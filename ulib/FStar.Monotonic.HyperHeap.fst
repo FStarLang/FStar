@@ -15,8 +15,6 @@
 *)
 module FStar.Monotonic.HyperHeap
 
-module Set = FStar.Set
-module Map = FStar.Map
 
 open FStar.Monotonic.Heap
 open FStar.Ghost

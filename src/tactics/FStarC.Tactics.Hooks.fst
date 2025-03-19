@@ -16,7 +16,6 @@
 
 module FStarC.Tactics.Hooks
 
-open FStar open FStarC
 open FStarC
 open FStarC.Effect
 open FStarC.List
@@ -29,7 +28,6 @@ open FStarC.TypeChecker.Common
 open FStarC.Tactics.Types
 open FStarC.Tactics.Interpreter
 open FStarC.Class.Show
-module Listlike = FStarC.Class.Listlike
 
 module BU      = FStarC.Util
 module Range   = FStarC.Range
@@ -764,7 +762,7 @@ let solve_implicits (env:Env.env) (tau:term) (imps:Env.implicits) : unit =
 
 (* Retrieves a tactic associated to a given attribute, if any *)
 let find_user_tac_for_attr env (a:term) : option sigelt =
-  let hooks = Env.lookup_attr env PC.handle_smt_goals_attr_string in
+  let hooks = Env.lookup_attr env (Ident.string_of_lid PC.handle_smt_goals_attr) in
   hooks |> BU.try_find (fun _ -> true)
 
 (* This function takes an environment [env] and a goal [goal], and tries to run
@@ -879,7 +877,7 @@ let splice
             : list goal & dsl_tac_result_t =
             run_tactic_on_ps tau.pos tau.pos false
               FStar.Tactics.Typeclasses.solve
-              ({env with admit=false; gamma=[]}, val_t)
+              ({env with gamma=[]}, val_t)
               FStar.Tactics.Typeclasses.solve
               tau
               tactic_already_typed
@@ -905,15 +903,25 @@ let splice
              (e_list RE.e_sigelt) tau tactic_already_typed ps
     in
 
-    // set delta depths in the sigelts fvs
+    // Set proper ranges in the sigelts. This is very important
+    // for the interactive mode, so that jump to definition works.
     let sigelts =
-      let set_lb_dd lb =
+      let proc_lb lb =
         let {lbname=Inr fv; lbdef} = lb in
-        {lb with lbname=Inr fv} in
+        let r =
+          (* If this name was provided in the definition list of the splice,
+          prefer that range. Otherwise set range to the full splice. *)
+          match tryFind (fun i -> Ident.lid_equals i fv.fv_name.v) lids with
+          | Some i -> pos i
+          | _ -> rng
+        in
+        let fv = setPos r fv in
+        {lb with lbname=Inr fv}
+      in
       List.map (fun se ->
         match se.sigel with
         | Sig_let {lbs=(is_rec, lbs); lids} ->
-          {se with sigel=Sig_let {lbs=(is_rec, List.map set_lb_dd lbs); lids}}
+          {se with sigel=Sig_let {lbs=(is_rec, List.map proc_lb lbs); lids}}
         | _ -> se
       ) sigelts
     in

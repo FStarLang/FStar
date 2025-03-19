@@ -28,11 +28,8 @@ open Flag
 open Crypto.AEAD.Encoding 
 open Crypto.Symmetric.PRF
 
-module HH = FStar.HyperHeap
 module HS = FStar.HyperStack
 
-module MAC    = Crypto.Symmetric.MAC
-module CMA    = Crypto.Symmetric.UF1CMA
 module Cipher = Crypto.Symmetric.Cipher
 module PRF    = Crypto.Symmetric.PRF
 module Plain  = Crypto.Plain

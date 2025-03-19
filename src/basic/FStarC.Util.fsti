@@ -14,23 +14,16 @@
    limitations under the License.
 *)
 module FStarC.Util
-open Prims
-open FStar.Pervasives
+
 open FStarC.Effect
 open FStarC.Json
 open FStarC.BaseTypes
+open FStarC.Array
 
 exception Impos
 
 val max_int: int
 val return_all: 'a -> ML 'a
-
-type time_ns
-val now_ns : unit -> time_ns
-val time_diff_ms: time_ns -> time_ns -> int
-val time_diff_ns: time_ns -> time_ns -> int
-val record_time_ns: (unit -> 'a) -> ('a & int)
-val record_time_ms: (unit -> 'a) -> ('a & int)
 
 type time_of_day
 val get_time_of_day : unit -> time_of_day
@@ -40,52 +33,8 @@ val get_file_last_modification_time: string -> time_of_day
 val string_of_time_of_day: time_of_day -> string
 
 (* generic utils *)
-(* smap: map from string keys *)
-type smap 'value
-val smap_create: int -> smap 'value
-val smap_clear:smap 'value -> unit
-val smap_add: smap 'value -> string -> 'value -> unit
-val smap_of_list: list (string&'value) -> smap 'value
-val smap_try_find: smap 'value -> string -> option 'value
-val smap_fold: smap 'value -> (string -> 'value -> 'a -> 'a) -> 'a -> 'a
-val smap_remove: smap 'value -> string -> unit
-(* The list may contain duplicates. *)
-val smap_keys: smap 'value -> list string
-val smap_copy: smap 'value -> smap 'value
-val smap_size: smap 'value -> int
-val smap_iter: smap 'value -> (string -> 'value -> unit) -> unit
 
 (* pure version *)
-type psmap 'value
-val psmap_empty: unit -> psmap 'value // GH-1161
-val psmap_add: psmap 'value -> string -> 'value -> psmap 'value
-val psmap_find_default: psmap 'value -> string -> 'value -> 'value
-val psmap_try_find: psmap 'value -> string -> option 'value
-val psmap_fold: psmap 'value -> (string -> 'value -> 'a -> 'a) -> 'a -> 'a
-val psmap_find_map: psmap 'value -> (string -> 'value -> option 'a) -> option 'a
-val psmap_modify: psmap 'value -> string -> (option 'value -> 'value) -> psmap 'value
-val psmap_merge: psmap 'value -> psmap 'value -> psmap 'value
-val psmap_remove: psmap 'value -> string -> psmap 'value
-type imap 'value
-val imap_create: int -> imap 'value
-val imap_clear:imap 'value -> unit
-val imap_add: imap 'value -> int -> 'value -> unit
-val imap_of_list: list (int&'value) -> imap 'value
-val imap_try_find: imap 'value -> int -> option 'value
-val imap_fold: imap 'value -> (int -> 'value -> 'a -> 'a) -> 'a -> 'a
-val imap_remove: imap 'value -> int -> unit
-(* The list may contain duplicates. *)
-val imap_keys: imap 'value -> list int
-val imap_copy: imap 'value -> imap 'value
-
-(* pure version *)
-type pimap 'value
-val pimap_empty: unit -> pimap 'value // GH-1161
-val pimap_add: pimap 'value -> int -> 'value -> pimap 'value
-val pimap_find_default: pimap 'value -> int -> 'value -> 'value
-val pimap_try_find: pimap 'value -> int -> option 'value
-val pimap_fold: pimap 'value -> (int -> 'value -> 'a -> 'a) -> 'a -> 'a
-val pimap_remove: pimap 'value -> int -> pimap 'value
 
 val format: string -> list string -> string
 val format1: string -> string -> string
@@ -209,18 +158,7 @@ val kill_all: unit -> unit
 val proc_prog : proc -> string
 val system_run : string -> int (* a less refined launching, implemented by Sys.command *)
 
-val get_file_extension: string -> string
-val is_path_absolute: string -> bool
-val join_paths: string -> string -> string
-val normalize_file_path: string -> string
-val basename: string -> string (* name of file without directory *)
-val dirname : string -> string
 val getcwd: unit -> string
-val readdir: string -> list string
-val paths_to_same_file: string -> string -> bool
-
-val file_exists: string -> Tot bool
-val is_directory: string -> Tot bool
 
 val int_of_string: string -> int
 val safe_int_of_string: string -> option int
@@ -311,7 +249,8 @@ val decr: ref int -> unit
 val geq: int -> int -> Tot bool
 val for_range: int -> int -> (int -> unit) -> unit
 
-val mk_ref: 'a -> ref 'a
+// Use FStarC.Effect.mk_ref instead
+// val mk_ref: 'a -> ref 'a
 
 val exec_name : string
 val get_exec_dir: unit -> string
@@ -372,6 +311,8 @@ val print_endline: string -> unit
 
 val map_option: ('a -> 'b) -> option 'a -> option 'b
 
+(* for a filepath, create the parent directory if it doesn't exist (and leading directories too) *)
+val maybe_create_parent : string -> unit
 val save_value_to_file: string -> 'a -> unit
 val load_value_from_file: string -> option 'a
 val save_2values_to_file: string -> 'a -> 'b -> unit

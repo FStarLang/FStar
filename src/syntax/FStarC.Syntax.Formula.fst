@@ -15,12 +15,9 @@
 *)
 module FStarC.Syntax.Formula
 
-open Prims
-open FStar.Pervasives
 open FStarC.Effect
 open FStarC.List
 
-open FStar open FStarC
 open FStarC
 open FStarC.Ident
 open FStarC.Syntax
@@ -162,7 +159,7 @@ and destruct_sq_exists t =
     let hd, args = U.head_and_args_full t in
     match (U.un_uinst hd).n, args with
     | Tm_fvar fv, [(a1, _); (a2, _)]
-        when fv_eq_lid fv PC.dtuple2_lid ->
+        when fv_eq_lid fv PC.lid_dtuple2 ->
             begin match (SS.compress a2).n with
             | Tm_abs {bs=[b]; body=q} ->
                 let bs, q = SS.open_term [b] q in

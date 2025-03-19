@@ -1,8 +1,5 @@
 module FStar.InteractiveHelpers.ParseTest
 
-module HS = FStar.HyperStack
-module ST = FStar.HyperStack.ST
-module B = LowStar.Buffer
 
 open FStar.List
 open FStar.Tactics.V2

@@ -15,9 +15,7 @@
 *)
 module FStarC.Tactics.V1.Basic
 
-open FStar open FStarC
 open FStarC
-open FStar.Pervasives
 open FStarC.Effect
 open FStarC.List
 open FStarC.Util
@@ -36,11 +34,8 @@ open FStarC.Class.Show
 open FStarC.Class.Tagged
 module Listlike = FStarC.Class.Listlike
 
-friend FStar.Pervasives (* to use Delta below *)
-
 module BU     = FStarC.Util
 module Cfg    = FStarC.TypeChecker.Cfg
-module EMB    = FStarC.Syntax.Embeddings
 module Env    = FStarC.TypeChecker.Env
 module Err    = FStarC.Errors
 module N      = FStarC.TypeChecker.Normalize
@@ -51,10 +46,8 @@ module Rel    = FStarC.TypeChecker.Rel
 module SF     = FStarC.Syntax.Free
 module S      = FStarC.Syntax.Syntax
 module SS     = FStarC.Syntax.Subst
-module SC     = FStarC.Syntax.Compress
 module TcComm = FStarC.TypeChecker.Common
 module TcTerm = FStarC.TypeChecker.TcTerm
-module TcUtil = FStarC.TypeChecker.Util
 module UF     = FStarC.Syntax.Unionfind
 module U      = FStarC.Syntax.Util
 module Z      = FStarC.BigInt
@@ -793,7 +786,7 @@ let intro_rec () : tac (binder & binder) =
     | None ->
         fail1 "intro_rec: goal is not an arrow (%s)" (tts (goal_env goal) (goal_type goal))
 
-let norm (s : list Pervasives.norm_step) : tac unit =
+let norm (s : list NormSteps.norm_step) : tac unit =
     let! goal = cur_goal in
     if_verbose (fun () -> BU.print1 "norm: witness = %s\n" (show (goal_witness goal))) ;!
     // Translate to actual normalizer steps
@@ -803,7 +796,7 @@ let norm (s : list Pervasives.norm_step) : tac unit =
     replace_cur (goal_with_type goal t)
 
 
-let norm_term_env (e : env) (s : list Pervasives.norm_step) (t : term) : tac term = wrap_err "norm_term" <| (
+let norm_term_env (e : env) (s : list NormSteps.norm_step) (t : term) : tac term = wrap_err "norm_term" <| (
     let! ps = get in
     if_verbose (fun () -> BU.print1 "norm_term_env: t = %s\n" (show t)) ;!
     // only for elaborating lifts and all that, we don't care if it's actually well-typed
@@ -871,7 +864,7 @@ let t_exact try_refine set_expected_typ tm : tac unit = wrap_err "exact" <| (
     | Inl e when not (try_refine) -> traise e
     | Inl e ->
       if_verbose (fun () -> BU.print_string "__exact_now failed, trying refine...\n") ;!
-      match! catch (norm [Pervasives.Delta] ;! refine_intro () ;! __exact_now set_expected_typ tm) with
+      match! catch (norm [NormSteps.Delta] ;! refine_intro () ;! __exact_now set_expected_typ tm) with
       | Inr r ->
         if_verbose (fun () -> BU.print_string "__exact_now: failed after refining too\n") ;!
         ret r
@@ -1270,7 +1263,7 @@ let binder_retype (b : binder) : tac unit = wrap_err "binder_retype" <| (
     )
 
 (* TODO: move to bv *)
-let norm_binder_type (s : list Pervasives.norm_step) (b : binder) : tac unit = wrap_err "norm_binder_type" <| (
+let norm_binder_type (s : list NormSteps.norm_step) (b : binder) : tac unit = wrap_err "norm_binder_type" <| (
     let! goal = cur_goal in
     let bv = b.binder_bv in
     match split_env bv (goal_env goal) with
@@ -2142,14 +2135,14 @@ let pack_curried (tv:term_view) : tac term = pack' tv true
 
 let lget (ty:term) (k:string) : tac term = wrap_err "lget" <| (
     let! ps = get in
-    match BU.psmap_try_find ps.local_state k with
+    match PSMap.try_find ps.local_state k with
     | None -> fail "not found"
     | Some t -> unquote ty t
     )
 
 let lset (_ty:term) (k:string) (t:term) : tac unit = wrap_err "lset" <| (
     let! ps = get in
-    let ps = { ps with local_state = BU.psmap_add ps.local_state k t } in
+    let ps = { ps with local_state = PSMap.add ps.local_state k t } in
     set ps
     )
 

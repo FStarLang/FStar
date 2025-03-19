@@ -19,10 +19,10 @@ module FStarC.Debug
 module BU = FStarC.Util
 
 (* Mutable state *)
-let anyref = BU.mk_ref false
-let _debug_all : ref bool = BU.mk_ref false
+let anyref = mk_ref false
+let _debug_all : ref bool = mk_ref false
 let toggle_list : ref (list (string & ref bool)) =
-  BU.mk_ref []
+  mk_ref []
 
 type saved_state = {
   toggles : list (string & bool);
@@ -37,7 +37,7 @@ let snapshot () : saved_state = {
 }
 
 let register_toggle (k : string) : ref bool =
-  let r = BU.mk_ref false in
+  let r = mk_ref false in
   if !_debug_all then
     r := true;
   toggle_list := (k, r) :: !toggle_list;
@@ -71,7 +71,7 @@ let tag (s:string) =
 
 let enable () = anyref := true
 
-let dbg_level = BU.mk_ref 0
+let dbg_level = mk_ref 0
 
 let low     () = !dbg_level >= 1 || !_debug_all
 let medium  () = !dbg_level >= 2 || !_debug_all
@@ -103,4 +103,5 @@ let disable_all () : unit =
   List.iter (fun (_, r) -> r := false) !toggle_list
 
 let set_debug_all () : unit =
-  _debug_all := true
+  _debug_all := true;
+  List.iter (fun (_, r) -> r := true) !toggle_list

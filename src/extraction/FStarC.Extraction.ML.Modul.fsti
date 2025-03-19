@@ -15,17 +15,15 @@
    limitations under the License.
 *)
 module FStarC.Extraction.ML.Modul
-open FStar.Pervasives
 open FStarC.Effect
 open FStarC.Syntax.Syntax
 open FStarC.Extraction.ML.Syntax
 open FStarC.Extraction.ML.UEnv
-module S = FStarC.Syntax.Syntax
 
 val iface : Type0
 
 type extension_sigelt_extractor =
-  uenv -> sigelt -> FStarC.Dyn.dyn -> either mlmodule string
+  uenv -> sigelt -> FStarC.Dyn.dyn -> either (list mlmodule1) string
 type extension_sigelt_iface_extractor =
   uenv -> sigelt -> FStarC.Dyn.dyn -> either (uenv & iface) string
 
@@ -40,4 +38,4 @@ val register_extension_extractor
   : unit
 
 val extract_iface: uenv -> modul -> uenv & iface
-val extract : uenv -> modul -> uenv & option mllib
+val extract : uenv -> modul -> uenv & option mlmodule

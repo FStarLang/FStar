@@ -360,7 +360,7 @@ let canon_lhs_rhs (eq: term) (m: term) (lhs rhs:term) : Tac unit =
   apply (`monoid_reflect);
   //dump ("after apply monoid_reflect");
   norm [iota; zeta; delta_only [`%canon; `%xsdenote; `%flatten; `%sort;
-                    `%select; `%assoc; `%fst; `%__proj__Mktuple2__item___1;
+                    `%select; `%assoc; `%fst; `%Mktuple2?._1;
                     `%(@); `%append; `%List.Tot.sortWith;
                     `%List.Tot.partition; `%bool_of_compare;
                     `%compare_of_bool;

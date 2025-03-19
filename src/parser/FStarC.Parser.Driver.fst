@@ -14,10 +14,8 @@
    limitations under the License.
 *)
 module FStarC.Parser.Driver
-open FStar.Pervasives
 open FStarC.Effect
 
-open FStar open FStarC
 open FStarC
 open FStarC.Parser
 open FStarC.Parser.AST
@@ -26,7 +24,7 @@ open FStarC.Util
 open FStarC.Errors
 open FStarC.Class.Show
 
-let is_cache_file (fn: string) = Util.get_file_extension fn = ".cache"
+let is_cache_file (fn: string) = Filepath.get_file_extension fn = ".cache"
 
 let parse_fragment lang_opt (frag: ParseIt.input_frag) : fragment =
     match ParseIt.parse lang_opt (Toplevel frag) with
@@ -45,13 +43,13 @@ let parse_fragment lang_opt (frag: ParseIt.input_frag) : fragment =
 
 let maybe_dump_module (m:modul) = 
     match m with
-    | Module (l, ds)
-    | Interface (l, ds, _) ->
-      if FStarC.Options.dump_module (Ident.string_of_lid l)
+    | Module {mname; decls}
+    | Interface {mname; decls} ->
+      if FStarC.Options.dump_module (Ident.string_of_lid mname)
       then (
         print2 "Parsed module %s\n%s\n"
-            (Ident.string_of_lid l)
-            (List.map show ds |> String.concat "\n")
+            (show mname)
+            (List.map show decls |> String.concat "\n")
       )
 (* Returns a non-desugared AST (as in [parser/ast.fs]) or aborts. *)
 let parse_file fn =

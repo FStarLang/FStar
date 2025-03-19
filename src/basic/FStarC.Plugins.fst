@@ -23,11 +23,10 @@ open FStarC.Plugins.Base
 
 module BU = FStarC.Util
 module E   = FStarC.Errors
-module O   = FStarC.Options
 open FStarC.Class.Show
 
-let loaded : ref (list string) = BU.mk_ref []
-let loaded_plugin_lib : ref bool = BU.mk_ref false
+let loaded : ref (list string) = mk_ref []
+let loaded_plugin_lib : ref bool = mk_ref false
 
 let pout  s   = if Debug.any () then BU.print_string s
 let pout1 s x = if Debug.any () then BU.print1 s x
@@ -61,7 +60,7 @@ let dynlink (fname:string) : unit =
 let load_plugin tac =
   if not (!loaded_plugin_lib) then (
     pout "Loading fstar.pluginlib before first plugin\n";
-    do_dynlink (BU.normalize_file_path <| BU.get_exec_dir () ^ "/../lib/fstar/pluginlib/fstar_pluginlib.cmxs");
+    do_dynlink (Filepath.normalize_file_path <| BU.get_exec_dir () ^ "/../lib/fstar/pluginlib/fstar_pluginlib.cmxs");
     pout "Loaded fstar.pluginlib OK\n";
     loaded_plugin_lib := true
   );
@@ -73,7 +72,7 @@ let load_plugins tacs =
 let load_plugins_dir dir =
   (* Dynlink all .cmxs files in the given directory *)
   (* fixme: confusion between FStarC.String and FStar.String *)
-  BU.readdir dir
+  Filepath.readdir dir
   |> List.filter (fun s -> String.length s >= 5 && FStar.String.sub s (String.length s - 5) 5 = ".cmxs")
   |> List.map (fun s -> dir ^ "/" ^ s)
   |> load_plugins
@@ -88,10 +87,6 @@ let compile_modules dir ms =
                 @ (List.map pkg packages)
                 @ ["-o"; m ^ ".cmxs"; m ^ ".ml"] in
      (* Note: not useful when in an OPAM setting *)
-     let ocamlpath_sep = match Platform.system with
-       | Platform.Windows -> ";"
-       | Platform.Posix -> ":"
-     in
      let old_ocamlpath =
        match BU.expand_environment_variable "OCAMLPATH" with
        | Some s -> s
@@ -99,7 +94,7 @@ let compile_modules dir ms =
      in
      let env_setter = BU.format3 "env OCAMLPATH=\"%s%s%s\""
        (Find.locate_ocaml ())
-       ocamlpath_sep
+       Platform.ocamlpath_sep
       //  Options.fstar_bin_directory // needed?
       //  ocamlpath_sep
        old_ocamlpath
@@ -126,7 +121,7 @@ let compile_modules dir ms =
 if it could find a plugin with the proper name. This will fail hard
 if loading the plugin fails. *)
 let autoload_plugin (ext:string) : bool =
-  if Options.Ext.get "noautoload" <> "" then false else (
+  if Options.Ext.enabled "noautoload" then false else (
   if Debug.any () then
     BU.print1 "Trying to find a plugin for extension %s\n" ext;
   match Find.find_file (ext ^ ".cmxs") with

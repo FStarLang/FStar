@@ -23,7 +23,6 @@ open FStar.Preorder
 
 (* NB: (a:Type0 & a) instead of dtuple2 is better notation *)
 
-module F = FStar.FunctionalExtensionality
 
 //abstract
 val heap: Type u#1

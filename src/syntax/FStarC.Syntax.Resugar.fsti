@@ -21,16 +21,11 @@ open FStarC.Syntax.Syntax
 open FStarC.Ident
 open FStarC.Util
 open FStarC.Const
-open FStarC.Range
+open FStarC.Range.Type
 
-module I = FStarC.Ident
+module Range = FStarC.Range.Type
 module S  = FStarC.Syntax.Syntax
-module SS = FStarC.Syntax.Subst
 module A  = FStarC.Parser.AST
-module C = FStarC.Parser.Const
-module U = FStarC.Syntax.Util
-module BU = FStarC.Util
-module Range = FStarC.Range
 module DsEnv = FStarC.Syntax.DsEnv
 
 val resugar_term: S.term -> A.term

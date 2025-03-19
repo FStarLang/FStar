@@ -15,10 +15,8 @@
 *)
 
 module FStarC.Syntax.Print
-open FStar.Pervasives
 open FStarC.Effect
 
-open FStar open FStarC
 open FStarC
 open FStarC.Range
 open FStarC.Syntax
@@ -31,7 +29,6 @@ open FStarC.Json
 
 module Errors     = FStarC.Errors
 module U          = FStarC.Util
-module A          = FStarC.Parser.AST
 module Unionfind  = FStarC.Syntax.Unionfind
 module C          = FStarC.Parser.Const
 module SU         = FStarC.Syntax.Util
@@ -359,6 +356,11 @@ let tscheme_to_string ts =
   then Ugly.tscheme_to_string ts
   else Pretty.tscheme_to_string ts
 
+let tscheme_to_doc ts =
+  if Options.ugly ()
+  then Pprint.arbitrary_string (Ugly.tscheme_to_string ts)
+  else Pretty.tscheme_to_doc ts
+
 let sub_eff_to_string se =
   let tsopt_to_string ts_opt =
     if is_some ts_opt then ts_opt |> must |> tscheme_to_string
@@ -377,6 +379,7 @@ instance pretty_ctxu     = { pp   = (fun x -> Pprint.doc_of_string (show x)); }
 instance pretty_uvar     = { pp   = (fun x -> Pprint.doc_of_string (show x)); }
 instance pretty_binder   = { pp   = (fun x -> Pprint.doc_of_string (show x)); }
 instance pretty_bv       = { pp   = (fun x -> Pprint.doc_of_string (show x)); }
+instance pretty_qualifier = { pp  = (fun x -> Pprint.doc_of_string (show x)); }
 
 open FStarC.Pprint
 

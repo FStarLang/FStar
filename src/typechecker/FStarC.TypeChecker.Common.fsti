@@ -14,28 +14,18 @@
    limitations under the License.
 *)
 module FStarC.TypeChecker.Common
-open Prims
-open FStar.Pervasives
-open FStarC.Effect
 
-open FStar open FStarC
 open FStarC
-open FStarC.Util
-open FStarC.Syntax
+open FStarC.Effect
 open FStarC.Syntax.Syntax
 open FStarC.Ident
 open FStarC.Class.Show
 open FStarC.Class.Monoid
-
 open FStarC.CList
-module CList = FStarC.CList
-
-(* Bring instances in scope *)
-open FStarC.Syntax.Print {}
+open FStarC.Range.Type
 
 module S = FStarC.Syntax.Syntax
 
-module BU = FStarC.Util
 
 (* relations on types, kinds, etc. *)
 type rel =
@@ -60,7 +50,7 @@ type problem 'a = {                  //Try to prove: lhs rel rhs ~ guard
     logical_guard:term;               //the condition under which this problem is solveable; (?u v1..vn)
     logical_guard_uvar:ctx_uvar;
     reason: list string;             //why we generated this problem, for error reporting
-    loc: Range.range;                 //and the source location where this arose
+    loc: range;                 //and the source location where this arose
     rank: option rank_t;
     logical : bool;                             //logical problems cannot unfold connectives
 }
@@ -110,17 +100,17 @@ type univ_ineq = universe & universe
 type identifier_info = {
     identifier:either bv fv;
     identifier_ty:typ;
-    identifier_range:Range.range;
+    identifier_range:range;
 }
 
 type id_info_by_col = //sorted in ascending order of columns
     list (int & identifier_info)
 
 type col_info_by_row =
-    BU.pimap id_info_by_col
+    PIMap.t id_info_by_col
 
 type row_info_by_file =
-    BU.psmap col_info_by_row
+    PSMap.t col_info_by_row
 
 type id_info_table = {
     id_info_enabled: bool;
@@ -128,7 +118,7 @@ type id_info_table = {
     id_info_buffer: list identifier_info;
 }
 
-val check_uvar_ctx_invariant : string -> Range.range -> bool -> gamma -> binders -> unit
+val check_uvar_ctx_invariant : string -> range -> bool -> gamma -> binders -> unit
 
 val mk_by_tactic : term -> term -> term
 
@@ -152,7 +142,7 @@ type implicit = {
     imp_reason : string;                  // Reason (in text) why the implicit was introduced
     imp_uvar   : ctx_uvar;                // The ctx_uvar representing it
     imp_tm     : term;                    // The term, made up of the ctx_uvar
-    imp_range  : Range.range;             // Position where it was introduced
+    imp_range  : range;                   // Position where it was introduced
 }
 
 instance val showable_implicit : showable implicit

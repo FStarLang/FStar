@@ -1,7 +1,6 @@
 module Test.Delta.Namespace
 module L = FStar.List.Tot
 open FStar.Tactics.V2
-module P = FStar.Printf
 let f (x:int) = x + 1
 let m (y:list int) = L.map f y
 

@@ -19,7 +19,6 @@
 module FStarC.Extraction.ML.Syntax
 open FStarC.Effect
 open FStarC.List
-open FStar open FStarC
 open FStarC
 open FStarC.Ident
 open FStarC.Util
@@ -110,7 +109,6 @@ let pop_unit (ts : mltyscheme) : e_tag & mltyscheme =
         else failwith "unexpected: pop_unit: domain was not unit"
     | _ ->
         failwith "unexpected: pop_unit: not a function type"
-module BU = FStarC.Util
 
 let ctor' (n: string) (args: list document) =
   nest 2 (group (parens (flow (break_ 1) (doc_of_string n :: args))))
@@ -275,12 +273,12 @@ let mlmodule1_to_doc (m:mlmodule1) : document =
   | MLM_Loc _mlloc -> doc_of_string "MLM_Loc")
 let mlmodule1_to_string (m:mlmodule1) : string = render (mlmodule1_to_doc m)
 
-let mlmodule_to_doc (m:mlmodule) : document =
+let mlmodulebody_to_doc (m:mlmodulebody) : document =
   group <| brackets <| spaced <| separate_map (semi ^^ break_ 1) mlmodule1_to_doc m
-let mlmodule_to_string (m:mlmodule) : string = render (mlmodule_to_doc m)
+let mlmodulebody_to_string (m:mlmodulebody) : string = render (mlmodulebody_to_doc m)
 
 instance showable_mlty : showable mlty = { show = mlty_to_string }
-instance showable_mlconstant : showable mlconstant = { show = mlconstant_to_string }  
+instance showable_mlconstant : showable mlconstant = { show = mlconstant_to_string }
 instance showable_mlexpr : showable mlexpr = { show = mlexpr_to_string }
 instance showable_mlmodule1 : showable mlmodule1 = { show = mlmodule1_to_string }
-instance showable_mlmodule : showable mlmodule = { show = mlmodule_to_string }
+instance showable_mlmodulebody : showable mlmodulebody = { show = mlmodulebody_to_string }

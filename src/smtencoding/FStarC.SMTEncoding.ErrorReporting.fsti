@@ -16,7 +16,6 @@
 
 module FStarC.SMTEncoding.ErrorReporting
 open FStarC.Effect
-open FStar open FStarC
 open FStarC
 open FStarC.BaseTypes
 open FStarC.Util
@@ -24,7 +23,6 @@ open FStarC.SMTEncoding.Term
 open FStarC.SMTEncoding.Util
 open FStarC.SMTEncoding
 open FStarC.Range
-module BU = FStarC.Util
 
 type label = error_label
 type labels = list label

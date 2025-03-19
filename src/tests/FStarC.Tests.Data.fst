@@ -17,7 +17,6 @@ module FStarC.Tests.Data
 // tests about data structures
 
 
-open FStar open FStarC
 open FStarC
 open FStarC.Effect
 module BU = FStarC.Util
@@ -44,21 +43,21 @@ let nn = 10000
 
 let run_all () =
   BU.print_string "data tests\n";
-  let (f, ms) = BU.record_time_ms (fun () -> insert nn (empty () <: FlatSet.t int)) in
+  let (f, ms) = Timing.record_ms (fun () -> insert nn (empty () <: FlatSet.t int)) in
   BU.print1 "FlatSet insert: %s\n" (show ms);
-  let (f_ok, ms) = BU.record_time_ms (fun () -> all_mem nn f) in
+  let (f_ok, ms) = Timing.record_ms (fun () -> all_mem nn f) in
   BU.print1 "FlatSet all_mem: %s\n" (show ms);
-  let (f, ms) = BU.record_time_ms (fun () -> all_remove nn f) in
+  let (f, ms) = Timing.record_ms (fun () -> all_remove nn f) in
   BU.print1 "FlatSet all_remove: %s\n" (show ms);
 
   if not f_ok then failwith "FlatSet all_mem failed";
   if not (is_empty f) then failwith "FlatSet all_remove failed";
 
-  let (rb, ms) = BU.record_time_ms (fun () -> insert nn (empty () <: RBSet.t int)) in
+  let (rb, ms) = Timing.record_ms (fun () -> insert nn (empty () <: RBSet.t int)) in
   BU.print1 "RBSet insert: %s\n" (show ms);
-  let (rb_ok, ms) = BU.record_time_ms (fun () -> all_mem nn rb) in
+  let (rb_ok, ms) = Timing.record_ms (fun () -> all_mem nn rb) in
   BU.print1 "RBSet all_mem: %s\n" (show ms);
-  let (rb, ms) = BU.record_time_ms (fun () -> all_remove nn rb) in
+  let (rb, ms) = Timing.record_ms (fun () -> all_remove nn rb) in
   BU.print1 "RBSet all_remove: %s\n" (show ms);
 
   if not rb_ok then failwith "RBSet all_mem failed";

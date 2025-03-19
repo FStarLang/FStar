@@ -10,7 +10,10 @@ EXPECTED="$2"
 
 DIFF="diff -u --strip-trailing-cr"
 
-if $DIFF "$ACTUAL" "$EXPECTED" ; then
+# Doing the diff in this order is more natural for error
+# messages, as '+' means new lines and '-' lines that are
+# no longer appearing.
+if $DIFF "$EXPECTED" "$ACTUAL" ; then
   # OK
   exit 0
 else

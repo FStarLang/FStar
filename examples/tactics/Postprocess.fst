@@ -19,10 +19,20 @@ open FStar.Tactics.V2
 
 assume val foo : int -> int
 assume val lem : unit -> Lemma (foo 1 == foo 2)
-let tau () = apply_lemma (`lem)
+let tau () =
+  grewrite (`(foo 1)) (`(foo 2));
+  trefl ();
+  apply_lemma (`lem);
+  ()
 
-[@@(postprocess_with tau)]
+[@@postprocess_with tau]
 let x : int = foo 1
+
+[@@postprocess_with tau]
+let x' : (z:int{z == foo 1}) = foo 1
+
+[@@postprocess_with tau; postprocess_type]
+let x'' : (z:int{z == foo 1}) = foo 1
 
 [@@(postprocess_for_extraction_with tau)]
 let y : int = foo 1

@@ -509,7 +509,7 @@ let rec length (l:listptr)
 	      split_and_smt ();
 	      ignore (forall_intro ());
 	      let h = implies_intro () in rewrite h;
-	      norm [delta_only ["FStar.Pervasives.Native.__proj__Some__item__v"]];
+	      norm [delta_only [`%Some?.v]];
 	      apply_lemma (`lemma_rw);
 	      ignore (repeatn 2 split_and_smt);
 	      ignore (repeatn 2 (fun () -> apply_lemma (`lemma_frame_out_empty_right); split_and_smt ()));
@@ -633,7 +633,7 @@ let rec append (l1 l2:listptr)
 
                 ignore (forall_intro ());
 		let h = implies_intro () in rewrite h;
-	        norm [delta_only ["FStar.Pervasives.Native.__proj__Some__item__v"]];
+	        norm [delta_only [`%Some?.v]];
 		apply_lemma (`lemma_rewrite_sep_assoc4);
 		apply_lemma (`lemma_rw);
 		ignore (repeatn 2 split_and_smt);
@@ -793,7 +793,7 @@ let rec rev_append (l1:listptr) (l2:listptr)
 
                ignore (forall_intro ());
 	       let h = implies_intro () in rewrite h;
-	       norm [delta_only ["FStar.Pervasives.Native.__proj__Some__item__v"]];
+	       norm [delta_only [`%Some?.v]];
 	       apply_lemma (`lemma_rewrite_sep_assoc4);
 	       apply_lemma (`lemma_rw); //!r in the Some branch
 	       ignore (repeatn 2 split_and_smt);

@@ -15,7 +15,6 @@
 *)
 module FStarC.Errors
 
-open FStar.Pervasives
 open FStar.String
 open FStarC
 open FStarC.Effect
@@ -33,9 +32,9 @@ open FStarC.Errors.Codes
 open FStarC.Errors.Msg
 open FStarC.Json
 
-let fallback_range : ref (option range) = BU.mk_ref None
+let fallback_range : ref (option range) = mk_ref None
 
-let error_range_bound : ref (option range) = BU.mk_ref None
+let error_range_bound : ref (option range) = mk_ref None
 
 let with_error_bound (r:range) (f : unit -> 'a) : 'a =
   let old = !error_range_bound in
@@ -140,7 +139,7 @@ let json_of_issue issue =
     JsonAssoc [
         "msg",    json_of_error_message issue.issue_msg;
         "level",  json_of_issue_level issue.issue_level;
-        "range",  dflt JsonNull (json_of_range <$> issue.issue_range);
+        "range",  dflt JsonNull (json_of_range <$> map_opt issue.issue_range Range.refind_range);
         "number", dflt JsonNull (JsonInt <$> issue.issue_number);
         "ctx",    JsonList (JsonStr <$> issue.issue_ctx);
     ]
@@ -181,7 +180,7 @@ let optional_def (f : 'a -> PP.document) (def : PP.document) (o : option 'a) : P
 
 let issue_to_doc' (print_hdr:bool) (issue:issue) : PP.document =
   let open FStarC.Pprint in
-  let r = issue.issue_range in
+  let r = BU.map_opt issue.issue_range Range.refind_range in
   let hdr : document =
     if print_hdr then (
       let level_header = doc_of_string (string_of_issue_level issue.issue_level) in
@@ -300,7 +299,10 @@ let fixup_issue_range (rng:option Range.range) : option Range.range =
     | None ->
       (* No range given, just rely on the fallback. NB: the
       fallback could also be set to None if it's too early. *)
-      !fallback_range
+      begin match !fallback_range with
+      | Some r -> Some r
+      | None -> !error_range_bound
+      end
     | Some range ->
       let use_rng = use_range range in
       let use_rng' =
@@ -319,13 +321,14 @@ let fixup_issue_range (rng:option Range.range) : option Range.range =
   map_opt rng maybe_bound_range
 
 let mk_default_handler print =
-    let issues : ref (list issue) = BU.mk_ref [] in
+    let issues : ref (list issue) = mk_ref [] in
     (* This number may be greater than the amount of 'EErrors'
      * in the list above due to errors that were immediately
      * printed (if debug_any()) *)
-    let err_count : ref int = BU.mk_ref 0 in
+    let err_count : ref int = mk_ref 0 in
 
     let add_one (e: issue) =
+        let e = { e with issue_range = fixup_issue_range e.issue_range } in
         (if e.issue_level = EError then
            err_count := 1 + !err_count);
         begin match e.issue_level with
@@ -354,7 +357,7 @@ let mk_default_handler print =
 let default_handler = mk_default_handler true
 
 let current_handler =
-    BU.mk_ref default_handler
+    mk_ref default_handler
 
 let mk_issue level range msg n ctx = {
   issue_level = level;
@@ -402,7 +405,7 @@ type error_context_t = {
 }
 
 let error_context : error_context_t =
-    let ctxs = BU.mk_ref [] in
+    let ctxs = mk_ref [] in
     let push s = ctxs := s :: !ctxs in
     let pop s =
         match !ctxs with
@@ -449,7 +452,7 @@ let t_set_parse_warn_error,
          - Some list error_setting in case it parses and is interpreted successfully
          - None in case it does not parse or is not intepretable
     *)
-    let error_flags : BU.smap (option (list error_setting)) = BU.smap_create 10 in
+    let error_flags : SMap.t (option (list error_setting)) = SMap.create 10 in
     (* set_error_flags is called by Options.set_options, parse_cmd_line etc,
        upon parsing the options.
        It parses the current warn_error string and sets the result in the
@@ -464,10 +467,10 @@ let t_set_parse_warn_error,
         in
         let we = Options.warn_error () in
         try let r = parse we in
-            BU.smap_add error_flags we (Some r);
+            SMap.add error_flags we (Some r);
             Getopt.Success
         with Invalid_warn_error_setting msg ->
-            (BU.smap_add error_flags we None;
+            (SMap.add error_flags we None;
              Getopt.Error ("Invalid --warn_error setting: " ^ msg ^ "\n", "warn_error"))
     in
     (* get_error_flags is called when logging an issue to figure out
@@ -480,7 +483,7 @@ let t_set_parse_warn_error,
        parse didn't succeed *)
     let get_error_flags () =
       let we = Options.warn_error () in
-      match BU.smap_try_find error_flags we with
+      match SMap.try_find error_flags we with
       | Some (Some w) -> w
       | _ -> default_settings
     in
@@ -727,3 +730,11 @@ let raise_error_doc rng code msg = raise_error rng code msg
 let log_issue_doc rng code msg = log_issue rng code msg
 let raise_error_text rng code msg = raise_error rng code msg
 let log_issue_text rng code msg = log_issue rng code msg
+
+let _ = Options.check_include_dir := (fun s ->
+          if not (Filepath.is_directory s) then
+            log_issue dummyRange Fatal_NotValidIncludeDirectory [
+              Pprint.prefix 2 1 (text "Not a valid include directory:")
+                (Pprint.doc_of_string s)
+            ]
+)

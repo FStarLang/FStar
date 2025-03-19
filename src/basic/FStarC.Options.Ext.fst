@@ -18,25 +18,40 @@ module FStarC.Options.Ext
 open FStarC
 open FStarC.Effect
 open FStarC.Class.Show
-module BU = FStarC.Util
+open FStarC.PSMap
 
 type ext_state =
-  | E : map : BU.psmap string -> ext_state
+  | E : map : psmap string -> ext_state
 
-let cur_state = BU.mk_ref (E (BU.psmap_empty ()))
+(* Default extension options *)
+let defaults = [
+  ("context_pruning", "true");
+]
+
+let init : ext_state =
+  E <| List.fold_right (fun (k,v) m -> psmap_add m k v)
+         defaults
+         (psmap_empty ())
+
+let cur_state = alloc init
 
 (* Set a key-value pair in the map *)
 let set (k:key) (v:value) : unit =
-  cur_state := E (BU.psmap_add (!cur_state).map k v)
+  cur_state := E (psmap_add (!cur_state).map k v)
 
 (* Get the value from the map, or return "" if not there *)
 let get (k:key) : value =
   let r = 
-    match BU.psmap_try_find (!cur_state).map k with
+    match psmap_try_find (!cur_state).map k with
     | None -> ""
     | Some v -> v
   in
   r
+
+let enabled (k:key) : bool =
+  let v = get k in
+  let v = String.lowercase v in
+  v <> "" && not (v = "off" || v = "false" || v = "0")
 
 (* Find a home *)
 let is_prefix (s1 s2 : string) : ML bool =
@@ -53,11 +68,11 @@ let getns (ns:string) : list (key & value) =
     then (k, v) :: acc
     else acc
   in
-  BU.psmap_fold (!cur_state).map f []
+  psmap_fold (!cur_state).map f []
 
 let all () : list (key & value) =
   let f k v acc = (k, v) :: acc in
-  BU.psmap_fold (!cur_state).map f []
+  psmap_fold (!cur_state).map f []
 
 let save () : ext_state =
   !cur_state
@@ -67,4 +82,4 @@ let restore (s:ext_state) : unit =
   ()
 
 let reset () : unit =
-  cur_state := E (BU.psmap_empty ())
+  cur_state := init

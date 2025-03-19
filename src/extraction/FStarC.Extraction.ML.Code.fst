@@ -15,10 +15,10 @@
 *)
 (* -------------------------------------------------------------------- *)
 module FStarC.Extraction.ML.Code
+
+open FStarC
 open FStarC.Effect
 open FStarC.List
-open FStar open FStarC
-open FStarC
 open FStarC.Util
 open FStarC.Extraction.ML
 open FStarC.Extraction.ML.Syntax
@@ -27,8 +27,10 @@ open FStarC.Const
 open FStarC.BaseTypes
 module BU = FStarC.Util
 
-(* This is the old printer used exclusively for the F# build of F*. It will not
- * evolve in the future. *)
+(* NOTE!!!!!!!!!!!!!!!!!!!!
+ * This is the old printer used exclusively for the F# build of F*. It will not
+ * evolve in the future. For the actual printer used for extracting OCaml code,
+ * see src/ml/FStarC_Extraction_ML_PrintML.ml *)
 
 (* -------------------------------------------------------------------- *)
 type assoc  = | ILeft | IRight | Left | Right | NonAssoc
@@ -120,6 +122,7 @@ let mlpath_of_mlpath (currentModule : mlsymbol) (x : mlpath) : mlpath =
     match string_of_mlpath x with
     | "Prims.Some" -> ([], "Some")
     | "Prims.None" -> ([], "None")
+    | "Prims.op_Modulus" -> (["Prims"], "mod_f")
     | _ ->
      let ns, x = x in
      (path_of_ns currentModule ns, x)
@@ -157,7 +160,6 @@ let infix_prim_ops = [
     ("op_GreaterThanOrEqual", e_bin_prio_order , ">=");
     ("op_LessThan"          , e_bin_prio_order , "<" );
     ("op_GreaterThan"       , e_bin_prio_order , ">" );
-    ("op_Modulus"           , e_bin_prio_order , "mod" );
 ]
 
 (* -------------------------------------------------------------------- *)
@@ -655,7 +657,7 @@ and doc_of_loc (lineno, file) =
     if (Options.no_location_info()) || Util.codegen_fsharp () || file=" dummy" then
         empty
     else
-        let file = BU.basename file in
+        let file = Filepath.basename file in
         reduce1 [ text "#"; num lineno; text ("\"" ^ file ^ "\"") ]
 
 (* -------------------------------------------------------------------- *)
@@ -777,41 +779,32 @@ let doc_of_mod1 (currentModule : mlsymbol) (m : mlmodule1) =
         doc_of_loc loc
 
 (* -------------------------------------------------------------------- *)
-let doc_of_mod (currentModule : mlsymbol) (m : mlmodule) =
+let doc_of_modbody (currentModule : mlsymbol) (m : mlmodulebody) =
     let docs = List.map (fun x ->
         let doc = doc_of_mod1 currentModule x in
         [doc; (match x.mlmodule1_m with | MLM_Loc _ -> empty | _ -> hardline); hardline]) m in
     reduce (List.flatten docs)
-
 (* -------------------------------------------------------------------- *)
-let doc_of_mllib_r (MLLib mllib) =
-    let rec for1_sig (x, sigmod, MLLib sub) =
+let doc_of_mlmodule_r (fsharp : bool) (mod : mlmodule) : doc =
+    let rec p_sig (mod : mlmodule) =
+        let x, sigmod = mod in
         let x = Util.flatten_mlpath x in
         let head = reduce1 [text "module"; text x; text ":"; text "sig"] in
         let tail = reduce1 [text "end"] in
         let doc  = Option.map (fun (s, _) -> doc_of_sig x s) sigmod in
-        let sub  = List.map for1_sig sub in
-        let sub  = List.map (fun x -> reduce [x; hardline; hardline]) sub in
 
         reduce [
             cat head hardline;
             (match doc with
              | None   -> empty
              | Some s -> cat s hardline);
-            reduce sub;
             cat tail hardline;
         ]
-    and for1_mod istop (mod_name, sigmod, MLLib sub) =
+
+    and p_mod istop mod =
+        let mod_name, sigmod = mod in
         let target_mod_name = Util.flatten_mlpath mod_name in
-        let maybe_open_pervasives =
-            match mod_name with
-            | ["FStar"], "Pervasives" -> []
-            | _ ->
-              let pervasives = Util.flatten_mlpath (["FStar"], "Pervasives") in
-              [hardline;
-               text ("open " ^ pervasives)]
-        in
-        let head = reduce1 (if Util.codegen_fsharp()
+        let head = reduce1 (if fsharp
                             then [text "module";  text target_mod_name]
                             else if not istop
                             then [text "module";  text target_mod_name; text "="; text "struct"]
@@ -819,34 +812,24 @@ let doc_of_mllib_r (MLLib mllib) =
         let tail = if not istop
                    then reduce1 [text "end"]
                    else reduce1 [] in
-        let doc  = Option.map (fun (_, m) -> doc_of_mod target_mod_name m) sigmod in
-        let sub  = List.map (for1_mod false)  sub in
-        let sub  = List.map (fun x -> reduce [x; hardline; hardline]) sub in
-        let prefix = if Util.codegen_fsharp() then [cat (text "#light \"off\"") hardline] else [] in
+        let doc  = Option.map (fun (_, m) -> doc_of_modbody target_mod_name m) sigmod in
+        let prefix = if fsharp then [cat (text "#light \"off\"") hardline] else [] in
         reduce <| (prefix @ [
             head;
             hardline;
-            text "open Prims"] @
-            maybe_open_pervasives @
-            [hardline;
             (match doc with
              | None   -> empty
              | Some s -> cat s hardline);
-            reduce sub;
             cat tail hardline;
         ])
-
     in
-
-    let docs = List.map (fun (x,s,m) ->
-      (Util.flatten_mlpath x,for1_mod true (x,s,m))) mllib in
-    docs
+    p_mod true mod
 
 (* -------------------------------------------------------------------- *)
 let pretty (sz : int) (Doc doc) = doc
 
-let doc_of_mllib mllib =
-    doc_of_mllib_r mllib
+let doc_of_mlmodule fsharp mlmodule =
+    doc_of_mlmodule_r fsharp mlmodule
 
 let string_of_mlexpr cmod (e:mlexpr) =
     let doc = doc_of_expr (Util.flatten_mlpath cmod) (min_op_prec, NonAssoc) e in

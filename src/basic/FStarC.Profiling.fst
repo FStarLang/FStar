@@ -15,12 +15,12 @@
 *)
 
 module FStarC.Profiling
-open FStar open FStarC
 open FStarC
 open FStarC.Effect
 module List = FStarC.List
 open FStarC.Options
 module BU = FStarC.Util
+module SMap = FStarC.SMap
 open FStarC.Json
 
 (*
@@ -48,21 +48,21 @@ let json_of_counter (c: counter) =
 (* Creating a new counter *)
 let new_counter cid = {
   cid = cid;
-  total_time = BU.mk_ref 0;
-  running = BU.mk_ref false;
-  undercount = BU.mk_ref false;
+  total_time = mk_ref 0;
+  running = mk_ref false;
+  undercount = mk_ref false;
 }
 
 (* A table of all profiling counters, indexed by their cids *)
-let all_counters : BU.smap counter = BU.smap_create 20
+let all_counters : SMap.smap counter = SMap.smap_create 20
 
 (* Returns the current counter for cid *)
 let create_or_lookup_counter cid =
-  match BU.smap_try_find all_counters cid with
+  match SMap.smap_try_find all_counters cid with
   | Some c -> c
   | None ->
     let c = new_counter cid in
-    BU.smap_add all_counters cid c;
+    SMap.add all_counters cid c;
     c
 
 (* Time an operation, if the the profiler is enabled *)
@@ -74,7 +74,7 @@ let profile  (f: unit -> 'a) (module_name:option string) (cid:string) : 'a =
        else begin
          try
            c.running := true; //mark the counter as running
-           let res, elapsed = BU.record_time_ns f in
+           let res, elapsed = Timing.record_ns f in
            c.total_time := !c.total_time + elapsed; //accumulate the time
            c.running := false; //finally mark the counter as not running
            res
@@ -116,9 +116,9 @@ let report tag c =
 (* Report all profiles and clear all counters *)
 let report_and_clear tag =
     let ctrs = //all the counters as a list
-      BU.smap_fold all_counters (fun _ v l -> v :: l) []
+      SMap.fold all_counters (fun _ v l -> v :: l) []
     in
-    BU.smap_clear all_counters; //remove them all
+    SMap.clear all_counters; //remove them all
     let ctrs = //sort counters in descending order by elapsed time
       BU.sort_with (fun c1 c2 -> !c2.total_time - !c1.total_time) ctrs
     in

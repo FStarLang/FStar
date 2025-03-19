@@ -18,7 +18,6 @@
 module FStarC.Path
 
 open FStarC.Class.Deq
-open FStarC.Class.Show
 
 type path a = list a
 

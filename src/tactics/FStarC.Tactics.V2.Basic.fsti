@@ -30,11 +30,8 @@ open FStarC.Reflection.V2.Data
 open FStarC.Tactics.Types
 open FStarC.Tactics.Monad
 
-module BU     = FStarC.Util
-module O      = FStarC.Options
 module Range  = FStarC.Range
 module Z      = FStarC.BigInt
-module TcComm = FStarC.TypeChecker.Common
 module Core   = FStarC.TypeChecker.Core
 module RD     = FStarC.Reflection.V2.Data
 
@@ -56,9 +53,9 @@ val tc                     : env -> term -> tac typ
 val tcc                    : env -> term -> tac comp
 val unshelve               : term -> tac unit
 val unquote                : typ -> term -> tac term
-val norm                   : list Pervasives.norm_step -> tac unit
-val norm_term_env          : env -> list Pervasives.norm_step -> term -> tac term
-val norm_binding_type      : list Pervasives.norm_step -> RD.binding -> tac unit
+val norm                   : list NormSteps.norm_step -> tac unit
+val norm_term_env          : env -> list NormSteps.norm_step -> term -> tac term
+val norm_binding_type      : list NormSteps.norm_step -> RD.binding -> tac unit
 val intro                  : unit -> tac RD.binding
 val intros                 : (max:Z.t) -> tac (list RD.binding)
 val intro_rec              : unit -> tac (RD.binding & RD.binding)
@@ -122,6 +119,7 @@ val free_uvars             : term -> tac (list Z.t)
 
 val all_ext_options        : unit -> tac (list (string & string))
 val ext_getv               : string -> tac string
+val ext_enabled            : string -> tac bool
 val ext_getns              : string -> tac (list (string & string))
 
 val alloc                  : 'a -> tac (tref 'a)
@@ -139,12 +137,12 @@ val refl_core_check_term_at_type      : env -> term -> typ -> tac (option Core.t
 val refl_tc_term                      : env -> term -> tac (option (term & (Core.tot_or_ghost & typ)) & issues)
 val refl_universe_of                  : env -> term -> tac (option universe & issues)
 val refl_check_prop_validity          : env -> term -> tac (option unit & issues)
-val refl_check_match_complete         : env -> term -> term -> list pattern -> tac (option (list pattern & list (list RD.binding)))
+val refl_check_match_complete         : env -> term -> term -> list pattern -> tac (option (list pattern & list (list RD.binding)) & issues)
 val refl_instantiate_implicits        : env -> term -> expected_typ:option term -> tac (option (list (bv & typ) & term & typ) & issues)
 val refl_try_unify                    : env -> list (bv & typ) -> term -> term -> tac (option (list (bv & term)) & issues)
 val refl_maybe_relate_after_unfolding : env -> term -> term -> tac (option Core.side & issues)
 val refl_maybe_unfold_head            : env -> term -> tac (option term & issues)
-val refl_norm_well_typed_term         : env -> list norm_step -> term -> tac term
+val refl_norm_well_typed_term         : env -> list NormSteps.norm_step -> term -> tac term
 
 val push_open_namespace               : env -> list string -> tac env
 val push_module_abbrev                : env -> string -> list string -> tac env

@@ -26,7 +26,6 @@ module DLL = DoublyLinkedList
 
 module HS = FStar.HyperStack
 module HST = FStar.HyperStack.ST
-module G = FStar.Ghost
 module L = FStar.List.Pure
 module B = LowStar.Buffer
 

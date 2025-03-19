@@ -19,11 +19,10 @@
 //////////////////////////////////////////////////////////////////////////
 
 module FStarC.TypeChecker.Rel
-open FStar.Pervasives
+
+open FStarC
 open FStarC.Effect
 open FStarC.List
-open FStar open FStarC
-open FStarC
 open FStarC.Util
 open FStarC.Errors
 open FStarC.Defensive
@@ -31,6 +30,7 @@ open FStarC.TypeChecker
 open FStarC.Syntax
 open FStarC.TypeChecker.Env
 open FStarC.Syntax.Syntax
+open FStarC.Syntax.Print {}
 open FStarC.Syntax.Subst
 open FStarC.Ident
 open FStarC.TypeChecker.Common
@@ -474,7 +474,7 @@ let set_logical (b:bool) = function
 
 let is_top_level_prob p = p_reason p |> List.length = 1
 let next_pid =
-    let ctr = BU.mk_ref 0 in
+    let ctr = mk_ref 0 in
     fun () -> incr ctr; !ctr
 
 (* Creates a subproblem of [orig], in a context extended with [scope]. *)
@@ -2184,6 +2184,29 @@ type reveal_hide_t =
   | Hide of (universe & typ & term)
   | Reveal of (universe & typ & term)
 
+let payload_of_hide_reveal h args : option (universe & typ & term) =
+  match h.n, args with
+  | Tm_uinst(_, [u]), [(ty, Some ({ aqual_implicit = true })); (t, _)] ->
+    Some (u, ty, t)
+  | _ -> None
+
+let is_reveal_or_hide t =
+  let h, args = U.head_and_args t in
+  if U.is_fvar PC.reveal h
+  then match payload_of_hide_reveal h args with
+        | None -> None
+        | Some t -> Some (Reveal t)
+  else if U.is_fvar PC.hide h
+  then match payload_of_hide_reveal h args with
+        | None -> None
+        | Some t -> Some (Hide t)
+  else None
+                
+let mk_fv_app g lid u args r =
+  let fv = Env.fvar_of_nonqual_lid g lid in
+  let head = S.mk_Tm_uinst fv [u]  in
+  S.mk_Tm_app head args r
+
 (******************************************************************************************************)
 (* Main solving algorithm begins here *)
 (******************************************************************************************************)
@@ -2210,7 +2233,7 @@ let rec solve (probs :worklist) : solution =
           | _ -> false
         in
         let maybe_expand (tp:tprob) : tprob =
-          if Options.Ext.get "__unrefine" <> "" && tp.relation = SUB && is_expand_uvar tp.rhs
+          if Options.Ext.enabled "__unrefine" && tp.relation = SUB && is_expand_uvar tp.rhs
           then
             let lhs = tp.lhs in
             let lhs_norm = N.unfold_whnf' [Env.DontUnfoldAttr [PC.do_not_unrefine_attr]] (p_env probs hd) lhs in
@@ -2757,6 +2780,8 @@ and solve_binders (bs1:binders) (bs2:binders) (orig:prob) (wl:worklist)
        match a1, a2 with
        | Some (Implicit b1), Some (Implicit b2) ->
          true //we don't care about comparing the dot qualifier in this context
+       | Some Equality, None | None, Some Equality ->
+         true // also don't care about the equality qualifier
        | _ ->
          U.eq_bqual a1 a2
    in
@@ -3602,12 +3627,7 @@ and solve_t' (problem:tprob) (wl:worklist) : solution =
                       let wl = solve_prob orig (Some formula) [] wl in
                       solve (attempt subprobs wl))
               in
-              let unfold_and_retry d wl (prob, reason) =
-                   if !dbg_Rel
-                   then BU.print2 "Failed to solve %s because a sub-problem is not solvable without SMT because %s"
-                                (prob_to_string env orig)
-                                (Thunk.force reason);
-                   let env = p_env wl prob in
+              let unfold_and_retry d wl env =
                    match N.unfold_head_once env t1,
                          N.unfold_head_once env t2
                    with
@@ -3633,7 +3653,31 @@ and solve_t' (problem:tprob) (wl:worklist) : solution =
                        solve_t torig' wl
                      end
                    | _ ->
-                     solve_sub_probs env wl //fallback to trying to solve with SMT on
+                      solve_sub_probs env wl //fallback to trying to solve with SMT on
+              in
+              let try_reveal_reveal_or_retry d wl (prob, reason) =
+                if !dbg_Rel
+                then BU.print2 "Failed to solve %s because a sub-problem is not solvable without SMT because %s"
+                            (prob_to_string env orig)
+                            (Thunk.force reason);
+                let env = p_env wl prob in
+                match is_reveal_or_hide t1, is_reveal_or_hide t2 with
+                // reveal ?u =?= reveal t   ~~>   ?u =?= hide (reveal t)
+                | Some (Reveal (u, ty, lhs)), Some (Reveal _) when is_flex lhs ->
+                  let rhs = mk_fv_app env PC.hide u [(ty, S.as_aqual_implicit true); (t2, None)] t2.pos in
+                  let torig' = { torig with lhs; rhs } in
+                  (if !dbg_Rel then BU.print1 "reveal-reveal heuristic: %s\n" (prob_to_string env (TProb torig')));
+                  solve_t torig' wl
+                // reveal t =?= reveal ?u   ~~>   hide (reveal t) =?= ?u
+                | Some (Reveal _), Some (Reveal (u, ty, rhs)) when is_flex rhs ->
+                  let lhs = mk_fv_app env PC.hide u [(ty, S.as_aqual_implicit true); (t1, None)] t1.pos in
+                  let torig' = { torig with lhs; rhs } in
+                  (if !dbg_Rel then BU.print1 "reveal-reveal heuristic: %s\n" (prob_to_string env (TProb torig')));
+                  solve_t torig' wl
+                | _ ->
+                  match d with
+                  | Some d -> unfold_and_retry d wl env
+                  | None -> solve_sub_probs env wl //fallback to trying to solve with SMT on
               in
               let d = decr_delta_depth <| delta_depth_of_term env head1 in
               let treat_as_injective =
@@ -3642,17 +3686,13 @@ and solve_t' (problem:tprob) (wl:worklist) : solution =
                   Env.fv_has_attr env fv PC.unifier_hint_injective_lid
                 | _ -> false
               in
-              begin
-              match d with
-              | Some d when wl.smt_ok && not treat_as_injective ->
+              let is_reveal = U.is_fvar PC.reveal head1 || U.is_fvar PC.reveal head2 in
+              if Some? d && wl.smt_ok && not treat_as_injective || is_reveal then
                 try_solve_without_smt_or_else wl
                     solve_sub_probs_no_smt
-                    (unfold_and_retry d)
-
-              | _ -> //cannot be unfolded or no smt anyway; so just try to solve extensionally
+                    (try_reveal_reveal_or_retry d)
+              else //cannot be unfolded or no smt anyway; so just try to solve extensionally
                 solve_sub_probs env wl
-
-              end
 
             | _ ->
               let lhs = force_refinement (base1, refinement1) in
@@ -3874,29 +3914,7 @@ and solve_t' (problem:tprob) (wl:worklist) : solution =
                 //  by generating reveal (hide ?u) == reveal y
                 //  and simplifying it to       ?u == reveal y
                 //
-                let payload_of_hide_reveal h args : option (universe & typ & term) =
-                    match h.n, args with
-                    | Tm_uinst(_, [u]), [(ty, Some ({ aqual_implicit = true })); (t, _)] ->
-                      Some (u, ty, t)
-                    | _ -> None
-                in
-                let is_reveal_or_hide t =
-                  let h, args = U.head_and_args t in
-                  if U.is_fvar PC.reveal h
-                  then match payload_of_hide_reveal h args with
-                       | None -> None
-                       | Some t -> Some (Reveal t)
-                  else if U.is_fvar PC.hide h
-                  then match payload_of_hide_reveal h args with
-                       | None -> None
-                       | Some t -> Some (Hide t)
-                  else None
-                in
-                let mk_fv_app lid u args r =
-                  let fv = Env.fvar_of_nonqual_lid wl.tcenv lid in
-                  let head = S.mk_Tm_uinst fv [u]  in
-                  S.mk_Tm_app head args r
-                in
+                let mk_fv_app = mk_fv_app wl.tcenv in
                 match is_reveal_or_hide t1, is_reveal_or_hide t2 with
                 (* We only apply these first two rules when the arg to reveal
                 is a flex, to avoid loops such as:
@@ -4836,13 +4854,13 @@ let solve_and_commit wl err
   if !dbg_RelBench then
     BU.print1 "solving problems %s {\n"
       (FStarC.Common.string_of_list (fun p -> string_of_int (p_pid p)) wl.attempting);
-  let (sol, ms) = BU.record_time_ms (fun () -> solve wl) in
+  let (sol, ms) = Timing.record_ms (fun () -> solve wl) in
   if !dbg_RelBench then
     BU.print1 "} solved in %s ms\n" (string_of_int ms);
 
   match sol with
     | Success (deferred, defer_to_tac, implicits) ->
-      let ((), ms) = BU.record_time_ms (fun () -> UF.commit tx) in
+      let ((), ms) = Timing.record_ms (fun () -> UF.commit tx) in
       if !dbg_RelBench then
         BU.print1 "committed in %s ms\n" (string_of_int ms);
       Some (deferred, defer_to_tac, implicits)
@@ -4925,7 +4943,7 @@ let sub_or_eq_comp env (use_eq:bool) c1 c2 =
     let wl = { wl with repr_subcomp_allowed = true } in
     let prob = CProb prob in
     def_check_prob "sub_comp" prob;
-    let (r, ms) = BU.record_time_ms
+    let (r, ms) = Timing.record_ms
                   (fun () -> with_guard env prob <| solve_and_commit (singleton wl prob true)  (fun _ -> None))
     in
     if !dbg_Rel || !dbg_RelTop || !dbg_RelBench then
@@ -5558,7 +5576,7 @@ let resolve_implicits' env is_tac is_gen (implicits:Env.implicits)
   in
   (* tcresolve is also the only tactic we ever run for an open problem. *)
   let meta_tac_allowed_for_open_problem tac = cacheable tac in
-  let __meta_arg_cache : ref (list (term & env_t & typ & term)) = BU.mk_ref [] in
+  let __meta_arg_cache : ref (list (term & env_t & typ & term)) = mk_ref [] in
   let meta_arg_cache_result (tac : term) (e : env_t) (ty : term) (res : term) : unit =
     __meta_arg_cache := (tac, e, ty, res) :: !__meta_arg_cache
   in
@@ -5642,7 +5660,7 @@ let resolve_implicits' env is_tac is_gen (implicits:Env.implicits)
             BU.print1 "Deferring implicit due to open ctx/typ %s\n" (show ctx_u);
           until_fixpoint ((hd, Implicit_unresolved)::out, changed, defer_open_metas) tl
         ) else if is_open && not (meta_tac_allowed_for_open_problem tac)
-            && Options.Ext.get "compat:open_metas" = "" then ( // i.e. compat option unset
+            && not (Options.Ext.enabled "compat:open_metas") then ( // i.e. compat option unset
           (* If the tactic is not explicitly whitelisted to run with open problems,
           then defer. *)
           until_fixpoint ((hd, Implicit_unresolved)::out, changed, defer_open_metas) tl

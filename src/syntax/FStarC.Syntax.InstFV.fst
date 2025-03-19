@@ -14,7 +14,6 @@
    limitations under the License.
 *)
 module FStarC.Syntax.InstFV
-open FStar.Pervasives
 open FStarC.Effect
 open FStarC.Syntax.Syntax
 open FStarC.Ident

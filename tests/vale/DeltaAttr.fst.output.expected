@@ -1,0 +1,171 @@
+Module after desugaring:
+module DeltaAttr
+Declarations: [
+irreducible
+let myattr = ()
+irreducible
+let otherattr = ()
+let normalize steps x =
+  (FStar.Stubs.Tactics.V2.Builtins.dup ();
+    FStar.Tactics.V2.Derived.exact (quote x);
+    FStar.Stubs.Tactics.V2.Builtins.norm steps;
+    FStar.Tactics.V2.Derived.trefl ())
+  <:
+  FStar.Tactics.Effect.Tac Prims.unit
+[@@ DeltaAttr.myattr]
+let add_1 x = x + 1 <: Prims.int
+[@@ DeltaAttr.myattr]
+let sub_1 x = x - 1 <: Prims.int
+[@@ DeltaAttr.otherattr]
+let add x = x + x <: Prims.int
+let test_1 x =
+  FStar.Tactics.Effect.synth_by_tactic (fun _ ->
+        DeltaAttr.normalize [FStar.NormSteps.delta_attr ["DeltaAttr.myattr"]]
+          (DeltaAttr.add (DeltaAttr.sub_1 (DeltaAttr.add_1 x))))
+  <:
+  Prims.int
+let test_2 x =
+  FStar.Tactics.Effect.synth_by_tactic (fun _ ->
+        DeltaAttr.normalize [FStar.NormSteps.delta_attr ["DeltaAttr.otherattr"]]
+          (DeltaAttr.add (DeltaAttr.sub_1 (DeltaAttr.add_1 x))))
+  <:
+  Prims.int
+let test_3 x =
+  FStar.Tactics.Effect.synth_by_tactic (fun _ ->
+        DeltaAttr.normalize [FStar.NormSteps.delta_attr ["DeltaAttr.myattr"; "DeltaAttr.otherattr"]]
+          (DeltaAttr.add (DeltaAttr.sub_1 (DeltaAttr.add_1 x))))
+  <:
+  Prims.int
+let test_3' x =
+  FStar.Tactics.Effect.synth_by_tactic (fun _ ->
+        DeltaAttr.normalize [
+            FStar.NormSteps.delta_attr ["DeltaAttr.myattr"];
+            FStar.NormSteps.delta_attr ["DeltaAttr.otherattr"]
+          ]
+          (DeltaAttr.add (DeltaAttr.sub_1 (DeltaAttr.add_1 x))))
+  <:
+  Prims.int
+let test_4 x =
+  FStar.Tactics.Effect.synth_by_tactic (fun _ ->
+        DeltaAttr.normalize [
+            FStar.NormSteps.delta_attr ["DeltaAttr.myattr"];
+            FStar.NormSteps.delta_only ["DeltaAttr.add"]
+          ]
+          (DeltaAttr.add (DeltaAttr.sub_1 (DeltaAttr.add_1 x))))
+  <:
+  Prims.int
+let test_5 x =
+  FStar.Tactics.Effect.synth_by_tactic (fun _ ->
+        DeltaAttr.normalize [
+            FStar.NormSteps.delta_only ["DeltaAttr.add"];
+            FStar.NormSteps.delta_only ["DeltaAttr.add_1"];
+            FStar.NormSteps.delta_only ["DeltaAttr.sub_1"]
+          ]
+          (DeltaAttr.add (DeltaAttr.sub_1 (DeltaAttr.add_1 x))))
+  <:
+  Prims.int
+]
+
+Module before type checking:
+module DeltaAttr
+Declarations: [
+irreducible
+let myattr = ()
+irreducible
+let otherattr = ()
+let normalize steps x =
+  (FStar.Stubs.Tactics.V2.Builtins.dup ();
+    FStar.Tactics.V2.Derived.exact (quote x);
+    FStar.Stubs.Tactics.V2.Builtins.norm steps;
+    FStar.Tactics.V2.Derived.trefl ())
+  <:
+  FStar.Tactics.Effect.Tac Prims.unit
+[@@ DeltaAttr.myattr]
+let add_1 x = x + 1 <: Prims.int
+[@@ DeltaAttr.myattr]
+let sub_1 x = x - 1 <: Prims.int
+[@@ DeltaAttr.otherattr]
+let add x = x + x <: Prims.int
+let test_1 x =
+  FStar.Tactics.Effect.synth_by_tactic (fun _ ->
+        DeltaAttr.normalize [FStar.NormSteps.delta_attr ["DeltaAttr.myattr"]]
+          (DeltaAttr.add (DeltaAttr.sub_1 (DeltaAttr.add_1 x))))
+  <:
+  Prims.int
+let test_2 x =
+  FStar.Tactics.Effect.synth_by_tactic (fun _ ->
+        DeltaAttr.normalize [FStar.NormSteps.delta_attr ["DeltaAttr.otherattr"]]
+          (DeltaAttr.add (DeltaAttr.sub_1 (DeltaAttr.add_1 x))))
+  <:
+  Prims.int
+let test_3 x =
+  FStar.Tactics.Effect.synth_by_tactic (fun _ ->
+        DeltaAttr.normalize [FStar.NormSteps.delta_attr ["DeltaAttr.myattr"; "DeltaAttr.otherattr"]]
+          (DeltaAttr.add (DeltaAttr.sub_1 (DeltaAttr.add_1 x))))
+  <:
+  Prims.int
+let test_3' x =
+  FStar.Tactics.Effect.synth_by_tactic (fun _ ->
+        DeltaAttr.normalize [
+            FStar.NormSteps.delta_attr ["DeltaAttr.myattr"];
+            FStar.NormSteps.delta_attr ["DeltaAttr.otherattr"]
+          ]
+          (DeltaAttr.add (DeltaAttr.sub_1 (DeltaAttr.add_1 x))))
+  <:
+  Prims.int
+let test_4 x =
+  FStar.Tactics.Effect.synth_by_tactic (fun _ ->
+        DeltaAttr.normalize [
+            FStar.NormSteps.delta_attr ["DeltaAttr.myattr"];
+            FStar.NormSteps.delta_only ["DeltaAttr.add"]
+          ]
+          (DeltaAttr.add (DeltaAttr.sub_1 (DeltaAttr.add_1 x))))
+  <:
+  Prims.int
+let test_5 x =
+  FStar.Tactics.Effect.synth_by_tactic (fun _ ->
+        DeltaAttr.normalize [
+            FStar.NormSteps.delta_only ["DeltaAttr.add"];
+            FStar.NormSteps.delta_only ["DeltaAttr.add_1"];
+            FStar.NormSteps.delta_only ["DeltaAttr.sub_1"]
+          ]
+          (DeltaAttr.add (DeltaAttr.sub_1 (DeltaAttr.add_1 x))))
+  <:
+  Prims.int
+]
+
+Module after type checking:
+module DeltaAttr
+Declarations: [
+irreducible
+let myattr = ()
+irreducible
+let otherattr = ()
+let normalize steps x =
+  (FStar.Stubs.Tactics.V2.Builtins.dup ();
+    (let _ = quote x in
+      FStar.Tactics.V2.Derived.exact _);
+    FStar.Stubs.Tactics.V2.Builtins.norm steps;
+    FStar.Tactics.V2.Derived.trefl ())
+  <:
+  FStar.Tactics.Effect.Tac Prims.unit
+[@@ DeltaAttr.myattr]
+let add_1 x = x + 1 <: Prims.int
+[@@ DeltaAttr.myattr]
+let sub_1 x = x - 1 <: Prims.int
+[@@ DeltaAttr.otherattr]
+let add x = x + x <: Prims.int
+let test_1 x = DeltaAttr.add (x + 1 - 1) <: Prims.int
+let test_2 x =
+  DeltaAttr.sub_1 (DeltaAttr.add_1 x) + DeltaAttr.sub_1 (DeltaAttr.add_1 x) <: Prims.int
+let test_3 x = x + 1 - 1 + (x + 1 - 1) <: Prims.int
+let test_3' x = x + 1 - 1 + (x + 1 - 1) <: Prims.int
+let test_4 x = x + 1 - 1 + (x + 1 - 1) <: Prims.int
+let test_5 x = x + 1 - 1 + (x + 1 - 1) <: Prims.int
+]
+
+* Warning 274:
+  - Implicitly opening namespace 'fstar.' shadows module 'calc' in file
+    "Calc.fst".
+  - Rename "Calc.fst" to avoid conflicts.
+

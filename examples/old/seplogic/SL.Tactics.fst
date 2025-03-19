@@ -25,26 +25,6 @@ open FStar.Tactics.V2
 
 #reset-options "--using_facts_from '* -FStar.Tactics +FStar.Tactics.Result +FStar.Tactics.Types'"
 
-let unfold_fns :list string = [
-  "wp_command";
-  "wpsep_command";
-  "lift_wpsep";
-  "uu___is_Return";
-  "uu___is_Bind";
-  "uu___is_Read";
-  "uu___is_Write";
-  "uu___is_Alloc";
-  "__proj__Return__item__v";
-  "__proj__Bind__item__c1";
-  "__proj__Bind__item__c2";
-  "__proj__Read__item__id";
-  "__proj__Write__item__id";
-  "__proj__Write__item__v"
-]
-
-unfold let unfold_steps :list string =
-  List.Tot.map (fun s -> "Lang." ^ s) unfold_fns
-
 (*
  * If we have (p /\ q) ==> r, this tactic will push p and q, separately, into the context
  *)

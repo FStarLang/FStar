@@ -14,18 +14,11 @@
    limitations under the License.
 *)
 module FStarC.Parser.Dep
-open FStarC.Effect
-open FStar open FStarC
+
 open FStarC
-open FStarC.Parser
-open FStarC.Parser.AST
+open FStarC.Effect
 open FStarC.Util
-open FStarC.Const
-open FStar.String
 open FStarC.Ident
-open FStarC.Errors
-module Const = FStarC.Parser.Const
-module BU = FStarC.Util
 
 type open_kind = | Open_module | Open_namespace
 type module_name = string
@@ -36,10 +29,7 @@ val lowercase_module_name : string -> string
 
 val build_inclusion_candidates_list : unit -> list (string & string)
 
-val core_modules (_: unit) : list string
-(* Given a filename, returns the list of automatically opened modules
-and namespaces *)
-val hard_coded_dependencies : string -> list (lident & open_kind)
+val prelude : list (open_kind & lid)
 
 val is_interface: string -> bool
 val is_implementation: string -> bool

@@ -14,11 +14,10 @@
    limitations under the License.
 *)
 module FStarC.TypeChecker.DMFF
-open FStar.Pervasives
+
+open FStarC
 open FStarC.Effect
 open FStarC.List
-open FStar open FStarC
-open FStarC
 open FStarC.TypeChecker
 open FStarC.TypeChecker.Common
 open FStarC.TypeChecker.Env
@@ -27,6 +26,7 @@ open FStarC.Ident
 open FStarC.Errors
 open FStarC.Syntax
 open FStarC.Syntax.Syntax
+open FStarC.Syntax.Print {}
 open FStarC.Syntax.Subst
 open FStarC.Syntax.Util
 open FStarC.Const
@@ -47,12 +47,10 @@ module S  = FStarC.Syntax.Syntax
 module SS = FStarC.Syntax.Subst
 module N  = FStarC.TypeChecker.Normalize
 module TcComm = FStarC.TypeChecker.Common
-module TcUtil = FStarC.TypeChecker.Util
 module TcTerm = FStarC.TypeChecker.TcTerm
 module BU = FStarC.Util //basic util
 module U  = FStarC.Syntax.Util
 module PC = FStarC.Parser.Const
-module TEQ = FStarC.TypeChecker.TermEqAndSimplify
 
 open FStarC.Class.Setlike
 
@@ -142,7 +140,7 @@ let gen_wps_for_free
 
   // The [register] function accumulates the top-level definitions that are
   // generated in the course of producing WP combinators
-  let sigelts = BU.mk_ref [] in
+  let sigelts = mk_ref [] in
   let register env lident def =
     let sigelt, fv = mk_toplevel_definition env lident def in
     let sigelt = { sigelt with sigmeta={sigelt.sigmeta with sigmeta_admit=true}} in
@@ -1414,7 +1412,7 @@ let cps_and_elaborate (env:FStarC.TypeChecker.Env.env) (ed:S.eff_decl)
   in
   let _ = recheck_debug "turned into the effect signature" env effect_signature in
 
-  let sigelts = BU.mk_ref [] in
+  let sigelts = mk_ref [] in
   let mk_lid name : lident = U.dm4f_lid ed name in
 
   // TODO: we assume that reading the top-level definitions in the order that

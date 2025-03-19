@@ -31,7 +31,6 @@ open FStar.HyperStack
 open FStar.HyperStack.ST
 
 module U8 = FStar.UInt8
-module U16 = FStar.UInt16
 module U32 = FStar.UInt32
 
 (*! Pure model *)

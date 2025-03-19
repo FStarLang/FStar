@@ -235,9 +235,7 @@ jobs:
 
       - name: Build
         run: |
-          NPROC=$(nproc)
-          if [ $NPROC -gt 16 ]; then NPROC=16; fi
-          make -C hacl-star -skj${NPROC}
+          make -C hacl-star -skj$(nproc)
 
       - uses: mtzguido/gci-upload@master
         with:
@@ -248,7 +246,6 @@ jobs:
     runs-on: ubuntu-latest
     container: mtzguido/dev-base
     needs:
-      - build-krml
       - build-hacl
     steps:
       - name: Cleanup
@@ -273,7 +270,7 @@ jobs:
       - name: Get Vale (again)
         run: ./hacl-star/tools/get_vale.sh
 
-      - run: sudo apt-get install -y libssl-dev
+      - run: sudo apt-get update && sudo apt-get install -y libssl-dev
 
       - name: Test
         run: make -C hacl-star -skj$(nproc) test
@@ -308,9 +305,7 @@ jobs:
 
       - name: Build
         run: |
-          NPROC=$(nproc)
-          if [ $NPROC -gt 16 ]; then NPROC=16; fi
-          make -C everparse -skj${NPROC}
+          make -C everparse -skj$(nproc)
 
       - uses: mtzguido/gci-upload@master
         with:
@@ -321,7 +316,6 @@ jobs:
     runs-on: ubuntu-latest
     container: mtzguido/dev-base
     needs:
-      - build-krml
       - build-everparse
     steps:
       - name: Cleanup
@@ -381,9 +375,7 @@ jobs:
 
       - name: Build
         run: |
-          NPROC=$(nproc)
-          if [ $NPROC -gt 16 ]; then NPROC=16; fi
-          make -C merkle-tree -skj${NPROC} dist/libmerkletree.a
+          make -C merkle-tree -skj$(nproc) dist/libmerkletree.a
 
       - uses: mtzguido/gci-upload@master
         with:
@@ -393,8 +385,6 @@ jobs:
     runs-on: ubuntu-latest
     container: mtzguido/dev-base
     needs:
-      - build-krml
-      - build-hacl
       - build-merkle-tree
     steps:
       - name: Cleanup
@@ -472,9 +462,6 @@ jobs:
     runs-on: ubuntu-latest
     container: mtzguido/dev-base
     needs:
-      - build-krml
-      - build-hacl
-      - build-everparse
       - build-mitls-fstar
     steps:
       - name: Cleanup
@@ -561,3 +548,116 @@ jobs:
         with:
           name: everparse-cbor
           path: everparse
+
+  build-everquic-crypto:
+    runs-on: ubuntu-latest
+    container: mtzguido/dev-base
+    needs:
+      - build-krml
+      - build-hacl
+      - build-everparse
+    steps:
+      - name: Cleanup
+        run: sudo find . -delete
+      - run: echo "HOME=/home/user" >> $GITHUB_ENV
+      - uses: mtzguido/set-opam-env@master
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: fstar.tar.gz
+      - run: tar -xzf fstar.tar.gz
+      - run: echo "FSTAR_EXE=$(pwd)/fstar/bin/fstar.exe" >> $GITHUB_ENV
+
+      - uses: mtzguido/gci-download@master
+        with:
+          name: karamel
+
+      - uses: mtzguido/gci-download@master
+        with:
+          name: hacl-star
+
+      - uses: mtzguido/gci-download@master
+        with:
+          name: everparse
+
+      - name: Checkout everquic-crypto
+        uses: actions/checkout@master
+        with:
+          path: everquic-crypto/
+          repository: project-everest/everquic-crypto
+
+      - name: Build
+        run: |
+          make -C everquic-crypto -skj$(nproc) dist/libeverquic.a
+
+      - uses: mtzguido/gci-upload@master
+        with:
+          name: everquic-crypto
+
+  test-everquic-crypto:
+    runs-on: ubuntu-latest
+    container: mtzguido/dev-base
+    needs:
+      - build-everquic-crypto
+    steps:
+      - name: Cleanup
+        run: sudo find . -delete
+      - run: echo "HOME=/home/user" >> $GITHUB_ENV
+      - uses: mtzguido/set-opam-env@master
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: fstar.tar.gz
+      - run: tar -xzf fstar.tar.gz
+      - run: echo "FSTAR_EXE=$(pwd)/fstar/bin/fstar.exe" >> $GITHUB_ENV
+
+      - uses: mtzguido/gci-download@master
+        with:
+          name: karamel
+
+      - uses: mtzguido/gci-download@master
+        with:
+          name: hacl-star
+
+      - uses: mtzguido/gci-download@master
+        with:
+          name: everquic-crypto
+
+      - name: Test
+        run: make -C everquic-crypto -skj$(nproc) test
+
+  build-starmalloc:
+    runs-on: ubuntu-latest
+    container: mtzguido/dev-base
+    needs:
+      - build-krml
+      - build-steel
+    steps:
+      - name: Cleanup
+        run: sudo find . -delete
+      - run: echo "HOME=/home/user" >> $GITHUB_ENV
+      - uses: mtzguido/set-opam-env@master
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: fstar.tar.gz
+      - run: tar -xzf fstar.tar.gz
+      - run: echo "FSTAR_EXE=$(pwd)/fstar/bin/fstar.exe" >> $GITHUB_ENV
+
+      - name: Checkout steel
+        uses: actions/checkout@master
+        with:
+          path: starmalloc/
+          repository: Inria-Prosecco/starmalloc
+
+      - uses: mtzguido/gci-download@master
+        with:
+          name: karamel
+      - uses: mtzguido/gci-download@master
+        with:
+          name: steel
+
+      # AFAICT there are no starmalloc tests. Just `make all`
+      # to verify, extract, and build.
+      - name: Build
+        run: make -C starmalloc all -skj$(nproc)

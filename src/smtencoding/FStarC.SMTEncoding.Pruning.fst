@@ -15,7 +15,6 @@
 *)
 module FStarC.SMTEncoding.Pruning
 open FStarC.Effect
-open FStar open FStarC
 open FStar.List.Tot
 open FStarC
 open FStarC.SMTEncoding.Term
@@ -30,16 +29,16 @@ let triggers_as_triggers_set (ts:triggers) : triggers_set = List.map from_list t
 
 type pruning_state = {
   //A macro is a (define-fun f ... (body)); Maps macro name 'f' to the free names of its body
-  macro_freenames: BU.psmap (list string); 
+  macro_freenames: PSMap.t (list string); 
   // Maps trigger symbols to assumptions that have triggers that mention that symbol
   // E.g., given `A : forall x. {:pattern (p x; q x) \/ (p' x; q' x)} R`
   // trigger_to_assumption maps p -> A, q -> A, p' -> A, q' -> A
-  trigger_to_assumption: BU.psmap (list assumption);
+  trigger_to_assumption: PSMap.t (list assumption);
   // Maps assumption name to triggers that  "waiting" on it
   // E.g., in the example above, assumption_to_trigger contains A -> [[p;q]; [p';q']]
-  assumption_to_triggers: BU.psmap triggers_set;
+  assumption_to_triggers: PSMap.t triggers_set;
   // Maps assumption names to the assumptions themselves
-  assumption_name_map: BU.psmap decl;
+  assumption_name_map: PSMap.t decl;
   //assumptions with no triggers that will always included
   ambients: list string;
   //extra roots that will be added to the initial set of roots
@@ -47,20 +46,20 @@ type pruning_state = {
 }
 
 let debug (f: unit -> unit) : unit =
-  if Options.Ext.get "debug_context_pruning" <> ""
+  if Options.Ext.enabled "debug_context_pruning"
   then f()
 
 let print_pruning_state (p:pruning_state)
 : string
 = let t_to_a =
-    BU.psmap_fold
+    PSMap.fold
       p.trigger_to_assumption
       (fun k v (acc:list (string & int)) -> (k, List.length v) :: acc)
       []
   in
   let t_to_a = BU.sort_with (fun x y -> snd x - snd y) t_to_a in
   let a_to_t =
-    BU.psmap_fold
+    PSMap.fold
       p.assumption_to_triggers
       (fun k v acc ->
         BU.format2 "[%s -> %s]" 
@@ -69,7 +68,7 @@ let print_pruning_state (p:pruning_state)
       []
   in
   let macros =
-    BU.psmap_fold
+    PSMap.fold
       p.macro_freenames
       (fun k v acc ->
         BU.format2 "[%s -> %s]" 
@@ -87,20 +86,20 @@ instance show_pruning_state: showable pruning_state = { show = print_pruning_sta
 (* Initial state: everything is empty *)
 let init
 : pruning_state 
-= { macro_freenames = BU.psmap_empty ();
-    trigger_to_assumption = BU.psmap_empty ();
-    assumption_to_triggers = BU.psmap_empty ();
-    assumption_name_map = BU.psmap_empty ();
+= { macro_freenames = PSMap.empty ();
+    trigger_to_assumption = PSMap.empty ();
+    assumption_to_triggers = PSMap.empty ();
+    assumption_name_map = PSMap.empty ();
     ambients=[];
     extra_roots=[] }
 
 (* Add: trig -> a*)
 let add_trigger_to_assumption (a:assumption) (p:pruning_state) (trig:string)
 : pruning_state
-= match BU.psmap_try_find p.trigger_to_assumption trig with
+= match PSMap.try_find p.trigger_to_assumption trig with
   | None -> 
-    { p with trigger_to_assumption = BU.psmap_add p.trigger_to_assumption trig [a] }
-  | Some l -> { p with trigger_to_assumption = BU.psmap_add p.trigger_to_assumption trig (a::l) }
+    { p with trigger_to_assumption = PSMap.add p.trigger_to_assumption trig [a] }
+  | Some l -> { p with trigger_to_assumption = PSMap.add p.trigger_to_assumption trig (a::l) }
 
 // Names that are excluded from the set of free names
 // Since they are very common and are not useful to scan as triggers
@@ -149,7 +148,7 @@ let maybe_add_ambient (a:assumption) (p:pruning_state)
     let p = 
       { p with
         assumption_to_triggers=
-        BU.psmap_add p.assumption_to_triggers a.assumption_name triggers}
+        PSMap.add p.assumption_to_triggers a.assumption_name triggers}
     in
     List.fold_left (List.fold_left (add_trigger_to_assumption a)) p (List.map elems triggers)
   in
@@ -275,21 +274,21 @@ let maybe_add_ambient (a:assumption) (p:pruning_state)
 // Otherwise, use the custom logic for ambients
 let add_assumption_to_triggers (a:assumption) (p:pruning_state) (trigs:triggers_set)
 : pruning_state
-= let p = { p with assumption_name_map = BU.psmap_add p.assumption_name_map a.assumption_name (Assume a) } in
+= let p = { p with assumption_name_map = PSMap.add p.assumption_name_map a.assumption_name (Assume a) } in
   match trigs with
   | [] -> maybe_add_ambient a p
-  | _ -> { p with assumption_to_triggers = BU.psmap_add p.assumption_to_triggers a.assumption_name trigs }
+  | _ -> { p with assumption_to_triggers = PSMap.add p.assumption_to_triggers a.assumption_name trigs }
 
 // Mark a trigger as reached; removing it from the trigger map
 let trigger_reached (p:pruning_state) (trig:string)
 : pruning_state
-= { p with trigger_to_assumption = BU.psmap_remove p.trigger_to_assumption trig }
+= { p with trigger_to_assumption = PSMap.remove p.trigger_to_assumption trig }
 
 // remove one trigger from waiting triggers of aname
 // if aname now has an empty set of triggers, return true, marking it as reachable/eligible
 let remove_trigger_for_assumption (p:pruning_state) (trig:string) (aname:string)
 : pruning_state & bool
-= match BU.psmap_try_find p.assumption_to_triggers aname with
+= match PSMap.try_find p.assumption_to_triggers aname with
   | None ->
     // debug (fun _ -> BU.print2 "Removing trigger %s for assumption %s---no assumption found\n" trig aname);
     p, false
@@ -301,7 +300,7 @@ let remove_trigger_for_assumption (p:pruning_state) (trig:string) (aname:string)
     // debug (fun _ ->
     //   BU.print5 "Removing trigger %s for assumption %s---eligible? %s, original triggers %s, remaining triggers %s\n"
     //     trig aname (show eligible) (show l) (show remaining_triggers));
-    { p with assumption_to_triggers = BU.psmap_add p.assumption_to_triggers aname remaining_triggers },
+    { p with assumption_to_triggers = PSMap.add p.assumption_to_triggers aname remaining_triggers },
     eligible
 
 let rec assumptions_of_decl (d:decl)
@@ -323,7 +322,7 @@ let rec add_decl (d:decl) (p:pruning_state)
   | Module (_, ds) -> List.fold_left (fun p d -> add_decl d p) p ds
   | DefineFun(macro, _, _, body, _) ->
     let free_names = elems (free_top_level_names body) in
-    let p = { p with macro_freenames = BU.psmap_add p.macro_freenames macro free_names } in
+    let p = { p with macro_freenames = PSMap.add p.macro_freenames macro free_names } in
     p
   | _ -> p
     
@@ -359,7 +358,7 @@ let mark_trigger_reached (x:sym)
 let find_assumptions_waiting_on_trigger (x:sym)
 : st (list assumption)
 = let! ctxt = get in
-  match BU.psmap_try_find ctxt.p.trigger_to_assumption x with
+  match PSMap.try_find ctxt.p.trigger_to_assumption x with
   | None -> return []
   | Some l -> return l
 
@@ -368,7 +367,7 @@ let find_assumptions_waiting_on_trigger (x:sym)
 let reached_assumption (aname:string)
 : st unit
 = let! ctxt = get in
-  let p = { ctxt.p with assumption_to_triggers = BU.psmap_remove ctxt.p.assumption_to_triggers aname } in
+  let p = { ctxt.p with assumption_to_triggers = PSMap.remove ctxt.p.assumption_to_triggers aname } in
   put {ctxt with reached=add aname ctxt.reached }
 
 // Remove trigger x from assumption a, and return true if a is now eligible
@@ -410,7 +409,7 @@ let rec scan (ds:list assumption)
 : st unit
 = let! ctxt = get in
   let macro_expand (s:sym) : list sym =
-    match BU.psmap_try_find ctxt.p.macro_freenames s with
+    match PSMap.try_find ctxt.p.macro_freenames s with
     | None -> [s]
     | Some l -> s::l
   in
@@ -456,12 +455,12 @@ let prune (p:pruning_state) (roots:list decl)
   let reached_assumptions =
     List.collect
       (fun name ->
-        match BU.psmap_try_find ctxt.p.assumption_name_map name with
+        match PSMap.try_find ctxt.p.assumption_name_map name with
         | None -> []
         | Some a -> [a]) 
       (reached_names@p.ambients)
   in
-  // if Options.Ext.get "debug_context_pruning" <> ""
+  // if Options.Ext.enabled "debug_context_pruning"
   // then (
   //   BU.print1 "Retained %s assumptions\n" (show (List.length reached_assumptions))
   // );

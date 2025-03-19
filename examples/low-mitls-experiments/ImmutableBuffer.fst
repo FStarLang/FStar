@@ -19,7 +19,6 @@ module B = LowStar.Buffer
 module HS = FStar.HyperStack
 module HST = FStar.HyperStack.ST
 module Seq = FStar.Seq
-module U32 = FStar.UInt32
 
 module IB = LowStar.ImmutableBuffer
 

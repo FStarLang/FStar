@@ -28,11 +28,21 @@ instance showable_string : showable string =
 }
 
 instance show_list (a:Type) (_ : showable a) : Tot (showable (list a)) = {
-  show = FStarC.Common.string_of_list show;
+  show =
+    (fun l ->
+      let rec show_list_aux = (fun l ->
+        match l with
+        | [] -> ""
+        | [x] -> show x
+        | x::xs -> show x ^ ", " ^ show_list_aux xs
+      ) in
+      "[" ^ show_list_aux l ^ "]"
+    );
 }
 
 instance show_option (a:Type) (_ : showable a) : Tot (showable (option a)) = {
-  show = FStarC.Common.string_of_option show;
+  show = (function None -> "None"
+                 | Some x -> "Some " ^ show x);
 }
 
 instance show_either

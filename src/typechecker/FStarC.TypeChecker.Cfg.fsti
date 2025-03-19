@@ -15,10 +15,8 @@
 *)
 
 module FStarC.TypeChecker.Cfg
-open FStarC.Effect
-open FStar open FStarC
+
 open FStarC
-open FStarC.Util
 open FStar.String
 open FStarC.Const
 open FStar.Char
@@ -35,15 +33,8 @@ open FStarC.Class.Show
 open FStarC.Class.Deq
 
 module S  = FStarC.Syntax.Syntax
-module SS = FStarC.Syntax.Subst
-module BU = FStarC.Util
-module FC = FStarC.Const
-module PC = FStarC.Parser.Const
-module U  = FStarC.Syntax.Util
 module I  = FStarC.Ident
 module EMB = FStarC.Syntax.Embeddings
-module Z = FStarC.BigInt
-module NBE = FStarC.TypeChecker.NBETerm
 
 type fsteps = {
      beta : bool;
@@ -108,7 +99,7 @@ type cfg = {
      tcenv: Env.env;
      debug: debug_switches;
      delta_level: list Env.delta_level;  // Controls how much unfolding of definitions should be performed
-     primitive_steps:BU.psmap primitive_step;
+     primitive_steps:PSMap.t primitive_step;
      strong : bool;                       // under a binder
      memoize_lazy : bool;     (* What exactly is this? Seems to be always true now. *)
      normalize_pure_lets: bool;
@@ -138,8 +129,8 @@ val find_prim_step: cfg -> fv -> option primitive_step
 // val embed_simple: EMB.embedding 'a -> Range.range -> 'a -> term
 // val try_unembed_simple: EMB.embedding 'a -> term -> option 'a
 
-val built_in_primitive_steps : BU.psmap primitive_step
-val simplification_steps (env:Env.env_t): BU.psmap primitive_step
+val built_in_primitive_steps : PSMap.t primitive_step
+val simplification_steps (env:Env.env_t): PSMap.t primitive_step
 
 val register_plugin : primitive_step -> unit
 val register_extra_step : primitive_step -> unit
@@ -153,4 +144,4 @@ val config: list step -> Env.env -> cfg
 
 val should_reduce_local_let : cfg -> letbinding -> bool
 
-val translate_norm_steps: list Pervasives.norm_step -> list Env.step
+val translate_norm_steps: list NormSteps.norm_step -> list Env.step

@@ -18,7 +18,6 @@ module FStar.DM4F.Heap
 open FStar.Classical
 open FStar.Set
 
-module F = FStar.FunctionalExtensionality
 
 (* Heap is a tuple of a source of freshness (the no. of the next
    reference to be allocated) and a mapping of allocated raw

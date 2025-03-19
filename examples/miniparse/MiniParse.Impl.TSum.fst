@@ -18,7 +18,6 @@ include MiniParse.Impl.Combinators
 include MiniParse.Spec.TSum
 
 module B = LowStar.Buffer
-module M = LowStar.ModifiesPat
 module U32 = FStar.UInt32
 module HST = FStar.HyperStack.ST
 

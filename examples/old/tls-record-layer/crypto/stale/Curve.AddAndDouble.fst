@@ -27,9 +27,7 @@ open Curve.Bigint
 open Curve.Bignum
 open Curve.Point
 
-module U8  = FStar.UInt8
 module U32 = FStar.UInt32
-module U64 = FStar.UInt64
 module U128 = FStar.UInt128
 module HS = FStar.HyperStack
 

@@ -2,7 +2,6 @@ module FStarC.TypeChecker.Primops.MachineInts
 
 (* Primops about machine integers *)
 
-open FStar open FStarC
 open FStarC
 open FStarC.Effect
 open FStar.Char

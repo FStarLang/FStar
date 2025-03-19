@@ -31,9 +31,7 @@ open C.Loops
 
 module B = FStar.Buffer
 
-module U16 = FStar.UInt16
 module U32 = FStar.UInt32
-module I32 = FStar.Int32
 module Cast = FStar.Int.Cast
 
 (*** API to access validated but unparsed key-value buffer *)

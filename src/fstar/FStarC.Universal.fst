@@ -16,10 +16,8 @@
 
 //Top-level invocations into the universal type-checker FStarC.TypeChecker
 module FStarC.Universal
-open FStar.Pervasives
 open FStarC.Effect
 open FStarC.List
-open FStar open FStarC
 open FStarC
 open FStarC.Errors
 open FStarC.Util
@@ -97,14 +95,14 @@ let parse (env:uenv) (pre_fn: option string) (fn:string)
     | Some pre_fn ->
         let pre_ast, _ = Parser.Driver.parse_file pre_fn in
         match pre_ast, ast with
-        | Parser.AST.Interface (lid1, decls1, _), Parser.AST.Module (lid2, decls2)
+        | Parser.AST.Interface {mname=lid1; decls=decls1}, Parser.AST.Module {mname=lid2; decls=decls2}
           when Ident.lid_equals lid1 lid2 ->
           let _, env =
             with_dsenv_of_env env (FStarC.ToSyntax.Interleave.initialize_interface lid1 decls1)
           in
           with_dsenv_of_env env (FStarC.ToSyntax.Interleave.interleave_module ast true)
 
-        | Parser.AST.Interface (lid1, _, _), Parser.AST.Module (lid2, _) ->
+        | Parser.AST.Interface {mname=lid1}, Parser.AST.Interface {mname=lid2} ->
           (* Names do not match *)
           Errors.raise_error lid1
             Errors.Fatal_PreModuleMismatch
@@ -183,8 +181,8 @@ let tc_one_fragment curmod (env:TcEnv.env_t) frag =
 
   let range_of_first_mod_decl modul =
     match modul with
-    | Parser.AST.Module (_, { Parser.AST.drange = d } :: _)
-    | Parser.AST.Interface (_, { Parser.AST.drange = d } :: _, _) -> d
+    | Parser.AST.Module {decls = d :: _} -> d.drange
+    | Parser.AST.Interface {decls = d :: _} -> d.drange
     | _ -> Range.dummyRange in
 
   let filter_lang_decls (d:FStarC.Parser.AST.decl) =
@@ -220,8 +218,8 @@ let tc_one_fragment curmod (env:TcEnv.env_t) frag =
         let open FStarC.Parser.AST in
         let decls =
           match ast_modul with
-          | Module (_, decls)
-          | Interface (_, decls, _) -> decls
+          | Module {decls}
+          | Interface {decls} -> decls
         in
         List.filter filter_lang_decls decls
       in
@@ -254,7 +252,14 @@ let tc_one_fragment curmod (env:TcEnv.env_t) frag =
     //We already have a parsed decl, usually from FStarC.Interactive.Incremental
     match d.d with
     | FStarC.Parser.AST.TopLevelModule lid ->
-      check_module_name_declaration (FStarC.Parser.AST.Module(lid, [d]))
+      let no_prelude =
+        d.attrs |> List.existsb (function t ->
+          match t.tm with
+          | Const (FStarC.Const.Const_string ("no_prelude", _)) -> true
+          | _ -> false)
+      in
+      let modul = Parser.AST.Module { mname = lid; decls = [d]; no_prelude } in
+      check_module_name_declaration modul
     | _ -> 
       check_decls [d]
   )
@@ -281,7 +286,7 @@ let tc_one_fragment curmod (env:TcEnv.env_t) frag =
 let load_interface_decls env interface_file_name : TcEnv.env_t =
   let r = Pars.parse None (Pars.Filename interface_file_name) in
   match r with
-  | Pars.ASTFragment (Inl (FStarC.Parser.AST.Interface(l, decls, _)), _) ->
+  | Pars.ASTFragment (Inl (FStarC.Parser.AST.Interface {mname=l; decls}), _) ->
     snd (with_dsenv_of_tcenv env <| FStarC.ToSyntax.Interleave.initialize_interface l decls)
   | Pars.ASTFragment _ ->
     Errors.raise_error0 FStarC.Errors.Fatal_ParseErrors
@@ -297,7 +302,7 @@ let load_interface_decls env interface_file_name : TcEnv.env_t =
 (***********************************************************************)
 
 (* Extraction to OCaml, F# or Krml *)
-let emit dep_graph (mllibs:list (uenv & MLSyntax.mllib)) =
+let emit dep_graph (mllib : list (uenv & MLSyntax.mlmodule)) =
   let opt = Options.codegen () in
   let fail #a () : a = failwith ("Unrecognized extraction backend: " ^ show opt) in
   if opt <> None then
@@ -310,14 +315,38 @@ let emit dep_graph (mllibs:list (uenv & MLSyntax.mllib)) =
       | Some Options.Extension -> ".ast"
       | _ -> fail ()
     in
+
+    (* The output filename can be overriden with -o, but see the length checks below
+    so we only allow this if a single file is going to be extracted, otherwise we would
+    clobber them. *)
+    let ofile (basename : string) =
+      match Options.output_to () with
+      | Some fn -> fn
+      | None -> Find.prepend_output_dir basename
+    in
+
     match opt with
     | Some Options.FSharp | Some Options.OCaml | Some Options.Plugin | Some Options.PluginNoLib ->
-      (* When bootstrapped in F#, this will use the old printer in
-         FStarC.Extraction.ML.Code for both OCaml and F# extraction.
-         When bootstarpped in OCaml, this will use the old printer
-         for F# extraction and the new printer for OCaml extraction. *)
-      let outdir = Options.output_dir() in
-      List.iter (FStarC.Extraction.ML.PrintML.print outdir ext) (List.map snd mllibs)
+      let printer =
+        if opt = Some Options.FSharp
+        then FStarC.Extraction.ML.PrintFS.print_fs
+        else FStarC.Extraction.ML.PrintML.print_ml
+      in
+
+      if Some? (Options.output_to ()) && List.length mllib > 1 then
+        raise_error0 Errors.Fatal_OptionsNotCompatible [
+          text "Cannot provide -o and extract multiple modules";
+          text "Please use -o with a single module, or specify an output directory with --odir";
+        ];
+
+      mllib |> List.iter (fun (_, mlmodule) ->
+        let p, _ = mlmodule in
+        let filename =
+          let basename = FStarC.Extraction.ML.Util.flatten_mlpath p ^ ext in
+          ofile basename
+        in
+        let ml = printer mlmodule in
+        write_file filename ml)
 
     | Some Options.Extension ->
       //
@@ -325,28 +354,35 @@ let emit dep_graph (mllibs:list (uenv & MLSyntax.mllib)) =
       //   in the binary format to a file
       // The first component is the list of dependencies
       //
+      if Some? (Options.output_to ()) && List.length mllib > 1 then
+        raise_error0 Errors.Fatal_OptionsNotCompatible [
+          text "Cannot provide -o and extract multiple modules";
+          text "Please use -o with a single module, or specify an output directory with --odir";
+        ];
+
+      mllib |>
       List.iter (fun (env, m) ->
-        let MLSyntax.MLLib ms = m in
-        List.iter (fun m ->
-          let mname, modul, _ = m in
-          let filename = String.concat "_" (fst mname @ [snd mname]) in
-          match modul with
-          | Some (_, decls) ->
-            let bindings = FStarC.Extraction.ML.UEnv.bindings_of_uenv env in
-            let deps : list string = Dep.deps_of_modul dep_graph (MLSyntax.string_of_mlpath mname) in
-            save_value_to_file (Find.prepend_output_dir (filename^ext)) (deps, bindings, decls)
-          | None ->
-            failwith "Unexpected ml modul in Extension extraction mode"
-        ) ms
-      ) mllibs
+        let mname, modul = m in
+        let filename =
+          let basename = FStarC.Extraction.ML.Util.flatten_mlpath mname ^ ext in
+          ofile basename
+        in
+        match modul with
+        | Some (_, decls) ->
+          let bindings = FStarC.Extraction.ML.UEnv.bindings_of_uenv env in
+          let deps : list string = Dep.deps_of_modul dep_graph (MLSyntax.string_of_mlpath mname) in
+          save_value_to_file filename (deps, bindings, decls)
+        | None ->
+          failwith "Unexpected ml modul in Extension extraction mode"
+      )
 
     | Some Options.Krml ->
       let programs =
-        mllibs |> List.collect (fun (ue, mllibs) ->
-                                  Extraction.Krml.translate ue mllibs)
+        mllib |> List.collect (fun (ue, m) -> Extraction.Krml.translate ue [m])
       in
       let bin: Extraction.Krml.binary_format = Extraction.Krml.current_version, programs in
       let oname : string =
+        (* note: -o implies --krmloutput *)
         match Options.krmloutput () with
         | Some fname -> fname (* NB: no prepending odir nor adding extension, user chose a explicit path *)
         | _ ->
@@ -364,17 +400,15 @@ let tc_one_file
         (fn:string) //file name
         (parsing_data:FStarC.Parser.Dep.parsing_data)  //passed by the caller, ONLY for caching purposes at this point
     : tc_result
-    & option MLSyntax.mllib
+    & option MLSyntax.mlmodule
     & uenv =
   GenSym.reset_gensym();
 
   (*
-   * AR: smt encode_modul functions are now here instead of in Tc.fs
-   *     this is common smt postprocessing for fresh module and module read from cache
+   * AR: this is common smt postprocessing for fresh module and module read from cache
    *)
-  let maybe_restore_opts () : unit =
-    if not (Options.interactive ()) then
-      Options.restore_cmd_line_options true |> ignore
+  let restore_opts () : unit =
+    Options.restore_cmd_line_options true |> ignore
   in
   let maybe_extract_mldefs tcmod env =
     match Options.codegen() with
@@ -382,7 +416,7 @@ let tc_one_file
     | Some tgt ->
       if not (Options.should_extract (string_of_lid tcmod.name) tgt)
       then None, 0
-      else FStarC.Util.record_time_ms (fun () ->
+      else Timing.record_ms (fun () ->
             with_env env (fun env ->
               let _, defs = FStarC.Extraction.ML.Modul.extract env tcmod in
               defs)
@@ -392,7 +426,7 @@ let tc_one_file
       if Options.codegen() = None
       then env, 0
       else
-        FStarC.Util.record_time_ms (fun () ->
+        Timing.record_ms (fun () ->
             let env, _ = with_env env (fun env ->
                   FStarC.Extraction.ML.Modul.extract_iface env tcmod) in
             env
@@ -415,7 +449,7 @@ let tc_one_file
                  in
                  let modul, env = Tc.check_module tcenv fmod (is_some pre_fn) in
                  //AR: encode the module to to smt
-                 maybe_restore_opts ();
+                 restore_opts ();
                  let smt_decls =
                    if not (Options.lax())
                    then FStarC.SMTEncoding.Encode.encode_modul env modul
@@ -444,11 +478,7 @@ let tc_one_file
           extracted_defs,
           env
       in
-      if (Options.should_verify (string_of_lid fmod.name) //if we're verifying this module
-            && (FStarC.Options.record_hints() //and if we're recording or using hints
-                || FStarC.Options.use_hints()))
-      then SMT.with_hints_db (Pars.find_file fn) check_mod
-      else check_mod () //don't add a hints file for modules that are not actually verified
+      SMT.with_hints_db (Pars.find_file fn) check_mod
   in
   if not (Options.cache_off()) then
       let r = Ch.load_module_from_cache (tcenv_of_uenv env) fn in
@@ -456,8 +486,18 @@ let tc_one_file
         (* If --force and this file was given in the command line,
          * forget about the cache we just loaded and recheck the file.
          * Note: we do the call above anyway since load_module_from_cache
-         * sets some internal state about dependencies. *)
-        if Options.force () && Options.should_check_file fn
+         * sets some internal state about dependencies.
+         *
+         * We do the same if we were called with --output and --cache_checked_modules
+         * (-o, -c) and without codegen. This means the user is asking to generate a checked
+         * file into the file provided by -o, so we should not be loading anything.
+         * If codegen was given, the the user wants an ml/krml file, and it is fine
+         * to load the cache.
+         *)
+        if Options.should_check_file fn && (
+             Options.force () ||
+             (Some? (Options.output_to ()) && None? (Options.codegen ()))
+           )
         then None
         else r
       in
@@ -495,7 +535,6 @@ let tc_one_file
         then BU.print1 "Module after type checking:\n%s\n" (show tcmod);
 
         let extend_tcenv tcmod tcenv =
-            FStarC.SMTEncoding.Z3.refresh None;
             let _, tcenv =
                 with_dsenv_of_tcenv tcenv <|
                     FStarC.ToSyntax.ToSyntax.add_modul_to_env
@@ -504,7 +543,7 @@ let tc_one_file
                         (FStarC.TypeChecker.Normalize.erase_universes tcenv)
             in
             let env = FStarC.TypeChecker.Tc.load_checked_module tcenv tcmod in
-            maybe_restore_opts ();
+            restore_opts ();
             //AR: encode smt module and do post processing
             if (not (Options.lax())) then begin
               FStarC.SMTEncoding.Encode.encode_modul_from_cache env tcmod smt_decls
@@ -560,12 +599,12 @@ let needs_interleaving intf impl =
   let m1 = Parser.Dep.lowercase_module_name intf in
   let m2 = Parser.Dep.lowercase_module_name impl in
   m1 = m2 &&
-  List.mem (FStarC.Util.get_file_extension intf) ["fsti"; "fsi"] &&
-  List.mem (FStarC.Util.get_file_extension impl) ["fst"; "fs"]
+  List.mem (Filepath.get_file_extension intf) ["fsti"; "fsi"] &&
+  List.mem (Filepath.get_file_extension impl) ["fst"; "fs"]
 
 let tc_one_file_from_remaining (remaining:list string) (env:uenv)
                                (deps:FStarC.Parser.Dep.deps)  //used to query parsing data
-  : list string & tc_result & option MLSyntax.mllib & uenv
+  : list string & tc_result & option MLSyntax.mlmodule & uenv
   =
   let remaining, (nmods, mllib, env) =
     match remaining with
@@ -583,7 +622,7 @@ let tc_one_file_from_remaining (remaining:list string) (env:uenv)
 
 let rec tc_fold_interleave (deps:FStarC.Parser.Dep.deps)  //used to query parsing data
                            (acc:list tc_result &
-                                list (uenv & MLSyntax.mllib) &  // initial env in which this module is extracted
+                                list (uenv & MLSyntax.mlmodule) &  // initial env in which this module is extracted
                                 uenv)
                            (remaining:list string) =
   let as_list env mllib =

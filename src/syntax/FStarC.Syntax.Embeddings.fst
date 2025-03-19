@@ -16,9 +16,7 @@
 
 module FStarC.Syntax.Embeddings
 
-open FStar
 open FStarC
-open FStar.Pervasives
 open FStarC.Effect
 open FStarC.Syntax.Syntax
 open FStarC.Range
@@ -31,17 +29,13 @@ module C     = FStarC.Const
 module Err   = FStarC.Errors
 module Ident = FStarC.Ident
 module PC    = FStarC.Parser.Const
-module Print = FStarC.Syntax.Print
 module S     = FStarC.Syntax.Syntax
 module SS    = FStarC.Syntax.Subst
 module U     = FStarC.Syntax.Util
-module UF    = FStarC.Syntax.Unionfind
 module Z     = FStarC.BigInt
 
+open FStarC.Syntax.Print {}
 open FStarC.Syntax.Embeddings.Base
-module AE = FStarC.Syntax.Embeddings.AppEmb
-
-friend FStar.Pervasives (* To expose norm_step *)
 
 (*********************************************************************
 
@@ -807,11 +801,12 @@ let steps_Unascribe     = tconst PC.steps_unascribe
 let steps_NBE           = tconst PC.steps_nbe
 let steps_Unmeta        = tconst PC.steps_unmeta
 
-let e_norm_step : embedding Pervasives.norm_step =
+let e_norm_step : embedding NormSteps.norm_step =
+  let open FStarC.NormSteps in
     let typ () = S.t_norm_step in
     let emb_t_norm_step () = ET_app (PC.norm_step_lid |> Ident.string_of_lid, []) in
     let printer _ = "norm_step" in
-    let em (n:Pervasives.norm_step) (rng:range) _shadow norm : term =
+    let em (n:NormSteps.norm_step) (rng:range) _shadow norm : term =
         lazy_embed
             printer
             emb_t_norm_step
@@ -868,7 +863,7 @@ let e_norm_step : embedding Pervasives.norm_step =
 
                 )
     in
-    let un (t:term) norm : option Pervasives.norm_step =
+    let un (t:term) norm : option NormSteps.norm_step =
         lazy_unembed
             printer
             emb_t_norm_step
@@ -1227,7 +1222,7 @@ let e___range =
         em
         un
         (fun () -> S.t___range)
-        Range.string_of_range
+        show
         (fun () -> ET_app (PC.range_lid |> Ident.string_of_lid, []))
 
 (* This is an odd one. We embed ranges as sealed, but we don't want to use the Sealed.sealed

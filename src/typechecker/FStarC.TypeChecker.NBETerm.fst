@@ -15,7 +15,6 @@
 *)
 
 module FStarC.TypeChecker.NBETerm
-open FStar open FStarC
 open FStarC
 open FStarC.Effect
 open FStarC.Syntax.Syntax
@@ -23,19 +22,17 @@ open FStarC.Errors
 open FStar.Char
 open FStar.String
 
-friend FStar.Pervasives (* To expose norm_step *)
-
 module PC = FStarC.Parser.Const
 module S = FStarC.Syntax.Syntax
-module P = FStarC.Syntax.Print
+module U = FStarC.Syntax.Util
 module BU = FStarC.Util
-module C = FStarC.Const
 module SE = FStarC.Syntax.Embeddings
 module TEQ = FStarC.TypeChecker.TermEqAndSimplify
 
 open FStarC.VConfig
 
 open FStarC.Class.Show
+open FStarC.Syntax.Print {}
 
 // NBE term manipulation
 
@@ -690,81 +687,81 @@ let e_unsupported #a : embedding a =
     mk_emb em un (fun () -> lid_as_typ PC.term_lid [] []) (fun () -> ET_abstract)
 
 let e_norm_step =
-    let em cb (n:Pervasives.norm_step) : t =
+    let em cb (n:NormSteps.norm_step) : t =
         match n with
-        | Pervasives.Simpl   -> mkFV (lid_as_fv PC.steps_simpl     None) [] []
-        | Pervasives.Weak    -> mkFV (lid_as_fv PC.steps_weak      None) [] []
-        | Pervasives.HNF     -> mkFV (lid_as_fv PC.steps_hnf       None) [] []
-        | Pervasives.Primops -> mkFV (lid_as_fv PC.steps_primops   None) [] []
-        | Pervasives.Delta   -> mkFV (lid_as_fv PC.steps_delta     None) [] []
-        | Pervasives.Zeta    -> mkFV (lid_as_fv PC.steps_zeta      None) [] []
-        | Pervasives.Iota    -> mkFV (lid_as_fv PC.steps_iota      None) [] []
-        | Pervasives.Reify   -> mkFV (lid_as_fv PC.steps_reify     None) [] []
-        | Pervasives.NBE     -> mkFV (lid_as_fv PC.steps_nbe       None) [] []
-        | Pervasives.UnfoldOnly l ->
+        | NormSteps.Simpl   -> mkFV (lid_as_fv PC.steps_simpl     None) [] []
+        | NormSteps.Weak    -> mkFV (lid_as_fv PC.steps_weak      None) [] []
+        | NormSteps.HNF     -> mkFV (lid_as_fv PC.steps_hnf       None) [] []
+        | NormSteps.Primops -> mkFV (lid_as_fv PC.steps_primops   None) [] []
+        | NormSteps.Delta   -> mkFV (lid_as_fv PC.steps_delta     None) [] []
+        | NormSteps.Zeta    -> mkFV (lid_as_fv PC.steps_zeta      None) [] []
+        | NormSteps.Iota    -> mkFV (lid_as_fv PC.steps_iota      None) [] []
+        | NormSteps.Reify   -> mkFV (lid_as_fv PC.steps_reify     None) [] []
+        | NormSteps.NBE     -> mkFV (lid_as_fv PC.steps_nbe       None) [] []
+        | NormSteps.UnfoldOnly l ->
                      mkFV (lid_as_fv PC.steps_unfoldonly None)
                           [] [as_arg (embed (e_list e_string) cb l)]
-        | Pervasives.UnfoldFully l ->
+        | NormSteps.UnfoldFully l ->
                      mkFV (lid_as_fv PC.steps_unfoldfully None)
                           [] [as_arg (embed (e_list e_string) cb l)]
-        | Pervasives.UnfoldAttr l ->
+        | NormSteps.UnfoldAttr l ->
                      mkFV (lid_as_fv PC.steps_unfoldattr None)
                           [] [as_arg (embed (e_list e_string) cb l)]
-        | Pervasives.UnfoldQual l ->
+        | NormSteps.UnfoldQual l ->
                      mkFV (lid_as_fv PC.steps_unfoldqual None)
                           [] [as_arg (embed (e_list e_string) cb l)]
-        | Pervasives.UnfoldNamespace l ->
+        | NormSteps.UnfoldNamespace l ->
                      mkFV (lid_as_fv PC.steps_unfoldnamespace None)
                           [] [as_arg (embed (e_list e_string) cb l)]
-        | Pervasives.ZetaFull -> mkFV (lid_as_fv PC.steps_zeta_full None) [] []
-        | Pervasives.Unascribe -> mkFV (lid_as_fv PC.steps_unascribe None) [] []
+        | NormSteps.ZetaFull -> mkFV (lid_as_fv PC.steps_zeta_full None) [] []
+        | NormSteps.Unascribe -> mkFV (lid_as_fv PC.steps_unascribe None) [] []
     in
-    let un cb (t0:t) : option Pervasives.norm_step =
+    let un cb (t0:t) : option NormSteps.norm_step =
         match t0.nbe_t with
         | FV (fv, _, []) when S.fv_eq_lid fv PC.steps_simpl ->
-            Some Pervasives.Simpl
+            Some NormSteps.Simpl
         | FV (fv, _, []) when S.fv_eq_lid fv PC.steps_weak ->
-            Some Pervasives.Weak
+            Some NormSteps.Weak
         | FV (fv, _, []) when S.fv_eq_lid fv PC.steps_hnf ->
-            Some Pervasives.HNF
+            Some NormSteps.HNF
         | FV (fv, _, []) when S.fv_eq_lid fv PC.steps_primops ->
-            Some Pervasives.Primops
+            Some NormSteps.Primops
         | FV (fv, _, []) when S.fv_eq_lid fv PC.steps_delta ->
-            Some Pervasives.Delta
+            Some NormSteps.Delta
         | FV (fv, _, []) when S.fv_eq_lid fv PC.steps_zeta ->
-            Some Pervasives.Zeta
+            Some NormSteps.Zeta
         | FV (fv, _, []) when S.fv_eq_lid fv PC.steps_iota ->
-            Some Pervasives.Iota
+            Some NormSteps.Iota
         | FV (fv, _, []) when S.fv_eq_lid fv PC.steps_nbe ->
-            Some Pervasives.NBE
+            Some NormSteps.NBE
         | FV (fv, _, []) when S.fv_eq_lid fv PC.steps_reify ->
-            Some Pervasives.Reify
+            Some NormSteps.Reify
         | FV (fv, _, []) when S.fv_eq_lid fv PC.steps_zeta_full ->
-            Some Pervasives.ZetaFull
+            Some NormSteps.ZetaFull
         | FV (fv, _, []) when S.fv_eq_lid fv PC.steps_unascribe ->
-            Some Pervasives.Unascribe
+            Some NormSteps.Unascribe
         | FV (fv, _, [(l, _)]) when S.fv_eq_lid fv PC.steps_unfoldonly ->
             BU.bind_opt (unembed (e_list e_string) cb l) (fun ss ->
-            Some <| Pervasives.UnfoldOnly ss)
+            Some <| NormSteps.UnfoldOnly ss)
         | FV (fv, _, [(l, _)]) when S.fv_eq_lid fv PC.steps_unfoldfully ->
             BU.bind_opt (unembed (e_list e_string) cb l) (fun ss ->
-            Some <| Pervasives.UnfoldFully ss)
+            Some <| NormSteps.UnfoldFully ss)
         | FV (fv, _, [(l, _)]) when S.fv_eq_lid fv PC.steps_unfoldattr ->
             BU.bind_opt (unembed (e_list e_string) cb l) (fun ss ->
-            Some <| Pervasives.UnfoldAttr ss)
+            Some <| NormSteps.UnfoldAttr ss)
         | FV (fv, _, [(l, _)]) when S.fv_eq_lid fv PC.steps_unfoldqual ->
             BU.bind_opt (unembed (e_list e_string) cb l) (fun ss ->
-            Some <| Pervasives.UnfoldQual ss)
+            Some <| NormSteps.UnfoldQual ss)
         | FV (fv, _, [(l, _)]) when S.fv_eq_lid fv PC.steps_unfoldnamespace ->
             BU.bind_opt (unembed (e_list e_string) cb l) (fun ss ->
-            Some <| Pervasives.UnfoldNamespace ss)
+            Some <| NormSteps.UnfoldNamespace ss)
         | _ ->
             Errors.log_issue0 Errors.Warning_NotEmbedded
               (BU.format1 "Not an embedded norm_step: %s" (t_to_string t0));
             None
     in
     mk_emb em un (fun () -> mkFV (lid_as_fv PC.norm_step_lid None) [] [])
-                 (SE.emb_typ_of norm_step)
+                 (SE.emb_typ_of NormSteps.norm_step)
 
 (* Interface for building primitive steps *)
 

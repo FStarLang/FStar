@@ -14,9 +14,6 @@
    limitations under the License.
 *)
 module FStarC.SMTEncoding.Encode
-open Prims
-open FStar open FStarC
-open FStar.Pervasives
 open FStarC.Effect
 open FStarC.List
 open FStarC
@@ -715,7 +712,7 @@ let encode_top_level_vals env bindings quals =
 exception Let_rec_unencodeable
 
 //Make a copy of all the mutable state of env_t, central place for keeping track of mutable fields in env_t
-let copy_env (en:env_t) = { en with global_cache = BU.smap_copy en.global_cache}
+let copy_env (en:env_t) = { en with global_cache = SMap.copy en.global_cache}
 
 let encode_top_level_let :
     env_t -> (bool & list letbinding) -> list qualifier -> decls_t & env_t =
@@ -943,7 +940,7 @@ let encode_top_level_let :
                     let app_is_prop = Term.mk_subtype_of_unit app in
                     if should_encode_logical
                     then (
-                      if is_sub_singleton && Options.Ext.get "retain_old_prop_typing" = ""
+                      if is_sub_singleton && not (Options.Ext.enabled "retain_old_prop_typing")
                       then (
                         Util.mkAssume(mkForall (S.range_of_lbname lbn)
                                             ([[app_is_prop]], vars, mkImp(mk_and_l binder_guards, mk_Valid <| app_is_prop)),
@@ -1221,7 +1218,7 @@ let encode_sig_inductive (env:env_t) (se:sigelt)
             let base_eqs = is_l::univ_eqs in
             let inversion_case, decls' =
               if injective_type_params
-              || Options.Ext.get "compat:injectivity" <> ""
+              || Options.Ext.enabled "compat:injectivity"
               then (
                 let _univs, data_t = Env.lookup_datacon env.tcenv l in
                 let args, res = U.arrow_formals data_t in
@@ -1348,7 +1345,7 @@ let encode_datacon (env:env_t) (se:sigelt)
   let s_fuel_tm = mkApp("SFuel", [fuel_tm]) in
   let vars, guards, env', binder_decls, names = encode_binders (Some fuel_tm) formals env in
   let injective_type_params =
-    injective_type_params || Options.Ext.get "compat:injectivity" <> ""
+    injective_type_params || Options.Ext.enabled "compat:injectivity"
   in
   let univ_fields =
           univs
@@ -1518,11 +1515,11 @@ let encode_datacon (env:env_t) (se:sigelt)
                               | Tm_fvar fv ->
                                 if BU.for_some (S.fv_eq_lid fv) mutuals
                                 then Some (bs, c)
-                                else if Options.Ext.get "compat:2954" <> ""
+                                else if Options.Ext.enabled "compat:2954"
                                 then (warn_compat(); Some (bs, c)) //compatibility mode
                                 else None
                               | _ ->
-                                if Options.Ext.get "compat:2954" <> ""
+                                if Options.Ext.enabled "compat:2954"
                                 then (warn_compat(); Some (bs, c)) //compatibility mode
                                 else None
                             )
@@ -1679,12 +1676,12 @@ let rec encode_sigelt (env:env_t) (se:sigelt) : (decls_t & env_t) =
             begin
             if !dbg_SMTEncoding then
               BU.print1 "Skipped encoding of %s\n" nm;
-            [Caption (BU.format1 "<Skipped %s/>" nm)] |> mk_decls_trivial
+            [Caption (BU.format1 "<Skipped %s/>" nm); EmptyLine] |> mk_decls_trivial
             end
 
          | _ -> ([Caption (BU.format1 "<Start encoding %s>" nm)] |> mk_decls_trivial)
                 @g
-                @([Caption (BU.format1 "</end encoding %s>" nm)] |> mk_decls_trivial) in
+                @([Caption (BU.format1 "</end encoding %s>" nm); EmptyLine] |> mk_decls_trivial) in
     g, env
 
 and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t & env_t) =
@@ -2043,14 +2040,14 @@ let encode_labels (labs:list error_label) =
     prefix, suffix
 
 (* caching encodings of the environment and the top-level API to the encoding *)
-let last_env : ref (list env_t) = BU.mk_ref []
-let init_env tcenv = last_env := [{bvar_bindings=BU.psmap_empty ();
-                                   fvar_bindings=(BU.psmap_empty (), []);
+let last_env : ref (list env_t) = mk_ref []
+let init_env tcenv = last_env := [{bvar_bindings=PSMap.empty ();
+                                   fvar_bindings=(PSMap.empty (), []);
                                    tcenv=tcenv; warn=true; depth=0;
                                    nolabels=false; use_zfuel_name=false;
                                    encode_non_total_function_typ=true; encoding_quantifier=false;
                                    current_module_name=Env.current_module tcenv |> Ident.string_of_lid;
-                                   global_cache = BU.smap_create 100}]
+                                   global_cache = SMap.create 100}]
 let get_env cmn tcenv = match !last_env with
     | [] -> failwith "No env; call init first!"
     | e::_ -> {e with tcenv=tcenv; current_module_name=Ident.string_of_lid cmn}
@@ -2125,11 +2122,11 @@ let recover_caching_and_update_env (env:env_t) (decls:decls_t) :decls_t =
   decls |> List.collect (fun elt ->
     if elt.key = None then [elt]  //not meant to be hashconsed, keep it
     else (
-      match BU.smap_try_find env.global_cache (elt.key |> BU.must) with
+      match SMap.try_find env.global_cache (elt.key |> BU.must) with
       | Some cache_elt -> [Term.RetainAssumptions cache_elt.a_names] |> mk_decls_trivial  //hit, retain a_names from the hit entry
                                                                                              //AND drop elt
       | None ->  //no hit, update cache and retain elt
-        BU.smap_add env.global_cache (elt.key |> BU.must) elt;
+        SMap.add env.global_cache (elt.key |> BU.must) elt;
         [elt]
     )
   )
@@ -2227,7 +2224,7 @@ let encode_query use_env_msg (tcenv:Env.env) (q:S.term)
     let env_decls, env = encode_env_bindings env bindings in
     if Debug.medium () || !dbg_SMTEncoding || !dbg_SMTQuery
     then BU.print1 "Encoding query formula {: %s\n" (show q);
-    let (phi, qdecls), ms = BU.record_time_ms (fun () -> encode_formula q env) in
+    let (phi, qdecls), ms = Timing.record_ms (fun () -> encode_formula q env) in
     let labels, phi = ErrorReporting.label_goals use_env_msg (Env.get_range tcenv) phi in
     let label_prefix, label_suffix = encode_labels labels in
     let caption =

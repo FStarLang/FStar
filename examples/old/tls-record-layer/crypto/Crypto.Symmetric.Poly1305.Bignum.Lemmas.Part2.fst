@@ -32,9 +32,6 @@ open Crypto.Symmetric.Poly1305.Bigint
 
 open Crypto.Symmetric.Poly1305.Bignum.Lemmas.Part1
 
-module U32 = FStar.UInt32
-module U64 = FStar.UInt64
-module HS = FStar.HyperStack
 
 #reset-options "--z3rlimit 20 --initial_fuel 0 --max_fuel 0"
 

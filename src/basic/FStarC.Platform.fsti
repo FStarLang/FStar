@@ -1,12 +1,23 @@
 module FStarC.Platform
+
 open FStarC.Effect
+include FStarC.Platform.Base
 
-type sys =
-| Windows
-| Posix
+open FStarC.Class.Show
+instance val showable_sys : showable sys
 
-val system : sys
+(* Running on Windows (not cygwin) *)
+val windows : bool
+
+(* Running on Cygwin. *)
+val cygwin : bool
+
+(* Running on a unix-like system *)
+val unix : bool
+
+(* Executable name for this platform, currently
+just appends '.exe' on Windows. *)
 val exe : string -> string
 
-(* true when we are running in Cygwin. Note: system will return 'Windows' in this case *)
-val is_cygwin : bool
+(* String used to separate paths in the OCAMLPATH environment variable. *)
+val ocamlpath_sep : string

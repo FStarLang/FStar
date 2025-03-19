@@ -20,13 +20,9 @@ module LowStar.BufferOps
    and notations into the scope without bringing any definition from
    LowStar.Buffer into the scope. *)
 
-module HS = FStar.HyperStack
 module HST = FStar.HyperStack.ST
-module U32 = FStar.UInt32
-module G = FStar.Ghost
 module Seq = FStar.Seq
 module B = LowStar.Buffer
-module L = FStar.List.Tot
 
 inline_for_extraction
 unfold

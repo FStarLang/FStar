@@ -18,7 +18,7 @@
 module FStar.Seq.Base
 //#set-options "--initial_fuel 0 --max_fuel 0 --initial_ifuel 1 --max_ifuel 1"
 
-module List = FStar.List.Tot
+module List = FStar.List.Tot.Base
 
 new val seq ([@@@strictly_positive] a : Type u#a) : Type u#a
 

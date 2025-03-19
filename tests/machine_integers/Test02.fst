@@ -11,7 +11,6 @@ module U8   = FStar.UInt8
 module U16  = FStar.UInt16
 module U32  = FStar.UInt32
 module U64  = FStar.UInt64
-module U128 = FStar.UInt128
 
 let main () =
     (* This is awkward, but the branching makes this VC hard for Z3. The integer

@@ -1,6 +1,5 @@
 module FStarC.TypeChecker.Normalize.Unfolding
 
-open FStar open FStarC
 open FStarC
 open FStarC.Effect
 open FStarC.List
@@ -12,16 +11,14 @@ module Common = FStarC.TypeChecker.Common
 module BU = FStarC.Util
 module Path = FStarC.Path
 module PC = FStarC.Parser.Const
-module Print = FStarC.Syntax.Print
 module S = FStarC.Syntax.Syntax
 module U = FStarC.Syntax.Util
-module TEQ = FStarC.TypeChecker.TermEqAndSimplify
 
 open FStarC.Class.Show
 
 (* Max number of warnings to print in a single run.
 Initialized in Normalize.normalize *)
-let plugin_unfold_warn_ctr : ref int = BU.mk_ref 0
+let plugin_unfold_warn_ctr : ref int = mk_ref 0
 
 let should_unfold cfg should_reify fv qninfo : should_unfold_res =
     let attrs =
@@ -89,6 +86,10 @@ let should_unfold cfg should_reify fv qninfo : should_unfold_res =
     | _, true when Some? cfg.steps.unfold_once && BU.for_some (fv_eq_lid fv) (Some?.v cfg.steps.unfold_once) ->
         log_unfolding cfg (fun () -> BU.print_string " >> UnfoldOnce\n");
         once
+
+    | Some (Inr ({sigattrs=attrs}, _), _), _ when cfg.steps.for_extraction && Some? (BU.find_map attrs Parser.Const.ExtractAs.is_extract_as_attr) ->
+        log_unfolding cfg (fun () -> BU.print_string " >> Has extract_as attribute and we're extracting, unfold!");
+        yes
 
     // Recursive lets may only be unfolded when Zeta is on
     | Some (Inr ({sigquals=qs; sigel=Sig_let {lbs=(is_rec, _)}}, _), _), _ when

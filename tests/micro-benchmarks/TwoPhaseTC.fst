@@ -18,7 +18,6 @@ module TwoPhaseTC
 #set-options "--ugly"
 
 open FStar.Classical
-module PropExt = FStar.PropositionalExtensionality
 
 #set-options "--max_fuel 0 --max_ifuel 0 --initial_fuel 0 --initial_ifuel 0"
 

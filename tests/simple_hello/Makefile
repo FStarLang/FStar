@@ -20,8 +20,11 @@ endif
 Hello.%.test: Hello.%
 	./$< | grep "Hello F\*!"
 
-%.ml: %.fst
-	$(FSTAR_EXE) --codegen OCaml $< --extract $* --z3version 4.13.3
+%.checked: %
+	$(FSTAR_EXE) $< --cache_checked_modules --z3version 4.13.3
+
+%.ml: %.fst.checked
+	$(FSTAR_EXE) --codegen OCaml $<
 
 %.exe: %.ml
 	$(FSTAR_EXE) --ocamlopt $< -o $@
@@ -31,3 +34,6 @@ Hello.%.test: Hello.%
 
 clean:
 	rm -f *.ml *.exe *.byte *.cm* *.o
+
+# Keep intermediate files
+.SECONDARY:

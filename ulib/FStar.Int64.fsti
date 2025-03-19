@@ -31,6 +31,8 @@ new val t : eqtype
 
 val v (x:t) : Tot (int_t n)
 
+let fits (x:int) : prop = Int.fits x n
+
 val int_to_t: x:int_t n -> Pure t
   (requires True)
   (ensures (fun y -> v y = x))

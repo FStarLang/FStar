@@ -16,7 +16,6 @@
 module FStarC.ToSyntax.ToSyntax
 open FStarC.Effect
 
-open FStar open FStarC
 open FStarC
 open FStarC.Util
 open FStarC.Syntax
@@ -28,12 +27,10 @@ open FStarC.Parser.AST
 open FStarC.Ident
 
 module S = FStarC.Syntax.Syntax
-module U = FStarC.Syntax.Util
 
 type extension_tosyntax_decl_t = env -> FStarC.Dyn.dyn -> lids:list lident -> Range.range -> list sigelt'
 val register_extension_tosyntax (lang_name:string) (cb:extension_tosyntax_decl_t) : unit
 
-val as_interface:            AST.modul -> AST.modul
 val desugar_term:            env -> term -> S.term
 val desugar_machine_integer: env -> repr:string
                            -> (FStarC.Const.signedness & FStarC.Const.width)

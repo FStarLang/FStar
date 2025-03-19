@@ -15,17 +15,16 @@
 *)
 
 module FStarC.CheckedFiles
-open FStar open FStarC
 open FStarC
 open FStarC.Effect
 open FStarC.Util
+open FStarC.SMap
 
 open FStarC.Class.Show
 
 (* Module abbreviations for the universal type-checker  *)
 module Syntax  = FStarC.Syntax.Syntax
 module TcEnv   = FStarC.TypeChecker.Env
-module SMT     = FStarC.SMTEncoding.Solver
 module BU      = FStarC.Util
 module Dep     = FStarC.Parser.Dep
 
@@ -36,7 +35,7 @@ let dbg = Debug.get_toggle "CheckedFiles"
  * detect when loading the cache that the version number is same
  * It needs to be kept in sync with Prims.fst
  *)
-let cache_version_number = 72
+let cache_version_number = 73
 
 (*
  * Abbreviation for what we store in the checked files (stages as described below)
@@ -108,7 +107,7 @@ type cache_t =
   either string Dep.parsing_data
 
 //Internal cache
-let mcache : smap cache_t = BU.smap_create 50
+let mcache : smap cache_t = SMap.create 50
 
 (*
  * Either the reason because of which dependences are stale/invalid
@@ -148,7 +147,7 @@ let hash_dependences (deps:Dep.deps) (fn:string) :either string (list (string & 
     match interface_checked_file_name with
     | None -> Inr (("source", source_hash)::out)
     | Some iface ->
-       (match BU.smap_try_find mcache iface with
+       (match SMap.try_find mcache iface with
        | None ->
          let msg = BU.format1
            "hash_dependences::the interface checked file %s does not exist\n"
@@ -175,7 +174,7 @@ let hash_dependences (deps:Dep.deps) (fn:string) :either string (list (string & 
      * See #1668
      *)
     let digest =
-      match BU.smap_try_find mcache cache_fn with
+      match SMap.try_find mcache cache_fn with
       | None ->
         let msg = BU.format2 "For dependency %s, cache file %s is not loaded" fn cache_fn in
         if !dbg
@@ -205,7 +204,7 @@ let hash_dependences (deps:Dep.deps) (fn:string) :either string (list (string & 
 let load_checked_file (fn:string) (checked_fn:string) :cache_t =
   if !dbg then
     BU.print1 "Trying to load checked file result %s\n" checked_fn;
-  let elt = checked_fn |> BU.smap_try_find mcache in
+  let elt = checked_fn |> SMap.try_find mcache in
   if elt |> is_some
   then (
     //already loaded
@@ -213,8 +212,8 @@ let load_checked_file (fn:string) (checked_fn:string) :cache_t =
       BU.print1 "Already loaded checked file %s\n" checked_fn;
     elt |> must
   ) else
-    let add_and_return elt = BU.smap_add mcache checked_fn elt; elt in
-    if not (BU.file_exists checked_fn)
+    let add_and_return elt = SMap.add mcache checked_fn elt; elt in
+    if not (Filepath.file_exists checked_fn)
     then let msg = BU.format1 "checked file %s does not exist" checked_fn in
          add_and_return (Invalid msg, Inl msg)
     else let entry :option checked_file_entry_stage1 = BU.load_value_from_file checked_fn in
@@ -274,7 +273,7 @@ let load_checked_file_with_tc_result
     match hash_dependences deps fn with
     | Inl msg ->
       let elt = (Invalid msg, parsing_data) in
-      BU.smap_add mcache checked_fn elt;
+      SMap.add mcache checked_fn elt;
       Inl msg
     | Inr deps_dig' ->
       let deps_dig, tc_result = checked_fn |> load_tc_result' in
@@ -282,7 +281,7 @@ let load_checked_file_with_tc_result
       then begin
         //mark the tc data of the file as valid
         let elt = (Valid (BU.digest_of_file checked_fn), parsing_data) in
-        BU.smap_add mcache checked_fn elt;
+        SMap.add mcache checked_fn elt;
         (*
          * if there exists an interface for it, mark that too as valid
          * this is specially needed for extraction invocations of F* with --cmi flag
@@ -311,9 +310,9 @@ let load_checked_file_with_tc_result
           | Some iface ->
             try
               let iface_checked_fn = iface |> Dep.cache_file_name in
-              match BU.smap_try_find mcache iface_checked_fn with
+              match SMap.try_find mcache iface_checked_fn with
               | Some (Unknown, parsing_data) ->
-                BU.smap_add mcache
+                SMap.add mcache
                   iface_checked_fn
                   (Valid (BU.digest_of_file iface_checked_fn), parsing_data)
               | _ -> ()
@@ -326,10 +325,10 @@ let load_checked_file_with_tc_result
       else begin
         if !dbg
         then begin
-          BU.print4 "FAILING to load.\nExpected (%s) hashes:\n%s\n\nGot (%s) hashes:\n\t%s\n"
-            (BU.string_of_int (List.length deps_dig'))
+          BU.print4 "FAILING to load.\nHashes computed (%s):\n%s\n\nHashes read (%s):\n%s\n"
+            (show (List.length deps_dig'))
             (FStarC.Parser.Dep.print_digest deps_dig')
-            (BU.string_of_int (List.length deps_dig))
+            (show (List.length deps_dig))
             (FStarC.Parser.Dep.print_digest deps_dig);
           if List.length deps_dig = List.length deps_dig'
           then List.iter2 (fun (x,y) (x', y') ->
@@ -344,7 +343,7 @@ let load_checked_file_with_tc_result
             checked_fn
         in
         let elt = (Invalid msg, Inl msg) in
-        BU.smap_add mcache checked_fn elt;
+        SMap.add mcache checked_fn elt;
         Inl msg
       end
 
@@ -395,7 +394,7 @@ let load_parsing_data_from_cache file_name =
 
 let load_module_from_cache =
   //this is only used for supressing more than one cache invalid warnings
-  let already_failed = BU.mk_ref false in
+  let already_failed = mk_ref false in
   fun env fn -> Errors.with_ctx ("While loading module from file " ^ fn) (fun () ->
     let load_it fn () =
       let cache_file = Dep.cache_file_name fn in
@@ -469,7 +468,13 @@ let store_module_to_cache env fn parsing_data tc_result =
   if Options.cache_checked_modules()
   && not (Options.cache_off())
   then begin
-    let cache_file = FStarC.Parser.Dep.cache_file_name fn in
+    let cache_file =
+      match Options.output_to () with
+      | Some fn -> fn
+      (* Note: ^ in this case, main guarantees we were called on a single file, or
+         we would clobber previously-written checked files. *)
+      | None -> FStarC.Parser.Dep.cache_file_name fn
+    in
     let digest = hash_dependences (TcEnv.dep_graph env) fn in
     match digest with
     | Inr hashes ->

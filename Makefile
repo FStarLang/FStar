@@ -2,7 +2,6 @@ export FSTAR_ROOT=$(CURDIR)
 # ^ This variable is only used by internal makefiles.
 # Do NOT rely on it in client code. It is not what FSTAR_HOME was.
 include mk/common.mk
-undefine FSTAR_EXE # just in case
 
 # NOTE: If you are changing any of install rules, run a macos build too.
 # The behavior of cp, find, etc, can differ in subtle ways from that of GNU tools.
@@ -19,14 +18,12 @@ all-packages: package-1 package-2 package-src-1 package-src-2
 # to a local build of stage0, to avoid recompiling it every time.
 ifneq ($(FSTAR_EXTERNAL_STAGE0),)
 FSTAR0_EXE := $(abspath $(FSTAR_EXTERNAL_STAGE0))
-_ != mkdir -p stage0/bin
-_ != ln -Trsf $(FSTAR0_EXE) stage0/bin/fstar.exe
+_ != mkdir -p stage0/out/bin
+_ != ln -Tsf $(FSTAR0_EXE) stage0/out/bin/fstar.exe
 # ^ Setting this link allows VS code to work seamlessly.
 endif
 
-# When stage0 is bumped, use this:
-#FSTAR0_EXE ?= stage0/out/bin/fstar.exe
-FSTAR0_EXE ?= stage0/bin/fstar.exe
+FSTAR0_EXE ?= stage0/out/bin/fstar.exe
 
 # This is hardcoding some dune paths, with internal (non-public) names.
 # This is motivated by dune installing packages as a unit, so I could not
@@ -73,11 +70,8 @@ build: 2
 0 $(FSTAR0_EXE):
 	$(call bold_msg, "STAGE 0")
 	mkdir -p stage0/ulib/.cache # prevent warnings
-	$(MAKE) -C stage0 fstar
+	$(MAKE) -C stage0 minimal # build: only fstar.exe and set-up lib sources
 	$(MAKE) -C stage0 trim # We don't need OCaml build files.
-	# When the stage is bumped, use this:
-	# $(MAKE) -C stage0 build # build: only fstar.exe
-	# $(MAKE) -C stage0 trim # We don't need OCaml build files.
 
 .bare1.src.touch: $(FSTAR0_EXE) .force
 	$(call bold_msg, "EXTRACT", "STAGE 1 FSTARC-BARE")
@@ -310,17 +304,19 @@ endif
 
 setlink-%:
 	if [ -e out ] && ! [ -h out ]; then echo "ERROR: out/ exists and is not a symbolic link, please remove it"; false; fi
-	ln -Trsf stage$*/out out
+	rm -f out && ln -sf $(CURDIR)/stage$*/out out
 	# For compatibility with the previous layout
 	mkdir -p bin
-	ln -Trsf out/bin/fstar.exe bin/fstar.exe
-	ln -Trsf .scripts/get_fstar_z3.sh bin/get_fstar_z3.sh
+	ln -sf $(CURDIR)/out/bin/fstar.exe bin/fstar.exe
+	ln -sf $(CURDIR)/.scripts/get_fstar_z3.sh bin/get_fstar_z3.sh
 
 stage1: .install-stage1.touch
+.PHONY: 1
 1: stage1
 	$(MAKE) setlink-1
 
 stage2: .install-stage2.touch
+.PHONY: 2
 2: stage2
 	$(MAKE) setlink-2
 
@@ -440,7 +436,7 @@ ci: .force
 save: stage0_new
 
 stage0_new: TO=stage0_new
-stage0_new: .stage2.touch
+stage0_new: .stage2.src.touch
 	$(call bold_msg, "SNAPSHOT", "$(TO)")
 	rm -rf "$(TO)"
 	.scripts/src-install.sh "stage2" "$(TO)"
@@ -457,6 +453,7 @@ bump-stage0: stage0_new
 	rm -rf stage0
 	mv stage0_new stage0
 	echo 'out' >> stage0/.gitignore
+	echo '** -diff -merge linguist-generated=true' >> stage0/.gitattributes
 	# Now that stage0 supports all features, we can return to a clean state
 	# where the 01 makefile is equal to the 12 makefile. Same for stage1
 	# support and config code, we just take it from the stage2.

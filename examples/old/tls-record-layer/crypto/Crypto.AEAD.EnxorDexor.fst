@@ -32,7 +32,6 @@ open Crypto.AEAD.Encrypt.Invariant
 module Cipher        = Crypto.Symmetric.Cipher
 module PRF           = Crypto.Symmetric.PRF
 module Plain         = Crypto.Plain
-module Invariant     = Crypto.AEAD.Invariant
 module HH            = FStar.HyperHeap
 module HS            = FStar.HyperStack
 module ST            = FStar.HyperStack.ST

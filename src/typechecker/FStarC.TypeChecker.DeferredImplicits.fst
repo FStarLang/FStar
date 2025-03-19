@@ -17,20 +17,22 @@
 *)
 
 module FStarC.TypeChecker.DeferredImplicits
-open FStarC.Effect
-open FStarC.List
-open FStar open FStarC
+
 open FStarC
+open FStarC.List
+open FStarC.Effect
 open FStarC.Util
 open FStarC.Errors
 open FStarC.TypeChecker
 open FStarC.Syntax
 open FStarC.TypeChecker.Env
 open FStarC.Syntax.Syntax
+open FStarC.Syntax.Print {}
 open FStarC.Syntax.Subst
 open FStarC.Ident
 open FStarC.TypeChecker.Common
 open FStarC.Syntax
+
 module BU = FStarC.Util
 module S = FStarC.Syntax.Syntax
 module U = FStarC.Syntax.Util
@@ -114,7 +116,7 @@ let find_user_tac_for_uvar env (u:ctx_uvar) : option sigelt =
     match u.ctx_uvar_meta with
     | Some (Ctx_uvar_meta_attr a) ->
       (* hooks: all definitions with the resolve_implicits attr *)
-      let hooks = Env.lookup_attr env FStarC.Parser.Const.resolve_implicits_attr_string in
+      let hooks = Env.lookup_attr env (string_of_lid Parser.Const.resolve_implicits_attr_string) in
       (* candidates: hooks that also have the attribute [a] *)
       let candidates = 
         hooks |> List.filter
@@ -282,20 +284,20 @@ let solve_deferred_to_tactic_goals env g =
         Group them so that all implicits with the same associated sigelt
         are in the same bucket *)
     let bucketize (is:list (implicit & sigelt)) : list (implicits & sigelt) =
-      let map : BU.smap (implicits & sigelt) = BU.smap_create 17 in
+      let map : SMap.t (implicits & sigelt) = SMap.create 17 in
       List.iter
         (fun (i, s) ->
            match U.lid_of_sigelt s with
            | None -> failwith "Unexpected: tactic without a name"
            | Some l ->
              let lstr = Ident.string_of_lid l in
-             match BU.smap_try_find map lstr with
-             | None -> BU.smap_add map lstr ([i], s)
+             match SMap.try_find map lstr with
+             | None -> SMap.add map lstr ([i], s)
              | Some (is, s) ->
-               BU.smap_remove map lstr;
-               BU.smap_add map lstr (i::is, s))
+               SMap.remove map lstr;
+               SMap.add map lstr (i::is, s))
         is;
-        BU.smap_fold map (fun _ is out -> is::out) []
+        SMap.fold map (fun _ is out -> is::out) []
     in
     let buckets = bucketize (eqs@more) in
     // Dispatch each bucket of implicits to their respective tactic

@@ -3,6 +3,7 @@ class
 data
 extraction
 fstar
+interactive
 parser
 prettyprint
 reflection

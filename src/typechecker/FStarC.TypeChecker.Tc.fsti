@@ -19,8 +19,12 @@ open FStarC.Effect
 open FStarC.Syntax.Syntax
 open FStarC.TypeChecker.Env
 open FStarC.TypeChecker.Common
-module EMB = FStarC.Syntax.Embeddings
 
+val run_postprocess
+  (for_extraction : bool)
+  (env : env)
+  (se : sigelt)
+  : sigelt
 
 val check_module: env -> modul -> bool -> modul & env
 val load_checked_module: env -> modul -> env

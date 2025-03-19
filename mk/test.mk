@@ -27,14 +27,16 @@ FSTAR_EXE ?= $(FSTAR_ROOT)/out/bin/fstar.exe
 FSTAR_EXE := $(abspath $(FSTAR_EXE))
 export FSTAR_EXE
 
-# This warning is really useless.
-OTHERFLAGS += --warn_error -321
-OTHERFLAGS += --ext context_pruning
-OTHERFLAGS += --z3version 4.13.3
+FSTAR_ARGS += --odir $(OUTPUT_DIR)
+FSTAR_ARGS += --cache_dir $(CACHE_DIR)
+FSTAR_ARGS += --already_cached Prims,FStar,LowStar
+FSTAR_ARGS += --warn_error -321 # This warning is really useless.
+FSTAR_ARGS += --ext context_pruning
+FSTAR_ARGS += --z3version 4.13.3
+FSTAR_ARGS += $(OTHERFLAGS)
 
 # Set ADMIT=1 to admit queries
-ADMIT ?=
-MAYBE_ADMIT = $(if $(ADMIT),--admit_smt_queries true)
+FSTAR_ARGS += $(if $(ADMIT),--admit_smt_queries true)
 
 # Almost everything goes into the OUTPUT_DIR, except for .checked files
 # which go in the CACHE_DIR. The .depend goes in the current directory.
@@ -43,12 +45,8 @@ MAYBE_ADMIT = $(if $(ADMIT),--admit_smt_queries true)
 OUTPUT_DIR ?= _output
 CACHE_DIR ?= _cache
 
-FSTAR = $(FSTAR_EXE) $(SIL) 				\
-	$(if $(NO_WRITE_CHECKED),,--cache_checked_modules)		\
-	--odir $(OUTPUT_DIR)				\
-	--cache_dir $(CACHE_DIR)			\
-	--already_cached Prims,FStar,LowStar		\
-	 $(OTHERFLAGS) $(MAYBE_ADMIT)
+FSTAR = $(FSTAR_EXE) $(SIL) 						\
+	$(FSTAR_ARGS)
 
 ifneq ($(MAKECMDGOALS),clean)
 ifeq ($(NODEPEND),) # Set NODEPEND=1 to not dependency analysis
@@ -58,7 +56,7 @@ FSTAR_FILES := $(strip $(FSTAR_FILES))
 ifneq ($(FSTAR_FILES),) # It anyway only runs if fst/fsti files are found in the cwd
 .depend: $(FSTAR_FILES)
 	$(call msg, "DEPEND", $(CURDIR))
-	$(FSTAR) --dep full $(FSTAR_FILES) --output_deps_to $@
+	$(FSTAR) --dep full $(FSTAR_FILES) -o $@
 depend: .depend
 include .depend
 endif
@@ -69,41 +67,41 @@ endif
 # These will be in the cache directory due to the .depend
 %.fst.checked:
 	$(call msg, "CHECK", $(basename $(notdir $@)))
-	$(FSTAR) $<
+	$(FSTAR) -c $< -o $@
 	touch -c $@
 
 %.fsti.checked:
 	$(call msg, "CHECK", $(basename $(notdir $@)))
-	$(FSTAR) $<
+	$(FSTAR) -c $< -o $@
 	touch -c $@
 
-$(OUTPUT_DIR)/%.fst.output: NO_WRITE_CHECKED=1
 $(OUTPUT_DIR)/%.fst.output: %.fst
 	$(call msg, "OUTPUT", $(basename $(notdir $@)))
-	$(FSTAR) --message_format human -f --print_expected_failures $< >$@ 2>&1
+	@mkdir -p $(dir $@)
+	$(FSTAR) --message_format human --silent -f --print_expected_failures $< >$@ 2>&1
 
-$(OUTPUT_DIR)/%.fsti.output: NO_WRITE_CHECKED=1
 $(OUTPUT_DIR)/%.fsti.output: %.fsti
 	$(call msg, "OUTPUT", $(basename $(notdir $@)))
-	$(FSTAR) --message_format human -f --print_expected_failures $< >$@ 2>&1
+	@mkdir -p $(dir $@)
+	$(FSTAR) --message_format human --silent -f --print_expected_failures $< >$@ 2>&1
 
-$(OUTPUT_DIR)/%.fst.json_output: NO_WRITE_CHECKED=1
 $(OUTPUT_DIR)/%.fst.json_output: %.fst
 	$(call msg, "JSONOUT", $(basename $(notdir $@)))
-	$(FSTAR) --message_format json -f --print_expected_failures $< >$@ 2>&1
+	@mkdir -p $(dir $@)
+	$(FSTAR) --message_format json --silent -f --print_expected_failures $< >$@ 2>&1
 
-$(OUTPUT_DIR)/%.fsti.json_output: NO_WRITE_CHECKED=1
 $(OUTPUT_DIR)/%.fsti.json_output: %.fsti
 	$(call msg, "JSONOUT", $(basename $(notdir $@)))
-	$(FSTAR) --message_format json -f --print_expected_failures $< >$@ 2>&1
+	@mkdir -p $(dir $@)
+	$(FSTAR) --message_format json --silent -f --print_expected_failures $< >$@ 2>&1
 
-$(OUTPUT_DIR)/$(subst .,_,%).ml:
+$(OUTPUT_DIR)/%.ml:
 	$(call msg, "EXTRACT", $(basename $(notdir $@)))
-	$(FSTAR) $(subst .checked,,$(notdir $<)) --codegen OCaml --extract_module $(subst .fst.checked,,$(notdir $<))
+	$(FSTAR) --codegen OCaml $< -o $@
 
-$(OUTPUT_DIR)/$(subst .,_,%).fs:
+$(OUTPUT_DIR)/%.fs:
 	$(call msg, "EXTRACT FS", $(basename $(notdir $@)))
-	$(FSTAR) $(subst .checked,,$(notdir $<)) --codegen FSharp --extract_module $(subst .fst.checked,,$(notdir $<))
+	$(FSTAR) --codegen FSharp $< -o $@
 
 # No FSharp compilation in these makefiles, sorry.
 $(OUTPUT_DIR)/%.exe: $(OUTPUT_DIR)/%.ml
@@ -123,6 +121,7 @@ $(OUTPUT_DIR)/%.diff: $(OUTPUT_DIR)/% %.expected
 $(OUTPUT_DIR)/%.accept: $(OUTPUT_DIR)/%
 	$(call msg, "ACCEPT", $<)
 	cp $< ./$*.expected
+	touch $(OUTPUT_DIR)/$*.diff # touch so subsequent test skips
 
 # Subrules for descending into subdirectories (coallesce with a define?)
 
@@ -191,7 +190,11 @@ endif
 __diff: $(patsubst %.expected,$(OUTPUT_DIR)/%.diff,$(wildcard *.expected))
 diff: __diff
 ifeq ($(NODIFF),)
+ifeq ($(ACCEPT),1)
+all: __accept
+else
 all: __diff
+endif
 endif
 
 accept: $(addsuffix .__accept,$(SUBDIRS))

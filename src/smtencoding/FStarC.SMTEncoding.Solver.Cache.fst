@@ -16,7 +16,6 @@
 
 module FStarC.SMTEncoding.Solver.Cache
 
-open FStar open FStarC
 open FStarC
 open FStarC.Effect
 open FStarC.TypeChecker.Env
@@ -139,7 +138,7 @@ instance hashable_env : hashable env = {
 }
 
 let query_cache_ref : ref (RBSet.t hash_code) =
-  BU.mk_ref (empty ())
+  mk_ref (empty ())
 
 let on () =
   Options.query_cache () && Options.ide ()

@@ -1,12 +1,10 @@
 module FStarC.TypeChecker.Primops.Errors.Msg
 
-open FStar open FStarC
 open FStarC
 open FStarC.Effect
 open FStarC.List
 open FStarC.Class.Monad
 
-module Z = FStarC.BigInt
 module PC = FStarC.Parser.Const
 
 open FStarC.TypeChecker.Primops.Base

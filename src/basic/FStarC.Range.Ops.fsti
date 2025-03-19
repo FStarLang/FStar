@@ -56,3 +56,7 @@ val bound_range (r : range) (bound : range) : range
 
 instance val showable_range : showable range
 instance val pretty_range : pretty range
+
+(* See FStarC.Find.refind_file, this just applies it to both filename
+components. *)
+val refind_range (r:range) : range

@@ -26,7 +26,6 @@ open FStarC.Effect
 open FStarC.Util
 open FStarC.Class.Ord
 
-module Options = FStarC.Options
 
 let union_rng r1 r2 =
   if r1.file_name <> r2.file_name
@@ -51,12 +50,10 @@ let rng_included r1 r2 =
 
 let string_of_pos pos =
     format2 "%s,%s" (string_of_int pos.line) (string_of_int pos.col)
-let file_of_range r       =
-    let f = r.def_range.file_name in
-    string_of_file_name f
-let set_file_of_range r (f:string) = {r with def_range = {r.def_range with file_name = f}}
+let file_of_range r = r.def_range.file_name
+let set_file_of_range r (f:string) = {r with def_range = {r.def_range with file_name = Filepath.basename f}}
 let string_of_rng r =
-    format3 "%s(%s-%s)" (string_of_file_name r.file_name) (string_of_pos r.start_pos) (string_of_pos r.end_pos)
+    format3 "%s(%s-%s)" r.file_name (string_of_pos r.start_pos) (string_of_pos r.end_pos)
 let string_of_def_range r = string_of_rng r.def_range
 let string_of_use_range r = string_of_rng r.use_range
 let string_of_range r     = string_of_def_range r
@@ -139,3 +136,17 @@ instance showable_range = {
 instance pretty_range = {
   pp = (fun r -> Pprint.doc_of_string (string_of_range r));
 }
+
+(* See FStarC.Find.refind_file, this just applies it to both filename
+components. *)
+let refind_rng (r:rng) : rng =
+  { r with file_name =
+      if Options.Ext.enabled "fstar:no_absolute_paths"
+      then r.file_name (* already a basename *)
+      else FStarC.Find.refind_file r.file_name
+  }
+
+let refind_range (r:range) : range =
+  { r with
+    def_range = refind_rng r.def_range;
+    use_range = refind_rng r.use_range }

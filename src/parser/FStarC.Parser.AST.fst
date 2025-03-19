@@ -15,7 +15,6 @@
 *)
 module FStarC.Parser.AST
 
-open FStar open FStarC
 open FStarC
 open FStarC.Effect
 open FStarC.List
@@ -49,8 +48,8 @@ instance hasRange_decl : hasRange decl = {
 
 let lid_of_modul (m:modul) : lid =
   match m with
-  | Module(lid, _) -> lid
-  | Interface (lid, _, _) -> lid
+  | Module {mname}
+  | Interface {mname} -> mname
 
 let check_id id =
     let first_char = String.substring (string_of_id id) 0 1 in
@@ -252,16 +251,16 @@ let rec extract_named_refinement (remove_parens:bool) (t1:term) : option (ident 
 
 //NS: needed to hoist this to workaround a bootstrapping bug
 //    leaving it within as_frag causes the type-checker to take a very long time, perhaps looping
-let rec as_mlist (cur: (lid & decl) & list decl) (ds:list decl) : modul =
-    let ((m_name, m_decl), cur) = cur in
+let rec as_mlist (cur: (lid & decl & bool) & list decl) (ds:list decl) : modul =
+    let ((m_name, m_decl, no_prelude), cur) = cur in
     match ds with
-    | [] -> Module(m_name, m_decl :: List.rev cur)
+    | [] -> Module { no_prelude; mname = m_name; decls = m_decl :: List.rev cur }
     | d :: ds ->
         begin match d.d with
         | TopLevelModule m' ->
             raise_error d Fatal_UnexpectedModuleDeclaration "Unexpected module declaration"
         | _ ->
-            as_mlist ((m_name, m_decl), d::cur) ds
+            as_mlist ((m_name, m_decl, no_prelude), d::cur) ds
         end
 
 let as_frag (ds:list decl) : inputFragment =
@@ -271,7 +270,13 @@ let as_frag (ds:list decl) : inputFragment =
   in
   match d.d with
   | TopLevelModule m ->
-      let m = as_mlist ((m,d), []) ds in
+      let no_prelude =
+        d.attrs |> List.existsb (function t ->
+          match t.tm with
+          | Const (FStarC.Const.Const_string ("no_prelude", _)) -> true
+          | _ -> false)
+      in
+      let m = as_mlist ((m,d, no_prelude), []) ds in
       Inl m
   | _ ->
       let ds = d::ds in
@@ -800,10 +805,11 @@ let rec decl_to_string (d:decl) = match d.d with
   | Unparseable ->
     "unparseable"
 
-let modul_to_string (m:modul) = match m with
-    | Module (_, decls)
-    | Interface (_, decls, _) ->
-      decls |> List.map decl_to_string |> String.concat "\n"
+let modul_to_string (m:modul) =
+  match m with
+  | Module {decls}
+  | Interface {decls} ->
+    decls |> List.map decl_to_string |> String.concat "\n"
 
 let decl_is_val id decl =
     match decl.d with
@@ -864,3 +870,7 @@ let mk_decl d r decorations =
   let d = { d=d; drange=r; quals=[]; attrs=[]; interleaved=false } in
   add_decorations d decorations
 
+let as_interface (m:modul) : modul =
+    match m with
+    | Module {no_prelude; mname; decls} -> Interface { no_prelude; mname; decls; admitted = true }
+    | i -> i

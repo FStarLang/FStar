@@ -22,7 +22,6 @@ open HyE.Ideal
 
 open Platform.Bytes
 open CoreCrypto
-module CC = CoreCrypto
 module B = Platform.Bytes
 
 open HyE.Plain

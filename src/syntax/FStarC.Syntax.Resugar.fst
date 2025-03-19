@@ -16,9 +16,7 @@
   limitations under the License.
 *)
 module FStarC.Syntax.Resugar //we should rename FStarC.ToSyntax to something else
-open FStar open FStarC
 open FStarC
-open FStar.Pervasives
 open FStarC.Effect
 open FStarC.Syntax.Syntax
 open FStarC.Ident
@@ -39,7 +37,6 @@ module U = FStarC.Syntax.Util
 module BU = FStarC.Util
 module D = FStarC.Parser.ToDocument
 module UF = FStarC.Syntax.Unionfind
-module E = FStarC.Errors
 module DsEnv = FStarC.Syntax.DsEnv
 
 (* Helpers to print/debug the resugaring phase *)
@@ -193,19 +190,17 @@ let rec resugar_term_as_op (t:S.term) : option (string&expected_arity) =
     | Some op ->
       Some (snd op, None)
     | _ ->
-      let length = String.length (nsstr fv.fv_name.v) in
-      let str = if length=0 then (string_of_lid fv.fv_name.v)
-          else BU.substring_from (string_of_lid fv.fv_name.v) (length+1) in
       (* Check that it is of the shape dtuple int, and return that arity *)
-      if BU.starts_with str "dtuple"
-         && Option.isSome (BU.safe_int_of_string (BU.substring_from str 6))
-      then Some ("dtuple", BU.safe_int_of_string (BU.substring_from str 6))
-      else if BU.starts_with str "tuple"
-         && Option.isSome (BU.safe_int_of_string (BU.substring_from str 5))
-      then Some ("tuple", BU.safe_int_of_string (BU.substring_from str 5))
-      else if BU.starts_with str "try_with" then Some ("try_with", None)
-      else if fv_eq_lid fv C.sread_lid then Some (string_of_lid fv.fv_name.v, None)
-      else None
+      match C.get_dtuple_tycon_arity (string_of_lid fv.fv_name.v) with
+      | Some n -> Some ("dtuple", Some n)
+      | None ->
+        match C.get_tuple_tycon_arity (string_of_lid fv.fv_name.v) with
+        | Some n -> Some ("tuple", Some n)
+        | None ->
+          let str = string_of_id (Ident.ident_of_lid fv.fv_name.v) in
+          if BU.starts_with str "try_with" then Some ("try_with", None)
+          else if fv_eq_lid fv C.sread_lid then Some (string_of_lid fv.fv_name.v, None)
+          else None
   in
   match (SS.compress t).n with
     | Tm_fvar fv ->
@@ -225,8 +220,8 @@ let is_true_pat (p:S.pat) : bool = match p.v with
     | _ -> false
 
 let is_tuple_constructor_lid lid =
-     C.is_tuple_data_lid' lid
-  || C.is_dtuple_data_lid' lid
+     C.is_tuple_datacon_lid lid
+  || C.is_dtuple_datacon_lid lid
 
 let may_shorten lid =
   if Options.print_real_names () then false
@@ -530,7 +525,7 @@ let rec resugar_term' (env: DsEnv.env) (t : S.term) : A.term =
                        mk (A.App (acc, aa, qq)))
                      h
       else if not (Options.print_implicits ())
-           && Options.Ext.get "show_hide_reveal" = ""
+           && not (Options.Ext.enabled "show_hide_reveal")
            && is_hide_or_reveal e
            && List.length args = 1 //args already filtered
       then (
@@ -783,11 +778,20 @@ let rec resugar_term' (env: DsEnv.env) (t : S.term) : A.term =
             let expect_n = D.handleable_args_length op in
             if List.length resugared_args >= expect_n
             then let op_args, rest = BU.first_N expect_n resugared_args in
-                 let head = mk (A.Op(op, List.map fst op_args)) in
-                 List.fold_left
-                        (fun head (arg, qual) -> mk (A.App (head, arg, qual)))
-                        head
-                        rest
+                 if not <| List.for_all (fun (_, q) -> q = A.Nothing) op_args
+                 then
+                   (* If any of the first n arguments that we found are implicit,
+                      and we have in fact resugared them, resugar as an application.
+                      Otherwise for ( ++ ) : #t:_ -> t -> t -> t we would see stuff like
+                        (int ++ [1]) [2]
+                   *)
+                   resugar_as_app e args
+                 else
+                  let head = mk (A.Op(op, List.map fst op_args)) in
+                  List.fold_left
+                          (fun head (arg, qual) -> mk (A.App (head, arg, qual)))
+                          head
+                          rest
             else resugar_as_app e args
           | Some n when List.length args = n -> mk (A.Op(op, List.map fst (resugar args)))
           | _ -> resugar_as_app e args
@@ -1248,7 +1252,7 @@ and resugar_pat' env (p:S.pat) (branch_bv: FlatSet.t bv) : A.pattern =
         args |>
         List.filter_map (fun (p, is_implicit) ->
             if is_implicit then None else Some (aux p (Some false))) in
-      let is_dependent_tuple = C.is_dtuple_data_lid' fv.fv_name.v in
+      let is_dependent_tuple = C.is_dtuple_datacon_lid fv.fv_name.v in
       mk (A.PatTuple (args, is_dependent_tuple))
 
     | Pat_cons({fv_qual=Some (Record_ctor(name, fields))}, _, args) ->

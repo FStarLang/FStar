@@ -5,7 +5,6 @@ open FStar.Class.Printable
 open FStar.List.Tot
 open FStar.Tactics.V2
 
-module TD = FStar.Tactics.V2.Derived
 module TU = FStar.Tactics.Util
 
 let mk_concat (sep : term) (ts : list term) : Tac term =

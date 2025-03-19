@@ -15,7 +15,6 @@
 *)
 module FStarC.Options
 
-open FStar open FStarC
 open FStarC.BaseTypes
 open FStarC
 open FStarC.Effect
@@ -23,15 +22,21 @@ open FStarC.List
 open FStarC.String
 open FStarC.Util
 open FStarC.Getopt
-open FStar.Pervasives
 open FStarC.VConfig
 open FStarC.Class.Show
 open FStarC.Class.Deq
 
-module Option = FStarC.Option
-module FC = FStarC.Common
+open FStarC.PSMap
+open FStarC.SMap
+
 module Util = FStarC.Util
 module List = FStarC.List
+
+(* Set externally, checks if the directory exists and otherwise
+logs an issue. Cannot do it here due to circular deps. *)
+let check_include_dir = mk_ref (fun (s:string) -> ())
+
+exception NotSettable of string
 
 module Ext = FStarC.Options.Ext
 
@@ -39,7 +44,7 @@ let debug_embedding = mk_ref false
 let eager_embedding = mk_ref false
 
 (* A FLAG TO INDICATE THAT WE'RE RUNNING UNIT TESTS *)
-let __unit_tests__ = Util.mk_ref false
+let __unit_tests__ = mk_ref false
 let __unit_tests() = !__unit_tests__
 let __set_unit_tests () = __unit_tests__ := true
 let __clear_unit_tests () = __unit_tests__ := false
@@ -65,8 +70,6 @@ let as_option as_t = function
 let as_comma_string_list = function
   | List ls -> List.flatten <| List.map (fun l -> split (as_string l) ",") ls
   | _ -> failwith "Impos: expected String (comma list)"
-
-let copy_optionstate m = Util.smap_copy m
 
 (* The option state is a stack of stacks. Why? First, we need to
  * support #push-options and #pop-options, which provide the user with
@@ -98,10 +101,20 @@ let copy_optionstate m = Util.smap_copy m
  *)
 let history1 = Debug.saved_state & Ext.ext_state & optionstate
 
-let fstar_options : ref optionstate = Util.mk_ref (Util.psmap_empty ())
+let fstar_options : ref optionstate = mk_ref (PSMap.empty ())
+
+let snapshot_all () : history1 =
+  (Debug.snapshot (), Ext.save (), !fstar_options)
+
+let restore_all (h : history1) : unit =
+  let dbg, ext, opts = h in
+  Debug.restore dbg;
+  Ext.restore ext;
+  fstar_options := opts
+
 
 let history : ref (list (list history1)) =
-  Util.mk_ref [] // IRRELEVANT: see clear() below
+  mk_ref [] // IRRELEVANT: see clear() below
 
 let peek () = !fstar_options
 
@@ -166,12 +179,12 @@ let rollback depth = Common.rollback pop  history depth
 let set_option k v =
   let map : optionstate = peek() in
   if k = "report_assumes"
-  then match Util.psmap_try_find map k with
+  then match psmap_try_find map k with
        | Some (String "error") ->
          //It's already set to error; ignore any attempt to change it
          ()
-       | _ -> fstar_options := Util.psmap_add map k v
-  else fstar_options := Util.psmap_add map k v
+       | _ -> fstar_options := psmap_add map k v
+  else fstar_options := psmap_add map k v
 
 let set_option' (k,v) =  set_option k v
 let set_admit_smt_queries (b:bool) = set_option "admit_smt_queries" (Bool b)
@@ -184,7 +197,6 @@ let defaults =
       ("disallow_unification_guards"  , Bool false);
       ("already_cached"               , Unset);
       ("cache_checked_modules"        , Bool false);
-      ("cache_dir"                    , Unset);
       ("cache_off"                    , Bool false);
       ("compat_pre_core"              , Unset);
       ("compat_pre_typed_indexed_effects"
@@ -220,7 +232,6 @@ let defaults =
       ("ide"                          , Bool false);
       ("ide_id_info_off"              , Bool false);
       ("lsp"                          , Bool false);
-      ("include"                      , List []);
       ("print"                        , Bool false);
       ("print_in_place"               , Bool false);
       ("force"                        , Bool false);
@@ -239,7 +250,6 @@ let defaults =
       ("max_ifuel"                    , Int 2);
       ("MLish"                        , Bool false);
       ("MLish_effect"                 , String "FStar.Effect");
-      ("no_default_includes"          , Bool false);
       ("no_extract"                   , List []);
       ("no_location_info"             , Bool false);
       ("no_smt"                       , Bool false);
@@ -247,8 +257,8 @@ let defaults =
       ("no_tactics"                   , Bool false);
       ("normalize_pure_terms_for_extraction"
                                       , Bool false);
+      ("output_to"                    , Unset);
       ("krmloutput"                   , Unset);
-      ("odir"                         , Unset);
       ("output_deps_to"               , Unset);
       ("prims"                        , Unset);
       ("pretype"                      , Bool true);
@@ -322,7 +332,6 @@ let defaults =
       ("use_nbe_for_extraction"       , Bool false);
       ("trivial_pre_for_unannotated_effectful_fns"
                                       , Bool true);
-      ("with_fstarc"                  , Bool false);
       ("profile_group_by_decl"        , Bool false);
       ("profile_component"            , Unset);
       ("profile"                      , Unset);
@@ -331,7 +340,7 @@ let defaults =
 let init () =
   Debug.disable_all ();
   Ext.reset ();
-  fstar_options := Util.psmap_empty ();
+  fstar_options := psmap_empty ();
   defaults |> List.iter set_option'                          //initialize it with the default values
 
 let clear () =
@@ -342,7 +351,7 @@ let clear () =
 let _ = clear ()
 
 let get_option s =
-  match Util.psmap_try_find (peek ()) s with
+  match psmap_try_find (peek ()) s with
   | None -> failwith ("Impossible: option " ^s^ " not found")
   | Some s -> s
 
@@ -447,7 +456,7 @@ let set_verification_options o =
     "z3version";
     "trivial_pre_for_unannotated_effectful_fns";
   ] in
-  List.iter (fun k -> set_option k (Util.psmap_try_find o k |> Util.must)) verifopts
+  List.iter (fun k -> set_option k (psmap_try_find o k |> Util.must)) verifopts
 
 let lookup_opt s c =
   c (get_option s)
@@ -462,7 +471,6 @@ let get_disallow_unification_guards  ()      = lookup_opt "disallow_unification_
 
 let get_already_cached          ()      = lookup_opt "already_cached"           (as_option (as_list as_string))
 let get_cache_checked_modules   ()      = lookup_opt "cache_checked_modules"    as_bool
-let get_cache_dir               ()      = lookup_opt "cache_dir"                (as_option as_string)
 let get_cache_off               ()      = lookup_opt "cache_off"                as_bool
 let get_print_cache_version     ()      = lookup_opt "print_cache_version"      as_bool
 let get_cmi                     ()      = lookup_opt "cmi"                      as_bool
@@ -489,7 +497,6 @@ let get_in                      ()      = lookup_opt "in"                       
 let get_ide                     ()      = lookup_opt "ide"                      as_bool
 let get_ide_id_info_off         ()      = lookup_opt "ide_id_info_off"          as_bool
 let get_lsp                     ()      = lookup_opt "lsp"                      as_bool
-let get_include                 ()      = lookup_opt "include"                  (as_list as_string)
 let get_print                   ()      = lookup_opt "print"                    as_bool
 let get_print_in_place          ()      = lookup_opt "print_in_place"           as_bool
 let get_initial_fuel            ()      = lookup_opt "initial_fuel"             as_int
@@ -505,15 +512,14 @@ let get_max_fuel                ()      = lookup_opt "max_fuel"                 
 let get_max_ifuel               ()      = lookup_opt "max_ifuel"                as_int
 let get_MLish                   ()      = lookup_opt "MLish"                    as_bool
 let get_MLish_effect            ()      = lookup_opt "MLish_effect"             as_string
-let get_no_default_includes     ()      = lookup_opt "no_default_includes"      as_bool
 let get_no_extract              ()      = lookup_opt "no_extract"               (as_list as_string)
 let get_no_location_info        ()      = lookup_opt "no_location_info"         as_bool
 let get_no_plugins              ()      = lookup_opt "no_plugins"               as_bool
 let get_no_smt                  ()      = lookup_opt "no_smt"                   as_bool
 let get_normalize_pure_terms_for_extraction
                                 ()      = lookup_opt "normalize_pure_terms_for_extraction" as_bool
+let get_output_to               ()      = lookup_opt "output_to"                (as_option as_string)
 let get_krmloutput              ()      = lookup_opt "krmloutput"               (as_option as_string)
-let get_odir                    ()      = lookup_opt "odir"                     (as_option as_string)
 let get_output_deps_to          ()      = lookup_opt "output_deps_to"           (as_option as_string)
 let get_ugly                    ()      = lookup_opt "ugly"                     as_bool
 let get_prims                   ()      = lookup_opt "prims"                    (as_option as_string)
@@ -585,17 +591,16 @@ let get_use_nbe                 ()      = lookup_opt "use_nbe"                  
 let get_use_nbe_for_extraction  ()      = lookup_opt "use_nbe_for_extraction"                  as_bool
 let get_trivial_pre_for_unannotated_effectful_fns
                                 ()      = lookup_opt "trivial_pre_for_unannotated_effectful_fns"    as_bool
-let get_with_fstarc             ()      = lookup_opt "with_fstarc"                                  as_bool
 let get_profile                 ()      = lookup_opt "profile"                  (as_option (as_list as_string))
 let get_profile_group_by_decl   ()      = lookup_opt "profile_group_by_decl"    as_bool
 let get_profile_component       ()      = lookup_opt "profile_component"        (as_option (as_list as_string))
 
 // See comment in the interface file
-let _version = Util.mk_ref ""
-let _platform = Util.mk_ref ""
-let _compiler = Util.mk_ref ""
-let _date = Util.mk_ref " not set"
-let _commit = Util.mk_ref ""
+let _version = mk_ref ""
+let _platform = mk_ref ""
+let _compiler = mk_ref ""
+let _date = mk_ref " not set"
+let _commit = mk_ref ""
 
 let display_version () =
   Util.print_string (Util.format5 "F* %s\nplatform=%s\ncompiler=%s\ndate=%s\ncommit=%s\n"
@@ -824,14 +829,17 @@ let rec specs_with_types warn_unsafe : list (char & string & opt_type & Pprint.d
     text "Expects all modules whose names or namespaces match the provided options \
           to already have valid .checked files in the include path");
 
-  ( noshort,
+  ( 'c',
     "cache_checked_modules",
     Const (Bool true),
-    text "Write a '.checked' file for each module after verification and read from it if present, instead of re-verifying");
+    text "Write a '.checked' file for each module after verification.");
 
   ( noshort,
     "cache_dir",
-    PostProcessed (pp_validate_dir, PathStr "dir"),
+    PostProcessed ((fun (Path s) ->
+      (* Stateful, does not go to optionstate. *)
+      Find.set_cache_dir s;
+      Unset), PathStr "dir"),
     text "Read and write .checked and .checked.lax in directory dir");
 
   ( noshort,
@@ -1038,7 +1046,10 @@ let rec specs_with_types warn_unsafe : list (char & string & opt_type & Pprint.d
 
   ( noshort,
     "include",
-    ReverseAccumulated (PathStr "path"),
+    PostProcessed ((fun (Path s) ->
+      !check_include_dir s;
+      Find.set_include_path (Find.get_include_path () @ [s]);
+      Unset), PathStr "dir"),
     text "A directory in which to search for files included on the command line");
 
   ( noshort,
@@ -1161,7 +1172,8 @@ let rec specs_with_types warn_unsafe : list (char & string & opt_type & Pprint.d
 
   ( noshort,
     "no_default_includes",
-    Const (Bool true),
+    WithSideEffect ((fun _ -> Find.set_no_default_includes true),
+                    Const (Bool true)),
     text "Ignore the default module search paths");
 
   ( noshort,
@@ -1184,21 +1196,29 @@ let rec specs_with_types warn_unsafe : list (char & string & opt_type & Pprint.d
     Const (Bool true),
     text "Extract top-level pure terms after normalizing them. This can lead to very large code, but can result in more partial evaluation and compile-time specialization.");
 
+  ( 'o',
+    "output_to",
+    PathStr "filename",
+    text "Write output (checked file, depend file, extracted output, etc) to this file.");
+
   ( noshort,
     "krmloutput",
     PathStr "filename",
-    text "Place KaRaMeL extraction output in file <filename>. The path can be relative or absolute and does not depend\
+    text "[Deprecated: use -o instead.] Place KaRaMeL extraction output in file <filename>. The path can be relative or absolute and does not depend\
     on the --odir option.");
 
   ( noshort,
     "odir",
-    PostProcessed (pp_validate_dir, PathStr "dir"),
+    PostProcessed ((fun (Path s) ->
+      (* Stateful, does not go to optionstate. *)
+      Find.set_odir s;
+      Unset), PathStr "dir"),
     text "Place output in directory  dir");
 
   ( noshort,
     "output_deps_to",
     PathStr "file",
-    text "Output the result of --dep into this file instead of to standard output.");
+    text "[Deprecated: use -o instead.] Output the result of --dep into this file instead of to standard output.");
 
   ( noshort,
     "prims",
@@ -1583,7 +1603,8 @@ let rec specs_with_types warn_unsafe : list (char & string & opt_type & Pprint.d
 
   ( noshort,
    "with_fstarc",
-    Const (Bool true),
+    WithSideEffect ((fun _ -> Find.set_with_fstarc true),
+                    Const (Bool true)),
     text "Expose compiler internal modules (FStarC namespace). Only for advanced plugins \
           you should probably not use it.");
 
@@ -1743,6 +1764,7 @@ let settable = function
     | "quake"
     | "query_cache"
     | "query_stats"
+    | "record_hints"
     | "record_options"
     | "retry"
     | "reuse_hint_for"
@@ -1785,7 +1807,19 @@ let all_specs = specs true
 let all_specs_getopt = List.map fst all_specs
 
 let all_specs_with_types = specs_with_types true
-let settable_specs = all_specs |> List.filter (fun ((_, x, _), _) -> settable x)
+let settable_specs =
+  all_specs |>
+  List.map (fun spec ->
+    let ((c, x, h), doc) = spec in
+    if settable x
+    then spec
+    else
+      let h' = match h with
+               | ZeroArgs _ -> ZeroArgs (fun () -> raise (NotSettable x))
+               | OneArg (_, k) -> OneArg ((fun s -> raise (NotSettable x)), k)
+      in
+      ((c, x, h'), doc)
+  )
 
 let help_for_option (s:string) : option Pprint.document =
   match all_specs |> List.filter (fun ((_, x, _), _) -> x = s) with
@@ -1811,7 +1845,7 @@ let display_usage () = display_usage_aux all_specs
 
 let fstar_bin_directory = Util.get_exec_dir ()
 
-let file_list_ : ref (list string) = Util.mk_ref []
+let file_list_ : ref (list string) = mk_ref []
 
 (* In `parse_filename_arg specs arg`:
 
@@ -1842,6 +1876,10 @@ let rec parse_filename_arg specs enable_filenames arg =
     Success
   end
 
+(* A copy of the optionstate right after parsing the command line,
+so we can reset back to it. *)
+let parsed_args_state : ref (option history1) = mk_ref None
+
 let parse_cmd_line () =
   let res = Getopt.parse_cmdline all_specs_getopt (parse_filename_arg all_specs_getopt true) in
   let res =
@@ -1849,6 +1887,7 @@ let parse_cmd_line () =
     then set_error_flags()
     else res
   in
+  parsed_args_state := Some (snapshot_all ());
   res, !file_list_
 
 let file_list () =
@@ -1858,17 +1897,21 @@ let restore_cmd_line_options should_clear =
     (* Some options must be preserved because they can't be reset via #pragrams.
      * Add them here as needed. *)
     let old_verify_module = get_verify_module() in
-    if should_clear then clear() else init();
-    let specs = List.map fst <| specs false in
-    let r = Getopt.parse_cmdline specs (parse_filename_arg specs false) in
+
+    if should_clear then clear () else init ();
+    match !parsed_args_state with
+    | None -> failwith "impossible: restore_cmd_line_options before initial parsing"
+    | Some h -> restore_all h;
+
     set_option' ("verify_module", List (List.map String old_verify_module));
-    r
+    Success
 
 let module_name_of_file_name f =
-    let f = basename f in
-    let f = String.substring f 0 (String.length f - String.length (get_file_extension f) - 1) in
+    let f = Filepath.basename f in
+    let f = String.substring f 0 (String.length f - String.length (Filepath.get_file_extension f) - 1) in
     String.lowercase f
 
+(* Basically returns true when the module is in the command line *)
 let should_check m =
   let l = get_verify_module () in
   List.contains (String.lowercase m) l
@@ -1892,10 +1935,6 @@ let should_print_message m =
 
 let custom_prims () = get_prims()
 
-let cache_dir () = get_cache_dir ()
-
-let include_ () = get_include ()
-
 //Used to parse the options of
 //   --using_facts_from
 //   --extract
@@ -1903,13 +1942,13 @@ let include_ () = get_include ()
 let path_of_text text = String.split ['.'] text
 
 let parse_settings ns : list (list string & bool) =
-    let cache = Util.smap_create 31 in
+    let cache = smap_create 31 in
     let with_cache f s =
-      match Util.smap_try_find cache s with
+      match smap_try_find cache s with
       | Some s -> s
       | None ->
         let res = f s in
-        Util.smap_add cache s res;
+        smap_add cache s res;
         res
     in
     let parse_one_setting s =
@@ -2010,7 +2049,8 @@ let message_format               () =
   | "json" -> Json
   | "github" -> Github
   | illegal -> failwith ("print_issue: option `message_format` was expected to be `human` or `json`, not `" ^ illegal ^ "`. This should be impossible: `message_format` was supposed to be validated.")
-let force                        () = get_force                       ()
+
+let force                        () = get_force ()
 let full_context_dependency      () = true
 let hide_uvar_nums               () = get_hide_uvar_nums              ()
 let hint_info                    () = get_hint_info                   ()
@@ -2024,14 +2064,14 @@ let hint_file_for_src src_filename =
         let file_name =
           match hint_dir () with
           | Some dir ->
-            Util.concat_dir_filename dir (Util.basename src_filename)
+            Util.concat_dir_filename dir (Filepath.basename src_filename)
           | _ -> src_filename
         in
         Util.format1 "%s.hints" file_name
 let ide                          () = get_ide                         ()
 let ide_id_info_off              () = get_ide_id_info_off             ()
 let ide_file_name_st =
-  let v = Util.mk_ref (None #string) in
+  let v = mk_ref (None #string) in
   let set f =
     match !v with
     | None -> v := Some f
@@ -2061,16 +2101,22 @@ let max_ifuel                    () = get_max_ifuel                   ()
 let ml_ish                       () = get_MLish                       ()
 let ml_ish_effect                () = get_MLish_effect                ()
 let set_ml_ish                   () = set_option "MLish" (Bool true)
-let no_default_includes          () = get_no_default_includes         ()
 let no_extract                   s  = get_no_extract() |> List.existsb (module_name_eq s)
 let normalize_pure_terms_for_extraction
                                  () = get_normalize_pure_terms_for_extraction ()
 let no_location_info             () = get_no_location_info            ()
 let no_plugins                   () = get_no_plugins                  ()
 let no_smt                       () = get_no_smt                      ()
-let krmloutput                   () = get_krmloutput                  ()
-let output_dir                   () = get_odir                        ()
-let output_deps_to               () = get_output_deps_to              ()
+
+let ( ||| ) o x =
+  match o with
+  | None -> x
+  | Some _ -> o
+
+let output_to                    () = get_output_to                   ()
+let krmloutput                   () = get_krmloutput                  () ||| output_to ()
+let output_deps_to               () = get_output_deps_to              () ||| output_to ()
+
 let ugly                         () = get_ugly                        ()
 let print_bound_var_types        () = get_print_bound_var_types       ()
 let print_effect_args            () = get_print_effect_args           ()
@@ -2151,7 +2197,6 @@ let use_nbe                      () = get_use_nbe                     ()
 let use_nbe_for_extraction       () = get_use_nbe_for_extraction      ()
 let trivial_pre_for_unannotated_effectful_fns
                                  () = get_trivial_pre_for_unannotated_effectful_fns ()
-let with_fstarc                  () = get_with_fstarc ()
 
 let debug_keys                   () = lookup_opt "debug" as_comma_string_list
 let debug_all                    () = lookup_opt "debug_all" as_bool
@@ -2223,7 +2268,7 @@ let find_setting_for_target tgt (s:list (codegen_t & string))
 
 let extract_settings
   : unit -> option parsed_extract_setting
-  = let memo:ref (option parsed_extract_setting & bool) = Util.mk_ref (None, false) in
+  = let memo:ref (option parsed_extract_setting & bool) = mk_ref (None, false) in
     let merge_parsed_extract_settings p0 p1 : parsed_extract_setting =
       let merge_setting s0 s1 =
         match s0, s1 with
@@ -2349,7 +2394,13 @@ let should_extract (m:string) (tgt:codegen_t) : bool =
         in
         not (no_extract m) &&
         (match get_extract_namespace (), get_extract_module() with
-        | [], [] -> true //neither is set; extract everything
+        | [], [] ->
+          // Neither is set; extract only files given in the command line.
+          // Except for krml: there we retain the behavior of extracting everything
+          // into a single krml output file.
+          if tgt = Krml
+          then true
+          else should_check m
         | _ -> should_extract_namespace m || should_extract_module m)
 
 let should_be_already_cached m =

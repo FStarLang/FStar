@@ -19,7 +19,6 @@ module FStarC.Tactics.Interpreter
 (* Most of the tactic running logic is here. V1.Interpreter calls
 into this module for all of that. *)
 
-open FStar open FStarC
 open FStarC
 open FStarC.Effect
 open FStarC.List
@@ -39,22 +38,18 @@ open FStarC.Tactics.Common
 open FStarC.Class.Show
 open FStarC.Class.PP
 open FStarC.Class.Monad
+open FStarC.Syntax.Print {}
 module Listlike = FStarC.Class.Listlike
 
 module BU      = FStarC.Util
-module Cfg     = FStarC.TypeChecker.Cfg
 module E       = FStarC.Tactics.Embedding
 module Env     = FStarC.TypeChecker.Env
 module Err     = FStarC.Errors
-module IFuns   = FStarC.Tactics.InterpFuns
 module NBE     = FStarC.TypeChecker.NBE
 module NBET    = FStarC.TypeChecker.NBETerm
 module N       = FStarC.TypeChecker.Normalize
-module NRE     = FStarC.Reflection.V2.NBEEmbeddings
 module PC      = FStarC.Parser.Const
 module PO      = FStarC.TypeChecker.Primops
-module Print   = FStarC.Syntax.Print
-module RE      = FStarC.Reflection.V2.Embeddings
 module S       = FStarC.Syntax.Syntax
 module SS      = FStarC.Syntax.Subst
 module TcComm  = FStarC.TypeChecker.Common
@@ -86,7 +81,7 @@ let native_tactics_steps () =
 
 (* This reference keeps all of the tactic primitives. *)
 let __primitive_steps_ref : ref (list PO.primitive_step) =
-  BU.mk_ref []
+  mk_ref []
 
 let primitive_steps () : list PO.primitive_step =
     (native_tactics_steps ())
@@ -362,6 +357,17 @@ let run_unembedded_tactic_on_ps
     | Failed (Errors.Error (code, msg, rng, ctx), ps) ->
       let msg = FStarC.Pprint.doc_of_string "Tactic failed" :: msg in
       raise (Errors.Error (code, msg, rng, ctx))
+
+    | Failed (Errors.Stop, ps) ->
+      if FStarC.Errors.get_err_count () > 0
+      then raise Errors.Stop
+      else
+        let open FStarC.Pprint in
+        let open FStarC.Errors.Msg in
+        Errors.raise_error0 Errors.Fatal_UserTacticFailure [
+          text "A tactic raised the Stop exception but did not log errors.";
+          text "Failing anyway."
+        ]
 
     (* Any other error, including exceptions being raised by the metaprograms. *)
     | Failed (e, ps) ->

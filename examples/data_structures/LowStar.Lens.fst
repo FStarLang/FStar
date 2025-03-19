@@ -17,7 +17,6 @@ module LowStar.Lens
 open FStar.HyperStack.ST
 module B = LowStar.Buffer
 module HS = FStar.HyperStack
-module HST = FStar.HyperStack.ST
 
 let mods (l:hs_lens 'a 'b) (h:HS.mem) =
   B.modifies (as_loc l.footprint) l.snapshot h /\

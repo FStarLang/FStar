@@ -13,9 +13,6 @@ OTHERFLAGS := $(filter-out --query_stats, $(OTHERFLAGS))
 OTHERFLAGS := $(filter-out --hint_info, $(OTHERFLAGS))
 OTHERFLAGS += --ext fstar:no_absolute_paths
 
-# Make sure we are silent
-OTHERFLAGS += --silent
-
 # For these tests, we check that the resugared output
 # matches the expected file. We have to repeat the lines for
 # json_output, sadly.
@@ -43,3 +40,5 @@ $(OUTPUT_DIR)/TuplePat.fst.json_output : OTHERFLAGS+=--dump_module TuplePat
 $(OUTPUT_DIR)/TuplePat.fst.output      : OTHERFLAGS+=--dump_module TuplePat
 $(OUTPUT_DIR)/Monoid.fst.json_output   : OTHERFLAGS+=--dump_module Monoid
 $(OUTPUT_DIR)/Monoid.fst.output        : OTHERFLAGS+=--dump_module Monoid
+$(OUTPUT_DIR)/InfixImps.fst.json_output: OTHERFLAGS+=--dump_module InfixImps --print_implicits
+$(OUTPUT_DIR)/InfixImps.fst.output     : OTHERFLAGS+=--dump_module InfixImps --print_implicits

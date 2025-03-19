@@ -18,7 +18,6 @@ include MiniParse.Spec.List
 include MiniParse.Impl.Base
 include MiniParse.Impl.Combinators // for seq_append_slice
 
-module U8 = FStar.UInt8
 module U32 = FStar.UInt32
 module HS = FStar.HyperStack
 module HST = FStar.HyperStack.ST

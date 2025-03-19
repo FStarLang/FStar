@@ -144,7 +144,7 @@ let lemma_snoc_list_seq (#a:Type) (x:a) (q:queue a)
     seq_of_list l `Seq.append` seq_of_list [x];
     == { assert (Seq.equal (seq_of_list [x]) (Seq.create 1 x)) }
     seq_of_list l `Seq.append` Seq.create 1 x;
-    == { admit() }
+    == { }
     Seq.snoc (seq_of_list l) x;
   }
 

@@ -16,10 +16,8 @@
 
 module Example
 
-module HS = FStar.HyperStack
 module HST = FStar.HyperStack.ST
 module B = LowStar.Buffer
-module DLL = DoublyLinkedListIface
 module L = FStar.List.Tot
 
 open DoublyLinkedListIface

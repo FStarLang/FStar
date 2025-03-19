@@ -1213,7 +1213,7 @@ and ty_strictly_positive_in_datacon_of_applied_inductive (env:env_t)
 *)
 let name_strictly_positive_in_type env (bv:bv) t =
   let t, fv_lid = name_as_fv_in_t t bv in
-  ty_strictly_positive_in_type env [fv_lid] t (BU.mk_ref [])
+  ty_strictly_positive_in_type env [fv_lid] t (mk_ref [])
 
   
 (* 
@@ -1298,7 +1298,7 @@ let check_strict_positivity (env:env_t)
   : bool
   = //memo table, memoizes the instances of inductives
     //that we have recursively already deemed as strictly positive
-    let unfolded_inductives = BU.mk_ref [] in
+    let unfolded_inductives = mk_ref [] in
 
     //ty_params are the parameters of ty, it does not include the indexes
     let env, (ty_lid, ty_us, ty_params) = open_sig_inductive_typ env ty in
@@ -1325,7 +1325,7 @@ let check_strict_positivity (env:env_t)
 let check_exn_strict_positivity (env:env_t)
                                 (data_ctor_lid:lid)
   : bool
-  = let unfolded_inductives = BU.mk_ref [] in
+  = let unfolded_inductives = mk_ref [] in
     ty_strictly_positive_in_datacon_decl env [C.exn_lid] data_ctor_lid [] [] unfolded_inductives
 
     

@@ -15,10 +15,8 @@
 *)
 (* -------------------------------------------------------------------- *)
 module FStarC.Extraction.ML.RemoveUnusedParameters
-open FStar.Pervasives
 open FStarC.Effect
 open FStarC.List
-open FStar open FStarC
 open FStarC
 open FStarC.Ident
 open FStarC.Util
@@ -59,22 +57,22 @@ type entry = list argument_tag
 
 type env_t = {
   current_module:list mlsymbol;
-  tydef_map:BU.psmap entry;
+  tydef_map:PSMap.t entry;
 }
 
 let initial_env : env_t = {
   current_module = [];
-  tydef_map = BU.psmap_empty ()
+  tydef_map = PSMap.empty ()
 }
 
 let extend_env (env:env_t) (i:mlsymbol) (e:entry) : env_t = {
     env with
-    tydef_map = BU.psmap_add env.tydef_map (string_of_mlpath (env.current_module,i)) e
+    tydef_map = PSMap.add env.tydef_map (string_of_mlpath (env.current_module,i)) e
 }
 
 let lookup_tyname (env:env_t) (name:mlpath)
   : option entry
-  = BU.psmap_try_find env.tydef_map (string_of_mlpath name)
+  = PSMap.try_find env.tydef_map (string_of_mlpath name)
 
 (** Free variables of a type: Computed to check which parameters are used *)
 type var_set = RBSet.t mlident
@@ -332,7 +330,7 @@ let elim_one_mltydecl (env:env_t) (td:one_mltydecl)
     { td with tydecl_parameters = parameters;
               tydecl_defn = body }
 
-let elim_module env m =
+let elim_modulebody env m =
   let elim_module1 env m =
     match m.mlmodule1_m with
     | MLM_Ty td ->
@@ -365,28 +363,24 @@ let set_current_module (e:env_t) (n:mlpath) =
   let curmod = fst n @ [snd n] in
   { e with current_module = curmod }
 
-let elim_mllib (env:env_t) (m:mllib) =
+let elim_mllib (env:env_t) (m:mlmodule) =
   if Options.codegen() <> Some Options.FSharp then env, m else
-  let (MLLib libs) = m in
   let elim_one_lib env lib =
-    let name, sig_mod, _libs = lib in
+    let name, sig_mod = lib in
     let env = set_current_module env name in
     let sig_mod, env =
         match sig_mod with
         | Some (sig_, mod_)  ->
           //intentionally discard the environment from the module translation
-          let env, mod_ = elim_module env mod_ in
+          let env, mod_ = elim_modulebody env mod_ in
           // The sig is currently empty
           Some (sig_, mod_), env
         | None ->
           None, env
     in
-    env, (name, sig_mod, _libs)
+    env, (name, sig_mod)
   in
-  let env, libs =
-    BU.fold_map elim_one_lib env libs
-  in
-  env, MLLib libs
+  elim_one_lib env m
 
-let elim_mllibs (l:list mllib) : list mllib =
+let elim_mllibs (l:list mlmodule) : list mlmodule =
   snd (BU.fold_map elim_mllib initial_env l)

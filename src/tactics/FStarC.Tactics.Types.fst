@@ -15,7 +15,6 @@
 *)
 module FStarC.Tactics.Types
 
-open FStar open FStarC
 open FStarC
 open FStarC.Effect
 open FStarC.Syntax.Syntax
@@ -26,6 +25,15 @@ module Env     = FStarC.TypeChecker.Env
 module O       = FStarC.Options
 module Range   = FStarC.Range
 module U       = FStarC.Syntax.Util
+
+instance showable_guard_policy : showable guard_policy = {
+  show = (function | Goal -> "Goal"
+                   | SMT -> "SMT"
+                   | SMTSync -> "SMTSync"
+                   | Force -> "Force"
+                   | ForceSMT -> "ForceSMT"
+                   | Drop -> "Drop");
+}
 
 let goal_env g = g.goal_main_env
 let goal_range g = g.goal_main_env.range
@@ -100,9 +108,3 @@ let check_goal_solved' goal =
 
 let check_goal_solved goal =
   Option.isSome (check_goal_solved' goal)
-
-let non_informative_token (g:env) (t:typ) = unit
-let subtyping_token (g:env) (t0 t1:typ) = unit
-let equiv_token (g:env) (t0 t1:typ) = unit
-let typing_token (g:env) (e:term) (c:Core.tot_or_ghost & typ) = unit
-let match_complete_token (g:env) (sc:term) (t:typ) (pats:list pattern) = unit

@@ -17,7 +17,6 @@ module FStarC.Tests.Unif
 //Unification tests
 //open FSharp.Compatibility.OCaml
 
-open FStar
 open FStarC
 open FStarC
 open FStarC.Effect
@@ -27,9 +26,6 @@ open FStarC.Syntax.Syntax
 open FStarC.Tests.Pars
 module S = FStarC.Syntax.Syntax
 module U = FStarC.Syntax.Util
-module SS = FStarC.Syntax.Subst
-module I = FStarC.Ident
-module P  = FStarC.Syntax.Print
 module N = FStarC.TypeChecker.Normalize
 module Rel = FStarC.TypeChecker.Rel
 module Env = FStarC.TypeChecker.Env
@@ -49,7 +45,7 @@ let guard_to_string g = match g with
     | NonTrivial f ->
       N.term_to_string (tcenv()) f
 
-let success = BU.mk_ref true
+let success = mk_ref true
 
 let fail msg =
     BU.print_string msg;

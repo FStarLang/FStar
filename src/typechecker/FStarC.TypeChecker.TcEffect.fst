@@ -14,10 +14,8 @@
    limitations under the License.
 *)
 module FStarC.TypeChecker.TcEffect
-open FStar.Pervasives
 open FStarC.Effect
 open FStarC.List
-open FStar open FStarC
 open FStarC
 open FStarC.Syntax
 open FStarC.TypeChecker

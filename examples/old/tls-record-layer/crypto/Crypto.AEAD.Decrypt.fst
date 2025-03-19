@@ -29,16 +29,13 @@ open Crypto.Symmetric.PRF
 open Crypto.AEAD.Encoding 
 open Crypto.AEAD.Invariant
 
-module HH       = FStar.HyperHeap
 module HS       = FStar.HyperStack
-module ST       = FStar.HyperStack.ST
 module MAC      = Crypto.Symmetric.MAC
 module CMA      = Crypto.Symmetric.UF1CMA
 module Plain    = Crypto.Plain
 module Cipher   = Crypto.Symmetric.Cipher
 module PRF      = Crypto.Symmetric.PRF
 module Dexor       = Crypto.AEAD.EnxorDexor
-module Encoding    = Crypto.AEAD.Encoding   
 module EncodingWrapper = Crypto.AEAD.Wrappers.Encoding
 module CMAWrapper = Crypto.AEAD.Wrappers.CMA
 module PRF_MAC    = Crypto.AEAD.Wrappers.PRF

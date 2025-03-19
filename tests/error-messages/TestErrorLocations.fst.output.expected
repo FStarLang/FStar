@@ -34,7 +34,7 @@
   - Expected type Prims.nat got type Prims.int
   - The SMT solver could not prove the query. Use --query_stats for more
     details.
-  - See also Prims.fst(680,18-680,24)
+  - See also Prims.fst(682,18-682,24)
 
 >>]
 >> Got issues: [
@@ -50,7 +50,7 @@
   - Assertion failed
   - The SMT solver could not prove the query. Use --query_stats for more
     details.
-  - See also Prims.fst(451,90-451,102)
+  - See also Prims.fst(459,90-459,102)
 
 >>]
 >> Got issues: [
@@ -58,7 +58,7 @@
   - Assertion failed
   - The SMT solver could not prove the query. Use --query_stats for more
     details.
-  - See also Prims.fst(451,90-451,102)
+  - See also Prims.fst(459,90-459,102)
 
 >>]
 >> Got issues: [
@@ -67,7 +67,7 @@
   - Expected type Prims.nat got type Prims.int
   - The SMT solver could not prove the query. Use --query_stats for more
     details.
-  - See also Prims.fst(680,18-680,24)
+  - See also Prims.fst(682,18-682,24)
 
 >>]
 >> Got issues: [

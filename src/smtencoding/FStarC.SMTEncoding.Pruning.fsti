@@ -46,7 +46,6 @@ module FStarC.SMTEncoding.Pruning
   Thanks to Chris Hawblitzel and Guido Martínez for design and discussions.
 *)
 open FStarC.Effect
-open FStar open FStarC
 open FStarC
 open FStarC.SMTEncoding.Term
 

@@ -17,7 +17,6 @@ module LowStar.Lens.Tuple2
 open LowStar.Lens
 open FStar.HyperStack.ST
 module B = LowStar.Buffer
-module HS = FStar.HyperStack
 module HST = FStar.HyperStack.ST
 module LB = LowStar.Lens.Buffer
 

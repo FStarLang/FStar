@@ -16,13 +16,10 @@
 
 (** Convert Parser.Ast to Pprint.document for prettyprinting. *)
 module FStarC.Parser.ToDocument
+
 open FStarC
-open FStar.Pervasives
 open FStarC.Effect
 open FStarC.List
-
-open FStar open FStarC
-open FStarC
 open FStarC.Util
 open FStarC.Parser.AST
 open FStarC.Ident
@@ -235,8 +232,8 @@ let matches_var t x =
         | Var y -> (string_of_id x) = string_of_lid y
         | _ -> false
 
-let is_tuple_constructor = C.is_tuple_data_lid'
-let is_dtuple_constructor = C.is_dtuple_data_lid'
+let is_tuple_constructor = C.is_tuple_datacon_lid
+let is_dtuple_constructor = C.is_dtuple_datacon_lid
 
 let is_array e = match e.tm with
     (* TODO check that there is no implicit parameters *)
@@ -290,7 +287,7 @@ type associativity =
 
 (* A token is either a character c representing any string beginning with c, a complete string or a unicode operator *)
 type token =
-    | StartsWith: Char.char -> token
+    | StartsWith: FStar.Char.char -> token
     | Exact     : string    -> token
     | UnicodeOperator
 
@@ -301,7 +298,7 @@ let token_to_string = function
     | Exact           s -> s
     | UnicodeOperator -> "<unicode-op>"
 
-let is_non_latin_char (s:Char.char): bool
+let is_non_latin_char (s:FStar.Char.char): bool
     = int_of_char s > 0x024f
 
 let matches_token (s:string) = function
@@ -490,7 +487,7 @@ let cat_with_colon x y = x ^^ colon ^/^ y
 (* that all printed AST nodes that could eventually contain a comment are printed in the *)
 (* sequential order of the document. *)
 
-let comment_stack : ref (list (string&range))= BU.mk_ref []
+let comment_stack : ref (list (string&range))= mk_ref []
 
 (* some meta-information that informs spacing and the placement of comments around a declaration *)
 type decl_meta =
@@ -2288,9 +2285,9 @@ let binder_to_document b = p_binder true b
 
 let modul_to_document (m:modul) =
   match m with
-  | Module (_, decls)
-  | Interface (_, decls, _) ->
-    decls |> List.map decl_to_document |> separate hardline
+  | Module {decls}
+  | Interface {decls} ->
+    separate_map hardline p_decl decls
 
 let comments_to_document (comments : list (string & FStarC.Range.range)) =
     separate_map hardline (fun (comment, range) -> str comment) comments
@@ -2326,8 +2323,8 @@ let decls_with_comments_to_document (decls:list decl) comments =
 (* are described in the ``Taking care of comments`` section *)
 let modul_with_comments_to_document (m:modul) comments =
   let decls = match m with
-    | Module (_, decls)
-    | Interface (_, decls, _) -> decls
+    | Module {decls}
+    | Interface {decls} -> decls
   in
   decls_with_comments_to_document decls comments
 

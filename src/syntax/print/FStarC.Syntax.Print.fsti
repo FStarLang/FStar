@@ -21,9 +21,6 @@ open FStarC.Syntax.Syntax
 open FStarC.Class.Show
 open FStarC.Class.PP
 
-module DsEnv = FStarC.Syntax.DsEnv
-module Json = FStarC.Json
-
 (* Use the instances if possible! *)
 
 instance val showable_term      : showable term
@@ -61,6 +58,7 @@ instance val pretty_ctxu        : pretty ctx_uvar
 instance val pretty_binder      : pretty binder
 instance val pretty_bv          : pretty bv
 instance val pretty_binding     : pretty binding
+instance val pretty_qualifier   : pretty qualifier
 
 (* A "short" version of printing a sigelt. Meant to (usually) be a small string
 suitable to embed in an error message. No need to be fully faithful to
@@ -78,6 +76,7 @@ val sigelt_to_doc'        : DsEnv.env -> sigelt -> Pprint.document
 
 (* Prints as <u1,..,un>ty instead of a pair. *)
 val tscheme_to_string : tscheme -> string
+val tscheme_to_doc    : tscheme -> Pprint.document
 
 (* Prints sugar, 'Implicit _' prints as '#', etc *)
 val bqual_to_string       : bqual -> string

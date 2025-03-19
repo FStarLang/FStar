@@ -15,9 +15,7 @@
 *)
 module FStarC.Tactics.V2.Basic
 
-open FStar open FStarC
 open FStarC
-open FStar.Pervasives
 open FStarC.Effect
 open FStarC.List
 open FStarC.Util
@@ -36,8 +34,6 @@ open FStarC.VConfig
 open FStarC.Errors.Msg
 module Listlike = FStarC.Class.Listlike
 
-friend FStar.Pervasives (* to expose norm_step *)
-
 module BU     = FStarC.Util
 module Cfg    = FStarC.TypeChecker.Cfg
 module Env    = FStarC.TypeChecker.Env
@@ -54,7 +50,6 @@ module SS     = FStarC.Syntax.Subst
 module SC     = FStarC.Syntax.Compress
 module TcComm = FStarC.TypeChecker.Common
 module TcTerm = FStarC.TypeChecker.TcTerm
-module TcUtil = FStarC.TypeChecker.Util
 module UF     = FStarC.Syntax.Unionfind
 module U      = FStarC.Syntax.Util
 module Z      = FStarC.BigInt
@@ -239,6 +234,9 @@ let proc_guard_formula
   (rng:Range.range)
 : tac unit
 = let! ps = get in
+  if !dbg_Tac then
+    BU.print2 "Guard policy is %s, trying to discharge %s\n"
+      (show ps.guard_policy) (show f);
   match ps.guard_policy with
   | Drop ->
     // should somehow taint the state instead of just printing a warning
@@ -581,7 +579,7 @@ let is_false t =
 
 let meas (s:string) (f : tac 'a) : tac 'a =
   mk_tac (fun ps ->
-    let (r, ms) = BU.record_time_ms (fun () -> Tactics.Monad.run f ps) in
+    let (r, ms) = Timing.record_ms (fun () -> Tactics.Monad.run f ps) in
     BU.print2 "++ Tactic %s ran in \t\t%sms\n" s (show ms);
     r)
 
@@ -842,7 +840,7 @@ let intro_rec () : tac (RD.binding & RD.binding) =
     | None ->
         fail1 "intro_rec: goal is not an arrow (%s)" (tts (goal_env goal) (goal_type goal))
 
-let norm (s : list Pervasives.norm_step) : tac unit =
+let norm (s : list NormSteps.norm_step) : tac unit =
     let! goal = cur_goal in
     if_verbose (fun () -> BU.print1 "norm: witness = %s\n" (show (goal_witness goal))) ;!
     // Translate to actual normalizer steps
@@ -852,7 +850,7 @@ let norm (s : list Pervasives.norm_step) : tac unit =
     replace_cur (goal_with_type goal t)
 
 let __norm_term_env
-  (well_typed:bool) (e : env) (s : list Pervasives.norm_step) (t : term)
+  (well_typed:bool) (e : env) (s : list NormSteps.norm_step) (t : term)
   : tac term
 = wrap_err "norm_term" <| (
     let! ps = get in
@@ -929,7 +927,7 @@ let t_exact try_refine set_expected_typ tm : tac unit = wrap_err "exact" <| (
     | Inl e when not (try_refine) -> traise e
     | Inl e ->
       if_verbose (fun () -> BU.print_string "__exact_now failed, trying refine...\n") ;!
-      match! catch (norm [Pervasives.Delta] ;! refine_intro () ;! __exact_now set_expected_typ tm) with
+      match! catch (norm [NormSteps.Delta] ;! refine_intro () ;! __exact_now set_expected_typ tm) with
       | Inr r ->
         if_verbose (fun () -> BU.print_string "__exact_now: failed after refining too\n") ;!
         return r
@@ -1381,7 +1379,7 @@ let var_retype (b : RD.binding) : tac unit = wrap_err "binder_retype" <| (
                           (Some goal_sc)
     )
 
-let norm_binding_type (s : list Pervasives.norm_step) (b : RD.binding) : tac unit = wrap_err "norm_binding_type" <| (
+let norm_binding_type (s : list NormSteps.norm_step) (b : RD.binding) : tac unit = wrap_err "norm_binding_type" <| (
     let! goal = cur_goal in
     let bv = binding_to_bv b in
     match split_env bv (goal_env goal) with
@@ -2045,14 +2043,14 @@ let rec init (l:list 'a) : list 'a =
 
 let lget (ty:term) (k:string) : tac term = wrap_err "lget" <| (
     let! ps = get in
-    match BU.psmap_try_find ps.local_state k with
+    match PSMap.try_find ps.local_state k with
     | None -> fail "not found"
     | Some t -> unquote ty t
     )
 
 let lset (_ty:term) (k:string) (t:term) : tac unit = wrap_err "lset" <| (
     let! ps = get in
-    let ps = { ps with local_state = BU.psmap_add ps.local_state k t } in
+    let ps = { ps with local_state = PSMap.add ps.local_state k t } in
     set ps
     )
 
@@ -2223,13 +2221,17 @@ let ext_getv (k:string) : tac string
   = return () ;!
     return (Options.Ext.get k)
 
+let ext_enabled (k:string) : tac bool
+  = return () ;!
+    return (Options.Ext.enabled k)
+
 let ext_getns (ns:string) : tac (list (string & string))
   = return () ;!
     return (Options.Ext.getns ns)
 
 let alloc (x:'a) : tac (tref 'a) =
   return ();!
-  return (BU.mk_ref x)
+  return (mk_ref x)
 
 let read (r:tref 'a) : tac 'a =
   return ();!
@@ -2241,6 +2243,10 @@ let write (r:tref 'a) (x:'a) : tac unit =
   return ()
 
 (***** Builtins used in the meta DSL framework *****)
+
+(* reflection typing calls generate guards in this format, and are mostly discharged
+   internally. *)
+type refl_guard_t = env & typ
 
 let dbg_refl (g:env) (msg:unit -> string) =
   if !dbg_ReflTc
@@ -2254,7 +2260,16 @@ let refl_typing_guard (e:env) (g:typ) : tac unit =
 
 let uncurry f (x, y) = f x y
 
-let __refl_typing_builtin_wrapper (f:unit -> 'a & list (env & typ)) : tac (option 'a & issues) =
+let exn_to_issue (e:exn) : Errors.issue =
+  FStarC.Errors.({
+    issue_msg = Errors.mkmsg (BU.print_exn e);
+    issue_level = EError;
+    issue_range = None;
+    issue_number = (Some 17);
+    issue_ctx = get_ctx ()
+  })
+
+let __refl_typing_builtin_wrapper (f:unit -> 'a & list refl_guard_t) : tac (option 'a & issues) =
   (* We ALWAYS rollback the state. This wrapper is meant to ensure that
   the UF graph is not affected by whatever we are wrapping. This means
   any returned term must be deeply-compressed. The guards are compressed by
@@ -2264,13 +2279,7 @@ let __refl_typing_builtin_wrapper (f:unit -> 'a & list (env & typ)) : tac (optio
   let errs, r =
     try Errors.catch_errors_and_ignore_rest f
     with exn -> //catch everything
-      let issue = FStarC.Errors.({
-        issue_msg = Errors.mkmsg (BU.print_exn exn);
-        issue_level = EError;
-        issue_range = None;
-        issue_number = (Some 17);
-        issue_ctx = get_ctx ()
-      }) in
+      let issue = exn_to_issue exn in
       [issue], None
   in
 
@@ -2298,8 +2307,32 @@ let __refl_typing_builtin_wrapper (f:unit -> 'a & list (env & typ)) : tac (optio
   if List.length errs > 0
   then return (None, errs)
   else (
-    iter_tac (uncurry refl_typing_guard) gs;!
-    return (r, errs)
+    (* Try to discharge the guards, but if any of them fails, return a decent error. *)
+    let! ok, guard_errs =
+      fold_right (fun (e,g) (ok, errs) ->
+        match! catch (refl_typing_guard e g) with
+        | Inr () -> return (ok, errs)
+        | Inl e ->
+          (* the exception is not really useful. *)
+          let iss =
+            FStarC.Errors.({
+              issue_msg = [
+                Pprint.doc_of_string "Discharging guard failed.";
+                Pprint.doc_of_string "g = " ^^ pp g;
+              ];
+              issue_level = EError;
+              issue_range = None;
+              issue_number = (Some 17);
+              issue_ctx = get_ctx ()
+            })
+          in
+          return (false, iss :: errs)
+      ) gs (true, [])
+    in
+    if ok then
+      return (r, errs @ guard_errs)
+    else
+      return (None, errs @ guard_errs)
   )
 
 (* This runs the tactic `f` in the current proofstate, and returns an
@@ -2317,15 +2350,19 @@ execution of the primitive we are calling. This second is meant to catch
 errors in the tactic execution, e.g. those related to discharging the
 guards if a synchronous mode (SMTSync/Force) was used.
 
-This also adds the label to the messages. *)
-let refl_typing_builtin_wrapper (label:string) (f:unit -> 'a & list (env & typ)) : tac (option 'a & issues) =
+This also adds the label to the messages (when debugging) to identify the primitive. *)
+let refl_typing_builtin_wrapper (label:string) (f:unit -> 'a & list refl_guard_t) : tac (option 'a & issues) =
   let open FStarC.Errors in
   let! o, errs =
     match! catch_all (__refl_typing_builtin_wrapper f) with
     | Inl errs -> return (None, errs)
     | Inr r -> return r
   in
-  let errs = errs |> List.map (fun is -> { is with issue_msg = is.issue_msg @ [text ("Raised within Tactics." ^ label)] }) in
+  let errs =
+    if Debug.any ()
+    then errs |> List.map (fun is -> { is with issue_msg = is.issue_msg @ [text ("Raised within Tactics." ^ label)] })
+    else errs
+  in
   return (o, errs)
 
 let no_uvars_in_term (t:term) : bool =
@@ -2429,7 +2466,7 @@ let refl_core_compute_term_type (g:env) (e:term) : tac (option (Core.tot_or_ghos
          let g = Env.set_range g e.pos in
          dbg_refl g (fun _ ->
            BU.format1 "refl_core_compute_term_type: %s\n" (show e));
-         let guards : ref (list (env & typ)) = BU.mk_ref [] in
+         let guards : ref (list refl_guard_t) = mk_ref [] in
          let gh = fun g guard ->
            (* FIXME: this is kinda ugly, we store all the guards
            in a local ref and fetch them at the end. *)
@@ -2549,7 +2586,7 @@ let refl_tc_term (g:env) (e:term) : tac (option (term & (Core.tot_or_ghost & typ
       dbg_refl g (fun _ ->
         BU.format1 "} finished tc with e = %s\n"
           (show e));
-      let guards : ref (list (env & typ)) = BU.mk_ref [] in
+      let guards : ref (list refl_guard_t) = mk_ref [] in
       let gh = fun g guard ->
         (* collect guards and return them *)
         dbg_refl g (fun _ -> 
@@ -2627,9 +2664,9 @@ let refl_check_prop_validity (g:env) (e:term) : tac (option unit & issues) =
   else return (None, [unexpected_uvars_issue (Env.get_range g)])
 
 let refl_check_match_complete (g:env) (sc:term) (scty:typ) (pats : list RD.pattern)
-: tac (option (list RD.pattern & list (list RD.binding)))
+: tac (option (list RD.pattern & list (list RD.binding)) & issues)
 =
-  return () ;!
+  refl_typing_builtin_wrapper "refl_check_match_complete" fun _ ->
   (* We just craft a match with the sc and patterns, using `1` in every
   branch, and check it against type int. *)
   let one = U.exp_int "1" in
@@ -2637,26 +2674,26 @@ let refl_check_match_complete (g:env) (sc:term) (scty:typ) (pats : list RD.patte
   let mm = mk (Tm_match {scrutinee=sc; ret_opt=None; brs=brs; rc_opt=None}) sc.pos in
   let env = g in
   let env = Env.set_expected_typ env S.t_int in
-  let! mm, _, g = __tc env mm in
+  let mm, _, guard = TcTerm.typeof_tot_or_gtot_term env mm true in
 
-  let errs, b = Errors.catch_errors_and_ignore_rest (fun () -> Env.is_trivial <| Rel.discharge_guard env g) in
-  match errs, b with
-  | [], Some true ->
-    let get_pats t =
-      match (U.unmeta t).n with
-      | Tm_match {brs} -> List.map (fun (p,_,_) -> p) brs
-      | _ -> failwith "refl_check_match_complete: not a match?"
-    in
-    let pats = get_pats mm in
-    let rec bnds_for_pat (p:pat) : list RD.binding =
-      match p.v with
-      | Pat_constant _ -> []
-      | Pat_cons (fv, _, pats) -> List.concatMap (fun (p, _) -> bnds_for_pat p) pats
-      | Pat_var bv -> [bv_to_binding bv]
-      | Pat_dot_term _ -> []
-    in
-    return (Some (List.map inspect_pat pats, List.map bnds_for_pat pats))
-  | _ -> return None
+  Rel.force_trivial_guard env guard;
+  let get_pats t =
+    match (U.unmeta t).n with
+    | Tm_match {brs} ->
+      List.map (fun br -> let (p,_,_) = SS.open_branch br in p) brs
+      (* ^We must open the patterns to return proper binders. See Pulse isse #357. *)
+    | _ -> failwith "refl_check_match_complete: not a match?"
+  in
+  let mm = SC.deep_compress false true mm in // important! we must return fully-compressed patterns
+  let pats = get_pats mm in
+  let rec bnds_for_pat (p:pat) : list RD.binding =
+    match p.v with
+    | Pat_constant _ -> []
+    | Pat_cons (fv, _, pats) -> List.concatMap (fun (p, _) -> bnds_for_pat p) pats
+    | Pat_var bv -> [bv_to_binding bv]
+    | Pat_dot_term _ -> []
+  in
+  (List.map inspect_pat pats, List.map bnds_for_pat pats), []
 
 let refl_instantiate_implicits (g:env) (e:term) (expected_typ : option term)
   : tac (option (list (bv & typ) & term & typ) & issues) =
@@ -2705,6 +2742,9 @@ let refl_instantiate_implicits (g:env) (e:term) (expected_typ : option term)
     in
 
     dbg_refl g (fun _ -> BU.format2 "refl_instantiate_implicits: inferred %s : %s" (show e) (show t));
+
+    // Stop now if we've already logged errors, it's less confusing to the user.
+    Errors.stop_if_err ();
 
     if not (no_univ_uvars_in_term e)
     then Errors.raise_error e Errors.Error_UnexpectedUnresolvedUvar
@@ -2761,8 +2801,8 @@ let refl_try_unify (g:env) (uvs:list (bv & typ)) (t0 t1:term)
       let uv_id = Syntax.Unionfind.uvar_unique_id ctx_u.ctx_uvar_head in
       Env.conj_guard guard_uvs guard_uv,
       (NT (bv, uv_t))::ss,
-      BU.pimap_add tbl uv_id (ctx_u.ctx_uvar_head, bv)
-    ) (Env.trivial_guard, [], (BU.pimap_empty ())) uvs in
+      PIMap.add tbl uv_id (ctx_u.ctx_uvar_head, bv)
+    ) (Env.trivial_guard, [], (PIMap.empty ())) uvs in
     let t0, t1 = SS.subst ss t0, SS.subst ss t1 in
     let g = { g with phase1=true; admit=true } in
     let guard_eq =
@@ -2780,14 +2820,14 @@ let refl_try_unify (g:env) (uvs:list (bv & typ)) (t0 t1:term)
         //   e.g., created as part of Rel.try_teq, return []
         //
         let b = List.existsb (fun {imp_uvar = {ctx_uvar_head = (uv, _, _)}} ->
-          BU.pimap_try_find tbl (Unionfind.puf_unique_id uv) = None) (Listlike.to_list guard.implicits) in
+          PIMap.try_find tbl (Unionfind.puf_unique_id uv) = None) (Listlike.to_list guard.implicits) in
         if b then []
         else
           //
           // iterate over the tbl
           // return uvs that could be solved fully
           //
-          BU.pimap_fold tbl (fun id (uvar, bv) l ->
+          PIMap.fold tbl (fun id (uvar, bv) l ->
             match Syntax.Unionfind.find uvar with
             | Some t ->
               let allow_uvars = true in
@@ -2892,7 +2932,7 @@ let proofstate_of_goals rng env goals imps =
         guard_policy = SMT;
         freshness = 0;
         tac_verb_dbg = !dbg_TacVerbose;
-        local_state = BU.psmap_empty ();
+        local_state = PSMap.empty ();
         urgency = 1;
         dump_on_failure = true;
     }
@@ -2922,7 +2962,7 @@ let proofstate_of_all_implicits rng env imps =
         guard_policy = SMT;
         freshness = 0;
         tac_verb_dbg = !dbg_TacVerbose;
-        local_state = BU.psmap_empty ();
+        local_state = PSMap.empty ();
         urgency = 1;
         dump_on_failure = true;
     }

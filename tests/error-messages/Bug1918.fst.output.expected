@@ -1,6 +1,6 @@
 >> Got issues: [
 * Error 228 at Bug1918.fst(11,13-11,14):
   - Could not solve typeclass constraint `Bug1918.mon`
-  - See also FStar.Tactics.Typeclasses.fst(297,6-300,7)
+  - See also FStar.Tactics.Typeclasses.fst(293,6-296,7)
 
 >>]

@@ -11,7 +11,6 @@ module Interop
 open FStar.FunctionalExtensionality
 open FStar.Integers
 open FStar.HyperStack.ST
-module M = FStar.Map
 module HS = FStar.HyperStack
 
 (* A primitive to update the state monolithically with the result of a ghost function *)

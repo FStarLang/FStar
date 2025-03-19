@@ -5,7 +5,6 @@ include Negotiation.Writers.Aux2
 
 module LWP = LowParseWriters.Parsers
 module LWPS = LowParseWriters.NoHoare.Parsers
-module LPI = LowParse.Low.Int
 
 inline_for_extraction
 noextract

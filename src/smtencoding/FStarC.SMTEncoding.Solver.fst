@@ -15,14 +15,14 @@
 *)
 
 module FStarC.SMTEncoding.Solver
-open FStar.Pervasives
+
+open FStarC
 open FStarC.Effect
 open FStarC.List
-open FStar open FStarC
-open FStarC
 open FStarC.SMTEncoding.Z3
 open FStarC.SMTEncoding.Term
 open FStarC.Util
+open FStarC.SMap
 open FStarC.Hints
 open FStarC.TypeChecker
 open FStarC.TypeChecker.Env
@@ -38,10 +38,7 @@ open FStarC.RBSet
 module BU       = FStarC.Util
 module Env      = FStarC.TypeChecker.Env
 module Err      = FStarC.Errors
-module Print    = FStarC.Syntax.Print
 module Syntax   = FStarC.Syntax.Syntax
-module TcUtil   = FStarC.TypeChecker.Util
-module U        = FStarC.Syntax.Util
 module UC       = FStarC.SMTEncoding.UnsatCore
 exception SplitQueryAndRetry
 
@@ -59,16 +56,27 @@ type z3_replay_result = either (option UC.unsat_core), error_labels
 let z3_result_as_replay_result = function
     | Inl l -> Inl l
     | Inr (r, _) -> Inr r
-let recorded_hints : ref (option hints) = BU.mk_ref None
-let replaying_hints: ref (option hints) = BU.mk_ref None
+
+// Hints are stored in this reference as we progress through the file,
+// and written out by calling finalize_hints_db below.
+let src_filename : ref string = mk_ref ""
+let recorded_hints : ref hints = mk_ref []
+let replaying_hints: ref (option hints) = mk_ref None
+let refreshing_hints : ref bool = mk_ref false
 
 (****************************************************************************)
 (* Hint databases (public)                                                  *)
 (****************************************************************************)
-let use_hints () = Options.use_hints () && Options.Ext.get "context_pruning" = ""
-let initialize_hints_db src_filename format_filename : unit =
-    if Options.record_hints() then recorded_hints := Some [];
-    let norm_src_filename = BU.normalize_file_path src_filename in
+let use_hints () = Options.use_hints ()
+
+(* fresh: true iff we are recording hints for the whole file, and hence should
+not merge hints with old ones. *)
+let initialize_hints_db filename (refresh:bool) : unit =
+    recorded_hints := [];
+    refreshing_hints := refresh;
+
+    let norm_src_filename = Filepath.normalize_file_path filename in
+    src_filename := norm_src_filename;
     (*
      * Read the hints file into replaying_hints
      * But it will only be used when use_hints is on
@@ -104,27 +112,77 @@ let initialize_hints_db src_filename format_filename : unit =
             ()
     end
 
-let finalize_hints_db src_filename :unit =
-    begin if Options.record_hints () then
-          let hints = Option.get !recorded_hints in
-          let hints_db = {
-                module_digest = BU.digest_of_file src_filename;
-                hints = hints
-              }  in
-          let norm_src_filename = BU.normalize_file_path src_filename in
-          let val_filename = Options.hint_file_for_src norm_src_filename in
-          write_hints val_filename hints_db
-    end;
-    recorded_hints := None;
-    replaying_hints := None
+let rec merge_hints (prev next : hints) : hints =
+  match prev, next with
+  (* Can Nones really happen? *)
+  | None :: prev, next -> merge_hints prev next
+  | prev, None :: next -> merge_hints prev next
+  | Some p :: prev,  Some n :: next ->
+    (* Take the lesser one, or prefer n if they are for the same query. *)
+    if String.compare p.hint_name n.hint_name < 0 || (p.hint_name = n.hint_name && p.hint_index < n.hint_index) then
+      Some p :: merge_hints prev (Some n :: next)
+    else if p.hint_name = n.hint_name && p.hint_index = n.hint_index then
+      Some n :: merge_hints prev next
+    else
+      Some n :: merge_hints (Some p :: prev) next
+  | [], next -> next
+  | prev, [] -> prev
+
+let merge_hints_db (prev next : hints_db) : hints_db =
+  {
+    module_digest = next.module_digest;
+    hints = merge_hints prev.hints next.hints;
+  }
+
+(* This is called after we check every single top-level in the interactive mode, so
+we can record hints before "finishing" a module (which is never triggered in
+interactive mode, currently). *)
+let flush_hints () : unit =
+  let hints = !recorded_hints in
+  let src_filename = !src_filename in
+  (* If empty, don't do anything. *)
+  if Cons? hints then begin
+    let hints_db = {
+      module_digest = BU.digest_of_file src_filename;
+      hints = hints;
+    } in
+    let val_filename = Options.hint_file_for_src src_filename in
+    let hints_db =
+      (* If it's a full --record_hints run, overwrite file. Otherwise merge with
+      old hints. *)
+      if !refreshing_hints
+      then hints_db
+      else
+        match read_hints val_filename with
+        | HintsOK prev_hints -> merge_hints_db prev_hints hints_db
+        | _ -> hints_db
+    in
+    write_hints val_filename hints_db
+  end;
+  recorded_hints := [];
+  replaying_hints := None
+
+let finalize_hints_db () : unit =
+  flush_hints ()
 
 let with_hints_db fname f =
-    initialize_hints_db fname false;
+  (* Forbid reentrant calls, which would trash the state. This
+  happens (benignly) in the IDE, since the top-level invocation of the
+  interactive mode is wrapped by this function, and that driver will
+  call the typechecker to check dependencies of the current file, which
+  are also wrapped (even if lax). This will do the right thing of only
+  handling the outer invocation. *)
+  if !src_filename <> "" then
+    f ()
+  else begin
+    (* If --record_hints is set at this time, and this is not an interactive, we're fully refreshing. *)
+    initialize_hints_db fname (Options.record_hints () && not (Options.interactive ()));
     let result = f () in
     // for the moment, there should be no need to trap exceptions to finalize the hints db
     // no cleanup needs to occur if an error occurs.
-    finalize_hints_db fname;
+    finalize_hints_db ();
     result
+  end
 
 (***********************************************************************************)
 (* Invoking the SMT solver and extracting an error report from the model, if any   *)
@@ -172,6 +230,7 @@ type query_settings = {
     query_hash:option string;
     query_can_be_split_and_retried:bool;
     query_term: FStarC.Syntax.Syntax.term;
+    query_record_hints: bool;
 }
 
 (* Translation from F* rlimit units to Z3 rlimit units.
@@ -206,8 +265,10 @@ let with_fuel_and_diagnostics settings label_assumptions =
         Term.CheckSat; //go Z3!
         Term.SetOption ("rlimit", "0"); //back to using infinite rlimit
         Term.GetReasonUnknown; //explain why it failed
-        Term.GetUnsatCore; //for proof profiling, recording hints etc
-    ]
+    ]@
+    (if settings.query_record_hints
+     then [ Term.GetUnsatCore ]
+     else [])
     @(if (Options.print_z3_statistics() ||
           Options.query_stats ()) then [Term.GetStatistics] else []) //stats
     @settings.query_suffix //recover error labels and a final "Done!" message
@@ -453,7 +514,7 @@ type unique_string_accumulator = {
    extracted in sorted order *)
 let mk_unique_string_accumulator ()
 : unique_string_accumulator
-= let strings = BU.mk_ref [] in
+= let strings = mk_ref [] in
   let add m =
     let ms = !strings in
     if List.contains m ms then ()
@@ -582,7 +643,7 @@ let query_info settings z3result =
         in
         let range = "(" ^ show settings.query_range ^ at_log_file ^ ")" in
         let used_hint_tag = if used_hint settings then " (with hint)" else "" in
-        let stats =
+        let stats () =
             if Options.query_stats() then
                 let f k v a = a ^ k ^ "=" ^ v ^ " " in
                 let str = smap_fold z3result.z3result_statistics f "statistics={" in
@@ -598,23 +659,22 @@ let query_info settings z3result =
                 show settings.query_fuel;
                 show settings.query_ifuel;
                 show (settings.query_rlimit);
-                // stats
+                // stats ()
              ];
         if Options.print_z3_statistics () then process_unsat_core core;
         errs |> List.iter (fun (_, msg, range) ->
             let msg = if used_hint settings then Pprint.doc_of_string "Hint-replay failed" :: msg else msg in
             FStarC.Errors.log_issue range FStarC.Errors.Warning_HitReplayFailed msg)
     end
-    else if Options.Ext.get "profile_context" <> ""
+    else if Options.Ext.enabled "profile_context"
     then match z3result.z3result_status with
          | UNSAT core -> process_unsat_core core
          | _ -> ()
 
 //caller must ensure that the recorded_hints is already initiailized
 let store_hint hint =
-  match !recorded_hints with
-  | Some l -> recorded_hints := Some (l@[Some hint])
-  | _ -> assert false; ()
+  let l = !recorded_hints in
+  recorded_hints := l@[Some hint]
 
 let record_hint settings z3result =
     if not (Options.record_hints()) then () else
@@ -786,6 +846,7 @@ let make_solver_configs
                         | Some {hash=h} -> h);
             query_can_be_split_and_retried=can_split;
             query_term=query_term;
+            query_record_hints=Options.record_hints();
         } in
         default_settings, next_hint
     in
@@ -908,8 +969,8 @@ let ask_solver_quake
         then acc
         else fold_nat' f (f acc lo) (lo + 1) hi
     in
-    let best_fuel = BU.mk_ref None in
-    let best_ifuel = BU.mk_ref None in
+    let best_fuel = mk_ref None in
+    let best_ifuel = mk_ref None in
     let maybe_improve (r:ref (option int)) (n:int) : unit =
         match !r with
         | None -> r := Some n
@@ -1010,7 +1071,7 @@ let ask_solver_recover
   if Options.proof_recovery () then (
     let r = ask_solver_quake configs in
     if r.ok then r else (
-      let restarted = BU.mk_ref false in
+      let restarted = mk_ref false in
       let cfg = List.last configs in
 
       Errors.diag cfg.query_range [
@@ -1058,7 +1119,7 @@ let ask_solver_recover
   ) else
     ask_solver_quake configs
 
-let failing_query_ctr : ref int = BU.mk_ref 0
+let failing_query_ctr : ref int = mk_ref 0
 
 let maybe_save_failing_query (env:env_t) (qs:query_settings) : unit =
   (* Save failing query to a clean file if --log_failing_queries. *)
@@ -1208,10 +1269,11 @@ type solver_cfg = {
   valid_intro      : bool;
   valid_elim       : bool;
   z3version        : string;
-  context_pruning  : bool
+  context_pruning  : bool;
+  record_hints     : bool;
 }
 
-let _last_cfg : ref (option solver_cfg) = BU.mk_ref None
+let _last_cfg : ref (option solver_cfg) = mk_ref None
 
 let get_cfg env : solver_cfg =
     { seed             = Options.z3_seed ()
@@ -1221,7 +1283,8 @@ let get_cfg env : solver_cfg =
     ; valid_intro      = Options.smtencoding_valid_intro ()
     ; valid_elim       = Options.smtencoding_valid_elim ()
     ; z3version        = Options.z3_version ()
-    ; context_pruning  = Options.Ext.get "context_pruning" <> ""
+    ; context_pruning  = Options.Ext.enabled "context_pruning"
+    ; record_hints     = Options.record_hints ()
     }
 
 let save_cfg env =
@@ -1467,7 +1530,7 @@ let solver = {
 
     solve=solve;
     solve_sync=solve_sync_bool;
-    finish=(fun () -> ());
+    finish=Z3.stop;
     refresh=Z3.refresh;
 }
 

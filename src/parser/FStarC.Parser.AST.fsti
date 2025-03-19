@@ -15,7 +15,6 @@
 *)
 module FStarC.Parser.AST
 
-open FStar open FStarC
 open FStarC
 open FStarC.Effect
 open FStarC.Range
@@ -24,7 +23,6 @@ open FStarC.Ident
 open FStarC.Class.Show
 open FStarC.Class.HasRange
 
-module S = FStarC.Syntax.Syntax
 (* AST produced by the parser, before desugaring
    It is not stratified: a single type called "term" containing
    expressions, formulas, types, and so on
@@ -290,8 +288,17 @@ and effect_decl =
 instance val hasRange_decl : hasRange decl
 
 type modul =
-  | Module of lid & list decl
-  | Interface of lid & list decl & bool (* flag to mark admitted interfaces *)
+  | Module {
+    no_prelude : bool;
+    mname : lid;
+    decls : list decl;
+  }
+  | Interface {
+    no_prelude : bool;
+    mname : lid;
+    decls : list decl;
+    admitted : bool; (* flag to mark admitted interfaces *)
+  }
 type file = modul
 type inputFragment = either file (list decl)
 
@@ -354,6 +361,7 @@ val string_of_pragma : pragma -> string
 val pat_to_string : pattern -> string
 val binder_to_string : binder -> string
 val modul_to_string : modul -> string
+val decl_to_string : decl -> string
 
 val decl_is_val : ident -> decl -> bool
 
@@ -366,3 +374,5 @@ val idents_of_binders : list binder -> range -> list ident
 
 instance val showable_decl : showable decl
 instance val showable_term : showable term
+
+val as_interface (m:modul) : modul

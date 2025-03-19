@@ -15,8 +15,6 @@
 *)
 
 module FStarC.Extraction.ML.UEnv
-open FStar.Pervasives
-open FStar open FStarC
 open FStarC
 open FStarC.Effect
 open FStarC.Util
@@ -48,7 +46,7 @@ type exp_binding = {
 
 type ty_or_exp_b = either ty_binding exp_binding
 
-type binding =
+type mlbinding =
   | Bv  of bv & ty_or_exp_b
   | Fv  of fv & exp_binding
   | ErasedFv of fv
@@ -69,7 +67,7 @@ val set_current_module : u:uenv -> p:mlpath -> uenv
 val with_typars_env : uenv -> (RemoveUnusedParameters.env_t -> RemoveUnusedParameters.env_t & 'a) -> uenv & 'a
 
 (** Debugging only *)
-val bindings_of_uenv : uenv -> list binding
+val bindings_of_uenv : uenv -> list mlbinding
 val debug: g:uenv -> f:(unit -> unit) -> unit
 
 (** Constructor *)

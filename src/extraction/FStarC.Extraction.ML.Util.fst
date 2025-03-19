@@ -14,15 +14,14 @@
    limitations under the License.
 *)
 module FStarC.Extraction.ML.Util
-open Prims
-open FStar.Pervasives
+
+open FStarC
 open FStarC.Effect
 open FStarC.List
-open FStar open FStarC
-open FStarC
 open FStarC.Util
 open FStarC.Syntax
 open FStarC.Syntax.Syntax
+open FStarC.Syntax.Print {}
 open FStarC.Syntax.Embeddings
 open FStarC.Extraction.ML
 open FStarC.Extraction.ML.Syntax
@@ -30,13 +29,8 @@ open FStarC.Const
 open FStarC.Ident
 open FStarC.Errors
 module BU = FStarC.Util
-module U = FStarC.Syntax.Util
 module UEnv = FStarC.Extraction.ML.UEnv
-module PC = FStarC.Parser.Const
 module Range = FStarC.Range
-module S = FStarC.Syntax.Syntax
-module N = FStarC.TypeChecker.Normalize
-module Env = FStarC.TypeChecker.Env
 
 open FStarC.Class.Show
 
@@ -83,7 +77,7 @@ let mlexpr_of_range (r:Range.range) : mlexpr' =
     let cstr (s : string) : mlexpr =
         MLC_String s |> MLE_Const |> with_ty ml_string_ty
     in
-    let drop_path = BU.basename in
+    let drop_path = Filepath.basename in
 
     // This is not being fully faithful since it disregards
     // the use_range, but I assume that's not too bad.
@@ -275,10 +269,9 @@ let is_type_abstraction = function
     | _ -> false
 
 let is_xtuple (ns, n) =
-  if FStarC.Parser.Const.is_tuple_datacon_string (BU.concat_l "." (ns@[n]))
-  (* Returns the integer k in "Mktuplek" *)
-  then Some (BU.int_of_char (BU.char_at n 7))
-  else None
+  Parser.Const.get_tuple_datacon_arity (BU.concat_l "." (ns@[n]))
+let is_xtuple_ty (ns, n) =
+  Parser.Const.get_tuple_tycon_arity (BU.concat_l "." (ns@[n]))
 
 let resugar_exp e = match e.expr with
     | MLE_CTor(mlp, args) ->
@@ -308,13 +301,6 @@ let record_fields fs vs = List.map2 (fun (f:lident) e -> (string_of_id (ident_of
 //            | _ -> p
 //      end
 //    | _ -> p
-
-
-let is_xtuple_ty (ns, n) =
-  if FStarC.Parser.Const.is_tuple_constructor_string (BU.concat_l "." (ns@[n]))
-  (* Returns the integer k in "tuplek" *)
-  then Some (BU.int_of_char (BU.char_at n 5))
-  else None
 
 let resugar_mlty t = match t with
     | MLTY_Named (args, mlp) ->

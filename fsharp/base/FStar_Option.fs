@@ -1,4 +1,5 @@
 module FStar_Option
+open FStar_Pervasives_Native
 let isSome = function
   | Some _ -> true
   | None -> false

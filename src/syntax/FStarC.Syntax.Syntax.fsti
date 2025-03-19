@@ -14,17 +14,15 @@
    limitations under the License.
 *)
 module FStarC.Syntax.Syntax
-open FStarC.Effect
+
 (* Type definitions for the core AST *)
 
-open FStar open FStarC
 open FStarC
-open FStarC.Util
-open FStarC.Range
+open FStarC.Effect
+open FStarC.Range.Type
 open FStarC.Ident
 open FStarC.Dyn
 open FStarC.Const
-module O = FStarC.Options
 open FStarC.VConfig
 
 include FStarC.Class.HasRange
@@ -37,7 +35,7 @@ open FStarC.Class.Tagged
 [@@ PpxDerivingYoJson; PpxDerivingShow ]
 type withinfo_t 'a = {
   v: 'a;
-  p: Range.range;
+  p: range;
 }
 
 (* Free term and type variables *)
@@ -88,7 +86,7 @@ type universe =
   | U_unif  of universe_uvar
   | U_unknown
 and univ_name = ident
-and universe_uvar = Unionfind.p_uvar (option universe) & version & Range.range
+and universe_uvar = Unionfind.p_uvar (option universe) & version & range
 
 [@@ PpxDerivingYoJson; PpxDerivingShow ]
 type univ_names    = list univ_name
@@ -191,7 +189,7 @@ and ctx_uvar = {                                                 (* (G |- ?u : t
   ctx_uvar_gamma:gamma;                                        (* G: a cons list of bindings (most recent at the head) *)
   ctx_uvar_binders:binders;                                    (* All the Tm_name bindings in G, a snoc list (most recent at the tail) *)
   ctx_uvar_reason:string;
-  ctx_uvar_range:Range.range;
+  ctx_uvar_range:range;
   ctx_uvar_meta: option ctx_uvar_meta_t;
 }
 and ctx_uvar_meta_t =
@@ -206,7 +204,7 @@ and uvar_decoration = {
   uvar_decoration_should_unrefine:bool;
 }
 
-and uvar = Unionfind.p_uvar (option term & uvar_decoration) & version & Range.range
+and uvar = Unionfind.p_uvar (option term & uvar_decoration) & version & range
 and uvars = FlatSet.t ctx_uvar
 and match_returns_ascription = binder & ascription               (* as x returns C|t *)
 and branch = pat & option term & term                           (* optional when clause in each branch *)
@@ -332,7 +330,7 @@ and cflag =                                                      (* flags applic
 and metadata =
   | Meta_pattern       of list term & list args                  (* Patterns for SMT quantifier instantiation; the first arg instantiation *)
   | Meta_named         of lident                                 (* Useful for pretty printing to keep the type abbreviation around *)
-  | Meta_labeled       of list Pprint.document & Range.range & bool (* Sub-terms in a VC are labeled with error messages to be reported, used in SMT encoding *)
+  | Meta_labeled       of list Pprint.document & range & bool    (* Sub-terms in a VC are labeled with error messages to be reported, used in SMT encoding *)
   | Meta_desugared     of meta_source_info                       (* Node tagged with some information about source term before desugaring *)
   | Meta_monadic       of monad_name & typ                       (* Annotation on a Tm_app or Tm_let node in case it is monadic for m not in {Pure, Ghost, Div} *)
                                                                  (* Contains the name of the monadic effect and  the type of the subterm *)
@@ -370,7 +368,7 @@ and subst_elt =
 and freenames = FlatSet.t bv
 and syntax 'a = {
     n:'a;
-    pos:Range.range;
+    pos:range;
     vars:memo free_vars;
     hash_code:memo FStarC.Hash.hash_code
 }
@@ -403,7 +401,7 @@ and lazyinfo = {
     blob  : dyn;
     lkind : lazy_kind;
     ltyp  : typ;
-    rng   : Range.range;
+    rng   : range;
 }
 // Different kinds of lazy terms. These are used to decide the unfolding
 // function, instead of keeping the closure inside the lazy node, since
@@ -752,14 +750,14 @@ type sigelt' =
     }
   | Sig_fail                 {
       errs:list int;      // Expected errors (empty for 'any')
-      rng: Range.range;   // range of the `expect_failure`, for error reporting
+      rng: range;   // range of the `expect_failure`, for error reporting
       fail_in_lax:bool;   // true if should fail in --lax
       ses:list sigelt;    // The sigelts to be checked
   }
 
 and sigelt = {
     sigel:    sigelt';
-    sigrng:   Range.range;
+    sigrng:   range;
     sigquals: list qualifier;
     sigmeta:  sig_metadata;
     sigattrs: list attribute;
@@ -792,7 +790,7 @@ type subst_t = list subst_elt
 val contains_reflectable:  list qualifier -> bool
 
 val withsort: 'a -> withinfo_t 'a
-val withinfo: 'a -> Range.range -> withinfo_t 'a
+val withinfo: 'a -> range -> withinfo_t 'a
 
 (* Constructors for each term form; NO HASH CONSING; just makes all the auxiliary data at each node *)
 val mk: 'a -> range -> syntax 'a
@@ -811,7 +809,7 @@ val mk_Tm_uinst:    term -> universes -> term
 
 val extend_app:     term -> arg -> range -> term
 val extend_app_n:   term -> args -> range -> term
-val mk_Tm_delayed:  (term & subst_ts) -> Range.range -> term
+val mk_Tm_delayed:  (term & subst_ts) -> range -> term
 val mk_Total:       typ -> comp
 val mk_GTotal:      typ -> comp
 val mk_Tac :        typ -> comp
@@ -846,7 +844,7 @@ val imp_tag:        binder_qualifier
 val iarg:           term -> arg
 val is_null_bv:     bv -> bool
 val is_null_binder: binder -> bool
-val argpos:         arg -> Range.range
+val argpos:         arg -> range
 val pat_bvs:        pat -> list bv
 val is_bqual_implicit:    bqual -> bool
 val is_aqual_implicit:    aqual -> bool
@@ -858,8 +856,8 @@ val is_top_level:   list letbinding -> bool
 (* gensym *)
 val freshen_bv       : bv -> bv
 val freshen_binder   : binder -> binder
-val gen_bv           : string -> option Range.range -> typ -> bv
-val gen_bv'          : ident -> option Range.range -> typ -> bv
+val gen_bv           : string -> option range -> typ -> bv
+val gen_bv'          : ident -> option range -> typ -> bv
 val new_bv           : option range -> typ -> bv
 val new_univ_name    : option range -> univ_name
 val lid_and_dd_as_fv : lident -> option fv_qual -> fv
@@ -881,7 +879,6 @@ val eq_pat : pat -> pat -> bool
 ///////////////////////////////////////////////////////////////////////
 //Some common constants
 ///////////////////////////////////////////////////////////////////////
-module C = FStarC.Parser.Const
 val delta_constant  : delta_depth
 val delta_equational: delta_depth
 val fvconst         : lident -> fv
@@ -919,7 +916,7 @@ val t_either_of     : term -> term -> term
 val t_sealed_of     : term -> term
 val t_erased_of     : term -> term
 
-val unit_const_with_range : Range.range -> term
+val unit_const_with_range : range -> term
 val unit_const            : term
 
 (** Checks wether an identity `id` is allowed by a include/open

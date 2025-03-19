@@ -15,22 +15,21 @@
 *)
 module FStarC.Parser.Const
 
-open FStar.String
 open FStarC
 open FStarC.Effect
 open FStarC.Util
 open FStarC.Ident
-open FStarC.Range
+open FStarC.Range.Type
 open FStarC.Const
 open FStarC.List
 module U = FStarC.Util
-module Options = FStarC.Options
-module List = FStarC.List
+include FStarC.Parser.Const.Tuples
 
 let p2l l = lid_of_path l dummyRange
 
 let pconst s              = p2l ["Prims";s]
 let psconst s             = p2l ["FStar"; "Pervasives"; s]
+let attr s                = p2l ["FStar"; "Attributes"; s]
 let psnconst s            = p2l ["FStar"; "Pervasives" ; "Native" ; s]
 let prims_lid             = p2l ["Prims"]
 let pervasives_native_lid = p2l ["FStar"; "Pervasives"; "Native"]
@@ -116,7 +115,6 @@ let c_true_lid      = pconst "trivial"
 let empty_type_lid  = pconst "empty"
 let c_and_lid       = pconst "pair"
 let c_or_lid        = pconst "sum"
-let dtuple2_lid     = pconst "dtuple2" // for l_Exists
 
 (* Various equality predicates *)
 let eq2_lid    = pconst  "eq2"
@@ -314,75 +312,85 @@ let normalize_term = psconst "normalize_term"
 let norm           = psconst "norm"
 
 (* lids for normalizer steps *)
-let steps_simpl         = psconst "simplify"
-let steps_weak          = psconst "weak"
-let steps_hnf           = psconst "hnf"
-let steps_primops       = psconst "primops"
-let steps_zeta          = psconst "zeta"
-let steps_zeta_full     = psconst "zeta_full"
-let steps_iota          = psconst "iota"
-let steps_delta         = psconst "delta"
-let steps_reify         = psconst "reify_"
-let steps_norm_debug    = psconst "norm_debug"
-let steps_unfoldonly    = psconst "delta_only"
-let steps_unfoldonce    = psconst "delta_once"
-let steps_unfoldfully   = psconst "delta_fully"
-let steps_unfoldattr    = psconst "delta_attr"
-let steps_unfoldqual    = psconst "delta_qualifier"
-let steps_unfoldnamespace = psconst "delta_namespace"
-let steps_unascribe     = psconst "unascribe"
-let steps_nbe           = psconst "nbe"
-let steps_unmeta        = psconst "unmeta"
+let mk_norm_step_lid l = p2l ["FStar"; "NormSteps"; l]
+let norm_step_lid         = mk_norm_step_lid "norm_step"
+let steps_simpl           = mk_norm_step_lid "simplify"
+let steps_weak            = mk_norm_step_lid "weak"
+let steps_hnf             = mk_norm_step_lid "hnf"
+let steps_primops         = mk_norm_step_lid "primops"
+let steps_zeta            = mk_norm_step_lid "zeta"
+let steps_zeta_full       = mk_norm_step_lid "zeta_full"
+let steps_iota            = mk_norm_step_lid "iota"
+let steps_delta           = mk_norm_step_lid "delta"
+let steps_reify           = mk_norm_step_lid "reify_"
+let steps_norm_debug      = mk_norm_step_lid "norm_debug"
+let steps_unfoldonly      = mk_norm_step_lid "delta_only"
+let steps_unfoldonce      = mk_norm_step_lid "delta_once"
+let steps_unfoldfully     = mk_norm_step_lid "delta_fully"
+let steps_unfoldattr      = mk_norm_step_lid "delta_attr"
+let steps_unfoldqual      = mk_norm_step_lid "delta_qualifier"
+let steps_unfoldnamespace = mk_norm_step_lid "delta_namespace"
+let steps_unascribe       = mk_norm_step_lid "unascribe"
+let steps_nbe             = mk_norm_step_lid "nbe"
+let steps_unmeta          = mk_norm_step_lid "unmeta"
 
 (* attributes *)
 let deprecated_attr = pconst "deprecated"
 let warn_on_use_attr = pconst "warn_on_use"
-let inline_let_attr = p2l ["FStar"; "Pervasives"; "inline_let"]
-let rename_let_attr = p2l ["FStar"; "Pervasives"; "rename_let"]
-let plugin_attr     = p2l ["FStar"; "Pervasives"; "plugin"]
-let tcnorm_attr    =  p2l ["FStar"; "Pervasives"; "tcnorm"]
-let dm4f_bind_range_attr = p2l ["FStar"; "Pervasives"; "dm4f_bind_range"]
-let must_erase_for_extraction_attr = psconst "must_erase_for_extraction"
-let strict_on_arguments_attr = p2l ["FStar"; "Pervasives"; "strict_on_arguments"]
-let resolve_implicits_attr_string = "FStar.Pervasives.resolve_implicits"
-let unification_tag_lid = psconst "defer_to"
-let override_resolve_implicits_handler_lid = p2l ["FStar"; "Pervasives"; "override_resolve_implicits_handler"]
-let handle_smt_goals_attr = psconst "handle_smt_goals"
-let handle_smt_goals_attr_string = "FStar.Pervasives.handle_smt_goals"
-let erasable_attr = p2l ["FStar"; "Pervasives"; "erasable"]
-let comment_attr = p2l ["FStar"; "Pervasives"; "Comment"]
-let c_inline_attr = p2l ["FStar"; "Pervasives"; "CInline"]
-let fail_attr      = psconst "expect_failure"
-let fail_lax_attr  = psconst "expect_lax_failure"
-let tcdecltime_attr = psconst "tcdecltime"
-let noextract_to_attr = psconst "noextract_to"
-let unifier_hint_injective_lid = psconst "unifier_hint_injective"
+let inline_let_attr = attr "inline_let"
+let rename_let_attr = attr "rename_let"
+let plugin_attr     = attr "plugin"
+let tcnorm_attr    =  attr "tcnorm"
+let dm4f_bind_range_attr = attr "dm4f_bind_range"
+let must_erase_for_extraction_attr = attr "must_erase_for_extraction"
+let strict_on_arguments_attr =  attr "strict_on_arguments"
+let resolve_implicits_attr_string = attr "resolve_implicits"
+let override_resolve_implicits_handler_lid = attr "override_resolve_implicits_handler"
+let handle_smt_goals_attr = attr "handle_smt_goals"
+let erasable_attr = attr "erasable"
+let fail_attr      = attr "expect_failure"
+let fail_lax_attr  = attr "expect_lax_failure"
+let unification_tag_lid = attr "defer_to"
+
+let comment_attr = attr "Comment"
+let c_inline_attr = attr "CInline"
+let attr_substitute_lid =  attr "Substitute"
+
 let normalize_for_extraction_lid = psconst "normalize_for_extraction"
-let commute_nested_matches_lid = psconst "commute_nested_matches"
-let remove_unused_type_parameters_lid = psconst "remove_unused_type_parameters"
-let ite_soundness_by_attr = psconst "ite_soundness_by"
-let default_effect_attr = psconst "default_effect"
-let top_level_effect_attr = psconst "top_level_effect"
-let effect_parameter_attr = psconst "effect_param"
-let bind_has_range_args_attr = psconst "bind_has_range_args"
-let primitive_extraction_attr = psconst "primitive_extraction"
-let binder_strictly_positive_attr = psconst "strictly_positive"
-let binder_unused_attr = psconst "unused"
-let no_auto_projectors_decls_attr = psconst "no_auto_projectors_decls"
-let no_auto_projectors_attr = psconst "no_auto_projectors"
-let no_subtping_attr_lid = psconst "no_subtyping"
-let admit_termination_lid = psconst "admit_termination"
+let normalize_for_extraction_type_lid = psconst "normalize_for_extraction_type"
+
+let tcdecltime_attr = attr "tcdecltime"
+let noextract_to_attr = attr "noextract_to"
+let unifier_hint_injective_lid = attr "unifier_hint_injective"
+let commute_nested_matches_lid = attr "commute_nested_matches"
+let ite_soundness_by_attr = attr "ite_soundness_by"
+let default_effect_attr = attr "default_effect"
+let top_level_effect_attr = attr "top_level_effect"
+let effect_parameter_attr = attr "effect_param"
+let bind_has_range_args_attr = attr "bind_has_range_args"
+let primitive_extraction_attr = attr "primitive_extraction"
+let binder_strictly_positive_attr = attr "strictly_positive"
+let binder_unused_attr = attr "unused"
+let no_auto_projectors_decls_attr = attr "no_auto_projectors_decls"
+let no_auto_projectors_attr = attr "no_auto_projectors"
+let no_subtping_attr_lid = attr "no_subtyping"
+let admit_termination_lid = attr "admit_termination"
 let unrefine_binder_attr = pconst "unrefine"
 let do_not_unrefine_attr = pconst "do_not_unrefine"
-let attr_substitute_lid = p2l ["FStar"; "Pervasives"; "Substitute"]
-let desugar_of_variant_record_lid = psconst "desugar_of_variant_record"
+let desugar_of_variant_record_lid = attr "desugar_of_variant_record"
+let coercion_lid = attr "coercion"
+
+let projector_attr     = pconst "projector"
+let discriminator_attr = pconst "discriminator"
+
+let remove_unused_type_parameters_lid = psconst "remove_unused_type_parameters"
 
 
 //the type of well-founded relations, used for decreases clauses with relations
 let well_founded_relation_lid = p2l ["FStar"; "WellFounded"; "well_founded_relation"]
 
 let gen_reset =
-    let x = U.mk_ref 0 in
+    let x = mk_ref 0 in
     let gen () = U.incr x; U.read x in
     let reset () = U.write x 0 in
     gen, reset
@@ -410,72 +418,6 @@ let const_to_string x = match x with
        | None -> ""
        | Some l -> U.format1 "<%s>" (string_of_lid l))    
   | Const_reflect l -> U.format1 "[[%s.reflect]]" (sli l)
-
-
-(* Tuples  *)
-
-let mk_tuple_lid n r =
-  let t = U.format1 "tuple%s" (U.string_of_int n) in
-  set_lid_range (psnconst t) r
-
-let lid_tuple2   = mk_tuple_lid 2 dummyRange
-let lid_tuple3   = mk_tuple_lid 3 dummyRange
-let lid_tuple4   = mk_tuple_lid 4 dummyRange
-let lid_tuple5   = mk_tuple_lid 5 dummyRange
-
-let is_tuple_constructor_string (s:string) :bool =
-  U.starts_with s "FStar.Pervasives.Native.tuple"
-
-let is_tuple_constructor_id  id  = is_tuple_constructor_string (string_of_id id)
-let is_tuple_constructor_lid lid = is_tuple_constructor_string (string_of_lid lid)
-
-let mk_tuple_data_lid n r =
-  let t = U.format1 "Mktuple%s" (U.string_of_int n) in
-  set_lid_range (psnconst t) r
-
-let lid_Mktuple2 = mk_tuple_data_lid 2 dummyRange
-let lid_Mktuple3 = mk_tuple_data_lid 3 dummyRange
-let lid_Mktuple4 = mk_tuple_data_lid 4 dummyRange
-let lid_Mktuple5 = mk_tuple_data_lid 5 dummyRange
-
-let is_tuple_datacon_string (s:string) :bool =
-  U.starts_with s "FStar.Pervasives.Native.Mktuple"
-
-let is_tuple_datacon_id  id  = is_tuple_datacon_string (string_of_id id)
-let is_tuple_datacon_lid lid = is_tuple_datacon_string (string_of_lid lid)
-
-let is_tuple_data_lid f n =
-  lid_equals f (mk_tuple_data_lid n dummyRange)
-
-let is_tuple_data_lid' f = is_tuple_datacon_string (string_of_lid f)
-
-
-(* Dtuples *)
-
-(* dtuple is defined in prims if n = 2, in pervasives otherwise *)
-let mod_prefix_dtuple (n:int) :(string -> lident) =
-  if n = 2 then pconst else psconst
-
-let mk_dtuple_lid n r =
-  let t = U.format1 "dtuple%s" (U.string_of_int n) in
-  set_lid_range ((mod_prefix_dtuple n) t) r
-
-let is_dtuple_constructor_string (s:string) :bool =
-  s = "Prims.dtuple2" || U.starts_with s "FStar.Pervasives.dtuple"
-
-let is_dtuple_constructor_lid lid = is_dtuple_constructor_string (string_of_lid lid)
-
-let mk_dtuple_data_lid n r =
-  let t = U.format1 "Mkdtuple%s" (U.string_of_int n) in
-  set_lid_range ((mod_prefix_dtuple n) t) r
-
-let is_dtuple_datacon_string (s:string) :bool =
-  s = "Prims.Mkdtuple2" || U.starts_with s "FStar.Pervasives.Mkdtuple"
-
-let is_dtuple_data_lid f n =
-  lid_equals f (mk_dtuple_data_lid n dummyRange)
-
-let is_dtuple_data_lid' f = is_dtuple_datacon_string (string_of_lid f)
 
 let is_name (lid:lident) =
   let c = U.char_at (string_of_id (ident_of_lid lid)) 0 in
@@ -513,8 +455,8 @@ let binder_lid = lid_of_path (["FStar"; "Stubs"; "Reflection"; "Types"; "binder"
 let binders_lid = lid_of_path (["FStar"; "Stubs"; "Reflection"; "Types"; "binders"]) FStarC.Range.dummyRange
 let bv_lid = lid_of_path (["FStar"; "Stubs"; "Reflection"; "Types"; "bv"]) FStarC.Range.dummyRange
 let fv_lid = lid_of_path (["FStar"; "Stubs"; "Reflection"; "Types"; "fv"]) FStarC.Range.dummyRange
-let norm_step_lid = psconst "norm_step"
 let postprocess_with = p2l ["FStar"; "Tactics"; "Effect"; "postprocess_with"]
+let postprocess_type = p2l ["FStar"; "Tactics"; "Effect"; "postprocess_type"]
 let preprocess_with = p2l ["FStar"; "Tactics"; "Effect"; "preprocess_with"]
 let postprocess_extr_with = p2l ["FStar"; "Tactics"; "Effect"; "postprocess_for_extraction_with"]
 let term_lid       = p2l ["FStar"; "Stubs"; "Reflection"; "Types"; "term"]
@@ -584,5 +526,4 @@ let tref_lid        = p2l ["FStar"; "Stubs"; "Tactics"; "Types"; "tref"]
 let document_lid = p2l ["FStar"; "Pprint"; "document"]
 let issue_lid = p2l ["FStar"; "Issue"; "issue"]
 
-let extract_as_lid = p2l ["FStar"; "ExtractAs"; "extract_as"]
-let extract_as_impure_effect_lid = p2l ["FStar"; "Pervasives"; "extract_as_impure_effect"]
+let extract_as_impure_effect_lid = attr "extract_as_impure_effect"

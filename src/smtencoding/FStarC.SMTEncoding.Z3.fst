@@ -16,7 +16,6 @@
 module FStarC.SMTEncoding.Z3
 open FStarC.Effect
 open FStarC.List
-open FStar open FStarC
 open FStarC
 open FStarC.SMTEncoding.Term
 open FStarC.BaseTypes
@@ -30,8 +29,8 @@ module BU = FStarC.Util
 (****************************************************************************)
 
 (* We only warn once about these things *)
-let _already_warned_solver_mismatch : ref bool = BU.mk_ref false
-let _already_warned_version_mismatch : ref bool = BU.mk_ref false
+let _already_warned_solver_mismatch : ref bool = mk_ref false
+let _already_warned_version_mismatch : ref bool = mk_ref false
 
 type label = string
 
@@ -53,11 +52,11 @@ let status_string_and_errors s =
 
 
 let query_logging =
-    let query_number = BU.mk_ref 0 in
-    let log_file_opt : ref (option (out_channel & string)) = BU.mk_ref None in
-    let used_file_names : ref (list (string & int)) = BU.mk_ref [] in
-    let current_module_name : ref (option string) = BU.mk_ref None in
-    let current_file_name : ref (option string) = BU.mk_ref None in
+    let query_number = mk_ref 0 in
+    let log_file_opt : ref (option (out_channel & string)) = mk_ref None in
+    let used_file_names : ref (list (string & int)) = mk_ref [] in
+    let current_module_name : ref (option string) = mk_ref None in
+    let current_file_name : ref (option string) = mk_ref None in
     let set_module_name n = current_module_name := Some n in
     let get_module_name () =
         match !current_module_name with
@@ -126,7 +125,7 @@ let query_logging =
 let z3_cmd_and_args () =
   let ver = Options.z3_version () in
   let cmd =
-    match Find.locate_z3 ver with
+    match Find.Z3.locate_z3 ver with
     | Some fn -> fn
     | None ->
       let open FStarC.Pprint in
@@ -134,7 +133,7 @@ let z3_cmd_and_args () =
       FStarC.Errors.raise_error0 Errors.Error_Z3InvocationError (
         [ text "Z3 solver not found.";
           prefix 2 1 (text "Required version: ") (doc_of_string ver)]
-        @ Find.z3_install_suggestion ver)
+        @ Find.Z3.z3_install_suggestion ver)
   in
   let cmd_args =
     List.append ["-smt2";
@@ -172,11 +171,16 @@ let check_z3version (p:proc) : unit =
     let open FStarC.Errors.Msg in
     Errors.log_issue0 Errors.Warning_SolverMismatch ([
       text <| BU.format1 "Unexpected SMT solver: expected to be talking to Z3, got %s." name;
-    ] @ Find.z3_install_suggestion (Options.z3_version ())
+    ] @ Find.Z3.z3_install_suggestion (Options.z3_version ())
     );
     _already_warned_solver_mismatch := true
   );
-  let ver_found : string = BU.trim_string (getinfo "version") in
+  (* Note: Z3 can either output a "clean" version like 4.13.4 or something like
+     "4.13.4 - build hashcode 6d3cfb63daa9afdd7d6d6b4d2f2fb84bd7324571" depending
+     on how it was built. Hence we split by "-" and take the first component to
+     ignore the hashcode. See https://github.com/FStarLang/FStar/pull/3700 for
+     more details. *)
+  let ver_found : string = BU.trim_string (List.hd (BU.split (getinfo "version") "-")) in
   let ver_conf  : string = BU.trim_string (Options.z3_version ()) in
   if ver_conf <> ver_found && not (!_already_warned_version_mismatch) then (
     let open FStarC.Errors in
@@ -185,7 +189,7 @@ let check_z3version (p:proc) : unit =
     Errors.log_issue0 Errors.Warning_SolverMismatch ([
       text (BU.format3 "Unexpected Z3 version for '%s': expected '%s', got '%s'."
                   (proc_prog p) ver_conf ver_found);
-      ] @ Find.z3_install_suggestion ver_conf
+      ] @ Find.Z3.z3_install_suggestion ver_conf
     );
     Errors.stop_if_err(); (* stop now if this was a hard error *)
     _already_warned_version_mismatch := true
@@ -212,7 +216,7 @@ let new_z3proc (id:string) (cmd_and_args : string & list string) : BU.proc =
     proc
 
 let new_z3proc_with_id =
-    let ctr = BU.mk_ref (-1) in
+    let ctr = mk_ref (-1) in
     (fun cmd_and_args ->
       let p = new_z3proc (BU.format1 "z3-bg-%s" (incr ctr; !ctr |> string_of_int)) cmd_and_args in
       p)
@@ -231,10 +235,10 @@ type bgproc = {
    we have asked the z3 process something
  *)
 let bg_z3_proc =
-    let the_z3proc = BU.mk_ref None in
-    let the_z3proc_params = BU.mk_ref (Some ("", [""])) in
-    let the_z3proc_ask_count = BU.mk_ref 0 in
-    let the_z3proc_version = BU.mk_ref "" in
+    let the_z3proc = mk_ref None in
+    let the_z3proc_params = mk_ref (Some ("", [""])) in
+    let the_z3proc_ask_count = mk_ref 0 in
+    let the_z3proc_version = mk_ref "" in
     // NOTE: We keep track of the version and restart on changes
     // just to be safe: the executable name in the_z3proc_params should
     // be enough to distinguish between the different executables.
@@ -282,7 +286,7 @@ let bg_z3_proc =
         make_new_z3_proc next_params
     in
     let x : list unit = [] in
-    BU.mk_ref ({ask = BU.with_monitor x ask;
+    mk_ref ({ask = BU.with_monitor x ask;
                 refresh = BU.with_monitor x refresh;
                 restart = BU.with_monitor x restart;
                 version = (fun () -> !the_z3proc_version);
@@ -404,6 +408,8 @@ let giveZ3 decls = with_solver_state_unit (SolverState.give decls)
 let refresh using_facts_from =
     (!bg_z3_proc).refresh();
     with_solver_state_unit (SolverState.reset using_facts_from)
+let stop () =
+    (!bg_z3_proc).refresh()
 
 let doZ3Exe (log_file:_) (r:Range.range) (fresh:bool) (input:string) (label_messages:error_labels) (queryid:string) : z3status & z3statistics =
   let parse (z3out:string) =
@@ -435,7 +441,7 @@ let doZ3Exe (log_file:_) (r:Range.range) (fresh:bool) (input:string) (label_mess
                    | Some (lbl, msg, r) -> [(lbl, msg, r)])
     in
     let statistics =
-        let statistics : z3statistics = BU.smap_create 0 in
+        let statistics : z3statistics = SMap.create 0 in
         match smt_output.smt_statistics with
         | None -> statistics
         | Some lines ->
@@ -448,7 +454,7 @@ let doZ3Exe (log_file:_) (r:Range.range) (fresh:bool) (input:string) (label_mess
                let key = List.hd tokens in
                let ltok = List.nth tokens ((List.length tokens) - 1) in
                let value = if BU.ends_with ltok ")" then (BU.substring ltok 0 ((String.length ltok) - 1)) else ltok in
-               BU.smap_add statistics key value
+               SMap.add statistics key value
             | _ -> ()
           in
           List.iter parse_line lines;
@@ -604,7 +610,7 @@ let mk_input (fresh : bool) (theory : list decl) : string & option string & opti
                       F* version: %s -- commit hash: %s\n\
                       Z3 version (according to F*): %s"
                         (!Options._version) (!Options._commit) ver
-      ) :: theory
+      ) :: EmptyLine :: theory
     in
     let options = z3_options ver in
     let options = options ^ (Options.z3_smtopt() |> String.concat "\n") ^ "\n\n" in
@@ -658,8 +664,8 @@ let cache_hit
     if Options.use_hints() && Options.use_hint_hashes() then
         match qhash with
         | Some (x) when qhash = cache ->
-            let stats : z3statistics = BU.smap_create 0 in
-            smap_add stats "fstar_cache_hit" "1";
+            let stats : z3statistics = SMap.create 0 in
+            SMap.add stats "fstar_cache_hit" "1";
             let result = {
               z3result_status = UNSAT None;
               z3result_time = 0;
@@ -693,7 +699,7 @@ let z3_job
     Profiling.profile
       (fun () ->
         try
-          BU.record_time_ms (fun () -> doZ3Exe log_file r fresh input label_messages queryid)
+          Timing.record_ms (fun () -> doZ3Exe log_file r fresh input label_messages queryid)
         with e ->
           refresh None; //refresh the solver but don't handle the exception; it'll be caught upstream
           raise e
@@ -747,7 +753,7 @@ let ask
       then failwith "Unexpected: unsat core must only be used with fresh solvers";
       reading_solver_state (SolverState.filter_with_unsat_core queryid core)
   in
-  let theory = theory @ (Push 0:: qry@[Pop 0]) in
+  let theory = theory @ (Push 0:: qry @ [Pop 0; EmptyLine]) in
   let input, qhash, log_file_name = mk_input fresh theory in
   let just_ask () = z3_job log_file_name r fresh label_messages input qhash queryid in
   let result =

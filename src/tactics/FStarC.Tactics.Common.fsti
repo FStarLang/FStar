@@ -13,3 +13,7 @@ exception NotAListLiteral
 exception TacticFailure of FStarC.Errors.Msg.error_message & option FStarC.Range.range
 exception EExn of term
 exception SKIP (* used by ctrl_rewrite *)
+
+(* NOTE: There is an extraction rule to turn
+
+  the user `FStar.Stubs.Tactics.Common.Stop` into the internal `FStarC.Errors.Stop` *)

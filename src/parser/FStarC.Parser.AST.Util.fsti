@@ -16,7 +16,6 @@
    Authors: N. Swamy and Copilot
 *)
 module FStarC.Parser.AST.Util
-open FStar.Pervasives
 open FStarC.Effect
 open FStarC.List
 open FStarC.Parser.AST
@@ -36,7 +35,7 @@ type open_namespaces_and_abbreviations = {
 }
 
 type error_message = {
-   message: string;
+   message: list FStarC.Pprint.document;
    range: FStarC.Range.range;
 }
 

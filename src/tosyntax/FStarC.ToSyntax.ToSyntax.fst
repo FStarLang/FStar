@@ -14,10 +14,8 @@
   limitations under the License.
 *)
 module FStarC.ToSyntax.ToSyntax
-open FStar.Pervasives
 open FStarC.Effect
 open FStarC.List
-open FStar open FStarC
 open FStarC
 open FStarC.Util
 open FStarC.Syntax
@@ -32,28 +30,28 @@ open FStarC.Errors
 open FStarC.Syntax
 open FStarC.Class.Setlike
 open FStarC.Class.Show
+open FStarC.Syntax.Print {}
 
 module C = FStarC.Parser.Const
 module S = FStarC.Syntax.Syntax
 module U = FStarC.Syntax.Util
 module BU = FStarC.Util
 module Env = FStarC.Syntax.DsEnv
-module P = FStarC.Syntax.Print
 module EMB = FStarC.Syntax.Embeddings
 module SS = FStarC.Syntax.Subst
 
 let extension_tosyntax_table 
-: BU.smap extension_tosyntax_decl_t
-= FStarC.Util.smap_create 20
+: SMap.t extension_tosyntax_decl_t
+= SMap.create 20
 
 let register_extension_tosyntax
     (lang_name:string)
     (cb:extension_tosyntax_decl_t)
-= FStarC.Util.smap_add extension_tosyntax_table lang_name cb
+= SMap.add extension_tosyntax_table lang_name cb
 
 let lookup_extension_tosyntax
     (lang_name:string)
-= FStarC.Util.smap_try_find extension_tosyntax_table lang_name
+= SMap.try_find extension_tosyntax_table lang_name
 
 let dbg_attrs    = Debug.get_toggle "attrs"
 let dbg_ToSyntax = Debug.get_toggle "ToSyntax"
@@ -1043,8 +1041,6 @@ and desugar_binding_pat_maybe_top top env p
 
   if top then
     let mklet x ty (tacopt : option S.term) : (env_t & bnd & list annotated_pat) =
-    // GM: ^ I seem to need the type annotation here,
-    //     or F* gets confused between tuple2 and tuple3 apparently?
         env, LetBinder(qualify env x, (ty, tacopt)), []
     in
     let op_to_ident x = mk_ident (compile_op 0 (string_of_id x) (range_of_id x), (range_of_id x)) in
@@ -1195,8 +1191,7 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term & an
       let rec flatten t = match t.tm with
         // * is left-associative
         | Op(id, [t1;t2]) when
-           string_of_id id = "*" &&
-           op_as_term env 2 op_star |> Option.isNone ->
+           string_of_id id = "*" && None? (op_as_term env 2 op_star) ->
           flatten t1 @ [ t2 ]
         | _ -> [t]
       in
@@ -1469,7 +1464,9 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term & an
                 | [] -> None
                 | [p, _] -> Some p // NB: We ignore the type annotation here, the typechecker catches that anyway in tc_abs
                 | _ ->
-                  raise_error p Errors.Fatal_UnsupportedDisjuctivePatterns "Disjunctive patterns are not supported in abstractions"
+                  raise_error p Errors.Fatal_UnsupportedDisjuctivePatterns [
+                    text "Disjunctive patterns are not supported in abstractions";
+                  ]
             in
             let b, sc_pat_opt =
                 match b with
@@ -1625,7 +1622,7 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term & an
             let env, lbname, rec_bindings, used_markers = match f with
               | Inl x ->
                 let env, xx, used_marker = push_bv' env x in
-                let dummy_ref = BU.mk_ref true in
+                let dummy_ref = mk_ref true in
                 env, Inl xx, S.mk_binder xx::rec_bindings, used_marker::used_markers
               | Inr l ->
                 let env, used_marker = push_top_level_rec_binding env (ident_of_lid l) in
@@ -2795,6 +2792,7 @@ let mk_data_discriminators quals env datas attrs =
                   then S.Assumption::q@quals
                   else q@quals
     in
+    let attrs = S.fvar C.discriminator_attr None :: attrs in
     datas |> List.map (fun d ->
         let disc_name = U.mk_discriminator d in
         { sigel = Sig_declare_typ {lid=disc_name; us=[]; t=Syntax.tun};
@@ -2831,6 +2829,7 @@ let mk_indexed_projector_names iquals fvq attrs env lid (fields:list S.binder) =
             in
             quals (OnlyName :: S.Projector(lid, x.ppname) :: iquals)
         in
+        let attrs = S.fvar C.projector_attr None :: attrs in
         let decl = { sigel = Sig_declare_typ {lid=field_name; us=[]; t=Syntax.tun};
                      sigquals = quals;
                      sigrng = range_of_lid field_name;
@@ -3582,8 +3581,8 @@ and desugar_redefine_effect env d d_attrs trans_qual quals eff_name eff_binders 
     let sub = sub' 0 in
     let mname=qualify env0 eff_name in
     let ed = {
-            mname         = mname;
             cattributes   = cattributes;
+            mname         = mname;
             univs         = ed.univs;
             binders       = binders;
             signature     = U.apply_eff_sig sub ed.signature;
@@ -4310,18 +4309,20 @@ let desugar_modul_common (curmod: option S.modul) env (m:AST.modul) : env_t & Sy
   let env = match curmod, m with
     | None, _ ->
         env
-    | Some ({ name = prev_lid }), Module (current_lid, _)
+    | Some ({ name = prev_lid }), Module {mname = current_lid }
       when lid_equals prev_lid current_lid && Options.interactive () ->
         // If we're in the interactive mode reading the contents of an fst after
         // desugaring the corresponding fsti, don't finish the fsti
         env
     | Some prev_mod, _ ->
         fst (Env.finish_module_or_interface env prev_mod) in
-  let (env, pop_when_done), mname, decls, intf = match m with
-    | Interface(mname, decls, admitted) ->
+  let (env, pop_when_done), mname, decls, intf =
+    match m with
+    | Interface {no_prelude; mname; decls; admitted} ->
       Env.prepare_module_or_interface true admitted env mname Env.default_mii, mname, decls, true
-    | Module(mname, decls) ->
-      Env.prepare_module_or_interface false false env mname Env.default_mii, mname, decls, false in
+    | Module {no_prelude; mname; decls} ->
+      Env.prepare_module_or_interface false false env mname Env.default_mii, mname, decls, false
+  in
   let env, sigelts = desugar_decls env decls in
   let modul = {
     name = mname;
@@ -4330,15 +4331,10 @@ let desugar_modul_common (curmod: option S.modul) env (m:AST.modul) : env_t & Sy
   } in
   env, modul, pop_when_done
 
-let as_interface (m:AST.modul) : AST.modul =
-    match m with
-    | AST.Module(mname, decls) -> AST.Interface(mname, decls, true)
-    | i -> i
-
 let desugar_partial_modul curmod (env:env_t) (m:AST.modul) : env_t & Syntax.modul =
   let m =
     if Options.interactive () &&
-      List.mem (get_file_extension (List.hd (Options.file_list ()))) ["fsti"; "fsi"]
+      List.mem (Filepath.get_file_extension (List.hd (Options.file_list ()))) ["fsti"; "fsi"]
     then as_interface m
     else m
   in

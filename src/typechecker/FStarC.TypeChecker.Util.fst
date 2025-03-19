@@ -15,11 +15,10 @@
 *)
 
 module FStarC.TypeChecker.Util
-open FStar.Pervasives
+
+open FStarC
 open FStarC.Effect
 open FStarC.List
-open FStar open FStarC
-open FStarC
 open FStarC.Util
 open FStarC.Errors
 open FStarC.Errors.Msg
@@ -46,7 +45,6 @@ module BU = FStarC.Util
 module U = FStarC.Syntax.Util
 module N = FStarC.TypeChecker.Normalize
 module TcComm = FStarC.TypeChecker.Common
-module P = FStarC.Syntax.Print
 module C = FStarC.Parser.Const
 module UF = FStarC.Syntax.Unionfind
 module TEQ = FStarC.TypeChecker.TermEqAndSimplify
@@ -2489,7 +2487,7 @@ let find_coercion (env:Env.env) (checked: lcomp) (exp_t: typ) (e:term)
     let? exp_head_lid = head_lid_of exp_t in
     let? computed_head_lid = head_lid_of computed_t in
 
-    let candidates = Env.lookup_attr env "FStar.Pervasives.coercion" in
+    let candidates = Env.lookup_attr env (string_of_lid C.coercion_lid) in
     candidates |> first_opt (fun se ->
       (* `f` is the candidate coercion, `e` the term to coerce *)
       let? f_name, f_us, f_typ =
@@ -2926,8 +2924,7 @@ let maybe_instantiate (env:Env.env) (e:term) (t:typ) : term & typ & guard_t =
                   match inst_n, bs with
                   | Some 0, _ -> [], bs, subst, Env.trivial_guard //no more instantiations to do
                   | _, {binder_qual = Some (Implicit _)} ::rest
-                  | _, {binder_qual = Some (Meta _)} ::rest
-                  | _, {binder_attrs = _::_} :: rest ->
+                  | _, {binder_qual = Some (Meta _)} ::rest ->
                       let b = List.hd bs in
                       let b = SS.subst_binder subst b in
                       let tm, ty, aq, g = instantiate_one_binder env e.pos b in

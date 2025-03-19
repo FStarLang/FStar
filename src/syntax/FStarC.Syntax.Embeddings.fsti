@@ -16,19 +16,15 @@
 
 module FStarC.Syntax.Embeddings
 
-open FStar
 open FStarC
-open FStar.Pervasives
 open FStarC.Effect
 open FStarC.Syntax.Syntax
 open FStar.Char
-open FStarC.VConfig
 
 include FStarC.Syntax.Embeddings.Base
 
-module Range = FStarC.Range
+module Range = FStarC.Range.Type
 module Z = FStarC.BigInt
-module BU = FStarC.Util
 
 (* Embeddings, both ways and containing type information *)
 val e_any         : embedding term
@@ -42,7 +38,7 @@ instance val e_int         : embedding Z.t
 instance val e_fsint       : embedding int
 instance val e_string      : embedding string
 instance val e_real        : embedding Real.real
-instance val e_norm_step   : embedding Pervasives.norm_step
+instance val e_norm_step   : embedding NormSteps.norm_step
 instance val e_vconfig     : embedding FStarC.VConfig.vconfig
 instance val e_order       : embedding FStarC.Order.order
 

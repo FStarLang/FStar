@@ -14,17 +14,13 @@
    limitations under the License.
 *)
 module FStarC.Syntax.Free
-open Prims
-open FStar.Pervasives
 open FStarC.Effect
 open FStarC.List
 
-open FStar open FStarC
 open FStarC
 open FStarC.Util
 open FStarC.Syntax
 open FStarC.Syntax.Syntax
-module Util = FStarC.Util
 module UF = FStarC.Syntax.Unionfind
 
 open FStarC.Class.Ord

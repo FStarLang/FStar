@@ -16,10 +16,8 @@
    limitations under the License.
 *)
 module FStarC.TypeChecker.TcInductive
-open FStar.Pervasives
 open FStarC.Effect
 open FStarC.List
-open FStar open FStarC
 open FStarC
 open FStarC.Errors
 open FStarC.TypeChecker
@@ -41,7 +39,6 @@ module TcUtil = FStarC.TypeChecker.Util
 module Gen = FStarC.TypeChecker.Generalize
 module BU = FStarC.Util //basic util
 module U  = FStarC.Syntax.Util
-module PP = FStarC.Syntax.Print
 module C  = FStarC.Parser.Const
 
 open FStarC.Class.Show
@@ -890,10 +887,12 @@ let check_inductive_well_typedness (env:env_t) (ses:list sigelt) (quals:list qua
     | Sig_inductive_typ {lid=l;us=univs;params=binders;num_uniform_params=num_uniform;t=typ;
                          mutuals=ts;ds} ->
       let fail expected inferred =
-          raise_error se Errors.Fatal_UnexpectedInductivetype
-                       (BU.format2 "Expected an inductive with type %s; got %s"
-                                   (Print.tscheme_to_string expected)
-                                   (Print.tscheme_to_string inferred))
+        let open FStarC.Errors.Msg in
+        let open FStarC.Pprint in
+        raise_error se Errors.Fatal_UnexpectedInductivetype [
+          text "Expected an inductive with type" ^/^ Print.tscheme_to_doc expected;
+          text "Got" ^/^ Print.tscheme_to_doc inferred;
+        ]
       in
       //
       //binders are the binders in Sig_inductive
@@ -1048,8 +1047,9 @@ let mk_discriminator_and_indexed_projectors iquals                   (* Qualifie
     in
 
     let discriminator_ses =
-        if fvq <> Data_ctor
-        then [] // We do not generate discriminators for record types
+        if fvq <> Data_ctor // We do not generate discriminators for record types
+          || U.has_attribute attrs C.no_auto_projectors_decls_attr
+        then []
         else
             let discriminator_name = U.mk_discriminator lid in
             let no_decl = false in
@@ -1064,6 +1064,7 @@ let mk_discriminator_and_indexed_projectors iquals                   (* Qualifie
                 //(if only_decl && (not <| env.is_iface || env.admit) then [S.Assumption] else []) @
                 List.filter (function S.Inline_for_extraction | S.NoExtract | S.Private -> true | _ -> false ) iquals
             in
+            let attrs = S.fvar C.discriminator_attr None :: attrs in
 
             (* Type of the discriminator *)
             let binders = imp_binders@[unrefined_arg_binder] in
@@ -1170,6 +1171,7 @@ let mk_discriminator_and_indexed_projectors iquals                   (* Qualifie
               then S.Assumption::q
               else q
           in
+          let attrs = S.fvar C.projector_attr None :: attrs in
           let quals =
               let iquals = iquals |> List.filter (function
                   | S.Inline_for_extraction

@@ -29,7 +29,6 @@ open FStar.HyperStack.ST
 module Mods   = LowStar.Modifies
 module Buffer = LowStar.Buffer
 
-module ST = FStar.HyperStack.ST
 
 type u32 = UInt32.t
 

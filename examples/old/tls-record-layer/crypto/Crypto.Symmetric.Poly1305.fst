@@ -45,7 +45,6 @@ open Flag
 module U8  = FStar.UInt8
 module U32 = FStar.UInt32
 module U64 = FStar.UInt64
-module HS  = FStar.HyperStack
 module ST  = FStar.HyperStack.ST
 
 (* 2016-11-22: we now forbid opening the current module name as a

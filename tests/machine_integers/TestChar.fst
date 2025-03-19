@@ -4,7 +4,6 @@ open FStar.All
 open FStar.IO
 open FStar.Char
 
-module U32 = FStar.UInt32
 
 (* See issue #2131 *)
 let main () =

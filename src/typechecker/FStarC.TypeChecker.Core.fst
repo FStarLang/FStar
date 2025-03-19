@@ -13,7 +13,6 @@ module U = FStarC.Syntax.Util
 module N = FStarC.TypeChecker.Normalize
 module PC = FStarC.Parser.Const
 module I = FStarC.Ident
-module P = FStarC.Syntax.Print
 module BU = FStarC.Util
 module TcUtil = FStarC.TypeChecker.Util
 module Hash = FStarC.Syntax.Hash
@@ -23,13 +22,14 @@ module TEQ = FStarC.TypeChecker.TermEqAndSimplify
 open FStarC.Class.Show
 open FStarC.Class.Setlike
 open FStarC.Class.Tagged
+open FStarC.Syntax.Print {}
 
 let dbg       = Debug.get_toggle "Core"
 let dbg_Eq    = Debug.get_toggle "CoreEq"
 let dbg_Top   = Debug.get_toggle "CoreTop"
 let dbg_Exit  = Debug.get_toggle "CoreExit"
 
-let goal_ctr = BU.mk_ref 0
+let goal_ctr = mk_ref 0
 let get_goal_ctr () = !goal_ctr
 let incr_goal_ctr () = let v = !goal_ctr in goal_ctr := v + 1; v + 1
 
@@ -238,7 +238,7 @@ let equal_term t1 t2 =
   FStarC.Profiling.profile (fun _ -> Hash.equal_term t1 t2) None "FStarC.TypeChecker.Core.equal_term"
 let table : tc_table = THT.create 1048576 //2^20
 type cache_stats_t = { hits : int; misses : int }
-let cache_stats = BU.mk_ref { hits = 0; misses = 0 }
+let cache_stats = mk_ref { hits = 0; misses = 0 }
 let record_cache_hit () =
    let cs = !cache_stats in
     cache_stats := { cs with hits = cs.hits + 1 }
@@ -429,6 +429,8 @@ let check_bqual (b0 b1:bqual)
       //we don't care about the inaccessibility qualifier
       //when comparing bquals
       return ()
+    | Some Equality, None
+    | None, Some Equality // The equality qualifier is metadata, ignore it
     | Some Equality, Some Equality ->
       return ()
     | Some (Meta t1), Some (Meta t2) when equal_term t1 t2 ->
@@ -766,14 +768,16 @@ or   G |- t0 <: t1 | p
  *)
 let rec check_relation (g:env) (rel:relation) (t0 t1:typ)
   : result unit
-  = let err () =
+  = let err (lbl:string) =
         match rel with
         | EQUALITY ->
-          fail (BU.format2 "not equal terms: %s <> %s"
+          fail (BU.format3 "(%s) not equal terms: %s <> %s"
+                           lbl
                            (show t0)
                            (show t1))
         | _ ->
-          fail (BU.format2 "%s is not a subtype of %s"
+          fail (BU.format3 "(%s) %s is not a subtype of %s"
+                           lbl
                            (show t0)
                            (show t1))
     in
@@ -849,8 +853,8 @@ let rec check_relation (g:env) (rel:relation) (t0 t1:typ)
       then if equatable g t0
             || equatable g t1
            then emit_guard t0 t1
-           else err ()
-      else err ()
+           else err "not equatable"
+      else err "guards not allowed"
     in
     let maybe_unfold_side_and_retry side t0 t1 =
       if! unfolding_ok then
@@ -891,7 +895,7 @@ let rec check_relation (g:env) (rel:relation) (t0 t1:typ)
         // See above remark regarding universe instantiations
         if Rel.teq_nosmt_force g.tcenv t0 t1
         then return ()
-        else err ()
+        else err "teq_nosmt_force over Types failed"
 
       | Tm_meta {tm=t0; meta=Meta_pattern _}, _
       | Tm_meta {tm=t0; meta=Meta_named _}, _
@@ -912,7 +916,7 @@ let rec check_relation (g:env) (rel:relation) (t0 t1:typ)
         then ( //heads are equal, equate universes
              if Rel.teq_nosmt_force g.tcenv t0 t1
              then return ()
-             else err ()
+             else err "teq_nosmt_force over Tm_uinst failed"
         )
         else maybe_unfold_and_retry t0 t1
 

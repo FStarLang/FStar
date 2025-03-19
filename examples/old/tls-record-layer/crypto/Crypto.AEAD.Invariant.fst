@@ -35,7 +35,6 @@ open FStar.HyperStack.ST
 
 module HH = FStar.HyperHeap
 module HS = FStar.HyperStack
-module ST = FStar.HyperStack.ST
 
 module MAC    = Crypto.Symmetric.MAC
 module CMA    = Crypto.Symmetric.UF1CMA

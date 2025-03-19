@@ -1,6 +1,5 @@
 module FStarC.TypeChecker.Cfg
 
-open FStar open FStarC
 open FStar.Char
 open FStarC
 open FStarC.Effect
@@ -14,18 +13,10 @@ open FStarC.TypeChecker.Env
 
 open FStarC.Class.Show
 
-module S   = FStarC.Syntax.Syntax
-module SS  = FStarC.Syntax.Subst
 module BU  = FStarC.Util
-module FC  = FStarC.Const
 module PC  = FStarC.Parser.Const
 module U   = FStarC.Syntax.Util
 module I   = FStarC.Ident
-module EMB = FStarC.Syntax.Embeddings
-module Z   = FStarC.BigInt
-module NBE = FStarC.TypeChecker.NBETerm
-
-friend FStar.Pervasives (* to expose norm_step *)
 
 let steps_to_string f =
   let format_opt (f:'a -> string) (o:option 'a) =
@@ -177,6 +168,7 @@ let default_steps : fsteps = {
 }
 
 let fstep_add_one s fs =
+  let optlist = function None -> [] | Some xs -> xs in
     match s with
     | Beta -> { fs with beta = true }
     | Iota -> { fs with iota = true }
@@ -193,10 +185,11 @@ let fstep_add_one s fs =
     | Inlining -> fs // not a step // ZP : Adding qualification because of name clash
     | DoNotUnfoldPureLets ->  { fs with do_not_unfold_pure_lets = true }
     | UnfoldUntil d -> { fs with unfold_until = Some d }
-    | UnfoldOnly  lids -> { fs with unfold_only  = Some lids }
-    | UnfoldOnce  lids -> { fs with unfold_once  = Some lids }
-    | UnfoldFully lids -> { fs with unfold_fully = Some lids }
-    | UnfoldAttr  lids -> { fs with unfold_attr  = Some lids }
+    | UnfoldOnly  lids ->    { fs with unfold_only      = Some <| optlist fs.unfold_only      @ lids }
+    | UnfoldOnce  lids ->    { fs with unfold_once      = Some <| optlist fs.unfold_once      @ lids }
+    | UnfoldFully lids ->    { fs with unfold_fully     = Some <| optlist fs.unfold_fully     @ lids }
+    | UnfoldAttr  lids ->    { fs with unfold_attr      = Some <| optlist fs.unfold_attr      @ lids }
+    | DontUnfoldAttr lids -> { fs with dont_unfold_attr = Some <| optlist fs.dont_unfold_attr @ lids }
     | UnfoldQual  strs ->
       let fs = { fs with unfold_qual  = Some strs } in
       if List.contains "pure_subterms_within_computations" strs
@@ -205,7 +198,6 @@ let fstep_add_one s fs =
     | UnfoldNamespace strs ->
      { fs with unfold_namespace =
          Some (List.map (fun s -> (Ident.path_of_text s, true)) strs, false) }
-    | DontUnfoldAttr lids -> { fs with dont_unfold_attr = Some lids }
     | PureSubtermsWithinComputations ->  { fs with pure_subterms_within_computations = true }
     | Simplify ->  { fs with simplify = true }
     | EraseUniverses ->  { fs with erase_universes = true }
@@ -241,16 +233,16 @@ let no_debug_switches = {
 }
 
 (* Primitive step sets. They are represented as a persistent string map *)
-type prim_step_set = BU.psmap primitive_step
+type prim_step_set = PSMap.t primitive_step
 
 let empty_prim_steps () : prim_step_set =
-    BU.psmap_empty ()
+    PSMap.empty ()
 
 let add_step (s : primitive_step) (ss : prim_step_set) =
-    BU.psmap_add ss (I.string_of_lid s.name) s
+    PSMap.add ss (I.string_of_lid s.name) s
 
 let merge_steps (s1 : prim_step_set) (s2 : prim_step_set) : prim_step_set =
-    BU.psmap_merge s1 s2
+    PSMap.merge s1 s2
 
 let add_steps (m : prim_step_set) (l : list primitive_step) : prim_step_set =
     List.fold_right add_step l m
@@ -276,10 +268,10 @@ instance showable_cfg : showable cfg = {
 let cfg_env cfg = cfg.tcenv
 
 let find_prim_step cfg fv =
-    BU.psmap_try_find cfg.primitive_steps (I.string_of_lid fv.fv_name.v)
+    PSMap.try_find cfg.primitive_steps (I.string_of_lid fv.fv_name.v)
 
 let is_prim_step cfg fv =
-    BU.is_some (BU.psmap_try_find cfg.primitive_steps (I.string_of_lid fv.fv_name.v))
+    BU.is_some (PSMap.try_find cfg.primitive_steps (I.string_of_lid fv.fv_name.v))
 
 let log cfg f =
     if cfg.debug.gen then f () else ()
@@ -301,15 +293,15 @@ let log_nbe cfg f =
     if cfg.debug.debug_nbe then f ()
 
 (* Profiling the time each different primitive step consumes *)
-let primop_time_map : BU.smap int = BU.smap_create 50
+let primop_time_map : SMap.t int = SMap.create 50
 
 let primop_time_reset () =
-    BU.smap_clear primop_time_map
+    SMap.clear primop_time_map
 
 let primop_time_count (nm : string) (ns : int) : unit =
-    match BU.smap_try_find primop_time_map nm with
-    | None     -> BU.smap_add primop_time_map nm ns
-    | Some ns0 -> BU.smap_add primop_time_map nm (ns0 + ns)
+    match SMap.try_find primop_time_map nm with
+    | None     -> SMap.add primop_time_map nm ns
+    | Some ns0 -> SMap.add primop_time_map nm (ns0 + ns)
 
 let fixto n s =
     if String.length s < n
@@ -317,18 +309,18 @@ let fixto n s =
     else s
 
 let primop_time_report () : string =
-    let pairs = BU.smap_fold primop_time_map (fun nm ns rest -> (nm, ns)::rest) [] in
+    let pairs = SMap.fold primop_time_map (fun nm ns rest -> (nm, ns)::rest) [] in
     let pairs = BU.sort_with (fun (_, t1) (_, t2) -> t1 - t2) pairs in
     List.fold_right (fun (nm, ns) rest -> (BU.format2 "%sms --- %s\n" (fixto 10 (BU.string_of_int (ns / 1000000))) nm) ^ rest) pairs ""
 
-let extendable_primops_dirty : ref bool = BU.mk_ref true
+let extendable_primops_dirty : ref bool = mk_ref true
 
 type register_prim_step_t = primitive_step -> unit
 type retrieve_prim_step_t = unit -> prim_step_set
 let mk_extendable_primop_set ()
   : register_prim_step_t
   & retrieve_prim_step_t =
-  let steps = BU.mk_ref (empty_prim_steps ()) in
+  let steps = mk_ref (empty_prim_steps ()) in
   let register (p:primitive_step) =
       extendable_primops_dirty := true;
       steps := add_step p !steps
@@ -356,7 +348,7 @@ let list_extra_steps () : list primitive_step =
     FStarC.Common.psmap_values (retrieve_extra_steps ())
 
 let cached_steps : unit -> prim_step_set =
-    let memo : ref prim_step_set = BU.mk_ref (empty_prim_steps ()) in
+    let memo : ref prim_step_set = mk_ref (empty_prim_steps ()) in
     fun () ->
       if !extendable_primops_dirty
       then
@@ -430,7 +422,7 @@ let config' psteps s e =
       memoize_lazy = true;
       normalize_pure_lets = (not steps.pure_subterms_within_computations) || Options.normalize_pure_terms_for_extraction();
       reifying = false;
-      compat_memo_ignore_cfg = Options.Ext.get "compat:normalizer_memo_ignore_cfg" <> "";
+      compat_memo_ignore_cfg = Options.Ext.enabled "compat:normalizer_memo_ignore_cfg";
    }
 
 let config s e = config' [] s e
@@ -451,31 +443,31 @@ let should_reduce_local_let cfg lb =
          not (cfg.steps.pure_subterms_within_computations)
 
 let translate_norm_step = function
-    | Pervasives.Zeta ->    [Zeta]
-    | Pervasives.ZetaFull -> [ZetaFull]
-    | Pervasives.Iota ->    [Iota]
-    | Pervasives.Delta ->   [UnfoldUntil delta_constant]
-    | Pervasives.Simpl ->   [Simplify]
-    | Pervasives.Weak ->    [Weak]
-    | Pervasives.HNF  ->    [HNF]
-    | Pervasives.Primops -> [Primops]
-    | Pervasives.Reify ->   [Reify]
-    | Pervasives.NormDebug -> [NormDebug]
-    | Pervasives.UnfoldOnly names ->
+    | NormSteps.Zeta ->    [Zeta]
+    | NormSteps.ZetaFull -> [ZetaFull]
+    | NormSteps.Iota ->    [Iota]
+    | NormSteps.Delta ->   [UnfoldUntil delta_constant]
+    | NormSteps.Simpl ->   [Simplify]
+    | NormSteps.Weak ->    [Weak]
+    | NormSteps.HNF  ->    [HNF]
+    | NormSteps.Primops -> [Primops]
+    | NormSteps.Reify ->   [Reify]
+    | NormSteps.NormDebug -> [NormDebug]
+    | NormSteps.UnfoldOnly names ->
         [UnfoldUntil delta_constant; UnfoldOnly (List.map I.lid_of_str names)]
-    | Pervasives.UnfoldOnce names ->
+    | NormSteps.UnfoldOnce names ->
         [UnfoldUntil delta_constant; UnfoldOnce (List.map I.lid_of_str names)]
-    | Pervasives.UnfoldFully names ->
+    | NormSteps.UnfoldFully names ->
         [UnfoldUntil delta_constant; UnfoldFully (List.map I.lid_of_str names)]
-    | Pervasives.UnfoldAttr names ->
+    | NormSteps.UnfoldAttr names ->
         [UnfoldUntil delta_constant; UnfoldAttr (List.map I.lid_of_str names)]
-    | Pervasives.UnfoldQual names ->
+    | NormSteps.UnfoldQual names ->
         [UnfoldUntil delta_constant; UnfoldQual names]
-    | Pervasives.UnfoldNamespace names ->
+    | NormSteps.UnfoldNamespace names ->
         [UnfoldUntil delta_constant; UnfoldNamespace names]
-    | Pervasives.Unascribe -> [Unascribe]
-    | Pervasives.NBE -> [NBE]
-    | Pervasives.Unmeta -> [Unmeta]
+    | NormSteps.Unascribe -> [Unascribe]
+    | NormSteps.NBE -> [NBE]
+    | NormSteps.Unmeta -> [Unmeta]
 
 let translate_norm_steps s =
     let s = List.concatMap translate_norm_step s in

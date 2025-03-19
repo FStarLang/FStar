@@ -1,5 +1,5 @@
 opam-version: "2.0"
-version: "2025.01.06~dev"
+version: "2025.02.17~dev"
 maintainer: "taramana@microsoft.com"
 authors: "Nik Swamy <nswamy@microsoft.com>,Jonathan Protzenko <protz@microsoft.com>,Tahina Ramananandro <taramana@microsoft.com>"
 homepage: "http://fstar-lang.org"
@@ -7,14 +7,14 @@ license: "Apache-2.0"
 depends: [
   "ocaml" {>= "4.14.0"}
   "batteries"
-  "zarith"
+  "zarith" {>= "1.14"}
   "stdint"
   "yojson"
-  "dune" {build & >= "3.8.0"}
-  "memtrace"
+  "dune" {>= "3.8.0"}
+  "memtrace" {>= "0.2.3"}
   "menhirLib"
-  "menhir" {build & >= "2.1"}
-  "mtime"
+  "menhir" {build & >= "20230415"}
+  "mtime" {>= "2.1.0"}
   "pprint"
   "sedlex"
   "ppxlib" {>= "0.27.0"}
@@ -29,10 +29,14 @@ build: [
 install: [
   [make "PREFIX=%{prefix}%" "install"]
 ]
+post-messages: [
+  """
+F* requires specific versions of Z3 to work correctly, and will refuse to run
+if the version string does not match. You should have z3-4.8.5 and z3-4.13.3
+in your $PATH. For details, see
+https://github.com/FStarLang/FStar/blob/master/INSTALL.md#runtime-dependency-particular-version-of-z3.
+""" {success}
+]
 dev-repo: "git+https://github.com/FStarLang/FStar"
 bug-reports: "https://github.com/FStarLang/FStar/issues"
 synopsis: "Verification system for effectful programs"
-url {
-  src: "https://github.com/FStarLang/FStar/archive/V0.9.7.0-alpha1.zip"
-  checksum: "md5=78414a6a5a0ca0c7770a43a36c5f31f7"
-}

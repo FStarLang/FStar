@@ -29,6 +29,8 @@ open FStar.Tactics.Effect
 open FStar.Stubs.Tactics.Types
 include FStar.Stubs.Tactics.Unseal
 
+val fixup_range : Range.range -> TacRO Range.range
+
 (** Resolve unification variable indirections at the top of the term. *)
 val compress : term -> Tac term
 
@@ -476,6 +478,10 @@ val all_ext_options : unit -> Tac (list (string & string))
 is returned if the key was unset. *)
 val ext_getv (k:string) : Tac string
 
+(* Returns true iff the extension flag is enabled. I.e. it's a non-empty
+string that is not 0/off/false. *)
+val ext_enabled (k:string) : Tac bool
+
 (* Return all k/v pairs in the state which are within
 the given namespace. *)
 val ext_getns (ns:string) : Tac (list (string & string))
@@ -549,9 +555,10 @@ val check_prop_validity (g:env) (t:term)
 val match_complete_token (g:env) (sc:term) (t:typ) (pats:list pattern) (bnds:list (list binding))
   : Type0
 
-// Returns elaborated patterns, the bindings for each one, and a token
+// Returns elaborated patterns, the bindings for each one, and a token. Possibly some issues
+// too.
 val check_match_complete (g:env) (sc:term) (t:typ) (pats:list pattern)
-  : Tac (option (pats_bnds:(list pattern & list (list binding))
+  : Tac (ret_t (pats_bnds:(list pattern & list (list binding))
                            {match_complete_token g sc t (fst pats_bnds) (snd pats_bnds)
                             /\ List.Tot.length (fst pats_bnds) == List.Tot.length (snd pats_bnds)
                             /\ List.Tot.length (fst pats_bnds) == List.Tot.length pats}))

@@ -4,7 +4,7 @@
   - Expected type Prims.nat got type Prims.int
   - The SMT solver could not prove the query. Use --query_stats for more
     details.
-  - See also Prims.fst(680,18-680,24)
+  - See also Prims.fst(682,18-682,24)
 
 >>]
 >> Got issues: [
@@ -13,7 +13,7 @@
   - Expected type Prims.nat got type Prims.int
   - The SMT solver could not prove the query. Use --query_stats for more
     details.
-  - See also Prims.fst(680,18-680,24)
+  - See also Prims.fst(682,18-682,24)
 
 >>]
 >> Got issues: [
@@ -63,7 +63,11 @@
     got type FStar.Pervasives.result Prims.int
   - The SMT solver could not prove the query. Use --query_stats for more
     details.
+<<<<<<< HEAD
   - See also FStar.Pervasives.fsti(529,4-529,5)
+=======
+  - See also FStar.Pervasives.fsti(371,4-371,5)
+>>>>>>> origin/master
 
 >>]
 >> Got issues: [
@@ -72,7 +76,7 @@
   - Expected type Prims.nat got type Prims.int
   - The SMT solver could not prove the query. Use --query_stats for more
     details.
-  - See also Prims.fst(680,18-680,24)
+  - See also Prims.fst(682,18-682,24)
 
 >>]
 >> Got issues: [

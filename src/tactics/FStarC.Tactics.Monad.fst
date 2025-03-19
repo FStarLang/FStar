@@ -16,9 +16,7 @@
 
 module FStarC.Tactics.Monad
 
-open FStar open FStarC
 open FStarC
-open FStar.Pervasives
 open FStarC.Effect
 open FStarC.List
 open FStarC.Syntax.Syntax
@@ -33,17 +31,15 @@ open FStarC.Errors.Msg
 open FStarC.Class.Show
 open FStarC.Class.Setlike
 open FStarC.Class.Listlike
+open FStarC.Syntax.Print {}
 module Setlike = FStarC.Class.Setlike
 module Listlike = FStarC.Class.Listlike
 
-module O       = FStarC.Options
 module BU      = FStarC.Util
 module Err     = FStarC.Errors
 module Range   = FStarC.Range
-module S       = FStarC.Syntax.Syntax
 module U       = FStarC.Syntax.Util
 module UF      = FStarC.Syntax.Unionfind
-module Print   = FStarC.Syntax.Print
 module Env     = FStarC.TypeChecker.Env
 module Rel     = FStarC.TypeChecker.Rel
 module Core    = FStarC.TypeChecker.Core
@@ -53,7 +49,7 @@ let dbg_CoreEq       = Debug.get_toggle "CoreEq"
 let dbg_RegisterGoal = Debug.get_toggle "RegisterGoal"
 let dbg_TacFail      = Debug.get_toggle "TacFail"
 
-let goal_ctr = BU.mk_ref 0
+let goal_ctr = mk_ref 0
 let get_goal_ctr () = !goal_ctr
 let incr_goal_ctr () = let v = !goal_ctr in goal_ctr := v + 1; v
 
@@ -209,10 +205,17 @@ let rec iter_tac f l =
   | [] -> ret ()
   | hd::tl -> f hd ;! iter_tac f tl
 
+let rec fold_right f l x =
+  match l with
+  | [] -> return x
+  | hd::tl ->
+    let! r = fold_right f tl x in
+    f hd r
+
 exception Bad of string
 
 (* private *)
-let nwarn = BU.mk_ref 0
+let nwarn = mk_ref 0
 let check_valid_goal g =
   if Options.defensive () then begin
     try

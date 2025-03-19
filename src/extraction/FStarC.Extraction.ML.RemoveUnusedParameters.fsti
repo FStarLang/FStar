@@ -24,4 +24,5 @@ type tydef = mlsymbol & metadata & either mltyscheme int
 val set_current_module (e:env_t) (n:mlpath) : env_t
 
 val elim_tydefs (env:env_t) (tds:list tydef) : env_t & list tydef
-val elim_mllib (env:env_t) (m:mllib) : env_t & mllib
+
+val elim_mllib (env:env_t) (m:mlmodule) : env_t & mlmodule

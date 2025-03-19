@@ -1,9 +1,7 @@
 module BvBinaryOps
 
 module BV = FStar.BV
-module BitVector = FStar.BitVector
 
-module Tac = FStar.Tactics
 
 module UInt = FStar.UInt
 

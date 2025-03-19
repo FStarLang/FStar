@@ -15,7 +15,6 @@
 *)
 module FStarC.Tactics.Monad
 open FStarC
-open FStar.Pervasives
 open FStarC.Syntax.Syntax
 open FStarC.TypeChecker.Env
 open FStarC.Tactics.Result
@@ -24,7 +23,6 @@ open FStarC.Class.Monad
 open FStarC.Errors.Msg
 
 module Range = FStarC.Range
-module BU    = FStarC.Util
 module O     = FStarC.Options
 
 (* Type of tactics *)
@@ -67,6 +65,8 @@ val trytac_exn : tac 'a -> tac (option 'a)
 
 (* iter combinator *)
 val iter_tac (f: 'a -> tac unit) (l:list 'a) : tac unit
+
+val fold_right (f: 'a -> 'b -> tac 'b) (l:list 'a) (x:'b) : tac 'b
 
 (* Defensive checks. Will only do anything if --defensive is on. If so,
 and some goal is ill-scoped, they will log a warning. *)

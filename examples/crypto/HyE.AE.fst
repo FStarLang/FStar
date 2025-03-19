@@ -26,7 +26,6 @@ module CC = CoreCrypto
 module B = Platform.Bytes
 
 open HyE.Plain
-module Plain = HyE.Plain
 
 noeq type key : Type0 =
   | Key: #region:erid -> raw:aes_key -> log:mlog_t region -> key

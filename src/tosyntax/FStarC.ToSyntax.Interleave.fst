@@ -19,7 +19,6 @@ open FStarC.List
 //Reorders the top-level definitions/declarations in a file
 //in a proper order for consistent type-checking
 
-open FStar open FStarC
 open FStarC
 open FStarC.Ident
 open FStarC.Errors
@@ -315,50 +314,11 @@ let ml_mode_check_initial_interface mname (iface:list decl) =
     | ModuleAbbrev _ -> true
     | _ -> false)
 
-let ulib_modules = [
-  "FStar.Calc";
-  "FStar.TSet";
-  "FStar.Seq.Base";
-  "FStar.Seq.Properties";
-  "FStar.UInt";
-  "FStar.UInt8";
-  "FStar.UInt16";
-  "FStar.UInt32";
-  "FStar.UInt64";
-  "FStar.Int";
-  "FStar.Int8";
-  "FStar.Int16";
-  "FStar.Int32";
-  "FStar.Int64";
-]
-
-(*
- * AR: ml mode optimizations are only applied in ml mode and only to non-core files
- *
- *     otherwise we skip effect declarations like Lemma from Pervasives.fsti,
- *       resulting in desugaring failures when typechecking Pervasives.fst
- *)
-let apply_ml_mode_optimizations (mname:lident) : bool =
-  (*
-   * AR: 03/29:
-   *     As we introduce interfaces for modules in ulib/, the interleaving code
-   *       doesn't interact with it too well when bootstrapping
-   *     Essentially we do optimizations here (e.g. not taking any interface decls but vals)
-   *       when bootstrapping
-   *     This doesn't work well for ulib files (but is ok for compiler files)
-   *     A better way to fix this problem would be to make compiler files in a separate namespace
-   *       and then do these optimizations (as well as --MLish etc.) only for them
-   *     But until then ... (sigh)
-   *)  
-  Options.ml_ish () &&
-  (not (List.contains (Ident.string_of_lid mname) (Parser.Dep.core_modules ()))) &&
-  (not (List.contains (Ident.string_of_lid mname) ulib_modules))
-
 let prefix_one_decl mname iface impl =
     match impl.d with
     | TopLevelModule _ -> iface, [impl]
     | _ ->
-      if apply_ml_mode_optimizations mname
+      if Options.ml_ish ()
       then ml_mode_prefix_with_iface_decls iface impl
       else prefix_with_iface_decls iface impl
 
@@ -369,7 +329,7 @@ module E = FStarC.Syntax.DsEnv
 let initialize_interface (mname:Ident.lid) (l:list decl) : E.withenv unit =
   fun (env:E.env) ->
     let decls =
-        if apply_ml_mode_optimizations mname
+        if Options.ml_ish ()
         then ml_mode_check_initial_interface mname l
         else check_initial_interface l in
     match E.iface_decls env mname with
@@ -407,7 +367,7 @@ let interleave_module (a:modul) (expect_complete_modul:bool) : E.withenv modul =
   fun (env:E.env)  ->
     match a with
     | Interface _ -> a, env
-    | Module(l, impls) -> begin
+    | Module {no_prelude; mname=l; decls=impls} -> begin
       match E.iface_decls env l with
       | None -> a, env
       | Some iface ->
@@ -435,7 +395,7 @@ let interleave_module (a:modul) (expect_complete_modul:bool) : E.withenv modul =
                      //since some batch-mode checks, e.g., must_erase_for_extraction
                      //depend on having all the iface decls around
         in
-        let a = Module(l, impls) in
+        let a = Module { no_prelude; mname=l; decls=impls } in
         match remaining_iface_vals with
         | _::_ when expect_complete_modul ->
           let open FStarC.Pprint in

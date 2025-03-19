@@ -28,9 +28,6 @@ open FStarC.Class.Show
 
 module E = FStarC.Errors
 module UF = FStarC.Syntax.Unionfind
-module RE = FStarC.Reflection.V2.Embeddings
-
-let _ = Version.dummy ()
 
 (* These modules only mentioned to put them in the dep graph
 and hence compile and link them in. They do not export anything,
@@ -38,15 +35,14 @@ instead they register primitive steps in the normalizer during
 initialization. *)
 open FStarC.Reflection.V1.Interpreter {}
 open FStarC.Reflection.V2.Interpreter {}
+(* Same, except that it only defines some types for userspace to refer to. *)
+open FStarC.Tactics.Types.Reflection {}
+open FStarC.NormSteps {}
 
 (* process_args:  parses command line arguments, setting FStarC.Options *)
 (*                returns an error status and list of filenames        *)
 let process_args () : parse_cmdline_res & list string =
   Options.parse_cmd_line ()
-
-(* cleanup: kills background Z3 processes; relevant when --n_cores > 1 *)
-(* GM: unclear if it's useful now? *)
-let cleanup () = Util.kill_all ()
 
 (* printing a finished message *)
 let finished_message fmods errs =
@@ -73,6 +69,7 @@ let report_errors fmods =
   end
 
 let load_native_tactics () =
+    let open FStarC.Errors.Msg in
     let modules_to_load = Options.load() |> List.map Ident.lid_of_str in
     let cmxs_to_load = Options.load_cmxs () |> List.map Ident.lid_of_str in
     let ml_module_name m = FStarC.Extraction.ML.Util.ml_module_name_of_lid m in
@@ -87,21 +84,24 @@ let load_native_tactics () =
           else  //else try to find and compile the ml file
             match Find.find_file_odir (ml_file m) with
             | None ->
-              E.raise_error0 E.Fatal_FailToCompileNativeTactic
-                (Util.format1 "Failed to compile native tactic; extracted module %s not found" (ml_file m))
+              E.raise_error0 E.Fatal_FailToCompileNativeTactic [
+                text "Failed to compile native tactic.";
+                text (format1 "Extracted module %s not found." (ml_file m))
+              ]
             | Some ml ->
-              let dir = Util.dirname ml in
+              let dir = Filepath.dirname ml in
               Plugins.compile_modules dir [ml_module_name m];
               begin match Find.find_file_odir cmxs with
                 | None ->
-                  E.raise_error0 E.Fatal_FailToCompileNativeTactic
-                    (Util.format1 "Failed to compile native tactic; compiled object %s not found" cmxs)
+                  E.raise_error0 E.Fatal_FailToCompileNativeTactic [
+                    text "Failed to compile native tactic.";
+                    text (format1 "Compilation seemingly succeeded, but compiled object %s not found." cmxs);
+                  ]
                 | Some f -> f
               end
     in
+
     let cmxs_files = (modules_to_load@cmxs_to_load) |> List.map cmxs_file in
-    if Debug.any () then
-      Util.print1 "Will try to load cmxs files: [%s]\n" (String.concat ", " cmxs_files);
     Plugins.load_plugins cmxs_files;
     iter_opt (Options.use_native_tactics ())
       Plugins.load_plugins_dir;
@@ -111,7 +111,7 @@ let load_native_tactics () =
 (* Need to keep names of input files for a second pass when prettyprinting *)
 (* This reference is set once in `go` and read in `main` if the print or *)
 (* print_in_place options are passed *)
-let fstar_files: ref (option (list string)) = Util.mk_ref None
+let fstar_files: ref (option (list string)) = mk_ref None
 
 (* This is used to print a backtrace when F* is interrupted by SIGINT *)
 let set_error_trap () =
@@ -136,7 +136,56 @@ let print_help_for (o : string) : unit =
 
 (* Normal mode with some flags, files, etc *)
 let go_normal () =
-  let res, filenames = process_args () in
+  let res, filenames0 = process_args () in
+
+  if Some? (Options.output_to()) &&
+     not (Some? (Options.dep ())) &&
+     List.length filenames0 > 1
+  then
+    Errors.raise_error0 Errors.Fatal_OptionsNotCompatible [
+      Errors.Msg.text "When using -o, you can only provide a single file in the
+        command line (except for dependency analysis).";
+    ];
+
+  let chopsuf (suf s : string) : option string =
+    if ends_with s suf
+    then Some (String.substring s 0 (String.length s - String.length suf))
+    else None
+  in
+  let ( ||| ) x y =
+    match x with
+    | None -> y
+    | _ -> x
+  in
+  let checked_of (f:string) =
+    chopsuf ".checked" f ||| chopsuf ".checked.lax" f
+  in
+
+  let filenames =
+    filenames0 |>
+    List.map (fun f ->
+      if not (Filepath.file_exists f) then f else
+      (* ^ only rewrite if file exists *)
+      match checked_of f with
+      | Some f' ->
+        if Debug.any () then
+          print1 "Rewriting argument file %s to its source file\n" f;
+        (match Find.find_file (Filepath.basename f') with
+         | Some r -> r
+         | None -> failwith "Couldn't find source for file" ^ f' ^ "!\n")
+      | None -> f
+    )
+  in
+  if Debug.any () then
+    print2 "Rewrote\n%s\ninto\n%s\n\n" (show filenames0) (show filenames);
+
+  (* Compat: create the --odir and --cache_dir if they don't exist.
+  F* has done this for a long time, only sinc it simplified
+  the handling of options. I think this should probably be removed,
+  but a few makefiles here and there rely on it. *)
+  iter_opt (Find.get_odir ()) (mkdir false true);
+  iter_opt (Find.get_cache_dir ()) (mkdir false true);
+
   let check_no_filenames opt =
     if Cons? filenames then (
       Util.print1_error "error: No filenames should be passed with option %s\n" opt;
@@ -185,7 +234,8 @@ let go_normal () =
           Errors.Msg.text "Could not read checked file:" ^/^ doc_of_string path
         ]
 
-      | Some (_, tcr) ->
+      | Some (deps, tcr) ->
+        print1 "Deps: %s\n" (show deps);
         print1 "%s\n" (show tcr.checked_module)
     )
 
@@ -245,19 +295,19 @@ let go_normal () =
         Util.print1_error "File %s was not found in include path.\n" f;
         exit 1
       | Some fn ->
-        Util.print1 "%s\n" (Util.normalize_file_path fn);
+        Util.print1 "%s\n" (Filepath.normalize_file_path fn);
         exit 0
     )
 
     | Success when Some? (Options.locate_z3 ()) -> (
       check_no_filenames "--locate_z3";
       let v = Some?.v (Options.locate_z3 ()) in
-      match Find.locate_z3 v with
+      match Find.Z3.locate_z3 v with
       | None ->
         // Use an actual error to reuse the pretty printing.
         Errors.log_issue0 Errors.Error_Z3InvocationError ([
           Errors.Msg.text <| Util.format1 "Z3 version '%s' was not found." v;
-          ] @ Find.z3_install_suggestion v);
+          ] @ Find.Z3.z3_install_suggestion v);
         report_errors []; // but make sure to report.
         exit 1
       | Some fn ->
@@ -270,9 +320,10 @@ let go_normal () =
       fstar_files := Some filenames;
 
       if Debug.any () then (
-        Util.print1 "- F* executable: %s\n" (Util.exec_name);
-        Util.print1 "- Library root: %s\n" ((Util.dflt "<none>" (Find.lib_root ())));
-        Util.print1 "- Full include path: %s\n" (show (Find.include_path ()));
+        Util.print3 "- F* version %s -- %s (on %s)\n"  !Options._version !Options._commit (Platform.kernel ());
+        Util.print1 "- Executable: %s\n" (Util.exec_name);
+        Util.print1 "- Library root: %s\n" (Util.dflt "<none>" (Find.lib_root ()));
+        Util.print1 "- Full include path: %s\n" (show (Find.full_include_path ()));
         Util.print_string "\n";
         ()
       );
@@ -350,26 +401,29 @@ let go () =
     OCaml.exec_ocamlopt_plugin rest
 
   | _ -> go_normal ()
+
 let handle_error e =
     if FStarC.Errors.handleable e then
-      FStarC.Errors.err_exn e;
-    if Options.trace_error() then
-      Util.print2_error "Unexpected error\n%s\n%s\n" (Util.message_of_exn e) (Util.trace_of_exn e)
-    else if not (FStarC.Errors.handleable e) then
-      Util.print1_error "Unexpected error; please file a bug report, ideally with a minimized version of the source program that triggered the error.\n%s\n" (Util.message_of_exn e);
-    cleanup();
+      FStarC.Errors.err_exn e
+    else begin
+      Util.print1_error "Unexpected error: %s\n" (Util.message_of_exn e);
+      if Options.trace_error() then
+        Util.print1_error "Trace:\n%s\n" (Util.trace_of_exn e)
+      else
+        Util.print_error "Please file a bug report, ideally with a minimized version of the source program that triggered the error.\n"
+    end;
     report_errors []
 
 let main () =
   try
     Hooks.setup_hooks ();
-    let _, time = Util.record_time_ms go in
+    let _, time = Timing.record_ms go in
     if FStarC.Options.query_stats()
     then Util.print2_error "TOTAL TIME %s ms: %s\n"
               (FStarC.Util.string_of_int time)
               (String.concat " " (FStarC.Getopt.cmdline()));
-    cleanup ();
     exit 0
   with
-  | e -> handle_error e;
-        exit 1
+  | e ->
+    handle_error e;
+    exit 1

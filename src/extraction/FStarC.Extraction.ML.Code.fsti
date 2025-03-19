@@ -23,7 +23,7 @@ open FStarC.Pprint
 
 type doc = | Doc of string
 
-val doc_of_mllib :    mllib -> list (string & doc)
+val doc_of_mlmodule:  fsharp:bool -> mlmodule -> doc
 val doc_of_sig :      mlsymbol -> mlsig -> doc
 val string_of_mlexpr: mlpath -> mlexpr -> string
 val string_of_mlty:   mlpath -> mlty -> string

@@ -1,6 +1,5 @@
 ﻿module FStarC.Tactics.V1.Primops
 
-open FStar open FStarC
 open FStarC
 open FStarC.Effect
 open FStarC.List
@@ -23,26 +22,12 @@ open FStarC.Class.Show
 open FStarC.Class.Monad
 open FStarC.Class.HasRange
 
-module BU      = FStarC.Util
-module Cfg     = FStarC.TypeChecker.Cfg
 module E       = FStarC.Tactics.Embedding
-module Env     = FStarC.TypeChecker.Env
-module Err     = FStarC.Errors
-module N       = FStarC.TypeChecker.Normalize
-module NBE     = FStarC.TypeChecker.NBE
 module NBET    = FStarC.TypeChecker.NBETerm
 module NRE     = FStarC.Reflection.V1.NBEEmbeddings
-module PC      = FStarC.Parser.Const
 module PO      = FStarC.TypeChecker.Primops
-module Print   = FStarC.Syntax.Print
 module RE      = FStarC.Reflection.V1.Embeddings
-module S       = FStarC.Syntax.Syntax
-module SS      = FStarC.Syntax.Subst
-module TcComm  = FStarC.TypeChecker.Common
-module TcRel   = FStarC.TypeChecker.Rel
-module TcTerm  = FStarC.TypeChecker.TcTerm
 module TI      = FStarC.Tactics.Interpreter
-module U       = FStarC.Syntax.Util
 
 (* Bring instances *)
 open FStarC.Reflection.V2.Embeddings {}

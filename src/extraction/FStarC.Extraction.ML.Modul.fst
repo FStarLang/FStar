@@ -15,7 +15,6 @@
 *)
 module FStarC.Extraction.ML.Modul
 
-open FStar open FStarC
 open FStarC
 open FStarC.Effect
 open FStarC.List
@@ -26,7 +25,6 @@ open FStarC.Extraction.ML.RegEmb
 open FStarC.Extraction.ML.UEnv
 open FStarC.Extraction.ML.Util
 open FStarC.Ident
-open FStar.Pervasives
 open FStarC.Syntax
 
 open FStarC.Syntax.Syntax
@@ -35,13 +33,11 @@ open FStarC.Extraction.ML.Syntax (* Intentionally shadows part of Syntax.Syntax 
 open FStarC.Class.Show
 
 module Term   = FStarC.Extraction.ML.Term
-module MLS    = FStarC.Extraction.ML.Syntax
 module BU     = FStarC.Util
 module S      = FStarC.Syntax.Syntax
 module SS     = FStarC.Syntax.Subst
 module UF     = FStarC.Syntax.Unionfind
 module U      = FStarC.Syntax.Util
-module TC     = FStarC.TypeChecker.Tc
 module N      = FStarC.TypeChecker.Normalize
 module PC     = FStarC.Parser.Const
 module Util   = FStarC.Extraction.ML.Util
@@ -63,15 +59,15 @@ type iface = {
 }
 
 let extension_extractor_table
-  : BU.smap extension_extractor
-  = FStarC.Util.smap_create 20
+  : SMap.t extension_extractor
+  = SMap.create 20
 
 let register_extension_extractor (ext:string) (callback:extension_extractor) =
-  FStarC.Util.smap_add extension_extractor_table ext callback
+  SMap.add extension_extractor_table ext callback
 
 let lookup_extension_extractor (ext:string) =
   (* Try to find a plugin if lookup fails *)
-  let do () = FStarC.Util.smap_try_find extension_extractor_table ext in
+  let do () = SMap.try_find extension_extractor_table ext in
   match do () with
   | None ->
     if Plugins.autoload_plugin ext
@@ -133,26 +129,26 @@ let rec extract_meta x : option meta =
   match SS.compress x with
   | { n = Tm_fvar fv } ->
       begin match string_of_lid (lid_of_fv fv) with
-      | "FStar.Pervasives.PpxDerivingShow" -> Some PpxDerivingShow
-      | "FStar.Pervasives.PpxDerivingYoJson" -> Some PpxDerivingYoJson
-      | "FStar.Pervasives.CInline" -> Some CInline
-      | "FStar.Pervasives.CNoInline" -> Some CNoInline
-      | "FStar.Pervasives.Substitute" -> Some Substitute
-      | "FStar.Pervasives.Gc" -> Some GCType
-      | "FStar.Pervasives.CAbstractStruct" -> Some CAbstract
-      | "FStar.Pervasives.CIfDef" -> Some CIfDef
-      | "FStar.Pervasives.CMacro" -> Some CMacro
+      | "FStar.Attributes.PpxDerivingShow" -> Some PpxDerivingShow
+      | "FStar.Attributes.PpxDerivingYoJson" -> Some PpxDerivingYoJson
+      | "FStar.Attributes.CInline" -> Some CInline
+      | "FStar.Attributes.CNoInline" -> Some CNoInline
+      | "FStar.Attributes.Substitute" -> Some Substitute
+      | "FStar.Attributes.Gc" -> Some GCType
+      | "FStar.Attributes.CAbstractStruct" -> Some CAbstract
+      | "FStar.Attributes.CIfDef" -> Some CIfDef
+      | "FStar.Attributes.CMacro" -> Some CMacro
       | "Prims.deprecated" -> Some (Deprecated "")
       | _ -> None
       end
   | { n = Tm_app {hd={ n = Tm_fvar fv }; args=[{ n = Tm_constant (Const_string (s, _)) }, _]} } ->
       begin match string_of_lid (lid_of_fv fv) with
-      | "FStar.Pervasives.PpxDerivingShowConstant" -> Some (PpxDerivingShowConstant s)
-      | "FStar.Pervasives.Comment" -> Some (Comment s)
-      | "FStar.Pervasives.CPrologue" -> Some (CPrologue s)
-      | "FStar.Pervasives.CEpilogue" -> Some (CEpilogue s)
-      | "FStar.Pervasives.CConst" -> Some (CConst s)
-      | "FStar.Pervasives.CCConv" -> Some (CCConv s)
+      | "FStar.Attributes.PpxDerivingShowConstant" -> Some (PpxDerivingShowConstant s)
+      | "FStar.Attributes.Comment" -> Some (Comment s)
+      | "FStar.Attributes.CPrologue" -> Some (CPrologue s)
+      | "FStar.Attributes.CEpilogue" -> Some (CEpilogue s)
+      | "FStar.Attributes.CConst" -> Some (CConst s)
+      | "FStar.Attributes.CCConv" -> Some (CCConv s)
       | "Prims.deprecated" -> Some (Deprecated s)
       | _ -> None
       end
@@ -754,14 +750,14 @@ let karamel_fixup_qual (se:sigelt) : sigelt =
 
 let mark_sigelt_erased (se:sigelt) (g:uenv) : uenv =
   debug g (fun u -> BU.print1 ">>>> NOT extracting %s \n" (Print.sigelt_to_string_short se));
-  // Cheating with delta levels and qualifiers below, but we don't ever use them.
+  // Cheating with fv qualifiers below, but we don't ever use them.
   List.fold_right (fun lid g -> extend_erased_fv g (S.lid_as_fv lid None))
                   (U.lids_of_sigelt se) g
 
 // If the definition has an [@@extract_as impl] attribute,
 // replace the lbdef with the specified impl:
 let fixup_sigelt_extract_as se =
-  match se.sigel, find_map se.sigattrs N.is_extract_as_attr with
+  match se.sigel, find_map se.sigattrs Parser.Const.ExtractAs.is_extract_as_attr with
   | Sig_let {lids; lbs=(_, [lb])}, Some impl ->
     // The specified implementation can be recursive,
     // to be on the safe side we always mark the replaced sigelt as recursive.
@@ -1165,33 +1161,10 @@ and extract_sig_let (g:uenv) (se:sigelt) : uenv & list mlmodule1 =
   if not (Sig_let? se.sigel)
   then failwith "Impossible: should only be called with Sig_let"
   else begin
-    let Sig_let { lbs } = se.sigel in
     let attrs = se.sigattrs in
     let quals = se.sigquals in
-    let maybe_postprocess_lbs lbs =
-      let post_tau =
-        match U.extract_attr' PC.postprocess_extr_with attrs with
-        | None -> None
-        | Some (_, (tau, None)::_) -> Some tau
-        | Some _ ->
-            Errors.log_issue se Errors.Warning_UnrecognizedAttribute
-              "Ill-formed application of 'postprocess_for_extraction_with'";
-            None
-      in
-      let postprocess_lb (tau:term) (lb:letbinding) : letbinding =
-        let env = tcenv_of_uenv g in
-        let lbdef = 
-          Profiling.profile
-                (fun () -> Env.postprocess env tau lb.lbtyp lb.lbdef)
-                (Some (Ident.string_of_lid (Env.current_module env)))
-                "FStarC.Extraction.ML.Module.post_process_for_extraction"
-        in
-        { lb with lbdef = lbdef }
-      in
-      match post_tau with
-      | None -> lbs
-      | Some tau -> fst lbs, List.map (postprocess_lb tau) (snd lbs)
-    in
+    let se = TypeChecker.Tc.run_postprocess true (tcenv_of_uenv g) se in
+    let Sig_let { lbs } = se.sigel in
     let maybe_normalize_for_extraction lbs = 
       let norm_steps =
         match U.extract_attr' PC.normalize_for_extraction_lid attrs with
@@ -1221,6 +1194,7 @@ and extract_sig_let (g:uenv) (se:sigelt) : uenv & list mlmodule1 =
               "Ill-formed application of 'normalize_for_extraction'";
             None
       in
+      let norm_type = U.has_attribute attrs PC.normalize_for_extraction_type_lid in
       let norm_one_lb steps lb =
         let env = tcenv_of_uenv g in
         let env = {env with erase_erasable_args=true} in
@@ -1228,9 +1202,18 @@ and extract_sig_let (g:uenv) (se:sigelt) : uenv & list mlmodule1 =
           Profiling.profile
                 (fun () -> N.normalize steps env lb.lbdef)
                 (Some (Ident.string_of_lid (Env.current_module env)))
-                "FStarC.Extraction.ML.Module.normalize_for_extraction"
+                "FStarC.Extraction.ML.Module.normalize_for_extraction.1"
         in
-        { lb with lbdef = lbd }
+        let lbt =
+          if norm_type
+          then
+            Profiling.profile
+                  (fun () -> N.normalize steps env lb.lbtyp)
+                  (Some (Ident.string_of_lid (Env.current_module env)))
+                  "FStarC.Extraction.ML.Module.normalize_for_extraction.2"
+          else lb.lbtyp
+        in
+        { lb with lbdef = lbd; lbtyp = lbt }
       in
       match norm_steps with
       | None -> lbs
@@ -1238,7 +1221,7 @@ and extract_sig_let (g:uenv) (se:sigelt) : uenv & list mlmodule1 =
         fst lbs, List.map (norm_one_lb steps) (snd lbs)
     in
     let ml_let, _, _ =
-      let lbs = maybe_normalize_for_extraction (maybe_postprocess_lbs lbs) in
+      let lbs = maybe_normalize_for_extraction lbs in
       Term.term_as_mlexpr
               g
               (mk (Tm_let {lbs; body=U.exp_false_bool}) se.sigrng)
@@ -1308,7 +1291,7 @@ and extract_sig_let (g:uenv) (se:sigelt) : uenv & list mlmodule1 =
     end
   end
 
-let extract' (g:uenv) (m:modul) : uenv & option mllib =
+let extract' (g:uenv) (m:modul) : uenv & option mlmodule =
   let _ = Options.restore_cmd_line_options true in
   let name, g = UEnv.extend_with_module_name g m.name in
   let g = set_tcenv g (FStarC.TypeChecker.Env.set_current_module (tcenv_of_uenv g) m.name) in
@@ -1327,13 +1310,13 @@ let extract' (g:uenv) (m:modul) : uenv & option mllib =
                  r
             else extract_sig g se)
         g m.declarations in
-  let mlm : mlmodule = List.flatten sigs in
+  let mlm : mlmodulebody = List.flatten sigs in
   let is_karamel = Options.codegen () = Some Options.Krml in
   if string_of_lid m.name <> "Prims"
   && (is_karamel || not m.is_interface)
   then begin
     if not (Options.silent()) then (BU.print1 "Extracted module %s\n" (string_of_lid m.name));
-    g, Some (MLLib ([name, Some ([], mlm), (MLLib [])]))
+    g, Some (name, Some ([], mlm))
   end
   else g, None
 

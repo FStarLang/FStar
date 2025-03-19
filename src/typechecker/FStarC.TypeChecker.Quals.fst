@@ -15,7 +15,6 @@
 *)
 
 module FStarC.TypeChecker.Quals
-open FStar open FStarC
 open FStarC
 open FStarC.Effect
 open FStarC.Errors
@@ -27,13 +26,31 @@ open FStarC.Syntax
 open FStarC.Class.Show
 open FStarC.Class.PP
 
-module SS = FStarC.Syntax.Subst
 module S  = FStarC.Syntax.Syntax
 module BU = FStarC.Util
 module U  = FStarC.Syntax.Util
 module N  = FStarC.TypeChecker.Normalize
 module C  = FStarC.Parser.Const
 module TcUtil = FStarC.TypeChecker.Util
+
+(* Returns Some (x,y) if there are distinct x,y in the list such that
+  f x y is false, None otherwise. *)
+let pairwise_compat #a (compat : a -> a -> bool) (xs : list a) : option (a & a) =
+  let rec go (prev next : list a) : option (a & a) =
+    match next with
+    | [] -> None
+    | x::xs ->
+      let rec go2 ys (k : unit -> option (a & a)) =
+        match ys with
+        | [] -> k ()
+        | y::ys ->
+          if not (compat x y)
+          then Some (x, y)
+          else go2 ys k
+      in
+      go2 prev (fun () -> go2 xs (fun () -> go (x::prev) xs))
+  in
+  go [] xs
 
 let check_sigelt_quals_pre (env:FStarC.TypeChecker.Env.env) se =
     let visibility = function Private -> true | _ -> false in
@@ -54,84 +71,99 @@ let check_sigelt_quals_pre (env:FStarC.TypeChecker.Env.env) se =
       | Effect -> true
       | _ -> false in
     let has_eq = function Noeq | Unopteq -> true | _ -> false in
-    let quals_combo_ok quals q =
-        match q with
-        | Assumption ->
-          quals
-          |> List.for_all (fun x -> x=q
-                              || x=Logic
-                              || inferred x
-                              || visibility x
-                              || assumption x
-                              || (env.is_iface && x=Inline_for_extraction)
-                              || x=NoExtract)
 
-        | New -> //no definition provided
-          quals
-          |> List.for_all (fun x -> x=q || inferred x || visibility x || assumption x)
+    (* Are qualifiers q1 and q2 compatible? The function check_all below will call this
+    function for every pair of qualifiers in sigelt, in both orders, ignoring the diagonal. Hence
+    this function need not be symmetric. This could probably use a cleanup by just
+    stating the incompatible cases. *)
+    let qual_compat q1 q2 =
+      match q1 with
+      | Assumption ->
+        q2=Logic
+        || inferred q2
+        || visibility q2
+        || assumption q2
+        || (env.is_iface && q2=Inline_for_extraction)
+        || q2=NoExtract
 
-        | Inline_for_extraction ->
-          quals |> List.for_all (fun x -> x=q || x=Logic || visibility x || reducibility x
-                                              || reification x || inferred x || has_eq x
-                                              || (env.is_iface && x=Assumption)
-                                              || x=NoExtract)
+      | New -> //no definition provided
+        inferred q2 || visibility q2 || assumption q2
 
-        | Unfold_for_unification_and_vcgen
-        | Visible_default
-        | Irreducible
-        | Noeq
-        | Unopteq ->
-          quals
-          |> List.for_all (fun x -> x=q || x=Logic || x=Inline_for_extraction || x=NoExtract || has_eq x || inferred x || visibility x || reification x)
+      | Inline_for_extraction ->
+         q2=Logic || visibility q2 || reducibility q2 ||
+         reification q2 || inferred q2 || has_eq q2 ||
+         (env.is_iface && q2=Assumption) || q2=NoExtract
 
-        | TotalEffect ->
-          quals
-          |> List.for_all (fun x -> x=q || inferred x || visibility x || reification x)
+      | Unfold_for_unification_and_vcgen
+      | Visible_default
+      | Irreducible
+      | Noeq
+      | Unopteq ->
+        q2=Logic || q2=Inline_for_extraction || q2=NoExtract || has_eq q2 || inferred q2 || visibility q2 || reification q2
 
-        | Logic ->
-          quals
-          |> List.for_all (fun x -> x=q || x=Assumption || inferred x || visibility x || reducibility x)
+      | TotalEffect ->
+        inferred q2 || visibility q2 || reification q2
 
-        | Reifiable
-        | Reflectable _ ->
-          quals
-          |> List.for_all (fun x -> reification x || inferred x || visibility x || x=TotalEffect || x=Visible_default)
+      | Logic ->
+        q2=Assumption || inferred q2 || visibility q2 || reducibility q2
 
-        | Private ->
-          true //only about visibility; always legal in combination with others
+      | Reifiable
+      | Reflectable _ ->
+        reification q2 || inferred q2 || visibility q2 || q2=TotalEffect || q2=Visible_default
 
-        | _ -> //inferred
-          true
+      | Private ->
+        true //only about visibility; always legal in combination with others
+
+      | _ -> //inferred
+        true
     in
+
     let check_no_subtyping_attribute se =
       if U.has_attribute se.sigattrs C.no_subtping_attr_lid &&
          (match se.sigel with
           | Sig_let _ -> false
           | _ -> true)
-      then raise_error se
-             Errors.Fatal_InconsistentQualifierAnnotation [
-              text "Illegal attribute: the `no_subtyping` attribute is allowed only on let-bindings."]
+      then
+        raise_error se Errors.Fatal_InconsistentQualifierAnnotation [
+          text "Illegal attribute: the `no_subtyping` attribute is allowed only on let-bindings."
+        ]
     in
     check_no_subtyping_attribute se;
+
     let quals = U.quals_of_sigelt se |> List.filter (fun x -> not (x = Logic)) in  //drop logic since it is deprecated
     if quals |> BU.for_some (function OnlyName -> true | _ -> false) |> not
     then
       let r = U.range_of_sigelt se in
       let no_dup_quals = BU.remove_dups (fun x y -> x=y) quals in
-      let err msg = raise_error r Errors.Fatal_QulifierListNotPermitted ([
-                      text "The qualifier list" ^/^ doc_of_string (show quals) ^/^ text "is not permissible for this element"
-                    ] @ msg)
+      let err msg =
+        raise_error r Errors.Fatal_QulifierListNotPermitted (
+          [ prefix 2 1 (text "Invalid qualifiers for declaration")
+                       (bquotes <| doc_of_string (Print.sigelt_to_string_short se));
+          ] @ msg
+        )
       in
-      if List.length quals <> List.length no_dup_quals
-      then err [text "Duplicate qualifiers."];
-      if not (quals |> List.for_all (quals_combo_ok quals))
-      then err [text "Ill-formed combination."];
+
+      if List.length quals <> List.length no_dup_quals then
+        err [text "Duplicate qualifiers."];
+
+      begin match pairwise_compat qual_compat quals with
+      | Some (q, q') ->
+        err [
+          text "Qualifiers" ^/^ (bquotes <| pp q) ^/^ text "and" ^/^ (bquotes <| pp q') ^/^ text "are not compatible.";
+        ]
+      | None -> ()
+      end;
+
       match se.sigel with
       | Sig_let {lbs=(is_rec, _)} -> //let rec
-        if is_rec && quals |> List.contains Unfold_for_unification_and_vcgen
-        then err [text "Recursive definitions cannot be marked inline."];
-        if quals |> BU.for_some (fun x -> assumption x || has_eq x)
-        then err [text "Definitions cannot be assumed or marked with equality qualifiers."]
+        if is_rec && quals |> List.contains Unfold_for_unification_and_vcgen then
+          err [text "Recursive definitions cannot be marked inline."];
+        if quals |> BU.for_some (fun x -> assumption x) then
+          err [text "Definitions cannot be marked `assume`."];
+        if quals |> BU.for_some (fun x -> has_eq x) then
+          err [text "Definitions cannot be marked with equality qualifiers."];
+        ()
+
       | Sig_bundle _ ->
         if not (quals |> BU.for_all (fun x ->
               x=Inline_for_extraction

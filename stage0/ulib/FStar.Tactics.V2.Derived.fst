@@ -63,29 +63,36 @@ exception Goal_not_trivial
 let goals () : Tac (list goal) = goals_of (get ())
 let smt_goals () : Tac (list goal) = smt_goals_of (get ())
 
+private
+let map_optRO (f:'a -> TacRO 'b) (x:option 'a) : TacRO (option 'b) =
+  match x with
+  | None -> None
+  | Some x -> Some (f x)
+
 let fail_doc_at (#a:Type) (m:error_message) (r:option range)
-  : TAC a (fun ps post -> post (Failed (TacticFailure (m, r)) ps))
-  = raise #a (TacticFailure (m, r))
+  : TAC a (fun ps post -> forall r. post (Failed (TacticFailure (m, r)) ps))
+  = let r = map_optRO fixup_range r in
+    raise #a (TacticFailure (m, r))
 
 let fail_doc (#a:Type) (m:error_message)
   : TAC a (fun ps post -> post (Failed (TacticFailure (m, None)) ps))
   = raise #a (TacticFailure (m, None))
 
 let fail_at (#a:Type) (m:string) (r:option range)
-  : TAC a (fun ps post -> post (Failed (TacticFailure (mkmsg m, r)) ps))
+  : TAC a (fun ps post -> forall r. post (Failed (TacticFailure (mkmsg m, r)) ps))
   = fail_doc_at (mkmsg m) r
 
 let fail (#a:Type) (m:string)
-  : TAC a (fun ps post -> post (Failed (TacticFailure (mkmsg m, None)) ps))
+  : TAC a (fun ps post -> forall r. post (Failed (TacticFailure (mkmsg m, r)) ps))
   = fail_at m None
 
 let fail_silently_doc (#a:Type) (m:error_message)
-  : TAC a (fun _ post -> forall ps. post (Failed (TacticFailure (m, None)) ps))
+  : TAC a (fun _ post -> forall r ps. post (Failed (TacticFailure (m, r)) ps))
   = set_urgency 0;
     raise #a (TacticFailure (m, None))
 
 let fail_silently (#a:Type) (m:string)
-  : TAC a (fun _ post -> forall ps. post (Failed (TacticFailure (mkmsg m, None)) ps))
+  : TAC a (fun _ post -> forall r ps. post (Failed (TacticFailure (mkmsg m, r)) ps))
   = fail_silently_doc (mkmsg m)
 
 (** Return the current *goal*, not its type. (Ignores SMT goals) *)

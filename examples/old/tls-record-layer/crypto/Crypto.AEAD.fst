@@ -41,18 +41,9 @@ open Crypto.AEAD.Encoding
 open Crypto.AEAD.Invariant
 (* open Crypto.AEAD.Wrappers *)
 
-module HH       = FStar.HyperHeap
-module HS       = FStar.HyperStack
-module ST       = FStar.HyperStack.ST
 module MAC      = Crypto.Symmetric.MAC
 module CMA      = Crypto.Symmetric.UF1CMA
-module Plain    = Crypto.Plain
-module Cipher   = Crypto.Symmetric.Cipher
 module PRF      = Crypto.Symmetric.PRF
-module Enxor    = Crypto.AEAD.EnxorDexor
-module Dexor    = Crypto.AEAD.EnxorDexor
-module PRF_MAC  = Crypto.AEAD.Wrappers.PRF
-module Encoding = Crypto.AEAD.Encoding   
 	 
 val gen: 
   i:id -> 

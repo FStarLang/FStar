@@ -14,12 +14,20 @@
    limitations under the License.
 *)
 module FStarC.Options
-open FStar.All
+
+open FStarC
 open FStarC.Effect
 open FStarC.Getopt
 open FStarC.BaseTypes
 open FStarC.VConfig
-open FStarC
+
+(* Set externally, checks if the directory exists and otherwise
+logs an issue. Cannot do it here due to circular deps. *)
+val check_include_dir : ref (string -> unit)
+
+(* Raised when a processing a pragma an a non-settable option
+appears there. *)
+exception NotSettable of string
 
 type codegen_t =
   | OCaml
@@ -29,7 +37,7 @@ type codegen_t =
   | PluginNoLib
   | Extension
 
-//let __test_norm_all = Util.mk_ref false
+//let __test_norm_all = mk_ref false
 
 type split_queries_t = | No | OnFailure | Always
 
@@ -43,7 +51,7 @@ type option_val =
   | List of list option_val
   | Unset
 
-type optionstate = FStarC.Util.psmap option_val
+type optionstate = PSMap.t option_val
 
 type opt_type =
 | Const of option_val
@@ -169,12 +177,12 @@ val max_ifuel                   : unit    -> int
 val ml_ish                      : unit    -> bool
 val ml_ish_effect               : unit    -> string
 val set_ml_ish                  : unit    -> unit
-val no_default_includes         : unit    -> bool
 val no_location_info            : unit    -> bool
 val no_plugins                  : unit    -> bool
 val no_smt                      : unit    -> bool
 val normalize_pure_terms_for_extraction
                                 : unit    -> bool
+val output_to                   : unit    -> option string
 val krmloutput                  : unit    -> option string
 val list_plugins                : unit    -> bool
 val locate                      : unit    -> bool
@@ -183,10 +191,7 @@ val locate_ocaml                : unit    -> bool
 val locate_file                 : unit    -> option string
 val locate_z3                   : unit    -> option string
 val output_deps_to              : unit    -> option string
-val output_dir                  : unit    -> option string
 val custom_prims                : unit    -> option string
-val cache_dir                   : unit    -> option string
-val include_                    : unit    -> list string
 val print_bound_var_types       : unit    -> bool
 val print_effect_args           : unit    -> bool
 val print_expected_failures     : unit    -> bool
@@ -262,7 +267,6 @@ val use_nbe                     : unit    -> bool
 val use_nbe_for_extraction      : unit    -> bool
 val trivial_pre_for_unannotated_effectful_fns
                                 : unit    -> bool
-val with_fstarc                 : unit    -> bool
 
 (* List of enabled debug toggles. *)
 val debug_keys                  : unit    -> list string

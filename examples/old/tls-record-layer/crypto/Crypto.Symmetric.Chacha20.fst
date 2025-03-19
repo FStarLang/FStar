@@ -31,8 +31,6 @@ open FStar.HyperStack.ST
 open FStar.Buffer
 open Buffer.Utils
 
-module HS = FStar.HyperStack
-module ST = FStar.HyperStack.ST
 
 type u64 = FStar.UInt64.t
 

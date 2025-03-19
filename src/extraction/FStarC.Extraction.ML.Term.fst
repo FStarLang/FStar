@@ -14,10 +14,8 @@
    limitations under the License.
 *)
 module FStarC.Extraction.ML.Term
-open FStar.Pervasives
 open FStarC.Effect
 open FStarC.List
-open FStar open FStarC
 open FStarC
 open FStarC.TypeChecker.Env
 open FStarC.Util
@@ -117,15 +115,15 @@ let err_cannot_extract_effect (l:lident) (r:Range.range) (reason:string) (ctxt:s
 (* Translating an effect lid to an e_tag = {E_PURE, E_ERASABLE, E_IMPURE} *)
 (***********************************************************************)
 let effect_as_etag =
-    let cache = BU.smap_create 20 in
+    let cache = SMap.create 20 in
     let rec delta_norm_eff g (l:lident) =
-        match BU.smap_try_find cache (string_of_lid l) with
+        match SMap.try_find cache (string_of_lid l) with
             | Some l -> l
             | None ->
                 let res = match TypeChecker.Env.lookup_effect_abbrev (tcenv_of_uenv g) [S.U_zero] l with
                 | None -> l
                 | Some (_, c) -> delta_norm_eff g (U.comp_effect_name c) in
-                BU.smap_add cache (string_of_lid l) res;
+                SMap.add cache (string_of_lid l) res;
                 res in
     fun g l ->
     let l = delta_norm_eff g l in
@@ -694,7 +692,7 @@ let translate_typ_t = g:uenv -> t:term -> mlty
 
 (* See below for register_pre_translate_typ *)
 let ref_translate_term_to_mlty : ref translate_typ_t =
-  BU.mk_ref (fun _ _ -> raise NotSupportedByExtension)
+  mk_ref (fun _ _ -> raise NotSupportedByExtension)
 
 let translate_term_to_mlty (g:uenv) (t0:term) : mlty =
   !ref_translate_term_to_mlty g t0
@@ -1193,7 +1191,7 @@ let maybe_promote_effect ml_e tag t =
 
 let translate_t = g:uenv -> t:term -> mlexpr & e_tag & mlty
 let ref_term_as_mlexpr : ref translate_t =
-  BU.mk_ref (fun _ _ -> raise NotSupportedByExtension)
+  mk_ref (fun _ _ -> raise NotSupportedByExtension)
 
 // An "after" pass does not make much sense... since term_as_mlexpr' here
 // (the default one) catches everything.

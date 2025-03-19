@@ -14,12 +14,9 @@
    limitations under the License.
 *)
 module FStarC.Syntax.Util
-open Prims
-open FStar.Pervasives
 open FStarC.Effect
 open FStarC.List
 
-open FStar open FStarC
 open FStarC
 open FStarC.Util
 open FStarC.Ident
@@ -42,13 +39,13 @@ open FStarC.Class.Setlike
 
 (* A hook into FStarC.Syntax.Print, only for debugging and error messages.
  * The reference is set in FStarC.Main *)
-let tts_f : ref (option (term -> string)) = U.mk_ref None
+let tts_f : ref (option (term -> string)) = mk_ref None
 let tts t : string =
     match !tts_f with
     | None -> "<<hook unset>>"
     | Some f -> f t
 
-let ttd_f : ref (option (term -> Pprint.document)) = U.mk_ref None
+let ttd_f : ref (option (term -> Pprint.document)) = mk_ref None
 let ttd t : Pprint.document =
     match !ttd_f with
     | None -> Pprint.doc_of_string "<<hook unset>>"
@@ -906,7 +903,7 @@ let open_univ_vars_binders_and_comp uvs binders c =
 (********************************************************************************)
 
 let is_tuple_constructor (t:typ) = match t.n with
-  | Tm_fvar fv -> PC.is_tuple_constructor_string (string_of_lid fv.fv_name.v)
+  | Tm_fvar fv -> PC.is_tuple_constructor_lid fv.fv_name.v
   | _ -> false
 
 let is_dtuple_constructor (t:typ) = match t.n with
@@ -1336,7 +1333,7 @@ let eqopt (e : 'a -> 'a -> bool) (x : option 'a) (y : option 'a) : bool =
 //
 // Use at your own peril, and please keep it if there's no good
 // reason against it, so I don't have to go crazy again.
-let debug_term_eq = U.mk_ref false
+let debug_term_eq = mk_ref false
 
 let check dbg msg cond =
   if cond
@@ -1581,6 +1578,7 @@ let remove_attr (attr : lident) (attrs:list attribute) : list attribute =
 let process_pragma p r =
     FStarC.Errors.set_option_warning_callback_range (Some r);
     let set_options s =
+      try
       match Options.set_options s with
       | Getopt.Success -> ()
       | Getopt.Help  ->
@@ -1589,6 +1587,11 @@ let process_pragma p r =
       | Getopt.Error (s, opt) ->
         Errors.raise_error r Errors.Fatal_FailToProcessPragma [
           Errors.Msg.text <| "Failed to process pragma: " ^ s;
+        ]
+      with
+      | Options.NotSettable x ->
+        Errors.raise_error r Errors.Fatal_FailToProcessPragma [
+          Errors.Msg.text <| U.format1 "Option '%s' is not settable via a pragma." x;
         ]
     in
     match p with

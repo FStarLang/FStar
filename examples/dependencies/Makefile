@@ -36,7 +36,7 @@ all:
 # - verify every F* file in parallel to generate .checked files
 # - extract each .checked file into a .ml file in parallel
 .depend:
-	$(FSTAR) --dep full $(ROOTS) --extract '* -Prims -FStar' --output_deps_to $@
+	$(FSTAR) --dep full $(ROOTS) --extract '* -Prims -FStar' -o $@
 
 include .depend
 

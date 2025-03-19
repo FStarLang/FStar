@@ -18,7 +18,6 @@ module FStar.ModifiesGen
 #set-options "--split_queries no"
 
 module HS = FStar.HyperStack
-module HST = FStar.HyperStack.ST
 
 noeq
 type aloc (#al: aloc_t) (c: cls al) = | ALoc:
@@ -1504,11 +1503,12 @@ let loc_addresses_unused_in #al c r a h = ()
 let loc_addresses_not_unused_in #al c r a h = ()
 #pop-options
 
-#push-options "--z3rlimit 50"
+// Using spinoff and z3refresh to avoid a crash in Z3 4.13.3
+#push-options "--z3rlimit 50 --z3refresh"
 let loc_unused_in_not_unused_in_disjoint #al c h =
-  assert (Ghost.reveal (Loc?.aux (loc_unused_in c h)) `loc_aux_disjoint` Ghost.reveal (Loc?.aux (loc_not_unused_in c h)));
-  assert_spinoff (loc_disjoint #al #c (loc_unused_in #al c h)
-                                      (loc_not_unused_in #al c h))
+  assert_spinoff (Ghost.reveal (Loc?.aux (loc_unused_in c h)) `loc_aux_disjoint` Ghost.reveal (Loc?.aux (loc_not_unused_in c h)));
+  assert_spinoff (loc_disjoint #al #c (loc_unused_in #al c h) (loc_not_unused_in #al c h));
+  ()
 #pop-options
 
 #push-options "--z3cliopt 'smt.qi.eager_threshold=100'"

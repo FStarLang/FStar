@@ -43,7 +43,7 @@ EXTRACT_NS += -FStar.TaggedUnion
 EXTRACT_NS += -FStar.Bytes
 EXTRACT_NS += -FStar.Util
 EXTRACT_NS += -FStar.InteractiveHelpers
-EXTRACT_NS += -FStar.Class
+EXTRACT_NS += -FStar.Class.Embeddable
 EXTRACT_NS += -FStar.Vector.Base
 EXTRACT_NS += -FStar.Vector.Properties
 EXTRACT_NS += -FStar.Vector
@@ -78,4 +78,4 @@ EXTRACT := --extract '* $(EXTRACT_NS)'
 # Update: generic.mk will now complain too.
 ROOTS := $(shell find $(SRC) -name '*.fst' -o -name '*.fsti')
 
-include mk/generic.mk
+include mk/generic-1.mk

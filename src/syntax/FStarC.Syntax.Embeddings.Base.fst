@@ -16,21 +16,19 @@
 
 module FStarC.Syntax.Embeddings.Base
 
-open FStar open FStarC
 open FStarC
 open FStarC.Effect
 open FStarC.Range
-open FStar.Pervasives
 open FStarC.Syntax.Syntax
 open FStarC.Class.Show
 open FStarC.Class.PP
 open FStarC.Class.Deq
+open FStarC.Syntax.Print {}
 
 module BU    = FStarC.Util
 module Err   = FStarC.Errors
 module Ident = FStarC.Ident
 module PC    = FStarC.Parser.Const
-module Print = FStarC.Syntax.Print
 module S     = FStarC.Syntax.Syntax
 module SS    = FStarC.Syntax.Subst
 module U     = FStarC.Syntax.Util

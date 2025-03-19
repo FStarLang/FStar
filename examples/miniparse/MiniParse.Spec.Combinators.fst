@@ -17,8 +17,6 @@ module MiniParse.Spec.Combinators
 include MiniParse.Spec.Base
 
 module Seq = FStar.Seq
-module U8 = FStar.UInt8
-module U32 = FStar.UInt32
 
 (** Constant-size parsers *)
 
