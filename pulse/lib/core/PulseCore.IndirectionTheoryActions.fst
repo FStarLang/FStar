@@ -15,6 +15,7 @@
 *)
 module PulseCore.IndirectionTheoryActions
 module PM = PulseCore.MemoryAlt
+module B = PulseCore.BaseHeapSig
 open FStar.Ghost
 
 let pm_sep_laws () : squash (
@@ -36,8 +37,6 @@ let pm_sep_laws () : squash (
     forall_intro emp_unit
   )
   
-let pm_sep : PulseCore.HeapSig.separable timeless_mem = PM.pulse_heap_sig.sep
-
 // 
 let split_mem3 (pp qq rr:slprop) (s:erased mem { interp (pp `star` qq `star` rr) s })
 : res:(erased mem & erased mem & erased mem) {
@@ -57,10 +56,10 @@ let split_mem3 (pp qq rr:slprop) (s:erased mem { interp (pp `star` qq `star` rr)
   l, m, r
 
 let update_timeless_mem_join (m: mem) (p1 p2: timeless_mem) :
-  Lemma (requires PM.pulse_heap_sig.sep.disjoint p1 p2)
+  Lemma (requires B.disjoint_mem p1 p2)
     (ensures
       disjoint (update_timeless_mem m p1) (update_timeless_mem (clear_except_hogs m) p2) /\
-      update_timeless_mem m (PM.pulse_heap_sig.sep.join p1 p2) ==
+      update_timeless_mem m (B.join_mem p1 p2) ==
         join_mem (update_timeless_mem m p1) (update_timeless_mem (clear_except_hogs m) p2)) =
   join_refl m;
   join_update_timeless_mem m (clear_except_hogs m) p1 p2
@@ -79,35 +78,35 @@ let pin_frame (p:pm_slprop) (frame:slprop)
     = interp frame (update_timeless_mem m1 pm)
   in
   let fr_affine ()
-  : Lemma (HeapSig.is_affine_mem_prop pm_sep fr)
+  : Lemma (B.is_affine_mem_prop fr)
   = introduce forall s0 s1.
-      fr s0 /\ pm_sep.disjoint s0 s1 ==> fr (pm_sep.join s0 s1)
+      fr s0 /\ B.disjoint_mem s0 s1 ==> fr (B.join_mem s0 s1)
     with introduce _ ==> _
     with _.
       update_timeless_mem_join m1 s0 s1
   in
   fr_affine();
-  let frame' = PM.pulse_heap_sig.as_slprop fr in
+  let frame' = B.as_slprop fr in
   lift_eq p;
-  assert (PM.pulse_heap_sig.interp p (timeless_mem_of m0));
+  assert (B.interp p (timeless_mem_of m0));
   assert (fr (timeless_mem_of m1));
-  PM.pulse_heap_sig.interp_as fr;
-  assert (PM.pulse_heap_sig.interp frame' (timeless_mem_of m1));
-  assert (pm_sep.disjoint (timeless_mem_of m0) (timeless_mem_of m1));
-  assert (pm_sep.join (timeless_mem_of m0) (timeless_mem_of m1) == (timeless_mem_of w));
-  PM.pulse_heap_sig.star_equiv p frame' (timeless_mem_of w);
+  B.interp_as fr;
+  assert (B.interp frame' (timeless_mem_of m1));
+  assert (B.disjoint_mem (timeless_mem_of m0) (timeless_mem_of m1));
+  assert (B.join_mem (timeless_mem_of m0) (timeless_mem_of m1) == (timeless_mem_of w));
+  B.star_equiv p frame' (timeless_mem_of w);
   assert (PM.interp (p `PM.star` frame') (timeless_mem_of w));
   introduce forall (q:PM.slprop) (m':_).
       PM.interp (q `PM.star` frame') m' ==>
       interp (lift q `star` frame) (update_timeless_mem w m')
   with introduce _ ==> _
   with _ . (
-    PM.pulse_heap_sig.star_equiv q frame' m';
+    B.star_equiv q frame' m';
     eliminate exists (m0' m1':IndirectionTheorySep.timeless_mem).
-        pm_sep.disjoint m0' m1' /\
-        m' == pm_sep.join m0' m1' /\
-        PM.pulse_heap_sig.interp q m0' /\
-        PM.pulse_heap_sig.interp frame' m1'
+        B.disjoint_mem m0' m1' /\
+        m' == B.join_mem m0' m1' /\
+        B.interp q m0' /\
+        B.interp frame' m1'
     returns _
     with _ . ( 
       assert (fr m1');
@@ -137,7 +136,7 @@ let pin_frame (p:pm_slprop) (frame:slprop)
           PM.interp (q `PM.star` frame') m' ==>
           interp (lift q `star` frame) (update_timeless_mem w m')))
   in
-  let frame' : PM.slprop = PM.pulse_heap_sig.non_info_slprop frame' in
+  let frame' : PM.slprop = frame' in
   (| frame', (fun q m' -> ())|)
 
 let is_ghost_action_refl (m:mem)
@@ -584,7 +583,7 @@ let drop (#opened_invariants:_) (p:slprop)
 let lift_ghost
       (#a:Type)
       #opened_invariants #p #q
-      (ni_a:HeapSig.non_info a)
+      (ni_a:PM.non_info a)
       (f:erased (ghost_act a opened_invariants p q))
 : ghost_act a opened_invariants p q
 = fun frame s0 ->

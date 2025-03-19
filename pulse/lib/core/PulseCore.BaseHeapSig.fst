@@ -2,25 +2,24 @@ module PulseCore.BaseHeapSig
 module H = PulseCore.Heap
 module H2 = PulseCore.Heap2
 open PulseCore.Tags
-open PulseCore.HeapSig
 
-let interp (p:slprop) : affine_mem_prop sep =
+let interp (p:slprop) : affine_mem_prop =
   H2.interp_depends_only_on p;
   H2.interp p
-let as_slprop (p:affine_mem_prop sep) : q:slprop{forall h. interp q h <==> p h} =
+let as_slprop (p:affine_mem_prop) : q:slprop{forall h. interp q h <==> p h} =
   introduce forall (h0 h1: H2.heap u#a). p h0 /\ H2.disjoint h0 h1 ==> p (H2.join h0 h1) with
-    introduce _ ==> _ with _. assert sep.disjoint h0 h1;
+    introduce _ ==> _ with _. assert disjoint_mem h0 h1;
   H2.as_slprop p
 
 let pure (p:prop) : slprop = as_slprop fun _ -> p
 
 let star_equiv (p q:slprop) (m:mem u#a)
-= assert (forall (m0 m1: mem u#a). sep.disjoint m0 m1 == H2.disjoint m0 m1);
+= assert (forall (m0 m1: mem u#a). disjoint_mem m0 m1 == H2.disjoint m0 m1);
   introduce interp (p `star` q) m ==>
-      exists m0 m1. sep.disjoint m0 m1 /\ m == sep.join m0 m1 /\ interp p m0 /\ interp q m1 with _.
+      exists m0 m1. disjoint_mem m0 m1 /\ m == join_mem m0 m1 /\ interp p m0 /\ interp q m1 with _.
     H2.elim_star p q m;
   introduce forall m0 m1.
-      sep.disjoint m0 m1 /\ m == sep.join m0 m1 /\ interp p m0 /\ interp q m1 ==>
+      disjoint_mem m0 m1 /\ m == join_mem m0 m1 /\ interp p m0 /\ interp q m1 ==>
         interp (p `star` q) m with
     introduce _ ==> _ with _.
     H2.intro_star p q m0 m1
@@ -31,15 +30,58 @@ let slprop_extensionality (p q:slprop)
 = introduce (forall c. interp p c <==> interp q c) ==> p == q with _.
   H2.slprop_extensionality p q
 
-let interp_as (p:affine_mem_prop sep)
+let star_commutative (p q: slprop) : Lemma (star p q == star q p) =
+  introduce forall c. interp (star p q) c <==> interp (star q p) c with (
+    star_equiv p q c;
+    star_equiv q p c;
+    introduce forall (a b: mem). disjoint_mem a b <==> disjoint_mem b a with H2.disjoint_sym a b;
+    introduce forall (h0 h1: mem). disjoint_mem h0 h1 ==> disjoint_mem h1 h0 /\ join_mem h0 h1 == join_mem h1 h0 with
+      introduce _ ==> _ with _. H2.join_commutative h0 h1
+  );
+  slprop_extensionality (star p q) (star q p)
+
+let star_associative' (p q r: slprop) (m: mem { interp (star p (star q r)) m }) :
+    squash (interp (star (star p q) r) m) =
+  star_equiv p (star q r) m;
+  let m1 = IndefiniteDescription.indefinite_description_ghost _ fun m1 -> exists m23.
+    disjoint_mem m1 m23 /\ m == join_mem m1 m23 /\ interp p m1 /\ interp (star q r) m23 in
+  let m23 = IndefiniteDescription.indefinite_description_ghost _ fun m23 ->
+    disjoint_mem m1 m23 /\ m == join_mem m1 m23 /\ interp p m1 /\ interp (star q r) m23 in
+  star_equiv q r m23;
+  let m2 = IndefiniteDescription.indefinite_description_ghost _ fun m2 -> exists m3.
+    disjoint_mem m2 m3 /\ m23 == join_mem m2 m3 /\ interp q m2 /\ interp r m3 in
+  let m3 = IndefiniteDescription.indefinite_description_ghost _ fun m3 ->
+    disjoint_mem m2 m3 /\ m23 == join_mem m2 m3 /\ interp q m2 /\ interp r m3 in
+  H2.join_associative m1 m2 m3;
+  let m12 = join_mem m1 m2 in
+  star_equiv p q m12;
+  assert disjoint_mem m12 m3;
+  star_equiv (star p q) r m
+
+let star_associative p q r : Lemma (star (star p q) r == star p (star q r)) =
+  introduce forall m. interp (star p (star q r)) m <==> interp (star (star p q) r) m with (
+    introduce interp (star p (star q r)) m ==> interp (star (star p q) r) m with _. (
+      star_associative' p q r m
+    );
+    introduce interp (star (star p q) r) m ==> interp (star p (star q r)) m with _. (
+      star_commutative (star p q) r;
+      star_commutative p q;
+      star_commutative p (star q r);
+      star_commutative q r;
+      star_associative' r q p m
+    )
+  );
+  slprop_extensionality (star p (star q r)) (star (star p q) r)
+
+let interp_as (p:affine_mem_prop)
 : Lemma (forall c. interp (as_slprop p) c == p c)
 = introduce forall c. interp (as_slprop p) c == p c
   with FStar.PropositionalExtensionality.apply (interp (as_slprop p) c) (p c)
 
 let emp_unit (p:slprop) : Lemma (p == (p `star` emp)) =
   introduce forall (h: _ { interp p h }). interp (p `star` emp) h with (
-    let h2 = sep.empty in
-    sep.join_empty h;
+    let h2 = empty_mem in
+    H2.join_empty h;
     H2.intro_emp h2;
     H2.intro_star p emp h h2
   );
@@ -77,21 +119,41 @@ let mg_of_mut (m:Tags.mutability) =
   | Tags.MUTABLE -> false
   | _ -> true
 
-let lower' (frame: slprop) (m: base_heap.mem) (h: H2.heap) : prop =
+let lower' (frame: slprop) (m: mem) (h: H2.heap) : prop =
   interp frame h
-let lower (frame: slprop) (m: base_heap.mem) : p:H2.slprop { forall h. H2.interp p h <==> lower' frame m h } =
+let lower (frame: slprop) (m: mem) : p:H2.slprop { forall h. H2.interp p h <==> lower' frame m h } =
   introduce forall (h0 h1: H2.heap). lower' frame m h0 /\ H2.disjoint h0 h1 ==> lower' frame m (H2.join h0 h1) with
     introduce _ ==> _ with _ . (
-      assert sep.disjoint h0 h1
+      assert disjoint_mem h0 h1
     );
   H2.as_slprop (lower' frame m)
 
-let elim_init (fp: H2.slprop) (frame:slprop u#a) (m:base_heap.mem)
+let ac_lemmas ()
+: Lemma (
+    (forall p q r. (p `star` q) `star` r == p `star` (q `star` r)) /\
+    (forall p q. p `star` q == q `star` p) /\
+    (forall p. p `star` emp == p)
+)
+= FStar.Classical.forall_intro_3 (star_associative);
+  FStar.Classical.forall_intro_2 (star_commutative);
+  FStar.Classical.forall_intro emp_unit
+
+let destruct_star_l (p q:slprop) (m:mem)
+: Lemma (interp (p `star` q) m ==> interp p m)
+= star_equiv p q m
+
+let destruct_star (p q:slprop) (m:mem)
+: Lemma (interp (p `star` q) m ==> interp p m /\ interp q m)
+= ac_lemmas ();
+  destruct_star_l p q m;
+  destruct_star_l q p m
+
+let elim_init (fp: H2.slprop) (frame:slprop u#a) (m:mem)
 : Lemma 
-  (requires interpret (fp `star` frame) m)
+  (requires interp (fp `star` frame) m)
   (ensures H2.interp fp m /\ H2.interp (fp `H2.star` lower frame m) m)
-= ac_lemmas base_heap;
-  HeapSig.destruct_star #base_heap fp frame m;
+= ac_lemmas ();
+  destruct_star fp frame m;
   assert H2.interp fp m;
   star_equiv fp frame m;
   let m1 = IndefiniteDescription.indefinite_description_ghost _ fun m1 -> exists m2.
@@ -111,11 +173,11 @@ let elim_init (fp: H2.slprop) (frame:slprop u#a) (m:base_heap.mem)
   assert join_mem m1 m4 == m;
   H2.intro_star fp (lower frame m) m1 m4
 
-let intro_fin (post: H2.slprop) (frame:slprop) (m:base_heap.mem)
-    (m0: base_heap.mem { ctr m0 <= ctr m /\ ghost_ctr m0 <= ghost_ctr m })
+let intro_fin (post: H2.slprop) (frame:slprop) (m:mem)
+    (m0: mem { ctr m0 <= ctr m /\ ghost_ctr m0 <= ghost_ctr m })
 : Lemma
   (requires H2.interp (post `H2.star` lower frame m0) m)
-  (ensures base_heap.interp (post `star` frame) m)
+  (ensures interp (post `star` frame) m)
 = H2.elim_star post (lower frame m0) m;
   let h1 = IndefiniteDescription.indefinite_description_ghost _ fun h1 -> exists h2.
     H2.disjoint h1 h2 /\ m == H2.join h1 h2 /\ H2.interp post h1 /\ H2.interp (lower frame m0) h2 in
@@ -128,14 +190,14 @@ let intro_fin (post: H2.slprop) (frame:slprop) (m:base_heap.mem)
   assert interp frame m3;
   let m4 = H2.empty_heap in
   H2.join_empty h2;
-  assert sep.disjoint m3 m4;
+  assert disjoint_mem m3 m4;
   assert join_mem m3 m4 == m2;
   assert interp frame m2;
   assert disjoint_mem m1 m2;
   assert join_mem m1 m2 == m;
   star_equiv post frame m;
   assert interp (post `star` frame) m;
-  ac_lemmas base_heap
+  ac_lemmas ()
               
 let lift_heap_action
       (#fp:H2.slprop u#a)
@@ -144,8 +206,8 @@ let lift_heap_action
       (#mut:_)
       ($f:H2.action #mut #None fp a fp')
       (#fp_post: a -> slprop u#a { forall x. fp' x == fp_post x })
-: _action_except base_heap a (mg_of_mut mut) fp fp_post
-= let act : _action_except base_heap a (mg_of_mut mut) fp fp_post =
+: _action_except a (mg_of_mut mut) fp fp_post
+= let act : _action_except a (mg_of_mut mut) fp fp_post =
     fun frame m0 ->
       elim_init fp frame m0;
       let h0 = m0 in
@@ -158,7 +220,7 @@ let lift_heap_action
       assert (H2.does_not_allocate CONCRETE h0 h1);
       assert (H2.does_not_allocate GHOST h0 h1);
       intro_fin (fp' x) frame m1 m0;
-      assert (maybe_ghost_action base_heap (mg_of_mut mut) m0 m1);
+      assert (maybe_ghost_action (mg_of_mut mut) m0 m1);
       (x, m1)
   in
   act
@@ -236,3 +298,22 @@ let gather' #a #p r x y =
 
 let pts_to_not_null_action' #a #p r v =
   pts_to_not_null_action #_ #(R.raise p) r (U.raise_val (reveal v))
+
+let lift_ghost
+      (#a:Type u#a)
+      (#p:slprop u#b)
+      (#q:a -> GTot slprop)
+      (ni_a:non_info a)
+      (f:erased (ghost_action_except a p q))
+: ghost_action_except a p q
+= fun frame m0 ->
+    let xm1 : erased (a * full_mem) = 
+        let ff = reveal f in
+        let x, m1 = ff frame m0 in
+        hide (x, m1)
+    in
+    let x : erased a = fst (reveal xm1) in
+    let pre_m1 : erased mem = snd (reveal xm1) in
+    let m1 = update_ghost m0 pre_m1 in
+    let x = ni_a x in
+    x, m1
