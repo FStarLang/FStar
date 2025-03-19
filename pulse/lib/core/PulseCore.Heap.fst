@@ -734,12 +734,6 @@ let full_cell (c:cell) =
 let full_heap_pred h =
   forall a. contains_addr h a ==> full_cell (select_addr h a)
 
-let ctr_empty () = ()
-
-let ctr_join h1 h2 a = ()
-
-let ctr_prop h = ()
-
 ////////////////////////////////////////////////////////////////////////////////
 // sel
 ////////////////////////////////////////////////////////////////////////////////
@@ -778,7 +772,7 @@ let sel_lemma (#a:_) (#pcm:_) (r:ref a pcm) (m:full_hheap (ptr r))
 #set-options "--fuel 2 --ifuel 2"
 #restart-solver
 let sel_action (#a:_) (#pcm:_) (r:ref a pcm) (v0:erased a)
-  : action #immut_heap #no_allocs
+  : action #immut_heap
       (pts_to r v0)
       (v:a{compatible pcm v0 v})
       (fun _ -> pts_to r v0)
@@ -798,7 +792,7 @@ let sel_action' (#a:_) (#pcm:_)
                   compatible pcm frame v)}
   = sel_v r v0 h
 
-let refined_pre_action (#immut:bool) (#allocates:bool)
+let refined_pre_action (#immut:bool)
                        (#[T.exact (`trivial_pre)]pre:heap ->prop)
                        (#[T.exact (`trivial_pre)]post:heap -> prop)
                        (fp0:slprop) (a:Type) (fp1:a -> slprop) =
@@ -808,12 +802,12 @@ let refined_pre_action (#immut:bool) (#allocates:bool)
        (requires pre m0)
        (ensures fun  (| x, m1 |) ->
          post m1 /\
-         (forall frame. frame_related_heaps m0 m1 fp0 (fp1 x) frame immut allocates))
+         (forall frame. frame_related_heaps m0 m1 fp0 (fp1 x) frame immut))
 
 #restart-solver
-let refined_pre_action_as_action #immut #allocs #pre #post (#fp0:slprop) (#a:Type) (#fp1:a -> slprop)
-                                 ($f:refined_pre_action #immut #allocs #pre #post fp0 a fp1)
-  : action #immut #allocs #pre #post fp0 a fp1
+let refined_pre_action_as_action #immut #pre #post (#fp0:slprop) (#a:Type) (#fp1:a -> slprop)
+                                 ($f:refined_pre_action #immut #pre #post fp0 a fp1)
+  : action #immut #pre #post fp0 a fp1
   = let g : pre_action fp0 a fp1 = fun m -> f m in
     g
 
@@ -838,7 +832,7 @@ let select_refine_pre (#a:_) (#p:_)
                       (f:(v:a{compatible p x v}
                         -> GTot (y:a{compatible p y v /\
                                     frame_compatible p x v y})))
-   : refined_pre_action #immut_heap #no_allocs
+   : refined_pre_action #immut_heap
                 (pts_to r x)
                 (v:a{compatible p x v /\ p.refine v})
                 (fun v -> pts_to r (f v))
@@ -927,7 +921,7 @@ let select_refine (#a:_) (#p:_)
                   (f:(v:a{compatible p x v}
                       -> GTot (y:a{compatible p y v /\
                                   frame_compatible p x v y})))
-   : action #immut_heap #no_allocs (pts_to r x)
+   : action #immut_heap (pts_to r x)
             (v:a{compatible p x v /\ p.refine v})
             (fun v -> pts_to r (f v))
    = refined_pre_action_as_action (select_refine_pre r x f)
@@ -1068,7 +1062,7 @@ let upd_gen_fp3 #a p r
   h3
 
 #push-options "--z3rlimit 10"
-let upd_gen_frame_preserving #a #p r x v f : Lemma (is_frame_preserving mut_heap no_allocs (upd_gen #a #p r x v f)) =
+let upd_gen_frame_preserving #a #p r x v f : Lemma (is_frame_preserving mut_heap (upd_gen #a #p r x v f)) =
   introduce forall (frame: slprop) (h0:full_hheap (pts_to r x `star` frame)).
      (affine_star (pts_to r x) frame h0;
       let (| _, h1 |) = upd_gen r x v f h0 in
@@ -1201,7 +1195,7 @@ let extend_alt
     (| r, h2 |)
 
 #push-options "--z3rlimit 10"
-let extend_fp #a #pcm x : Lemma (is_frame_preserving mut_heap allocs (extend_alt #a #pcm x)) =
+let extend_fp #a #pcm x : Lemma (is_frame_preserving mut_heap (extend_alt #a #pcm x)) =
   introduce forall (frame: slprop) (h0:full_hheap (emp `star` frame)).
      (let (| r, h1 |) = extend_alt #a #pcm x h0 in
       interp (pts_to r x `star` frame) h1) with (
@@ -1220,29 +1214,19 @@ let extend_fp #a #pcm x : Lemma (is_frame_preserving mut_heap allocs (extend_alt
 
 let extend #a #pcm
         (x:a{pcm.refine x})
- : action #mut_heap #allocs emp (ref a pcm) (fun r -> pts_to r x)
+ : action #mut_heap emp (ref a pcm) (fun r -> pts_to r x)
  = extend_fp #a #pcm x; extend_alt x
-
-let extend_modifies_nothing
-      #a #pcm (x:a { pcm.refine x })
-      (h:full_hheap emp)
-= ()
-
-let hprop_sub (p q:slprop) (h0 h1:heap)
-  : Lemma (requires (forall (hp:hprop (p `star` q)). hp h0 == hp h1))
-          (ensures (forall (hp:hprop q). hp h0 == hp h1))
-  = ()
 
 #push-options "--z3rlimit_factor 4 --max_fuel 1 --max_ifuel 1"
 #restart-solver
 let frame (#a:Type)
-          (#immut #allocates #hpre #hpost:_)
+          (#immut #hpre #hpost:_)
           (#pre:slprop)
           (#post:a -> slprop)
           (frame:slprop)
           ($f:action pre a post)
   = let g 
-      : refined_pre_action #immut #allocates #hpre #hpost 
+      : refined_pre_action #immut #hpre #hpost 
           (pre `star` frame) a (fun x -> post x `star` frame)
         = fun h0 ->
               assert (interp (pre `star` frame) h0);
@@ -1250,7 +1234,7 @@ let frame (#a:Type)
               let (| x, h1 |) = f h0 in
               assert (interp (post x) h1);
               assert (interp (post x `star` frame) h1);
-              assert (forall frame'. frame_related_heaps h0 h1 pre (post x) frame' immut allocates);
+              assert (forall frame'. frame_related_heaps h0 h1 pre (post x) frame' immut);
               introduce forall frame'.
                     (interp ((pre `star` frame) `star` frame') h0 ==>
                      interp ((post x `star` frame) `star` frame') h1)
@@ -1264,7 +1248,7 @@ let frame (#a:Type)
 
 let change_slprop (p q:slprop)
                   (proof: (h:heap -> Lemma (requires interp p h) (ensures interp q h)))
-  : action #immut_heap #no_allocs p unit (fun _ -> q)
+  : action #immut_heap p unit (fun _ -> q)
   = let g
       : refined_pre_action p unit (fun _ -> q)
       = fun h ->
@@ -1273,46 +1257,22 @@ let change_slprop (p q:slprop)
     in
     refined_pre_action_as_action g
 
-// let elim_pure (p:prop)
-//   : action (pure p) (u:unit{p}) (fun _ -> emp)
-//   = let f
-//       : refined_pre_action (pure p) (_:unit{p}) (fun _ -> emp)
-//       = fun h -> (| (), h |)
-//     in
-//     refined_pre_action_as_action f
-
-// let intro_pure (p:prop) (_:squash p)
-// : action emp unit (fun _ -> pure p)
-// = let f
-//     : refined_pre_action emp unit (fun _ -> pure p)
-//     = fun h -> (| (), h |)
-//   in
-//   refined_pre_action_as_action f
-
 let pts_to_evolve (#a:Type u#a) (#pcm:_) (r:ref a pcm) (x y : a) (h:heap)
   : Lemma (requires (interp (pts_to r x) h /\ compatible pcm y x))
           (ensures  (interp (pts_to r y) h))
   = let Ref a' pcm' v' = (select_addr h (Addr?._0 r)) in
     compatible_trans pcm y x v'
 
-// let drop p
-// = let f
-//     : refined_pre_action p unit (fun _ -> emp)
-//     = fun h -> (| (), h |)
-//   in
-//   refined_pre_action_as_action f
-
-
 let erase_action_result
       (#pre #post:_)
-      (#immut #alloc:_)
+      (#immut:_)
       (#fp:slprop)
       (#a:Type)
       (#fp':a -> slprop)
-      (act:action #immut #alloc #pre #post fp a fp')
-: action #immut #alloc #pre #post fp (erased a) (fun x -> fp' x)
+      (act:action #immut #pre #post fp a fp')
+: action #immut #pre #post fp (erased a) (fun x -> fp' x)
 = let g
-  : refined_pre_action #immut #alloc #pre #post fp (erased a) (fun x -> fp' x)
+  : refined_pre_action #immut #pre #post fp (erased a) (fun x -> fp' x)
   = fun h ->
     let (| x, h1 |) = act h in
     let y : erased a = hide x in
@@ -1323,11 +1283,11 @@ let erase_action_result
 
 let erase_action_result_identity
       (#pre #post:_)
-      (#immut #alloc:_)
+      (#immut:_)
       (#fp:slprop)
       (#a:Type)
       (#fp':a -> slprop)
-      (act:action #immut #alloc #pre #post fp a fp')
+      (act:action #immut #pre #post fp a fp')
       (h:full_hheap fp { pre h})
 : Lemma (
     let (| x, h1 |) = act h in
