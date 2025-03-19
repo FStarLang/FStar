@@ -37,7 +37,7 @@ let ghost_act a = _act_except a GHOST
 let act a = _act_except a ATOMIC
 
 val lift_mem_action #a #mg #ex #pre #post
-                   (_:PM._pst_action_except a mg (lower_inames ex) pre post)
+                   (_:PM._pst_action_except a mg pre post)
 : _act_except a (if mg then GHOST else ATOMIC) ex (lift pre) (fun x -> lift (post x))
 
 

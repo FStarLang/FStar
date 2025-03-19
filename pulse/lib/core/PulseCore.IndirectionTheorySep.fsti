@@ -225,13 +225,11 @@ val inv (i:iref) (p:slprop) : slprop
 
 val deq_iref : FStar.GhostSet.decide_eq iref
 let inames = FStar.GhostSet.set iref
-val lower_inames (i:inames) : PM.inames
 
 (** This proposition tells us that all the invariants names in [e] are valid in memory [m] *)
 val hogs_inames_ok (e:inames) (m:mem) : prop
 let inames_ok (e:inames) (m:mem) : prop
-= HeapSig.inames_ok #PM.pulse_heap_sig (lower_inames e) (timeless_mem_of m) /\
-  hogs_inames_ok e m
+= hogs_inames_ok e m
 
 (** The empty set of invariants is always empty *)
 val inames_ok_empty (m:mem)
@@ -245,8 +243,7 @@ val inames_ok_union (i j:inames) (m:mem)
 val hogs_invariant (ex:inames) (i:mem) : slprop
 
 let mem_invariant (e:inames) (w:mem) : slprop
-=  lift (PM.mem_invariant (lower_inames e) (timeless_mem_of w)) `star`
-   hogs_invariant e w
+= hogs_invariant e w
 
 val inames_ok_update_timeless_mem (m: mem) (p: timeless_mem) (ex: inames) :
   Lemma (inames_ok ex (update_timeless_mem m p) <==> inames_ok ex m)

@@ -1051,39 +1051,14 @@ let hogs_invariant_disjoint' (e f:inames) (p0 p1:slprop) (m0 m1:mem) :
 
 let inames_ok_disjoint i j mi mj = ()
 
-let pm_mem_invariant_empty ()
-: Lemma (lift (PM.mem_invariant GhostSet.empty PM.pulse_heap_sig.sep.empty) == emp)
-= PM.pulse_heap_sig.empty_mem_invariant GhostSet.empty;
-  lift_emp_eq ()
-
-
 let mem_invariant_disjoint (e f:inames) (p0 p1:slprop) (m0 m1:mem) =
-  sep_laws ();
-  let p0' = (p0 `star` lift (PM.mem_invariant GhostSet.empty (timeless_mem_of m0))) in
-  let p1' = (p1 `star` lift (PM.mem_invariant GhostSet.empty (timeless_mem_of m1))) in
-  hogs_invariant_disjoint' e f p0' p1' m0 m1;
-  let m = join_mem m0 m1 in
-  let cm = m in
-  Classical.forall_intro (PM.pulse_heap_sig.sep.join_empty);
-  pm_mem_invariant_empty()
+  hogs_invariant_disjoint' e f p0 p1 m0 m1
 
 let mem_invariant_age e m0 m1 = 
   introduce interp (mem_invariant e m0) m1 ==>
             interp (mem_invariant e (age_mem m0)) (age1 m1)
-  with _ . (
-    let m10, m11 =
-      split_mem (lift (PM.mem_invariant GhostSet.empty (timeless_mem_of m0)))
-                (hogs_invariant e m0) m1
-    in
-    hogs_invariant_age e m0 (m11);
-    age_hereditary (lift (PM.mem_invariant GhostSet.empty (timeless_mem_of m0))) m10;
-    assert (interp (hogs_invariant e (age_mem m0)) (age1 m11));
-    age_disjoint m10 m11;
-    intro_star (lift (PM.mem_invariant GhostSet.empty (timeless_mem_of m0)))
-                (hogs_invariant e (age_mem m0)) 
-                (age1 m10)
-                (age1 m11)
-  )
+  with _ . hogs_invariant_age e m0 m1
+  
 
 let mem_invariant_spend e m =
   hogs_invariant_congr2 e m (spend m)
@@ -1156,7 +1131,6 @@ let fresh_inv p m ctx =
     fresh_addr m f in
   let m': mem = hogs_fresh_inv p m i in
   let _: squash (inv i p `star` mem_invariant (single i) m' == inv i p) =
-    pm_mem_invariant_empty();
     hogs_single_invariant (level m) i p;
     sep_laws () in
   Classical.forall_intro (PM.pulse_heap_sig.sep.join_empty);
@@ -1216,7 +1190,6 @@ let fresh_slprop_ref p m =
   assert slprop_ref_pts_to i p m';
   let _: squash (slprop_ref_pts_to i p `star` mem_invariant GS.empty m' == slprop_ref_pts_to i p) =
     hogs_invariant_single_slprop_pts_to GS.empty (level_ m) i p;
-    pm_mem_invariant_empty();
     star_emp emp;
     star_emp (slprop_ref_pts_to i p) in
   Classical.forall_intro (PM.pulse_heap_sig.sep.join_empty);
