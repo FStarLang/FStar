@@ -1,6 +1,6 @@
 module Pulse.Lib.PCM.Raise
-#lang-pulse
 open FStar.PCM
+open FStar.Ghost
 module U = FStar.Universe
 
 let raise (#a:Type u#a) (p:pcm a)
@@ -53,10 +53,10 @@ let raise_refine
   y
 
   let raise_upd
-      (#a:Type u#a) (#p:pcm a) (#x #y: a)
+      (#a:Type u#a) (#p:pcm a) (#x #y: erased a)
       (f:frame_preserving_upd p x y)
   : frame_preserving_upd (raise u#a u#b p) 
-      (U.raise_val x) (U.raise_val y)
+      (U.raise_val (reveal x)) (U.raise_val (reveal y))
   = fun x -> 
       let ra = f (U.downgrade_val x) in
       let res = U.raise_val ra in

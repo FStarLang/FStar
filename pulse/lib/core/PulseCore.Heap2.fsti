@@ -191,19 +191,10 @@ val slprop_extensionality (p q:slprop)
 val emp : slprop u#a
 (** "Points to" allows to talk about the heap contents *)
 val pts_to (#a:Type u#a) (#pcm:_) (r:ref a pcm) (v:a) : slprop u#a
-// val h_and (p1 p2:slprop u#a) : slprop u#a
-// val h_or  (p1 p2:slprop u#a) : slprop u#a
 val star  (p1 p2:slprop u#a) : slprop u#a
-// val wand  (p1 p2:slprop u#a) : slprop u#a
 val h_exists (#[@@@strictly_positive] a:Type u#b)
              ([@@@strictly_positive]  f: (a -> slprop u#a))
   : slprop u#a
-// val h_forall (#a:Type u#b) (f: (a -> slprop u#a)) : slprop u#a
-(**
-  [h_refine] consists of refining a separation logic proposition [p] with an affine heap predicate
-  [r]. Since both types are equal, this is equivalent to [h_and].
-*)
-// val h_refine (p:slprop u#a) (r:a_heap_prop u#a) : slprop u#a
 
 (***** Basic properties of separation logic *)
 
@@ -226,20 +217,6 @@ val emp_unit (p:slprop)
 (** [emp] is trivial *)
 val intro_emp (h:heap)
   : Lemma (interp emp h)
-
-(** Introduction rule for equivalence of [h_exists] propositions *)
-val h_exists_cong (#a:Type) (p q : a -> slprop)
-    : Lemma
-      (requires (forall x. p x `equiv` q x))
-      (ensures (h_exists p `equiv` h_exists q))
-
-(** Introducing [h_exists] by presenting a witness *)
-val intro_h_exists (#a:_) (x:a) (p:a -> slprop) (h:heap)
-  : Lemma (interp (p x) h ==> interp (h_exists p) h)
-
-(** Eliminate an existential by simply getting a proposition. *)
-val elim_h_exists (#a:_) (p:a -> slprop) (h:heap)
-  : Lemma (interp (h_exists p) h ==> (exists x. interp (p x) h))
 
 (**
   The interpretation of a separation logic proposition [hp] is itself an [hprop] of footprint
@@ -343,20 +320,6 @@ val star_congruence (p1 p2 p3 p4:slprop)
   : Lemma (requires p1 `equiv` p3 /\ p2 `equiv` p4)
           (ensures (p1 `star` p2) `equiv` (p3 `star` p4))
 
-(***** Properties of the refinement *)
-
-// (** [h_refine p q] is just interpreting the affine heap prop [q] when [p] is valid *)
-// val refine_interp (p:slprop u#a) (q:a_heap_prop u#a) (h:heap u#a)
-//     : Lemma (interp p h /\ q h <==> interp (h_refine p q) h)
-
-// (**
-//   Equivalence on [h_refine] propositions is define by logical equivalence of the refinements
-//   on all heaps
-// *)
-// val refine_equiv (p0 p1:slprop u#a) (q0 q1:a_heap_prop u#a)
-//     : Lemma (p0 `equiv` p1 /\ (forall h. q0 h <==> q1 h) ==>
-//              equiv (h_refine p0 q0) (h_refine p1 q1))
-
 (**
   A [pure] separation logic predicate is a refinement on the empty heap. That is how we
   lift pure propositions to the separation logic world
@@ -376,20 +339,6 @@ val pure_star_interp (p:slprop u#a) (q:prop) (h:heap u#a)
    : Lemma (interp (p `star` pure q) h <==>
             interp (p `star` emp) h /\ q)
 
-(***** Magic wand and implications properties *)
-
-(** We can define a [stronger] relation on [slprops], defined by interpretation implication *)
-let stronger (p q:slprop) =
-  forall h. interp p h ==> interp q h
-
-(** [stronger] is stable when adding another starred [slprop] *)
-val stronger_star (p q r:slprop)
-  : Lemma (stronger q r ==> stronger (p `star` q) (p `star` r))
-
-(** If [q > r] and [p * q] is valid, then [p * r] is valid *)
-val weaken (p q r:slprop) (h:heap u#a)
-  : Lemma (q `stronger` r /\ interp (p `star` q) h ==> interp (p `star` r) h)
-
 (**** Actions *)
 
 (** An abstract predicate classifying a "full" heap, i.e., the entire
@@ -399,14 +348,6 @@ val full_heap_pred : heap -> prop
 let full_heap = h:heap { full_heap_pred h }
 
 let full_hheap fp = h:hheap fp { full_heap_pred h }
-
-(**
-  This modules exposes a preorder that is respected for every well-formed update of the heap.
-  The preorder represents the fact that once a reference is allocated, its type and PCM cannot
-  change and the trace of values contained in the PCM respects the preorder induced by the
-  PCM (see Steel.Preorder).
-*)
-val heap_evolves : FStar.Preorder.preorder full_heap
 
 (**
   This predicate allows us to maintain an allocation counter, as all references above [a]
@@ -420,14 +361,11 @@ let select_either (t:tag) (i:nat) (h:heap) : GTot (option H.cell) =
   match t with
   | CONCRETE -> select i h
   | GHOST -> select_ghost i h
-val free_above_addr (t:tag) (h:heap u#a) (a:nat) : prop
-val free_above_empty (t:tag) : Lemma (free_above_addr t (empty_heap u#a) 0)
-val reveal_free_above_addr (t:tag) (h:heap u#a) (a:nat)
-: Lemma (free_above_addr t h a <==>
-        (forall i. i >= a ==> None? (select_either t i h)))
-(** [free_above_addr] is abstract but can be weakened consistently with its intended behavior *)
-val weaken_free_above (t:tag) (h:heap) (a b:nat)
-  : Lemma (free_above_addr t h a /\ a <= b ==> free_above_addr t h b)
+let ctr (t:tag) (h:heap) =
+  match t with
+  | CONCRETE -> H.ctr (concrete h)
+  | GHOST -> H.ctr (ghost h)
+val ctr_empty (t:tag) : squash (ctr t (empty_heap u#a) == 0)
 
 (**
   The base type for an action is indexed by two separation logic propositions, representing
@@ -450,7 +388,7 @@ let pre_action (#[T.exact (`trivial_pre)]pre:heap -> prop)
 *)
 let no_allocs : option tag = None
 let does_not_allocate (t:tag) (h0 h1:heap) =
-    forall ctr. free_above_addr t h0 ctr ==> free_above_addr t h1 ctr
+  ctr t h0 == ctr t h1
 let maybe_allocates (t:option tag) (h0 h1:heap) =
   match t with
   | None ->
@@ -466,7 +404,6 @@ let action_related_heaps
       (#[T.exact (`MUTABLE)] m:mutability)
       (#[T.exact (`no_allocs)] allocates:option tag)
       (h0 h1:full_heap) =
-  heap_evolves h0 h1 /\
   maybe_allocates allocates h0 h1 /\
   (match m with
   | ONLY_GHOST ->
@@ -506,22 +443,13 @@ let action (#[T.exact (`MUTABLE)] mut:mutability)
            (fp:slprop u#b) (a:Type u#a) (fp':a -> slprop u#b) =
   f:pre_action #pre #post fp a fp'{ is_frame_preserving mut allocates f }
 
-(**
-  We define a second, but equivalent, type for actions that
-  instead of quantifying over the frame, are explicitly passed a frame
-  from outside
-
-  This notion of action is useful for defining actions like witness_h_exists, see comments at the declaration of witness_h_exists
-*)
-let action_with_frame
-  (fp:slprop u#a)
-  (a:Type u#b)
-  (fp':a -> slprop u#a)
-  = frame:slprop u#a ->
-    h0:full_hheap (fp `star` frame) ->
-    Pure (x:a & full_hheap (fp' x `star` frame))
-      (requires True)
-      (ensures fun (| x, h1 |) -> action_related_heaps #IMMUTABLE #no_allocs h0 h1)
+let apply_action #mut #alloc #pre #post #fp (#a: Type u#a) #fp'
+    (act: action #mut #alloc #pre #post fp a fp')
+    (frame: slprop u#b) (h0: full_hheap (fp `star` frame) { pre h0 })
+  : x:a & h1:full_hheap (fp' x `star` frame) { post h1 /\ action_related_heaps #mut #alloc h0 h1 } =
+  affine_star fp frame h0;
+  let (| x, h1 |) = act h0 in
+  (| x, h1 |)
 
 (**
   Two heaps [h0] and [h1] are frame-related if you can get from [h0] to [h1] with a
@@ -568,19 +496,6 @@ val sel_v (#a:Type u#h) (#pcm:pcm a) (r:ref a pcm) (v:erased a) (m:full_hheap (p
 (** [sel] respect [pts_to] *)
 val sel_lemma (#a:_) (#pcm:_) (r:ref a pcm) (m:full_hheap (ptr r))
   : Lemma (interp (pts_to r (sel r m)) m)
-
-// let witnessed_ref (#a:Type u#a)
-//                   (#pcm:pcm a)
-//                   (r:ref a pcm)
-//                   (fact:a -> prop)
-//                   (h:full_heap)
-//   = interp (ptr r) h /\
-//     fact (sel r h)
-
-// val witnessed_ref_stability (#a:Type) (#pcm:pcm a) (r:ref a pcm) (fact:a -> prop)
-//   : Lemma
-//     (requires FStar.Preorder.stable fact (PulseCore.Preorder.preorder_of_pcm pcm))
-//     (ensures FStar.Preorder.stable (witnessed_ref r fact) heap_evolves)
 
 (**
   The action variant of [sel], returning the "true" value inside the heap. This "true" value
@@ -686,11 +601,8 @@ val extend
   (#a:Type u#a)
   (#pcm:pcm a)
   (x:a{pcm.refine x})
-  (addr:nat)
   : action
       #MUTABLE #(Some CONCRETE)
-      #(fun h -> h `free_above_addr CONCRETE` addr)
-      #(fun h -> h `free_above_addr CONCRETE` (addr + 1))      
       emp 
       (ref a pcm)
       (fun r -> pts_to r x)
@@ -699,10 +611,9 @@ val extend_modifies
   (#a:Type u#a)
   (#pcm:pcm a)
   (x:a{pcm.refine x})
-  (addr:nat)
-  (h:full_hheap emp { h `free_above_addr CONCRETE` addr })
+  (h:full_hheap emp)
 : Lemma (
-      let (| _, h1 |) = extend #a #pcm x addr h in
+      let (| _, h1 |) = extend #a #pcm x h in
       ghost h == ghost h1
   )
 
@@ -717,49 +628,6 @@ val frame (#a:Type)
 val change_slprop (p q:slprop)
                   (proof: (h:heap -> Lemma (requires interp p h) (ensures interp q h)))
   : action #IMMUTABLE #no_allocs p unit (fun _ -> q)
-
-// module U = FStar.Universe
-
-// val id_elim_star (p q:slprop) (h:heap)
-//   : Pure (erased heap & erased heap )
-//          (requires (interp (p `star` q) h))
-//          (ensures (fun (hl, hr) -> disjoint hl hr
-//                               /\ h == join hl hr
-//                               /\ interp p hl
-//                               /\ interp q hr))
-
-// val id_elim_exists (#a:Type) (p : a -> slprop) (h:heap)
-//   : Pure (erased a)
-//          (requires (interp (h_exists p) h))
-//          (ensures (fun x -> interp (p x) h))
-
-
-// let is_frame_monotonic #a (p : a -> slprop) : prop =
-//   forall x y m frame. interp (p x `star` frame) m /\ interp (p y) m ==> interp (p y `star` frame) m
-
-// let is_witness_invariant #a (p : a -> slprop) =
-//   forall x y m. interp (p x) m /\ interp (p y) m ==> x == y
-
-// val witinv_framon (#a:_) (p : a -> slprop)
-//   : Lemma (requires (is_witness_invariant p))
-//           (ensures (is_frame_monotonic p))
-
-
-(**
-  witness_h_exists is defined with action_with_frame as it allows us to define it with any p
-
-  With the quantified frame actions, it creates an issue, since we have to prove that the witness is ok for all frames
-    whereas with an explicit frame, we can pick the witness for that particular frame
-*)
-val elim_exists (#a:_) (p:a -> slprop)
-  : action_with_frame (h_exists p) (erased a) (fun x -> p x)
-
-val intro_exists (#a:_) (p:a -> slprop) (x:erased a)
-  : action_with_frame (p x) unit (fun _ -> h_exists p)
-  
-val lift_exists (#a:_) (p:a -> slprop)
-  : action #IMMUTABLE #no_allocs (h_exists p) unit
-           (fun _a -> h_exists #(FStar.Universe.raise_t a) (FStar.Universe.lift_dom p))
 
 val elim_pure (p:prop)
   : action #IMMUTABLE #no_allocs (pure p) (u:unit{p}) (fun _ -> emp)
@@ -791,7 +659,7 @@ val lift_erased
 val core_ghost_ref : Type0
 val core_ghost_ref_eq (x y:core_ghost_ref) : GTot (b:bool{b <==> (x==y)})
 let ghost_ref (#[@@@unused] a:Type u#a) ([@@@unused]p:pcm a) : Type0 = core_ghost_ref
-val ghost_pts_to (meta:bool) (#a:Type u#a) (#p:pcm a) (r:ghost_ref p) (v:a) : slprop u#a
+val ghost_pts_to (#a:Type u#a) (#p:pcm a) (r:ghost_ref p) (v:a) : slprop u#a
 val core_ghost_ref_as_addr (_:core_ghost_ref) : GTot nat
 val core_ghost_ref_is_null (c:core_ghost_ref) : GTot bool
 val addr_as_core_ghost_ref (_:nat) : r:core_ghost_ref { not <| core_ghost_ref_is_null r }
@@ -807,62 +675,42 @@ val addr_as_core_ghost_ref_injective (a:nat)
     core_ghost_ref_as_addr (addr_as_core_ghost_ref a) == a)
 val interp_ghost_pts_to 
       (i:core_ghost_ref)
-      (#meta:bool)
       (#a:Type)
       (#pcm:FStar.PCM.pcm a)
       (v:a)
       (h0:heap)
 : Lemma
-  (requires interp (ghost_pts_to meta #a #pcm i v) h0)
+  (requires interp (ghost_pts_to #a #pcm i v) h0)
   (ensures (
     not (core_ghost_ref_is_null i) /\ (
     match select_ghost (core_ghost_ref_as_addr i) h0 with
     | None -> False
     | Some c ->
-      let H.Ref meta' a' pcm' v' = c in
-      meta == reveal meta' /\
+      let H.Ref a' pcm' v' = c in
       a == a' /\
       pcm == pcm' /\
       compatible pcm v v')))
       
 val ghost_pts_to_compatible_equiv 
-      (#meta:bool)
       (#a:Type)
       (#pcm:_)
       (x:ghost_ref #a pcm)
       (v0:a)
       (v1:a{composable pcm v0 v1})
-: Lemma (equiv (ghost_pts_to meta x v0 `star` ghost_pts_to meta x v1)
-               (ghost_pts_to meta x (op pcm v0 v1)))
+: Lemma (equiv (ghost_pts_to x v0 `star` ghost_pts_to x v1)
+               (ghost_pts_to x (op pcm v0 v1)))
 
 val ghost_extend
-    (#meta:erased bool)
     (#a:Type u#a)
     (#pcm:pcm a)
     (x:erased a{pcm.refine x})
-    (addr:erased nat)
 : action #ONLY_GHOST #(Some GHOST)
-      #(fun h -> h `free_above_addr GHOST` addr)
-      #(fun h -> h `free_above_addr GHOST` (addr + 1))      
       emp 
       (ghost_ref pcm)
-      (fun r -> ghost_pts_to meta r x)
+      (fun r -> ghost_pts_to r x)
 
-
-val ghost_extend_spec
-      (#meta:bool)
-      #a #pcm (x:a { pcm.refine x })
-      (addr:nat)
-      (h:full_hheap emp { free_above_addr GHOST h addr })
-: Lemma (
-      let (| r, h1 |) = ghost_extend #meta #a #pcm x addr h in
-      (forall (a:nat). a <> addr ==> select_ghost a h == select_ghost a h1) /\
-      select_ghost addr h1 == Some (H.Ref meta a pcm x) /\
-      addr_as_core_ghost_ref addr == r
-  )
 
 val ghost_read
-    (#meta:erased bool)
     (#a:Type)
     (#p:pcm a)
     (r:ghost_ref p)
@@ -871,29 +719,27 @@ val ghost_read
         -> GTot (y:a{compatible p y v /\
                      FStar.PCM.frame_compatible p x v y})))
 : action #IMMUTABLE
-    (ghost_pts_to meta r x)
+    (ghost_pts_to r x)
     (erased (v:a{compatible p x v /\ p.refine v}))
-    (fun v -> ghost_pts_to meta r (f v))
+    (fun v -> ghost_pts_to r (f v))
 
 val ghost_write
-    (#meta:erased bool)
     (#a:Type)
     (#p:pcm a)
     (r:ghost_ref p)
     (x y:Ghost.erased a)
     (f:FStar.PCM.frame_preserving_upd p x y)
 : action #ONLY_GHOST 
-    (ghost_pts_to meta r x)
+    (ghost_pts_to r x)
     unit
-    (fun _ -> ghost_pts_to meta r y)
+    (fun _ -> ghost_pts_to r y)
 
 val ghost_write_modifies
-      (#meta:bool)
       #a (#p:pcm a)
       (r:ghost_ref p)
       (x y:Ghost.erased a)
       (f:FStar.PCM.frame_preserving_upd p x y)
-      (h:full_hheap (ghost_pts_to meta r x))
+      (h:full_hheap (ghost_pts_to r x))
 : Lemma (
       let (| _, h1 |) = ghost_write r x y f h in
       (forall (a:nat). a <> core_ghost_ref_as_addr r ==> select_ghost a h == select_ghost a h1) /\
@@ -902,25 +748,23 @@ val ghost_write_modifies
   )
 
 val ghost_share
-    (#meta:erased bool)
     (#a:Type)
     (#pcm:pcm a)
     (r:ghost_ref pcm)
     (v0:FStar.Ghost.erased a)
     (v1:FStar.Ghost.erased a{composable pcm v0 v1})
 : action #IMMUTABLE
-    (ghost_pts_to meta r (v0 `op pcm` v1))
+    (ghost_pts_to r (v0 `op pcm` v1))
     unit
-    (fun _ -> ghost_pts_to meta r v0 `star` ghost_pts_to meta r v1)
+    (fun _ -> ghost_pts_to r v0 `star` ghost_pts_to r v1)
 
 val ghost_gather
-    (#meta:erased bool)
     (#a:Type)
     (#pcm:pcm a)
     (r:ghost_ref pcm)
     (v0:FStar.Ghost.erased a)
     (v1:FStar.Ghost.erased a)
 : action #IMMUTABLE 
-    (ghost_pts_to meta r v0 `star` ghost_pts_to meta r v1)
+    (ghost_pts_to r v0 `star` ghost_pts_to r v1)
     (squash (composable pcm v0 v1))
-    (fun _ -> ghost_pts_to meta r (op pcm v0 v1))
+    (fun _ -> ghost_pts_to r (op pcm v0 v1))
