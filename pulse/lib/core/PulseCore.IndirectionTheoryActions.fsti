@@ -129,7 +129,7 @@ val drop (#opened_invariants:_) (p:slprop)
 val lift_ghost
       (#a:Type)
       #opened_invariants #p #q
-      (ni_a:PulseCore.HeapSig.non_info a)
+      (ni_a:PM.non_info a)
       (f:erased (ghost_act a opened_invariants p q))
 : ghost_act a opened_invariants p q
 

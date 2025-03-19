@@ -20,15 +20,14 @@ open FStar.PCM
 module PST = PulseCore.HoareStateMonad
 module U = FStar.Universe
 module CM = FStar.Algebra.CommMonoid
-/// This module adds memory invariants to the heap to expose the
-/// final interface for Pulse's PCM-based memory model.
+module B = PulseCore.BaseHeapSig
 
 (**** Basic memory properties *)
 
 (** Abstract type of memories *)
-val mem : Type u#(a + 4)
+let mem : Type u#(a + 4) = B.mem
 
-val is_ghost_action (m0 m1:mem u#a) : prop
+let is_ghost_action (m0 m1:mem u#a) : prop = B.is_ghost_action m0 m1
 let maybe_ghost_action (b:bool) (m0 m1:mem u#a) = b ==> is_ghost_action m0 m1
 
 val ghost_action_preorder (_:unit)
@@ -38,10 +37,10 @@ val ghost_action_preorder (_:unit)
 
 (** The type of separation logic propositions. Based on Steel.Heap.slprop *)
 [@@erasable]
-val slprop : Type u#(a + 4) //invariant predicates, i --> p, live in u#a+4
+let slprop : Type u#(a + 4) = B.slprop //invariant predicates, i --> p, live in u#a+4
 
 (** Interpreting mem assertions as memory predicates *)
-val interp (p:slprop u#a) (m:mem u#a) : prop
+let interp (p:slprop u#a) (m:mem u#a) : prop = B.interp p m
 
 (** Equivalence relation on slprops is just equivalence of their interpretations *)
 val equiv (p1 p2:slprop u#a) : prop
@@ -79,10 +78,9 @@ val core_ref_is_null (r:core_ref) : b:bool { b <==> r == core_ref_null }
 let is_null (#a:Type u#a) (#pcm:pcm a) (r:ref a pcm) : (b:bool{b <==> r == null}) = core_ref_is_null r
 
 (** All the standard connectives of separation logic, based on [Steel.Heap] *)
-val emp : slprop u#a
-val pure (p:prop) : slprop u#a
-val star  (p1 p2:slprop u#a) : slprop u#a
-val h_exists (#a:Type u#b) (f: (a -> slprop u#a)) : slprop u#a
+let emp : slprop u#a = B.emp
+let pure (p:prop) : slprop u#a = B.pure p
+let star  (p1 p2:slprop u#a) : slprop u#a = B.star p1 p2
 
 (***** Properties of separation logic equivalence *)
 
@@ -146,17 +144,6 @@ let pst_action_except (a:Type u#a) (expects:slprop u#um) (provides: a ->  slprop
 let pst_ghost_action_except (a:Type u#a) (expects:slprop u#um) (provides: a -> slprop u#um) =
   _pst_action_except a true expects provides
 
-
-val pulse_heap_sig : hs:PulseCore.HeapSig.heap_sig u#(a + 3) {
-  hs.mem == mem /\
-  hs.slprop == slprop /\
-  hs.emp == emp /\
-  hs.star == star /\
-  pure == hs.pure /\
-  (forall p m. interp p m == hs.interp p m) /\
-  (forall m1 m2. is_ghost_action m1 m2 == hs.is_ghost_action m1 m2) /\
-  full_mem_pred == hs.full_mem_pred
-}
 
 (* Some generic actions and combinators *)
 
