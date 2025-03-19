@@ -106,12 +106,6 @@ let addr_as_core_ghost_ref (a:nat)
 let core_ghost_ref_as_addr_injective r1 = H2.core_ghost_ref_as_addr_injective r1
 let addr_as_core_ghost_ref_injective a = H2.addr_as_core_ghost_ref_injective a
 let select_ghost i m = H2.select_ghost i m
-let ghost_ctr m = H2.ctr GHOST m
-let ctr m = H2.ctr CONCRETE m
-let empty_mem_props () = 
-  H2.ctr_empty GHOST;
-  H.ctr_prop (H2.ghost empty_mem);
-  FStar.Classical.forall_intro_2 H2.select_ghost_interp
 
 (* Lifting H2 actions *)
 let mg_of_mut (m:Tags.mutability) =
@@ -174,7 +168,7 @@ let elim_init (fp: H2.slprop) (frame:slprop u#a) (m:mem)
   H2.intro_star fp (lower frame m) m1 m4
 
 let intro_fin (post: H2.slprop) (frame:slprop) (m:mem)
-    (m0: mem { ctr m0 <= ctr m /\ ghost_ctr m0 <= ghost_ctr m })
+    (m0: mem)
 : Lemma
   (requires H2.interp (post `H2.star` lower frame m0) m)
   (ensures interp (post `star` frame) m)
@@ -204,7 +198,7 @@ let lift_heap_action
       (#a:Type u#b)
       (#fp':a -> H2.slprop u#a)
       (#mut:_)
-      ($f:H2.action #mut #None fp a fp')
+      ($f:H2.action #mut fp a fp')
       (#fp_post: a -> slprop u#a { forall x. fp' x == fp_post x })
 : _action_except a (mg_of_mut mut) fp fp_post
 = let act : _action_except a (mg_of_mut mut) fp fp_post =
@@ -216,9 +210,7 @@ let lift_heap_action
       assert H2.interp (fp' x) h1;
       let m1 = h1 in
       assert (H2.interp (fp' x `H2.star` lower frame m0) m1);
-      assert (H2.action_related_heaps #mut #None h0 h1);
-      assert (H2.does_not_allocate CONCRETE h0 h1);
-      assert (H2.does_not_allocate GHOST h0 h1);
+      assert (H2.action_related_heaps #mut h0 h1);
       intro_fin (fp' x) frame m1 m0;
       assert (maybe_ghost_action (mg_of_mut mut) m0 m1);
       (x, m1)

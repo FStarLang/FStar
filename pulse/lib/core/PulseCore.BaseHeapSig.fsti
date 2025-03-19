@@ -129,15 +129,6 @@ val addr_as_core_ghost_ref_injective (a:nat)
 : Lemma 
   (ensures core_ghost_ref_as_addr (addr_as_core_ghost_ref a) == a)
 val select_ghost (i:nat) (m:mem u#a) : GTot (option (H.cell u#a))
-val ghost_ctr (b:mem) : GTot nat
-let free_above_ghost_ctr (m:mem u#a)
-: prop
-= forall addr. addr >= ghost_ctr m ==> select_ghost addr m == None
-val empty_mem_props () 
-: Lemma (
-    free_above_ghost_ctr empty_mem /\
-    ghost_ctr empty_mem == 0
-  )
 
 val pts_to (#a:Type u#a) (#p:pcm a) (r:ref a p) (x:a) : slprop u#a
 val ghost_pts_to (#a:Type u#a) (#p:pcm a) (r:ghost_ref a p) (x:a) : slprop u#a
