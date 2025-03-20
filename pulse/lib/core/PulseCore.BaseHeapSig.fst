@@ -27,15 +27,15 @@ let star_equiv (p q:slprop) (m:mem u#a)
 let slprop_extensionality (p q:slprop)
 : Lemma ((forall c. interp p c <==> interp q c) ==> p == q)
         [SMTPat (p == q)]
-= introduce (forall c. interp p c <==> interp q c) ==> p == q with _.
+= introduce (forall c. H2.interp p c <==> interp q c) ==> p == q with _.
   H2.slprop_extensionality p q
 
-let star_commutative (p q: slprop) : Lemma (star p q == star q p) =
+let star_commutative (p q: slprop u#a) : Lemma (star p q == star q p) =
   introduce forall c. interp (star p q) c <==> interp (star q p) c with (
     star_equiv p q c;
     star_equiv q p c;
-    introduce forall (a b: mem). disjoint_mem a b <==> disjoint_mem b a with H2.disjoint_sym a b;
-    introduce forall (h0 h1: mem). disjoint_mem h0 h1 ==> disjoint_mem h1 h0 /\ join_mem h0 h1 == join_mem h1 h0 with
+    introduce forall (a b: mem u#a). disjoint_mem a b <==> disjoint_mem b a with H2.disjoint_sym a b;
+    introduce forall (h0 h1: mem u#a). disjoint_mem h0 h1 ==> disjoint_mem h1 h0 /\ join_mem h0 h1 == join_mem h1 h0 with
       introduce _ ==> _ with _. H2.join_commutative h0 h1
   );
   slprop_extensionality (star p q) (star q p)
@@ -124,21 +124,21 @@ let lower (frame: slprop) (m: mem) : p:H2.slprop { forall h. H2.interp p h <==> 
 
 let ac_lemmas ()
 : Lemma (
-    (forall p q r. (p `star` q) `star` r == p `star` (q `star` r)) /\
-    (forall p q. p `star` q == q `star` p) /\
-    (forall p. p `star` emp == p)
+    (forall (p q r : slprop u#a). (p `star` q) `star` r == p `star` (q `star` r)) /\
+    (forall (p q: slprop u#a). p `star` q == q `star` p) /\
+    (forall (p: slprop u#a). p `star` emp == p)
 )
-= FStar.Classical.forall_intro_3 (star_associative);
-  FStar.Classical.forall_intro_2 (star_commutative);
-  FStar.Classical.forall_intro emp_unit
+= FStar.Classical.forall_intro_3 (star_associative u#a);
+  FStar.Classical.forall_intro_2 (star_commutative u#a);
+  FStar.Classical.forall_intro (emp_unit u#a)
 
 let destruct_star_l (p q:slprop) (m:mem)
 : Lemma (interp (p `star` q) m ==> interp p m)
 = star_equiv p q m
 
-let destruct_star (p q:slprop) (m:mem)
+let destruct_star (p q:slprop u#a) (m:mem)
 : Lemma (interp (p `star` q) m ==> interp p m /\ interp q m)
-= ac_lemmas ();
+= ac_lemmas u#a ();
   destruct_star_l p q m;
   destruct_star_l q p m
 
@@ -146,8 +146,7 @@ let elim_init (fp: H2.slprop) (frame:slprop u#a) (m:mem)
 : Lemma 
   (requires interp (fp `star` frame) m)
   (ensures H2.interp fp m /\ H2.interp (fp `H2.star` lower frame m) m)
-= ac_lemmas ();
-  destruct_star fp frame m;
+= destruct_star fp frame m;
   assert H2.interp fp m;
   star_equiv fp frame m;
   let m1 = IndefiniteDescription.indefinite_description_ghost _ fun m1 -> exists m2.
@@ -190,9 +189,8 @@ let intro_fin (post: H2.slprop) (frame:slprop) (m:mem)
   assert disjoint_mem m1 m2;
   assert join_mem m1 m2 == m;
   star_equiv post frame m;
-  assert interp (post `star` frame) m;
-  ac_lemmas ()
-              
+  assert interp (post `star` frame) m
+
 let lift_heap_action
       (#fp:H2.slprop u#a)
       (#a:Type u#b)

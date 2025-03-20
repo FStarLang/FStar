@@ -31,7 +31,7 @@ let core_ref_as_addr = H.core_ref_as_addr
 let core_ref_null = H.core_ref_null
 let core_ref_is_null = H.core_ref_is_null
 
-let disjoint (h1:heap) (h2:heap) =
+let disjoint (h1 h2:heap u#a) =
   H.disjoint h1.concrete h2.concrete /\ H.disjoint h1.ghost h2.ghost
 
 let disjoint_sym h0 h1 = ()
@@ -110,8 +110,8 @@ let h_exists #a f = as_slprop (fun h -> exists (x:a). interp (f x) h)
 let affine_star p1 p2 h = ()
 let equiv_symmetric p1 p2 = ()
 let equiv_extensional_on_star p1 p2 p3 = ()
-let emp_unit p = 
-  assert (forall h. disjoint h empty_heap /\ join h empty_heap == h)
+let emp_unit (p: slprop u#a) = 
+  assert (forall (h: heap u#a). disjoint h empty_heap /\ join h empty_heap == h)
 let intro_emp h = ()
 let h_exists_cong #a p q = ()
 let intro_h_exists x p h = ()
@@ -212,11 +212,11 @@ let sel_v' (#a:Type u#h) (#pcm:pcm a) (r:ref a pcm) (v:erased a) (m:full_hheap (
   = let v = H.sel_v #a #pcm r v m.concrete in
     v
 
-let lower_ptr #a #pcm (r:ref a pcm) (m:full_hheap (ptr r))
-: Lemma (H.interp (H.ptr #a #pcm r) m.concrete)
-= eliminate exists v. H.interp (H.pts_to #a #pcm r v) m.concrete
-  returns H.interp (H.ptr #a #pcm r) m.concrete
-  with _ . ( H.intro_h_exists v (H.pts_to #a #pcm r) m.concrete )
+let lower_ptr (#a: Type u#a) #pcm (r:ref a pcm) (m:full_hheap u#a (ptr r))
+    : Lemma (H.interp (H.ptr #a #pcm r) m.concrete) =
+  let v = IndefiniteDescription.indefinite_description_ghost _
+    fun v -> interp (pts_to r v) m in
+  H.intro_h_exists v (H.pts_to #a #pcm r) m.concrete
 
 let raise_ptr #a #pcm (r:ref a pcm) (m:full_heap)
 : Lemma 
@@ -225,9 +225,9 @@ let raise_ptr #a #pcm (r:ref a pcm) (m:full_heap)
   (ensures
     interp (ptr r) m)
 = H.elim_h_exists (H.pts_to #a #pcm r) m.concrete;
-  eliminate exists v. H.interp (H.pts_to #a #pcm r v) m.concrete
-  returns interp (ptr #a #pcm r) m
-  with _ . ()
+  let v = IndefiniteDescription.indefinite_description_ghost _
+    fun v -> H.interp (H.pts_to #a #pcm r v) m.concrete in
+  assert interp (pts_to r v) m
 
 (** [sel] is a ghost read of the value contained in a heap reference *)
 let sel (#a:Type u#h) (#pcm:pcm a) (r:ref a pcm) (m:full_hheap (ptr r)) : a =
@@ -244,15 +244,11 @@ let sel_v (#a:Type u#h) (#pcm:pcm a) (r:ref a pcm) (v:erased a) (m:full_hheap (p
 
 let sel_lemma #a #pcm r m = lower_ptr r m; H.sel_lemma #a #pcm r m.concrete
 
-let llift_pred (l:tag) (pre:H.heap -> prop)
-  : heap -> prop
-  = fun h -> pre (get l h)
-let lift_pred = llift_pred CONCRETE
 let lift_heap_pre_action
-      (#pre #post:_) (#fp:H.slprop) (#a:Type) (#fp':a -> H.slprop)
-      (act:H.pre_action #pre #post fp a fp')
-: pre_action #(lift_pred pre) #(lift_pred post) (lift fp) a (fun x -> lift (fp' x))
-= fun (h0:full_hheap (lift fp) { lift_pred pre h0 }) ->
+      (#fp:H.slprop) (#a:Type) (#fp':a -> H.slprop)
+      (act:H.pre_action fp a fp')
+: pre_action (lift fp) a (fun x -> lift (fp' x))
+= fun (h0:full_hheap (lift fp)) ->
     let (| x, c |) = act h0.concrete in
     let h1 : full_hheap (lift (fp' x)) = { h0 with concrete=c } in
     (| x, h1 |)
@@ -262,14 +258,14 @@ let lift_heap_pre_action
 #push-options "--fuel 0 --ifuel 0 --z3rlimit_factor 4"
 let lift_immut (m:bool) = if m then IMMUTABLE else MUTABLE
 let lift_action
-      (#immut #pre #post:_)
+      (#immut:_)
       (#fp:H.slprop) (#a:Type) (#fp':a -> H.slprop)
-      (act:H.action #immut #pre #post fp a fp')
-: action #(lift_immut immut) #(lift_pred pre) #(lift_pred post)
+      (act:H.action #immut fp a fp')
+: action #(lift_immut immut)
         (lift fp) a (fun x -> lift (fp' x))
 = let p = lift_heap_pre_action act in
   let mut = lift_immut immut in
-  introduce forall frame (h0:full_hheap (lift fp `star` frame) { lift_pred pre h0 }).
+  introduce forall frame (h0:full_hheap (lift fp `star` frame)).
     let (| x, h1 |) = p h0 in
     interp (lift (fp' x) `star` frame) h1 /\
     action_related_heaps #mut h0 h1
@@ -356,20 +352,20 @@ let refined_pre_action (#mut:mutability)
          (forall frame. frame_related_heaps m0 m1 fp0 (fp1 x) frame mut))
 
 #restart-solver
-let refined_pre_action_as_action #immut #pre #post (#fp0:slprop) (#a:Type) (#fp1:a -> slprop)
-                                 ($f:refined_pre_action #immut #pre #post fp0 a fp1)
-  : action #immut #pre #post fp0 a fp1
+let refined_pre_action_as_action #immut (#fp0:slprop) (#a:Type) (#fp1:a -> slprop)
+                                 ($f:refined_pre_action #immut fp0 a fp1)
+  : action #immut fp0 a fp1
   = let g : pre_action fp0 a fp1 = fun m -> f m in
     g
 
 let frame (#a:Type)
-          (#immut #hpre #hpost:_)
+          (#immut:_)
           (#pre:slprop)
           (#post:a -> slprop)
           (frame:slprop)
           ($f:action pre a post)
   = let g 
-      : refined_pre_action #immut #hpre #hpost 
+      : refined_pre_action #immut
           (pre `star` frame) a (fun x -> post x `star` frame)
         = fun h0 ->
               assert (interp (pre `star` frame) h0);
@@ -434,17 +430,16 @@ let drop p
 
 let is_frame_preserving_only_ghost 
     (#a: Type u#a)
-    (#pre #post:_)
     (#fp: slprop u#b)
     (#fp': a -> slprop u#b)
-    (f:pre_action #pre #post fp a fp')
-    (h:full_hheap fp { pre h })
+    (f:pre_action fp a fp')
+    (h:full_hheap fp)
 : Lemma 
   (requires is_frame_preserving ONLY_GHOST f)
   (ensures (dsnd (f h)).concrete == h.concrete)
 = emp_unit fp;
   let h : full_hheap (fp `star` emp) = h in
-  eliminate forall frame (h0:full_hheap (fp `star` frame) { pre h0 }). (
+  eliminate forall frame (h0:full_hheap (fp `star` frame)). (
       affine_star fp frame h0 ;
       (dsnd (f h0)).concrete == h0.concrete)
   with emp h
@@ -452,15 +447,15 @@ let is_frame_preserving_only_ghost
 let lift_erased
           (#a:Type)
           (#ni_a:non_informative a)
-           #hpre #hpost
+          (#mut:mutability { mut == ONLY_GHOST \/ mut == IMMUTABLE })
           (#pre:slprop)
           (#post:a -> slprop)
-          ($f:erased (action #ONLY_GHOST #hpre #hpost pre a post))
-: action #ONLY_GHOST #hpre #hpost pre a post
-= let g : refined_pre_action #ONLY_GHOST #hpre #hpost pre a post =
+          ($f:erased (action #mut pre a post))
+: action #mut pre a post
+= let g : refined_pre_action #mut pre a post =
     fun h ->
       let gg : erased (a & H.heap) =
-        let ff : action #ONLY_GHOST #hpre #hpost pre a post = reveal f in
+        let ff : action #mut pre a post = reveal f in
         let (| x, hh' |) = ff h in
         is_frame_preserving_only_ghost ff h;
         Ghost.hide (x, Ghost.reveal hh'.ghost)
@@ -477,14 +472,13 @@ let ghost_pts_to #a #p r v = llift GHOST (H.pts_to #a #p r v)
 
 
 let lift_heap_pre_action_ghost
-      (#pre #post:_) (#fp:H.slprop) (#a:Type) (#fp':a -> H.slprop)
+      (#fp:H.slprop) (#a:Type) (#fp':a -> H.slprop)
       (ni_a:non_informative a)
-      (act:H.pre_action #pre #post fp a fp')
-: pre_action #(llift_pred GHOST pre) #(llift_pred GHOST post)
-              (llift GHOST fp)
+      (act:H.pre_action fp a fp')
+: pre_action (llift GHOST fp)
               a
               (fun x -> llift GHOST (fp' x))
-= fun (h0:full_hheap (llift GHOST fp) { llift_pred GHOST pre h0 }) ->
+= fun (h0:full_hheap (llift GHOST fp)) ->
     let xg : erased (a & H.heap) = 
       let (| x, g |) = act (reveal h0.ghost) in
       hide (x, g)
@@ -498,16 +492,15 @@ let lift_heap_pre_action_ghost
 #push-options "--fuel 0 --ifuel 0 --z3rlimit_factor 4"
 let lift_immut_ghost (m:bool) = if m then IMMUTABLE else ONLY_GHOST
 let lift_action_ghost
-      (#immut #pre #post:_)
+      (#immut:_)
       (#fp:H.slprop) (#a:Type) (#fp':a -> H.slprop)
       (ni_a:non_informative a)
-      (act:H.action #immut #pre #post fp a fp')
+      (act:H.action #immut fp a fp')
 : action #(lift_immut_ghost immut)
-         #(llift_pred GHOST pre) #(llift_pred GHOST post)
          (llift GHOST fp) a (fun x -> llift GHOST (fp' x))
 = let p = lift_heap_pre_action_ghost ni_a act in
   let mut = lift_immut immut in
-  introduce forall frame (h0:full_hheap (llift GHOST fp `star` frame) { llift_pred GHOST pre h0 }).
+  introduce forall frame (h0:full_hheap (llift GHOST fp `star` frame)).
     let (| x, h1 |) = p h0 in
     interp (llift GHOST (fp' x) `star` frame) h1 /\
     action_related_heaps #mut h0 h1
@@ -570,74 +563,6 @@ let lift_action_ghost
   p
 #pop-options
 
-let lift_action_ghost_sem
-      (#immut #pre #post:_)
-      (#fp:H.slprop) (#a:Type) (#fp':a -> H.slprop)
-      (ni_a:non_informative a)
-      (act:H.action #immut #pre #post fp a fp')
-      (h:full_hheap (llift GHOST fp) { llift_pred GHOST pre h })
-: Lemma (
-    let (|x, h1|) = act h.ghost in
-    let (|y, h2|) = lift_action_ghost ni_a act h in
-    x==y /\
-    h2 == {h with ghost = h1}
-  )
-= ()
-
-let action_framing_alt
-  (#a: Type u#a)
-  (#mut:_)
-  #hpre #hpost
-  (#fp: slprop u#b)
-  (#fp': a -> slprop u#b)
-  ($f:action #mut #hpre #hpost fp a fp')
-  (frame:slprop) (h0:full_hheap (fp `star` frame) { hpre h0 })
-    : Lemma (
-      affine_star fp frame h0;
-      let (| x, h1 |) = f h0 in
-      frame_related_heaps h0 h1 fp (fp' x) frame mut
-    )
-  =
-  affine_star fp frame h0;
-  emp_unit fp
-
-let ghost_action_modifies
-          (#a:Type)
-           #hpre #hpost
-          (#pre:slprop)
-          (#post:a -> slprop)
-          ($f:action #ONLY_GHOST #hpre #hpost pre a post)
-          (h:full_hheap pre { hpre h })
-: Lemma (
-   let (|x, h1|) = f h in
-   {h with ghost = h1.ghost} == h1 
-)
-= let (|x, h1|) = f h in
-  assert (is_frame_preserving ONLY_GHOST f);
-  emp_unit pre;
-  action_framing_alt f emp h;
-  assert (action_related_heaps #ONLY_GHOST h h1)
-
-let action_result #a (#fp: a-> slprop)
-                  (r: (x:a & full_hheap (fp x)))
-: (a & full_heap)
-= let (|x,y|) = r in x,y
-let eq_pair (#a #b:Type)
-          (y:(a & b))
-          (x:(erased a & b))
-= reveal (fst x) == fst y /\ snd x == snd y
-let lift_erased_sem
-          (#a:Type)
-          (#ni_a:non_informative a)
-          (#allocs:option tag)
-           #hpre #hpost
-          (#pre:slprop)
-          (#post:a -> slprop)
-          ($f:erased (action #ONLY_GHOST #hpre #hpost pre a post))
-          (h:full_hheap pre { hpre h })
-: Lemma (reveal f h == lift_erased #a #ni_a f h)
-= ghost_action_modifies f h
-
 let ni_erased a : non_informative (erased a) = fun x -> reveal x
 let ni_unit : non_informative unit = fun x -> reveal x
 
@@ -690,31 +615,6 @@ let ghost_write
 = lift_erased #_ #(ni_unit)
     (Ghost.hide <|
       lift_action_ghost ni_unit (H.upd_gen_action #a #p r x y f))
-
-let ghost_write_modifies
-      #a (#p:pcm a)
-      (r:ghost_ref p)
-      (x y:Ghost.erased a)
-      (f:FStar.PCM.frame_preserving_upd p x y)
-      (h:full_hheap (ghost_pts_to r x))
-: Lemma (
-      let (| _, h1 |) = ghost_write r x y f h in
-      (forall (a:nat). a <> core_ghost_ref_as_addr r ==> select_ghost a h == select_ghost a h1) /\
-      concrete h == concrete h1 /\
-      H.related_cells (select_ghost (core_ghost_ref_as_addr r) h) (select_ghost (core_ghost_ref_as_addr r) h1)
-  )
-= calc (==) {
-    (dsnd (ghost_write r x y f h)).ghost;
-  (==) { _ by (T.trefl()) }
-    (dsnd (lift_erased #_ #ni_unit
-              (Ghost.hide <| lift_action_ghost ni_unit (H.upd_gen_action #a #p r x y f)) h)).ghost;
-  (==) { lift_erased_sem #_ #ni_unit #None (Ghost.hide <| lift_action_ghost ni_unit (H.upd_gen_action #a #p r x y f)) h }
-    (dsnd  (lift_action_ghost ni_unit (H.upd_gen_action #a #p r x y f) h)).ghost;
-  (==) { lift_action_ghost_sem ni_unit (H.upd_gen_action #a #p r x y f) h }
-    (hide (dsnd (H.upd_gen_action #a #p r x y f h.ghost)));
-  };
-  H.upd_gen_modifies #a #p r x y f h.ghost
-
 
 let ghost_share
     (#a:Type)

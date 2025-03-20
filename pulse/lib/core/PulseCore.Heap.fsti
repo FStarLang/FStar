@@ -390,14 +390,11 @@ let full_hheap fp = h:hheap fp { full_heap_pred h }
   The base type for an action is indexed by two separation logic propositions, representing
   the heap specification of the action before and after.
 *)
-let trivial_pre (h:heap) : prop = True
 module T = FStar.Tactics
-let pre_action (#[T.exact (`trivial_pre)]pre:heap -> prop)
-               (#[T.exact (`trivial_pre)]post:heap -> prop)
-               (fp:slprop u#a)
+let pre_action (fp:slprop u#a)
                (a:Type u#b)
                (fp':a -> slprop u#a)
-  = h0:full_hheap fp { pre h0 } -> res:(x:a & full_hheap (fp' x)) { post (dsnd res) }
+  = full_hheap fp -> x:a & full_hheap (fp' x)
 
 (**
   This is how the heaps before and after the action relate:
@@ -422,13 +419,12 @@ let action_related_heaps
 *)
 let is_frame_preserving
   (#a: Type u#a)
-  (#pre #post:_)
   (#fp: slprop u#b)
   (#fp': a -> slprop u#b)
   (immut:bool)
-  (f:pre_action #pre #post fp a fp')
+  (f:pre_action fp a fp')
   =
-  forall (frame: slprop u#b) (h0:full_hheap (fp `star` frame) { pre h0 }).
+  forall (frame: slprop u#b) (h0:full_hheap (fp `star` frame)).
      (affine_star fp frame h0;
       let (| x, h1 |) = f h0 in
       interp (fp' x `star` frame) h1 /\
@@ -436,10 +432,8 @@ let is_frame_preserving
 
 (** Every action is frame-preserving *)
 let action (#[T.exact (`mut_heap)] immut:bool)
-           (#[T.exact (`trivial_pre)]pre:heap -> prop)
-           (#[T.exact (`trivial_pre)]post:heap -> prop)
            (fp:slprop u#b) (a:Type u#a) (fp':a -> slprop u#b) =
-  f:pre_action #pre #post fp a fp'{ is_frame_preserving immut f }
+  f:pre_action fp a fp'{ is_frame_preserving immut f }
 
 (**
   Two heaps [h0] and [h1] are frame-related if you can get from [h0] to [h1] with a
@@ -460,13 +454,11 @@ let action_framing
   (#immut:bool)
   (#fp: slprop u#b)
   (#fp': a -> slprop u#b)
-  (#pre #post: heap u#b -> prop)
-  ($f:action #immut #pre #post fp a fp')
-  (frame:slprop) (h0:full_hheap (fp `star` frame) { pre h0 })
+  ($f:action #immut fp a fp')
+  (frame:slprop) (h0:full_hheap (fp `star` frame))
     : Lemma (
       affine_star fp frame h0;
       let (| x, h1 |) = f h0 in
-      post h1 /\
       frame_related_heaps h0 h1 fp (fp' x) frame immut
     )
   =
@@ -628,34 +620,32 @@ val extend
       (fun r -> pts_to r x)
 
 val frame (#a:Type)
-          #immut #hpre #hpost
+          #immut
           (#pre:slprop)
           (#post:a -> slprop)
           (frame:slprop)
-          ($f:action #immut #hpre #hpost pre a post)
-  : action #immut #hpre #hpost (pre `star` frame) a (fun x -> post x `star` frame)
+          ($f:action #immut pre a post)
+  : action #immut (pre `star` frame) a (fun x -> post x `star` frame)
 
 val pts_to_evolve (#a:Type u#a) (#pcm:_) (r:ref a pcm) (x y : a) (h:heap)
   : Lemma (requires (interp (pts_to r x) h /\ compatible pcm y x))
           (ensures  (interp (pts_to r y) h))
 
 val erase_action_result
-      (#pre #post:_)
       (#immut:_)
       (#fp:slprop)
       (#a:Type)
       (#fp':a -> slprop)
-      (act:action #immut #pre #post fp a fp')
-: action #immut #pre #post fp (erased a) (fun x -> fp' x)
+      (act:action #immut fp a fp')
+: action #immut fp (erased a) (fun x -> fp' x)
 
 val erase_action_result_identity
-      (#pre #post:_)
       (#immut:_)
       (#fp:slprop)
       (#a:Type)
       (#fp':a -> slprop)
-      (act:action #immut #pre #post fp a fp')
-      (h:full_hheap fp { pre h})
+      (act:action #immut fp a fp')
+      (h:full_hheap fp)
 : Lemma (
     let (| x, h1 |) = act h in
     let (| y, h2 |) = erase_action_result act h in

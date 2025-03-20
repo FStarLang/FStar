@@ -368,12 +368,10 @@ let select_either (t:tag) (i:nat) (h:heap) : GTot (option H.cell) =
 *)
 let trivial_pre (h:heap) : prop = True
 
-let pre_action (#[T.exact (`trivial_pre)]pre:heap -> prop)
-               (#[T.exact (`trivial_pre)]post:heap -> prop)
-               (fp:slprop u#a)
+let pre_action (fp:slprop u#a)
                (a:Type u#b)
                (fp':a -> slprop u#a)
-  = h0:full_hheap fp { pre h0 } -> res:(x:a & full_hheap (fp' x)) { post (dsnd res) }
+  = h0:full_hheap fp -> (x:a & full_hheap (fp' x))
 
 (**
   This is how the heaps before and after the action relate:
@@ -403,13 +401,12 @@ let action_related_heaps
 *)
 let is_frame_preserving
   (#a: Type u#a)
-  (#pre #post:_)
   (#fp: slprop u#b)
   (#fp': a -> slprop u#b)
   (immut:mutability)
-  (f:pre_action #pre #post fp a fp')
+  (f:pre_action fp a fp')
   =
-  forall (frame: slprop u#b) (h0:full_hheap (fp `star` frame) { pre h0 }).
+  forall (frame: slprop u#b) (h0:full_hheap (fp `star` frame)).
      (affine_star fp frame h0;
       let (| x, h1 |) = f h0 in
       interp (fp' x `star` frame) h1 /\
@@ -417,15 +414,13 @@ let is_frame_preserving
 
 (** Every action is frame-preserving *)
 let action (#[T.exact (`MUTABLE)] mut:mutability)
-           (#[T.exact (`trivial_pre)]pre:heap -> prop)
-           (#[T.exact (`trivial_pre)]post:heap -> prop)
            (fp:slprop u#b) (a:Type u#a) (fp':a -> slprop u#b) =
-  f:pre_action #pre #post fp a fp'{ is_frame_preserving mut f }
+  f:pre_action fp a fp'{ is_frame_preserving mut f }
 
-let apply_action #mut #pre #post #fp (#a: Type u#a) #fp'
-    (act: action #mut #pre #post fp a fp')
-    (frame: slprop u#b) (h0: full_hheap (fp `star` frame) { pre h0 })
-  : x:a & h1:full_hheap (fp' x `star` frame) { post h1 /\ action_related_heaps #mut h0 h1 } =
+let apply_action #mut #fp (#a: Type u#a) #fp'
+    (act: action #mut fp a fp')
+    (frame: slprop u#b) (h0: full_hheap (fp `star` frame))
+  : x:a & h1:full_hheap (fp' x `star` frame) { action_related_heaps #mut h0 h1 } =
   affine_star fp frame h0;
   let (| x, h1 |) = act h0 in
   (| x, h1 |)
@@ -597,12 +592,12 @@ val extend_modifies
   )
 
 val frame (#a:Type)
-          #immut #hpre #hpost
+          #immut
           (#pre:slprop)
           (#post:a -> slprop)
           (frame:slprop)
-          ($f:action #immut #hpre #hpost pre a post)
-  : action #immut #hpre #hpost (pre `star` frame) a (fun x -> post x `star` frame)
+          ($f:action #immut pre a post)
+  : action #immut (pre `star` frame) a (fun x -> post x `star` frame)
 
 val change_slprop (p q:slprop)
                   (proof: (h:heap -> Lemma (requires interp p h) (ensures interp q h)))
@@ -627,11 +622,11 @@ let non_informative (a:Type u#a) =
 val lift_erased
           (#a:Type)
           (#ni_a:non_informative a)
-           #hpre #hpost
+          (#mut:mutability { mut == ONLY_GHOST \/ mut == IMMUTABLE })
           (#pre:slprop)
           (#post:a -> slprop)
-          ($f:erased (action #ONLY_GHOST #hpre #hpost pre a post))
-: action #ONLY_GHOST #hpre #hpost pre a post
+          ($f:erased (action #mut pre a post))
+: action #mut pre a post
 
 [@@erasable]
 val core_ghost_ref : Type0
@@ -711,19 +706,6 @@ val ghost_write
     (ghost_pts_to r x)
     unit
     (fun _ -> ghost_pts_to r y)
-
-val ghost_write_modifies
-      #a (#p:pcm a)
-      (r:ghost_ref p)
-      (x y:Ghost.erased a)
-      (f:FStar.PCM.frame_preserving_upd p x y)
-      (h:full_hheap (ghost_pts_to r x))
-: Lemma (
-      let (| _, h1 |) = ghost_write r x y f h in
-      (forall (a:nat). a <> core_ghost_ref_as_addr r ==> select_ghost a h == select_ghost a h1) /\
-      concrete h == concrete h1 /\
-      H.related_cells (select_ghost (core_ghost_ref_as_addr r) h) (select_ghost (core_ghost_ref_as_addr r) h1)
-  )
 
 val ghost_share
     (#a:Type)

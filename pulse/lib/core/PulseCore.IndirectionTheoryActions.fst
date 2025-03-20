@@ -20,21 +20,21 @@ open FStar.Ghost
 
 let pm_sep_laws () : squash (
   PulseCore.Semantics.(
-    associative PM.star /\
-    commutative PM.star /\
-    is_unit PM.emp PM.star
+    associative (PM.star u#a) /\
+    commutative (PM.star u#a) /\
+    is_unit PM.emp (PM.star u#a)
   )
 ) 
-= introduce forall p q. PM.equiv p q ==> p == q
+= introduce forall p q. PM.equiv u#a p q ==> p == q
   with introduce _ ==> _
   with _ . (
     PM.slprop_extensionality p q
   );
   let open PM in
   FStar.Classical.(
-    forall_intro_2 star_commutative;
-    forall_intro_3 star_associative;
-    forall_intro emp_unit
+    forall_intro_2 (star_commutative u#a);
+    forall_intro_3 (star_associative u#a);
+    forall_intro (emp_unit u#a)
   )
   
 // 
