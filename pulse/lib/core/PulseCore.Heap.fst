@@ -33,10 +33,10 @@ let ctr (h: heap) : nat = Seq.length h
 let select i h =
   if i < ctr h then Seq.index h i else None
 
-let empty_heap' n = Seq.create n None
+let empty_heap' n : heap u#a = Seq.create n None
 
-let select_empty_heap' a n : Lemma (select a (empty_heap' n) == None) [SMTPat (select a (empty_heap' n))] =
-  reveal_opaque (`%select) (select a (empty_heap' n))
+let select_empty_heap' a n : Lemma (select a (empty_heap' u#a n) == None) [SMTPat (select a (empty_heap' u#a n))] =
+  reveal_opaque (`%select) (select a (empty_heap' u#a n))
 
 let empty_heap = empty_heap' 0
 
@@ -59,11 +59,11 @@ let update_addr' (m:heap) (a:addr { a < ctr m }) (c:option cell)
   : heap
   = Seq.upd m a c
 
-let select_update_addr' m a b c :
+let select_update_addr' (m: heap u#a) a b c :
     Lemma (select a (update_addr' m b c) ==
       (if a = b then c else select a m))
     [SMTPat (select a (update_addr' m b c))] =
-  reveal_opaque (`%select) (select a)
+  reveal_opaque (`%select) (select u#a a)
 
 let update_addr (m:heap) (a:addr { a < ctr m }) (c:cell)
   : heap
@@ -151,7 +151,7 @@ let join (m0:heap) (m1:heap{disjoint m0 m1})
 let ctr_join_def m0 m1 : Lemma (ctr (join m0 m1) == max (ctr m0) (ctr m1)) [SMTPat (ctr (join m0 m1))] =
   reveal_opaque (`%join) (join m0 m1)
 
-let select_join_def a m0 m1 :
+let select_join_def a (m0: heap u#a) m1 :
     Lemma (select a (join m0 m1) ==
       (match select a m0, select a m1 with
       | None, None -> None
@@ -160,7 +160,7 @@ let select_join_def a m0 m1 :
       | Some c0, Some c1 ->
         Some (join_cells c0 c1)))
       [SMTPat (select a (join m0 m1))] =
-  reveal_opaque (`%select) (select a);
+  reveal_opaque (`%select) (select u#a a);
   reveal_opaque (`%join) (join m0 m1)
 
 let disjoint_join_cells_assoc (c0 c1 c2:cell u#h)
@@ -202,14 +202,14 @@ let disjoint_join' (m0 m1 m2:heap u#h)
 let mem_equiv (m0 m1:heap) =
   ctr m0 == ctr m1 /\ forall a. select a m0 == select a m1
 
-let mem_equiv_eq (m0 m1:heap)
+let mem_equiv_eq (m0 m1:heap u#a)
   : Lemma
     (requires
       m0 `mem_equiv` m1)
     (ensures
       m0 == m1)
     [SMTPat (m0 `mem_equiv` m1)]
-  = reveal_opaque (`%select) select; assert Seq.equal m0 m1
+  = reveal_opaque (`%select) (select u#a); assert Seq.equal m0 m1
 
 let join_cells_commutative (c0:cell u#h) (c1:cell u#h{disjoint_cells c0 c1})
   : Lemma (disjoint_cells_sym c0 c1; join_cells c0 c1 == join_cells c1 c0)
@@ -422,24 +422,11 @@ let affine_star p q h = ()
 
 let equiv_symmetric (p1 p2:slprop u#a) = ()
 let equiv_extensional_on_star (p1 p2 p3:slprop u#a) = ()
-let emp_unit p
-  = let emp_unit_1 p m
-      : Lemma
-        (requires interp p m)
-        (ensures  interp (p `star` emp) m)
-        [SMTPat (interp (p `star` emp) m)]
-      = assert (disjoint empty_heap m);
-        assert (interp (p `star` emp) (join m empty_heap));
-        assert (mem_equiv m (join m empty_heap))
-    in
-    let emp_unit_2 p m
-      : Lemma
-        (requires interp (p `star` emp) m)
-        (ensures interp p m)
-        [SMTPat (interp (p `star` emp) m)]
-      = affine_star p emp m
-    in
-    ()
+
+let emp_unit (p: slprop u#a) =
+  introduce forall (m: heap u#a). interp p m <==> interp (p `star` emp) m with
+    (join_empty m; affine_star p emp m)
+
 
 let intro_emp h = ()
 
@@ -793,21 +780,17 @@ let sel_action' (#a:_) (#pcm:_)
   = sel_v r v0 h
 
 let refined_pre_action (#immut:bool)
-                       (#[T.exact (`trivial_pre)]pre:heap ->prop)
-                       (#[T.exact (`trivial_pre)]post:heap -> prop)
                        (fp0:slprop) (a:Type) (fp1:a -> slprop) =
   m0:full_hheap fp0 ->
   Pure (x:a &
         full_hheap (fp1 x))
-       (requires pre m0)
+       (requires True)
        (ensures fun  (| x, m1 |) ->
-         post m1 /\
          (forall frame. frame_related_heaps m0 m1 fp0 (fp1 x) frame immut))
 
-#restart-solver
-let refined_pre_action_as_action #immut #pre #post (#fp0:slprop) (#a:Type) (#fp1:a -> slprop)
-                                 ($f:refined_pre_action #immut #pre #post fp0 a fp1)
-  : action #immut #pre #post fp0 a fp1
+let refined_pre_action_as_action #immut (#fp0:slprop) (#a:Type) (#fp1:a -> slprop)
+                                 ($f:refined_pre_action #immut fp0 a fp1)
+  : action #immut fp0 a fp1
   = let g : pre_action fp0 a fp1 = fun m -> f m in
     g
 
@@ -1162,10 +1145,10 @@ let pts_to_not_null_action #a #pcm r v
     refined_pre_action_as_action g
 
 ////////////////////////////////////////////////////////////////////////////////
-let select_snoc (h: heap) (c: option cell) a :
+let select_snoc (h: heap u#a) (c: option cell) a :
     Lemma (select a (Seq.snoc h c) == (if a = ctr h then c else select a h))
       [SMTPat (select a (Seq.snoc h c))] =
-  reveal_opaque (`%select) (select a)
+  reveal_opaque (`%select) (select u#a a)
 
 let extend_full_heap_with (h: full_heap) (c: cell {full_cell c}) :
     h':full_heap {
@@ -1220,13 +1203,13 @@ let extend #a #pcm
 #push-options "--z3rlimit_factor 4 --max_fuel 1 --max_ifuel 1"
 #restart-solver
 let frame (#a:Type)
-          (#immut #hpre #hpost:_)
+          #immut
           (#pre:slprop)
           (#post:a -> slprop)
           (frame:slprop)
           ($f:action pre a post)
   = let g 
-      : refined_pre_action #immut #hpre #hpost 
+      : refined_pre_action #immut
           (pre `star` frame) a (fun x -> post x `star` frame)
         = fun h0 ->
               assert (interp (pre `star` frame) h0);
@@ -1264,15 +1247,14 @@ let pts_to_evolve (#a:Type u#a) (#pcm:_) (r:ref a pcm) (x y : a) (h:heap)
     compatible_trans pcm y x v'
 
 let erase_action_result
-      (#pre #post:_)
       (#immut:_)
       (#fp:slprop)
       (#a:Type)
       (#fp':a -> slprop)
-      (act:action #immut #pre #post fp a fp')
-: action #immut #pre #post fp (erased a) (fun x -> fp' x)
+      (act:action #immut fp a fp')
+: action #immut fp (erased a) (fun x -> fp' x)
 = let g
-  : refined_pre_action #immut #pre #post fp (erased a) (fun x -> fp' x)
+  : refined_pre_action #immut fp (erased a) (fun x -> fp' x)
   = fun h ->
     let (| x, h1 |) = act h in
     let y : erased a = hide x in
@@ -1282,13 +1264,12 @@ let erase_action_result
   refined_pre_action_as_action g
 
 let erase_action_result_identity
-      (#pre #post:_)
       (#immut:_)
       (#fp:slprop)
       (#a:Type)
       (#fp':a -> slprop)
-      (act:action #immut #pre #post fp a fp')
-      (h:full_hheap fp { pre h})
+      (act:action #immut fp a fp')
+      (h:full_hheap fp)
 : Lemma (
     let (| x, h1 |) = act h in
     let (| y, h2 |) = erase_action_result act h in

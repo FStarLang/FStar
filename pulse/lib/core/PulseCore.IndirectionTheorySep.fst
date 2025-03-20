@@ -1134,8 +1134,8 @@ let fresh_inv p m ctx =
   let _: squash (inv i p `star` mem_invariant (single i) m' == inv i p) =
     hogs_single_invariant (level m) i p;
     sep_laws () in
-  Classical.forall_intro (H2.join_empty);
-  PM.ghost_action_preorder ();
+  Classical.forall_intro (H2.join_empty u#3);
+  PM.ghost_action_preorder u#3 ();
   (| i, m' |)
 #pop-options
 
@@ -1193,9 +1193,9 @@ let fresh_slprop_ref p m =
     hogs_invariant_single_slprop_pts_to GS.empty (level_ m) i p;
     star_emp emp;
     star_emp (slprop_ref_pts_to i p) in
-  Classical.forall_intro (H2.join_empty);
+  Classical.forall_intro (H2.join_empty u#3);
   GS.lemma_equal_intro (hogs_dom m') GS.empty;
-  PM.ghost_action_preorder ();
+  PM.ghost_action_preorder u#3 ();
   (| i, m' |)
 
 let slprop_ref_pts_to_share x y =

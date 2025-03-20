@@ -65,8 +65,8 @@ let pure_equiv (p q:prop)
 = FStar.PropositionalExtensionality.apply p q
 
 let pure_true_emp (_:unit)
-: Lemma (pure True `equiv` emp)
-= B.pure_true_emp ()
+: Lemma (pure u#a True `equiv` emp)
+= B.pure_true_emp u#(a+3) ()
 
 (***** Properties of the separating conjunction *)
 let star_commutative (p1 p2:slprop)
