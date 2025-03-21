@@ -486,9 +486,3 @@ let check_subtyping g t1 t2 =
       text "Could not prove subtyping of" ^/^ pp t1 ^/^ text "and" ^/^ pp t2
     ]
   )
-
-let check_equiv g t1 t2 =
-  let res, issues =
-    Pulse.Typing.Util.check_equiv_now (elab_env g) t1 t2 in
-  T.log_issues issues;
-  res

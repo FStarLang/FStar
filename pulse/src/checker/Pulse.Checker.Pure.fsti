@@ -112,6 +112,3 @@ val is_non_informative (g:env) (c:comp)
 
 val check_subtyping (g:env) (t1 t2 : term)
   : T.Tac (subtyping_token g t1 t2)
-
-val check_equiv (g:env) (t1 t2:term)
-  : T.Tac (option (T.equiv_token (elab_env g) t1 t2))
