@@ -130,7 +130,7 @@ ensures pts_to_or_null r #p 'v
         unfold (pts_to_or_null None #p 'v);
         fold (pts_to_or_null None #p 'v);
         rewrite each (None #(ref a)) as r;
-        None #a
+        None
      }
     }
 }
@@ -201,7 +201,7 @@ ensures pts_to_or_null r #p 'v
      None -> {
         unfold pts_to_or_null None 'v;
         fold pts_to_or_null None 'v;
-        None #a
+        None
      }
     }
 }
