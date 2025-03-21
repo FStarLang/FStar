@@ -2696,6 +2696,7 @@ let refl_check_match_complete (g:env) (sc:term) (scty:typ) (pats : list RD.patte
   (List.map inspect_pat pats, List.map bnds_for_pat pats), []
 
 let refl_instantiate_implicits (g:env) (e:term) (expected_typ : option term)
+  (inst_extra:bool)
   : tac (option (list (bv & typ) & term & typ) & issues) =
   if no_uvars_in_g g &&
      no_uvars_in_term e
@@ -2711,7 +2712,7 @@ let refl_instantiate_implicits (g:env) (e:term) (expected_typ : option term)
       | None -> Env.clear_expected_typ g |> fst
       | Some typ -> Env.set_expected_typ g typ
     in
-    let g = {g with instantiate_imp=false; phase1=true; admit=true} in
+    let g = {g with instantiate_imp=inst_extra; phase1=true; admit=true} in
     let e, t, guard = g.typeof_tot_or_gtot_term g e must_tot in
     //
     // We don't worry about the logical payload,
