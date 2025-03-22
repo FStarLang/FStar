@@ -24,3 +24,5 @@ open Pulse.Typing
 val same_head (t0 t1 : term): Tac bool
 
 val eligible_for_smt_equality (g:env) (t0 t1 : term) : Tac bool
+
+val mkey_mismatch (g:env) (t0 t1 : term) : Tac bool

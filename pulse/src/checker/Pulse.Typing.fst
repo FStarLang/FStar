@@ -195,7 +195,7 @@ type slprop_equiv : env -> term -> term -> Type =
      g:env ->
      t0:term ->
      t1:term ->
-     FTB.equiv_token (elab_env g) t0 t1 ->
+     RT.equiv (elab_env g) t0 t1 ->
      slprop_equiv g t0 t1
 
   // | VE_Ex:
@@ -1139,7 +1139,7 @@ let star_typing_inversion (#g:_) (#t0 #t1:term) (d:tot_typing g (tm_star t0 t1) 
   = admit ()
 
 let slprop_eq_typing_inversion g (t0 t1:term)
-                              (token:FTB.equiv_token (elab_env g)
+                              (token:RT.equiv (elab_env g)
                                                      t0
                                                      t1)
   : GTot (tot_typing g t0 tm_slprop &

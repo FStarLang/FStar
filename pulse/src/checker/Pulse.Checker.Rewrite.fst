@@ -24,6 +24,7 @@ open Pulse.Checker.Prover
 open Pulse.PP
 module T = FStar.Tactics.V2
 module R = FStar.Reflection.V2
+module RT = FStar.Reflection.Typing
 
 let check_slprop_equiv_ext r (g:env) (p q:slprop)
 : T.Tac (slprop_equiv g p q)
@@ -36,7 +37,7 @@ let check_slprop_equiv_ext r (g:env) (p q:slprop)
       pp q;
     ]
   | Some token ->
-    VE_Ext g p q token
+    VE_Ext g p q (RT.Rel_eq_token _ _ _ ())
 
 let check_slprop_equiv_tac r (g:env) (p q:slprop) (tac_tm : term)
 : T.Tac (slprop_equiv g p q)

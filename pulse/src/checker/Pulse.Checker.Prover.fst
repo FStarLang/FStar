@@ -32,6 +32,7 @@ module T = FStar.Tactics.V2
 module P = Pulse.Syntax.Printer
 module Metatheory = Pulse.Typing.Metatheory
 module PS = Pulse.Checker.Prover.Substs
+module RT = FStar.Reflection.Typing
 
 module ElimExists  = Pulse.Checker.Prover.ElimExists
 module ElimPure    = Pulse.Checker.Prover.ElimPure
@@ -49,7 +50,7 @@ let check_equiv_emp' (g:env) (p:slprop) : T.Tac (option (slprop_equiv g p tm_emp
   | None ->
     match Pulse.Typing.Util.check_equiv_now_nosmt (elab_env g) p tm_emp with
     | Some tok, _ ->
-      Some (VE_Ext _ _ _ tok)
+      Some (VE_Ext _ _ _ (RT.Rel_eq_token _ _ _ ()))
     | None, _ -> None
 
 let normalize_slprop

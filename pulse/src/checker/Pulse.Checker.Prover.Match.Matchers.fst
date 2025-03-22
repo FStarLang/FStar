@@ -70,7 +70,7 @@ let try_solve_uvars (g:env) (uvs:env { disjoint uvs g }) (p q:term)
 
   let l, issues =
     RU.with_context (get_context g) (fun _ ->
-      T.with_policy T.ForceSMT (fun () ->
+      T.with_policy T.Force (fun () ->
         T.try_unify (elab_env g) uvs p q))
   in
 
@@ -147,7 +147,7 @@ let match_fastunif_11
   : T.Tac (match_res_t pst p q)
 = match PTU.check_equiv_now_nosmt (elab_env pst.pg) p q with
   | Some tok, _ ->
-    Matched PS.empty Trivial (fun () -> VE_Ext _ _ _ tok)
+    Matched PS.empty Trivial (fun () -> VE_Ext _ _ _ (RT.Rel_eq_token _ _ _ ()))
   | None, _ ->
     NoMatch "no unif"
 
@@ -158,61 +158,26 @@ let match_fastunif_inst_11
 = let g = pst.pg in
   let q0 = q in
 
-  (* If the heads of p and q differ, skip. *)
-  if not <| MKeys.same_head p q then (
-    if RU.debug_at_level (fstar_env g) "ggg" then
-      info_doc g (Some <| range_of_env g) [
-        text "head mismatch";
-      ];
-    raise (ENoMatch "head mismatch")
-  );
+  (* If the heads of p and q differ, skip. This makes sure we don't unfold
+  stuff implicitly. *)
+  if not <| MKeys.same_head p q then
+    raise (ENoMatch "head mismatch");
 
   (* Try to instantiate q's uvars by matching it to p. We do not trust
   this call so we then typecheck the result (and normalize it too). *)
   let ss' = try_solve_uvars pst.pg pst.uvs p q in
   let q_subst = ss'.(q) in
-  let q_norm =
-    (* First typecheck q_subst and then normalize it. If it
-    fails to typecheck, say due to a bad solution of uvars by try_solve_uvars,
-    then we must also fail here. Hence we use ForceSMT to not batch these queries. *)
-    match T.with_policy T.ForceSMT (fun () -> T.tc_term (elab_env g) q_subst) with
-    | Some (q_subst', _), _ ->
-      T.norm_well_typed_term (elab_env g)
-        [NormSteps.unascribe; primops; iota]
-        q_subst'
-    | None, issues ->
-      if RU.debug_at_level (fstar_env g) "ggg" then
-        info_doc_with_subissues g (Some <| range_of_env g) issues [
-          text "bad uvars?";
-        ];
-      // bad uvars, just ignore
-      raise (ENoMatch "uvar solution did not check")
-  in
-  let q_subst_eq_q_norm : erased (equiv_token (elab_env g) q_subst q_norm) = magic () in
 
-  if RU.debug_at_level (fstar_env g) "ggg" then
-    info_doc g (Some <| range_of_env g) [
-      text "match_fastunif_inst_11";
-      doc_of_string "p: " ^/^ pp p;
-      doc_of_string "q: " ^/^ pp q;
-      doc_of_string "q_subst: " ^/^ pp q_subst;
-      doc_of_string "q_norm: " ^/^ pp q_norm;
-    ];
-
-  match PTU.check_equiv_now_nosmt (elab_env pst.pg) p q_norm with
+  match PTU.check_equiv_now_nosmt (elab_env pst.pg) p q_subst with
   | None, issues ->
     if RU.debug_at_level (fstar_env g) "ggg" then
       info_doc_with_subissues g (Some <| range_of_env g) issues [
         text "match_fastunif_inst_11: check_equiv failed, no unif";
       ];
     raise (ENoMatch "no unif")
+
   | Some token, _ ->
-    // (| ss', VE_Ext _ _ _ (RU.magic ()) |)
-    let p_eq_q_norm : slprop_equiv g p q_norm  = VE_Ext _ _ _ token in
-    let p_eq_q      : slprop_equiv g p q_subst =
-      p_eq_q_norm >>> VE_Sym _ _ _ (VE_Ext _ _ _ q_subst_eq_q_norm)
-    in
-    Matched ss' Trivial (fun () -> p_eq_q)
+    Matched ss' Trivial (fun _ -> VE_Ext _ _ _ (RT.Rel_eq_token _ _ _ ()))
 
 let match_full_11
   (#preamble:_) (pst : prover_state preamble)
@@ -221,44 +186,20 @@ let match_full_11
 = let g = pst.pg in
   let q0 = q in
 
-  (* If the heads of p and q differ, skip. *)
+  (* Similar to fastunif_inst. Instead of unifiying without SMT,
+     we check if the mkeys match. If so, we return a guarded result. *)
+
   if not <| MKeys.same_head p q then
     raise (ENoMatch "head mismatch");
 
-  (* Try to instantiate q's uvars by matching it to p. We do not trust
-  this call so we then typecheck the result (and normalize it too). *)
   let ss' = try_solve_uvars pst.pg pst.uvs p q in
   let q_subst = ss'.(q) in
-  let q_norm =
-    (* First typecheck q_subst and then normalize it. If it
-    fails to typecheck, say due to a bad solution of uvars by try_solve_uvars,
-    then we must also fail here. Hence we use ForceSMT to not batch these queries. *)
-    // FIXME: Do not call SMT here.
-    match T.with_policy T.ForceSMT (fun () -> T.tc_term (elab_env g) q_subst) with
-    | Some (q_subst', _), [] ->
-      T.norm_well_typed_term (elab_env g)
-        [NormSteps.unascribe; primops; iota]
-        q_subst'
-    | _ ->
-      // bad uvars, just ignore
-      raise (ENoMatch "uvar solution did not check")
-  in
-
-  (* FIXME: extend reflection typing to provide the token. The norm_well_typed_term
-  calls gives us a squashed one (which is ok) but tc_term does not. *)
-  let q_subst_eq_q_norm : erased (equiv_token (elab_env g) q_subst q_norm) = magic () in
 
   (* Check now, after normalizing etc, that we are allowed to try an SMT query
   to match them. This is the part that looks at the binder attributes for strictness.
   If this check doesn't pass, skip. *)
-  if not (MKeys.eligible_for_smt_equality g p q_norm) then
+  if not (MKeys.eligible_for_smt_equality g p q_subst) then
     raise (ENoMatch "not eligible for SMT");
 
   (* Return a guarded result *)
-  Matched ss' (EquivToken g p q_norm) (fun token ->
-    let p_eq_q_norm : slprop_equiv g p q_norm  = VE_Ext _ _ _ token in
-    let p_eq_q      : slprop_equiv g p q_subst =
-      p_eq_q_norm >>> VE_Sym _ _ _ (VE_Ext _ _ _ q_subst_eq_q_norm)
-    in
-    p_eq_q
-  )
+  Matched ss' (Equiv g p q_subst) (fun equiv -> VE_Ext _ _ _ equiv)
