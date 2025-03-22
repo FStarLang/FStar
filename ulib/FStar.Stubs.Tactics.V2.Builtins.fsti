@@ -573,7 +573,11 @@ val check_match_complete (g:env) (sc:term) (t:typ) (pats:list pattern)
 //
 //   t' is the elaborated t, and ty is its type
 //
+// inst_extra: setting this flag to true will potentially cause implicits
+//             at the *end* of the type of [t] to be instantiated (e.g.
+//             [None] -> [None #int].
 val instantiate_implicits (g:env) (t:term) (expected_typ : option term)
+  (inst_extra : bool)
   : Tac (ret_t (list (namedv & typ) & term & typ))
 
 //
