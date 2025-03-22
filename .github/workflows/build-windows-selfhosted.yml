@@ -68,7 +68,13 @@ jobs:
       - run: unzip fstar*.zip
         shell: bash
 
+      - name: Check out Hello example
+        uses: actions/checkout@v4
+        with:
+          sparse-checkout: examples\hello\Hello
+          path: fstartest
+
       - name: Smoke test
         working-directory: fstar
         run: |
-          ./bin/fstar.exe lib/fstar/ulib/Prims.fst -f -d
+          .\bin\fstar.exe --already_cached "*,-Hello" fstartest\examples\hello\Hello\Hello.fst -f -d
