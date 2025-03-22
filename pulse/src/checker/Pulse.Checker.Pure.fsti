@@ -25,7 +25,9 @@ open Pulse.Readback
 let push_context (ctx:string) (r:range) (g:env) : (g':env { g == g' })
   = push_context g ctx r
 
-val instantiate_term_implicits (g:env) (t:term) (expected: option typ)
+val instantiate_term_implicits
+  (g:env) (t:term) (expected: option typ)
+  (inst_extra : bool) (* Should this instantiate implicits at the end of t? *)
   : T.Tac (term & term)
 
 val instantiate_term_implicits_uvs (g:env) (t:term)
@@ -112,6 +114,3 @@ val is_non_informative (g:env) (c:comp)
 
 val check_subtyping (g:env) (t1 t2 : term)
   : T.Tac (subtyping_token g t1 t2)
-
-val check_equiv (g:env) (t1 t2:term)
-  : T.Tac (option (T.equiv_token (elab_env g) t1 t2))

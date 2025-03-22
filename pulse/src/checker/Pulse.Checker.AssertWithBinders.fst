@@ -76,7 +76,7 @@ let infer_binder_types (g:env) (bs:list binder) (v:slprop)
         bs
         v
     in
-    let inst_abstraction, _ = PC.instantiate_term_implicits g (wr abstraction v_rng) None in
+    let inst_abstraction, _ = PC.instantiate_term_implicits g (wr abstraction v_rng) None true in
     refl_abs_binders inst_abstraction []
 
 let rec open_binders (g:env) (bs:list binder) (uvs:env { disjoint uvs g }) (v:term) (body:st_term)
@@ -258,8 +258,8 @@ let rewrite_all (is_source:bool) (g:env) (p: list (term & term)) (t:term) : T.Ta
     let p : list (R.term & R.term) = 
       T.map 
         (fun (e1, e2) -> 
-          (fst (Pulse.Checker.Pure.instantiate_term_implicits g e1 None)),
-          (fst (Pulse.Checker.Pure.instantiate_term_implicits g e2 None)))
+          (fst (Pulse.Checker.Pure.instantiate_term_implicits g e1 None false)),
+          (fst (Pulse.Checker.Pure.instantiate_term_implicits g e2 None false)))
         p
     in
     let lhs, rhs = visit_and_rewrite_conjuncts_all is_source g p t in
@@ -305,7 +305,7 @@ let check_renaming
     }
 
   | [], Some goal -> (
-      let goal, _ = PC.instantiate_term_implicits g goal None in
+      let goal, _ = PC.instantiate_term_implicits g goal None false in
       let lhs, rhs = rewrite_all (T.unseal st.source) g pairs goal in
       let t = { st with term = Tm_Rewrite { t1 = lhs; t2 = rhs; tac_opt };
                         source = Sealed.seal false; } in
@@ -454,7 +454,7 @@ let check
 
     check_unfoldable g v;
 
-    let v_opened, t_rem = PC.instantiate_term_implicits (push_env g uvs) v_opened None in
+    let v_opened, t_rem = PC.instantiate_term_implicits (push_env g uvs) v_opened None false in
 
     let uvs, v_opened =
       let (| uvs_rem, v_opened |) =
