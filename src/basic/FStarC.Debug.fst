@@ -23,17 +23,20 @@ let anyref = mk_ref false
 let _debug_all : ref bool = mk_ref false
 let toggle_list : ref (list (string & ref bool)) =
   mk_ref []
+let dbg_level = mk_ref 0
 
 type saved_state = {
   toggles : list (string & bool);
   any     : bool;
   all     : bool;
+  level   : int;
 }
 
 let snapshot () : saved_state = {
   toggles = !toggle_list |> List.map (fun (k, r) -> (k, !r));
   any     = !anyref;
   all     = !_debug_all;
+  level   = !dbg_level;
 }
 
 let register_toggle (k : string) : ref bool =
@@ -58,6 +61,7 @@ let restore (snapshot : saved_state) : unit =
   (* Also restore these references. *)
   anyref := snapshot.any;
   _debug_all := snapshot.all;
+  dbg_level := snapshot.level;
   ()
 
 let list_all_toggles () : list string =
@@ -70,8 +74,6 @@ let tag (s:string) =
     BU.print_string ("DEBUG:" ^  s ^ "\n")
 
 let enable () = anyref := true
-
-let dbg_level = mk_ref 0
 
 let low     () = !dbg_level >= 1 || !_debug_all
 let medium  () = !dbg_level >= 2 || !_debug_all
@@ -104,4 +106,4 @@ let disable_all () : unit =
 
 let set_debug_all () : unit =
   _debug_all := true;
-  List.iter (fun (_, r) -> r := true) !toggle_list
+  dbg_level := 4
