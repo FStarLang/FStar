@@ -22,16 +22,3 @@ let keys (m:'value t) = fold m (fun k _ acc -> k::acc) []
 let copy (m:'value t) = StringHashtbl.copy m
 let size (m:'value t) = StringHashtbl.length m
 let iter (m:'value t) f = StringHashtbl.iter f m
-
-type 'value smap = 'value t
-let smap_create = create
-let smap_clear = clear
-let smap_add = add
-let smap_of_list = of_list
-let smap_try_find = try_find
-let smap_fold = fold
-let smap_remove = remove
-let smap_keys = keys
-let smap_copy = copy
-let smap_size = size
-let smap_iter = iter

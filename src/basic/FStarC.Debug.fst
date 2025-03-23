@@ -21,47 +21,50 @@ module BU = FStarC.Util
 (* Mutable state *)
 let anyref = mk_ref false
 let _debug_all : ref bool = mk_ref false
-let toggle_list : ref (list (string & ref bool)) =
-  mk_ref []
+let toggle_list : ref (PSMap.t (ref bool)) = mk_ref (PSMap.empty ())
+let dbg_level = mk_ref 0
 
 type saved_state = {
   toggles : list (string & bool);
   any     : bool;
   all     : bool;
+  level   : int;
 }
 
 let snapshot () : saved_state = {
-  toggles = !toggle_list |> List.map (fun (k, r) -> (k, !r));
+  toggles = PSMap.fold !toggle_list (fun k r acc -> (k, !r) :: acc) [];
   any     = !anyref;
   all     = !_debug_all;
+  level   = !dbg_level;
 }
 
 let register_toggle (k : string) : ref bool =
   let r = mk_ref false in
   if !_debug_all then
     r := true;
-  toggle_list := (k, r) :: !toggle_list;
+  toggle_list := PSMap.add !toggle_list k r;
   r
 
 let get_toggle (k : string) : ref bool =
-  match List.tryFind (fun (k', _) -> k = k') !toggle_list with
-  | Some (_, r) -> r
+  match PSMap.try_find !toggle_list k with
+  | Some r -> r
   | None -> register_toggle k
 
 let restore (snapshot : saved_state) : unit =
   (* Set everything to false, then set all the saved ones
   to true. *)
-  !toggle_list |> List.iter (fun (_, r) -> r := false);
+  PSMap.iter !toggle_list (fun k r -> r := false);
   snapshot.toggles |> List.iter (fun (k, b) ->
     let r = get_toggle k in
     r := b);
   (* Also restore these references. *)
   anyref := snapshot.any;
   _debug_all := snapshot.all;
+  dbg_level := snapshot.level;
   ()
 
 let list_all_toggles () : list string =
-  List.map fst !toggle_list
+  PSMap.keys !toggle_list
 
 let any () = !anyref || !_debug_all
 
@@ -70,8 +73,6 @@ let tag (s:string) =
     BU.print_string ("DEBUG:" ^  s ^ "\n")
 
 let enable () = anyref := true
-
-let dbg_level = mk_ref 0
 
 let low     () = !dbg_level >= 1 || !_debug_all
 let medium  () = !dbg_level >= 2 || !_debug_all
@@ -100,8 +101,9 @@ let enable_toggles (keys : list string) : unit =
 let disable_all () : unit =
   anyref := false;
   dbg_level := 0;
-  List.iter (fun (_, r) -> r := false) !toggle_list
+  PSMap.iter !toggle_list (fun k r -> r := false)
 
 let set_debug_all () : unit =
   _debug_all := true;
-  List.iter (fun (_, r) -> r := true) !toggle_list
+  dbg_level := 4;
+  PSMap.iter !toggle_list (fun k r -> r := true)

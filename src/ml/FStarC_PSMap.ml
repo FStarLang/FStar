@@ -14,6 +14,8 @@ let empty (_: unit) : 'value t = StringMap.empty
 let add (map: 'value t) (key: string) (value: 'value) = StringMap.add key value map
 let find_default (map: 'value t) (key: string) (dflt: 'value) =
   StringMap.find_default dflt key map
+let of_list (l: (string * 'value) list) : 'value t =
+  List.fold_left (fun acc (k,v) -> add acc k v) (empty ()) l
 let try_find (map: 'value t) (key: string) =
   StringMap.Exceptionless.find key map
 let fold (m:'value t) f a = StringMap.fold f m a
@@ -34,14 +36,4 @@ let remove (m: 'value t)  (key:string)
   : 'value t = StringMap.remove key m
 
 let keys m = fold m (fun k _ acc -> k::acc) []
-
-type 'v psmap = 'v t
-let psmap_empty = empty
-let psmap_add = add
-let psmap_find_default = find_default
-let psmap_try_find = try_find
-let psmap_fold = fold
-let psmap_find_map = find_map
-let psmap_modify = modify
-let psmap_merge = merge
-let psmap_remove = remove
+let iter (m:'value t) f = StringMap.iter f m
