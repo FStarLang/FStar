@@ -252,11 +252,9 @@ let check
   let (| head, eff_head, ty_head, dhead |) = compute_term_type g head in
 
   debug_log g (fun _ ->
-    T.print (Printf.sprintf "st_app: head = %s, eff_head: %s, ty_head = %s\n"
-               (P.term_to_string head)
-               (P.tot_or_ghost_to_string eff_head)
-               (P.term_to_string ty_head)));
-    
+    T.print (Printf.sprintf "st_app: head = %s, eff_head: %s, ty_head = %s, arg = %s\n"
+               (show head) (show eff_head) (show ty_head) (show arg)));
+
   match is_arrow ty_head with
   | Some b ->
     apply_impure_function t.range g0 uvs g ctxt ctxt_typing post_hint res_ppname head qual arg ty_head eff_head dhead b

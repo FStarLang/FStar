@@ -23,6 +23,7 @@ module Metatheory = Pulse.Typing.Metatheory
 module CP = Pulse.Checker.Pure
 module RU = Pulse.RuntimeUtils
 module FV = Pulse.Typing.FV
+open Pulse.Show
 
 open Pulse.Typing.Combinators
 open Pulse.Typing.Metatheory

@@ -233,7 +233,7 @@ fn parse_dpe_cmd (#s:erased (Seq.seq U8.t))
         rewrite each c.cbor_read_is_success as false;
         unfold (cbor_read_deterministically_encoded_with_typ_error_post Spec.session_message input p s); 
         fold (parse_dpe_cmd_post len input s p None);
-        None #dpe_cmd
+        None
     } else {
         unfold (cbor_read_deterministically_encoded_with_typ_post Spec.session_message input p s c);
         rewrite each c.cbor_read_is_success as true;
@@ -262,7 +262,7 @@ fn parse_dpe_cmd (#s:erased (Seq.seq U8.t))
             elim_implies ();
             serialize_cbor_inj' vc vrem1;
             fold (parse_dpe_cmd_post len input s p None);
-            None #dpe_cmd
+            None
         } else {
             unfold (cbor_read_deterministically_encoded_with_typ_post Spec.command_message cbor_str.cbor_string_payload ps cs msg);
             rewrite each msg.cbor_read_is_success as true;
@@ -280,7 +280,7 @@ fn parse_dpe_cmd (#s:erased (Seq.seq U8.t))
               serialize_cbor_inj' vmsg vrem2;
               serialize_cbor_inj' vc vrem1;
               fold (parse_dpe_cmd_post len input s p None);
-              None #dpe_cmd
+              None
             } else {
               let cmd_id_cbor = cbor_array_index msg.cbor_read_payload 0sz;
               let cmd_id_int = cbor_destr_int64 cmd_id_cbor;
