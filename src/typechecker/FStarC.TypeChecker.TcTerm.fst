@@ -1698,6 +1698,8 @@ and tc_value env (e:term) : term
 
   //As a general naming convention, we use e for the term being analyzed and its subterms as e1, e2, etc.
   //We use t and its variants for the type of the term being analyzed
+  if Debug.extreme () then
+    BU.print1 "Checking value %s\n" (show e);
   let env = Env.set_range env e.pos in
   let top = SS.compress e in
   match top.n with
@@ -4863,10 +4865,9 @@ let rec __typeof_tot_or_gtot_term_fastpath (env:env) (t:term) (must_tot:bool) : 
       in the return type
 *)
 let typeof_tot_or_gtot_term_fastpath (env:env) (t:term) (must_tot:bool) : option typ =
+  Errors.with_ctx "In a call to typeof_tot_or_gtot_term_fastpath" <| fun () ->
   def_check_scoped t.pos "fastpath" env t;
-  Errors.with_ctx
-    "In a call to typeof_tot_or_gtot_term_fastpath"
-    (fun () -> __typeof_tot_or_gtot_term_fastpath env t must_tot)
+  __typeof_tot_or_gtot_term_fastpath env t must_tot
 
 (*
  * Precondition: G |- t : Tot _ or G |- t : GTot _
