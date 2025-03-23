@@ -15,6 +15,7 @@ val modify: t 'value -> string -> (option 'value -> 'value) -> t 'value
 val merge: t 'value -> t 'value -> t 'value
 val remove: t 'value -> string -> t 'value
 val keys : t 'value -> list string
+val iter : t 'value -> (string -> 'value -> unit) -> unit
 
 (* aliases *)
 type psmap = t
@@ -27,3 +28,4 @@ let psmap_find_map m f = find_map m f
 let psmap_modify m k f = modify m k f
 let psmap_merge m1 m2= merge m1 m2
 let psmap_remove m k = remove m k
+let psmap_iter m f = iter m f

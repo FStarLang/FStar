@@ -34,6 +34,7 @@ let remove (m: 'value t)  (key:string)
   : 'value t = StringMap.remove key m
 
 let keys m = fold m (fun k _ acc -> k::acc) []
+let iter (m:'value t) f = StringMap.iter f m
 
 type 'v psmap = 'v t
 let psmap_empty = empty
@@ -45,3 +46,4 @@ let psmap_find_map = find_map
 let psmap_modify = modify
 let psmap_merge = merge
 let psmap_remove = remove
+let psmap_iter = iter
