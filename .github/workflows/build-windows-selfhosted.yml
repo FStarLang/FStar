@@ -72,9 +72,9 @@ jobs:
         uses: actions/checkout@v4
         with:
           sparse-checkout: examples\hello\Hello
-          path: fstartest
+          path: ${{ github.workspace }}\fstartest
 
       - name: Smoke test
         working-directory: fstar
         run: |
-          .\bin\fstar.exe --already_cached "*,-Hello" fstartest\examples\hello\Hello\Hello.fst -f -d
+          .\bin\fstar.exe --already_cached "*,-Hello" ${{ github.workspace }}\fstartest\examples\hello\Hello\Hello.fst -f -d
