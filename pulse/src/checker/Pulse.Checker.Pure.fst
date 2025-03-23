@@ -215,20 +215,18 @@ let instantiate_term_implicits_uvs (g:env) (t0:term) =
     fail_doc_with_subissues g (Some rng) issues []
   )
   | Some (namedvs, t, ty) ->
-    let (| uvs, t, ty |)
-      : uvs:env { disjoint g uvs } &
-        term &
-        term =
-      T.fold_left (fun (| uvs, t, ty |) (namedv, namedvt) ->
+    let (ss , uvs)
+      : list subst_elt & uvs:env { disjoint g uvs } =
+      T.fold_left (fun (ss, uvs) (namedv, namedvt) ->
         let nview = R.inspect_namedv namedv in
         let ppname = { name = nview.ppname; range = rng } <: Pulse.Syntax.Base.ppname in
         let x = fresh (push_env g uvs) in
-        let ss = [RT.NT nview.uniq (tm_var {nm_index = x; nm_ppname = ppname})] in
+        let namedvt = subst_term namedvt ss in
+        let ss1 = [RT.NT nview.uniq (tm_var {nm_index = x; nm_ppname = ppname})] in
         let uvs : uvs:env { disjoint g uvs } = push_binding uvs x ppname namedvt in
-        (| uvs,
-           subst_term t ss,
-           subst_term ty ss |)) (| mk_env (fstar_env g), t, ty |) namedvs in
-    (| uvs, t, ty |)
+        (ss @ ss1, uvs)) ([], mk_env (fstar_env g)) namedvs
+    in
+    (| uvs, subst_term t ss, subst_term ty ss|)
 
 let check_universe (g:env) (t:term)
   : T.Tac (u:universe & universe_of g t u)
