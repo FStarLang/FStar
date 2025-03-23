@@ -465,15 +465,15 @@ let tc_sig_let env r se lbs lids : ML (list sigelt & list sigelt & Env.env) =
         let drop_lbtyp (e_lax:term) : ML term =
           match (SS.compress e_lax).n with
           | Tm_let {lbs=(false, [ lb ]); body=e2} ->
-            let lb_unannotated =
+            let lb_unannotated, ropt =
               match (SS.compress e).n with  //checking type annotation on e, the lb before phase 1, capturing e from above
               | Tm_let {lbs=(_, [ lb ])} ->
                 (match (SS.compress lb.lbtyp).n with
-                 | Tm_unknown -> true
-                 | _ -> false)
+                 | Tm_unknown -> true, Some (pos lb.lbtyp)
+                 | _ -> false, None)
               | _                       -> failwith "Impossible: first phase lb and second phase lb differ in structure!"
             in
-            if lb_unannotated then { e_lax with n = Tm_let {lbs=(false, [ { lb with lbtyp = S.tun } ]);
+            if lb_unannotated then { e_lax with n = Tm_let {lbs=(false, [ { lb with lbtyp = setPos (Some?.v ropt) S.tun } ]);
                                                             body=e2}}  //erase the type annotation
             else e_lax
           | Tm_let {lbs=(true, lbs)} ->

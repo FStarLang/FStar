@@ -1741,6 +1741,7 @@ and tc_value env (e:term) : ML (term
   //only occurs where type annotations are missing in source programs
   //or the program has explicit _ for missing terms
   | Tm_unknown ->
+    (* BU.print1 "Tm_unknown: at %s\n" (Range.string_of_range e.pos); *)
     let r = Env.get_range env in
     let t, g0 =
         match Env.expected_typ env with
@@ -1763,6 +1764,16 @@ and tc_value env (e:term) : ML (term
           ("user-provided implicit term at " ^ show r)
           r env t false
     in
+    (* We add a fake bv into the bv_info enviroment so hovering over
+       an _ shows its solution. *)
+    begin
+      let fake_bv : bv = {
+        ppname = Ident.mk_ident ("_ solved to", pos top);
+        index = (-1);
+        sort = t;
+      } in
+      Env.insert_bv_info env fake_bv e
+    end;
     e, S.mk_Total t |> TcComm.lcomp_of_comp, g0 ++ g1
 
   | Tm_name x ->
