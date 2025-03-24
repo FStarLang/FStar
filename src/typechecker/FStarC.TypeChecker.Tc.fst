@@ -816,9 +816,10 @@ let tc_decl' env0 se: list sigelt & list sigelt & Env.env =
               | [] -> [ S.Visible_default ]
               | qs -> qs
            in
-            List.map 
-              (fun sp -> { sp with sigquals = sigquals@sp.sigquals; sigattrs = se.sigattrs@sp.sigattrs})
-              ses
+           let ses = ses |> List.map (fun sp ->
+                             { sp with sigquals = sigquals@sp.sigquals; sigattrs = se.sigattrs@sp.sigattrs}) in
+           let ses = ses |> List.map (Compress.deep_compress_se false false) in
+           ses
       else ses
     in
     let ses = ses |> List.map (fun se ->
@@ -915,9 +916,11 @@ let tc_decl' env0 se: list sigelt & list sigelt & Env.env =
     [se], [], env0)
 
 
-(* [tc_decl env se] typechecks [se] in environment [env] and returns *
+(* [tc_decl env se] typechecks [se] in environment [env] and returns
  * the list of typechecked sig_elts, and a list of new sig_elts elaborated
- * during typechecking but not yet typechecked *)
+ * during typechecking but not yet typechecked. This may also be called
+ * on ALREADY CHECKED declarations coming out of a splice_t. See the
+ * check for sigmeta_already_checked below. *)
 let tc_decl env se: list sigelt & list sigelt & Env.env =
   FStarC.GenSym.reset_gensym();
   let env0 = env in
