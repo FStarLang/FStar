@@ -798,9 +798,11 @@ let check_linear_pattern_variables pats (r:Range.range) =
       let symdiff s1 s2 = union (diff s1 s2) (diff s2 s1) in
       let nonlinear_vars = symdiff pvars (pat_vars p) in
       let first_nonlinear_var = List.hd (elems nonlinear_vars) in
-      raise_error r Errors.Fatal_IncoherentPatterns
-        (BU.format1 "Patterns in this match are incoherent, variable %s is bound in some but not all patterns."
-                       (show first_nonlinear_var.ppname))
+      raise_error first_nonlinear_var Errors.Fatal_IncoherentPatterns [
+        text "Patterns in this match are incoherent.";
+        text (BU.format1 "Variable %s is bound in some but not all patterns."
+                       (show first_nonlinear_var.ppname));
+      ]
     in
     List.iter aux ps
 
