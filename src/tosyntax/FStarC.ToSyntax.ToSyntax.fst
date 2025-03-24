@@ -3699,9 +3699,9 @@ and desugar_decl_maybe_fail_attr env (d: decl): (env_t & sigelts) =
             Errors.log_issue err_rng Errors.Error_DidNotFail [
                 prefix 2 1
                   (text "This top-level definition was expected to raise error codes")
-                  (pp expected_errs) ^/^
+                  (pp (Class.Ord.sort expected_errs)) ^/^
                 prefix 2 1 (text "but it raised")
-                  (pp errnos) ^^ text "(at desugaring time)" ^^ dot;
+                  (pp (Class.Ord.sort errnos)) ^^ text "(at desugaring time)" ^^ dot;
                 text (BU.format3 "Error #%s was raised %s times, instead of %s."
                                       (show e) (show n2) (show n1));
               ];
