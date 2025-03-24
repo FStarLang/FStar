@@ -2386,7 +2386,7 @@ let unexpected_uvars_issue r =
   let i = {
     issue_level = EError;
     issue_range = Some r;
-    issue_msg = Errors.mkmsg "Cannot check relation with uvars";
+    issue_msg = Errors.mkmsg "Cannot check relation with uvars.";
     issue_number = Some (errno Error_UnexpectedUnresolvedUvar);
     issue_ctx = []
   } in
