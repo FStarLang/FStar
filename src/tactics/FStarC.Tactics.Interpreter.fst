@@ -364,7 +364,7 @@ let run_unembedded_tactic_on_ps
       else
         let open FStarC.Pprint in
         let open FStarC.Errors.Msg in
-        Errors.raise_error0 Errors.Fatal_UserTacticFailure [
+        Errors.raise_error ps.entry_range Errors.Fatal_UserTacticFailure [
           text "A tactic raised the Stop exception but did not log errors.";
           text "Failing anyway."
         ]
