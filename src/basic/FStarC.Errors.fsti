@@ -51,8 +51,10 @@ val call_to_erased_errno : int
 
 val update_flags : list (error_flag & string) -> list error_setting
 
+type context_t = list string
+
 (* error code, message, source position, and error context *)
-type error = error_code & error_message & FStarC.Range.range & list string
+type error = error_code & error_message & Range.range & context_t
 
 exception Error   of error
 exception Warning of error

@@ -320,41 +320,57 @@ let fixup_issue_range (rng:option Range.range) : option Range.range =
   in
   map_opt rng maybe_bound_range
 
-let mk_default_handler print =
-    let issues : ref (list issue) = mk_ref [] in
-    (* This number may be greater than the amount of 'EErrors'
-     * in the list above due to errors that were immediately
-     * printed (if debug_any()) *)
-    let err_count : ref int = mk_ref 0 in
+(* This handler prints to the error output immediately. *)
+let mk_default_handler () =
+  let err_count : ref int = mk_ref 0 in
 
-    let add_one (e: issue) =
-        let e = { e with issue_range = fixup_issue_range e.issue_range } in
-        (if e.issue_level = EError then
-           err_count := 1 + !err_count);
-        begin match e.issue_level with
-          | EInfo when print -> print_issue e
-          | _ when print && Debug.any () -> print_issue e
-          | _ -> issues := e :: !issues
-        end;
-        if Options.defensive_abort () && e.issue_number = Some defensive_errno then
-          failwith "Aborting due to --defensive abort";
-        ()
-    in
-    let count_errors () = !err_count in
-    let report () =
-        let unique_issues = BU.remove_dups (fun i0 i1 -> i0=i1) !issues in
-        let sorted_unique_issues = List.sortWith compare_issues unique_issues in
-        if print then List.iter print_issue sorted_unique_issues;
-        sorted_unique_issues
-    in
-    let clear () = issues := []; err_count := 0 in
-    { eh_name = "default handler (print=" ^ string_of_bool print ^ ")";
-      eh_add_one = add_one;
-      eh_count_errors = count_errors;
-      eh_report = report;
-      eh_clear = clear }
+  let add_one (e: issue) =
+      (if e.issue_level = EError then
+         err_count := 1 + !err_count);
+      print_issue e;
 
-let default_handler = mk_default_handler true
+      (* We may abort if we are debugging. *)
+      if e.issue_level <> EInfo then begin
+        Options.abort_counter := !Options.abort_counter - 1;
+        if !Options.abort_counter = 0 then
+          failwith "Aborting due to --abort_on"
+      end;
+      if Options.defensive_abort () && e.issue_number = Some defensive_errno then
+        failwith "Aborting due to --defensive abort";
+      ()
+  in
+  let count_errors () = !err_count in
+  let report () = [] in (* we just print them directly *)
+  let clear () = err_count := 0 in
+  { eh_name = "default handler";
+    eh_add_one = add_one;
+    eh_count_errors = count_errors;
+    eh_report = report;
+    eh_clear = clear }
+
+(* This is a single long-living instance of a default handler. *)
+let default_handler = mk_default_handler ()
+
+(* This handle collects all issues, and never prints. It is for
+@@expect_failure and other similar scenarios. *)
+let mk_catch_handler () =
+  let issues : ref (list issue) = mk_ref [] in
+  let err_count : ref int = mk_ref 0 in
+
+  let add_one (e: issue) =
+      (if e.issue_level = EError then
+         err_count := 1 + !err_count);
+      issues := e :: !issues;
+      ()
+  in
+  let count_errors () = !err_count in
+  let report () = !issues in
+  let clear () = issues := []; err_count := 0 in
+  { eh_name = "catch handler";
+    eh_add_one = add_one;
+    eh_count_errors = count_errors;
+    eh_report = report;
+    eh_clear = clear }
 
 let current_handler =
     mk_ref default_handler
@@ -371,12 +387,8 @@ let get_err_count () = (!current_handler).eh_count_errors ()
 
 let wrapped_eh_add_one (h : error_handler) (issue : issue) : unit =
     (* Try to set a good use range if we got an empty/dummy one *)
-    h.eh_add_one issue;
-    if issue.issue_level <> EInfo then begin
-      Options.abort_counter := !Options.abort_counter - 1;
-      if !Options.abort_counter = 0 then
-        failwith "Aborting due to --abort_on"
-    end
+    let issue = { issue with issue_range = fixup_issue_range issue.issue_range } in
+    h.eh_add_one issue
 
 let add_one issue =
     atomically (fun () -> wrapped_eh_add_one (!current_handler) issue)
@@ -643,7 +655,7 @@ let with_ctx_if (b:bool) (s:string) (f : unit -> 'a) : 'a =
 // restores handler back
 //
 let catch_errors_aux (f : unit -> 'a) : list issue & list issue & option 'a =
-  let newh = mk_default_handler false in
+  let newh = mk_catch_handler () in
   let old = !current_handler in
   current_handler := newh;
   let finally_restore () =
