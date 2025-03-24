@@ -1,3 +1,15 @@
+* Warning 240 at NegativeTests.Set.fst(35,4-35,16):
+  - NegativeTests.Set.should_fail3 is declared but no definition was found
+  - Add an 'assume' if this is intentional
+
+* Warning 240 at NegativeTests.Set.fst(30,4-30,16):
+  - NegativeTests.Set.should_fail2 is declared but no definition was found
+  - Add an 'assume' if this is intentional
+
+* Warning 240 at NegativeTests.Set.fst(25,4-25,16):
+  - NegativeTests.Set.should_fail1 is declared but no definition was found
+  - Add an 'assume' if this is intentional
+
 >> Got issues: [
 * Error 19 at NegativeTests.Set.fst(28,9-28,30):
   - Assertion failed
@@ -19,18 +31,6 @@
     details.
 
 >>]
-* Warning 240 at NegativeTests.Set.fst(25,4-25,16):
-  - NegativeTests.Set.should_fail1 is declared but no definition was found
-  - Add an 'assume' if this is intentional
-
-* Warning 240 at NegativeTests.Set.fst(30,4-30,16):
-  - NegativeTests.Set.should_fail2 is declared but no definition was found
-  - Add an 'assume' if this is intentional
-
-* Warning 240 at NegativeTests.Set.fst(35,4-35,16):
-  - NegativeTests.Set.should_fail3 is declared but no definition was found
-  - Add an 'assume' if this is intentional
-
 * Warning 240 at NegativeTests.Set.fst(37,0-38,52):
   - Missing definitions in module NegativeTests.Set:
       should_fail1
