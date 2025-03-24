@@ -643,7 +643,7 @@ let tc_decl' env0 se: list sigelt & list sigelt & Env.env =
     | [] ->
         List.iter Errors.print_issue errs;
         Errors.log_issue se Errors.Error_DidNotFail [
-            text "This top-level definition was expected to fail, but it succeeded";
+            text "This top-level definition was expected to fail, but it succeeded.";
           ]
     | _ ->
         if expected_errors <> [] then
@@ -656,9 +656,9 @@ let tc_decl' env0 se: list sigelt & list sigelt & Env.env =
             Errors.log_issue fail_rng Errors.Error_DidNotFail [
                 prefix 2 1
                   (text "This top-level definition was expected to raise error codes")
-                  (pp expected_errors) ^/^
+                  (pp (sort expected_errors)) ^/^
                 prefix 2 1 (text "but it raised")
-                  (pp actual_errors) ^^
+                  (pp (sort actual_errors)) ^^
                 dot;
                 text (BU.format3 "Error #%s was raised %s times, instead of %s."
                                       (show e) (show n2) (show n1));
