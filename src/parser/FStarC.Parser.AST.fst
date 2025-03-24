@@ -708,8 +708,7 @@ and aqual_to_string = function
   | Some Implicit -> "#"
   | None -> ""
   | Some (Meta _)
-  | Some TypeClassArg ->
-    failwith "aqual_to_strings: meta arg qualifier?"
+  | Some TypeClassArg -> "{||}"
 
 and attr_list_to_string = function
   | [] -> ""
