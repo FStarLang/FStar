@@ -108,11 +108,6 @@ let find_user_tac_for_uvar env (u:ctx_uvar) : option sigelt =
       | _ ->
         None
     in
-    let candidate_names candidates = 
-          List.collect U.lids_of_sigelt candidates
-          |> List.map string_of_lid
-          |> String.concat ", "
-    in
     match u.ctx_uvar_meta with
     | Some (Ctx_uvar_meta_attr a) ->
       (* hooks: all definitions with the resolve_implicits attr *)
@@ -171,15 +166,18 @@ let find_user_tac_for_uvar env (u:ctx_uvar) : option sigelt =
       | [] -> None //no candidates
       | [ c ] -> Some c //if there is a unique candidate return it
       | _ -> //it is ambiguous; complain
+        let candidate_names candidates =
+              List.collect U.lids_of_sigelt candidates
+        in
         let candidates = candidate_names candidates in
         let attr = show a in
-        FStarC.Errors.log_issue u.ctx_uvar_range
-                               FStarC.Errors.Warning_AmbiguousResolveImplicitsHook
-                               (BU.format2
-                                  "Multiple resolve_implicits hooks are eligible for attribute %s; \n\
-                                   please resolve the ambiguity by using the `override_resolve_implicits_handler` attribute \
-                                   to choose among these candidates {%s}"
-                                   attr candidates);
+        let open FStarC.Pprint in
+        let open FStarC.Class.PP in
+        raise_error u FStarC.Errors.Warning_AmbiguousResolveImplicitsHook [
+          text "Multiple resolve_implicits hooks are eligible for attribute" ^/^ doc_of_string attr;
+          text "Please resolve the ambiguity by using the `override_resolve_implicits_handler` \
+                attribute to choose among these candidates" ^/^ pp candidates;
+        ];
         None
       end
       
