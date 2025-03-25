@@ -1788,29 +1788,31 @@ let default_if_err (def : 'a) (t : tac 'a) : tac 'a =
   | Inl _ -> return def
   | Inr v -> return v
 
-let match_env (e:env) (t1 : term) (t2 : term) : tac bool = wrap_err "match_env" <| (
-    let! ps = get in
-    let! t1, ty1, g1 = __tc e t1 in
-    let! t2, ty2, g2 = __tc e t2 in
-    proc_guard "match_env g1" e g1 None ps.entry_range ;!
-    proc_guard "match_env g2" e g2 None ps.entry_range ;!
-    let must_tot = true in
-    default_if_err false <|
-      tac_and (do_match must_tot e ty1 ty2)
-              (do_match must_tot e t1 t2)
-    )
+let match_env (e:env) (t1 : term) (t2 : term) : tac bool =
+  wrap_err "match_env" <|
+  default_if_err false <| (
+  let! ps = get in
+  let! t1, ty1, g1 = __tc e t1 in
+  let! t2, ty2, g2 = __tc e t2 in
+  proc_guard "match_env g1" e g1 None ps.entry_range ;!
+  proc_guard "match_env g2" e g2 None ps.entry_range ;!
+  let must_tot = true in
+    tac_and (do_match must_tot e ty1 ty2)
+            (do_match must_tot e t1 t2)
+  )
 
-let unify_env (e:env) (t1 : term) (t2 : term) : tac bool = wrap_err "unify_env" <| (
-    let! ps = get in
-    let! t1, ty1, g1 = __tc e t1 in
-    let! t2, ty2, g2 = __tc e t2 in
-    proc_guard "unify_env g1" e g1 None ps.entry_range ;!
-    proc_guard "unify_env g2" e g2 None ps.entry_range ;!
-    let must_tot = true in
-    default_if_err false <|
-      tac_and (do_unify must_tot e ty1 ty2)
-              (do_unify must_tot e t1 t2)
-    )
+let unify_env (e:env) (t1 : term) (t2 : term) : tac bool =
+  wrap_err "unify_env" <|
+  default_if_err false <| (
+  let! ps = get in
+  let! t1, ty1, g1 = __tc e t1 in
+  let! t2, ty2, g2 = __tc e t2 in
+  proc_guard "unify_env g1" e g1 None ps.entry_range ;!
+  proc_guard "unify_env g2" e g2 None ps.entry_range ;!
+  let must_tot = true in
+    tac_and (do_unify must_tot e ty1 ty2)
+            (do_unify must_tot e t1 t2)
+  )
 
 let unify_guard_env (e:env) (t1 : term) (t2 : term) : tac bool = wrap_err "unify_guard_env" <| (
     let! ps = get in
