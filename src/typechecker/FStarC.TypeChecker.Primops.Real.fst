@@ -59,27 +59,14 @@ instance nbe_e_tf : TypeChecker.NBETerm.embedding tf =
   in
   mk_emb em un (fun () -> lid_as_typ PC.bool_lid [] []) (Syntax.Embeddings.emb_typ_of tf)
 
-let cmp (r1 r2 : Real.real) : option order =
-  match r1._0, r2._0 with
-  | "0.0", "0.0" -> Some Eq
-  | "0.0", "0.5" -> Some Lt
-  | "0.0", "1.0" -> Some Lt
-  | "0.5", "0.0" -> Some Gt
-  | "0.5", "0.5" -> Some Eq
-  | "0.5", "1.0" -> Some Lt
-  | "1.0", "0.0" -> Some Gt
-  | "1.0", "0.5" -> Some Gt
-  | "1.0", "1.0" -> Some Eq
-  | _ -> None
-
 let lt (r1 r2 : Real.real) : option tf =
-  cmp r1 r2 |> Class.Monad.fmap (function Lt -> T | _ -> F)
+  Real.cmp r1 r2 |> Class.Monad.fmap (function Lt -> T | _ -> F)
 let le (r1 r2 : Real.real) : option tf =
-  cmp r1 r2 |> Class.Monad.fmap (function Lt | Eq -> T | _ -> F)
+  Real.cmp r1 r2 |> Class.Monad.fmap (function Lt | Eq -> T | _ -> F)
 let gt (r1 r2 : Real.real) : option tf =
-  cmp r1 r2 |> Class.Monad.fmap (function Gt -> T | _ -> F)
+  Real.cmp r1 r2 |> Class.Monad.fmap (function Gt -> T | _ -> F)
 let ge (r1 r2 : Real.real) : option tf =
-  cmp r1 r2 |> Class.Monad.fmap (function Gt | Eq -> T | _ -> F)
+  Real.cmp r1 r2 |> Class.Monad.fmap (function Gt | Eq -> T | _ -> F)
 
 let of_int (i:Z.t) : Real.real =
   Real.Real (string_of_int (Z.to_int_fs i) ^ ".0")

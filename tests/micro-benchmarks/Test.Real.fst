@@ -80,6 +80,11 @@ let _ = assert (0.0R >=. 0.0R)
 let _ = assert (0.0R <=. 0.0R)
 let _ = assert (1.0R >=. 1.0R)
 let _ = assert (1.0R <=. 1.0R)
+let _ = assert (1.0R <=. 2.0R)
+let _ = assert (1.R <=. 1.R)
+let _ = assert (1.R <=. 2.R)
+let _ = assert (1.0R <. 2.0R)
+let _ = assert (1001.0R <. 1002.00R)
 #pop-options
 
 [@@expect_failure] let _ = assert (1.0R <. 0.0R)
