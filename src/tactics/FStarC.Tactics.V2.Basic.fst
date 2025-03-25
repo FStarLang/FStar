@@ -2321,6 +2321,7 @@ let __refl_typing_builtin_wrapper (f:unit -> 'a & list refl_guard_t) : tac (opti
               issue_msg = [
                 Pprint.doc_of_string "Discharging guard failed.";
                 Pprint.doc_of_string "g = " ^^ pp g;
+                Pprint.doc_of_string "Guard policy is" ^/^ pp ps.guard_policy;
               ];
               issue_level = EError;
               issue_range = None;
