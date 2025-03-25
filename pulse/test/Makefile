@@ -1,5 +1,6 @@
 SUBDIRS += bug-reports
 SUBDIRS += nolib
+SUBDIRS += pool
 
 PULSE_ROOT ?= ..
 include $(PULSE_ROOT)/mk/test.mk

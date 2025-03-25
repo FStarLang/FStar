@@ -183,6 +183,7 @@ let list_extension #a (t0 t1 : list a)
   : prop
   = Cons? t1 /\ t0 == List.Tot.tail t1
 
+noextract
 let list_preorder #a
   : FStar.Preorder.preorder (list a)
   = FStar.ReflexiveTransitiveClosure.closure list_extension
@@ -484,6 +485,7 @@ ghost fn gtrade_up (x: slprop_ref) (y: slprop)
   gtrade_intro _ _ _ aux;
 }
 
+noextract
 instance non_informative_slprop_ref : Pulse.Lib.NonInformative.non_informative slprop_ref =
   { reveal = (fun (x: erased slprop_ref) -> reveal x) }
 
@@ -695,6 +697,7 @@ let rec all_tasks_done (ts : list task_t) =
     task_done t **
     all_tasks_done ts'
 
+noextract
 let slprop_equiv_refl (v1 v2 : slprop) (_ : squash (v1 == v2)) 
   : slprop_equiv v1 v2 = slprop_equiv_refl _
 
@@ -1214,6 +1217,7 @@ fn do_work_once (#f:perm) (p : pool)
   let topt = grab_work p;
   match topt {
     None -> {
+      Sleep.sleep_ms 10;
       unfold (vopt #task_t);
     }
     Some t -> {
