@@ -2256,7 +2256,11 @@ let dbg_refl (g:env) (msg:unit -> string) =
   if !dbg_ReflTc
   then BU.print_string (msg ())
 
-let issues = list Errors.issue
+let uvar_solution = bv & term
+let remaining_uvar_t = bv & typ
+let remaining_uvars_t = list remaining_uvar_t
+let issues = list FStarC.Errors.issue
+let refl_tac (a : Type) = tac (option a & issues)
 
 let refl_typing_guard (e:env) (g:typ) : tac unit =
   let reason = "refl_typing_guard" in

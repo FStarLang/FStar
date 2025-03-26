@@ -126,22 +126,28 @@ val alloc                  : 'a -> tac (tref 'a)
 val read                   : tref 'a -> tac 'a
 val write                  : tref 'a -> 'a -> tac unit
 
+
 (***** Callbacks for the meta DSL framework *****)
+let uvar_solution = bv & term
+let remaining_uvar_t = bv & typ
+let remaining_uvars_t = list remaining_uvar_t
 let issues = list FStarC.Errors.issue
-val refl_is_non_informative           : env -> typ -> tac (option unit & issues)
-val refl_check_subtyping              : env -> typ -> typ -> tac (option unit & issues)
-val t_refl_check_equiv                : smt_ok:bool -> unfolding_ok:bool -> env -> typ -> typ -> tac (option unit & issues)
-val refl_core_compute_term_type       : env -> term -> tac (option (Core.tot_or_ghost & typ) & issues)
-val refl_core_check_term              : env -> term -> typ -> Core.tot_or_ghost -> tac (option unit & issues)
-val refl_core_check_term_at_type      : env -> term -> typ -> tac (option Core.tot_or_ghost & issues)
-val refl_tc_term                      : env -> term -> tac (option (term & (Core.tot_or_ghost & typ)) & issues)
-val refl_universe_of                  : env -> term -> tac (option universe & issues)
-val refl_check_prop_validity          : env -> term -> tac (option unit & issues)
-val refl_check_match_complete         : env -> term -> term -> list pattern -> tac (option (list pattern & list (list RD.binding)) & issues)
-val refl_instantiate_implicits        : env -> term -> expected_typ:option term -> inst_extra:bool -> tac (option (list (bv & typ) & term & typ) & issues)
-val refl_try_unify                    : env -> list (bv & typ) -> term -> term -> tac (option (list (bv & term)) & issues)
-val refl_maybe_relate_after_unfolding : env -> term -> term -> tac (option Core.side & issues)
-val refl_maybe_unfold_head            : env -> term -> tac (option term & issues)
+let refl_tac (a : Type) = tac (option a & issues)
+
+val refl_is_non_informative           : env -> typ -> refl_tac unit
+val refl_check_subtyping              : env -> typ -> typ -> refl_tac unit
+val t_refl_check_equiv                : smt_ok:bool -> unfolding_ok:bool -> env -> typ -> typ -> refl_tac unit
+val refl_core_compute_term_type       : env -> term -> refl_tac (Core.tot_or_ghost & typ)
+val refl_core_check_term              : env -> term -> typ -> Core.tot_or_ghost -> refl_tac unit
+val refl_core_check_term_at_type      : env -> term -> typ -> refl_tac Core.tot_or_ghost
+val refl_tc_term                      : env -> term -> refl_tac (term & (Core.tot_or_ghost & typ))
+val refl_universe_of                  : env -> term -> refl_tac universe
+val refl_check_prop_validity          : env -> term -> refl_tac unit
+val refl_check_match_complete         : env -> term -> term -> list pattern -> refl_tac (list pattern & list (list RD.binding))
+val refl_instantiate_implicits        : env -> term -> expected_typ:option term -> inst_extra:bool -> refl_tac (remaining_uvars_t & term & typ)
+val refl_try_unify                    : env -> list (bv & typ) -> term -> term -> refl_tac (list uvar_solution)
+val refl_maybe_relate_after_unfolding : env -> term -> term -> refl_tac Core.side
+val refl_maybe_unfold_head            : env -> term -> refl_tac term
 val refl_norm_well_typed_term         : env -> list NormSteps.norm_step -> term -> tac term
 
 val push_open_namespace               : env -> list string -> tac env
@@ -149,5 +155,5 @@ val push_module_abbrev                : env -> string -> list string -> tac env
 val resolve_name                      : env -> list string -> tac (option (either bv fv))
 val log_issues                        : list Errors.issue -> tac unit
 
-val call_subtac                       : env -> tac unit -> universe -> typ -> tac (option term & issues)
-val call_subtac_tm                    : env -> term     -> universe -> typ -> tac (option term & issues)
+val call_subtac                       : env -> tac unit -> universe -> typ -> refl_tac term
+val call_subtac_tm                    : env -> term     -> universe -> typ -> refl_tac term
