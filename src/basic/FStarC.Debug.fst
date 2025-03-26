@@ -94,8 +94,13 @@ let enable_toggles (keys : list string) : unit =
     | "High" ->    set_level_high ()
     | "Extreme" -> set_level_extreme ()
     | _ ->
-      let t = get_toggle k in
-      t := true
+      if String.length k > 0 && String.get k 0 = '-' then
+        let k = String.substring k 1 (String.length k - 1) in
+        let t = get_toggle k in
+        t := false
+      else
+        let t = get_toggle k in
+        t := true
   )
 
 let disable_all () : unit =

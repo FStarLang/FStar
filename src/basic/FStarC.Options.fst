@@ -882,7 +882,8 @@ let rec specs_with_types warn_unsafe : list (char & string & opt_type & Pprint.d
         let keys = as_comma_string_list o in
         Debug.enable_toggles keys;
         o), ReverseAccumulated (SimpleStr "debug toggles")),
-    text "Enable specific debug toggles (comma-separated list of debug keys)");
+    text "Enable specific debug toggles (comma-separated list of debug keys). You can \
+          use a '-' at the beginning of a toggle to disable it instead.");
 
   ( noshort,
     "debug_all",
