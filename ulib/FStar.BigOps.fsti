@@ -85,7 +85,7 @@ val map_op'_cons
 
 (** [big_and' f l] = [/\_{x in l} f x] *)
 [@@ __reduce__]
-let big_and' #a (f: (a -> Type)) (l: list a) : Type = map_op' l_and f l True
+let big_and' #a (f: (a -> Type)) (l: list a) : Type = map_op' (fun p q -> p /\ q) (fun x -> f x) l True
 
 (** Equations for [big_and'] showing it to be trivial over the empty list *)
 val big_and'_nil (#a: Type) (f: (a -> Type)) : Lemma (big_and' f [] == True)
@@ -125,7 +125,7 @@ let big_and #a (f: (a -> Type)) (l: list a) : prop =
 
 (** [big_or f l] = [\/_{x in l} f x] *)
 [@@ __reduce__]
-let big_or' #a (f: (a -> Type)) (l: list a) : Type = map_op' l_or f l False
+let big_or' #a (f: (a -> Type)) (l: list a) : Type = map_op' (fun p q -> p \/ q) (fun x -> f x) l False
 
 (** Equations for [big_or] showing it to be [False] on the empty list *)
 val big_or'_nil (#a: Type) (f: (a -> Type)) : Lemma (big_or' f [] == False)
@@ -235,7 +235,7 @@ let pairwise_and #a (f: (a -> a -> Type)) (l: list a) : prop =
 (** [pairwise_or f l] disjoins [f] on all pairs excluding the diagonal
     i.e., [pairwise_or f [a; b; c] = f a b \/ f a c \/ f b c] *)
 [@@ __reduce__]
-let pairwise_or' #a (f: (a -> a -> Type)) (l: list a) : Type = pairwise_op' l_or f l False
+let pairwise_or' #a (f: (a -> a -> Type)) (l: list a) : Type = pairwise_op' (fun p q -> p \/ q) (fun x y -> f x y) l False
 
 (** Equations for [pairwise_or'] showing it to be a fold with [big_or'] *)
 val pairwise_or'_nil (#a: Type) (f: (a -> a -> Type0)) : Lemma (pairwise_or' f [] == False)

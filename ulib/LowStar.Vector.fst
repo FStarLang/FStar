@@ -514,7 +514,7 @@ let shrink #a vec new_size =
 
 val fold_left_seq:
   #a:Type -> #b:Type0 -> seq:S.seq a ->
-  f:(b -> a -> GTot b) -> ib:b ->
+  f:(b -> a -> Tot b) -> ib:b ->
   GTot b (decreases (S.length seq))
 let rec fold_left_seq #a #b seq f ib =
   if S.length seq = 0 then ib
@@ -549,7 +549,7 @@ let fold_left #a #b vec f ib =
 val forall_seq:
   #a:Type -> seq:S.seq a ->
   i:nat -> j:nat{i <= j && j <= S.length seq} ->
-  p:(a -> GTot Type0) -> GTot Type0
+  p:(a -> Type0) -> GTot Type0
 let forall_seq #a seq i j p =
   forall (idx:nat{i <= idx && idx < j}).
     p (S.index seq idx)
@@ -557,7 +557,7 @@ let forall_seq #a seq i j p =
 val forall_buffer:
   #a:Type -> h:HS.mem -> buf:B.buffer a ->
   i:nat -> j:nat{i <= j && j <= B.length buf} ->
-  p:(a -> GTot Type0) -> GTot Type0
+  p:(a -> Type0) -> GTot Type0
 let forall_buffer #a h buf i j p =
   forall_seq (B.as_seq h buf) i j p
 
@@ -577,7 +577,7 @@ let forall_all #a h vec p =
 val forall2_seq:
   #a:Type -> seq:S.seq a ->
   i:nat -> j:nat{i <= j && j <= S.length seq} ->
-  p:(a -> a -> GTot Type0) -> GTot Type0
+  p:(a -> a -> Tot Type0) -> GTot Type0
 let forall2_seq #a seq i j p =
   forall (k:nat{i <= k && k < j}) (l:nat{i <= l && l < j && k <> l}).
     p (S.index seq k) (S.index seq l)
@@ -585,20 +585,20 @@ let forall2_seq #a seq i j p =
 val forall2_buffer:
   #a:Type -> h:HS.mem -> buf:B.buffer a ->
   i:nat -> j:nat{i <= j && j <= B.length buf} ->
-  p:(a -> a -> GTot Type0) -> GTot Type0
+  p:(a -> a -> Tot Type0) -> GTot Type0
 let forall2_buffer #a h buf i j p =
   forall2_seq (B.as_seq h buf) i j p
 
 val forall2:
   #a:Type -> h:HS.mem -> vec:vector a ->
   i:uint32_t -> j:uint32_t{i <= j && j <= size_of vec} ->
-  p:(a -> a -> GTot Type0) -> GTot Type0
+  p:(a -> a -> Tot Type0) -> GTot Type0
 let forall2 #a h vec i j p =
   forall2_seq (as_seq h vec) (U32.v i) (U32.v j) p
 
 val forall2_all:
   #a:Type -> h:HS.mem -> vec:vector a ->
-  p:(a -> a -> GTot Type0) -> GTot Type0
+  p:(a -> a -> Tot Type0) -> GTot Type0
 let forall2_all #a h vec p =
   forall2 h vec 0ul (size_of vec) p
 
@@ -646,7 +646,7 @@ val forall_seq_ok:
   #a:Type -> seq:S.seq a ->
   i:nat -> j:nat{i <= j && j <= S.length seq} ->
   k:nat{i <= k && k < j} ->
-  p:(a -> GTot Type0) ->
+  p:(a -> Tot Type0) ->
   Lemma (requires (forall_seq seq i j p))
         (ensures (p (S.index seq k)))
 let forall_seq_ok #a seq i j k p = ()
@@ -655,7 +655,7 @@ val forall2_seq_ok:
   #a:Type -> seq:S.seq a ->
   i:nat -> j:nat{i <= j && j <= S.length seq} ->
   k:nat{i <= k && k < j} -> l:nat{i <= l && l < j && k <> l} ->
-  p:(a -> a -> GTot Type0) ->
+  p:(a -> a -> Tot Type0) ->
   Lemma (requires (forall2_seq seq i j p))
         (ensures (p (S.index seq k) (S.index seq l)))
 let forall2_seq_ok #a seq i j k l p = ()

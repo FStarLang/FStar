@@ -28,7 +28,7 @@ unfold let lift_state_all (a : Type) (wp : st_wp a) (p : all_post a) = wp (fun a
 sub_effect STATE ~> ALL { lift_wp = lift_state_all }
 
 unfold
-let lift_exn_all (a : Type) (wp : ex_wp a) (p : all_post a) (h : heap) = wp (fun ra -> p ra h)
+let lift_exn_all (a : Type) (wp : ex_wp a) : all_wp_h heap a = fun (p : all_post a) (h : heap) -> wp (fun ra -> p ra h)
 sub_effect EXN ~> ALL { lift_wp = lift_exn_all }
 
 effect All (a:Type) (pre:all_pre) (post:(h:heap -> Tot (all_post' a (pre h)))) =

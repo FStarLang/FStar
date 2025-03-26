@@ -20,6 +20,7 @@ type option 'a =
    | None : option 'a
    | Some : v:'a -> option 'a
 
+val find : f:('a -> Tot bool) -> list 'a -> Tot (option (x:'a{f x}))
 let rec find f l = match l with
   | [] -> None
   | hd::tl -> if f hd then Some hd else find f tl

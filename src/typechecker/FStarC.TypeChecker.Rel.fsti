@@ -50,6 +50,9 @@ val head_matches_delta (env:env) (logical:bool) (smt_ok:bool) (t1 t2:typ) : (mat
 val may_relate_with_logical_guard (env:env) (is_equality:bool) (head:typ) : bool
 val guard_to_string           : env -> guard_t -> string
 val simplify_guard            : env -> guard_t -> guard_t
+
+val maybe_eta_expand_fun (env: env) (e t_e t_expected: term) : option term
+
 val solve_deferred_constraints: env -> guard_t -> guard_t
 val solve_non_tactic_deferred_constraints: maybe_defer_flex_flex:bool -> env -> guard_t -> guard_t
 

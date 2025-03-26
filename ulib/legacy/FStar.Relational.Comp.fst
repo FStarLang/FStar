@@ -42,7 +42,7 @@ let comp a b wp0 wp1 p h2 =
     (R?.l h2)
 
 //TODO: this should be conditional on the monotonicity of the wps
-assume Monotone_comp: forall a b wp1 wp2 p1 p2. (forall x h. p1 x h ==> p2 x h)
+assume Monotone_comp: forall a b wp1 wp2 (p1 p2: st_post_h heap2 (rel a b)). (forall x h. p1 x h ==> p2 x h)
 			==> (forall h. comp a b wp1 wp2 p1 h
 			    ==> comp a b wp1 wp2 p2 h)
 

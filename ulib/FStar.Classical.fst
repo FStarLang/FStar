@@ -40,7 +40,7 @@ let get_equality #t a b = get_squashed #(equals a b) (a == b)
 let impl_to_arrow #a #b impl sx =
   bind_squash #(a -> GTot b) impl (fun f -> bind_squash sx (fun x -> return_squash (f x)))
 
-let arrow_to_impl #a #b f = squash_double_arrow (return_squash (fun x -> f (return_squash x)))
+let arrow_to_impl #a #b f = squash_double_arrow (return_squash #(a -> GTot (squash b)) (fun x -> f (return_squash x)))
 
 let impl_intro_gtot #p #q f = return_squash f
 

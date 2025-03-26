@@ -22,7 +22,7 @@ let aux (ps:proofstate) (p : __result unit -> Type0)
     spinoff (squash (p (Success () ps)));
     <==> { spinoff_equiv (squash (p (Success () ps))) }
     squash (p (Success () ps));
-    ==>> { squash_p_impl_p _ }
+    ==>> { squash_p_impl_p fun _ -> p (Success () ps) }
     p (Success () ps);
     ==> { () }
     tac_return_wp () ps p;
