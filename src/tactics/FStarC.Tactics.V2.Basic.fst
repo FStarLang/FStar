@@ -1729,6 +1729,7 @@ let unquote (ty : term) (tm : term) : tac term = wrap_err "unquote" <| (
     )
 
 let uvar_env (env : env) (ty : option typ) : tac term =
+  wrap_err "uvar_env" <| (
   let! ps = get in
   // If no type was given, add a uvar for it too!
   let! typ, g, r =
@@ -1747,6 +1748,7 @@ let uvar_env (env : env) (ty : option typ) : tac term =
   //the guard is an explicit goal; so the typedness deps of this new uvar is []
   let! t, uvar_t = new_uvar "uvar_env" env typ None [] ps.entry_range in
   return t
+  )
 
 let ghost_uvar_env (env : env) (ty : typ) : tac term =
   let! ps = get in
