@@ -35,7 +35,7 @@ val stt_atomic
     (opens:inames)
     (pre:slprop)
     (post:a -> slprop)
-: Type u#(max 4 a)
+: Type u#(max 5 a)
 
 val return_atomic
     (#a:Type u#a)
@@ -71,35 +71,8 @@ val lift_observability
     (e1:stt_atomic a #obs opens pre post)
 : stt_atomic a #(join_obs obs obs') opens pre post
 
-val lift_atomic0
-    (#a:Type u#0)
-    (#obs:_)
-    (#opens:inames)
-    (#pre:slprop)
-    (#post:a -> slprop)
-    (e:stt_atomic a #obs opens pre post)
-: stt a pre post
-
-val lift_atomic1
-    (#a:Type u#1)
-    (#obs:_)
-    (#opens:inames)
-    (#pre:slprop)
-    (#post:a -> slprop)
-    (e:stt_atomic a #obs opens pre post)
-: stt a pre post
-
-val lift_atomic2
-    (#a:Type u#2)
-    (#obs:_)
-    (#opens:inames)
-    (#pre:slprop)
-    (#post:a -> slprop)
-    (e:stt_atomic a #obs opens pre post)
-: stt a pre post
-
-val lift_atomic3
-    (#a:Type u#3)
+val lift_atomic
+    (#a:Type u#a)
     (#obs:_)
     (#opens:inames)
     (#pre:slprop)
@@ -155,7 +128,7 @@ val stt_ghost
     (opens:inames)
     (pre:slprop)
     (post:a -> slprop)
-: Type u#(max 4 a)
+: Type u#(max 5 a)
 
 type non_informative_witness (a:Type u#a) =
   x:Ghost.erased a -> y:a{y == Ghost.reveal x}

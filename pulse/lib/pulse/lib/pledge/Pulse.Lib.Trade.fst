@@ -20,7 +20,7 @@ module Pulse.Lib.Trade
 open Pulse.Lib.Pervasives
 
 
-let trade_elim_t is hyp extra concl : Type u#4 =
+let trade_elim_t is hyp extra concl : Type u#5 =
   unit -> stt_ghost unit is (extra ** hyp) (fun _ -> concl)
 
 let trade_elim_exists (is:inames) (hyp extra concl:slprop) : slprop =
@@ -53,7 +53,7 @@ let sqeq (p : Type) (_ : squash p) : erased p =
 let psquash (a:Type u#a) : prop = squash a
 
 ghost
-fn pextract (a:Type u#4) (_:squash a)
+fn pextract (a:Type u#5) (_:squash a)
   requires emp
   returns i:a
   ensures emp
