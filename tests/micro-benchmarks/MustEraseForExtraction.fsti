@@ -17,8 +17,8 @@ module MustEraseForExtraction
 
 val t1 : Type0
 
-[@@must_erase_for_extraction]
+[@@erasable]
 val t2 : Type0
 
-[@@must_erase_for_extraction]
+[@@erasable]
 val t3 : Type0

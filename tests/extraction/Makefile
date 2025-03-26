@@ -13,6 +13,7 @@ endif
 
 RUN += ExtractAs.fst
 RUN += InlineLet.fst
+RUN += Bug3366.fst
 
 include $(FSTAR_ROOT)/mk/test.mk
 
