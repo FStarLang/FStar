@@ -88,8 +88,8 @@ let same_head (t0 t1:term)
     | _ ->
       true // conservative
 
-exception GFalse
-exception GTrue
+exception GFalse of string
+exception GTrue of string
 
 (* quick unification *)
 let qunif (g:env) (t0 t1 : term) : T.Tac bool =
@@ -105,7 +105,7 @@ let rec eligible_for_smt_equality (g:env) (t0 t1 : term)
     (* Never try to SMT-match pure slprops. In fact we never should be called
     on pure slprops anyway. *)
     if Tm_Pure? (inspect_term t0) || Tm_Pure? (inspect_term t1) then
-      raise GFalse;
+      raise (GFalse "they are pure");
     (* If they are both equational, claim it fair game to try to use SMT.
     Note: this is *before* the ambiguity check and we do not perform a query,
     so if there is one equational resource in the context and two equational
@@ -121,23 +121,25 @@ let rec eligible_for_smt_equality (g:env) (t0 t1 : term)
     or whatever
     *)
     if equational t0 && equational t1 then
-      raise GTrue;
+      raise (GTrue "both equational");
     let term_eq = TermEq.term_eq in
     let h0, args0 = R.collect_app_ln t0 in
     let h1, args1 = R.collect_app_ln t1 in
-    if not (term_eq h0 h1) || not (length args0 = length args1) then
-      raise GFalse;
+    if not (term_eq h0 h1) then
+      raise (GFalse (Printf.sprintf "heads differ: %s vs %s" (show h0) (show h1)));
+    if length args0 <> length args1 then
+      raise (GFalse "arg lengths differ!?! should not happen!");
 
     (* At this point, we have two applications with the same head. Look at mkeys. *)
 
     let hfv = match R.inspect_ln h0 with
               | R.Tv_FVar fv
               | R.Tv_UInst fv _ -> fv
-              | _ -> raise GFalse
+              | _ -> raise (GFalse "head is not fvar")
     in
     if Pulse.Reflection.Util.fv_has_attr_string "Pulse.Lib.Core.no_mkeys" hfv then
-      raise GTrue;
-    let t = match type_of_fv g hfv with | None -> raise GFalse | Some t -> t in
+      raise (GTrue "no_mkeys");
+    let t = match type_of_fv g hfv with | None -> raise (GFalse "notyp") | Some t -> t in
     let bs, _ = R.collect_arr_ln_bs t in
     if L.length bs <> L.length args0 then
       false
@@ -169,6 +171,30 @@ let rec eligible_for_smt_equality (g:env) (t0 t1 : term)
     // anykey &&
     eq
   with
-  | GFalse -> false
-  | GTrue -> true
+  | GFalse s ->
+    // let open Pulse.PP in
+    // info_doc g (Some <| range_of_env g) [
+    //   doc_of_string "GFalse" ^/^ doc_of_string s;
+    // ];
+    false
+  | GTrue s ->
+    // let open Pulse.PP in
+    // info_doc g (Some <| range_of_env g) [
+    //   doc_of_string "GTrue" ^/^ doc_of_string s;
+    // ];
+    true
   | e -> raise e
+
+let same_head_strict (t0 t1:term)
+  : T.Tac bool
+  = match T.hua t0, T.hua t1 with
+    | Some (h0, us0, args0), Some (h1, us1, args1) ->
+      T.inspect_fv h0 = T.inspect_fv h1 &&
+      L.length args0 = L.length args1
+    | _ ->
+      false
+
+let mkey_mismatch (g:env) (t0 t1 : term) : T.Tac bool =
+  if same_head_strict t0 t1
+  then not (eligible_for_smt_equality g t0 t1)
+  else false

@@ -23,6 +23,7 @@ module Metatheory = Pulse.Typing.Metatheory
 module CP = Pulse.Checker.Pure
 module RU = Pulse.RuntimeUtils
 module FV = Pulse.Typing.FV
+open Pulse.Show
 
 open Pulse.Typing.Combinators
 open Pulse.Typing.Metatheory
@@ -133,7 +134,7 @@ let intro_post_hint g effect_annot ret_ty_opt post =
       | None -> wr RT.unit_ty FStar.Range.range_0
       | Some t -> t
   in
-  let ret_ty, _ = CP.instantiate_term_implicits g ret_ty None in
+  let ret_ty, _ = CP.instantiate_term_implicits g ret_ty None false in
   let (| u, ty_typing |) = CP.check_universe g ret_ty in
   let (| post, post_typing |) = CP.check_slprop (push_binding g x ppname_default ret_ty) (open_term_nv post (v_as_nv x)) in 
   let post' = close_term post x in

@@ -144,7 +144,7 @@ let slprop_equiv_ext_type : R.term =
     )
 
 let inst_slprop_equiv_ext_aux #g #v0 #v1
-  (token:T.equiv_token g v0 v1)
+  (equiv:RT.equiv g v0 v1)
   : GTot (RT.equiv g (stt_slprop_equiv v0 v0) (stt_slprop_equiv v0 v1)) =
 
   let ctxt = RT.Ctxt_app_arg
@@ -152,12 +152,12 @@ let inst_slprop_equiv_ext_aux #g #v0 #v1
     R.Q_Explicit
     RT.Ctxt_hole in
 
-  RT.Rel_ctxt _ _ _ ctxt (RT.Rel_eq_token _ _ _ (Squash.return_squash token))
+  RT.Rel_ctxt _ _ _ ctxt equiv
 
 let inst_slprop_equiv_ext #g #v0 #v1
   (d0:RT.tot_typing g v0 slprop_tm)
   (d1:RT.tot_typing g v1 slprop_tm)
-  (token:T.equiv_token g v0 v1)
+  (token:RT.equiv g v0 v1)
   : GTot (pf:R.term &
           RT.tot_typing g pf (stt_slprop_equiv v0 v1)) =
 

@@ -23,6 +23,9 @@ open Pulse.Lib.Pervasives
 
 module T = Pulse.Lib.Spec.AVLTree
 
+module Box = Pulse.Lib.Box
+open Pulse.Lib.Box { box, (:=), (!) }
+
 noeq
 type node (t:Type0) = {
     data : t;
@@ -30,7 +33,7 @@ type node (t:Type0) = {
     right : tree_t t;
 }
 
-and node_ptr (t:Type0) = ref (node t)
+and node_ptr (t:Type0) = box (node t)
 
 //A nullable pointer to a node
 and tree_t (t:Type0) = option (node_ptr t)
@@ -40,7 +43,7 @@ let rec is_tree #t ct ft = match ft with
   | T.Node data left' right' ->
     exists* (p:node_ptr t) (lct:tree_t t) (rct:tree_t t).
       pure (ct == Some p) **
-      pts_to p { data = data ; left = lct ; right = rct} **
+      Box.pts_to p { data = data ; left = lct ; right = rct} **
       is_tree lct left' **
       is_tree rct right'
 
@@ -98,7 +101,7 @@ ensures
 
 
 [@@no_mkeys] // internal only
-let is_tree_cases #t (x : option (ref (node t))) (ft : T.tree t)
+let is_tree_cases #t (x : option (box (node t))) (ft : T.tree t)
 = match x with
   | None -> pure (ft == T.Leaf)
   | Some v -> 
@@ -238,7 +241,7 @@ fn node_cons (#t:Type0) (v:t) (ltree:tree_t t) (rtree:tree_t t) (#l:(T.tree t)) 
   returns y:tree_t t
   ensures is_tree y (T.Node v l r) ** (pure (Some? y))
 {
-  let y = alloc { data=v; left =ltree; right = rtree };
+  let y = Box.alloc { data=v; left =ltree; right = rtree };
   rewrite each ltree as ({data = v; left = ltree; right = rtree}).left in (is_tree ltree l);
   rewrite each rtree as ({data = v; left = ltree; right = rtree}).right in (is_tree rtree r);
   intro_is_tree_node (Some y) y;
@@ -859,7 +862,7 @@ fn rec delete_avl (#t:Type0) (cmp: T.cmp t) (tree:tree_t t) (key: t)
               None -> { (*Leaf,Leaf*)
                  is_tree_case_none None #rtree;
                  let tr = create t;
-                 free vl;
+                 Box.free vl;
                  rewrite each rtree as T.Leaf #t;
                  rewrite each ltree as T.Leaf #t;
                  unfold is_tree #t None T.Leaf;
@@ -880,7 +883,7 @@ fn rec delete_avl (#t:Type0) (cmp: T.cmp t) (tree:tree_t t) (key: t)
                 intro_is_tree_node (Some vl) vl #vl';
                 with ltree.
                   assert (is_tree #t None ltree);
-                free vlr;
+                Box.free vlr;
                 elim_is_tree_leaf #t None;
                 (Some vl)
               }
@@ -902,7 +905,7 @@ fn rec delete_avl (#t:Type0) (cmp: T.cmp t) (tree:tree_t t) (key: t)
                 with rtree.
                   rewrite is_tree lnode.right rtree as is_tree vl'.right rtree;
                 intro_is_tree_node (Some vl) vl #vl';
-                free vll;
+                Box.free vll;
                //  rewrite (is_tree right rtree) as (is_tree right T.Leaf);
                 elim_is_tree_leaf None;
                 (Some vl)
