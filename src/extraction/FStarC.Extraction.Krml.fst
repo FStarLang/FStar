@@ -203,6 +203,7 @@ and typ =
   | TArray of typ & constant
 
 let translate_decl_accum : ref (list decl) = mk_ref []
+let krml_current_decl : ref (option mlident) = mk_ref None
 
 instance pretty_width = { pp = function
   | UInt8 -> doc_of_string "UInt8"
@@ -1489,6 +1490,12 @@ let translate_let env flavor lb: ML (option decl) =
   !ref_translate_let env flavor lb
 
 let translate_decl env d: ML (list decl) =
+  begin
+    match d.mlmodule1_m with
+    | MLM_Let (flavor, lb::_) ->
+      krml_current_decl := Some lb.mllb_name
+    | _ -> ()
+  end;
   translate_decl_accum := [];
   let base =
     match d.mlmodule1_m with
