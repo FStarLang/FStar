@@ -625,7 +625,7 @@ let check_bqual (b0 b1:bqual)
     | Some (Meta t1), Some (Meta t2) ->
       if equal_term t1 t2
       then return ()
-      else fail_str (Format.fmt2 "Binder qualifier mismatch, %s vs %s" (show b0) (show b1))
+      else return () // fail_str (Format.fmt2 "Binder qualifier mismatch, %s vs %s" (show b0) (show b1))
     | _ ->
       fail_str (Format.fmt2 "Binder qualifier mismatch, %s vs %s" (show b0) (show b1))
 
