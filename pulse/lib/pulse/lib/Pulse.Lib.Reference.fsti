@@ -91,8 +91,8 @@ fn share
   (r:ref a)
   (#v:erased a)
   (#p:perm)
-  requires pts_to r #p v
-  ensures  pts_to r #(p /. 2.0R) v ** pts_to r #(p /. 2.0R) v
+  requires r |-> Frac p v
+  ensures (r |-> Frac (p /. 2.0R) v) ** (r |-> Frac (p /. 2.0R) v)
 
 
 [@@allow_ambiguous]
@@ -103,8 +103,8 @@ fn gather
   (r:ref a)
   (#x0 #x1:erased a)
   (#p0 #p1:perm)
-  requires pts_to r #p0 x0 ** pts_to r #p1 x1
-  ensures  pts_to r #(p0 +. p1) x0 ** pure (x0 == x1)
+  requires (r |-> Frac p0 x0) ** (r |-> Frac p1 x1)
+  ensures  (r |-> Frac (p0 +. p1) x0) ** pure (x0 == x1)
 
 
 
