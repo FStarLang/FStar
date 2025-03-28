@@ -67,10 +67,6 @@ let sugar_star_of_list (r:Range.range) (ts : list A.term) : A.term =
   | [] -> sugar_emp r
   | ts -> fold_right1 (fun a b -> sugar_app r (sugar_star r) [a; b]) ts
 
-let slprop_to_ast_term (v:Sugar.slprop) : A.term
-  = match v.v with
-    | Sugar.SLPropTerm t -> t
-
 let parse_annots (r:Range.range) (cs : list Sugar.computation_annot) : err Sugar.parsed_annots =
   let open PulseSyntaxExtension.Sugar in
   let reqs  = filter (fun (a, _) -> Requires? a) cs in
@@ -82,8 +78,8 @@ let parse_annots (r:Range.range) (cs : list Sugar.computation_annot) : err Sugar
   // let enss  = choose (function (Sugar.Ensures  t, _) -> Some t | _ -> None) cs in
   // let rets  = choose (function (Sugar.Returns  t, _) -> Some t | _ -> None) cs in
   // let opens = choose (function (Sugar.Opens    t, _) -> Some t | _ -> None) cs in
-  let req = reqs |> List.map (function (Requires t, _) -> slprop_to_ast_term t) |> sugar_star_of_list r in
-  let ens = enss |> List.map (function (Ensures  t, _) -> slprop_to_ast_term t) |> sugar_star_of_list r in
+  let req = reqs |> List.map (function (Requires t, _) -> t) |> sugar_star_of_list r in
+  let ens = enss |> List.map (function (Ensures  t, _) -> t) |> sugar_star_of_list r in
   let! return_name, return_type =
     match rets with
     | [] -> return (None, sugar_unit r)
@@ -123,8 +119,8 @@ let parse_annots (r:Range.range) (cs : list Sugar.computation_annot) : err Sugar
   in
   check_order cs false false false;!
   return {
-    precondition = Sugar.as_slprop (Sugar.SLPropTerm req) r;
-    postcondition = Sugar.as_slprop (Sugar.SLPropTerm ens) r;
+    precondition =  req;
+    postcondition = ens;
     return_name = return_name;
     return_type = return_type;
     opens = opens;
@@ -165,8 +161,8 @@ let comp_to_ast_term (c:Sugar.computation_type) : err A.term =
       let h = mk_term (App (h, return_ty, Nothing)) r Expr in
       h
   in
-  let pre  = slprop_to_ast_term annots.precondition in
-  let post = slprop_to_ast_term annots.postcondition in
+  let pre  = annots.precondition in
+  let post = annots.postcondition in
   let post =
     let pat = mk_pattern (PatVar (annots.return_name, None, [])) r in
     let pat = mk_pattern (PatAscribed (pat, (return_ty, None))) r in
@@ -350,10 +346,8 @@ let rec interpret_slprop_constructors (env:env_t) (v:S.term)
   
 let desugar_slprop (env:env_t) (v:Sugar.slprop)
   : err SW.slprop
-  = match v.v with
-    | Sugar.SLPropTerm t -> 
-      let! t = tosyntax env t in
-      interpret_slprop_constructors env t
+  = let! t = tosyntax env v in
+    interpret_slprop_constructors env t
 
 let desugar_computation_type (env:env_t) (c:Sugar.computation_type)
   : err SW.comp

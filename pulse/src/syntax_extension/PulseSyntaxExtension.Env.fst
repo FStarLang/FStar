@@ -142,8 +142,7 @@ and free_vars_binders (env:env_t) (bs:Sugar.binders)
 
 let free_vars_slprop (env:env_t) (t:Sugar.slprop) =
   let open PulseSyntaxExtension.Sugar in
-  match t.v with
-  | SLPropTerm t -> free_vars_term env t
+  free_vars_term env t
 
 let free_vars_annot (env:env_t) (a:Sugar.computation_annot) =
   let open PulseSyntaxExtension.Sugar in

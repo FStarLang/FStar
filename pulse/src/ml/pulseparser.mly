@@ -364,4 +364,4 @@ typX(X,Y):
 
 pulseSLProp:
   | p=typX(tmEqWith(appTermNoRecordExp), tmEqWith(appTermNoRecordExp))
-    { PulseSyntaxExtension_Sugar.(as_slprop (SLPropTerm p) (rr $loc)) }
+    { p }
