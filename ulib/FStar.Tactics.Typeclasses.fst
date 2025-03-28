@@ -20,6 +20,7 @@ module R = FStar.Reflection.V2
 open FStar.Stubs.Tactics.Common
 open FStar.Tactics.Effect
 open FStar.Stubs.Tactics.V2.Builtins
+open FStar.Stubs.Tactics.Types
 open FStar.Tactics.V2.SyntaxHelpers
 open FStar.Tactics.V2.Derived
 open FStar.Tactics.V2.SyntaxCoercions
@@ -45,6 +46,11 @@ type st_t = {
   seen           : list term;
   glb            : list (sigelt & fv);
   fuel           : int;
+  rng            : range;
+  (* ^ The range of the original goal, for error reporting.
+  Probably exposing ps.entry_range would be better. *)
+  warned_oof     : tref bool;
+  (* ^ Whether we have warned about out of fuel. *)
 }
 
 noeq
@@ -236,8 +242,18 @@ let try_trivial (st:st_t) (g:tc_goal) (k : st_t -> Tac unit) () : Tac unit =
   It mostly creates a tc_goal record and calls the functions above.
 *)
 let rec tcresolve' (st:st_t) : Tac unit =
-    if st.fuel <= 0 then
-      raise Next;
+    if st.fuel <= 0 then (
+      let r = st.warned_oof in
+      if not (read r) then (
+        let open FStar.Stubs.Errors.Msg in
+        log_issues [FStar.Issue.mk_issue_doc "Warning" [
+          text "Warning: fuel exhausted during typeclass resolution.";
+          text "This usually indicates a loop in your instances.";
+        ] (Some st.rng) None []];
+        write r true
+      );
+      raise Next
+    );
     debug (fun () -> "fuel = " ^ string_of_int st.fuel);
 
     maybe_intros();
@@ -296,6 +312,8 @@ let tcresolve () : Tac unit =
       seen = [];
       glb = glb;
       fuel = 16;
+      rng = range_of_term (cur_goal ());
+      warned_oof = alloc false;
     } in
     try
       tcresolve' st0;
