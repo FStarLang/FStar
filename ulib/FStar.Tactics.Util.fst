@@ -130,3 +130,10 @@ let string_of_option #a (f : a -> Tac string) (o : option a) : Tac string =
   match o with
   | Some x -> "Some " ^ f x
   | None -> "None"
+
+val existsb : ('a -> Tac bool) -> list 'a -> Tac bool
+let rec existsb f l = match l with
+  | [] -> false
+  | hd::tl ->
+    if f hd then true
+    else existsb f tl
