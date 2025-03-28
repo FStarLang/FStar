@@ -177,7 +177,7 @@ let extract_fundeps (se : sigelt) : Tac (option (list int)) =
     in
     aux attrs
 
-let trywith (st:st_t) (g:tc_goal) (t typ : term) (k : st_t -> Tac unit) : Tac unit =
+let trywith (st:st_t) (g:tc_goal) (t typ : term) (attrs : list term) (k : st_t -> Tac unit) : Tac unit =
     // print ("head_fv = " ^ fv_to_string g.head_fv);
     // print ("fundeps = " ^ Util.string_of_option (Util.string_of_list (fun i -> string_of_int i)) fundeps);
     // print ("unresolved_args = " ^ Util.string_of_list (fun i -> string_of_int i) unresolved_args);
@@ -192,7 +192,12 @@ let trywith (st:st_t) (g:tc_goal) (t typ : term) (k : st_t -> Tac unit) : Tac un
       let unresolved_args = g.args_and_uvars |> Util.mapi (fun i (_, b) -> if b then [i <: int] else []) |> List.Tot.flatten in
       debug (fun () -> "Trying to apply hypothesis/instance: " ^ term_to_string t);
       (fun () ->
-        if Cons? unresolved_args then (
+        if L.existsb (Reflection.TermEq.Simple.term_eq (`noinst)) attrs then (
+          (* If this instance has the noinst attribute, force using apply_noinst.
+            This means we will not let this instance instantiate the goal, regardless
+            of any fundeps on the class. *)
+          orskip "apply_noinst" (fun () -> apply_noinst t)
+        ) else if Cons? unresolved_args then (
           (* If some args have uvars, we check to see if they are
             functional dependencies of the class. If so, we apply
             the instance and instantiate the uvars. Otherwise skip. *)
@@ -218,14 +223,15 @@ let local (st:st_t) (g:tc_goal) (k : st_t -> Tac unit) () : Tac unit =
     debug (fun () -> "local, goal = " ^ term_to_string g.g);
     let bs = vars_of_env (cur_env ()) in
     first (fun (b:binding) ->
-              trywith st g (pack (Tv_Var b)) b.sort k)
+              trywith st g (pack (Tv_Var b)) b.sort [] k)
           bs
 
 let global (st:st_t) (g:tc_goal) (k : st_t -> Tac unit) () : Tac unit =
     debug (fun () -> "global, goal = " ^ term_to_string g.g);
     first (fun (se, fv) ->
               let typ = orskip "tc" (fun () -> tc (cur_env()) (pack (Tv_FVar fv))) in // FIXME: a bit slow.. but at least it's a simple fvar
-              trywith st g (pack (Tv_FVar fv)) typ k)
+              let attrs = sigelt_attrs se in
+              trywith st g (pack (Tv_FVar fv)) typ attrs k)
           st.glb
 
 let try_trivial (st:st_t) (g:tc_goal) (k : st_t -> Tac unit) () : Tac unit =
