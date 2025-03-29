@@ -294,60 +294,9 @@ let idents_as_binders (env:env_t) (l:list ident)
       aux env [] [] l
     end
 
-let rec interpret_slprop_constructors (env:env_t) (v:S.term)
-  : err SW.term
-  = let head, args = U.head_and_args_full v in
-    match head.n, args with
-    | S.Tm_fvar fv, [(l, _)]
-      when S.fv_eq_lid fv pure_lid ->
-      let res = SW.tm_pure (as_term l) v.pos in
-      return res
-    
-    | S.Tm_fvar fv, []
-      when S.fv_eq_lid fv emp_lid ->
-      return <| SW.tm_emp v.pos
-      
-    | S.Tm_fvar fv, [(l, _); (r, _)]
-      when S.fv_eq_lid fv star_lid ->
-      let! l = interpret_slprop_constructors env l in
-      let! r = interpret_slprop_constructors env r in
-      return <| SW.tm_star l r v.pos
-
-    | S.Tm_fvar fv, [(l, _)]
-      when S.fv_eq_lid fv exists_lid -> (
-        match (SS.compress l).n with
-        | S.Tm_abs {bs=[b]; body } ->
-          let b = SW.mk_binder b.S.binder_bv.ppname (as_term b.S.binder_bv.sort) in
-          let! body = interpret_slprop_constructors env body in
-          return <| SW.tm_exists b body v.pos
-        | _ ->
-          return <| as_term v
-      )
-
-    | S.Tm_fvar fv, [(l, _)]
-      when S.fv_eq_lid fv forall_lid -> (
-        match (SS.compress l).n with
-        | S.Tm_abs {bs=[b]; body } ->
-          let b = SW.mk_binder b.S.binder_bv.ppname (as_term b.S.binder_bv.sort) in
-          let! body = interpret_slprop_constructors env body in
-          return <| SW.tm_forall b body v.pos
-        | _ ->
-          return <| as_term v
-      )
-
-    | S.Tm_fvar fv, [(l, _)]
-      when S.fv_eq_lid fv prims_exists_lid
-      ||   S.fv_eq_lid fv prims_forall_lid -> (
-      fail "exists/forall are prop connectives; you probably meant to use exists*/forall*" v.pos  
-      )
-
-    | _ ->
-      return <| as_term v
-  
 let desugar_slprop (env:env_t) (v:Sugar.slprop)
   : err SW.slprop
-  = let! t = tosyntax env v in
-    interpret_slprop_constructors env t
+  = tosyntax env v
 
 let desugar_computation_type (env:env_t) (c:Sugar.computation_type)
   : err SW.comp

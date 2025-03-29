@@ -40,9 +40,9 @@ val mk_fv (nm:lident) (r:range) : fv
 new val qualifier : Type0
 val as_qual (imp:bool)  : option qualifier
 val tc_qual : option qualifier
-new val term : Type0
-new val binder : Type0
-new val comp : Type0
+let term : Type0 = FStarC.Syntax.Syntax.term (* pulse terms are just F* terms *)
+new val binder : Type0 (* pulse binder *)
+new val comp : Type0 (* pulse comp *)
 val meta_qual : term -> option qualifier
 let slprop = term
 val mk_binder (x:ident) (t:term) : binder
