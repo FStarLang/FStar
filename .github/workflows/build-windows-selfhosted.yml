@@ -68,13 +68,9 @@ jobs:
       - run: unzip fstar*.zip
         shell: bash
 
-      - name: Check out Hello example
-        uses: actions/checkout@v4
-        with:
-          sparse-checkout: examples\hello\Hello
-          path: ${{ github.workspace }}\fstartest
-
       - name: Smoke test
         working-directory: fstar
         run: |
-          .\bin\fstar.exe --already_cached ,* ${{ github.workspace }}\fstartest\examples\hello\Hello\Hello.fst -f --debug_all_modules
+          mkdir "${{ github.workspace }}\fstartest"
+          echo module Hello open FStar.Mul let _ = assert (forall x . 1 + x*x > 0) > "${{ github.workspace }}\fstartest\Hello.fst"
+          .\bin\fstar.exe --already_cached ,* ${{ github.workspace }}\fstartest\Hello.fst -f --debug_all_modules
