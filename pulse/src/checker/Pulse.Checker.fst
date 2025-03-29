@@ -27,6 +27,7 @@ open Pulse.Checker.Pure
 open Pulse.Checker.Bind
 open Pulse.Checker.SLPropEquiv
 open Pulse.Checker.Base
+open Pulse.Show
 
 module P = Pulse.Syntax.Printer
 module RU = Pulse.RuntimeUtils
@@ -223,8 +224,19 @@ let rec check
       | Tm_ElimExists _ ->
         Exists.check_elim_exists g pre pre_typing post_hint res_ppname t
 
-      | Tm_IntroExists { p; witnesses } ->
-        (match instantiate_unknown_witnesses g t with
+      | Tm_IntroExists _ ->
+        (
+        (* First of all, elaborate *)
+        let prep (t:st_term{Tm_IntroExists? t.term}) : T.Tac (t:st_term{Tm_IntroExists? t.term}) =
+          let Tm_IntroExists { p; witnesses } = t.term in
+          let p, _ = instantiate_term_implicits g p (Some tm_slprop) false in
+          { t with term=Tm_IntroExists { p; witnesses } }
+        in
+        let t = prep t in
+
+        let Tm_IntroExists { p; witnesses } = t.term in
+
+        match instantiate_unknown_witnesses g t with
         | Some t ->
           check g pre pre_typing post_hint res_ppname t
         | None ->
