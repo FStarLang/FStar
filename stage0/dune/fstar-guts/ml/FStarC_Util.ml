@@ -14,20 +14,6 @@ let is_punctuation c = List.mem c [33; 34; 35; 37; 38; 39; 40; 41; 42; 44; 45; 4
 
 let return_all x = x
 
-type time_ns = int64
-let now_ns () = Mtime_clock.now_ns()
-let time_diff_ns t1 t2 =
-  Z.of_int (Int64.to_int (Int64.sub t2 t1))
-let time_diff_ms t1 t2 = Z.div (time_diff_ns t1 t2) (Z.of_int 1000000)
-let record_time_ns f =
-    let start = now_ns () in
-    let res = f () in
-    let elapsed = time_diff_ns start (now_ns()) in
-    res, elapsed
-let record_time_ms f =
-    let res, ns = record_time_ns f in
-    res, Z.div ns (Z.of_int 1000000)
-
 type time_of_day = float
 let get_time_of_day () = BatUnix.gettimeofday()
 let get_time_of_day_ms () = Z.of_int (int_of_float (get_time_of_day () *. 1000.0))
@@ -345,41 +331,6 @@ let ask_process
   with e -> (* Ensure that reader_fn gets an EOF and exits *)
     kill_process p; raise e
 
-let get_file_extension (fn:string) : string = snd (BatString.rsplit fn ".")
-
-(* NOTE: Working around https://github.com/ocaml-batteries-team/batteries-included/issues/1136 *)
-let is_absolute_windows (path_str : string) : bool =
-  if FStarC_Platform.windows then
-    match BatString.to_list path_str with
-    | '\\' :: _ -> true
-    | letter :: ':' :: '\\' :: _ -> BatChar.is_letter letter
-    | _ -> false
-  else
-    false
-
-let is_path_absolute path_str =
-  let open Batteries.Incubator in
-  let open BatPathGen.OfString in
-  let path = of_string path_str in
-  is_absolute path || is_absolute_windows path_str
-
-let join_paths path_str0 path_str1 =
-  let open Batteries.Incubator in
-  let open BatPathGen.OfString in
-  let open BatPathGen.OfString.Operators in
-  to_string ((of_string path_str0) //@ (of_string path_str1))
-
-let normalize_file_path (path_str:string) =
-  if is_path_absolute path_str then
-    path_str
-  else
-    let open Batteries.Incubator in
-    let open BatPathGen.OfString in
-    let open BatPathGen.OfString.Operators in
-    let path = of_string path_str in
-    let cwd = of_string (BatSys.getcwd ()) in
-    to_string (normalize_in_tree (cwd //@ path))
-
 type stream_reader = BatIO.input
 let open_stdin () = BatIO.stdin
 let read_line s =
@@ -410,85 +361,6 @@ let string_builder_append b s = BatBuffer.add_string b s
 
 let message_of_exn (e:exn) = Printexc.to_string e
 let trace_of_exn (e:exn) = Printexc.get_backtrace ()
-
-module StringOps =
-  struct
-    type t = string
-    let equal (x:t) (y:t) = x=y
-    let compare (x:t) (y:t) = BatString.compare x y
-    let hash (x:t) = BatHashtbl.hash x
-  end
-
-module StringHashtbl = BatHashtbl.Make(StringOps)
-module StringMap = BatMap.Make(StringOps)
-
-type 'value smap = 'value StringHashtbl.t
-let smap_create (i:Z.t) : 'value smap = StringHashtbl.create (Z.to_int i)
-let smap_clear (s:('value smap)) = StringHashtbl.clear s
-let smap_add (m:'value smap) k (v:'value) = StringHashtbl.replace m k v
-let smap_of_list (l: (string * 'value) list) =
-  let s = StringHashtbl.create (BatList.length l) in
-  FStar_List.iter (fun (x,y) -> smap_add s x y) l;
-  s
-let smap_try_find (m:'value smap) k = StringHashtbl.find_option m k
-let smap_fold (m:'value smap) f a = StringHashtbl.fold f m a
-let smap_remove (m:'value smap) k = StringHashtbl.remove m k
-let smap_keys (m:'value smap) = smap_fold m (fun k _ acc -> k::acc) []
-let smap_copy (m:'value smap) = StringHashtbl.copy m
-let smap_size (m:'value smap) = StringHashtbl.length m
-let smap_iter (m:'value smap) f = StringHashtbl.iter f m
-
-exception PSMap_Found
-type 'value psmap = 'value StringMap.t
-let psmap_empty (_: unit) : 'value psmap = StringMap.empty
-let psmap_add (map: 'value psmap) (key: string) (value: 'value) = StringMap.add key value map
-let psmap_find_default (map: 'value psmap) (key: string) (dflt: 'value) =
-  StringMap.find_default dflt key map
-let psmap_try_find (map: 'value psmap) (key: string) =
-  StringMap.Exceptionless.find key map
-let psmap_fold (m:'value psmap) f a = StringMap.fold f m a
-let psmap_find_map (m:'value psmap) f =
-  let res = ref None in
-  let upd k v =
-    let r = f k v in
-    if r <> None then (res := r; raise PSMap_Found) in
-  (try StringMap.iter upd m with PSMap_Found -> ());
-  !res
-let psmap_modify (m: 'value psmap) (k: string) (upd: 'value option -> 'value) =
-  StringMap.modify_opt k (fun vopt -> Some (upd vopt)) m
-
-let psmap_merge (m1: 'value psmap) (m2: 'value psmap) : 'value psmap =
-  psmap_fold m1 (fun k v m -> psmap_add m k v) m2
-
-let psmap_remove (m: 'value psmap)  (key:string)
-  : 'value psmap = StringMap.remove key m
-  
-module ZHashtbl = BatHashtbl.Make(Z)
-module ZMap = BatMap.Make(Z)
-
-type 'value imap = 'value ZHashtbl.t
-let imap_create (i:Z.t) : 'value imap = ZHashtbl.create (Z.to_int i)
-let imap_clear (s:('value imap)) = ZHashtbl.clear s
-let imap_add (m:'value imap) k (v:'value) = ZHashtbl.replace m k v
-let imap_of_list (l: (Z.t * 'value) list) =
-  let s = ZHashtbl.create (BatList.length l) in
-  FStar_List.iter (fun (x,y) -> imap_add s x y) l;
-  s
-let imap_try_find (m:'value imap) k = ZHashtbl.find_option m k
-let imap_fold (m:'value imap) f a = ZHashtbl.fold f m a
-let imap_remove (m:'value imap) k = ZHashtbl.remove m k
-let imap_keys (m:'value imap) = imap_fold m (fun k _ acc -> k::acc) []
-let imap_copy (m:'value imap) = ZHashtbl.copy m
-
-type 'value pimap = 'value ZMap.t
-let pimap_empty (_: unit) : 'value pimap = ZMap.empty
-let pimap_add (map: 'value pimap) (key: Z.t) (value: 'value) = ZMap.add key value map
-let pimap_find_default (map: 'value pimap) (key: Z.t) (dflt: 'value) =
-  ZMap.find_default dflt key map
-let pimap_try_find (map: 'value pimap) (key: Z.t) =
-  ZMap.Exceptionless.find key map
-let pimap_fold (m:'value pimap) f a = ZMap.fold f m a
-let pimap_remove (m:'value pimap) k = ZMap.remove k m
 
 (* restore pre-2.11 BatString.nsplit behavior,
    see https://github.com/ocaml-batteries-team/batteries-included/issues/845 *)
@@ -644,7 +516,7 @@ let replace_char (s:string) c1 c2 =
   BatUTF8.map (fun x -> if x = c1 then c2 else x) s
 let replace_chars (s:string) c (by:string) =
   BatString.replace_chars (fun x -> if x = Char.chr c then by else BatString.of_char x) s
-let hashcode s = Z.of_int (StringOps.hash s)
+let hashcode s = Z.of_int (BatHashtbl.hash s)
 let compare s1 s2 = Z.of_int (BatString.compare s1 s2)
 let split s sep = BatString.split_on_string sep s
 let splitlines s = split s "\n"
@@ -840,13 +712,6 @@ let string_to_ascii_bytes (s:string) : char array =
 let ascii_bytes_to_string (b:char array) : string =
   BatString.implode (BatArray.to_list b)
 
-let mk_ref a = ref a
-
-let write_file (fn:string) s =
-  let fh = open_file_for_writing fn in
-  append_to_file fh s;
-  close_out_channel fh
-
 let copy_file input_name output_name =
   (* see https://ocaml.github.io/ocamlunix/ocamlunix.html#sec33 *)
   let open Unix in
@@ -1039,28 +904,26 @@ let get_oreader (filename:string) : oReader = {
 
 let getcwd = Sys.getcwd
 
-let readdir dir = "." :: ".." :: Array.to_list (Sys.readdir dir)
-
-let paths_to_same_file f g =
-  let open Unix in
-  let { st_dev = i; st_ino = j } = stat f in
-  let { st_dev = i'; st_ino = j' } = stat g in
-  (i,j) = (i',j')
-
-let file_exists = Sys.file_exists
-(* Sys.is_directory raises Sys_error if the path does not exist *)
-let is_directory f = Sys.file_exists f && Sys.is_directory f
-
-
-let basename = Filename.basename
-let dirname = Filename.dirname
 let print_endline = print_endline
 
 let map_option f opt = BatOption.map f opt
 
+let maybe_create_parent (fname:string) : unit =
+  let d = Filename.dirname fname in
+  if Sys.file_exists d && Sys.is_directory d then ()
+  else
+    mkdir false true d
+
+let write_file (fn:string) s =
+  maybe_create_parent fn;
+  let fh = open_file_for_writing fn in
+  append_to_file fh s;
+  close_out_channel fh
+
 let save_value_to_file (fname:string) value =
   (* BatFile.with_file_out uses Unix.openfile (which isn't available in
      js_of_ocaml) instead of Pervasives.open_out, so we don't use it here. *)
+  maybe_create_parent fname;
   let channel = open_out_bin fname in
   BatPervasives.finally
     (fun () -> close_out channel)
@@ -1080,6 +943,7 @@ let load_value_from_file (fname:string) =
 
 let save_2values_to_file (fname:string) value1 value2 =
   try
+    maybe_create_parent fname;
     let channel = open_out_bin fname in
     BatPervasives.finally
       (fun () -> close_out channel)
@@ -1093,6 +957,7 @@ let save_2values_to_file (fname:string) value1 value2 =
 
 let load_2values_from_file (fname:string) =
   try
+    maybe_create_parent fname;
     let channel = open_in_bin fname in
     BatPervasives.finally
       (fun () -> close_in channel)
@@ -1107,13 +972,15 @@ let print_exn e =
   Printexc.to_string e
 
 let digest_of_file =
-  let cache = smap_create (Z.of_int 101) in
+  let open FStarC_SMap in
+  let cache = create (Z.of_int 101) in
   fun (fname:string) ->
-    match smap_try_find cache fname with
+    match try_find cache fname with
     | Some dig -> dig
     | None ->
       let dig = BatDigest.file fname in
-      smap_add cache fname dig;
+      let dig = BatDigest.to_hex dig in
+      add cache fname dig;
       dig
 
 let digest_of_string (s:string) =

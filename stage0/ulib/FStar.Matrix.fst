@@ -30,7 +30,6 @@ module CF = FStar.Algebra.CommMonoid.Fold
 module SP = FStar.Seq.Permutation
 module SB = FStar.Seq.Base
 module SProp = FStar.Seq.Properties
-module ML = FStar.Math.Lemmas
 
 open FStar.IntegerIntervals   
 open FStar.Mul

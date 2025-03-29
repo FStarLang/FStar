@@ -17,7 +17,6 @@ module FStar.Buffer
  
 open FStar.Seq
 open FStar.UInt32
-module Int32 = FStar.Int32
 open FStar.HyperStack
 open FStar.HyperStack.ST
 open FStar.Ghost

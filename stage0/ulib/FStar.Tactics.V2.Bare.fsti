@@ -20,6 +20,8 @@ include FStar.Reflection.V2
 include FStar.Reflection.V2.Formula
 
 include FStar.Stubs.Tactics.Types
+include FStar.Stubs.Tactics.Types.Reflection
+include FStar.Stubs.TypeChecker.Core
 include FStar.Tactics.Effect
 include FStar.Stubs.Tactics.V2.Builtins
 include FStar.Tactics.V2.Derived

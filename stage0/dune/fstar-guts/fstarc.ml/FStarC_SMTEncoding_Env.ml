@@ -195,18 +195,18 @@ let (__proj__Mkvarops_t__item__mk_unique :
         next_id; mk_unique;_} -> mk_unique
 let (varops : varops_t) =
   let initial_ctr = (Prims.of_int (100)) in
-  let ctr = FStarC_Util.mk_ref initial_ctr in
-  let new_scope uu___ = FStarC_Util.smap_create (Prims.of_int (100)) in
+  let ctr = FStarC_Effect.mk_ref initial_ctr in
+  let new_scope uu___ = FStarC_SMap.create (Prims.of_int (100)) in
   let scopes =
     let uu___ = let uu___1 = new_scope () in [uu___1] in
-    FStarC_Util.mk_ref uu___ in
+    FStarC_Effect.mk_ref uu___ in
   let mk_unique y =
     let y1 = escape y in
     let y2 =
       let uu___ =
         let uu___1 = FStarC_Effect.op_Bang scopes in
         FStarC_Util.find_map uu___1
-          (fun names -> FStarC_Util.smap_try_find names y1) in
+          (fun names -> FStarC_SMap.try_find names y1) in
       match uu___ with
       | FStar_Pervasives_Native.None -> y1
       | FStar_Pervasives_Native.Some uu___1 ->
@@ -219,7 +219,7 @@ let (varops : varops_t) =
             Prims.strcat y1 uu___3)) in
     let top_scope =
       let uu___ = FStarC_Effect.op_Bang scopes in FStarC_List.hd uu___ in
-    FStarC_Util.smap_add top_scope y2 true; y2 in
+    FStarC_SMap.add top_scope y2 true; y2 in
   let new_var pp rn =
     let uu___ =
       let uu___1 = FStarC_Ident.string_of_id pp in
@@ -364,10 +364,10 @@ let binder_of_eithervar :
 type env_t =
   {
   bvar_bindings:
-    (FStarC_Syntax_Syntax.bv * FStarC_SMTEncoding_Term.term)
-      FStarC_Util.pimap FStarC_Util.psmap
+    (FStarC_Syntax_Syntax.bv * FStarC_SMTEncoding_Term.term) FStarC_PIMap.t
+      FStarC_PSMap.t
     ;
-  fvar_bindings: (fvar_binding FStarC_Util.psmap * fvar_binding Prims.list) ;
+  fvar_bindings: (fvar_binding FStarC_PSMap.t * fvar_binding Prims.list) ;
   depth: Prims.int ;
   tcenv: FStarC_TypeChecker_Env.env ;
   warn: Prims.bool ;
@@ -376,11 +376,11 @@ type env_t =
   encode_non_total_function_typ: Prims.bool ;
   current_module_name: Prims.string ;
   encoding_quantifier: Prims.bool ;
-  global_cache: FStarC_SMTEncoding_Term.decls_elt FStarC_Util.smap }
+  global_cache: FStarC_SMTEncoding_Term.decls_elt FStarC_SMap.t }
 let (__proj__Mkenv_t__item__bvar_bindings :
   env_t ->
-    (FStarC_Syntax_Syntax.bv * FStarC_SMTEncoding_Term.term)
-      FStarC_Util.pimap FStarC_Util.psmap)
+    (FStarC_Syntax_Syntax.bv * FStarC_SMTEncoding_Term.term) FStarC_PIMap.t
+      FStarC_PSMap.t)
   =
   fun projectee ->
     match projectee with
@@ -388,7 +388,7 @@ let (__proj__Mkenv_t__item__bvar_bindings :
         use_zfuel_name; encode_non_total_function_typ; current_module_name;
         encoding_quantifier; global_cache;_} -> bvar_bindings
 let (__proj__Mkenv_t__item__fvar_bindings :
-  env_t -> (fvar_binding FStarC_Util.psmap * fvar_binding Prims.list)) =
+  env_t -> (fvar_binding FStarC_PSMap.t * fvar_binding Prims.list)) =
   fun projectee ->
     match projectee with
     | { bvar_bindings; fvar_bindings; depth; tcenv; warn; nolabels;
@@ -444,7 +444,7 @@ let (__proj__Mkenv_t__item__encoding_quantifier : env_t -> Prims.bool) =
         use_zfuel_name; encode_non_total_function_typ; current_module_name;
         encoding_quantifier; global_cache;_} -> encoding_quantifier
 let (__proj__Mkenv_t__item__global_cache :
-  env_t -> FStarC_SMTEncoding_Term.decls_elt FStarC_Util.smap) =
+  env_t -> FStarC_SMTEncoding_Term.decls_elt FStarC_SMap.t) =
   fun projectee ->
     match projectee with
     | { bvar_bindings; fvar_bindings; depth; tcenv; warn; nolabels;
@@ -453,11 +453,11 @@ let (__proj__Mkenv_t__item__global_cache :
 let (print_env : env_t -> Prims.string) =
   fun e ->
     let bvars =
-      FStarC_Util.psmap_fold e.bvar_bindings
+      FStarC_PSMap.fold e.bvar_bindings
         (fun _k ->
            fun pi ->
              fun acc ->
-               FStarC_Util.pimap_fold pi
+               FStarC_PIMap.fold pi
                  (fun _i ->
                     fun uu___ ->
                       fun acc1 ->
@@ -468,7 +468,7 @@ let (print_env : env_t -> Prims.string) =
                                 FStarC_Syntax_Print.showable_bv x in
                             uu___1 :: acc1) acc) [] in
     let allvars =
-      FStarC_Util.psmap_fold (FStar_Pervasives_Native.fst e.fvar_bindings)
+      FStarC_PSMap.fold (FStar_Pervasives_Native.fst e.fvar_bindings)
         (fun _k -> fun fvb -> fun acc -> (fvb.fvar_lid) :: acc) [] in
     let last_fvar =
       match FStarC_List.rev allvars with
@@ -487,10 +487,10 @@ let (lookup_bvar_binding :
     fun bv ->
       let uu___ =
         let uu___1 = FStarC_Ident.string_of_id bv.FStarC_Syntax_Syntax.ppname in
-        FStarC_Util.psmap_try_find env.bvar_bindings uu___1 in
+        FStarC_PSMap.try_find env.bvar_bindings uu___1 in
       match uu___ with
       | FStar_Pervasives_Native.Some bvs ->
-          FStarC_Util.pimap_try_find bvs bv.FStarC_Syntax_Syntax.index
+          FStarC_PIMap.try_find bvs bv.FStarC_Syntax_Syntax.index
       | FStar_Pervasives_Native.None -> FStar_Pervasives_Native.None
 let (lookup_fvar_binding :
   env_t -> FStarC_Ident.lident -> fvar_binding FStar_Pervasives_Native.option)
@@ -498,32 +498,30 @@ let (lookup_fvar_binding :
   fun env ->
     fun lid ->
       let uu___ = FStarC_Ident.string_of_lid lid in
-      FStarC_Util.psmap_try_find
-        (FStar_Pervasives_Native.fst env.fvar_bindings) uu___
+      FStarC_PSMap.try_find (FStar_Pervasives_Native.fst env.fvar_bindings)
+        uu___
 let add_bvar_binding :
   'uuuuu .
     (FStarC_Syntax_Syntax.bv * 'uuuuu) ->
-      (FStarC_Syntax_Syntax.bv * 'uuuuu) FStarC_Util.pimap FStarC_Util.psmap
-        ->
-        (FStarC_Syntax_Syntax.bv * 'uuuuu) FStarC_Util.pimap
-          FStarC_Util.psmap
+      (FStarC_Syntax_Syntax.bv * 'uuuuu) FStarC_PIMap.t FStarC_PSMap.t ->
+        (FStarC_Syntax_Syntax.bv * 'uuuuu) FStarC_PIMap.t FStarC_PSMap.t
   =
   fun bvb ->
     fun bvbs ->
       let uu___ =
         FStarC_Ident.string_of_id
           (FStar_Pervasives_Native.fst bvb).FStarC_Syntax_Syntax.ppname in
-      FStarC_Util.psmap_modify bvbs uu___
+      FStarC_PSMap.modify bvbs uu___
         (fun pimap_opt ->
            let uu___1 =
-             let uu___2 = FStarC_Util.pimap_empty () in
+             let uu___2 = FStarC_PIMap.empty () in
              FStarC_Util.dflt uu___2 pimap_opt in
-           FStarC_Util.pimap_add uu___1
+           FStarC_PIMap.add uu___1
              (FStar_Pervasives_Native.fst bvb).FStarC_Syntax_Syntax.index bvb)
 let (add_fvar_binding :
   fvar_binding ->
-    (fvar_binding FStarC_Util.psmap * fvar_binding Prims.list) ->
-      (fvar_binding FStarC_Util.psmap * fvar_binding Prims.list))
+    (fvar_binding FStarC_PSMap.t * fvar_binding Prims.list) ->
+      (fvar_binding FStarC_PSMap.t * fvar_binding Prims.list))
   =
   fun fvb ->
     fun uu___ ->
@@ -531,7 +529,7 @@ let (add_fvar_binding :
       | (fvb_map, fvb_list) ->
           let uu___1 =
             let uu___2 = FStarC_Ident.string_of_lid fvb.fvar_lid in
-            FStarC_Util.psmap_add fvb_map uu___2 fvb in
+            FStarC_PSMap.add fvb_map uu___2 fvb in
           (uu___1, (fvb :: fvb_list))
 let (fresh_fvar :
   Prims.string ->
@@ -1028,8 +1026,7 @@ let (tok_of_name :
   fun env ->
     fun nm ->
       let uu___ =
-        FStarC_Util.psmap_find_map
-          (FStar_Pervasives_Native.fst env.fvar_bindings)
+        FStarC_PSMap.find_map (FStar_Pervasives_Native.fst env.fvar_bindings)
           (fun uu___1 ->
              fun fvb ->
                check_valid_fvb fvb;
@@ -1039,10 +1036,10 @@ let (tok_of_name :
       match uu___ with
       | FStar_Pervasives_Native.Some b -> FStar_Pervasives_Native.Some b
       | FStar_Pervasives_Native.None ->
-          FStarC_Util.psmap_find_map env.bvar_bindings
+          FStarC_PSMap.find_map env.bvar_bindings
             (fun uu___1 ->
                fun pi ->
-                 FStarC_Util.pimap_fold pi
+                 FStarC_PIMap.fold pi
                    (fun uu___2 ->
                       fun y ->
                         fun res ->

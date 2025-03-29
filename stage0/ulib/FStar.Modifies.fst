@@ -16,9 +16,7 @@
 module FStar.Modifies
 
 module HS = FStar.HyperStack
-module HST = FStar.HyperStack.ST
 module B = FStar.Buffer
-module U32 = FStar.UInt32
 
 noeq
 type loc_aux : Type =

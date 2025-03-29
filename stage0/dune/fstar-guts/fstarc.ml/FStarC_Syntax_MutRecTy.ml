@@ -87,9 +87,10 @@ let (disentangle_abbrevs_from_bundle :
                            "mutrecty: disentangle_abbrevs_from_bundle: type_abbrevs: impossible")
                   type_abbrev_sigelts in
               let unfolded_type_abbrevs =
-                let rev_unfolded_type_abbrevs = FStarC_Util.mk_ref [] in
-                let in_progress = FStarC_Util.mk_ref [] in
-                let not_unfolded_yet = FStarC_Util.mk_ref type_abbrev_sigelts in
+                let rev_unfolded_type_abbrevs = FStarC_Effect.mk_ref [] in
+                let in_progress = FStarC_Effect.mk_ref [] in
+                let not_unfolded_yet =
+                  FStarC_Effect.mk_ref type_abbrev_sigelts in
                 let remove_not_unfolded lid =
                   let uu___1 =
                     let uu___2 = FStarC_Effect.op_Bang not_unfolded_yet in

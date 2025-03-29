@@ -49,31 +49,29 @@ let (string_of_pos : FStarC_Range_Type.pos -> Prims.string) =
     let uu___1 = FStarC_Util.string_of_int pos.FStarC_Range_Type.col in
     FStarC_Util.format2 "%s,%s" uu___ uu___1
 let (file_of_range : FStarC_Range_Type.range -> Prims.string) =
-  fun r ->
-    let f = (r.FStarC_Range_Type.def_range).FStarC_Range_Type.file_name in
-    FStarC_Range_Type.string_of_file_name f
+  fun r -> (r.FStarC_Range_Type.def_range).FStarC_Range_Type.file_name
 let (set_file_of_range :
   FStarC_Range_Type.range -> Prims.string -> FStarC_Range_Type.range) =
   fun r ->
     fun f ->
+      let uu___ =
+        let uu___1 = r.FStarC_Range_Type.def_range in
+        let uu___2 = FStarC_Filepath.basename f in
+        {
+          FStarC_Range_Type.file_name = uu___2;
+          FStarC_Range_Type.start_pos = (uu___1.FStarC_Range_Type.start_pos);
+          FStarC_Range_Type.end_pos = (uu___1.FStarC_Range_Type.end_pos)
+        } in
       {
-        FStarC_Range_Type.def_range =
-          (let uu___ = r.FStarC_Range_Type.def_range in
-           {
-             FStarC_Range_Type.file_name = f;
-             FStarC_Range_Type.start_pos =
-               (uu___.FStarC_Range_Type.start_pos);
-             FStarC_Range_Type.end_pos = (uu___.FStarC_Range_Type.end_pos)
-           });
+        FStarC_Range_Type.def_range = uu___;
         FStarC_Range_Type.use_range = (r.FStarC_Range_Type.use_range)
       }
 let (string_of_rng : FStarC_Range_Type.rng -> Prims.string) =
   fun r ->
-    let uu___ =
-      FStarC_Range_Type.string_of_file_name r.FStarC_Range_Type.file_name in
-    let uu___1 = string_of_pos r.FStarC_Range_Type.start_pos in
-    let uu___2 = string_of_pos r.FStarC_Range_Type.end_pos in
-    FStarC_Util.format3 "%s(%s-%s)" uu___ uu___1 uu___2
+    let uu___ = string_of_pos r.FStarC_Range_Type.start_pos in
+    let uu___1 = string_of_pos r.FStarC_Range_Type.end_pos in
+    FStarC_Util.format3 "%s(%s-%s)" r.FStarC_Range_Type.file_name uu___
+      uu___1
 let (string_of_def_range : FStarC_Range_Type.range -> Prims.string) =
   fun r -> string_of_rng r.FStarC_Range_Type.def_range
 let (string_of_use_range : FStarC_Range_Type.range -> Prims.string) =
@@ -235,3 +233,23 @@ let (pretty_range : FStarC_Range_Type.range FStarC_Class_PP.pretty) =
       (fun r ->
          let uu___ = string_of_range r in FStarC_Pprint.doc_of_string uu___)
   }
+let (refind_rng : FStarC_Range_Type.rng -> FStarC_Range_Type.rng) =
+  fun r ->
+    let uu___ =
+      let uu___1 = FStarC_Options_Ext.enabled "fstar:no_absolute_paths" in
+      if uu___1
+      then r.FStarC_Range_Type.file_name
+      else FStarC_Find.refind_file r.FStarC_Range_Type.file_name in
+    {
+      FStarC_Range_Type.file_name = uu___;
+      FStarC_Range_Type.start_pos = (r.FStarC_Range_Type.start_pos);
+      FStarC_Range_Type.end_pos = (r.FStarC_Range_Type.end_pos)
+    }
+let (refind_range : FStarC_Range_Type.range -> FStarC_Range_Type.range) =
+  fun r ->
+    let uu___ = refind_rng r.FStarC_Range_Type.def_range in
+    let uu___1 = refind_rng r.FStarC_Range_Type.use_range in
+    {
+      FStarC_Range_Type.def_range = uu___;
+      FStarC_Range_Type.use_range = uu___1
+    }

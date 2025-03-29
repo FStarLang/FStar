@@ -22,7 +22,6 @@ module FStar.Printf
 
 open FStar.Char
 open FStar.String
-module I = FStar.Integers
 
 noeq
 type extension =

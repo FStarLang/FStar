@@ -115,9 +115,10 @@ let (errors_smt_detail :
                        let uu___2 = FStarC_TypeChecker_Env.get_range env in
                        (e, msg1, uu___2, ctx)
                      else
-                       (let r' =
-                          let uu___3 = FStarC_Range_Type.use_range r in
-                          FStarC_Range_Type.set_def_range r uu___3 in
+                       (let r1 = FStarC_Range_Ops.refind_range r in
+                        let r' =
+                          let uu___3 = FStarC_Range_Type.use_range r1 in
+                          FStarC_Range_Type.set_def_range r1 uu___3 in
                         let uu___3 =
                           let uu___4 = FStarC_Range_Ops.file_of_range r' in
                           let uu___5 =
@@ -131,23 +132,23 @@ let (errors_smt_detail :
                               let uu___5 =
                                 let uu___6 =
                                   let uu___7 =
-                                    FStarC_Range_Ops.string_of_use_range r in
+                                    FStarC_Range_Ops.string_of_use_range r1 in
                                   Prims.strcat "Also see: " uu___7 in
                                 FStarC_Pprint.doc_of_string uu___6 in
                               let uu___6 =
                                 let uu___7 =
                                   let uu___8 =
                                     let uu___9 =
-                                      FStarC_Range_Type.use_range r in
+                                      FStarC_Range_Type.use_range r1 in
                                     let uu___10 =
-                                      FStarC_Range_Type.def_range r in
+                                      FStarC_Range_Type.def_range r1 in
                                     uu___9 <> uu___10 in
                                   if uu___8
                                   then
                                     let uu___9 =
                                       let uu___10 =
                                         FStarC_Range_Ops.string_of_def_range
-                                          r in
+                                          r1 in
                                       Prims.strcat
                                         "Other related locations: " uu___10 in
                                     FStarC_Pprint.doc_of_string uu___9
@@ -157,7 +158,7 @@ let (errors_smt_detail :
                             FStar_List_Tot_Base.append msg1 uu___4 in
                           let uu___4 = FStarC_TypeChecker_Env.get_range env in
                           (e, msg2, uu___4, ctx)
-                        else (e, msg1, r, ctx)) in
+                        else (e, msg1, r1, ctx)) in
                    (match uu___1 with
                     | (e1, msg1, r1, ctx1) -> (e1, msg1, r1, ctx1))) errs in
         errs1
@@ -199,8 +200,8 @@ let (log_issue_text :
             log_issue env r uu___1
 let (err_msg_type_strings :
   FStarC_TypeChecker_Env.env ->
-    FStarC_Syntax_Syntax.term ->
-      FStarC_Syntax_Syntax.term -> (Prims.string * Prims.string))
+    FStarC_Syntax_Syntax.typ ->
+      FStarC_Syntax_Syntax.typ -> (Prims.string * Prims.string))
   =
   fun env ->
     fun t1 ->
@@ -217,7 +218,7 @@ let (err_msg_comp_strings :
       fun c2 ->
         print_discrepancy (FStarC_TypeChecker_Normalize.comp_to_string env)
           c1 c2
-let (exhaustiveness_check : FStarC_Pprint.document Prims.list) =
+let (exhaustiveness_check : FStarC_Errors_Msg.error_message) =
   let uu___ = FStarC_Errors_Msg.text "Patterns are incomplete" in [uu___]
 let (subtyping_failed :
   FStarC_TypeChecker_Env.env ->
@@ -269,11 +270,11 @@ let unexpected_signature_for_monad :
             (Obj.magic FStarC_Errors_Msg.is_error_message_string)
             (Obj.magic uu___)
 let expected_a_term_of_type_t_got_a_function :
-  'uuuuu .
+  'a .
     FStarC_TypeChecker_Env.env ->
       FStarC_Range_Type.range ->
         Prims.string ->
-          FStarC_Syntax_Syntax.typ -> FStarC_Syntax_Syntax.term -> 'uuuuu
+          FStarC_Syntax_Syntax.typ -> FStarC_Syntax_Syntax.term -> 'a
   =
   fun env ->
     fun rng ->
@@ -358,7 +359,7 @@ let (basic_type_error :
   FStarC_TypeChecker_Env.env ->
     FStarC_Range_Type.range ->
       FStarC_Syntax_Syntax.term FStar_Pervasives_Native.option ->
-        FStarC_Syntax_Syntax.term -> FStarC_Syntax_Syntax.term -> unit)
+        FStarC_Syntax_Syntax.typ -> FStarC_Syntax_Syntax.typ -> unit)
   =
   fun env ->
     fun rng ->
@@ -419,7 +420,7 @@ let raise_basic_type_error :
     FStarC_TypeChecker_Env.env ->
       FStarC_Range_Type.range ->
         FStarC_Syntax_Syntax.term FStar_Pervasives_Native.option ->
-          FStarC_Syntax_Syntax.term -> FStarC_Syntax_Syntax.term -> 'a
+          FStarC_Syntax_Syntax.typ -> FStarC_Syntax_Syntax.typ -> 'a
   =
   fun env ->
     fun rng ->
@@ -479,11 +480,10 @@ let raise_basic_type_error :
 let (occurs_check : (FStarC_Errors_Codes.error_code * Prims.string)) =
   (FStarC_Errors_Codes.Fatal_PossibleInfiniteTyp,
     "Possibly infinite typ (occurs check failed)")
-let constructor_fails_the_positivity_check :
-  'uuuuu .
-    'uuuuu ->
-      FStarC_Syntax_Syntax.term ->
-        FStarC_Ident.lid -> (FStarC_Errors_Codes.error_code * Prims.string)
+let (constructor_fails_the_positivity_check :
+  FStarC_TypeChecker_Env.env ->
+    FStarC_Syntax_Syntax.term ->
+      FStarC_Ident.lid -> (FStarC_Errors_Codes.error_code * Prims.string))
   =
   fun env ->
     fun d ->
@@ -548,8 +548,8 @@ let expected_function_typ :
 let (expected_poly_typ :
   FStarC_TypeChecker_Env.env ->
     FStarC_Syntax_Syntax.term ->
-      FStarC_Syntax_Syntax.term ->
-        FStarC_Syntax_Syntax.term ->
+      FStarC_Syntax_Syntax.typ ->
+        FStarC_Syntax_Syntax.typ ->
           (FStarC_Errors_Codes.error_code * Prims.string))
   =
   fun env ->
@@ -598,12 +598,11 @@ let (name_and_result :
             ct.FStarC_Syntax_Syntax.effect_name in
         (uu___, (ct.FStarC_Syntax_Syntax.result_typ))
 let computed_computation_type_does_not_match_annotation :
-  'uuuuu 'a .
+  'a .
     FStarC_TypeChecker_Env.env ->
       FStarC_Range_Type.range ->
-        'uuuuu ->
-          FStarC_Syntax_Syntax.comp' FStarC_Syntax_Syntax.syntax ->
-            FStarC_Syntax_Syntax.comp' FStarC_Syntax_Syntax.syntax -> 'a
+        FStarC_Syntax_Syntax.term ->
+          FStarC_Syntax_Syntax.comp -> FStarC_Syntax_Syntax.comp -> 'a
   =
   fun env ->
     fun r ->
@@ -656,10 +655,10 @@ let computed_computation_type_does_not_match_annotation :
                        (Obj.magic FStarC_Errors_Msg.is_error_message_list_doc)
                        (Obj.magic uu___2))
 let computed_computation_type_does_not_match_annotation_eq :
-  'uuuuu 'a .
+  'a .
     FStarC_TypeChecker_Env.env ->
       FStarC_Range_Type.range ->
-        'uuuuu ->
+        FStarC_Syntax_Syntax.term ->
           FStarC_Syntax_Syntax.comp -> FStarC_Syntax_Syntax.comp -> 'a
   =
   fun env ->
@@ -763,21 +762,21 @@ let __expected_eff_expression :
               (Obj.magic FStarC_Errors_Msg.is_error_message_list_doc)
               (Obj.magic uu___)
 let expected_pure_expression :
-  'uuuuu .
+  'a .
     FStarC_Range_Type.range ->
       FStarC_Syntax_Syntax.term ->
         FStarC_Syntax_Syntax.comp ->
-          Prims.string FStar_Pervasives_Native.option -> 'uuuuu
+          Prims.string FStar_Pervasives_Native.option -> 'a
   =
   fun rng ->
     fun e ->
       fun c -> fun reason -> __expected_eff_expression "pure" rng e c reason
 let expected_ghost_expression :
-  'uuuuu .
+  'a .
     FStarC_Range_Type.range ->
       FStarC_Syntax_Syntax.term ->
         FStarC_Syntax_Syntax.comp ->
-          Prims.string FStar_Pervasives_Native.option -> 'uuuuu
+          Prims.string FStar_Pervasives_Native.option -> 'a
   =
   fun rng ->
     fun e ->

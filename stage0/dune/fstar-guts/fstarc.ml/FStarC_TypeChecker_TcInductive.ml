@@ -2963,6 +2963,12 @@ let (mk_discriminator_and_indexed_projectors :
                                       [FStarC_Syntax_Syntax.Logic;
                                       FStarC_Syntax_Syntax.Assumption]
                                     else [])) uu___2 in
+                               let attrs1 =
+                                 let uu___2 =
+                                   FStarC_Syntax_Syntax.fvar
+                                     FStarC_Parser_Const.discriminator_attr
+                                     FStar_Pervasives_Native.None in
+                                 uu___2 :: attrs in
                                let binders =
                                  FStarC_List.op_At imp_binders
                                    [unrefined_arg_binder] in
@@ -2996,7 +3002,7 @@ let (mk_discriminator_and_indexed_projectors :
                                    FStarC_Syntax_Syntax.sigquals = quals;
                                    FStarC_Syntax_Syntax.sigmeta =
                                      FStarC_Syntax_Syntax.default_sigmeta;
-                                   FStarC_Syntax_Syntax.sigattrs = attrs;
+                                   FStarC_Syntax_Syntax.sigattrs = attrs1;
                                    FStarC_Syntax_Syntax.sigopens_and_abbrevs
                                      = [];
                                    FStarC_Syntax_Syntax.sigopts =
@@ -3163,7 +3169,7 @@ let (mk_discriminator_and_indexed_projectors :
                                       FStarC_Syntax_Syntax.sigquals = quals;
                                       FStarC_Syntax_Syntax.sigmeta =
                                         FStarC_Syntax_Syntax.default_sigmeta;
-                                      FStarC_Syntax_Syntax.sigattrs = attrs;
+                                      FStarC_Syntax_Syntax.sigattrs = attrs1;
                                       FStarC_Syntax_Syntax.sigopens_and_abbrevs
                                         = [];
                                       FStarC_Syntax_Syntax.sigopts =
@@ -3282,6 +3288,12 @@ let (mk_discriminator_and_indexed_projectors :
                                                 FStarC_Syntax_Syntax.Assumption
                                                 :: q
                                               else q in
+                                            let attrs1 =
+                                              let uu___7 =
+                                                FStarC_Syntax_Syntax.fvar
+                                                  FStarC_Parser_Const.projector_attr
+                                                  FStar_Pervasives_Native.None in
+                                              uu___7 :: attrs in
                                             let quals1 =
                                               let iquals1 =
                                                 FStarC_List.filter
@@ -3300,13 +3312,13 @@ let (mk_discriminator_and_indexed_projectors :
                                                     (lid,
                                                       (x.FStarC_Syntax_Syntax.ppname)))
                                                 :: iquals1) in
-                                            let attrs1 =
+                                            let attrs2 =
                                               FStarC_List.op_At
                                                 (if only_decl
                                                  then []
                                                  else
                                                    [FStarC_Syntax_Util.attr_substitute])
-                                                attrs in
+                                                attrs1 in
                                             let decl =
                                               let uu___7 =
                                                 FStarC_Ident.range_of_lid
@@ -3330,7 +3342,7 @@ let (mk_discriminator_and_indexed_projectors :
                                                   =
                                                   FStarC_Syntax_Syntax.default_sigmeta;
                                                 FStarC_Syntax_Syntax.sigattrs
-                                                  = attrs1;
+                                                  = attrs2;
                                                 FStarC_Syntax_Syntax.sigopens_and_abbrevs
                                                   = [];
                                                 FStarC_Syntax_Syntax.sigopts
@@ -3585,7 +3597,7 @@ let (mk_discriminator_and_indexed_projectors :
                                                       =
                                                       FStarC_Syntax_Syntax.default_sigmeta;
                                                     FStarC_Syntax_Syntax.sigattrs
-                                                      = attrs1;
+                                                      = attrs2;
                                                     FStarC_Syntax_Syntax.sigopens_and_abbrevs
                                                       = [];
                                                     FStarC_Syntax_Syntax.sigopts

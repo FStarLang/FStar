@@ -138,6 +138,10 @@ let is_gcd_for_euclid a b q d =
   add_sub_l a (q * b);
   is_gcd_plus b (a - q * b) q d
 
+let lemma_div_mod' (u : int) (v : nonzero)
+  : squash (u - (u / v) * v = u % v)
+  = lemma_div_mod u v
+
 val egcd (a b u1 u2 u3 v1 v2 v3:int) : Pure (int & int & int)
   (requires v3 >= 0 /\
             u1 * a + u2 * b = u3 /\
@@ -165,7 +169,7 @@ let rec egcd a b u1 u2 u3 v1 v2 v3 =
       (u1 * a + u2 * b) - q * (v1 * a + v2 * b);
       == { }
       u3 - q * v3;
-      == { lemma_div_mod u3 v3 }
+      == { lemma_div_mod' u3 v3 }
       u3 % v3;
     };
     let u1, v1 = v1, u1 - q * v1 in

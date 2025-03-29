@@ -1,17 +1,15 @@
 open Prims
 type using_facts_from_setting =
   (Prims.string Prims.list * Prims.bool) Prims.list
-type decl_name_set = Prims.bool FStarC_Util.psmap
-let (empty_decl_names : Prims.bool FStarC_Util.psmap) =
-  FStarC_Util.psmap_empty ()
+type decl_name_set = Prims.bool FStarC_PSMap.t
+let (empty_decl_names : Prims.bool FStarC_PSMap.t) = FStarC_PSMap.empty ()
 let (decl_names_contains : Prims.string -> decl_name_set -> Prims.bool) =
   fun x ->
     fun s ->
-      let uu___ = FStarC_Util.psmap_try_find s x in
+      let uu___ = FStarC_PSMap.try_find s x in
       FStar_Pervasives_Native.uu___is_Some uu___
-let (add_name :
-  Prims.string -> decl_name_set -> Prims.bool FStarC_Util.psmap) =
-  fun x -> fun s -> FStarC_Util.psmap_add s x true
+let (add_name : Prims.string -> decl_name_set -> Prims.bool FStarC_PSMap.t) =
+  fun x -> fun s -> FStarC_PSMap.add s x true
 type decls_at_level =
   {
   pruning_state: FStarC_SMTEncoding_Pruning.pruning_state ;
@@ -19,7 +17,7 @@ type decls_at_level =
   all_decls_at_level_rev: FStarC_SMTEncoding_Term.decl Prims.list Prims.list ;
   given_some_decls: Prims.bool ;
   to_flush_rev: FStarC_SMTEncoding_Term.decl Prims.list Prims.list ;
-  named_assumptions: FStarC_SMTEncoding_Term.assumption FStarC_Util.psmap ;
+  named_assumptions: FStarC_SMTEncoding_Term.assumption FStarC_PSMap.t ;
   pruning_roots:
     FStarC_SMTEncoding_Term.decl Prims.list FStar_Pervasives_Native.option }
 let (__proj__Mkdecls_at_level__item__pruning_state :
@@ -58,7 +56,7 @@ let (__proj__Mkdecls_at_level__item__to_flush_rev :
         given_some_decls; to_flush_rev; named_assumptions; pruning_roots;_}
         -> to_flush_rev
 let (__proj__Mkdecls_at_level__item__named_assumptions :
-  decls_at_level -> FStarC_SMTEncoding_Term.assumption FStarC_Util.psmap) =
+  decls_at_level -> FStarC_SMTEncoding_Term.assumption FStarC_PSMap.t) =
   fun projectee ->
     match projectee with
     | { pruning_state; given_decl_names; all_decls_at_level_rev;
@@ -74,7 +72,7 @@ let (__proj__Mkdecls_at_level__item__pruning_roots :
         given_some_decls; to_flush_rev; named_assumptions; pruning_roots;_}
         -> pruning_roots
 let (init_given_decls_at_level : decls_at_level) =
-  let uu___ = FStarC_Util.psmap_empty () in
+  let uu___ = FStarC_PSMap.empty () in
   {
     pruning_state = FStarC_SMTEncoding_Pruning.init;
     given_decl_names = empty_decl_names;
@@ -234,7 +232,7 @@ let (pop : solver_state -> solver_state) =
           s1))
 let (filter_using_facts_from :
   using_facts_from_setting FStar_Pervasives_Native.option ->
-    FStarC_SMTEncoding_Term.assumption FStarC_Util.psmap ->
+    FStarC_SMTEncoding_Term.assumption FStarC_PSMap.t ->
       decl_name_set ->
         (Prims.string -> Prims.bool) ->
           FStarC_SMTEncoding_Term.decl Prims.list ->
@@ -266,13 +264,13 @@ let (filter_using_facts_from :
                               | uu___2 -> false)
                            a.FStarC_SMTEncoding_Term.assumption_fact_ids) in
                 let already_given_map =
-                  FStarC_Util.smap_create (Prims.of_int (1000)) in
+                  FStarC_SMap.create (Prims.of_int (1000)) in
                 let add_assumption a =
-                  FStarC_Util.smap_add already_given_map
+                  FStarC_SMap.add already_given_map
                     a.FStarC_SMTEncoding_Term.assumption_name true in
                 let already_given a =
                   (let uu___ =
-                     FStarC_Util.smap_try_find already_given_map
+                     FStarC_SMap.try_find already_given_map
                        a.FStarC_SMTEncoding_Term.assumption_name in
                    FStar_Pervasives_Native.uu___is_Some uu___) ||
                     (already_given_decl
@@ -285,26 +283,44 @@ let (filter_using_facts_from :
                           (let uu___1 = already_given a in
                            Prims.op_Negation uu___1) in
                       if uu___ then (add_assumption a; [d]) else []
-                  | FStarC_SMTEncoding_Term.RetainAssumptions names ->
-                      let assumptions =
-                        FStarC_List.collect
-                          (fun name ->
-                             let uu___ =
-                               FStarC_Util.psmap_try_find named_assumptions
-                                 name in
-                             match uu___ with
-                             | FStar_Pervasives_Native.None -> []
-                             | FStar_Pervasives_Native.Some a ->
-                                 let uu___1 = already_given a in
-                                 if uu___1
-                                 then []
-                                 else
-                                   (add_assumption a;
-                                    [FStarC_SMTEncoding_Term.Assume a]))
-                          names in
-                      assumptions
                   | uu___ -> [d] in
-                let ds1 = FStarC_List.collect map_decl ds in ds1
+                let ds' = FStarC_List.collect map_decl ds in
+                ((let uu___1 =
+                    let uu___2 =
+                      FStarC_Options_Ext.get "debug_using_facts_from" in
+                    uu___2 <> "" in
+                  if uu___1
+                  then
+                    let orig_n = FStarC_List.length ds in
+                    let new_n = FStarC_List.length ds' in
+                    (if orig_n <> new_n
+                     then
+                       let uu___2 =
+                         FStarC_Class_Show.show
+                           FStarC_Class_Show.showable_nat orig_n in
+                       let uu___3 =
+                         let uu___4 =
+                           FStarC_List.map
+                             FStarC_SMTEncoding_Term.decl_to_string_short ds in
+                         FStarC_Class_Show.show
+                           (FStarC_Class_Show.show_list
+                              FStarC_Class_Show.showable_string) uu___4 in
+                       let uu___4 =
+                         FStarC_Class_Show.show
+                           FStarC_Class_Show.showable_nat new_n in
+                       let uu___5 =
+                         let uu___6 =
+                           FStarC_List.map
+                             FStarC_SMTEncoding_Term.decl_to_string_short ds' in
+                         FStarC_Class_Show.show
+                           (FStarC_Class_Show.show_list
+                              FStarC_Class_Show.showable_string) uu___6 in
+                       FStarC_Util.print4
+                         "Pruned using facts from:\n\tOriginal (%s): [%s];\n\tPruned (%s): [%s]\n"
+                         uu___2 uu___3 uu___4 uu___5
+                     else ())
+                  else ());
+                 ds')
 let (already_given_decl : solver_state -> Prims.string -> Prims.bool) =
   fun s ->
     fun aname ->
@@ -319,9 +335,9 @@ let rec (flatten :
         FStarC_List.collect flatten ds
     | uu___ -> [d]
 let (add_named_assumptions :
-  FStarC_SMTEncoding_Term.assumption FStarC_Util.psmap ->
+  FStarC_SMTEncoding_Term.assumption FStarC_PSMap.t ->
     FStarC_SMTEncoding_Term.decl Prims.list ->
-      FStarC_SMTEncoding_Term.assumption FStarC_Util.psmap)
+      FStarC_SMTEncoding_Term.assumption FStarC_PSMap.t)
   =
   fun named_assumptions ->
     fun ds ->
@@ -330,7 +346,7 @@ let (add_named_assumptions :
            fun d ->
              match d with
              | FStarC_SMTEncoding_Term.Assume a ->
-                 FStarC_Util.psmap_add named_assumptions1
+                 FStarC_PSMap.add named_assumptions1
                    a.FStarC_SMTEncoding_Term.assumption_name a
              | uu___ -> named_assumptions1) named_assumptions ds
 let (add_retain_assumptions :

@@ -12,8 +12,8 @@ let (__proj__Mkvops_t__item__next_minor :
   fun projectee ->
     match projectee with | { next_major; next_minor;_} -> next_minor
 let (vops : vops_t) =
-  let major = FStarC_Util.mk_ref Prims.int_zero in
-  let minor = FStarC_Util.mk_ref Prims.int_zero in
+  let major = FStarC_Effect.mk_ref Prims.int_zero in
+  let minor = FStarC_Effect.mk_ref Prims.int_zero in
   let next_major uu___ =
     FStarC_Effect.op_Colon_Equals minor Prims.int_zero;
     (let uu___2 = FStarC_Util.incr major; FStarC_Effect.op_Bang major in
@@ -68,7 +68,7 @@ let (version_to_string : FStarC_Syntax_Syntax.version -> Prims.string) =
     FStarC_Util.format2 "%s.%s" uu___ uu___1
 let (state : uf FStarC_Effect.ref) =
   let uu___ = let uu___1 = vops.next_major () in empty uu___1 in
-  FStarC_Util.mk_ref uu___
+  FStarC_Effect.mk_ref uu___
 type tx =
   | TX of uf 
 let (uu___is_TX : tx -> Prims.bool) = fun projectee -> true

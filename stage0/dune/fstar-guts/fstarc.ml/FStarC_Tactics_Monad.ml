@@ -8,7 +8,7 @@ let (dbg_RegisterGoal : Prims.bool FStarC_Effect.ref) =
 let (dbg_TacFail : Prims.bool FStarC_Effect.ref) =
   FStarC_Debug.get_toggle "TacFail"
 let (goal_ctr : Prims.int FStarC_Effect.ref) =
-  FStarC_Util.mk_ref Prims.int_zero
+  FStarC_Effect.mk_ref Prims.int_zero
 let (get_goal_ctr : unit -> Prims.int) =
   fun uu___ -> FStarC_Effect.op_Bang goal_ctr
 let (incr_goal_ctr : unit -> Prims.int) =
@@ -408,12 +408,34 @@ let rec iter_tac : 'a . ('a -> unit tac) -> 'a Prims.list -> unit tac =
                (fun uu___1 ->
                   let uu___1 = Obj.magic uu___1 in Obj.magic (iter_tac f tl))
                  uu___1)
+let rec fold_right :
+  'a 'b . ('a -> 'b -> 'b tac) -> 'a Prims.list -> 'b -> 'b tac =
+  fun uu___2 ->
+    fun uu___1 ->
+      fun uu___ ->
+        (fun f ->
+           fun l ->
+             fun x ->
+               match l with
+               | [] ->
+                   Obj.magic
+                     (FStarC_Class_Monad.return monad_tac () (Obj.magic x))
+               | hd::tl ->
+                   let uu___ = fold_right f tl x in
+                   Obj.magic
+                     (FStarC_Class_Monad.op_let_Bang monad_tac () ()
+                        (Obj.magic uu___)
+                        (fun uu___1 ->
+                           (fun r ->
+                              let r = Obj.magic r in Obj.magic (f hd r))
+                             uu___1))) uu___2 uu___1 uu___
 exception Bad of Prims.string 
 let (uu___is_Bad : Prims.exn -> Prims.bool) =
   fun projectee -> match projectee with | Bad uu___ -> true | uu___ -> false
 let (__proj__Bad__item__uu___ : Prims.exn -> Prims.string) =
   fun projectee -> match projectee with | Bad uu___ -> uu___
-let (nwarn : Prims.int FStarC_Effect.ref) = FStarC_Util.mk_ref Prims.int_zero
+let (nwarn : Prims.int FStarC_Effect.ref) =
+  FStarC_Effect.mk_ref Prims.int_zero
 let (check_valid_goal : FStarC_Tactics_Types.goal -> unit) =
   fun g ->
     let uu___ = FStarC_Options.defensive () in

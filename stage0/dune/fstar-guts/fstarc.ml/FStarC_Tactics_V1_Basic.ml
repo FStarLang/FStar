@@ -2768,7 +2768,7 @@ let (intro_rec :
                              fail1 "intro_rec: goal is not an arrow (%s)"
                                uu___4)))) uu___1))) uu___
 let (norm :
-  FStar_Pervasives.norm_step Prims.list -> unit FStarC_Tactics_Monad.tac) =
+  FStarC_NormSteps.norm_step Prims.list -> unit FStarC_Tactics_Monad.tac) =
   fun s ->
     FStarC_Class_Monad.op_let_Bang FStarC_Tactics_Monad.monad_tac () ()
       (Obj.magic FStarC_Tactics_Monad.cur_goal)
@@ -2805,7 +2805,7 @@ let (norm :
                       uu___1))) uu___)
 let (norm_term_env :
   env ->
-    FStar_Pervasives.norm_step Prims.list ->
+    FStarC_NormSteps.norm_step Prims.list ->
       FStarC_Syntax_Syntax.term ->
         FStarC_Syntax_Syntax.term FStarC_Tactics_Monad.tac)
   =
@@ -3175,7 +3175,7 @@ let (t_exact :
                                               let uu___8 =
                                                 let uu___9 =
                                                   norm
-                                                    [FStar_Pervasives.Delta] in
+                                                    [FStarC_NormSteps.Delta] in
                                                 FStarC_Class_Monad.op_let_Bang
                                                   FStarC_Tactics_Monad.monad_tac
                                                   () () uu___9
@@ -4996,7 +4996,7 @@ let (binder_retype :
                                  uu___4)))) uu___1) in
     FStarC_Tactics_Monad.wrap_err "binder_retype" uu___
 let (norm_binder_type :
-  FStar_Pervasives.norm_step Prims.list ->
+  FStarC_NormSteps.norm_step Prims.list ->
     FStarC_Syntax_Syntax.binder -> unit FStarC_Tactics_Monad.tac)
   =
   fun s ->
@@ -8860,7 +8860,7 @@ let (lget :
                 (fun ps ->
                    let ps = Obj.magic ps in
                    let uu___1 =
-                     FStarC_Util.psmap_try_find
+                     FStarC_PSMap.try_find
                        ps.FStarC_Tactics_Types.local_state k in
                    match uu___1 with
                    | FStar_Pervasives_Native.None ->
@@ -8884,8 +8884,8 @@ let (lset :
                   let ps = Obj.magic ps in
                   let ps1 =
                     let uu___1 =
-                      FStarC_Util.psmap_add
-                        ps.FStarC_Tactics_Types.local_state k t in
+                      FStarC_PSMap.add ps.FStarC_Tactics_Types.local_state k
+                        t in
                     {
                       FStarC_Tactics_Types.main_context =
                         (ps.FStarC_Tactics_Types.main_context);

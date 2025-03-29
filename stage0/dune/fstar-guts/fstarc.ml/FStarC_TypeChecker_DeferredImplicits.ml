@@ -109,18 +109,14 @@ let (find_user_tac_for_uvar :
                            FStar_Pervasives_Native.Some (s :: tl1))
                   | uu___4 -> FStar_Pervasives_Native.None)
              | uu___2 -> FStar_Pervasives_Native.None) in
-      let candidate_names candidates =
-        let uu___ =
-          let uu___1 =
-            FStarC_List.collect FStarC_Syntax_Util.lids_of_sigelt candidates in
-          FStarC_List.map FStarC_Ident.string_of_lid uu___1 in
-        FStarC_String.concat ", " uu___ in
       match u.FStarC_Syntax_Syntax.ctx_uvar_meta with
       | FStar_Pervasives_Native.Some (FStarC_Syntax_Syntax.Ctx_uvar_meta_attr
           a) ->
           let hooks =
-            FStarC_TypeChecker_Env.lookup_attr env
-              FStarC_Parser_Const.resolve_implicits_attr_string in
+            let uu___ =
+              FStarC_Ident.string_of_lid
+                FStarC_Parser_Const.resolve_implicits_attr_string in
+            FStarC_TypeChecker_Env.lookup_attr env uu___ in
           let candidates =
             FStarC_List.filter
               (fun hook ->
@@ -206,17 +202,35 @@ let (find_user_tac_for_uvar :
            | [] -> FStar_Pervasives_Native.None
            | c::[] -> FStar_Pervasives_Native.Some c
            | uu___ ->
+               let candidate_names candidates3 =
+                 FStarC_List.collect FStarC_Syntax_Util.lids_of_sigelt
+                   candidates3 in
                let candidates3 = candidate_names candidates2 in
                let attr =
                  FStarC_Class_Show.show FStarC_Syntax_Print.showable_term a in
                ((let uu___2 =
-                   FStarC_Util.format2
-                     "Multiple resolve_implicits hooks are eligible for attribute %s; \nplease resolve the ambiguity by using the `override_resolve_implicits_handler` attribute to choose among these candidates {%s}"
-                     attr candidates3 in
-                 FStarC_Errors.log_issue FStarC_Class_HasRange.hasRange_range
-                   u.FStarC_Syntax_Syntax.ctx_uvar_range
+                   let uu___3 =
+                     let uu___4 =
+                       FStarC_Errors_Msg.text
+                         "Multiple resolve_implicits hooks are eligible for attribute" in
+                     let uu___5 = FStarC_Pprint.doc_of_string attr in
+                     FStarC_Pprint.op_Hat_Slash_Hat uu___4 uu___5 in
+                   let uu___4 =
+                     let uu___5 =
+                       let uu___6 =
+                         FStarC_Errors_Msg.text
+                           "Please resolve the ambiguity by using the `override_resolve_implicits_handler` attribute to choose among these candidates" in
+                       let uu___7 =
+                         FStarC_Class_PP.pp
+                           (FStarC_Class_PP.pp_list
+                              FStarC_Ident.pretty_lident) candidates3 in
+                       FStarC_Pprint.op_Hat_Slash_Hat uu___6 uu___7 in
+                     [uu___5] in
+                   uu___3 :: uu___4 in
+                 FStarC_Errors.raise_error
+                   FStarC_Syntax_Syntax.hasRange_ctx_uvar u
                    FStarC_Errors_Codes.Warning_AmbiguousResolveImplicitsHook
-                   () (Obj.magic FStarC_Errors_Msg.is_error_message_string)
+                   () (Obj.magic FStarC_Errors_Msg.is_error_message_list_doc)
                    (Obj.magic uu___2));
                 FStar_Pervasives_Native.None))
       | uu___ -> FStar_Pervasives_Native.None
@@ -728,7 +742,7 @@ let (solve_deferred_to_tactic_goals :
          match uu___1 with
          | (more, imps) ->
              let bucketize is =
-               let map = FStarC_Util.smap_create (Prims.of_int (17)) in
+               let map = FStarC_SMap.create (Prims.of_int (17)) in
                FStarC_List.iter
                  (fun uu___3 ->
                     match uu___3 with
@@ -739,15 +753,15 @@ let (solve_deferred_to_tactic_goals :
                              failwith "Unexpected: tactic without a name"
                          | FStar_Pervasives_Native.Some l ->
                              let lstr = FStarC_Ident.string_of_lid l in
-                             let uu___5 = FStarC_Util.smap_try_find map lstr in
+                             let uu___5 = FStarC_SMap.try_find map lstr in
                              (match uu___5 with
                               | FStar_Pervasives_Native.None ->
-                                  FStarC_Util.smap_add map lstr ([i], s)
+                                  FStarC_SMap.add map lstr ([i], s)
                               | FStar_Pervasives_Native.Some (is1, s1) ->
-                                  (FStarC_Util.smap_remove map lstr;
-                                   FStarC_Util.smap_add map lstr
-                                     ((i :: is1), s1))))) is;
-               FStarC_Util.smap_fold map
+                                  (FStarC_SMap.remove map lstr;
+                                   FStarC_SMap.add map lstr ((i :: is1), s1)))))
+                 is;
+               FStarC_SMap.fold map
                  (fun uu___3 -> fun is1 -> fun out -> is1 :: out) [] in
              let buckets = bucketize (FStarC_List.op_At eqs more) in
              (FStarC_List.iter

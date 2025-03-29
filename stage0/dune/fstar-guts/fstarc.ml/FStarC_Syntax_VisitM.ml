@@ -2180,7 +2180,7 @@ let op_Less_Less_Bar :
 let tie_bu : 'm . 'm FStarC_Class_Monad.monad -> 'm lvm -> 'm lvm =
   fun md ->
     fun d ->
-      let r = let uu___ = novfs md in FStarC_Util.mk_ref uu___ in
+      let r = let uu___ = novfs md in FStarC_Effect.mk_ref uu___ in
       (let uu___1 =
          let uu___2 =
            let uu___3 = FStarC_Effect.op_Bang r in uu___3.lvm_monad in
