@@ -45,8 +45,10 @@ cp version.txt "$PREFIX"
 STRIP=strip
 
 if windows; then
-  STRIP="$(pwd)/mk/winwrap.sh $STRIP"
+  strip_prefix="$(cygpath -m "$PREFIX")"
+else
+  strip_prefix="$PREFIX"
 fi
 
-$STRIP "$PREFIX"/bin/* || true
-$STRIP "$PREFIX"/lib/fstar/z3-*/bin/* || true
+$STRIP "$strip_prefix"/bin/* || true
+$STRIP "$strip_prefix"/lib/fstar/z3-*/bin/* || true
