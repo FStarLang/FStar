@@ -79,7 +79,7 @@ val buffer_view (src:Type0) (rrel rel:B.srel src) (dest:Type u#b) : Type u#b
 
 let buffer (dest:Type u#a) : Type u#(max a 1) = (src:Type0 & rrel:B.srel src & rel:B.srel src & buffer_view src rrel rel dest)
 
-let as_buffer_t (#dest:Type) (b:buffer dest) = B.mbuffer (Mkdtuple4?._1 b) (Mkdtuple4?._2 b) (Mkdtuple4?._3 b)
+let as_buffer_t (#dest:Type) (b:buffer dest) = B.mbuffer b._1 b._2 b._3
 
 /// `mk_buffer_view`: The main constructor
 val mk_buffer_view (#src:Type0) (#rrel #rel:B.srel src) (#dest:Type)
@@ -100,14 +100,14 @@ val as_buffer_mk_buffer_view (#src:Type0) (#rrel #rel:B.srel src) (#dest:Type)
                                length b % View?.n v == 0
                               })
     : Lemma (let bv = mk_buffer_view b v in
-             Mkdtuple4?._1 bv == src  /\
-	     Mkdtuple4?._2 bv == rrel /\
-	     Mkdtuple4?._3 bv == rel  /\
+             bv._1 == src  /\
+	           bv._2 == rrel /\
+	           bv._3 == rel  /\
              as_buffer bv == b)
             [SMTPat (as_buffer (mk_buffer_view b v))]
 
 /// `get_view`: Projecting the view functions itself
-val get_view  (#b : Type) (v:buffer b) : view (Mkdtuple4?._1 v) b
+val get_view  (#b : Type) (v:buffer b) : view v._1 b
 
 /// A lemma-relating projector to constructor
 val get_view_mk_buffer_view (#src:Type0) (#rrel #rel:B.srel src) (#dest:Type)
@@ -116,7 +116,7 @@ val get_view_mk_buffer_view (#src:Type0) (#rrel #rel:B.srel src) (#dest:Type)
                                length b % View?.n v == 0
                              })
     : Lemma (let bv = mk_buffer_view b v in
-             Mkdtuple4?._1 bv == src /\
+             bv._1 == src /\
              get_view bv == v)
             [SMTPat (get_view (mk_buffer_view b v))]
 

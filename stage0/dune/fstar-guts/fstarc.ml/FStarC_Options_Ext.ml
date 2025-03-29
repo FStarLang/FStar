@@ -2,12 +2,21 @@ open Prims
 type key = Prims.string
 type value = Prims.string
 type ext_state =
-  | E of Prims.string FStarC_Util.psmap 
+  | E of Prims.string FStarC_PSMap.t 
 let (uu___is_E : ext_state -> Prims.bool) = fun projectee -> true
-let (__proj__E__item__map : ext_state -> Prims.string FStarC_Util.psmap) =
+let (__proj__E__item__map : ext_state -> Prims.string FStarC_PSMap.t) =
   fun projectee -> match projectee with | E map -> map
-let (init : ext_state) = let uu___ = FStarC_Util.psmap_empty () in E uu___
-let (cur_state : ext_state FStarC_Effect.ref) = FStarC_Util.mk_ref init
+let (defaults : (Prims.string * Prims.string) Prims.list) =
+  [("context_pruning", "true")]
+let (init : ext_state) =
+  let uu___ =
+    let uu___1 = FStarC_PSMap.empty () in
+    FStarC_List.fold_right
+      (fun uu___2 ->
+         fun m -> match uu___2 with | (k, v) -> FStarC_PSMap.add m k v)
+      defaults uu___1 in
+  E uu___
+let (cur_state : ext_state FStarC_Effect.ref) = FStarC_Effect.alloc init
 let (set : key -> value -> unit) =
   fun k ->
     fun v ->
@@ -16,7 +25,7 @@ let (set : key -> value -> unit) =
           let uu___2 =
             let uu___3 = FStarC_Effect.op_Bang cur_state in
             __proj__E__item__map uu___3 in
-          FStarC_Util.psmap_add uu___2 k v in
+          FStarC_PSMap.add uu___2 k v in
         E uu___1 in
       FStarC_Effect.op_Colon_Equals cur_state uu___
 let (get : key -> value) =
@@ -26,7 +35,7 @@ let (get : key -> value) =
         let uu___1 =
           let uu___2 = FStarC_Effect.op_Bang cur_state in
           __proj__E__item__map uu___2 in
-        FStarC_Util.psmap_try_find uu___1 k in
+        FStarC_PSMap.try_find uu___1 k in
       match uu___ with
       | FStar_Pervasives_Native.None -> ""
       | FStar_Pervasives_Native.Some v -> v in
@@ -53,14 +62,14 @@ let (getns : Prims.string -> (key * value) Prims.list) =
     let uu___ =
       let uu___1 = FStarC_Effect.op_Bang cur_state in
       __proj__E__item__map uu___1 in
-    FStarC_Util.psmap_fold uu___ f []
+    FStarC_PSMap.fold uu___ f []
 let (all : unit -> (key * value) Prims.list) =
   fun uu___ ->
     let f k v acc = (k, v) :: acc in
     let uu___1 =
       let uu___2 = FStarC_Effect.op_Bang cur_state in
       __proj__E__item__map uu___2 in
-    FStarC_Util.psmap_fold uu___1 f []
+    FStarC_PSMap.fold uu___1 f []
 let (save : unit -> ext_state) = fun uu___ -> FStarC_Effect.op_Bang cur_state
 let (restore : ext_state -> unit) =
   fun s -> FStarC_Effect.op_Colon_Equals cur_state s

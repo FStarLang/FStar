@@ -32,6 +32,7 @@ open FStarC.Class.Setlike
 
 open FStarC.Class.Show
 open FStarC.Class.PP
+open FStarC.Class.HasRange
 module Listlike = FStarC.Class.Listlike
 
 module S = FStarC.Syntax.Syntax
@@ -539,10 +540,15 @@ and add_sigelts force env ses =
 // Lookup up various kinds of identifiers                 //
 ////////////////////////////////////////////////////////////
 let try_lookup_bv env (bv:bv) =
-  BU.find_map env.gamma (function
-    | Binding_var id when bv_eq id bv ->
-      Some (id.sort, (range_of_id id.ppname))
-    | _ -> None)
+  let r =
+    BU.find_map env.gamma (function
+      | Binding_var id when bv_eq id bv ->
+        Some (id.sort, pos id.ppname)
+      | _ -> None)
+  in
+  if Debug.extreme () then
+    BU.print2 "lookup_bv %s -> %s\n" (show bv) (show r);
+  r
 
 let lookup_type_of_let us_opt se lid =
     let inst_tscheme ts =
@@ -633,7 +639,7 @@ let try_lookup_lid_aux us_opt env lid =
       end |> BU.map_option (fun (us_t, rng) -> (us_t, rng))
   in
     match BU.bind_opt (lookup_qname env lid) mapper with
-      | Some ((us, t), r) -> Some ((us, {t with pos=range_of_lid lid}), r)
+      | Some ((us, t), r) -> Some ((us, setPos (pos lid) t), r)
       | None -> None
 
 ////////////////////////////////////////////////////////////////

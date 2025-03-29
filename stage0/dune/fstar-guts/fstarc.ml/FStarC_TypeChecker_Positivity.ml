@@ -1571,7 +1571,7 @@ let (name_strictly_positive_in_type :
         let uu___ = name_as_fv_in_t t bv in
         match uu___ with
         | (t1, fv_lid) ->
-            let uu___1 = FStarC_Util.mk_ref [] in
+            let uu___1 = FStarC_Effect.mk_ref [] in
             ty_strictly_positive_in_type env [fv_lid] t1 uu___1
 let (name_unused_in_type :
   FStarC_TypeChecker_Env.env ->
@@ -1706,7 +1706,7 @@ let (check_strict_positivity :
   fun env ->
     fun mutuals ->
       fun ty ->
-        let unfolded_inductives = FStarC_Util.mk_ref [] in
+        let unfolded_inductives = FStarC_Effect.mk_ref [] in
         let uu___ = open_sig_inductive_typ env ty in
         match uu___ with
         | (env1, (ty_lid, ty_us, ty_params)) ->
@@ -1734,6 +1734,6 @@ let (check_exn_strict_positivity :
   FStarC_TypeChecker_Env.env -> FStarC_Ident.lident -> Prims.bool) =
   fun env ->
     fun data_ctor_lid ->
-      let unfolded_inductives = FStarC_Util.mk_ref [] in
+      let unfolded_inductives = FStarC_Effect.mk_ref [] in
       ty_strictly_positive_in_datacon_decl env [FStarC_Parser_Const.exn_lid]
         data_ctor_lid [] [] unfolded_inductives

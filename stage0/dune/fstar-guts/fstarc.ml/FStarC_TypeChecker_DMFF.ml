@@ -175,7 +175,7 @@ let (gen_wps_for_free :
              (let unknown = FStarC_Syntax_Syntax.tun in
               let mk x =
                 FStarC_Syntax_Syntax.mk x FStarC_Range_Type.dummyRange in
-              let sigelts = FStarC_Util.mk_ref [] in
+              let sigelts = FStarC_Effect.mk_ref [] in
               let register env2 lident def =
                 let uu___2 = mk_toplevel_definition env2 lident def in
                 match uu___2 with
@@ -1059,7 +1059,7 @@ let (gen_wps_for_free :
                             let projector =
                               let uu___4 =
                                 let uu___5 =
-                                  FStarC_Parser_Const.mk_tuple_data_lid
+                                  FStarC_Parser_Const_Tuples.mk_tuple_data_lid
                                     (FStarC_List.length args)
                                     FStarC_Range_Type.dummyRange in
                                 FStarC_TypeChecker_Env.lookup_projector env2
@@ -3737,7 +3737,7 @@ and (trans_F_ :
                         ||
                         (let uu___5 =
                            let uu___6 =
-                             FStarC_Parser_Const.mk_tuple_data_lid
+                             FStarC_Parser_Const_Tuples.mk_tuple_data_lid
                                (FStarC_List.length wp_args)
                                FStarC_Range_Type.dummyRange in
                            FStarC_Syntax_Util.is_constructor wp_head uu___6 in
@@ -4183,7 +4183,7 @@ let (cps_and_elaborate :
                                   recheck_debug
                                     "turned into the effect signature" env2
                                     effect_signature in
-                                let sigelts = FStarC_Util.mk_ref [] in
+                                let sigelts = FStarC_Effect.mk_ref [] in
                                 let mk_lid name =
                                   FStarC_Syntax_Util.dm4f_lid ed name in
                                 let elaborate_and_star dmff_env1

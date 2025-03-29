@@ -1173,7 +1173,7 @@ let (arith_to_bv_tac : unit -> (unit, unit) FStar_Tactics_Effect.tac_repr) =
       (fun uu___1 ->
          let uu___2 =
            FStarC_Tactics_V2_Builtins.norm
-             [Fstarcompiler.FStar_Pervasives.delta_only ["FStar.BV.bvult"]] in
+             [Fstarcompiler.FStarC_NormSteps.delta_only ["FStar.BV.bvult"]] in
          FStar_Tactics_Effect.tac_bind
            (FStar_Sealed.seal
               (Obj.magic
@@ -1319,9 +1319,9 @@ let (arith_to_bv_tac : unit -> (unit, unit) FStar_Tactics_Effect.tac_repr) =
                                                   (Obj.magic
                                                      (FStar_Range.mk_range
                                                         "Prims.fst"
-                                                        (Prims.of_int (611))
+                                                        (Prims.of_int (613))
                                                         (Prims.of_int (19))
-                                                        (Prims.of_int (611))
+                                                        (Prims.of_int (613))
                                                         (Prims.of_int (31)))))
                                                (Obj.magic uu___8)
                                                (fun uu___9 ->
@@ -1483,7 +1483,7 @@ let (bv_tac : unit -> (unit, unit) FStar_Tactics_Effect.tac_repr) =
                                                           (fun uu___11 ->
                                                              let uu___12 =
                                                                FStarC_Tactics_V2_Builtins.norm
-                                                                 [Fstarcompiler.FStar_Pervasives.delta] in
+                                                                 [Fstarcompiler.FStarC_NormSteps.delta] in
                                                              Obj.magic
                                                                (FStar_Tactics_Effect.tac_bind
                                                                   (FStar_Sealed.seal

@@ -27,7 +27,6 @@ open FStar.Stubs.VConfig
 include FStar.Tactics.Names
 
 module L = FStar.List.Tot.Base
-module V = FStar.Tactics.Visit
 private let (@) = L.op_At
 
 let name_of_bv (bv : bv) : Tac string =

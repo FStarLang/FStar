@@ -333,8 +333,10 @@ let (ps_to_json :
             then
               let uu___4 =
                 let uu___5 =
-                  FStarC_Range_Ops.json_of_def_range
-                    ps.FStarC_Tactics_Types.entry_range in
+                  let uu___6 =
+                    FStarC_Range_Ops.refind_range
+                      ps.FStarC_Tactics_Types.entry_range in
+                  FStarC_Range_Ops.json_of_def_range uu___6 in
                 ("location", uu___5) in
               [uu___4]
             else [] in

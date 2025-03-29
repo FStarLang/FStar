@@ -53,6 +53,8 @@ new val t : eqtype
     machine integer *)
 val v (x:t) : Tot (uint_t n)
 
+let fits (x:int) : prop = UInt.fits x n
+
 (** A coercion that injects a bounded mathematical integers into a
     machine integer *)
 val uint_to_t (x:uint_t n) : Pure t

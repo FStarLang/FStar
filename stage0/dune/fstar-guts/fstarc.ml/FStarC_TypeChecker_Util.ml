@@ -5432,8 +5432,11 @@ let (find_coercion :
                                   (op_let_Question ()) uu___7
                                     (fun computed_head_lid ->
                                        let candidates =
+                                         let uu___8 =
+                                           FStarC_Ident.string_of_lid
+                                             FStarC_Parser_Const.coercion_lid in
                                          FStarC_TypeChecker_Env.lookup_attr
-                                           env "FStar.Pervasives.coercion" in
+                                           env uu___8 in
                                        first_opt
                                          (fun se ->
                                             let uu___8 =
@@ -6590,12 +6593,21 @@ let (instantiate_one_binder :
                             FStarC_Syntax_Util.is_fvar
                               FStarC_Parser_Const.tcresolve_lid tau
                         | uu___7 -> false in
+                      let name =
+                        let uu___7 =
+                          let uu___8 =
+                            FStarC_Class_Show.show
+                              FStarC_Syntax_Print.showable_bv x in
+                          Prims.strcat uu___8 "'" in
+                        Prims.strcat "'" uu___7 in
                       if is_typeclass
                       then "Typeclass constraint argument"
                       else
                         if FStar_Pervasives_Native.uu___is_Some ctx_uvar_meta
-                        then "Instantiating meta argument"
-                        else "Instantiating implicit argument" in
+                        then Prims.strcat "Instantiating meta argument" name
+                        else
+                          Prims.strcat "Instantiating implicit argument "
+                            name in
                     FStarC_TypeChecker_Env.new_implicit_var_aux msg r env t
                       FStarC_Syntax_Syntax.Strict ctx_uvar_meta
                       should_unrefine in
@@ -6817,35 +6829,6 @@ let (maybe_instantiate :
                                          g g' in
                                      (((tm, aq) :: args), bs3, subst2,
                                        uu___10)))
-                       | (uu___3,
-                          { FStarC_Syntax_Syntax.binder_bv = uu___4;
-                            FStarC_Syntax_Syntax.binder_qual = uu___5;
-                            FStarC_Syntax_Syntax.binder_positivity = uu___6;
-                            FStarC_Syntax_Syntax.binder_attrs =
-                              uu___7::uu___8;_}::rest)
-                           ->
-                           let b = FStarC_List.hd bs2 in
-                           let b1 = FStarC_Syntax_Subst.subst_binder subst b in
-                           let uu___9 =
-                             instantiate_one_binder env
-                               e.FStarC_Syntax_Syntax.pos b1 in
-                           (match uu___9 with
-                            | (tm, ty, aq, g) ->
-                                let subst1 =
-                                  (FStarC_Syntax_Syntax.NT
-                                     ((b1.FStarC_Syntax_Syntax.binder_bv),
-                                       tm))
-                                  :: subst in
-                                let uu___10 =
-                                  aux subst1 (decr_inst inst_n) rest in
-                                (match uu___10 with
-                                 | (args, bs3, subst2, g') ->
-                                     let uu___11 =
-                                       FStarC_Class_Monoid.op_Plus_Plus
-                                         FStarC_TypeChecker_Common.monoid_guard_t
-                                         g g' in
-                                     (((tm, aq) :: args), bs3, subst2,
-                                       uu___11)))
                        | (uu___3, bs3) ->
                            ([], bs3, subst,
                              (FStarC_Class_Monoid.mzero
@@ -8692,7 +8675,7 @@ let make_record_fields_in_order :
                                               missing))
                                         | FStar_Pervasives_Native.Some a1 ->
                                             (rest, (a1 :: as_rev), missing))
-                                   | uu___5 ->
+                                   | x1::x2::uu___5 ->
                                        let uu___6 =
                                          let uu___7 =
                                            FStarC_Ident.string_of_id
@@ -8704,8 +8687,8 @@ let make_record_fields_in_order :
                                            "Field %s of record type %s is given multiple assignments"
                                            uu___7 uu___8 in
                                        FStarC_Errors.raise_error
-                                         FStarC_Class_HasRange.hasRange_range
-                                         rng
+                                         FStarC_Ident.hasrange_lident
+                                         (FStar_Pervasives_Native.fst x1)
                                          FStarC_Errors_Codes.Fatal_MissingFieldInRecord
                                          ()
                                          (Obj.magic

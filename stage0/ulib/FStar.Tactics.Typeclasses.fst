@@ -20,6 +20,7 @@ module R = FStar.Reflection.V2
 open FStar.Stubs.Tactics.Common
 open FStar.Tactics.Effect
 open FStar.Stubs.Tactics.V2.Builtins
+open FStar.Stubs.Tactics.Types
 open FStar.Tactics.V2.SyntaxHelpers
 open FStar.Tactics.V2.Derived
 open FStar.Tactics.V2.SyntaxCoercions
@@ -33,28 +34,23 @@ let debug (f : unit -> Tac string) : Tac unit =
 module L = FStar.List.Tot.Base
 let (@) = L.op_At
 
-(* The attribute that marks classes *)
-irreducible
-let tcclass : unit = ()
-
-(* The attribute that marks instances *)
-irreducible
-let tcinstance : unit = ()
-
-(* Functional dependencies of a class. *)
-irreducible
-let fundeps (_ : list int) : unit = ()
-
-(* The attribute that marks class fields
-   to signal that no method should be generated for them *)
-irreducible
-let no_method : unit = ()
+irreducible let tcinstance : unit = ()
+irreducible let tcclass : unit = ()
+irreducible let tcmethod : unit = ()
+irreducible let fundeps (_ : list int) : unit = ()
+irreducible let noinst : unit = ()
+irreducible let no_method : unit = ()
 
 noeq
 type st_t = {
-  seen : list term;
-  glb : list (sigelt & fv);
-  fuel : int;
+  seen           : list term;
+  glb            : list (sigelt & fv);
+  fuel           : int;
+  rng            : range;
+  (* ^ The range of the original goal, for error reporting.
+  Probably exposing ps.entry_range would be better. *)
+  warned_oof     : tref bool;
+  (* ^ Whether we have warned about out of fuel. *)
 }
 
 noeq
@@ -101,13 +97,26 @@ let rec res_typ (t:term) : Tac term =
 (* Would be good to use different exceptions for each reason
 the search stops, but it takes some work to properly account
 for them and report proper errors. *)
-exception NoInst
+exception Next
+
+let skip #a (s : string)
+  : TAC a (fun ps post -> post (FStar.Stubs.Tactics.Result.Failed Next ps))
+  = if debugging () then
+      print ("skip: " ^ s);
+    raise Next
+
+let orskip #a (s : string) (k : unit -> Tac a) : Tac a =
+  try k () with
+  | e -> skip s
 
 private
 let rec first (f : 'a -> Tac 'b) (l : list 'a) : Tac 'b =
     match l with
-    | [] -> raise NoInst
-    | x::xs -> (fun () -> f x) `or_else` (fun () -> first f xs)
+    | [] -> raise Next
+    | x::xs ->
+      try f x with
+      | Next -> first f xs
+      | e -> raise e
 
 private
 let rec maybe_intros () : Tac unit =
@@ -168,33 +177,45 @@ let extract_fundeps (se : sigelt) : Tac (option (list int)) =
     in
     aux attrs
 
-let trywith (st:st_t) (g:tc_goal) (t typ : term) (k : st_t -> Tac unit) : Tac unit =
+let trywith (st:st_t) (g:tc_goal) (t typ : term) (attrs : list term) (k : st_t -> Tac unit) : Tac unit =
     // print ("head_fv = " ^ fv_to_string g.head_fv);
     // print ("fundeps = " ^ Util.string_of_option (Util.string_of_list (fun i -> string_of_int i)) fundeps);
-    let unresolved_args = g.args_and_uvars |> Util.mapi (fun i (_, b) -> if b then [i <: int] else []) |> List.Tot.flatten in
     // print ("unresolved_args = " ^ Util.string_of_list (fun i -> string_of_int i) unresolved_args);
 
     match head_of (res_typ typ) with
     | None ->
       debug (fun () -> "no head for typ of this? " ^ term_to_string t ^ "    typ=" ^ term_to_string typ);
-      raise NoInst
+      raise Next
     | Some fv' ->
       if not (fv_eq fv' g.head_fv) then
-        raise NoInst; // class mismatch, would be better to not even get here
+        raise Next; // class mismatch, would be better to not even get here
+      let unresolved_args = g.args_and_uvars |> Util.mapi (fun i (_, b) -> if b then [i <: int] else []) |> List.Tot.flatten in
       debug (fun () -> "Trying to apply hypothesis/instance: " ^ term_to_string t);
       (fun () ->
-        if Cons? unresolved_args && None? g.fundeps then
-          fail "Will not continue as there are unresolved args (and no fundeps)"
-        else if Cons? unresolved_args && Some? g.fundeps then (
+        if L.existsb (Reflection.TermEq.Simple.term_eq (`noinst)) attrs then (
+          (* If this instance has the noinst attribute, force using apply_noinst.
+            This means we will not let this instance instantiate the goal, regardless
+            of any fundeps on the class. *)
+          orskip "apply_noinst" (fun () -> apply_noinst t)
+        ) else if Cons? unresolved_args then (
+          (* If some args have uvars, we check to see if they are
+            functional dependencies of the class. If so, we apply
+            the instance and instantiate the uvars. Otherwise skip. *)
+          if None? g.fundeps then
+            skip "Will not continue as there are unresolved args (and no fundeps)";
+
           let Some fundeps = g.fundeps in
           debug (fun () -> "checking fundeps");
-          let all_good = List.Tot.for_all (fun i -> List.Tot.mem i fundeps) unresolved_args in
-          if all_good then apply t else fail "fundeps"
+          if unresolved_args |> L.existsb (fun i -> not (List.Tot.mem i fundeps)) then
+            skip "fundeps: a non-fundep is unresolved";
+
+          (* Gor for it, with the full apply. *)
+          orskip "apply" (fun () -> apply t)
         ) else (
-          apply_noinst t
+          orskip "apply_noinst" (fun () -> apply_noinst t)
         )
       ) `seq` (fun () ->
-        debug (fun () -> dump "next"; "apply seems to have worked");
+        debug (fun () -> dump "next"; "apply of " ^ term_to_string t ^ " seems to have worked");
         let st = { st with fuel = st.fuel - 1 } in
         k st)
 
@@ -202,17 +223,17 @@ let local (st:st_t) (g:tc_goal) (k : st_t -> Tac unit) () : Tac unit =
     debug (fun () -> "local, goal = " ^ term_to_string g.g);
     let bs = vars_of_env (cur_env ()) in
     first (fun (b:binding) ->
-              trywith st g (pack (Tv_Var b)) b.sort k)
+              trywith st g (pack (Tv_Var b)) b.sort [] k)
           bs
 
 let global (st:st_t) (g:tc_goal) (k : st_t -> Tac unit) () : Tac unit =
     debug (fun () -> "global, goal = " ^ term_to_string g.g);
     first (fun (se, fv) ->
-              let typ = tc (cur_env()) (pack (Tv_FVar fv)) in // FIXME: a bit slow.. but at least it's a simple fvar
-              trywith st g (pack (Tv_FVar fv)) typ k)
+              let typ = orskip "tc" (fun () -> tc (cur_env()) (pack (Tv_FVar fv))) in // FIXME: a bit slow.. but at least it's a simple fvar
+              let attrs = sigelt_attrs se in
+              trywith st g (pack (Tv_FVar fv)) typ attrs k)
           st.glb
 
-exception Next
 let try_trivial (st:st_t) (g:tc_goal) (k : st_t -> Tac unit) () : Tac unit =
   match g.g with
   | Tv_FVar fv ->
@@ -221,18 +242,24 @@ let try_trivial (st:st_t) (g:tc_goal) (k : st_t -> Tac unit) () : Tac unit =
     else raise Next
   | _ -> raise Next
 
-let ( <|> ) (t1 t2  : unit -> Tac 'a) : unit -> Tac 'a =
-  fun () ->
-    try t1 () with _ -> t2 ()
-
 (*
   tcresolve': the main typeclass instantiation function.
 
   It mostly creates a tc_goal record and calls the functions above.
 *)
 let rec tcresolve' (st:st_t) : Tac unit =
-    if st.fuel <= 0 then
-      raise NoInst;
+    if st.fuel <= 0 then (
+      let r = st.warned_oof in
+      if not (read r) then (
+        let open FStar.Stubs.Errors.Msg in
+        log_issues [FStar.Issue.mk_issue_doc "Warning" [
+          text "Warning: fuel exhausted during typeclass resolution.";
+          text "This usually indicates a loop in your instances.";
+        ] (Some st.rng) None []];
+        write r true
+      );
+      raise Next
+    );
     debug (fun () -> "fuel = " ^ string_of_int st.fuel);
 
     maybe_intros();
@@ -241,13 +268,13 @@ let rec tcresolve' (st:st_t) : Tac unit =
     (* Try to detect loops *)
     if L.existsb (Reflection.TermEq.Simple.term_eq g) st.seen then (
       debug (fun () -> "loop");
-      raise NoInst
+      raise Next
     );
 
     match hua g with
     | None ->
       debug (fun () -> "Goal does not look like a typeclass");
-      raise NoInst
+      raise Next
 
     | Some (head_fv, us, args) ->
       (* ^ Maybe should check is this really is a class too? *)
@@ -260,9 +287,13 @@ let rec tcresolve' (st:st_t) : Tac unit =
       let args_and_uvars = args |> Util.map (fun (a, q) -> (a, q), Cons? (free_uvars a )) in
       let st = { st with seen = g :: st.seen } in
       let g = { g; head_fv; c_se; fundeps; args_and_uvars } in
-      (try_trivial st g tcresolve' <|>
-       local st g tcresolve' <|>
-       global st g tcresolve') ()
+      try try_trivial st g tcresolve' () with
+        | Next -> (
+          try local st g tcresolve' () with
+          | Next -> global st g tcresolve' ()
+          | e -> raise e
+        )
+        | e -> raise e
 
 [@@plugin]
 let tcresolve () : Tac unit =
@@ -287,12 +318,14 @@ let tcresolve () : Tac unit =
       seen = [];
       glb = glb;
       fuel = 16;
+      rng = range_of_term (cur_goal ());
+      warned_oof = alloc false;
     } in
     try
       tcresolve' st0;
       debug (fun () -> "Solved to:\n\t" ^ term_to_string w)
     with
-    | NoInst ->
+    | Next ->
       let open FStar.Pprint in
       fail_doc [
         prefix 2 1 (text "Could not solve typeclass constraint")
@@ -382,13 +415,17 @@ let mk_class (nm:string) : Tac decls =
       let proj_name = cur_module () @ [base ^ s] in
       let proj = pack (Tv_FVar (pack_fv proj_name)) in
 
-      let proj_lb =
+      let proj_se =
         match lookup_typ (top_env ()) proj_name with
         | None -> fail "mk_class: proj not found?"
-        | Some se ->
-          match inspect_sigelt se with
-          | Sg_Let {lbs} -> lookup_lb lbs proj_name
-          | _ -> fail "mk_class: proj not Sg_Let?"
+        | Some se -> se
+      in
+      let proj_attrs = sigelt_attrs proj_se in
+      let proj_lb =
+        match inspect_sigelt proj_se with
+        | Sg_Let {lbs} ->
+          lookup_lb lbs proj_name
+        | _ -> fail "mk_class: proj not Sg_Let?"
       in
       debug (fun () -> "proj_ty = " ^ term_to_string proj_lb.lb_typ);
 
@@ -420,7 +457,7 @@ let mk_class (nm:string) : Tac decls =
       let lb = { lb_fv=sfv; lb_us=proj_lb.lb_us; lb_typ=ty; lb_def=def } in
       let se = pack_sigelt (Sg_Let {isrec=false; lbs=[lb]}) in
       let se = set_sigelt_quals to_propagate se in
-      let se = set_sigelt_attrs b.attrs se in
+      let se = set_sigelt_attrs ((`tcmethod) :: proj_attrs @ b.attrs) se in
       //debug (fun () -> "trying to return : " ^ term_to_string (quote se));
       se
     )

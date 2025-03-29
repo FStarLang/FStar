@@ -2216,7 +2216,8 @@ and (encode_term :
               let uu___3 =
                 FStarC_Syntax_Unionfind.uvar_id
                   uv.FStarC_Syntax_Syntax.ctx_uvar_head in
-              FStarC_SMTEncoding_Util.mk_Term_uvar uu___3 in
+              FStarC_SMTEncoding_Term.mk_Term_uvar uu___3
+                FStarC_Range_Type.dummyRange in
             let uu___3 =
               let uu___4 = FStarC_Syntax_Util.ctx_uvar_typ uv in
               encode_term_pred FStar_Pervasives_Native.None uu___4 env ttm in

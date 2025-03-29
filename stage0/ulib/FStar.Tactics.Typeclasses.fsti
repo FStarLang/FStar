@@ -18,11 +18,14 @@ module FStar.Tactics.Typeclasses
 open FStar.Tactics.Effect
 open FStar.Stubs.Reflection.Types (* for `decls` *)
 
-(* The attribute that marks classes *)
-val tcclass : unit
-
-(* The attribute that marks instances *)
+(* The attribute that marks instances. This is the main attribute
+needed as it is used to find instances for typeclass resolution. *)
 val tcinstance : unit
+
+(* These attribute that mark classes and methods, which can be useful
+to control their normalization or to generate code. *)
+val tcclass  : unit
+val tcmethod : unit
 
 (* Functional dependencies of a class. It takes an int list
 representing the arguments of the class (starting from 0, both explicit
@@ -31,6 +34,11 @@ an instance, if the fundeps are unresolved (i.e. contain uvars) but the
 other arguments do not, we will apply the instance and instantiate the
 fundeps. *)
 val fundeps : list int -> unit
+
+(* Use this attribute in an instance to prevent it from instantiating
+the goal, **even if** there are functional dependencies for the class
+that seem to match. *)
+val noinst : unit
 
 (* The attribute that marks class fields
    to signal that no method should be generated for them *)

@@ -13,7 +13,7 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 *)
-
+[@@"no_prelude"]
 module Prims
 
 /// This module is implicitly opened in the scope of all other modules.
@@ -46,6 +46,14 @@ val cps:attribute
     not be unfolded during tactics. *)
 assume
 val tac_opaque : attribute
+
+(** This attribute is added to all projectors. *)
+assume
+val projector : attribute
+
+(** This attribute is added to all discriminators. *)
+assume
+val discriminator : attribute
 
 (** This attribute can be used on type binders to make unifier attempt
     to unrefine them before instantiating them. This is useful in polymorphic
@@ -597,12 +605,6 @@ val op_disEquality: #[@@@unrefine]a: eqtype -> a -> a -> Tot bool
 assume new
 type exn : Type0 
 
-(** [array]: TODO: should be removed.
-    See FStar.Seq, LowStar.Buffer, etc. *)
-assume new
-type array : Type -> Type0 
-
-
 (** String concatenation and its abbreviation as [^].  TODO, both
     should be removed in favor of what is present in FStar.String *)
 assume
@@ -729,4 +731,4 @@ val string_of_int: int -> Tot string
 (** THIS IS MEANT TO BE KEPT IN SYNC WITH FStar.CheckedFiles.fs
     Incrementing this forces all .checked files to be invalidated *)
 irreducible
-let __cache_version_number__ = 72
+let __cache_version_number__ = 73

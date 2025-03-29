@@ -38,7 +38,7 @@ let (__proj__TIMEOUT__item___0 :
   = fun projectee -> match projectee with | TIMEOUT _0 -> _0
 let (uu___is_KILLED : z3status -> Prims.bool) =
   fun projectee -> match projectee with | KILLED -> true | uu___ -> false
-type z3statistics = Prims.string FStarC_Util.smap
+type z3statistics = Prims.string FStarC_SMap.t
 type z3result =
   {
   z3result_status: z3status ;
@@ -111,9 +111,9 @@ let (__proj__Mkquery_log__item__close_log : query_log -> unit -> unit) =
     | { get_module_name; set_module_name; write_to_log; append_to_log;
         close_log;_} -> close_log
 let (_already_warned_solver_mismatch : Prims.bool FStarC_Effect.ref) =
-  FStarC_Util.mk_ref false
+  FStarC_Effect.mk_ref false
 let (_already_warned_version_mismatch : Prims.bool FStarC_Effect.ref) =
-  FStarC_Util.mk_ref false
+  FStarC_Effect.mk_ref false
 type label = Prims.string
 let (status_tag : z3status -> Prims.string) =
   fun uu___ ->
@@ -154,11 +154,11 @@ let (status_string_and_errors :
                  Prims.strcat " because " msg1) in
         (uu___, errs)
 let (query_logging : query_log) =
-  let query_number = FStarC_Util.mk_ref Prims.int_zero in
-  let log_file_opt = FStarC_Util.mk_ref FStar_Pervasives_Native.None in
-  let used_file_names = FStarC_Util.mk_ref [] in
-  let current_module_name = FStarC_Util.mk_ref FStar_Pervasives_Native.None in
-  let current_file_name = FStarC_Util.mk_ref FStar_Pervasives_Native.None in
+  let query_number = FStarC_Effect.mk_ref Prims.int_zero in
+  let log_file_opt = FStarC_Effect.mk_ref FStar_Pervasives_Native.None in
+  let used_file_names = FStarC_Effect.mk_ref [] in
+  let current_module_name = FStarC_Effect.mk_ref FStar_Pervasives_Native.None in
+  let current_file_name = FStarC_Effect.mk_ref FStar_Pervasives_Native.None in
   let set_module_name n =
     FStarC_Effect.op_Colon_Equals current_module_name
       (FStar_Pervasives_Native.Some n) in
@@ -229,7 +229,7 @@ let (z3_cmd_and_args : unit -> (Prims.string * Prims.string Prims.list)) =
   fun uu___ ->
     let ver = FStarC_Options.z3_version () in
     let cmd =
-      let uu___1 = FStarC_Find.locate_z3 ver in
+      let uu___1 = FStarC_Find_Z3.locate_z3 ver in
       match uu___1 with
       | FStar_Pervasives_Native.Some fn -> fn
       | FStar_Pervasives_Native.None ->
@@ -244,7 +244,7 @@ let (z3_cmd_and_args : unit -> (Prims.string * Prims.string Prims.list)) =
                     uu___7 uu___8 in
                 [uu___6] in
               uu___4 :: uu___5 in
-            let uu___4 = FStarC_Find.z3_install_suggestion ver in
+            let uu___4 = FStarC_Find_Z3.z3_install_suggestion ver in
             FStarC_List.op_At uu___3 uu___4 in
           FStarC_Errors.raise_error0
             FStarC_Errors_Codes.Error_Z3InvocationError ()
@@ -328,7 +328,7 @@ let (check_z3version : FStarC_Util.proc -> unit) =
              [uu___5] in
            let uu___5 =
              let uu___6 = FStarC_Options.z3_version () in
-             FStarC_Find.z3_install_suggestion uu___6 in
+             FStarC_Find_Z3.z3_install_suggestion uu___6 in
            FStarC_List.op_At uu___4 uu___5 in
          FStarC_Errors.log_issue0 FStarC_Errors_Codes.Warning_SolverMismatch
            () (Obj.magic FStarC_Errors_Msg.is_error_message_list_doc)
@@ -360,7 +360,7 @@ let (check_z3version : FStarC_Util.proc -> unit) =
                    uu___8 ver_conf ver_found in
                FStarC_Errors_Msg.text uu___7 in
              [uu___6] in
-           let uu___6 = FStarC_Find.z3_install_suggestion ver_conf in
+           let uu___6 = FStarC_Find_Z3.z3_install_suggestion ver_conf in
            FStarC_List.op_At uu___5 uu___6 in
          FStarC_Errors.log_issue0 FStarC_Errors_Codes.Warning_SolverMismatch
            () (Obj.magic FStarC_Errors_Msg.is_error_message_list_doc)
@@ -416,7 +416,7 @@ let (new_z3proc :
       check_z3version proc; proc
 let (new_z3proc_with_id :
   (Prims.string * Prims.string Prims.list) -> FStarC_Util.proc) =
-  let ctr = FStarC_Util.mk_ref (Prims.of_int (-1)) in
+  let ctr = FStarC_Effect.mk_ref (Prims.of_int (-1)) in
   fun cmd_and_args ->
     let p =
       let uu___ =
@@ -454,11 +454,11 @@ let (__proj__Mkbgproc__item__ctxt :
   fun projectee ->
     match projectee with | { ask; refresh; restart; version; ctxt;_} -> ctxt
 let (bg_z3_proc : bgproc FStarC_Effect.ref) =
-  let the_z3proc = FStarC_Util.mk_ref FStar_Pervasives_Native.None in
+  let the_z3proc = FStarC_Effect.mk_ref FStar_Pervasives_Native.None in
   let the_z3proc_params =
-    FStarC_Util.mk_ref (FStar_Pervasives_Native.Some ("", [""])) in
-  let the_z3proc_ask_count = FStarC_Util.mk_ref Prims.int_zero in
-  let the_z3proc_version = FStarC_Util.mk_ref "" in
+    FStarC_Effect.mk_ref (FStar_Pervasives_Native.Some ("", [""])) in
+  let the_z3proc_ask_count = FStarC_Effect.mk_ref Prims.int_zero in
+  let the_z3proc_version = FStarC_Effect.mk_ref "" in
   let make_new_z3_proc cmd_and_args =
     (let uu___1 = FStarC_Options.hint_info () in
      if uu___1
@@ -545,7 +545,7 @@ let (bg_z3_proc : bgproc FStarC_Effect.ref) =
        version = (fun uu___3 -> FStarC_Effect.op_Bang the_z3proc_version);
        ctxt = uu___2
      } in
-   FStarC_Util.mk_ref uu___1)
+   FStarC_Effect.mk_ref uu___1)
 type smt_output_section = Prims.string Prims.list
 type smt_output =
   {
@@ -827,7 +827,7 @@ let (doZ3Exe :
                            | FStar_Pervasives_Native.Some (lbl, msg, r1) ->
                                [(lbl, msg, r1)]) lblnegs1 in
                 let statistics =
-                  let statistics1 = FStarC_Util.smap_create Prims.int_zero in
+                  let statistics1 = FStarC_SMap.create Prims.int_zero in
                   match smt_output1.smt_statistics with
                   | FStar_Pervasives_Native.None -> statistics1
                   | FStar_Pervasives_Native.Some lines1 ->
@@ -849,7 +849,7 @@ let (doZ3Exe :
                                   ((FStarC_String.length ltok) -
                                      Prims.int_one)
                               else ltok in
-                            FStarC_Util.smap_add statistics1 key value
+                            FStarC_SMap.add statistics1 key value
                         | ""::entry::[] ->
                             let tokens = FStarC_Util.split entry " " in
                             let key = FStarC_List.hd tokens in
@@ -863,7 +863,7 @@ let (doZ3Exe :
                                   ((FStarC_String.length ltok) -
                                      Prims.int_one)
                               else ltok in
-                            FStarC_Util.smap_add statistics1 key value
+                            FStarC_SMap.add statistics1 key value
                         | uu___ -> () in
                       (FStarC_List.iter parse_line lines1; statistics1) in
                 let reason_unknown =
@@ -1091,7 +1091,7 @@ let (mk_input :
               "Z3 invocation started by F*\nF* version: %s -- commit hash: %s\nZ3 version (according to F*): %s"
               uu___2 uu___3 ver in
           FStarC_SMTEncoding_Term.Caption uu___1 in
-        uu___ :: theory in
+        uu___ :: FStarC_SMTEncoding_Term.EmptyLine :: theory in
       let options = z3_options ver in
       let options1 =
         let uu___ =
@@ -1174,8 +1174,8 @@ let (cache_hit :
         then
           match qhash with
           | FStar_Pervasives_Native.Some x when qhash = cache ->
-              let stats = FStarC_Util.smap_create Prims.int_zero in
-              (FStarC_Util.smap_add stats "fstar_cache_hit" "1";
+              let stats = FStarC_SMap.create Prims.int_zero in
+              (FStarC_SMap.add stats "fstar_cache_hit" "1";
                (let result =
                   {
                     z3result_status = (UNSAT FStar_Pervasives_Native.None);
@@ -1213,7 +1213,7 @@ let (z3_job :
                          (fun uu___3 ->
                             match () with
                             | () ->
-                                FStarC_Util.record_time_ms
+                                FStarC_Timing.record_ms
                                   (fun uu___4 ->
                                      doZ3Exe log_file r fresh input
                                        label_messages queryid)) ()
@@ -1295,7 +1295,8 @@ let (ask :
                   FStarC_List.op_At theory
                     (FStarC_List.op_At
                        ((FStarC_SMTEncoding_Term.Push Prims.int_zero) :: qry)
-                       [FStarC_SMTEncoding_Term.Pop Prims.int_zero]) in
+                       [FStarC_SMTEncoding_Term.Pop Prims.int_zero;
+                       FStarC_SMTEncoding_Term.EmptyLine]) in
                 let uu___ = mk_input fresh theory1 in
                 match uu___ with
                 | (input, qhash, log_file_name) ->

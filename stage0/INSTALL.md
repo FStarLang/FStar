@@ -44,30 +44,25 @@ Z3 version 4.13.3 - 64 bit
 
 On Linux you can install these two versions with the following command:
 ```bash
-sudo ./bin/get_fstar_z3.sh /usr/local/bin
+sudo .scripts/get_fstar_z3.sh /usr/local/bin
 ```
 
 ## OPAM package ##
 
 If the OCaml package manager (OPAM version 2.0 or later) is present on your platform,
-you can install the latest development version of F\* (`master` branch) and
-required dependencies using the following command:
-
-    $ opam pin add fstar --dev-repo
-
-To instead install the latest released version you can use the following command
-(keeping in mind that you will often get an old version of F\* this way,
-so unless a release happened recently we don't really recommend it):
+you can install the latest released version of F* and required dependencies
+using the following command:
 
     $ opam install fstar
+
+To instead install the latest development version (`master` branch) you can
+use the following command:
+
+    $ opam pin add fstar --dev-repo
 
 Note: To install OCaml and OPAM on your platform please read the
 [Working OCaml setup](#prerequisites-working-ocaml-setup)
 section further below, steps 0 to 3.
-
-Note: On MacOS you will additionally need to install `coreutils`
-via Homebrew or Macports for the OPAM package of F\* to work
-(see [issue #469](https://github.com/FStarLang/FStar/issues/469)).
 
 
 ## Binary package ##
@@ -283,7 +278,7 @@ Then follow step 4 in [Instructions for all OSes](#instructions-for-all-oses) be
   $ opam install --deps-only .
   ```
 
-  **Note:** On some Linux distributions, for example Gentoo, where `opambuild` comes pre-installed, you may need run 
+  **Note:** On some Linux distributions, for example Gentoo, where `opambuild` comes pre-installed, you may need run
   `CHECK_IF_PREINSTALLED=false opam install .` instead to prevent build failures.
 
   **Note:** Some of these opam packages depend on binary packages that you need to install locally
@@ -315,12 +310,12 @@ This does two things:
 
 1. As explained in more detail [below](#bootstrapping-f-in-ocaml), a snapshot of
    the F\* sources extracted to OCaml is checked in the F\* repo and regularly
-   updated, and the command above will simply build an F\* binary out of that snapshot. 
+   updated, and the command above will simply build an F\* binary out of that snapshot.
 
    That snapshot also contains the extracted OCaml code of the various
    OCaml libraries needed for building OCaml code extracted from F\*,
    native tactics, etc., so this step also compiles them.
- 
+
    This step can be isolatedly run with `make dune-fstar`
 
    **Note:** On Windows this generates a *native* F\* binary, that is,
@@ -336,7 +331,7 @@ This does two things:
 2. The command above verifies the F\* standard library, producing
    `.checked` files that cache definitions to speed up subsequent
    usage.
-   
+
    This step can be isolatedly run with `make verify-ulib`
 
 ## Bootstrapping F\* in OCaml

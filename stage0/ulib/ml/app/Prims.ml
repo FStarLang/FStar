@@ -152,22 +152,7 @@ type pattern = unit
 
 type ('Aa,'Auu____1278) decreases = unit
 let returnM : 'Aa . 'Aa -> 'Aa = fun x  -> x
-type lex_t =
-  | LexTop
-  | LexCons of unit * Obj.t * lex_t
-let (uu___is_LexTop : lex_t -> bool) =
-  fun projectee  ->
-    match projectee with | LexTop  -> true | uu____1313 -> false
 
-let (uu___is_LexCons : lex_t -> bool) =
-  fun projectee  ->
-    match projectee with | LexCons (a,_1,_2) -> true | uu____1327 -> false
-
-type 'Aprojectee __proj__LexCons__item__a = Obj.t
-let (__proj__LexCons__item___1 : lex_t -> Obj.t) =
-  fun projectee  -> match projectee with | LexCons (a,_1,_2) -> _1
-let (__proj__LexCons__item___2 : lex_t -> lex_t) =
-  fun projectee  -> match projectee with | LexCons (a,_1,_2) -> _2
 type ('Aa,'Awp) as_requires = 'Awp
 type ('Aa,'Awp,'Ax) as_ensures = unit
 let admit () = failwith "Prims.admit: cannot be executed"

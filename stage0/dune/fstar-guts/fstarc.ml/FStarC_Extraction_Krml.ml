@@ -1682,7 +1682,7 @@ type translate_type_without_decay_t =
   env -> FStarC_Extraction_ML_Syntax.mlty -> typ
 let (ref_translate_type_without_decay :
   translate_type_without_decay_t FStarC_Effect.ref) =
-  FStarC_Util.mk_ref
+  FStarC_Effect.mk_ref
     (fun uu___ ->
        fun uu___1 -> FStarC_Effect.raise NotSupportedByKrmlExtension)
 let (register_pre_translate_type_without_decay :
@@ -1709,7 +1709,7 @@ let (translate_type_without_decay :
       uu___ env1 t
 type translate_type_t = env -> FStarC_Extraction_ML_Syntax.mlty -> typ
 let (ref_translate_type : translate_type_t FStarC_Effect.ref) =
-  FStarC_Util.mk_ref
+  FStarC_Effect.mk_ref
     (fun uu___ ->
        fun uu___1 -> FStarC_Effect.raise NotSupportedByKrmlExtension)
 let (register_pre_translate_type : translate_type_t -> unit) =
@@ -1732,7 +1732,7 @@ let (translate_type : env -> FStarC_Extraction_ML_Syntax.mlty -> typ) =
       let uu___ = FStarC_Effect.op_Bang ref_translate_type in uu___ env1 t
 type translate_expr_t = env -> FStarC_Extraction_ML_Syntax.mlexpr -> expr
 let (ref_translate_expr : translate_expr_t FStarC_Effect.ref) =
-  FStarC_Util.mk_ref
+  FStarC_Effect.mk_ref
     (fun uu___ ->
        fun uu___1 -> FStarC_Effect.raise NotSupportedByKrmlExtension)
 let (register_pre_translate_expr : translate_expr_t -> unit) =
@@ -1758,7 +1758,7 @@ type translate_type_decl_t =
     FStarC_Extraction_ML_Syntax.one_mltydecl ->
       decl FStar_Pervasives_Native.option
 let (ref_translate_type_decl : translate_type_decl_t FStarC_Effect.ref) =
-  FStarC_Util.mk_ref
+  FStarC_Effect.mk_ref
     (fun uu___ ->
        fun uu___1 -> FStarC_Effect.raise NotSupportedByKrmlExtension)
 let (register_pre_translate_type_decl : translate_type_decl_t -> unit) =
@@ -1951,10 +1951,11 @@ let rec (translate_type_without_decay' :
           uu___1 = "FStar.Ghost.erased" -> TAny
       | FStarC_Extraction_ML_Syntax.MLTY_Named ([], (path, type_name)) ->
           TQualified (path, type_name)
-      | FStarC_Extraction_ML_Syntax.MLTY_Named (args, (ns, t1)) when
-          ((ns = ["Prims"]) || (ns = ["FStar"; "Pervasives"; "Native"])) &&
-            (FStarC_Util.starts_with t1 "tuple")
-          ->
+      | FStarC_Extraction_ML_Syntax.MLTY_Named (args, p) when
+          let uu___ =
+            let uu___1 = FStarC_Extraction_ML_Syntax.string_of_mlpath p in
+            FStarC_Parser_Const_Tuples.get_tuple_tycon_arity uu___1 in
+          uu___ = (FStar_Pervasives_Native.Some (FStarC_List.length args)) ->
           let uu___ =
             FStarC_List.map (translate_type_without_decay env1) args in
           TTuple uu___
@@ -3875,7 +3876,7 @@ type translate_let_t =
     FStarC_Extraction_ML_Syntax.mlletflavor ->
       FStarC_Extraction_ML_Syntax.mllb -> decl FStar_Pervasives_Native.option
 let (ref_translate_let : translate_let_t FStarC_Effect.ref) =
-  FStarC_Util.mk_ref translate_let'
+  FStarC_Effect.mk_ref translate_let'
 let (register_pre_translate_let : translate_let_t -> unit) =
   fun f ->
     let before = FStarC_Effect.op_Bang ref_translate_let in
@@ -3913,14 +3914,14 @@ let (translate_decl :
 let (translate_module :
   FStarC_Extraction_ML_UEnv.uenv ->
     (FStarC_Extraction_ML_Syntax.mlpath * (FStarC_Extraction_ML_Syntax.mlsig
-      * FStarC_Extraction_ML_Syntax.mlmodule) FStar_Pervasives_Native.option
-      * FStarC_Extraction_ML_Syntax.mllib) -> file)
+      * FStarC_Extraction_ML_Syntax.mlmodulebody)
+      FStar_Pervasives_Native.option) -> file)
   =
   fun uenv ->
     fun m ->
       let uu___ = m in
       match uu___ with
-      | (module_name, modul, uu___1) ->
+      | (module_name, modul) ->
           let module_name1 =
             FStarC_List.op_At (FStar_Pervasives_Native.fst module_name)
               [FStar_Pervasives_Native.snd module_name] in
@@ -3929,45 +3930,43 @@ let (translate_module :
             | FStar_Pervasives_Native.Some (_signature, decls) ->
                 FStarC_List.collect
                   (translate_decl (empty uenv module_name1)) decls
-            | uu___2 ->
+            | uu___1 ->
                 failwith "Unexpected standalone interface or nested modules" in
           ((FStarC_String.concat "_" module_name1), program1)
 let (translate :
   FStarC_Extraction_ML_UEnv.uenv ->
-    FStarC_Extraction_ML_Syntax.mllib -> file Prims.list)
+    FStarC_Extraction_ML_Syntax.mlmodule Prims.list -> file Prims.list)
   =
   fun ue ->
-    fun uu___ ->
-      match uu___ with
-      | FStarC_Extraction_ML_Syntax.MLLib modules ->
-          FStarC_List.filter_map
-            (fun m ->
-               let m_name =
-                 let uu___1 = m in
-                 match uu___1 with
-                 | (path, uu___2, uu___3) ->
-                     FStarC_Extraction_ML_Syntax.string_of_mlpath path in
-               try
-                 (fun uu___1 ->
-                    match () with
-                    | () ->
-                        ((let uu___3 =
-                            let uu___4 = FStarC_Options.silent () in
-                            Prims.op_Negation uu___4 in
-                          if uu___3
-                          then
-                            FStarC_Util.print1
-                              "Attempting to translate module %s\n" m_name
-                          else ());
-                         (let uu___3 = translate_module ue m in
-                          FStar_Pervasives_Native.Some uu___3))) ()
-               with
-               | uu___1 ->
-                   ((let uu___3 = FStarC_Util.print_exn uu___1 in
-                     FStarC_Util.print2
-                       "Unable to translate module: %s because:\n  %s\n"
-                       m_name uu___3);
-                    FStar_Pervasives_Native.None)) modules
+    fun modules ->
+      FStarC_List.filter_map
+        (fun m ->
+           let m_name =
+             let uu___ = m in
+             match uu___ with
+             | (path, uu___1) ->
+                 FStarC_Extraction_ML_Syntax.string_of_mlpath path in
+           try
+             (fun uu___ ->
+                match () with
+                | () ->
+                    ((let uu___2 =
+                        let uu___3 = FStarC_Options.silent () in
+                        Prims.op_Negation uu___3 in
+                      if uu___2
+                      then
+                        FStarC_Util.print1
+                          "Attempting to translate module %s\n" m_name
+                      else ());
+                     (let uu___2 = translate_module ue m in
+                      FStar_Pervasives_Native.Some uu___2))) ()
+           with
+           | uu___ ->
+               ((let uu___2 = FStarC_Util.print_exn uu___ in
+                 FStarC_Util.print2
+                   "Unable to translate module: %s because:\n  %s\n" m_name
+                   uu___2);
+                FStar_Pervasives_Native.None)) modules
 let (uu___0 : unit) =
   register_post_translate_type_without_decay translate_type_without_decay';
   register_post_translate_type translate_type';

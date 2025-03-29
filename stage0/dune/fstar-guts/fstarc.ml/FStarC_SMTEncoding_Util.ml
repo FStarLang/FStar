@@ -18,8 +18,9 @@ let (mkAssume :
           } in
         FStarC_SMTEncoding_Term.Assume uu___1
 let norng :
-  'uuuuu 'uuuuu1 .
-    ('uuuuu -> FStarC_Range_Type.range -> 'uuuuu1) -> 'uuuuu -> 'uuuuu1
+  'a .
+    ('a -> FStarC_Range_Type.range -> FStarC_SMTEncoding_Term.term) ->
+      'a -> FStarC_SMTEncoding_Term.term
   = fun f -> fun x -> f x FStarC_Range_Type.dummyRange
 let (mkTrue : FStarC_SMTEncoding_Term.term) =
   FStarC_SMTEncoding_Term.mkTrue FStarC_Range_Type.dummyRange
@@ -198,20 +199,22 @@ let (mkCases :
   FStarC_SMTEncoding_Term.term Prims.list -> FStarC_SMTEncoding_Term.term) =
   norng FStarC_SMTEncoding_Term.mkCases
 let norng2 :
-  'uuuuu 'uuuuu1 'uuuuu2 .
-    ('uuuuu -> 'uuuuu1 -> FStarC_Range_Type.range -> 'uuuuu2) ->
-      'uuuuu -> 'uuuuu1 -> 'uuuuu2
+  'a 'b .
+    ('a -> 'b -> FStarC_Range_Type.range -> FStarC_SMTEncoding_Term.term) ->
+      'a -> 'b -> FStarC_SMTEncoding_Term.term
   = fun f -> fun x -> fun y -> f x y FStarC_Range_Type.dummyRange
 let norng3 :
-  'uuuuu 'uuuuu1 'uuuuu2 'uuuuu3 .
-    ('uuuuu -> 'uuuuu1 -> 'uuuuu2 -> FStarC_Range_Type.range -> 'uuuuu3) ->
-      'uuuuu -> 'uuuuu1 -> 'uuuuu2 -> 'uuuuu3
+  'a 'b 'c .
+    ('a ->
+       'b -> 'c -> FStarC_Range_Type.range -> FStarC_SMTEncoding_Term.term)
+      -> 'a -> 'b -> 'c -> FStarC_SMTEncoding_Term.term
   = fun f -> fun x -> fun y -> fun z -> f x y z FStarC_Range_Type.dummyRange
 let norng4 :
-  'uuuuu 'uuuuu1 'uuuuu2 'uuuuu3 'uuuuu4 .
-    ('uuuuu ->
-       'uuuuu1 -> 'uuuuu2 -> 'uuuuu3 -> FStarC_Range_Type.range -> 'uuuuu4)
-      -> 'uuuuu -> 'uuuuu1 -> 'uuuuu2 -> 'uuuuu3 -> 'uuuuu4
+  'a 'b 'c 'd .
+    ('a ->
+       'b ->
+         'c -> 'd -> FStarC_Range_Type.range -> FStarC_SMTEncoding_Term.term)
+      -> 'a -> 'b -> 'c -> 'd -> FStarC_SMTEncoding_Term.term
   =
   fun f ->
     fun x ->
@@ -220,8 +223,6 @@ let (mk_Term_app :
   FStarC_SMTEncoding_Term.term ->
     FStarC_SMTEncoding_Term.term -> FStarC_SMTEncoding_Term.term)
   = norng2 FStarC_SMTEncoding_Term.mk_Term_app
-let (mk_Term_uvar : Prims.int -> FStarC_SMTEncoding_Term.term) =
-  norng FStarC_SMTEncoding_Term.mk_Term_uvar
 let (mk_and_l :
   FStarC_SMTEncoding_Term.term Prims.list -> FStarC_SMTEncoding_Term.term) =
   norng FStarC_SMTEncoding_Term.mk_and_l

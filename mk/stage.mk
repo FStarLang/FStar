@@ -76,6 +76,7 @@ install: # NOTE: no deps, dune figures it out and rebuilds if needed
 	echo 'ulib'          > $(PREFIX)/lib/fstar/fstar.include
 	echo 'ulib.checked' >> $(PREFIX)/lib/fstar/fstar.include
 	@# Install checked files for FStarC
+	rm -rf $(PREFIX)/lib/fstar/fstarc
 	mkdir -p $(PREFIX)/lib/fstar/fstarc/
 	$(INSTALL_DIR) $(FSTAR_ROOT)/src $(PREFIX)/lib/fstar/fstarc/src
 	$(INSTALL_DIR) fstarc.checked    $(PREFIX)/lib/fstar/fstarc/src.checked

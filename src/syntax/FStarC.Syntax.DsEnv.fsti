@@ -54,7 +54,7 @@ type foundname =
   | Eff_name  of sigelt & lident
 
 val fail_or:  env -> (lident -> option 'a) -> lident -> 'a
-val fail_or2: (ident -> option 'a) -> ident -> 'a
+val fail_or2: env -> (ident -> option 'a) -> ident -> 'a
 
 val opens_and_abbrevs :env -> list (either open_module_or_namespace module_abbrev)
 val dep_graph: env -> FStarC.Parser.Dep.deps

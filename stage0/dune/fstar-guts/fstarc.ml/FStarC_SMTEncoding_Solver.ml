@@ -17,14 +17,14 @@ let z3_result_as_replay_result :
     match uu___ with
     | FStar_Pervasives.Inl l -> FStar_Pervasives.Inl l
     | FStar_Pervasives.Inr (r, uu___1) -> FStar_Pervasives.Inr r
-let (src_filename : Prims.string FStarC_Effect.ref) = FStarC_Util.mk_ref ""
+let (src_filename : Prims.string FStarC_Effect.ref) = FStarC_Effect.mk_ref ""
 let (recorded_hints : FStarC_Hints.hints FStarC_Effect.ref) =
-  FStarC_Util.mk_ref []
+  FStarC_Effect.mk_ref []
 let (replaying_hints :
   FStarC_Hints.hints FStar_Pervasives_Native.option FStarC_Effect.ref) =
-  FStarC_Util.mk_ref FStar_Pervasives_Native.None
+  FStarC_Effect.mk_ref FStar_Pervasives_Native.None
 let (refreshing_hints : Prims.bool FStarC_Effect.ref) =
-  FStarC_Util.mk_ref false
+  FStarC_Effect.mk_ref false
 let (use_hints : unit -> Prims.bool) =
   fun uu___ -> FStarC_Options.use_hints ()
 let (initialize_hints_db : Prims.string -> Prims.bool -> unit) =
@@ -32,7 +32,7 @@ let (initialize_hints_db : Prims.string -> Prims.bool -> unit) =
     fun refresh ->
       FStarC_Effect.op_Colon_Equals recorded_hints [];
       FStarC_Effect.op_Colon_Equals refreshing_hints refresh;
-      (let norm_src_filename = FStarC_Util.normalize_file_path filename in
+      (let norm_src_filename = FStarC_Filepath.normalize_file_path filename in
        FStarC_Effect.op_Colon_Equals src_filename norm_src_filename;
        (let val_filename = FStarC_Options.hint_file_for_src norm_src_filename in
         let uu___3 = FStarC_Hints.read_hints val_filename in
@@ -830,7 +830,7 @@ let (__proj__Mkunique_string_accumulator__item__clear :
   fun projectee -> match projectee with | { add; get; clear;_} -> clear
 let (mk_unique_string_accumulator : unit -> unique_string_accumulator) =
   fun uu___ ->
-    let strings = FStarC_Util.mk_ref [] in
+    let strings = FStarC_Effect.mk_ref [] in
     let add m =
       let ms = FStarC_Effect.op_Bang strings in
       if FStarC_List.contains m ms
@@ -986,22 +986,22 @@ let (query_info : query_settings -> FStarC_SMTEncoding_Z3.z3result -> unit) =
                    Prims.strcat "(" uu___3 in
                  let used_hint_tag =
                    if used_hint settings then " (with hint)" else "" in
-                 let stats =
-                   let uu___3 = FStarC_Options.query_stats () in
-                   if uu___3
+                 let stats uu___3 =
+                   let uu___4 = FStarC_Options.query_stats () in
+                   if uu___4
                    then
                      let f k v a =
                        Prims.strcat a
                          (Prims.strcat k
                             (Prims.strcat "=" (Prims.strcat v " "))) in
                      let str =
-                       FStarC_Util.smap_fold
+                       FStarC_SMap.fold
                          z3result.FStarC_SMTEncoding_Z3.z3result_statistics f
                          "statistics={" in
-                     let uu___4 =
+                     let uu___5 =
                        FStarC_Util.substring str Prims.int_zero
                          ((FStarC_String.length str) - Prims.int_one) in
-                     Prims.strcat uu___4 "}"
+                     Prims.strcat uu___5 "}"
                    else "" in
                  ((let uu___4 =
                      let uu___5 =
@@ -1551,8 +1551,8 @@ let (ask_solver_quake : query_settings Prims.list -> answer) =
       else
         (let uu___1 = f acc lo2 in
          fold_nat' f uu___1 (lo2 + Prims.int_one) hi2) in
-    let best_fuel = FStarC_Util.mk_ref FStar_Pervasives_Native.None in
-    let best_ifuel = FStarC_Util.mk_ref FStar_Pervasives_Native.None in
+    let best_fuel = FStarC_Effect.mk_ref FStar_Pervasives_Native.None in
+    let best_ifuel = FStarC_Effect.mk_ref FStar_Pervasives_Native.None in
     let maybe_improve r n =
       let uu___ = FStarC_Effect.op_Bang r in
       match uu___ with
@@ -1692,7 +1692,7 @@ let (ask_solver_recover : query_settings Prims.list -> answer) =
       (if r.ok
        then r
        else
-         (let restarted = FStarC_Util.mk_ref false in
+         (let restarted = FStarC_Effect.mk_ref false in
           let cfg = FStarC_List.last configs in
           (let uu___3 =
              let uu___4 =
@@ -1799,7 +1799,7 @@ let (ask_solver_recover : query_settings Prims.list -> answer) =
              RestartAnd (IncreaseRLimit (Prims.of_int (8)))])))
     else ask_solver_quake configs
 let (failing_query_ctr : Prims.int FStarC_Effect.ref) =
-  FStarC_Util.mk_ref Prims.int_zero
+  FStarC_Effect.mk_ref Prims.int_zero
 let (maybe_save_failing_query :
   FStarC_SMTEncoding_Env.env_t -> query_settings -> unit) =
   fun env ->
@@ -2066,7 +2066,7 @@ let (__proj__Mksolver_cfg__item__record_hints : solver_cfg -> Prims.bool) =
     | { seed; cliopt; smtopt; facts; valid_intro; valid_elim; z3version;
         context_pruning; record_hints;_} -> record_hints
 let (_last_cfg : solver_cfg FStar_Pervasives_Native.option FStarC_Effect.ref)
-  = FStarC_Util.mk_ref FStar_Pervasives_Native.None
+  = FStarC_Effect.mk_ref FStar_Pervasives_Native.None
 let (get_cfg : FStarC_TypeChecker_Env.env -> solver_cfg) =
   fun env ->
     let uu___ = FStarC_Options.z3_seed () in

@@ -30,6 +30,49 @@ open FStarC.Class.Show
 open FStarC.Class.Monad
 open FStarC.Class.Setlike
 
+let rec takeWhileMax (n : int) (f : 'a -> bool) (xs : list 'a) : list 'a =
+  if n <= 0
+  then []
+  else
+    match xs with
+    | [] -> []
+    | x::xs' ->
+      if f x
+      then x :: takeWhileMax (n - 1) f xs'
+      else []
+
+(* The functions for typo suggestions can be SLOW. They should only be called
+when we are actually logging an error, which is not very frequent. *)
+
+(* User wrote 'x', which wasn't found in the list 'xs'. Give some suggestions. *)
+let typo_candidates (x : string) (xs : list string) : list string =
+  let cands = xs |> List.map (fun y -> (EditDist.edit_distance x y, y)) in
+  let cands = Class.Ord.sort cands |> Class.Ord.dedup in
+  (* Don't suggest anything with a big distance (>= 8), and return at most 5 suggestions. *)
+  let cands = takeWhileMax 5 (fun (d, _) -> d < 8) cands in
+  List.map snd cands
+
+let rec list_sep2 #a (s1 s2 : a) (xs : list a) : list a =
+  match xs with
+  | [] -> []
+  | [x] -> [x]
+  | [x;y] -> [x; s2; y]
+  | x::y::xs -> x :: s1 :: list_sep2 s1 s2 (y::xs)
+
+let typo_msg (x : string) (xs : list string) : Pprint.document =
+  let open FStarC.Pprint in
+  let cands = typo_candidates x xs in
+  if List.length cands = 0
+  then empty
+  else
+    nest 2 <| text "Hint: Did you mean" ^/^
+      flow empty
+        (list_sep2
+          (comma ^^ break_ 1)
+          (break_ 1 ^^ doc_of_string "or" ^^ break_ 1)
+          (List.map doc_of_string cands))
+        ^^ doc_of_string "?"
+
 module BU = FStarC.Util
 
 let ugly_sigelt_to_string_hook : ref (sigelt -> string) = mk_ref (fun _ -> "")
@@ -102,12 +145,24 @@ type env = {
   syntax_only:          bool;                             (* Whether next push should skip type-checking *)
   ds_hooks:             dsenv_hooks;                       (* hooks that the interactive more relies onto for symbol tracking *)
   dep_graph:            FStarC.Parser.Dep.deps;
-  no_prelude:         bool;                             (* whether the module was marked no_prelude *)
+  no_prelude:           bool;                             (* whether the module was marked no_prelude *)
 }
 and dsenv_hooks =
   { ds_push_open_hook : env -> open_module_or_namespace -> unit;
     ds_push_include_hook : env -> lident -> unit;
     ds_push_module_abbrev_hook : env -> ident -> lident -> unit }
+
+(* For typo suggestions *)
+let all_local_names (env:env) : list string =
+  List.fold_right (fun scope acc ->
+    match scope with
+    | Local_bindings lbs -> PSMap.keys lbs @ acc // List.map (fun (x, _, _) -> string_of_id x) (PSMap. lbs) @ acc
+    | Rec_binding (x, _, _) -> string_of_id x :: acc
+    | Module_abbrev (x, _) -> string_of_id x :: acc
+    | Open_module_or_namespace _ -> acc
+    | Top_level_defs lbs -> PSMap.keys lbs @ acc // List.map (fun (x, _) -> string_of_id x) (PSMap. lbs) @ acc
+    | Record_or_dc r -> string_of_lid r.typename :: acc
+  ) env.scope_mods []
 
 let mk_dsenv_hooks open_hook include_hook module_abbrev_hook =
   { ds_push_open_hook = open_hook;
@@ -1198,9 +1253,10 @@ let elab_restriction f env ns restriction =
       | None -> ()
     in
     l |> List.iter (fun (id, _renamed) ->
-        if name_exists id |> not
-        then raise_error id Errors.Fatal_NameNotFound
-               (BU.format1 "Definition %s cannot be found" (mk_lid id |> string_of_lid)));
+        if name_exists id |> not then
+          raise_error id Errors.Fatal_NameNotFound [
+            text <| BU.format1 "Definition %s cannot be found." (mk_lid id |> string_of_lid);
+          ]);
     f env ns (AllowList l)
 
 let push_namespace' env ns restriction =
@@ -1221,8 +1277,13 @@ let push_namespace' env ns restriction =
              BU.starts_with (Ident.string_of_lid m ^ ".")
                             (Ident.string_of_lid ns ^ "."))
       then (ns, Open_namespace)
-      else raise_error ns Errors.Fatal_NameSpaceNotFound
-             (BU.format1 "Namespace %s cannot be found" (Ident.string_of_lid ns))
+      else
+        let open FStarC.Pprint in
+        let open FStarC.Class.PP in
+        raise_error ns Errors.Fatal_NameSpaceNotFound [
+          text <| BU.format1 "Namespace '%s' cannot be found." (Ident.string_of_lid ns);
+          typo_msg (Ident.string_of_lid ns) (List.map Ident.string_of_lid module_names);
+        ]
     )
     | Some ns' ->
       (ns', Open_module)
@@ -1527,8 +1588,17 @@ let fail_or env lookup lid =
     if List.length (ns_of_lid lid) = 0 then
       raise_error lid Errors.Fatal_IdentifierNotFound [
         Pprint.prefix 2 1 (text "Identifier not found:") (pp lid);
+        typo_msg (Ident.string_of_lid lid) (all_local_names env);
       ]
     else
+      let all_ids_in_module (m : lident) : list string =
+        let m = string_of_lid m in
+        match SMap.try_find env.trans_exported_ids m with
+        | Some f ->
+          let exported_ids = !(f Exported_id_term_type) in
+          exported_ids |> Class.Setlike.elems
+        | None -> []
+      in
       let modul = lid_of_ids (ns_of_lid lid) in
       let modul =
         let h::t = ids_of_lid modul in
@@ -1545,9 +1615,7 @@ let fail_or env lookup lid =
             pp modul;
             text "could not be resolved";
           ];
-          if Debug.any ()
-          then text "Opened modules = "  ^^ (String.concat ", " opened_modules |> Errors.text)
-          else empty;
+          typo_msg (Ident.string_of_lid modul) opened_modules;
         ]
 
       | Some modul' when (not (List.existsb (fun m -> m = (string_of_lid modul')) opened_modules)) ->
@@ -1576,13 +1644,19 @@ let fail_or env lookup lid =
               if modul <>? modul' then
               Pprint.parens (Pprint.prefix 2 1 (text "resolved to") (pp modul'))
             else
-              text "")
-          ]
+              empty);
+          ];
+          typo_msg (Ident.string_of_lid lid) (all_ids_in_module modul');
         ]
 
-let fail_or2 lookup id = match lookup id with
-  | None -> raise_error id Errors.Fatal_IdentifierNotFound ("Identifier not found [" ^(string_of_id id)^"]")
+let fail_or2 env lookup id = match lookup id with
   | Some r -> r
+  | None ->
+    let open FStarC.Class.PP in
+    raise_error id Errors.Fatal_IdentifierNotFound [
+      Pprint.prefix 2 1 (text "Identifier not found:") (pp id);
+      typo_msg (Ident.string_of_id id) (all_local_names env);
+    ]
 
 let resolve_name (e:env) (name:lident)
   : option (either bv fv)

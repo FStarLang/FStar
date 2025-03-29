@@ -51,7 +51,7 @@ let with_captured_errors :
 type env_t = FStarC_TypeChecker_Env.env
 let (repl_current_qid :
   Prims.string FStar_Pervasives_Native.option FStarC_Effect.ref) =
-  FStarC_Util.mk_ref FStar_Pervasives_Native.None
+  FStarC_Effect.mk_ref FStar_Pervasives_Native.None
 let (nothing_left_to_pop :
   FStarC_Interactive_Ide_Types.repl_state -> Prims.bool) =
   fun st ->
@@ -686,7 +686,10 @@ let (alist_of_symbol_lookup_result :
           let uu___1 =
             let uu___2 =
               let uu___3 =
-                json_of_opt FStarC_Range_Ops.json_of_def_range
+                json_of_opt
+                  (fun r ->
+                     let uu___4 = FStarC_Range_Ops.refind_range r in
+                     FStarC_Range_Ops.json_of_def_range uu___4)
                   lr.FStarC_Interactive_QueryHelper.slr_def_range in
               ("defined-at", uu___3) in
             let uu___3 =
@@ -977,13 +980,13 @@ let (sig_of_fstar_option :
       | FStar_Pervasives_Native.Some arg_sig ->
           Prims.strcat flag (Prims.strcat " " arg_sig)
 let (fstar_options_list_cache : fstar_option Prims.list) =
-  let defaults = FStarC_Util.smap_of_list FStarC_Options.defaults in
+  let defaults = FStarC_SMap.of_list FStarC_Options.defaults in
   let uu___ =
     FStarC_List.filter_map
       (fun uu___1 ->
          match uu___1 with
          | (_shortname, name, typ, doc) ->
-             let uu___2 = FStarC_Util.smap_try_find defaults name in
+             let uu___2 = FStarC_SMap.try_find defaults name in
              FStarC_Util.map_option
                (fun default_value ->
                   let uu___3 = sig_of_fstar_option name typ in
@@ -1012,9 +1015,9 @@ let (fstar_options_list_cache : fstar_option Prims.list) =
        fun o2 ->
          FStarC_String.compare (FStarC_String.lowercase o1.opt_name)
            (FStarC_String.lowercase o2.opt_name)) uu___
-let (fstar_options_map_cache : fstar_option FStarC_Util.smap) =
-  let cache = FStarC_Util.smap_create (Prims.of_int (50)) in
-  FStarC_List.iter (fun opt -> FStarC_Util.smap_add cache opt.opt_name opt)
+let (fstar_options_map_cache : fstar_option FStarC_SMap.t) =
+  let cache = FStarC_SMap.create (Prims.of_int (50)) in
+  FStarC_List.iter (fun opt -> FStarC_SMap.add cache opt.opt_name opt)
     fstar_options_list_cache;
   cache
 let (update_option : fstar_option -> fstar_option) =
@@ -1162,9 +1165,16 @@ let run_segment :
         | FStarC_Parser_Driver.Empty -> []
         | FStarC_Parser_Driver.Decls decls -> decls
         | FStarC_Parser_Driver.Modul (FStarC_Parser_AST.Module
-            (uu___2, decls)) -> decls
+            { FStarC_Parser_AST.no_prelude = uu___2;
+              FStarC_Parser_AST.mname = uu___3;
+              FStarC_Parser_AST.decls = decls;_})
+            -> decls
         | FStarC_Parser_Driver.Modul (FStarC_Parser_AST.Interface
-            (uu___2, decls, uu___3)) -> decls in
+            { FStarC_Parser_AST.no_prelude1 = uu___2;
+              FStarC_Parser_AST.mname1 = uu___3;
+              FStarC_Parser_AST.decls1 = decls;
+              FStarC_Parser_AST.admitted = uu___4;_})
+            -> decls in
       let uu___ =
         with_captured_errors st.FStarC_Interactive_Ide_Types.repl_env
           FStarC_Util.sigint_ignore
@@ -1940,7 +1950,7 @@ let (run_option_lookup :
     match uu___ with
     | (uu___1, trimmed_name) ->
         let uu___2 =
-          FStarC_Util.smap_try_find fstar_options_map_cache trimmed_name in
+          FStarC_SMap.try_find fstar_options_map_cache trimmed_name in
         (match uu___2 with
          | FStar_Pervasives_Native.None ->
              FStar_Pervasives.Inl (Prims.strcat "Unknown option:" opt_name)
@@ -2470,8 +2480,8 @@ let (__proj__Mksearch_candidate__item__sc_fvars :
     match projectee with | { sc_lid; sc_typ; sc_fvars;_} -> sc_fvars
 let (sc_of_lid : FStarC_Ident.lid -> search_candidate) =
   fun lid ->
-    let uu___ = FStarC_Util.mk_ref FStar_Pervasives_Native.None in
-    let uu___1 = FStarC_Util.mk_ref FStar_Pervasives_Native.None in
+    let uu___ = FStarC_Effect.mk_ref FStar_Pervasives_Native.None in
+    let uu___1 = FStarC_Effect.mk_ref FStar_Pervasives_Native.None in
     { sc_lid = lid; sc_typ = uu___; sc_fvars = uu___1 }
 let (sc_typ :
   FStarC_TypeChecker_Env.env -> search_candidate -> FStarC_Syntax_Syntax.typ)
@@ -2980,7 +2990,7 @@ let rec (go : FStarC_Interactive_Ide_Types.repl_state -> Prims.int) =
                | FStar_Pervasives.Inl st' -> go st'
                | FStar_Pervasives.Inr exitcode -> exitcode)))
 let (interactive_error_handler : FStarC_Errors.error_handler) =
-  let issues = FStarC_Util.mk_ref [] in
+  let issues = FStarC_Effect.mk_ref [] in
   let add_one e =
     let e1 =
       let uu___ = FStarC_Errors.fixup_issue_range e.FStarC_Errors.issue_range in

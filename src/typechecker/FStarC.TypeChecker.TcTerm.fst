@@ -431,7 +431,7 @@ let check_pat_fvs (rng:Range.range) env pats bs =
     begin match bs |> BU.find_opt (fun ({binder_bv=b}) -> not (mem b pat_vars)) with
         | None -> ()
         | Some ({binder_bv=x}) ->
-          Errors.log_issue rng Errors.Warning_SMTPatternIllFormed
+          Errors.log_issue pats Errors.Warning_SMTPatternIllFormed
              (BU.format1 "Pattern misses at least one bound variable: %s" (show x))
     end
 
@@ -1698,6 +1698,8 @@ and tc_value env (e:term) : term
 
   //As a general naming convention, we use e for the term being analyzed and its subterms as e1, e2, etc.
   //We use t and its variants for the type of the term being analyzed
+  if Debug.extreme () then
+    BU.print1 "Checking value %s\n" (show e);
   let env = Env.set_range env e.pos in
   let top = SS.compress e in
   match top.n with
@@ -2734,23 +2736,9 @@ and check_application_args env head (chead:comp) ghead args expected_topt : term
                      bs       (* formal parameters *)
                      args     (* remaining actual arguments *) : (term & lcomp & guard_t) =
 
-        let instantiate_one_and_go b rest_bs args =
-          (* We compute a range by combining the range of the head
-           * and the last argument we checked (if any). This is such that
-           * if we instantiate an implicit for `f ()` (of type `#x:a -> ...),
-           * we give it the range of `f ()` instead of just the range for `f`.
-           * See issue #2021. This is only for the use range, we take
-           * the def range from the head, so the 'see also' should still
-           * point to the definition of the head. *)
-          let r = match outargs with
-                  | [] -> head.pos
-                  | ((t, _), _, _)::_ ->
-                      Range.range_of_rng (Range.def_range head.pos)
-                                        (Range.union_rng (Range.use_range head.pos)
-                                                          (Range.use_range t.pos))
-          in
+        let instantiate_one_and_go rng b rest_bs args =
           let b = SS.subst_binder subst b in
-          let tm, ty, aq, g' = TcUtil.instantiate_one_binder env r b in
+          let tm, ty, aq, g' = TcUtil.instantiate_one_binder env rng b in
           let ty, g_ex = check_no_escape (Some head) env fvs ty in
           let guard = g ++ g' ++ g_ex in
           let arg = tm, aq in
@@ -2763,12 +2751,22 @@ and check_application_args env head (chead:comp) ghead args expected_topt : term
         | ({binder_bv=x;binder_qual=Some (Implicit _)})::rest, (_, None)::_
         | ({binder_bv=x;binder_qual=Some (Meta _)})::rest, (_, None)::_
           ->
-          instantiate_one_and_go (List.hd bs) rest args
+          (* We compute a range by combining the range of the head
+           * and the last argument we checked (if any). This is such that
+           * if we instantiate an implicit for `f ()` (of type `#x:a -> ...),
+           * we give it the range of `f ()` instead of just the range for `f`.
+           * See issue #2021. *)
+          let r = match outargs with
+                  | [] -> head.pos
+                  | ((t, _), _, _)::_ ->
+                      Range.union_ranges head.pos t.pos
+          in
+          instantiate_one_and_go r (List.hd bs) rest args
 
         (* User provided a _ for a meta arg, keep the meta for the unknown. *)
         | ({binder_bv=x;binder_qual=Some (Meta tau);binder_attrs=b_attrs})::rest,
           ({n = Tm_unknown}, Some {aqual_implicit=true})::rest' ->
-          instantiate_one_and_go (List.hd bs) rest rest' (* NB: rest' instead of args, we consume the _ *)
+          instantiate_one_and_go (pos (fst (List.hd args))) (List.hd bs) rest rest' (* NB: rest' instead of args, we consume the _ *)
 
         | ({binder_bv=x;binder_qual=bqual;binder_attrs=b_attrs})::rest, (e, aq)::rest' -> (* a concrete argument *)
             let aq = check_expected_aqual_for_binder aq (List.hd bs) e.pos in
@@ -4863,10 +4861,9 @@ let rec __typeof_tot_or_gtot_term_fastpath (env:env) (t:term) (must_tot:bool) : 
       in the return type
 *)
 let typeof_tot_or_gtot_term_fastpath (env:env) (t:term) (must_tot:bool) : option typ =
+  Errors.with_ctx "In a call to typeof_tot_or_gtot_term_fastpath" <| fun () ->
   def_check_scoped t.pos "fastpath" env t;
-  Errors.with_ctx
-    "In a call to typeof_tot_or_gtot_term_fastpath"
-    (fun () -> __typeof_tot_or_gtot_term_fastpath env t must_tot)
+  __typeof_tot_or_gtot_term_fastpath env t must_tot
 
 (*
  * Precondition: G |- t : Tot _ or G |- t : GTot _

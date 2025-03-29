@@ -1,6 +1,6 @@
 open Prims
 let (gensym_st : Prims.int FStarC_Effect.ref) =
-  FStarC_Util.mk_ref Prims.int_zero
+  FStarC_Effect.mk_ref Prims.int_zero
 let (next_id : unit -> Prims.int) =
   fun uu___ ->
     let r = FStarC_Effect.op_Bang gensym_st in

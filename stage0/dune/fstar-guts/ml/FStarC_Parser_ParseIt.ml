@@ -1,4 +1,5 @@
 module U = FStarC_Util
+open FStarC_SMap
 open FStarC_Errors
 open FStarC_Syntax_Syntax
 open Lexing
@@ -6,6 +7,8 @@ open FStarC_Sedlexing
 open FStarC_Errors_Codes
 module Codes = FStarC_Errors_Codes
 module Msg = FStarC_Errors_Msg
+module Filepath = FStarC_Filepath
+module SMap = FStarC_SMap
 
 type filename = string
 
@@ -30,8 +33,6 @@ let setLexbufPos filename lexbuf line col =
     pos_bol  = 0;
     pos_lnum = line }
 
-module Path = BatPathGen.OfString
-
 let find_file filename =
   match FStarC_Find.find_file filename with
     | Some s ->
@@ -39,13 +40,13 @@ let find_file filename =
     | None ->
       raise_error_text FStarC_Range.dummyRange Fatal_ModuleOrFileNotFound (U.format1 "Unable to find file: %s\n" filename)
 
-let vfs_entries : (U.time_of_day * string) U.smap = U.smap_create (Z.of_int 1)
+let vfs_entries : (U.time_of_day * string) SMap.t = SMap.create (Z.of_int 1)
 
 let read_vfs_entry fname =
-  U.smap_try_find vfs_entries (U.normalize_file_path fname)
+  SMap.try_find vfs_entries (Filepath.normalize_file_path fname)
 
 let add_vfs_entry fname contents =
-  U.smap_add vfs_entries (U.normalize_file_path fname) (U.get_time_of_day (), contents)
+  SMap.add vfs_entries (Filepath.normalize_file_path fname) (U.get_time_of_day (), contents)
 
 let get_file_last_modification_time filename =
   match read_vfs_entry filename with
@@ -75,23 +76,16 @@ let read_file (filename:string) =
     if debug then U.print1 "Opening file %s\n" filename;
     filename, read_physical_file filename
 
-let fs_extensions = [".fs"; ".fsi"]
 let fst_extensions = [".fst"; ".fsti"]
-let interface_extensions = [".fsti"; ".fsi"]
-
-let valid_extensions () =
-  fst_extensions @ if FStarC_Options.ml_ish () then fs_extensions else []
+let interface_extensions = [".fsti"]
 
 let has_extension file extensions =
   FStar_List.existsb (U.ends_with file) extensions
 
 let check_extension fn =
-  if (not (has_extension fn (valid_extensions ()))) then
+  if (not (has_extension fn fst_extensions)) then
     let message = U.format1 "Unrecognized extension '%s'" fn in
-    raise_error_text FStarC_Range.dummyRange Fatal_UnrecognizedExtension
-      (if has_extension fn fs_extensions
-       then message ^ " (pass --MLish to process .fs and .fsi files)"
-       else message)
+    raise_error_text FStarC_Range.dummyRange Fatal_UnrecognizedExtension message
 
 type parse_frag =
     | Filename of filename
@@ -116,9 +110,7 @@ type parse_result =
     | Term of FStarC_Parser_AST.term
     | ParseError of parse_error
 
-module BU = FStarC_Util
 module Range = FStarC_Range
-module MHL = MenhirLib.Convert
 
 let range_of_positions filename start fin = 
   let start_pos = FStarC_Parser_Util.pos_of_lexpos start in
@@ -296,6 +288,190 @@ let parse_incremental_fragment
   let decls = List.map (fun d -> d, contents_at (range_of d)) decls in
   decls, comments, err_opt
 
+let dbg_Tokens = FStarC_Debug.get_toggle "Tokens"
+
+let string_of_token =
+  let open FStarC_Parser_Parse in
+  function
+  | STRING s -> "STRING " ^ s
+  | IDENT s -> "IDENT " ^ s
+  | NAME s -> "NAME " ^ s
+  | TVAR s -> "TVAR " ^ s
+  | TILDE s -> "TILDE " ^ s
+  | INT8 (s, b) -> "INT8 (" ^ s ^ ", " ^ string_of_bool b ^ ")"
+  | INT16 (s, b) -> "INT16 (" ^ s ^ ", " ^ string_of_bool b ^ ")"
+  | INT32 (s, b) -> "INT32 (" ^ s ^ ", " ^ string_of_bool b ^ ")"
+  | INT64 (s, b) -> "INT64 (" ^ s ^ ", " ^ string_of_bool b ^ ")"
+  | INT (s, b) -> "INT (" ^ s ^ ", " ^ string_of_bool b ^ ")"
+  | RANGE s -> " RANGE " ^ s
+  | UINT8 s -> "UINT8 " ^ s
+  | UINT16 s -> "UINT16 " ^ s
+  | UINT32 s -> "UINT32 " ^ s
+  | UINT64 s -> "UINT64 " ^ s
+  | SIZET s -> "SIZET " ^ s
+  | REAL s -> "REAL " ^ s
+  | CHAR c -> "CHAR c"
+  | LET b -> "LET b"
+  | LET_OP s -> "LET_OP " ^ s
+  | AND_OP s -> "AND_OP " ^ s
+  | MATCH_OP s -> "MATCH_OP " ^ s
+  | IF_OP s -> "IF_OP " ^ s
+  | EXISTS b -> "EXISTS b"
+  | EXISTS_OP s -> "EXISTS_OP " ^ s
+  | FORALL b -> "FORALL b"
+  | FORALL_OP s -> "FORALL_OP " ^ s
+  | SEMICOLON_OP op -> "SEMICOLON_OP " ^ (match op with None -> "None" | Some s -> "(Some " ^ s ^ ")")
+  | ASSUME -> "ASSUME"
+  | NEW -> "NEW"
+  | LOGIC -> "LOGIC"
+  | ATTRIBUTES -> "ATTRIBUTES"
+  | IRREDUCIBLE -> "IRREDUCIBLE"
+  | UNFOLDABLE -> "UNFOLDABLE"
+  | INLINE -> "INLINE"
+  | OPAQUE -> "OPAQUE"
+  | UNFOLD -> "UNFOLD"
+  | INLINE_FOR_EXTRACTION -> "INLINE_FOR_EXTRACTION"
+  | NOEXTRACT -> "NOEXTRACT"
+  | NOEQUALITY -> "NOEQUALITY"
+  | UNOPTEQUALITY -> "UNOPTEQUALITY"
+  | PRAGMA_SHOW_OPTIONS -> "PRAGMA_SHOW_OPTIONS"
+  | PRAGMA_SET_OPTIONS -> "PRAGMA_SET_OPTIONS"
+  | PRAGMA_RESET_OPTIONS -> "PRAGMA_RESET_OPTIONS"
+  | PRAGMA_PUSH_OPTIONS -> "PRAGMA_PUSH_OPTIONS"
+  | PRAGMA_POP_OPTIONS -> "PRAGMA_POP_OPTIONS"
+  | PRAGMA_RESTART_SOLVER -> "PRAGMA_RESTART_SOLVER"
+  | PRAGMA_PRINT_EFFECTS_GRAPH -> "PRAGMA_PRINT_EFFECTS_GRAPH"
+  | TYP_APP_LESS -> "TYP_APP_LESS"
+  | TYP_APP_GREATER -> "TYP_APP_GREATER"
+  | SUBTYPE -> "SUBTYPE"
+  | EQUALTYPE -> "EQUALTYPE"
+  | SUBKIND -> "SUBKIND"
+  | BY -> "BY"
+  | AND -> "AND"
+  | ASSERT -> "ASSERT"
+  | SYNTH -> "SYNTH"
+  | BEGIN -> "BEGIN"
+  | ELSE -> "ELSE"
+  | END -> "END"
+  | EXCEPTION -> "EXCEPTION"
+  | FALSE -> "FALSE"
+  | FUN -> "FUN"
+  | FUNCTION -> "FUNCTION"
+  | IF -> "IF"
+  | IN -> "IN"
+  | MODULE -> "MODULE"
+  | DEFAULT -> "DEFAULT"
+  | MATCH -> "MATCH"
+  | OF -> "OF"
+  | FRIEND -> "FRIEND"
+  | OPEN -> "OPEN"
+  | REC -> "REC"
+  | THEN -> "THEN"
+  | TRUE -> "TRUE"
+  | TRY -> "TRY"
+  | TYPE -> "TYPE"
+  | CALC -> "CALC"
+  | CLASS -> "CLASS"
+  | INSTANCE -> "INSTANCE"
+  | EFFECT -> "EFFECT"
+  | VAL -> "VAL"
+  | INTRO -> "INTRO"
+  | ELIM -> "ELIM"
+  | INCLUDE -> "INCLUDE"
+  | WHEN -> "WHEN"
+  | AS -> "AS"
+  | RETURNS -> "RETURNS"
+  | RETURNS_EQ -> "RETURNS_EQ"
+  | WITH -> "WITH"
+  | HASH -> "HASH"
+  | AMP -> "AMP"
+  | LPAREN -> "LPAREN"
+  | RPAREN -> "RPAREN"
+  | LPAREN_RPAREN -> "LPAREN_RPAREN"
+  | COMMA -> "COMMA"
+  | LONG_LEFT_ARROW -> "LONG_LEFT_ARROW"
+  | LARROW -> "LARROW"
+  | RARROW -> "RARROW"
+  | IFF -> "IFF"
+  | IMPLIES -> "IMPLIES"
+  | CONJUNCTION -> "CONJUNCTION"
+  | DISJUNCTION -> "DISJUNCTION"
+  | DOT -> "DOT"
+  | COLON -> "COLON"
+  | COLON_COLON -> "COLON_COLON"
+  | SEMICOLON -> "SEMICOLON"
+  | QMARK_DOT -> "QMARK_DOT"
+  | QMARK -> "QMARK"
+  | EQUALS -> "EQUALS"
+  | PERCENT_LBRACK -> "PERCENT_LBRACK"
+  | LBRACK_AT -> "LBRACK_AT"
+  | LBRACK_AT_AT -> "LBRACK_AT_AT"
+  | LBRACK_AT_AT_AT -> "LBRACK_AT_AT_AT"
+  | DOT_LBRACK -> "DOT_LBRACK"
+  | DOT_LENS_PAREN_LEFT -> "DOT_LENS_PAREN_LEFT"
+  | DOT_LPAREN -> "DOT_LPAREN"
+  | DOT_LBRACK_BAR -> "DOT_LBRACK_BAR"
+  | LBRACK -> "LBRACK"
+  | LBRACK_BAR -> "LBRACK_BAR"
+  | LBRACE_BAR -> "LBRACE_BAR"
+  | LBRACE -> "LBRACE"
+  | BANG_LBRACE -> "BANG_LBRACE"
+  | BAR_RBRACK -> "BAR_RBRACK"
+  | BAR_RBRACE -> "BAR_RBRACE"
+  | UNDERSCORE -> "UNDERSCORE"
+  | LENS_PAREN_LEFT -> "LENS_PAREN_LEFT"
+  | LENS_PAREN_RIGHT -> "LENS_PAREN_RIGHT"
+  | SEQ_BANG_LBRACK -> "SEQ_BANG_LBRACK"
+  | BAR -> "BAR"
+  | RBRACK -> "RBRACK"
+  | RBRACE -> "RBRACE"
+  | DOLLAR -> "DOLLAR"
+  | PRIVATE -> "PRIVATE"
+  | REIFIABLE -> "REIFIABLE"
+  | REFLECTABLE -> "REFLECTABLE"
+  | REIFY -> "REIFY"
+  | RANGE_OF -> "RANGE_OF"
+  | SET_RANGE_OF -> "SET_RANGE_OF"
+  | LBRACE_COLON_PATTERN -> "LBRACE_COLON_PATTERN"
+  | PIPE_LEFT -> "PIPE_LEFT"
+  | PIPE_RIGHT -> "PIPE_RIGHT"
+  | NEW_EFFECT -> "NEW_EFFECT"
+  | SUB_EFFECT -> "SUB_EFFECT"
+  | LAYERED_EFFECT -> "LAYERED_EFFECT"
+  | POLYMONADIC_BIND -> "POLYMONADIC_BIND"
+  | POLYMONADIC_SUBCOMP -> "POLYMONADIC_SUBCOMP"
+  | SPLICE -> "SPLICE"
+  | SPLICET -> "SPLICET"
+  | SQUIGGLY_RARROW -> "SQUIGGLY_RARROW"
+  | TOTAL -> "TOTAL"
+  | REQUIRES -> "REQUIRES"
+  | ENSURES -> "ENSURES"
+  | DECREASES -> "DECREASES"
+  | LBRACE_COLON_WELL_FOUNDED -> "LBRACE_COLON_WELL_FOUNDED"
+  | MINUS -> "MINUS"
+  | COLON_EQUALS -> "COLON_EQUALS"
+  | QUOTE -> "QUOTE"
+  | BACKTICK_AT -> "BACKTICK_AT"
+  | BACKTICK_HASH -> "BACKTICK_HASH"
+  | BACKTICK -> "BACKTICK"
+  | UNIV_HASH -> "UNIV_HASH"
+  | BACKTICK_PERC -> "BACKTICK_PERC"
+  | OPPREFIX s -> "OPPREFIX " ^ s
+  | OPINFIX0a s -> "OPINFIX0a " ^ s
+  | OPINFIX0b s -> "OPINFIX0b " ^ s
+  | OPINFIX0c s -> "OPINFIX0c " ^ s
+  | OPINFIX0d s -> "OPINFIX0d " ^ s
+  | OPINFIX1 s -> "OPINFIX1 " ^ s
+  | OPINFIX2 s -> "OPINFIX2 " ^ s
+  | OPINFIX3 s -> "OPINFIX3 " ^ s
+  | OPINFIX4 s -> "OPINFIX4 " ^ s
+  | OP_MIXFIX_ASSIGNMENT s -> "OP_MIXFIX_ASSIGNMENT " ^ s
+  | OP_MIXFIX_ACCESS s -> "OP_MIXFIX_ACCESS " ^ s
+  | BLOB _ -> "BLOB _"
+  | USE_LANG_BLOB _ -> "USE_LANG_BLOB _"
+  | EOF -> "EOF"
+  | _ -> "(unknown token)"
+
 let parse_fstar_incrementally
 : FStarC_Parser_AST_Util.extension_lang_parser 
 = let f =
@@ -312,6 +488,8 @@ let parse_fstar_incrementally
       let contents = s in
       let lexer () =
         let tok = FStarC_Parser_LexFStar.token lexbuf in
+        if !dbg_Tokens then
+          print_string ("TOKEN: " ^ (string_of_token tok) ^ "\n");
         (tok, lexbuf.start_p, lexbuf.cur_p)
       in
       try 
@@ -332,13 +510,12 @@ let parse_fstar_incrementally
           Inr (decls @ [err_decl])
       with
       | FStarC_Errors.Error(e, msg, r, _ctx) ->
-        let msg = FStarC_Errors_Msg.rendermsg msg in
         let err : FStarC_Parser_AST_Util.error_message = { message = msg; range = r } in
         Inl err
       | e ->
         let pos = FStarC_Parser_Util.pos_of_lexpos (lexbuf.cur_p) in
         let r = FStarC_Range.mk_range filename pos pos in
-        let err : FStarC_Parser_AST_Util.error_message = { message = "Syntax error parsing #lang-fstar block: "; range = r } in
+        let err : FStarC_Parser_AST_Util.error_message = { message = FStarC_Errors_Msg.mkmsg "Syntax error parsing #lang-fstar block: "; range = r } in
         Inl err
   in
   { parse_decls = f }
@@ -384,6 +561,8 @@ let parse (lang_opt:lang_opts) fn =
 
     let lexer () =
       let tok = FStarC_Parser_LexFStar.token lexbuf in
+        if !dbg_Tokens then
+          print_string ("TOKEN: " ^ (string_of_token tok) ^ "\n");
       (tok, lexbuf.start_p, lexbuf.cur_p)
     in
     try
@@ -396,10 +575,7 @@ let parse (lang_opt:lang_opts) fn =
         let frags = match fileOrFragment with
             | FStar_Pervasives.Inl modul ->
               if has_extension filename interface_extensions
-              then match modul with
-                    | FStarC_Parser_AST.Module(l,d) ->
-                      FStar_Pervasives.Inl (FStarC_Parser_AST.Interface(l, d, true))
-                    | _ -> failwith "Impossible"
+              then FStar_Pervasives.Inl (FStarC_Parser_AST.as_interface modul)
               else FStar_Pervasives.Inl modul
             | _ -> fileOrFragment
         in ASTFragment (frags, FStarC_Parser_Util.flush_comments ())
@@ -442,6 +618,8 @@ let parse_warn_error s =
     else
       let lexbuf = FStarC_Sedlexing.create s "" 0 (String.length s) in
       let lexer() = let tok = FStarC_Parser_LexFStar.token lexbuf in
+        if !dbg_Tokens then
+          print_string ("TOKEN: " ^ (string_of_token tok) ^ "\n");
         (tok, lexbuf.start_p, lexbuf.cur_p)
       in
       try

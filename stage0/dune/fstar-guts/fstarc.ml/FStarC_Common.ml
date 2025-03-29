@@ -130,14 +130,13 @@ let rec eq_list :
         | ([], uu___) -> false
         | (uu___, []) -> false
         | (x1::t1, x2::t2) -> (f x1 x2) && (eq_list f t1 t2)
-let psmap_to_list :
-  'a . 'a FStarC_Util.psmap -> (Prims.string * 'a) Prims.list =
-  fun m ->
-    FStarC_Util.psmap_fold m (fun k -> fun v -> fun a1 -> (k, v) :: a1) []
-let psmap_keys : 'a . 'a FStarC_Util.psmap -> Prims.string Prims.list =
-  fun m -> FStarC_Util.psmap_fold m (fun k -> fun v -> fun a1 -> k :: a1) []
-let psmap_values : 'a . 'a FStarC_Util.psmap -> 'a Prims.list =
-  fun m -> FStarC_Util.psmap_fold m (fun k -> fun v -> fun a1 -> v :: a1) []
+let psmap_to_list : 'a . 'a FStarC_PSMap.t -> (Prims.string * 'a) Prims.list
+  =
+  fun m -> FStarC_PSMap.fold m (fun k -> fun v -> fun a1 -> (k, v) :: a1) []
+let psmap_keys : 'a . 'a FStarC_PSMap.t -> Prims.string Prims.list =
+  fun m -> FStarC_PSMap.fold m (fun k -> fun v -> fun a1 -> k :: a1) []
+let psmap_values : 'a . 'a FStarC_PSMap.t -> 'a Prims.list =
+  fun m -> FStarC_PSMap.fold m (fun k -> fun v -> fun a1 -> v :: a1) []
 let option_to_list : 'a . 'a FStar_Pervasives_Native.option -> 'a Prims.list
   =
   fun uu___ ->

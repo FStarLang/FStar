@@ -176,7 +176,7 @@ let go_normal () =
       | None -> f
     )
   in
-  if Debug.any () then
+  if Debug.high () then
     print2 "Rewrote\n%s\ninto\n%s\n\n" (show filenames0) (show filenames);
 
   (* Compat: create the --odir and --cache_dir if they don't exist.

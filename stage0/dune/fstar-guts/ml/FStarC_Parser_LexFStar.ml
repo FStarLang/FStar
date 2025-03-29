@@ -9,6 +9,7 @@ module L = Sedlexing
 module E = FStarC_Errors
 module Codes = FStarC_Errors_Codes
 module BU = FStarC_Util
+module Filepath = FStarC_Filepath
 
 let ba_of_string s = Array.init (String.length s) (fun i -> Char.code (String.get s i))
 let array_trim_both a n m = Array.sub a n (Array.length a - n - m)
@@ -472,9 +473,9 @@ match%sedlex lexbuf with
  | "#pop-options" -> PRAGMA_POP_OPTIONS
  | "#restart-solver" -> PRAGMA_RESTART_SOLVER
  | "#print-effects-graph" -> PRAGMA_PRINT_EFFECTS_GRAPH
- | "__SOURCE_FILE__" -> STRING (BU.basename (L.source_file lexbuf))
+ | "__SOURCE_FILE__" -> STRING (Filepath.basename (L.source_file lexbuf))
  | "__LINE__" -> INT (string_of_int (L.current_line lexbuf), false)
- | "__FILELINE__"   -> STRING (BU.basename (L.source_file lexbuf) ^ "(" ^ (string_of_int (L.current_line lexbuf)) ^ ")")
+ | "__FILELINE__"   -> STRING (Filepath.basename (L.source_file lexbuf) ^ "(" ^ (string_of_int (L.current_line lexbuf)) ^ ")")
 
  | Plus anywhite -> token lexbuf
  | newline -> L.new_line lexbuf; token lexbuf

@@ -31,7 +31,6 @@ module LowStar.BufferView.Up
 open LowStar.Monotonic.Buffer
 
 module HS=FStar.HyperStack
-module B=LowStar.Monotonic.Buffer
 module Down=LowStar.BufferView.Down
 
 (** Definition of a view **)

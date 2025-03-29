@@ -249,72 +249,48 @@ let rec (resugar_term_as_op :
           FStar_Pervasives_Native.Some
             ((FStar_Pervasives_Native.snd op), FStar_Pervasives_Native.None)
       | uu___1 ->
-          let length =
-            let uu___2 =
-              FStarC_Ident.nsstr
-                (fv.FStarC_Syntax_Syntax.fv_name).FStarC_Syntax_Syntax.v in
-            FStarC_String.length uu___2 in
-          let str =
-            if length = Prims.int_zero
-            then
-              FStarC_Ident.string_of_lid
-                (fv.FStarC_Syntax_Syntax.fv_name).FStarC_Syntax_Syntax.v
-            else
-              (let uu___3 =
-                 FStarC_Ident.string_of_lid
-                   (fv.FStarC_Syntax_Syntax.fv_name).FStarC_Syntax_Syntax.v in
-               FStarC_Util.substring_from uu___3 (length + Prims.int_one)) in
           let uu___2 =
-            (FStarC_Util.starts_with str "dtuple") &&
-              (let uu___3 =
-                 let uu___4 =
-                   FStarC_Util.substring_from str (Prims.of_int (6)) in
-                 FStarC_Util.safe_int_of_string uu___4 in
-               FStarC_Option.isSome uu___3) in
-          if uu___2
-          then
             let uu___3 =
-              let uu___4 =
-                let uu___5 =
-                  FStarC_Util.substring_from str (Prims.of_int (6)) in
-                FStarC_Util.safe_int_of_string uu___5 in
-              ("dtuple", uu___4) in
-            FStar_Pervasives_Native.Some uu___3
-          else
-            (let uu___4 =
-               (FStarC_Util.starts_with str "tuple") &&
-                 (let uu___5 =
-                    let uu___6 =
-                      FStarC_Util.substring_from str (Prims.of_int (5)) in
-                    FStarC_Util.safe_int_of_string uu___6 in
-                  FStarC_Option.isSome uu___5) in
-             if uu___4
-             then
-               let uu___5 =
-                 let uu___6 =
-                   let uu___7 =
-                     FStarC_Util.substring_from str (Prims.of_int (5)) in
-                   FStarC_Util.safe_int_of_string uu___7 in
-                 ("tuple", uu___6) in
-               FStar_Pervasives_Native.Some uu___5
-             else
-               if FStarC_Util.starts_with str "try_with"
-               then
-                 FStar_Pervasives_Native.Some
-                   ("try_with", FStar_Pervasives_Native.None)
-               else
-                 (let uu___7 =
-                    FStarC_Syntax_Syntax.fv_eq_lid fv
-                      FStarC_Parser_Const.sread_lid in
-                  if uu___7
-                  then
-                    let uu___8 =
-                      let uu___9 =
-                        FStarC_Ident.string_of_lid
+              FStarC_Ident.string_of_lid
+                (fv.FStarC_Syntax_Syntax.fv_name).FStarC_Syntax_Syntax.v in
+            FStarC_Parser_Const_Tuples.get_dtuple_tycon_arity uu___3 in
+          (match uu___2 with
+           | FStar_Pervasives_Native.Some n ->
+               FStar_Pervasives_Native.Some
+                 ("dtuple", (FStar_Pervasives_Native.Some n))
+           | FStar_Pervasives_Native.None ->
+               let uu___3 =
+                 let uu___4 =
+                   FStarC_Ident.string_of_lid
+                     (fv.FStarC_Syntax_Syntax.fv_name).FStarC_Syntax_Syntax.v in
+                 FStarC_Parser_Const_Tuples.get_tuple_tycon_arity uu___4 in
+               (match uu___3 with
+                | FStar_Pervasives_Native.Some n ->
+                    FStar_Pervasives_Native.Some
+                      ("tuple", (FStar_Pervasives_Native.Some n))
+                | FStar_Pervasives_Native.None ->
+                    let str =
+                      let uu___4 =
+                        FStarC_Ident.ident_of_lid
                           (fv.FStarC_Syntax_Syntax.fv_name).FStarC_Syntax_Syntax.v in
-                      (uu___9, FStar_Pervasives_Native.None) in
-                    FStar_Pervasives_Native.Some uu___8
-                  else FStar_Pervasives_Native.None)) in
+                      FStarC_Ident.string_of_id uu___4 in
+                    if FStarC_Util.starts_with str "try_with"
+                    then
+                      FStar_Pervasives_Native.Some
+                        ("try_with", FStar_Pervasives_Native.None)
+                    else
+                      (let uu___5 =
+                         FStarC_Syntax_Syntax.fv_eq_lid fv
+                           FStarC_Parser_Const.sread_lid in
+                       if uu___5
+                       then
+                         let uu___6 =
+                           let uu___7 =
+                             FStarC_Ident.string_of_lid
+                               (fv.FStarC_Syntax_Syntax.fv_name).FStarC_Syntax_Syntax.v in
+                           (uu___7, FStar_Pervasives_Native.None) in
+                         FStar_Pervasives_Native.Some uu___6
+                       else FStar_Pervasives_Native.None))) in
     let uu___ =
       let uu___1 = FStarC_Syntax_Subst.compress t in
       uu___1.FStarC_Syntax_Syntax.n in
@@ -349,8 +325,8 @@ let (is_true_pat : FStarC_Syntax_Syntax.pat -> Prims.bool) =
     | uu___ -> false
 let (is_tuple_constructor_lid : FStarC_Ident.lident -> Prims.bool) =
   fun lid ->
-    (FStarC_Parser_Const.is_tuple_data_lid' lid) ||
-      (FStarC_Parser_Const.is_dtuple_data_lid' lid)
+    (FStarC_Parser_Const_Tuples.is_tuple_datacon_lid lid) ||
+      (FStarC_Parser_Const_Tuples.is_dtuple_datacon_lid lid)
 let (may_shorten : FStarC_Ident.lident -> Prims.bool) =
   fun lid ->
     let uu___ = FStarC_Options.print_real_names () in
@@ -1673,27 +1649,41 @@ let rec (resugar_term' :
                                               resugared_args in
                                           (match uu___10 with
                                            | (op_args, rest) ->
-                                               let head =
-                                                 let uu___11 =
-                                                   let uu___12 =
-                                                     let uu___13 =
-                                                       FStarC_List.map
-                                                         FStar_Pervasives_Native.fst
-                                                         op_args in
-                                                     (op1, uu___13) in
-                                                   FStarC_Parser_AST.Op
-                                                     uu___12 in
-                                                 mk uu___11 in
-                                               FStarC_List.fold_left
-                                                 (fun head1 ->
-                                                    fun uu___11 ->
-                                                      match uu___11 with
-                                                      | (arg, qual) ->
-                                                          mk
-                                                            (FStarC_Parser_AST.App
-                                                               (head1, arg,
-                                                                 qual))) head
-                                                 rest)
+                                               let uu___11 =
+                                                 let uu___12 =
+                                                   FStarC_List.for_all
+                                                     (fun uu___13 ->
+                                                        match uu___13 with
+                                                        | (uu___14, q) ->
+                                                            q =
+                                                              FStarC_Parser_AST.Nothing)
+                                                     op_args in
+                                                 Prims.op_Negation uu___12 in
+                                               if uu___11
+                                               then resugar_as_app e args1
+                                               else
+                                                 (let head =
+                                                    let uu___13 =
+                                                      let uu___14 =
+                                                        let uu___15 =
+                                                          FStarC_List.map
+                                                            FStar_Pervasives_Native.fst
+                                                            op_args in
+                                                        (op1, uu___15) in
+                                                      FStarC_Parser_AST.Op
+                                                        uu___14 in
+                                                    mk uu___13 in
+                                                  FStarC_List.fold_left
+                                                    (fun head1 ->
+                                                       fun uu___13 ->
+                                                         match uu___13 with
+                                                         | (arg, qual) ->
+                                                             mk
+                                                               (FStarC_Parser_AST.App
+                                                                  (head1,
+                                                                    arg,
+                                                                    qual)))
+                                                    head rest))
                                         else resugar_as_app e args1
                                     | FStar_Pervasives_Native.Some n when
                                         (FStarC_List.length args1) = n ->
@@ -2683,7 +2673,7 @@ and (resugar_pat' :
                               aux p2 (FStar_Pervasives_Native.Some false) in
                             FStar_Pervasives_Native.Some uu___3)) args in
               let is_dependent_tuple =
-                FStarC_Parser_Const.is_dtuple_data_lid'
+                FStarC_Parser_Const_Tuples.is_dtuple_datacon_lid
                   (fv.FStarC_Syntax_Syntax.fv_name).FStarC_Syntax_Syntax.v in
               mk (FStarC_Parser_AST.PatTuple (args1, is_dependent_tuple))
           | FStarC_Syntax_Syntax.Pat_cons

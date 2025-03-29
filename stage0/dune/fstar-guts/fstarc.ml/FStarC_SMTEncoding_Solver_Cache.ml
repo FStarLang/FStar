@@ -343,7 +343,7 @@ let (query_cache_ref :
          (Obj.magic
             (FStarC_RBSet.setlike_rbset FStarC_Class_Hashable.ord_hash_code))
          ()) in
-  FStarC_Util.mk_ref uu___
+  FStarC_Effect.mk_ref uu___
 let (on : unit -> Prims.bool) =
   fun uu___ -> (FStarC_Options.query_cache ()) && (FStarC_Options.ide ())
 let (query_cache_add :

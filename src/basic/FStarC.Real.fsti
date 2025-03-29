@@ -15,7 +15,13 @@
 *)
 module FStarC.Real
 
+open FStarC.Effect
+open FStarC.Order
+
 (* A type for embedded real constants. This allows to write embeddings for them
 (see FStarC.Syntax.Embeddings and FStarC.TypeChecker.NBETerm). *)
 
 type real = | Real of string
+
+(* Compares two reals, may return None if unknown. *)
+val cmp (r1 r2 : real) : option order

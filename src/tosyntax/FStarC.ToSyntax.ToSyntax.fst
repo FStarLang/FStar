@@ -798,9 +798,11 @@ let check_linear_pattern_variables pats (r:Range.range) =
       let symdiff s1 s2 = union (diff s1 s2) (diff s2 s1) in
       let nonlinear_vars = symdiff pvars (pat_vars p) in
       let first_nonlinear_var = List.hd (elems nonlinear_vars) in
-      raise_error r Errors.Fatal_IncoherentPatterns
-        (BU.format1 "Patterns in this match are incoherent, variable %s is bound in some but not all patterns."
-                       (show first_nonlinear_var.ppname))
+      raise_error first_nonlinear_var Errors.Fatal_IncoherentPatterns [
+        text "Patterns in this match are incoherent.";
+        text (BU.format1 "Variable %s is bound in some but not all patterns."
+                       (show first_nonlinear_var.ppname));
+      ]
     in
     List.iter aux ps
 
@@ -1201,7 +1203,7 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term & an
       desugar_term_maybe_top top_level env t
 
     | Tvar a ->
-      setpos <| (fail_or2 (try_lookup_id env) a), noaqs
+      setpos <| (fail_or2 env (try_lookup_id env) a), noaqs
 
     | Uvar u ->
       raise_error top Errors.Fatal_UnexpectedUniverseVariable
@@ -2623,7 +2625,7 @@ and desugar_formula env (f:term) : S.term =
         let names =
           names |> List.map
           (fun i ->
-          { fail_or2 (try_lookup_id env) i with pos=(range_of_id i) })
+          { fail_or2 env (try_lookup_id env) i with pos=(range_of_id i) })
         in
         let pats =
           pats |> List.map
@@ -3697,9 +3699,9 @@ and desugar_decl_maybe_fail_attr env (d: decl): (env_t & sigelts) =
             Errors.log_issue err_rng Errors.Error_DidNotFail [
                 prefix 2 1
                   (text "This top-level definition was expected to raise error codes")
-                  (pp expected_errs) ^/^
+                  (pp (Class.Ord.sort expected_errs)) ^/^
                 prefix 2 1 (text "but it raised")
-                  (pp errnos) ^^ text "(at desugaring time)" ^^ dot;
+                  (pp (Class.Ord.sort errnos)) ^^ text "(at desugaring time)" ^^ dot;
                 text (BU.format3 "Error #%s was raised %s times, instead of %s."
                                       (show e) (show n2) (show n1));
               ];
