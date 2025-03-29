@@ -77,4 +77,4 @@ jobs:
       - name: Smoke test
         working-directory: fstar
         run: |
-          .\bin\fstar.exe --already_cached *,-Hello ${{ github.workspace }}\fstartest\examples\hello\Hello\Hello.fst -f --debug_all_modules
+          .\bin\fstar.exe --already_cached ,* ${{ github.workspace }}\fstartest\examples\hello\Hello\Hello.fst -f --debug_all_modules
