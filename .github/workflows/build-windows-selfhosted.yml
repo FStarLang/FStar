@@ -72,5 +72,5 @@ jobs:
         working-directory: fstar
         run: |
           mkdir "${{ github.workspace }}\fstartest"
-          echo module Hello open FStar.Mul let _ = assert (forall x . 1 + x*x > 0) > "${{ github.workspace }}\fstartest\Hello.fst"
+          echo "module Hello open FStar.Mul let _ = assert (forall x . 1 + x*x > 0)" > "${{ github.workspace }}\fstartest\Hello.fst"
           .\bin\fstar.exe --already_cached ,* ${{ github.workspace }}\fstartest\Hello.fst -f --debug_all_modules
