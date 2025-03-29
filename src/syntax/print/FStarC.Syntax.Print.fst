@@ -375,11 +375,12 @@ instance pretty_term     = { pp   = term_to_doc; }
 instance pretty_univ     = { pp   = univ_to_doc; }
 instance pretty_sigelt   = { pp   = sigelt_to_doc; }
 instance pretty_comp     = { pp   = comp_to_doc; }
-instance pretty_ctxu     = { pp   = (fun x -> Pprint.doc_of_string (show x)); }
-instance pretty_uvar     = { pp   = (fun x -> Pprint.doc_of_string (show x)); }
-instance pretty_binder   = { pp   = (fun x -> Pprint.doc_of_string (show x)); }
-instance pretty_bv       = { pp   = (fun x -> Pprint.doc_of_string (show x)); }
-instance pretty_qualifier = { pp  = (fun x -> Pprint.doc_of_string (show x)); }
+instance pretty_ctxu      = pretty_from_showable
+instance pretty_uvar      = pretty_from_showable
+instance pretty_binder    = pretty_from_showable
+instance pretty_bv        = pretty_from_showable
+instance pretty_qualifier = pretty_from_showable
+instance pretty_aqual     = pretty_from_showable
 
 open FStarC.Pprint
 
