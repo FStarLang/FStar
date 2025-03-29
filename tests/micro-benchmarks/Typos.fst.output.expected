@@ -1,0 +1,18 @@
+>> Got issues: [
+* Error 72 at Typos.fst(6,8-6,13):
+  - Module name Proms could not be resolved
+  - Hint: Did you mean Prims?
+
+>>]
+>> Got issues: [
+* Error 72 at Typos.fst(9,14-9,20):
+  - Identifier strong not found in module Prims
+  - Hint: Did you mean string?
+
+>>]
+>> Got issues: [
+* Error 72 at Typos.fst(16,8-16,9):
+  - Identifier not found: d
+  - Hint: Did you mean a, b or c?
+
+>>]

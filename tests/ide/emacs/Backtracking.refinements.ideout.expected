@@ -33,8 +33,8 @@
 {"kind": "response", "query-id": "32", "response": [{"level": "error", "message": "- Syntax error\n", "number": 168, "ranges": [{"beg": [5, 8], "end": [5, 8], "fname": "<input>"}]}], "status": "success"}
 {"kind": "response", "query-id": "33", "response": [], "status": "success"}
 {"kind": "response", "query-id": "34", "response": [], "status": "success"}
-{"kind": "response", "query-id": "35", "response": [{"level": "error", "message": "- Identifier not found: b\n", "number": 72, "ranges": [{"beg": [5, 7], "end": [5, 8], "fname": "<input>"}]}], "status": "success"}
-{"kind": "response", "query-id": "36", "response": [{"level": "error", "message": "- Identifier not found: b\n", "number": 72, "ranges": [{"beg": [5, 7], "end": [5, 8], "fname": "<input>"}]}], "status": "success"}
+{"kind": "response", "query-id": "35", "response": [{"level": "error", "message": "- Identifier not found: b\n- Hint: Did you mean a?\n", "number": 72, "ranges": [{"beg": [5, 7], "end": [5, 8], "fname": "<input>"}]}], "status": "success"}
+{"kind": "response", "query-id": "36", "response": [{"level": "error", "message": "- Identifier not found: b\n- Hint: Did you mean a?\n", "number": 72, "ranges": [{"beg": [5, 7], "end": [5, 8], "fname": "<input>"}]}], "status": "success"}
 {"kind": "response", "query-id": "37", "response": [], "status": "success"}
 {"kind": "response", "query-id": "38", "response": [], "status": "success"}
 {"kind": "response", "query-id": "39", "response": [{"level": "error", "message": "- Syntax error\n", "number": 168, "ranges": [{"beg": [5, 15], "end": [5, 15], "fname": "<input>"}]}], "status": "success"}

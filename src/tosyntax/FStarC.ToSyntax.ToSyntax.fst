@@ -1203,7 +1203,7 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term & an
       desugar_term_maybe_top top_level env t
 
     | Tvar a ->
-      setpos <| (fail_or2 (try_lookup_id env) a), noaqs
+      setpos <| (fail_or2 env (try_lookup_id env) a), noaqs
 
     | Uvar u ->
       raise_error top Errors.Fatal_UnexpectedUniverseVariable
@@ -2625,7 +2625,7 @@ and desugar_formula env (f:term) : S.term =
         let names =
           names |> List.map
           (fun i ->
-          { fail_or2 (try_lookup_id env) i with pos=(range_of_id i) })
+          { fail_or2 env (try_lookup_id env) i with pos=(range_of_id i) })
         in
         let pats =
           pats |> List.map
