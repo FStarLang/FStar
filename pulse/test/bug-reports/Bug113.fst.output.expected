@@ -1,5 +1,6 @@
 >> Got issues: [
 * Error 72 at Bug113.fst(29,38-29,44):
   - Identifier not found: erased
+  - Hint: Did you mean f, p or x?
 
 >>]

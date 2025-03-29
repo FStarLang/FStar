@@ -1,6 +1,7 @@
 >> Got issues: [
 * Error 72 at Bug.DesugaringError.fst(11,4-11,5):
   - Identifier not found: a
+  - Hint: Did you mean x or y?
 
 >>]
 >> Got issues: [
