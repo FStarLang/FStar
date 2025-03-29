@@ -312,10 +312,10 @@ let check_expected_effect env (use_eq:bool) (copt:option comp) (ec : term & comp
                let def_eff_opt = Env.get_default_effect env norm_eff_name in
                match def_eff_opt with
                | None ->
-                 raise_error e Errors.Error_LayeredMissingAnnot //hard error if layered effects are used without annotations
-                             (BU.format2 "Missing annotation for a layered effect (%s) computation at %s"
-                                (c |> U.comp_effect_name |> show)
-                                (show e.pos))
+                 // hard error if layered effects are used without annotations
+                 raise_error e Errors.Error_LayeredMissingAnnot [
+                   text (BU.format1 "Missing annotation for a layered effect (%s) computation." (c |> U.comp_effect_name |> show));
+                 ]
                | Some def_eff ->
                  //
                  //AR: TODO: it may be good hygiene to check that def_eff exists
