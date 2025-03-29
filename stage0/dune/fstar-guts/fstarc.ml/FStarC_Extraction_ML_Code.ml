@@ -159,6 +159,7 @@ let (mlpath_of_mlpath :
       match uu___ with
       | "Prims.Some" -> ([], "Some")
       | "Prims.None" -> ([], "None")
+      | "Prims.op_Modulus" -> (["Prims"], "mod_f")
       | uu___1 ->
           let uu___2 = x in
           (match uu___2 with
@@ -225,8 +226,7 @@ let (infix_prim_ops :
   ("op_LessThanOrEqual", e_bin_prio_order, "<=");
   ("op_GreaterThanOrEqual", e_bin_prio_order, ">=");
   ("op_LessThan", e_bin_prio_order, "<");
-  ("op_GreaterThan", e_bin_prio_order, ">");
-  ("op_Modulus", e_bin_prio_order, "mod")]
+  ("op_GreaterThan", e_bin_prio_order, ">")]
 let (prim_uni_ops : unit -> (Prims.string * Prims.string) Prims.list) =
   fun uu___ ->
     let op_minus =
@@ -1112,7 +1112,7 @@ and (doc_of_loc : FStarC_Extraction_ML_Syntax.mlloc -> doc) =
         if uu___1
         then empty
         else
-          (let file1 = FStarC_Util.basename file in
+          (let file1 = FStarC_Filepath.basename file in
            let uu___3 =
              let uu___4 =
                let uu___5 = num lineno in
@@ -1281,9 +1281,9 @@ let (doc_of_mod1 :
             (text "let") :: uu___1 in
           reduce1 uu___
       | FStarC_Extraction_ML_Syntax.MLM_Loc loc -> doc_of_loc loc
-let (doc_of_mod :
+let (doc_of_modbody :
   FStarC_Extraction_ML_Syntax.mlsymbol ->
-    FStarC_Extraction_ML_Syntax.mlmodule -> doc)
+    FStarC_Extraction_ML_Syntax.mlmodulebody -> doc)
   =
   fun currentModule ->
     fun m ->
@@ -1297,112 +1297,70 @@ let (doc_of_mod :
               | uu___ -> hardline);
              hardline]) m in
       reduce (FStarC_List.flatten docs)
-let (doc_of_mllib_r :
-  FStarC_Extraction_ML_Syntax.mllib -> (Prims.string * doc) Prims.list) =
-  fun uu___ ->
-    match uu___ with
-    | FStarC_Extraction_ML_Syntax.MLLib mllib ->
-        let rec for1_sig uu___1 =
-          match uu___1 with
-          | (x, sigmod, FStarC_Extraction_ML_Syntax.MLLib sub) ->
-              let x1 = FStarC_Extraction_ML_Util.flatten_mlpath x in
-              let head =
-                reduce1 [text "module"; text x1; text ":"; text "sig"] in
-              let tail = reduce1 [text "end"] in
-              let doc1 =
-                FStarC_Option.map
-                  (fun uu___2 ->
-                     match uu___2 with | (s, uu___3) -> doc_of_sig x1 s)
-                  sigmod in
-              let sub1 = FStarC_List.map for1_sig sub in
-              let sub2 =
-                FStarC_List.map (fun x2 -> reduce [x2; hardline; hardline])
-                  sub1 in
-              let uu___2 =
-                let uu___3 =
-                  let uu___4 =
-                    let uu___5 = reduce sub2 in [uu___5; cat tail hardline] in
-                  (match doc1 with
-                   | FStar_Pervasives_Native.None -> empty
-                   | FStar_Pervasives_Native.Some s -> cat s hardline) ::
-                    uu___4 in
-                (cat head hardline) :: uu___3 in
-              reduce uu___2
-        and for1_mod istop uu___1 =
-          match uu___1 with
-          | (mod_name, sigmod, FStarC_Extraction_ML_Syntax.MLLib sub) ->
-              let target_mod_name =
-                FStarC_Extraction_ML_Util.flatten_mlpath mod_name in
-              let maybe_open_pervasives =
-                match mod_name with
-                | ("FStar"::[], "Pervasives") -> []
-                | uu___2 ->
-                    let pervasives =
-                      FStarC_Extraction_ML_Util.flatten_mlpath
-                        (["FStar"], "Pervasives") in
-                    [hardline; text (Prims.strcat "open " pervasives)] in
-              let head =
-                let uu___2 =
-                  let uu___3 = FStarC_Extraction_ML_Util.codegen_fsharp () in
-                  if uu___3
-                  then [text "module"; text target_mod_name]
-                  else
-                    if Prims.op_Negation istop
-                    then
-                      [text "module";
-                      text target_mod_name;
-                      text "=";
-                      text "struct"]
-                    else [] in
-                reduce1 uu___2 in
-              let tail =
-                if Prims.op_Negation istop
-                then reduce1 [text "end"]
-                else reduce1 [] in
-              let doc1 =
-                FStarC_Option.map
-                  (fun uu___2 ->
-                     match uu___2 with
-                     | (uu___3, m) -> doc_of_mod target_mod_name m) sigmod in
-              let sub1 = FStarC_List.map (for1_mod false) sub in
-              let sub2 =
-                FStarC_List.map (fun x -> reduce [x; hardline; hardline])
-                  sub1 in
-              let prefix =
-                let uu___2 = FStarC_Extraction_ML_Util.codegen_fsharp () in
-                if uu___2 then [cat (text "#light \"off\"") hardline] else [] in
-              let uu___2 =
-                let uu___3 =
-                  let uu___4 =
-                    let uu___5 =
-                      let uu___6 =
-                        let uu___7 =
-                          let uu___8 = reduce sub2 in
-                          [uu___8; cat tail hardline] in
-                        (match doc1 with
-                         | FStar_Pervasives_Native.None -> empty
-                         | FStar_Pervasives_Native.Some s -> cat s hardline)
-                          :: uu___7 in
-                      hardline :: uu___6 in
-                    FStarC_List.op_At maybe_open_pervasives uu___5 in
-                  FStarC_List.op_At [head; hardline; text "open Prims"]
-                    uu___4 in
-                FStarC_List.op_At prefix uu___3 in
-              reduce uu___2 in
-        let docs =
-          FStarC_List.map
-            (fun uu___1 ->
-               match uu___1 with
-               | (x, s, m) ->
-                   let uu___2 = FStarC_Extraction_ML_Util.flatten_mlpath x in
-                   let uu___3 = for1_mod true (x, s, m) in (uu___2, uu___3))
-            mllib in
-        docs
+let (doc_of_mlmodule_r :
+  Prims.bool -> FStarC_Extraction_ML_Syntax.mlmodule -> doc) =
+  fun fsharp ->
+    fun mod1 ->
+      let rec p_sig mod2 =
+        let uu___ = mod2 in
+        match uu___ with
+        | (x, sigmod) ->
+            let x1 = FStarC_Extraction_ML_Util.flatten_mlpath x in
+            let head = reduce1 [text "module"; text x1; text ":"; text "sig"] in
+            let tail = reduce1 [text "end"] in
+            let doc1 =
+              FStarC_Option.map
+                (fun uu___1 ->
+                   match uu___1 with | (s, uu___2) -> doc_of_sig x1 s) sigmod in
+            reduce
+              [cat head hardline;
+              (match doc1 with
+               | FStar_Pervasives_Native.None -> empty
+               | FStar_Pervasives_Native.Some s -> cat s hardline);
+              cat tail hardline]
+      and p_mod istop mod2 =
+        let uu___ = mod2 in
+        match uu___ with
+        | (mod_name, sigmod) ->
+            let target_mod_name =
+              FStarC_Extraction_ML_Util.flatten_mlpath mod_name in
+            let head =
+              reduce1
+                (if fsharp
+                 then [text "module"; text target_mod_name]
+                 else
+                   if Prims.op_Negation istop
+                   then
+                     [text "module";
+                     text target_mod_name;
+                     text "=";
+                     text "struct"]
+                   else []) in
+            let tail =
+              if Prims.op_Negation istop
+              then reduce1 [text "end"]
+              else reduce1 [] in
+            let doc1 =
+              FStarC_Option.map
+                (fun uu___1 ->
+                   match uu___1 with
+                   | (uu___2, m) -> doc_of_modbody target_mod_name m) sigmod in
+            let prefix =
+              if fsharp then [cat (text "#light \"off\"") hardline] else [] in
+            reduce
+              (FStarC_List.op_At prefix
+                 [head;
+                 hardline;
+                 (match doc1 with
+                  | FStar_Pervasives_Native.None -> empty
+                  | FStar_Pervasives_Native.Some s -> cat s hardline);
+                 cat tail hardline]) in
+      p_mod true mod1
 let (pretty : Prims.int -> doc -> Prims.string) =
   fun sz -> fun uu___ -> match uu___ with | Doc doc1 -> doc1
-let (doc_of_mllib :
-  FStarC_Extraction_ML_Syntax.mllib -> (Prims.string * doc) Prims.list) =
-  fun mllib -> doc_of_mllib_r mllib
+let (doc_of_mlmodule :
+  Prims.bool -> FStarC_Extraction_ML_Syntax.mlmodule -> doc) =
+  fun fsharp -> fun mlmodule -> doc_of_mlmodule_r fsharp mlmodule
 let (string_of_mlexpr :
   FStarC_Extraction_ML_Syntax.mlpath ->
     FStarC_Extraction_ML_Syntax.mlexpr -> Prims.string)

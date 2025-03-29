@@ -29,7 +29,6 @@ open FStar.Tactics.V2.SyntaxCoercions
 include FStar.Tactics.Names
 
 module L = FStar.List.Tot.Base
-module V = FStar.Tactics.Visit
 private let (@) = L.op_At
 
 private

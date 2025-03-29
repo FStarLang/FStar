@@ -4,16 +4,15 @@ type extension_tosyntax_decl_t =
     FStarC_Dyn.dyn ->
       FStarC_Ident.lident Prims.list ->
         FStarC_Range_Type.range -> FStarC_Syntax_Syntax.sigelt' Prims.list
-let (extension_tosyntax_table : extension_tosyntax_decl_t FStarC_Util.smap) =
-  FStarC_Util.smap_create (Prims.of_int (20))
+let (extension_tosyntax_table : extension_tosyntax_decl_t FStarC_SMap.t) =
+  FStarC_SMap.create (Prims.of_int (20))
 let (register_extension_tosyntax :
   Prims.string -> extension_tosyntax_decl_t -> unit) =
   fun lang_name ->
-    fun cb -> FStarC_Util.smap_add extension_tosyntax_table lang_name cb
+    fun cb -> FStarC_SMap.add extension_tosyntax_table lang_name cb
 let (lookup_extension_tosyntax :
   Prims.string -> extension_tosyntax_decl_t FStar_Pervasives_Native.option) =
-  fun lang_name ->
-    FStarC_Util.smap_try_find extension_tosyntax_table lang_name
+  fun lang_name -> FStarC_SMap.try_find extension_tosyntax_table lang_name
 let (dbg_attrs : Prims.bool FStarC_Effect.ref) =
   FStarC_Debug.get_toggle "attrs"
 let (dbg_ToSyntax : Prims.bool FStarC_Effect.ref) =
@@ -1024,7 +1023,7 @@ let (no_annot_abs :
 let rec (generalize_annotated_univs :
   FStarC_Syntax_Syntax.sigelt -> FStarC_Syntax_Syntax.sigelt) =
   fun s ->
-    let vars = FStarC_Util.mk_ref [] in
+    let vars = FStarC_Effect.mk_ref [] in
     let seen =
       let uu___ =
         Obj.magic
@@ -1032,7 +1031,7 @@ let rec (generalize_annotated_univs :
              (Obj.magic
                 (FStarC_RBSet.setlike_rbset FStarC_Syntax_Syntax.ord_ident))
              ()) in
-      FStarC_Util.mk_ref uu___ in
+      FStarC_Effect.mk_ref uu___ in
     let reg u =
       let uu___ =
         let uu___1 =
@@ -1739,14 +1738,24 @@ let (check_linear_pattern_variables :
                  FStarC_List.hd uu___2 in
                let uu___2 =
                  let uu___3 =
-                   FStarC_Class_Show.show FStarC_Ident.showable_ident
-                     first_nonlinear_var.FStarC_Syntax_Syntax.ppname in
-                 FStarC_Util.format1
-                   "Patterns in this match are incoherent, variable %s is bound in some but not all patterns."
-                   uu___3 in
-               FStarC_Errors.raise_error FStarC_Class_HasRange.hasRange_range
-                 r FStarC_Errors_Codes.Fatal_IncoherentPatterns ()
-                 (Obj.magic FStarC_Errors_Msg.is_error_message_string)
+                   FStarC_Errors_Msg.text
+                     "Patterns in this match are incoherent." in
+                 let uu___4 =
+                   let uu___5 =
+                     let uu___6 =
+                       let uu___7 =
+                         FStarC_Class_Show.show FStarC_Ident.showable_ident
+                           first_nonlinear_var.FStarC_Syntax_Syntax.ppname in
+                       FStarC_Util.format1
+                         "Variable %s is bound in some but not all patterns."
+                         uu___7 in
+                     FStarC_Errors_Msg.text uu___6 in
+                   [uu___5] in
+                 uu___3 :: uu___4 in
+               FStarC_Errors.raise_error FStarC_Syntax_Syntax.hasRange_bv
+                 first_nonlinear_var
+                 FStarC_Errors_Codes.Fatal_IncoherentPatterns ()
+                 (Obj.magic FStarC_Errors_Msg.is_error_message_list_doc)
                  (Obj.magic uu___2)) in
           FStarC_List.iter aux ps
 let (smt_pat_lid : FStarC_Range_Type.range -> FStarC_Ident.lident) =
@@ -1804,9 +1813,9 @@ let rec (hoist_pat_ascription' :
         let uu___ =
           let uu___1 =
             (if dep
-             then FStarC_Parser_Const.mk_dtuple_lid
-             else FStarC_Parser_Const.mk_tuple_lid) (FStarC_List.length pats)
-              pat.FStarC_Parser_AST.prange in
+             then FStarC_Parser_Const_Tuples.mk_dtuple_lid
+             else FStarC_Parser_Const_Tuples.mk_tuple_lid)
+              (FStarC_List.length pats) pat.FStarC_Parser_AST.prange in
           FStarC_Parser_AST.Var uu___1 in
         handle_list uu___
           (fun pats1 -> FStarC_Parser_AST.PatTuple (pats1, dep)) pats
@@ -2112,11 +2121,11 @@ let rec (desugar_data_pat :
                    let l =
                      if dep
                      then
-                       FStarC_Parser_Const.mk_dtuple_data_lid
+                       FStarC_Parser_Const_Tuples.mk_dtuple_data_lid
                          (FStarC_List.length args2)
                          p1.FStarC_Parser_AST.prange
                      else
-                       FStarC_Parser_Const.mk_tuple_data_lid
+                       FStarC_Parser_Const_Tuples.mk_tuple_data_lid
                          (FStarC_List.length args2)
                          p1.FStarC_Parser_AST.prange in
                    let constr =
@@ -2608,7 +2617,7 @@ and (desugar_term_maybe_top :
                    (let uu___2 = FStarC_Ident.string_of_id id in uu___2 = "*")
                      &&
                      (let uu___2 = op_as_term env (Prims.of_int (2)) op_star in
-                      FStarC_Option.isNone uu___2)
+                      FStar_Pervasives_Native.uu___is_None uu___2)
                    ->
                    let uu___2 = flatten t1 in FStarC_List.op_At uu___2 [t2]
                | uu___2 -> [t] in
@@ -2630,7 +2639,7 @@ and (desugar_term_maybe_top :
          | FStarC_Parser_AST.Tvar a ->
              let uu___2 =
                let uu___3 =
-                 FStarC_Syntax_DsEnv.fail_or2
+                 FStarC_Syntax_DsEnv.fail_or2 env
                    (FStarC_Syntax_DsEnv.try_lookup_id env) a in
                setpos uu___3 in
              (uu___2, noaqs)
@@ -3007,7 +3016,7 @@ and (desugar_term_maybe_top :
               | (targs, aqs) ->
                   let tup =
                     let uu___3 =
-                      FStarC_Parser_Const.mk_tuple_lid
+                      FStarC_Parser_Const_Tuples.mk_tuple_lid
                         (FStarC_List.length targs)
                         top.FStarC_Parser_AST.range in
                     FStarC_Syntax_DsEnv.fail_or env
@@ -3089,7 +3098,7 @@ and (desugar_term_maybe_top :
               | (env1, uu___3, targs) ->
                   let tup =
                     let uu___4 =
-                      FStarC_Parser_Const.mk_dtuple_lid
+                      FStarC_Parser_Const_Tuples.mk_dtuple_lid
                         (FStarC_List.length targs)
                         top.FStarC_Parser_AST.range in
                     FStarC_Syntax_DsEnv.fail_or env1
@@ -3338,14 +3347,18 @@ and (desugar_term_maybe_top :
                                 | (p1, uu___6)::[] ->
                                     FStar_Pervasives_Native.Some p1
                                 | uu___6 ->
+                                    let uu___7 =
+                                      let uu___8 =
+                                        FStarC_Errors_Msg.text
+                                          "Disjunctive patterns are not supported in abstractions" in
+                                      [uu___8] in
                                     FStarC_Errors.raise_error
                                       FStarC_Parser_AST.hasRange_pattern p
                                       FStarC_Errors_Codes.Fatal_UnsupportedDisjuctivePatterns
                                       ()
                                       (Obj.magic
-                                         FStarC_Errors_Msg.is_error_message_string)
-                                      (Obj.magic
-                                         "Disjunctive patterns are not supported in abstractions") in
+                                         FStarC_Errors_Msg.is_error_message_list_doc)
+                                      (Obj.magic uu___7) in
                               let uu___6 =
                                 match b with
                                 | LetBinder uu___7 -> failwith "Impossible"
@@ -3372,7 +3385,7 @@ and (desugar_term_maybe_top :
                                               uu___7, uu___8) ->
                                                let tup2 =
                                                  let uu___9 =
-                                                   FStarC_Parser_Const.mk_tuple_data_lid
+                                                   FStarC_Parser_Const_Tuples.mk_tuple_data_lid
                                                      (Prims.of_int (2))
                                                      top.FStarC_Parser_AST.range in
                                                  FStarC_Syntax_Syntax.lid_and_dd_as_fv
@@ -3433,7 +3446,7 @@ and (desugar_term_maybe_top :
                                               (uu___8, uu___9, pats1)) ->
                                                let tupn =
                                                  let uu___10 =
-                                                   FStarC_Parser_Const.mk_tuple_data_lid
+                                                   FStarC_Parser_Const_Tuples.mk_tuple_data_lid
                                                      (Prims.int_one +
                                                         (FStarC_List.length
                                                            args))
@@ -3793,7 +3806,7 @@ and (desugar_term_maybe_top :
                                   (match uu___10 with
                                    | (env2, xx, used_marker) ->
                                        let dummy_ref =
-                                         FStarC_Util.mk_ref true in
+                                         FStarC_Effect.mk_ref true in
                                        let uu___11 =
                                          let uu___12 =
                                            FStarC_Syntax_Syntax.mk_binder xx in
@@ -6129,7 +6142,7 @@ and (desugar_formula :
                      FStarC_List.map
                        (fun i ->
                           let uu___2 =
-                            FStarC_Syntax_DsEnv.fail_or2
+                            FStarC_Syntax_DsEnv.fail_or2 env1
                               (FStarC_Syntax_DsEnv.try_lookup_id env1) i in
                           let uu___3 = FStarC_Ident.range_of_id i in
                           {
@@ -6541,6 +6554,12 @@ let (mk_data_discriminators :
             then
               FStarC_List.op_At (FStarC_Syntax_Syntax.Assumption :: q) quals1
             else FStarC_List.op_At q quals1 in
+          let attrs1 =
+            let uu___ =
+              FStarC_Syntax_Syntax.fvar
+                FStarC_Parser_Const.discriminator_attr
+                FStar_Pervasives_Native.None in
+            uu___ :: attrs in
           FStarC_List.map
             (fun d ->
                let disc_name = FStarC_Syntax_Util.mk_discriminator d in
@@ -6562,7 +6581,7 @@ let (mk_data_discriminators :
                  FStarC_Syntax_Syntax.sigquals = uu___1;
                  FStarC_Syntax_Syntax.sigmeta =
                    FStarC_Syntax_Syntax.default_sigmeta;
-                 FStarC_Syntax_Syntax.sigattrs = attrs;
+                 FStarC_Syntax_Syntax.sigattrs = attrs1;
                  FStarC_Syntax_Syntax.sigopens_and_abbrevs = uu___2;
                  FStarC_Syntax_Syntax.sigopts = FStar_Pervasives_Native.None
                }) datas
@@ -6617,6 +6636,12 @@ let (mk_indexed_projector_names :
                            (FStarC_Syntax_Syntax.Projector
                               (lid, (x.FStarC_Syntax_Syntax.ppname))) ::
                            iquals1) in
+                       let attrs1 =
+                         let uu___1 =
+                           FStarC_Syntax_Syntax.fvar
+                             FStarC_Parser_Const.projector_attr
+                             FStar_Pervasives_Native.None in
+                         uu___1 :: attrs in
                        let decl =
                          let uu___1 = FStarC_Ident.range_of_lid field_name in
                          let uu___2 =
@@ -6634,7 +6659,7 @@ let (mk_indexed_projector_names :
                            FStarC_Syntax_Syntax.sigquals = quals1;
                            FStarC_Syntax_Syntax.sigmeta =
                              FStarC_Syntax_Syntax.default_sigmeta;
-                           FStarC_Syntax_Syntax.sigattrs = attrs;
+                           FStarC_Syntax_Syntax.sigattrs = attrs1;
                            FStarC_Syntax_Syntax.sigopens_and_abbrevs = uu___2;
                            FStarC_Syntax_Syntax.sigopts =
                              FStar_Pervasives_Native.None
@@ -6684,7 +6709,7 @@ let (mk_indexed_projector_names :
                               FStarC_Syntax_Syntax.sigquals = quals1;
                               FStarC_Syntax_Syntax.sigmeta =
                                 FStarC_Syntax_Syntax.default_sigmeta;
-                              FStarC_Syntax_Syntax.sigattrs = attrs;
+                              FStarC_Syntax_Syntax.sigattrs = attrs1;
                               FStarC_Syntax_Syntax.sigopens_and_abbrevs =
                                 uu___3;
                               FStarC_Syntax_Syntax.sigopts =
@@ -9227,10 +9252,13 @@ and (desugar_decl_maybe_fail_attr :
                                         FStarC_Errors_Msg.text
                                           "This top-level definition was expected to raise error codes" in
                                       let uu___12 =
+                                        let uu___13 =
+                                          FStarC_Class_Ord.sort
+                                            FStarC_Class_Ord.ord_int
+                                            expected_errs in
                                         FStarC_Class_PP.pp
                                           (FStarC_Class_PP.pp_list
-                                             FStarC_Class_PP.pp_int)
-                                          expected_errs in
+                                             FStarC_Class_PP.pp_int) uu___13 in
                                       FStarC_Pprint.prefix (Prims.of_int (2))
                                         Prims.int_one uu___11 uu___12 in
                                     let uu___11 =
@@ -9239,9 +9267,13 @@ and (desugar_decl_maybe_fail_attr :
                                           FStarC_Errors_Msg.text
                                             "but it raised" in
                                         let uu___14 =
+                                          let uu___15 =
+                                            FStarC_Class_Ord.sort
+                                              FStarC_Class_Ord.ord_int errnos in
                                           FStarC_Class_PP.pp
                                             (FStarC_Class_PP.pp_list
-                                               FStarC_Class_PP.pp_int) errnos in
+                                               FStarC_Class_PP.pp_int)
+                                            uu___15 in
                                         FStarC_Pprint.prefix
                                           (Prims.of_int (2)) Prims.int_one
                                           uu___13 uu___14 in
@@ -10450,7 +10482,8 @@ and (desugar_decl_core :
                         FStarC_Class_HasRange.hasRange_range
                         error.FStarC_Parser_AST_Util.range
                         FStarC_Errors_Codes.Fatal_SyntaxError ()
-                        (Obj.magic FStarC_Errors_Msg.is_error_message_string)
+                        (Obj.magic
+                           FStarC_Errors_Msg.is_error_message_list_doc)
                         (Obj.magic error.FStarC_Parser_AST_Util.message)
                   | FStar_Pervasives.Inr d' ->
                       let quals =
@@ -10565,7 +10598,11 @@ let (desugar_modul_common :
              { FStarC_Syntax_Syntax.name = prev_lid;
                FStarC_Syntax_Syntax.declarations = uu___;
                FStarC_Syntax_Syntax.is_interface = uu___1;_},
-             FStarC_Parser_AST.Module (current_lid, uu___2)) when
+             FStarC_Parser_AST.Module
+             { FStarC_Parser_AST.no_prelude = uu___2;
+               FStarC_Parser_AST.mname = current_lid;
+               FStarC_Parser_AST.decls = uu___3;_})
+              when
               (FStarC_Ident.lid_equals prev_lid current_lid) &&
                 (FStarC_Options.interactive ())
               -> env
@@ -10575,12 +10612,21 @@ let (desugar_modul_common :
               FStar_Pervasives_Native.fst uu___1 in
         let uu___ =
           match m with
-          | FStarC_Parser_AST.Interface (mname, decls, admitted) ->
+          | FStarC_Parser_AST.Interface
+              { FStarC_Parser_AST.no_prelude1 = no_prelude;
+                FStarC_Parser_AST.mname1 = mname;
+                FStarC_Parser_AST.decls1 = decls;
+                FStarC_Parser_AST.admitted = admitted;_}
+              ->
               let uu___1 =
                 FStarC_Syntax_DsEnv.prepare_module_or_interface true admitted
                   env1 mname FStarC_Syntax_DsEnv.default_mii in
               (uu___1, mname, decls, true)
-          | FStarC_Parser_AST.Module (mname, decls) ->
+          | FStarC_Parser_AST.Module
+              { FStarC_Parser_AST.no_prelude = no_prelude;
+                FStarC_Parser_AST.mname = mname;
+                FStarC_Parser_AST.decls = decls;_}
+              ->
               let uu___1 =
                 FStarC_Syntax_DsEnv.prepare_module_or_interface false false
                   env1 mname FStarC_Syntax_DsEnv.default_mii in
@@ -10597,12 +10643,6 @@ let (desugar_modul_common :
                      FStarC_Syntax_Syntax.is_interface = intf
                    } in
                  (env3, modul, pop_when_done))
-let (as_interface : FStarC_Parser_AST.modul -> FStarC_Parser_AST.modul) =
-  fun m ->
-    match m with
-    | FStarC_Parser_AST.Module (mname, decls) ->
-        FStarC_Parser_AST.Interface (mname, decls, true)
-    | i -> i
 let (desugar_partial_modul :
   FStarC_Syntax_Syntax.modul FStar_Pervasives_Native.option ->
     env_t -> FStarC_Parser_AST.modul -> (env_t * FStarC_Syntax_Syntax.modul))
@@ -10617,9 +10657,9 @@ let (desugar_partial_modul :
                  let uu___2 =
                    let uu___3 = FStarC_Options.file_list () in
                    FStarC_List.hd uu___3 in
-                 FStarC_Util.get_file_extension uu___2 in
+                 FStarC_Filepath.get_file_extension uu___2 in
                FStarC_List.mem uu___1 ["fsti"; "fsi"]) in
-          if uu___ then as_interface m else m in
+          if uu___ then FStarC_Parser_AST.as_interface m else m in
         let uu___ = desugar_modul_common curmod env m1 in
         match uu___ with
         | (env1, modul, pop_when_done) ->

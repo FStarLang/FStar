@@ -4,6 +4,7 @@ type 'a ref = 'a ref'[@@deriving yojson,show]
 let op_Bang (r:'a ref) = !r
 let op_Colon_Equals x y = x := y
 let alloc x = ref x
+let mk_ref = alloc
 let raise = raise
 let exit i = exit (Z.to_int i)
 exception Failure = Failure (* NB: reusing OCaml's native Failure. *)

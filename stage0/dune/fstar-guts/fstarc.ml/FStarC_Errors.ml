@@ -1,10 +1,10 @@
 open Prims
 let (fallback_range :
   FStarC_Range_Type.range FStar_Pervasives_Native.option FStarC_Effect.ref) =
-  FStarC_Util.mk_ref FStar_Pervasives_Native.None
+  FStarC_Effect.mk_ref FStar_Pervasives_Native.None
 let (error_range_bound :
   FStarC_Range_Type.range FStar_Pervasives_Native.option FStarC_Effect.ref) =
-  FStarC_Util.mk_ref FStar_Pervasives_Native.None
+  FStarC_Effect.mk_ref FStar_Pervasives_Native.None
 let with_error_bound : 'a . FStarC_Range_Type.range -> (unit -> 'a) -> 'a =
   fun r ->
     fun f ->
@@ -250,12 +250,15 @@ let (json_of_issue : issue -> FStarC_Json.json) =
           let uu___5 =
             let uu___6 =
               let uu___7 =
+                let uu___8 =
+                  FStarC_Util.map_opt issue1.issue_range
+                    FStarC_Range_Ops.refind_range in
                 Obj.magic
                   (FStarC_Class_Monad.op_Less_Dollar_Greater
                      FStarC_Class_Monad.monad_option () ()
-                     (fun uu___8 ->
-                        (Obj.magic FStarC_Range_Type.json_of_range) uu___8)
-                     (Obj.magic issue1.issue_range)) in
+                     (fun uu___9 ->
+                        (Obj.magic FStarC_Range_Type.json_of_range) uu___9)
+                     (Obj.magic uu___8)) in
               FStarC_Util.dflt FStarC_Json.JsonNull uu___7 in
             ("range", uu___6) in
           let uu___6 =
@@ -377,7 +380,8 @@ let optional_def :
 let (issue_to_doc' : Prims.bool -> issue -> FStarC_Pprint.document) =
   fun print_hdr ->
     fun issue1 ->
-      let r = issue1.issue_range in
+      let r =
+        FStarC_Util.map_opt issue1.issue_range FStarC_Range_Ops.refind_range in
       let hdr =
         if print_hdr
         then
@@ -626,8 +630,8 @@ let (fixup_issue_range :
     FStarC_Util.map_opt rng1 maybe_bound_range
 let (mk_default_handler : Prims.bool -> error_handler) =
   fun print ->
-    let issues = FStarC_Util.mk_ref [] in
-    let err_count = FStarC_Util.mk_ref Prims.int_zero in
+    let issues = FStarC_Effect.mk_ref [] in
+    let err_count = FStarC_Effect.mk_ref Prims.int_zero in
     let add_one e =
       let e1 =
         let uu___ = fixup_issue_range e.issue_range in
@@ -682,7 +686,7 @@ let (mk_default_handler : Prims.bool -> error_handler) =
     }
 let (default_handler : error_handler) = mk_default_handler true
 let (current_handler : error_handler FStarC_Effect.ref) =
-  FStarC_Util.mk_ref default_handler
+  FStarC_Effect.mk_ref default_handler
 let (mk_issue :
   issue_level ->
     FStarC_Range_Type.range FStar_Pervasives_Native.option ->
@@ -776,7 +780,7 @@ let (__proj__Mkerror_context_t__item__set :
   fun projectee ->
     match projectee with | { push; pop; clear = clear1; get; set;_} -> set
 let (error_context : error_context_t) =
-  let ctxs = FStarC_Util.mk_ref [] in
+  let ctxs = FStarC_Effect.mk_ref [] in
   let push s =
     let uu___ = let uu___1 = FStarC_Effect.op_Bang ctxs in s :: uu___1 in
     FStarC_Effect.op_Colon_Equals ctxs uu___ in
@@ -836,8 +840,8 @@ let (uu___0 :
   (((Prims.string -> FStarC_Errors_Codes.error_setting Prims.list) -> unit) *
     (unit -> FStarC_Errors_Codes.error_setting Prims.list)))
   =
-  let parser_callback = FStarC_Util.mk_ref FStar_Pervasives_Native.None in
-  let error_flags = FStarC_Util.smap_create (Prims.of_int (10)) in
+  let parser_callback = FStarC_Effect.mk_ref FStar_Pervasives_Native.None in
+  let error_flags = FStarC_SMap.create (Prims.of_int (10)) in
   let set_error_flags uu___ =
     let parse s =
       let uu___1 = FStarC_Effect.op_Bang parser_callback in
@@ -851,18 +855,17 @@ let (uu___0 :
          match () with
          | () ->
              let r = parse we in
-             (FStarC_Util.smap_add error_flags we
-                (FStar_Pervasives_Native.Some r);
+             (FStarC_SMap.add error_flags we (FStar_Pervasives_Native.Some r);
               FStarC_Getopt.Success)) ()
     with
     | Invalid_warn_error_setting msg ->
-        (FStarC_Util.smap_add error_flags we FStar_Pervasives_Native.None;
+        (FStarC_SMap.add error_flags we FStar_Pervasives_Native.None;
          FStarC_Getopt.Error
            ((Prims.strcat "Invalid --warn_error setting: "
                (Prims.strcat msg "\n")), "warn_error")) in
   let get_error_flags uu___ =
     let we = FStarC_Options.warn_error () in
-    let uu___1 = FStarC_Util.smap_try_find error_flags we in
+    let uu___1 = FStarC_SMap.try_find error_flags we in
     match uu___1 with
     | FStar_Pervasives_Native.Some (FStar_Pervasives_Native.Some w) -> w
     | uu___2 -> FStarC_Errors_Codes.default_settings in
@@ -1263,3 +1266,22 @@ let (log_issue_text :
         log_issue FStarC_Class_HasRange.hasRange_range rng code ()
           (Obj.magic FStarC_Errors_Msg.is_error_message_string)
           (Obj.magic msg)
+let (uu___1 : unit) =
+  FStarC_Effect.op_Colon_Equals FStarC_Options.check_include_dir
+    (fun s ->
+       if Prims.op_Negation (FStarC_Filepath.is_directory s)
+       then
+         let uu___ =
+           let uu___2 =
+             let uu___3 =
+               FStarC_Errors_Msg.text "Not a valid include directory:" in
+             let uu___4 = FStarC_Pprint.doc_of_string s in
+             FStarC_Pprint.prefix (Prims.of_int (2)) Prims.int_one uu___3
+               uu___4 in
+           [uu___2] in
+         log_issue FStarC_Class_HasRange.hasRange_range
+           FStarC_Range_Type.dummyRange
+           FStarC_Errors_Codes.Fatal_NotValidIncludeDirectory ()
+           (Obj.magic FStarC_Errors_Msg.is_error_message_list_doc)
+           (Obj.magic uu___)
+       else ())

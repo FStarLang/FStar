@@ -1134,7 +1134,7 @@ let e_tuple2 : 'a 'b . 'a embedding -> 'b embedding -> ('a * 'b) embedding =
       let etyp uu___ =
         let uu___1 =
           let uu___2 =
-            FStarC_Ident.string_of_lid FStarC_Parser_Const.lid_tuple2 in
+            FStarC_Ident.string_of_lid FStarC_Parser_Const_Tuples.lid_tuple2 in
           let uu___3 =
             let uu___4 = ea.e_typ () in
             let uu___5 = let uu___6 = eb.e_typ () in [uu___6] in uu___4 ::
@@ -1160,7 +1160,7 @@ let e_tuple2 : 'a 'b . 'a embedding -> 'b embedding -> ('a * 'b) embedding =
                    uu___6 :: uu___7 in
                  uu___4 :: uu___5 in
                uu___2 :: uu___3 in
-             lid_as_constr FStarC_Parser_Const.lid_Mktuple2
+             lid_as_constr FStarC_Parser_Const_Tuples.lid_Mktuple2
                [FStarC_Syntax_Syntax.U_zero; FStarC_Syntax_Syntax.U_zero]
                uu___1) in
       let un1 cb trm =
@@ -1172,7 +1172,7 @@ let e_tuple2 : 'a 'b . 'a embedding -> 'b embedding -> ('a * 'b) embedding =
                     (fvar, us, (b1, uu___)::(a1, uu___1)::uu___2::uu___3::[])
                     when
                     FStarC_Syntax_Syntax.fv_eq_lid fvar
-                      FStarC_Parser_Const.lid_Mktuple2
+                      FStarC_Parser_Const_Tuples.lid_Mktuple2
                     ->
                     Obj.magic
                       (Obj.repr
@@ -1204,7 +1204,7 @@ let e_tuple2 : 'a 'b . 'a embedding -> 'b embedding -> ('a * 'b) embedding =
                let uu___4 = let uu___5 = type_of ea in as_arg uu___5 in
                [uu___4] in
              uu___2 :: uu___3 in
-           lid_as_typ FStarC_Parser_Const.lid_tuple2
+           lid_as_typ FStarC_Parser_Const_Tuples.lid_tuple2
              [FStarC_Syntax_Syntax.U_zero; FStarC_Syntax_Syntax.U_zero]
              uu___1) etyp
 let e_tuple3 :
@@ -1217,7 +1217,8 @@ let e_tuple3 :
         let etyp uu___ =
           let uu___1 =
             let uu___2 =
-              FStarC_Ident.string_of_lid FStarC_Parser_Const.lid_tuple3 in
+              FStarC_Ident.string_of_lid
+                FStarC_Parser_Const_Tuples.lid_tuple3 in
             let uu___3 =
               let uu___4 = ea.e_typ () in
               let uu___5 =
@@ -1256,7 +1257,7 @@ let e_tuple3 :
                          uu___7 :: uu___8 in
                        uu___5 :: uu___6 in
                      uu___3 :: uu___4 in
-                   lid_as_constr FStarC_Parser_Const.lid_Mktuple3
+                   lid_as_constr FStarC_Parser_Const_Tuples.lid_Mktuple3
                      [FStarC_Syntax_Syntax.U_zero;
                      FStarC_Syntax_Syntax.U_zero;
                      FStarC_Syntax_Syntax.U_zero] uu___2) in
@@ -1270,7 +1271,7 @@ let e_tuple3 :
                        (c1, uu___)::(b1, uu___1)::(a1, uu___2)::uu___3::uu___4::uu___5::[])
                       when
                       FStarC_Syntax_Syntax.fv_eq_lid fvar
-                        FStarC_Parser_Const.lid_Mktuple3
+                        FStarC_Parser_Const_Tuples.lid_Mktuple3
                       ->
                       Obj.magic
                         (Obj.repr
@@ -1317,7 +1318,7 @@ let e_tuple3 :
                    [uu___6] in
                  uu___4 :: uu___5 in
                uu___2 :: uu___3 in
-             lid_as_typ FStarC_Parser_Const.lid_tuple3
+             lid_as_typ FStarC_Parser_Const_Tuples.lid_tuple3
                [FStarC_Syntax_Syntax.U_zero;
                FStarC_Syntax_Syntax.U_zero;
                FStarC_Syntax_Syntax.U_zero] uu___1) etyp
@@ -1334,7 +1335,8 @@ let e_tuple4 :
           let etyp uu___ =
             let uu___1 =
               let uu___2 =
-                FStarC_Ident.string_of_lid FStarC_Parser_Const.lid_tuple4 in
+                FStarC_Ident.string_of_lid
+                  FStarC_Parser_Const_Tuples.lid_tuple4 in
               let uu___3 =
                 let uu___4 = ea.e_typ () in
                 let uu___5 =
@@ -1387,7 +1389,7 @@ let e_tuple4 :
                            uu___7 :: uu___8 in
                          uu___5 :: uu___6 in
                        uu___3 :: uu___4 in
-                     lid_as_constr FStarC_Parser_Const.lid_Mktuple4
+                     lid_as_constr FStarC_Parser_Const_Tuples.lid_Mktuple4
                        [FStarC_Syntax_Syntax.U_zero;
                        FStarC_Syntax_Syntax.U_zero;
                        FStarC_Syntax_Syntax.U_zero;
@@ -1403,7 +1405,7 @@ let e_tuple4 :
                                                                    uu___3)::uu___4::uu___5::uu___6::uu___7::[])
                         when
                         FStarC_Syntax_Syntax.fv_eq_lid fvar
-                          FStarC_Parser_Const.lid_Mktuple4
+                          FStarC_Parser_Const_Tuples.lid_Mktuple4
                         ->
                         Obj.magic
                           (Obj.repr
@@ -1473,7 +1475,7 @@ let e_tuple4 :
                      uu___6 :: uu___7 in
                    uu___4 :: uu___5 in
                  uu___2 :: uu___3 in
-               lid_as_typ FStarC_Parser_Const.lid_tuple4
+               lid_as_typ FStarC_Parser_Const_Tuples.lid_tuple4
                  [FStarC_Syntax_Syntax.U_zero;
                  FStarC_Syntax_Syntax.U_zero;
                  FStarC_Syntax_Syntax.U_zero;
@@ -1493,7 +1495,8 @@ let e_tuple5 :
             let etyp uu___ =
               let uu___1 =
                 let uu___2 =
-                  FStarC_Ident.string_of_lid FStarC_Parser_Const.lid_tuple5 in
+                  FStarC_Ident.string_of_lid
+                    FStarC_Parser_Const_Tuples.lid_tuple5 in
                 let uu___3 =
                   let uu___4 = ea.e_typ () in
                   let uu___5 =
@@ -1561,7 +1564,7 @@ let e_tuple5 :
                              uu___7 :: uu___8 in
                            uu___5 :: uu___6 in
                          uu___3 :: uu___4 in
-                       lid_as_constr FStarC_Parser_Const.lid_Mktuple5
+                       lid_as_constr FStarC_Parser_Const_Tuples.lid_Mktuple5
                          [FStarC_Syntax_Syntax.U_zero;
                          FStarC_Syntax_Syntax.U_zero;
                          FStarC_Syntax_Syntax.U_zero;
@@ -1579,7 +1582,7 @@ let e_tuple5 :
                            (a1, uu___4)::uu___5::uu___6::uu___7::uu___8::uu___9::[])
                           when
                           FStarC_Syntax_Syntax.fv_eq_lid fvar
-                            FStarC_Parser_Const.lid_Mktuple5
+                            FStarC_Parser_Const_Tuples.lid_Mktuple5
                           ->
                           Obj.magic
                             (Obj.repr
@@ -1675,7 +1678,7 @@ let e_tuple5 :
                        uu___6 :: uu___7 in
                      uu___4 :: uu___5 in
                    uu___2 :: uu___3 in
-                 lid_as_typ FStarC_Parser_Const.lid_tuple5
+                 lid_as_typ FStarC_Parser_Const_Tuples.lid_tuple5
                    [FStarC_Syntax_Syntax.U_zero;
                    FStarC_Syntax_Syntax.U_zero;
                    FStarC_Syntax_Syntax.U_zero;
@@ -2036,55 +2039,55 @@ let e_unsupported : 'a . unit -> 'a embedding =
     mk_emb em1 un1
       (fun uu___1 -> lid_as_typ FStarC_Parser_Const.term_lid [] [])
       (fun uu___1 -> FStarC_Syntax_Syntax.ET_abstract)
-let (e_norm_step : FStar_Pervasives.norm_step embedding) =
+let (e_norm_step : FStarC_NormSteps.norm_step embedding) =
   let em1 cb n =
     match n with
-    | FStar_Pervasives.Simpl ->
+    | FStarC_NormSteps.Simpl ->
         let uu___ =
           FStarC_Syntax_Syntax.lid_as_fv FStarC_Parser_Const.steps_simpl
             FStar_Pervasives_Native.None in
         mkFV uu___ [] []
-    | FStar_Pervasives.Weak ->
+    | FStarC_NormSteps.Weak ->
         let uu___ =
           FStarC_Syntax_Syntax.lid_as_fv FStarC_Parser_Const.steps_weak
             FStar_Pervasives_Native.None in
         mkFV uu___ [] []
-    | FStar_Pervasives.HNF ->
+    | FStarC_NormSteps.HNF ->
         let uu___ =
           FStarC_Syntax_Syntax.lid_as_fv FStarC_Parser_Const.steps_hnf
             FStar_Pervasives_Native.None in
         mkFV uu___ [] []
-    | FStar_Pervasives.Primops ->
+    | FStarC_NormSteps.Primops ->
         let uu___ =
           FStarC_Syntax_Syntax.lid_as_fv FStarC_Parser_Const.steps_primops
             FStar_Pervasives_Native.None in
         mkFV uu___ [] []
-    | FStar_Pervasives.Delta ->
+    | FStarC_NormSteps.Delta ->
         let uu___ =
           FStarC_Syntax_Syntax.lid_as_fv FStarC_Parser_Const.steps_delta
             FStar_Pervasives_Native.None in
         mkFV uu___ [] []
-    | FStar_Pervasives.Zeta ->
+    | FStarC_NormSteps.Zeta ->
         let uu___ =
           FStarC_Syntax_Syntax.lid_as_fv FStarC_Parser_Const.steps_zeta
             FStar_Pervasives_Native.None in
         mkFV uu___ [] []
-    | FStar_Pervasives.Iota ->
+    | FStarC_NormSteps.Iota ->
         let uu___ =
           FStarC_Syntax_Syntax.lid_as_fv FStarC_Parser_Const.steps_iota
             FStar_Pervasives_Native.None in
         mkFV uu___ [] []
-    | FStar_Pervasives.Reify ->
+    | FStarC_NormSteps.Reify ->
         let uu___ =
           FStarC_Syntax_Syntax.lid_as_fv FStarC_Parser_Const.steps_reify
             FStar_Pervasives_Native.None in
         mkFV uu___ [] []
-    | FStar_Pervasives.NBE ->
+    | FStarC_NormSteps.NBE ->
         let uu___ =
           FStarC_Syntax_Syntax.lid_as_fv FStarC_Parser_Const.steps_nbe
             FStar_Pervasives_Native.None in
         mkFV uu___ [] []
-    | FStar_Pervasives.UnfoldOnly l ->
+    | FStarC_NormSteps.UnfoldOnly l ->
         let uu___ =
           FStarC_Syntax_Syntax.lid_as_fv FStarC_Parser_Const.steps_unfoldonly
             FStar_Pervasives_Native.None in
@@ -2093,7 +2096,7 @@ let (e_norm_step : FStar_Pervasives.norm_step embedding) =
             let uu___3 = embed (e_list e_string) cb l in as_arg uu___3 in
           [uu___2] in
         mkFV uu___ [] uu___1
-    | FStar_Pervasives.UnfoldFully l ->
+    | FStarC_NormSteps.UnfoldFully l ->
         let uu___ =
           FStarC_Syntax_Syntax.lid_as_fv
             FStarC_Parser_Const.steps_unfoldfully
@@ -2103,7 +2106,7 @@ let (e_norm_step : FStar_Pervasives.norm_step embedding) =
             let uu___3 = embed (e_list e_string) cb l in as_arg uu___3 in
           [uu___2] in
         mkFV uu___ [] uu___1
-    | FStar_Pervasives.UnfoldAttr l ->
+    | FStarC_NormSteps.UnfoldAttr l ->
         let uu___ =
           FStarC_Syntax_Syntax.lid_as_fv FStarC_Parser_Const.steps_unfoldattr
             FStar_Pervasives_Native.None in
@@ -2112,7 +2115,7 @@ let (e_norm_step : FStar_Pervasives.norm_step embedding) =
             let uu___3 = embed (e_list e_string) cb l in as_arg uu___3 in
           [uu___2] in
         mkFV uu___ [] uu___1
-    | FStar_Pervasives.UnfoldQual l ->
+    | FStarC_NormSteps.UnfoldQual l ->
         let uu___ =
           FStarC_Syntax_Syntax.lid_as_fv FStarC_Parser_Const.steps_unfoldqual
             FStar_Pervasives_Native.None in
@@ -2121,7 +2124,7 @@ let (e_norm_step : FStar_Pervasives.norm_step embedding) =
             let uu___3 = embed (e_list e_string) cb l in as_arg uu___3 in
           [uu___2] in
         mkFV uu___ [] uu___1
-    | FStar_Pervasives.UnfoldNamespace l ->
+    | FStarC_NormSteps.UnfoldNamespace l ->
         let uu___ =
           FStarC_Syntax_Syntax.lid_as_fv
             FStarC_Parser_Const.steps_unfoldnamespace
@@ -2131,12 +2134,12 @@ let (e_norm_step : FStar_Pervasives.norm_step embedding) =
             let uu___3 = embed (e_list e_string) cb l in as_arg uu___3 in
           [uu___2] in
         mkFV uu___ [] uu___1
-    | FStar_Pervasives.ZetaFull ->
+    | FStarC_NormSteps.ZetaFull ->
         let uu___ =
           FStarC_Syntax_Syntax.lid_as_fv FStarC_Parser_Const.steps_zeta_full
             FStar_Pervasives_Native.None in
         mkFV uu___ [] []
-    | FStar_Pervasives.Unascribe ->
+    | FStarC_NormSteps.Unascribe ->
         let uu___ =
           FStarC_Syntax_Syntax.lid_as_fv FStarC_Parser_Const.steps_unascribe
             FStar_Pervasives_Native.None in
@@ -2145,37 +2148,37 @@ let (e_norm_step : FStar_Pervasives.norm_step embedding) =
     match t0.nbe_t with
     | FV (fv, uu___, []) when
         FStarC_Syntax_Syntax.fv_eq_lid fv FStarC_Parser_Const.steps_simpl ->
-        FStar_Pervasives_Native.Some FStar_Pervasives.Simpl
+        FStar_Pervasives_Native.Some FStarC_NormSteps.Simpl
     | FV (fv, uu___, []) when
         FStarC_Syntax_Syntax.fv_eq_lid fv FStarC_Parser_Const.steps_weak ->
-        FStar_Pervasives_Native.Some FStar_Pervasives.Weak
+        FStar_Pervasives_Native.Some FStarC_NormSteps.Weak
     | FV (fv, uu___, []) when
         FStarC_Syntax_Syntax.fv_eq_lid fv FStarC_Parser_Const.steps_hnf ->
-        FStar_Pervasives_Native.Some FStar_Pervasives.HNF
+        FStar_Pervasives_Native.Some FStarC_NormSteps.HNF
     | FV (fv, uu___, []) when
         FStarC_Syntax_Syntax.fv_eq_lid fv FStarC_Parser_Const.steps_primops
-        -> FStar_Pervasives_Native.Some FStar_Pervasives.Primops
+        -> FStar_Pervasives_Native.Some FStarC_NormSteps.Primops
     | FV (fv, uu___, []) when
         FStarC_Syntax_Syntax.fv_eq_lid fv FStarC_Parser_Const.steps_delta ->
-        FStar_Pervasives_Native.Some FStar_Pervasives.Delta
+        FStar_Pervasives_Native.Some FStarC_NormSteps.Delta
     | FV (fv, uu___, []) when
         FStarC_Syntax_Syntax.fv_eq_lid fv FStarC_Parser_Const.steps_zeta ->
-        FStar_Pervasives_Native.Some FStar_Pervasives.Zeta
+        FStar_Pervasives_Native.Some FStarC_NormSteps.Zeta
     | FV (fv, uu___, []) when
         FStarC_Syntax_Syntax.fv_eq_lid fv FStarC_Parser_Const.steps_iota ->
-        FStar_Pervasives_Native.Some FStar_Pervasives.Iota
+        FStar_Pervasives_Native.Some FStarC_NormSteps.Iota
     | FV (fv, uu___, []) when
         FStarC_Syntax_Syntax.fv_eq_lid fv FStarC_Parser_Const.steps_nbe ->
-        FStar_Pervasives_Native.Some FStar_Pervasives.NBE
+        FStar_Pervasives_Native.Some FStarC_NormSteps.NBE
     | FV (fv, uu___, []) when
         FStarC_Syntax_Syntax.fv_eq_lid fv FStarC_Parser_Const.steps_reify ->
-        FStar_Pervasives_Native.Some FStar_Pervasives.Reify
+        FStar_Pervasives_Native.Some FStarC_NormSteps.Reify
     | FV (fv, uu___, []) when
         FStarC_Syntax_Syntax.fv_eq_lid fv FStarC_Parser_Const.steps_zeta_full
-        -> FStar_Pervasives_Native.Some FStar_Pervasives.ZetaFull
+        -> FStar_Pervasives_Native.Some FStarC_NormSteps.ZetaFull
     | FV (fv, uu___, []) when
         FStarC_Syntax_Syntax.fv_eq_lid fv FStarC_Parser_Const.steps_unascribe
-        -> FStar_Pervasives_Native.Some FStar_Pervasives.Unascribe
+        -> FStar_Pervasives_Native.Some FStarC_NormSteps.Unascribe
     | FV (fv, uu___, (l, uu___1)::[]) when
         FStarC_Syntax_Syntax.fv_eq_lid fv
           FStarC_Parser_Const.steps_unfoldonly
@@ -2183,7 +2186,7 @@ let (e_norm_step : FStar_Pervasives.norm_step embedding) =
         let uu___2 = unembed (e_list e_string) cb l in
         FStarC_Util.bind_opt uu___2
           (fun ss ->
-             FStar_Pervasives_Native.Some (FStar_Pervasives.UnfoldOnly ss))
+             FStar_Pervasives_Native.Some (FStarC_NormSteps.UnfoldOnly ss))
     | FV (fv, uu___, (l, uu___1)::[]) when
         FStarC_Syntax_Syntax.fv_eq_lid fv
           FStarC_Parser_Const.steps_unfoldfully
@@ -2191,7 +2194,7 @@ let (e_norm_step : FStar_Pervasives.norm_step embedding) =
         let uu___2 = unembed (e_list e_string) cb l in
         FStarC_Util.bind_opt uu___2
           (fun ss ->
-             FStar_Pervasives_Native.Some (FStar_Pervasives.UnfoldFully ss))
+             FStar_Pervasives_Native.Some (FStarC_NormSteps.UnfoldFully ss))
     | FV (fv, uu___, (l, uu___1)::[]) when
         FStarC_Syntax_Syntax.fv_eq_lid fv
           FStarC_Parser_Const.steps_unfoldattr
@@ -2199,7 +2202,7 @@ let (e_norm_step : FStar_Pervasives.norm_step embedding) =
         let uu___2 = unembed (e_list e_string) cb l in
         FStarC_Util.bind_opt uu___2
           (fun ss ->
-             FStar_Pervasives_Native.Some (FStar_Pervasives.UnfoldAttr ss))
+             FStar_Pervasives_Native.Some (FStarC_NormSteps.UnfoldAttr ss))
     | FV (fv, uu___, (l, uu___1)::[]) when
         FStarC_Syntax_Syntax.fv_eq_lid fv
           FStarC_Parser_Const.steps_unfoldqual
@@ -2207,7 +2210,7 @@ let (e_norm_step : FStar_Pervasives.norm_step embedding) =
         let uu___2 = unembed (e_list e_string) cb l in
         FStarC_Util.bind_opt uu___2
           (fun ss ->
-             FStar_Pervasives_Native.Some (FStar_Pervasives.UnfoldQual ss))
+             FStar_Pervasives_Native.Some (FStarC_NormSteps.UnfoldQual ss))
     | FV (fv, uu___, (l, uu___1)::[]) when
         FStarC_Syntax_Syntax.fv_eq_lid fv
           FStarC_Parser_Const.steps_unfoldnamespace
@@ -2216,7 +2219,7 @@ let (e_norm_step : FStar_Pervasives.norm_step embedding) =
         FStarC_Util.bind_opt uu___2
           (fun ss ->
              FStar_Pervasives_Native.Some
-               (FStar_Pervasives.UnfoldNamespace ss))
+               (FStarC_NormSteps.UnfoldNamespace ss))
     | uu___ ->
         ((let uu___2 =
             let uu___3 = t_to_string t0 in

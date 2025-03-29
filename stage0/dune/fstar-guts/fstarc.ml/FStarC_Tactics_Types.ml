@@ -49,6 +49,18 @@ let (uu___is_ForceSMT : guard_policy -> Prims.bool) =
   fun projectee -> match projectee with | ForceSMT -> true | uu___ -> false
 let (uu___is_Drop : guard_policy -> Prims.bool) =
   fun projectee -> match projectee with | Drop -> true | uu___ -> false
+let (showable_guard_policy : guard_policy FStarC_Class_Show.showable) =
+  {
+    FStarC_Class_Show.show =
+      (fun uu___ ->
+         match uu___ with
+         | Goal -> "Goal"
+         | SMT -> "SMT"
+         | SMTSync -> "SMTSync"
+         | Force -> "Force"
+         | ForceSMT -> "ForceSMT"
+         | Drop -> "Drop")
+  }
 type proofstate =
   {
   main_context: FStarC_TypeChecker_Env.env ;
@@ -62,7 +74,7 @@ type proofstate =
   guard_policy: guard_policy ;
   freshness: Prims.int ;
   tac_verb_dbg: Prims.bool ;
-  local_state: FStarC_Syntax_Syntax.term FStarC_Util.psmap ;
+  local_state: FStarC_Syntax_Syntax.term FStarC_PSMap.t ;
   urgency: Prims.int ;
   dump_on_failure: Prims.bool }
 let (__proj__Mkproofstate__item__main_context :
@@ -141,7 +153,7 @@ let (__proj__Mkproofstate__item__tac_verb_dbg : proofstate -> Prims.bool) =
         tac_verb_dbg; local_state; urgency; dump_on_failure;_} ->
         tac_verb_dbg
 let (__proj__Mkproofstate__item__local_state :
-  proofstate -> FStarC_Syntax_Syntax.term FStarC_Util.psmap) =
+  proofstate -> FStarC_Syntax_Syntax.term FStarC_PSMap.t) =
   fun projectee ->
     match projectee with
     | { main_context; all_implicits; goals; smt_goals; depth; __dump; 
@@ -490,8 +502,3 @@ let (check_goal_solved : goal -> Prims.bool) =
   fun goal1 ->
     let uu___ = check_goal_solved' goal1 in FStarC_Option.isSome uu___
 type 'a tref = 'a FStarC_Effect.ref
-type ('g, 't) non_informative_token = unit
-type ('g, 't0, 't1) subtyping_token = unit
-type ('g, 't0, 't1) equiv_token = unit
-type ('g, 'e, 'c) typing_token = unit
-type ('g, 'sc, 't, 'pats) match_complete_token = unit

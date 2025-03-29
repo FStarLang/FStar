@@ -376,9 +376,9 @@ let (matches_var :
           let uu___1 = FStarC_Ident.string_of_lid y in uu___ = uu___1
       | uu___ -> false
 let (is_tuple_constructor : FStarC_Ident.lident -> Prims.bool) =
-  FStarC_Parser_Const.is_tuple_data_lid'
+  FStarC_Parser_Const_Tuples.is_tuple_datacon_lid
 let (is_dtuple_constructor : FStarC_Ident.lident -> Prims.bool) =
-  FStarC_Parser_Const.is_dtuple_data_lid'
+  FStarC_Parser_Const_Tuples.is_dtuple_datacon_lid
 let (is_array : FStarC_Parser_AST.term -> Prims.bool) =
   fun e ->
     match e.FStarC_Parser_AST.tm with
@@ -749,7 +749,7 @@ let (cat_with_colon :
       FStarC_Pprint.op_Hat_Hat x uu___
 let (comment_stack :
   (Prims.string * FStarC_Range_Type.range) Prims.list FStarC_Effect.ref) =
-  FStarC_Util.mk_ref []
+  FStarC_Effect.mk_ref []
 type decl_meta =
   {
   r: FStarC_Range_Type.range ;
@@ -5049,12 +5049,17 @@ let (binder_to_document : FStarC_Parser_AST.binder -> FStarC_Pprint.document)
 let (modul_to_document : FStarC_Parser_AST.modul -> FStarC_Pprint.document) =
   fun m ->
     match m with
-    | FStarC_Parser_AST.Module (uu___, decls) ->
-        let uu___1 = FStarC_List.map decl_to_document decls in
-        FStarC_Pprint.separate FStarC_Pprint.hardline uu___1
-    | FStarC_Parser_AST.Interface (uu___, decls, uu___1) ->
-        let uu___2 = FStarC_List.map decl_to_document decls in
-        FStarC_Pprint.separate FStarC_Pprint.hardline uu___2
+    | FStarC_Parser_AST.Module
+        { FStarC_Parser_AST.no_prelude = uu___;
+          FStarC_Parser_AST.mname = uu___1;
+          FStarC_Parser_AST.decls = decls;_}
+        -> FStarC_Pprint.separate_map FStarC_Pprint.hardline p_decl decls
+    | FStarC_Parser_AST.Interface
+        { FStarC_Parser_AST.no_prelude1 = uu___;
+          FStarC_Parser_AST.mname1 = uu___1;
+          FStarC_Parser_AST.decls1 = decls;
+          FStarC_Parser_AST.admitted = uu___2;_}
+        -> FStarC_Pprint.separate_map FStarC_Pprint.hardline p_decl decls
 let (comments_to_document :
   (Prims.string * FStarC_Range_Type.range) Prims.list ->
     FStarC_Pprint.document)
@@ -5113,8 +5118,17 @@ let (modul_with_comments_to_document :
     fun comments ->
       let decls =
         match m with
-        | FStarC_Parser_AST.Module (uu___, decls1) -> decls1
-        | FStarC_Parser_AST.Interface (uu___, decls1, uu___1) -> decls1 in
+        | FStarC_Parser_AST.Module
+            { FStarC_Parser_AST.no_prelude = uu___;
+              FStarC_Parser_AST.mname = uu___1;
+              FStarC_Parser_AST.decls = decls1;_}
+            -> decls1
+        | FStarC_Parser_AST.Interface
+            { FStarC_Parser_AST.no_prelude1 = uu___;
+              FStarC_Parser_AST.mname1 = uu___1;
+              FStarC_Parser_AST.decls1 = decls1;
+              FStarC_Parser_AST.admitted = uu___2;_}
+            -> decls1 in
       decls_with_comments_to_document decls comments
 let (decl_with_comments_to_document :
   FStarC_Parser_AST.decl ->

@@ -80,9 +80,9 @@ let (debug_term : FStarC_Syntax_Syntax.term -> unit) =
   fun t ->
     let uu___ = FStarC_Class_Show.show FStarC_Syntax_Print.showable_term t in
     FStarC_Util.print1 "%s\n" uu___
-let (debug_sigmap : FStarC_Syntax_Syntax.sigelt FStarC_Util.smap -> unit) =
+let (debug_sigmap : FStarC_Syntax_Syntax.sigelt FStarC_SMap.t -> unit) =
   fun m ->
-    FStarC_Util.smap_fold m
+    FStarC_SMap.fold m
       (fun k ->
          fun v ->
            fun u ->
@@ -91,16 +91,16 @@ let (debug_sigmap : FStarC_Syntax_Syntax.sigelt FStarC_Util.smap -> unit) =
 type config =
   {
   core_cfg: FStarC_TypeChecker_Cfg.cfg ;
-  fv_cache: FStarC_TypeChecker_NBETerm.t FStarC_Util.smap }
+  fv_cache: FStarC_TypeChecker_NBETerm.t FStarC_SMap.t }
 let (__proj__Mkconfig__item__core_cfg : config -> FStarC_TypeChecker_Cfg.cfg)
   =
   fun projectee -> match projectee with | { core_cfg; fv_cache;_} -> core_cfg
 let (__proj__Mkconfig__item__fv_cache :
-  config -> FStarC_TypeChecker_NBETerm.t FStarC_Util.smap) =
+  config -> FStarC_TypeChecker_NBETerm.t FStarC_SMap.t) =
   fun projectee -> match projectee with | { core_cfg; fv_cache;_} -> fv_cache
 let (new_config : FStarC_TypeChecker_Cfg.cfg -> config) =
   fun cfg ->
-    let uu___ = FStarC_Util.smap_create (Prims.of_int (51)) in
+    let uu___ = FStarC_SMap.create (Prims.of_int (51)) in
     { core_cfg = cfg; fv_cache = uu___ }
 let (reifying_false : config -> config) =
   fun cfg ->
@@ -263,7 +263,7 @@ let (cache_add :
       fun v ->
         let lid = (fv.FStarC_Syntax_Syntax.fv_name).FStarC_Syntax_Syntax.v in
         let uu___ = FStarC_Ident.string_of_lid lid in
-        FStarC_Util.smap_add cfg.fv_cache uu___ v
+        FStarC_SMap.add cfg.fv_cache uu___ v
 let (try_in_cache :
   config ->
     FStarC_Syntax_Syntax.fv ->
@@ -273,7 +273,7 @@ let (try_in_cache :
     fun fv ->
       let lid = (fv.FStarC_Syntax_Syntax.fv_name).FStarC_Syntax_Syntax.v in
       let uu___ = FStarC_Ident.string_of_lid lid in
-      FStarC_Util.smap_try_find cfg.fv_cache uu___
+      FStarC_SMap.try_find cfg.fv_cache uu___
 let (debug : config -> (unit -> unit) -> unit) =
   fun cfg -> fun f -> FStarC_TypeChecker_Cfg.log_nbe cfg.core_cfg f
 let rec (unlazy_unmeta :

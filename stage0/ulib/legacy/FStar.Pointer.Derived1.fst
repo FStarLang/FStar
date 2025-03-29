@@ -15,8 +15,6 @@
 *)
 module FStar.Pointer.Derived1
 
-module HH = FStar.HyperStack
-module HS = FStar.HyperStack
 module HST = FStar.HyperStack.ST
 
 let includes_gfield_gen #t p #l q fd =

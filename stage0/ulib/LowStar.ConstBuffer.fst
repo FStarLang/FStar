@@ -15,13 +15,9 @@
 *)
 module LowStar.ConstBuffer
 
-module U32 = FStar.UInt32
-module Seq = FStar.Seq
 
-module HS = FStar.HyperStack
 open FStar.HyperStack.ST
 
-module I = LowStar.ImmutableBuffer
 module B = LowStar.Buffer
 
 let const_buffer a = qbuf a

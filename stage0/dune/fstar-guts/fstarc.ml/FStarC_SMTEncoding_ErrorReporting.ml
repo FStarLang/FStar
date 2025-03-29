@@ -37,7 +37,8 @@ type msg = (Prims.string * FStarC_Range_Type.range)
 type ranges =
   (Prims.string FStar_Pervasives_Native.option * FStarC_Range_Type.range)
     Prims.list
-let (__ctr : Prims.int FStarC_Effect.ref) = FStarC_Util.mk_ref Prims.int_zero
+let (__ctr : Prims.int FStarC_Effect.ref) =
+  FStarC_Effect.mk_ref Prims.int_zero
 let (fresh_label :
   FStarC_Errors_Msg.error_message ->
     FStarC_Range_Type.range ->

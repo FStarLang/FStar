@@ -1728,18 +1728,20 @@ let (ops : FStarC_TypeChecker_Primops_Base.primitive_step Prims.list) =
                                                                     FStarC_Reflection_V2_NBEEmbeddings.e_attribute)
                                                                     (solve
                                                                     FStarC_Reflection_V2_NBEEmbeddings.e_attribute)) in
-                                                                    FStarC_Tactics_InterpFuns.mk_tac_step_3
+                                                                    FStarC_Tactics_InterpFuns.mk_tac_step_4
                                                                     Prims.int_zero
                                                                     "instantiate_implicits"
                                                                     FStarC_Reflection_V2_Embeddings.e_env
                                                                     uu___0
                                                                     (FStarC_Syntax_Embeddings.e_option
                                                                     uu___0)
+                                                                    FStarC_Syntax_Embeddings.e_bool
                                                                     uu___210
                                                                     FStarC_Reflection_V2_NBEEmbeddings.e_env
                                                                     FStarC_Reflection_V2_NBEEmbeddings.e_attribute
                                                                     (FStarC_TypeChecker_NBETerm.e_option
                                                                     FStarC_Reflection_V2_NBEEmbeddings.e_attribute)
+                                                                    FStarC_TypeChecker_NBETerm.e_bool
                                                                     uu___211
                                                                     FStarC_Tactics_V2_Basic.refl_instantiate_implicits
                                                                     FStarC_Tactics_V2_Basic.refl_instantiate_implicits in

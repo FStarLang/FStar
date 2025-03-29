@@ -1,6 +1,6 @@
 open Prims
 let (plugin_unfold_warn_ctr : Prims.int FStarC_Effect.ref) =
-  FStarC_Util.mk_ref Prims.int_zero
+  FStarC_Effect.mk_ref Prims.int_zero
 type should_unfold_res =
   | Should_unfold_no 
   | Should_unfold_yes 
@@ -173,6 +173,30 @@ let (should_unfold :
                         (fun uu___2 ->
                            FStarC_Util.print_string " >> UnfoldOnce\n");
                       once)
+                 | (FStar_Pervasives_Native.Some
+                    (FStar_Pervasives.Inr
+                     ({ FStarC_Syntax_Syntax.sigel = uu___;
+                        FStarC_Syntax_Syntax.sigrng = uu___1;
+                        FStarC_Syntax_Syntax.sigquals = uu___2;
+                        FStarC_Syntax_Syntax.sigmeta = uu___3;
+                        FStarC_Syntax_Syntax.sigattrs = attrs1;
+                        FStarC_Syntax_Syntax.sigopens_and_abbrevs = uu___4;
+                        FStarC_Syntax_Syntax.sigopts = uu___5;_},
+                      uu___6),
+                     uu___7),
+                    uu___8) when
+                     (cfg.FStarC_TypeChecker_Cfg.steps).FStarC_TypeChecker_Cfg.for_extraction
+                       &&
+                       (let uu___9 =
+                          FStarC_Util.find_map attrs1
+                            FStarC_Parser_Const_ExtractAs.is_extract_as_attr in
+                        FStar_Pervasives_Native.uu___is_Some uu___9)
+                     ->
+                     (FStarC_TypeChecker_Cfg.log_unfolding cfg
+                        (fun uu___10 ->
+                           FStarC_Util.print_string
+                             " >> Has extract_as attribute and we're extracting, unfold!");
+                      yes)
                  | (FStar_Pervasives_Native.Some
                     (FStar_Pervasives.Inr
                      ({

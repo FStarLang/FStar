@@ -20,14 +20,10 @@ open FStar.HyperStack.ST
 
 include LowStar.Monotonic.Buffer
 
-module P = FStar.Preorder
-module G = FStar.Ghost
 
-module U8 = FStar.UInt8
 module U32 = FStar.UInt32
 module Seq = FStar.Seq
 
-module HS = FStar.HyperStack
 module ST = FStar.HyperStack.ST
 
 module E = FStar.Endianness

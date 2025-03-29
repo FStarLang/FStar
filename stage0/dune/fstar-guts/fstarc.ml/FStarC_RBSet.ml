@@ -120,9 +120,8 @@ let rec elems : 'a . 'a rbset -> 'a Prims.list =
     | L -> []
     | N (uu___, a1, x, b) ->
         let uu___1 = elems a1 in
-        let uu___2 =
-          let uu___3 = elems b in FStar_List_Tot_Base.append [x] uu___3 in
-        FStar_List_Tot_Base.append uu___1 uu___2
+        let uu___2 = let uu___3 = elems b in FStarC_List.op_At [x] uu___3 in
+        FStarC_List.op_At uu___1 uu___2
 let equal :
   'a . 'a FStarC_Class_Ord.ord -> 'a rbset -> 'a rbset -> Prims.bool =
   fun uu___ ->

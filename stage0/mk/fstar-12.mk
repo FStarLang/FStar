@@ -3,8 +3,6 @@ FSTAR_OPTIONS += --lax
 # only. Passing it here would mean the library is checked with
 # --MLish, which fails.
 FSTAR_OPTIONS += --MLish_effect 'FStarC.Effect'
-FSTAR_OPTIONS += --no_default_includes
-FSTAR_OPTIONS += --include "$(FSTAR_ROOT)/ulib"
 
 # FIXME: Maintaining this list sucks. Could **the module** itself
 # specify whether it is noextract? Actually, the F* compiler should
@@ -26,4 +24,4 @@ EXTRACT += --extract +FStar.Seq.Properties
 ROOTS :=
 ROOTS += $(SRC)/fstar/FStarC.Main.fst
 
-include mk/generic.mk
+include mk/generic-1.mk
