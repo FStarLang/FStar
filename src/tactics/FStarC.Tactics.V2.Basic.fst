@@ -1729,6 +1729,7 @@ let unquote (ty : term) (tm : term) : tac term = wrap_err "unquote" <| (
     )
 
 let uvar_env (env : env) (ty : option typ) : tac term =
+  wrap_err "uvar_env" <| (
   let! ps = get in
   // If no type was given, add a uvar for it too!
   let! typ, g, r =
@@ -1747,6 +1748,7 @@ let uvar_env (env : env) (ty : option typ) : tac term =
   //the guard is an explicit goal; so the typedness deps of this new uvar is []
   let! t, uvar_t = new_uvar "uvar_env" env typ None [] ps.entry_range in
   return t
+  )
 
 let ghost_uvar_env (env : env) (ty : typ) : tac term =
   let! ps = get in
@@ -2254,7 +2256,11 @@ let dbg_refl (g:env) (msg:unit -> string) =
   if !dbg_ReflTc
   then BU.print_string (msg ())
 
-let issues = list Errors.issue
+let uvar_solution = bv & term
+let remaining_uvar_t = bv & typ
+let remaining_uvars_t = list remaining_uvar_t
+let issues = list FStarC.Errors.issue
+let refl_tac (a : Type) = tac (option a & issues)
 
 let refl_typing_guard (e:env) (g:typ) : tac unit =
   let reason = "refl_typing_guard" in
@@ -2321,6 +2327,7 @@ let __refl_typing_builtin_wrapper (f:unit -> 'a & list refl_guard_t) : tac (opti
               issue_msg = [
                 Pprint.doc_of_string "Discharging guard failed.";
                 Pprint.doc_of_string "g = " ^^ pp g;
+                Pprint.doc_of_string "Guard policy is" ^/^ pp ps.guard_policy;
               ];
               issue_level = EError;
               issue_range = None;

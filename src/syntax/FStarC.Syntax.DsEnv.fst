@@ -48,8 +48,8 @@ when we are actually logging an error, which is not very frequent. *)
 let typo_candidates (x : string) (xs : list string) : list string =
   let cands = xs |> List.map (fun y -> (EditDist.edit_distance x y, y)) in
   let cands = Class.Ord.sort cands |> Class.Ord.dedup in
-  (* Don't suggest anything with a big distance (>= 8), and return at most 5 suggestions. *)
-  let cands = takeWhileMax 5 (fun (d, _) -> d < 8) cands in
+  (* Don't suggest anything with a big distance (>= 3), and return at most 5 suggestions. *)
+  let cands = takeWhileMax 5 (fun (d, _) -> d < 3) cands in
   List.map snd cands
 
 let rec list_sep2 #a (s1 s2 : a) (xs : list a) : list a =
@@ -156,12 +156,24 @@ and dsenv_hooks =
 let all_local_names (env:env) : list string =
   List.fold_right (fun scope acc ->
     match scope with
-    | Local_bindings lbs -> PSMap.keys lbs @ acc // List.map (fun (x, _, _) -> string_of_id x) (PSMap. lbs) @ acc
+    | Local_bindings lbs -> PSMap.keys lbs @ acc
     | Rec_binding (x, _, _) -> string_of_id x :: acc
-    | Module_abbrev (x, _) -> string_of_id x :: acc
+    | Module_abbrev (x, _) -> acc
     | Open_module_or_namespace _ -> acc
-    | Top_level_defs lbs -> PSMap.keys lbs @ acc // List.map (fun (x, _) -> string_of_id x) (PSMap. lbs) @ acc
+    | Top_level_defs lbs -> PSMap.keys lbs @ acc
     | Record_or_dc r -> string_of_lid r.typename :: acc
+  ) env.scope_mods []
+
+let all_mod_names (env:env) : list string =
+  (List.map (fun (l, _) -> Ident.string_of_lid l) env.modules) @
+  List.fold_right (fun scope acc ->
+    match scope with
+    | Local_bindings lbs -> acc
+    | Rec_binding (x, _, _) -> acc
+    | Module_abbrev (x, _) -> string_of_id x :: acc
+    | Open_module_or_namespace (m, _, _) -> Ident.string_of_lid m :: acc
+    | Top_level_defs lbs -> acc
+    | Record_or_dc r -> acc
   ) env.scope_mods []
 
 let mk_dsenv_hooks open_hook include_hook module_abbrev_hook =
@@ -1613,9 +1625,9 @@ let fail_or env lookup lid =
           flow (break_ 1) [
             text "Module name";
             pp modul;
-            text "could not be resolved";
+            text "could not be resolved.";
           ];
-          typo_msg (Ident.string_of_lid modul) opened_modules;
+          typo_msg (Ident.string_of_lid modul) (all_mod_names env);
         ]
 
       | Some modul' when (not (List.existsb (fun m -> m = (string_of_lid modul')) opened_modules)) ->
@@ -1646,7 +1658,7 @@ let fail_or env lookup lid =
             else
               empty);
           ];
-          typo_msg (Ident.string_of_lid lid) (all_ids_in_module modul');
+          typo_msg (Ident.string_of_id (ident_of_lid lid)) (all_ids_in_module modul');
         ]
 
 let fail_or2 env lookup id = match lookup id with

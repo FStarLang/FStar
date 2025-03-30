@@ -1668,10 +1668,11 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term & an
                             match args |> List.tryFind (fun x -> not (is_var_pattern x)) with
                             | None -> ()
                             | Some p ->
-                              raise_error p Errors.Fatal_ComputationTypeNotAllowed
-                                ("Computation type annotations are only permitted on let-bindings \
-                                             without inlined patterns; \
-                                             replace this pattern with a variable") in
+                              raise_error p Errors.Fatal_ComputationTypeNotAllowed [
+                                text "Computation type annotations are only permitted on let-bindings \
+                                      without inlined patterns.";
+                                text "Suggestion: replace this pattern with a variable."
+                              ] in
                          t
                     else if Options.ml_ish () //we're type-checking the compiler itself, e.g.
                     && Option.isSome (Env.try_lookup_effect_name env (C.effect_ML_lid())) //ML is in scope (not still in prims, e.g)
