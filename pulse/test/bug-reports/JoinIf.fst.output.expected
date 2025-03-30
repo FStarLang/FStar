@@ -1,7 +1,6 @@
 >> Got issues: [
 * Error 72 at JoinIf.fst(112,46-112,50):
   - Identifier not found: star
-  - Hint: Did you mean a, s, A, R or U32?
 
 >>]
 >> Got issues: [

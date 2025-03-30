@@ -1,6 +1,5 @@
 >> Got issues: [
 * Error 72 at Bug169.fst(10,24-10,29):
-  - Module name SiveT could not be resolved
-  - Hint: Did you mean Prims, Pulse, FStar.Seq, FStar.Set or FStar.SizeT?
+  - Module name SiveT could not be resolved.
 
 >>]
