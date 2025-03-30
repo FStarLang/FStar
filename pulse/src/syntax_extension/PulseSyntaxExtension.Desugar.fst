@@ -629,9 +629,6 @@ let rec desugar_stmt (env:env_t) (s:Sugar.stmt)
 
     | Introduce { slprop; witnesses } -> (
       let! vp = desugar_slprop env slprop in
-      fail_if (not (SW.is_tm_exists vp))
-             "introduce expects an existential formula"
-             s.range ;!
       let! witnesses = witnesses |> mapM (desugar_term env) in
       return (SW.tm_intro_exists vp witnesses s.range)
     )
