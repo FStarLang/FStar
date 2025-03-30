@@ -5,11 +5,11 @@
 >>]
 >> Got issues: [
 * Error 118 at UnresolvedFields.fst(17,4-17,5):
-  - Field 'c' is redundant for type UnresolvedFields.t
+  - No field 'c' in record type 'UnresolvedFields.t'.
 
 >>]
 >> Got issues: [
 * Error 118 at UnresolvedFields.fst(26,4-26,5):
-  - Field 'c' is redundant for type UnresolvedFields.t
+  - No field 'c' in record type 'UnresolvedFields.t'.
 
 >>]

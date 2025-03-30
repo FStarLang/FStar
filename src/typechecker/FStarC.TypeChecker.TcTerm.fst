@@ -1200,7 +1200,7 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
       match choice with
       | None ->
         raise_error field_name Errors.Fatal_IdentifierNotFound [
-           text <| BU.format1 "Field name %s could not be resolved" (string_of_lid field_name);
+           text <| BU.format1 "Field name %s could not be resolved." (string_of_lid field_name);
         ]
       | Some choice ->
         let f = S.fv_to_tm choice in
