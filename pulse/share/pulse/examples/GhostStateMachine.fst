@@ -22,7 +22,6 @@ open Pulse.Lib
 open Pulse.Lib.SpinLock
 open Pulse.Lib.Box { box, (:=), (!) }
 
-module R = Pulse.Lib.Reference
 
 (*  
   A small example of a ghost state machine (although this implementation

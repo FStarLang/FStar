@@ -17,7 +17,6 @@
 module Pulse.Typing.Util
 
 module T = FStar.Tactics.V2
-module RU = Pulse.RuntimeUtils
 (* Call check_equiv under a ForceSMT guard policy *)
 let check_equiv_now tcenv t0 t1 =
   T.with_policy ForceSMT (fun () ->
