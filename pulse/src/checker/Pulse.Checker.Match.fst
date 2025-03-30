@@ -457,7 +457,21 @@ let maybe_weaken_branch_tags
       let checked_brs = T.map #_ #(cbr:check_branches_aux_t #g pre post_hint sc_u sc_ty sc {ctag_of_br cbr == ct}) (fun x -> x) checked_brs in
       (| ct, checked_brs |)
 
-#push-options "--z3rlimit 20"
+(* Hoisting this makes the proof much faster and more stable. *)
+let rec check_branches_aux2
+  (g:env)
+  (sc_u:universe)
+  (sc_ty:typ)
+  (sc : term)
+  (c0 :comp_st)
+  (brs : list (br:branch & br_typing g sc_u sc_ty sc br.pat br.e c0))
+  : brs_typing g sc_u sc_ty sc (List.Tot.map dfst brs) c0
+  = match brs with
+    | [] -> TBRS_0 c0
+    | (| br, d|)::rest ->
+      let { pat; e } = br in
+      TBRS_1 c0 pat e d (List.Tot.map dfst rest) (check_branches_aux2 g sc_u sc_ty sc c0 rest)
+
 let check_branches
         (g:env)
         (pre:term)
@@ -476,19 +490,8 @@ let check_branches
   let (| ct, checked_brs |) = maybe_weaken_branch_tags checked_brs in
   let (| c0, checked_brs |) = join_branches ct checked_brs in
   let brs = List.Tot.map dfst checked_brs in
-  let d : brs_typing g sc_u sc_ty sc brs c0 =
-    let rec aux (brs : list (br:branch & br_typing g sc_u sc_ty sc br.pat br.e c0))
-      : brs_typing g sc_u sc_ty sc (List.Tot.map dfst brs) c0
-      = match brs with
-        | [] -> TBRS_0 c0
-        | (| br, d|)::rest ->
-          let { pat; e } = br in
-          TBRS_1 c0 pat e d (List.Tot.map dfst rest) (aux rest)
-    in
-    aux checked_brs
-  in
+  let d : brs_typing g sc_u sc_ty sc brs c0 = check_branches_aux2 g sc_u sc_ty sc c0 checked_brs in
   (| brs, c0, d |)
-#pop-options
 
 let check
         (g:env)

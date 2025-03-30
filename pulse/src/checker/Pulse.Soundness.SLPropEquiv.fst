@@ -17,7 +17,6 @@
 module Pulse.Soundness.SLPropEquiv
 module RT = FStar.Reflection.Typing
 module R = FStar.Reflection.V2
-module T = FStar.Tactics.V2
 open FStar.List.Tot
 open Pulse.Syntax
 open Pulse.Reflection.Util

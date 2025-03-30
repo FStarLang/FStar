@@ -334,8 +334,6 @@ let rec check
 
       | Tm_WithInv _ ->
         WithInv.check g pre pre_typing post_hint res_ppname t check
-
-      | _ -> T.fail "Checker form not implemented"
     in
 
     let (| x, g1, t, pre', k |) = r in

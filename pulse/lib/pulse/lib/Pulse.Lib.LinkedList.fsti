@@ -20,8 +20,6 @@ module Pulse.Lib.LinkedList
 open Pulse.Lib.Pervasives
 open Pulse.Lib.Trade.Util
 open FStar.List.Tot
-module T = Pulse.Lib.Trade.Util
-module FA = Pulse.Lib.Forall.Util
 module U32 = FStar.UInt32
 open Pulse.Lib.BoundedIntegers
 
