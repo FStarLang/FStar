@@ -58,45 +58,46 @@ if ! [ -v FSTAR_PACKAGE_FORMAT ]; then
   detect_format
 fi
 
-# Fix for stupid path confustion in windows
-if windows; then
-  WRAP=$(pwd)/mk/winwrap.sh
-else
-  WRAP=
-fi
+fixpath () {
+    local result="$(realpath "$1")"
+    if windows ; then
+	result="$(cygpath -m "$result")"
+    fi
+    echo "$result"
+}
 
 case $FSTAR_PACKAGE_FORMAT in
   zip)
     TGT="$ARCHIVE.zip"
-    ATGT="$(realpath "$TGT")"
+    ATGT="$(fixpath "$TGT")"
     pushd "$PREFIX" >/dev/null
     LEVEL=
     if release; then
       LEVEL=-9
     fi
-    $WRAP zip -q -r $LEVEL "$ATGT" .
+    zip -q -r $LEVEL "$ATGT" .
     popd >/dev/null
     ;;
   7z)
     TGT="$ARCHIVE.zip"
-    ATGT="$(realpath "$TGT")"
+    ATGT="$(fixpath "$TGT")"
     LEVEL=
     if release; then
       LEVEL=-mx9
     fi
     pushd "$PREFIX" >/dev/null
-    $WRAP 7z $LEVEL a "$ATGT" .
+    7z $LEVEL a "$ATGT" .
     popd >/dev/null
     ;;
   tar.gz|tgz)
     # -h: resolve symlinks
     TGT="$ARCHIVE.tar.gz"
-    $WRAP tar cf "$ARCHIVE.tar" -h -C "$PREFIX" .
+    tar cf "$ARCHIVE.tar" -h -C "$PREFIX" .
     LEVEL=
     if release; then
       LEVEL=-9
     fi
-    $WRAP gzip -f $LEVEL "$ARCHIVE.tar"
+    gzip -f $LEVEL "$ARCHIVE.tar"
     ;;
   *)
     echo "unrecognized FSTAR_PACKAGE_FORMAT: $FSTAR_PACKAGE_FORMAT" >&2

@@ -51,13 +51,7 @@ ifeq ($(ADMIT),1)
 FSTAR_OPTIONS += --admit_smt_queries true
 endif
 
-ifeq ($(OS),Windows_NT)
-WINWRAP=$(FSTAR_ROOT)/mk/winwrap.sh
-else
-WINWRAP=
-endif
-
-FSTAR := $(WINWRAP) $(FSTAR_EXE) $(SIL) $(FSTAR_OPTIONS)
+FSTAR := $(FSTAR_EXE) $(SIL) $(FSTAR_OPTIONS)
 
 %$(EXTENSION): FF=$(notdir $(subst $(EXTENSION),,$@))
 %$(EXTENSION):

@@ -1,5 +1,14 @@
 # This makefile is included from several other makefiles in the tree.
 
+# In some places, we need to compute absolute paths, and in a Cygwin
+# enviroment we need Windows-style paths (forward slashes ok, but no
+# /cygdrive/).
+ifeq ($(OS),Windows_NT)
+cygpath=$(shell cygpath -m "$(abspath $(1))")
+else
+cygpath=$(abspath $(1))
+endif
+
 MAKEFLAGS += --no-builtin-rules
 Q?=@
 SIL?=--silent
@@ -61,7 +70,7 @@ need_exe =											\
   $(if $(value $(strip $1)),									\
     $(if $(wildcard $(value $(strip $1))),							\
       $(if $(shell test -x $(value $(strip $1)) && echo 1),					\
-        $(eval override $(strip $1):=$(abspath $(value $(strip $1)))),				\
+        $(eval override $(strip $1):=$(call cygpath,$(value $(strip $1)))),				\
         $(error $(strip $1) ("$(value $(strip $1))") is not executable)),			\
       $(error $(strip $1) ("$(value $(strip $1))") does not exist (cwd = $(CURDIR)))),		\
     $(error Need an executable for $(strip $1)$(if $2, ("$(strip $2)"))))			\
@@ -70,7 +79,7 @@ need_file =											\
   $(if $(value $(strip $1)),									\
     $(if $(wildcard $(value $(strip $1))),							\
       $(if $(shell test -f $(value $(strip $1)) && echo 1),					\
-        $(eval override $(strip $1):=$(abspath $(value $(strip $1)))),				\
+        $(eval override $(strip $1):=$(call cygpath,$(value $(strip $1)))),				\
         $(error $(strip $1) ("$(value $(strip $1))") is not executable)),			\
       $(error $(strip $1) ("$(value $(strip $1))") does not exist (cwd = $(CURDIR)))),		\
     $(error Need a file path for $(strip $1)$(if $2, ("$(strip $2)"))))				\
@@ -79,7 +88,7 @@ need_dir =											\
   $(if $(value $(strip $1)),									\
     $(if $(wildcard $(value $(strip $1))),							\
       $(if $(shell test -d $(value $(strip $1)) && echo 1),					\
-        $(eval override $(strip $1):=$(abspath $(value $(strip $1)))),				\
+        $(eval override $(strip $1):=$(call cygpath,$(value $(strip $1)))),				\
         $(error $(strip $1) ("$(value $(strip $1))") is not executable)),			\
       $(error $(strip $1) ("$(value $(strip $1))") is not a directory (cwd = $(CURDIR)))),	\
     $(error Need an *existing* directory path for $(strip $1)$(if $2, ("$(strip $2)"))))	\
@@ -87,6 +96,6 @@ need_dir =											\
 need_dir_mk =											\
   $(if $(value $(strip $1)),									\
     $(if $(shell mkdir -p $(value $(strip $1)) && echo 1),					\
-      $(eval override $(strip $1):=$(abspath $(value $(strip $1)))),				\
+      $(eval override $(strip $1):=$(call cygpath,$(value $(strip $1)))),				\
       $(error $(strip $1) ("$(value $(strip $1))") is not a directory (mkdir failed, cwd = $(CURDIR)))),	\
     $(error Need a directory path for $(strip $1)$(if $2, ("$(strip $2)"))))			\
