@@ -71,7 +71,7 @@ fn proof
   with_invariants i {
     later_elim_timeless _;
     unfold inv_p;
-    with (v_done : bool) v_res v_claimed.
+    with (v_done : bool) v_res (v_claimed : bool).
       assert (pts_to done #0.5R v_done
               ** pts_to done #0.5R true
               ** pts_to res #0.5R v_res
