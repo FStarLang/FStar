@@ -111,7 +111,7 @@ fn multiply_by_repeated_addition (x y:nat)
         (c < x)
     )
     invariant b.
-    exists* c a.
+    exists* (c a : nat).
         R.pts_to ctr c **
         R.pts_to acc a **
         pure (c <= x /\
@@ -159,7 +159,7 @@ ensures pure ((n * (n + 1) / 2) == z)
         (c < n)
     )
     invariant b.
-    exists* c a.
+    exists* (c a : nat).
         R.pts_to ctr c **
         R.pts_to acc a **
         pure (c <= n /\
@@ -228,7 +228,7 @@ fn fib_loop (k:pos)
     (c < k)
   )
   invariant b . 
-    exists* vi vj vctr. 
+    exists* (vi vj vctr : nat).
         R.pts_to i vi **
         R.pts_to j vj **
         R.pts_to ctr vctr **

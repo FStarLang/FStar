@@ -1,6 +1,7 @@
 >> Got issues: [
 * Error 19 at Bug94.fst(11,16-11,18):
-  - Expected term of type Prims.nat got term - 1
+  - Ill-typed term: - 1
+  - Expected a term of type Prims.nat
   - Assertion failed
   - The SMT solver could not prove the query. Use --query_stats for more
     details.

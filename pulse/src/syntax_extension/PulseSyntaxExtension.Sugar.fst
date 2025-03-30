@@ -29,15 +29,7 @@ let dummyRange = FStarC.Range.dummyRange
 type binder = A.binder
 type binders = list binder
 
-type slprop' =
-  | SLPropTerm of A.term
-
-and slprop = {
-  v:slprop';
-  vrange:rng
-}
-
-let as_slprop (v:slprop') (r:rng) = { v; vrange=r}
+type slprop = A.term
 
 type st_comp_tag = 
   | ST
@@ -92,11 +84,6 @@ type hint_type =
       option A.term (* optional tactic *)
   | WILD
   | SHOW_PROOF_STATE of rng
-
-instance showable_slprop : showable slprop = {
-  show = (fun s -> match s.v with
-    | SLPropTerm t -> show t);
-}
 
 instance showable_hint_type : showable hint_type = {
   show = (fun i -> match i with
@@ -410,11 +397,8 @@ and eq_annot (a1 a2:computation_annot) =
   | Returns (i1, t1), Returns (i2, t2) -> eq_opt eq_ident i1 i2 && AU.eq_term t1 t2
   | Opens t1, Opens t2 -> AU.eq_term t1 t2
   | _, _ -> false
-and eq_slprop (s1 s2:slprop) =
-  eq_slprop' s1.v s2.v
-and eq_slprop' (s1 s2:slprop') =
-  match s1, s2 with
-  | SLPropTerm t1, SLPropTerm t2 -> AU.eq_term t1 t2
+and eq_slprop (s1 s2 : slprop) =
+  AU.eq_term s1 s2
 and eq_body (b1 b2:either stmt lambda) =
   match b1, b2 with
   | Inl s1, Inl s2 -> eq_stmt s1 s2
@@ -554,7 +538,6 @@ and scan_annot cbs (a : computation_annot) =
   | Returns (i, t) -> cbs.scan_term t
   | Opens t -> cbs.scan_term t
 and scan_slprop (cbs:A.dep_scan_callbacks) (s:slprop) =
-  let SLPropTerm s = s.v in
   cbs.scan_term s
 and scan_lambda (cbs:A.dep_scan_callbacks) (l:lambda) =
   iter (scan_binder cbs) l.binders;
