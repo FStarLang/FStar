@@ -163,16 +163,23 @@ let readback_failure (s:R.term) =
   Printf.sprintf "Internal error: failed to readback F* term %s"
                  (T.term_to_string s)
 
-(* Set got_typ = None if we don't have a good type for `t`. *)
-let ill_typed_term (t:term) (expected_typ:option term) (got_typ:option term) : Tac (list document) =
+(* Set got_typ = None if we don't have a good type for `t`.
+Note that calling this with None for expected_typ, but Some _ for got_typ
+does not make sense, as that indicates a well-typed term with no particular
+expected type, which is fine. *)
+let ill_typed_term (t:term) (expected_typ got_typ : option term)
+: TacH (list document)
+       (requires fun _ -> None? expected_typ ==> None? got_typ)
+       (ensures fun _ _ -> True)
+=
   let open Pulse.PP in
   match expected_typ, got_typ with
-  | None, _ -> [
+  | None, None -> [
     prefix 2 1 (text "Ill-typed term:") (pp t)
   ]
   | Some ty, None -> [
-    prefix 2 1 (text "Expected term of type") (pp ty) ^/^
-    prefix 2 1 (text "got term") (pp t)
+    prefix 2 1 (text "Ill-typed term:") (pp t);
+    prefix 2 1 (text "Expected a term of type") (pp ty);
   ]
   | Some ty, Some ty' -> [
     prefix 2 1 (text "Expected term of type") (pp ty) ^/^
