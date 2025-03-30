@@ -497,6 +497,7 @@ let eq_restriction (restriction1 restriction2: FStarC.Syntax.Syntax.restriction)
   | (AllowList l1, AllowList l2) ->
     let eq_tuple eq_fst eq_snd (a, b) (c, d) = eq_fst a c && eq_snd b d in
     eq_list (eq_tuple eq_ident (eq_option eq_ident)) l1 l2
+  | _ -> false
 
 let rec eq_decl' (d1 d2:decl') : bool =
   //generate the cases of this comparison starting with TopLevelModule
