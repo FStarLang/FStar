@@ -21,6 +21,7 @@ open FStarC.Syntax.Syntax
 open FStarC.TypeChecker.Env
 open FStarC.Tactics.Common
 open FStarC.Class.Show
+open FStarC.Class.PP
 
 module PO      = FStarC.TypeChecker.Primops
 module Range   = FStarC.Range
@@ -52,6 +53,7 @@ type guard_policy =
     | Drop // unsound
 
 instance val showable_guard_policy : showable guard_policy
+instance val pretty_guard_policy   : pretty guard_policy
 
 type proofstate = {
     main_context : env;          //the shared top-level context for all goals

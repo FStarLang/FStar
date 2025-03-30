@@ -35,6 +35,8 @@ instance showable_guard_policy : showable guard_policy = {
                    | Drop -> "Drop");
 }
 
+instance pretty_guard_policy : pretty guard_policy = pretty_from_showable
+
 let goal_env g = g.goal_main_env
 let goal_range g = g.goal_main_env.range
 let goal_witness g =
