@@ -1,7 +1,7 @@
 open Prims
 let (dbg : Prims.bool FStarC_Effect.ref) =
   FStarC_Debug.get_toggle "CheckedFiles"
-let (cache_version_number : Prims.int) = (Prims.of_int (72))
+let (cache_version_number : Prims.int) = (Prims.of_int (73))
 type tc_result =
   {
   checked_module: FStarC_Syntax_Syntax.modul ;
@@ -101,8 +101,7 @@ let (uu___0 : tc_result_t FStarC_Class_Show.showable) =
 type cache_t =
   (tc_result_t * (Prims.string, FStarC_Parser_Dep.parsing_data)
     FStar_Pervasives.either)
-let (mcache : cache_t FStarC_Util.smap) =
-  FStarC_Util.smap_create (Prims.of_int (50))
+let (mcache : cache_t FStarC_SMap.t) = FStarC_SMap.create (Prims.of_int (50))
 let (hash_dependences :
   FStarC_Parser_Dep.deps ->
     Prims.string ->
@@ -154,7 +153,7 @@ let (hash_dependences :
         | FStar_Pervasives_Native.None ->
             FStar_Pervasives.Inr (("source", source_hash) :: out)
         | FStar_Pervasives_Native.Some iface ->
-            let uu___ = FStarC_Util.smap_try_find mcache iface in
+            let uu___ = FStarC_SMap.try_find mcache iface in
             (match uu___ with
              | FStar_Pervasives_Native.None ->
                  let msg =
@@ -181,7 +180,7 @@ let (hash_dependences :
         | fn2::deps1 ->
             let cache_fn = FStarC_Parser_Dep.cache_file_name fn2 in
             let digest =
-              let uu___1 = FStarC_Util.smap_try_find mcache cache_fn in
+              let uu___1 = FStarC_SMap.try_find mcache cache_fn in
               match uu___1 with
               | FStar_Pervasives_Native.None ->
                   let msg =
@@ -220,7 +219,7 @@ let (load_checked_file : Prims.string -> Prims.string -> cache_t) =
          FStarC_Util.print1 "Trying to load checked file result %s\n"
            checked_fn
        else ());
-      (let elt = FStarC_Util.smap_try_find mcache checked_fn in
+      (let elt = FStarC_SMap.try_find mcache checked_fn in
        if FStarC_Util.is_some elt
        then
          ((let uu___2 = FStarC_Effect.op_Bang dbg in
@@ -231,8 +230,8 @@ let (load_checked_file : Prims.string -> Prims.string -> cache_t) =
           FStarC_Util.must elt)
        else
          (let add_and_return elt1 =
-            FStarC_Util.smap_add mcache checked_fn elt1; elt1 in
-          if Prims.op_Negation (FStarC_Util.file_exists checked_fn)
+            FStarC_SMap.add mcache checked_fn elt1; elt1 in
+          if Prims.op_Negation (FStarC_Filepath.file_exists checked_fn)
           then
             let msg =
               FStarC_Util.format1 "checked file %s does not exist" checked_fn in
@@ -317,7 +316,7 @@ let (load_checked_file_with_tc_result :
              (match uu___1 with
               | FStar_Pervasives.Inl msg ->
                   let elt1 = ((Invalid msg), parsing_data) in
-                  (FStarC_Util.smap_add mcache checked_fn elt1;
+                  (FStarC_SMap.add mcache checked_fn elt1;
                    FStar_Pervasives.Inl msg)
               | FStar_Pervasives.Inr deps_dig' ->
                   let uu___2 = load_tc_result' checked_fn in
@@ -331,7 +330,7 @@ let (load_checked_file_with_tc_result :
                                FStarC_Util.digest_of_file checked_fn in
                              Valid uu___4 in
                            (uu___3, parsing_data) in
-                         (FStarC_Util.smap_add mcache checked_fn elt1;
+                         (FStarC_SMap.add mcache checked_fn elt1;
                           (let validate_iface_cache uu___4 =
                              let iface =
                                let uu___5 =
@@ -348,7 +347,7 @@ let (load_checked_file_with_tc_result :
                                              FStarC_Parser_Dep.cache_file_name
                                                iface1 in
                                            let uu___6 =
-                                             FStarC_Util.smap_try_find mcache
+                                             FStarC_SMap.try_find mcache
                                                iface_checked_fn in
                                            (match uu___6 with
                                             | FStar_Pervasives_Native.Some
@@ -360,7 +359,7 @@ let (load_checked_file_with_tc_result :
                                                         iface_checked_fn in
                                                     Valid uu___9 in
                                                   (uu___8, parsing_data1) in
-                                                FStarC_Util.smap_add mcache
+                                                FStarC_SMap.add mcache
                                                   iface_checked_fn uu___7
                                             | uu___7 -> ())) ()
                                   with | uu___5 -> ()) in
@@ -371,17 +370,19 @@ let (load_checked_file_with_tc_result :
                            if uu___5
                            then
                              ((let uu___7 =
-                                 FStarC_Util.string_of_int
+                                 FStarC_Class_Show.show
+                                   FStarC_Class_Show.showable_nat
                                    (FStarC_List.length deps_dig') in
                                let uu___8 =
                                  FStarC_Parser_Dep.print_digest deps_dig' in
                                let uu___9 =
-                                 FStarC_Util.string_of_int
+                                 FStarC_Class_Show.show
+                                   FStarC_Class_Show.showable_nat
                                    (FStarC_List.length deps_dig) in
                                let uu___10 =
                                  FStarC_Parser_Dep.print_digest deps_dig in
                                FStarC_Util.print4
-                                 "FAILING to load.\nExpected (%s) hashes:\n%s\n\nGot (%s) hashes:\n\t%s\n"
+                                 "FAILING to load.\nHashes computed (%s):\n%s\n\nHashes read (%s):\n%s\n"
                                  uu___7 uu___8 uu___9 uu___10);
                               if
                                 (FStarC_List.length deps_dig) =
@@ -412,7 +413,7 @@ let (load_checked_file_with_tc_result :
                                checked_fn in
                            let elt1 =
                              ((Invalid msg), (FStar_Pervasives.Inl msg)) in
-                           FStarC_Util.smap_add mcache checked_fn elt1;
+                           FStarC_SMap.add mcache checked_fn elt1;
                            FStar_Pervasives.Inl msg)))))
 let (load_parsing_data_from_cache :
   Prims.string ->
@@ -443,7 +444,7 @@ let (load_module_from_cache :
   FStarC_TypeChecker_Env.env ->
     Prims.string -> tc_result FStar_Pervasives_Native.option)
   =
-  let already_failed = FStarC_Util.mk_ref false in
+  let already_failed = FStarC_Effect.mk_ref false in
   fun env ->
     fun fn ->
       FStarC_Errors.with_ctx
@@ -536,7 +537,12 @@ let (store_module_to_cache :
                Prims.op_Negation uu___1) in
           if uu___
           then
-            let cache_file = FStarC_Parser_Dep.cache_file_name fn in
+            let cache_file =
+              let uu___1 = FStarC_Options.output_to () in
+              match uu___1 with
+              | FStar_Pervasives_Native.Some fn1 -> fn1
+              | FStar_Pervasives_Native.None ->
+                  FStarC_Parser_Dep.cache_file_name fn in
             let digest =
               let uu___1 = FStarC_TypeChecker_Env.dep_graph env in
               hash_dependences uu___1 fn in

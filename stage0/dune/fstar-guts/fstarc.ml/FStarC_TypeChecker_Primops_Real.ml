@@ -52,25 +52,6 @@ let (nbe_e_tf : tf FStarC_TypeChecker_NBETerm.embedding) =
   FStarC_TypeChecker_NBETerm.mk_emb em un
     (fun uu___ -> lid_as_typ FStarC_Parser_Const.bool_lid [] [])
     (FStarC_Syntax_Embeddings_Base.emb_typ_of e_tf)
-let (cmp :
-  FStarC_Real.real ->
-    FStarC_Real.real -> FStarC_Order.order FStar_Pervasives_Native.option)
-  =
-  fun r1 ->
-    fun r2 ->
-      match ((FStarC_Real.__proj__Real__item___0 r1),
-              (FStarC_Real.__proj__Real__item___0 r2))
-      with
-      | ("0.0", "0.0") -> FStar_Pervasives_Native.Some FStarC_Order.Eq
-      | ("0.0", "0.5") -> FStar_Pervasives_Native.Some FStarC_Order.Lt
-      | ("0.0", "1.0") -> FStar_Pervasives_Native.Some FStarC_Order.Lt
-      | ("0.5", "0.0") -> FStar_Pervasives_Native.Some FStarC_Order.Gt
-      | ("0.5", "0.5") -> FStar_Pervasives_Native.Some FStarC_Order.Eq
-      | ("0.5", "1.0") -> FStar_Pervasives_Native.Some FStarC_Order.Lt
-      | ("1.0", "0.0") -> FStar_Pervasives_Native.Some FStarC_Order.Gt
-      | ("1.0", "0.5") -> FStar_Pervasives_Native.Some FStarC_Order.Gt
-      | ("1.0", "1.0") -> FStar_Pervasives_Native.Some FStarC_Order.Eq
-      | uu___ -> FStar_Pervasives_Native.None
 let (lt :
   FStarC_Real.real -> FStarC_Real.real -> tf FStar_Pervasives_Native.option)
   =
@@ -78,7 +59,7 @@ let (lt :
     fun uu___ ->
       (fun r1 ->
          fun r2 ->
-           let uu___ = cmp r1 r2 in
+           let uu___ = FStarC_Real.cmp r1 r2 in
            Obj.magic
              (FStarC_Class_Monad.fmap FStarC_Class_Monad.monad_option () ()
                 (fun uu___1 ->
@@ -95,7 +76,7 @@ let (le :
     fun uu___ ->
       (fun r1 ->
          fun r2 ->
-           let uu___ = cmp r1 r2 in
+           let uu___ = FStarC_Real.cmp r1 r2 in
            Obj.magic
              (FStarC_Class_Monad.fmap FStarC_Class_Monad.monad_option () ()
                 (fun uu___1 ->
@@ -113,7 +94,7 @@ let (gt :
     fun uu___ ->
       (fun r1 ->
          fun r2 ->
-           let uu___ = cmp r1 r2 in
+           let uu___ = FStarC_Real.cmp r1 r2 in
            Obj.magic
              (FStarC_Class_Monad.fmap FStarC_Class_Monad.monad_option () ()
                 (fun uu___1 ->
@@ -130,7 +111,7 @@ let (ge :
     fun uu___ ->
       (fun r1 ->
          fun r2 ->
-           let uu___ = cmp r1 r2 in
+           let uu___ = FStarC_Real.cmp r1 r2 in
            Obj.magic
              (FStarC_Class_Monad.fmap FStarC_Class_Monad.monad_option () ()
                 (fun uu___1 ->

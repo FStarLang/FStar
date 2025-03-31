@@ -37,7 +37,6 @@ finite maps as they're modeled in Dafny.
 module FStar.FiniteMap.Base
 
 open FStar.FunctionalExtensionality
-module FLT = FStar.List.Tot
 module FSet = FStar.FiniteSet.Base
 
 type setfun_t (a: eqtype)

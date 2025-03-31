@@ -1,6 +1,7 @@
 open Prims
 let (is_cache_file : Prims.string -> Prims.bool) =
-  fun fn -> let uu___ = FStarC_Util.get_file_extension fn in uu___ = ".cache"
+  fun fn ->
+    let uu___ = FStarC_Filepath.get_file_extension fn in uu___ = ".cache"
 type fragment =
   | Empty 
   | Modul of FStarC_Parser_AST.modul 
@@ -52,33 +53,44 @@ let (parse_fragment :
 let (maybe_dump_module : FStarC_Parser_AST.modul -> unit) =
   fun m ->
     match m with
-    | FStarC_Parser_AST.Module (l, ds) ->
-        let uu___ =
-          let uu___1 = FStarC_Ident.string_of_lid l in
-          FStarC_Options.dump_module uu___1 in
-        if uu___
-        then
-          let uu___1 = FStarC_Ident.string_of_lid l in
-          let uu___2 =
-            let uu___3 =
-              FStarC_List.map
-                (FStarC_Class_Show.show FStarC_Parser_AST.showable_decl) ds in
-            FStarC_String.concat "\n" uu___3 in
-          FStarC_Util.print2 "Parsed module %s\n%s\n" uu___1 uu___2
-        else ()
-    | FStarC_Parser_AST.Interface (l, ds, uu___) ->
+    | FStarC_Parser_AST.Module
+        { FStarC_Parser_AST.no_prelude = uu___;
+          FStarC_Parser_AST.mname = mname; FStarC_Parser_AST.decls = decls;_}
+        ->
         let uu___1 =
-          let uu___2 = FStarC_Ident.string_of_lid l in
+          let uu___2 = FStarC_Ident.string_of_lid mname in
           FStarC_Options.dump_module uu___2 in
         if uu___1
         then
-          let uu___2 = FStarC_Ident.string_of_lid l in
+          let uu___2 =
+            FStarC_Class_Show.show FStarC_Ident.showable_lident mname in
           let uu___3 =
             let uu___4 =
               FStarC_List.map
-                (FStarC_Class_Show.show FStarC_Parser_AST.showable_decl) ds in
+                (FStarC_Class_Show.show FStarC_Parser_AST.showable_decl)
+                decls in
             FStarC_String.concat "\n" uu___4 in
           FStarC_Util.print2 "Parsed module %s\n%s\n" uu___2 uu___3
+        else ()
+    | FStarC_Parser_AST.Interface
+        { FStarC_Parser_AST.no_prelude1 = uu___;
+          FStarC_Parser_AST.mname1 = mname; FStarC_Parser_AST.decls1 = decls;
+          FStarC_Parser_AST.admitted = uu___1;_}
+        ->
+        let uu___2 =
+          let uu___3 = FStarC_Ident.string_of_lid mname in
+          FStarC_Options.dump_module uu___3 in
+        if uu___2
+        then
+          let uu___3 =
+            FStarC_Class_Show.show FStarC_Ident.showable_lident mname in
+          let uu___4 =
+            let uu___5 =
+              FStarC_List.map
+                (FStarC_Class_Show.show FStarC_Parser_AST.showable_decl)
+                decls in
+            FStarC_String.concat "\n" uu___5 in
+          FStarC_Util.print2 "Parsed module %s\n%s\n" uu___3 uu___4
         else ()
 let (parse_file :
   Prims.string ->

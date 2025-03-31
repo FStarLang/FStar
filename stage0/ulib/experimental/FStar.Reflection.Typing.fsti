@@ -33,6 +33,7 @@ module L = FStar.List.Tot
 module R = FStar.Reflection.V2
 open FStar.Stubs.Tactics.V2.Builtins
 open FStar.Stubs.Tactics.Types
+include FStar.Stubs.Tactics.Types.Reflection
 open FStar.Tactics.Effect
 module RD = FStar.Stubs.Reflection.V2.Data
 
@@ -1005,7 +1006,7 @@ let mk_if (scrutinee then_ else_:R.term) : R.term =
 
 
 // effect and type
-type comp_typ = FStar.Stubs.Tactics.Types.tot_or_ghost & typ
+type comp_typ = tot_or_ghost & typ
 
 let close_comp_typ' (c:comp_typ) (x:var) (i:nat) =
   fst c, subst_term (snd c) [ ND x i ]

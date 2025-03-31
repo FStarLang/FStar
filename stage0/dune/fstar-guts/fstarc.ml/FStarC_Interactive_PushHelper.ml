@@ -40,7 +40,7 @@ let (__proj__NTBinding__item___0 :
   = fun projectee -> match projectee with | NTBinding _0 -> _0
 let (repl_stack :
   FStarC_Interactive_Ide_Types.repl_stack_t FStarC_Effect.ref) =
-  FStarC_Util.mk_ref []
+  FStarC_Effect.mk_ref []
 let (set_check_kind :
   FStarC_TypeChecker_Env.env_t ->
     FStarC_Interactive_Ide_Types.push_kind -> FStarC_TypeChecker_Env.env_t)
@@ -530,7 +530,7 @@ let (fresh_name_tracking_hooks :
       FStarC_Syntax_DsEnv.dsenv_hooks * FStarC_TypeChecker_Env.tcenv_hooks))
   =
   fun uu___ ->
-    let events = FStarC_Util.mk_ref [] in
+    let events = FStarC_Effect.mk_ref [] in
     let push_event evt =
       let uu___1 = let uu___2 = FStarC_Effect.op_Bang events in evt :: uu___2 in
       FStarC_Effect.op_Colon_Equals events uu___1 in
@@ -872,16 +872,14 @@ let (add_module_completions :
              Prims.strcat (FStarC_String.uppercase first) uu___1) in
         let mods = FStarC_Parser_Dep.build_inclusion_candidates_list () in
         let loaded_mods_set =
-          let uu___ = FStarC_Util.psmap_empty () in
-          let uu___1 =
-            let uu___2 = FStarC_Basefiles.prims () in uu___2 :: deps in
+          let uu___ = FStarC_PSMap.empty () in
           FStarC_List.fold_left
             (fun acc ->
                fun dep ->
-                 let uu___2 = FStarC_Parser_Dep.lowercase_module_name dep in
-                 FStarC_Util.psmap_add acc uu___2 true) uu___ uu___1 in
+                 let uu___1 = FStarC_Parser_Dep.lowercase_module_name dep in
+                 FStarC_PSMap.add acc uu___1 true) uu___ deps in
         let loaded modname =
-          FStarC_Util.psmap_find_default loaded_mods_set modname false in
+          FStarC_PSMap.find_default loaded_mods_set modname false in
         let this_mod_key = FStarC_Parser_Dep.lowercase_module_name this_fname in
         FStarC_List.fold_left
           (fun table1 ->

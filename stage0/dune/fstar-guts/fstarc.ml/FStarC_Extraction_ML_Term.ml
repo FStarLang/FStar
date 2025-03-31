@@ -187,11 +187,11 @@ let (effect_as_etag :
   FStarC_Extraction_ML_UEnv.uenv ->
     FStarC_Ident.lident -> FStarC_Extraction_ML_Syntax.e_tag)
   =
-  let cache = FStarC_Util.smap_create (Prims.of_int (20)) in
+  let cache = FStarC_SMap.create (Prims.of_int (20)) in
   let rec delta_norm_eff g l =
     let uu___ =
       let uu___1 = FStarC_Ident.string_of_lid l in
-      FStarC_Util.smap_try_find cache uu___1 in
+      FStarC_SMap.try_find cache uu___1 in
     match uu___ with
     | FStar_Pervasives_Native.Some l1 -> l1
     | FStar_Pervasives_Native.None ->
@@ -206,7 +206,7 @@ let (effect_as_etag :
               let uu___3 = FStarC_Syntax_Util.comp_effect_name c in
               delta_norm_eff g uu___3 in
         ((let uu___2 = FStarC_Ident.string_of_lid l in
-          FStarC_Util.smap_add cache uu___2 res);
+          FStarC_SMap.add cache uu___2 res);
          res) in
   fun g ->
     fun l ->
@@ -1183,7 +1183,7 @@ type translate_typ_t =
   FStarC_Extraction_ML_UEnv.uenv ->
     FStarC_Syntax_Syntax.term -> FStarC_Extraction_ML_Syntax.mlty
 let (ref_translate_term_to_mlty : translate_typ_t FStarC_Effect.ref) =
-  FStarC_Util.mk_ref
+  FStarC_Effect.mk_ref
     (fun uu___ -> fun uu___1 -> FStarC_Effect.raise NotSupportedByExtension)
 let (translate_term_to_mlty :
   FStarC_Extraction_ML_UEnv.uenv ->
@@ -2209,7 +2209,7 @@ type translate_t =
       (FStarC_Extraction_ML_Syntax.mlexpr * FStarC_Extraction_ML_Syntax.e_tag
         * FStarC_Extraction_ML_Syntax.mlty)
 let (ref_term_as_mlexpr : translate_t FStarC_Effect.ref) =
-  FStarC_Util.mk_ref
+  FStarC_Effect.mk_ref
     (fun uu___ -> fun uu___1 -> FStarC_Effect.raise NotSupportedByExtension)
 let (register_pre_translate : translate_t -> unit) =
   fun f ->

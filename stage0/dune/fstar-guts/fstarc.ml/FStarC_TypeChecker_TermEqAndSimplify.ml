@@ -164,7 +164,13 @@ let rec (eq_tm :
            uu___1)) -> Unknown
         | (FStarC_Syntax_Syntax.Tm_constant (FStarC_Const.Const_real r1),
            FStarC_Syntax_Syntax.Tm_constant (FStarC_Const.Const_real r2)) ->
-            equal_if (r1 = r2)
+            let uu___ =
+              FStarC_Real.cmp (FStarC_Real.Real r1) (FStarC_Real.Real r2) in
+            (match uu___ with
+             | FStar_Pervasives_Native.Some (FStarC_Order.Eq) -> Equal
+             | FStar_Pervasives_Native.Some (FStarC_Order.Lt) -> NotEqual
+             | FStar_Pervasives_Native.Some (FStarC_Order.Gt) -> NotEqual
+             | FStar_Pervasives_Native.None -> Unknown)
         | (FStarC_Syntax_Syntax.Tm_constant c,
            FStarC_Syntax_Syntax.Tm_constant d) ->
             let uu___ = FStarC_Const.eq_const c d in equal_iff uu___

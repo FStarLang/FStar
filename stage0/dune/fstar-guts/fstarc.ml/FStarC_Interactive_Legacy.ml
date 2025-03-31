@@ -258,9 +258,9 @@ let (__proj__Mkinteractive_state__item__log :
     match projectee with | { chunk; stdin; buffer; log;_} -> log
 let (the_interactive_state : interactive_state) =
   let uu___ = FStarC_Util.new_string_builder () in
-  let uu___1 = FStarC_Util.mk_ref FStar_Pervasives_Native.None in
-  let uu___2 = FStarC_Util.mk_ref [] in
-  let uu___3 = FStarC_Util.mk_ref FStar_Pervasives_Native.None in
+  let uu___1 = FStarC_Effect.mk_ref FStar_Pervasives_Native.None in
+  let uu___2 = FStarC_Effect.mk_ref [] in
+  let uu___3 = FStarC_Effect.mk_ref FStar_Pervasives_Native.None in
   { chunk = uu___; stdin = uu___1; buffer = uu___2; log = uu___3 }
 let rec (read_chunk : unit -> input_chunks) =
   fun uu___ ->

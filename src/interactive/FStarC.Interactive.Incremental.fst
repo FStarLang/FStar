@@ -36,6 +36,7 @@ module P = FStarC.Parser.ParseIt
 module BU = FStarC.Util
 open FStarC.Parser.AST
 open FStarC.Parser.AST.Util
+open FStarC.Parser.AST.Diff { eq_decl }
 
 let qid = string & int
 let qst a = qid -> a & qid

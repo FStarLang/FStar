@@ -2376,7 +2376,7 @@ let (uu___is_Let_rec_unencodeable : Prims.exn -> Prims.bool) =
 let (copy_env : FStarC_SMTEncoding_Env.env_t -> FStarC_SMTEncoding_Env.env_t)
   =
   fun en ->
-    let uu___ = FStarC_Util.smap_copy en.FStarC_SMTEncoding_Env.global_cache in
+    let uu___ = FStarC_SMap.copy en.FStarC_SMTEncoding_Env.global_cache in
     {
       FStarC_SMTEncoding_Env.bvar_bindings =
         (en.FStarC_SMTEncoding_Env.bvar_bindings);
@@ -6419,7 +6419,7 @@ let rec (encode_sigelt :
                     let uu___3 =
                       let uu___4 = FStarC_Util.format1 "<Skipped %s/>" nm in
                       FStarC_SMTEncoding_Term.Caption uu___4 in
-                    [uu___3] in
+                    [uu___3; FStarC_SMTEncoding_Term.EmptyLine] in
                   FStarC_SMTEncoding_Term.mk_decls_trivial uu___2))
             | uu___1 ->
                 let uu___2 =
@@ -6437,7 +6437,7 @@ let rec (encode_sigelt :
                         let uu___7 =
                           FStarC_Util.format1 "</end encoding %s>" nm in
                         FStarC_SMTEncoding_Term.Caption uu___7 in
-                      [uu___6] in
+                      [uu___6; FStarC_SMTEncoding_Term.EmptyLine] in
                     FStarC_SMTEncoding_Term.mk_decls_trivial uu___5 in
                   FStarC_List.op_At g uu___4 in
                 FStarC_List.op_At uu___2 uu___3 in
@@ -7280,17 +7280,17 @@ let (encode_labels :
                uu___3 :: uu___4) labs in
     (prefix, suffix)
 let (last_env : FStarC_SMTEncoding_Env.env_t Prims.list FStarC_Effect.ref) =
-  FStarC_Util.mk_ref []
+  FStarC_Effect.mk_ref []
 let (init_env : FStarC_TypeChecker_Env.env -> unit) =
   fun tcenv ->
     let uu___ =
       let uu___1 =
-        let uu___2 = FStarC_Util.psmap_empty () in
-        let uu___3 = let uu___4 = FStarC_Util.psmap_empty () in (uu___4, []) in
+        let uu___2 = FStarC_PSMap.empty () in
+        let uu___3 = let uu___4 = FStarC_PSMap.empty () in (uu___4, []) in
         let uu___4 =
           let uu___5 = FStarC_TypeChecker_Env.current_module tcenv in
           FStarC_Ident.string_of_lid uu___5 in
-        let uu___5 = FStarC_Util.smap_create (Prims.of_int (100)) in
+        let uu___5 = FStarC_SMap.create (Prims.of_int (100)) in
         {
           FStarC_SMTEncoding_Env.bvar_bindings = uu___2;
           FStarC_SMTEncoding_Env.fvar_bindings = uu___3;
@@ -7494,8 +7494,8 @@ let (recover_caching_and_update_env :
            else
              (let uu___1 =
                 let uu___2 = FStarC_Util.must elt.FStarC_SMTEncoding_Term.key in
-                FStarC_Util.smap_try_find
-                  env.FStarC_SMTEncoding_Env.global_cache uu___2 in
+                FStarC_SMap.try_find env.FStarC_SMTEncoding_Env.global_cache
+                  uu___2 in
               match uu___1 with
               | FStar_Pervasives_Native.Some cache_elt ->
                   FStarC_SMTEncoding_Term.mk_decls_trivial
@@ -7504,8 +7504,8 @@ let (recover_caching_and_update_env :
               | FStar_Pervasives_Native.None ->
                   ((let uu___3 =
                       FStarC_Util.must elt.FStarC_SMTEncoding_Term.key in
-                    FStarC_Util.smap_add
-                      env.FStarC_SMTEncoding_Env.global_cache uu___3 elt);
+                    FStarC_SMap.add env.FStarC_SMTEncoding_Env.global_cache
+                      uu___3 elt);
                    [elt]))) decls
 let (encode_sig :
   FStarC_TypeChecker_Env.env -> FStarC_Syntax_Syntax.sigelt -> unit) =
@@ -7815,7 +7815,7 @@ let (encode_query :
                              "Encoding query formula {: %s\n" uu___6
                          else ());
                         (let uu___5 =
-                           FStarC_Util.record_time_ms
+                           FStarC_Timing.record_ms
                              (fun uu___6 ->
                                 FStarC_SMTEncoding_EncodeTerm.encode_formula
                                   q1 env1) in

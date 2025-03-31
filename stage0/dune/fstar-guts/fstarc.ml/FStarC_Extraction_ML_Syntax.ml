@@ -222,7 +222,7 @@ type mlconstant =
   | MLC_Float of FStarC_BaseTypes.float 
   | MLC_Char of FStarC_BaseTypes.char 
   | MLC_String of Prims.string 
-  | MLC_Bytes of FStarC_BaseTypes.byte Prims.array 
+  | MLC_Bytes of FStarC_BaseTypes.byte FStarC_Array.array 
 let (uu___is_MLC_Unit : mlconstant -> Prims.bool) =
   fun projectee -> match projectee with | MLC_Unit -> true | uu___ -> false
 let (uu___is_MLC_Bool : mlconstant -> Prims.bool) =
@@ -256,7 +256,7 @@ let (uu___is_MLC_Bytes : mlconstant -> Prims.bool) =
   fun projectee ->
     match projectee with | MLC_Bytes _0 -> true | uu___ -> false
 let (__proj__MLC_Bytes__item___0 :
-  mlconstant -> FStarC_BaseTypes.byte Prims.array) =
+  mlconstant -> FStarC_BaseTypes.byte FStarC_Array.array) =
   fun projectee -> match projectee with | MLC_Bytes _0 -> _0
 type mlpattern =
   | MLP_Wild 
@@ -721,7 +721,7 @@ let (mk_mlmodule1 : mlmodule1' -> mlmodule1) =
 let (mk_mlmodule1_with_attrs :
   mlmodule1' -> mlattribute Prims.list -> mlmodule1) =
   fun m -> fun attrs -> { mlmodule1_m = m; mlmodule1_attrs = attrs }
-type mlmodule = mlmodule1 Prims.list
+type mlmodulebody = mlmodule1 Prims.list
 type mlsig1 =
   | MLS_Mod of (mlsymbol * mlsig1 Prims.list) 
   | MLS_Ty of mltydecl 
@@ -748,15 +748,8 @@ let (with_ty_loc : mlty -> mlexpr' -> mlloc -> mlexpr) =
   fun t -> fun e -> fun l -> { expr = e; mlty = t; loc = l }
 let (with_ty : mlty -> mlexpr' -> mlexpr) =
   fun t -> fun e -> with_ty_loc t e dummy_loc
-type mllib =
-  | MLLib of (mlpath * (mlsig * mlmodule) FStar_Pervasives_Native.option *
-  mllib) Prims.list 
-let (uu___is_MLLib : mllib -> Prims.bool) = fun projectee -> true
-let (__proj__MLLib__item___0 :
-  mllib ->
-    (mlpath * (mlsig * mlmodule) FStar_Pervasives_Native.option * mllib)
-      Prims.list)
-  = fun projectee -> match projectee with | MLLib _0 -> _0
+type mlmodule =
+  (mlpath * (mlsig * mlmodulebody) FStar_Pervasives_Native.option)
 let (ml_unit_ty : mlty) = MLTY_Erased
 let (ml_bool_ty : mlty) = MLTY_Named ([], (["Prims"], "bool"))
 let (ml_int_ty : mlty) = MLTY_Named ([], (["Prims"], "int"))
@@ -1292,7 +1285,7 @@ let (mlmodule1_to_doc : mlmodule1 -> FStarC_Pprint.document) =
     FStarC_Pprint.group uu___
 let (mlmodule1_to_string : mlmodule1 -> Prims.string) =
   fun m -> let uu___ = mlmodule1_to_doc m in FStarC_Pprint.render uu___
-let (mlmodule_to_doc : mlmodule -> FStarC_Pprint.document) =
+let (mlmodulebody_to_doc : mlmodulebody -> FStarC_Pprint.document) =
   fun m ->
     let uu___ =
       let uu___1 =
@@ -1304,8 +1297,8 @@ let (mlmodule_to_doc : mlmodule -> FStarC_Pprint.document) =
         spaced uu___2 in
       FStarC_Pprint.brackets uu___1 in
     FStarC_Pprint.group uu___
-let (mlmodule_to_string : mlmodule -> Prims.string) =
-  fun m -> let uu___ = mlmodule_to_doc m in FStarC_Pprint.render uu___
+let (mlmodulebody_to_string : mlmodulebody -> Prims.string) =
+  fun m -> let uu___ = mlmodulebody_to_doc m in FStarC_Pprint.render uu___
 let (showable_mlty : mlty FStarC_Class_Show.showable) =
   { FStarC_Class_Show.show = mlty_to_string }
 let (showable_mlconstant : mlconstant FStarC_Class_Show.showable) =
@@ -1314,5 +1307,5 @@ let (showable_mlexpr : mlexpr FStarC_Class_Show.showable) =
   { FStarC_Class_Show.show = mlexpr_to_string }
 let (showable_mlmodule1 : mlmodule1 FStarC_Class_Show.showable) =
   { FStarC_Class_Show.show = mlmodule1_to_string }
-let (showable_mlmodule : mlmodule FStarC_Class_Show.showable) =
-  { FStarC_Class_Show.show = mlmodule_to_string }
+let (showable_mlmodulebody : mlmodulebody FStarC_Class_Show.showable) =
+  { FStarC_Class_Show.show = mlmodulebody_to_string }

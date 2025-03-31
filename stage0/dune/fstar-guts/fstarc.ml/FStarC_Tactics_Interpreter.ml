@@ -52,7 +52,7 @@ let (native_tactics_steps :
     FStarC_List.map step_from_native_step uu___1
 let (__primitive_steps_ref :
   FStarC_TypeChecker_Primops_Base.primitive_step Prims.list FStarC_Effect.ref)
-  = FStarC_Util.mk_ref []
+  = FStarC_Effect.mk_ref []
 let (primitive_steps :
   unit -> FStarC_TypeChecker_Primops_Base.primitive_step Prims.list) =
   fun uu___ ->
@@ -1100,7 +1100,9 @@ let run_unembedded_tactic_on_ps :
                             FStarC_Errors_Msg.text "Failing anyway." in
                           [uu___6] in
                         uu___4 :: uu___5 in
-                      FStarC_Errors.raise_error0
+                      FStarC_Errors.raise_error
+                        FStarC_Class_HasRange.hasRange_range
+                        ps3.FStarC_Tactics_Types.entry_range
                         FStarC_Errors_Codes.Fatal_UserTacticFailure ()
                         (Obj.magic
                            FStarC_Errors_Msg.is_error_message_list_doc)

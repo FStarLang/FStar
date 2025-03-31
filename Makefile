@@ -461,6 +461,8 @@ bump-stage0: stage0_new
 	ln -s fstar-12.mk mk/fstar-01.mk
 	rm -rf stage1
 	cp -r stage2 stage1
+	rm -f stage1/dune/fstar-guts/app
+	ln -Trsf stage0/ulib/ml/app stage1/dune/fstar-guts/app
 
 # This rule brings a stage0 from an OLD fstar repo. Only useful for migrating.
 bring-stage0: .force

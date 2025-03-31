@@ -18,7 +18,6 @@ module FStar.Monotonic.DependentMap
     that grow monotonically,
     while subject to an invariant on the entire map *)
 open FStar.HyperStack.ST
-module HS = FStar.HyperStack
 module DM = FStar.DependentMap
 
 /// `map a b`: Represent the partial map as a list of pairs of points

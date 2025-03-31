@@ -384,7 +384,7 @@ and (destruct_sq_exists :
                        | (FStarC_Syntax_Syntax.Tm_fvar fv,
                           (a1, uu___3)::(a2, uu___4)::[]) when
                            FStarC_Syntax_Syntax.fv_eq_lid fv
-                             FStarC_Parser_Const.dtuple2_lid
+                             FStarC_Parser_Const_Tuples.lid_dtuple2
                            ->
                            let uu___5 =
                              let uu___6 = FStarC_Syntax_Subst.compress a2 in

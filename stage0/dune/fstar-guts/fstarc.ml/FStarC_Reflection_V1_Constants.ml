@@ -19,7 +19,7 @@ let (refl_constant_term : refl_constant -> FStarC_Syntax_Syntax.term) =
 let (fstar_refl_lid : Prims.string Prims.list -> FStarC_Ident.lident) =
   fun s ->
     FStarC_Ident.lid_of_path
-      (FStar_List_Tot_Base.append ["FStar"; "Stubs"; "Reflection"] s)
+      (FStar_List_Tot_Base.op_At ["FStar"; "Stubs"; "Reflection"] s)
       FStarC_Range_Type.dummyRange
 let (fstar_refl_types_lid : Prims.string -> FStarC_Ident.lident) =
   fun s -> fstar_refl_lid ["Types"; s]

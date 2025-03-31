@@ -241,7 +241,7 @@ let (invoke_full_lax :
              match uu___2 with
              | (diag, st') ->
                  let repls =
-                   FStarC_Util.psmap_add
+                   FStarC_PSMap.add
                      gst.FStarC_Interactive_Ide_Types.grepl_repls fname st' in
                  let diag1 =
                    if FStarC_Util.is_some diag
@@ -258,7 +258,7 @@ let (invoke_full_lax :
                           (gst.FStarC_Interactive_Ide_Types.grepl_stdin)
                       }))) in
           let uu___ =
-            FStarC_Util.psmap_try_find
+            FStarC_PSMap.try_find
               gst.FStarC_Interactive_Ide_Types.grepl_repls fname in
           match uu___ with
           | FStar_Pervasives_Native.Some uu___1 ->
@@ -322,7 +322,7 @@ let (run_query :
           (FStar_Pervasives_Native.None, (FStar_Pervasives.Inl gst))
       | FStarC_Interactive_JsonHelper.Completion (txpos, ctx) ->
           let uu___ =
-            FStarC_Util.psmap_try_find
+            FStarC_PSMap.try_find
               gst.FStarC_Interactive_Ide_Types.grepl_repls
               txpos.FStarC_Interactive_JsonHelper.path in
           (match uu___ with
@@ -338,7 +338,7 @@ let (run_query :
             (FStar_Pervasives.Inl gst))
       | FStarC_Interactive_JsonHelper.Hover txpos ->
           let uu___ =
-            FStarC_Util.psmap_try_find
+            FStarC_PSMap.try_find
               gst.FStarC_Interactive_Ide_Types.grepl_repls
               txpos.FStarC_Interactive_JsonHelper.path in
           (match uu___ with
@@ -358,7 +358,7 @@ let (run_query :
             (FStar_Pervasives.Inl gst))
       | FStarC_Interactive_JsonHelper.Definition txpos ->
           let uu___ =
-            FStarC_Util.psmap_try_find
+            FStarC_PSMap.try_find
               gst.FStarC_Interactive_Ide_Types.grepl_repls
               txpos.FStarC_Interactive_JsonHelper.path in
           (match uu___ with
@@ -502,7 +502,7 @@ let (start_server : unit -> unit) =
   fun uu___ ->
     let uu___1 =
       let uu___2 =
-        let uu___3 = FStarC_Util.psmap_empty () in
+        let uu___3 = FStarC_PSMap.empty () in
         let uu___4 = FStarC_Util.open_stdin () in
         {
           FStarC_Interactive_Ide_Types.grepl_repls = uu___3;

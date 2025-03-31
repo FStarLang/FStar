@@ -389,12 +389,12 @@ and env =
   curmodule: FStarC_Ident.lident ;
   gamma: FStarC_Syntax_Syntax.binding Prims.list ;
   gamma_sig: sig_binding Prims.list ;
-  gamma_cache: cached_elt FStarC_Util.smap ;
+  gamma_cache: cached_elt FStarC_SMap.t ;
   modules: FStarC_Syntax_Syntax.modul Prims.list ;
   expected_typ:
     (FStarC_Syntax_Syntax.typ * Prims.bool) FStar_Pervasives_Native.option ;
-  sigtab: FStarC_Syntax_Syntax.sigelt FStarC_Util.smap ;
-  attrtab: FStarC_Syntax_Syntax.sigelt Prims.list FStarC_Util.smap ;
+  sigtab: FStarC_Syntax_Syntax.sigelt FStarC_SMap.t ;
+  attrtab: FStarC_Syntax_Syntax.sigelt Prims.list FStarC_SMap.t ;
   instantiate_imp: Prims.bool ;
   effects: effects ;
   generalize: Prims.bool ;
@@ -445,10 +445,10 @@ and env =
     ;
   qtbl_name_and_index:
     ((FStarC_Ident.lident * FStarC_Syntax_Syntax.typ * Prims.int)
-      FStar_Pervasives_Native.option * Prims.int FStarC_Util.smap)
+      FStar_Pervasives_Native.option * Prims.int FStarC_SMap.t)
     ;
-  normalized_eff_names: FStarC_Ident.lident FStarC_Util.smap ;
-  fv_delta_depths: FStarC_Syntax_Syntax.delta_depth FStarC_Util.smap ;
+  normalized_eff_names: FStarC_Ident.lident FStarC_SMap.t ;
+  fv_delta_depths: FStarC_Syntax_Syntax.delta_depth FStarC_SMap.t ;
   proof_ns: proof_namespace ;
   synth_hook:
     env ->
@@ -486,8 +486,8 @@ and env =
       env -> FStarC_Syntax_Syntax.term -> FStarC_Syntax_Syntax.term
     ;
   strict_args_tab:
-    Prims.int Prims.list FStar_Pervasives_Native.option FStarC_Util.smap ;
-  erasable_types_tab: Prims.bool FStarC_Util.smap ;
+    Prims.int Prims.list FStar_Pervasives_Native.option FStarC_SMap.t ;
+  erasable_types_tab: Prims.bool FStarC_SMap.t ;
   enable_defer_to_tac: Prims.bool ;
   unif_allow_ref_guards: Prims.bool ;
   erase_erasable_args: Prims.bool ;
@@ -693,7 +693,7 @@ let (__proj__Mkenv__item__gamma_sig : env -> sig_binding Prims.list) =
         dsenv; nbe; strict_args_tab; erasable_types_tab; enable_defer_to_tac;
         unif_allow_ref_guards; erase_erasable_args; core_check;
         missing_decl;_} -> gamma_sig
-let (__proj__Mkenv__item__gamma_cache : env -> cached_elt FStarC_Util.smap) =
+let (__proj__Mkenv__item__gamma_cache : env -> cached_elt FStarC_SMap.t) =
   fun projectee ->
     match projectee with
     | { solver; range; curmodule; gamma; gamma_sig; gamma_cache; modules;
@@ -743,7 +743,7 @@ let (__proj__Mkenv__item__expected_typ :
         unif_allow_ref_guards; erase_erasable_args; core_check;
         missing_decl;_} -> expected_typ
 let (__proj__Mkenv__item__sigtab :
-  env -> FStarC_Syntax_Syntax.sigelt FStarC_Util.smap) =
+  env -> FStarC_Syntax_Syntax.sigelt FStarC_SMap.t) =
   fun projectee ->
     match projectee with
     | { solver; range; curmodule; gamma; gamma_sig; gamma_cache; modules;
@@ -759,7 +759,7 @@ let (__proj__Mkenv__item__sigtab :
         unif_allow_ref_guards; erase_erasable_args; core_check;
         missing_decl;_} -> sigtab
 let (__proj__Mkenv__item__attrtab :
-  env -> FStarC_Syntax_Syntax.sigelt Prims.list FStarC_Util.smap) =
+  env -> FStarC_Syntax_Syntax.sigelt Prims.list FStarC_SMap.t) =
   fun projectee ->
     match projectee with
     | { solver; range; curmodule; gamma; gamma_sig; gamma_cache; modules;
@@ -1139,7 +1139,7 @@ let (__proj__Mkenv__item__subtype_nosmt_force :
 let (__proj__Mkenv__item__qtbl_name_and_index :
   env ->
     ((FStarC_Ident.lident * FStarC_Syntax_Syntax.typ * Prims.int)
-      FStar_Pervasives_Native.option * Prims.int FStarC_Util.smap))
+      FStar_Pervasives_Native.option * Prims.int FStarC_SMap.t))
   =
   fun projectee ->
     match projectee with
@@ -1156,7 +1156,7 @@ let (__proj__Mkenv__item__qtbl_name_and_index :
         unif_allow_ref_guards; erase_erasable_args; core_check;
         missing_decl;_} -> qtbl_name_and_index
 let (__proj__Mkenv__item__normalized_eff_names :
-  env -> FStarC_Ident.lident FStarC_Util.smap) =
+  env -> FStarC_Ident.lident FStarC_SMap.t) =
   fun projectee ->
     match projectee with
     | { solver; range; curmodule; gamma; gamma_sig; gamma_cache; modules;
@@ -1172,7 +1172,7 @@ let (__proj__Mkenv__item__normalized_eff_names :
         unif_allow_ref_guards; erase_erasable_args; core_check;
         missing_decl;_} -> normalized_eff_names
 let (__proj__Mkenv__item__fv_delta_depths :
-  env -> FStarC_Syntax_Syntax.delta_depth FStarC_Util.smap) =
+  env -> FStarC_Syntax_Syntax.delta_depth FStarC_SMap.t) =
   fun projectee ->
     match projectee with
     | { solver; range; curmodule; gamma; gamma_sig; gamma_cache; modules;
@@ -1371,8 +1371,7 @@ let (__proj__Mkenv__item__nbe :
         unif_allow_ref_guards; erase_erasable_args; core_check;
         missing_decl;_} -> nbe
 let (__proj__Mkenv__item__strict_args_tab :
-  env -> Prims.int Prims.list FStar_Pervasives_Native.option FStarC_Util.smap)
-  =
+  env -> Prims.int Prims.list FStar_Pervasives_Native.option FStarC_SMap.t) =
   fun projectee ->
     match projectee with
     | { solver; range; curmodule; gamma; gamma_sig; gamma_cache; modules;
@@ -1388,7 +1387,7 @@ let (__proj__Mkenv__item__strict_args_tab :
         unif_allow_ref_guards; erase_erasable_args; core_check;
         missing_decl;_} -> strict_args_tab
 let (__proj__Mkenv__item__erasable_types_tab :
-  env -> Prims.bool FStarC_Util.smap) =
+  env -> Prims.bool FStarC_SMap.t) =
   fun projectee ->
     match projectee with
     | { solver; range; curmodule; gamma; gamma_sig; gamma_cache; modules;
@@ -1976,7 +1975,7 @@ type qninfo =
     FStar_Pervasives.either * FStarC_Range_Type.range)
     FStar_Pervasives_Native.option
 type env_t = env
-type sigtable = FStarC_Syntax_Syntax.sigelt FStarC_Util.smap
+type sigtable = FStarC_Syntax_Syntax.sigelt FStarC_SMap.t
 let (should_verify : env -> Prims.bool) =
   fun env1 ->
     ((let uu___ = FStarC_Options.lax () in Prims.op_Negation uu___) &&
@@ -1998,10 +1997,10 @@ let (visible_at :
       | (InliningDelta, FStarC_Syntax_Syntax.Inline_for_extraction) -> true
       | uu___ -> false
 let (default_table_size : Prims.int) = (Prims.of_int (200))
-let new_sigtab : 'uuuuu . unit -> 'uuuuu FStarC_Util.smap =
-  fun uu___ -> FStarC_Util.smap_create default_table_size
-let new_gamma_cache : 'uuuuu . unit -> 'uuuuu FStarC_Util.smap =
-  fun uu___ -> FStarC_Util.smap_create (Prims.of_int (100))
+let new_sigtab : 'uuuuu . unit -> 'uuuuu FStarC_SMap.t =
+  fun uu___ -> FStarC_SMap.create default_table_size
+let new_gamma_cache : 'uuuuu . unit -> 'uuuuu FStarC_SMap.t =
+  fun uu___ -> FStarC_SMap.create (Prims.of_int (100))
 let (initial_env :
   FStarC_Parser_Dep.deps ->
     (env ->
@@ -2052,22 +2051,17 @@ let (initial_env :
                         let uu___1 = new_sigtab () in
                         let uu___2 = new_sigtab () in
                         let uu___3 =
-                          let uu___4 =
-                            FStarC_Util.smap_create (Prims.of_int (10)) in
+                          let uu___4 = FStarC_SMap.create (Prims.of_int (10)) in
                           (FStar_Pervasives_Native.None, uu___4) in
-                        let uu___4 =
-                          FStarC_Util.smap_create (Prims.of_int (20)) in
-                        let uu___5 =
-                          FStarC_Util.smap_create (Prims.of_int (50)) in
+                        let uu___4 = FStarC_SMap.create (Prims.of_int (20)) in
+                        let uu___5 = FStarC_SMap.create (Prims.of_int (50)) in
                         let uu___6 = FStarC_Options.using_facts_from () in
                         let uu___7 =
-                          FStarC_Util.mk_ref
+                          FStarC_Effect.mk_ref
                             FStarC_TypeChecker_Common.id_info_table_empty in
                         let uu___8 = FStarC_Syntax_DsEnv.empty_env deps in
-                        let uu___9 =
-                          FStarC_Util.smap_create (Prims.of_int (20)) in
-                        let uu___10 =
-                          FStarC_Util.smap_create (Prims.of_int (20)) in
+                        let uu___9 = FStarC_SMap.create (Prims.of_int (20)) in
+                        let uu___10 = FStarC_SMap.create (Prims.of_int (20)) in
                         let uu___11 =
                           Obj.magic
                             (FStarC_Class_Setlike.empty ()
@@ -2175,16 +2169,15 @@ let (initial_env :
                           missing_decl = uu___11
                         }
 let (dsenv : env -> FStarC_Syntax_DsEnv.env) = fun env1 -> env1.dsenv
-let (sigtab : env -> FStarC_Syntax_Syntax.sigelt FStarC_Util.smap) =
+let (sigtab : env -> FStarC_Syntax_Syntax.sigelt FStarC_SMap.t) =
   fun env1 -> env1.sigtab
-let (attrtab :
-  env -> FStarC_Syntax_Syntax.sigelt Prims.list FStarC_Util.smap) =
+let (attrtab : env -> FStarC_Syntax_Syntax.sigelt Prims.list FStarC_SMap.t) =
   fun env1 -> env1.attrtab
-let (gamma_cache : env -> cached_elt FStarC_Util.smap) =
+let (gamma_cache : env -> cached_elt FStarC_SMap.t) =
   fun env1 -> env1.gamma_cache
 let (query_indices :
   (FStarC_Ident.lident * Prims.int) Prims.list Prims.list FStarC_Effect.ref)
-  = FStarC_Util.mk_ref [[]]
+  = FStarC_Effect.mk_ref [[]]
 let (push_query_indices : unit -> unit) =
   fun uu___ ->
     let uu___1 = FStarC_Effect.op_Bang query_indices in
@@ -2223,26 +2216,26 @@ let (peek_query_indices :
   unit -> (FStarC_Ident.lident * Prims.int) Prims.list) =
   fun uu___ ->
     let uu___1 = FStarC_Effect.op_Bang query_indices in FStarC_List.hd uu___1
-let (stack : env Prims.list FStarC_Effect.ref) = FStarC_Util.mk_ref []
+let (stack : env Prims.list FStarC_Effect.ref) = FStarC_Effect.mk_ref []
 let (push_stack : env -> env) =
   fun env1 ->
     (let uu___1 = let uu___2 = FStarC_Effect.op_Bang stack in env1 :: uu___2 in
      FStarC_Effect.op_Colon_Equals stack uu___1);
-    (let uu___1 = FStarC_Util.smap_copy (gamma_cache env1) in
-     let uu___2 = FStarC_Util.smap_copy (sigtab env1) in
-     let uu___3 = FStarC_Util.smap_copy (attrtab env1) in
+    (let uu___1 = FStarC_SMap.copy (gamma_cache env1) in
+     let uu___2 = FStarC_SMap.copy (sigtab env1) in
+     let uu___3 = FStarC_SMap.copy (attrtab env1) in
      let uu___4 =
        let uu___5 =
-         FStarC_Util.smap_copy
+         FStarC_SMap.copy
            (FStar_Pervasives_Native.snd env1.qtbl_name_and_index) in
        ((FStar_Pervasives_Native.fst env1.qtbl_name_and_index), uu___5) in
-     let uu___5 = FStarC_Util.smap_copy env1.normalized_eff_names in
-     let uu___6 = FStarC_Util.smap_copy env1.fv_delta_depths in
+     let uu___5 = FStarC_SMap.copy env1.normalized_eff_names in
+     let uu___6 = FStarC_SMap.copy env1.fv_delta_depths in
      let uu___7 =
        let uu___8 = FStarC_Effect.op_Bang env1.identifier_info in
-       FStarC_Util.mk_ref uu___8 in
-     let uu___8 = FStarC_Util.smap_copy env1.strict_args_tab in
-     let uu___9 = FStarC_Util.smap_copy env1.erasable_types_tab in
+       FStarC_Effect.mk_ref uu___8 in
+     let uu___8 = FStarC_SMap.copy env1.strict_args_tab in
+     let uu___9 = FStarC_SMap.copy env1.erasable_types_tab in
      {
        solver = (env1.solver);
        range = (env1.range);
@@ -2453,7 +2446,7 @@ let (incr_query_index : env -> env) =
              let next = n + Prims.int_one in
              (add_query_index (l, next);
               (let uu___3 = FStarC_Ident.string_of_lid l in
-               FStarC_Util.smap_add tbl uu___3 next);
+               FStarC_SMap.add tbl uu___3 next);
               {
                 solver = (env1.solver);
                 range = (env1.range);
@@ -2514,7 +2507,7 @@ let (incr_query_index : env -> env) =
              let next = m + Prims.int_one in
              (add_query_index (l, next);
               (let uu___4 = FStarC_Ident.string_of_lid l in
-               FStarC_Util.smap_add tbl uu___4 next);
+               FStarC_SMap.add tbl uu___4 next);
               {
                 solver = (env1.solver);
                 range = (env1.range);
@@ -2753,7 +2746,7 @@ let (find_in_sigtab :
   fun env1 ->
     fun lid ->
       let uu___ = FStarC_Ident.string_of_lid lid in
-      FStarC_Util.smap_try_find (sigtab env1) uu___
+      FStarC_SMap.try_find (sigtab env1) uu___
 let (new_u_univ : unit -> FStarC_Syntax_Syntax.universe) =
   fun uu___ ->
     let uu___1 =
@@ -2915,14 +2908,14 @@ let (lookup_qname : env -> FStarC_Ident.lident -> qninfo) =
       let cur_mod = in_cur_mod env1 lid in
       let cache t =
         (let uu___1 = FStarC_Ident.string_of_lid lid in
-         FStarC_Util.smap_add (gamma_cache env1) uu___1 t);
+         FStarC_SMap.add (gamma_cache env1) uu___1 t);
         FStar_Pervasives_Native.Some t in
       let found =
         if cur_mod <> No
         then
           let uu___ =
             let uu___1 = FStarC_Ident.string_of_lid lid in
-            FStarC_Util.smap_try_find (gamma_cache env1) uu___1 in
+            FStarC_SMap.try_find (gamma_cache env1) uu___1 in
           match uu___ with
           | FStar_Pervasives_Native.None ->
               FStarC_Util.find_map env1.gamma
@@ -2971,7 +2964,7 @@ let (lookup_attr :
   env -> Prims.string -> FStarC_Syntax_Syntax.sigelt Prims.list) =
   fun env1 ->
     fun attr ->
-      let uu___ = FStarC_Util.smap_try_find (attrtab env1) attr in
+      let uu___ = FStarC_SMap.try_find (attrtab env1) attr in
       match uu___ with
       | FStar_Pervasives_Native.Some ses -> ses
       | FStar_Pervasives_Native.None -> []
@@ -2980,7 +2973,7 @@ let (add_se_to_attrtab : env -> FStarC_Syntax_Syntax.sigelt -> unit) =
     fun se ->
       let add_one env2 se1 attr =
         let uu___ = let uu___1 = lookup_attr env2 attr in se1 :: uu___1 in
-        FStarC_Util.smap_add (attrtab env2) attr uu___ in
+        FStarC_SMap.add (attrtab env2) attr uu___ in
       FStarC_List.iter
         (fun attr ->
            let uu___ = FStarC_Syntax_Util.head_and_args attr in
@@ -3007,12 +3000,12 @@ let (try_add_sigelt :
           let s = FStarC_Ident.string_of_lid l in
           (let uu___1 =
              (Prims.op_Negation force) &&
-               (let uu___2 = FStarC_Util.smap_try_find (sigtab env1) s in
+               (let uu___2 = FStarC_SMap.try_find (sigtab env1) s in
                 FStar_Pervasives_Native.uu___is_Some uu___2) in
            if uu___1
            then
              let old_se =
-               let uu___2 = FStarC_Util.smap_try_find (sigtab env1) s in
+               let uu___2 = FStarC_SMap.try_find (sigtab env1) s in
                FStar_Pervasives_Native.__proj__Some__item__v uu___2 in
              (if
                 (FStarC_Syntax_Syntax.uu___is_Sig_declare_typ
@@ -3051,7 +3044,7 @@ let (try_add_sigelt :
                    (Obj.magic FStarC_Errors_Msg.is_error_message_list_doc)
                    (Obj.magic uu___3)))
            else ());
-          FStarC_Util.smap_add (sigtab env1) s se
+          FStarC_SMap.add (sigtab env1) s se
 let rec (add_sigelt :
   Prims.bool -> env -> FStarC_Syntax_Syntax.sigelt -> unit) =
   fun force ->
@@ -3078,17 +3071,33 @@ let (try_lookup_bv :
   =
   fun env1 ->
     fun bv ->
-      FStarC_Util.find_map env1.gamma
-        (fun uu___ ->
-           match uu___ with
-           | FStarC_Syntax_Syntax.Binding_var id when
-               FStarC_Syntax_Syntax.bv_eq id bv ->
-               let uu___1 =
-                 let uu___2 =
-                   FStarC_Ident.range_of_id id.FStarC_Syntax_Syntax.ppname in
-                 ((id.FStarC_Syntax_Syntax.sort), uu___2) in
-               FStar_Pervasives_Native.Some uu___1
-           | uu___1 -> FStar_Pervasives_Native.None)
+      let r =
+        FStarC_Util.find_map env1.gamma
+          (fun uu___ ->
+             match uu___ with
+             | FStarC_Syntax_Syntax.Binding_var id when
+                 FStarC_Syntax_Syntax.bv_eq id bv ->
+                 let uu___1 =
+                   let uu___2 =
+                     FStarC_Class_HasRange.pos FStarC_Ident.hasrange_ident
+                       id.FStarC_Syntax_Syntax.ppname in
+                   ((id.FStarC_Syntax_Syntax.sort), uu___2) in
+                 FStar_Pervasives_Native.Some uu___1
+             | uu___1 -> FStar_Pervasives_Native.None) in
+      (let uu___1 = FStarC_Debug.extreme () in
+       if uu___1
+       then
+         let uu___2 =
+           FStarC_Class_Show.show FStarC_Syntax_Print.showable_bv bv in
+         let uu___3 =
+           FStarC_Class_Show.show
+             (FStarC_Class_Show.show_option
+                (FStarC_Class_Show.show_tuple2
+                   FStarC_Syntax_Print.showable_term
+                   FStarC_Range_Ops.showable_range)) r in
+         FStarC_Util.print2 "lookup_bv %s -> %s\n" uu___2 uu___3
+       else ());
+      r
 let (lookup_type_of_let :
   FStarC_Syntax_Syntax.universes FStar_Pervasives_Native.option ->
     FStarC_Syntax_Syntax.sigelt ->
@@ -3218,9 +3227,8 @@ let (try_lookup_lid_aux :
   FStarC_Syntax_Syntax.universes FStar_Pervasives_Native.option ->
     env ->
       FStarC_Ident.lident ->
-        ((FStarC_Syntax_Syntax.universes * FStarC_Syntax_Syntax.term'
-          FStarC_Syntax_Syntax.syntax) * FStarC_Range_Type.range)
-          FStar_Pervasives_Native.option)
+        ((FStarC_Syntax_Syntax.universes * FStarC_Syntax_Syntax.term) *
+          FStarC_Range_Type.range) FStar_Pervasives_Native.option)
   =
   fun us_opt ->
     fun env1 ->
@@ -3395,14 +3403,11 @@ let (try_lookup_lid_aux :
             let uu___1 =
               let uu___2 =
                 let uu___3 =
-                  let uu___4 = FStarC_Ident.range_of_lid lid in
-                  {
-                    FStarC_Syntax_Syntax.n = (t.FStarC_Syntax_Syntax.n);
-                    FStarC_Syntax_Syntax.pos = uu___4;
-                    FStarC_Syntax_Syntax.vars = (t.FStarC_Syntax_Syntax.vars);
-                    FStarC_Syntax_Syntax.hash_code =
-                      (t.FStarC_Syntax_Syntax.hash_code)
-                  } in
+                  let uu___4 =
+                    FStarC_Class_HasRange.pos FStarC_Ident.hasrange_lident
+                      lid in
+                  FStarC_Class_HasRange.setPos
+                    (FStarC_Syntax_Syntax.has_range_syntax ()) uu___4 t in
                 (us, uu___3) in
               (uu___2, r) in
             FStar_Pervasives_Native.Some uu___1
@@ -3911,12 +3916,12 @@ and (delta_depth_of_fv :
       let lid = (fv.FStarC_Syntax_Syntax.fv_name).FStarC_Syntax_Syntax.v in
       let uu___ =
         let uu___1 = FStarC_Ident.string_of_lid lid in
-        FStarC_Util.smap_try_find env1.fv_delta_depths uu___1 in
+        FStarC_SMap.try_find env1.fv_delta_depths uu___1 in
       match uu___ with
       | FStar_Pervasives_Native.Some dd -> dd
       | FStar_Pervasives_Native.None ->
           ((let uu___2 = FStarC_Ident.string_of_lid lid in
-            FStarC_Util.smap_add env1.fv_delta_depths uu___2
+            FStarC_SMap.add env1.fv_delta_depths uu___2
               FStarC_Syntax_Syntax.delta_equational);
            (let d =
               let uu___2 =
@@ -3924,7 +3929,7 @@ and (delta_depth_of_fv :
                   (fv.FStarC_Syntax_Syntax.fv_name).FStarC_Syntax_Syntax.v in
               delta_depth_of_qninfo env1 fv uu___2 in
             (let uu___3 = FStarC_Ident.string_of_lid lid in
-             FStarC_Util.smap_add env1.fv_delta_depths uu___3 d);
+             FStarC_SMap.add env1.fv_delta_depths uu___3 d);
             d))
 and (fv_delta_depth :
   env -> FStarC_Syntax_Syntax.fv -> FStarC_Syntax_Syntax.delta_depth) =
@@ -4065,7 +4070,7 @@ let (fv_has_attr :
           (fv.FStarC_Syntax_Syntax.fv_name).FStarC_Syntax_Syntax.v attr_lid
 let cache_in_fv_tab :
   'a .
-    'a FStarC_Util.smap ->
+    'a FStarC_SMap.t ->
       FStarC_Syntax_Syntax.fv -> (unit -> (Prims.bool * 'a)) -> 'a
   =
   fun tab ->
@@ -4074,14 +4079,13 @@ let cache_in_fv_tab :
         let s =
           let uu___ = FStarC_Syntax_Syntax.lid_of_fv fv in
           FStarC_Ident.string_of_lid uu___ in
-        let uu___ = FStarC_Util.smap_try_find tab s in
+        let uu___ = FStarC_SMap.try_find tab s in
         match uu___ with
         | FStar_Pervasives_Native.None ->
             let uu___1 = f () in
             (match uu___1 with
              | (should_cache, res) ->
-                 (if should_cache then FStarC_Util.smap_add tab s res else ();
-                  res))
+                 (if should_cache then FStarC_SMap.add tab s res else (); res))
         | FStar_Pervasives_Native.Some r -> r
 let (fv_has_erasable_attr : env -> FStarC_Syntax_Syntax.fv -> Prims.bool) =
   fun env1 ->
@@ -4271,7 +4275,7 @@ let (norm_eff_name : env -> FStarC_Ident.lident -> FStarC_Ident.lident) =
       let res =
         let uu___ =
           let uu___1 = FStarC_Ident.string_of_lid l in
-          FStarC_Util.smap_try_find env1.normalized_eff_names uu___1 in
+          FStarC_SMap.try_find env1.normalized_eff_names uu___1 in
         match uu___ with
         | FStar_Pervasives_Native.Some l1 -> l1
         | FStar_Pervasives_Native.None ->
@@ -4280,7 +4284,7 @@ let (norm_eff_name : env -> FStarC_Ident.lident -> FStarC_Ident.lident) =
              | FStar_Pervasives_Native.None -> l
              | FStar_Pervasives_Native.Some m ->
                  ((let uu___3 = FStarC_Ident.string_of_lid l in
-                   FStarC_Util.smap_add env1.normalized_eff_names uu___3 m);
+                   FStarC_SMap.add env1.normalized_eff_names uu___3 m);
                   m)) in
       let uu___ = FStarC_Ident.range_of_lid l in
       FStarC_Ident.set_lid_range res uu___
@@ -5509,30 +5513,29 @@ let (print_effects_graph : env -> Prims.string) =
     let path_str path =
       let uu___ = FStarC_List.map eff_name path in
       FStarC_String.concat ";" uu___ in
-    let pbinds = FStarC_Util.smap_create (Prims.of_int (10)) in
-    let lifts = FStarC_Util.smap_create (Prims.of_int (20)) in
-    let psubcomps = FStarC_Util.smap_create (Prims.of_int (10)) in
+    let pbinds = FStarC_SMap.create (Prims.of_int (10)) in
+    let lifts = FStarC_SMap.create (Prims.of_int (20)) in
+    let psubcomps = FStarC_SMap.create (Prims.of_int (10)) in
     FStarC_List.iter
       (fun uu___1 ->
          match uu___1 with
          | { msource = src; mtarget = tgt; mlift = uu___2; mpath = path;_} ->
              let key = eff_name src in
              let m =
-               let uu___3 = FStarC_Util.smap_try_find lifts key in
+               let uu___3 = FStarC_SMap.try_find lifts key in
                match uu___3 with
                | FStar_Pervasives_Native.None ->
-                   let m1 = FStarC_Util.smap_create (Prims.of_int (10)) in
-                   (FStarC_Util.smap_add lifts key m1; m1)
+                   let m1 = FStarC_SMap.create (Prims.of_int (10)) in
+                   (FStarC_SMap.add lifts key m1; m1)
                | FStar_Pervasives_Native.Some m1 -> m1 in
              let uu___3 =
-               let uu___4 = eff_name tgt in
-               FStarC_Util.smap_try_find m uu___4 in
+               let uu___4 = eff_name tgt in FStarC_SMap.try_find m uu___4 in
              (match uu___3 with
               | FStar_Pervasives_Native.Some uu___4 -> ()
               | FStar_Pervasives_Native.None ->
                   let uu___4 = eff_name tgt in
                   let uu___5 = path_str path in
-                  FStarC_Util.smap_add m uu___4 uu___5)) (env1.effects).order;
+                  FStarC_SMap.add m uu___4 uu___5)) (env1.effects).order;
     FStarC_List.iter
       (fun uu___2 ->
          match uu___2 with
@@ -5542,8 +5545,7 @@ let (print_effects_graph : env -> Prims.string) =
                let uu___5 = eff_name n in
                let uu___6 = eff_name p in
                FStarC_Util.format3 "%s, %s |> %s" uu___4 uu___5 uu___6 in
-             FStarC_Util.smap_add pbinds key "")
-      (env1.effects).polymonadic_binds;
+             FStarC_SMap.add pbinds key "") (env1.effects).polymonadic_binds;
     FStarC_List.iter
       (fun uu___3 ->
          match uu___3 with
@@ -5552,15 +5554,15 @@ let (print_effects_graph : env -> Prims.string) =
                let uu___6 = eff_name m in
                let uu___7 = eff_name n in
                FStarC_Util.format2 "%s <: %s" uu___6 uu___7 in
-             FStarC_Util.smap_add psubcomps key "")
+             FStarC_SMap.add psubcomps key "")
       (env1.effects).polymonadic_subcomps;
     (let uu___3 =
        let uu___4 =
-         FStarC_Util.smap_fold lifts
+         FStarC_SMap.fold lifts
            (fun src ->
               fun m ->
                 fun s ->
-                  FStarC_Util.smap_fold m
+                  FStarC_SMap.fold m
                     (fun tgt ->
                        fun path ->
                          fun s1 ->
@@ -5571,7 +5573,7 @@ let (print_effects_graph : env -> Prims.string) =
        FStarC_String.concat "\n" uu___4 in
      let uu___4 =
        let uu___5 =
-         FStarC_Util.smap_fold pbinds
+         FStarC_SMap.fold pbinds
            (fun k ->
               fun uu___6 ->
                 fun s ->
@@ -5581,7 +5583,7 @@ let (print_effects_graph : env -> Prims.string) =
        FStarC_String.concat "\n" uu___5 in
      let uu___5 =
        let uu___6 =
-         FStarC_Util.smap_fold psubcomps
+         FStarC_SMap.fold psubcomps
            (fun k ->
               fun uu___7 ->
                 fun s ->
@@ -5755,7 +5757,7 @@ let (update_effect_lattice :
                    (Obj.magic uu___2)
                else ()) order;
           (let joins =
-             let ubs = FStarC_Util.smap_create (Prims.of_int (10)) in
+             let ubs = FStarC_SMap.create (Prims.of_int (10)) in
              let add_ub i j k ik jk =
                let key =
                  let uu___1 = FStarC_Ident.string_of_lid i in
@@ -5764,12 +5766,12 @@ let (update_effect_lattice :
                    Prims.strcat ":" uu___3 in
                  Prims.strcat uu___1 uu___2 in
                let v =
-                 let uu___1 = FStarC_Util.smap_try_find ubs key in
+                 let uu___1 = FStarC_SMap.try_find ubs key in
                  match uu___1 with
                  | FStar_Pervasives_Native.Some ubs1 -> (i, j, k, ik, jk) ::
                      ubs1
                  | FStar_Pervasives_Native.None -> [(i, j, k, ik, jk)] in
-               FStarC_Util.smap_add ubs key v in
+               FStarC_SMap.add ubs key v in
              FStarC_List.iter
                (fun i ->
                   FStarC_List.iter
@@ -5789,7 +5791,7 @@ let (update_effect_lattice :
                                  FStar_Pervasives_Native.Some jk) ->
                                   add_ub i j k ik.mlift jk.mlift
                               | uu___5 -> ()) ms) ms) ms;
-             FStarC_Util.smap_fold ubs
+             FStarC_SMap.fold ubs
                (fun s ->
                   fun l ->
                     fun joins1 ->
@@ -6587,7 +6589,7 @@ let (univnames : env -> FStarC_Syntax_Syntax.univ_name FStarC_FlatSet.t) =
 let (lidents : env -> FStarC_Ident.lident Prims.list) =
   fun env1 ->
     let keys = FStarC_List.collect FStar_Pervasives_Native.fst env1.gamma_sig in
-    FStarC_Util.smap_fold (sigtab env1)
+    FStarC_SMap.fold (sigtab env1)
       (fun uu___ ->
          fun v ->
            fun keys1 ->

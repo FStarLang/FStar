@@ -758,9 +758,9 @@ let rec string_of_list :
                                  (FStar_Sealed.seal
                                     (Obj.magic
                                        (FStar_Range.mk_range "Prims.fst"
-                                          (Prims.of_int (611))
+                                          (Prims.of_int (613))
                                           (Prims.of_int (19))
-                                          (Prims.of_int (611))
+                                          (Prims.of_int (613))
                                           (Prims.of_int (31)))))
                                  (Obj.magic uu___3)
                                  (fun uu___4 ->
@@ -779,9 +779,9 @@ let rec string_of_list :
                                   (FStar_Sealed.seal
                                      (Obj.magic
                                         (FStar_Range.mk_range "Prims.fst"
-                                           (Prims.of_int (611))
+                                           (Prims.of_int (613))
                                            (Prims.of_int (19))
-                                           (Prims.of_int (611))
+                                           (Prims.of_int (613))
                                            (Prims.of_int (31)))))
                                   (Obj.magic uu___2)
                                   (fun uu___3 ->
@@ -813,8 +813,8 @@ let string_of_option :
                        (FStar_Sealed.seal
                           (Obj.magic
                              (FStar_Range.mk_range "Prims.fst"
-                                (Prims.of_int (611)) (Prims.of_int (19))
-                                (Prims.of_int (611)) (Prims.of_int (31)))))
+                                (Prims.of_int (613)) (Prims.of_int (19))
+                                (Prims.of_int (613)) (Prims.of_int (31)))))
                        (Obj.magic uu___)
                        (fun uu___1 ->
                           FStar_Tactics_Effect.lift_div_tac
@@ -823,4 +823,44 @@ let string_of_option :
                Obj.magic
                  (Obj.repr
                     (FStar_Tactics_Effect.lift_div_tac (fun uu___ -> "None"))))
+        uu___1 uu___
+let rec existsb :
+  'a .
+    ('a -> (Prims.bool, unit) FStar_Tactics_Effect.tac_repr) ->
+      'a Prims.list -> (Prims.bool, unit) FStar_Tactics_Effect.tac_repr
+  =
+  fun uu___1 ->
+    fun uu___ ->
+      (fun f ->
+         fun l ->
+           match l with
+           | [] ->
+               Obj.magic
+                 (Obj.repr
+                    (FStar_Tactics_Effect.lift_div_tac (fun uu___ -> false)))
+           | hd::tl ->
+               Obj.magic
+                 (Obj.repr
+                    (let uu___ = f hd in
+                     FStar_Tactics_Effect.tac_bind
+                       (FStar_Sealed.seal
+                          (Obj.magic
+                             (FStar_Range.mk_range "FStar.Tactics.Util.fst"
+                                (Prims.of_int (138)) (Prims.of_int (7))
+                                (Prims.of_int (138)) (Prims.of_int (11)))))
+                       (FStar_Sealed.seal
+                          (Obj.magic
+                             (FStar_Range.mk_range "FStar.Tactics.Util.fst"
+                                (Prims.of_int (138)) (Prims.of_int (4))
+                                (Prims.of_int (139)) (Prims.of_int (21)))))
+                       (Obj.magic uu___)
+                       (fun uu___1 ->
+                          (fun uu___1 ->
+                             if uu___1
+                             then
+                               Obj.magic
+                                 (Obj.repr
+                                    (FStar_Tactics_Effect.lift_div_tac
+                                       (fun uu___2 -> true)))
+                             else Obj.magic (Obj.repr (existsb f tl))) uu___1))))
         uu___1 uu___

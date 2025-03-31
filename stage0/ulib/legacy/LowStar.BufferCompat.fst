@@ -19,7 +19,6 @@ include LowStar.Buffer
 module HS = FStar.HyperStack
 module HST = FStar.HyperStack.ST
 module U32 = FStar.UInt32
-module G = FStar.Ghost
 module Seq = FStar.Seq
 
 unfold

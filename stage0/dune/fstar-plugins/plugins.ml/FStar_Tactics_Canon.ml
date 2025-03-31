@@ -71,7 +71,7 @@ let rec (canon_point :
                 ->
                 let uu___1 =
                   FStarC_Tactics_V2_Builtins.norm
-                    [Fstarcompiler.FStar_Pervasives.primops] in
+                    [Fstarcompiler.FStarC_NormSteps.primops] in
                 Obj.magic
                   (FStar_Tactics_Effect.tac_bind
                      (FStar_Sealed.seal
@@ -118,8 +118,8 @@ let rec (canon_point :
                 ->
                 let uu___1 =
                   FStarC_Tactics_V2_Builtins.norm
-                    [Fstarcompiler.FStar_Pervasives.delta;
-                    Fstarcompiler.FStar_Pervasives.primops] in
+                    [Fstarcompiler.FStarC_NormSteps.delta;
+                    Fstarcompiler.FStarC_NormSteps.primops] in
                 Obj.magic
                   (FStar_Tactics_Effect.tac_bind
                      (FStar_Sealed.seal
@@ -1253,7 +1253,7 @@ let (canon_point_entry : unit -> (unit, unit) FStar_Tactics_Effect.tac_repr)
   fun uu___ ->
     let uu___1 =
       FStarC_Tactics_V2_Builtins.norm
-        [Fstarcompiler.FStar_Pervasives.primops] in
+        [Fstarcompiler.FStarC_NormSteps.primops] in
     FStar_Tactics_Effect.tac_bind
       (FStar_Sealed.seal
          (Obj.magic
@@ -1383,9 +1383,9 @@ let (canon_point_entry : unit -> (unit, unit) FStar_Tactics_Effect.tac_repr)
                                              (Obj.magic
                                                 (FStar_Range.mk_range
                                                    "Prims.fst"
-                                                   (Prims.of_int (611))
+                                                   (Prims.of_int (613))
                                                    (Prims.of_int (19))
-                                                   (Prims.of_int (611))
+                                                   (Prims.of_int (613))
                                                    (Prims.of_int (31)))))
                                           (Obj.magic uu___8)
                                           (fun uu___9 ->

@@ -35,6 +35,11 @@ other arguments do not, we will apply the instance and instantiate the
 fundeps. *)
 val fundeps : list int -> unit
 
+(* Use this attribute in an instance to prevent it from instantiating
+the goal, **even if** there are functional dependencies for the class
+that seem to match. *)
+val noinst : unit
+
 (* The attribute that marks class fields
    to signal that no method should be generated for them *)
 val no_method : unit

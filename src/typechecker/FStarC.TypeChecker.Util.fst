@@ -2850,9 +2850,10 @@ let instantiate_one_binder (env:env_t) (r:Range.range) (b:binder) : term & typ &
         | Some (Ctx_uvar_meta_tac tau) -> U.is_fvar C.tcresolve_lid tau
         | _ -> false
       in
+      let name = "'" ^ show x ^ "'" in
       if is_typeclass then "Typeclass constraint argument"
-      else if Some? ctx_uvar_meta then "Instantiating meta argument"
-      else "Instantiating implicit argument"
+      else if Some? ctx_uvar_meta then "Instantiating meta argument" ^ name
+      else "Instantiating implicit argument " ^ name
     in
     Env.new_implicit_var_aux msg r env t Strict ctx_uvar_meta should_unrefine
   in
@@ -3732,10 +3733,10 @@ let make_record_fields_in_order env uc topt
                rest, a::as_rev, missing
              )
 
-           | _ ->
+           | x1::x2::_ ->
 //             debug();
-             raise_error rng Errors.Fatal_MissingFieldInRecord
-                (BU.format2 "Field %s of record type %s is given multiple assignments"
+             raise_error (fst x1) Errors.Fatal_MissingFieldInRecord
+                (BU.format2 "Field '%s' of record type '%s' is given multiple assignments."
                   (string_of_id field_name)
                   (string_of_lid rdc.typename)))
         (fas, [], [])
@@ -3750,7 +3751,7 @@ let make_record_fields_in_order env uc topt
       | (f, _)::_, _ ->
 //        debug();
         raise_error f Errors.Fatal_MissingFieldInRecord [
-            Errors.Msg.text <| BU.format2 "Field '%s' is redundant for type %s" (show f) (show rdc.typename);
+            Errors.Msg.text <| BU.format2 "No field '%s' in record type '%s'." (show f) (show rdc.typename);
             if Cons? missing then
               prefix 2 1 (text "Missing fields:")
                 (pp_missing ())

@@ -1111,27 +1111,75 @@ let (hasRange_decl : decl FStarC_Class_HasRange.hasRange) =
              interleaved = (d.interleaved)
            })
   }
-type modul =
-  | Module of (FStarC_Ident.lid * decl Prims.list) 
-  | Interface of (FStarC_Ident.lid * decl Prims.list * Prims.bool) 
+type modul__Module__payload =
+  {
+  no_prelude: Prims.bool ;
+  mname: FStarC_Ident.lid ;
+  decls: decl Prims.list }
+and modul__Interface__payload =
+  {
+  no_prelude1: Prims.bool ;
+  mname1: FStarC_Ident.lid ;
+  decls1: decl Prims.list ;
+  admitted: Prims.bool }
+and modul =
+  | Module of modul__Module__payload 
+  | Interface of modul__Interface__payload 
+let (__proj__Mkmodul__Module__payload__item__no_prelude :
+  modul__Module__payload -> Prims.bool) =
+  fun projectee ->
+    match projectee with | { no_prelude; mname; decls;_} -> no_prelude
+let (__proj__Mkmodul__Module__payload__item__mname :
+  modul__Module__payload -> FStarC_Ident.lid) =
+  fun projectee ->
+    match projectee with | { no_prelude; mname; decls;_} -> mname
+let (__proj__Mkmodul__Module__payload__item__decls :
+  modul__Module__payload -> decl Prims.list) =
+  fun projectee ->
+    match projectee with | { no_prelude; mname; decls;_} -> decls
+let (__proj__Mkmodul__Interface__payload__item__no_prelude :
+  modul__Interface__payload -> Prims.bool) =
+  fun projectee ->
+    match projectee with
+    | { no_prelude1 = no_prelude; mname1 = mname; decls1 = decls; admitted;_}
+        -> no_prelude
+let (__proj__Mkmodul__Interface__payload__item__mname :
+  modul__Interface__payload -> FStarC_Ident.lid) =
+  fun projectee ->
+    match projectee with
+    | { no_prelude1 = no_prelude; mname1 = mname; decls1 = decls; admitted;_}
+        -> mname
+let (__proj__Mkmodul__Interface__payload__item__decls :
+  modul__Interface__payload -> decl Prims.list) =
+  fun projectee ->
+    match projectee with
+    | { no_prelude1 = no_prelude; mname1 = mname; decls1 = decls; admitted;_}
+        -> decls
+let (__proj__Mkmodul__Interface__payload__item__admitted :
+  modul__Interface__payload -> Prims.bool) =
+  fun projectee ->
+    match projectee with
+    | { no_prelude1 = no_prelude; mname1 = mname; decls1 = decls; admitted;_}
+        -> admitted
 let (uu___is_Module : modul -> Prims.bool) =
   fun projectee -> match projectee with | Module _0 -> true | uu___ -> false
-let (__proj__Module__item___0 :
-  modul -> (FStarC_Ident.lid * decl Prims.list)) =
+let (__proj__Module__item___0 : modul -> modul__Module__payload) =
   fun projectee -> match projectee with | Module _0 -> _0
 let (uu___is_Interface : modul -> Prims.bool) =
   fun projectee ->
     match projectee with | Interface _0 -> true | uu___ -> false
-let (__proj__Interface__item___0 :
-  modul -> (FStarC_Ident.lid * decl Prims.list * Prims.bool)) =
+let (__proj__Interface__item___0 : modul -> modul__Interface__payload) =
   fun projectee -> match projectee with | Interface _0 -> _0
 type file = modul
 type inputFragment = (file, decl Prims.list) FStar_Pervasives.either
 let (lid_of_modul : modul -> FStarC_Ident.lid) =
   fun m ->
     match m with
-    | Module (lid, uu___) -> lid
-    | Interface (lid, uu___, uu___1) -> lid
+    | Module { no_prelude = uu___; mname; decls = uu___1;_} -> mname
+    | Interface
+        { no_prelude1 = uu___; mname1 = mname; decls1 = uu___1;
+          admitted = uu___2;_}
+        -> mname
 let (check_id : FStarC_Ident.ident -> unit) =
   fun id ->
     let first_char =
@@ -1463,7 +1511,8 @@ let (mkTuple : term Prims.list -> FStarC_Range_Type.range -> term) =
   fun args ->
     fun r ->
       let cons =
-        FStarC_Parser_Const.mk_tuple_data_lid (FStarC_List.length args) r in
+        FStarC_Parser_Const_Tuples.mk_tuple_data_lid
+          (FStarC_List.length args) r in
       let uu___ = mk_term (Name cons) r Expr in
       let uu___1 = FStarC_List.map (fun x -> (x, Nothing)) args in
       mkApp uu___ uu___1 r
@@ -1471,7 +1520,8 @@ let (mkDTuple : term Prims.list -> FStarC_Range_Type.range -> term) =
   fun args ->
     fun r ->
       let cons =
-        FStarC_Parser_Const.mk_dtuple_data_lid (FStarC_List.length args) r in
+        FStarC_Parser_Const_Tuples.mk_dtuple_data_lid
+          (FStarC_List.length args) r in
       let uu___ = mk_term (Name cons) r Expr in
       let uu___1 = FStarC_List.map (fun x -> (x, Nothing)) args in
       mkApp uu___ uu___1 r
@@ -1618,15 +1668,22 @@ let rec (extract_named_refinement :
           extract_named_refinement remove_parens t
       | uu___ -> FStar_Pervasives_Native.None
 let rec (as_mlist :
-  ((FStarC_Ident.lid * decl) * decl Prims.list) -> decl Prims.list -> modul)
+  ((FStarC_Ident.lid * decl * Prims.bool) * decl Prims.list) ->
+    decl Prims.list -> modul)
   =
   fun cur ->
     fun ds ->
       let uu___ = cur in
       match uu___ with
-      | ((m_name, m_decl), cur1) ->
+      | ((m_name, m_decl, no_prelude), cur1) ->
           (match ds with
-           | [] -> Module (m_name, (m_decl :: (FStarC_List.rev cur1)))
+           | [] ->
+               Module
+                 {
+                   no_prelude;
+                   mname = m_name;
+                   decls = (m_decl :: (FStarC_List.rev cur1))
+                 }
            | d::ds1 ->
                (match d.d with
                 | TopLevelModule m' ->
@@ -1635,7 +1692,8 @@ let rec (as_mlist :
                       ()
                       (Obj.magic FStarC_Errors_Msg.is_error_message_string)
                       (Obj.magic "Unexpected module declaration")
-                | uu___1 -> as_mlist ((m_name, m_decl), (d :: cur1)) ds1))
+                | uu___1 ->
+                    as_mlist ((m_name, m_decl, no_prelude), (d :: cur1)) ds1))
 let (as_frag : decl Prims.list -> inputFragment) =
   fun ds ->
     let uu___ =
@@ -1646,7 +1704,15 @@ let (as_frag : decl Prims.list -> inputFragment) =
     | (d, ds1) ->
         (match d.d with
          | TopLevelModule m ->
-             let m1 = as_mlist ((m, d), []) ds1 in FStar_Pervasives.Inl m1
+             let no_prelude =
+               FStarC_List.existsb
+                 (fun uu___1 ->
+                    match uu___1.tm with
+                    | Const (FStarC_Const.Const_string
+                        ("no_prelude", uu___2)) -> true
+                    | uu___2 -> false) d.attrs in
+             let m1 = as_mlist ((m, d, no_prelude), []) ds1 in
+             FStar_Pervasives.Inl m1
          | uu___1 ->
              let ds2 = d :: ds1 in
              (FStarC_List.iter
@@ -2379,10 +2445,8 @@ and (aqual_to_string :
     | FStar_Pervasives_Native.Some (Equality) -> "$"
     | FStar_Pervasives_Native.Some (Implicit) -> "#"
     | FStar_Pervasives_Native.None -> ""
-    | FStar_Pervasives_Native.Some (Meta uu___1) ->
-        failwith "aqual_to_strings: meta arg qualifier?"
-    | FStar_Pervasives_Native.Some (TypeClassArg) ->
-        failwith "aqual_to_strings: meta arg qualifier?"
+    | FStar_Pervasives_Native.Some (Meta uu___1) -> "{||}"
+    | FStar_Pervasives_Native.Some (TypeClassArg) -> "{||}"
 and (attr_list_to_string : term Prims.list -> Prims.string) =
   fun uu___ ->
     match uu___ with
@@ -2614,12 +2678,15 @@ let rec (decl_to_string : decl -> Prims.string) =
 let (modul_to_string : modul -> Prims.string) =
   fun m ->
     match m with
-    | Module (uu___, decls) ->
-        let uu___1 = FStarC_List.map decl_to_string decls in
-        FStarC_String.concat "\n" uu___1
-    | Interface (uu___, decls, uu___1) ->
+    | Module { no_prelude = uu___; mname = uu___1; decls;_} ->
         let uu___2 = FStarC_List.map decl_to_string decls in
         FStarC_String.concat "\n" uu___2
+    | Interface
+        { no_prelude1 = uu___; mname1 = uu___1; decls1 = decls;
+          admitted = uu___2;_}
+        ->
+        let uu___3 = FStarC_List.map decl_to_string decls in
+        FStarC_String.concat "\n" uu___3
 let (decl_is_val : FStarC_Ident.ident -> decl -> Prims.bool) =
   fun id ->
     fun decl1 ->
@@ -2724,3 +2791,15 @@ let (mk_decl :
         let d1 =
           { d; drange = r; quals = []; attrs = []; interleaved = false } in
         add_decorations d1 decorations
+let (as_interface : modul -> modul) =
+  fun m ->
+    match m with
+    | Module { no_prelude; mname; decls;_} ->
+        Interface
+          {
+            no_prelude1 = no_prelude;
+            mname1 = mname;
+            decls1 = decls;
+            admitted = true
+          }
+    | i -> i

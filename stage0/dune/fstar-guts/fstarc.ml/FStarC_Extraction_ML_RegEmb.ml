@@ -189,7 +189,7 @@ let rec (pats_to_list_pat :
           ((["Prims"], "Cons"), uu___1) in
         FStarC_Extraction_ML_Syntax.MLP_CTor uu___
 let (fresh : Prims.string -> Prims.string) =
-  let r = FStarC_Util.mk_ref Prims.int_zero in
+  let r = FStarC_Effect.mk_ref Prims.int_zero in
   fun s ->
     let v = FStarC_Effect.op_Bang r in
     FStarC_Effect.op_Colon_Equals r (v + Prims.int_one);
@@ -376,8 +376,8 @@ let (builtin_embeddings : (FStarC_Ident.lident * embedding_data) Prims.list)
                     let uu___19 =
                       let uu___20 =
                         let uu___21 =
-                          FStarC_Parser_Const.mk_tuple_lid (Prims.of_int (2))
-                            FStarC_Range_Type.dummyRange in
+                          FStarC_Parser_Const_Tuples.mk_tuple_lid
+                            (Prims.of_int (2)) FStarC_Range_Type.dummyRange in
                         let uu___22 =
                           let uu___23 = syn_emb_lid "e_tuple2" in
                           let uu___24 =
@@ -392,7 +392,7 @@ let (builtin_embeddings : (FStarC_Ident.lident * embedding_data) Prims.list)
                       let uu___21 =
                         let uu___22 =
                           let uu___23 =
-                            FStarC_Parser_Const.mk_tuple_lid
+                            FStarC_Parser_Const_Tuples.mk_tuple_lid
                               (Prims.of_int (3)) FStarC_Range_Type.dummyRange in
                           let uu___24 =
                             let uu___25 = syn_emb_lid "e_tuple3" in
@@ -1099,7 +1099,7 @@ let (dbg_plugin : Prims.bool FStarC_Effect.ref) =
   FStarC_Debug.get_toggle "Plugins"
 let (local_fv_embeddings :
   (FStarC_Ident.lident * embedding_data) Prims.list FStarC_Effect.ref) =
-  FStarC_Util.mk_ref []
+  FStarC_Effect.mk_ref []
 let (register_embedding : FStarC_Ident.lident -> embedding_data -> unit) =
   fun l ->
     fun d ->
@@ -1793,7 +1793,7 @@ let (mk_unembed :
     fun mutuals ->
       fun record_fields ->
         fun ctors ->
-          let e_branches = FStarC_Util.mk_ref [] in
+          let e_branches = FStarC_Effect.mk_ref [] in
           let arg_v = fresh "tm" in
           FStarC_List.iter
             (fun ctor ->
@@ -1944,7 +1944,7 @@ let (mk_embed :
     fun mutuals ->
       fun record_fields ->
         fun ctors ->
-          let e_branches = FStarC_Util.mk_ref [] in
+          let e_branches = FStarC_Effect.mk_ref [] in
           let arg_v = fresh "tm" in
           FStarC_List.iter
             (fun ctor ->

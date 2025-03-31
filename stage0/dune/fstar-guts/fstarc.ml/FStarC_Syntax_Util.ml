@@ -2,7 +2,7 @@ open Prims
 let (tts_f :
   (FStarC_Syntax_Syntax.term -> Prims.string) FStar_Pervasives_Native.option
     FStarC_Effect.ref)
-  = FStarC_Util.mk_ref FStar_Pervasives_Native.None
+  = FStarC_Effect.mk_ref FStar_Pervasives_Native.None
 let (tts : FStarC_Syntax_Syntax.term -> Prims.string) =
   fun t ->
     let uu___ = FStarC_Effect.op_Bang tts_f in
@@ -12,7 +12,7 @@ let (tts : FStarC_Syntax_Syntax.term -> Prims.string) =
 let (ttd_f :
   (FStarC_Syntax_Syntax.term -> FStarC_Pprint.document)
     FStar_Pervasives_Native.option FStarC_Effect.ref)
-  = FStarC_Util.mk_ref FStar_Pervasives_Native.None
+  = FStarC_Effect.mk_ref FStar_Pervasives_Native.None
 let (ttd : FStarC_Syntax_Syntax.term -> FStarC_Pprint.document) =
   fun t ->
     let uu___ = FStarC_Effect.op_Bang ttd_f in
@@ -1820,16 +1820,14 @@ let (is_tuple_constructor : FStarC_Syntax_Syntax.typ -> Prims.bool) =
   fun t ->
     match t.FStarC_Syntax_Syntax.n with
     | FStarC_Syntax_Syntax.Tm_fvar fv ->
-        let uu___ =
-          FStarC_Ident.string_of_lid
-            (fv.FStarC_Syntax_Syntax.fv_name).FStarC_Syntax_Syntax.v in
-        FStarC_Parser_Const.is_tuple_constructor_string uu___
+        FStarC_Parser_Const_Tuples.is_tuple_constructor_lid
+          (fv.FStarC_Syntax_Syntax.fv_name).FStarC_Syntax_Syntax.v
     | uu___ -> false
 let (is_dtuple_constructor : FStarC_Syntax_Syntax.typ -> Prims.bool) =
   fun t ->
     match t.FStarC_Syntax_Syntax.n with
     | FStarC_Syntax_Syntax.Tm_fvar fv ->
-        FStarC_Parser_Const.is_dtuple_constructor_lid
+        FStarC_Parser_Const_Tuples.is_dtuple_constructor_lid
           (fv.FStarC_Syntax_Syntax.fv_name).FStarC_Syntax_Syntax.v
     | uu___ -> false
 let (is_lid_equality : FStarC_Ident.lident -> Prims.bool) =
@@ -3030,7 +3028,8 @@ let eqopt :
         | (FStar_Pervasives_Native.None, FStar_Pervasives_Native.None) ->
             true
         | uu___ -> false
-let (debug_term_eq : Prims.bool FStarC_Effect.ref) = FStarC_Util.mk_ref false
+let (debug_term_eq : Prims.bool FStarC_Effect.ref) =
+  FStarC_Effect.mk_ref false
 let (check : Prims.bool -> Prims.string -> Prims.bool -> Prims.bool) =
   fun dbg ->
     fun msg ->
