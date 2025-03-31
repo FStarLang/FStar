@@ -3736,7 +3736,7 @@ let make_record_fields_in_order env uc topt
            | x1::x2::_ ->
 //             debug();
              raise_error (fst x1) Errors.Fatal_MissingFieldInRecord
-                (BU.format2 "Field %s of record type %s is given multiple assignments"
+                (BU.format2 "Field '%s' of record type '%s' is given multiple assignments."
                   (string_of_id field_name)
                   (string_of_lid rdc.typename)))
         (fas, [], [])
@@ -3751,7 +3751,7 @@ let make_record_fields_in_order env uc topt
       | (f, _)::_, _ ->
 //        debug();
         raise_error f Errors.Fatal_MissingFieldInRecord [
-            Errors.Msg.text <| BU.format2 "Field '%s' is redundant for type %s" (show f) (show rdc.typename);
+            Errors.Msg.text <| BU.format2 "No field '%s' in record type '%s'." (show f) (show rdc.typename);
             if Cons? missing then
               prefix 2 1 (text "Missing fields:")
                 (pp_missing ())
