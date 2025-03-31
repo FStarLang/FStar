@@ -114,7 +114,7 @@ let normalize_slprop_context
 
   { pst with
       remaining_ctxt = ctxt';
-      remaining_ctxt_frame_typing = magic ();
+      remaining_ctxt_frame_typing = RU.magic ();
       k = k_elab_equiv pst.k (VE_Refl _ _) (RU.magic ());
       
       unsolved = unsolved';
