@@ -18,7 +18,7 @@ module PulseSyntaxExtension.Sugar
 open FStarC
 open FStarC.Ident
 module A = FStarC.Parser.AST
-module AU = FStarC.Parser.AST.Util
+module AD = FStarC.Parser.AST.Diff
 open FStarC.Class.Show
 open FStarC.Class.Tagged
 
@@ -373,19 +373,19 @@ let rec eq_decl (d1 d2:decl) =
   | _ -> false
 and eq_fn_decl (f1 f2:fn_decl) =
   eq_ident f1.id f2.id &&
-  forall2 AU.eq_binder f1.binders f2.binders &&
+  forall2 AD.eq_binder f1.binders f2.binders &&
   eq_ascription f1.ascription f2.ascription
 and eq_fn_defn (f1 f2:fn_defn) =
   eq_ident f1.id f2.id &&
   f1.is_rec = f2.is_rec &&
-  forall2 AU.eq_binder f1.binders f2.binders &&
+  forall2 AD.eq_binder f1.binders f2.binders &&
   eq_ascription f1.ascription f2.ascription &&
-  eq_opt AU.eq_term f1.measure f2.measure &&
+  eq_opt AD.eq_term f1.measure f2.measure &&
   eq_body f1.body f2.body
 and eq_ascription (a1 a2:either computation_type (option A.term)) =
   match a1, a2 with
   | Inl c1, Inl c2 -> eq_computation_type c1 c2
-  | Inr t1, Inr t2 -> eq_opt AU.eq_term t1 t2
+  | Inr t1, Inr t2 -> eq_opt AD.eq_term t1 t2
   | _, _ -> false
 and eq_computation_type (c1 c2:computation_type) =
   c1.tag = c2.tag &&
@@ -394,11 +394,11 @@ and eq_annot (a1 a2:computation_annot) =
   match fst a1, fst a2 with
   | Requires s1, Requires s2 -> eq_slprop s1 s2
   | Ensures s1, Ensures s2 -> eq_slprop s1 s2
-  | Returns (i1, t1), Returns (i2, t2) -> eq_opt eq_ident i1 i2 && AU.eq_term t1 t2
-  | Opens t1, Opens t2 -> AU.eq_term t1 t2
+  | Returns (i1, t1), Returns (i2, t2) -> eq_opt eq_ident i1 i2 && AD.eq_term t1 t2
+  | Opens t1, Opens t2 -> AD.eq_term t1 t2
   | _, _ -> false
 and eq_slprop (s1 s2 : slprop) =
-  AU.eq_term s1 s2
+  AD.eq_term s1 s2
 and eq_body (b1 b2:either stmt lambda) =
   match b1, b2 with
   | Inl s1, Inl s2 -> eq_stmt s1 s2
@@ -409,27 +409,27 @@ and eq_stmt (s1 s2:stmt) =
 and eq_stmt' (s1 s2:stmt') =
   match s1, s2 with
   | Open l1, Open l2 -> eq_lident l1 l2
-  | Expr e1, Expr e2 -> AU.eq_term e1.e e2.e
+  | Expr e1, Expr e2 -> AD.eq_term e1.e e2.e
   | Assignment { lhs=l1; value=v1 }, Assignment { lhs=l2; value=v2 } ->
-    AU.eq_term l1 l2 && AU.eq_term v1 v2
+    AD.eq_term l1 l2 && AD.eq_term v1 v2
   | ArrayAssignment { arr=a1; index=i1; value=v1 }, ArrayAssignment { arr=a2; index=i2; value=v2 } ->
-    AU.eq_term a1 a2 && AU.eq_term i1 i2 && AU.eq_term v1 v2
+    AD.eq_term a1 a2 && AD.eq_term i1 i2 && AD.eq_term v1 v2
   | LetBinding { norw=norw1; qualifier=q1; pat=pat1; typ=t1; init=init1 }, LetBinding { norw=norw2; qualifier=q2; pat=pat2; typ=t2; init=init2 } ->
     norw1 = norw2 &&
     eq_opt eq_mut_or_ref q1 q2 &&
-    AU.eq_pattern pat1 pat2 &&
-    eq_opt AU.eq_term t1 t2 &&
+    AD.eq_pattern pat1 pat2 &&
+    eq_opt AD.eq_term t1 t2 &&
     eq_opt eq_let_init init1 init2
   | Block { stmt=s1 }, Block { stmt=s2 } -> eq_stmt s1 s2
   | If { head=h1; join_slprop=j1; then_=t1; else_opt=e1 }, If { head=h2; join_slprop=j2; then_=t2; else_opt=e2 } ->
-    AU.eq_term h1 h2 &&
+    AD.eq_term h1 h2 &&
     eq_opt eq_ensures_slprop j1 j2 &&
     eq_stmt t1 t2 &&
     eq_opt eq_stmt e1 e2
   | Match { head=h1; returns_annot=r1; branches=b1 }, Match { head=h2; returns_annot=r2; branches=b2 } ->
-    AU.eq_term h1 h2 &&
+    AD.eq_term h1 h2 &&
     eq_opt eq_ensures_slprop r1 r2 &&
-    forall2 (fun (norw1, p1, s1) (norw2, p2, s2) -> norw1 = norw2 && AU.eq_pattern p1 p2 && eq_stmt s1 s2) b1 b2
+    forall2 (fun (norw1, p1, s1) (norw2, p2, s2) -> norw1 = norw2 && AD.eq_pattern p1 p2 && eq_stmt s1 s2) b1 b2
   | While { guard=g1; id=id1; invariant=i1; body=b1 }, While { guard=g2; id=id2; invariant=i2; body=b2 } ->
     eq_stmt g1 g2 &&
     eq_ident id1 id2 &&
@@ -437,7 +437,7 @@ and eq_stmt' (s1 s2:stmt') =
     eq_stmt b1 b2
   | Introduce { slprop=s1; witnesses=w1 }, Introduce { slprop=s2; witnesses=w2 } ->
     eq_slprop s1 s2 &&
-    forall2 AU.eq_term w1 w2
+    forall2 AD.eq_term w1 w2
   | Sequence { s1=s1; s2=s2 }, Sequence { s1=s1'; s2=s2' } ->
     eq_stmt s1 s1' && eq_stmt s2 s2'
   | Parallel { p1=p1; p2=p2; q1=q1; q2=q2; b1=b1; b2=b2 }, Parallel { p1=p1'; p2=p2'; q1=q1'; q2=q2'; b1=b1'; b2=b2' } ->
@@ -449,21 +449,21 @@ and eq_stmt' (s1 s2:stmt') =
     eq_stmt b2 b2'
   | ProofHintWithBinders { hint_type=ht1; binders=bs1 }, ProofHintWithBinders { hint_type=ht2; binders=bs2 } ->
     eq_hint_type ht1 ht2 &&
-    forall2 AU.eq_binder bs1 bs2
+    forall2 AD.eq_binder bs1 bs2
   | WithInvariants { names=n1; body=b1; returns_=r1 }, WithInvariants { names=n2; body=b2; returns_=r2 } ->
-    forall2 AU.eq_term n1 n2 &&
+    forall2 AD.eq_term n1 n2 &&
     eq_stmt b1 b2 &&
     eq_opt eq_ensures_slprop r1 r2
   | _ -> false
 and eq_let_init (i1 i2:let_init) =
   match i1, i2 with
   | Array_initializer a1, Array_initializer a2 -> eq_array_init a1 a2
-  | Default_initializer t1, Default_initializer t2 -> AU.eq_term t1 t2
+  | Default_initializer t1, Default_initializer t2 -> AD.eq_term t1 t2
   | Lambda_initializer l1, Lambda_initializer l2 -> eq_fn_defn l1 l2
   | Stmt_initializer s1, Stmt_initializer s2 -> eq_stmt s1 s2
   | _, _ -> false
 and eq_array_init (a1 a2:array_init) =
-  AU.eq_term a1.init a2.init && AU.eq_term a1.len a2.len
+  AD.eq_term a1.init a2.init && AD.eq_term a1.len a2.len
 and eq_hint_type (h1 h2:hint_type) =
   match h1, h2 with
   | ASSERT s1, ASSERT s2 -> eq_slprop s1 s2
@@ -475,24 +475,24 @@ and eq_hint_type (h1 h2:hint_type) =
     eq_opt (forall2 eq_lident) ns1 ns2 &&
     eq_slprop s1 s2
   | RENAME (ts1, g1, t1), RENAME (ts2, g2, t2) ->
-    forall2 (fun (t1, t2) (t1', t2') -> AU.eq_term t1 t1' && AU.eq_term t2 t2') ts1 ts2 &&
+    forall2 (fun (t1, t2) (t1', t2') -> AD.eq_term t1 t1' && AD.eq_term t2 t2') ts1 ts2 &&
     eq_opt eq_slprop g1 g2 &&
-    eq_opt AU.eq_term t1 t2
+    eq_opt AD.eq_term t1 t2
   | REWRITE (s1, s1', t1), REWRITE (s2, s2', t2) ->
     eq_slprop s1 s2 &&
     eq_slprop s1' s2' &&
-    eq_opt AU.eq_term t1 t2
+    eq_opt AD.eq_term t1 t2
   | WILD, WILD -> true
   | SHOW_PROOF_STATE r1, SHOW_PROOF_STATE r2 -> true
   | _, _ -> false
 and eq_ensures_slprop (e1 e2:ensures_slprop) =
   let h1, s1, t1 = e1 in
   let h2, s2, t2 = e2 in
-  eq_opt (fun (i1, t1) (i2, t2) -> eq_ident i1 i2 && AU.eq_term t1 t2) h1 h2 &&
+  eq_opt (fun (i1, t1) (i2, t2) -> eq_ident i1 i2 && AD.eq_term t1 t2) h1 h2 &&
   eq_slprop s1 s2 &&
-  eq_opt AU.eq_term t1 t2
+  eq_opt AD.eq_term t1 t2
 and eq_lambda (l1 l2:lambda) =
-  forall2 AU.eq_binder l1.binders l2.binders &&
+  forall2 AD.eq_binder l1.binders l2.binders &&
   eq_opt eq_computation_type l1.ascription l2.ascription &&
   eq_stmt l1.body l2.body
 and eq_mut_or_ref (m1 m2:mut_or_ref) =
