@@ -119,7 +119,7 @@ let add_remove_inverse (g:env)
 //
 // Find i -~- p in pre, where pre is well-typed
 //
-let rec find_inv (#g:env) (#pre:term) (pre_typing:tot_typing g pre tm_slprop) (i:term)
+let rec find_inv (#g:env) (#pre:term) (pre_typing :tot_typing g pre tm_slprop) (i:term)
   : T.Tac (option (p:term &
                    frame:term &
                    tot_typing g (tm_inv i p) tm_slprop &
@@ -211,7 +211,7 @@ let rec __withinv_post (#g:env) (#p:term) (#i:term) (#post:term)
   then Some (| tm_inv i p, magic () |)  // i:iname, p:slprop, get typing of inv i p
   else match inspect_term post with
        | Tm_Star l r ->
-         let res = __withinv_post #g #p #i #l p_typing i_typing (magic ()) in
+         let res = __withinv_post #g #p #i #l p_typing i_typing (RU.magic ()) in
          begin
            match res with
            | Some (| l', _ |) -> Some (| tm_star l' r, magic () |)
@@ -282,8 +282,8 @@ let check0
         let res = withinv_post
           #g_x
           #p #i #(open_term_nv post_hint.post (v_as_nv post_hint.x))
-          (magic ())  // weakening of p typing
-          (magic ())  // weakening of i typing
+          (RU.magic ())  // weakening of p typing
+          (RU.magic ())  // weakening of i typing
           post_hint.post_typing_src
         in
         match res with
@@ -321,7 +321,7 @@ let check0
   // and frame is well-typed
   // therefore tm_star is well-typed
   //
-  let pre_body_typing : tot_typing g pre_body tm_slprop = magic () in
+  let pre_body_typing : tot_typing g pre_body tm_slprop = RU.magic () in
 
   let x = fresh g in
   assume (fresh_wrt x g (freevars post_hint.post));
@@ -381,7 +381,7 @@ let check0
       EffectAnnotAtomicOrGhost { opens=opens_remove_i } in
   let effect_annot_typing
     : effect_annot_typing g effect_annot
-    = remove_iname_typing g #opens #i opens_typing (magic ())  // from inversion of tm_inv_typing
+    = remove_iname_typing g #opens #i opens_typing (RU.magic ())  // from inversion of tm_inv_typing
   in
 
   assume (fresh_wrt x g (freevars post_body));
@@ -392,8 +392,8 @@ let check0
     ty_typing = post_hint_ret_ty_typing;
     post = post_body;
     x;
-    post_typing_src=magic ();
-    post_typing=magic ();
+    post_typing_src=RU.magic ();
+    post_typing=RU.magic ();
   } in
 
   let (| body, c_body, body_typing |) =
@@ -429,7 +429,7 @@ let check0
     assert (add_frame_later_l c p == c_body);
     assert (comp_with_inv c i p == c_out_eq);
     let d : st_typing _ _ c_out_eq =
-      T_WithInv _ i p _ c (magic ()) (magic ()) body_typing tok in
+      T_WithInv _ i p _ c (RU.magic ()) (RU.magic ()) body_typing tok in
     let d_pre_eq : slprop_equiv g (comp_pre c_out_eq) (comp_pre c_out) = d_pre_frame_eq in
     let d_post_eq : slprop_equiv (push_binding g x ppname_default post_hint.ret_ty)
                                  (tm_star (tm_inv i p) (open_term post_frame x))
@@ -445,9 +445,9 @@ let check0
     assume (~ (x `Set.mem` freevars (comp_post c_out_eq)));
     assume (~ (x `Set.mem` freevars (comp_post c_out)));
     let d_st_equiv : st_equiv _ c_out_eq c_out =
-      ST_SLPropEquiv _ c_out_eq c_out x (magic ())
-                                        (magic ())
-                                        (magic ())
+      ST_SLPropEquiv _ c_out_eq c_out x (RU.magic ())
+                                        (RU.magic ())
+                                        (RU.magic ())
                                         (RT.Rel_refl _ _ RT.R_Eq)
                                         d_pre_eq
                                         d_post_eq in
@@ -460,7 +460,7 @@ let check0
   | EffectAnnotAtomic _
   | EffectAnnotAtomicOrGhost _ ->
     let tok : prop_validity g (tm_inames_subset (comp_inames c_out) opens) =
-      add_remove_inverse g opens i opens_typing (magic ())
+      add_remove_inverse g opens i opens_typing (RU.magic ())
     in
     let (| c_out_opens, d_sub_c |) : (c_out_opens:comp & st_sub _ c_out c_out_opens) =
       match c_out with

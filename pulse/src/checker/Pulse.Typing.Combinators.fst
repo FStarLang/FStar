@@ -504,11 +504,11 @@ let comp_for_post_hint #g (#pre:slprop) (pre_typing:tot_typing g pre tm_slprop)
   | EffectAnnotGhost { opens } ->
     let d_opens : tot_typing post.g opens tm_inames = post.effect_annot_typing in
     assert (g `env_extends` post.g);
-    let d_opens : tot_typing g opens tm_inames = magic () in  // weakening
+    let d_opens : tot_typing g opens tm_inames = RU.magic () in  // weakening
     (| _, CT_STGhost _ opens _ d_opens d_s |)
   | EffectAnnotAtomic { opens }
   | EffectAnnotAtomicOrGhost { opens } ->
     let d_opens : tot_typing post.g opens tm_inames = post.effect_annot_typing in
     assert (g `env_extends` post.g);
-    let d_opens : tot_typing g opens tm_inames = magic () in  // weakening
+    let d_opens : tot_typing g opens tm_inames = RU.magic () in  // weakening
     (| _, CT_STAtomic _ opens Neutral _ d_opens d_s |)

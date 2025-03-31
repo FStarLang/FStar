@@ -25,6 +25,7 @@ open Pulse.PP
 module T = FStar.Tactics.V2
 module R = FStar.Reflection.V2
 module RT = FStar.Reflection.Typing
+module RU = Pulse.RuntimeUtils
 
 let check_slprop_equiv_ext r (g:env) (p q:slprop)
 : T.Tac (slprop_equiv g p q)
@@ -76,7 +77,7 @@ let check_slprop_equiv_tac r (g:env) (p q:slprop) (tac_tm : term)
     // Need a VE_ rule to turn an arbitrary proof into a slprop_equiv.
     // Or use enough core lemmas to show that slprop_equiv implies equality here,
     // and then use VE_Ext.
-    VE_Ext g p q (magic ())
+    VE_Ext g p q (RU.magic ())
 
 let rec check_slprop_equiv r (g:env) (p q:slprop)
 : T.Tac (slprop_equiv g p q)
