@@ -338,6 +338,7 @@ val print_smt_term_list_list: list (list term) -> string
 
 val dummy_sort : sort
 
+instance val showable_sort : showable sort
 instance val showable_fv : showable fv
 instance val showable_smt_term : Class.Show.showable term
 instance val showable_decl : showable decl
