@@ -1791,8 +1791,17 @@ and tc_value env (e:term) : term
                  "Universe applications are only allowed on top-level identifiers"
 
   | Tm_fvar fv ->
+    let maybe_set_fv_qual env fv =
+      (* The Data_ctor qualifier is mostly set by desugaring, but
+         may be missing in tactic-generated terms. In general,
+         we should try to not rely on desugaring. *)
+      if None? fv.fv_qual && Env.is_datacon env fv.fv_name.v
+      then { fv with fv_qual = Some Data_ctor }
+      else fv
+    in
     let (us, t), range = Env.lookup_lid env fv.fv_name.v in
     let fv = S.set_range_of_fv fv range in
+    let fv = maybe_set_fv_qual env fv in
     maybe_warn_on_use env fv;
     if !dbg_Range
     then BU.print5 "Lookup up fvar %s at location %s (lid range = defined at %s, used at %s); got universes type %s\n"
