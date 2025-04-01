@@ -1585,7 +1585,7 @@ let bind (r1:Range.range) (env:Env.env) (e1opt:option term) (lc1:lcomp) ((b, lc2
                  // else raise_error (Errors.Fatal_NonTrivialPreConditionInPrims,
                  //                   "Non-trivial pre-conditions very early in prims, even before we have defined the PURE monad")
                  //                   (Env.get_range env)
-            else if U.is_total_comp c1
+            else if U.is_total_comp c1 && not (Options.Ext.enabled "compat:3800")
             then (*
                   * Helper routine to close the compuation c with c1's return type
                   * When c1's return type is of the form _:t{phi}, is is useful to know
@@ -1613,7 +1613,7 @@ let bind (r1:Range.range) (env:Env.env) (e1opt:option term) (lc1:lcomp) ((b, lc2
             then Inl (S.mk_GTotal (U.comp_result c2), trivial_guard, "both GTot")
             else aux_with_trivial_guard ()
           in
-          match try_simplify () with
+          match Inr "no simplify" with //try_simplify () with
           | Inl (c, g, reason) ->
             debug (fun () ->
                 BU.print2 "(2) bind: Simplified (because %s) to\n\t%s\n"
@@ -1669,6 +1669,7 @@ let bind (r1:Range.range) (env:Env.env) (e1opt:option term) (lc1:lcomp) ((b, lc2
                  //           (x == e1 ==> lift_M2_M (wp2[e1/x]))
 
                  if U.is_partial_return c1
+                 && Options.Ext.enabled "compat:3800"
                  then
                       let _ = debug (fun () ->
                         BU.print2 "(3) bind (case a): Substituting %s for %s\n" (N.term_to_string env e1) (show x)) in
@@ -1678,7 +1679,11 @@ let bind (r1:Range.range) (env:Env.env) (e1opt:option term) (lc1:lcomp) ((b, lc2
                  else
                       let _ = debug (fun () ->
                         BU.print2 "(3) bind (case b): Adding equality %s = %s\n" (N.term_to_string env e1) (show x)) in
-                      let c2 = SS.subst_comp [NT(x,e1)] c2 in
+                      let c2 = 
+                        if Options.Ext.enabled "compat:3800"
+                        then SS.subst_comp [NT(x,e1)] c2
+                        else c2
+                      in
                       let x_eq_e = U.mk_eq2 u_res_t1 res_t1 e1 (bv_to_name x) in
                       let c2, g_w = weaken_comp (Env.push_binders env [S.mk_binder x]) c2 x_eq_e in
                       let g = Env.conj_guards [
