@@ -249,7 +249,7 @@ let initial_env deps
     proof_ns = Options.using_facts_from ();
     synth_hook = (fun e g tau -> failwith "no synthesizer available");
     try_solve_implicits_hook = (fun e tau imps -> failwith "no implicit hook available");
-    splice = (fun e is_typed lids tau range -> failwith "no splicer available");
+    splice = (fun e is_typed _quals _attrs lids tau range -> failwith "no splicer available");
     mpreprocess = (fun e tau tm -> failwith "no preprocessor available");
     postprocess = (fun e tau typ tm -> failwith "no postprocessor available");
     identifier_info=mk_ref FStarC.TypeChecker.Common.id_info_table_empty;

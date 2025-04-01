@@ -126,6 +126,8 @@ val alloc                  : 'a -> tac (tref 'a)
 val read                   : tref 'a -> tac 'a
 val write                  : tref 'a -> 'a -> tac unit
 
+val splice_quals           : unit -> tac (list RD.qualifier)
+val splice_attrs           : unit -> tac (list attribute)
 
 (***** Callbacks for the meta DSL framework *****)
 let uvar_solution = bv & term

@@ -206,9 +206,7 @@ and env = {
   proof_ns       :proof_namespace;                (* the current names that will be encoded to SMT (a.k.a. hint db) *)
   synth_hook          :env -> typ -> term -> term;     (* hook for synthesizing terms via tactics, third arg is tactic term *)
   try_solve_implicits_hook :env -> term -> implicits -> unit;     (* *)
-  splice : env -> is_typed:bool -> list lident -> term -> Range.range -> list sigelt; (* hook for synthesizing top-level sigelts via tactics *)
-                                                                                 (* second arg is true for typed splice *)
-                                                                                 (* third arg is tactic term *)
+  splice : splice_t;   (* hook for synthesizing top-level sigelts via tactics *)
   mpreprocess    :env -> term -> term -> term;    (* hook for preprocessing typechecked terms via metaprograms *)
   postprocess    :env -> term -> typ -> term -> term; (* hook for postprocessing typechecked terms via metaprograms *)
   identifier_info: ref FStarC.TypeChecker.Common.id_info_table; (* information on identifiers *)
@@ -252,6 +250,15 @@ and tcenv_hooks =
 
 and core_check_t =
   env -> term -> typ -> bool -> either (option typ) (bool -> string)
+and splice_t =
+  env ->
+  list S.qualifier ->       (* qualifiers in splice call *)
+  list S.attribute ->       (* attributes in splice call *)
+  is_typed:bool ->          (* is this a splice_t? *)
+  list lident ->            (* list of names that MUST be defined *)
+  term ->                   (* tactic term *)
+  Range.range ->            (* entry range *)
+  list sigelt
 
 (* Keeping track of declarations and definitions. This operates
 over the missing_decl field. *)

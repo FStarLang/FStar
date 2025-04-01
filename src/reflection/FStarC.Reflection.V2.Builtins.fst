@@ -481,7 +481,7 @@ let sigelt_attrs (se : sigelt) : list attribute =
 let set_sigelt_attrs (attrs : list attribute) (se : sigelt) : sigelt =
     { se with sigattrs = attrs }
 
-(* PRIVATE, and hacky :-( *)
+(* Can we make these the same type instead of doing this? *)
 let rd_to_syntax_qual : RD.qualifier -> qualifier = function
   | RD.Assumption -> Assumption
   | RD.New -> New

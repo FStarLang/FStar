@@ -25,6 +25,7 @@ open FStarC.Ident
 open FStarC.Syntax
 open FStarC.Class.Show
 open FStarC.Class.PP
+open FStar.List.Tot { (@) }
 
 module S  = FStarC.Syntax.Syntax
 module BU = FStarC.Util
@@ -53,6 +54,11 @@ let pairwise_compat #a (compat : a -> a -> bool) (xs : list a) : option (a & a) 
   go [] xs
 
 let check_sigelt_quals_pre (env:FStarC.TypeChecker.Env.env) se =
+    (* If this is a splice, the attributes don't mean anything, they will
+    just be passed through to the tactic to decide what to do. So just
+    accept them. *)
+    if Sig_splice? se.sigel then () else
+
     let visibility = function Private -> true | _ -> false in
     let reducibility = function
         | Irreducible

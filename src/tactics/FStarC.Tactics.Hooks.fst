@@ -821,6 +821,8 @@ type dsl_tac_result_t =
 
 let splice
   (env:Env.env)
+  (quals : list S.qualifier)
+  (attrs : list S.attribute)
   (is_typed:bool)
   (lids:list Ident.lident)
   (tau:term)
@@ -838,6 +840,10 @@ let splice
     TcRel.force_trivial_guard env g;
 
     let ps = FStarC.Tactics.V2.Basic.proofstate_of_goals tau.pos env [] [] in
+    let ps = { ps with
+      splice_quals = quals;
+      splice_attrs = attrs;
+    } in
     let tactic_already_typed = true in
     let gs, sigelts =
       if is_typed then
