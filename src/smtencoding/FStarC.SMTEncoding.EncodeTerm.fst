@@ -842,7 +842,6 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
                in
                let cvars = univ_fvs @ cvars in
                BU.remove_dups fv_eq cvars
-               |> List.rev
              in
              let tkey =
                mkForall t.pos ([], fsym::cvars, t_interp)
