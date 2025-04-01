@@ -1494,7 +1494,7 @@ let resugar_sigelt' env se : option A.decl =
       let datacon_ses, tyc = resugar_typ env datacon_ses se in
       datacon_ses, tyc::tycons
     in
-    let leftover_datacons, tycons = List.fold_left retrieve_datacons_and_resugar (datacon_ses, []) decl_typ_ses in
+    let leftover_datacons, tycons = List.fold_left retrieve_datacons_and_resugar (List.rev datacon_ses, []) decl_typ_ses in
     begin match leftover_datacons with
       | [] -> //true
         (* TODO : documentation should be retrieved from the desugaring environment at some point *)
