@@ -788,8 +788,7 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
              || U.is_tot_or_gtot_comp res
         then 
              let t0_univ = env.tcenv.universe_of env.tcenv t0 in
-             let univ_fvs, univ_tms = List.map encode_univ_name (FlatSet.elems (Free.univnames t `FlatSet.union` Free.univnames (U.type_with_u t0_univ))) |> List.unzip in
-             let vars, guards_l, env', decls, _ = encode_binders None binders env in
+             let vars, guards_l, env', decls, bvs = encode_binders None binders env in
              let fsym = mk_fv (varops.fresh module_name "f", Term_sort) in
              let f = mkFreeV  fsym in
              let app = mk_Apply f vars in
@@ -835,12 +834,29 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
                  let tot_fun_axioms = isTotFun_axioms t.pos f [] vars guards_l is_pure in
                  mkAnd (t_interp, tot_fun_axioms)
              in
+             let tkey_body =
+              // The key for hash-consing is t_interp,
+              // in a conjunction together with the universes of the binders and the function.
+              // We will compute the closure variables cvars as the set of free variables of this formula.
+              // To get somewhat stable hashes, we need to make sure that the
+              // universe parameters appear in a stable order.
+              // The first occurrence (left-to-right) counts, so we start with the universes of the binders
+              // and add the function universe at the end (which is a max, with sometimes unpredictable argument order).
+              let rec add_bv_sorts bvs acc =
+                match bvs with
+                | bv::bvs ->
+                  add_bv_sorts bvs (mkAnd (acc, mk_Term_type (encode_universe (env'.tcenv.universe_of env'.tcenv bv.sort))))
+                | _ -> acc
+                in
+              let tkey_body = t_interp in
+              let tkey_body = add_bv_sorts bvs t_interp in
+              let tkey_body = mkAnd (tkey_body, mk_Term_type (encode_universe t0_univ)) in
+              tkey_body in
              let cvars =
                let cvars = 
-                 Term.free_variables t_interp
+                 Term.free_variables tkey_body
                  |> List.filter (fun x -> fv_name x <> fv_name fsym)
                in
-               let cvars = univ_fvs @ cvars in
                BU.remove_dups fv_eq cvars
              in
              let tkey =
