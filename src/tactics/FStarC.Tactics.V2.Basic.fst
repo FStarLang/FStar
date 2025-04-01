@@ -2246,6 +2246,16 @@ let write (r:tref 'a) (x:'a) : tac unit =
   r := x;
   return ()
 
+let splice_quals () : tac (list RD.qualifier) =
+  let! ps = get in
+  let quals = ps.splice_quals in
+  let quals = quals |> List.map syntax_to_rd_qual in
+  return quals
+
+let splice_attrs () : tac (list attribute) =
+  let! ps = get in
+  return ps.splice_attrs
+
 (***** Builtins used in the meta DSL framework *****)
 
 (* reflection typing calls generate guards in this format, and are mostly discharged
@@ -2935,6 +2945,10 @@ let proofstate_of_goals rng env goals imps =
         all_implicits = imps;
         goals = goals;
         smt_goals = [];
+
+        splice_quals = [];
+        splice_attrs = [];
+
         depth = 0;
         __dump = do_dump_proofstate;
         psc = PO.null_psc;
@@ -2965,6 +2979,8 @@ let proofstate_of_all_implicits rng env imps =
         all_implicits = imps;
         goals = goals;
         smt_goals = [];
+        splice_quals = [];
+        splice_attrs = [];
         depth = 0;
         __dump = do_dump_proofstate;
         psc = PO.null_psc;
