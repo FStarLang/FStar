@@ -1,0 +1,33 @@
+name: Build F* (opam)
+
+# This builds F* by just calling `opam install .`. We don't thoroughly
+# test this build but at least we check that it does work successfully.
+
+on:
+  workflow_call:
+  workflow_dispatch:
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@master
+
+      - uses: ocaml/setup-ocaml@v3
+        with:
+          ocaml-compiler: 4.14.2
+
+      - name: OPAM build
+        run: opam install .
+
+      - name: Install Z3
+        run: sudo ./.scripts/get_fstar_z3.sh /usr/bin
+
+      - name: Smoke test
+        run: |
+          echo -e "module A\nopen FStar.Mul\nlet _ = assert (forall x. 1 + x*x > 0)" > A.fst
+          eval $(opam env) && fstar.exe A.fst

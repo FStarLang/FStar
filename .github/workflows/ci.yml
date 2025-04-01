@@ -13,6 +13,10 @@ defaults:
     shell: bash
 
 jobs:
+  opam:
+    name: opam
+    uses: ./.github/workflows/build-opam.yml
+
   build:
     name: build
     uses: ./.github/workflows/build-ci.yml
@@ -35,6 +39,7 @@ jobs:
     needs:
       - build
       - tests
+      - opam
       # - nix-build
     steps:
       # Note: we only run on failure. Otherwise this is skipped, which counts
