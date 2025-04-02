@@ -232,6 +232,9 @@ let ops = [
     (fun _ -> write)
     (fun _ -> write);
 
+  mk_tac_step_1 0 "splice_quals" splice_quals splice_quals;
+  mk_tac_step_1 0 "splice_attrs" splice_attrs splice_attrs;
+
   // reflection typechecker callbacks (part of the DSL framework)
 
   mk_tac_step_2 0 "is_non_informative"      refl_is_non_informative refl_is_non_informative;

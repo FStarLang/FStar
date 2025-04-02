@@ -253,7 +253,7 @@ let go_normal () =
         (* Just "show decls" would print it, we just format this a bit *)
         files |> List.iter (fun (name, decls) ->
           print1 "%s:\n" name;
-          decls |> List.iter (fun d -> print1 "  %s\n" (show d))
+          decls |> List.iter (fun d -> print1 "%s\n\n" (show d))
         )
     )
 
