@@ -101,14 +101,15 @@ let do_locate_z3 (v:string) : option string =
     BU.print2 "do_locate_z3(%s) = %s\n" (Class.Show.show v) (Class.Show.show path);
   path
 
-let locate_z3 (v : string) : option string =
+let locate_z3 : (v : string) -> option string =
   let cache : SMap.t (option string) = SMap.create 5 in
-  let find_or (k:string) (f : string -> option string) : option string =
-    match SMap.try_find cache k with
-    | Some v -> v
-    | None ->
-      let v = f k in
-      SMap.add cache k v;
-      v
-  in
-  find_or v do_locate_z3
+  fun v ->
+    let find_or (k:string) (f : string -> option string) : option string =
+      match SMap.try_find cache k with
+      | Some v -> v
+      | None ->
+        let v = f k in
+        SMap.add cache k v;
+        v
+    in
+    find_or v do_locate_z3
