@@ -451,8 +451,8 @@ let check
     (| x, x_ty, pre'', g2, k_elab_trans k_frame k |)
 
 
-  | UNFOLD { names; p=v }
-  | FOLD { names; p=v } ->
+  | UNFOLD { p=v }
+  | FOLD { p=v } ->
 
     let (| uvs, v_opened, body_opened |) =
       let bs = infer_binder_types g bs v in
@@ -497,8 +497,12 @@ let check
       ] in
       info_doc_env g (Some st.range) msg
     end;
-
-    let rw = mk_term (Tm_Rewrite { t1 = lhs; t2 = rhs; tac_opt = Some Pulse.Reflection.Util.slprop_equiv_norm_tm }) st.range in
+    let tac =
+      match hint_type with
+      | UNFOLD _ -> Pulse.Reflection.Util.slprop_equiv_unfold_tm
+      | _ -> Pulse.Reflection.Util.slprop_equiv_fold_tm
+    in
+    let rw = mk_term (Tm_Rewrite { t1 = lhs; t2 = rhs; tac_opt = Some tac }) st.range in
     let rw = { rw with effect_tag = as_effect_hint STT_Ghost } in
 
     let st = mk_term (Tm_Bind { binder = as_binder (wr (`unit) st.range); head = rw; body }) st.range in

@@ -591,6 +591,20 @@ than SMT. This tactic is also used by the checker when elaborating fold/unfold. 
 let slprop_equiv_norm (_:unit) : T.Tac unit =
     T.mapply (`slprop_equiv_refl)
 
+
+let slprop_equiv_unfold (_:unit) : T.Tac unit =
+    T.mapply (`slprop_equiv_trans);
+    T.norm [hnf; iota; primops];
+    T.mapply (`slprop_equiv_refl);
+    T.mapply (`slprop_equiv_refl)
+
+let slprop_equiv_fold (_:unit) : T.Tac unit =
+    T.mapply (`slprop_equiv_trans);
+    T.flip();
+    T.norm [hnf; iota; primops];
+    T.mapply (`slprop_equiv_refl);
+    T.mapply (`slprop_equiv_refl)
+    
 let slprop_equiv_ext' (p1 p2:slprop) (_: squash (p1 == p2))
   : slprop_equiv p1 p2 = slprop_equiv_refl p1
 
