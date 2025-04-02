@@ -294,6 +294,7 @@ let defaults =
       ("silent"                       , Bool false);
       ("smt"                          , Unset);
       ("smtencoding.elim_box"         , Bool false);
+      ("smtencoding.encode_string"    , Bool false);
       ("smtencoding.nl_arith_repr"    , String "boxwrap");
       ("smtencoding.l_arith_repr"     , String "boxwrap");
       ("smtencoding.valid_intro"      , Bool true);
@@ -440,6 +441,7 @@ let set_verification_options o =
     "quake";
     "retry";
     "smtencoding.elim_box";
+    "smtencoding.encode_string";
     "smtencoding.nl_arith_repr";
     "smtencoding.l_arith_repr";
     "smtencoding.valid_intro";
@@ -553,6 +555,7 @@ let get_report_assumes          ()      = lookup_opt "report_assumes"           
 let get_silent                  ()      = lookup_opt "silent"                   as_bool
 let get_smt                     ()      = lookup_opt "smt"                      (as_option as_string)
 let get_smtencoding_elim_box    ()      = lookup_opt "smtencoding.elim_box"     as_bool
+let get_smtencoding_encode_string ()    = lookup_opt "smtencoding.encode_string" as_bool
 let get_smtencoding_nl_arith_repr ()    = lookup_opt "smtencoding.nl_arith_repr" as_string
 let get_smtencoding_l_arith_repr()      = lookup_opt "smtencoding.l_arith_repr" as_string
 let get_smtencoding_valid_intro ()      = lookup_opt "smtencoding.valid_intro"  as_bool
@@ -1403,6 +1406,11 @@ let rec specs_with_types warn_unsafe : list (char & string & opt_type & Pprint.d
     BoolStr,
     text "Include an axiom in the SMT encoding to eliminate proof-irrelevance into the existence of a proof witness");
 
+  (noshort,
+    "smtencoding.encode_string",
+    BoolStr,
+    text "Encode strings as SMT strings to enable reasoning about strings");
+
   ( noshort,
     "split_queries",
     EnumStr ["no"; "on_failure"; "always"],
@@ -1772,6 +1780,7 @@ let settable = function
     | "report_assumes"
     | "silent"
     | "smtencoding.elim_box"
+    | "smtencoding.encode_string"
     | "smtencoding.l_arith_repr"
     | "smtencoding.nl_arith_repr"
     | "smtencoding.valid_intro"
@@ -2148,6 +2157,7 @@ let report_assumes               () = get_report_assumes              ()
 let silent                       () = get_silent                      ()
 let smt                          () = get_smt                         ()
 let smtencoding_elim_box         () = get_smtencoding_elim_box        ()
+let smtencoding_encode_string    () = get_smtencoding_encode_string   ()
 let smtencoding_nl_arith_native  () = get_smtencoding_nl_arith_repr () = "native"
 let smtencoding_nl_arith_wrapped () = get_smtencoding_nl_arith_repr () = "wrapped"
 let smtencoding_nl_arith_default () = get_smtencoding_nl_arith_repr () = "boxwrap"
