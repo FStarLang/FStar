@@ -623,6 +623,10 @@ and encode_String_term env head args_e =
         Term.unboxString (List.hd arg_tms),
         Term.unboxInt    (List.hd (List.tl arg_tms))
     in
+    let binary_string_char arg_tms =
+        Term.unboxString (List.hd arg_tms),
+        Term.unboxInt    (mkApp("FStar.Char.int_of_char", [(List.hd (List.tl arg_tms))]))
+    in
     let ternary_string_int_int arg_tms = match arg_tms with
       | [t1; t2; t3] ->
         Term.unboxString t1, Term.unboxInt t2, Term.unboxInt t3
@@ -634,11 +638,13 @@ and encode_String_term env head args_e =
     let mk_string : ('a -> term) -> (list term -> 'a) -> list term -> term =
       fun op mk_args ts -> op (mk_args ts) |> Term.boxString
     in
+    let char_of_int int = mkApp("FStar.Char.__char_of_int", [int]) in
     let strlen     = mk_int    Util.mkStrLen     unary_string in
     let strcat     = mk_string Util.mkStrCat     binary_string_string in
     let strsubstr  = mk_string Util.mkStrSubStr  ternary_string_int_int in
-    let strat      = mk_int    Util.mkStrAt      binary_string_int in
-    let strindexof = mk_int    Util.mkStrIndexOf binary_string_int in
+    (* For str.at, we need to convert the returned boxed int to a char *)
+    let strat terms = mk_int Util.mkStrAt binary_string_int terms |> char_of_int in
+    let strindexof = mk_int Util.mkStrIndexOf binary_string_char in
     let ops =
         [(Const.string_length_lid, strlen);
          (Const.string_strlen_lid, strlen);

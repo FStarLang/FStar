@@ -425,7 +425,8 @@ let mkStrSubStr (t1, t2, t3) r = mkApp' (StrSubStr, [t1; t2; t3]) r
 let mkStrIndexOf (t1, t2) r = mkApp' (StrIndexOf, [t1; mkApp ("str.from_code", [t2]) r]) r
 (* In the ulib, the return type of at is a char, whereas SMTLIB returns a
  * string. So we need to insert a conversion from string to char. *)
-let mkStrAt (t1, t2) r = mkApp ("str.to_code", [mkApp' (StrAt, [t1; t2]) r]) r
+let mkStrAt (t1, t2) r =
+  mkApp ("str.to_code", [mkApp' (StrAt, [t1; t2]) r]) r
 let mkCases t r = match t with
   | [] -> failwith "Impos"
   | hd::tl -> List.fold_left (fun out t -> mkAnd (out, t) r) hd tl

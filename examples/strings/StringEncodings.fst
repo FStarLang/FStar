@@ -20,15 +20,10 @@ let helloworld_literal () = ()
 val str_substr: unit -> Lemma (sub helloworld 1 2 = "el")
 let str_substr () = ()
 
-(*
-FIXME: The following lemmas can't be verified yet.
-Z3 4.8.5 doesn't have str.to_code and str.from_code for conversion between
-singleton strings and character codes.
-Using later versions of Z3, need to investigate why the verification conditions
-result in unknown results.
-*)
+(* The following lemmas can't be verified using Z3 4.8.5.  Z3 4.8.5 doesn't have
+str.to_code and str.from_code for conversion between singleton strings and
+character codes.  *)
 
-(*
 val str_index_of_present: unit -> Lemma (index_of helloworld 'w' = 5)
 let str_index_of_present () = ()
 
@@ -37,4 +32,3 @@ let str_index_of_absent () = ()
 
 val str_at: unit -> Lemma (index helloworld 5 = 'w')
 let str_at () = ()
-*)
