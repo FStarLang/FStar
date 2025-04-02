@@ -62,8 +62,16 @@ let seq_create_lid = ["FStar"; "Seq"; "Base"; "create"]
 let tot_lid = ["Prims"; "Tot"]
 
 let slprop_equiv_norm_tm = R.pack_ln (R.Tv_FVar (R.pack_fv (mk_pulse_lib_core_lid "slprop_equiv_norm")))
-let slprop_equiv_fold_tm = R.pack_ln (R.Tv_FVar (R.pack_fv (mk_pulse_lib_core_lid "slprop_equiv_fold")))
-let slprop_equiv_unfold_tm = R.pack_ln (R.Tv_FVar (R.pack_fv (mk_pulse_lib_core_lid "slprop_equiv_unfold")))
+let slprop_equiv_fold_tm (s:string) = 
+  let head = R.pack_ln (R.Tv_FVar (R.pack_fv (mk_pulse_lib_core_lid "slprop_equiv_fold"))) in
+  let s = R.pack_ln (R.Tv_Const (R.C_String s)) in
+  let t = R.pack_ln (R.Tv_App head (s, R.Q_Explicit)) in
+  t
+let slprop_equiv_unfold_tm (s:string) =
+  let head = R.pack_ln (R.Tv_FVar (R.pack_fv (mk_pulse_lib_core_lid "slprop_equiv_unfold"))) in
+  let s = R.pack_ln (R.Tv_Const (R.C_String s)) in
+  let t = R.pack_ln (R.Tv_App head (s, R.Q_Explicit)) in
+  t
 let match_rewrite_tac_tm = R.pack_ln (R.Tv_FVar (R.pack_fv (mk_pulse_lib_core_lid "match_rewrite_tac")))
 
 (* The "plicities" *)

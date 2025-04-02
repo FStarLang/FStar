@@ -592,15 +592,17 @@ let slprop_equiv_norm (_:unit) : T.Tac unit =
     T.mapply (`slprop_equiv_refl)
 
 
-let slprop_equiv_unfold (_:unit) : T.Tac unit =
+let slprop_equiv_unfold (head_sym:string) (_:unit) : T.Tac unit =
     T.mapply (`slprop_equiv_trans);
+    T.norm [hnf; zeta; delta_only [head_sym]];
     T.norm [hnf; iota; primops];
     T.mapply (`slprop_equiv_refl);
     T.mapply (`slprop_equiv_refl)
 
-let slprop_equiv_fold (_:unit) : T.Tac unit =
+let slprop_equiv_fold (head_sym:string) (_:unit) : T.Tac unit =
     T.mapply (`slprop_equiv_trans);
     T.flip();
+    T.norm [hnf; zeta; delta_only [head_sym]];
     T.norm [hnf; iota; primops];
     T.mapply (`slprop_equiv_refl);
     T.mapply (`slprop_equiv_refl)

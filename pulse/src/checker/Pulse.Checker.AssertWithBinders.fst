@@ -142,14 +142,15 @@ let def_of_fv (g:T.env) (fv:R.fv)
       | R.Sg_Inductive _nm _univs params typ _ -> None
 
 let unfold_head (g : env) (t:term)
-  : T.Tac term
+  : T.Tac (term & string)
   = let rg = elab_env g in
     match T.hua t with
     | Some (fv, u, args) -> (
       (* zeta to allow unfolding recursive definitions. Should be only once
       unless it appears on the head of its own definition.. which should be impossible? *)
-      let t = T.norm_term_env rg [hnf; zeta; delta_only [T.implode_qn (T.inspect_fv fv)]] t in
-      t
+      let head_symbol = T.implode_qn (T.inspect_fv fv) in
+      let t = T.norm_term_env rg [hnf; zeta; delta_only [head_symbol]] t in
+      t, head_symbol
       (* Something like this would be better, but we need to instantiate
          the universes, and we don't have a good way to do that yet.
       match def_of_fv rg fv with
@@ -167,18 +168,18 @@ let unfold_head (g : env) (t:term)
         (Printf.sprintf "Cannot unfold %s, the head is not an fvar" (T.term_to_string t))
 
 let unfold_defs' (g:env) (defs:option (list string)) (t:term)
-  : T.Tac term
-  = let t = unfold_head g t in
+  : T.Tac (term & string)
+  = let t, head_sym = unfold_head g t in
     let t =
       match defs with
       | None -> t
       | Some defs -> unfold_all g defs t
     in
     let t = T.norm_term_env (elab_env g) [hnf; iota; primops] t in
-    t
+    t, head_sym
 
 let unfold_defs (g:env) (defs:option (list string)) (t:term)
-: T.Tac term
+: T.Tac (term & string)
 = RU.profile (fun () -> unfold_defs' g defs t) 
              (T.moduleof (fstar_env g))
             "Pulse.Checker.Unfold"
@@ -467,14 +468,15 @@ let check
         add_rem_uvs (push_env g uvs) t_rem (mk_env (fstar_env g)) v_opened in
       push_env uvs uvs_rem, v_opened in
 
-    let lhs, rhs =
+    let lhs, rhs, tac =
       match hint_type with      
       | UNFOLD _ ->
-        v_opened,
-        unfold_defs (push_env g uvs) None v_opened
+        let rhs, head_sym = unfold_defs (push_env g uvs) None v_opened in
+        v_opened, rhs, Pulse.Reflection.Util.slprop_equiv_unfold_tm head_sym
       | FOLD { names=ns } -> 
-        unfold_defs (push_env g uvs) ns v_opened,
-        v_opened in
+        let lhs, head_sym = unfold_defs (push_env g uvs) ns v_opened in
+        lhs, v_opened, Pulse.Reflection.Util.slprop_equiv_fold_tm head_sym
+    in
 
     let uvs_bs = uvs |> bindings_with_ppname |> L.rev in
     let uvs_closing = uvs_bs |> closing in
@@ -497,11 +499,6 @@ let check
       ] in
       info_doc_env g (Some st.range) msg
     end;
-    let tac =
-      match hint_type with
-      | UNFOLD _ -> Pulse.Reflection.Util.slprop_equiv_unfold_tm
-      | _ -> Pulse.Reflection.Util.slprop_equiv_fold_tm
-    in
     let rw = mk_term (Tm_Rewrite { t1 = lhs; t2 = rhs; tac_opt = Some tac }) st.range in
     let rw = { rw with effect_tag = as_effect_hint STT_Ghost } in
 
