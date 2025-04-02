@@ -81,7 +81,8 @@ val norm_well_typed_term
       Ghost.erased (RT.related g t RT.R_Eq t')
     )
 val add_attribute (x:T.sigelt) (_:R.term) : (y:T.sigelt { x == y })
-val get_attributes (x:T.sigelt) : T.Tac (list R.term)
+val get_attributes (x:T.sigelt) : T.Tac (list R.term) 
+
 val add_noextract_qual (x:T.sigelt) : (y:T.sigelt { x == y })
 
 val must_erase_for_extraction (g:env) (ty:T.term) : bool
@@ -89,3 +90,6 @@ val must_erase_for_extraction (g:env) (ty:T.term) : bool
 val magic : #a: Type -> unit -> GTot a
 (* magic with a string, to at least report an error message if it is hit at runtime *)
 val magic_s: #a: Type -> string -> Tot a
+
+val profile (f:(unit -> Tac 'b)) (module_name:name) (component_name:string)
+: Tac 'b

@@ -213,3 +213,9 @@ let must_erase_for_extraction (g:FStarC_Reflection_Types.env) (ty:FStarC_Syntax_
   FStarC_TypeChecker_Util.must_erase_for_extraction g ty
 
 let magic_s s = failwith ("Cannot execute magic: " ^ s)
+
+let profile (f: unit -> 'b utac) (module_name:string list) (component_name:string) 
+: 'b utac
+= fun ps ->
+    let name = String.concat "." module_name in
+    FStarC_Profiling.profile (fun () -> f () ps) (Some name) component_name

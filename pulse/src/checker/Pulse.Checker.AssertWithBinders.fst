@@ -166,7 +166,7 @@ let unfold_head (g : env) (t:term)
       fail g (Some (RU.range_of_term t))
         (Printf.sprintf "Cannot unfold %s, the head is not an fvar" (T.term_to_string t))
 
-let unfold_defs (g:env) (defs:option (list string)) (t:term)
+let unfold_defs' (g:env) (defs:option (list string)) (t:term)
   : T.Tac term
   = let t = unfold_head g t in
     let t =
@@ -176,6 +176,12 @@ let unfold_defs (g:env) (defs:option (list string)) (t:term)
     in
     let t = T.norm_term_env (elab_env g) [hnf; iota; primops] t in
     t
+
+let unfold_defs (g:env) (defs:option (list string)) (t:term)
+: T.Tac term
+= RU.profile (fun () -> unfold_defs' g defs t) 
+             (T.moduleof (fstar_env g))
+            "Pulse.Checker.Unfold"
 
 let check_unfoldable g (v:term) : T.Tac unit =
   match inspect_term v with
