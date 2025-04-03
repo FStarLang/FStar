@@ -780,7 +780,7 @@ let check_linear_pattern_variables pats (r:Range.range) =
           then union out p_vars
           else
             let duplicate_bv = List.hd (elems intersection) in
-            raise_error r Errors.Fatal_NonLinearPatternNotPermitted
+            raise_error duplicate_bv Errors.Fatal_NonLinearPatternNotPermitted
               (BU.format1 "Non-linear patterns are not permitted: `%s` appears more than once in this pattern."
                 (show duplicate_bv.ppname))
       in
