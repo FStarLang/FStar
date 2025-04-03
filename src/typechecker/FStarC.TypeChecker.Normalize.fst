@@ -2750,7 +2750,7 @@ let normalize_with_primitive_steps ps s e (t:term) =
     Profiling.profile (fun () ->
       let c = config' ps s e in
       reflection_env_hook := Some e;
-      plugin_unfold_warn_ctr := 10;
+      plugin_unfold_warn_ctr := 1;
       log_top c (fun () -> BU.print2 "\nStarting normalizer%s for (%s) {\n" maybe_nbe (show t));
       log_top c (fun () -> BU.print1 ">>> cfg = %s\n" (show c));
       def_check_scoped t.pos "normalize_with_primitive_steps call" e t;
@@ -2777,7 +2777,7 @@ let normalize_comp s e c =
   Profiling.profile (fun () ->
     let cfg = config s e in
     reflection_env_hook := Some e;
-    plugin_unfold_warn_ctr := 10;
+    plugin_unfold_warn_ctr := 1;
     log_top cfg (fun () -> BU.print1 "Starting normalizer for computation (%s) {\n" (show c));
     log_top cfg (fun () -> BU.print1 ">>> cfg = %s\n" (show cfg));
     def_check_scoped c.pos "normalize_comp call" e c;

@@ -1,5 +1,5 @@
 (*
-   Copyright 2008-2018 Microsoft Research
+   Copyright 2008-2025 Microsoft Research
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -13,13 +13,13 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 *)
-module FStar.Tactics.V2
+module FStar.Tactics.Easy
 
-(* The bare version, plus some particular things we expose to users
-for convenience. Crucially, mapply must be here, so we can open
-tactics.v2.bare in typeclasses, and typeclasses in mapply, and not
-trigger a cycle. *)
-include FStar.Tactics.V2.Bare
-include FStar.Tactics.MApply0
-include FStar.Tactics.MApply
-include FStar.Tactics.Easy
+open FStar.Tactics.V2.Bare
+open FStar.Tactics.Logic.Lemmas { lemma_from_squash }
+
+let easy_fill () : Tac unit =
+    let _ = repeat intro in
+    (* If the goal is `a -> Lemma b`, intro will fail, try to use this switch *)
+    let _ = trytac (fun () -> apply (`lemma_from_squash); intro ()) in
+    smt ()
