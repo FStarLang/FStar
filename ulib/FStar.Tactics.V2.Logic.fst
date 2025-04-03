@@ -24,7 +24,7 @@ open FStar.Tactics.V2.SyntaxCoercions
 open FStar.Tactics.NamedView
 open FStar.Tactics.Util
 
-open FStar.Tactics.V1.Logic.Lemmas
+open FStar.Tactics.Logic.Lemmas
 
 private
 let term_eq = FStar.Reflection.TermEq.Simple.term_eq
@@ -247,14 +247,6 @@ let sk_binder b = sk_binder' [] b
 let skolem () =
   let bs = vars_of_env (cur_env ()) in
   map sk_binder bs
-
-let easy_fill () =
-    let _ = repeat intro in
-    (* If the goal is `a -> Lemma b`, intro will fail, try to use this switch *)
-    let _ = trytac (fun () -> apply (`lemma_from_squash); intro ()) in
-    smt ()
-
-let easy #a #x = x
 
 (** Add a lemma into the local context, quantified for all arguments.
 Only works for lemmas with up to 3 arguments for now. It is expected

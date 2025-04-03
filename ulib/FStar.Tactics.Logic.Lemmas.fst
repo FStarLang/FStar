@@ -13,7 +13,7 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 *)
-module FStar.Tactics.V1.Logic.Lemmas
+module FStar.Tactics.Logic.Lemmas
 
 let fa_intro_lem (#a:Type) (#p:a -> Type) (f:(x:a -> squash (p x))) : Lemma (forall (x:a). p x) =
   FStar.Classical.lemma_forall_intro_gtot
