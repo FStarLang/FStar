@@ -89,7 +89,10 @@ val mk_and_l : list term -> term
 val mk_or_l : list term -> term
 val mk_ApplyTT : term -> term -> term
 val mk_String_const : string -> term
-val mk_Precedes : term -> term -> term -> term -> term
+val mk_Precedes : term -> term -> term -> term -> term -> term -> term
+val mk_LexCons : term -> term -> term -> term
+val mk_lex_t : term
+val mk_LexTop : term
 
 
 (*
