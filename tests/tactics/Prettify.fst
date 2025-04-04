@@ -32,6 +32,8 @@ type named_ty =
     (named "Case1" ((named "x" int & int) & (named "y" int & string)))
     (named "Case2" (named "b" bool))
 
+// bijection record disabled for now
+(*
 %splice[
   named_ty_pretty;
   Case1;
@@ -43,6 +45,7 @@ type named_ty =
 
 let _ = assert (Inl ((1, 2), (3, "a")) >> named_ty_pretty_bij == Case1 1 2 3 "a")
 let _ = assert (Case2 false << named_ty_pretty_bij == Inr false)
+*)
 
 (* This test doesn't work.. apparently the projectors from a spliced
 type can't be called? *)

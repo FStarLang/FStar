@@ -5,8 +5,6 @@ as the body of a splice. We could make this a plugin eventually,
 not doing it now to now complicate the build (and this is pretty
 fast anyway). *)
 
-//#set-options "--print_implicits --print_full_names --print_universes"
-
 open FStar.Tactics.V2.Bare
 open FStar.List.Tot { (@), unsnoc }
 
@@ -483,7 +481,7 @@ let entry (suf nm : string) : Tac decls =
   let ds = ds @ mk_left cfg in
   let ds = ds @ mk_left_right cfg in
   let ds = ds @ mk_right_left cfg in
-  let ds = ds @ mk_bij cfg in
+  // let ds = ds @ mk_bij cfg in
   let post_type (se : sigelt) : Tac sigelt =
     let quals = filter (fun q -> not (Unfold_for_unification_and_vcgen? q)) quals in
     let se = set_sigelt_quals quals se in
@@ -493,6 +491,7 @@ let entry (suf nm : string) : Tac decls =
   let post_other (se : sigelt) : Tac sigelt =
     let quals = filter (fun q -> not (Noeq? q || Unopteq? q)) quals in
     let se = set_sigelt_quals quals se in
+    let attrs = attrs @ [`"KrmlPrivate"] in
     let se = set_sigelt_attrs attrs se in
     se
   in
