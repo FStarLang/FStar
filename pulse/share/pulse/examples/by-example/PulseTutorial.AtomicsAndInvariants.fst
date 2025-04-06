@@ -22,9 +22,9 @@ module U32 = FStar.UInt32
 let timeless_slprop = v:slprop { timeless v } 
 //owns$
 let owns (x:ref U32.t) : timeless_slprop = exists* v. pts_to x v
-//owns$
+//end owns$
 
- //create_invariant$
+//create_invariant$
 ghost
 fn create_invariant (r:ref U32.t) (v:erased U32.t)
 requires pts_to r v
@@ -34,9 +34,10 @@ ensures inv i (owns r)
     fold owns;
     new_invariant (owns r)
 }
+//end create_invariant$
 
 
- //update_ref_atomic$
+//update_ref_atomic$
 atomic
 fn update_ref_atomic (r:ref U32.t) (i:iname) (v:U32.t)
 requires inv i (owns r)
@@ -51,7 +52,7 @@ opens [i]
      later_intro (owns r)
   }
 }
-
+//end update_ref_atomic$
 
 
 ghost
@@ -67,7 +68,6 @@ ensures  pts_to x 'v ** pts_to x 'u ** pure False
 
 //double_open_bad$
 [@@expect_failure]
-
 fn double_open_bad (r:ref U32.t) (i:inv (owns r))
 requires emp
 ensures pure False
@@ -82,11 +82,9 @@ ensures pure False
       }
     }
 }
+//end double_open_bad$
 
-//double_open_bad$
-
-
- //update_ref$
+//update_ref$
 fn update_ref (r:ref U32.t) (i:iname) (v:U32.t)
 requires inv i (owns r)
 ensures inv i (owns r)
@@ -99,11 +97,10 @@ ensures inv i (owns r)
      later_intro (owns r)
   }
 }
-
+//end update_ref$
 
 //update_ref_fail$
-[@@expect_failure]
- 
+[@@expect_failure] 
 fn update_ref_fail (r:ref U32.t) (i:iname) (v:U32.t)
 requires inv i (owns r)
 ensures inv i (owns r)
@@ -114,14 +111,9 @@ ensures inv i (owns r)
     fold owns;
   }
 }
-
-//update_ref_fail$
-
-
+//end update_ref_fail$
 
 let readable (r:ref U32.t) : timeless_slprop  = exists* p v. pts_to r #p v
-
-
 
 ghost
 fn intro_readable (r:ref U32.t) (p:perm) (v:U32.t)
@@ -132,7 +124,7 @@ fn intro_readable (r:ref U32.t) (p:perm) (v:U32.t)
 }
 
 
- //split_readable$
+//split_readable$
 ghost
 fn split_readable (r:ref U32.t) (i:iname)
 requires inv i (readable r)
@@ -152,3 +144,4 @@ opens [i]
         later_intro (readable r)
     };
 }
+//end split_readable$

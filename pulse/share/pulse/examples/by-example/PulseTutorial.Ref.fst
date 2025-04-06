@@ -19,7 +19,7 @@ module PulseTutorial.Ref
 open Pulse.Lib.Pervasives
 
 
- //incr
+//incr$
 fn incr (r:ref int)
 requires pts_to r 'v
 ensures pts_to r ('v + 1)
@@ -27,10 +27,9 @@ ensures pts_to r ('v + 1)
     let v = !r;
     r := v + 1;
 }
+//end incr$
 
-
-
- //swap$
+//swap$
 fn swap #a (r0 r1:ref a)
 requires pts_to r0 'v0 ** pts_to r1 'v1
 ensures pts_to r0 'v1 ** pts_to r1 'v0
@@ -40,6 +39,7 @@ ensures pts_to r0 'v1 ** pts_to r1 'v0
     r0 := v1;
     r1 := v0;
 }
+//end swap$
 
 
  //value_of$
@@ -50,6 +50,7 @@ ensures pts_to r 'v ** pure (v == 'v)
 {
     !r;
 }
+//end value_of$
 
 
 
@@ -61,6 +62,7 @@ ensures pts_to r w ** pure (v == reveal w)
 {
     !r;
 }
+//end value_of_explicit$
 
 
 [@@expect_failure]
@@ -72,6 +74,7 @@ ensures pts_to r w ** pure (v == reveal w)
 {
     reveal w
 }
+//end value_of_explicit_fail$
 
 
  //value_of_explicit_alt$
@@ -83,6 +86,7 @@ ensures pts_to r w
     let v = !r;
     v
 }
+//end value_of_explicit_alt$
 
 
  //assign$
@@ -92,6 +96,7 @@ ensures pts_to r v
 {
     r := v;
 }
+//end assign$
 
 
 
@@ -103,6 +108,7 @@ ensures pts_to r ('v + n)
     let v = !r;
     r := v + n;
 }
+//end add$
 
 
 open FStar.Mul //can we include this in Pulse.Lib.Pervasives
@@ -118,6 +124,7 @@ ensures pts_to r (4 * 'v)
     let v2 = !r;
     add r v2;
 }
+//end quadruple$
 
 
 [@@expect_failure]
@@ -133,6 +140,7 @@ ensures pts_to r (4 * 'v)
     add r v2;    // Env=...                               Ctxt= pts_to r (v2 + v2)
                  // ..                                    Ctxt= pts_to r (4 * 'v)
 }
+//end quadruple_show_proof_state$
 
 
 [@@expect_failure]
@@ -144,6 +152,7 @@ ensures pts_to r (4 * 'v)
     add r (!r);
     add r (!r);
 }
+//end quad FAIL$
 
 
 
@@ -155,6 +164,7 @@ ensures pts_to r #1.0R v
 {
     r := v;
 }
+//end assign_1.0R$
 
 
  //value_of_perm$
@@ -165,6 +175,7 @@ ensures pts_to r #p 'v ** pure (v == 'v)
 {
     !r;
 }
+//end value_of_perm$
 
 
 //assign_perm FAIL$
@@ -176,7 +187,6 @@ ensures pts_to r #p w
 {
     r := v;
 }
-
 //end assign_perm FAIL$
 
 
@@ -187,6 +197,7 @@ ensures pts_to r #(p /. 2.0R) 'v ** pts_to r #(p /. 2.0R) 'v
 {
     share r;
 }
+//end share_ref$
 
 
  //gather_ref$
@@ -200,6 +211,7 @@ ensures
 {
     gather r
 }
+//end gather_ref$
 
 
 
@@ -225,6 +237,7 @@ ensures
     share r;
     r
 }
+//end alias_ref$
 
 
 
@@ -240,7 +253,7 @@ ensures pure (v == 1)
     !i             //      .    |- v:int. emp ** pure (v == 1) 
 
 }
-
+//end one
 
 
 [@@expect_failure]
@@ -253,6 +266,7 @@ ensures pts_to s 0
     let mut s = 0;
     s
 }
+//end refs_as_scoped FAIL
 
 
 

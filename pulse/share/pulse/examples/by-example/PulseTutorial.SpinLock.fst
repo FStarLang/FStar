@@ -38,7 +38,7 @@ type lock = {
 
 let lock_alive (l:lock) (p:slprop) =
   inv l.i (lock_inv l.r p)
-//lock$
+//end lock$
 
  //dup_lock_alive$
 ghost
@@ -51,7 +51,7 @@ fn dup_lock_alive (l:lock) (p:slprop)
   fold lock_alive;
   fold lock_alive
 }
-
+//end dup_lock_alive$
 
  //new_lock$
 fn new_lock (p:slprop)
@@ -69,14 +69,14 @@ ensures lock_alive l p
    fold lock_alive;
    l
 }
-
+//end new_lock$
 
 
 //acquire_sig$
 fn rec acquire (#p:slprop) (l:lock)
 requires lock_alive l p
 ensures lock_alive l p ** p
-//acquire_sig$
+//end acquire_sig$
 //acquire_body$
 {
   unfold lock_alive;
@@ -113,9 +113,9 @@ ensures lock_alive l p ** p
   if b { rewrite (maybe b p) as p; }
   else { rewrite (maybe b p) as emp; acquire l }
 }
+//end acquire_body$
 
-
- //release$
+//release$
 fn release (#p:slprop) (l:lock)
 requires lock_alive l p ** p
 ensures lock_alive l p
@@ -136,4 +136,4 @@ ensures lock_alive l p
   };
   fold lock_alive
 }
-
+//end release$
