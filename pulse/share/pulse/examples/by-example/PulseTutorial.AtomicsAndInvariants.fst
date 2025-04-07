@@ -17,12 +17,21 @@
 module PulseTutorial.AtomicsAndInvariants
 #lang-pulse
 open Pulse.Lib.Pervasives
+module T = FStar.Tactics
 module U32 = FStar.UInt32
 
-let timeless_slprop = v:slprop { timeless v } 
 //owns$
 let owns (x:ref U32.t) : timeless_slprop = exists* v. pts_to x v
 //end owns$
+
+//owns_timeless$
+let owns_timeless (x:ref U32.t)
+: squash (timeless (owns x))
+by T.(norm [delta_only [`%owns; `%auto_squash]]; 
+      mapply (`FStar.Squash.return_squash);
+      mapply (`timeless_exists))
+= ()
+//end owns_timeless$
 
 //create_invariant$
 ghost
@@ -36,23 +45,53 @@ ensures inv i (owns r)
 }
 //end create_invariant$
 
-
-//update_ref_atomic$
+//update_ref_atomic0$
+[@@expect_failure]
 atomic
 fn update_ref_atomic (r:ref U32.t) (i:iname) (v:U32.t)
 requires inv i (owns r)
 ensures inv i (owns r)
+{
+  with_invariants i {    //later (owns r)
+     unfold owns;        //cannot prove owns; only later (owns r)
+  }
+}
+//end update_ref_atomic0$
+
+
+//update_ref_atomic$
+atomic
+fn update_ref_atomic (r:ref U32.t) (i:iname) (v:U32.t)
+requires inv i (owns r) ** later_credit 1
+ensures inv i (owns r)
 opens [i]
 {
-  with_invariants i {    //owns r
-     later_elim_timeless _;
+  with_invariants i {    //later (owns r) ** later_credit 1
+     later_elim _;       //ghost step: owns r
      unfold owns;        //ghost step;  exists* u. pts_to r u
      write_atomic r v;   //atomic step; pts_to r v
      fold owns;          //ghost step;  owns r
-     later_intro (owns r)
-  }
+     later_intro (owns r) //ghost step: later (owns r)
+  } // inv i (owns r)
 }
 //end update_ref_atomic$
+
+//update_ref_atomic_alt$
+atomic
+fn update_ref_atomic_alt (r:ref U32.t) (i:iname) (v:U32.t)
+requires inv i (owns r)
+ensures inv i (owns r)
+opens [i]
+{
+  with_invariants i {    //later (owns r) ** later_credit 1
+     later_elim_timeless _;       //owns r
+     unfold owns;        //ghost step;  exists* u. pts_to r u
+     write_atomic r v;   //atomic step; pts_to r v
+     fold owns;          //ghost step;  owns r
+     later_intro (owns r) //later (owns r)
+  } // inv i (owns r)
+}
+//end update_ref_atomic_alt$
 
 
 ghost
@@ -89,13 +128,8 @@ fn update_ref (r:ref U32.t) (i:iname) (v:U32.t)
 requires inv i (owns r)
 ensures inv i (owns r)
 {                    
-  with_invariants i {    //owns r
-     later_elim_timeless _;
-     unfold owns;        //ghost step;  exists* u. pts_to r u
-     write_atomic r v;   //atomic step; pts_to r v
-     fold owns;          //ghost step;  owns r
-     later_intro (owns r)
-  }
+  later_credit_buy 1;
+  update_ref_atomic r i v;
 }
 //end update_ref$
 
