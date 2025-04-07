@@ -15,7 +15,6 @@
 *)
 
 module PulseByExample
-#lang-pulse
 
 open Pulse.Lib.Core
 
@@ -27,8 +26,9 @@ open Pulse.Lib.Core
 *)
 
 //SNIPPET_START: five
-let fstar_five : int = 5
+#lang-pulse
 
+let fstar_five : int = 5
 
 fn five ()
   requires emp

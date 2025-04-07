@@ -17,7 +17,8 @@
 module PulseTutorial.HigherOrder
 #lang-pulse
 open Pulse.Lib.Pervasives
- //apply$
+
+//apply$
 fn apply (#a:Type0)
          (#b:a -> Type0)
          (#pre:a -> slprop)
@@ -30,9 +31,10 @@ ensures post x y
 {
   f x
 }
+//end apply$
 
 
- //apply_ghost$
+//apply_ghost$
 ghost
 fn apply_ghost 
          (#a:Type0)
@@ -47,18 +49,16 @@ ensures post x y
 {
   f x
 }
+//end apply_ghost$
 
 
 let id_t = (#a:Type0) -> x:a -> stt a emp (fun _ -> emp)
-
 
 fn id ()
 : id_t 
 = (#a:Type0) (x:a) { x }
 
-
 let id_t_a (a:Type0) = x:a -> stt a emp (fun _ -> emp)
-
 
 fn id_a (a:Type0)
 : id_t_a a 
@@ -72,11 +72,11 @@ type ctr = {
     next: i:erased int -> stt int (inv i) (fun y -> inv (i + 1) ** pure (y == reveal i));
     destroy: i:erased int -> stt unit (inv i) (fun _ -> emp)
 }
-//ctr$
+//end ctr$
 let next c = c.next
 let destroy c = c.destroy
 
- //new_counter$
+//new_counter$
 fn new_counter ()
 requires emp
 returns c:ctr
@@ -103,8 +103,7 @@ ensures c.inv 0
     rewrite (pts_to x 0) as (c.inv 0);
     c
 }
-
-
+//end new_counter$
 
 fn return (#a:Type0) (x:a)
 requires emp
@@ -116,7 +115,7 @@ ensures pure (x == y)
 
 
 
- //test_counter$
+//test_counter$
 fn test_counter ()
 requires emp
 ensures emp
@@ -130,3 +129,4 @@ ensures emp
     assert pure (x == 1);
     destroy _;
 }
+//end test_counter$

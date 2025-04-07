@@ -32,7 +32,7 @@ and node_ptr (t:Type0) = ref (node t)
 
 //A nullable pointer to a node
 and llist (t:Type0) = option (node_ptr t)
-//llist$
+//end llist$
 
 //is_list$
 let rec is_list #t (x:llist t) (l:list t)
@@ -44,7 +44,7 @@ let rec is_list #t (x:llist t) (l:list t)
       pure (x == Some p) **
       pts_to p { head; tail } **
       is_list tail tl
-//is_list$
+//end is_list$
 
 //boilerplate$
 
@@ -99,7 +99,7 @@ ensures
     fold (is_list x (node.head::tl));
 }
 
-//boilerplate$
+//end boilerplate$
 
 //is_list_cases$
 let is_list_cases #t (x:llist t) (l:list t)
@@ -111,9 +111,9 @@ let is_list_cases #t (x:llist t) (l:list t)
       pts_to v n **
       pure (l == n.head::tl) **
       is_list n.tail tl
-//is_list_cases$
+//end is_list_cases$
 
- //cases_of_is_list$
+//cases_of_is_list$
 ghost
 fn cases_of_is_list #t (x:llist t) (l:list t)
 requires is_list x l
@@ -136,9 +136,10 @@ ensures is_list_cases x l
     }
   }
 }
+//end cases_of_is_list$
 
 
- //is_list_case_none$
+//is_list_case_none$
 ghost
 fn is_list_case_none (#t:Type) (x:llist t) (#l:list t)
 requires is_list x l ** pure (x == None)
@@ -149,10 +150,10 @@ ensures is_list x l ** pure (l == [])
   unfold (is_list_cases None l);
   fold (is_list x []);
 }
+//end is_list_case_none$
 
 
-
- //is_list_case_some$
+//is_list_case_some$
 ghost
 fn is_list_case_some (#t:Type) (x:llist t) (v:node_ptr t) (#l:list t) 
 requires is_list x l ** pure (x == Some v)
@@ -166,10 +167,11 @@ ensures
   rewrite each x as (Some v);
   unfold (is_list_cases (Some v) l);
 }
+//end is_list_case_some$
 
 
 
- //length$
+//length$
 fn rec length (#t:Type0) (x:llist t)
 requires is_list x 'l
 returns n:nat
@@ -182,18 +184,18 @@ ensures is_list x 'l ** pure (n == List.Tot.length 'l)
     }
     Some vl -> {
       is_list_case_some x vl;
-      with _node _tl. _;
       let node = !vl;
-      rewrite each _node as node;
       let n = length node.tail;
       intro_is_list_cons x vl;
       (1 + n)
     }
   }
 }
+//end length$
 
 
 
+//length_tail$
 fn rec length_tail (#t:Type0) (x:llist t) (k:nat)
 requires is_list x 'l
 returns n:nat
@@ -215,12 +217,13 @@ ensures is_list x 'l ** pure (n == k + List.Tot.length 'l)
     }
   }
 }
+//end length_tail$
 
 
 module I = Pulse.Lib.Trade.Util
 open I
 
- //tail_for_cons$
+//tail_for_cons$
 ghost
 fn tail_for_cons (#t:Type) (v:node_ptr t) (#n:node t) (tl:erased (list t))
 requires 
@@ -239,10 +242,9 @@ ensures
   };
   I.intro _ _ _ aux;
 }
+//end tail_for_cons$
 
-
-
- //tail$
+//tail$
 fn tail (#t:Type) (x:llist t)
 requires is_list x 'l ** pure (Some? x)
 returns y:llist t
@@ -259,9 +261,9 @@ ensures exists* tl.
     tail_for_cons np tl;
     nd.tail
 }
+//end tail$
 
-
- //length_iter$
+//length_iter$
 fn length_iter (#t:Type) (x: llist t)
 requires is_list x 'l
 returns n:nat
@@ -300,9 +302,9 @@ ensures is_list x 'l ** pure (n == List.Tot.length 'l)
   let n = !ctr;
   n
 }
+//end length_iter$
 
-
- //append$
+//append$
 fn rec append (#t:Type0) (x y:llist t)
 requires is_list x 'l1 ** is_list y 'l2 ** pure (Some? x)
 ensures is_list x ('l1 @ 'l2)
@@ -326,10 +328,9 @@ ensures is_list x ('l1 @ 'l2)
     }
   }
 }
+//end append$
 
-
-
- //tail_alt$
+//tail_alt$
 fn tail_alt (#t:Type) (x:llist t)
 requires is_list x 'l ** pure (Some? x)
 returns y:llist t
@@ -353,9 +354,9 @@ ensures exists* hd tl.
   FA.intro_forall_imp _ _ _ aux;
   node.tail
 }
+//end tail_alt$
 
-
-
+//is_last_cell$
 fn is_last_cell (#t:Type) (x:llist t)
 requires is_list x 'l ** pure (Some? x)
 returns b:bool
@@ -380,10 +381,9 @@ ensures is_list x 'l ** pure (b == (List.Tot.length 'l = 1))
     }
   }
 }
+//end is_last_cell$
 
-
-
- //append_at_last_cell$
+//append_at_last_cell$
 fn append_at_last_cell (#t:Type) (x y:llist t)
 requires
   is_list x 'l1 **
@@ -401,9 +401,9 @@ ensures
   rewrite each y as ({node with tail = y}).tail in (is_list y 'l2);
   intro_is_list_cons x np; 
 }
+//end append_at_last_cell$
 
-
- //non_empty_list$
+//non_empty_list$
 ghost
 fn non_empty_list (#t:Type0) (x:llist t)
 requires is_list x 'l ** pure (Cons? 'l)
@@ -415,10 +415,9 @@ ensures is_list x 'l ** pure (Some? x)
     rewrite each tail as n.tail;
     intro_is_list_cons x v #n #tl;
 }
+//end non_empty_list$
 
-
-
- //append_iter$
+//append_iter$
 fn append_iter (#t:Type) (x y:llist t)
 requires is_list x 'l1 ** is_list y 'l2 ** pure (Some? x)
 ensures is_list x ('l1 @ 'l2)
@@ -477,3 +476,4 @@ ensures is_list x ('l1 @ 'l2)
   List.Tot.Properties.append_assoc pfx sfx 'l2;
   ()
 }
+//end append_iter$
