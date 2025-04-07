@@ -129,7 +129,7 @@ ensures lock_alive l p
     later_elim _;
     unfold lock_inv;
     write_atomic_box l.r 0ul;
-    drop_ (maybe _ _); //double release
+    drop_ (maybe _ _); //maybe release without acquire
     fold (maybe (0ul = 0ul) p);
     fold (lock_inv l.r p);
     later_intro (lock_inv l.r p);
