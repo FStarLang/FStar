@@ -36,11 +36,11 @@ let raise (#a:Type) (p:pcm a)
       refine = (fun x -> p.refine (downgrade_val x));
     }
 
-let raise_frame_preserving_upd #a (#p:pcm a) (#x #y:a) (f:frame_preserving_upd p x y)
-  : frame_preserving_upd (raise p) (raise_val x) (raise_val y)
+let raise_frame_preserving_upd (#a:Type u#a) (#p:pcm a) (#x #y:a) (f:frame_preserving_upd p x y)
+  : frame_preserving_upd (raise u#a u#b p) (raise_val u#a u#b x) (raise_val u#a u#b y)
   = fun v ->
       let u = f (downgrade_val v) in
-      let v_new = raise_val u in
-      assert (forall frame. composable p y frame ==> composable (raise p) (raise_val y) (raise_val frame));
-      assert (forall frame. composable (raise p) (raise_val x) frame ==> composable p x (downgrade_val frame));
+      let v_new = raise_val u#a u#b u in
+      assert (forall frame. composable p y frame ==> composable (raise u#a u#b p) (raise_val u#a u#b y) (raise_val u#a u#b frame));
+      assert (forall frame. composable (raise u#a u#b p) (raise_val u#a u#b x) frame ==> composable p x (downgrade_val frame));
       v_new

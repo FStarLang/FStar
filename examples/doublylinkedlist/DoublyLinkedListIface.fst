@@ -604,7 +604,7 @@ let dll_insert_at_tail #t d n =
 #reset-options
 
 #set-options "--z3rlimit 80 --max_fuel 2 --max_ifuel 1"
-
+#push-options "--z3rlimit_factor 4"
 let dll_insert_before #t n' d n =
   let h00 = HST.get () in
   HST.push_frame ();
@@ -693,7 +693,7 @@ let dll_insert_before #t n' d n =
   // assert (as_payload_list h11 d == l_insert_before'
   //           (as_list h00 d `L.index_of` n') (as_payload_list h00 d) (g_node_val h00 n));
   ()
-
+#pop-options
 #reset-options
 
 #set-options "--z3rlimit 80 --max_fuel 2 --max_ifuel 1"
