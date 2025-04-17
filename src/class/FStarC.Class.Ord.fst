@@ -24,6 +24,17 @@ let rec sort #a xs =
   | [] -> []
   | x::xs -> insert x (sort xs)
 
+(* An advantage of not having instance canonicity:
+we can just construct a dictionary with this new function
+without to use a newtype (which would involve a traversal
+of the list to convert into!). *)
+let sort_by #a (f : a -> a -> order) xs =
+  let d : ord a = {
+    super = { (=?) = (fun a b -> f a b = Eq) };
+    cmp = f;
+  } in
+  sort #a #d xs
+
 let dedup #a xs =
   let open FStarC.List in
   let out = fold_left (fun out x -> if existsb (fun y -> x =? y) out then out else x :: out) [] xs in
