@@ -1110,7 +1110,12 @@ let t_apply_lemma (noinst:bool) (noinst_lhs:bool)
     in
     let bs, comp = U.arrow_formals_comp t in
     match lemma_or_sq comp with
-    | None -> fail "not a lemma or squashed function"
+    | None ->
+      fail_doc [
+        prefix 2 1 (text "Term to apply has computation type:") (pp comp);
+        text "`apply_lemma` can only apply functions with the Lemma effect or returning a squashed value.";
+      ]
+
     | Some (pre, post) ->
       let! uvs, _, implicits, subst =
         foldM_left

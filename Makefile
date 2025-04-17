@@ -88,12 +88,11 @@ build: 2
 # These files are regenerated as soon as *any* ml file reachable from
 # stage*/dune changes. This makes sure we trigger dune rebuilds when we
 # modify base ML files. However this will not catch deletion of a file.
-.stage1.ml.touch: $(shell find -L stage1/dune/ -name '*.ml' -type f)
-	touch $@
-.stage2.ml.touch: $(shell find -L stage2/dune/ -name '*.ml' -type f)
-	touch $@
+.src.ml.touch: .force
+	[ -e $@ ] || touch $@
+	find -L src/ml -newer $@ -exec touch $@ \; -quit
 
-$(FSTAR1_BARE_EXE): .bare1.src.touch .stage1.ml.touch $(MAYBEFORCE)
+$(FSTAR1_BARE_EXE): .bare1.src.touch .src.ml.touch $(MAYBEFORCE)
 	$(call bold_msg, "BUILD", "STAGE 1 FSTARC-BARE")
 	$(MAKE) -C stage1 fstarc-bare
 	touch -c $@
@@ -111,7 +110,7 @@ $(FSTAR1_BARE_EXE): .bare1.src.touch .stage1.ml.touch $(MAYBEFORCE)
 	  TOUCH=$@ \
 	  $(MAKE) -f mk/plugins.mk ocaml
 
-$(FSTAR1_FULL_EXE): .bare1.src.touch .full1.src.touch .stage1.ml.touch $(MAYBEFORCE)
+$(FSTAR1_FULL_EXE): .bare1.src.touch .full1.src.touch .src.ml.touch $(MAYBEFORCE)
 	$(call bold_msg, "BUILD", "STAGE 1 FSTARC")
 	$(MAKE) -C stage1 fstarc-full
 	touch -c $@
@@ -129,7 +128,7 @@ $(FSTAR1_FULL_EXE): .bare1.src.touch .full1.src.touch .stage1.ml.touch $(MAYBEFO
 	  $(MAKE) -f mk/lib.mk ocaml verify
 	# ^ NB: also verify files we don't extract
 
-.alib1.touch: .alib1.src.touch .stage1.ml.touch $(MAYBEFORCE)
+.alib1.touch: .alib1.src.touch .src.ml.touch $(MAYBEFORCE)
 	$(call bold_msg, "BUILD", "STAGE 1 LIB")
 	$(MAKE) -C stage1/ libapp
 	touch $@
@@ -149,7 +148,7 @@ $(FSTAR1_FULL_EXE): .bare1.src.touch .full1.src.touch .stage1.ml.touch $(MAYBEFO
 	  TOUCH=$@ \
 	  $(MAKE) -f mk/lib.mk ocaml
 
-.plib1.touch: .plib1.src.touch .stage1.ml.touch $(MAYBEFORCE)
+.plib1.touch: .plib1.src.touch .src.ml.touch $(MAYBEFORCE)
 	$(call bold_msg, "BUILD", "STAGE 1 PLUGLIB")
 	$(MAKE) -C stage1/ libplugin
 	touch $@
@@ -168,7 +167,7 @@ $(FSTAR1_FULL_EXE): .bare1.src.touch .full1.src.touch .stage1.ml.touch $(MAYBEFO
 	  TOUCH=$@ \
 	  $(MAKE) -f mk/fstar-12.mk ocaml
 
-$(FSTAR2_BARE_EXE): .bare2.src.touch .stage2.ml.touch $(MAYBEFORCE)
+$(FSTAR2_BARE_EXE): .bare2.src.touch .src.ml.touch $(MAYBEFORCE)
 	$(call bold_msg, "BUILD", "STAGE 2 FSTARC-BARE")
 	$(MAKE) -C stage2 fstarc-bare FSTAR_DUNE_RELEASE=1
 	touch -c $@
@@ -189,7 +188,7 @@ $(FSTAR2_BARE_EXE): .bare2.src.touch .stage2.ml.touch $(MAYBEFORCE)
 	  TOUCH=$@ \
 	  $(MAKE) -f mk/plugins.mk ocaml
 
-$(FSTAR2_FULL_EXE): .bare2.src.touch .full2.src.touch .stage2.ml.touch $(MAYBEFORCE)
+$(FSTAR2_FULL_EXE): .bare2.src.touch .full2.src.touch .src.ml.touch $(MAYBEFORCE)
 	$(call bold_msg, "BUILD", "STAGE 2 FSTARC")
 	$(MAKE) -C stage2 fstarc-full FSTAR_DUNE_RELEASE=1
 	touch -c $@
@@ -207,7 +206,7 @@ $(FSTAR2_FULL_EXE): .bare2.src.touch .full2.src.touch .stage2.ml.touch $(MAYBEFO
 	  $(MAKE) -f mk/lib.mk ocaml verify
 	# ^ NB: also verify files we don't extract
 
-.alib2.touch: .alib2.src.touch .stage2.ml.touch $(MAYBEFORCE)
+.alib2.touch: .alib2.src.touch .src.ml.touch $(MAYBEFORCE)
 	$(call bold_msg, "BUILD", "STAGE 2 LIB")
 	$(MAKE) -C stage2/ libapp FSTAR_DUNE_RELEASE=1
 	touch $@
@@ -227,7 +226,7 @@ $(FSTAR2_FULL_EXE): .bare2.src.touch .full2.src.touch .stage2.ml.touch $(MAYBEFO
 	  TOUCH=$@ \
 	  $(MAKE) -f mk/lib.mk ocaml
 
-.plib2.touch: .plib2.src.touch .stage2.ml.touch $(MAYBEFORCE)
+.plib2.touch: .plib2.src.touch .src.ml.touch $(MAYBEFORCE)
 	$(call bold_msg, "BUILD", "STAGE 2 PLUGLIB")
 	$(MAKE) -C stage2/ libplugin FSTAR_DUNE_RELEASE=1
 	touch $@
@@ -282,10 +281,10 @@ else
 LINK_OK=0
 endif
 
-.stage1.src.touch: .bare1.src.touch .full1.src.touch .alib1.src.touch .plib1.src.touch .stage1.ml.touch
+.stage1.src.touch: .bare1.src.touch .full1.src.touch .alib1.src.touch .plib1.src.touch .src.ml.touch
 	touch $@
 
-.stage2.src.touch: .bare2.src.touch .full2.src.touch .alib2.src.touch .plib2.src.touch .stage2.ml.touch
+.stage2.src.touch: .bare2.src.touch .full2.src.touch .alib2.src.touch .plib2.src.touch .src.ml.touch
 	touch $@
 
 .install-stage1.touch: export FSTAR_LINK_LIBDIRS=$(LINK_OK)
