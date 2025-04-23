@@ -159,7 +159,7 @@ instance showable_closure : showable closure = {
 
 instance showable_stack_elt : showable stack_elt = {
   show = (function
-          | Arg (c, _, _) -> BU.format1 "Closure %s" (show c)
+          | Arg (c, _, _) -> BU.format1 "Arg %s" (show c)
           | MemoLazy _ -> "MemoLazy"
           | Abs (_, bs, _, _, _) -> BU.format1 "Abs %s" (show <| List.length bs)
           | UnivArgs _ -> "UnivArgs"
