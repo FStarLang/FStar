@@ -13,13 +13,18 @@ defaults:
 
 jobs:
   build:
+    strategy:
+      matrix:
+        ocamlv:
+          - 4.14.2
+          - 5.3
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@master
 
       - uses: ocaml/setup-ocaml@v3
         with:
-          ocaml-compiler: 4.14.2
+          ocaml-compiler: ${{ matrix.ocamlv }}
 
       - name: OPAM build
         run: opam install .
