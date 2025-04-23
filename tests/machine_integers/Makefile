@@ -5,9 +5,9 @@ include $(FSTAR_ROOT)/mk/test.mk
 
 all: BigList.memcheck
 
-# Test that this file does not use much memory (currently 580MB),
+# Test that this file does not use much memory (currently ~500MB),
 # we give it 1.5GB
 BigList.memcheck: BigList.fst
 	$(call msg, "MEMCHECK", $<)
-	( ulimit -v 1500000 && $(FSTAR) BigList.fst )
+	( ulimit -d 1500000 && $(FSTAR) BigList.fst )
 	touch $@
