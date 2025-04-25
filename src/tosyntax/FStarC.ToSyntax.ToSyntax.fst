@@ -4298,6 +4298,7 @@ and desugar_decl_core env (d_attrs:list S.term) (d:decl) : (env_t & sigelts) =
   )
 
 let desugar_decls env decls =
+  Stats.record "desugar_decls" fun () ->
   let env, sigelts =
     List.fold_left (fun (env, sigelts) d ->
       let env, se = desugar_decl env d in

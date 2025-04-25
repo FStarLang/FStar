@@ -128,6 +128,7 @@ let lib_paths () =
   @ fstarc_paths ()
 
 let full_include_path () =
+  // Stats.record "Find.full_include_path" fun () ->
   match !_full_include with
   | Some paths -> paths
   | None ->
@@ -144,6 +145,7 @@ let full_include_path () =
     res
 
 let do_find (paths : list string) (filename : string) : option string =
+  // Stats.record "Find.do_find" fun () ->
   if Filepath.is_path_absolute filename then
     if Filepath.file_exists filename then
       Some filename

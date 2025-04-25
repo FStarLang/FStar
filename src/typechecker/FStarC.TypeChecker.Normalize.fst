@@ -2718,6 +2718,7 @@ and norm_residual_comp cfg env (rc:residual_comp) : residual_comp =
 let reflection_env_hook = mk_ref None
 
 let normalize_with_primitive_steps ps s e (t:term) =
+  Stats.record "norm_term" fun () ->
   let is_nbe = is_nbe_request s in
   let maybe_nbe = if is_nbe then " (NBE)" else "" in
   Errors.with_ctx ("While normalizing a term" ^ maybe_nbe) (fun () ->
@@ -2748,6 +2749,7 @@ let normalize s e t =
                       "FStarC.TypeChecker.Normalize.normalize"
 
 let normalize_comp s e c =
+  Stats.record "norm_comp" fun () ->
   Profiling.profile (fun () ->
     let cfg = config s e in
     reflection_env_hook := Some e;

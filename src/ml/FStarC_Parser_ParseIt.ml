@@ -541,6 +541,7 @@ let parse_lang lang fn =
       ParseError (e, msg, r)
 
 let parse (lang_opt:lang_opts) fn =
+  FStarC_Stats.record "parse" @@ fun () ->
   FStarC_Parser_Util.warningHandler := (function
     | e -> Printf.printf "There was some warning (TODO)\n");
   match lang_opt with
