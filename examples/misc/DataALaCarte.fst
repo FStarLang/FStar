@@ -15,7 +15,7 @@
 *)
 module DataALaCarte
 open FStar.Tactics.Typeclasses
-
+#set-options "--z3rlimit_factor 4 --z3cliopt 'smt.qi.eager_threshold=100' --fuel 2 --ifuel 2"
 (**
  * This module is an adaptation of S. Swierstra's Data Type a la Carte
  * https://www.cambridge.org/core/journals/journal-of-functional-programming/article/data-types-a-la-carte/14416CB20C4637164EA9F77097909409
@@ -91,32 +91,36 @@ let rec fold_expr
 = let In t = e in
   alg (ff.fmap t (fun (x:expr f { x << e }) -> fold_expr alg x))
 
-class eval (f: Type -> Type) = {
-  evalAlg : f int -> int
+[@@fundeps[2]]
+class eval (f: Type -> Type) (a:Type) = {
+  evalAlg : f a -> a
 }
 
-instance eval_val : eval value =
+instance eval_val : eval value int =
   let evalAlg : value int -> int = fun (Val x) -> x in
   { evalAlg }
 
-instance eval_add : eval add =
+instance eval_add : eval add int =
   let evalAlg : add int -> int = fun (Add x y) -> x + y in
   { evalAlg }
 
 instance eval_coprod 
-    (f g: ([@@@strictly_positive]Type -> Type))
-    {| ef: eval f |}
-    {| eg: eval g |} 
-: eval (coprod f g)
-= let evalAlg (x:coprod f g int) : int =
+    (f g: ([@@@strictly_positive]Type -> Type)) (a:Type)
+    {| ef: eval f a |}
+    {| eg: eval g a |} 
+: eval (coprod f g) a
+= let evalAlg (x:coprod f g a) : a =
     match x with
     | Inl x -> ef.evalAlg x
     | Inr y -> eg.evalAlg y
   in
   { evalAlg }
 
-let eval_expr (#f:([@@@strictly_positive]Type -> Type)) {| ef: eval f |} {| functor f |} (x:expr f) : int =
-  fold_expr ef.evalAlg x
+let eval_expr 
+  (#a:Type)
+  (#f:([@@@strictly_positive]Type -> Type))
+  {| ef: eval f a |} {| functor f |} (x:expr f)
+: a = fold_expr ef.evalAlg x
 
 let test = assert_norm (eval_expr addExample == 1337)
 
@@ -131,28 +135,30 @@ instance functor_mul : functor mul =
   in
   { fmap }
 
-instance eval_mul : eval mul =
+instance eval_mul : eval mul int =
   let evalAlg : mul int -> int = fun (Mul x y) -> x * y in
   {  evalAlg }
 
 let inj_t (f g:Type -> Type) = #a:Type -> f a -> g a
-// let failure (f g:Type -> Type) :
-let proj_t (f g:Type -> Type) =
-  #a:Type -> 
-  x:g a ->
-  y:option (f a) { 
-    (Some? y ==> (f==g /\ Some?.v y == x) \/ Some?.v y << x) 
-    // /\
-    // (None? y ==> (f =!= g))
-  }
+let proj_t (f g:Type -> Type) = #a:Type -> x:g a -> option (f a)
 class leq (f g : Type -> Type) = {
   inj: inj_t f g;
   proj: proj_t f g;
+  inversion: unit
+   -> Lemma (
+    (forall (a:Type) (x:g a).
+      match proj x with
+      | Some y -> inj y == x
+      | _ -> True) /\
+    (forall (a:Type) (x:f a). 
+      proj (inj x) == Some x)
+  )
 }
 
 instance leq_id (f:Type -> Type) : leq f f = {
   inj=(fun #_ x -> x);
   proj=(fun #_ x -> Some x);
+  inversion=(fun _ -> ())
 }
 
 instance leq_ext_left (f g:[@@@strictly_positive]Type -> Type) : leq f (g ** f) = 
@@ -162,7 +168,7 @@ let proj : proj_t f (g ** f) = fun #a x ->
   | Inl _ -> None
   | Inr x -> Some x
 in
-{ inj; proj }
+{ inj; proj; inversion=(fun _ -> ()) }
 
 let compose (#a #b #c:Type) (f:b -> c) (g: a -> b) (x:a) : c = f (g x)
 
@@ -176,15 +182,33 @@ instance leq_cong_left
     | Inl x -> f_inj.proj x
     | _ -> None
   in
-  { inj; proj }
+  { inj; proj; inversion=(fun _ -> f_inj.inversion()) }
 
 let inject (#f #g:([@@@strictly_positive]Type -> Type)) {| gf: leq g f |}
 : g (expr f) -> expr f 
 = compose In gf.inj
 
 let project  (#g #f:([@@@strictly_positive]Type -> Type)) {| gf: leq g f |}
-: expr f -> option (g (expr f))
+: x:expr f -> option (g (expr f)) 
 = fun (In x) -> gf.proj x
+
+let inject_project 
+  (#f #g:([@@@strictly_positive]Type -> Type)) {| gf: leq g f |}
+  (x:expr f)
+: Lemma (
+    match project #g #f x with
+    | Some y -> inject #f #g  y == x
+    | _ -> True
+) [SMTPat (project #g #f x)]
+= gf.inversion()
+
+let project_inject
+  (#f #g:([@@@strictly_positive]Type -> Type)) {| gf: leq g f |}
+  (x:g (expr f))
+: Lemma (
+    project #g #f (inject #f #g x) == Some x
+) [SMTPat (project #g #f (inject #f #g x))]
+= gf.inversion()
 
 let v (#f:[@@@strictly_positive]Type -> Type) {| vf: leq value f |} (x:int)
 : expr f
@@ -323,7 +347,6 @@ let rewrite
 
 let ex5_l : expr (value ** add ** mul) = v 3 *^ (v 1 +^ v 2)
 let ex5_r : expr (value ** add ** mul) = (v 1 +^ v 2) *^ v 3
-
 let ex6 = ex5_l +^ ex5_r
 
 let ex5'_l : expr (value ** add ** mul) =
@@ -333,25 +356,98 @@ let ex5'_r : expr (value ** add ** mul) =
 let ex6' = ex5'_l +^ ex5'_r 
 
 module T = FStar.Tactics.V2
-let test56 = 
- assert (rewrite ex6 == ex6')
-    by (T.compute())
+// let test56 = 
+//  assert (rewrite ex6 == ex6')
+//     by (T.compute())
 
+let or_else (x:option 'a)
+           (or_else: squash (None? x) -> 'a)
+: 'a
+= match x with
+  | None -> or_else ()
+  | Some y -> y
+
+module P = FStar.Printf
 let rec to_string_alt 
-    // (#f:([@@@strictly_positive]Type -> Type))
-    // {| leq value f |} {| leq add f |} {| leq mul f |}
     (x:expr (value ** add ** mul))
 : string
-= match project #value x with
-  | None -> (
-    match project #add x with
-    | None -> (
-      match project #mul x with
-      | None -> ""
-      | Some (Mul x y) -> "(" ^ to_string_alt x ^ "*" ^ to_string_alt y ^ ")"
-    )
-    | Some (Add x y) -> "(" ^ to_string_alt x ^ "+" ^ to_string_alt y ^ ")"
-  )
-  | Some (Val x) -> string_of_int x
-  
+= (let? Val x = project #value x in return <| string_of_int x) 
+  `or_else` fun _ ->
+  (let? Add x y = project #add x in 
+   return <| P.sprintf "(%s + %s)" (to_string_alt x) (to_string_alt y))
+  `or_else` fun _ ->
+  let Some (Mul x y) = project #mul x in
+  P.sprintf "(%s * %s)" (to_string_alt x) (to_string_alt y)
 
+let prj (#g #f:([@@@strictly_positive]Type -> Type)) {| gf: leq g f |} (#a:Type) (x:f a)
+: option (g a)
+= gf.proj x
+
+let has_add_alg (x: (value ** add ** mul) bool) 
+: bool
+= (let? _ = prj #value x in return false) 
+  `or_else` fun _ -> 
+  (let? _ = prj #add x in return true)
+  `or_else` fun _ -> 
+  (let Some (Mul x y) = prj #mul x in x || y)
+
+let has_add 
+  (x:expr (value ** add ** mul))
+: bool
+= fold_expr has_add_alg x
+
+#push-options "--z3rlimit_factor 8 --query_stats"
+let rec rewrite_correct
+    (e:expr (value ** add ** mul))
+: Lemma (
+   eval_expr #int e == eval_expr #int (rewrite e)
+)
+= match project #value e with
+  | Some (Val _) -> ()
+  | _ -> 
+    match project #add e with
+    | Some (Add x y) ->
+      rewrite_correct x;
+      rewrite_correct y
+    | _ ->
+      let Some (Mul x y) = project #mul e in
+      rewrite_correct x;
+      rewrite_correct y;
+      match project #add (rewrite y) with
+      | None -> (
+        match project #add (rewrite x) with
+        | None -> ()
+        | Some (Add x' y') -> (
+          calc (==) {
+            eval_expr e;
+          (==) {}
+            eval_expr x * eval_expr y;
+          (==) {}
+            eval_expr (rewrite x) * eval_expr (rewrite y);
+          (==) {}
+            (eval_expr x' + eval_expr y') * eval_expr (rewrite y);
+          (==) {}
+            (eval_expr x' * eval_expr (rewrite y)) +
+            (eval_expr y' * eval_expr (rewrite y));
+          (==) {}
+            (eval_expr (rewrite e));
+          }
+        )
+      )
+      | Some (Add x' y') -> (
+        calc (==) {
+          eval_expr e;
+        (==) {}
+          eval_expr x * eval_expr y;
+        (==) {}
+          eval_expr (rewrite x) * eval_expr (rewrite y);
+        (==) {}
+          eval_expr (rewrite x) * (eval_expr x' + eval_expr y');
+        (==) {}
+          (eval_expr (rewrite x) * eval_expr x') +
+          (eval_expr (rewrite x) * eval_expr y');
+        (==) {}
+          (eval_expr (rewrite e));
+        }
+      )
+#pop-options
