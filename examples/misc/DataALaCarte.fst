@@ -135,17 +135,34 @@ instance eval_mul : eval mul =
   let evalAlg : mul int -> int = fun (Mul x y) -> x * y in
   {  evalAlg }
 
+let inj_t (f g:Type -> Type) = #a:Type -> f a -> g a
+// let failure (f g:Type -> Type) :
+let proj_t (f g:Type -> Type) =
+  #a:Type -> 
+  x:g a ->
+  y:option (f a) { 
+    (Some? y ==> (f==g /\ Some?.v y == x) \/ Some?.v y << x) 
+    // /\
+    // (None? y ==> (f =!= g))
+  }
 class leq (f g : Type -> Type) = {
-  inj: (#a:Type -> f a -> g a)
+  inj: inj_t f g;
+  proj: proj_t f g;
 }
 
-instance leq_id (f:Type -> Type) {| functor f |}: leq f f = {
-  inj=(fun #_ x -> x)
+instance leq_id (f:Type -> Type) : leq f f = {
+  inj=(fun #_ x -> x);
+  proj=(fun #_ x -> Some x);
 }
 
-instance leq_ext_left (f g:[@@@strictly_positive]Type -> Type) {| functor f |} {| functor g |} : leq f (g ** f) = {
-  inj=Inr
-}
+instance leq_ext_left (f g:[@@@strictly_positive]Type -> Type) : leq f (g ** f) = 
+let inj : inj_t f (g ** f) = Inr in 
+let proj : proj_t f (g ** f) = fun #a x ->
+  match x with
+  | Inl _ -> None
+  | Inr x -> Some x
+in
+{ inj; proj }
 
 let compose (#a #b #c:Type) (f:b -> c) (g: a -> b) (x:a) : c = f (g x)
 
@@ -153,12 +170,21 @@ instance leq_cong_left
   (f g h:[@@@strictly_positive]Type -> Type)
   {| f_inj:leq f h |}
 : leq f (h ** g)
-= let inj (#a:Type) (x:f a) : (h ** g) a = Inl (f_inj.inj x) in
-  { inj }
+= let inj : inj_t f (h ** g) = fun #a x -> Inl (f_inj.inj x) in
+  let proj : proj_t f (h ** g) = fun #a x -> 
+    match x with
+    | Inl x -> f_inj.proj x
+    | _ -> None
+  in
+  { inj; proj }
 
 let inject (#f #g:([@@@strictly_positive]Type -> Type)) {| gf: leq g f |}
 : g (expr f) -> expr f 
 = compose In gf.inj
+
+let project  (#g #f:([@@@strictly_positive]Type -> Type)) {| gf: leq g f |}
+: expr f -> option (g (expr f))
+= fun (In x) -> gf.proj x
 
 let v (#f:[@@@strictly_positive]Type -> Type) {| vf: leq value f |} (x:int)
 : expr f
@@ -189,3 +215,143 @@ let rec lift (#f #g: [@@@strictly_positive]Type -> Type)
 (* reuse addExample by lifting it *)
 let ex3 : expr (value ** add ** mul) = lift addExample *^ v 2
 let test3 = assert_norm (eval_expr ex3 == (1337 * 2))
+
+class render (f: [@@@strictly_positive]Type -> Type) = {
+  to_string : 
+    #g:([@@@strictly_positive]Type -> Type) ->
+    x:f (expr g) ->
+    (y:g (expr g) { y << x } -> string) ->
+    string
+}
+
+instance render_value : render value =
+  let to_string #g (x:value (expr g)) _ : string =
+    match x with
+    | Val x -> string_of_int x
+  in
+  { to_string }
+
+
+instance render_add : render add =
+  let to_string #g (x:add (expr g)) (to_str0: (y:g (expr g) {y << x} -> string)) : string =
+    match x with
+    | Add x y ->
+      let In x = x in
+      let In y = y in
+      "(" ^ to_str0 x ^ " + " ^ to_str0 y ^ ")"
+  in
+  { to_string }
+
+instance render_mul : render mul =
+  let to_string #g (x:mul (expr g)) (to_str0: (y:g (expr g) {y << x} -> string)) : string =
+    match x with
+    | Mul x y ->
+      let In x = x in
+      let In y = y in
+      "(" ^ to_str0 x ^ " * " ^ to_str0 y ^ ")"
+  in
+  { to_string }
+
+instance render_coprod (f g: [@@@strictly_positive]Type -> Type) 
+  {| rf: render f |} 
+  {| rg: render g |}
+: render (coprod f g)
+= let to_string #h (x:coprod f g (expr h)) (rc: (y:h (expr h) { y << x }) -> string): string =
+    match x with
+    | Inl x -> rf.to_string #h x rc
+    | Inr y -> rg.to_string #h y rc
+  in
+  { to_string }
+
+let rec render0_render
+    (#f: [@@@strictly_positive]Type -> Type) 
+    {| rf: render f |}
+    (x: f (expr f))
+: string
+= rf.to_string #f x render0_render
+
+let pretty (#f: ([@@@strictly_positive]Type -> Type)) (e:expr f) {| rf: render f |} : string =
+  let In e = e in
+  rf.to_string e render0_render
+
+let test4 = pretty ex3
+let tt = assert_norm (pretty ex3 == "((118 + 1219) * 2)")
+
+let (let?) 
+    (x:option 'a) 
+    (g:(y:'a { Some y == x} -> option 'b))
+: option 'b =
+  match x with
+  | None -> None
+  | Some y -> g y
+
+let return (x:'a) : option 'a = Some x
+
+let dflt (y:'a) (x:option 'a) : 'a =
+  match x with
+  | None -> y
+  | Some x -> x
+
+let distr_mul_l (#f:([@@@strictly_positive]Type -> Type))
+          {| leq add f |} {| leq mul f |} (x:expr f)
+: option (expr f)
+= let? Mul a b = project x in
+  let? Add c d = project b in
+  return (a *^ c +^ a *^ d)
+
+let distr_mul_r (#f:([@@@strictly_positive]Type -> Type))
+          {| leq add f |} {| leq mul f |} (x:expr f)
+: option (expr f)
+= let? Mul a b = project x in
+  let? Add c d = project a in
+  return (c *^ b +^ d *^ b)
+
+let distr_alt 
+  (#f:([@@@strictly_positive]Type -> Type))
+  {| leq add f |} {| leq mul f |} 
+  (x:f (expr f))
+: expr f
+= dflt (dflt (In x) (distr_mul_r (In x))) 
+       (distr_mul_l (In x))
+
+let rewrite 
+  (#f:([@@@strictly_positive]Type -> Type))
+  {| leq add f |} {| leq mul f |} {| functor f |}
+  (x:(expr f))
+: expr f
+= fold_expr distr_alt x
+
+let ex5_l : expr (value ** add ** mul) = v 3 *^ (v 1 +^ v 2)
+let ex5_r : expr (value ** add ** mul) = (v 1 +^ v 2) *^ v 3
+
+let ex6 = ex5_l +^ ex5_r
+
+let ex5'_l : expr (value ** add ** mul) =
+  (v 3 *^ v 1) +^ (v 3 *^ v 2)
+let ex5'_r : expr (value ** add ** mul) =
+  (v 1 *^ v 3) +^ (v 2 *^ v 3)
+let ex6' = ex5'_l +^ ex5'_r 
+
+module T = FStar.Tactics.V2
+let test56 = 
+ assert (rewrite ex6 == ex6')
+    by (T.compute())
+
+let rec to_string_alt 
+    // (#f:([@@@strictly_positive]Type -> Type))
+    // {| leq value f |} {| leq add f |} {| leq mul f |}
+    (x:expr (value ** add ** mul))
+: string
+= match project #value x with
+  | None -> (
+    match project #add x with
+    | None -> (
+      match project #mul x with
+      | None -> ""
+      | Some (Mul x y) -> "(" ^ to_string_alt x ^ "*" ^ to_string_alt y ^ ")"
+    )
+    | Some (Add x y) -> "(" ^ to_string_alt x ^ "+" ^ to_string_alt y ^ ")"
+  )
+  | Some (Val x) -> string_of_int x
+  
+
