@@ -49,7 +49,7 @@ let ( ** ) (f g: ([@@@strictly_positive]Type -> Type)) = coprod f g
 
 let addExample : expr (value ** add) = In (Inr (Add (In (Inl (Val 118))) (In (Inl (Val 1219)))))
 
-class functor (f:Type -> Type) = {
+class functor (f:[@@@strictly_positive]Type -> Type) = {
   fmap : (#a:Type -> #b:Type -> x:f a -> (y:a{y << x} -> b) -> f b)
 }
 
@@ -92,7 +92,7 @@ let rec fold_expr
   alg (ff.fmap t (fun (x:expr f { x << e }) -> fold_expr alg x))
 
 [@@fundeps[2]]
-class eval (f: Type -> Type) (a:Type) = {
+class eval (f: [@@@strictly_positive]Type -> Type) (a:Type) = {
   evalAlg : f a -> a
 }
 
@@ -141,7 +141,7 @@ instance eval_mul : eval mul int =
 
 let inj_t (f g:Type -> Type) = #a:Type -> f a -> g a
 let proj_t (f g:Type -> Type) = #a:Type -> x:g a -> option (f a)
-class leq (f g : Type -> Type) = {
+class leq (f g : [@@@strictly_positive]Type -> Type) = {
   inj: inj_t f g;
   proj: proj_t f g;
   inversion: unit
@@ -155,7 +155,7 @@ class leq (f g : Type -> Type) = {
   )
 }
 
-instance leq_id (f:Type -> Type) : leq f f = {
+instance leq_id f : leq f f = {
   inj=(fun #_ x -> x);
   proj=(fun #_ x -> Some x);
   inversion=(fun _ -> ())
@@ -202,23 +202,21 @@ let inject_project
 ) [SMTPat (project #g #f x)]
 = gf.inversion()
 
-let project_inject
-  (#f #g:([@@@strictly_positive]Type -> Type)) {| gf: leq g f |}
-  (x:g (expr f))
+let project_inject (#f #g:_) {| gf: leq g f |} (x:g (expr f))
 : Lemma (
     project #g #f (inject #f #g x) == Some x
 ) [SMTPat (project #g #f (inject #f #g x))]
 = gf.inversion()
 
-let v (#f:[@@@strictly_positive]Type -> Type) {| vf: leq value f |} (x:int)
+let v #f {| vf: leq value f |} (x:int)
 : expr f
 = inject (Val x)
 
-let ( +^ ) (#f: [@@@strictly_positive]Type -> Type) {| vf : leq add f |} (x y: expr f)
+let ( +^ ) #f {| vf : leq add f |} (x y: expr f)
 : expr f
 = inject (Add x y)
 
-let ( *^ ) (#f: [@@@strictly_positive]Type -> Type) {| vf : leq mul f |} (x y: expr f)
+let ( *^ ) #f {| vf : leq mul f |} (x y: expr f)
 : expr f
 = inject (Mul x y)
 
@@ -226,7 +224,7 @@ let ex2 : expr (value ** add ** mul) = v 1001 +^ v 1833 +^ v 13713 *^ v 24
 let test2 = assert_norm (eval_expr ex2 == ((1001 + 1833 + 13713 * 24)))
 
 (* lift allows promoting terms defined in a smaller type to a bigger one *)
-let rec lift (#f #g: [@@@strictly_positive]Type -> Type) 
+let rec lift #f #g
     {| ff: functor f |} 
     {| fg: leq f g |}
     (x: expr f)
@@ -242,7 +240,7 @@ let test3 = assert_norm (eval_expr ex3 == (1337 * 2))
 
 class render (f: [@@@strictly_positive]Type -> Type) = {
   to_string : 
-    #g:([@@@strictly_positive]Type -> Type) ->
+    #g:_ ->
     x:f (expr g) ->
     (y:g (expr g) { y << x } -> string) ->
     string
@@ -276,7 +274,7 @@ instance render_mul : render mul =
   in
   { to_string }
 
-instance render_coprod (f g: [@@@strictly_positive]Type -> Type) 
+instance render_coprod (f g: _)
   {| rf: render f |} 
   {| rg: render g |}
 : render (coprod f g)
@@ -288,13 +286,13 @@ instance render_coprod (f g: [@@@strictly_positive]Type -> Type)
   { to_string }
 
 let rec render0_render
-    (#f: [@@@strictly_positive]Type -> Type) 
+    (#f: _)
     {| rf: render f |}
     (x: f (expr f))
 : string
 = rf.to_string #f x render0_render
 
-let pretty (#f: ([@@@strictly_positive]Type -> Type)) (e:expr f) {| rf: render f |} : string =
+let pretty #f (e:expr f) {| rf: render f |} : string =
   let In e = e in
   rf.to_string e render0_render
 
@@ -316,34 +314,117 @@ let dflt (y:'a) (x:option 'a) : 'a =
   | None -> y
   | Some x -> x
 
-let distr_mul_l (#f:([@@@strictly_positive]Type -> Type))
-          {| leq add f |} {| leq mul f |} (x:expr f)
-: option (expr f)
-= let? Mul a b = project x in
-  let? Add c d = project b in
-  return (a *^ c +^ a *^ d)
+let rewrite_rule f = expr f -> option (expr f)
+let rewrite_rule_soundness #f (r:rewrite_rule f)
+  {| eval f int |} {| functor f |} 
+  (x:expr f) =
+    match r x with
+    | None -> True
+    | Some y -> eval_expr #int x == eval_expr #int y
+  
+noeq
+type rewrite_t (f:_) {| eval f int |} {| functor f |} = {
+  rule: rewrite_rule f;
+  soundness: unit -> Lemma (forall x. rewrite_rule_soundness rule x)
+}
 
-let distr_mul_r (#f:([@@@strictly_positive]Type -> Type))
-          {| leq add f |} {| leq mul f |} (x:expr f)
-: option (expr f)
-= let? Mul a b = project x in
-  let? Add c d = project a in
-  return (c *^ b +^ d *^ b)
+let or_else (x:option 'a)
+           (or_else: squash (None? x) -> 'a)
+: 'a
+= match x with
+  | None -> or_else ()
+  | Some y -> y
 
-let distr_alt 
-  (#f:([@@@strictly_positive]Type -> Type))
-  {| leq add f |} {| leq mul f |} 
-  (x:f (expr f))
+let ev_val_sem #f (ev: eval f int) {| functor f |} {| leq value f |} =
+  forall (x:expr f). dflt True 
+    (let? Val a= project x in
+     Some #prop (eval_expr x == a))
+
+let ev_add_sem #f (ev: eval f int) {| functor f |} {| leq add f |} =
+  forall (x:expr f). dflt True 
+    (let? Add a b = project x in
+     Some #prop (eval_expr x == eval_expr a + eval_expr b))
+
+let ev_mul_sem #f (ev: eval f int) {| functor f |} {| leq mul f |} =
+  forall (x:expr f). dflt True 
+    (let? Mul a b = project x in
+     Some #prop (eval_expr x == eval_expr a * eval_expr b))
+
+let distr_mul_l #f
+    {| ev: eval f int |} {| functor f |}
+    {| leq add f |} {| leq mul f |}
+    (_: squash (ev_add_sem ev /\ ev_mul_sem ev))
+: rewrite_t f
+= let rule = fun (x:expr f) ->
+    let? Mul a b = project x in
+    let? Add c d = project b in
+    return (a *^ c +^ a *^ d)
+  in
+  let soundness _ = () in
+  { rule; soundness }
+
+let distr_mul_r #f
+    {| ev: eval f int |} {| functor f |}
+    {| leq add f |} {| leq mul f |}
+    (_: squash (ev_add_sem ev /\ ev_mul_sem ev))
+: rewrite_t f
+= let rule = fun x ->
+    let? Mul a b = project x in
+    let? Add c d = project a in
+    return (c *^ b +^ d *^ b)
+  in
+  let soundness _ = () in
+  { rule; soundness }
+
+let compose_rewrites #f
+    {| ev: eval f int |} {| functor f |}
+    (r0 r1: rewrite_t f)
+: rewrite_t f
+= let rule : expr f -> option (expr f) = fun x ->
+    match r0.rule x with
+    | None -> r1.rule x
+    | x -> x
+  in
+  let soundness _ 
+    : Lemma (forall x. rewrite_rule_soundness rule x)
+    = r0.soundness(); r1.soundness()
+  in
+  { rule; soundness }
+
+let rewrite_alg #f {| eval f int |} {| functor f |} 
+                  (l:rewrite_t f) (x:f (expr f))
+= dflt (In x) <| l.rule (In x)
+
+let rewrite #f {| eval f int |} {| functor f |} 
+               (l:rewrite_t f) (x:expr f)
+= fold_expr (rewrite_alg l) x
+
+let rewrite_distr
+  #f
+  {| ev: eval f int |} {| functor f |}
+  {| leq add f |} {| leq mul f |}
+  (pf: squash (ev_add_sem ev /\ ev_mul_sem ev))
+  (x:expr f)
 : expr f
-= dflt (dflt (In x) (distr_mul_r (In x))) 
-       (distr_mul_l (In x))
+= rewrite (compose_rewrites (distr_mul_l pf) (distr_mul_r pf)) x
 
-let rewrite 
-  (#f:([@@@strictly_positive]Type -> Type))
-  {| leq add f |} {| leq mul f |} {| functor f |}
-  (x:(expr f))
-: expr f
-= fold_expr distr_alt x
+let rec rewrite_soundness 
+    (x:expr (value ** add ** mul))
+    (l:rewrite_t (value ** add ** mul))
+: Lemma (eval_expr #int x == eval_expr (rewrite l x))
+= match project #value x with
+  | Some (Val _) ->
+    l.soundness()
+  | _ -> 
+    match project #add x with
+    | Some (Add a b) -> 
+      rewrite_soundness a l; rewrite_soundness b l;
+      l.soundness()
+    | _ -> 
+      let Some (Mul a b) = project #mul x in
+      rewrite_soundness a l; rewrite_soundness b l;
+      l.soundness()
+
 
 let ex5_l : expr (value ** add ** mul) = v 3 *^ (v 1 +^ v 2)
 let ex5_r : expr (value ** add ** mul) = (v 1 +^ v 2) *^ v 3
@@ -356,16 +437,9 @@ let ex5'_r : expr (value ** add ** mul) =
 let ex6' = ex5'_l +^ ex5'_r 
 
 module T = FStar.Tactics.V2
-// let test56 = 
-//  assert (rewrite ex6 == ex6')
-//     by (T.compute())
-
-let or_else (x:option 'a)
-           (or_else: squash (None? x) -> 'a)
-: 'a
-= match x with
-  | None -> or_else ()
-  | Some y -> y
+let test56 = 
+ assert (rewrite_distr () ex6 == ex6')
+    by (T.compute())
 
 module P = FStar.Printf
 let rec to_string_alt 
@@ -379,7 +453,7 @@ let rec to_string_alt
   let Some (Mul x y) = project #mul x in
   P.sprintf "(%s * %s)" (to_string_alt x) (to_string_alt y)
 
-let prj (#g #f:([@@@strictly_positive]Type -> Type)) {| gf: leq g f |} (#a:Type) (x:f a)
+let prj #g #f {| gf: leq g f |} (#a:Type) (x:f a)
 : option (g a)
 = gf.proj x
 
@@ -395,59 +469,3 @@ let has_add
   (x:expr (value ** add ** mul))
 : bool
 = fold_expr has_add_alg x
-
-#push-options "--z3rlimit_factor 8 --query_stats"
-let rec rewrite_correct
-    (e:expr (value ** add ** mul))
-: Lemma (
-   eval_expr #int e == eval_expr #int (rewrite e)
-)
-= match project #value e with
-  | Some (Val _) -> ()
-  | _ -> 
-    match project #add e with
-    | Some (Add x y) ->
-      rewrite_correct x;
-      rewrite_correct y
-    | _ ->
-      let Some (Mul x y) = project #mul e in
-      rewrite_correct x;
-      rewrite_correct y;
-      match project #add (rewrite y) with
-      | None -> (
-        match project #add (rewrite x) with
-        | None -> ()
-        | Some (Add x' y') -> (
-          calc (==) {
-            eval_expr e;
-          (==) {}
-            eval_expr x * eval_expr y;
-          (==) {}
-            eval_expr (rewrite x) * eval_expr (rewrite y);
-          (==) {}
-            (eval_expr x' + eval_expr y') * eval_expr (rewrite y);
-          (==) {}
-            (eval_expr x' * eval_expr (rewrite y)) +
-            (eval_expr y' * eval_expr (rewrite y));
-          (==) {}
-            (eval_expr (rewrite e));
-          }
-        )
-      )
-      | Some (Add x' y') -> (
-        calc (==) {
-          eval_expr e;
-        (==) {}
-          eval_expr x * eval_expr y;
-        (==) {}
-          eval_expr (rewrite x) * eval_expr (rewrite y);
-        (==) {}
-          eval_expr (rewrite x) * (eval_expr x' + eval_expr y');
-        (==) {}
-          (eval_expr (rewrite x) * eval_expr x') +
-          (eval_expr (rewrite x) * eval_expr y');
-        (==) {}
-          (eval_expr (rewrite e));
-        }
-      )
-#pop-options
