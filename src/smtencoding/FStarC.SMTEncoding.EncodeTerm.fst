@@ -351,6 +351,28 @@ let is_BitVector_primitive head args =
 
     | _ -> false
 
+
+let is_String_primitive head args =
+    match head.n, args with
+    | _ when not (Options.smtencoding_encode_string ()) -> false
+    | Tm_fvar fv, [_;_] ->
+      (* concat *)
+      S.fv_eq_lid fv Const.prims_strcat_lid
+      || S.fv_eq_lid fv Const.prims_op_Hat_lid
+      || S.fv_eq_lid fv Const.string_concat_lid
+      (* index *)
+      || S.fv_eq_lid fv Const.string_index_lid
+      (* indexof *)
+      || S.fv_eq_lid fv Const.string_index_of_lid
+    | Tm_fvar fv, [_] ->
+      (* length *)
+      S.fv_eq_lid fv Const.string_strlen_lid
+      || S.fv_eq_lid fv Const.string_length_lid
+    | Tm_fvar fv, [_;_;_] ->
+      (* substring *)
+      S.fv_eq_lid fv Const.string_sub_lid
+    | _ -> false
+
 let rec encode_const c env =
   Errors.with_ctx "While encoding a constant to SMT" (fun () ->
     match c with
@@ -582,6 +604,63 @@ and encode_arith_term env head args_e =
         BU.must
     in
     op arg_tms, sz_decls @ decls
+
+and encode_String_term env head args_e =
+    let arg_tms, decls = encode_args args_e env in
+    let head_fv =
+        match head.n with
+        | Tm_fvar fv -> fv
+        | _ -> failwith "Impossible"
+    in
+    let unary_string arg_tms =
+        Term.unboxString (List.hd arg_tms)
+    in
+    let binary_string_string arg_tms =
+        Term.unboxString (List.hd arg_tms),
+        Term.unboxString (List.hd (List.tl arg_tms))
+    in
+    let binary_string_int arg_tms =
+        Term.unboxString (List.hd arg_tms),
+        Term.unboxInt    (List.hd (List.tl arg_tms))
+    in
+    let binary_string_char arg_tms =
+        Term.unboxString (List.hd arg_tms),
+        Term.unboxInt    (mkApp("FStar.Char.int_of_char", [(List.hd (List.tl arg_tms))]))
+    in
+    let ternary_string_int_int arg_tms = match arg_tms with
+      | [t1; t2; t3] ->
+        Term.unboxString t1, Term.unboxInt t2, Term.unboxInt t3
+      | _ -> failwith "Impossible"
+    in
+    let mk_int : ('a -> term) -> (list term -> 'a) -> list term -> term =
+      fun op mk_args ts -> op (mk_args ts) |> Term.boxInt
+    in
+    let mk_string : ('a -> term) -> (list term -> 'a) -> list term -> term =
+      fun op mk_args ts -> op (mk_args ts) |> Term.boxString
+    in
+    let char_of_int int = mkApp("FStar.Char.__char_of_int", [int]) in
+    let strlen     = mk_int    Util.mkStrLen     unary_string in
+    let strcat     = mk_string Util.mkStrCat     binary_string_string in
+    let strsubstr  = mk_string Util.mkStrSubStr  ternary_string_int_int in
+    (* For str.at, we need to convert the returned boxed int to a char *)
+    let strat terms = mk_int Util.mkStrAt binary_string_int terms |> char_of_int in
+    let strindexof = mk_int Util.mkStrIndexOf binary_string_char in
+    let ops =
+        [(Const.string_length_lid, strlen);
+         (Const.string_strlen_lid, strlen);
+         (Const.prims_strcat_lid, strcat);
+         (Const.prims_op_Hat_lid, strcat);
+         (Const.string_concat_lid, strcat);
+         (Const.string_sub_lid, strsubstr);
+         (Const.string_index_lid, strat);
+         (Const.string_index_of_lid, strindexof);
+        ]
+    in
+    let _, op =
+        List.tryFind (fun (l, _) -> S.fv_eq_lid head_fv l) ops |>
+        BU.must
+    in
+    op arg_tms, decls
 
 and encode_deeply_embedded_quantifier (t:S.term) (env:env_t) : term & decls_t =
     let env = {env with encoding_quantifier=true} in
@@ -1018,6 +1097,9 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
           let t = U.refine dummy arg in (* so that `squash f`, when f is a formula, benefits from shallow embedding *)
           encode_term t env
 
+        | _ when is_String_primitive head args_e ->
+            encode_String_term env head args_e
+
         | Tm_fvar fv, _
         | Tm_uinst({n=Tm_fvar fv}, _), _
             when (not env.encoding_quantifier)
@@ -1043,7 +1125,7 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
            | Some l
              when l |> Env.norm_eff_name env.tcenv
                     |> Env.is_layered_effect env.tcenv -> fallback ()
-           | _ ->             
+           | _ ->
             let e0 = TcUtil.norm_reify env.tcenv []
               (U.mk_reify (args_e |> List.hd |> fst) lopt) in
             if !dbg_SMTEncodingReify

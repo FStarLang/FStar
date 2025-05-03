@@ -44,7 +44,7 @@ let rec strSort x = match x with
   | Bool_sort  -> "Bool"
   | Int_sort  -> "Int"
   | Term_sort -> "Term"
-  | String_sort -> "FString"
+  | String_sort -> if Options.smtencoding_encode_string() then "String" else "FString"
   | Fuel_sort -> "Fuel"
   | BitVec_sort n -> format1 "(_ BitVec %s)" (string_of_int n)
   | Array(s1, s2) -> format2 "(Array %s %s)" (strSort s1) (strSort s2)
@@ -55,7 +55,7 @@ let rec docSort x = match x with
   | Bool_sort  -> doc_of_string "Bool"
   | Int_sort  -> doc_of_string "Int"
   | Term_sort -> doc_of_string "Term"
-  | String_sort -> doc_of_string "FString"
+  | String_sort -> doc_of_string (if Options.smtencoding_encode_string() then "String" else "FString")
   | Fuel_sort -> doc_of_string "Fuel"
   | BitVec_sort n -> form "_" [doc_of_string "BitVec"; doc_of_string (string_of_int n)]
   | Array(s1, s2) -> form "Array" [docSort s1; docSort s2]
@@ -209,7 +209,7 @@ let free_top_level_names (t:term)
 = let rec free_top_level_names acc t =
     match t.tm with
     | FreeV (FV (nm, _, _)) -> add nm acc
-    | App (Var s, args) -> 
+    | App (Var s, args) ->
       let acc = add s acc in
       List.fold_left free_top_level_names acc args
     | App (_, args) -> List.fold_left free_top_level_names acc args
@@ -267,6 +267,11 @@ let op_to_string = function
   | BvToNat -> "bv2int"
   | BvUext n -> format1 "(_ zero_extend %s)" (string_of_int n)
   | NatToBv n -> format1 "(_ int2bv %s)" (string_of_int n)
+  | StrLen -> "str.len"
+  | StrCat -> "str.++"
+  | StrSubStr -> "str.substr"
+  | StrIndexOf -> "str.indexof"
+  | StrAt -> "str.at"
   | Var s -> s
 
 let weightToSmtStr = function
@@ -329,6 +334,7 @@ let mkFalse r       = mk (App(FalseOp, [])) r
 let mkUnreachable   = mk (App(Var "Unreachable", [])) Range.dummyRange
 let mkInteger i  r  = mk (Integer (ensure_decimal i)) r
 let mkInteger' i r  = mkInteger (string_of_int i) r
+let mkString s r    = mk (String s) r
 let mkReal i r      = mk (Real i) r
 let mkBoundV i r    = mk (BoundV i) r
 let mkFreeV x r     = mk (FreeV x) r
@@ -411,6 +417,16 @@ let mkITE (t1, t2, t3) r =
     | _, App(TrueOp, _) -> mkImp(t1, t2) r
     | _, _ ->  mkApp'(ITE, [t1; t2; t3]) r
   end
+let mkStrLen t r = mkApp'(StrLen, [t]) r
+let mkStrCat = mk_bin_op StrCat
+let mkStrSubStr (t1, t2, t3) r = mkApp' (StrSubStr, [t1; t2; t3]) r
+(* In the ulib, the second argument of indexof is a char, whereas SMTLIB expects
+ * a string. So we need to insert a conversion from char to string. *)
+let mkStrIndexOf (t1, t2) r = mkApp' (StrIndexOf, [t1; mkApp ("str.from_code", [t2]) r]) r
+(* In the ulib, the return type of at is a char, whereas SMTLIB returns a
+ * string. So we need to insert a conversion from string to char. *)
+let mkStrAt (t1, t2) r =
+  mkApp ("str.to_code", [mkApp' (StrAt, [t1; t2]) r]) r
 let mkCases t r = match t with
   | [] -> failwith "Impos"
   | hd::tl -> List.fold_left (fun out t -> mkAnd (out, t) r) hd tl
@@ -463,7 +479,12 @@ let check_pattern_ok (t:term) : option term =
                 | BvUext _
                 | NatToBv _
                 | BvToNat
-                | ITE -> false
+                | ITE
+                | StrLen
+                | StrCat
+                | StrSubStr
+                | StrIndexOf
+                | StrAt -> false
             in
             if not head_ok then Some t
             else aux_l terms
@@ -665,7 +686,7 @@ let constructor_to_decl rng constr =
     let sort = constr.constr_sort in
     let field_sorts = constr.constr_fields |> List.map (fun f -> f.field_sort) in
     let cdecl = DeclFun(constr.constr_name, field_sorts, constr.constr_sort, Some "Constructor") in
-    let cid = 
+    let cid =
       match constr.constr_id with
       | None -> []
       | Some id -> [fresh_constructor rng (constr.constr_name, field_sorts, sort, id)]
@@ -703,7 +724,7 @@ let constructor_to_decl rng constr =
       then []
       else (
         let arg_sorts =
-          constr.constr_fields 
+          constr.constr_fields
           |> List.filter (fun f -> f.field_projectible)
           |> List.map (fun _ -> Term_sort)
         in
@@ -786,6 +807,9 @@ let termToSmt
         | Integer i -> doc_of_string i
         | Real r -> doc_of_string r
         | String s ->
+          if Options.smtencoding_encode_string ()
+          then dquotes (doc_of_string s)
+          else
           let id_opt = SMap.try_find string_cache s in
           doc_of_string (match id_opt with
            | Some id -> id
@@ -927,6 +951,7 @@ and mkPrelude z3options =
   let basic = z3options ^
                 "(declare-sort FString)\n\
                 (declare-fun FString_constr_id (FString) Int)\n\
+                (declare-fun String_constr_id (String) Int)\n\
                 \n\
                 (declare-sort Term)\n\
                 (declare-fun Term_constr_id (Term) Int)\n\
@@ -994,7 +1019,7 @@ and mkPrelude z3options =
          constr_id=Some id;
          constr_base=false }
    in
-   let constrs : constructors = 
+   let constrs : constructors =
      List.map as_constr
        [("FString_const", ["FString_const_proj_0", Int_sort, true], String_sort, 0, true);
         ("Tm_type",  [], Term_sort, 2, true);
@@ -1066,8 +1091,8 @@ let mkBvConstructor (sz : int) =
     constr_fields=[{field_projectible=true; field_name=snd (boxBitVecFun sz); field_sort=BitVec_sort sz }];
     constr_base=false
   } in
-  constructor_to_decl norng constr, 
-  constr.constr_name, 
+  constructor_to_decl norng constr,
+  constr.constr_name,
   discriminator_name constr
 
 let __range_c = mk_ref 0
@@ -1160,7 +1185,9 @@ let mk_tester n t     = mkApp("is-"^n,   [t]) t.rng
 let mk_ApplyTF t t'   = mkApp("ApplyTF", [t;t']) t.rng
 let mk_ApplyTT t t'  r  = mkApp("ApplyTT", [t;t']) r
 let kick_partial_app t  = mk_ApplyTT (mkApp("__uu__PartialApp", []) t.rng) t t.rng |> mk_Valid
-let mk_String_const s r = mkApp ("FString_const", [mk (String s) r]) r
+let mk_String_const s r =
+  if Options.smtencoding_encode_string () then mkString s r
+  else mkApp ("FString_const", [mk (String s) r]) r
 let mk_Precedes x1 x2 x3 x4 r = mkApp("Prims.precedes", [x1;x2;x3;x4])  r|> mk_Valid
 let rec n_fuel n =
     if n = 0 then mkApp("ZFuel", []) norng

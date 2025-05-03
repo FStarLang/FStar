@@ -73,6 +73,12 @@ type op =
   | BvToNat
   | ITE
   | Var of string
+  (* String operations *)
+  | StrLen
+  | StrCat
+  | StrSubStr
+  | StrIndexOf
+  | StrAt
 
 type qop =
   | Forall
@@ -106,7 +112,7 @@ type constructor_t = {
   constr_fields:list constructor_field;
   constr_sort:sort;
   constr_id:option int;
-    //Some i, if a term whose head is this constructor is distinct from 
+    //Some i, if a term whose head is this constructor is distinct from
     //terms with other head constructors
   constr_base: bool; //generate a base to eliminate non-injective arguments
 }
@@ -262,6 +268,12 @@ val mkBvShr'  : (int -> (term & term) -> Range.range -> term)
 val mkBvUdivUnsafe : (int -> (term & term) -> Range.range -> term)
 val mkBvModUnsafe  : (int -> (term & term) -> Range.range -> term)
 val mkBvMul'  : (int -> (term & term) -> Range.range -> term)
+
+val mkStrLen  : (term -> Range.range -> term)
+val mkStrCat  : ((term & term) -> Range.range -> term)
+val mkStrSubStr : ((term & term & term) -> Range.range -> term)
+val mkStrIndexOf : ((term & term) -> Range.range -> term)
+val mkStrAt : ((term & term) -> Range.range -> term)
 
 val mkITE: (term & term & term) -> Range.range -> term
 val mkCases : list term -> Range.range -> term
