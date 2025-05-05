@@ -1,7 +1,7 @@
 module Pulse.Lib.GhostFractionalTable
 #lang-pulse
 open Pulse.Lib.Pervasives
-module PM = Pulse.Lib.PCMMap
+module PM = Pulse.Lib.PCM.Map
 module PF = Pulse.Lib.PCM.Fraction
 module GPR = Pulse.Lib.GhostPCMReference
 let a_map (a:Type) = PM.pointwise nat (PF.pcm_frac #(option a))
