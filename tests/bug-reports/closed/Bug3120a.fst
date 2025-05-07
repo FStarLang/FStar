@@ -163,7 +163,7 @@ let as_requires_wlift #a (w : pure_wp a) :
   assert (forall post. w post ==> w (fun _ -> True)) ;
   assert (forall post. (True ==> w post) ==> w (fun _ -> True))
 
-let lift_pure (a : Type) (w : pure_wp a) (f:(eqtype_as_type unit -> PURE a w)) : dm a (wlift w) =
+let lift_pure (a : Type) (w : pure_wp a) (f:(unit -> PURE a w)) : dm a (wlift w) =
   as_requires_wlift w ;
   d_bind #_ #_ #_ #_ #_ #_ #_ #(fun _ -> w_return (elim_pure #a #w f)) (d_req (as_requires w)) (fun _ ->
     let r = elim_pure #a #w f in

@@ -179,7 +179,7 @@ let lift_pure_mst_total
       (wp:pure_wp a)
       (state:Type u#2)
       (rel:P.preorder state)
-      (f:eqtype_as_type unit -> PURE a wp)
+      (f:unit -> PURE a wp)
     : repr a state rel
       (fun s0 -> wp (fun _ -> True))
       (fun s0 x s1 -> wp (fun _ -> True) /\  (~ (wp (fun r -> r =!= x \/ s0 =!= s1))))

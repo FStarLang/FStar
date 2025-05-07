@@ -138,7 +138,7 @@ layered_effect {
        if_then_else = i_if_then_else
 }
 
-let lift_pure_nd (a:Type) (wp:pure_wp a) (f:(eqtype_as_type unit -> PURE a wp)) :
+let lift_pure_nd (a:Type) (wp:pure_wp a) (f:(unit -> PURE a wp)) :
   Pure (irepr a wp) (requires True)
                     (ensures (fun _ -> True))
   = fun p _ -> let r = elim_pure f p in [r]

@@ -178,7 +178,7 @@ let lift_pure_mst
       (wp:pure_wp a)
       (state:Type u#2)
       (rel:P.preorder state)
-      (f:eqtype_as_type unit -> PURE a wp)
+      (f:unit -> PURE a wp)
     : repr a state rel
       (fun s0 -> wp (fun _ -> True))
       (fun s0 x s1 -> wp (fun _ -> True) /\  (~ (wp (fun r -> r =!= x \/ s0 =!= s1))))
@@ -210,7 +210,7 @@ sub_effect PURE ~> MSTATE = lift_pure_mst
 let bind_div_mst (a:Type) (b:Type)
   (wp:pure_wp a)
   (state:Type u#2) (rel:P.preorder state) (req:a -> pre_t state) (ens:a -> post_t state b)
-  (f:eqtype_as_type unit -> DIV a wp) (g:(x:a -> repr b state rel (req x) (ens x)))
+  (f:unit -> DIV a wp) (g:(x:a -> repr b state rel (req x) (ens x)))
 : repr b state rel
     (fun s0 -> wp (fun _ -> True) /\ (forall x. req x s0))
     (fun s0 y s1 -> exists x. (ens x) s0 y s1)
