@@ -128,12 +128,12 @@ let lift_pure_st_wp #a #st (w : pure_wp a) : wp st a =
   r
 
 let lift_id_st_wp #a #st (w : pure_wp a) : wp st a =
-  elim_pure_wp_monotonicity_forall ();
+  elim_pure_wp_monotonicity w;
   fun s0 p -> w (fun x -> p x s0)
 
 let lift_id_st a wp st (f : ID2.repr a wp)
   : repr a st (lift_id_st_wp wp)
-  = elim_pure_wp_monotonicity_forall ();
+  = elim_pure_wp_monotonicity wp;
     fun s0 -> (f (), s0)
 
 sub_effect ID ~> ST = lift_id_st
