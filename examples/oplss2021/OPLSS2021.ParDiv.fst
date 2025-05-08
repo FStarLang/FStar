@@ -349,7 +349,7 @@ val bind_pure_c_ (a:Type) (b:Type)
   (wp:pure_wp a)
   (pre:hm.r)
   (post:b -> hm.r)
-  (f:eqtype_as_type unit -> PURE a wp)
+  (f:unit -> PURE a wp)
   (g:(x:a -> comp b pre post))
  : Pure (comp b
               pre
@@ -364,7 +364,7 @@ val bind_div_c_ (a:Type) (b:Type)
   (wp:pure_wp a)
   (pre:hm.r)
   (post:b -> hm.r)
-  (f:eqtype_as_type unit -> DIV a wp)
+  (f:unit -> DIV a wp)
   (g:(x:a -> comp b pre post))
  : Pure (comp b
               pre

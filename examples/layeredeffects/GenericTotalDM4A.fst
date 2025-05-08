@@ -85,7 +85,7 @@ effect {
  *     there is now a check in the typechecker to forbid it,
  *     so the lift below fails
  *)
-let lift_pure_dm4a (a:Type) (f:(eqtype_as_type unit -> Tot a))
+let lift_pure_dm4a (a:Type) (f:(unit -> Tot a))
   : repr a (w_return (f ()))
   = return _ (f ())
 
