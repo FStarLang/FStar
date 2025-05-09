@@ -32,8 +32,6 @@ unfold let srel (a:Type0) = Preorder.preorder (Seq.seq a)
 (*
  * A compatibility relation between preorders of a sequence and its subsequence
  *)
-[@@"opaque_to_smt"]
-unfold
 let compatible_subseq_preorder (#a:Type0)
   (len:nat) (rel:srel a) (i:nat) (j:nat{i <= j /\ j <= len}) (sub_rel:srel a)
   = (forall (s1 s2:Seq.seq a). {:pattern (rel s1 s2); (sub_rel (Seq.slice s1 i j) (Seq.slice s2 i j))}  //for any two sequences s1 and s2
@@ -1869,7 +1867,6 @@ val region_lifetime_buf (#a:Type0) (#rrel #rel:srel a) (b:mbuffer a rrel rel) : 
 (*
  * A functoriality lemma
  *)
-unfold
 let rrel_rel_always_compatible (#a:Type0) (rrel rel:srel a) =
   forall (len:nat) (i:nat) (j:nat{i <= j /\ j <= len}). compatible_subseq_preorder len rrel i j rel
 
@@ -1923,7 +1920,7 @@ unfold let spred (a:Type0) = Seq.seq a -> Type0
  * Note the tight patterns on the quantifier, you may need to write additional triggers
  * if you are directly working with them
  *)
-unfold let stable_on (#a:Type0) (p:spred a) (rel:srel a) =
+let stable_on (#a:Type0) (p:spred a) (rel:srel a) =
   forall (s1 s2:Seq.seq a).{:pattern (p s1); (rel s1 s2); (p s2)} (p s1 /\ rel s1 s2) ==> p s2
 
 (* Clients get this pure token when they witness a predicate *)
@@ -2038,7 +2035,6 @@ val freeable_disjoint' (#a1 #a2:Type0) (#rrel1 #rel1:srel a1) (#rrel2 #rel2:srel
 unfold let lmbuffer (a:Type0) (rrel rel:srel a) (len:nat)
   = b:mbuffer a rrel rel{length b == len /\ not (g_is_null b)}
 
-unfold
 let alloc_post_mem_common (#a:Type0) (#rrel #rel:srel a)
   (b:mbuffer a rrel rel) (h0 h1:HS.mem) (s:Seq.seq a)
   = live h1 b /\
@@ -2052,13 +2048,13 @@ let alloc_post_mem_common (#a:Type0) (#rrel #rel:srel a)
 unfold let lmbuffer_or_null (a:Type0) (rrel rel:srel a) (len:nat) (r:HS.rid)
   = b:mbuffer a rrel rel{(not (g_is_null b)) ==> (length b == len /\ frameOf b == r)}
 
-unfold let alloc_partial_post_mem_common (#a:Type0) (#rrel #rel:srel a)
+let alloc_partial_post_mem_common (#a:Type0) (#rrel #rel:srel a)
   (b:mbuffer a rrel rel) (h0 h1:HS.mem) (s:Seq.seq a)
   = (g_is_null b /\ h0 == h1) \/
     ((not (g_is_null b)) /\ alloc_post_mem_common b h0 h1 s)
 
 
-unfold let malloc_pre (r:HS.rid) (len:U32.t) = HST.is_eternal_region r /\ U32.v len > 0
+let malloc_pre (r:HS.rid) (len:U32.t) = HST.is_eternal_region r /\ U32.v len > 0
 
 
 /// ``gcmalloc r init len`` allocates a memory-managed buffer of some

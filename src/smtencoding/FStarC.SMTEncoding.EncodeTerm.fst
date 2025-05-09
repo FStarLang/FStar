@@ -321,6 +321,16 @@ let getInteger (tm : Syntax.term') =
     | Tm_constant (Const_int (n,None)) -> FStarC.Util.int_of_string n
     | _ -> failwith "Expected an Integer term"
 
+let rec is_squash (env: env_t) (tm: Syntax.term) =
+  match (U.unascribe (norm env tm)).n with
+  | Tm_fvar fv when S.fv_eq_lid fv Const.unit_lid ->
+    Some []
+  | Tm_refine {b={sort};phi} ->
+    (match is_squash env sort with
+    | Some phis -> Some (SS.subst [DT(0, U.exp_unit)] phi :: phis)
+    | None -> None)
+  | _ -> None
+
 (* We only want to encode a term as a bitvector term (not an uninterpreted function)
    if there is a concrete/constant size argument given*)
 let is_BitVector_primitive head args =
@@ -380,19 +390,15 @@ and encode_binders (fuel_opt:option term) (bs:Syntax.binders) (env:env_t) :
     let vars, guards, env, decls, names =
       bs |> List.fold_left
       (fun (vars, guards, env, decls, names) b ->
-        let v, g, env, decls', n =
+        // let v, g, env, decls', n =
             let x = b.binder_bv in
-            let xxsym, xx, env' = gen_term_var env x in
-            let guard_x_t, decls' =
-              encode_term_pred fuel_opt (norm env x.sort) env xx
+            // let xxsym, xx, env' = gen_term_var env x in
+            let env', guard_x_t, decls', xxfv, _ =
+              encode_term_pred_binder fuel_opt (norm env x.sort) env x
             in //if we had polarities, we could generate a mkHasTypeZ here in the negative case
-            mk_fv (xxsym, Term_sort),
-            guard_x_t,
-            env',
-            decls',
-            x
-        in
-        v::vars, g::guards, env, decls@decls', n::names)
+            xxfv :: vars, guard_x_t :: guards, env', decls @ decls', x :: names
+            // vars, guard_x_t :: guards, env', decls @ decls', names
+        )
        ([], [], env, [], [])
     in
     List.rev vars,
@@ -400,6 +406,22 @@ and encode_binders (fuel_opt:option term) (bs:Syntax.binders) (env:env_t) :
     env,
     decls,
     List.rev names
+
+and encode_term_pred_binder (fuel_opt:option term) (t:typ) (env:env_t) (eb:bv) : env_t & term & decls_t & fv & S.term =
+    match (U.unascribe t).n with
+    | Tm_refine {b={sort}; phi} ->
+      let env, guard, decls1, ev, e = encode_term_pred_binder fuel_opt sort env eb in
+      let sub = [DT(0,e)] in
+      let guard_phi, decls2 = encode_formula (SS.subst sub phi) env in
+      env, mkAnd(guard, guard_phi), decls2 @ decls1, ev, e
+    // | Tm_fvar fv when S.fv_eq_lid fv Const.unit_lid ->
+    //   let env = push_term_var env eb mk_Term_unit in
+    //   env, mkTrue, [], None, U.exp_unit
+    | _ ->
+      let xxsym, e, env = gen_term_var env eb in
+      let ev = mk_fv (xxsym, Term_sort) in
+      let guard, decls = encode_term_pred fuel_opt t env e in
+      env, guard, decls, ev, S.bv_to_name eb
 
 and encode_term_pred (fuel_opt:option term) (t:typ) (env:env_t) (e:term) : term & decls_t =
     let t, decls = encode_term t env in

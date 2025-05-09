@@ -406,6 +406,7 @@ let freshman_aux p a b i =
     0;
   }
 
+#push-options "--split_queries always"
 val freshman (p:int{is_prime p}) (a b:int) : Lemma
   (pow (a + b) p % p = (pow a p + pow b p) % p)
 let freshman p a b =
@@ -432,6 +433,7 @@ let freshman p a b =
          lemma_mod_plus_distr_r (pow a p) (pow b p) p }
     (pow a p + pow b p) % p;
   }
+#pop-options
 
 val fermat_aux (p:int{is_prime p}) (a:pos{a < p}) : Lemma
   (ensures pow a p % p == a % p)
