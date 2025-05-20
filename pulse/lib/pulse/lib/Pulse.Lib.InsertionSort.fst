@@ -1,39 +1,10 @@
-module PulseExample.InsertionSort
+module Pulse.Lib.InsertionSort
 #lang-pulse
 open Pulse.Lib.Pervasives
 module A = Pulse.Lib.Array
 module SZ = FStar.SizeT
 module Seq = FStar.Seq
-open FStar.Order
-// open Pulse.Lib.BoundedIntegers
-
-let flip_order (o:order) : order =
-  match o with
-  | Lt -> Gt
-  | Eq -> Eq
-  | Gt -> Lt
-
-class total_order (a:Type) = {
-  compare: a -> a -> order;
-  properties : squash (
-    (forall (x y:a). {:pattern compare x y} eq (compare x y) <==> x == y) /\
-    (forall (x y z:a). {:pattern compare x y; compare y z} lt (compare x y) /\ lt (compare y z) ==> lt (compare x z)) /\
-    (forall (x y:a). {:pattern compare x y} compare x y == flip_order (compare y x))
-  )
-}
-
-let ( <? )  (#t:Type) {| o:total_order t |} (x:t) (y:t) : bool = lt (o.compare x y)
-let ( <=? ) (#t:Type) {| o:total_order t |} (x:t) (y:t) : bool = le (o.compare x y)
-let ( >? )  (#t:Type) {| o:total_order t |} (x:t) (y:t) : bool = not (x <=? y)
-let ( ==? ) (#t:Type) {| o:total_order t |} (x:t) (y:t) : bool = eq (o.compare x y)
-let ( >=? )  (#t:Type) {| o:total_order t |} (x:t) (y:t) : bool = not (x <? y)
-
-let rec count (#t:Type) {| total_order t |} (x:t) (s:Seq.seq t)
-: Tot nat (decreases Seq.length s)
-= if Seq.length s = 0 then 0
-  else if Seq.head s ==? x
-  then 1 + count x (Seq.tail s)
-  else count x (Seq.tail s)
+open Pulse.Lib.TotalOrder
 
 let rec upd_count (#t:Type) {| total_order t |} (s:Seq.seq t) (i:nat) (x:t) (z:t)
 : Lemma
@@ -56,19 +27,6 @@ let rec upd_count (#t:Type) {| total_order t |} (s:Seq.seq t) (i:nat) (x:t) (z:t
     if i = 0 then ()
     else upd_count (Seq.tail s) (i - 1) x z
   )
-
-let permutation 
-      (#t:Type)
-      {| total_order t |}
-      (s0 s1:Seq.seq t)
-= forall (x:t). count x s0 == count x s1
-    
-let sorted 
-      (#t:Type)
-      {| total_order t |}
-      (s:Seq.seq t)
-= forall (i j:nat).{:pattern (Seq.index s i); (Seq.index s j)}
-  i <= j /\ j < Seq.length s ==> Seq.index s i <=? Seq.index s j
 
 let ordered 
       (#t:Type)
@@ -255,7 +213,7 @@ ensures exists* s'. (a |-> s') **
 }
 
 instance total_order_int : total_order int = {
-  compare = compare_int;
+  compare = FStar.Order.compare_int;
   properties = ()
 }
 
