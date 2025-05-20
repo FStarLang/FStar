@@ -5,7 +5,7 @@ module A = Pulse.Lib.Array
 module SZ = FStar.SizeT
 module Seq = FStar.Seq
 open FStar.Order
-open Pulse.Lib.BoundedIntegers
+// open Pulse.Lib.BoundedIntegers
 
 let flip_order (o:order) : order =
   match o with
@@ -120,8 +120,8 @@ let inner_invariant
       (key:t)
       (vi vj:SZ.t)
       (done:bool)
-= 0sz <= vi /\
-  vi < vj /\
+= 0 <= SZ.v vi /\
+  SZ.v vi < SZ.v vj /\
   SZ.v vj < Seq.length s' /\ (
   let ai = Seq.index s' (SZ.v vi) in
   let lhs = Seq.slice s' 0 (SZ.v vi + 1 <: nat) in
@@ -132,11 +132,12 @@ let inner_invariant
   ordered lhs (Seq.upd rhs 0 ai) /\
   (if done
    then vi == 0sz /\ slot == ai /\ permutation s0 (Seq.upd s' 0 key)
-   else if vi + 1sz = vj then slot == key /\ permutation s0 s'
-   else slot == Seq.index s' (SZ.v vi + 2 <: nat) /\ permutation s0 (Seq.upd s' (SZ.v vi + 1 <: nat) key)) /\
+   else if SZ.v vi + 1 = SZ.v vj then slot == key /\ permutation s0 s'
+   else slot == Seq.index s' (SZ.v vi + 2) /\ permutation s0 (Seq.upd s' (SZ.v vi + 1) key)) /\
   (forall (k:nat). 0 <= k /\ k < Seq.length rhs ==> Seq.index rhs k >=? key))
 
-#push-options "--fuel 0 --ifuel 1 --split_queries no --z3rlimit_factor 20"
+#push-options "--fuel 0 --ifuel 1 --split_queries no --z3rlimit_factor 5"
+#restart-solver
 let step_inner_invariant
       (#t:Type)
       {| total_order t |}
@@ -148,13 +149,13 @@ let step_inner_invariant
     Seq.index s0 (SZ.v vi) >? key /\
     s1 == Seq.upd s0 (SZ.v vi + 1 <: nat) (Seq.index s0 (SZ.v vi)))
   (ensures (
-    let vi' = if vi = 0sz then 0sz else vi - 1sz in
+    let vi' = if vi = 0sz then 0sz else SZ.(vi -^ 1sz) in
     let done = (vi = 0sz) in
     inner_invariant s s1 key vi' vj done))
 = () 
 #pop-options
 
-#push-options "--fuel 0 --ifuel 1 --split_queries no --z3rlimit_factor 5"
+#push-options "--fuel 0 --ifuel 1 --split_queries no"
 let step_outer_invariant
       (#t:Type)
       {| total_order t |}
@@ -181,20 +182,20 @@ fn insertion_sort
       (len:SZ.t)
       (#s:erased (Seq.seq t){ Seq.length s == SZ.v len })
 requires a |-> s
-requires pure (len > 0sz)
+requires pure (SZ.v len > 0)
 ensures exists* s'. (a |-> s') **
   pure (sorted #t s' /\ permutation s s')
 {
   let mut j = 1sz;
   while (
-    let v = !j;
-    (v < len)
+    let vj = !j;
+    SZ.(vj <^ len)
   )
   invariant b. (
     exists* vj (s':Seq.seq t).
       (j |-> vj) **
       (a |-> s') **
-      pure (b == (vj < len)) **
+      pure (b == SZ.(vj <^ len)) **
       pure (
         1 <= SZ.v vj /\ 
         SZ.v vj <= SZ.v len /\
@@ -206,9 +207,9 @@ ensures exists* s'. (a |-> s') **
   {
     pts_to_len a;
     let vj = !j;
-    j := vj + 1sz;
+    j := SZ.(vj +^ 1sz);
     let key = a.(vj);
-    let mut i : SZ.t = vj - 1sz;
+    let mut i : SZ.t = SZ.(vj -^ 1sz);
     let mut done = false;
     with ss. assert (a |-> ss);
     while (
@@ -229,11 +230,11 @@ ensures exists* s'. (a |-> s') **
       let vi = !i;
       with s0. assert (a |-> s0);
       let ai = a.(vi);
-      a.(vi + 1sz) <- ai;
+      a.(SZ.(vi +^ 1sz)) <- ai;
       with s1. assert (a |-> s1);
       step_inner_invariant ss s0 s1 key vi vj;
       if (vi = 0sz) { done := true }
-      else { i := vi - 1sz; }
+      else { i := SZ.(vi -^ 1sz); }
     };
     with s0. assert (a |-> s0);
     let vi = !i;
@@ -246,7 +247,7 @@ ensures exists* s'. (a |-> s') **
     }
     else 
     {
-      a.(vi + 1sz) <- key;
+      a.(SZ.(vi +^ 1sz)) <- key;
     }
   };
   with s'. assert (a |-> s');
@@ -264,7 +265,7 @@ fn insertion_sort_int
       (#s:erased (Seq.seq int) { Seq.length s == SZ.v len })
 requires
   a |-> s
-requires pure (len > 0sz)
+requires pure (SZ.v len > 0)
 ensures
   exists* s'. (a |-> s') **
   pure (sorted s' /\ permutation s s')
