@@ -4,26 +4,8 @@ open Pulse.Lib.Pervasives
 module A = Pulse.Lib.Array
 module SZ = FStar.SizeT
 module Seq = FStar.Seq
-open FStar.Order
+open Pulse.Lib.TotalOrder
 open Pulse.Lib.BoundedIntegers
-
-let flip_order (o:order) : order =
-  match o with
-  | Lt -> Gt
-  | Eq -> Eq
-  | Gt -> Lt
-
-class total_order (a:Type) = {
-  compare: a -> a -> order;
-  properties : squash (
-    (forall (x y:a). {:pattern compare x y} eq (compare x y) <==> x == y) /\
-    (forall (x y z:a). {:pattern compare x y; compare y z} lt (compare x y) /\ lt (compare y z) ==> lt (compare x z)) /\
-    (forall (x y:a). {:pattern compare x y} compare x y == flip_order (compare y x))
-  )
-}
-
-let ( <? )  (#t:Type) {| o:total_order t |} (x:t) (y:t) : bool = lt (o.compare x y)
-let ( <=? ) (#t:Type) {| o:total_order t |} (x:t) (y:t) : bool = le (o.compare x y)
 
 fn binary_search
       (#t:Type)
@@ -86,7 +68,7 @@ ensures
 }
 
 instance total_order_int : total_order int = {
-  compare = compare_int;
+  compare = FStar.Order.compare_int;
   properties = ()
 }
 
