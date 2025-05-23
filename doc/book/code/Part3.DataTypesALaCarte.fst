@@ -13,11 +13,11 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 *)
-module DataALaCarte
+module Part3.DataTypesALaCarte
 open FStar.Tactics.Typeclasses
 #set-options "--z3rlimit_factor 4 --z3cliopt 'smt.qi.eager_threshold=100' --fuel 2 --ifuel 2"
 (**
- * This module is an adaptation of S. Swierstra's Data Type a la Carte
+ * This module is an adaptation of W. Swierstra's Data Type a la Carte
  * https://www.cambridge.org/core/journals/journal-of-functional-programming/article/data-types-a-la-carte/14416CB20C4637164EA9F77097909409
  * 
  * Demonstrating extensibility of datatypes and functions over them, 
@@ -30,47 +30,213 @@ open FStar.Tactics.Typeclasses
  *
  *)
 
+//SNIPPET_START: exp$
+type exp =
+| V of int
+| Plus : exp -> exp -> exp
+
+let rec evaluate = function
+| V i -> i
+| Plus e1 e2 -> evaluate e1 + evaluate e2
+//SNIPPET_END: exp$
+
+
+//SNIPPET_START: expr-fail$
+[@@expect_failure]
+noeq
+type expr (f : (Type -> Type)) =
+  | In of f (expr f)
+//SNIPPET_END: expr-fail$
+
+//SNIPPET_START: expr$
 noeq
 type expr (f : ([@@@strictly_positive]Type -> Type)) =
-  | In of (f (expr f))
+  | In of f (expr f)
+//SNIPPET_END: expr$
 
+//SNIPPET_START: elist$
+type list ([@@@strictly_positive]a:Type) =
+| Nil
+| Cons : a -> list a -> list a
+
+let elist = expr list
+
+(*
+   .___ Nil
+  /
+ .
+  \.___.____Nil
+*)
+let elist_ex1 = 
+  In (Cons (In Nil) 
+           (Cons (In (Cons (In Nil) Nil)) 
+            Nil))
+//SNIPPET_END: elist$
+
+//SNIPPET_START: coprod$
 noeq
 type coprod (f g: ([@@@strictly_positive]Type -> Type)) ([@@@strictly_positive]a:Type) =
   | Inl of f a
   | Inr of g a
+let ( ++ ) f g = coprod f g
+//SNIPPET_END: coprod$
 
+//SNIPPET_START: value add$
 type value ([@@@strictly_positive]a:Type) =
   | Val of int
 
 type add ([@@@strictly_positive]a:Type) =
   | Add : a -> a -> add a
 
-let ( ** ) (f g: ([@@@strictly_positive]Type -> Type)) = coprod f g
+let addExample : expr (value ++ add) = In (Inr (Add (In (Inl (Val 118))) (In (Inl (Val 1219)))))
+//SNIPPET_END: value add$
 
-let addExample : expr (value ** add) = In (Inr (Add (In (Inl (Val 118))) (In (Inl (Val 1219)))))
+// Injections and projections to build values more easily
 
+//SNIPPET_START: inj_proj$
+let inj_t (f g:Type -> Type) = #a:Type -> f a -> g a
+let proj_t (f g:Type -> Type) = #a:Type -> x:g a -> option (f a)
+//SNIPPET_END: inj_proj$
+
+//SNIPPET_START: leq$
+class leq (f g : [@@@strictly_positive]Type -> Type) = {
+  inj: inj_t f g;
+  proj: proj_t f g;
+  inversion: unit
+   -> Lemma (
+    (forall (a:Type) (x:g a).
+      match proj x with
+      | Some y -> inj y == x
+      | _ -> True) /\
+    (forall (a:Type) (x:f a). 
+      proj (inj x) == Some x)
+  )
+}
+//SNIPPET_END: leq$
+
+//SNIPPET_START: leq_refl$
+instance leq_refl f : leq f f = {
+  inj=(fun #_ x -> x);
+  proj=(fun #_ x -> Some x);
+  inversion=(fun _ -> ())
+}
+//SNIPPET_END: leq_refl$
+
+//SNIPPET_START: leq_ext_left$
+instance leq_ext_left f g
+: leq f (g ++ f)
+= let inj : inj_t f (g ++ f) = Inr in 
+  let proj : proj_t f (g ++ f) = fun #a x ->
+    match x with
+    | Inl _ -> None
+    | Inr x -> Some x
+  in
+  { inj; proj; inversion=(fun _ -> ()) }
+//SNIPPET_END: leq_ext_left$
+
+//SNIPPET_START: leq_cong_right$
+instance leq_cong_right 
+  f g h
+  {| f_inj:leq f h |}
+: leq f (h ++ g)
+= let inj : inj_t f (h ++ g) = fun #a x -> Inl (f_inj.inj x) in
+  let proj : proj_t f (h ++ g) = fun #a x -> 
+    match x with
+    | Inl x -> f_inj.proj x
+    | _ -> None
+  in
+  { inj; proj; inversion=(fun _ -> f_inj.inversion()) }
+//SNIPPET_END: leq_cong_right$
+
+//SNIPPET_START: inject project$
+let inject #f #g {| gf: leq g f |}
+: g (expr f) -> expr f 
+= fun x -> In (gf.inj x)
+
+let project #g #f {| gf: leq g f |}
+: x:expr f -> option (g (expr f)) 
+= fun (In x) -> gf.proj x
+
+let inject_project 
+  #f #g {| gf: leq g f |}
+  (x:expr f)
+: Lemma (
+    match project #g #f x with
+    | Some y -> inject y == x
+    | _ -> True
+) [SMTPat (project #g #f x)]
+= gf.inversion()
+
+let project_inject #f #g {| gf: leq g f |} (x:g (expr f))
+: Lemma (
+    project #g #f (inject x) == Some x
+) [SMTPat (project #g #f (inject x))]
+= gf.inversion()
+//SNIPPET_END: inject project$
+
+//SNIPPET_START: v and +^$
+let v #f {| vf: leq value f |} (x:int)
+: expr f
+= inject (Val x)
+
+let ( +^ ) #f {| vf : leq add f |} (x y: expr f)
+: expr f
+= inject (Add x y)
+//SNIPPET_END: v and +^$
+
+//SNIPPET_START: ex1$
+let ex1 : expr (value ++ add) = v 118 +^ v 1219
+//SNIPPET_END: ex1$
+
+//SNIPPET_START: mul$
+type mul ([@@@strictly_positive]a:Type) =
+  | Mul : a -> a -> mul a
+
+let ( *^ ) #f {| vf : leq mul f |} (x y: expr f)
+: expr f
+= inject (Mul x y)
+
+let ex2 : expr (value ++ add ++ mul) = v 1001 +^ v 1833 +^ v 13713 *^ v 24
+//SNIPPET_END: mul$
+
+/// Evaluating expressions
+
+//SNIPPET_START: functor$
 class functor (f:[@@@strictly_positive]Type -> Type) = {
   fmap : (#a:Type -> #b:Type -> x:f a -> (y:a{y << x} -> b) -> f b)
 }
+//SNIPPET_END: functor$
 
+//SNIPPET_START: functor_value$
 instance functor_value : functor value =
   let fmap (#a #b:Type) (x:value a) (f:(y:a{y<<x} -> b)) : value b =
-    let Val x = x in
-    Val x
+    let Val x = x in Val x
   in
   { fmap }
+//SNIPPET_END: functor_value$
 
+//SNIPPET_START: functor_add$
 instance functor_add : functor add =
   let fmap (#a #b:Type) (x:add a) (f:(y:a{y<<x} -> b)) : add b =
-    match x with
-    | Add x y ->
-      let x' = f x in
-      let y' = f y in
-      Add x' y'
+    let Add x y = x in
+    Add (f x) (f y)
   in
   { fmap }
+//SNIPPET_END: functor_add$
 
-instance functor_coprod (f g:([@@@strictly_positive]Type -> Type)) {| ff: functor f |} {| fg: functor g |}
+//SNIPPET_START: functor_mul$
+instance functor_mul : functor mul = 
+  let fmap (#a #b:Type) (x:mul a) (f:(y:a{y<<x} -> b)) : mul b =
+    let Mul x y = x in
+    Mul (f x) (f y)
+  in
+  { fmap }
+//SNIPPET_END: functor_mul$
+
+//SNIPPET_START: functor_coprod$
+instance functor_coprod 
+    #f #g
+    {| ff: functor f |} {| fg: functor g |}
 : functor (coprod f g)
 = let fmap (#a #b:Type) (x:coprod f g a) (a2b:(y:a{y << x} -> b)) 
   : coprod f g b
@@ -79,17 +245,16 @@ instance functor_coprod (f g:([@@@strictly_positive]Type -> Type)) {| ff: functo
     | Inr x -> Inr (fg.fmap x a2b)
   in
   { fmap }
+//SNIPPET_END: functor_coprod$
 
-
-let rec fold_expr
-    (#f:([@@@strictly_positive]Type -> Type))
-    {| ff: functor f |}
-    (#a:Type)
-    (alg:f a -> a)
-    (e:expr f)
+//SNIPPET_START: fold_expr$
+let rec fold_expr #f #a {| ff : functor f |}
+    (alg:f a -> a) (e:expr f)
 : a
 = let In t = e in
   alg (ff.fmap t (fun (x:expr f { x << e }) -> fold_expr alg x))
+  // alg (fmap t (fun x -> fold_expr alg x))
+//SNIPPET_END: fold_expr$
 
 [@@fundeps[2]]
 class eval (f: [@@@strictly_positive]Type -> Type) (a:Type) = {
@@ -122,105 +287,18 @@ let eval_expr
   {| ef: eval f a |} {| functor f |} (x:expr f)
 : a = fold_expr ef.evalAlg x
 
+open FStar.Mul
 let test = assert_norm (eval_expr addExample == 1337)
 
-type mul ([@@@strictly_positive]a:Type) =
-  | Mul : a -> a -> mul a
 
-open FStar.Mul
-instance functor_mul : functor mul = 
-  let fmap (#a #b:Type) (x:mul a) (f:(y:a{y<<x} -> b)) : mul b =
-    let Mul x y = x in
-    Mul (f x) (f y)
-  in
-  { fmap }
+// type mul ([@@@strictly_positive]a:Type) =
+//   | Mul : a -> a -> mul a
+
 
 instance eval_mul : eval mul int =
   let evalAlg : mul int -> int = fun (Mul x y) -> x * y in
   {  evalAlg }
 
-let inj_t (f g:Type -> Type) = #a:Type -> f a -> g a
-let proj_t (f g:Type -> Type) = #a:Type -> x:g a -> option (f a)
-class leq (f g : [@@@strictly_positive]Type -> Type) = {
-  inj: inj_t f g;
-  proj: proj_t f g;
-  inversion: unit
-   -> Lemma (
-    (forall (a:Type) (x:g a).
-      match proj x with
-      | Some y -> inj y == x
-      | _ -> True) /\
-    (forall (a:Type) (x:f a). 
-      proj (inj x) == Some x)
-  )
-}
-
-instance leq_id f : leq f f = {
-  inj=(fun #_ x -> x);
-  proj=(fun #_ x -> Some x);
-  inversion=(fun _ -> ())
-}
-
-instance leq_ext_left (f g:[@@@strictly_positive]Type -> Type) : leq f (g ** f) = 
-let inj : inj_t f (g ** f) = Inr in 
-let proj : proj_t f (g ** f) = fun #a x ->
-  match x with
-  | Inl _ -> None
-  | Inr x -> Some x
-in
-{ inj; proj; inversion=(fun _ -> ()) }
-
-let compose (#a #b #c:Type) (f:b -> c) (g: a -> b) (x:a) : c = f (g x)
-
-instance leq_cong_left 
-  (f g h:[@@@strictly_positive]Type -> Type)
-  {| f_inj:leq f h |}
-: leq f (h ** g)
-= let inj : inj_t f (h ** g) = fun #a x -> Inl (f_inj.inj x) in
-  let proj : proj_t f (h ** g) = fun #a x -> 
-    match x with
-    | Inl x -> f_inj.proj x
-    | _ -> None
-  in
-  { inj; proj; inversion=(fun _ -> f_inj.inversion()) }
-
-let inject (#f #g:([@@@strictly_positive]Type -> Type)) {| gf: leq g f |}
-: g (expr f) -> expr f 
-= compose In gf.inj
-
-let project  (#g #f:([@@@strictly_positive]Type -> Type)) {| gf: leq g f |}
-: x:expr f -> option (g (expr f)) 
-= fun (In x) -> gf.proj x
-
-let inject_project 
-  (#f #g:([@@@strictly_positive]Type -> Type)) {| gf: leq g f |}
-  (x:expr f)
-: Lemma (
-    match project #g #f x with
-    | Some y -> inject #f #g  y == x
-    | _ -> True
-) [SMTPat (project #g #f x)]
-= gf.inversion()
-
-let project_inject (#f #g:_) {| gf: leq g f |} (x:g (expr f))
-: Lemma (
-    project #g #f (inject #f #g x) == Some x
-) [SMTPat (project #g #f (inject #f #g x))]
-= gf.inversion()
-
-let v #f {| vf: leq value f |} (x:int)
-: expr f
-= inject (Val x)
-
-let ( +^ ) #f {| vf : leq add f |} (x y: expr f)
-: expr f
-= inject (Add x y)
-
-let ( *^ ) #f {| vf : leq mul f |} (x y: expr f)
-: expr f
-= inject (Mul x y)
-
-let ex2 : expr (value ** add ** mul) = v 1001 +^ v 1833 +^ v 13713 *^ v 24
 let test2 = assert_norm (eval_expr ex2 == ((1001 + 1833 + 13713 * 24)))
 
 (* lift allows promoting terms defined in a smaller type to a bigger one *)
@@ -235,7 +313,7 @@ let rec lift #f #g
   In (fg.inj yy)
 
 (* reuse addExample by lifting it *)
-let ex3 : expr (value ** add ** mul) = lift addExample *^ v 2
+let ex3 : expr (value ++ add ++ mul) = lift addExample *^ v 2
 let test3 = assert_norm (eval_expr ex3 == (1337 * 2))
 
 class render (f: [@@@strictly_positive]Type -> Type) = {
@@ -408,31 +486,40 @@ let rewrite_distr
 : expr f
 = rewrite (compose_rewrites (distr_mul_l pf) (distr_mul_r pf)) x
 
+#show-options
 let rec rewrite_soundness 
-    (x:expr (value ** add ** mul))
-    (l:rewrite_t (value ** add ** mul))
+    (x:expr (value ++ add ++ mul))
+    (l:rewrite_t (value ++ add ++ mul))
 : Lemma (eval_expr #int x == eval_expr (rewrite l x))
 = match project #value x with
   | Some (Val _) ->
     l.soundness()
-  | _ -> 
+  | _ ->
+    match project #mul x with
+    | Some (Mul a b) ->
+      rewrite_soundness a l; rewrite_soundness b l;
+      l.soundness()
+    | _ ->
     match project #add x with
     | Some (Add a b) -> 
       rewrite_soundness a l; rewrite_soundness b l;
       l.soundness()
-    | _ -> 
-      let Some (Mul a b) = project #mul x in
-      rewrite_soundness a l; rewrite_soundness b l;
-      l.soundness()
+    | _ -> admit()
 
+let rewrite_distr_soundness 
+    (x:expr (value ++ add ++ mul))
+: Lemma (eval_expr #int x == eval_expr #int (rewrite_distr () x))
+= rewrite_soundness x
+    (compose_rewrites (distr_mul_l ()) (distr_mul_r ()))
+    
 
-let ex5_l : expr (value ** add ** mul) = v 3 *^ (v 1 +^ v 2)
-let ex5_r : expr (value ** add ** mul) = (v 1 +^ v 2) *^ v 3
+let ex5_l : expr (value ++ add ++ mul) = v 3 *^ (v 1 +^ v 2)
+let ex5_r : expr (value ++ add ++ mul) = (v 1 +^ v 2) *^ v 3
 let ex6 = ex5_l +^ ex5_r
 
-let ex5'_l : expr (value ** add ** mul) =
+let ex5'_l : expr (value ++ add ++ mul) =
   (v 3 *^ v 1) +^ (v 3 *^ v 2)
-let ex5'_r : expr (value ** add ** mul) =
+let ex5'_r : expr (value ++ add ++ mul) =
   (v 1 *^ v 3) +^ (v 2 *^ v 3)
 let ex6' = ex5'_l +^ ex5'_r 
 
@@ -443,7 +530,7 @@ let test56 =
 
 module P = FStar.Printf
 let rec to_string_alt 
-    (x:expr (value ** add ** mul))
+    (x:expr (value ++ add ++ mul))
 : string
 = (let? Val x = project #value x in return <| string_of_int x) 
   `or_else` fun _ ->
@@ -457,7 +544,7 @@ let prj #g #f {| gf: leq g f |} (#a:Type) (x:f a)
 : option (g a)
 = gf.proj x
 
-let has_add_alg (x: (value ** add ** mul) bool) 
+let has_add_alg (x: (value ++ add ++ mul) bool) 
 : bool
 = (let? _ = prj #value x in return false) 
   `or_else` fun _ -> 
@@ -466,6 +553,6 @@ let has_add_alg (x: (value ** add ** mul) bool)
   (let Some (Mul x y) = prj #mul x in x || y)
 
 let has_add 
-  (x:expr (value ** add ** mul))
+  (x:expr (value ++ add ++ mul))
 : bool
 = fold_expr has_add_alg x
