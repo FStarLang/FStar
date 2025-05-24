@@ -644,8 +644,13 @@ let mk_input (fresh : bool) (theory : list decl) : string & option string & opti
                    |> String.concat "\n"
               else ps
             in
-            (* Add the Z3 version to the string, so we get a mismatch if we switch versions. *)
+            (* Add the Z3 version to the string, so we get a mismatch if we switch versions.
+            Same for rlimit and seed; otherwise we may save a hash with a large rlimit (or particular
+            seed), then decrease the limit (change the seed) and the proof would still succeed with the
+            old hash (seed), but be broken. *)
             let hs = hs ^ "Z3 version: " ^ ver in
+            let hs = hs ^ "Z3 rlimit: " ^ (Options.z3_rlimit() |> string_of_int) in
+            let hs = hs ^ "Z3 seed: " ^ (Options.z3_seed() |> string_of_int) in
             ps ^ "\n" ^ ss, Some (BU.digest_of_string hs)
         else
             List.map (declToSmt options) theory |> String.concat "\n", None

@@ -105,7 +105,7 @@ let dm_free_subcomp a wp1 wp2 f = f
 val lift_pure_dm_free :
   a: Type ->
   w: pure_wp a ->
-  f: (_: eqtype_as_type unit -> PURE a w) ->
+  f: (_: unit -> PURE a w) ->
   Tot (dm_free a (wp_lift_pure_hist w))
 let lift_pure_dm_free a w f =
   FStar.Monotonic.Pure.elim_pure_wp_monotonicity_forall ();

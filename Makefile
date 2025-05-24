@@ -64,10 +64,24 @@ build: 2
 2.bare: $(FSTAR2_BARE_EXE)
 2.full: $(FSTAR2_FULL_EXE)
 
-# This one we assume it's rather stable, and do not
-# mark it PHONY. Still adding '0' allows to force this
-# build by 'make 0'.
-0 $(FSTAR0_EXE):
+# This file's timestamp is updated whenever anything in stage0/
+# (excluding some build directories)
+# changes, forcing rebuilds downstream. Note that deleting a file
+# will bump the directories timestamp, we also catch that.
+# This is copied from generic.mk.
+.stage0.touch: .force
+	mkdir -p $(dir $@)
+	[ -e $@ ] || touch $@
+	# I would like to *not* have -type f below, but dune
+	# will create and delete lock files, which bumps
+	# the timestamp of directories, and we would keep triggering
+	# rebuilds.
+	find stage0/ \
+	  -path stage0/dune/_build -prune -false -o \
+	  -path stage0/out -prune -false -o \
+	  -type f -newer $@ -exec touch $@ \; -quit
+
+stage0/out/bin/fstar.exe: .stage0.touch
 	$(call bold_msg, "STAGE 0")
 	mkdir -p stage0/ulib/.cache # prevent warnings
 	$(MAKE) -C stage0 minimal # build: only fstar.exe and set-up lib sources

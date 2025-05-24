@@ -71,13 +71,13 @@ let e_unit_5 = t
 
 (* Tests for extraction of erasable effects, combined with their lifts to non-erasable effects *)
 
-type repr (a:Type) (_:eqtype_as_type unit) = a
+type repr (a:Type) (_:unit) = a
 let return (a:Type) (x:a) : repr a () = x
 let bind (a b:Type) (f:repr a ()) (g:a -> repr b ()) : repr b () = g f
 [@@ primitive_extraction]
 total
 effect {
-  MPURE (a:Type) (_:eqtype_as_type unit) with {repr; return; bind}
+  MPURE (a:Type) (_:unit) with {repr; return; bind}
 }
 
 //an erasable effect must be marked total
@@ -88,7 +88,7 @@ new_effect MGHOST = MPURE
 total new_effect MGHOST = MPURE
 
 //a lift cannot be in Ghost effect if the source effect is not erasable
-let lift_PURE_MPURE_error (a:Type) (wp:pure_wp a) (f:eqtype_as_type unit -> PURE a wp)
+let lift_PURE_MPURE_error (a:Type) (wp:pure_wp a) (f:unit -> PURE a wp)
   : Ghost (repr a ())
       (requires wp (fun _ -> True))
       (ensures fun _ -> True)
@@ -99,7 +99,7 @@ sub_effect PURE ~> MPURE = lift_PURE_MPURE_error
 
 //lifts from GHOST effect are not allowed
 //GHOST effect is implicitly lifted/combined with effects when appropriate
-let lift_GHOST_MPURE (a:Type) (wp:pure_wp a) (f:eqtype_as_type unit -> GHOST a wp)
+let lift_GHOST_MPURE (a:Type) (wp:pure_wp a) (f:unit -> GHOST a wp)
   : Ghost (repr a ())
       (requires wp (fun _ -> True))
       (ensures fun _ -> True)
@@ -108,7 +108,7 @@ let lift_GHOST_MPURE (a:Type) (wp:pure_wp a) (f:eqtype_as_type unit -> GHOST a w
 [@@expect_failure [187]]
 sub_effect GHOST ~> MPURE = lift_GHOST_MPURE
 
-let lift_PURE_MPURE (a:Type) (wp:pure_wp a) (f:eqtype_as_type unit -> PURE a wp)
+let lift_PURE_MPURE (a:Type) (wp:pure_wp a) (f:unit -> PURE a wp)
   : Pure (repr a ())
       (requires wp (fun _ -> True))
       (ensures fun _ -> True)
@@ -205,7 +205,7 @@ total
 new_effect M2 = MPURE
 
 //instead of defining lifts from PURE To M1 or M2, we define polymonadic binds
-let bind_PURE_M1 (a b:Type) (wp:pure_wp a) (f:eqtype_as_type unit -> PURE a wp) (g:a -> repr b ())
+let bind_PURE_M1 (a b:Type) (wp:pure_wp a) (f:unit -> PURE a wp) (g:a -> repr b ())
   : Pure (repr b ())
       (requires wp (fun _ -> True))
       (ensures fun _ -> True)
