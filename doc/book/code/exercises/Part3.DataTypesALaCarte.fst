@@ -321,11 +321,11 @@ let test3 = assert_norm (eval_expr ex3 == (1337 * 2))
 //SNIPPET_START: rewrite_rule$
 let rewrite_rule f = expr f -> option (expr f)
 let rewrite_rule_soundness #f (r:rewrite_rule f)
-  {| eval f |} {| functor f |} (x:expr f)
-= match r x with
-  | None -> True
-  | Some y -> eval_expr x == eval_expr y
-  
+  {| eval f |} {| functor f |} 
+  (x:expr f) =
+    match r x with
+    | None -> True
+    | Some y -> eval_expr x == eval_expr y
 noeq
 type rewrite_t (f:_) {| eval f |} {| functor f |} = {
   rule: rewrite_rule f;
@@ -473,82 +473,17 @@ let rec rewrite_soundness
 let rewrite_distr_soundness 
     (x:expr (value ++ add ++ mul))
 : Lemma (eval_expr x == eval_expr (rewrite_distr () x))
-= rewrite_soundness x (compose_rewrites (distr_mul_l ()) (distr_mul_r ()))
+= rewrite_soundness x
+    (compose_rewrites (distr_mul_l ()) (distr_mul_r ()))
 //SNIPPET_END: rewrite_distr_soundness$
+    
 
-//SNIPPET_START: to_string_specific$
 module P = FStar.Printf
 let rec to_string_specific
     (x:expr (value ++ add ++ mul))
 : string
-= (let? Val x = project #value x in return <| string_of_int x) 
-  `or_else` fun _ ->
-  (let? Add x y = project #add x in 
-   return <| P.sprintf "(%s + %s)" (to_string_specific x) (to_string_specific y))
-  `or_else` fun _ ->
-  let Some (Mul x y) = project #mul x in
-  P.sprintf "(%s * %s)" (to_string_specific x) (to_string_specific y)
-//SNIPPET_END: 
+= admit()
 
-//SNIPPET_START: to_string$
-class render (f: [@@@strictly_positive]Type -> Type) = {
-  to_string : 
-    #g:_ ->
-    x:f (expr g) ->
-    (y:g (expr g) { y << x } -> string) ->
-    string
-}
-
-instance render_value : render value =
-  let to_string #g (x:value (expr g)) _ : string =
-    match x with
-    | Val x -> string_of_int x
-  in
-  { to_string }
-
-
-instance render_add : render add =
-  let to_string #g (x:add (expr g)) (to_str0: (y:g (expr g) {y << x} -> string)) : string =
-    match x with
-    | Add x y ->
-      let In x = x in
-      let In y = y in
-      "(" ^ to_str0 x ^ " + " ^ to_str0 y ^ ")"
-  in
-  { to_string }
-
-instance render_mul : render mul =
-  let to_string #g (x:mul (expr g)) (to_str0: (y:g (expr g) {y << x} -> string)) : string =
-    match x with
-    | Mul x y ->
-      let In x = x in
-      let In y = y in
-      "(" ^ to_str0 x ^ " * " ^ to_str0 y ^ ")"
-  in
-  { to_string }
-
-instance render_coprod (f g: _)
-  {| rf: render f |} 
-  {| rg: render g |}
-: render (coprod f g)
-= let to_string #h (x:coprod f g (expr h)) (rc: (y:h (expr h) { y << x }) -> string): string =
-    match x with
-    | Inl x -> rf.to_string #h x rc
-    | Inr y -> rg.to_string #h y rc
-  in
-  { to_string }
-
-let rec render0_render
-    (#f: _)
-    {| rf: render f |}
-    (x: f (expr f))
-: string
-= rf.to_string #f x render0_render
-
-let pretty #f (e:expr f) {| rf: render f |} : string =
-  let In e = e in
-  rf.to_string e render0_render
-
-let test4 = pretty ex3
-let tt = assert_norm (pretty ex3 == "((118 + 1219) * 2)")
-//SNIPPET_END: to_string$
+// Ex 2:
+(* class render (f: [@@@strictly_positive]Type -> Type) = {
+  to_string : ... *)
