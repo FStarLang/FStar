@@ -22,7 +22,11 @@ module TEQ = FStarC.TypeChecker.TermEqAndSimplify
 open FStarC.Class.Show
 open FStarC.Class.Setlike
 open FStarC.Class.Tagged
+open FStarC.Class.PP
 open FStarC.Syntax.Print {}
+
+open FStarC.Pprint
+open FStarC.Errors.Msg { text }
 
 let dbg       = Debug.get_toggle "Core"
 let dbg_Eq    = Debug.get_toggle "CoreEq"
@@ -205,13 +209,15 @@ let print_context (ctx:context)
   in
   aux "" (List.rev ctx.error_context)
 
-let error = context & string
+let error = context & Errors.error_message (* = list doc *)
 
 let print_error (err:error) =
   let ctx, msg = err in
-  BU.format2 "%s%s" (print_context ctx) msg
+  BU.format2 "%s%s" (print_context ctx) (Errors.Msg.rendermsg msg)
 
-let print_error_short (err:error) = snd err
+let print_error_short (err:error) =
+  let _, msg = err in
+  Errors.Msg.rendermsg msg
 
 type __result a =
   | Success of a
@@ -292,6 +298,8 @@ let (let?) (#a:Type) (#b:Type) (x:option a) (f: a -> option b)
     | None -> None
     | Some x -> f x
 
+let fail_str #a msg : result a = fun ctx -> Error (ctx, Errors.mkmsg msg)
+
 let fail #a msg : result a = fun ctx -> Error (ctx, msg)
 
 let dump_context
@@ -325,7 +333,9 @@ let is_type (g:env) (t:term)
           return u
 
         | _ ->
-          fail (BU.format1 "Expected a type; got %s" (show t))
+          fail [
+            text "Expected a type, got" ^/^ pp t
+          ]
     in
     with_context "is_type" (Some (CtxTerm t)) (fun _ ->
       handle_with
@@ -365,7 +375,10 @@ let rec is_arrow (g:env) (t:term)
                Whereas the refinement on the result is not.
              *)
             match e_tag with
-            | None -> fail (BU.format1 "Expected total or gtot arrow, got %s" (Ident.string_of_lid (U.comp_effect_name c)))
+            | None ->
+              fail [
+                text "Expected total or gtot arrow, got" ^/^ pp (U.comp_effect_name c);
+              ]
             | Some e_tag ->
               let g, [x], c = arrow_formals_comp g t in
               let (pre, _)::(post, _)::_ = U.comp_effect_args c in
@@ -393,7 +406,9 @@ let rec is_arrow (g:env) (t:term)
           aux t
 
         | _ ->
-          fail (BU.format2 "Expected an arrow, got (%s) %s" (tag_of t) (show t))
+          fail [
+            text "Expected an arrow, got a" ^/^ doc_of_string (tag_of t) ^^ colon ^/^ pp t;
+          ]
     in
     with_context "is_arrow" None (fun _ ->
       handle_with
@@ -410,14 +425,14 @@ let check_arg_qual (a:aqual) (b:bqual)
       | Some ({aqual_implicit=true}) ->
         return ()
       | _ ->
-        fail "missing arg qualifier implicit"
+        fail_str "missing arg qualifier implicit"
       end
 
     | _ ->
       begin
       match a with
       | Some ({aqual_implicit=true}) ->
-        fail "extra arg qualifier implicit"
+        fail_str "extra arg qualifier implicit"
       | _ -> return ()
       end
 
@@ -436,7 +451,7 @@ let check_bqual (b0 b1:bqual)
     | Some (Meta t1), Some (Meta t2) when equal_term t1 t2 ->
       return ()
     | _ ->
-      fail (BU.format2 "Binder qualifier mismatch, %s vs %s" (show b0) (show b1))
+      fail_str (BU.format2 "Binder qualifier mismatch, %s vs %s" (show b0) (show b1))
 
 let check_aqual (a0 a1:aqual)
   : result unit
@@ -445,20 +460,25 @@ let check_aqual (a0 a1:aqual)
     | Some ({aqual_implicit=b0}), Some ({aqual_implicit=b1}) ->
       if b0 = b1
       then return ()
-      else fail (BU.format2 "Unequal arg qualifiers: lhs implicit=%s and rhs implicit=%s"
-                    (string_of_bool b0) (string_of_bool b1))
+      else
+        fail [
+          text "Unequal arg qualifiers: lhs implicit="
+          ^^ pp b0 ^/^ text "and rhs implicit=" ^^ pp b1
+        ]
     | None, Some { aqual_implicit=false }
     | Some { aqual_implicit=false }, None ->
       return ()
     | _ ->
-      fail (BU.format2 "Unequal arg qualifiers: lhs %s and rhs %s"
-              (show a0) (show a1))
+      fail [
+        text "Unequal arg qualifiers: lhs" ^/^ pp a0
+        ^^ text "and rhs" ^/^ pp a1
+      ]
 
 let check_positivity_qual (rel:relation) (p0 p1:option positivity_qualifier)
   : result unit
   = if FStarC.TypeChecker.Common.check_positivity_qual (SUBTYPING? rel) p0 p1
     then return ()
-    else fail "Unequal positivity qualifiers"
+    else fail_str "Unequal positivity qualifiers"
 
 let mk_forall_l (us:universes) (xs:binders) (t:term)
   : term
@@ -544,7 +564,7 @@ let no_guard (g:result 'a)
   = fun ctx ->
       match g ({ ctx with no_guard = true}) with
       | Success (x, None) -> Success (x, None)
-      | Success (x, Some g) -> fail (BU.format1 "Unexpected guard: %s" (show g)) ctx
+      | Success (x, Some g) -> fail_str (BU.format1 "Unexpected guard: %s" (show g)) ctx
       | err -> err
 
 let equatable g t =
@@ -596,7 +616,7 @@ let lookup (g:env) (e:term) : result (tot_or_ghost & typ) =
    match THT.lookup e table with
    | None ->
      record_cache_miss ();
-     fail "not in cache"
+     fail_str "not in cache"
    | Some he ->
      if he.he_gamma `context_included` g.tcenv.gamma
      then (
@@ -611,14 +631,14 @@ let lookup (g:env) (e:term) : result (tot_or_ghost & typ) =
      )
      else (
        // record_cache_miss();
-       fail "not in cache"
+       fail_str "not in cache"
      )
 
 let check_no_escape (bs:binders) t =
     let xs = FStarC.Syntax.Free.names t in
     if BU.for_all (fun b -> not (mem b.binder_bv xs)) bs
     then return ()
-    else fail "Name escapes its scope"
+    else fail_str "Name escapes its scope"
 
 let rec map (#a #b:Type) (f:a -> result b) (l:list a) : result (list b) =
   match l with
@@ -668,7 +688,7 @@ let rec iter2 (xs ys:list 'a) (f: 'a -> 'a -> 'b -> result 'b) (b:'b)
     | x::xs, y::ys ->
       let! b = f x y b in
       iter2 xs ys f b
-    | _ -> fail "Lists of differing length"
+    | _ -> fail_str "Lists of differing length"
 
 let is_non_informative g t = N.non_info_norm g t
 
@@ -771,15 +791,19 @@ let rec check_relation (g:env) (rel:relation) (t0 t1:typ)
   = let err (lbl:string) =
         match rel with
         | EQUALITY ->
-          fail (BU.format3 "(%s) not equal terms: %s <> %s"
-                           lbl
-                           (show t0)
-                           (show t1))
+          fail [
+            parens (text lbl) ^/^ text "not equal terms:"
+            ^/^ pp t0
+            ^/^ text "<>"
+            ^/^ pp t1
+          ]
         | _ ->
-          fail (BU.format3 "(%s) %s is not a subtype of %s"
-                           lbl
-                           (show t0)
-                           (show t1))
+          fail [
+            parens (text lbl)
+            ^/^ pp t0
+            ^/^ text "is not a subtype of"
+            ^/^ pp t1
+          ]
     in
     let rel_to_string rel =
       match rel with
@@ -1117,7 +1141,7 @@ let rec check_relation (g:env) (rel:relation) (t0 t1:typ)
           = match br0, br1 with
             | (p0, None, body0), (p1, None, body1) ->
               if not (S.eq_pat p0 p1)
-              then fail "patterns not equal"
+              then fail_str "patterns not equal"
               else begin
                 let g', (p0, _, body0), (p1, _, body1) = open_branches_eq_pat g (p0, None, body0) (p1, None, body1) in
                 match PatternUtils.raw_pat_as_exp g.tcenv p0 with
@@ -1126,9 +1150,9 @@ let rec check_relation (g:env) (rel:relation) (t0 t1:typ)
                   // We need universes for the binders
                   let! us = check_binders g bs0 in
                   with_context "relate_branch" None (fun _ -> with_binders bs0 us (check_relation g' rel body0 body1))
-             | _ -> fail "raw_pat_as_exp failed in check_equality match rule"
+             | _ -> fail_str "raw_pat_as_exp failed in check_equality match rule"
              end
-            | _ -> fail "Core does not support branches with when"
+            | _ -> fail_str "Core does not support branches with when"
         in
         handle_with
           (check_relation g EQUALITY e0 e1 ;!
@@ -1145,7 +1169,7 @@ and check_relation_args (g:env) rel (a0 a1:args)
             check_aqual q0 q1;!
             check_relation g rel t0 t1)
          ()
-    else fail "Unequal number of arguments"
+    else fail_str "Unequal number of arguments"
 
 and check_relation_comp (g:env) rel (c0 c1:comp)
   : result unit
@@ -1175,9 +1199,11 @@ and check_relation_comp (g:env) rel (c0 c1:comp)
           let ct1 = Env.unfold_effect_abbrev g.tcenv c1 in
           if I.lid_equals ct0.effect_name ct1.effect_name
           then ct_eq ct0.result_typ ct0.effect_args ct1.result_typ ct1.effect_args
-          else fail (BU.format2 "Subcomp failed: Unequal computation types %s and %s"
-                            (Ident.string_of_lid ct0.effect_name)
-                            (Ident.string_of_lid ct1.effect_name))
+          else
+            fail [
+              text "Subcomp failed: Unequal computation types"
+               ^/^ pp ct0.effect_name ^/^ doc_of_string "and" ^/^ pp ct1.effect_name
+            ]
         )
       )
 
@@ -1188,7 +1214,7 @@ and check_relation_comp (g:env) rel (c0 c1:comp)
     | Some (E_Ghost, t0), Some (E_Total, t1) ->
       if non_informative g t1
       then check_relation g rel t0 t1
-      else fail "Expected a Total computation, but got Ghost"
+      else fail_str "Expected a Total computation, but got Ghost"
 
 
 and check_subtype (g:env) (e:option term) (t0 t1:typ)
@@ -1219,7 +1245,7 @@ and memo_check (g:env) (e:term)
            if gh g.tcenv guard
            then let r = (res, None) in
                 insert g e r; Success r
-           else fail "guard handler failed" ctx)
+           else fail_str "guard handler failed" ctx)
 
       | _ -> r
     in
@@ -1279,7 +1305,7 @@ and do_check (g:env) (e:term)
     begin
     match Env.try_lookup_bv g.tcenv x with
     | None ->
-      fail (BU.format1 "Variable not found: %s" (show x))
+      fail_str (BU.format1 "Variable not found: %s" (show x))
     | Some (t, _) ->
       return (E_Total, t)
     end
@@ -1291,14 +1317,14 @@ and do_check (g:env) (e:term)
       return (E_Total, t)
 
     | _ -> //no implicit universe instantiation allowed
-      fail "Missing universes instantiation"
+      fail_str "Missing universes instantiation"
     end
 
   | Tm_uinst ({n=Tm_fvar f}, us) ->
     begin
     match Env.try_lookup_and_inst_lid g.tcenv us f.fv_name.v with
     | None ->
-      fail (BU.format1 "Top-level name not found: %s" (Ident.string_of_lid f.fv_name.v))
+      fail_str (BU.format1 "Top-level name not found: %s" (Ident.string_of_lid f.fv_name.v))
 
     | Some (t, _) ->
       return (E_Total, t)
@@ -1312,7 +1338,7 @@ and do_check (g:env) (e:term)
     | Const_set_range_of
     | Const_reify _
     | Const_reflect _ ->
-      fail "Unhandled constant"
+      fail_str "Unhandled constant"
 
     | _ ->
       let t = FStarC.TypeChecker.TcTerm.tc_constant g.tcenv e.pos c in
@@ -1399,7 +1425,7 @@ and do_check (g:env) (e:term)
       let Some (eff, t) = comp_as_tot_or_ghost_and_type c in
       return (eff, t)
     )
-    else fail (BU.format1 "Effect ascriptions are not fully handled yet: %s" (show c))
+    else fail_str (BU.format1 "Effect ascriptions are not fully handled yet: %s" (show c))
 
   | Tm_let {lbs=(false, [lb]); body} ->
     let Inl x = lb.lbname in
@@ -1417,7 +1443,7 @@ and do_check (g:env) (e:term)
       )
     )
     else (
-      fail (format1 "Let binding is effectful (lbeff = %s)" (show lb.lbeff))
+      fail_str (format1 "Let binding is effectful (lbeff = %s)" (show lb.lbeff))
     )
 
   | Tm_match {scrutinee=sc; ret_opt=None; brs=branches; rc_opt} ->
@@ -1431,7 +1457,7 @@ and do_check (g:env) (e:term)
         | [] ->
           (match branch_typ_opt with
            | None ->
-             fail "could not compute a type for the match"
+             fail_str "could not compute a type for the match"
 
            | Some et ->
              match boolean_negation_simp path_condition with
@@ -1472,7 +1498,7 @@ and do_check (g:env) (e:term)
           | Pat_var _ ->
             //trivially exhaustive
             (match rest with
-             | _ :: _ -> fail "Redundant branches after wildcard"
+             | _ :: _ -> fail_str "Redundant branches after wildcard"
              | _ -> return (eff_br, tbr))
 
           | _ ->
@@ -1550,7 +1576,7 @@ and do_check (g:env) (e:term)
           | Pat_var _ ->
             //trivially exhaustive
             (match rest with
-             | _ :: _ -> fail "Redundant branches after wildcard"
+             | _ :: _ -> fail_str "Redundant branches after wildcard"
              | _ -> return eff_br)
 
           | _ ->
@@ -1561,10 +1587,10 @@ and do_check (g:env) (e:term)
     return (eff, ty)
 
   | Tm_match _ ->
-    fail "Match with effect returns ascription, or tactic handler"
+    fail_str "Match with effect returns ascription, or tactic handler"
 
   | _ ->
-    fail (BU.format1 "Unexpected term: %s" (tag_of e))
+    fail_str (BU.format1 "Unexpected term: %s" (tag_of e))
 
 and check_binders (g_initial:env) (xs:binders)
   : result (list universe)
@@ -1596,7 +1622,7 @@ and check_comp (g:env) (c:comp)
       is_type g t
     | Comp ct ->
       if List.length ct.comp_univs <> 1
-      then fail "Unexpected/missing universe instantitation in comp"
+      then fail_str "Unexpected/missing universe instantitation in comp"
       else let u = List.hd ct.comp_univs in
            let effect_app_tm =
              let head = S.mk_Tm_uinst (S.fvar ct.effect_name None) [u] in
@@ -1611,9 +1637,16 @@ and check_comp (g:env) (c:comp)
            then return u
            else (
               match Env.effect_repr g.tcenv c u with
-              | None -> fail (BU.format2 "Total effect %s (normalized to %s) does not have a representation"
-                                        (Ident.string_of_lid (U.comp_effect_name c))
-                                        (Ident.string_of_lid c_lid))
+              | None ->
+                 fail [
+                  flow (break_ 1) [
+                    text "Total effect";
+                    pp (U.comp_effect_name c);
+                    text "(normalized to";
+                    pp c_lid ^^ doc_of_string ")";
+                    text "does not have a representation.";
+                  ]
+                 ]
               | Some tm -> universe_of g tm
            )
 
@@ -1667,7 +1700,7 @@ and check_pat (g:env) (p:pat) (t_sc:typ) : result (binders & universes) =
       let! pat_dot_t =
         match p.v with
         | Pat_dot_term (Some t) -> return t
-        | _ -> fail "check_pat in core has unset dot pattern" in
+        | _ -> fail_str "check_pat in core has unset dot pattern" in
 
       let! _, p_t = check "pat dot term" g pat_dot_t in
       let!_ = with_context "check_pat cons" None (fun _ -> check_subtype g (Some pat_dot_t) p_t expected_t) in
@@ -1689,16 +1722,23 @@ and check_pat (g:env) (p:pat) (t_sc:typ) : result (binders & universes) =
 
     return (bs, us)
 
-  | _ -> fail "check_pat called with a dot pattern"
+  | _ -> fail_str "check_pat called with a dot pattern"
 
 and check_scrutinee_pattern_type_compatible (g:env) (t_sc t_pat:typ)
   : result precondition
   = let open Env in
     let err (s:string) =
-      fail (BU.format3 "Scrutinee type %s and Pattern type %s are not compatible because %s"
-              (show t_sc)
-              (show t_pat)
-              s) in
+      fail [
+        flow (break_ 1) [
+          text "Scrutinee type";
+          pp t_sc;
+          text "and pattern type";
+          pp t_pat;
+          text "are not compatible because";
+          text s;
+        ]
+      ]
+    in
 
     let head_sc, args_sc = U.head_and_args t_sc in
     let head_pat, args_pat = U.head_and_args t_pat in
@@ -1835,7 +1875,7 @@ let check_term_top g e topt (must_tot:bool) (gh:option guard_handler_t)
       then let eff, t = eff_te in 
            if eff = E_Ghost &&
               not (non_informative g t)
-           then fail "expected total effect, found ghost"
+           then fail_str "expected total effect, found ghost"
            else return (E_Total, t)
       else return eff_te
     | Some t ->

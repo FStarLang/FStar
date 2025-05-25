@@ -14,6 +14,15 @@ let (uu___is_LaxCheck : push_kind -> Prims.bool) =
   fun projectee -> match projectee with | LaxCheck -> true | uu___ -> false
 let (uu___is_FullCheck : push_kind -> Prims.bool) =
   fun projectee -> match projectee with | FullCheck -> true | uu___ -> false
+let (showable_push_kind : push_kind FStarC_Class_Show.showable) =
+  {
+    FStarC_Class_Show.show =
+      (fun uu___ ->
+         match uu___ with
+         | SyntaxCheck -> "SyntaxCheck"
+         | LaxCheck -> "LaxCheck"
+         | FullCheck -> "FullCheck")
+  }
 type completion_context =
   | CKCode 
   | CKOption of Prims.bool 
@@ -384,10 +393,10 @@ type repl_stack_entry_t = (repl_depth_t * (repl_task * repl_state))
 type repl_stack_t = (repl_depth_t * (repl_task * repl_state)) Prims.list
 type grepl_state =
   {
-  grepl_repls: repl_state FStarC_Util.psmap ;
+  grepl_repls: repl_state FStarC_PSMap.t ;
   grepl_stdin: FStarC_Util.stream_reader }
 let (__proj__Mkgrepl_state__item__grepl_repls :
-  grepl_state -> repl_state FStarC_Util.psmap) =
+  grepl_state -> repl_state FStarC_PSMap.t) =
   fun projectee ->
     match projectee with | { grepl_repls; grepl_stdin;_} -> grepl_repls
 let (__proj__Mkgrepl_state__item__grepl_stdin :
@@ -463,26 +472,22 @@ let (repl_state_to_string : repl_state -> Prims.string) =
       uu___
 let (push_query_to_string : push_query -> Prims.string) =
   fun pq ->
-    let pk =
-      match pq.push_kind with
-      | SyntaxCheck -> "SyntaxCheck"
-      | LaxCheck -> "LaxCheck"
-      | FullCheck -> "FullCheck" in
     let code_or_decl =
       match pq.push_code_or_decl with
       | FStar_Pervasives.Inl code -> code
       | FStar_Pervasives.Inr (_decl, code) -> code.FStarC_Parser_ParseIt.code in
     let uu___ =
-      let uu___1 =
-        let uu___2 = FStarC_Util.string_of_int pq.push_line in
-        let uu___3 =
-          let uu___4 = FStarC_Util.string_of_int pq.push_column in
-          let uu___5 =
-            let uu___6 = FStarC_Util.string_of_bool pq.push_peek_only in
-            [uu___6; code_or_decl] in
-          uu___4 :: uu___5 in
-        uu___2 :: uu___3 in
-      pk :: uu___1 in
+      let uu___1 = FStarC_Class_Show.show showable_push_kind pq.push_kind in
+      let uu___2 =
+        let uu___3 = FStarC_Util.string_of_int pq.push_line in
+        let uu___4 =
+          let uu___5 = FStarC_Util.string_of_int pq.push_column in
+          let uu___6 =
+            let uu___7 = FStarC_Util.string_of_bool pq.push_peek_only in
+            [uu___7; code_or_decl] in
+          uu___5 :: uu___6 in
+        uu___3 :: uu___4 in
+      uu___1 :: uu___2 in
     FStarC_Util.format
       "{ push_kind = %s; push_line = %s; push_column = %s; push_peek_only = %s; push_code_or_decl = %s }"
       uu___
@@ -585,6 +590,9 @@ let (json_of_issue_level : FStarC_Errors.issue_level -> FStarC_Json.json) =
        | FStarC_Errors.EError -> "error")
 let (json_of_issue : FStarC_Errors.issue -> FStarC_Json.json) =
   fun issue ->
+    let r =
+      FStarC_Util.map_opt issue.FStarC_Errors.issue_range
+        FStarC_Range_Ops.refind_range in
     let uu___ =
       let uu___1 =
         let uu___2 =
@@ -598,18 +606,18 @@ let (json_of_issue : FStarC_Errors.issue -> FStarC_Json.json) =
               let uu___6 =
                 let uu___7 =
                   let uu___8 =
-                    match issue.FStarC_Errors.issue_range with
+                    match r with
                     | FStar_Pervasives_Native.None -> []
-                    | FStar_Pervasives_Native.Some r ->
-                        let uu___9 = FStarC_Range_Ops.json_of_use_range r in
+                    | FStar_Pervasives_Native.Some r1 ->
+                        let uu___9 = FStarC_Range_Ops.json_of_use_range r1 in
                         [uu___9] in
                   let uu___9 =
-                    match issue.FStarC_Errors.issue_range with
-                    | FStar_Pervasives_Native.Some r when
-                        let uu___10 = FStarC_Range_Type.def_range r in
-                        let uu___11 = FStarC_Range_Type.use_range r in
+                    match r with
+                    | FStar_Pervasives_Native.Some r1 when
+                        let uu___10 = FStarC_Range_Type.def_range r1 in
+                        let uu___11 = FStarC_Range_Type.use_range r1 in
                         uu___10 <> uu___11 ->
-                        let uu___10 = FStarC_Range_Ops.json_of_def_range r in
+                        let uu___10 = FStarC_Range_Ops.json_of_def_range r1 in
                         [uu___10]
                     | uu___10 -> [] in
                   FStarC_List.op_At uu___8 uu___9 in

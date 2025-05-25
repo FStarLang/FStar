@@ -137,6 +137,9 @@ let alloc x                 = from_tac_1 "B.alloc" B.alloc x
 let read  r                 = from_tac_1 "B.read" B.read r
 let write r x               = from_tac_2 "B.write" B.write r x
 
+let splice_quals x         = from_tac_1 "B.splice_quals" B.splice_quals x
+let splice_attrs x         = from_tac_1 "B.splice_attrs" B.splice_attrs x
+
 type ('env, 't) prop_validity_token = unit
 type ('env, 'sc, 't, 'pats, 'bnds) match_complete_token = unit
 
@@ -150,7 +153,7 @@ let check_match_complete         = from_tac_4 "B.refl_check_match_complete" B.re
 let tc_term                      = from_tac_2 "B.refl_tc_term" B.refl_tc_term
 let universe_of                  = from_tac_2 "B.refl_universe_of" B.refl_universe_of
 let check_prop_validity          = from_tac_2 "B.refl_check_prop_validity" B.refl_check_prop_validity
-let instantiate_implicits        = from_tac_3 "B.refl_instantiate_implicits" B.refl_instantiate_implicits
+let instantiate_implicits        = from_tac_4 "B.refl_instantiate_implicits" B.refl_instantiate_implicits
 let try_unify                    = from_tac_4 "B.refl_try_unify" B.refl_try_unify
 let maybe_relate_after_unfolding = from_tac_3 "B.refl_maybe_relate_after_unfolding" B.refl_maybe_relate_after_unfolding
 let maybe_unfold_head            = from_tac_2 "B.refl_maybe_unfold_head" B.refl_maybe_unfold_head

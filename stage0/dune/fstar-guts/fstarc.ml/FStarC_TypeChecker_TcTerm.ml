@@ -354,42 +354,40 @@ let (check_expected_aqual_for_binder :
   fun aq ->
     fun b ->
       fun pos ->
-        let uu___ =
-          let expected_aq = FStarC_Syntax_Util.aqual_of_binder b in
-          match (aq, expected_aq) with
-          | (FStar_Pervasives_Native.None, FStar_Pervasives_Native.None) ->
-              FStar_Pervasives.Inr aq
-          | (FStar_Pervasives_Native.None, FStar_Pervasives_Native.Some eaq)
-              ->
-              if eaq.FStarC_Syntax_Syntax.aqual_implicit
-              then
-                FStar_Pervasives.Inl
-                  "expected implicit annotation on the argument"
-              else FStar_Pervasives.Inr expected_aq
-          | (FStar_Pervasives_Native.Some aq1, FStar_Pervasives_Native.None)
-              ->
-              FStar_Pervasives.Inl
-                "expected an explicit argument (without annotation)"
-          | (FStar_Pervasives_Native.Some aq1, FStar_Pervasives_Native.Some
-             eaq) ->
-              if
-                aq1.FStarC_Syntax_Syntax.aqual_implicit <>
-                  eaq.FStarC_Syntax_Syntax.aqual_implicit
-              then FStar_Pervasives.Inl "mismatch"
-              else FStar_Pervasives.Inr expected_aq in
-        match uu___ with
-        | FStar_Pervasives.Inl err ->
-            let msg =
-              let uu___1 =
-                FStarC_Errors_Msg.text
-                  (Prims.strcat "Inconsistent argument qualifiers: "
-                     (Prims.strcat err ".")) in
-              [uu___1] in
-            FStarC_Errors.raise_error FStarC_Class_HasRange.hasRange_range
-              pos FStarC_Errors_Codes.Fatal_InconsistentImplicitQualifier ()
-              (Obj.magic FStarC_Errors_Msg.is_error_message_list_doc)
-              (Obj.magic msg)
-        | FStar_Pervasives.Inr r -> r
+        let expected_aq = FStarC_Syntax_Util.aqual_of_binder b in
+        let is_imp a =
+          match a with
+          | FStar_Pervasives_Native.Some a1 ->
+              a1.FStarC_Syntax_Syntax.aqual_implicit
+          | uu___ -> false in
+        (let uu___1 =
+           let uu___2 = is_imp aq in
+           let uu___3 = is_imp expected_aq in uu___2 <> uu___3 in
+         if uu___1
+         then
+           let msg =
+             let uu___2 =
+               FStarC_Errors_Msg.text "Inconsistent argument qualifiers." in
+             let uu___3 =
+               let uu___4 =
+                 let uu___5 =
+                   let uu___6 =
+                     let uu___7 = is_imp aq in if uu___7 then "im" else "ex" in
+                   let uu___7 =
+                     let uu___8 = is_imp expected_aq in
+                     if uu___8 then "im" else "ex" in
+                   FStarC_Util.format2
+                     "Expected an %splicit argument, got an %splicit one."
+                     uu___6 uu___7 in
+                 FStarC_Errors_Msg.text uu___5 in
+               [uu___4] in
+             uu___2 :: uu___3 in
+           FStarC_Errors.raise_error FStarC_Class_HasRange.hasRange_range pos
+             FStarC_Errors_Codes.Fatal_InconsistentImplicitQualifier ()
+             (Obj.magic FStarC_Errors_Msg.is_error_message_list_doc)
+             (Obj.magic msg)
+         else ());
+        expected_aq
 let (check_erasable_binder_attributes :
   FStarC_TypeChecker_Env.env ->
     FStarC_Syntax_Syntax.term Prims.list -> FStarC_Syntax_Syntax.typ -> unit)
@@ -1073,8 +1071,9 @@ let (check_pat_fvs :
                   FStarC_Class_Show.show FStarC_Syntax_Print.showable_bv x in
                 FStarC_Util.format1
                   "Pattern misses at least one bound variable: %s" uu___5 in
-              FStarC_Errors.log_issue FStarC_Class_HasRange.hasRange_range
-                rng FStarC_Errors_Codes.Warning_SMTPatternIllFormed ()
+              FStarC_Errors.log_issue
+                (FStarC_Syntax_Syntax.has_range_syntax ()) pats
+                FStarC_Errors_Codes.Warning_SMTPatternIllFormed ()
                 (Obj.magic FStarC_Errors_Msg.is_error_message_string)
                 (Obj.magic uu___4)
 let (check_no_smt_theory_symbols :
@@ -1883,7 +1882,7 @@ let rec (tc_term :
            uu___4 uu___5 uu___6 uu___7
        else ());
       (let uu___2 =
-         FStarC_Util.record_time_ms
+         FStarC_Timing.record_ms
            (fun uu___3 ->
               tc_maybe_toplevel_term
                 {
@@ -4772,437 +4771,451 @@ and (tc_value :
   =
   fun env ->
     fun e ->
-      let env1 =
-        FStarC_TypeChecker_Env.set_range env e.FStarC_Syntax_Syntax.pos in
-      let top = FStarC_Syntax_Subst.compress e in
-      match top.FStarC_Syntax_Syntax.n with
-      | FStarC_Syntax_Syntax.Tm_bvar x ->
-          let uu___ =
-            let uu___1 =
-              FStarC_Class_Show.show FStarC_Syntax_Print.showable_term top in
-            FStarC_Util.format1
-              "Violation of locally nameless convention: %s" uu___1 in
-          FStarC_Errors.raise_error
-            (FStarC_Syntax_Syntax.has_range_syntax ()) top
-            FStarC_Errors_Codes.Error_IllScopedTerm ()
-            (Obj.magic FStarC_Errors_Msg.is_error_message_string)
-            (Obj.magic uu___)
-      | FStarC_Syntax_Syntax.Tm_uvar (u, s) ->
-          let uu___ =
-            let uu___1 =
-              let uu___2 = FStarC_Syntax_Util.ctx_uvar_typ u in
-              FStarC_Syntax_Subst.subst' s uu___2 in
-            FStar_Pervasives.Inl uu___1 in
-          value_check_expected_typ env1 e uu___
-            (FStarC_Class_Monoid.mzero
-               FStarC_TypeChecker_Common.monoid_guard_t)
-      | FStarC_Syntax_Syntax.Tm_unknown ->
-          let r = FStarC_TypeChecker_Env.get_range env1 in
-          let uu___ =
-            let uu___1 = FStarC_TypeChecker_Env.expected_typ env1 in
-            match uu___1 with
-            | FStar_Pervasives_Native.None ->
-                let uu___2 = FStarC_Syntax_Util.type_u () in
-                (match uu___2 with
-                 | (k, u) ->
-                     let uu___3 =
-                       FStarC_TypeChecker_Util.new_implicit_var
-                         "type of user-provided implicit term" r env1 k false in
-                     (match uu___3 with | (t, uu___4, g0) -> (t, g0)))
-            | FStar_Pervasives_Native.Some (t, use_eq) when use_eq ->
+      (let uu___1 = FStarC_Debug.extreme () in
+       if uu___1
+       then
+         let uu___2 =
+           FStarC_Class_Show.show FStarC_Syntax_Print.showable_term e in
+         FStarC_Util.print1 "Checking value %s\n" uu___2
+       else ());
+      (let env1 =
+         FStarC_TypeChecker_Env.set_range env e.FStarC_Syntax_Syntax.pos in
+       let top = FStarC_Syntax_Subst.compress e in
+       match top.FStarC_Syntax_Syntax.n with
+       | FStarC_Syntax_Syntax.Tm_bvar x ->
+           let uu___1 =
+             let uu___2 =
+               FStarC_Class_Show.show FStarC_Syntax_Print.showable_term top in
+             FStarC_Util.format1
+               "Violation of locally nameless convention: %s" uu___2 in
+           FStarC_Errors.raise_error
+             (FStarC_Syntax_Syntax.has_range_syntax ()) top
+             FStarC_Errors_Codes.Error_IllScopedTerm ()
+             (Obj.magic FStarC_Errors_Msg.is_error_message_string)
+             (Obj.magic uu___1)
+       | FStarC_Syntax_Syntax.Tm_uvar (u, s) ->
+           let uu___1 =
+             let uu___2 =
+               let uu___3 = FStarC_Syntax_Util.ctx_uvar_typ u in
+               FStarC_Syntax_Subst.subst' s uu___3 in
+             FStar_Pervasives.Inl uu___2 in
+           value_check_expected_typ env1 e uu___1
+             (FStarC_Class_Monoid.mzero
+                FStarC_TypeChecker_Common.monoid_guard_t)
+       | FStarC_Syntax_Syntax.Tm_unknown ->
+           let r = FStarC_TypeChecker_Env.get_range env1 in
+           let uu___1 =
+             let uu___2 = FStarC_TypeChecker_Env.expected_typ env1 in
+             match uu___2 with
+             | FStar_Pervasives_Native.None ->
+                 let uu___3 = FStarC_Syntax_Util.type_u () in
+                 (match uu___3 with
+                  | (k, u) ->
+                      let uu___4 =
+                        FStarC_TypeChecker_Util.new_implicit_var
+                          "type of user-provided implicit term" r env1 k
+                          false in
+                      (match uu___4 with | (t, uu___5, g0) -> (t, g0)))
+             | FStar_Pervasives_Native.Some (t, use_eq) when use_eq ->
+                 let uu___3 =
+                   let uu___4 =
+                     let uu___5 =
+                       let uu___6 =
+                         FStarC_Class_Show.show
+                           FStarC_Syntax_Print.showable_term t in
+                       FStarC_Util.format1
+                         "Equality ascription as an expected type for unk (:%s) is not yet supported."
+                         uu___6 in
+                     FStarC_Errors_Msg.text uu___5 in
+                   let uu___5 =
+                     let uu___6 =
+                       FStarC_Errors_Msg.text "Please use subtyping." in
+                     [uu___6] in
+                   uu___4 :: uu___5 in
+                 FStarC_Errors.raise_error
+                   (FStarC_Syntax_Syntax.has_range_syntax ()) e
+                   FStarC_Errors_Codes.Fatal_NotSupported ()
+                   (Obj.magic FStarC_Errors_Msg.is_error_message_list_doc)
+                   (Obj.magic uu___3)
+             | FStar_Pervasives_Native.Some (t, uu___3) ->
+                 (t,
+                   (FStarC_Class_Monoid.mzero
+                      FStarC_TypeChecker_Common.monoid_guard_t)) in
+           (match uu___1 with
+            | (t, g0) ->
                 let uu___2 =
                   let uu___3 =
                     let uu___4 =
-                      let uu___5 =
-                        FStarC_Class_Show.show
-                          FStarC_Syntax_Print.showable_term t in
-                      FStarC_Util.format1
-                        "Equality ascription as an expected type for unk (:%s) is not yet supported."
-                        uu___5 in
-                    FStarC_Errors_Msg.text uu___4 in
-                  let uu___4 =
-                    let uu___5 =
-                      FStarC_Errors_Msg.text "Please use subtyping." in
-                    [uu___5] in
-                  uu___3 :: uu___4 in
-                FStarC_Errors.raise_error
-                  (FStarC_Syntax_Syntax.has_range_syntax ()) e
-                  FStarC_Errors_Codes.Fatal_NotSupported ()
-                  (Obj.magic FStarC_Errors_Msg.is_error_message_list_doc)
-                  (Obj.magic uu___2)
-            | FStar_Pervasives_Native.Some (t, uu___2) ->
-                (t,
-                  (FStarC_Class_Monoid.mzero
-                     FStarC_TypeChecker_Common.monoid_guard_t)) in
-          (match uu___ with
-           | (t, g0) ->
-               let uu___1 =
-                 let uu___2 =
-                   let uu___3 =
-                     FStarC_Class_Show.show FStarC_Range_Ops.showable_range r in
-                   Prims.strcat "user-provided implicit term at " uu___3 in
-                 FStarC_TypeChecker_Util.new_implicit_var uu___2 r env1 t
-                   false in
-               (match uu___1 with
-                | (e1, uu___2, g1) ->
-                    let uu___3 =
-                      let uu___4 = FStarC_Syntax_Syntax.mk_Total t in
-                      FStarC_TypeChecker_Common.lcomp_of_comp uu___4 in
-                    let uu___4 =
-                      FStarC_Class_Monoid.op_Plus_Plus
-                        FStarC_TypeChecker_Common.monoid_guard_t g0 g1 in
-                    (e1, uu___3, uu___4)))
-      | FStarC_Syntax_Syntax.Tm_name x ->
-          let uu___ = FStarC_TypeChecker_Env.lookup_bv env1 x in
-          (match uu___ with
-           | (t, rng) ->
-               let x1 =
-                 FStarC_Syntax_Syntax.set_range_of_bv
-                   {
-                     FStarC_Syntax_Syntax.ppname =
-                       (x.FStarC_Syntax_Syntax.ppname);
-                     FStarC_Syntax_Syntax.index =
-                       (x.FStarC_Syntax_Syntax.index);
-                     FStarC_Syntax_Syntax.sort = t
-                   } rng in
-               (FStarC_TypeChecker_Env.insert_bv_info env1 x1 t;
-                (let e1 = FStarC_Syntax_Syntax.bv_to_name x1 in
-                 let uu___2 =
-                   FStarC_TypeChecker_Util.maybe_instantiate env1 e1 t in
-                 match uu___2 with
-                 | (e2, t1, implicits) ->
-                     let tc =
-                       let uu___3 = FStarC_TypeChecker_Env.should_verify env1 in
-                       if uu___3
-                       then FStar_Pervasives.Inl t1
-                       else
-                         (let uu___5 =
-                            let uu___6 = FStarC_Syntax_Syntax.mk_Total t1 in
-                            FStarC_TypeChecker_Common.lcomp_of_comp uu___6 in
-                          FStar_Pervasives.Inr uu___5) in
-                     value_check_expected_typ env1 e2 tc implicits)))
-      | FStarC_Syntax_Syntax.Tm_uinst
-          ({ FStarC_Syntax_Syntax.n = FStarC_Syntax_Syntax.Tm_fvar fv;
-             FStarC_Syntax_Syntax.pos = uu___;
-             FStarC_Syntax_Syntax.vars = uu___1;
-             FStarC_Syntax_Syntax.hash_code = uu___2;_},
-           uu___3)
-          when
-          (FStarC_Syntax_Syntax.fv_eq_lid fv FStarC_Parser_Const.synth_lid)
-            && (Prims.op_Negation env1.FStarC_TypeChecker_Env.phase1)
-          ->
-          FStarC_Errors.raise_error FStarC_TypeChecker_Env.hasRange_env env1
-            FStarC_Errors_Codes.Fatal_BadlyInstantiatedSynthByTactic ()
-            (Obj.magic FStarC_Errors_Msg.is_error_message_string)
-            (Obj.magic "Badly instantiated synth_by_tactic")
-      | FStarC_Syntax_Syntax.Tm_fvar fv when
-          (FStarC_Syntax_Syntax.fv_eq_lid fv FStarC_Parser_Const.synth_lid)
-            && (Prims.op_Negation env1.FStarC_TypeChecker_Env.phase1)
-          ->
-          FStarC_Errors.raise_error FStarC_TypeChecker_Env.hasRange_env env1
-            FStarC_Errors_Codes.Fatal_BadlyInstantiatedSynthByTactic ()
-            (Obj.magic FStarC_Errors_Msg.is_error_message_string)
-            (Obj.magic "Badly instantiated synth_by_tactic")
-      | FStarC_Syntax_Syntax.Tm_uinst
-          ({ FStarC_Syntax_Syntax.n = FStarC_Syntax_Syntax.Tm_fvar fv;
-             FStarC_Syntax_Syntax.pos = uu___;
-             FStarC_Syntax_Syntax.vars = uu___1;
-             FStarC_Syntax_Syntax.hash_code = uu___2;_},
-           us)
-          ->
-          let us1 = FStarC_List.map (tc_universe env1) us in
-          let uu___3 =
-            FStarC_TypeChecker_Env.lookup_lid env1
-              (fv.FStarC_Syntax_Syntax.fv_name).FStarC_Syntax_Syntax.v in
-          (match uu___3 with
-           | ((us', t), range) ->
-               let fv1 = FStarC_Syntax_Syntax.set_range_of_fv fv range in
-               (maybe_warn_on_use env1 fv1;
-                if (FStarC_List.length us1) <> (FStarC_List.length us')
-                then
-                  (let uu___6 =
-                     let uu___7 =
-                       FStarC_Class_Show.show FStarC_Syntax_Print.showable_fv
-                         fv1 in
-                     let uu___8 =
-                       FStarC_Class_Show.show FStarC_Class_Show.showable_nat
-                         (FStarC_List.length us1) in
-                     let uu___9 =
-                       FStarC_Class_Show.show FStarC_Class_Show.showable_nat
-                         (FStarC_List.length us') in
-                     FStarC_Util.format3
-                       "Unexpected number of universe instantiations for \"%s\" (%s vs %s)"
-                       uu___7 uu___8 uu___9 in
-                   FStarC_Errors.raise_error
-                     FStarC_TypeChecker_Env.hasRange_env env1
-                     FStarC_Errors_Codes.Fatal_UnexpectedNumberOfUniverse ()
-                     (Obj.magic FStarC_Errors_Msg.is_error_message_string)
-                     (Obj.magic uu___6))
-                else ();
-                FStarC_List.iter2
-                  (fun ul ->
-                     fun ur ->
-                       match (ul, ur) with
-                       | (FStarC_Syntax_Syntax.U_unif u'', uu___7) ->
-                           FStarC_Syntax_Unionfind.univ_change u'' ur
-                       | (FStarC_Syntax_Syntax.U_name n1,
-                          FStarC_Syntax_Syntax.U_name n2) when
-                           FStarC_Ident.ident_equals n1 n2 -> ()
-                       | uu___7 ->
-                           let uu___8 =
-                             let uu___9 =
-                               FStarC_Class_Show.show
-                                 FStarC_Syntax_Print.showable_fv fv1 in
-                             let uu___10 =
-                               FStarC_Class_Show.show
-                                 FStarC_Syntax_Print.showable_univ ul in
-                             let uu___11 =
-                               FStarC_Class_Show.show
-                                 FStarC_Syntax_Print.showable_univ ur in
-                             FStarC_Util.format3
-                               "Incompatible universe application for %s, expected %s got %s\n"
-                               uu___9 uu___10 uu___11 in
-                           FStarC_Errors.raise_error
-                             FStarC_TypeChecker_Env.hasRange_env env1
-                             FStarC_Errors_Codes.Fatal_IncompatibleUniverse
-                             ()
-                             (Obj.magic
-                                FStarC_Errors_Msg.is_error_message_string)
-                             (Obj.magic uu___8)) us' us1;
-                FStarC_TypeChecker_Env.insert_fv_info env1 fv1 t;
-                (let e1 =
-                   let uu___8 =
-                     FStarC_Syntax_Syntax.mk
-                       (FStarC_Syntax_Syntax.Tm_fvar fv1)
-                       e.FStarC_Syntax_Syntax.pos in
-                   FStarC_Syntax_Syntax.mk_Tm_uinst uu___8 us1 in
-                 check_instantiated_fvar env1
-                   fv1.FStarC_Syntax_Syntax.fv_name
-                   fv1.FStarC_Syntax_Syntax.fv_qual e1 t)))
-      | FStarC_Syntax_Syntax.Tm_uinst (uu___, us) ->
-          FStarC_Errors.raise_error FStarC_TypeChecker_Env.hasRange_env env1
-            FStarC_Errors_Codes.Fatal_UnexpectedNumberOfUniverse ()
-            (Obj.magic FStarC_Errors_Msg.is_error_message_string)
-            (Obj.magic
-               "Universe applications are only allowed on top-level identifiers")
-      | FStarC_Syntax_Syntax.Tm_fvar fv ->
-          let uu___ =
-            FStarC_TypeChecker_Env.lookup_lid env1
-              (fv.FStarC_Syntax_Syntax.fv_name).FStarC_Syntax_Syntax.v in
-          (match uu___ with
-           | ((us, t), range) ->
-               let fv1 = FStarC_Syntax_Syntax.set_range_of_fv fv range in
-               (maybe_warn_on_use env1 fv1;
-                (let uu___3 = FStarC_Effect.op_Bang dbg_Range in
-                 if uu___3
+                      FStarC_Class_Show.show FStarC_Range_Ops.showable_range
+                        r in
+                    Prims.strcat "user-provided implicit term at " uu___4 in
+                  FStarC_TypeChecker_Util.new_implicit_var uu___3 r env1 t
+                    false in
+                (match uu___2 with
+                 | (e1, uu___3, g1) ->
+                     let uu___4 =
+                       let uu___5 = FStarC_Syntax_Syntax.mk_Total t in
+                       FStarC_TypeChecker_Common.lcomp_of_comp uu___5 in
+                     let uu___5 =
+                       FStarC_Class_Monoid.op_Plus_Plus
+                         FStarC_TypeChecker_Common.monoid_guard_t g0 g1 in
+                     (e1, uu___4, uu___5)))
+       | FStarC_Syntax_Syntax.Tm_name x ->
+           let uu___1 = FStarC_TypeChecker_Env.lookup_bv env1 x in
+           (match uu___1 with
+            | (t, rng) ->
+                let x1 =
+                  FStarC_Syntax_Syntax.set_range_of_bv
+                    {
+                      FStarC_Syntax_Syntax.ppname =
+                        (x.FStarC_Syntax_Syntax.ppname);
+                      FStarC_Syntax_Syntax.index =
+                        (x.FStarC_Syntax_Syntax.index);
+                      FStarC_Syntax_Syntax.sort = t
+                    } rng in
+                (FStarC_TypeChecker_Env.insert_bv_info env1 x1 t;
+                 (let e1 = FStarC_Syntax_Syntax.bv_to_name x1 in
+                  let uu___3 =
+                    FStarC_TypeChecker_Util.maybe_instantiate env1 e1 t in
+                  match uu___3 with
+                  | (e2, t1, implicits) ->
+                      let tc =
+                        let uu___4 =
+                          FStarC_TypeChecker_Env.should_verify env1 in
+                        if uu___4
+                        then FStar_Pervasives.Inl t1
+                        else
+                          (let uu___6 =
+                             let uu___7 = FStarC_Syntax_Syntax.mk_Total t1 in
+                             FStarC_TypeChecker_Common.lcomp_of_comp uu___7 in
+                           FStar_Pervasives.Inr uu___6) in
+                      value_check_expected_typ env1 e2 tc implicits)))
+       | FStarC_Syntax_Syntax.Tm_uinst
+           ({ FStarC_Syntax_Syntax.n = FStarC_Syntax_Syntax.Tm_fvar fv;
+              FStarC_Syntax_Syntax.pos = uu___1;
+              FStarC_Syntax_Syntax.vars = uu___2;
+              FStarC_Syntax_Syntax.hash_code = uu___3;_},
+            uu___4)
+           when
+           (FStarC_Syntax_Syntax.fv_eq_lid fv FStarC_Parser_Const.synth_lid)
+             && (Prims.op_Negation env1.FStarC_TypeChecker_Env.phase1)
+           ->
+           FStarC_Errors.raise_error FStarC_TypeChecker_Env.hasRange_env env1
+             FStarC_Errors_Codes.Fatal_BadlyInstantiatedSynthByTactic ()
+             (Obj.magic FStarC_Errors_Msg.is_error_message_string)
+             (Obj.magic "Badly instantiated synth_by_tactic")
+       | FStarC_Syntax_Syntax.Tm_fvar fv when
+           (FStarC_Syntax_Syntax.fv_eq_lid fv FStarC_Parser_Const.synth_lid)
+             && (Prims.op_Negation env1.FStarC_TypeChecker_Env.phase1)
+           ->
+           FStarC_Errors.raise_error FStarC_TypeChecker_Env.hasRange_env env1
+             FStarC_Errors_Codes.Fatal_BadlyInstantiatedSynthByTactic ()
+             (Obj.magic FStarC_Errors_Msg.is_error_message_string)
+             (Obj.magic "Badly instantiated synth_by_tactic")
+       | FStarC_Syntax_Syntax.Tm_uinst
+           ({ FStarC_Syntax_Syntax.n = FStarC_Syntax_Syntax.Tm_fvar fv;
+              FStarC_Syntax_Syntax.pos = uu___1;
+              FStarC_Syntax_Syntax.vars = uu___2;
+              FStarC_Syntax_Syntax.hash_code = uu___3;_},
+            us)
+           ->
+           let us1 = FStarC_List.map (tc_universe env1) us in
+           let uu___4 =
+             FStarC_TypeChecker_Env.lookup_lid env1
+               (fv.FStarC_Syntax_Syntax.fv_name).FStarC_Syntax_Syntax.v in
+           (match uu___4 with
+            | ((us', t), range) ->
+                let fv1 = FStarC_Syntax_Syntax.set_range_of_fv fv range in
+                (maybe_warn_on_use env1 fv1;
+                 if (FStarC_List.length us1) <> (FStarC_List.length us')
                  then
-                   let uu___4 =
-                     let uu___5 = FStarC_Syntax_Syntax.lid_of_fv fv1 in
-                     FStarC_Class_Show.show FStarC_Ident.showable_lident
-                       uu___5 in
-                   let uu___5 =
-                     FStarC_Range_Ops.string_of_range
-                       e.FStarC_Syntax_Syntax.pos in
-                   let uu___6 = FStarC_Range_Ops.string_of_range range in
-                   let uu___7 = FStarC_Range_Ops.string_of_use_range range in
-                   let uu___8 =
-                     FStarC_Class_Show.show FStarC_Syntax_Print.showable_term
-                       t in
-                   FStarC_Util.print5
-                     "Lookup up fvar %s at location %s (lid range = defined at %s, used at %s); got universes type %s\n"
-                     uu___4 uu___5 uu___6 uu___7 uu___8
-                 else ());
-                FStarC_TypeChecker_Env.insert_fv_info env1 fv1 t;
-                (let e1 =
-                   let uu___4 =
-                     FStarC_Syntax_Syntax.mk
-                       (FStarC_Syntax_Syntax.Tm_fvar fv1)
-                       e.FStarC_Syntax_Syntax.pos in
-                   FStarC_Syntax_Syntax.mk_Tm_uinst uu___4 us in
-                 check_instantiated_fvar env1
-                   fv1.FStarC_Syntax_Syntax.fv_name
-                   fv1.FStarC_Syntax_Syntax.fv_qual e1 t)))
-      | FStarC_Syntax_Syntax.Tm_constant c ->
-          let t = tc_constant env1 top.FStarC_Syntax_Syntax.pos c in
-          let e1 =
-            FStarC_Syntax_Syntax.mk (FStarC_Syntax_Syntax.Tm_constant c)
-              e.FStarC_Syntax_Syntax.pos in
-          value_check_expected_typ env1 e1 (FStar_Pervasives.Inl t)
-            (FStarC_Class_Monoid.mzero
-               FStarC_TypeChecker_Common.monoid_guard_t)
-      | FStarC_Syntax_Syntax.Tm_arrow
-          { FStarC_Syntax_Syntax.bs1 = bs; FStarC_Syntax_Syntax.comp = c;_}
-          ->
-          let uu___ = FStarC_Syntax_Subst.open_comp bs c in
-          (match uu___ with
-           | (bs1, c1) ->
-               let env0 = env1 in
-               let uu___1 = FStarC_TypeChecker_Env.clear_expected_typ env1 in
-               (match uu___1 with
-                | (env2, uu___2) ->
-                    let uu___3 = tc_binders env2 bs1 in
-                    (match uu___3 with
-                     | (bs2, env3, g, us) ->
-                         let uu___4 = tc_comp env3 c1 in
-                         (match uu___4 with
-                          | (c2, uc, f) ->
-                              let e1 =
-                                let uu___5 = FStarC_Syntax_Util.arrow bs2 c2 in
-                                {
-                                  FStarC_Syntax_Syntax.n =
-                                    (uu___5.FStarC_Syntax_Syntax.n);
-                                  FStarC_Syntax_Syntax.pos =
-                                    (top.FStarC_Syntax_Syntax.pos);
-                                  FStarC_Syntax_Syntax.vars =
-                                    (uu___5.FStarC_Syntax_Syntax.vars);
-                                  FStarC_Syntax_Syntax.hash_code =
-                                    (uu___5.FStarC_Syntax_Syntax.hash_code)
-                                } in
-                              (if
-                                 Prims.op_Negation
-                                   env3.FStarC_TypeChecker_Env.phase1
-                               then check_smt_pat env3 e1 bs2 c2
-                               else ();
-                               (let u = FStarC_Syntax_Syntax.U_max (uc :: us) in
-                                let t =
-                                  FStarC_Syntax_Syntax.mk
-                                    (FStarC_Syntax_Syntax.Tm_type u)
-                                    top.FStarC_Syntax_Syntax.pos in
-                                let g1 =
-                                  let uu___6 =
-                                    FStarC_TypeChecker_Env.close_guard_univs
-                                      us bs2 f in
-                                  FStarC_Class_Monoid.op_Plus_Plus
-                                    FStarC_TypeChecker_Common.monoid_guard_t
-                                    g uu___6 in
-                                let g2 =
-                                  FStarC_TypeChecker_Util.close_guard_implicits
-                                    env3 false bs2 g1 in
-                                value_check_expected_typ env0 e1
-                                  (FStar_Pervasives.Inl t) g2))))))
-      | FStarC_Syntax_Syntax.Tm_type u ->
-          let u1 = tc_universe env1 u in
-          let t =
-            FStarC_Syntax_Syntax.mk
-              (FStarC_Syntax_Syntax.Tm_type (FStarC_Syntax_Syntax.U_succ u1))
-              top.FStarC_Syntax_Syntax.pos in
-          let e1 =
-            FStarC_Syntax_Syntax.mk (FStarC_Syntax_Syntax.Tm_type u1)
-              top.FStarC_Syntax_Syntax.pos in
-          value_check_expected_typ env1 e1 (FStar_Pervasives.Inl t)
-            (FStarC_Class_Monoid.mzero
-               FStarC_TypeChecker_Common.monoid_guard_t)
-      | FStarC_Syntax_Syntax.Tm_refine
-          { FStarC_Syntax_Syntax.b = x; FStarC_Syntax_Syntax.phi = phi;_} ->
-          let uu___ =
-            let uu___1 =
-              let uu___2 = FStarC_Syntax_Syntax.mk_binder x in [uu___2] in
-            FStarC_Syntax_Subst.open_term uu___1 phi in
-          (match uu___ with
-           | (x1, phi1) ->
-               let env0 = env1 in
-               let uu___1 = FStarC_TypeChecker_Env.clear_expected_typ env1 in
-               (match uu___1 with
-                | (env2, uu___2) ->
-                    let uu___3 =
-                      let uu___4 = FStarC_List.hd x1 in tc_binder env2 uu___4 in
-                    (match uu___3 with
-                     | (x2, env3, f1, u) ->
-                         ((let uu___5 = FStarC_Debug.high () in
-                           if uu___5
-                           then
-                             let uu___6 =
-                               FStarC_Range_Ops.string_of_range
-                                 top.FStarC_Syntax_Syntax.pos in
-                             let uu___7 =
-                               FStarC_Class_Show.show
-                                 FStarC_Syntax_Print.showable_term phi1 in
-                             let uu___8 =
-                               FStarC_Class_Show.show
-                                 FStarC_Syntax_Print.showable_bv
-                                 x2.FStarC_Syntax_Syntax.binder_bv in
-                             FStarC_Util.print3
-                               "(%s) Checking refinement formula %s; binder is %s\n"
-                               uu___6 uu___7 uu___8
-                           else ());
-                          (let uu___5 = FStarC_Syntax_Util.type_u () in
-                           match uu___5 with
-                           | (t_phi, uu___6) ->
-                               let uu___7 =
-                                 tc_check_tot_or_gtot_term env3 phi1 t_phi
-                                   (FStar_Pervasives_Native.Some
-                                      "refinement formula must be pure or ghost") in
-                               (match uu___7 with
-                                | (phi2, uu___8, f2) ->
-                                    let e1 =
-                                      let uu___9 =
-                                        FStarC_Syntax_Util.refine
-                                          x2.FStarC_Syntax_Syntax.binder_bv
-                                          phi2 in
-                                      {
-                                        FStarC_Syntax_Syntax.n =
-                                          (uu___9.FStarC_Syntax_Syntax.n);
-                                        FStarC_Syntax_Syntax.pos =
-                                          (top.FStarC_Syntax_Syntax.pos);
-                                        FStarC_Syntax_Syntax.vars =
-                                          (uu___9.FStarC_Syntax_Syntax.vars);
-                                        FStarC_Syntax_Syntax.hash_code =
-                                          (uu___9.FStarC_Syntax_Syntax.hash_code)
-                                      } in
-                                    let t =
-                                      FStarC_Syntax_Syntax.mk
-                                        (FStarC_Syntax_Syntax.Tm_type u)
-                                        top.FStarC_Syntax_Syntax.pos in
-                                    let g =
-                                      let uu___9 =
-                                        FStarC_TypeChecker_Env.close_guard_univs
-                                          [u] [x2] f2 in
-                                      FStarC_Class_Monoid.op_Plus_Plus
-                                        FStarC_TypeChecker_Common.monoid_guard_t
-                                        f1 uu___9 in
-                                    let g1 =
-                                      FStarC_TypeChecker_Util.close_guard_implicits
-                                        env3 false [x2] g in
-                                    value_check_expected_typ env0 e1
-                                      (FStar_Pervasives.Inl t) g1))))))
-      | FStarC_Syntax_Syntax.Tm_abs
-          { FStarC_Syntax_Syntax.bs = bs; FStarC_Syntax_Syntax.body = body;
-            FStarC_Syntax_Syntax.rc_opt = uu___;_}
-          ->
-          let bs1 =
-            FStarC_TypeChecker_Util.maybe_add_implicit_binders env1 bs in
-          ((let uu___2 = FStarC_Debug.medium () in
-            if uu___2
-            then
-              let uu___3 =
-                FStarC_Class_Show.show FStarC_Syntax_Print.showable_term
-                  {
-                    FStarC_Syntax_Syntax.n =
-                      (FStarC_Syntax_Syntax.Tm_abs
-                         {
-                           FStarC_Syntax_Syntax.bs = bs1;
-                           FStarC_Syntax_Syntax.body = body;
-                           FStarC_Syntax_Syntax.rc_opt =
-                             FStar_Pervasives_Native.None
-                         });
-                    FStarC_Syntax_Syntax.pos = (top.FStarC_Syntax_Syntax.pos);
-                    FStarC_Syntax_Syntax.vars =
-                      (top.FStarC_Syntax_Syntax.vars);
-                    FStarC_Syntax_Syntax.hash_code =
-                      (top.FStarC_Syntax_Syntax.hash_code)
-                  } in
-              FStarC_Util.print1 "Abstraction is: %s\n" uu___3
-            else ());
-           (let uu___2 = FStarC_Syntax_Subst.open_term bs1 body in
-            match uu___2 with | (bs2, body1) -> tc_abs env1 top bs2 body1))
-      | uu___ ->
-          let uu___1 =
-            let uu___2 =
-              FStarC_Class_Show.show FStarC_Syntax_Print.showable_term top in
-            let uu___3 =
-              FStarC_Class_Tagged.tag_of FStarC_Syntax_Syntax.tagged_term top in
-            FStarC_Util.format2 "Unexpected value: %s (%s)" uu___2 uu___3 in
-          failwith uu___1
+                   (let uu___7 =
+                      let uu___8 =
+                        FStarC_Class_Show.show
+                          FStarC_Syntax_Print.showable_fv fv1 in
+                      let uu___9 =
+                        FStarC_Class_Show.show FStarC_Class_Show.showable_nat
+                          (FStarC_List.length us1) in
+                      let uu___10 =
+                        FStarC_Class_Show.show FStarC_Class_Show.showable_nat
+                          (FStarC_List.length us') in
+                      FStarC_Util.format3
+                        "Unexpected number of universe instantiations for \"%s\" (%s vs %s)"
+                        uu___8 uu___9 uu___10 in
+                    FStarC_Errors.raise_error
+                      FStarC_Syntax_Syntax.hasRange_fv fv1
+                      FStarC_Errors_Codes.Fatal_UnexpectedNumberOfUniverse ()
+                      (Obj.magic FStarC_Errors_Msg.is_error_message_string)
+                      (Obj.magic uu___7))
+                 else ();
+                 FStarC_List.iter2
+                   (fun ul ->
+                      fun ur ->
+                        match (ul, ur) with
+                        | (FStarC_Syntax_Syntax.U_unif u'', uu___8) ->
+                            FStarC_Syntax_Unionfind.univ_change u'' ur
+                        | (FStarC_Syntax_Syntax.U_name n1,
+                           FStarC_Syntax_Syntax.U_name n2) when
+                            FStarC_Ident.ident_equals n1 n2 -> ()
+                        | uu___8 ->
+                            let uu___9 =
+                              let uu___10 =
+                                FStarC_Class_Show.show
+                                  FStarC_Syntax_Print.showable_fv fv1 in
+                              let uu___11 =
+                                FStarC_Class_Show.show
+                                  FStarC_Syntax_Print.showable_univ ul in
+                              let uu___12 =
+                                FStarC_Class_Show.show
+                                  FStarC_Syntax_Print.showable_univ ur in
+                              FStarC_Util.format3
+                                "Incompatible universe application for %s, expected %s got %s\n"
+                                uu___10 uu___11 uu___12 in
+                            FStarC_Errors.raise_error
+                              FStarC_TypeChecker_Env.hasRange_env env1
+                              FStarC_Errors_Codes.Fatal_IncompatibleUniverse
+                              ()
+                              (Obj.magic
+                                 FStarC_Errors_Msg.is_error_message_string)
+                              (Obj.magic uu___9)) us' us1;
+                 FStarC_TypeChecker_Env.insert_fv_info env1 fv1 t;
+                 (let e1 =
+                    let uu___9 =
+                      FStarC_Syntax_Syntax.mk
+                        (FStarC_Syntax_Syntax.Tm_fvar fv1)
+                        e.FStarC_Syntax_Syntax.pos in
+                    FStarC_Syntax_Syntax.mk_Tm_uinst uu___9 us1 in
+                  check_instantiated_fvar env1
+                    fv1.FStarC_Syntax_Syntax.fv_name
+                    fv1.FStarC_Syntax_Syntax.fv_qual e1 t)))
+       | FStarC_Syntax_Syntax.Tm_uinst (uu___1, us) ->
+           FStarC_Errors.raise_error FStarC_TypeChecker_Env.hasRange_env env1
+             FStarC_Errors_Codes.Fatal_UnexpectedNumberOfUniverse ()
+             (Obj.magic FStarC_Errors_Msg.is_error_message_string)
+             (Obj.magic
+                "Universe applications are only allowed on top-level identifiers")
+       | FStarC_Syntax_Syntax.Tm_fvar fv ->
+           let uu___1 =
+             FStarC_TypeChecker_Env.lookup_lid env1
+               (fv.FStarC_Syntax_Syntax.fv_name).FStarC_Syntax_Syntax.v in
+           (match uu___1 with
+            | ((us, t), range) ->
+                let fv1 = FStarC_Syntax_Syntax.set_range_of_fv fv range in
+                (maybe_warn_on_use env1 fv1;
+                 (let uu___4 = FStarC_Effect.op_Bang dbg_Range in
+                  if uu___4
+                  then
+                    let uu___5 =
+                      let uu___6 = FStarC_Syntax_Syntax.lid_of_fv fv1 in
+                      FStarC_Class_Show.show FStarC_Ident.showable_lident
+                        uu___6 in
+                    let uu___6 =
+                      FStarC_Range_Ops.string_of_range
+                        e.FStarC_Syntax_Syntax.pos in
+                    let uu___7 = FStarC_Range_Ops.string_of_range range in
+                    let uu___8 = FStarC_Range_Ops.string_of_use_range range in
+                    let uu___9 =
+                      FStarC_Class_Show.show
+                        FStarC_Syntax_Print.showable_term t in
+                    FStarC_Util.print5
+                      "Lookup up fvar %s at location %s (lid range = defined at %s, used at %s); got universes type %s\n"
+                      uu___5 uu___6 uu___7 uu___8 uu___9
+                  else ());
+                 FStarC_TypeChecker_Env.insert_fv_info env1 fv1 t;
+                 (let e1 =
+                    let uu___5 =
+                      FStarC_Syntax_Syntax.mk
+                        (FStarC_Syntax_Syntax.Tm_fvar fv1)
+                        e.FStarC_Syntax_Syntax.pos in
+                    FStarC_Syntax_Syntax.mk_Tm_uinst uu___5 us in
+                  check_instantiated_fvar env1
+                    fv1.FStarC_Syntax_Syntax.fv_name
+                    fv1.FStarC_Syntax_Syntax.fv_qual e1 t)))
+       | FStarC_Syntax_Syntax.Tm_constant c ->
+           let t = tc_constant env1 top.FStarC_Syntax_Syntax.pos c in
+           let e1 =
+             FStarC_Syntax_Syntax.mk (FStarC_Syntax_Syntax.Tm_constant c)
+               e.FStarC_Syntax_Syntax.pos in
+           value_check_expected_typ env1 e1 (FStar_Pervasives.Inl t)
+             (FStarC_Class_Monoid.mzero
+                FStarC_TypeChecker_Common.monoid_guard_t)
+       | FStarC_Syntax_Syntax.Tm_arrow
+           { FStarC_Syntax_Syntax.bs1 = bs; FStarC_Syntax_Syntax.comp = c;_}
+           ->
+           let uu___1 = FStarC_Syntax_Subst.open_comp bs c in
+           (match uu___1 with
+            | (bs1, c1) ->
+                let env0 = env1 in
+                let uu___2 = FStarC_TypeChecker_Env.clear_expected_typ env1 in
+                (match uu___2 with
+                 | (env2, uu___3) ->
+                     let uu___4 = tc_binders env2 bs1 in
+                     (match uu___4 with
+                      | (bs2, env3, g, us) ->
+                          let uu___5 = tc_comp env3 c1 in
+                          (match uu___5 with
+                           | (c2, uc, f) ->
+                               let e1 =
+                                 let uu___6 = FStarC_Syntax_Util.arrow bs2 c2 in
+                                 {
+                                   FStarC_Syntax_Syntax.n =
+                                     (uu___6.FStarC_Syntax_Syntax.n);
+                                   FStarC_Syntax_Syntax.pos =
+                                     (top.FStarC_Syntax_Syntax.pos);
+                                   FStarC_Syntax_Syntax.vars =
+                                     (uu___6.FStarC_Syntax_Syntax.vars);
+                                   FStarC_Syntax_Syntax.hash_code =
+                                     (uu___6.FStarC_Syntax_Syntax.hash_code)
+                                 } in
+                               (if
+                                  Prims.op_Negation
+                                    env3.FStarC_TypeChecker_Env.phase1
+                                then check_smt_pat env3 e1 bs2 c2
+                                else ();
+                                (let u =
+                                   FStarC_Syntax_Syntax.U_max (uc :: us) in
+                                 let t =
+                                   FStarC_Syntax_Syntax.mk
+                                     (FStarC_Syntax_Syntax.Tm_type u)
+                                     top.FStarC_Syntax_Syntax.pos in
+                                 let g1 =
+                                   let uu___7 =
+                                     FStarC_TypeChecker_Env.close_guard_univs
+                                       us bs2 f in
+                                   FStarC_Class_Monoid.op_Plus_Plus
+                                     FStarC_TypeChecker_Common.monoid_guard_t
+                                     g uu___7 in
+                                 let g2 =
+                                   FStarC_TypeChecker_Util.close_guard_implicits
+                                     env3 false bs2 g1 in
+                                 value_check_expected_typ env0 e1
+                                   (FStar_Pervasives.Inl t) g2))))))
+       | FStarC_Syntax_Syntax.Tm_type u ->
+           let u1 = tc_universe env1 u in
+           let t =
+             FStarC_Syntax_Syntax.mk
+               (FStarC_Syntax_Syntax.Tm_type (FStarC_Syntax_Syntax.U_succ u1))
+               top.FStarC_Syntax_Syntax.pos in
+           let e1 =
+             FStarC_Syntax_Syntax.mk (FStarC_Syntax_Syntax.Tm_type u1)
+               top.FStarC_Syntax_Syntax.pos in
+           value_check_expected_typ env1 e1 (FStar_Pervasives.Inl t)
+             (FStarC_Class_Monoid.mzero
+                FStarC_TypeChecker_Common.monoid_guard_t)
+       | FStarC_Syntax_Syntax.Tm_refine
+           { FStarC_Syntax_Syntax.b = x; FStarC_Syntax_Syntax.phi = phi;_} ->
+           let uu___1 =
+             let uu___2 =
+               let uu___3 = FStarC_Syntax_Syntax.mk_binder x in [uu___3] in
+             FStarC_Syntax_Subst.open_term uu___2 phi in
+           (match uu___1 with
+            | (x1, phi1) ->
+                let env0 = env1 in
+                let uu___2 = FStarC_TypeChecker_Env.clear_expected_typ env1 in
+                (match uu___2 with
+                 | (env2, uu___3) ->
+                     let uu___4 =
+                       let uu___5 = FStarC_List.hd x1 in
+                       tc_binder env2 uu___5 in
+                     (match uu___4 with
+                      | (x2, env3, f1, u) ->
+                          ((let uu___6 = FStarC_Debug.high () in
+                            if uu___6
+                            then
+                              let uu___7 =
+                                FStarC_Range_Ops.string_of_range
+                                  top.FStarC_Syntax_Syntax.pos in
+                              let uu___8 =
+                                FStarC_Class_Show.show
+                                  FStarC_Syntax_Print.showable_term phi1 in
+                              let uu___9 =
+                                FStarC_Class_Show.show
+                                  FStarC_Syntax_Print.showable_bv
+                                  x2.FStarC_Syntax_Syntax.binder_bv in
+                              FStarC_Util.print3
+                                "(%s) Checking refinement formula %s; binder is %s\n"
+                                uu___7 uu___8 uu___9
+                            else ());
+                           (let uu___6 = FStarC_Syntax_Util.type_u () in
+                            match uu___6 with
+                            | (t_phi, uu___7) ->
+                                let uu___8 =
+                                  tc_check_tot_or_gtot_term env3 phi1 t_phi
+                                    (FStar_Pervasives_Native.Some
+                                       "refinement formula must be pure or ghost") in
+                                (match uu___8 with
+                                 | (phi2, uu___9, f2) ->
+                                     let e1 =
+                                       let uu___10 =
+                                         FStarC_Syntax_Util.refine
+                                           x2.FStarC_Syntax_Syntax.binder_bv
+                                           phi2 in
+                                       {
+                                         FStarC_Syntax_Syntax.n =
+                                           (uu___10.FStarC_Syntax_Syntax.n);
+                                         FStarC_Syntax_Syntax.pos =
+                                           (top.FStarC_Syntax_Syntax.pos);
+                                         FStarC_Syntax_Syntax.vars =
+                                           (uu___10.FStarC_Syntax_Syntax.vars);
+                                         FStarC_Syntax_Syntax.hash_code =
+                                           (uu___10.FStarC_Syntax_Syntax.hash_code)
+                                       } in
+                                     let t =
+                                       FStarC_Syntax_Syntax.mk
+                                         (FStarC_Syntax_Syntax.Tm_type u)
+                                         top.FStarC_Syntax_Syntax.pos in
+                                     let g =
+                                       let uu___10 =
+                                         FStarC_TypeChecker_Env.close_guard_univs
+                                           [u] [x2] f2 in
+                                       FStarC_Class_Monoid.op_Plus_Plus
+                                         FStarC_TypeChecker_Common.monoid_guard_t
+                                         f1 uu___10 in
+                                     let g1 =
+                                       FStarC_TypeChecker_Util.close_guard_implicits
+                                         env3 false [x2] g in
+                                     value_check_expected_typ env0 e1
+                                       (FStar_Pervasives.Inl t) g1))))))
+       | FStarC_Syntax_Syntax.Tm_abs
+           { FStarC_Syntax_Syntax.bs = bs; FStarC_Syntax_Syntax.body = body;
+             FStarC_Syntax_Syntax.rc_opt = uu___1;_}
+           ->
+           let bs1 =
+             FStarC_TypeChecker_Util.maybe_add_implicit_binders env1 bs in
+           ((let uu___3 = FStarC_Debug.medium () in
+             if uu___3
+             then
+               let uu___4 =
+                 FStarC_Class_Show.show FStarC_Syntax_Print.showable_term
+                   {
+                     FStarC_Syntax_Syntax.n =
+                       (FStarC_Syntax_Syntax.Tm_abs
+                          {
+                            FStarC_Syntax_Syntax.bs = bs1;
+                            FStarC_Syntax_Syntax.body = body;
+                            FStarC_Syntax_Syntax.rc_opt =
+                              FStar_Pervasives_Native.None
+                          });
+                     FStarC_Syntax_Syntax.pos =
+                       (top.FStarC_Syntax_Syntax.pos);
+                     FStarC_Syntax_Syntax.vars =
+                       (top.FStarC_Syntax_Syntax.vars);
+                     FStarC_Syntax_Syntax.hash_code =
+                       (top.FStarC_Syntax_Syntax.hash_code)
+                   } in
+               FStarC_Util.print1 "Abstraction is: %s\n" uu___4
+             else ());
+            (let uu___3 = FStarC_Syntax_Subst.open_term bs1 body in
+             match uu___3 with | (bs2, body1) -> tc_abs env1 top bs2 body1))
+       | uu___1 ->
+           let uu___2 =
+             let uu___3 =
+               FStarC_Class_Show.show FStarC_Syntax_Print.showable_term top in
+             let uu___4 =
+               FStarC_Class_Tagged.tag_of FStarC_Syntax_Syntax.tagged_term
+                 top in
+             FStarC_Util.format2 "Unexpected value: %s (%s)" uu___3 uu___4 in
+           failwith uu___2)
 and (tc_constant :
   FStarC_TypeChecker_Env.env ->
     FStarC_Range_Type.range ->
@@ -7733,27 +7746,11 @@ and (check_application_args :
                let rec tc_args head_info uu___1 bs args1 =
                  match uu___1 with
                  | (subst, outargs, arg_rets, g, fvs) ->
-                     let instantiate_one_and_go b rest_bs args2 =
-                       let r1 =
-                         match outargs with
-                         | [] -> head.FStarC_Syntax_Syntax.pos
-                         | ((t, uu___2), uu___3, uu___4)::uu___5 ->
-                             let uu___6 =
-                               FStarC_Range_Type.def_range
-                                 head.FStarC_Syntax_Syntax.pos in
-                             let uu___7 =
-                               let uu___8 =
-                                 FStarC_Range_Type.use_range
-                                   head.FStarC_Syntax_Syntax.pos in
-                               let uu___9 =
-                                 FStarC_Range_Type.use_range
-                                   t.FStarC_Syntax_Syntax.pos in
-                               FStarC_Range_Ops.union_rng uu___8 uu___9 in
-                             FStarC_Range_Type.range_of_rng uu___6 uu___7 in
+                     let instantiate_one_and_go rng b rest_bs args2 =
                        let b1 = FStarC_Syntax_Subst.subst_binder subst b in
                        let uu___2 =
                          FStarC_TypeChecker_Util.instantiate_one_binder env
-                           r1 b1 in
+                           rng b1 in
                        match uu___2 with
                        | (tm, ty, aq, g') ->
                            let uu___3 =
@@ -7797,8 +7794,15 @@ and (check_application_args :
                            FStarC_Syntax_Syntax.binder_positivity = uu___3;
                            FStarC_Syntax_Syntax.binder_attrs = uu___4;_}::rest,
                          (uu___5, FStar_Pervasives_Native.None)::uu___6) ->
+                          let r1 =
+                            match outargs with
+                            | [] -> head.FStarC_Syntax_Syntax.pos
+                            | ((t, uu___7), uu___8, uu___9)::uu___10 ->
+                                FStarC_Range_Ops.union_ranges
+                                  head.FStarC_Syntax_Syntax.pos
+                                  t.FStarC_Syntax_Syntax.pos in
                           let uu___7 = FStarC_List.hd bs in
-                          instantiate_one_and_go uu___7 rest args1
+                          instantiate_one_and_go r1 uu___7 rest args1
                       | ({ FStarC_Syntax_Syntax.binder_bv = x;
                            FStarC_Syntax_Syntax.binder_qual =
                              FStar_Pervasives_Native.Some
@@ -7806,8 +7810,15 @@ and (check_application_args :
                            FStarC_Syntax_Syntax.binder_positivity = uu___3;
                            FStarC_Syntax_Syntax.binder_attrs = uu___4;_}::rest,
                          (uu___5, FStar_Pervasives_Native.None)::uu___6) ->
+                          let r1 =
+                            match outargs with
+                            | [] -> head.FStarC_Syntax_Syntax.pos
+                            | ((t, uu___7), uu___8, uu___9)::uu___10 ->
+                                FStarC_Range_Ops.union_ranges
+                                  head.FStarC_Syntax_Syntax.pos
+                                  t.FStarC_Syntax_Syntax.pos in
                           let uu___7 = FStarC_List.hd bs in
-                          instantiate_one_and_go uu___7 rest args1
+                          instantiate_one_and_go r1 uu___7 rest args1
                       | ({ FStarC_Syntax_Syntax.binder_bv = x;
                            FStarC_Syntax_Syntax.binder_qual =
                              FStar_Pervasives_Native.Some
@@ -7824,8 +7835,15 @@ and (check_application_args :
                           { FStarC_Syntax_Syntax.aqual_implicit = true;
                             FStarC_Syntax_Syntax.aqual_attributes = uu___6;_})::rest')
                           ->
-                          let uu___7 = FStarC_List.hd bs in
-                          instantiate_one_and_go uu___7 rest rest'
+                          let uu___7 =
+                            let uu___8 =
+                              let uu___9 = FStarC_List.hd args1 in
+                              FStar_Pervasives_Native.fst uu___9 in
+                            FStarC_Class_HasRange.pos
+                              (FStarC_Syntax_Syntax.has_range_syntax ())
+                              uu___8 in
+                          let uu___8 = FStarC_List.hd bs in
+                          instantiate_one_and_go uu___7 uu___8 rest rest'
                       | ({ FStarC_Syntax_Syntax.binder_bv = x;
                            FStarC_Syntax_Syntax.binder_qual = bqual;
                            FStarC_Syntax_Syntax.binder_positivity = uu___2;
@@ -13944,13 +13962,15 @@ let (typeof_tot_or_gtot_term_fastpath :
   fun env ->
     fun t ->
       fun must_tot ->
-        FStarC_Defensive.def_check_scoped
-          FStarC_TypeChecker_Env.hasBinders_env
-          FStarC_Class_Binders.hasNames_term FStarC_Syntax_Print.pretty_term
-          t.FStarC_Syntax_Syntax.pos "fastpath" env t;
         FStarC_Errors.with_ctx
           "In a call to typeof_tot_or_gtot_term_fastpath"
-          (fun uu___1 -> __typeof_tot_or_gtot_term_fastpath env t must_tot)
+          (fun uu___ ->
+             FStarC_Defensive.def_check_scoped
+               FStarC_TypeChecker_Env.hasBinders_env
+               FStarC_Class_Binders.hasNames_term
+               FStarC_Syntax_Print.pretty_term t.FStarC_Syntax_Syntax.pos
+               "fastpath" env t;
+             __typeof_tot_or_gtot_term_fastpath env t must_tot)
 let rec (effectof_tot_or_gtot_term_fastpath :
   FStarC_TypeChecker_Env.env ->
     FStarC_Syntax_Syntax.term ->

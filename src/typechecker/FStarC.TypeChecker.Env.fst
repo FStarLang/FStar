@@ -32,6 +32,7 @@ open FStarC.Class.Setlike
 
 open FStarC.Class.Show
 open FStarC.Class.PP
+open FStarC.Class.HasRange
 module Listlike = FStarC.Class.Listlike
 
 module S = FStarC.Syntax.Syntax
@@ -50,15 +51,24 @@ let dbg_LayeredEffectsEqns = Debug.get_toggle "LayeredEffectsEqns"
 let rec eq_step s1 s2 =
   match s1, s2 with
   | Beta, Beta
-  | Iota, Iota           //pattern matching
-  | Zeta, Zeta            //fixed points
-  | ZetaFull, ZetaFull    //fixed points
-  | Weak, Weak            //Do not descend into binders
-  | HNF, HNF             //Only produce a head normal form
-  | Primops, Primops         //reduce primitive operators like +, -, *, /, etc.
+  | Iota, Iota
+  | Zeta, Zeta
+  | ZetaFull, ZetaFull -> true
+  | Exclude s1, Exclude s2 -> eq_step s1 s2
+  | Weak, Weak
+  | HNF, HNF
+  | Primops, Primops
   | Eager_unfolding, Eager_unfolding
   | Inlining, Inlining
-  | DoNotUnfoldPureLets, DoNotUnfoldPureLets
+  | DoNotUnfoldPureLets, DoNotUnfoldPureLets -> true
+  | UnfoldUntil s1, UnfoldUntil s2 -> s1 = s2
+  | UnfoldOnly lids1, UnfoldOnly lids2
+  | UnfoldOnce lids1, UnfoldOnce lids2
+  | UnfoldFully lids1, UnfoldFully lids2
+  | UnfoldAttr lids1, UnfoldAttr lids2 -> lids1 =? lids2
+  | UnfoldQual strs1, UnfoldQual strs2 -> strs1 =? strs2
+  | UnfoldNamespace strs1, UnfoldNamespace strs2 -> strs1 =? strs2
+  | DontUnfoldAttr lids1, DontUnfoldAttr lids2 -> lids1 =? lids2
   | PureSubtermsWithinComputations, PureSubtermsWithinComputations
   | Simplify, Simplify
   | EraseUniverses, EraseUniverses
@@ -70,16 +80,12 @@ let rec eq_step s1 s2 =
   | Unmeta, Unmeta
   | Unascribe, Unascribe
   | NBE, NBE
-  | Unrefine, Unrefine -> true
-  | Exclude s1, Exclude s2 -> eq_step s1 s2
-  | UnfoldUntil s1, UnfoldUntil s2 -> s1 = s2
-  | UnfoldOnly lids1, UnfoldOnly lids2
-  | UnfoldFully lids1, UnfoldFully lids2
-  | UnfoldAttr lids1, UnfoldAttr lids2 -> lids1 =? lids2
-  | UnfoldQual strs1, UnfoldQual strs2 -> strs1 =? strs2
-  | UnfoldNamespace strs1, UnfoldNamespace strs2 -> strs1 =? strs2
-  | DontUnfoldAttr lids1, DontUnfoldAttr lids2 -> lids1 =? lids2
-  | _ -> false // fixme: others ?
+  | ForExtraction, ForExtraction
+  | Unrefine, Unrefine
+  | NormDebug, NormDebug
+  | DefaultUnivsToZero, DefaultUnivsToZero
+  | Tactics, Tactics -> true
+  | _ -> false
 
 instance deq_step : deq step = {
   (=?) = eq_step;
@@ -100,6 +106,7 @@ let rec step_to_string (s:step) : string =
   | DoNotUnfoldPureLets -> "DoNotUnfoldPureLets"
   | UnfoldUntil s1 -> "UnfoldUntil " ^ show s1
   | UnfoldOnly lids1 -> "UnfoldOnly " ^ show lids1
+  | UnfoldOnce lids1 -> "UnfoldOnce " ^ show lids1
   | UnfoldFully lids1 -> "UnfoldFully " ^ show lids1
   | UnfoldAttr lids1 -> "UnfoldAttr " ^ show lids1
   | UnfoldQual strs1 -> "UnfoldQual " ^ show strs1
@@ -121,6 +128,7 @@ let rec step_to_string (s:step) : string =
   | NormDebug -> "NormDebug"
   | DefaultUnivsToZero -> "DefaultUnivsToZero"
   | Tactics -> "Tactics"
+  | _ -> failwith "fixme: step_to_string incomplete"
 
 instance showable_step : showable step = {
   show = step_to_string;
@@ -248,7 +256,7 @@ let initial_env deps
     proof_ns = Options.using_facts_from ();
     synth_hook = (fun e g tau -> failwith "no synthesizer available");
     try_solve_implicits_hook = (fun e tau imps -> failwith "no implicit hook available");
-    splice = (fun e is_typed lids tau range -> failwith "no splicer available");
+    splice = (fun e is_typed _quals _attrs lids tau range -> failwith "no splicer available");
     mpreprocess = (fun e tau tm -> failwith "no preprocessor available");
     postprocess = (fun e tau typ tm -> failwith "no postprocessor available");
     identifier_info=mk_ref FStarC.TypeChecker.Common.id_info_table_empty;
@@ -539,10 +547,15 @@ and add_sigelts force env ses =
 // Lookup up various kinds of identifiers                 //
 ////////////////////////////////////////////////////////////
 let try_lookup_bv env (bv:bv) =
-  BU.find_map env.gamma (function
-    | Binding_var id when bv_eq id bv ->
-      Some (id.sort, (range_of_id id.ppname))
-    | _ -> None)
+  let r =
+    BU.find_map env.gamma (function
+      | Binding_var id when bv_eq id bv ->
+        Some (id.sort, pos id.ppname)
+      | _ -> None)
+  in
+  if Debug.extreme () then
+    BU.print2 "lookup_bv %s -> %s\n" (show bv) (show r);
+  r
 
 let lookup_type_of_let us_opt se lid =
     let inst_tscheme ts =
@@ -633,7 +646,7 @@ let try_lookup_lid_aux us_opt env lid =
       end |> BU.map_option (fun (us_t, rng) -> (us_t, rng))
   in
     match BU.bind_opt (lookup_qname env lid) mapper with
-      | Some ((us, t), r) -> Some ((us, {t with pos=range_of_lid lid}), r)
+      | Some ((us, t), r) -> Some ((us, setPos (pos lid) t), r)
       | None -> None
 
 ////////////////////////////////////////////////////////////////

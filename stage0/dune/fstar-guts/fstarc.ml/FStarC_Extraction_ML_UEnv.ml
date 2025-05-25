@@ -37,24 +37,24 @@ let (__proj__Mkexp_binding__item__exp_b_eff :
     match projectee with
     | { exp_b_name; exp_b_expr; exp_b_tscheme; exp_b_eff;_} -> exp_b_eff
 type ty_or_exp_b = (ty_binding, exp_binding) FStar_Pervasives.either
-type binding =
+type mlbinding =
   | Bv of (FStarC_Syntax_Syntax.bv * ty_or_exp_b) 
   | Fv of (FStarC_Syntax_Syntax.fv * exp_binding) 
   | ErasedFv of FStarC_Syntax_Syntax.fv 
-let (uu___is_Bv : binding -> Prims.bool) =
+let (uu___is_Bv : mlbinding -> Prims.bool) =
   fun projectee -> match projectee with | Bv _0 -> true | uu___ -> false
 let (__proj__Bv__item___0 :
-  binding -> (FStarC_Syntax_Syntax.bv * ty_or_exp_b)) =
+  mlbinding -> (FStarC_Syntax_Syntax.bv * ty_or_exp_b)) =
   fun projectee -> match projectee with | Bv _0 -> _0
-let (uu___is_Fv : binding -> Prims.bool) =
+let (uu___is_Fv : mlbinding -> Prims.bool) =
   fun projectee -> match projectee with | Fv _0 -> true | uu___ -> false
 let (__proj__Fv__item___0 :
-  binding -> (FStarC_Syntax_Syntax.fv * exp_binding)) =
+  mlbinding -> (FStarC_Syntax_Syntax.fv * exp_binding)) =
   fun projectee -> match projectee with | Fv _0 -> _0
-let (uu___is_ErasedFv : binding -> Prims.bool) =
+let (uu___is_ErasedFv : mlbinding -> Prims.bool) =
   fun projectee ->
     match projectee with | ErasedFv _0 -> true | uu___ -> false
-let (__proj__ErasedFv__item___0 : binding -> FStarC_Syntax_Syntax.fv) =
+let (__proj__ErasedFv__item___0 : mlbinding -> FStarC_Syntax_Syntax.fv) =
   fun projectee -> match projectee with | ErasedFv _0 -> _0
 let (plug : unit -> Prims.bool) =
   fun uu___ ->
@@ -112,16 +112,16 @@ let (tydef_mlpath : tydef -> FStarC_Extraction_ML_Syntax.mlpath) =
 type uenv =
   {
   env_tcenv: FStarC_TypeChecker_Env.env ;
-  env_bindings: binding Prims.list ;
-  env_mlident_map: FStarC_Extraction_ML_Syntax.mlident FStarC_Util.psmap ;
+  env_bindings: mlbinding Prims.list ;
+  env_mlident_map: FStarC_Extraction_ML_Syntax.mlident FStarC_PSMap.t ;
   env_remove_typars: FStarC_Extraction_ML_RemoveUnusedParameters.env_t ;
-  mlpath_of_lid: FStarC_Extraction_ML_Syntax.mlpath FStarC_Util.psmap ;
-  env_fieldname_map: FStarC_Extraction_ML_Syntax.mlident FStarC_Util.psmap ;
-  mlpath_of_fieldname: FStarC_Extraction_ML_Syntax.mlpath FStarC_Util.psmap ;
+  mlpath_of_lid: FStarC_Extraction_ML_Syntax.mlpath FStarC_PSMap.t ;
+  env_fieldname_map: FStarC_Extraction_ML_Syntax.mlident FStarC_PSMap.t ;
+  mlpath_of_fieldname: FStarC_Extraction_ML_Syntax.mlpath FStarC_PSMap.t ;
   tydefs: tydef Prims.list ;
   type_names:
     (FStarC_Syntax_Syntax.fv * FStarC_Extraction_ML_Syntax.mlpath) Prims.list ;
-  tydef_declarations: Prims.bool FStarC_Util.psmap ;
+  tydef_declarations: Prims.bool FStarC_PSMap.t ;
   currentModule: FStarC_Extraction_ML_Syntax.mlpath }
 let (__proj__Mkuenv__item__env_tcenv : uenv -> FStarC_TypeChecker_Env.env) =
   fun projectee ->
@@ -129,14 +129,14 @@ let (__proj__Mkuenv__item__env_tcenv : uenv -> FStarC_TypeChecker_Env.env) =
     | { env_tcenv; env_bindings; env_mlident_map; env_remove_typars;
         mlpath_of_lid; env_fieldname_map; mlpath_of_fieldname; tydefs;
         type_names; tydef_declarations; currentModule;_} -> env_tcenv
-let (__proj__Mkuenv__item__env_bindings : uenv -> binding Prims.list) =
+let (__proj__Mkuenv__item__env_bindings : uenv -> mlbinding Prims.list) =
   fun projectee ->
     match projectee with
     | { env_tcenv; env_bindings; env_mlident_map; env_remove_typars;
         mlpath_of_lid; env_fieldname_map; mlpath_of_fieldname; tydefs;
         type_names; tydef_declarations; currentModule;_} -> env_bindings
 let (__proj__Mkuenv__item__env_mlident_map :
-  uenv -> FStarC_Extraction_ML_Syntax.mlident FStarC_Util.psmap) =
+  uenv -> FStarC_Extraction_ML_Syntax.mlident FStarC_PSMap.t) =
   fun projectee ->
     match projectee with
     | { env_tcenv; env_bindings; env_mlident_map; env_remove_typars;
@@ -150,21 +150,21 @@ let (__proj__Mkuenv__item__env_remove_typars :
         mlpath_of_lid; env_fieldname_map; mlpath_of_fieldname; tydefs;
         type_names; tydef_declarations; currentModule;_} -> env_remove_typars
 let (__proj__Mkuenv__item__mlpath_of_lid :
-  uenv -> FStarC_Extraction_ML_Syntax.mlpath FStarC_Util.psmap) =
+  uenv -> FStarC_Extraction_ML_Syntax.mlpath FStarC_PSMap.t) =
   fun projectee ->
     match projectee with
     | { env_tcenv; env_bindings; env_mlident_map; env_remove_typars;
         mlpath_of_lid; env_fieldname_map; mlpath_of_fieldname; tydefs;
         type_names; tydef_declarations; currentModule;_} -> mlpath_of_lid
 let (__proj__Mkuenv__item__env_fieldname_map :
-  uenv -> FStarC_Extraction_ML_Syntax.mlident FStarC_Util.psmap) =
+  uenv -> FStarC_Extraction_ML_Syntax.mlident FStarC_PSMap.t) =
   fun projectee ->
     match projectee with
     | { env_tcenv; env_bindings; env_mlident_map; env_remove_typars;
         mlpath_of_lid; env_fieldname_map; mlpath_of_fieldname; tydefs;
         type_names; tydef_declarations; currentModule;_} -> env_fieldname_map
 let (__proj__Mkuenv__item__mlpath_of_fieldname :
-  uenv -> FStarC_Extraction_ML_Syntax.mlpath FStarC_Util.psmap) =
+  uenv -> FStarC_Extraction_ML_Syntax.mlpath FStarC_PSMap.t) =
   fun projectee ->
     match projectee with
     | { env_tcenv; env_bindings; env_mlident_map; env_remove_typars;
@@ -187,7 +187,7 @@ let (__proj__Mkuenv__item__type_names :
         mlpath_of_lid; env_fieldname_map; mlpath_of_fieldname; tydefs;
         type_names; tydef_declarations; currentModule;_} -> type_names
 let (__proj__Mkuenv__item__tydef_declarations :
-  uenv -> Prims.bool FStarC_Util.psmap) =
+  uenv -> Prims.bool FStarC_PSMap.t) =
   fun projectee ->
     match projectee with
     | { env_tcenv; env_bindings; env_mlident_map; env_remove_typars;
@@ -263,7 +263,8 @@ let with_typars_env :
              tydef_declarations = (u.tydef_declarations);
              currentModule = (u.currentModule)
            }, x)
-let (bindings_of_uenv : uenv -> binding Prims.list) = fun u -> u.env_bindings
+let (bindings_of_uenv : uenv -> mlbinding Prims.list) =
+  fun u -> u.env_bindings
 let (dbg : Prims.bool FStarC_Effect.ref) =
   FStarC_Debug.get_toggle "Extraction"
 let (debug : uenv -> (unit -> unit) -> unit) =
@@ -278,7 +279,7 @@ let (print_mlpath_map : uenv -> Prims.string) =
         (FStarC_String.concat "." (FStar_Pervasives_Native.fst mlp))
         (Prims.strcat "." (FStar_Pervasives_Native.snd mlp)) in
     let entries =
-      FStarC_Util.psmap_fold g.mlpath_of_lid
+      FStarC_PSMap.fold g.mlpath_of_lid
         (fun key ->
            fun value ->
              fun entries1 ->
@@ -286,11 +287,34 @@ let (print_mlpath_map : uenv -> Prims.string) =
                  FStarC_Util.format2 "%s -> %s" key (string_of_mlpath value) in
                uu___ :: entries1) [] in
     FStarC_String.concat "\n" entries
-let (lookup_fv_generic :
-  uenv ->
-    FStarC_Syntax_Syntax.fv ->
-      (Prims.bool, exp_binding) FStar_Pervasives.either)
-  =
+type lookup_res =
+  | Found of exp_binding 
+  | WasErased of FStarC_Range_Type.range 
+  | NotFound 
+let (uu___is_Found : lookup_res -> Prims.bool) =
+  fun projectee -> match projectee with | Found _0 -> true | uu___ -> false
+let (__proj__Found__item___0 : lookup_res -> exp_binding) =
+  fun projectee -> match projectee with | Found _0 -> _0
+let (uu___is_WasErased : lookup_res -> Prims.bool) =
+  fun projectee ->
+    match projectee with | WasErased _0 -> true | uu___ -> false
+let (__proj__WasErased__item___0 : lookup_res -> FStarC_Range_Type.range) =
+  fun projectee -> match projectee with | WasErased _0 -> _0
+let (uu___is_NotFound : lookup_res -> Prims.bool) =
+  fun projectee -> match projectee with | NotFound -> true | uu___ -> false
+let (showable_lookup_res : lookup_res FStarC_Class_Show.showable) =
+  {
+    FStarC_Class_Show.show =
+      (fun uu___ ->
+         match uu___ with
+         | Found t -> "Found .."
+         | WasErased r ->
+             let uu___1 =
+               FStarC_Class_Show.show FStarC_Range_Ops.showable_range r in
+             Prims.strcat "WasErased " uu___1
+         | NotFound -> "NotFound")
+  }
+let (lookup_fv_generic : uenv -> FStarC_Syntax_Syntax.fv -> lookup_res) =
   fun g ->
     fun fv ->
       let v =
@@ -298,13 +322,18 @@ let (lookup_fv_generic :
           (fun uu___ ->
              match uu___ with
              | Fv (fv', t) when FStarC_Syntax_Syntax.fv_eq fv fv' ->
-                 FStar_Pervasives_Native.Some (FStar_Pervasives.Inr t)
+                 FStar_Pervasives_Native.Some (Found t)
              | ErasedFv fv' when FStarC_Syntax_Syntax.fv_eq fv fv' ->
-                 FStar_Pervasives_Native.Some (FStar_Pervasives.Inl true)
+                 let uu___1 =
+                   let uu___2 =
+                     FStarC_Class_HasRange.pos
+                       FStarC_Syntax_Syntax.hasRange_fv fv' in
+                   WasErased uu___2 in
+                 FStar_Pervasives_Native.Some uu___1
              | uu___1 -> FStar_Pervasives_Native.None) in
       match v with
       | FStar_Pervasives_Native.Some r -> r
-      | FStar_Pervasives_Native.None -> FStar_Pervasives.Inl false
+      | FStar_Pervasives_Native.None -> NotFound
 let (try_lookup_fv :
   FStarC_Range_Type.range ->
     uenv ->
@@ -315,22 +344,31 @@ let (try_lookup_fv :
       fun fv ->
         let uu___ = lookup_fv_generic g fv in
         match uu___ with
-        | FStar_Pervasives.Inr r1 -> FStar_Pervasives_Native.Some r1
-        | FStar_Pervasives.Inl (true) ->
+        | Found r1 -> FStar_Pervasives_Native.Some r1
+        | WasErased pos ->
             ((let uu___2 =
                 let uu___3 =
                   let uu___4 =
                     let uu___5 =
-                      FStarC_Class_Show.show FStarC_Syntax_Print.showable_fv
-                        fv in
+                      FStarC_Ident.string_of_lid
+                        (fv.FStarC_Syntax_Syntax.fv_name).FStarC_Syntax_Syntax.v in
                     FStarC_Util.format1
                       "Will not extract reference to variable `%s` since it has the `noextract` qualifier."
                       uu___5 in
                   FStarC_Errors_Msg.text uu___4 in
                 let uu___4 =
                   let uu___5 =
-                    FStarC_Errors_Msg.text
-                      "Either remove its qualifier or add it to this definition." in
+                    let uu___6 =
+                      let uu___7 =
+                        FStarC_Ident.string_of_lid
+                          (fv.FStarC_Syntax_Syntax.fv_name).FStarC_Syntax_Syntax.v in
+                      let uu___8 =
+                        FStarC_Class_Show.show
+                          FStarC_Range_Ops.showable_range pos in
+                      FStarC_Util.format2
+                        "Either remove the noextract qualifier from %s (defined in %s) or add it to this definition."
+                        uu___7 uu___8 in
+                    FStarC_Errors_Msg.text uu___6 in
                   let uu___6 =
                     let uu___7 =
                       let uu___8 =
@@ -349,7 +387,7 @@ let (try_lookup_fv :
                 (Obj.magic FStarC_Errors_Msg.is_error_message_list_doc)
                 (Obj.magic uu___2));
              FStar_Pervasives_Native.None)
-        | FStar_Pervasives.Inl (false) -> FStar_Pervasives_Native.None
+        | NotFound -> FStar_Pervasives_Native.None
 let (lookup_fv :
   FStarC_Range_Type.range -> uenv -> FStarC_Syntax_Syntax.fv -> exp_binding)
   =
@@ -358,8 +396,8 @@ let (lookup_fv :
       fun fv ->
         let uu___ = lookup_fv_generic g fv in
         match uu___ with
-        | FStar_Pervasives.Inr t -> t
-        | FStar_Pervasives.Inl b ->
+        | Found t -> t
+        | res ->
             let uu___1 =
               let uu___2 =
                 FStarC_Range_Ops.string_of_range
@@ -367,9 +405,9 @@ let (lookup_fv :
               let uu___3 =
                 FStarC_Class_Show.show FStarC_Ident.showable_lident
                   (fv.FStarC_Syntax_Syntax.fv_name).FStarC_Syntax_Syntax.v in
-              let uu___4 = FStarC_Util.string_of_bool b in
+              let uu___4 = FStarC_Class_Show.show showable_lookup_res res in
               FStarC_Util.format3
-                "Internal error: (%s) free variable %s not found during extraction (erased=%s)\n"
+                "Internal error: (%s) free variable %s not found during extraction (res=%s)\n"
                 uu___2 uu___3 uu___4 in
             failwith uu___1
 let (lookup_bv : uenv -> FStarC_Syntax_Syntax.bv -> ty_or_exp_b) =
@@ -440,7 +478,7 @@ let (has_tydef_declaration : uenv -> FStarC_Ident.lident -> Prims.bool) =
     fun l ->
       let uu___ =
         let uu___1 = FStarC_Ident.string_of_lid l in
-        FStarC_Util.psmap_try_find u.tydef_declarations uu___1 in
+        FStarC_PSMap.try_find u.tydef_declarations uu___1 in
       match uu___ with
       | FStar_Pervasives_Native.None -> false
       | FStar_Pervasives_Native.Some b -> b
@@ -450,7 +488,7 @@ let (mlpath_of_lident :
     fun x ->
       let uu___ =
         let uu___1 = FStarC_Ident.string_of_lid x in
-        FStarC_Util.psmap_try_find g.mlpath_of_lid uu___1 in
+        FStarC_PSMap.try_find g.mlpath_of_lid uu___1 in
       match uu___ with
       | FStar_Pervasives_Native.None ->
           (debug g
@@ -484,6 +522,8 @@ let (no_fstar_stubs_ns :
   =
   fun ns ->
     match ns with
+    | "FStar"::"NormSteps"::rest when plug () -> "Fstarcompiler.FStarC" ::
+        "NormSteps" :: rest
     | "FStar"::"Stubs"::rest when
         (plug_no_lib ()) && (FStarC_Options_Ext.enabled "__guts") -> "FStarC"
         :: rest
@@ -518,7 +558,7 @@ let (lookup_record_field_name :
             FStarC_Ident.lid_of_ids uu___1 in
           let uu___1 =
             let uu___2 = FStarC_Ident.string_of_lid key in
-            FStarC_Util.psmap_try_find g.mlpath_of_fieldname uu___2 in
+            FStarC_PSMap.try_find g.mlpath_of_fieldname uu___2 in
           (match uu___1 with
            | FStar_Pervasives_Native.None ->
                let uu___2 =
@@ -529,8 +569,8 @@ let (lookup_record_field_name :
                let uu___2 = mlp in
                (match uu___2 with
                 | (ns, id) -> let ns1 = no_fstar_stubs_ns ns in (ns1, id)))
-let (initial_mlident_map : unit -> Prims.string FStarC_Util.psmap) =
-  let map = FStarC_Util.mk_ref FStar_Pervasives_Native.None in
+let (initial_mlident_map : unit -> Prims.string FStarC_PSMap.t) =
+  let map = FStarC_Effect.mk_ref FStar_Pervasives_Native.None in
   fun uu___ ->
     let uu___1 = FStarC_Effect.op_Bang map in
     match uu___1 with
@@ -552,9 +592,9 @@ let (initial_mlident_map : unit -> Prims.string FStarC_Util.psmap) =
                 FStarC_Extraction_ML_Syntax.krml_keywords
             | FStar_Pervasives_Native.Some (FStarC_Options.Extension) -> []
             | FStar_Pervasives_Native.None -> [] in
-          let uu___3 = FStarC_Util.psmap_empty () in
+          let uu___3 = FStarC_PSMap.empty () in
           FStarC_List.fold_right
-            (fun x -> fun m1 -> FStarC_Util.psmap_add m1 x "") uu___2 uu___3 in
+            (fun x -> fun m1 -> FStarC_PSMap.add m1 x "") uu___2 uu___3 in
         (FStarC_Effect.op_Colon_Equals map (FStar_Pervasives_Native.Some m);
          m)
 let (rename_conventional : Prims.string -> Prims.bool -> Prims.string) =
@@ -601,9 +641,9 @@ let (root_name_of_bv :
     then FStarC_Ident.reserved_prefix
     else FStarC_Ident.string_of_id x.FStarC_Syntax_Syntax.ppname
 let (find_uniq :
-  Prims.string FStarC_Util.psmap ->
+  Prims.string FStarC_PSMap.t ->
     Prims.string ->
-      Prims.bool -> (Prims.string * Prims.string FStarC_Util.psmap))
+      Prims.bool -> (Prims.string * Prims.string FStarC_PSMap.t))
   =
   fun ml_ident_map ->
     fun root_name ->
@@ -615,12 +655,12 @@ let (find_uniq :
             else
               (let uu___1 = FStarC_Util.string_of_int i in
                Prims.strcat root_name1 uu___1) in
-          let uu___ = FStarC_Util.psmap_try_find ml_ident_map target_mlident in
+          let uu___ = FStarC_PSMap.try_find ml_ident_map target_mlident in
           match uu___ with
           | FStar_Pervasives_Native.Some x ->
               aux (i + Prims.int_one) root_name1
           | FStar_Pervasives_Native.None ->
-              let map = FStarC_Util.psmap_add ml_ident_map target_mlident "" in
+              let map = FStarC_PSMap.add ml_ident_map target_mlident "" in
               (target_mlident, map) in
         let mlident = rename_conventional root_name is_local_type_variable in
         if is_local_type_variable
@@ -691,33 +731,13 @@ let (new_mlpath_of_lident :
             | "FStar.Pervasives.either" when plug () -> guts mlp
             | "FStar.Pervasives.Inl" when plug () -> guts mlp
             | "FStar.Pervasives.Inr" when plug () -> guts mlp
-            | "FStar.Pervasives.norm_step" when plug () -> guts mlp
-            | "FStar.Pervasives.norm_debug" when plug () -> guts mlp
-            | "FStar.Pervasives.simplify" when plug () -> guts mlp
-            | "FStar.Pervasives.weak" when plug () -> guts mlp
-            | "FStar.Pervasives.hnf" when plug () -> guts mlp
-            | "FStar.Pervasives.primops" when plug () -> guts mlp
-            | "FStar.Pervasives.delta" when plug () -> guts mlp
-            | "FStar.Pervasives.norm_debug" when plug () -> guts mlp
-            | "FStar.Pervasives.zeta" when plug () -> guts mlp
-            | "FStar.Pervasives.zeta_full" when plug () -> guts mlp
-            | "FStar.Pervasives.iota" when plug () -> guts mlp
-            | "FStar.Pervasives.nbe" when plug () -> guts mlp
-            | "FStar.Pervasives.reify_" when plug () -> guts mlp
-            | "FStar.Pervasives.delta_only" when plug () -> guts mlp
-            | "FStar.Pervasives.delta_fully" when plug () -> guts mlp
-            | "FStar.Pervasives.delta_attr" when plug () -> guts mlp
-            | "FStar.Pervasives.delta_qualifier" when plug () -> guts mlp
-            | "FStar.Pervasives.delta_namespace" when plug () -> guts mlp
-            | "FStar.Pervasives.unmeta" when plug () -> guts mlp
-            | "FStar.Pervasives.unascribe" when plug () -> guts mlp
             | "FStar.Stubs.Tactics.Common.Stop" ->
                 (["Fstarcompiler.FStarC"; "Errors"], "Stop")
             | uu___2 -> mlp in
           let g2 =
             let uu___1 =
               let uu___2 = FStarC_Ident.string_of_lid x in
-              FStarC_Util.psmap_add g1.mlpath_of_lid uu___2 mlp1 in
+              FStarC_PSMap.add g1.mlpath_of_lid uu___2 mlp1 in
             {
               env_tcenv = (g1.env_tcenv);
               env_bindings = (g1.env_bindings);
@@ -840,7 +860,7 @@ let (extend_bv :
 let (burn_name : uenv -> FStarC_Extraction_ML_Syntax.mlident -> uenv) =
   fun g ->
     fun i ->
-      let uu___ = FStarC_Util.psmap_add g.env_mlident_map i "" in
+      let uu___ = FStarC_PSMap.add g.env_mlident_map i "" in
       {
         env_tcenv = (g.env_tcenv);
         env_bindings = (g.env_bindings);
@@ -939,7 +959,7 @@ let (extend_fv :
                        } in
                      let gamma = (Fv (x, exp_binding1)) :: (g1.env_bindings) in
                      let mlident_map =
-                       FStarC_Util.psmap_add g1.env_mlident_map mlsymbol "" in
+                       FStarC_PSMap.add g1.env_mlident_map mlsymbol "" in
                      ({
                         env_tcenv = (g1.env_tcenv);
                         env_bindings = gamma;
@@ -1034,7 +1054,7 @@ let (extend_with_tydef_declaration : uenv -> FStarC_Ident.lident -> uenv) =
     fun l ->
       let uu___ =
         let uu___1 = FStarC_Ident.string_of_lid l in
-        FStarC_Util.psmap_add u.tydef_declarations uu___1 true in
+        FStarC_PSMap.add u.tydef_declarations uu___1 true in
       {
         env_tcenv = (u.env_tcenv);
         env_bindings = (u.env_bindings);
@@ -1154,7 +1174,7 @@ let (extend_record_field_name :
                let g1 =
                  let uu___2 =
                    let uu___3 = FStarC_Ident.string_of_lid key in
-                   FStarC_Util.psmap_add g.mlpath_of_fieldname uu___3 mlp1 in
+                   FStarC_PSMap.add g.mlpath_of_fieldname uu___3 mlp1 in
                  {
                    env_tcenv = (g.env_tcenv);
                    env_bindings = (g.env_bindings);
@@ -1200,10 +1220,10 @@ let (new_uenv : FStarC_TypeChecker_Env.env -> uenv) =
   fun e ->
     let env =
       let uu___ = initial_mlident_map () in
-      let uu___1 = FStarC_Util.psmap_empty () in
+      let uu___1 = FStarC_PSMap.empty () in
       let uu___2 = initial_mlident_map () in
-      let uu___3 = FStarC_Util.psmap_empty () in
-      let uu___4 = FStarC_Util.psmap_empty () in
+      let uu___3 = FStarC_PSMap.empty () in
+      let uu___4 = FStarC_PSMap.empty () in
       {
         env_tcenv = e;
         env_bindings = [];

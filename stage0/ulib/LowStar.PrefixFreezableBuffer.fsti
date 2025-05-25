@@ -20,14 +20,12 @@ open FStar.HyperStack.ST
 
 include LowStar.Monotonic.Buffer
 
-module P = FStar.Preorder
 module G = FStar.Ghost
 
 module U32 = FStar.UInt32
 module Seq = FStar.Seq
 
 module HS = FStar.HyperStack
-module ST = FStar.HyperStack.ST
 
 (*
  * A library for prefix freezable buffers of elements of type u8

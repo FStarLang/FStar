@@ -131,12 +131,8 @@ let resolve_tac_alt () : Tac unit =
   else T.admit_all()
 #push-options "--warn_error @348"
 
-//raises 348 for ambiguity in resolve_implicits
-// GM 2023-02-01: Used to raise 348 five times, but now it's 15 after
-// some scoping fixes in Tc (why?)
-// GM 2023-12-03: Now 21 times, whatever. It's probably due to slight
-// differences in the messages which decrease deduplication.
-[@@expect_failure [348; 348; 348; 348; 348; 348; 348; 348; 348; 348; 348; 348; 348; 348; 348; 348; 348; 348; 348; 348; 348; 66]]
+// Raises 348 for ambiguity in resolve_implicits
+[@@expect_failure [348]]
 let test3 (b:bool)
   : cmd (r1 ** r2 ** r3 ** r4 ** r5)
         (r1 ** r2 ** r3 ** r4 ** r5)
@@ -156,7 +152,7 @@ let resolve_tac_alt_alt () : Tac unit =
   else T.admit_all()
 
 [@@expect_failure [228]] //intentional failure in resolve_tac_alt_alt
-let test3 (b:bool)
+let test4 (b:bool)
   : cmd (r1 ** r2 ** r3 ** r4 ** r5)
         (r1 ** r2 ** r3 ** r4 ** r5)
   =

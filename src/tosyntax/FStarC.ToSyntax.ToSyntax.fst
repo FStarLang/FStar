@@ -780,7 +780,7 @@ let check_linear_pattern_variables pats (r:Range.range) =
           then union out p_vars
           else
             let duplicate_bv = List.hd (elems intersection) in
-            raise_error r Errors.Fatal_NonLinearPatternNotPermitted
+            raise_error duplicate_bv Errors.Fatal_NonLinearPatternNotPermitted
               (BU.format1 "Non-linear patterns are not permitted: `%s` appears more than once in this pattern."
                 (show duplicate_bv.ppname))
       in
@@ -798,9 +798,11 @@ let check_linear_pattern_variables pats (r:Range.range) =
       let symdiff s1 s2 = union (diff s1 s2) (diff s2 s1) in
       let nonlinear_vars = symdiff pvars (pat_vars p) in
       let first_nonlinear_var = List.hd (elems nonlinear_vars) in
-      raise_error r Errors.Fatal_IncoherentPatterns
-        (BU.format1 "Patterns in this match are incoherent, variable %s is bound in some but not all patterns."
-                       (show first_nonlinear_var.ppname))
+      raise_error first_nonlinear_var Errors.Fatal_IncoherentPatterns [
+        text "Patterns in this match are incoherent.";
+        text (BU.format1 "Variable %s is bound in some but not all patterns."
+                       (show first_nonlinear_var.ppname));
+      ]
     in
     List.iter aux ps
 
@@ -1201,7 +1203,7 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term & an
       desugar_term_maybe_top top_level env t
 
     | Tvar a ->
-      setpos <| (fail_or2 (try_lookup_id env) a), noaqs
+      setpos <| (fail_or2 env (try_lookup_id env) a), noaqs
 
     | Uvar u ->
       raise_error top Errors.Fatal_UnexpectedUniverseVariable
@@ -1666,10 +1668,11 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term & an
                             match args |> List.tryFind (fun x -> not (is_var_pattern x)) with
                             | None -> ()
                             | Some p ->
-                              raise_error p Errors.Fatal_ComputationTypeNotAllowed
-                                ("Computation type annotations are only permitted on let-bindings \
-                                             without inlined patterns; \
-                                             replace this pattern with a variable") in
+                              raise_error p Errors.Fatal_ComputationTypeNotAllowed [
+                                text "Computation type annotations are only permitted on let-bindings \
+                                      without inlined patterns.";
+                                text "Suggestion: replace this pattern with a variable."
+                              ] in
                          t
                     else if Options.ml_ish () //we're type-checking the compiler itself, e.g.
                     && Option.isSome (Env.try_lookup_effect_name env (C.effect_ML_lid())) //ML is in scope (not still in prims, e.g)
@@ -2623,7 +2626,7 @@ and desugar_formula env (f:term) : S.term =
         let names =
           names |> List.map
           (fun i ->
-          { fail_or2 (try_lookup_id env) i with pos=(range_of_id i) })
+          { fail_or2 env (try_lookup_id env) i with pos=(range_of_id i) })
         in
         let pats =
           pats |> List.map
@@ -3697,9 +3700,9 @@ and desugar_decl_maybe_fail_attr env (d: decl): (env_t & sigelts) =
             Errors.log_issue err_rng Errors.Error_DidNotFail [
                 prefix 2 1
                   (text "This top-level definition was expected to raise error codes")
-                  (pp expected_errs) ^/^
+                  (pp (Class.Ord.sort expected_errs)) ^/^
                 prefix 2 1 (text "but it raised")
-                  (pp errnos) ^^ text "(at desugaring time)" ^^ dot;
+                  (pp (Class.Ord.sort errnos)) ^^ text "(at desugaring time)" ^^ dot;
                 text (BU.format3 "Error #%s was raised %s times, instead of %s."
                                       (show e) (show n2) (show n1));
               ];
@@ -4295,6 +4298,7 @@ and desugar_decl_core env (d_attrs:list S.term) (d:decl) : (env_t & sigelts) =
   )
 
 let desugar_decls env decls =
+  Stats.record "desugar_decls" fun () ->
   let env, sigelts =
     List.fold_left (fun (env, sigelts) d ->
       let env, se = desugar_decl env d in

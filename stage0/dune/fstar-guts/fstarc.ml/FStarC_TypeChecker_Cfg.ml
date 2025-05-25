@@ -874,6 +874,10 @@ let (default_steps : fsteps) =
 let (fstep_add_one : FStarC_TypeChecker_Env.step -> fsteps -> fsteps) =
   fun s ->
     fun fs ->
+      let optlist uu___ =
+        match uu___ with
+        | FStar_Pervasives_Native.None -> []
+        | FStar_Pervasives_Native.Some xs -> xs in
       match s with
       | FStarC_TypeChecker_Env.Beta ->
           {
@@ -1333,7 +1337,9 @@ let (fstep_add_one : FStarC_TypeChecker_Env.step -> fsteps -> fsteps) =
             primops = (fs.primops);
             do_not_unfold_pure_lets = (fs.do_not_unfold_pure_lets);
             unfold_until = (fs.unfold_until);
-            unfold_only = (FStar_Pervasives_Native.Some lids);
+            unfold_only =
+              (FStar_Pervasives_Native.Some
+                 (FStarC_List.op_At (optlist fs.unfold_only) lids));
             unfold_once = (fs.unfold_once);
             unfold_fully = (fs.unfold_fully);
             unfold_attr = (fs.unfold_attr);
@@ -1371,7 +1377,9 @@ let (fstep_add_one : FStarC_TypeChecker_Env.step -> fsteps -> fsteps) =
             do_not_unfold_pure_lets = (fs.do_not_unfold_pure_lets);
             unfold_until = (fs.unfold_until);
             unfold_only = (fs.unfold_only);
-            unfold_once = (FStar_Pervasives_Native.Some lids);
+            unfold_once =
+              (FStar_Pervasives_Native.Some
+                 (FStarC_List.op_At (optlist fs.unfold_once) lids));
             unfold_fully = (fs.unfold_fully);
             unfold_attr = (fs.unfold_attr);
             unfold_qual = (fs.unfold_qual);
@@ -1409,7 +1417,9 @@ let (fstep_add_one : FStarC_TypeChecker_Env.step -> fsteps -> fsteps) =
             unfold_until = (fs.unfold_until);
             unfold_only = (fs.unfold_only);
             unfold_once = (fs.unfold_once);
-            unfold_fully = (FStar_Pervasives_Native.Some lids);
+            unfold_fully =
+              (FStar_Pervasives_Native.Some
+                 (FStarC_List.op_At (optlist fs.unfold_fully) lids));
             unfold_attr = (fs.unfold_attr);
             unfold_qual = (fs.unfold_qual);
             unfold_namespace = (fs.unfold_namespace);
@@ -1447,10 +1457,51 @@ let (fstep_add_one : FStarC_TypeChecker_Env.step -> fsteps -> fsteps) =
             unfold_only = (fs.unfold_only);
             unfold_once = (fs.unfold_once);
             unfold_fully = (fs.unfold_fully);
-            unfold_attr = (FStar_Pervasives_Native.Some lids);
+            unfold_attr =
+              (FStar_Pervasives_Native.Some
+                 (FStarC_List.op_At (optlist fs.unfold_attr) lids));
             unfold_qual = (fs.unfold_qual);
             unfold_namespace = (fs.unfold_namespace);
             dont_unfold_attr = (fs.dont_unfold_attr);
+            pure_subterms_within_computations =
+              (fs.pure_subterms_within_computations);
+            simplify = (fs.simplify);
+            erase_universes = (fs.erase_universes);
+            allow_unbound_universes = (fs.allow_unbound_universes);
+            reify_ = (fs.reify_);
+            compress_uvars = (fs.compress_uvars);
+            no_full_norm = (fs.no_full_norm);
+            check_no_uvars = (fs.check_no_uvars);
+            unmeta = (fs.unmeta);
+            unascribe = (fs.unascribe);
+            in_full_norm_request = (fs.in_full_norm_request);
+            weakly_reduce_scrutinee = (fs.weakly_reduce_scrutinee);
+            nbe_step = (fs.nbe_step);
+            for_extraction = (fs.for_extraction);
+            unrefine = (fs.unrefine);
+            default_univs_to_zero = (fs.default_univs_to_zero);
+            tactics = (fs.tactics)
+          }
+      | FStarC_TypeChecker_Env.DontUnfoldAttr lids ->
+          {
+            beta = (fs.beta);
+            iota = (fs.iota);
+            zeta = (fs.zeta);
+            zeta_full = (fs.zeta_full);
+            weak = (fs.weak);
+            hnf = (fs.hnf);
+            primops = (fs.primops);
+            do_not_unfold_pure_lets = (fs.do_not_unfold_pure_lets);
+            unfold_until = (fs.unfold_until);
+            unfold_only = (fs.unfold_only);
+            unfold_once = (fs.unfold_once);
+            unfold_fully = (fs.unfold_fully);
+            unfold_attr = (fs.unfold_attr);
+            unfold_qual = (fs.unfold_qual);
+            unfold_namespace = (fs.unfold_namespace);
+            dont_unfold_attr =
+              (FStar_Pervasives_Native.Some
+                 (FStarC_List.op_At (optlist fs.dont_unfold_attr) lids));
             pure_subterms_within_computations =
               (fs.pure_subterms_within_computations);
             simplify = (fs.simplify);
@@ -1573,43 +1624,6 @@ let (fstep_add_one : FStarC_TypeChecker_Env.step -> fsteps -> fsteps) =
             unfold_qual = (fs.unfold_qual);
             unfold_namespace = uu___;
             dont_unfold_attr = (fs.dont_unfold_attr);
-            pure_subterms_within_computations =
-              (fs.pure_subterms_within_computations);
-            simplify = (fs.simplify);
-            erase_universes = (fs.erase_universes);
-            allow_unbound_universes = (fs.allow_unbound_universes);
-            reify_ = (fs.reify_);
-            compress_uvars = (fs.compress_uvars);
-            no_full_norm = (fs.no_full_norm);
-            check_no_uvars = (fs.check_no_uvars);
-            unmeta = (fs.unmeta);
-            unascribe = (fs.unascribe);
-            in_full_norm_request = (fs.in_full_norm_request);
-            weakly_reduce_scrutinee = (fs.weakly_reduce_scrutinee);
-            nbe_step = (fs.nbe_step);
-            for_extraction = (fs.for_extraction);
-            unrefine = (fs.unrefine);
-            default_univs_to_zero = (fs.default_univs_to_zero);
-            tactics = (fs.tactics)
-          }
-      | FStarC_TypeChecker_Env.DontUnfoldAttr lids ->
-          {
-            beta = (fs.beta);
-            iota = (fs.iota);
-            zeta = (fs.zeta);
-            zeta_full = (fs.zeta_full);
-            weak = (fs.weak);
-            hnf = (fs.hnf);
-            primops = (fs.primops);
-            do_not_unfold_pure_lets = (fs.do_not_unfold_pure_lets);
-            unfold_until = (fs.unfold_until);
-            unfold_only = (fs.unfold_only);
-            unfold_once = (fs.unfold_once);
-            unfold_fully = (fs.unfold_fully);
-            unfold_attr = (fs.unfold_attr);
-            unfold_qual = (fs.unfold_qual);
-            unfold_namespace = (fs.unfold_namespace);
-            dont_unfold_attr = (FStar_Pervasives_Native.Some lids);
             pure_subterms_within_computations =
               (fs.pure_subterms_within_computations);
             simplify = (fs.simplify);
@@ -2282,7 +2296,7 @@ type cfg =
   debug: debug_switches ;
   delta_level: FStarC_TypeChecker_Env.delta_level Prims.list ;
   primitive_steps:
-    FStarC_TypeChecker_Primops_Base.primitive_step FStarC_Util.psmap ;
+    FStarC_TypeChecker_Primops_Base.primitive_step FStarC_PSMap.t ;
   strong: Prims.bool ;
   memoize_lazy: Prims.bool ;
   normalize_pure_lets: Prims.bool ;
@@ -2314,7 +2328,7 @@ let (__proj__Mkcfg__item__delta_level :
         memoize_lazy; normalize_pure_lets; reifying;
         compat_memo_ignore_cfg;_} -> delta_level
 let (__proj__Mkcfg__item__primitive_steps :
-  cfg -> FStarC_TypeChecker_Primops_Base.primitive_step FStarC_Util.psmap) =
+  cfg -> FStarC_TypeChecker_Primops_Base.primitive_step FStarC_PSMap.t) =
   fun projectee ->
     match projectee with
     | { steps; tcenv; debug; delta_level; primitive_steps; strong;
@@ -2351,21 +2365,21 @@ let (__proj__Mkcfg__item__compat_memo_ignore_cfg : cfg -> Prims.bool) =
         memoize_lazy; normalize_pure_lets; reifying;
         compat_memo_ignore_cfg;_} -> compat_memo_ignore_cfg
 type prim_step_set =
-  FStarC_TypeChecker_Primops_Base.primitive_step FStarC_Util.psmap
+  FStarC_TypeChecker_Primops_Base.primitive_step FStarC_PSMap.t
 let (empty_prim_steps : unit -> prim_step_set) =
-  fun uu___ -> FStarC_Util.psmap_empty ()
+  fun uu___ -> FStarC_PSMap.empty ()
 let (add_step :
   FStarC_TypeChecker_Primops_Base.primitive_step ->
     prim_step_set ->
-      FStarC_TypeChecker_Primops_Base.primitive_step FStarC_Util.psmap)
+      FStarC_TypeChecker_Primops_Base.primitive_step FStarC_PSMap.t)
   =
   fun s ->
     fun ss ->
       let uu___ =
         FStarC_Ident.string_of_lid s.FStarC_TypeChecker_Primops_Base.name in
-      FStarC_Util.psmap_add ss uu___ s
+      FStarC_PSMap.add ss uu___ s
 let (merge_steps : prim_step_set -> prim_step_set -> prim_step_set) =
-  fun s1 -> fun s2 -> FStarC_Util.psmap_merge s1 s2
+  fun s1 -> fun s2 -> FStarC_PSMap.merge s1 s2
 let (add_steps :
   prim_step_set ->
     FStarC_TypeChecker_Primops_Base.primitive_step Prims.list ->
@@ -2375,7 +2389,7 @@ let (prim_from_list :
   FStarC_TypeChecker_Primops_Base.primitive_step Prims.list -> prim_step_set)
   = fun l -> let uu___ = empty_prim_steps () in add_steps uu___ l
 let (built_in_primitive_steps :
-  FStarC_TypeChecker_Primops_Base.primitive_step FStarC_Util.psmap) =
+  FStarC_TypeChecker_Primops_Base.primitive_step FStarC_PSMap.t) =
   prim_from_list FStarC_TypeChecker_Primops.built_in_primitive_steps_list
 let (env_dependent_ops : FStarC_TypeChecker_Env.env_t -> prim_step_set) =
   fun env ->
@@ -2383,7 +2397,7 @@ let (env_dependent_ops : FStarC_TypeChecker_Env.env_t -> prim_step_set) =
     prim_from_list uu___
 let (simplification_steps :
   FStarC_TypeChecker_Env.env_t ->
-    FStarC_TypeChecker_Primops_Base.primitive_step FStarC_Util.psmap)
+    FStarC_TypeChecker_Primops_Base.primitive_step FStarC_PSMap.t)
   =
   fun env ->
     let uu___ = FStarC_TypeChecker_Primops.simplification_ops_list env in
@@ -2422,7 +2436,7 @@ let (find_prim_step :
       let uu___ =
         FStarC_Ident.string_of_lid
           (fv.FStarC_Syntax_Syntax.fv_name).FStarC_Syntax_Syntax.v in
-      FStarC_Util.psmap_try_find cfg1.primitive_steps uu___
+      FStarC_PSMap.try_find cfg1.primitive_steps uu___
 let (is_prim_step : cfg -> FStarC_Syntax_Syntax.fv -> Prims.bool) =
   fun cfg1 ->
     fun fv ->
@@ -2430,7 +2444,7 @@ let (is_prim_step : cfg -> FStarC_Syntax_Syntax.fv -> Prims.bool) =
         let uu___1 =
           FStarC_Ident.string_of_lid
             (fv.FStarC_Syntax_Syntax.fv_name).FStarC_Syntax_Syntax.v in
-        FStarC_Util.psmap_try_find cfg1.primitive_steps uu___1 in
+        FStarC_PSMap.try_find cfg1.primitive_steps uu___1 in
       FStarC_Util.is_some uu___
 let (log : cfg -> (unit -> unit) -> unit) =
   fun cfg1 -> fun f -> if (cfg1.debug).gen then f () else ()
@@ -2449,19 +2463,18 @@ let (log_unfolding : cfg -> (unit -> unit) -> unit) =
       if uu___ then f () else ()
 let (log_nbe : cfg -> (unit -> unit) -> unit) =
   fun cfg1 -> fun f -> if (cfg1.debug).debug_nbe then f () else ()
-let (primop_time_map : Prims.int FStarC_Util.smap) =
-  FStarC_Util.smap_create (Prims.of_int (50))
+let (primop_time_map : Prims.int FStarC_SMap.t) =
+  FStarC_SMap.create (Prims.of_int (50))
 let (primop_time_reset : unit -> unit) =
-  fun uu___ -> FStarC_Util.smap_clear primop_time_map
+  fun uu___ -> FStarC_SMap.clear primop_time_map
 let (primop_time_count : Prims.string -> Prims.int -> unit) =
   fun nm ->
     fun ns ->
-      let uu___ = FStarC_Util.smap_try_find primop_time_map nm in
+      let uu___ = FStarC_SMap.try_find primop_time_map nm in
       match uu___ with
-      | FStar_Pervasives_Native.None ->
-          FStarC_Util.smap_add primop_time_map nm ns
+      | FStar_Pervasives_Native.None -> FStarC_SMap.add primop_time_map nm ns
       | FStar_Pervasives_Native.Some ns0 ->
-          FStarC_Util.smap_add primop_time_map nm (ns0 + ns)
+          FStarC_SMap.add primop_time_map nm (ns0 + ns)
 let (fixto : Prims.int -> Prims.string -> Prims.string) =
   fun n ->
     fun s ->
@@ -2473,7 +2486,7 @@ let (fixto : Prims.int -> Prims.string -> Prims.string) =
 let (primop_time_report : unit -> Prims.string) =
   fun uu___ ->
     let pairs =
-      FStarC_Util.smap_fold primop_time_map
+      FStarC_SMap.fold primop_time_map
         (fun nm -> fun ns -> fun rest -> (nm, ns) :: rest) [] in
     let pairs1 =
       FStarC_Util.sort_with
@@ -2495,14 +2508,15 @@ let (primop_time_report : unit -> Prims.string) =
                  FStarC_Util.format2 "%sms --- %s\n" uu___3 nm in
                FStarC_String.op_Hat uu___2 rest) pairs1 ""
 let (extendable_primops_dirty : Prims.bool FStarC_Effect.ref) =
-  FStarC_Util.mk_ref true
+  FStarC_Effect.mk_ref true
 type register_prim_step_t =
   FStarC_TypeChecker_Primops_Base.primitive_step -> unit
 type retrieve_prim_step_t = unit -> prim_step_set
 let (mk_extendable_primop_set :
   unit -> (register_prim_step_t * retrieve_prim_step_t)) =
   fun uu___ ->
-    let steps = let uu___1 = empty_prim_steps () in FStarC_Util.mk_ref uu___1 in
+    let steps =
+      let uu___1 = empty_prim_steps () in FStarC_Effect.mk_ref uu___1 in
     let register p =
       FStarC_Effect.op_Colon_Equals extendable_primops_dirty true;
       (let uu___2 =
@@ -2536,7 +2550,7 @@ let (list_extra_steps :
   fun uu___ ->
     let uu___1 = retrieve_extra_steps () in FStarC_Common.psmap_values uu___1
 let (cached_steps : unit -> prim_step_set) =
-  let memo = let uu___ = empty_prim_steps () in FStarC_Util.mk_ref uu___ in
+  let memo = let uu___ = empty_prim_steps () in FStarC_Effect.mk_ref uu___ in
   fun uu___ ->
     let uu___1 = FStarC_Effect.op_Bang extendable_primops_dirty in
     if uu___1
@@ -2735,22 +2749,22 @@ let (should_reduce_local_let :
                 (Prims.op_Negation
                    (cfg1.steps).pure_subterms_within_computations)))
 let (translate_norm_step :
-  FStar_Pervasives.norm_step -> FStarC_TypeChecker_Env.step Prims.list) =
+  FStarC_NormSteps.norm_step -> FStarC_TypeChecker_Env.step Prims.list) =
   fun uu___ ->
     match uu___ with
-    | FStar_Pervasives.Zeta -> [FStarC_TypeChecker_Env.Zeta]
-    | FStar_Pervasives.ZetaFull -> [FStarC_TypeChecker_Env.ZetaFull]
-    | FStar_Pervasives.Iota -> [FStarC_TypeChecker_Env.Iota]
-    | FStar_Pervasives.Delta ->
+    | FStarC_NormSteps.Zeta -> [FStarC_TypeChecker_Env.Zeta]
+    | FStarC_NormSteps.ZetaFull -> [FStarC_TypeChecker_Env.ZetaFull]
+    | FStarC_NormSteps.Iota -> [FStarC_TypeChecker_Env.Iota]
+    | FStarC_NormSteps.Delta ->
         [FStarC_TypeChecker_Env.UnfoldUntil
            FStarC_Syntax_Syntax.delta_constant]
-    | FStar_Pervasives.Simpl -> [FStarC_TypeChecker_Env.Simplify]
-    | FStar_Pervasives.Weak -> [FStarC_TypeChecker_Env.Weak]
-    | FStar_Pervasives.HNF -> [FStarC_TypeChecker_Env.HNF]
-    | FStar_Pervasives.Primops -> [FStarC_TypeChecker_Env.Primops]
-    | FStar_Pervasives.Reify -> [FStarC_TypeChecker_Env.Reify]
-    | FStar_Pervasives.NormDebug -> [FStarC_TypeChecker_Env.NormDebug]
-    | FStar_Pervasives.UnfoldOnly names ->
+    | FStarC_NormSteps.Simpl -> [FStarC_TypeChecker_Env.Simplify]
+    | FStarC_NormSteps.Weak -> [FStarC_TypeChecker_Env.Weak]
+    | FStarC_NormSteps.HNF -> [FStarC_TypeChecker_Env.HNF]
+    | FStarC_NormSteps.Primops -> [FStarC_TypeChecker_Env.Primops]
+    | FStarC_NormSteps.Reify -> [FStarC_TypeChecker_Env.Reify]
+    | FStarC_NormSteps.NormDebug -> [FStarC_TypeChecker_Env.NormDebug]
+    | FStarC_NormSteps.UnfoldOnly names ->
         let uu___1 =
           let uu___2 =
             let uu___3 = FStarC_List.map FStarC_Ident.lid_of_str names in
@@ -2759,7 +2773,7 @@ let (translate_norm_step :
         (FStarC_TypeChecker_Env.UnfoldUntil
            FStarC_Syntax_Syntax.delta_constant)
           :: uu___1
-    | FStar_Pervasives.UnfoldOnce names ->
+    | FStarC_NormSteps.UnfoldOnce names ->
         let uu___1 =
           let uu___2 =
             let uu___3 = FStarC_List.map FStarC_Ident.lid_of_str names in
@@ -2768,7 +2782,7 @@ let (translate_norm_step :
         (FStarC_TypeChecker_Env.UnfoldUntil
            FStarC_Syntax_Syntax.delta_constant)
           :: uu___1
-    | FStar_Pervasives.UnfoldFully names ->
+    | FStarC_NormSteps.UnfoldFully names ->
         let uu___1 =
           let uu___2 =
             let uu___3 = FStarC_List.map FStarC_Ident.lid_of_str names in
@@ -2777,7 +2791,7 @@ let (translate_norm_step :
         (FStarC_TypeChecker_Env.UnfoldUntil
            FStarC_Syntax_Syntax.delta_constant)
           :: uu___1
-    | FStar_Pervasives.UnfoldAttr names ->
+    | FStarC_NormSteps.UnfoldAttr names ->
         let uu___1 =
           let uu___2 =
             let uu___3 = FStarC_List.map FStarC_Ident.lid_of_str names in
@@ -2786,19 +2800,19 @@ let (translate_norm_step :
         (FStarC_TypeChecker_Env.UnfoldUntil
            FStarC_Syntax_Syntax.delta_constant)
           :: uu___1
-    | FStar_Pervasives.UnfoldQual names ->
+    | FStarC_NormSteps.UnfoldQual names ->
         [FStarC_TypeChecker_Env.UnfoldUntil
            FStarC_Syntax_Syntax.delta_constant;
         FStarC_TypeChecker_Env.UnfoldQual names]
-    | FStar_Pervasives.UnfoldNamespace names ->
+    | FStarC_NormSteps.UnfoldNamespace names ->
         [FStarC_TypeChecker_Env.UnfoldUntil
            FStarC_Syntax_Syntax.delta_constant;
         FStarC_TypeChecker_Env.UnfoldNamespace names]
-    | FStar_Pervasives.Unascribe -> [FStarC_TypeChecker_Env.Unascribe]
-    | FStar_Pervasives.NBE -> [FStarC_TypeChecker_Env.NBE]
-    | FStar_Pervasives.Unmeta -> [FStarC_TypeChecker_Env.Unmeta]
+    | FStarC_NormSteps.Unascribe -> [FStarC_TypeChecker_Env.Unascribe]
+    | FStarC_NormSteps.NBE -> [FStarC_TypeChecker_Env.NBE]
+    | FStarC_NormSteps.Unmeta -> [FStarC_TypeChecker_Env.Unmeta]
 let (translate_norm_steps :
-  FStar_Pervasives.norm_step Prims.list ->
+  FStarC_NormSteps.norm_step Prims.list ->
     FStarC_TypeChecker_Env.step Prims.list)
   =
   fun s ->

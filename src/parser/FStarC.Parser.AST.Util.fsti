@@ -20,13 +20,9 @@ open FStarC.Effect
 open FStarC.List
 open FStarC.Parser.AST
 
-(* Check if two decls are equal, ignoring range metadata.
-   Used in FStarC.Interactive.Incremental *)
-val eq_term (t1 t2:term) : bool
-val eq_binder (b1 b2:binder) : bool
-val eq_pattern (p1 p2:pattern) : bool
-val eq_decl (d1 d2:decl) : bool
-
+(* Returns every identifier mentioned in a decl (including
+the body). This is used from the interactive mode to provide
+hover information and jump-to-definition. *)
 val lidents_of_decl (t:decl) : list FStarC.Ident.lident
 
 type open_namespaces_and_abbreviations = {

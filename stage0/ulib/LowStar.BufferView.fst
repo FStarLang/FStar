@@ -23,11 +23,11 @@ type buffer_view (a:Type0) (rrel rel:B.srel a) (b:Type u#b) : Type u#b =
 
 let mk_buffer_view #src #rrel #rel #dest b v  = (| src, rrel, rel, BufferView b v |)
 
-let as_buffer #b v = BufferView?.buf (Mkdtuple4?._4 v)
+let as_buffer #b v = BufferView?.buf v._4
 
 let as_buffer_mk_buffer_view #_ #_ #_ #_ _ _ = ()
 
-let get_view #b v = BufferView?.v (Mkdtuple4?._4 v)
+let get_view #b v = BufferView?.v v._4
 
 let get_view_mk_buffer_view #_ #_ #_ #_ _ _ = ()
 
@@ -49,7 +49,7 @@ let view_indexing #b vb i
 
 let split_at_i (#b: _) (vb:buffer b) (i:nat{i < length vb}) (h:HS.mem)
     : GTot (frags:
-               (let src_t = Mkdtuple4?._1 vb in
+               (let src_t = vb._1 in
                 Seq.seq src_t &
                 Seq.lseq src_t (View?.n (get_view vb)) &
                 Seq.seq src_t){

@@ -5,14 +5,9 @@ open FStar_Pervasives
 open FStarC_Tactics_Result
 open FStarC_Tactics_Types
 
-module N        = FStarC_TypeChecker_Normalize
 module B        = FStarC_Tactics_V1_Basic
 module TM       = FStarC_Tactics_Monad
 module CTRW     = FStarC_Tactics_CtrlRewrite
-module RD       = FStarC_Reflection_V1_Data
-module EMB      = FStarC_Syntax_Embeddings
-module EMBBase  = FStarC_Syntax_Embeddings_Base
-module NBET     = FStarC_TypeChecker_NBETerm
 
 type ('a,'wp) tac_repr = proofstate -> 'a __result
 type 'a __tac = ('a, unit) tac_repr

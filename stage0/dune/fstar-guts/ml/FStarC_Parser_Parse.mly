@@ -105,6 +105,9 @@ let parse_use_lang_blob (extension_name:string)
 */
 %token <string option> SEMICOLON_OP
 
+(* IMPORTANT: Please extend the string_of_token function in FStarC_Parser_ParseIt.ml
+   to make sure they are printed properly, and that --debug Tokens works. *)
+
 %token ASSUME NEW LOGIC ATTRIBUTES
 %token IRREDUCIBLE UNFOLDABLE INLINE OPAQUE UNFOLD INLINE_FOR_EXTRACTION
 %token NOEXTRACT
@@ -373,7 +376,7 @@ typeclassDecl:
       }
 
 restriction:
-  | LBRACE ids=separated_list(COMMA, id=ident renamed=option(AS id=ident {id} ) {(id, renamed)}) RBRACE
+  | LBRACE ids=separated_list(COMMA, id=identOrOperator renamed=option(AS id=identOrOperator {id} ) {(id, renamed)}) RBRACE
       { FStarC_Syntax_Syntax.AllowList ids }
   |   { FStarC_Syntax_Syntax.Unrestricted  }
 
@@ -848,8 +851,14 @@ qlidentOrOperator:
   | LPAREN id=operator RPAREN
     { lid_of_ns_and_id [] (id_of_text (compile_op' (string_of_id id) (range_of_id id))) }
 
+%public
 %inline lidentOrOperator:
   | id=lident { id }
+  | LPAREN id=operator RPAREN
+    { mk_ident (compile_op' (string_of_id id) (range_of_id id), range_of_id id) }
+
+%inline identOrOperator:
+  | id=ident { id }
   | LPAREN id=operator RPAREN
     { mk_ident (compile_op' (string_of_id id) (range_of_id id), range_of_id id) }
 
@@ -1302,7 +1311,8 @@ tmEqWith(X):
 %inline recordTerm:
   | LBRACE e=recordExp RBRACE { e }
 
-tmNoEqWith(X):
+%public
+tmNoEqNoRecordWith(X):
   | e1=tmNoEqWith(X) COLON_COLON e2=tmNoEqWith(X)
       { consTerm (rr $loc) e1 e2 }
   | e1=tmNoEqWith(X) AMP e2=tmNoEqWith(X)
@@ -1329,12 +1339,15 @@ tmNoEqWith(X):
       { mkApp op [ e1, Infix; e2, Nothing ] (rr $loc) }
  | e1=tmNoEqWith(X) op=OPINFIX4 e2=tmNoEqWith(X)
       { mk_term (Op(mk_ident(op, rr $loc(op)), [e1; e2])) (rr $loc) Un}
-  | e=recordTerm { e }
   | BACKTICK_PERC e=atomicTerm
       { mk_term (VQuote e) (rr $loc) Un }
   | op=TILDE e=atomicTerm
       { mk_term (Op(mk_ident (op, rr $loc(op)), [e])) (rr $loc) Formula }
   | e=X { e }
+
+tmNoEqWith(X):
+  | e=tmNoEqNoRecordWith(X) { e }
+  | e=recordTerm { e }
 
 binop_name:
   | o=OPINFIX0a              { mk_ident (o, rr $loc) }
@@ -1666,6 +1679,7 @@ string:
   | op=OPPREFIX     { mk_ident (op, rr $loc) }
   | op=binop_name   { op }
   | op=TILDE        { mk_ident (op, rr $loc) }
+  | op=MINUS        { mk_ident ("-", rr $loc) }
   | op=and_op       {op}
   | op=let_op       {op}
   | op=quantifier_op {op}

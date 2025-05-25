@@ -6,7 +6,7 @@ let (dbg_NormRebuild : Prims.bool FStarC_Effect.ref) =
 let (maybe_debug :
   FStarC_TypeChecker_Cfg.cfg ->
     FStarC_Syntax_Syntax.term ->
-      (FStarC_Syntax_Syntax.term * FStarC_Util.time_ns)
+      (FStarC_Syntax_Syntax.term * FStarC_Timing.time_ns)
         FStar_Pervasives_Native.option -> unit)
   =
   fun cfg ->
@@ -17,9 +17,9 @@ let (maybe_debug :
         then
           match dbg with
           | FStar_Pervasives_Native.Some (tm, time_then) ->
-              let time_now = FStarC_Util.now_ns () in
+              let time_now = FStarC_Timing.now_ns () in
               let uu___ =
-                let uu___1 = FStarC_Util.time_diff_ms time_then time_now in
+                let uu___1 = FStarC_Timing.diff_ms time_then time_now in
                 FStarC_Class_Show.show FStarC_Class_Show.showable_int uu___1 in
               let uu___1 =
                 FStarC_Class_Show.show FStarC_Syntax_Print.showable_term tm in
@@ -47,7 +47,7 @@ let cases :
 type 'a cfg_memo =
   (FStarC_TypeChecker_Cfg.cfg * 'a) FStarC_Syntax_Syntax.memo
 let fresh_memo : 'a . unit -> 'a FStarC_Syntax_Syntax.memo =
-  fun uu___ -> FStarC_Util.mk_ref FStar_Pervasives_Native.None
+  fun uu___ -> FStarC_Effect.mk_ref FStar_Pervasives_Native.None
 type closure =
   | Clos of ((FStarC_Syntax_Syntax.binder FStar_Pervasives_Native.option *
   closure * FStarC_Syntax_Syntax.subst_t FStarC_Syntax_Syntax.memo)
@@ -587,7 +587,7 @@ let (closure_as_term :
 let (unembed_binder_knot :
   FStarC_Syntax_Syntax.binder FStarC_Syntax_Embeddings_Base.embedding
     FStar_Pervasives_Native.option FStarC_Effect.ref)
-  = FStarC_Util.mk_ref FStar_Pervasives_Native.None
+  = FStarC_Effect.mk_ref FStar_Pervasives_Native.None
 let (unembed_binder :
   FStarC_Syntax_Syntax.term ->
     FStarC_Syntax_Syntax.binder FStar_Pervasives_Native.option)
@@ -1576,7 +1576,7 @@ let (__get_n_binders :
              FStarC_Syntax_Syntax.comp))
     FStarC_Effect.ref)
   =
-  FStarC_Util.mk_ref
+  FStarC_Effect.mk_ref
     (fun e ->
        fun s ->
          fun n -> fun t -> failwith "Impossible: __get_n_binders unset")
@@ -1780,7 +1780,7 @@ let (is_quantified_const :
                      FStarC_Syntax_Syntax.bv_eq bv1 bv'
                  | uu___1 -> false in
                let replace_full_applications_with bv1 arity s t =
-                 let chgd = FStarC_Util.mk_ref false in
+                 let chgd = FStarC_Effect.mk_ref false in
                  let t' =
                    FStarC_Syntax_Visit.visit_term false
                      (fun t1 ->
@@ -2157,44 +2157,6 @@ let (is_forall_const :
                              uu___4))))
            | uu___1 -> Obj.magic (Obj.repr FStar_Pervasives_Native.None))
         uu___1 uu___
-let (is_extract_as_attr :
-  FStarC_Syntax_Syntax.attribute ->
-    FStarC_Syntax_Syntax.term FStar_Pervasives_Native.option)
-  =
-  fun attr ->
-    let uu___ = FStarC_Syntax_Util.head_and_args attr in
-    match uu___ with
-    | (head, args) ->
-        let uu___1 =
-          let uu___2 =
-            let uu___3 = FStarC_Syntax_Subst.compress head in
-            uu___3.FStarC_Syntax_Syntax.n in
-          (uu___2, args) in
-        (match uu___1 with
-         | (FStarC_Syntax_Syntax.Tm_fvar fv, (t, uu___2)::[]) when
-             FStarC_Syntax_Syntax.fv_eq_lid fv
-               FStarC_Parser_Const.extract_as_lid
-             ->
-             let uu___3 =
-               let uu___4 = FStarC_Syntax_Subst.compress t in
-               uu___4.FStarC_Syntax_Syntax.n in
-             (match uu___3 with
-              | FStarC_Syntax_Syntax.Tm_quoted (impl, uu___4) ->
-                  FStar_Pervasives_Native.Some impl
-              | uu___4 -> FStar_Pervasives_Native.None)
-         | uu___2 -> FStar_Pervasives_Native.None)
-let (has_extract_as_attr :
-  FStarC_TypeChecker_Env.env ->
-    FStarC_Ident.lid ->
-      FStarC_Syntax_Syntax.term FStar_Pervasives_Native.option)
-  =
-  fun g ->
-    fun lid ->
-      let uu___ = FStarC_TypeChecker_Env.lookup_attrs_of_lid g lid in
-      match uu___ with
-      | FStar_Pervasives_Native.Some attrs ->
-          FStarC_Util.find_map attrs is_extract_as_attr
-      | FStar_Pervasives_Native.None -> FStar_Pervasives_Native.None
 let rec (norm :
   FStarC_TypeChecker_Cfg.cfg ->
     env -> stack -> FStarC_Syntax_Syntax.term -> FStarC_Syntax_Syntax.term)
@@ -2490,7 +2452,7 @@ let rec (norm :
                      ->
                      let tm' = closure_as_term cfg env1 tm in
                      let uu___4 =
-                       FStarC_Util.record_time_ms
+                       FStarC_Timing.record_ms
                          (fun uu___5 -> nbe_eval cfg s tm') in
                      (match uu___4 with
                       | (tm_norm, elapsed) ->
@@ -2664,7 +2626,7 @@ let rec (norm :
                            FStarC_TypeChecker_Cfg.compat_memo_ignore_cfg =
                              (cfg.FStarC_TypeChecker_Cfg.compat_memo_ignore_cfg)
                          } in
-                       let t0 = FStarC_Util.now_ns () in
+                       let t0 = FStarC_Timing.now_ns () in
                        let tm_normed = norm cfg'1 env1 [] tm in
                        maybe_debug cfg tm_normed
                          (FStar_Pervasives_Native.Some (tm, t0));
@@ -3025,7 +2987,7 @@ let rec (norm :
                                        let uu___6 =
                                          let uu___7 =
                                            let uu___8 =
-                                             FStarC_Util.mk_ref
+                                             FStarC_Effect.mk_ref
                                                (FStar_Pervasives_Native.Some
                                                   (cfg, ([], a))) in
                                            (env1, a, uu___8, false) in
@@ -3966,7 +3928,7 @@ and (do_unfold_fv :
                     ->
                     let uu___2 =
                       FStarC_Util.find_map se.FStarC_Syntax_Syntax.sigattrs
-                        is_extract_as_attr in
+                        FStarC_Parser_Const_ExtractAs.is_extract_as_attr in
                     (match uu___2 with
                      | FStar_Pervasives_Native.Some impl ->
                          FStar_Pervasives_Native.Some ([], impl)
@@ -7568,7 +7530,7 @@ and (do_rebuild :
                                             let uu___6 =
                                               let uu___7 =
                                                 let uu___8 =
-                                                  FStarC_Util.mk_ref
+                                                  FStarC_Effect.mk_ref
                                                     (if
                                                        (cfg1.FStarC_TypeChecker_Cfg.steps).FStarC_TypeChecker_Cfg.hnf
                                                      then
@@ -7667,7 +7629,7 @@ and (norm_residual_comp :
         }
 let (reflection_env_hook :
   FStarC_TypeChecker_Env.env FStar_Pervasives_Native.option FStarC_Effect.ref)
-  = FStarC_Util.mk_ref FStar_Pervasives_Native.None
+  = FStarC_Effect.mk_ref FStar_Pervasives_Native.None
 let (normalize_with_primitive_steps :
   FStarC_TypeChecker_Primops_Base.primitive_step Prims.list ->
     FStarC_TypeChecker_Env.steps ->
@@ -7717,7 +7679,7 @@ let (normalize_with_primitive_steps :
                       t.FStarC_Syntax_Syntax.pos
                       "normalize_with_primitive_steps call" e t;
                     (let uu___8 =
-                       FStarC_Util.record_time_ms
+                       FStarC_Timing.record_ms
                          (fun uu___9 ->
                             if is_nbe then nbe_eval c s t else norm c [] [] t) in
                      match uu___8 with
@@ -7793,7 +7755,7 @@ let (normalize_comp :
              (let uu___7 =
                 FStarC_Errors.with_ctx "While normalizing a computation type"
                   (fun uu___8 ->
-                     FStarC_Util.record_time_ms
+                     FStarC_Timing.record_ms
                        (fun uu___9 -> norm_comp cfg [] c)) in
               match uu___7 with
               | (c1, ms) ->

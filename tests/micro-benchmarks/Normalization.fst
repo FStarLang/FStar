@@ -83,3 +83,14 @@ let test_u32_of_char () =
   assert_norm (FStar.Char.u32_of_char 'c' == 99ul);
   assert_norm (FStar.Char.u32_of_char '→' == 8594ul)
 #pop-options
+
+module T = FStar.Tactics
+let test_reveal_hide (a:Type) (x:a) =
+  let open FStar.Ghost in
+  assert (reveal (hide x) == x)
+       by T.(norm [primops]; trefl())
+
+let test_reveal_hide_nbe (a:Type) (x:a) =
+  let open FStar.Ghost in
+  assert (reveal (hide x) == x)
+       by T.(norm [nbe; primops]; trefl())

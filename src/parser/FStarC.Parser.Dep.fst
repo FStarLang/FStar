@@ -540,6 +540,8 @@ let dep_subsumed_by d d' =
       | PreferInterface l', FriendImplementation l -> l=l'
       | _ -> d = d'
 
+let warned_about : ref (list (option intf_and_impl)) = mk_ref Nil
+
 (** For all items [i] in the map that start with [prefix], add an additional
     entry where [i] stripped from [prefix] points to the same value. Returns a
     boolean telling whether the map was modified.
@@ -566,8 +568,10 @@ let enter_namespace
       begin
         let suffix_filename = SMap.try_find original_map suffix in
         if implicit_open &&
-           suffix_exists suffix_filename
+           suffix_exists suffix_filename &&
+           not (List.mem suffix_filename !warned_about)
         then let str = suffix_filename |> must |> intf_and_impl_to_string in
+             warned_about := suffix_filename :: !warned_about;
              let open FStarC.Pprint in
              log_issue0 Errors.Warning_UnexpectedFile [
                 flow (break_ 1) [
@@ -1447,6 +1451,7 @@ let collect (all_cmd_line_files: list file_name)
     : list file_name
     & deps //topologically sorted transitive dependences of all_cmd_line_files
     =
+  Stats.record "Parser.Dep.collect" fun () ->
   let all_cmd_line_files =
     match all_cmd_line_files with
     | [] -> all_files_in_include_paths ()

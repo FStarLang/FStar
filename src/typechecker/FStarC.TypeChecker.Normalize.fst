@@ -43,7 +43,6 @@ module BU = FStarC.Util
 module FC = FStarC.Const
 module PC = FStarC.Parser.Const
 module U  = FStarC.Syntax.Util
-module I  = FStarC.Ident
 module EMB = FStarC.Syntax.Embeddings
 module TcComm = FStarC.TypeChecker.Common
 module TEQ = FStarC.TypeChecker.TermEqAndSimplify
@@ -160,7 +159,7 @@ instance showable_closure : showable closure = {
 
 instance showable_stack_elt : showable stack_elt = {
   show = (function
-          | Arg (c, _, _) -> BU.format1 "Closure %s" (show c)
+          | Arg (c, _, _) -> BU.format1 "Arg %s" (show c)
           | MemoLazy _ -> "MemoLazy"
           | Abs (_, bs, _, _, _) -> BU.format1 "Abs %s" (show <| List.length bs)
           | UnivArgs _ -> "UnivArgs"
@@ -466,72 +465,11 @@ let reduce_equality norm_cb cfg tm =
 (* Main normalization function of the abstract machine                                                              *)
 (********************************************************************************************************************)
 
-(*
- * AR: norm requests can some times have additional arguments since we flatten the arguments sometimes in the typechecker
- *     so, a request may look like: normalize_term [a; b; c; d]
- *     in such cases, we rejig the request to be (normalize_term a) [b; c; d]
- *)
-type norm_request_t =
-  | Norm_request_none  //not a norm request
-  | Norm_request_ready  //in the form that can be reduced immediately
-  | Norm_request_requires_rejig  //needs rejig
-
-let is_norm_request (hd:term) (args:args) :norm_request_t =
-  let aux (min_args:int) :norm_request_t = args |> List.length |> (fun n -> if n < min_args then Norm_request_none
-                                                                            else if n = min_args then Norm_request_ready
-                                                                            else Norm_request_requires_rejig)
-  in
-  match (U.un_uinst hd).n with
-  | Tm_fvar fv when S.fv_eq_lid fv PC.normalize_term -> aux 2
-  | Tm_fvar fv when S.fv_eq_lid fv PC.normalize -> aux 1
-  | Tm_fvar fv when S.fv_eq_lid fv PC.norm -> aux 3
-  | _ -> Norm_request_none
-
-let should_consider_norm_requests cfg = (not (cfg.steps.no_full_norm)) && (not (Ident.lid_equals cfg.tcenv.curmodule PC.prims_lid))
-
-let rejig_norm_request (hd:term) (args:args) :term =
-  match (U.un_uinst hd).n with
-  | Tm_fvar fv when S.fv_eq_lid fv PC.normalize_term ->
-    (match args with
-     | t1::t2::rest when List.length rest > 0 -> mk_app (mk_app hd [t1; t2]) rest
-     | _ -> failwith "Impossible! invalid rejig_norm_request for normalize_term")
-  | Tm_fvar fv when S.fv_eq_lid fv PC.normalize ->
-    (match args with
-     | t::rest when List.length rest > 0 -> mk_app (mk_app hd [t]) rest
-     | _ -> failwith "Impossible! invalid rejig_norm_request for normalize")
-  | Tm_fvar fv when S.fv_eq_lid fv PC.norm ->
-    (match args with
-     | t1::t2::t3::rest when List.length rest > 0 -> mk_app (mk_app hd [t1; t2; t3]) rest
-     | _ -> failwith "Impossible! invalid rejig_norm_request for norm")
-  | _ -> failwith ("Impossible! invalid rejig_norm_request for: %s" ^ (show hd))
+let should_consider_norm_requests cfg =
+  not (cfg.steps.no_full_norm) &&
+  not (Ident.lid_equals cfg.tcenv.curmodule PC.prims_lid)
 
 let is_nbe_request s = BU.for_some ((=?) NBE) s
-
-let get_norm_request cfg (full_norm:term -> term) args =
-    let parse_steps s =
-      match PO.try_unembed_simple s with
-      | Some steps -> Some (Cfg.translate_norm_steps steps)
-      | None -> None
-    in
-    let inherited_steps =
-        (if cfg.steps.erase_universes then [EraseUniverses] else [])
-      @ (if cfg.steps.allow_unbound_universes then [AllowUnboundUniverses] else [])
-      @ (if cfg.steps.nbe_step then [NBE] else []) // ZOE : NBE can be set as the default mode
-    in
-    (* We always set UnfoldTac: do not unfold logical connectives *)
-    match args with
-    | [_; (tm, _)]
-    | [(tm, _)] ->
-      let s = [Beta; Zeta; Iota; Primops; UnfoldUntil delta_constant; Reify] in
-      Some (DontUnfoldAttr [PC.tac_opaque_attr] :: inherited_steps @ s, tm)
-    | [(steps, _); _; (tm, _)] ->
-      begin
-      match parse_steps (full_norm steps) with
-      | None -> None
-      | Some s -> Some (DontUnfoldAttr [PC.tac_opaque_attr] :: inherited_steps @ s, tm)
-      end
-    | _ ->
-      None
 
 let nbe_eval (cfg:cfg) (s:steps) (tm:term) : term =
     let delta_level =
@@ -870,6 +808,19 @@ let is_forall_const cfg (phi : term) : option term =
 
     | _ -> None
 
+(* For each of the norm requests in pervasives. *)
+type norm_request_kind =
+  | NormalizeTerm
+  | Normalize
+  | Norm
+
+let is_norm_request_head (fv : S.fv) : option norm_request_kind =
+  match () with
+  | _ when S.fv_eq_lid fv PC.normalize_term -> Some NormalizeTerm
+  | _ when S.fv_eq_lid fv PC.normalize -> Some Normalize
+  | _ when S.fv_eq_lid fv PC.norm -> Some Norm
+  | _ -> None
+
 (* GM: Please consider this function private outside of this recursive
  * group, and call `normalize` instead. `normalize` will print timing
  * information when --debug NormTop is given, which makes it a
@@ -916,6 +867,12 @@ let rec norm : cfg -> env -> stack -> term -> term =
             log_unfolding cfg (fun () -> BU.print1 " >> This is a constructor: %s\n" (show t));
             rebuild cfg empty_env stack t
 
+          // Normalization requests
+          | Tm_fvar fv when
+              should_consider_norm_requests cfg &&
+              Some? (is_norm_request_head fv) ->
+            handle_norm_request cfg env stack (Some?.v (is_norm_request_head fv)) t
+
           // A top-level name, possibly unfold it.
           // In either case, also drop the environment, no free indices here.
           | Tm_fvar fv ->
@@ -938,84 +895,6 @@ let rec norm : cfg -> env -> stack -> term -> term =
             let qi = S.on_antiquoted (norm cfg env []) qi in
             let t = mk (Tm_quoted (qt, qi)) t.pos in
             rebuild cfg env stack (closure_as_term cfg env t)
-
-          | Tm_app {hd; args}
-            when should_consider_norm_requests cfg &&
-                 is_norm_request hd args = Norm_request_requires_rejig ->
-            if cfg.debug.print_normalized
-            then BU.print_string "Rejigging norm request ... \n";
-            norm cfg env stack (rejig_norm_request hd args)
-
-          | Tm_app {hd; args}
-            when should_consider_norm_requests cfg &&
-                 is_norm_request hd args = Norm_request_ready ->
-            if cfg.debug.print_normalized
-            then BU.print2 "Potential norm request with hd = %s and args = %s ... \n"
-                   (show hd) (Print.args_to_string args);
-
-            let cfg' = { cfg with steps = { cfg.steps with unfold_only = None
-                                                         ; unfold_fully = None
-                                                         ; do_not_unfold_pure_lets = false };
-                                  delta_level=[Unfold delta_constant];
-                                  normalize_pure_lets=true} in
-            begin
-            match get_norm_request cfg (norm cfg' env []) args with
-            | None -> //just normalize it as a normal application
-              if cfg.debug.print_normalized
-              then BU.print_string "Norm request None ... \n";
-              let stack =
-                stack |>
-                List.fold_right
-                  (fun (a, aq) stack -> Arg (Clos(env, a, fresh_memo (), false),aq,t.pos)::stack)
-                  args
-              in
-              log cfg  (fun () -> BU.print1 "\tPushed %s arguments\n" (string_of_int <| List.length args));
-              norm cfg env stack hd
-
-            | Some (s, tm) when is_nbe_request s ->
-              let tm' = closure_as_term cfg env tm in
-              let tm_norm, elapsed = Timing.record_ms (fun _ -> nbe_eval cfg s tm') in
-              if cfg.debug.print_normalized
-              then begin
-                let cfg' = Cfg.config s cfg.tcenv in
-                // BU.print1 "NBE result timing (%s ms)\n"
-                //        (show (snd (BU.time_diff start fin)))
-                BU.print4 "NBE result timing (%s ms){\nOn term {\n%s\n}\nwith steps {%s}\nresult is{\n\n%s\n}\n}\n"
-                       (show elapsed)
-                       (show tm')
-                       (show cfg')
-                       (show tm_norm)
-              end;
-              rebuild cfg env stack tm_norm
-
-            | Some (s, tm) ->
-              let open FStarC.Errors.Msg in
-              let open FStarC.Pprint in
-              if cfg.debug.print_normalized then
-                Errors.diag tm.pos [
-                  text <| BU.format1 "Starting norm request on `%s`." (show tm);
-                  text "Steps =" ^/^ text (show s);
-                  ];
-              let delta_level =
-                if s |> BU.for_some (function UnfoldUntil _ | UnfoldOnly _ | UnfoldFully _ -> true | _ -> false)
-                then [Unfold delta_constant]
-                else if cfg.steps.for_extraction
-                then [Env.Eager_unfolding_only; Env.InliningDelta]
-                else [NoDelta]
-              in
-              let cfg' = {cfg with steps = ({ to_fsteps s
-                                              with in_full_norm_request=true;
-                                                   for_extraction=cfg.steps.for_extraction})
-                               ; delta_level = delta_level
-                               ; normalize_pure_lets = true } in
-              (* We reduce the term in an empty stack to prevent unwanted interactions.
-              Later, we rebuild the normalized term with the current stack. This is
-              not a tail-call, but this happens rarely enough that it should not be a problem. *)
-              let t0 = Timing.now_ns () in
-              let tm_normed = norm cfg' env [] tm in
-              maybe_debug cfg tm_normed (Some (tm, t0));
-              rebuild cfg env stack tm_normed
-            end
 
           | Tm_type u ->
             let u = norm_universe cfg env u in
@@ -1548,6 +1427,100 @@ and do_unfold_fv (cfg:Cfg.cfg) stack (t0:term) (qninfo : qninfo) (f:fv) : term =
                 | _ -> failwith (BU.format1 "Impossible: missing universe instantiation on %s" (show f.fv_name.v))
          else norm cfg empty_env stack t
          end
+
+and handle_norm_request (cfg:Cfg.cfg) env stack (k : norm_request_kind) (hd : term) =
+  let debug = cfg.debug.print_normalized in
+  if debug then
+    BU.print2 "handle_norm_request %s, stack = %s\n" (show hd) (show (fst <| firstn 5 stack));
+
+  let inherited_steps =
+      (if cfg.steps.erase_universes then [EraseUniverses] else [])
+    @ (if cfg.steps.allow_unbound_universes then [AllowUnboundUniverses] else [])
+    @ (if cfg.steps.nbe_step then [NBE] else [])
+  in
+  let parse_steps s =
+    match PO.try_unembed_simple s with
+    | Some steps -> Some (Cfg.translate_norm_steps steps)
+    | None -> None
+  in
+  let env_term_steps_stack =
+    match k, stack with
+    | NormalizeTerm, UnivArgs _ :: Arg (Clos (_, _, _, _) , _, _) :: Arg (Clos (a_env, a_t, _, _) , _, _) :: stack'
+    | NormalizeTerm, Arg (Clos (_, _, _, _) , _, _) :: Arg (Clos (a_env, a_t, _, _) , _, _) :: stack'
+    | Normalize, Arg (Clos (a_env, a_t, _, _) , _, _) :: stack' ->
+      let steps = [Beta; Zeta; Iota; Primops; UnfoldUntil delta_constant; Reify] in
+      let steps = DontUnfoldAttr [PC.tac_opaque_attr] :: inherited_steps @ steps in
+      Some (a_env, a_t, steps), stack'
+    | Norm, UnivArgs _ :: Arg (Clos (s_env, s_t, _, _), _, _) :: Arg (Clos (_, _, _, _) , _, _) :: Arg (Clos (a_env, a_t, _, _) , _, _) :: stack'
+    | Norm, Arg (Clos (s_env, s_t, _, _), _, _) :: Arg (Clos (_, _, _, _) , _, _) :: Arg (Clos (a_env, a_t, _, _) , _, _) :: stack' ->
+      let cfg' = { cfg with steps = { cfg.steps with unfold_only = None
+                                                  ; unfold_fully = None
+                                                  ; do_not_unfold_pure_lets = false };
+                            delta_level=[Unfold delta_constant];
+                            normalize_pure_lets=true} in
+      let s_t = norm cfg' s_env [] s_t in
+      begin match parse_steps s_t with
+      | Some s ->
+        let s = DontUnfoldAttr [PC.tac_opaque_attr] :: inherited_steps @ s in
+        Some (a_env, a_t, s), stack'
+      | None ->
+        if debug then
+          BU.print2 "handle_norm_request: couldn't parse steps %s in env %s\n" (show s_t) (show s_env);
+        None, stack
+      end
+    | _ ->
+      None, stack
+  in
+  match env_term_steps_stack with
+  | None, stack ->
+    (* Couldn't parse the norm request, treat as a normal application, args already on stack *)
+    if debug then
+      BU.print2 "Couldn't recognize norm request %s;; stack = %s\n" (show hd) (show stack);
+    rebuild cfg env stack hd
+
+  | Some (t_env, tm, s), stack when is_nbe_request s ->
+     let tm' = closure_as_term cfg t_env tm in
+     let tm_norm, elapsed = Timing.record_ms (fun _ -> nbe_eval cfg s tm') in
+     if debug then
+     begin
+       let cfg' = Cfg.config s cfg.tcenv in
+       // BU.print1 "NBE result timing (%s ms)\n"
+       //        (show (snd (BU.time_diff start fin)))
+       BU.print4 "NBE result timing (%s ms){\nOn term {\n%s\n}\nwith steps {%s}\nresult is{\n\n%s\n}\n}\n"
+              (show elapsed)
+              (show tm')
+              (show cfg')
+              (show tm_norm)
+     end;
+     rebuild cfg env stack tm_norm
+
+  | Some (t_env, tm, s), stack ->
+    let open FStarC.Errors.Msg in
+    let open FStarC.Pprint in
+    if debug then
+      Errors.diag tm.pos [
+        text <| BU.format1 "Starting norm request on `%s`." (show tm);
+        text "Steps =" ^/^ text (show s);
+        ];
+    let delta_level =
+      if s |> BU.for_some (function UnfoldUntil _ | UnfoldOnly _ | UnfoldFully _ -> true | _ -> false)
+      then [Unfold delta_constant]
+      else if cfg.steps.for_extraction
+      then [Env.Eager_unfolding_only; Env.InliningDelta]
+      else [NoDelta]
+    in
+    let cfg' = {cfg with steps = ({ to_fsteps s
+                                    with in_full_norm_request=true;
+                                          for_extraction=cfg.steps.for_extraction})
+                      ; delta_level = delta_level
+                      ; normalize_pure_lets = true } in
+    (* We reduce the term in an empty stack to prevent unwanted interactions.
+    Later, we rebuild the normalized term with the current stack. This is
+    not a tail-call, but this happens rarely enough that it should not be a problem. *)
+    let t0 = Timing.now_ns () in
+    let tm_normed = norm cfg' t_env [] tm in
+    maybe_debug cfg tm_normed (Some (tm, t0));
+    rebuild cfg t_env stack tm_normed
 
 and reduce_impure_comp cfg env stack (head : term) // monadic term
                                      (m : either monad_name (monad_name & monad_name))
@@ -2745,13 +2718,14 @@ and norm_residual_comp cfg env (rc:residual_comp) : residual_comp =
 let reflection_env_hook = mk_ref None
 
 let normalize_with_primitive_steps ps s e (t:term) =
+  Stats.record "norm_term" fun () ->
   let is_nbe = is_nbe_request s in
   let maybe_nbe = if is_nbe then " (NBE)" else "" in
   Errors.with_ctx ("While normalizing a term" ^ maybe_nbe) (fun () ->
     Profiling.profile (fun () ->
       let c = config' ps s e in
       reflection_env_hook := Some e;
-      plugin_unfold_warn_ctr := 10;
+      plugin_unfold_warn_ctr := 1;
       log_top c (fun () -> BU.print2 "\nStarting normalizer%s for (%s) {\n" maybe_nbe (show t));
       log_top c (fun () -> BU.print1 ">>> cfg = %s\n" (show c));
       def_check_scoped t.pos "normalize_with_primitive_steps call" e t;
@@ -2775,10 +2749,11 @@ let normalize s e t =
                       "FStarC.TypeChecker.Normalize.normalize"
 
 let normalize_comp s e c =
+  Stats.record "norm_comp" fun () ->
   Profiling.profile (fun () ->
     let cfg = config s e in
     reflection_env_hook := Some e;
-    plugin_unfold_warn_ctr := 10;
+    plugin_unfold_warn_ctr := 1;
     log_top cfg (fun () -> BU.print1 "Starting normalizer for computation (%s) {\n" (show c));
     log_top cfg (fun () -> BU.print1 ">>> cfg = %s\n" (show cfg));
     def_check_scoped c.pos "normalize_comp call" e c;

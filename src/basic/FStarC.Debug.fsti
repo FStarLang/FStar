@@ -51,7 +51,10 @@ val extreme () : bool
 (* Enable a list of debug toggles. If will also call enable()
 is key is non-empty, and will recognize "Low", "Medium",
 "High", "Extreme" as special and call the corresponding
-set_level_* function. *)
+set_level_* function.
+
+If any elemnt of the list starts with '-', then we disable
+that toggle instead. *)
 val enable_toggles (keys : list string) : unit
 
 (* Sets the debug level to zero and sets all registered toggles

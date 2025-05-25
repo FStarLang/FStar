@@ -3,7 +3,6 @@ module FStar.Reflection.TermEq
 open FStar.Stubs.Reflection.Types
 open FStar.Stubs.Reflection.V2.Data
 open FStar.Stubs.Reflection.V2.Builtins
-module L = FStar.List.Tot
 
 (* Auxiliary... would be good to move. *)
 let rec allP0 #a (pred : a -> Type0) (l : list a) : Type0 =

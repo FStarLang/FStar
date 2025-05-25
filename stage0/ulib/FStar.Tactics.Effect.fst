@@ -45,6 +45,8 @@ let postprocess_with _ = ()
 
 let postprocess_for_extraction_with _ = ()
 
+let postprocess_type = ()
+
 #set-options "--no_tactics"
 
 let unfold_with_tactic _ _ = ()

@@ -75,7 +75,7 @@ let (mlexpr_of_range :
         FStarC_Extraction_ML_Syntax.ml_string_ty
         (FStarC_Extraction_ML_Syntax.MLE_Const
            (FStarC_Extraction_ML_Syntax.MLC_String s)) in
-    let drop_path = FStarC_Util.basename in
+    let drop_path = FStarC_Filepath.basename in
     let uu___ =
       let uu___1 =
         let uu___2 =
@@ -479,16 +479,17 @@ let (is_xtuple :
   fun uu___ ->
     match uu___ with
     | (ns, n) ->
-        let uu___1 =
-          let uu___2 = FStarC_Util.concat_l "." (FStarC_List.op_At ns [n]) in
-          FStarC_Parser_Const.is_tuple_datacon_string uu___2 in
-        if uu___1
-        then
-          let uu___2 =
-            let uu___3 = FStarC_Util.char_at n (Prims.of_int (7)) in
-            FStarC_Util.int_of_char uu___3 in
-          FStar_Pervasives_Native.Some uu___2
-        else FStar_Pervasives_Native.None
+        let uu___1 = FStarC_Util.concat_l "." (FStarC_List.op_At ns [n]) in
+        FStarC_Parser_Const_Tuples.get_tuple_datacon_arity uu___1
+let (is_xtuple_ty :
+  (Prims.string Prims.list * Prims.string) ->
+    Prims.int FStar_Pervasives_Native.option)
+  =
+  fun uu___ ->
+    match uu___ with
+    | (ns, n) ->
+        let uu___1 = FStarC_Util.concat_l "." (FStarC_List.op_At ns [n]) in
+        FStarC_Parser_Const_Tuples.get_tuple_tycon_arity uu___1
 let (resugar_exp :
   FStarC_Extraction_ML_Syntax.mlexpr -> FStarC_Extraction_ML_Syntax.mlexpr) =
   fun e ->
@@ -527,23 +528,6 @@ let record_fields :
                let uu___1 = FStarC_Ident.ident_of_lid f in
                FStarC_Ident.string_of_id uu___1 in
              (uu___, e)) fs vs
-let (is_xtuple_ty :
-  (Prims.string Prims.list * Prims.string) ->
-    Prims.int FStar_Pervasives_Native.option)
-  =
-  fun uu___ ->
-    match uu___ with
-    | (ns, n) ->
-        let uu___1 =
-          let uu___2 = FStarC_Util.concat_l "." (FStarC_List.op_At ns [n]) in
-          FStarC_Parser_Const.is_tuple_constructor_string uu___2 in
-        if uu___1
-        then
-          let uu___2 =
-            let uu___3 = FStarC_Util.char_at n (Prims.of_int (5)) in
-            FStarC_Util.int_of_char uu___3 in
-          FStar_Pervasives_Native.Some uu___2
-        else FStar_Pervasives_Native.None
 let (resugar_mlty :
   FStarC_Extraction_ML_Syntax.mlty -> FStarC_Extraction_ML_Syntax.mlty) =
   fun t ->

@@ -97,7 +97,7 @@ let embed_string (s:string) : term =
 (* For compatibility: the typechecker sets this attribute for all
 projectors. Karamel relies on it to do inlining. *)
 let substitute_attr : term =
-  `Pervasives.Substitute
+  `Attributes.Substitute
 
 let mk_proj_decl (is_method:bool)
                  (tyqn:name) ctorname

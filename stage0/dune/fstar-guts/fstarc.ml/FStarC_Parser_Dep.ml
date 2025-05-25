@@ -18,15 +18,16 @@ let with_file_outchannel :
   'a . Prims.string -> (FStarC_Util.out_channel -> 'a) -> 'a =
   fun fn ->
     fun k ->
-      let outc = FStarC_Util.open_file_for_writing fn in
-      let r =
-        try (fun uu___ -> match () with | () -> k outc) ()
-        with
-        | uu___ ->
-            (FStarC_Util.close_out_channel outc;
-             FStarC_Util.delete_file fn;
-             FStarC_Effect.raise uu___) in
-      FStarC_Util.close_out_channel outc; r
+      FStarC_Util.maybe_create_parent fn;
+      (let outc = FStarC_Util.open_file_for_writing fn in
+       let r =
+         try (fun uu___1 -> match () with | () -> k outc) ()
+         with
+         | uu___1 ->
+             (FStarC_Util.close_out_channel outc;
+              FStarC_Util.delete_file fn;
+              FStarC_Effect.raise uu___1) in
+       FStarC_Util.close_out_channel outc; r)
 type verify_mode =
   | VerifyAll 
   | VerifyUserList 
@@ -42,7 +43,7 @@ let (uu___is_VerifyFigureItOut : verify_mode -> Prims.bool) =
 type intf_and_impl =
   (Prims.string FStar_Pervasives_Native.option * Prims.string
     FStar_Pervasives_Native.option)
-type files_for_module_name = intf_and_impl FStarC_Util.smap
+type files_for_module_name = intf_and_impl FStarC_SMap.t
 let (intf_and_impl_to_string :
   (Prims.string FStar_Pervasives_Native.option * Prims.string
     FStar_Pervasives_Native.option) -> Prims.string)
@@ -64,7 +65,7 @@ let (files_for_module_name_to_string : files_for_module_name -> unit) =
        match sopt with
        | FStar_Pervasives_Native.None -> "<None>"
        | FStar_Pervasives_Native.Some s -> s in
-     FStarC_Util.smap_iter m
+     FStarC_SMap.iter m
        (fun k ->
           fun v -> FStarC_Util.print2 "%s:%s\n" k (intf_and_impl_to_string v));
      FStarC_Util.print_string "}\n")
@@ -81,7 +82,7 @@ let (uu___is_Black : color -> Prims.bool) =
 let (check_and_strip_suffix :
   Prims.string -> Prims.string FStar_Pervasives_Native.option) =
   fun f ->
-    let suffixes = [".fsti"; ".fst"; ".fsi"; ".fs"] in
+    let suffixes = [".fsti"; ".fst"] in
     let matches =
       FStarC_List.map
         (fun ext ->
@@ -125,7 +126,8 @@ let list_of_pair :
         FStarC_List.op_At (list_of_option intf) (list_of_option impl)
 let (maybe_module_name_of_file :
   Prims.string -> Prims.string FStar_Pervasives_Native.option) =
-  fun f -> let uu___ = FStarC_Util.basename f in check_and_strip_suffix uu___
+  fun f ->
+    let uu___ = FStarC_Filepath.basename f in check_and_strip_suffix uu___
 let (module_name_of_file : Prims.string -> Prims.string) =
   fun f ->
     let uu___ = maybe_module_name_of_file f in
@@ -217,10 +219,10 @@ let (__proj__Mkdep_node__item__color : dep_node -> color) =
   fun projectee ->
     match projectee with | { edges; color = color1;_} -> color1
 type dependence_graph =
-  | Deps of dep_node FStarC_Util.smap 
+  | Deps of dep_node FStarC_SMap.t 
 let (uu___is_Deps : dependence_graph -> Prims.bool) = fun projectee -> true
-let (__proj__Deps__item___0 : dependence_graph -> dep_node FStarC_Util.smap)
-  = fun projectee -> match projectee with | Deps _0 -> _0
+let (__proj__Deps__item___0 : dependence_graph -> dep_node FStarC_SMap.t) =
+  fun projectee -> match projectee with | Deps _0 -> _0
 type parsing_data_elt =
   | P_begin_module of FStarC_Ident.lident 
   | P_open of (Prims.bool * FStarC_Ident.lident) 
@@ -268,10 +270,14 @@ let (uu___is_P_inline_for_extraction : parsing_data_elt -> Prims.bool) =
   fun projectee ->
     match projectee with | P_inline_for_extraction -> true | uu___ -> false
 type parsing_data =
-  | Mk_pd of parsing_data_elt Prims.list 
-let (uu___is_Mk_pd : parsing_data -> Prims.bool) = fun projectee -> true
-let (__proj__Mk_pd__item___0 : parsing_data -> parsing_data_elt Prims.list) =
-  fun projectee -> match projectee with | Mk_pd _0 -> _0
+  {
+  elts: parsing_data_elt Prims.list ;
+  no_prelude: Prims.bool }
+let (__proj__Mkparsing_data__item__elts :
+  parsing_data -> parsing_data_elt Prims.list) =
+  fun projectee -> match projectee with | { elts; no_prelude;_} -> elts
+let (__proj__Mkparsing_data__item__no_prelude : parsing_data -> Prims.bool) =
+  fun projectee -> match projectee with | { elts; no_prelude;_} -> no_prelude
 let (str_of_parsing_data_elt : parsing_data_elt -> Prims.string) =
   fun elt ->
     let str_of_open_kind uu___ =
@@ -329,25 +335,30 @@ let (str_of_parsing_data_elt : parsing_data_elt -> Prims.string) =
           Prims.strcat uu___1 ")" in
         Prims.strcat "P_lid (" uu___
     | P_inline_for_extraction -> "P_inline_for_extraction"
+let (showable_parsing_data_elt : parsing_data_elt FStarC_Class_Show.showable)
+  = { FStarC_Class_Show.show = str_of_parsing_data_elt }
 let (str_of_parsing_data : parsing_data -> Prims.string) =
-  fun uu___ ->
-    match uu___ with
-    | Mk_pd l ->
-        FStarC_List.fold_left
-          (fun s ->
-             fun elt ->
-               let uu___1 =
-                 let uu___2 = str_of_parsing_data_elt elt in
-                 Prims.strcat "; " uu___2 in
-               Prims.strcat s uu___1) "" l
+  fun pd ->
+    let uu___ =
+      let uu___1 =
+        FStarC_Class_Show.show
+          (FStarC_Class_Show.show_list showable_parsing_data_elt) pd.elts in
+      let uu___2 =
+        let uu___3 =
+          let uu___4 =
+            FStarC_Class_Show.show FStarC_Class_Show.showable_bool
+              pd.no_prelude in
+          Prims.strcat uu___4 "}" in
+        Prims.strcat "; no_prelude = " uu___3 in
+      Prims.strcat uu___1 uu___2 in
+    Prims.strcat "{ elts = " uu___
+let (showable_parsing_data : parsing_data FStarC_Class_Show.showable) =
+  { FStarC_Class_Show.show = str_of_parsing_data }
 let (friends : parsing_data -> FStarC_Ident.lident Prims.list) =
   fun p ->
-    let uu___ = p in
-    match uu___ with
-    | Mk_pd p1 ->
-        FStarC_List.collect
-          (fun uu___1 ->
-             match uu___1 with | P_dep (true, l) -> [l] | uu___2 -> []) p1
+    FStarC_List.collect
+      (fun uu___ -> match uu___ with | P_dep (true, l) -> [l] | uu___1 -> [])
+      p.elts
 let (parsing_data_elt_eq :
   parsing_data_elt -> parsing_data_elt -> Prims.bool) =
   fun e1 ->
@@ -369,7 +380,7 @@ let (parsing_data_elt_eq :
       | (P_lid l1, P_lid l2) -> FStarC_Ident.lid_equals l1 l2
       | (P_inline_for_extraction, P_inline_for_extraction) -> true
       | (uu___, uu___1) -> false
-let (empty_parsing_data : parsing_data) = Mk_pd []
+let (empty_parsing_data : parsing_data) = { elts = []; no_prelude = false }
 type deps =
   {
   dep_graph: dependence_graph ;
@@ -377,7 +388,7 @@ type deps =
   cmd_line_files: file_name Prims.list ;
   all_files: file_name Prims.list ;
   interfaces_with_inlining: module_name Prims.list ;
-  parse_results: parsing_data FStarC_Util.smap }
+  parse_results: parsing_data FStarC_SMap.t }
 let (__proj__Mkdeps__item__dep_graph : deps -> dependence_graph) =
   fun projectee ->
     match projectee with
@@ -406,7 +417,7 @@ let (__proj__Mkdeps__item__interfaces_with_inlining :
         interfaces_with_inlining; parse_results;_} ->
         interfaces_with_inlining
 let (__proj__Mkdeps__item__parse_results :
-  deps -> parsing_data FStarC_Util.smap) =
+  deps -> parsing_data FStarC_SMap.t) =
   fun projectee ->
     match projectee with
     | { dep_graph; file_system_map; cmd_line_files; all_files;
@@ -414,22 +425,21 @@ let (__proj__Mkdeps__item__parse_results :
 let (deps_try_find :
   dependence_graph -> Prims.string -> dep_node FStar_Pervasives_Native.option)
   =
-  fun uu___ ->
-    fun k -> match uu___ with | Deps m -> FStarC_Util.smap_try_find m k
+  fun uu___ -> fun k -> match uu___ with | Deps m -> FStarC_SMap.try_find m k
 let (deps_add_dep : dependence_graph -> Prims.string -> dep_node -> unit) =
   fun uu___ ->
-    fun k -> fun v -> match uu___ with | Deps m -> FStarC_Util.smap_add m k v
+    fun k -> fun v -> match uu___ with | Deps m -> FStarC_SMap.add m k v
 let (deps_keys : dependence_graph -> Prims.string Prims.list) =
-  fun uu___ -> match uu___ with | Deps m -> FStarC_Util.smap_keys m
+  fun uu___ -> match uu___ with | Deps m -> FStarC_SMap.keys m
 let (deps_empty : unit -> dependence_graph) =
   fun uu___ ->
-    let uu___1 = FStarC_Util.smap_create (Prims.of_int (41)) in Deps uu___1
+    let uu___1 = FStarC_SMap.create (Prims.of_int (41)) in Deps uu___1
 let (mk_deps :
   dependence_graph ->
     files_for_module_name ->
       file_name Prims.list ->
         file_name Prims.list ->
-          module_name Prims.list -> parsing_data FStarC_Util.smap -> deps)
+          module_name Prims.list -> parsing_data FStarC_SMap.t -> deps)
   =
   fun dg ->
     fun fs ->
@@ -447,8 +457,8 @@ let (mk_deps :
               }
 let (empty_deps : deps) =
   let uu___ = deps_empty () in
-  let uu___1 = FStarC_Util.smap_create Prims.int_zero in
-  let uu___2 = FStarC_Util.smap_create Prims.int_zero in
+  let uu___1 = FStarC_SMap.create Prims.int_zero in
+  let uu___2 = FStarC_SMap.create Prims.int_zero in
   mk_deps uu___ uu___1 [] [] [] uu___2
 let (module_name_of_dep : dependence -> module_name) =
   fun uu___ ->
@@ -463,7 +473,7 @@ let (resolve_module_name :
   =
   fun file_system_map ->
     fun key ->
-      let uu___ = FStarC_Util.smap_try_find file_system_map key in
+      let uu___ = FStarC_SMap.try_find file_system_map key in
       match uu___ with
       | FStar_Pervasives_Native.Some
           (FStar_Pervasives_Native.Some fn, uu___1) ->
@@ -480,7 +490,7 @@ let (interface_of_internal :
   =
   fun file_system_map ->
     fun key ->
-      let uu___ = FStarC_Util.smap_try_find file_system_map key in
+      let uu___ = FStarC_SMap.try_find file_system_map key in
       match uu___ with
       | FStar_Pervasives_Native.Some
           (FStar_Pervasives_Native.Some iface, uu___1) ->
@@ -492,7 +502,7 @@ let (implementation_of_internal :
   =
   fun file_system_map ->
     fun key ->
-      let uu___ = FStarC_Util.smap_try_find file_system_map key in
+      let uu___ = FStarC_SMap.try_find file_system_map key in
       match uu___ with
       | FStar_Pervasives_Native.Some
           (uu___1, FStar_Pervasives_Native.Some impl) ->
@@ -525,7 +535,7 @@ let (cache_file_name : Prims.string -> Prims.string) =
       else Prims.strcat fn ".checked" in
     let mname = module_name_of_file fn in
     let uu___ =
-      let uu___1 = FStarC_Util.basename cache_fn in
+      let uu___1 = FStarC_Filepath.basename cache_fn in
       FStarC_Find.find_file uu___1 in
     match uu___ with
     | FStar_Pervasives_Native.Some path ->
@@ -537,10 +547,11 @@ let (cache_file_name : Prims.string -> Prims.string) =
                 Prims.op_Negation uu___3))
               &&
               ((Prims.op_Negation
-                  (FStarC_Util.file_exists expected_cache_file))
+                  (FStarC_Filepath.file_exists expected_cache_file))
                  ||
                  (let uu___3 =
-                    FStarC_Util.paths_to_same_file path expected_cache_file in
+                    FStarC_Filepath.paths_to_same_file path
+                      expected_cache_file in
                   Prims.op_Negation uu___3)) in
           if uu___2
           then
@@ -577,14 +588,14 @@ let (cache_file_name : Prims.string -> Prims.string) =
               (Obj.magic uu___3)
           else ());
          (let uu___2 =
-            (FStarC_Util.file_exists expected_cache_file) &&
-              (FStarC_Util.paths_to_same_file path expected_cache_file) in
+            (FStarC_Filepath.file_exists expected_cache_file) &&
+              (FStarC_Filepath.paths_to_same_file path expected_cache_file) in
           if uu___2 then expected_cache_file else path))
     | FStar_Pervasives_Native.None ->
         ((let uu___2 = FStarC_Effect.op_Bang dbg_CheckedFiles in
           if uu___2
           then
-            let uu___3 = FStarC_Util.basename cache_fn in
+            let uu___3 = FStarC_Filepath.basename cache_fn in
             FStarC_Util.print1 "find_file(%s) returned None\n" uu___3
           else ());
          (let uu___3 = FStarC_Options.should_be_already_cached mname in
@@ -604,18 +615,18 @@ let (cache_file_name : Prims.string -> Prims.string) =
               (Obj.magic uu___4)
           else ());
          FStarC_Find.prepend_cache_dir cache_fn) in
-  let memo = FStarC_Util.smap_create (Prims.of_int (100)) in
+  let memo = FStarC_SMap.create (Prims.of_int (100)) in
   let memo1 f x =
-    let uu___ = FStarC_Util.smap_try_find memo x in
+    let uu___ = FStarC_SMap.try_find memo x in
     match uu___ with
     | FStar_Pervasives_Native.Some res -> res
     | FStar_Pervasives_Native.None ->
-        let res = f x in (FStarC_Util.smap_add memo x res; res) in
+        let res = f x in (FStarC_SMap.add memo x res; res) in
   memo1 checked_file_and_exists_flag
 let (parsing_data_of : deps -> Prims.string -> parsing_data) =
   fun deps1 ->
     fun fn ->
-      let uu___ = FStarC_Util.smap_try_find deps1.parse_results fn in
+      let uu___ = FStarC_SMap.try_find deps1.parse_results fn in
       FStarC_Util.must uu___
 let (file_of_dep_aux :
   Prims.bool ->
@@ -792,11 +803,11 @@ let (print_graph :
                      uu___4.edges in
                    FStarC_List.iter
                      (fun dep ->
-                        let l = FStarC_Util.basename k in
+                        let l = FStarC_Filepath.basename k in
                         let r =
                           let uu___4 =
                             file_of_dep file_system_map cmd_lined_files dep in
-                          FStarC_Util.basename uu___4 in
+                          FStarC_Filepath.basename uu___4 in
                         let uu___4 =
                           let uu___5 =
                             FStarC_Options.should_be_already_cached
@@ -814,54 +825,54 @@ let (print_graph :
               FStarC_Util.fprint outc "%s" uu___4))
 let (safe_readdir_for_include : Prims.string -> Prims.string Prims.list) =
   fun d ->
-    try (fun uu___ -> match () with | () -> FStarC_Util.readdir d) ()
+    try (fun uu___ -> match () with | () -> FStarC_Filepath.readdir d) ()
     with | uu___ -> []
 let (build_inclusion_candidates_list :
   unit -> (Prims.string * Prims.string) Prims.list) =
   fun uu___ ->
-    let include_directories = FStarC_Find.include_path () in
+    let include_directories = FStarC_Find.full_include_path () in
     let include_directories1 =
-      FStarC_List.map FStarC_Util.normalize_file_path include_directories in
+      FStarC_List.map FStarC_Filepath.normalize_file_path include_directories in
     let include_directories2 = FStarC_List.unique include_directories1 in
     let cwd =
       let uu___1 = FStarC_Util.getcwd () in
-      FStarC_Util.normalize_file_path uu___1 in
+      FStarC_Filepath.normalize_file_path uu___1 in
     FStarC_List.concatMap
       (fun d ->
          let files = safe_readdir_for_include d in
          FStarC_List.filter_map
            (fun f ->
-              let f1 = FStarC_Util.basename f in
+              let f1 = FStarC_Filepath.basename f in
               let uu___1 = check_and_strip_suffix f1 in
               FStarC_Util.map_option
                 (fun longname ->
                    let full_path =
-                     if d = cwd then f1 else FStarC_Util.join_paths d f1 in
+                     if d = cwd then f1 else FStarC_Filepath.join_paths d f1 in
                    (longname, full_path)) uu___1) files) include_directories2
 let (build_map : Prims.string Prims.list -> files_for_module_name) =
   fun filenames ->
-    let map = FStarC_Util.smap_create (Prims.of_int (41)) in
+    let map = FStarC_SMap.create (Prims.of_int (41)) in
     let add_entry key full_path =
-      let uu___ = FStarC_Util.smap_try_find map key in
+      let uu___ = FStarC_SMap.try_find map key in
       match uu___ with
       | FStar_Pervasives_Native.Some (intf, impl) ->
           let uu___1 = is_interface full_path in
           if uu___1
           then
-            FStarC_Util.smap_add map key
+            FStarC_SMap.add map key
               ((FStar_Pervasives_Native.Some full_path), impl)
           else
-            FStarC_Util.smap_add map key
+            FStarC_SMap.add map key
               (intf, (FStar_Pervasives_Native.Some full_path))
       | FStar_Pervasives_Native.None ->
           let uu___1 = is_interface full_path in
           if uu___1
           then
-            FStarC_Util.smap_add map key
+            FStarC_SMap.add map key
               ((FStar_Pervasives_Native.Some full_path),
                 FStar_Pervasives_Native.None)
           else
-            FStarC_Util.smap_add map key
+            FStarC_SMap.add map key
               (FStar_Pervasives_Native.None,
                 (FStar_Pervasives_Native.Some full_path)) in
     (let uu___1 = build_inclusion_candidates_list () in
@@ -910,7 +921,7 @@ let (check_module_declaration_against_filename :
       let uu___ =
         let uu___1 =
           let uu___2 =
-            let uu___3 = FStarC_Util.basename filename in
+            let uu___3 = FStarC_Filepath.basename filename in
             check_and_strip_suffix uu___3 in
           FStarC_Util.must uu___2 in
         uu___1 <> k' in
@@ -938,41 +949,15 @@ let (check_module_declaration_against_filename :
 exception Exit 
 let (uu___is_Exit : Prims.exn -> Prims.bool) =
   fun projectee -> match projectee with | Exit -> true | uu___ -> false
-let (core_modules : unit -> Prims.string Prims.list) =
-  fun uu___ -> ["Prims"; "FStar.Pervasives"; "FStar.Pervasives.Native"]
-let (implicit_ns_deps : FStarC_Ident.lident Prims.list) =
-  [FStarC_Parser_Const.fstar_ns_lid]
-let (implicit_module_deps : FStarC_Ident.lident Prims.list) =
-  [FStarC_Parser_Const.prims_lid; FStarC_Parser_Const.pervasives_lid]
-let (hard_coded_dependencies :
-  Prims.string -> (FStarC_Ident.lident * open_kind) Prims.list) =
-  fun full_filename ->
-    let filename = FStarC_Util.basename full_filename in
-    let implicit_module_deps1 =
-      FStarC_List.map (fun l -> (l, Open_module)) implicit_module_deps in
-    let implicit_ns_deps1 =
-      FStarC_List.map (fun l -> (l, Open_namespace)) implicit_ns_deps in
-    let uu___ =
-      let uu___1 = module_name_of_file filename in
-      let uu___2 = core_modules () in FStarC_List.mem uu___1 uu___2 in
-    if uu___
-    then []
-    else
-      (let uu___2 =
-         let uu___3 = module_name_of_file full_filename in
-         namespace_of_module uu___3 in
-       match uu___2 with
-       | FStar_Pervasives_Native.None ->
-           FStarC_List.op_At implicit_ns_deps1 implicit_module_deps1
-       | FStar_Pervasives_Native.Some ns ->
-           FStarC_List.op_At implicit_ns_deps1
-             (FStarC_List.op_At implicit_module_deps1 [(ns, Open_namespace)]))
 let (dep_subsumed_by : dependence -> dependence -> Prims.bool) =
   fun d ->
     fun d' ->
       match (d, d') with
       | (PreferInterface l', FriendImplementation l) -> l = l'
       | uu___ -> d = d'
+let (warned_about :
+  intf_and_impl FStar_Pervasives_Native.option Prims.list FStarC_Effect.ref)
+  = FStarC_Effect.mk_ref []
 let (enter_namespace :
   files_for_module_name ->
     files_for_module_name -> Prims.string -> Prims.bool -> Prims.bool)
@@ -981,14 +966,14 @@ let (enter_namespace :
     fun working_map ->
       fun sprefix ->
         fun implicit_open ->
-          let found = FStarC_Util.mk_ref false in
+          let found = FStarC_Effect.mk_ref false in
           let sprefix1 = Prims.strcat sprefix "." in
           let suffix_exists mopt =
             match mopt with
             | FStar_Pervasives_Native.None -> false
             | FStar_Pervasives_Native.Some (intf, impl) ->
                 (FStarC_Util.is_some intf) || (FStarC_Util.is_some impl) in
-          FStarC_Util.smap_iter original_map
+          FStarC_SMap.iter original_map
             (fun k ->
                fun uu___1 ->
                  if FStarC_Util.starts_with k sprefix1
@@ -999,77 +984,97 @@ let (enter_namespace :
                        ((FStarC_String.length k) -
                           (FStarC_String.length sprefix1)) in
                    ((let suffix_filename =
-                       FStarC_Util.smap_try_find original_map suffix in
-                     if implicit_open && (suffix_exists suffix_filename)
+                       FStarC_SMap.try_find original_map suffix in
+                     let uu___3 =
+                       (implicit_open && (suffix_exists suffix_filename)) &&
+                         (let uu___4 =
+                            let uu___5 = FStarC_Effect.op_Bang warned_about in
+                            FStarC_List.mem suffix_filename uu___5 in
+                          Prims.op_Negation uu___4) in
+                     if uu___3
                      then
                        let str =
-                         let uu___3 = FStarC_Util.must suffix_filename in
-                         intf_and_impl_to_string uu___3 in
-                       let uu___3 =
-                         let uu___4 =
-                           let uu___5 = FStarC_Pprint.break_ Prims.int_one in
+                         let uu___4 = FStarC_Util.must suffix_filename in
+                         intf_and_impl_to_string uu___4 in
+                       ((let uu___5 =
+                           let uu___6 = FStarC_Effect.op_Bang warned_about in
+                           suffix_filename :: uu___6 in
+                         FStarC_Effect.op_Colon_Equals warned_about uu___5);
+                        (let uu___5 =
                            let uu___6 =
-                             let uu___7 =
-                               FStarC_Errors_Msg.text
-                                 "Implicitly opening namespace" in
+                             let uu___7 = FStarC_Pprint.break_ Prims.int_one in
                              let uu___8 =
                                let uu___9 =
-                                 let uu___10 =
-                                   FStarC_Pprint.doc_of_string sprefix1 in
-                                 FStarC_Pprint.squotes uu___10 in
+                                 FStarC_Errors_Msg.text
+                                   "Implicitly opening namespace" in
                                let uu___10 =
                                  let uu___11 =
-                                   FStarC_Errors_Msg.text "shadows module" in
+                                   let uu___12 =
+                                     FStarC_Pprint.doc_of_string sprefix1 in
+                                   FStarC_Pprint.squotes uu___12 in
                                  let uu___12 =
                                    let uu___13 =
-                                     let uu___14 =
-                                       FStarC_Pprint.doc_of_string suffix in
-                                     FStarC_Pprint.squotes uu___14 in
+                                     FStarC_Errors_Msg.text "shadows module" in
                                    let uu___14 =
                                      let uu___15 =
-                                       FStarC_Errors_Msg.text "in file" in
+                                       let uu___16 =
+                                         FStarC_Pprint.doc_of_string suffix in
+                                       FStarC_Pprint.squotes uu___16 in
                                      let uu___16 =
                                        let uu___17 =
-                                         let uu___18 =
-                                           let uu___19 =
-                                             FStarC_Pprint.doc_of_string str in
-                                           FStarC_Pprint.dquotes uu___19 in
-                                         FStarC_Pprint.op_Hat_Hat uu___18
-                                           FStarC_Pprint.dot in
-                                       [uu___17] in
+                                         FStarC_Errors_Msg.text "in file" in
+                                       let uu___18 =
+                                         let uu___19 =
+                                           let uu___20 =
+                                             let uu___21 =
+                                               FStarC_Pprint.doc_of_string
+                                                 str in
+                                             FStarC_Pprint.dquotes uu___21 in
+                                           FStarC_Pprint.op_Hat_Hat uu___20
+                                             FStarC_Pprint.dot in
+                                         [uu___19] in
+                                       uu___17 :: uu___18 in
                                      uu___15 :: uu___16 in
                                    uu___13 :: uu___14 in
                                  uu___11 :: uu___12 in
                                uu___9 :: uu___10 in
-                             uu___7 :: uu___8 in
-                           FStarC_Pprint.flow uu___5 uu___6 in
-                         let uu___5 =
-                           let uu___6 =
-                             let uu___7 = FStarC_Errors_Msg.text "Rename" in
+                             FStarC_Pprint.flow uu___7 uu___8 in
+                           let uu___7 =
                              let uu___8 =
-                               let uu___9 =
-                                 let uu___10 =
-                                   FStarC_Pprint.doc_of_string str in
-                                 FStarC_Pprint.dquotes uu___10 in
+                               let uu___9 = FStarC_Errors_Msg.text "Rename" in
                                let uu___10 =
-                                 FStarC_Errors_Msg.text "to avoid conflicts." in
+                                 let uu___11 =
+                                   let uu___12 =
+                                     FStarC_Pprint.doc_of_string str in
+                                   FStarC_Pprint.dquotes uu___12 in
+                                 let uu___12 =
+                                   FStarC_Errors_Msg.text
+                                     "to avoid conflicts." in
+                                 FStarC_Pprint.op_Hat_Slash_Hat uu___11
+                                   uu___12 in
                                FStarC_Pprint.op_Hat_Slash_Hat uu___9 uu___10 in
-                             FStarC_Pprint.op_Hat_Slash_Hat uu___7 uu___8 in
-                           [uu___6] in
-                         uu___4 :: uu___5 in
-                       FStarC_Errors.log_issue0
-                         FStarC_Errors_Codes.Warning_UnexpectedFile ()
-                         (Obj.magic
-                            FStarC_Errors_Msg.is_error_message_list_doc)
-                         (Obj.magic uu___3)
+                             [uu___8] in
+                           uu___6 :: uu___7 in
+                         FStarC_Errors.log_issue0
+                           FStarC_Errors_Codes.Warning_UnexpectedFile ()
+                           (Obj.magic
+                              FStarC_Errors_Msg.is_error_message_list_doc)
+                           (Obj.magic uu___5)))
                      else ());
                     (let filename =
-                       let uu___3 = FStarC_Util.smap_try_find original_map k in
+                       let uu___3 = FStarC_SMap.try_find original_map k in
                        FStarC_Util.must uu___3 in
-                     FStarC_Util.smap_add working_map suffix filename;
+                     FStarC_SMap.add working_map suffix filename;
                      FStarC_Effect.op_Colon_Equals found true))
                  else ());
           FStarC_Effect.op_Bang found
+let (prelude : (open_kind * FStarC_Ident.lid) Prims.list) =
+  let uu___ =
+    let uu___1 =
+      let uu___2 = FStarC_Ident.lid_of_str "FStar.Prelude" in
+      (Open_module, uu___2) in
+    [uu___1] in
+  (Open_namespace, FStarC_Parser_Const.fstar_ns_lid) :: uu___
 let (collect_one :
   files_for_module_name ->
     Prims.string ->
@@ -1081,22 +1086,32 @@ let (collect_one :
     fun filename ->
       fun get_parsing_data_from_cache ->
         let from_parsing_data pd original_map1 filename1 =
-          let deps1 = FStarC_Util.mk_ref [] in
-          let has_inline_for_extraction = FStarC_Util.mk_ref false in
+          let deps1 = FStarC_Effect.mk_ref [] in
+          let has_inline_for_extraction = FStarC_Effect.mk_ref false in
+          let mname = lowercase_module_name filename1 in
           let mo_roots =
-            let mname = lowercase_module_name filename1 in
             let uu___ =
               (is_interface filename1) &&
                 (has_implementation original_map1 mname) in
             if uu___ then [UseImplementation mname] else [] in
           let auto_open =
-            let uu___ = hard_coded_dependencies filename1 in
-            FStarC_List.map
-              (fun uu___1 ->
-                 match uu___1 with
-                 | (lid, k) -> P_implicit_open_module_or_namespace (k, lid))
-              uu___ in
-          let working_map = FStarC_Util.smap_copy original_map1 in
+            if pd.no_prelude
+            then []
+            else
+              (let uu___1 =
+                 FStarC_List.map
+                   (fun uu___2 ->
+                      match uu___2 with | (k, l) -> P_open (false, l))
+                   prelude in
+               let uu___2 =
+                 let uu___3 = namespace_of_module mname in
+                 match uu___3 with
+                 | FStar_Pervasives_Native.None -> []
+                 | FStar_Pervasives_Native.Some ns ->
+                     [P_implicit_open_module_or_namespace
+                        (Open_namespace, ns)] in
+               FStarC_List.op_At uu___1 uu___2) in
+          let working_map = FStarC_SMap.copy original_map1 in
           let set_interface_inlining uu___ =
             let uu___1 = is_interface filename1 in
             if uu___1
@@ -1180,10 +1195,10 @@ let (collect_one :
               let uu___ = FStarC_Ident.string_of_id ident in
               FStarC_String.lowercase uu___ in
             let alias = lowercase_join_longident lid true in
-            let uu___ = FStarC_Util.smap_try_find original_map1 alias in
+            let uu___ = FStarC_SMap.try_find original_map1 alias in
             match uu___ with
             | FStar_Pervasives_Native.Some deps_of_aliased_module ->
-                (FStarC_Util.smap_add working_map key deps_of_aliased_module;
+                (FStarC_SMap.add working_map key deps_of_aliased_module;
                  (let uu___3 =
                     let uu___4 = lowercase_join_longident lid true in
                     dep_edge uu___4 false in
@@ -1238,21 +1253,19 @@ let (collect_one :
                 enter_namespace original_map1 working_map uu___2 in
               ()
             else () in
-          (match pd with
-           | Mk_pd l ->
-               FStarC_List.iter
-                 (fun elt ->
-                    match elt with
-                    | P_begin_module lid -> begin_module lid
-                    | P_open (b, lid) -> record_open b lid
-                    | P_implicit_open_module_or_namespace (k, lid) ->
-                        record_implicit_open_module_or_namespace (lid, k)
-                    | P_dep (b, lid) -> add_dep_on_module lid b
-                    | P_alias (id, lid) ->
-                        let uu___1 = record_module_alias id lid in ()
-                    | P_lid lid -> record_lid lid
-                    | P_inline_for_extraction -> set_interface_inlining ())
-                 (FStarC_List.op_At auto_open l));
+          FStarC_List.iter
+            (fun elt ->
+               match elt with
+               | P_begin_module lid -> begin_module lid
+               | P_open (b, lid) -> record_open b lid
+               | P_implicit_open_module_or_namespace (k, lid) ->
+                   record_implicit_open_module_or_namespace (lid, k)
+               | P_dep (b, lid) -> add_dep_on_module lid b
+               | P_alias (id, lid) ->
+                   let uu___1 = record_module_alias id lid in ()
+               | P_lid lid -> record_lid lid
+               | P_inline_for_extraction -> set_interface_inlining ())
+            (FStarC_List.op_At auto_open pd.elts);
           (let uu___1 = FStarC_Effect.op_Bang deps1 in
            let uu___2 = FStarC_Effect.op_Bang has_inline_for_extraction in
            (uu___1, uu___2, mo_roots)) in
@@ -1277,30 +1290,52 @@ let (collect_one :
                (let uu___2 = FStarC_Util.must data_from_cache in
                 (uu___2, deps1, has_inline_for_extraction, mo_roots)))
         else
-          (let num_of_toplevelmods = FStarC_Util.mk_ref Prims.int_zero in
-           let pd = FStarC_Util.mk_ref [] in
+          (let num_of_toplevelmods = FStarC_Effect.mk_ref Prims.int_zero in
+           let pd = FStarC_Effect.mk_ref empty_parsing_data in
            let add_to_parsing_data elt =
              let uu___1 =
                let uu___2 =
-                 let uu___3 = FStarC_Effect.op_Bang pd in
+                 let uu___3 =
+                   let uu___4 = FStarC_Effect.op_Bang pd in uu___4.elts in
                  FStarC_List.existsML (fun e -> parsing_data_elt_eq e elt)
                    uu___3 in
                Prims.op_Negation uu___2 in
              if uu___1
              then
                let uu___2 =
-                 let uu___3 = FStarC_Effect.op_Bang pd in elt :: uu___3 in
+                 let uu___3 = FStarC_Effect.op_Bang pd in
+                 let uu___4 =
+                   let uu___5 =
+                     let uu___6 = FStarC_Effect.op_Bang pd in uu___6.elts in
+                   elt :: uu___5 in
+                 { elts = uu___4; no_prelude = (uu___3.no_prelude) } in
                FStarC_Effect.op_Colon_Equals pd uu___2
              else () in
+           let set_no_prelude b =
+             let uu___1 =
+               let uu___2 = FStarC_Effect.op_Bang pd in
+               { elts = (uu___2.elts); no_prelude = b } in
+             FStarC_Effect.op_Colon_Equals pd uu___1 in
            let rec collect_module uu___1 =
              match uu___1 with
-             | FStarC_Parser_AST.Module (lid, decls) ->
-                 (check_module_declaration_against_filename lid filename;
-                  add_to_parsing_data (P_begin_module lid);
+             | FStarC_Parser_AST.Module
+                 { FStarC_Parser_AST.no_prelude = no_prelude;
+                   FStarC_Parser_AST.mname = mname;
+                   FStarC_Parser_AST.decls = decls;_}
+                 ->
+                 (set_no_prelude no_prelude;
+                  check_module_declaration_against_filename mname filename;
+                  add_to_parsing_data (P_begin_module mname);
                   collect_decls decls)
-             | FStarC_Parser_AST.Interface (lid, decls, uu___2) ->
-                 (check_module_declaration_against_filename lid filename;
-                  add_to_parsing_data (P_begin_module lid);
+             | FStarC_Parser_AST.Interface
+                 { FStarC_Parser_AST.no_prelude1 = no_prelude;
+                   FStarC_Parser_AST.mname1 = mname;
+                   FStarC_Parser_AST.decls1 = decls;
+                   FStarC_Parser_AST.admitted = uu___2;_}
+                 ->
+                 (set_no_prelude no_prelude;
+                  check_module_declaration_against_filename mname filename;
+                  add_to_parsing_data (P_begin_module mname);
                   collect_decls decls)
            and collect_decls decls =
              FStarC_List.iter
@@ -1850,7 +1885,8 @@ let (collect_one :
              | FStarC_Parser_AST.PatVQuote t -> collect_term t
              | FStarC_Parser_AST.PatApp (p, ps) ->
                  (collect_pattern p; collect_patterns ps)
-             | FStarC_Parser_AST.PatName uu___2 -> ()
+             | FStarC_Parser_AST.PatName lid ->
+                 add_to_parsing_data (P_lid lid)
              | FStarC_Parser_AST.PatList ps -> collect_patterns ps
              | FStarC_Parser_AST.PatOr ps -> collect_patterns ps
              | FStarC_Parser_AST.PatTuple (ps, uu___2) -> collect_patterns ps
@@ -1889,30 +1925,30 @@ let (collect_one :
            match uu___1 with
            | (ast, uu___2) ->
                (collect_module ast;
-                (let pd1 =
-                   let uu___4 =
-                     let uu___5 = FStarC_Effect.op_Bang pd in
-                     FStarC_List.rev uu___5 in
-                   Mk_pd uu___4 in
-                 let uu___4 = from_parsing_data pd1 original_map filename in
+                (let pd1 = FStarC_Effect.op_Bang pd in
+                 let pd2 =
+                   {
+                     elts = (FStarC_List.rev pd1.elts);
+                     no_prelude = (pd1.no_prelude)
+                   } in
+                 let uu___4 = from_parsing_data pd2 original_map filename in
                  match uu___4 with
                  | (deps1, has_inline_for_extraction, mo_roots) ->
-                     (pd1, deps1, has_inline_for_extraction, mo_roots))))
+                     (pd2, deps1, has_inline_for_extraction, mo_roots))))
 let (collect_one_cache :
-  (dependence Prims.list * dependence Prims.list * Prims.bool)
-    FStarC_Util.smap FStarC_Effect.ref)
+  (dependence Prims.list * dependence Prims.list * Prims.bool) FStarC_SMap.t
+    FStarC_Effect.ref)
   =
-  let uu___ = FStarC_Util.smap_create Prims.int_zero in
-  FStarC_Util.mk_ref uu___
+  let uu___ = FStarC_SMap.create Prims.int_zero in FStarC_Effect.mk_ref uu___
 let (set_collect_one_cache :
-  (dependence Prims.list * dependence Prims.list * Prims.bool)
-    FStarC_Util.smap -> unit)
+  (dependence Prims.list * dependence Prims.list * Prims.bool) FStarC_SMap.t
+    -> unit)
   = fun cache -> FStarC_Effect.op_Colon_Equals collect_one_cache cache
 let (dep_graph_copy : dependence_graph -> dependence_graph) =
   fun dep_graph ->
     let uu___ = dep_graph in
     match uu___ with
-    | Deps g -> let uu___1 = FStarC_Util.smap_copy g in Deps uu___1
+    | Deps g -> let uu___1 = FStarC_SMap.copy g in Deps uu___1
 let (widen_deps :
   module_name Prims.list ->
     dependence_graph ->
@@ -1922,7 +1958,7 @@ let (widen_deps :
     fun dep_graph ->
       fun file_system_map ->
         fun widened ->
-          let widened1 = FStarC_Util.mk_ref widened in
+          let widened1 = FStarC_Effect.mk_ref widened in
           let uu___ = dep_graph in
           match uu___ with
           | Deps dg ->
@@ -1940,14 +1976,14 @@ let (widen_deps :
                               (FStarC_Effect.op_Colon_Equals widened1 true;
                                FriendImplementation m)
                           | uu___2 -> d) deps1 in
-                   (FStarC_Util.smap_fold dg
+                   (FStarC_SMap.fold dg
                       (fun filename ->
                          fun dep_node1 ->
                            fun uu___3 ->
                              let uu___4 =
                                let uu___5 = widen_one dep_node1.edges in
                                { edges = uu___5; color = White } in
-                             FStarC_Util.smap_add dg' filename uu___4) ();
+                             FStarC_SMap.add dg' filename uu___4) ();
                     (let uu___3 = FStarC_Effect.op_Bang widened1 in
                      (uu___3, (Deps dg')))))
 let (topological_dependences_of' :
@@ -2097,7 +2133,7 @@ let (topological_dependences_of :
                   interfaces_needing_inlining root_files widened
 let (all_files_in_include_paths : unit -> Prims.string Prims.list) =
   fun uu___ ->
-    let paths = FStarC_Find.include_path () in
+    let paths = FStarC_Find.full_include_path () in
     FStarC_List.collect
       (fun path ->
          let files = safe_readdir_for_include path in
@@ -2106,7 +2142,7 @@ let (all_files_in_include_paths : unit -> Prims.string Prims.list) =
              (fun f ->
                 (FStarC_Util.ends_with f ".fst") ||
                   (FStarC_Util.ends_with f ".fsti")) files in
-         FStarC_List.map (fun file -> FStarC_Util.join_paths path file)
+         FStarC_List.map (fun file -> FStarC_Filepath.join_paths path file)
            files1) paths
 let (collect :
   Prims.string Prims.list ->
@@ -2134,14 +2170,14 @@ let (collect :
              | FStar_Pervasives_Native.Some fn1 -> fn1) all_cmd_line_files1 in
       let dep_graph = deps_empty () in
       let file_system_map = build_map all_cmd_line_files2 in
-      let interfaces_needing_inlining = FStarC_Util.mk_ref [] in
+      let interfaces_needing_inlining = FStarC_Effect.mk_ref [] in
       let add_interface_for_inlining l =
         let l1 = lowercase_module_name l in
         let uu___ =
           let uu___1 = FStarC_Effect.op_Bang interfaces_needing_inlining in
           l1 :: uu___1 in
         FStarC_Effect.op_Colon_Equals interfaces_needing_inlining uu___ in
-      let parse_results = FStarC_Util.smap_create (Prims.of_int (40)) in
+      let parse_results = FStarC_SMap.create (Prims.of_int (40)) in
       let rec discover_one file_name1 =
         let uu___ =
           let uu___1 = deps_try_find dep_graph file_name1 in
@@ -2151,9 +2187,10 @@ let (collect :
           let uu___1 =
             let uu___2 =
               let uu___3 = FStarC_Effect.op_Bang collect_one_cache in
-              FStarC_Util.smap_try_find uu___3 file_name1 in
+              FStarC_SMap.try_find uu___3 file_name1 in
             match uu___2 with
-            | FStar_Pervasives_Native.Some cached -> ((Mk_pd []), cached)
+            | FStar_Pervasives_Native.Some cached ->
+                (empty_parsing_data, cached)
             | FStar_Pervasives_Native.None ->
                 let uu___3 =
                   collect_one file_system_map file_name1
@@ -2168,7 +2205,7 @@ let (collect :
               (if needs_interface_inlining
                then add_interface_for_inlining file_name1
                else ();
-               FStarC_Util.smap_add parse_results file_name1 parsing_data1;
+               FStarC_SMap.add parse_results file_name1 parsing_data1;
                (let deps2 =
                   let module_name1 = lowercase_module_name file_name1 in
                   let uu___4 =
@@ -2191,9 +2228,10 @@ let (collect :
         (fun uu___1 -> FStarC_List.iter discover_one all_cmd_line_files2)
         "FStarC.Parser.Dep.discover";
       (let cycle_detected dep_graph1 cycle filename =
+         let cycle1 = FStarC_List.rev cycle in
          FStarC_Util.print1
-           "The cycle contains a subset of the modules in:\n%s \n"
-           (FStarC_String.concat "\n`used by` " cycle);
+           "The cycle contains a subset of the modules in:\n  %s \n"
+           (FStarC_String.concat "\n  `uses` " cycle1);
          (let fn = "dep.graph" in
           with_file_outchannel fn
             (fun outc ->
@@ -2218,7 +2256,7 @@ let (collect :
              (Obj.magic uu___4))) in
        let full_cycle_detection all_command_line_files file_system_map1 =
          let dep_graph1 = dep_graph_copy dep_graph in
-         let mo_files = FStarC_Util.mk_ref [] in
+         let mo_files = FStarC_Effect.mk_ref [] in
          let rec aux cycle filename =
            let node =
              let uu___1 = deps_try_find dep_graph1 filename in
@@ -2327,7 +2365,7 @@ let (deps_of_modul : deps -> module_name -> module_name Prims.list) =
         FStarC_Util.dflt [] uu___ in
       let uu___ =
         let uu___1 =
-          FStarC_Util.smap_try_find deps1.file_system_map
+          FStarC_SMap.try_find deps1.file_system_map
             (FStarC_String.lowercase m) in
         FStarC_Util.map_option
           (fun uu___2 ->
@@ -2378,7 +2416,7 @@ let (print_raw : FStarC_Util.out_channel -> deps -> unit) =
       | Deps deps2 ->
           let uu___1 =
             let uu___2 =
-              FStarC_Util.smap_fold deps2
+              FStarC_SMap.fold deps2
                 (fun k ->
                    fun dep_node1 ->
                      fun out ->
@@ -2396,23 +2434,21 @@ let (print_full : FStarC_Util.out_channel -> deps -> unit) =
     fun deps1 ->
       let pre_tag = FStarC_Options_Ext.get "dep_pretag" in
       let sort_output_files orig_output_file_map =
-        let order = FStarC_Util.mk_ref [] in
-        let remaining_output_files =
-          FStarC_Util.smap_copy orig_output_file_map in
-        let visited_other_modules =
-          FStarC_Util.smap_create (Prims.of_int (41)) in
+        let order = FStarC_Effect.mk_ref [] in
+        let remaining_output_files = FStarC_SMap.copy orig_output_file_map in
+        let visited_other_modules = FStarC_SMap.create (Prims.of_int (41)) in
         let should_visit lc_module_name =
           (let uu___ =
-             FStarC_Util.smap_try_find remaining_output_files lc_module_name in
+             FStarC_SMap.try_find remaining_output_files lc_module_name in
            FStarC_Option.isSome uu___) ||
             (let uu___ =
-               FStarC_Util.smap_try_find visited_other_modules lc_module_name in
+               FStarC_SMap.try_find visited_other_modules lc_module_name in
              FStarC_Option.isNone uu___) in
         let mark_visiting lc_module_name =
           let ml_file_opt =
-            FStarC_Util.smap_try_find remaining_output_files lc_module_name in
-          FStarC_Util.smap_remove remaining_output_files lc_module_name;
-          FStarC_Util.smap_add visited_other_modules lc_module_name true;
+            FStarC_SMap.try_find remaining_output_files lc_module_name in
+          FStarC_SMap.remove remaining_output_files lc_module_name;
+          FStarC_SMap.add visited_other_modules lc_module_name true;
           ml_file_opt in
         let emit_output_file_opt ml_file_opt =
           match ml_file_opt with
@@ -2456,14 +2492,24 @@ let (print_full : FStarC_Util.out_channel -> deps -> unit) =
                    emit_output_file_opt ml_file_opt)
                 else ());
                aux modules_to_extract) in
-        let all_extracted_modules =
-          FStarC_Util.smap_keys orig_output_file_map in
+        let all_extracted_modules = FStarC_SMap.keys orig_output_file_map in
         aux all_extracted_modules;
         (let uu___1 = FStarC_Effect.op_Bang order in FStarC_List.rev uu___1) in
       let sb = FStarC_StringBuffer.create (Prims.of_int (10000)) in
       let pr str = let uu___ = FStarC_StringBuffer.add str sb in () in
-      let print_entry target first_dep all_deps =
-        pr target; pr ": "; pr first_dep; pr "\\\n\t"; pr all_deps; pr "\n\n" in
+      let norm_path s =
+        FStarC_Util.replace_chars (FStarC_Util.replace_chars s 92 "/") 32
+          "\\ " in
+      let print_entry target all_deps =
+        pr target;
+        pr ":";
+        FStarC_List.iter (fun f -> pr " \\\n\t"; pr (norm_path f)) all_deps;
+        pr "\n\n" in
+      let print_all tag files =
+        pr (Prims.strcat pre_tag tag);
+        pr "=";
+        FStarC_List.iter (fun f -> pr " \\\n\t"; pr (norm_path f)) files;
+        pr "\n\n" in
       let keys = deps_keys deps1.dep_graph in
       let no_fstar_stubs_file s =
         let s1 = "FStar.Stubs." in
@@ -2482,15 +2528,12 @@ let (print_full : FStarC_Util.out_channel -> deps -> unit) =
       let output_file ext fst_file =
         let basename =
           let uu___ =
-            let uu___1 = FStarC_Util.basename fst_file in
+            let uu___1 = FStarC_Filepath.basename fst_file in
             check_and_strip_suffix uu___1 in
           FStarC_Option.get uu___ in
         let basename1 = no_fstar_stubs_file basename in
         let ml_base_name = FStarC_Util.replace_chars basename1 46 "_" in
         FStarC_Find.prepend_output_dir (Prims.strcat ml_base_name ext) in
-      let norm_path s =
-        FStarC_Util.replace_chars (FStarC_Util.replace_chars s 92 "/") 32
-          "\\ " in
       let output_fs_file f =
         let uu___ = output_file ".fs" f in norm_path uu___ in
       let output_ml_file f =
@@ -2548,7 +2591,6 @@ let (print_full : FStarC_Util.out_channel -> deps -> unit) =
                                        (dep_subsumed_by iface_dep)
                                        dep_node1.edges in
                                    Prims.op_Negation uu___3)) in
-                         let norm_f = norm_path file_name1 in
                          let files =
                            FStarC_List.map
                              (file_of_dep_aux true deps1.file_system_map
@@ -2575,8 +2617,6 @@ let (print_full : FStarC_Util.out_channel -> deps -> unit) =
                              let uu___4 = cache_file_name iface_fn1 in uu___4
                                :: uu___3
                            else files1 in
-                         let files3 = FStarC_List.map norm_path files2 in
-                         let files4 = FStarC_String.concat "\\\n\t" files3 in
                          let cache_file_name1 = cache_file file_name1 in
                          let all_checked_files2 =
                            let uu___3 =
@@ -2586,7 +2626,8 @@ let (print_full : FStarC_Util.out_channel -> deps -> unit) =
                              Prims.op_Negation uu___4 in
                            if uu___3
                            then
-                             (print_entry cache_file_name1 norm_f files4;
+                             (print_entry cache_file_name1 (file_name1 ::
+                                files2);
                               cache_file_name1
                               ::
                               all_checked_files1)
@@ -2627,9 +2668,6 @@ let (print_full : FStarC_Util.out_channel -> deps -> unit) =
                           | (all_fst_files_dep, widened1) ->
                               let all_checked_fst_dep_files =
                                 FStarC_List.map cache_file all_fst_files_dep in
-                              let all_checked_fst_dep_files_string =
-                                FStarC_String.concat " \\\n\t"
-                                  all_checked_fst_dep_files in
                               ((let uu___5 = is_implementation file_name1 in
                                 if uu___5
                                 then
@@ -2641,8 +2679,8 @@ let (print_full : FStarC_Util.out_channel -> deps -> unit) =
                                         lowercase_module_name file_name1 in
                                       ((let uu___9 =
                                           output_ml_file file_name1 in
-                                        print_entry uu___9 cache_file_name1
-                                          all_checked_fst_dep_files_string);
+                                        print_entry uu___9 (cache_file_name1
+                                          :: all_checked_fst_dep_files));
                                        (let uu___10 =
                                           FStarC_Options.should_extract mname
                                             FStarC_Options.FSharp in
@@ -2651,20 +2689,20 @@ let (print_full : FStarC_Util.out_channel -> deps -> unit) =
                                           let uu___11 =
                                             output_fs_file file_name1 in
                                           print_entry uu___11
-                                            cache_file_name1
-                                            all_checked_fst_dep_files_string
+                                            (cache_file_name1 ::
+                                            all_checked_fst_dep_files)
                                         else ());
                                        (let uu___10 =
                                           output_krml_file file_name1 in
-                                        print_entry uu___10 cache_file_name1
-                                          all_checked_fst_dep_files_string))
+                                        print_entry uu___10 (cache_file_name1
+                                          :: all_checked_fst_dep_files)))
                                     else
                                       (let mname =
                                          lowercase_module_name file_name1 in
                                        (let uu___10 =
                                           output_ml_file file_name1 in
-                                        print_entry uu___10 cache_file_name1
-                                          "");
+                                        print_entry uu___10
+                                          [cache_file_name1]);
                                        (let uu___11 =
                                           FStarC_Options.should_extract mname
                                             FStarC_Options.FSharp in
@@ -2673,12 +2711,12 @@ let (print_full : FStarC_Util.out_channel -> deps -> unit) =
                                           let uu___12 =
                                             output_fs_file file_name1 in
                                           print_entry uu___12
-                                            cache_file_name1 ""
+                                            [cache_file_name1]
                                         else ());
                                        (let uu___11 =
                                           output_krml_file file_name1 in
-                                        print_entry uu___11 cache_file_name1
-                                          "")));
+                                        print_entry uu___11
+                                          [cache_file_name1])));
                                    (let cmx_files =
                                       let extracted_fst_files =
                                         FStarC_List.filter
@@ -2703,12 +2741,12 @@ let (print_full : FStarC_Util.out_channel -> deps -> unit) =
                                         FStarC_Options.OCaml in
                                     if uu___7
                                     then
-                                      let cmx_files1 =
-                                        FStarC_String.concat "\\\n\t"
-                                          cmx_files in
                                       let uu___8 = output_cmx_file file_name1 in
-                                      let uu___9 = output_ml_file file_name1 in
-                                      print_entry uu___8 uu___9 cmx_files1
+                                      let uu___9 =
+                                        let uu___10 =
+                                          output_ml_file file_name1 in
+                                        uu___10 :: cmx_files in
+                                      print_entry uu___8 uu___9
                                     else ()))
                                 else
                                   (let uu___7 =
@@ -2728,13 +2766,13 @@ let (print_full : FStarC_Util.out_channel -> deps -> unit) =
                                       then
                                         let uu___9 =
                                           output_krml_file file_name1 in
-                                        print_entry uu___9 cache_file_name1
-                                          all_checked_fst_dep_files_string
+                                        print_entry uu___9 (cache_file_name1
+                                          :: all_checked_fst_dep_files)
                                       else
                                         (let uu___10 =
                                            output_krml_file file_name1 in
-                                         print_entry uu___10 cache_file_name1
-                                           ""))
+                                         print_entry uu___10
+                                           [cache_file_name1]))
                                    else ()));
                                all_checked_files2)) in
                    profile process_one_key
@@ -2746,7 +2784,7 @@ let (print_full : FStarC_Util.out_channel -> deps -> unit) =
             let uu___1 = FStarC_List.filter is_interface keys in
             FStarC_Util.sort_with FStarC_String.compare uu___1 in
           let all_ml_files =
-            let ml_file_map = FStarC_Util.smap_create (Prims.of_int (41)) in
+            let ml_file_map = FStarC_SMap.create (Prims.of_int (41)) in
             FStarC_List.iter
               (fun fst_file ->
                  let mname = lowercase_module_name fst_file in
@@ -2755,11 +2793,11 @@ let (print_full : FStarC_Util.out_channel -> deps -> unit) =
                  if uu___2
                  then
                    let uu___3 = output_ml_file fst_file in
-                   FStarC_Util.smap_add ml_file_map mname uu___3
+                   FStarC_SMap.add ml_file_map mname uu___3
                  else ()) all_fst_files;
             sort_output_files ml_file_map in
           let all_fs_files =
-            let fs_file_map = FStarC_Util.smap_create (Prims.of_int (41)) in
+            let fs_file_map = FStarC_SMap.create (Prims.of_int (41)) in
             FStarC_List.iter
               (fun fst_file ->
                  let mname = lowercase_module_name fst_file in
@@ -2768,11 +2806,11 @@ let (print_full : FStarC_Util.out_channel -> deps -> unit) =
                  if uu___2
                  then
                    let uu___3 = output_fs_file fst_file in
-                   FStarC_Util.smap_add fs_file_map mname uu___3
+                   FStarC_SMap.add fs_file_map mname uu___3
                  else ()) all_fst_files;
             sort_output_files fs_file_map in
           let all_krml_files =
-            let krml_file_map = FStarC_Util.smap_create (Prims.of_int (41)) in
+            let krml_file_map = FStarC_SMap.create (Prims.of_int (41)) in
             FStarC_List.iter
               (fun fst_file ->
                  let mname = lowercase_module_name fst_file in
@@ -2781,14 +2819,9 @@ let (print_full : FStarC_Util.out_channel -> deps -> unit) =
                  if uu___2
                  then
                    let uu___3 = output_krml_file fst_file in
-                   FStarC_Util.smap_add krml_file_map mname uu___3
+                   FStarC_SMap.add krml_file_map mname uu___3
                  else ()) keys;
             sort_output_files krml_file_map in
-          let print_all tag files =
-            pr (Prims.strcat pre_tag tag);
-            pr "=\\\n\t";
-            FStarC_List.iter (fun f -> pr (norm_path f); pr " \\\n\t") files;
-            pr "\n" in
           (FStarC_List.iter
              (fun fsti ->
                 let mn = lowercase_module_name fsti in
@@ -2846,7 +2879,7 @@ let (do_print : FStarC_Util.out_channel -> Prims.string -> deps -> unit) =
              let uu___6 =
                let uu___7 =
                  let uu___8 = FStarC_Util.getcwd () in
-                 FStarC_Util.normalize_file_path uu___8 in
+                 FStarC_Filepath.normalize_file_path uu___8 in
                FStarC_Class_Show.show FStarC_Class_Show.showable_string
                  uu___7 in
              [uu___6] in

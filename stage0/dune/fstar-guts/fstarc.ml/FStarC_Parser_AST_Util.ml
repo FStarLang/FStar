@@ -1089,11 +1089,13 @@ let (__proj__Mkopen_namespaces_and_abbreviations__item__module_abbreviations
   fun projectee ->
     match projectee with
     | { open_namespaces; module_abbreviations;_} -> module_abbreviations
-type error_message = {
-  message: Prims.string ;
+type error_message =
+  {
+  message: FStarC_Pprint.document Prims.list ;
   range: FStarC_Range_Type.range }
-let (__proj__Mkerror_message__item__message : error_message -> Prims.string)
-  = fun projectee -> match projectee with | { message; range;_} -> message
+let (__proj__Mkerror_message__item__message :
+  error_message -> FStarC_Pprint.document Prims.list) =
+  fun projectee -> match projectee with | { message; range;_} -> message
 let (__proj__Mkerror_message__item__range :
   error_message -> FStarC_Range_Type.range) =
   fun projectee -> match projectee with | { message; range;_} -> range
@@ -1128,15 +1130,14 @@ let (__proj__Mkextension_parser__item__parse_decl :
   =
   fun projectee ->
     match projectee with | { parse_decl_name; parse_decl;_} -> parse_decl
-let (extension_parser_table : extension_parser FStarC_Util.smap) =
-  FStarC_Util.smap_create (Prims.of_int (20))
+let (extension_parser_table : extension_parser FStarC_SMap.t) =
+  FStarC_SMap.create (Prims.of_int (20))
 let (register_extension_parser : Prims.string -> extension_parser -> unit) =
-  fun ext ->
-    fun parser -> FStarC_Util.smap_add extension_parser_table ext parser
+  fun ext -> fun parser -> FStarC_SMap.add extension_parser_table ext parser
 let (lookup_extension_parser :
   Prims.string -> extension_parser FStar_Pervasives_Native.option) =
   fun ext ->
-    let do1 uu___ = FStarC_Util.smap_try_find extension_parser_table ext in
+    let do1 uu___ = FStarC_SMap.try_find extension_parser_table ext in
     let uu___ = do1 () in
     match uu___ with
     | FStar_Pervasives_Native.None ->
@@ -1178,21 +1179,21 @@ let (as_open_namespaces_and_abbrevs :
                }
            | uu___ -> out) ls
       { open_namespaces = []; module_abbreviations = [] }
-let (extension_lang_parser_table : extension_lang_parser FStarC_Util.smap) =
-  FStarC_Util.smap_create (Prims.of_int (20))
+let (extension_lang_parser_table : extension_lang_parser FStarC_SMap.t) =
+  FStarC_SMap.create (Prims.of_int (20))
 let (register_extension_lang_parser :
   Prims.string -> extension_lang_parser -> unit) =
   fun ext ->
-    fun parser -> FStarC_Util.smap_add extension_lang_parser_table ext parser
+    fun parser -> FStarC_SMap.add extension_lang_parser_table ext parser
 let (lookup_extension_lang_parser :
   Prims.string -> extension_lang_parser FStar_Pervasives_Native.option) =
   fun ext ->
-    let r = FStarC_Util.smap_try_find extension_lang_parser_table ext in
+    let r = FStarC_SMap.try_find extension_lang_parser_table ext in
     match r with
     | FStar_Pervasives_Native.None ->
         let uu___ = FStarC_Plugins.autoload_plugin ext in
         if uu___
-        then FStarC_Util.smap_try_find extension_lang_parser_table ext
+        then FStarC_SMap.try_find extension_lang_parser_table ext
         else FStar_Pervasives_Native.None
     | uu___ -> r
 let (parse_extension_lang :
@@ -1219,6 +1220,6 @@ let (parse_extension_lang :
                  FStarC_Errors.raise_error
                    FStarC_Class_HasRange.hasRange_range error.range
                    FStarC_Errors_Codes.Fatal_SyntaxError ()
-                   (Obj.magic FStarC_Errors_Msg.is_error_message_string)
+                   (Obj.magic FStarC_Errors_Msg.is_error_message_list_doc)
                    (Obj.magic error.message)
              | FStar_Pervasives.Inr ds -> ds)

@@ -17,8 +17,6 @@ module LowStar.UninitializedBuffer
 
 include LowStar.Monotonic.Buffer
 
-module P = FStar.Preorder
-module G = FStar.Ghost
 module U32 = FStar.UInt32
 module Seq = FStar.Seq
 

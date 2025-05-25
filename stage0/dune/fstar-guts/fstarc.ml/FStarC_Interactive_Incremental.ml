@@ -203,6 +203,19 @@ let (pop_entries :
 let repl_task :
   'uuuuu 'uuuuu1 'uuuuu2 . ('uuuuu * ('uuuuu1 * 'uuuuu2)) -> 'uuuuu1 =
   fun uu___ -> match uu___ with | (uu___1, (p, uu___2)) -> p
+let (push_kind_geq :
+  FStarC_Interactive_Ide_Types.push_kind ->
+    FStarC_Interactive_Ide_Types.push_kind -> Prims.bool)
+  =
+  fun pk1 ->
+    fun pk2 ->
+      (pk1 = pk2) ||
+        (match (pk1, pk2) with
+         | (FStarC_Interactive_Ide_Types.FullCheck,
+            FStarC_Interactive_Ide_Types.LaxCheck) -> true
+         | (FStarC_Interactive_Ide_Types.LaxCheck,
+            FStarC_Interactive_Ide_Types.SyntaxCheck) -> true
+         | uu___ -> false)
 let (inspect_repl_stack :
   FStarC_Interactive_Ide_Types.repl_stack_t ->
     (FStarC_Parser_AST.decl * FStarC_Parser_ParseIt.code_fragment) Prims.list
@@ -260,8 +273,9 @@ let (inspect_repl_stack :
                        | FStarC_Interactive_Ide_Types.PushFragment
                            (FStar_Pervasives.Inr d', pk, issues) ->
                            let uu___1 =
-                             FStarC_Parser_AST_Util.eq_decl
-                               (FStar_Pervasives_Native.fst d) d' in
+                             (FStarC_Parser_AST_Util.eq_decl
+                                (FStar_Pervasives_Native.fst d) d')
+                               && (push_kind_geq pk push_kind) in
                            if uu___1
                            then
                              let uu___2 = d in

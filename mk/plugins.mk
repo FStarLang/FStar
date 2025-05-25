@@ -58,6 +58,7 @@ ROOTS += ../ulib/FStar.Tactics.CanonCommMonoidSimple.Equiv.fst
 ROOTS += ../ulib/FStar.Tactics.Canon.fst
 ROOTS += ../ulib/FStar.Tactics.Canon.fsti
 ROOTS += ../ulib/FStar.Tactics.CheckLN.fsti
+ROOTS += ../ulib/FStar.Tactics.Easy.fsti
 ROOTS += ../ulib/FStar.Tactics.MApply0.fsti
 ROOTS += ../ulib/FStar.Tactics.MkProjectors.fsti
 ROOTS += ../ulib/FStar.Tactics.NamedView.fsti
@@ -71,5 +72,6 @@ ROOTS += ../ulib/FStar.Tactics.V1.Logic.fsti
 ROOTS += ../ulib/FStar.Tactics.V2.Logic.fsti
 ROOTS += ../ulib/FStar.Tactics.V2.SyntaxHelpers.fst
 ROOTS += ../ulib/FStar.Tactics.Visit.fst
+ROOTS += ../ulib/FStar.Tactics.PrettifyType.fst
 
 include mk/generic-1.mk

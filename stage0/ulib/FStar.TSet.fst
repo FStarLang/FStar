@@ -18,7 +18,6 @@
 module FStar.TSet
 
 #set-options "--initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0"
-module P = FStar.PropositionalExtensionality
 module F = FStar.FunctionalExtensionality
 
 (*

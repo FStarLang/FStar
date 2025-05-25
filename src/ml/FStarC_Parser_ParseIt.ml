@@ -8,6 +8,7 @@ open FStarC_Errors_Codes
 module Codes = FStarC_Errors_Codes
 module Msg = FStarC_Errors_Msg
 module Filepath = FStarC_Filepath
+module SMap = FStarC_SMap
 
 type filename = string
 
@@ -39,13 +40,13 @@ let find_file filename =
     | None ->
       raise_error_text FStarC_Range.dummyRange Fatal_ModuleOrFileNotFound (U.format1 "Unable to find file: %s\n" filename)
 
-let vfs_entries : (U.time_of_day * string) smap = smap_create (Z.of_int 1)
+let vfs_entries : (U.time_of_day * string) SMap.t = SMap.create (Z.of_int 1)
 
 let read_vfs_entry fname =
-  smap_try_find vfs_entries (Filepath.normalize_file_path fname)
+  SMap.try_find vfs_entries (Filepath.normalize_file_path fname)
 
 let add_vfs_entry fname contents =
-  smap_add vfs_entries (Filepath.normalize_file_path fname) (U.get_time_of_day (), contents)
+  SMap.add vfs_entries (Filepath.normalize_file_path fname) (U.get_time_of_day (), contents)
 
 let get_file_last_modification_time filename =
   match read_vfs_entry filename with
@@ -540,6 +541,7 @@ let parse_lang lang fn =
       ParseError (e, msg, r)
 
 let parse (lang_opt:lang_opts) fn =
+  FStarC_Stats.record "parse" @@ fun () ->
   FStarC_Parser_Util.warningHandler := (function
     | e -> Printf.printf "There was some warning (TODO)\n");
   match lang_opt with

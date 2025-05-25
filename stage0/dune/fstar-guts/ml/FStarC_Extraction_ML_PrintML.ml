@@ -1,11 +1,11 @@
 open List
 open Lexing
 open Ppxlib_ast
-open Astlib.Ast_500.Parsetree
+open Astlib.Ast_502.Parsetree
 open Location
 open Pprintast
 open Ast_helper
-open Astlib.Ast_500.Asttypes
+open Astlib.Ast_502.Asttypes
 open Longident
 
 open FStarC_Extraction_ML_Syntax
@@ -222,22 +222,19 @@ let rec build_core_type ?(annots = []) (ty: mlty): core_type =
      let label = Nolabel in
      Typ.mk (Ptyp_arrow (label,c_ty1,c_ty2))
   | MLTY_Named (tys, (path, sym)) ->
-     let c_tys = map build_core_type tys in
-     let p = path_to_ident (path, sym) in
-     let ty = Typ.mk (Ptyp_constr (p, c_tys)) in
-     (match path with
-      | ["Fstarcompiler.FStar"; "Pervasives"; "Native"]
-      | ["FStar"; "Pervasives"; "Native"] ->
-        (* A special case for tuples, so they are displayed as
-         * ('a * 'b) instead of ('a,'b) FStar_Pervasives_Native.tuple2
-         * VD: Should other types named "tupleXX" where XX does not represent
-         * the arity of the tuple be added to FStar.Pervasives.Native,
-         * the condition below might need to be more specific. *)
-        if BatString.starts_with sym "tuple" then
-          Typ.mk (Ptyp_tuple (map build_core_type tys))
-        else
-          ty
-      | _ -> ty)
+     (* Note: bypassing F* interface *)
+     if FStarC_Parser_Const_Tuples.is_tuple_constructor_string (String.concat "." (path@[sym])) then
+       (* A special case for tuples, so they are displayed as
+        * ('a * 'b) instead of ('a,'b) FStar_Pervasives_Native.tuple2
+        * VD: Should other types named "tupleXX" where XX does not represent
+        * the arity of the tuple be added to FStar.Pervasives.Native,
+        * the condition below might need to be more specific. *)
+       Typ.mk (Ptyp_tuple (map build_core_type tys))
+     else
+       let c_tys = map build_core_type tys in
+       let p = path_to_ident (path, sym) in
+       let ty = Typ.mk (Ptyp_constr (p, c_tys)) in
+       ty
   | MLTY_Tuple tys -> Typ.mk (Ptyp_tuple (map build_core_type tys))
   | MLTY_Top -> Typ.mk (Ptyp_constr (mk_lident "Obj.t", []))
   | MLTY_Erased -> Typ.mk (Ptyp_constr (mk_lident "unit", []))
@@ -494,7 +491,7 @@ let build_exn (sym, tys): type_exception =
   let ctor = Te.decl ?args:args name in
   Te.mk_exception ctor
 
-let build_module1 path (m1: mlmodule1): structure_item option =
+let build_module1 (m1: mlmodule1): structure_item option =
   match m1.mlmodule1_m with
   | MLM_Ty tydecl ->
      (match build_tydecl tydecl with
@@ -511,9 +508,9 @@ let build_module1 path (m1: mlmodule1): structure_item option =
       Some (Str.value Nonrecursive [binding])
   | MLM_Loc (p, f) -> None
 
-let build_m path (md: (mlsig * mlmodule) option) : structure =
+let build_m (md: (mlsig * mlmodulebody) option) : structure =
   match md with
-  | Some(s, m) ->
+  | Some(_sig, m) ->
     let open_plugin_lib =
       if FStarC_Options.codegen () = Some FStarC_Options.Plugin (* NB: PluginNoLib does not open the library *)
       then [Str.open_ (Opn.mk ?override:(Some Fresh) (Mod.ident (mk_lident "Fstar_pluginlib")))]
@@ -527,40 +524,21 @@ let build_m path (md: (mlsig * mlmodule) option) : structure =
     let open_prims =
       [Str.open_ (Opn.mk ?override:(Some Fresh) (Mod.ident (mk_lident "Prims")))]
     in
-    open_plugin_lib @ open_guts @ open_prims @ (map (build_module1 path) m |> flatmap opt_to_list)
+    open_plugin_lib @ open_guts @ open_prims @ (map build_module1 m |> flatmap opt_to_list)
   | None -> []
 
-let build_ast (out_dir: string option) (ext: string) (ml: mllib) =
-  match ml with
-  | MLLib l ->
-     map (fun (p, md, _) ->
-         let m = path_to_string p in
-         current_module := m;
-         let name = BatString.concat "" [m; ext] in
-         let path = (match out_dir with
-           | Some out -> BatString.concat "/" [out; name]
-           | None -> name) in
-         (path, build_m path md)) l
+let build_ast (modul : mlmodule) =
+  let (p, md) = modul in
+  let m = path_to_string p in
+  current_module := m;
+  build_m md
 
+let print_module (s: structure) : string =
+  let fmt = Format.str_formatter in
+  structure fmt s;
+  let res = Format.flush_str_formatter () in
+  res
 
-(* printing the AST to the correct path *)
-let print_module ((path, m): string * structure) =
-  Format.set_formatter_out_channel (open_out_bin path);
-  structure Format.std_formatter m;
-  Format.pp_print_flush Format.std_formatter ()
-
-let print (out_dir: string option) (ext: string) (ml: mllib) =
-  match ext with
-  | ".ml" ->
-     (* Use this printer for OCaml extraction *)
-     let ast = build_ast out_dir ext ml in
-     iter print_module ast
-  | ".fs" ->
-     (* Use the old printer for F# extraction *)
-     let new_doc = FStarC_Extraction_ML_Code.doc_of_mllib ml in
-     iter (fun (n, d) ->
-         FStarC_Util.write_file
-           (FStarC_Find.prepend_output_dir (BatString.concat "" [n;ext]))
-           (FStarC_Extraction_ML_Code.pretty (Prims.parse_int "120") d)
-           ) new_doc
-  | _ -> failwith "Unrecognized extension"
+let print_ml (modul : mlmodule) : string =
+  let ast = build_ast modul in
+  print_module ast

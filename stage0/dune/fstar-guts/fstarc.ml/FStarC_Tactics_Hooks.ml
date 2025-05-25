@@ -1675,8 +1675,10 @@ let (find_user_tac_for_attr :
   fun env ->
     fun a ->
       let hooks =
-        FStarC_TypeChecker_Env.lookup_attr env
-          FStarC_Parser_Const.handle_smt_goals_attr_string in
+        let uu___ =
+          FStarC_Ident.string_of_lid
+            FStarC_Parser_Const.handle_smt_goals_attr in
+        FStarC_TypeChecker_Env.lookup_attr env uu___ in
       FStarC_Util.try_find (fun uu___ -> true) hooks
 let (handle_smt_goal :
   FStarC_TypeChecker_Env.env ->
@@ -1908,7 +1910,8 @@ let (splice :
                                            (env.FStarC_TypeChecker_Env.use_eq_strict);
                                          FStarC_TypeChecker_Env.is_iface =
                                            (env.FStarC_TypeChecker_Env.is_iface);
-                                         FStarC_TypeChecker_Env.admit = false;
+                                         FStarC_TypeChecker_Env.admit =
+                                           (env.FStarC_TypeChecker_Env.admit);
                                          FStarC_TypeChecker_Env.lax_universes
                                            =
                                            (env.FStarC_TypeChecker_Env.lax_universes);
@@ -2098,7 +2101,7 @@ let (splice :
                           match uu___5 with
                           | (gs, sigelts) ->
                               let sigelts1 =
-                                let set_lb_dd lb =
+                                let proc_lb lb =
                                   let uu___6 = lb in
                                   match uu___6 with
                                   | {
@@ -2111,9 +2114,25 @@ let (splice :
                                       FStarC_Syntax_Syntax.lbattrs = uu___10;
                                       FStarC_Syntax_Syntax.lbpos = uu___11;_}
                                       ->
+                                      let r =
+                                        let uu___12 =
+                                          FStarC_List.tryFind
+                                            (fun i ->
+                                               FStarC_Ident.lid_equals i
+                                                 (fv.FStarC_Syntax_Syntax.fv_name).FStarC_Syntax_Syntax.v)
+                                            lids in
+                                        match uu___12 with
+                                        | FStar_Pervasives_Native.Some i ->
+                                            FStarC_Class_HasRange.pos
+                                              FStarC_Ident.hasrange_lident i
+                                        | uu___13 -> rng in
+                                      let fv1 =
+                                        FStarC_Class_HasRange.setPos
+                                          FStarC_Syntax_Syntax.hasRange_fv r
+                                          fv in
                                       {
                                         FStarC_Syntax_Syntax.lbname =
-                                          (FStar_Pervasives.Inr fv);
+                                          (FStar_Pervasives.Inr fv1);
                                         FStarC_Syntax_Syntax.lbunivs =
                                           (lb.FStarC_Syntax_Syntax.lbunivs);
                                         FStarC_Syntax_Syntax.lbtyp =
@@ -2140,8 +2159,7 @@ let (splice :
                                            let uu___7 =
                                              let uu___8 =
                                                let uu___9 =
-                                                 FStarC_List.map set_lb_dd
-                                                   lbs in
+                                                 FStarC_List.map proc_lb lbs in
                                                (is_rec, uu___9) in
                                              {
                                                FStarC_Syntax_Syntax.lbs1 =

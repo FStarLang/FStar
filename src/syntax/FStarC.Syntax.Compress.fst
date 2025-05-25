@@ -72,6 +72,7 @@ looks like a big identity function.
 makes .checked files more brittle, so we don't do it.
 *)
 let deep_compress (allow_uvars:bool) (allow_names: bool) (tm : term) : term =
+  Stats.record "deep_compress" fun () ->
   Err.with_ctx ("While deep-compressing a term") (fun () ->
     Visit.visit_term_univs true
       (compress1_t allow_uvars allow_names)
@@ -93,6 +94,7 @@ let deep_compress_if_no_uvars (tm : term) : option term =
   )
 
 let deep_compress_se (allow_uvars:bool) (allow_names:bool) (se : sigelt) : sigelt =
+  Stats.record "deep_compress_se" fun () ->
   Err.with_ctx (format1 "While deep-compressing %s" (Syntax.Print.sigelt_to_string_short se)) (fun () ->
     Visit.visit_sigelt true
       (compress1_t allow_uvars allow_names)

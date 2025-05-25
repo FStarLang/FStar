@@ -16,7 +16,6 @@
 
 module FStar.Vector.Properties
 open FStar.Vector.Base
-module S = FStar.Seq
 module U32 = FStar.UInt32
 
 /// This coercion seems to be necessary in some places

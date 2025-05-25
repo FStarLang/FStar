@@ -59,6 +59,7 @@ instance val pretty_binder      : pretty binder
 instance val pretty_bv          : pretty bv
 instance val pretty_binding     : pretty binding
 instance val pretty_qualifier   : pretty qualifier
+instance val pretty_aqual       : pretty aqual
 
 (* A "short" version of printing a sigelt. Meant to (usually) be a small string
 suitable to embed in an error message. No need to be fully faithful to

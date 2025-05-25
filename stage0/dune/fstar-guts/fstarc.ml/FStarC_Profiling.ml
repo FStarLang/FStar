@@ -51,20 +51,19 @@ let (json_of_counter : counter -> FStarC_Json.json) =
     FStarC_Json.JsonAssoc uu___
 let (new_counter : Prims.string -> counter) =
   fun cid ->
-    let uu___ = FStarC_Util.mk_ref Prims.int_zero in
-    let uu___1 = FStarC_Util.mk_ref false in
-    let uu___2 = FStarC_Util.mk_ref false in
+    let uu___ = FStarC_Effect.mk_ref Prims.int_zero in
+    let uu___1 = FStarC_Effect.mk_ref false in
+    let uu___2 = FStarC_Effect.mk_ref false in
     { cid; total_time = uu___; running = uu___1; undercount = uu___2 }
-let (all_counters : counter FStarC_Util.smap) =
-  FStarC_Util.smap_create (Prims.of_int (20))
+let (all_counters : counter FStarC_SMap.t) =
+  FStarC_SMap.create (Prims.of_int (20))
 let (create_or_lookup_counter : Prims.string -> counter) =
   fun cid ->
-    let uu___ = FStarC_Util.smap_try_find all_counters cid in
+    let uu___ = FStarC_SMap.try_find all_counters cid in
     match uu___ with
     | FStar_Pervasives_Native.Some c -> c
     | FStar_Pervasives_Native.None ->
-        let c = new_counter cid in
-        (FStarC_Util.smap_add all_counters cid c; c)
+        let c = new_counter cid in (FStarC_SMap.add all_counters cid c; c)
 let profile :
   'a .
     (unit -> 'a) ->
@@ -86,7 +85,7 @@ let profile :
                    match () with
                    | () ->
                        (FStarC_Effect.op_Colon_Equals c.running true;
-                        (let uu___5 = FStarC_Util.record_time_ns f in
+                        (let uu___5 = FStarC_Timing.record_ns f in
                          match uu___5 with
                          | (res, elapsed) ->
                              ((let uu___7 =
@@ -141,9 +140,9 @@ let (report : Prims.string -> counter -> unit) =
 let (report_and_clear : Prims.string -> unit) =
   fun tag ->
     let ctrs =
-      FStarC_Util.smap_fold all_counters
-        (fun uu___ -> fun v -> fun l -> v :: l) [] in
-    FStarC_Util.smap_clear all_counters;
+      FStarC_SMap.fold all_counters (fun uu___ -> fun v -> fun l -> v :: l)
+        [] in
+    FStarC_SMap.clear all_counters;
     (let ctrs1 =
        FStarC_Util.sort_with
          (fun c1 ->

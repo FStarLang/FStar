@@ -1110,7 +1110,12 @@ let t_apply_lemma (noinst:bool) (noinst_lhs:bool)
     in
     let bs, comp = U.arrow_formals_comp t in
     match lemma_or_sq comp with
-    | None -> fail "not a lemma or squashed function"
+    | None ->
+      fail_doc [
+        prefix 2 1 (text "Term to apply has computation type:") (pp comp);
+        text "`apply_lemma` can only apply functions with the Lemma effect or returning a squashed value.";
+      ]
+
     | Some (pre, post) ->
       let! uvs, _, implicits, subst =
         foldM_left
@@ -1729,6 +1734,7 @@ let unquote (ty : term) (tm : term) : tac term = wrap_err "unquote" <| (
     )
 
 let uvar_env (env : env) (ty : option typ) : tac term =
+  wrap_err "uvar_env" <| (
   let! ps = get in
   // If no type was given, add a uvar for it too!
   let! typ, g, r =
@@ -1747,6 +1753,7 @@ let uvar_env (env : env) (ty : option typ) : tac term =
   //the guard is an explicit goal; so the typedness deps of this new uvar is []
   let! t, uvar_t = new_uvar "uvar_env" env typ None [] ps.entry_range in
   return t
+  )
 
 let ghost_uvar_env (env : env) (ty : typ) : tac term =
   let! ps = get in
@@ -1788,29 +1795,31 @@ let default_if_err (def : 'a) (t : tac 'a) : tac 'a =
   | Inl _ -> return def
   | Inr v -> return v
 
-let match_env (e:env) (t1 : term) (t2 : term) : tac bool = wrap_err "match_env" <| (
-    let! ps = get in
-    let! t1, ty1, g1 = __tc e t1 in
-    let! t2, ty2, g2 = __tc e t2 in
-    proc_guard "match_env g1" e g1 None ps.entry_range ;!
-    proc_guard "match_env g2" e g2 None ps.entry_range ;!
-    let must_tot = true in
-    default_if_err false <|
-      tac_and (do_match must_tot e ty1 ty2)
-              (do_match must_tot e t1 t2)
-    )
+let match_env (e:env) (t1 : term) (t2 : term) : tac bool =
+  wrap_err "match_env" <|
+  default_if_err false <| (
+  let! ps = get in
+  let! t1, ty1, g1 = __tc e t1 in
+  let! t2, ty2, g2 = __tc e t2 in
+  proc_guard "match_env g1" e g1 None ps.entry_range ;!
+  proc_guard "match_env g2" e g2 None ps.entry_range ;!
+  let must_tot = true in
+    tac_and (do_match must_tot e ty1 ty2)
+            (do_match must_tot e t1 t2)
+  )
 
-let unify_env (e:env) (t1 : term) (t2 : term) : tac bool = wrap_err "unify_env" <| (
-    let! ps = get in
-    let! t1, ty1, g1 = __tc e t1 in
-    let! t2, ty2, g2 = __tc e t2 in
-    proc_guard "unify_env g1" e g1 None ps.entry_range ;!
-    proc_guard "unify_env g2" e g2 None ps.entry_range ;!
-    let must_tot = true in
-    default_if_err false <|
-      tac_and (do_unify must_tot e ty1 ty2)
-              (do_unify must_tot e t1 t2)
-    )
+let unify_env (e:env) (t1 : term) (t2 : term) : tac bool =
+  wrap_err "unify_env" <|
+  default_if_err false <| (
+  let! ps = get in
+  let! t1, ty1, g1 = __tc e t1 in
+  let! t2, ty2, g2 = __tc e t2 in
+  proc_guard "unify_env g1" e g1 None ps.entry_range ;!
+  proc_guard "unify_env g2" e g2 None ps.entry_range ;!
+  let must_tot = true in
+    tac_and (do_unify must_tot e ty1 ty2)
+            (do_unify must_tot e t1 t2)
+  )
 
 let unify_guard_env (e:env) (t1 : term) (t2 : term) : tac bool = wrap_err "unify_guard_env" <| (
     let! ps = get in
@@ -2242,6 +2251,16 @@ let write (r:tref 'a) (x:'a) : tac unit =
   r := x;
   return ()
 
+let splice_quals () : tac (list RD.qualifier) =
+  let! ps = get in
+  let quals = ps.splice_quals in
+  let quals = quals |> List.map syntax_to_rd_qual in
+  return quals
+
+let splice_attrs () : tac (list attribute) =
+  let! ps = get in
+  return ps.splice_attrs
+
 (***** Builtins used in the meta DSL framework *****)
 
 (* reflection typing calls generate guards in this format, and are mostly discharged
@@ -2252,7 +2271,11 @@ let dbg_refl (g:env) (msg:unit -> string) =
   if !dbg_ReflTc
   then BU.print_string (msg ())
 
-let issues = list Errors.issue
+let uvar_solution = bv & term
+let remaining_uvar_t = bv & typ
+let remaining_uvars_t = list remaining_uvar_t
+let issues = list FStarC.Errors.issue
+let refl_tac (a : Type) = tac (option a & issues)
 
 let refl_typing_guard (e:env) (g:typ) : tac unit =
   let reason = "refl_typing_guard" in
@@ -2319,6 +2342,7 @@ let __refl_typing_builtin_wrapper (f:unit -> 'a & list refl_guard_t) : tac (opti
               issue_msg = [
                 Pprint.doc_of_string "Discharging guard failed.";
                 Pprint.doc_of_string "g = " ^^ pp g;
+                Pprint.doc_of_string "Guard policy is" ^/^ pp ps.guard_policy;
               ];
               issue_level = EError;
               issue_range = None;
@@ -2386,7 +2410,7 @@ let unexpected_uvars_issue r =
   let i = {
     issue_level = EError;
     issue_range = Some r;
-    issue_msg = Errors.mkmsg "Cannot check relation with uvars";
+    issue_msg = Errors.mkmsg "Cannot check relation with uvars.";
     issue_number = Some (errno Error_UnexpectedUnresolvedUvar);
     issue_ctx = []
   } in
@@ -2696,6 +2720,7 @@ let refl_check_match_complete (g:env) (sc:term) (scty:typ) (pats : list RD.patte
   (List.map inspect_pat pats, List.map bnds_for_pat pats), []
 
 let refl_instantiate_implicits (g:env) (e:term) (expected_typ : option term)
+  (inst_extra:bool)
   : tac (option (list (bv & typ) & term & typ) & issues) =
   if no_uvars_in_g g &&
      no_uvars_in_term e
@@ -2711,7 +2736,7 @@ let refl_instantiate_implicits (g:env) (e:term) (expected_typ : option term)
       | None -> Env.clear_expected_typ g |> fst
       | Some typ -> Env.set_expected_typ g typ
     in
-    let g = {g with instantiate_imp=false; phase1=true; admit=true} in
+    let g = {g with instantiate_imp=inst_extra; phase1=true; admit=true} in
     let e, t, guard = g.typeof_tot_or_gtot_term g e must_tot in
     //
     // We don't worry about the logical payload,
@@ -2925,6 +2950,10 @@ let proofstate_of_goals rng env goals imps =
         all_implicits = imps;
         goals = goals;
         smt_goals = [];
+
+        splice_quals = [];
+        splice_attrs = [];
+
         depth = 0;
         __dump = do_dump_proofstate;
         psc = PO.null_psc;
@@ -2955,6 +2984,8 @@ let proofstate_of_all_implicits rng env imps =
         all_implicits = imps;
         goals = goals;
         smt_goals = [];
+        splice_quals = [];
+        splice_attrs = [];
         depth = 0;
         __dump = do_dump_proofstate;
         psc = PO.null_psc;

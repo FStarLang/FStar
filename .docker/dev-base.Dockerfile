@@ -16,7 +16,7 @@ RUN apt-get install -y --no-install-recommends \
       && apt-get clean -y
 
 # Install the relevant Z3 versions.
-COPY ./bin/get_fstar_z3.sh /usr/local/bin
+COPY .scripts/get_fstar_z3.sh /usr/local/bin
 RUN get_fstar_z3.sh /usr/local/bin
 
 RUN useradd -ms /bin/bash user

@@ -164,12 +164,17 @@ let rec eq_tm (env:env_t) (t1:term) (t2:term) : eq_result =
       Unknown
 
     | Tm_constant (Const_real r1), Tm_constant (Const_real r2) ->
-      // We cannot decide equality of reals. Use a conservative approach here.
-      // If the strings match, they are equal, otherwise we don't know. If this
-      // goes via the eq_iff case below, it will falsely claim that "1.0R" and
-      // "01.R" are different, since eq_const does not canonizalize the string
-      // representations.
-      equal_if (r1 = r2)
+      // We cannot simply compare strings (they are not canonicalized, e.g.
+      // "01.R" and "1.0R"). Call the proper comparison in FStarC.Real, which
+      // returns None for unknown.
+      begin match Real.cmp (Real.Real r1) (Real.Real r2) with
+        | Some Order.Eq -> Equal
+        | Some Order.Lt
+        | Some Order.Gt -> NotEqual
+        | None ->
+          // We don't know.
+          Unknown
+      end
 
     | Tm_constant c, Tm_constant d ->
       // NOTE: this relies on the fact that eq_const *correctly decides*

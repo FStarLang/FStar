@@ -973,14 +973,14 @@ let print_exn e =
 
 let digest_of_file =
   let open FStarC_SMap in
-  let cache = smap_create (Z.of_int 101) in
+  let cache = create (Z.of_int 101) in
   fun (fname:string) ->
-    match smap_try_find cache fname with
+    match try_find cache fname with
     | Some dig -> dig
     | None ->
       let dig = BatDigest.file fname in
       let dig = BatDigest.to_hex dig in
-      smap_add cache fname dig;
+      add cache fname dig;
       dig
 
 let digest_of_string (s:string) =

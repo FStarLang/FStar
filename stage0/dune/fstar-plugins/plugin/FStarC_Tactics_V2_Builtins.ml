@@ -5,15 +5,9 @@ open FStar_Pervasives
 open FStarC_Tactics_Result
 open FStarC_Tactics_Types
 
-module N        = FStarC_TypeChecker_Normalize
 module B        = FStarC_Tactics_V2_Basic
 module TM       = FStarC_Tactics_Monad
 module CTRW     = FStarC_Tactics_CtrlRewrite
-module RT       = FStarC_Reflection_Types
-module RD       = FStarC_Reflection_V1_Data
-module EMB      = FStarC_Syntax_Embeddings
-module EMBBase  = FStarC_Syntax_Embeddings_Base
-module NBET     = FStarC_TypeChecker_NBETerm
 
 type ('a,'wp) tac_repr = proofstate -> 'a __result
 type 'a __tac = ('a, unit) tac_repr
@@ -156,7 +150,7 @@ let check_match_complete         = from_tac_4 "B.refl_check_match_complete" B.re
 let tc_term                      = from_tac_2 "B.refl_tc_term" B.refl_tc_term
 let universe_of                  = from_tac_2 "B.refl_universe_of" B.refl_universe_of
 let check_prop_validity          = from_tac_2 "B.refl_check_prop_validity" B.refl_check_prop_validity
-let instantiate_implicits        = from_tac_3 "B.refl_instantiate_implicits" B.refl_instantiate_implicits
+let instantiate_implicits        = from_tac_4 "B.refl_instantiate_implicits" B.refl_instantiate_implicits
 let try_unify                    = from_tac_4 "B.refl_try_unify" B.refl_try_unify
 let maybe_relate_after_unfolding = from_tac_3 "B.refl_maybe_relate_after_unfolding" B.refl_maybe_relate_after_unfolding
 let maybe_unfold_head            = from_tac_2 "B.refl_maybe_unfold_head" B.refl_maybe_unfold_head

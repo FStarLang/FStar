@@ -643,7 +643,7 @@ let tc_decl' env0 se: list sigelt & list sigelt & Env.env =
     | [] ->
         List.iter Errors.print_issue errs;
         Errors.log_issue se Errors.Error_DidNotFail [
-            text "This top-level definition was expected to fail, but it succeeded";
+            text "This top-level definition was expected to fail, but it succeeded.";
           ]
     | _ ->
         if expected_errors <> [] then
@@ -656,9 +656,9 @@ let tc_decl' env0 se: list sigelt & list sigelt & Env.env =
             Errors.log_issue fail_rng Errors.Error_DidNotFail [
                 prefix 2 1
                   (text "This top-level definition was expected to raise error codes")
-                  (pp expected_errors) ^/^
+                  (pp (sort expected_errors)) ^/^
                 prefix 2 1 (text "but it raised")
-                  (pp actual_errors) ^^
+                  (pp (sort actual_errors)) ^^
                 dot;
                 text (BU.format3 "Error #%s was raised %s times, instead of %s."
                                       (show e) (show n2) (show n1));
@@ -808,17 +808,28 @@ let tc_decl' env0 se: list sigelt & list sigelt & Env.env =
 
     // env.splice will check the tactic
 
-    let ses = env.splice env is_typed lids t se.sigrng in
+    let ses = env.splice env se.sigquals se.sigattrs is_typed lids t se.sigrng in
+
+    if Debug.low () then
+      BU.print1 "Will splice decls:\n%s\n" (show ses);
+
     let ses = 
-      if is_typed
-      then let sigquals = 
+      (* For non-typed splices, they choose their own attributes and qualifiers.
+      The tactics can access them via the cur_attrs and cur_quals primitives, and add
+      them to the generated sigelts, possibly filtering some out.
+
+      Typed splices should probably do the same, though we would need to have
+      a typing judgment for them (e.g. stating what is allowed). *)
+      if is_typed then
+        let sigquals =
               match se.sigquals with
               | [] -> [ S.Visible_default ]
               | qs -> qs
            in
-            List.map 
-              (fun sp -> { sp with sigquals = sigquals@sp.sigquals; sigattrs = se.sigattrs@sp.sigattrs})
-              ses
+           let ses = ses |> List.map (fun sp ->
+                             { sp with sigquals = sigquals@sp.sigquals; sigattrs = se.sigattrs@sp.sigattrs}) in
+           let ses = ses |> List.map (Compress.deep_compress_se false false) in
+           ses
       else ses
     in
     let ses = ses |> List.map (fun se ->
@@ -915,9 +926,11 @@ let tc_decl' env0 se: list sigelt & list sigelt & Env.env =
     [se], [], env0)
 
 
-(* [tc_decl env se] typechecks [se] in environment [env] and returns *
+(* [tc_decl env se] typechecks [se] in environment [env] and returns
  * the list of typechecked sig_elts, and a list of new sig_elts elaborated
- * during typechecking but not yet typechecked *)
+ * during typechecking but not yet typechecked. This may also be called
+ * on ALREADY CHECKED declarations coming out of a splice_t. See the
+ * check for sigmeta_already_checked below. *)
 let tc_decl env se: list sigelt & list sigelt & Env.env =
   FStarC.GenSym.reset_gensym();
   let env0 = env in

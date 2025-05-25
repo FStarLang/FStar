@@ -21,6 +21,7 @@ open FStarC.Syntax.Syntax
 open FStarC.TypeChecker.Env
 open FStarC.Tactics.Common
 open FStarC.Class.Show
+open FStarC.Class.PP
 
 module PO      = FStarC.TypeChecker.Primops
 module Range   = FStarC.Range
@@ -52,6 +53,7 @@ type guard_policy =
     | Drop // unsound
 
 instance val showable_guard_policy : showable guard_policy
+instance val pretty_guard_policy   : pretty guard_policy
 
 type proofstate = {
     main_context : env;          //the shared top-level context for all goals
@@ -65,6 +67,11 @@ type proofstate = {
     // as values. This goal stack should be user-level.
     goals        : list goal;   //all the goals remaining to be solved
     smt_goals    : list goal;   //goals that have been deferred to SMT
+
+    // These are read-only, for splice tactics to read.
+    // They are just empty in other invocations.
+    splice_quals : list qualifier;
+    splice_attrs : list attribute;
 
     depth        : int;          //depth for tracing and debugging
     __dump       : proofstate -> string -> unit; // callback to dump_proofstate, to avoid an annoying circularity

@@ -29,6 +29,10 @@ open FStarC.Class.Show
 module E = FStarC.Errors
 module UF = FStarC.Syntax.Unionfind
 
+let print_stats () =
+  if !Stats.ever_enabled then
+    print1_error "Stats:\n%s\n" (Stats.print_all ())
+
 (* These modules only mentioned to put them in the dep graph
 and hence compile and link them in. They do not export anything,
 instead they register primitive steps in the normalizer during
@@ -65,6 +69,7 @@ let report_errors fmods =
   let nerrs = FStarC.Errors.get_err_count() in
   if nerrs > 0 then begin
     finished_message fmods nerrs;
+    print_stats ();
     exit 1
   end
 
@@ -125,6 +130,7 @@ let set_error_trap () =
     Errors.diag Range.dummyRange [
       text "GOT SIGINT! Exiting";
     ];
+    print_stats ();
     exit 1
   in
   set_sigint_handler (sigint_handler_f h')
@@ -176,7 +182,7 @@ let go_normal () =
       | None -> f
     )
   in
-  if Debug.any () then
+  if Debug.high () then
     print2 "Rewrote\n%s\ninto\n%s\n\n" (show filenames0) (show filenames);
 
   (* Compat: create the --odir and --cache_dir if they don't exist.
@@ -253,7 +259,7 @@ let go_normal () =
         (* Just "show decls" would print it, we just format this a bit *)
         files |> List.iter (fun (name, decls) ->
           print1 "%s:\n" name;
-          decls |> List.iter (fun d -> print1 "  %s\n" (show d))
+          decls |> List.iter (fun d -> print1 "%s\n\n" (show d))
         )
     )
 
@@ -422,8 +428,10 @@ let main () =
     then Util.print2_error "TOTAL TIME %s ms: %s\n"
               (FStarC.Util.string_of_int time)
               (String.concat " " (FStarC.Getopt.cmdline()));
+    print_stats();
     exit 0
   with
   | e ->
     handle_error e;
+    print_stats();
     exit 1
