@@ -299,20 +299,6 @@ let test = assert_norm (eval_expr ex1 == 1337)
 let test2 = assert_norm (eval_expr ex2 == ((1001 + 1833 + 13713 * 24)))
 //SNIPPET_END: eval_test$
 
-(* lift allows promoting terms defined in a smaller type to a bigger one *)
-let rec lift #f #g
-    {| ff: functor f |} 
-    {| fg: leq f g |}
-    (x: expr f)
-: expr g
-= let In xx = x in
-  let xx : f (expr f) = xx in
-  let yy : f (expr g) = ff.fmap xx lift in 
-  In (fg.inj yy)
-
-(* reuse addExample by lifting it *)
-let ex3 : expr (value ++ add ++ mul) = lift addExample *^ v 2
-let test3 = assert_norm (eval_expr ex3 == (1337 * 2))
 
 //////////////////////////////////////////
 // Rewrite rules
@@ -548,6 +534,23 @@ let rec render0_render
 let pretty #f (e:expr f) {| rf: render f |} : string =
   let In e = e in
   rf.to_string e render0_render
+
+//SNIPPET_START: lift$
+(* lift allows promoting terms defined in a smaller type to a bigger one *)
+let rec lift #f #g
+    {| ff: functor f |} 
+    {| fg: leq f g |}
+    (x: expr f)
+: expr g
+= let In xx = x in
+  let xx : f (expr f) = xx in
+  let yy : f (expr g) = ff.fmap xx lift in 
+  In (fg.inj yy)
+
+(* reuse addExample by lifting it *)
+let ex3 : expr (value ++ add ++ mul) = lift addExample *^ v 2
+let test3 = assert_norm (eval_expr ex3 == (1337 * 2))
+//SNIPPET_END: lift$
 
 let test4 = pretty ex3
 let tt = assert_norm (pretty ex3 == "((118 + 1219) * 2)")
