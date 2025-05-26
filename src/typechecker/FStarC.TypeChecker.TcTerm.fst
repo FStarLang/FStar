@@ -1543,14 +1543,14 @@ and tc_match (env : Env.env) (top : term) : term & lcomp & guard_t =
     in
 
     //bind with e1's computation type
-    let cres = TcUtil.bind e1.pos env (Some e1) c1 (Some guard_x, c_branches) in
+    let cres = TcUtil.bind e1.pos false env (Some e1) c1 (Some guard_x, c_branches) in
 
     let cres =
       if erasable
       then (* promote cres to ghost *)
            let e = U.exp_true_bool in
            let c = mk_GTotal U.t_bool in
-           TcUtil.bind e.pos env (Some e) (TcComm.lcomp_of_comp c) (None, cres)
+           TcUtil.bind e.pos false env (Some e) (TcComm.lcomp_of_comp c) (None, cres)
       else cres
     in
 
@@ -2632,8 +2632,8 @@ and check_application_args env head (chead:comp) ghead args expected_topt : term
                        |> fst)
                 else env in
               if TcComm.is_pure_or_ghost_lcomp c
-              then i+1,TcUtil.bind e.pos env (Some e) c (x, out_c)
-              else i+1,TcUtil.bind e.pos env None c (x, out_c))
+              then i+1,TcUtil.bind e.pos false env (Some e) c (x, out_c)
+              else i+1,TcUtil.bind e.pos false env None c (x, out_c))
           (1, cres)
           arg_comps_rev in
 
@@ -2646,8 +2646,8 @@ and check_application_args env head (chead:comp) ghead args expected_topt : term
                (show head)
                (TcComm.lcomp_to_string chead);
         if TcComm.is_pure_or_ghost_lcomp chead
-        then TcUtil.bind head.pos env (Some head) chead (None, comp)
-        else TcUtil.bind head.pos env None chead (None, comp) in
+        then TcUtil.bind head.pos false env (Some head) chead (None, comp)
+        else TcUtil.bind head.pos false env None chead (None, comp) in
 
       (* TODO : This is a really syntactic criterion to check if we can evaluate *)
       (* applications left-to-right, can we do better ? *)
@@ -3970,6 +3970,7 @@ and check_inner_let env e =
        let cres =
          TcUtil.maybe_return_e2_and_bind
            e1.pos
+           (not is_inline_let) //inline lets are inlined in the VC also, if they are Tot
            env
            (Some e1)
            c1
