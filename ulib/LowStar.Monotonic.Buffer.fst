@@ -67,7 +67,6 @@ let lemma_seq_sub_compatibility_is_transitive (#a:Type0)
 	   assert (Seq.equal (Seq.slice (Seq.slice s2 i1 j1) i2 j2) (Seq.slice s2 (i1 + i2) (i1 + j2))))
     in
 
-
     let t1 (s s2:Seq.seq a) = Seq.length s == len /\ Seq.length s2 == j2 - i2 /\
                               rel2 (Seq.slice s (i1 + i2) (i1 + j2)) s2 in
     let t2 (s s2:Seq.seq a) = t1 s s2 /\ rel s (Seq.replace_subseq s (i1 + i2) (i1 + j2) s2) in

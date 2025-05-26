@@ -1065,7 +1065,7 @@ let mul_wide_impl (x: U64.t) (y: U64.t) :
   assert (U64.v r1 == (phh x y + (phl x y + pll_h x y) / pow2 32 + (plh x y + (phl x y + pll_h x y) % pow2 32) / pow2 32) % pow2 64);
   let r = { low = r0; high = r1; } in
   r
-
+#restart-solver
 let product_sums (a b c d:nat) :
   Lemma ((a + b) * (c + d) == a * c + a * d + b * c + b * d) = ()
 
