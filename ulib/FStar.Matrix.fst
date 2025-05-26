@@ -658,7 +658,7 @@ let double_foldm_snoc_of_equal_generators #c #eq (#m #n: pos)
   SP.foldm_snoc_of_equal_inits cm (fun (i: under m) -> SP.foldm_snoc cm (SB.init n (fun (j: under n) -> f i j)))
                                   (fun (i: under m) -> SP.foldm_snoc cm (SB.init n (fun (j: under n) -> g i j)))
 
-#push-options "--z3rlimit 15 --ifuel 0 --fuel 0"  
+#push-options "--z3rlimit 15 --ifuel 0 --fuel 0 --ext compat:3800"  
 let matrix_mul_is_associative #c #eq #m #n #p #q (add: CE.cm c eq) 
                     (mul: CE.cm c eq{is_fully_distributive mul add /\ is_absorber add.unit mul}) 
                     (mx: matrix c m n) (my: matrix c n p) (mz: matrix c p q)

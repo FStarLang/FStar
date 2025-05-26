@@ -48,6 +48,7 @@ let lemma_seq_sub_compatilibity_is_reflexive (#a:Type0) (len:nat) (rel:srel a)
  *
  * i2 and j2 are relative offsets within [i1, j1) (i.e. assuming i1 = 0)
  *)
+#push-options "--ext compat:3800"
 let lemma_seq_sub_compatibility_is_transitive (#a:Type0)
   (len:nat) (rel:srel a) (i1 j1:nat) (rel1:srel a) (i2 j2:nat) (rel2:srel a)
   :Lemma (requires (i1 <= j1 /\ j1 <= len /\ i2 <= j2 /\ j2 <= j1 - i1 /\
@@ -79,8 +80,9 @@ let lemma_seq_sub_compatibility_is_transitive (#a:Type0)
 	   assert (Seq.equal (Seq.replace_subseq s i1 j1 (Seq.replace_subseq (Seq.slice s i1 j1) i2 j2 s2))
 	                     (Seq.replace_subseq s (i1 + i2) (i1 + j2) s2)))
     in
-
     Classical.forall_intro_2 aux0; Classical.forall_intro_2 aux1
+#pop-options
+
 
 noeq type mbuffer (a:Type0) (rrel:srel a) (rel:srel a) :Type0 =
   | Null
