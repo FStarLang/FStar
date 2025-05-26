@@ -299,21 +299,6 @@ let test = assert_norm (eval_expr ex1 == 1337)
 let test2 = assert_norm (eval_expr ex2 == ((1001 + 1833 + 13713 * 24)))
 //SNIPPET_END: eval_test$
 
-(* lift allows promoting terms defined in a smaller type to a bigger one *)
-let rec lift #f #g
-    {| ff: functor f |} 
-    {| fg: leq f g |}
-    (x: expr f)
-: expr g
-= let In xx = x in
-  let xx : f (expr f) = xx in
-  let yy : f (expr g) = ff.fmap xx lift in 
-  In (fg.inj yy)
-
-(* reuse addExample by lifting it *)
-let ex3 : expr (value ++ add ++ mul) = lift addExample *^ v 2
-let test3 = assert_norm (eval_expr ex3 == (1337 * 2))
-
 //////////////////////////////////////////
 // Rewrite rules
 //////////////////////////////////////////
@@ -487,3 +472,19 @@ let rec to_string_specific
 // Ex 2:
 (* class render (f: [@@@strictly_positive]Type -> Type) = {
   to_string : ... *)
+
+// Ex 3:
+(* lift allows promoting terms defined in a smaller type to a bigger one *)
+let lift #f #g
+    {| ff: functor f |} 
+    {| fg: leq f g |}
+    (x: expr f)
+: expr g
+= admit()
+
+(* reuse addExample by lifting it *)
+let ex3 : expr (value ++ add ++ mul) = lift addExample *^ v 2
+[@@expect_failure]
+let test_e3 = assert_norm (eval_expr ex3 == (1337 * 2))
+
+
