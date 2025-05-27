@@ -37,6 +37,7 @@ let test2 (lll:list int{List.Tot.length lll > 0 /\
   let h = HST.get () in
   assert (B.as_seq h b == Seq.seq_of_list l);
   assert (B.length b == List.Tot.length l);
+  [@@inline_let]
   let ll = [1;2;3;4;5;6;7;8;9;10;11] in
   HST.push_frame ();
   let b = B.alloca_of_list ll in

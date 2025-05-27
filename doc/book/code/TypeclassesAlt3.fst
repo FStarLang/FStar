@@ -180,6 +180,7 @@ let testsum64 : U64.t = Some?.v (sum [0x01uL; 0x02uL; 0x03uL] 0x00uL)
 
 //SNIPPET_START: testsum32'$
 let testsum32' : U32.t =
+  [@@inline_let]
   let x =
     sum #U32.t
         [0x01ul; 0x02ul; 0x03ul;

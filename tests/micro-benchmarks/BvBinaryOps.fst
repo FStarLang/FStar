@@ -15,7 +15,9 @@ let lemma_test_bv8 (bv: BV.bv_t 8) (i: UInt.uint_t 3): unit =
   assert ((BV.bvand #8 (BV.bvor #8 bv shl) shl <> BV.int2bv #8 0 == true))
 
 let lemma_test_bv8' (bv: BV.bv_t 8) (i: UInt.uint_t 3): unit =
+  [@@inline_let]
   let i' = BV.bv_uext #3 #5 (BV.int2bv #3 i) in
+  [@@inline_let]
   let shl = (BV.bvshl' #8 (BV.int2bv #8 1) i') in
   assert ((BV.bvand #8 (BV.bvor #8 bv shl) shl <> BV.int2bv #8 0 == true))
 
@@ -31,7 +33,9 @@ let lemma_test_bv8' (bv: BV.bv_t 8) (i: UInt.uint_t 3): unit =
 // much clearer that the top 58 bits are zeros:
 
 let lemma_test_bv64' (bv: BV.bv_t 64) (i: UInt.uint_t 6): unit =
+  [@@inline_let]
   let i' = BV.bv_uext #6 #58 (BV.int2bv #6 i) in
+  [@@inline_let]
   let shl = BV.bvshl' #64 (BV.int2bv #64 1) i' in
   assert ((BV.bvand #64 (BV.bvor #64 bv shl) shl <> BV.int2bv #64 0 == true))
 
