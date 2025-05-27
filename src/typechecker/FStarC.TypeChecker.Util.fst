@@ -1614,14 +1614,24 @@ let bind
                      Env.map_guard g_c2 (SS.subst [NT (x, e)]);
                      g_close ], "c1 Tot")
                 | Some e, Some x ->
-                  let c2, g_c2' = weaken_comp env c2 (U.mk_eq2 (env.universe_of env x.sort) x.sort e (bv_to_name x)) in
-                  let c2, g_close = close_with_type_of_x x c2 in
-                  let c2 = close_wp_comp env [x] c2 in
-                  Inl (c2, Env.conj_guards [
-                            g_c1;
-                            Env.close_guard env [S.mk_binder x] g_c2;
-                            Env.close_guard env [S.mk_binder x] g_c2';
-                            Env.close_guard env [S.mk_binder x] g_close ], "c1 Tot with eq")
+                  if U.is_total_comp c2
+                  then (
+                    Inl (c2, trivial_guard, "both Tot")
+                  )
+                  else if U.is_tot_or_gtot_comp c2
+                  then (
+                    Inl (S.mk_GTotal (U.comp_result c2), trivial_guard, "Tot/GTot")
+                  ) 
+                  else ( 
+                    let c2, g_c2' = weaken_comp env c2 (U.mk_eq2 (env.universe_of env x.sort) x.sort e (bv_to_name x)) in
+                    let c2, g_close = close_with_type_of_x x c2 in
+                    let c2 = close_wp_comp env [x] c2 in
+                    Inl (c2, Env.conj_guards [
+                              g_c1;
+                              Env.close_guard env [S.mk_binder x] g_c2;
+                              Env.close_guard env [S.mk_binder x] g_c2';
+                              Env.close_guard env [S.mk_binder x] g_close ], "c1 Tot with eq")
+                  )
                  | _, Some x ->
                    let c2, g_close = c2 |> close_with_type_of_x x in
                    Inl (c2, Env.conj_guards [
