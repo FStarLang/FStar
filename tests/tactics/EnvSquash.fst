@@ -23,7 +23,9 @@ assume val p : int -> prop
  * splitting a VC do not have their types squashed, which causes
  * a less efficient SMT encoding, and is unneeded anyhow. *)
 
+#push-options "--ext compat:3800"
 let test () =
+    [@@inline_let]
     let tau () : Tac unit =
       let bs = vars_of_env (cur_env ()) in
       guard (Cons? (List.Tot.rev bs));
@@ -34,3 +36,4 @@ let test () =
     in
     assume (exists x. p x);
     assert True by tau ()
+#pop-options

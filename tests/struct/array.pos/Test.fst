@@ -63,11 +63,13 @@ let mk_struct_literal (x:S.struct_literal 'a) : Pure (S.struct_literal 'a)
   (requires True)
   (ensures fun _ -> True) = x
 
+#push-options "--ext compat:3800"
 let caller ()
 : HST.Stack int
   (requires fun _ -> True)
   (ensures (fun _ z _ -> z == 18)) =
   HST.push_frame();
+  [@@inline_let]
   let l : S.struct_literal struct = mk_struct_literal [(|"I", 18|); (| "B", true |)] in
   let dm : S.struct struct = S.struct_create struct l in
   let b = S.buffer_of_array_pointer (S.screate (S.TArray 2ul struct_t) (Some (Seq.create 2 dm))) in
@@ -76,3 +78,4 @@ let caller ()
   let z = callee pfrom pto in
   HST.pop_frame ();
   z
+#pop-options
