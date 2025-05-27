@@ -92,7 +92,10 @@ type scope_mod =
 | Rec_binding              of rec_binding
 | Module_abbrev            of module_abbrev
 | Open_module_or_namespace of open_module_or_namespace
-| Top_level_defs           of PSMap.t bool   (* a map (to avoid a linear scan) recording that a top-level definition for an unqualified identifier x is in scope and should be resolved as curmodule.x. *)
+| Top_level_defs           of PSMap.t unit
+  (* ^ A map (to avoid a linear scan) recording that a top-level definition
+     for an unqualified identifier x is in scope and should be resolved
+     as curmodule.x. *)
 | Record_or_dc             of record_or_dc    (* to honor interleavings of "open" and record definitions *)
 
 instance _ : showable scope_mod = {
@@ -1118,9 +1121,9 @@ let push_sigelt' fail_on_dup env s =
   let push_top_level_def id stack =
     match stack with
     | Top_level_defs ids :: rest ->
-      Top_level_defs (PSMap.add ids (string_of_id id) true) :: rest
+      Top_level_defs (PSMap.add ids (string_of_id id) ()) :: rest
     | _ ->
-      Top_level_defs (PSMap.add (PSMap.empty()) (string_of_id id) true) :: stack
+      Top_level_defs (PSMap.add (PSMap.empty()) (string_of_id id) ()) :: stack
   in
   lss |> List.iter (fun (lids, se) ->
     lids |> List.iter (fun lid ->
