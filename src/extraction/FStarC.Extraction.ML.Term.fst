@@ -1939,7 +1939,7 @@ and term_as_mlexpr' (g:uenv) (top:term) : (mlexpr & e_tag & mlty) =
                   | E_ERASABLE, MLTY_Erased -> [Erased]
                   | _ -> []
               in
-              let meta = if has_c_inline then CInline :: meta else meta in
+              let meta = if has_c_inline || Options.Ext.get "extraction_inline_all" <> "" then CInline :: meta else meta in
               f, {mllb_meta = meta; mllb_attrs = []; mllb_name=nm; mllb_tysc=Some polytype; mllb_add_unit=add_unit; mllb_def=e; print_typ=true}
           in
           let lbs = extract_lb_sig g (is_rec, lbs) in
