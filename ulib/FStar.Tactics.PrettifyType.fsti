@@ -11,6 +11,7 @@ them directly. *)
 (* Use this alias to generate field and constructor names.
 Place it around an atom for field name, and around (the outer) tuple2
 of a case to choose a constructor name. *)
+inline_for_extraction
 type named (s:string) (a:Type) = a
 
 let fakeunit = `unit
