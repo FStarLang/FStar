@@ -243,7 +243,7 @@ let rec is_type_aux env t =
       | Some (t, _) ->
         is_arity env t
       | _ -> (
-        failwith (BU.format1 "Extraction: variable not found: %s" (tag_of t))
+        failwith (BU.format1 "Extraction: variable not found: %s" (show x))
       )
     )
 
