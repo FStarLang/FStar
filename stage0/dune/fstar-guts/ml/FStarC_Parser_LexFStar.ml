@@ -513,7 +513,7 @@ match%sedlex lexbuf with
         | s  -> EXISTS_OP s
       )
 
- | "∃", Plus op_char ->
+ | Utf8 "∃", Plus op_char ->
     ensure_no_comment lexbuf (fun s ->
         match BatString.lchop ~n:1 s with
         | "" -> EXISTS false
@@ -527,7 +527,7 @@ match%sedlex lexbuf with
         | s  -> FORALL_OP s
       )
 
- | "∀", Plus op_char ->
+ | Utf8 "∀", Plus op_char ->
     ensure_no_comment lexbuf (fun s ->
         match BatString.lchop ~n:1 s with
         | "" -> FORALL false
