@@ -1701,7 +1701,7 @@ let bind
                  //           (x == e1 ==> lift_M2_M (wp2[e1/x]))
 
                  if U.is_partial_return c1
-                 && Options.Ext.enabled "compat:3800"
+                 && (not is_let_binding || Options.Ext.enabled "compat:3800")
                  then
                       let _ = debug (fun () ->
                         BU.print2 "(3) bind (case a): Substituting %s for %s\n" (N.term_to_string env e1) (show x)) in
@@ -1712,7 +1712,7 @@ let bind
                       let _ = debug (fun () ->
                         BU.print2 "(3) bind (case b): Adding equality %s = %s\n" (N.term_to_string env e1) (show x)) in
                       let c2 = 
-                        if Options.Ext.enabled "compat:3800"
+                        if not is_let_binding || Options.Ext.enabled "compat:3800"
                         then SS.subst_comp [NT(x,e1)] c2
                         else c2
                       in
