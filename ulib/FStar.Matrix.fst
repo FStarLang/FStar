@@ -658,7 +658,7 @@ let double_foldm_snoc_of_equal_generators #c #eq (#m #n: pos)
   SP.foldm_snoc_of_equal_inits cm (fun (i: under m) -> SP.foldm_snoc cm (SB.init n (fun (j: under n) -> f i j)))
                                   (fun (i: under m) -> SP.foldm_snoc cm (SB.init n (fun (j: under n) -> g i j)))
 
-#push-options "--z3rlimit 15 --ifuel 0 --fuel 0 --ext compat:3800"  
+#push-options "--z3rlimit 15 --ifuel 0 --fuel 0"
 let matrix_mul_is_associative #c #eq #m #n #p #q (add: CE.cm c eq) 
                     (mul: CE.cm c eq{is_fully_distributive mul add /\ is_absorber add.unit mul}) 
                     (mx: matrix c m n) (my: matrix c n p) (mz: matrix c p q)
@@ -668,9 +668,13 @@ let matrix_mul_is_associative #c #eq #m #n #p #q (add: CE.cm c eq)
   let lhs = (mx `matrix_mul add mul` my) `matrix_mul add mul` mz in
   let mxy = matrix_mul add mul mx my in
   let myz = matrix_mul add mul my mz in
-  let ((+), ( * ), (=)) = add.mult, mul.mult, eq.eq in 
+  let (+) = add.mult in
+  let ( * ) = mul.mult in
+  let (=) = eq.eq in
   let aux i l : squash (ijth lhs i l = ijth rhs i l) =
+    [@@inline_let]
     let sum_j (f: under n -> c) = SP.foldm_snoc add (SB.init n f) in
+    [@@inline_let]
     let sum_k (f: under p -> c) = SP.foldm_snoc add (SB.init p f) in 
     let xy_products_init k j = ijth mx i j * ijth my j k in
     let xy_cell_as_sum k = sum_j (xy_products_init k) in    
@@ -679,10 +683,15 @@ let matrix_mul_is_associative #c #eq #m #n #p #q (add: CE.cm c eq)
     in Classical.forall_intro xy_cell_lemma;  
     let xy_z_products_init k = xy_cell_as_sum k * ijth mz k l in
     matrix_mul_ijth_eq_sum_of_seq_for_init add mul mxy mz i l xy_z_products_init;
+    [@@inline_let]
     let full_init_kj k j = (ijth mx i j * ijth my j k) * ijth mz k l in
+    [@@inline_let]
     let full_init_jk j k = (ijth mx i j * ijth my j k) * ijth mz k l in 
+    [@@inline_let]
     let full_init_rh j k = ijth mx i j * (ijth my j k * ijth mz k l) in
+    [@@inline_let]
     let sum_jk (f: (under n -> under p -> c)) = sum_j (fun j -> sum_k (fun k -> f j k)) in
+    [@@inline_let]
     let sum_kj (f: (under p -> under n -> c)) = sum_k (fun k -> sum_j (fun j -> f k j)) in
     let xy_z_distr k : Lemma (((xy_cell_as_sum k) * (ijth mz k l)) = sum_j (full_init_kj k))
       = foldm_snoc_distributivity_right_eq mul add (SB.init n (xy_products_init k)) (ijth mz k l) 

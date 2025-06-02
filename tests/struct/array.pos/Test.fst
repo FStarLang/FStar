@@ -63,7 +63,6 @@ let mk_struct_literal (x:S.struct_literal 'a) : Pure (S.struct_literal 'a)
   (requires True)
   (ensures fun _ -> True) = x
 
-#push-options "--ext compat:3800"
 let caller ()
 : HST.Stack int
   (requires fun _ -> True)
@@ -78,4 +77,3 @@ let caller ()
   let z = callee pfrom pto in
   HST.pop_frame ();
   z
-#pop-options
