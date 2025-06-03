@@ -953,6 +953,11 @@ match_returning:
   | as_opt=option(AS i=lident {i}) RETURNS t=tmIff {as_opt,t,false}
   | as_opt=option(AS i=lident {i}) RETURNS_EQ t=tmIff {as_opt,t,true}
 
+localletqualifier:
+  | REC    { LocalRec }
+  | UNFOLD { LocalUnfold }
+  |        { LocalNoLetQualifier }
+
 %public
 noSeqTerm:
   | t=typ  { t }
@@ -1036,7 +1041,7 @@ noSeqTerm:
       }
 
   | attrs=ioption(attribute)
-    LET q=letqualifier lb=letbinding lbs=list(attr_letbinding) IN e=term
+    LET q=localletqualifier lb=letbinding lbs=list(attr_letbinding) IN e=term
       {
         let lbs = (attrs, lb)::lbs in
         let lbs = focusAttrLetBindings lbs (rr2 $loc(q) $loc(lb)) in
