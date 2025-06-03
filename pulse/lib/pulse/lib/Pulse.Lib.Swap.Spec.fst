@@ -114,12 +114,12 @@ let rec mk_bezout
   (decreases l)
 = if l = 0
   then begin
-    let d : pos = n in
-    let q_n : nat = 1 in
-    let q_l : nat = 0 in
-    let u_n : int = 1 in
-    let u_l : int = 0 in
-    let res = {
+    let unfold d : pos = n in
+    let unfold q_n : nat = 1 in
+    let unfold q_l : nat = 0 in
+    let unfold u_n : int = 1 in
+    let unfold u_l : int = 0 in
+    let unfold res = {
       d = d;
       q_n = q_n;
       q_l = q_l;
@@ -140,21 +140,21 @@ let rec mk_bezout
     let d = bpre.d in
     let q_l = bpre.q_n in
     let qpre_lpre = bpre.q_l in
-    let upre_l = bpre.u_n in
-    let upre_lpre = bpre.u_l in
+    let unfold upre_l = bpre.u_n in
+    let unfold upre_lpre = bpre.u_l in
     let n_alt0 = l * ql + lpre in
     assert (n == n_alt0);
-    let l_alt = d * q_l in
-    let lpre_alt1 = d * qpre_lpre in
-    let n_alt1 = l_alt * ql + lpre_alt1 in
+    let unfold l_alt = d * q_l in
+    let unfold lpre_alt1 = d * qpre_lpre in
+    let unfold n_alt1 = l_alt * ql + lpre_alt1 in
     assert (n_alt1 == n);
-    let q_n = q_l * ql + qpre_lpre in
+    let unfold q_n = q_l * ql + qpre_lpre in
     assert (eq2 #int n_alt1 (d * q_n)) by (int_semiring ());
-    let lpre_alt2 = n + - l * ql in
+    let unfold lpre_alt2 = n + - l * ql in
     assert (lpre_alt2 == lpre);
-    let d_alt = l * upre_l + lpre_alt2 * upre_lpre in
+    let unfold d_alt = l * upre_l + lpre_alt2 * upre_lpre in
     assert (d_alt == d);
-    let u_l = upre_l + - ql * upre_lpre in
+    let unfold u_l = upre_l + - ql * upre_lpre in
     assert (eq2 #int (n * upre_lpre + l * u_l) d_alt) by (int_semiring ());
     let res = {
       d = d;
@@ -208,13 +208,13 @@ let jump_mod_d
   let x' = jump n l x in
   let x'q = (x + l) / n in
   euclidean_division_definition (x + l) n;
-  let l_alt = b.d * b.q_l in
+  let unfold l_alt = b.d * b.q_l in
   assert (l_alt == l);
-  let n_alt = b.d * b.q_n in
+  let unfold n_alt = b.d * b.q_n in
   assert (n_alt == n);
-  let x'_alt = x + l_alt + - x'q * n_alt in
+  let unfold x'_alt = x + l_alt + - x'q * n_alt in
   assert (x'_alt == x');
-  let qx = b.q_l + - x'q * b.q_n in
+  let unfold qx = b.q_l + - x'q * b.q_n in
   assert (eq2 #int x'_alt (x + qx * b.d)) by (int_semiring ());
   lemma_mod_plus x qx b.d
 
@@ -281,8 +281,8 @@ let jump_coverage
   let i = x % b.d in
   let qx = x / b.d in
   euclidean_division_definition x b.d;
-  let k1 = qx * b.u_l in
-  let m = qx * b.u_n in
+  let unfold k1 = qx * b.u_l in
+  let unfold m = qx * b.u_n in
   assert (eq2 #int (qx * (n * b.u_n + l * b.u_l) + i) (i + k1 * l + m * n)) by (int_semiring ());
   assert (x == i + k1 * l + m * n);
   small_mod x n;
@@ -398,7 +398,7 @@ let mod_eq_elim
   euclidean_division_definition x2 n;
   let q1 = x1 / n in
   let q2 = x2 / n in
-  let k = q1 + - q2 in
+  let unfold k = q1 + - q2 in
   let r = x1 % n in
   assert (q1 * n + r + - (q2 * n + r) == k * n) by (int_semiring ());
   k
@@ -604,6 +604,7 @@ let array_swap_post
     0 <= l /\
     l <= n /\
     s `Seq.equal` (Seq.slice s0 l n `Seq.append` Seq.slice s0 0 l)
+#restart-solver
 
 let array_as_ring_buffer_swap
   (#t: Type)
@@ -630,7 +631,7 @@ let array_as_ring_buffer_swap
   ))
   [SMTPat (array_swap_post s0 n l s); SMTPat (bezout_prop n l bz)]
 = Classical.forall_intro (jump_if n l ());
-  let p
+  let unfold p
     (idx: nat_up_to n)
   : Tot prop
   = Seq.index s idx == Seq.index s0 (jump n l idx)

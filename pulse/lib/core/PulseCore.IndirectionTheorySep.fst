@@ -1022,6 +1022,7 @@ let hogs_invariant_disjoint' (e f:inames) (p0 p1:slprop) (m0 m1:mem) :
       (p1 `star` hogs_invariant f m1) m1)
     (ensures (
       let m = join_premem m0 m1 in
+      mem_ok m /\
       (p0 `star` p1 `star` hogs_invariant (GS.union e f) m) m)) =
   let e' = gs_diff e (hogs_dom m1) in
   let _ : squash ((p0 `star` hogs_invariant e' m0) m0) =

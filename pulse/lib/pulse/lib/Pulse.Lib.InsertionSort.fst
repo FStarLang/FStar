@@ -113,7 +113,8 @@ let step_inner_invariant
 = () 
 #pop-options
 
-#push-options "--fuel 0 --ifuel 1 --split_queries no"
+#push-options "--fuel 0 --ifuel 1 --split_queries no --z3rlimit_factor 2"
+#restart-solver
 let step_outer_invariant
       (#t:Type)
       {| total_order t |}
