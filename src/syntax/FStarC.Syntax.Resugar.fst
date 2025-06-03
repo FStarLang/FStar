@@ -876,16 +876,50 @@ let rec resugar_term' (env: DsEnv.env) (t : S.term) : A.term =
           (pat, resugar_term' env term), (universe_to_string univs))
       in
       let r = List.map resugar_one_binding source_lbs in
-      let bnds =
-          let f (attrs, (pb, univs)) =
-            if not (Options.print_universes ()) then attrs, pb
-            (* Print bound universes as a comment *)
-            else attrs, (fst pb, label univs (snd pb))
+      let resugar_one_binding (attrs, (pb, univs)) =
+        if not (Options.print_universes ()) then attrs, pb
+        (* Print bound universes as a comment *)
+        else attrs, (fst pb, label univs (snd pb))
+      in
+      let qual, bnds =
+        match r with
+        | [(Some attrs, (pb, univs))] when not is_rec -> (
+          let qual, attrs =
+            let is_inline_let_attr a =
+              match a.tm with
+              | Var l ->
+                Ident.lid_equals l C.inline_let_attr
+              | _ -> false
+            in
+            let is_inline_let_vc_attr a =
+              match a.tm with
+              | Var l ->
+                Ident.lid_equals l C.inline_let_vc_attr
+              | _ -> false
+            in
+            let inline_attrs, rest =
+              List.partition 
+                (fun a -> is_inline_let_attr a || is_inline_let_vc_attr a)
+                attrs
+            in
+            if List.existsb is_inline_let_attr inline_attrs
+            && List.existsb is_inline_let_vc_attr inline_attrs
+            then LocalUnfold, rest
+            else LocalNoLetQualifier, attrs
           in
-          List.map f r
+          let attrs =
+            match attrs with
+            | [] -> None
+            | _ -> Some attrs
+          in
+          qual, [resugar_one_binding (attrs, (pb, univs))]
+        )
+        | _ ->
+          (if is_rec then A.LocalRec else A.LocalNoLetQualifier),
+          List.map resugar_one_binding r
       in
       let body = resugar_term' env body in
-      mk (A.Let((if is_rec then A.LocalRec else A.LocalNoLetQualifier), bnds, body))
+      mk (A.Let(qual, bnds, body))
 
     | Tm_uvar (u, _) ->
       let s = "?u" ^ (UF.uvar_id u.ctx_uvar_head |> string_of_int) in
