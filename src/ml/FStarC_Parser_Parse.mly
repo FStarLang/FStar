@@ -939,9 +939,9 @@ match_returning:
   | as_opt=option(AS i=lident {i}) RETURNS_EQ t=tmIff {as_opt,t,true}
 
 localletqualifier:
-  | REC    { false, Rec }
-  | UNFOLD { true, NoLetQualifier }
-  |        { false, NoLetQualifier }
+  | REC    { LocalRec }
+  | UNFOLD { LocalUnfold }
+  |        { LocalNoLetQualifier }
 
 %public
 noSeqTerm:
@@ -1028,12 +1028,9 @@ noSeqTerm:
   | attrs=ioption(attribute)
     LET q=localletqualifier lb=letbinding lbs=list(attr_letbinding) IN e=term
       {
-        let is_unfold, is_rec = q in
-        let inline_attrs = if is_unfold then [inline_let_attribute; inline_let_vc_attribute] else [] in
-        let attrs = match attrs with | None -> Some inline_attrs | Some attrs -> Some (inline_attrs@attrs) in
         let lbs = (attrs, lb)::lbs in
         let lbs = focusAttrLetBindings lbs (rr2 $loc(q) $loc(lb)) in
-        mk_term (Let(is_rec, lbs, e)) (rr $loc) Expr
+        mk_term (Let(q, lbs, e)) (rr $loc) Expr
       }
   | op=let_op b=letoperatorbinding lbs=list(op=and_op b=letoperatorbinding {(op, b)}) IN e=term
     { let lbs = (op, b)::lbs in

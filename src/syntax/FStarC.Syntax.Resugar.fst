@@ -806,7 +806,7 @@ let rec resugar_term' (env: DsEnv.env) (t : S.term) : A.term =
       let branch_bv = FStarC.Syntax.Free.names t in
       let bnds = [None, (resugar_pat' env pat branch_bv, resugar_term' env e)] in
       let body = resugar_term' env t in
-      mk (A.Let(A.NoLetQualifier, bnds, body))
+      mk (A.Let(A.LocalNoLetQualifier, bnds, body))
 
     (* | Tm_match(e, asc_opt, [(pat1, _, t1); (pat2, _, t2)], _) *)
     (*   when is_true_pat pat1 && is_wild_pat pat2 -> *)
@@ -885,7 +885,7 @@ let rec resugar_term' (env: DsEnv.env) (t : S.term) : A.term =
           List.map f r
       in
       let body = resugar_term' env body in
-      mk (A.Let((if is_rec then A.Rec else A.NoLetQualifier), bnds, body))
+      mk (A.Let((if is_rec then A.LocalRec else A.LocalNoLetQualifier), bnds, body))
 
     | Tm_uvar (u, _) ->
       let s = "?u" ^ (UF.uvar_id u.ctx_uvar_head |> string_of_int) in
@@ -1520,6 +1520,11 @@ let resugar_sigelt' env se : option A.decl =
     else
       let mk e = S.mk e se.sigrng in
       let dummy = mk Tm_unknown in
+      let lq_as_q = function
+        | LocalRec -> Rec
+        | LocalNoLetQualifier -> NoLetQualifier
+        | LocalUnfold -> failwith "Impossible"
+      in
       (* This function turns each resolved top-level lid being defined into an
        * ident without a path, so it gets printed correctly. *)
       let nopath_lbs ((is_rec, lbs) : letbindings) : letbindings =
@@ -1532,7 +1537,7 @@ let resugar_sigelt' env se : option A.decl =
       let t = resugar_term' env desugared_let in
       begin match t.tm with
         | A.Let(isrec, lets, _) ->
-          Some (decl'_to_decl se (TopLevelLet (isrec, List.map snd lets)))
+          Some (decl'_to_decl se (TopLevelLet (lq_as_q isrec, List.map snd lets)))
         | _ -> failwith "Should not happen hopefully"
       end
 

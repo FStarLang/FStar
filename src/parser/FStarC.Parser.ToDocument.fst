@@ -1463,8 +1463,9 @@ and p_noSeqTerm' ps pb e = match e.tm with
     let p_lb q (a, (pat, e)) is_last =
       let attrs = p_attrs_opt true a in
       let doc_let_or_and = match q with
-        | Some Rec -> group (str "let" ^/^ str "rec")
-        | Some NoLetQualifier -> str "let"
+        | Some LocalRec -> group (str "let" ^/^ str "rec")
+        | Some LocalNoLetQualifier -> str "let"
+        | Some LocalUnfold -> group (str "let" ^/^ str "unfold")
         | _ -> str "and"
       in
       let doc_pat = p_letlhs doc_let_or_and (pat, e) true in
