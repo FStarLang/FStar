@@ -873,3 +873,11 @@ let as_interface (m:modul) : modul =
     match m with
     | Module {no_prelude; mname; decls} -> Interface { no_prelude; mname; decls; admitted = true }
     | i -> i
+
+let inline_let_attribute 
+: term
+= mk_term (Var FStarC.Parser.Const.inline_let_attr) Range.dummyRange Expr
+
+let inline_let_vc_attribute 
+: term
+= mk_term (Var FStarC.Parser.Const.inline_let_vc_attr) Range.dummyRange Expr

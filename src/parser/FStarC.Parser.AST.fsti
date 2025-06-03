@@ -376,3 +376,6 @@ instance val showable_decl : showable decl
 instance val showable_term : showable term
 
 val as_interface (m:modul) : modul
+
+val inline_let_attribute : term
+val inline_let_vc_attribute : term 
