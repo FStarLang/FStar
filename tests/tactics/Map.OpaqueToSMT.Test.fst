@@ -22,7 +22,7 @@ let sel (n:imap) (k:int) = sel n k
 #reset-options "--initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0"
 //expect no Z3 query
 let test1 (m:imap) =
-  [@@inline_let]
+  [@@inline_let_vc]
   let n = upd (upd m 0 "hello") 1 "goodbye" in
   assert_norm (sel n 0 == "hello")
 
@@ -30,6 +30,6 @@ let test1 (m:imap) =
 let test2 (m:imap) =
   assume (sel m 2 == "world");
   assert_norm (sel m 2 == m 2); //need this because after normalization the query below becomes `m 2 = "world"`
-  [@@inline_let]
+  [@@inline_let_vc]
   let n = upd (upd m 0 "hello") 1 "goodbye" in
   assert_norm (sel n 2 == "world")

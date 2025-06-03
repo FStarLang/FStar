@@ -305,7 +305,7 @@ let lemma_repeat_blocks_multi_vec_equiv_pre #a #b #b_vec w blocksize n hi_f f f_
     }
 
 let lemma_repeat_blocks_multi_vec #a #b #b_vec w blocksize inp f f_v normalize_v acc_v0 =
-  [@@inline_let]
+  [@@inline_let_vc]
   let blocksize_v = w * blocksize in
   let len = length inp in
   let nw = len / blocksize_v in
@@ -374,7 +374,7 @@ let lemma_repeat_blocks_vec_equiv_pre #a #b #b_vec #c w blocksize n f l l_v norm
 
 
 let lemma_repeat_blocks_vec #a #b #b_vec #c w blocksize inp f l f_v l_v normalize_v acc_v0 =
-  [@@inline_let]
+  [@@inline_let_vc]
   let blocksize_v = w * blocksize in
   let nb_v = length inp / blocksize_v in
 

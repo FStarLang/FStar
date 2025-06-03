@@ -36,7 +36,7 @@ let _ = assert (fib 5 = 5) by trivial ()
 let _ = assert (fib 5 == 5) by trivial ()
 
 let _ =
-    [@@inline_let]
+    [@@inline_let_vc]
     let x = 1 in
     assert (1 == x) by trefl ()
 

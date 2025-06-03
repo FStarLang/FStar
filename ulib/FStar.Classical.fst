@@ -74,7 +74,7 @@ let impl_intro_gen #p #q f =
 
 (*** Universal quantification *)
 let get_forall #a p =
-  [@@inline_let]
+  [@@inline_let_vc]
   let t = (forall (x:a). p x) in
   assert (norm [delta; delta_only [`%l_Forall]] t == (squash (x:a -> GTot (p x))));
   norm_spec [delta; delta_only [`%l_Forall]] t;

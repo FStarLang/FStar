@@ -95,7 +95,7 @@ let rewrite_inside_reify (f : int -> ND unit (as_pure_wp(fun p -> True))) (x' : 
   | Box x ->
      match x with
      | 0 ->
-       [@@inline_let]
+       [@@inline_let_vc]
        let ll = reify (f x) (fun _ -> True) in
        assert (ll == ll) by begin
          let beq = T.nth_var (-1) in

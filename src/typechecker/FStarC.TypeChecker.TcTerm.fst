@@ -3935,8 +3935,9 @@ and check_inner_let env e =
        let e1, _, c1, g1, annotated = check_let_bound_def false (Env.clear_expected_typ env |> fst) lb in
        let pure_or_ghost = TcComm.is_pure_or_ghost_lcomp c1 in
        let is_inline_let = BU.for_some (U.is_fvar FStarC.Parser.Const.inline_let_attr) lb.lbattrs in
+       let is_inline_let_vc = BU.for_some (U.is_fvar FStarC.Parser.Const.inline_let_vc_attr) lb.lbattrs in
        let _ =
-        if is_inline_let
+        if (is_inline_let || is_inline_let_vc)  //inline let is allowed only if it is pure or ghost
         && not (pure_or_ghost || Env.is_erasable_effect env c1.eff_name)  //inline let is allowed on erasable effects
         then raise_error e1
                Errors.Fatal_ExpectedPureExpression
@@ -3970,7 +3971,7 @@ and check_inner_let env e =
        let cres =
          TcUtil.maybe_return_e2_and_bind
            e1.pos
-           (not is_inline_let) //inline lets are inlined in the VC also, if they are Tot
+           (not is_inline_let_vc) //inline lets are inlined in the VC
            env
            (Some e1)
            c1

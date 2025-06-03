@@ -24,7 +24,7 @@ assume val p : int -> prop
  * a less efficient SMT encoding, and is unneeded anyhow. *)
 
 let test () =
-    [@@inline_let]
+    [@@inline_let_vc]
     let tau () : Tac unit =
       let bs = vars_of_env (cur_env ()) in
       guard (Cons? (List.Tot.rev bs));
