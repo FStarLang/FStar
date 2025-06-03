@@ -1499,6 +1499,8 @@ let maybe_capture_unit_refinement (env:env) (t:term) (x:bv) (c:comp) : comp & gu
     else c, Env.trivial_guard
   | _ -> c, Env.trivial_guard
 
+let optimize_bind_vc () = Options.Ext.enabled "optimize_let_vc"
+
 let bind
       (r1:Range.range)
       (is_let_binding:bool) 
@@ -1604,9 +1606,9 @@ let bind
                 in
                 match e1opt, b with
                 | Some e, Some x when (
+                    not (optimize_bind_vc()) || // optimization is disabled
                     not is_let_binding || //non-let bindings, e.g., in applications, are inlined
-                    is_layered || // layered effects do not always support closing with universal quantification
-                    Options.Ext.enabled "compat:3800" // for compatibility with pre 3800 behavior
+                    is_layered // layered effects do not always support closing with universal quantification
                   ) ->
                   let c2, g_close = c2 |> SS.subst_comp [NT (x, e)] |> close_with_type_of_x x in
                   Inl (c2, Env.conj_guards [
@@ -1701,7 +1703,8 @@ let bind
                  //           (x == e1 ==> lift_M2_M (wp2[e1/x]))
 
                  if U.is_partial_return c1
-                 && (not is_let_binding || Options.Ext.enabled "compat:3800")
+                 && (not (optimize_bind_vc()) || //optimization is disabled
+                     not is_let_binding)
                  then
                       let _ = debug (fun () ->
                         BU.print2 "(3) bind (case a): Substituting %s for %s\n" (N.term_to_string env e1) (show x)) in
@@ -1712,7 +1715,7 @@ let bind
                       let _ = debug (fun () ->
                         BU.print2 "(3) bind (case b): Adding equality %s = %s\n" (N.term_to_string env e1) (show x)) in
                       let c2 = 
-                        if not is_let_binding || Options.Ext.enabled "compat:3800"
+                        if not (optimize_bind_vc()) || not is_let_binding
                         then SS.subst_comp [NT(x,e1)] c2
                         else c2
                       in

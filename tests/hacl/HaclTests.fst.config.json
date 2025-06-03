@@ -1,7 +1,7 @@
 {
   "fstar_exe": "fstar.exe",
   "options": [
-    "--ext", "context_pruning",
+    "--ext", "optimize_let_vc",
     "--z3rlimit_factor", "2",
     "--z3version", "4.13.3"
   ],
