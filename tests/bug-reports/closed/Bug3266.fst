@@ -14,8 +14,7 @@ type functor = {
   laws : functor_laws map;
 }
 
-//TODO: Revisit
-// #set-options "--defensive abort"
+#set-options "--defensive abort"
 
 let ff : functor = {
     map = (fun a (stf: st a) -> let x, s1 = stf in ()); //if you remove the pattern matching on stf then no error is reported

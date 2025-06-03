@@ -1623,7 +1623,7 @@ let bind
                     Inl (S.mk_GTotal (U.comp_result c2), trivial_guard, "Tot/GTot")
                   ) 
                   else ( 
-                    let c2, g_c2' = weaken_comp env c2 (U.mk_eq2 (env.universe_of env x.sort) x.sort e (bv_to_name x)) in
+                    let c2, g_c2' = weaken_comp (Env.push_binders env [S.mk_binder x]) c2 (U.mk_eq2 (env.universe_of env x.sort) x.sort e (bv_to_name x)) in
                     let c2, g_close = close_with_type_of_x x c2 in
                     let c2 = close_wp_comp env [x] c2 in
                     Inl (c2, Env.conj_guards [
