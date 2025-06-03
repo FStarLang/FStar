@@ -707,14 +707,10 @@ let d_lu1
 : Lemma
   (requires (exec_equiv phi phi' (while b c) (while b c)))
   (ensures (exec_equiv phi phi' (while b c) (ifthenelse b (seq c (while b c)) skip)))
-= [@@inline_let_vc]
-  let fc = reify_computation c in
-  [@@inline_let_vc]
-  let fl = reify_computation (while b c) in
-  [@@inline_let_vc]
-  let fr = reify_computation (ifthenelse b (seq c (while b c)) skip) in
-  [@@inline_let_vc]
-  let eb = reify_exp b in
+= let unfold fc = reify_computation c in
+  let unfold fl = reify_computation (while b c) in
+  let unfold fr = reify_computation (ifthenelse b (seq c (while b c)) skip) in
+  let unfold eb = reify_exp b in
   let prf1
     (s0: heap)
     (fuel: nat)

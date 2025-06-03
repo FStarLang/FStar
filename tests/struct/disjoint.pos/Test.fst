@@ -72,8 +72,7 @@ let caller
   (requires (fun _ -> True))
   (ensures (fun _ z _ -> z == 18))
 = HST.push_frame();
-  [@@inline_let_vc]
-  let l : S.struct_literal struct = mk_struct_literal [(|"I", 18|); (| "B", true |)] in
+  let unfold l : S.struct_literal struct = mk_struct_literal [(|"I", 18|); (| "B", true |)] in
   let ofrom : obj = S.screate _ (Some (S.struct_create struct l)) in
   let moto : more_obj = S.screate _ (Some (S.struct_create more_struct [(|"Less",S.struct_create struct [(|"I",1729|); (|"B",false|)]|); (|"ThisMore", ()|)])) in
   let pfrom : obj = ofrom in

@@ -38,14 +38,10 @@ let sep_logic
 // (a:Type) (m:cm a) (x y z1 z2 z3 : a) = let op_Star = CM?.mult m in
 // so working around it for now
 (x y z1 z2 z3 : int) =
-  [@@inline_let_vc]
-  let m = int_multiply_cm in
-  [@@inline_let_vc]
-  let op_Star = op_Multiply in
-  [@@inline_let_vc]
-  let h0 = z1 * CM?.unit m * (x * z2 * y * CM?.unit m) * z3 in
-  [@@inline_let_vc]
-  let h1 = x * y in
+  let unfold m = int_multiply_cm in
+  let unfold op_Star = op_Multiply in
+  let unfold h0 = z1 * CM?.unit m * (x * z2 * y * CM?.unit m) * z3 in
+  let unfold h1 = x * y in
   assert_by_tactic (exists h1'. h1 * h1' == h0)
   (fun _ -> apply_lemma (`exists_intro);
             flip();
