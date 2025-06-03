@@ -450,8 +450,8 @@ visible (Projector C2 _0) let  __proj__C2__item___0  : (projectee:(uu___#49:t2{(
 [@ ]
 visible let rec lift  : (uu___:t1 -> Tot t2) = (fun uu___1 -> (match uu___1@0:(Tm_unknown) with
 	| (A1 )  -> A2
-	|(B1 i#558)  -> (B2 i@0:(Tm_unknown))
-	|(C1 f#559)  -> (C2 (fun x -> (lift (f@1:(Tm_unknown) x@0:(Tm_unknown)))))))
+	|(B1 i#553)  -> (B2 i@0:(Tm_unknown))
+	|(C1 f#554)  -> (C2 (fun x -> (lift (f@1:(Tm_unknown) x@0:(Tm_unknown)))))))
 [@ ]
 visible let  lemA  : (uu___:unit -> Lemma (unit)) = (fun uu___ -> ())
 [@ ]
