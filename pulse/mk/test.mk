@@ -28,7 +28,7 @@ HINTS_ENABLED?=
 # This warning is really useless.
 OTHERFLAGS += --warn_error -321
 OTHERFLAGS += --warn_error @247 # couldn't write a checked file? FAIL RIGHT NOW
-OTHERFLAGS += --ext context_pruning
+OTHERFLAGS += --ext optimize_let_vc
 OTHERFLAGS += --z3version 4.13.3
 ifdef TESTNOLIB
 OTHERFLAGS += --include $(PULSE_ROOT)/lib/common

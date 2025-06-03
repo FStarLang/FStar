@@ -40,7 +40,7 @@ FSTAR_OPTIONS += --include "$(SRC)"
 FSTAR_OPTIONS += --cache_checked_modules
 FSTAR_OPTIONS += --warn_error -321
 FSTAR_OPTIONS += $(addprefix --include , $(INCLUDE_PATHS))
-FSTAR_OPTIONS += --ext context_pruning
+FSTAR_OPTIONS += --ext optimize_let_vc
 FSTAR_OPTIONS += --z3version 4.13.3
 
 ifeq ($(ADMIT),1)

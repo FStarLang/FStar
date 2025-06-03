@@ -9,7 +9,7 @@
     "--z3version",
     "4.13.3",
     "--ext",
-    "context_pruning"
+    "optimize_let_vc"
   ],
   "include_dirs": [
   ]
