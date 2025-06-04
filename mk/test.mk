@@ -45,7 +45,8 @@ FSTAR_ARGS += $(if $(ADMIT),--admit_smt_queries true)
 OUTPUT_DIR ?= _output
 CACHE_DIR ?= _cache
 
-FSTAR = $(FSTAR_EXE) $(SIL) 						\
+FSTAR = $(FSTAR_WRAP)							\
+	$(FSTAR_EXE) $(SIL) 						\
 	$(FSTAR_ARGS)
 
 ifneq ($(MAKECMDGOALS),clean)

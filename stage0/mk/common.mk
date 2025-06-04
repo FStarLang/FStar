@@ -3,7 +3,7 @@
 MAKEFLAGS += --no-builtin-rules
 Q?=@
 SIL?=--silent
-RUNLIM=
+FSTAR_WRAP=
 ifneq ($(V),)
 	Q=
 	SIL=
@@ -11,7 +11,7 @@ else
 	MAKEFLAGS += -s
 endif
 
-define NO_RUNLIM_ERR
+define NO_FSTAR_WRAP_ERR
 runlim not found:
   To use RESOURCEMONITOR=1, the `runlim` tool must be installed and in your $$PATH.
   It must also be a recent version supporting the `-p` option.
@@ -32,12 +32,12 @@ endef
 # information about the time and space taken by each F* invocation.
 ifneq ($(RESOURCEMONITOR),)
 	ifeq ($(shell which runlim),)
-		_ := $(error $(NO_RUNLIM_ERR)))
+		_ := $(error $(NO_FSTAR_WRAP_ERR)))
 	endif
 	ifneq ($(MONID),)
 		MONPREFIX=$(MONID).
 	endif
-	RUNLIM=runlim -p -o $@.$(MONPREFIX)runlim
+	FSTAR_WRAP=runlim -p -o $@.$(MONPREFIX)runlim
 endif
 
 # Ensure that any failing rule will not create its target file.

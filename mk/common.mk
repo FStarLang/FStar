@@ -12,7 +12,7 @@ endif
 MAKEFLAGS += --no-builtin-rules
 Q?=@
 SIL?=--silent
-RUNLIM=
+FSTAR_WRAP=
 ifneq ($(V),)
 	Q=
 	SIL=
@@ -20,11 +20,10 @@ else
 	MAKEFLAGS += -s
 endif
 
-define NO_RUNLIM_ERR
+define NO_RAMON_ERR
 runlim not found:
-  To use RESOURCEMONITOR=1, the `runlim` tool must be installed and in your $$PATH.
-  It must also be a recent version supporting the `-p` option.
-  You can get it from: [https://github.com/arminbiere/runlim]
+  To use RESOURCEMONITOR=1, the `ramon` tool must be installed and in your $$PATH.
+  You can get it from: [https://github.com/mtzguido/ramon]
 endef
 
 define msg =
@@ -41,12 +40,12 @@ endef
 # information about the time and space taken by each F* invocation.
 ifneq ($(RESOURCEMONITOR),)
 	ifeq ($(shell which runlim),)
-		_ := $(error $(NO_RUNLIM_ERR)))
+		_ := $(error $(NO_RAMON_ERR)))
 	endif
 	ifneq ($(MONID),)
 		MONPREFIX=$(MONID).
 	endif
-	RUNLIM=runlim -p -o $@.$(MONPREFIX)runlim
+	FSTAR_WRAP=ramon -o $@.$(MONPREFIX)ramon
 endif
 
 # Ensure that any failing rule will not create its target file.

@@ -53,6 +53,10 @@ endif
 
 FSTAR := $(FSTAR_EXE) $(SIL) $(FSTAR_OPTIONS)
 
+# Wrap. Lazy assignment here since FSTAR_WRAP usually mentions $@
+FSTAR_TMP := $(FSTAR)
+FSTAR = $(FSTAR_WRAP) $(FSTAR_TMP)
+
 %$(EXTENSION): FF=$(notdir $(subst $(EXTENSION),,$@))
 %$(EXTENSION):
 	$(call msg, $(MSG), $(FF))
