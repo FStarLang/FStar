@@ -1481,8 +1481,9 @@ let lcomp_has_trivial_postcondition (lc:lcomp) =
  *
  * We should make wp-effects also same as the layered effects
  *)
-let maybe_capture_unit_refinement (env:env) (t:term) (x:bv) (c:comp) : comp & guard_t =
-  let t = N.normalize_refinement N.whnf_steps env t in
+let maybe_capture_unit_refinement (env:env) (t:term) (x:bv) (c:comp) 
+: comp & guard_t & bool
+= let t = N.normalize_refinement N.whnf_steps env t in
   match t.n with
   | Tm_refine {b; phi} ->
     let is_unit =
@@ -1494,10 +1495,11 @@ let maybe_capture_unit_refinement (env:env) (t:term) (x:bv) (c:comp) : comp & gu
       then
         let b, phi = SS.open_term_bv b phi in
         let phi = SS.subst [NT (b, S.unit_const)] phi in
-        weaken_comp env c phi
-      else close_wp_comp env [x] c, Env.trivial_guard
-    else c, Env.trivial_guard
-  | _ -> c, Env.trivial_guard
+        let c, g = weaken_comp env c phi in
+        c, g, true
+      else close_wp_comp env [x] c, Env.trivial_guard, true
+    else c, Env.trivial_guard, false
+  | _ -> c, Env.trivial_guard, false
 
 let optimize_bind_vc () = Options.Ext.enabled "optimize_let_vc"
 
@@ -1585,21 +1587,22 @@ let bind
               | Inl (c, reason) -> Inl (c, trivial_guard, reason)
               | Inr reason -> Inr reason in
             if Env.too_early_in_prims env  //if we're very early in prims
-            then //if U.is_tot_or_gtot_comp c1
-                 //&& U.is_tot_or_gtot_comp c2
-                 Inl (c2, trivial_guard, "Early in prims; we don't have bind yet")
-                 // else raise_error (Errors.Fatal_NonTrivialPreConditionInPrims,
-                 //                   "Non-trivial pre-conditions very early in prims, even before we have defined the PURE monad")
-                 //                   (Env.get_range env)
+            then Inl (c2, trivial_guard, "Early in prims; we don't have bind yet")
             else if U.is_total_comp c1
             then (*
                   * Helper routine to close the compuation c with c1's return type
                   * When c1's return type is of the form _:t{phi}, is is useful to know
                   *   that t{phi} is inhabited, even if c1 is inlined etc.
                   *)
-                let close_with_type_of_x (x:bv) (c:comp) =
+                let maybe_close_with_unit_refinement (x:bv) (c:comp) =
                   let x = { x with sort = U.comp_result c1 } in
-                  maybe_capture_unit_refinement env x.sort x c in
+                  maybe_capture_unit_refinement env x.sort x c
+                in
+                let close_with_type_of_x (x:bv) (c:comp) =
+                  let c, g, closed = maybe_close_with_unit_refinement x c in
+                  if closed then c, g
+                  else close_wp_comp env [x] c, Env.close_guard env [S.mk_binder x] g
+                in
                 let is_layered = 
                   c2 |> U.comp_effect_name |> Env.norm_eff_name env 
                   |> Env.is_layered_effect env
@@ -1610,36 +1613,55 @@ let bind
                     not is_let_binding || //non-let bindings, e.g., in applications, are inlined
                     is_layered // layered effects do not always support closing with universal quantification
                   ) ->
-                  let c2, g_close = c2 |> SS.subst_comp [NT (x, e)] |> close_with_type_of_x x in
+                  let c2, g_close, _ =
+                    c2 |> SS.subst_comp [NT (x, e)] |> maybe_close_with_unit_refinement x
+                  in
                   Inl (c2, Env.conj_guards [
                      g_c1;
                      Env.map_guard g_c2 (SS.subst [NT (x, e)]);
                      g_close ], "c1 Tot")
-                | Some e, Some x ->
-                  if U.is_total_comp c2
-                  then (
-                    Inl (c2, trivial_guard, "both Tot")
-                  )
-                  else if U.is_tot_or_gtot_comp c2
-                  then (
-                    Inl (S.mk_GTotal (U.comp_result c2), trivial_guard, "Tot/GTot")
-                  ) 
-                  else ( 
+                | Some e, Some x -> (
+                  let default_with_eqn () =
                     let c2, g_c2' = weaken_comp (Env.push_binders env [S.mk_binder x]) c2 (U.mk_eq2 (env.universe_of env x.sort) x.sort e (bv_to_name x)) in
                     let c2, g_close = close_with_type_of_x x c2 in
-                    let c2 = close_wp_comp env [x] c2 in
                     Inl (c2, Env.conj_guards [
-                              g_c1;
-                              Env.close_guard env [S.mk_binder x] g_c2;
+                              trivial_guard;
                               Env.close_guard env [S.mk_binder x] g_c2';
-                              Env.close_guard env [S.mk_binder x] g_close ], "c1 Tot with eq")
+                              g_close], "c1 Tot with eq")
+                  in
+                  if U.is_tot_or_gtot_comp c2
+                  then (
+                    if is_let_binding
+                    then (
+                      if not (mem x (Free.names_comp c2))
+                      then (
+                        //x is not free in c2; but if it is a unit refinement, the
+                        //binder may legitimately be unused in the continuation,
+                        //with only its type relevant---so close with unit refinement
+                        //See, e.g., Unit1.Basic.bind_test2
+                        //Note, closing with the type of x unconditionally causes
+                        //other examples to blow up, e.g., in Registers.List.fst in native_tactics
+                        //closing with the type of every let binding even with a tot continuation
+                        //moves the continuation out of Tot to pure, and then
+                        //we fall into the default case with equations.
+                        //So, this is trying to strike a balance:
+                        //Compact VCs for let bound Tot terms with Tot/GTot continuations
+                        //remaining in Tot/GTot;
+                        //Except if the let-bound terms binds a unit refinement,
+                        //then we close with the unit refinement, so that the
+                        //the refinement is captured.
+                        let c2, g_close, _ = maybe_close_with_unit_refinement x c2 in
+                        Inl (c2, Env.conj_guards [ trivial_guard; g_close],  "both Tot/GTot")
+                      )
+                      else default_with_eqn ()
+                    )
+                    else Inl (SS.subst_comp [NT(x,e)] c2, trivial_guard, "both Tot/GTot")
                   )
-                 | _, Some x ->
-                   let c2, g_close = c2 |> close_with_type_of_x x in
-                   Inl (c2, Env.conj_guards [
-                     g_c1;
-                     Env.close_guard env [S.mk_binder x] g_c2;
-                     g_close ], "c1 Tot only close")
+                  else default_with_eqn ()
+                )
+                | _, Some x ->
+                   let c2, g_close = close_with_type_of_x x c2 in
+                   Inl (c2, Env.conj_guards [ trivial_guard; g_close ], "c1 Tot only close")
                  | _, _ -> aux_with_trivial_guard ()
             else if U.is_tot_or_gtot_comp c1
                  && U.is_tot_or_gtot_comp c2
