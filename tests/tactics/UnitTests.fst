@@ -36,7 +36,7 @@ let _ = assert (fib 5 = 5) by trivial ()
 let _ = assert (fib 5 == 5) by trivial ()
 
 let _ =
-    let x = 1 in
+    let unfold x = 1 in
     assert (1 == x) by trefl ()
 
 let va1    = assert (1 == 1) by trefl ()

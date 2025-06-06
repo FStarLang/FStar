@@ -68,7 +68,7 @@ let caller ()
   (requires fun _ -> True)
   (ensures (fun _ z _ -> z == 18)) =
   HST.push_frame();
-  let l : S.struct_literal struct = mk_struct_literal [(|"I", 18|); (| "B", true |)] in
+  let unfold l : S.struct_literal struct = mk_struct_literal [(|"I", 18|); (| "B", true |)] in
   let dm : S.struct struct = S.struct_create struct l in
   let b = S.buffer_of_array_pointer (S.screate (S.TArray 2ul struct_t) (Some (Seq.create 2 dm))) in
   let pfrom : obj = S.pointer_of_buffer_cell b (UInt32.uint_to_t 0) in

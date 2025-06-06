@@ -1530,7 +1530,7 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term & an
       //
       let p = mk_pattern (PatWild (None, [])) t1.range in
       let p = mk_pattern (PatAscribed (p, (unit_ty p.prange, None))) p.prange in
-      let t = mk_term (Let(NoLetQualifier, [None, (p, t1)], t2)) top.range Expr in
+      let t = mk_term (Let(LocalNoLetQualifier, [None, (p, t1)], t2)) top.range Expr in
       let tm, s = desugar_term_aq env t in
 
       //
@@ -1596,25 +1596,38 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term & an
         desugar_term_aq env t
       )
     | Let(qual, lbs, body) ->
-      let is_rec = qual = Rec in
+      let is_rec = qual = LocalRec in
+      let extra_attrs =
+        if qual = LocalUnfold
+        then [inline_let_attribute; inline_let_vc_attribute]
+        else []
+      in
+      let add_extra_attrs attrs =
+        match attrs, extra_attrs with
+        | _, [] -> attrs
+        | None, _ -> Some extra_attrs
+        | Some attrs, _ -> Some (attrs @ extra_attrs)
+      in
       let ds_let_rec_or_app () =
         let bindings = lbs in
         let funs = bindings |> List.map (fun (attr_opt, (p, def)) ->
           if is_app_pattern p
-          then attr_opt, destruct_app_pattern env top_level p, def
+          then add_extra_attrs attr_opt, destruct_app_pattern env top_level p, def
           else match un_function p def with
-                | Some (p, def) -> attr_opt, destruct_app_pattern env top_level p, def
-                | _ -> begin match p.pat with
-                        | PatAscribed({pat=PatVar(id,_,_)}, t) ->
-                            if top_level
-                            then attr_opt, (Inr (qualify env id), [], Some t), def
-                            else attr_opt, (Inl id, [], Some t), def
-                        | PatVar(id, _, _) ->
-                            if top_level
-                            then attr_opt, (Inr (qualify env id), [], None), def
-                            else attr_opt, (Inl id, [], None), def
-                        | _ -> raise_error p Errors.Fatal_UnexpectedLetBinding "Unexpected let binding"
-                      end)
+                | Some (p, def) ->
+                  add_extra_attrs attr_opt, destruct_app_pattern env top_level p, def
+                | _ -> begin
+                  match p.pat with
+                  | PatAscribed({pat=PatVar(id,_,_)}, t) ->
+                    if top_level
+                    then add_extra_attrs attr_opt, (Inr (qualify env id), [], Some t), def
+                    else add_extra_attrs attr_opt, (Inl id, [], Some t), def
+                  | PatVar(id, _, _) ->
+                    if top_level
+                    then add_extra_attrs attr_opt, (Inr (qualify env id), [], None), def
+                    else add_extra_attrs attr_opt, (Inl id, [], None), def
+                  | _ -> raise_error p Errors.Fatal_UnexpectedLetBinding "Unexpected let binding"
+                end)
         in
 
         //Generate fresh names and populate an env' with recursive bindings
@@ -1760,6 +1773,7 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term & an
       in
 
       let attrs, (head_pat, defn) = List.hd lbs in
+      let attrs = add_extra_attrs attrs in
       if is_rec
       || is_app_pattern head_pat
       then ds_let_rec_or_app()
@@ -3917,8 +3931,13 @@ and desugar_decl_core env (d_attrs:list S.term) (d:decl) : (env_t & sigelts) =
     then begin
       (* Usual case *)
       let lets = List.map (fun x -> None, x) lets in
+      let qual =
+        match isrec with
+        | NoLetQualifier -> LocalNoLetQualifier
+        | Rec -> LocalRec
+      in
       let as_inner_let =
-        mk_term (Let(isrec, lets, mk_term (Const Const_unit) d.drange Expr)) d.drange Expr
+        mk_term (Let(qual, lets, mk_term (Const Const_unit) d.drange Expr)) d.drange Expr
       in
       let ds_lets, aq = desugar_term_maybe_top true env as_inner_let in
       check_no_aq aq;

@@ -30,7 +30,7 @@ type calc_chain #a : list (relation a) -> a -> a -> Type =
 
 let rec elim_calc_chain #a (rs:list (relation a)) (#x #y:a) (pf:calc_chain rs x y)
   : Lemma (ensures (calc_chain_related rs x y))
-  = let steps = [delta_only [`%calc_chain_related]; iota; zeta] in
+  = let unfold steps = [delta_only [`%calc_chain_related]; iota; zeta] in
     let t = norm steps (calc_chain_related rs x y) in
     norm_spec steps (calc_chain_related rs x y);
     match pf with
@@ -53,7 +53,7 @@ let calc_step #a #x #y p z #rs pf j =
   bind_squash (pf ()) (fun pk -> return_squash (_calc_step p z pk (j ())))
 
 let calc_finish #a p #x #y #rs pf =
-  let steps = [delta_only [`%calc_chain_related]; iota; zeta] in
+  let unfold steps = [delta_only [`%calc_chain_related]; iota; zeta] in
   let t = norm steps (calc_chain_related rs x y) in
   norm_spec steps (calc_chain_related rs x y);
   let _ : squash (p x y) = bind_squash (pf ()) (fun pk -> elim_calc_chain rs pk) in

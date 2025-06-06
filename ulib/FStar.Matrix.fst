@@ -658,7 +658,7 @@ let double_foldm_snoc_of_equal_generators #c #eq (#m #n: pos)
   SP.foldm_snoc_of_equal_inits cm (fun (i: under m) -> SP.foldm_snoc cm (SB.init n (fun (j: under n) -> f i j)))
                                   (fun (i: under m) -> SP.foldm_snoc cm (SB.init n (fun (j: under n) -> g i j)))
 
-#push-options "--z3rlimit 15 --ifuel 0 --fuel 0"  
+#push-options "--z3rlimit 15 --ifuel 0 --fuel 0"
 let matrix_mul_is_associative #c #eq #m #n #p #q (add: CE.cm c eq) 
                     (mul: CE.cm c eq{is_fully_distributive mul add /\ is_absorber add.unit mul}) 
                     (mx: matrix c m n) (my: matrix c n p) (mz: matrix c p q)
@@ -668,22 +668,24 @@ let matrix_mul_is_associative #c #eq #m #n #p #q (add: CE.cm c eq)
   let lhs = (mx `matrix_mul add mul` my) `matrix_mul add mul` mz in
   let mxy = matrix_mul add mul mx my in
   let myz = matrix_mul add mul my mz in
-  let ((+), ( * ), (=)) = add.mult, mul.mult, eq.eq in 
+  let (+) = add.mult in
+  let ( * ) = mul.mult in
+  let (=) = eq.eq in
   let aux i l : squash (ijth lhs i l = ijth rhs i l) =
-    let sum_j (f: under n -> c) = SP.foldm_snoc add (SB.init n f) in
-    let sum_k (f: under p -> c) = SP.foldm_snoc add (SB.init p f) in 
+    let unfold sum_j (f: under n -> c) = SP.foldm_snoc add (SB.init n f) in
+    let unfold sum_k (f: under p -> c) = SP.foldm_snoc add (SB.init p f) in 
     let xy_products_init k j = ijth mx i j * ijth my j k in
     let xy_cell_as_sum k = sum_j (xy_products_init k) in    
     let xy_cell_lemma k : Lemma (ijth mxy i k == xy_cell_as_sum k) = 
         matrix_mul_ijth_eq_sum_of_seq_for_init add mul mx my i k (xy_products_init k)
-        in Classical.forall_intro xy_cell_lemma;  
+    in Classical.forall_intro xy_cell_lemma;  
     let xy_z_products_init k = xy_cell_as_sum k * ijth mz k l in
     matrix_mul_ijth_eq_sum_of_seq_for_init add mul mxy mz i l xy_z_products_init;
-    let full_init_kj k j = (ijth mx i j * ijth my j k) * ijth mz k l in
-    let full_init_jk j k = (ijth mx i j * ijth my j k) * ijth mz k l in 
-    let full_init_rh j k = ijth mx i j * (ijth my j k * ijth mz k l) in
-    let sum_jk (f: (under n -> under p -> c)) = sum_j (fun j -> sum_k (fun k -> f j k)) in
-    let sum_kj (f: (under p -> under n -> c)) = sum_k (fun k -> sum_j (fun j -> f k j)) in
+    let unfold full_init_kj k j = (ijth mx i j * ijth my j k) * ijth mz k l in
+    let unfold full_init_jk j k = (ijth mx i j * ijth my j k) * ijth mz k l in 
+    let unfold full_init_rh j k = ijth mx i j * (ijth my j k * ijth mz k l) in
+    let unfold sum_jk (f: (under n -> under p -> c)) = sum_j (fun j -> sum_k (fun k -> f j k)) in
+    let unfold sum_kj (f: (under p -> under n -> c)) = sum_k (fun k -> sum_j (fun j -> f k j)) in
     let xy_z_distr k : Lemma (((xy_cell_as_sum k) * (ijth mz k l)) = sum_j (full_init_kj k))
       = foldm_snoc_distributivity_right_eq mul add (SB.init n (xy_products_init k)) (ijth mz k l) 
                                                    (SB.init n (full_init_kj k)) 
@@ -698,7 +700,7 @@ let matrix_mul_is_associative #c #eq #m #n #p #q (add: CE.cm c eq)
       in Classical.forall_intro_2 aux_rh;
     double_foldm_snoc_of_equal_generators add full_init_jk full_init_rh;
     eq.transitivity (ijth lhs i l) (sum_jk full_init_jk) (sum_jk full_init_rh); 
-    
+
     // now expand the right hand side, fully dual to the first part of the lemma.
     let yz_products_init j k = ijth my j k * ijth mz k l in
     let yz_cell_as_sum j = sum_k (yz_products_init j) in
@@ -802,10 +804,8 @@ let rec matrix_right_mul_identity_aux_1 #c #eq #m
           (decreases k)
   = if k = 0 then matrix_right_mul_identity_aux_0 add mul mx i j k
     else 
-      let unit = matrix_mul_unit add mul m in
-      let mxu = matrix_mul add mul mx unit in
-      let ( * ) = mul.mult in
-      let ( $=$ ) = eq.eq in
+      let unfold unit = matrix_mul_unit add mul m in
+      let unfold ( * ) = mul.mult in
       let gen = fun (k: under m) -> ijth mx i k * ijth unit k j in   
       let full = SB.init k gen in
       let liat,last = SProp.un_snoc full in
@@ -835,10 +835,8 @@ let matrix_right_mul_identity_aux_2 #c #eq #m
                                                  -> ijth mx i k `mul.mult` 
                                                    ijth (matrix_mul_unit add mul m) k j))
                    `eq.eq` ijth mx i j) = 
-  let unit = matrix_mul_unit add mul m in
-  let mxu = matrix_mul add mul mx unit in
-  let ( * ) = mul.mult in
-  let ( $=$ ) = eq.eq in
+  let unfold unit = matrix_mul_unit add mul m in
+  let unfold ( * ) = mul.mult in
   let gen = fun (k: under m) -> ijth mx i k * ijth unit k j in  
   let full = SB.init k gen in
   let liat,last = SProp.un_snoc full in
@@ -868,10 +866,8 @@ let rec matrix_right_mul_identity_aux_3 #c #eq #m
           (decreases k) = 
   if (k-1) > j+1 then matrix_right_mul_identity_aux_3 add mul mx i j (k-1)
   else matrix_right_mul_identity_aux_2 add mul mx i j (k-1);
-  let unit = matrix_mul_unit add mul m in
-  let mxu = matrix_mul add mul mx unit in
-  let ( * ) = mul.mult in
-  let ( $=$ ) = eq.eq in
+  let unfold unit = matrix_mul_unit add mul m in
+  let unfold ( * ) = mul.mult in
   let gen = fun (k: under m) -> ijth mx i k * ijth unit k j in  
   let subgen (i: under (k)) = gen i in
   let full = SB.init k gen in
@@ -926,10 +922,8 @@ let rec matrix_left_mul_identity_aux_1 #c #eq #m
   : Lemma (ensures SP.foldm_snoc add (SB.init k 
             (fun (k: under m) -> ijth (matrix_mul_unit add mul m) i k `mul.mult` ijth mx k j)) 
            `eq.eq` add.unit) = 
-  let unit = matrix_mul_unit add mul m in
-  let mxu = matrix_mul add mul mx unit in
-  let ( * ) = mul.mult in
-  let ( $=$ ) = eq.eq in
+  let unfold unit = matrix_mul_unit add mul m in
+  let unfold ( * ) = mul.mult in
   let gen (k: under m) = ijth unit i k * ijth mx k j in 
   let full = SB.init k gen in
   let liat,last = SProp.un_snoc full in        
@@ -957,10 +951,8 @@ let matrix_left_mul_identity_aux_2 #c #eq #m
   : Lemma (ensures SP.foldm_snoc add (SB.init k 
             (fun (k: under m) -> ijth (matrix_mul_unit add mul m) i k `mul.mult` ijth mx k j)) 
            `eq.eq` ijth mx i j) =  
-  let unit = matrix_mul_unit add mul m in
-  let mxu = matrix_mul add mul mx unit in 
-  let ( * ) = mul.mult in
-  let ( $=$ ) = eq.eq in
+  let unfold unit = matrix_mul_unit add mul m in
+  let unfold ( * ) = mul.mult in
   let gen (k: under m) = ijth unit i k * ijth mx k j in 
   let full = SB.init k gen in
   let liat,last = SProp.un_snoc full in 
@@ -989,10 +981,8 @@ let rec matrix_left_mul_identity_aux_3 #c #eq #m
   : Lemma (ensures SP.foldm_snoc add (SB.init k 
             (fun (k: under m) -> ijth (matrix_mul_unit add mul m) i k `mul.mult` ijth mx k j)) 
            `eq.eq` ijth mx i j) =  
-  let unit = matrix_mul_unit add mul m in
-  let mxu = matrix_mul add mul mx unit in 
-  let ( * ) = mul.mult in
-  let ( $=$ ) = eq.eq in
+  let unfold unit = matrix_mul_unit add mul m in
+  let unfold ( * ) = mul.mult in
   let gen (k: under m) = ijth unit i k * ijth mx k j in   
   let full = SB.init k gen in
   if (k-1 = i+1) then matrix_left_mul_identity_aux_2 add mul mx i j (k-1)
@@ -1033,9 +1023,9 @@ let matrix_mul_right_identity #c #eq #m (add: CE.cm c eq)
                               (mul: CE.cm c eq{is_absorber add.unit mul}) 
                               (mx: matrix c m m)
   : Lemma (matrix_mul add mul mx (matrix_mul_unit add mul m) `matrix_eq_fun eq` mx) =   
-  let unit = matrix_mul_unit add mul m in
+  let unfold unit = matrix_mul_unit add mul m in
   let mxu = matrix_mul add mul mx unit in
-  let ( * ) = mul.mult in
+  let unfold ( * ) = mul.mult in
   let ( $=$ ) = eq.eq in
   let aux (i j: under m) : Lemma (ijth mxu i j $=$ ijth mx i j) = 
     let gen = fun (k: under m) -> ijth mx i k * ijth unit k j in
@@ -1049,9 +1039,9 @@ let matrix_mul_left_identity #c #eq #m (add: CE.cm c eq)
                               (mul: CE.cm c eq{is_absorber add.unit mul}) 
                               (mx: matrix c m m)
   : Lemma (matrix_mul add mul (matrix_mul_unit add mul m) mx `matrix_eq_fun eq` mx) =   
-  let unit = matrix_mul_unit add mul m in
+  let unfold unit = matrix_mul_unit add mul m in
   let mxu = matrix_mul add mul unit mx in
-  let ( * ) = mul.mult in
+  let unfold ( * ) = mul.mult in
   let ( $=$ ) = eq.eq in
   let aux (i j: under m) : squash (ijth mxu i j $=$ ijth mx i j) = 
     let gen (k: under m) = ijth unit i k * ijth mx k j in

@@ -806,7 +806,7 @@ let rec resugar_term' (env: DsEnv.env) (t : S.term) : A.term =
       let branch_bv = FStarC.Syntax.Free.names t in
       let bnds = [None, (resugar_pat' env pat branch_bv, resugar_term' env e)] in
       let body = resugar_term' env t in
-      mk (A.Let(A.NoLetQualifier, bnds, body))
+      mk (A.Let(A.LocalNoLetQualifier, bnds, body))
 
     (* | Tm_match(e, asc_opt, [(pat1, _, t1); (pat2, _, t2)], _) *)
     (*   when is_true_pat pat1 && is_wild_pat pat2 -> *)
@@ -876,16 +876,50 @@ let rec resugar_term' (env: DsEnv.env) (t : S.term) : A.term =
           (pat, resugar_term' env term), (universe_to_string univs))
       in
       let r = List.map resugar_one_binding source_lbs in
-      let bnds =
-          let f (attrs, (pb, univs)) =
-            if not (Options.print_universes ()) then attrs, pb
-            (* Print bound universes as a comment *)
-            else attrs, (fst pb, label univs (snd pb))
+      let resugar_one_binding (attrs, (pb, univs)) =
+        if not (Options.print_universes ()) then attrs, pb
+        (* Print bound universes as a comment *)
+        else attrs, (fst pb, label univs (snd pb))
+      in
+      let qual, bnds =
+        match r with
+        | [(Some attrs, (pb, univs))] when not is_rec -> (
+          let qual, attrs =
+            let is_inline_let_attr a =
+              match a.tm with
+              | Var l ->
+                Ident.lid_equals l C.inline_let_attr
+              | _ -> false
+            in
+            let is_inline_let_vc_attr a =
+              match a.tm with
+              | Var l ->
+                Ident.lid_equals l C.inline_let_vc_attr
+              | _ -> false
+            in
+            let inline_attrs, rest =
+              List.partition 
+                (fun a -> is_inline_let_attr a || is_inline_let_vc_attr a)
+                attrs
+            in
+            if List.existsb is_inline_let_attr inline_attrs
+            && List.existsb is_inline_let_vc_attr inline_attrs
+            then LocalUnfold, rest
+            else LocalNoLetQualifier, attrs
           in
-          List.map f r
+          let attrs =
+            match attrs with
+            | [] -> None
+            | _ -> Some attrs
+          in
+          qual, [resugar_one_binding (attrs, (pb, univs))]
+        )
+        | _ ->
+          (if is_rec then A.LocalRec else A.LocalNoLetQualifier),
+          List.map resugar_one_binding r
       in
       let body = resugar_term' env body in
-      mk (A.Let((if is_rec then A.Rec else A.NoLetQualifier), bnds, body))
+      mk (A.Let(qual, bnds, body))
 
     | Tm_uvar (u, _) ->
       let s = "?u" ^ (UF.uvar_id u.ctx_uvar_head |> string_of_int) in
@@ -1520,6 +1554,11 @@ let resugar_sigelt' env se : option A.decl =
     else
       let mk e = S.mk e se.sigrng in
       let dummy = mk Tm_unknown in
+      let lq_as_q = function
+        | LocalRec -> Rec
+        | LocalNoLetQualifier -> NoLetQualifier
+        | LocalUnfold -> failwith "Impossible"
+      in
       (* This function turns each resolved top-level lid being defined into an
        * ident without a path, so it gets printed correctly. *)
       let nopath_lbs ((is_rec, lbs) : letbindings) : letbindings =
@@ -1532,7 +1571,7 @@ let resugar_sigelt' env se : option A.decl =
       let t = resugar_term' env desugared_let in
       begin match t.tm with
         | A.Let(isrec, lets, _) ->
-          Some (decl'_to_decl se (TopLevelLet (isrec, List.map snd lets)))
+          Some (decl'_to_decl se (TopLevelLet (lq_as_q isrec, List.map snd lets)))
         | _ -> failwith "Should not happen hopefully"
       end
 

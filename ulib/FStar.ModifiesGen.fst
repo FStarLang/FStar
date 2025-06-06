@@ -1836,6 +1836,7 @@ let union_loc_of_loc_includes_intro
 #pop-options
 
 #push-options "--fuel 0 --ifuel 0 --z3rlimit 50 --z3cliopt 'smt.qi.eager_threshold=1'"
+#restart-solver
 let union_loc_of_loc_includes_elim
   (#al: (bool -> HS.rid -> nat -> Tot Type))
   (c: ((b: bool) -> Tot (cls (al b))))
@@ -1852,7 +1853,7 @@ let union_loc_of_loc_includes_elim
   let doms' = aloc_domain (cls_union c) (Loc?.regions smaller) (Loc?.live_addrs smaller) in
   let doml = aloc_domain (c b) (Loc?.regions larger) (Loc?.live_addrs larger) in
   let doms = aloc_domain (c b) (Loc?.regions smaller) (Loc?.live_addrs smaller) in
-  let g
+  let unfold g
     (r: HS.rid)
     (a: nat)
     (x: aloc (c b))
@@ -1860,7 +1861,7 @@ let union_loc_of_loc_includes_elim
   : GTot Type0
   = GSet.mem y (GSet.union auxl doml) /\ y `aloc_includes` x
   in
-  let g' (r: HS.rid) (a: nat) (x: aloc (c b)) : GTot Type0 =
+  let unfold g' (r: HS.rid) (a: nat) (x: aloc (c b)) : GTot Type0 =
     exists (y: aloc (c b)) . g r a x y
   in
   let f

@@ -36,7 +36,7 @@ let vu_inv (x:u32_nat)
             mapply (`inverse_num_lemma))
 
 let add_mod a b =
-  let y = bvadd #32 a b in
+  let unfold y = bvadd #32 a b in
   assert (y == u (FStar.UInt.add_mod #32 (v a) (v b)))
      by  (mapply (`sym);
           mapply (`int2bv_add);
@@ -47,7 +47,7 @@ let add_mod a b =
   y
 
 let sub_mod a b =
-  let y = bvsub #32 a b in
+  let unfold y = bvsub #32 a b in
   assert (y == u (FStar.UInt.sub_mod #32 (v a) (v b)))
      by
          (mapply (`sym);

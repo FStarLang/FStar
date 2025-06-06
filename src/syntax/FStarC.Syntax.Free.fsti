@@ -20,6 +20,7 @@ open FStarC.Effect
 open FStarC.Syntax.Syntax
 
 val names            : term -> FlatSet.t bv
+val names_comp       : comp -> FlatSet.t bv
 val names_of_binders : binders -> FlatSet.t bv
 
 val fvars            : term -> RBSet.t Ident.lident

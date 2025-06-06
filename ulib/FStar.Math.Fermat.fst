@@ -455,7 +455,7 @@ let rec fermat_aux p a =
       == { }
       a % p;
     }
-
+#push-options "--fuel 0 --ifuel 0 --retry 2"
 let fermat p a =
   if a % p = 0 then
     begin
@@ -473,6 +473,7 @@ let fermat p a =
       == { lemma_mod_twice a p }
       a % p;
     }
+#pop-options
 
 val mod_mult_congr_aux (p:int{is_prime p}) (a b c:int) : Lemma
   (requires (a * c) % p = (b * c) % p /\ 0 <= b /\ b <= a /\ a < p /\ c % p <> 0)

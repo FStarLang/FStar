@@ -25,7 +25,7 @@ assume val assert_eq: i:int -> j:int -> Lemma (requires (normalize_term i == j))
     compilation *)
 
 let concrete_integer_map_1  =
-    let v =
+    let unfold v =
       (//embed abstract
         (sel
           (//unembed list (int * abs) * abs
@@ -43,7 +43,7 @@ let concrete_integer_map_1  =
     assert_eq v 3
 
 let concrete_integer_map_2 =
-    let mk r  =
+    let unfold mk r  =
       let f r = (//embed (regmap abs)
                   upd (//unembed (regmap abs)
                       r)
@@ -72,18 +72,18 @@ let concrete_integer_map_2 =
       let f r = f (f r) in
       f r
     in
-    let r = mk (create 0) in
+    let unfold r = mk (create 0) in
     assert_eq (sel r 0) 0
 
 let symbolic_map_contents_1 (x:int) (y:int) =
-    let r = const_map_n 10000 x (create y) in
+    let unfold r = const_map_n 10000 x (create y) in
     assert_eq (sel r 10000) x
 
 let symbolic_map_contents_2 (x:int) (y:int) =
-    let r = const_map_n 10000 x (create y) in
+    let unfold r = const_map_n 10000 x (create y) in
     assert_eq (sel r 20000) y
 
 let symbolic_map_contents_3 (x:int) (y:int) =
-    let r = const_map_n 10000 x (create y) in
+    let unfold r = const_map_n 10000 x (create y) in
     assert_eq (sel r 10000) x;
     assert_eq (sel r 10001) y
