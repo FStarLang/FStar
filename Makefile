@@ -286,8 +286,8 @@ stage3-bare: $(FSTAR2_FULL_EXE) .force
 
 stage3-diff: stage3-bare .force
 	$(call bold_msg, "DIFF", "STAGE 2 vs STAGE 3")
-	@# No output expected the gitignore line
-	diff -r stage2/fstarc.ml stage3/fstarc.ml
+	@# Ignore ramon files, if any
+	diff -r -x '*.ramon' stage2/fstarc.ml stage3/fstarc.ml
 
 ifeq ($(shell uname),Linux)
 LINK_OK=1
