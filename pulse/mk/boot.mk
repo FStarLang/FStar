@@ -47,7 +47,7 @@ ifeq ($(ADMIT),1)
 FSTAR_OPTIONS += --admit_smt_queries true
 endif
 
-FSTAR = $(FSTAR_EXE) $(SIL) $(FSTAR_OPTIONS)
+FSTAR = $(RUNLIM) $(FSTAR_EXE) $(SIL) $(FSTAR_OPTIONS)
 
 %$(EXTENSION): FF=$(notdir $(subst $(EXTENSION),,$@))
 %$(EXTENSION):
