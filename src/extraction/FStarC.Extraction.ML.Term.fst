@@ -243,7 +243,7 @@ let rec is_type_aux env t =
       | Some (t, _) ->
         is_arity env t
       | _ -> (
-        failwith (BU.format1 "Extraction: variable not found: %s" (tag_of t))
+        failwith (BU.format1 "Extraction: variable not found: %s" (show x))
       )
     )
 
@@ -298,9 +298,7 @@ let is_type env t =
                                 );
     let b = is_type_aux env t in
     debug env (fun _ ->
-        if b
-        then BU.print2 "yes, is_type %s (%s)\n" (show t) (tag_of t)
-        else BU.print2 "not a type %s (%s)\n" (show t) (tag_of t));
+        BU.print3 "is_type(%s) (tag %s) = %s\n" (show t) (tag_of (SS.compress t)) (show b));
     b
 
 let is_type_binder env x = is_arity env x.binder_bv.sort
