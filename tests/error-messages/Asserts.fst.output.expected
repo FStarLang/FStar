@@ -1,8 +1,9 @@
 >> Got issues: [
-* Error 19 at Asserts.fst(6,9-6,17):
+* Error 19 at Asserts.fst(6,2-6,8):
   - Assertion failed
   - The SMT solver could not prove the query. Use --query_stats for more
     details.
+  - See also Asserts.fst(6,9-6,17)
 
 >>]
 >> Got issues: [

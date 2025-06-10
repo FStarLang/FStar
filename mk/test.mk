@@ -31,7 +31,7 @@ FSTAR_ARGS += --odir $(OUTPUT_DIR)
 FSTAR_ARGS += --cache_dir $(CACHE_DIR)
 FSTAR_ARGS += --already_cached Prims,FStar,LowStar
 FSTAR_ARGS += --warn_error -321 # This warning is really useless.
-FSTAR_ARGS += --ext context_pruning
+FSTAR_ARGS += --ext optimize_let_vc
 FSTAR_ARGS += --z3version 4.13.3
 FSTAR_ARGS += $(OTHERFLAGS)
 
@@ -45,7 +45,7 @@ FSTAR_ARGS += $(if $(ADMIT),--admit_smt_queries true)
 OUTPUT_DIR ?= _output
 CACHE_DIR ?= _cache
 
-FSTAR = $(FSTAR_EXE) $(SIL) 						\
+FSTAR = $(RUNLIM) $(FSTAR_EXE) $(SIL) 						\
 	$(FSTAR_ARGS)
 
 ifneq ($(MAKECMDGOALS),clean)

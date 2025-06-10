@@ -33,6 +33,11 @@ type let_qualifier =
   | NoLetQualifier
   | Rec
 
+type local_let_qualifier =
+  | LocalNoLetQualifier
+  | LocalRec
+  | LocalUnfold
+
 type quote_kind =
   | Static
   | Dynamic
@@ -53,7 +58,7 @@ type term' =
   | Abs       of list pattern & term                 (* fun p1 p2 .. pn -> body *)
   | Function  of list branch & range                 (* function | p1 -> e1 | ... | pn -> en; range is for binder *)
   | App       of term & term & imp                    (* aqual marks an explicitly provided implicit parameter *)
-  | Let       of let_qualifier & list (option attributes_ & (pattern & term)) & term
+  | Let       of local_let_qualifier & list (option attributes_ & (pattern & term)) & term
   | LetOperator   of list (ident & pattern & term) & term
   | LetOpen   of lid & term
   | LetOpenRecord of term & term & term
@@ -376,3 +381,6 @@ instance val showable_decl : showable decl
 instance val showable_term : showable term
 
 val as_interface (m:modul) : modul
+
+val inline_let_attribute : term
+val inline_let_vc_attribute : term 

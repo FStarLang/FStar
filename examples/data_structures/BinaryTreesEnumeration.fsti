@@ -240,7 +240,7 @@ let product_complete (#a #b: Type) (l1: list a) (l2: list b) x1 x2 :
          List.memP x2 l2 ==>
          List.memP (x1, x2) (product #a l1 l2)) =
     let x = (x1, x2) in
-    let f2 x1 = fun x2 -> (x1, x2) in
+    let unfold f2 x1 = fun x2 -> (x1, x2) in
     let f1 = fun x1 -> List.Tot.map (f2 x1) l2 in
     let l = f1 x1 in
     let ls = List.Tot.map f1 l1 in
