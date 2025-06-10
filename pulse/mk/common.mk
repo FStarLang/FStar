@@ -56,7 +56,7 @@ endef
 # information about the time and space taken by each F* invocation.
 ifneq ($(RESOURCEMONITOR),)
 	ifeq ($(shell which runlim),)
-		_ := $(error $(NO_RUNLIM_ERR)))
+		_ := $(error $(NO_RUNLIM_ERR))
 	endif
 	ifneq ($(MONID),)
 		MONPREFIX=$(MONID).

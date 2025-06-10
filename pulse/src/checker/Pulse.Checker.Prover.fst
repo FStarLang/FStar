@@ -422,6 +422,7 @@ let rec get_q_at_hd (g:env) (l:list slprop) (q:slprop { L.existsb (fun v -> eq_t
          (| hd::tl', RU.magic #(slprop_equiv _ _ _) () |)
 
 #push-options "--z3rlimit_factor 8 --ifuel 2 --fuel 1 --split_queries no"
+#restart-solver
 let prove
   (allow_ambiguous : bool)
   (#g:env) (#ctxt:slprop) (ctxt_typing:slprop_typing g ctxt)

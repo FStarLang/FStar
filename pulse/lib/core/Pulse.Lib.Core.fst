@@ -49,8 +49,8 @@ let exists_extensional (#a:Type u#a) (p q: a -> slprop)
 let timeless_exists #a p =
   exists_extensional p (fun x -> p x) ();
   Sep.timeless_exists p;
-  let h: squash (Sep.timeless Sep.(exists* x. p x)) = () in
-  let h: squash (Sep.timeless (exists* x. p x)) = h in
+  let unfold h: squash (Sep.timeless Sep.(exists* x. p x)) = () in
+  let unfold h: squash (Sep.timeless (exists* x. p x)) = h in
   ()
 let slprop_equiv = slprop_equiv
 let elim_slprop_equiv #p #q pf = slprop_equiv_elim p q
