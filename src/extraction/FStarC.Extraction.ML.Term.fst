@@ -708,7 +708,7 @@ let rec translate_term_to_mlty' (g:uenv) (t0:term) : mlty =
     let arg_as_mlty (g:uenv) (a, _) : mlty =
         if is_type g a //This is just an optimization; we could in principle always emit MLTY_Erased, at the expense of more magics
         then translate_term_to_mlty g a
-        else MLTY_Erased
+        else MLTY_Top
     in
     let fv_app_as_mlty (g:uenv) (fv:fv) (args : args) : mlty =
         if not (is_fv_type g fv)
