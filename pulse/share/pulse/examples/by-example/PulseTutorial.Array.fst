@@ -63,6 +63,13 @@ module A = Pulse.Lib.Array
 module R = Pulse.Lib.Reference
 open FStar.SizeT
 
+#push-options "--debug prover,pulse.checker"
+fn incr (y:ref int)
+requires R.pts_to y 'v
+ensures R.pts_to y ('v + 2)
+{
+  y := !y + 2;
+}
 
 //comparesigbegin$
 fn compare
@@ -88,9 +95,7 @@ fn compare
   while (
     let vi = !i;
     if (vi <^ l) {
-      let v1 = a1.(vi);
-      let v2 = a2.(vi);
-      (v1 = v2)
+      (a1.(vi) = a2.(vi))
     } else {
       false
     }
@@ -107,12 +112,9 @@ fn compare
     )
   )
   {
-    let vi = !i; 
-    i := vi +^ 1sz
+    i := !i +^ 1sz
   };
-  let vi = !i;
-  let res = vi = l;
-  res
+  (!i = l);
 }
 //compareimplend$
 
@@ -135,8 +137,7 @@ fn copy
 {
   let mut i = 0sz;
   while (
-    let vi = !i;
-    (vi <^ l)
+    (!i <^ l)
   )
   invariant b.
   exists* vi s1. ( 
@@ -152,8 +153,7 @@ fn copy
   )
   {
     let vi = !i;
-    let v = a2.(vi);
-    a1.(vi) <- v;
+    a1.(vi) <- a2.(vi);
     i := vi +^ 1sz
   }
 }
@@ -270,3 +270,14 @@ fn copy_app ([@@@ Rust_mut_binder] v:V.vec int)
   // v, s |- V.pts_to v (Seq.create 2 0) ** ...
 }
 //end copyuse$
+
+fn test_match_head (x:ref (option int))
+requires R.pts_to x 'v
+returns i:int
+ensures R.pts_to x 'v ** pure (Some? 'v ==> i == Some?.v 'v)
+{
+  match !x {
+  Some v -> { v }
+  None -> { 0 }
+  }
+} 
