@@ -22,12 +22,13 @@ open Pulse.Typing.Combinators
 open Pulse.Checker.Base
 open Pulse.Checker.Pure
 open Pulse.Checker.Prover
+open Pulse.Show
 
 module T = FStar.Tactics.V2
 module P = Pulse.Syntax.Printer
 module Metatheory = Pulse.Typing.Metatheory
 module Abs = Pulse.Checker.Abs
-
+module RU = Pulse.Reflection.Util
 #push-options "--z3rlimit_factor 4 --split_queries no"
 let check_bind_fn
   (g:env)
@@ -114,7 +115,8 @@ let check_binder_typ
       ]
   end
 
-let check_bind
+let check_bind'
+  (maybe_elaborate:bool)
   (g:env)
   (ctxt:slprop)
   (ctxt_typing:tot_typing g ctxt tm_slprop)
@@ -122,13 +124,12 @@ let check_bind
   (res_ppname:ppname)
   (t:st_term {Tm_Bind? t.term})
   (check:check_t)
-  : T.Tac (checker_result_t g ctxt post_hint)
-=
-  let g = Pulse.Typing.Env.push_context g "check_bind" t.range in
+: T.Tac (checker_result_t g ctxt post_hint)
+= let g = Pulse.Typing.Env.push_context g "check_bind" t.range in
 
   debug_prover g (fun _ ->
     Printf.sprintf "checking bind:\n%s\n" (P.st_term_to_string t));
- 
+
   if None? post_hint
   then fail g (Some t.range) "check_bind: post hint is not set, please add an annotation";
 
@@ -142,22 +143,58 @@ let check_bind
     check_bind_fn g ctxt ctxt_typing post_hint res_ppname t check
   )
   else (
-    let (| x, g1, _, (| ctxt', ctxt'_typing |), k1 |) =
-      let r = check g ctxt ctxt_typing None binder.binder_ppname e1 in
-      check_if_seq_lhs g ctxt None r e1;
-      check_binder_typ g ctxt None r binder e1;
-      r
+    let dflt () =
+      let (| x, g1, _, (| ctxt', ctxt'_typing |), k1 |) =
+        let r = check g ctxt ctxt_typing None binder.binder_ppname e1 in
+        check_if_seq_lhs g ctxt None r e1;
+        check_binder_typ g ctxt None r binder e1;
+        r
+      in
+      let g1 = reset_context g1 g in
+      let d : st_typing_in_ctxt g1 ctxt' post_hint =
+        let ppname = mk_ppname_no_range "_bind_c" in
+        let r =
+          check g1 ctxt' ctxt'_typing post_hint ppname (open_st_term_nv e2 (binder.binder_ppname, x)) in
+          apply_checker_result_k #_ #_ #(Some?.v post_hint) r ppname in
+      let d : st_typing_in_ctxt g ctxt post_hint = k1 post_hint d in
+      checker_result_for_st_typing d res_ppname
     in
-    let g1 = reset_context g1 g in
-    let d : st_typing_in_ctxt g1 ctxt' post_hint =
-      let ppname = mk_ppname_no_range "_bind_c" in
-      let r =
-        check g1 ctxt' ctxt'_typing post_hint ppname (open_st_term_nv e2 (binder.binder_ppname, x)) in
-        apply_checker_result_k #_ #_ #(Some?.v post_hint) r ppname in
-    let d : st_typing_in_ctxt g ctxt post_hint = k1 post_hint d in
-
-    checker_result_for_st_typing d res_ppname
+    if not maybe_elaborate then dflt()
+    else (
+      match e1.term with
+      | Tm_Return { expected_type; insert_eq; term=tm } -> (
+        let rebuild (head:either term st_term) : T.Tac st_term =
+          match head with
+          | Inr st_term -> { t with term = Tm_Bind { binder; head=st_term; body=e2 } }
+          | Inl tm' -> 
+            let head = Tm_Return { expected_type; term=tm'; insert_eq } in
+            let head = mk_term head (Pulse.RuntimeUtils.range_of_term tm') in
+            { t with term = Tm_Bind { binder; head; body=e2 } }
+        in
+        match Pulse.Checker.Base.hoist_stateful_apps g (Inl tm) false rebuild with
+        | Some t -> //something was elaborated, go back to the top checking loop
+          debug_prover g (fun _ -> Printf.sprintf "Bind was elaborated to %s\n" (show t));
+          check g ctxt ctxt_typing post_hint res_ppname t
+        | None -> 
+          debug_prover g (fun _ -> "No elaboration in check_bind, proceeding to check head\n");
+          dflt()
+      )
+      | _ ->
+        let rebuild (head:either term st_term { Inr? head }) : T.Tac st_term =
+          let Inr e1' = head in
+          { t with term = Tm_Bind { binder; head=e1'; body=e2 } }
+        in
+        match Pulse.Checker.Base.hoist_stateful_apps g (Inr e1) false rebuild with
+        | Some t -> //something was elaborated, go back to the top checking loop
+          debug_prover g (fun _ -> Printf.sprintf "Bind was elaborated to %s\n" (show t));
+          check g ctxt ctxt_typing post_hint res_ppname t
+        | None -> 
+          debug_prover g (fun _ -> "No elaboration in check_bind, proceeding to check head\n");
+          dflt()
+    )
   )
+
+let check_bind = check_bind' true
 
 let check_tot_bind
   (g:env)
@@ -167,25 +204,28 @@ let check_tot_bind
   (res_ppname:ppname)
   (t:st_term { Tm_TotBind? t.term })
   (check:check_t)
-  : T.Tac (checker_result_t g pre post_hint)
-=
-  let g = Pulse.Typing.Env.push_context g "check_tot_bind" t.range in
+: T.Tac (checker_result_t g pre post_hint)
+= let g = Pulse.Typing.Env.push_context g "check_tot_bind" t.range in
 
   if None? post_hint
   then fail g (Some t.range) "check_tot_bind: post hint is not set, please add an annotation";
 
 
   let Tm_TotBind { binder=b; head=e1; body=e2 } = t.term in
-  match Pulse.Checker.Base.is_stateful_application g e1 with
-  | Some st_app -> (
-    let st_app = { st_app with source = t.source } in
-    let t = { t with term = Tm_Bind { binder=b; head=st_app; body=e2 } } in
-    check_bind g pre pre_typing post_hint res_ppname t check
-  )
-
-  | None -> (
-    let head = Tm_Return { expected_type = b.binder_ty; term = e1; insert_eq = true } in
-    let head = mk_term head (Pulse.RuntimeUtils.range_of_term e1) in
-    let t = { t with term = Tm_Bind { binder=b; head; body=e2 } } in
-    check_bind g pre pre_typing post_hint res_ppname t check
-  )
+  let rebuild (head:either term st_term) : T.Tac (t:st_term { Tm_Bind? t.term }) =
+    match head with
+    | Inl e1' ->
+      let head = Tm_Return { expected_type = b.binder_ty; term = e1'; insert_eq = true } in
+      let head = mk_term head (Pulse.RuntimeUtils.range_of_term e1') in
+      { t with term = Tm_Bind { binder=b; head; body=e2 } }
+    | Inr e1' ->
+      { t with term = Tm_Bind { binder=b; head=e1'; body=e2 } }
+  in
+  match Pulse.Checker.Base.hoist_stateful_apps g (Inl e1) false rebuild with
+  | None -> //no stateful apps; just return the head and check it
+    let t = rebuild (Inl e1) in
+    debug_prover g (fun _ -> Printf.sprintf "No elaboration in check_tot_bind, proceeding to check\n%s\n" (show t));
+    check_bind' false g pre pre_typing post_hint res_ppname t check
+  | Some t ->
+    debug_prover g (fun _ -> Printf.sprintf "Elaborated and proceeding back to top-level\n%s\n" (show t));
+    check g pre pre_typing post_hint res_ppname t
