@@ -143,8 +143,7 @@ ensures pts_to r (4 * 'v)
 //end quadruple_show_proof_state$
 
 
-[@@expect_failure]
- //quad FAIL$
+//quad FAIL$
 fn quad_fail (r:ref int)
 requires pts_to r 'v
 ensures pts_to r (4 * 'v)

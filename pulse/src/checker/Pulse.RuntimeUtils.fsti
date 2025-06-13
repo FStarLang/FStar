@@ -93,3 +93,6 @@ val magic_s: #a: Type -> string -> Tot a
 
 val profile (f:(unit -> Tac 'b)) (module_name:name) (component_name:string)
 : Tac 'b
+
+val mk_app_flat (head:T.term) (args:list T.argv) (r:range)
+: T.term

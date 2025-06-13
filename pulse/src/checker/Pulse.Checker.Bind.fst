@@ -226,6 +226,8 @@ let check_tot_bind
     let t = rebuild (Inl e1) in
     debug_prover g (fun _ -> Printf.sprintf "No elaboration in check_tot_bind, proceeding to check\n%s\n" (show t));
     check_bind' false g pre pre_typing post_hint res_ppname t check
-  | Some t ->
-    debug_prover g (fun _ -> Printf.sprintf "Elaborated and proceeding back to top-level\n%s\n" (show t));
-    check g pre pre_typing post_hint res_ppname t
+  | Some t' ->
+    debug_prover g (fun _ -> Printf.sprintf "Elaborated and proceeding back to top-level\n%s\nto\n%s\n" 
+      (show t)
+      (show t'));
+    check g pre pre_typing post_hint res_ppname t'

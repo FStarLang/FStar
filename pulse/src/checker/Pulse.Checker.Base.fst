@@ -789,8 +789,7 @@ let checker_result_t_equiv_ctxt (g:env) (ctxt ctxt' : slprop)
 module RU = Pulse.RuntimeUtils  
 let as_stateful_application (head:term) (args:list T.argv { Cons? args }) r =
   let applied_args, (last_arg, qual) = List.unsnoc args in
-  let head = T.mk_app head applied_args in
-  let head = wr head (T.range_of_term head) in
+  let head = RU.mk_app_flat head applied_args (T.range_of_term head) in
   let qual = 
     match qual with
     | T.Q_Implicit -> Some Implicit
@@ -905,7 +904,7 @@ let decompose_app (g:env) (tt:either term st_term)
       let args = args @ [last_arg, Pulse.Elaborate.Pure.elab_qual last_arg_qual] in
       let rebuild (args:list T.argv{Cons? args}) : T.Tac (res:either term st_term { Inr? res }) = 
         let args, last_arg = List.unsnoc args in
-        let head = T.mk_app head args in
+        let head = RU.mk_app_flat head args t.range in
         Inr <| mk_term (Tm_STApp { head; arg=fst last_arg; arg_qual=last_arg_qual }) t.range
       in
       Some (head, args, rebuild)
@@ -918,7 +917,7 @@ let decompose_app (g:env) (tt:either term st_term)
     | None -> 
       let head, args = T.collect_app_ln tt in
       let rebuild (args:list T.argv{Cons? args}) : T.Tac (either term st_term) =
-        let head = T.mk_app head args in
+        let head = RU.mk_app_flat head args (T.range_of_term tt) in
         Inl head
       in
       Some (head, args, rebuild)
@@ -949,8 +948,11 @@ let rec maybe_hoist (g:env) (arg:T.argv)
   match is_stateful_application g t with
   | None -> (
     let g, binders, args = maybe_hoist_args g args in
-    let t = T.mk_app head args in
-    g, binders, (t, q)
+    match binders with
+    | [] -> g, [], arg // no elab
+    | _ -> 
+      let t = RU.mk_app_flat head args (T.range_of_term t) in
+      g, binders, (t, q)
   )
   | Some _ -> (
     let g, binders, args = maybe_hoist_args g args in
