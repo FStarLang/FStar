@@ -713,7 +713,14 @@ let register_pre_translate_typ (f : translate_typ_t) : unit =
 
 let rec translate_term_to_mlty' (g:uenv) (t0:term) : mlty =
     let arg_as_mlty (g:uenv) (a, _) : mlty =
-        if is_type g a //This is just an optimization; we could in principle always emit MLTY_Erased, at the expense of more magics
+      (* Translate an argument to a type constructor. Usually, just
+      call translate_term_to_mlty. For karamel extraction, try to extract
+      what we cannot detect as a type into unit instead of Obj.t, to remain
+      in the Low* subset. We should revisit this and make it consistent. *)
+      if Options.codegen () <> Some Options.Krml then
+        translate_term_to_mlty g a
+      else
+        if is_type g a
         then translate_term_to_mlty g a
         else MLTY_Erased
     in
@@ -1596,24 +1603,29 @@ and term_as_mlexpr' (g:uenv) (top:term) : (mlexpr & e_tag & mlty) =
             ml_bs (f, t) in
           with_ty tfun <| MLE_Fun(ml_bs, ml_body), f, tfun
 
+        (* Extract `range_of x` to a literal range. *)
         | Tm_app {hd={n=Tm_constant Const_range_of}; args=[(a1, _)]} ->
           let ty = term_as_mlty g (tabbrev PC.range_lid) in
           with_ty ty <| mlexpr_of_range a1.pos, E_PURE, ty
 
+        (* Ignore `set_range_of` *)
         | Tm_app {hd={n=Tm_constant Const_set_range_of}; args=[(t, _); (r, _)]} ->
           term_as_mlexpr g t
 
+        (* Cannot extract a reflect (aborts at runtime). *)
         | Tm_app {hd={n=Tm_constant (Const_reflect _)}} ->
             let ({exp_b_expr=fw}) = UEnv.lookup_fv t.pos g (S.lid_as_fv (PC.failwith_lid()) None) in
             with_ty ml_int_ty <| MLE_App(fw, [with_ty ml_string_ty <| MLE_Const (MLC_String "Extraction of reflect is not supported")]),
             E_PURE,
             ml_int_ty
 
+        (* Push applications into match branches *)
         | Tm_app {hd=head; args}
           when is_match head &&
                args |> should_apply_to_match_branches ->
           args |> apply_to_match_branches head |> term_as_mlexpr g
 
+        (* A regular application. *)
         | Tm_app {hd=head; args} ->
           let is_total rc =
               Ident.lid_equals rc.residual_effect PC.effect_Tot_lid

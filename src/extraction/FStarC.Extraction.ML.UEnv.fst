@@ -126,7 +126,6 @@ let bindings_of_uenv u = u.env_bindings
 
 let dbg = Debug.get_toggle "Extraction"
 let debug g f =
-    let c = string_of_mlpath g.currentModule in
     if !dbg
     then f ()
 

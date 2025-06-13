@@ -5,7 +5,7 @@ let (test : Prims.bool) = f "123"
 type 't comparator_for = 't -> 't -> Prims.bool
 let rec (univ_eq : Prims.int comparator_for) = fun u1 -> fun u2 -> false
 type ('t, 'x, 'y) cmpres = Prims.bool
-type 't comparator_for' = 't -> 't -> ('t, unit, unit) cmpres
+type 't comparator_for' = 't -> 't -> ('t, Obj.t, Obj.t) cmpres
 let (string_eq : Prims.string comparator_for') = fun x -> fun y -> x = y
 let (bool_eq : Prims.bool comparator_for') = fun x -> fun y -> x = y
 type sb =
