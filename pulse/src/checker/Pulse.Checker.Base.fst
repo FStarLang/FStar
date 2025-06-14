@@ -787,30 +787,29 @@ let checker_result_t_equiv_ctxt (g:env) (ctxt ctxt' : slprop)
   (| x, g1, t, ctxt', k_elab_equiv k equiv (VE_Refl _ _) |)
 
 module RU = Pulse.RuntimeUtils  
+let as_stateful_application (head:term) (args:list T.argv { Cons? args }) r =
+  let applied_args, (last_arg, qual) = List.unsnoc args in
+  let head = RU.mk_app_flat head applied_args (T.range_of_term head) in
+  let qual = 
+    match qual with
+    | T.Q_Implicit -> Some Implicit
+    | _ -> None
+  in
+  let st_app = Tm_STApp { head; arg=last_arg; arg_qual=qual} in
+  mk_term st_app r
+
+
 let is_stateful_application (g:env) (e:term) 
-  : T.Tac (option st_term) =
-  
+  : T.Tac (o:option st_term { Some? o ==> Tm_STApp? (Some?.v o).term }) =
   let head, args = T.collect_app_ln e in
+  if Nil? args then None else
   match RU.lax_check_term_with_unknown_universes (elab_env g) head with
   | None -> None
   | Some ht -> 
     let head_t = wr ht (T.range_of_term ht) in
     match is_stateful_arrow g (Some (C_Tot head_t)) args [] with 
     | None -> None
-    | Some (applied_args, (last_arg, aqual))->
-      let head = T.mk_app head applied_args in
-      let head = wr head (T.range_of_term head) in
-      let last_arg = wr last_arg (T.range_of_term last_arg) in
-      let qual = 
-        match aqual with
-        | T.Q_Implicit -> Some Implicit
-        | _ -> None
-      in
-      let st_app = Tm_STApp { head; arg=last_arg; arg_qual=qual} in
-      let st_app = mk_term st_app (RU.range_of_term e) in
-      Some st_app
-    | _ -> None
-
+    | Some _ -> Some (as_stateful_application head args (RU.range_of_term e))
 
 let apply_conversion
       (#g:env) (#e:term) (#eff:_) (#t0:term)
@@ -892,3 +891,139 @@ let norm_st_typing_inverse
       Some (T_Equiv _ _ _ _ d steq)
     )
     else None
+
+open FStar.List.Tot    
+module RT = FStar.Reflection.Typing
+let decompose_app (g:env) (tt:either term st_term)
+: T.Tac (option (term & list T.argv & (args:list T.argv{ Cons? args } -> T.Tac (res:either term st_term { Inr? tt ==> Inr? res }))))
+= let decompose_st_app (t:st_term)
+  : T.Tac (option (term & list T.argv & (args:list T.argv{ Cons? args } -> T.Tac (res:either term st_term { Inr? tt ==> Inr? res }))))
+  = match t.term with
+    | Tm_STApp { head; arg=last_arg; arg_qual=last_arg_qual } ->
+      let head, args = T.collect_app_ln head in
+      let args = args @ [last_arg, Pulse.Elaborate.Pure.elab_qual last_arg_qual] in
+      let rebuild (args:list T.argv{Cons? args}) : T.Tac (res:either term st_term { Inr? res }) = 
+        let args, last_arg = List.unsnoc args in
+        let head = RU.mk_app_flat head args t.range in
+        Inr <| mk_term (Tm_STApp { head; arg=fst last_arg; arg_qual=last_arg_qual }) t.range
+      in
+      Some (head, args, rebuild)
+    | _ -> None
+  in
+  match tt with
+  | Inl tt -> (
+    match is_stateful_application g tt with
+    | Some st_app -> decompose_st_app st_app
+    | None -> 
+      let head, args = T.collect_app_ln tt in
+      let rebuild (args:list T.argv{Cons? args}) : T.Tac (either term st_term) =
+        let head = RU.mk_app_flat head args (T.range_of_term tt) in
+        Inl head
+      in
+      Some (head, args, rebuild)
+  )
+  | Inr st -> decompose_st_app st
+
+let anf_binder = T.pack (T.Tv_FVar (T.pack_fv (Pulse.Reflection.Util.mk_pulse_lib_core_lid "__anf_binder__")))
+  
+let bind_st_term (g:env) (s:st_term) 
+: T.Tac (env & binder & var & term)
+= let open Pulse.Syntax in
+  let b = {
+    binder_ty = tm_unknown;
+    binder_ppname = mk_ppname (FStar.Reflection.Typing.seal_pp_name "__anf") s.range;
+    binder_attrs = FStar.Sealed.seal [anf_binder];
+  } in
+  let x = Pulse.Typing.Env.fresh g in
+  let g = Pulse.Typing.Env.push_binding g x b.binder_ppname b.binder_ty in
+  g, b, x, RT.var_as_term x
+
+let rec maybe_hoist (g:env) (arg:T.argv)
+: T.Tac (env & list (binder & var & st_term) & T.argv)
+= let t, q = arg in
+  let head, args = T.collect_app_ln t in
+  match args with
+  | [] -> g, [], arg //no args to hoist
+  | _ ->
+  match is_stateful_application g t with
+  | None -> (
+    let g, binders, args = maybe_hoist_args g args in
+    match binders with
+    | [] -> g, [], arg // no elab
+    | _ -> 
+      let t = RU.mk_app_flat head args (T.range_of_term t) in
+      g, binders, (t, q)
+  )
+  | Some _ -> (
+    let g, binders, args = maybe_hoist_args g args in
+    if Nil? args then T.fail "Impossible";
+    let st_app = as_stateful_application head args (T.range_of_term t) in
+    let g, b, x, t = bind_st_term g st_app in
+    let arg = t, q in
+    g, binders@[b, x, st_app], arg
+  )
+
+and maybe_hoist_args (g:env) (args:list T.argv)
+: T.Tac (env & list (binder & var & st_term) & list T.argv)
+= T.fold_right
+    (fun arg (g, binders, args) ->
+      let g, binders', arg = maybe_hoist g arg in
+      let binders = binders' @ binders in
+      g, binders, arg::args)
+    args
+    (g, [], [])
+
+let maybe_hoist_top 
+  (hoist_top_level:bool)
+  (g:env)
+  (tt:either term st_term)
+: T.Tac (env & list (binder & var & st_term) & res:either term st_term { 
+    (if hoist_top_level then Inl? res else tt==res)
+    })
+= if not hoist_top_level then g, [], tt
+  else (
+    match tt with
+    | Inl _ -> g, [], tt
+    | Inr st -> 
+      let g, b, x, t = bind_st_term g st in 
+      g, [(b, x, st)], Inl t
+  )
+
+let hoist_stateful_apps
+  (g:env)
+  (tt:either term st_term)
+  (hoist_top_level:bool)
+  (context: (
+    x:either term st_term { 
+      (Inr? tt ==> Inr? x) /\
+      (hoist_top_level /\ Inl? tt ==> Inl? x)
+    } -> T.Tac st_term))
+: T.Tac (option st_term)
+= match decompose_app g tt with
+  | None -> None
+  | Some (head, args, rebuild) ->
+    let _, binders, args = maybe_hoist_args g args in
+    match args with
+    | [] -> None
+    | _ ->
+      let tt' = rebuild args in
+      let _, binders', tt' = maybe_hoist_top (hoist_top_level && Inl? tt) g tt' in 
+      let binders = binders' @ binders in
+      match binders with
+      | [] -> (
+        match tt, tt' with
+        | Inl _, Inr _ -> (
+          Some (context tt') //we at least elaborated a pure term to an inpure term
+        )
+        | _ -> None //No elaboration
+      )
+      | _ ->
+        let bind_term = context tt' in
+        let res = List.Tot.fold_right
+          (fun (b, v, arg) body -> 
+            let body = Pulse.Syntax.Naming.close_st_term body v in
+            mk_term (Tm_Bind { binder = b; head = arg; body = body }) bind_term.range)
+          binders
+          bind_term
+        in
+        Some res

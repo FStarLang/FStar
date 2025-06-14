@@ -183,10 +183,9 @@ let faux (qb : option SW.qualifier & SW.binder) (bv : S.bv)
     in
     (q,b,bv)
 
-
-let stapp_assignment assign_lid (args:list S.term) (last_arg:S.term) (r:_)
-  : SW.st_term
-  = let head_fv = S.lid_as_fv assign_lid None in
+let app_lid lid (args:list S.term) (r:_)
+  : S.term
+  = let head_fv = S.lid_as_fv lid None in
     let head = S.fv_to_tm head_fv in
     let app = 
       L.fold_left 
@@ -194,7 +193,8 @@ let stapp_assignment assign_lid (args:list S.term) (last_arg:S.term) (r:_)
           S.mk_Tm_app head [(arg, None)] arg.pos)
         head args
     in
-    SW.(tm_st_app (tm_expr app r) None (as_term last_arg) r)
+    app
+
 
 let ret (s:S.term) = SW.(tm_return (as_term s) s.pos)
 
@@ -442,15 +442,17 @@ let rec desugar_stmt (env:env_t) (s:Sugar.stmt)
       let! lhs = tosyntax env lhs in
       let! rhs = tosyntax env value in
       let! assignment_lid = resolve_lid env (op_colon_equals_lid s.range) in
-      return (stapp_assignment assignment_lid [lhs] rhs s.range)
+      let tm = (app_lid assignment_lid [lhs; rhs] s.range) in
+      return (st_term_of_admit_or_return (admit_or_return env (app_lid assignment_lid [lhs; rhs] s.range)))
 
     | ArrayAssignment { arr; index; value } ->
       let! arr = tosyntax env arr in
       let! index = tosyntax env index in
       let! value = tosyntax env value in      
       let! array_assignment_lid = resolve_lid env (op_array_assignment_lid s.range) in
-      return (stapp_assignment array_assignment_lid [arr;index] value s.range)
-    
+      let tm = (app_lid array_assignment_lid [arr; index; value] s.range) in
+      return (st_term_of_admit_or_return (admit_or_return env tm))
+
     | Sequence { s1={s=Open l; range}; s2 } ->
       let! env = 
         try 

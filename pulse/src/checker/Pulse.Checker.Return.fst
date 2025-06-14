@@ -147,22 +147,25 @@ let check
   (res_ppname:ppname)
   (st:st_term { Tm_Return? st.term })
   (check:check_t)
-  : T.Tac (checker_result_t g ctxt post_hint)
-  = let Tm_Return f = st.term in
-    match Pulse.Checker.Base.is_stateful_application g f.term with
-    | Some st_app ->
-      let st_app = { st_app with source = st.source } in
-      check g ctxt ctxt_typing post_hint res_ppname st_app
-    
-    | None -> (
-      match post_hint with
-      | Some p -> (
-        let ctag =
-          match ctag_of_effect_annot p.effect_annot with
-          | Some c -> c
-          | None -> STT_Atomic in
-        check_core g ctxt ctxt_typing post_hint res_ppname st (Some ctag)
-        
-      )
-      | _ ->  check_core g ctxt ctxt_typing post_hint res_ppname st None
+: T.Tac (checker_result_t g ctxt post_hint)
+= let Tm_Return f = st.term in
+  let rebuild (tt: either term st_term) : T.Tac st_term =
+    match tt with
+    | Inl t -> { st with term = Tm_Return { f with term = t } }
+    | Inr st_app -> { st_app with source = st.source }
+  in
+  match Pulse.Checker.Base.hoist_stateful_apps g (Inl f.term) false rebuild with
+  | Some tt -> //some elaboration, go back to top
+    check g ctxt ctxt_typing post_hint res_ppname tt
+  | None -> (
+    match post_hint with
+    | Some p -> (
+      let ctag =
+        match ctag_of_effect_annot p.effect_annot with
+        | Some c -> c
+        | None -> STT_Atomic in
+      check_core g ctxt ctxt_typing post_hint res_ppname st (Some ctag)
+      
     )
+    | _ ->  check_core g ctxt ctxt_typing post_hint res_ppname st None
+  )

@@ -4,30 +4,18 @@
 
 >>]
 >> Got issues: [
-* Error 12 at Bug267.fst(33,10-33,14):
-  - Expected type Prims.int
-    but !i
-    has type
-        Pulse.Lib.Core.stt Prims.int
-          (Pulse.Lib.Reference.pts_to i (*?u39*) _)
-          (fun x ->
-              Pulse.Lib.Reference.pts_to i (*?u39*) _ **
-              Pulse.Lib.Core.pure ((*?u39*) _ == x))
-
->>]
->> Got issues: [
-* Error 19 at Bug267.fst(64,4-64,5):
+* Error 19 at Bug267.fst(62,4-62,5):
   - Could not prove equality between computed type Prims.int
     and expected type Prims.nat
   - Assertion failed
   - The SMT solver could not prove the query. Use --query_stats for more
     details.
   - Also see: Prims.fst(161,28-183,79)
-  - See also Bug267.fst(64,4-64,8)
+  - See also Bug267.fst(62,4-62,8)
 
 >>]
 >> Got issues: [
-* Error 12 at Bug267.fst(69,13-69,14):
+* Error 12 at Bug267.fst(67,13-67,14):
   - Expected type Pulse.Lib.Core.slprop but n >= 1 has type Prims.bool
 
 >>]

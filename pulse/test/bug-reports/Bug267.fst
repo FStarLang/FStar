@@ -22,8 +22,6 @@ fn add (r : ref int) (v : int)
   r := v0 + v
 }
 
-(* Complains in !i: expected int got stt .... Could be better. *)
-[@@expect_failure [12]]
 fn four_fail ()
   requires emp
   returns i:int

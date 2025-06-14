@@ -4,6 +4,7 @@
       Pulse.Lib.Reference.pts_to r ?n
   - In the context:
       IntroGhost.my_inv b r
+  - See also IntroGhost.fst(44,9-44,30)
 
 >>]
 >> Got issues: [
