@@ -8,10 +8,8 @@
   "include_dirs": [
     "out/lib/pulse",
     "share/pulse/examples",
-    "share/pulse/examples/bug-reports",
     "share/pulse/examples/by-example",
     "share/pulse/examples/parallel",
-    "share/pulse/examples/parix",
     "share/pulse/examples/dice",
     "share/pulse/examples/dice/cbor",
     "share/pulse/examples/dice/dpe",
