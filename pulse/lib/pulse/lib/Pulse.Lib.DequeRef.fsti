@@ -1,6 +1,7 @@
 module Pulse.Lib.DequeRef
 #lang-pulse
 open Pulse.Lib.Pervasives
+open FStar.List.Tot
 
 val dq (t:Type0) : Type0
 
