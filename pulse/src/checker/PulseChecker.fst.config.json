@@ -8,5 +8,6 @@
     "4.13.3"
   ],
   "include_dirs": [
+    "--include", "../../build/checker.checked"
   ]
 }
