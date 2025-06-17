@@ -718,6 +718,10 @@ let is_comp_ascribed_reflect (e:term) : option (lident & term & aqual) =
      | _ -> None)
    | _ -> None
 
+let effect_has_primitive_extraction (env:Env.env) (eff: lident) : bool =
+  let eff = Env.norm_eff_name env eff in
+  let ed = Env.get_effect_decl env eff in
+  U.has_attribute ed.eff_attrs Const.primitive_extraction_attr
 
 (************************************************************************************************************)
 (* Main type-checker begins here                                                                            *)
@@ -1061,15 +1065,23 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
     let e = U.mk_reify e (Some c.effect_name) in
     let repr = Env.reify_comp env (S.mk_Comp c) u_c in
     let c =
-        if is_total_effect env c.effect_name
-        then S.mk_Total repr |> TcComm.lcomp_of_comp
-        else let ct = { comp_univs = [u_c]
-                      ; effect_name = Const.effect_Dv_lid
-                      ; result_typ = repr
-                      ; effect_args = []
-                      ; flags = []
-                      }
-             in S.mk_Comp ct |> TcComm.lcomp_of_comp
+        if effect_has_primitive_extraction env c.effect_name then
+          (* Primitively extracted, make sure to reify into GTot to
+             not mix the two representations. *)
+          S.mk_GTotal repr |> TcComm.lcomp_of_comp
+        else if is_total_effect env c.effect_name then
+          (* Total. *)
+          S.mk_Total repr |> TcComm.lcomp_of_comp
+        else
+          (* Add a DIV effect for non-total effects. *)
+          let ct = { comp_univs = [u_c]
+                   ; effect_name = Const.effect_Dv_lid
+                   ; result_typ = repr
+                   ; effect_args = []
+                   ; flags = []
+                   }
+          in
+          S.mk_Comp ct |> TcComm.lcomp_of_comp
     in
     let e, c, g' = comp_check_expected_typ env e c in
     e, c, g ++ (g_c ++ g')

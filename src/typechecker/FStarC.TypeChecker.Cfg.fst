@@ -433,13 +433,15 @@ let should_reduce_local_let cfg lb =
   else if cfg.steps.pure_subterms_within_computations &&
           U.has_attribute lb.lbattrs PC.inline_let_attr
   then true //1. we're extracting, and it's marked @inline_let
+  else if U.has_attribute lb.lbattrs PC.no_inline_let_attr
+  then false //Or, 2. do not unfold as it's explicitly marked as @no_inline_let
   else
     let n = Env.norm_eff_name cfg.tcenv lb.lbeff in
     if U.is_pure_effect n &&
        (cfg.normalize_pure_lets
         || U.has_attribute lb.lbattrs PC.inline_let_attr)
-    then true //Or, 2. it's pure and we either not extracting, or it's marked @inline_let
-    else U.is_ghost_effect n && //Or, 3. it's ghost and we're not extracting
+    then true //Or, 3. it's pure and we are either not extracting, or it's marked @inline_let
+    else U.is_ghost_effect n && //Or, 4. it's ghost and we're not extracting
          not (cfg.steps.pure_subterms_within_computations)
 
 let translate_norm_step = function
