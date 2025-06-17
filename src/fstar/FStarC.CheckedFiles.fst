@@ -340,7 +340,7 @@ let load_checked_file_with_tc_result
         end;
         let msg =
           BU.format1
-            "checked file %s is stale (dependence hash mismatch, use --debug yes for more details)"
+            "checked file %s is stale (dependence hash mismatch, use --debug CheckedFiles for more details)"
             checked_fn
         in
         let elt = (Invalid msg, Inl msg) in
