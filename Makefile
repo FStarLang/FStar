@@ -77,8 +77,8 @@ build: 2
 	# the timestamp of directories, and we would keep triggering
 	# rebuilds.
 	find stage0/ \
-	  -path stage0/dune/_build -prune -false -o \
-	  -path stage0/out -prune -false -o \
+	  -path stage0/dune/_build -prune -exec false -o \
+	  -path stage0/out -prune -exec false -o \
 	  -type f -newer $@ -exec touch $@ \; -quit
 
 stage0/out/bin/fstar.exe: .stage0.touch
