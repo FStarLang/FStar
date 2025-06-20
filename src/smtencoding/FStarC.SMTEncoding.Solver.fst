@@ -269,8 +269,7 @@ let with_fuel_and_diagnostics settings label_assumptions =
     (if settings.query_record_hints
      then [ Term.GetUnsatCore ]
      else [])
-    @(if (Options.print_z3_statistics() ||
-          Options.query_stats ()) then [Term.GetStatistics] else []) //stats
+    @[Term.GetStatistics] //stats, we always ask for them to print remaining rlimits
     @settings.query_suffix //recover error labels and a final "Done!" message
 
 
@@ -526,6 +525,8 @@ let mk_unique_string_accumulator ()
   let clear () = strings := [] in
   { add ; get; clear }
 
+let __rc : ref int = mk_ref 0
+
 let query_info settings z3result =
     let process_unsat_core (core:option UC.unsat_core) =
        (* Accumulator for module names *)
@@ -649,7 +650,18 @@ let query_info settings z3result =
                 let str = smap_fold z3result.z3result_statistics f "statistics={" in
                     (substring str 0 ((String.length str) - 1)) ^ "}"
             else "" in
-        BU.print "%s\tQuery-stats (%s, %s)\t%s%s in %s milliseconds with fuel %s and ifuel %s and rlimit %s\n"
+        let used_rlimit_str =
+          try
+            let r0 = !__rc in
+            let r = BU.must <| SMap.try_find z3result.z3result_statistics "rlimit-count" in
+            let r = int_of_string r in
+            __rc := r;
+            let used = r - r0 in
+            show <| used / convert_rlimit 1
+          with
+          | _ -> "unknown"
+        in
+        BU.print "%s\tQuery-stats (%s, %s)\t%s%s in %s milliseconds with fuel %s and ifuel %s and rlimit %s (used rlimit %s)\n"
              [  range;
                 settings.query_name;
                 show settings.query_index;
@@ -658,7 +670,8 @@ let query_info settings z3result =
                 show z3result.z3result_time;
                 show settings.query_fuel;
                 show settings.query_ifuel;
-                show (settings.query_rlimit);
+                show settings.query_rlimit;
+                used_rlimit_str;
                 // stats ()
              ];
         if Options.print_z3_statistics () then process_unsat_core core;
