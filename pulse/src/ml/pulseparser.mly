@@ -69,6 +69,7 @@ let add_decorations decors ds =
 %token MUT FN INVARIANT WHILE REF PARALLEL REWRITE FOLD EACH NOREWRITE
 %token GHOST ATOMIC
 %token WITH_INVS OPENS  SHOW_PROOF_STATE
+%token PRESERVES
 
 %start pulseDeclEOF
 %start peekFnId
@@ -188,7 +189,6 @@ fnBody:
   | COLON typ=option(appTerm) EQUALS lambda=pulseLambda
     { Inr (lambda, typ) }
 
-
 ret_ty:
   | r=tmNoEqNoRecordWith(appTermNoRecordExp) {r}
 
@@ -197,6 +197,7 @@ returns:
   | RETURNS r=ret_ty { PulseSyntaxExtension_Sugar.Returns (None, r) }
 
 pulseComputationAnnot1_:
+  | PRESERVES t=pulseSLProp { PulseSyntaxExtension_Sugar.Preserves t }
   | REQUIRES t=pulseSLProp { PulseSyntaxExtension_Sugar.Requires t }
   | ENSURES t=pulseSLProp { PulseSyntaxExtension_Sugar.Ensures t }
   | r=returns {r}

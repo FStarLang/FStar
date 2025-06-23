@@ -69,6 +69,7 @@ let sugar_star_of_list (r:Range.range) (ts : list A.term) : A.term =
 
 let parse_annots (r:Range.range) (cs : list Sugar.computation_annot) : err Sugar.parsed_annots =
   let open PulseSyntaxExtension.Sugar in
+  let pres = filter (fun (a, _) -> Preserves ? a) cs in
   let reqs  = filter (fun (a, _) -> Requires? a) cs in
   let enss  = filter (fun (a, _) -> Ensures?  a) cs in
   let rets  = filter (fun (a, _) -> Returns?  a) cs in
@@ -78,8 +79,8 @@ let parse_annots (r:Range.range) (cs : list Sugar.computation_annot) : err Sugar
   // let enss  = choose (function (Sugar.Ensures  t, _) -> Some t | _ -> None) cs in
   // let rets  = choose (function (Sugar.Returns  t, _) -> Some t | _ -> None) cs in
   // let opens = choose (function (Sugar.Opens    t, _) -> Some t | _ -> None) cs in
-  let req = reqs |> List.map (function (Requires t, _) -> t) |> sugar_star_of_list r in
-  let ens = enss |> List.map (function (Ensures  t, _) -> t) |> sugar_star_of_list r in
+  let req = pres @ reqs |> List.map (function (Requires t, _) | (Preserves t, _) -> t) |> sugar_star_of_list r in
+  let ens = pres @ enss |> List.map (function (Ensures  t, _) | (Preserves t, _) -> t) |> sugar_star_of_list r in
   let! return_name, return_type =
     match rets with
     | [] -> return (None, sugar_unit r)
@@ -114,6 +115,10 @@ let parse_annots (r:Range.range) (cs : list Sugar.computation_annot) : err Sugar
         fail "opens must come before the return (the name returned is *not* in scope for the opens clause)" r
       else if ens && Returns? a then
         fail "returns must come before ensures (the name returned is in scope for the ensures clause)" r
+      else if ret && Preserves? a then
+        fail "preserves must come before the return" r
+      else if ens && Preserves? a then
+        fail "preserves must come before ensures" r
       else
         check_order cs req ret ens
   in
