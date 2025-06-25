@@ -817,12 +817,12 @@ let make_solver_configs
  : (list query_settings & option hint)
  =
     (* Fetch the settings. *)
+    let qname, index =
+        match env.tcenv.qtbl_name_and_index with
+        | None, _ -> failwith "No query name set!"
+        | Some (q, _typ, n), _ -> Ident.string_of_lid q, n
+    in
     let default_settings, next_hint =
-        let qname, index =
-            match env.tcenv.qtbl_name_and_index with
-            | None, _ -> failwith "No query name set!"
-            | Some (q, _typ, n), _ -> Ident.string_of_lid q, n
-        in
         let rlimit =
             let open FStar.Mul in
             Options.z3_rlimit_factor () * Options.z3_rlimit ()
@@ -853,13 +853,27 @@ let make_solver_configs
 
     (* Fetch hints, if any. *)
     let use_hints_setting =
-        if  use_hints () && next_hint |> is_some
+        if use_hints () && next_hint |> is_some
         then
-            let ({unsat_core=Some core; fuel=i; ifuel=j; hash=h}) = next_hint |> must in
+          let ({unsat_core=Some core; fuel=i; ifuel=j; hash=h}) = next_hint |> must in
+          (* Make sure the recorded fuels are allowed now, so we don't
+          keep succeeding with a hint even after reducing the maximum allowed
+          fuels. *)
+          let between i j k = i <= k && k <= j in
+          if between (Options.initial_fuel()) (Options.max_fuel()) i
+          && between (Options.initial_ifuel()) (Options.max_ifuel()) j
+          then
             [{default_settings with query_hint=Some core;
                                     query_fuel=i;
                                     query_ifuel=j}]
-        else []
+          else (
+            if Options.query_stats () then
+              BU.print3 "Hint for %s has fuels not currently valid (%s, %s), ignoring!\n"
+                qname (show i) (show j);
+            []
+          )
+        else
+          []
     in
 
     let initial_fuel_max_ifuel =

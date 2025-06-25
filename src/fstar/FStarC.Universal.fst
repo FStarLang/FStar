@@ -402,6 +402,7 @@ let tc_one_file
     : tc_result
     & option MLSyntax.mlmodule
     & uenv =
+  Stats.record "tc_one_file" fun () ->
   GenSym.reset_gensym();
 
   (*

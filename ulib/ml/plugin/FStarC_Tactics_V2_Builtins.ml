@@ -137,6 +137,9 @@ let alloc x                 = from_tac_1 "B.alloc" B.alloc x
 let read  r                 = from_tac_1 "B.read" B.read r
 let write r x               = from_tac_2 "B.write" B.write r x
 
+let splice_quals x         = from_tac_1 "B.splice_quals" B.splice_quals x
+let splice_attrs x         = from_tac_1 "B.splice_attrs" B.splice_attrs x
+
 type ('env, 't) prop_validity_token = unit
 type ('env, 'sc, 't, 'pats, 'bnds) match_complete_token = unit
 

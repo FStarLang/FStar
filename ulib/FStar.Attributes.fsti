@@ -80,6 +80,21 @@ type __internal_ocaml_attributes =
     size. *)
 val inline_let : unit
 
+(** The [inline_let_vc] attribute on a local let-binding, instructs the
+    verification condition generator to try to inline the definition in the
+    VC of the continuation. Note, use this with care, since
+    inlining all lets can lead to an exponential blowup in VC
+    size. It is however useful for VCs where a local definition
+    must be normalized, e.g., in conjunction with assert_norm. 
+    Note, inline_let and inline_let_vc are both implied by `unfold let` *)
+val inline_let_vc : unit
+
+(** The [no_inline_let] attribute on a local let-binding prevents the
+    normalizer from unfolding the definition of a local let-binding. This
+    attribute can be useful when processing definitions with tactics, as
+    otherwise the normalizer will eagerly unfold all pure definitions. *)
+val no_inline_let : unit
+
 (** The [rename_let] attribute support a form of metaprogramming for
     the names of let-bound variables used in extracted code.
 

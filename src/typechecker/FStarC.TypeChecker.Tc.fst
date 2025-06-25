@@ -808,10 +808,20 @@ let tc_decl' env0 se: list sigelt & list sigelt & Env.env =
 
     // env.splice will check the tactic
 
-    let ses = env.splice env is_typed lids t se.sigrng in
+    let ses = env.splice env se.sigquals se.sigattrs is_typed lids t se.sigrng in
+
+    if Debug.low () then
+      BU.print1 "Will splice decls:\n%s\n" (show ses);
+
     let ses = 
-      if is_typed
-      then let sigquals = 
+      (* For non-typed splices, they choose their own attributes and qualifiers.
+      The tactics can access them via the cur_attrs and cur_quals primitives, and add
+      them to the generated sigelts, possibly filtering some out.
+
+      Typed splices should probably do the same, though we would need to have
+      a typing judgment for them (e.g. stating what is allowed). *)
+      if is_typed then
+        let sigquals =
               match se.sigquals with
               | [] -> [ S.Visible_default ]
               | qs -> qs

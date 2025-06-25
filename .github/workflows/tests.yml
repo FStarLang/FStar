@@ -104,12 +104,8 @@ jobs:
           # - fstar-stage1-src.tar.gz
           # ^ See note in test-local.
         os:
-          - ubuntu-20.04
-          - ubuntu-22.04
           - ubuntu-24.04
           - ubuntu-latest
-        exclude:
-          - os: ubuntu-24.04 # setup-ocaml fails due to darcs https://github.com/ocaml/setup-ocaml/issues/872
     runs-on: ${{ matrix.os }}
     steps:
       # TODO: Install both 4.8.5 and 4.13.1

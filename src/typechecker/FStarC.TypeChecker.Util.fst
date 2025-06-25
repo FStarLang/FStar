@@ -1481,8 +1481,9 @@ let lcomp_has_trivial_postcondition (lc:lcomp) =
  *
  * We should make wp-effects also same as the layered effects
  *)
-let maybe_capture_unit_refinement (env:env) (t:term) (x:bv) (c:comp) : comp & guard_t =
-  let t = N.normalize_refinement N.whnf_steps env t in
+let maybe_capture_unit_refinement (env:env) (t:term) (x:bv) (c:comp) 
+: comp & guard_t & bool
+= let t = N.normalize_refinement N.whnf_steps env t in
   match t.n with
   | Tm_refine {b; phi} ->
     let is_unit =
@@ -1494,12 +1495,18 @@ let maybe_capture_unit_refinement (env:env) (t:term) (x:bv) (c:comp) : comp & gu
       then
         let b, phi = SS.open_term_bv b phi in
         let phi = SS.subst [NT (b, S.unit_const)] phi in
-        weaken_comp env c phi
-      else close_wp_comp env [x] c, Env.trivial_guard
-    else c, Env.trivial_guard
-  | _ -> c, Env.trivial_guard
+        let c, g = weaken_comp env c phi in
+        c, g, true
+      else close_wp_comp env [x] c, Env.trivial_guard, true
+    else c, Env.trivial_guard, false
+  | _ -> c, Env.trivial_guard, false
 
-let bind (r1:Range.range) (env:Env.env) (e1opt:option term) (lc1:lcomp) ((b, lc2):lcomp_with_binder) : lcomp =
+let optimize_bind_vc () = Options.Ext.enabled "optimize_let_vc"
+
+let bind
+      (r1:Range.range)
+      (is_let_binding:bool) 
+      (env:Env.env) (e1opt:option term) (lc1:lcomp) ((b, lc2):lcomp_with_binder) : lcomp =
   let debug f =
       if Debug.extreme () || !dbg_bind
       then f ()
@@ -1551,7 +1558,8 @@ let bind (r1:Range.range) (env:Env.env) (e1opt:option term) (lc1:lcomp) ((b, lc2
             | None -> g_c2) in
 
           debug (fun () ->
-            BU.print4 "(1) bind: \n\tc1=%s\n\tx=%s\n\tc2=%s\n\te1=%s\n(1. end bind)\n"
+            BU.print5 "(1) bind (is_let_binding=%s): \n\tc1=%s\n\tx=%s\n\tc2=%s\n\te1=%s\n(1. end bind)\n"
+            (show is_let_binding)
             (show c1)
             (match b with
                 | None -> "none"
@@ -1579,34 +1587,81 @@ let bind (r1:Range.range) (env:Env.env) (e1opt:option term) (lc1:lcomp) ((b, lc2
               | Inl (c, reason) -> Inl (c, trivial_guard, reason)
               | Inr reason -> Inr reason in
             if Env.too_early_in_prims env  //if we're very early in prims
-            then //if U.is_tot_or_gtot_comp c1
-                 //&& U.is_tot_or_gtot_comp c2
-                 Inl (c2, trivial_guard, "Early in prims; we don't have bind yet")
-                 // else raise_error (Errors.Fatal_NonTrivialPreConditionInPrims,
-                 //                   "Non-trivial pre-conditions very early in prims, even before we have defined the PURE monad")
-                 //                   (Env.get_range env)
+            then Inl (c2, trivial_guard, "Early in prims; we don't have bind yet")
             else if U.is_total_comp c1
             then (*
                   * Helper routine to close the compuation c with c1's return type
                   * When c1's return type is of the form _:t{phi}, is is useful to know
                   *   that t{phi} is inhabited, even if c1 is inlined etc.
                   *)
-                 let close_with_type_of_x (x:bv) (c:comp) =
-                   let x = { x with sort = U.comp_result c1 } in
-                   maybe_capture_unit_refinement env x.sort x c in
-                 match e1opt, b with
-                 | Some e, Some x ->
-                   let c2, g_close = c2 |> SS.subst_comp [NT (x, e)] |> close_with_type_of_x x in
-                   Inl (c2, Env.conj_guards [
+                let maybe_close_with_unit_refinement (x:bv) (c:comp) =
+                  let x = { x with sort = U.comp_result c1 } in
+                  maybe_capture_unit_refinement env x.sort x c
+                in
+                let close_with_type_of_x (x:bv) (c:comp) =
+                  let c, g, closed = maybe_close_with_unit_refinement x c in
+                  if closed then c, g
+                  else close_wp_comp env [x] c, Env.close_guard env [S.mk_binder x] g
+                in
+                let is_layered = 
+                  c2 |> U.comp_effect_name |> Env.norm_eff_name env 
+                  |> Env.is_layered_effect env
+                in
+                match e1opt, b with
+                | Some e, Some x when (
+                    not (optimize_bind_vc()) || // optimization is disabled
+                    not is_let_binding || //non-let bindings, e.g., in applications, are inlined
+                    is_layered // layered effects do not always support closing with universal quantification
+                  ) ->
+                  let c2, g_close, _ =
+                    c2 |> SS.subst_comp [NT (x, e)] |> maybe_close_with_unit_refinement x
+                  in
+                  Inl (c2, Env.conj_guards [
                      g_c1;
                      Env.map_guard g_c2 (SS.subst [NT (x, e)]);
                      g_close ], "c1 Tot")
-                 | _, Some x ->
-                   let c2, g_close = c2 |> close_with_type_of_x x in
-                   Inl (c2, Env.conj_guards [
-                     g_c1;
-                     Env.close_guard env [S.mk_binder x] g_c2;
-                     g_close ], "c1 Tot only close")
+                | Some e, Some x -> (
+                  let default_with_eqn () =
+                    let c2, g_c2' = weaken_comp (Env.push_binders env [S.mk_binder x]) c2 (U.mk_eq2 (env.universe_of env x.sort) x.sort e (bv_to_name x)) in
+                    let c2, g_close = close_with_type_of_x x c2 in
+                    Inl (c2, Env.conj_guards [
+                              trivial_guard;
+                              Env.close_guard env [S.mk_binder x] g_c2';
+                              g_close], "c1 Tot with eq")
+                  in
+                  if U.is_tot_or_gtot_comp c2
+                  then (
+                    if is_let_binding
+                    then (
+                      if not (mem x (Free.names_comp c2))
+                      then (
+                        //x is not free in c2; but if it is a unit refinement, the
+                        //binder may legitimately be unused in the continuation,
+                        //with only its type relevant---so close with unit refinement
+                        //See, e.g., Unit1.Basic.bind_test2
+                        //Note, closing with the type of x unconditionally causes
+                        //other examples to blow up, e.g., in Registers.List.fst in native_tactics
+                        //closing with the type of every let binding even with a tot continuation
+                        //moves the continuation out of Tot to pure, and then
+                        //we fall into the default case with equations.
+                        //So, this is trying to strike a balance:
+                        //Compact VCs for let bound Tot terms with Tot/GTot continuations
+                        //remaining in Tot/GTot;
+                        //Except if the let-bound terms binds a unit refinement,
+                        //then we close with the unit refinement, so that the
+                        //the refinement is captured.
+                        let c2, g_close, _ = maybe_close_with_unit_refinement x c2 in
+                        Inl (c2, Env.conj_guards [ trivial_guard; g_close],  "both Tot/GTot")
+                      )
+                      else default_with_eqn ()
+                    )
+                    else Inl (SS.subst_comp [NT(x,e)] c2, trivial_guard, "both Tot/GTot")
+                  )
+                  else default_with_eqn ()
+                )
+                | _, Some x ->
+                   let c2, g_close = close_with_type_of_x x c2 in
+                   Inl (c2, Env.conj_guards [ trivial_guard; g_close ], "c1 Tot only close")
                  | _, _ -> aux_with_trivial_guard ()
             else if U.is_tot_or_gtot_comp c1
                  && U.is_tot_or_gtot_comp c2
@@ -1628,7 +1683,8 @@ let bind (r1:Range.range) (env:Env.env) (e1opt:option term) (lc1:lcomp) ((b, lc2
               let c, g_bind = mk_bind env c1 b c2 bind_flags r1 in
               c, Env.conj_guard g g_bind in
 
-            (* AR: we have let the previously applied bind optimizations take effect, below is the code to do more inlining for pure and ghost terms *)
+            (* AR: we have let the previously applied bind optimizations take effect,
+                below is the code to do more inlining for pure and ghost terms *)
             let u_res_t1, res_t1 =
               let t = U.comp_result c1 in
               match comp_univ_opt c1 with
@@ -1669,6 +1725,8 @@ let bind (r1:Range.range) (env:Env.env) (e1opt:option term) (lc1:lcomp) ((b, lc2
                  //           (x == e1 ==> lift_M2_M (wp2[e1/x]))
 
                  if U.is_partial_return c1
+                 && (not (optimize_bind_vc()) || //optimization is disabled
+                     not is_let_binding)
                  then
                       let _ = debug (fun () ->
                         BU.print2 "(3) bind (case a): Substituting %s for %s\n" (N.term_to_string env e1) (show x)) in
@@ -1678,7 +1736,11 @@ let bind (r1:Range.range) (env:Env.env) (e1opt:option term) (lc1:lcomp) ((b, lc2
                  else
                       let _ = debug (fun () ->
                         BU.print2 "(3) bind (case b): Adding equality %s = %s\n" (N.term_to_string env e1) (show x)) in
-                      let c2 = SS.subst_comp [NT(x,e1)] c2 in
+                      let c2 = 
+                        if not (optimize_bind_vc()) || not is_let_binding
+                        then SS.subst_comp [NT(x,e1)] c2
+                        else c2
+                      in
                       let x_eq_e = U.mk_eq2 u_res_t1 res_t1 e1 (bv_to_name x) in
                       let c2, g_w = weaken_comp (Env.push_binders env [S.mk_binder x]) c2 x_eq_e in
                       let g = Env.conj_guards [
@@ -1756,7 +1818,7 @@ let assume_result_eq_pure_term_in_m env (m_opt:option lident) (e:term) (lc:lcomp
             let ret = TcComm.lcomp_of_comp <| Env.comp_set_flags env_x ret [PARTIAL_RETURN] in
             let eq = U.mk_eq2 u_t t xexp e in
             let eq_ret = weaken_precondition env_x ret (NonTrivial eq) in
-            let bind_c, g_bind = TcComm.lcomp_comp (bind e.pos env None (TcComm.lcomp_of_comp c) (Some x, eq_ret)) in
+            let bind_c, g_bind = TcComm.lcomp_comp (bind e.pos false env None (TcComm.lcomp_of_comp c) (Some x, eq_ret)) in
             Env.comp_set_flags env bind_c flags, Env.conj_guards [g_c; g_ret; g_bind]
   in
 
@@ -1783,6 +1845,7 @@ let maybe_assume_result_eq_pure_term env e lc =
 
 let maybe_return_e2_and_bind
         (r:Range.range)
+        (is_let_binding:bool)
         (env:env)
         (e1opt:option term)
         (lc1:lcomp)
@@ -1814,7 +1877,7 @@ let maybe_return_e2_and_bind
              && is_pure_or_ghost_effect env eff2
         then maybe_assume_result_eq_pure_term_in_m env_x (eff1 |> Some) e2 lc2
         else lc2 in //the resulting computation is still pure/ghost and inlineable; no need to insert a return
-   bind r env e1opt lc1 (x, lc2)
+   bind r is_let_binding env e1opt lc1 (x, lc2)
 
 let fvar_env env lid =  S.fvar (Ident.set_lid_range lid (Env.get_range env)) None
 
@@ -2324,7 +2387,7 @@ let coerce_with (env:Env.env)
         if !dbg_Coercions then
             BU.print1 "Coercing with %s!\n" (Ident.string_of_lid f);
         let lc2 = TcComm.lcomp_of_comp <| comp2 in
-        let lc_res = bind e.pos env (Some e) lc (None, lc2) in
+        let lc_res = bind e.pos false env (Some e) lc (None, lc2) in
         let coercion = S.fvar (Ident.set_lid_range f e.pos) None in
         let coercion = S.mk_Tm_uinst coercion us in
 
@@ -2471,7 +2534,7 @@ let find_coercion (env:Env.env) (checked: lcomp) (exp_t: typ) (e:term)
   (* b2t is primitive... for now *)
   | Tm_fvar fv, [] when S.fv_eq_lid fv C.bool_lid && is_type exp_t ->
     let lc2 = TcComm.lcomp_of_comp <| S.mk_Total U.ktype0 in
-    let lc_res = bind e.pos env (Some e) checked (None, lc2) in
+    let lc_res = bind e.pos false env (Some e) checked (None, lc2) in
     Some (U.mk_app (S.fvar C.b2t_lid None) [S.as_arg e], lc_res, Env.trivial_guard)
 
   (* user coercions, find candidates with the @@coercion attribute and try. *)
@@ -2675,7 +2738,7 @@ let weaken_result_typ env (e:term) (lc:lcomp) (t:typ) (use_eq:bool) : term & lco
                 let cret, gret = return_value env (c |> U.comp_effect_name |> Env.norm_eff_name env)
                   (comp_univ_opt c) res_t (S.bv_to_name x) in
                   //AR: an M_M bind
-                let lc = bind e.pos env (Some e) (TcComm.lcomp_of_comp c) (Some x, TcComm.lcomp_of_comp cret) in
+                let lc = bind e.pos false env (Some e) (TcComm.lcomp_of_comp c) (Some x, TcComm.lcomp_of_comp cret) in
                 if Debug.extreme ()
                 then BU.print4 "weaken_result_type::strengthen_trivial: inserting a return for e: %s, c: %s, t: %s, and then post return lc: %s\n"
                                (show e) (show c) (show t) (TcComm.lcomp_to_string lc);
@@ -2736,7 +2799,7 @@ let weaken_result_typ env (e:term) (lc:lcomp) (t:typ) (use_eq:bool) : term & lco
                           in
                           let x = {x with sort=lc.res_typ} in
                           //AR: M_M bind
-                          let c = bind e.pos env (Some e) (TcComm.lcomp_of_comp c) (Some x, eq_ret) in
+                          let c = bind e.pos false env (Some e) (TcComm.lcomp_of_comp c) (Some x, eq_ret) in
                           let c, g_lc = TcComm.lcomp_comp c in
                           if Debug.extreme ()
                           then BU.print1 "Strengthened to %s\n" (Normalize.comp_to_string env c);

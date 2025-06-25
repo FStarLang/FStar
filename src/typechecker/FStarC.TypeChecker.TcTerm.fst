@@ -718,6 +718,10 @@ let is_comp_ascribed_reflect (e:term) : option (lident & term & aqual) =
      | _ -> None)
    | _ -> None
 
+let effect_has_primitive_extraction (env:Env.env) (eff: lident) : bool =
+  let eff = Env.norm_eff_name env eff in
+  let ed = Env.get_effect_decl env eff in
+  U.has_attribute ed.eff_attrs Const.primitive_extraction_attr
 
 (************************************************************************************************************)
 (* Main type-checker begins here                                                                            *)
@@ -1061,15 +1065,23 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
     let e = U.mk_reify e (Some c.effect_name) in
     let repr = Env.reify_comp env (S.mk_Comp c) u_c in
     let c =
-        if is_total_effect env c.effect_name
-        then S.mk_Total repr |> TcComm.lcomp_of_comp
-        else let ct = { comp_univs = [u_c]
-                      ; effect_name = Const.effect_Dv_lid
-                      ; result_typ = repr
-                      ; effect_args = []
-                      ; flags = []
-                      }
-             in S.mk_Comp ct |> TcComm.lcomp_of_comp
+        if effect_has_primitive_extraction env c.effect_name then
+          (* Primitively extracted, make sure to reify into GTot to
+             not mix the two representations. *)
+          S.mk_GTotal repr |> TcComm.lcomp_of_comp
+        else if is_total_effect env c.effect_name then
+          (* Total. *)
+          S.mk_Total repr |> TcComm.lcomp_of_comp
+        else
+          (* Add a DIV effect for non-total effects. *)
+          let ct = { comp_univs = [u_c]
+                   ; effect_name = Const.effect_Dv_lid
+                   ; result_typ = repr
+                   ; effect_args = []
+                   ; flags = []
+                   }
+          in
+          S.mk_Comp ct |> TcComm.lcomp_of_comp
     in
     let e, c, g' = comp_check_expected_typ env e c in
     e, c, g ++ (g_c ++ g')
@@ -1543,14 +1555,14 @@ and tc_match (env : Env.env) (top : term) : term & lcomp & guard_t =
     in
 
     //bind with e1's computation type
-    let cres = TcUtil.bind e1.pos env (Some e1) c1 (Some guard_x, c_branches) in
+    let cres = TcUtil.bind e1.pos false env (Some e1) c1 (Some guard_x, c_branches) in
 
     let cres =
       if erasable
       then (* promote cres to ghost *)
            let e = U.exp_true_bool in
            let c = mk_GTotal U.t_bool in
-           TcUtil.bind e.pos env (Some e) (TcComm.lcomp_of_comp c) (None, cres)
+           TcUtil.bind e.pos false env (Some e) (TcComm.lcomp_of_comp c) (None, cres)
       else cres
     in
 
@@ -1791,8 +1803,17 @@ and tc_value env (e:term) : term
                  "Universe applications are only allowed on top-level identifiers"
 
   | Tm_fvar fv ->
+    let maybe_set_fv_qual env fv =
+      (* The Data_ctor qualifier is mostly set by desugaring, but
+         may be missing in tactic-generated terms. In general,
+         we should try to not rely on desugaring. *)
+      if None? fv.fv_qual && Env.is_datacon env fv.fv_name.v
+      then { fv with fv_qual = Some Data_ctor }
+      else fv
+    in
     let (us, t), range = Env.lookup_lid env fv.fv_name.v in
     let fv = S.set_range_of_fv fv range in
+    let fv = maybe_set_fv_qual env fv in
     maybe_warn_on_use env fv;
     if !dbg_Range
     then BU.print5 "Lookup up fvar %s at location %s (lid range = defined at %s, used at %s); got universes type %s\n"
@@ -2623,8 +2644,8 @@ and check_application_args env head (chead:comp) ghead args expected_topt : term
                        |> fst)
                 else env in
               if TcComm.is_pure_or_ghost_lcomp c
-              then i+1,TcUtil.bind e.pos env (Some e) c (x, out_c)
-              else i+1,TcUtil.bind e.pos env None c (x, out_c))
+              then i+1,TcUtil.bind e.pos false env (Some e) c (x, out_c)
+              else i+1,TcUtil.bind e.pos false env None c (x, out_c))
           (1, cres)
           arg_comps_rev in
 
@@ -2637,8 +2658,8 @@ and check_application_args env head (chead:comp) ghead args expected_topt : term
                (show head)
                (TcComm.lcomp_to_string chead);
         if TcComm.is_pure_or_ghost_lcomp chead
-        then TcUtil.bind head.pos env (Some head) chead (None, comp)
-        else TcUtil.bind head.pos env None chead (None, comp) in
+        then TcUtil.bind head.pos false env (Some head) chead (None, comp)
+        else TcUtil.bind head.pos false env None chead (None, comp) in
 
       (* TODO : This is a really syntactic criterion to check if we can evaluate *)
       (* applications left-to-right, can we do better ? *)
@@ -3926,8 +3947,9 @@ and check_inner_let env e =
        let e1, _, c1, g1, annotated = check_let_bound_def false (Env.clear_expected_typ env |> fst) lb in
        let pure_or_ghost = TcComm.is_pure_or_ghost_lcomp c1 in
        let is_inline_let = BU.for_some (U.is_fvar FStarC.Parser.Const.inline_let_attr) lb.lbattrs in
+       let is_inline_let_vc = BU.for_some (U.is_fvar FStarC.Parser.Const.inline_let_vc_attr) lb.lbattrs in
        let _ =
-        if is_inline_let
+        if (is_inline_let || is_inline_let_vc)  //inline let is allowed only if it is pure or ghost
         && not (pure_or_ghost || Env.is_erasable_effect env c1.eff_name)  //inline let is allowed on erasable effects
         then raise_error e1
                Errors.Fatal_ExpectedPureExpression
@@ -3961,6 +3983,7 @@ and check_inner_let env e =
        let cres =
          TcUtil.maybe_return_e2_and_bind
            e1.pos
+           (not is_inline_let_vc) //inline lets are inlined in the VC
            env
            (Some e1)
            c1

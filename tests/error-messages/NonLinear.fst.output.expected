@@ -1,0 +1,5 @@
+>> Got issues: [
+* Error 138 at NonLinear.fst(6,9-6,10):
+  - Non-linear patterns are not permitted: `x` appears more than once in this pattern.
+
+>>]

@@ -114,6 +114,7 @@ let mcache : smap cache_t = SMap.create 50
  *   or the list of dep string, as defined in the checked_file_entry above
  *)
 let hash_dependences (deps:Dep.deps) (fn:string) :either string (list (string & string)) =
+  Stats.record "hash_dependences" fun () ->
   let fn =
     match Find.find_file fn with
     | Some fn -> fn

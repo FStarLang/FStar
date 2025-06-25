@@ -306,6 +306,7 @@ and should_invalidate_cache n use_cache =
 //see the comment above
 
 let names t = (fst (free_names_and_uvars t Def)).free_names
+let names_comp c = (fst (free_names_and_uvars_comp c Def)).free_names
 let uvars t = (fst (free_names_and_uvars t Def)).free_uvars
 let univs t = (fst (free_names_and_uvars t Def)).free_univs
 

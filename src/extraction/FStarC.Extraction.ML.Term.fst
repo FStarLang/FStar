@@ -111,6 +111,10 @@ let err_cannot_extract_effect (l:lident) (r:Range.range) (reason:string) (ctxt:s
        (string_of_lid l) reason ctxt
   ]
 
+let get_extraction_mode env (m:Ident.lident) =
+  let norm_m = Env.norm_eff_name env m in
+  (Env.get_effect_decl env norm_m).extraction_mode
+
 (***********************************************************************)
 (* Translating an effect lid to an e_tag = {E_PURE, E_ERASABLE, E_IMPURE} *)
 (***********************************************************************)
@@ -132,16 +136,19 @@ let effect_as_etag =
     else if TcEnv.is_erasable_effect (tcenv_of_uenv g) l
     then E_ERASABLE
     else
-         // Reifiable effects should be pure. Added guard because some effect declarations
-         // don't seem to be in the environment at this point, in particular FStarC.Effect.ML
-         // (maybe because it's primitive?)
          let ed_opt = TcEnv.effect_decl_opt (tcenv_of_uenv g) l in
          match ed_opt with
          | Some (ed, qualifiers) ->
            if TcEnv.is_reifiable_effect (tcenv_of_uenv g) ed.mname
-           then E_PURE
+           then
+             (* Some reifiable effects are extracted natively. In that case,
+                the tag must be IMPURE. *)
+             if get_extraction_mode (tcenv_of_uenv g) ed.mname = S.Extract_reify
+             then E_PURE
+             else E_IMPURE
            else E_IMPURE
-         | None -> E_IMPURE
+         | None ->
+           E_IMPURE
 
 (********************************************************************************************)
 (* Basic syntactic operations on a term                                                     *)
@@ -243,7 +250,7 @@ let rec is_type_aux env t =
       | Some (t, _) ->
         is_arity env t
       | _ -> (
-        failwith (BU.format1 "Extraction: variable not found: %s" (tag_of t))
+        failwith (BU.format1 "Extraction: variable not found: %s" (show x))
       )
     )
 
@@ -298,9 +305,7 @@ let is_type env t =
                                 );
     let b = is_type_aux env t in
     debug env (fun _ ->
-        if b
-        then BU.print2 "yes, is_type %s (%s)\n" (show t) (tag_of t)
-        else BU.print2 "not a type %s (%s)\n" (show t) (tag_of t));
+        BU.print3 "is_type(%s) (tag %s) = %s\n" (show t) (tag_of (SS.compress t)) (show b));
     b
 
 let is_type_binder env x = is_arity env x.binder_bv.sort
@@ -708,7 +713,14 @@ let register_pre_translate_typ (f : translate_typ_t) : unit =
 
 let rec translate_term_to_mlty' (g:uenv) (t0:term) : mlty =
     let arg_as_mlty (g:uenv) (a, _) : mlty =
-        if is_type g a //This is just an optimization; we could in principle always emit MLTY_Erased, at the expense of more magics
+      (* Translate an argument to a type constructor. Usually, just
+      call translate_term_to_mlty. For karamel extraction, try to extract
+      what we cannot detect as a type into unit instead of Obj.t, to remain
+      in the Low* subset. We should revisit this and make it consistent. *)
+      if Options.codegen () <> Some Options.Krml then
+        translate_term_to_mlty g a
+      else
+        if is_type g a
         then translate_term_to_mlty g a
         else MLTY_Erased
     in
@@ -1591,24 +1603,29 @@ and term_as_mlexpr' (g:uenv) (top:term) : (mlexpr & e_tag & mlty) =
             ml_bs (f, t) in
           with_ty tfun <| MLE_Fun(ml_bs, ml_body), f, tfun
 
+        (* Extract `range_of x` to a literal range. *)
         | Tm_app {hd={n=Tm_constant Const_range_of}; args=[(a1, _)]} ->
           let ty = term_as_mlty g (tabbrev PC.range_lid) in
           with_ty ty <| mlexpr_of_range a1.pos, E_PURE, ty
 
+        (* Ignore `set_range_of` *)
         | Tm_app {hd={n=Tm_constant Const_set_range_of}; args=[(t, _); (r, _)]} ->
           term_as_mlexpr g t
 
+        (* Cannot extract a reflect (aborts at runtime). *)
         | Tm_app {hd={n=Tm_constant (Const_reflect _)}} ->
             let ({exp_b_expr=fw}) = UEnv.lookup_fv t.pos g (S.lid_as_fv (PC.failwith_lid()) None) in
             with_ty ml_int_ty <| MLE_App(fw, [with_ty ml_string_ty <| MLE_Const (MLC_String "Extraction of reflect is not supported")]),
             E_PURE,
             ml_int_ty
 
+        (* Push applications into match branches *)
         | Tm_app {hd=head; args}
           when is_match head &&
                args |> should_apply_to_match_branches ->
           args |> apply_to_match_branches head |> term_as_mlexpr g
 
+        (* A regular application. *)
         | Tm_app {hd=head; args} ->
           let is_total rc =
               Ident.lid_equals rc.residual_effect PC.effect_Tot_lid
@@ -1939,7 +1956,7 @@ and term_as_mlexpr' (g:uenv) (top:term) : (mlexpr & e_tag & mlty) =
                   | E_ERASABLE, MLTY_Erased -> [Erased]
                   | _ -> []
               in
-              let meta = if has_c_inline then CInline :: meta else meta in
+              let meta = if has_c_inline || Options.Ext.get "extraction_inline_all" <> "" then CInline :: meta else meta in
               f, {mllb_meta = meta; mllb_attrs = []; mllb_name=nm; mllb_tysc=Some polytype; mllb_add_unit=add_unit; mllb_def=e; print_typ=true}
           in
           let lbs = extract_lb_sig g (is_rec, lbs) in

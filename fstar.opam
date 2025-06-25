@@ -1,5 +1,5 @@
 opam-version: "2.0"
-version: "2025.03.25~dev"
+version: "2025.06.20~dev"
 maintainer: "taramana@microsoft.com"
 authors: "Nik Swamy <nswamy@microsoft.com>,Jonathan Protzenko <protz@microsoft.com>,Tahina Ramananandro <taramana@microsoft.com>"
 homepage: "http://fstar-lang.org"
@@ -16,8 +16,8 @@ depends: [
   "menhir" {build & >= "20230415"}
   "mtime" {>= "2.1.0"}
   "pprint"
-  "sedlex"
-  "ppxlib" {>= "0.27.0" && < "0.36"}
+  "sedlex" {>= "3.5" }
+  "ppxlib" {>= "0.36.0" }
   "process"
   "ppx_deriving" {build}
   "ppx_deriving_yojson" {build}

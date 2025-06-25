@@ -26,7 +26,7 @@ let return (a:Type) (x:a) : repr a () = x
 let bind (a:Type) (b:Type) (f:repr a ()) (g:a -> repr b ()) : repr b () = g f
 
 layered_effect {
-  M1 : Type -> eqtype_as_type unit -> Effect
+  M1 : Type -> unit -> Effect
   with
   repr = repr;
   return = return;
@@ -36,7 +36,7 @@ layered_effect {
 new_effect M2 = M1
 new_effect M3 = M1
 
-let lift_pure_m (a:Type u#a) (wp:_) (f:eqtype_as_type unit -> PURE a wp)
+let lift_pure_m (a:Type u#a) (wp:_) (f:unit -> PURE a wp)
   : Pure (repr a ()) (requires wp (fun _ -> True)) (ensures fun _ -> True)
   = FStar.Monotonic.Pure.elim_pure_wp_monotonicity_forall u#a ();
     f ()

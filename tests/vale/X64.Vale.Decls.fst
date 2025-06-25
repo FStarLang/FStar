@@ -349,6 +349,8 @@ irreducible val va_irreducible_lemma_Sub64 : va_b0:va_codes -> va_s0:va_state ->
     /\ (va_get_ok va_sM) /\ (eq_int (va_eval_dst_operand_uint64 va_sM dst)
     ((va_eval_dst_operand_uint64 va_s0 dst) - (va_eval_operand_uint64 va_s0 src))) /\ (va_state_eq
     va_sM (va_update_flags va_sM (va_update_ok va_sM (va_update_dst_operand dst va_sM va_s0)))))))
+#push-options "--z3rlimit_factor 4"
+#restart-solver
 irreducible let va_irreducible_lemma_Sub64 va_b0 va_s0 va_sN dst src =
   (va_reveal_opaque (va_transparent_code_Sub64 dst src));
   let (va_old_s:va_state) = va_s0 in
@@ -359,6 +361,7 @@ irreducible let va_irreducible_lemma_Sub64 va_b0 va_s0 va_sN dst src =
     ((va_eval_dst_operand_uint64 va_s0 dst) - (va_eval_operand_uint64 va_s0 src)))
   );
   (va_bM, va_sM)
+#pop-options
 let va_lemma_Sub64 = va_irreducible_lemma_Sub64
 
 val va_transparent_code_Sub64Wrap : dst:va_dst_operand -> src:va_operand -> Tot va_code

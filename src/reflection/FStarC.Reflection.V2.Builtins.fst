@@ -112,11 +112,15 @@ let pack_fv (ns:list string) : fv =
     let lid = PC.p2l ns in
     let fallback () =
         let quals =
-            (* This an awful hack *)
-            if Ident.lid_equals lid PC.cons_lid then Some Data_ctor else
-            if Ident.lid_equals lid PC.nil_lid  then Some Data_ctor else
-            if Ident.lid_equals lid PC.some_lid then Some Data_ctor else
-            if Ident.lid_equals lid PC.none_lid then Some Data_ctor else
+          let id = Ident.ident_of_lid lid in
+          let c = String.get (Ident.string_of_id id) 0 in
+          (* This an awful hack: if lowercase c <> c then c is uppercase.
+          Also we should not be doing this at all, and just rely on the
+          typechecker to fill these in. But note, we could be splicing-in
+          the definition for this here, so we also cannot just look it up. *)
+          if FStar.Char.lowercase c <> c then
+            Some Data_ctor
+          else
             None
         in
         lid_as_fv (PC.p2l ns) quals
@@ -481,7 +485,7 @@ let sigelt_attrs (se : sigelt) : list attribute =
 let set_sigelt_attrs (attrs : list attribute) (se : sigelt) : sigelt =
     { se with sigattrs = attrs }
 
-(* PRIVATE, and hacky :-( *)
+(* Can we make these the same type instead of doing this? *)
 let rd_to_syntax_qual : RD.qualifier -> qualifier = function
   | RD.Assumption -> Assumption
   | RD.New -> New

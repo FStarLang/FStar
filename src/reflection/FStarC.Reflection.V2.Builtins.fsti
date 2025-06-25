@@ -29,6 +29,8 @@ module RD  = FStarC.Reflection.V2.Data
 module S   = FStarC.Syntax.Syntax
 module Z   = FStarC.BigInt
 
+val syntax_to_rd_qual : S.qualifier -> RD.qualifier
+
 (* Primitives *)
 val compare_bv            : bv -> bv -> order
 val compare_namedv        : namedv -> namedv -> order

@@ -79,7 +79,7 @@ layered_effect {
        if_then_else = i_if_then_else
 }
 
-let lift_pure_nd (a:Type) (wp:pure_wp a) (f:(eqtype_as_type unit -> PURE a wp)) :
+let lift_pure_nd (a:Type) (wp:pure_wp a) (f:(unit -> PURE a wp)) :
   Pure (irepr a wp) (requires True)
                     (ensures (fun _ -> True))
   = fun p _ -> elim_pure f p
@@ -96,7 +96,7 @@ let rewrite_inside_reify (f : int -> ND unit (as_pure_wp(fun p -> True))) (x' : 
   | Box x ->
      match x with
      | 0 ->
-       let ll = reify (f x) (fun _ -> True) in
+       let unfold ll = reify (f x) (fun _ -> True) in
        assert (ll == ll) by begin
          let beq = T.nth_var (-1) in
          T.rewrite beq;

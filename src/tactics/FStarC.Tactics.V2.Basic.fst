@@ -1110,7 +1110,12 @@ let t_apply_lemma (noinst:bool) (noinst_lhs:bool)
     in
     let bs, comp = U.arrow_formals_comp t in
     match lemma_or_sq comp with
-    | None -> fail "not a lemma or squashed function"
+    | None ->
+      fail_doc [
+        prefix 2 1 (text "Term to apply has computation type:") (pp comp);
+        text "`apply_lemma` can only apply functions with the Lemma effect or returning a squashed value.";
+      ]
+
     | Some (pre, post) ->
       let! uvs, _, implicits, subst =
         foldM_left
@@ -2246,6 +2251,16 @@ let write (r:tref 'a) (x:'a) : tac unit =
   r := x;
   return ()
 
+let splice_quals () : tac (list RD.qualifier) =
+  let! ps = get in
+  let quals = ps.splice_quals in
+  let quals = quals |> List.map syntax_to_rd_qual in
+  return quals
+
+let splice_attrs () : tac (list attribute) =
+  let! ps = get in
+  return ps.splice_attrs
+
 (***** Builtins used in the meta DSL framework *****)
 
 (* reflection typing calls generate guards in this format, and are mostly discharged
@@ -2935,6 +2950,10 @@ let proofstate_of_goals rng env goals imps =
         all_implicits = imps;
         goals = goals;
         smt_goals = [];
+
+        splice_quals = [];
+        splice_attrs = [];
+
         depth = 0;
         __dump = do_dump_proofstate;
         psc = PO.null_psc;
@@ -2965,6 +2984,8 @@ let proofstate_of_all_implicits rng env imps =
         all_implicits = imps;
         goals = goals;
         smt_goals = [];
+        splice_quals = [];
+        splice_attrs = [];
         depth = 0;
         __dump = do_dump_proofstate;
         psc = PO.null_psc;

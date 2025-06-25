@@ -19,8 +19,8 @@ let f2 x =
   Prims.int
 noeq
 type t3 =
-  | C : PatImps.t3
   | B : PatImps.t3
+  | C : PatImps.t3
 
 
 
@@ -56,8 +56,8 @@ let f2 x =
   Prims.int
 noeq
 type t3 =
-  | C : PatImps.t3
   | B : PatImps.t3
+  | C : PatImps.t3
 
 
 
@@ -94,8 +94,8 @@ let f2 x =
   Prims.int
 noeq
 type t3 =
-  | C : PatImps.t3
   | B : PatImps.t3
+  | C : PatImps.t3
 
 
 

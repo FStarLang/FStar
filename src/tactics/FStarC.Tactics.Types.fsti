@@ -68,6 +68,11 @@ type proofstate = {
     goals        : list goal;   //all the goals remaining to be solved
     smt_goals    : list goal;   //goals that have been deferred to SMT
 
+    // These are read-only, for splice tactics to read.
+    // They are just empty in other invocations.
+    splice_quals : list qualifier;
+    splice_attrs : list attribute;
+
     depth        : int;          //depth for tracing and debugging
     __dump       : proofstate -> string -> unit; // callback to dump_proofstate, to avoid an annoying circularity
     psc          : PO.psc;       //primitive step context where we started execution

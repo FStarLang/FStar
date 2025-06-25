@@ -9,7 +9,7 @@ let bind a b (x: repr a _) (f:a-> repr b _) : repr b () = f x
 reifiable
 reflectable
 layered_effect {
-  ND : a:Type -> dummy:eqtype_as_type unit -> Effect
+  ND : a:Type -> dummy:unit -> Effect
   with repr         = repr;
        return       = return;
        bind         = bind
@@ -18,7 +18,7 @@ layered_effect {
 let monotonic #a (wp : pure_wp a) =
   forall p1 p2. (forall x. p1 x ==> p2 x) ==> wp p1 ==> wp p2
 
-let lift_pure_nd (a:Type) (wp:pure_wp a) (f:(eqtype_as_type unit -> PURE a wp)) :
+let lift_pure_nd (a:Type) (wp:pure_wp a) (f:(unit -> PURE a wp)) :
   Pure (repr a ()) (requires (wp (fun _ -> True))) // <--- This is a lift from Tot only
                    (ensures (fun _ -> True))
   = assume (monotonic wp);

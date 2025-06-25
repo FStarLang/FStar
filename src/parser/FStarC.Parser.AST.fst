@@ -408,6 +408,12 @@ let string_of_fsdoc (comment,keywords) =
 let string_of_let_qualifier = function
   | NoLetQualifier -> ""
   | Rec -> "rec"
+
+let string_of_local_let_qualifier = function
+  | LocalNoLetQualifier -> ""
+  | LocalRec -> "rec"
+  | LocalUnfold -> "unfold"
+  
 let to_string_l sep f l =
   String.concat sep (List.map f l)
 let imp_to_string = function
@@ -446,7 +452,7 @@ let rec term_to_string (x:term) = match x.tm with
   | Abs(pats, t) ->
     Util.format2 "(fun %s -> %s)" (to_string_l " " pat_to_string pats) (t|> term_to_string)
   | App(t1, t2, imp) -> Util.format3 "%s %s%s" (t1|> term_to_string) (imp_to_string imp) (t2|> term_to_string)
-  | Let (Rec, (a,(p,b))::lbs, body) ->
+  | Let (LocalRec, (a,(p,b))::lbs, body) ->
     Util.format4 "%slet rec %s%s in %s"
         (attrs_opt_to_string a)
         (Util.format2 "%s=%s" (p|> pat_to_string) (b|> term_to_string))
@@ -461,7 +467,7 @@ let rec term_to_string (x:term) = match x.tm with
   | Let (q, [(attrs,(pat,tm))], body) ->
     Util.format5 "%slet %s %s = %s in %s"
         (attrs_opt_to_string attrs)
-        (string_of_let_qualifier q)
+        (string_of_local_let_qualifier q)
         (pat|> pat_to_string)
         (tm|> term_to_string)
         (body|> term_to_string)
@@ -873,3 +879,11 @@ let as_interface (m:modul) : modul =
     match m with
     | Module {no_prelude; mname; decls} -> Interface { no_prelude; mname; decls; admitted = true }
     | i -> i
+
+let inline_let_attribute 
+: term
+= mk_term (Var FStarC.Parser.Const.inline_let_attr) Range.dummyRange Expr
+
+let inline_let_vc_attribute 
+: term
+= mk_term (Var FStarC.Parser.Const.inline_let_vc_attr) Range.dummyRange Expr

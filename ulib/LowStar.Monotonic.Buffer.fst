@@ -54,8 +54,8 @@ let lemma_seq_sub_compatibility_is_transitive (#a:Type0)
                     compatible_sub_preorder len rel i1 j1 rel1 /\
                     compatible_sub_preorder (j1 - i1) rel1 i2 j2 rel2))
 	 (ensures  (compatible_sub_preorder len rel (i1 + i2) (i1 + j2) rel2))
-  = let t1 (s1 s2:Seq.seq a) = Seq.length s1 == len /\ Seq.length s2 == len /\ rel s1 s2 in
-    let t2 (s1 s2:Seq.seq a) = t1 s1 s2 /\ rel2 (Seq.slice s1 (i1 + i2) (i1 + j2)) (Seq.slice s2 (i1 + i2) (i1 + j2)) in
+  = let unfold t1 (s1 s2:Seq.seq a) = Seq.length s1 == len /\ Seq.length s2 == len /\ rel s1 s2 in
+    let unfold t2 (s1 s2:Seq.seq a) = t1 s1 s2 /\ rel2 (Seq.slice s1 (i1 + i2) (i1 + j2)) (Seq.slice s2 (i1 + i2) (i1 + j2)) in
 
     let aux0 (s1 s2:Seq.seq a) :Lemma (t1 s1 s2 ==> t2 s1 s2)
       = Classical.arrow_to_impl #(t1 s1 s2) #(t2 s1 s2)
@@ -66,10 +66,9 @@ let lemma_seq_sub_compatibility_is_transitive (#a:Type0)
 	   assert (Seq.equal (Seq.slice (Seq.slice s2 i1 j1) i2 j2) (Seq.slice s2 (i1 + i2) (i1 + j2))))
     in
 
-
-    let t1 (s s2:Seq.seq a) = Seq.length s == len /\ Seq.length s2 == j2 - i2 /\
+    let unfold t1 (s s2:Seq.seq a) = Seq.length s == len /\ Seq.length s2 == j2 - i2 /\
                               rel2 (Seq.slice s (i1 + i2) (i1 + j2)) s2 in
-    let t2 (s s2:Seq.seq a) = t1 s s2 /\ rel s (Seq.replace_subseq s (i1 + i2) (i1 + j2) s2) in
+    let unfold t2 (s s2:Seq.seq a) = t1 s s2 /\ rel s (Seq.replace_subseq s (i1 + i2) (i1 + j2) s2) in
     let aux1 (s s2:Seq.seq a) :Lemma (t1 s s2 ==> t2 s s2)
       = Classical.arrow_to_impl #(t1 s s2) #(t2 s s2)
           (fun _ ->
@@ -79,7 +78,6 @@ let lemma_seq_sub_compatibility_is_transitive (#a:Type0)
 	   assert (Seq.equal (Seq.replace_subseq s i1 j1 (Seq.replace_subseq (Seq.slice s i1 j1) i2 j2 s2))
 	                     (Seq.replace_subseq s (i1 + i2) (i1 + j2) s2)))
     in
-
     Classical.forall_intro_2 aux0; Classical.forall_intro_2 aux1
 
 noeq type mbuffer (a:Type0) (rrel:srel a) (rel:srel a) :Type0 =
