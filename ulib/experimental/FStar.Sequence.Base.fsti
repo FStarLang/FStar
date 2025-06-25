@@ -100,7 +100,7 @@ val update: #ty: Type -> s: seq ty -> i: nat{i < length s} -> ty -> seq ty
 ///
 /// function Seq#Contains<T>(Seq T, T): bool;
 
-val contains: #ty: Type -> seq ty -> ty -> Type0
+val contains: #ty: Type -> seq ty -> ty -> prop
 
 /// We represent the Dafny function `Seq#Take` with `take`:
 ///
@@ -120,7 +120,7 @@ val drop: #ty: Type -> s: seq ty -> howMany: nat{howMany <= length s} -> seq ty
 ///
 /// We also provide the infix symbol `$==` for it.
 
-val equal: #ty: Type -> seq ty -> seq ty -> Type0
+val equal: #ty: Type -> seq ty -> seq ty -> prop
 let ($==) = equal
 
 /// Instead of representing the Dafny function `Seq#SameUntil`, which
@@ -131,7 +131,7 @@ let ($==) = equal
 ///
 /// We also provide the infix notation `$<=` for it.
 
-val is_prefix: #ty: Type -> seq ty -> seq ty -> Type0
+val is_prefix: #ty: Type -> seq ty -> seq ty -> prop
 let ($<=) = is_prefix
 
 /// We represent the Dafny function `Seq#Rank` with `rank`.
