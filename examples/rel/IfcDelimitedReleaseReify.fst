@@ -269,6 +269,7 @@ let wallet_attack [n;x_h;k;x_l] =
 (* This does not verify, as expected
    However, also does not verify with x_h : Low, which should be fine *) 
 
+#push-options "--split_queries always"
 [@@expect_failure]
 let verify_wallet_attack (n x_h k x_l : id):
   Lemma begin
@@ -279,4 +280,4 @@ let verify_wallet_attack (n x_h k x_l : id):
     del_rel m env l [] [b] wallet_attack
   end
  = ()
-
+#pop-options

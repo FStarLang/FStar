@@ -2187,11 +2187,12 @@ let raise_loc_includes #al #c l1 l2 =
   assert (forall (x: aloc c) . GSet.mem x (Ghost.reveal (Loc?.aux l1)) <==> GSet.mem (upgrade_aloc u#x u#y x) (Ghost.reveal (Loc?.aux l1')));
   assert (forall (x: aloc c) . GSet.mem x (Ghost.reveal (Loc?.aux l2)) <==> GSet.mem (upgrade_aloc u#x u#y x) (Ghost.reveal (Loc?.aux l2')));
   assert (loc_aux_includes (Ghost.reveal (Loc?.aux l1')) (Ghost.reveal (Loc?.aux l2')) <==> loc_aux_includes (Ghost.reveal (Loc?.aux l1)) (Ghost.reveal (Loc?.aux l2)));
-  //Sometimes hit a Z3 assertion violation on this one with 4.13.3: reported to Z3 authors
+  //Sometimes hit a Z3 assertion violation on this one with 4.13.3: reported to Z3 authors & fixed in Z3 4.15
   ()
 #pop-options
 
-#push-options "--z3rlimit 20"
+#push-options "--z3rlimit 20 --z3cliopt 'smt.qi.eager_threshold=100'--fuel 0 --ifuel 1"
+#restart-solver
 let raise_loc_disjoint #al #c l1 l2 =
   let l1' = raise_loc u#x u#y l1 in
   let l2' = raise_loc u#x u#y l2 in
