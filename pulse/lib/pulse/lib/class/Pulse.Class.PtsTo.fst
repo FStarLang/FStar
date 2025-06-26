@@ -38,3 +38,9 @@ type frac a =
 instance pts_to_frac (p a : Type) (d : has_pts_to p a) : has_pts_to p (frac a) = {
   pts_to = (fun p #f' (Frac f v) -> d.pts_to p #(f' *. f) v);
 }
+
+(* Handle lseq by ignoring the refinement. *)
+[@@pulse_unfold]
+instance pts_to_lseq (p a : Type) (n : nat) (d : has_pts_to p (Seq.seq a)) : has_pts_to p (Seq.lseq a n) = {
+  pts_to = d.pts_to;
+}
