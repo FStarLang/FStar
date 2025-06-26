@@ -15,10 +15,11 @@
 *)
 
 module Pulse.Lib.OnRange
+#lang-pulse
 open Pulse.Lib.Pervasives
-open Pulse.Lib.Stick
+open Pulse.Lib.Trade
 
-val on_range ([@@@equate_strict] p: (nat -> slprop))
+val on_range ([@@@mkey] p: (nat -> slprop))
              (i:nat)
              (j:nat)
   : slprop

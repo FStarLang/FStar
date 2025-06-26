@@ -15,6 +15,7 @@
 *)
 
 module Pulse.Lib.PCM.Fraction
+#lang-pulse
 open FStar.PCM
 open FStar.Real
 open PulseCore.FractionalPermission

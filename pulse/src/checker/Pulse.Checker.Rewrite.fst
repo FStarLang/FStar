@@ -23,21 +23,22 @@ open Pulse.Checker.Base
 open Pulse.Checker.Prover
 open Pulse.PP
 module T = FStar.Tactics.V2
-module P = Pulse.Syntax.Printer
 module R = FStar.Reflection.V2
+module RT = FStar.Reflection.Typing
+module RU = Pulse.RuntimeUtils
 
 let check_slprop_equiv_ext r (g:env) (p q:slprop)
 : T.Tac (slprop_equiv g p q)
 = let res, issues = Pulse.Typing.Util.check_equiv_now (elab_env g) p q in
-  T.log_issues issues;
   match res with
   | None -> 
-    fail_doc g (Some r)
-           [text "rewrite: could not prove equality of";
-            pp p;
-            pp q]
+    fail_doc_with_subissues g (Some r) issues [
+      text "rewrite: could not prove equality of";
+      pp p;
+      pp q;
+    ]
   | Some token ->
-    VE_Ext g p q token
+    VE_Ext g p q (RT.Rel_eq_token _ _ _ ())
 
 let check_slprop_equiv_tac r (g:env) (p q:slprop) (tac_tm : term)
 : T.Tac (slprop_equiv g p q)
@@ -66,17 +67,17 @@ let check_slprop_equiv_tac r (g:env) (p q:slprop) (tac_tm : term)
   let res, issues = T.call_subtac_tm r_env tac_tm u0 goal in
   match res with
   | None -> 
-    T.log_issues issues;
-    fail_doc g (Some r)
-           [text "rewrite: could not prove equality of";
-            pp p;
-            pp q;
-            text "Using tactic:" ^/^ pp tac_tm]
+    fail_doc_with_subissues g (Some r) issues [
+      text "rewrite: could not prove equality of";
+      pp p;
+      pp q;
+      text "Using tactic:" ^/^ pp tac_tm
+    ]
   | Some token ->
     // Need a VE_ rule to turn an arbitrary proof into a slprop_equiv.
     // Or use enough core lemmas to show that slprop_equiv implies equality here,
     // and then use VE_Ext.
-    VE_Ext g p q (magic ())
+    VE_Ext g p q (RU.magic ())
 
 let rec check_slprop_equiv r (g:env) (p q:slprop)
 : T.Tac (slprop_equiv g p q)
@@ -128,7 +129,9 @@ let check
     | None ->
       check_slprop_equiv t.range g p q
     | Some tac ->
-      check_slprop_equiv_tac t.range g p q tac
+      RU.profile (fun () -> check_slprop_equiv_tac t.range g p q tac)
+                 (T.moduleof (fstar_env g))
+                 "Pulse.Checker.Rewrite.check_slprop_equiv_tac"
   in
 	let d = T_Rewrite _ p q p_typing equiv_p_q in
 	prove_post_hint (try_frame_pre false pre_typing (match_comp_res_with_post_hint d post_hint) res_ppname) post_hint t.range

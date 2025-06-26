@@ -21,7 +21,6 @@ open Pulse.Syntax
 module G = FStar.Ghost
 module L = FStar.List.Tot
 
-module R = FStar.Reflection
 module RT = FStar.Reflection.Typing
 module RU = Pulse.RuntimeUtils
 open FStar.List.Tot
@@ -277,16 +276,14 @@ let extends_with_push (g1 g2 g3:env)
   assert (equal (push_binding g1 x n t)
                 (push_env g2 (push_binding g3 x n t)))
 
-#push-options "--admit_smt_queries true"
 let rec subst_env (en:env) (ss:subst)
-  : en':env { fstar_env en == fstar_env en' /\
-              dom en == dom en' } =
+  : Tot (en':env { fstar_env en == fstar_env en' /\ dom en == dom en' })
+      (decreases bindings en) =
   match bindings en with
   | [] -> en
   | _ ->
     let x, t, en = remove_latest_binding en in
     push_binding (subst_env en ss) x ppname_default (subst_term t ss) 
-#pop-options
 
 let push_context g ctx r = { g with ctxt = Pulse.RuntimeUtils.extend_context ctx (Some r) g.ctxt }
 let push_context_no_range g ctx = { g with ctxt = Pulse.RuntimeUtils.extend_context ctx None g.ctxt }
@@ -329,22 +326,6 @@ let print_context (g:env) : T.Tac string =
   | _ -> 
     Printf.sprintf "\n\tContext:\n\t%s" (String.concat "\n\t" (ctxt_to_list g))
 
-let print_issue (g:env) (i:FStar.Issue.issue) : T.Tac string = 
-    let open FStar.Issue in
-    let range_opt_to_string = function
-      | None -> "Unknown range"
-      | Some r -> T.range_to_string r
-    in
-    Printf.sprintf "%s (%s): %s%s"
-       (range_opt_to_string (range_of_issue i))
-       (level_of_issue i)
-       (render_issue i)
-       (ctx_to_string (T.unseal (get_context g) @ (T.map (fun i -> (i, None)) (context_of_issue i))))
-
-let print_issues (g:env)
-                 (i:list FStar.Issue.issue)
-   = String.concat "\n" (T.map (print_issue g) i)
-
 let env_to_string (e:env) : T.Tac string =
   let bs = T.map #((var & typ) & ppname) #_
     (fun ((n, t), x) -> Printf.sprintf "%s#%d : %s" (T.unseal x.name) n (Pulse.Syntax.Printer.term_to_string t))
@@ -382,7 +363,7 @@ let env_to_doc' (simplify:bool) (e:env) : T.Tac document =
   in
   T.zip e.bs e.names |> maybe_filter |> separate_map comma pp1
 
-let env_to_doc = env_to_doc' false
+let env_to_doc = env_to_doc' true
 
 let get_range (g:env) (r:option range) : T.Tac range =
     match r with
@@ -404,9 +385,7 @@ let fail_doc_env (#a:Type) (with_env:bool) (g:env) (r:option range) (msg:list Pp
     then msg @ [doc_of_string "In typing environment:" ^^ indent (env_to_doc g)]
     else msg
   in
-  let issue = FStar.Issue.mk_issue_doc "Error" msg (Some r) None (ctxt_to_list g) in
-  T.log_issues [issue];
-  T.fail_at "Pulse checker failed" (Some r)
+  T.fail_doc_at msg (Some r)
 
 let warn_doc (g:env) (r:option range) (msg:list Pprint.document) : T.Tac unit =
   let r = get_range g r in
@@ -432,3 +411,46 @@ let warn (g:env) (r:option range) (msg:string) : T.Tac unit =
 
 let info (g:env) (r:option range) (msg:string) =
   info_doc g r [Pprint.arbitrary_string msg]
+
+let fail_doc_with_subissues #a (g:env) (ro : option range)
+  (sub : list Issue.issue)
+  (msg : list document)
+  : T.TacH a (requires fun _ -> True) (ensures fun _ r -> FStar.Tactics.Result.Failed? r)
+=
+  (* If for whatever reason `sub` is empty, F* will handle it well
+  and a generic error message will be displayed *)
+  if Nil? sub then (
+    let issue =
+      FStar.Issue.mk_issue_doc
+        "Error"
+        (msg @ [doc_of_string "F* did not provide any extra information on why this failed."])
+        None
+        None
+        []
+    in
+    T.log_issues [issue];
+    T.raise T.Stop
+  )
+  ;
+  let issues = sub |> T.map (fun is ->
+    FStar.Issue.mk_issue_doc
+      (Issue.level_of_issue is)
+      (msg @ Issue.message_of_issue is)
+      (Issue.range_of_issue is)
+      (Issue.number_of_issue is)
+      (Issue.context_of_issue is)
+    )
+  in
+  T.log_issues issues;
+  T.raise T.Stop
+
+let info_doc_with_subissues (g:env) (r:option range)
+  (sub : list Issue.issue)
+  (msg : list Pprint.document)
+=
+  let msg = msg @ [
+    doc_of_string "Issues:" ^^ hardline ^^
+        (List.Tot.map Issue.issue_to_doc sub |>
+         concat) ]
+  in
+  info_doc g r msg

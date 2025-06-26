@@ -1,4 +1,6 @@
 module Pulse.C.Types.Fields
+#lang-pulse
+
 include Pulse.C.Types.Base
 open Pulse.C.Typestring
 open Pulse.Lib.Pervasives
@@ -11,7 +13,7 @@ let norm_fields () : FStar.Tactics.Tac unit =
 [@@noextract_to "krml"] // primitive
 val field_t_nil: Type0
 [@@noextract_to "krml"] // primitive
-val field_t_cons (fn: Type0) (ft: Type0) (fc: Type0): Type0
+val field_t_cons (fname: Type0) (ft: Type0) (fc: Type0): Type0
 
 inline_for_extraction [@@noextract_to "krml"; norm_field_attr]
 noeq
@@ -39,8 +41,8 @@ let field_description_nil : field_description_t field_t_nil = {
 
 inline_for_extraction [@@noextract_to "krml"; norm_field_attr]
 let field_description_cons0
-  (fn: Type0) (#ft: Type0) (#fc: Type0) (n: string) (t: typedef ft) (fd: field_description_t fc)
-: Tot (nonempty_field_description_t (field_t_cons fn ft fc))
+  (fname: Type0) (#ft: Type0) (#fc: Type0) (n: string) (t: typedef ft) (fd: field_description_t fc)
+: Tot (nonempty_field_description_t (field_t_cons fname ft fc))
 = {
     fd_def = (fun n' -> n = n' || fd.fd_def n');
     fd_empty = false;
@@ -49,5 +51,5 @@ let field_description_cons0
   }
 
 inline_for_extraction [@@noextract_to "krml"; norm_field_attr]
-let field_description_cons (#ft: Type0) (#fc: Type0) (n: string) (#fn: Type0) (# [ solve_mk_string_t ()] prf: squash (norm norm_typestring (mk_string_t n == fn))) (t: typedef ft) (fd: field_description_t fc) : Tot (nonempty_field_description_t (field_t_cons fn ft fc)) =
-  field_description_cons0 fn #ft #fc n t fd
+let field_description_cons (#ft: Type0) (#fc: Type0) (n: string) (#fname: Type0) (# [ solve_mk_string_t ()] prf: squash (norm norm_typestring (mk_string_t n == fname))) (t: typedef ft) (fd: field_description_t fc) : Tot (nonempty_field_description_t (field_t_cons fname ft fc)) =
+  field_description_cons0 fname #ft #fc n t fd

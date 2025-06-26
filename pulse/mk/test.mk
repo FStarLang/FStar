@@ -23,14 +23,20 @@ include $(PULSE_ROOT)/mk/common.mk
 include $(PULSE_ROOT)/mk/locate.mk
 .DEFAULT_GOAL := all
 
-HINTS_ENABLED?=--use_hints
+HINTS_ENABLED?=
 
 # This warning is really useless.
 OTHERFLAGS += --warn_error -321
 OTHERFLAGS += --warn_error @247 # couldn't write a checked file? FAIL RIGHT NOW
-OTHERFLAGS += --ext context_pruning
+OTHERFLAGS += --ext optimize_let_vc
 OTHERFLAGS += --z3version 4.13.3
+ifdef TESTNOLIB
+OTHERFLAGS += --include $(PULSE_ROOT)/lib/common
+OTHERFLAGS += --include $(PULSE_ROOT)/lib/pulse/_cache
+OTHERFLAGS += --include $(PULSE_ROOT)/build/ocaml/installed/lib/pulse
+else
 OTHERFLAGS += --include $(PULSE_ROOT)/out/lib/pulse
+endif
 
 # Set ADMIT=1 to admit queries
 ADMIT ?=
@@ -43,7 +49,7 @@ MAYBE_ADMIT = $(if $(ADMIT),--admit_smt_queries true)
 OUTPUT_DIR ?= _output
 CACHE_DIR ?= _cache
 
-FSTAR = $(FSTAR_EXE) $(SIL) 				\
+FSTAR = $(RUNLIM) $(FSTAR_EXE) $(SIL) 				\
 	--cache_checked_modules				\
 	--odir $(OUTPUT_DIR)				\
 	--cache_dir $(CACHE_DIR)			\
@@ -79,27 +85,28 @@ endif
 
 $(OUTPUT_DIR)/%.output: %
 	$(call msg, "OUTPUT", $(basename $(notdir $@)))
-	$(FSTAR) --silent --message_format human -f --print_expected_failures $< >$@ 2>&1
+	$(FSTAR) --silent --message_format human -f --print_expected_failures --ext pulse:admit_diag $< >$@ 2>&1
 
 $(OUTPUT_DIR)/%.json_output: %
 	$(call msg, "JSONOUT", $(basename $(notdir $@)))
-	$(FSTAR) --silent --message_format json -f --print_expected_failures $< >$@ 2>&1
+	$(FSTAR) --silent --message_format json -f --print_expected_failures --ext pulse:admit_diag $< >$@ 2>&1
 
 $(OUTPUT_DIR)/$(subst .,_,%).ml:
 	$(call msg, "EXTRACT", $(basename $(notdir $@)))
-	$(FSTAR) $(subst .checked,,$(notdir $<)) --codegen OCaml --extract_module $(subst .fst.checked,,$(notdir $<))
+	$(FSTAR) $< --codegen OCaml
 
 $(OUTPUT_DIR)/$(subst .,_,%).fs:
 	$(call msg, "EXTRACT FS", $(basename $(notdir $@)))
-	$(FSTAR) $(subst .checked,,$(notdir $<)) --codegen FSharp --extract_module $(subst .fst.checked,,$(notdir $<))
+	$(FSTAR) $< --codegen FSharp
 
 $(OUTPUT_DIR)/$(subst .,_,%).krml:
 	$(call msg, "EXTRACT", $(basename $(notdir $@)))
-	$(FSTAR) $(subst .checked,,$(notdir $<)) --codegen krml --extract_module $(subst .fst.checked,,$(notdir $<))
+	$(FSTAR) $< --codegen krml --extract_module $(subst .fst.checked,,$(notdir $<))
 
 $(OUTPUT_DIR)/%.c: $(OUTPUT_DIR)/%.krml
 	$(call msg, "KRML", $(basename $(notdir $@)))
-	$(KRML_EXE) -header=$(PULSE_ROOT)/mk/krmlheader -bundle $*=* -skip-linking $+ -tmpdir $(OUTPUT_DIR)
+	if ! which $(KRML_EXE); then echo "krml ($(KRML_EXE)) not found" >&2; false; fi
+	$(KRML_EXE) -skip-makefiles -header=$(PULSE_ROOT)/mk/krmlheader -bundle $*=* -skip-linking $+ -tmpdir $(OUTPUT_DIR)
 
 # No FSharp compilation in these makefiles, sorry.
 $(OUTPUT_DIR)/%.exe: $(OUTPUT_DIR)/%.ml
@@ -178,8 +185,12 @@ endif
 
 __diff: $(patsubst %.expected,$(OUTPUT_DIR)/%.diff,$(wildcard *.expected))
 diff: __diff
+ifneq ($(ACCEPT),)
+all: __accept
+else
 ifeq ($(NODIFF),)
 all: __diff
+endif
 endif
 
 accept: $(addsuffix .__accept,$(SUBDIRS))

@@ -17,8 +17,6 @@ module PulseCore.InstantiatedSemantics
 
 module Sem = PulseCore.Semantics
 module Sep = PulseCore.IndirectionTheorySep
-module ITA = PulseCore.IndirectionTheoryActions
-module U = FStar.Universe
 module F = FStar.FunctionalExtensionality
 
 open PulseCore.IndirectionTheorySep
@@ -51,6 +49,7 @@ let emp = emp
 let pure p = pure p
 let op_Star_Star = star
 let op_exists_Star #a p = op_exists_Star #a p
+let implies = implies
 let later_credit = later_credit
 let later = later
 let equiv = equiv
@@ -80,7 +79,6 @@ let slprop_equiv_elim p q = ()
 let slprop_equiv_unit p = unsquash ()
 let slprop_equiv_comm p1 p2 = unsquash ()
 let slprop_equiv_assoc p1 p2 p3 = unsquash ()
-module T = FStar.Tactics.V2
 let slprop_equiv_exists 
     (#a:Type)
     (p q: a -> slprop)

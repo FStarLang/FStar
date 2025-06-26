@@ -1,9 +1,7 @@
 module PulseTutorial.PCMParallelIncrement
 #lang-pulse
 open Pulse.Lib.Pervasives
-module M = FStar.Algebra.CommMonoid
 module MS = Pulse.Lib.PCM.MonoidShares
-module U = FStar.Universe
 module GPR = Pulse.Lib.GhostPCMReference
 module CI = Pulse.Lib.CancellableInvariant
 module R = Pulse.Lib.Reference
@@ -83,7 +81,7 @@ let pcm_of (n:nat) = MS.pcm_of MS.nat_plus_cm n
 let tank (n:nat) = GPR.gref (pcm_of n)
 
 // A predicate asserting ownership of `i` units of the tank
-let owns_tank_units #n (g:tank n) (i:nat)
+let owns_tank_units #n ([@@@mkey] g : tank n) (i:nat)
 : timeless_slprop
 = GPR.pts_to #_ #(pcm_of n) g i
 
@@ -388,7 +386,7 @@ ensures  R.pts_to r ('i + 2)
   rewrite (can_give #2 gs (2 - 1)) as (can_give #(reveal (hide 2)) gs 1);
   rewrite (can_give #2 gs 1) as (can_give #(reveal (hide 2)) gs 1);
   // share permission to the invariant for use in two threads
-  CI.share2 ci;
+  CI.share ci;
   // and duplicate the invariant itself
   dup_inv _ _;
   // Now, spawn two threads in which to run increment
@@ -401,10 +399,8 @@ ensures  R.pts_to r ('i + 2)
     (fun _ -> increment #2 r ci)
     (fun _ -> increment #2 r ci);
   later_credit_buy 1;
-  CI.gather2 ci; CI.cancel ci; // Collect back permission to the invariant and then cancel it
+  CI.gather ci; CI.cancel ci; // Collect back permission to the invariant and then cancel it
   drop_ (inv _ _); //drop the other copy of the invariant; it is now useless
-  // ugly! reveal/hide rewrite
-  rewrite each (reveal #nat (hide #nat 2)) as 2;
   // collect up the has_given predicates from each thread
   gather_has_given gs;
   // recover the postcondition by the main ghost state eliminator lemma

@@ -15,17 +15,11 @@
 *)
 
 module Invariant
+
 #lang-pulse
-
-// #set-options "--error_contexts true"
-// #set-options "--print_implicits --print_universes"
-// #set-options "--ext pulse:guard_policy=SMTSync"
-// #set-options "--debug Invariant --debug_level SMTQuery"
-
-// #set-options "--trace_error"
-open Pulse.Lib.Pervasives
-open Pulse.Lib.Reference
+open Pulse
 open Pulse.Lib
+open Pulse.Lib.Box { box, (:=), (!) }
 
 assume val p : slprop
 assume val q : slprop
@@ -91,12 +85,12 @@ let test (i:iname) = assert (
 )
 
 assume
-val atomic_write_int (r : ref int) (v : int) :
+val atomic_write_int (r : box int) (v : int) :
   stt_atomic unit emp_inames (exists* v0. pts_to r v0) (fun _ -> pts_to r v)
 
 
 atomic
-fn test_atomic (r : ref int)
+fn test_atomic (r : box int)
   requires pts_to r 'v
   ensures pts_to r 0
 {
@@ -120,8 +114,8 @@ fn test2 ()
   requires emp
   ensures emp
 {
-  let r = alloc #int 0;
-  let i = new_invariant (exists* v. pts_to r v);
+  let r = Box.alloc #int 0;
+  let i = new_invariant (exists* v. Box.pts_to r v);
   with_invariants i
     returns _:unit
     ensures later (exists* v. pts_to r v)

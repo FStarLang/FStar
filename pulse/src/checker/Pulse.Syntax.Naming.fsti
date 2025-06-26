@@ -22,18 +22,21 @@ open Pulse.Common
 
 module L = FStar.List.Tot
 
-module R = FStar.Reflection
-module RTB = FStar.Reflection.Typing.Builtins
 module RT = FStar.Reflection.Typing
 module RU = Pulse.RuntimeUtils
 module U = Pulse.Syntax.Pure
-module E = Pulse.Elaborate.Pure
+
+(* Use these operators to abbreviate. But keep in mind
+   the shape of the expressions, even if ++ is assoc,
+   can affect the proofs. *)
+unfold private let (++) (#a : eqtype) (s1 s2 : Set.set a) : Set.set a = Set.union s1 s2
+unfold private let empty #a = Set.empty #a
 
 let freevars (t:term) : Set.set var = RT.freevars t
 
 let freevars_st_comp (s:st_comp) : Set.set var =
-  freevars s.res `Set.union`
-  freevars s.pre `Set.union`
+  freevars s.res ++
+  freevars s.pre ++
   freevars s.post
 
 let freevars_comp (c:comp) : Tot (Set.set var) (decreases c) =
@@ -42,11 +45,11 @@ let freevars_comp (c:comp) : Tot (Set.set var) (decreases c) =
   | C_ST s -> freevars_st_comp s
   | C_STGhost inames s
   | C_STAtomic inames _ s ->
-    freevars inames `Set.union` freevars_st_comp s
+    freevars inames ++ freevars_st_comp s
 
 let freevars_opt (f: 'a -> Set.set var) (x:option 'a) : Set.set var =
   match x with
-  | None -> Set.empty
+  | None -> empty
   | Some x -> f x
 
 let freevars_term_opt (t:option term) : Set.set var =
@@ -54,13 +57,16 @@ let freevars_term_opt (t:option term) : Set.set var =
 
 let rec freevars_list (t:list term) : Set.set var =
   match t with
-  | [] -> Set.empty
-  | hd::tl -> freevars hd `Set.union` freevars_list tl
+  | [] -> empty
+  | hd::tl -> freevars hd ++ freevars_list tl
 
 let rec freevars_pairs (pairs:list (term & term)) : Set.set var =
   match pairs with
-  | [] -> Set.empty
-  | (t1, t2)::tl -> Set.union (freevars t1) (freevars t2) `Set.union` freevars_pairs tl
+  | [] -> empty
+  | (t1, t2)::tl ->
+    freevars t1 ++
+    freevars t2 ++
+    freevars_pairs tl
 
 let freevars_proof_hint (ht:proof_hint_type) : Set.set var = 
   match ht with
@@ -68,107 +74,112 @@ let freevars_proof_hint (ht:proof_hint_type) : Set.set var =
   | FOLD { p }
   | UNFOLD { p } -> freevars p
   | RENAME { pairs; goal; tac_opt } ->
-    Set.union (Set.union (freevars_pairs pairs) (freevars_term_opt goal))
-              (freevars_term_opt tac_opt)
+    freevars_pairs pairs ++
+    freevars_term_opt goal ++
+    freevars_term_opt tac_opt
   | REWRITE { t1; t2; tac_opt } ->
-    Set.union (Set.union (freevars t1) (freevars t2))
-              (freevars_term_opt tac_opt)
+    freevars t1 ++
+    freevars t2 ++
+    freevars_term_opt tac_opt
   | WILD
-  | SHOW_PROOF_STATE _ -> Set.empty
+  | SHOW_PROOF_STATE _ -> empty
 
 let freevars_ascription (c:comp_ascription) 
   : Set.set var
-  = Set.union (freevars_opt freevars_comp c.elaborated)
-              (freevars_opt freevars_comp c.annotated)
+  = freevars_opt freevars_comp c.elaborated ++
+    freevars_opt freevars_comp c.annotated
 
 let rec freevars_st (t:st_term)
   : Set.set var
   = match t.term with
     | Tm_Return { expected_type; term } ->
-      Set.union (freevars expected_type) (freevars term)
+      freevars expected_type ++
+      freevars term
     | Tm_Abs { b; ascription; body } ->
-      Set.union (freevars b.binder_ty) 
-                (Set.union (freevars_st body)
-                           (freevars_ascription ascription))
+      freevars b.binder_ty ++
+      freevars_st body ++
+      freevars_ascription ascription
     | Tm_STApp { head; arg } ->
-      Set.union (freevars head) (freevars arg)
+      freevars head ++
+      freevars arg
     | Tm_Bind { binder; head; body } ->
-      Set.union 
-        (Set.union (freevars binder.binder_ty) 
-                   (freevars_st head))
-        (freevars_st body)
+      freevars binder.binder_ty ++
+      freevars_st head ++
+      freevars_st body
     | Tm_TotBind { binder; head; body } ->
-      Set.union
-        (Set.union (freevars binder.binder_ty)
-                   (freevars head))
-        (freevars_st body)
+      freevars binder.binder_ty ++
+      freevars head ++
+      freevars_st body
     | Tm_If { b; then_; else_; post } ->
-      Set.union (Set.union (freevars b) (freevars_st then_))
-                (Set.union (freevars_st else_) (freevars_term_opt post))
+      freevars b ++
+      freevars_st then_ ++
+      (freevars_st else_ ++ freevars_term_opt post)
 
     | Tm_Match { sc ; returns_; brs } ->
-      let (@@) = Set.union in
-      freevars sc
-        @@ freevars_term_opt returns_
-        @@ freevars_branches brs
+      freevars sc ++
+      freevars_term_opt returns_ ++
+      freevars_branches brs
 
     | Tm_IntroPure { p }
     | Tm_ElimExists { p } ->
       freevars p
     | Tm_IntroExists { p; witnesses } ->
-      Set.union (freevars p) (freevars_list witnesses)
+      freevars p ++
+      freevars_list witnesses
     | Tm_While { invariant; condition; body } ->
-      Set.union (freevars invariant)
-                (Set.union (freevars_st condition)
-                           (freevars_st body))
+      freevars invariant ++
+      freevars_st condition ++
+      freevars_st body
     | Tm_Par { pre1; body1; post1; pre2; body2; post2 } ->
-      Set.union
-        (Set.union (freevars pre1)
-                   (Set.union (freevars_st body1)
-                              (freevars post1)))
-        (Set.union (freevars pre2)
-                   (Set.union (freevars_st body2)
-                              (freevars post2)))
+      (freevars pre1 ++ 
+       freevars_st body1 ++
+       freevars post1) ++
+      (freevars pre2 ++
+       freevars_st body2 ++
+       freevars post2)
 
     | Tm_WithLocal { binder; initializer; body } ->
-      Set.union (freevars binder.binder_ty)
-                (Set.union (freevars initializer)
-                           (freevars_st body))
+      freevars binder.binder_ty ++
+      freevars initializer ++
+      freevars_st body
 
     | Tm_WithLocalArray { binder; initializer; length; body } ->
-      Set.union (freevars binder.binder_ty)
-                (Set.union (freevars initializer)
-                           (Set.union (freevars length)
-                                      (freevars_st body)))
+      freevars binder.binder_ty ++
+      freevars initializer ++
+      freevars length ++
+      freevars_st body
 
     | Tm_Rewrite { t1; t2; tac_opt } ->
-      Set.union (
-        Set.union (freevars t1) (freevars t2)
-      ) (freevars_term_opt tac_opt)
+      freevars t1 ++
+      freevars t2 ++
+      freevars_term_opt tac_opt
 
     | Tm_Admit { typ; post } ->
-      Set.union (freevars typ)
-                (freevars_term_opt post)
+      freevars typ ++
+      freevars_term_opt post
 
     | Tm_Unreachable {c} ->
       freevars_comp c
 
     | Tm_ProofHintWithBinders { binders; hint_type; t } ->
-      Set.union (freevars_proof_hint hint_type) (freevars_st t)
+      (* Nothing about the binders? *)
+      freevars_proof_hint hint_type ++
+      freevars_st t
 
     | Tm_WithInv { name; body; returns_inv } ->
-      Set.union (Set.union (freevars name) (freevars_st body))
-                (freevars_opt 
-                  (fun (b, r, is) ->
-                    (Set.union (freevars b.binder_ty) 
-                               (Set.union (freevars r)
-                                          (freevars is))))
-                  returns_inv)
+      freevars name ++
+      freevars_st body ++
+      freevars_opt
+        (fun (b, r, is) ->
+          freevars b.binder_ty ++
+          freevars r ++
+          freevars is)
+        returns_inv
 
-and freevars_branches (t:list (pattern & st_term)) : Set.set var =
+and freevars_branches (t:list branch) : Set.set var =
   match t with
-  | [] -> Set.empty
-  | (_, b)::tl -> freevars_st b `Set.union` freevars_branches tl
+  | [] -> empty
+  | b::tl -> freevars_st b.e ++ freevars_branches tl
 
 
 let ln' (t:term) (i:int) : bool = RT.ln' t i
@@ -356,11 +367,10 @@ let rec ln_st' (t:st_term) (i:int)
           ln' is i)
         returns_inv i
 
-and ln_branch' (b : pattern & st_term) (i:int) : Tot bool (decreases b) =
-  let (p, e) = b in
-  ln_pattern' p i &&
-  ln_st' e (i + pattern_shift_n p)
-  
+and ln_branch' (b : branch) (i:int) : Tot bool (decreases b) =
+  ln_pattern' b.pat i &&
+  ln_st' b.e (i + pattern_shift_n b.pat)
+
 and ln_branches' (t:st_term) (brs : list branch{brs << t}) (i:int) : Tot bool (decreases brs) =
   for_all_dec t brs (fun b -> ln_branch' b i)
 
@@ -625,11 +635,11 @@ and subst_branches (t:st_term) (ss:subst) (brs : list branch{brs << t})
 : Tot (list branch) (decreases brs)
 = map_dec t brs (fun br -> subst_branch ss br)
 
-and subst_branch (ss:subst) (b : pattern & st_term) : Tot (pattern & st_term) (decreases b) =
-  let (p, e) = b in
-  let p = subst_pat p ss in
-  let ss = shift_subst_n (pattern_shift_n p) ss in
-  p, subst_st_term e ss
+and subst_branch (ss:subst) (b : branch) : Tot branch (decreases b) =
+  let {pat; e; norw} = b in
+  let pat = subst_pat pat ss in
+  let ss = shift_subst_n (pattern_shift_n pat) ss in
+  { pat; e=subst_st_term e ss; norw }
 
 
 let open_st_term' (t:st_term) (v:term) (i:index) : st_term =

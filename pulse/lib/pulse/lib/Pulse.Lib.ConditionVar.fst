@@ -112,9 +112,9 @@ let recv (b: cvar_t) (p:slprop)
     SLT.pts_to b.core.tab i #0.5R p
 
 fn create (p:slprop)
-requires emp
-returns c:cvar_t
-ensures send c p ** recv c p
+  requires emp
+  returns c:cvar_t
+  ensures send c p ** recv c p
 {
   let r = Box.alloc 0ul;
   let tab = SLT.create ();
@@ -123,7 +123,7 @@ ensures send c p ** recv c p
   rewrite (SLT.pts_to tab 0 #0.5R p)
       as (predicate_at tab 0.5R (singleton p) 0);
   OR.on_range_singleton_intro (predicate_at tab 0.5R (singleton p)) 0;
-  Box.share2 r;
+  Box.share r;
   istar_singleton p;
   equiv_refl (istar (singleton p));
   rewrite (equiv (istar (singleton p)) (istar (singleton p)))
@@ -150,7 +150,7 @@ requires
   send b p ** p ** later_credit 1
 ensures 
   emp
-opens [inv_name b]
+  opens [inv_name b]
 {
   unfold send;
   unfold cvar;
@@ -178,8 +178,8 @@ opens [inv_name b]
 }
 
 fn signal (c:cvar_t) (#p:slprop)
-requires send c p ** p
-ensures emp
+  requires send c p ** p
+  ensures emp
 {
   later_credit_buy 1;
   signal_atomic c #p
@@ -215,7 +215,7 @@ requires
   SLT.is_table t (Seq.length preds) **
   SLT.pts_to t i #0.5R p **
   stored_predicates t (Seq.length preds) 0.5R preds
-returns _:squash (i < Seq.length preds)
+  returns _:squash (i < Seq.length preds)
 ensures
   SLT.is_table t (Seq.length preds) **
   SLT.pts_to t i #1.0R (Seq.index preds i) **
@@ -286,7 +286,8 @@ ensures
             (predicate_at b.core.tab 0.5R preds')
             0 i (Seq.length preds');
         fold (istar preds');
-        fold (maybe_holds v q preds'); 
+        rewrite (istar preds') as (maybe_holds v q preds');
+        // fold (maybe_holds v q preds');
         fold (cvar_inv b.core q);
         later_intro (cvar_inv b.core q);
         drop_ (SLT.pts_to b.core.tab i #0.5R _);
@@ -368,11 +369,17 @@ ensures
 {
   later_elim _;
   istar_preds_preds'_eq preds i p1 p2;
-  assert (equiv (OR.on_range (index_preds preds') 0 (Seq.length preds) ** Seq.index preds i) q);
+  rewrite
+    equiv (istar preds) q
+  as
+    equiv (OR.on_range (index_preds preds') 0 (Seq.length preds) ** Seq.index preds i) q
+  ;
   equiv_star_cong_r _ _ _ _;
   istar_preds'_tail preds i p1 p2;
   OR.on_range_join_eq 0 (Seq.length preds) (Seq.length preds') (index_preds preds');
-  ()
+
+  rewrite equiv (OR.on_range (index_preds preds') 0 (Seq.length preds) ** (p1 ** p2)) q
+       as equiv (istar preds') q;
 }
 
 ghost
@@ -453,7 +460,7 @@ opens
         rewrite_istar_equiv preds preds' i p1 p2 q;
         // show_proof_state;
         // step ();
-        fold (maybe_holds v q preds');
+        rewrite equiv (istar preds') q as maybe_holds v q preds';
         fold (cvar_inv b.core q);
         later_intro (cvar_inv b.core q);
         drop_ (SLT.pts_to b.core.tab i #0.5R emp);
@@ -462,7 +469,7 @@ opens
       { 
         rewrite (maybe_holds v q preds) as (istar preds);
         rewrite_istar preds preds' i p1 p2 q;
-        fold (maybe_holds v q preds');
+        rewrite istar preds' as maybe_holds v q preds';
         fold (cvar_inv b.core q);
         later_intro (cvar_inv b.core q);
         drop_ (SLT.pts_to b.core.tab i #0.5R emp);

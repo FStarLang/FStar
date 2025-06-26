@@ -1,4 +1,5 @@
 module Pulse.C.Typenat
+#lang-pulse
 
 (** Suppose [array (n : nat) (t : Type)] represents the type of array values.
     Then, when extracting values of type [ref (array n t)], the length n is lost.

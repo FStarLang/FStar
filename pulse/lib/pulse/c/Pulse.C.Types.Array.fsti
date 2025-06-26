@@ -179,12 +179,12 @@ inline_for_extraction [@@noextract_to "krml"]
 let array_ref (#t: Type) (td: typedef t) = (a: array_ptr td { g_array_ptr_is_null a == false })
 
 (*
-val array_ref_base_size_type (#t: Type) (#td: typedef t) (a: array_ref td) : GTot Type0
+val array_ref_base_size_type (#t: Type) (#td: typedef t) (a: array_ref td) : Type0
 *)
 val array_ref_base_size (#t: Type) (#td: typedef t) (a: array_ptr td) : Ghost SZ.t
   (requires True)
   (ensures (fun y -> SZ.v y == 0 <==> a == null_array_ptr td))
-val has_array_ref_base (#t: Type) (#td: typedef t) (a: array_ref td) (#ty: Type) (r: ref (base_array0 ty td (array_ref_base_size a))) : GTot prop
+val has_array_ref_base (#t: Type) (#td: typedef t) (a: array_ref td) (#ty: Type) (r: ref (base_array0 ty td (array_ref_base_size a))) : prop
 val has_array_ref_base_inj (#t: Type) (#td: typedef t) (a: array_ref td) (#ty: Type) (r1 r2: ref (base_array0 ty td (array_ref_base_size a))) : Lemma
   (requires (has_array_ref_base a r1 /\ has_array_ref_base a r2))
   (ensures (r1 == r2))
@@ -323,7 +323,7 @@ let has_array_of_base
   (#td: typedef t)
   (r: ref (base_array0 tn td n))
   (a: array td)
-: GTot prop
+: prop
 =   let (| al, len |) = a in
     array_ref_base_size al == n /\
     has_array_ref_base al #tn r /\
@@ -390,7 +390,7 @@ let array_ref_of_base_post
   (r: ref (base_array0 tn td n))
   (a: array_ref td)
   (ar: array td)
-: GTot prop
+: prop
 =
        array_ptr_of ar == a /\
         array_ref_base_size a == Ghost.reveal n /\
@@ -521,7 +521,7 @@ ensures
 }
 
 
-let full_seq (#t: Type) (td: typedef t) (v: Seq.seq t) : GTot prop =
+let full_seq (#t: Type) (td: typedef t) (v: Seq.seq t) : prop =
   forall (i: nat { i < Seq.length v }) . {:pattern (Seq.index v i)} full td (Seq.index v i)
 
 let full_seq_seq_of_base_array
@@ -907,7 +907,7 @@ let array_ref_split_post
   (a: array td)
   (i: SZ.t)
   (sl sr: Ghost.erased (Seq.seq t))
-: GTot prop
+: prop
 = SZ.v i <= array_length a /\ Seq.length s == array_length a /\
   Ghost.reveal sl == Seq.slice s 0 (SZ.v i) /\
   Ghost.reveal sr == Seq.slice s (SZ.v i) (Seq.length s)
@@ -983,7 +983,7 @@ val array_join
     ))
     (fun _ -> array_pts_to a (sl `Seq.append` sr))
 
-let fractionable_seq (#t: Type) (td: typedef t) (s: Seq.seq t) : GTot prop =
+let fractionable_seq (#t: Type) (td: typedef t) (s: Seq.seq t) : prop =
   forall (i: nat). i < Seq.length s ==> fractionable td (Seq.index s i)
 
 let mk_fraction_seq (#t: Type) (td: typedef t) (s: Seq.seq t) (p: perm) : Ghost (Seq.seq t)
@@ -1055,7 +1055,7 @@ let array_blit_post
   (idx_dst: SZ.t)
   (len: SZ.t)
   (s1' : Ghost.erased (Seq.seq t))
-: GTot prop
+: prop
 =
   SZ.v idx_src + SZ.v len <= array_length src /\
   SZ.v idx_dst + SZ.v len <= array_length dst /\

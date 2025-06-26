@@ -115,8 +115,8 @@ requires
     SM.seq_list_match c1 l1_0 vmatch **
     SM.seq_list_match c2 l2_0 vmatch **
     pure (SZ.v mi == Seq.length c1)
-returns res: bool
-ensures exists* c l .
+  returns res: bool
+  ensures exists* c l .
     pts_to a c **
     SM.seq_list_match c l vmatch **
     Trade.trade
@@ -219,8 +219,8 @@ ensures exists* c l .
             let i2' = SZ.add i2 1sz;
             let prf_c2' : squash (Seq.slice c2' 0 1 `Seq.equal` Seq.cons x2 Seq.empty) = seq_helper_1 c2' x2;
             merge_case_2_pre c c1' x2 c2';
-            let Mktuple2 ac01 ac2 = S.append_split a i2' #(Seq.append c (Seq.append c1' (Seq.cons x2 Seq.empty))) #(Seq.tail c2');
-            let Mktuple2 ac ac1 = S.append_split ac01 i1 #c #(Seq.append c1' (Seq.cons x2 Seq.empty));
+            let ac01, ac2 = S.append_split a i2' #(Seq.append c (Seq.append c1' (Seq.cons x2 Seq.empty))) #(Seq.tail c2');
+            let ac, ac1 = S.append_split ac01 i1 #c #(Seq.append c1' (Seq.cons x2 Seq.empty));
             AS.slice_swap' ac1 (SZ.sub i2 i1) c1' (Seq.cons x2 Seq.empty);
             S.join ac ac1 ac01;
             S.join ac01 ac2 a;
@@ -317,7 +317,7 @@ fn sort_aux
     } else {
         let len_half = len `SZ.div` 2sz;
         let mi = len_half;
-        let Mktuple2 a1 a2 = S.split a mi;
+        let a1, a2 = S.split a mi;
         Seq.lemma_split c (SZ.v mi);
         with c1 . assert (pts_to a1 c1);
         with c2 . assert (pts_to a2 c2);

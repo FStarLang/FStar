@@ -68,3 +68,4 @@ let withlocalarray_soundness #g #t #c d soundness =
     ret_t_typing
     post_typing
     rbody_typing
+#pop-options

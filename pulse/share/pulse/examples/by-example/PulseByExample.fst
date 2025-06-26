@@ -15,9 +15,7 @@
 *)
 
 module PulseByExample
-#lang-pulse
 
-module PM = Pulse.Main
 open Pulse.Lib.Core
 
 (* 
@@ -28,8 +26,9 @@ open Pulse.Lib.Core
 *)
 
 //SNIPPET_START: five
-let fstar_five : int = 5
+#lang-pulse
 
+let fstar_five : int = 5
 
 fn five ()
   requires emp
@@ -73,11 +72,49 @@ fn ref_swap (r1 r2:ref int)
 
 {
   let v1 = !r1;
-  let v2 = !r2;
-  r1 := v2;
-  r2 := v1;
+  r1 := !r2;
+  r2 := v1
 }
 
+fn ref_non_zero (r1:ref int) (n1:Ghost.erased int)
+requires
+  R.pts_to r1 n1
+returns b:bool
+ensures R.pts_to r1 n1 ** pure (b == (Ghost.reveal n1 <> 0))
+{
+  (0 <> !r1);
+}
+
+fn id (r:ref int)
+  requires
+    R.pts_to r 'n
+  returns r':ref int
+  ensures
+    R.pts_to r' 'n ** pure (r == r')
+{
+  r;
+}
+
+fn set (r:ref int) (x:int)
+requires R.pts_to r 'n
+ensures R.pts_to r x
+{
+  r := x;
+}
+
+fn go () () ()
+{
+  ()
+}
+
+fn test (r:ref int)
+  requires 
+    R.pts_to r 'n
+  ensures
+    R.pts_to r 2
+{
+  go (set r 1) (set r 4) (set r 2);
+}
 
 open Pulse.Lib.Array
 module A = Pulse.Lib.Array
@@ -105,8 +142,7 @@ fn arr_swap (#t:Type0) (n i j:SZ.t) (a:larray t (v n))
        /\ Seq.index 's0 (v j) == Seq.index s (v i))  
 {
   let vi = a.(i);
-  let vj = a.(j);
-  a.(i) <- vj;
+  a.(i) <- a.(j);
   a.(j) <- vi;
 }
 
@@ -129,8 +165,8 @@ fn max (n:SZ.t) (a:larray nat (v n))
           (forall (i:nat). i < v n ==> Seq.index 's i <= r))
 {
   let mut i : SZ.t = 0sz;
-  let mut max : nat = 0; //Note: without that `nat` annotation, this fails with very poor feedback. "SMT query failed"
-  while (let vi = !i; (vi < n))
+  let mut max : nat = 0;
+  while ((!i < n))
   invariant b. exists* (vi:SZ.t) (vmax:nat).
     A.pts_to a #'p 's **
     R.pts_to i vi **
@@ -140,21 +176,13 @@ fn max (n:SZ.t) (a:larray nat (v n))
        /\ b == (vi < n))
   {
     let vi = !i;
-    let vmax = !max;
     let v = a.(vi);
     i := vi + 1sz;
-    if (v > vmax) {
+    if (v > !max) {
       max := v;
     }
   };
-  with (vi:SZ.t) (vmax:nat). assert (
-    R.pts_to i vi **
-    R.pts_to max vmax **
-    pure (vi = n
-       /\ (forall (j:nat). j < v vi ==> Seq.index 's j <= vmax))
-  );
-  let vmax = !max;
-  vmax
+  !max;
 }
 
 //this option should become the default, once I shake out the handling of address-taking
@@ -191,16 +219,3 @@ fn max_alt (n:SZ.t) (a:larray nat (v n))
 }
 
 #pop-options
-
-(* 
-- some more mature example (e.g. sorting alg)
-
-- some simple record data structure along with a library of functions on this DS
-  (e.g. library of functions on 2D points)
-
-- build up to explaining the pulse implementation of lpht? -- emphasis on connecting
-  pure implementation to imperative code
-- pulse linked list? -- more traditional sep logic example 
-
-- concurrency, e.g. par incr of a ctr
-*)

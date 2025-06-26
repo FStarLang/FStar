@@ -1,0 +1,13 @@
+{
+  "fstar_exe": "fstar.exe",
+  "options": [
+    "--query_cache",
+    "--ext", "optimize_let_vc",
+    "--z3version", "4.13.3"
+  ],
+  "include_dirs": [
+    "../../build/ocaml/installed/lib/pulse",
+    "../../lib/common",
+    "../../lib/pulse/_cache"
+  ]
+}

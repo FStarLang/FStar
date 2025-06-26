@@ -3,8 +3,6 @@ module F = FStar.FunctionalExtensionality
 open FStar.FunctionalExtensionality
 open FStar.PCM
 open PulseCore.Tags
-module Frac = PulseCore.FractionalPermission
-module PP = PulseCore.Preorder
 module H = PulseCore.Heap
 
 noeq

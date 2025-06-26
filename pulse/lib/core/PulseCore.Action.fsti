@@ -16,9 +16,7 @@
 
 module PulseCore.Action
 
-module S = FStar.Set
 module I = PulseCore.InstantiatedSemantics
-module PP = PulseCore.Preorder
 module Sep = PulseCore.IndirectionTheorySep
 open FStar.PCM
 open FStar.Ghost
@@ -57,7 +55,7 @@ val act
     (opens:inames)
     (pre:slprop)
     (post:a -> slprop)
-: Type u#(max a 4)
+: Type u#(max a 5)
 
 val return 
     (#a:Type u#a)
@@ -123,24 +121,8 @@ val sub
     (f:act a r opens pre post)
 : act a r opens pre' post'
 
-val lift (#a:Type u#100) #r #opens (#pre:slprop) (#post:a -> slprop)
+val lift (#a:Type u#a) #r #opens (#pre:slprop) (#post:a -> slprop)
          (m:act a r opens pre post)
-: I.stt a pre post
-
-val lift0 (#a:Type u#0) #r #opens #pre #post
-          (m:act a r opens pre post)
-: I.stt a pre post
-
-val lift1 (#a:Type u#1) #r #opens #pre #post
-          (m:act a r opens pre post)
-: I.stt a pre post
-
-val lift2 (#a:Type u#2) #r #opens #pre #post
-          (m:act a r opens pre post)
-: I.stt a pre post
-
-val lift3 (#a:Type u#3) #r #opens #pre #post
-          (m:act a r opens pre post)
 : I.stt a pre post
 
 //////////////////////////////////////////////////////////////////////
@@ -192,6 +174,9 @@ val later_intro (p:slprop)
 
 val later_elim (p:slprop)
 : act unit Ghost emp_inames (later p ** later_credit 1) (fun _ -> p)
+
+val implies_elim (p:slprop) (q:slprop { implies p q })
+: act unit Ghost emp_inames p (fun _ -> q)
 
 val buy1 ()
 : stt unit emp (fun _ -> later_credit 1)

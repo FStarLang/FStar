@@ -17,8 +17,6 @@
 module Pulse.Typing.Combinators
 
 module RT = FStar.Reflection.Typing
-module R = FStar.Reflection.V2
-module L = FStar.List.Tot
 module T = FStar.Tactics.V2
 module P = Pulse.Syntax.Printer
 
@@ -142,7 +140,6 @@ let rec slprop_equiv_typing (#g:_) (#t0 #t1:term) (v:slprop_equiv g t0 t1)
         construct_forall_typing #g #u #b #t0 x b_typing t0_typing)
         
 #push-options "--z3rlimit_factor 8 --ifuel 1 --fuel 2"
-
 let bind_t (case_c1 case_c2:comp_st -> bool) =
       (g:env) ->
       (pre:term) ->
@@ -171,6 +168,7 @@ let bind_t (case_c1 case_c2:comp_st -> bool) =
               open_term (comp_post c1) x == comp_pre c2 /\
               (~ (x `Set.mem` freevars (comp_post c2))))
            (ensures fun _ _ -> True)
+#pop-options
 
 let mk_bind_st_st
   : bind_t C_ST? C_ST?
@@ -236,6 +234,7 @@ let lift_ghost_atomic (#g:env) (#e:st_term) (#c:comp_st { C_STGhost? c }) (d:st_
   | Some d ->
     d
 
+#push-options "--z3rlimit_factor 8 --ifuel 1 --fuel 2"
 let mk_bind_ghost_ghost : bind_t C_STGhost? C_STGhost? =
   fun g pre e1 e2 c1 c2 px d_e1 d_c1res d_e2 res_typing post_typing post_hint ->
   let _, x = px in
@@ -298,6 +297,7 @@ let mk_bind_atomic_atomic
       else (
         T.fail "Should have been handled separately"
       )
+#pop-options
 
 #push-options "--z3rlimit_factor 10 --fuel 0 --ifuel 1"
 let rec mk_bind (g:env) 
@@ -504,11 +504,11 @@ let comp_for_post_hint #g (#pre:slprop) (pre_typing:tot_typing g pre tm_slprop)
   | EffectAnnotGhost { opens } ->
     let d_opens : tot_typing post.g opens tm_inames = post.effect_annot_typing in
     assert (g `env_extends` post.g);
-    let d_opens : tot_typing g opens tm_inames = magic () in  // weakening
+    let d_opens : tot_typing g opens tm_inames = RU.magic () in  // weakening
     (| _, CT_STGhost _ opens _ d_opens d_s |)
   | EffectAnnotAtomic { opens }
   | EffectAnnotAtomicOrGhost { opens } ->
     let d_opens : tot_typing post.g opens tm_inames = post.effect_annot_typing in
     assert (g `env_extends` post.g);
-    let d_opens : tot_typing g opens tm_inames = magic () in  // weakening
+    let d_opens : tot_typing g opens tm_inames = RU.magic () in  // weakening
     (| _, CT_STAtomic _ opens Neutral _ d_opens d_s |)

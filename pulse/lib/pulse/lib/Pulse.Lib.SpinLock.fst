@@ -92,7 +92,7 @@ fn rec acquire (#v:slprop) (#p:perm) (l:lock)
         elim_cond_true _ _ _;
         rewrite each i as 0ul;
         GR.(l.gr := 1ul);
-        GR.share2 l.gr;
+        GR.share l.gr;
         fold (lock_inv_aux l.r l.gr v);
         fold (lock_inv l.r l.gr v);
         pack_cinv_vp l.i;
@@ -148,8 +148,9 @@ fn release (#v:slprop) (#p:perm) (l:lock)
     unfold (lock_inv l.r l.gr v);
     unfold (lock_inv_aux l.r l.gr v);
     GR.pts_to_injective_eq l.gr;
-    GR.gather2 l.gr;
-    rewrite (if (1ul = 0ul) then v else emp) as emp;
+    GR.gather l.gr;
+    with i. assert (pts_to l.gr i);
+    rewrite (if (i = 0ul) then v else emp) as emp;
     write_atomic_box l.r 0ul;
     GR.(l.gr := 0ul);
     fold (lock_inv_aux l.r l.gr v);
@@ -176,8 +177,6 @@ fn share (#v:slprop) (#p:perm) (l:lock)
 } 
 
 
-let share2 #v l = share #v #1.0R l
-
 
 ghost
 fn gather (#v:slprop) (#p1 #p2 :perm) (l:lock)
@@ -190,9 +189,6 @@ fn gather (#v:slprop) (#p1 #p2 :perm) (l:lock)
   fold (lock_alive l #(p1 +. p2) v);
   drop_ (inv _ _)
 } 
-
-
-let gather2 #v l = gather #v #0.5R #0.5R l
 
 
 fn free (#v:slprop) (l:lock)
@@ -208,7 +204,9 @@ fn free (#v:slprop) (l:lock)
   B.free l.r;
   GR.gather l.gr;
   GR.free l.gr;
-  rewrite (if (1ul = 0ul) then v else emp) as emp
+  with i. assert (if (i = 0ul) then v else emp); // awkward
+  rewrite (if (i = 0ul) then v else emp) as emp;
+  ()
 }
 
 
@@ -278,7 +276,7 @@ fn elim_inv_and_active_into_alive (l:lock) (v:slprop) (#p:perm)
     fold (lock_alive l #p v)
   };
 
-  intro_stick _ _ _ aux
+  intro_trade _ _ _ aux
 }
 
 
@@ -299,6 +297,6 @@ fn elim_alive_into_inv_and_active (l:lock) (v:slprop) (#p:perm)
       CInv.iname_of l.i as iname_of l,
       cinv_vp l.i (lock_inv l.r l.gr v) as iname_v_of l v
   };
-  intro_stick _ _ _ aux
+  intro_trade _ _ _ aux
 }
 

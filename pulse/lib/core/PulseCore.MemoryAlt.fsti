@@ -19,7 +19,6 @@ open FStar.Ghost
 open FStar.PCM
 module PST = PulseCore.HoareStateMonad
 module U = FStar.Universe
-module S = FStar.Set
 module CM = FStar.Algebra.CommMonoid
 /// This module adds memory invariants to the heap to expose the
 /// final interface for Pulse's PCM-based memory model.

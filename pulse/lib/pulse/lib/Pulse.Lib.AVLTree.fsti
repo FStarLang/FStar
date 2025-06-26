@@ -19,6 +19,7 @@
 //Pulse AVL tree interface. Inspired from Steel. The FStar spec file is adopted from Steel
 //----------------------------------------------------------------------------------------------------------
 module Pulse.Lib.AVLTree
+#lang-pulse
 open Pulse.Lib.Pervasives
 
 module T = Pulse.Lib.Spec.AVLTree
@@ -26,35 +27,38 @@ module G = FStar.Ghost
 
 val tree_t  (a:Type u#0): Type u#0
 
-val is_tree #t (ct:tree_t t) (ft:T.tree t)
+val is_tree #t ([@@@mkey] ct:tree_t t) (ft:T.tree t)
 : Tot slprop (decreases ft)
 
-val height (#t:Type0) (x:tree_t t) (#ft:G.erased (T.tree t))
-  : stt nat
-(requires is_tree x ft)
-(ensures fun n -> is_tree x ft ** pure (n == T.height ft))
+fn height (#t:Type0) (x:tree_t t) (#ft:G.erased (T.tree t))
+  requires is_tree x ft
+  returns  n : nat
+  ensures  is_tree x ft ** pure (n == T.height ft)
 
-val is_empty (#t:Type) (x:tree_t t) (#ft:G.erased(T.tree t))
-   : stt bool
-  (requires is_tree x ft)
-  (ensures fun b -> is_tree x ft ** pure (b <==> (T.is_empty ft)))
+fn is_empty (#t:Type) (x:tree_t t) (#ft:G.erased(T.tree t))
+  requires is_tree x ft
+  returns  b : bool
+  ensures  is_tree x ft ** pure (b <==> (T.is_empty ft))
 
-val create (t:Type0)
-   : stt (tree_t t)
-  (requires emp)
-  (ensures fun x -> is_tree x T.Leaf)
+fn create (t:Type0)
+  returns  x : tree_t t
+  ensures  is_tree x T.Leaf
 
-val mem (#t:eqtype) (x:tree_t t) (v: t) (#ft:G.erased (T.tree t))
-     : stt bool
-(requires is_tree x ft)
-(ensures fun b -> is_tree x ft ** pure (b <==> (T.mem ft v)))
+fn mem (#t:eqtype) (x:tree_t t) (v: t) (#ft:G.erased (T.tree t))
+  requires is_tree x ft
+  returns  b : bool
+  ensures  is_tree x ft ** pure (b <==> (T.mem ft v))
 
-val  insert_avl (#t:Type0) (cmp: T.cmp t) (tree:tree_t t) (key: t) (#l: G.erased(T.tree t))
-    : stt (tree_t t )
-(requires is_tree tree l) 
-(ensures fun y -> (is_tree y (T.insert_avl cmp l key)))
+fn insert_avl
+  (#t:Type0) (cmp: T.cmp t) (tree:tree_t t) (key: t)
+  (#l: G.erased(T.tree t))
+  requires is_tree tree l
+  returns  y : tree_t t
+  ensures  is_tree y (T.insert_avl cmp l key)
 
-val  delete_avl (#t:Type0) (cmp: T.cmp t) (tree:tree_t t) (key: t) (#l: G.erased(T.tree t))
-    : stt (tree_t t )
-(requires is_tree tree l) 
-(ensures fun y -> (is_tree y (T.delete_avl cmp l key)))
+fn delete_avl
+  (#t:Type0) (cmp: T.cmp t) (tree:tree_t t) (key: t)
+  (#l: G.erased(T.tree t))
+  requires is_tree tree l
+  returns  y : tree_t t
+  ensures  is_tree y (T.delete_avl cmp l key)

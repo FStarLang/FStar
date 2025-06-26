@@ -17,7 +17,6 @@
 module ExistsWitness
 #lang-pulse
 open Pulse.Lib.Pervasives
-module U8 = FStar.UInt8
 module R = Pulse.Lib.Reference
 //This example illustrates how to get your "hands" on an existential witness
 //Using the `with ... assert` construct

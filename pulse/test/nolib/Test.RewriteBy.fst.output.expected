@@ -1,0 +1,17 @@
+>> Got issues: [
+* Error 170 at Test.RewriteBy.fst(31,1-37,8):
+  - rewrite: could not prove equality of
+  - Test.RewriteBy.p
+  - Test.RewriteBy.q
+  - Using tactic:
+    fun _ ->
+      FStar.Stubs.Tactics.V2.Builtins.dump "a";
+      Test.RewriteBy.tac ()
+  - Tactic failed
+  - Tactic got stuck!
+  - Reduction stopped at:
+      reify (let _ = FStar.Stubs.Tactics.V2.Builtins.dump "a" in
+          Test.RewriteBy.tac ())
+        "(((proofstate)))"
+
+>>]

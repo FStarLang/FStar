@@ -15,17 +15,19 @@
 *)
 
 module Pulse.Lib.Trade
+#lang-pulse
 
-open Pulse.Lib.Core
+open Pulse.Lib.Pervasives
 
 module T = FStar.Tactics
 
-val trade :
-  (#[T.exact (`emp_inames)] is:inames) ->
-  (hyp:slprop) ->
-  (concl:slprop) ->
-  slprop
+val trade
+  (#[T.exact (`emp_inames)] is:inames)
+  ([@@@mkey] hyp:slprop)
+  ([@@@mkey] concl:slprop)
+  : slprop
 
+unfold
 let ( ==>* ) :
   (#[T.exact (`emp_inames)] is:inames) ->
   (hyp:slprop) ->
@@ -33,18 +35,25 @@ let ( ==>* ) :
   slprop
   = fun #is -> trade #is
 
-val intro_trade
-  (#[T.exact (`emp_inames)] is:inames)
-  (hyp concl:slprop)
-  (extra:slprop)
+(* Specialized to no inames *)
+unfold
+let ( @==> ) :
+  (hyp:slprop) ->
+  (concl:slprop) ->
+  slprop
+  = trade #emp_inames
+
+ghost
+fn intro_trade
+  (#[T.exact (`emp_inames)]is:inames)
+  (hyp concl extra:slprop)
   (f_elim: unit -> (
     stt_ghost unit is
     (extra ** hyp)
     (fun _ -> concl)
   ))
-: stt_ghost unit emp_inames
-    extra
-    (fun _ -> trade #is hyp concl)
+  requires extra
+  ensures trade #is hyp concl
 
 val elim_trade
   (#[T.exact (`emp_inames)] is:inames)
@@ -53,29 +62,31 @@ val elim_trade
     (trade #is hyp concl ** hyp)
     (fun _ -> concl)
 
-val trade_sub_inv
+ghost
+fn trade_sub_inv
   (#is1:inames)
   (#is2:inames { inames_subset is1 is2 })
   (hyp concl:slprop)
-: stt_ghost unit emp_inames
-    (trade #is1 hyp concl)
-    (fun _ -> trade #is2 hyp concl)
+  requires trade #is1 hyp concl
+  ensures trade #is2 hyp concl
 
-// Could weaken `f` to
-// (f : unit -> stt_ghost unit (invlist_names os) (invlist_inv os ** q) (fun _ -> invlist_inv os ** r))
-val trade_map
+ghost
+fn trade_map
   (#is : inames)
   (p q r : slprop)
   (f : unit -> stt_ghost unit emp_inames q (fun _ -> r))
-: stt_ghost unit
-    emp_inames
-    (trade #is p q)
-    (fun _ -> trade #is p r)
+  requires trade #is p q
+  ensures  trade #is p r
 
-val trade_compose
+ghost
+fn trade_compose
   (#is : inames)
   (p q r : slprop)
-: stt_ghost unit
-    emp_inames
-    (trade #is p q ** trade #is q r)
-    (fun _ -> trade #is p r)
+  requires trade #is p q ** trade #is q r
+  ensures  trade #is p r
+
+ghost
+fn rewrite_with_trade
+  (p1 p2 : slprop)
+  requires p1 ** pure (p1 == p2)
+  ensures  p2 ** (p2 @==> p1)

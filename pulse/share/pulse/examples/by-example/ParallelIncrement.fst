@@ -18,7 +18,6 @@ module ParallelIncrement
 #lang-pulse
 open Pulse.Lib.Pervasives
 
-module U32 = FStar.UInt32
 module L = Pulse.Lib.SpinLock
 module GR = Pulse.Lib.GhostReference
 module R = Pulse.Lib.Reference
@@ -41,8 +40,6 @@ ensures  (L.lock_alive l #p (exists* v. pts_to x #0.5R v)) ** R.pts_to x #0.5R (
     with p _v. rewrite (R.pts_to x #p _v) as (R.pts_to x #0.5R _v);
 }
 
-
-#push-options "--print_implicits --ext 'pulse:env_on_err' --print_full_names"
 
 fn increment_f (x: ref nat)
                (#p:perm)
@@ -152,7 +149,7 @@ ensures pts_to x ('i + 2)
     };
 
     with pred. assert (L.lock_alive lock #1.0R (exists* v. pts_to x v ** pred v));
-    L.share2 lock;
+    L.share lock;
     parallel
     requires pts_to left #0.5R 0 **
              L.lock_alive lock #0.5R (exists* v. pts_to x v ** pred v)
@@ -165,7 +162,7 @@ ensures pts_to x ('i + 2)
     { increment_f2 x lock (step left true) }
     { increment_f2 x lock (step right false) };
 
-    L.gather2 lock;
+    L.gather lock;
     L.acquire lock;
     GR.gather left;
     GR.gather right;
@@ -183,7 +180,6 @@ val atomic_increment (r:ref int) (#i:erased int)
     (pts_to r i)
     (fun _ -> pts_to r (i + 1))
      
-module F = Pulse.Lib.FlippableInv
 
 let test (l:iname) = assert (not (mem_inv emp_inames l))
 let pts_to_refine #a (x:ref a) (p:a -> slprop) = exists* v. pts_to x v ** p v 
@@ -211,9 +207,9 @@ ensures inv l (pts_to_refine x pred) ** qpred ('i + 1)
 }
 
 
-open Pulse.Lib.Stick.Util
+open Pulse.Lib.Trade.Util
 module FA = Pulse.Lib.Forall.Util
-module I = Pulse.Lib.Stick.Util
+module I = Pulse.Lib.Trade.Util
 
 fn atomic_increment_f3
         (x: ref int)
@@ -467,7 +463,7 @@ ensures pts_to x ('i + 2)
       }
     };
 
-    C.share2 c;
+    C.share c;
     with pred. assert (inv (C.iname_of c) (C.cinv_vp c (exists* v. pts_to x v ** pred v)));
     dup_inv (C.iname_of c) (C.cinv_vp c (exists* v. pts_to x v ** pred v));
 
@@ -487,7 +483,7 @@ ensures pts_to x ('i + 2)
     { atomic_increment_f6 x c (step left true) }
     { atomic_increment_f6 x c (step right false) };
 
-    C.gather2 c;
+    C.gather c;
     drop_ (inv (C.iname_of c) (C.cinv_vp c (exists* v. pts_to x v ** pred v)));
     later_credit_buy 1;
     C.cancel c;

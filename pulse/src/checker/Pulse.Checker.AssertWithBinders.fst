@@ -28,7 +28,6 @@ module R = FStar.Reflection.V2
 module RT = FStar.Reflection.Typing
 module PC = Pulse.Checker.Pure
 module P = Pulse.Syntax.Printer
-module N = Pulse.Syntax.Naming
 module PS = Pulse.Checker.Prover.Substs
 module Prover = Pulse.Checker.Prover
 module Env = Pulse.Typing.Env
@@ -77,7 +76,7 @@ let infer_binder_types (g:env) (bs:list binder) (v:slprop)
         bs
         v
     in
-    let inst_abstraction, _ = PC.instantiate_term_implicits g (wr abstraction v_rng) None in
+    let inst_abstraction, _ = PC.instantiate_term_implicits g (wr abstraction v_rng) None true in
     refl_abs_binders inst_abstraction []
 
 let rec open_binders (g:env) (bs:list binder) (uvs:env { disjoint uvs g }) (v:term) (body:st_term)
@@ -143,14 +142,15 @@ let def_of_fv (g:T.env) (fv:R.fv)
       | R.Sg_Inductive _nm _univs params typ _ -> None
 
 let unfold_head (g : env) (t:term)
-  : T.Tac term
+  : T.Tac (term & string)
   = let rg = elab_env g in
     match T.hua t with
     | Some (fv, u, args) -> (
       (* zeta to allow unfolding recursive definitions. Should be only once
       unless it appears on the head of its own definition.. which should be impossible? *)
-      let t = T.norm_term_env rg [hnf; zeta; delta_only [T.implode_qn (T.inspect_fv fv)]] t in
-      t
+      let head_symbol = T.implode_qn (T.inspect_fv fv) in
+      let t = T.norm_term_env rg [hnf; zeta; delta_only [head_symbol]] t in
+      t, head_symbol
       (* Something like this would be better, but we need to instantiate
          the universes, and we don't have a good way to do that yet.
       match def_of_fv rg fv with
@@ -167,16 +167,22 @@ let unfold_head (g : env) (t:term)
       fail g (Some (RU.range_of_term t))
         (Printf.sprintf "Cannot unfold %s, the head is not an fvar" (T.term_to_string t))
 
-let unfold_defs (g:env) (defs:option (list string)) (t:term)
-  : T.Tac term
-  = let t = unfold_head g t in
+let unfold_defs' (g:env) (defs:option (list string)) (t:term)
+  : T.Tac (term & string)
+  = let t, head_sym = unfold_head g t in
     let t =
       match defs with
       | None -> t
       | Some defs -> unfold_all g defs t
     in
     let t = T.norm_term_env (elab_env g) [hnf; iota; primops] t in
-    t
+    t, head_sym
+
+let unfold_defs (g:env) (defs:option (list string)) (t:term)
+: T.Tac (term & string)
+= RU.profile (fun () -> unfold_defs' g defs t) 
+             (T.moduleof (fstar_env g))
+            "Pulse.Checker.Unfold"
 
 let check_unfoldable g (v:term) : T.Tac unit =
   match inspect_term v with
@@ -205,7 +211,8 @@ let visit_and_rewrite (p: (R.term & R.term)) (t:term) : T.Tac term =
 let visit_and_rewrite_conjuncts (p: (R.term & R.term)) (tms:list term) : T.Tac (list term) =
   T.map (visit_and_rewrite p) tms
 
-let visit_and_rewrite_conjuncts_all (p: list (R.term & R.term)) (goal:term) : T.Tac (term & term) =
+(* is_source: was this rewrite written in the source by the user? *)
+let visit_and_rewrite_conjuncts_all (is_source:bool) (g:env) (p: list (R.term & R.term)) (goal:term) : T.Tac (term & term) =
   let tms = slprop_as_list goal in
   let tms' = T.fold_left (fun tms p -> visit_and_rewrite_conjuncts p tms) tms p in
   assume (L.length tms' == L.length tms);
@@ -217,8 +224,11 @@ let visit_and_rewrite_conjuncts_all (p: list (R.term & R.term)) (goal:term) : T.
       ([], [])
       tms tms'
   in
+  if is_source && Nil? lhs then
+    warn_doc g None [
+      Pulse.PP.text "No rewrites performed."
+    ];
   list_as_slprop lhs, list_as_slprop rhs
-  
 
 let disjoint (dom:list var) (cod:Set.set var) =
   L.for_all (fun d -> not (Set.mem d cod)) dom
@@ -247,7 +257,7 @@ let rec as_subst (p : list (term & term))
 
 
 
-let rewrite_all (g:env) (p: list (term & term)) (t:term) : T.Tac (term & term) =
+let rewrite_all (is_source:bool) (g:env) (p: list (term & term)) (t:term) : T.Tac (term & term) =
   match as_subst p [] [] Set.empty with
   | Some s ->
     t, subst_term t s
@@ -255,11 +265,11 @@ let rewrite_all (g:env) (p: list (term & term)) (t:term) : T.Tac (term & term) =
     let p : list (R.term & R.term) = 
       T.map 
         (fun (e1, e2) -> 
-          (fst (Pulse.Checker.Pure.instantiate_term_implicits g e1 None)),
-          (fst (Pulse.Checker.Pure.instantiate_term_implicits g e2 None)))
+          (fst (Pulse.Checker.Pure.instantiate_term_implicits g e1 None false)),
+          (fst (Pulse.Checker.Pure.instantiate_term_implicits g e2 None false)))
         p
     in
-    let lhs, rhs = visit_and_rewrite_conjuncts_all p t in
+    let lhs, rhs = visit_and_rewrite_conjuncts_all is_source g p t in
     debug_log g (fun _ -> Printf.sprintf "Rewrote %s to %s" (P.term_to_string lhs) (P.term_to_string rhs));
     lhs, rhs
 
@@ -293,7 +303,7 @@ let check_renaming
 
   | [], None ->
     // if there is no goal, take the goal to be the full current pre
-    let lhs, rhs = rewrite_all g pairs pre in
+    let lhs, rhs = rewrite_all (T.unseal st.source) g pairs pre in
     let t = { st with term = Tm_Rewrite { t1 = lhs; t2 = rhs; tac_opt};
                       source = Sealed.seal false; } in
     { st with
@@ -302,8 +312,8 @@ let check_renaming
     }
 
   | [], Some goal -> (
-      let goal, _ = PC.instantiate_term_implicits g goal None in
-      let lhs, rhs = rewrite_all g pairs goal in
+      let goal, _ = PC.instantiate_term_implicits g goal None false in
+      let lhs, rhs = rewrite_all (T.unseal st.source) g pairs goal in
       let t = { st with term = Tm_Rewrite { t1 = lhs; t2 = rhs; tac_opt };
                         source = Sealed.seal false; } in
       { st with term = Tm_Bind { binder = as_binder tm_unit; head = t; body };
@@ -442,8 +452,8 @@ let check
     (| x, x_ty, pre'', g2, k_elab_trans k_frame k |)
 
 
-  | UNFOLD { names; p=v }
-  | FOLD { names; p=v } ->
+  | UNFOLD { p=v }
+  | FOLD { p=v } ->
 
     let (| uvs, v_opened, body_opened |) =
       let bs = infer_binder_types g bs v in
@@ -451,21 +461,22 @@ let check
 
     check_unfoldable g v;
 
-    let v_opened, t_rem = PC.instantiate_term_implicits (push_env g uvs) v_opened None in
+    let v_opened, t_rem = PC.instantiate_term_implicits (push_env g uvs) v_opened None false in
 
     let uvs, v_opened =
       let (| uvs_rem, v_opened |) =
         add_rem_uvs (push_env g uvs) t_rem (mk_env (fstar_env g)) v_opened in
       push_env uvs uvs_rem, v_opened in
 
-    let lhs, rhs =
+    let lhs, rhs, tac =
       match hint_type with      
       | UNFOLD _ ->
-        v_opened,
-        unfold_defs (push_env g uvs) None v_opened
+        let rhs, head_sym = unfold_defs (push_env g uvs) None v_opened in
+        v_opened, rhs, Pulse.Reflection.Util.slprop_equiv_unfold_tm head_sym
       | FOLD { names=ns } -> 
-        unfold_defs (push_env g uvs) ns v_opened,
-        v_opened in
+        let lhs, head_sym = unfold_defs (push_env g uvs) ns v_opened in
+        lhs, v_opened, Pulse.Reflection.Util.slprop_equiv_fold_tm head_sym
+    in
 
     let uvs_bs = uvs |> bindings_with_ppname |> L.rev in
     let uvs_closing = uvs_bs |> closing in
@@ -488,30 +499,17 @@ let check
       ] in
       info_doc_env g (Some st.range) msg
     end;
-    let rw = { term = Tm_Rewrite { t1 = lhs;
-                                   t2 = rhs;
-                                   tac_opt = Some Pulse.Reflection.Util.slprop_equiv_norm_tm };
-               range = st.range;
-               effect_tag = as_effect_hint STT_Ghost;
-               source = Sealed.seal false;
-    } in
-    let st = { term = Tm_Bind { binder = as_binder (wr (`unit) st.range);
-                                head = rw; body };
-               range = st.range;
-               effect_tag = body.effect_tag;
-               source = Sealed.seal false;
-    } in
+    let rw = mk_term (Tm_Rewrite { t1 = lhs; t2 = rhs; tac_opt = Some tac }) st.range in
+    let rw = { rw with effect_tag = as_effect_hint STT_Ghost } in
+
+    let st = mk_term (Tm_Bind { binder = as_binder (wr (`unit) st.range); head = rw; body }) st.range in
+    let st = { st with effect_tag = body.effect_tag } in
 
     let st =
       match bs with
       | [] -> st
       | _ ->
-        { term = Tm_ProofHintWithBinders { hint_type = ASSERT { p = lhs };
-                                           binders = bs;
-                                           t = st };
-          range = st.range;
-          effect_tag = st.effect_tag;
-          source = Sealed.seal false;
-        }
+        let t = mk_term (Tm_ProofHintWithBinders { hint_type = ASSERT { p = lhs }; binders = bs; t = st }) st.range in
+        { t with effect_tag = st.effect_tag }
     in
     check g pre pre_typing post_hint res_ppname st

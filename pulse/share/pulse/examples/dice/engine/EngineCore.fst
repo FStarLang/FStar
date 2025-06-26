@@ -17,7 +17,6 @@
 module EngineCore
 #lang-pulse
 open Pulse.Lib.Pervasives
-module R = Pulse.Lib.Reference
 module A = Pulse.Lib.Array
 module V = Pulse.Lib.Vec
 module US = FStar.SizeT

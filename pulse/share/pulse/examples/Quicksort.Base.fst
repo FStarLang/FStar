@@ -240,7 +240,7 @@ fn partition (a: A.array int) (lo: nat) (hi:(hi:nat{lo < hi}))
   let mut j = lo;
   let mut k = lo;
   while (let vk = !k; (vk < hi - 1))
-    invariant b . exists* s vi vj vk. (
+    invariant b . exists* s (vi vj vk : nat). (
       A.pts_to_range a lo hi s **
       R.pts_to i vi **
       R.pts_to j vj **

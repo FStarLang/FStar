@@ -2,8 +2,6 @@ module PulseCore.CompactHeapSig
 open FStar.Ghost
 open FStar.PCM
 open PulseCore.HeapSig
-module H2 = PulseCore.Heap2
-module ST = PulseCore.HoareStateMonad
 module CM = FStar.Algebra.CommMonoid
 open FStar.Tactics.Typeclasses
 

@@ -16,19 +16,18 @@
 
 module PulseSyntaxExtension.ASTBuilder
 open FStarC
-open FStarC.Compiler.Effect
+open FStarC.Effect
 open FStarC.Parser.AST
 open FStarC.Parser.AST.Util
 open FStarC.Ident
-module BU = FStarC.Compiler.Util
-module List = FStarC.Compiler.List
-module A = FStarC.Parser.AST
+module BU = FStarC.Util
+module List = FStarC.List
 module AU = FStarC.Parser.AST.Util
 module S = FStarC.Syntax.Syntax
 open FStar.List.Tot
 open FStarC.Const
 
-let r_ = FStarC.Compiler.Range.dummyRange
+let r_ = FStarC.Range.dummyRange
 
 #push-options "--warn_error -272" //intentional top-level effect
 let pulse_checker_tac = Ident.lid_of_path ["Pulse"; "Main"; "check_pulse"] r_
@@ -38,7 +37,7 @@ let tm t r = { tm=t; range=r; level=Un}
 
 let parse_decl_name
   : contents:string ->
-    FStarC.Compiler.Range.range ->
+    FStarC.Range.range ->
     either AU.error_message FStarC.Ident.ident
   = fun contents r ->
     match Parser.parse_peek_id contents r with
@@ -54,7 +53,7 @@ let lid_as_term ns r = str (Ident.string_of_lid ns) r
 
 let encode_open_namespaces_and_abbreviations
     (ctx:open_namespaces_and_abbreviations)
-    (r:FStarC.Compiler.Range.range)
+    (r:FStarC.Range.range)
 : term & term
 = let tm t = tm t r in
   let str s = str s r in
@@ -72,9 +71,9 @@ let encode_open_namespaces_and_abbreviations
   in
   namespaces, abbrevs
 
-let encode_range (r:FStarC.Compiler.Range.range)
+let encode_range (r:FStarC.Range.range)
 : term & term & term
-= let open FStarC.Compiler.Range in
+= let open FStarC.Range in
   let line = line_of_pos (start_of_range r) in
   let col = col_of_pos (start_of_range r) in
   str (file_of_range r) r, i line r, i col r
@@ -82,7 +81,7 @@ let encode_range (r:FStarC.Compiler.Range.range)
 let parse_decl
   : open_namespaces_and_abbreviations ->
     contents:string ->
-    FStarC.Compiler.Range.range ->
+    FStarC.Range.range ->
     either AU.error_message decl
   = fun ctx contents r ->
       let tm t = tm t r in
@@ -116,18 +115,18 @@ let maybe_report_error first_error decls =
   | None -> Inr decls
   | Some (raw_error, msg, r) ->
     let should_fail_on_error =
-      let file = FStarC.Compiler.Range.file_of_range r in
+      let file = FStarC.Range.file_of_range r in
       match FStarC.Parser.Dep.maybe_module_name_of_file file with
       | None -> false //don't report hard errors on <input>; we'll log them as warnings below
       | Some _ ->
         match FStarC.Options.ide_filename() with
         | None -> true //we're not in IDE mode, parsing failures are fatal
         | Some fn ->
-          BU.basename fn <> BU.basename file  //we're in IDE mode, failures are not fatal in the current file
+          Filepath.basename fn <> Filepath.basename file  //we're in IDE mode, failures are not fatal in the current file
     in
     if should_fail_on_error
     then (
-      Inl { message = FStarC.Errors.Msg.rendermsg msg; range = r }
+      Inl { message = msg; range = r }
     )
     else (
       // FStarC.Errors.log_issue_doc r (raw_error, msg);
@@ -135,11 +134,11 @@ let maybe_report_error first_error decls =
       Inr <| (decls @ [Inr <| FStarC.Parser.AST.(mk_decl Unparseable r [])])
     )
 open FStarC.Class.Show
-let parse_extension_lang (contents:string) (r:FStarC.Compiler.Range.range)
+let parse_extension_lang (contents:string) (r:FStarC.Range.range)
 : either AU.error_message (list decl)
 = match Parser.parse_lang contents r with
   | Inr None ->
-    Inl { message = "#lang-pulse: Parsing failed"; range = r }
+    Inl { message = [Errors.text "#lang-pulse: Parsing failed"]; range = r }
   | Inr (Some (err,r)) -> 
     Inl { message = err; range = r }
   | Inl (decls, first_error) -> (
@@ -203,15 +202,15 @@ let _ = register_extension_lang_parser "pulse" {parse_decls=parse_extension_lang
    
 module TcEnv = FStarC.TypeChecker.Env
 module D = PulseSyntaxExtension.Desugar
-module L = FStarC.Compiler.List
-module R = FStarC.Compiler.Range
+module L = FStarC.List
+module R = FStarC.Range
 module DsEnv = FStarC.Syntax.DsEnv
 let sugar_decl = PulseSyntaxExtension.Sugar.decl
 let desugar_pulse (env:TcEnv.env) 
                   (namespaces:list string)
                   (module_abbrevs:list (string & string))
                   (sugar:sugar_decl)
-: either PulseSyntaxExtension.SyntaxWrapper.decl (option (string & R.range))
+: either PulseSyntaxExtension.SyntaxWrapper.decl (option (list Pprint.document & R.range))
 = let namespaces = L.map Ident.path_of_text namespaces in
   let module_abbrevs = L.map (fun (x, l) -> x, Ident.path_of_text l) module_abbrevs in
   let env = D.reinitialize_env env.dsenv (TcEnv.current_module env) namespaces module_abbrevs in
@@ -226,11 +225,10 @@ let desugar_pulse_decl_callback
 : list FStarC.Syntax.Syntax.sigelt'
 = let d = D.desugar_decl (D.mk_env env) (FStarC.Dyn.undyn blob) 0 in
   match fst d with
-  | Inr None -> //All errors were logged via the error API
-    //Raise one final error at the start of the decl to stop further processing
-    let start = FStarC.Compiler.Range.start_of_range rng in
-    let rng = FStarC.Compiler.Range.mk_range (FStarC.Compiler.Range.file_of_range rng) start start in
-    FStarC.Errors.raise_error rng FStarC.Errors.Fatal_SyntaxError "Failed to desugar pulse declaration"
+  | Inr None ->
+    //All errors were logged via the error API, just stop.
+    raise FStarC.Errors.Stop
+
   | Inr (Some (msg, rng)) ->
     FStarC.Errors.raise_error rng FStarC.Errors.Fatal_SyntaxError msg
   | Inl d ->
@@ -253,7 +251,7 @@ let parse_pulse (env:TcEnv.env)
                 (content:string)
                 (file_name:string)
                 (line col:int)
-  : either PulseSyntaxExtension.SyntaxWrapper.decl (option (string & R.range))
+  : either PulseSyntaxExtension.SyntaxWrapper.decl (option (list Pprint.document & R.range))
   = let range = 
       let p = R.mk_pos line col in
       R.mk_range file_name p p
@@ -261,4 +259,3 @@ let parse_pulse (env:TcEnv.env)
     match Parser.parse_decl content range with
     | Inl d -> desugar_pulse env namespaces module_abbrevs d
     | Inr e -> Inr e
-    

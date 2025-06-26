@@ -40,36 +40,34 @@ FSTAR_OPTIONS += --include "$(SRC)"
 FSTAR_OPTIONS += --cache_checked_modules
 FSTAR_OPTIONS += --warn_error -321
 FSTAR_OPTIONS += $(addprefix --include , $(INCLUDE_PATHS))
-FSTAR_OPTIONS += --ext context_pruning
+FSTAR_OPTIONS += --ext optimize_let_vc
 FSTAR_OPTIONS += --z3version 4.13.3
 
 ifeq ($(ADMIT),1)
 FSTAR_OPTIONS += --admit_smt_queries true
 endif
 
-FSTAR = $(FSTAR_EXE) $(SIL) $(FSTAR_OPTIONS)
+FSTAR = $(RUNLIM) $(FSTAR_EXE) $(SIL) $(FSTAR_OPTIONS)
 
 %$(EXTENSION): FF=$(notdir $(subst $(EXTENSION),,$@))
 %$(EXTENSION):
 	$(call msg, $(MSG), $(FF))
 	$(FSTAR) --already_cached ',*' $<
+	touch -c $@
 
-%.ml: FF=$(notdir $(subst $(EXTENSION),,$<))
-%.ml: MM=$(basename $(FF))
 %.ml: LBL=$(notdir $@)
-# ^ HACK we use notdir to get the module name since we need to pass in
-# the fst (not the checked file), but we don't know where it is, so this
-# is relying on F* looking in its include path.
 %.ml:
 	$(call msg, "EXTRACT", $(LBL))
-	$(FSTAR) $(FF) --already_cached '*,' --codegen $(CODEGEN) --extract_module $(MM)
+	$(FSTAR) $< --already_cached '*,' --codegen $(CODEGEN)
+	touch -c $@
 
 %.krml: FF=$(notdir $(subst $(EXTENSION),,$<))
 %.krml: MM=$(basename $(FF))
 %.krml: LBL=$(notdir $@)
 %.krml:
 	$(call msg, "EXTRACT", $(LBL))
-	$(FSTAR) $(FF) --already_cached ',*' --codegen krml --extract_module $(MM)
+	$(FSTAR) $< --already_cached ',*' --codegen krml --extract_module $(MM)
+	touch -c $@
 
 $(CACHE_DIR)/.depend$(TAG):
 	$(call msg, "DEPEND", $(SRC))

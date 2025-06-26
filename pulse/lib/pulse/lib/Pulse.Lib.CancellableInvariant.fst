@@ -46,13 +46,13 @@ let iname_of c = c.i
 ghost
 fn new_cancellable_invariant (v:slprop)
   requires v
+  opens []
   returns c:cinv
   ensures inv (iname_of c) (cinv_vp c v) ** active c 1.0R
-  opens []
 {
   let r = GR.alloc true;
   rewrite v as (if true then v else emp);
-  GR.share2 r;
+  GR.share r;
   fold (cinv_vp_aux r v);
   let i = new_invariant (cinv_vp_aux r v);
   let c = {i;r};
@@ -64,8 +64,6 @@ fn new_cancellable_invariant (v:slprop)
 
 let unpacked c _v = pts_to c.r #0.5R true
 
-
-
 ghost
 fn unpack_cinv_vp (#p:perm) (#v:slprop) (c:cinv)
   requires cinv_vp c v ** active c p
@@ -74,9 +72,10 @@ fn unpack_cinv_vp (#p:perm) (#v:slprop) (c:cinv)
 {
   unfold cinv_vp;
   unfold cinv_vp_aux;
+  with b. assert (pts_to c.r #0.5R b ** (if b then v else emp));
   unfold active;
   GR.pts_to_injective_eq c.r;
-  rewrite (if true then v else emp) as v;
+  rewrite (if b then v else emp) as v;
   fold (active c p);
   fold (unpacked c v)
 }
@@ -110,8 +109,6 @@ fn share (#p:perm) (c:cinv)
 }
 
 
-let share2 c = share #1.0R c
-
 
 ghost
 fn gather (#p1 #p2:perm) (c:cinv)
@@ -125,25 +122,24 @@ fn gather (#p1 #p2:perm) (c:cinv)
 }
 
 
-let gather2 c = gather #0.5R #0.5R c
-
 
 ghost
 fn cancel_ (#v:slprop) (c:cinv)
-requires cinv_vp c v **
+  requires cinv_vp c v **
          active c 1.0R
-ensures cinv_vp c v ** v
-opens []
+  ensures cinv_vp c v ** v
+  opens []
 {
   unfold cinv_vp;
   unfold cinv_vp_aux;
+  with b. assert (pts_to c.r #0.5R b ** (if b then v else emp));
   unfold active;
   GR.pts_to_injective_eq c.r;
-  rewrite (if true then v else emp) as v;
+  rewrite (if b then v else emp) as v;
   GR.gather c.r;
   GR.(c.r := false);
   rewrite emp as (if false then v else emp);
-  GR.share2 c.r;
+  GR.share c.r;
   fold (cinv_vp_aux c.r v);
   fold (cinv_vp c v);
   drop_ (pts_to c.r #0.5R _)

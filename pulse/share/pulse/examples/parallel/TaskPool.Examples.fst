@@ -98,11 +98,13 @@ fn qsh (n:nat)
 
 
 
-#set-options "--print_implicits"
 fn qs12_par (#e:perm) (p:pool)
   requires pool_alive #e p
   returns _:unit
-  ensures pool_alive #e p ** pledge emp_inames (pool_done p) (qsv 1) ** pledge emp_inames (pool_done p) (qsv 2)
+  ensures
+    pool_alive #e p **
+    pledge emp_inames (pool_done p) (qsv 1) **
+    pledge emp_inames (pool_done p) (qsv 2)
   {
     spawn_ p (fun () -> qsc 1);
     spawn_ p (fun () -> qsc 2);
@@ -118,19 +120,21 @@ fn qsh_par (n:nat)
   let p = setup_pool 42;
   share_alive p _;
   spawn_ p (fun () -> qs12_par p);
-  (* Ah! This cannot work right now since we need to share part
-  of the pool_alive slprop to the spawned task, so we have
-  to index pool_alive with a permission, and allow
-  share/gather. *)
-  
   spawn_ p (fun () -> qsc 3);
   spawn_ p (fun () -> qsc 4);
-  admit();
+  join_pledge #emp_inames #(pool_done p) (qsv 3) (qsv 4);
+  (* We don't have full permission on the pool. First await to get
+     back the permission we shared away, and then properly teardown. *)
+  await_pool p #emp_inames (
+    pool_alive #(1.0R /. 2.0R) p **
+    pledge emp_inames (pool_done p) (qsv 1) **
+    pledge emp_inames (pool_done p) (qsv 2)
+  );
+  gather_alive p _;
   teardown_pool p;
-  redeem_pledge (pool_done p) (qsv 1)
-  redeem_pledge (pool_done p) (qsv 2);
-  redeem_pledge (pool_done p) (qsv 3);
-  redeem_pledge (pool_done p) (qsv 4);
+  redeem_pledge _ (pool_done p) (qsv 1);
+  redeem_pledge _ (pool_done p) (qsv 2);
+  redeem_pledge _ (pool_done p) _;
   drop_ (pool_done p)
 }
 

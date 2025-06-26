@@ -16,10 +16,9 @@
 
 module Pulse2Rust.Deps
 
-open FStarC.Compiler
-open FStarC.Compiler.Util
-open FStarC.Compiler.List
-open FStarC.Compiler.Effect
+open FStarC.Util
+open FStarC.List
+open FStarC.Effect
 
 open Pulse2Rust.Rust.Syntax
 open Pulse2Rust.Env
@@ -28,9 +27,7 @@ open Pulse2Rust.Extract
 open RustBindings
 
 module S = FStarC.Extraction.ML.Syntax
-module EUtil = FStarC.Extraction.ML.Util
 
-module UEnv = FStarC.Extraction.ML.UEnv
 
 val empty_defs : reachable_defs
 
@@ -50,7 +47,7 @@ val reachable_defs_mltydecl (t:S.mltydecl) : reachable_defs
 
 val reachable_defs_mlmodule1 (m:S.mlmodule1) : reachable_defs
 
-val reachable_defs_decls (decls:S.mlmodule) : reachable_defs
+val reachable_defs_decls (decls:S.mlmodulebody) : reachable_defs
 
 val topsort_all (d:dict) (black:list string)
   : list string

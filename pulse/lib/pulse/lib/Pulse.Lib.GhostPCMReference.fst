@@ -26,9 +26,9 @@ fn read
     (f: (v:a{FStar.PCM.compatible #a p (reveal x) v}
           -> GTot (y:a{compatible p y v /\
                         FStar.PCM.frame_compatible p x v y})))
-requires pts_to r x
-returns v:(v:a { compatible p x v /\ p.refine v })
-ensures pts_to r (f v) 
+  requires pts_to r x
+  returns v:(v:a { compatible p x v /\ p.refine v })
+  ensures pts_to r (f v)
 {
   unfold pts_to;
   rewrite ghost_pcm_pts_to #_ #(PR.raise p) r (U.raise_val u#0 u#1 x)

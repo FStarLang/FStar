@@ -17,9 +17,7 @@
 module PulseCore.MemoryAlt
 open FStar.Ghost
 open FStar.PCM
-module PST = PulseCore.HoareStateMonad
 module U = FStar.Universe
-module S = FStar.Set
 module CM = FStar.Algebra.CommMonoid
 module H = PulseCore.HeapSig
 module E = PulseCore.HeapExtension
@@ -169,7 +167,6 @@ let star  (p1 p2:slprop u#a)
 : slprop u#a
 = sig.star p1 p2
 
-module F = FStar.FunctionalExtensionality
 let h_exists (#a:Type u#b) (f: (a -> slprop u#a))
 : slprop u#a
 = H.exists_ #sig #a (fun x -> reveal_slprop (f x))

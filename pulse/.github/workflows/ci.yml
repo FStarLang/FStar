@@ -54,8 +54,8 @@ jobs:
         id: checkout-karamel
         with:
           path: karamel
-          repository: mtzguido/karamel
-          ref: dev
+          repository: FStarLang/karamel
+          ref: master
 
       - name: Try fetch built karamel
         id: cache-karamel

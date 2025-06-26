@@ -15,6 +15,7 @@
 *)
 
 module Pulse.Lib.Mutex
+#lang-pulse
 
 open Pulse.Lib.Pervasives
 

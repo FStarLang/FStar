@@ -18,6 +18,7 @@ module Pulse.Lib.Shift
 #lang-pulse
 open Pulse.Class.Duplicable
 open Pulse.Lib.Core
+open Pulse.Main
 
 module T = FStar.Tactics
 
@@ -27,7 +28,8 @@ val shift :
   (concl:slprop) ->
   slprop
 
-val intro_shift
+ghost
+fn intro_shift
   (#[T.exact (`emp_inames)] is:inames)
   (hyp concl:slprop)
   (extra:slprop)
@@ -37,38 +39,35 @@ val intro_shift
     (extra ** hyp)
     (fun _ -> concl)
   ))
-: stt_ghost unit emp_inames
-    extra
-    (fun _ -> shift #is hyp concl)
+  requires extra
+  ensures  shift #is hyp concl
 
-val elim_shift
+ghost
+fn elim_shift
   (#[T.exact (`emp_inames)] is:inames)
   (hyp concl:slprop)
-: stt_ghost unit is
-    (shift #is hyp concl ** hyp)
-    (fun _ -> concl)
+  opens is
+  requires shift #is hyp concl ** hyp
+  ensures  concl
 
-val shift_sub_inv
+ghost
+fn shift_sub_inv
   (#is1:inames)
   (#is2:inames { inames_subset is1 is2 })
   (hyp concl:slprop)
-: stt_ghost unit emp_inames
-    (shift #is1 hyp concl)
-    (fun _ -> shift #is2 hyp concl)
+  requires shift #is1 hyp concl
+  ensures  shift #is2 hyp concl
 
-val shift_dup
+ghost
+fn shift_dup
   (#is : inames)
   (p q : slprop)
-: stt_ghost unit
-    emp_inames
-    (shift #is p q)
-    (fun _ -> shift #is p q ** shift #is p q)
+  requires shift #is p q
+  ensures  shift #is p q ** shift #is p q
 
-val shift_compose
+ghost
+fn shift_compose
   (#is : inames)
   (p q r : slprop)
-: stt_ghost unit
-    emp_inames
-    (shift #is p q ** shift #is q r)
-    (fun _ -> shift #is p r)
-
+  requires shift #is p q ** shift #is q r
+  ensures  shift #is p r

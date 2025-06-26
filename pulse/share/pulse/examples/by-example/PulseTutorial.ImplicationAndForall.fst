@@ -17,19 +17,19 @@
 module PulseTutorial.ImplicationAndForall
 #lang-pulse
 open Pulse.Lib.Pervasives
-open Pulse.Lib.Stick.Util
+open Pulse.Lib.Trade.Util
 open Pulse.Lib.Forall.Util
-module I = Pulse.Lib.Stick.Util
+module I = Pulse.Lib.Trade.Util
 module GR = Pulse.Lib.GhostReference
 open GR
 
 //regain_half$
 let regain_half #a (x:GR.ref a) (v:a) =
   pts_to x #0.5R v @==> pts_to x v
-//regain_half$
+//end regain_half$
 
 
- //intro_regain_half$
+//intro_regain_half$
 ghost 
 fn intro_regain_half (x:GR.ref int)
 requires pts_to x 'v
@@ -46,9 +46,9 @@ ensures pts_to x #0.5R 'v ** regain_half x 'v
   I.intro _ _ _ aux;
   fold regain_half;
 }
+//end intro_regain_half$
 
-
- //use_regain_half$
+//use_regain_half$
 ghost
 fn use_regain_half (x:GR.ref int)
 requires pts_to x #0.5R 'v ** regain_half x 'v
@@ -57,17 +57,18 @@ ensures pts_to x 'v
   unfold regain_half;
   I.elim _ _;
 }
+//end use_regain_half$
 
 
 //regain_half_q$
 let regain_half_q #a (x:GR.ref a) =
   forall* u. pts_to x #0.5R u @==> pts_to x u 
-//regain_half_q$
+//end regain_half_q$
 
 
 module FA = Pulse.Lib.Forall.Util
 
- //intro_regain_half_q$
+//intro_regain_half_q$
 ghost 
 fn intro_regain_half_q (x:GR.ref int)
 requires pts_to x 'v
@@ -84,9 +85,9 @@ ensures pts_to x #0.5R 'v ** regain_half_q x
   FA.intro_forall_imp _ _ _ aux1;
   fold regain_half_q;
 }
+//end intro_regain_half_q$
 
-
- //use_regain_half_q$
+//use_regain_half_q$
 ghost
 fn use_regain_half_q (x:GR.ref int)
 requires pts_to x #0.5R 'u ** regain_half_q x
@@ -96,15 +97,16 @@ ensures pts_to x 'u
   FA.elim #_ #(fun u -> pts_to x #0.5R u @==> pts_to x u) 'u;
   I.elim _ _;
 }
+//end use_regain_half_q$
 
 
 //can_update$
 let can_update (x:GR.ref int) = 
   forall* u v. pts_to x #0.5R u @==>
                pts_to x v
-//can_update$
+//end can_update$
 
- //make_can_update$
+//make_can_update$
 ghost
 fn make_can_update (x:GR.ref int)
 requires pts_to x 'w
@@ -129,9 +131,10 @@ ensures pts_to x #0.5R 'w ** can_update x
   FA.intro _ aux;
   fold (can_update x);
 }
+//end make_can_update$
 
 
- //update$
+//update$
 ghost
 fn update (x:GR.ref int) (k:int)
 requires pts_to x #0.5R 'u ** can_update x
@@ -143,6 +146,4 @@ ensures pts_to x #0.5R k ** can_update x
   I.elim _ _;
   make_can_update x;
 }
-
-
-
+//end update$

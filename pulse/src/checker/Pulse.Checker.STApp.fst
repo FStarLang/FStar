@@ -23,7 +23,6 @@ open Pulse.Checker.Base
 
 module T = FStar.Tactics.V2
 module RT = FStar.Reflection.Typing
-module FV = Pulse.Typing.FV
 module RU = Pulse.RuntimeUtils
 module P = Pulse.Syntax.Printer
 module Prover = Pulse.Checker.Prover
@@ -77,11 +76,9 @@ let rec intro_uvars_for_logical_implicits (g:env) (uvs:env { disjoint g uvs }) (
        | C_ST _
        | C_STAtomic _ _ _
        | C_STGhost _ _ ->
-         (| uvs', push_env g uvs', {term=Tm_STApp {head=t;arg_qual=Some Implicit;arg=t_var};
-                                    range=Pulse.RuntimeUtils.range_of_term t;
-                                    effect_tag=as_effect_hint (ctag_of_comp_st c_rest);
-                                    source = Sealed.seal false;
-                                   }|)
+         let term = mk_term (Tm_STApp {head=t;arg_qual=Some Implicit;arg=t_var}) (RU.range_of_term t) in
+         let term = { term with effect_tag = as_effect_hint (ctag_of_comp_st c_rest) } in
+         (| uvs', push_env g uvs', term |)
        | C_Tot ty ->
          intro_uvars_for_logical_implicits g uvs' (tm_pureapp t (Some Implicit) t_var) ty
     end
@@ -107,7 +104,8 @@ let instantiate_implicits (g:env) (t:st_term { Tm_STApp? t.term })
   | _ ->
     match is_pure_app t with
     | Some (head, q, arg) ->
-      (| uvs, push_env g uvs, {term=Tm_STApp {head;arg_qual=q;arg}; range=Pulse.RuntimeUtils.range_of_term t; effect_tag=default_effect_hint; source = Sealed.seal false } |)
+      let term = mk_term (Tm_STApp {head;arg_qual=q;arg}) range in
+      (| uvs, push_env g uvs, term |)
     | _ ->
       fail g (Some (Pulse.RuntimeUtils.range_of_term t))
         (Printf.sprintf "check_stapp.instantiate_implicits: expected an application term, found: %s"
@@ -116,15 +114,15 @@ let instantiate_implicits (g:env) (t:st_term { Tm_STApp? t.term })
 (* Should we allow ambiguous proving when calling [t]? (NB: [t]
 can be partially applied, hence we look at the head. *)
 let should_allow_ambiguous (t:term) : T.Tac bool =
-  let attr_name = "Pulse.Lib.Core.allow_ambiguous" in
-  match T.hua t with
-  | None -> false
-  | Some (hfv, _, _) ->
-    match T.lookup_typ (T.top_env ()) (T.inspect_fv hfv) with
-    | None -> false
-    | Some se ->
-      let attrs = T.sigelt_attrs se in
-      attrs |> T.tryFind (fun a -> T.is_fvar a attr_name)
+  Pulse.Reflection.Util.head_has_attr_string "Pulse.Lib.Core.allow_ambiguous" t
+
+let compatible_qual (actual expected : option qualifier) : bool =
+  match actual, expected with
+  | None, None -> true
+  | Some Implicit, Some Implicit
+  | Some Implicit, Some TcArg
+  | Some Implicit, Some (Meta _) -> true
+  | _ -> false
 
 #push-options "--z3rlimit_factor 4 --fuel 1 --ifuel 1"
 let apply_impure_function 
@@ -162,7 +160,7 @@ let apply_impure_function
            (Printf.sprintf "head term %s is ghost, but the arrow comp is not STGhost"
               (P.term_to_string head));
 
-    if qual <> bqual
+    if not (compatible_qual qual bqual)
     then (
      fail g (Some range) (Printf.sprintf "Unexpected qualifier in head type %s of stateful application: head = %s, arg = %s"
                 (P.term_to_string ty_head)
@@ -179,9 +177,10 @@ let apply_impure_function
         | C_STAtomic _ _ res ->
           // ST application
           let d : st_typing _ _ (open_comp_with comp_typ arg) =
-            T_STApp g head formal qual comp_typ arg dhead darg in
+            T_STApp g head formal bqual comp_typ arg dhead darg in
           let d = canonicalize_st_typing d in
-          let t = { term = Tm_STApp {head; arg_qual=qual; arg}; range; effect_tag=as_effect_hint (ctag_of_comp_st comp_typ); source=Sealed.seal false } in
+          let t = mk_term (Tm_STApp {head; arg_qual=bqual; arg}) range in
+          let t = { t with effect_tag=as_effect_hint (ctag_of_comp_st comp_typ) } in
           let c = (canon_comp (open_comp_with comp_typ arg)) in
           (| t, c, d |)
         | C_STGhost _ res ->
@@ -207,17 +206,22 @@ let apply_impure_function
                 (FStar.Squash.return_squash token) in
 
           let d : st_typing _ _ (open_comp_with comp_typ arg) =
-            T_STGhostApp g head formal qual comp_typ arg x
+            T_STGhostApp g head formal bqual comp_typ arg x
               (lift_typing_to_ghost_typing dhead)
               (E d_non_info)
               (lift_typing_to_ghost_typing darg) in
           let d = canonicalize_st_typing d in
-          let t = { term = Tm_STApp {head; arg_qual=qual; arg}; range; effect_tag=as_effect_hint STT_Ghost; source=Sealed.seal false; } in
+          let t = mk_term (Tm_STApp {head; arg_qual=bqual; arg}) range in
+          let t = { t with effect_tag=as_effect_hint STT_Ghost } in
           let c = (canon_comp (open_comp_with comp_typ arg)) in
           (| t, c, d |)
         | _ ->
-          fail g (Some range)
-            "Expected an effectful application; got a pure term (could it be partially applied by mistake?)"
+          let open Pulse.PP in
+          fail_doc g (Some range) [
+            text "Expected an effectful application, got a pure term.";
+            pp comp_typ;
+            text "Could it be partially applied by mistake?"
+          ]
       in
       let (| st', c', st_typing' |) = match_comp_res_with_post_hint d post_hint in
       debug_log g (fun _ -> T.print (Printf.sprintf "st_app: c' = %s\n\tallow_ambiguous = %s\n"
@@ -248,11 +252,9 @@ let check
   let (| head, eff_head, ty_head, dhead |) = compute_term_type g head in
 
   debug_log g (fun _ ->
-    T.print (Printf.sprintf "st_app: head = %s, eff_head: %s, ty_head = %s\n"
-               (P.term_to_string head)
-               (P.tot_or_ghost_to_string eff_head)
-               (P.term_to_string ty_head)));
-    
+    T.print (Printf.sprintf "st_app: head = %s, eff_head: %s, ty_head = %s, arg = %s\n"
+               (show head) (show eff_head) (show ty_head) (show arg)));
+
   match is_arrow ty_head with
   | Some b ->
     apply_impure_function t.range g0 uvs g ctxt ctxt_typing post_hint res_ppname head qual arg ty_head eff_head dhead b

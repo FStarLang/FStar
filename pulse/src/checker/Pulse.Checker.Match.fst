@@ -186,8 +186,10 @@ let rec tot_typing_weakening_n bs d =
     let d = Pulse.Typing.Metatheory.tot_typing_weakening_single d x t in
     tot_typing_weakening_n bs d
 
-let samepat (b1 b2 : branch) : prop = fst b1 == fst b2
-let samepats (bs1 bs2 : list branch) : prop = L.map fst bs1 == L.map fst bs2
+let patof (b:branch) : pattern = b.pat
+let samepat (b1 b2 : branch) : prop = b1.pat == b2.pat
+let samepats (bs1 bs2 : list branch) : prop =
+  L.map patof bs1 == L.map patof bs2
 
 let open_st_term_bs (t:st_term) (bs:list binding) : st_term =
   let rec aux (bs:list binding) (i:nat) : subst =
@@ -214,6 +216,7 @@ let rec bindings_to_string (bs : list binding) : T.Tac string =
 #push-options "--z3rlimit 20"
 
 let check_branch
+        (norw:bool)
         (g:env)
         (pre:term)
         (pre_typing: tot_typing g pre tm_slprop)
@@ -244,25 +247,27 @@ let check_branch
     fail g (Some e.range) "Failed to elab pattern into term";
   if (R.Tv_Unknown? (R.inspect_ln (fst (Some?.v elab_p)))) then
     fail g (Some e.range) "should not happen: pattern elaborated to Tv_Unknown";
-  // T.print ("Elaborated pattern = " ^ T.term_to_string (fst (Some?.v elab_p)));
+  if Cons? (snd (Some?.v elab_p)) then
+    fail g (Some e.range) "should not happen: pattern elaboration missed some binders";
+  // T.print ("Elaborated pattern = " ^ Pulse.Show.show (fst (Some?.v elab_p)));
   let elab_p_tm = fst (Some?.v elab_p) in
   let eq_typ = mk_sq_eq2 sc_u sc_ty sc elab_p_tm in
   let g' = push_binding g' hyp_var ({name = Sealed.seal "branch equality"; range = Range.range_0 }) eq_typ in
   let e = open_st_term_bs e pulse_bs in
   let e =
-    {
-      term =
-        Tm_ProofHintWithBinders {
-          binders = [];
-          hint_type = RENAME { pairs = [(sc, elab_p_tm)];
-                               goal = None;
-                               tac_opt = Some Pulse.Reflection.Util.match_rewrite_tac_tm; };
-          t = e;
-        };
-      range = e.range;
-      effect_tag = e.effect_tag;
-      source = Sealed.seal false;
-    }
+    if norw
+    then e
+    else
+      let t =
+        mk_term (Tm_ProofHintWithBinders {
+                   binders = [];
+                   hint_type = RENAME { pairs = [(sc, elab_p_tm)];
+                                        goal = None;
+                                        tac_opt = Some Pulse.Reflection.Util.match_rewrite_tac_tm; };
+                   t = e; })
+                e.range
+      in
+      { t with effect_tag = e.effect_tag }
   in
   let pre_typing = tot_typing_weakening_n pulse_bs pre_typing in // weaken w/ binders
   let pre_typing = Pulse.Typing.Metatheory.tot_typing_weakening_single pre_typing hyp_var eq_typ in // weaken w/ branch eq
@@ -274,6 +279,7 @@ let check_branch
   let br_d : br_typing g sc_u sc_ty sc p (close_st_term_n e (L.map fst pulse_bs)) c = TBR g sc_u sc_ty sc c p e bs () () () hyp_var e_d in
   (| p, close_st_term_n e (L.map fst pulse_bs), c, br_d |)
 
+#pop-options
 
 let check_branches_aux_t 
         (#g:env)
@@ -284,7 +290,7 @@ let check_branches_aux_t
         (sc : term)
 = (br:branch
    & c:comp_st{comp_pre c == pre /\ comp_post_matches_hint c (Some post_hint)}
-   & br_typing g sc_u sc_ty sc (fst br) (snd br) c)
+   & br_typing g sc_u sc_ty sc br.pat br.e c)
 
 let check_branches_aux
         (g:env)
@@ -304,10 +310,10 @@ let check_branches_aux
 = if L.isEmpty brs0 then fail g None "empty match";
   let tr1 (b: branch) (pbs:R.pattern & list R.binding)
     : T.Tac (check_branches_aux_t pre post_hint sc_u sc_ty sc)
-    = let (_, e) = b in
+    = let e = b.e in
       let (p, bs) = pbs in
-      let (| p, e, c, d |) = check_branch g pre pre_typing post_hint check sc_u sc_ty sc p e bs in
-      (| (p,e), c, d |)
+      let (| p, e, c, d |) = check_branch (T.unseal b.norw) g pre pre_typing post_hint check sc_u sc_ty sc p e bs in
+      (| {pat=p; e; norw=b.norw}, c, d |)
   in
   let r = zipWith tr1 brs0 bnds in
   assume (samepats brs0 (L.map Mkdtuple3?._1 r));
@@ -333,7 +339,7 @@ let weaken_branch_observability
           comp_observability c == obs
         })
       (checked_br : check_branches_aux_t #g pre post_hint sc_u sc_ty sc { ctag_of_br checked_br == STT_Atomic})
-: T.Tac (br:branch & br_typing g sc_u sc_ty sc (fst br) (snd br) c)
+: T.Tac (br:branch & br_typing g sc_u sc_ty sc br.pat br.e c)
 = let (| br, c0, typing |) = checked_br in
   match c0 with
   | C_STAtomic i obs' st ->
@@ -365,7 +371,7 @@ let join_branches (#g #pre #post_hint #sc_u #sc_ty #sc:_)
                   (ct:ctag)
                   (checked_brs : list (cbr:check_branches_aux_t #g pre post_hint sc_u sc_ty sc {ctag_of_br cbr == ct}))
 : T.Tac (c:comp_st { comp_pre c == pre /\ comp_post_matches_hint c (Some post_hint) } &
-         list (br:branch & br_typing g sc_u sc_ty sc (fst br) (snd br) c))
+         list (br:branch & br_typing g sc_u sc_ty sc br.pat br.e c))
 = match checked_brs with
   | [] -> T.fail "Impossible: empty match"
   | checked_br::rest ->
@@ -376,7 +382,7 @@ let join_branches (#g #pre #post_hint #sc_u #sc_ty #sc:_)
       let rest = 
         List.Tot.map 
           #(cbr:check_branches_aux_t #g pre post_hint sc_u sc_ty sc {ctag_of_br cbr==ct})
-          #(br:branch & br_typing g sc_u sc_ty sc (fst br) (snd br) c)
+          #(br:branch & br_typing g sc_u sc_ty sc br.pat br.e c)
           (fun (| br, c', d |) -> (| br, d |))
           rest
       in
@@ -407,7 +413,7 @@ let weaken_branch_tag_to
 = let (| pe, c, d|) = br in
   if ctag_of_comp_st c = ct then br
   else
-    let r = (snd pe).range in
+    let r = pe.e.range in
     match ct, c with
     | STT_Ghost, C_STAtomic _ _ _
     | STT_Ghost, C_ST _ -> T.fail "Unexpected least effect"
@@ -451,6 +457,21 @@ let maybe_weaken_branch_tags
       let checked_brs = T.map #_ #(cbr:check_branches_aux_t #g pre post_hint sc_u sc_ty sc {ctag_of_br cbr == ct}) (fun x -> x) checked_brs in
       (| ct, checked_brs |)
 
+(* Hoisting this makes the proof much faster and more stable. *)
+let rec check_branches_aux2
+  (g:env)
+  (sc_u:universe)
+  (sc_ty:typ)
+  (sc : term)
+  (c0 :comp_st)
+  (brs : list (br:branch & br_typing g sc_u sc_ty sc br.pat br.e c0))
+  : brs_typing g sc_u sc_ty sc (List.Tot.map dfst brs) c0
+  = match brs with
+    | [] -> TBRS_0 c0
+    | (| br, d|)::rest ->
+      let { pat; e } = br in
+      TBRS_1 c0 pat e d (List.Tot.map dfst rest) (check_branches_aux2 g sc_u sc_ty sc c0 rest)
+
 let check_branches
         (g:env)
         (pre:term)
@@ -469,16 +490,7 @@ let check_branches
   let (| ct, checked_brs |) = maybe_weaken_branch_tags checked_brs in
   let (| c0, checked_brs |) = join_branches ct checked_brs in
   let brs = List.Tot.map dfst checked_brs in
-  let d : brs_typing g sc_u sc_ty sc brs c0 =
-    let rec aux (brs : list (br:branch & br_typing g sc_u sc_ty sc (fst br) (snd br) c0))
-      : brs_typing g sc_u sc_ty sc (List.Tot.map dfst brs) c0
-      = match brs with
-        | [] -> TBRS_0 c0
-        | (|(p,e), d|)::rest ->
-          TBRS_1 c0 p e d (List.Tot.map dfst rest) (aux rest)
-    in
-    aux checked_brs
-  in
+  let d : brs_typing g sc_u sc_ty sc brs c0 = check_branches_aux2 g sc_u sc_ty sc c0 checked_brs in
   (| brs, c0, d |)
 
 let check
@@ -500,11 +512,11 @@ let check
   let nbr = L.length brs in
 
   let (| sc, sc_u, sc_ty, sc_ty_typing, sc_typing |) = compute_tot_term_type_and_u g sc in
-  let elab_pats = L.map elab_pat (L.map fst brs) in
+  let elab_pats = L.map elab_pat (L.map patof brs) in
 
   assertby (L.length elab_pats == L.length brs) (fun () ->
-    lemma_map_len fst brs;
-    lemma_map_len elab_pat (L.map fst brs)
+    lemma_map_len patof brs;
+    lemma_map_len elab_pat (L.map patof brs)
   );
 
   let (| elab_pats', bnds', complete_d |)
@@ -513,16 +525,20 @@ let check
         & pats_complete g sc sc_ty pats)
   =
     match T.check_match_complete (elab_env g) sc sc_ty elab_pats with
-    | None -> fail g (Some sc_range) "Could not check that match is correct/complete"
-    | Some (elab_pats', bnds) ->
+    | None, issues ->
+      let open Pulse.PP in
+      fail_doc_with_subissues g (Some sc_range) issues [
+        text "Could not verify that this match is exhaustive.";
+      ]
+    | Some (elab_pats', bnds), _ ->
       (| elab_pats', bnds, PC_Elab _ _ _ _ _ (RT.MC_Tok _ _ _ _ bnds ()) |)
   in
   let new_pats = map_opt readback_pat elab_pats' in 
   if None? new_pats then
     fail g (Some sc_range) "failed to readback new patterns";
-  let brs = zipWith (fun p (_, e) -> (p,e)) (Some?.v new_pats) brs in
+  let brs = zipWith (fun p br -> { br with pat=p }) (Some?.v new_pats) brs in
   
-  assume (L.map fst brs == Some?.v new_pats);
+  assume (L.map patof brs == Some?.v new_pats);
   
   lemma_map_opt_lenx readback_pat elab_pats';
 
@@ -537,9 +553,9 @@ let check
 
   let (| brs, c, brs_d |) =
     check_branches g pre pre_typing post_hint check sc_u sc_ty sc brs (zip elab_pats' bnds') in
-  
+
   (* Provable *)
-  assume (L.map (fun (p, _) -> elab_pat p) brs == elab_pats');
+  assume (L.map (fun br -> elab_pat br.pat) brs == elab_pats');
   let c_typing = comp_typing_from_post_hint c pre_typing post_hint in
   let d = T_Match g sc_u sc_ty sc sc_ty_typing sc_typing c (E c_typing) brs brs_d complete_d in
   checker_result_for_st_typing (| _, _, d |) res_ppname

@@ -5,7 +5,7 @@ open Pulse_Syntax_Base
 module U = Pulse_Syntax_Pure
 module S = FStarC_Syntax_Syntax
 type universe = Pulse_Syntax_Base.universe
-type range = FStarC_Compiler_Range.range
+type range = FStarC_Range.range
 let u_zero : universe = U.u_zero
 let u_succ (u:universe) : universe = U.u_succ u
 let u_var (s:string) : universe = U.u_var s
@@ -36,6 +36,8 @@ type binder = Pulse_Syntax_Base.binder
 type comp = Pulse_Syntax_Base.comp
 type slprop = term
 
+let meta_qual t = Some (Pulse_Syntax_Base.Meta t)
+
 let ppname_of_id (i:ident) : ppname = { name = FStarC_Ident.string_of_id i; range = i.idRange }
 
 let mk_binder_with_attrs (x:ident) (t:term) (attrs:term list) : binder =
@@ -64,7 +66,7 @@ let tm_arrow (b:binder) (q:S.aqual) (body:comp) : term =
   U.tm_arrow b (map_aqual q) body
 let tm_expr (t:S.term) r : term = Pulse_Syntax_Pure.wr t r
 let tm_unknown r : term = wr r Tm_Unknown
-let tm_emp_inames :term = wr FStarC_Compiler_Range.dummyRange Tm_EmpInames
+let tm_emp_inames :term = wr FStarC_Range.dummyRange Tm_EmpInames
 let tm_add_inv (names:term) (n:term) r : term =
   Pulse_RuntimeUtils.set_range (Pulse_Syntax_Pure.tm_add_inv names n) r
 
@@ -106,6 +108,9 @@ let pat_cons fv vs _r = PSB.(pat_cons fv (List.map (fun v -> (v,false)) vs))
 
 type st_term = Pulse_Syntax_Base.st_term
 type branch = Pulse_Syntax_Base.branch
+
+let mk_branch (p:pattern) (t:st_term) (norw:bool) : branch =
+  PSB.mk_branch p t norw
 
 let tm_return (t:term) r : st_term = PSB.(with_range (tm_return (tm_unknown r) false t) r)
 
@@ -210,6 +215,9 @@ let comp_post c =
    | C_STGhost (_, st) -> st.post
    | _ -> Pulse_Syntax_Pure.tm_emp
 
+let mark_statement_sequence (s : st_term) : st_term =
+  PSB.mark_statement_sequence s
+
 let print_exn (e:exn) = Printexc.to_string e
 
 open FStar_Pervasives
@@ -231,7 +239,7 @@ let binder_to_string (env:Env.env) (b:binder)
   = tac_to_string env (Pulse_Syntax_Printer.binder_to_string b)
 let bv_to_string (x:bv) : string =
     x.bv_ppname.name ^ "@" ^
-     (FStarC_Compiler_Util.string_of_int x.bv_index)
+     (FStarC_Util.string_of_int x.bv_index)
 let term_to_string (env:Env.env) (t:term)
   : string
   = tac_to_string env (Pulse_Syntax_Printer.term_to_string t)

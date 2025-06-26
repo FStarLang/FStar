@@ -16,10 +16,10 @@
 
 module Pulse2Rust
 
-open FStarC.Compiler
-open FStarC.Compiler.Util
-open FStarC.Compiler.List
-open FStarC.Compiler.Effect
+open FStarC
+open FStarC.Util
+open FStarC.List
+open FStarC.Effect
 
 open Pulse2Rust.Deps
 open Pulse2Rust.Rust.Syntax
@@ -31,7 +31,6 @@ open RustBindings
 open FStarC.Class.Setlike
 
 module S = FStarC.Extraction.ML.Syntax
-module EUtil = FStarC.Extraction.ML.Util
 
 module UEnv = FStarC.Extraction.ML.UEnv
 
@@ -48,9 +47,9 @@ let mlmodule1_name (m:S.mlmodule1) : list S.mlsymbol =
 let extract_one
   (g:env)
   (mname:string)
-  (gamma:list UEnv.binding)
-  (decls:S.mlmodule) : string & env =
-  // let (deps, gamma, decls)  : (list string & list UEnv.binding & S.mlmodule) =
+  (gamma:list UEnv.mlbinding)
+  (decls:S.mlmodulebody) : string & env =
+  // let (deps, gamma, decls)  : (list string & list UEnv.mlbinding & S.mlmodule) =
   //   match load_value_from_file file with
   //   | Some r -> r
   //   | None -> failwith "Could not load file" in
@@ -101,33 +100,33 @@ let extract_one
 
 let file_to_module_name (f:string) : string =
   let suffix = ".ast" in
-  let s = basename f in
+  let s = Filepath.basename f in
   let s = String.substring s 0 (String.length s - String.length suffix) in
   replace_chars s '_' "."
 
 let read_all_ast_files (files:list string) : dict =
-  let d = smap_create 100 in
+  let d = SMap.create 100 in
   files |> List.iter (fun f ->
-    let contents  : (list string & list UEnv.binding & S.mlmodule) =
+    let contents  : (list string & list UEnv.mlbinding & S.mlmodulebody) =
       match load_value_from_file f with
       | Some r -> r
       | None -> failwith (format1 "Could not load file %s" f) in
-    smap_add d (file_to_module_name f) contents);
+    SMap.add d (file_to_module_name f) contents);
   d
 
-let build_decls_dict (d:dict) : smap S.mlmodule1 =
-  let dd = smap_create 100 in
-  smap_iter d (fun module_nm (_, _, decls) ->
+let build_decls_dict (d:dict) : SMap.t S.mlmodule1 =
+  let dd = SMap.create 100 in
+  SMap.iter d (fun module_nm (_, _, decls) ->
     List.iter (fun (decl:S.mlmodule1) ->
       List.iter (fun decl_nm ->
-        smap_add dd (module_nm ^ "." ^ decl_nm) decl
+        SMap.add dd (module_nm ^ "." ^ decl_nm) decl
       ) (mlmodule1_name decl)
     ) decls
   );
   dd
 
 let rec collect_reachable_defs_aux
-  (dd:smap S.mlmodule1)
+  (dd:SMap.t S.mlmodule1)
   (worklist:reachable_defs)
   (reachable_defs:reachable_defs) =
 
@@ -138,7 +137,7 @@ let rec collect_reachable_defs_aux
       //  print1 "Adding %s to reachable_defs\n" hd;
        let reachable_defs = add hd reachable_defs in
        let worklist =
-         let hd_decl = smap_try_find dd hd in
+         let hd_decl = SMap.try_find dd hd in
          match hd_decl with
          | None -> worklist
          | Some hd_decl ->
@@ -153,7 +152,7 @@ let rec collect_reachable_defs_aux
 
 let collect_reachable_defs (d:dict) (root_module:string) : reachable_defs =
   let dd = build_decls_dict d in
-  let root_decls = smap_try_find d root_module |> must |> (fun (_, _, decls) -> decls) in
+  let root_decls = SMap.try_find d root_module |> must |> (fun (_, _, decls) -> decls) in
   let worklist = List.fold_left (fun worklist decl ->
     addn
       (decl |> mlmodule1_name |> List.map (fun s -> root_module ^ "." ^ s))
@@ -182,11 +181,11 @@ let extract (files:list string) (odir:string) (libs:string) : unit =
   let root_module = file_to_module_name (let root_file::_ = files in root_file) in
   // print1 "root_module: %s\n" root_module;
   let reachable_defs = collect_reachable_defs d root_module in
-  let external_libs = FStarC.Compiler.Util.split libs "," |> List.map trim_string in
+  let external_libs = FStarC.Util.split libs "," |> List.map trim_string in
   let g = empty_env external_libs d all_modules reachable_defs in
   let _, all_rust_files = List.fold_left (fun (g, all_rust_files) f ->
     // print1 "Extracting file: %s\n" f;
-    let (_, bs, ds) = smap_try_find d f |> must in
+    let (_, bs, ds) = SMap.try_find d f |> must in
     let s, g = extract_one g f bs ds in
     let rust_fname = concat_dir_filename odir (rust_file_name f) in
     let rust_f = open_file_for_writing rust_fname in

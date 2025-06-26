@@ -16,7 +16,7 @@
 
 module Pulse.Show
 
-open FStar.Tactics
+open FStar.Tactics.V2
 open FStar.Tactics.Typeclasses
 open Pulse.Typing
 open Pulse.Syntax.Base
@@ -54,6 +54,13 @@ instance tac_showable_ctag : tac_showable ctag = {
 instance tac_showable_term : tac_showable term = {
   show = term_to_string;
 }
+instance tac_showable_aqualv : tac_showable aqualv = {
+  show = function
+         | Q_Explicit -> "Q_Explicit"
+         | Q_Implicit -> "Q_Implicit"
+         | Q_Meta t -> "Q_Meta " ^ show t
+         | Q_Equality -> "Q_Equality"
+}
 instance tac_showable_st_term : tac_showable st_term = {
   show = st_term_to_string;
 }
@@ -83,9 +90,8 @@ instance tac_showable_post_hint_t : tac_showable post_hint_t = {
       "post = " ^ show h.post ^ "; " ^
     "}")
 }
-
-instance tac_showable_r_term : tac_showable Reflection.term = {
-  show = Tactics.term_to_string;
+instance tac_showable_namedv : tac_showable Reflection.namedv = {
+  show = (fun b -> namedv_to_string b);
 }
 
 instance tac_showable_range : tac_showable Range.range = {
@@ -114,4 +120,15 @@ instance tac_showable_tuple6 (a b c d e f : Type) (_ : tac_showable a) (_ : tac_
 
 instance tac_showable_tuple7 (a b c d e f g : Type) (_ : tac_showable a) (_ : tac_showable b) (_ : tac_showable c) (_ : tac_showable d) (_ : tac_showable e) (_ : tac_showable f) (_ : tac_showable g) : tac_showable (a & b & c & d & e & f & g) = {
   show = (fun (x, y, z, w, v, u, t) -> "(" ^ show x ^ ", " ^ show y ^ ", " ^ show z ^ ", " ^ show w ^ ", " ^ show v ^ ", " ^ show u ^ ", " ^ show t ^ ")");
+}
+
+instance tac_showable_tot_or_ghost : tac_showable tot_or_ghost = {
+  show = (fun e -> tot_or_ghost_to_string e);
+}
+
+instance tac_showable_qualifier : tac_showable qualifier = {
+  show = function
+         | Implicit -> "Implicit"
+         | TcArg -> "TcArg"
+         | Meta t -> "Meta " ^ show t
 }

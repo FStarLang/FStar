@@ -19,7 +19,7 @@ module PulseTutorial.Loops
 open Pulse.Lib.Pervasives
 module R = Pulse.Lib.Reference
 
- //count_down$
+//count_down$
 fn count_down (x:ref nat)
 requires R.pts_to x 'v
 ensures  R.pts_to x 0
@@ -45,9 +45,10 @@ ensures  R.pts_to x 0
         }
     }
 }
+//end count_down$
 
 
- //count_down3$
+//count_down3$
 fn count_down3 (x:ref nat)
 requires R.pts_to x 'v
 ensures  R.pts_to x 0
@@ -70,9 +71,10 @@ ensures  R.pts_to x 0
         pure (b == false ==> v == 0)
     { () }
 }
+//end count_down3$
 
 
- //count_down_loopy$
+//count_down_loopy$
 fn count_down_loopy (x:ref nat)
 requires R.pts_to x 'v
 ensures  R.pts_to x 0
@@ -95,10 +97,11 @@ ensures  R.pts_to x 0
         pure (b == false ==> v == 0)
     { () }
 }
+//end count_down_loopy$
 
 open FStar.Mul
 
- //multiply_by_repeated_addition$
+//multiply_by_repeated_addition$
 fn multiply_by_repeated_addition (x y:nat)
     requires emp
     returns z:nat
@@ -111,7 +114,7 @@ fn multiply_by_repeated_addition (x y:nat)
         (c < x)
     )
     invariant b.
-    exists* c a.
+    exists* (c a : nat).
         R.pts_to ctr c **
         R.pts_to acc a **
         pure (c <= x /\
@@ -125,10 +128,11 @@ fn multiply_by_repeated_addition (x y:nat)
     };
     !acc
 }
+//end multiply_by_repeated_addition$
 
 
 noextract
-//SNIPPET_START: sum$
+//sum$
 let rec sum (n:nat)
 : nat
 = if n = 0 then 0 else n + sum (n - 1)
@@ -140,10 +144,10 @@ let rec sum_lemma (n:nat)
 = if n = 0 then ()
   else sum_lemma (n - 1)
 #pop-options
-//SNIPPET_END: sum$
+//end sum$
 
 
-//SNIPPET_START: isum$
+//isum$
 #push-options "--z3cliopt 'smt.arith.nl=false'"
 noextract
 
@@ -159,7 +163,7 @@ ensures pure ((n * (n + 1) / 2) == z)
         (c < n)
     )
     invariant b.
-    exists* c a.
+    exists* (c a : nat).
         R.pts_to ctr c **
         R.pts_to acc a **
         pure (c <= n /\
@@ -174,16 +178,15 @@ ensures pure ((n * (n + 1) / 2) == z)
     sum_lemma n; //call an F* lemma inside Pulse
     !acc;
 }
-
 #pop-options
-//SNIPPET_END: isum$
+//end isum$
 
 noextract
 //fib$
 let rec fib (n:nat) : nat =
   if n <= 1 then 1
   else fib (n - 1) + fib (n - 2)
-//fib$
+//end fib$
 
 noextract
  //fib_rec$
@@ -198,7 +201,7 @@ ensures
           snd v == fib n 
         )
 {
-  if ((n = 1))
+  if (n = 1)
   {
     //type inference in Pulse doesn't work well here:
     //it picks (1, 1) to have type (int & int)
@@ -212,9 +215,9 @@ ensures
     out := (snd v, fst v + snd v);
   }
 }
+//end fib_rec$
 
-
- //fib_loop$
+//fib_loop$
 fn fib_loop (k:pos)
   requires emp
   returns r:nat
@@ -228,7 +231,7 @@ fn fib_loop (k:pos)
     (c < k)
   )
   invariant b . 
-    exists* vi vj vctr. 
+    exists* (vi vj vctr : nat).
         R.pts_to i vi **
         R.pts_to j vj **
         R.pts_to ctr vctr **
@@ -249,8 +252,7 @@ fn fib_loop (k:pos)
   };
   !j
 }
-
-
+//end fib_loop$
 
 noextract
 let rec fib_mono (n:nat) (m:nat { m <= n})
@@ -265,7 +267,7 @@ module U32 = FStar.UInt32
 
 
 noextract
-
+//fibonacci32$
 fn fibonacci32 (k:U32.t)
   requires pure (0ul < k /\ fib (v k) < pow2 32)
   returns r:U32.t
@@ -299,4 +301,4 @@ fn fibonacci32 (k:U32.t)
   };
   !j
 }
-
+//end fibonacci32$

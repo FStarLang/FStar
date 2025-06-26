@@ -134,7 +134,7 @@ fn majority
   let vcand = !cand;
   // a couple of optimizations
   if (vk = 0sz) {
-    None #a
+    None
   } else if (len <^ 2sz *^ vk) {
     Some vcand
   } else {
@@ -170,7 +170,7 @@ fn majority
     if (len <^ 2sz *^ vk) {
       Some vcand
     } else {
-      None #a
+      None
     }
   }
 }

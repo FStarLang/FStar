@@ -16,10 +16,10 @@
 
 module Pulse2Rust.Env
 
-open FStarC.Compiler
-open FStarC.Compiler.Util
-open FStarC.Compiler.List
-open FStarC.Compiler.Effect
+open FStarC
+open FStarC.Util
+open FStarC.List
+open FStarC.Effect
 
 open Pulse2Rust.Rust.Syntax
 
@@ -42,7 +42,7 @@ type reachable_defs = RBSet.t string
 
 val reachable_defs_to_string (d:reachable_defs) : string
 
-type dict = smap (list string & list UEnv.binding & S.mlmodule)
+type dict = SMap.t (list string & list UEnv.mlbinding & S.mlmodulebody)
 
 type env = {
   external_libs : list string;

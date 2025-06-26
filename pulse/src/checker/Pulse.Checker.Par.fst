@@ -24,8 +24,6 @@ open Pulse.Checker.Prover
 open Pulse.Checker.Comp
 
 module T = FStar.Tactics.V2
-module P = Pulse.Syntax.Printer
-module RT = FStar.Reflection.Typing
 module MT = Pulse.Typing.Metatheory
 
 #push-options "--z3rlimit_factor 4 --split_queries no"

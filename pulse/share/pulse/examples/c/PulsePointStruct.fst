@@ -37,8 +37,6 @@ ensures
 }
 
 
-#set-options "--print_implicits"
-
 inline_for_extraction noextract
 let _x = norm Pulse.C.Typestring.norm_typestring (Pulse.C.Typestring.mk_string_t "x")
 
@@ -70,7 +68,7 @@ requires
       exists (vx vy: U32.t) . struct_get_field v "x" === mk_scalar vx /\ struct_get_field v "y" === mk_scalar vy
     ))
 ensures
-    (exists* v' . p `pts_to` v' ** pure (
+    (exists* (v' : erased _) . p `pts_to` v' ** pure (
       struct_get_field v' "x" === struct_get_field v "y" /\
       struct_get_field v' "y" === struct_get_field v "x"
     ))

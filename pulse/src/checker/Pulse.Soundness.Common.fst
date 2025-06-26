@@ -17,7 +17,6 @@
 module Pulse.Soundness.Common
 module RT = FStar.Reflection.Typing
 module R = FStar.Reflection.V2
-module L = FStar.List.Tot
 module T = FStar.Tactics.V2
 open FStar.List.Tot
 open Pulse.Syntax
@@ -122,6 +121,7 @@ let mk_t_abs_tot (g:env)
     in
     RT.close_open_inverse body x;
     d
+#pop-options
 
 let mk_t_abs (g:env)
              (#u:universe)

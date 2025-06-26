@@ -22,7 +22,7 @@ open Pulse.Lib.Array
 
 module SZ = FStar.SizeT
 
- //readi$
+//readi$
 fn read_i
   (#[@@@ Rust_generics_bounds ["Copy"]] t:Type)
   (arr:array t)
@@ -35,15 +35,16 @@ fn read_i
 {
   arr.(i)
 }
+//end readi$
 
-
- //writei$
+//writei$
 fn write_i (#t:Type) (arr:array t) (#s:erased (Seq.seq t)) (x:t) (i:SZ.t { SZ.v i < Seq.length s })
   requires pts_to arr s
   ensures pts_to arr (Seq.upd s (SZ.v i) x)
 {
   arr.(i) <- x
 }
+//end writei$
 
 
 //writeipbegin$
@@ -62,6 +63,13 @@ module A = Pulse.Lib.Array
 module R = Pulse.Lib.Reference
 open FStar.SizeT
 
+#push-options "--debug prover,pulse.checker"
+fn incr (y:ref int)
+requires R.pts_to y 'v
+ensures R.pts_to y ('v + 2)
+{
+  y := !y + 2;
+}
 
 //comparesigbegin$
 fn compare
@@ -87,9 +95,7 @@ fn compare
   while (
     let vi = !i;
     if (vi <^ l) {
-      let v1 = a1.(vi);
-      let v2 = a2.(vi);
-      (v1 = v2)
+      (a1.(vi) = a2.(vi))
     } else {
       false
     }
@@ -106,12 +112,9 @@ fn compare
     )
   )
   {
-    let vi = !i; 
-    i := vi +^ 1sz
+    i := !i +^ 1sz
   };
-  let vi = !i;
-  let res = vi = l;
-  res
+  (!i = l);
 }
 //compareimplend$
 
@@ -134,8 +137,7 @@ fn copy
 {
   let mut i = 0sz;
   while (
-    let vi = !i;
-    (vi <^ l)
+    (!i <^ l)
   )
   invariant b.
   exists* vi s1. ( 
@@ -151,12 +153,11 @@ fn copy
   )
   {
     let vi = !i;
-    let v = a2.(vi);
-    a1.(vi) <- v;
+    a1.(vi) <- a2.(vi);
     i := vi +^ 1sz
   }
 }
-
+//end copy$
 
 
 //copy2sigbegin$
@@ -221,7 +222,7 @@ fn compare_stack_arrays ()
   let b = compare a1 a2 2sz;
   assert (pure b)
 }
-
+//end compare_stack_arrays$
 
 //ret_stack_array$
 [@@ expect_failure]
@@ -268,3 +269,15 @@ fn copy_app ([@@@ Rust_mut_binder] v:V.vec int)
   V.to_vec_pts_to v
   // v, s |- V.pts_to v (Seq.create 2 0) ** ...
 }
+//end copyuse$
+
+fn test_match_head (x:ref (option int))
+requires R.pts_to x 'v
+returns i:int
+ensures R.pts_to x 'v ** pure (Some? 'v ==> i == Some?.v 'v)
+{
+  match !x {
+  Some v -> { v }
+  None -> { 0 }
+  }
+} 

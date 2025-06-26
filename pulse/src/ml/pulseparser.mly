@@ -9,9 +9,9 @@ open Fstarcompiler
 open Prims
 open FStar_Pervasives
 open FStarC_Errors
-open FStarC_Compiler_List
-open FStarC_Compiler_Util
-open FStarC_Compiler_Range
+open FStarC_List
+open FStarC_Util
+open FStarC_Range
 open FStarC_Options
 (* TODO : these files should be deprecated and removed *)
 open FStarC_Syntax_Syntax
@@ -44,10 +44,6 @@ let as_aqual (q:unit option) =
 
 let pos_of_lexpos (p:Lexing.position) = FStarC_Parser_Util.pos_of_lexpos p
 
-let default_return =
-    gen dummyRange,
-    mk_term (Var (lid_of_ids [(mk_ident("unit", dummyRange))])) dummyRange Un
-
 let with_computation_tag (c:PulseSyntaxExtension_Sugar.computation_type) t =
   match t with
   | None -> c
@@ -70,9 +66,10 @@ let add_decorations decors ds =
 %}
 
 /* pulse specific tokens; rest are inherited from F* */
-%token MUT FN INVARIANT WHILE REF PARALLEL REWRITE FOLD EACH
+%token MUT FN INVARIANT WHILE REF PARALLEL REWRITE FOLD EACH NOREWRITE
 %token GHOST ATOMIC
 %token WITH_INVS OPENS  SHOW_PROOF_STATE
+%token PRESERVES
 
 %start pulseDeclEOF
 %start peekFnId
@@ -90,9 +87,7 @@ maybeRec:
 
 /* This is to just peek at the name of the top-level definition */
 peekFnId:
-  | q=option(qual) FN maybeRec id=lident
-      { FStarC_Ident.string_of_id id }
-  | q=option(qual) VAL FN id=lident
+  | q=option(qual) FN maybeRec id=lidentOrOperator
       { FStarC_Ident.string_of_id id }
 
 qual:
@@ -118,7 +113,7 @@ declBody:
 
 pulseDecl:
   | q=qualOptFn (* workaround what seems to be a menhir bug *)
-    isRec=maybeRec lid=lident bs=pulseBinderList
+    isRec=maybeRec lid=lidentOrOperator bs=pulseBinderList
     rest=pulseAscriptionMaybeBody
     {
       let decors = [] in
@@ -169,15 +164,6 @@ pulseDeclEOF:
     {
       p
     }
-  | q=option(qual)
-    VAL FN lid=lident bs=pulseBinderList
-    ascription=pulseComputationType
-    EOF
-    {
-      let open PulseSyntaxExtension_Sugar in
-      let ascription = with_computation_tag ascription q in
-      FnDecl (mk_fn_decl lid (List.flatten bs) (Inl ascription) [] (rr $loc))
-    }
 
 pulseBinderList:
   /* |  { [] } We don't yet support nullary functions */
@@ -185,7 +171,7 @@ pulseBinderList:
     {  bs }
 
 localFnDefn:
-  | q=option(qual) FN lid=lident
+  | q=option(qual) FN lid=lidentOrOperator
     bs=pulseBinderList
     body=fnBody
     {
@@ -203,20 +189,32 @@ fnBody:
   | COLON typ=option(appTerm) EQUALS lambda=pulseLambda
     { Inr (lambda, typ) }
 
+ret_ty:
+  | r=tmNoEqNoRecordWith(appTermNoRecordExp) {r}
+
+returns:
+  | RETURNS i=lidentOrUnderscore COLON r=ret_ty { PulseSyntaxExtension_Sugar.Returns (Some i, r) }
+  | RETURNS r=ret_ty { PulseSyntaxExtension_Sugar.Returns (None, r) }
+
+pulseComputationAnnot1_:
+  | PRESERVES t=pulseSLProp { PulseSyntaxExtension_Sugar.Preserves t }
+  | REQUIRES t=pulseSLProp { PulseSyntaxExtension_Sugar.Requires t }
+  | ENSURES t=pulseSLProp { PulseSyntaxExtension_Sugar.Ensures t }
+  | r=returns {r}
+  | OPENS inv=appTermNoRecordExp { PulseSyntaxExtension_Sugar.Opens inv }
+
+pulseComputationAnnot1:
+  | a=pulseComputationAnnot1_ { (a, rr $loc) }
+
 pulseComputationType:
-  | REQUIRES t=pulseSLProp
-    ret=option(RETURNS i=lidentOrUnderscore COLON r=term { (i, r) })
-    ENSURES t2=pulseSLProp
-    maybe_opens=option(OPENS inv=appTermNoRecordExp { inv })
+  | annots=list(pulseComputationAnnot1)
     {
-        let i, r =
-          match ret with
-          | Some (i, r) -> i, r
-          | None -> default_return
-        in
-        PulseSyntaxExtension_Sugar.mk_comp ST t i r t2 maybe_opens (rr $loc)
+        PulseSyntaxExtension_Sugar.mk_comp ST annots (rr $loc)
     }
 
+optional_norewrite:
+  | NOREWRITE { true }
+  | { false }
 
 pulseStmtNoSeq:
   | OPEN i=quident
@@ -235,10 +233,8 @@ pulseStmtNoSeq:
     }
   | lhs=appTermNoRecordExp COLON_EQUALS a=noSeqTerm
     { PulseSyntaxExtension_Sugar.mk_assignment lhs a }
-  | LET q=option(mutOrRefQualifier) p=pulsePattern typOpt=option(preceded(COLON, appTerm)) EQUALS LBRACK_BAR v=noSeqTerm SEMICOLON n=noSeqTerm BAR_RBRACK
-    { PulseSyntaxExtension_Sugar.mk_let_binding q p typOpt (Some (Array_initializer { init=v; len=n })) }
-  | LET q=option(mutOrRefQualifier) p=pulsePattern typOpt=option(preceded(COLON, appTerm)) EQUALS init=bindableTerm
-    { PulseSyntaxExtension_Sugar.mk_let_binding q p typOpt (Some init) }
+  | norw=optional_norewrite LET q=option(mutOrRefQualifier) p=pulsePattern typOpt=option(preceded(COLON, appTerm)) EQUALS init=bindableTerm
+    { PulseSyntaxExtension_Sugar.mk_let_binding norw q p typOpt (Some init) }
   | s=pulseBindableTerm
     { s }
   | WHILE LPAREN tm=pulseStmt RPAREN INVARIANT i=lident DOT v=pulseSLProp LBRACE body=pulseStmt RBRACE
@@ -270,7 +266,7 @@ pulseStmtNoSeq:
     {
       let id, fndefn = f in
       let pat = mk_pattern (PatVar (id, None, [])) (rr $loc) in
-      PulseSyntaxExtension_Sugar.mk_let_binding None pat None (Some (Lambda_initializer fndefn))
+      PulseSyntaxExtension_Sugar.mk_let_binding false None pat None (Some (Lambda_initializer fndefn))
     }
   | p=ifStmt { p }
   | p=matchStmt { p }
@@ -284,6 +280,7 @@ matchStmt:
 bindableTerm:
   | p=pulseBindableTerm { let p = PulseSyntaxExtension_Sugar.mk_stmt p (rr $loc) in Stmt_initializer p }
   | s=noSeqTerm { Default_initializer s }
+  | LBRACK_BAR v=noSeqTerm SEMICOLON n=noSeqTerm BAR_RBRACK { Array_initializer { init=v; len=n } }
   
 pulseBindableTerm:
   | WITH_INVS names=nonempty_list(atomicTerm) r=option(ensuresSLProp) LBRACE body=pulseStmt RBRACE
@@ -322,12 +319,11 @@ ensuresSLProp:
     { ret, s, maybe_opens }
 
 pulseMatchBranch:
-  | pat=pulsePattern RARROW LBRACE e=pulseStmt RBRACE
-    { (pat, e) }
+  | norw=optional_norewrite pat=pulsePattern RARROW LBRACE e=pulseStmt RBRACE
+    { (norw, pat, e) }
 
 pulsePattern:
   | p=tuplePattern { p }
-  // TODO: extend with sugar for tuples, lists, etc
 
 pulseStmt:
   | s=pulseStmtNoSeq
@@ -369,4 +365,4 @@ typX(X,Y):
 
 pulseSLProp:
   | p=typX(tmEqWith(appTermNoRecordExp), tmEqWith(appTermNoRecordExp))
-    { PulseSyntaxExtension_Sugar.(as_slprop (SLPropTerm p) (rr $loc)) }
+    { p }

@@ -17,12 +17,10 @@
 module PulseTutorial.ParallelIncrement
 #lang-pulse
 open Pulse.Lib.Pervasives
-module U32 = FStar.UInt32
 module L = Pulse.Lib.SpinLock
 module GR = Pulse.Lib.GhostReference
-module R = Pulse.Lib.Reference
 
- //par$
+//par$
 fn par (#pf #pg #qf #qg:_)
        (f: unit -> stt unit pf (fun _ -> qf))
        (g: unit -> stt unit pg (fun _ -> qg))
@@ -36,7 +34,7 @@ ensures qf ** qg
   { g () };
   ()
 }
-
+//end par$
 
 
 fn incr2 (x y:ref int)
@@ -56,7 +54,6 @@ ensures pts_to x ('i + 1) ** pts_to y ('j + 1)
 
 
 [@@expect_failure]
-
 fn attempt0 (x:ref int)
 requires pts_to x 'i
 ensures pts_to x ('i + 2)
@@ -72,7 +69,7 @@ ensures pts_to x ('i + 2)
 }
 
 
- //attempt$
+//attempt$
 fn attempt (x:ref int)
 requires pts_to x 'i
 ensures exists* v. pts_to x v
@@ -87,13 +84,13 @@ ensures exists* v. pts_to x v
     x := v + 1;
     L.release l
   };
-  L.share2 l;
+  L.share l;
   par incr incr;
-  L.gather2 l;
+  L.gather l;
   L.acquire l;
   L.free l
 }
-
+//end attempt$
 
 //lock_inv$
 let contributions (left right: GR.ref int) (i v:int) : timeless_slprop =
@@ -106,9 +103,9 @@ let lock_inv (x:ref int) (init:int) (left right:GR.ref int) : timeless_slprop =
   exists* v. 
     pts_to x v **
     contributions left right init v
-//lock_inv$
+//end lock_inv$
 
- //incr_left$
+//incr_left$
 fn incr_left (x:ref int)
              (#p:perm)
              (#left:GR.ref int)
@@ -130,9 +127,9 @@ ensures L.lock_alive lock #p (lock_inv x i left right) ** GR.pts_to left #0.5R (
   fold lock_inv;
   L.release lock
 }
+//end incr_left$
 
-
- //incr_right$
+//incr_right$
 fn incr_right (x:ref int)
               (#p:perm)
               (#left:GR.ref int)
@@ -154,9 +151,9 @@ ensures L.lock_alive lock #p (lock_inv x i left right) ** GR.pts_to right #0.5R 
   fold (lock_inv x i left right);
   L.release lock
 }
+//end incr_right$
 
-
- //add2$
+//add2$
 fn add2 (x:ref int)
 requires pts_to x 'i
 ensures  pts_to x ('i + 2)
@@ -168,10 +165,10 @@ ensures  pts_to x ('i + 2)
   fold (contributions left right 'i 'i);
   fold (lock_inv x 'i left right);
   let lock = L.new_lock (lock_inv x 'i left right);
-  L.share2 lock;
+  L.share lock;
   par (fun _ -> incr_left x lock)
       (fun _ -> incr_right x lock);
-  L.gather2 lock;
+  L.gather lock;
   L.acquire lock;
   L.free lock;
   unfold lock_inv;
@@ -181,7 +178,7 @@ ensures  pts_to x ('i + 2)
   GR.free left;
   GR.free right;
 }
-
+//end add2$
 
 /////////////////////////////////////////////////////////////////////////
 // A bit more generic, with ghost functions
@@ -190,7 +187,7 @@ ensures  pts_to x ('i + 2)
 
 //Parameterize incr by the ghost steps it needs to take
 //give it an abstract spec in terms of some call-provided aspec
- //incr$
+//incr$
 fn incr (x: ref int)
         (#p:perm)
         (#refine #aspec: int -> slprop)
@@ -211,11 +208,11 @@ ensures L.lock_alive l #p (exists* v. pts_to x v ** refine v) ** aspec ('i + 1)
     ghost_steps vx 'i;
     L.release l;
 }
-
+//end incr$
 
 //At the call-site, we instantiate incr twice, with different
 //ghost steps
- //add2_v2$
+//add2_v2$
 fn add2_v2 (x: ref int)
 requires pts_to x 'i
 ensures pts_to x ('i + 2)
@@ -263,10 +260,10 @@ ensures pts_to x ('i + 2)
         fold (contributions left right 'i (v + 1));
       }
     };
-    L.share2 lock;
+    L.share lock;
     par (fun _ -> incr x lock (step left true))
         (fun _ -> incr x lock (step right false));
-    L.gather2 lock;
+    L.gather lock;
     L.acquire lock;
     L.free lock;
     unfold (contributions left right 'i);
@@ -275,7 +272,7 @@ ensures pts_to x ('i + 2)
     GR.free left;
     GR.free right;
 }
-
+//end add2_v2$
 
 //Note, rather than using two ghost references and duplicating code
 //monoids and use just a single piece of ghost state. But, that's for another
@@ -301,13 +298,13 @@ val cas (r:ref int) (u v:int) (#i:erased int)
     (fun b ->
       cond b (pts_to r v ** pure (reveal i == u)) 
              (pts_to r i))
-//atomic_primitives$
+//end atomic_primitives$
 
 //This provides a way to allocate an invariant
 //and then discard it
 module C = Pulse.Lib.CancellableInvariant
 
- //incr_atomic_spec$
+//incr_atomic_spec$
 fn incr_atomic
         (x: ref int)
         (#p:perm)
@@ -319,15 +316,16 @@ fn incr_atomic
                   (fun _ -> refine (v + 1) ** aspec (vq + 1) ** pts_to x (v + 1))))
 requires inv (C.iname_of c) (C.cinv_vp c (exists* v. pts_to x v ** refine v)) ** aspec 'i ** C.active c p
 ensures inv (C.iname_of c) (C.cinv_vp c (exists* v. pts_to x v ** refine v)) ** aspec ('i + 1) ** C.active c p
+//end incr_atomic_spec$
 //incr_atomic_body$
 {
   //incr_atomic_body_read$
   atomic
   fn read ()
   requires inv (C.iname_of c) (C.cinv_vp c (exists* v. pts_to x v ** refine v)) ** C.active c p ** later_credit 1
+  opens [C.iname_of c]
   returns v:int
   ensures inv (C.iname_of c) (C.cinv_vp c (exists* v. pts_to x v ** refine v)) ** C.active c p
-  opens [C.iname_of c]
   {
     with_invariants (C.iname_of c)
     {
@@ -339,7 +337,7 @@ ensures inv (C.iname_of c) (C.cinv_vp c (exists* v. pts_to x v ** refine v)) ** 
         v
     }
   };
-  //incr_atomic_body_read$
+  //end incr_atomic_body_read$
   //incr_atomic_body_loop$
   let mut continue = true;
   fold (cond true (aspec 'i) (aspec ('i + 1)));
@@ -391,13 +389,13 @@ ensures inv (C.iname_of c) (C.cinv_vp c (exists* v. pts_to x v ** refine v)) ** 
       };
     continue := next
   };
-  //incr_atomic_body_loop$
+  //end incr_atomic_body_loop$
   unfold cond;
 }
+//end incr_atomic_body$
 
 
-
- //add2_v3$
+//add2_v3$
 fn add2_v3 (x: ref int)
 requires pts_to x 'i
 ensures pts_to x ('i + 2)
@@ -446,13 +444,13 @@ ensures pts_to x ('i + 2)
         fold (contributions left right 'i (v + 1));
       }
     };
-    C.share2 c;
+    C.share c;
     with pred. assert (inv (C.iname_of c) (C.cinv_vp c (exists* v. pts_to x v ** pred v)));
     dup_inv (C.iname_of c) (C.cinv_vp c (exists* v. pts_to x v ** pred v));
     par (fun _ -> incr_atomic x c (step left true))
         (fun _ -> incr_atomic x c (step right false));
     
-    C.gather2 c;
+    C.gather c;
     later_credit_buy 1;
     C.cancel c;
     unfold contributions;
@@ -462,6 +460,7 @@ ensures pts_to x ('i + 2)
     GR.free right;
     drop_ (inv _ _)
 }
+//end add2_v3$
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -605,7 +604,7 @@ fn incr_pcm_t (r:ref int) (ghost_r:ghost_pcm_ref pcm) (l:L.lock) (t1:bool) (#n:i
     fold lock_inv_ghost;
     fold lock_inv_pcm;
     L.release l;
-    fold (t1_perm ghost_r (add_one n) t1)
+    fold (t1_perm ghost_r (add_one n) true);
   } else {
     rewrite (t1_perm ghost_r n t1) as
             (ghost_pcm_pts_to ghost_r (None, half n));
@@ -623,7 +622,7 @@ fn incr_pcm_t (r:ref int) (ghost_r:ghost_pcm_ref pcm) (l:L.lock) (t1:bool) (#n:i
     fold lock_inv_ghost;
     fold lock_inv_pcm;
     L.release l;
-    fold (t1_perm ghost_r (add_one n) t1)
+    fold (t1_perm ghost_r (add_one n) false)
   }
 }
 
@@ -649,7 +648,7 @@ fn incr_pcm (r:ref int) (#n:erased int)
 
   let l = L.new_lock (lock_inv_pcm r ghost_r);
   
-  L.share2 l;
+  L.share l;
 
   parallel
     requires L.lock_alive l #0.5R (lock_inv_pcm r ghost_r) **
@@ -663,7 +662,7 @@ fn incr_pcm (r:ref int) (#n:erased int)
     { incr_pcm_t r ghost_r l true }
     { incr_pcm_t r ghost_r l false };
 
-  L.gather2 l;
+  L.gather l;
   L.acquire l;
   unfold lock_inv_pcm;
   unfold lock_inv_ghost;
@@ -755,7 +754,7 @@ fn incr_pcm_abstract (r:ref int)
   share ghost_r;
   fold lock_inv_ghost;
   let l = L.new_lock (exists* v. pts_to r v ** lock_inv_ghost ghost_r v);
-  L.share2 l;
+  L.share l;
 
   parallel
     requires L.lock_alive l #0.5R (exists* v. pts_to r v ** lock_inv_ghost ghost_r v) **
@@ -771,11 +770,10 @@ fn incr_pcm_abstract (r:ref int)
     { incr_pcm_t_abstract r l t1 }
     { incr_pcm_t_abstract r l t2 };
 
-  L.gather2 l;
+  L.gather l;
   L.acquire l;
   unfold lock_inv_ghost;
   gather ghost_r;
   L.free l;
   drop_ (ghost_pcm_pts_to ghost_r _)
 }
-

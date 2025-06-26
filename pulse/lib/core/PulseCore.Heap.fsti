@@ -16,7 +16,6 @@
 module PulseCore.Heap
 open FStar.Ghost
 open FStar.PCM
-module Frac = PulseCore.FractionalPermission
 
 /// This module defines the behavior of a structured heap where each memory cell is governed by
 /// a partial commutative monoid. This PCM structure is reused for the entire heap as it is possible

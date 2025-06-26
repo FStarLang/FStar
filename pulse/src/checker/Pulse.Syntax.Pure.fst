@@ -94,7 +94,6 @@ let tm_pureabs (ppname:R.ppname_t) (ty : term) (q : option qualifier) (body:term
   }
   in
   let r = pack (Tv_Abs b body) in
-  assume (~(R.Tv_Unknown? (R.inspect_ln r))); // NamedView API doesn't ensure this, it should
   set_range r rng
 
 let tm_arrow (b:binder) (q:option qualifier) (c:comp) : term =
@@ -145,6 +144,7 @@ let is_fvar (t:term) : option (R.name & list universe) =
 
 let readback_qual = function
   | R.Q_Implicit -> Some Implicit
+  | R.Q_Meta t -> Some (Meta t)
   | _ -> None
 
 let is_pure_app (t:term) : option (term & option qualifier & term) =
@@ -177,7 +177,6 @@ let is_arrow (t:term) : option (binder & option qualifier & comp) =
   | R.Tv_Arrow b c ->
     let {ppname;qual;sort} = R.inspect_binder b in
     begin match qual with
-          | R.Q_Meta _ -> None
           | _ ->
             let q = readback_qual qual in
             let c_view = R.inspect_comp c in

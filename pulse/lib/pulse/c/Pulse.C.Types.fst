@@ -1,4 +1,5 @@
 module Pulse.C.Types
+#lang-pulse
 
 include Pulse.C.Types.Scalar
 include Pulse.C.Types.Struct

@@ -16,18 +16,14 @@
 
 module PulseSyntaxExtension.Env
 open FStarC
-open FStarC.Compiler.Effect
+open FStarC.Effect
 // module Sugar = PulseSugar
-module SW = PulseSyntaxExtension.SyntaxWrapper
 module A = FStarC.Parser.AST
 module D = FStarC.Syntax.DsEnv
 module S = FStarC.Syntax.Syntax
-module L = FStarC.Compiler.List
-module U = FStarC.Syntax.Util
+module L = FStarC.List
 module SS = FStarC.Syntax.Subst
-module R = FStarC.Compiler.Range
-module BU = FStarC.Compiler.Util
-module P =  FStarC.Syntax.Print
+module BU = FStarC.Util
 module ToSyntax = FStarC.ToSyntax.ToSyntax
 open FStarC.Class.Show
 open FStarC.Class.HasRange
@@ -35,8 +31,9 @@ open FStarC.Class.Monad
 open FStarC.Ident
 open FStar.List.Tot
 open PulseSyntaxExtension.Err
+open FStarC.Syntax.Print {} // instances
 
-let r_ = FStarC.Compiler.Range.dummyRange
+let r_ = FStarC.Range.dummyRange
 #push-options "--warn_error -272" //intentional top-level effects
 let admit_lid = Ident.lid_of_path ["Prims"; "admit"] r_
 let pulse_lib_core_lid l = Ident.lid_of_path (["Pulse"; "Lib"; "Core"]@[l]) r_
@@ -145,15 +142,26 @@ and free_vars_binders (env:env_t) (bs:Sugar.binders)
 
 let free_vars_slprop (env:env_t) (t:Sugar.slprop) =
   let open PulseSyntaxExtension.Sugar in
-  match t.v with
-  | SLPropTerm t -> free_vars_term env t
+  free_vars_term env t
 
-let free_vars_comp (env:env_t) (c:Sugar.computation_type)
+let free_vars_annot (env:env_t) (a:Sugar.computation_annot) =
+  let open PulseSyntaxExtension.Sugar in
+  match fst a with
+  | Requires t -> free_vars_slprop env t
+  | Ensures t -> free_vars_slprop env t
+  | Returns (None, t) -> free_vars_term env t
+  | Returns (_, t) -> free_vars_term env t
+  | Opens t -> free_vars_term env t
+
+let free_vars_comp (env:env_t) (c:Sugar.parsed_annots)
   : list ident
   = let ids =
         free_vars_slprop env c.precondition @
         free_vars_term env c.return_type @
-        free_vars_slprop (fst (push_bv env c.return_name)) c.postcondition
+        free_vars_slprop (fst (push_bv env c.return_name)) c.postcondition @
+        (match c.opens with
+         | Some o -> free_vars_term (fst (push_bv env c.return_name)) o
+         | None -> [])
     in
     (* NOTE: We use this particular dedup function since it favors
     occurrences on the left, so `dedup [1;2;1]` is `[1;2]`  instaed of `[2;1]`.

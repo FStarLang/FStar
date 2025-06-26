@@ -2,7 +2,7 @@ open Fstarcompiler
 open Lexing
 open FStar_Pervasives_Native
 open FStar_Pervasives
-open FStarC_Compiler_Range
+open FStarC_Range
 open FStarC_Parser_ParseIt
 module FP = FStarC_Parser_Parse
 module PP = Pulse_FStar_Parser
@@ -24,6 +24,8 @@ let rewrite_token (tok:FP.token)
     | IDENT "with_invariants" -> PP.WITH_INVS
     | IDENT "opens" -> PP.OPENS
     | IDENT "show_proof_state" -> PP.SHOW_PROOF_STATE
+    | IDENT "norewrite" -> PP.NOREWRITE
+    | IDENT "preserves" -> PP.PRESERVES
     (* the rest are just copied from FStarC_Parser_Parse *)
     | IDENT s -> PP.IDENT s
     | AMP -> PP.AMP
@@ -226,11 +228,11 @@ let parse_decl (s:string) (r:range) =
   with
   | e ->
     let pos = FStarC_Parser_Util.pos_of_lexpos (lexbuf.cur_p) in
-    let r = FStarC_Compiler_Range.mk_range fn pos pos in
-    Inr (Some ("Syntax error", r))
+    let r = FStarC_Range.mk_range fn pos pos in
+    Inr (Some (FStarC_Errors_Msg.mkmsg "Syntax error", r))
 
  
-let parse_peek_id (s:string) (r:range) : (string, string * range) either =
+let parse_peek_id (s:string) (r:range) : (string, FStarC_Pprint.document list * range) either =
   (* print_string ("About to parse <" ^ s ^ ">"); *)
   let fn = file_of_range r in
   let lexbuf, lexer = lexbuf_and_lexer s r in
@@ -240,13 +242,8 @@ let parse_peek_id (s:string) (r:range) : (string, string * range) either =
   with
   | e ->
     let pos = FStarC_Parser_Util.pos_of_lexpos (lexbuf.cur_p) in
-    let r = FStarC_Compiler_Range.mk_range fn pos pos in
-    let msg = FStarC_Compiler_Util.format3 
-         "Failed to peek id, Syntax error @ %s\n%s\n%s\n"
-          (FStarC_Compiler_Range.string_of_range r)
-          (Printexc.to_string e)
-          (Printexc.get_backtrace()) in
-    Inr (msg, r)
+    let r = FStarC_Range.mk_range fn pos pos in
+    Inr (FStarC_Errors_Msg.mkmsg "Syntax error", r)
 
 
 let parse_lang (s:string) (r:range) =
@@ -263,5 +260,5 @@ let parse_lang (s:string) (r:range) =
   with
   | e ->
     let pos = FStarC_Parser_Util.pos_of_lexpos (lexbuf.cur_p) in
-    let r = FStarC_Compiler_Range.mk_range fn pos pos in
-    Inr (Some ("#lang-pulse: Syntax error", r))
+    let r = FStarC_Range.mk_range fn pos pos in
+    Inr (Some (FStarC_Errors_Msg.mkmsg "#lang-pulse: Syntax error", r))

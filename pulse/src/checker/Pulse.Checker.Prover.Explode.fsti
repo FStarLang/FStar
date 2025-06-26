@@ -23,4 +23,4 @@ module T = FStar.Tactics
 its individual components. *)
 val explode
   (#preamble:_) (pst:prover_state preamble)
-: T.Tac (pst':prover_state preamble {pst' `pst_extends` pst})
+: T.Tac (list (list Pprint.document) & pst':prover_state preamble {pst' `pst_extends` pst})

@@ -43,11 +43,15 @@ open Pulse.Lib.Pervasives
 module U32 = FStar.UInt32
 module U8 = FStar.UInt8
 module SZ = FStar.SizeT
-module A = Pulse.Lib.Array
+module V = Pulse.Lib.Vec
 module U64 = FStar.UInt64
 module Cast = FStar.Int.Cast
 open Pulse.Lib.BoundedIntegers
-#push-options "--fuel 0 --ifuel 0"
+module B = Pulse.Lib.Box
+open Pulse.Lib.Box { box, (:=), (!) }
+open Pulse.Lib.Vec { op_Array_Access, op_Array_Assignment }
+
+#push-options "--fuel 0 --ifuel 0 --warn_error @288"
 
 (**********************************************************)
 (* Pure specification *) 
@@ -131,11 +135,11 @@ let aggregate_hashes (h0 h1: hash_value_t)
 assume
 val blake2b:
      nn:SZ.t{1 ≤ SZ.v nn ∧ SZ.v nn ≤ 64}
-  -> output: A.array U8.t { A.length output == SZ.v nn}
+  -> output: V.vec U8.t { V.length output == SZ.v nn}
   -> ll: SZ.t { SZ.v ll <= blake2_max_input_length}
-  -> d:A.array U8.t { SZ.v ll ≤ A.length d}
+  -> d:V.vec U8.t { SZ.v ll ≤ V.length d}
   -> kk: SZ.t { kk == 0sz }                        //We do not use blake2 in keyed mode
-  -> _dummy: A.array U8.t // this really should be a NULL, but krml doesn't extract Steel's null pointers yet
+  -> _dummy: V.vec U8.t // this really should be a NULL, but krml doesn't extract Steel's null pointers yet
   -> #sout:Ghost.erased (Seq.seq U8.t)
   -> #p:perm
   -> #sd:Ghost.erased (Seq.seq U8.t) { Seq.length sd == SZ.v ll}
@@ -149,10 +153,10 @@ val blake2b:
 (* Pulse *)
 
 // A buffer with the input to be hashed
-let hashable_buffer = b:A.array U8.t { A.length b ≤ blake2_max_input_length }
+let hashable_buffer = b:V.vec U8.t { V.length b ≤ blake2_max_input_length }
 
 // A buffer holding the raw hash value
-let hash_value_buf  = x:A.array U8.t { A.length x == 32 ∧ A.is_full_array x }
+let hash_value_buf  = x:V.vec U8.t { V.length x == 32 ∧ V.is_full_vec x }
 
 // The main data structure: ha_core
 // This contains a buffer with the raw hash value
@@ -160,7 +164,7 @@ let hash_value_buf  = x:A.array U8.t { A.length x == 32 ∧ A.is_full_array x }
 noeq
 type ha_core = {
   acc: hash_value_buf;
-  ctr: ref U32.t;
+  ctr: box U32.t;
 }
 
 // The representation predicate for ha_core ties it to a hash_value_t
@@ -169,9 +173,9 @@ type ha_core = {
 // and the code has to take care of potential overflow. So, at the spec
 // level we connect the nat and the concrete counter, indicating that 
 // the counter hasn't overflowed yet.
-let ha_val_core (core:ha_core) (h:hash_value_t) 
+let ha_val_core ([@@@mkey] core:ha_core) (h:hash_value_t) 
   : slprop
-  = A.pts_to core.acc (fst h) **
+  = V.pts_to core.acc (fst h) **
     (exists* (n:U32.t).
       pure (U32.v n == snd h) **
       pts_to core.ctr n)
@@ -183,7 +187,7 @@ let ha_val_core (core:ha_core) (h:hash_value_t)
 ghost
 fn fold_ha_val_core (#acc:Seq.lseq U8.t 32) (h:ha_core)
   requires
-   A.pts_to h.acc acc **
+   V.pts_to h.acc acc **
    pts_to h.ctr 'n
   ensures
    ha_val_core h (acc, U32.v 'n)
@@ -195,8 +199,8 @@ fn fold_ha_val_core (#acc:Seq.lseq U8.t 32) (h:ha_core)
 // This too is a bit of boilerplate. It use fold_ha_val_core, but also 
 // creates and returns a new ha_core value
 
-fn package_core (#vacc:erased (Seq.lseq U8.t 32)) (acc:hash_value_buf) (ctr:ref U32.t)
-  requires A.pts_to acc vacc **
+fn package_core (#vacc:erased (Seq.lseq U8.t 32)) (acc:hash_value_buf) (ctr:box U32.t)
+  requires V.pts_to acc vacc **
            pts_to ctr 'vctr 
   returns h:ha_core
   ensures ha_val_core h (reveal vacc, U32.v 'vctr) **
@@ -211,7 +215,7 @@ fn package_core (#vacc:erased (Seq.lseq U8.t 32)) (acc:hash_value_buf) (ctr:ref 
 
 // A quirk of the Blake spec is that we need a dummy buffer to pass to it
 // which could contain a key, but we're not using it in keyed mode
-let dummy_buf = x:A.larray U8.t 1 { A.is_full_array x }
+let dummy_buf = x:V.lvec U8.t 1 { V.is_full_vec x }
 
 // The full structure holds a core hash value, but also a temporary buffer
 // into which to hash new values, and the dummy buffer
@@ -225,10 +229,10 @@ type ha = {
 // Again, we play the same game as with ha_core
 
 // A representation predicate for ha, encapsulating an ha_val_core
-let ha_val (h:ha) (s:hash_value_t) =
+let ha_val ([@@@mkey] h : ha) (s:hash_value_t) =
   ha_val_core h.core s **
-  (exists* (s:Seq.seq U8.t). A.pts_to h.tmp s ** pure (Seq.length s == 32)) **
-  A.pts_to h.dummy (Seq.create 1 0uy)
+  (exists* (s:Seq.seq U8.t). V.pts_to h.tmp s ** pure (Seq.length s == 32)) **
+  V.pts_to h.dummy (Seq.create 1 0uy)
 
 // A ghost function to package up a ha_val predicate
 // If we were generating this automatically and inserting folds also in the prover,
@@ -238,10 +242,10 @@ let ha_val (h:ha) (s:hash_value_t) =
 ghost
 fn fold_ha_val (#acc #s:Seq.lseq U8.t 32) (h:ha)
   requires
-   A.pts_to h.core.acc acc **
+   V.pts_to h.core.acc acc **
    pts_to h.core.ctr 'n **
-   A.pts_to h.tmp s **
-   A.pts_to h.dummy (Seq.create 1 0uy)
+   V.pts_to h.tmp s **
+   V.pts_to h.dummy (Seq.create 1 0uy)
   ensures
    ha_val h (acc, U32.v 'n)
 {
@@ -257,11 +261,11 @@ fn fold_ha_val (#acc #s:Seq.lseq U8.t 32) (h:ha)
 fn package
   (#vacc:erased (Seq.lseq U8.t 32))
   (#vtmp:erased (Seq.lseq U8.t 32))
-  (acc:hash_value_buf) (ctr:ref U32.t) (tmp:hash_value_buf) (dummy:dummy_buf)
-  requires A.pts_to acc vacc **
+  (acc:hash_value_buf) (ctr:box U32.t) (tmp:hash_value_buf) (dummy:dummy_buf)
+  requires V.pts_to acc vacc **
            pts_to ctr 'vctr **
-           A.pts_to tmp vtmp **
-           A.pts_to dummy (Seq.create 1 0uy)
+           V.pts_to tmp vtmp **
+           V.pts_to dummy (Seq.create 1 0uy)
   returns h:ha
   ensures ha_val h (reveal vacc, U32.v 'vctr) **
           pure (h == { core={acc;ctr}; tmp; dummy })
@@ -277,21 +281,23 @@ fn package
 // End boilerplate
 
 // Allocting a new instance of ha
+// TODO: A.alloc is deprecated, use V.alloc instead and use vectors instead of arrays in datatypes.
 
 fn create ()
     requires emp
     returns h:ha
     ensures ha_val h initial_hash
 {  
-    let acc = A.alloc 0uy 32sz;
-    let ctr = alloc 0ul;
-    let tmp = A.alloc 0uy 32sz;
-    let dummy = A.alloc 0uy 1sz;
+    let acc = V.alloc 0uy 32sz;
+    let ctr = B.alloc 0ul;
+    let tmp = V.alloc 0uy 32sz;
+    let dummy = V.alloc 0uy 1sz;
     package acc ctr tmp dummy
 }
 
 
 // Free'ing an ha
+// TODO: A.free is deprecated, use V.free instead and use vectors instead of arrays in datatypes.
 
 fn reclaim (#h:hash_value_t) (s:ha)
     requires ha_val s h
@@ -299,14 +305,11 @@ fn reclaim (#h:hash_value_t) (s:ha)
 {
     unfold ha_val;
     unfold ha_val_core;
-    free s.core.ctr;
-    A.free s.core.acc;
-    A.free s.tmp;
-    A.free s.dummy
+    B.free s.core.ctr;
+    V.free s.core.acc;
+    V.free s.tmp;
+    V.free s.dummy
 }
-
-
-
 
 // Aggregating two raw hashes XOR's them byte-by-byte
 // Compared to the version in Zeta.Steel, this is significantly cleaner
@@ -325,11 +328,11 @@ fn reclaim (#h:hash_value_t) (s:ha)
 fn aggregate_raw_hashes (#s1 #s2:e_raw_hash_value_t)
                         (b1 b2: hash_value_buf)
   requires 
-    A.pts_to b1 s1 **
-    A.pts_to b2 s2
+    V.pts_to b1 s1 **
+    V.pts_to b2 s2
   ensures
-    A.pts_to b1 (xor_bytes s1 s2) **
-    A.pts_to b2 s2
+    V.pts_to b1 (xor_bytes s1 s2) **
+    V.pts_to b2 s2
 {
     let mut i = 0sz;
     assert (pure (s1 `Seq.equal` xor_bytes_pfx s1 s2 0));
@@ -337,14 +340,15 @@ fn aggregate_raw_hashes (#s1 #s2:e_raw_hash_value_t)
     invariant b.
         exists* wi.
             pts_to i wi **
-            A.pts_to b1 (xor_bytes_pfx s1 s2 (v wi)) **
-            A.pts_to b2 s2 **
+            V.pts_to b1 (xor_bytes_pfx s1 s2 (v wi)) **
+            V.pts_to b2 s2 **
             pure (b == (wi < 32sz))
     {
       let x1 = b1.(i);
       let x2 = b2.(i);
       b1.(i) <- U8.logxor x1 x2;
       extend_hash_value s1 s2 (v i);
+      open Pulse.Lib.Reference;
       i := i + 1sz;
     };
     assert (pure (xor_bytes_pfx s1 s2 32 `Seq.equal` xor_bytes s1 s2))
@@ -411,7 +415,7 @@ fn compare (b1 b2:ha)
   }
   else
   {
-    let res = A.compare 32sz b1.core.acc b2.core.acc;
+    let res = V.compare 32sz b1.core.acc b2.core.acc;
     fold_ha_val b1;
     fold_ha_val b2;
     res
@@ -432,15 +436,15 @@ fn add (ha:ha) (input:hashable_buffer) (l:(l:SZ.t {SZ.v l <= blake2_max_input_le
        (#p:perm)
   requires
     ha_val ha 'h **
-    A.pts_to input #p s
+    V.pts_to input #p s
   returns ok:bool
   ensures
     ha_val ha (if ok then aggregate_hashes 'h (hash_one_value (Seq.slice s 0 (SZ.v l))) else 'h) **
-    A.pts_to input #p s
+    V.pts_to input #p s
 { 
-   let mut ctr = 1ul;
+   let ctr = B.alloc 1ul;
    unfold ha_val;
-   A.pts_to_len input;
+   V.pts_to_len input;
    blake2b 32sz ha.tmp l input 0sz ha.dummy;
    let ha' = package_core ha.tmp ctr;
    let v = aggregate ha.core ha';
@@ -449,6 +453,7 @@ fn add (ha:ha) (input:hashable_buffer) (l:(l:SZ.t {SZ.v l <= blake2_max_input_le
    with w. unfold (ha_val_core ha.core w);
    fold_ha_val ha;
    rewrite each ha'.ctr as ctr;
+   B.free ctr;
    v
 }
 

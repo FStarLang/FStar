@@ -13,7 +13,7 @@ let is_table (t:table) (max:nat)
 : slprop
 = GT.is_table t max
 
-let pts_to (t:table) (i:nat) (#f:perm) (p:slprop)
+let pts_to ([@@@mkey]t:table) ([@@@mkey]i:nat) (#f:perm) (p:slprop)
 : slprop
 = exists* r.
     slprop_ref_pts_to r p **
@@ -21,9 +21,9 @@ let pts_to (t:table) (i:nat) (#f:perm) (p:slprop)
 
 ghost
 fn create ()
-requires emp
-returns t:table
-ensures is_table t 0
+  requires emp
+  returns t:table
+  ensures is_table t 0
 {
   let t = GT.create #slprop_ref;
   t
@@ -98,6 +98,7 @@ ensures
   unfold pts_to;
   with r1. assert (GT.pts_to t i #f1 r1);
   GT.gather t i #f0 #f1 #r0 #r1;
+  rewrite each r1 as r0;
   slprop_ref_gather r0 #p #q;
   fold (pts_to t i #(f0 +. f1) p);
 }

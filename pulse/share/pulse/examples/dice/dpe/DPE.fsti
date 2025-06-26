@@ -28,10 +28,9 @@ module SZ = FStar.SizeT
 module U8 = FStar.UInt8
 module U16 = FStar.UInt16
 module U32 = FStar.UInt32
-module PM = Pulse.Lib.PCMMap
+module PM = Pulse.Lib.PCM.Map
 module FP = Pulse.Lib.PCM.FractionalPreorder
 module A = Pulse.Lib.Array
-module HT = Pulse.Lib.HashTable
 module PHT = Pulse.Lib.HashTable.Spec
 
 open PulseCore.Preorder

@@ -33,7 +33,7 @@ val typedef (t: Type0) : Type0
 inline_for_extraction [@@noextract_to "krml"]
 let typeof (#t: Type0) (td: typedef t) : Tot Type0 = t
 
-val fractionable (#t: Type0) (td: typedef t) (x: t) : GTot prop
+val fractionable (#t: Type0) (td: typedef t) (x: t) : prop
 
 val mk_fraction (#t: Type0) (td: typedef t) (x: t) (p: perm) : Ghost t
   (requires (fractionable td x))
@@ -48,7 +48,7 @@ val mk_fraction_compose (#t: Type0) (td: typedef t) (x: t) (p1 p2: perm) : Lemma
   (requires (fractionable td x /\ p1 <=. 1.0R /\ p2 <=. 1.0R))
   (ensures (mk_fraction td (mk_fraction td x p1) p2 == mk_fraction td x (p1 `prod_perm` p2)))
 
-val full (#t: Type0) (td: typedef t) (v: t) : GTot prop
+val full (#t: Type0) (td: typedef t) (v: t) : prop
 
 val uninitialized (#t: Type0) (td: typedef t) : Ghost t
   (requires True)
@@ -115,10 +115,10 @@ let null (#t: Type) (td: typedef t) : Tot (ptr td) = null_gen t
 inline_for_extraction [@@noextract_to "krml"]
 let ref (#t: Type) (td: typedef t) : Tot Type0 = (p: ptr td { ~ (p == null td) })
 
-val pts_to (#t: Type) (#[@@@equate_by_smt]td: typedef t) (r: ref td) ([@@@equate_by_smt] v: Ghost.erased t) : slprop
+val pts_to (#t: Type) (#td: typedef t) ([@@@mkey]r: ref td) (v: Ghost.erased t) : slprop
 
 let pts_to_or_null
-  (#t: Type) (#[@@@equate_by_smt]td: typedef t) (p: ptr td) ([@@@equate_by_smt] v: Ghost.erased t) : slprop
+  (#t: Type) (#td: typedef t) ([@@@mkey]p: ptr td) (v: Ghost.erased t) : slprop
 = if FStar.StrongExcludedMiddle.strong_excluded_middle (p == null _)
   then emp
   else pts_to p v

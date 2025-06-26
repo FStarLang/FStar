@@ -106,7 +106,34 @@ let qualifier_compat g r (q:option qualifier) (q':T.aqualv) : T.Tac unit =
   | Some Implicit, T.Q_Implicit 
   | Some Implicit, T.Q_Meta _ -> ()
   | Some TcArg, T.Q_Meta _ -> ()
+  | Some (Meta _), T.Q_Meta _ -> ()
   | _ -> Env.fail g (Some r) "Unexpected binder qualifier"
+
+// let check_qual g (q:T.aqualv) : T.Tac T.aqualv =
+//   match q with
+//   | T.Q_Meta t ->
+//     let t = T.tc (elab_env g) t in
+//     (* FIXME *)
+//     T.Q_Meta t
+//   | q -> q
+let check_qual g (q:qualifier) : T.Tac qualifier =
+  match q with
+  | Meta t ->
+    let ty = (`(unit -> T.Tac u#0 unit)) in
+    // let t = T.pack (T.Tv_AscribedT t ty None false) in
+    let t =
+      (* This makes sure to elaborate the meta qualifier so it
+      matches exactly with what F* would generate. If not, we get
+      weird errors using an `fn` in the implementation and a `val .. : stt`
+      in the interface, or vice-versa, since they don't fully match. *)
+      match T.instantiate_implicits (elab_env g) t (Some ty) false with
+      | Some (_, t, _), _ -> t
+      | None, iss ->
+        T.log_issues iss;
+        T.fail ("check_qual: failed to elaborate term " ^ show t)
+    in
+    Meta t
+  | q -> q
 
 let rec rebuild_abs (g:env) (t:st_term) (annot:T.term)
   : T.Tac (t:st_term { Tm_Abs? t.term })
@@ -171,7 +198,7 @@ let preprocess_abs
   : T.Tac (t:st_term { Tm_Abs? t.term })
   = let annot, t = arrow_of_abs g t in
     debug_abs g (fun _ -> Printf.sprintf "arrow_of_abs = %s\n" (P.term_to_string annot));
-    let annot, _ = Pulse.Checker.Pure.instantiate_term_implicits g annot None in
+    let annot, _ = Pulse.Checker.Pure.instantiate_term_implicits g annot None false in
     let abs = rebuild_abs g t annot in
     debug_abs g (fun _ -> Printf.sprintf "rebuild_abs = %s\n" (P.st_term_to_string abs));
     abs
@@ -262,7 +289,7 @@ let maybe_rewrite_body_typing
     | Some (C_Tot t) -> (
       match c with
       | C_Tot t' -> (
-        let t, _ = Pulse.Checker.Pure.instantiate_term_implicits g t None in
+        let t, _ = Pulse.Checker.Pure.instantiate_term_implicits g t None false in
         let (| u, t_typing |) = Pulse.Checker.Pure.check_universe g t in
         match Pulse.Checker.Base.norm_st_typing_inverse
                  #_ #_ #t' d t t_typing [hnf;delta]
@@ -282,6 +309,7 @@ let maybe_rewrite_body_typing
     | Some c -> 
       let st = st_comp_of_comp c in
       Env.fail g (Some (RU.range_of_term st.pre)) "Unexpected annotation on a function body"
+#pop-options
 
 let open_ascription (c:comp_ascription) (nv:nvar) : comp_ascription =
   let t = term_of_nvar nv in
@@ -299,6 +327,7 @@ let rec check_abs_core
   let range = t.range in
   match t.term with  
   | Tm_Abs { b = {binder_ty=t;binder_ppname=ppname;binder_attrs}; q=qual; ascription=asc; body } -> //pre=pre_hint; body; ret_ty; post=post_hint_body } ->
+    let qual = T.map_opt (check_qual g) qual in
     (*  (fun (x:t) -> {pre_hint} body : t { post_hint } *)
     let (| t, _, _ |) = compute_tot_term_type g t in //elaborate it first
     let (| u, t_typing |) = check_universe g t in //then check that its universe ... We could collapse the two calls
@@ -339,7 +368,7 @@ let rec check_abs_core
       let binder_attrs =
         binder_attrs
         |> T.unseal
-        |> T.map (fun attr -> attr |> (fun t -> instantiate_term_implicits g t None) |> fst)
+        |> T.map (fun attr -> attr |> (fun t -> instantiate_term_implicits g t None false) |> fst)
         |> FStar.Sealed.seal in
 
       let b = {binder_ty=t;binder_ppname=ppname;binder_attrs} in
@@ -384,7 +413,12 @@ let rec check_abs_core
           Some (open_term_nv (comp_res c) px),
           Some (open_term' (comp_post c) var 1)
       in
-      let (| pre_opened, pre_typing |) = check_slprop g' pre_opened in
+      let (| pre_opened, pre_typing |) =
+        (* In some cases F* can mess up the range in error reporting and make it
+         point outside of this term. Bound it here. See e.g. Bug59, if we remove
+         this bound then the range points to the span between the 'x' and 'y' binders. *)
+        RU.with_error_bound (T.range_of_term pre_opened) (fun () -> check_slprop g' pre_opened)
+      in
       let pre = close_term pre_opened x in
       let post : post_hint_opt g' =
         match post_hint_body with
@@ -432,6 +466,7 @@ let rec check_abs_core
       let tres = tm_arrow {binder_ty=t;binder_ppname=ppname;binder_attrs} qual (close_comp c_body x) in
 
       (| _, C_Tot tres, tt |)
+#pop-options
 
 let check_abs (g:env) (t:st_term{Tm_Abs? t.term}) (check:check_t)
   : T.Tac (t:st_term & c:comp & st_typing g t c) =

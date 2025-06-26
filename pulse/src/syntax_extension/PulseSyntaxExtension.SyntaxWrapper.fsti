@@ -17,7 +17,7 @@
 module PulseSyntaxExtension.SyntaxWrapper
 open FStarC
 open FStarC.Ident
-let range = FStarC.Compiler.Range.range
+let range = FStarC.Range.range
 let var = nat
 let index = nat
 
@@ -40,9 +40,10 @@ val mk_fv (nm:lident) (r:range) : fv
 new val qualifier : Type0
 val as_qual (imp:bool)  : option qualifier
 val tc_qual : option qualifier
-new val term : Type0
-new val binder : Type0
-new val comp : Type0
+let term : Type0 = FStarC.Syntax.Syntax.term (* pulse terms are just F* terms *)
+new val binder : Type0 (* pulse binder *)
+new val comp : Type0 (* pulse comp *)
+val meta_qual : term -> option qualifier
 let slprop = term
 val mk_binder (x:ident) (t:term) : binder
 val mk_binder_with_attrs (x:ident) (t:term) (attrs:list term) : binder
@@ -85,7 +86,8 @@ val pat_constant (c:constant) (_:range) : pattern
 val pat_cons (head:fv) (ps:list pattern) (_:range) : pattern
 
 new val st_term : Type0
-type branch = pattern & st_term
+type branch
+val mk_branch : pattern -> st_term -> norw:bool -> branch
 val tm_return (t:term) (_:range) : st_term
 val tm_ghost_return (t:term) (_:range) : st_term
 val tm_abs (b:binder) (q:option qualifier) (_:option comp) (body:st_term) (_:range) : st_term
@@ -115,6 +117,9 @@ val close_comp_n (t:comp) (vs:list var) : comp
 val comp_pre (c:comp) : term
 val comp_res (c:comp) : term
 val comp_post (c:comp) : term
+val mark_statement_sequence (s:st_term) : st_term
+(* ^marks a statement as being the lhs of s1;s2, to perform more checks on it
+(type must be unit) *)
 
 val print_exn (e:exn) : string
 val binder_to_string (env:FStarC.TypeChecker.Env.env) (b:binder) : string

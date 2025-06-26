@@ -1,19 +1,17 @@
 module ExtractPulseC
 
 friend FStarC.Extraction.Krml
-open FStarC.Compiler.Effect
-open FStarC.Compiler.List
-open FStar
-open FStarC.Compiler
-open FStarC.Compiler.Util
+open FStarC
+open FStarC.Effect
+open FStarC.List
+open FStarC.Util
 open FStarC.Extraction
 open FStarC.Extraction.ML
 open FStarC.Extraction.ML.Syntax
 open FStarC.Const
 open FStarC.BaseTypes
 open FStarC.Extraction.Krml
-module K = FStarC.Extraction.Krml
-module BU = FStarC.Compiler.Util
+module BU = FStarC.Util
 
 (* JL: TODO: in stdlib somewhere? *)
 let opt_bind (m: option 'a) (k: 'a -> option 'b): option 'b =
@@ -26,7 +24,7 @@ let char_of_typechar (t: mlty): option char =
     if p = "Pulse.C.Typestring.cdot" then
       Some '.'
     else if BU.starts_with p "Pulse.C.Typestring.c" then
-      Some (FStarC.Compiler.String.get p (FStar.String.strlen "Pulse.C.Typestring.c"))
+      Some (FStarC.String.get p (FStar.String.strlen "Pulse.C.Typestring.c"))
     else
       None
 

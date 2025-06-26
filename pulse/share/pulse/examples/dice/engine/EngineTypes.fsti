@@ -16,7 +16,6 @@
 
 module EngineTypes
 open Pulse.Lib.Pervasives
-module R = Pulse.Lib.Reference
 module V = Pulse.Lib.Vec
 module US = FStar.SizeT
 module U8 = FStar.UInt8

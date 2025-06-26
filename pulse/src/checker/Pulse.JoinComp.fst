@@ -23,10 +23,6 @@ open Pulse.Checker.Pure
 open Pulse.Checker.Base
 open Pulse.Checker.Prover
 
-module T = FStar.Tactics.V2
-module P = Pulse.Syntax.Printer
-module Metatheory = Pulse.Typing.Metatheory
-module RU = Pulse.RuntimeUtils
 
 let st_ghost_as_atomic_matches_post_hint
   (c:comp { C_STGhost? c })

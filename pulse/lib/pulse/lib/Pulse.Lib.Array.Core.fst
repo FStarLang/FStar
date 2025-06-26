@@ -61,8 +61,8 @@ let pts_to_timeless _ _ _ = ()
 
 ghost
 fn pts_to_len (#t:Type) (a:array t) (#p:perm) (#x:FStar.Seq.seq t)
-requires pts_to a #p x
-ensures pts_to a #p x ** pure (length a == Seq.length x)
+  requires pts_to a #p x
+  ensures pts_to a #p x ** pure (length a == Seq.length x)
 {
   unfold (pts_to a #p x);
   H.pts_to_len a;
@@ -72,8 +72,8 @@ ensures pts_to a #p x ** pure (length a == Seq.length x)
 
 
 fn alloc (#elt:Type0) (x:elt) (n:SZ.t)
-requires emp
-returns a:array elt
+  requires emp
+  returns a:array elt
 ensures
   pts_to a (Seq.create (SZ.v n) x) **
   pure (length a == SZ.v n /\ is_full_array a)
@@ -95,7 +95,7 @@ fn op_Array_Access
     (#s: Ghost.erased (Seq.seq t){SZ.v i < Seq.length s})
 requires
   pts_to a #p s
-returns res:t
+  returns res:t
 ensures 
   pts_to a #p s **
   pure (res == Seq.index s (SZ.v i))
@@ -167,8 +167,8 @@ fn gather
   (arr:array a)
   (#s0 #s1:Ghost.erased (Seq.seq a))
   (#p0 #p1:perm)
-requires pts_to arr #p0 s0 ** pts_to arr #p1 s1
-ensures pts_to arr #(p0 +. p1) s0 ** pure (s0 == s1)
+  requires pts_to arr #p0 s0 ** pts_to arr #p1 s1
+  ensures pts_to arr #(p0 +. p1) s0 ** pure (s0 == s1)
 {
   unfold (pts_to arr #p0 s0);
   unfold (pts_to arr #p1 s1);
@@ -179,8 +179,9 @@ ensures pts_to arr #(p0 +. p1) s0 ** pure (s0 == s1)
 
 let pts_to_range
   (#a:Type)
-  ([@@@equate_strict] x:array a)
-  (i j : nat)
+  ([@@@mkey] x:array a)
+  ([@@@mkey] i : nat)
+  (j : nat)
   (#[exact (`1.0R)] p:perm)
   (s : Seq.seq a)
 : slprop
@@ -201,7 +202,7 @@ requires
 ensures
   pts_to_range a i j #p s **
   pure (
-      (i <= j /\ j <= length a /\ eq2 #int (Seq.length s) (j - i))
+      (i <= j /\ j <= length a /\ Seq.length s == (j - i))
   )
 {
   unfold (pts_to_range a i j #p s);
@@ -220,19 +221,20 @@ fn pts_to_range_split
   (i m j: nat)
   (#p: perm)
   (#s: Seq.seq elt)
-requires
-  pts_to_range a i j #p s **
-  pure (i <= m /\ m <= j)
-ensures exists* s1 s2.
-  pts_to_range a i m #p s1 **
-  pts_to_range a m j #p s2 **
-  pure (
-    i <= m /\ m <= j /\ j <= length a /\
-    eq2 #int (Seq.length s) (j - i) /\
-    s1 == Seq.slice s 0 (m - i) /\
-    s2 == Seq.slice s (m - i) (Seq.length s) /\
-    s == Seq.append s1 s2
-  )
+  requires
+    pts_to_range a i j #p s **
+    pure (i <= m /\ m <= j)
+  ensures
+    exists* s1 s2.
+      pts_to_range a i m #p s1 **
+      pts_to_range a m j #p s2 **
+      pure (
+        i <= m /\ m <= j /\ j <= length a /\
+        eq2 #int (Seq.length s) (j - i) /\
+        s1 == Seq.slice s 0 (m - i) /\
+        s2 == Seq.slice s (m - i) (Seq.length s) /\
+        s == Seq.append s1 s2
+      )
 {
   unfold (pts_to_range a i j #p s);
   H.pts_to_range_split a i m j #p #(raise_seq s);
@@ -285,7 +287,7 @@ fn pts_to_range_index
   (#p: perm)
 requires
   pts_to_range a l r #p s
-returns res:t
+  returns res:t
 ensures 
   pts_to_range a l r #p s **
   pure (eq2 #int (Seq.length s) (r - l) /\
@@ -307,14 +309,14 @@ fn pts_to_range_upd
   (#l: Ghost.erased nat{l <= SZ.v i})
   (#r: Ghost.erased nat{SZ.v i < r})
   (#s0: Ghost.erased (Seq.seq t))
-requires pts_to_range a l r s0
-ensures
-  exists* s.
-    pts_to_range a l r s **
-    pure(
-      eq2 #int (Seq.length s0) (r - l) /\
-      s == Seq.upd s0 (SZ.v i - l) v
-    )
+  requires pts_to_range a l r s0
+  ensures
+    exists* s.
+      pts_to_range a l r s **
+      pure(
+        eq2 #int (Seq.length s0) (r - l) /\
+        s == Seq.upd s0 (SZ.v i - l) v
+      )
 {
   unfold (pts_to_range a l r s0);
   H.pts_to_range_upd a i (U.raise_val v);
@@ -342,9 +344,9 @@ fn alloc_with_pre
     (init:a)
     (len:SZ.t)
     (pre:slprop)
-requires pre
-returns arr:array a
-ensures (pre **
+  requires pre
+  returns arr:array a
+  ensures (pre **
          (pts_to arr (Seq.create (SZ.v len) init) ** (
           pure (is_full_array arr) **
           pure (length arr == SZ.v len)))) **
@@ -356,8 +358,8 @@ ensures (pre **
 
 
 fn free_with_post (#a:Type u#0) (arr:array a) (post:slprop)
-requires (post ** (exists* v. pts_to arr v)) ** pure (is_full_array arr)
-ensures post
+  requires (post ** (exists* v. pts_to arr v)) ** pure (is_full_array arr)
+  ensures post
 {
   free arr  
 }
@@ -396,7 +398,7 @@ fn pts_to_range_gather
 
 
 (* this is universe-polymorphic in ret_t; so can't define it in Pulse yet *)
-let with_local'
+let with_local
     (#a:Type u#0)
     (init:a)
     (len:SZ.t)
@@ -427,5 +429,3 @@ let with_local'
             (fun _ -> return_stt_noeq r post))
   in
   bind_stt m1 body
-
-let with_local = with_local'

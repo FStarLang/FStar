@@ -653,6 +653,7 @@ fun d cb ->
 #pop-options
 
 #push-options "--z3rlimit 40"
+#restart-solver // avoiding z3 crash on 4.13.3
 let st_typing_freevars_par : st_typing_freevars_case T_Par? =
 fun d cb ->
   match d with

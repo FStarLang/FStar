@@ -20,9 +20,8 @@ open FStar.Ghost
 open Pulse.Class.Duplicable
 open Pulse.Lib.Pervasives
 
-module T = FStar.Tactics
 
-let shift_elim_t is hyp extra concl : Type u#4 =
+let shift_elim_t is hyp extra concl : Type u#5 =
   unit -> stt_ghost unit is (extra ** hyp) (fun _ -> concl)
 
 let psquash (a:Type u#a) : prop = squash a
@@ -42,7 +41,7 @@ ensures p ** p
 {
   let d = reveal d;
   dup p #d ()
-} 
+}
 
 
 ghost
@@ -73,7 +72,7 @@ let sqeq (p : Type) (_ : squash p) : erased p =
 
 
 ghost
-fn pextract (a:Type u#4) (pf:squash a)
+fn pextract (a:Type u#5) (pf:squash a)
 requires emp
 returns i:a
 ensures emp
@@ -86,7 +85,7 @@ ensures emp
 }
 
 ghost
-fn extract_eliminator (is:inames) (extra hyp concl: slprop) 
+fn extract_eliminator (is:inames) (extra hyp concl: slprop)
 requires shift_elim_exists is hyp (reveal extra) concl
 returns i : shift_elim_t is hyp (reveal extra) concl
 ensures shift_elim_exists is hyp (reveal extra) concl
@@ -176,7 +175,7 @@ ensures shift #is2 hyp concl
     rewrite (dfst res) as res._1;
     f ()
   };
-  
+
   intro_shift #is2 hyp concl (dfst res) #d aux
 
 }
@@ -213,7 +212,7 @@ ensures shift #is p q ** shift #is p q
   fold (shift #is p q)
 }
 
-instance shift_duplicable 
+instance shift_duplicable
   (#is : inames)
   (p q : slprop)
 : duplicable (shift #is p q)

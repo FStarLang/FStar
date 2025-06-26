@@ -143,7 +143,7 @@ fn lookup
           {
             cont := false;
             ret := Some idx;
-            V.replace_i_ref contents idx (Used k' v');
+            let _ = V.replace_i_ref contents idx (Used k' v');
             with vcontents. assert (pts_to contents vcontents);
             with s. assert (pts_to vcontents s);
             assert (pure (Seq.equal s pht.repr.seq));
@@ -152,7 +152,7 @@ fn lookup
           } else
           {
             off := voff +^ 1sz;
-            V.replace_i_ref contents idx (Used k' v');
+            let _ = V.replace_i_ref contents idx (Used k' v');
             with vcontents. assert (pts_to contents vcontents);
             with s. assert (pts_to vcontents s);
             assert (pure (Seq.equal s pht.repr.seq));
@@ -163,7 +163,7 @@ fn lookup
         Clean ->
         {
           cont := false;
-          V.replace_i_ref contents idx c;
+          let _ = V.replace_i_ref contents idx c;
           with vcontents. assert (pts_to contents vcontents);
           with s. assert (pts_to vcontents s);
           assert (pure (Seq.equal s pht.repr.seq));
@@ -173,7 +173,7 @@ fn lookup
         Zombie ->
         {
           off := voff +^ 1sz;
-          V.replace_i_ref contents idx c;
+          let _ = V.replace_i_ref contents idx c;
           with vcontents. assert (pts_to contents vcontents);
           with s. assert (pts_to vcontents s);
           assert (pure (Seq.equal s pht.repr.seq));
@@ -411,6 +411,7 @@ fn insert
     res
   }
 }
+#pop-options
 
 
 let is_used
@@ -447,7 +448,7 @@ fn not_full
     {
       let c = V.replace_i_ref contents vi Zombie;
       let b = is_used c;
-      V.replace_i_ref contents vi (snd b);
+      let _ = V.replace_i_ref contents vi (snd b);
       with vcontents. assert (pts_to contents vcontents);
       with s. assert (V.pts_to vcontents s);
       assert (pure (Seq.equal s pht.repr.seq));
@@ -519,8 +520,7 @@ fn insert_if_not_full
   }
 }
 
-
-
+#push-options "--z3rlimit_factor 6"
 fn delete
   (#[@@@ Rust_generics_bounds ["Copy"; "PartialEq"; "Clone"]] kt:eqtype)
   (#[@@@ Rust_generics_bounds ["Clone"]] vt:Type0)
@@ -632,7 +632,7 @@ fn delete
     res
   }
 }
-
+#pop-options
 
 // 
 // fn test_mono ()

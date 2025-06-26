@@ -16,10 +16,10 @@
 
 module Pulse2Rust.Extract
 
-open FStarC.Compiler
-open FStarC.Compiler.Util
-open FStarC.Compiler.List
-open FStarC.Compiler.Effect
+open FStarC
+open FStarC.Util
+open FStarC.List
+open FStarC.Effect
 
 open Pulse2Rust.Rust.Syntax
 open Pulse2Rust.Env
@@ -29,7 +29,6 @@ open RustBindings
 module S = FStarC.Extraction.ML.Syntax
 module EUtil = FStarC.Extraction.ML.Util
 
-module UEnv = FStarC.Extraction.ML.UEnv
 
 //
 // 'a to A
@@ -67,13 +66,13 @@ let lookup_datacon_in_module1 (s:S.mlident) (m:S.mlmodule1) : option S.mlsymbol 
   | _ -> None
 
 let lookup_datacon (g:env) (s:S.mlident) : option (list string & S.mlsymbol) =
-  let d_keys = smap_keys g.d in
+  let d_keys = SMap.keys g.d in
   find_map d_keys (fun k ->
-    let (_, _, decls) = smap_try_find g.d k |> must in
+    let (_, _, decls) = SMap.try_find g.d k |> must in
     let ropt = find_map decls (lookup_datacon_in_module1 s) in
     match ropt with
     | None -> None
-    | Some tname -> Some (FStarC.Compiler.Util.split k ".", tname)
+    | Some tname -> Some (FStarC.Util.split k ".", tname)
   )
 
 //
@@ -887,7 +886,7 @@ let extract_generic_type_param_trait_bounds (attrs:list S.mlexpr) : list (list s
                       match e.expr with
                       | MLE_Const (MLC_String s) -> s
                       | _ -> failwith "unexpected generic type param bounds")
-         |> List.map (fun bound -> FStarC.Compiler.Util.split bound "::"))
+         |> List.map (fun bound -> FStarC.Util.split bound "::"))
   |> dflt []
 
 let extract_generic_type_params (tyvars:list S.ty_param)

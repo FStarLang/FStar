@@ -26,12 +26,12 @@ open Pulse.Lib.Trade
 open Pulse.Class.Duplicable
 
 open Pulse.Lib.SpinLock
+open Pulse.Lib.Box { box, (!), (:=) }
 
+module B = Pulse.Lib.Box
 module RTC   = FStar.ReflexiveTransitiveClosure
 module FRAP  = Pulse.Lib.FractionalAnchoredPreorder
 module AR    = Pulse.Lib.AnchoredReference
-module Big   = Pulse.Lib.BigReference
-module Ghost = Pulse.Lib.GhostReference
 
 noeq
 type task_state : Type0 =
@@ -51,7 +51,7 @@ let v (s : task_state) : int =
   | Running -> 1
   | Done -> 2
   | Claimed -> 3
-  
+
 let p_st : preorder task_state = fun x y -> b2t (v x <= v y)
 
 let anchor_rel : FRAP.anchor_rel p_st =
@@ -71,7 +71,7 @@ let anchor_rel_refl (x:task_state) :
 let state_res
   (pre : slprop)
   (post : slprop)
-  (g_state : AR.ref task_state p_st anchor_rel)
+  ([@@@mkey] g_state : AR.ref task_state p_st anchor_rel)
   (st : task_state)
 =
   match st with
@@ -82,7 +82,7 @@ let state_res
 
 noeq
 type handle : Type0 = {
-  state   : ref task_state;
+  state   : box task_state;
   g_state : AR.ref task_state p_st anchor_rel; (* these two refs are kept in sync *)
 }
 
@@ -103,7 +103,7 @@ type task_t : Type0 = {
 let state_pred
   (pre : slprop_ref)
   (post : slprop_ref)
-  (h : handle)
+  ([@@@mkey] h : handle)
 : slprop =
   exists* (v_state : task_state).
     pts_to
@@ -142,6 +142,7 @@ ghost fn task_thunk_typing_dup t
 instance task_thunk_typing_duplicable t : duplicable (task_thunk_typing t) =
   { dup_f = fun _ -> task_thunk_typing_dup t }
 
+[@@no_mkeys] (* usually there's only a single instance *)
 let rec all_state_pred
   ( v_runnable : list task_t)
 : slprop
@@ -204,7 +205,7 @@ let list_preorder_mono_memP (#a:Type) (x:a) (l1 l2:list a)
     l1 l2 ()
 
 let lock_inv
-  (runnable   : ref (list task_t))
+  (runnable   : box (list task_t))
   (g_runnable : AR.ref (list task_t) list_preorder list_anchor)
 : slprop
 = 
@@ -217,7 +218,7 @@ let lock_inv
 
 noeq
 type pool_st : Type u#0 = {
-  runnable   : ref (list task_t);
+  runnable   : box (list task_t);
   g_runnable : AR.ref (list task_t) list_preorder list_anchor;
   
   lk : lock; // (lock_inv runnable g_runnable);
@@ -242,7 +243,7 @@ let task_spotted
     AR.snapshot p.g_runnable v_runnable **
     pure (List.memP t v_runnable)
 
-let gtrade_ty a b extra : Type u#4 =
+let gtrade_ty a b extra : Type u#5 =
   unit -> stt_ghost unit [] (extra ** a) (fun _ -> b)
 let gtrade_fun a b extra {| duplicable extra |} (f: gtrade_ty a b extra) =
   emp
@@ -364,10 +365,10 @@ fn rec extract_state_pred
   decreases ts
 {
   match ts {
-    Nil -> {
+    [] -> {
       unreachable ()
     }
-    Cons t' ts' -> {
+    t' :: ts' -> {
       let b = SEM.strong_excluded_middle (t == t');
       if not b {
         take_one_h11 t' ts';
@@ -397,9 +398,10 @@ fn rec extract_state_pred
         {
           add_one_state_pred t' ts';
         };
-        intro_trade (state_pred t.pre t.post t.h) (all_state_pred ts)
-                    (pure (ts == t'::ts') ** task_thunk_typing t' ** all_state_pred ts') aux;
-
+        intro_trade
+          (state_pred t.pre t.post t.h) (all_state_pred ts)
+          (pure (ts == t::ts') ** task_thunk_typing t ** all_state_pred ts')
+          aux;
         ()
       }
     }
@@ -496,7 +498,7 @@ fn spawn (p:pool)
 {
   let task_st : task_state = Ready;
   assert (pure (anchor_rel Ready Ready));
-  let r_task_st : ref task_state = alloc task_st;
+  let r_task_st : box task_state = B.alloc task_st;
   let gr_task_st : AR.ref task_state p_st anchor_rel = AR.alloc #task_state task_st #p_st #anchor_rel;
 
   AR.drop_anchor gr_task_st;
@@ -513,8 +515,10 @@ fn spawn (p:pool)
     post = post_ref;
     thunk = Dyn.mkdyn f;
   };
-  dup (slprop_ref_pts_to post_ref post) ();
-  dup (slprop_ref_pts_to pre_ref pre) ();
+  rewrite each pre_ref as task.pre;
+  rewrite each post_ref as task.post;
+  dup (slprop_ref_pts_to task.pre pre) ();
+  dup (slprop_ref_pts_to task.post post) ();
   fold task_thunk_typing_core task pre post;
   fold task_thunk_typing task;
   
@@ -565,8 +569,6 @@ fn spawn (p:pool)
   release p.lk;
   fold (pool_alive #pf p);
   
-  rewrite each task.post as post_ref;
-
   task.h;
 }
 
@@ -615,7 +617,7 @@ fn try_await
   AR.drop_anchor p.g_runnable;
   recall_task_spotted p t #v_runnable;
   AR.lift_anchor p.g_runnable _;
-  
+
   extract_state_pred p t #v_runnable;
 
   let v_state = elim_state_pred t.pre t.post t.h;
@@ -623,7 +625,7 @@ fn try_await
   rewrite (pts_to t.h.state #(if Running? v_state then 0.5R else 1.0R) (unclaimed (reveal v_state)))
        as (pts_to h.state #(if Running? v_state then 0.5R else 1.0R) (unclaimed (reveal v_state)));
   let task_st = !h.state;
-  
+
   match task_st {
     Ready -> {
       (* NOOP *)
@@ -654,25 +656,16 @@ fn try_await
     Done -> {
       (* First prove that ghost state cannot be Claimed,
       due to the anchor *)
-      rewrite (AR.pts_to t.h.g_state v_state)
-           as (AR.pts_to h.g_state v_state);
-      assert (AR.pts_to h.g_state v_state);
-      assert (AR.anchored h.g_state Ready);
-      AR.recall_anchor h.g_state Ready;
+      rewrite each h as t.h;
+      AR.recall_anchor t.h.g_state Ready;
       assert (pure (v_state =!= Claimed));
       assert (pure (v_state == Done));
-      rewrite (AR.pts_to h.g_state v_state)
-           as (AR.pts_to t.h.g_state v_state);
 
       (* Now claim it *)
       claim_done_task #p #(up t.pre) #(up t.post) t.h;
 
       gtrade_elim (up t.post ** later_credit 1) post;
-      rewrite (post)
-           as (if true then post else joinable p post h);
-           
-      rewrite (pts_to h.state Done)
-           as (pts_to t.h.state (unclaimed Claimed));
+
       intro_state_pred t.pre t.post t.h Claimed;
       elim_trade _ _; // undo extract_state_pred
       fold (lock_inv p.runnable p.g_runnable);
@@ -696,6 +689,7 @@ let handle_done (h:handle) : slprop =
 let task_done (t : task_t)  : slprop =
   handle_done t.h
 
+[@@no_mkeys] (* usually there's only a single instance *)
 let rec all_tasks_done (ts : list task_t) =
   match ts with
   | [] -> emp
@@ -771,10 +765,10 @@ fn rec all_tasks_done_inst (t : task_t) (ts : list task_t)
   decreases ts
 {
   match ts {
-    Nil -> {
+    [] -> {
       unreachable();
     }
-    Cons t' ts' -> {
+    t' :: ts' -> {
       let b = SEM.strong_excluded_middle (t == t');
       if b {
         rewrite each t' as t;
@@ -822,6 +816,7 @@ fn disown_aux
 
   match st {
     Done -> {
+      rewrite each h as t.h;
       rewrite (state_res (up t.pre) (up t.post) t.h.g_state Done)
            as up t.post;
 
@@ -847,6 +842,7 @@ fn disown_aux
     }
     Claimed -> {
       assert (AR.anchored h.g_state Ready);
+      rewrite each h as t.h;
       AR.recall_anchor t.h.g_state Ready;
       unreachable();
     }
@@ -900,7 +896,7 @@ fn await (#p:pool)
   ensures  pool_alive #f p ** post
 {
   let mut done = false;
-  while (let v = !done; (not v))
+  while (let v = Pulse.Lib.Reference.(!done); (not v))
     invariant b.
       exists* v_done.
         pool_alive #f p **
@@ -908,9 +904,14 @@ fn await (#p:pool)
         (if v_done then post else joinable p post h) **
         pure (b == not v_done)
   {
+    with v_done. assert (pts_to done v_done);
+    rewrite each v_done as false;
     let b = try_await #p #post h #f;
-    done := b;
+    Pulse.Lib.Reference.(done := b);
   };
+  with v_done. assert (pts_to done v_done);
+  rewrite each v_done as true;
+  ()
 }
 
 ghost
@@ -922,10 +923,10 @@ fn rec pool_done_task_done_aux
   decreases ts
 {
   match ts {
-    Nil -> {
+    [] -> {
       unreachable();
     }
-    Cons t' ts' -> {
+    t' :: ts' -> {
       let b = SEM.strong_excluded_middle (t == t');
       if b {
         rewrite each t' as t;
@@ -1026,15 +1027,14 @@ fn weaken_vopt (#a:Type0) (o : option a)
 {
   match o {
     None -> {
-      unfold (vopt None p1);
-      fold (vopt None p2);
+      rewrite vopt None p1 as vopt o p2;
       drop_ extra;
       ()
     }
     Some v -> {
-      rewrite (vopt o p1) as p1 v;
+      unfold vopt (Some v) p1;
       f v;
-      fold (vopt o p2);
+      rewrite p2 v as vopt o p2;
     }
   }
 }
@@ -1048,7 +1048,7 @@ fn rec grab_work'' (p:pool) (v_runnable : list task_t)
              up t.pre ** pts_to t.h.state #0.5R Running ** pure (List.memP t v_runnable) ** task_thunk_typing t)
 {
   match v_runnable {
-    Nil -> {
+    [] -> {
       // intro_vopt_none;
       // fails with variable not found...
 
@@ -1057,7 +1057,7 @@ fn rec grab_work'' (p:pool) (v_runnable : list task_t)
           as vopt topt (fun t -> up t.pre ** pts_to t.h.state #0.5R Running ** pure (List.memP t v_runnable) ** task_thunk_typing t);
       topt
     }
-    Cons t ts -> {
+    t :: ts -> {
       take_one_h11 t ts;
       unfold (state_pred t.pre t.post t.h);
       
@@ -1070,8 +1070,8 @@ fn rec grab_work'' (p:pool) (v_runnable : list task_t)
 
           t.h.state := Running;
           AR.write t.h.g_state Running;
-          
-          Pulse.Lib.Reference.share2 t.h.state;
+
+          B.share t.h.state;
           dup (task_thunk_typing t) ();
 
           intro_state_pred_Running t.pre t.post t.h;
@@ -1113,7 +1113,9 @@ fn rec grab_work' (p:pool)
              up t.pre ** pts_to t.h.state #0.5R Running ** task_spotted p t ** task_thunk_typing t)
 {
   unfold (lock_inv p.runnable p.g_runnable);
+  with v_runnable0. assert (pts_to p.runnable v_runnable0);
   let v_runnable = !p.runnable;
+  rewrite each v_runnable0 as v_runnable;
   let topt = grab_work'' p v_runnable;
 
   AR.take_snapshot_full p.g_runnable;
@@ -1186,11 +1188,11 @@ fn put_back_result (p:pool) #f (t : task_t)
   assert (state_pred t.pre t.post t.h ** pts_to t.h.state #0.5R Running);
     unfold (state_pred t.pre t.post t.h);
     with v_st. assert (AR.pts_to t.h.g_state v_st);
-    pts_to_injective_eq t.h.state;
+    B.pts_to_injective_eq t.h.state;
     assert (pure (v_st == Running));
     rewrite (pts_to t.h.state #(if Running? v_st then 0.5R else 1.0R) (unclaimed v_st))
          as (pts_to t.h.state #0.5R v_st);
-    Pulse.Lib.Reference.gather2 t.h.state;
+    B.gather t.h.state;
     t.h.state := Done; // Only concrete step (except for mutex taking)
     AR.write t.h.g_state Done;
 
@@ -1216,11 +1218,9 @@ fn do_work_once (#f:perm) (p : pool)
   let topt = grab_work p;
   match topt {
     None -> {
-      rewrite (if Some? topt then up (Some?.v topt).pre else emp)
-           as emp;
+      unfold (vopt #task_t);
     }
     Some t -> {
-      rewrite each topt as Some t;
       get_vopt #task_t #t ();
       perf_work t;
       put_back_result p t
@@ -1247,7 +1247,7 @@ fn await_help
   ensures  pool_alive #f p ** post
 {
   let mut done = false;
-  while (let v = !done; (not v))
+  while (let v = Pulse.Lib.Reference.(!done); (not v))
     invariant b.
       exists* v_done.
         pool_alive #f p **
@@ -1255,12 +1255,18 @@ fn await_help
         (if v_done then post else joinable p post h) **
         pure (b == not v_done)
   {
+    with v_done. assert (pts_to done v_done);
+    rewrite each v_done as false;
     let b = try_await #p #post h #f;
-    done := b;
+    Pulse.Lib.Reference.(done := b);
     if (not b) {
       do_work_once #f p;
     }
   };
+  with v_done.
+    assert (pts_to done v_done);
+    rewrite each v_done as true;
+  ();
 }
 
 let ite (b:bool) (p q : slprop) : slprop =
@@ -1273,12 +1279,12 @@ fn rec check_if_all_done
   ensures  all_state_pred ts ** ite b (all_tasks_done ts) emp
 {
   match ts {
-    Nil -> {
+    [] -> {
       rewrite emp as (all_tasks_done ts);
       fold (ite true (all_tasks_done ts) emp);
       true;
     }
-    Cons t ts' -> {
+    t :: ts' -> {
       take_one_h11 t ts';
       unfold (state_pred t.pre t.post t.h);
       let st = !t.h.state;
@@ -1286,7 +1292,7 @@ fn rec check_if_all_done
         Done -> {
           let bb = check_if_all_done ts';
           if bb {
-            rewrite (ite bb (all_tasks_done ts') emp) as (all_tasks_done ts');
+            rewrite ite true (all_tasks_done ts') emp as (all_tasks_done ts');
             with g_st. assert (AR.pts_to t.h.g_state g_st);
             assert (pure (g_st == Done \/ g_st == Claimed));
             AR.take_snapshot t.h.g_state;
@@ -1297,7 +1303,7 @@ fn rec check_if_all_done
             add_one_state_pred t ts';
             true;
           } else {
-            drop_ (ite bb (all_tasks_done ts') emp);
+            drop_ (ite false (all_tasks_done ts') emp);
             fold (state_pred t.pre t.post t.h);
             add_one_state_pred t ts';
             rewrite emp as ite false (all_tasks_done ts) emp;
@@ -1324,7 +1330,6 @@ fn rec check_if_all_done
   }
 }
 
-#push-options "--print_implicits"
 fn try_await_pool
   (p:pool)
   #is (#f:perm)
@@ -1385,7 +1390,7 @@ fn await_pool
 {
   let mut done = false;
   fold (ite false q (pledge is (pool_done p) q));
-  while (let v = !done; not v)
+  while (let v = Pulse.Lib.Reference.(!done); not v)
     invariant b.
       exists* v_done.
         pool_alive #f p **
@@ -1397,7 +1402,7 @@ fn await_pool
     rewrite each v_done as false;
     unfold (ite false q (pledge is (pool_done p) q));
     let b = try_await_pool p #is #f q;
-    done := b;
+    Pulse.Lib.Reference.(done := b);
   };
   with v_done. assert (pts_to done v_done);
   rewrite each v_done as true;
@@ -1415,9 +1420,8 @@ fn rec teardown_pool
 
   let runnable = !p.runnable;
   let b = check_if_all_done runnable;
+  unfold ite;
   if b {
-    rewrite ite b (all_tasks_done runnable) emp
-         as all_tasks_done runnable;
     AR.drop_anchor p.g_runnable;
     AR.share p.g_runnable;
     fold (pool_done p);
@@ -1431,8 +1435,6 @@ fn rec teardown_pool
     drop_ (lock_alive _ #0.5R _);
     drop_ (lock_acquired p.lk);
   } else {
-    rewrite ite b (all_tasks_done runnable) emp
-         as emp;
     (* Spin *)
     fold (lock_inv p.runnable p.g_runnable);
     release p.lk;
@@ -1505,7 +1507,7 @@ fn setup_pool
   returns p : pool
   ensures pool_alive p
 {
-  let runnable = Pulse.Lib.Reference.alloc ([] <: list task_t);
+  let runnable = Box.alloc ([] <: list task_t);
   assert (pure (list_preorder #task_t [] [] /\ True));
   let g_runnable = AR.alloc #(list task_t) [] #list_preorder #list_anchor;
   rewrite emp as (all_state_pred []);
@@ -1517,7 +1519,7 @@ fn setup_pool
   rewrite each g_runnable as p.g_runnable;
   rewrite each runnable as p.runnable;
 
-  Pulse.Lib.SpinLock.share2 p.lk;
+  Pulse.Lib.SpinLock.share p.lk;
   fold (pool_alive p);
   fold (pool_alive p);
 

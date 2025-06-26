@@ -16,6 +16,7 @@
    Author: N. Swamy
 *)
 module Pulse.Lib.FractionalAnchoredPreorder
+#lang-pulse
 
 (** This module provides a partial commutative monoid (PCM) for use in
     the ghost state of a concurrent Pulse program.
@@ -63,7 +64,7 @@ open FStar.Preorder
 open PulseCore.Preorder
 open PulseCore.FractionalPermission
 
-#push-options "--fuel 0 --ifuel 2"
+#set-options "--fuel 0 --ifuel 2"
 
 /// A permission: is a pair of
 ///
@@ -522,6 +523,7 @@ let avalue_anchored_update (#v:Type)
 /// A frame-preserving update for anchored values.
 ///   Notice the additional precondition, refining the preorder
 #restart-solver
+#push-options "--z3rlimit_factor 2"
 let update_anchored_hist (#v:Type)
                          (#p:preorder v)
                          (#s:anchor_rel p)
@@ -536,6 +538,7 @@ let update_anchored_hist (#v:Type)
       let Owns full_m = full_v in
       let m_res = avalue_anchored_update full_m v1 in
       Owns m_res
+#pop-options
 
 /// A derived form without a history on the new value
 let avalue_update_anchored_value (#v:Type)

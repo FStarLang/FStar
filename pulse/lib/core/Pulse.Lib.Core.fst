@@ -17,15 +17,14 @@ module Pulse.Lib.Core
 module I = PulseCore.InstantiatedSemantics
 module A = PulseCore.Atomic
 module T = FStar.Tactics.V2
-module F = FStar.FunctionalExtensionality
 open PulseCore.InstantiatedSemantics
 open PulseCore.FractionalPermission
 open PulseCore.Observability
 friend PulseCore.InstantiatedSemantics
 module Sep = PulseCore.IndirectionTheorySep
-let equate_by_smt = ()
-let equate_strict = ()
-let equate_syntactic = ()
+
+let mkey = ()
+let no_mkeys = ()
 
 let allow_ambiguous = ()
 
@@ -37,7 +36,7 @@ let timeless_emp = Sep.timeless_emp ()
 let pure = pure
 let timeless_pure p = Sep.timeless_pure p
 let op_Star_Star = op_Star_Star
-let timeless_star p q = Sep.later_star p q
+let timeless_star p q = Sep.timeless_star p q
 let op_exists_Star = op_exists_Star
 let exists_extensional (#a:Type u#a) (p q: a -> slprop)
   (_:squash (forall x. p x == q x))
@@ -47,22 +46,12 @@ let exists_extensional (#a:Type u#a) (p q: a -> slprop)
         slprop_equiv_refl (p x)
     );
     I.slprop_equiv_exists p q ()
-let timeless_exists (#a:Type u#a) (p: a -> slprop)
-: Lemma
-    (requires forall x. timeless (p x))
-    (ensures timeless (op_exists_Star p))
-    [SMTPat (timeless (op_exists_Star p))]
-= calc (==) {
-    later (op_exists_Star p);
-  (==) { exists_extensional p (fun x -> p x) () }
-    later (exists* x. p x);
-  (==) { Sep.later_exists p }
-    (exists* x. later (p x));
-  (==) { exists_extensional (fun x -> later (p x)) (fun x -> p x) () }
-    (exists* x. p x);
-  (==) { exists_extensional (fun x -> p x) p () }
-    op_exists_Star p;
-  }
+let timeless_exists #a p =
+  exists_extensional p (fun x -> p x) ();
+  Sep.timeless_exists p;
+  let unfold h: squash (Sep.timeless Sep.(exists* x. p x)) = () in
+  let unfold h: squash (Sep.timeless (exists* x. p x)) = h in
+  ()
 let slprop_equiv = slprop_equiv
 let elim_slprop_equiv #p #q pf = slprop_equiv_elim p q
 let slprop_post_equiv = slprop_post_equiv
@@ -177,10 +166,7 @@ let bind_atomic = A.bind_atomic
 let frame_atomic = A.frame_atomic
 let sub_atomic = A.sub_atomic
 let sub_invs_atomic = A.sub_invs_stt_atomic
-let lift_atomic0 = A.lift_atomic0
-let lift_atomic1 = A.lift_atomic1
-let lift_atomic2 = A.lift_atomic2
-let lift_atomic3 = A.lift_atomic3
+let lift_atomic = A.lift_atomic
 
 ////////////////////////////////////////////////////////////////////
 // Ghost computations
@@ -217,9 +203,18 @@ let rec later_credit_buy n =
 let later = later
 let later_intro p = A.later_intro p
 let later_elim p = A.later_elim p
-let timeless_iff p = ()
+
+let later_elim_timeless p = A.implies_elim (later p) p
+
 let later_star = Sep.later_star
-let later_exists = Sep.later_exists
+let later_exists #t f =
+  let h: squash Sep.(later (exists* x. f x) `implies` exists* x. later (f x)) = Sep.later_exists #t f in
+  let h: squash (later (exists* x. f x) `implies` exists* x. later (f x)) = h in
+  A.implies_elim _ _
+let exists_later #t f =
+  let h: squash Sep.((exists* x. later (f x)) `implies` later (exists* x. f x)) = Sep.later_exists #t f in
+  let h: squash ((exists* x. later (f x)) `implies` later (exists* x. f x)) = h in
+  A.implies_elim _ _
 
 //////////////////////////////////////////////////////////////////////////
 // Equivalence
@@ -329,7 +324,7 @@ let alloc
 : stt (pcm_ref pcm)
     emp
     (fun r -> pcm_pts_to r x)
-= A.lift_atomic0 (A.alloc #a #pcm x)
+= A.lift_atomic (A.alloc #a #pcm x)
 
 let read
     (#a:Type)
@@ -342,7 +337,7 @@ let read
 : stt (v:a{compatible p x v /\ p.refine v})
     (pcm_pts_to r x)
     (fun v -> pcm_pts_to r (f v))
-= A.lift_atomic1 (A.read r x f)
+= A.lift_atomic (A.read r x f)
 
 let write
     (#a:Type)
@@ -353,7 +348,7 @@ let write
 : stt unit
     (pcm_pts_to r x)
     (fun _ -> pcm_pts_to r y)
-= A.lift_atomic0 (A.write r x y f)
+= A.lift_atomic (A.write r x y f)
 
 let share = A.share
 let gather = A.gather
@@ -383,7 +378,7 @@ let refl_stt (#a:Type u#a) (x:a)
 : stt unit emp (fun _ -> pure (x == x))
 = let m : stt_ghost unit emp_inames emp (fun _ -> pure (x == x)) = intro_pure (x == x) () in
   let m : stt_atomic unit #Neutral emp_inames emp (fun _ -> pure (x == x)) = lift_ghost_neutral m FStar.Tactics.Typeclasses.solve in
-  lift_atomic0 m
+  lift_atomic m
 
 let frame_flip (#pre #a #post:_) (frame:slprop) (e:stt a pre post)
 : stt a (pre ** frame) (fun x -> frame ** post x)
@@ -417,7 +412,7 @@ let big_alloc
 : stt (pcm_ref pcm)
     emp
     (fun r -> big_pcm_pts_to r x)
-= A.lift_atomic0 (A.big_alloc #a #pcm x)
+= A.lift_atomic (A.big_alloc #a #pcm x)
 
 let big_read
     (#a:Type)
@@ -430,7 +425,7 @@ let big_read
 : stt (v:a{compatible p x v /\ p.refine v})
     (big_pcm_pts_to r x)
     (fun v -> big_pcm_pts_to r (f v))
-= A.lift_atomic2 (A.big_read r x f)
+= A.lift_atomic (A.big_read r x f)
 
 let big_write
     (#a:Type)
@@ -441,7 +436,7 @@ let big_write
 : stt unit
     (big_pcm_pts_to r x)
     (fun _ -> big_pcm_pts_to r y)
-= A.lift_atomic0 (A.big_write r x y f)
+= A.lift_atomic (A.big_write r x y f)
 
 let big_share = A.big_share
 let big_gather = A.big_gather

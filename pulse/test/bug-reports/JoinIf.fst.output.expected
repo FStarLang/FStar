@@ -1,0 +1,11 @@
+>> Got issues: [
+* Error 72 at JoinIf.fst(112,46-112,50):
+  - Identifier not found: star
+
+>>]
+>> Got issues: [
+* Error 228 at JoinIf.fst(46,3-50,4):
+  - Pulse cannot yet infer a postcondition for a non-tail conditional statement;
+    Either annotate this `if` with `returns` clause; or rewrite your code to use a tail conditional
+
+>>]

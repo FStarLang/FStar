@@ -41,7 +41,7 @@ val drop (p:slprop)
 assume
 val dbg : slprop
 
-open Pulse.Lib.Stick
+open Pulse.Lib.Trade
 
 
 ghost
@@ -49,8 +49,8 @@ fn elim_implies () (#p #q:slprop)
    requires (p @==> q) ** p
    ensures q
 {
-  open Pulse.Lib.Stick;
-  elim_stick p q
+  open Pulse.Lib.Trade;
+  elim_trade p q
 }
 
 

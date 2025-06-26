@@ -18,7 +18,6 @@ module Pulse.Elaborate.Pure
 module RT = FStar.Reflection.Typing
 module R = FStar.Reflection.V2
 module L = FStar.List.Tot
-module RU = Pulse.RuntimeUtils
 open FStar.List.Tot
 open Pulse.Syntax.Base
 
@@ -33,6 +32,7 @@ let elab_qual = function
   | None -> R.Q_Explicit
   | Some Implicit -> R.Q_Implicit
   | Some TcArg -> R.Q_Meta (`FStar.Tactics.Typeclasses.tcresolve)
+  | Some (Meta t) -> R.Q_Meta t
 
 let elab_observability =
   let open R in

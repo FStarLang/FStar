@@ -1,0 +1,29 @@
+>> Got issues: [
+* Error 228 at ExistsErasedAndPureEqualities.fst(32,4-33,21):
+  - Could not resolve all free variables in the proposition: v == v_
+  - See also ExistsErasedAndPureEqualities.fst(32,4-34,12)
+
+>>]
+>> Got issues: [
+* Error 228 at ExistsErasedAndPureEqualities.fst(50,4-51,21):
+  - Could not resolve all free variables in the proposition: v == v_
+  - See also ExistsErasedAndPureEqualities.fst(50,4-52,12)
+
+>>]
+* Info at ExistsErasedAndPureEqualities.fst(68,4-68,11):
+  - Admitting continuation.
+  - Current context:
+      ExistsErasedAndPureEqualities.some_pred x v
+  - In typing environment:
+      _#768 : Prims.squash (v_ == v),
+      v_#765 : FStar.Ghost.erased Prims.int,
+      _#472 : Prims.squash (v == v),
+      v#116 : FStar.Ghost.erased Prims.int,
+      x#111 : Pulse.Lib.Reference.ref Prims.int
+
+>> Got issues: [
+* Error 228 at ExistsErasedAndPureEqualities.fst(79,4-80,21):
+  - Could not resolve all free variables in the proposition: v == v_
+  - See also ExistsErasedAndPureEqualities.fst(79,4-81,12)
+
+>>]

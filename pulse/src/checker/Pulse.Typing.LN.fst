@@ -26,7 +26,6 @@ open Pulse.Typing
 // TODO: this is needed only for the E_Total flag,
 //       may be the flag should move to reflection
 //
-module T = FStar.Tactics.V2
 
 let well_typed_terms_are_ln (g:R.env) (e:R.term) (t:R.term) (#eff:_) (d:RT.typing g e (eff, t))
   : Lemma (ensures RT.ln e /\ RT.ln t) =
@@ -319,9 +318,9 @@ and open_branch_ln' (br : branch) (x:term) (i:index)
   : Lemma
     (requires ln_branch' (subst_branch [RT.DT i x] br) (i - 1))
     (ensures ln_branch' br i)
-  = let (p, e) = br in
-    open_pattern_ln p x i;
-    open_st_term_ln' e x (i + pattern_shift_n p)
+  = let {pat; e} = br in
+    open_pattern_ln pat x i;
+    open_st_term_ln' e x (i + pattern_shift_n pat)
 
 let open_term_ln (e:term) (v:var)
   : Lemma 
@@ -1092,7 +1091,61 @@ let ln_mk_array (t:term) (n:int)
       (ensures ln' (mk_array t) n) =
   admit ()
 
-#push-options "--z3rlimit_factor 15 --fuel 4 --ifuel 1 --split_queries no --query_stats --z3cliopt 'smt.qi.eager_threshold=100'"
+let par_post_ln (uL uR aL aR postL postR x : _)
+  : Lemma
+      (requires ln' postL 0 /\ ln' postR 0)
+      (ensures ln' (par_post uL uR aL aR postL postR x) 0)
+=
+  admit ()
+
+let comp_par_ln (cL : comp{C_ST? cL}) (cR : comp{C_ST? cR}) (x : var)
+  : Lemma
+      (requires ln_c cL /\ ln_c cR)
+      (ensures ln_c (comp_par cL cR x))
+= let res = mk_tuple2 (comp_u cL) (comp_u cR) (comp_res cL) (comp_res cR) in
+  assert (ln res);
+  let pre = tm_star (comp_pre cL) (comp_pre cR) in
+  assert (ln pre);
+  assert (ln_c cL);
+  assert (ln' (comp_post cL) 1);
+  assert (ln' (comp_post cR) 1);
+  let post = par_post (comp_u cL) (comp_u cR) (comp_res cL) (comp_res cR) (comp_post cL) (comp_post cR) x in
+  par_post_ln (comp_u cL) (comp_u cR) (comp_res cL) (comp_res cR) (comp_post cL) (comp_post cR) x;
+  assert (ln' post 0);
+  assert (ln_c (comp_par cL cR x));
+  ()
+
+let st_typing_ln_par
+  (#g:_) (#t:_) (#c:_)
+  (d:st_typing g t c{T_Par? d})
+  (cb : (#g:_ -> #t:_ -> #c:_ -> d':st_typing g t c{d' << d} -> Lemma (ensures ln_st t /\ ln_c c)))
+  : Lemma 
+    (ensures ln_st t /\ ln_c c)
+    (decreases d)
+=
+  let T_Par _ _ cL _ cR x _ _ eL_typing eR_typing = d in
+  let x_tm = term_of_no_name_var x in
+  let u = comp_u cL in
+  let aL = comp_res cL in
+  let aR = comp_res cR in
+  cb eL_typing;
+  cb eR_typing;
+  ln_mk_fst u aL aR x_tm (-1);
+  ln_mk_snd u aL aR x_tm (-1);
+  open_term_ln_inv' (comp_post cL) (Pulse.Typing.mk_fst u u aL aR x_tm) 0;
+  close_term_ln' (open_term' (comp_post cL) (Pulse.Typing.mk_fst u u aL aR x_tm) 0) x 0;
+  open_term_ln_inv' (comp_post cR) (Pulse.Typing.mk_snd u u aL aR x_tm) 0;
+  close_term_ln' (open_term' (comp_post cR) (Pulse.Typing.mk_snd u u aL aR x_tm) 0) x 0;
+  assert (ln_st t);
+  assert (ln_c cL);
+  assert (ln_c cR);
+  comp_par_ln cL cR x;
+  assert (ln_c c);
+  ()
+
+// Note the use of break_vc in every case below.
+
+#push-options "--z3rlimit_factor 15 --fuel 4 --ifuel 1 --split_queries no --z3cliopt 'smt.qi.eager_threshold=100'"
 let rec st_typing_ln (#g:_) (#t:_) (#c:_)
                      (d:st_typing g t c)
   : Lemma 
@@ -1100,7 +1153,7 @@ let rec st_typing_ln (#g:_) (#t:_) (#c:_)
     (decreases d)
   = match d with
     | T_Frame _ _ c frame df dc ->
-      FStar.Pure.BreakVC.break_vc();
+      FStar.Pure.BreakVC.break_vc ();
       tot_or_ghost_typing_ln df;
       st_typing_ln dc;
       assert (ln' (comp_post c) 0);
@@ -1108,14 +1161,14 @@ let rec st_typing_ln (#g:_) (#t:_) (#c:_)
       assert (ln' (tm_star (comp_post c) frame) 0)
 
     | T_IntroPure _ p t _ ->
-      FStar.Pure.BreakVC.break_vc();
+      FStar.Pure.BreakVC.break_vc ();
       tot_or_ghost_typing_ln t;
       assert (ln p);
       assert (ln' p 0);
       assert (ln' (tm_pure p) 0)
 
     | T_Abs _g x _q ty _u body c dt db ->
-      FStar.Pure.BreakVC.break_vc();
+      FStar.Pure.BreakVC.break_vc ();
       tot_or_ghost_typing_ln dt;
       st_typing_ln db;
       open_st_term_ln body x;
@@ -1124,7 +1177,7 @@ let rec st_typing_ln (#g:_) (#t:_) (#c:_)
 
     | T_STApp _ _ _ _ res arg st at
     | T_STGhostApp _ _ _ _ res arg _ st _ at ->
-      FStar.Pure.BreakVC.break_vc();
+      FStar.Pure.BreakVC.break_vc ();
       tot_or_ghost_typing_ln st;
       tot_or_ghost_typing_ln at;
       // We have RT.ln' (elab_comp res),
@@ -1134,12 +1187,12 @@ let rec st_typing_ln (#g:_) (#t:_) (#c:_)
       Pulse.Elaborate.elab_ln_comp (open_comp_with res arg) (-1)
 
     | T_Lift _ _ _ _ d1 l ->
-      FStar.Pure.BreakVC.break_vc();
+      FStar.Pure.BreakVC.break_vc ();
       st_typing_ln d1;
       lift_comp_ln l
 
     | T_Return _ c use_eq u t e post x t_typing e_typing post_typing ->
-      FStar.Pure.BreakVC.break_vc();
+      FStar.Pure.BreakVC.break_vc ();
       tot_or_ghost_typing_ln t_typing;
       tot_or_ghost_typing_ln e_typing;
       tot_or_ghost_typing_ln post_typing;
@@ -1157,7 +1210,7 @@ let rec st_typing_ln (#g:_) (#t:_) (#c:_)
       end
 
     | T_Bind _ _ e2 _ _ _ x _ d1 dc1 d2 bc ->
-      FStar.Pure.BreakVC.break_vc();
+      FStar.Pure.BreakVC.break_vc ();
       st_typing_ln d1;
       tot_or_ghost_typing_ln dc1;
       st_typing_ln d2;
@@ -1165,7 +1218,7 @@ let rec st_typing_ln (#g:_) (#t:_) (#c:_)
       bind_comp_ln bc
 
     | T_BindFn _g _e1 e2 _c1 _c2 _b x d1 _u dc1 d2 c ->
-      FStar.Pure.BreakVC.break_vc();
+      FStar.Pure.BreakVC.break_vc ();
       st_typing_ln d1;
       tot_or_ghost_typing_ln dc1;
       st_typing_ln d2;
@@ -1173,18 +1226,18 @@ let rec st_typing_ln (#g:_) (#t:_) (#c:_)
       comp_typing_ln c
 
     | T_If _ _ _ _ _ _ tb d1 d2 _ ->
-      FStar.Pure.BreakVC.break_vc();
+      FStar.Pure.BreakVC.break_vc ();
       tot_or_ghost_typing_ln tb;
       st_typing_ln d1;
       st_typing_ln d2
 
     | T_Match _ _ _ sc _ scd c _ _ _ _ ->
-      FStar.Pure.BreakVC.break_vc();
+      FStar.Pure.BreakVC.break_vc ();
       tot_or_ghost_typing_ln scd;
       admit ()
 
     | T_ElimExists _ u t p x dt dv ->
-      FStar.Pure.BreakVC.break_vc();
+      FStar.Pure.BreakVC.break_vc ();
       tot_or_ghost_typing_ln dt;
       tot_or_ghost_typing_ln dv;
       let x_tm = tm_var {nm_index=x;nm_ppname=ppname_default} in
@@ -1194,46 +1247,34 @@ let rec st_typing_ln (#g:_) (#t:_) (#c:_)
 
 
     | T_IntroExists _ u t p e dt dv dw ->
-      FStar.Pure.BreakVC.break_vc();
+      FStar.Pure.BreakVC.break_vc ();
       tot_or_ghost_typing_ln dt;
       tot_or_ghost_typing_ln dv;
       tot_or_ghost_typing_ln dw;
       open_term_ln_inv' p e 0
 
     | T_Equiv _ _ _ _ d2 deq ->
-      FStar.Pure.BreakVC.break_vc();
+      FStar.Pure.BreakVC.break_vc ();
       st_typing_ln d2;
       st_equiv_ln deq
 
     | T_While _ inv _ _ inv_typing cond_typing body_typing ->
-      FStar.Pure.BreakVC.break_vc();
+      FStar.Pure.BreakVC.break_vc ();
       tot_or_ghost_typing_ln inv_typing;
       st_typing_ln cond_typing;
       st_typing_ln body_typing;
       open_term_ln_inv' inv tm_false 0
 
     | T_Par _ _ cL _ cR x _ _ eL_typing eR_typing ->
-      FStar.Pure.BreakVC.break_vc();
-      let x_tm = term_of_no_name_var x in
-      let u = comp_u cL in
-      let aL = comp_res cL in
-      let aR = comp_res cR in
-      st_typing_ln eL_typing;
-      st_typing_ln eR_typing;
-      ln_mk_fst u aL aR x_tm (-1);
-      ln_mk_snd u aL aR x_tm (-1);
-      open_term_ln_inv' (comp_post cL) (Pulse.Typing.mk_fst u u aL aR x_tm) 0;
-      close_term_ln' (open_term' (comp_post cL) (Pulse.Typing.mk_fst u u aL aR x_tm) 0) x 0;
-      open_term_ln_inv' (comp_post cR) (Pulse.Typing.mk_snd u u aL aR x_tm) 0;
-      close_term_ln' (open_term' (comp_post cR) (Pulse.Typing.mk_snd u u aL aR x_tm) 0) x 0
+      st_typing_ln_par d st_typing_ln
 
     | T_Rewrite _ _ _ p_typing equiv_p_q ->
-      FStar.Pure.BreakVC.break_vc();
+      FStar.Pure.BreakVC.break_vc ();
       tot_or_ghost_typing_ln p_typing;
       slprop_equiv_ln equiv_p_q
 
     | T_WithLocal g _ init body init_t c x init_typing init_t_typing c_typing body_typing ->
-      FStar.Pure.BreakVC.break_vc();
+      FStar.Pure.BreakVC.break_vc ();
       tot_or_ghost_typing_ln init_typing;
       st_typing_ln body_typing;
       open_st_term_ln' body (null_var x) 0;
@@ -1242,7 +1283,7 @@ let rec st_typing_ln (#g:_) (#t:_) (#c:_)
       ln_mk_ref init_t (-1)
 
     | T_WithLocalArray g _ init len body init_t c x init_typing len_typing init_t_typing c_typing body_typing ->
-      FStar.Pure.BreakVC.break_vc();
+      FStar.Pure.BreakVC.break_vc ();
       tot_or_ghost_typing_ln init_typing;
       tot_or_ghost_typing_ln len_typing;
       st_typing_ln body_typing;
@@ -1253,7 +1294,7 @@ let rec st_typing_ln (#g:_) (#t:_) (#c:_)
 
     | T_Admit _ c c_typing
     | T_Unreachable _ c c_typing _ ->
-      FStar.Pure.BreakVC.break_vc();
+      FStar.Pure.BreakVC.break_vc ();
       comp_typing_ln c_typing;
       let st_typing, _ = Pulse.Typing.Metatheory.Base.comp_typing_inversion c_typing in
       let STC _ _ x t_typing pre_typing post_typing = st_typing in
@@ -1263,11 +1304,11 @@ let rec st_typing_ln (#g:_) (#t:_) (#c:_)
       open_term_ln' (comp_post c) (term_of_no_name_var x) 0
 
     | T_Sub _ e c c' d d_sub ->
-      FStar.Pure.BreakVC.break_vc();
+      FStar.Pure.BreakVC.break_vc ();
       st_typing_ln d;
       st_sub_ln d_sub
 
     | T_WithInv _ _ _ _ _ _ _ _ _ ->
       FStar.Pure.BreakVC.break_vc();
       admit() // IOU
-#pop-options
+

@@ -1,6 +1,4 @@
 module PulseCore.IndirectionTheoryActions
-module F = FStar.FunctionalExtensionality
-module T = FStar.Tactics
 module PM = PulseCore.MemoryAlt
 module HST = PulseCore.HoareStateMonad
 open PulseCore.IndirectionTheorySep
@@ -48,6 +46,9 @@ val later_intro (e:inames) (p:slprop)
 
 val later_elim (e:inames) (p:slprop) 
 : ghost_act unit e (later p `star` later_credit 1) (fun _ -> p)
+
+val implies_elim (e:inames) (p: slprop) (q:slprop { implies p q })
+: ghost_act unit e p (fun _ -> q)
 
 val buy (e:inames)
 : act unit e emp (fun _ -> later_credit 1)

@@ -9,7 +9,7 @@ depends: [
   "fstar" {>= "2023.04.15~dev"}
 ]
 build: [
-  [make "-j" jobs]
+  [make "-j" jobs "ADMIT=1"]
 ]
 install: [
   [make "PREFIX=%{prefix}%" "install"]

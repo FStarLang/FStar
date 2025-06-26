@@ -1,4 +1,5 @@
 module Pulse.Lib.PCM.MonoidShares
+#lang-pulse
 open FStar.PCM
 module M = FStar.Algebra.CommMonoid
 

@@ -19,35 +19,31 @@ open FStar.Ghost
 open PulseCore.FractionalPermission
 open PulseCore.Observability
 open FStar.PCM
-module G = FStar.Ghost
-module Set = FStar.Set
 module T = FStar.Tactics.V2
 open Pulse.Lib.Dv {}
 open FStar.ExtractAs
 
-(* This attribute can be used on the indexes of a slprop
-   to instruct the checker to call the SMT solver to relate
-   occurrences of that index.
+(* Arguments of slprops can be marked as a matching key to
+   1- Make sure we do no try to use the SMT to match resources with
+      different matching keys (in other words, we only use the unifier to
+      match the matching keys).
+   2- Indicate that we only expect a single instance of the resource for
+      a given set of matching keys, so we allow the use of SMT for the rest
+      of the arguments.
 
-   For example, if you have
+     val pts_to ([@@@mkey] x : ref a) (v : a) : slprop
 
-     val pts_to (x:ref a) ([@@@equate_by_smt] v:a) : slprop
+   Then `pts_to x (a + b)` and `pts_to x (b + a)` will be matched by the
+   prover by emitting an SMT query `pts_to x (a + b) == pts_to x (b +
+   a)`. (Note we ask for this possibly weaker fact instead of `(a + b)
+   == (b + a)`; this can be useful when the definition of the resource
+   is not injective.)
 
-   Then `pts_to x (a + b)` and `pts_to x (b + a)` will be
-   matched by the prover by emitting an SMT query (a + b) == (b + a). Of course, 
-   `pts_to x a` and `pts_to x a` will be matched purely by unification without
-   emitted a trivial SMT query (a == a).
-
-   By default, if none of the indexes of a slprop are marked with "equate_by_smt", 
-   the _last_ argument of a slprop is considered to be equated by SMT. This makes 
-   it convenient to write slprops like the one below, without paying special
-   heed to this attribute.
-  
-     val pts_to (x:ref a) (v:a) : slprop
+   Of course, `pts_to x a` and `pts_to x a` will be matched purely by
+   unification without even emitting a trivial SMT query (a == a).
 *)
-val equate_by_smt    : unit (* now meaningless. *)
-val equate_strict    : unit (* only use fastunif *)
-val equate_syntactic : unit (* only use term_eq *)
+val mkey : unit
+val no_mkeys : unit
 
 (** This attribute allows to do ambiguous proving when calling a function. *)
 val allow_ambiguous : unit
@@ -93,15 +89,15 @@ val elim_slprop_equiv (#p #q:_) (_:slprop_equiv p q) : squash (p == q)
 val slprop_post_equiv (#t:Type u#a) (p q: t -> slprop) : prop
 
 val intro_slprop_post_equiv
-       (#t:Type u#a) 
+       (#t:Type u#a)
        (p q: t -> slprop)
        (pf: (x:t -> slprop_equiv (p x) (q x)))
   : slprop_post_equiv p q
 
 val elim_slprop_post_equiv (#t:Type u#a)
-                          (p q: t -> slprop) 
+                          (p q: t -> slprop)
                           (pf:slprop_post_equiv p q)
-                          (x:t) 
+                          (x:t)
     : slprop_equiv (p x) (q x)
 
 val slprop_equiv_refl (v0:slprop) : slprop_equiv v0 v0
@@ -142,7 +138,7 @@ let star_comm (p q:slprop)
 let emp_unit (p:slprop)
 : Lemma (emp ** p == p)
 = elim_slprop_equiv (slprop_equiv_unit p)
-let slprop_equivs () 
+let slprop_equivs ()
 : Lemma (
       (forall p q r. p ** (q ** r) == (p ** q) ** r) /\
       (forall p q. p ** q == q ** p) /\
@@ -179,7 +175,10 @@ let (/!) (is1 is2 : inames) : Type0 =
   GhostSet.disjoint is1 is2
 
 val inv (i:iname) (p:slprop) : slprop
+
+[@@no_mkeys]
 val inames_live (inames:inames) : slprop
+
 let mem_iname (e:inames) (i:iname) : erased bool = elift2 (fun e i -> GhostSet.mem i e) e i
 let mem_inv (e:inames) (i:iname) : GTot bool = mem_iname e i
 
@@ -266,7 +265,7 @@ val hide_div #a #pre #post (f:unit -> Dv (stt a pre post))
    potentially opening invariants in `opens`
    and returns `x:a`
    such that the final state satisfies `post x`.
-   
+
    The #obs index is used to indicate whether or not this computation has
    observable effects:
 
@@ -292,7 +291,7 @@ val stt_atomic
     (opens:inames)
     (pre:slprop)
     (post:a -> slprop)
-: Type u#(max 4 a)
+: Type u#(max 5 a)
 
 val lift_observability
     (#a:Type u#a)
@@ -360,8 +359,8 @@ val sub_invs_atomic
     (_ : squash (inames_subset opens1 opens2))
 : stt_atomic a #obs opens2 pre post
 
-val lift_atomic0
-  (#a:Type u#0)
+val lift_atomic
+  (#a:Type u#a)
   (#obs:_)
   (#opens:inames)
   (#pre:slprop)
@@ -369,32 +368,6 @@ val lift_atomic0
   (e:stt_atomic a #obs opens pre post)
 : stt a pre post
 
-val lift_atomic1
-  (#a:Type u#1)
-  (#obs:_)
-  (#opens:inames)
-  (#pre:slprop)
-  (#post:a -> slprop)
-  (e:stt_atomic a #obs opens pre post)
-: stt a pre post
-
-val lift_atomic2
-  (#a:Type u#2)
-  (#obs:_)
-  (#opens:inames)
-  (#pre:slprop)
-  (#post:a -> slprop)
-  (e:stt_atomic a #obs opens pre post)
-: stt a pre post
-
-val lift_atomic3
-  (#a:Type u#3)
-  (#obs:_)
-  (#opens:inames)
-  (#pre:slprop)
-  (#post:a -> slprop)
-  (e:stt_atomic a #obs opens pre post)
-: stt a pre post
 //////////////////////////////////////////////////////////////////////////
 // Ghost computations
 //////////////////////////////////////////////////////////////////////////
@@ -411,7 +384,7 @@ val stt_ghost
     (opens:inames)
     (pre:slprop)
     (post:a -> slprop)
-: Type u#(max 4 a)
+: Type u#(max 5 a)
 
 val bind_ghost
     (#a:Type u#a)
@@ -494,13 +467,11 @@ val later (p: slprop) : slprop
 val later_intro (p: slprop) : stt_ghost unit emp_inames p fun _ -> later p
 val later_elim (p: slprop) : stt_ghost unit emp_inames (later p ** later_credit 1) fun _ -> p
 
-val timeless_iff p : squash (timeless p <==> p == later p)
-let later_elim_timeless (p: slprop { timeless p }) : stt_ghost unit emp_inames (later p) (fun _ -> p) =
-  timeless_iff p;
-  lift_neutral_ghost (return_neutral_noeq _ _)
+val later_elim_timeless (p: slprop { timeless p }) : stt_ghost unit emp_inames (later p) (fun _ -> p)
 
 val later_star p q : squash (later (p ** q) == later p ** later q)
-val later_exists #t (f:t->slprop) : squash (later (exists* x. f x) == (exists* x. later (f x)))
+val later_exists (#t: Type) (f:t->slprop) : stt_ghost unit emp_inames (later (exists* x. f x)) (fun _ -> exists* x. later (f x))
+val exists_later (#t: Type) (f:t->slprop) : stt_ghost unit emp_inames (exists* x. later (f x)) (fun _ -> later (exists* x. f x))
 
 //////////////////////////////////////////////////////////////////////////
 // Equivalence
@@ -521,7 +492,7 @@ val equiv_elim_timeless (a:slprop { timeless a }) (b: slprop { timeless b }) : s
 val equiv_star_congr (p q r: slprop) : squash (equiv q r == (equiv q r ** equiv (p ** q) (p ** r)))
 
 val later_equiv (p q: slprop) : squash (later (equiv p q) == equiv (later p) (later q))
- 
+
 //////////////////////////////////////////////////////////////////////////
 // Higher-order ghost state: references that can store predicates
 //////////////////////////////////////////////////////////////////////////
@@ -529,7 +500,7 @@ val later_equiv (p q: slprop) : squash (later (equiv p q) == equiv (later p) (la
 [@@erasable]
 val slprop_ref : Type0
 
-val slprop_ref_pts_to (x: slprop_ref) (y: slprop) : slprop
+val slprop_ref_pts_to ([@@@mkey]x: slprop_ref) (y: slprop) : slprop
 
 val slprop_ref_alloc (y: slprop)
 : stt_ghost slprop_ref emp_inames emp fun x -> slprop_ref_pts_to x y
@@ -620,6 +591,22 @@ than SMT. This tactic is also used by the checker when elaborating fold/unfold. 
 let slprop_equiv_norm (_:unit) : T.Tac unit =
     T.mapply (`slprop_equiv_refl)
 
+
+let slprop_equiv_unfold (head_sym:string) (_:unit) : T.Tac unit =
+    T.mapply (`slprop_equiv_trans);
+    T.norm [hnf; zeta; delta_only [head_sym]];
+    T.norm [hnf; iota; primops];
+    T.mapply (`slprop_equiv_refl);
+    T.mapply (`slprop_equiv_refl)
+
+let slprop_equiv_fold (head_sym:string) (_:unit) : T.Tac unit =
+    T.mapply (`slprop_equiv_trans);
+    T.flip();
+    T.norm [hnf; zeta; delta_only [head_sym]];
+    T.norm [hnf; iota; primops];
+    T.mapply (`slprop_equiv_refl);
+    T.mapply (`slprop_equiv_refl)
+    
 let slprop_equiv_ext' (p1 p2:slprop) (_: squash (p1 == p2))
   : slprop_equiv p1 p2 = slprop_equiv_refl p1
 
@@ -631,7 +618,7 @@ let match_rewrite_tac (_:unit) : T.Tac unit =
     T.trefl ()
 
 [@@deprecated "Use (rewrite .. as .. by ..) syntax instead!"]
-val rewrite_by (p:slprop) (q:slprop) 
+val rewrite_by (p:slprop) (q:slprop)
                (t:unit -> T.Tac unit)
                (_:unit { T.with_tactic t (slprop_equiv p q) })
 : stt_ghost unit emp_inames p (fun _ -> q)
@@ -692,7 +679,7 @@ let pcm_ref
 val pcm_pts_to
     (#a:Type u#1)
     (#p:pcm a)
-    ([@@@equate_strict] r:pcm_ref p)
+    ([@@@mkey] r:pcm_ref p)
     (v:a)
 : slprop
 
@@ -797,7 +784,7 @@ instance val non_informative_ghost_pcm_ref
 val ghost_pcm_pts_to
     (#a:Type u#1)
     (#p:pcm a)
-    ([@@@equate_strict] r:ghost_pcm_ref p)
+    ([@@@mkey] r:ghost_pcm_ref p)
     (v:a)
 : slprop
 
@@ -871,7 +858,7 @@ val ghost_gather
 val big_pcm_pts_to
     (#a:Type u#2)
     (#p:pcm a)
-    ([@@@equate_strict] r:pcm_ref p)
+    ([@@@mkey] r:pcm_ref p)
     (v:a)
 : slprop
 
@@ -950,7 +937,7 @@ val big_gather
 val big_ghost_pcm_pts_to
     (#a:Type u#2)
     (#p:pcm a)
-    ([@@@equate_strict] r:ghost_pcm_ref p)
+    ([@@@mkey] r:ghost_pcm_ref p)
     (v:a)
 : slprop
 
@@ -1033,14 +1020,14 @@ during checking `opens` annotations. We use to try
 to make iname_list and @@ reduce away. *)
 val unfold_check_opens : unit
 
-[@@coercion; strict_on_arguments [0]; unfold_check_opens]
-let rec iname_list (xs : list iname) : inames =
-  match xs with
-  | [] -> emp_inames
-  | i::is -> add_inv (iname_list is) i
-
 [@@unfold_check_opens]
 let (@@) : inames -> inames -> inames = join_inames
 
 (* Attribute to eagerly unfold slprops in the context and goal. *)
 val pulse_unfold : unit
+
+[@@coercion; pulse_unfold; strict_on_arguments [0]; unfold_check_opens]
+let rec iname_list (xs : list iname) : inames =
+  match xs with
+  | [] -> emp_inames
+  | i::is -> add_inv (iname_list is) i

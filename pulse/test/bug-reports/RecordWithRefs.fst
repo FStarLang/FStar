@@ -33,7 +33,7 @@ let fst (p:u8_pair_repr) : U8.t =
 let snd (p:u8_pair_repr) : U8.t =
   let (_, x) = p in x
   
-let u8_pair_pred (p:u8_pair) (v:u8_pair_repr) : slprop = 
+let u8_pair_pred ([@@@mkey]p:u8_pair) (v:u8_pair_repr) : slprop =
     R.pts_to p.a (fst v) **
     R.pts_to p.b (snd v)
 
@@ -131,6 +131,6 @@ fn swap_pair_alt3 (p: u8_pair) (#v: erased u8_pair_repr)
     p.a := y;
     p.b := x;
     
-    fold_u8_pair_pred p
+    fold_u8_pair_pred p;
 }
 

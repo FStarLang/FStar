@@ -1,4 +1,5 @@
 module Pulse.C.Types.Array.Base
+#lang-pulse
 module SZ = FStar.SizeT
 
 inline_for_extraction

@@ -14,16 +14,17 @@
 *)
 
 module Pulse.Lib.SpinLock
+#lang-pulse
 
 open Pulse.Lib.Pervasives
-open Pulse.Lib.Stick
+open Pulse.Lib.Trade
 
 module T = FStar.Tactics.V2
 
 val lock : Type0
 
 val lock_alive
-      ([@@@equate_strict] l:lock)
+      ([@@@mkey] l:lock)
       (#[T.exact (`1.0R)] p:perm)
       (v:slprop)
   : slprop
@@ -44,22 +45,11 @@ val share (#v:slprop) (#p:perm) (l:lock)
       (lock_alive l #p v)
       (fun _ -> lock_alive l #(p /. 2.0R) v ** lock_alive l #(p /. 2.0R) v)
 
-val share2 (#v:slprop) (l:lock)
-  : stt_ghost unit emp_inames
-      (lock_alive l v)
-      (fun _ -> lock_alive l #0.5R v ** lock_alive l #0.5R v)
-
 [@@allow_ambiguous]
 val gather (#v:slprop) (#p1 #p2:perm) (l:lock)
   : stt_ghost unit emp_inames
       (lock_alive l #p1 v ** lock_alive l #p2 v)
       (fun _ -> lock_alive l #(p1 +. p2) v)
-
-[@@allow_ambiguous]
-val gather2 (#v:slprop) (l:lock)
-  : stt_ghost unit emp_inames
-      (lock_alive l #0.5R v ** lock_alive l #0.5R v)
-      (fun _ -> lock_alive l v)
 
 val free (#v:slprop) (l:lock)
   : stt unit (lock_alive l #1.0R v ** lock_acquired l) (fun _ -> emp)

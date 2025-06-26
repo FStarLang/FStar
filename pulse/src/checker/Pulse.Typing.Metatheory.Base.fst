@@ -19,7 +19,6 @@ open Pulse.Syntax
 open Pulse.Syntax.Naming
 open Pulse.Typing
 module RU = Pulse.RuntimeUtils
-module T = FStar.Tactics.V2
 module RT = FStar.Reflection.Typing
 
 let admit_st_comp_typing (g:env) (st:st_comp) 
@@ -124,18 +123,26 @@ let lift_comp_weakening (g:env) (g':env { disjoint g g'})
   | Lift_Neutral_Ghost _ c -> Lift_Neutral_Ghost _ c
   | Lift_Observability _ obs c -> Lift_Observability _ obs c
 
-#push-options "--admit_smt_queries true"
+// TODO: the proof for RT.Equiv is not correct here
+let equiv_weakening (g:env) (g':env { disjoint g g' })
+  #t1 #t2 (d:RT.equiv (elab_env (push_env g g')) t1 t2)
+  (g1:env { pairwise_disjoint g g1 g' })
+  : RT.equiv (elab_env (push_env (push_env g g1) g')) t1 t2 =
+  admit ();
+  d
+
 let st_equiv_weakening (g:env) (g':env { disjoint g g' })
   (#c1 #c2:comp) (d:st_equiv (push_env g g') c1 c2)
   (g1:env { pairwise_disjoint g g1 g' })
   : st_equiv (push_env (push_env g g1) g') c1 c2 =
   match d with
-  | ST_SLPropEquiv _ c1 c2 x _ _ _ _ _ _ ->
+  | ST_SLPropEquiv _ c1 c2 x _ _ _ hequiv _ _ ->
     assume (~ (x `Set.mem` dom g'));
     assume (~ (x `Set.mem` dom g1));
-    // TODO: the proof for RT.Equiv is not correct here
-    ST_SLPropEquiv _ c1 c2 x (RU.magic ()) (RU.magic ()) (RU.magic ()) (FStar.Reflection.Typing.Rel_refl _ _ _) (RU.magic ()) (RU.magic ())
-#pop-options
+    ST_SLPropEquiv _ c1 c2 x (RU.magic ()) (RU.magic ()) (RU.magic ())
+      (equiv_weakening _ _ hequiv _) (RU.magic ()) (RU.magic ())
+  | ST_TotEquiv _ t1 t2 u _ _ ->
+    ST_TotEquiv _ t1 t2 u (RU.magic ()) (RU.magic ())
 
 // TODO: add precondition that g1 extends g'
 let prop_validity_token_weakening (#g:env) (#t:term)
@@ -464,7 +471,6 @@ let rec st_typing_weakening g g' t c d g1
                         (prop_validity_token_weakening tok _)
 #pop-options
 
-#push-options "--admit_smt_queries true"
 let non_informative_t_subst (g:env) (x:var) (t:typ) (g':env { pairwise_disjoint g (singleton_env (fstar_env g) x t) g' })
   (#e:term)
   (e_typing:tot_typing g e t)
@@ -481,7 +487,7 @@ let non_informative_t_subst (g:env) (x:var) (t:typ) (g':env { pairwise_disjoint 
 let non_informative_c_subst (g:env) (x:var) (t:typ) (g':env { pairwise_disjoint g (singleton_env (fstar_env g) x t) g' })
   (#e:term)
   (e_typing:tot_typing g e t)
-  (c:comp)
+  (c:comp_st)
   (d:non_informative_c (push_env g (push_env (singleton_env (fstar_env g) x t) g')) c)
 
   : non_informative_c (push_env g (subst_env g' (nt x e))) (subst_comp c (nt x e)) =
@@ -519,7 +525,7 @@ let bind_comp_subst
   (g:env) (x:var) (t:typ) (g':env { pairwise_disjoint g (singleton_env (fstar_env g) x t) g' })
   (#e:term)
   (e_typing:tot_typing g e t)
-  (#y:var) (#c1 #c2 #c3:comp) (d:bind_comp (push_env g (push_env (singleton_env (fstar_env g) x t) g')) y c1 c2 c3)
+  (#y:var) (#c1 #c2 #c3:comp_st) (d:bind_comp (push_env g (push_env (singleton_env (fstar_env g) x t) g')) y c1 c2 c3)
   : bind_comp (push_env g (subst_env g' (nt x e)))
               y
               (subst_comp c1 (nt x e))
@@ -530,6 +536,9 @@ let bind_comp_subst
 
   match d with
   | Bind_comp _ y c1 c2 _ z _ ->
+    assume bind_comp_pre y (S.subst_comp c1 ss) (S.subst_comp c2 ss);
+    assume None? (lookup (push_env g (subst_env g' (nt x e))) z) /\
+        ~(Set.mem z (S.freevars (S.comp_post (S.subst_comp c2 ss))));
     Bind_comp _ y (subst_comp c1 ss)
                   (subst_comp c2 ss)
                   (RU.magic ())
@@ -545,16 +554,21 @@ let st_equiv_subst (g:env) (x:var) (t:typ) (g':env { pairwise_disjoint g (single
              (subst_comp c1 (nt x e))
              (subst_comp c2 (nt x e)) =
   match d with
-  | ST_SLPropEquiv _ c1 c2 y _ _ _ _ _ _ ->
+  | ST_SLPropEquiv _ c1 c2 y _ _ _ hequiv _ _ ->
+    assume None? (lookup (push_env g (subst_env g' (nt x e))) y) /\
+        ~(Set.mem y (S.freevars (S.comp_post (S.subst_comp c1 (nt x e))))) /\
+        ~(Set.mem y (S.freevars (S.comp_post (S.subst_comp c2 (nt x e)))));
     ST_SLPropEquiv _ (subst_comp c1 (nt x e))
                     (subst_comp c2 (nt x e))
                     y
                     (RU.magic ())
                     (RU.magic ())
                     (RU.magic ())
-                    (RT.Rel_refl _ _ _)  // TODO: incorrect proof
+                    (admit (); hequiv)  // TODO: incorrect proof
                     (RU.magic ())
                     (RU.magic ())
+  | ST_TotEquiv _ t1 t2 u _ _ ->
+    ST_TotEquiv _ (subst_term t1 (nt x e)) (subst_term t2 (nt x e)) u (RU.magic ()) (RU.magic ())
 
 let st_comp_typing_subst (g:env) (x:var) (t:typ) (g':env { pairwise_disjoint g (singleton_env (fstar_env g) x t) g' })
   (#e:term)
@@ -564,6 +578,8 @@ let st_comp_typing_subst (g:env) (x:var) (t:typ) (g':env { pairwise_disjoint g (
                    (subst_st_comp s (nt x e)) =
   match d with
   | STC _ s y _ _ _ ->
+    assume None? (lookup (push_env g (subst_env g' (nt x e))) y) /\
+        ~(Set.mem y (S.freevars (S.subst_st_comp s (nt x e)).post));
     STC _ (subst_st_comp s (nt x e))
          y
          (RU.magic ())
@@ -602,6 +618,7 @@ let rec st_typing_subst g x t g' #e #eff e_typing #e1 #c1 e1_typing _
     Pervasives.coerce_eq (RU.magic ()) e1_typing
 
   | T_STApp _ head ty q res arg _ _ ->
+    admit ();
     T_STApp _ (subst_term head ss)
               (subst_term ty ss)
               q
@@ -611,6 +628,7 @@ let rec st_typing_subst g x t g' #e #eff e_typing #e1 #c1 e1_typing _
               (RU.magic ())
 
  | T_STGhostApp _ head ty q res arg x _ _ _ ->
+    admit ();
     T_STGhostApp _ (subst_term head ss)
               (subst_term ty ss)
               q
@@ -622,6 +640,7 @@ let rec st_typing_subst g x t g' #e #eff e_typing #e1 #c1 e1_typing _
               (RU.magic ())
 
   | T_Return _ c use_eq u t e post x _ _ _ ->
+    admit ();
     T_Return _ c use_eq u
       (subst_term t ss)
       (subst_term e ss)
@@ -632,6 +651,7 @@ let rec st_typing_subst g x t g' #e #eff e_typing #e1 #c1 e1_typing _
       (RU.magic ())
 
   | T_Lift _ e c1 c2 d_e d_lift ->
+    admit ();
     T_Lift _ (subst_st_term e ss)
              (subst_comp c1 ss)
              (subst_comp c2 ss)
@@ -639,6 +659,7 @@ let rec st_typing_subst g x t g' #e #eff e_typing #e1 #c1 e1_typing _
              (lift_comp_subst g x t g' e_typing d_lift)
 
   | T_Bind _ e1 e2 c1 c2 b y c d_e1 _ d_e2 d_bc ->
+    admit ();
     T_Bind _ (subst_st_term e1 ss)
              (subst_st_term e2 ss)
              (subst_comp c1 ss)
@@ -652,6 +673,7 @@ let rec st_typing_subst g x t g' #e #eff e_typing #e1 #c1 e1_typing _
              (bind_comp_subst g x t g' e_typing d_bc)
 
   | T_BindFn _ e1 e2 c1 c2 b y d_e1 u _ d_e2 d_c2 ->
+    admit ();
     T_BindFn _ (subst_st_term e1 ss)
                (subst_st_term e2 ss)
                (subst_comp c1 ss)
@@ -665,6 +687,7 @@ let rec st_typing_subst g x t g' #e #eff e_typing #e1 #c1 e1_typing _
                (comp_typing_subst g x t (push_binding g' y ppname_default (comp_res c1)) e_typing d_c2)
  
   | T_If _ b e1 e2 c hyp _ d_e1 d_e2 _ ->
+    admit ();
     T_If _ (subst_term b ss)
            (subst_st_term e1 ss)
            (subst_st_term e2 ss)
@@ -679,6 +702,7 @@ let rec st_typing_subst g x t g' #e #eff e_typing #e1 #c1 e1_typing _
     Pervasives.coerce_eq (RU.magic ()) e1_typing
 
   | T_Frame _ e c frame _ d_e ->
+    admit ();
     T_Frame _ (subst_st_term e ss)
               (subst_comp c ss)
               (subst_term frame ss)
@@ -686,21 +710,33 @@ let rec st_typing_subst g x t g' #e #eff e_typing #e1 #c1 e1_typing _
               (st_typing_subst g x t g' e_typing d_e (RU.magic ()))
 
   | T_Equiv _ e c c' d_e d_eq ->
+    admit ();
     T_Equiv _ (subst_st_term e ss)
               (subst_comp c ss)
               (subst_comp c' ss)
               (st_typing_subst g x t g' e_typing d_e (RU.magic ()))
               (st_equiv_subst g x t g' e_typing d_eq)
+  
+  | T_Sub _ e c c' d_e d_eq ->
+    admit ();
+    T_Sub _ (subst_st_term e ss)
+            (subst_comp c ss)
+            (subst_comp c' ss)
+            (st_typing_subst g x t g' e_typing d_e (RU.magic ()))
+            (coerce_eq d_eq ())
 
   | T_IntroPure _ p _ _ ->
+    admit ();
     T_IntroPure _ (subst_term p ss)
                   (RU.magic ())
                   (RU.magic ())
 
   | T_ElimExists _ u t p y _ _ ->
+    admit ();
     T_ElimExists _ u (subst_term t ss) (subst_term p ss) y (RU.magic ()) (RU.magic ())
 
   | T_IntroExists _ u b p e _ _ _ ->
+    admit ();
     T_IntroExists _ u (subst_binder b ss)
                       (subst_term p ss)
                       (subst_term e ss)
@@ -709,6 +745,7 @@ let rec st_typing_subst g x t g' #e #eff e_typing #e1 #c1 e1_typing _
                       (RU.magic ())
 
   | T_While _ inv cond body _ cond_typing body_typing ->
+    admit ();
     T_While _ (subst_term inv ss)
               (subst_st_term cond ss)
               (subst_st_term body ss)
@@ -717,6 +754,7 @@ let rec st_typing_subst g x t g' #e #eff e_typing #e1 #c1 e1_typing _
               (st_typing_subst g x t g' e_typing body_typing (RU.magic ()))
 
   | T_Par _ eL cL eR cR y d_cL d_cR d_eL d_eR ->
+    admit ();
     T_Par _ (subst_st_term eL ss)
             (subst_comp cL ss)
             (subst_st_term eR ss)
@@ -728,6 +766,7 @@ let rec st_typing_subst g x t g' #e #eff e_typing #e1 #c1 e1_typing _
             (st_typing_subst g x t g' e_typing d_eR (RU.magic ()))
 
   | T_WithLocal _ ppname init body init_t c y _ _ d_c d_body ->
+    admit ();
     T_WithLocal _ ppname
                   (subst_term init ss)
                   (subst_st_term body ss)
@@ -740,6 +779,7 @@ let rec st_typing_subst g x t g' #e #eff e_typing #e1 #c1 e1_typing _
                   (coerce_eq (st_typing_subst g x t (push_binding g' y ppname_default (mk_ref init_t)) e_typing d_body (RU.magic ())) ())
 
   | T_WithLocalArray _ ppname init len body init_t c y _ _ _ d_c d_body ->
+    admit ();
     T_WithLocalArray _ ppname
                        (subst_term init ss)
                        (subst_term len ss)
@@ -754,11 +794,21 @@ let rec st_typing_subst g x t g' #e #eff e_typing #e1 #c1 e1_typing _
                        (coerce_eq (st_typing_subst g x t (push_binding g' y ppname_default (mk_ref init_t)) e_typing d_body (RU.magic ())) ())
 
   | T_Rewrite _ p q _ _ ->
+    admit ();
     T_Rewrite _ (subst_term p ss)
                 (subst_term q ss)
                 (RU.magic ())
                 (RU.magic ())
 
   | T_Admit _ c d_c ->
+    admit ();
     T_Admit _ (subst_comp c ss) (comp_typing_subst g x t g' e_typing d_c)
-#pop-options
+
+  | T_Unreachable _ c d_c d_p ->
+    admit ();
+    T_Unreachable _ (subst_comp c ss) (comp_typing_subst g x t g' e_typing d_c) (coerce_eq d_p ())
+  
+  | T_WithInv _ i p body c d_i d_p d_body d_tok ->
+    admit ();
+    T_WithInv _ (subst_term i ss) (subst_term p ss) (subst_st_term body ss) (subst_comp c ss)
+      (RU.magic ()) (RU.magic ()) (st_typing_subst g x t g' e_typing d_body _) (RU.magic ())

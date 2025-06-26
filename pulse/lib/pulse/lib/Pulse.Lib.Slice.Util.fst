@@ -38,7 +38,7 @@ fn append_split (#t: Type) (s: S.slice t) (#p: perm) (i: SZ.t)
 {
   assert pure (v1 `Seq.equal` Seq.slice (Seq.append v1 v2) 0 (SZ.v i));
   assert pure (v2 `Seq.equal` Seq.slice (Seq.append v1 v2) (SZ.v i) (Seq.length v1 + Seq.length v2));
-  S.split s i
+  S.split s i;
 }
 
 inline_for_extraction
@@ -56,7 +56,7 @@ fn append_split_trade (#t: Type) (input: S.slice t) (#p: perm) (i: SZ.t)
 {
   let s = append_split input i;
   match s {
-    Mktuple2 s1 s2 -> {
+    s1, s2 -> {
       ghost fn aux ()
         requires S.is_split input s1 s2 ** (pts_to s1 #p v1 ** pts_to s2 #p v2)
         ensures pts_to input #p (v1 `Seq.append` v2)
@@ -85,7 +85,7 @@ fn split_trade (#t: Type) (s: S.slice t) (#p: perm) (i: SZ.t) (#v: Ghost.erased 
   Seq.lemma_split v (SZ.v i);
   let s' = S.split s i;
   match s' {
-    Mktuple2 s1 s2 -> {
+    s1, s2 -> {
       with v1 v2. assert pts_to s1 #p v1 ** pts_to s2 #p v2;
       ghost fn aux ()
         requires S.is_split s s1 s2 ** (pts_to s1 #p v1 ** pts_to s2 #p v2)
@@ -220,19 +220,19 @@ inline_for_extraction
 fn arrayptr_to_slice_intro_trade
   (#t: Type) (a: AP.ptr t) (#p: perm) (alen: SZ.t) (#v: Ghost.erased (Seq.seq t))
   requires
-    (pts_to a #p v ** pure (SZ.v alen == Seq.length v))
+    (AP.pts_to a #p v ** pure (SZ.v alen == Seq.length v))
   returns s: slice t
   ensures
     (pts_to s #p v **
       trade
         (pts_to s #p v)
-        (pts_to a #p v)
+        (AP.pts_to a #p v)
     )
 {
   let s = arrayptr_to_slice_intro a alen;
   ghost fn aux (_: unit)
     requires arrayptr_to_slice a s ** pts_to s #p v
-    ensures pts_to a #p v
+    ensures AP.pts_to a #p v
   {
     arrayptr_to_slice_elim s
   };
@@ -245,18 +245,18 @@ fn slice_to_arrayptr_intro_trade
   (#t: Type) (s: slice t) (#p: perm) (#v: Ghost.erased (Seq.seq t))
 requires
   (pts_to s #p v)
-returns a: AP.ptr t
+  returns a: AP.ptr t
 ensures
-  (pts_to a #p v **
+  (AP.pts_to a #p v **
     trade
-      (pts_to a #p v)
+      (AP.pts_to a #p v)
       (pts_to s #p v)
   )
 {
   pts_to_len s;
   let a = slice_to_arrayptr_intro s;
   ghost fn aux (_: unit)
-    requires slice_to_arrayptr s a ** pts_to a #p v
+    requires slice_to_arrayptr s a ** AP.pts_to a #p v
     ensures pts_to s #p v
   {
     slice_to_arrayptr_elim a;

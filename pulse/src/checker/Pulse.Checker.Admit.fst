@@ -24,6 +24,7 @@ open Pulse.Checker.Pure
 open Pulse.Checker.Base
 open Pulse.Checker.Prover
 
+module RU = Pulse.RuntimeUtils
 module P = Pulse.Syntax.Printer
 
 let check
@@ -68,8 +69,8 @@ let check
         let d_s : st_comp_typing _ s = STC _ s x t_typing pre_typing post_typing in
         (match c with
          | STT -> (| _,  CT_ST _ _ d_s |)
-         | STT_Ghost -> (| _, CT_STGhost _ tm_emp_inames _ (magic ()) d_s |)
-         | STT_Atomic -> (| _, CT_STAtomic _ tm_emp_inames Neutral _ (magic ()) d_s |))
+         | STT_Ghost -> (| _, CT_STGhost _ tm_emp_inames _ (RU.magic ()) d_s |)
+         | STT_Atomic -> (| _, CT_STAtomic _ tm_emp_inames Neutral _ (RU.magic ()) d_s |))
 
       | _, Some post -> Pulse.Typing.Combinators.comp_for_post_hint pre_typing post x
   in
@@ -79,13 +80,11 @@ let check
   // ^ This makes a big difference! Would be good to distill into
   // a smaller F*-only example and file an issue.
   let ide = T.ide () in
+  let admit_diag = T.ext_getv "pulse:admit_diag" = "1" in
   let no_admit_diag = T.ext_getv "pulse:no_admit_diag" = "1" in
-  (if ide && not no_admit_diag then begin
-    (* If we're running interactively, print out the context
-    and environment. *)
-    let open FStar.Pprint in
+  (if admit_diag || (ide && not no_admit_diag) then begin
+    (* If we're running interactively, print out the context and environment. *)
     let open Pulse.PP in
-    let pre = T.norm_well_typed_term (elab_env g) [Pervasives.unascribe; primops; iota] pre in
     let msg = [
       text "Admitting continuation.";
       text "Current context:" ^^

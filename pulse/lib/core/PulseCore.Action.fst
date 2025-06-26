@@ -24,6 +24,7 @@ module I = PulseCore.InstantiatedSemantics
 module F = FStar.FunctionalExtensionality
 module ST = PulseCore.HoareStateMonad
 module Set = FStar.GhostSet
+module U = FStar.Universe
 friend PulseCore.InstantiatedSemantics
 
 open FStar.PCM
@@ -96,37 +97,19 @@ let stt_of_action0 (#a:Type u#0) #ak #pre #post (m:ITA._act_except a ak GhostSet
   in
   let action : Sem.action state a = {pre=pre; post=F.on_dom _ post; step} in
   fun _ -> Sem.act_as_m0 action
-  
-let stt_of_action1 (#a:Type u#1) #ak #pre #post (m:ITA._act_except a ak GhostSet.empty pre post)
-: stt a pre post
-= let step (frame:slprop)
-    : Sem.st_sep state a (pre `star` frame) (fun x -> post x `star` frame)
-    = m frame
-  in
-  let action : Sem.action state a = {pre=pre; post=F.on_dom _ post; step} in
-  fun _ -> Sem.act_as_m1 u#_ u#100 action
 
-let stt_of_action2 (#a:Type u#2) #ak #pre #post (m:ITA._act_except a ak GhostSet.empty pre post)
+let stt_of_action4 (#a:Type u#4) #ak #pre #post (m:ITA._act_except a ak GhostSet.empty pre post)
 : stt a pre post
 = let step (frame:slprop)
     : Sem.st_sep state a (pre `star` frame) (fun x -> post x `star` frame)
     = m frame
   in
   let action : Sem.action state a = {pre=pre; post=F.on_dom _ post; step} in
-  fun _ -> Sem.act_as_m2 u#_ u#100 action
-
-let stt_of_action3 (#a:Type u#3) #ak #pre #post (m:ITA._act_except a ak GhostSet.empty pre post)
-: stt a pre post
-= let step (frame:slprop)
-    : Sem.st_sep state a (pre `star` frame) (fun x -> post x `star` frame)
-    = m frame
-  in
-  let action : Sem.action state a = {pre=pre; post=F.on_dom _ post; step} in
-  let lift : Sem.liftable u#3 u#100 = {
+  let lift : Sem.liftable u#4 u#100 = {
     downgrade_val = (fun t x -> FStar.Universe.downgrade_val x);
     laws = ()
   } in
-  fun _ -> Sem.act_as_m_poly u#_ u#3 u#100 lift action
+  fun _ -> Sem.act_as_m_poly u#_ u#4 u#100 lift action
 
 
 let maybe_ghost (r:reifiability) = r = Ghost
@@ -145,6 +128,9 @@ let pre_act
     (post:a -> slprop)
 = ITA._act_except a (as_action_kind r) opens pre post
 
+let map_post #a #b (f: b->a) (post: a->slprop) : b->slprop =
+  fun x -> post (f x)
+
 let act 
     (a:Type u#a)
     (r:reifiability)
@@ -152,7 +138,7 @@ let act
     (pre:slprop)
     (post:a -> slprop)
 = #ictx:inames_disj opens ->
-  pre_act a r ictx pre post
+  a':Type u#4 & f:(a'->a) & pre_act a' r ictx pre (map_post f post)
 
 let ghost_action_preorder (_:unit)
   : Lemma (FStar.Preorder.preorder_rel is_ghost_action)
@@ -166,6 +152,20 @@ let return_pre_act
 : pre_act a Ghost except (post x) post
 = ghost_action_preorder ();
   fun frame m0 -> x, m0
+
+let map_pre_act
+    (#r:reifiability)
+    (#a:Type u#a)
+    (#b:Type u#b)
+    (#except:inames)
+    (#pre #post: _)
+    (g:a->b)
+    (f:pre_act a r except pre (map_post g post))
+: pre_act b r except pre post
+= ghost_action_preorder ();
+  fun frame m0 ->
+    let x, m1 = f frame m0 in
+    g x, m1
 
 let bind_pre_act_ghost
      (#a:Type u#a)
@@ -229,6 +229,38 @@ let lift_pre_act_ghost
 // Next, reversing the polarity of the inames index
 //////////////////////////////////////////////////////
 
+let lift_pre_act0_act (#a: Type u#0) #r #opens #pre #post
+  (m: (#ictx:inames_disj opens -> pre_act a r ictx pre post))
+: act a r opens pre post
+= fun #ictx -> (| U.raise_t a, U.downgrade_val,
+    fun m0 frame ->
+    let x, m1 = m #ictx m0 frame in
+    U.raise_val x, m1 |)
+
+let lift_pre_act1_act (#a: Type u#1) #r #opens #pre #post
+  (m: (#ictx:inames_disj opens -> pre_act a r ictx pre post))
+: act a r opens pre post
+= fun #ictx -> (| U.raise_t u#1 u#4 a, U.downgrade_val,
+    fun m0 frame ->
+    let x, m1 = m #ictx m0 frame in
+    U.raise_val x, m1 |)
+
+let lift_pre_act2_act (#a: Type u#2) #r #opens #pre #post
+  (m: (#ictx:inames_disj opens -> pre_act a r ictx pre post))
+: act a r opens pre post
+= fun #ictx -> (| U.raise_t u#2 u#4 a, U.downgrade_val,
+    fun m0 frame ->
+    let x, m1 = m #ictx m0 frame in
+    U.raise_val x, m1 |)
+
+let lift_pre_act3_act (#a: Type u#3) #r #opens #pre #post
+  (m: (#ictx:inames_disj opens -> pre_act a r ictx pre post))
+: act a r opens pre post
+= fun #ictx -> (| U.raise_t u#3 u#4 a, U.downgrade_val,
+    fun m0 frame ->
+    let x, m1 = m #ictx m0 frame in
+    U.raise_val x, m1 |)
+
 let return 
     (#a:Type u#a)
     (#r:reifiability)
@@ -236,7 +268,7 @@ let return
     (#post:a -> slprop)
     (x:a)
 : act a r opens (post x) post
-= fun #ictx -> return_pre_act #a #ictx #post x
+= fun #ictx -> (| U.raise_t unit, (fun _ -> x), return_pre_act #_ #ictx #(fun _ -> post x) (U.raise_val ()) |)
 
 let bind_ghost
      (#a:Type u#a)
@@ -246,7 +278,12 @@ let bind_ghost
      (f:act a Ghost opens pre1 post1)
      (g:(x:a -> act b Ghost opens (post1 x) post2))
 : act b Ghost opens pre1 post2
-= fun #ictx -> bind_pre_act_ghost #a #b #ictx #pre1 #post1 #post2 (f #ictx) (fun x -> g x #ictx)
+= fun #ictx ->
+  let (| am, fm, f |) = f #ictx in
+  (| x:am & (g (fm x) #ictx)._1,
+     (fun (| x, y |) -> (g (fm x) #ictx)._2 y),
+     bind_pre_act_ghost #am #_ #ictx #pre1 #(map_post fm post1) #_ f
+      (fun x -> map_pre_act #Ghost #_ #(x:am & (g (fm x) #ictx)._1) (fun y -> (| x, y |)) (g (fm x) #ictx)._3) |)
 
 let bind_atomic
      (#a:Type u#a)
@@ -258,7 +295,12 @@ let bind_atomic
      (f:act a r1 opens pre1 post1)
      (g:(x:a -> act b r2 opens (post1 x) post2))
 : act b Atomic opens pre1 post2
-= fun #ictx -> bind_pre_act_atomic #a #b #r1 #r2 #ictx #pre1 #post1 #post2 (f #ictx) (fun x -> g x #ictx)
+= fun #ictx ->
+  let (| am, fm, f |) = f #ictx in
+  (| x:am & (g (fm x) #ictx)._1,
+     (fun (| x, y |) -> (g (fm x) #ictx)._2 y),
+     bind_pre_act_atomic #am #_ #r1 #r2 #ictx #pre1 #(map_post fm post1) #_ f
+      (fun x -> map_pre_act #_ #_ #(x:am & (g (fm x) #ictx)._1) (fun y -> (| x, y |)) (g (fm x) #ictx)._3) |)
 
 let frame
      (#a:Type u#a)
@@ -267,7 +309,9 @@ let frame
      (#pre #post #frame:_)
      (f:act a r opens pre post)
 : act a r opens (pre `star` frame) (fun x -> post x `star` frame)
-= fun #ictx -> frame_pre_act (f #ictx)
+= fun #ictx ->
+  let (| am, fm, f |) = f #ictx in
+  (| am, fm, frame_pre_act f |)
 
 let lift_ghost_atomic
     (#a:Type)
@@ -276,7 +320,9 @@ let lift_ghost_atomic
     (#opens:inames)
     (f:act a Ghost opens pre post)
 : act a Atomic opens pre post
-= fun #ictx -> lift_pre_act_ghost (f #ictx)
+= fun #ictx ->
+  let (| am, fm, f |) = f #ictx in
+  (| am, fm, lift_pre_act_ghost f |)
 
 let weaken 
     (#a:Type)
@@ -318,67 +364,41 @@ let sub
     (post':a -> slprop { forall x. slprop_equiv (post x) (post' x) })
     (f:act a r opens pre post)
 : act a r opens pre' post'
-= fun #ictx -> sub_pre_act_atomic #a #r #pre #post #ictx pre' post' (f #ictx)
+= fun #ictx ->
+  let (| am, fm, f |) = f #ictx in
+  (| am, fm, sub_pre_act_atomic _ _ f |)
 
-let action_of_act 
-    (#a:Type)
-    (#r:reifiability)
-    (#opens:inames)
-    (#pre:slprop)
-    (#post:a -> slprop)
-    (f:act a r opens pre post)
-: pre_act a r emp_inames pre post
-= f #emp_inames
-
-let lift (#a:Type u#100) #r #opens #pre #post
+let lift (#a:Type u#a) #r #opens #pre #post
          (m:act a r opens pre post)
 : stt a pre post
-= stt_of_action (action_of_act m)
+= let (| a, f, m |) = m #emp_inames in
+  bind (stt_of_action4 m) (fun x -> I.return (f x) post)
 
-let lift0 (#a:Type u#0) #r #opens #pre #post
-          (m:act a r opens pre post)
-: stt a pre post
-= stt_of_action0 (action_of_act m)
-
-let lift1 (#a:Type u#1) #r #opens #pre #post
-          (m:act a r opens pre post)
-: stt a pre post
-= stt_of_action1 (action_of_act m)
-
-let lift2 (#a:Type u#2) #r #opens #pre #post
-          (m:act a r opens pre post)
-: stt a pre post
-= stt_of_action2 (action_of_act m)
-
-let lift3 (#a:Type u#3) #r #opens #pre #post
-          (m:act a r opens pre post)
-: stt a pre post
-= stt_of_action3 (action_of_act m)
 ///////////////////////////////////////////////////////
 // invariants
 ///////////////////////////////////////////////////////
 let inv i p = inv i p
 let dup_inv (i:iref) (p:slprop) =
-  fun #ictx -> ITA.dup_inv ictx i p
-let new_invariant p = fun #ictx -> ITA.new_invariant ictx p
+  lift_pre_act0_act fun #ictx -> ITA.dup_inv ictx i p
+let new_invariant p = lift_pre_act0_act fun #ictx -> ITA.new_invariant ictx p
 let exists_equiv (#a:_) (#p:a -> slprop)
   : squash (op_exists_Star p == (exists* x. p x))
   = let pf = I.slprop_equiv_exists p (fun x -> p x) () in
     let pf = FStar.Squash.return_squash pf in
     I.slprop_equiv_elim (op_exists_Star p) (exists* x. p x)
  
-module T = FStar.Tactics
-let fresh_invariant ctx p = fun #ictx -> ITA.fresh_invariant ictx p ctx
+let fresh_invariant ctx p = lift_pre_act0_act fun #ictx -> ITA.fresh_invariant ictx p ctx
 
-let inames_live_inv (i:iref) (p:slprop) = fun #ictx -> ITA.inames_live_inv ictx i p
+let inames_live_inv (i:iref) (p:slprop) = lift_pre_act0_act fun #ictx -> ITA.inames_live_inv ictx i p
 
 let with_invariant #a #r #fp #fp' #f_opens #p i f =
   fun #ictx ->
-  let f : act a r f_opens (later p `star` fp) (fun x -> later p `star` fp' x) = f () in
   let ictx' = Sep.add_inv ictx i in
-  ITA.with_invariant #a #fp #fp' #ictx i (f #ictx')
+  let (| af, mf, f |) = f () #ictx' in
+  (| af, mf, ITA.with_invariant i f |)
 
 let invariant_name_identifies_invariant p q i =
+  lift_pre_act0_act
   fun #ictx -> 
     ITA.invariant_name_identifies_invariant ictx i p q
 
@@ -388,11 +408,15 @@ let invariant_name_identifies_invariant p q i =
 ////////////////////////////////////////////////////////////////////////
 let later_intro (p:slprop)
 : act unit Ghost emp_inames p (fun _ -> later p)
-= fun #ictx -> ITA.later_intro ictx p
+= lift_pre_act0_act fun #ictx -> ITA.later_intro ictx p
 
 let later_elim (p:slprop)
 : act unit Ghost emp_inames (later p ** later_credit 1) (fun _ -> p)
-= fun #ictx -> ITA.later_elim ictx p
+= lift_pre_act0_act fun #ictx -> ITA.later_elim ictx p
+
+let implies_elim (p:slprop) (q:slprop { implies p q })
+: act unit Ghost emp_inames p (fun _ -> q)
+= lift_pre_act0_act fun #ictx -> ITA.implies_elim ictx p q
 
 let buy1 ()
 : stt unit emp (fun _ -> later_credit 1)
@@ -406,7 +430,8 @@ let core_ref_null = Mem.core_ref_null
 let is_core_ref_null = Mem.core_ref_is_null
 let pts_to #a #p r x = Sep.lift (Mem.pts_to #a #p r x)
 let timeless_pts_to #a #p r x = Sep.timeless_lift (Mem.pts_to #a #p r x)
-let pts_to_not_null #a #p r v #ictx =
+let pts_to_not_null #a #p r v =
+  lift_pre_act0_act fun #ictx ->
   ITA.lift_mem_action (Mem.pts_to_not_null_action #a #p (Sep.lower_inames ictx) r v)
 
 let lift_eqs ()
@@ -423,8 +448,7 @@ let alloc
     (#pcm:pcm a)
     (x:a{pcm.refine x})
 : act (ref a pcm) Atomic emp_inames emp (fun r -> pts_to r x)
-= fun #ictx ->
-    lift_eqs();
+= lift_eqs(); lift_pre_act0_act fun #ictx ->
     ITA.lift_mem_action (Mem.alloc_action #a #pcm (Sep.lower_inames ictx) x)
 
 let read
@@ -440,7 +464,7 @@ let read
       emp_inames
       (pts_to r x)
       (fun v -> pts_to r (f v))
-= fun #ictx -> 
+= lift_pre_act1_act fun #ictx -> 
     ITA.lift_mem_action (Mem.select_refine #a #p (Sep.lower_inames ictx) r x f)
 
 let write
@@ -454,7 +478,7 @@ let write
       emp_inames
       (pts_to r x)
       (fun _ -> pts_to r y)
-= fun #ictx ->
+= lift_pre_act0_act fun #ictx ->
     ITA.lift_mem_action (Mem.upd_gen #a #p (Sep.lower_inames ictx) r x y f)
 
 let share
@@ -468,8 +492,7 @@ let share
       emp_inames
       (pts_to r (v0 `op pcm` v1))
       (fun _ -> pts_to r v0 `star` pts_to r v1)
-= fun #ictx ->
-    lift_eqs();
+= lift_eqs(); lift_pre_act0_act fun #ictx ->
     ITA.lift_mem_action (Mem.split_action #a #pcm (Sep.lower_inames ictx) r v0 v1)
 
 let gather
@@ -483,8 +506,7 @@ let gather
       emp_inames
       (pts_to r v0 `star` pts_to r v1)
       (fun _ -> pts_to r (op pcm v0 v1))
-= fun #ictx ->
-    lift_eqs();
+= lift_eqs(); lift_pre_act0_act fun #ictx ->
     ITA.lift_mem_action (Mem.gather_action #a #pcm (Sep.lower_inames ictx) r v0 v1)
 
 ///////////////////////////////////////////////////////////////////
@@ -492,7 +514,7 @@ let gather
 ///////////////////////////////////////////////////////////////////
 let big_pts_to #a #pcm r x = Sep.lift (Mem.big_pts_to #a #pcm r x)
 let timeless_big_pts_to #a #p r x = Sep.timeless_lift (Mem.big_pts_to #a #p r x)
-let big_pts_to_not_null #a #p r v #ictx = 
+let big_pts_to_not_null #a #p r v = lift_pre_act0_act fun #ictx ->
   ITA.lift_mem_action (Mem.big_pts_to_not_null_action #a #p (Sep.lower_inames ictx) r v)
 
 let big_alloc
@@ -500,8 +522,7 @@ let big_alloc
     (#pcm:pcm a)
     (x:a{pcm.refine x})
 : act (ref a pcm) Atomic emp_inames emp (fun r -> big_pts_to r x)
-= fun #ictx ->
-    lift_eqs();
+= lift_eqs(); lift_pre_act0_act fun #ictx ->
     ITA.lift_mem_action (Mem.big_alloc_action #a #pcm (Sep.lower_inames ictx) x)
 
 let big_read
@@ -517,7 +538,7 @@ let big_read
       emp_inames
       (big_pts_to r x)
       (fun v -> big_pts_to r (f v))
-= fun #ictx ->
+= lift_pre_act2_act fun #ictx ->
     lift_eqs();
     ITA.lift_mem_action (Mem.big_select_refine#a #p (Sep.lower_inames ictx) r x f)
 
@@ -532,7 +553,7 @@ let big_write
       emp_inames
       (big_pts_to r x)
       (fun _ -> big_pts_to r y)
-= fun #ictx ->
+= lift_pre_act0_act fun #ictx ->
     ITA.lift_mem_action (Mem.big_upd_gen #a #p (Sep.lower_inames ictx) r x y f)
 
 let big_share
@@ -546,8 +567,7 @@ let big_share
       emp_inames
       (big_pts_to r (v0 `op pcm` v1))
       (fun _ -> big_pts_to r v0 `star` big_pts_to r v1)
-= fun #ictx ->
-    lift_eqs();
+= lift_eqs(); lift_pre_act0_act fun #ictx ->
     ITA.lift_mem_action (Mem.big_split_action #a #pcm (Sep.lower_inames ictx) r v0 v1)
 
 let big_gather
@@ -561,13 +581,12 @@ let big_gather
       emp_inames
       (big_pts_to r v0 `star` big_pts_to r v1)
       (fun _ -> big_pts_to r (op pcm v0 v1))
-= fun #ictx ->
-    lift_eqs();
+= lift_eqs(); lift_pre_act0_act fun #ictx ->
     ITA.lift_mem_action (Mem.big_gather_action #a #pcm (Sep.lower_inames ictx) r v0 v1)
 
 let nb_pts_to #a #pcm r x = Sep.lift <| Mem.nb_pts_to #a #pcm r x
 let timeless_nb_pts_to #a #p r x = Sep.timeless_lift <| Mem.nb_pts_to #a #p r x
-let nb_pts_to_not_null #a #p r v #ictx =
+let nb_pts_to_not_null #a #p r v = lift_pre_act0_act fun #ictx ->
   ITA.lift_mem_action (Mem.nb_pts_to_not_null_action #a #p (Sep.lower_inames ictx) r v)
 
 let nb_alloc
@@ -575,8 +594,7 @@ let nb_alloc
     (#pcm:pcm a)
     (x:a{pcm.refine x})
 : act (ref a pcm) Atomic emp_inames emp (fun r -> nb_pts_to r x)
-= fun #ictx ->
-    lift_eqs();
+= lift_eqs (); lift_pre_act0_act fun #ictx ->
     ITA.lift_mem_action (Mem.nb_alloc_action #a #pcm (Sep.lower_inames ictx) x)
 
 let nb_read
@@ -592,7 +610,7 @@ let nb_read
       emp_inames
       (nb_pts_to r x)
       (fun v -> nb_pts_to r (f v))
-= fun #ictx ->
+= lift_pre_act3_act fun #ictx ->
     ITA.lift_mem_action (Mem.nb_select_refine #a #p (Sep.lower_inames ictx) r x f)
 
 let nb_write
@@ -606,7 +624,7 @@ let nb_write
       emp_inames
       (nb_pts_to r x)
       (fun _ -> nb_pts_to r y)
-= fun #ictx ->
+= lift_pre_act0_act fun #ictx ->
     ITA.lift_mem_action <| Mem.nb_upd_gen #a #p (Sep.lower_inames ictx) r x y f
 
 let nb_share
@@ -620,8 +638,7 @@ let nb_share
       emp_inames
       (nb_pts_to r (v0 `op pcm` v1))
       (fun _ -> nb_pts_to r v0 `star` nb_pts_to r v1)
-= fun #ictx ->
-    lift_eqs();
+= lift_eqs(); lift_pre_act0_act fun #ictx ->
     ITA.lift_mem_action <| Mem.nb_split_action #a #pcm (Sep.lower_inames ictx) r v0 v1
 
 let nb_gather
@@ -635,8 +652,7 @@ let nb_gather
       emp_inames
       (nb_pts_to r v0 `star` nb_pts_to r v1)
       (fun _ -> nb_pts_to r (op pcm v0 v1))
-= fun #ictx ->
-    lift_eqs ();
+= lift_eqs(); lift_pre_act0_act fun #ictx ->
     ITA.lift_mem_action <| Mem.nb_gather_action #a #pcm (Sep.lower_inames ictx) r v0 v1
 
 
@@ -660,11 +676,11 @@ let pure_true ()
 
 let intro_pure (p:prop) (pf:squash p)
 : act unit Ghost emp_inames emp (fun _ -> pure p)
-= fun #ictx -> ITA.intro_pure #ictx p pf
+= lift_pre_act0_act fun #ictx -> ITA.intro_pure #ictx p pf
 
 let elim_pure (p:prop)
 : act (squash p) Ghost emp_inames (pure p) (fun _ -> emp)
-= fun #ictx -> ITA.elim_pure #ictx p
+= lift_pre_act0_act fun #ictx -> ITA.elim_pure #ictx p
 
 ///////////////////////////////////////////////////////////////////
 // exists*
@@ -675,73 +691,82 @@ let thunk (p:slprop) = fun (_:unit) -> p
 
 let intro_exists' (#a:Type u#a) (p:a -> slprop) (x:erased a)
 : act unit Ghost emp_inames (p x) (thunk (op_exists_Star p))
-= fun #ictx -> ITA.intro_exists #ictx p x
+= lift_pre_act0_act fun #ictx -> ITA.intro_exists #ictx p x
 
 let intro_exists'' (#a:Type u#a) (p:a -> slprop) (x:erased a)
 : act unit Ghost emp_inames (p x) (thunk (exists* x. p x))
-= fun #ictx -> coerce_eq (exists_equiv #a #p) (intro_exists' #a p x #ictx)
+= exists_equiv #a #p; intro_exists' p x
 
 let intro_exists (#a:Type u#a) (p:a -> slprop) (x:erased a)
 : act unit Ghost emp_inames (p x) (fun _ -> exists* x. p x)
 = intro_exists'' p x
 
-let elim_exists' (#a:Type u#a) (p:a -> slprop)
-: act (erased a) Ghost emp_inames (op_exists_Star p) (fun x -> p x)
-= fun #ictx -> ITA.witness_exists #ictx p
+let exists_ok_mem #a (p: a->slprop) = m:erased mem { interp (exists* x. p x) m }
+let exists_get_witness #a (p: a->slprop) (m:exists_ok_mem p) : x:erased a { interp (p x) m } =
+  exists_equiv #a #p;
+  interp_exists p;
+  IndefiniteDescription.indefinite_description_tot a (fun x -> interp (p x) m)
 
 let elim_exists (#a:Type u#a) (p:a -> slprop)
 : act (erased a) Ghost emp_inames (exists* x. p x) (fun x -> p x)
-= fun #ictx -> coerce_eq (exists_equiv #a #p) (elim_exists' #a p #ictx)
+= fun #ictx ->
+  let k: pre_act (exists_ok_mem p) Ghost ictx (exists* x. p x) (fun x -> p (exists_get_witness p x)) =
+   fun frame m0 ->
+    sep_laws();
+    let m1, m2 = split_mem (exists* x. p x) (frame `Sep.star` mem_invariant ictx m0) (hide m0) in 
+    assert FStar.Preorder.reflexive is_ghost_action;
+    intro_star (p (exists_get_witness p m1)) (frame `Sep.star` mem_invariant ictx m0) m1 m2;
+    m1, m0
+  in (| exists_ok_mem p, exists_get_witness p, k |)
 
-let drop p = fun #ictx -> ITA.drop #ictx p
+let drop p = lift_pre_act0_act fun #ictx -> ITA.drop #ictx p
 
 let core_ghost_ref = Mem.core_ghost_ref
 let ghost_pts_to #a #pcm r x = Sep.lift (Mem.ghost_pts_to #a #pcm r x)
 let timeless_ghost_pts_to #a #p r x = Sep.timeless_lift (Mem.ghost_pts_to #a #p r x)
-let ghost_alloc #a #pcm x = fun #ictx -> let open Mem in lift_eqs(); ITA.lift_mem_action <| ghost_alloc #(Sep.lower_inames ictx) #a #pcm x
-let ghost_read #a #p r x f = fun #ictx -> let open Mem in lift_eqs(); ITA.lift_mem_action <| ghost_read #(Sep.lower_inames ictx) #a #p r x f
-let ghost_write #a #p r x y f = fun #ictx -> let open Mem in lift_eqs(); ITA.lift_mem_action <| ghost_write #(Sep.lower_inames ictx) #a #p r x y f
-let ghost_share #a #pcm r v0 v1 = fun #ictx -> let open Mem in lift_eqs(); ITA.lift_mem_action <| ghost_share #(Sep.lower_inames ictx) #a #pcm r v0 v1
-let ghost_gather #a #pcm r v0 v1 = fun #ictx -> let open Mem in lift_eqs(); ITA.lift_mem_action <| ghost_gather #(Sep.lower_inames ictx) #a #pcm r v0 v1
+let ghost_alloc #a #pcm x = let open Mem in lift_eqs (); lift_pre_act0_act fun #ictx -> ITA.lift_mem_action <| ghost_alloc #(Sep.lower_inames ictx) #a #pcm x
+let ghost_read #a #p r x f = let open Mem in lift_eqs(); lift_pre_act1_act fun #ictx -> ITA.lift_mem_action <| ghost_read #(Sep.lower_inames ictx) #a #p r x f
+let ghost_write #a #p r x y f = let open Mem in lift_eqs(); lift_pre_act0_act fun #ictx -> ITA.lift_mem_action <| ghost_write #(Sep.lower_inames ictx) #a #p r x y f
+let ghost_share #a #pcm r v0 v1 = let open Mem in lift_eqs(); lift_pre_act0_act fun #ictx -> ITA.lift_mem_action <| ghost_share #(Sep.lower_inames ictx) #a #pcm r v0 v1
+let ghost_gather #a #pcm r v0 v1 = let open Mem in lift_eqs(); lift_pre_act0_act fun #ictx -> ITA.lift_mem_action <| ghost_gather #(Sep.lower_inames ictx) #a #pcm r v0 v1
 
 let big_ghost_pts_to #a #p r x = Sep.lift (Mem.big_ghost_pts_to #a #p r x)
 let timeless_big_ghost_pts_to #a #p r x = Sep.timeless_lift (Mem.big_ghost_pts_to #a #p r x)
-let big_ghost_alloc #a #pcm x = fun #ictx -> let open Mem in lift_eqs(); ITA.lift_mem_action <| big_ghost_alloc #(Sep.lower_inames ictx) #a #pcm x
-let big_ghost_read #a #p r x f = fun #ictx -> let open Mem in lift_eqs(); ITA.lift_mem_action <| big_ghost_read #(Sep.lower_inames ictx) #a #p r x f
-let big_ghost_write #a #p r x y f = fun #ictx -> let open Mem in lift_eqs(); ITA.lift_mem_action <| big_ghost_write #(Sep.lower_inames ictx) #a #p r x y f
-let big_ghost_share #a #pcm r v0 v1 = fun #ictx -> let open Mem in lift_eqs(); ITA.lift_mem_action <| big_ghost_share #(Sep.lower_inames ictx) #a #pcm r v0 v1
-let big_ghost_gather #a #pcm r v0 v1 = fun #ictx -> let open Mem in lift_eqs(); ITA.lift_mem_action <| big_ghost_gather #(Sep.lower_inames ictx) #a #pcm r v0 v1
+let big_ghost_alloc #a #pcm x = let open Mem in lift_eqs(); lift_pre_act0_act fun #ictx -> ITA.lift_mem_action <| big_ghost_alloc #(Sep.lower_inames ictx) #a #pcm x
+let big_ghost_read #a #p r x f = let open Mem in lift_eqs(); lift_pre_act2_act fun #ictx -> ITA.lift_mem_action <| big_ghost_read #(Sep.lower_inames ictx) #a #p r x f
+let big_ghost_write #a #p r x y f = let open Mem in lift_eqs(); lift_pre_act0_act fun #ictx -> ITA.lift_mem_action <| big_ghost_write #(Sep.lower_inames ictx) #a #p r x y f
+let big_ghost_share #a #pcm r v0 v1 = let open Mem in lift_eqs(); lift_pre_act0_act fun #ictx -> ITA.lift_mem_action <| big_ghost_share #(Sep.lower_inames ictx) #a #pcm r v0 v1
+let big_ghost_gather #a #pcm r v0 v1 = let open Mem in lift_eqs(); lift_pre_act0_act fun #ictx -> ITA.lift_mem_action <| big_ghost_gather #(Sep.lower_inames ictx) #a #pcm r v0 v1
 
 let nb_ghost_pts_to #a #p r x = Sep.lift (Mem.nb_ghost_pts_to #a #p r x)
 let timeless_nb_ghost_pts_to #a #p r x = Sep.timeless_lift (Mem.nb_ghost_pts_to #a #p r x)
-let nb_ghost_alloc #a #pcm x = fun #ictx -> let open Mem in lift_eqs(); ITA.lift_mem_action <| nb_ghost_alloc #(Sep.lower_inames ictx) #a #pcm x
-let nb_ghost_read #a #p r x f = fun #ictx -> let open Mem in lift_eqs(); ITA.lift_mem_action <| nb_ghost_read #(Sep.lower_inames ictx) #a #p r x f
-let nb_ghost_write #a #p r x y f = fun #ictx -> let open Mem in lift_eqs(); ITA.lift_mem_action <| nb_ghost_write #(Sep.lower_inames ictx) #a #p r x y f
-let nb_ghost_share #a #pcm r v0 v1 = fun #ictx -> let open Mem in lift_eqs(); ITA.lift_mem_action <| nb_ghost_share #(Sep.lower_inames ictx) #a #pcm r v0 v1
-let nb_ghost_gather #a #pcm r v0 v1 = fun #ictx -> let open Mem in lift_eqs(); ITA.lift_mem_action <| nb_ghost_gather #(Sep.lower_inames ictx) #a #pcm r v0 v1
+let nb_ghost_alloc #a #pcm x = let open Mem in lift_eqs(); lift_pre_act0_act fun #ictx -> ITA.lift_mem_action <| nb_ghost_alloc #(Sep.lower_inames ictx) #a #pcm x
+let nb_ghost_read #a #p r x f = let open Mem in lift_eqs(); lift_pre_act3_act fun #ictx -> ITA.lift_mem_action <| nb_ghost_read #(Sep.lower_inames ictx) #a #p r x f
+let nb_ghost_write #a #p r x y f = let open Mem in lift_eqs(); lift_pre_act0_act fun #ictx -> ITA.lift_mem_action <| nb_ghost_write #(Sep.lower_inames ictx) #a #p r x y f
+let nb_ghost_share #a #pcm r v0 v1 = let open Mem in lift_eqs(); lift_pre_act0_act fun #ictx -> ITA.lift_mem_action <| nb_ghost_share #(Sep.lower_inames ictx) #a #pcm r v0 v1
+let nb_ghost_gather #a #pcm r v0 v1 = let open Mem in lift_eqs(); lift_pre_act0_act fun #ictx -> ITA.lift_mem_action <| nb_ghost_gather #(Sep.lower_inames ictx) #a #pcm r v0 v1
 
 
 let lift_erased #a ni_a #opens #pre #post f =
   fun #ictx -> 
-    let f : erased (pre_act a Ghost ictx pre post) =
-      hide (reveal f #ictx)
-    in
-    ITA.lift_ghost #a #ictx #pre #post ni_a f
+    (| erased (reveal f #ictx)._1, (fun x -> ni_a ((reveal f #ictx)._2 (reveal x))),
+      ITA.lift_ghost #(erased (reveal f #ictx)._1) (fun x -> reveal x)
+        (hide (map_pre_act hide (reveal f #ictx)._3)) |)
 
 let equiv_refl a =
-  fun #ictx -> ITA.equiv_refl #ictx a
+  lift_pre_act0_act fun #ictx -> ITA.equiv_refl #ictx a
 
 let equiv_dup (a b:slprop) =
-  fun #ictx -> ITA.equiv_dup #ictx a b
+  lift_pre_act0_act fun #ictx -> ITA.equiv_dup #ictx a b
 
 let equiv_trans (a b c:slprop) =
-  fun #ictx -> ITA.equiv_trans #ictx a b c
+  lift_pre_act0_act fun #ictx -> ITA.equiv_trans #ictx a b c
 
 let equiv_elim (a b:slprop) =
-  fun #ictx -> ITA.equiv_elim #ictx a b
+  lift_pre_act0_act fun #ictx -> ITA.equiv_elim #ictx a b
 
 let slprop_ref = Sep.slprop_ref
 let slprop_ref_pts_to = Sep.slprop_ref_pts_to
-let slprop_ref_alloc y = fun #ictx -> ITA.slprop_ref_alloc #ictx y
-let slprop_ref_share x y = fun #ictx -> ITA.slprop_ref_share #ictx x y
-let slprop_ref_gather x y1 y2 = fun #ictx -> ITA.slprop_ref_gather #ictx x y1 y2
+let slprop_ref_alloc y = lift_pre_act0_act fun #ictx -> ITA.slprop_ref_alloc #ictx y
+let slprop_ref_share x y = lift_pre_act0_act fun #ictx -> ITA.slprop_ref_share #ictx x y
+let slprop_ref_gather x y1 y2 = lift_pre_act0_act fun #ictx -> ITA.slprop_ref_gather #ictx x y1 y2

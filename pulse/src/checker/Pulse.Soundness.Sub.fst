@@ -17,8 +17,6 @@
 module Pulse.Soundness.Sub
 module RT = FStar.Reflection.Typing
 module R = FStar.Reflection.V2
-module L = FStar.List.Tot
-module T = FStar.Tactics.V2
 module RU = Pulse.RuntimeUtils
 open FStar.List.Tot
 open Pulse.Syntax

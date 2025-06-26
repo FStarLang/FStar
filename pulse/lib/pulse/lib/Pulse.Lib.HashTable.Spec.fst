@@ -15,6 +15,7 @@
 *)
 
 module Pulse.Lib.HashTable.Spec
+#lang-pulse
 module US = FStar.SizeT
 
 open FStar.Ghost

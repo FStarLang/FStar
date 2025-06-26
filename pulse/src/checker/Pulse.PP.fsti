@@ -61,6 +61,7 @@ instance val printable_binder   : printable binder
 instance val printable_st_term  : printable st_term
 instance val printable_universe : printable universe
 instance val printable_comp     : printable comp
+instance val printable_namedv   : printable namedv
 
 instance val printable_env : printable env
 

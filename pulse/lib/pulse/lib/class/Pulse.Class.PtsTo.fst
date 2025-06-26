@@ -1,4 +1,5 @@
 module Pulse.Class.PtsTo
+#lang-pulse
 
 open Pulse.Lib.Core
 open PulseCore.FractionalPermission

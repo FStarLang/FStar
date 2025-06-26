@@ -1,7 +1,7 @@
 module Pulse.Lib.GhostFractionalTable
 #lang-pulse
 open Pulse.Lib.Pervasives
-module PM = Pulse.Lib.PCMMap
+module PM = Pulse.Lib.PCM.Map
 module PF = Pulse.Lib.PCM.Fraction
 module GPR = Pulse.Lib.GhostPCMReference
 let a_map (a:Type) = PM.pointwise nat (PF.pcm_frac #(option a))
@@ -31,7 +31,7 @@ let singleton #a (i:nat) (f:perm) (r:option a)
     then Some (r, f)
     else None)
 
-let is_table #a (t:table a) (max:nat)
+let is_table #a ([@@@mkey]t:table a) (max:nat)
 : slprop
 = GPR.pts_to t (full_table_above max)
 
@@ -42,9 +42,9 @@ let pts_to #a (t:table a) (i:nat) (#f:perm) (p:a)
 
 ghost
 fn create (#a:Type)
-requires emp
-returns t:table a
-ensures is_table t 0
+  requires emp
+  returns t:table a
+  ensures is_table t 0
 {
   let gref = GPR.alloc #_ #(a_map a) (full_table_above 0);
   fold (is_table gref 0);

@@ -16,9 +16,9 @@
 
 module Pulse2Rust.Rust.Syntax
 
-open FStarC.Compiler.Effect
+open FStarC.Effect
 
-module L = FStarC.Compiler.List
+module L = FStarC.List
 
 let vec_new_fn = "vec_new"
 let panic_fn = "panic"

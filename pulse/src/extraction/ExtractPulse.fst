@@ -1,21 +1,17 @@
 module ExtractPulse
 friend FStarC.Extraction.Krml
 
-(* IMPORTANT: these `open` directives come from FStarC.Extraction.Krml.
-   Without them, spurious dependencies on F* ulib will be introduced *)
-open FStarC.Compiler.Effect
-open FStarC.Compiler.List
-open FStar
-open FStarC.Compiler
-open FStarC.Compiler.Util
+open FStarC
+open FStarC.Effect
+open FStarC.List
+open FStarC.Util
 open FStarC.Extraction
 open FStarC.Extraction.ML
 open FStarC.Extraction.ML.Syntax
 open FStarC.Const
 open FStarC.BaseTypes
 
-module BU = FStarC.Compiler.Util
-module FC = FStarC.Const
+module BU = FStarC.Util
 
 open FStarC.Class.Show
 
@@ -100,14 +96,21 @@ let pulse_translate_expr : translate_expr_t = fun env e ->
   | MLE_App ({ expr = MLE_Name p }, [ x; n])
   | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ x; n])
     when string_of_mlpath p = "Pulse.Lib.Array.Core.alloc" ->
+    EBufCreate (Stack, cb x, cb n)
+
+  | MLE_App ({ expr = MLE_Name p }, [ x; n])
+  | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ x; n])
+    when string_of_mlpath p = "Pulse.Lib.Vec.alloc" ->
     EBufCreate (ManuallyManaged, cb x, cb n)
 
   | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ e; i; _p; _w ])
-    when string_of_mlpath p = "Pulse.Lib.Array.Core.op_Array_Access" ->
+    when string_of_mlpath p = "Pulse.Lib.Vec.op_Array_Access"
+      || string_of_mlpath p = "Pulse.Lib.Array.Core.op_Array_Access" ->
     EBufRead (cb e, cb i)
 
   | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ e; i; v; _w ])
-    when string_of_mlpath p = "Pulse.Lib.Array.Core.op_Array_Assignment" ->
+    when string_of_mlpath p = "Pulse.Lib.Vec.op_Array_Assignment"
+      || string_of_mlpath p = "Pulse.Lib.Array.Core.op_Array_Assignment" ->
     EBufWrite (cb e, cb i, cb v)
 
   | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, (e :: i :: _))
@@ -119,7 +122,7 @@ let pulse_translate_expr : translate_expr_t = fun env e ->
     EBufWrite (cb e, cb i, cb v)
 
   | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ x; _w ])
-    when string_of_mlpath p = "Pulse.Lib.Array.Core.free" ->
+    when string_of_mlpath p = "Pulse.Lib.Vec.free" ->
     EBufFree (cb x)
 
   (* Pulse array pointers (ArrayPtr, as an underlying C extraction for slices *)
@@ -143,6 +146,9 @@ let pulse_translate_expr : translate_expr_t = fun env e ->
     when string_of_mlpath p = "Pulse.Lib.ArrayPtr.memcpy" ->
     EBufBlit (translate_expr env e1, translate_expr env e2, translate_expr env e3, translate_expr env e4, translate_expr env e5)
 
+  | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ b ])
+    when string_of_mlpath p = "Pulse.Lib.Vec.vec_to_array" ->
+    cb b
 
   (* Pulse control, while etc *)
   | MLE_App ({expr=MLE_Name p}, [{expr=MLE_Fun (_, test)}; {expr=MLE_Fun(_, body)}])

@@ -1,0 +1,21 @@
+>> Got issues: [
+* Error 228 at Bug267.fst(14,4-14,6):
+  - Expected a total term, but this term has Ghost effect
+
+>>]
+>> Got issues: [
+* Error 19 at Bug267.fst(62,4-62,5):
+  - Could not prove equality between computed type Prims.int
+    and expected type Prims.nat
+  - Assertion failed
+  - The SMT solver could not prove the query. Use --query_stats for more
+    details.
+  - Also see: Prims.fst(161,28-183,79)
+  - See also Bug267.fst(62,4-62,8)
+
+>>]
+>> Got issues: [
+* Error 12 at Bug267.fst(67,13-67,14):
+  - Expected type Pulse.Lib.Core.slprop but n >= 1 has type Prims.bool
+
+>>]

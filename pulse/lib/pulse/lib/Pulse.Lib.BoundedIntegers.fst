@@ -15,6 +15,7 @@
 *)
 
 module Pulse.Lib.BoundedIntegers
+#lang-pulse
 
 module TC = FStar.Tactics.Typeclasses
 
@@ -26,7 +27,7 @@ class bounded_int (t:eqtype) = {
     v : t -> GTot int;
     u : fits_t fits -> GTot t;
     ( + ) : (x:t -> y:t -> Pure t (requires fits (v x + v y)) (ensures fun z -> v z == v x + v y));
-    op_Subtraction : (x:t -> y:t -> Pure t (requires fits (v x - v y)) (ensures fun z -> v z == v x - v y));
+    ( - ) : (x:t -> y:t -> Pure t (requires fits (v x - v y)) (ensures fun z -> v z == v x - v y));
     ( < ) : (x:t -> y:t -> b:bool { b = (v x < v y)});
     ( <= ) : (x:t -> y:t -> b:bool { b = (v x <= v y)});
     ( > ) : (x:t -> y:t -> b:bool { b = (v x > v y)});
@@ -47,7 +48,7 @@ instance bounded_int_int : bounded_int int = {
     v = id;
     u = id;
     ( + ) = (fun x y -> Prims.op_Addition x y);
-    op_Subtraction = (fun x y -> Prims.op_Subtraction x y);
+    ( - ) = (fun x y -> Prims.op_Subtraction x y);
     ( < ) = (fun x y -> Prims.op_LessThan x y);
     ( <= ) = (fun x y -> Prims.op_LessThanOrEqual x y);
     ( > ) = (fun x y -> Prims.op_GreaterThan x y);
@@ -131,7 +132,7 @@ instance bounded_int_u32 : bounded_int FStar.UInt32.t = {
     v = (fun x -> FStar.UInt32.v x);
     u = FStar.UInt32.uint_to_t;
     ( + ) = (fun x y -> FStar.UInt32.add x y);
-    op_Subtraction = (fun x y -> FStar.UInt32.sub x y);
+    ( - ) = (fun x y -> FStar.UInt32.sub x y);
     ( < ) = FStar.UInt32.(fun x y -> x <^ y);
     ( <= ) = FStar.UInt32.(fun x y -> x <=^ y);
     ( > ) = FStar.UInt32.(fun x y -> x >^ y);
@@ -155,7 +156,7 @@ instance bounded_int_u64 : bounded_int FStar.UInt64.t = {
     v = (fun x -> FStar.UInt64.v x);
     u = FStar.UInt64.uint_to_t;
     ( + ) = (fun x y -> FStar.UInt64.add x y);
-    op_Subtraction = (fun x y -> FStar.UInt64.sub x y);
+    ( - ) = (fun x y -> FStar.UInt64.sub x y);
     ( < ) = FStar.UInt64.(fun x y -> x <^ y);
     ( <= ) = FStar.UInt64.(fun x y -> x <=^ y);
     ( > ) = FStar.UInt64.(fun x y -> x >^ y);
@@ -177,8 +178,7 @@ let test (t:eqtype) {| _ : bounded_unsigned t |} (x:t) = v x
 
 let add_u32 (x:FStar.UInt32.t) (y:FStar.UInt32.t { ok (+) x y }) = x + y
 
-//Again, parser doesn't allow using (-)
-let sub_u32 (x:FStar.UInt32.t) (y:FStar.UInt32.t { ok op_Subtraction x y}) = x - y
+let sub_u32 (x:FStar.UInt32.t) (y:FStar.UInt32.t { ok (-) x y}) = x - y
 
 //this work and resolved to int, because of the 1
 let add_nat_1 (x:nat) = x + 1
@@ -194,7 +194,7 @@ instance bounded_int_nat : bounded_int nat = {
     v = nat_as_int;
     u = (fun x -> x);
     ( + ) = (fun x y -> Prims.op_Addition x y);
-    op_Subtraction = (fun x y -> Prims.op_Subtraction x y); //can't write ( - ), it doesn't parse
+    ( - ) = (fun x y -> Prims.op_Subtraction x y);
     ( < ) = (fun x y -> Prims.op_LessThan x y);
     ( <= ) = (fun x y -> Prims.op_LessThanOrEqual x y);
     ( > ) = (fun x y -> Prims.op_GreaterThan x y);
@@ -214,7 +214,7 @@ instance bounded_int_pos : bounded_int pos = {
     v = pos_as_int;
     u = (fun x -> x);
     ( + ) = (fun x y -> Prims.op_Addition x y);
-    op_Subtraction = (fun x y -> Prims.op_Subtraction x y); //can't write ( - ), it doesn't parse
+    ( - ) = (fun x y -> Prims.op_Subtraction x y);
     ( < ) = (fun x y -> Prims.op_LessThan x y);
     ( <= ) = (fun x y -> Prims.op_LessThanOrEqual x y);
     ( > ) = (fun x y -> Prims.op_GreaterThan x y);
@@ -233,7 +233,7 @@ instance bounded_int_size_t : bounded_int FStar.SizeT.t = {
     v = (fun x -> FStar.SizeT.v x);
     u = (fun x -> FStar.SizeT.uint_to_t x);
     ( + ) = (fun x y -> FStar.SizeT.add x y);
-    op_Subtraction = (fun x y -> FStar.SizeT.sub x y);
+    ( - ) = (fun x y -> FStar.SizeT.sub x y);
     ( < ) = (fun x y -> FStar.SizeT.(x <^ y));
     ( <= ) = (fun x y -> FStar.SizeT.(x <=^ y));
     ( > ) = (fun x y -> FStar.SizeT.(x >^ y));

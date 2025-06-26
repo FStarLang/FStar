@@ -18,16 +18,16 @@ module PulseSyntaxExtension.Parser
 open FStarC
 
 val parse_peek_id (contents:string)
-                  (r:FStarC.Compiler.Range.range)
+                  (r:FStarC.Range.range)
   : either string
-           (string & FStarC.Compiler.Range.range)
+           (list FStarC.Pprint.document & FStarC.Range.range)
 
 val parse_decl (contents:string)
-               (r:FStarC.Compiler.Range.range)
+               (r:FStarC.Range.range)
   : either PulseSyntaxExtension.Sugar.decl
-           (option (string & FStarC.Compiler.Range.range))
+           (option (list FStarC.Pprint.document & FStarC.Range.range))
 
 val parse_lang (contents:string)
-               (r:FStarC.Compiler.Range.range)
+               (r:FStarC.Range.range)
   : either (list (either PulseSyntaxExtension.Sugar.decl FStarC.Parser.AST.decl) & option FStarC.Parser.ParseIt.parse_error)
-           (option (string & FStarC.Compiler.Range.range))
+           (option (list FStarC.Pprint.document & FStarC.Range.range))

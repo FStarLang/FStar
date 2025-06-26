@@ -9,7 +9,7 @@ test-c: verify # reuses cache, needs to run after verify
 	+$(MAKE) -f c.Makefile
 
 .PHONY: test-cbor
-test-cbor:
+test-cbor: verify
 	+$(MAKE) -C cbor
 
 # Add a dependency for 'all'

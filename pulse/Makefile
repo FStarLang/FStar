@@ -74,7 +74,7 @@ do-install: plugin lib-pulse
 	# Install plugin.
 	$(FSTAR_EXE) --ocamlenv \
 	  dune install --root=build/ocaml --prefix=$(abspath $(PREFIX))
-	# Install library (cp -u: don't copy unless newer, -p: preserve time/perms)
+	# Install library (cp -p: preserve time/perms)
 	# We install it flat. Note that lib/core is not included, but still some PulseCore
 	# checked files make it in. We could add:
 	#   \( -not -name 'PulseCore.*' \)
@@ -83,12 +83,13 @@ do-install: plugin lib-pulse
 	# to change their namespace.
 	find lib/pulse lib/common \
 		\( -name '*.fst' -o -name '*.fsti' -o -name '*.checked' -o -name '*.ml' \) -and \
-		-exec cp -p -u -t $(PREFIX)/lib/pulse/lib {} \;
+		-exec cp -p {} $(PREFIX)/lib/pulse/lib \;
 	# Set up fstar.include so users only include lib/pulse
 	echo 'lib' > $(PREFIX)/lib/pulse/fstar.include
 
 	# Install share/ too, as-is.
-	cp -p -t $(PREFIX) -r share/
+	mkdir -p share/pulse
+	cp -p -r share/pulse/* $(PREFIX)/share/pulse/
 
 .PHONY: clean
 clean:

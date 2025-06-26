@@ -38,7 +38,7 @@ ensures q ** s
 
 let incr_functional (x:int) = x + 1
 
- //incr
+//incr$
 fn incr (x:ref int)
 requires pts_to x 'i
 ensures pts_to x ('i + 1)
@@ -46,9 +46,9 @@ ensures pts_to x ('i + 1)
     let v = !x;
     x := v + 1;
 }
+//end incr$
 
-
- //incr_explicit_i
+//incr_explicit_i$
 fn incr_explicit_i (x:ref int) (i:erased int)
 requires pts_to x i
 ensures pts_to x (i + 1)
@@ -56,10 +56,9 @@ ensures pts_to x (i + 1)
     let v = !x;
     x := v + 1;
 }
+//end incr_explicit_i$
 
-
-
- //par_incr
+//par_incr$
 fn par_incr (x y:ref int)
 requires pts_to x 'i ** pts_to y 'j
 ensures pts_to x ('i + 1) ** pts_to y ('j + 1)
@@ -67,23 +66,23 @@ ensures pts_to x ('i + 1) ** pts_to y ('j + 1)
    par (fun _ -> incr x)
        (fun _ -> incr y)
 }
+//end par_incr$
 
 
- //incr_frame
+//incr_frame$
 fn incr_frame (x y:ref int)
 requires pts_to x 'i ** pts_to y 'j
 ensures pts_to x ('i + 1) ** pts_to y 'j
 {
    incr x;
 }
+//end incr_frame$
 
-
- //incr_frame_any
+//incr_frame_any$
 fn incr_frame_any (x:ref int) (f:slprop)
 requires pts_to x 'i ** f
 ensures pts_to x ('i + 1) ** f
 {
    incr x;
 }
-
-
+//end incr_frame_any$

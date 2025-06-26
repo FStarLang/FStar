@@ -18,10 +18,8 @@ module Pulse.Syntax.Printer
 open FStar.Printf
 open Pulse.Syntax
 
-module L = FStar.List.Tot
 
 module T = FStar.Tactics.V2
-module Un = FStar.Sealed
 module R = FStar.Reflection.V2
 
 let tot_or_ghost_to_string = function
@@ -58,6 +56,7 @@ let qual_to_string = function
   | None -> ""
   | Some Implicit -> "#"
   | Some TcArg -> "#[tcresolve]"
+  | Some (Meta t) -> sprintf "#[%s]" (T.term_to_string t)
 
 let indent (level:string) = level ^ "\t"
 
@@ -441,9 +440,10 @@ and branches_to_string brs : T.Tac _ =
   | b::bs -> branch_to_string b ^ branches_to_string bs
 
 and branch_to_string br : T.Tac _ =
-  let (pat, e) = br in
-  Printf.sprintf "{ %s -> %s }"
+  let {pat; e; norw} = br in
+  Printf.sprintf "{ %s%s -> %s }"
     (pattern_to_string pat)
+    (if T.unseal norw then "(norw)" else "")
     (st_term_to_string' "" e)
 
 and pattern_to_string (p:pattern) : T.Tac string = 

@@ -15,17 +15,30 @@
 *)
 
 module Pulse.Lib.GhostWitness
+#lang-pulse
 
 open Pulse.Lib.Pervasives
 
-val ghost_witness (a:Type u#0) (_:squash a) :
-  stt_ghost a emp_inames emp (fun _ -> emp)
+ghost
+fn ghost_witness (a:Type u#0) (_ : squash a)
+  requires emp
+  returns  a
+  ensures  emp
 
-val ghost_witness2 (a:Type u#4) (_:squash a) :
-  stt_ghost a emp_inames emp (fun _ -> emp)
+ghost
+fn ghost_witness2 (a:Type u#4) (_ : squash a)
+  requires emp
+  returns  a
+  ensures  emp
 
-val ghost_witness_exists (a:Type u#0) :
-  stt_ghost a emp_inames (pure (exists (x:a). True)) (fun _ -> emp)
+ghost
+fn ghost_witness_exists (a:Type u#0)
+  requires pure (exists (x:a). True)
+  returns  a
+  ensures  emp
 
-val ghost_witness_exists2 (a:Type u#4) :
-  stt_ghost a emp_inames (pure (exists (x:a). True)) (fun _ -> emp)
+ghost
+fn ghost_witness_exists2 (a:Type u#4)
+  requires pure (exists (x:a). True)
+  returns  a
+  ensures  emp

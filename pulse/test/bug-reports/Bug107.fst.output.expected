@@ -1,0 +1,14 @@
+>> Got issues: [
+* Error 228 at Bug107.fst(45,9-45,16):
+  - Could not resolve implicit uu___#194
+    of type Prims.int
+    in term Bug107.foo 1 _
+
+>>]
+>> Got issues: [
+* Error 228 at Bug107.fst(56,9-56,16):
+  - Could not resolve implicit uu___#194
+    of type Prims.int
+    in term Bug107.foo _ 2
+
+>>]

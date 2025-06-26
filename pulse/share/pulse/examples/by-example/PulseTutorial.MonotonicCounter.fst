@@ -3,7 +3,6 @@ module PulseTutorial.MonotonicCounter
 open Pulse.Lib.Pervasives
 open FStar.Preorder
 module MR = Pulse.Lib.MonotonicGhostRef
-module PP = PulseCore.Preorder
 noeq
 type ctr = {
     inv: int -> slprop;

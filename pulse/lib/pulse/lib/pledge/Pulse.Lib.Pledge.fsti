@@ -23,8 +23,8 @@ val pledge (is:inames) (f:slprop) (v:slprop) : slprop
 
 ghost
 fn pledge_inames_live (is:inames) (f p:slprop)
-requires pledge is f p
-ensures inames_live is ** pledge is f p
+  requires pledge is f p
+  ensures inames_live is ** pledge is f p
 
 unfold
 let pledge0 (f:slprop) (v:slprop) : slprop = pledge emp_inames f v

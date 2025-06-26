@@ -3,13 +3,12 @@ module Pulse.Lib.DequeRef
 open Pulse.Lib.Pervasives
 open Pulse.Lib.Deque
 module B = Pulse.Lib.Box
-module DQ = Pulse.Lib.Deque
 open FStar.List.Tot
 open Pulse.Lib.Box
 
 let dq (t:Type0) = B.box (deque t)
 
-let is_dq (#t:Type0) (x:dq t) (l:list t) 
+let is_dq (#t:Type0) ([@@@mkey]x:dq t) (l:list t) 
 : slprop
 = exists* xx. B.pts_to x xx ** is_deque xx l
 
@@ -26,11 +25,13 @@ fn mk_empty (#t:Type) (_:unit)
 
 
 fn push_front (#t:Type) (l : dq t) (x : t) (#xs:erased (list t))
-requires is_dq l xs
-ensures  is_dq l (x::xs)
+  requires is_dq l xs
+  ensures  is_dq l (x::xs)
 {
   unfold is_dq;
+  with xx0. assert (B.pts_to l xx0);
   let xx = !l;
+  rewrite each xx0 as xx;
   let yy = push_front xx x;
   l := yy;
   fold is_dq;
@@ -38,12 +39,14 @@ ensures  is_dq l (x::xs)
 
 
 fn pop_front (#t:Type) (l : dq t) (#x : erased t) (#xs : erased (list t))
-requires is_dq l (reveal x :: xs)
-returns  y : t
-ensures  is_dq l xs ** pure (y == x)
+  requires is_dq l (reveal x :: xs)
+  returns  y : t
+  ensures  is_dq l xs ** pure (y == x)
 {
   unfold is_dq;
+  with xx0. assert (B.pts_to l xx0);
   let xx = !l;
+  rewrite each xx0 as xx;
   let yy = pop_front xx;
   l := fst yy;
   fold is_dq;
@@ -51,9 +54,9 @@ ensures  is_dq l xs ** pure (y == x)
 }
 
 fn pop_alt (#t:Type) (l : dq t) (#xs : erased (list t) { Cons? xs })
-requires is_dq l xs
-returns  _: (y : t { Cons?.hd xs == y })
-ensures  is_dq l (Cons?.tl xs)
+  requires is_dq l xs
+  returns  _: (y : t { Cons?.hd xs == y })
+  ensures  is_dq l (Cons?.tl xs)
 {
   let y = pop_front l #(Cons?.hd xs) #(Cons?.tl xs);
   y
@@ -61,11 +64,13 @@ ensures  is_dq l (Cons?.tl xs)
 
 
 fn push_back (#t:Type) (l : dq t) (x : t) (#xs:erased (list t))
-requires is_dq l xs
-ensures  is_dq l (xs @ [x])
+  requires is_dq l xs
+  ensures  is_dq l (xs @ [x])
 {
   unfold is_dq;
+  with xx0. assert (B.pts_to l xx0);
   let xx = !l;
+  rewrite each xx0 as xx;
   let yy = push_back xx x;
   l := yy;
   fold is_dq;
@@ -73,12 +78,14 @@ ensures  is_dq l (xs @ [x])
 
 
 fn pop_back (#t:Type) (l : dq t) (#x : erased t) (#xs : erased (list t))
-requires is_dq l (xs @ [reveal x])
-returns  y : t
-ensures  is_dq l xs ** pure (y == x)
+  requires is_dq l (xs @ [reveal x])
+  returns  y : t
+  ensures  is_dq l xs ** pure (y == x)
 {
   unfold is_dq;
+  with xx0. assert (B.pts_to l xx0);
   let xx = !l;
+  rewrite each xx0 as xx;
   let yy = pop_back xx;
   l := fst yy;
   fold is_dq;
@@ -107,10 +114,10 @@ ensures
   push_front x3 v;
   push_front x4 v;
 
-  pop_front x1;
-  pop_front x2;
-  pop_front x3;
-  pop_front x4;
+  let _ = pop_front x1;
+  let _ = pop_front x2;
+  let _ = pop_front x3;
+  let _ = pop_front x4;
   ()
 }
 #pop-options

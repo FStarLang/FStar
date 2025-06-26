@@ -17,10 +17,9 @@
 module Pulse2Rust.Deps
 
 open FStarC
-open FStarC.Compiler
-open FStarC.Compiler.Util
-open FStarC.Compiler.List
-open FStarC.Compiler.Effect
+open FStarC.Util
+open FStarC.List
+open FStarC.Effect
 
 open Pulse2Rust.Rust.Syntax
 open Pulse2Rust.Env
@@ -31,9 +30,7 @@ open RustBindings
 open FStarC.Class.Setlike
 
 module S = FStarC.Extraction.ML.Syntax
-module EUtil = FStarC.Extraction.ML.Util
 
-module UEnv = FStarC.Extraction.ML.UEnv
 
 let empty_defs : reachable_defs = RBSet.empty ()
 let singleton (p:S.mlpath) : reachable_defs = singleton (S.string_of_mlpath p)
@@ -159,7 +156,7 @@ let reachable_defs_mlmodule1 (m:S.mlmodule1) : reachable_defs =
     // (reachable_defs_to_string defs);
   defs
 
-let reachable_defs_decls (decls:S.mlmodule) : reachable_defs =
+let reachable_defs_decls (decls:S.mlmodulebody) : reachable_defs =
   reachable_defs_list reachable_defs_mlmodule1 decls
 
 let decl_reachable (reachable_defs:reachable_defs) (mname:string) (d:S.mlmodule1) : bool =
@@ -176,8 +173,8 @@ let decl_reachable (reachable_defs:reachable_defs) (mname:string) (d:S.mlmodule1
 let rec topsort (d:dict) (grey:list string) (black:list string) (root:string)
   : (list string & list string) =  // grey and black
   let grey = root::grey in
-  let deps = root |> smap_try_find d |> must |> (fun (deps, _, _) -> deps) in
-  let deps = deps |> List.filter (fun f -> List.mem f (smap_keys d) && not (f = root)) in
+  let deps = root |> SMap.try_find d |> must |> (fun (deps, _, _) -> deps) in
+  let deps = deps |> List.filter (fun f -> List.mem f (SMap.keys d) && not (f = root)) in
   if List.existsb (fun d -> List.mem d grey) deps
   then failwith (format1 "cyclic dependency: %s" root);
   let deps = deps |> List.filter (fun f -> not (List.mem f black)) in
@@ -189,10 +186,10 @@ let rec topsort (d:dict) (grey:list string) (black:list string) (root:string)
 let rec topsort_all (d:dict) (black:list string)
   : list string =
   
-  if List.for_all (fun f -> List.contains f black) (smap_keys d)
+  if List.for_all (fun f -> List.contains f black) (SMap.keys d)
   then black
   else
-    let rem = List.filter (fun f -> not (List.contains f black)) (smap_keys d) in
+    let rem = List.filter (fun f -> not (List.contains f black)) (SMap.keys d) in
     let root = List.nth rem (List.length rem - 1) in
     let grey, black = topsort d [] black root in
     if List.length grey <> 0

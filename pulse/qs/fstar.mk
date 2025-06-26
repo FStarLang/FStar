@@ -24,11 +24,11 @@ FSTAR_EXE ?= fstar.exe
 $(call need_exe,FSTAR_EXE)
 export FSTAR_EXE
 
-HINTS_ENABLED?=--use_hints
+HINTS_ENABLED?=
 
 # This warning is really useless.
 OTHERFLAGS += --warn_error -321
-OTHERFLAGS += --ext context_pruning
+OTHERFLAGS += --ext optimize_let_vc
 OTHERFLAGS += --z3version 4.13.3
 
 # Set ADMIT=1 to admit queries

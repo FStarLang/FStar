@@ -30,7 +30,7 @@ module T = FStar.Tactics.V2
 module PS = Pulse.Checker.Prover.Substs
 module Metatheory = Pulse.Typing.Metatheory
 
-let coerce_eq (#a #b:Type) (x:a) (_:squash (a == b)) : y:b{y == x} = x
+let coerce_eq (#a #b:Type) (x:a) (_:squash (a == b)) : b = x
 
 // there will be some side conditions related to the typings
 let k_intro_exists (#g:env) (#u:universe) (#b:binder) (#p:slprop)
@@ -85,6 +85,7 @@ let k_intro_exists (#g:env) (#u:universe) (#b:binder) (#p:slprop)
   k post_hint (| t1, c1, d1 |)
 
 #push-options "--z3rlimit_factor 8 --ifuel 2 --fuel 1"
+
 let intro_exists (#preamble:_) (pst:prover_state preamble)
   (u:universe) (b:binder) (body:slprop)
   (unsolved':list slprop)
@@ -150,10 +151,10 @@ let intro_exists (#preamble:_) (pst:prover_state preamble)
       let r = PS.ss_to_nt_substs pst_sub.pg pst_sub.uvs pst_sub.ss in
       match r with
       | Inr msg ->
-        fail pst_sub.pg None
-          (Printf.sprintf
-             "resulted substitution after intro exists protocol is not well-typed: %s"
-             msg)
+        fail_doc pst_sub.pg None [
+          Pulse.PP.text "Resulted substitution after intro exists protocol is not well-typed.";
+          Pulse.PP.text msg;
+        ]
       | Inl nt -> nt in
   assert (PS.well_typed_nt_substs pst_sub.pg pst_sub.uvs nt effect_labels);
   let pst_sub_goals_inv

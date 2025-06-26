@@ -17,7 +17,6 @@
 module UnificationVariableEscapes
 #lang-pulse
 open Pulse.Lib.Pervasives
-module U32 = FStar.UInt32
 module A = Pulse.Lib.Array
 module US = FStar.SizeT
 module R = Pulse.Lib.Reference

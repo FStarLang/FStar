@@ -130,7 +130,13 @@ let is_return_bv0 (e:st_term) : bool =
 let simplify_nested_let (e:st_term) (b_x:binder) (head:st_term) (e3:st_term)
   : option st_term =
 
-  let mk t : st_term = { range = e.range; effect_tag = default_effect_hint; term = t; source=Sealed.seal false } in
+  let mk t : st_term = {
+    range = e.range;
+    effect_tag = default_effect_hint;
+    term = t;
+    source=Sealed.seal false;
+    seq_lhs=Sealed.seal false;
+  } in
   let body e2 = mk (Tm_Bind { binder = b_x; head = e2; body = e3 }) in
   match head.term with
   | Tm_TotBind { binder = b_y; head = e1; body = e2 } ->
@@ -217,11 +223,12 @@ let rec simplify_st_term (g:env) (e:st_term) : T.Tac st_term =
   | Tm_Unreachable _ -> e
 
 and simplify_branch (g:env) (b:branch) : T.Tac branch =
-  let pat, body = b in
+  let {pat; e=body; norw} = b in
   let g, bs = extend_env'_pattern g pat in
   let body = Pulse.Checker.Match.open_st_term_bs body bs in
   let body = simplify_st_term g body in
-  pat, Pulse.Syntax.Naming.close_st_term_n body (L.map fst bs)
+  let body = Pulse.Syntax.Naming.close_st_term_n body (L.map fst bs) in
+  {pat; e=body; norw}
 
 let erase_type_for_extraction (g:env) (t:term) : T.Tac bool =
   RU.must_erase_for_extraction (E.fstar_env g) t
@@ -314,11 +321,12 @@ let rec erase_ghost_subterms (g:env) (p:st_term) : T.Tac st_term =
   end
 
 and erase_ghost_subterms_branch (g:env) (b:branch) : T.Tac branch =
-  let pat, body = b in
+  let {pat; e=body; norw} = b in
   let g, bs = extend_env'_pattern g pat in
   let body = Pulse.Checker.Match.open_st_term_bs body bs in
   let body = erase_ghost_subterms g body in
-  pat, Pulse.Syntax.Naming.close_st_term_n body (L.map fst bs)
+  let body = Pulse.Syntax.Naming.close_st_term_n body (L.map fst bs) in
+  { pat; e=body; norw }
 
 let extract_dv_binder (b:Pulse.Syntax.Base.binder) (q:option Pulse.Syntax.Base.qualifier)
   : T.Tac R.binder =
@@ -328,7 +336,11 @@ let extract_dv_binder (b:Pulse.Syntax.Base.binder) (q:option Pulse.Syntax.Base.q
     attrs = T.unseal b.binder_attrs;
     qual = (match q with
       | Some Implicit -> R.Q_Implicit
-      | Some TcArg -> R.Q_Explicit // ??
+
+      (* This translation does not really have to respect implicit/explicit args,
+      as that is irrelevant for extraction. We just make these explicit too. *)
+      | Some TcArg -> R.Q_Explicit
+      | Some (Meta t) -> R.Q_Explicit
       | None -> R.Q_Explicit);
   }
 
@@ -469,8 +481,10 @@ let rec extract_dv g (p:st_term) : T.Tac R.term =
       let body = extract_dv g (open_st_term_nv body x) in
       ECL.mk_let b' allocator (close_term body x._2)
 
-    | Tm_Admit _ ->
-      ECL.mk_return ECL.unit_tm
+    | Tm_Admit { typ } ->
+      ECL.mk_meta_monadic
+        (R.mk_app (R.pack_ln (R.Tv_FVar (R.pack_fv ["Prims"; "admit"])))
+          [typ, R.Q_Implicit; ECL.unit_tm, R.Q_Explicit])
 
     | Tm_Unreachable { c } ->
       ECL.mk_meta_monadic (R.mk_app (R.pack_ln (R.Tv_FVar (R.pack_fv ["Pulse"; "Lib"; "Dv"; "unreachable"])))
@@ -481,7 +495,7 @@ let rec extract_dv g (p:st_term) : T.Tac R.term =
   end
 
 and extract_dv_branch g (b:Pulse.Syntax.Base.branch) : T.Tac R.branch =
-  let pat, body = b in
+  let {pat; e=body; norw} = b in
   let g, pat, bs = extract_dv_pattern g pat in
   pat, LN.close_term_n
     (extract_dv g (Pulse.Checker.Match.open_st_term_bs body bs))

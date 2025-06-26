@@ -48,6 +48,10 @@ fn intro_inv_p (v_done:bool) (v_res:option int) (v_claimed:bool)
     ** pure (v_done ==> Some? v_res)
   ensures inv_p
 {
+  (* Unfortunate... does not happen automatically since we don't unfold
+  under a match. *)
+  rewrite (if not v_claimed then pts_to res #0.5R v_res else emp)
+       as (if not v_claimed then R.pts_to res #0.5R v_res else emp);
   fold inv_p;
 }
 
@@ -67,32 +71,32 @@ fn proof
   with_invariants i {
     later_elim_timeless _;
     unfold inv_p;
-    with (v_done : bool) v_res v_claimed.
+    with (v_done : bool) v_res (v_claimed : bool).
       assert (pts_to done #0.5R v_done
               ** pts_to done #0.5R true
               ** pts_to res #0.5R v_res
               ** pts_to claimed #0.5R v_claimed
-              ** (if not v_claimed then pts_to res #0.5R v_res else emp)
+              ** (if not v_claimed then R.pts_to res #0.5R v_res else emp)
               ** pure (v_claimed ==> v_done)
               ** pure (v_done ==> Some? v_res));
 
     pts_to_injective_eq #_ #0.5R #0.5R #v_done #true done;
     assert (pure (v_done == true));
     
-    GR.gather2 #bool
+    GR.gather #bool
       claimed
       #false #v_claimed;
     assert (pure (v_claimed == false));
 
     // NB: this step is very sensitive to ordering
-    rewrite ((if not v_claimed then pts_to res #0.5R v_res else emp) ** emp)
-         as (pts_to res #0.5R v_res ** (if not true then pts_to res #0.5R v_res else emp));
+    rewrite ((if not v_claimed then R.pts_to res #0.5R v_res else emp) ** emp)
+         as (R.pts_to res #0.5R v_res ** (if not true then pts_to res #0.5R v_res else emp));
 
     GR.op_Colon_Equals claimed true;
     
     fold goal;
     
-    GR.share2 #_ claimed;
+    GR.share #_ claimed;
     
     // If we just try to:
     //   fold inv_p;
@@ -138,9 +142,9 @@ fn setup (_:unit)
   res := None;
   GR.op_Colon_Equals claimed false;
   
-  share2 #_ done;
-  share2 #_ res;
-  GR.share2 #_ claimed;
+  share #_ done;
+  share #_ res;
+  GR.share #_ claimed;
   
   rewrite (pts_to res #0.5R None)
        as (if not false then pts_to res #0.5R None else emp);
@@ -179,7 +183,7 @@ fn worker (i : iname) (_:unit)
               ** pure (v_claimed ==> v_done)
               ** pure (v_done ==> Some? v_res));
 
-    gather2 #_ done #false #v_done;
+    gather #_ done #false #v_done;
     assert (pts_to done false);
     
     assert (pure (not v_claimed)); // contrapositive from v_done=false
@@ -187,7 +191,7 @@ fn worker (i : iname) (_:unit)
     rewrite (if not v_claimed then pts_to res #0.5R v_res else emp)
          as pts_to res #0.5R v_res;
          
-    gather2 #_ res #v_res #v_res;
+    gather #_ res #v_res #v_res;
     assert (pts_to res v_res);
     
     
@@ -202,12 +206,12 @@ fn worker (i : iname) (_:unit)
     res := Some 42;
     done := true;
     
-    share2 #_ res;
+    share #_ res;
 
     rewrite (pts_to res #0.5R (Some 42))
         as (if not v_claimed then pts_to res #0.5R (Some 42) else emp);
         
-    share2 #_ done;
+    share #_ done;
     
     fold inv_p;
 

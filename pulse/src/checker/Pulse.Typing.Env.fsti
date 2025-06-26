@@ -148,6 +148,7 @@ val remove_latest_binding (g:env { Cons? (bindings g) })
             let (x, t, g') = r in
             fstar_env g' == fstar_env g /\
             (~ (x `Set.mem` dom g')) /\
+            bindings g == (x, t) :: bindings g' /\
             g == push_binding g' x ppname_default t)
 
 // g1 extends g2 with g3, i.e. g1.bs == g3.bs @ g2.bs (recall most recent binding at the head)
@@ -193,8 +194,6 @@ val reset_context (g:env) (use_context_from:env) : g':env{ g' == g}
 val get_context (g:env) : Pulse.RuntimeUtils.context
 val range_of_env (g:env) : T.Tac range
 val print_context (g:env) : T.Tac string
-val print_issue (g:env) (i:FStar.Issue.issue) : T.Tac string 
-val print_issues (g:env) (i:list FStar.Issue.issue) : T.Tac string
 val env_to_string (g:env) : T.Tac string
 val env_to_doc' (simplify:bool) (g:env) : T.Tac FStar.Pprint.document
 val env_to_doc (g:env) : T.Tac FStar.Pprint.document
@@ -224,4 +223,14 @@ val warn (g:env) (r:option range) (msg:string)
   : T.Tac unit
 
 val info (g:env) (r:option range) (msg:string)
+  : T.Tac unit
+
+val fail_doc_with_subissues #a (g:env) (ro : option range)
+  (sub : list Issue.issue)
+  (msg : list Pprint.document)
+  : T.TacH a (requires fun _ -> True) (ensures fun _ r -> FStar.Tactics.Result.Failed? r)
+
+val info_doc_with_subissues (g:env) (r:option range)
+  (sub : list Issue.issue)
+  (msg : list Pprint.document)
   : T.Tac unit

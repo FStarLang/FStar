@@ -1,0 +1,30 @@
+>> Got issues: [
+* Error 19 at Bug100.fst(10,31-10,33):
+  - Subtyping check failed
+  - Expected type FStar.Seq.Base.seq Prims.int
+    got type FStar.Seq.Base.seq Prims.nat
+  - The SMT solver could not prove the query. Use --query_stats for more
+    details.
+  - See also Prims.fst(682,18-682,24)
+
+>>]
+>> Got issues: [
+* Error 19 at Bug100.fst(19,57-19,58):
+  - Subtyping check failed
+  - Expected type FStar.Seq.Base.seq Prims.int
+    got type FStar.Seq.Base.seq Prims.nat
+  - The SMT solver could not prove the query. Use --query_stats for more
+    details.
+  - See also Prims.fst(682,18-682,24)
+
+>>]
+>> Got issues: [
+* Error 19 at Bug100.fst(23,11-23,17):
+  - Ill-typed term: Bug100.pts_to Prims.int a1 s1
+  - Expected a term of type slprop
+  - Assertion failed
+  - The SMT solver could not prove the query. Use --query_stats for more
+    details.
+  - Also see: Prims.fst(161,28-183,79)
+
+>>]

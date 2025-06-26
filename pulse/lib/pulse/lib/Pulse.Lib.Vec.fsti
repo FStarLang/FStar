@@ -30,7 +30,7 @@ module A = Pulse.Lib.Array.Core
 
 val vec ([@@@strictly_positive] a:Type0) : Type u#0
 
-val length (#a:Type0) (v:vec a) : GTot nat
+val length (#a:Type u#0) (x:vec a) : Ghost nat (requires True) (ensures SZ.fits)
 
 inline_for_extraction
 type lvec (a:Type0) (n:nat) = v:vec a { length v == n }
@@ -39,7 +39,7 @@ val is_full_vec (#a:Type0) (v:vec a) : prop
 
 val pts_to
   (#a:Type0)
-  ([@@@equate_strict] v:vec a)
+  ([@@@mkey] v:vec a)
   (#[T.exact (`1.0R)] p:perm)
   (s:Seq.seq a)
 : slprop
@@ -53,113 +53,119 @@ val pts_to_timeless (#a:Type0) (v:vec a) (p:perm) (s:Seq.seq a)
   : Lemma (timeless (pts_to v #p s))
           [SMTPat (timeless (pts_to v #p s))]
 
-val pts_to_len (#a:Type0) (v:vec a) (#p:perm) (#s:Seq.seq a)
-  : stt_ghost unit emp_inames
-      (pts_to v #p s)
-      (fun _ → pts_to v #p s ** pure (length v == Seq.length s))
+ghost
+fn pts_to_len (#a:Type0) (v:vec a) (#p:perm) (#s:Seq.seq a)
+  requires pts_to v #p s
+  ensures  pts_to v #p s ** pure (length v == Seq.length s)
 
-val alloc 
+fn alloc 
   (#a:Type0)
   (x:a)
   (n:SZ.t)
-  : stt (vec a)
-        (requires emp)
-        (ensures fun v ->
-           pts_to v (Seq.create (SZ.v n) x) **
-           pure (length v == SZ.v n /\ is_full_vec v))
+  requires emp
+  returns  v:vec a
+  ensures pts_to v (Seq.create (SZ.v n) x) **
+          pure (length v == SZ.v n /\ is_full_vec v)
 
 (* Written x.(i) *)
-val op_Array_Access
+fn op_Array_Access
   (#a: Type0)
   (v:vec a)
   (i:SZ.t)
   (#p:perm)
   (#s:Ghost.erased (Seq.seq a) { SZ.v i < Seq.length s })
-  : stt a
-        (requires pts_to v #p s)
-        (ensures fun res ->
-           pts_to v #p s **
-           pure (res == Seq.index s (SZ.v i)))
-
+  requires pts_to v #p s
+  returns  res : a
+  ensures  pts_to v #p s **
+           pure (res == Seq.index s (SZ.v i))
 
 (* Written x.(i) <- v *)
-val op_Array_Assignment
+fn op_Array_Assignment
   (#a:Type0)
   (v:vec a)
   (i:SZ.t)
   (x:a)
   (#s:Ghost.erased (Seq.seq a) { SZ.v i < Seq.length s })
-  : stt unit
-        (requires pts_to v s)
-        (ensures fun _ -> pts_to v (Seq.upd s (SZ.v i) x))
+  requires pts_to v s
+  ensures  pts_to v (Seq.upd s (SZ.v i) x)
 
-val free
+fn free
   (#a:Type0)
   (v:vec a)
   (#s:Ghost.erased (Seq.seq a))
-  : stt unit
-        (requires
-           pts_to v s **
-           pure (is_full_vec v))
-        (ensures fun _ -> emp)
-
-val share
+  requires pts_to v s ** pure (is_full_vec v)
+  ensures emp
+ghost
+fn share
   (#a:Type)
   (v:vec a)
   (#s:Ghost.erased (Seq.seq a))
   (#p:perm)
-  : stt_ghost unit emp_inames
-      (requires pts_to v #p s)
-      (ensures fun _ -> pts_to v #(p /. 2.0R) s ** pts_to v #(p /. 2.0R) s)
+  requires pts_to v #p s
+  ensures pts_to v #(p /. 2.0R) s ** pts_to v #(p /. 2.0R) s
 
 [@@allow_ambiguous]
-val gather
+ghost
+fn gather
   (#a:Type)
   (v:vec a)
   (#s0 #s1:Ghost.erased (Seq.seq a))
   (#p0 #p1:perm)
-  : stt_ghost unit emp_inames
-      (requires pts_to v #p0 s0 ** pts_to v #p1 s1)
-      (ensures fun _ -> pts_to v #(p0 +. p1) s0 ** pure (s0 == s1))
+  requires pts_to v #p0 s0 ** pts_to v #p1 s1
+  ensures pts_to v #(p0 +. p1) s0 ** pure (s0 == s1)
 
 val vec_to_array (#a:Type0) (v:vec a) : arr:A.array a { A.length arr == length v }
 
 ghost
 fn to_array_pts_to (#a:Type0) (v:vec a) (#p:perm) (#s:Seq.seq a)
-requires pts_to v #p s
-ensures A.pts_to (vec_to_array v) #p s
+  requires pts_to v #p s
+  ensures A.pts_to (vec_to_array v) #p s
 
 ghost
 fn to_vec_pts_to (#a:Type0) (v:vec a) (#p:perm) (#s:Seq.seq a)
-requires A.pts_to (vec_to_array v) #p s
-ensures pts_to v #p s
+  requires A.pts_to (vec_to_array v) #p s
+  ensures pts_to v #p s
 
-val read_ref (#a:Type0) (r:R.ref (vec a))
+fn read_ref (#a:Type0) (r:R.ref (vec a))
   (i:SZ.t)
   (#v:erased (vec a))
   (#s:erased (Seq.seq a) { SZ.v i < Seq.length s})
-  : stt a
-    (requires R.pts_to r v ** pts_to v s)
-    (ensures fun res -> R.pts_to r v ** pts_to v s ** pure (res == Seq.index s (SZ.v i)))
+  requires R.pts_to r v ** pts_to v s
+  returns res : a
+  ensures R.pts_to r v ** pts_to v s ** pure (res == Seq.index s (SZ.v i))
 
-val write_ref (#a:Type0) (r:R.ref (vec a))
+fn write_ref (#a:Type0) (r:R.ref (vec a))
   (i:SZ.t)
   (x:a)
   (#v:erased (vec a))
   (#s:erased (Seq.seq a) { SZ.v i < Seq.length s})
-  : stt unit
-    (requires R.pts_to r v ** pts_to v s)
-    (ensures fun _ -> R.pts_to r v ** pts_to v (Seq.upd s (SZ.v i) x))
+  requires R.pts_to r v ** pts_to v s
+  ensures R.pts_to r v ** pts_to v (Seq.upd s (SZ.v i) x)
 
-val replace_i (#a:Type0) (v:vec a) (i:SZ.t) (x:a)
+fn replace_i (#a:Type0) (v:vec a) (i:SZ.t) (x:a)
   (#s:erased (Seq.seq a) { SZ.v i < Seq.length s})
-  : stt a
-    (requires pts_to v s)
-    (ensures fun res -> pts_to v (Seq.upd s (SZ.v i) x) ** pure (res == Seq.index s (SZ.v i)))
+  requires pts_to v s
+  returns  res : a
+  ensures  pts_to v (Seq.upd s (SZ.v i) x) ** pure (res == Seq.index s (SZ.v i))
 
-val replace_i_ref (#a:Type0) (r:R.ref (vec a)) (i:SZ.t) (x:a)
+fn replace_i_ref (#a:Type0) (r:R.ref (vec a)) (i:SZ.t) (x:a)
   (#v:erased (vec a))
   (#s:erased (Seq.seq a) { SZ.v i < Seq.length s})
-  : stt a
-    (requires R.pts_to r v ** pts_to v s)
-    (ensures fun res -> R.pts_to r v ** pts_to v (Seq.upd s (SZ.v i) x) ** pure (res == Seq.index s (SZ.v i)))
+  requires R.pts_to r v ** pts_to v s
+  returns  res : a
+  ensures R.pts_to r v ** pts_to v (Seq.upd s (SZ.v i) x) ** pure (res == Seq.index s (SZ.v i))
+
+fn compare
+        (#t:eqtype)
+        (l:SZ.t)
+        (a1 a2:lvec t (SZ.v l))
+        (#p1 #p2:perm)
+        (#s1 #s2:Ghost.erased (Seq.seq t))
+  requires
+     pts_to a1 #p1 s1 **
+     pts_to a2 #p2 s2
+  returns res : bool
+  ensures
+     pts_to a1 #p1 s1 **
+     pts_to a2 #p2 s2 **
+     pure (res <==> Seq.equal s1 s2)

@@ -74,8 +74,8 @@ let is_annotated_type_array (t:term) : option term =
 let head_range (t:st_term {Tm_WithLocalArray? t.term}) : range =
   let Tm_WithLocalArray { initializer } = t.term in
   Pulse.RuntimeUtils.range_of_term initializer
+
 #restart-solver
-#push-options "--query_stats"
 let check
   (g:env)
   (pre:term)
@@ -97,6 +97,7 @@ let check
       "Allocating a mutable local variable is only allowed in non-ghost and non-atomic code"
   
   | Some post ->
+    let _ = Tactics.BreakVC.break_vc () in
     let g = push_context "check_withlocal_array" t.range g in
     let Tm_WithLocalArray {binder; initializer; length; body} = t.term in
     let (| init, init_u, init_t, init_t_typing, init_typing |) =

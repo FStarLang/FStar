@@ -15,15 +15,15 @@
 *)
 
 module Pulse.Lib.HigherReference
+#lang-pulse
 open Pulse.Lib.Core
 open PulseCore.FractionalPermission
 open FStar.Ghost
 open Pulse.Class.PtsTo
-module U32 = FStar.UInt32
 module T = FStar.Tactics
 val ref ([@@@unused]a:Type u#1) : Type u#0
 
-val pts_to (#a:Type) (r:ref a) (#[T.exact (`1.0R)] p:perm) (n:a) : slprop
+val pts_to (#a:Type) ([@@@mkey]r:ref a) (#[T.exact (`1.0R)] p:perm) (n:a) : slprop
 
 [@@pulse_unfold]
 instance has_pts_to_ref (a:Type) : has_pts_to (ref a) a = {
@@ -62,18 +62,6 @@ val gather (#a:Type) (r:ref a) (#x0 #x1:erased a) (#p0 #p1:perm)
   : stt_ghost unit emp_inames
       (pts_to r #p0 x0 ** pts_to r #p1 x1)
       (fun _ -> pts_to r #(p0 +. p1) x0 ** pure (x0 == x1))
-
-(* Share/gather specialized to half permission *)
-val share2 (#a:Type) (r:ref a) (#v:erased a)
-  : stt_ghost unit emp_inames
-      (pts_to r v)
-      (fun _ -> pts_to r #0.5R v ** pts_to r #0.5R v)
-
-[@@allow_ambiguous]
-val gather2 (#a:Type) (r:ref a) (#x0 #x1:erased a)
-  : stt_ghost unit emp_inames
-      (pts_to r #0.5R x0 ** pts_to r #0.5R x1)
-      (fun _ -> pts_to r x0 ** pure (x0 == x1))
 
 val with_local
   (#a:Type u#1)

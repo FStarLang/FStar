@@ -15,12 +15,15 @@
 *)
 
 module Pulse.Lib.Forall
+#lang-pulse
 open Pulse.Lib.Core
 
 val ( forall* )
     (#a:Type u#a)
     (p:a -> slprop)
 : slprop
+
+(* Cannot use pulse vals yet: universe polymorphic definition. *)
 
 val elim_forall
     (#a:Type)

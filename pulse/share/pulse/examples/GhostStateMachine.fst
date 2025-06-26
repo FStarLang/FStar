@@ -16,11 +16,12 @@
 
 module GhostStateMachine
 #lang-pulse
-open Pulse.Lib.Pervasives
-open Pulse.Lib.Reference
-open Pulse.Lib.SpinLock
+open Pulse
+open Pulse.Lib
 
-module R = Pulse.Lib.Reference
+open Pulse.Lib.SpinLock
+open Pulse.Lib.Box { box, (:=), (!) }
+
 
 (*  
   A small example of a ghost state machine (although this implementation
@@ -56,9 +57,9 @@ type st_t =
   | CNext : payload_t -> st_t
   | CFinal : payload_t -> st_t
 
-type pure_handle_t = ref pure_st_t
+type pure_handle_t = box pure_st_t
 
-type handle_t = ref st_t
+type handle_t = box st_t
 
 let pure_handle_has_state (h:pure_handle_t) (s:pure_st_t) : slprop = pts_to h #0.5R s
 
@@ -100,10 +101,10 @@ fn init ()
   returns st:locked_state_t
   ensures pure_handle_has_state st.ph Init ** lock_alive st.lk #1.0R (lock_inv st.h st.ph)
 {
-  let ph = alloc Init;
-  let h = alloc CInit;
+  let ph = Box.alloc Init;
+  let h = Box.alloc CInit;
 
-  R.share2 #pure_st_t ph #Init;
+  Box.share #pure_st_t ph #Init;
   fold pure_handle_has_state ph Init;
   fold pure_handle_has_state ph Init;
   fold handle_has_state h CInit;
@@ -143,16 +144,16 @@ fn next ()
   unfold pure_handle_has_state global_locked_state.ph Init;
   unfold pure_handle_has_state global_locked_state.ph ps;
 
-  pts_to_injective_eq #pure_st_t #0.5R #0.5R #Init #ps global_locked_state.ph;
+  Box.pts_to_injective_eq #pure_st_t #0.5R #0.5R #Init #ps global_locked_state.ph;
   rewrite (pts_to global_locked_state.ph #0.5R ps)
        as (pts_to global_locked_state.ph #0.5R Init);
-  Pulse.Lib.Reference.gather2 #pure_st_t global_locked_state.ph #Init;
+  Box.gather #pure_st_t global_locked_state.ph #Init;
 
   let st = CNext some_payload;
   global_locked_state.h := st;
   global_locked_state.ph := Next;
 
-  R.share2 #pure_st_t global_locked_state.ph #Next;
+  Box.share #pure_st_t global_locked_state.ph #Next;
   fold pure_handle_has_state global_locked_state.ph Next;
   fold pure_handle_has_state global_locked_state.ph Next;
   fold handle_has_state global_locked_state.h st;
@@ -181,16 +182,16 @@ fn close ()
   unfold pure_handle_has_state global_locked_state.ph Next;
   unfold pure_handle_has_state global_locked_state.ph ps;
 
-  pts_to_injective_eq #pure_st_t #0.5R #0.5R #Next #ps global_locked_state.ph;
+  Box.pts_to_injective_eq #pure_st_t #0.5R #0.5R #Next #ps global_locked_state.ph;
   rewrite (pts_to global_locked_state.ph #0.5R ps)
        as (pts_to global_locked_state.ph #0.5R Next);
-  Pulse.Lib.Reference.gather2 #pure_st_t global_locked_state.ph #Next;
+  Box.gather #pure_st_t global_locked_state.ph #Next;
 
   let st = CFinal some_payload;
   global_locked_state.h := st;
   global_locked_state.ph := Final;
 
-  R.share2 #pure_st_t global_locked_state.ph #Final;
+  Box.share #pure_st_t global_locked_state.ph #Final;
   fold pure_handle_has_state global_locked_state.ph Final;
   fold pure_handle_has_state global_locked_state.ph Final;
   fold handle_has_state global_locked_state.h st;

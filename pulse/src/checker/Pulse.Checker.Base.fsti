@@ -17,16 +17,12 @@
 module Pulse.Checker.Base
 
 module RT = FStar.Reflection.Typing
-module R = FStar.Reflection.V2
-module L = FStar.List.Tot
 module T = FStar.Tactics.V2
 open FStar.List.Tot
 open Pulse.Syntax
 open Pulse.Typing
 open Pulse.Typing.Combinators
-module FV = Pulse.Typing.FV
-module RU = Pulse.RuntimeUtils
-module Metatheory = Pulse.Typing.Metatheory
+open Pulse.Typing.FV {} (* for smtpats, which some clients seem to need *)
 
 val debug (g:env) (f:unit -> T.Tac string) : T.Tac unit
 
@@ -208,7 +204,7 @@ val checker_result_t_equiv_ctxt (g:env) (ctxt ctxt' : slprop)
 : checker_result_t g ctxt' post_hint
 
 val is_stateful_application (g:env) (e:term) 
-  : T.Tac (option st_term)
+  : T.Tac (o:option st_term { Some? o ==> Tm_STApp? (Some?.v o).term })
 
 val norm_typing
       (g:env) (e:term) (eff:_) (t0:term)
@@ -233,3 +229,14 @@ val norm_st_typing_inverse
       (d1:tot_typing g t1 (tm_type u))
       (steps:list norm_step)
   : T.Tac (option (st_typing g e (C_Tot t1)))
+
+val hoist_stateful_apps
+  (g:env)
+  (tt:either term st_term)
+  (hoist_top_level_st:bool)
+  (context: (
+    x:either term st_term { 
+        (Inr? tt ==> Inr? x) /\
+        (hoist_top_level_st /\ Inl? tt ==> Inl? x)
+      } -> T.Tac st_term))
+: T.Tac (option st_term)

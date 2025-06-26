@@ -2,16 +2,14 @@
   "fstar_exe": "fstar.exe",
   "options": [
     "--query_cache",
-    "--ext", "context_pruning",
+    "--ext", "optimize_let_vc",
     "--z3version", "4.13.3"
   ],
   "include_dirs": [
-    "lib",
+    "out/lib/pulse",
     "share/pulse/examples",
-    "share/pulse/examples/bug-reports",
     "share/pulse/examples/by-example",
     "share/pulse/examples/parallel",
-    "share/pulse/examples/parix",
     "share/pulse/examples/dice",
     "share/pulse/examples/dice/cbor",
     "share/pulse/examples/dice/dpe",

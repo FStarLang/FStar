@@ -62,6 +62,16 @@ let seq_create_lid = ["FStar"; "Seq"; "Base"; "create"]
 let tot_lid = ["Prims"; "Tot"]
 
 let slprop_equiv_norm_tm = R.pack_ln (R.Tv_FVar (R.pack_fv (mk_pulse_lib_core_lid "slprop_equiv_norm")))
+let slprop_equiv_fold_tm (s:string) = 
+  let head = R.pack_ln (R.Tv_FVar (R.pack_fv (mk_pulse_lib_core_lid "slprop_equiv_fold"))) in
+  let s = R.pack_ln (R.Tv_Const (R.C_String s)) in
+  let t = R.pack_ln (R.Tv_App head (s, R.Q_Explicit)) in
+  t
+let slprop_equiv_unfold_tm (s:string) =
+  let head = R.pack_ln (R.Tv_FVar (R.pack_fv (mk_pulse_lib_core_lid "slprop_equiv_unfold"))) in
+  let s = R.pack_ln (R.Tv_Const (R.C_String s)) in
+  let t = R.pack_ln (R.Tv_App head (s, R.Q_Explicit)) in
+  t
 let match_rewrite_tac_tm = R.pack_ln (R.Tv_FVar (R.pack_fv (mk_pulse_lib_core_lid "match_rewrite_tac")))
 
 (* The "plicities" *)
@@ -755,3 +765,16 @@ let inv_disjointness_goal (is iname:R.term) : R.term =
   let u0 = R.pack_universe R.Uv_Zero in
   let p = mk_reveal u0 bool_tm p in
   mk_eq2 u0 bool_tm (`false) p
+
+let fv_has_attr_string (attr_name:string) (f : R.fv) : T.Tac bool =
+  match T.lookup_typ (T.top_env ()) (T.inspect_fv f) with
+  | None -> false
+  | Some se ->
+    let attrs = T.sigelt_attrs se in
+    attrs |> T.tryFind (fun a -> T.is_fvar a attr_name)
+
+let head_has_attr_string (attr_name:string) (t : R.term) : T.Tac bool =
+  match T.hua t with
+  | None -> false
+  | Some (hfv, _, _) ->
+    fv_has_attr_string attr_name hfv

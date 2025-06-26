@@ -16,19 +16,13 @@
 
 module Pulse.Checker.Prover.Match.Base
 
-open FStar.Tactics.V2
-open FStar.List.Tot
-open FStar.Ghost
-
 open Pulse.Syntax
 open Pulse.Typing
-open Pulse.Typing.Combinators
 open Pulse.Checker.Prover.Base
-open Pulse.PP
+open Pulse.VC
+open FStar.List.Tot
 
-module RU = Pulse.RuntimeUtils
 module T  = FStar.Tactics.V2
-module P = Pulse.Syntax.Printer
 module PS = Pulse.Checker.Prover.Substs
 
 (* Move? *)
@@ -82,9 +76,13 @@ type match_pass_result (g:env) (ss:PS.ss_t) (ctxt0 unsolved0 : list slprop) = {
 
   unsolved_matched : list slprop;
   unsolved1        : list slprop;
-  unsolved_ok      : slprop_list_equiv g (unsolved0) (unsolved_matched @ unsolved1);
-  
+  unsolved_ok      : slprop_list_equiv g unsolved0 (unsolved_matched @ unsolved1);
+
   match_ok         : slprop_list_equiv g ctxt_matched (ss' $$ unsolved_matched);
+
+  (* Some information for the user explaining why unsolved1 couldn't be
+  fully matched. E.g. ambiguity messages. *)
+  msgs : list (list Pprint.document);
 }
 
 (* A zero for the match pass result, no progress at all.
@@ -101,6 +99,8 @@ let mpr_zero (#g #ss #ctxt0 #unsolved0 :_) : match_pass_result g ss ctxt0 unsolv
     unsolved_ok      = slprop_list_equiv_refl _ _;
     
     match_ok = slprop_list_equiv_refl _ _;
+    
+    msgs = [];
   }
 
 (* FIXME: probably do not have to be in this interface, and can
@@ -143,21 +143,31 @@ val apply_mpr
 (******************************************************************)
 (******************************************************************)
 
-(* A matcher can raise this to signal a graceful failure. *)
-exception NoMatch of string
+(* The result of a matcher. *)
 
-(* Ambig (q, p1, p2): q (in goals) can be matched by p1 or p2 (in ctx). *)
-exception Ambig of (slprop & slprop & slprop)
-
-let match_success_t
+noeq
+type match_res_t
   (#preamble:_) (pst : prover_state preamble)
   (p q : slprop) : Type =
-  ss:PS.ss_t & slprop_equiv pst.pg p ss.(q)
+  | NoMatch : reason:string -> match_res_t pst p q
+  | Matched :
+    ss_ext : PS.ss_t ->
+    vc : vc_t ->
+    with_vc vc (slprop_equiv pst.pg p ss_ext.(q)) ->
+    match_res_t pst p q
+    (* Note: I would prefer to just write
+         Matched of guarded (ss:PS.ss_t & slprop_equiv pst.pg p ss.(q))
+       but that seems to incur many more inference failures. *)
+
+(* A matcher can also raise this to signal a graceful failure, it's just
+converted to NoMatch. *)
+exception ENoMatch of string
 
 (* The type of a 1-to-1 matcher. The pst is "read-only". If there's
-no match, it should raise NoMatch. Other exceptions are not caught. *)
+no match, it returns NoMatch or raises ENoMatch. Other exceptions are
+not caught. These matchers never try to discharge VCs, but instead return
+guarded results (see match_res_t). *)
 type matcher_t =
-  (#preamble:_) ->
-  (pst : prover_state preamble) ->
+  (#preamble:_) -> (pst : prover_state preamble) ->
   (p : slprop) -> (q : slprop) ->
-  T.Tac (match_success_t pst p q)
+  T.Tac (match_res_t pst p q)

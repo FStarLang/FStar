@@ -16,7 +16,6 @@
 
 module Pulse.Lib.Swap.Array
 #lang-pulse
-module R = Pulse.Lib.Reference
 module Prf = Pulse.Lib.Swap.Spec
 open Pulse.Lib.Swap.Common
 #set-options "--fuel 2 --ifuel 1"
@@ -49,7 +48,7 @@ let size_sub
 
 #restart-solver
 
-#push-options "--z3rlimit_factor 4"
+#push-options "--z3rlimit_factor 8"
 
 inline_for_extraction noextract [@@noextract_to "krml"]
 
@@ -135,12 +134,12 @@ fn array_swap
   (lb: SZ.t) (rb: SZ.t)
   (mb: SZ.t)
   (#s1 #s2: Ghost.erased (Seq.seq t))
-requires (
+  requires (
     A.pts_to_range a (SZ.v lb) (SZ.v mb) s1 **
     A.pts_to_range a (SZ.v mb) (SZ.v rb) s2
   )
-returns mb' : SZ.t
-ensures (
+  returns mb' : SZ.t
+  ensures (
     A.pts_to_range a (SZ.v lb) (SZ.v mb') s2 **
     A.pts_to_range a (SZ.v mb') (SZ.v rb) s1 **
     pure (array_swap_post lb rb mb mb')

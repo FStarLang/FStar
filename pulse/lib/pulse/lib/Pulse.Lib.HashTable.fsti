@@ -15,13 +15,13 @@
 *)
 
 module Pulse.Lib.HashTable
+#lang-pulse
 
 open Pulse.Lib.Pervasives
 open Pulse.Lib.HashTable.Spec
 open Pulse.Lib.HashTable.Type
 
 module V = Pulse.Lib.Vec
-module R = Pulse.Lib.Reference
 module SZ = FStar.SizeT
 module PHT = Pulse.Lib.HashTable.Spec
 
@@ -40,7 +40,7 @@ let mk_init_pht (#k:eqtype) #v (hashf:k -> SZ.t) (sz:pos_us)
 }
 
 noextract
-let related #kt #vt (ht:ht_t kt vt) (pht:pht_t kt vt) : GTot prop =
+let related #kt #vt (ht:ht_t kt vt) (pht:pht_t kt vt) : prop =
   SZ.v ht.sz == pht.repr.sz /\
   pht.repr.hashf == lift_hash_fun ht.hashf
 
@@ -77,7 +77,7 @@ val dealloc
     (ensures fun _ -> emp)
 
 noextract
-let same_sz_and_hashf (#kt:eqtype) (#vt:Type) (ht1 ht2:ht_t kt vt) : GTot prop =
+let same_sz_and_hashf (#kt:eqtype) (#vt:Type) (ht1 ht2:ht_t kt vt) : prop =
   ht1.sz == ht2.sz /\
   ht1.hashf == ht2.hashf
 

@@ -16,7 +16,8 @@
 
 module Pulse.Show
 
-open FStar.Tactics
+open FStar.Tactics.V2
+open FStar.Tactics.NamedView
 open Pulse.Typing
 open Pulse.Syntax.Base
 
@@ -36,6 +37,7 @@ instance val tac_showable_list (a:Type) (_ : tac_showable a)
   
 instance val tac_showable_ctag : tac_showable ctag
 instance val tac_showable_term : tac_showable term
+instance val tac_showable_aqualv : tac_showable aqualv
 instance val tac_showable_st_term : tac_showable st_term
 instance val tac_showable_universe : tac_showable universe
 instance val tac_showable_comp : tac_showable comp
@@ -43,8 +45,8 @@ instance val tac_showable_env : tac_showable env
 instance val tac_showable_observability : tac_showable observability
 instance val tac_showable_effect_annot : tac_showable effect_annot
 instance val tac_showable_post_hint_t : tac_showable post_hint_t
+instance val tac_showable_namedv : tac_showable Reflection.namedv
 
-instance val tac_showable_r_term : tac_showable Reflection.term
 instance val tac_showable_range  : tac_showable Range.range
 
 instance val tac_showable_tuple2 (a b : Type) (_:tac_showable a) (_:tac_showable b) : tac_showable (a & b)
@@ -53,3 +55,6 @@ instance val tac_showable_tuple4 (a b c d : Type) (_:tac_showable a) (_:tac_show
 instance val tac_showable_tuple5 (a b c d e : Type) (_:tac_showable a) (_:tac_showable b) (_:tac_showable c) (_:tac_showable d) (_:tac_showable e) : tac_showable (a & b & c & d & e)
 instance val tac_showable_tuple6 (a b c d e f : Type) (_:tac_showable a) (_:tac_showable b) (_:tac_showable c) (_:tac_showable d) (_:tac_showable e) (_:tac_showable f) : tac_showable (a & b & c & d & e & f)
 instance val tac_showable_tuple7 (a b c d e f g : Type) (_:tac_showable a) (_:tac_showable b) (_:tac_showable c) (_:tac_showable d) (_:tac_showable e) (_:tac_showable f) (_:tac_showable g) : tac_showable (a & b & c & d & e & f & g)
+
+instance val tac_showable_tot_or_ghost : tac_showable tot_or_ghost
+instance val tac_showable_qualifier    : tac_showable qualifier

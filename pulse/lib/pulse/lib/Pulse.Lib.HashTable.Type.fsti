@@ -15,10 +15,10 @@
 *)
 
 module Pulse.Lib.HashTable.Type
+#lang-pulse
 
 open Pulse.Lib.Pervasives
 module V = Pulse.Lib.Vec
-module R = Pulse.Lib.Reference
 module SZ = FStar.SizeT
 
 open Pulse.Lib.HashTable.Spec

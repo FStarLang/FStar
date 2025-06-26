@@ -22,7 +22,6 @@ open Pulse.Syntax
 open Pulse.Typing
 open Pulse.Typing.Combinators
 open Pulse.Checker.Base
-module T = FStar.Tactics.V2
 
 let canon_slprop (vp:term)
   : term

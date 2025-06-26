@@ -17,19 +17,20 @@
 module Pulse.Checker.Prover.Match
 
 module T = FStar.Tactics
+open FStar.Pprint
 
 open Pulse.Checker.Prover.Base
 
 (* Full matching passes. *)
 
 val match_syntactic (#preamble:preamble) (pst:prover_state preamble)
-: T.Tac (pst':prover_state preamble { pst' `pst_extends` pst })
+: T.Tac (list (list document) & pst':prover_state preamble { pst' `pst_extends` pst })
 
 val match_fastunif (#preamble:preamble) (pst:prover_state preamble)
-: T.Tac (pst':prover_state preamble { pst' `pst_extends` pst })
+: T.Tac (list (list document) & pst':prover_state preamble { pst' `pst_extends` pst })
 
 val match_fastunif_i (#preamble:preamble) (pst:prover_state preamble)
-: T.Tac (pst':prover_state preamble { pst' `pst_extends` pst })
+: T.Tac (list (list document) & pst':prover_state preamble { pst' `pst_extends` pst })
 
 val match_full (#preamble:preamble) (pst:prover_state preamble)
-: T.Tac (pst':prover_state preamble { pst' `pst_extends` pst })
+: T.Tac (list (list document) & pst':prover_state preamble { pst' `pst_extends` pst })

@@ -16,19 +16,18 @@
 
 module PulseSyntaxExtension.Desugar
 open FStarC
-open FStarC.Compiler.Effect
+open FStarC.Effect
 module Sugar = PulseSyntaxExtension.Sugar
 module SW = PulseSyntaxExtension.SyntaxWrapper
 module A = FStarC.Parser.AST
 module D = FStarC.Syntax.DsEnv
 module ToSyntax = FStarC.ToSyntax.ToSyntax
 module S = FStarC.Syntax.Syntax
-module L = FStarC.Compiler.List
+module L = FStarC.List
 module U = FStarC.Syntax.Util
 module SS = FStarC.Syntax.Subst
-module R = FStarC.Compiler.Range
-module BU = FStarC.Compiler.Util
-module P =  FStarC.Syntax.Print
+module R = FStarC.Range
+module BU = FStarC.Util
 module LR = PulseSyntaxExtension.TransformRValues
 
 open FStarC.Class.Show
@@ -45,10 +44,92 @@ let close_st_term_bvs (e:SW.st_term) (xs:list SW.bv) : SW.st_term =
 let close_comp_bvs  (e:SW.comp) (xs:list SW.bv) : SW.comp = 
   SW.close_comp_n e (L.map SW.index_of_bv xs)
 
+
 let rec fold_right1 (f : 'a -> 'a -> 'a) (l : list 'a) : 'a =
   match l with
   | [h] -> h
   | h::t -> f h (fold_right1 f t)
+
+let sugar_app (r:Range.range) (f:A.term) (aa : list A.term) : A.term =
+  List.fold_left  (fun f a ->
+    A.mk_term (A.App (f, a, A.Nothing)) r A.Expr)
+  f aa
+
+let sugar_unit (r:Range.range) : A.term =
+  A.mk_term (A.Var FStarC.Parser.Const.unit_lid) r A.Expr
+let sugar_emp (r:Range.range) : A.term =
+  A.mk_term (A.Var emp_lid) r A.Expr
+let sugar_star (r:Range.range) : A.term =
+  A.mk_term (A.Var star_lid) r A.Expr
+
+let sugar_star_of_list (r:Range.range) (ts : list A.term) : A.term =
+  match ts with
+  | [] -> sugar_emp r
+  | ts -> fold_right1 (fun a b -> sugar_app r (sugar_star r) [a; b]) ts
+
+let parse_annots (r:Range.range) (cs : list Sugar.computation_annot) : err Sugar.parsed_annots =
+  let open PulseSyntaxExtension.Sugar in
+  let pres = filter (fun (a, _) -> Preserves ? a) cs in
+  let reqs  = filter (fun (a, _) -> Requires? a) cs in
+  let enss  = filter (fun (a, _) -> Ensures?  a) cs in
+  let rets  = filter (fun (a, _) -> Returns?  a) cs in
+  let opens = filter (fun (a, _) -> Opens?    a) cs in
+
+  // let reqs  = choose (function (Sugar.Requires t, _) -> Some t | _ -> None) cs in
+  // let enss  = choose (function (Sugar.Ensures  t, _) -> Some t | _ -> None) cs in
+  // let rets  = choose (function (Sugar.Returns  t, _) -> Some t | _ -> None) cs in
+  // let opens = choose (function (Sugar.Opens    t, _) -> Some t | _ -> None) cs in
+  let req = pres @ reqs |> List.map (function (Requires t, _) | (Preserves t, _) -> t) |> sugar_star_of_list r in
+  let ens = pres @ enss |> List.map (function (Ensures  t, _) | (Preserves t, _) -> t) |> sugar_star_of_list r in
+  let! return_name, return_type =
+    match rets with
+    | [] -> return (None, sugar_unit r)
+    | (Returns (name, t), _)::[] -> return (name, t)
+    | _::(_,r)::_ ->
+      fail "Multiple returns are not allowed." r
+  in
+  let return_name =
+    match return_name with
+    | None -> Ident.mk_ident ("_", r)
+    | Some id -> id
+  in
+  let! opens : option A.term =
+    match opens with
+    | [] -> return None
+    | (Opens t, _)::[] -> return (Some t)
+    | _::(_,r)::_ ->
+      fail "Multiple opens are not allowed." r
+  in
+  let rec check_order cs ((*have we seen a: *)req ret ens : bool) =
+    match cs with
+    | [] -> return ()
+    | (a, r)::cs ->
+      let req = req || Requires? a in
+      let ret = ret || Returns? a in
+      let ens = ens || Ensures? a in
+      if ens && Requires? a then
+        fail "requires must come before any ensures" r
+      else if ret && Requires? a then
+        fail "requires must come before the return" r
+      else if ret && Opens? a then
+        fail "opens must come before the return (the name returned is *not* in scope for the opens clause)" r
+      else if ens && Returns? a then
+        fail "returns must come before ensures (the name returned is in scope for the ensures clause)" r
+      else if ret && Preserves? a then
+        fail "preserves must come before the return" r
+      else if ens && Preserves? a then
+        fail "preserves must come before ensures" r
+      else
+        check_order cs req ret ens
+  in
+  check_order cs false false false;!
+  return {
+    precondition =  req;
+    postcondition = ens;
+    return_name = return_name;
+    return_type = return_type;
+    opens = opens;
+  }
 
 let as_term (t:S.term)
   : SW.term
@@ -61,15 +142,11 @@ let as_term (t:S.term)
 let desugar_const (c:FStarC.Const.sconst) : SW.constant =
   SW.inspect_const c
 
-let slprop_to_ast_term (v:Sugar.slprop)
-  : err A.term
-  = let open FStarC.Parser.AST in
-    match v.v with
-    | Sugar.SLPropTerm t -> return t
-
 let comp_to_ast_term (c:Sugar.computation_type) : err A.term =
+  let open Sugar in
   let open FStarC.Parser.AST in
-  let return_ty = c.return_type in
+  let! annots = parse_annots c.range c.annots in
+  let return_ty = annots.return_type in
   let r = c.range in
   let head =
     match c.tag with
@@ -89,10 +166,10 @@ let comp_to_ast_term (c:Sugar.computation_type) : err A.term =
       let h = mk_term (App (h, return_ty, Nothing)) r Expr in
       h
   in
-  let! pre = slprop_to_ast_term c.precondition in
-  let! post = slprop_to_ast_term c.postcondition in
+  let pre  = annots.precondition in
+  let post = annots.postcondition in
   let post =
-    let pat = mk_pattern (PatVar (c.return_name, None, [])) r in
+    let pat = mk_pattern (PatVar (annots.return_name, None, [])) r in
     let pat = mk_pattern (PatAscribed (pat, (return_ty, None))) r in
     mk_term (Abs ([pat], post)) r Expr
   in
@@ -111,10 +188,9 @@ let faux (qb : option SW.qualifier & SW.binder) (bv : S.bv)
     in
     (q,b,bv)
 
-
-let stapp_assignment assign_lid (args:list S.term) (last_arg:S.term) (r:_)
-  : SW.st_term
-  = let head_fv = S.lid_as_fv assign_lid None in
+let app_lid lid (args:list S.term) (r:_)
+  : S.term
+  = let head_fv = S.lid_as_fv lid None in
     let head = S.fv_to_tm head_fv in
     let app = 
       L.fold_left 
@@ -122,7 +198,8 @@ let stapp_assignment assign_lid (args:list S.term) (last_arg:S.term) (r:_)
           S.mk_Tm_app head [(arg, None)] arg.pos)
         head args
     in
-    SW.(tm_st_app (tm_expr app r) None (as_term last_arg) r)
+    app
+
 
 let ret (s:S.term) = SW.(tm_return (as_term s) s.pos)
 
@@ -161,7 +238,6 @@ let tosyntax' (env:env_t) (t:A.term)
       | e -> 
         match FStarC.Errors.issue_of_exn e with
         | Some i ->
-          let i = prepend_ctx_issue (Pprint.arbitrary_string "Failed to desugar Pulse term") i in
           FStarC.Errors.add_issues [i];
           just_fail ()
 
@@ -184,7 +260,7 @@ let desugar_term (env:env_t) (t:A.term)
 let desugar_term_opt (env:env_t) (t:option A.term)
   : err SW.term
   = match t with
-    | None -> return (SW.tm_unknown FStarC.Compiler.Range.dummyRange)
+    | None -> return (SW.tm_unknown FStarC.Range.dummyRange)
     | Some e -> desugar_term env e
 
 //
@@ -205,7 +281,7 @@ let idents_as_binders (env:env_t) (l:list ident)
            (BU.format1 "Identifiers (%s) not found, consider adding them as binders" s)
            (non_tick_idents |> L.hd |> Ident.range_of_id)
     else begin
-      let erased_tm = A.(mk_term (Var FStarC.Parser.Const.erased_lid) FStarC.Compiler.Range.dummyRange Un) in
+      let erased_tm = A.(mk_term (Var FStarC.Parser.Const.erased_lid) FStarC.Range.dummyRange Un) in
       let mk_ty i =
         let wild = A.(mk_term Wild (Ident.range_of_id i) Un) in
         A.(mkApp erased_tm [wild, A.Nothing] (Ident.range_of_id i)) in
@@ -223,102 +299,46 @@ let idents_as_binders (env:env_t) (l:list ident)
       aux env [] [] l
     end
 
-let rec interpret_slprop_constructors (env:env_t) (v:S.term)
-  : err SW.term
-  = let head, args = U.head_and_args_full v in
-    match head.n, args with
-    | S.Tm_fvar fv, [(l, _)]
-      when S.fv_eq_lid fv pure_lid ->
-      let res = SW.tm_pure (as_term l) v.pos in
-      return res
-    
-    | S.Tm_fvar fv, []
-      when S.fv_eq_lid fv emp_lid ->
-      return <| SW.tm_emp v.pos
-      
-    | S.Tm_fvar fv, [(l, _); (r, _)]
-      when S.fv_eq_lid fv star_lid ->
-      let! l = interpret_slprop_constructors env l in
-      let! r = interpret_slprop_constructors env r in
-      return <| SW.tm_star l r v.pos
-
-    | S.Tm_fvar fv, [(l, _)]
-      when S.fv_eq_lid fv exists_lid -> (
-        match (SS.compress l).n with
-        | S.Tm_abs {bs=[b]; body } ->
-          let b = SW.mk_binder b.S.binder_bv.ppname (as_term b.S.binder_bv.sort) in
-          let! body = interpret_slprop_constructors env body in
-          return <| SW.tm_exists b body v.pos
-        | _ ->
-          return <| as_term v
-      )
-
-    | S.Tm_fvar fv, [(l, _)]
-      when S.fv_eq_lid fv forall_lid -> (
-        match (SS.compress l).n with
-        | S.Tm_abs {bs=[b]; body } ->
-          let b = SW.mk_binder b.S.binder_bv.ppname (as_term b.S.binder_bv.sort) in
-          let! body = interpret_slprop_constructors env body in
-          return <| SW.tm_forall b body v.pos
-        | _ ->
-          return <| as_term v
-      )
-
-    | S.Tm_fvar fv, [(l, _)]
-      when S.fv_eq_lid fv prims_exists_lid
-      ||   S.fv_eq_lid fv prims_forall_lid -> (
-      fail "exists/forall are prop connectives; you probably meant to use exists*/forall*" v.pos  
-      )
-
-    | _ ->
-      return <| as_term v
-  
 let desugar_slprop (env:env_t) (v:Sugar.slprop)
   : err SW.slprop
-  = match v.v with
-    | Sugar.SLPropTerm t -> 
-      let! t = tosyntax env t in
-      interpret_slprop_constructors env t
+  = tosyntax env v
 
 let desugar_computation_type (env:env_t) (c:Sugar.computation_type)
   : err SW.comp
   = //let! pres = map_err (desugar_slprop env) c.preconditions in
     //let pre = fold_right1 (fun a b -> SW.tm_star a b c.range) pres in
-    let! pre = desugar_slprop env c.precondition in
+    let! annots = parse_annots c.range c.annots in
+    let! pre = desugar_slprop env annots.Sugar.precondition in
 
-    let! ret = desugar_term env c.return_type in
+    let! ret = desugar_term env annots.Sugar.return_type in
 
-    // let! opens = match c.opens with
-    //             | [] -> return SW.tm_emp_inames
-    //             | [i] -> desugar_term env i
-    //             | _ -> fail "only one opens supported" c.range
-    // in
-    let! opens = match c.opens with
-                 | Some t -> desugar_term env t
-                 | None -> return SW.tm_emp_inames
+    let! opens =
+      match annots.Sugar.opens with
+      | Some t -> desugar_term env t
+      | None -> return SW.tm_emp_inames
     in
 
     (* Should have return_name in scope I think *)
     // let! openss = map_err (desugar_term env) c.opens in
     // let opens = L.fold_right (fun i is -> SW.tm_add_inv i is c.range) openss SW.tm_emp_inames in
 
-    let env1, bv = push_bv env c.return_name in
+    let env1, bv = push_bv env annots.Sugar.return_name in
     // let! posts = map_err (desugar_slprop env1) c.postconditions in
     // let post = fold_right1 (fun a b -> SW.tm_star a b c.range) posts in
-    let! post = desugar_slprop env1 c.postcondition in
+    let! post = desugar_slprop env1 annots.Sugar.postcondition in
     let post = SW.close_term post bv.index in
 
     match c.tag with
     | Sugar.ST ->
-      if Some? c.opens then
+      if Some? annots.Sugar.opens then
         fail "STT computations are not indexed by invariants. Either remove the `opens` or make this function ghost/atomic."
-             (Some?.v c.opens).range
+             (Some?.v annots.Sugar.opens).range
       else return ();!
-      return SW.(mk_comp pre (mk_binder c.return_name ret) post)
+      return SW.(mk_comp pre (mk_binder annots.Sugar.return_name ret) post)
     | Sugar.STAtomic ->
-      return SW.(atomic_comp opens pre (mk_binder c.return_name ret) post)
+      return SW.(atomic_comp opens pre (mk_binder annots.Sugar.return_name ret) post)
     | Sugar.STGhost ->
-      return SW.(ghost_comp opens pre (mk_binder c.return_name ret) post)
+      return SW.(ghost_comp opens pre (mk_binder annots.Sugar.return_name ret) post)
 
 let mk_totbind b s1 s2 r : SW.st_term =
   SW.tm_totbind b s1 s2 r
@@ -331,16 +351,6 @@ let explicit_rvalues (env:env_t) (s:Sugar.stmt)
   = s
 
 let qual = option SW.qualifier
-
-let as_qual (q:A.aqual) rng : err qual =
-  match q with
-  | Some A.Implicit -> return <| SW.as_qual true
-  | Some A.TypeClassArg -> return <| SW.tc_qual
-  | Some (A.Meta t) ->
-    fail "Pulse does not yet support meta arguments" rng
-  | Some A.Equality ->
-    fail "Pulse does not yet support equality arguments" rng
-  | None -> return <| SW.as_qual false
 
 (* We open FStar.Tactics.V2 in the scope of every `by` as a convenience. *)
 let desugar_tac_opt (env:env_t) (topt : option A.term) : err (option SW.term) =
@@ -405,6 +415,24 @@ let desugar_datacon (env:env_t) (l:lid) : err SW.fv =
   in
   return (SW.mk_fv (S.lid_of_fv sfv) rng)
 
+let close_st_term_binders qbs body =
+  let bvs = List.Tot.map (fun (_, _, b) -> b) qbs in
+  close_st_term_bvs body bvs
+
+let mk_abs_with_comp qbs comp body range =
+  let _, abs =
+    L.fold_right
+      (fun (q,b,bv) (c, body) ->
+        let body' = SW.close_st_term body (SW.index_of_bv bv) in
+        let asc =
+          match c with
+          | None -> None
+          | Some c -> Some  (SW.close_comp c (SW.index_of_bv bv)) in
+        None, SW.tm_abs b q asc body' range)
+      qbs (comp, body)
+  in
+  abs
+
 (* s has already been transformed with explicit dereferences for r-values *)
 let rec desugar_stmt (env:env_t) (s:Sugar.stmt)
   : err SW.st_term
@@ -419,15 +447,17 @@ let rec desugar_stmt (env:env_t) (s:Sugar.stmt)
       let! lhs = tosyntax env lhs in
       let! rhs = tosyntax env value in
       let! assignment_lid = resolve_lid env (op_colon_equals_lid s.range) in
-      return (stapp_assignment assignment_lid [lhs] rhs s.range)
+      let tm = (app_lid assignment_lid [lhs; rhs] s.range) in
+      return (st_term_of_admit_or_return (admit_or_return env (app_lid assignment_lid [lhs; rhs] s.range)))
 
     | ArrayAssignment { arr; index; value } ->
       let! arr = tosyntax env arr in
       let! index = tosyntax env index in
       let! value = tosyntax env value in      
       let! array_assignment_lid = resolve_lid env (op_array_assignment_lid s.range) in
-      return (stapp_assignment array_assignment_lid [arr;index] value s.range)
-    
+      let tm = (app_lid array_assignment_lid [arr; index; value] s.range) in
+      return (st_term_of_admit_or_return (admit_or_return env tm))
+
     | Sequence { s1={s=Open l; range}; s2 } ->
       let! env = 
         try 
@@ -444,33 +474,63 @@ let rec desugar_stmt (env:env_t) (s:Sugar.stmt)
       in
       desugar_stmt env s2
 
-    | Sequence { s1={s=LetBinding lb}; s2 } ->
+    | Sequence { s1={s=LetBinding lb; range=s1range}; s2 } ->
       begin match lb.pat.pat with
       | A.PatVar _
       | A.PatWild _ ->
+        (* simple bind *)
         desugar_bind env lb s2 s.range
       | _ ->
+        (* a single-branch pattern match *)
         let id = Ident.id_of_text "_letpattern" in
+        let id = Ident.set_id_range lb.pat.prange id in
         let pat = lb.pat in
         if Some? lb.qualifier then
           fail "Qualifiers are not allowed for pattern bindings" lb.pat.prange
         else return ();!
+        let! init_expr =
+          match lb.init with
+          | None -> fail "Pattern bindings must have an initializer" lb.pat.prange
+          | Some (Default_initializer e) -> return e
+          | Some _ -> fail "Pattern bindings cannot have complext initializers" lb.pat.prange
+        in
         let lb' =
-          { qualifier = lb.qualifier;
+          { norw = lb.norw;
+            qualifier = lb.qualifier;
             pat = A.mk_pattern (A.PatVar (id, None, [])) lb.pat.prange;
             typ = lb.typ;
             init = lb.init }
         in
         let t_let =
-          mk_stmt (LetBinding lb') s.range
+          mk_stmt (LetBinding lb') s1range
+        in
+        let seq s1 s2 =
+          mk_stmt (Sequence { s1; s2 }) s1range
         in
         let t_match =
           mk_stmt (Match { head = A.(mk_term (Tvar id) lb.pat.prange Expr);
                           returns_annot = None;
-                          branches = [(pat, s2)] }) s.range
+                          branches = [(lb.norw, pat, s2)] }) s1range
+        in
+        let t_match =
+          (* We only inject a variable when the rhs is a variable *)
+          if not lb.norw &&
+              (match init_expr.A.tm with
+                | A.Tvar _ -> true
+                | A.Var _ -> true
+                | A.Name _ -> true
+                | _ -> false)
+          then
+            let s_rw =
+              mk_stmt (ProofHintWithBinders {
+                    hint_type = RENAME ([(init_expr, A.mk_term (A.Tvar id) lb.pat.prange A.Expr)], None, None);
+                    binders = []}) s1range
+            in
+            seq s_rw t_match
+          else t_match
         in
         let s'' =
-          mk_stmt (Sequence { s1 = t_let ; s2=t_match }) s.range
+          seq t_let t_match
         in
         // BU.print2 "GG Rewrote \n(%s)\n to \n(%s)\n\n" (show s) (show s'');
         desugar_stmt env s''
@@ -525,9 +585,6 @@ let rec desugar_stmt (env:env_t) (s:Sugar.stmt)
 
     | Introduce { slprop; witnesses } -> (
       let! vp = desugar_slprop env slprop in
-      fail_if (not (SW.is_tm_exists vp))
-             "introduce expects an existential formula"
-             s.range ;!
       let! witnesses = witnesses |> mapM (desugar_term env) in
       return (SW.tm_intro_exists vp witnesses s.range)
     )
@@ -578,14 +635,14 @@ let rec desugar_stmt (env:env_t) (s:Sugar.stmt)
       let n1 : term = tm_expr n1 s.range in
       return (SW.tm_with_inv n1 tt returns_ s.range)
 
-and desugar_branch (env:env_t) (br:A.pattern & Sugar.stmt)
+and desugar_branch (env:env_t) (br: bool & A.pattern & Sugar.stmt)
   : err SW.branch
-  = let (p, e) = br in
+  = let (norw, p, e) = br in
     let! (p, vs) = desugar_pat env p in
     let env, bvs = push_bvs env vs in
     let! e = desugar_stmt env e in
     let e = SW.close_st_term_n e (L.map (fun (v:S.bv) -> v.index <: nat) bvs) in
-    return (p,e)
+    return (SW.mk_branch p e norw)
 
 and desugar_pat (env:env_t) (p:A.pattern)
   : err (SW.pattern & list ident)
@@ -615,6 +672,21 @@ and desugar_pat (env:env_t) (p:A.pattern)
       let strs = L.map Ident.string_of_id idents in
       let pats = L.map (fun s -> SW.pat_var s r) strs in
       return (SW.pat_cons fv pats r, idents)
+
+    | A.PatList ps ->
+      let! ps = ps |> mapM (fun p -> desugar_pat env p) in
+      let pats, idents = L.unzip ps in
+      let cons = SW.mk_fv Parser.Const.cons_lid r in
+      let nil  = SW.mk_fv Parser.Const.nil_lid r in
+      let pat = FStarC.List.fold_right (fun p acc -> SW.pat_cons cons [p;acc] r) pats (SW.pat_cons nil [] r) in
+      return (pat, L.flatten idents)
+
+    | A.PatTuple (ps, dep) ->
+      let! ps = ps |> mapM (fun p -> desugar_pat env p) in
+      let pats, idents = L.unzip ps in
+      let ctor = SW.mk_fv (Parser.Const.Tuples.mk_tuple_data_lid (L.length pats) r) r in
+      let pat = SW.pat_cons ctor pats r in
+      return (pat, L.flatten idents)
 
     | _ ->
       fail "invalid pattern" r
@@ -662,6 +734,25 @@ and desugar_bind (env:env_t) (lb:_) (s2:Sugar.stmt) (r:R.range)
           let! lam = desugar_lambda env lam in
           return <| mk_bind b lam s2 r
 
+        | Sugar.Lambda_initializer {
+            id; is_rec=false;
+            binders;
+            ascription=Inr ascription;
+            measure=None;
+            body=Inr body;
+            range
+          } ->
+          let! env, bs, bvs = desugar_binders env binders in
+          let! comp =
+            match ascription with
+            | None -> return (SW.mk_tot (SW.tm_unknown range))
+            | Some t -> let! t = desugar_term env t in return (SW.mk_tot t)
+          in
+          let! body = desugar_lambda env body in
+          let! qbs = map2 faux bs bvs in
+          let abs = mk_abs_with_comp qbs (Some comp) body range in
+          return <| mk_bind b abs s2 r
+
         | Sugar.Lambda_initializer _ ->
           fail "Nested functions are not yet fully supported" r
 
@@ -695,7 +786,13 @@ and desugar_bind (env:env_t) (lb:_) (s2:Sugar.stmt) (r:R.range)
 
 and desugar_sequence (env:env_t) (s1 s2:Sugar.stmt) r
   : err SW.st_term
-  = let! s1 = desugar_stmt env s1 in
+  = let semicolon = not (Sugar.LetBinding? s1.s) in
+    let! s1 = desugar_stmt env s1 in
+    let s1 =
+      if semicolon
+      then SW.mark_statement_sequence s1
+      else s1
+    in
     let! s2 = desugar_stmt env s2 in
     let annot = SW.mk_binder (Ident.id_of_text "_") (SW.tm_unknown r) in
     return (mk_bind annot s1 s2 r)
@@ -746,7 +843,7 @@ and desugar_binders (env:env_t) (bs:Sugar.binders)
           let! attrs = mapM (desugar_term env) attrs in
           let env, bv = push_bv env b in
           let! env, bs, bvs = aux env bs in
-          let! aq = as_qual aq rng in
+          let! aq = as_qual env aq rng in
           return (env, (aq, b, t, attrs)::bs, bv::bvs)
     in
     let! env, bs, bvs = aux env bs in
@@ -761,7 +858,8 @@ and desugar_lambda (env:env_t) (l:Sugar.lambda)
       | None ->
         return (env, bs, bvs, None)
       | Some c -> 
-        let fvs = free_vars_comp env c in
+        let! pannots = parse_annots c.range c.annots in
+        let fvs = free_vars_comp env pannots in
         let! env, bs', bvs' = idents_as_binders env fvs in
         let bs = bs@bs' in
         let bvs = bvs@bvs' in
@@ -775,17 +873,7 @@ and desugar_lambda (env:env_t) (l:Sugar.lambda)
     in
     let! body = desugar_stmt env body in
     let! qbs = map2 faux bs bvs in
-    let _, abs =
-      L.fold_right 
-        (fun (q,b,bv) (c, body) ->
-          let body' = SW.close_st_term body (SW.index_of_bv bv) in
-          let asc =
-            match c with
-            | None -> None
-            | Some c -> Some  (SW.close_comp c (SW.index_of_bv bv)) in
-          None, SW.tm_abs b q asc body' range)
-        qbs (comp, body)
-    in
+    let abs = mk_abs_with_comp qbs comp body range in
     return abs
 
 and desugar_decl (env:env_t)
@@ -798,7 +886,8 @@ and desugar_decl (env:env_t)
         (res:Sugar.computation_type)
   : err A.term
   = // can we just use a unknown type here?
-    let r = range_of_id res.return_name in
+    let! annots = parse_annots res.range res.annots in
+    let r = range_of_id annots.Sugar.return_name in
     let! env, bs', _ = desugar_binders env bs in
     let! res_t = comp_to_ast_term res in
     let bs'' = bs |> L.map (fun b ->
@@ -810,14 +899,11 @@ and desugar_decl (env:env_t)
     let bs'' = init @ [last] in
     return (A.mk_term (A.Product (bs'', res_t)) r A.Expr)
   in
-  let close_st_term_binders qbs body =
-    let bvs = List.Tot.map (fun (_, _, b) -> b) qbs in
-    close_st_term_bvs body bvs
-  in
   match d with
   | Sugar.FnDefn { id; is_rec; binders; ascription=Inl ascription; measure; body=Inl body; range } ->
     let! env, bs, bvs = desugar_binders env binders in
-    let fvs = free_vars_comp env ascription in
+    let! pannots = parse_annots ascription.range ascription.annots in
+    let fvs = free_vars_comp env pannots in
     let! env, bs', bvs' = idents_as_binders env fvs in
     let bs = bs@bs' in
     let bvs = bvs@bvs' in
@@ -861,7 +947,8 @@ and desugar_decl (env:env_t)
     let! env, bs, bvs = desugar_binders env binders in
 
     (* Process ticks *)
-    let fvs = free_vars_comp env ascription in
+    let! pannots = parse_annots ascription.range ascription.annots in
+    let fvs = free_vars_comp env pannots in
     let! env, bs', bvs' = idents_as_binders env fvs in
     let bs = bs@bs' in
     let bvs = bvs@bvs' in
@@ -870,6 +957,18 @@ and desugar_decl (env:env_t)
     let! qbs = map2 faux bs bvs in
     let comp = close_comp_bvs comp (List.Tot.map (fun (_,_,bv) -> bv) qbs) in
     return (SW.fn_decl range id qbs comp)
+
+and as_qual (env:env_t) (q:A.aqual) rng : err qual =
+  match q with
+  | Some A.Implicit -> return <| SW.as_qual true
+  | Some A.TypeClassArg -> return <| SW.tc_qual
+  | Some (A.Meta t) ->
+    let! t = desugar_term env t in
+    return <| SW.meta_qual t
+  | Some A.Equality ->
+    fail "Pulse does not yet support equality arguments" rng
+  | None -> return <| SW.as_qual false
+
 
 let reinitialize_env (dsenv:D.env)
                      (curmod:Ident.lident)

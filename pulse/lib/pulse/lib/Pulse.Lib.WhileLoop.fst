@@ -24,8 +24,8 @@ fn rec while_loop'
   (inv:bool -> slprop)
   (cond:unit -> stt bool (exists* x. inv x) (fun b -> inv b))
   (body:unit -> stt unit (inv true) (fun _ -> exists* x. inv x))
-requires (exists* x. inv x) 
-ensures inv false
+  requires (exists* x. inv x)
+  ensures inv false
 {
   let b = cond ();
   if b {

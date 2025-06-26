@@ -16,14 +16,12 @@
 
 module Pulse.Lib.Swap.Slice
 #lang-pulse
-module R = Pulse.Lib.Reference
 module Prf = Pulse.Lib.Swap.Spec
 open Pulse.Lib.Swap.Common
 #set-options "--fuel 2 --ifuel 1"
 #restart-solver
 
-#push-options "--z3rlimit_factor 4"
-
+#push-options "--z3rlimit_factor 6"
 #restart-solver
 
 inline_for_extraction noextract [@@noextract_to "krml"]
@@ -88,7 +86,6 @@ fn slice_swap_aux(#t: Type0) (a: S.slice t) (mb: (mb: SZ.t {0 < SZ.v mb /\ SZ.v 
       pi := i';
       ()
     };
-    ()
 }
 
 #pop-options
@@ -100,11 +97,11 @@ fn slice_swap0
   (a: S.slice t)
   (mb: SZ.t)
   (#s: Ghost.erased (Seq.seq t))
-requires (
+  requires (
     pts_to a s **
     pure (SZ.v mb <= Seq.length s)
   )
-ensures (
+  ensures (
     exists* s' .
     pts_to a s' **
     pure (
@@ -134,11 +131,11 @@ fn slice_swap
   (a: S.slice t)
   (mb: SZ.t)
   (#s: Ghost.erased (Seq.seq t))
-requires (
+  requires (
     pts_to a s **
     pure (SZ.v mb <= Seq.length s)
   )
-ensures (
+  ensures (
     exists* s' .
     pts_to a s' **
     pure (

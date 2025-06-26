@@ -29,7 +29,6 @@ open Pulse.PP
 
 module RU = Pulse.RuntimeUtils
 module T  = FStar.Tactics.V2
-module P = Pulse.Syntax.Printer
 module PS = Pulse.Checker.Prover.Substs
 
 let slprop_list_equiv_refl (g:env) (vs:list slprop) : slprop_list_equiv g vs vs = admit()
@@ -153,6 +152,8 @@ let compose_mpr (g:env) (ss : PS.ss_t) (ctxt0 unsolved0 ctxt1 unsolved1 : list s
         (VE_Refl _ _)
       >>* VE_Sym _ _ _ (subst_append_equiv _ _ _ _)
     );
+    
+    msgs = mpr1.msgs @ mpr2.msgs;
   }
 
 let apply_mpr_vequiv_proof

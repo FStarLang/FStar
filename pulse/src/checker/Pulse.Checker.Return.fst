@@ -23,8 +23,8 @@ open Pulse.Checker.Base
 open Pulse.Checker.Prover
 
 module T = FStar.Tactics.V2
-module P = Pulse.Syntax.Printer
 module Metatheory = Pulse.Typing.Metatheory
+module RU = Pulse.RuntimeUtils
 
 let check_effect
     (#g:env) (#e:term) (#eff:T.tot_or_ghost) (#t:term)
@@ -43,7 +43,7 @@ let check_effect
   | _, T.E_Total -> 
     (| STT_Atomic, e, d |)
   | _ -> 
-    fail g (Some (Pulse.RuntimeUtils.range_of_term e)) "Expected a total term, but this term has Ghost effect"
+    fail g (Some (RU.range_of_term e)) "Expected a total term, but this term has Ghost effect"
  
 
 let check_tot_or_ghost_term (g:env) (e:term) (t:term) (c:option ctag)
@@ -64,10 +64,11 @@ type result_of_typing (g:env) =
 
 let compute_tot_or_ghost_term_type_and_u (g:env) (e:term) (c:option ctag)
 : T.Tac (result_of_typing g)
-= let (| t, eff, ty, (| u, ud |), d |) = compute_term_type_and_u g e in
+= RU.with_error_bound (RU.range_of_term e) fun () -> // stopgap, ideally remove
+  let (| t, eff, ty, (| u, ud |), d |) = compute_term_type_and_u g e in
   let (| c, e, d |) = check_effect d c in
   R c e u ty ud d
-    
+
 #push-options "--z3rlimit_factor 4"
 let check_core
   (g:env)
@@ -93,7 +94,7 @@ let check_core
       match inspect_term expected_type with
       | Tm_Unknown -> None
       | _ ->
-        let ty, _ = Pulse.Checker.Pure.instantiate_term_implicits g expected_type None in
+        let ty, _ = Pulse.Checker.Pure.instantiate_term_implicits g expected_type None false in
         let (| u, d |) = check_universe g ty in
         Some (| ty, u, d |)
   in
@@ -146,22 +147,25 @@ let check
   (res_ppname:ppname)
   (st:st_term { Tm_Return? st.term })
   (check:check_t)
-  : T.Tac (checker_result_t g ctxt post_hint)
-  = let Tm_Return f = st.term in
-    match Pulse.Checker.Base.is_stateful_application g f.term with
-    | Some st_app ->
-      let st_app = { st_app with source = st.source } in
-      check g ctxt ctxt_typing post_hint res_ppname st_app
-    
-    | None -> (
-      match post_hint with
-      | Some p -> (
-        let ctag =
-          match ctag_of_effect_annot p.effect_annot with
-          | Some c -> c
-          | None -> STT_Atomic in
-        check_core g ctxt ctxt_typing post_hint res_ppname st (Some ctag)
-        
-      )
-      | _ ->  check_core g ctxt ctxt_typing post_hint res_ppname st None
+: T.Tac (checker_result_t g ctxt post_hint)
+= let Tm_Return f = st.term in
+  let rebuild (tt: either term st_term) : T.Tac st_term =
+    match tt with
+    | Inl t -> { st with term = Tm_Return { f with term = t } }
+    | Inr st_app -> { st_app with source = st.source }
+  in
+  match Pulse.Checker.Base.hoist_stateful_apps g (Inl f.term) false rebuild with
+  | Some tt -> //some elaboration, go back to top
+    check g ctxt ctxt_typing post_hint res_ppname tt
+  | None -> (
+    match post_hint with
+    | Some p -> (
+      let ctag =
+        match ctag_of_effect_annot p.effect_annot with
+        | Some c -> c
+        | None -> STT_Atomic in
+      check_core g ctxt ctxt_typing post_hint res_ppname st (Some ctag)
+      
     )
+    | _ ->  check_core g ctxt ctxt_typing post_hint res_ppname st None
+  )
