@@ -16,6 +16,7 @@
 
 module Pulse.Lib.HigherReference
 #lang-pulse
+open Pulse.Main
 open Pulse.Lib.Core
 open PulseCore.FractionalPermission
 open FStar.Ghost
@@ -34,34 +35,45 @@ val pts_to_timeless (#a:Type) (r:ref a) (p:perm) (n:a)
   : Lemma (timeless (pts_to r #p n))
           [SMTPat (timeless (pts_to r #p n))]
 
-val alloc (#a:Type) (x:a)
-  : stt (ref a) emp (fun r -> pts_to r x)
+fn alloc (#a:Type) (x:a)
+  returns  r : ref a
+  ensures  r |-> x
+  
+fn read (#a:Type) (r:ref a) (#n:erased a) (#p:perm)
+  preserves r |-> Frac p n
+  returns  x : a
+  ensures  pure (n == x)
 
-val ( ! ) (#a:Type) (r:ref a) (#n:erased a) (#p:perm)
-  : stt a
-        (pts_to r #p n)
-        (fun x -> pts_to r #p n ** pure (reveal n == x))
+(* alias for read *)
+fn ( ! ) (#a:Type) (r:ref a) (#n:erased a) (#p:perm)
+  preserves r |-> Frac p n
+  returns  x : a
+  ensures  pure (n == x)
 
-val ( := ) (#a:Type) (r:ref a) (x:a) (#n:erased a)
-  : stt unit
-        (pts_to r n)
-        (fun _ -> pts_to r x)
+fn write (#a:Type) (r:ref a) (x:a) (#n:erased a)
+  requires r |-> n
+  ensures  r |-> x
 
-val free (#a:Type) (r:ref a) (#n:erased a)
-  : stt unit (pts_to r n) (fun _ -> emp)
+(* alias for write *)
+fn ( := ) (#a:Type) (r:ref a) (x:a) (#n:erased a)
+  requires r |-> n
+  ensures  r |-> x
 
-val share (#a:Type) (r:ref a) (#v:erased a) (#p:perm)
-  : stt_ghost unit emp_inames
-      (pts_to r #p v)
-      (fun _ ->
-       pts_to r #(p /. 2.0R) v **
-       pts_to r #(p /. 2.0R) v)
+fn free (#a:Type) (r:ref a) (#n:erased a)
+  requires pts_to r n
+  ensures  emp
+
+ghost
+fn share (#a:Type) (r:ref a) (#v:erased a) (#p:perm)
+  requires r |-> Frac p v
+  ensures  (r |-> Frac (p /. 2.0R) v) **
+           (r |-> Frac (p /. 2.0R) v)
 
 [@@allow_ambiguous]
-val gather (#a:Type) (r:ref a) (#x0 #x1:erased a) (#p0 #p1:perm)
-  : stt_ghost unit emp_inames
-      (pts_to r #p0 x0 ** pts_to r #p1 x1)
-      (fun _ -> pts_to r #(p0 +. p1) x0 ** pure (x0 == x1))
+ghost
+fn gather (#a:Type) (r:ref a) (#x0 #x1:erased a) (#p0 #p1:perm)
+  requires (r |-> Frac p0 x0) ** (r |-> Frac p1 x1)
+  ensures  (r |-> Frac (p0 +. p1) x0) ** pure (x0 == x1)
 
 val with_local
   (#a:Type u#1)
@@ -74,15 +86,15 @@ val with_local
   : stt ret_t pre post
 
 [@@allow_ambiguous]
-val pts_to_injective_eq (#a:_)
+ghost
+fn pts_to_injective_eq (#a:_)
                         (#p #q:_)
                         (#v0 #v1:a)
                         (r:ref a)
-  : stt_ghost unit emp_inames
-      (pts_to r #p v0 ** pts_to r #q v1)
-      (fun _ -> pts_to r #p v0 ** pts_to r #q v1 ** pure (v0 == v1))
+  requires (r |-> Frac p v0) ** (r |-> Frac q v1)
+  ensures  (r |-> Frac p v0) ** (r |-> Frac q v1) ** pure (v0 == v1)
 
-val pts_to_perm_bound (#a:_) (#p:_) (r:ref a) (#v:a)
-  : stt_ghost unit emp_inames
-      (pts_to r #p v)
-      (fun _ -> pts_to r #p v ** pure (p <=. 1.0R))
+ghost
+fn pts_to_perm_bound (#a:_) (#p:_) (r:ref a) (#v:a)
+  requires r |-> Frac p v
+  ensures  (r |-> Frac p v) ** pure (p <=. 1.0R)

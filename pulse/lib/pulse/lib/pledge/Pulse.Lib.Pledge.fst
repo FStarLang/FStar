@@ -294,8 +294,8 @@ let split_switch (is : inames) (b1 b2 : bool) (f v1 v2 : slprop) : slprop =
   | true, true -> emp
 
 let inv_p' (is:inames) (f v1 v2 : slprop) (r1 r2 : GR.ref bool) (b1 b2 : bool) =
-     GR.pts_to r1 #0.5R b1
-  ** GR.pts_to r2 #0.5R b2
+     (r1 |-> Frac 0.5R b1)
+  ** (r2 |-> Frac 0.5R b2)
   ** split_switch is b1 b2 f v1 v2
 
 let inv_p (is:inames) (f v1 v2 : slprop) (r1 r2 : GR.ref bool) : slprop =
@@ -305,7 +305,7 @@ ghost
 fn do_elim_body_l
   (#is:inames) (#f:slprop) (v1:slprop) (v2:slprop) (r1 r2 : GR.ref bool)
   ()
-  requires inv_p is f v1 v2 r1 r2 ** f ** GR.pts_to r1 #0.5R false
+  requires inv_p is f v1 v2 r1 r2 ** f ** (r1 |-> Frac 0.5R false)
   ensures  inv_p is f v1 v2 r1 r2 ** f ** v1
   opens is
 {
@@ -324,7 +324,7 @@ fn do_elim_body_l
   if b2 {
     (* The "easy" case: the big pledge has already been claimed
     by the other subpledge, so we just extract our resource. *)
-    assert (pts_to r1 false);
+    assert (r1 |-> false);
     r1 := true;
     rewrite emp ** split_switch is false true f v1 v2
         as  split_switch is true true f v1 v2 ** v1;
@@ -342,11 +342,11 @@ fn do_elim_body_l
     fold (inv_p' is f v1 v2 r1 r2 true true);
     fold inv_p;
     assert (f ** v1 ** inv_p is f v1 v2 r1 r2);
-    drop_ (pts_to r1 #0.5R true);
+    drop_ (r1 |-> Frac 0.5R true);
   } else {
     (* The "hard" case: the big pledge has not been claimed.
     Claim it, split it, and store the leftover in the invariant. *)
-    assert (pts_to r1 false);
+    assert (r1 |-> false);
 
     rewrite split_switch is false false f v1 v2
         as  pledge is f (v1 ** v2);
@@ -361,17 +361,15 @@ fn do_elim_body_l
     fold (inv_p' is f v1 v2 r1 r2 true false);
     fold inv_p;
     assert (f ** v1 ** inv_p is f v1 v2 r1 r2);
-    drop_ (pts_to r1 #0.5R true);
+    drop_ (r1 |-> Frac 0.5R true);
   }
 }
-
-#set-options "--print_implicits"
 
 ghost
 fn elim_body_l1
   (#is:inames) (#f:slprop) (i : iname) (v1:slprop) (v2:slprop) (r1 r2 : GR.ref bool)
   ()
-  requires f ** (GR.pts_to r1 #0.5R false ** later_credit 1 ** inv i (inv_p is f v1 v2 r1 r2)) ** pure (not (mem_inv is i))
+  requires f ** ((r1 |-> Frac 0.5R false) ** later_credit 1 ** inv i (inv_p is f v1 v2 r1 r2)) ** pure (not (mem_inv is i))
   ensures  f ** v1 ** inv i (inv_p is f v1 v2 r1 r2)
   opens add_inv is i
 {
@@ -389,7 +387,7 @@ ghost
 fn elim_body_l
   (#is:inames) (#f:slprop) (i : iname) (v1:slprop) (v2:slprop) (r1 r2 : GR.ref bool)
   ()
-  requires f ** (GR.pts_to r1 #0.5R false ** later_credit 1 ** inv i (inv_p is f v1 v2 r1 r2) ** pure (not (mem_inv is i)))
+  requires f ** ((r1 |-> Frac 0.5R false) ** later_credit 1 ** inv i (inv_p is f v1 v2 r1 r2) ** pure (not (mem_inv is i)))
   ensures  f ** v1
   opens add_inv is i
 {
@@ -429,7 +427,7 @@ fn flip_invp
 // fn elim_body_r
 //   (#is:inames) (#f:slprop) (i : iname{not (mem_inv is i)}) (v1:slprop) (v2:slprop) (r1 r2 : GR.ref bool)
 //   ()
-//   requires f ** (GR.pts_to r2 #0.5R false ** later_credit 1 ** inv i (inv_p is f v1 v2 r1 r2))
+//   requires f ** ((r2 |-> Frac 0.5R false) ** later_credit 1 ** inv i (inv_p is f v1 v2 r1 r2))
 //   ensures  f ** v2 ** inv i (inv_p is f v1 v2 r1 r2)
 //   opens add_inv is i
 // {
@@ -442,7 +440,7 @@ ghost
 fn elim_body_r1
   (#is:inames) (#f:slprop) (i : iname) (v1:slprop) (v2:slprop) (r1 r2 : GR.ref bool)
   ()
-  requires f ** (GR.pts_to r2 #0.5R false ** later_credit 1 ** inv i (inv_p is f v1 v2 r1 r2) ** pure (not (mem_inv is i)))
+  requires f ** ((r2 |-> Frac 0.5R false) ** later_credit 1 ** inv i (inv_p is f v1 v2 r1 r2) ** pure (not (mem_inv is i)))
   ensures  f ** v2 ** inv i (inv_p is f v1 v2 r1 r2)
   opens add_inv is i
 {
@@ -462,7 +460,7 @@ ghost
 fn elim_body_r
   (#is:inames) (#f:slprop) (i : iname) (v1:slprop) (v2:slprop) (r1 r2 : GR.ref bool)
   ()
-  requires f ** (GR.pts_to r2 #0.5R false ** later_credit 1 ** inv i (inv_p is f v1 v2 r1 r2) ** pure (not (mem_inv is i)))
+  requires f ** ((r2 |-> Frac 0.5R false) ** later_credit 1 ** inv i (inv_p is f v1 v2 r1 r2) ** pure (not (mem_inv is i)))
   ensures  f ** v2
   opens add_inv is i
 {
@@ -507,14 +505,14 @@ fn ghost_split_pledge (#is:inames) (#f:slprop) (v1:slprop) (v2:slprop)
     is'
     f
     v1
-    (GR.pts_to r1 #0.5R false ** later_credit 1 ** inv i (inv_p is f v1 v2 r1 r2) ** pure (not (mem_inv is i)))
+    ((r1 |-> Frac 0.5R false) ** later_credit 1 ** inv i (inv_p is f v1 v2 r1 r2) ** pure (not (mem_inv is i)))
     (elim_body_l #is #f i v1 v2 r1 r2);
 
   make_pledge
     is'
     f
     v2
-    (GR.pts_to r2 #0.5R false ** later_credit 1 ** inv i (inv_p is f v1 v2 r1 r2) ** pure (not (mem_inv is i)))
+    ((r2 |-> Frac 0.5R false) ** later_credit 1 ** inv i (inv_p is f v1 v2 r1 r2) ** pure (not (mem_inv is i)))
     (elim_body_r #is #f i v1 v2 r1 r2);
 
   rewrite each

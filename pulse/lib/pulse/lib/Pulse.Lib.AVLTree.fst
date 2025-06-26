@@ -43,7 +43,7 @@ let rec is_tree #t ct ft = match ft with
   | T.Node data left' right' ->
     exists* (p:node_ptr t) (lct:tree_t t) (rct:tree_t t).
       pure (ct == Some p) **
-      Box.pts_to p { data = data ; left = lct ; right = rct} **
+      (p |-> { data = data ; left = lct ; right = rct}) **
       is_tree lct left' **
       is_tree rct right'
 
@@ -74,7 +74,7 @@ fn elim_is_tree_node (#t:Type0) (ct:tree_t t) (data:t) (ltree:T.tree t) (rtree:T
   ensures (
   exists* (p:node_ptr t) (lct:tree_t t) (rct:tree_t t).
     pure (ct == Some p) **
-    pts_to p { data; left = lct;right = rct } **
+    (p |-> { data; left = lct;right = rct }) **
     is_tree lct ltree **
     is_tree rct rtree
 )
@@ -89,7 +89,7 @@ module G = FStar.Ghost
 ghost
 fn intro_is_tree_node (#t:Type0) (ct:tree_t t) (v:node_ptr t) (#node:node t) (#ltree:T.tree t) (#rtree:T.tree t)
 requires
-  pts_to v node **
+  (v |-> node) **
   is_tree node.left ltree **
   is_tree node.right rtree **
   pure (ct == Some v)
@@ -106,7 +106,7 @@ let is_tree_cases #t (x : option (box (node t))) (ft : T.tree t)
   | None -> pure (ft == T.Leaf)
   | Some v -> 
     exists* (n:node t) (ltree:T.tree t) (rtree:T.tree t).
-      pts_to v n **
+      (v |-> n) **
       pure (ft == T.Node n.data ltree rtree) **
       is_tree n.left ltree **
       is_tree n.right rtree
@@ -124,7 +124,7 @@ fn cases_of_is_tree #t (x:tree_t t) (ft:T.tree t)
     T.Node data ltree rtree -> {
       unfold (is_tree x (T.Node data ltree rtree));
       with p lct rct. _;
-      with n. assert pts_to p n;
+      with n. assert p |-> n;
       with l'. rewrite is_tree lct l' as is_tree n.left l';
       with r'. rewrite is_tree rct r' as is_tree n.right r';
       fold (is_tree_cases (Some p) (T.Node data ltree rtree))
@@ -155,7 +155,7 @@ fn is_tree_case_some (#t:Type) (x:tree_t t) (v:node_ptr t) (#ft:T.tree t)
   requires is_tree x ft ** pure (x == Some v)
 ensures
    exists* (node:node t) (ltree:T.tree t) (rtree:T.tree t).
-    pts_to v node **
+    (v |-> node) **
     is_tree node.left ltree **
     is_tree node.right rtree **
     pure (ft == T.Node node.data ltree rtree)
@@ -183,7 +183,7 @@ fn rec height (#t:Type0) (x:tree_t t)
     }
     Some vl -> {
       is_tree_case_some (Some vl) vl;
-      with gnode. assert pts_to vl gnode;
+      with gnode. assert vl |-> gnode;
       let node = !vl;
       rewrite each gnode as node; (* unfortunate *)
       let l_height = height node.left;
@@ -442,7 +442,7 @@ ensures
   exists* (node:node t) (ltree:T.tree t) (rtree:T.tree t).
     pure (x == Some v) **
     pure ('l == T.Node node.data ltree rtree) **
-    pts_to v node **
+    (v |-> node) **
     is_tree node.left ltree **
     is_tree node.right rtree
 {
@@ -472,7 +472,7 @@ fn read_node
     (* ^ squash to help with spec well-formedness *)
   ensures (
     let (l, x, r, _) = res in
-    pts_to (Some?.v tree) ({left = l; data = x; right = r})
+    (Some?.v tree |-> {left = l; data = x; right = r})
     ** is_tree l (_left t)
     ** is_tree r (_right t)
     ** pure (x == _data t)
@@ -480,10 +480,10 @@ fn read_node
 {
   let p = get_some_ref tree;
   rewrite each tree as (Some p);
-  with node. assert (pts_to p node);
+  with node. assert p |-> node;
   let n = !p;
   rewrite each node as n;
-  rewrite pts_to p n as pts_to (Some?.v tree) n;
+  rewrite p |-> n as Some?.v tree |-> n;
   // rewrite each ltree as tree.left;
   (n.left, n.data, n.right, ())
 }
@@ -496,7 +496,7 @@ fn write_node
   (rp : tree_t a)
   (#lt #rt : erased (T.tree a))
   requires
-    pts_to (Some?.v tree) 'n0 **
+    (Some?.v tree |-> 'n0) **
     is_tree lp lt **
     is_tree rp rt
   ensures
@@ -577,7 +577,7 @@ fn rec is_balanced (#t:Type0) (tree:tree_t t)
     }
     Some vl -> {
       is_tree_case_some (Some vl) vl;
-      with node. assert (pts_to vl node);
+      with node. assert vl |-> node;
       let n = !vl;
       rewrite each node as n;
 
@@ -625,7 +625,7 @@ fn rec  rebalance_avl (#t:Type0) (tree:tree_t t) (#l:G.erased(T.tree t))
       }
       else
       {
-        with node. assert (pts_to vl node);
+        with node. assert vl |-> node;
         let n = !vl;
         rewrite each node as n;
         let height_l = height n.left;
@@ -640,7 +640,7 @@ fn rec  rebalance_avl (#t:Type0) (tree:tree_t t) (#l:G.erased(T.tree t))
           is_tree_case_some n.left vll;
          
 
-          with nodel. assert (pts_to vll nodel);
+          with nodel. assert vll |-> nodel;
           let nl = !vll;
           rewrite each nodel as nl;
 
@@ -678,7 +678,7 @@ fn rec  rebalance_avl (#t:Type0) (tree:tree_t t) (#l:G.erased(T.tree t))
           intro_is_tree_node n.right vlr;
           is_tree_case_some n.right vlr;
 
-          with noder. assert (pts_to vlr noder);
+          with noder. assert vlr |-> noder;
           let nr = !vlr;
           rewrite each noder as nr;
 
@@ -746,7 +746,7 @@ fn rec insert_avl (#t:Type0) (cmp: T.cmp t) (tree:tree_t t) (key: t)
     }
     Some vl -> {
       is_tree_case_some (Some vl) vl;
-      with node. assert (pts_to vl node);
+      with node. assert vl |-> node;
       let n = !vl;
       rewrite each node as n;
       let delta = cmp n.data key;
@@ -801,7 +801,7 @@ fn rec tree_max_c (#t:Type0) (tree:tree_t t) (#l:G.erased(T.tree t){T.Node? l})
     }
     Some vl -> {
       is_tree_case_some (Some vl) vl;
-      with node. assert pts_to vl node;
+      with node. assert vl |-> node;
       let n = !vl;
       rewrite each node as n;
       let right = n.right;
@@ -843,7 +843,7 @@ fn rec delete_avl (#t:Type0) (cmp: T.cmp t) (tree:tree_t t) (key: t)
     }
     Some vl -> {
       is_tree_case_some (Some vl) vl;
-      with node. assert (pts_to vl node);
+      with node. assert vl |-> node;
       let n = !vl;
       rewrite each node as n;
       let delta = cmp n.data key;
@@ -871,7 +871,7 @@ fn rec delete_avl (#t:Type0) (cmp: T.cmp t) (tree:tree_t t) (key: t)
               }
               Some vlr -> {(*Leaf,Node_*)
                 is_tree_case_some (Some vlr) vlr;
-                with rnode'. assert (pts_to vlr rnode');
+                with rnode'. assert vlr |-> rnode';
                 let rnode = !vlr;
                 rewrite each rnode' as rnode;
                 let vl' = {data = rnode.data; left = rnode.left; right = rnode.right};
@@ -895,7 +895,7 @@ fn rec delete_avl (#t:Type0) (cmp: T.cmp t) (tree:tree_t t) (key: t)
               None -> {(*Node_,Leaf*)
                 is_tree_case_some (Some vll) vll;
                 is_tree_case_none None;
-                with node. assert (pts_to vll node);
+                with node. assert vll |-> node;
                 let lnode = !vll;
                 rewrite each node as lnode;
                 let vl' = {data = lnode.data; left = lnode.left; right = lnode.right};

@@ -44,7 +44,7 @@ fn alloc (#a:Type u#0) (v:a)
 
 
 
-fn op_Bang
+fn read
   (#a:Type)
   (r:ref a)
   (#n:erased a)
@@ -59,9 +59,9 @@ fn op_Bang
   U.downgrade_val k
 }
 
+let op_Bang = read
 
-
-fn op_Colon_Equals
+fn write
   (#a:Type)
   (r:ref a)
   (x:a)
@@ -74,6 +74,7 @@ fn op_Colon_Equals
   fold (pts_to r #1.0R x)
 }
 
+let op_Colon_Equals = write
 
 
 fn free #a (r:ref a) (#n:erased a)

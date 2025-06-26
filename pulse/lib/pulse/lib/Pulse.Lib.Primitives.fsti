@@ -42,6 +42,8 @@ val write_atomic (r:ref U32.t) (x:U32.t) (#n:erased U32.t)
         (pts_to r n) 
         (fun _ -> pts_to r (hide x))
 
+let cond b (p q:slprop) = if b then p else q
+
 val cas (r:ref U32.t) (u v:U32.t) (#i:erased U32.t)
   : stt_atomic bool #Observable emp_inames 
     (pts_to r i)
