@@ -432,7 +432,7 @@ let pts_to #a #p r x = Sep.lift (Mem.pts_to #a #p r x)
 let timeless_pts_to #a #p r x = Sep.timeless_lift (Mem.pts_to #a #p r x)
 let pts_to_not_null #a #p r v =
   lift_pre_act0_act fun #ictx ->
-  ITA.lift_mem_action (Mem.pts_to_not_null_action #a #p (Sep.lower_inames ictx) r v)
+  ITA.lift_mem_action (Mem.pts_to_not_null_action #a #p r v)
 
 let lift_eqs ()
 : squash (
@@ -449,7 +449,7 @@ let alloc
     (x:a{pcm.refine x})
 : act (ref a pcm) Atomic emp_inames emp (fun r -> pts_to r x)
 = lift_eqs(); lift_pre_act0_act fun #ictx ->
-    ITA.lift_mem_action (Mem.alloc_action #a #pcm (Sep.lower_inames ictx) x)
+    ITA.lift_mem_action (Mem.alloc_action #a #pcm x)
 
 let read
     (#a:Type)
@@ -465,7 +465,7 @@ let read
       (pts_to r x)
       (fun v -> pts_to r (f v))
 = lift_pre_act1_act fun #ictx -> 
-    ITA.lift_mem_action (Mem.select_refine #a #p (Sep.lower_inames ictx) r x f)
+    ITA.lift_mem_action (Mem.select_refine #a #p r x f)
 
 let write
     (#a:Type)
@@ -479,7 +479,7 @@ let write
       (pts_to r x)
       (fun _ -> pts_to r y)
 = lift_pre_act0_act fun #ictx ->
-    ITA.lift_mem_action (Mem.upd_gen #a #p (Sep.lower_inames ictx) r x y f)
+    ITA.lift_mem_action (Mem.upd_gen #a #p r x y f)
 
 let share
     (#a:Type)
@@ -493,7 +493,7 @@ let share
       (pts_to r (v0 `op pcm` v1))
       (fun _ -> pts_to r v0 `star` pts_to r v1)
 = lift_eqs(); lift_pre_act0_act fun #ictx ->
-    ITA.lift_mem_action (Mem.split_action #a #pcm (Sep.lower_inames ictx) r v0 v1)
+    ITA.lift_mem_action (Mem.split_action #a #pcm r v0 v1)
 
 let gather
     (#a:Type)
@@ -507,7 +507,7 @@ let gather
       (pts_to r v0 `star` pts_to r v1)
       (fun _ -> pts_to r (op pcm v0 v1))
 = lift_eqs(); lift_pre_act0_act fun #ictx ->
-    ITA.lift_mem_action (Mem.gather_action #a #pcm (Sep.lower_inames ictx) r v0 v1)
+    ITA.lift_mem_action (Mem.gather_action #a #pcm r v0 v1)
 
 ///////////////////////////////////////////////////////////////////
 // big refs
@@ -515,7 +515,7 @@ let gather
 let big_pts_to #a #pcm r x = Sep.lift (Mem.big_pts_to #a #pcm r x)
 let timeless_big_pts_to #a #p r x = Sep.timeless_lift (Mem.big_pts_to #a #p r x)
 let big_pts_to_not_null #a #p r v = lift_pre_act0_act fun #ictx ->
-  ITA.lift_mem_action (Mem.big_pts_to_not_null_action #a #p (Sep.lower_inames ictx) r v)
+  ITA.lift_mem_action (Mem.big_pts_to_not_null_action #a #p r v)
 
 let big_alloc
     (#a:Type)
@@ -523,7 +523,7 @@ let big_alloc
     (x:a{pcm.refine x})
 : act (ref a pcm) Atomic emp_inames emp (fun r -> big_pts_to r x)
 = lift_eqs(); lift_pre_act0_act fun #ictx ->
-    ITA.lift_mem_action (Mem.big_alloc_action #a #pcm (Sep.lower_inames ictx) x)
+    ITA.lift_mem_action (Mem.big_alloc_action #a #pcm x)
 
 let big_read
     (#a:Type)
@@ -540,7 +540,7 @@ let big_read
       (fun v -> big_pts_to r (f v))
 = lift_pre_act2_act fun #ictx ->
     lift_eqs();
-    ITA.lift_mem_action (Mem.big_select_refine#a #p (Sep.lower_inames ictx) r x f)
+    ITA.lift_mem_action (Mem.big_select_refine#a #p r x f)
 
 let big_write
     (#a:Type)
@@ -554,7 +554,7 @@ let big_write
       (big_pts_to r x)
       (fun _ -> big_pts_to r y)
 = lift_pre_act0_act fun #ictx ->
-    ITA.lift_mem_action (Mem.big_upd_gen #a #p (Sep.lower_inames ictx) r x y f)
+    ITA.lift_mem_action (Mem.big_upd_gen #a #p r x y f)
 
 let big_share
     (#a:Type)
@@ -568,7 +568,7 @@ let big_share
       (big_pts_to r (v0 `op pcm` v1))
       (fun _ -> big_pts_to r v0 `star` big_pts_to r v1)
 = lift_eqs(); lift_pre_act0_act fun #ictx ->
-    ITA.lift_mem_action (Mem.big_split_action #a #pcm (Sep.lower_inames ictx) r v0 v1)
+    ITA.lift_mem_action (Mem.big_split_action #a #pcm r v0 v1)
 
 let big_gather
     (#a:Type)
@@ -582,12 +582,12 @@ let big_gather
       (big_pts_to r v0 `star` big_pts_to r v1)
       (fun _ -> big_pts_to r (op pcm v0 v1))
 = lift_eqs(); lift_pre_act0_act fun #ictx ->
-    ITA.lift_mem_action (Mem.big_gather_action #a #pcm (Sep.lower_inames ictx) r v0 v1)
+    ITA.lift_mem_action (Mem.big_gather_action #a #pcm r v0 v1)
 
 let nb_pts_to #a #pcm r x = Sep.lift <| Mem.nb_pts_to #a #pcm r x
 let timeless_nb_pts_to #a #p r x = Sep.timeless_lift <| Mem.nb_pts_to #a #p r x
 let nb_pts_to_not_null #a #p r v = lift_pre_act0_act fun #ictx ->
-  ITA.lift_mem_action (Mem.nb_pts_to_not_null_action #a #p (Sep.lower_inames ictx) r v)
+  ITA.lift_mem_action (Mem.nb_pts_to_not_null_action #a #p r v)
 
 let nb_alloc
     (#a:Type)
@@ -595,7 +595,7 @@ let nb_alloc
     (x:a{pcm.refine x})
 : act (ref a pcm) Atomic emp_inames emp (fun r -> nb_pts_to r x)
 = lift_eqs (); lift_pre_act0_act fun #ictx ->
-    ITA.lift_mem_action (Mem.nb_alloc_action #a #pcm (Sep.lower_inames ictx) x)
+    ITA.lift_mem_action (Mem.nb_alloc_action #a #pcm x)
 
 let nb_read
     (#a:Type)
@@ -611,7 +611,7 @@ let nb_read
       (nb_pts_to r x)
       (fun v -> nb_pts_to r (f v))
 = lift_pre_act3_act fun #ictx ->
-    ITA.lift_mem_action (Mem.nb_select_refine #a #p (Sep.lower_inames ictx) r x f)
+    ITA.lift_mem_action (Mem.nb_select_refine #a #p r x f)
 
 let nb_write
     (#a:Type)
@@ -625,7 +625,7 @@ let nb_write
       (nb_pts_to r x)
       (fun _ -> nb_pts_to r y)
 = lift_pre_act0_act fun #ictx ->
-    ITA.lift_mem_action <| Mem.nb_upd_gen #a #p (Sep.lower_inames ictx) r x y f
+    ITA.lift_mem_action <| Mem.nb_upd_gen #a #p r x y f
 
 let nb_share
     (#a:Type)
@@ -639,7 +639,7 @@ let nb_share
       (nb_pts_to r (v0 `op pcm` v1))
       (fun _ -> nb_pts_to r v0 `star` nb_pts_to r v1)
 = lift_eqs(); lift_pre_act0_act fun #ictx ->
-    ITA.lift_mem_action <| Mem.nb_split_action #a #pcm (Sep.lower_inames ictx) r v0 v1
+    ITA.lift_mem_action <| Mem.nb_split_action #a #pcm r v0 v1
 
 let nb_gather
     (#a:Type)
@@ -653,7 +653,7 @@ let nb_gather
       (nb_pts_to r v0 `star` nb_pts_to r v1)
       (fun _ -> nb_pts_to r (op pcm v0 v1))
 = lift_eqs(); lift_pre_act0_act fun #ictx ->
-    ITA.lift_mem_action <| Mem.nb_gather_action #a #pcm (Sep.lower_inames ictx) r v0 v1
+    ITA.lift_mem_action <| Mem.nb_gather_action #a #pcm r v0 v1
 
 
 ///////////////////////////////////////////////////////////////////
@@ -724,27 +724,27 @@ let drop p = lift_pre_act0_act fun #ictx -> ITA.drop #ictx p
 let core_ghost_ref = Mem.core_ghost_ref
 let ghost_pts_to #a #pcm r x = Sep.lift (Mem.ghost_pts_to #a #pcm r x)
 let timeless_ghost_pts_to #a #p r x = Sep.timeless_lift (Mem.ghost_pts_to #a #p r x)
-let ghost_alloc #a #pcm x = let open Mem in lift_eqs (); lift_pre_act0_act fun #ictx -> ITA.lift_mem_action <| ghost_alloc #(Sep.lower_inames ictx) #a #pcm x
-let ghost_read #a #p r x f = let open Mem in lift_eqs(); lift_pre_act1_act fun #ictx -> ITA.lift_mem_action <| ghost_read #(Sep.lower_inames ictx) #a #p r x f
-let ghost_write #a #p r x y f = let open Mem in lift_eqs(); lift_pre_act0_act fun #ictx -> ITA.lift_mem_action <| ghost_write #(Sep.lower_inames ictx) #a #p r x y f
-let ghost_share #a #pcm r v0 v1 = let open Mem in lift_eqs(); lift_pre_act0_act fun #ictx -> ITA.lift_mem_action <| ghost_share #(Sep.lower_inames ictx) #a #pcm r v0 v1
-let ghost_gather #a #pcm r v0 v1 = let open Mem in lift_eqs(); lift_pre_act0_act fun #ictx -> ITA.lift_mem_action <| ghost_gather #(Sep.lower_inames ictx) #a #pcm r v0 v1
+let ghost_alloc #a #pcm x = let open Mem in lift_eqs (); lift_pre_act0_act fun #ictx -> ITA.lift_mem_action <| ghost_alloc #a #pcm x
+let ghost_read #a #p r x f = let open Mem in lift_eqs(); lift_pre_act1_act fun #ictx -> ITA.lift_mem_action <| ghost_read #a #p r x f
+let ghost_write #a #p r x y f = let open Mem in lift_eqs(); lift_pre_act0_act fun #ictx -> ITA.lift_mem_action <| ghost_write #a #p r x y f
+let ghost_share #a #pcm r v0 v1 = let open Mem in lift_eqs(); lift_pre_act0_act fun #ictx -> ITA.lift_mem_action <| ghost_share #a #pcm r v0 v1
+let ghost_gather #a #pcm r v0 v1 = let open Mem in lift_eqs(); lift_pre_act0_act fun #ictx -> ITA.lift_mem_action <| ghost_gather #a #pcm r v0 v1
 
 let big_ghost_pts_to #a #p r x = Sep.lift (Mem.big_ghost_pts_to #a #p r x)
 let timeless_big_ghost_pts_to #a #p r x = Sep.timeless_lift (Mem.big_ghost_pts_to #a #p r x)
-let big_ghost_alloc #a #pcm x = let open Mem in lift_eqs(); lift_pre_act0_act fun #ictx -> ITA.lift_mem_action <| big_ghost_alloc #(Sep.lower_inames ictx) #a #pcm x
-let big_ghost_read #a #p r x f = let open Mem in lift_eqs(); lift_pre_act2_act fun #ictx -> ITA.lift_mem_action <| big_ghost_read #(Sep.lower_inames ictx) #a #p r x f
-let big_ghost_write #a #p r x y f = let open Mem in lift_eqs(); lift_pre_act0_act fun #ictx -> ITA.lift_mem_action <| big_ghost_write #(Sep.lower_inames ictx) #a #p r x y f
-let big_ghost_share #a #pcm r v0 v1 = let open Mem in lift_eqs(); lift_pre_act0_act fun #ictx -> ITA.lift_mem_action <| big_ghost_share #(Sep.lower_inames ictx) #a #pcm r v0 v1
-let big_ghost_gather #a #pcm r v0 v1 = let open Mem in lift_eqs(); lift_pre_act0_act fun #ictx -> ITA.lift_mem_action <| big_ghost_gather #(Sep.lower_inames ictx) #a #pcm r v0 v1
+let big_ghost_alloc #a #pcm x = let open Mem in lift_eqs(); lift_pre_act0_act fun #ictx -> ITA.lift_mem_action <| big_ghost_alloc #a #pcm x
+let big_ghost_read #a #p r x f = let open Mem in lift_eqs(); lift_pre_act2_act fun #ictx -> ITA.lift_mem_action <| big_ghost_read #a #p r x f
+let big_ghost_write #a #p r x y f = let open Mem in lift_eqs(); lift_pre_act0_act fun #ictx -> ITA.lift_mem_action <| big_ghost_write #a #p r x y f
+let big_ghost_share #a #pcm r v0 v1 = let open Mem in lift_eqs(); lift_pre_act0_act fun #ictx -> ITA.lift_mem_action <| big_ghost_share #a #pcm r v0 v1
+let big_ghost_gather #a #pcm r v0 v1 = let open Mem in lift_eqs(); lift_pre_act0_act fun #ictx -> ITA.lift_mem_action <| big_ghost_gather #a #pcm r v0 v1
 
 let nb_ghost_pts_to #a #p r x = Sep.lift (Mem.nb_ghost_pts_to #a #p r x)
 let timeless_nb_ghost_pts_to #a #p r x = Sep.timeless_lift (Mem.nb_ghost_pts_to #a #p r x)
-let nb_ghost_alloc #a #pcm x = let open Mem in lift_eqs(); lift_pre_act0_act fun #ictx -> ITA.lift_mem_action <| nb_ghost_alloc #(Sep.lower_inames ictx) #a #pcm x
-let nb_ghost_read #a #p r x f = let open Mem in lift_eqs(); lift_pre_act3_act fun #ictx -> ITA.lift_mem_action <| nb_ghost_read #(Sep.lower_inames ictx) #a #p r x f
-let nb_ghost_write #a #p r x y f = let open Mem in lift_eqs(); lift_pre_act0_act fun #ictx -> ITA.lift_mem_action <| nb_ghost_write #(Sep.lower_inames ictx) #a #p r x y f
-let nb_ghost_share #a #pcm r v0 v1 = let open Mem in lift_eqs(); lift_pre_act0_act fun #ictx -> ITA.lift_mem_action <| nb_ghost_share #(Sep.lower_inames ictx) #a #pcm r v0 v1
-let nb_ghost_gather #a #pcm r v0 v1 = let open Mem in lift_eqs(); lift_pre_act0_act fun #ictx -> ITA.lift_mem_action <| nb_ghost_gather #(Sep.lower_inames ictx) #a #pcm r v0 v1
+let nb_ghost_alloc #a #pcm x = let open Mem in lift_eqs(); lift_pre_act0_act fun #ictx -> ITA.lift_mem_action <| nb_ghost_alloc #a #pcm x
+let nb_ghost_read #a #p r x f = let open Mem in lift_eqs(); lift_pre_act3_act fun #ictx -> ITA.lift_mem_action <| nb_ghost_read #a #p r x f
+let nb_ghost_write #a #p r x y f = let open Mem in lift_eqs(); lift_pre_act0_act fun #ictx -> ITA.lift_mem_action <| nb_ghost_write #a #p r x y f
+let nb_ghost_share #a #pcm r v0 v1 = let open Mem in lift_eqs(); lift_pre_act0_act fun #ictx -> ITA.lift_mem_action <| nb_ghost_share #a #pcm r v0 v1
+let nb_ghost_gather #a #pcm r v0 v1 = let open Mem in lift_eqs(); lift_pre_act0_act fun #ictx -> ITA.lift_mem_action <| nb_ghost_gather #a #pcm r v0 v1
 
 
 let lift_erased #a ni_a #opens #pre #post f =

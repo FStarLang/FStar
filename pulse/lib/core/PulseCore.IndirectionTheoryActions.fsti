@@ -37,7 +37,7 @@ let ghost_act a = _act_except a GHOST
 let act a = _act_except a ATOMIC
 
 val lift_mem_action #a #mg #ex #pre #post
-                   (_:PM._pst_action_except a mg (lower_inames ex) pre post)
+                   (_:PM._pst_action_except a mg pre post)
 : _act_except a (if mg then GHOST else ATOMIC) ex (lift pre) (fun x -> lift (post x))
 
 
@@ -129,7 +129,7 @@ val drop (#opened_invariants:_) (p:slprop)
 val lift_ghost
       (#a:Type)
       #opened_invariants #p #q
-      (ni_a:PulseCore.HeapSig.non_info a)
+      (ni_a:PM.non_info a)
       (f:erased (ghost_act a opened_invariants p q))
 : ghost_act a opened_invariants p q
 
