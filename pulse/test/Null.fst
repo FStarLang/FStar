@@ -2,6 +2,9 @@ module Null
 
 #lang-pulse
 open Pulse
+open Pulse.Lib.Box
+module Box = Pulse.Lib.Box
+module Ref = Pulse.Lib.Reference
 
 (*
 PRESERVES(null_or_live(x));
@@ -14,6 +17,15 @@ int foo(int *x) {
 }
 *)
 
+let x : ref int = Pulse.Lib.Reference.null
+let y () : box int = Box.null
+
+fn foo ()
+  returns r : box int
+{
+  Box.null
+}
+
 // This should maybe go into the Pulse library or a prelude.
 unfold
 let live #a (r : ref a) =
@@ -22,20 +34,20 @@ let live #a (r : ref a) =
 // Idem
 unfold
 let null_or_live #a (r : ref a) =
-  if is_null r
+  if Ref.is_null r
   then emp
   else live r
 
-fn foo (x : ref int)
+fn test (x : ref int)
   preserves null_or_live x
   returns int
 {
-  if (is_null x) {
+  if (Ref.is_null x) {
     0
   } else {
     unfold null_or_live x;
-    rewrite each is_null #int x as false;
-    let res = !x;
+    rewrite each Ref.is_null #int x as false;
+    let res = Ref.(!x);
     rewrite live x as null_or_live x;
     res
   }
