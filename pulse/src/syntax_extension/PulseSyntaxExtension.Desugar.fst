@@ -160,6 +160,13 @@ let comp_to_ast_term (c:Sugar.computation_type) : err A.term =
       let h = mk_term (Var stt_atomic_lid) r Expr in
       let h = mk_term (App (h, return_ty, Nothing)) r Expr in
       mk_term (App (h, is, Nothing)) r Expr
+    | Sugar.STUnobservable ->
+      (* hack for now *)
+      let is = mk_term (Var (Ident.lid_of_str "Pulse.Lib.Core.emp_inames")) r Expr in
+      let h = mk_term (Var stt_atomic_lid) r Expr in
+      let h = mk_term (App (h, mk_term (Var neutral_lid) r Expr, Hash)) r Expr in
+      let h = mk_term (App (h, return_ty, Nothing)) r Expr in
+      mk_term (App (h, is, Nothing)) r Expr
    | Sugar.STGhost ->
       (* hack for now *)
       let h = mk_term (Var stt_ghost_lid) r Expr in
@@ -337,6 +344,8 @@ let desugar_computation_type (env:env_t) (c:Sugar.computation_type)
       return SW.(mk_comp pre (mk_binder annots.Sugar.return_name ret) post)
     | Sugar.STAtomic ->
       return SW.(atomic_comp opens pre (mk_binder annots.Sugar.return_name ret) post)
+    | Sugar.STUnobservable ->
+      return SW.(unobs_comp opens pre (mk_binder annots.Sugar.return_name ret) post)
     | Sugar.STGhost ->
       return SW.(ghost_comp opens pre (mk_binder annots.Sugar.return_name ret) post)
 

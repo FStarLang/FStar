@@ -21,6 +21,7 @@ let rewrite_token (tok:FP.token)
     | IDENT "fold" -> PP.FOLD
     | IDENT "atomic" -> PP.ATOMIC
     | IDENT "ghost" -> PP.GHOST
+    | IDENT "unobservable" -> PP.UNOBSERVABLE
     | IDENT "with_invariants" -> PP.WITH_INVS
     | IDENT "opens" -> PP.OPENS
     | IDENT "show_proof_state" -> PP.SHOW_PROOF_STATE
