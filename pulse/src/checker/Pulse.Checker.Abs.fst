@@ -233,6 +233,7 @@ let check_effect_annotation g r (asc:comp_ascription) (c_computed:comp) : T.Tac 
     | C_Tot _, C_Tot _
     | C_ST _, C_ST _  -> nop
     | C_STGhost i c1, C_STGhost j c2
+    | C_STAtomic i Neutral c1, C_STAtomic j Neutral c2
     | C_STAtomic i Observable c1, C_STAtomic j Observable c2 ->
       // This should be true since we used the annotated computation type
       // to check the body of the function, but this fact is not exposed

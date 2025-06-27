@@ -65,6 +65,7 @@ val mk_tot (t:term) : comp
 val mk_comp (pre:term) (ret:binder) (post:term) : comp
 val ghost_comp (opens:term) (pre:term) (ret:binder) (post:term) : comp
 val atomic_comp (opens:term) (pre:term) (ret:binder) (post:term) : comp
+val unobs_comp (opens:term) (pre:term) (ret:binder) (post:term) : comp
 
 val is_tm_exists (x:term) : bool
 
