@@ -36,18 +36,6 @@ module SU         = FStarC.Syntax.Util
 module Pretty     = FStarC.Syntax.Print.Pretty
 module Ugly       = FStarC.Syntax.Print.Ugly
 
-let sli (l:lident) : string =
-    if Options.print_real_names()
-    then string_of_lid l
-    else string_of_id (ident_of_lid l)
-//    Util.format3 "%s@{def=%s;use=%s}" s
-//        (Range.string_of_range (Ident.range_of_lid l))
-//        (Range.string_of_use_range (Ident.range_of_lid l))
-
-let lid_to_string (l:lid) = sli l
-
-// let fv_to_string fv = Printf.sprintf "%s@%A" (lid_to_string fv.fv_name.v) fv.fv_delta
-let fv_to_string fv = lid_to_string fv.fv_name.v //^ "(@@" ^ showfv.fv_delta ^ ")"
 let bv_to_string bv =
   if Options.print_real_names ()
   then show bv.ppname ^ "#" ^ show bv.index
@@ -74,9 +62,9 @@ let filter_imp_binders bs =
 
 let const_to_string = C.const_to_string
 
-let lbname_to_string = function
+let lbname_to_string : lbname -> string = function
   | Inl l -> bv_to_string l
-  | Inr l -> lid_to_string l.fv_name.v
+  | Inr l -> show l
 
 let uvar_to_string u = if (Options.hide_uvar_nums()) then "?" else "?" ^ (Unionfind.uvar_id u |> string_of_int)
 let version_to_string v = U.format2 "%s.%s" (U.string_of_int v.major) (U.string_of_int v.minor)
@@ -127,11 +115,11 @@ let qual_to_string = function
   | Unopteq               -> "unopteq"
   | Logic                 -> "logic"
   | TotalEffect           -> "total"
-  | Discriminator l       -> U.format1 "(Discriminator %s)" (lid_to_string l)
-  | Projector (l, x)      -> U.format2 "(Projector %s %s)" (lid_to_string l) (string_of_id x)
+  | Discriminator l       -> U.format1 "(Discriminator %s)" (show l)
+  | Projector (l, x)      -> U.format2 "(Projector %s %s)" (show l) (string_of_id x)
   | RecordType (ns, fns)  -> U.format2 "(RecordType %s %s)" (text_of_path (path_of_ns ns)) (fns |> List.map string_of_id |> String.concat ", ")
   | RecordConstructor (ns, fns) -> U.format2 "(RecordConstructor %s %s)" (text_of_path (path_of_ns ns))  (fns |> List.map string_of_id |> String.concat ", ")
-  | Action eff_lid        -> U.format1 "(Action %s)" (lid_to_string eff_lid)
+  | Action eff_lid        -> U.format1 "(Action %s)" (show eff_lid)
   | ExceptionConstructor  -> "ExceptionConstructor"
   | HasMaskedEffect       -> "HasMaskedEffect"
   | Effect                -> "Effect"
@@ -291,7 +279,7 @@ let metadata_to_string = function
         U.format1 "{Meta_pattern %s}" pats
 
     | Meta_named lid ->
-        U.format1 "{Meta_named %s}" (sli lid)
+        U.format1 "{Meta_named %s}" (show lid)
 
     | Meta_labeled (l, r, _) ->
         U.format2 "{Meta_labeled (%s, %s)}" (Errors.Msg.rendermsg l) (Range.string_of_range r)
@@ -300,10 +288,10 @@ let metadata_to_string = function
         "{Meta_desugared}"
 
     | Meta_monadic (m, t) ->
-        U.format2 "{Meta_monadic(%s @ %s)}" (sli m) (term_to_string t)
+        U.format2 "{Meta_monadic(%s @ %s)}" (show m) (term_to_string t)
 
     | Meta_monadic_lift (m, m', t) ->
-        U.format3 "{Meta_monadic_lift(%s -> %s @ %s)}" (sli m) (sli m') (term_to_string t)
+        U.format3 "{Meta_monadic_lift(%s -> %s @ %s)}" (show m) (show m') (term_to_string t)
 
 
 instance showable_term   = { show = term_to_string; }
@@ -311,7 +299,6 @@ instance showable_univ   = { show = univ_to_string; }
 instance showable_comp   = { show = comp_to_string; }
 instance showable_sigelt = { show = sigelt_to_string; }
 instance showable_bv     = { show = bv_to_string; }
-instance showable_fv     = { show = fv_to_string; }
 instance showable_binder = { show = binder_to_string; }
 instance showable_uvar   = { show = uvar_to_string; }
 let ctx_uvar_to_string ctx_uvar =
@@ -366,7 +353,7 @@ let sub_eff_to_string se =
     if is_some ts_opt then ts_opt |> must |> tscheme_to_string
     else "<None>" in
   U.format4 "sub_effect %s ~> %s : lift = %s ;; lift_wp = %s"
-    (lid_to_string se.source) (lid_to_string se.target)
+    (show se.source) (show se.target)
     (tsopt_to_string se.lift) (tsopt_to_string se.lift_wp)
 
 instance showable_sub_eff = { show = sub_eff_to_string; }
@@ -429,13 +416,13 @@ let rec sigelt_to_string_short (x: sigelt) = match x.sigel with
       else if SU.is_dm4f ed then "new_effect_for_free"
       else "new_effect"
     in
-    U.format2 "%s { %s ... }" kw (lid_to_string ed.mname)
+    U.format2 "%s { %s ... }" kw (show ed.mname)
 
   | Sig_sub_effect se ->
-    U.format2 "sub_effect %s ~> %s" (lid_to_string se.source) (lid_to_string se.target)
+    U.format2 "sub_effect %s ~> %s" (show se.source) (show se.target)
 
   | Sig_effect_abbrev {lid=l; bs=tps; comp=c} ->
-    U.format3 "effect %s %s = %s" (sli l)
+    U.format3 "effect %s %s = %s" (show l)
        (String.concat " " <| List.map show tps)
        (show c)
 

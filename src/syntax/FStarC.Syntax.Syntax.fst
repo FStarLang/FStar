@@ -627,6 +627,15 @@ instance hasRange_ctx_uvar : hasRange ctx_uvar = {
   setPos = (fun r u -> { u with ctx_uvar_range = r });
 }
 
+let sli (l:lident) : string =
+    if Options.print_real_names()
+    then string_of_lid l
+    else string_of_id (ident_of_lid l)
+
+instance showable_fv : showable fv = {
+  show = (fun fv -> sli fv.fv_name.v);
+}
+
 instance showable_lazy_kind = {
   show = (function
           | BadLazy -> "BadLazy"
@@ -657,6 +666,24 @@ instance showable_lazy_kind = {
 instance showable_restriction: showable restriction = {
   show = (function | Unrestricted -> "Unrestricted"
                    | AllowList l  -> "AllowList " ^ show l);
+}
+
+instance showable_unresolved_constructor : showable unresolved_constructor = {
+  show = (fun uc ->
+           "{ uc_base_term = " ^ show uc.uc_base_term ^
+           "; uc_typename = " ^ show uc.uc_typename ^
+           "; uc_fields = " ^ show uc.uc_fields ^ " }"
+  );
+}
+
+instance showable_fv_qual : showable fv_qual = {
+  show = (function
+          | Data_ctor -> "Data_ctor"
+          | Record_projector p -> "Record_projector (" ^ show p ^ ")"
+          | Record_ctor      p -> "Record_ctor (" ^ show p ^ ")"
+          | Unresolved_projector p -> "Unresolved_projector (" ^ show p^ ")"
+          | Unresolved_constructor p -> "Unresolved_constructor (" ^ show p ^ ")"
+  );
 }
 
 instance deq_lazy_kind : deq lazy_kind = {

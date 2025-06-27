@@ -940,6 +940,7 @@ instance val hasRange_bv     : hasRange bv
 instance val hasRange_binder : hasRange binder
 instance val hasRange_ctx_uvar : hasRange ctx_uvar
 
+instance val showable_fv : showable fv
 instance val showable_emb_typ : showable emb_typ
 instance val showable_delta_depth : showable delta_depth
 instance val showable_should_check_uvar : showable should_check_uvar
@@ -947,6 +948,8 @@ instance val showable_should_check_uvar : showable should_check_uvar
 instance val showable_lazy_kind : showable lazy_kind
 
 instance val showable_restriction: showable restriction
+instance val showable_unresolved_constructor : showable unresolved_constructor
+instance val showable_fv_qual : showable fv_qual
 
 instance val deq_lazy_kind   : deq lazy_kind
 instance val deq_bv          : deq bv
