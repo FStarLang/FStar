@@ -14,7 +14,7 @@
    limitations under the License.
 *)
 
-module Pulse.Lib.HigherArray
+module Pulse.Lib.HigherArray.PtsToRange
 #lang-pulse
 open FStar.Tactics.V2
 open Pulse.Lib.Core
@@ -24,118 +24,8 @@ open PulseCore.FractionalPermission
 open FStar.Ghost
 module SZ = FStar.SizeT
 module Seq = FStar.Seq
-
-val array ([@@@unused] a:Type u#1) : Type u#0
-
-val length (#a:Type) (x:array a) : Ghost nat (requires True) (ensures SZ.fits)
-
-type elseq (a:Type) (l:SZ.t) = s:erased (Seq.seq a) { Seq.length s == SZ.v l }
-
-type larray t (n:nat) = a:array t { length a == n }
-
-val is_full_array (#a:Type) (x:array a) : prop
-
-val null #a : array a
-val is_null #a (r: array a) : b:bool {b <==> r == null #a}
-
-val pts_to (#a:Type) ([@@@mkey]x:array a) (#[exact (`1.0R)] p:perm) (s: Seq.seq a) : slprop
-
-[@@pulse_unfold]
-instance has_pts_to_array (a:Type u#1) : has_pts_to (array a) (Seq.seq a) = {
-  pts_to = pts_to;
-}
-[@@pulse_unfold]
-instance has_pts_to_larray (a:Type u#1) (n : nat) : has_pts_to (larray a n) (Seq.seq a) = {
-  pts_to = pts_to;
-}
-
-val pts_to_timeless (#a:Type) (x:array a) (p:perm) (s:Seq.seq a)
-  : Lemma (timeless (pts_to x #p s))
-          [SMTPat (timeless (pts_to x #p s))]
-
-ghost
-fn pts_to_len (#t:Type) (a:array t) (#p:perm) (#x:Seq.seq t)
-  requires pts_to a #p x
-  ensures  pts_to a #p x ** pure (length a == Seq.length x)
-
-ghost
-fn pts_to_not_null (#a:_) (#p:_) (r:array a) (#v:Seq.seq a)
-  preserves r |-> Frac p v
-  ensures  pure (not (is_null #a r))
-
-fn alloc
-        (#elt: Type)
-        (x: elt)
-        (n: SZ.t)
-  requires emp
-  returns  a : array elt
-  ensures  pts_to a (Seq.create (SZ.v n) x) **
-           pure (length a == SZ.v n /\ is_full_array a)
-
-(* Written x.(i) *)
-fn op_Array_Access
-        (#t: Type)
-        (a: array t)
-        (i: SZ.t)
-        (#p: perm)
-        (#s: Ghost.erased (Seq.seq t){SZ.v i < Seq.length s})
-  requires pts_to a #p s
-  returns  res : t
-  ensures  pts_to a #p s **
-           pure (res == Seq.index s (SZ.v i))
-
-(* Written x.(i) <- v *)
-fn op_Array_Assignment
-        (#t: Type)
-        (a: array t)
-        (i: SZ.t)
-        (v: t)
-        (#s: Ghost.erased (Seq.seq t) {SZ.v i < Seq.length s})
-  requires pts_to a s
-  ensures  pts_to a (Seq.upd s (SZ.v i) v)
-
-fn free
-        (#elt: Type)
-        (a: array elt)
-        (#s: Ghost.erased (Seq.seq elt))
-  requires pts_to a s ** pure (is_full_array a)
-  ensures  emp
-
-ghost
-fn share
-  (#a:Type)
-  (arr:array a)
-  (#s:Ghost.erased (Seq.seq a))
-  (#p:perm)
-  requires pts_to arr #p s
-  ensures  pts_to arr #(p /. 2.0R) s ** pts_to arr #(p /. 2.0R) s
-
-[@@allow_ambiguous]
-ghost
-fn gather
-  (#a:Type)
-  (arr:array a)
-  (#s0 #s1:Ghost.erased (Seq.seq a))
-  (#p0 #p1:perm)
-  requires pts_to arr #p0 s0 ** pts_to arr #p1 s1
-  ensures  pts_to arr #(p0 +. p1) s0 ** pure (s0 == s1)
-
-[@@allow_ambiguous]
-ghost
-fn pts_to_injective_eq
-    (#a:Type)
-    (#p0 #p1:perm)
-    (#s0 #s1:Seq.seq a)
-    (arr:array a)
-  preserves pts_to arr #p0 s0
-  preserves pts_to arr #p1 s1
-  ensures pure (s0 == s1)
-
-ghost
-fn pts_to_perm_bound (#a:_) (#p:_) (arr: array a) (#s:Seq.seq a)
-  preserves pts_to arr #p s
-  requires pure (Seq.length s > 0)
-  ensures pure (p <=. 1.0R)
+open Pulse.Lib.HigherArray.Core
+open Pulse.Lib.HigherArray.PtsTo
 
 val pts_to_range
   (#a:Type)
@@ -147,6 +37,12 @@ val pts_to_range
 val pts_to_range_timeless (#a:Type) (x:array a) (i j : nat) (p:perm) (s:Seq.seq a)
   : Lemma (timeless (pts_to_range x i j #p s))
           [SMTPat (timeless (pts_to_range x i j #p s))]
+
+let is_subarray #elt (a: array elt) (i j: nat) (b: array elt) : prop =
+  base_of b == base_of a /\
+  offset_of b == offset_of a + i /\
+  i + length b == j /\
+  j <= length a
 
 ghost
 fn pts_to_range_prop
@@ -208,6 +104,7 @@ fn pts_to_range_join
   requires pts_to_range a i m #p s1 ** pts_to_range a m j #p s2
   ensures  pts_to_range a i j #p (s1 `Seq.append` s2)
 
+inline_for_extraction
 fn pts_to_range_index
   (#t: Type)
   (a: array t)
@@ -223,6 +120,7 @@ fn pts_to_range_index
     pure (eq2 #int (Seq.length s) (r - l) /\
           res == Seq.index s (SZ.v i - l))
 
+inline_for_extraction
 fn pts_to_range_upd
   (#t: Type)
   (a: array t)

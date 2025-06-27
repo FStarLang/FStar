@@ -15,7 +15,7 @@
 *)
 module PulseCore.Semantics
 
-module U = FStar.Universe
+module U = Pulse.Lib.Raise
 module ST = PulseCore.HoareStateMonad
 module NST = PulseCore.NondeterministicHoareStateMonad
 module PNST = PulseCore.PartialNondeterministicHoareStateMonad

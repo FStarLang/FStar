@@ -13,8 +13,10 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 *)
+module Pulse.Lib.Raise
 
-module Pulse.Lib.HigherArray
-include Pulse.Lib.HigherArray.Core
-include Pulse.Lib.HigherArray.PtsTo
-include Pulse.Lib.HigherArray.PtsToRange
+let raise_t = Universe.raise_t
+let raise_val = Universe.raise_val
+let downgrade_val = Universe.downgrade_val
+let downgrade_val_raise_val = Universe.downgrade_val_raise_val
+let raise_val_downgrade_val = Universe.raise_val_downgrade_val

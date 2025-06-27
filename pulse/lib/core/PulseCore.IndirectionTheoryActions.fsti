@@ -101,7 +101,7 @@ val frame (#a:Type)
 : _act_except a ak opened_invariants (pre `star` frame) (fun x -> post x `star` frame)
 
 open FStar.Ghost
-module U = FStar.Universe
+module U = Pulse.Lib.Raise
 val witness_exists (#opened_invariants:_) (#a:_) (p:a -> slprop)
 : ghost_act (erased a) opened_invariants
            (op_exists_Star p)

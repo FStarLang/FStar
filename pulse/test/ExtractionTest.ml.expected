@@ -30,7 +30,7 @@ let rec (write10 : FStar_UInt32.t Pulse_Lib_Reference.ref -> unit -> unit) =
             Pulse_Lib_Reference.op_Colon_Equals ctr
               (FStar_UInt32.sub ctr@2 Stdint.Uint32.one) ()))
 let rec (fill_array :
-  FStar_UInt32.t Pulse_Lib_Array_Core.array ->
+  FStar_UInt32.t Pulse_Lib_HigherArray_Core.array ->
     FStar_SizeT.t -> FStar_UInt32.t -> unit -> unit)
   =
   fun x ->
@@ -44,9 +44,19 @@ let rec (fill_array :
                FStar_SizeT.lt i@1 n)
             (fun while_body ->
                let i@2 = Pulse_Lib_Reference.op_Bang i () () in
-               Pulse_Lib_Array_Core.op_Array_Assignment x i@2 v ();
+               Pulse_Lib_HigherArray_Core.mask_write x i@2 v () ();
                Pulse_Lib_Reference.op_Colon_Equals i
                  (FStar_SizeT.add i@2 Stdint.Uint64.one) ())
+let rec (sub_array : FStar_UInt32.t Pulse_Lib_HigherArray_Core.array -> unit)
+  =
+  fun x ->
+    let __anf =
+      let sub =
+        Pulse_Lib_HigherArray_Core.sub x () () Stdint.Uint64.one
+          (Stdint.Uint64.of_int (2)) () in
+      sub in
+    Pulse_Lib_HigherArray_Core.mask_write __anf Stdint.Uint64.zero
+      (Stdint.Uint32.of_int (42)) () ()
 let (test0 : FStar_SizeT.t -> FStar_SizeT.t -> FStar_SizeT.t) =
   fun x -> fun y -> FStar_SizeT.rem x y
 type 'a opt =

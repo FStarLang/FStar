@@ -19,7 +19,7 @@ module Pulse.Lib.GhostReference
 open Pulse.Lib.Core
 open Pulse.Main
 module H = Pulse.Lib.HigherGhostReference
-module U = FStar.Universe
+module U = Pulse.Lib.Raise
 let ref a = H.ref (U.raise_t a)
 
 instance non_informative_gref (a:Type0) : NonInformative.non_informative (ref a) = {

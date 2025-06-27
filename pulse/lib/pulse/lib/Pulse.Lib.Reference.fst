@@ -19,7 +19,7 @@ module Pulse.Lib.Reference
 open Pulse.Lib.Core
 open Pulse.Main
 module H = Pulse.Lib.HigherReference
-module U = FStar.Universe
+module U = Pulse.Lib.Raise
 let ref a = H.ref (U.raise_t a)
 
 let null (#a:Type u#0) : ref a = H.null

@@ -1,7 +1,7 @@
 module Pulse.Lib.PCM.Raise
 open FStar.PCM
 open FStar.Ghost
-module U = FStar.Universe
+module U = Pulse.Lib.Raise
 
 let raise (#a:Type u#a) (p:pcm a)
 : pcm (U.raise_t u#a u#b a)
