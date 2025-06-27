@@ -22,11 +22,16 @@ open FStar.PCM
 open Pulse.Lib.PCM.Fraction
 
 let ref (a:Type u#1) = pcm_ref (pcm_frac #a)
+
+let null (#a:Type u#1) : ref a = null_core_pcm_ref
+
+let is_null #a (r : ref a)
+  : b:bool{b <==> r == null #a}
+= is_null_core_pcm_ref r
+
 let pts_to (#a:Type) (r:ref a) (#[T.exact (`1.0R)] p:perm) (n:a)
 = pcm_pts_to r (Some (n, p)) ** pure (perm_ok p)
 let pts_to_timeless _ _ _ = ()
-
-
 
 fn alloc' (#a:Type u#1) (x:a)
   requires emp
@@ -169,5 +174,15 @@ fn pts_to_perm_bound (#a:_) (#p:_) (r:ref a) (#v:a)
   ensures pts_to r #p v ** pure (p <=. 1.0R)
 {
   unfold pts_to r #p v;
+  fold pts_to r #p v;
+}
+
+ghost
+fn pts_to_not_null (#a:_) (#p:_) (r:ref a) (#v:a)
+  preserves r |-> Frac p v
+  ensures  pure (not (is_null #a r))
+{
+  unfold pts_to r #p v;
+  pts_to_not_null r _;
   fold pts_to r #p v;
 }

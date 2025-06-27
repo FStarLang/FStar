@@ -24,6 +24,10 @@ open Pulse.Class.PtsTo
 module T = FStar.Tactics
 val ref ([@@@unused]a:Type u#1) : Type u#0
 
+val null (#a:Type u#1) : ref a
+
+val is_null #a (r : ref a) : b:bool{b <==> r == null #a}
+
 val pts_to (#a:Type) ([@@@mkey]r:ref a) (#[T.exact (`1.0R)] p:perm) (n:a) : slprop
 
 [@@pulse_unfold]
@@ -91,10 +95,15 @@ fn pts_to_injective_eq (#a:_)
                         (#p #q:_)
                         (#v0 #v1:a)
                         (r:ref a)
-  requires (r |-> Frac p v0) ** (r |-> Frac q v1)
-  ensures  (r |-> Frac p v0) ** (r |-> Frac q v1) ** pure (v0 == v1)
+  preserves (r |-> Frac p v0) ** (r |-> Frac q v1)
+  ensures   pure (v0 == v1)
 
 ghost
 fn pts_to_perm_bound (#a:_) (#p:_) (r:ref a) (#v:a)
-  requires r |-> Frac p v
-  ensures  (r |-> Frac p v) ** pure (p <=. 1.0R)
+  preserves r |-> Frac p v
+  ensures   pure (p <=. 1.0R)
+
+ghost
+fn pts_to_not_null (#a:_) (#p:_) (r:ref a) (#v:a)
+  preserves r |-> Frac p v
+  ensures  pure (not (is_null #a r))

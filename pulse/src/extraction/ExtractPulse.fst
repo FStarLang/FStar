@@ -71,10 +71,28 @@ let pulse_translate_expr : translate_expr_t = fun env e ->
     when string_of_mlpath p = "Pulse.Lib.Reference.alloc" ->
     EBufCreate (Stack, cb init, EConstant (UInt32, "1"))
 
+  | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, [ ty ] )}, [ _ ])
+  | MLE_TApp({ expr = MLE_Name p }, [ ty ] )
+    when string_of_mlpath p = "Pulse.Lib.Reference.null" ->
+    EBufNull (translate_type_without_decay env ty)
+
+  | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, [ty]) } , [ r ])
+    when string_of_mlpath p = "Pulse.Lib.Reference.is_null" ->
+    generate_is_null (translate_type_without_decay env ty) (cb r)
+
   | MLE_App ({ expr = MLE_Name p } , [ init ])
   | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) } , [ init ])
     when string_of_mlpath p = "Pulse.Lib.Box.alloc" ->
     EBufCreate (ManuallyManaged, cb init, EConstant (UInt32, "1"))
+
+  | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, [ ty ] )}, [ _ ])
+  | MLE_TApp({ expr = MLE_Name p }, [ ty ] )
+    when string_of_mlpath p = "Pulse.Lib.Box.null" ->
+    EBufNull (translate_type_without_decay env ty)
+
+  | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, [ty]) } , [ r ])
+    when string_of_mlpath p = "Pulse.Lib.Box.is_null" ->
+    generate_is_null (translate_type_without_decay env ty) (cb r)
 
   | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ x; _w ])
     when string_of_mlpath p = "Pulse.Lib.Box.free" ->

@@ -29,6 +29,10 @@ module R = Pulse.Lib.Reference
 new
 val box ([@@@strictly_positive] a:Type0) : Type0
 
+val null (#a:Type u#0) : box a
+
+val is_null #a (r : box a) : b:bool{b <==> r == null #a}
+
 val pts_to (#a:Type0)
            ([@@@mkey] b:box a)
            (#[T.exact (`1.0R)] p:perm)
@@ -91,3 +95,8 @@ ghost
 fn to_box_pts_to (#a:Type0) (b:box a) (#p:perm) (#v:a)
   requires R.pts_to (box_to_ref b) #p v
   ensures pts_to b #p v
+
+ghost
+fn pts_to_not_null (#a:_) (#p:_) (r:box a) (#v:a)
+  preserves r |-> Frac p v
+  ensures  pure (not (is_null #a r))

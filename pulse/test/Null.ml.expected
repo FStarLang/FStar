@@ -1,0 +1,11 @@
+open Prims
+let (x : Prims.int Pulse_Lib_Reference.ref) = Pulse_Lib_Reference.null ()
+let (y : unit -> Prims.int Pulse_Lib_Box.box) =
+  fun uu___ -> Pulse_Lib_Box.null ()
+let rec (foo : unit -> Prims.int Pulse_Lib_Box.box) =
+  fun uu___ -> Pulse_Lib_Box.null ()
+let rec (test : Prims.int Pulse_Lib_Reference.ref -> Prims.int) =
+  fun x1 ->
+    if Pulse_Lib_Reference.is_null x1
+    then Prims.int_zero
+    else (let res = Pulse_Lib_Reference.op_Bang x1 () () in res)

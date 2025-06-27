@@ -26,6 +26,10 @@ open PulseCore.FractionalPermission
 
 val ref ([@@@unused] a:Type u#0) : Type u#0
 
+val null (#a:Type u#0) : ref a
+
+val is_null #a (r : ref a) : b:bool{b <==> r == null #a}
+
 val pts_to
     (#a:Type)
     ([@@@mkey] r:ref a)
@@ -160,6 +164,11 @@ fn pts_to_perm_bound
   (#v:a)
   preserves r |-> Frac p v
   ensures   pure (p <=. 1.0R)
+
+ghost
+fn pts_to_not_null (#a:_) (#p:_) (r:ref a) (#v:a)
+  preserves r |-> Frac p v
+  ensures  pure (not (is_null #a r))
 
 fn replace
   (#a:Type0)
