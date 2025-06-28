@@ -122,7 +122,7 @@ let parse_use_lang_blob (extension_name:string)
 %token INCLUDE
 %token WHEN AS RETURNS RETURNS_EQ WITH HASH AMP LPAREN RPAREN LPAREN_RPAREN COMMA LONG_LEFT_ARROW LARROW RARROW
 %token IFF IMPLIES CONJUNCTION DISJUNCTION
-%token DOT COLON COLON_COLON SEMICOLON
+%token DOT COLON DOT_DOT COLON_COLON SEMICOLON
 %token QMARK_DOT
 %token QMARK
 %token EQUALS PERCENT_LBRACK LBRACK_AT LBRACK_AT_AT LBRACK_AT_AT_AT DOT_LBRACK
@@ -702,6 +702,10 @@ constructorPattern:
       { pat }
 
 atomicPattern:
+  | DOT_DOT
+      {
+        mk_pattern PatRest (rr $loc)
+      }
   | LPAREN pat=tuplePattern COLON t=simpleArrow phi_opt=refineOpt RPAREN
       {
         let pos_t = rr2 $loc(pat) $loc(t) in

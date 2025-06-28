@@ -858,16 +858,16 @@ let try_lookup_lid_with_attributes_no_resolve (env: env) l :option (term & list 
 let try_lookup_lid_no_resolve (env: env) l :option term = try_lookup_lid_with_attributes_no_resolve env l |> drop_attributes
 
 let try_lookup_datacon env (lid:lident) =
-  let k_global_def lid se =
+  let k_global_def lid (se, _) =
       match se with
-      | ({ sigel = Sig_declare_typ _; sigquals = quals }, _) ->
+      | { sigel = Sig_declare_typ _; sigquals = quals } ->
         if quals |> BU.for_some (function Assumption -> true | _ -> false)
-        then Some (lid_and_dd_as_fv lid None)
+        then Some (lid_and_dd_as_fv lid None, se)
         else None
-      | ({ sigel = Sig_splice _ }, _) (* A spliced datacon *)
-      | ({ sigel = Sig_datacon _ }, _) ->
-         let qual = fv_qual_of_se (fst se) in
-         Some (lid_and_dd_as_fv lid qual)
+      | { sigel = Sig_splice _ } (* A spliced datacon *)
+      | { sigel = Sig_datacon _ } ->
+         let qual = fv_qual_of_se se in
+         Some (lid_and_dd_as_fv lid qual, se)
       | _ -> None in
   resolve_in_open_namespaces' env lid (fun _ -> None) (fun _ -> None) k_global_def
 

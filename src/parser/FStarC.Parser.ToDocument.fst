@@ -1110,6 +1110,8 @@ and p_constructorPattern p = match p.pat with
       p_atomicPattern p
 
 and p_atomicPattern p = match p.pat with
+  | PatRest ->
+    str ".."
   | PatAscribed (pat, (t, None)) ->
     (* This inverts the first rule of atomicPattern (LPAREN tuplePattern COLON
      * simpleArrow RPAREN). *)

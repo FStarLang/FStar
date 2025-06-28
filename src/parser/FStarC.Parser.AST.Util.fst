@@ -109,6 +109,7 @@ and lidents_of_pattern p =
   | PatOr ps -> concat_map lidents_of_pattern ps
   | PatOp _ -> []
   | PatVQuote t -> lidents_of_term t
+  | PatRest -> []
 and lidents_of_binder b =
   match b.b with
   | Annotated (_, t)

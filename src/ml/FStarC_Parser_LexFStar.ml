@@ -597,6 +597,8 @@ match%sedlex lexbuf with
  | "<|" -> PIPE_LEFT
  | "|>" -> PIPE_RIGHT
 
+ | ".." -> DOT_DOT
+
  | op_token_1
  | op_token_2
  | op_token_3

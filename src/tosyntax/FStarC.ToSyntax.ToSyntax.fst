@@ -14,9 +14,10 @@
   limitations under the License.
 *)
 module FStarC.ToSyntax.ToSyntax
+
+open FStarC
 open FStarC.Effect
 open FStarC.List
-open FStarC
 open FStarC.Util
 open FStarC.Syntax
 open FStarC.Syntax.Syntax
@@ -27,18 +28,17 @@ open FStarC.Parser.AST
 open FStarC.Ident
 open FStarC.Const
 open FStarC.Errors
-open FStarC.Syntax
 open FStarC.Class.Setlike
 open FStarC.Class.Show
 open FStarC.Syntax.Print {}
 
-module C = FStarC.Parser.Const
-module S = FStarC.Syntax.Syntax
-module U = FStarC.Syntax.Util
-module BU = FStarC.Util
+module C   = FStarC.Parser.Const
+module S   = FStarC.Syntax.Syntax
+module U   = FStarC.Syntax.Util
+module BU  = FStarC.Util
 module Env = FStarC.Syntax.DsEnv
 module EMB = FStarC.Syntax.Embeddings
-module SS = FStarC.Syntax.Subst
+module SS  = FStarC.Syntax.Subst
 
 let extension_tosyntax_table 
 : SMap.t extension_tosyntax_decl_t
@@ -529,6 +529,7 @@ let rec gather_pattern_bound_vars_maybe_top (acc : FlatSet.t ident) p =
   | PatConst _
   | PatVQuote _
   | PatName _
+  | PatRest
   | PatOp _ -> acc
   | PatApp (phead, pats) -> gather_pattern_bound_vars_from_list (phead::pats)
   | PatTvar (x, _, _)
@@ -934,16 +935,51 @@ let rec desugar_data_pat
         loc, aqs, env, LocalBinder(xbv, aq, attrs), pos <| Pat_var xbv, []
 
       | PatName l ->
-        let l = fail_or env (try_lookup_datacon env) l in
+        let l, _ = fail_or env (try_lookup_datacon env) l in
         let x = S.new_bv (Some p.prange) (tun_r p.prange) in
         loc, aqs, env, LocalBinder(x,  None, []), pos <| Pat_cons(l, None, []), []
+
+      (* Detect matches of the form
+           | C ..
+         We simply elaborate the pattern to `C _ _` (with
+         as many underscores as needed).
+      *)
+      | PatApp({pat=PatName l}, [{ pat = PatRest }]) ->
+        let PatApp (hd, _) = p.pat in
+        let argpats =
+          let l, se = fail_or env (try_lookup_datacon env) l in
+          match se.sigel with
+          | Sig_datacon { t; num_ty_params } ->
+            let bs, _ = U.arrow_formals t in
+            (* drop the type parameters *)
+            let _, bs = List.splitAt num_ty_params bs in
+            bs |> List.map (fun b ->
+              let q =
+                match b.binder_qual with
+                | Some (Syntax.Implicit _) -> Some Implicit
+                | _ -> None
+              in
+              mk_pattern (PatWild (q, [])) p.prange)
+          | _ ->
+            failwith "unexpected: try_lookup_datacon returned odd sigelt"
+        in
+        let newpat : pattern =
+          mk_pattern (PatApp (hd, argpats)) p.prange
+        in
+        aux' top loc aqs env newpat
+
+      | PatRest ->
+        raise_error p Errors.Fatal_UnexpectedPattern [
+          text "Unexpected pattern.";
+          text "Using `..` is only allowed as argument to a data constructor, e.g. `C ..`.";
+        ]
 
       | PatApp({pat=PatName l}, args) ->
         let loc, aqs, env, annots, args = List.fold_right (fun arg (loc, aqs, env, annots, args) ->
           let loc, aqs, env, b, arg, ans = aux loc aqs env arg in
           let imp = is_implicit b in
           (loc, aqs, env, ans@annots, (arg, imp)::args)) args (loc, aqs, env, [], []) in
-        let l = fail_or env  (try_lookup_datacon env) l in
+        let l, _ = fail_or env  (try_lookup_datacon env) l in
         let x = S.new_bv (Some p.prange) (tun_r p.prange) in
         loc, aqs, env, LocalBinder(x, None, []), pos <| Pat_cons(l, None, args), annots
 
@@ -1307,7 +1343,7 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term & an
 
     | Construct(l, args) ->
         begin match Env.try_lookup_datacon env l with
-        | Some head ->
+        | Some (head, _) ->
             let head = mk (Tm_fvar head) in
             begin match args with
               | [] -> head, noaqs
