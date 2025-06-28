@@ -1178,6 +1178,7 @@ let collect_one
             collect_aqual aqual;
             attrs |> List.iter collect_term
 
+        | PatRest
         | PatOp _
         | PatConst _ ->
             ()

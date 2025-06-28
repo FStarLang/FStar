@@ -135,6 +135,8 @@ and eq_pattern' (p1 p2:pattern')
       eq_ident i1 i2
     | PatVQuote t1, PatVQuote t2 ->
       eq_term t1 t2
+    | PatRest, PatRest ->
+      true
     | _ -> false
 
 and eq_term' (t1 t2:term')

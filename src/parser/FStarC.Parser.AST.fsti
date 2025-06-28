@@ -137,6 +137,7 @@ and pattern' =
   | PatName     of lid
   | PatTvar     of ident & aqual & attributes_
   | PatList     of list pattern
+  | PatRest     (* For '..', which matches all extra args *)
   | PatTuple    of list pattern & bool (* dependent if flag is set *)
   | PatRecord   of list (lid & pattern)
   | PatAscribed of pattern & (term & option term)
@@ -383,4 +384,4 @@ instance val showable_term : showable term
 val as_interface (m:modul) : modul
 
 val inline_let_attribute : term
-val inline_let_vc_attribute : term 
+val inline_let_vc_attribute : term

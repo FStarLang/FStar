@@ -470,6 +470,7 @@ let string_of_token =
   | BLOB _ -> "BLOB _"
   | USE_LANG_BLOB _ -> "USE_LANG_BLOB _"
   | EOF -> "EOF"
+  | DOT_DOT -> "DOT_DOT"
   | _ -> "(unknown token)"
 
 let parse_fstar_incrementally
