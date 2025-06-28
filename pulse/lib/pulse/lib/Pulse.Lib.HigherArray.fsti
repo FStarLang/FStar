@@ -25,7 +25,7 @@ open FStar.Ghost
 module SZ = FStar.SizeT
 module Seq = FStar.Seq
 
-val array ([@@@strictly_positive] a:Type u#1) : Type u#0
+val array ([@@@unused] a:Type u#1) : Type u#0
 
 val length (#a:Type) (x:array a) : Ghost nat (requires True) (ensures SZ.fits)
 
@@ -34,6 +34,9 @@ type elseq (a:Type) (l:SZ.t) = s:erased (Seq.seq a) { Seq.length s == SZ.v l }
 type larray t (n:nat) = a:array t { length a == n }
 
 val is_full_array (#a:Type) (x:array a) : prop
+
+val null #a : array a
+val is_null #a (r: array a) : b:bool {b <==> r == null #a}
 
 val pts_to (#a:Type) ([@@@mkey]x:array a) (#[exact (`1.0R)] p:perm) (s: Seq.seq a) : slprop
 
@@ -54,6 +57,11 @@ ghost
 fn pts_to_len (#t:Type) (a:array t) (#p:perm) (#x:Seq.seq t)
   requires pts_to a #p x
   ensures  pts_to a #p x ** pure (length a == Seq.length x)
+
+ghost
+fn pts_to_not_null (#a:_) (#p:_) (r:array a) (#v:Seq.seq a)
+  preserves r |-> Frac p v
+  ensures  pure (not (is_null #a r))
 
 fn alloc
         (#elt: Type)
@@ -111,6 +119,23 @@ fn gather
   (#p0 #p1:perm)
   requires pts_to arr #p0 s0 ** pts_to arr #p1 s1
   ensures  pts_to arr #(p0 +. p1) s0 ** pure (s0 == s1)
+
+[@@allow_ambiguous]
+ghost
+fn pts_to_injective_eq
+    (#a:Type)
+    (#p0 #p1:perm)
+    (#s0 #s1:Seq.seq a)
+    (arr:array a)
+  preserves pts_to arr #p0 s0
+  preserves pts_to arr #p1 s1
+  ensures pure (s0 == s1)
+
+ghost
+fn pts_to_perm_bound (#a:_) (#p:_) (arr: array a) (#s:Seq.seq a)
+  preserves pts_to arr #p s
+  requires pure (Seq.length s > 0)
+  ensures pure (p <=. 1.0R)
 
 val pts_to_range
   (#a:Type)

@@ -46,12 +46,15 @@ val pts_to_timeless (#a:Type) ([@@@mkey] r:ref a) (p:perm) (x:a)
   : Lemma (timeless (pts_to r #p x))
           [SMTPat (timeless (pts_to r #p x))]
 
+val is_full_ref #a (x: ref a) : prop
+
 [@@deprecated "Reference.alloc is unsound; use Box.alloc instead"]
 fn alloc
   (#a:Type)
   (x:a)
   returns  r : ref a
   ensures  r |-> x
+  ensures  pure (is_full_ref r)
 
 fn read
   (#a:Type)
@@ -98,7 +101,7 @@ fn free
   (r:ref a)
   (#n:erased a)
   requires r |-> n
-  ensures  emp
+  requires pure (is_full_ref r)
 
 ghost
 fn share

@@ -39,9 +39,12 @@ val pts_to_timeless (#a:Type) (r:ref a) (p:perm) (n:a)
   : Lemma (timeless (pts_to r #p n))
           [SMTPat (timeless (pts_to r #p n))]
 
+val is_full_ref #a (x: ref a) : prop
+
 fn alloc (#a:Type) (x:a)
   returns  r : ref a
   ensures  r |-> x
+  ensures  pure (is_full_ref r)
   
 fn read (#a:Type) (r:ref a) (#n:erased a) (#p:perm)
   preserves r |-> Frac p n
@@ -65,7 +68,7 @@ fn ( := ) (#a:Type) (r:ref a) (x:a) (#n:erased a)
 
 fn free (#a:Type) (r:ref a) (#n:erased a)
   requires pts_to r n
-  ensures  emp
+  requires pure (is_full_ref r)
 
 ghost
 fn share (#a:Type) (r:ref a) (#v:erased a) (#p:perm)

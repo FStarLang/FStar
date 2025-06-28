@@ -95,6 +95,7 @@ type array'
     length: (l:Ghost.erased nat {offset p + l <= base_len (base p)})
   }
 let array ([@@@strictly_positive] elt: Type u#1) : Type0 = array'
+
 let length (#elt: Type) (a: array elt) = a.length
 
 let ptr_of
@@ -108,6 +109,7 @@ let is_full_array (#elt: Type) (a: array elt) : Tot prop =
 
 let null (#a: Type u#1) : array a
 = { p = null_ptr; length =Ghost.hide 0 }
+let is_null a = is_null_ptr a.p
 
 let length_fits #elt a = ()
 
@@ -190,6 +192,17 @@ fn pts_to_len'
 let pts_to_len = pts_to_len'
 
 
+ghost
+fn pts_to_not_null (#a:_) (#p:_) (r:array a) (#v:Seq.seq a)
+  preserves r |-> Frac p v
+  ensures  pure (not (is_null #a r))
+{
+  unfold pts_to r #p v;
+  let res = pts_to_not_null #_ #(PA.pcm a (SizeT.v r.p.base_len)) r.p.base _;
+  fold pts_to r #p v;
+  res
+}
+
 
 fn alloc' 
     (#elt: Type u#1)
@@ -204,7 +217,7 @@ ensures
   let v = (mk_carrier (SZ.v n) 0 (Seq.create (SZ.v n) x) 1.0R);
   FStar.PCM.compatible_refl (PA.pcm elt (SZ.v n)) v;
   let b = Pulse.Lib.Core.alloc #_ #(PA.pcm elt (SZ.v n)) v;
-  pts_to_not_null b _;
+  Pulse.Lib.Core.pts_to_not_null b _;
   fold_pts_to n b 0 #1.0R (Seq.create (SZ.v n) x);
   mk_array n b 0;
 }
@@ -435,6 +448,37 @@ fn gather
   of_squash (mk_carrier_gather (SZ.v (ptr_of arr).base_len) ((ptr_of arr).offset) s0 s1 p0 p1 ());
   of_squash (mk_carrier_valid_sum_perm (SZ.v (ptr_of arr).base_len) ((ptr_of arr).offset) s0 p0 p1);
   fold pts_to arr #(p0 +. p1) s0;
+}
+
+[@@allow_ambiguous]
+ghost
+fn pts_to_injective_eq
+    (#a:Type)
+    (#p0 #p1:perm)
+    (#s0 #s1:Seq.seq a)
+    (arr:array a)
+  preserves pts_to arr #p0 s0
+  preserves pts_to arr #p1 s1
+  ensures pure (s0 == s1)
+{
+  unfold pts_to arr #p0 s0;
+  unfold pts_to arr #p1 s1;
+  Pulse.Lib.Core.gather (lptr_of arr) _ _;
+  Pulse.Lib.Core.share (lptr_of arr) _ _;
+  of_squash (mk_carrier_gather (SZ.v (ptr_of arr).base_len) ((ptr_of arr).offset) s0 s1 p0 p1 ());
+  of_squash (mk_carrier_valid_sum_perm (SZ.v (ptr_of arr).base_len) ((ptr_of arr).offset) s0 p0 p1);
+  fold pts_to arr #p0 s0;
+  fold pts_to arr #p1 s1;
+}
+
+ghost
+fn pts_to_perm_bound (#a:_) (#p:_) (arr: array a) (#s:Seq.seq a)
+  preserves pts_to arr #p s
+  requires pure (Seq.length s > 0)
+  ensures pure (p <=. 1.0R)
+{
+  unfold pts_to arr #p s;
+  fold pts_to arr #p s;
 }
 
 let ptr_shift

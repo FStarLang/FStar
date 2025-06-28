@@ -17,41 +17,38 @@
 module Pulse.Lib.HigherReference
 #lang-pulse
 open Pulse.Lib.Core
-open Pulse.Main
-open FStar.PCM
-open Pulse.Lib.PCM.Fraction
+module A = Pulse.Lib.HigherArray
 
-let ref (a:Type u#1) = pcm_ref (pcm_frac #a)
+let ref (a:Type u#1) = A.array a
 
-let null (#a:Type u#1) : ref a = null_core_pcm_ref
+let null (#a:Type u#1) : ref a = A.null
 
 let is_null #a (r : ref a)
   : b:bool{b <==> r == null #a}
-= is_null_core_pcm_ref r
+= A.is_null r
+
+let singleton #a (x:a) : Seq.seq a = Seq.create 1 x
+let singleton_inj #a (x: a) : Lemma (Seq.index (singleton x) 0 == x) [SMTPat (singleton x)] = ()
+let upd_singleton #a (x y: a) :
+    Lemma (Seq.upd (singleton x) 0 y == singleton y)
+      [SMTPat (Seq.upd (singleton x) 0 y)] =
+  assert Seq.equal (Seq.upd (singleton x) 0 y) (singleton y)
 
 let pts_to (#a:Type) (r:ref a) (#[T.exact (`1.0R)] p:perm) (n:a)
-= pcm_pts_to r (Some (n, p)) ** pure (perm_ok p)
+= A.pts_to r #p (singleton n)
 let pts_to_timeless _ _ _ = ()
 
-fn alloc' (#a:Type u#1) (x:a)
-  requires emp
+let is_full_ref = A.is_full_array
+
+fn alloc (#a:Type u#1) (x:a)
   returns r:ref a
   ensures pts_to r x
+  ensures pure (is_full_ref r)
 {
-  full_values_compatible x;
-  let r = Pulse.Lib.Core.alloc #_ #(pcm_frac #a) (Some (x, 1.0R));
+  let r = A.alloc x 1sz;
   fold (pts_to r #1.0R x);
   r
 }
-
-let alloc = alloc'
-
-let read_compat (#a:Type u#1) (x:fractional a)
-                (v:fractional a { compatible pcm_frac x v })
-  : GTot (y:fractional a { compatible pcm_frac y v /\
-                           FStar.PCM.frame_compatible pcm_frac x v y })
-  = x
-
 
 fn read (#a:Type u#1) (r:ref a) (#n:erased a) (#p:perm)
   preserves r |-> Frac p n
@@ -59,12 +56,9 @@ fn read (#a:Type u#1) (r:ref a) (#n:erased a) (#p:perm)
   ensures  rewrites_to x n
 {
   unfold pts_to r #p n;
-  with w. assert (pcm_pts_to r w);
-  let x = Pulse.Lib.Core.read r w (fun _ -> w);
-  assert pure (compatible pcm_frac w x);
-  assert (pcm_pts_to r w);
+  let x = A.(r.(0sz));
   fold (pts_to r #p n);
-  fst (Some?.v x)
+  x
 }
 
 let ( ! ) #a = read #a
@@ -74,8 +68,7 @@ fn write (#a:Type u#1) (r:ref a) (x:a) (#n:erased a)
   ensures  r |-> x
 {
   unfold pts_to r #1.0R n;
-  with w. assert (pcm_pts_to r w);
-  Pulse.Lib.Core.write r _ _ (mk_frame_preserving_upd n x);
+  A.(r.(0sz) <- x);
   fold pts_to r #1.0R x;
 }
 
@@ -84,12 +77,10 @@ let ( := ) #a = write #a
 
 fn free #a (r:ref a) (#n:erased a)
   requires pts_to r #1.0R n
-  ensures emp
+  requires pure (is_full_ref r)
 {
   unfold pts_to r #1.0R n;
-  with w. assert (pcm_pts_to r w);
-  Pulse.Lib.Core.write r _ _ (mk_frame_preserving_upd_none n);
-  Pulse.Lib.Core.drop_ _;
+  A.free r;
 }
 
 ghost
@@ -98,9 +89,7 @@ fn share #a (r:ref a) (#v:erased a) (#p:perm)
   ensures pts_to r #(p /. 2.0R) v ** pts_to r #(p /. 2.0R) v
 {
   unfold pts_to r #p v;
-  rewrite pcm_pts_to r (Some (reveal v, p))
-      as  pcm_pts_to r (Some (reveal v, p /. 2.0R) `op pcm_frac` Some(reveal v, p /. 2.0R));
-  Pulse.Lib.Core.share r (Some (reveal v, p /. 2.0R)) _; //writing an underscore for the first arg also causes a crash
+  A.share r;
   fold (pts_to r #(p /. 2.0R) v);
   fold (pts_to r #(p /. 2.0R) v);
 }
@@ -112,19 +101,27 @@ fn gather #a (r:ref a) (#x0 #x1:erased a) (#p0 #p1:perm)
 { 
   unfold pts_to r #p0 x0;
   unfold pts_to r #p1 x1;
-  Pulse.Lib.Core.gather r (Some (reveal x0, p0)) (Some (reveal x1, p1));
+  A.gather r;
   fold (pts_to r #(p0 +. p1) x0)
 }
 
+(* this is universe-polymorphic in ret_t; so can't define it in Pulse yet *)
+
+fn alloc_with_frame #a (init: a) pre
+  requires pre
+  returns r: ref a
+  ensures (pre ** pts_to r init) ** pure (is_full_ref r)
+{
+  alloc init
+}
+
 fn free_with_frame #a (r:ref a) (frame:slprop)
-  requires frame ** (exists* (x:a). pts_to r x)
+  requires ((frame ** (exists* (x: a). pts_to r x)) ** pure (is_full_ref r))
   ensures frame
 {
   free r;
 }
 
-
-(* this is universe-polymorphic in ret_t; so can't define it in Pulse yet *)
 let with_local
     (#a:Type u#1)
     (init:a)
@@ -132,22 +129,10 @@ let with_local
     (#ret_t:Type u#a)
     (#post:ret_t -> slprop) 
     (body: (r:ref a -> stt ret_t (pre ** pts_to r init) (fun v -> post v ** (exists* (x:a). pts_to r x))))
-= let m1
-    : stt (ref a) (emp ** pre) (fun r -> pts_to r init ** pre)
-    = frame_stt pre (alloc init)
-  in
-  let pf_post : slprop_post_equiv (fun r -> pts_to r init ** pre) (fun r -> pre ** pts_to r init)
-    = intro_slprop_post_equiv _ _ (fun r -> slprop_equiv_comm (pts_to r #1.0R init) pre)
-  in
-  let m1 
-    : stt (ref a) pre (fun r -> pre ** pts_to r init)
-    = sub_stt _ _ (slprop_equiv_unit pre) pf_post m1
-  in
-  let body (r:ref a)
-    : stt ret_t (pre ** pts_to r init) post
-    = bind_stt (body r) (fun v -> bind_stt (free_with_frame #a r (post v)) (fun _ -> return_stt_noeq v post))
-  in
-  bind_stt m1 body
+= bind_stt (alloc_with_frame init pre) fun r ->
+  bind_stt (frame_stt (pure (is_full_ref r)) (body r)) fun ret ->
+  bind_stt (free_with_frame r _) fun _ ->
+  return_stt_noeq ret post
   
 
 ghost
@@ -161,8 +146,7 @@ fn pts_to_injective_eq
 {
   unfold pts_to r #p0 v0;
   unfold pts_to r #p1 v1;
-  Pulse.Lib.Core.gather r (Some (v0, p0)) (Some (v1, p1));
-  Pulse.Lib.Core.share r (Some (v0, p0)) (Some (v1, p1));
+  A.pts_to_injective_eq r;
   fold pts_to r #p0 v0;
   fold pts_to r #p1 v1;
 }
@@ -174,6 +158,7 @@ fn pts_to_perm_bound (#a:_) (#p:_) (r:ref a) (#v:a)
   ensures pts_to r #p v ** pure (p <=. 1.0R)
 {
   unfold pts_to r #p v;
+  A.pts_to_perm_bound r;
   fold pts_to r #p v;
 }
 
@@ -183,6 +168,6 @@ fn pts_to_not_null (#a:_) (#p:_) (r:ref a) (#v:a)
   ensures  pure (not (is_null #a r))
 {
   unfold pts_to r #p v;
-  pts_to_not_null r _;
+  A.pts_to_not_null r;
   fold pts_to r #p v;
 }

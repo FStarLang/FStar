@@ -13,11 +13,18 @@ class reflike (vt:Type) (rt:Type) = {
   (:=) : r:rt -> v:vt -> #v0:erased vt -> stt unit (r |-> v0) (fun _ -> r |-> v);
 }
 
-(* Prevent warning about using alloc... this is just a test. *)
 #push-options "--warn_error -288"
+fn weakened_ref_alloc #a (x: a)
+  returns r: Pulse.Lib.Reference.ref a
+  ensures Pulse.Lib.Reference.pts_to r x
+{
+  Pulse.Lib.Reference.alloc x
+}
+
+(* Prevent warning about using alloc... this is just a test. *)
 instance reflike_ref (a:Type) : reflike a (ref a) = {
   ( |-> ) = (fun r v -> Pulse.Lib.Reference.pts_to r v);
-  alloc   = Pulse.Lib.Reference.alloc;
+  alloc   = weakened_ref_alloc;
   ( ! )   = (fun r #v0 -> Pulse.Lib.Reference.op_Bang r #v0 #1.0R);
   ( := )  = (fun r v #v0 -> Pulse.Lib.Reference.op_Colon_Equals r v #v0);
 }
