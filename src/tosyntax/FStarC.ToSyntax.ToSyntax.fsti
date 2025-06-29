@@ -57,3 +57,7 @@ val parse_attr_with_list : bool -> S.term -> lident -> option (list int & Range.
 
 val get_fail_attr1 : bool -> S.term       -> option (list int & Range.range & bool)
 val get_fail_attr  : bool -> list S.term -> option (list int & Range.range & bool)
+
+(* Return a list of wildcard patterns (implicit or explicit as needed)
+in order to expand the `..` in `| C .. ->`. *)
+val rest_pat_for_lid (env : env) (l : lid) : list pattern
