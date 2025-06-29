@@ -25,10 +25,10 @@ let rec print_st_typing #g #t #c (d:st_typing g t c)
     | T_Abs g x q b u body c tt body_typing ->
       Printf.sprintf "(T_Abs ... %s)" (print_st_typing body_typing)
     
-    | T_STApp _ _ _ _ _ _ _ _ ->
+    | T_STApp .. ->
       "T_STApp"
     
-    | T_Return _ _ _ _ _ _ _ _ _ _ _ ->
+    | T_Return .. ->
       "T_Return"
 
     | T_Lift _ _ _ _ d _ ->
@@ -40,10 +40,10 @@ let rec print_st_typing #g #t #c (d:st_typing g t c)
     | T_Frame g e c frame _ body ->
       Printf.sprintf "(T_Frame %s %s)" (Pulse.Syntax.Printer.term_to_string frame) (print_st_typing body)
 
-    | T_If _ _ _ _ _ _ _ _ _ _ ->
+    | T_If .. ->
       "T_If"
 
-    | T_Match _ _ _ _ _ _ _ _ _ _ _ ->
+    | T_Match .. ->
       "T_Match"
 
     | T_Equiv g e c c' d eq ->
@@ -54,10 +54,10 @@ let rec print_st_typing #g #t #c (d:st_typing g t c)
     //      (Pulse.Syntax.Printer.comp_to_string c')
     //      (print_st_typing d)
         
-    | T_IntroPure _ _ _ _ ->
+    | T_IntroPure .. ->
       "T_IntroPure"
 
-    | T_Rewrite _ _ _ _ _ ->
+    | T_Rewrite .. ->
       "T_Rewrite"
       
     | _ -> "<UNK>"

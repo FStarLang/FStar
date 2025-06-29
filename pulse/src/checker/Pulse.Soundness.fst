@@ -338,75 +338,75 @@ let rec soundness (g:stt_env)
     in
     LN.st_typing_ln d;
     match d with
-    | T_Lift _ _ _ _ _ _ ->
+    | T_Lift .. ->
       lift_soundness _ _ _ d soundness
-    | T_Frame _ _ _ _ _ _ ->
+    | T_Frame .. ->
       frame_soundness _ _ _ d soundness
 
     | T_Abs _ x q ty u body c t_typing body_typing ->
       mk_t_abs q ppname_default t_typing body_typing    
 
-    | T_STApp _ _ _ _ _ _ _ _ ->
+    | T_STApp .. ->
       stapp_soundness _ _ _ d soundness
 
-    | T_STGhostApp _ _ _ _ _ _ _ _ _ _ ->
+    | T_STGhostApp .. ->
       stghostapp_soundness _ _ _ d soundness
 
-    | T_Bind _ _e1 _e2 _c1 _c2 _b _x _c _e1_typing _t_typing _e2_typing _bc ->
+    | T_Bind .. ->
       bind_soundness d soundness mk_t_abs
 
-    | T_BindFn _ _ _ _ _ _ _ _ _ _ _ _ ->
+    | T_BindFn .. ->
       Bind.bind_fn_typing d soundness
 
-    | T_Equiv _ _ _ _ _ _ ->
+    | T_Equiv .. ->
       stequiv_soundness _ _ _ d soundness
 
-    | T_Return _ _ _ _ _ _ _ _ _ _ _ ->
+    | T_Return .. ->
       Return.return_soundness d
 
-    | T_If _ _ _ _ _ _ _ _ _ _->
+    | T_If .. ->
       let ct_soundness g c uc (d':_ {d' << d}) =
         Comp.comp_typing_soundness g c uc d'
       in
       if_soundness _ _ _ d soundness ct_soundness
 
-    | T_Match _ _ _ _ _ _ _ _ _ _ _ ->
+    | T_Match .. ->
       let ct_soundness g c uc (d':_ {d' << d}) =
         Comp.comp_typing_soundness g c uc d'
       in
       Pulse.Soundness.Match.match_soundness _ _ _ d soundness ct_soundness
 
-    | T_IntroPure _ _ _ _  ->
+    | T_IntroPure .. ->
       admit()
       
-    | T_ElimExists _ _ _ _ _ _ _ ->
+    | T_ElimExists .. ->
       Exists.elim_exists_soundness d
 
-    | T_IntroExists _ _ _ _ _ _ _ _ ->
+    | T_IntroExists .. ->
       Exists.intro_exists_soundness d
 
-    | T_While _ _ _ _ _ _ _ ->
+    | T_While .. ->
       While.while_soundness d soundness
 
-    | T_Par _ _ _ _ _ _ _ _ _ _ ->
+    | T_Par .. ->
       Par.par_soundness d soundness
 
-    | T_WithLocal _ _ _ _ _ _ _ _ _ _ _ ->
+    | T_WithLocal .. ->
       WithLocal.withlocal_soundness d soundness
 
-    | T_WithLocalArray _ _ _ _ _ _ _ _ _ _ _ _ _ ->
+    | T_WithLocalArray .. ->
       WithLocalArray.withlocalarray_soundness d soundness
 
-    | T_Rewrite _ _ _ _ _ ->
+    | T_Rewrite .. ->
       Rewrite.rewrite_soundness d
 
-    | T_Admit _ _ _ -> Admit.admit_soundess d
+    | T_Admit .. -> Admit.admit_soundess d
 
-    | T_Unreachable _ _ _ _ -> RU.magic()
+    | T_Unreachable .. -> RU.magic()
 
-    | T_Sub _ _ _ _ _ _ -> Sub.sub_soundness d soundness
+    | T_Sub .. -> Sub.sub_soundness d soundness
 
-    | T_WithInv _ _ _ _ _ _ _ _ _ -> RU.magic() // IOU
+    | T_WithInv .. -> RU.magic() // IOU
 #pop-options
 
 let soundness_lemma
