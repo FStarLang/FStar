@@ -137,7 +137,7 @@ let parse_use_lang_blob (extension_name:string)
 %token INCLUDE
 %token WHEN AS RETURNS RETURNS_EQ WITH HASH AMP LPAREN RPAREN LPAREN_RPAREN COMMA LONG_LEFT_ARROW LARROW RARROW
 %token IFF IMPLIES CONJUNCTION DISJUNCTION
-%token DOT COLON COLON_COLON SEMICOLON
+%token DOT COLON DOT_DOT COLON_COLON SEMICOLON
 %token QMARK_DOT
 %token QMARK
 %token EQUALS PERCENT_LBRACK LBRACK_AT LBRACK_AT_AT LBRACK_AT_AT_AT DOT_LBRACK
@@ -391,7 +391,7 @@ typeclassDecl:
       }
 
 restriction:
-  | LBRACE ids=separated_list(COMMA, id=identOrOperator renamed=option(AS id=identOrOperator {id} ) {(id, renamed)}) RBRACE
+  | LBRACE ids=right_flexible_list(COMMA, id=identOrOperator renamed=option(AS id=identOrOperator {id} ) {(id, renamed)}) RBRACE
       { FStarC_Syntax_Syntax.AllowList ids }
   |   { FStarC_Syntax_Syntax.Unrestricted  }
 
@@ -436,9 +436,9 @@ rawDecl:
           | bs -> mk_term (Product(bs, t)) (rr2 $loc(bs) $loc(t)) Type_level
         in Val(lid, t)
       }
-  | SPLICE LBRACK ids=separated_list(SEMICOLON, ident) RBRACK t=thunk(atomicTerm)
+  | SPLICE LBRACK ids=right_flexible_list(SEMICOLON, ident) RBRACK t=thunk(atomicTerm)
       { Splice (false, ids, t) }
-  | SPLICET LBRACK ids=separated_list(SEMICOLON, ident) RBRACK t=atomicTerm
+  | SPLICET LBRACK ids=right_flexible_list(SEMICOLON, ident) RBRACK t=atomicTerm
       { Splice (true, ids, t) }
   | EXCEPTION lid=uident t_opt=option(OF t=typ {t})
       { Exception(lid, t_opt) }
@@ -717,13 +717,17 @@ constructorPattern:
       { pat }
 
 atomicPattern:
+  | DOT_DOT
+      {
+        mk_pattern PatRest (rr $loc)
+      }
   | LPAREN pat=tuplePattern COLON t=simpleArrow phi_opt=refineOpt RPAREN
       {
         let pos_t = rr2 $loc(pat) $loc(t) in
         let pos = rr $loc in
         mkRefinedPattern pat t true phi_opt pos_t pos
       }
-  | LBRACK pats=separated_list(SEMICOLON, tuplePattern) RBRACK
+  | LBRACK pats=right_flexible_list(SEMICOLON, tuplePattern) RBRACK
       { mk_pattern (PatList pats) (rr2 $loc($1) $loc($3)) }
   | LBRACE record_pat=right_flexible_list(SEMICOLON, fieldPattern) RBRACE
       { mk_pattern (PatRecord record_pat) (rr $loc) }
@@ -1550,7 +1554,7 @@ projectionLHS:
       { mkSeqLit (rr2 $loc($1) $loc($3)) es }
   | PERCENT_LBRACK es=semiColonTermList RBRACK
       { mk_term (LexList es) (rr2 $loc($1) $loc($3)) Type_level }
-  | BANG_LBRACE es=separated_list(COMMA, appTerm) RBRACE
+  | BANG_LBRACE es=right_flexible_list(COMMA, appTerm) RBRACE
       { mkRefSet (rr2 $loc($1) $loc($3)) es }
   | ns=quident QMARK_DOT id=lident
       { mk_term (Projector (ns, id)) (rr2 $loc(ns) $loc(id)) Expr }

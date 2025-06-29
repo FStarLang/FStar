@@ -60,6 +60,7 @@ let rewrite_token (tok:FP.token)
     | DISJUNCTION -> PP.DISJUNCTION
     | DOLLAR -> PP.DOLLAR 
     | DOT -> PP.DOT 
+    | DOT_DOT -> PP.DOT_DOT
     | DOT_LBRACK -> PP.DOT_LBRACK 
     | DOT_LBRACK_BAR -> PP.DOT_LBRACK_BAR 
     | DOT_LENS_PAREN_LEFT -> PP.DOT_LENS_PAREN_LEFT 
