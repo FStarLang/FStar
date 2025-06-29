@@ -839,6 +839,23 @@ let rec hoist_pat_ascription' (pat: pattern): pattern & option term
   // return the pattern directly
   | _ -> pat, None
 
+let rest_pat_for_lid (env : env_t) (l : lid) : list pattern =
+  let l, se = fail_or env (try_lookup_datacon env) l in
+  match se.sigel with
+  | Sig_datacon { t; num_ty_params } ->
+    let bs, _ = U.arrow_formals t in
+    (* drop the type parameters *)
+    let _, bs = List.splitAt num_ty_params bs in
+    bs |> List.map (fun b ->
+      let q =
+        match b.binder_qual with
+        | Some (Syntax.Implicit _) -> Some Implicit
+        | _ -> None
+      in
+      mk_pattern (PatWild (q, [])) (pos l))
+  | _ ->
+    failwith "unexpected: try_lookup_datacon returned odd sigelt"
+
 let hoist_pat_ascription (pat: pattern): pattern
   = let pat, typ = hoist_pat_ascription' pat in
     match typ with
@@ -946,23 +963,7 @@ let rec desugar_data_pat
       *)
       | PatApp({pat=PatName l}, [{ pat = PatRest }]) ->
         let PatApp (hd, _) = p.pat in
-        let argpats =
-          let l, se = fail_or env (try_lookup_datacon env) l in
-          match se.sigel with
-          | Sig_datacon { t; num_ty_params } ->
-            let bs, _ = U.arrow_formals t in
-            (* drop the type parameters *)
-            let _, bs = List.splitAt num_ty_params bs in
-            bs |> List.map (fun b ->
-              let q =
-                match b.binder_qual with
-                | Some (Syntax.Implicit _) -> Some Implicit
-                | _ -> None
-              in
-              mk_pattern (PatWild (q, [])) p.prange)
-          | _ ->
-            failwith "unexpected: try_lookup_datacon returned odd sigelt"
-        in
+        let argpats = rest_pat_for_lid env l in
         let newpat : pattern =
           mk_pattern (PatApp (hd, argpats)) p.prange
         in
