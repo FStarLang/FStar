@@ -1271,6 +1271,6 @@ let rec st_typing_ln (#g:_) (#t:_) (#c:_)
       st_typing_ln d;
       st_sub_ln d_sub
 
-    | T_WithInv _ _ _ _ _ _ _ _ _ ->
+    | T_WithInv .. ->
       admit() // IOU
 

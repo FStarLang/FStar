@@ -731,24 +731,24 @@ let rec st_typing_freevars
            freevars_comp c `Set.subset` vars_of_env g)
   (decreases d)
 = match d with
-  | T_Abs _ _ _ _ _ _ _ _ _ ->
+  | T_Abs .. ->
     st_typing_freevars_abs d st_typing_freevars
   | T_STApp _ _ _ _ _ _ _ _
-  | T_STGhostApp _ _ _ _ _ _ _ _ _ _ ->
+  | T_STGhostApp .. ->
     st_typing_freevars_stapp d st_typing_freevars
-  | T_Return _ _ _ _ _ _ _ _ _ _ _ ->
+  | T_Return .. ->
     st_typing_freevars_return d st_typing_freevars
   | T_Lift _ _ _ _ d1 _ ->
     st_typing_freevars d1
-  | T_Bind _ _ _ _ _ _ _ _ _ _ _ _ ->
+  | T_Bind .. ->
     st_typing_freevars_bind d st_typing_freevars
-  | T_BindFn _ _ _ _ _ _ _ _ _ _ _ _ ->
+  | T_BindFn .. ->
     st_typing_freevars_bind_fn d st_typing_freevars
-  | T_If _ _ _ _ _ _ _ _ _ _ ->
+  | T_If .. ->
     st_typing_freevars_if d st_typing_freevars
-  | T_Match _ _ _ _ _ _ _ _ _ _ _ ->
+  | T_Match .. ->
     admit () // IOU
-  | T_Frame _ _ _ _ _ _ ->
+  | T_Frame .. ->
     st_typing_freevars_frame d st_typing_freevars
   | T_IntroPure _ p prop_typing _ ->
     tot_or_ghost_typing_freevars prop_typing
@@ -759,21 +759,21 @@ let rec st_typing_freevars
   | T_Equiv _ _ _ _ d2 deq ->
     st_typing_freevars d2;
     st_equiv_freevars deq
-  | T_While _ _ _ _ _ _ _ ->
+  | T_While .. ->
     st_typing_freevars_while d st_typing_freevars
-  | T_Par _ _ _ _ _ _ _ _ _ _ ->
+  | T_Par .. ->
     st_typing_freevars_par d st_typing_freevars
-  | T_Rewrite _ _ _ _ _ ->
+  | T_Rewrite .. ->
     st_typing_freevars_rewrite d st_typing_freevars
-  | T_WithLocal _ _ _ _ _ _ _ _ _ _ _ ->
+  | T_WithLocal .. ->
     st_typing_freevars_withlocal d st_typing_freevars
-  | T_WithLocalArray _ _ _ _ _ _ _ _ _ _ _ _ _ ->
+  | T_WithLocalArray .. ->
     st_typing_freevars_withlocalarray d st_typing_freevars
-  | T_Admit _ _ _ ->
+  | T_Admit .. ->
     st_typing_freevars_admit d st_typing_freevars
   | T_Unreachable _ c c_typing _ ->
     st_typing_freevars_unreachable d st_typing_freevars
-  | T_WithInv _ _ _ _ _ _ _ _ _ ->
+  | T_WithInv .. ->
     admit () // IOU
   | T_Sub _ _ _ _ d_t d_sub ->
     st_typing_freevars d_t;

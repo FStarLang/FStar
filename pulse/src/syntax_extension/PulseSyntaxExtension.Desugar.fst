@@ -668,6 +668,13 @@ and desugar_pat (env:env_t) (p:A.pattern)
     | A.PatName lid ->
       let! fv = desugar_datacon env lid in
       return (SW.pat_cons fv [] r, [])
+    | A.PatApp ({pat=A.PatName lid}, [{pat = A.PatRest}]) ->
+      let A.PatApp (hd, _) = p.pat in
+      let! fv = desugar_datacon env lid in
+      let rest = ToSyntax.rest_pat_for_lid env.dsenv lid in
+      let newpat = A.mk_pattern (A.PatApp (hd, rest)) r in
+      desugar_pat env newpat
+
     | A.PatApp ({pat=A.PatName lid}, args) ->
       let! fv = desugar_datacon env lid in
       let! idents =
@@ -696,6 +703,9 @@ and desugar_pat (env:env_t) (p:A.pattern)
       let ctor = SW.mk_fv (Parser.Const.Tuples.mk_tuple_data_lid (L.length pats) r) r in
       let pat = SW.pat_cons ctor pats r in
       return (pat, L.flatten idents)
+
+    | A.PatRest ->
+      fail "Invalid pattern: `..` can only appear applied to a constructor" r
 
     | _ ->
       fail "invalid pattern" r

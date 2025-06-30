@@ -57,3 +57,12 @@ fn test (x : t1) (y z : t2)
     }
   }
 }
+
+fn isC (x : t2)
+  returns bool
+{
+  match x {
+    C .. -> { true }
+    D -> { false }
+  }
+}
