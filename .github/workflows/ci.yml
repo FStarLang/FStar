@@ -26,10 +26,9 @@ jobs:
     needs: build
     uses: ./.github/workflows/tests.yml
 
-  # Disabled as it takes too long without the magic nix cache.
-  # nix-build:
-  #   name: nix
-  #   uses: ./.github/workflows/nix.yml
+  nix-build:
+    name: nix
+    uses: ./.github/workflows/nix.yml
 
   # Branch protection points here
   ciok:
@@ -40,7 +39,7 @@ jobs:
       - build
       - tests
       - opam
-      # - nix-build
+      - nix-build
     steps:
       # Note: we only run on failure. Otherwise this is skipped, which counts
       # as a success.
