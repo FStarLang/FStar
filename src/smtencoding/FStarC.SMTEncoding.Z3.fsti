@@ -33,6 +33,7 @@ type z3statistics = SMap.t string
 type z3result = {
       z3result_status      : z3status;
       z3result_time        : int;
+      z3result_initial_statistics : z3statistics;
       z3result_statistics  : z3statistics;
       z3result_query_hash  : option string;
       z3result_log_file    : option string
