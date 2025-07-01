@@ -298,9 +298,32 @@ type smt_output = {
   smt_result:         smt_output_section;
   smt_reason_unknown: option smt_output_section;
   smt_unsat_core:     option smt_output_section;
+  smt_initial_statistics : option smt_output_section;
   smt_statistics:     option smt_output_section;
   smt_labels:         option smt_output_section;
 }
+
+let parse_stats (smt_stats : option smt_output_section) : z3statistics =
+    (* Parse the statistics section, if it exists *)
+    let statistics : z3statistics = SMap.create 0 in
+    match smt_stats with
+    | None -> statistics
+    | Some lines ->
+      let parse_line line =
+        let pline = BU.split (BU.trim_string line) ":" in
+        match pline with
+        | "(" :: entry :: []
+        |  "" :: entry :: [] ->
+           let tokens = BU.split entry " " in
+           let key = List.hd tokens in
+           let ltok = List.nth tokens ((List.length tokens) - 1) in
+           let value = if BU.ends_with ltok ")" then (BU.substring ltok 0 ((String.length ltok) - 1)) else ltok in
+           SMap.add statistics key value
+        | _ -> ()
+      in
+      List.iter parse_line lines;
+      statistics
+
 
 let smt_output_sections (log_file:option string) (r:Range.range) (lines:list string) : smt_output =
     let rec until tag lines =
@@ -321,12 +344,13 @@ let smt_output_sections (log_file:option string) (r:Range.range) (lines:list str
          | None -> failwith ("Parse error: " ^ end_tag tag ^ " not found")
          | Some (section, suffix) -> Some section, prefix @ suffix
     in
+    let initial_stats_opt, lines = find_section "initial_stats" lines in
     let result_opt, lines = find_section "result" lines in
     let result = 
       match result_opt with
       | None ->
         failwith
-          (BU.format1 "Unexpexted output from Z3: no result section found:\n%s" (String.concat "\n" lines))
+          (BU.format1 "Unexpected output from Z3: no result section found:\n%s" (String.concat "\n" lines))
       | Some result -> result
     in
     let reason_unknown, lines = find_section "reason-unknown" lines in
@@ -354,9 +378,9 @@ let smt_output_sections (log_file:option string) (r:Range.range) (lines:list str
     {smt_result = BU.must result_opt;
      smt_reason_unknown = reason_unknown;
      smt_unsat_core = unsat_core;
+     smt_initial_statistics = initial_stats_opt;
      smt_statistics = statistics;
      smt_labels = labels}
-
 
 let with_solver_state (f: SolverState.solver_state -> 'a & SolverState.solver_state)
 : 'a
@@ -411,7 +435,10 @@ let refresh using_facts_from =
 let stop () =
     (!bg_z3_proc).refresh()
 
-let doZ3Exe (log_file:_) (r:Range.range) (fresh:bool) (input:string) (label_messages:error_labels) (queryid:string) : z3status & z3statistics =
+let doZ3Exe (log_file:_) (r:Range.range) (fresh:bool) (input:string) (label_messages:error_labels) (queryid:string)
+  (* returns initial and final statistics *)
+  : z3status & z3statistics & z3statistics
+=
   let parse (z3out:string) =
     let lines = String.split ['\n'] z3out |> List.map BU.trim_string in
     let smt_output = smt_output_sections log_file r lines in
@@ -440,26 +467,8 @@ let doZ3Exe (log_file:_) (r:Range.range) (fresh:bool) (input:string) (label_mess
                    | None -> []
                    | Some (lbl, msg, r) -> [(lbl, msg, r)])
     in
-    let statistics =
-        let statistics : z3statistics = SMap.create 0 in
-        match smt_output.smt_statistics with
-        | None -> statistics
-        | Some lines ->
-          let parse_line line =
-            let pline = BU.split (BU.trim_string line) ":" in
-            match pline with
-            | "(" :: entry :: []
-            |  "" :: entry :: [] ->
-               let tokens = BU.split entry " " in
-               let key = List.hd tokens in
-               let ltok = List.nth tokens ((List.length tokens) - 1) in
-               let value = if BU.ends_with ltok ")" then (BU.substring ltok 0 ((String.length ltok) - 1)) else ltok in
-               SMap.add statistics key value
-            | _ -> ()
-          in
-          List.iter parse_line lines;
-          statistics
-    in
+    let initial_statistics = parse_stats smt_output.smt_initial_statistics in
+    let statistics = parse_stats smt_output.smt_statistics in
     let reason_unknown = BU.map_opt smt_output.smt_reason_unknown (fun x ->
         let ru = String.concat " " x in
         if BU.starts_with ru "(:reason-unknown \""
@@ -479,9 +488,9 @@ let doZ3Exe (log_file:_) (r:Range.range) (fresh:bool) (input:string) (label_mess
         failwith (format1 "Unexpected output from Z3: got output result: %s\n"
                           (String.concat "\n" smt_output.smt_result))
     in
-    status, statistics
+    status, initial_statistics, statistics
   in
-  let log_result fwrite (res, _stats) =
+  let log_result fwrite (res, _initial_stats, _stats) =
     (* If we are logging, write some more information to the
     smt2 file, such as the result of the query and the new unsat
     core generated. We take a call back to do so, since for the
@@ -674,9 +683,11 @@ let cache_hit
             let result = {
               z3result_status = UNSAT None;
               z3result_time = 0;
-              z3result_statistics = stats;
               z3result_query_hash = qhash;
-              z3result_log_file = log_file
+              z3result_log_file = log_file;
+              (* fake stats *)
+              z3result_initial_statistics = stats;
+              z3result_statistics = stats;
             } in
             Some result
         | _ ->
@@ -700,7 +711,7 @@ let z3_job
   //That field is printed out in the query-stats output, which is a separate
   //profiling feature. We could try in the future to unify all the different
   //kinds of profiling features ... but that's beyond scope for now.
-  let (status, statistics), elapsed_time =
+  let (status, initial_statistics, statistics), elapsed_time =
     Profiling.profile
       (fun () ->
         try
@@ -714,6 +725,7 @@ let z3_job
   in
   { z3result_status     = status;
     z3result_time       = elapsed_time;
+    z3result_initial_statistics = initial_statistics;
     z3result_statistics = statistics;
     z3result_query_hash = qhash;
     z3result_log_file   = log_file }
