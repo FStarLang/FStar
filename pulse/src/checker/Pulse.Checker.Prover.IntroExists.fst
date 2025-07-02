@@ -125,6 +125,7 @@ let intro_exists (#preamble:_) (pst:prover_state preamble)
     remaining_ctxt_frame_typing = RU.magic ();
     uvs = push_binding pst.uvs x ppname b.binder_ty;
     ss = pst.ss;
+    rwr_ss = pst.rwr_ss;
     nts = None;
     solved = tm_emp;
     unsolved = (slprop_as_list (open_term_nv body px)) @ unsolved';
@@ -342,6 +343,7 @@ let intro_exists (#preamble:_) (pst:prover_state preamble)
     remaining_ctxt_frame_typing = RU.magic ();
     uvs = pst_sub.uvs;
     ss = pst_sub.ss;
+    rwr_ss = pst_sub.rwr_ss;
     nts = Some (| nt, effect_labels |);
     solved = preamble.goals;
     unsolved = [];

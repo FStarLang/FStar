@@ -96,7 +96,7 @@ let normalize_slprop_context
   : T.Tac (pst':prover_state preamble { pst' `pst_extends` pst }) =
 
   let norm1 (v : slprop) : T.Tac slprop =
-    dfst (normalize_slprop pst.pg pst.ss.(v))
+    dfst (normalize_slprop pst.pg pst.ss.(pst.rwr_ss.(v)))
   in
 
   let ctxt = pst.remaining_ctxt in
@@ -324,11 +324,12 @@ let rec prover
   let _, pst = ElimExists.elim_exists_pst pst in
   let pst = ElimPure.elim_pure_pst pst in
   debug_prover pst.pg (fun _ ->
-  Printf.sprintf "At the prover top-level with\n  remaining_ctxt: %s\n  unsolved: %s\n  allow_ambiguous: %s\n  ss: %s\n  env: %s\n"
+  Printf.sprintf "At the prover top-level with\n  remaining_ctxt: %s\n  unsolved: %s\n  allow_ambiguous: %s\n  ss: %s\n  rwr_ss: %s\n  env: %s\n"
     (show (list_as_slprop pst.remaining_ctxt))
     (show (list_as_slprop pst.unsolved))
     (show pst.allow_ambiguous)
     (show pst.ss)
+    (show pst.rwr_ss)
     (Pprint.render (env_to_doc pst.pg)));
 
   if L.length (bindings pst.pg) > L.length (bindings pst0.pg) then begin
@@ -445,14 +446,14 @@ let prove
   } in
   assume (list_as_slprop (slprop_as_list ctxt) == ctxt);
   assume ((PS.empty).(tm_emp) == tm_emp);
-  let ss = Pulse.Checker.Prover.RewritesTo.get_subst_from_env g in
-  admit ();
+  let rwr_ss = Pulse.Checker.Prover.RewritesTo.get_subst_from_env g in
   let pst0 : prover_state preamble = {
     pg = g;
     remaining_ctxt = slprop_as_list ctxt;
     remaining_ctxt_frame_typing = ctxt_frame_typing;
     uvs = uvs;
-    ss;
+    ss = PS.empty;
+    rwr_ss;
     nts = None;
     solved = tm_emp;
     unsolved = slprop_as_list goals;

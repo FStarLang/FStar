@@ -323,8 +323,10 @@ let rec ss_to_nt_substs (g:env) (uvs:env) (ss:ss_t)
   let g = Env.push_context g "ss_to_nt_substs" (range_of_env g) in
   match bindings uvs with
   | [] ->
-    // The substitution can have a larger domain than just the uvars when using rewrites_to
-    Inl (| [], [] |)
+    (match ss.l with
+     | [] -> Inl (| [], [] |)
+     | x::_ ->
+       Inr (Printf.sprintf "Extra uvars in the substitutions collected by the prover, e.g._#%d" x))
   | _ ->
     let x, ty, rest_uvs = remove_binding uvs in
     if Map.contains ss.m x

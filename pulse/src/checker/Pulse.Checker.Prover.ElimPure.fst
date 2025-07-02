@@ -141,27 +141,26 @@ let elim_pure_pst (#preamble:_) (pst:prover_state preamble)
       (RU.magic ())
       pst.uvs in
 
-  let ss : PS.ss_t = // extends pst.ss with new rewrites_to_p substitutions
-    RewritesTo.get_new_substs_from_env pst.pg g' pst.ss in
+  let rwr_ss : PS.ss_t = // extends pst.ss with new rewrites_to_p substitutions
+    RewritesTo.get_new_substs_from_env pst.pg g' pst.rwr_ss in
 
   let k
     : continuation_elaborator
-        pst.pg (list_as_slprop pst.remaining_ctxt * (preamble.frame * ss.(pst.solved)))
-        g' (remaining_ctxt' * (preamble.frame * ss.(pst.solved))) =
-    admit (); k in
+        pst.pg (list_as_slprop pst.remaining_ctxt * (preamble.frame * pst.ss.(pst.solved)))
+        g' (remaining_ctxt' * (preamble.frame * pst.ss.(pst.solved))) = k in
 
   // some *s
   let k
     : continuation_elaborator
-        pst.pg ((list_as_slprop pst.remaining_ctxt * preamble.frame) * ss.(pst.solved))
-        g' ((remaining_ctxt' * preamble.frame) * ss.(pst.solved)) =
+        pst.pg ((list_as_slprop pst.remaining_ctxt * preamble.frame) * pst.ss.(pst.solved))
+        g' ((remaining_ctxt' * preamble.frame) * pst.ss.(pst.solved)) =
     
     k_elab_equiv k (RU.magic ()) (RU.magic ()) in
 
   let k_new
     : continuation_elaborator
         preamble.g0 (preamble.ctxt * preamble.frame)
-        g' ((remaining_ctxt' * preamble.frame) * ss.(pst.solved)) =
+        g' ((remaining_ctxt' * preamble.frame) * pst.ss.(pst.solved)) =
     k_elab_trans pst.k k in
   
   assume (list_as_slprop (slprop_as_list remaining_ctxt') == remaining_ctxt');
@@ -170,7 +169,7 @@ let elim_pure_pst (#preamble:_) (pst:prover_state preamble)
     pg = g';
     remaining_ctxt = slprop_as_list remaining_ctxt';
     remaining_ctxt_frame_typing = RU.magic ();
-    ss;
+    rwr_ss;
     nts = None;
     k = k_new;
     goals_inv = RU.magic ();  // weakening of pst.goals_inv

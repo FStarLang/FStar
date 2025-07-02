@@ -83,6 +83,7 @@ type prover_state (preamble:preamble) = {
 
   uvs : uvs:env { disjoint uvs pg };
   ss : PS.ss_t;
+  rwr_ss : PS.ss_t;
 
   //
   // these are the typed ss
