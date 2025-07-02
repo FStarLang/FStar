@@ -65,9 +65,9 @@ let read_compat (#a:Type u#1) (x:fractional a)
 
 ghost
 fn read (#a:Type u#1) (r:ref a) (#n:erased a) (#p:perm)
-  requires pts_to r #p n
+  preserves pts_to r #p n
   returns x:erased a
-  ensures pts_to r #p n ** pure (n == x)
+  ensures rewrites_to x n
 {
   unfold pts_to r #p n;
   with w. assert (ghost_pcm_pts_to r w);

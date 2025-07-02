@@ -77,7 +77,7 @@ fn op_Array_Access
   requires pts_to v #p s
   returns  res : a
   ensures  pts_to v #p s **
-           pure (res == Seq.index s (SZ.v i))
+           rewrites_to res (Seq.index s (SZ.v i))
 
 (* Written x.(i) <- v *)
 fn op_Array_Assignment

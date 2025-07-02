@@ -93,12 +93,9 @@ fn op_Array_Access
     (i: SZ.t)
     (#p: perm)
     (#s: Ghost.erased (Seq.seq t){SZ.v i < Seq.length s})
-requires
-  pts_to a #p s
-  returns res:t
-ensures 
-  pts_to a #p s **
-  pure (res == Seq.index s (SZ.v i))
+preserves pts_to a #p s
+returns res:t
+ensures rewrites_to res (Seq.index s (SZ.v i))
 {
   unfold (pts_to a #p s);
   let res = H.(a.(i));

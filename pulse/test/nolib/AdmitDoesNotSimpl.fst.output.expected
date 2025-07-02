@@ -24,7 +24,7 @@
 * Info at AdmitDoesNotSimpl.fst(35,2-35,9):
   - Admitting continuation.
   - Current context:
-      AdmitDoesNotSimpl.foo (1 + 1)
+      AdmitDoesNotSimpl.foo 2
   - In typing environment:
       uu___0#116 : Prims.unit
 

@@ -54,7 +54,7 @@ fn alloc (#a:Type0) (x:a)
 fn ( ! ) (#a:Type0) (b:box a) (#v:erased a) (#p:perm)
   preserves b |-> Frac p v
   returns  x : a
-  ensures  pure (eq2 #a (reveal v) x)
+  ensures  rewrites_to x (reveal v)
 
 fn ( := ) (#a:Type0) (b:box a) (x:a) (#v:erased a)
   requires b |-> v

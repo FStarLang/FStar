@@ -60,7 +60,7 @@ fn read
   (#p:perm)
   preserves r |-> Frac p n
   returns  x : a
-  ensures  pure (reveal n == x)
+  ensures rewrites_to x n
 
 (* alias for read *)
 fn ( ! )
@@ -70,7 +70,7 @@ fn ( ! )
   (#p:perm)
   preserves r |-> Frac p n
   returns  x : a
-  ensures  pure (reveal n == x)
+  ensures rewrites_to x n
 
 (* := *)
 fn write
@@ -177,5 +177,6 @@ fn replace
   (#v:erased a)
   requires r |-> v
   returns  res : a
-  ensures  (r |-> x) ** pure (res == reveal v)
+  ensures  r |-> x
+  ensures  rewrites_to res v
 

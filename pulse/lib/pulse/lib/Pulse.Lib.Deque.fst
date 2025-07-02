@@ -610,10 +610,9 @@ fn is_singleton
 
   with v. assert (pts_to headp v);
   let vv = Box.( !headp );
-  rewrite each v as vv;
 
   let nextp = vv.dnext;
-  rewrite each vv.dnext as nextp;
+  rewrite each v.dnext as nextp;
 
   match nextp {
   None -> {

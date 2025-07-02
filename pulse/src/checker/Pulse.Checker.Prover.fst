@@ -153,17 +153,6 @@ let rec __intro_any_exists (n:nat)
         __intro_any_exists (n-1) pst prover
   )
 
-let elim_exists_and_pure (#g:env) (#ctxt:slprop)
-  (ctxt_typing:tot_typing g ctxt tm_slprop)
-  : T.Tac (g':env { env_extends g' g } &
-           ctxt':term &
-           tot_typing g' ctxt' tm_slprop &
-           continuation_elaborator g ctxt g' ctxt') =
-  
-  let (| g1, ctxt1, d1, k1 |) = ElimExists.elim_exists ctxt_typing in
-  let (| g2, ctxt2, d2, k2 |) = ElimPure.elim_pure d1 in
-  (| g2, ctxt2, d2, k_elab_trans k1 k2 |)
-
 let unsolved_equiv_pst (#preamble:_) (pst:prover_state preamble) (unsolved':list slprop)
   (d:slprop_equiv (push_env pst.pg pst.uvs) (list_as_slprop pst.unsolved) (list_as_slprop unsolved'))
   : prover_state preamble =
@@ -324,33 +313,38 @@ let rec prover
   (pst0:prover_state preamble)
   : T.Tac (pst':prover_state preamble { pst' `pst_extends` pst0 /\
                                         is_terminal pst' })
-= debug_prover pst0.pg (fun _ ->
-    Printf.sprintf "At the prover top-level with remaining_ctxt: %s\n  unsolved: %s\n  allow_ambiguous: %s\n"
-      (show (list_as_slprop pst0.remaining_ctxt))
-      (show (list_as_slprop pst0.unsolved))
-      (show pst0.allow_ambiguous));
+= (* Beta/iota/primops normalization in the context and goals.
+      FIXME: do this incrementally instead of on every entry to the
+      prover. *)
+  let pst = normalize_slprop_context pst0 in
+  let pst = { pst with progress = false } in
   (* Always eagerly eliminate pure, even if the goals are empty,
   so we don't complain about a possible "leak". I think it'd be nicer
   to use a typeclass for safely-droppable resources. *)
-  let pst0 = ElimPure.elim_pure_pst pst0 in
+  let _, pst = ElimExists.elim_exists_pst pst in
+  let pst = ElimPure.elim_pure_pst pst in
+  debug_prover pst.pg (fun _ ->
+  Printf.sprintf "At the prover top-level with\n  remaining_ctxt: %s\n  unsolved: %s\n  allow_ambiguous: %s\n  ss: %s\n  env: %s\n"
+    (show (list_as_slprop pst.remaining_ctxt))
+    (show (list_as_slprop pst.unsolved))
+    (show pst.allow_ambiguous)
+    (show pst.ss)
+    (Pprint.render (env_to_doc pst.pg)));
 
-  match pst0.unsolved with
+  if L.length (bindings pst.pg) > L.length (bindings pst0.pg) then begin
+    (* We made progress, and need to renormalize, so start over. *)
+    prover pst
+  end else match pst.unsolved with
   | [] ->
     (* We happen to be called on a fully-solved pst, do nothing. *)
-    pst0
+    pst
 
   | _ ->
-    (* Beta/iota/primops normalization in the context and goals.
-       FIXME: do this incrementally instead of on every entry to the
-       prover. *)
-    let pst = normalize_slprop_context pst0 in
-    let pst = { pst with progress = false } in
-
     match prover_iteration pst with
     | Stepped name pst' ->
       (* We made progress, so we start over. *)
       debug_prover pst.pg (fun _ ->
-        Printf.sprintf "prover: made progress with pass '%s', remaining_ctxt after iteration = %s\n"
+        Printf.sprintf "prover: made progress with pass '%s',  remaining_ctxt after iteration = %s\n"
           name
           (show (list_as_slprop pst.remaining_ctxt)));
       prover pst'
@@ -451,12 +445,14 @@ let prove
   } in
   assume (list_as_slprop (slprop_as_list ctxt) == ctxt);
   assume ((PS.empty).(tm_emp) == tm_emp);
+  let ss = Pulse.Checker.Prover.RewritesTo.get_subst_from_env g in
+  admit ();
   let pst0 : prover_state preamble = {
     pg = g;
     remaining_ctxt = slprop_as_list ctxt;
     remaining_ctxt_frame_typing = ctxt_frame_typing;
     uvs = uvs;
-    ss = PS.empty;
+    ss;
     nts = None;
     solved = tm_emp;
     unsolved = slprop_as_list goals;
@@ -700,3 +696,13 @@ let prove_post_hint (#g:env) (#ctxt:slprop)
         //
         (| x, g3, (| u_ty, ty, RU.magic #(tot_typing _ _ _) () |),
                   (| post_hint_opened, RU.magic #(tot_typing _ _ _) () |), k_elab_trans k k_post |)
+
+let elim_exists_and_pure (#g:env) (#ctxt:slprop)
+  (ctxt_typing:tot_typing g ctxt tm_slprop)
+  : T.Tac (g':env { env_extends g' g } &
+           ctxt':term &
+           tot_typing g' ctxt' tm_slprop &
+           continuation_elaborator g ctxt g' ctxt') =
+
+  let (| g', _nts, _labels, ctxt', k |) = prove false #g #ctxt ctxt_typing (mk_env (fstar_env g)) emp_typing in
+  (| g', ctxt', E (RU.magic ()), k_elab_equiv k (VE_Refl _ _) (VE_Unit _ _) |)

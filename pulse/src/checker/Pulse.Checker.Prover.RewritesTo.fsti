@@ -1,5 +1,5 @@
 (*
-   Copyright 2023 Microsoft Research
+   Copyright 2025 Microsoft Research
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -14,26 +14,13 @@
    limitations under the License.
 *)
 
-module Pulse.Lib.GlobalVar
-#lang-pulse
+module Pulse.Checker.Prover.RewritesTo
+open Pulse.Syntax
+open Pulse.Typing.Env
+module PS = Pulse.Checker.Prover.Substs
 
-open Pulse.Lib.Pervasives
-open Pulse.Class.Duplicable
-open FStar.ExtractAs
-open Pulse.Lib.Trade
+val extract_rewrites_to_p (t: typ) : option (var & term)
 
-val gvar (#a:Type0) (p:a -> slprop) : Type0
+val get_subst_from_env (g: env) : PS.ss_t
 
-val mk_gvar
-      (#a:Type0)
-      (#p:a -> slprop) 
-      {| (x:a -> duplicable (p x)) |}
-      (init:unit -> stt a emp (fun x -> p x))
-: gvar p
-
-val read_gvar_ghost (#a:Type0) (#p:a -> slprop) (x:gvar p) : GTot a
-
-fn read_gvar (#a:Type0) (#p:a -> slprop) (x:gvar p)
-  returns  r : a
-  ensures  p r
-  ensures  rewrites_to r (read_gvar_ghost x)
+val get_new_substs_from_env (g: env) (g': env { env_extends g' g }) (ss: PS.ss_t) : PS.ss_t

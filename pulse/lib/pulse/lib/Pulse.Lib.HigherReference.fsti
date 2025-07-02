@@ -46,13 +46,13 @@ fn alloc (#a:Type) (x:a)
 fn read (#a:Type) (r:ref a) (#n:erased a) (#p:perm)
   preserves r |-> Frac p n
   returns  x : a
-  ensures  pure (n == x)
+  ensures  rewrites_to x n
 
 (* alias for read *)
 fn ( ! ) (#a:Type) (r:ref a) (#n:erased a) (#p:perm)
   preserves r |-> Frac p n
   returns  x : a
-  ensures  pure (n == x)
+  ensures  rewrites_to x n
 
 fn write (#a:Type) (r:ref a) (x:a) (#n:erased a)
   requires r |-> n

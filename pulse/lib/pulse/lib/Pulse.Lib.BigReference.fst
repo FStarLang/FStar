@@ -47,9 +47,9 @@ let read_compat (#a:Type u#1) (x:fractional a)
 
 
 fn op_Bang (#a:Type u#2) (r:ref a) (#n:erased a) (#p:perm)
-  requires pts_to r #p n
+  preserves pts_to r #p n
   returns x:a
-  ensures pts_to r #p n ** pure (reveal n == x)
+  ensures rewrites_to x n
 {
   unfold pts_to r #p n;
   with w. assert (big_pcm_pts_to r w);

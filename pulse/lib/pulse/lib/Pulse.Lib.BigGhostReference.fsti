@@ -41,16 +41,16 @@ fn alloc (#a:Type) (x:a)
   
 ghost
 fn read (#a:Type) (r:ref a) (#n:erased a) (#p:perm)
-  requires pts_to r #p n
+  preserves pts_to r #p n
   returns  x : erased a
-  ensures  pts_to r #p n ** pure (n == x)
+  ensures  rewrites_to x n
 
 (* = read *)
 ghost
 fn ( ! ) (#a:Type) (r:ref a) (#n:erased a) (#p:perm)
-  requires pts_to r #p n
+  preserves pts_to r #p n
   returns  x : erased a
-  ensures  pts_to r #p n ** pure (n == x)
+  ensures rewrites_to x n
 
 ghost
 fn write (#a:Type) (r:ref a) (x:erased a) (#n:erased a)
