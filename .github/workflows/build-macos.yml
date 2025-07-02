@@ -57,10 +57,9 @@ jobs:
           - macos-latest
     runs-on: ${{ matrix.os }}
     steps:
-      # no 4.8.5 on mac, could call script but just admit.
-      # - uses: cda-tum/setup-z3@main
-      #   with:
-      #     version: 4.8.5
+      - uses: cda-tum/setup-z3@main
+        with:
+          version: 4.13.3
 
       - name: Get fstar package
         uses: actions/download-artifact@v4
