@@ -13,20 +13,11 @@
           inherit system;
         };
         ocamlPackages = pkgs.ocaml-ng.ocamlPackages_4_14;
-        # We need sedlex >= 3.5 for utf8 support.
-        sedlex = ocamlPackages.sedlex.overrideDerivation (_: {
-          src = pkgs.fetchFromGitHub {
-            owner = "ocaml-community";
-            repo = "sedlex";
-            rev = "v3.5";
-            sha256 = "sha256-TtxrlJtoKn7i2w8OVD3YDJ96MsmsFs4MA1CuNKpqSuU=";
-          };
-        });
 
         z3 = pkgs.callPackage (import ./.nix/z3.nix) { };
         version = self.rev or "dirty";
         fstar = ocamlPackages.callPackage ./.nix/fstar.nix {
-          inherit version z3 sedlex;
+          inherit version z3;
         };
 
         emacs = pkgs.writeScriptBin "emacs-fstar" ''
