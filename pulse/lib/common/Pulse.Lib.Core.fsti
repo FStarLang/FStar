@@ -1026,6 +1026,22 @@ let (@@) : inames -> inames -> inames = join_inames
 (* Attribute to eagerly unfold slprops in the context and goal. *)
 val pulse_unfold : unit
 
+let rewrites_to_p #t (x y: t) = (x == y)
+
+(*
+`rewrites_to x t` instructs the Pulse matcher to globally replace `x` by `t` before matching.
+(The first argument needs to be a variable.)
+
+This is used in read functions to rewrite the return value
+to the erased value, which makes nested dereferencing (!(!x)) work.
+
+fn ( ! ) #t (x: ref t) (y: erased t)
+  preserves x |-> y
+  returns result: t
+  ensures rewrites_to result y
+*)
+[@@pulse_unfold] let rewrites_to #t (x y: t) = pure (rewrites_to_p x y)
+
 [@@coercion; pulse_unfold; strict_on_arguments [0]; unfold_check_opens]
 let rec iname_list (xs : list iname) : inames =
   match xs with

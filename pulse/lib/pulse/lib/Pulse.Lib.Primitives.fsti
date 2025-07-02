@@ -35,7 +35,7 @@ module B = Pulse.Lib.Box
 val read_atomic (r:ref U32.t) (#n:erased U32.t) (#p:perm)
   : stt_atomic U32.t #Observable emp_inames
     (pts_to r #p n)
-    (fun x -> pts_to r #p n ** pure (reveal n == x))
+    (fun x -> pts_to r #p n ** pure (x == reveal n))
 
 val write_atomic (r:ref U32.t) (x:U32.t) (#n:erased U32.t)
   : stt_atomic unit #Observable emp_inames
@@ -54,7 +54,7 @@ val cas (r:ref U32.t) (u v:U32.t) (#i:erased U32.t)
 val read_atomic_box (r:B.box U32.t) (#n:erased U32.t) (#p:perm)
   : stt_atomic U32.t emp_inames
     (pts_to r #p n)
-    (fun x -> pts_to r #p n ** pure (reveal n == x))
+    (fun x -> pts_to r #p n ** pure (x == reveal n))
 
 val write_atomic_box (r:B.box U32.t) (x:U32.t) (#n:erased U32.t)
   : stt_atomic unit emp_inames

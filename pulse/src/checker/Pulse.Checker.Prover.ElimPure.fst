@@ -29,6 +29,8 @@ open Pulse.Typing.Combinators
 module Metatheory = Pulse.Typing.Metatheory
 open Pulse.Reflection.Util
 open Pulse.Checker.Prover.Base
+open Pulse.Checker.Prover.Util
+module PS = Pulse.Checker.Prover.Substs
 module RU = Pulse.RuntimeUtils
 
 let elim_pure_head =
@@ -97,6 +99,7 @@ let mk (#g:env) (#v:slprop) (v_typing:tot_typing g v tm_slprop)
   | Tm_Pure pp ->
     let p_typing =
       Metatheory.pure_typing_inversion #g #(wr pp) v_typing in
+    debug_prover g (fun _ -> Printf.sprintf "elim_pure: %s\n" (T.term_to_string pp));
     Some (| ppname_default,
             mk_elim_pure (wr pp),
             elim_pure_comp pp,
@@ -138,11 +141,14 @@ let elim_pure_pst (#preamble:_) (pst:prover_state preamble)
       (RU.magic ())
       pst.uvs in
 
+  let rwr_ss : PS.ss_t = // extends pst.ss with new rewrites_to_p substitutions
+    RewritesTo.get_new_substs_from_env pst.pg g' pst.rwr_ss in
+
   let k
     : continuation_elaborator
         pst.pg (list_as_slprop pst.remaining_ctxt * (preamble.frame * pst.ss.(pst.solved)))
         g' (remaining_ctxt' * (preamble.frame * pst.ss.(pst.solved))) = k in
-  
+
   // some *s
   let k
     : continuation_elaborator
@@ -163,6 +169,7 @@ let elim_pure_pst (#preamble:_) (pst:prover_state preamble)
     pg = g';
     remaining_ctxt = slprop_as_list remaining_ctxt';
     remaining_ctxt_frame_typing = RU.magic ();
+    rwr_ss;
     nts = None;
     k = k_new;
     goals_inv = RU.magic ();  // weakening of pst.goals_inv

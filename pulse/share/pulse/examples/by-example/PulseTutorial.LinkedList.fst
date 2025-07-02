@@ -311,15 +311,12 @@ ensures is_list x ('l1 @ 'l2)
 {
   let np = Some?.v x;
   is_list_case_some x np;
-  with _node _tl. _;
   let node = !np;
-  rewrite each _node as node;
   match node.tail {
     None -> {
-      is_list_case_none None;
-      elim_is_list_nil None;
+      is_list_case_none node.tail;
+      elim_is_list_nil node.tail;
       np := { node with tail = y };
-      rewrite each y as ({ node with tail = y }).tail in (is_list y 'l2);
       intro_is_list_cons x np; 
     }
     Some _ -> {

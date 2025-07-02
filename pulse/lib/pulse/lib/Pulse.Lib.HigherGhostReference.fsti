@@ -53,14 +53,14 @@ ghost
 fn read (#a:Type) (r:ref a) (#n:erased a) (#p:perm)
   preserves r |-> Frac p n
   returns  x : erased a
-  ensures  pure (n == x)
+  ensures  rewrites_to x n
 
 (* alias for read *)
 ghost
 fn ( ! ) (#a:Type) (r:ref a) (#n:erased a) (#p:perm)
   preserves pts_to r #p n
   returns  x : erased a
-  ensures  pure (n == x)
+  ensures  rewrites_to x n
 
 ghost
 fn write (#a:Type) (r:ref a) (x:erased a) (#n:erased a)

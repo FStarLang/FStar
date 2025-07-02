@@ -38,9 +38,9 @@ fn alloc (#a:Type) (x:a)
   ensures  pts_to r x
 
 fn ( ! ) (#a:Type) (r:ref a) (#n:erased a) (#p:perm)
-  requires pts_to r #p n
+  preserves pts_to r #p n
   returns  x : a
-  ensures  pts_to r #p n ** pure (reveal n == x)
+  ensures rewrites_to x n
 
 fn ( := ) (#a:Type) (r:ref a) (x:a) (#n:erased a)
   requires pts_to r n

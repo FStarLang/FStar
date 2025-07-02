@@ -56,7 +56,7 @@ let read_compat (#a:Type u#1) (x:fractional a)
 fn read (#a:Type u#1) (r:ref a) (#n:erased a) (#p:perm)
   preserves r |-> Frac p n
   returns  x : a
-  ensures  pure (n == x)
+  ensures  rewrites_to x n
 {
   unfold pts_to r #p n;
   with w. assert (pcm_pts_to r w);

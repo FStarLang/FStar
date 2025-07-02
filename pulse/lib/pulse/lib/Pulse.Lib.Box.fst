@@ -51,9 +51,9 @@ fn alloc (#a:Type0) (x:a)
 #pop-options
 
 fn op_Bang (#a:Type0) (b:box a) (#v:erased a) (#p:perm)
-  requires pts_to b #p v
+  preserves pts_to b #p v
   returns  x : a
-  ensures  pts_to b #p v ** pure (reveal v == x)
+  ensures rewrites_to x v
 {
   unfold (pts_to b #p v);
   let x = R.(!b.r);

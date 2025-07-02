@@ -239,8 +239,9 @@ fn rec append (#t:Type0) (x y:llist t)
   is_list_cases_some x np;
   with _node _tl. _;
   let node = !np;
-  rewrite each _node as node;
-  match node.tail {
+  let nt = node.tail;
+  with tl. rewrite is_list node.tail tl as is_list nt tl;
+  match nt {
     None -> {
       is_list_cases_none None;
       unfold (is_list #t None []);
@@ -361,13 +362,13 @@ fn is_last_cell (#t:Type) (x:llist t)
   some_iff_cons x;
   let np = Some?.v x;
   is_list_cases_some x np;
-  with _node _tl. _;
   let node = !np;
-  rewrite each _node as node;
-  match node.tail {
+  let nt = node.tail;
+  with tl. rewrite is_list node.tail tl as is_list nt tl;
+  match nt {
     None -> {
       is_list_cases_none None;
-      rewrite is_list #t None _tl as is_list node.tail _tl;
+      with tl. rewrite is_list #t None tl as is_list node.tail tl;
       intro_is_list_cons x np;
       true
     }
@@ -392,10 +393,10 @@ ensures
   some_iff_cons x;
   let np = Some?.v x;
   is_list_cases_some x np;
-  with _node _tl. _;
   let node = !np;
-  rewrite each _node as node;
-  match node.tail {
+  let nt = node.tail;
+  with tl. rewrite is_list node.tail tl as is_list nt tl;
+  match nt {
     None -> {
       is_list_cases_none None;
       unfold (is_list #t None []);

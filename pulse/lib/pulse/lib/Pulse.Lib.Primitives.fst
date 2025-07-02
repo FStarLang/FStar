@@ -21,9 +21,6 @@ module Pulse.Lib.Primitives
 friend Pulse.Lib.Box
 
 let read_atomic (r:ref U32.t) (#n:erased U32.t) (#p:perm)
-: stt_atomic U32.t emp_inames
-    (pts_to r #p n)
-    (fun x -> pts_to r #p n ** pure (reveal n == x))
 = Pulse.Lib.Core.as_atomic _ _ ((let open Pulse.Lib.Reference in ( ! )) r #n #p)
 
 let write_atomic (r:ref U32.t) (x:U32.t) (#n:erased U32.t)

@@ -67,9 +67,9 @@ fn alloc (#elt: Type) (x: elt) (n: SZ.t)
 fn op_Array_Access
   (#t: Type) (a: array t) (i: SZ.t)
   (#p: perm) (#s: erased (Seq.seq t){SZ.v i < Seq.length s})
-  requires pts_to a #p s
+  preserves pts_to a #p s
   returns  res : t
-  ensures  pts_to a #p s ** pure (res == Seq.index s (SZ.v i))
+  ensures  rewrites_to res (Seq.index s (SZ.v i))
 
 (* Written a.(i) <- v *)
 fn op_Array_Assignment

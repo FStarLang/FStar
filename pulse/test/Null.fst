@@ -43,10 +43,9 @@ fn test (x : ref int)
   returns int
 {
   if (Ref.is_null x) {
+    rewrite emp as null_or_live x;
     0
   } else {
-    unfold null_or_live x;
-    rewrite each Ref.is_null #int x as false;
     let res = Ref.(!x);
     rewrite live x as null_or_live x;
     res
