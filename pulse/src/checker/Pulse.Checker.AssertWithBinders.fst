@@ -271,6 +271,7 @@ let rewrite_all (is_source:bool) (g:env) (p: list (term & term)) (t:term) : T.Ta
   | _ ->
     let elab1 (t : R.term) : T.Tac R.term =
       let t = fst (Pulse.Checker.Pure.instantiate_term_implicits g t None false) in
+      let t = dfst <| Pulse.Checker.Prover.normalize_slprop g t in
       t
     in
     let p : list (R.term & R.term) = T.map (fun (e1, e2) -> elab1 e1, elab1 e2) p in
