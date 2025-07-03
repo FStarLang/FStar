@@ -18,12 +18,12 @@ module FStar.GhostSet
 (** Ghost computational sets: membership is a ghost boolean function *)
 #set-options "--initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0"
 
-[@@must_erase_for_extraction; erasable]
+[@@erasable]
 val set (a: Type u#a) : Type u#a
 
 let decide_eq a = x:a -> y:a -> GTot (b:bool { b <==> (x==y) })
 
-val equal (#a:Type) (s1:set a) (s2:set a) : Type0
+val equal (#a:Type) (s1:set a) (s2:set a) : prop
 
 (* destructors *)
 
@@ -43,7 +43,7 @@ let disjoint (#a:Type) (s1: set a) (s2: set a) =
   equal (intersect s1 s2) empty
 
 (* ops *)
-type subset (#a:Type) (s1:set a) (s2:set a) :Type0 = forall x. mem x s1 ==> mem x s2
+type subset (#a:Type) (s1:set a) (s2:set a) :prop = forall x. mem x s1 ==> mem x s2
 
 (* Properties *)
 val mem_empty: #a:Type -> x:a -> Lemma
