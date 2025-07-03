@@ -238,6 +238,7 @@ let keygen () =
   Key ka ke
 
 
+#push-options "--z3rlimit 10"
 /// encrypt:
 ///       We return a cipher, preserve the invariant,
 ///       and extend the log by exactly one entry
@@ -245,6 +246,7 @@ let encrypt k plain =
   let c = CPA.encrypt k.enc plain in
   let t = MAC.mac k.mac c in
   (c, t)
+#pop-options
 
 /// decrypt:
 ///     In the ideal case, we prove it functionally correct and secure
