@@ -201,6 +201,69 @@ let simpl_hide_reveal (t:thua_t) : T.Tac thua_t =
     end
   | None -> t
 
+let is_size_t_v (t:thua_t) : T.Tac (option term) =
+  match hua t with
+  | Some (h, us, args) ->
+    if implode_qn (T.inspect_fv h) = `%FStar.SizeT.v
+    then
+      match args with
+      | [(t, Q_Explicit)] -> Some t
+      | _ -> None
+    else
+    None
+  | _ -> None
+
+type op =
+  | Add
+  | Sub
+  | Mul
+  | Div
+  | Rem
+
+let is_size_t_op (fv : fv) : option op =
+  match implode_qn (T.inspect_fv fv) with
+  | `%FStar.SizeT.add -> Some Add
+  | `%FStar.SizeT.sub -> Some Sub
+  | `%FStar.SizeT.mul -> Some Mul
+  | `%FStar.SizeT.div -> Some Div
+  | `%FStar.SizeT.rem -> Some Rem
+  | _ -> None
+
+let math_opfv (o : op) : string =
+  match o with
+  | Add -> `%(+)
+  | Sub -> `%(-)
+  | Mul -> `%( Prims.op_Multiply )
+  | Div -> `%(/)
+  | Rem -> `%(%)
+
+let is_size_t_applied_op (t:thua_t) : T.Tac (option (op & term & term)) =
+  match hua t with
+  | Some (h, us, args) -> (
+    match is_size_t_op h, args with
+    | Some op, [(l, Q_Explicit); (r, Q_Explicit)] ->
+      Some (op, l, r)
+    | _ -> None
+  )
+  | _ -> None
+
+// Rewrites SZ.v (SZ.mul x y) to SZ.v x * SZ.v y, and similar
+let rec simpl_size_t (t:thua_t) : T.Tac thua_t =
+  match is_size_t_v t with
+  | Some e -> (
+    match is_size_t_applied_op (thua e) with
+    | Some (h, l, r) ->
+      let l = fst <| simpl_size_t (thua l) in
+      let r = fst <| simpl_size_t (thua r) in
+      let f : fv = pack_fv <| explode_qn (math_opfv h) in
+      let l' = `(FStar.SizeT.v (`#l)) in
+      let r' = `(FStar.SizeT.v (`#r)) in
+      let res = T.mk_app (T.Tv_UInst f []) [(l', Q_Explicit); (r', Q_Explicit)] in
+      thua res
+    | None -> t
+    )
+  | None -> t
+
 let rec simplify (t0:term) : T.Tac term =
   let t = thua t0  in
   let t = simpl_proj t in
@@ -208,6 +271,7 @@ let rec simplify (t0:term) : T.Tac term =
   let t = simpl_list t in
   let t = simpl_hide_reveal t in
   let t = simpl_reveal_hide t in
+  let t = simpl_size_t t in
   let t =
     match hua t with
     | Some (h, us, args) ->
