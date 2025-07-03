@@ -1296,38 +1296,42 @@ let rec norm : cfg -> env -> stack -> term -> term =
             log cfg (fun () -> BU.print1 ">> metadata = %s\n" (show m));
             begin match m with
               | Meta_monadic (m_from, ty) ->
+                let nonerasable_case () =
+                  reduce_impure_comp cfg env stack head (Inl m_from) ty in
                 if cfg.steps.for_extraction
                 then (
                   //In Extraction, we want to erase sub-terms with erasable effect
-                  //Or pure terms with non-informative return types
-                  if Env.is_erasable_effect cfg.tcenv m_from
-                  || (U.is_pure_effect m_from && Env.non_informative cfg.tcenv ty)
-                  then (
+                  if Env.is_erasable_effect cfg.tcenv m_from then
                     rebuild cfg env stack (S.mk (Tm_meta {tm=U.exp_unit; meta=m}) t.pos)
-                  )
-                  else (
-                    reduce_impure_comp cfg env stack head (Inl m_from) ty
-                  )
+                  //Or pure terms with non-informative return types
+                  else if not (U.is_pure_effect m_from) then
+                    nonerasable_case ()
+                  else match Env.non_informative cfg.tcenv ty with
+                    | None -> nonerasable_case ()
+                    | Some tm ->
+                      rebuild cfg env stack (S.mk (Tm_meta {tm; meta=m}) t.pos)
                 )
-                else 
-                  reduce_impure_comp cfg env stack head (Inl m_from) ty
+                else
+                  nonerasable_case ()
 
               | Meta_monadic_lift (m_from, m_to, ty) ->
+                let nonerasable_case () =
+                  reduce_impure_comp cfg env stack head (Inr (m_from, m_to)) ty in
                 if cfg.steps.for_extraction
                 then (
                   //In Extraction, we want to erase sub-terms with erasable effect
-                  //Or pure terms with non-informative return types
-                  if Env.is_erasable_effect cfg.tcenv m_from
-                  ||  Env.is_erasable_effect cfg.tcenv m_to
-                  || (U.is_pure_effect m_from && Env.non_informative cfg.tcenv ty)
-                  then (
+                  if Env.is_erasable_effect cfg.tcenv m_from || Env.is_erasable_effect cfg.tcenv m_to then
                     rebuild cfg env stack (S.mk (Tm_meta {tm=U.exp_unit; meta=m}) t.pos)
-                  )
-                  else (
-                    reduce_impure_comp cfg env stack head (Inr (m_from, m_to)) ty
-                  )
+                  //Or pure terms with non-informative return types
+                  else if not (U.is_pure_effect m_from) then
+                    nonerasable_case ()
+                  else match Env.non_informative cfg.tcenv ty with
+                    | None -> nonerasable_case ()
+                    | Some tm ->
+                      rebuild cfg env stack (S.mk (Tm_meta {tm; meta=m}) t.pos)
                 )
-                else reduce_impure_comp cfg env stack head (Inr (m_from, m_to)) ty
+                else
+                  nonerasable_case ()
 
               | _ ->
                 if cfg.steps.unmeta
@@ -2774,6 +2778,8 @@ let non_info_norm env t =
   let steps = [UnfoldUntil delta_constant;
                AllowUnboundUniverses;
                EraseUniverses;
+               Primops;
+               Beta; Iota;
                HNF;
                (* We could use Weak too were it not that we need
                 * to descend in the codomain of arrows. *)
@@ -2782,6 +2788,21 @@ let non_info_norm env t =
                ]
   in
   non_informative env (normalize steps env t)
+
+let non_info_sort_norm env t =
+  let steps = [UnfoldUntil (Env.delta_depth_of_fv env (S.fvconst PC.prop_lid)); // do not unfold prop
+               AllowUnboundUniverses;
+               EraseUniverses;
+               Primops;
+               Beta; Iota;
+               HNF;
+               (* We could use Weak too were it not that we need
+                * to descend in the codomain of arrows. *)
+               Unascribe;   //remove ascriptions
+               ForExtraction //and refinement types
+               ]
+  in
+  non_informative_sort (normalize steps env t)
 
 (*
  * Ghost T to Pure T promotion
@@ -2796,7 +2817,7 @@ let non_info_norm env t =
  *)
 
 let maybe_promote_t env non_informative_only t =
-  not non_informative_only || non_info_norm env t
+  not non_informative_only || Some? (non_info_norm env t)
 
 let ghost_to_pure_aux env non_informative_only c =
     match c.n with

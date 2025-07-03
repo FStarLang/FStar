@@ -690,7 +690,7 @@ let rec iter2 (xs ys:list 'a) (f: 'a -> 'a -> 'b -> result 'b) (b:'b)
       iter2 xs ys f b
     | _ -> fail_str "Lists of differing length"
 
-let is_non_informative g t = N.non_info_norm g t
+let is_non_informative g t = Some? (N.non_info_norm g t)
 
 let non_informative g t
   : bool

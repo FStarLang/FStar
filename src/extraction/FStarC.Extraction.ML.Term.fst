@@ -692,6 +692,15 @@ let head_of_type_is_extract_as_impure_effect g t =
   | Tm_fvar fv -> has_extract_as_impure_effect g fv
   | _ -> false
 
+let ty_of_must_erase (g: uenv) (t: term) =
+  let rec go t =
+    match t.n with
+    | Tm_abs {bs;body} -> {t with n=Tm_arrow {bs; comp=mk_Total (go body)}}
+    | Tm_constant Const_unit -> t_unit in
+  match TcUtil.must_erase_for_extraction (tcenv_of_uenv g) t with
+  | Some r -> Some (go r)
+  | None -> None
+
 exception NotSupportedByExtension
 let translate_typ_t = g:uenv -> t:term -> mlty
 
@@ -772,6 +781,9 @@ let rec translate_term_to_mlty' (g:uenv) (t0:term) : mlty =
           | Tm_name bv ->
             bv_as_mlty env bv
 
+          | Tm_fvar fv when fv_eq_lid fv PC.unit_lid ->
+            MLTY_Erased
+
           | Tm_fvar fv ->
             (* it is not clear whether description in the thesis covers type applications with 0 args.
                However, this case is needed to translate types like nnat, and so far seems to work as expected*)
@@ -830,12 +842,14 @@ let rec translate_term_to_mlty' (g:uenv) (t0:term) : mlty =
           end
         | _ -> false
     in
-    if TcUtil.must_erase_for_extraction (tcenv_of_uenv g) t0
-    then MLTY_Erased
-    else let mlt = aux g t0 in
-         if is_top_ty mlt
-         then MLTY_Top
-         else mlt
+    let t0 =
+      match ty_of_must_erase g t0 with
+      | Some repl -> repl
+      | None -> t0 in
+    let mlt = aux g t0 in
+    if is_top_ty mlt
+    then MLTY_Top
+    else mlt
 
 
 and binders_as_ml_binders (g:uenv) (bs:binders) : list (mlident & mlty) & uenv =
@@ -1249,7 +1263,7 @@ let rec extract_lb_sig (g:uenv) (lbs:letbindings) : list lb_sig =
                   let expected_t = term_as_mlty g lbtyp in
                   (lbname_, f_e, (lbtyp, ([], ([],expected_t))), false, has_c_inline, lbdef)
               in
-              if TcUtil.must_erase_for_extraction (tcenv_of_uenv g) lbtyp
+              if Some? (TcUtil.must_erase_for_extraction (tcenv_of_uenv g) lbtyp)
               then (lbname_, f_e, (lbtyp, ([], ([], MLTY_Erased))), false, has_c_inline, lbdef)
               else  //              debug g (fun () -> printfn "Let %s at type %s; expected effect is %A\n" (show lbname) (Print.typ_to_string t) f_e);
                 match lbtyp.n with
@@ -1527,13 +1541,18 @@ and term_as_mlexpr' (g:uenv) (top:term) : (mlexpr & e_tag & mlty) =
         | Tm_uinst(t, _) ->
           term_as_mlexpr g t
 
+        | Tm_constant Const_unit ->
+          ml_unit, E_PURE, MLTY_Erased
+
         | Tm_constant c ->
           let tcenv = tcenv_of_uenv g in
           let _, ty, _ = TcTerm.typeof_tot_or_gtot_term tcenv t true in  //AR: TODO: type_of_well_typed?
-          if TcUtil.must_erase_for_extraction tcenv ty
-          then ml_unit, E_PURE, MLTY_Erased
-          else let ml_ty = term_as_mlty g ty in
-               with_ty ml_ty (mlexpr_of_const t.pos c), E_PURE, ml_ty
+          (match TcUtil.must_erase_for_extraction tcenv ty with
+          | Some repl ->
+            term_as_mlexpr g repl
+          | None ->
+            let ml_ty = term_as_mlty g ty in
+            with_ty ml_ty (mlexpr_of_const t.pos c), E_PURE, ml_ty)
 
         | Tm_name _ -> //lookup in g; decide if its in left or right; tag is Pure because it's just a variable
           if is_type g t //Here, we really need to be certain that g is a type; unclear if level ensures it
