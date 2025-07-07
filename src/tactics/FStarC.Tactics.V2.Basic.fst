@@ -2521,8 +2521,7 @@ let refl_core_check_term (g:env) (e:term) (t:typ) (eff:Core.tot_or_ghost)
          let g = Env.set_range g e.pos in
          dbg_refl g (fun _ ->
            BU.format3 "refl_core_check_term: term: %s, type: %s, eff: %s\n"
-             (show e) (show t)
-             (tot_or_ghost_to_string eff));
+             (show e) (show t) (show eff));
          let must_tot = to_must_tot eff in
          match Core.check_term g e t must_tot with
          | Inl None ->
