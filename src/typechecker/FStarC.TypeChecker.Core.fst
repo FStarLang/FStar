@@ -733,6 +733,12 @@ let debug g f =
   if !dbg
   then f ()
 
+instance showable_tot_or_ghost = {
+    show = (function
+            | E_Total -> "E_Total"
+            | E_Ghost -> "E_Ghost");
+}
+
 instance showable_side = {
     show = (function
             | Left -> "Left"
@@ -1934,7 +1940,7 @@ let check_term_top_gh g e topt (must_tot:bool) (gh:option guard_handler_t)
         if !dbg || !dbg_Top || !dbg_Exit
         then begin
           BU.print3 "(%s) Exiting core: Simplified guard from {{%s}} to {{%s}}\n"
-            (BU.string_of_int (get_goal_ctr()))
+            (show (get_goal_ctr()))
             (show guard0)
             (show guard);
           let guard_names = Syntax.Free.names guard |> elems in
