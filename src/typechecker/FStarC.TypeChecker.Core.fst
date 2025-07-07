@@ -611,6 +611,11 @@ let curry_application hd arg args p =
     let t = S.mk (Tm_app {hd=head; args}) p in
     t
 
+(* Replace all the *use* ranges in [t] by the use range in [r]. *)
+let replace_all_use_ranges (r:Range.range) (t:term) : term =
+  let ur = Range.use_range r in
+  t |> Syntax.Visit.visit_term false (fun t ->
+    { t with pos = Range.set_use_range t.pos ur })
 
 let lookup (g:env) (e:term) : result (tot_or_ghost & typ) =
    match THT.lookup e table with
@@ -627,7 +632,17 @@ let lookup (g:env) (e:term) : result (tot_or_ghost & typ) =
            (show e)
            (show (snd (fst he.he_res)))
            (show he.he_gamma);
-       fun _ -> Success he.he_res
+       let res = he.he_res in
+       let res =
+         (* Important: replace all the use ranges in the cached type for the
+         use range of the term being looked up. Otherwise, the cached ranges will
+         refer to the original term we cached, and could be completely unrelated
+         to [e] here. See https://github.com/FStarLang/pulse/issues/416. *)
+         let ((lbl, ty), prec) = res in
+         let ty = replace_all_use_ranges (pos e) ty in
+         ((lbl, ty), prec)
+       in
+       fun _ -> Success res
      )
      else (
        // record_cache_miss();
