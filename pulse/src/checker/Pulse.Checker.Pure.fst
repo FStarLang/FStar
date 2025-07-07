@@ -50,7 +50,7 @@ let check_ln (g:env) (label:string) (t:R.term) : Tac unit =
 let rtb_core_compute_term_type g f e =
   check_ln g "rtb_compute_term_type" e;
   debug g (fun _ ->
-    Printf.sprintf "(%s) Calling core_check_term on %s" 
+    Printf.sprintf "(%s) Calling core_compute_term_type on %s"
           (T.range_to_string (RU.range_of_term e))
           (T.term_to_string e));
   let res = RU.with_context (get_context g) (fun _ -> RTB.core_compute_term_type f e) in
@@ -107,19 +107,16 @@ let rtb_core_check_term g f e eff t =
   check_ln g "rtb_core_check_term.e" e;
   check_ln g "rtb_core_check_term.t" t;
   debug g (fun _ ->
-    Printf.sprintf "(%s) Calling core_check_term on %s and %s"
-                (T.range_to_string (RU.range_of_term e))
-                (T.term_to_string e)
-                (T.term_to_string t));
+    Printf.sprintf "(%s) Calling core_check_term on %s and %s. Range of t = %s\n"
+                (show (RU.range_of_term e)) (show e) (show t)
+                (show (RU.range_of_term t)));
   let res = RU.with_context (get_context g) (fun _ -> RTB.core_check_term f e t eff) in
   res
 
 let rtb_core_check_term_at_type g f e t =
   debug g (fun _ ->
     Printf.sprintf "(%s) Calling core_check_term_at_type on %s and %s"
-                (T.range_to_string (RU.range_of_term e))
-                (T.term_to_string e)
-                (T.term_to_string t));
+                (show (RU.range_of_term e)) (show e) (show t));
   let res = RU.with_context (get_context g) (fun _ -> RTB.core_check_term_at_type f e t) in
   res
 
@@ -303,7 +300,7 @@ let check_term (g:env) (e:term) (eff:T.tot_or_ghost) (t:term)
   let topt, issues =
     catch_all (fun _ -> 
       rtb_core_check_term 
-        (push_context g "check_term_with_expected_type_and_effect" (range_of_term t))
+        (push_context g "check_term_with_expected_type_and_effect" (range_of_term e))
          fg e eff t) in
   match topt with
   | None ->
@@ -319,7 +316,7 @@ let check_term_at_type (g:env) (e:term) (t:term)
   let effopt, issues =
     catch_all (fun _ -> 
     rtb_core_check_term_at_type 
-      (push_context g "check_term_with_expected_type" (range_of_term t))
+      (push_context g "check_term_with_expected_type" (range_of_term e))
       fg e t) in
   match effopt with
   | None ->
@@ -351,7 +348,7 @@ let core_check_term g e eff t =
   let topt, issues =
     catch_all (fun _ ->
      rtb_core_check_term
-      (push_context g "core_check_term" (range_of_term t))
+      (push_context g "core_check_term" (range_of_term e))
        fg e eff t) in
   match topt with
   | None ->
@@ -363,7 +360,7 @@ let core_check_term_at_type g e t =
   let effopt, issues =
     catch_all (fun _ -> 
     rtb_core_check_term_at_type 
-      (push_context g "core_check_term_at_type" (range_of_term t))
+      (push_context g "core_check_term_at_type" (range_of_term e))
        fg e t) in
   match effopt with
   | None ->

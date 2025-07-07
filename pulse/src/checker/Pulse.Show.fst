@@ -129,6 +129,10 @@ instance tac_showable_tot_or_ghost : tac_showable tot_or_ghost = {
 instance tac_showable_qualifier : tac_showable qualifier = {
   show = function
          | Implicit -> "Implicit"
-         | TcArg -> "TcArg"
-         | Meta t -> "Meta " ^ show t
+         | TcArg    -> "TcArg"
+         | Meta t   -> "Meta " ^ show t
+}
+
+instance tac_showable_issue : tac_showable FStar.Issue.issue = {
+  show = (fun i -> FStar.Issue.render_issue i);
 }
