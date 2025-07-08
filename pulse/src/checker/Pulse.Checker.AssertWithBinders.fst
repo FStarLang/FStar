@@ -262,13 +262,11 @@ let rewrite_all (is_source:bool) (g:env) (p: list (term & term)) (t:term) : T.Ta
   | Some s ->
     t, subst_term t s
   | _ ->
-    let p : list (R.term & R.term) = 
-      T.map 
-        (fun (e1, e2) -> 
-          (fst (Pulse.Checker.Pure.instantiate_term_implicits g e1 None false)),
-          (fst (Pulse.Checker.Pure.instantiate_term_implicits g e2 None false)))
-        p
+    let elab1 (t : R.term) : T.Tac R.term =
+      let t = fst (Pulse.Checker.Pure.instantiate_term_implicits g t None false) in
+      t
     in
+    let p : list (R.term & R.term) = T.map (fun (e1, e2) -> elab1 e1, elab1 e2) p in
     let lhs, rhs = visit_and_rewrite_conjuncts_all is_source g p t in
     debug_log g (fun _ -> Printf.sprintf "Rewrote %s to %s" (P.term_to_string lhs) (P.term_to_string rhs));
     lhs, rhs
