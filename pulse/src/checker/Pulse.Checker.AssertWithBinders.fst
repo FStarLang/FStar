@@ -194,10 +194,12 @@ let check_unfoldable g (v:term) : T.Tac unit =
                         but %s is a primitive term that cannot be folded or unfolded"
                         (P.term_to_string v))
 
-let warn_nop (g:env) : T.Tac unit =
+let warn_nop (g:env) (goal:term) : T.Tac unit =
   let open Pulse.PP in
   warn_doc g None [
-    Pulse.PP.text "No rewrites performed.";
+    text "No rewrites performed.";
+    text "Rewriting in: " ^^
+      indent (pp <| canon_slprop_print goal);
   ]
 
 let visit_and_rewrite (p: (R.term & R.term)) (t:term) : T.Tac term =
@@ -231,7 +233,7 @@ let visit_and_rewrite_conjuncts_all (is_source:bool) (g:env) (p: list (R.term & 
       tms tms'
   in
   if is_source && Nil? lhs then
-    warn_nop g;
+    warn_nop g goal;
   list_as_slprop lhs, list_as_slprop rhs
 
 let disjoint (dom:list var) (cod:Set.set var) =
@@ -274,7 +276,7 @@ let rewrite_all (is_source:bool) (g:env) (p: list (term & term)) (t:term) : T.Ta
   | Some s ->
     let t' = subst_term t s in
     if is_source && eq_tm t t' then
-      warn_nop g;
+      warn_nop g t;
     t, t'
   | _ ->
     let lhs, rhs = visit_and_rewrite_conjuncts_all is_source g p t in
