@@ -65,6 +65,12 @@ let parse_use_lang_blob (extension_name:string)
 : FStarC_Parser_AST.decl list
 = FStarC_Parser_AST_Util.parse_extension_lang extension_name s extension_syntax_start
 
+type tc_constraint = {
+  id: FStarC_Ident.ident;
+  t: FStarC_Parser_AST.term;
+  r: FStarC_Range.range;
+}
+
 %}
 
 %token <string> STRING
@@ -755,16 +761,28 @@ fieldPattern:
   | lid=qlident
       { lid, mk_pattern (PatVar (ident_of_lid lid, None, [])) (rr $loc(lid)) }
 
+tc_constraint:
+  | id=ioption(id=lidentOrUnderscore COLON {id}) t=simpleArrow
+    { let r = rr $loc in
+      let id = match id with | Some id -> id | None -> gen r in
+      {id; t; r}
+    }
+
+tc_constraints:
+  | constraints=right_flexible_nonempty_list(COMMA, tc_constraint) { constraints }
+
   (* (x : t) is already covered by atomicPattern *)
   (* we do *NOT* allow _ in multibinder () since it creates reduce/reduce conflicts when*)
   (* preprocessing to ocamlyacc/fsyacc (which is expected since the macro are expanded) *)
 patternOrMultibinder:
-  | LBRACE_BAR id=ioption(id=lidentOrUnderscore COLON {id}) t=simpleArrow BAR_RBRACE
-      { let r = rr $loc in
-        let id = match id with | Some id -> id | None -> gen r in
-        let w = mk_pattern (PatVar (id, Some TypeClassArg, [])) r in
-        let asc = (t, None) in
-        [mk_pattern (PatAscribed(w, asc)) r]
+  | LBRACE_BAR constraints=tc_constraints BAR_RBRACE
+      {
+        let constraint_as_pat (c:tc_constraint) =
+          let w = mk_pattern (PatVar (c.id, Some TypeClassArg, [])) c.r in
+          let asc = (c.t, None) in
+          mk_pattern (PatAscribed(w, asc)) c.r
+        in
+        List.map constraint_as_pat constraints
       }
 
   | pat=atomicPattern { [pat] }
@@ -788,10 +806,12 @@ binder:
 
 %public
 multiBinder:
-  | LBRACE_BAR id=ioption(id=lidentOrUnderscore COLON {id}) t=simpleArrow BAR_RBRACE
-      { let r = rr $loc in
-        let id = match id with | Some id -> id | None -> gen r in
-        [mk_binder (Annotated (id, t)) r Type_level (Some TypeClassArg)]
+  | LBRACE_BAR constraints=tc_constraints BAR_RBRACE
+      {
+        let constraint_as_binder (c:tc_constraint) =
+          mk_binder (Annotated (c.id, c.t)) c.r Type_level (Some TypeClassArg)
+        in
+        List.map constraint_as_binder constraints
       }
 
   | LPAREN qual_ids=nonempty_list(aqualifiedWithAttrs(lidentOrUnderscore)) COLON t=simpleArrow r=refineOpt RPAREN
