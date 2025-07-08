@@ -443,7 +443,7 @@ let mk_abs_with_comp qbs comp body range =
   abs
 
 (* s has already been transformed with explicit dereferences for r-values *)
-let rec desugar_stmt (env:env_t) (s:Sugar.stmt)
+let rec desugar_stmt' (env:env_t) (s:Sugar.stmt)
   : err SW.st_term
   = let open SW in
     let open Sugar in
@@ -511,15 +511,17 @@ let rec desugar_stmt (env:env_t) (s:Sugar.stmt)
             init = lb.init }
         in
         let t_let =
-          mk_stmt (LetBinding lb') s1range
+          { mk_stmt (LetBinding lb') s1range with source = false }
         in
         let seq s1 s2 =
-          mk_stmt (Sequence { s1; s2 }) s1range
+          { mk_stmt (Sequence { s1; s2 }) s1range with source = false }
         in
         let t_match =
+          {
           mk_stmt (Match { head = A.(mk_term (Tvar id) lb.pat.prange Expr);
                           returns_annot = None;
                           branches = [(lb.norw, pat, s2)] }) s1range
+                          with source = false }
         in
         let t_match =
           (* We only inject a variable when the rhs is a variable *)
@@ -535,6 +537,7 @@ let rec desugar_stmt (env:env_t) (s:Sugar.stmt)
                     hint_type = RENAME ([(init_expr, A.mk_term (A.Tvar id) lb.pat.prange A.Expr)], None, None);
                     binders = []}) s1range
             in
+            let s_rw = { s_rw with source=false } in
             seq s_rw t_match
           else t_match
         in
@@ -643,6 +646,13 @@ let rec desugar_stmt (env:env_t) (s:Sugar.stmt)
       let tt = L.fold_right (fun nm body -> let nm : term = tm_expr nm s.range in SW.tm_with_inv nm body None s.range) names body in
       let n1 : term = tm_expr n1 s.range in
       return (SW.tm_with_inv n1 tt returns_ s.range)
+
+and desugar_stmt (env:env_t) (s:Sugar.stmt) : err SW.st_term =
+  let! r = desugar_stmt' env s in
+  if not s.source then
+    return (SW.mark_not_source r)
+  else
+    return r
 
 and desugar_branch (env:env_t) (br: bool & A.pattern & Sugar.stmt)
   : err SW.branch
