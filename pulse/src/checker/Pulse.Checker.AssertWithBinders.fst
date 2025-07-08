@@ -262,12 +262,14 @@ let rec as_subst (p : list (term & term))
 
 
 let rewrite_all (is_source:bool) (g:env) (p: list (term & term)) (t:term) : T.Tac (term & term) =
-  let elab1 (t : R.term) : T.Tac R.term =
-    let t = fst (Pulse.Checker.Pure.instantiate_term_implicits g t None false) in
-    let t = dfst <| Pulse.Checker.Prover.normalize_slprop g t in
-    t
+  let elab_pair (lhs rhs : R.term) : T.Tac (R.term & R.term) =
+    let lhs, lhs_typ = Pulse.Checker.Pure.instantiate_term_implicits g lhs None true in
+    let rhs, rhs_typ = Pulse.Checker.Pure.instantiate_term_implicits g rhs (Some lhs_typ) true in
+    let lhs = dfst <| Pulse.Checker.Prover.normalize_slprop g lhs in
+    let rhs = dfst <| Pulse.Checker.Prover.normalize_slprop g rhs in
+    lhs, rhs
   in
-  let p : list (R.term & R.term) = T.map (fun (e1, e2) -> elab1 e1, elab1 e2) p in
+  let p : list (R.term & R.term) = T.map (fun (e1, e2) -> elab_pair e1 e2) p in
   match as_subst p [] [] Set.empty with
   | Some s ->
     let t' = subst_term t s in
