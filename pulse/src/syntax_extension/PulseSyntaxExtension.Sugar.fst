@@ -189,7 +189,10 @@ type stmt' =
 
 and stmt = {
   s:stmt';
-  range:rng
+  range:rng;
+  source:bool;
+  (* true if this was written by the user, false for statements
+  we generate automatically when desugaring. *)
 }
 
 and lambda = {
@@ -638,7 +641,7 @@ let mk_match head returns_annot branches = Match { head; returns_annot; branches
 let mk_while guard id invariant body = While { guard; id; invariant; body }
 let mk_intro slprop witnesses = Introduce { slprop; witnesses }
 let mk_sequence s1 s2 = Sequence { s1; s2 }
-let mk_stmt s range = { s; range }
+let mk_stmt s range = { s; range; source=true }
 let mk_fn_defn id is_rec binders ascription measure body decorations range
 : fn_defn
 = { id; is_rec; binders; ascription; measure; body; decorations; range }

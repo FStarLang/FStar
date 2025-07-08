@@ -194,6 +194,12 @@ let check_unfoldable g (v:term) : T.Tac unit =
                         but %s is a primitive term that cannot be folded or unfolded"
                         (P.term_to_string v))
 
+let warn_nop (g:env) : T.Tac unit =
+  let open Pulse.PP in
+  warn_doc g None [
+    Pulse.PP.text "No rewrites performed.";
+  ]
+
 let visit_and_rewrite (p: (R.term & R.term)) (t:term) : T.Tac term =
   let open FStar.Reflection.TermEq in
   let lhs, rhs = p in
@@ -225,9 +231,7 @@ let visit_and_rewrite_conjuncts_all (is_source:bool) (g:env) (p: list (R.term & 
       tms tms'
   in
   if is_source && Nil? lhs then
-    warn_doc g None [
-      Pulse.PP.text "No rewrites performed."
-    ];
+    warn_nop g;
   list_as_slprop lhs, list_as_slprop rhs
 
 let disjoint (dom:list var) (cod:Set.set var) =
@@ -260,15 +264,16 @@ let rec as_subst (p : list (term & term))
 let rewrite_all (is_source:bool) (g:env) (p: list (term & term)) (t:term) : T.Tac (term & term) =
   match as_subst p [] [] Set.empty with
   | Some s ->
-    t, subst_term t s
+    let t' = subst_term t s in
+    if is_source && eq_tm t t' then
+      warn_nop g;
+    t, t'
   | _ ->
-    let p : list (R.term & R.term) = 
-      T.map 
-        (fun (e1, e2) -> 
-          (fst (Pulse.Checker.Pure.instantiate_term_implicits g e1 None false)),
-          (fst (Pulse.Checker.Pure.instantiate_term_implicits g e2 None false)))
-        p
+    let elab1 (t : R.term) : T.Tac R.term =
+      let t = fst (Pulse.Checker.Pure.instantiate_term_implicits g t None false) in
+      t
     in
+    let p : list (R.term & R.term) = T.map (fun (e1, e2) -> elab1 e1, elab1 e2) p in
     let lhs, rhs = visit_and_rewrite_conjuncts_all is_source g p t in
     debug_log g (fun _ -> Printf.sprintf "Rewrote %s to %s" (P.term_to_string lhs) (P.term_to_string rhs));
     lhs, rhs

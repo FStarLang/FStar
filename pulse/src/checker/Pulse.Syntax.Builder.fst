@@ -65,4 +65,5 @@ let mk_fn_defn id isrec bs comp meas body : decl' = FnDefn { id; isrec; bs; comp
 let mk_fn_decl id bs comp : decl' = FnDecl { id; bs; comp; }
 let mk_decl d range : decl = {d; range}
 let mark_statement_sequence (s : st_term) : st_term = { s with seq_lhs = Sealed.seal true }
+let mark_not_source         (s : st_term) : st_term = { s with source = Sealed.seal false }
 let mk_branch pat e norw = { pat; e; norw }

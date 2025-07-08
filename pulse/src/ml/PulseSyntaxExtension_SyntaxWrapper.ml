@@ -221,6 +221,9 @@ let comp_post c =
 let mark_statement_sequence (s : st_term) : st_term =
   PSB.mark_statement_sequence s
 
+let mark_not_source (s : st_term) : st_term =
+  PSB.mark_not_source s
+
 let print_exn (e:exn) = Printexc.to_string e
 
 open FStar_Pervasives
