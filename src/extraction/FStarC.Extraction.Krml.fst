@@ -170,7 +170,9 @@ and width =
   | Bool
   | CInt
   | SizeT | PtrdiffT
-  | Half | Float | Double
+  (* MUST BE IN SAME ORDER AS KARAMEL! *)
+  | Float | Double
+  | Half
 
 and constant = width & string
 
