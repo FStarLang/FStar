@@ -53,7 +53,7 @@ let check_equiv_emp' (g:env) (p:slprop) : T.Tac (option (slprop_equiv g p tm_emp
       Some (VE_Ext _ _ _ (RT.Rel_eq_token _ _ _ ()))
     | None, _ -> None
 
-let normalize_slprop
+let __normalize_slprop
   (g:env)
   (v:slprop)
   : T.Tac (v':slprop & slprop_equiv g v v')
@@ -79,13 +79,28 @@ let normalize_slprop
   let v_equiv_v' = VE_Ext _ _ _ (RU.magic ()) in
   (| v', v_equiv_v' |)
 
+let normalize_slprop
+  (g:env)
+  (v:slprop)
+  (use_rewrites_to : bool)
+  : T.Tac (v':slprop & slprop_equiv g v v')
+=
+  if use_rewrites_to then
+    let rwr = Pulse.Checker.Prover.RewritesTo.get_subst_from_env g in
+    let v' = rwr.(v) in
+    let eq_v_v' : slprop_equiv g v v' = VE_Ext _ _ _ (RU.magic ()) in
+    let (| v'', eq_v'_v'' |) = __normalize_slprop g v' in
+    (| v'', VE_Trans _ _ _ _ eq_v_v' eq_v'_v'' |)
+  else
+    __normalize_slprop g v
+
 let normalize_slprop_welltyped
   (g:env)
   (v:slprop)
   (v_typing:tot_typing g v tm_slprop)
   : T.Tac (v':slprop & slprop_equiv g v v' & tot_typing g v' tm_slprop)
 =
-  let (| v', v_equiv_v' |) = normalize_slprop g v in
+  let (| v', v_equiv_v' |) = normalize_slprop g v true in
   // FIXME: prove (or add axiom) that equiv preserves typing
   (| v', v_equiv_v', E (magic()) |)
 
@@ -96,7 +111,7 @@ let normalize_slprop_context
   : T.Tac (pst':prover_state preamble { pst' `pst_extends` pst }) =
 
   let norm1 (v : slprop) : T.Tac slprop =
-    dfst (normalize_slprop pst.pg pst.ss.(pst.rwr_ss.(v)))
+    dfst (__normalize_slprop pst.pg pst.ss.(pst.rwr_ss.(v)))
   in
 
   let ctxt = pst.remaining_ctxt in
