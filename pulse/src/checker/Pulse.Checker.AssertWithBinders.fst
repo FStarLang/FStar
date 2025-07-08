@@ -194,10 +194,12 @@ let check_unfoldable g (v:term) : T.Tac unit =
                         but %s is a primitive term that cannot be folded or unfolded"
                         (P.term_to_string v))
 
-let warn_nop (g:env) : T.Tac unit =
+let warn_nop (g:env) (goal:term) : T.Tac unit =
   let open Pulse.PP in
   warn_doc g None [
-    Pulse.PP.text "No rewrites performed.";
+    text "No rewrites performed.";
+    text "Rewriting in: " ^^
+      indent (pp <| canon_slprop_print goal);
   ]
 
 let visit_and_rewrite (p: (R.term & R.term)) (t:term) : T.Tac term =
@@ -231,7 +233,7 @@ let visit_and_rewrite_conjuncts_all (is_source:bool) (g:env) (p: list (R.term & 
       tms tms'
   in
   if is_source && Nil? lhs then
-    warn_nop g;
+    warn_nop g goal;
   list_as_slprop lhs, list_as_slprop rhs
 
 let disjoint (dom:list var) (cod:Set.set var) =
@@ -262,18 +264,21 @@ let rec as_subst (p : list (term & term))
 
 
 let rewrite_all (is_source:bool) (g:env) (p: list (term & term)) (t:term) : T.Tac (term & term) =
+  let elab_pair (lhs rhs : R.term) : T.Tac (R.term & R.term) =
+    let lhs, lhs_typ = Pulse.Checker.Pure.instantiate_term_implicits g lhs None true in
+    let rhs, rhs_typ = Pulse.Checker.Pure.instantiate_term_implicits g rhs (Some lhs_typ) true in
+    let lhs = dfst <| Pulse.Checker.Prover.normalize_slprop g lhs in
+    let rhs = dfst <| Pulse.Checker.Prover.normalize_slprop g rhs in
+    lhs, rhs
+  in
+  let p : list (R.term & R.term) = T.map (fun (e1, e2) -> elab_pair e1 e2) p in
   match as_subst p [] [] Set.empty with
   | Some s ->
     let t' = subst_term t s in
     if is_source && eq_tm t t' then
-      warn_nop g;
+      warn_nop g t;
     t, t'
   | _ ->
-    let elab1 (t : R.term) : T.Tac R.term =
-      let t = fst (Pulse.Checker.Pure.instantiate_term_implicits g t None false) in
-      t
-    in
-    let p : list (R.term & R.term) = T.map (fun (e1, e2) -> elab1 e1, elab1 e2) p in
     let lhs, rhs = visit_and_rewrite_conjuncts_all is_source g p t in
     debug_log g (fun _ -> Printf.sprintf "Rewrote %s to %s" (P.term_to_string lhs) (P.term_to_string rhs));
     lhs, rhs
