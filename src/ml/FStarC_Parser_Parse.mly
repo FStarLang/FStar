@@ -759,20 +759,14 @@ fieldPattern:
   (* we do *NOT* allow _ in multibinder () since it creates reduce/reduce conflicts when*)
   (* preprocessing to ocamlyacc/fsyacc (which is expected since the macro are expanded) *)
 patternOrMultibinder:
-  | LBRACE_BAR id=lidentOrUnderscore COLON t=simpleArrow BAR_RBRACE
+  | LBRACE_BAR id=ioption(id=lidentOrUnderscore COLON {id}) t=simpleArrow BAR_RBRACE
       { let r = rr $loc in
+        let id = match id with | Some id -> id | None -> gen r in
         let w = mk_pattern (PatVar (id, Some TypeClassArg, [])) r in
         let asc = (t, None) in
         [mk_pattern (PatAscribed(w, asc)) r]
       }
 
-  | LBRACE_BAR t=simpleArrow BAR_RBRACE
-      { let r = rr $loc in
-        let id = gen r in
-        let w = mk_pattern (PatVar (id, Some TypeClassArg, [])) r in
-        let asc = (t, None) in
-        [mk_pattern (PatAscribed(w, asc)) r]
-      }
   | pat=atomicPattern { [pat] }
   | LPAREN qual_id0=aqualifiedWithAttrs(lident) qual_ids=nonempty_list(aqualifiedWithAttrs(lident)) COLON t=simpleArrow r=refineOpt RPAREN
       {
@@ -794,14 +788,9 @@ binder:
 
 %public
 multiBinder:
-  | LBRACE_BAR id=lidentOrUnderscore COLON t=simpleArrow BAR_RBRACE
+  | LBRACE_BAR id=ioption(id=lidentOrUnderscore COLON {id}) t=simpleArrow BAR_RBRACE
       { let r = rr $loc in
-        [mk_binder (Annotated (id, t)) r Type_level (Some TypeClassArg)]
-      }
-
-  | LBRACE_BAR t=simpleArrow BAR_RBRACE
-      { let r = rr $loc in
-        let id = gen r in
+        let id = match id with | Some id -> id | None -> gen r in
         [mk_binder (Annotated (id, t)) r Type_level (Some TypeClassArg)]
       }
 
