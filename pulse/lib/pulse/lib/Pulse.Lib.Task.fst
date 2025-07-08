@@ -556,9 +556,7 @@ fn spawn (p:pool)
        as (state_res (up task.pre) (up task.post) gr_task_st Ready);
   rewrite each gr_task_st as handle.g_state;
   rewrite each handle as task.h;
-  rewrite each pre_ref as task.pre;
-  rewrite each post_ref as task.post;
-   
+
   intro_state_pred task.pre task.post task.h Ready;
   // fold (state_pred #code task.pre task.post task.h);
 
@@ -1345,7 +1343,6 @@ fn try_await_pool
   let runnable = !p.runnable;
   let done = check_if_all_done runnable;
   if done {
-    rewrite each done as true;
     rewrite (ite true (all_tasks_done runnable) emp)
          as all_tasks_done runnable;
 
@@ -1369,7 +1366,6 @@ fn try_await_pool
 
     true
   } else {
-    rewrite each done as false;
     rewrite (ite false (all_tasks_done runnable) emp)
          as emp;
     fold (lock_inv p.runnable p.g_runnable);

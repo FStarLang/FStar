@@ -467,7 +467,6 @@ fn read_node
   )
 {
   let p = get_some_ref tree;
-  rewrite each tree as (Some p);
   with node. assert p |-> node;
   let n = !p;
   rewrite p |-> n as Some?.v tree |-> n;
