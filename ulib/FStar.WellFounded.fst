@@ -40,6 +40,7 @@ type acc (#a:Type u#a) (r:binrel u#a u#r a) (x:a) : Type u#(max a r) =
 (*
  * A binrel r is well-founded if every element is accessible
  *)
+[@@ erasable]
 let well_founded (#a:Type u#a) (r:binrel u#a u#r a) = x:a -> acc r x
 
 (*
