@@ -47,12 +47,12 @@ let rec print_st_typing #g #t #c (d:st_typing g t c)
       "T_Match"
 
     | T_Equiv g e c c' d eq ->
-      Printf.sprintf "(T_Equiv %s)"
+      // Printf.sprintf "(T_Equiv %s)"
+      //    (print_st_typing d)
+      Printf.sprintf "(T_Equiv \n\t{%s}\n\t{%s}\n\t %s)"
+         (Pulse.Syntax.Printer.comp_to_string c)
+         (Pulse.Syntax.Printer.comp_to_string c')
          (print_st_typing d)
-    //   Printf.sprintf "(T_Equiv \n\t{%s}\n\t{%s}\n\t %s)"
-    //      (Pulse.Syntax.Printer.comp_to_string c)
-    //      (Pulse.Syntax.Printer.comp_to_string c')
-    //      (print_st_typing d)
         
     | T_IntroPure .. ->
       "T_IntroPure"

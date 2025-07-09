@@ -47,6 +47,35 @@ val construct_forall_typing
         (db:tot_typing (push_binding g x ppname_default b.binder_ty) (open_term body x) tm_slprop)
   : GTot (tot_typing g (tm_forall_sl u b body) tm_slprop)
    
+let st_equiv_trans (#g:env) (#c0 #c1 #c2:comp) (d01:st_equiv g c0 c1) (d12:st_equiv g c1 c2)
+  : option (st_equiv g c0 c2)
+  = 
+    match d01 with
+    | ST_SLPropEquiv _f _c0 _c1 x c0_pre_typing c0_res_typing c0_post_typing eq_res_01 eq_pre_01 eq_post_01 -> (
+      let ST_SLPropEquiv _f _c1 _c2 y c1_pre_typing c1_res_typing c1_post_typing eq_res_12 eq_pre_12 eq_post_12 = d12 in
+      if x = y && eq_tm (comp_res c0) (comp_res c1)
+      then Some (
+            ST_SLPropEquiv g c0 c2 x c0_pre_typing c0_res_typing c0_post_typing
+              (RT.Rel_trans _ _ _ _ _ eq_res_01 eq_res_12)
+              (VE_Trans _ _ _ _ eq_pre_01 eq_pre_12)
+              (VE_Trans _ _ _ _ eq_post_01 eq_post_12)
+      )
+      else None
+    )
+    | ST_TotEquiv g t1 t2 u typing eq ->
+      let ST_TotEquiv _g _t1 t3 _ _ eq' = d12 in
+      let eq'' = Ghost.hide (RT.Rel_trans _ _ _ _ _ eq eq') in
+      Some (ST_TotEquiv g t1 t3 u typing eq'')
+
+let t_equiv #g #st #c (d:st_typing g st c) (#c':comp) (eq:st_equiv g c c')
+  : st_typing g st c'
+  = match d with
+    | T_Equiv _ _ _ _ d0 eq' -> (
+        match st_equiv_trans eq' eq with
+        | None -> T_Equiv _ _ _ _ d eq
+        | Some eq'' -> T_Equiv _ _ _ _ d0 eq''
+    )
+    | _ -> T_Equiv _ _ _ _ d eq
 
 let rec slprop_equiv_typing (#g:_) (#t0 #t1:term) (v:slprop_equiv g t0 t1)
   : GTot ((tot_typing g t0 tm_slprop -> tot_typing g t1 tm_slprop) &
@@ -479,7 +508,7 @@ let apply_frame (#g:env)
     let st_typing = fst <| Metatheory.comp_typing_inversion c'_typing in
     let (| res_typing, pre_typing, x, post_typing |) = Metatheory.st_comp_typing_inversion st_typing in
     let st_equiv = ST_SLPropEquiv g c' c'' x pre_typing res_typing post_typing (RT.Rel_refl _ _ _) ve (VE_Refl _ _) in
-    let t_typing = T_Equiv _ _ _ _ t_typing st_equiv in
+    let t_typing = t_equiv t_typing st_equiv in
     (| c'', t_typing |)
 
 let comp_for_post_hint #g (#pre:slprop) (pre_typing:tot_typing g pre tm_slprop)
