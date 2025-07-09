@@ -62,10 +62,10 @@ let () =
   Hashtbl.add keywords "end"           END         ;
   Hashtbl.add keywords "ensures"       ENSURES     ;
   Hashtbl.add keywords "exception"     EXCEPTION   ;
-  Hashtbl.add keywords "exists"        (EXISTS false);
+  Hashtbl.add keywords "exists"        EXISTS      ;
   Hashtbl.add keywords "false"         FALSE       ;
   Hashtbl.add keywords "friend"        FRIEND      ;
-  Hashtbl.add keywords "forall"        (FORALL false);
+  Hashtbl.add keywords "forall"        FORALL      ;
   Hashtbl.add keywords "fun"           FUN         ;
   Hashtbl.add keywords "λ"             FUN         ;
   Hashtbl.add keywords "function"      FUNCTION    ;
@@ -77,7 +77,7 @@ let () =
   Hashtbl.add keywords "instance"      INSTANCE    ;
   Hashtbl.add keywords "introduce"     INTRO ;
   Hashtbl.add keywords "irreducible"   IRREDUCIBLE ;
-  Hashtbl.add keywords "let"           (LET false) ;
+  Hashtbl.add keywords "let"           LET         ;
   Hashtbl.add keywords "logic"         LOGIC       ;
   Hashtbl.add keywords "match"         MATCH       ;
   Hashtbl.add keywords "returns"       RETURNS     ;
@@ -193,8 +193,8 @@ let () =
    "}", RBRACE;
    "$", DOLLAR;
      (* New Unicode equivalents *)
-   "∀", (FORALL false);
-   "∃", (EXISTS false);
+   "∀", FORALL;
+   "∃", EXISTS;
    "⊤", NAME "True";
    "⊥", NAME "False";
    "⟹", IMPLIES;
@@ -502,35 +502,35 @@ match%sedlex lexbuf with
  | "let", Plus op_char ->
     ensure_no_comment lexbuf (fun s ->
         match BatString.lchop ~n:3 s with
-        | "" -> LET false
+        | "" -> LET
         | s  -> LET_OP s
       )
 
  | "exists", Plus op_char ->
     ensure_no_comment lexbuf (fun s ->
         match BatString.lchop ~n:6 s with
-        | "" -> EXISTS false
+        | "" -> EXISTS
         | s  -> EXISTS_OP s
       )
 
  | Utf8 "∃", Plus op_char ->
     ensure_no_comment lexbuf (fun s ->
         match BatString.lchop ~n:1 s with
-        | "" -> EXISTS false
+        | "" -> EXISTS
         | s  -> EXISTS_OP s
       )
  
  | "forall", Plus op_char ->
     ensure_no_comment lexbuf (fun s ->
         match BatString.lchop ~n:6 s with
-        | "" -> FORALL false
+        | "" -> FORALL
         | s  -> FORALL_OP s
       )
 
  | Utf8 "∀", Plus op_char ->
     ensure_no_comment lexbuf (fun s ->
         match BatString.lchop ~n:1 s with
-        | "" -> FORALL false
+        | "" -> FORALL
         | s  -> FORALL_OP s
       )
     
