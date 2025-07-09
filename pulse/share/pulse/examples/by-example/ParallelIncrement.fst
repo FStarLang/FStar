@@ -326,12 +326,7 @@ ensures inv l invp ** qpred ('i + 1)
   };
   let mut continue = true;
   fold (cond true (qpred 'i) (qpred ('i + 1)));
-  while (
-    with _b. _;
-    let b = !continue;
-    rewrite each _b as b;
-    b
-  )
+  while (!continue)
   invariant b.
     inv l invp **
     pts_to continue b **

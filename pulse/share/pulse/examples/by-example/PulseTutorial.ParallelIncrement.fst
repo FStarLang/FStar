@@ -201,9 +201,7 @@ requires L.lock_alive l #p (exists* v. pts_to x v ** refine v) ** aspec 'i
 ensures L.lock_alive l #p (exists* v. pts_to x v ** refine v) ** aspec ('i + 1)
  {
     L.acquire l;
-    with _v. _;
     let vx = !x;
-    rewrite each _v as vx;
     x := vx + 1;
     ghost_steps vx 'i;
     L.release l;
@@ -341,12 +339,7 @@ ensures inv (C.iname_of c) (C.cinv_vp c (exists* v. pts_to x v ** refine v)) ** 
   //incr_atomic_body_loop$
   let mut continue = true;
   fold (cond true (aspec 'i) (aspec ('i + 1)));
-  while (
-    with _b. _;
-    let b = !continue;
-    rewrite each _b as b;
-    b
-  )
+  while (!continue)
   invariant b.
     inv (C.iname_of c) (C.cinv_vp c (exists* v. pts_to x v ** refine v)) **
     pts_to continue b **
