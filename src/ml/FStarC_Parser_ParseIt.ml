@@ -311,14 +311,14 @@ let string_of_token =
   | SIZET s  -> "SIZET " ^ s
   | REAL s   -> "REAL " ^ s
   | CHAR c   -> "CHAR c"
-  | LET b -> "LET b"
+  | LET -> "LET"
   | LET_OP s -> "LET_OP " ^ s
   | AND_OP s -> "AND_OP " ^ s
   | MATCH_OP s -> "MATCH_OP " ^ s
   | IF_OP s -> "IF_OP " ^ s
-  | EXISTS b -> "EXISTS b"
+  | EXISTS -> "EXISTS"
   | EXISTS_OP s -> "EXISTS_OP " ^ s
-  | FORALL b -> "FORALL b"
+  | FORALL -> "FORALL"
   | FORALL_OP s -> "FORALL_OP " ^ s
   | SEMICOLON_OP op -> "SEMICOLON_OP " ^ (match op with None -> "None" | Some s -> "(Some " ^ s ^ ")")
   | ASSUME -> "ASSUME"
