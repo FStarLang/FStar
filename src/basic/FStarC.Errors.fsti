@@ -87,6 +87,8 @@ type error_handler = {
     eh_clear: unit -> unit
 }
 
+val mk_catch_handler () : error_handler
+
 val string_of_issue_level : issue_level -> string
 val issue_level_of_string : string -> issue_level
 val issue_message : issue -> error_message
