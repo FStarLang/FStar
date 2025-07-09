@@ -30,7 +30,7 @@ let map_hogvs #a #b (f:a -> b) : (hogvs a ^-> hogvs b) =
 noeq type premem_ (x: Type u#4) : Type u#4 = {
   hogs: hogvs x;
   saved_credits: erased nat;
-  timeless_heap: timeless_heap_sig.mem;
+  timeless_heap: PM.mem u#0;
 }
 
 let map_premem #a #b (f: a->b) : (premem_ a ^-> premem_ b) =

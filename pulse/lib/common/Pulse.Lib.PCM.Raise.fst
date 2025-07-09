@@ -1,6 +1,6 @@
 module Pulse.Lib.PCM.Raise
-#lang-pulse
 open FStar.PCM
+open FStar.Ghost
 module U = FStar.Universe
 
 let raise (#a:Type u#a) (p:pcm a)
@@ -30,7 +30,7 @@ let raise_compatible
       op p frame x == y
   returns compatible (raise u#a u#b p) (U.raise_val x) (U.raise_val y)
   with _ . (
-    assert (composable (raise p) (U.raise_val x) (U.raise_val frame))
+    assert (composable (raise u#a u#b p) (U.raise_val x) (U.raise_val frame))
   )
  
     
@@ -49,16 +49,16 @@ let raise_refine
   let ya = f va in
   let y = U.raise_val ya in
   assert (compatible p ya va);
-  raise_compatible p ya va;
+  raise_compatible u#a u#b p ya va;
   y
 
   let raise_upd
-      (#a:Type u#a) (#p:pcm a) (#x #y: a)
+      (#a:Type u#a) (#p:pcm a) (#x #y: erased a)
       (f:frame_preserving_upd p x y)
   : frame_preserving_upd (raise u#a u#b p) 
-      (U.raise_val x) (U.raise_val y)
+      (U.raise_val (reveal x)) (U.raise_val (reveal y))
   = fun x -> 
       let ra = f (U.downgrade_val x) in
       let res = U.raise_val ra in
-      raise_compatible p y ra;
+      raise_compatible u#a u#b p y ra;
       res
