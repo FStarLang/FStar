@@ -298,19 +298,19 @@ let string_of_token =
   | NAME s -> "NAME " ^ s
   | TVAR s -> "TVAR " ^ s
   | TILDE s -> "TILDE " ^ s
-  | INT8 (s, b) -> "INT8 (" ^ s ^ ", " ^ string_of_bool b ^ ")"
-  | INT16 (s, b) -> "INT16 (" ^ s ^ ", " ^ string_of_bool b ^ ")"
-  | INT32 (s, b) -> "INT32 (" ^ s ^ ", " ^ string_of_bool b ^ ")"
-  | INT64 (s, b) -> "INT64 (" ^ s ^ ", " ^ string_of_bool b ^ ")"
-  | INT (s, b) -> "INT (" ^ s ^ ", " ^ string_of_bool b ^ ")"
-  | RANGE s -> " RANGE " ^ s
-  | UINT8 s -> "UINT8 " ^ s
+  | INT8 s   -> "INT8 " ^ s
+  | INT16 s  -> "INT16 " ^ s
+  | INT32 s  -> "INT32 " ^ s
+  | INT64 s  -> "INT64 " ^ s
+  | INT s    -> "INT " ^ s
+  | RANGE s  -> "RANGE " ^ s
+  | UINT8 s  -> "UINT8 " ^ s
   | UINT16 s -> "UINT16 " ^ s
   | UINT32 s -> "UINT32 " ^ s
   | UINT64 s -> "UINT64 " ^ s
-  | SIZET s -> "SIZET " ^ s
-  | REAL s -> "REAL " ^ s
-  | CHAR c -> "CHAR c"
+  | SIZET s  -> "SIZET " ^ s
+  | REAL s   -> "REAL " ^ s
+  | CHAR c   -> "CHAR c"
   | LET b -> "LET b"
   | LET_OP s -> "LET_OP " ^ s
   | AND_OP s -> "AND_OP " ^ s

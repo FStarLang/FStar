@@ -79,20 +79,21 @@ type tc_constraint = {
 %token <string> TVAR
 %token <string> TILDE
 
-/* bool indicates if INT8 was 'bad' max_int+1, e.g. '128'  */
-%token <string * bool> INT8
-%token <string * bool> INT16
-%token <string * bool> INT32
-%token <string * bool> INT64
-%token <string * bool> INT
-%token <string> RANGE
-
+%token <string> INT
+%token <string> INT8
 %token <string> UINT8
+%token <string> INT16
 %token <string> UINT16
+%token <string> INT32
 %token <string> UINT32
+%token <string> INT64
 %token <string> UINT64
 %token <string> SIZET
+
 %token <string> REAL
+
+%token <string> RANGE
+
 %token <FStar_Char.char> CHAR
 %token <bool> LET
 %token <string> LET_OP
@@ -1583,9 +1584,7 @@ constant:
   | LPAREN_RPAREN { Const_unit }
   | n=INT
      {
-        if snd n then
-          log_issue_text (rr $loc) Error_OutOfRange "This number is outside the allowable range for representable integer constants";
-        Const_int (fst n, None)
+        Const_int (n, None)
      }
   | c=CHAR { Const_char c }
   | s=STRING { Const_string (s, rr $loc) }
@@ -1595,30 +1594,22 @@ constant:
   | n=UINT8 { Const_int (n, Some (Unsigned, Int8)) }
   | n=INT8
       {
-        if snd n then
-          log_issue_text (rr $loc) Error_OutOfRange "This number is outside the allowable range for 8-bit signed integers";
-        Const_int (fst n, Some (Signed, Int8))
+        Const_int (n, Some (Signed, Int8))
       }
   | n=UINT16 { Const_int (n, Some (Unsigned, Int16)) }
   | n=INT16
       {
-        if snd n then
-          log_issue_text (rr $loc) Error_OutOfRange "This number is outside the allowable range for 16-bit signed integers";
-        Const_int (fst n, Some (Signed, Int16))
+        Const_int (n, Some (Signed, Int16))
       }
   | n=UINT32 { Const_int (n, Some (Unsigned, Int32)) }
   | n=INT32
       {
-        if snd n then
-          log_issue_text (rr $loc) Error_OutOfRange "This number is outside the allowable range for 32-bit signed integers";
-        Const_int (fst n, Some (Signed, Int32))
+        Const_int (n, Some (Signed, Int32))
       }
   | n=UINT64 { Const_int (n, Some (Unsigned, Int64)) }
   | n=INT64
       {
-        if snd n then
-          log_issue_text (rr $loc) Error_OutOfRange "This number is outside the allowable range for 64-bit signed integers";
-        Const_int (fst n, Some (Signed, Int64))
+        Const_int (n, Some (Signed, Int64))
       }
   | n=SIZET { Const_int (n, Some (Unsigned, Sizet)) }
   (* TODO : What about reflect ? There is also a constant representing it *)
@@ -1654,9 +1645,7 @@ atomicUniverse:
       { mk_term Wild (rr $loc) Expr }
   | n=INT
       {
-        if snd n then
-          log_issue_text (rr $loc) Error_OutOfRange ("This number is outside the allowable range for representable integer constants");
-        mk_term (Const (Const_int (fst n, None))) (rr $loc(n)) Expr
+        mk_term (Const (Const_int (n, None))) (rr $loc(n)) Expr
       }
   | u=lident { mk_term (Uvar u) (range_of_id u) Expr }
   | LPAREN u=universeFrom RPAREN
@@ -1681,7 +1670,7 @@ flag:
 
 range:
   | i=INT
-    { format2 "%s..%s" (fst i) (fst i) }
+    { format2 "%s..%s" i i }
   | r=RANGE
     { r }
 
