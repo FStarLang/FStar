@@ -343,7 +343,7 @@ val mkFsTypApp : term -> list term -> range -> term
 val mkTuple : list term -> range -> term
 val mkDTuple : list term -> range -> term
 val mkRefinedBinder : ident -> term -> bool -> option term -> range -> aqual -> list term -> binder
-val mkRefinedPattern : pattern -> term -> bool -> option term -> range -> range -> pattern
+val mkRefinedPattern : pattern -> term -> (*should_bind_pat:*)bool -> option term -> range -> range -> pattern
 val extract_named_refinement : bool -> term -> option (ident & term & option term)
 
 val as_frag : list decl -> inputFragment
