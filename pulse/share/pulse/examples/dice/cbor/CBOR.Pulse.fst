@@ -275,7 +275,6 @@ ensures
                         #(cbor_array_iterator_match p2 gi2' l2');
                     if (res = 0s) {
                         let i1 = !pi1;
-                        rewrite each gi1' as i1;
                         let done = cbor_array_iterator_is_done i1;
                         pdone := done
                     } else {
@@ -375,7 +374,6 @@ ensures
                     let res = !pres;
                     if (res = 0s) {
                         let i1 = !pi1;
-                        rewrite each gi1' as i1;
                         let done = cbor_map_iterator_is_done i1;
                         pdone := done
                     }
@@ -622,7 +620,6 @@ ensures
                 #(raw_data_item_map_entry_match pmap x vx)
                 #(cbor_map_iterator_match pmap gi' l');
             let i' = !pi;
-            rewrite each gi' as i';
             let done = cbor_map_iterator_is_done i';
             pdone := done;
             fold (cbor_map_get_invariant pmap vkey vmap map NotFound i' l')
