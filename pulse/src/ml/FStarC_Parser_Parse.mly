@@ -802,12 +802,24 @@ patternOrMultibinder:
       }
 
   | pat=atomicPattern { [pat] }
-  | LPAREN qual_id0=aqualifiedWithAttrs(lident) qual_ids=nonempty_list(aqualifiedWithAttrs(lident)) COLON t=simpleArrow r=refineOpt RPAREN
+  | LPAREN
+      qual_id0=aqualifiedWithAttrs(lident)
+      qual_ids=nonempty_list(aqualifiedWithAttrs(lident))
+      COLON
+      t=simpleArrow r=refineOpt
+    RPAREN
       {
         let pos = rr $loc in
         let t_pos = rr $loc(t) in
         let qual_ids = qual_id0 :: qual_ids in
-        List.map (fun ((aq, attrs), x) -> mkRefinedPattern (mk_pattern (PatVar (x, aq, attrs)) pos) t false r t_pos pos) qual_ids
+        let n = List.length qual_ids in
+        List.mapi (fun idx ((aq, attrs), x) ->
+          let pat = mk_pattern (PatVar (x, aq, attrs)) pos in
+          (* Only the last binder carries the refinement, if any. *)
+          let refine_opt = if idx = Int.sub n 1 then r else None in
+          (*                    ^ The - symbol resolves to F* addition. *)
+          mkRefinedPattern pat t true refine_opt t_pos pos
+        ) qual_ids
       }
 
 binder:
@@ -833,8 +845,11 @@ multiBinder:
   | LPAREN qual_ids=nonempty_list(aqualifiedWithAttrs(lidentOrUnderscore)) COLON t=simpleArrow r=refineOpt RPAREN
      {
        let should_bind_var = match qual_ids with | [ _ ] -> true | _ -> false in
-       List.map (fun ((q, attrs), x) ->
-         mkRefinedBinder x t should_bind_var r (rr $loc) q attrs) qual_ids
+       let n = List.length qual_ids in
+       List.mapi (fun idx ((q, attrs), x) ->
+         let refine_opt = if idx = Int.sub n 1 then r else None in
+         mkRefinedBinder x t true refine_opt (rr $loc) q attrs
+       ) qual_ids
      }
 
   | LPAREN_RPAREN
