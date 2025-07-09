@@ -474,7 +474,7 @@ match%sedlex lexbuf with
  | "#restart-solver" -> PRAGMA_RESTART_SOLVER
  | "#print-effects-graph" -> PRAGMA_PRINT_EFFECTS_GRAPH
  | "__SOURCE_FILE__" -> STRING (Filepath.basename (L.source_file lexbuf))
- | "__LINE__" -> INT (string_of_int (L.current_line lexbuf), false)
+ | "__LINE__" -> INT (string_of_int (L.current_line lexbuf))
  | "__FILELINE__"   -> STRING (Filepath.basename (L.source_file lexbuf) ^ "(" ^ (string_of_int (L.current_line lexbuf)) ^ ")")
 
  | Plus anywhite -> token lexbuf
@@ -559,19 +559,19 @@ match%sedlex lexbuf with
    Hashtbl.find_option constructors id |> Option.default (NAME id)
 
  | tvar -> TVAR (L.lexeme lexbuf)
- | (integer | xinteger) -> INT (clean_number (L.lexeme lexbuf), false)
+ | (integer | xinteger) -> INT (clean_number (L.lexeme lexbuf))
  | (uint8 | char8) ->
    let c = clean_number (L.lexeme lexbuf) in
    let cv = int_of_string c in
    if cv < 0 || cv > 255 then fail lexbuf (Codes.Fatal_SyntaxError, "Out-of-range character literal")
    else UINT8 (c)
- | int8 -> INT8 (clean_number (L.lexeme lexbuf), false)
+ | int8 -> INT8 (clean_number (L.lexeme lexbuf))
  | uint16 -> UINT16 (clean_number (L.lexeme lexbuf))
- | int16 -> INT16 (clean_number (L.lexeme lexbuf), false)
+ | int16 -> INT16 (clean_number (L.lexeme lexbuf))
  | uint32 -> UINT32 (clean_number (L.lexeme lexbuf))
- | int32 -> INT32 (clean_number (L.lexeme lexbuf), false)
+ | int32 -> INT32 (clean_number (L.lexeme lexbuf))
  | uint64 -> UINT64 (clean_number (L.lexeme lexbuf))
- | int64 -> INT64 (clean_number (L.lexeme lexbuf), false)
+ | int64 -> INT64 (clean_number (L.lexeme lexbuf))
  | sizet -> SIZET (clean_number (L.lexeme lexbuf))
  | range -> RANGE (L.lexeme lexbuf)
  | real -> REAL(trim_right lexbuf 1)
