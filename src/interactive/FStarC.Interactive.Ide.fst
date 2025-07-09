@@ -1213,25 +1213,8 @@ let rec go st : int =
   | Inl st' -> go st'
   | Inr exitcode -> exitcode
 
-let interactive_error_handler = // No printing here — collect everything for future use
-  let issues : ref (list issue) = mk_ref [] in
-  let add_one (e: issue) =
-    let e = { e with issue_range = FStarC.Errors.fixup_issue_range e.issue_range } in
-    issues := e :: !issues
-  in
-  let count_errors () =
-    let issues = Util.remove_dups (fun i0 i1 -> i0=i1) !issues in
-    List.length (List.filter (fun e -> e.issue_level = EError) issues)
-  in
-  let report () =
-    List.sortWith compare_issues (Util.remove_dups (fun i0 i1 -> i0=i1) !issues)
-  in
-  let clear () = issues := [] in
-  { eh_name = "interactive error handler";
-    eh_add_one = add_one;
-    eh_count_errors = count_errors;
-    eh_report = report;
-    eh_clear = clear }
+// No printing here — collect everything for future use
+let interactive_error_handler = Errors.mk_catch_handler ()
 
 let interactive_printer printer =
   { printer_prinfo = (fun s -> forward_message printer "info" (JsonStr s));

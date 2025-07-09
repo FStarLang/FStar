@@ -1,3 +1,25 @@
+* Warning 240 at NegativeTests.Neg.fst(44,4-44,17):
+  - NegativeTests.Neg.bad_projector is declared but no definition was found
+  - Add an 'assume' if this is intentional
+
+* Warning 240 at NegativeTests.Neg.fst(40,4-40,28):
+  - NegativeTests.Neg.test_postcondition_label
+    is declared but no definition was found
+  - Add an 'assume' if this is intentional
+
+* Warning 240 at NegativeTests.Neg.fst(36,4-36,27):
+  - NegativeTests.Neg.test_precondition_label
+    is declared but no definition was found
+  - Add an 'assume' if this is intentional
+
+* Warning 240 at NegativeTests.Neg.fst(22,4-22,5):
+  - NegativeTests.Neg.y is declared but no definition was found
+  - Add an 'assume' if this is intentional
+
+* Warning 240 at NegativeTests.Neg.fst(18,4-18,5):
+  - NegativeTests.Neg.x is declared but no definition was found
+  - Add an 'assume' if this is intentional
+
 >> Got issues: [
 * Error 19 at NegativeTests.Neg.fst(20,8-20,10):
   - Subtyping check failed
@@ -88,28 +110,6 @@
     not Type or eqtype, or it is eqtype but contains noeq/unopteq qualifiers
 
 >>]
-* Warning 240 at NegativeTests.Neg.fst(18,4-18,5):
-  - NegativeTests.Neg.x is declared but no definition was found
-  - Add an 'assume' if this is intentional
-
-* Warning 240 at NegativeTests.Neg.fst(22,4-22,5):
-  - NegativeTests.Neg.y is declared but no definition was found
-  - Add an 'assume' if this is intentional
-
-* Warning 240 at NegativeTests.Neg.fst(36,4-36,27):
-  - NegativeTests.Neg.test_precondition_label
-    is declared but no definition was found
-  - Add an 'assume' if this is intentional
-
-* Warning 240 at NegativeTests.Neg.fst(40,4-40,28):
-  - NegativeTests.Neg.test_postcondition_label
-    is declared but no definition was found
-  - Add an 'assume' if this is intentional
-
-* Warning 240 at NegativeTests.Neg.fst(44,4-44,17):
-  - NegativeTests.Neg.bad_projector is declared but no definition was found
-  - Add an 'assume' if this is intentional
-
 * Warning 240 at NegativeTests.Neg.fst(63,0-63,32):
   - Missing definitions in module NegativeTests.Neg:
       bad_projector

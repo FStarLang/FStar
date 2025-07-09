@@ -3865,13 +3865,14 @@ and check_top_level_let env e =
                  g1, e1, univs, TcComm.lcomp_of_comp c1
          in
 
-         (* Check that it doesn't have a top-level effect; warn if it does *)
+         (* Check that it doesn't have a top-level effect; warn if it does.
+            Do not warn in phase1 to avoid double errors.*)
          let e2, c1 =
            let ok, c1 = TcUtil.check_top_level env g1 c1 in //check that it has no effect and a trivial pre-condition
            if ok
            then e2, c1
            else (
-             if not (Options.ml_ish ()) then
+             if not (Options.ml_ish ()) && not env.phase1 then
                Err.warn_top_level_effect (Env.get_range env); // maybe warn
              mk (Tm_meta {tm=e2; meta=Meta_desugared Masked_effect}) e2.pos, c1 //and tag it as masking an effect
            )
