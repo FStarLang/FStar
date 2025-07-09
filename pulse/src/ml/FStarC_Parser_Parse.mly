@@ -110,14 +110,14 @@ type tc_constraint = {
 %token <string> RANGE
 
 %token <Fstarcompiler.FStar_Char.char> CHAR
-%token <bool> LET
+%token LET
 %token <string> LET_OP
 %token <string> AND_OP
 %token <string> MATCH_OP
 %token <string> IF_OP
-%token <bool> EXISTS
+%token EXISTS
 %token <string> EXISTS_OP
-%token <bool> FORALL
+%token FORALL
 %token <string> FORALL_OP
 
 
