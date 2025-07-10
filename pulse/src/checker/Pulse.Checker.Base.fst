@@ -630,7 +630,7 @@ let match_comp_res_with_post_hint (#g:env) (#t:st_term) (#c:comp_st)
              ST_SLPropEquiv _ c c' _ cpre_typing cres_typing cpost_typing d_equiv (VE_Refl _ _) (VE_Refl _ _)
            in
 
-           (| t, c', T_Equiv _ _ _ _ d d_stequiv |)
+           (| t, c', Pulse.Typing.Combinators.t_equiv d d_stequiv |)
 
 let apply_checker_result_k (#g:env) (#ctxt:slprop) (#post_hint:post_hint_for_env g)
   (r:checker_result_t g ctxt (Some post_hint))
@@ -648,50 +648,12 @@ let apply_checker_result_k (#g:env) (#ctxt:slprop) (#post_hint:post_hint_for_env
   k (Some post_hint) d
 
 #push-options "--z3rlimit_factor 4 --fuel 0 --ifuel 1"
-let checker_result_for_st_typing_old (#g:env) (#ctxt:slprop) (#post_hint:post_hint_opt g)
-  (d:st_typing_in_ctxt g ctxt post_hint)
-  (ppname:ppname)
-  : T.Tac (checker_result_t g ctxt post_hint) =
-
-  let (| t, c, d |) = d in
- 
-  let x = fresh g in
-
-  let g' = push_binding g x ppname (comp_res c) in
-  let ctxt' = open_term_nv (comp_post c) (ppname, x) in
-  let k
-    : continuation_elaborator
-        g (tm_star tm_emp (comp_pre c))
-        g' (tm_star ctxt' tm_emp) =
-    continuation_elaborator_with_bind tm_emp d (RU.magic ()) (ppname, x) in
-  let k
-    : continuation_elaborator g (comp_pre c) g' ctxt' =
-    k_elab_equiv k (RU.magic ()) (RU.magic ()) in
-
-  let _ : squash (checker_res_matches_post_hint g post_hint x (comp_res c) ctxt') =
-    match post_hint with
-    | None -> ()
-    | Some post_hint -> () in
-
-  assert (g' `env_extends` g);
-
-  let comp_res_typing, _, f =
-    Metatheory.(st_comp_typing_inversion_cofinite (fst <| comp_typing_inversion (st_typing_correctness d))) in
-
-  // RU.magic is the typing of comp_res in g'
-  // weaken comp_res_typing
-
-  assume (~ (x `Set.mem` freevars (comp_post c)));
-  let tt : universe_of _ _ _ = RU.magic () in
-  (| x, g', (| comp_u c, comp_res c, tt |), (| ctxt', f x |), k |)
-
+//TODO: refactor and merge with continuation_elaborator_with_bind
 let checker_result_for_st_typing (#g:env) (#ctxt:slprop) (#post_hint:post_hint_opt g)
   (d:st_typing_in_ctxt g ctxt post_hint)
   (ppname:ppname)
 : T.Tac (checker_result_t g ctxt post_hint)
-= if RU.debug_at_level (fstar_env g) "old_bind" then checker_result_for_st_typing_old d ppname
-  else 
-  let (| e1, c1, d1 |) = d in
+= let (| e1, c1, d1 |) = d in
   let (| u_of_1, pre_typing, x, post_typing |) =
     Metatheory.(st_comp_typing_inversion (fst <| comp_typing_inversion (st_typing_correctness d1))) in
 
@@ -907,7 +869,7 @@ let norm_st_typing_inverse
       let steq : st_equiv g (C_Tot t0) (C_Tot t1) =
         ST_TotEquiv _ _ _ u (E (coerce_eq (Ghost.reveal t0_typing) ())) eq
       in
-      Some (T_Equiv _ _ _ _ d steq)
+      Some (Pulse.Typing.Combinators.t_equiv d steq)
     )
     else None
 

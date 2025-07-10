@@ -27,7 +27,10 @@ let rec print_st_typing #g #t #c (d:st_typing g t c)
     
     | T_STApp .. ->
       "T_STApp"
-    
+
+    | T_STGhostApp .. ->
+      "T_STGhostApp"
+
     | T_Return .. ->
       "T_Return"
 
@@ -37,27 +40,58 @@ let rec print_st_typing #g #t #c (d:st_typing g t c)
     | T_Bind g e1 e2 c1 c2 b x c d1 _ d2 _ ->
       Printf.sprintf "(T_Bind %s %s)" (print_st_typing d1) (print_st_typing d2)
 
-    | T_Frame g e c frame _ body ->
-      Printf.sprintf "(T_Frame %s %s)" (Pulse.Syntax.Printer.term_to_string frame) (print_st_typing body)
-
+    | T_BindFn _ _ _ _ _ _ _ d1 _ _ d2 _ ->
+      Printf.sprintf "(T_BindFn %s %s)" (print_st_typing d1) (print_st_typing d2)
+    
     | T_If .. ->
       "T_If"
 
     | T_Match .. ->
       "T_Match"
+    
+    | T_Frame g e c frame _ body ->
+      Printf.sprintf "(T_Frame %s %s)" (Pulse.Syntax.Printer.term_to_string frame) (print_st_typing body)
 
     | T_Equiv g e c c' d eq ->
-      // Printf.sprintf "(T_Equiv %s)"
-      //    (print_st_typing d)
       Printf.sprintf "(T_Equiv \n\t{%s}\n\t{%s}\n\t %s)"
          (Pulse.Syntax.Printer.comp_to_string c)
          (Pulse.Syntax.Printer.comp_to_string c')
          (print_st_typing d)
         
+      
+    | T_Sub _ _ _ _ d _ -> 
+      Printf.sprintf "(T_Sub %s)" (print_st_typing d)
+
     | T_IntroPure .. ->
       "T_IntroPure"
+
+    | T_ElimExists .. ->
+      "T_ElimExists"
+
+    | T_IntroExists .. ->
+      "T_IntroExists"
+    
+    | T_While _ _ _ _ _ d1 d2 ->
+      Printf.sprintf "(T_While %s %s)" (print_st_typing d1) (print_st_typing d2)
+
+    | T_WithLocal _ _ _ _ _ _ _ _ _ _ d ->
+      Printf.sprintf "(T_WithLocal %s)" (print_st_typing d)
+
+    | T_WithLocalArray _ _ _ _ _ _ _ _ _ _ _ _ d ->
+      Printf.sprintf "(T_WithLocalArray %s)" (print_st_typing d)  
 
     | T_Rewrite .. ->
       "T_Rewrite"
       
-    | _ -> "<UNK>"
+    | T_Admit .. ->
+      "T_Admit"
+
+    | T_Unreachable .. ->
+      "T_Unreachable"
+
+    | T_WithInv _ _ _ _ _ _ _ d _ ->
+      Printf.sprintf "(T_WithInv %s)" (print_st_typing d)
+    
+    | T_Par _ _ _ _ _ _ _ _ d1 d2 ->
+      Printf.sprintf "(T_Par %s %s)" (print_st_typing d1) (print_st_typing d2)
+      

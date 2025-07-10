@@ -78,6 +78,7 @@ let elim_exists_pst (#preamble:_) (pst:prover_state preamble)
   there's any in the ctxt then we will make progress. *)
   let prog = List.Tot.existsb (fun t -> Tm_ExistsSL? (inspect_term t)) pst.remaining_ctxt in
 
+  // if not prog then [], pst else
   let (| g', remaining_ctxt', ty, k |) =
     elim_exists_frame
       #pst.pg

@@ -457,7 +457,7 @@ let prove
     nts = None;
     solved = tm_emp;
     unsolved = slprop_as_list goals;
-    k = k_elab_equiv (k_elab_unit g ctxt) (RU.magic ()) (RU.magic ());
+    k = k_elab_equiv_continuation (k_elab_unit g (preamble.ctxt * preamble.frame)) (RU.magic ());
     goals_inv = RU.magic ();
     solved_inv = ();
     progress = false;
@@ -514,7 +514,9 @@ let prove
   // so we can drop their substitutions from the tail of nts
   assume (PS.nt_subst_term goals nts == PS.nt_subst_term goals nts_uvs);
 
-  (| pst.pg, nts_uvs, nts_uvs_effect_labels, list_as_slprop pst.remaining_ctxt, k_elab_equiv (k ()) (RU.magic ()) (RU.magic ()) |)
+  (| pst.pg, nts_uvs, nts_uvs_effect_labels, 
+     list_as_slprop pst.remaining_ctxt,
+     k_elab_equiv (k ()) (RU.magic ()) (RU.magic ()) |)
 #pop-options
 
 let canon_post (c:comp_st) : comp_st =
@@ -706,4 +708,4 @@ let elim_exists_and_pure (#g:env) (#ctxt:slprop)
            continuation_elaborator g ctxt g' ctxt') =
 
   let (| g', _nts, _labels, ctxt', k |) = prove false #g #ctxt ctxt_typing (mk_env (fstar_env g)) emp_typing in
-  (| g', ctxt', E (RU.magic ()), k_elab_equiv k (VE_Refl _ _) (VE_Unit _ _) |)
+  (| g', ctxt', E (RU.magic ()),  k_elab_equiv k (VE_Refl _ _) (VE_Unit _ _) |)

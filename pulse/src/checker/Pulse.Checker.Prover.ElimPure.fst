@@ -133,6 +133,12 @@ let elim_pure_pst (#preamble:_) (pst:prover_state preamble)
   : T.Tac (pst':prover_state preamble { pst' `pst_extends` pst /\
                                         pst'.unsolved == pst.unsolved }) =
 
+  (* Hacking progress checking: we eliminate all exists, so if
+  there's any in the ctxt then we will make progress. *)
+  // let prog = List.Tot.existsb (fun t -> Tm_Pure? (inspect_term t)) pst.remaining_ctxt in
+
+  // if not prog then pst else
+
   let (| g', remaining_ctxt', ty, k |) =
     elim_pure_frame
       #pst.pg

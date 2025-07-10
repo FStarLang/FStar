@@ -451,8 +451,7 @@ let check0
                                         (RT.Rel_refl _ _ RT.R_Eq)
                                         d_pre_eq
                                         d_post_eq in
-    let d : st_typing _ _ c_out =
-      T_Equiv _ _ _ _ d d_st_equiv in
+    let d : st_typing _ _ c_out = Pulse.Typing.Combinators.t_equiv d d_st_equiv in
     d
   in
   match post_hint.effect_annot with

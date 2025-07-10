@@ -46,35 +46,36 @@ val construct_forall_typing
         (dt:tot_typing g b.binder_ty (tm_type u))
         (db:tot_typing (push_binding g x ppname_default b.binder_ty) (open_term body x) tm_slprop)
   : GTot (tot_typing g (tm_forall_sl u b body) tm_slprop)
-   
+
 let st_equiv_trans (#g:env) (#c0 #c1 #c2:comp) (d01:st_equiv g c0 c1) (d12:st_equiv g c1 c2)
-  : option (st_equiv g c0 c2)
+  : st_equiv g c0 c2
   = 
     match d01 with
     | ST_SLPropEquiv _f _c0 _c1 x c0_pre_typing c0_res_typing c0_post_typing eq_res_01 eq_pre_01 eq_post_01 -> (
       let ST_SLPropEquiv _f _c1 _c2 y c1_pre_typing c1_res_typing c1_post_typing eq_res_12 eq_pre_12 eq_post_12 = d12 in
-      if x = y && eq_tm (comp_res c0) (comp_res c1)
-      then Some (
-            ST_SLPropEquiv g c0 c2 x c0_pre_typing c0_res_typing c0_post_typing
+      let eq_res_10 = RT.Rel_sym _ _ _ eq_res_01 in
+      let eq_post_12_x = Pulse.Typing.Metatheory.Base.slprop_equiv_rename y x _ _ eq_res_10 eq_post_12 in
+      Pulse.Typing.FV.freevars_open_term_both y (comp_post c2);
+      Pulse.Typing.Metatheory.Base.freevars_slprop_equiv eq_post_12;
+      assert ~(Set.mem x (freevars (comp_post c2)));
+      let eq = 
+        ST_SLPropEquiv g c0 c2 x c0_pre_typing c0_res_typing c0_post_typing
               (RT.Rel_trans _ _ _ _ _ eq_res_01 eq_res_12)
               (VE_Trans _ _ _ _ eq_pre_01 eq_pre_12)
-              (VE_Trans _ _ _ _ eq_post_01 eq_post_12)
-      )
-      else None
+              (VE_Trans _ _ _ _ eq_post_01 eq_post_12_x)
+      in
+      eq
     )
     | ST_TotEquiv g t1 t2 u typing eq ->
       let ST_TotEquiv _g _t1 t3 _ _ eq' = d12 in
       let eq'' = Ghost.hide (RT.Rel_trans _ _ _ _ _ eq eq') in
-      Some (ST_TotEquiv g t1 t3 u typing eq'')
+      ST_TotEquiv g t1 t3 u typing eq''
 
 let t_equiv #g #st #c (d:st_typing g st c) (#c':comp) (eq:st_equiv g c c')
   : st_typing g st c'
   = match d with
-    | T_Equiv _ _ _ _ d0 eq' -> (
-        match st_equiv_trans eq' eq with
-        | None -> T_Equiv _ _ _ _ d eq
-        | Some eq'' -> T_Equiv _ _ _ _ d0 eq''
-    )
+    | T_Equiv _ _ _ _ d0 eq' -> 
+      T_Equiv _ _ _ _ d0 (st_equiv_trans eq' eq)
     | _ -> T_Equiv _ _ _ _ d eq
 
 let rec slprop_equiv_typing (#g:_) (#t0 #t1:term) (v:slprop_equiv g t0 t1)

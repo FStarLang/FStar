@@ -231,23 +231,6 @@ let freevars_close_term (e:term) (x:var) (i:index)
              (freevars e `set_minus` x))
   = freevars_close_term' e x i
 
-let freevars_close_st_term e x i = freevars_close_st_term' e x i
-
-let contains_r (g:R.env) (x:var) = Some? (RT.lookup_bvar g x)
-let vars_of_env_r (g:R.env) = Set.intension (contains_r g)
-
-assume
-val refl_typing_freevars (#g:R.env) (#e:R.term) (#t:R.term) (#eff:_) 
-                         (_:RT.typing g e (eff, t))
-  : Lemma 
-    (ensures RT.freevars e `Set.subset` (vars_of_env_r g) /\
-             RT.freevars t `Set.subset` (vars_of_env_r g))
-
-assume
-val refl_equiv_freevars (#g:R.env) (#e1 #e2:R.term) (d:RT.equiv g e1 e2)
-  : Lemma (RT.freevars e1 `Set.subset` (vars_of_env_r g) /\
-           RT.freevars e2 `Set.subset` (vars_of_env_r g))
-
 let freevars_open_term_inv (e:term) 
                            (x:var {~ (x `Set.mem` freevars e) })
   : Lemma 
@@ -266,6 +249,30 @@ val freevars_open_term (e:term) (x:term) (i:index)
   : Lemma (freevars (open_term' e x i) `Set.subset` 
            (freevars e `Set.union` freevars x))
     [SMTPat (freevars (open_term' e x i))]
+
+let freevars_open_term_both (x:var) (t:term)
+: Lemma (freevars (open_term t x) `Set.subset` (freevars t `Set.union` Set.singleton x) /\
+         freevars t `Set.subset` freevars (open_term t x))
+= admit()
+
+let freevars_close_st_term e x i = freevars_close_st_term' e x i
+
+let contains_r (g:R.env) (x:var) = Some? (RT.lookup_bvar g x)
+let vars_of_env_r (g:R.env) = Set.intension (contains_r g)
+
+assume
+val refl_typing_freevars (#g:R.env) (#e:R.term) (#t:R.term) (#eff:_) 
+                         (_:RT.typing g e (eff, t))
+  : Lemma 
+    (ensures RT.freevars e `Set.subset` (vars_of_env_r g) /\
+             RT.freevars t `Set.subset` (vars_of_env_r g))
+
+assume
+val refl_equiv_freevars (#g:R.env) (#e1 #e2:R.term) (d:RT.equiv g e1 e2)
+  : Lemma (RT.freevars e1 `Set.subset` (vars_of_env_r g) /\
+           RT.freevars e2 `Set.subset` (vars_of_env_r g))
+
+
 
 assume
 val freevars_open_comp (c:comp) (x:term) (i:index)

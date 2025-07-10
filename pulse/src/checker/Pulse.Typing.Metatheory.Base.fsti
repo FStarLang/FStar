@@ -144,3 +144,15 @@ let slprop_equiv_subst
               (subst_term p1 (nt x e))
               (subst_term p2 (nt x e)) =
   admit ()
+
+let slprop_equiv_rename 
+     (#g:env) (#t0 #t1:term) 
+     (x:var{None? (lookup g x)}) 
+     (y:var{None? (lookup g y)}) tx ty (eq:RT.equiv (elab_env g) tx ty)
+     (v:slprop_equiv (push_binding g x ppname_default tx) (open_term t0 x) (open_term t1 x))
+: slprop_equiv (push_binding g y ppname_default ty) (open_term t0 y) (open_term t1 y)
+= RU.magic()
+
+let freevars_slprop_equiv (#g:env) (#t0 #t1:term) (d:slprop_equiv g t0 t1)
+: Lemma ((freevars t0 `Set.subset` dom g) /\ (freevars t1 `Set.subset` dom g))
+= admit()
