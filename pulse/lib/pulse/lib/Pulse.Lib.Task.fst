@@ -1111,9 +1111,7 @@ fn rec grab_work' (p:pool)
              up t.pre ** pts_to t.h.state #0.5R Running ** task_spotted p t ** task_thunk_typing t)
 {
   unfold (lock_inv p.runnable p.g_runnable);
-  with v_runnable0. assert (pts_to p.runnable v_runnable0);
   let v_runnable = !p.runnable;
-  rewrite each v_runnable0 as v_runnable;
   let topt = grab_work'' p v_runnable;
 
   AR.take_snapshot_full p.g_runnable;
