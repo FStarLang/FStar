@@ -17,11 +17,9 @@ module PulseCore.KnotInstantiation
 open FStar.FunctionalExtensionality
 module F = FStar.FunctionalExtensionality
 module PM = PulseCore.MemoryAlt
-module HS = PulseCore.HeapSig
 open FStar.Ghost {erased, hide, reveal}
 
 let address = erased nat
-let timeless_heap_sig : HS.heap_sig u#3 = PM.pulse_heap_sig
 
 [@@erasable]
 noeq type hogs_val_ (x: Type u#4) =
@@ -54,7 +52,7 @@ let hogs_val = hogs_val_ mem_pred
 val read (m: premem) (a: address) : hogs_val
 val level_ (w: premem) : GTot nat
 val credits_ (m: premem) : GTot nat
-val timeless_heap_of (m: premem) : timeless_heap_sig.mem
+val timeless_heap_of (m: premem) : PM.mem u#0
 
 val approx (n: erased nat) : (mem_pred ^-> mem_pred)
 val approx_def (n: erased nat) (p: mem_pred) w :
@@ -64,7 +62,7 @@ val approx_def (n: erased nat) (p: mem_pred) w :
 noeq type premem2 : Type u#4 = {
   hogs: address -> hogs_val;
   saved_credits: erased nat;
-  timeless_heap: timeless_heap_sig.mem;
+  timeless_heap: PM.mem u#0;
 }
 
 val pack (n: erased nat) (x: premem2) : premem

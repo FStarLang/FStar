@@ -17,6 +17,7 @@
 module PulseCore.IndirectionTheorySep
 module F = FStar.FunctionalExtensionality
 module PM = PulseCore.MemoryAlt
+module B = PulseCore.BaseHeapSig
 open FStar.Ghost 
 
 let timeless_mem : Type u#4 = PM.mem u#0
@@ -47,7 +48,7 @@ val update_ghost :
 
 let is_full (m:mem) 
 : prop
-= PM.pulse_heap_sig.full_mem_pred (timeless_mem_of m)
+= PM.full_mem_pred u#0 (timeless_mem_of m)
 let full_mem = m:mem { is_full m  }
 
 val emp : slprop
@@ -68,10 +69,10 @@ val sep_laws (_:unit) : squash (
 )
 
 val disjoint (m0 m1:mem) : p:prop { p ==>
-    PM.pulse_heap_sig.sep.disjoint (timeless_mem_of m0) (timeless_mem_of m1) /\
+    B.disjoint_mem (timeless_mem_of m0) (timeless_mem_of m1) /\
     level m0 == level m1 }
 val join (m0:mem) (m1:mem { disjoint m0 m1 }) :
-  n:mem { timeless_mem_of n == PM.pulse_heap_sig.sep.join (timeless_mem_of m0) (timeless_mem_of m1) }
+  n:mem { timeless_mem_of n == B.join_mem (timeless_mem_of m0) (timeless_mem_of m1) }
 val clear_except_hogs (i:mem) : mem
 val join_refl (i:mem)
 : Lemma (disjoint i (clear_except_hogs i) /\ join i (clear_except_hogs i) == i)
@@ -97,10 +98,10 @@ val update_timeless_mem_id (m: mem) :
     [SMTPat (update_timeless_mem m (timeless_mem_of m))]
 
 val join_update_timeless_mem (m1 m2: mem) (p1 p2: timeless_mem) :
-  Lemma (requires disjoint m1 m2 /\ PM.pulse_heap_sig.sep.disjoint p1 p2)
+  Lemma (requires disjoint m1 m2 /\ B.disjoint_mem p1 p2)
     (ensures disjoint (update_timeless_mem m1 p1) (update_timeless_mem m2 p2) /\
       join_mem (update_timeless_mem m1 p1) (update_timeless_mem m2 p2) ==
-        update_timeless_mem (join_mem m1 m2) (PM.pulse_heap_sig.sep.join p1 p2))
+        update_timeless_mem (join_mem m1 m2) (B.join_mem p1 p2))
 
 val star_equiv :
       p:slprop ->
@@ -168,7 +169,7 @@ val lift (p:pm_slprop) : slprop
 
 val lift_eq (p:PM.slprop)
 : Lemma (forall m. interp (lift p) m ==
-                   PM.pulse_heap_sig.interp p (timeless_mem_of m))
+                   B.interp p (timeless_mem_of m))
 
 val lift_emp_eq () : Lemma (
   lift PM.emp == emp
@@ -225,13 +226,11 @@ val inv (i:iref) (p:slprop) : slprop
 
 val deq_iref : FStar.GhostSet.decide_eq iref
 let inames = FStar.GhostSet.set iref
-val lower_inames (i:inames) : PM.inames
 
 (** This proposition tells us that all the invariants names in [e] are valid in memory [m] *)
 val hogs_inames_ok (e:inames) (m:mem) : prop
 let inames_ok (e:inames) (m:mem) : prop
-= HeapSig.inames_ok #PM.pulse_heap_sig (lower_inames e) (timeless_mem_of m) /\
-  hogs_inames_ok e m
+= hogs_inames_ok e m
 
 (** The empty set of invariants is always empty *)
 val inames_ok_empty (m:mem)
@@ -245,8 +244,7 @@ val inames_ok_union (i j:inames) (m:mem)
 val hogs_invariant (ex:inames) (i:mem) : slprop
 
 let mem_invariant (e:inames) (w:mem) : slprop
-=  lift (PM.mem_invariant (lower_inames e) (timeless_mem_of w)) `star`
-   hogs_invariant e w
+= hogs_invariant e w
 
 val inames_ok_update_timeless_mem (m: mem) (p: timeless_mem) (ex: inames) :
   Lemma (inames_ok ex (update_timeless_mem m p) <==> inames_ok ex m)
@@ -378,7 +376,7 @@ val mem_invariant_disjoint (e f:inames) (p0 p1:slprop) (m0 m1:mem)
   (requires
     disjoint m0 m1 /\
     FStar.GhostSet.disjoint (hogs_dom m0) (hogs_dom m1) /\
-    timeless_mem_of m1 == PM.pulse_heap_sig.sep.empty /\
+    timeless_mem_of m1 == B.empty_mem /\
     interp (p0 `star` mem_invariant e m0) m0 /\
     interp (p1 `star` mem_invariant f m1) m1)
   (ensures (
@@ -422,7 +420,7 @@ val fresh_inv
     inames_ok (single i) m' /\
     interp (inv i p `star` mem_invariant (single i) m') m' /\
     FStar.GhostSet.disjoint (hogs_dom m) (hogs_dom m') /\
-    timeless_mem_of m' == PM.pulse_heap_sig.sep.empty /\
+    timeless_mem_of m' == B.empty_mem /\
     credits m' == 0
   }
 
@@ -450,7 +448,7 @@ val fresh_slprop_ref
     timeless_mem_of (join_mem m m') == timeless_mem_of m /\
     interp (slprop_ref_pts_to i p `star` mem_invariant GhostSet.empty m') m' /\
     hogs_dom m' == GhostSet.empty /\
-    timeless_mem_of m' == PM.pulse_heap_sig.sep.empty /\
+    timeless_mem_of m' == B.empty_mem /\
     credits m' == 0
   }
 

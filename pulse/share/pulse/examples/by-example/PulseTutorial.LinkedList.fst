@@ -210,7 +210,6 @@ ensures is_list x 'l ** pure (n == k + List.Tot.length 'l)
       is_list_case_some x vl;
       with _node _tl. _;
       let n = !vl;
-      rewrite each _node as n;
       let n = length_tail n.tail (1 + k);
       intro_is_list_cons x vl;
       n
@@ -257,7 +256,6 @@ ensures exists* tl.
     is_list_case_some x np;
     with node tl. _;
     let nd = !np;
-    rewrite each node as nd;
     tail_for_cons np tl;
     nd.tail
 }
@@ -286,10 +284,8 @@ ensures is_list x 'l ** pure (n == List.Tot.length 'l)
           b == (Some? ll)) **
     (is_list ll suffix @==> is_list x 'l)
   {
-    with _n _ll _suffix. _; //bind existential variables in the invariant
     let n = !ctr;
     let ll = !cur;
-    rewrite each _ll as ll; //again, rewrite the context to use ll instead of _ll
     let next = tail ll;     //tail gives us back a trade
     with tl. _;
     I.trans (is_list next tl) _ _; //extend the trade, transitively
@@ -340,7 +336,6 @@ ensures exists* hd tl.
   is_list_case_some x np;
   with _node _tl. _;
   let node = !np;
-  rewrite each _node as node;
   ghost
   fn aux (tl':list t)
     requires pts_to np node ** is_list node.tail tl'
@@ -361,9 +356,7 @@ ensures is_list x 'l ** pure (b == (List.Tot.length 'l = 1))
 {
   let np = Some?.v x;
   is_list_case_some x np;
-  with _node _tl. _;
   let node = !np;
-  rewrite each _node as node;
   match node.tail {
     None -> { 
       is_list_case_none node.tail;
@@ -427,7 +420,6 @@ ensures is_list x ('l1 @ 'l2)
   while (
     with _b ll pfx sfx. _;
     let l = !cur;
-    rewrite each ll as l;
     let b = is_last_cell l; //check if we are at the last cell
     if b 
     { 
@@ -467,7 +459,6 @@ ensures is_list x ('l1 @ 'l2)
   { () };
   with ll pfx sfx. _;
   let last = !cur;
-  rewrite each ll as last;
   append_at_last_cell last y;
   FA.elim_forall_imp (is_list last) (fun sfx' -> is_list x (pfx @ sfx')) (sfx@'l2);
   List.Tot.Properties.append_assoc pfx sfx 'l2;

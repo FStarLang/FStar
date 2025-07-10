@@ -30,6 +30,7 @@ include Pulse.Checker.Prover.Util
 val normalize_slprop
   (g:env)
   (v:slprop)
+  (use_rewrites_to : bool)
   : T.Tac (v':slprop & slprop_equiv g v v')
 
 val normalize_slprop_welltyped

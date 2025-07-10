@@ -355,7 +355,6 @@ fn impl_t_array
         rewrite (cbor_array_iterator_match p gi' l') as (cbor_array_iterator_match p i' l');
         let b_end = cbor_array_iterator_is_done i';
         rewrite (cbor_array_iterator_match p i' l') as (cbor_array_iterator_match p gi' l');
-        rewrite each i'0 as i'; // FIXME, should not be needed
         elim_stick0 () #(cbor_array_iterator_match p i' l');
         rewrite (cbor_array_iterator_match p (Ghost.reveal (Ghost.hide i)) l) as (cbor_array_iterator_match p i l);
         elim_stick0 ();
@@ -943,7 +942,6 @@ fn impl_matches_map_group_no_restricted
         pres := res;
         if (res) {
             let i = !pi;
-            rewrite each gi as i; // FIXME: HOW HOW HOW to do that once the issue with the use of stick_consume_l above is solved and the `with` above is removed?
             let done = cbor_map_iterator_is_done i;
             pcont := not done;
         } else {
