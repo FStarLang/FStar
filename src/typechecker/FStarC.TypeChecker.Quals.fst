@@ -93,12 +93,14 @@ let check_sigelt_quals_pre (env:FStarC.TypeChecker.Env.env) se =
         || q2=NoExtract
 
       | New -> //no definition provided
-        inferred q2 || visibility q2 || assumption q2
+        inferred q2 || visibility q2 || assumption q2 ||
+        q2=Inline_for_extraction || q2=NoExtract
 
       | Inline_for_extraction ->
          q2=Logic || visibility q2 || reducibility q2 ||
          reification q2 || inferred q2 || has_eq q2 ||
-         (env.is_iface && q2=Assumption) || q2=NoExtract
+         (env.is_iface && q2=Assumption) || q2=NoExtract ||
+         q2=New
 
       | Unfold_for_unification_and_vcgen
       | Visible_default
