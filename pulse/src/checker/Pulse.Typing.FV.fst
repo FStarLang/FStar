@@ -656,7 +656,7 @@ fun d cb ->
     assert (freevars (open_term' inv tm_false 0) `Set.subset` freevars inv)
 #pop-options
 
-#push-options "--z3rlimit 40"
+#push-options "--z3rlimit 40 --fuel 3 --ifuel 2"
 #restart-solver // avoiding z3 crash on 4.13.3
 let st_typing_freevars_par : st_typing_freevars_case T_Par? =
 fun d cb ->

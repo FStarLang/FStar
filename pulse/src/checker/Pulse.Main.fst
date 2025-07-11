@@ -107,7 +107,6 @@ let check_fndefn
   let blob = "pulse", refl_e in
   soundness_lemma g body c t_typing;
 
-  let elab_derivation = T.ext_getv "pulse:elab_derivation" <> "" in
   let cur_module = T.cur_module () in
 
   let maybe_add_impl t (se: RT.sigelt_for (fstar_env g) t) : Tac (RT.sigelt_for (fstar_env g) t) =
@@ -125,9 +124,6 @@ let check_fndefn
     (refl_t:typ)
     (_:squash (RT.tot_typing (elab_env g) (elab_st_typing t_typing) refl_t)) =
     let nm = fst (inspect_ident id) in
-    // if elab_derivation
-    // then RT.mk_checked_let (fstar_env g) cur_module nm (elab_st_typing t_typing) refl_t
-    // else 
     Reflection.Util.mk_opaque_let (fstar_env g) cur_module nm (elab_st_typing t_typing) refl_t
   in
 
