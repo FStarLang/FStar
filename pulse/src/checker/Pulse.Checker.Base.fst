@@ -1008,3 +1008,14 @@ let hoist_stateful_apps
           bind_term
         in
         Some res
+
+ 
+let compose_checker_result_t 
+  (#g:env) (#g':env { g' `env_extends` g }) (#ctxt #ctxt':slprop) (#post_hint:post_hint_opt g)
+  (r1:checker_result_t g ctxt None)
+  (r2:checker_result_t g' ctxt' post_hint { composable r1 r2 })
+: T.Tac (checker_result_t g ctxt post_hint)
+= let (| x1, g1, t1, (| _, ctxt'_typing |), k1 |) = r1 in
+  let (| x2, g2, t2, ctxt2, k2 |) = r2 in
+  let k = k_elab_trans k1 k2 in
+  (| x2, g2, t2, ctxt2, k |)
