@@ -49,7 +49,7 @@ val warn_on_use_errno    : int
 val defensive_errno      : int
 val call_to_erased_errno : int
 
-val update_flags : list (error_flag & string) -> list error_setting
+val update_flags : list (error_flag & (int & int)) -> list error_setting
 
 type context_t = list string
 
@@ -114,7 +114,7 @@ val set_handler : error_handler -> unit
 val get_ctx : unit -> list string
 
 val set_option_warning_callback_range : ropt:option FStarC.Range.range -> unit
-val set_parse_warn_error : (string -> list error_setting) -> unit
+val set_parse_warn_error : (string -> option (list error_setting)) -> unit
 
 val lookup : error_code -> error_setting
 

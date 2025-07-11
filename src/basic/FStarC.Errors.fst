@@ -80,7 +80,7 @@ let warn_on_use_errno    = errno Warning_WarnOnUse
 let defensive_errno      = errno Warning_Defensive
 let call_to_erased_errno = errno Error_CallToErased
 
-let update_flags (l:list (error_flag & string))
+let update_flags (l:list (error_flag & (int & int)))
   : list error_setting
   = let set_one_flag i flag default_flag =
       match flag, default_flag with
@@ -107,19 +107,9 @@ let update_flags (l:list (error_flag & string))
     let errs = lookup_error_range default_settings range in
     List.map (fun (v, default_flag, i) -> v, set_one_flag i flag default_flag, i) errs
    in
-   let compute_range (flag, s) =
-     let r = BU.split s ".." in
-     let (l,h) =
-         match r with
-         | [r1; r2] -> (int_of_string r1, int_of_string r2)
-         | _ -> raise (Invalid_warn_error_setting
-                       (BU.format1 "Malformed warn-error range %s" s))
-     in
-     flag, (l, h)
-  in
   // NOTE: Rev below so when we handle things like '@0..100-50'
   // the -50 overrides the @0..100.
-  let error_range_settings = List.map compute_range (List.rev l) in
+  let error_range_settings = List.rev l in
   List.collect set_flag_for_range error_range_settings
   @ default_settings
 
@@ -457,7 +447,7 @@ let set_option_warning_callback_range (ropt:option FStarC.Range.range) =
 let t_set_parse_warn_error,
     error_flags =
     (* To parse a warn_error string we expect a callback to be set in FStarC.Main.setup_hooks *)
-    let parser_callback : ref (option (string -> list error_setting)) = mk_ref None in
+    let parser_callback : ref (option (string -> option (list error_setting))) = mk_ref None in
     (* The reporting of errors, particularly errors in the warn_error string itself
        is delicate.
        We keep a map from warn_error strings to their parsed results,
@@ -478,7 +468,11 @@ let t_set_parse_warn_error,
           | Some f -> f s
         in
         let we = Options.warn_error () in
-        try let r = parse we in
+        try
+          let r = parse we in
+          match r with
+          | None -> raise (Invalid_warn_error_setting "Parsing of warn_error string failed")
+          | Some r ->
             SMap.add error_flags we (Some r);
             Getopt.Success
         with Invalid_warn_error_setting msg ->
@@ -503,7 +497,7 @@ let t_set_parse_warn_error,
        and installing, in turn, callbacks in Options for
        parsing warn_error settings and also for warning on the use of
        unsafe options. *)
-    let set_callbacks (f:string -> list error_setting) =
+    let set_callbacks (f:string -> option (list error_setting)) =
         parser_callback := Some f;
         Options.set_error_flags_callback set_error_flags;
         Options.set_option_warning_callback (warn_unsafe_options None)

@@ -573,7 +573,6 @@ match%sedlex lexbuf with
  | uint64 -> UINT64 (clean_number (L.lexeme lexbuf))
  | int64 -> INT64 (clean_number (L.lexeme lexbuf))
  | sizet -> SIZET (clean_number (L.lexeme lexbuf))
- | range -> RANGE (L.lexeme lexbuf)
  | real -> REAL(trim_right lexbuf 1)
  | (integer | xinteger | ieee64 | xieee64), Plus ident_char ->
    fail lexbuf (Codes.Fatal_SyntaxError, "This is not a valid numeric literal: " ^ L.lexeme lexbuf)
