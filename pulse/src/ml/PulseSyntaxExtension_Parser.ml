@@ -157,7 +157,6 @@ let rewrite_token (tok:FP.token)
     | QMARK -> PP.QMARK 
     | QMARK_DOT -> PP.QMARK_DOT 
     | QUOTE -> PP.QUOTE 
-    | RANGE s -> PP.RANGE s 
     | RANGE_OF -> PP.RANGE_OF 
     | RARROW -> PP.RARROW 
     | RBRACE -> PP.RBRACE 
