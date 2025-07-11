@@ -117,7 +117,7 @@ let check_binder_typ
 
 let maybe_close_post 
   (g:env)
-  (post_hint:post_hint_opt g)
+  (post_hint:post_hint_opt g {Some? post_hint})
   (ctxt:slprop)
   (ctxt_typing:tot_typing g ctxt tm_slprop)
   (res_ppname:ppname)
@@ -131,9 +131,6 @@ let maybe_close_post
       Printf.sprintf "Derivation of continuation in bind:\n%s\n"
         (Pulse.Typing.Printer.print_st_typing dd));
     d
-  | _ ->
-    let (| x, g1, t, ctxt', k |) = r in
-    admit()
 
 let check_bind'
   (maybe_elaborate:bool)
@@ -150,8 +147,8 @@ let check_bind'
   debug_prover g (fun _ ->
     Printf.sprintf "checking bind:\n%s\n" (P.st_term_to_string t));
 
-  // if None? post_hint
-  // then fail g (Some t.range) "check_bind: post hint is not set, please add an annotation";
+  if None? post_hint
+  then fail g (Some t.range) "check_bind: post hint is not set, please add an annotation";
 
   let Tm_Bind { binder; head=e1; body=e2 } = t.term in
   if Tm_Admit? e1.term
