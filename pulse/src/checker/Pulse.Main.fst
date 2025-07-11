@@ -125,9 +125,10 @@ let check_fndefn
     (refl_t:typ)
     (_:squash (RT.tot_typing (elab_env g) (elab_st_typing t_typing) refl_t)) =
     let nm = fst (inspect_ident id) in
-    if elab_derivation
-    then RT.mk_checked_let (fstar_env g) cur_module nm (elab_st_typing t_typing) refl_t
-    else Reflection.Util.mk_opaque_let (fstar_env g) cur_module nm (elab_st_typing t_typing) refl_t
+    // if elab_derivation
+    // then RT.mk_checked_let (fstar_env g) cur_module nm (elab_st_typing t_typing) refl_t
+    // else 
+    Reflection.Util.mk_opaque_let (fstar_env g) cur_module nm (elab_st_typing t_typing) refl_t
   in
 
   if fn_d.isrec

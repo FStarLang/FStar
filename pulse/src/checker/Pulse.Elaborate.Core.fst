@@ -97,7 +97,7 @@ let elab_bind #g #x #c1 #c2 #c
           e1 e2
   
 let elab_lift #g #c1 #c2 (d:lift_comp g c1 c2) (e:R.term)
-  : Tot R.term
+  : GTot R.term
   = match d with
     | Lift_STAtomic_ST _ _ ->
       let t = comp_res c1 in
@@ -169,7 +169,7 @@ let rec elab_st_typing (#g:env)
                        (#t:st_term)
                        (#c:comp)
                        (d:st_typing g t c)
-  : Tot R.term (decreases d)
+  : GTot R.term (decreases d)
   = match d with
     | T_Abs _ x qual b _u body _c ty_typing body_typing ->
       let ty = b.binder_ty in
@@ -317,7 +317,7 @@ and elab_br (#g:env)
             (#p:pattern)
             (#e:st_term)
             (d : br_typing g sc_u sc_ty sc p e c)
-  : Tot R.branch (decreases d)
+  : GTot R.branch (decreases d)
   = let TBR _ _ _ _ _ _ _ _ bs _ _ _ ed = d in
     let e = elab_st_typing ed in
     (elab_pat p, e)
@@ -326,7 +326,7 @@ and elab_branches (#g:env)
                   (#sc_u:universe) (#sc_ty:typ) (#sc:term)
                   (#brs:list branch)
                   (d : brs_typing g sc_u sc_ty sc brs c)
-  : Tot (list R.branch)
+  : GTot (list R.branch)
         (decreases d)
   = match d with
     | TBRS_0 _ -> []

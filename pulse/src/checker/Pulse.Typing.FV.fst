@@ -492,7 +492,7 @@ let st_typing_freevars_cb_t
 let st_typing_freevars_case
   (pred : (
     (#g:_) -> (#t:_) -> (#c:_) ->
-    st_typing g t c -> bool))
+    st_typing g t c -> GTot bool))
   : Type =
   (#g:_) -> (#t:_) -> (#c:_) ->
   (d : st_typing g t c{pred d}) ->

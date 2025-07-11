@@ -226,11 +226,13 @@ let weaken_comp_inames (#g:env) (#e:st_term) (#c:comp_st) (d_e:st_typing g e c) 
   = match c with
     | C_ST _ -> (| c, d_e |)
     | C_STGhost inames sc ->
-      let d_e = T_Sub _ _ _ _ d_e (STS_GhostInvs _ sc inames new_inames (check_prop_validity _ _ (tm_inames_subset_typing _ _ _))) in
+      let pv = check_prop_validity _ _ (tm_inames_subset_typing _ _ _) in
+      let d_e = T_Sub _ _ _ _ d_e (STS_GhostInvs _ sc inames new_inames pv) in
       (| with_inames c new_inames, d_e |)
 
     | C_STAtomic inames obs sc ->
-      let d_e = T_Sub _ _ _ _ d_e (STS_AtomicInvs _ sc inames new_inames obs obs (check_prop_validity _ _ (tm_inames_subset_typing _ _ _))) in
+      let pv = check_prop_validity _ _ (tm_inames_subset_typing _ _ _) in
+      let d_e = T_Sub _ _ _ _ d_e (STS_AtomicInvs _ sc inames new_inames obs obs pv) in
       (| with_inames c new_inames, d_e |)
 
 let try_lift_ghost_atomic (#g:env) (#e:st_term) (#c:comp_st { C_STGhost? c }) (d:st_typing g e c)
@@ -278,15 +280,18 @@ let mk_bind_ghost_ghost : bind_t C_STGhost? C_STGhost? =
   end
   else if (Some? post_hint)
   then (
-    let d_e1 = T_Sub _ _ _ _ d_e1 (STS_GhostInvs _ sc1 inames1 inames2 (check_prop_validity _ _ (tm_inames_subset_typing _ _ _))) in
+    let pv = check_prop_validity _ _ (tm_inames_subset_typing _ _ _) in
+    let d_e1 = T_Sub _ _ _ _ d_e1 (STS_GhostInvs _ sc1 inames1 inames2 pv) in
     let c1 = C_STGhost inames2 sc1 in
     let bc = Bind_comp g x c1 c2 res_typing x post_typing in
     (| _, _, T_Bind _ e1 e2 _ _ b _ _ d_e1 d_c1res d_e2 bc |)
   )
   else begin
     let new_inames = tm_join_inames inames1 inames2 in
-    let d_e1 = T_Sub _ _ _ _ d_e1 (STS_GhostInvs _ sc1 inames1 new_inames (check_prop_validity _ _ (tm_inames_subset_typing _ _ _))) in
-    let d_e2 = T_Sub _ _ _ _ d_e2 (STS_GhostInvs _ sc2 inames2 new_inames (check_prop_validity _ _ (tm_inames_subset_typing _ _ _))) in
+    let pv1 = check_prop_validity _ _ (tm_inames_subset_typing _ _ _) in
+    let pv2 = check_prop_validity _ _ (tm_inames_subset_typing _ _ _) in
+    let d_e1 = T_Sub _ _ _ _ d_e1 (STS_GhostInvs _ sc1 inames1 new_inames pv1) in
+    let d_e2 = T_Sub _ _ _ _ d_e2 (STS_GhostInvs _ sc2 inames2 new_inames pv2) in
     let c1 = C_STGhost new_inames sc1 in
     let c2 = C_STGhost new_inames sc2 in
     let bc = Bind_comp g x c1 c2 res_typing x post_typing in
@@ -309,15 +314,18 @@ let mk_bind_atomic_atomic
         end
         else if (Some? post_hint)
         then (
-          let d_e1 = T_Sub _ _ _ _ d_e1 (STS_AtomicInvs _ sc1 inames1 inames2 obs1 obs1 (check_prop_validity _ _ (tm_inames_subset_typing _ _ _))) in
+          let pv = check_prop_validity _ _ (tm_inames_subset_typing _ _ _) in
+          let d_e1 = T_Sub _ _ _ _ d_e1 (STS_AtomicInvs _ sc1 inames1 inames2 obs1 obs1 pv) in
           let c1 = C_STAtomic inames2 obs1 sc1 in
           let bc = Bind_comp g x c1 c2 res_typing x post_typing in
           (| _, _, T_Bind _ e1 e2 _ _ b _ _ d_e1 d_c1res d_e2 bc |)
         )
         else begin
           let new_inames = tm_join_inames inames1 inames2 in
-          let d_e1 = T_Sub _ _ _ _ d_e1 (STS_AtomicInvs _ sc1 inames1 new_inames obs1 obs1 (check_prop_validity _ _ (tm_inames_subset_typing _ _ _))) in
-          let d_e2 = T_Sub _ _ _ _ d_e2 (STS_AtomicInvs _ sc2 inames2 new_inames obs2 obs2 (check_prop_validity _ _ (tm_inames_subset_typing _ _ _))) in
+          let pv1 = check_prop_validity _ _ (tm_inames_subset_typing _ _ _) in
+          let pv2 = check_prop_validity _ _ (tm_inames_subset_typing _ _ _) in
+          let d_e1 = T_Sub _ _ _ _ d_e1 (STS_AtomicInvs _ sc1 inames1 new_inames obs1 obs1 pv1) in
+          let d_e2 = T_Sub _ _ _ _ d_e2 (STS_AtomicInvs _ sc2 inames2 new_inames obs2 obs2 pv2) in
           let c1 = C_STAtomic new_inames obs1 sc1 in
           let c2 = C_STAtomic new_inames obs2 sc2 in
           let bc = Bind_comp g x c1 c2 res_typing x post_typing in

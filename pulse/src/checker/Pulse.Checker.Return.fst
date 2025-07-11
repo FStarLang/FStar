@@ -69,7 +69,8 @@ let compute_tot_or_ghost_term_type_and_u (g:env) (e:term) (c:option ctag)
   let (| c, e, d |) = check_effect d c in
   R c e u ty ud d
 
-#push-options "--z3rlimit_factor 4"
+#push-options "--z3rlimit_factor 8 --fuel 0 --ifuel 1"
+#restart-solver
 let check_core
   (g:env)
   (ctxt:term)

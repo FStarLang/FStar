@@ -151,7 +151,7 @@ let intro_post_hint g effect_annot ret_ty_opt post =
 
 let comp_typing_as_effect_annot_typing (#g:env) (#c:comp_st) (ct:comp_typing_u g c)
 : effect_annot_typing g (effect_annot_of_comp c)
-= let _, iname_typing = Metatheory.comp_typing_inversion ct in
+= let iname_typing = snd <| Metatheory.comp_typing_inversion ct in
   match c with
   | C_ST _ -> ()
   | C_STGhost _ _
@@ -159,19 +159,19 @@ let comp_typing_as_effect_annot_typing (#g:env) (#c:comp_st) (ct:comp_typing_u g
   
 
 let post_hint_from_comp_typing #g #c ct = 
-  let st_comp_typing, _ = Metatheory.comp_typing_inversion ct in
-  let (| ty_typing, pre_typing, x, post_typing |) = Metatheory.st_comp_typing_inversion st_comp_typing in
+  let st_comp_typing = fst <| Metatheory.comp_typing_inversion ct in
   let effect_annot_typing = comp_typing_as_effect_annot_typing ct in
+  let inv = Metatheory.st_comp_typing_inversion st_comp_typing in
   let p : post_hint_t = 
     { g;
       effect_annot=_;
       effect_annot_typing;
       ret_ty = comp_res c; u=comp_u c; 
-      ty_typing=ty_typing;
+      ty_typing=Mkdtuple4?._1 inv;
       post=comp_post c;
-      x;
-      post_typing_src=post_typing;
-      post_typing=post_typing_as_abstraction post_typing }
+      x=Mkdtuple4?._3 inv;
+      post_typing_src=Mkdtuple4?._4 inv;
+      post_typing=post_typing_as_abstraction (Mkdtuple4?._4 inv) }
   in
   p
 
@@ -390,7 +390,7 @@ let continuation_elaborator_with_bind (#g:env) (ctxt:term)
       (show c1));
   let (| c1, e1_typing |) =
     apply_frame ctxt_pre1_typing e1_typing framing_token in
-  let (| u_of_1, pre_typing, _, _ |) =
+  let (| u_of_1, pre_typing, _, _ |) = 
     Metatheory.(st_comp_typing_inversion (fst <| comp_typing_inversion (st_typing_correctness e1_typing))) in
   let b = res1 in
   let ppname, x = x in
@@ -450,7 +450,7 @@ let st_comp_typing_with_post_hint
       (ctxt_typing:tot_typing g ctxt tm_slprop)
       (post_hint:post_hint_opt g { Some? post_hint })
       (c:comp_st { comp_pre c == ctxt /\ comp_post_matches_hint c post_hint })
-: Dv (st_comp_typing g (st_comp_of_comp c))
+: st_comp_typing g (st_comp_of_comp c)
 = let st = st_comp_of_comp c in
   let Some ph = post_hint in
   let post_typing_src
@@ -458,13 +458,13 @@ let st_comp_typing_with_post_hint
                  (open_term ph.post ph.x) tm_slprop
     = ph.post_typing_src
   in
-  let x = fresh g in
+  let x = RU.magic () in //fresh g in
   assume (fresh_wrt x g (freevars ph.post));
   assume (None? (lookup g ph.x));
   let post_typing_src
     : tot_typing (push_binding ph.g x ppname_default ph.ret_ty)
                  (open_term ph.post x) tm_slprop
-    = if x = ph.x
+    = if x = Ghost.reveal ph.x
       then post_typing_src
       else 
         let open Pulse.Typing.Metatheory.Base in
@@ -625,7 +625,6 @@ let match_comp_res_with_post_hint (#g:env) (#t:st_term) (#c:comp_st)
            let c' = with_st_comp c {(st_comp_of_comp c) with res = ret_ty } in
            let (| cres_typing, cpre_typing, x, cpost_typing |) =
              st_comp_typing_inversion (fst <| comp_typing_inversion (st_typing_correctness d)) in
-
            let d_stequiv : st_equiv g c c' =
              ST_SLPropEquiv _ c c' _ cpre_typing cres_typing cpost_typing d_equiv (VE_Refl _ _) (VE_Refl _ _)
            in
@@ -654,9 +653,10 @@ let checker_result_for_st_typing (#g:env) (#ctxt:slprop) (#post_hint:post_hint_o
   (ppname:ppname)
 : T.Tac (checker_result_t g ctxt post_hint)
 = let (| e1, c1, d1 |) = d in
-  let (| u_of_1, pre_typing, x, post_typing |) =
-    Metatheory.(st_comp_typing_inversion (fst <| comp_typing_inversion (st_typing_correctness d1))) in
-
+  let x = fresh g in
+  assume (~ (x `Set.mem` freevars (comp_post c1)));
+  let u_of_1, pre_typing, post_typing = 
+    Metatheory.(st_comp_typing_inversion_with_name (fst <| comp_typing_inversion (st_typing_correctness d1)) x) in
   let g' = push_binding g x ppname (comp_res c1) in
   let ctxt' = open_term_nv (comp_post c1) (ppname, x) in
   let k

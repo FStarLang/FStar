@@ -32,7 +32,7 @@ open FStar.Ghost
 
 
 val admit_comp_typing (g:env) (c:comp_st)
-  : Dv (comp_typing_u g c)
+  : comp_typing_u g c
 
 let rt_equiv_typing (#g:_) (#t0 #t1:_) (d:RT.equiv g t0 t1)
                     (#k:_)
@@ -54,13 +54,14 @@ let iname_typing (g:env) (c:comp_st) = tot_typing g (inames_of_comp_st c) tm_ina
 
 val st_typing_correctness (#g:env) (#t:st_term) (#c:comp_st) 
                           (d:st_typing g t c)
-  : Dv (comp_typing_u g c)
+  : comp_typing_u g c
   
 val comp_typing_inversion (#g:env) (#c:comp_st) (ct:comp_typing_u g c)
-  : st_comp_typing g (st_comp_of_comp c) & iname_typing g c
+  : erased (st_comp_typing g (st_comp_of_comp c) & iname_typing g c)
 
 val st_comp_typing_inversion_cofinite (#g:env) (#st:_) (ct:st_comp_typing g st)
-  : (universe_of g st.res st.u &
+  : (
+    universe_of g st.res st.u &
      tot_typing g st.pre tm_slprop &
      (x:var{fresh_wrt x g (freevars st.post)} -> //this part is tricky, to get the quantification on x
        tot_typing (push_binding g x ppname_default st.res) (open_term st.post x) tm_slprop))
@@ -68,14 +69,19 @@ val st_comp_typing_inversion_cofinite (#g:env) (#st:_) (ct:st_comp_typing g st)
 val st_comp_typing_inversion (#g:env) (#st:_) (ct:st_comp_typing g st)
   : (universe_of g st.res st.u &
      tot_typing g st.pre tm_slprop &
-     x:var{fresh_wrt x g (freevars st.post)} &
+     x:erased var{fresh_wrt x g (freevars st.post)} &
      tot_typing (push_binding g x ppname_default st.res) (open_term st.post x) tm_slprop)
+
+val st_comp_typing_inversion_with_name (#g:env) (#st:_) (ct:st_comp_typing g st) (x:var{fresh_wrt x g (freevars st.post)})
+  : universe_of g st.res st.u &
+    tot_typing g st.pre tm_slprop &
+    tot_typing (push_binding g x ppname_default st.res) (open_term st.post x) tm_slprop
 
 val tm_exists_inversion (#g:env) (#u:universe) (#ty:term) (#p:term) 
                         (_:tot_typing g (tm_exists_sl u (as_binder ty) p) tm_slprop)
                         (x:var { fresh_wrt x g (freevars p) } )
-  : universe_of g ty u &
-    tot_typing (push_binding g x ppname_default ty) p tm_slprop
+  : (universe_of g ty u &
+     tot_typing (push_binding g x ppname_default ty) p tm_slprop)
 
 val pure_typing_inversion (#g:env) (#p:term) (_:tot_typing g (tm_pure p) tm_slprop)
    : tot_typing g p (S.wr FStar.Reflection.Typing.tm_prop Range.range_0)

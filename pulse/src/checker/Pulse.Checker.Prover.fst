@@ -606,7 +606,6 @@ let try_frame_pre_uvs
     : continuation_elaborator g1 (remaining_ctxt * comp_pre c)
                               g2 ctxt' =
     continuation_elaborator_with_bind remaining_ctxt d (RU.magic #(tot_typing _ _ _) ()) (res_ppname, x) in
-
   let k
     : continuation_elaborator g1 (comp_pre c * remaining_ctxt)
                               g2 ctxt' =
