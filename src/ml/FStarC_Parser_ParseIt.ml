@@ -303,7 +303,6 @@ let string_of_token =
   | INT32 s  -> "INT32 " ^ s
   | INT64 s  -> "INT64 " ^ s
   | INT s    -> "INT " ^ s
-  | RANGE s  -> "RANGE " ^ s
   | UINT8 s  -> "UINT8 " ^ s
   | UINT16 s -> "UINT16 " ^ s
   | UINT32 s -> "UINT32 " ^ s
@@ -615,18 +614,18 @@ let parse (lang_opt:lang_opts) fn =
 (** Parsing of command-line error/warning/silent flags. *)
 let parse_warn_error s =
   let user_flags =
-    if s = ""
-    then []
-    else
-      let lexbuf = FStarC_Sedlexing.create s "" 0 (String.length s) in
-      let lexer() = let tok = FStarC_Parser_LexFStar.token lexbuf in
-        if !dbg_Tokens then
-          print_string ("TOKEN: " ^ (string_of_token tok) ^ "\n");
-        (tok, lexbuf.start_p, lexbuf.cur_p)
-      in
-      try
-        MenhirLib.Convert.Simplified.traditional2revised FStarC_Parser_Parse.warn_error_list lexer
-      with e ->
-        failwith (U.format1 "Malformed warn-error list: %s" s)
+    let lexbuf = FStarC_Sedlexing.create s "" 0 (String.length s) in
+    let lexer () =
+      let tok = FStarC_Parser_WarnError_Lex.token lexbuf in
+      (tok, lexbuf.start_p, lexbuf.cur_p)
+    in
+    try
+      Some (MenhirLib.Convert.Simplified.traditional2revised FStarC_Parser_WarnError.warn_error_list lexer)
+    with e ->
+      None
   in
-  FStarC_Errors.update_flags user_flags
+  let map_opt f = function
+    | None -> None
+    | Some x -> Some (f x)
+  in
+  map_opt FStarC_Errors.update_flags user_flags

@@ -21,6 +21,8 @@
 
 (menhir
  (modules FStarC_Parser_Parse))
+(menhir
+ (modules FStarC_Parser_WarnError))
 
 (rule
   (target FStarC_Version.ml)

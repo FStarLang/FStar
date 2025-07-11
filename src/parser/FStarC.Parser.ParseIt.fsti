@@ -63,7 +63,7 @@ val parse (ext_lang:lang_opts)
 : parse_result
 val find_file: string -> string
 
-val parse_warn_error: string -> list FStarC.Errors.error_setting
+val parse_warn_error: string -> option (list FStarC.Errors.error_setting)
 
 (* useful for unit testing and registered a #lang-fstar parser *)
 val parse_fstar_incrementally : AU.extension_lang_parser
