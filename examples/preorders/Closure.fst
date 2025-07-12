@@ -148,7 +148,7 @@ let st_offer (st0: client_state) : option offer =
   | C13_wait_Finished1 transcript0 mode0 -> Some (mode_offer mode0)
   | _ -> None
 
-let mrel = closure step
+let mrel : FStar.Preorder.preorder client_state = closure step
 
 /// Main type for the connection handshake
 noeq type t = | C_State: HST.mreference client_state mrel -> t
@@ -159,7 +159,8 @@ open FStar.HyperStack.ST
 
 let p (r:mreference client_state mrel) (o:offer) h0 =
   st_offer (HS.sel h0 r) == Some o
-
+#restart-solver
+#push-options "--fuel 0 --ifuel 0 --split_queries no --z3rlimit_factor 4"
 val witness_offer (st:t) :
   ST (o: offer { let C_State r = st in token_p r (p r o) } )
     (requires fun h0 ->
@@ -168,6 +169,7 @@ val witness_offer (st:t) :
        ~(C_init? (HS.sel h0 r)) /\
        ~(C_truncated_ClientHello? (HS.sel h0 r)))
     (ensures fun h0 o h1 -> h0 == h1)
+#pop-options
 let witness_offer st =
   let C_State r = st in
   let Some o = st_offer !r in
