@@ -38,6 +38,10 @@ val freevars_close_term (e:term) (x:var) (i:index)
              freevars e `set_minus` x)
     [SMTPat (freevars (close_term' e x i))]
 
+val freevars_open_term_both (x:var) (t:term)
+: Lemma (freevars (open_term t x) `Set.subset` (freevars t `Set.union` Set.singleton x) /\
+         freevars t `Set.subset` freevars (open_term t x))
+
 val freevars_close_st_term (e:st_term) (x:var) (i:index)
   : Lemma 
     (ensures freevars_st (close_st_term' e x i) ==

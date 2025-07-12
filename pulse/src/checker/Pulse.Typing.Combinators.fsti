@@ -26,6 +26,9 @@ let st_comp_with_pre (st:st_comp) (pre:term) : st_comp = { st with pre }
 let nvar_as_binder (x:nvar) (t:term) : binder =
   mk_binder_ppname t (fst x)
 
+val t_equiv #g #st #c (d:st_typing g st c) (#c':comp) (eq:st_equiv g c c')
+  : st_typing g st c'
+  
 val slprop_equiv_typing (#g:_) (#t0 #t1:term) (v:slprop_equiv g t0 t1)
   : GTot ((tot_typing g t0 tm_slprop -> tot_typing g t1 tm_slprop) &
           (tot_typing g t1 tm_slprop -> tot_typing g t0 tm_slprop))

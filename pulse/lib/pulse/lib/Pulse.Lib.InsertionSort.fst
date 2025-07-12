@@ -147,8 +147,7 @@ ensures exists* s'. (a |-> s') **
 {
   let mut j = 1sz;
   while (
-    let vj = !j;
-    SZ.(vj <^ len)
+    SZ.(!j <^ len)
   )
   invariant b. (
     exists* vj (s':Seq.seq t).
@@ -172,10 +171,7 @@ ensures exists* s'. (a |-> s') **
     let mut done = false;
     with ss. assert (a |-> ss);
     while (
-      let vi = !i;
-      let ai = a.(vi);
-      let done = !done;
-      (not done && ai >? key)
+      (not !done && a.(!i) >? key)
     )
     invariant b. (
       exists* (vi:SZ.t) (d:bool) (s':Seq.seq t). 
@@ -188,8 +184,7 @@ ensures exists* s'. (a |-> s') **
     {
       let vi = !i;
       with s0. assert (a |-> s0);
-      let ai = a.(vi);
-      a.(SZ.(vi +^ 1sz)) <- ai;
+      a.(SZ.(vi +^ 1sz)) <- a.(vi);
       with s1. assert (a |-> s1);
       step_inner_invariant ss s0 s1 key vi vj;
       if (vi = 0sz) { done := true }

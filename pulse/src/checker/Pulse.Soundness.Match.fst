@@ -38,9 +38,9 @@ let complete_soundness
   (d : brs_typing g sc_u sc_ty sc brs c)
   (comp : pats_complete g sc sc_ty (L.map (fun br -> elab_pat br.pat) brs))
   (bs : list (list R.binding))
-  : RT.match_is_complete (elab_env g) sc sc_ty
+  : Ghost.erased (RT.match_is_complete (elab_env g) sc sc_ty
                                  (List.Tot.map fst (elab_branches d))
-                                 bs
+                                 bs)
   = let PC_Elab _ _ _ _ bs' s = comp in
     assume (L.map fst (elab_branches d) == L.map (fun br -> elab_pat br.pat) brs); // FIXME
     assume (bs == bs'); // FIXME

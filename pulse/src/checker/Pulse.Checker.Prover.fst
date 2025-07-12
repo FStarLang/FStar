@@ -472,7 +472,7 @@ let prove
     nts = None;
     solved = tm_emp;
     unsolved = slprop_as_list goals;
-    k = k_elab_equiv (k_elab_unit g ctxt) (RU.magic ()) (RU.magic ());
+    k = k_elab_equiv_continuation (k_elab_unit g (preamble.ctxt * preamble.frame)) (RU.magic ());
     goals_inv = RU.magic ();
     solved_inv = ();
     progress = false;
@@ -529,7 +529,9 @@ let prove
   // so we can drop their substitutions from the tail of nts
   assume (PS.nt_subst_term goals nts == PS.nt_subst_term goals nts_uvs);
 
-  (| pst.pg, nts_uvs, nts_uvs_effect_labels, list_as_slprop pst.remaining_ctxt, k_elab_equiv (k ()) (RU.magic ()) (RU.magic ()) |)
+  (| pst.pg, nts_uvs, nts_uvs_effect_labels, 
+     list_as_slprop pst.remaining_ctxt,
+     k_elab_equiv (k ()) (RU.magic ()) (RU.magic ()) |)
 #pop-options
 
 let canon_post (c:comp_st) : comp_st =
@@ -604,7 +606,6 @@ let try_frame_pre_uvs
     : continuation_elaborator g1 (remaining_ctxt * comp_pre c)
                               g2 ctxt' =
     continuation_elaborator_with_bind remaining_ctxt d (RU.magic #(tot_typing _ _ _) ()) (res_ppname, x) in
-
   let k
     : continuation_elaborator g1 (comp_pre c * remaining_ctxt)
                               g2 ctxt' =

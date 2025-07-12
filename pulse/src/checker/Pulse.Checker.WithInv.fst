@@ -237,7 +237,7 @@ let withinv_post (#g:env) (#p:term) (#i:term) (#post:term)
   __withinv_post #g #p #i #post p_typing i_typing post_typing
 
 #restart-solver
-#push-options "--z3rlimit_factor 20 --split_queries no"
+#push-options "--z3rlimit_factor 40 --split_queries no"
 let check0
   (g:env)
   (pre:term)
@@ -278,10 +278,12 @@ let check0
         (Some b.binder_ty)
         post in
       begin
-        let g_x = push_binding g post_hint.x ppname_default post_hint.ret_ty in
+        let x = fresh g in
+        assume (x == Ghost.reveal post_hint.x);
+        let g_x = push_binding g x ppname_default post_hint.ret_ty in
         let res = withinv_post
           #g_x
-          #p #i #(open_term_nv post_hint.post (v_as_nv post_hint.x))
+          #p #i #(open_term_nv post_hint.post (v_as_nv x))
           (RU.magic ())  // weakening of p typing
           (RU.magic ())  // weakening of i typing
           post_hint.post_typing_src
@@ -294,13 +296,13 @@ let check0
             text "in the with_invariants annotated postcondition."
           ]
         | Some (| post', post'_typing |) ->
-          let post'_closed = close_term post' post_hint.x in
-          assume (open_term (post'_closed) post_hint.x == post');
+          let post'_closed = close_term post' x in
+          assume (open_term (post'_closed) x == post');
           assume (freevars post_hint.post == freevars post');
           { post_hint with
             post = post'_closed;
             post_typing_src = post'_typing;
-            post_typing = post_typing_as_abstraction #_ #post_hint.x #_ #post'_closed post'_typing }
+            post_typing = post_typing_as_abstraction #_ #x #_ #post'_closed post'_typing }
       end
     | Some (_, post, _), Some q ->
       fail_doc g (Some t.range) 
@@ -451,8 +453,7 @@ let check0
                                         (RT.Rel_refl _ _ RT.R_Eq)
                                         d_pre_eq
                                         d_post_eq in
-    let d : st_typing _ _ c_out =
-      T_Equiv _ _ _ _ d d_st_equiv in
+    let d : st_typing _ _ c_out = Pulse.Typing.Combinators.t_equiv d d_st_equiv in
     d
   in
   match post_hint.effect_annot with
