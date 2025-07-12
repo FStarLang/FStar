@@ -75,6 +75,29 @@ let head_range (t:st_term {Tm_WithLocalArray? t.term}) : range =
   let Tm_WithLocalArray { initializer } = t.term in
   Pulse.RuntimeUtils.range_of_term initializer
 
+let check_length_constant g (t:term)
+: T.Tac unit
+= let open FStar.Reflection.V2 in
+  let open Pulse.PP in
+  let fail () =
+    fail_doc g (Some <| T.range_of_term t)
+      [text "Stack allocating an array requires the length to be a constant";
+       text (P.term_to_string t ^ " is not a constant")]
+  in
+  match T.inspect_ln t with
+  | Tv_Const _ -> ()
+  | Tv_App hd (arg, Q_Explicit) -> (
+    match T.inspect_ln hd with
+    | Tv_FVar fv -> (
+      if T.inspect_fv fv = ["FStar"; "SizeT"; "__uint_to_t"]
+      && Tv_Const? (T.inspect_ln arg)
+      then ()
+      else fail()
+    )
+    | _ -> fail()
+  )
+  | _ -> fail()
+
 #restart-solver
 let check
   (g:env)
@@ -121,6 +144,7 @@ let check
           <: (t:term & u:universe & ty:term & universe_of g ty u & tot_typing g t ty)
           (* ^ Need this annotation *)
     in
+    check_length_constant g length;
     let (| len, len_typing |) =
       check_tot_term g length tm_szt in
     if not (eq_univ init_u u0)
