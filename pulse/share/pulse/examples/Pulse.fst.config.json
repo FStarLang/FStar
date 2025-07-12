@@ -3,7 +3,7 @@
   "options": [
     "--query_cache",
     "--cache_dir",
-    "dice/_cache",
+    "_output/_cache",
     "--warn_error", 
     "-249",
     "--ext",
