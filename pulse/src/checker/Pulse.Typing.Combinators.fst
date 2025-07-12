@@ -46,7 +46,37 @@ val construct_forall_typing
         (dt:tot_typing g b.binder_ty (tm_type u))
         (db:tot_typing (push_binding g x ppname_default b.binder_ty) (open_term body x) tm_slprop)
   : GTot (tot_typing g (tm_forall_sl u b body) tm_slprop)
-   
+
+let st_equiv_trans (#g:env) (#c0 #c1 #c2:comp) (d01:st_equiv g c0 c1) (d12:st_equiv g c1 c2)
+  : st_equiv g c0 c2
+  = 
+    match d01 with
+    | ST_SLPropEquiv _f _c0 _c1 x c0_pre_typing c0_res_typing c0_post_typing eq_res_01 eq_pre_01 eq_post_01 -> (
+      let ST_SLPropEquiv _f _c1 _c2 y c1_pre_typing c1_res_typing c1_post_typing eq_res_12 eq_pre_12 eq_post_12 = d12 in
+      let eq_res_10 = RT.Rel_sym _ _ _ eq_res_01 in
+      let eq_post_12_x = Pulse.Typing.Metatheory.Base.slprop_equiv_rename y x _ _ eq_res_10 eq_post_12 in
+      Pulse.Typing.FV.freevars_open_term_both y (comp_post c2);
+      Pulse.Typing.Metatheory.Base.freevars_slprop_equiv eq_post_12;
+      assert ~(Set.mem x (freevars (comp_post c2)));
+      let eq = 
+        ST_SLPropEquiv g c0 c2 x c0_pre_typing c0_res_typing c0_post_typing
+              (RT.Rel_trans _ _ _ _ _ eq_res_01 eq_res_12)
+              (VE_Trans _ _ _ _ eq_pre_01 eq_pre_12)
+              (VE_Trans _ _ _ _ eq_post_01 eq_post_12_x)
+      in
+      eq
+    )
+    | ST_TotEquiv g t1 t2 u typing eq ->
+      let ST_TotEquiv _g _t1 t3 _ _ eq' = d12 in
+      let eq'' = Ghost.hide (RT.Rel_trans _ _ _ _ _ eq eq') in
+      ST_TotEquiv g t1 t3 u typing eq''
+
+let t_equiv #g #st #c (d:st_typing g st c) (#c':comp) (eq:st_equiv g c c')
+  : st_typing g st c'
+  = match d with
+    | T_Equiv _ _ _ _ d0 eq' -> 
+      T_Equiv _ _ _ _ d0 (st_equiv_trans eq' eq)
+    | _ -> T_Equiv _ _ _ _ d eq
 
 let rec slprop_equiv_typing (#g:_) (#t0 #t1:term) (v:slprop_equiv g t0 t1)
   : GTot ((tot_typing g t0 tm_slprop -> tot_typing g t1 tm_slprop) &
@@ -196,11 +226,13 @@ let weaken_comp_inames (#g:env) (#e:st_term) (#c:comp_st) (d_e:st_typing g e c) 
   = match c with
     | C_ST _ -> (| c, d_e |)
     | C_STGhost inames sc ->
-      let d_e = T_Sub _ _ _ _ d_e (STS_GhostInvs _ sc inames new_inames (check_prop_validity _ _ (tm_inames_subset_typing _ _ _))) in
+      let pv = check_prop_validity _ _ (tm_inames_subset_typing _ _ _) in
+      let d_e = T_Sub _ _ _ _ d_e (STS_GhostInvs _ sc inames new_inames pv) in
       (| with_inames c new_inames, d_e |)
 
     | C_STAtomic inames obs sc ->
-      let d_e = T_Sub _ _ _ _ d_e (STS_AtomicInvs _ sc inames new_inames obs obs (check_prop_validity _ _ (tm_inames_subset_typing _ _ _))) in
+      let pv = check_prop_validity _ _ (tm_inames_subset_typing _ _ _) in
+      let d_e = T_Sub _ _ _ _ d_e (STS_AtomicInvs _ sc inames new_inames obs obs pv) in
       (| with_inames c new_inames, d_e |)
 
 let try_lift_ghost_atomic (#g:env) (#e:st_term) (#c:comp_st { C_STGhost? c }) (d:st_typing g e c)
@@ -248,15 +280,18 @@ let mk_bind_ghost_ghost : bind_t C_STGhost? C_STGhost? =
   end
   else if (Some? post_hint)
   then (
-    let d_e1 = T_Sub _ _ _ _ d_e1 (STS_GhostInvs _ sc1 inames1 inames2 (check_prop_validity _ _ (tm_inames_subset_typing _ _ _))) in
+    let pv = check_prop_validity _ _ (tm_inames_subset_typing _ _ _) in
+    let d_e1 = T_Sub _ _ _ _ d_e1 (STS_GhostInvs _ sc1 inames1 inames2 pv) in
     let c1 = C_STGhost inames2 sc1 in
     let bc = Bind_comp g x c1 c2 res_typing x post_typing in
     (| _, _, T_Bind _ e1 e2 _ _ b _ _ d_e1 d_c1res d_e2 bc |)
   )
   else begin
     let new_inames = tm_join_inames inames1 inames2 in
-    let d_e1 = T_Sub _ _ _ _ d_e1 (STS_GhostInvs _ sc1 inames1 new_inames (check_prop_validity _ _ (tm_inames_subset_typing _ _ _))) in
-    let d_e2 = T_Sub _ _ _ _ d_e2 (STS_GhostInvs _ sc2 inames2 new_inames (check_prop_validity _ _ (tm_inames_subset_typing _ _ _))) in
+    let pv1 = check_prop_validity _ _ (tm_inames_subset_typing _ _ _) in
+    let pv2 = check_prop_validity _ _ (tm_inames_subset_typing _ _ _) in
+    let d_e1 = T_Sub _ _ _ _ d_e1 (STS_GhostInvs _ sc1 inames1 new_inames pv1) in
+    let d_e2 = T_Sub _ _ _ _ d_e2 (STS_GhostInvs _ sc2 inames2 new_inames pv2) in
     let c1 = C_STGhost new_inames sc1 in
     let c2 = C_STGhost new_inames sc2 in
     let bc = Bind_comp g x c1 c2 res_typing x post_typing in
@@ -279,15 +314,18 @@ let mk_bind_atomic_atomic
         end
         else if (Some? post_hint)
         then (
-          let d_e1 = T_Sub _ _ _ _ d_e1 (STS_AtomicInvs _ sc1 inames1 inames2 obs1 obs1 (check_prop_validity _ _ (tm_inames_subset_typing _ _ _))) in
+          let pv = check_prop_validity _ _ (tm_inames_subset_typing _ _ _) in
+          let d_e1 = T_Sub _ _ _ _ d_e1 (STS_AtomicInvs _ sc1 inames1 inames2 obs1 obs1 pv) in
           let c1 = C_STAtomic inames2 obs1 sc1 in
           let bc = Bind_comp g x c1 c2 res_typing x post_typing in
           (| _, _, T_Bind _ e1 e2 _ _ b _ _ d_e1 d_c1res d_e2 bc |)
         )
         else begin
           let new_inames = tm_join_inames inames1 inames2 in
-          let d_e1 = T_Sub _ _ _ _ d_e1 (STS_AtomicInvs _ sc1 inames1 new_inames obs1 obs1 (check_prop_validity _ _ (tm_inames_subset_typing _ _ _))) in
-          let d_e2 = T_Sub _ _ _ _ d_e2 (STS_AtomicInvs _ sc2 inames2 new_inames obs2 obs2 (check_prop_validity _ _ (tm_inames_subset_typing _ _ _))) in
+          let pv1 = check_prop_validity _ _ (tm_inames_subset_typing _ _ _) in
+          let pv2 = check_prop_validity _ _ (tm_inames_subset_typing _ _ _) in
+          let d_e1 = T_Sub _ _ _ _ d_e1 (STS_AtomicInvs _ sc1 inames1 new_inames obs1 obs1 pv1) in
+          let d_e2 = T_Sub _ _ _ _ d_e2 (STS_AtomicInvs _ sc2 inames2 new_inames obs2 obs2 pv2) in
           let c1 = C_STAtomic new_inames obs1 sc1 in
           let c2 = C_STAtomic new_inames obs2 sc2 in
           let bc = Bind_comp g x c1 c2 res_typing x post_typing in
@@ -479,7 +517,7 @@ let apply_frame (#g:env)
     let st_typing = fst <| Metatheory.comp_typing_inversion c'_typing in
     let (| res_typing, pre_typing, x, post_typing |) = Metatheory.st_comp_typing_inversion st_typing in
     let st_equiv = ST_SLPropEquiv g c' c'' x pre_typing res_typing post_typing (RT.Rel_refl _ _ _) ve (VE_Refl _ _) in
-    let t_typing = T_Equiv _ _ _ _ t_typing st_equiv in
+    let t_typing = t_equiv t_typing st_equiv in
     (| c'', t_typing |)
 
 let comp_for_post_hint #g (#pre:slprop) (pre_typing:tot_typing g pre tm_slprop)

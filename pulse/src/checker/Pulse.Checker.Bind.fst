@@ -115,6 +115,23 @@ let check_binder_typ
       ]
   end
 
+let maybe_close_post 
+  (g:env)
+  (post_hint:post_hint_opt g {Some? post_hint})
+  (ctxt:slprop)
+  (ctxt_typing:tot_typing g ctxt tm_slprop)
+  (res_ppname:ppname)
+  (r:checker_result_t g ctxt post_hint)
+: T.Tac (st_typing_in_ctxt g ctxt post_hint)
+= match post_hint with
+  | Some ph ->
+    let d = apply_checker_result_k #_ #_ #ph r res_ppname in
+    let (| _, _, dd |) = d in
+    debug_prover g (fun _ ->
+      Printf.sprintf "Derivation of continuation in bind:\n%s\n"
+        (Pulse.Typing.Printer.print_st_typing dd));
+    d
+
 let check_bind'
   (maybe_elaborate:bool)
   (g:env)
@@ -153,9 +170,9 @@ let check_bind'
       let g1 = reset_context g1 g in
       let d : st_typing_in_ctxt g1 ctxt' post_hint =
         let ppname = mk_ppname_no_range "_bind_c" in
-        let r =
-          check g1 ctxt' ctxt'_typing post_hint ppname (open_st_term_nv e2 (binder.binder_ppname, x)) in
-          apply_checker_result_k #_ #_ #(Some?.v post_hint) r ppname in
+        let r = check g1 ctxt' ctxt'_typing post_hint ppname (open_st_term_nv e2 (binder.binder_ppname, x)) in
+        maybe_close_post _ _ _ ctxt'_typing ppname r
+      in
       let d : st_typing_in_ctxt g ctxt post_hint = k1 post_hint d in
       checker_result_for_st_typing d res_ppname
     in

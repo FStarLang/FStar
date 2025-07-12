@@ -53,7 +53,7 @@ let canonicalize_st_typing (#g:env) (#t:st_term) (#c:comp_st) (d:st_typing g t c
       : st_equiv g c c'
       = ST_SLPropEquiv g c c' x (RU.magic ()) (RU.magic()) (RU.magic()) (canon_comp_eq_res g c) (RU.magic()) (RU.magic())
     in
-    T_Equiv _ _ _ _ d st_eq
+    Pulse.Typing.Combinators.t_equiv d st_eq
 
 let coerce_eq (#a #b:Type) (x:a) (_:squash (a === b)) : y:b { y == x } = x
 

@@ -29,6 +29,29 @@ module R = FStar.Reflection.V2
 module RT = FStar.Reflection.Typing
 module RU = Pulse.RuntimeUtils
 
+noeq
+type br_typing_vis : env -> universe -> typ -> term -> pattern -> st_term -> comp_st -> Type =
+  | TBRV :
+      g:env ->
+      sc_u : universe ->
+      sc_ty : typ ->
+      sc:term ->
+      c:comp_st ->
+      p:pattern ->
+      e:st_term ->
+      bs:(list R.binding){RT.bindings_ok_for_pat (fstar_env g) bs (elab_pat p)} ->
+      _ : squash (all_fresh g (L.map readback_binding bs)) ->
+      _ : squash (Some? (RT.elaborate_pat (elab_pat p) bs)) ->
+      _ : squash (~(R.Tv_Unknown? (R.inspect_ln (fst (Some?.v (RT.elaborate_pat (elab_pat p) bs)))))) -> // should be provable from defn of elaborate_pat
+      hyp:var {freshv (push_bindings g (L.map readback_binding bs)) hyp} ->
+      st_typing (
+         push_binding (push_bindings g (L.map readback_binding bs))
+              hyp
+              ({name=Sealed.seal "branch equality"; range=FStar.Range.range_0})
+              (mk_sq_eq2 sc_u sc_ty sc (wr (fst (Some?.v (RT.elaborate_pat (elab_pat p) bs))) Range.range_0))
+         ) e c ->
+      br_typing_vis g sc_u sc_ty sc p (close_st_term_n e (L.map fst (L.map readback_binding bs))) c
+
 let rec readback_pat (p : R.pattern) : option pattern =
   match p with
   | R.Pat_Cons fv _ args ->
@@ -231,7 +254,7 @@ let check_branch
   : T.Tac (p:pattern{elab_pat p == p0}
           & e:st_term
           & c:comp_st{comp_pre c == pre /\ comp_post_matches_hint c (Some post_hint)}
-          & br_typing g sc_u sc_ty sc p e c)
+          & br_typing_vis g sc_u sc_ty sc p e c)
   =
   let p = (match readback_pat p0 with | Some p -> p | None ->
     fail g (Some e.range) "readback_pat failed")
@@ -276,7 +299,7 @@ let check_branch
     let ppname = mk_ppname_no_range "_br" in
     let r = check g' pre pre_typing (Some post_hint) ppname e in
     apply_checker_result_k r ppname in
-  let br_d : br_typing g sc_u sc_ty sc p (close_st_term_n e (L.map fst pulse_bs)) c = TBR g sc_u sc_ty sc c p e bs () () () hyp_var e_d in
+  let br_d : br_typing_vis g sc_u sc_ty sc p (close_st_term_n e (L.map fst pulse_bs)) c = TBRV g sc_u sc_ty sc c p e bs () () () hyp_var e_d in
   (| p, close_st_term_n e (L.map fst pulse_bs), c, br_d |)
 
 #pop-options
@@ -290,7 +313,7 @@ let check_branches_aux_t
         (sc : term)
 = (br:branch
    & c:comp_st{comp_pre c == pre /\ comp_post_matches_hint c (Some post_hint)}
-   & br_typing g sc_u sc_ty sc br.pat br.e c)
+   & br_typing_vis g sc_u sc_ty sc br.pat br.e c)
 
 let check_branches_aux
         (g:env)
@@ -339,16 +362,19 @@ let weaken_branch_observability
           comp_observability c == obs
         })
       (checked_br : check_branches_aux_t #g pre post_hint sc_u sc_ty sc { ctag_of_br checked_br == STT_Atomic})
-: T.Tac (br:branch & br_typing g sc_u sc_ty sc br.pat br.e c)
+: T.Tac (br:branch & br_typing_vis g sc_u sc_ty sc br.pat br.e c)
 = let (| br, c0, typing |) = checked_br in
   match c0 with
   | C_STAtomic i obs' st ->
     if not (sub_observability obs' obs)
     then T.fail "Cannot weaken observability"
     else (
-      let TBR g sc_u sc_ty sc c p e bs p1 p2 p3 hyp st_typing = typing in
-      let st_typing = T_Lift _ _ _ _ st_typing (Lift_Observability _ c obs) in
-      let d = TBR g sc_u sc_ty sc _ p e bs p1 p2 p3 hyp st_typing in
+      let d : br_typing_vis g sc_u sc_ty sc br.pat br.e c = 
+        let TBRV g sc_u sc_ty sc c p e bs p1 p2 p3 hyp st_typing = typing in
+        let st_typing = T_Lift _ _ _ _ st_typing (Lift_Observability _ c obs) in
+        let d = TBRV g sc_u sc_ty sc _ p e bs p1 p2 p3 hyp st_typing in
+        d
+      in
       (| br, d |)
     )
 
@@ -366,12 +392,13 @@ let rec max_obs
     | C_STAtomic _ obs' _ ->
       max_obs rest (join_obs obs obs')
 
-
+#push-options "--z3rlimit_factor 4 --fuel 0 --ifuel 1"
+#restart-solver
 let join_branches (#g #pre #post_hint #sc_u #sc_ty #sc:_) 
                   (ct:ctag)
                   (checked_brs : list (cbr:check_branches_aux_t #g pre post_hint sc_u sc_ty sc {ctag_of_br cbr == ct}))
 : T.Tac (c:comp_st { comp_pre c == pre /\ comp_post_matches_hint c (Some post_hint) } &
-         list (br:branch & br_typing g sc_u sc_ty sc br.pat br.e c))
+         list (br:branch & br_typing_vis g sc_u sc_ty sc br.pat br.e c))
 = match checked_brs with
   | [] -> T.fail "Impossible: empty match"
   | checked_br::rest ->
@@ -382,16 +409,17 @@ let join_branches (#g #pre #post_hint #sc_u #sc_ty #sc:_)
       let rest = 
         List.Tot.map 
           #(cbr:check_branches_aux_t #g pre post_hint sc_u sc_ty sc {ctag_of_br cbr==ct})
-          #(br:branch & br_typing g sc_u sc_ty sc br.pat br.e c)
+          #(br:branch & br_typing_vis g sc_u sc_ty sc br.pat br.e c)
           (fun (| br, c', d |) -> (| br, d |))
           rest
       in
       (| c, ((| br, d |) :: rest) |)
-    | C_STAtomic i obs stc ->
+    | C_STAtomic i obs stc -> 
       let max_obs = max_obs (List.Tot.map Mkdtuple3?._2 rest) obs in
       let c = C_STAtomic i max_obs stc in
       let checked_brs = T.map (weaken_branch_observability max_obs c) checked_brs in
       (| c, checked_brs |)
+#pop-options 
 
 let rec least_tag (#g #pre #post_hint #sc_u #sc_ty #sc:_) 
               (checked_brs : list (check_branches_aux_t #g pre post_hint sc_u sc_ty sc))
@@ -405,6 +433,9 @@ let rec least_tag (#g #pre #post_hint #sc_u #sc_ty #sc:_)
     | C_STGhost _ _ -> least_tag rest
     | C_STAtomic i _ _ -> STT_Atomic
 
+
+#push-options "--z3rlimit_factor 4 --fuel 0 --ifuel 1"
+#restart-solver
 let weaken_branch_tag_to 
       (#g #pre #post_hint #sc_u #sc_ty #sc:_) 
       (ct:ctag)
@@ -425,9 +456,9 @@ let weaken_branch_tag_to
       fail g (Some r)  "Cannot lift a branch to ST"
 
     | STT_Atomic, C_STGhost _ _ -> (
-      let TBR g sc_u sc_ty sc c p e bs pf1 pf2 pf3 h d = d in
+      let TBRV g sc_u sc_ty sc c p e bs pf1 pf2 pf3 h d = d in
       let d = Pulse.Typing.Combinators.lift_ghost_atomic d in
-      let d = TBR g sc_u sc_ty sc _ p e bs pf1 pf2 pf3 h d in
+      let d = TBRV g sc_u sc_ty sc _ p e bs pf1 pf2 pf3 h d in
       (| pe, _, d |)
     )
 
@@ -456,6 +487,11 @@ let maybe_weaken_branch_tags
       let ct = ctag_of_br hd in
       let checked_brs = T.map #_ #(cbr:check_branches_aux_t #g pre post_hint sc_u sc_ty sc {ctag_of_br cbr == ct}) (fun x -> x) checked_brs in
       (| ct, checked_brs |)
+#pop-options
+let erase_br_typing #g #sc_u #sc_ty #sc #p #e #c (d: br_typing_vis g sc_u sc_ty sc p e c)
+  : br_typing g sc_u sc_ty sc p e c =
+  let TBRV g sc_u sc_ty sc c p e bs pf1 pf2 pf3 hyp d = d in
+  TBR g sc_u sc_ty sc c p e bs pf1 pf2 pf3 hyp d
 
 (* Hoisting this makes the proof much faster and more stable. *)
 let rec check_branches_aux2
@@ -464,13 +500,13 @@ let rec check_branches_aux2
   (sc_ty:typ)
   (sc : term)
   (c0 :comp_st)
-  (brs : list (br:branch & br_typing g sc_u sc_ty sc br.pat br.e c0))
+  (brs : list (br:branch & br_typing_vis g sc_u sc_ty sc br.pat br.e c0))
   : brs_typing g sc_u sc_ty sc (List.Tot.map dfst brs) c0
   = match brs with
     | [] -> TBRS_0 c0
     | (| br, d|)::rest ->
       let { pat; e } = br in
-      TBRS_1 c0 pat e d (List.Tot.map dfst rest) (check_branches_aux2 g sc_u sc_ty sc c0 rest)
+      TBRS_1 c0 pat e (erase_br_typing d) (List.Tot.map dfst rest) (check_branches_aux2 g sc_u sc_ty sc c0 rest)
 
 let check_branches
         (g:env)

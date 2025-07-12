@@ -15,9 +15,9 @@
   - Current context:
       ExistsErasedAndPureEqualities.some_pred x v
   - In typing environment:
-      _#769 : Prims.squash (v_ == v),
-      v_#766 : FStar.Ghost.erased Prims.int,
-      _#472 : Prims.squash (v == v),
+      _#758 : Prims.squash (v_ == v),
+      v_#757 : FStar.Ghost.erased Prims.int,
+      _#470 : Prims.squash (v == v),
       v#116 : FStar.Ghost.erased Prims.int,
       x#111 : Pulse.Lib.Reference.ref Prims.int
 

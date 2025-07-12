@@ -100,6 +100,11 @@ val k_elab_trans
   (k1:continuation_elaborator g1 ctxt1 g2 ctxt2 { g1 `env_extends` g0})
    : continuation_elaborator g0 ctxt0 g2 ctxt2
 
+val k_elab_equiv_continuation (#g1:env) (#g2:env { g2 `env_extends` g1 }) (#ctxt #ctxt1 #ctxt2:term)
+  (k:continuation_elaborator g1 ctxt g2 ctxt1)
+  (d:slprop_equiv g2 ctxt1 ctxt2)
+  : continuation_elaborator g1 ctxt g2 ctxt2
+
 val k_elab_equiv
   (#g1:env) (#g2:env { g2 `env_extends` g1 }) (#ctxt1 #ctxt1' #ctxt2 #ctxt2':term)
   (k:continuation_elaborator g1 ctxt1 g2 ctxt2)

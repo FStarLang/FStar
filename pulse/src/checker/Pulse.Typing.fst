@@ -557,7 +557,7 @@ let tm_inames_subset_typing (g:env) (inames1 inames2 : term) : tot_typing g (tm_
 let prop_validity (g:env) (t:term) =
   FTB.prop_validity_token (elab_env g) t
 
-[@@ no_auto_projectors]
+[@@ erasable; no_auto_projectors]
 noeq
 type st_equiv : env -> comp -> comp -> Type =
   | ST_SLPropEquiv :
@@ -588,7 +588,7 @@ type st_equiv : env -> comp -> comp -> Type =
 
 let sub_observability (o1 o2:observability) = o1 = Neutral || o1 = o2 || o2 = Observable
 
-[@@ no_auto_projectors]
+[@@ erasable; no_auto_projectors]
 noeq
 type st_sub : env -> comp -> comp -> Type =
   | STS_Refl :
@@ -623,7 +623,7 @@ type st_sub : env -> comp -> comp -> Type =
     prop_validity g (tm_inames_subset is1 is2) ->
     st_sub g (C_STAtomic is1 obs1 stc) (C_STAtomic is2 obs2 stc)
 
-[@@ no_auto_projectors]
+[@@ erasable; no_auto_projectors]
 noeq
 type lift_comp : env -> comp -> comp -> Type =
   | Lift_STAtomic_ST :
@@ -665,7 +665,7 @@ let wtag (ct:option ctag)  (t:st_term') : st_term =
     seq_lhs = Sealed.seal false;
   }
 
-[@@ no_auto_projectors]
+[@@ erasable; no_auto_projectors]
 noeq
 type st_comp_typing : env -> st_comp -> Type =
   | STC:
@@ -678,7 +678,7 @@ type st_comp_typing : env -> st_comp -> Type =
       st_comp_typing g st
 
 
-[@@ no_auto_projectors]
+[@@ erasable; no_auto_projectors]
 noeq
 type bind_comp  : env -> var -> comp -> comp -> comp -> Type =
   | Bind_comp :  // (C_ST and C_ST) or (C_STGhost and C_STGhost) or (C_STAtomic and C_STAtomic)
@@ -702,7 +702,7 @@ let tr_binding (vt : var & typ) : Tot R.binding =
 
 let tr_bindings = L.map tr_binding
 
-[@@ no_auto_projectors]
+[@@ erasable; no_auto_projectors]
 noeq
 type comp_typing : env -> comp -> universe -> Type =
   | CT_Tot :
@@ -754,7 +754,7 @@ let eff_of_ctag = function
   | STT_Ghost -> T.E_Ghost
   | _ -> T.E_Total
 
-[@@ no_auto_projectors]
+[@@ erasable; no_auto_projectors]
 noeq
 type st_typing : env -> st_term -> comp -> Type =
   | T_Abs: 
@@ -1178,7 +1178,7 @@ type post_hint_t = {
   u:universe;
   ty_typing:universe_of g ret_ty u;
   post:term;
-  x:(x:var { fresh_wrt x g (freevars post) });
+  x:(x:FStar.Ghost.erased var { fresh_wrt x g (freevars post) });
   post_typing_src:tot_typing (push_binding g x ppname_default ret_ty) (open_term post x) tm_slprop;
   post_typing:
     FStar.Ghost.erased (RT.tot_typing (elab_env g)
