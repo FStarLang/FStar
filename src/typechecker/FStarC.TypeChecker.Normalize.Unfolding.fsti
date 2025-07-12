@@ -5,10 +5,6 @@ open FStarC.TypeChecker
 open FStarC.Syntax.Syntax
 open FStarC.TypeChecker.Cfg
 
-(* This reference stores the max amount of warnings we emit
-about unfolding plugins. Set by normalize (0 otherwise). *)
-val plugin_unfold_warn_ctr : ref int
-
 (* Exposed for NBE *)
 type should_unfold_res =
     | Should_unfold_no
