@@ -107,8 +107,6 @@ type tc_constraint = {
 
 %token <string> REAL
 
-%token <string> RANGE
-
 %token <Fstarcompiler.FStar_Char.char> CHAR
 %token LET
 %token <string> LET_OP
@@ -194,13 +192,11 @@ type tc_constraint = {
 
 %start inputFragment
 %start term
-%start warn_error_list
 %start oneDeclOrEOF
 %type <FStarC_Parser_AST.inputFragment> inputFragment
 %type <(FStarC_Parser_AST.decl list * FStarC_Sedlexing.snap option) option> oneDeclOrEOF
 %type <FStarC_Parser_AST.term> term
 %type <FStarC_Ident.ident> lident
-%type <(FStarC_Errors_Codes.error_flag * string) list> warn_error_list
 %%
 
 (* inputFragment is used at the same time for whole files and fragment of codes (for interactive mode) *)
@@ -1621,27 +1617,15 @@ constant:
   | TRUE { Const_bool true }
   | FALSE { Const_bool false }
   | r=REAL { Const_real r }
-  | n=UINT8 { Const_int (n, Some (Unsigned, Int8)) }
-  | n=INT8
-      {
-        Const_int (n, Some (Signed, Int8))
-      }
+  | n=UINT8  { Const_int (n, Some (Unsigned, Int8)) }
+  | n=INT8   { Const_int (n, Some (Signed,   Int8)) }
   | n=UINT16 { Const_int (n, Some (Unsigned, Int16)) }
-  | n=INT16
-      {
-        Const_int (n, Some (Signed, Int16))
-      }
+  | n=INT16  { Const_int (n, Some (Signed,   Int16)) }
   | n=UINT32 { Const_int (n, Some (Unsigned, Int32)) }
-  | n=INT32
-      {
-        Const_int (n, Some (Signed, Int32))
-      }
+  | n=INT32  { Const_int (n, Some (Signed,   Int32)) }
   | n=UINT64 { Const_int (n, Some (Unsigned, Int64)) }
-  | n=INT64
-      {
-        Const_int (n, Some (Signed, Int64))
-      }
-  | n=SIZET { Const_int (n, Some (Unsigned, Sizet)) }
+  | n=INT64  { Const_int (n, Some (Signed,   Int64)) }
+  | n=SIZET  { Const_int (n, Some (Unsigned, Sizet)) }
   (* TODO : What about reflect ? There is also a constant representing it *)
   | REIFY   { Const_reify None }
   | RANGE_OF     { Const_range_of }
@@ -1680,30 +1664,6 @@ atomicUniverse:
   | u=lident { mk_term (Uvar u) (range_of_id u) Expr }
   | LPAREN u=universeFrom RPAREN
     { u (*mk_term (Paren u) (rr2 $loc($1) $loc($3)) Expr*) }
-
-warn_error_list:
-  | e=warn_error EOF { e }
-
-warn_error:
-  | f=flag r=range
-    { [(f, r)] }
-  | f=flag r=range e=warn_error
-    { (f, r) :: e }
-
-flag:
-  | op=OPINFIX1
-    { if op = "@" then CAlwaysError else failwith (format1 "unexpected token %s in warn-error list" op)}
-  | op=OPINFIX2
-    { if op = "+" then CWarning else failwith (format1 "unexpected token %s in warn-error list" op)}
-  | MINUS
-          { CSilent }
-
-range:
-  | i=INT
-    { format2 "%s..%s" i i }
-  | r=RANGE
-    { r }
-
 
 /******************************************************************************/
 /*                       Miscellanous, tools                                   */
