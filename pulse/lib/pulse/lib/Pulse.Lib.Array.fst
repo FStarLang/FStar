@@ -40,11 +40,7 @@ fn compare (#t:eqtype) (l:US.t) (a1 a2:larray t (US.v l)) (#p1 #p2:perm)
   pts_to_len a2 #p2 #'s2;
   let mut i = 0sz;
   while (let vi = !i; 
-    if (vi < l) { 
-      let v1 = a1.(vi); 
-      let v2 = a2.(vi); 
-      (v1 = v2) } 
-    else { false } )
+    if (vi < l) { (a1.(vi) = a2.(vi)) } else { false } )
   invariant b. exists* (vi:US.t). ( 
     pts_to i vi **
     pts_to a1 #p1 's1 **
@@ -53,12 +49,9 @@ fn compare (#t:eqtype) (l:US.t) (a1 a2:larray t (US.v l)) (#p1 #p2:perm)
        /\ (b == (vi < l && Seq.index 's1 (US.v vi) = Seq.index 's2 (US.v vi)))
        /\ (forall (i:nat). i < US.v vi ==> Seq.index 's1 i == Seq.index 's2 i)))
   {
-    let vi = !i; 
-    i := vi + 1sz;
+    i := !i + 1sz;
   };
-  let vi = !i;
-  let res = vi = l;
-  res
+  (!i = l)
 }
 
 fn memcpy_l (#t:eqtype) (l:US.t) (src dst:(a:array t { US.v l <= A.length a }))
@@ -86,9 +79,7 @@ fn memcpy_l (#t:eqtype) (l:US.t) (src dst:(a:array t { US.v l <= A.length a }))
 
   {
     let vi = !i;
-    let x = src.(vi);
-    with s. assert (pts_to dst s);
-    (dst.(vi) <- x);
+    (dst.(vi) <- src.(vi));
     i := vi + 1sz;
   };
   with s. assert (pts_to dst s);
