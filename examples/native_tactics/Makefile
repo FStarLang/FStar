@@ -15,7 +15,6 @@ TAC_MODULES=Print\
     Split\
     BV\
     UnitTests\
-    Bane\
     Canon\
     Simple\
     SimpleTactic\
