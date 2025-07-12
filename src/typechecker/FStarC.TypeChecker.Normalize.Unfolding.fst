@@ -16,10 +16,6 @@ module U = FStarC.Syntax.Util
 
 open FStarC.Class.Show
 
-(* Max number of warnings to print in a single run.
-Initialized in Normalize.normalize *)
-let plugin_unfold_warn_ctr : ref int = mk_ref 0
-
 let should_unfold cfg should_reify fv qninfo : should_unfold_res =
     let attrs =
       match Env.attrs_of_qninfo qninfo with
@@ -176,15 +172,4 @@ let should_unfold cfg should_reify fv qninfo : should_unfold_res =
       | _ ->
         failwith <| BU.format1 "Unexpected unfolding result: %s" (show res)
     in
-    if Some? cfg.steps.dont_unfold_attr                 // If we are running a tactic (probably..),
-       && not (Options.no_plugins ())                   // haven't explicitly disabled plugins
-       && (r <> Should_unfold_no)                       // actually unfolding this fvar
-       && BU.for_some (U.is_fvar PC.plugin_attr) attrs  // it is a plugin
-       && !plugin_unfold_warn_ctr > 0                   // and we haven't raised too many warnings
-    then begin
-      // then warn about it
-      let msg = BU.format1 "Unfolding name which is marked as a plugin: %s" (show fv) in
-      Errors.log_issue fv.fv_name.p Errors.Warning_UnfoldPlugin msg;
-      plugin_unfold_warn_ctr := !plugin_unfold_warn_ctr - 1
-    end;
     r

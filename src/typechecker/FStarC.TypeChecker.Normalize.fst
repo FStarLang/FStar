@@ -49,6 +49,10 @@ module TEQ = FStarC.TypeChecker.TermEqAndSimplify
 module PO = FStarC.TypeChecker.Primops
 open FStarC.TypeChecker.Normalize.Unfolding
 
+(* Max number of warnings to print in a single run.
+Initialized in Normalize.normalize *)
+let plugin_unfold_warn_ctr : ref int = mk_ref 0
+
 let dbg_univ_norm = Debug.get_toggle "univ_norm"
 let dbg_NormRebuild = Debug.get_toggle "NormRebuild"
 
@@ -1384,6 +1388,23 @@ let rec norm : cfg -> env -> stack -> term -> term =
 and do_unfold_fv (cfg:Cfg.cfg) stack (t0:term) (qninfo : qninfo) (f:fv) : term =
     // Second, try to unfold to the definition itself.
     let defn () = Env.lookup_definition_qninfo cfg.delta_level f.fv_name.v qninfo in
+    let is_plugin () =
+      match qninfo with
+      | Some (Inr (se, None), _) -> BU.for_some (U.is_fvar PC.plugin_attr) se.sigattrs  // it is a plugin
+      | _ -> false
+    in
+    let maybe_warn_if_unfolding_plugin () =
+     if Some? cfg.steps.dont_unfold_attr                 // If we are running a tactic (probably..),
+         && not (Options.no_plugins ())                   // haven't explicitly disabled plugins
+         && !plugin_unfold_warn_ctr > 0                   // we haven't raised too many warnings
+         && is_plugin ()                                  // and it is in fact a plugin
+     then begin
+       // then warn about it
+       let msg = BU.format1 "Unfolding name which is marked as a plugin: %s" (show f) in
+       Errors.log_issue f.fv_name.p Errors.Warning_UnfoldPlugin msg;
+       plugin_unfold_warn_ctr := !plugin_unfold_warn_ctr - 1
+     end
+    in
     // First, try to unfold to the implementation specified in the extract_as attribute (when doing extraction)
     let defn () =
       if cfg.steps.for_extraction then
@@ -1405,6 +1426,7 @@ and do_unfold_fv (cfg:Cfg.cfg) stack (t0:term) (qninfo : qninfo) (f:fv) : term =
        | Some (us, t) ->
          begin
          log_unfolding cfg (fun () -> BU.print2 " >> Unfolded %s to %s\n" (show t0) (show t));
+         maybe_warn_if_unfolding_plugin ();
          // preserve the range info on the returned term
          let t =
            if cfg.steps.unfold_until = Some delta_constant
