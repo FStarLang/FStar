@@ -520,7 +520,7 @@ fun d _cb ->
     freevars_open_comp res arg 0;
     freevars_tm_arrow (as_binder ty) q res
 
-#push-options "--z3rlimit 60 --query_stats --fuel 2 --ifuel 2 --split_queries no --z3smtopt '(set-option :smt.qi.eager_threshold 100)' --z3smtopt '(set-option :smt.arith.nl false)'"
+#push-options "--z3rlimit_factor 20 --fuel 3 --ifuel 2 --split_queries no"
 #restart-solver
 let st_typing_freevars_return : st_typing_freevars_case T_Return? =
 fun d cb ->
@@ -542,8 +542,7 @@ fun d cb ->
     freevars_close_term
       (tm_star (open_term' post (null_var x) 0) (tm_pure (mk_eq2 u t (null_var x) e)))
       x 0;
-    freevars_open_term post e 0;
-    admit()
+    freevars_open_term post e 0
 #pop-options
 
 let st_typing_freevars_bind : st_typing_freevars_case T_Bind? =
