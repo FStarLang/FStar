@@ -80,6 +80,12 @@ let parse_use_lang_blob (extension_name:string)
 : FStarC_Parser_AST.decl list
 = FStarC_Parser_AST_Util.parse_extension_lang extension_name s extension_syntax_start
 
+type tc_constraint = {
+  id: FStarC_Ident.ident;
+  t: FStarC_Parser_AST.term;
+  r: FStarC_Range.range;
+}
+
 %}
 
 %token <string> STRING
@@ -88,29 +94,28 @@ let parse_use_lang_blob (extension_name:string)
 %token <string> TVAR
 %token <string> TILDE
 
-/* bool indicates if INT8 was 'bad' max_int+1, e.g. '128'  */
-%token <string * bool> INT8
-%token <string * bool> INT16
-%token <string * bool> INT32
-%token <string * bool> INT64
-%token <string * bool> INT
-%token <string> RANGE
-
+%token <string> INT
+%token <string> INT8
 %token <string> UINT8
+%token <string> INT16
 %token <string> UINT16
+%token <string> INT32
 %token <string> UINT32
+%token <string> INT64
 %token <string> UINT64
 %token <string> SIZET
+
 %token <string> REAL
+
 %token <Fstarcompiler.FStar_Char.char> CHAR
-%token <bool> LET
+%token LET
 %token <string> LET_OP
 %token <string> AND_OP
 %token <string> MATCH_OP
 %token <string> IF_OP
-%token <bool> EXISTS
+%token EXISTS
 %token <string> EXISTS_OP
-%token <bool> FORALL
+%token FORALL
 %token <string> FORALL_OP
 
 
@@ -137,7 +142,7 @@ let parse_use_lang_blob (extension_name:string)
 %token INCLUDE
 %token WHEN AS RETURNS RETURNS_EQ WITH HASH AMP LPAREN RPAREN LPAREN_RPAREN COMMA LONG_LEFT_ARROW LARROW RARROW
 %token IFF IMPLIES CONJUNCTION DISJUNCTION
-%token DOT COLON COLON_COLON SEMICOLON
+%token DOT COLON DOT_DOT COLON_COLON SEMICOLON
 %token QMARK_DOT
 %token QMARK
 %token EQUALS PERCENT_LBRACK LBRACK_AT LBRACK_AT_AT LBRACK_AT_AT_AT DOT_LBRACK
@@ -187,13 +192,11 @@ let parse_use_lang_blob (extension_name:string)
 
 %start inputFragment
 %start term
-%start warn_error_list
 %start oneDeclOrEOF
 %type <FStarC_Parser_AST.inputFragment> inputFragment
 %type <(FStarC_Parser_AST.decl list * FStarC_Sedlexing.snap option) option> oneDeclOrEOF
 %type <FStarC_Parser_AST.term> term
 %type <FStarC_Ident.ident> lident
-%type <(FStarC_Errors_Codes.error_flag * string) list> warn_error_list
 %%
 
 (* inputFragment is used at the same time for whole files and fragment of codes (for interactive mode) *)
@@ -391,7 +394,7 @@ typeclassDecl:
       }
 
 restriction:
-  | LBRACE ids=separated_list(COMMA, id=identOrOperator renamed=option(AS id=identOrOperator {id} ) {(id, renamed)}) RBRACE
+  | LBRACE ids=right_flexible_list(COMMA, id=identOrOperator renamed=option(AS id=identOrOperator {id} ) {(id, renamed)}) RBRACE
       { FStarC_Syntax_Syntax.AllowList ids }
   |   { FStarC_Syntax_Syntax.Unrestricted  }
 
@@ -436,9 +439,9 @@ rawDecl:
           | bs -> mk_term (Product(bs, t)) (rr2 $loc(bs) $loc(t)) Type_level
         in Val(lid, t)
       }
-  | SPLICE LBRACK ids=separated_list(SEMICOLON, ident) RBRACK t=thunk(atomicTerm)
+  | SPLICE LBRACK ids=right_flexible_list(SEMICOLON, ident) RBRACK t=thunk(atomicTerm)
       { Splice (false, ids, t) }
-  | SPLICET LBRACK ids=separated_list(SEMICOLON, ident) RBRACK t=atomicTerm
+  | SPLICET LBRACK ids=right_flexible_list(SEMICOLON, ident) RBRACK t=atomicTerm
       { Splice (true, ids, t) }
   | EXCEPTION lid=uident t_opt=option(OF t=typ {t})
       { Exception(lid, t_opt) }
@@ -717,13 +720,17 @@ constructorPattern:
       { pat }
 
 atomicPattern:
+  | DOT_DOT
+      {
+        mk_pattern PatRest (rr $loc)
+      }
   | LPAREN pat=tuplePattern COLON t=simpleArrow phi_opt=refineOpt RPAREN
       {
         let pos_t = rr2 $loc(pat) $loc(t) in
         let pos = rr $loc in
         mkRefinedPattern pat t true phi_opt pos_t pos
       }
-  | LBRACK pats=separated_list(SEMICOLON, tuplePattern) RBRACK
+  | LBRACK pats=right_flexible_list(SEMICOLON, tuplePattern) RBRACK
       { mk_pattern (PatList pats) (rr2 $loc($1) $loc($3)) }
   | LBRACE record_pat=right_flexible_list(SEMICOLON, fieldPattern) RBRACE
       { mk_pattern (PatRecord record_pat) (rr $loc) }
@@ -766,31 +773,49 @@ fieldPattern:
   | lid=qlident
       { lid, mk_pattern (PatVar (ident_of_lid lid, None, [])) (rr $loc(lid)) }
 
+tc_constraint:
+  | id=ioption(id=lidentOrUnderscore COLON {id}) t=simpleArrow
+    { let r = rr $loc in
+      let id = match id with | Some id -> id | None -> gen r in
+      {id; t; r}
+    }
+
+tc_constraints:
+  | constraints=right_flexible_nonempty_list(COMMA, tc_constraint) { constraints }
+
   (* (x : t) is already covered by atomicPattern *)
   (* we do *NOT* allow _ in multibinder () since it creates reduce/reduce conflicts when*)
   (* preprocessing to ocamlyacc/fsyacc (which is expected since the macro are expanded) *)
 patternOrMultibinder:
-  | LBRACE_BAR id=lidentOrUnderscore COLON t=simpleArrow BAR_RBRACE
-      { let r = rr $loc in
-        let w = mk_pattern (PatVar (id, Some TypeClassArg, [])) r in
-        let asc = (t, None) in
-        [mk_pattern (PatAscribed(w, asc)) r]
+  | LBRACE_BAR constraints=tc_constraints BAR_RBRACE
+      {
+        let constraint_as_pat (c:tc_constraint) =
+          let w = mk_pattern (PatVar (c.id, Some TypeClassArg, [])) c.r in
+          let asc = (c.t, None) in
+          mk_pattern (PatAscribed(w, asc)) c.r
+        in
+        List.map constraint_as_pat constraints
       }
 
-  | LBRACE_BAR t=simpleArrow BAR_RBRACE
-      { let r = rr $loc in
-        let id = gen r in
-        let w = mk_pattern (PatVar (id, Some TypeClassArg, [])) r in
-        let asc = (t, None) in
-        [mk_pattern (PatAscribed(w, asc)) r]
-      }
   | pat=atomicPattern { [pat] }
-  | LPAREN qual_id0=aqualifiedWithAttrs(lident) qual_ids=nonempty_list(aqualifiedWithAttrs(lident)) COLON t=simpleArrow r=refineOpt RPAREN
+  | LPAREN
+      qual_id0=aqualifiedWithAttrs(lident)
+      qual_ids=nonempty_list(aqualifiedWithAttrs(lident))
+      COLON
+      t=simpleArrow r=refineOpt
+    RPAREN
       {
         let pos = rr $loc in
         let t_pos = rr $loc(t) in
         let qual_ids = qual_id0 :: qual_ids in
-        List.map (fun ((aq, attrs), x) -> mkRefinedPattern (mk_pattern (PatVar (x, aq, attrs)) pos) t false r t_pos pos) qual_ids
+        let n = List.length qual_ids in
+        List.mapi (fun idx ((aq, attrs), x) ->
+          let pat = mk_pattern (PatVar (x, aq, attrs)) pos in
+          (* Only the last binder carries the refinement, if any. *)
+          let refine_opt = if idx = Int.sub n 1 then r else None in
+          (*                    ^ The - symbol resolves to F* addition. *)
+          mkRefinedPattern pat t true refine_opt t_pos pos
+        ) qual_ids
       }
 
 binder:
@@ -805,22 +830,22 @@ binder:
 
 %public
 multiBinder:
-  | LBRACE_BAR id=lidentOrUnderscore COLON t=simpleArrow BAR_RBRACE
-      { let r = rr $loc in
-        [mk_binder (Annotated (id, t)) r Type_level (Some TypeClassArg)]
-      }
-
-  | LBRACE_BAR t=simpleArrow BAR_RBRACE
-      { let r = rr $loc in
-        let id = gen r in
-        [mk_binder (Annotated (id, t)) r Type_level (Some TypeClassArg)]
+  | LBRACE_BAR constraints=tc_constraints BAR_RBRACE
+      {
+        let constraint_as_binder (c:tc_constraint) =
+          mk_binder (Annotated (c.id, c.t)) c.r Type_level (Some TypeClassArg)
+        in
+        List.map constraint_as_binder constraints
       }
 
   | LPAREN qual_ids=nonempty_list(aqualifiedWithAttrs(lidentOrUnderscore)) COLON t=simpleArrow r=refineOpt RPAREN
      {
        let should_bind_var = match qual_ids with | [ _ ] -> true | _ -> false in
-       List.map (fun ((q, attrs), x) ->
-         mkRefinedBinder x t should_bind_var r (rr $loc) q attrs) qual_ids
+       let n = List.length qual_ids in
+       List.mapi (fun idx ((q, attrs), x) ->
+         let refine_opt = if idx = Int.sub n 1 then r else None in
+         mkRefinedBinder x t true refine_opt (rr $loc) q attrs
+       ) qual_ids
      }
 
   | LPAREN_RPAREN
@@ -1550,7 +1575,7 @@ projectionLHS:
       { mkSeqLit (rr2 $loc($1) $loc($3)) es }
   | PERCENT_LBRACK es=semiColonTermList RBRACK
       { mk_term (LexList es) (rr2 $loc($1) $loc($3)) Type_level }
-  | BANG_LBRACE es=separated_list(COMMA, appTerm) RBRACE
+  | BANG_LBRACE es=right_flexible_list(COMMA, appTerm) RBRACE
       { mkRefSet (rr2 $loc($1) $loc($3)) es }
   | ns=quident QMARK_DOT id=lident
       { mk_term (Projector (ns, id)) (rr2 $loc(ns) $loc(id)) Expr }
@@ -1585,44 +1610,22 @@ constant:
   | LPAREN_RPAREN { Const_unit }
   | n=INT
      {
-        if snd n then
-          log_issue_text (rr $loc) Error_OutOfRange "This number is outside the allowable range for representable integer constants";
-        Const_int (fst n, None)
+        Const_int (n, None)
      }
   | c=CHAR { Const_char c }
   | s=STRING { Const_string (s, rr $loc) }
   | TRUE { Const_bool true }
   | FALSE { Const_bool false }
   | r=REAL { Const_real r }
-  | n=UINT8 { Const_int (n, Some (Unsigned, Int8)) }
-  | n=INT8
-      {
-        if snd n then
-          log_issue_text (rr $loc) Error_OutOfRange "This number is outside the allowable range for 8-bit signed integers";
-        Const_int (fst n, Some (Signed, Int8))
-      }
+  | n=UINT8  { Const_int (n, Some (Unsigned, Int8)) }
+  | n=INT8   { Const_int (n, Some (Signed,   Int8)) }
   | n=UINT16 { Const_int (n, Some (Unsigned, Int16)) }
-  | n=INT16
-      {
-        if snd n then
-          log_issue_text (rr $loc) Error_OutOfRange "This number is outside the allowable range for 16-bit signed integers";
-        Const_int (fst n, Some (Signed, Int16))
-      }
+  | n=INT16  { Const_int (n, Some (Signed,   Int16)) }
   | n=UINT32 { Const_int (n, Some (Unsigned, Int32)) }
-  | n=INT32
-      {
-        if snd n then
-          log_issue_text (rr $loc) Error_OutOfRange "This number is outside the allowable range for 32-bit signed integers";
-        Const_int (fst n, Some (Signed, Int32))
-      }
+  | n=INT32  { Const_int (n, Some (Signed,   Int32)) }
   | n=UINT64 { Const_int (n, Some (Unsigned, Int64)) }
-  | n=INT64
-      {
-        if snd n then
-          log_issue_text (rr $loc) Error_OutOfRange "This number is outside the allowable range for 64-bit signed integers";
-        Const_int (fst n, Some (Signed, Int64))
-      }
-  | n=SIZET { Const_int (n, Some (Unsigned, Sizet)) }
+  | n=INT64  { Const_int (n, Some (Signed,   Int64)) }
+  | n=SIZET  { Const_int (n, Some (Unsigned, Sizet)) }
   (* TODO : What about reflect ? There is also a constant representing it *)
   | REIFY   { Const_reify None }
   | RANGE_OF     { Const_range_of }
@@ -1656,37 +1659,11 @@ atomicUniverse:
       { mk_term Wild (rr $loc) Expr }
   | n=INT
       {
-        if snd n then
-          log_issue_text (rr $loc) Error_OutOfRange ("This number is outside the allowable range for representable integer constants");
-        mk_term (Const (Const_int (fst n, None))) (rr $loc(n)) Expr
+        mk_term (Const (Const_int (n, None))) (rr $loc(n)) Expr
       }
   | u=lident { mk_term (Uvar u) (range_of_id u) Expr }
   | LPAREN u=universeFrom RPAREN
     { u (*mk_term (Paren u) (rr2 $loc($1) $loc($3)) Expr*) }
-
-warn_error_list:
-  | e=warn_error EOF { e }
-
-warn_error:
-  | f=flag r=range
-    { [(f, r)] }
-  | f=flag r=range e=warn_error
-    { (f, r) :: e }
-
-flag:
-  | op=OPINFIX1
-    { if op = "@" then CAlwaysError else failwith (format1 "unexpected token %s in warn-error list" op)}
-  | op=OPINFIX2
-    { if op = "+" then CWarning else failwith (format1 "unexpected token %s in warn-error list" op)}
-  | MINUS
-          { CSilent }
-
-range:
-  | i=INT
-    { format2 "%s..%s" (fst i) (fst i) }
-  | r=RANGE
-    { r }
-
 
 /******************************************************************************/
 /*                       Miscellanous, tools                                   */

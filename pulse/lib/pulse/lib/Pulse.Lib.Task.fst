@@ -556,9 +556,7 @@ fn spawn (p:pool)
        as (state_res (up task.pre) (up task.post) gr_task_st Ready);
   rewrite each gr_task_st as handle.g_state;
   rewrite each handle as task.h;
-  rewrite each pre_ref as task.pre;
-  rewrite each post_ref as task.post;
-   
+
   intro_state_pred task.pre task.post task.h Ready;
   // fold (state_pred #code task.pre task.post task.h);
 
@@ -1113,9 +1111,7 @@ fn rec grab_work' (p:pool)
              up t.pre ** pts_to t.h.state #0.5R Running ** task_spotted p t ** task_thunk_typing t)
 {
   unfold (lock_inv p.runnable p.g_runnable);
-  with v_runnable0. assert (pts_to p.runnable v_runnable0);
   let v_runnable = !p.runnable;
-  rewrite each v_runnable0 as v_runnable;
   let topt = grab_work'' p v_runnable;
 
   AR.take_snapshot_full p.g_runnable;
@@ -1345,7 +1341,6 @@ fn try_await_pool
   let runnable = !p.runnable;
   let done = check_if_all_done runnable;
   if done {
-    rewrite each done as true;
     rewrite (ite true (all_tasks_done runnable) emp)
          as all_tasks_done runnable;
 
@@ -1369,7 +1364,6 @@ fn try_await_pool
 
     true
   } else {
-    rewrite each done as false;
     rewrite (ite false (all_tasks_done runnable) emp)
          as emp;
     fold (lock_inv p.runnable p.g_runnable);

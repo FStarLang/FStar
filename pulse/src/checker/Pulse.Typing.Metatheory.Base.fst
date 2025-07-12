@@ -614,7 +614,7 @@ let rec st_typing_subst g x t g' #e #eff e_typing #e1 #c1 e1_typing _
   let ss = nt x e in
 
   match e1_typing with
-  | T_Abs _ _ _ _ _ _ _ _ _ ->
+  | T_Abs .. ->
     Pervasives.coerce_eq (RU.magic ()) e1_typing
 
   | T_STApp _ head ty q res arg _ _ ->

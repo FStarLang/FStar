@@ -65,6 +65,7 @@ val mk_tot (t:term) : comp
 val mk_comp (pre:term) (ret:binder) (post:term) : comp
 val ghost_comp (opens:term) (pre:term) (ret:binder) (post:term) : comp
 val atomic_comp (opens:term) (pre:term) (ret:binder) (post:term) : comp
+val unobs_comp (opens:term) (pre:term) (ret:binder) (post:term) : comp
 
 val is_tm_exists (x:term) : bool
 
@@ -120,6 +121,7 @@ val comp_post (c:comp) : term
 val mark_statement_sequence (s:st_term) : st_term
 (* ^marks a statement as being the lhs of s1;s2, to perform more checks on it
 (type must be unit) *)
+val mark_not_source (s:st_term) : st_term
 
 val print_exn (e:exn) : string
 val binder_to_string (env:FStarC.TypeChecker.Env.env) (b:binder) : string

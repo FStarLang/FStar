@@ -30,6 +30,7 @@ include Pulse.Checker.Prover.Util
 val normalize_slprop
   (g:env)
   (v:slprop)
+  (use_rewrites_to : bool)
   : T.Tac (v':slprop & slprop_equiv g v v')
 
 val normalize_slprop_welltyped
@@ -37,13 +38,6 @@ val normalize_slprop_welltyped
   (v:slprop)
   (v_typing:tot_typing g v tm_slprop)
   : T.Tac (v':slprop & slprop_equiv g v v' & tot_typing g v' tm_slprop)
-
-val elim_exists_and_pure (#g:env) (#ctxt:slprop)
-  (ctxt_typing:tot_typing g ctxt tm_slprop)
-  : T.Tac (g':env { env_extends g' g } &
-           ctxt':term &
-           tot_typing g' ctxt' tm_slprop &
-           continuation_elaborator g ctxt g' ctxt')
 
 val prove
   (allow_ambiguous : bool)
@@ -80,3 +74,10 @@ val prove_post_hint (#g:env) (#ctxt:slprop)
   (rng:range)
   
   : T.Tac (checker_result_t g ctxt post_hint)
+
+val elim_exists_and_pure (#g:env) (#ctxt:slprop)
+  (ctxt_typing:tot_typing g ctxt tm_slprop)
+  : T.Tac (g':env { env_extends g' g } &
+           ctxt':term &
+           tot_typing g' ctxt' tm_slprop &
+           continuation_elaborator g ctxt g' ctxt')

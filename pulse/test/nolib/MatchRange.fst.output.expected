@@ -1,5 +1,5 @@
 >> Got issues: [
-* Error 19 at MatchRange.fst(12,5-13,16):
+* Error 19 at MatchRange.fst(12,2-18,5):
   - Could not verify that this match is exhaustive.
   - Patterns are incomplete
   - The SMT solver could not prove the query. Use --query_stats for more

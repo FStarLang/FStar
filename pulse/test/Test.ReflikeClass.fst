@@ -9,7 +9,7 @@ module Box = Pulse.Lib.Box
 class reflike (vt:Type) (rt:Type) = {
   ( |-> ) : rt -> vt -> slprop;
   alloc   : v:vt -> stt rt emp (fun r -> r |-> v);
-  (!) : r:rt -> #v0:erased vt -> stt vt (r |-> v0) (fun v -> (r |-> v0) ** pure (Ghost.reveal v0 == v));
+  (!) : r:rt -> #v0:erased vt -> stt vt (r |-> v0) (fun v -> (r |-> v0) ** rewrites_to v (reveal v0));
   (:=) : r:rt -> v:vt -> #v0:erased vt -> stt unit (r |-> v0) (fun _ -> r |-> v);
 }
 

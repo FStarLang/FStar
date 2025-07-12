@@ -194,6 +194,14 @@ let check_unfoldable g (v:term) : T.Tac unit =
                         but %s is a primitive term that cannot be folded or unfolded"
                         (P.term_to_string v))
 
+let warn_nop (g:env) (goal:term) : T.Tac unit =
+  let open Pulse.PP in
+  warn_doc g None [
+    text "No rewrites performed.";
+    text "Rewriting in: " ^^
+      indent (pp <| canon_slprop_print goal);
+  ]
+
 let visit_and_rewrite (p: (R.term & R.term)) (t:term) : T.Tac term =
   let open FStar.Reflection.TermEq in
   let lhs, rhs = p in
@@ -225,9 +233,7 @@ let visit_and_rewrite_conjuncts_all (is_source:bool) (g:env) (p: list (R.term & 
       tms tms'
   in
   if is_source && Nil? lhs then
-    warn_doc g None [
-      Pulse.PP.text "No rewrites performed."
-    ];
+    warn_nop g goal;
   list_as_slprop lhs, list_as_slprop rhs
 
 let disjoint (dom:list var) (cod:Set.set var) =
@@ -257,18 +263,32 @@ let rec as_subst (p : list (term & term))
 
 
 
-let rewrite_all (is_source:bool) (g:env) (p: list (term & term)) (t:term) : T.Tac (term & term) =
+let rewrite_all (is_source:bool) (g:env) (p: list (term & term)) (t:term) tac_opt : T.Tac (term & term) =
+  (* We only use the rewrites_to substitution if there is no tactic attached to the
+  rewrite. Otherwise, tactics may become brittle as the goal is changed unexpectedly
+  by other things in the context. See tests/Match.fst. *)
+  let use_rwr = None? tac_opt in
+  let norm (t:term) : T.Tac term = dfst <| Pulse.Checker.Prover.normalize_slprop g t use_rwr in
+  let t =
+    let t, _ = Pulse.Checker.Pure.instantiate_term_implicits g t None true in
+    let t = dfst <| Pulse.Checker.Prover.normalize_slprop g t use_rwr in
+    t
+  in
+  let elab_pair (lhs rhs : R.term) : T.Tac (R.term & R.term) =
+    let lhs, lhs_typ = Pulse.Checker.Pure.instantiate_term_implicits g lhs None true in
+    let rhs, rhs_typ = Pulse.Checker.Pure.instantiate_term_implicits g rhs (Some lhs_typ) true in
+    let lhs = norm lhs in
+    let rhs = norm rhs in
+    lhs, rhs
+  in
+  let p : list (R.term & R.term) = T.map (fun (e1, e2) -> elab_pair e1 e2) p in
   match as_subst p [] [] Set.empty with
   | Some s ->
-    t, subst_term t s
+    let t' = subst_term t s in
+    if is_source && eq_tm t t' then
+      warn_nop g t;
+    t, t'
   | _ ->
-    let p : list (R.term & R.term) = 
-      T.map 
-        (fun (e1, e2) -> 
-          (fst (Pulse.Checker.Pure.instantiate_term_implicits g e1 None false)),
-          (fst (Pulse.Checker.Pure.instantiate_term_implicits g e2 None false)))
-        p
-    in
     let lhs, rhs = visit_and_rewrite_conjuncts_all is_source g p t in
     debug_log g (fun _ -> Printf.sprintf "Rewrote %s to %s" (P.term_to_string lhs) (P.term_to_string rhs));
     lhs, rhs
@@ -303,7 +323,7 @@ let check_renaming
 
   | [], None ->
     // if there is no goal, take the goal to be the full current pre
-    let lhs, rhs = rewrite_all (T.unseal st.source) g pairs pre in
+    let lhs, rhs = rewrite_all (T.unseal st.source) g pairs pre tac_opt in
     let t = { st with term = Tm_Rewrite { t1 = lhs; t2 = rhs; tac_opt};
                       source = Sealed.seal false; } in
     { st with
@@ -313,7 +333,7 @@ let check_renaming
 
   | [], Some goal -> (
       let goal, _ = PC.instantiate_term_implicits g goal None false in
-      let lhs, rhs = rewrite_all (T.unseal st.source) g pairs goal in
+      let lhs, rhs = rewrite_all (T.unseal st.source) g pairs goal tac_opt in
       let t = { st with term = Tm_Rewrite { t1 = lhs; t2 = rhs; tac_opt };
                         source = Sealed.seal false; } in
       { st with term = Tm_Bind { binder = as_binder tm_unit; head = t; body };

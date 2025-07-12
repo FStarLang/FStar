@@ -115,7 +115,6 @@ ensures pts_to_or_null r #p 'v
 {
     match r {
      Some x -> {
-        rewrite each r as (Some x);
         unfold (pts_to_or_null (Some x) #p 'v);
         let o = !x;
         fold (pts_to_or_null (Some x) #p 'v);
@@ -123,7 +122,6 @@ ensures pts_to_or_null r #p 'v
         Some o
      }
      None -> {
-        rewrite each r as None;
         unfold (pts_to_or_null None #p 'v);
         fold (pts_to_or_null None #p 'v);
         rewrite each (None #(ref a)) as r;

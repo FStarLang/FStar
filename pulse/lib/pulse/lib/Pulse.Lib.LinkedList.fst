@@ -196,7 +196,6 @@ fn rec length (#t:Type0) (x:llist t)
         is_list_cases_some (Some vl) vl;
         with _node _tl. _;
         let node = !vl;
-        rewrite each _node as node;
         let n = length node.tail;
         intro_is_list_cons x vl;
         (1 + n)
@@ -239,8 +238,9 @@ fn rec append (#t:Type0) (x y:llist t)
   is_list_cases_some x np;
   with _node _tl. _;
   let node = !np;
-  rewrite each _node as node;
-  match node.tail {
+  let nt = node.tail;
+  with tl. rewrite is_list node.tail tl as is_list nt tl;
+  match nt {
     None -> {
       is_list_cases_none None;
       unfold (is_list #t None []);
@@ -297,9 +297,7 @@ fn move_next (#t:Type) (x:llist t)
     some_iff_cons x;
     let np = Some?.v x;
     is_list_cases_some x np;
-    with _node _tl. _;
     let node = !np;
-    rewrite each _node as node;
     intro_yields_cons np;
     rewrite each (Some np) as x;
     node.tail
@@ -336,7 +334,6 @@ fn length_iter (#t:Type) (x: llist t)
     with _n _ll suffix. _;
     let n = Pulse.Lib.Reference.(!ctr);
     let ll = Pulse.Lib.Reference.(!cur);
-    rewrite each _ll as ll;
     some_iff_cons ll;
     let next = move_next ll;
     with tl. assert (is_list next tl);
@@ -361,13 +358,13 @@ fn is_last_cell (#t:Type) (x:llist t)
   some_iff_cons x;
   let np = Some?.v x;
   is_list_cases_some x np;
-  with _node _tl. _;
   let node = !np;
-  rewrite each _node as node;
-  match node.tail {
+  let nt = node.tail;
+  with tl. rewrite is_list node.tail tl as is_list nt tl;
+  match nt {
     None -> {
       is_list_cases_none None;
-      rewrite is_list #t None _tl as is_list node.tail _tl;
+      with tl. rewrite is_list #t None tl as is_list node.tail tl;
       intro_is_list_cons x np;
       true
     }
@@ -392,10 +389,10 @@ ensures
   some_iff_cons x;
   let np = Some?.v x;
   is_list_cases_some x np;
-  with _node _tl. _;
   let node = !np;
-  rewrite each _node as node;
-  match node.tail {
+  let nt = node.tail;
+  with tl. rewrite is_list node.tail tl as is_list nt tl;
+  match nt {
     None -> {
       is_list_cases_none None;
       unfold (is_list #t None []);
@@ -443,7 +440,6 @@ fn move_next_forall (#t:Type) (x:llist t)
     is_list_cases_some x np;
     let node = !np;
     with tail tl. assert (is_list #t tail tl);
-    rewrite each tail as node.tail;
     ghost fn aux (tl':list t)
         requires pts_to np node
         ensures is_list node.tail tl' @==> is_list x (node.head::tl')
@@ -483,7 +479,6 @@ fn append_iter (#t:Type) (x y:llist t)
   while (
     with _b ll pfx sfx. _;
     let l = Pulse.Lib.Reference.(!cur);
-    rewrite each ll as l; (* this is a little annoying; rename every occurrence of ll to l *)
     some_iff_cons l;
     let b = is_last_cell l;
     if b 
@@ -518,7 +513,6 @@ fn append_iter (#t:Type) (x y:llist t)
   { () };
   with ll pfx sfx. _;
   let last = Pulse.Lib.Reference.(!cur);
-  rewrite each ll as last; (* same as above *)
   append_at_last_cell last y;
   (* finally, use the quqnatified postcondition of the invariant *)
   FA.elim_forall_imp (is_list last) (fun sfx' -> is_list x (pfx @ sfx')) (sfx@'l2);
@@ -542,7 +536,6 @@ fn detach_next (#t:Type) (x:llist t)
   is_list_cases_some x v;
   with node tl. _;
   let nodev = !v;
-  rewrite each node as nodev;
   let node' = { nodev with tail = None};
   fold (is_list node'.tail []);
   v := node';
@@ -577,7 +570,6 @@ fn split (#t:Type0) (x:llist t) (n:U32.t) (#xl:erased (list t))
     else 
     {
       let l = Pulse.Lib.Reference.(!cur);
-      rewrite each ll as l; (* this is a little annoying; rename every occurrence of ll to l *)
       let next = move_next_forall l;
       with hd tl. _;
       (* this is the key induction step *)
@@ -610,7 +602,6 @@ fn split (#t:Type0) (x:llist t) (n:U32.t) (#xl:erased (list t))
   { () };
   with i ll pfx sfx. _;
   let last = Pulse.Lib.Reference.(!cur);
-  rewrite each ll as last; (* same as above *)
   let y = detach_next last;
   with hd tl. _;
   FA.elim_forall_imp (is_list last) (fun sfx' -> is_list x (pfx @ sfx')) [hd];

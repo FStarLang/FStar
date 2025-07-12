@@ -366,8 +366,6 @@ ensures
   let b = StrongExcludedMiddle.strong_excluded_middle (i < Seq.length s1 && i < Seq.length s2);
   if b {
     assert (pure (i < Seq.length s1 && i < Seq.length s2));
-    rewrite each x1 as Seq.index s1 i;
-    rewrite each x2 as Seq.index s2 i;
     rewrite seq_seq_match_item p s1 s2 i as p (Seq.index s1 i) (Seq.index s2 i);
     ()
   } else {

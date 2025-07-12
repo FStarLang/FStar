@@ -58,3 +58,4 @@ instance val tac_showable_tuple7 (a b c d e f g : Type) (_:tac_showable a) (_:ta
 
 instance val tac_showable_tot_or_ghost : tac_showable tot_or_ghost
 instance val tac_showable_qualifier    : tac_showable qualifier
+instance val tac_showable_issue        : tac_showable FStar.Issue.issue

@@ -21,6 +21,7 @@ let rewrite_token (tok:FP.token)
     | IDENT "fold" -> PP.FOLD
     | IDENT "atomic" -> PP.ATOMIC
     | IDENT "ghost" -> PP.GHOST
+    | IDENT "unobservable" -> PP.UNOBSERVABLE
     | IDENT "with_invariants" -> PP.WITH_INVS
     | IDENT "opens" -> PP.OPENS
     | IDENT "show_proof_state" -> PP.SHOW_PROOF_STATE
@@ -59,6 +60,7 @@ let rewrite_token (tok:FP.token)
     | DISJUNCTION -> PP.DISJUNCTION
     | DOLLAR -> PP.DOLLAR 
     | DOT -> PP.DOT 
+    | DOT_DOT -> PP.DOT_DOT
     | DOT_LBRACK -> PP.DOT_LBRACK 
     | DOT_LBRACK_BAR -> PP.DOT_LBRACK_BAR 
     | DOT_LENS_PAREN_LEFT -> PP.DOT_LENS_PAREN_LEFT 
@@ -72,10 +74,10 @@ let rewrite_token (tok:FP.token)
     | EQUALS -> PP.EQUALS 
     | EQUALTYPE -> PP.EQUALTYPE 
     | EXCEPTION -> PP.EXCEPTION 
-    | EXISTS s -> PP.EXISTS s 
+    | EXISTS -> PP.EXISTS
     | EXISTS_OP s -> PP.EXISTS_OP s
     | FALSE -> PP.FALSE 
-    | FORALL s -> PP.FORALL s 
+    | FORALL -> PP.FORALL
     | FORALL_OP s -> PP.FORALL_OP s
     | FRIEND -> PP.FRIEND 
     | FUN -> PP.FUN 
@@ -110,7 +112,7 @@ let rewrite_token (tok:FP.token)
     | LBRACK_BAR -> PP.LBRACK_BAR 
     | LENS_PAREN_LEFT -> PP.LENS_PAREN_LEFT 
     | LENS_PAREN_RIGHT -> PP.LENS_PAREN_RIGHT 
-    | LET b -> PP.LET b
+    | LET -> PP.LET
     | LET_OP s -> PP.LET_OP s
     | LOGIC -> PP.LOGIC 
     | LONG_LEFT_ARROW -> PP.LONG_LEFT_ARROW 
@@ -155,7 +157,6 @@ let rewrite_token (tok:FP.token)
     | QMARK -> PP.QMARK 
     | QMARK_DOT -> PP.QMARK_DOT 
     | QUOTE -> PP.QUOTE 
-    | RANGE s -> PP.RANGE s 
     | RANGE_OF -> PP.RANGE_OF 
     | RARROW -> PP.RARROW 
     | RBRACE -> PP.RBRACE 

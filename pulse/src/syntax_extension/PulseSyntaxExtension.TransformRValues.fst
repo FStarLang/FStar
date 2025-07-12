@@ -123,8 +123,9 @@ let add_derefs_in_scope (n:needs_derefs) (p:Sugar.stmt)
            { s=Sugar.LetBinding { norw=false;
                                   qualifier=None; pat=pat; typ=None;
                                   init=Some (Sugar.Default_initializer (read x)) };
-             range=p.range } in
-         { s=Sugar.Sequence { s1=lb; s2=p }; range=p.range})
+             range=p.range;
+             source=false } in
+         { s=Sugar.Sequence { s1=lb; s2=p }; range=p.range; source=false})
        n p
 
 let term'_of_id (y:ident) = A.Var (Ident.lid_of_ids [y])

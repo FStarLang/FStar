@@ -193,7 +193,7 @@ ensures exists* s'. (a |-> s') **
       with s1. assert (a |-> s1);
       step_inner_invariant ss s0 s1 key vi vj;
       if (vi = 0sz) { done := true }
-      else { i := SZ.(vi -^ 1sz); }
+      else { assert pure (SZ.v vi > 0); i := SZ.(vi -^ 1sz); }
     };
     with s0. assert (a |-> s0);
     let vi = !i;

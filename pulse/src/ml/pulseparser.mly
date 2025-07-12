@@ -67,7 +67,7 @@ let add_decorations decors ds =
 
 /* pulse specific tokens; rest are inherited from F* */
 %token MUT FN INVARIANT WHILE REF PARALLEL REWRITE FOLD EACH NOREWRITE
-%token GHOST ATOMIC
+%token GHOST ATOMIC UNOBSERVABLE
 %token WITH_INVS OPENS  SHOW_PROOF_STATE
 %token PRESERVES
 
@@ -93,6 +93,7 @@ peekFnId:
 qual:
   | GHOST { PulseSyntaxExtension_Sugar.STGhost }
   | ATOMIC { PulseSyntaxExtension_Sugar.STAtomic }
+  | UNOBSERVABLE { PulseSyntaxExtension_Sugar.STUnobservable }
 
 startOfNextPulseDeclToken:
  | i=startOfNextDeclToken { i }

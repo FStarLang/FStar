@@ -96,6 +96,9 @@ let neutral_comp (inames:term) (pre:term) (ret:binder) (post:term) : comp =
 let atomic_comp (inames:term) (pre:term) (ret:binder) (post:term) : comp =
    C_STAtomic (inames, Observable, mk_st_comp pre ret post)
 
+let unobs_comp (inames:term) (pre:term) (ret:binder) (post:term) : comp =
+   C_STAtomic (inames, Neutral, mk_st_comp pre ret post)
+
 module PSB = Pulse_Syntax_Builder
 type constant = Pulse_Syntax_Base.constant
 let inspect_const = FStarC_Reflection_V2_Builtins.inspect_const
@@ -217,6 +220,9 @@ let comp_post c =
 
 let mark_statement_sequence (s : st_term) : st_term =
   PSB.mark_statement_sequence s
+
+let mark_not_source (s : st_term) : st_term =
+  PSB.mark_not_source s
 
 let print_exn (e:exn) = Printexc.to_string e
 

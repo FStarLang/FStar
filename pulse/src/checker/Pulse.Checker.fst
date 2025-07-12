@@ -210,12 +210,13 @@ let rec check
   else (
     maybe_trace t g0 pre0 t.range;  
     if RU.debug_at_level (fstar_env g0) "pulse.checker" then
-      T.print (Printf.sprintf "At %s{\nerr context:\n>%s\n\n{\n\tenv=%s\ncontext:\n%s,\n\nst_term: %s}}\n"
-                (T.range_to_string t.range)
+      T.print (Printf.sprintf "At %s{\nerr context:\n>%s\n\n{\n\tenv=%s\ncontext:\n%s,\n\nst_term: %s\nis_source: %s}}\n"
+                (show t.range)
                 (RU.print_context (get_context g0))
-                (Pulse.Typing.Env.env_to_string g0)
-                (Pulse.Syntax.Printer.term_to_string pre0)
-                (Pulse.Syntax.Printer.st_term_to_string t));
+                (show g0)
+                (show pre0)
+                (show t)
+                (show (T.unseal t.source)));
     
     match maybe_elaborate_if_or_match_head g0 t with
     | Some t -> 

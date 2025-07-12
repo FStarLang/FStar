@@ -31,7 +31,6 @@ fn push_front (#t:Type) (l : dq t) (x : t) (#xs:erased (list t))
   unfold is_dq;
   with xx0. assert (B.pts_to l xx0);
   let xx = !l;
-  rewrite each xx0 as xx;
   let yy = push_front xx x;
   l := yy;
   fold is_dq;
@@ -46,7 +45,6 @@ fn pop_front (#t:Type) (l : dq t) (#x : erased t) (#xs : erased (list t))
   unfold is_dq;
   with xx0. assert (B.pts_to l xx0);
   let xx = !l;
-  rewrite each xx0 as xx;
   let yy = pop_front xx;
   l := fst yy;
   fold is_dq;
@@ -70,7 +68,6 @@ fn push_back (#t:Type) (l : dq t) (x : t) (#xs:erased (list t))
   unfold is_dq;
   with xx0. assert (B.pts_to l xx0);
   let xx = !l;
-  rewrite each xx0 as xx;
   let yy = push_back xx x;
   l := yy;
   fold is_dq;
@@ -85,7 +82,6 @@ fn pop_back (#t:Type) (l : dq t) (#x : erased t) (#xs : erased (list t))
   unfold is_dq;
   with xx0. assert (B.pts_to l xx0);
   let xx = !l;
-  rewrite each xx0 as xx;
   let yy = pop_back xx;
   l := fst yy;
   fold is_dq;

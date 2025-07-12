@@ -252,7 +252,6 @@ fn unfold_is_deque_cons (#t:Type) (l : deque t) (#xs : (list t){Cons? xs})
     hd :: tl -> {
       unfold is_deque;
       with hp tp. assert (is_deque_suffix hp (hd::tl) None tp None);
-      rewrite each hp as fst (hp, tp);
       hide (hp, tp)
     }
   }
@@ -347,12 +346,10 @@ fn unfactor_is_deque_suffix
   match tl {
     [] -> {
       rewrite each l as [hd];
-      rewrite each tl as [];
       fold (is_deque_suffix p [hd] prev tail last);
     }
     y :: ys -> {
       rewrite each l as (hd::y::ys);
-      rewrite each tl as (y::ys);
       fold (is_deque_suffix p (hd::y::ys) prev tail last);
     }
   }
@@ -484,7 +481,6 @@ fn pop_front_nil (#t:Type) (l : deque t)
     tail = None;
   };
   fold (is_deque l' []);
-  rewrite each l' as fst (l', x);
 
   (l', x);
 }
@@ -531,7 +527,6 @@ fn pop_front_cons (#t:Type) (l : deque t)
   let l' = { head = Some headp'; tail = l.tail };
   fold (is_deque l' (reveal y :: reveal ys));
 
-  rewrite each l' as fst (l', retv);
   (l', retv)
 }
 
@@ -610,10 +605,9 @@ fn is_singleton
 
   with v. assert (pts_to headp v);
   let vv = Box.( !headp );
-  rewrite each v as vv;
 
   let nextp = vv.dnext;
-  rewrite each vv.dnext as nextp;
+  rewrite each v.dnext as nextp;
 
   match nextp {
   None -> {
@@ -765,7 +759,6 @@ fn fold_is_deque_cons
       unreachable();
     }
     hd :: tl -> {
-      rewrite each xs as Cons hd tl;
       fold (is_deque l (hd :: tl));
     }
   }
@@ -893,7 +886,6 @@ fn rec is_deque_suffix_nolast_helper
       v;
     }
     h2 :: tl2 -> {
-      rewrite each l as (hd :: h2 :: tl2);
       unfold is_deque_suffix p (hd :: h2 :: tl2) prev tail last;
 
       with vp. assert (pts_to p vp);

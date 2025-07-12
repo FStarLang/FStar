@@ -22,11 +22,16 @@ open FStar.PCM
 open Pulse.Lib.PCM.Fraction
 
 let ref (a:Type u#1) = pcm_ref (pcm_frac #a)
+
+let null (#a:Type u#1) : ref a = null_core_pcm_ref
+
+let is_null #a (r : ref a)
+  : b:bool{b <==> r == null #a}
+= is_null_core_pcm_ref r
+
 let pts_to (#a:Type) (r:ref a) (#[T.exact (`1.0R)] p:perm) (n:a)
 = pcm_pts_to r (Some (n, p)) ** pure (perm_ok p)
 let pts_to_timeless _ _ _ = ()
-
-
 
 fn alloc' (#a:Type u#1) (x:a)
   requires emp
@@ -48,10 +53,10 @@ let read_compat (#a:Type u#1) (x:fractional a)
   = x
 
 
-fn read' (#a:Type u#1) (r:ref a) (#n:erased a) (#p:perm)
-  requires pts_to r #p n
-  returns x:a
-  ensures pts_to r #p n ** pure (reveal n == x)
+fn read (#a:Type u#1) (r:ref a) (#n:erased a) (#p:perm)
+  preserves r |-> Frac p n
+  returns  x : a
+  ensures  rewrites_to x n
 {
   unfold pts_to r #p n;
   with w. assert (pcm_pts_to r w);
@@ -62,13 +67,11 @@ fn read' (#a:Type u#1) (r:ref a) (#n:erased a) (#p:perm)
   fst (Some?.v x)
 }
 
-let read = read'
 let ( ! ) #a = read #a
 
-
 fn write (#a:Type u#1) (r:ref a) (x:a) (#n:erased a)
-  requires pts_to r #1.0R n
-  ensures pts_to r #1.0R x
+  requires r |-> n
+  ensures  r |-> x
 {
   unfold pts_to r #1.0R n;
   with w. assert (pcm_pts_to r w);
@@ -79,7 +82,7 @@ fn write (#a:Type u#1) (r:ref a) (x:a) (#n:erased a)
 let ( := ) #a = write #a
 
 
-fn free' #a (r:ref a) (#n:erased a)
+fn free #a (r:ref a) (#n:erased a)
   requires pts_to r #1.0R n
   ensures emp
 {
@@ -89,11 +92,8 @@ fn free' #a (r:ref a) (#n:erased a)
   Pulse.Lib.Core.drop_ _;
 }
 
-let free = free'
-   
-
 ghost
-fn share' #a (r:ref a) (#v:erased a) (#p:perm)
+fn share #a (r:ref a) (#v:erased a) (#p:perm)
   requires pts_to r #p v
   ensures pts_to r #(p /. 2.0R) v ** pts_to r #(p /. 2.0R) v
 {
@@ -105,11 +105,8 @@ fn share' #a (r:ref a) (#v:erased a) (#p:perm)
   fold (pts_to r #(p /. 2.0R) v);
 }
 
-let share = share'
-
-
 ghost
-fn gather' #a (r:ref a) (#x0 #x1:erased a) (#p0 #p1:perm)
+fn gather #a (r:ref a) (#x0 #x1:erased a) (#p0 #p1:perm)
   requires pts_to r #p0 x0 ** pts_to r #p1 x1
   ensures pts_to r #(p0 +. p1) x0 ** pure (x0 == x1)
 { 
@@ -118,9 +115,6 @@ fn gather' #a (r:ref a) (#x0 #x1:erased a) (#p0 #p1:perm)
   Pulse.Lib.Core.gather r (Some (reveal x0, p0)) (Some (reveal x1, p1));
   fold (pts_to r #(p0 +. p1) x0)
 }
-
-let gather = gather'
-
 
 fn free_with_frame #a (r:ref a) (frame:slprop)
   requires frame ** (exists* (x:a). pts_to r x)
@@ -157,7 +151,7 @@ let with_local
   
 
 ghost
-fn pts_to_injective_eq'
+fn pts_to_injective_eq
     (#a:Type)
     (#p0 #p1:perm)
     (#v0 #v1:a)
@@ -173,11 +167,9 @@ fn pts_to_injective_eq'
   fold pts_to r #p1 v1;
 }
 
-let pts_to_injective_eq = pts_to_injective_eq'
-
 
 ghost
-fn pts_to_perm_bound' (#a:_) (#p:_) (r:ref a) (#v:a)
+fn pts_to_perm_bound (#a:_) (#p:_) (r:ref a) (#v:a)
   requires pts_to r #p v
   ensures pts_to r #p v ** pure (p <=. 1.0R)
 {
@@ -185,4 +177,12 @@ fn pts_to_perm_bound' (#a:_) (#p:_) (r:ref a) (#v:a)
   fold pts_to r #p v;
 }
 
-let pts_to_perm_bound = pts_to_perm_bound'
+ghost
+fn pts_to_not_null (#a:_) (#p:_) (r:ref a) (#v:a)
+  preserves r |-> Frac p v
+  ensures  pure (not (is_null #a r))
+{
+  unfold pts_to r #p v;
+  pts_to_not_null r _;
+  fold pts_to r #p v;
+}

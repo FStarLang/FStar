@@ -25,6 +25,12 @@ module R = Pulse.Lib.Reference
 noeq
 type box a = | B : r:R.ref a -> box a
 
+let null (#a:Type u#0) : box a = B R.null
+
+let is_null #a (r : box a)
+  : b:bool{b <==> r == null #a}
+= R.is_null (B?.r r)
+
 let pts_to b #p v = R.pts_to b.r #p v
 
 let pts_to_timeless _ _ _ = ()
@@ -45,9 +51,9 @@ fn alloc (#a:Type0) (x:a)
 #pop-options
 
 fn op_Bang (#a:Type0) (b:box a) (#v:erased a) (#p:perm)
-  requires pts_to b #p v
+  preserves pts_to b #p v
   returns  x : a
-  ensures  pts_to b #p v ** pure (reveal v == x)
+  ensures rewrites_to x v
 {
   unfold (pts_to b #p v);
   let x = R.(!b.r);
@@ -79,3 +85,14 @@ let to_ref_pts_to #a b #p #v =
   rewrite (pts_to b #p v) (R.pts_to b.r #p v) (slprop_equiv_refl _)
 let to_box_pts_to #a b #p #v =
   rewrite (R.pts_to b.r #p v) (pts_to b #p v) (slprop_equiv_refl _)
+
+#lang-pulse
+ghost
+fn pts_to_not_null (#a:_) (#p:_) (r:box a) (#v:a)
+  preserves r |-> Frac p v
+  ensures  pure (not (is_null #a r))
+{
+  unfold (pts_to r #p v);
+  R.pts_to_not_null (B?.r r);
+  fold (pts_to r #p v);
+}

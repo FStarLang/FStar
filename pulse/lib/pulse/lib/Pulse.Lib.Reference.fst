@@ -22,6 +22,12 @@ module H = Pulse.Lib.HigherReference
 module U = FStar.Universe
 let ref a = H.ref (U.raise_t a)
 
+let null (#a:Type u#0) : ref a = H.null
+
+let is_null #a (r : ref a)
+  : b:bool{b <==> r == null #a}
+= H.is_null r
+
 let pts_to
     (#a:Type u#0)
     (r:ref a)
@@ -44,14 +50,14 @@ fn alloc (#a:Type u#0) (v:a)
 
 
 
-fn op_Bang
+fn read
   (#a:Type)
   (r:ref a)
   (#n:erased a)
   (#p:perm)
-  requires pts_to r #p n
+  preserves pts_to r #p n
   returns x:a
-  ensures pts_to r #p n ** pure (eq2 #a (reveal n) x)
+  ensures rewrites_to x n
 {
   unfold (pts_to r #p n);
   let k = H.( !r );
@@ -59,9 +65,9 @@ fn op_Bang
   U.downgrade_val k
 }
 
+let op_Bang = read
 
-
-fn op_Colon_Equals
+fn write
   (#a:Type)
   (r:ref a)
   (x:a)
@@ -74,6 +80,7 @@ fn op_Colon_Equals
   fold (pts_to r #1.0R x)
 }
 
+let op_Colon_Equals = write
 
 
 fn free #a (r:ref a) (#n:erased a)
@@ -194,6 +201,16 @@ fn pts_to_perm_bound (#a:_) (#p:_) (r:ref a) (#v:a)
 }
 
 
+ghost
+fn pts_to_not_null (#a:_) (#p:_) (r:ref a) (#v:a)
+  preserves r |-> Frac p v
+  ensures  pure (not (is_null #a r))
+{
+  unfold pts_to r #p v;
+  let res = H.pts_to_not_null r;
+  fold pts_to r #p v;
+  res
+}
 
 fn replace (#a:Type0) (r:ref a) (x:a) (#v:erased a)
   requires pts_to r v

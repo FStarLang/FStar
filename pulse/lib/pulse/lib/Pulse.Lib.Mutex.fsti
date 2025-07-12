@@ -44,7 +44,7 @@ val pts_to (#a:Type0) (mg:mutex_guard a) (#[T.exact (`1.0R)] p:perm) (x:a) : slp
 val ( ! ) (#a:Type0) (mg:mutex_guard a) (#x:erased a) (#p:perm)
   : stt a
       (requires pts_to mg #p x)
-      (ensures fun y -> pts_to mg #p x ** pure (reveal x == y))
+      (ensures fun y -> pts_to mg #p x ** rewrites_to y (reveal x))
 
 val ( := ) (#a:Type0) (mg:mutex_guard a) (y:a) (#x:erased a)
   : stt unit
@@ -54,7 +54,7 @@ val ( := ) (#a:Type0) (mg:mutex_guard a) (y:a) (#x:erased a)
 val replace (#a:Type0) (mg:mutex_guard a) (y:a) (#x:erased a)
   : stt a
       (requires mg `pts_to` x)
-      (ensures fun r -> mg `pts_to` y ** pure (r == reveal x))
+      (ensures fun r -> mg `pts_to` y ** rewrites_to r (reveal x))
 
 val new_mutex (#a:Type0) (v:a -> slprop) (x:a)
   : stt (mutex a)

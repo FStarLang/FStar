@@ -103,7 +103,7 @@ val op_Array_Access
             pts_to a #p s)
         (ensures fun res ->
             pts_to a #p s **
-            pure (res == Seq.index s (SZ.v i)))
+            rewrites_to res (Seq.index s (SZ.v i)))
 
 
 (* Written a.(i) <- v *)
