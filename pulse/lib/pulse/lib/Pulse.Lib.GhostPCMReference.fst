@@ -17,7 +17,6 @@ let pts_to_is_timeless #a #p r v = ()
 
 let alloc #a #p x = ghost_alloc #_ #(PR.raise p) (U.raise_val x)
   
-
 ghost
 fn read
     (#a:Type u#0)
@@ -34,11 +33,12 @@ fn read
   unfold pts_to;
   rewrite ghost_pcm_pts_to #_ #(PR.raise p) r (U.raise_val u#0 u#1 x)
       as ghost_pcm_pts_to #_ #(PR.raise p) r (reveal (hide (U.raise_val x)));
-  let v = ghost_read #_ #(PR.raise u#0 u#1 p) r (U.raise_val x) (PR.raise_refine u#0 u#1 p x f);
-  let v = U.downgrade_val (Ghost.reveal v);
-  with _v. 
-   rewrite ghost_pcm_pts_to #(U.raise_t u#0 u#1 a) #(PR.raise p) r _v
-        as ghost_pcm_pts_to #_ #(PR.raise p) r (U.raise_val u#0 u#1 (f v));
+  let v0 = ghost_read #_ #(PR.raise u#0 u#1 p) r (U.raise_val x) (PR.raise_refine u#0 u#1 p x f);
+  let v = U.downgrade_val u#0 u#1 (Ghost.reveal v0);
+  let vv = (PR.raise_refine u#0 u#1 #_ p x f (reveal v0));
+  rewrite
+    ghost_pcm_pts_to #(U.raise_t u#0 u#1 a) #(PR.raise u#0 u#1 p) r vv
+    as ghost_pcm_pts_to #(U.raise_t u#0 u#1 a) #(PR.raise u#0 u#1 p) r (U.raise_val u#0 u#1 (f v));
   fold (pts_to r (f v));
   v
 }

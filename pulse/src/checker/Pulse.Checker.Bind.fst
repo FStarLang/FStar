@@ -127,9 +127,6 @@ let maybe_close_post
   | Some ph ->
     let d = apply_checker_result_k #_ #_ #ph r res_ppname in
     let (| _, _, dd |) = d in
-    debug_prover g (fun _ ->
-      Printf.sprintf "Derivation of continuation in bind:\n%s\n"
-        (Pulse.Typing.Printer.print_st_typing dd));
     d
 
 let check_bind'

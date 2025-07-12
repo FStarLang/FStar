@@ -336,7 +336,11 @@ let free_action #a #p r v0 = lift_action (H.free_action #a #p r v0)
 let split_action #a #p r v0 v1 = lift_action (H.split_action #a #p r v0 v1)
 let gather_action #a #p r v0 v1 = lift_action (H.gather_action #a #p r v0 v1)
 let pts_to_not_null_action #a #p r v = lift_action (H.pts_to_not_null_action #a #p r v)
-let extend #a #pcm x = lift_action (H.extend #a #pcm x)
+let extend
+  (#a:Type u#a)
+  (#pcm:pcm a)
+  (x:a{pcm.refine x})
+  = let _ = lift_emp u#a in lift_action u#a u#0 (H.extend #a #pcm x)
 let extend_modifies #a #pcm x h = ()
 
 let refined_pre_action (#mut:mutability)
@@ -586,7 +590,8 @@ let ghost_extend
     (#a:Type u#a)
     (#pcm:pcm a)
     (x:erased a{pcm.refine x})
-= lift_erased #_ #(ni_erased H.core_ref)
+= let _ = lift_ghost_emp u#a in
+  lift_erased #_ #(ni_erased H.core_ref)
     (Ghost.hide <|
       lift_action_ghost (ni_erased H.core_ref) (H.erase_action_result (H.extend #a #pcm x)))
 

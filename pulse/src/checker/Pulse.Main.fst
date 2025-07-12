@@ -97,9 +97,8 @@ let check_fndefn
               (P.st_term_to_string body)
               (P.comp_to_string c));
   debug_main g
-    (fun _ -> Printf.sprintf "\nchecker call returned in main with:\n%s\nderivation=%s\n"
-              (P.st_term_to_string body)
-              (Pulse.Typing.Printer.print_st_typing t_typing));
+    (fun _ -> Printf.sprintf "\nchecker call returned in main with:\n%s\n"
+              (P.st_term_to_string body));
 
   let refl_t = elab_comp c in
   

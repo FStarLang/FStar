@@ -4,6 +4,7 @@ open Pulse.Lib.Pervasives
 open Pulse.Lib.Deque
 module B = Pulse.Lib.Box
 open FStar.List.Tot
+open Pulse.Lib.Box
 
 let dq (t:Type0) = B.box (deque t)
 
@@ -27,7 +28,6 @@ fn push_front (#t:Type) (l : dq t) (x : t) (#xs:erased (list t))
   requires is_dq l xs
   ensures  is_dq l (x::xs)
 {
-  open Pulse.Lib.Box;
   unfold is_dq;
   with xx0. assert (B.pts_to l xx0);
   let xx = !l;
@@ -42,7 +42,6 @@ fn pop_front (#t:Type) (l : dq t) (#x : erased t) (#xs : erased (list t))
   returns  y : t
   ensures  is_dq l xs ** pure (y == x)
 {
-  open Pulse.Lib.Box;
   unfold is_dq;
   with xx0. assert (B.pts_to l xx0);
   let xx = !l;
@@ -54,7 +53,7 @@ fn pop_front (#t:Type) (l : dq t) (#x : erased t) (#xs : erased (list t))
 
 fn pop_alt (#t:Type) (l : dq t) (#xs : erased (list t) { Cons? xs })
   requires is_dq l xs
-  returns  y: (y : t { Cons?.hd xs == y })
+  returns  _: (y : t { Cons?.hd xs == y })
   ensures  is_dq l (Cons?.tl xs)
 {
   let y = pop_front l #(Cons?.hd xs) #(Cons?.tl xs);
@@ -66,7 +65,6 @@ fn push_back (#t:Type) (l : dq t) (x : t) (#xs:erased (list t))
   requires is_dq l xs
   ensures  is_dq l (xs @ [x])
 {
-  open Pulse.Lib.Box;
   unfold is_dq;
   with xx0. assert (B.pts_to l xx0);
   let xx = !l;
@@ -81,7 +79,6 @@ fn pop_back (#t:Type) (l : dq t) (#x : erased t) (#xs : erased (list t))
   returns  y : t
   ensures  is_dq l xs ** pure (y == x)
 {
-  open Pulse.Lib.Box;
   unfold is_dq;
   with xx0. assert (B.pts_to l xx0);
   let xx = !l;
