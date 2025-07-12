@@ -2796,6 +2796,8 @@ let non_info_norm env t =
   let steps = [UnfoldUntil delta_constant;
                AllowUnboundUniverses;
                EraseUniverses;
+               Primops;
+               Beta; Iota;
                HNF;
                (* We could use Weak too were it not that we need
                 * to descend in the codomain of arrows. *)
@@ -2804,6 +2806,21 @@ let non_info_norm env t =
                ]
   in
   non_informative env (normalize steps env t)
+
+let non_info_sort_norm env t =
+  let steps = [UnfoldUntil (Env.delta_depth_of_fv env (S.fvconst PC.prop_lid)); // do not unfold prop
+               AllowUnboundUniverses;
+               EraseUniverses;
+               Primops;
+               Beta; Iota;
+               HNF;
+               (* We could use Weak too were it not that we need
+                * to descend in the codomain of arrows. *)
+               Unascribe;   //remove ascriptions
+               ForExtraction //and refinement types
+               ]
+  in
+  non_informative_sort (normalize steps env t)
 
 (*
  * Ghost T to Pure T promotion
