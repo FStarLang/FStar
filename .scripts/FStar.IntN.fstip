@@ -92,10 +92,11 @@ val shift_arithmetic_right (a:t) (s:UInt32.t) : Pure t
   (ensures (fun c -> FStar.Int.shift_arithmetic_right (v a) (UInt32.v s) = v c))
 
 (* Comparison operators *)
-let eq (a:t) (b:t) : Tot bool = eq #n (v a) (v b)
-let gt (a:t) (b:t) : Tot bool = gt #n (v a) (v b)
+let eq  (a:t) (b:t) : Tot bool = eq  #n (v a) (v b)
+let ne  (a:t) (b:t) : Tot bool = ne  #n (v a) (v b)
+let gt  (a:t) (b:t) : Tot bool = gt  #n (v a) (v b)
 let gte (a:t) (b:t) : Tot bool = gte #n (v a) (v b)
-let lt (a:t) (b:t) : Tot bool = lt #n (v a) (v b)
+let lt ( a:t) (b:t) : Tot bool = lt  #n (v a) (v b)
 let lte (a:t) (b:t) : Tot bool = lte #n (v a) (v b)
 
 (* Infix notations *)
@@ -111,6 +112,7 @@ unfold let op_Less_Less_Hat = shift_left
 unfold let op_Greater_Greater_Hat = shift_right
 unfold let op_Greater_Greater_Greater_Hat = shift_arithmetic_right
 unfold let op_Equals_Hat = eq
+unfold let op_Not_Equals_Hat = ne
 unfold let op_Greater_Hat = gt
 unfold let op_Greater_Equals_Hat = gte
 unfold let op_Less_Hat = lt

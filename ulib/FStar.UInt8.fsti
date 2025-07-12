@@ -224,6 +224,9 @@ val shift_left (a:t) (s:UInt32.t) : Pure t
     operator [=] *)
 let eq (a:t) (b:t) : Tot bool = eq #n (v a) (v b)
 
+(** Inequality *)
+let ne (a:t) (b:t) : Tot bool = ne #n (v a) (v b)
+
 (** Greater than *)
 let gt (a:t) (b:t) : Tot bool = gt #n (v a) (v b)
 
@@ -332,6 +335,7 @@ unfold let op_Bar_Hat = logor
 unfold let op_Less_Less_Hat = shift_left
 unfold let op_Greater_Greater_Hat = shift_right
 unfold let op_Equals_Hat = eq
+unfold let op_Not_Equals_Hat = ne
 unfold let op_Greater_Hat = gt
 unfold let op_Greater_Equals_Hat = gte
 unfold let op_Less_Hat = lt

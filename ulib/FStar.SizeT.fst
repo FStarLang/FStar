@@ -79,6 +79,8 @@ let div x y =
   res
 
 let rem x y = Sz <| U64.rem x.x y.x
+let eq  x y = U64.eq  x.x y.x
+let ne  x y = U64.ne  x.x y.x
 let gt  x y = U64.gt  x.x y.x
 let gte x y = U64.gte x.x y.x
 let lt  x y = U64.lt  x.x y.x
