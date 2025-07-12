@@ -125,9 +125,9 @@ let conv (#a:Type u#a)
          (pf2:slprop_post_equiv post1 post2)
 : Lemma (stt a pre1 post1 == stt a pre2 post2)
 = slprop_equiv_elim pre1 pre2;
-  introduce forall x. post1 x == post2 x
+  introduce forall (x:a). post1 x == post2 x
   with slprop_equiv_elim (post1 x) (post2 x);
-  Sem.conv #state a #pre1 #(F.on_dom _ post1) (F.on_dom _ post2);
+  Sem.conv u#4 u#a u#100 #state a #pre1 #(F.on_dom _ post1) (F.on_dom _ post2);
   ()
 
 let sub (#a:Type u#a)
