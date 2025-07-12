@@ -778,3 +778,51 @@ let head_has_attr_string (attr_name:string) (t : R.term) : T.Tac bool =
   | None -> false
   | Some (hfv, _, _) ->
     fv_has_attr_string attr_name hfv
+
+let rec eq_list (f:'a -> 'a -> bool) (l1 l2:list 'a) : bool =
+  match l1, l2 with
+  | [], [] -> true
+  | x1::xs1, x2::xs2 -> f x1 x2 && eq_list f xs1 xs2
+  | _ -> false
+
+let eq_ident (i1 i2:R.ident) : bool =
+  R.compare_ident i1 i2 = Order.Eq
+
+let qual_eq (q1 q2:R.qualifier) : bool =
+  let open R in
+  match q1, q2 with
+  | Assumption, Assumption
+  | InternalAssumption, InternalAssumption
+  | New, New
+  | Private, Private
+  | Unfold_for_unification_and_vcgen, Unfold_for_unification_and_vcgen
+  | Visible_default, Visible_default
+  | Irreducible, Irreducible
+  | Inline_for_extraction, Inline_for_extraction
+  | NoExtract, NoExtract
+  | Noeq, Noeq
+  | Unopteq, Unopteq
+  | TotalEffect, TotalEffect
+  | Logic, Logic
+  | Reifiable, Reifiable -> true
+  | Reflectable n1, Reflectable n2
+  | Discriminator n1, Discriminator n2 
+  | Action n1, Action n2 -> n1 = n2 
+  | Projector (n1, i1), Projector (n2, i2) ->
+    n1 = n2 && eq_ident i1 i2
+  | RecordType (ids1, ids1'), RecordType (ids2, ids2')
+  | RecordConstructor (ids1, ids1'), RecordConstructor (ids2, ids2') ->
+    eq_list eq_ident ids1 ids2 &&
+    eq_list eq_ident ids1' ids2'
+  | ExceptionConstructor, ExceptionConstructor
+  | HasMaskedEffect, HasMaskedEffect
+  | Effect, Effect
+  | OnlyName, OnlyName -> true
+  | _ -> false
+
+let fv_has_qual (qual:R.qualifier) (f : R.fv) : T.Tac bool =
+  match T.lookup_typ (T.top_env ()) (T.inspect_fv f) with
+  | None -> false
+  | Some se ->
+    let quals = T.sigelt_quals se in
+    quals |> T.tryFind (fun x -> qual_eq qual x)

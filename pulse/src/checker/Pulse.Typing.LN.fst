@@ -608,7 +608,7 @@ let open_proof_hint_ln_inv (ht:proof_hint_type) (x:term { ln x }) (i:index)
     | WILD
     | SHOW_PROOF_STATE _ -> ()
 
-#push-options "--z3rlimit_factor 4 --fuel 2 --ifuel 2 --query_stats --split_queries no"
+#push-options "--z3rlimit_factor 4 --fuel 2 --ifuel 2 --split_queries no"
 let rec open_term_ln_inv_st' (t:st_term)
                              (x:term { ln x })
                              (i:index)
@@ -1310,4 +1310,4 @@ let rec st_typing_ln (#g:_) (#t:_) (#c:_)
 
     | T_WithInv .. ->
       admit() // IOU
-
+#pop-options

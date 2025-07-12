@@ -81,20 +81,18 @@ let check_length_constant g (t:term)
   let open Pulse.PP in
   let fail () =
     fail_doc g (Some <| T.range_of_term t)
-      [text "Stack allocating an array requires the length to be a constant";
+      [text "Stack allocating an array requires the length to be a constant or marked inline_for_extraction";
        text (P.term_to_string t ^ " is not a constant")]
   in
-  match T.inspect_ln t with
+  let hd, args = T.collect_app_ln t in 
+  match T.inspect_ln hd with
   | Tv_Const _ -> ()
-  | Tv_App hd (arg, Q_Explicit) -> (
-    match T.inspect_ln hd with
-    | Tv_FVar fv -> (
-      if T.inspect_fv fv = ["FStar"; "SizeT"; "__uint_to_t"]
-      && Tv_Const? (T.inspect_ln arg)
-      then ()
-      else fail()
-    )
-    | _ -> fail()
+  | Tv_FVar fv -> (  
+    if T.inspect_fv fv = ["FStar"; "SizeT"; "__uint_to_t"]
+    then ()
+    else if RU.fv_has_qual Inline_for_extraction fv
+    then ()
+    else fail()
   )
   | _ -> fail()
 
