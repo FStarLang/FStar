@@ -177,7 +177,7 @@ let maybe_setting_error_bound (t:st_term) (f : unit -> T.Tac 'a) : T.Tac 'a =
 
 #push-options "--z3rlimit_factor 4 --fuel 0 --ifuel 1"
 
-let maybe_elaborate_if_or_match_head (g:env) (t:st_term)
+let maybe_elaborate_stateful_head (g:env) (t:st_term)
 : T.Tac (option st_term)
 = match t.term with
   | Tm_If {b; then_=e1; else_=e2; post} ->
@@ -194,6 +194,22 @@ let maybe_elaborate_if_or_match_head (g:env) (t:st_term)
       { t with term=Tm_Match {sc; returns_=post_match; brs} }
     in
     Pulse.Checker.Base.hoist_stateful_apps g (Inl sc) true rebuild
+  | Tm_WithLocal { binder; initializer; body } ->
+    let rebuild (sc:either term st_term {Inl? sc})
+    : T.Tac st_term
+    = let Inl initializer = sc in
+      { t with term=Tm_WithLocal {binder; initializer; body } }
+    in
+    Pulse.Checker.Base.hoist_stateful_apps g (Inl initializer) true rebuild
+  | Tm_WithLocalArray { binder; initializer; body; length } ->
+    //length has to be a constant---not hoisting
+    let rebuild (sc:either term st_term {Inl? sc})
+    : T.Tac st_term
+    = let Inl initializer = sc in
+      { t with term=Tm_WithLocalArray {binder; initializer; body; length } }
+    in
+    Pulse.Checker.Base.hoist_stateful_apps g (Inl initializer) true rebuild
+
   | _ -> None
 
 let rec check
@@ -218,7 +234,7 @@ let rec check
                 (show t)
                 (show (T.unseal t.source)));
     
-    match maybe_elaborate_if_or_match_head g0 t with
+    match maybe_elaborate_stateful_head g0 t with
     | Some t -> 
       check g0 pre0 pre0_typing post_hint res_ppname t
     | None -> 
