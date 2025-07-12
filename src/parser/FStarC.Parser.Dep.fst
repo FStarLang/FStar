@@ -35,7 +35,7 @@ module BU = FStarC.Util
 
 let dbg              = Debug.get_toggle "Dep"
 let dbg_CheckedFiles = Debug.get_toggle "CheckedFiles"
-
+let debug_print f    = if !dbg then f ()
 let profile f c = Profiling.profile f None c
 
 (* Meant to write to a file as an out_channel. If an exception is raised,
@@ -597,6 +597,10 @@ let prelude : list (open_kind & lid) = [
    (Open_module,    Ident.lid_of_str "FStar.Prelude");
 ]
 
+//For --ide mode, we stop dependence analysis at interface boundaries
+//and do not check for dependence cycles across interface boundaries
+let peek_past_interfaces () = not (Options.ide ())
+
 (*
  * Get parsing data for a file
  * First see if the data in the checked file is good (using the provided callback)
@@ -634,6 +638,7 @@ let collect_one
        let mo_roots =
          if is_interface filename
          && has_implementation original_map mname
+         && peek_past_interfaces()
          then [ UseImplementation mname ]
          else []
        in
@@ -789,7 +794,7 @@ let collect_one
     data_from_cache |> must,
     deps, has_inline_for_extraction, mo_roots
   end
-  else
+  else begin
       //parse the file and traverse the AST to collect parsing data
       let num_of_toplevelmods = mk_ref 0 in
       let pd : ref parsing_data = mk_ref empty_parsing_data in
@@ -1224,6 +1229,7 @@ let collect_one
       let deps, has_inline_for_extraction, mo_roots = from_parsing_data pd original_map filename in
       (* Util.print2 "Deps for %s: %s\n" filename (String.concat " " (!deps)); *)
       pd, deps, has_inline_for_extraction, mo_roots
+    end
 
 
 (* JP: it looks like the code was changed but the comments were never updated.
@@ -1492,7 +1498,12 @@ let collect (all_cmd_line_files: list file_name)
         | Some cached -> empty_parsing_data, cached
         | None ->
           let parsing_data, deps, needs_interface_inlining, additional_roots = collect_one file_system_map file_name get_parsing_data_from_cache in
-          parsing_data, (deps, additional_roots, needs_interface_inlining) in
+          parsing_data, (deps, additional_roots, needs_interface_inlining)
+      in
+      debug_print (fun _ -> 
+        BU.print3 "collect_one (%s) : deps=%s; mo_roots=%s\n"
+          file_name (show deps) (show mo_roots)
+      );
       if needs_interface_inlining
       then add_interface_for_inlining file_name;
       SMap.add parse_results file_name parsing_data;
@@ -1515,6 +1526,7 @@ let collect (all_cmd_line_files: list file_name)
     end
   in
   profile (fun () -> List.iter discover_one all_cmd_line_files) "FStarC.Parser.Dep.discover";
+  debug_print (fun () -> print_graph stdout "stdout" dep_graph file_system_map all_cmd_line_files);
 
   (* At this point, dep_graph has all the (immediate) dependency graph of all the files. *)
   let cycle_detected (dep_graph:dependence_graph) cycle filename =
@@ -1576,11 +1588,14 @@ let collect (all_cmd_line_files: list file_name)
               | Some fn when fn=filename ->
                 //don't add trivial self-loops
                 [x]
-              | _ ->
-                //if a module A uses B
-                //then detect cycles through both B.fsti
-                //and B.fst
-               [x; UseImplementation f]
+              | _  ->
+                if peek_past_interfaces()
+                then 
+                    //if a module A uses B
+                    //then detect cycles through both B.fsti
+                    //and B.fst
+                  [x; UseImplementation f]
+                else [x]
               end
             | _ -> [x]) in
         match node.color with
@@ -1606,6 +1621,7 @@ let collect (all_cmd_line_files: list file_name)
              *   is not on the command line, add it to mo_files
              *)
             if is_interface filename
+            && peek_past_interfaces()
             then iter_opt
                   (implementation_of_internal file_system_map (lowercase_module_name filename))
                   (fun impl -> if not (List.contains impl all_command_line_files)
