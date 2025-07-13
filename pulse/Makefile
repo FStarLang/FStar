@@ -43,7 +43,7 @@ plugin.src: checker.src extraction.src syntax_extension.src
 ## Building the plugin with dune
 plugin.build: plugin.src .force
 	$(FSTAR_EXE) --ocamlenv \
-	  dune build --root=build/ocaml
+	  dune build --no-print-directory --root=build/ocaml
 
 ## Installing the plugin into out/
 plugin: plugin.build .force
