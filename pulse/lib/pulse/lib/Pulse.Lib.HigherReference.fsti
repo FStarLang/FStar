@@ -21,6 +21,7 @@ open Pulse.Lib.Core
 open PulseCore.FractionalPermission
 open FStar.Ghost
 open Pulse.Class.PtsTo
+open Pulse.Lib.HigherArray
 module T = FStar.Tactics
 val ref ([@@@unused]a:Type u#1) : Type u#0
 
@@ -41,6 +42,7 @@ val pts_to_timeless (#a:Type) (r:ref a) (p:perm) (n:a)
 
 val is_full_ref #a (x: ref a) : prop
 
+[@@deprecated "HigherReference.alloc is unsound; only use for model implementations"]
 fn alloc (#a:Type) (x:a)
   returns  r : ref a
   ensures  r |-> x
@@ -66,6 +68,7 @@ fn ( := ) (#a:Type) (r:ref a) (x:a) (#n:erased a)
   requires r |-> n
   ensures  r |-> x
 
+[@@deprecated "HigherReference.free is unsound; only use for model implementations"]
 fn free (#a:Type) (r:ref a) (#n:erased a)
   requires pts_to r n
   requires pure (is_full_ref r)
@@ -110,3 +113,38 @@ ghost
 fn pts_to_not_null (#a:_) (#p:_) (r:ref a) (#v:a)
   preserves r |-> Frac p v
   ensures  pure (not (is_null #a r))
+
+val to_array_ghost #a (r: ref a) : GTot (array a)
+
+unobservable
+fn to_array #a (r: ref a) #p (#v: erased a)
+  requires r |-> Frac p v
+  returns arr: array a
+  ensures rewrites_to arr (to_array_ghost r)
+  ensures arr |-> Frac p (seq![reveal v])
+  ensures pure (length arr == 1)
+
+ghost
+fn return_to_array #a (r: ref a) #p (#v: Seq.seq a)
+  requires to_array_ghost r |-> Frac p v
+  requires pure (length (to_array_ghost r) == 1)
+  returns _: squash (Seq.length v == 1)
+  ensures r |-> Frac p (Seq.index v 0)
+
+val array_at_ghost #a (arr: array a) (i: nat { i < length arr }) : GTot (r:ref a { to_array_ghost r == gsub arr i (i+1) })
+
+unobservable
+fn array_at #a (arr: array a) (i: SizeT.t) #p (#v: erased (Seq.seq a) { SizeT.v i < length arr /\ length arr == Seq.length v }) #mask
+  requires pts_to_mask arr #p v mask
+  requires pure (mask (SizeT.v i))
+  returns r: ref a
+  ensures rewrites_to r (array_at_ghost arr (SizeT.v i))
+  ensures r |-> Frac p (Seq.index v (SizeT.v i))
+  ensures pts_to_mask arr #p v (fun k -> mask k /\ k <> SizeT.v i)
+
+ghost
+fn return_array_at (#a: Type u#1) (arr: array a) (i: nat) (#p: perm) (#v: a) (#v': Seq.seq a { i < length arr /\ length arr == Seq.length v' }) (#mask: nat->prop)
+  requires array_at_ghost arr i |-> Frac p v
+  requires pts_to_mask arr #p v' mask
+  requires pure (~(mask i))
+  ensures pts_to_mask arr #p (Seq.upd v' i v) (fun k -> mask k \/ k == i)

@@ -171,3 +171,64 @@ fn pts_to_not_null (#a:_) (#p:_) (r:ref a) (#v:a)
   A.pts_to_not_null r;
   fold pts_to r #p v;
 }
+
+let to_array_ghost r = r
+
+unobservable
+fn to_array #a (r: ref a) #p (#v: erased a)
+  requires r |-> Frac p v
+  returns arr: array a
+  ensures rewrites_to arr (to_array_ghost r)
+  ensures arr |-> Frac p (seq![reveal v])
+  ensures pure (length arr == 1)
+{
+  unfold pts_to r #p v;
+  pts_to_len r;
+  assert pure (Seq.equal seq![reveal v] (singleton (reveal v)));
+  r
+}
+
+ghost
+fn return_to_array #a (r: ref a) #p (#v: Seq.seq a)
+  requires to_array_ghost r |-> Frac p v
+  requires pure (length (to_array_ghost r) == 1)
+  returns _: squash (Seq.length v == 1)
+  ensures r |-> Frac p (Seq.index v 0)
+{
+  pts_to_len r;
+  assert pure (singleton (Seq.Base.index v 0) `Seq.equal` v);
+  fold pts_to r #p (Seq.index v 0);
+}
+
+let array_at_ghost arr i = gsub arr i (i+1)
+
+unobservable
+fn array_at #a (arr: array a) (i: SizeT.t) #p (#v: erased (Seq.seq a) { SizeT.v i < length arr /\ length arr == Seq.length v }) #mask
+  requires pts_to_mask arr #p v mask
+  requires pure (mask (SizeT.v i))
+  returns r: ref a
+  ensures rewrites_to r (array_at_ghost arr (SizeT.v i))
+  ensures r |-> Frac p (Seq.index v (SizeT.v i))
+  ensures pts_to_mask arr #p v (fun k -> mask k /\ k <> SizeT.v i)
+{
+  let res = sub arr i (SizeT.add i 1sz);
+  mask_ext res (singleton (Seq.index v (SizeT.v i))) (fun _ -> True);
+  from_mask res;
+  fold pts_to res #p (Seq.index v (SizeT.v i));
+  mask_mext arr (fun k -> mask k /\ k <> SizeT.v i);
+  res
+}
+
+ghost
+fn return_array_at (#a: Type u#1) (arr: array a) (i: nat) (#p: perm) (#v: a) (#v': Seq.seq a { i < length arr /\ length arr == Seq.length v' }) (#mask: nat->prop)
+  requires array_at_ghost arr i |-> Frac p v
+  requires pts_to_mask arr #p v' mask
+  requires pure (~(mask i))
+  ensures pts_to_mask arr #p (Seq.upd v' i v) (fun k -> mask k \/ k == i)
+{
+  unfold pts_to (array_at_ghost arr i) #p v;
+  to_mask (array_at_ghost arr i);
+  gsub_elim arr i (i+1);
+  join_mask arr;
+  mask_ext arr (Seq.upd v' i v) (fun k -> mask k \/ k == i);
+}

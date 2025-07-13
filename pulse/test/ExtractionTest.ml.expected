@@ -2,32 +2,36 @@ open Prims
 let (zero : unit -> FStar_UInt32.t) = fun uu___ -> Stdint.Uint32.zero
 let rec (test_invariants_and_later : unit -> unit) = fun uu___ -> ()
 let rec (test_read_write :
-  FStar_UInt32.t Pulse_Lib_Reference.ref -> unit -> unit) =
+  FStar_UInt32.t Pulse_Lib_HigherReference.ref -> unit -> unit) =
   fun x ->
     fun _'n ->
-      let n = Pulse_Lib_Reference.op_Bang x () () in
-      Pulse_Lib_Reference.op_Colon_Equals x
+      let n = let k = Pulse_Lib_HigherReference.op_Bang x () () in k in
+      Pulse_Lib_HigherReference.op_Colon_Equals x
         (FStar_UInt32.add n Stdint.Uint32.zero) ()
 let rec (test_write_10 :
-  FStar_UInt32.t Pulse_Lib_Reference.ref -> unit -> unit) =
+  FStar_UInt32.t Pulse_Lib_HigherReference.ref -> unit -> unit) =
   fun x ->
     fun _'n ->
-      Pulse_Lib_Reference.op_Colon_Equals x (Stdint.Uint32.of_int (2)) ();
+      Pulse_Lib_HigherReference.op_Colon_Equals x (Stdint.Uint32.of_int (2))
+        ();
       test_read_write x ();
-      Pulse_Lib_Reference.op_Colon_Equals x Stdint.Uint32.zero ()
+      Pulse_Lib_HigherReference.op_Colon_Equals x Stdint.Uint32.zero ()
 let rec (test_inner_ghost_fun : unit -> unit) = fun uu___ -> ()
-let rec (write10 : FStar_UInt32.t Pulse_Lib_Reference.ref -> unit -> unit) =
+let rec (write10 :
+  FStar_UInt32.t Pulse_Lib_HigherReference.ref -> unit -> unit) =
   fun x ->
     fun _'n ->
-      let ctr = Pulse_Lib_Reference.alloc (Stdint.Uint32.of_int (10)) in
+      let ctr = Pulse_Lib_HigherReference.alloc (Stdint.Uint32.of_int (10)) in
       Pulse_Lib_Dv.while_
         (fun while_cond ->
-           let ctr@1 = Pulse_Lib_Reference.op_Bang ctr () () in
+           let ctr@1 =
+             let k = Pulse_Lib_HigherReference.op_Bang ctr () () in k in
            FStar_UInt32.gt ctr@1 Stdint.Uint32.zero)
         (fun while_body ->
            test_write_10 x ();
-           (let ctr@2 = Pulse_Lib_Reference.op_Bang ctr () () in
-            Pulse_Lib_Reference.op_Colon_Equals ctr
+           (let ctr@2 =
+              let k = Pulse_Lib_HigherReference.op_Bang ctr () () in k in
+            Pulse_Lib_HigherReference.op_Colon_Equals ctr
               (FStar_UInt32.sub ctr@2 Stdint.Uint32.one) ()))
 let rec (fill_array :
   FStar_UInt32.t Pulse_Lib_HigherArray_Core.array ->
@@ -37,24 +41,24 @@ let rec (fill_array :
     fun n ->
       fun v ->
         fun _'s ->
-          let i = Pulse_Lib_Reference.alloc Stdint.Uint64.zero in
+          let i = Pulse_Lib_HigherReference.alloc Stdint.Uint64.zero in
           Pulse_Lib_Dv.while_
             (fun while_cond ->
-               let i@1 = Pulse_Lib_Reference.op_Bang i () () in
+               let i@1 =
+                 let k = Pulse_Lib_HigherReference.op_Bang i () () in k in
                FStar_SizeT.lt i@1 n)
             (fun while_body ->
-               let i@2 = Pulse_Lib_Reference.op_Bang i () () in
+               let i@2 =
+                 let k = Pulse_Lib_HigherReference.op_Bang i () () in k in
                Pulse_Lib_HigherArray_Core.mask_write x i@2 v () ();
-               Pulse_Lib_Reference.op_Colon_Equals i
+               Pulse_Lib_HigherReference.op_Colon_Equals i
                  (FStar_SizeT.add i@2 Stdint.Uint64.one) ())
 let rec (sub_array : FStar_UInt32.t Pulse_Lib_HigherArray_Core.array -> unit)
   =
   fun x ->
     let __anf =
-      let sub =
-        Pulse_Lib_HigherArray_Core.sub x () () Stdint.Uint64.one
-          (Stdint.Uint64.of_int (2)) () in
-      sub in
+      Pulse_Lib_HigherArray_Core.sub x () () Stdint.Uint64.one
+        (Stdint.Uint64.of_int (2)) () in
     Pulse_Lib_HigherArray_Core.mask_write __anf Stdint.Uint64.zero
       (Stdint.Uint32.of_int (42)) () ()
 let (test0 : FStar_SizeT.t -> FStar_SizeT.t -> FStar_SizeT.t) =
