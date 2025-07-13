@@ -1,5 +1,3 @@
-PULSE_ROOT ?= ../..
-include $(PULSE_ROOT)/mk/locate.mk
 
 TAG := pulse2rust
 SRC := .
@@ -13,4 +11,6 @@ FSTAR_OPTIONS += --lax --MLish --MLish_effect FStarC.Effect
 
 DEPFLAGS += --already_cached 'FStarC'
 
+PULSE_ROOT ?= ../..
 include $(PULSE_ROOT)/mk/boot.mk
+.DEFAULT_GOAL := ocaml

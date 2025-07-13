@@ -1,8 +1,9 @@
 SRC := lib/pulse
-CACHE_DIR := lib/pulse/_cache
-OUTPUT_DIR := lib/pulse/_output
+CACHE_DIR := build/lib.pulse.checked/
+OUTPUT_DIR := build/lib.pulse.ml/
 CODEGEN := NONE
 FSTAR_OPTIONS += --include build/ocaml/installed/lib/pulse
+FSTAR_OPTIONS += --include build/lib.common.checked
 FSTAR_OPTIONS += --include lib/common
 ROOTS := $(shell find $(SRC) -name '*.fst' -o -name '*.fsti')
 DEPFLAGS += --already_cached 'Prims,FStar,FStarC'

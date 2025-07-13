@@ -1,6 +1,3 @@
-PULSE_ROOT ?= .
-include $(PULSE_ROOT)/mk/locate.mk
-
 TAG := syntax_extension
 SRC := src/syntax_extension
 CACHE_DIR := build/$(TAG).checked
@@ -13,4 +10,7 @@ FSTAR_OPTIONS += --lax --MLish --MLish_effect FStarC.Effect
 
 DEPFLAGS += --already_cached 'Prims,FStarC'
 
+PULSE_ROOT ?= .
 include $(PULSE_ROOT)/mk/boot.mk
+
+.DEFAULT_GOAL := ocaml

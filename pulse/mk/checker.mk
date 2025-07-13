@@ -10,3 +10,5 @@ DEPFLAGS += --already_cached 'Prims,FStar,FStarC'
 
 PULSE_ROOT ?= .
 include $(PULSE_ROOT)/mk/boot.mk
+
+.DEFAULT_GOAL := ocaml

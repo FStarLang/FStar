@@ -7,6 +7,9 @@
   ],
   "include_dirs": [
     "../build/ocaml/installed/lib/pulse",
+    "../build/lib.common.checked",
+    "../build/lib.core.checked",
+    "../build/lib.pulse.checked",
     "../lib"
   ]
 }
