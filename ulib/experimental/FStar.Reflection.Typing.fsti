@@ -1778,18 +1778,20 @@ type sigelt_typing : env -> sigelt -> Type0 =
   | ST_Let :
     g : env ->
     fv : R.fv ->
+    us: list R.univ_name ->
     ty : R.typ ->
     tm : R.term ->
     squash (typing g tm (E_Total, ty)) ->
-    sigelt_typing g (pack_sigelt (Sg_Let false [pack_lb ({ lb_fv = fv; lb_us = []; lb_typ = ty; lb_def = tm })]))
+    sigelt_typing g (pack_sigelt (Sg_Let false [pack_lb ({ lb_fv = fv; lb_us = us; lb_typ = ty; lb_def = tm })]))
 
   | ST_Let_Opaque :
     g : env ->
     fv : R.fv ->
+    us: list R.univ_name ->
     ty : R.typ ->
     (* no tm: only a proof of existence *)
     squash (exists (tm:R.term). typing g tm (E_Total, ty)) ->
-    sigelt_typing g (pack_sigelt (Sg_Let false [pack_lb ({ lb_fv = fv; lb_us = []; lb_typ = ty; lb_def = (`_) })]))
+    sigelt_typing g (pack_sigelt (Sg_Let false [pack_lb ({ lb_fv = fv; lb_us = us; lb_typ = ty; lb_def = (`_) })]))
 
 (**
  * The type of the top-level tactic that would splice-in the definitions.
@@ -1888,7 +1890,7 @@ let mk_checked_let (g:R.env) (cur_module:name) (nm:string) (tm:R.term) (ty:R.typ
   let lb = R.pack_lb ({ lb_fv = fv; lb_us = []; lb_typ = ty; lb_def = tm }) in
   let se = R.pack_sigelt (R.Sg_Let false [lb]) in
   let pf : sigelt_typing g se =
-    ST_Let g fv ty tm ()
+    ST_Let g fv [] ty tm ()
   in
   ( true, se, None )
 
