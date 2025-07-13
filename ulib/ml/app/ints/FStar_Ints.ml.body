@@ -62,6 +62,7 @@ let shift_arithmetic_right = shift_right
 
 (* Comparison operators *)
 let eq  (a:t) (b:t) : bool = a = b
+let ne  (a:t) (b:t) : bool = a <> b
 let gt  (a:t) (b:t) : bool = a > b
 let gte (a:t) (b:t) : bool = a >= b
 let lt  (a:t) (b:t) : bool = a < b

@@ -10,7 +10,6 @@ open FStarC.Syntax.Print
 module Common = FStarC.TypeChecker.Common
 module BU = FStarC.Util
 module Path = FStarC.Path
-module PC = FStarC.Parser.Const
 module S = FStarC.Syntax.Syntax
 module U = FStarC.Syntax.Util
 

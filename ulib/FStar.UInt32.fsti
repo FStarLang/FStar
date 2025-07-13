@@ -224,6 +224,9 @@ val shift_left (a:t) (s:t) : Pure t
     operator [=] *)
 let eq (a:t) (b:t) : Tot bool = eq #n (v a) (v b)
 
+(** Inequality *)
+let ne (a:t) (b:t) : Tot bool = ne #n (v a) (v b)
+
 (** Greater than *)
 let gt (a:t) (b:t) : Tot bool = gt #n (v a) (v b)
 
@@ -315,27 +318,28 @@ let gte_mask (a:t) (b:t)
 #reset-options
 
 (*** Infix notations *)
-unfold let op_Plus_Hat = add
-unfold let op_Plus_Question_Hat = add_underspec
-unfold let op_Plus_Percent_Hat = add_mod
-unfold let op_Subtraction_Hat = sub
-unfold let op_Subtraction_Question_Hat = sub_underspec
-unfold let op_Subtraction_Percent_Hat = sub_mod
-unfold let op_Star_Hat = mul
-unfold let op_Star_Question_Hat = mul_underspec
-unfold let op_Star_Percent_Hat = mul_mod
-unfold let op_Slash_Hat = div
-unfold let op_Percent_Hat = rem
-unfold let op_Hat_Hat = logxor
-unfold let op_Amp_Hat = logand
-unfold let op_Bar_Hat = logor
-unfold let op_Less_Less_Hat = shift_left
-unfold let op_Greater_Greater_Hat = shift_right
-unfold let op_Equals_Hat = eq
-unfold let op_Greater_Hat = gt
-unfold let op_Greater_Equals_Hat = gte
-unfold let op_Less_Hat = lt
-unfold let op_Less_Equals_Hat = lte
+unfold let ( +^ )  = add
+unfold let ( +?^ ) = add_underspec
+unfold let ( +%^ ) = add_mod
+unfold let ( -^ )  = sub
+unfold let ( -?^ ) = sub_underspec
+unfold let ( -%^ ) = sub_mod
+unfold let ( *^ ) = mul
+unfold let ( *?^ )= mul_underspec
+unfold let ( *%^ )= mul_mod
+unfold let ( /^ )  = div
+unfold let ( %^ )  = rem
+unfold let ( ^^ )  = logxor
+unfold let ( &^ )  = logand
+unfold let ( |^ )  = logor
+unfold let ( <<^ ) = shift_left
+unfold let ( >>^ ) = shift_right
+unfold let ( =^ )  = eq
+unfold let ( <>^ ) = ne
+unfold let ( >^ )  = gt
+unfold let ( >=^ ) = gte
+unfold let ( <^ )  = lt
+unfold let ( <=^ ) = lte
 
 (**** To input / output constants *)
 (** In decimal representation *)
