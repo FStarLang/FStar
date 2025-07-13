@@ -55,8 +55,8 @@ type computation_type = {
 (* Not used in this module, but the list in annots above
 is translated to this type before doing anything meaningful with it. *)
 type parsed_annots = {
-  precondition: Sugar.slprop;
-  postcondition: Sugar.slprop;
+  precondition: slprop;
+  postcondition: slprop;
   return_name: ident;
   return_type: A.term;
   opens: option A.term
