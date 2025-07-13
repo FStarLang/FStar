@@ -25,7 +25,7 @@ USER user
 WORKDIR /home/user
 
 # Install OCaml
-ARG OCAML_VERSION=4.14.2
+ARG OCAML_VERSION=5.3.0
 RUN opam init --compiler=$OCAML_VERSION --disable-sandboxing
 RUN opam env --set-switch | tee --append $HOME/.profile $HOME/.bashrc $HOME/.bash_profile
 RUN opam option depext-run-installs=true
@@ -37,7 +37,7 @@ ADD fstar.opam ./fstar.opam
 RUN opam install -j$(nproc) --confirm-level=unsafe-yes --deps-only ./fstar.opam && opam clean
 
 # Some karamel dependencies too. hex for everparse
-RUN opam install -j$(nproc) --confirm-level=unsafe-yes fix fileutils visitors camlp4 wasm ulex uucp ctypes ctypes-foreign hex && opam clean
+RUN opam install -j$(nproc) --confirm-level=unsafe-yes fix fileutils visitors camlp4 wasm uucp ctypes ctypes-foreign hex && opam clean
 
 RUN sudo apt install time
 
