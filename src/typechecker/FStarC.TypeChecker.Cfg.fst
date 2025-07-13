@@ -209,7 +209,8 @@ let fstep_add_one s fs =
     | Unmeta ->  { fs with unmeta = true }
     | Unascribe ->  { fs with unascribe = true }
     | NBE -> {fs with nbe_step = true }
-    | ForExtraction -> {fs with for_extraction = true }
+    // for_extraction requires erase_universes, otherwise @@extract_as fails on universe-polymorphic applications
+    | ForExtraction -> {fs with for_extraction = true; erase_universes = true }
     | Unrefine -> {fs with unrefine = true }
     | NormDebug -> fs // handled above, affects only dbg flags
     | DefaultUnivsToZero -> {fs with default_univs_to_zero = true}
