@@ -1,0 +1,56 @@
+/* krml header omitted for test repeatability */
+
+
+#include "InlineArrayLen.h"
+
+krml_checked_int_t InlineArrayLen_basic(void)
+{
+  krml_checked_int_t arr[2U];
+  for (uint32_t _i = 0U; _i < (size_t)2U; ++_i)
+    arr[_i] = (krml_checked_int_t)123;
+  return arr[0U];
+}
+
+krml_checked_int_t InlineArrayLen_use(void)
+{
+  krml_checked_int_t arr[2U];
+  for (uint32_t _i = 0U; _i < (size_t)2U; ++_i)
+    arr[_i] = (krml_checked_int_t)123;
+  return arr[0U];
+}
+
+krml_checked_int_t InlineArrayLen_use_gen_init(void)
+{
+  krml_checked_int_t arr[2U];
+  for (uint32_t _i = 0U; _i < (size_t)2U; ++_i)
+    arr[_i] = (krml_checked_int_t)123;
+  return arr[0U];
+}
+
+krml_checked_int_t InlineArrayLen_use_gen_init_st(void)
+{
+  krml_checked_int_t __anf = (krml_checked_int_t)42;
+  krml_checked_int_t arr[2U];
+  for (uint32_t _i = 0U; _i < (size_t)2U; ++_i)
+    arr[_i] = __anf;
+  return arr[0U];
+}
+
+krml_checked_int_t InlineArrayLen_use_gen_len(void)
+{
+  krml_checked_int_t arr[2U];
+  for (uint32_t _i = 0U; _i < (size_t)2U; ++_i)
+    arr[_i] = (krml_checked_int_t)123;
+  return arr[0U];
+}
+
+krml_checked_int_t InlineArrayLen_use_gen_len_st(void)
+{
+  size_t __anf = (size_t)42U;
+  KRML_CHECK_SIZE(sizeof (krml_checked_int_t), __anf);
+  krml_checked_int_t arr[__anf];
+  for (uint32_t _i = 0U; _i < __anf; ++_i)
+    arr[_i] = (krml_checked_int_t)123;
+  return arr[0U];
+}
+
