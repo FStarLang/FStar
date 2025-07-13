@@ -63,7 +63,7 @@ type term' =
   | LetOpen   of lid & term
   | LetOpenRecord of term & term & term
   | Seq       of term & term
-  | Bind      of ident & term & term
+  | Bind      of ident & term & term (* do notation bind ('x <-- foo ()' or 'f;;g'). DEPRECATED. *)
   | If        of term & option ident (* is this a regular if or a if operator (i.e. [if*]) *)
                       & option match_returns_annotation & term & term
   | Match     of term & option ident (* is this a regular match or a match operator (i.e. [match*]) *)

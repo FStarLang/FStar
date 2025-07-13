@@ -44,9 +44,6 @@ let old_attribute_syntax_warning =
   "The `[@ ...]` syntax of attributes is deprecated. \
    Use `[@@ a1; a2; ...; an]`, a semi-colon separated list of attributes, instead"
 
-let do_notation_deprecation_warning =
-  "The lightweight do notation [x <-- y; z] or [x ;; z] is deprecated, use let operators (i.e. [let* x = y in z] or [y ;* z], [*] being any sequence of operator characters) instead."
-
 let none_to_empty_list x =
   match x with
   | None -> []
@@ -946,18 +943,16 @@ term:
 (*     exists for the previous production *)
   | e1=noSeqTerm op=SEMICOLON_OP e2=term
       { let t = match op with
-	  | Some op ->
-	     let op = mk_ident ("let" ^ op, rr $loc(op)) in
-	     let pat = mk_pattern (PatWild(None, [])) (rr $loc(op)) in
-	     LetOperator ([(op, pat, e1)], e2)
-	  | None   ->
-             log_issue_text (rr $loc) Warning_DeprecatedLightDoNotation do_notation_deprecation_warning;
-	     Bind(gen (rr $loc(op)), e1, e2)
-        in mk_term t (rr2 $loc(e1) $loc(e2)) Expr
+        | Some op ->
+          let op = mk_ident ("let" ^ op, rr $loc(op)) in
+          let pat = mk_pattern (PatWild(None, [])) (rr $loc(op)) in
+          LetOperator ([(op, pat, e1)], e2)
+        | None ->
+          Bind(gen (rr $loc(op)), e1, e2)
+        in mk_term t (rr $loc) Expr
       }
   | x=lidentOrUnderscore LONG_LEFT_ARROW e1=noSeqTerm SEMICOLON e2=term
-    { log_issue_text (rr $loc) Warning_DeprecatedLightDoNotation do_notation_deprecation_warning;
-      mk_term (Bind(x, e1, e2)) (rr2 $loc(x) $loc(e2)) Expr }
+    { mk_term (Bind(x, e1, e2)) (rr $loc) Expr }
 
 match_returning:
   | as_opt=option(AS i=lident {i}) RETURNS t=tmIff {as_opt,t,false}

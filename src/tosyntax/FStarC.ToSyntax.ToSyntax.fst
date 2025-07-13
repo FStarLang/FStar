@@ -1555,6 +1555,10 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term & an
       S.extend_app head arg top.range, aq1@aq2
 
     | Bind(x, t1, t2) ->
+      log_issue top.range Warning_DeprecatedLightDoNotation [
+        text "The lightweight do notation [x <-- y; z] or [x ;; z] is deprecated.";
+        text "Use let operators (i.e. [let* x = y in z] or [y ;* z], [*] being any sequence of operator characters) instead.";
+      ];
       let xpat = AST.mk_pattern (AST.PatVar(x, None, [])) (range_of_id x) in
       let k = AST.mk_term (Abs([xpat], t2)) t2.range t2.level in
       let bind_lid = Ident.lid_of_path ["bind"] (range_of_id x) in
