@@ -407,32 +407,32 @@ let colorize s colors =
 
 let colorize_bold s =
   match stdout_isatty () with
-  | Some true -> format3 "%s%s%s" "\x1b[39;1m" s "\x1b[0m"
+  | Some true -> format3 "%s%s%s" "\x1b[39m" s "\x1b[0m"
   | _ -> s
 
 let colorize_red s =
   match stdout_isatty () with
-  | Some true -> format3 "%s%s%s" "\x1b[31;1m" s "\x1b[0m"
+  | Some true -> format3 "%s%s%s" "\x1b[31m" s "\x1b[0m"
   | _ -> s
 
 let colorize_yellow s =
   match stdout_isatty () with
-  | Some true -> format3 "%s%s%s" "\x1b[33;1m" s "\x1b[0m"
+  | Some true -> format3 "%s%s%s" "\x1b[33m" s "\x1b[0m"
   | _ -> s
 
 let colorize_cyan s =
   match stdout_isatty () with
-  | Some true -> format3 "%s%s%s" "\x1b[36;1m" s "\x1b[0m"
+  | Some true -> format3 "%s%s%s" "\x1b[36m" s "\x1b[0m"
   | _ -> s
 
 let colorize_green s =
   match stdout_isatty () with
-  | Some true -> format3 "%s%s%s" "\x1b[32;1m" s "\x1b[0m"
+  | Some true -> format3 "%s%s%s" "\x1b[32m" s "\x1b[0m"
   | _ -> s
 
 let colorize_magenta  s =
   match stdout_isatty () with
-  | Some true -> format3 "%s%s%s" "\x1b[35;1m" s "\x1b[0m"
+  | Some true -> format3 "%s%s%s" "\x1b[35m" s "\x1b[0m"
   | _ -> s
 
 let pr  = Printf.printf
