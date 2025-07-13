@@ -1,45 +1,45 @@
 open Prims
-let rec (basic : unit -> Prims.int) =
+let rec (basic : unit -> FStar_Int32.t) =
   fun uu___ ->
     let arr =
-      Pulse_Lib_Array_Core.alloc (Prims.of_int (123))
+      Pulse_Lib_Array_Core.alloc (Stdint.Int32.of_int (123))
         (Stdint.Uint64.of_int (2)) in
     let arr1 =
       Pulse_Lib_Array_Core.op_Array_Access arr Stdint.Uint64.zero () () in
     arr1
-let rec (use : unit -> Prims.int) =
+let rec (use : unit -> FStar_Int32.t) =
   fun uu___ ->
     let arr =
-      Pulse_Lib_Array_Core.alloc (Prims.of_int (123))
+      Pulse_Lib_Array_Core.alloc (Stdint.Int32.of_int (123))
         (Stdint.Uint64.of_int (2)) in
     let arr1 =
       Pulse_Lib_Array_Core.op_Array_Access arr Stdint.Uint64.zero () () in
     arr1
-let rec (use_gen_init : unit -> Prims.int) =
+let rec (use_gen_init : unit -> FStar_Int32.t) =
   fun uu___ ->
     let arr =
-      Pulse_Lib_Array_Core.alloc (Prims.of_int (123))
+      Pulse_Lib_Array_Core.alloc (Stdint.Int32.of_int (123))
         (Stdint.Uint64.of_int (2)) in
     let r = Pulse_Lib_Array_Core.op_Array_Access arr Stdint.Uint64.zero () () in
     let arr1 = r in arr1
-let rec (use_gen_init_st : unit -> Prims.int) =
+let rec (use_gen_init_st : unit -> FStar_Int32.t) =
   fun uu___ ->
-    let init uu___1 = (Prims.of_int (42)) in
+    let init uu___1 = (Stdint.Int32.of_int (123)) in
     let __anf = init () in
     let arr = Pulse_Lib_Array_Core.alloc __anf (Stdint.Uint64.of_int (2)) in
     let r = Pulse_Lib_Array_Core.op_Array_Access arr Stdint.Uint64.zero () () in
     let arr1 = r in arr1
-let rec (use_gen_len : unit -> Prims.int) =
+let rec (use_gen_len : unit -> FStar_Int32.t) =
   fun uu___ ->
     let arr =
-      Pulse_Lib_Array_Core.alloc (Prims.of_int (123))
+      Pulse_Lib_Array_Core.alloc (Stdint.Int32.of_int (123))
         (Stdint.Uint64.of_int (2)) in
     let r = Pulse_Lib_Array_Core.op_Array_Access arr Stdint.Uint64.zero () () in
     let arr1 = r in arr1
-let rec (use_gen_len_st : unit -> Prims.int) =
+let rec (use_gen_len_st : unit -> FStar_Int32.t) =
   fun uu___ ->
     let len uu___1 = (Stdint.Uint64.of_int (42)) in
     let __anf = len () in
-    let arr = Pulse_Lib_Array_Core.alloc (Prims.of_int (123)) __anf in
+    let arr = Pulse_Lib_Array_Core.alloc (Stdint.Int32.of_int (123)) __anf in
     let r = Pulse_Lib_Array_Core.op_Array_Access arr Stdint.Uint64.zero () () in
     let arr1 = r in arr1

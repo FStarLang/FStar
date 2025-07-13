@@ -4,32 +4,32 @@ module InlineArrayLen
 open Pulse
 
 fn basic ()
-  returns int
+  returns Int32.t
 {
-  let mut arr = [| 123; 2sz |];
+  let mut arr = [| 123l; 2sz |];
   arr.(0sz);
 }
 
 inline_for_extraction noextract
 fn gen (x : SizeT.t)
   requires pure (SizeT.v x > 0)
-  returns int
+  returns Int32.t
 {
-  let mut arr = [| 123; x |];
+  let mut arr = [| 123l; x |];
   arr.(0sz);
 }
 
 fn use ()
-  returns int
+  returns Int32.t
 {
   gen 2sz;
 }
 
 inline_for_extraction noextract
 fn gen_init (x : SizeT.t)
-  (init : unit -> int)
+  (init : unit -> Int32.t)
   requires pure (SizeT.v x > 0)
-  returns int
+  returns Int32.t
 {
   let mut arr = [| init(); 2sz |];
   let r = arr.(0sz);
@@ -37,16 +37,16 @@ fn gen_init (x : SizeT.t)
 }
 
 fn use_gen_init ()
-  returns int
+  returns Int32.t
 {
-  gen_init 2sz (fun _ -> 123);
+  gen_init 2sz (fun _ -> 123l);
 }
 
 inline_for_extraction noextract
 fn gen_init_st (x : SizeT.t)
-  (init : unit -> stt int emp (fun _ -> emp))
+  (init : unit -> stt Int32.t emp (fun _ -> emp))
   requires pure (SizeT.v x > 0)
-  returns int
+  returns Int32.t
 {
   let mut arr = [| init(); 2sz |];
   let r = arr.(0sz);
@@ -54,12 +54,12 @@ fn gen_init_st (x : SizeT.t)
 }
 
 fn use_gen_init_st ()
-  returns int
+  returns Int32.t
 {
   fn init ()
-    returns int
+    returns Int32.t
   {
-    42;
+    123l;
   };
   gen_init_st 2sz init;
 }
@@ -67,15 +67,15 @@ fn use_gen_init_st ()
 inline_for_extraction noextract
 fn gen_len
   (len : (unit -> x:SizeT.t{SizeT.v x > 0}))
-  returns int
+  returns Int32.t
 {
-  let mut arr = [| 123; len() |];
+  let mut arr = [| 123l; len() |];
   let r = arr.(0sz);
   r
 }
 
 fn use_gen_len ()
-  returns int
+  returns Int32.t
 {
   gen_len (fun _ -> 2sz);
 }
@@ -83,15 +83,15 @@ fn use_gen_len ()
 inline_for_extraction noextract
 fn gen_len_st
   (len : unit -> stt SizeT.t emp (fun r -> pure (SizeT.v r > 0)))
-  returns int
+  returns Int32.t
 {
-  let mut arr = [| 123; len () |];
+  let mut arr = [| 123l; len () |];
   let r = arr.(0sz);
   r
 }
 
 fn use_gen_len_st ()
-  returns int
+  returns Int32.t
 {
   fn len ()
     returns r : SizeT.t
