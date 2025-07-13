@@ -49,14 +49,14 @@ let with_computation_tag (c:PulseSyntaxExtension_Sugar.computation_type) t =
   | None -> c
   | Some t -> { c with tag = t }
 
-let mk_fn_defn q id is_rec bs body range =
+let mk_fn_defn q id is_rec us bs body range =
     match body with
     | Inl (ascription, measure, body) ->
       let ascription = with_computation_tag ascription q in 
-      PulseSyntaxExtension_Sugar.mk_fn_defn id is_rec (List.flatten bs) (Inl ascription) measure (Inl body) range
+      PulseSyntaxExtension_Sugar.mk_fn_defn id is_rec us (List.flatten bs) (Inl ascription) measure (Inl body) range
 
     | Inr (lambda, typ) ->
-      PulseSyntaxExtension_Sugar.mk_fn_defn id is_rec (List.flatten bs) (Inr typ) None (Inr lambda) range
+      PulseSyntaxExtension_Sugar.mk_fn_defn id is_rec us (List.flatten bs) (Inr typ) None (Inr lambda) range
 
 let add_decorations decors ds =
   List.map (function
@@ -90,6 +90,12 @@ peekFnId:
   | q=option(qual) FN maybeRec id=lidentOrOperator
       { FStarC_Ident.string_of_id id }
 
+univParam:
+  | UNIV_HASH n=lident { n }
+
+univParams:
+  | ns=list(univParam) { ns }
+
 qual:
   | GHOST { PulseSyntaxExtension_Sugar.STGhost }
   | ATOMIC { PulseSyntaxExtension_Sugar.STAtomic }
@@ -114,7 +120,7 @@ declBody:
 
 pulseDecl:
   | q=qualOptFn (* workaround what seems to be a menhir bug *)
-    isRec=maybeRec lid=lidentOrOperator bs=pulseBinderList
+    isRec=maybeRec lid=lidentOrOperator us=univParams bs=pulseBinderList
     rest=pulseAscriptionMaybeBody
     {
       let decors = [] in
@@ -122,15 +128,15 @@ pulseDecl:
       | Inl (ascription, None) ->
         let open PulseSyntaxExtension_Sugar in
         let ascription = with_computation_tag ascription q in
-        FnDecl (mk_fn_decl lid (List.flatten bs) (Inl ascription) decors (rr $loc))
+        FnDecl (mk_fn_decl lid us (List.flatten bs) (Inl ascription) decors (rr $loc))
       
       | Inl (ascription, Some (measure, body)) ->
         let body = Inl (ascription, measure, body) in
-        PulseSyntaxExtension_Sugar.FnDefn (mk_fn_defn q lid isRec bs body decors (rr $loc))
+        PulseSyntaxExtension_Sugar.FnDefn (mk_fn_defn q lid isRec us bs body decors (rr $loc))
 
       | Inr (typ, Some lambda) ->
         let body = Inr (lambda, typ) in
-        PulseSyntaxExtension_Sugar.FnDefn (mk_fn_defn q lid isRec bs body decors (rr $loc))
+        PulseSyntaxExtension_Sugar.FnDefn (mk_fn_defn q lid isRec us bs body decors (rr $loc))
 
       | Inr (typ, None) ->
         raise_error_text (rr $loc) Fatal_SyntaxError "Ascriptions of lambdas without bodies are not yet supported"
@@ -176,7 +182,7 @@ localFnDefn:
     bs=pulseBinderList
     body=fnBody
     {
-      lid, mk_fn_defn q lid false bs body [] (rr $loc)
+      lid, mk_fn_defn q lid false [] bs body [] (rr $loc)
     }
 
 fnBody:

@@ -929,7 +929,7 @@ and desugar_decl (env:env_t)
     return (A.mk_term (A.Product (bs'', res_t)) r A.Expr)
   in
   match d with
-  | Sugar.FnDefn { id; is_rec; binders; ascription=Inl ascription; measure; body=Inl body; range } ->
+  | Sugar.FnDefn { id; is_rec; us; binders; ascription=Inl ascription; measure; body=Inl body; range } ->
     let! env, bs, bvs = desugar_binders env binders in
     let! pannots = parse_annots ascription.range ascription.annots in
     let fvs = free_vars_comp env pannots in
@@ -958,9 +958,9 @@ and desugar_decl (env:env_t)
     let! body = desugar_stmt env body in
     let! qbs = map2 faux bs bvs in
     let body = close_st_term_binders qbs body in
-    return (SW.fn_defn range id is_rec qbs comp meas body)
+    return (SW.fn_defn range id is_rec us qbs comp meas body)
 
-  | Sugar.FnDefn { id; is_rec=false; binders; ascription=Inr ascription; measure=None; body=Inr body; range } ->
+  | Sugar.FnDefn { id; is_rec=false; us; binders; ascription=Inr ascription; measure=None; body=Inr body; range } ->
     let! env, bs, bvs = desugar_binders env binders in
     let! comp = 
       match ascription with
@@ -970,9 +970,9 @@ and desugar_decl (env:env_t)
     let! body = desugar_lambda env body in
     let! qbs = map2 faux bs bvs in
     let body = close_st_term_binders qbs body in
-    return (SW.fn_defn range id false qbs comp None body)
+    return (SW.fn_defn range id false us qbs comp None body)
 
-  | Sugar.FnDecl { id; binders; ascription=Inl ascription; range } ->
+  | Sugar.FnDecl { id; us; binders; ascription=Inl ascription; range } ->
     let! env, bs, bvs = desugar_binders env binders in
 
     (* Process ticks *)
@@ -985,7 +985,7 @@ and desugar_decl (env:env_t)
     let! comp = desugar_computation_type env ascription in
     let! qbs = map2 faux bs bvs in
     let comp = close_comp_bvs comp (List.Tot.map (fun (_,_,bv) -> bv) qbs) in
-    return (SW.fn_decl range id qbs comp)
+    return (SW.fn_decl range id us qbs comp)
 
 and as_qual (env:env_t) (q:A.aqual) rng : err qual =
   match q with

@@ -76,6 +76,9 @@ let unembed_st_term_for_extraction (d:S.term) : 'a =
 let unembed_pulse_decl (d:'a) : 'b =
    U.unlazy_as_t (S.Lazy_extension "pulse_decl") (Obj.magic d)
 
+let push_univ_vars g us =
+  FStarC_TypeChecker_Env.push_univ_vars g us
+
 let debug_subst (s:S.subst_elt list) (t:S.term) (r1:S.term) (r2:S.term) =
   if is_pulse_option_set "subst"
   then r2

@@ -83,7 +83,7 @@ let add_knot (g : env) (rng : R.range)
              (d : decl{FnDefn? d.d})
 : Tac (d : decl{FnDefn? d.d})
 =
-  let FnDefn { id; isrec; bs; comp; meas; body } = d.d in
+  let FnDefn { id; isrec; us; bs; comp; meas; body } = d.d in
   if Nil? bs then
     fail g (Some d.range) "main: FnDefn does not have binders";
   (* NB: bs and comp are open *)
@@ -200,7 +200,7 @@ let add_knot (g : env) (rng : R.range)
   (* NB: body and comp unchanged, they are already shifted properly
      (we dropped one binder and added one) *)
   { d with d =
-    FnDefn { id=id'; isrec=false; bs=bs'; comp; meas=None; body }
+    FnDefn { id=id'; isrec=false; us; bs=bs'; comp; meas=None; body }
   }
 
 let tie_knot (g : env)
