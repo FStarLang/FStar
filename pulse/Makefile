@@ -82,6 +82,8 @@ do-install: plugin lib-pulse
 	# so I'm keeping this for now (it's already the case) and will do a PR later
 	# to change their namespace.
 	find lib/pulse lib/common \
+	     build/lib.common.checked/ build/lib.pulse.checked/ \
+		-type f \
 		\( -name '*.fst' -o -name '*.fsti' -o -name '*.checked' -o -name '*.ml' \) -and \
 		-exec cp -p {} $(PREFIX)/lib/pulse/lib \;
 	# Set up fstar.include so users only include lib/pulse

@@ -8,7 +8,8 @@
 		"4.13.3"
 	],
 	"include_dirs": [
-		"../pulse/_cache",
+		"../../build/lib.common.checked",
+		"../../build/lib.core.checked",
 		"../common"
 	]
 }
