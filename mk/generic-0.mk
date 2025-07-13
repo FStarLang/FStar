@@ -91,7 +91,8 @@ DEPSTEM := $(CACHE_DIR)/.depend$(TAG)
 $(DEPSTEM).touch: .force
 	mkdir -p $(dir $@)
 	[ -e $@ ] || touch $@
-	find $(SRC) -newer $@ -exec touch $@ \; -quit
+	# Ignore anything in CACHE_DIR and OUTPUT_DIR, to avoid rebuilding .depend in a loop
+	find $(SRC) -path $(CACHE_DIR) -prune -o -path $(OUTPUT_DIR) -prune -o -newer $@ -exec touch $@ \; -quit
 
 $(DEPSTEM): $(DEPSTEM).touch
 	$(call msg, "DEPEND", $(SRC))
