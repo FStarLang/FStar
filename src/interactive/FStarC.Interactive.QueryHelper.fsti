@@ -30,7 +30,7 @@ module CTable = FStarC.Interactive.CompletionTable
 
 type position = string & int & int
 type sl_reponse = { slr_name: string;
-                    slr_def_range: option Range.range;
+                    slr_def_range: option Range.t;
                     slr_typ: option string;
                     slr_doc: option string;
                     slr_def: option string }

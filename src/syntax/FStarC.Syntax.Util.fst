@@ -266,7 +266,7 @@ let comp_eff_name_res_and_args (c:comp) : lident & typ & args =
  * Layered effects typechecking code already makes sure that those types
  *   have this exact shape
  *)
-let effect_indices_from_repr (repr:term) (is_layered:bool) (r:Range.range) (err:string)
+let effect_indices_from_repr (repr:term) (is_layered:bool) (r:Range.t) (err:string)
 : list term =
   let err () = Errors.raise_error r Errors.Fatal_UnexpectedEffect err in
   let repr = compress repr in

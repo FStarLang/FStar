@@ -612,7 +612,7 @@ let curry_application hd arg args p =
     t
 
 (* Replace all the *use* ranges in [t] by the use range in [r]. *)
-let replace_all_use_ranges (r:Range.range) (t:term) : term =
+let replace_all_use_ranges (r:Range.t) (t:term) : term =
   let ur = Range.use_range r in
   t |> Syntax.Visit.visit_term false (fun t ->
     { t with pos = Range.set_use_range t.pos ur })

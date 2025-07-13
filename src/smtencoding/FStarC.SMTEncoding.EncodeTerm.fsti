@@ -27,11 +27,11 @@ open FStarC.Const
 open FStarC.SMTEncoding
 open FStarC.SMTEncoding.Util
 open FStarC.SMTEncoding.Env
-val isTotFun_axioms: Range.range -> head:term -> vars:fvs -> guards:list term -> bool -> term
+val isTotFun_axioms: Range.t -> head:term -> vars:fvs -> guards:list term -> bool -> term
 val mk_Apply : e:term -> vars:fvs -> term
-val maybe_curry_app : rng:Range.range -> head:either op term -> arity:int -> args:list term -> term
-val maybe_curry_fvb : rng:Range.range -> head:fvar_binding -> args:list term -> term
-val mkForall_fuel : string -> Range.range -> (list (list pat) & fvs & term -> term)  //first arg is the module name
+val maybe_curry_app : rng:Range.t -> head:either op term -> arity:int -> args:list term -> term
+val maybe_curry_fvb : rng:Range.t -> head:fvar_binding -> args:list term -> term
+val mkForall_fuel : string -> Range.t -> (list (list pat) & fvs & term -> term)  //first arg is the module name
 
 val head_normal : env_t -> Syntax.term -> bool
 
@@ -40,7 +40,7 @@ val norm: env_t -> Syntax.term -> Syntax.term
 
 val curried_arrow_formals_comp : k:Syntax.term -> Syntax.binders & comp
 
-val raise_arity_mismatch : head:string -> arity:int -> n_args:int -> rng:Range.range -> 'a
+val raise_arity_mismatch : head:string -> arity:int -> n_args:int -> rng:Range.t -> 'a
 
 val encode_term : t:typ       (* expects t to be in normal form already *)
                -> env:env_t

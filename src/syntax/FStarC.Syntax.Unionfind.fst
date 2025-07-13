@@ -160,7 +160,7 @@ let chk_v_t (su:S.uvar) =
 
 let uvar_id u  = PU.puf_id (get_term_graph()) (chk_v_t u)
 let uvar_unique_id u = PU.puf_unique_id (chk_v_t u)
-let fresh decoration (rng:Range.range)  =
+let fresh decoration (rng:Range.t)  =
     fail_if_ro ();
     PU.puf_fresh (get_term_graph()) (None, decoration), get_version(), rng
 
@@ -188,7 +188,7 @@ let chk_v_u (u, v, rng) =
     then u
     else
       let open FStarC.Pprint in
-      raise_error (rng <: Range.range) Fatal_BadUvar [
+      raise_error (rng <: Range.t) Fatal_BadUvar [
         text "Internal error: incompatible version for universe unification variable"
           ^/^ doc_of_string (uvar_to_string u);
         text "Current version: " ^/^ doc_of_string (version_to_string expected);
@@ -200,7 +200,7 @@ let set_univ_graph (ug:ugraph) =
   set ({get() with univ_graph = ug})
 
 let univ_uvar_id u  = PU.puf_id (get_univ_graph()) (chk_v_u u)
-let univ_fresh (rng:Range.range) =
+let univ_fresh (rng:Range.t) =
     fail_if_ro ();
     PU.puf_fresh (get_univ_graph()) None, get_version(), rng
 

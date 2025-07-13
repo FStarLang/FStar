@@ -219,7 +219,7 @@ type query_settings = {
     query_decl:decl;
     query_name:string;
     query_index:int;
-    query_range:Range.range;
+    query_range:Range.t;
     query_fuel:int;
     query_ifuel:int;
     query_rlimit:int;

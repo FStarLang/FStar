@@ -41,18 +41,18 @@ type parse_frag =
     | Incremental of input_frag
     | Fragment of input_frag
 
-type parse_error = (error_code & error_message & Range.range)
+type parse_error = (error_code & error_message & Range.t)
 
 type code_fragment = {
     code: string;
-    range: FStarC.Range.range;
+    range: FStarC.Range.t;
 }
 
 type incremental_result 'a = 
-    list ('a & code_fragment) & list (string & Range.range) & option parse_error
+    list ('a & code_fragment) & list (string & Range.t) & option parse_error
 
 type parse_result =
-    | ASTFragment of (AST.inputFragment & list (string & Range.range))
+    | ASTFragment of (AST.inputFragment & list (string & Range.t))
     | IncrementalFragment of incremental_result AST.decl
     | Term of AST.term
     | ParseError of parse_error

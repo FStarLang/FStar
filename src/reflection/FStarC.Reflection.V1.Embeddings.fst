@@ -67,7 +67,7 @@ let e_comp     = EmbV2.e_comp
 let e_universe = EmbV2.e_universe
 
 instance e_aqualv =
-    let embed_aqualv (rng:Range.range) (q : aqualv) : term =
+    let embed_aqualv (rng:Range.t) (q : aqualv) : term =
         let r =
         match q with
         | Data.Q_Explicit -> ref_Q_Explicit.t
@@ -96,7 +96,7 @@ instance e_ident : embedding RD.ident =
     e_tuple2 e_string e_range
 
 instance e_universe_view =
-  let embed_universe_view (rng:Range.range) (uv:universe_view) : term =
+  let embed_universe_view (rng:Range.t) (uv:universe_view) : term =
     match uv with
     | Uv_Zero -> ref_Uv_Zero.t
     | Uv_Succ u ->
@@ -150,7 +150,7 @@ instance e_universe_view =
   mk_emb embed_universe_view unembed_universe_view fstar_refl_universe_view
 
 let e_env =
-    let embed_env (rng:Range.range) (e:Env.env) : term =
+    let embed_env (rng:Range.t) (e:Env.env) : term =
         U.mk_lazy e fstar_refl_env Lazy_env (Some rng)
     in
     let unembed_env (t:term) : option Env.env =
@@ -163,7 +163,7 @@ let e_env =
     mk_emb embed_env unembed_env fstar_refl_env
 
 instance e_const =
-    let embed_const (rng:Range.range) (c:vconst) : term =
+    let embed_const (rng:Range.t) (c:vconst) : term =
         let r =
         match c with
         | C_Unit    -> ref_C_Unit.t
@@ -227,7 +227,7 @@ instance e_const =
     mk_emb embed_const unembed_const fstar_refl_vconst
 
 let rec e_pattern_aq aq =
-    let rec embed_pattern (rng:Range.range) (p : pattern) : term =
+    let rec embed_pattern (rng:Range.t) (p : pattern) : term =
         match p with
         | Pat_Constant c ->
             S.mk_Tm_app ref_Pat_Constant.t [S.as_arg (embed rng c)] rng
@@ -286,7 +286,7 @@ let e_match_returns_annotation =
 
 let e_term_view_aq aq =
     let push (s, aq) = (s+1, aq) in
-    let embed_term_view (rng:Range.range) (t:term_view) : term =
+    let embed_term_view (rng:Range.t) (t:term_view) : term =
         match t with
         | Tv_FVar fv ->
             S.mk_Tm_app ref_Tv_FVar.t [S.as_arg (embed rng fv)]
@@ -490,7 +490,7 @@ let e_term_view = e_term_view_aq noaqs
 let e_name = e_list e_string
 
 instance e_bv_view =
-    let embed_bv_view (rng:Range.range) (bvv:bv_view) : term =
+    let embed_bv_view (rng:Range.t) (bvv:bv_view) : term =
         S.mk_Tm_app ref_Mk_bv.t [S.as_arg (embed #_ #(e_sealed e_string) rng bvv.bv_ppname);
                                  S.as_arg (embed rng bvv.bv_index)]
                     rng
@@ -514,7 +514,7 @@ let e_attribute  = e_term
 let e_attributes = e_list e_attribute
 
 instance e_binder_view =
-  let embed_binder_view (rng:Range.range) (bview:binder_view) : term =
+  let embed_binder_view (rng:Range.t) (bview:binder_view) : term =
     S.mk_Tm_app ref_Mk_binder.t [S.as_arg (embed #_ #e_bv rng bview.binder_bv);
                                  S.as_arg (embed rng bview.binder_qual);
                                  S.as_arg (embed #_ #e_attributes rng bview.binder_attrs);
@@ -539,7 +539,7 @@ instance e_binder_view =
   mk_emb embed_binder_view unembed_binder_view fstar_refl_binder_view
 
 instance e_comp_view =
-    let embed_comp_view (rng:Range.range) (cv : comp_view) : term =
+    let embed_comp_view (rng:Range.t) (cv : comp_view) : term =
         match cv with
         | C_Total t ->
             S.mk_Tm_app ref_C_Total.t [S.as_arg (embed #_ #e_term rng t)]
@@ -602,7 +602,7 @@ instance e_comp_view =
 
 (* TODO: move to, Syntax.Embeddings or somewhere better even *)
 instance e_sigelt =
-    let embed_sigelt (rng:Range.range) (se:sigelt) : term =
+    let embed_sigelt (rng:Range.t) (se:sigelt) : term =
         U.mk_lazy se fstar_refl_sigelt Lazy_sigelt (Some rng)
     in
     let unembed_sigelt (t:term) : option sigelt =
@@ -618,7 +618,7 @@ let e_univ_name =
     set_type fstar_refl_univ_name e_ident
 
 let e_lb_view =
-    let embed_lb_view (rng:Range.range) (lbv:lb_view) : term =
+    let embed_lb_view (rng:Range.t) (lbv:lb_view) : term =
         S.mk_Tm_app ref_Mk_lb.t [S.as_arg (embed rng lbv.lb_fv);
                                  S.as_arg (embed rng lbv.lb_us);
                                  S.as_arg (embed #_ #e_term rng lbv.lb_typ);
@@ -644,7 +644,7 @@ let e_lb_view =
     mk_emb embed_lb_view unembed_lb_view fstar_refl_lb_view
 
 let e_letbinding =
-    let embed_letbinding (rng:Range.range) (lb:letbinding) : term =
+    let embed_letbinding (rng:Range.t) (lb:letbinding) : term =
         U.mk_lazy lb fstar_refl_letbinding Lazy_letbinding (Some rng)
     in
     let unembed_letbinding (t : term) : option letbinding =
@@ -659,7 +659,7 @@ let e_letbinding =
 let e_ctor : embedding RD.ctor = e_tuple2 (e_list e_string) e_term
 
 instance e_sigelt_view =
-    let embed_sigelt_view (rng:Range.range) (sev:sigelt_view) : term =
+    let embed_sigelt_view (rng:Range.t) (sev:sigelt_view) : term =
         match sev with
         | Sg_Let (r, lbs) ->
             S.mk_Tm_app ref_Sg_Let.t
@@ -718,7 +718,7 @@ instance e_sigelt_view =
     mk_emb embed_sigelt_view unembed_sigelt_view fstar_refl_sigelt_view
 
 let e_qualifier =
-    let embed (rng:Range.range) (q:RD.qualifier) : term =
+    let embed (rng:Range.t) (q:RD.qualifier) : term =
         let r =
         match q with
         | RD.Assumption                       -> ref_qual_Assumption.t

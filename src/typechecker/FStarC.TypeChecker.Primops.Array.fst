@@ -30,8 +30,8 @@ let arg_as_list {|e:EMB.embedding 'a|} (a:arg)
 let mixed_binary_op
   (as_a : arg -> option 'a)
   (as_b : arg -> option 'b)
-  (embed_c : Range.range -> 'c -> term)
-  (f : Range.range -> universes -> 'a -> 'b -> option 'c)
+  (embed_c : Range.t -> 'c -> term)
+  (f : Range.t -> universes -> 'a -> 'b -> option 'c)
   (psc : psc)
   (norm_cb : EMB.norm_cb)
   (univs : universes)
@@ -53,8 +53,8 @@ let mixed_ternary_op
   (as_a : arg -> option 'a)
   (as_b : arg -> option 'b)
   (as_c : arg -> option 'c)
-  (embed_d : Range.range -> 'd -> term)
-  (f : Range.range -> universes -> 'a -> 'b -> 'c -> option 'd)
+  (embed_d : Range.t -> 'd -> term)
+  (f : Range.t -> universes -> 'a -> 'b -> 'c -> option 'd)
   (psc : psc)
   (norm_cb : EMB.norm_cb)
   (univs : universes)
@@ -148,7 +148,7 @@ let ops : list primitive_step =
       | _ -> None
   in
   let length_op =
-    let embed_int (r:Range.range) (i:Z.t) : term = embed_simple r i in
+    let embed_int (r:Range.t) (i:Z.t) : term = embed_simple r i in
     let run_op (blob:FStarC.Dyn.dyn) : option Z.t =
         Some (BU.array_length #term (FStarC.Dyn.undyn blob))
     in

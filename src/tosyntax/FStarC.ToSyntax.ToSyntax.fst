@@ -58,7 +58,7 @@ let dbg_ToSyntax = Debug.get_toggle "ToSyntax"
 
 type antiquotations_temp = list (bv & S.term)
 
-let tun_r (r:Range.range) : S.term = { tun with pos = r }
+let tun_r (r:Range.t) : S.term = { tun with pos = r }
 
 type annotated_pat = Syntax.pat & list (bv & Syntax.typ & list S.term)
 
@@ -140,7 +140,7 @@ let desugar_disjunctive_pattern annotated_pats when_opt branch =
         U.branch(pat, when_opt, branch)
     )
 
-let trans_qual (r:Range.range) maybe_effect_id = function
+let trans_qual (r:Range.t) maybe_effect_id = function
   | AST.Private ->       S.Private
   | AST.Assumption ->    S.Assumption
   | AST.Unfold_for_unification_and_vcgen -> S.Unfold_for_unification_and_vcgen
@@ -761,7 +761,7 @@ let check_no_aq (aq : antiquotations_temp) : unit =
         raise_error e Errors.Fatal_UnexpectedAntiquotation
           (BU.format1 "Unexpected antiquotation: `#(%s)" (show e))
 
-let check_linear_pattern_variables pats (r:Range.range) =
+let check_linear_pattern_variables pats (r:Range.t) =
   // returns the set of pattern variables
   let rec pat_vars p : RBSet.t bv =
     match p.v with
@@ -807,8 +807,8 @@ let check_linear_pattern_variables pats (r:Range.range) =
     in
     List.iter aux ps
 
-let smt_pat_lid (r:Range.range) = Ident.set_lid_range C.smtpat_lid r
-let smt_pat_or_lid (r:Range.range) = Ident.set_lid_range C.smtpatOr_lid r
+let smt_pat_lid (r:Range.t) = Ident.set_lid_range C.smtpat_lid r
+let smt_pat_or_lid (r:Range.t) = Ident.set_lid_range C.smtpatOr_lid r
 
 // [hoist_pat_ascription' pat] pulls [PatAscribed] nodes out of [pat]
 // and construct a tuple that consists in a non-ascribed pattern and a
@@ -3313,7 +3313,7 @@ let push_reflect_effect env quals (effect_name:Ident.lid) range =
          Env.push_sigelt env refl_decl // FIXME: Add docs to refl_decl?
     else env
 
-let parse_attr_with_list warn (at:S.term) (head:lident) : option (list int & Range.range) & bool =
+let parse_attr_with_list warn (at:S.term) (head:lident) : option (list int & Range.t) & bool =
   let warn () =
     if warn then
       Errors.log_issue at Errors.Warning_UnappliedFail
@@ -3344,7 +3344,7 @@ let parse_attr_with_list warn (at:S.term) (head:lident) : option (list int & Ran
 
 
 // If this is an expect_failure attribute, return the listed errors and whether it's a expect_lax_failure or not
-let get_fail_attr1 warn (at : S.term) : option (list int & Range.range & bool) =
+let get_fail_attr1 warn (at : S.term) : option (list int & Range.t & bool) =
     let rebind res b =
       match res with
       | None -> None
@@ -3356,7 +3356,7 @@ let get_fail_attr1 warn (at : S.term) : option (list int & Range.range & bool) =
          rebind res true
 
 // Traverse a list of attributes to find all expect_failures and combine them
-let get_fail_attr warn (ats : list S.term) : option (list int & Range.range & bool) =
+let get_fail_attr warn (ats : list S.term) : option (list int & Range.t & bool) =
     let comb f1 f2 =
       match f1, f2 with
       | Some (e1, rng1, l1), Some (e2, rng2, l2) ->
@@ -3370,7 +3370,7 @@ let get_fail_attr warn (ats : list S.term) : option (list int & Range.range & bo
     in
     List.fold_right (fun at acc -> comb (get_fail_attr1 warn at) acc) ats None
 
-let lookup_effect_lid env (l:lident) (r:Range.range) : S.eff_decl =
+let lookup_effect_lid env (l:lident) (r:Range.t) : S.eff_decl =
   match Env.try_lookup_effect_defn env l with
   | None ->
     raise_error r Errors.Fatal_EffectNotFound

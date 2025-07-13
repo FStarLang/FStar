@@ -151,7 +151,7 @@ let print_mlpath_map (g:uenv) =
 
 type lookup_res =
   | Found of exp_binding
-  | WasErased of Range.range (* position of the definition that was erased *)
+  | WasErased of Range.t (* position of the definition that was erased *)
   | NotFound
 
 instance showable_lookup_res : showable lookup_res = {
@@ -175,7 +175,7 @@ let lookup_fv_generic (g:uenv) (fv:fv) : lookup_res =
   | Some r -> r
   | None -> NotFound
 
-let try_lookup_fv (r:Range.range) (g:uenv) (fv:fv) : option exp_binding =
+let try_lookup_fv (r:Range.t) (g:uenv) (fv:fv) : option exp_binding =
   match lookup_fv_generic g fv with
   | Found r -> Some r
   | WasErased pos ->
@@ -191,7 +191,7 @@ let try_lookup_fv (r:Range.range) (g:uenv) (fv:fv) : option exp_binding =
     None
 
 (** Fatal failure version of try_lookup_fv *)
-let lookup_fv (r:Range.range) (g:uenv) (fv:fv) : exp_binding =
+let lookup_fv (r:Range.t) (g:uenv) (fv:fv) : exp_binding =
   match lookup_fv_generic g fv with
   | Found t -> t
   | res ->

@@ -149,7 +149,7 @@ let check_no_escape (head_opt : option term)
    So, this function checks that the implicit flags match and takes
    the attributes from the binding site, i.e., expected_aq.
 *)
-let check_expected_aqual_for_binder (aq:aqual) (b:binder) (pos:Range.range) : aqual =
+let check_expected_aqual_for_binder (aq:aqual) (b:binder) (pos:Range.t) : aqual =
   let expected_aq = U.aqual_of_binder b in
   // All we check is that the "plicity" matches, and
   // keep attributes of the binder.
@@ -426,7 +426,7 @@ let rec get_pat_vars' all (andlist : bool) (pats:term) : FlatSet.t bv =
 
 let get_pat_vars all pats = get_pat_vars' all false pats
 
-let check_pat_fvs (rng:Range.range) env pats bs =
+let check_pat_fvs (rng:Range.t) env pats bs =
     let pat_vars = get_pat_vars (List.map (fun b -> b.binder_bv) bs) (N.normalize [Env.Beta] env pats) in
     begin match bs |> BU.find_opt (fun ({binder_bv=b}) -> not (mem b pat_vars)) with
         | None -> ()

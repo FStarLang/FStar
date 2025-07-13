@@ -35,16 +35,16 @@ module Z      = FStarC.BigInt
 module Core   = FStarC.TypeChecker.Core
 module RD     = FStarC.Reflection.V2.Data
 
-val proofstate_of_goals : Range.range -> env -> list goal -> list implicit -> proofstate
+val proofstate_of_goals : Range.t -> env -> list goal -> list implicit -> proofstate
 (* Returns proofstate and uvar for main witness *)
-val proofstate_of_goal_ty : Range.range -> env -> typ -> proofstate & term
+val proofstate_of_goal_ty : Range.t -> env -> typ -> proofstate & term
 
-val proofstate_of_all_implicits: Range.range -> env -> implicits -> proofstate & term
+val proofstate_of_all_implicits: Range.t -> env -> implicits -> proofstate & term
 
 (* Metaprogramming primitives (not all of them).
  * Documented in `ulib/FStarC.Tactics.Builtins.fst` *)
 
-val fixup_range (r : Range.range) : tac (Range.range)
+val fixup_range (r : Range.t) : tac (Range.t)
 val compress               : term -> tac term
 val top_env                : unit -> tac env
 val fresh                  : unit -> tac Z.t
@@ -108,7 +108,7 @@ val term_to_string         : term -> tac string
 val comp_to_string         : comp -> tac string
 val term_to_doc            : term -> tac Pprint.document
 val comp_to_doc            : comp -> tac Pprint.document
-val range_to_string        : Range.range -> tac string
+val range_to_string        : Range.t -> tac string
 val term_eq_old            : term -> term -> tac bool
 val with_compat_pre_core   : Z.t -> tac 'a -> tac 'a
 

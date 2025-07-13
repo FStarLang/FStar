@@ -25,6 +25,9 @@ new val rng : Type0
 [@@ PpxDerivingYoJson; PpxDerivingShow]
 new val range : Type0
 
+(* So we can write Range.t *)
+type t = range
+
 [@@ PpxDerivingYoJson; PpxDerivingShow]
 new val pos : Type0
 

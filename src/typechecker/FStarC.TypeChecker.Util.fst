@@ -506,7 +506,7 @@ let mk_comp_l mname u_result result wp flags =
 
 let mk_comp md = mk_comp_l md.mname
 
-let effect_args_from_repr (repr:term) (is_layered:bool) (r:Range.range) : list term =
+let effect_args_from_repr (repr:term) (is_layered:bool) (r:Range.t) : list term =
   let err () =
     raise_error r Errors.Fatal_UnexpectedEffect [
         text "Could not get effect args from repr" ^/^ pp repr ^/^ text "with is_layered=" ^^ pp is_layered
@@ -527,7 +527,7 @@ let effect_args_from_repr (repr:term) (is_layered:bool) (r:Range.range) : list t
  *
  * Caller must ensure that ed is a wp-based effect
  *)
-let mk_wp_return env (ed:S.eff_decl) (u_a:universe) (a:typ) (e:term) (r:Range.range)
+let mk_wp_return env (ed:S.eff_decl) (u_a:universe) (a:typ) (e:term) (r:Range.t)
 : comp
 = let c =
     if not <| Env.lid_exists env C.effect_GTot_lid //we're still in prims, not yet having fully defined the primitive effects
@@ -721,7 +721,7 @@ let substitutive_indexed_close_substs (env:env)
   (b_bv:bv)
   (ct_args:args)
   (num_effect_params:int)
-  (r:Range.range)
+  (r:Range.t)
 
   : list subst_elt =
   
@@ -858,7 +858,7 @@ let substitutive_indexed_bind_substs env
   (bs:binders)
   (binder_kinds:list indexed_effect_binder_kind)
   (ct1:comp_typ) (b:option bv) (ct2:comp_typ)
-  (r1:Range.range)
+  (r1:Range.t)
   (num_effect_params:int)
   (has_range_binders:bool)
 
@@ -985,7 +985,7 @@ let ad_hoc_indexed_bind_substs env
   (m_ed n_ed p_ed:S.eff_decl)
   (bs:binders)
   (ct1:comp_typ) (b:option bv) (ct2:comp_typ)
-  (r1:Range.range)
+  (r1:Range.t)
   (has_range_binders:bool)
 
   : list subst_elt & guard_t =
@@ -1097,7 +1097,7 @@ let ad_hoc_indexed_bind_substs env
  *
  * Caller must ensure that ed is an indexed effect
  *)
-let mk_indexed_return env (ed:S.eff_decl) (u_a:universe) (a:typ) (e:term) (r:Range.range)
+let mk_indexed_return env (ed:S.eff_decl) (u_a:universe) (a:typ) (e:term) (r:Range.t)
   : comp & guard_t =
 
   let debug = !dbg_LayeredEffectsApp in
@@ -1160,7 +1160,7 @@ let mk_indexed_bind env
   (m:lident) (n:lident) (p:lident) (bind_t:tscheme)
   (bind_combinator_kind:indexed_effect_combinator_kind)
   (ct1:comp_typ) (b:option bv) (ct2:comp_typ)
-  (flags:list cflag) (r1:Range.range)
+  (flags:list cflag) (r1:Range.t)
   (num_effect_params:int)
   (has_range_binders:bool)
   : comp & guard_t =
@@ -1242,7 +1242,7 @@ let mk_indexed_bind env
 
   c, guard
 
-let mk_wp_bind env (m:lident) (ct1:comp_typ) (b:option bv) (ct2:comp_typ) (flags:list cflag) (r1:Range.range)
+let mk_wp_bind env (m:lident) (ct1:comp_typ) (b:option bv) (ct2:comp_typ) (flags:list cflag) (r1:Range.t)
   : comp =
 
   let (md, a, kwp), (u_t1, t1, wp1), (u_t2, t2, wp2) =
@@ -1274,7 +1274,7 @@ let mk_bind env
   (b:option bv)
   (c2:comp)
   (flags:list cflag)
-  (r1:Range.range) : comp & guard_t =
+  (r1:Range.t) : comp & guard_t =
 
   let env2 = maybe_push env b in
   let ct1, ct2 = Env.unfold_effect_abbrev env c1, Env.unfold_effect_abbrev env2 c2 in
@@ -1345,7 +1345,7 @@ let strengthen_comp env (reason:option (unit -> list Pprint.document)) (c:comp) 
 (*
  * Wrapper over mk_wp_return and mk_indexed_return
  *)
-let mk_return env (ed:S.eff_decl) (u_a:universe) (a:typ) (e:term) (r:Range.range)
+let mk_return env (ed:S.eff_decl) (u_a:universe) (a:typ) (e:term) (r:Range.t)
 : comp & guard_t
 = if ed |> U.is_layered
   then mk_indexed_return env ed u_a a e r
@@ -1504,7 +1504,7 @@ let maybe_capture_unit_refinement (env:env) (t:term) (x:bv) (c:comp)
 let optimize_bind_vc () = Options.Ext.enabled "optimize_let_vc"
 
 let bind
-      (r1:Range.range)
+      (r1:Range.t)
       (is_let_binding:bool) 
       (env:Env.env) (e1opt:option term) (lc1:lcomp) ((b, lc2):lcomp_with_binder) : lcomp =
   let debug f =
@@ -1844,7 +1844,7 @@ let maybe_assume_result_eq_pure_term env e lc =
   maybe_assume_result_eq_pure_term_in_m env None e lc
 
 let maybe_return_e2_and_bind
-        (r:Range.range)
+        (r:Range.t)
         (is_let_binding:bool)
         (env:env)
         (e1opt:option term)
@@ -1892,7 +1892,7 @@ let substitutive_indexed_ite_substs (env:env)
   (ct_then:comp_typ)
   (ct_else:comp_typ)
   (num_effect_params:int)
-  (r:Range.range)
+  (r:Range.t)
 
   : list subst_elt & guard_t =
   
@@ -1974,7 +1974,7 @@ let ad_hoc_indexed_ite_substs (env:env)
   (p:term)
   (ct_then:comp_typ)
   (ct_else:comp_typ)
-  (r:Range.range)
+  (r:Range.t)
 
   : list subst_elt & guard_t =
 
@@ -2038,7 +2038,7 @@ let ad_hoc_indexed_ite_substs (env:env)
   substs,
   Env.conj_guards [g_uvars; f_guard; g_guard]
 
-let mk_layered_conjunction env (ed:S.eff_decl) (u_a:universe) (a:term) (p:typ) (ct1:comp_typ) (ct2:comp_typ) (r:Range.range)
+let mk_layered_conjunction env (ed:S.eff_decl) (u_a:universe) (a:term) (p:typ) (ct1:comp_typ) (ct2:comp_typ) (r:Range.t)
 : comp & guard_t =
 
   let debug = !dbg_LayeredEffectsApp in
@@ -2093,7 +2093,7 @@ let mk_layered_conjunction env (ed:S.eff_decl) (u_a:universe) (a:term) (p:typ) (
 (*
  * For non-layered effects, just apply the if_then_else combinator
  *)
-let mk_non_layered_conjunction env (ed:S.eff_decl) (u_a:universe) (a:term) (p:typ) (ct1:comp_typ) (ct2:comp_typ) (_:Range.range)
+let mk_non_layered_conjunction env (ed:S.eff_decl) (u_a:universe) (a:term) (p:typ) (ct1:comp_typ) (ct2:comp_typ) (_:Range.t)
 : comp & guard_t =
   //p is a boolean guard, so b2t it
   let p = U.b2t p in
@@ -2899,7 +2899,7 @@ let maybe_implicit_with_meta_or_attr aq (attrs:list attribute) =
  * to find an instance for it. We might not even be able to, since instances
  * are for concrete types.
  *)
-let instantiate_one_binder (env:env_t) (r:Range.range) (b:binder) : term & typ & aqual & guard_t =
+let instantiate_one_binder (env:env_t) (r:Range.t) (b:binder) : term & typ & aqual & guard_t =
   if Debug.high () then
     BU.print1 "instantiate_one_binder: Instantiating implicit binder %s\n" (show b);
   let (++) = Env.conj_guard in
@@ -3355,7 +3355,7 @@ let layered_effect_indices_as_binders env r eff_name sig_ts u a_tm =
   | _ -> fail sig_tm
 
 
-let check_non_informative_type_for_lift env m1 m2 t (r:Range.range) : unit =
+let check_non_informative_type_for_lift env m1 m2 t (r:Range.t) : unit =
   //raise an error if m1 is erasable, m2 is not erasable, and t is informative
   if Env.is_erasable_effect env m1       &&
      not (Env.is_erasable_effect env m2) &&
@@ -3373,7 +3373,7 @@ let substitutive_indexed_lift_substs (env:env)
   (bs:binders)
   (ct:comp_typ)
   (lift_name:string)
-  (r:Range.range)
+  (r:Range.t)
 
   : list subst_elt & guard_t =
 
@@ -3407,7 +3407,7 @@ let ad_hoc_indexed_lift_substs (env:env)
   (bs:binders)
   (ct:comp_typ)
   (lift_name:string)
-  (r:Range.range)
+  (r:Range.t)
 
   : list subst_elt & guard_t =
 
@@ -3756,7 +3756,7 @@ let make_record_fields_in_order env uc topt
        (rdc : DsEnv.record_or_dc)
        (fas : list (lident & 'a))
        (not_found:ident -> option 'a)
-       (rng : Range.range)
+       (rng : Range.t)
   : list 'a
   = let debug () =
       let print_rdc (rdc:DsEnv.record_or_dc) =

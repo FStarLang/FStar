@@ -53,7 +53,7 @@ let dbg_Tac        = Debug.get_toggle "Tac"
 let dbg_SpinoffAll = Debug.get_toggle "SpinoffAll"
 
 let run_tactic_on_typ
-        (rng_tac : Range.range) (rng_goal : Range.range)
+        (rng_tac : Range.t) (rng_goal : Range.t)
         (tactic:term) (env:Env.env) (typ:term)
                     : list goal // remaining goals
                     & term // witness
@@ -65,7 +65,7 @@ let run_tactic_on_typ
     gs, w
 
 let run_tactic_on_all_implicits
-        (rng_tac : Range.range) (rng_goal : Range.range)
+        (rng_tac : Range.t) (rng_goal : Range.t)
         (tactic:term) (env:Env.env) (imps:Env.implicits)
     : list goal // remaining goals
     =
@@ -351,12 +351,12 @@ let preprocess (env:Env.env) (goal:term)
 
 let rec traverse_for_spinoff
                  (pol:pol)
-                 (label_ctx:option (list Pprint.document & Range.range))
+                 (label_ctx:option (list Pprint.document & Range.t))
                  (e:Env.env)
                  (t:term) : tres =
     let debug_any = Debug.any () in
     let traverse pol e t = traverse_for_spinoff pol label_ctx e t in
-    let traverse_ctx pol (ctx : list Pprint.document & Range.range) (e:Env.env) (t:term) : tres =
+    let traverse_ctx pol (ctx : list Pprint.document & Range.t) (e:Env.env) (t:term) : tres =
       let print_lc (msg, rng) =
         BU.format3 "(%s,%s) : %s"
           (Range.string_of_def_range rng)
@@ -394,7 +394,7 @@ let rec traverse_for_spinoff
           res
     in
     let maybe_spinoff pol
-                      (label_ctx:option (list Pprint.document & Range.range))
+                      (label_ctx:option (list Pprint.document & Range.t))
                       (e:Env.env)
                       (t:term)
       : tres =
@@ -826,7 +826,7 @@ let splice
   (is_typed:bool)
   (lids:list Ident.lident)
   (tau:term)
-  (rng:Range.range) : list sigelt =
+  (rng:Range.t) : list sigelt =
   
   Errors.with_ctx "While running splice with a tactic" (fun () ->
     if env.flychecking then [] else begin

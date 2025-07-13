@@ -15,7 +15,7 @@ let null_psc = { psc_range = Range.dummyRange ; psc_subst = fun () -> [] }
 let psc_range psc = psc.psc_range
 let psc_subst psc = psc.psc_subst ()
 
-let embed_simple {| EMB.embedding 'a |} (r:Range.range) (x:'a) : term =
+let embed_simple {| EMB.embedding 'a |} (r:Range.t) (x:'a) : term =
     EMB.embed x r None EMB.id_norm_cb
 
 let try_unembed_simple {| EMB.embedding 'a |} (x:term) : option 'a =

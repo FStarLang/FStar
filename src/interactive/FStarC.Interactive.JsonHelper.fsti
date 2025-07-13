@@ -152,14 +152,14 @@ val wrap_content_szerr : string -> lsp_query
 // Report on server capabilities
 val js_servcap : json
 
-// Create a JSON location link from a Range.range
-val js_loclink : Range.range -> json
+// Create a JSON location link from a Range.t
+val js_loclink : Range.t -> json
 
 // Convert txdoc_pos into (filename, line, col)
 val pos_munge : txdoc_pos -> string & int & int
 
 // Build a JSON diagnostic
-val js_diag : string -> string -> option Range.range -> assoct
+val js_diag : string -> string -> option Range.t -> assoct
 
 // Build an empty JSON diagnostic; used for clearing diagnostic
 val js_diag_clear : string -> assoct

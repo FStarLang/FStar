@@ -201,7 +201,7 @@ let check_sigelt_quals_pre (env:FStarC.TypeChecker.Env.env) se =
         then err []
       | _ -> ()
 
-let check_erasable env quals (r:Range.range) se =
+let check_erasable env quals (r:Range.t) se =
   let lids = U.lids_of_sigelt se in
   let val_exists =
     lids |> BU.for_some (fun l -> Option.isSome (Env.try_lookup_val_decl env l))
@@ -302,7 +302,7 @@ let check_must_erase_attribute env se =
   end
   | _ -> ()
 
-let check_typeclass_instance_attribute env (rng:Range.range) se =
+let check_typeclass_instance_attribute env (rng:Range.t) se =
   let is_tc_instance =
       se.sigattrs |> BU.for_some
         (fun t ->

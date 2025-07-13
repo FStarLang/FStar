@@ -100,11 +100,11 @@ val compare_string : string -> string -> Z.t
 
 val push_namedv    : Env.env -> bv     -> Env.env
 
-val range_of_term : term -> Range.range
-val range_of_sigelt : sigelt -> Range.range
+val range_of_term : term -> Range.t
+val range_of_sigelt : sigelt -> Range.t
 
 val subst_term : list subst_elt -> term -> term
 val subst_comp : list subst_elt -> comp -> comp
 
-val inspect_ident : ident -> string & Range.range
-val pack_ident : string & Range.range -> ident
+val inspect_ident : ident -> string & Range.t
+val pack_ident : string & Range.t -> ident

@@ -32,19 +32,19 @@ type open_namespaces_and_abbreviations = {
 
 type error_message = {
    message: list FStarC.Pprint.document;
-   range: FStarC.Range.range;
+   range: FStarC.Range.t;
 }
 
 type extension_parser = {
   parse_decl_name:
     (contents:string ->
-     FStarC.Range.range ->
+     FStarC.Range.t ->
      either error_message FStarC.Ident.ident);
 
   parse_decl:
    (open_namespaces_and_abbreviations ->
     contents:string ->
-    p:FStarC.Range.range ->
+    p:FStarC.Range.t ->
     either error_message decl)
 }
 
@@ -55,11 +55,11 @@ val lookup_extension_parser (extension_name:string) : option extension_parser
 type extension_lang_parser = {
   parse_decls:
    (contents:string ->
-    p:FStarC.Range.range ->
+    p:FStarC.Range.t ->
     either error_message (list decl))
 }
 
 val as_open_namespaces_and_abbrevs (ls:list decl) : open_namespaces_and_abbreviations
 val register_extension_lang_parser (extension_name:string) (parser:extension_lang_parser) : unit
 val lookup_extension_lang_parser (extension_name:string) : option extension_lang_parser
-val parse_extension_lang (lang_name:string) (raw_text:string) (raw_text_pos:FStarC.Range.range) : list decl
+val parse_extension_lang (lang_name:string) (raw_text:string) (raw_text_pos:FStarC.Range.t) : list decl

@@ -27,7 +27,7 @@ type norm_cb = either Ident.lident term -> term // a callback to the normalizer
 
 type shadow_term = option (Thunk.t term)
 
-type embed_t = Range.range -> shadow_term -> norm_cb -> term
+type embed_t = Range.t -> shadow_term -> norm_cb -> term
 
 type unembed_t 'a = norm_cb -> option 'a // bool = whether we should warn on a failure
 

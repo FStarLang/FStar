@@ -31,8 +31,8 @@ type lcomp_with_binder = option bv & lcomp
 // val report: env -> list string -> unit
 
 //unification variables
-val new_implicit_var : string -> Range.range -> env -> typ -> unrefine:bool -> term & (ctx_uvar & Range.range) & guard_t
-val check_uvars: Range.range -> typ -> unit
+val new_implicit_var : string -> Range.t -> env -> typ -> unrefine:bool -> term & (ctx_uvar & Range.t) & guard_t
+val check_uvars: Range.t -> typ -> unit
 
 //caller can set the boolean to true if they want to solve the deferred constraints involving this binder now (best case)
 val close_guard_implicits: env -> bool -> binders -> guard_t -> guard_t
@@ -47,7 +47,7 @@ val decorated_pattern_as_term: pat -> list bv & term
 //instantiation of implicits
 val maybe_implicit_with_meta_or_attr: bqual -> list attribute -> bool
 
-val instantiate_one_binder (env:env_t) (r:Range.range) (b:binder) : term & typ & aqual & guard_t
+val instantiate_one_binder (env:env_t) (r:Range.t) (b:binder) : term & typ & aqual & guard_t
 val maybe_instantiate : env -> term -> typ -> (term & typ & guard_t)
 
 //operations on computation types
@@ -56,8 +56,8 @@ val lcomp_univ_opt: lcomp -> (option universe & guard_t)
 val is_pure_effect: env -> lident -> bool
 val is_pure_or_ghost_effect: env -> lident -> bool
 val should_not_inline_lc: lcomp -> bool
-val bind: Range.range -> is_let_binding:bool -> env -> option term -> lcomp -> lcomp_with_binder -> lcomp
-val maybe_return_e2_and_bind: Range.range -> is_let_binding:bool -> env -> option term -> lcomp -> e2:term -> lcomp_with_binder -> lcomp
+val bind: Range.t -> is_let_binding:bool -> env -> option term -> lcomp -> lcomp_with_binder -> lcomp
+val maybe_return_e2_and_bind: Range.t -> is_let_binding:bool -> env -> option term -> lcomp -> e2:term -> lcomp_with_binder -> lcomp
 
 (*
  * When typechecking a match term, typechecking each branch returns
@@ -132,8 +132,8 @@ val check_top_level: env -> guard_t -> lcomp -> bool&comp
 val maybe_coerce_lc : env -> term -> lcomp -> typ -> term & lcomp & guard_t
 
 //misc.
-val label: list Pprint.document -> Range.range -> typ -> typ
-val label_guard: Range.range -> list Pprint.document -> guard_t -> guard_t
+val label: list Pprint.document -> Range.t -> typ -> typ
+val label_guard: Range.t -> list Pprint.document -> guard_t -> guard_t
 val short_circuit: term -> args -> guard_formula
 val short_circuit_head: term -> bool
 val maybe_add_implicit_binders: env -> binders -> binders
@@ -157,35 +157,35 @@ val effect_extraction_mode : env -> lident -> eff_extraction_mode
  *
  * The unification variables are resolved in the input env
  *)
-val fresh_effect_repr: env -> Range.range -> lident -> signature:tscheme -> repr:option tscheme -> u:universe -> a:term -> term & guard_t
+val fresh_effect_repr: env -> Range.t -> lident -> signature:tscheme -> repr:option tscheme -> u:universe -> a:term -> term & guard_t
 
 (*
  * A wrapper over fresh_layered_effect_repr that looks up signature and repr from env
  *
  * If the effect does not have a repr (e.g. primitive effects), then we return a `unit -> M a ?u` term
  *)
-val fresh_effect_repr_en: env -> Range.range -> lident -> universe -> term -> term & guard_t
+val fresh_effect_repr_en: env -> Range.t -> lident -> universe -> term -> term & guard_t
 
 (*
  * Return binders for the layered effect indices with signature
  * In the binder types, a is substituted with a_tm (u is universe of a)
  *)
-val layered_effect_indices_as_binders:env -> Range.range -> eff_name:lident -> signature:tscheme -> u:universe -> a_tm:term -> binders
+val layered_effect_indices_as_binders:env -> Range.t -> eff_name:lident -> signature:tscheme -> u:universe -> a_tm:term -> binders
 
 val get_field_projector_name : env -> datacon:lident -> index:int -> lident
 
 
 (* update the env functions *)
-val update_env_sub_eff : env -> sub_eff -> Range.range -> env
+val update_env_sub_eff : env -> sub_eff -> Range.t -> env
 val update_env_polymonadic_bind :
   env -> lident -> lident -> lident -> tscheme -> indexed_effect_combinator_kind -> env
 
 val try_lookup_record_type : env -> lident -> option DsEnv.record_or_dc
-val find_record_or_dc_from_typ : env -> option typ -> unresolved_constructor -> Range.range -> DsEnv.record_or_dc & lident & fv
+val find_record_or_dc_from_typ : env -> option typ -> unresolved_constructor -> Range.t -> DsEnv.record_or_dc & lident & fv
 val field_name_matches : lident -> DsEnv.record_or_dc -> ident -> bool
 val make_record_fields_in_order : env -> unresolved_constructor -> option (either typ typ) ->
                                 DsEnv.record_or_dc ->
                                 list (lident & 'a) ->
                                 not_found:(ident -> option 'a) ->
-                                Range.range ->
+                                Range.t ->
                                 list 'a

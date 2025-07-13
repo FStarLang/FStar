@@ -565,7 +565,7 @@ let e_either (ea:embedding 'a) (eb:embedding 'b) =
     mk_emb em un (fun () -> lid_as_typ PC.either_lid [U_zero;U_zero] [as_arg (type_of eb); as_arg (type_of ea)]) etyp
 
 // Embedding range (unsealed)
-let e___range : embedding Range.range =
+let e___range : embedding Range.t =
     let em cb r = Constant (Range r) in
     let un cb t =
     match t with
@@ -573,7 +573,7 @@ let e___range : embedding Range.range =
     | _ ->
         None
     in
-    mk_emb' em un (fun () -> lid_as_typ PC.__range_lid [] []) (SE.emb_typ_of Range.range)
+    mk_emb' em un (fun () -> lid_as_typ PC.__range_lid [] []) (SE.emb_typ_of Range.t)
 
 // Embedding a sealed term. This just calls the embedding for a but also
 // adds a `seal` marker to the result. The unembedding removes it.
@@ -595,7 +595,7 @@ let e_sealed (ea : embedding 'a) : Prims.Tot (embedding (Sealed.sealed 'a)) =
     in
     mk_emb em un (fun () -> lid_as_typ PC.sealed_lid [U_zero] [as_arg (type_of ea)]) etyp
 
-let e_range : embedding Range.range =
+let e_range : embedding Range.t =
   embed_as (e_sealed e___range) Sealed.unseal Sealed.seal None
 
 let e_issue : embedding FStarC.Errors.issue =

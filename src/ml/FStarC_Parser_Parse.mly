@@ -68,7 +68,7 @@ let parse_use_lang_blob (extension_name:string)
 type tc_constraint = {
   id: FStarC_Ident.ident;
   t: FStarC_Parser_AST.term;
-  r: FStarC_Range.range;
+  r: FStarC_Range.t;
 }
 
 %}

@@ -229,7 +229,7 @@ let js_servcap : json =
 let js_pos (p: pos) : json = JsonAssoc [("line", JsonInt (line_of_pos p - 1));
                                         ("character", JsonInt (col_of_pos p))]
 
-let js_range (r: Range.range) : json =
+let js_range (r: Range.t) : json =
   JsonAssoc [("start", js_pos (start_of_range r)); ("end", js_pos (end_of_range r))]
 
 // Used to report diagnostic, for example, when loading dependencies fails
@@ -237,7 +237,7 @@ let js_dummyrange : json =
   JsonAssoc [("start", JsonAssoc [("line", JsonInt 0); ("character", JsonInt 0);
              ("end", JsonAssoc [("line", JsonInt 0); ("character", JsonInt 0)])])]
 
-let js_loclink (r: Range.range) : json =
+let js_loclink (r: Range.t) : json =
   let s = js_range r in
   JsonList [JsonAssoc [("targetUri", JsonStr (path_to_uri (file_of_range r)));
                        ("targetRange", s); ("targetSelectionRange", s)]]
@@ -245,7 +245,7 @@ let js_loclink (r: Range.range) : json =
 // Lines are 0-indexed in LSP, but 1-indexed in the F* Typechecker;
 let pos_munge (pos: txdoc_pos) = (pos.path, pos.line + 1, pos.col)
 
-let js_diag (fname: string) (msg: string) (r: option Range.range) : assoct =
+let js_diag (fname: string) (msg: string) (r: option Range.t) : assoct =
   let r' = match r with
            | Some r -> js_range r
            | None -> js_dummyrange in

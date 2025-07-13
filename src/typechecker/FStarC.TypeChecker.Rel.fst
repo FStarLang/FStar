@@ -1502,7 +1502,7 @@ let head_matches_delta env (logical:bool) smt_ok t1 t2 : (match_result & option 
             (show t1) (show t2) (show r);
     r
 
-let kind_type (binders:binders) (r:Range.range) =
+let kind_type (binders:binders) (r:Range.t) =
     U.type_u() |> fst
 
 
@@ -1961,7 +1961,7 @@ let apply_substitutive_indexed_subcomp (env:Env.env)
   (num_effect_params:int)
   (wl:worklist)
   (subcomp_name:string)
-  (r1:Range.range)
+  (r1:Range.t)
 
   : typ & list prob & worklist =
 
@@ -2072,7 +2072,7 @@ let apply_ad_hoc_indexed_subcomp (env:Env.env)
   (sub_prob:worklist -> term -> rel -> term -> string -> prob & worklist)
   (wl:worklist)
   (subcomp_name:string)
-  (r1:Range.range)
+  (r1:Range.t)
 
   : typ & list prob & worklist =
 

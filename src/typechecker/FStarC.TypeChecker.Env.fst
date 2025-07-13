@@ -425,7 +425,7 @@ let inst_tscheme_with_range (r:range) (t:tscheme) =
     let us, t = inst_tscheme t in
     us, Subst.set_use_range r t
 
-let check_effect_is_not_a_template (ed:eff_decl) (rng:Range.range) : unit =
+let check_effect_is_not_a_template (ed:eff_decl) (rng:Range.t) : unit =
   if List.length ed.univs <> 0 || List.length ed.binders <> 0
   then
     let msg = BU.format2
@@ -577,7 +577,7 @@ let lookup_type_of_let us_opt se lid =
 
     | _ -> None
 
-let effect_signature (us_opt:option universes) (se:sigelt) rng : option ((universes & typ) & Range.range) =
+let effect_signature (us_opt:option universes) (se:sigelt) rng : option ((universes & typ) & Range.t) =
   let inst_ts us_opt ts =
     match us_opt with
     | None -> inst_tscheme ts
@@ -1997,14 +1997,14 @@ let close_guard env binders g =
 (* Generating new implicit variables *)
 let new_tac_implicit_var
   (reason: string)
-  (r: Range.range)
+  (r: Range.t)
   (env:env)
   (uvar_typ:typ)
   (should_check:should_check_uvar)
   (uvar_typedness_deps:list ctx_uvar)
   (meta:option ctx_uvar_meta_t)
   (unrefine:bool)
-: term & (ctx_uvar & Range.range) & guard_t
+: term & (ctx_uvar & Range.t) & guard_t
 =
   let binders = all_binders env in
   let gamma = env.gamma in

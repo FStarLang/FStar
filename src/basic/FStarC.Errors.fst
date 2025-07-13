@@ -43,7 +43,7 @@ let with_error_bound (r:range) (f : unit -> 'a) : 'a =
   error_range_bound := old;
   res
 
-let maybe_bound_range (r : Range.range) : Range.range =
+let maybe_bound_range (r : Range.t) : Range.t =
   match !error_range_bound with
   | Some r' -> Range.bound_range r r'
   | None -> r
@@ -283,7 +283,7 @@ let dummy_ide_rng : Range.rng =
 
 (* Attempts to set a decent range (no dummy, no dummy ide) relying
 on the fallback_range reference. *)
-let fixup_issue_range (rng:option Range.range) : option Range.range =
+let fixup_issue_range (rng:option Range.t) : option Range.t =
   let rng =
     match rng with
     | None ->
@@ -441,7 +441,7 @@ let warn_unsafe_options rng_opt msg =
     add_one (mk_issue EError rng_opt (mkmsg ("Every use of this option triggers an error: " ^ msg)) (Some warn_on_use_errno) [])
   | _ -> ()
 
-let set_option_warning_callback_range (ropt:option FStarC.Range.range) =
+let set_option_warning_callback_range (ropt:option FStarC.Range.t) =
     Options.set_option_warning_callback (warn_unsafe_options ropt)
 
 let t_set_parse_warn_error,

@@ -120,7 +120,7 @@ let fstar_tactics_Drop          = fstar_tactics_data  ["Types"; "Drop"]
 let fstar_tactics_Force         = fstar_tactics_data  ["Types"; "Force"]
 
 
-let mk_emb (em: Range.range -> 'a -> term)
+let mk_emb (em: Range.t -> 'a -> term)
            (un: term -> option 'a)
            (t: term) =
     mk_emb (fun x r _topt _norm -> em r x)
@@ -208,7 +208,7 @@ let e_goal_nbe =
      }
 
 instance e_exn : embedding exn =
-    let embed_exn (e:exn) (rng:Range.range) _ _ : term =
+    let embed_exn (e:exn) (rng:Range.t) _ _ : term =
         match e with
         | TacticFailure s ->
             S.mk_Tm_app fstar_tactics_TacticFailure.t
@@ -234,7 +234,7 @@ instance e_exn : embedding exn =
            ]
           in
           S.mk_Tm_app fstar_tactics_TacticFailure.t
-              [S.as_arg (embed rng (msg, None #Range.range))]
+              [S.as_arg (embed rng (msg, None #Range.t))]
               rng
     in
     let unembed_exn (t:term) _ : option exn =
@@ -292,7 +292,7 @@ let e_exn_nbe =
     ; NBETerm.e_typ = (fun () -> fv_as_emb_typ fv_exn) }
 
 let e_result (ea : embedding 'a) : Tot _ =
-    let embed_result (res:__result 'a) (rng:Range.range) (sh:shadow_term) (cbs:norm_cb) : term =
+    let embed_result (res:__result 'a) (rng:Range.t) (sh:shadow_term) (cbs:norm_cb) : term =
         match res with
         | Success (a, ps) ->
           S.mk_Tm_app (S.mk_Tm_uinst fstar_tactics_Success.t [U_zero])
@@ -364,7 +364,7 @@ let e_result_nbe (ea : NBET.embedding 'a)  =
     ; NBETerm.e_typ = (fun () -> fv_as_emb_typ fstar_tactics_result.fv) }
 
 let e_direction =
-    let embed_direction (rng:Range.range) (d : direction) : term =
+    let embed_direction (rng:Range.t) (d : direction) : term =
         match d with
         | TopDown -> fstar_tactics_topdown.t
         | BottomUp -> fstar_tactics_bottomup.t
@@ -398,7 +398,7 @@ let e_direction_nbe  =
     ; NBETerm.e_typ = (fun () -> fv_as_emb_typ fstar_tactics_direction.fv) }
 
 let e_ctrl_flag =
-    let embed_ctrl_flag (rng:Range.range) (d : ctrl_flag) : term =
+    let embed_ctrl_flag (rng:Range.t) (d : ctrl_flag) : term =
         match d with
         | Continue -> fstar_tactics_Continue.t
         | Skip     -> fstar_tactics_Skip.t
@@ -437,7 +437,7 @@ let e_ctrl_flag_nbe  =
 
 let e_unfold_side =
   let open FStarC.TypeChecker.Core in
-  let embed_unfold_side (rng:Range.range) (s:side) : term =
+  let embed_unfold_side (rng:Range.t) (s:side) : term =
     match s with
     | Left -> fstar_tc_core_unfold_side_Left.t
     | Right -> fstar_tc_core_unfold_side_Right.t
@@ -486,7 +486,7 @@ let e_unfold_side_nbe  =
 
 let e_tot_or_ghost =
   let open FStarC.TypeChecker.Core in
-  let embed_tot_or_ghost (rng:Range.range) (s:tot_or_ghost) : term =
+  let embed_tot_or_ghost (rng:Range.t) (s:tot_or_ghost) : term =
     match s with
     | E_Total -> fstar_tc_core_tot_or_ghost_ETotal.t
     | E_Ghost -> fstar_tc_core_tot_or_ghost_EGhost.t
@@ -530,7 +530,7 @@ let t_tref = S.lid_as_fv PC.tref_lid None
   |> (fun head -> S.mk_Tm_app head [S.iarg S.t_term] Range.dummyRange)
 
 let e_tref #a =
-  let em (r:tref a) (rng:Range.range) _shadow _norm : term =
+  let em (r:tref a) (rng:Range.t) _shadow _norm : term =
     U.mk_lazy r t_tref Lazy_tref (Some rng)
   in
   let un (t:term) _ : option (tref a) =
@@ -576,7 +576,7 @@ let e_tref_nbe #a =
   ; NBETerm.e_typ = (fun () -> ET_app (PC.tref_lid |> Ident.string_of_lid, [ET_abstract])) }
 
 let e_guard_policy =
-    let embed_guard_policy (rng:Range.range) (p : guard_policy) : term =
+    let embed_guard_policy (rng:Range.t) (p : guard_policy) : term =
         match p with
         | SMT   -> fstar_tactics_SMT.t
         | SMTSync -> fstar_tactics_SMTSync.t

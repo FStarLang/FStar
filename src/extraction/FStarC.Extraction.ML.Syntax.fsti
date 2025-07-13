@@ -105,8 +105,8 @@ type meta =
   | CIfDef
   | CMacro
   | Deprecated of string
-  | RemoveUnusedTypeParameters of list int & FStarC.Range.range //positional
-  | HasValDecl of FStarC.Range.range //this symbol appears in the interface of a module
+  | RemoveUnusedTypeParameters of list int & FStarC.Range.t //positional
+  | HasValDecl of FStarC.Range.t //this symbol appears in the interface of a module
   | CNoInline
 
 // rename
