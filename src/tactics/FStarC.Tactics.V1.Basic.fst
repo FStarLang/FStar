@@ -244,7 +244,7 @@ let with_policy pol (t : tac 'a) : tac 'a =
     bind (set_guard_policy old_pol) (fun () ->
     ret r))))
 
-let proc_guard' (simplify:bool) (reason:string) (e : env) (g : guard_t) (sc_opt:option should_check_uvar) (rng:Range.range) : tac unit =
+let proc_guard' (simplify:bool) (reason:string) (e : env) (g : guard_t) (sc_opt:option should_check_uvar) (rng:Range.t) : tac unit =
     mlog (fun () ->
         BU.print2 "Processing guard (%s:%s)\n" reason (Rel.guard_to_string e g)) (fun () ->
     let imps = Listlike.to_list g.implicits in 
@@ -879,7 +879,7 @@ let try_unify_by_application (should_check:option should_check_uvar)
                              (e : env)
                              (ty1 : term)
                              (ty2 : term)
-                             (rng:Range.range)
+                             (rng:Range.t)
    : tac (list (term & aqual & ctx_uvar))
    = let f = if only_match then do_match else do_unify in
      let must_tot = true in
@@ -2217,7 +2217,7 @@ let comp_to_string (c:comp) : tac string
   = let s = show c in
     ret s
 
-let range_to_string (r:FStarC.Range.range) : tac string
+let range_to_string (r:FStarC.Range.t) : tac string
   = ret (show r)
 
 let term_eq_old (t1:term) (t2:term) : tac bool

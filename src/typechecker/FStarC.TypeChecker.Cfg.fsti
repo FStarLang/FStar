@@ -126,7 +126,7 @@ val log_nbe : cfg -> (unit -> unit) -> unit
 val is_prim_step: cfg -> fv -> bool
 val find_prim_step: cfg -> fv -> option primitive_step
 
-// val embed_simple: EMB.embedding 'a -> Range.range -> 'a -> term
+// val embed_simple: EMB.embedding 'a -> Range.t -> 'a -> term
 // val try_unembed_simple: EMB.embedding 'a -> term -> option 'a
 
 val built_in_primitive_steps : PSMap.t primitive_step

@@ -93,19 +93,19 @@ type parse_frag =
     | Incremental of input_frag
     | Fragment of input_frag
 
-type parse_error = (Codes.error_code * Msg.error_message * FStarC_Range.range)
+type parse_error = (Codes.error_code * Msg.error_message * FStarC_Range.t)
 
 
 type code_fragment = {
-   range: FStarC_Range.range;
+   range: FStarC_Range.t;
    code: string;
 }
 
 type 'a incremental_result = 
-    ('a * code_fragment) list * (string * FStarC_Range.range) list * parse_error option
+    ('a * code_fragment) list * (string * FStarC_Range.t) list * parse_error option
 
 type parse_result =
-    | ASTFragment of (FStarC_Parser_AST.inputFragment * (string * FStarC_Range.range) list)
+    | ASTFragment of (FStarC_Parser_AST.inputFragment * (string * FStarC_Range.t) list)
     | IncrementalFragment of FStarC_Parser_AST.decl incremental_result
     | Term of FStarC_Parser_AST.term
     | ParseError of parse_error
@@ -137,7 +137,7 @@ let parse_incremental_decls
     (contents:string)
     lexbuf
     (lexer:unit -> 'token * Lexing.position * Lexing.position)
-    (range_of: 'semantic_value -> FStarC_Range.range)
+    (range_of: 'semantic_value -> FStarC_Range.t)
     (parse_one:
      (Lexing.lexbuf -> 'token) ->
          Lexing.lexbuf ->
@@ -220,7 +220,7 @@ let contents_at contents =
     (* Find the raw content of the input from the line of the start_pos to the end_pos.
         This is used by Interactive.Incremental to record exactly the raw content of the
         fragment that was checked *) 
-    fun (range:Range.range) ->
+    fun (range:Range.t) ->
       (* discard all lines until the start line *)
       let start_pos = Range.start_of_range range in
       let end_pos = Range.end_of_range range in
@@ -275,7 +275,7 @@ let parse_incremental_fragment
     (contents:string)
     lexbuf
     (lexer:unit -> 'token * Lexing.position * Lexing.position)
-    (range_of: 'semantic_value -> FStarC_Range.range)
+    (range_of: 'semantic_value -> FStarC_Range.t)
     (parse_one:
      (Lexing.lexbuf -> 'token) ->
          Lexing.lexbuf ->
@@ -475,7 +475,7 @@ let string_of_token =
 let parse_fstar_incrementally
 : FStarC_Parser_AST_Util.extension_lang_parser 
 = let f =
-    fun (s:string) (r:FStarC_Range.range) ->
+    fun (s:string) (r:FStarC_Range.t) ->
       let open FStar_Pervasives in
       let open FStarC_Range in
       let lexbuf =

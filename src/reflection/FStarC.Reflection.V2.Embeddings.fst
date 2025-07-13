@@ -90,7 +90,7 @@ let rec mapM_opt (f : ('a -> option 'b)) (l : list 'a) : option (list 'b) =
         Some (x :: xs)))
 
 let e_term_aq aq =
-    let embed_term (rng:Range.range) (t:term) : term =
+    let embed_term (rng:Range.t) (t:term) : term =
         let qi = { qkind = Quote_static; antiquotations = aq } in
         S.mk (Tm_quoted (t, qi)) rng
     in
@@ -127,7 +127,7 @@ let e_sort   : embedding (Sealed.sealed term)   = e_sealed e_term
 let e_ppname : embedding ppname_t = e_sealed e_string
 
 let e_aqualv =
-    let embed_aqualv (rng:Range.range) (q : aqualv) : term =
+    let embed_aqualv (rng:Range.t) (q : aqualv) : term =
       let r =
       match q with
       | Data.Q_Explicit -> ref_Q_Explicit.t
@@ -152,7 +152,7 @@ let e_aqualv =
 let e_binders = e_list e_binder
 
 let e_universe_view =
-  let embed_universe_view (rng:Range.range) (uv:universe_view) : term =
+  let embed_universe_view (rng:Range.t) (uv:universe_view) : term =
     match uv with
     | Uv_Zero -> ref_Uv_Zero.t
     | Uv_Succ u ->
@@ -199,7 +199,7 @@ let e_universe_view =
   mk_emb embed_universe_view unembed_universe_view fstar_refl_universe_view
 
 let e_vconst =
-    let embed_const (rng:Range.range) (c:vconst) : term =
+    let embed_const (rng:Range.t) (c:vconst) : term =
         let r =
         match c with
         | C_Unit    -> ref_C_Unit.t
@@ -246,7 +246,7 @@ let e_vconst =
     mk_emb embed_const unembed_const fstar_refl_vconst
 
 let rec e_pattern_aq aq =
-    let rec embed_pattern (rng:Range.range) (p : pattern) : term =
+    let rec embed_pattern (rng:Range.t) (p : pattern) : term =
         match p with
         | Pat_Constant c ->
             S.mk_Tm_app ref_Pat_Constant.t [S.as_arg (embed rng c)] rng
@@ -299,7 +299,7 @@ instance e_match_returns_annotation =
 
 let e_term_view_aq aq =
     let push (s, aq) = (s+1, aq) in
-    let embed_term_view (rng:Range.range) (t:term_view) : term =
+    let embed_term_view (rng:Range.t) (t:term_view) : term =
         match t with
         | Tv_FVar fv ->
             S.mk_Tm_app ref_Tv_FVar.t [S.as_arg (embed rng fv)]
@@ -432,7 +432,7 @@ let e_name = e_list e_string
 
 
 instance e_namedv_view =
-    let embed_namedv_view (rng:Range.range) (namedvv:namedv_view) : term =
+    let embed_namedv_view (rng:Range.t) (namedvv:namedv_view) : term =
         S.mk_Tm_app ref_Mk_namedv_view.t [
           S.as_arg (embed rng namedvv.uniq);
           S.as_arg (embed #_ #e_sort   rng namedvv.sort);
@@ -450,7 +450,7 @@ instance e_namedv_view =
     mk_emb embed_namedv_view unembed_namedv_view fstar_refl_namedv_view
 
 instance e_bv_view =
-    let embed_bv_view (rng:Range.range) (bvv:bv_view) : term =
+    let embed_bv_view (rng:Range.t) (bvv:bv_view) : term =
         S.mk_Tm_app ref_Mk_bv_view.t [
           S.as_arg (embed rng bvv.index);
           S.as_arg (embed #_ #e_sort   rng bvv.sort);
@@ -468,7 +468,7 @@ instance e_bv_view =
     mk_emb embed_bv_view unembed_bv_view fstar_refl_bv_view
 
 instance e_binding =
-    let embed (rng:Range.range) (bindingv:RD.binding) : term =
+    let embed (rng:Range.t) (bindingv:RD.binding) : term =
         S.mk_Tm_app ref_Mk_binding.t [
           S.as_arg (embed rng bindingv.uniq);
           S.as_arg (embed #_ #e_term   rng bindingv.sort);
@@ -489,7 +489,7 @@ let e_attribute  = e_term
 let e_attributes = e_list e_attribute
 
 let e_binder_view =
-  let embed_binder_view (rng:Range.range) (bview:binder_view) : term =
+  let embed_binder_view (rng:Range.t) (bview:binder_view) : term =
     S.mk_Tm_app ref_Mk_binder_view.t [
       S.as_arg (embed #_ #e_term rng bview.sort);
       S.as_arg (embed rng bview.qual);
@@ -508,7 +508,7 @@ let e_binder_view =
   mk_emb embed_binder_view unembed_binder_view fstar_refl_binder_view
 
 let e_comp_view =
-    let embed_comp_view (rng:Range.range) (cv : comp_view) : term =
+    let embed_comp_view (rng:Range.t) (cv : comp_view) : term =
         match cv with
         | C_Total t ->
             S.mk_Tm_app ref_C_Total.t [S.as_arg (embed #_ #e_term rng t)]
@@ -551,7 +551,7 @@ let e_univ_name = e_ident
 let e_univ_names = e_list e_univ_name
 
 let e_subst_elt =
-    let ee (rng:Range.range) (e:subst_elt) : term =
+    let ee (rng:Range.t) (e:subst_elt) : term =
         match e with
         | DB (i, x) ->
             S.mk_Tm_app ref_DB.t [
@@ -618,7 +618,7 @@ let e_subst = e_list e_subst_elt
 let e_ctor = e_tuple2 (e_string_list) e_term
 
 let e_lb_view =
-    let embed_lb_view (rng:Range.range) (lbv:lb_view) : term =
+    let embed_lb_view (rng:Range.t) (lbv:lb_view) : term =
         S.mk_Tm_app ref_Mk_lb.t [S.as_arg (embed rng lbv.lb_fv);
                                  S.as_arg (embed rng lbv.lb_us);
                                  S.as_arg (embed #_ #e_term       rng lbv.lb_typ);
@@ -635,7 +635,7 @@ let e_lb_view =
     mk_emb embed_lb_view unembed_lb_view fstar_refl_lb_view
 
 let e_sigelt_view =
-    let embed_sigelt_view (rng:Range.range) (sev:sigelt_view) : term =
+    let embed_sigelt_view (rng:Range.t) (sev:sigelt_view) : term =
         match sev with
         | Sg_Let (r, lbs) ->
             S.mk_Tm_app ref_Sg_Let.t
@@ -678,7 +678,7 @@ let e_sigelt_view =
     mk_emb embed_sigelt_view unembed_sigelt_view fstar_refl_sigelt_view
 
 let e_qualifier =
-    let embed (rng:Range.range) (q:RD.qualifier) : term =
+    let embed (rng:Range.t) (q:RD.qualifier) : term =
         let r =
         match q with
         | RD.Assumption                       -> ref_qual_Assumption.t

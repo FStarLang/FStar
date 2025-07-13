@@ -52,7 +52,7 @@ val status_string_and_errors : z3status -> string & error_labels
 val giveZ3 : list decl -> unit
 
 val ask_text
-       : r:Range.range
+       : r:Range.t
        -> cache:(option string) // hash
        -> label_messages:error_labels
        -> qry:list decl
@@ -60,7 +60,7 @@ val ask_text
        -> core:option U.unsat_core
        -> string
 
-val ask: r:Range.range
+val ask: r:Range.t
        -> cache:option string // hash
        -> label_messages:error_labels
        -> qry:list decl

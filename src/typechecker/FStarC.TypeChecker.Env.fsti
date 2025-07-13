@@ -87,7 +87,7 @@ type name_prefix = FStarC.Ident.path
 // To turn off everything, one can prepend `([], false)` to this (since [] is a prefix of everything)
 type proof_namespace = list (name_prefix & bool)
 
-type cached_elt = (either (universes & typ) (sigelt & option universes)) & Range.range
+type cached_elt = (either (universes & typ) (sigelt & option universes)) & Range.t
 type goal = term
 
 type must_tot = bool
@@ -117,7 +117,7 @@ and polymonadic_bind_t =
   option bv ->
   comp_typ ->
   list cflag ->
-  Range.range ->
+  Range.t ->
   comp & guard_t
 
 and mlift = {
@@ -164,7 +164,7 @@ and effects = {
 
 and env = {
   solver         :solver_t;                     (* interface to the SMT solver *)
-  range          :Range.range;                  (* the source location of the term being checked *)
+  range          :Range.t;                  (* the source location of the term being checked *)
   curmodule      :lident;                       (* Name of this module *)
   gamma          :list binding;                (* Local typing environment *)
   gamma_sig      :list sig_binding;            (* and signature elements *)
@@ -257,7 +257,7 @@ and splice_t =
   is_typed:bool ->          (* is this a splice_t? *)
   list lident ->            (* list of names that MUST be defined *)
   term ->                   (* tactic term *)
-  Range.range ->            (* entry range *)
+  Range.t ->            (* entry range *)
   list sigelt
 
 (* Keeping track of declarations and definitions. This operates
@@ -270,7 +270,7 @@ type implicit = TcComm.implicit
 type implicits = TcComm.implicits
 type guard_t = TcComm.guard_t
 type tcenv_depth_t = int & int & solver_depth_t & int
-type qninfo = option ((either (universes & typ) (sigelt & option universes)) & Range.range)
+type qninfo = option ((either (universes & typ) (sigelt & option universes)) & Range.t)
 
 val tc_hooks : env -> tcenv_hooks
 val set_tc_hooks: env -> tcenv_hooks -> env
@@ -309,8 +309,8 @@ val rollback : solver_t -> string -> option tcenv_depth_t -> env
 
 (* Checking the per-module debug level and position info *)
 val current_module : env -> lident
-val set_range      : env -> Range.range -> env
-val get_range      : env -> Range.range
+val set_range      : env -> Range.t -> env
+val get_range      : env -> Range.t
 
 instance val hasRange_env : hasRange env
 
@@ -321,13 +321,13 @@ val promote_id_info : env -> (typ -> option typ) -> unit
 
 (* Querying identifiers *)
 val lid_exists             : env -> lident -> bool
-val try_lookup_bv          : env -> bv -> option (typ & Range.range)
-val lookup_bv              : env -> bv -> typ & Range.range
+val try_lookup_bv          : env -> bv -> option (typ & Range.t)
+val lookup_bv              : env -> bv -> typ & Range.t
 val lookup_qname           : env -> lident -> qninfo
 val lookup_sigelt          : env -> lident -> option sigelt
-val try_lookup_lid         : env -> lident -> option ((universes & typ) & Range.range)
-val try_lookup_and_inst_lid: env -> universes -> lident -> option (typ & Range.range)
-val lookup_lid             : env -> lident -> (universes & typ) & Range.range
+val try_lookup_lid         : env -> lident -> option ((universes & typ) & Range.t)
+val try_lookup_and_inst_lid: env -> universes -> lident -> option (typ & Range.t)
+val lookup_lid             : env -> lident -> (universes & typ) & Range.t
 val lookup_univ            : env -> univ_name -> bool
 val try_lookup_val_decl    : env -> lident -> option (tscheme & list qualifier)
 val lookup_val_decl        : env -> lident -> (universes & typ)
@@ -352,7 +352,7 @@ val try_lookup_effect_lid  : env -> lident -> option term
 val lookup_effect_lid      : env -> lident -> term
 val lookup_effect_abbrev   : env -> universes -> lident -> option (binders & comp)
 val norm_eff_name          : (env -> lident -> lident)
-val num_effect_indices     : env -> lident -> Range.range -> int
+val num_effect_indices     : env -> lident -> Range.t -> int
 val lookup_effect_quals    : env -> lident -> list qualifier
 val lookup_projector       : env -> lident -> int -> lident
 val lookup_attr            : env -> string -> list sigelt
@@ -507,24 +507,24 @@ val close_forall              : env -> binders -> term -> term
 
 val new_tac_implicit_var
   (reason: string)
-  (r: Range.range)
+  (r: Range.t)
   (env:env)
   (uvar_typ:typ)
   (should_check:should_check_uvar)
   (uvar_typedness_deps:list ctx_uvar)
   (meta:option ctx_uvar_meta_t)
   (unrefine:bool)
-: term & (ctx_uvar & Range.range) & guard_t
+: term & (ctx_uvar & Range.t) & guard_t
 
 val new_implicit_var_aux
   (reason: string)
-  (r: Range.range)
+  (r: Range.t)
   (env:env)
   (uvar_typ:typ)
   (should_check:should_check_uvar)
   (meta:option ctx_uvar_meta_t)
   (unrefine:bool)
-: term & (ctx_uvar & Range.range) & guard_t
+: term & (ctx_uvar & Range.t) & guard_t
 
 
 val uvar_meta_for_binder (b:binder) : option ctx_uvar_meta_t & (*should_unrefine:*)bool
@@ -547,10 +547,10 @@ val uvars_for_binders :
   bs:S.binders ->
   substs:S.subst_t ->
   reason:(S.binder -> string) ->
-  r:Range.range ->
+  r:Range.t ->
   (list S.term & guard_t)
 
-val pure_precondition_for_trivial_post : env -> universe -> typ -> typ -> Range.range -> typ
+val pure_precondition_for_trivial_post : env -> universe -> typ -> typ -> Range.t -> typ
 
 (* Fetch the arity from the letrecs field. None if not there (happens
 for either not a recursive let, or one that does not need the totality

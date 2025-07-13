@@ -536,10 +536,10 @@ let syntax_to_rd_qual = function
   | S.Effect -> RD.Effect
   | OnlyName -> RD.OnlyName
 
-let inspect_ident (i:ident) : string & Range.range =
+let inspect_ident (i:ident) : string & Range.t =
   (string_of_id i, range_of_id i)
 
-let pack_ident (i: string & Range.range) : ident =
+let pack_ident (i: string & Range.t) : ident =
   Ident.mk_ident i
 
 let sigelt_quals (se : sigelt) : list RD.qualifier =

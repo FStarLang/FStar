@@ -286,8 +286,8 @@ let report_implicits rng (is : TcRel.tagged_implicits) : unit =
   Err.stop_if_err ()
 
 let run_unembedded_tactic_on_ps
-  (rng_call : Range.range)
-  (rng_goal : Range.range)
+  (rng_call : Range.t)
+  (rng_goal : Range.t)
   (background : bool)
   (arg : 'a)
   (tau: 'a -> tac 'b)
@@ -399,8 +399,8 @@ let run_unembedded_tactic_on_ps
           ((if ps.dump_on_failure then [doc_of_string "Tactic failed"] else []) @ doc)
 
 let run_tactic_on_ps'
-  (rng_call : Range.range)
-  (rng_goal : Range.range)
+  (rng_call : Range.t)
+  (rng_goal : Range.t)
   (background : bool)
   (e_arg : embedding 'a)
   (arg : 'a)
@@ -439,8 +439,8 @@ let run_tactic_on_ps'
         arg tau ps
 
 let run_tactic_on_ps
-          (rng_call : Range.range)
-          (rng_goal : Range.range)
+          (rng_call : Range.t)
+          (rng_goal : Range.t)
           (background : bool)
           (e_arg : embedding 'a)
           (arg : 'a)

@@ -116,15 +116,15 @@ let dummy () : (option binder & closure & memo subst_t) = (None, Dummy, fresh_me
 type branches = list (pat & option term & term)
 
 type stack_elt =
- | Arg      of closure & aqual & Range.range
- | UnivArgs of list universe & Range.range // NB: universes must be values already, no bvars allowed
+ | Arg      of closure & aqual & Range.t
+ | UnivArgs of list universe & Range.t // NB: universes must be values already, no bvars allowed
  | MemoLazy of cfg_memo (env & term)
- | Match    of env & option match_returns_ascription & branches & option residual_comp & cfg & Range.range
- | Abs      of env & binders & env & option residual_comp & Range.range //the second env is the first one extended with the binders, for reducing the option lcomp
- | App      of env & term & aqual & Range.range
- | CBVApp   of env & term & aqual & Range.range
- | Meta     of env & S.metadata & Range.range
- | Let      of env & binders & letbinding & Range.range
+ | Match    of env & option match_returns_ascription & branches & option residual_comp & cfg & Range.t
+ | Abs      of env & binders & env & option residual_comp & Range.t //the second env is the first one extended with the binders, for reducing the option lcomp
+ | App      of env & term & aqual & Range.t
+ | CBVApp   of env & term & aqual & Range.t
+ | Meta     of env & S.metadata & Range.t
+ | Let      of env & binders & letbinding & Range.t
 type stack = list stack_elt
 
 let head_of t = let hd, _ = U.head_and_args_full t in hd
@@ -2899,7 +2899,7 @@ let ghost_to_pure_lcomp2 env (lc1, lc2) =
        then ghost_to_pure_lcomp env lc1, lc2
        else lc1, lc2
 
-let warn_norm_failure (r:Range.range) (e:exn) : unit =
+let warn_norm_failure (r:Range.t) (e:exn) : unit =
   Errors.log_issue r Errors.Warning_NormalizationFailure (BU.format1 "Normalization failed with error %s\n" (BU.message_of_exn e))
 
 let term_to_doc env t =

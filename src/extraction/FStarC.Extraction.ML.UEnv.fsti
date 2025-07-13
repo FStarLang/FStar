@@ -77,12 +77,12 @@ val new_uenv : e:TypeChecker.Env.env -> uenv
 
 (** Lookup a top-level term identifier. Raises an error/warning when the
 FV has been erased, using the given range. *)
-val try_lookup_fv: Range.range -> g:uenv -> fv:fv -> option exp_binding
+val try_lookup_fv: Range.t -> g:uenv -> fv:fv -> option exp_binding
 
 (* As above, but will abort if the variable is not found or was erased.
 Only use this for variables that must be in the environment, such as
 definitions in Prims. *)
-val lookup_fv: Range.range -> g:uenv -> fv:fv -> exp_binding
+val lookup_fv: Range.t -> g:uenv -> fv:fv -> exp_binding
 
 (** Lookup a local term or type variable *)
 val lookup_bv: g:uenv -> bv: bv -> ty_or_exp_b

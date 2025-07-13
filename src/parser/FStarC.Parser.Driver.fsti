@@ -30,4 +30,4 @@ type fragment =
 val parse_fragment : ParseIt.lang_opts -> ParseIt.input_frag -> fragment
 
 (* Returns a non-desugared AST (as in [parser/ast.fs]) or aborts. *)
-val parse_file : string -> AST.file & list (string & Range.range)
+val parse_file : string -> AST.file & list (string & Range.t)

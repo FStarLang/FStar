@@ -85,7 +85,7 @@ let err_ill_typed_application env (t : term) mlhead (args : args) (ty : mlty) =
                 (Code.string_of_mlty (current_module_of_uenv env) ty)
                 (show args))
 
-let err_ill_typed_erasure env (pos:Range.range) (ty : mlty) =
+let err_ill_typed_erasure env (pos:Range.t) (ty : mlty) =
     Errors.raise_error pos Fatal_IllTyped
        (BU.format1 "Erased value found where a value of type %s was expected"
                   (Code.string_of_mlty (current_module_of_uenv env) ty))
@@ -104,7 +104,7 @@ let err_unexpected_eff env (t:term) ty f0 f1 =
         prefix 4 1 (text "Expected effect") (arbitrary_string (eff_to_string f0)) ^/^
         prefix 4 1 (text "got effect") (arbitrary_string (eff_to_string f1))]
 
-let err_cannot_extract_effect (l:lident) (r:Range.range) (reason:string) (ctxt:string) =
+let err_cannot_extract_effect (l:lident) (r:Range.t) (reason:string) (ctxt:string) =
   Errors.raise_error r Errors.Fatal_UnexpectedEffect [
     Errors.text <|
      BU.format3 "Cannot extract effect %s because %s (when extracting %s)"
@@ -521,7 +521,7 @@ let maybe_eta_expand_coercion g expect e =
   Otherwise, we often end up with coercions like (Obj.magic (fun x -> e) : a -> b) : a -> c
   Whereas with this optimization we produce (fun x -> Obj.magic (e : b) : c)  : a -> c
 *)
-let apply_coercion (pos:Range.range) (g:uenv) (e:mlexpr) (ty:mlty) (expect:mlty) : mlexpr =
+let apply_coercion (pos:Range.t) (g:uenv) (e:mlexpr) (ty:mlty) (expect:mlty) : mlexpr =
     if Util.codegen_fsharp()
     then //magics are not always sound in F#; warn
       FStarC.Errors.log_issue pos Errors.Warning_NoMagicInFSharp [

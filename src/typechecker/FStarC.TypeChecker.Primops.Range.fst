@@ -14,9 +14,9 @@ module Z = FStarC.BigInt
 (* Range ops *)
 
 (* this type only here to use typeclass hackery *)
-type unsealedRange = | U of Range.range
+type unsealedRange = | U of Range.t
 
-let mk_range (fn : string) (from_l from_c to_l to_c : Z.t) : Range.range =
+let mk_range (fn : string) (from_l from_c to_l to_c : Z.t) : Range.t =
   Range.mk_range fn (mk_pos (Z.to_int_fs from_l) (Z.to_int_fs from_c))
                     (mk_pos (Z.to_int_fs to_l) (Z.to_int_fs to_c))
 

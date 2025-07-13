@@ -24,7 +24,7 @@ type tf =
 instance e_tf : Syntax.Embeddings.embedding tf =
   let ty = U.fvar_const PC.prop_lid in
   let emb_t_prop = ET_app(PC.prop_lid |> Ident.string_of_lid, []) in
-  let em (p:tf) (rng:Range.range) _shadow _norm : term =
+  let em (p:tf) (rng:Range.t) _shadow _norm : term =
     match p with
     | T -> U.t_true
     | F -> U.t_false

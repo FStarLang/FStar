@@ -31,7 +31,7 @@ open FStarC.Ident
 type name = list string
 type typ  = term
 type binders = list binder
-type ident = string & Range.range
+type ident = string & Range.t
 type univ_name = ident
 
 type vconst =
@@ -40,7 +40,7 @@ type vconst =
     | C_True
     | C_False
     | C_String of string
-    | C_Range of Range.range
+    | C_Range of Range.t
     | C_Reify
     | C_Reflect of name
 
@@ -81,7 +81,7 @@ type universe_view =
   | Uv_Succ : universe -> universe_view
   | Uv_Max  : universes -> universe_view
   | Uv_BVar : Z.t -> universe_view
-  | Uv_Name : (string & Range.range) -> universe_view
+  | Uv_Name : (string & Range.t) -> universe_view
   | Uv_Unif : universe_uvar -> universe_view
   | Uv_Unk  : universe_view
 

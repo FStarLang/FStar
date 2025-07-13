@@ -926,7 +926,7 @@ let e_norm_step : embedding NormSteps.norm_step =
         emb_t_norm_step
 
 let e_vconfig =
-    let em (vcfg:vconfig) (rng:Range.range) _shadow norm : term =
+    let em (vcfg:vconfig) (rng:Range.t) _shadow norm : term =
       (* The order is very important here, even if this is a record. *)
       S.mk_Tm_app (tdataconstr PC.mkvconfig_lid) // TODO: should this be a record constructor? does it matter?
                   [S.as_arg (embed vcfg.initial_fuel                              rng None norm);
@@ -1205,8 +1205,8 @@ let e_sealed (ea : embedding 'a) : Tot (embedding (Sealed.sealed 'a)) =
 
 (*
  * Embed a range as a FStar.Range.__range
- * The user usually manipulates a FStar.Range.range = sealed __range
- * For embedding an actual FStar.Range.range, we compose this (automatically
+ * The user usually manipulates a FStar.Range.t = sealed __range
+ * For embedding an actual FStar.Range.t, we compose this (automatically
  * via typeclass resolution) with e_sealed.
  *)
 let e___range =
@@ -1227,7 +1227,7 @@ let e___range =
 
 (* This is an odd one. We embed ranges as sealed, but we don't want to use the Sealed.sealed
 type internally, so we "hack" it like this. *)
-let e_range : embedding Range.range =
+let e_range : embedding Range.t =
   embed_as (e_sealed e___range) Sealed.unseal Sealed.seal None
 
 let e_issue : embedding Err.issue = e_lazy Lazy_issue (S.fvar PC.issue_lid None)

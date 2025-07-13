@@ -385,10 +385,10 @@ let range_of_ropt = function
     | None -> dummyRange
     | Some r -> r
 
-let gen_bv' (id : ident) (r : option Range.range) (t : typ) : bv =
+let gen_bv' (id : ident) (r : option Range.t) (t : typ) : bv =
   {ppname=id; index=GS.next_id(); sort=t}
 
-let gen_bv (s : string) (r : option Range.range) (t : typ) : bv =
+let gen_bv (s : string) (r : option Range.t) (t : typ) : bv =
   let id = mk_ident(s, range_of_ropt r) in
   gen_bv' id r t
 
@@ -461,7 +461,7 @@ let fvar_with_dd l dq =  fv_to_tm (lid_and_dd_as_fv l dq)
 let fvar l dq = fv_to_tm (lid_as_fv l dq)
 let lid_of_fv (fv:fv) = fv.fv_name.v
 let range_of_fv (fv:fv) = range_of_lid (lid_of_fv fv)
-let set_range_of_fv (fv:fv) (r:Range.range) =
+let set_range_of_fv (fv:fv) (r:Range.t) =
     {fv with fv_name={fv.fv_name with v=Ident.set_lid_range (lid_of_fv fv) r}}
 let has_simple_attribute (l: list term) s =
   List.existsb (function

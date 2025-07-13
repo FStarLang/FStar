@@ -325,7 +325,7 @@ let parse_stats (smt_stats : option smt_output_section) : z3statistics =
       statistics
 
 
-let smt_output_sections (log_file:option string) (r:Range.range) (lines:list string) : smt_output =
+let smt_output_sections (log_file:option string) (r:Range.t) (lines:list string) : smt_output =
     let rec until tag lines =
         match lines with
         | [] -> None
@@ -435,7 +435,7 @@ let refresh using_facts_from =
 let stop () =
     (!bg_z3_proc).refresh()
 
-let doZ3Exe (log_file:_) (r:Range.range) (fresh:bool) (input:string) (label_messages:error_labels) (queryid:string)
+let doZ3Exe (log_file:_) (r:Range.t) (fresh:bool) (input:string) (label_messages:error_labels) (queryid:string)
   (* returns initial and final statistics *)
   : z3status & z3statistics & z3statistics
 =
@@ -697,7 +697,7 @@ let cache_hit
 
 let z3_job
        (log_file:_)
-       (r:Range.range)
+       (r:Range.t)
        fresh
        (label_messages:error_labels)
        input
@@ -731,7 +731,7 @@ let z3_job
     z3result_log_file   = log_file }
 
 let ask_text
-    (r:Range.range)
+    (r:Range.t)
     (cache:option string)
     (label_messages:error_labels)
     (qry:list decl)
@@ -751,7 +751,7 @@ let ask_text
     input
 
 let ask
-    (r:Range.range)
+    (r:Range.t)
     (cache:option string)
     (label_messages:error_labels)
     (qry:list decl)

@@ -329,7 +329,7 @@ let add_implicits (i:implicits) : tac unit =
 let new_uvar (reason:string) (env:env) (typ:typ)
              (sc_opt:option should_check_uvar)
              (uvar_typedness_deps:list ctx_uvar)
-             (rng:Range.range) 
+             (rng:Range.t) 
   : tac (term & ctx_uvar) =
     let should_check = 
       match sc_opt with
@@ -342,7 +342,7 @@ let new_uvar (reason:string) (env:env) (typ:typ)
     bind (add_implicits (Listlike.to_list g_u.implicits)) (fun _ ->
     ret (u, fst ctx_uvar))
 
-let mk_irrelevant_goal (reason:string) (env:env) (phi:typ) (sc_opt:option should_check_uvar) (rng:Range.range) opts label : tac goal =
+let mk_irrelevant_goal (reason:string) (env:env) (phi:typ) (sc_opt:option should_check_uvar) (rng:Range.t) opts label : tac goal =
     let typ = U.mk_squash (env.universe_of env phi) phi in
     bind (new_uvar reason env typ sc_opt [] rng) (fun (_, ctx_uvar) ->
     let goal = mk_goal env ctx_uvar opts false label in
@@ -351,7 +351,7 @@ let mk_irrelevant_goal (reason:string) (env:env) (phi:typ) (sc_opt:option should
 let add_irrelevant_goal' (reason:string) (env:Env.env)
                          (phi:term) 
                          (sc_opt:option should_check_uvar)
-                         (rng:Range.range)
+                         (rng:Range.t)
                          (opts:FStarC.Options.optionstate)
                          (label:string) : tac unit =
     bind (mk_irrelevant_goal reason env phi sc_opt rng opts label) (fun goal ->
@@ -366,7 +366,7 @@ let add_irrelevant_goal (base_goal:goal) (reason:string)
 
 let goal_of_guard (reason:string) (e:Env.env)
                   (f:term) (sc_opt:option should_check_uvar)
-                  (rng:Range.range) : tac goal =
+                  (rng:Range.t) : tac goal =
   bind getopts (fun opts ->
   bind (mk_irrelevant_goal reason e f sc_opt rng opts "") (fun goal ->
   let goal = { goal with is_guard = true } in
