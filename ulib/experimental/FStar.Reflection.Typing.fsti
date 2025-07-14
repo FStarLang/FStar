@@ -1770,9 +1770,12 @@ type fstar_top_env = g:fstar_env {
   forall x. None? (lookup_bvar g x )
 }
 
-//
-// No universe polymorphism yet
-//
+// Note: even though the sigelt_typing judgement takes a list of universe
+// parameters, there is no way to exhibit typing judgements of terms
+// containing universe variables yet (without invoking admit).
+// TODO: expose push_univ_names/lookup_univ operations on environments, require
+// them for universe names in typing judgements, and extend
+// sigelt_has_type/dsl_tac_t with universe parameters.
 noeq
 type sigelt_typing : env -> sigelt -> Type0 =
   | ST_Let :
