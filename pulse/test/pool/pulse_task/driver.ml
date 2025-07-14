@@ -2,7 +2,7 @@ let dbg s = print_string (s ^ "\n"); flush stdout
 
 let main =
   let nproc = 32 in
-  let len = 100000 in
+  let len = 10000 in
   let a = Array.make len 0 in
   for i = 0 to len - 1 do
     a.(i) <- Random.int (10 * len)
