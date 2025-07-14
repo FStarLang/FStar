@@ -16,36 +16,32 @@
 module Pulse.Lib.Raise
 open FStar.ExtractAs
 
-// This is a re-export of FStar.Universe with better extraction rules and SMT patterns
+[@@Tactics.Typeclasses.tcclass]
+val raisable : Type u#(1 + max a b)
 
-(** [raise_t a] is an isomorphic copy of [a] (living in universe 'ua) in universe [max 'ua 'ub] **)
+[@@Tactics.Typeclasses.tcinstance]
+val raisable_inst : raisable u#a u#(max a b)
+
+(** [raise_t a] is an isomorphic copy of [a] (living in universe a) in universe [b] **)
 inline_for_extraction [@@extract_as (`(fun (t: Type u#a) -> t))]
-val raise_t ([@@@strictly_positive] t : Type u#a) : Type u#(max a b)
+val raise_t {| raisable u#a u#b |} (t : Type u#a) : Type u#b
 
 (** [raise_val x] injects a value [x] of type [a] to [raise_t a] **)
 inline_for_extraction [@@extract_as (`(fun (#a: Type u#a) (x: a) -> x))]
-val raise_val : #a:Type u#a -> x:a -> raise_t u#a u#b a
+val raise_val : #a:Type u#a -> {| raisable u#a u#b |} -> x:a -> raise_t u#a u#b a
 
 (** [downgrade_val x] projects a value [x] of type [raise_t a] to [a] **)
 inline_for_extraction [@@extract_as (`(fun (#a: Type u#a) (x: a) -> x))]
-val downgrade_val : #a:Type u#a -> x:raise_t u#a u#b a -> a
+val downgrade_val : #a:Type u#a -> {| raisable u#a u#b |} -> x:raise_t u#a u#b a -> a
 
-val downgrade_val_raise_val
-  (#a: Type u#a)
-  (x: a)
-: Lemma
-  (downgrade_val u#a u#b (raise_val x) == x)
-  [SMTPat (raise_val x)]
+val downgrade_val_raise_val (#a: Type u#a) {| raisable u#a u#b |} (x: a) :
+  Lemma (downgrade_val (raise_val x) == x) [SMTPat (raise_val x)]
 
-val raise_val_downgrade_val
-  (#a: Type u#a)
-  (x: raise_t u#a u#b a)
-: Lemma
-  (raise_val (downgrade_val x) == x)
-  [SMTPat (downgrade_val x)]
+val raise_val_downgrade_val (#a: Type u#a) {| raisable u#a u#b |} (x: raise_t u#a u#b a) : 
+  Lemma (raise_val (downgrade_val x) == x) [SMTPat (downgrade_val x)]
 
-let lift_dom #a #b (q:a -> b) : raise_t a -> b =
+let lift_dom (#a : Type u#a) {| raisable u#a u#b |} (#b: Type u#c) (q:a -> b) : raise_t u#a u#b a -> b =
   fun v -> q (downgrade_val v)
 
-let lift_codom #a #b (q:a -> b) : a -> raise_t b =
+let lift_codom (#a: Type u#a) (#b: Type u#b) {| raisable u#b u#c |} (q:a -> b) : a -> raise_t u#b u#c b =
   fun v -> raise_val (q v)

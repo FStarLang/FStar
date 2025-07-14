@@ -3,7 +3,7 @@ open FStar.PCM
 open FStar.Ghost
 module U = Pulse.Lib.Raise
 
-let raise (#a:Type u#a) (p:pcm a)
+let raise (#a:Type u#a) (p:pcm a) {| U.raisable u#a u#b |}
 : pcm (U.raise_t u#a u#b a)
 = let core : pcm' (U.raise_t u#a u#b a) = {
     composable = (fun x y -> composable p (U.downgrade_val x) (U.downgrade_val y));
@@ -21,7 +21,7 @@ let raise (#a:Type u#a) (p:pcm a)
   p
 
 let raise_compatible
-    (#a:Type u#a) (p:pcm a) (x y:a)
+    (#a:Type u#a) {| U.raisable u#a u#b |} (p:pcm a) (x y:a)
 : Lemma 
   (requires compatible p x y)
   (ensures compatible (raise u#a u#b p) (U.raise_val x) (U.raise_val y))
@@ -35,7 +35,7 @@ let raise_compatible
  
     
 let raise_refine
-    (#a:Type u#a) (p:pcm a)
+    (#a:Type u#a) {| U.raisable u#a u#b |} (p:pcm a)
     (xa:FStar.Ghost.erased a)
     (f:(va:a{compatible p xa va}
         -> GTot (ya:a{compatible p ya va /\
@@ -53,7 +53,7 @@ let raise_refine
   y
 
   let raise_upd
-      (#a:Type u#a) (#p:pcm a) (#x #y: erased a)
+      (#a:Type u#a) {| U.raisable u#a u#b |} (#p:pcm a) (#x #y: erased a)
       (f:frame_preserving_upd p x y)
   : frame_preserving_upd (raise u#a u#b p) 
       (U.raise_val (reveal x)) (U.raise_val (reveal y))

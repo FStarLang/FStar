@@ -538,13 +538,13 @@ let intro_exists (#opened_invariants:_) (#a:_) (p:a -> slprop) (x:erased a)
 let raise_exists (#opened_invariants:_) (#a:Type u#a) (p:a -> slprop)
 : ghost_act unit opened_invariants
     (op_exists_Star p)
-    (fun _a -> op_exists_Star #(U.raise_t u#a u#b a) (U.lift_dom u#a u#_ u#b p))
+    (fun _a -> op_exists_Star #(U.raise_t u#a u#b a) (U.lift_dom u#a u#b u#_ p))
 = fun frame s0 ->
     let x, s1 = witness_exists #opened_invariants #a p frame s0 in
     sep_laws();
     let m1, m2 = split_mem (p x) (frame `star` mem_invariant opened_invariants s1) s1 in
     assert (interp ((U.lift_dom p) (U.raise_val u#a u#b (reveal x))) m1);
-    interp_exists (U.lift_dom u#a u#_ u#b p);
+    interp_exists (U.lift_dom u#a u#b u#_ p);
     assert (interp (op_exists_Star #(U.raise_t u#a u#b a) (U.lift_dom p)) m1);
     star_equiv (op_exists_Star #(U.raise_t u#a u#b a) (U.lift_dom p)) (frame `star` mem_invariant opened_invariants s1) s1;
     (), s1

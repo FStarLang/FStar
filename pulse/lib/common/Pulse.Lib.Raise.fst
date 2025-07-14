@@ -15,8 +15,24 @@
 *)
 module Pulse.Lib.Raise
 
-let raise_t = Universe.raise_t
-let raise_val = Universe.raise_val
-let downgrade_val = Universe.downgrade_val
-let downgrade_val_raise_val = Universe.downgrade_val_raise_val
-let raise_val_downgrade_val = Universe.raise_val_downgrade_val
+noeq type raisable = {
+  f: ([@@@strictly_positive] Type u#a -> Type u#b);
+  raise_val: (#t: Type u#a -> x: t -> f t);
+  downgrade_val: (#t: Type u#a -> x: f t -> t);
+  down_raise: (#t: Type u#a -> x: t -> squash (downgrade_val (raise_val x) == x));
+  raise_down: (#t: Type u#a -> x: f t -> squash (raise_val (downgrade_val x) == x));
+}
+
+let raisable_inst = {
+  f = Universe.raise_t;
+  raise_val = Universe.raise_val;
+  downgrade_val = Universe.downgrade_val;
+  down_raise = Universe.downgrade_val_raise_val;
+  raise_down = Universe.raise_val_downgrade_val;
+}
+
+let raise_t #inst t = inst.f t
+let raise_val #t #inst x = inst.raise_val x
+let downgrade_val #t #inst x = inst.downgrade_val x
+let downgrade_val_raise_val #_ #inst x = inst.down_raise x
+let raise_val_downgrade_val #_ #inst x = inst.raise_down x

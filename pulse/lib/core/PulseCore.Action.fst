@@ -237,6 +237,10 @@ let lift_pre_act0_act (#a: Type u#0) #r #opens #pre #post
     let x, m1 = m #ictx m0 frame in
     U.raise_val x, m1 |)
 
+instance raisable14 : U.raisable u#1 u#4 = U.raisable_inst u#1 u#4
+instance raisable24 : U.raisable u#2 u#4 = U.raisable_inst u#2 u#4
+instance raisable34 : U.raisable u#3 u#4 = U.raisable_inst u#3 u#4
+
 let lift_pre_act1_act (#a: Type u#1) #r #opens #pre #post
   (m: (#ictx:inames_disj opens -> pre_act a r ictx pre post))
 : act a r opens pre post

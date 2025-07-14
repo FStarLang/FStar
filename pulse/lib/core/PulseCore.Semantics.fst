@@ -274,7 +274,7 @@ let raise_action
       step = (fun frame ->
                ST.weaken <|
                ST.bind (a.step frame) <|
-               (fun x -> ST.return <| U.raise_val u#a u#(max a b) x))
+               (fun x -> ST.return <| U.raise_val u#a u#(max a b) #_ #U.raisable_inst x))
    }
 
 let act
