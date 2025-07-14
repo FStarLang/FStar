@@ -49,7 +49,6 @@ module TcInductive = FStarC.TypeChecker.TcInductive
 module TcEff = FStarC.TypeChecker.TcEffect
 module PC = FStarC.Parser.Const
 module EMB = FStarC.Syntax.Embeddings
-module ToSyntax = FStarC.ToSyntax.ToSyntax
 
 let dbg_TwoPhases = Debug.get_toggle "TwoPhases"
 let dbg_IdInfoOn  = Debug.get_toggle "IdInfoOn"
@@ -99,7 +98,7 @@ let log env = (Options.log_types()) &&  not(lid_equals PC.prims_lid (Env.current
 
 (*****************Type-checking the signature of a module*****************************)
 
-let tc_type_common (env:env) ((uvs, t):tscheme) (expected_typ:typ) (r:Range.range) :tscheme =
+let tc_type_common (env:env) ((uvs, t):tscheme) (expected_typ:typ) (r:Range.t) :tscheme =
   let uvs, t = SS.open_univ_vars uvs t in
   let env = Env.push_univ_vars env uvs in
   let t = tc_check_trivial_guard env t expected_typ in
@@ -110,10 +109,10 @@ let tc_type_common (env:env) ((uvs, t):tscheme) (expected_typ:typ) (r:Range.rang
     uvs, t
   else uvs, t |> N.remove_uvar_solutions env |> SS.close_univ_vars uvs
 
-let tc_declare_typ (env:env) (ts:tscheme) (r:Range.range) :tscheme =
+let tc_declare_typ (env:env) (ts:tscheme) (r:Range.t) :tscheme =
   tc_type_common env ts (U.type_u () |> fst) r
 
-let tc_assume (env:env) (ts:tscheme) (r:Range.range) :tscheme =
+let tc_assume (env:env) (ts:tscheme) (r:Range.t) :tscheme =
   //AR: this might seem same as tc_declare_typ but come prop, this will change
   tc_type_common env ts (U.type_u () |> fst) r
 

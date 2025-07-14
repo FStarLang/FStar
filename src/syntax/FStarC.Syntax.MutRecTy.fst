@@ -38,7 +38,7 @@ let disentangle_abbrevs_from_bundle
     (sigelts: list sigelt)
     (quals:   list qualifier)
     (members: list lident)
-    (rng:   FStarC.Range.range)
+    (rng:   FStarC.Range.t)
     : sigelt & list sigelt =
 
    (* NS: Attributes on the type constructors and abbreviation are gathered,

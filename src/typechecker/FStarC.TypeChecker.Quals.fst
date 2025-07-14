@@ -93,12 +93,14 @@ let check_sigelt_quals_pre (env:FStarC.TypeChecker.Env.env) se =
         || q2=NoExtract
 
       | New -> //no definition provided
-        inferred q2 || visibility q2 || assumption q2
+        inferred q2 || visibility q2 || assumption q2 ||
+        q2=Inline_for_extraction || q2=NoExtract
 
       | Inline_for_extraction ->
          q2=Logic || visibility q2 || reducibility q2 ||
          reification q2 || inferred q2 || has_eq q2 ||
-         (env.is_iface && q2=Assumption) || q2=NoExtract
+         (env.is_iface && q2=Assumption) || q2=NoExtract ||
+         q2=New
 
       | Unfold_for_unification_and_vcgen
       | Visible_default
@@ -199,7 +201,7 @@ let check_sigelt_quals_pre (env:FStarC.TypeChecker.Env.env) se =
         then err []
       | _ -> ()
 
-let check_erasable env quals (r:Range.range) se =
+let check_erasable env quals (r:Range.t) se =
   let lids = U.lids_of_sigelt se in
   let val_exists =
     lids |> BU.for_some (fun l -> Option.isSome (Env.try_lookup_val_decl env l))
@@ -300,7 +302,7 @@ let check_must_erase_attribute env se =
   end
   | _ -> ()
 
-let check_typeclass_instance_attribute env (rng:Range.range) se =
+let check_typeclass_instance_attribute env (rng:Range.t) se =
   let is_tc_instance =
       se.sigattrs |> BU.for_some
         (fun t ->

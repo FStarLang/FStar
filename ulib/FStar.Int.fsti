@@ -177,10 +177,11 @@ let mod (#n:pos) (a:int_t n) (b:int_t n{b <> 0}) : Tot (int_t n) =
   a - ((a/b) * b)
 
 (* Comparison operators *)
-let eq #n (a:int_t n) (b:int_t n) : Tot bool = a = b
-let gt #n (a:int_t n) (b:int_t n) : Tot bool = a > b
+let eq  #n (a:int_t n) (b:int_t n) : Tot bool = a = b
+let ne  #n (a:int_t n) (b:int_t n) : Tot bool = a <> b
+let gt  #n (a:int_t n) (b:int_t n) : Tot bool = a > b
 let gte #n (a:int_t n) (b:int_t n) : Tot bool = a >= b
-let lt #n (a:int_t n) (b:int_t n) : Tot bool = a < b
+let lt  #n (a:int_t n) (b:int_t n) : Tot bool = a < b
 let lte #n (a:int_t n) (b:int_t n) : Tot bool = a <= b
 
 /// Casts

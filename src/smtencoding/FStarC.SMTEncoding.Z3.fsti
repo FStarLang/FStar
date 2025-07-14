@@ -33,6 +33,7 @@ type z3statistics = SMap.t string
 type z3result = {
       z3result_status      : z3status;
       z3result_time        : int;
+      z3result_initial_statistics : z3statistics;
       z3result_statistics  : z3statistics;
       z3result_query_hash  : option string;
       z3result_log_file    : option string
@@ -51,7 +52,7 @@ val status_string_and_errors : z3status -> string & error_labels
 val giveZ3 : list decl -> unit
 
 val ask_text
-       : r:Range.range
+       : r:Range.t
        -> cache:(option string) // hash
        -> label_messages:error_labels
        -> qry:list decl
@@ -59,7 +60,7 @@ val ask_text
        -> core:option U.unsat_core
        -> string
 
-val ask: r:Range.range
+val ask: r:Range.t
        -> cache:option string // hash
        -> label_messages:error_labels
        -> qry:list decl

@@ -14,9 +14,10 @@
   limitations under the License.
 *)
 module FStarC.ToSyntax.ToSyntax
+
+open FStarC
 open FStarC.Effect
 open FStarC.List
-open FStarC
 open FStarC.Util
 open FStarC.Syntax
 open FStarC.Syntax.Syntax
@@ -27,18 +28,17 @@ open FStarC.Parser.AST
 open FStarC.Ident
 open FStarC.Const
 open FStarC.Errors
-open FStarC.Syntax
 open FStarC.Class.Setlike
 open FStarC.Class.Show
 open FStarC.Syntax.Print {}
 
-module C = FStarC.Parser.Const
-module S = FStarC.Syntax.Syntax
-module U = FStarC.Syntax.Util
-module BU = FStarC.Util
+module C   = FStarC.Parser.Const
+module S   = FStarC.Syntax.Syntax
+module U   = FStarC.Syntax.Util
+module BU  = FStarC.Util
 module Env = FStarC.Syntax.DsEnv
 module EMB = FStarC.Syntax.Embeddings
-module SS = FStarC.Syntax.Subst
+module SS  = FStarC.Syntax.Subst
 
 let extension_tosyntax_table 
 : SMap.t extension_tosyntax_decl_t
@@ -58,7 +58,7 @@ let dbg_ToSyntax = Debug.get_toggle "ToSyntax"
 
 type antiquotations_temp = list (bv & S.term)
 
-let tun_r (r:Range.range) : S.term = { tun with pos = r }
+let tun_r (r:Range.t) : S.term = { tun with pos = r }
 
 type annotated_pat = Syntax.pat & list (bv & Syntax.typ & list S.term)
 
@@ -140,7 +140,7 @@ let desugar_disjunctive_pattern annotated_pats when_opt branch =
         U.branch(pat, when_opt, branch)
     )
 
-let trans_qual (r:Range.range) maybe_effect_id = function
+let trans_qual (r:Range.t) maybe_effect_id = function
   | AST.Private ->       S.Private
   | AST.Assumption ->    S.Assumption
   | AST.Unfold_for_unification_and_vcgen -> S.Unfold_for_unification_and_vcgen
@@ -529,6 +529,7 @@ let rec gather_pattern_bound_vars_maybe_top (acc : FlatSet.t ident) p =
   | PatConst _
   | PatVQuote _
   | PatName _
+  | PatRest
   | PatOp _ -> acc
   | PatApp (phead, pats) -> gather_pattern_bound_vars_from_list (phead::pats)
   | PatTvar (x, _, _)
@@ -760,7 +761,7 @@ let check_no_aq (aq : antiquotations_temp) : unit =
         raise_error e Errors.Fatal_UnexpectedAntiquotation
           (BU.format1 "Unexpected antiquotation: `#(%s)" (show e))
 
-let check_linear_pattern_variables pats (r:Range.range) =
+let check_linear_pattern_variables pats (r:Range.t) =
   // returns the set of pattern variables
   let rec pat_vars p : RBSet.t bv =
     match p.v with
@@ -806,8 +807,8 @@ let check_linear_pattern_variables pats (r:Range.range) =
     in
     List.iter aux ps
 
-let smt_pat_lid (r:Range.range) = Ident.set_lid_range C.smtpat_lid r
-let smt_pat_or_lid (r:Range.range) = Ident.set_lid_range C.smtpatOr_lid r
+let smt_pat_lid (r:Range.t) = Ident.set_lid_range C.smtpat_lid r
+let smt_pat_or_lid (r:Range.t) = Ident.set_lid_range C.smtpatOr_lid r
 
 // [hoist_pat_ascription' pat] pulls [PatAscribed] nodes out of [pat]
 // and construct a tuple that consists in a non-ascribed pattern and a
@@ -837,6 +838,23 @@ let rec hoist_pat_ascription' (pat: pattern): pattern & option term
   // compose (at least not in a simple way) sub ascriptions, thus we
   // return the pattern directly
   | _ -> pat, None
+
+let rest_pat_for_lid (env : env_t) (l : lid) : list pattern =
+  let l, se = fail_or env (try_lookup_datacon env) l in
+  match se.sigel with
+  | Sig_datacon { t; num_ty_params } ->
+    let bs, _ = U.arrow_formals t in
+    (* drop the type parameters *)
+    let _, bs = List.splitAt num_ty_params bs in
+    bs |> List.map (fun b ->
+      let q =
+        match b.binder_qual with
+        | Some (Syntax.Implicit _) -> Some Implicit
+        | _ -> None
+      in
+      mk_pattern (PatWild (q, [])) (pos l))
+  | _ ->
+    failwith "unexpected: try_lookup_datacon returned odd sigelt"
 
 let hoist_pat_ascription (pat: pattern): pattern
   = let pat, typ = hoist_pat_ascription' pat in
@@ -934,16 +952,35 @@ let rec desugar_data_pat
         loc, aqs, env, LocalBinder(xbv, aq, attrs), pos <| Pat_var xbv, []
 
       | PatName l ->
-        let l = fail_or env (try_lookup_datacon env) l in
+        let l, _ = fail_or env (try_lookup_datacon env) l in
         let x = S.new_bv (Some p.prange) (tun_r p.prange) in
         loc, aqs, env, LocalBinder(x,  None, []), pos <| Pat_cons(l, None, []), []
+
+      (* Detect matches of the form
+           | C ..
+         We simply elaborate the pattern to `C _ _` (with
+         as many underscores as needed).
+      *)
+      | PatApp({pat=PatName l}, [{ pat = PatRest }]) ->
+        let PatApp (hd, _) = p.pat in
+        let argpats = rest_pat_for_lid env l in
+        let newpat : pattern =
+          mk_pattern (PatApp (hd, argpats)) p.prange
+        in
+        aux' top loc aqs env newpat
+
+      | PatRest ->
+        raise_error p Errors.Fatal_UnexpectedPattern [
+          text "Unexpected pattern.";
+          text "Using `..` is only allowed as argument to a data constructor, e.g. `C ..`.";
+        ]
 
       | PatApp({pat=PatName l}, args) ->
         let loc, aqs, env, annots, args = List.fold_right (fun arg (loc, aqs, env, annots, args) ->
           let loc, aqs, env, b, arg, ans = aux loc aqs env arg in
           let imp = is_implicit b in
           (loc, aqs, env, ans@annots, (arg, imp)::args)) args (loc, aqs, env, [], []) in
-        let l = fail_or env  (try_lookup_datacon env) l in
+        let l, _ = fail_or env  (try_lookup_datacon env) l in
         let x = S.new_bv (Some p.prange) (tun_r p.prange) in
         loc, aqs, env, LocalBinder(x, None, []), pos <| Pat_cons(l, None, args), annots
 
@@ -1307,7 +1344,7 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term & an
 
     | Construct(l, args) ->
         begin match Env.try_lookup_datacon env l with
-        | Some head ->
+        | Some (head, _) ->
             let head = mk (Tm_fvar head) in
             begin match args with
               | [] -> head, noaqs
@@ -1518,6 +1555,10 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term & an
       S.extend_app head arg top.range, aq1@aq2
 
     | Bind(x, t1, t2) ->
+      log_issue top.range Warning_DeprecatedLightDoNotation [
+        text "The lightweight do notation [x <-- y; z] or [x ;; z] is deprecated.";
+        text "Use let operators (i.e. [let* x = y in z] or [y ;* z], [*] being any sequence of operator characters) instead.";
+      ];
       let xpat = AST.mk_pattern (AST.PatVar(x, None, [])) (range_of_id x) in
       let k = AST.mk_term (Abs([xpat], t2)) t2.range t2.level in
       let bind_lid = Ident.lid_of_path ["bind"] (range_of_id x) in
@@ -3276,7 +3317,7 @@ let push_reflect_effect env quals (effect_name:Ident.lid) range =
          Env.push_sigelt env refl_decl // FIXME: Add docs to refl_decl?
     else env
 
-let parse_attr_with_list warn (at:S.term) (head:lident) : option (list int & Range.range) & bool =
+let parse_attr_with_list warn (at:S.term) (head:lident) : option (list int & Range.t) & bool =
   let warn () =
     if warn then
       Errors.log_issue at Errors.Warning_UnappliedFail
@@ -3307,7 +3348,7 @@ let parse_attr_with_list warn (at:S.term) (head:lident) : option (list int & Ran
 
 
 // If this is an expect_failure attribute, return the listed errors and whether it's a expect_lax_failure or not
-let get_fail_attr1 warn (at : S.term) : option (list int & Range.range & bool) =
+let get_fail_attr1 warn (at : S.term) : option (list int & Range.t & bool) =
     let rebind res b =
       match res with
       | None -> None
@@ -3319,7 +3360,7 @@ let get_fail_attr1 warn (at : S.term) : option (list int & Range.range & bool) =
          rebind res true
 
 // Traverse a list of attributes to find all expect_failures and combine them
-let get_fail_attr warn (ats : list S.term) : option (list int & Range.range & bool) =
+let get_fail_attr warn (ats : list S.term) : option (list int & Range.t & bool) =
     let comb f1 f2 =
       match f1, f2 with
       | Some (e1, rng1, l1), Some (e2, rng2, l2) ->
@@ -3333,7 +3374,7 @@ let get_fail_attr warn (ats : list S.term) : option (list int & Range.range & bo
     in
     List.fold_right (fun at acc -> comb (get_fail_attr1 warn at) acc) ats None
 
-let lookup_effect_lid env (l:lident) (r:Range.range) : S.eff_decl =
+let lookup_effect_lid env (l:lident) (r:Range.t) : S.eff_decl =
   match Env.try_lookup_effect_defn env l with
   | None ->
     raise_error r Errors.Fatal_EffectNotFound

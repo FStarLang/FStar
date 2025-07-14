@@ -740,6 +740,7 @@ and pat_to_string x = match x.pat with
   | PatOp op ->  Util.format1 "(%s)" (Ident.string_of_id op)
   | PatAscribed(p,(t, None)) -> Util.format2 "(%s:%s)" (p |> pat_to_string) (t |> term_to_string)
   | PatAscribed(p,(t, Some tac)) -> Util.format3 "(%s:%s by %s)" (p |> pat_to_string) (t |> term_to_string) (tac |> term_to_string)
+  | PatRest -> ".."
 
 and attrs_opt_to_string = function
   | None -> ""

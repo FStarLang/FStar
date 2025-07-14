@@ -647,7 +647,7 @@ let fresh_constructor rng (name, arg_sorts, sort, id) =
   Assume a
 
 let injective_constructor
-  (rng:Range.range)
+  (rng:Range.t)
   ((name, fields, sort):(string & list constructor_field & sort)) :list decl =
     let n_bvars = List.length fields in
     let bvar_name i = "x_" ^ string_of_int i in

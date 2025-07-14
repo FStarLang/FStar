@@ -149,7 +149,7 @@ let check_no_escape (head_opt : option term)
    So, this function checks that the implicit flags match and takes
    the attributes from the binding site, i.e., expected_aq.
 *)
-let check_expected_aqual_for_binder (aq:aqual) (b:binder) (pos:Range.range) : aqual =
+let check_expected_aqual_for_binder (aq:aqual) (b:binder) (pos:Range.t) : aqual =
   let expected_aq = U.aqual_of_binder b in
   // All we check is that the "plicity" matches, and
   // keep attributes of the binder.
@@ -426,7 +426,7 @@ let rec get_pat_vars' all (andlist : bool) (pats:term) : FlatSet.t bv =
 
 let get_pat_vars all pats = get_pat_vars' all false pats
 
-let check_pat_fvs (rng:Range.range) env pats bs =
+let check_pat_fvs (rng:Range.t) env pats bs =
     let pat_vars = get_pat_vars (List.map (fun b -> b.binder_bv) bs) (N.normalize [Env.Beta] env pats) in
     begin match bs |> BU.find_opt (fun ({binder_bv=b}) -> not (mem b pat_vars)) with
         | None -> ()
@@ -3865,13 +3865,14 @@ and check_top_level_let env e =
                  g1, e1, univs, TcComm.lcomp_of_comp c1
          in
 
-         (* Check that it doesn't have a top-level effect; warn if it does *)
+         (* Check that it doesn't have a top-level effect; warn if it does.
+            Do not warn in phase1 to avoid double errors.*)
          let e2, c1 =
            let ok, c1 = TcUtil.check_top_level (Env.push_univ_vars env univ_vars) g1 c1 in //check that it has no effect and a trivial pre-condition
            if ok
            then e2, c1
            else (
-             if not (Options.ml_ish ()) then
+             if not (Options.ml_ish ()) && not env.phase1 then
                Err.warn_top_level_effect (Env.get_range env); // maybe warn
              mk (Tm_meta {tm=e2; meta=Meta_desugared Masked_effect}) e2.pos, c1 //and tag it as masking an effect
            )

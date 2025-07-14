@@ -49,6 +49,10 @@ module TEQ = FStarC.TypeChecker.TermEqAndSimplify
 module PO = FStarC.TypeChecker.Primops
 open FStarC.TypeChecker.Normalize.Unfolding
 
+(* Max number of warnings to print in a single run.
+Initialized in Normalize.normalize *)
+let plugin_unfold_warn_ctr : ref int = mk_ref 0
+
 let dbg_univ_norm = Debug.get_toggle "univ_norm"
 let dbg_NormRebuild = Debug.get_toggle "NormRebuild"
 
@@ -112,15 +116,15 @@ let dummy () : (option binder & closure & memo subst_t) = (None, Dummy, fresh_me
 type branches = list (pat & option term & term)
 
 type stack_elt =
- | Arg      of closure & aqual & Range.range
- | UnivArgs of list universe & Range.range // NB: universes must be values already, no bvars allowed
+ | Arg      of closure & aqual & Range.t
+ | UnivArgs of list universe & Range.t // NB: universes must be values already, no bvars allowed
  | MemoLazy of cfg_memo (env & term)
- | Match    of env & option match_returns_ascription & branches & option residual_comp & cfg & Range.range
- | Abs      of env & binders & env & option residual_comp & Range.range //the second env is the first one extended with the binders, for reducing the option lcomp
- | App      of env & term & aqual & Range.range
- | CBVApp   of env & term & aqual & Range.range
- | Meta     of env & S.metadata & Range.range
- | Let      of env & binders & letbinding & Range.range
+ | Match    of env & option match_returns_ascription & branches & option residual_comp & cfg & Range.t
+ | Abs      of env & binders & env & option residual_comp & Range.t //the second env is the first one extended with the binders, for reducing the option lcomp
+ | App      of env & term & aqual & Range.t
+ | CBVApp   of env & term & aqual & Range.t
+ | Meta     of env & S.metadata & Range.t
+ | Let      of env & binders & letbinding & Range.t
 type stack = list stack_elt
 
 let head_of t = let hd, _ = U.head_and_args_full t in hd
@@ -1384,6 +1388,23 @@ let rec norm : cfg -> env -> stack -> term -> term =
 and do_unfold_fv (cfg:Cfg.cfg) stack (t0:term) (qninfo : qninfo) (f:fv) : term =
     // Second, try to unfold to the definition itself.
     let defn () = Env.lookup_definition_qninfo cfg.delta_level f.fv_name.v qninfo in
+    let is_plugin () =
+      match qninfo with
+      | Some (Inr (se, None), _) -> BU.for_some (U.is_fvar PC.plugin_attr) se.sigattrs  // it is a plugin
+      | _ -> false
+    in
+    let maybe_warn_if_unfolding_plugin () =
+     if Some? cfg.steps.dont_unfold_attr                 // If we are running a tactic (probably..),
+         && not (Options.no_plugins ())                   // haven't explicitly disabled plugins
+         && !plugin_unfold_warn_ctr > 0                   // we haven't raised too many warnings
+         && is_plugin ()                                  // and it is in fact a plugin
+     then begin
+       // then warn about it
+       let msg = BU.format1 "Unfolding name which is marked as a plugin: %s" (show f) in
+       Errors.log_issue f.fv_name.p Errors.Warning_UnfoldPlugin msg;
+       plugin_unfold_warn_ctr := !plugin_unfold_warn_ctr - 1
+     end
+    in
     // First, try to unfold to the implementation specified in the extract_as attribute (when doing extraction)
     let defn () =
       if cfg.steps.for_extraction then
@@ -1405,6 +1426,7 @@ and do_unfold_fv (cfg:Cfg.cfg) stack (t0:term) (qninfo : qninfo) (f:fv) : term =
        | Some (us, t) ->
          begin
          log_unfolding cfg (fun () -> BU.print2 " >> Unfolded %s to %s\n" (show t0) (show t));
+         maybe_warn_if_unfolding_plugin ();
          // preserve the range info on the returned term
          let t =
            if cfg.steps.unfold_until = Some delta_constant
@@ -2877,7 +2899,7 @@ let ghost_to_pure_lcomp2 env (lc1, lc2) =
        then ghost_to_pure_lcomp env lc1, lc2
        else lc1, lc2
 
-let warn_norm_failure (r:Range.range) (e:exn) : unit =
+let warn_norm_failure (r:Range.t) (e:exn) : unit =
   Errors.log_issue r Errors.Warning_NormalizationFailure (BU.format1 "Normalization failed with error %s\n" (BU.message_of_exn e))
 
 let term_to_doc env t =

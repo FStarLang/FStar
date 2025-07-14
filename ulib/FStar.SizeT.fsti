@@ -140,6 +140,16 @@ val rem (a:t) (b:t{v b <> 0}) : Pure t
   (requires True)
   (ensures (fun c -> mod_spec (v a) (v b) = v c))
 
+(** Equal *)
+val eq (x y:t) : Pure bool
+  (requires True)
+  (ensures (fun z -> z == (v x = v y)))
+
+(** Not equal *)
+val ne (x y:t) : Pure bool
+  (requires True)
+  (ensures (fun z -> z == (v x <> v y)))
+
 (** Greater than *)
 val gt (x y:t) : Pure bool
   (requires True)
@@ -166,9 +176,11 @@ unfold let ( +^ ) = add
 unfold let ( -^ ) = sub
 unfold let ( *^ ) = mul
 unfold let ( %^ ) = rem
-unfold let ( >^ ) = gt
+unfold let ( =^ )  = eq
+unfold let ( <>^ ) = ne
+unfold let ( >^ )  = gt
 unfold let ( >=^ ) = gte
-unfold let ( <^ ) = lt
+unfold let ( <^ )  = lt
 unfold let ( <=^ ) = lte
 
 //This private primitive is used internally by the

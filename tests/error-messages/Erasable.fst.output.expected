@@ -1,3 +1,11 @@
+* Warning 240 at Erasable.fst(56,4-56,11):
+  - Erasable.e_nat_3 is declared but no definition was found
+  - Add an 'assume' if this is intentional
+
+* Warning 240 at Erasable.fst(49,4-49,11):
+  - Erasable.e_nat_2 is declared but no definition was found
+  - Add an 'assume' if this is intentional
+
 >> Got issues: [
 * Error 162 at Erasable.fst(6,0-8,17):
   - Incompatible attributes and qualifiers: erasable types do not support
@@ -39,14 +47,6 @@
   - Declaration is marked `erasable` but the definition is not.
 
 >>]
-* Warning 240 at Erasable.fst(49,4-49,11):
-  - Erasable.e_nat_2 is declared but no definition was found
-  - Add an 'assume' if this is intentional
-
-* Warning 240 at Erasable.fst(56,4-56,11):
-  - Erasable.e_nat_3 is declared but no definition was found
-  - Add an 'assume' if this is intentional
-
 * Warning 240 at Erasable.fst(73,0-73,19):
   - Missing definitions in module Erasable:
       e_nat_2

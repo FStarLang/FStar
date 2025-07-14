@@ -53,7 +53,7 @@ let dbg_Tac        = Debug.get_toggle "Tac"
 let dbg_SpinoffAll = Debug.get_toggle "SpinoffAll"
 
 let run_tactic_on_typ
-        (rng_tac : Range.range) (rng_goal : Range.range)
+        (rng_tac : Range.t) (rng_goal : Range.t)
         (tactic:term) (env:Env.env) (typ:term)
                     : list goal // remaining goals
                     & term // witness
@@ -65,7 +65,7 @@ let run_tactic_on_typ
     gs, w
 
 let run_tactic_on_all_implicits
-        (rng_tac : Range.range) (rng_goal : Range.range)
+        (rng_tac : Range.t) (rng_goal : Range.t)
         (tactic:term) (env:Env.env) (imps:Env.implicits)
     : list goal // remaining goals
     =
@@ -351,12 +351,12 @@ let preprocess (env:Env.env) (goal:term)
 
 let rec traverse_for_spinoff
                  (pol:pol)
-                 (label_ctx:option (list Pprint.document & Range.range))
+                 (label_ctx:option (list Pprint.document & Range.t))
                  (e:Env.env)
                  (t:term) : tres =
     let debug_any = Debug.any () in
     let traverse pol e t = traverse_for_spinoff pol label_ctx e t in
-    let traverse_ctx pol (ctx : list Pprint.document & Range.range) (e:Env.env) (t:term) : tres =
+    let traverse_ctx pol (ctx : list Pprint.document & Range.t) (e:Env.env) (t:term) : tres =
       let print_lc (msg, rng) =
         BU.format3 "(%s,%s) : %s"
           (Range.string_of_def_range rng)
@@ -394,7 +394,7 @@ let rec traverse_for_spinoff
           res
     in
     let maybe_spinoff pol
-                      (label_ctx:option (list Pprint.document & Range.range))
+                      (label_ctx:option (list Pprint.document & Range.t))
                       (e:Env.env)
                       (t:term)
       : tres =
@@ -819,6 +819,15 @@ type dsl_tac_result_t =
   dsl_typed_sigelt_t &
   list dsl_typed_sigelt_t
 
+let rec us_equals (us vs: list univ_name) : bool =
+  match us, vs with
+  | u::us, v::vs ->
+    if Ident.ident_equals u v then
+      us_equals us vs
+    else
+      false
+  | _ -> true
+
 let splice
   (env:Env.env)
   (quals : list S.qualifier)
@@ -826,7 +835,7 @@ let splice
   (is_typed:bool)
   (lids:list Ident.lident)
   (tau:term)
-  (rng:Range.range) : list sigelt =
+  (rng:Range.t) : list sigelt =
   
   Errors.with_ctx "While running splice with a tactic" (fun () ->
     if env.flychecking then [] else begin
@@ -855,26 +864,19 @@ let splice
         then Err.raise_error rng Errors.Error_BadSplice
                (BU.format1 "Typed splice: unexpected lids length (> 1) (%s)" (show lids))
         else begin
-          let val_t : option typ =  // val type, if any, for the lid
+          let val_t, uv_t : option typ & option (list univ_name) =  // val type / univ params, if any, for the lid
             //
             // For spliced vals, their lids is set to []
             //   (see ToSyntax.fst:desugar_decl, splice case)
             //
             if List.length lids = 0
-            then None
+            then None, None
             else
               match Env.try_lookup_val_decl env (List.hd lids) with
-              | None -> None
+              | None -> None, None
               | Some ((uvs, tval), _) ->
-                //
-                // No universe polymorphic typed splice yet
-                //
-                if List.length uvs <> 0
-                then
-                  Err.raise_error rng Errors.Error_BadSplice 
-                    (BU.format1 "Typed splice: val declaration for %s is universe polymorphic in %s universes, expected 0"
-                       (show (List.length uvs)))
-                else Some tval in
+                let uvs, tval = SS.open_univ_vars uvs tval in
+                Some tval, Some uvs in
 
           //
           // The arguments to run_tactic_on_ps here are in sync with ulib/FStarC.Tactics.dsl_tac_t
@@ -889,6 +891,17 @@ let splice
               tactic_already_typed
               ps
           in
+          (match uv_t, sig_blob with
+            | Some uv_t, (true, {sigel}, _) ->
+              let actual_uv =
+                match sigel with
+                | Sig_let {lbs = (_, [{lbunivs}])} -> lbunivs
+                | _ -> [] in
+              if not (us_equals uv_t actual_uv) then
+                Err.raise_error rng Errors.Error_BadSplice
+                  (BU.format3 "Typed splice: val declaration for %s is universe polymorphic in %s, expected %s"
+                    (show (List.hd lids)) (show actual_uv) (show uv_t))
+            | _ -> ());
           let sig_blobs = sig_blobs_before@(sig_blob::sig_blobs_after) in
           let sigelts = sig_blobs |> map (fun (checked, se, blob_opt) ->
             { se with

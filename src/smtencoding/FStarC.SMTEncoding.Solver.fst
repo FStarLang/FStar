@@ -219,7 +219,7 @@ type query_settings = {
     query_decl:decl;
     query_name:string;
     query_index:int;
-    query_range:Range.range;
+    query_range:Range.t;
     query_fuel:int;
     query_ifuel:int;
     query_rlimit:int;
@@ -262,6 +262,12 @@ let with_fuel_and_diagnostics settings label_assumptions =
     ]
     @label_assumptions         //the sub-goals that are currently disabled
     @[  Term.SetOption ("rlimit", string_of_int rlimit); //the rlimit setting for the check-sat
+
+        // Print stats just before the query, so we know the initial rlimit.
+        Term.Echo "<initial_stats>";
+        Term.GetStatistics;
+        Term.Echo "</initial_stats>";
+
         Term.CheckSat; //go Z3!
         Term.SetOption ("rlimit", "0"); //back to using infinite rlimit
         Term.GetReasonUnknown; //explain why it failed
@@ -526,6 +532,26 @@ let mk_unique_string_accumulator ()
   let clear () = strings := [] in
   { add ; get; clear }
 
+let div_with_decimals (ndec : nat) (x y : int) : string =
+  // BU.print2 "div_with_decimals: %s / %s\n" (show x) (show y);
+  let open FStar.Mul in
+  let mul =
+    (* no power function in F* sources? *)
+    let rec aux (n:nat) =
+      if n = 0 then 1 else 10 * aux (n - 1)
+    in
+    aux ndec
+  in
+  let intg = x / y in
+  let frac = mul * x / y % mul in
+  (* zero pad *)
+  let frac =
+    let len = String.length (show frac) in
+    let pad = ndec - len in
+    String.make pad '0' ^ string_of_int frac
+  in
+  show intg ^ "." ^ frac // pad
+
 let query_info settings z3result =
     let process_unsat_core (core:option UC.unsat_core) =
        (* Accumulator for module names *)
@@ -649,7 +675,18 @@ let query_info settings z3result =
                 let str = smap_fold z3result.z3result_statistics f "statistics={" in
                     (substring str 0 ((String.length str) - 1)) ^ "}"
             else "" in
-        BU.print "%s\tQuery-stats (%s, %s)\t%s%s in %s milliseconds with fuel %s and ifuel %s and rlimit %s\n"
+        let used_rlimit_str =
+          try
+            let open FStar.Mul in
+            let decimals = 3 in
+            let r0 = int_of_string <| BU.must <| SMap.try_find z3result.z3result_initial_statistics "rlimit-count" in
+            let r1 = int_of_string <| BU.must <| SMap.try_find z3result.z3result_statistics "rlimit-count" in
+            let used = r1 - r0 in
+            div_with_decimals decimals used (convert_rlimit 1)
+          with
+          | _ -> "unknown"
+        in
+        BU.print "%s\tQuery-stats (%s, %s)\t%s%s in %s milliseconds with fuel %s and ifuel %s and rlimit %s (used rlimit %s)\n"
              [  range;
                 settings.query_name;
                 show settings.query_index;
@@ -658,7 +695,8 @@ let query_info settings z3result =
                 show z3result.z3result_time;
                 show settings.query_fuel;
                 show settings.query_ifuel;
-                show (settings.query_rlimit);
+                show settings.query_rlimit;
+                used_rlimit_str;
                 // stats ()
              ];
         if Options.print_z3_statistics () then process_unsat_core core;

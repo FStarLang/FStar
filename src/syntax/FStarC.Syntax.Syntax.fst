@@ -385,10 +385,10 @@ let range_of_ropt = function
     | None -> dummyRange
     | Some r -> r
 
-let gen_bv' (id : ident) (r : option Range.range) (t : typ) : bv =
+let gen_bv' (id : ident) (r : option Range.t) (t : typ) : bv =
   {ppname=id; index=GS.next_id(); sort=t}
 
-let gen_bv (s : string) (r : option Range.range) (t : typ) : bv =
+let gen_bv (s : string) (r : option Range.t) (t : typ) : bv =
   let id = mk_ident(s, range_of_ropt r) in
   gen_bv' id r t
 
@@ -461,7 +461,7 @@ let fvar_with_dd l dq =  fv_to_tm (lid_and_dd_as_fv l dq)
 let fvar l dq = fv_to_tm (lid_as_fv l dq)
 let lid_of_fv (fv:fv) = fv.fv_name.v
 let range_of_fv (fv:fv) = range_of_lid (lid_of_fv fv)
-let set_range_of_fv (fv:fv) (r:Range.range) =
+let set_range_of_fv (fv:fv) (r:Range.t) =
     {fv with fv_name={fv.fv_name with v=Ident.set_lid_range (lid_of_fv fv) r}}
 let has_simple_attribute (l: list term) s =
   List.existsb (function
@@ -627,6 +627,15 @@ instance hasRange_ctx_uvar : hasRange ctx_uvar = {
   setPos = (fun r u -> { u with ctx_uvar_range = r });
 }
 
+let sli (l:lident) : string =
+    if Options.print_real_names()
+    then string_of_lid l
+    else string_of_id (ident_of_lid l)
+
+instance showable_fv : showable fv = {
+  show = (fun fv -> sli fv.fv_name.v);
+}
+
 instance showable_lazy_kind = {
   show = (function
           | BadLazy -> "BadLazy"
@@ -657,6 +666,24 @@ instance showable_lazy_kind = {
 instance showable_restriction: showable restriction = {
   show = (function | Unrestricted -> "Unrestricted"
                    | AllowList l  -> "AllowList " ^ show l);
+}
+
+instance showable_unresolved_constructor : showable unresolved_constructor = {
+  show = (fun uc ->
+           "{ uc_base_term = " ^ show uc.uc_base_term ^
+           "; uc_typename = " ^ show uc.uc_typename ^
+           "; uc_fields = " ^ show uc.uc_fields ^ " }"
+  );
+}
+
+instance showable_fv_qual : showable fv_qual = {
+  show = (function
+          | Data_ctor -> "Data_ctor"
+          | Record_projector p -> "Record_projector (" ^ show p ^ ")"
+          | Record_ctor      p -> "Record_ctor (" ^ show p ^ ")"
+          | Unresolved_projector p -> "Unresolved_projector (" ^ show p^ ")"
+          | Unresolved_constructor p -> "Unresolved_constructor (" ^ show p ^ ")"
+  );
 }
 
 instance deq_lazy_kind : deq lazy_kind = {

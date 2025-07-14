@@ -27,18 +27,18 @@ open FStarC.Json {json}
 (* This is a fallback to be used if an error is raised/logged
 with a dummy range. It is set by TypeChecker.Tc.process_one_decl to
 the range of the sigelt being checked. *)
-val fallback_range : FStarC.Effect.ref (option Range.range)
+val fallback_range : FStarC.Effect.ref (option Range.t)
 
 (* This range, if set, will be used to limit the range of every
 issue that is logged/raised. This is set, e.g. when checking a top-level
 definition, to the range of the definition, so no error can be reported
 outside of it. *)
-val error_range_bound : FStarC.Effect.ref (option Range.range)
+val error_range_bound : FStarC.Effect.ref (option Range.t)
 
-val with_error_bound (r:Range.range) (f : unit -> 'a) : 'a
+val with_error_bound (r:Range.t) (f : unit -> 'a) : 'a
 
 (* Intersect a range by the current bound (if any). *)
-val maybe_bound_range (rng:Range.range) : Range.range
+val maybe_bound_range (rng:Range.t) : Range.t
 
 (* Get the error number for a particular code. Useful for creating error
 messages mentioning --warn_error. *)
@@ -49,10 +49,12 @@ val warn_on_use_errno    : int
 val defensive_errno      : int
 val call_to_erased_errno : int
 
-val update_flags : list (error_flag & string) -> list error_setting
+val update_flags : list (error_flag & (int & int)) -> list error_setting
+
+type context_t = list string
 
 (* error code, message, source position, and error context *)
-type error = error_code & error_message & FStarC.Range.range & list string
+type error = error_code & error_message & Range.t & context_t
 
 exception Error   of error
 exception Warning of error
@@ -70,7 +72,7 @@ val json_of_issue_level: issue_level -> json
 type issue = {
     issue_msg: error_message;
     issue_level: issue_level;
-    issue_range: option Range.range;
+    issue_range: option Range.t;
     issue_number: option int;
     issue_ctx: list string;
 }
@@ -85,6 +87,8 @@ type error_handler = {
     eh_clear: unit -> unit
 }
 
+val mk_catch_handler () : error_handler
+
 val string_of_issue_level : issue_level -> string
 val issue_level_of_string : string -> issue_level
 val issue_message : issue -> error_message
@@ -96,7 +100,7 @@ val compare_issues : issue -> issue -> int // for sorting.. weird
 
 (* Make sure to bound the range of an issue and fallback to the fallback_range
 if need be. *)
-val fixup_issue_range (rng:option Range.range) : option Range.range
+val fixup_issue_range (rng:option Range.t) : option Range.t
 
 val add_errors : list error -> unit
 val issue_of_exn : exn -> option issue
@@ -109,8 +113,8 @@ val clear : unit -> unit
 val set_handler : error_handler -> unit
 val get_ctx : unit -> list string
 
-val set_option_warning_callback_range : ropt:option FStarC.Range.range -> unit
-val set_parse_warn_error : (string -> list error_setting) -> unit
+val set_option_warning_callback_range : ropt:option FStarC.Range.t -> unit
+val set_parse_warn_error : (string -> option (list error_setting)) -> unit
 
 val lookup : error_code -> error_setting
 
@@ -196,7 +200,7 @@ val find_multiset_discrepancy : list int -> list int -> option (int & int & int)
 
 
 (* Specialized variants, only useful for OCaml code. Not to be used from F* sources. *)
-val raise_error_doc  : Range.range -> error_code -> error_message -> 'a
-val log_issue_doc    : Range.range -> error_code -> error_message -> unit
-val raise_error_text : Range.range -> error_code -> string -> 'a
-val log_issue_text   : Range.range -> error_code -> string -> unit
+val raise_error_doc  : Range.t -> error_code -> error_message -> 'a
+val log_issue_doc    : Range.t -> error_code -> error_message -> unit
+val raise_error_text : Range.t -> error_code -> string -> 'a
+val log_issue_text   : Range.t -> error_code -> string -> unit

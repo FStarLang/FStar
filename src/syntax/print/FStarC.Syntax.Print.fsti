@@ -28,7 +28,6 @@ instance val showable_univ      : showable universe
 instance val showable_comp      : showable comp
 instance val showable_sigelt    : showable sigelt
 instance val showable_bv        : showable bv
-instance val showable_fv        : showable fv
 instance val showable_binder    : showable binder
 instance val showable_uvar      : showable uvar
 instance val showable_ctxu      : showable ctx_uvar

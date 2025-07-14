@@ -43,7 +43,7 @@ val rollback           : tx -> unit
 val commit             : tx -> unit
 val update_in_tx       : ref 'a -> 'a -> unit
 
-val fresh              : S.uvar_decoration -> Range.range -> S.uvar
+val fresh              : S.uvar_decoration -> Range.t -> S.uvar
 val uvar_id            : S.uvar -> int
 val uvar_unique_id     : S.uvar -> int
 val find               : S.uvar -> option S.term
@@ -53,7 +53,7 @@ val change_decoration  : S.uvar -> S.uvar_decoration -> unit
 val equiv              : S.uvar -> S.uvar -> bool
 val union              : S.uvar -> S.uvar -> unit
 
-val univ_fresh         : Range.range -> S.universe_uvar
+val univ_fresh         : Range.t -> S.universe_uvar
 val univ_uvar_id       : S.universe_uvar -> int
 val univ_find          : S.universe_uvar -> option S.universe
 val univ_change        : S.universe_uvar -> S.universe -> unit

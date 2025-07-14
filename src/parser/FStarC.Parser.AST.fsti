@@ -63,7 +63,7 @@ type term' =
   | LetOpen   of lid & term
   | LetOpenRecord of term & term & term
   | Seq       of term & term
-  | Bind      of ident & term & term
+  | Bind      of ident & term & term (* do notation bind ('x <-- foo ()' or 'f;;g'). DEPRECATED. *)
   | If        of term & option ident (* is this a regular if or a if operator (i.e. [if*]) *)
                       & option match_returns_annotation & term & term
   | Match     of term & option ident (* is this a regular match or a match operator (i.e. [match*]) *)
@@ -137,6 +137,7 @@ and pattern' =
   | PatName     of lid
   | PatTvar     of ident & aqual & attributes_
   | PatList     of list pattern
+  | PatRest     (* For '..', which matches all extra args *)
   | PatTuple    of list pattern & bool (* dependent if flag is set *)
   | PatRecord   of list (lid & pattern)
   | PatAscribed of pattern & (term & option term)
@@ -342,7 +343,7 @@ val mkFsTypApp : term -> list term -> range -> term
 val mkTuple : list term -> range -> term
 val mkDTuple : list term -> range -> term
 val mkRefinedBinder : ident -> term -> bool -> option term -> range -> aqual -> list term -> binder
-val mkRefinedPattern : pattern -> term -> bool -> option term -> range -> range -> pattern
+val mkRefinedPattern : pattern -> term -> (*should_bind_pat:*)bool -> option term -> range -> range -> pattern
 val extract_named_refinement : bool -> term -> option (ident & term & option term)
 
 val as_frag : list decl -> inputFragment
@@ -383,4 +384,4 @@ instance val showable_term : showable term
 val as_interface (m:modul) : modul
 
 val inline_let_attribute : term
-val inline_let_vc_attribute : term 
+val inline_let_vc_attribute : term

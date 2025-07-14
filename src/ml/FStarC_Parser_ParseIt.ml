@@ -93,19 +93,19 @@ type parse_frag =
     | Incremental of input_frag
     | Fragment of input_frag
 
-type parse_error = (Codes.error_code * Msg.error_message * FStarC_Range.range)
+type parse_error = (Codes.error_code * Msg.error_message * FStarC_Range.t)
 
 
 type code_fragment = {
-   range: FStarC_Range.range;
+   range: FStarC_Range.t;
    code: string;
 }
 
 type 'a incremental_result = 
-    ('a * code_fragment) list * (string * FStarC_Range.range) list * parse_error option
+    ('a * code_fragment) list * (string * FStarC_Range.t) list * parse_error option
 
 type parse_result =
-    | ASTFragment of (FStarC_Parser_AST.inputFragment * (string * FStarC_Range.range) list)
+    | ASTFragment of (FStarC_Parser_AST.inputFragment * (string * FStarC_Range.t) list)
     | IncrementalFragment of FStarC_Parser_AST.decl incremental_result
     | Term of FStarC_Parser_AST.term
     | ParseError of parse_error
@@ -137,7 +137,7 @@ let parse_incremental_decls
     (contents:string)
     lexbuf
     (lexer:unit -> 'token * Lexing.position * Lexing.position)
-    (range_of: 'semantic_value -> FStarC_Range.range)
+    (range_of: 'semantic_value -> FStarC_Range.t)
     (parse_one:
      (Lexing.lexbuf -> 'token) ->
          Lexing.lexbuf ->
@@ -220,7 +220,7 @@ let contents_at contents =
     (* Find the raw content of the input from the line of the start_pos to the end_pos.
         This is used by Interactive.Incremental to record exactly the raw content of the
         fragment that was checked *) 
-    fun (range:Range.range) ->
+    fun (range:Range.t) ->
       (* discard all lines until the start line *)
       let start_pos = Range.start_of_range range in
       let end_pos = Range.end_of_range range in
@@ -275,7 +275,7 @@ let parse_incremental_fragment
     (contents:string)
     lexbuf
     (lexer:unit -> 'token * Lexing.position * Lexing.position)
-    (range_of: 'semantic_value -> FStarC_Range.range)
+    (range_of: 'semantic_value -> FStarC_Range.t)
     (parse_one:
      (Lexing.lexbuf -> 'token) ->
          Lexing.lexbuf ->
@@ -298,27 +298,26 @@ let string_of_token =
   | NAME s -> "NAME " ^ s
   | TVAR s -> "TVAR " ^ s
   | TILDE s -> "TILDE " ^ s
-  | INT8 (s, b) -> "INT8 (" ^ s ^ ", " ^ string_of_bool b ^ ")"
-  | INT16 (s, b) -> "INT16 (" ^ s ^ ", " ^ string_of_bool b ^ ")"
-  | INT32 (s, b) -> "INT32 (" ^ s ^ ", " ^ string_of_bool b ^ ")"
-  | INT64 (s, b) -> "INT64 (" ^ s ^ ", " ^ string_of_bool b ^ ")"
-  | INT (s, b) -> "INT (" ^ s ^ ", " ^ string_of_bool b ^ ")"
-  | RANGE s -> " RANGE " ^ s
-  | UINT8 s -> "UINT8 " ^ s
+  | INT8 s   -> "INT8 " ^ s
+  | INT16 s  -> "INT16 " ^ s
+  | INT32 s  -> "INT32 " ^ s
+  | INT64 s  -> "INT64 " ^ s
+  | INT s    -> "INT " ^ s
+  | UINT8 s  -> "UINT8 " ^ s
   | UINT16 s -> "UINT16 " ^ s
   | UINT32 s -> "UINT32 " ^ s
   | UINT64 s -> "UINT64 " ^ s
-  | SIZET s -> "SIZET " ^ s
-  | REAL s -> "REAL " ^ s
-  | CHAR c -> "CHAR c"
-  | LET b -> "LET b"
+  | SIZET s  -> "SIZET " ^ s
+  | REAL s   -> "REAL " ^ s
+  | CHAR c   -> "CHAR c"
+  | LET -> "LET"
   | LET_OP s -> "LET_OP " ^ s
   | AND_OP s -> "AND_OP " ^ s
   | MATCH_OP s -> "MATCH_OP " ^ s
   | IF_OP s -> "IF_OP " ^ s
-  | EXISTS b -> "EXISTS b"
+  | EXISTS -> "EXISTS"
   | EXISTS_OP s -> "EXISTS_OP " ^ s
-  | FORALL b -> "FORALL b"
+  | FORALL -> "FORALL"
   | FORALL_OP s -> "FORALL_OP " ^ s
   | SEMICOLON_OP op -> "SEMICOLON_OP " ^ (match op with None -> "None" | Some s -> "(Some " ^ s ^ ")")
   | ASSUME -> "ASSUME"
@@ -470,12 +469,13 @@ let string_of_token =
   | BLOB _ -> "BLOB _"
   | USE_LANG_BLOB _ -> "USE_LANG_BLOB _"
   | EOF -> "EOF"
+  | DOT_DOT -> "DOT_DOT"
   | _ -> "(unknown token)"
 
 let parse_fstar_incrementally
 : FStarC_Parser_AST_Util.extension_lang_parser 
 = let f =
-    fun (s:string) (r:FStarC_Range.range) ->
+    fun (s:string) (r:FStarC_Range.t) ->
       let open FStar_Pervasives in
       let open FStarC_Range in
       let lexbuf =
@@ -614,18 +614,18 @@ let parse (lang_opt:lang_opts) fn =
 (** Parsing of command-line error/warning/silent flags. *)
 let parse_warn_error s =
   let user_flags =
-    if s = ""
-    then []
-    else
-      let lexbuf = FStarC_Sedlexing.create s "" 0 (String.length s) in
-      let lexer() = let tok = FStarC_Parser_LexFStar.token lexbuf in
-        if !dbg_Tokens then
-          print_string ("TOKEN: " ^ (string_of_token tok) ^ "\n");
-        (tok, lexbuf.start_p, lexbuf.cur_p)
-      in
-      try
-        MenhirLib.Convert.Simplified.traditional2revised FStarC_Parser_Parse.warn_error_list lexer
-      with e ->
-        failwith (U.format1 "Malformed warn-error list: %s" s)
+    let lexbuf = FStarC_Sedlexing.create s "" 0 (String.length s) in
+    let lexer () =
+      let tok = FStarC_Parser_WarnError_Lex.token lexbuf in
+      (tok, lexbuf.start_p, lexbuf.cur_p)
+    in
+    try
+      Some (MenhirLib.Convert.Simplified.traditional2revised FStarC_Parser_WarnError.warn_error_list lexer)
+    with e ->
+      None
   in
-  FStarC_Errors.update_flags user_flags
+  let map_opt f = function
+    | None -> None
+    | Some x -> Some (f x)
+  in
+  map_opt FStarC_Errors.update_flags user_flags

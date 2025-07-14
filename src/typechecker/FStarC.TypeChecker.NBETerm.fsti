@@ -56,9 +56,9 @@ type constant =
   | Unit
   | Bool of bool
   | Int of Z.t
-  | String of string & Range.range
+  | String of string & Range.t
   | Char of FStar.Char.char
-  | Range of Range.range
+  | Range of Range.t
   | SConst of FStarC.Const.sconst
   | Real of string
 
@@ -171,7 +171,7 @@ and t' =
 
 and t = {
   nbe_t : t';
-  nbe_r : Range.range
+  nbe_r : Range.t
 }
 
 and comp =
@@ -281,8 +281,8 @@ instance val e_real   : embedding Real.real
 instance val e_unit   : embedding unit
 val e_any    : embedding t
 val mk_any_emb : t -> embedding t
-val e___range  : embedding Range.range (* unsealed *)
-instance val e_range  : embedding Range.range (* sealed *)
+val e___range  : embedding Range.t (* unsealed *)
+instance val e_range  : embedding Range.t (* sealed *)
 instance val e_issue  : embedding FStarC.Errors.issue
 instance val e_document : embedding FStarC.Pprint.document
 instance val e_vconfig  : embedding vconfig

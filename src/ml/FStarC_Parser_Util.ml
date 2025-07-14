@@ -37,7 +37,7 @@ let errorAndWarningCount = ref 0
 let errorR  exn = incr errorAndWarningCount; match exn with StopProcessing | ReportedError -> raise exn | _ -> !errorHandler exn
 let warning exn = incr errorAndWarningCount; match exn with StopProcessing | ReportedError -> raise exn | _ -> !warningHandler exn
 
-let comments : (string * FStarC_Range.range) list ref = ref []
+let comments : (string * FStarC_Range.t) list ref = ref []
 let add_comment x = comments := x :: !comments
 let flush_comments () =
   let lexed_comments = !comments in

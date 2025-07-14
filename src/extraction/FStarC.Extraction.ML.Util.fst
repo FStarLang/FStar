@@ -66,11 +66,11 @@ let mlconst_of_const' (sctt : sconst) =
   | Const_reflect _ ->
     failwith "Unhandled constant: real/reify/reflect"
 
-let mlconst_of_const (p:Range.range) (c:sconst) =
+let mlconst_of_const (p:Range.t) (c:sconst) =
     try mlconst_of_const' c
     with _ -> failwith (BU.format2 "(%s) Failed to translate constant %s " (Range.string_of_range p) (show c))
 
-let mlexpr_of_range (r:Range.range) : mlexpr' =
+let mlexpr_of_range (r:Range.t) : mlexpr' =
     let cint (i : int) : mlexpr =
         MLC_Int (string_of_int i, None) |> MLE_Const |> with_ty ml_int_ty
     in
@@ -94,7 +94,7 @@ let mlexpr_of_range (r:Range.range) : mlexpr' =
                             Range.end_of_range r   |> Range.col_of_pos  |> cint;
                             ])
 
-let mlexpr_of_const (p:Range.range) (c:sconst) : mlexpr' =
+let mlexpr_of_const (p:Range.t) (c:sconst) : mlexpr' =
     (* Special case ranges, which can be extracted but not as constants.
      * Maybe a sign that there shouldn't really be a Const_range *)
     match c with
@@ -355,7 +355,7 @@ let conjoin_opt e1 e2 = match e1, e2 with
     | None, Some x -> Some x
     | Some x, Some y -> Some (conjoin x y)
 
-let mlloc_of_range (r: Range.range) =
+let mlloc_of_range (r: Range.t) =
     let pos = Range.start_of_range r in
     let line = Range.line_of_pos pos in
     line, Range.file_of_range r

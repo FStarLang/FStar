@@ -128,7 +128,7 @@ let fresh : string -> string =
     r := v+1;
     s^"_"^(string_of_int v)
 
-let not_implemented_warning (r: Range.range) (t: string) (msg: string) =
+let not_implemented_warning (r: Range.t) (t: string) (msg: string) =
   let open FStarC.Pprint in
   let open FStarC.Errors.Msg in
   let open FStarC.Class.PP in

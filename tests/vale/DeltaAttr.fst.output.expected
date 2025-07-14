@@ -1,3 +1,8 @@
+* Warning 274:
+  - Implicitly opening namespace 'fstar.' shadows module 'calc' in file
+    "Calc.fst".
+  - Rename "Calc.fst" to avoid conflicts.
+
 Module after desugaring:
 module DeltaAttr
 Declarations: [
@@ -163,9 +168,4 @@ let test_3' x = x + 1 - 1 + (x + 1 - 1) <: Prims.int
 let test_4 x = x + 1 - 1 + (x + 1 - 1) <: Prims.int
 let test_5 x = x + 1 - 1 + (x + 1 - 1) <: Prims.int
 ]
-
-* Warning 274:
-  - Implicitly opening namespace 'fstar.' shadows module 'calc' in file
-    "Calc.fst".
-  - Rename "Calc.fst" to avoid conflicts.
 

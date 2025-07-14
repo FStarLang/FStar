@@ -28,7 +28,7 @@ open FStarC.Ident
 
 module S = FStarC.Syntax.Syntax
 
-type extension_tosyntax_decl_t = env -> FStarC.Dyn.dyn -> lids:list lident -> Range.range -> list sigelt'
+type extension_tosyntax_decl_t = env -> FStarC.Dyn.dyn -> lids:list lident -> Range.t -> list sigelt'
 val register_extension_tosyntax (lang_name:string) (cb:extension_tosyntax_decl_t) : unit
 
 (* Only called from tactics *)
@@ -36,7 +36,7 @@ val desugar_term:            env -> term -> S.term
 
 val desugar_machine_integer: env -> repr:string
                            -> (FStarC.Const.signedness & FStarC.Const.width)
-                           -> Range.range -> Syntax.term
+                           -> Range.t -> Syntax.term
 val free_vars (tvars_only:bool) (e:env) (t:term) : list ident
 val close:                   env -> term -> term
 
@@ -53,7 +53,11 @@ val add_modul_to_env: Syntax.modul
                     -> erase_univs:(S.term -> S.term)
                     -> withenv unit
 
-val parse_attr_with_list : bool -> S.term -> lident -> option (list int & Range.range) & bool
+val parse_attr_with_list : bool -> S.term -> lident -> option (list int & Range.t) & bool
 
-val get_fail_attr1 : bool -> S.term       -> option (list int & Range.range & bool)
-val get_fail_attr  : bool -> list S.term -> option (list int & Range.range & bool)
+val get_fail_attr1 : bool -> S.term       -> option (list int & Range.t & bool)
+val get_fail_attr  : bool -> list S.term -> option (list int & Range.t & bool)
+
+(* Return a list of wildcard patterns (implicit or explicit as needed)
+in order to expand the `..` in `| C .. ->`. *)
+val rest_pat_for_lid (env : env) (l : lid) : list pattern

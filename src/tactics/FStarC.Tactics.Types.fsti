@@ -76,7 +76,7 @@ type proofstate = {
     depth        : int;          //depth for tracing and debugging
     __dump       : proofstate -> string -> unit; // callback to dump_proofstate, to avoid an annoying circularity
     psc          : PO.psc;       //primitive step context where we started execution
-    entry_range  : Range.range;  //position of entry, set by the use
+    entry_range  : Range.t;  //position of entry, set by the use
     guard_policy : guard_policy; //guard policy: what to do with guards arising during tactic exec
     freshness    : int;          //a simple freshness counter for the fresh tactic
     tac_verb_dbg : bool;         //whether to print verbose debugging messages
@@ -94,11 +94,11 @@ val decr_depth : proofstate -> proofstate
 val incr_depth : proofstate -> proofstate
 val tracepoint_with_psc : PO.psc -> proofstate -> bool
 val tracepoint : proofstate -> bool
-val set_proofstate_range : proofstate -> Range.range -> proofstate
+val set_proofstate_range : proofstate -> Range.t -> proofstate
 
 val set_ps_psc : PO.psc -> proofstate -> proofstate
 val goal_env: goal -> env
-val goal_range: goal -> Range.range
+val goal_range: goal -> Range.t
 val goal_witness: goal -> term
 val goal_type: goal -> term
 val goal_opts: goal -> Options.optionstate

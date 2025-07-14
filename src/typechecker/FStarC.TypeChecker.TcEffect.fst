@@ -93,7 +93,7 @@ let check_and_gen env (eff_name:string) (comb:string) (n:int) (us, t) : (univ_na
 (*
  * A small gadget to get a uvar for pure wp with given result type
  *)
-let pure_wp_uvar env (t:typ) (reason:string) (r:Range.range) : term & guard_t =
+let pure_wp_uvar env (t:typ) (reason:string) (r:Range.t) : term & guard_t =
   let pure_wp_t =
     let pure_wp_ts = Env.lookup_definition [Env.NoDelta] env PC.pure_wp_lid |> must in
     let _, pure_wp_t = Env.inst_tscheme pure_wp_ts in
@@ -131,7 +131,7 @@ let eq_binders env (bs1 bs2:binders) : option (list S.indexed_effect_binder_kind
   then bs1 |> List.map (fun _ -> Substitutive_binder) |> Some
   else None
 
-let log_ad_hoc_combinator_warning (comb_name:string) (r:Range.range) =
+let log_ad_hoc_combinator_warning (comb_name:string) (r:Range.t) =
   log_issue r Errors.Warning_Adhoc_IndexedEffect_Combinator [
     Errors.text (BU.format1 "Combinator %s is not a substitutive indexed effect combinator, \
                    it is better to make it one if possible for better performance and ease of use" comb_name)
@@ -366,7 +366,7 @@ let validate_indexed_effect_bind_shape (env:env)
   (m_repr_ts n_repr_ts p_repr_ts:option tscheme)
   (bind_us:univ_names)
   (bind_t:typ)
-  (r:Range.range)
+  (r:Range.t)
   (num_effect_params:int)
   (has_range_binders:bool)
   : typ & indexed_effect_combinator_kind =
@@ -655,7 +655,7 @@ let validate_indexed_effect_subcomp_shape (env:env)
   (u:univ_name)
   (subcomp_t:typ)
   (num_effect_params:int)
-  (r:Range.range)
+  (r:Range.t)
   : typ & indexed_effect_combinator_kind =
 
   let subcomp_name = BU.format2 "%s <: %s"
@@ -876,7 +876,7 @@ let validate_indexed_effect_ite_shape (env:env)
   (ite_ty:typ)
   (ite_tm:term)
   (num_effect_params:int)
-  (r:Range.range)
+  (r:Range.t)
 
   : term & indexed_effect_combinator_kind =
 
@@ -980,7 +980,7 @@ let validate_indexed_effect_close_shape (env:env)
   (u_b:univ_name)
   (close_tm:term)
   (num_effect_params:int)
-  (r:Range.range) : term =
+  (r:Range.t) : term =
 
   let close_name = BU.format1 "close_%s" (string_of_lid eff_name) in
 
@@ -1099,7 +1099,7 @@ let validate_indexed_effect_lift_shape (env:env)
   (m_eff_name n_eff_name:lident)
   (u:univ_name)
   (lift_t:typ)
-  (r:Range.range)
+  (r:Range.t)
   : typ & indexed_effect_combinator_kind =
 
   let lift_name = BU.format2 "%s ~> %s"
@@ -2444,7 +2444,7 @@ let tc_layered_lift env0 (sub:S.sub_eff) : S.sub_eff =
 
   sub
 
-let check_lift_for_erasable_effects env (m1:lident) (m2:lident) (r:Range.range) : unit =
+let check_lift_for_erasable_effects env (m1:lident) (m2:lident) (r:Range.t) : unit =
   let err reason = raise_error r Errors.Fatal_UnexpectedEffect
                                 (BU.format3 "Error defining a lift/subcomp %s ~> %s: %s"
                                   (string_of_lid m1) (string_of_lid m2) reason) in
@@ -2640,7 +2640,7 @@ let tc_effect_abbrev env (lid, uvs, tps, c) r =
   (lid, uvs, tps, c)
 
 
-let check_polymonadic_bind_for_erasable_effects env (m:lident) (n:lident) (p:lident) (r:Range.range) =
+let check_polymonadic_bind_for_erasable_effects env (m:lident) (n:lident) (p:lident) (r:Range.t) =
   let err reason = raise_error r Errors.Fatal_UnexpectedEffect
                                 (BU.format4 "Error definition polymonadic bind (%s, %s) |> %s: %s"
                                   (show m) (show n) (show p) reason) in

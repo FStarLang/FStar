@@ -68,7 +68,7 @@ open FStarC.Class.Monad
 open FStarC.Class.PP
 open FStarC.Class.Setlike
 
-let fixup_range (r : FStarC.Range.range) : tac (FStarC.Range.range) =
+let fixup_range (r : FStarC.Range.t) : tac (FStarC.Range.t) =
   return (Errors.maybe_bound_range r)
 
 let compress (t:term) : tac term =
@@ -231,7 +231,7 @@ let with_policy pol (t : tac 'a) : tac 'a =
 
 let proc_guard_formula
   (reason:string) (e : env) (f : term) (sc_opt : option should_check_uvar)
-  (rng:Range.range)
+  (rng:Range.t)
 : tac unit
 = let! ps = get in
   if !dbg_Tac then
@@ -284,7 +284,7 @@ let proc_guard_formula
       log (fun () -> BU.print1 "guard = %s\n" (show f));!
       fail1 "Forcing the guard failed (%s)" reason
 
-let proc_guard' (simplify:bool) (reason:string) (e : env) (g : guard_t) (sc_opt:option should_check_uvar) (rng:Range.range) : tac unit =
+let proc_guard' (simplify:bool) (reason:string) (e : env) (g : guard_t) (sc_opt:option should_check_uvar) (rng:Range.t) : tac unit =
     log (fun () -> BU.print2 "Processing guard (%s:%s)\n" reason (Rel.guard_to_string e g));!
     let imps = Listlike.to_list g.implicits in
     let _ =
@@ -942,7 +942,7 @@ let try_unify_by_application (should_check:option should_check_uvar)
                              (e : env)
                              (ty1 : term)
                              (ty2 : term)
-                             (rng:Range.range)
+                             (rng:Range.t)
    : tac (list (term & aqual & ctx_uvar))
    = let f = if only_match then do_match else do_unify in
      let must_tot = true in
@@ -2152,7 +2152,7 @@ let comp_to_doc (c:comp) : tac Pprint.document
     let s = Print.comp_to_doc' g.dsenv c in
     return s
 
-let range_to_string (r:FStarC.Range.range) : tac string
+let range_to_string (r:FStarC.Range.t) : tac string
   = return (show r)
 
 let term_eq_old (t1:term) (t2:term) : tac bool
@@ -2521,8 +2521,7 @@ let refl_core_check_term (g:env) (e:term) (t:typ) (eff:Core.tot_or_ghost)
          let g = Env.set_range g e.pos in
          dbg_refl g (fun _ ->
            BU.format3 "refl_core_check_term: term: %s, type: %s, eff: %s\n"
-             (show e) (show t)
-             (tot_or_ghost_to_string eff));
+             (show e) (show t) (show eff));
          let must_tot = to_must_tot eff in
          match Core.check_term g e t must_tot with
          | Inl None ->
@@ -3005,7 +3004,7 @@ let getprop (e:Env.env) (t:term) : option term =
     U.un_squash tn
 
 let run_unembedded_tactic_on_ps_and_solve_remaining
-    (t_range g_range : Range.range)
+    (t_range g_range : Range.t)
     (background : bool)
     (t : 'a)
     (f : 'a -> tac 'b)
@@ -3038,7 +3037,7 @@ let call_subtac (g:env) (f : tac unit) (_u:universe) (goal_ty : typ) : tac (opti
 
 let run_tactic_on_ps_and_solve_remaining
     (#a #b : Type)
-    (t_range g_range : Range.range)
+    (t_range g_range : Range.t)
     (background : bool)
     (t : a)
     (f_tm : term)

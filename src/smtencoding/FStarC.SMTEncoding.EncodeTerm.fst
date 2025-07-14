@@ -257,7 +257,7 @@ let check_pattern_vars env vars pats =
     and term( * ) is just term
  *)
 
-type label = (fv & string & Range.range)
+type label = (fv & string & Range.t)
 type labels = list label
 type pattern = {
   pat_vars: list (bv & fv);
@@ -1621,7 +1621,7 @@ and encode_formula (phi:typ) (env:env_t) : (term & decls_t)  = (* expects phi to
        then BU.print2 "Formula (%s)  %s\n"
                      (tag_of phi)
                      (show phi) in
-    let enc (f:list term -> term) : Range.range -> args -> (term & decls_t) = fun r l ->
+    let enc (f:list term -> term) : Range.t -> args -> (term & decls_t) = fun r l ->
         let decls, args = BU.fold_map (fun decls x -> let t, decls' = encode_term (fst x) env in decls@decls', t) [] l in
         ({f args with rng=r}, decls) in
 
@@ -1631,7 +1631,7 @@ and encode_formula (phi:typ) (env:env_t) : (term & decls_t)  = (* expects phi to
         | [t1;t2] -> f(t1,t2)
         | _ -> failwith "Impossible" in
 
-    let enc_prop_c f : Range.range -> args -> (term & decls_t) = fun r l ->
+    let enc_prop_c f : Range.t -> args -> (term & decls_t) = fun r l ->
         let decls, phis =
             BU.fold_map (fun decls (t, _) ->
                 let phi, decls' = encode_formula t env in

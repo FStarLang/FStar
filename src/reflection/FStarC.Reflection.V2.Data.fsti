@@ -39,7 +39,7 @@ let binder_is_simple (b:Stubs.Reflection.Types.binder) : Tot Type0 = True
 
 type simple_binder = binder
 
-type ident_view = string & Range.range
+type ident_view = string & Range.t
 
 (* No distinction internally between bvars and named vars *)
 type namedv = bv
@@ -50,7 +50,7 @@ type vconst =
     | C_True
     | C_False
     | C_String of string
-    | C_Range of Range.range
+    | C_Range of Range.t
     | C_Reify
     | C_Reflect of name
     | C_Real of string (* Real literals are represented as a string e.g. "1.2" *)

@@ -9,12 +9,12 @@ module EMB = FStarC.Syntax.Embeddings
 module NBE = FStarC.TypeChecker.NBETerm
 
 type psc = {
-     psc_range : FStarC.Range.range;
+     psc_range : FStarC.Range.t;
      psc_subst : unit -> subst_t // potentially expensive, so thunked
 }
 
 val null_psc : psc
-val psc_range : psc -> FStarC.Range.range
+val psc_range : psc -> FStarC.Range.t
 val psc_subst : psc -> subst_t
 
 type interp_t =
@@ -40,7 +40,7 @@ val as_primitive_step_nbecbs
      : (Ident.lident & int & int & interp_t & nbe_interp_t) -> primitive_step
 
 (* Some helpers for the NBE. Does not really belong in this module. *)
-val embed_simple: {| EMB.embedding 'a |} -> Range.range -> 'a -> term
+val embed_simple: {| EMB.embedding 'a |} -> Range.t -> 'a -> term
 val try_unembed_simple: {| EMB.embedding 'a |} -> term -> option 'a
 
 val mk_interp1 #a #r

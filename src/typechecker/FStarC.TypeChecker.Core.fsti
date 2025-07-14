@@ -9,6 +9,8 @@ type tot_or_ghost =
   | E_Total
   | E_Ghost
 
+instance val showable_tot_or_ghost : Class.Show.showable tot_or_ghost
+
 val clear_memo_table (_:unit)
   : unit
 

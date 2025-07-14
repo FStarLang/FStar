@@ -1110,6 +1110,8 @@ and p_constructorPattern p = match p.pat with
       p_atomicPattern p
 
 and p_atomicPattern p = match p.pat with
+  | PatRest ->
+    str ".."
   | PatAscribed (pat, (t, None)) ->
     (* This inverts the first rule of atomicPattern (LPAREN tuplePattern COLON
      * simpleArrow RPAREN). *)
@@ -2290,7 +2292,7 @@ let modul_to_document (m:modul) =
   | Interface {decls} ->
     separate_map hardline p_decl decls
 
-let comments_to_document (comments : list (string & FStarC.Range.range)) =
+let comments_to_document (comments : list (string & FStarC.Range.t)) =
     separate_map hardline (fun (comment, range) -> str comment) comments
 
 let extract_decl_range (d: decl): decl_meta =
