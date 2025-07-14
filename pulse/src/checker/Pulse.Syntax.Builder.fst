@@ -61,8 +61,8 @@ let mk_unfold_hint_type names p = UNFOLD { names; p }
 let mk_fold_hint_type names p = FOLD { names; p }
 let mk_rename_hint_type pairs goal tac_opt = RENAME { pairs; goal; tac_opt=map_opt tac_opt thunk }
 let mk_rewrite_hint_type t1 t2 tac_opt = REWRITE { t1; t2; tac_opt=map_opt tac_opt thunk }
-let mk_fn_defn id isrec bs comp meas body : decl' = FnDefn { id; isrec; bs; comp; meas; body }
-let mk_fn_decl id bs comp : decl' = FnDecl { id; bs; comp; }
+let mk_fn_defn id isrec us bs comp meas body : decl' = FnDefn { id; isrec; us; bs; comp; meas; body }
+let mk_fn_decl id us bs comp : decl' = FnDecl { id; us; bs; comp; }
 let mk_decl d range : decl = {d; range}
 let mark_statement_sequence (s : st_term) : st_term = { s with seq_lhs = Sealed.seal true }
 let mark_not_source         (s : st_term) : st_term = { s with source = Sealed.seal false }

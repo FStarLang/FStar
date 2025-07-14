@@ -143,6 +143,7 @@ val fn_defn :
   range ->
   name:ident ->
   isrec:bool ->
+  us:list ident ->
   bs:list (option qualifier & binder & bv) ->
   comp:comp ->
   meas:option term ->
@@ -152,6 +153,7 @@ val fn_defn :
 val fn_decl :
   range ->
   name:ident ->
+  us:list ident ->
   bs:list (option qualifier & binder & bv) ->
   comp:comp ->
   decl

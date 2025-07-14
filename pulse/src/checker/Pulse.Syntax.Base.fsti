@@ -326,6 +326,7 @@ type fn_defn = {
   Tm_Abs with bs and body, especially if non-recursive. *)
   id : R.ident;
   isrec : bool;
+  us : list R.univ_name;
   bs : list (option qualifier & binder & bv);
   comp : comp; (* bs in scope *)
   meas : (meas:option term{Some? meas ==> isrec}); (* bs in scope *)
@@ -336,6 +337,7 @@ noeq
 type fn_decl = {
   (* A function declaration, without a body. *)
   id : R.ident;
+  us : list R.univ_name;
   bs : list (option qualifier & binder & bv);
   comp : comp_st; (* bs in scope *)
 }

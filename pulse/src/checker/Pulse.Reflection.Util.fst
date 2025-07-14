@@ -729,13 +729,13 @@ let mk_szv (n:R.term) =
   let t = pack_ln (Tv_FVar (pack_fv szv_lid)) in
   pack_ln (Tv_App t (n, Q_Explicit))
 
-let mk_opaque_let (g:R.env) (cur_module:R.name) (nm:string) (tm:Ghost.erased R.term) (ty:R.typ{RT.typing g tm (T.E_Total, ty)})
+let mk_opaque_let (g:R.env) (cur_module:R.name) (nm:string) (us: list R.univ_name) (tm:Ghost.erased R.term) (ty:R.typ{RT.typing g tm (T.E_Total, ty)})
   : T.Tac (RT.sigelt_for g (Some ty)) =
   let fv = R.pack_fv (cur_module @ [nm]) in
-  let lb = R.pack_lb ({ lb_fv = fv; lb_us = []; lb_typ = ty; lb_def = (`_) }) in
+  let lb = R.pack_lb ({ lb_fv = fv; lb_us = us; lb_typ = ty; lb_def = (`_) }) in
   let se = R.pack_sigelt (R.Sg_Let false [lb]) in
   let pf : RT.sigelt_typing g se =
-    RT.ST_Let_Opaque g fv ty ()
+    RT.ST_Let_Opaque g fv us ty ()
   in
   (true, se, None)
 
