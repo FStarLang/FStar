@@ -31,20 +31,10 @@ let raisable_inst = ()
 
 let elim_subtype (#a: Type u#a) (#b: Type u#b { subtype_of a b }) (x: a) : b = x
 
-let raisable_elim {| raisable u#a u#b |} (t: Type u#(max a b)) : Type u#b =
-  elim_subtype t
+let raise_t t = elim_subtype (U.raise_t u#a u#b t)
 
-#push-options "--no_smt" // I can't wait until the universe branch merges
+let raise_val x = U.raise_val u#a u#b x
+let downgrade_val x = U.downgrade_val u#a u#b x
 
-let raisable_prop {| inst : raisable u#a u#b |} : squash (subtype_of (Type u#(max a b)) (Type u#b)) =
-  inst
-
-let raise_t #inst t = raisable_elim (U.raise_t u#a u#b t)
-
-let raise_val #t #inst x = U.raise_val u#a u#b x
-let downgrade_val #t #inst x = U.downgrade_val u#a u#b x
-
-#pop-options
-
-let downgrade_val_raise_val #_ #inst x = U.downgrade_val_raise_val u#a u#b x
-let raise_val_downgrade_val #_ #inst x = U.raise_val_downgrade_val u#a u#b x
+let downgrade_val_raise_val x = U.downgrade_val_raise_val u#a u#b x
+let raise_val_downgrade_val x = U.raise_val_downgrade_val u#a u#b x
