@@ -163,13 +163,13 @@ ghost fn gsub_elim #t (arr: array t) #f (#mask: nat->prop) (i j: nat)
 
 inline_for_extraction
 unobservable
-fn sub #t (arr: array t) #f #mask (i: SZ.t) (j: SZ.t)
-    (#v: erased (Seq.seq t) { SZ.v i <= SZ.v j /\ SZ.v j <= Seq.length (reveal v) })
+fn sub #t (arr: array t) #f #mask (i: SZ.t) (j: erased nat)
+    (#v: erased (Seq.seq t) { SZ.v i <= j /\ j <= Seq.length (reveal v) })
   requires pts_to_mask arr #f v mask
   returns sub: (sub: array t { length arr == Seq.length (reveal v) })
-  ensures rewrites_to sub (gsub arr (SZ.v i) (SZ.v j))
-  ensures pts_to_mask sub #f (Seq.slice v (SZ.v i) (SZ.v j)) (fun k -> mask (k + SZ.v i))
-  ensures pts_to_mask arr #f v (fun k -> mask k /\ ~(SZ.v i <= k /\ k < SZ.v j))
+  ensures rewrites_to sub (gsub arr (SZ.v i) j)
+  ensures pts_to_mask sub #f (Seq.slice v (SZ.v i) j) (fun k -> mask (k + SZ.v i))
+  ensures pts_to_mask arr #f v (fun k -> mask k /\ ~(SZ.v i <= k /\ k < j))
 
 [@@allow_ambiguous]
 ghost fn return_sub #t (arr: array t) #f (#v #vsub: erased (Seq.seq t)) #mask #masksub (#i: nat) (#j: nat { i <= j /\ j <= length arr })

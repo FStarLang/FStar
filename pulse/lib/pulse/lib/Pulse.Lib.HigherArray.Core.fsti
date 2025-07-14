@@ -177,13 +177,13 @@ ghost fn gsub_elim u#a (#t: Type u#a) (arr: array t) #f (#mask: nat->prop) (i j:
     pure (Seq.length v' == length arr /\ (forall (k:nat). k < j - i ==> Seq.index v k == Seq.index v' (k + i)))
 
 unobservable
-fn sub u#a (#t: Type u#a) (arr: array t) #f #mask (i: SZ.t) (j: SZ.t)
-    (#v: erased (Seq.seq t) { SZ.v i <= SZ.v j /\ SZ.v j <= Seq.length (reveal v) })
+fn sub u#a (#t: Type u#a) (arr: array t) #f #mask (i: SZ.t) (j: erased nat)
+    (#v: erased (Seq.seq t) { SZ.v i <= j /\ j <= Seq.length (reveal v) })
   requires pts_to_mask arr #f v mask
   returns sub: (sub: array t { length arr == Seq.length (reveal v) })
-  ensures rewrites_to sub (gsub arr (SZ.v i) (SZ.v j))
-  ensures pts_to_mask sub #f (Seq.slice v (SZ.v i) (SZ.v j)) (fun k -> mask (k + SZ.v i))
-  ensures pts_to_mask arr #f v (fun k -> mask k /\ ~(SZ.v i <= k /\ k < SZ.v j))
+  ensures rewrites_to sub (gsub arr (SZ.v i) j)
+  ensures pts_to_mask sub #f (Seq.slice v (SZ.v i) j) (fun k -> mask (k + SZ.v i))
+  ensures pts_to_mask arr #f v (fun k -> mask k /\ ~(SZ.v i <= k /\ k < j))
 
 [@@allow_ambiguous]
 ghost fn return_sub u#a (#t: Type u#a) (arr: array t) #f (#v #vsub: erased (Seq.seq t)) #mask #masksub (#i: nat) (#j: nat { i <= j /\ j <= length arr })

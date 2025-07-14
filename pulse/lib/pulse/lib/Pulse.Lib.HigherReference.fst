@@ -211,7 +211,7 @@ fn array_at u#a (#a: Type u#a) (arr: array a) (i: SizeT.t) #p (#v: erased (Seq.s
   ensures r |-> Frac p (Seq.index v (SizeT.v i))
   ensures pts_to_mask arr #p v (fun k -> mask k /\ k <> SizeT.v i)
 {
-  let res = sub arr i (SizeT.add i 1sz);
+  let res = sub arr i (SizeT.v i + 1);
   mask_ext res (singleton (Seq.index v (SizeT.v i))) (fun _ -> True);
   from_mask res;
   fold pts_to res #p (Seq.index v (SizeT.v i));
