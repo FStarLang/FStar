@@ -115,14 +115,10 @@ test-pulse2rust: pulse2rust test-share # test-pulse2rust uses .checked files fro
 	+$(MAKE) -C pulse2rust test
 
 .PHONY: test
-test: test-pulse test-share test-qs
+test: test-pulse test-share
 ifeq ($(PULSE_NO_RUST),)
 test: test-pulse2rust
 endif
-
-.PHONY: test-qs
-test-qs: local-install
-	$(MAKE) -C qs test
 
 .PHONY: pulse2rust
 pulse2rust: lib-pulse plugin
