@@ -30,17 +30,17 @@ ensures pure (v == 0)
 }
 
 fn effectful_length()
-returns FStar.SizeT.t
+returns x : SizeT.t
+ensures pure (SizeT.v x == 17)
 {
   17sz;
 }
 
-[@@expect_failure [228]]
 fn test_with_local_array2 ()
 returns v:int
 ensures pure (v == 0)
 {
-  //We do not hoist the length---expected a constant
+  //We do also hoist the length
   let mut x = [| array_initializer(); effectful_length() |];
   x.(16sz);
 }
@@ -52,27 +52,23 @@ returns FStar.SizeT.t
   17sz;
 }
 
-[@@expect_failure [12]]
+[@@expect_failure [19]]
 fn test_with_local_array2' ()
 returns v:int
 ensures pure (v == 0)
 {
-  //This one fails, but for a different reason.
-  //effectul_length2 is marked as inline_for_extraction,
-  //so we do not complain syntactically about the length
-  //but we do not hoist the effectful term, so it is not pure.
+  // This one fails, since there is no guarantee that
+  // the value returned by effectful_length2 is > 16.
   let mut x = [| array_initializer(); effectful_length2() |];
   x.(16sz);
 }
 
 let pure_length () = 17sz
 
-[@@expect_failure [228]]
 fn test_with_local_array3 ()
 returns v:int
 ensures pure (v == 0)
 {
-  //This fails too: The length should be a constant
   let mut x = [| array_initializer(); pure_length() |];
   x.(16sz);
 }
