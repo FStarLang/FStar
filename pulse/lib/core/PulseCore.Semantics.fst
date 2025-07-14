@@ -168,6 +168,7 @@ type step_result (#st:state u#s) (a:Type u#a) (q:post st a) (frame:st.pred) =
           m:m a next q -> //the reduct
           step_result a q frame
 
+#push-options "--z3rlimit 10"
 (**
  * [step f frame]: Reduces a single step of [f], while framing
  * the assertion [frame]
@@ -216,6 +217,7 @@ let rec step
                 (fun x -> return <| Step _ <| Par m0 (Step?.m x))
     in
     weaken <| bind (lift <| NST.flip()) choose 
+#pop-options
 
 let rec loop #t () : Dv t = loop ()
 
