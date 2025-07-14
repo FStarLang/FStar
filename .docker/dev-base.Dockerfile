@@ -37,7 +37,7 @@ ADD fstar.opam ./fstar.opam
 RUN opam install -j$(nproc) --confirm-level=unsafe-yes --deps-only ./fstar.opam && opam clean
 
 # Some karamel dependencies too. hex for everparse
-RUN opam install -j$(nproc) --confirm-level=unsafe-yes fix fileutils visitors camlp4 wasm uucp ctypes ctypes-foreign hex && opam clean
+RUN opam install -j$(nproc) --confirm-level=unsafe-yes fix fileutils visitors camlp4 wasm uucp ctypes ctypes-foreign hex domainslib && opam clean
 
 RUN sudo apt install time
 
