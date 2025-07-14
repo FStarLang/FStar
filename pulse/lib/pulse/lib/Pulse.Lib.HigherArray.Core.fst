@@ -28,6 +28,7 @@ module Frac = Pulse.Lib.PCM.Fraction
 module PM = Pulse.Lib.PCM.Map
 open Pulse.Lib.PCM.Array
 module PA = Pulse.Lib.PCM.Array
+open Pulse.Lib.SmallType.PCM
 
 
 /// An abstract type to represent a base array (whole allocation
@@ -60,7 +61,7 @@ let offset_of #t (a: array t) : GTot nat = a.offset
 let is_full_array (#elt: Type) (a: array elt) : Tot prop =
   length a == reveal a.base_len
 
-let null (#a: Type u#1) : array a = null_array'
+let null #a : array a = null_array'
 let is_null a = is_null_core_pcm_ref a.base_ref
 
 let lptr_of #elt (a: array elt) : pcm_ref (PA.pcm elt a.base_len) =
@@ -88,7 +89,7 @@ let mask_nonempty (mask: nat -> prop) (len: nat) : prop =
   exists i. mask i /\ i < len
 
 // workaround for https://github.com/FStarLang/pulse/issues/430
-let squash' (t: Type u#1) = squash t
+let squash' (t: Type u#a) = squash t
 let intro_squash #t (x: t) : squash' t = ()
 
 let pts_to_mask #t ([@@@mkey] a: array t) (#[full_default()] f: perm) (v: erased (Seq.seq t)) (mask: nat -> prop) : slprop =
@@ -98,7 +99,7 @@ let pts_to_mask #t ([@@@mkey] a: array t) (#[full_default()] f: perm) (v: erased
 let pts_to_mask_timeless _ _ _ _ = ()
 
 ghost
-fn pts_to_mask_props #t (a:array t) (#p:perm) (#x:Seq.seq t) #mask
+fn pts_to_mask_props u#a (#t: Type u#a) (a:array t) (#p:perm) (#x:Seq.seq t) #mask
   preserves pts_to_mask a #p x mask
   ensures pure (length a == Seq.length x)
   ensures pure (mask_nonempty mask (length a) ==> p <=. 1.0R)
@@ -106,12 +107,12 @@ fn pts_to_mask_props #t (a:array t) (#p:perm) (#x:Seq.seq t) #mask
   ensures pure (squash' t)
 {
   unfold pts_to_mask a #p x mask;
-  pts_to_not_null _ _;
+  pts_to_not_null (lptr_of a) _;
   fold pts_to_mask a #p x mask;
 }
 
 ghost
-fn pts_to_mask_len #t (a:array t) (#p:perm) (#x:Seq.seq t) #mask
+fn pts_to_mask_len u#a (#t: Type u#a) (a:array t) (#p:perm) (#x:Seq.seq t) #mask
   preserves pts_to_mask a #p x mask
   ensures pure (length a == Seq.length x)
 {
@@ -119,7 +120,7 @@ fn pts_to_mask_len #t (a:array t) (#p:perm) (#x:Seq.seq t) #mask
 }
 
 ghost
-fn pts_to_mask_perm_bound #t (arr: array t) #p (#s:Seq.seq t) #mask
+fn pts_to_mask_perm_bound u#a (#t: Type u#a) (arr: array t) #p (#s:Seq.seq t) #mask
   preserves pts_to_mask arr #p s mask
   requires pure (exists (i: nat). i < Seq.length s /\ mask i)
   ensures pure (p <=. 1.0R)
@@ -128,14 +129,14 @@ fn pts_to_mask_perm_bound #t (arr: array t) #p (#s:Seq.seq t) #mask
 }
 
 ghost
-fn pts_to_mask_not_null #a #p (r:array a) (#v:Seq.seq a) #mask
+fn pts_to_mask_not_null u#a (#a: Type u#a) #p (r:array a) (#v:Seq.seq a) #mask
   preserves pts_to_mask r #p v mask
   ensures pure (not (is_null r))
 {
   pts_to_mask_props r;
 }
 
-ghost fn mask_vext #t (arr: array t) #f #v v' #mask
+ghost fn mask_vext u#a (#t: Type u#a) (arr: array t) #f #v v' #mask
   requires pts_to_mask arr #f v mask
   requires pure (Seq.length v' == Seq.length v /\
     (forall (i: nat). mask i /\ i < Seq.length v ==> Seq.index v i == Seq.index v' i))
@@ -146,7 +147,7 @@ ghost fn mask_vext #t (arr: array t) #f #v v' #mask
   fold pts_to_mask arr #f v' mask;
 }
 
-ghost fn mask_mext #t (arr: array t) #f #v #mask (mask': nat -> prop)
+ghost fn mask_mext u#a (#t: Type u#a) (arr: array t) #f #v #mask (mask': nat -> prop)
   requires pts_to_mask arr #f v mask
   requires pure (forall (i: nat). i < Seq.length v ==> (mask i <==> mask' i))
   ensures pts_to_mask arr #f v mask'
@@ -156,7 +157,7 @@ ghost fn mask_mext #t (arr: array t) #f #v #mask (mask': nat -> prop)
   fold pts_to_mask arr #f v mask';
 }
 
-ghost fn mask_ext #t (arr: array t) #f #v #mask v' (mask': nat -> prop)
+ghost fn mask_ext u#a (#t: Type u#a) (arr: array t) #f #v #mask v' (mask': nat -> prop)
   requires pts_to_mask arr #f v mask
   requires pure (forall (i: nat). i < Seq.length v ==> (mask i <==> mask' i))
   requires pure (Seq.length v' == Seq.length v /\
@@ -167,15 +168,15 @@ ghost fn mask_ext #t (arr: array t) #f #v #mask v' (mask': nat -> prop)
   mask_mext arr mask';
 }
 
-fn mask_alloc #elt (x: elt) (n: SZ.t)
+fn mask_alloc u#a (#elt: Type u#a) {| small_type u#a |} (x: elt) (n: SZ.t)
   returns a: array elt
   ensures pts_to_mask a (Seq.create (SZ.v n) x) (fun _ -> True)
   ensures pure (length a == SZ.v n /\ is_full_array a)
 {
   let v = mk_carrier 0 (SZ.v n) 1.0R (Seq.create (SZ.v n) x) (fun _ -> true);
   FStar.PCM.compatible_refl (PA.pcm elt (SZ.v n)) v;
-  let b = Pulse.Lib.Core.alloc #_ #(PA.pcm elt (SZ.v n)) v;
-  Pulse.Lib.Core.pts_to_not_null b _;
+  let b = alloc #_ #_ #(PA.pcm elt (SZ.v n)) v;
+  pts_to_not_null b _;
   let arr: array elt = { base_ref = b; base_len = SZ.v n; length = SZ.v n; offset = 0 };
   rewrite each b as lptr_of arr;
   assert pure (v `Map.equal` mk_carrier' arr 1.0R (Seq.create (SZ.v n) x) (fun _ -> l_True));
@@ -184,7 +185,7 @@ fn mask_alloc #elt (x: elt) (n: SZ.t)
   arr
 }
 
-fn mask_free #elt (a: array elt) (#s: Ghost.erased (Seq.seq elt)) #mask
+fn mask_free u#a (#elt: Type u#a) (a: array elt) (#s: Ghost.erased (Seq.seq elt)) #mask
   requires pts_to_mask a s mask
   requires pure (forall i. mask i)
   requires pure (is_full_array a)
@@ -198,7 +199,7 @@ let get_mask_idx (m: nat->prop) (l: nat) : GTot (i: nat { mask_nonempty m l ==> 
   else
     0
 
-ghost fn pcm_rw #t
+ghost fn pcm_rw u#a (#t: Type u#a)
     (a1: array t) p1 s1 m1
     (a2: array t) p2 s2 m2
   requires pts_to_mask #t a1 #p1 s1 m1
@@ -218,7 +219,7 @@ ghost fn pcm_rw #t
   fold pts_to_mask a2 #p2 s2 m2;
 }
 
-ghost fn pcm_share #t
+ghost fn pcm_share u#a (#t: Type u#a)
     (a: array t) p s m
     (a1: array t) p1 s1 m1
     (a2: array t) p2 s2 m2
@@ -236,7 +237,7 @@ ghost fn pcm_share #t
   ensures pts_to_mask a2 #p2 s2 m2
 {
   unfold pts_to_mask a #p s m;
-  Pulse.Lib.Core.share (lptr_of a) (mk_carrier' a1 p1 s1 m1) (mk_carrier' a2 p2 s2 m2);
+  share (lptr_of a) (mk_carrier' a1 p1 s1 m1) (mk_carrier' a2 p2 s2 m2);
   rewrite
     pcm_pts_to (lptr_of a) (mk_carrier' a1 p1 s1 m1) as
     pcm_pts_to (lptr_of a1) (mk_carrier' a1 p1 s1 m1);
@@ -253,7 +254,7 @@ ghost fn pcm_share #t
   fold pts_to_mask a2 #p2 s2 m2;
 }
 
-ghost fn pcm_gather #t
+ghost fn pcm_gather u#a (#t: Type u#a)
     (a: array t) p s m
     (a1: array t) p1 s1 m1
     (a2: array t) p2 s2 m2
@@ -284,7 +285,7 @@ ghost fn pcm_gather #t
   rewrite
     pcm_pts_to (lptr_of a2) (mk_carrier' a2 p2 s2 m2) as
     pcm_pts_to (lptr_of a) (mk_carrier' a2 p2 s2 m2);
-  Pulse.Lib.Core.gather (lptr_of a) (mk_carrier' a1 p1 s1 m1) (mk_carrier' a2 p2 s2 m2);
+  gather (lptr_of a) (mk_carrier' a1 p1 s1 m1) (mk_carrier' a2 p2 s2 m2);
   let i = get_mask_idx m (length a);
   assert pure (mask_nonempty m a.length ==>
     Map.sel (mk_carrier' a p s m) (i + a.offset) == Some (Seq.index s i, p));
@@ -292,7 +293,7 @@ ghost fn pcm_gather #t
 }
 
 ghost
-fn mask_share #a (arr:array a) (#s: Seq.seq a) #p #mask
+fn mask_share u#a (#a: Type u#a) (arr:array a) (#s: Seq.seq a) #p #mask
   requires pts_to_mask arr #p s mask
   ensures pts_to_mask arr #(p /. 2.0R) s mask
   ensures pts_to_mask arr #(p /. 2.0R) s mask
@@ -305,7 +306,7 @@ fn mask_share #a (arr:array a) (#s: Seq.seq a) #p #mask
 }
 
 [@@allow_ambiguous]
-ghost fn mask_gather #t (arr: array t) #p1 #p2 #s1 #s2 #mask1 #mask2
+ghost fn mask_gather u#a (#t: Type u#a) (arr: array t) #p1 #p2 #s1 #s2 #mask1 #mask2
   requires pts_to_mask arr #p1 s1 mask1
   requires pts_to_mask arr #p2 s2 mask2
   requires pure (forall i. mask1 i <==> mask2 i)
@@ -324,7 +325,7 @@ ghost fn mask_gather #t (arr: array t) #p1 #p2 #s1 #s2 #mask1 #mask2
     Map.sel (mk_carrier' arr p1 s1 mask1) (i + arr.offset) == Some (Seq.index s1 i, p1));
 }
 
-ghost fn split_mask #t (arr: array t) #f #v #mask (pred: nat -> prop)
+ghost fn split_mask u#a (#t: Type u#a) (arr: array t) #f #v #mask (pred: nat -> prop)
   requires pts_to_mask arr #f v mask
   ensures pts_to_mask arr #f v (mask_isect mask pred)
   ensures pts_to_mask arr #f v (mask_diff mask pred)
@@ -345,7 +346,7 @@ let mix #t (v1: Seq.seq t) (v2: Seq.seq t { Seq.length v1 == Seq.length v2 }) (m
     if IndefiniteDescription.strong_excluded_middle (mask i) then Seq.index v1 i else Seq.index v2 i
 
 [@@allow_ambiguous]
-ghost fn join_mask #t (arr: array t) #f #v1 #v2 #mask1 #mask2
+ghost fn join_mask u#a (#t: Type u#a) (arr: array t) #f #v1 #v2 #mask1 #mask2
   requires pts_to_mask arr #f v1 mask1
   requires pts_to_mask arr #f v2 mask2
   requires pure (forall i. ~(mask1 i /\ mask2 i))
@@ -367,7 +368,7 @@ ghost fn join_mask #t (arr: array t) #f #v1 #v2 #mask1 #mask2
 }
 
 [@@allow_ambiguous]
-ghost fn join_mask' #t (arr: array t) #f (#v: erased (Seq.seq t)) #mask1 #mask2
+ghost fn join_mask' u#a (#t: Type u#a) (arr: array t) #f (#v: erased (Seq.seq t)) #mask1 #mask2
   requires pts_to_mask arr #f v mask1
   requires pts_to_mask arr #f v mask2
   requires pure (forall i. ~(mask1 i /\ mask2 i))
@@ -379,7 +380,7 @@ ghost fn join_mask' #t (arr: array t) #f (#v: erased (Seq.seq t)) #mask1 #mask2
 
 [@@allow_ambiguous]
 ghost
-fn pts_to_mask_injective_eq #a #p0 #p1 #s0 #s1 #mask0 #mask1 (arr:array a)
+fn pts_to_mask_injective_eq u#a (#a: Type u#a) #p0 #p1 #s0 #s1 #mask0 #mask1 (arr:array a)
   preserves pts_to_mask arr #p0 s0 mask0
   preserves pts_to_mask arr #p1 s1 mask1
   ensures pure (Seq.length s0 == Seq.length s1 /\
@@ -388,15 +389,15 @@ fn pts_to_mask_injective_eq #a #p0 #p1 #s0 #s1 #mask0 #mask1 (arr:array a)
 {
   unfold pts_to_mask arr #p0 s0 mask0;
   unfold pts_to_mask arr #p1 s1 mask1;
-  Pulse.Lib.Core.gather (lptr_of arr) (mk_carrier' arr p0 s0 mask0) (mk_carrier' arr p1 s1 mask1);
-  Pulse.Lib.Core.share (lptr_of arr) (mk_carrier' arr p0 s0 mask0) (mk_carrier' arr p1 s1 mask1);
+  gather (lptr_of arr) (mk_carrier' arr p0 s0 mask0) (mk_carrier' arr p1 s1 mask1);
+  share (lptr_of arr) (mk_carrier' arr p0 s0 mask0) (mk_carrier' arr p1 s1 mask1);
   assert pure (forall (i: nat). i < Seq.length s0 /\ mask0 i ==>
     Map.sel (mk_carrier' arr p0 s0 mask0) (i + arr.offset) == Some (Seq.index s0 i, p0));
   fold pts_to_mask arr #p0 s0 mask0;
   fold pts_to_mask arr #p1 s1 mask1;
 }
 
-fn mask_read #t (a: array t) (i: SZ.t) #p (#s: erased (Seq.seq t) { SZ.v i < Seq.length s }) #mask
+fn mask_read u#a (#t: Type u#a) (a: array t) (i: SZ.t) #p (#s: erased (Seq.seq t) { SZ.v i < Seq.length s }) #mask
   preserves pts_to_mask a #p s mask
   requires pure (mask (SZ.v i))
   returns res: t
@@ -404,19 +405,19 @@ fn mask_read #t (a: array t) (i: SZ.t) #p (#s: erased (Seq.seq t) { SZ.v i < Seq
 {
   unfold pts_to_mask a #p s mask;
   with w. assert pcm_pts_to (lptr_of a) w;
-  let v = Pulse.Lib.Core.read (lptr_of a) w (fun _ -> w);
+  let v = read (lptr_of a) w (fun _ -> w);
   fold pts_to_mask a #p s mask;
   fst (Some?.v (FStar.Map.sel v (a.offset + SZ.v i)));
 }
 
-fn mask_write #t (a: array t) (i: SZ.t) (v: t) (#s: erased (Seq.seq t) { SZ.v i < Seq.length s }) #mask
+fn mask_write u#a (#t: Type u#a) (a: array t) (i: SZ.t) (v: t) (#s: erased (Seq.seq t) { SZ.v i < Seq.length s }) #mask
   requires pts_to_mask a s mask
   requires pure (mask (SZ.v i))
   ensures pts_to_mask a (Seq.upd s (SZ.v i) v) mask
 {
   unfold pts_to_mask a s mask;
   with w. assert (pcm_pts_to (lptr_of a) w);
-  Pulse.Lib.Core.write (lptr_of a) w _
+  write (lptr_of a) w _
       (PM.lift_frame_preserving_upd
         _ _
         (Frac.mk_frame_preserving_upd
@@ -442,7 +443,7 @@ let length_gsub #t arr i j = ()
 let offset_of_gsub #t arr i j = ()
 let base_of_gsub #t arr i j = ()
 
-ghost fn gsub_intro #t (arr: array t) #f #mask (i j: nat) (#v: erased (Seq.seq t) { i <= j /\ j <= Seq.length v })
+ghost fn gsub_intro u#a (#t: Type u#a) (arr: array t) #f #mask (i j: nat) (#v: erased (Seq.seq t) { i <= j /\ j <= Seq.length v })
   requires pts_to_mask arr #f v mask
   requires pure (forall (k: nat). mask k /\ k < Seq.length v ==> i <= k /\ k < j)
   returns _: squash (length arr == Seq.length v)
@@ -455,12 +456,12 @@ ghost fn gsub_intro #t (arr: array t) #f #mask (i j: nat) (#v: erased (Seq.seq t
   ()
 }
 
-let elim_squash (t: Type u#1 { squash' t }) : GTot t =
+let elim_squash (t: Type u#a { squash' t }) : GTot t =
   let h : squash (squash' t) = () in
   let h : squash t = IndefiniteDescription.elim_squash h in
   IndefiniteDescription.elim_squash h
 
-ghost fn gsub_elim #t (arr: array t) #f (#mask: nat->prop) (i j: nat)
+ghost fn gsub_elim u#a (#t: Type u#a) (arr: array t) #f (#mask: nat->prop) (i j: nat)
     (#v: erased (Seq.seq t) { i <= j /\ j <= length arr })
   requires pts_to_mask (gsub arr i j) #f v mask
   returns _: squash (j - i == Seq.length v)
@@ -479,7 +480,7 @@ ghost fn gsub_elim #t (arr: array t) #f (#mask: nat->prop) (i j: nat)
 }
 
 unobservable
-fn sub #t (arr: array t) #f #mask (i: SZ.t) (j: SZ.t)
+fn sub u#a (#t: Type u#a) (arr: array t) #f #mask (i: SZ.t) (j: SZ.t)
     (#v: erased (Seq.seq t) { SZ.v i <= SZ.v j /\ SZ.v j <= Seq.length (reveal v) })
   requires pts_to_mask arr #f v mask
   returns sub: (sub: array t { length arr == Seq.length (reveal v) })
@@ -497,7 +498,7 @@ fn sub #t (arr: array t) #f #mask (i: SZ.t) (j: SZ.t)
 }
 
 [@@allow_ambiguous]
-ghost fn return_sub #t (arr: array t) #f (#v #vsub: erased (Seq.seq t)) #mask #masksub (#i: nat) (#j: nat { i <= j /\ j <= length arr })
+ghost fn return_sub u#a (#t: Type u#a) (arr: array t) #f (#v #vsub: erased (Seq.seq t)) #mask #masksub (#i: nat) (#j: nat { i <= j /\ j <= length arr })
   requires pts_to_mask arr #f v mask
   requires pts_to_mask (gsub arr i j) #f vsub masksub
   requires pure (forall (k: nat). i <= k /\ k < j ==> ~(mask k))

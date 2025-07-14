@@ -9,4 +9,4 @@ let rec (test : Prims.int Pulse_Lib_HigherReference.ref -> Prims.int) =
   fun x1 ->
     if Pulse_Lib_HigherReference.is_null x1
     then Prims.int_zero
-    else (let k = Pulse_Lib_HigherReference.op_Bang x1 () () in k)
+    else Pulse_Lib_HigherReference.read x1 () ()

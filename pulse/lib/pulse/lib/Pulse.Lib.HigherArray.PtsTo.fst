@@ -25,17 +25,17 @@ module SZ = FStar.SizeT
 module Seq = FStar.Seq
 open Pulse.Lib.WithPure
 
-let pts_to (#elt: Type u#1) (a: array elt) (#p: perm) (s: Seq.seq elt) : Tot slprop =
+let pts_to (#elt: Type u#a) (a: array elt) (#p: perm) (s: Seq.seq elt) : Tot slprop =
   pts_to_mask a #p s fun i -> True
 
-ghost fn to_mask #t (arr: array t) #f #v
+ghost fn to_mask u#a (#t: Type u#a) (arr: array t) #f #v
   requires arr |-> Frac f v
   ensures pts_to_mask arr #f v (fun _ -> True)
 {
   unfold pts_to arr #f v;
 }
 
-ghost fn from_mask #t (arr: array t) #f #v #mask
+ghost fn from_mask u#a (#t: Type u#a) (arr: array t) #f #v #mask
   requires pts_to_mask arr #f v mask
   requires pure (forall (i: nat). i < Seq.length v ==> mask i)
   ensures arr |-> Frac f v
@@ -48,7 +48,7 @@ let pts_to_timeless _ _ _ = ()
 
 ghost
 fn pts_to_len
-  (#elt: Type u#1)
+  u#a (#elt: Type u#a)
   (a:array elt)
   (#p:perm)
   (#x:Seq.seq elt)
@@ -61,18 +61,18 @@ fn pts_to_len
 }
 
 ghost
-fn pts_to_not_null (#a:_) (#p:_) (r:array a) (#v:Seq.seq a)
+fn pts_to_not_null u#a (#a: Type u#a) (#p:_) (r:array a) (#v:Seq.seq a)
   preserves r |-> Frac p v
   ensures  pure (not (is_null #a r))
 {
   unfold pts_to r #p v;
-  pts_to_mask_not_null _;
+  pts_to_mask_not_null r;
   fold pts_to r #p v;
 }
 
 inline_for_extraction
 fn alloc
-    (#elt: Type u#1)
+    u#a (#elt: Type u#a) {| small_type u#a |}
     (x: elt)
     (n: SZ.t)
   returns a:array elt
@@ -87,7 +87,7 @@ ensures
 
 inline_for_extraction
 fn read
-    (#t: Type)
+    u#a (#t: Type u#a)
     (a: array t)
     (i: SZ.t)
     (#p: perm)
@@ -106,7 +106,7 @@ let op_Array_Access = read
 
 inline_for_extraction
 fn write
-    (#t: Type)
+    u#a (#t: Type u#a)
     (a: array t)
     (i: SZ.t)
     (v: t)
@@ -122,7 +122,7 @@ fn write
 let op_Array_Assignment = write
 
 fn free
-    (#elt: Type)
+    u#a (#elt: Type u#a)
     (a: array elt)
     (#s: Ghost.erased (Seq.seq elt))
   requires pts_to a s
@@ -134,7 +134,7 @@ fn free
 
 ghost
 fn share
-  (#elt:Type)
+  u#a (#elt: Type u#a)
   (arr:array elt)
   (#s:Ghost.erased (Seq.seq elt))
   (#p:perm)
@@ -150,7 +150,7 @@ fn share
 [@@allow_ambiguous]
 ghost
 fn gather
-  (#a:Type)
+  u#a (#a: Type u#a)
   (arr:array a)
   (#s0 #s1:Ghost.erased (Seq.seq a))
   (#p0 #p1:perm)
@@ -168,7 +168,7 @@ fn gather
 [@@allow_ambiguous]
 ghost
 fn pts_to_injective_eq
-    (#a:Type)
+    u#a (#a: Type u#a)
     (#p0 #p1:perm)
     (#s0 #s1:Seq.seq a)
     (arr:array a)
@@ -185,7 +185,7 @@ fn pts_to_injective_eq
 }
 
 ghost
-fn pts_to_perm_bound (#a:_) (#p:_) (arr: array a) (#s:Seq.seq a)
+fn pts_to_perm_bound u#a (#a: Type u#a) (#p:_) (arr: array a) (#s:Seq.seq a)
   preserves pts_to arr #p s
   requires pure (Seq.length s > 0)
   ensures pure (p <=. 1.0R)

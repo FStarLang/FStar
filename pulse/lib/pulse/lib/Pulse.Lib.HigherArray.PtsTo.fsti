@@ -25,44 +25,45 @@ open FStar.Ghost
 module SZ = FStar.SizeT
 module Seq = FStar.Seq
 open Pulse.Lib.HigherArray.Core
+open Pulse.Lib.SmallType
 
-val pts_to (#a:Type) ([@@@mkey]x:array a) (#[exact (`1.0R)] p:perm) (s: Seq.seq a) : slprop
+val pts_to (#a:Type u#a) ([@@@mkey]x:array a) (#[exact (`1.0R)] p:perm) (s: Seq.seq a) : slprop
 
 [@@pulse_unfold]
-instance has_pts_to_array (a:Type u#1) : has_pts_to (array a) (Seq.seq a) = {
+instance has_pts_to_array (a:Type u#a) : has_pts_to (array a) (Seq.seq a) = {
   pts_to = pts_to;
 }
 [@@pulse_unfold]
-instance has_pts_to_larray (a:Type u#1) (n : nat) : has_pts_to (larray a n) (Seq.seq a) = {
+instance has_pts_to_larray (a:Type u#a) (n : nat) : has_pts_to (larray a n) (Seq.seq a) = {
   pts_to = pts_to;
 }
 
-ghost fn to_mask #t (arr: array t) #f #v
+ghost fn to_mask u#a (#t: Type u#a) (arr: array t) #f #v
   requires arr |-> Frac f v
   ensures pts_to_mask arr #f v (fun _ -> True)
 
-ghost fn from_mask #t (arr: array t) #f #v #mask
+ghost fn from_mask u#a (#t: Type u#a) (arr: array t) #f #v #mask
   requires pts_to_mask arr #f v mask
   requires pure (forall (i: nat). i < Seq.length v ==> mask i)
   ensures arr |-> Frac f v
 
-val pts_to_timeless (#a:Type) (x:array a) (p:perm) (s:Seq.seq a)
+val pts_to_timeless (#a: Type u#a) (x:array a) (p:perm) (s:Seq.seq a)
   : Lemma (timeless (pts_to x #p s))
           [SMTPat (timeless (pts_to x #p s))]
 
 ghost
-fn pts_to_len (#t:Type) (a:array t) (#p:perm) (#x:Seq.seq t)
+fn pts_to_len u#a (#t: Type u#a) (a:array t) (#p:perm) (#x:Seq.seq t)
   requires pts_to a #p x
   ensures  pts_to a #p x ** pure (length a == Seq.length x)
 
 ghost
-fn pts_to_not_null (#a:_) (#p:_) (r:array a) (#v:Seq.seq a)
+fn pts_to_not_null u#a (#a: Type u#a) (#p:_) (r:array a) (#v:Seq.seq a)
   preserves r |-> Frac p v
   ensures  pure (not (is_null #a r))
 
 inline_for_extraction
 fn alloc
-        (#elt: Type)
+        u#a (#elt: Type u#a) {| small_type u#a |}
         (x: elt)
         (n: SZ.t)
   requires emp
@@ -73,7 +74,7 @@ fn alloc
 (* Written x.(i) *)
 inline_for_extraction
 fn op_Array_Access
-        (#t: Type)
+        u#a (#t: Type u#a)
         (a: array t)
         (i: SZ.t)
         (#p: perm)
@@ -86,7 +87,7 @@ fn op_Array_Access
 (* Written x.(i) <- v *)
 inline_for_extraction
 fn op_Array_Assignment
-        (#t: Type)
+        u#a (#t: Type u#a)
         (a: array t)
         (i: SZ.t)
         (v: t)
@@ -96,7 +97,7 @@ fn op_Array_Assignment
 
 inline_for_extraction
 fn free
-        (#elt: Type)
+        u#a (#elt: Type u#a)
         (a: array elt)
         (#s: Ghost.erased (Seq.seq elt))
   requires pts_to a s ** pure (is_full_array a)
@@ -104,7 +105,7 @@ fn free
 
 ghost
 fn share
-  (#a:Type)
+  u#a (#a: Type u#a)
   (arr:array a)
   (#s:Ghost.erased (Seq.seq a))
   (#p:perm)
@@ -114,7 +115,7 @@ fn share
 [@@allow_ambiguous]
 ghost
 fn gather
-  (#a:Type)
+  u#a (#a: Type u#a)
   (arr:array a)
   (#s0 #s1:Ghost.erased (Seq.seq a))
   (#p0 #p1:perm)
@@ -124,7 +125,7 @@ fn gather
 [@@allow_ambiguous]
 ghost
 fn pts_to_injective_eq
-    (#a:Type)
+    u#a (#a: Type u#a)
     (#p0 #p1:perm)
     (#s0 #s1:Seq.seq a)
     (arr:array a)
@@ -133,7 +134,7 @@ fn pts_to_injective_eq
   ensures pure (s0 == s1)
 
 ghost
-fn pts_to_perm_bound (#a:_) (#p:_) (arr: array a) (#s:Seq.seq a)
+fn pts_to_perm_bound u#a (#a: Type u#a) (#p:_) (arr: array a) (#s:Seq.seq a)
   preserves pts_to arr #p s
   requires pure (Seq.length s > 0)
   ensures pure (p <=. 1.0R)

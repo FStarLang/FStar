@@ -14,25 +14,37 @@
    limitations under the License.
 *)
 module Pulse.Lib.Raise
+module U = FStar.Universe
 
-noeq type raisable = {
-  f: ([@@@strictly_positive] Type u#a -> Type u#b);
-  raise_val: (#t: Type u#a -> x: t -> f t);
-  downgrade_val: (#t: Type u#a -> x: f t -> t);
-  down_raise: (#t: Type u#a -> x: t -> squash (downgrade_val (raise_val x) == x));
-  raise_down: (#t: Type u#a -> x: f t -> squash (raise_val (downgrade_val x) == x));
-}
+type punit : Type u#a = | PUnit
 
-let raisable_inst = {
-  f = Universe.raise_t;
-  raise_val = Universe.raise_val;
-  downgrade_val = Universe.downgrade_val;
-  down_raise = Universe.downgrade_val_raise_val;
-  raise_down = Universe.raise_val_downgrade_val;
-}
+let raisable : p:prop { Type u#(max a b) } =
+  squash (
+    Squash.return_squash (punit u#(max a b));
+    subtype_of (Type u#(max a b)) (Type u#b)
+  )
 
-let raise_t #inst t = inst.f t
-let raise_val #t #inst x = inst.raise_val x
-let downgrade_val #t #inst x = inst.downgrade_val x
-let downgrade_val_raise_val #_ #inst x = inst.down_raise x
-let raise_val_downgrade_val #_ #inst x = inst.raise_down x
+let raisable_non_info : non_informative (raisable u#a u#b) =
+  { reveal = ((fun p -> p) <: Ghost.erased (raisable u#a u#b) -> raisable u#a u#b) }
+
+let raisable_inst = ()
+
+let elim_subtype (#a: Type u#a) (#b: Type u#b { subtype_of a b }) (x: a) : b = x
+
+let raisable_elim {| raisable u#a u#b |} (t: Type u#(max a b)) : Type u#b =
+  elim_subtype t
+
+#push-options "--no_smt" // I can't wait until the universe branch merges
+
+let raisable_prop {| inst : raisable u#a u#b |} : squash (subtype_of (Type u#(max a b)) (Type u#b)) =
+  inst
+
+let raise_t #inst t = raisable_elim (U.raise_t u#a u#b t)
+
+let raise_val #t #inst x = U.raise_val u#a u#b x
+let downgrade_val #t #inst x = U.downgrade_val u#a u#b x
+
+#pop-options
+
+let downgrade_val_raise_val #_ #inst x = U.downgrade_val_raise_val u#a u#b x
+let raise_val_downgrade_val #_ #inst x = U.raise_val_downgrade_val u#a u#b x

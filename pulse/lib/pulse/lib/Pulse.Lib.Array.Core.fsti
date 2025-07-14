@@ -149,7 +149,7 @@ val gsub #t (arr: array t) (i: nat) (j: nat { i <= j /\ j <= length arr }) : GTo
 
 ghost fn gsub_intro #t (arr: array t) #f #mask (i j: nat) (#v: erased (Seq.seq t) { i <= j /\ j <= Seq.length v })
   requires pts_to_mask arr #f v mask
-  requires pure (forall (k: nat). mask k ==> i <= k /\ k < j)
+  requires pure (forall (k: nat). mask k /\ k < Seq.length v ==> i <= k /\ k < j)
   returns _: squash (length arr == Seq.length v)
   ensures pts_to_mask (gsub arr i j) #f (Seq.slice v i j) (fun k -> mask (k + i))
 
@@ -157,7 +157,7 @@ ghost fn gsub_elim #t (arr: array t) #f (#mask: nat->prop) (i j: nat)
     (#v: erased (Seq.seq t) { i <= j /\ j <= length arr })
   requires pts_to_mask (gsub arr i j) #f v mask
   returns _: squash (j - i == Seq.length v)
-  ensures exists* v'.
+  ensures exists* (v': Seq.seq t).
     pts_to_mask arr #f v' (fun k -> i <= k /\ k < j /\ mask (k - i)) **
     pure (Seq.length v' == length arr /\ (forall (k:nat). k < j - i ==> Seq.index v k == Seq.index v' (k + i)))
 
@@ -198,7 +198,7 @@ ghost fn to_mask #t (arr: array t) #f #v
 
 ghost fn from_mask #t (arr: array t) #f #v #mask
   requires pts_to_mask arr #f v mask
-  requires pure (forall i. mask i)
+  requires pure (forall (i: nat). i < Seq.length v ==> mask i)
   ensures arr |-> Frac f v
 
 val pts_to_timeless (#a:Type) (x:array a) (p:perm) (s:Seq.seq a)

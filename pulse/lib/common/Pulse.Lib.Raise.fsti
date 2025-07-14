@@ -14,10 +14,13 @@
    limitations under the License.
 *)
 module Pulse.Lib.Raise
+open Pulse.Lib.NonInformative
 open FStar.ExtractAs
 
-[@@Tactics.Typeclasses.tcclass]
-val raisable : Type u#(1 + max a b)
+[@@Tactics.Typeclasses.tcclass; erasable]
+val raisable : p:prop { Type u#(max a b) } // hack to specify universe parameters
+
+instance val raisable_non_info : non_informative (raisable u#a u#b)
 
 [@@Tactics.Typeclasses.tcinstance]
 val raisable_inst : raisable u#a u#(max a b)

@@ -66,8 +66,8 @@ let pulse_translate_expr : translate_expr_t = fun env e ->
   match e.expr with
 
   (* Pulse references *)
-  | MLE_App ({ expr = MLE_Name p } , [ init ])
-  | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) } , [ init ])
+  | MLE_App ({ expr = MLE_Name p } , [ _; init ])
+  | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) } , [ _; init ])
     when string_of_mlpath p = "Pulse.Lib.HigherReference.alloc" ->
     EBufCreate (Stack, cb init, EConstant (UInt32, "1"))
 
@@ -114,7 +114,7 @@ let pulse_translate_expr : translate_expr_t = fun env e ->
 
   (* Pulse arrays *)
   | MLE_App ({ expr = MLE_Name p }, [ x; n])
-  | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ x; n])
+  | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [_; x; n])
     when string_of_mlpath p = "Pulse.Lib.HigherArray.Core.alloc" ->
     EBufCreate (Stack, cb x, cb n)
 

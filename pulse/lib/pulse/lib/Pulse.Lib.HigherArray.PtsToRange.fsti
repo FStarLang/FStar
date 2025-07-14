@@ -26,15 +26,16 @@ module SZ = FStar.SizeT
 module Seq = FStar.Seq
 open Pulse.Lib.HigherArray.Core
 open Pulse.Lib.HigherArray.PtsTo
+open Pulse.Lib.SmallType
 
 val pts_to_range
-  (#a:Type)
+  (#a:Type u#a)
   ([@@@mkey]x:array a)
   ([@@@mkey] i [@@@mkey] j : nat)
   (#[exact (`1.0R)] p:perm)
   (s : Seq.seq a) : slprop
 
-val pts_to_range_timeless (#a:Type) (x:array a) (i j : nat) (p:perm) (s:Seq.seq a)
+val pts_to_range_timeless (#a: Type u#a) (x:array a) (i j : nat) (p:perm) (s:Seq.seq a)
   : Lemma (timeless (pts_to_range x i j #p s))
           [SMTPat (timeless (pts_to_range x i j #p s))]
 
@@ -46,7 +47,7 @@ let is_subarray #elt (a: array elt) (i j: nat) (b: array elt) : prop =
 
 ghost
 fn pts_to_range_prop
-  (#elt: Type) (a: array elt) (#i #j: nat)
+  u#a (#elt: Type u#a) (a: array elt) (#i #j: nat)
   (#p: perm)
   (#s: Seq.seq elt)
   requires pts_to_range a i j #p s
@@ -56,7 +57,7 @@ fn pts_to_range_prop
 
 ghost
 fn pts_to_range_intro
-  (#elt: Type)
+  u#a (#elt: Type u#a)
   (a: array elt)
   (p: perm)
   (s: Seq.seq elt)
@@ -65,7 +66,7 @@ fn pts_to_range_intro
 
 ghost
 fn pts_to_range_elim
-  (#elt: Type)
+  u#a (#elt: Type u#a)
   (a: array elt)
   (p: perm)
   (s: Seq.seq elt)
@@ -74,7 +75,7 @@ fn pts_to_range_elim
 
 ghost
 fn pts_to_range_split
-  (#elt: Type)
+  u#a (#elt: Type u#a)
   (a: array elt)
   (i m j: nat)
   (#p: perm)
@@ -96,7 +97,7 @@ fn pts_to_range_split
 
 ghost
 fn pts_to_range_join
-  (#elt: Type)
+  u#a (#elt: Type u#a)
   (a: array elt)
   (i m j: nat)
   (#p: perm)
@@ -106,7 +107,7 @@ fn pts_to_range_join
 
 inline_for_extraction
 fn pts_to_range_index
-  (#t: Type)
+  u#a (#t: Type u#a)
   (a: array t)
   (i: SZ.t)
   (#l: Ghost.erased nat{l <= SZ.v i})
@@ -122,7 +123,7 @@ fn pts_to_range_index
 
 inline_for_extraction
 fn pts_to_range_upd
-  (#t: Type)
+  u#a (#t: Type u#a)
   (a: array t)
   (i: SZ.t)
   (v: t)
@@ -140,7 +141,7 @@ fn pts_to_range_upd
 
 ghost
 fn pts_to_range_share
-  (#a:Type)
+  u#a (#a: Type u#a)
   (arr:array a)
   (#l #r: nat)
   (#s:Seq.seq a)
@@ -151,7 +152,7 @@ fn pts_to_range_share
 [@@allow_ambiguous]
 ghost
 fn pts_to_range_gather
-  (#a:Type)
+  u#a (#a: Type u#a)
   (arr:array a)
   (#l #r: nat)
   (#s0 #s1: Seq.seq a)

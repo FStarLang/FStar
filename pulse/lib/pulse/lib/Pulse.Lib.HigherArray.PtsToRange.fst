@@ -31,7 +31,7 @@ module PA = Pulse.Lib.PCM.Array
 open Pulse.Lib.WithPure
 
 let pts_to_range
-  (#a:Type)
+  (#a: Type u#a)
   ([@@@mkey] x:array a)
   (i j : nat)
   (#[exact (`1.0R)] p:perm)
@@ -39,7 +39,7 @@ let pts_to_range
 : slprop
 = with_pure (i <= j /\ j <= length x) fun _ -> pts_to (gsub x i j) #p s
 
-ghost fn fold_pts_to_range #a (x: array a) (i: nat) (j: nat { i <= j /\ j <= length x }) #p #s0 s #mask
+ghost fn fold_pts_to_range u#a (#a: Type u#a) (x: array a) (i: nat) (j: nat { i <= j /\ j <= length x }) #p #s0 s #mask
   requires pts_to_mask (gsub x i j) #p s0 mask
   requires pure (Seq.equal s s0)
   requires pure (forall (k: nat). k < j - i ==> mask k)
@@ -47,12 +47,12 @@ ghost fn fold_pts_to_range #a (x: array a) (i: nat) (j: nat { i <= j /\ j <= len
 {
   pts_to_mask_len (gsub x i j);
   mask_ext (gsub x i j) s (fun _ -> True);
-  from_mask _;
+  from_mask (gsub x i j);
   intro_with_pure (i <= j /\ j <= length x) (fun _ -> pts_to (gsub x i j) #p s) ();
   fold pts_to_range x i j #p s;
 }
 
-ghost fn unfold_pts_to_range #a (x: array a) (i j: nat) #p s
+ghost fn unfold_pts_to_range u#a (#a: Type u#a) (x: array a) (i j: nat) #p s
   requires pts_to_range x i j #p s
   returns _: squash (i <= j /\ j <= length x)
   ensures pts_to_mask (gsub x i j) #p s (fun _ -> True)
@@ -63,14 +63,14 @@ ghost fn unfold_pts_to_range #a (x: array a) (i j: nat) #p s
   ()
 }
 
-let pts_to_range_timeless (#a:Type) (x:array a) (i j : nat) (p:perm) (s:Seq.seq a)
+let pts_to_range_timeless (#a: Type u#a) (x:array a) (i j : nat) (p:perm) (s:Seq.seq a)
   : Lemma (timeless (pts_to_range x i j #p s))
           [SMTPat (timeless (pts_to_range x i j #p s))]
   = ()
 
 ghost
 fn pts_to_range_prop
-  (#elt: Type)
+  u#a (#elt: Type u#a)
   (a: array elt)
   (#i #j: nat)
   (#p: perm)
@@ -87,7 +87,7 @@ fn pts_to_range_prop
 
 ghost
 fn pts_to_range_intro
-  (#elt: Type)
+  u#a (#elt: Type u#a)
   (a: array elt)
   (p: perm)
   (s: Seq.seq elt)
@@ -102,7 +102,7 @@ fn pts_to_range_intro
 
 ghost
 fn pts_to_range_elim
-  (#elt: Type)
+  u#a (#elt: Type u#a)
   (a: array elt)
   (p: perm)
   (s: Seq.seq elt)
@@ -117,7 +117,7 @@ fn pts_to_range_elim
 
 ghost
 fn pts_to_range_split
-  (#elt: Type)
+  u#a (#elt: Type u#a)
   (a: array elt)
   (i m j: nat)
   (#p: perm)
@@ -137,7 +137,7 @@ ensures
       s == Seq.append s1 s2
     )
 {
-  unfold_pts_to_range _ _ _ _;
+  unfold_pts_to_range a i j s;
   gsub_elim a i j;
   with v' mask. assert pts_to_mask a #p v' mask;
   let pred : (nat -> prop) = (fun k -> k < m);
@@ -153,7 +153,7 @@ ensures
 
 ghost
 fn pts_to_range_join
-  (#elt: Type)
+  u#a (#elt: Type u#a)
   (a: array elt)
   (i m j: nat)
   (#p: perm)
@@ -173,7 +173,7 @@ requires
 }
 
 fn pts_to_range_index
-  (#t: Type)
+  u#a (#t: Type u#a)
   (a: array t)
   (i: SZ.t)
   (#l: Ghost.erased nat{l <= SZ.v i})
@@ -197,7 +197,7 @@ fn pts_to_range_index
 }
 
 fn pts_to_range_upd
-  (#t: Type)
+  u#a (#t: Type u#a)
   (a: array t)
   (i: SZ.t)
   (v: t)
@@ -224,7 +224,7 @@ fn pts_to_range_upd
 
 ghost
 fn pts_to_range_share
-  (#a:Type)
+  u#a (#a: Type u#a)
   (arr:array a)
   (#l #r: nat)
   (#s:Seq.seq a)
@@ -240,7 +240,7 @@ fn pts_to_range_share
 
 ghost
 fn pts_to_range_gather
-  (#a:Type)
+  u#a (#a: Type u#a)
   (arr:array a)
   (#l #r: nat)
   (#s0 #s1: Seq.seq a)

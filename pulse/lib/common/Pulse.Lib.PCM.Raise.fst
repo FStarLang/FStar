@@ -3,7 +3,7 @@ open FStar.PCM
 open FStar.Ghost
 module U = Pulse.Lib.Raise
 
-let raise (#a:Type u#a) (p:pcm a) {| U.raisable u#a u#b |}
+let raise (#a:Type u#a) {| U.raisable u#a u#b |} (p:pcm a) 
 : pcm (U.raise_t u#a u#b a)
 = let core : pcm' (U.raise_t u#a u#b a) = {
     composable = (fun x y -> composable p (U.downgrade_val x) (U.downgrade_val y));
