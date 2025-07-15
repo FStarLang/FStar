@@ -67,6 +67,7 @@ let is_null a = is_null_core_pcm_ref a.base_ref
 let lptr_of #elt (a: array elt) : pcm_ref (PA.pcm elt a.base_len) =
   a.base_ref
 
+[@@noextract_to "krml"]
 let mk_carrier_f #elt (off: nat) (len: nat) (f: perm) (v: Seq.seq elt) (mask: nat -> bool) :
     index_t len -> Pulse.Lib.PCM.Fraction.fractional elt = fun i ->
   if off <= i && i < off + Seq.length v && mask (i - off) then
@@ -74,6 +75,7 @@ let mk_carrier_f #elt (off: nat) (len: nat) (f: perm) (v: Seq.seq elt) (mask: na
   else
     None
 
+[@@noextract_to "krml"]
 let mk_carrier #elt (off: nat) (len: nat) (f: perm) (v: Seq.seq elt) (mask: nat -> bool) : carrier elt len =
   Map.map_literal #(index_t len) #(Pulse.Lib.PCM.Fraction.fractional elt) (mk_carrier_f off len f v mask)
 
@@ -168,6 +170,7 @@ ghost fn mask_ext u#a (#t: Type u#a) (arr: array t) #f #v #mask v' (mask': nat -
   mask_mext arr mask';
 }
 
+[@@noextract_to "krml"]
 fn mask_alloc u#a (#elt: Type u#a) {| small_type u#a |} (x: elt) (n: SZ.t)
   returns a: array elt
   ensures pts_to_mask a (Seq.create (SZ.v n) x) (fun _ -> True)
@@ -185,6 +188,7 @@ fn mask_alloc u#a (#elt: Type u#a) {| small_type u#a |} (x: elt) (n: SZ.t)
   arr
 }
 
+[@@noextract_to "krml"]
 fn mask_free u#a (#elt: Type u#a) (a: array elt) (#s: Ghost.erased (Seq.seq elt)) #mask
   requires pts_to_mask a s mask
   requires pure (forall i. mask i)
@@ -397,6 +401,7 @@ fn pts_to_mask_injective_eq u#a (#a: Type u#a) #p0 #p1 #s0 #s1 #mask0 #mask1 (ar
   fold pts_to_mask arr #p1 s1 mask1;
 }
 
+[@@noextract_to "krml"]
 fn mask_read u#a (#t: Type u#a) (a: array t) (i: SZ.t) #p (#s: erased (Seq.seq t) { SZ.v i < Seq.length s }) #mask
   preserves pts_to_mask a #p s mask
   requires pure (mask (SZ.v i))
@@ -410,6 +415,7 @@ fn mask_read u#a (#t: Type u#a) (a: array t) (i: SZ.t) #p (#s: erased (Seq.seq t
   fst (Some?.v (FStar.Map.sel v (a.offset + SZ.v i)));
 }
 
+[@@noextract_to "krml"]
 fn mask_write u#a (#t: Type u#a) (a: array t) (i: SZ.t) (v: t) (#s: erased (Seq.seq t) { SZ.v i < Seq.length s }) #mask
   requires pts_to_mask a s mask
   requires pure (mask (SZ.v i))
@@ -433,6 +439,7 @@ fn mask_write u#a (#t: Type u#a) (a: array t) (i: SZ.t) (v: t) (#s: erased (Seq.
   fold pts_to_mask a (Seq.upd s (SZ.v i) v) mask;
 }
 
+[@@noextract_to "krml"]
 let sub_impl #t (arr: array t) (i: nat) (j: erased nat { i <= j /\ j <= length arr }) : array t =
   { arr with offset = arr.offset + i; length = j - i }
 
@@ -479,6 +486,7 @@ ghost fn gsub_elim u#a (#t: Type u#a) (arr: array t) #f (#mask: nat->prop) (i j:
   ()
 }
 
+[@@noextract_to "krml"]
 unobservable
 fn sub u#a (#t: Type u#a) (arr: array t) #f #mask (i: SZ.t) (j: erased nat)
     (#v: erased (Seq.seq t) { SZ.v i <= j /\ j <= Seq.length (reveal v) })

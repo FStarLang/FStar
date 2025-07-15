@@ -24,9 +24,6 @@ let raisable : p:prop { Type u#(max a b) } =
     subtype_of (Type u#(max a b)) (Type u#b)
   )
 
-let raisable_non_info : non_informative (raisable u#a u#b) =
-  { reveal = ((fun p -> p) <: Ghost.erased (raisable u#a u#b) -> raisable u#a u#b) }
-
 let raisable_inst = ()
 
 let elim_subtype (#a: Type u#a) (#b: Type u#b { subtype_of a b }) (x: a) : b = x

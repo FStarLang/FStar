@@ -39,7 +39,7 @@ pub fn majority<A: Copy + PartialEq>(
     }
     let vk = k;
     let vcand = cand;
-    let _bind_c = if vk == 0 {
+    if vk == 0 {
         None
     } else if len < 2 * vk {
         Some(vcand)
@@ -62,11 +62,7 @@ pub fn majority<A: Copy + PartialEq>(
         }
         let vk1 = k;
         if len < 2 * vk1 { Some(vcand) } else { None }
-    };
-    let cand1 = _bind_c;
-    let k1 = cand1;
-    let i1 = k1;
-    i1
+    }
 }
 pub type u32_t = u32;
 pub fn majority_mono(

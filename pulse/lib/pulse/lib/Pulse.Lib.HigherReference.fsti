@@ -55,6 +55,7 @@ fn read u#a (#a: Type u#a) (r:ref a) (#n:erased a) (#p:perm)
   ensures  rewrites_to x n
 
 (* alias for read *)
+inline_for_extraction
 fn ( ! ) u#a (#a: Type u#a) (r:ref a) (#n:erased a) (#p:perm)
   preserves r |-> Frac p n
   returns  x : a
@@ -65,6 +66,7 @@ fn write u#a (#a: Type u#a) (r:ref a) (x:a) (#n:erased a)
   ensures  r |-> x
 
 (* alias for write *)
+inline_for_extraction
 fn ( := ) u#a (#a: Type u#a) (r:ref a) (x:a) (#n:erased a)
   requires r |-> n
   ensures  r |-> x

@@ -61,6 +61,7 @@ fn read u#a (#a: Type u#a) (r:ref a) (#n:erased a) (#p:perm)
   x
 }
 
+inline_for_extraction
 let ( ! ) #a = read #a
 
 fn write u#a (#a: Type u#a) (r:ref a) (x:a) (#n:erased a)
@@ -72,6 +73,7 @@ fn write u#a (#a: Type u#a) (r:ref a) (x:a) (#n:erased a)
   fold pts_to r #1.0R x;
 }
 
+inline_for_extraction
 let ( := ) #a = write #a
 
 

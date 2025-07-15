@@ -45,10 +45,7 @@ pub fn multiply_by_repeated_addition(x: i64, y: i64) -> i64 {
         let c = ctr;
         ctr = c + 1;
     }
-    let _bind_c = acc;
-    let acc1 = _bind_c;
-    let ctr1 = acc1;
-    ctr1
+    acc
 }
 pub fn fib_loop(k: i64) -> i64 {
     let mut i = 1;
@@ -65,10 +62,6 @@ pub fn fib_loop(k: i64) -> i64 {
         i = vj;
         j = vi + vj;
     }
-    let _bind_c = j;
-    let ctr1 = _bind_c;
-    let j1 = ctr1;
-    let i1 = j1;
-    i1
+    j
 }
 

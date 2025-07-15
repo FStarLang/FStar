@@ -20,7 +20,9 @@ open FStar.ExtractAs
 [@@Tactics.Typeclasses.tcclass; erasable]
 val raisable : p:prop { Type u#(max a b) } // hack to specify universe parameters
 
-instance val raisable_non_info : non_informative (raisable u#a u#b)
+inline_for_extraction noextract
+let raisable_non_info : non_informative (raisable u#a u#b) =
+  { reveal = ((fun p -> p) <: Ghost.erased (raisable u#a u#b) -> raisable u#a u#b) }
 
 [@@Tactics.Typeclasses.tcinstance]
 val raisable_inst : raisable u#a u#(max a b)

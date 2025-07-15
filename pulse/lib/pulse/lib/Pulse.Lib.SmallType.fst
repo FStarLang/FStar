@@ -20,6 +20,7 @@ module U = Pulse.Lib.Raise
 [@@Tactics.Typeclasses.tcclass; erasable]
 let small_type = U.raisable u#a u#2
 
+inline_for_extraction noextract
 instance small_type_non_info : Pulse.Lib.NonInformative.non_informative (small_type u#a) =
   U.raisable_non_info
 

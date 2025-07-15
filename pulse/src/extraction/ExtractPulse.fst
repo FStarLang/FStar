@@ -100,22 +100,20 @@ let pulse_translate_expr : translate_expr_t = fun env e ->
 
   | MLE_App({expr=MLE_App({expr=MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ e ])}, [_v])}, [_perm])
   | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ e; _v; _perm ])
-    when string_of_mlpath p = "Pulse.Lib.HigherReference.op_Bang"
-      || string_of_mlpath p = "Pulse.Lib.HigherReference.read"
+    when string_of_mlpath p = "Pulse.Lib.HigherReference.read"
       || string_of_mlpath p = "Pulse.Lib.Box.op_Bang" ->
     EBufRead (cb e, zero_for_deref)
 
   | MLE_App ({expr=MLE_App({expr=MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ e1 ])}, [e2])}, [_e3])
   | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ e1; e2; _e3 ])
-    when string_of_mlpath p = "Pulse.Lib.HigherReference.op_Colon_Equals"
-      || string_of_mlpath p = "Pulse.Lib.HigherReference.write"
+    when string_of_mlpath p = "Pulse.Lib.HigherReference.write"
       || string_of_mlpath p = "Pulse.Lib.Box.op_Colon_Equals" ->
     EBufWrite (cb e1, zero_for_deref, cb e2)
 
   (* Pulse arrays *)
   | MLE_App ({ expr = MLE_Name p }, [ x; n])
   | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [_; x; n])
-    when string_of_mlpath p = "Pulse.Lib.HigherArray.Core.alloc" ->
+    when string_of_mlpath p = "Pulse.Lib.HigherArray.Core.mask_alloc" ->
     EBufCreate (Stack, cb x, cb n)
 
   | MLE_App ({ expr = MLE_Name p }, [ x; n])
@@ -124,8 +122,11 @@ let pulse_translate_expr : translate_expr_t = fun env e ->
     EBufCreate (ManuallyManaged, cb x, cb n)
 
   | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ e; i; _p; _w ])
-    when string_of_mlpath p = "Pulse.Lib.Vec.op_Array_Access"
-      || string_of_mlpath p = "Pulse.Lib.HigherArray.Core.mask_read" ->
+    when string_of_mlpath p = "Pulse.Lib.Vec.op_Array_Access" ->
+    EBufRead (cb e, cb i)
+
+  | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ e; i; _p; _w; _m ])
+    when string_of_mlpath p = "Pulse.Lib.HigherArray.Core.mask_read" ->
     EBufRead (cb e, cb i)
 
   | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ e; i; v; _w ])

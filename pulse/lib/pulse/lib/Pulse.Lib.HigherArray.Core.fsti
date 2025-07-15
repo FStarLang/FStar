@@ -35,6 +35,7 @@ val offset_of #t (a: array t) : GTot nat
 
 type elseq (a:Type) (l:SZ.t) = s:erased (Seq.seq a) { Seq.length s == SZ.v l }
 
+inline_for_extraction
 type larray t (n:nat) = a:array t { length a == n }
 
 val is_full_array (#a:Type) (x:array a) : prop

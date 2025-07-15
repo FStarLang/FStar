@@ -172,6 +172,7 @@ requires
   fold_pts_to_range a i j #p (Seq.append s1 s2);
 }
 
+inline_for_extraction
 fn pts_to_range_index
   u#a (#t: Type u#a)
   (a: array t)
@@ -196,6 +197,7 @@ fn pts_to_range_index
   res
 }
 
+inline_for_extraction
 fn pts_to_range_upd
   u#a (#t: Type u#a)
   (a: array t)
