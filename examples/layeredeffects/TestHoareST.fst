@@ -22,7 +22,7 @@ open HoareST
 
 /// Note that we don't need FStar.ST since the layered effects abstraction does not need it for verification
 
-#set-options "--max_fuel 0 --initial_ifuel 4 --max_ifuel 4 --using_facts_from '* -FStar.ST'"
+#set-options "--fuel 0 --ifuel 4 --using_facts_from '* -FStar.ST'"
 
 
 /// In this test:
@@ -131,7 +131,7 @@ assume val proof_of_pred : unit -> Tot (squash some_pred)
 assume val test10 : unit -> Pure unit (requires some_pred) (ensures fun _ -> True)
 
 //#restart-solver
-//#set-options "--max_fuel 0 --max_ifuel 0 --log_queries"
+//#set-options "--fuel 0 --ifuel 0 --log_queries"
 let test11 () : Tot unit =
   let _ : squash some_pred = proof_of_pred () in
   test10 ()

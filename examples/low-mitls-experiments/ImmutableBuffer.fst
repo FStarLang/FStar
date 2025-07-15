@@ -107,7 +107,7 @@ let test_ub () :HST.St unit =
 
 
 (***** Tests for bigops in the buffer library *****)
-#push-options "--max_fuel 0 --max_ifuel 0"
+#push-options "--fuel 0 --ifuel 0"
 let test_bigops (b1:UB.ubuffer int) (b2:IB.ibuffer int) (b3:B.buffer int) (h h0 h1:HS.mem) : unit =
   let open LowStar.Buffer in
   let l1, l2, l3 = loc_buffer b1, loc_buffer b2, loc_buffer b3 in
@@ -124,7 +124,7 @@ let test_bigops (b1:UB.ubuffer int) (b2:IB.ibuffer int) (b3:B.buffer int) (h h0 
 
 module PF = LowStar.PrefixFreezableBuffer
 
-#push-options "--max_fuel 0 --max_ifuel 0"
+#push-options "--fuel 0 --ifuel 0"
 
 assume val havoc_pf (b:PF.buffer)
   : HST.ST unit (requires (fun _ -> True))

@@ -423,7 +423,7 @@ let store128_be
 /// over the underlying sequence of bytes interpreted as a sequence of (little|big)-endian
 /// integers.
 
-#set-options "--z3rlimit 20 --max_fuel 0 --max_ifuel 0"
+#set-options "--z3rlimit 20 --fuel 0 --ifuel 0"
 
 inline_for_extraction
 let index_32_be
@@ -485,7 +485,7 @@ let interval_4_disjoint (i j: nat)
     (ensures  (let open FStar.Mul in 4 * i + 4 <= 4 * j \/ 4 * j + 4 <= 4 * i))
   = ()
 
-#reset-options "--z3rlimit 16 --max_fuel 0 --max_ifuel 0"
+#reset-options "--z3rlimit 16 --fuel 0 --ifuel 0"
 
 open FStar.Mul
 

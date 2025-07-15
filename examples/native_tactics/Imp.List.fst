@@ -137,7 +137,7 @@ let x_times_42 x : prog = [
 ]
 
 // let _ = norm_assert (forall x y. equiv_norm (long_zero x) (long_zero y))
-// #reset-options "--max_fuel 0"
+// #reset-options "--fuel 0"
 // let _ = norm_assert (forall x. eval (x_times_42 x) == 42 * x)
 
 
@@ -180,11 +180,11 @@ let x_times_42 x : prog = [
 // let _ = norm_assert (eval (poly5 3) == 3*3*3*3*3 + 3*3*3*3 + 3*3*3 + 3*3 + 3 + 1)
 
 // (* Bunch of fuel to even prove ground facts *)
-// #reset-options "--initial_fuel 20 --max_fuel 20"
+// #reset-options "--fuel 20"
 // let _ = assert (eval (poly5 1) == 6)
 // let _ = assert (eval (poly5 2) == 63)
 // let _ = assert (eval (poly5 3) == 3*3*3*3*3 + 3*3*3*3 + 3*3*3 + 3*3 + 3 + 1)
-// #reset-options "--max_fuel 0"
+// #reset-options "--fuel 0"
 
 // (* A different way of computing it *)
 // [@@unfold_defs]
@@ -211,12 +211,12 @@ let x_times_42 x : prog = [
 // let _ = norm_assert (forall x. eval (poly5 x) == eval (poly5' x))
 
 // (* Same *)
-// #reset-options "--initial_fuel 20 --max_fuel 20"
+// #reset-options "--fuel 20"
 // let _ = assert (eval (poly5' 1) == 6)
 // let _ = assert (eval (poly5' 2) == 63)
 // let _ = assert (eval (poly5' 3) == 3*3*3*3*3 + 3*3*3*3 + 3*3*3 + 3*3 + 3 + 1)
 // let _ = assert (forall x. (eval (poly5 x) == eval (poly5' x)))
-// #reset-options "--max_fuel 0"
+// #reset-options "--fuel 0"
 
 // //--------------------------------------------------------------------------------
 
@@ -230,7 +230,7 @@ let x_times_42 x : prog = [
 // // #set-options "--z3rlimit 10"
 // // let _ = assert_norm (forall x. (poly5 (eval (poly5 x)) `equiv` poly5' (eval (poly5' x))))
 
-// // #set-options "--max_fuel 0"
+// // #set-options "--fuel 0"
 // // // --tactic_trace"
 // // let _ = assert (forall x. poly5 x `equiv` poly5' x)
 // //           by (let _ = forall_intros () in

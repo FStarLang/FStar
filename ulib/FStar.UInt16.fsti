@@ -43,7 +43,7 @@ unfold let n = 16
 open FStar.UInt
 open FStar.Mul
 
-#set-options "--max_fuel 0 --max_ifuel 0"
+#set-options "--fuel 0 --ifuel 0"
 
 (** Abstract type of machine integers, with an underlying
     representation using a bounded mathematical integer *)
@@ -248,7 +248,7 @@ let minus (a:t) = add_mod (lognot a) (uint_to_t 1)
 inline_for_extraction
 let n_minus_one = UInt32.uint_to_t (n - 1)
 
-#set-options "--z3rlimit 80 --initial_fuel 1 --max_fuel 1"
+#set-options "--z3rlimit 80 --fuel 1"
 
 (** A constant-time way to compute the equality of
     two machine integers.

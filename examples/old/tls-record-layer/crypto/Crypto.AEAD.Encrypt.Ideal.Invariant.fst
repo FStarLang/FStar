@@ -34,7 +34,7 @@ module HS  = FStar.HyperStack
 module PRF = Crypto.Symmetric.PRF
 module Cipher = Crypto.Symmetric.Cipher
 
-#reset-options "--z3rlimit 100 --initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0"      
+#reset-options "--z3rlimit 100 --fuel 0 --ifuel 0"
 let safeMac_ideal_writes 
   (#i:id)
   (#rw:rw)

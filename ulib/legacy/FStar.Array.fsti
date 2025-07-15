@@ -26,7 +26,7 @@ open FStar.All
 open FStar.Seq
 open FStar.Ref
 
-#set-options "--max_fuel 0 --initial_fuel 0 --initial_ifuel 0 --max_ifuel 0"
+#set-options "--fuel 0 --initial_fuel 0 --ifuel 0"
 
 val array (a:Type0) : Type0
 

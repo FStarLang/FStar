@@ -39,7 +39,7 @@ module Plain  = Crypto.Plain
 open Crypto.AEAD.Invariant
 open Crypto.AEAD.Encrypt.Invariant
 
-#set-options "--initial_ifuel 0 --max_ifuel 0"
+#set-options "--ifuel 0"
 
 (*
  * framing of aead_entries_are_refined by mac_wrapper
@@ -122,7 +122,7 @@ private val frame_unused_aead_id_for_prf_mac_wrapper
 	     nonce <> nonce'))
   (ensures  (let table_0 = HS.sel h0 (itable i aead_st.prf) in
              unused_aead_iv_for_prf table_0 nonce' h1))
-#reset-options "--z3rlimit 100 --initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0"
+#reset-options "--z3rlimit 100 --fuel 0 --ifuel 0"
 let frame_unused_aead_id_for_prf_mac_wrapper #i #rw #aadlen #plainlen aead_st nonce aad plain ct mac_st h0 h1 nonce' =
    let dom_0 = {iv=nonce'; ctr=PRF.ctr_0 i} in
    let prf_table = HS.sel h0 (itable i aead_st.prf) in
@@ -134,7 +134,7 @@ let frame_unused_aead_id_for_prf_mac_wrapper #i #rw #aadlen #plainlen aead_st no
       MAC.frame_norm h0 h1 CMA.(mac_range.r);
       lemma_mac_log_framing mac_st h0 h1 mac_range)
 
-#reset-options "--z3rlimit 100 --initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0"      
+#reset-options "--z3rlimit 100 --fuel 0 --ifuel 0"
 private val frame_unused_aead_id_for_prf_mac_wrapper_forall
   (#i:id)
   (#rw:rw)
@@ -180,7 +180,7 @@ private val frame_entries_and_table_mac_wrapper
 let frame_entries_and_table_mac_wrapper #i #rw #aadlen #plainlen aead_st nonce aad plain cipher_tagged mac_st h0 h1 = 
   frame_aead_entries_are_refined_mac_wrapper aead_st nonce aad plain cipher_tagged mac_st h0 h1
 
-#reset-options "--z3rlimit 200 --initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0"      
+#reset-options "--z3rlimit 200 --fuel 0 --ifuel 0"
 (*
  * mac_wrapper does not modify the plain text buffer and the ciphertext part of the ciphertext buffer
  *)

@@ -42,7 +42,7 @@ module RR = FStar.Monotonic.RRef
 module BufferUtils = Crypto.AEAD.BufferUtils
 
 (*** UF1CMA.mac ***)
-#reset-options "--z3rlimit 40 --initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0"
+#reset-options "--z3rlimit 40 --fuel 0 --ifuel 0"
 
 let mac_requires (#i:CMA.id) (ak:CMA.state i) (acc:CMA.accBuffer i) (tag:MAC.tagB) (h:mem) =
   let open CMA in
@@ -83,7 +83,7 @@ let weaken_mac_modifies
    = ()	    
 
 
-#set-options "--z3rlimit 40 --initial_fuel 0 --max_fuel 0 --initial_ifuel 1 --max_ifuel 1"
+#set-options "--z3rlimit 40 --fuel 0 --ifuel 1"
 let mac_wrapper (#i:EncodingWrapper.mac_id) (ak:CMA.state i) (acc:CMA.accBuffer i) 
   (tag:MAC.tagB{CMA.pairwise_distinct (Buffer.frameOf (MAC.as_buffer (CMA.abuf acc))) (Buffer.frameOf tag) ak.CMA.region})
   : ST unit
@@ -96,7 +96,7 @@ let mac_wrapper (#i:EncodingWrapper.mac_id) (ak:CMA.state i) (acc:CMA.accBuffer 
     if not (CMA.authId i) then
       Buffer.lemma_reveal_modifies_2 (MAC.as_buffer (CMA.abuf acc)) tag h0 h1
 
-#set-options "--z3rlimit 40 --initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0"
+#set-options "--z3rlimit 40 --fuel 0 --ifuel 0"
 let mac_is_set_st 
         (#i:id)
         (iv:Cipher.iv (Cipher.algi i))
@@ -132,7 +132,7 @@ let mac_ensures
   (safeMac i ==> mac_is_set_st iv st aad cipher_tagged h1)
        
 
-#reset-options "--initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0 --z3rlimit 100"
+#reset-options "--fuel 0 --ifuel 0 --z3rlimit 100"
 val frame_mac_is_set
         (i:id) (iv:Cipher.iv (alg i))
 	(st:aead_state i Writer)
@@ -263,7 +263,7 @@ let mac #i st #aadlen aad #txtlen plain cipher_tagged ak acc h_init =
    intro_mac_is_set st aad plain cipher_tagged ak acc h_init h0 h1
 
 
-#reset-options "--initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0 --z3rlimit 100"
+#reset-options "--fuel 0 --ifuel 0 --z3rlimit 100"
 (*** UF1CMA.verify ***)
 
 (*+ The main work of wrapping UF1CMA.verify is to 
@@ -324,7 +324,7 @@ let verify_ok (#i:CMA.id) (st:CMA.state i) (acc:CMA.accBuffer i) (tag:lbuffer 16
       else b==verified
     else True
 
-#set-options "--initial_ifuel 0 --max_ifuel 0"
+#set-options "--ifuel 0"
 let frame_verify_ok (#i:CMA.id) (ak:CMA.state i) (acc:CMA.accBuffer i) (tag:lbuffer 16) 
 		    (h0:mem{verify_liveness CMA.(ak.region) ak tag h0})
 		    (h1:mem{verify_liveness CMA.(ak.region) ak tag h1})
@@ -433,9 +433,9 @@ val intro_mac_is_used :  #i:id -> #n:Cipher.iv (alg i) -> st:aead_state i Reader
 				          verify_ok ak acc tag h true))
 			       (ensures (let prf_table = HS.sel h (PRF.itable i st.prf) in
 					 mac_is_used prf_table n h))
-#set-options "--initial_ifuel 1 --max_ifuel 1"
+#set-options "--ifuel 1"
 let intro_mac_is_used #i #n st #aadlen aad #plainlen plain cipher_tagged ak acc h = ()
-#set-options "--initial_ifuel 0 --max_ifuel 0"
+#set-options "--ifuel 0"
 
 (*+ entry_exists_if_verify_ok:
 	A key lemma from the invariant and verify succeeding
@@ -465,7 +465,7 @@ val entry_exists_if_verify_ok : #i:id -> #n:Cipher.iv (alg i) -> (st:aead_state 
 		   | Some (AEADEntry _ _ l p _) ->
 		     l == v plainlen /\
 		     found_entry n st aad cipher_tagged p h))
-#reset-options "--initial_ifuel 0 --max_ifuel 0 --initial_fuel 0 --max_fuel 0 --z3rlimit 400"
+#reset-options "--ifuel 0 --fuel 0 --z3rlimit 400"
 let entry_exists_if_verify_ok #i #n st #aadlen aad #plainlen plain cipher_tagged_b ak acc tag_b h =
     let aead_entries = HS.sel h (st_ilog st) in
     let prf_table = HS.sel h (PRF.itable i st.prf) in
@@ -529,7 +529,7 @@ val get_verified_plain : #i:id -> #n:Cipher.iv (alg i) -> st:aead_state i Reader
 							   (HS.sel h1 (PRF.itable i st.prf)) /\
 		          found_entry n st aad cipher_tagged p h1
 		     else True)))
-#reset-options "--initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0 --z3rlimit 100"
+#reset-options "--fuel 0 --ifuel 0 --z3rlimit 100"
 let get_verified_plain #i #n st #aadlen aad #plainlen plain cipher_tagged ak acc verified = 
   if safeId i && verified then
     let h = get () in
@@ -597,7 +597,7 @@ val verify_ok_nonce_is_used:
 	      (ensures (~(fresh_nonce n (HS.sel h (st_ilog st)))))
 let verify_ok_nonce_is_used #i #n st #aadlen aad #plainlen plain cipher_tagged ak acc h = ()
         
-#reset-options "--z3rlimit 40 --initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0"
+#reset-options "--z3rlimit 40 --fuel 0 --ifuel 0"
 val verify : #i:id -> #n:Cipher.iv (alg i) -> st:aead_state i Reader ->
 	     #aadlen:aadlen -> (aad:lbuffer (v aadlen)) ->
  	     #plainlen:txtlen_32 {safelen i (v plainlen) (PRF.ctr_0 i +^ 1ul)} ->
@@ -636,7 +636,7 @@ val verify : #i:id -> #n:Cipher.iv (alg i) -> st:aead_state i Reader ->
 						    (Buffer.as_seq h1 cipher) 
 						    (HS.sel h1 (PRF.itable i st.prf)) /\
   			       found_entry n st aad cipher_tagged p h1)))))
-#reset-options "--z3rlimit 200 --initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0"
+#reset-options "--z3rlimit 200 --fuel 0 --ifuel 0"
 let verify #i #n st #aadlen aad #plainlen plain cipher_tagged ak acc h_init = 
   let open CMA in
   let cipher = Buffer.sub cipher_tagged 0ul plainlen in

@@ -22,7 +22,7 @@ unfold let n = 16
 open FStar.Int
 open FStar.Mul
 
-#set-options "--max_fuel 0 --max_ifuel 0"
+#set-options "--fuel 0 --ifuel 0"
 
 (* NOTE: anything that you fix/update here should be reflected in [FStar.UIntN.fstp], which is mostly
  * a copy-paste of this module. *)

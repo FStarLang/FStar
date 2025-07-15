@@ -97,7 +97,7 @@ let frame #a #wp f =
                          lemma_join_comm h0' h1;
                          S.return_squash res)))
 
-#set-options "--z3rlimit_factor 1 --max_fuel 0 --max_ifuel 0"
+#set-options "--z3rlimit_factor 1 --fuel 0 --ifuel 0"
 
 val bind_without_framing (#a:Type) (#wp1:st_wp a)
          (#b:Type) (#wp2:a -> st_wp b)

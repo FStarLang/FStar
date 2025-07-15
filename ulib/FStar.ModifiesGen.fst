@@ -1030,7 +1030,7 @@ let modifies_loc_includes #al #c s1 h h' s2 =
 
 let modifies_preserves_liveness #al #c s1 s2 h h' #t #pre r = ()
 
-#push-options "--z3rlimit 20 --max_fuel 0 --max_ifuel 0"
+#push-options "--z3rlimit 20 --fuel 0 --ifuel 0"
 let modifies_preserves_liveness_strong #al #c s1 s2 h h' #t #pre r x =
   let rg = HS.frameOf r in
   let ad = HS.as_addr r in
@@ -1534,7 +1534,7 @@ let modifies_address_liveness_insensitive_unused_in #al c h h' =
 #pop-options
 #pop-options
 
-#push-options "--max_fuel 0 --max_ifuel 0 --z3rlimit 16 --retry 5 --z3cliopt 'smt.qi.eager_threshold=5'"
+#push-options "--fuel 0 --ifuel 0 --z3rlimit 16 --retry 5 --z3cliopt 'smt.qi.eager_threshold=5'"
 #restart-solver
 let modifies_only_not_unused_in #al #c l h h' =
   assert (modifies_preserves_regions l h h');

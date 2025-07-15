@@ -189,7 +189,7 @@ let finish a s =
 //16-09-23 Instead of the code below, we should re-use existing AEAD encodings
 //16-09-23 and share their injectivity proofs and crypto model.
 
-#reset-options "--initial_fuel 0 --max_fuel 0 --z3rlimit 20"
+#reset-options "--fuel 0 --z3rlimit 20"
 
 private val ghash_loop_:
   tag:elemB ->
@@ -260,7 +260,7 @@ let mk_len_info len_info len_1 len_2 =
   upd len_info 11ul (uint32_to_uint8 len_2)
 // relying on outer initialization?
 
-#reset-options "--initial_fuel 0 --max_fuel 0 --z3rlimit 20"
+#reset-options "--fuel 0 --z3rlimit 20"
 
 (* A hash function used in authentication. It will authenticate additional data first, *)
 (* then ciphertext and at last length information. The result is stored in tag.        *)

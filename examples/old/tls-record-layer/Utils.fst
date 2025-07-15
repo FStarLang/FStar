@@ -22,7 +22,7 @@ open FStar.HyperStack
 open FStar.Buffer
 open Low.Bytes
 
-#set-options "--max_fuel 0 --initial_fuel 0 --initial_ifuel 0 --max_ifuel 0"
+#set-options "--fuel 0 --initial_fuel 0 --ifuel 0"
 
 let lemma_slice_sub_1 (#a:Type{hasEq a}) (s:Seq.seq a) (s':Seq.seq a) (a:nat) (b:nat{a <= b /\ b <= Seq.length s /\ b <= Seq.length s'}) : Lemma
   (requires (s == s'))
@@ -102,7 +102,7 @@ let rec f_seq_lemma_0 #a f s1 s2 s1' s2' len =
     assert(Seq.index (Seq.slice s1 0 len) (len-1) == Seq.index (Seq.slice s1' 0 len) (len-1));
     assert(Seq.index (Seq.slice s2 0 len) (len-1) == Seq.index (Seq.slice s2' 0 len) (len-1))
 
-#set-options "--max_fuel 0 --initial_fuel 0 --initial_ifuel 0 --max_ifuel 0"
+#set-options "--fuel 0 --initial_fuel 0 --ifuel 0"
 
 val lemma_slice_append: #a:Type -> s:Seq.seq a -> i:nat{i < Seq.length s} -> Lemma
   (Seq.slice s 0 (i+1) == Seq.append (Seq.slice s 0 i) (Seq.create 1 (Seq.index s i)))

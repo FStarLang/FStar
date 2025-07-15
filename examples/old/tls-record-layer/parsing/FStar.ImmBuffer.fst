@@ -352,7 +352,7 @@ let u32 : serializable UInt32.t = Serializable le_uint32_serializer le_uint32_pa
 let u64 : serializable UInt64.t = Serializable le_uint64_serializer le_uint64_parser
 let ptr = Serializable ptr_serializer ptr_parser
 
-#reset-options "--initial_fuel 0 --max_fuel 0"
+#reset-options "--fuel 0"
 
 assume val lemma_bytes_to_buffer: b:bytes ->
   Lemma (length_bytes b % sizeof byte = 0 

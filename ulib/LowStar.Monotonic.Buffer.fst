@@ -1827,7 +1827,7 @@ let mmalloc_drgn_and_blit #a #rrel #_ #_ d src id_src len =
   in
   Buffer len content 0ul len
 
-#push-options "--max_fuel 0 --initial_ifuel 1 --max_ifuel 1 --z3rlimit 128 --split_queries no"
+#push-options "--fuel 0 --ifuel 1 --z3rlimit 128 --split_queries no"
 #restart-solver
 let blit #a #rrel1 #rrel2 #rel1 #rel2 src idx_src dst idx_dst len =
   let open HST in
@@ -1877,7 +1877,7 @@ let blit #a #rrel1 #rrel2 #rel1 #rel2 src idx_src dst idx_dst len =
 #pop-options
 
 #restart-solver
-#push-options "--z3rlimit 256 --max_fuel 0 --max_ifuel 1 --initial_ifuel 1 --z3cliopt smt.qi.EAGER_THRESHOLD=4"
+#push-options "--z3rlimit 256 --fuel 0 --max_ifuel 1 --initial_ifuel 1 --z3cliopt smt.qi.EAGER_THRESHOLD=4"
 let fill' (#t:Type) (#rrel #rel: srel t)
   (b: mbuffer t rrel rel)
   (z:t)

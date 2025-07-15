@@ -14,7 +14,7 @@
    limitations under the License.
 *)
 module TestErrorLocations
-#set-options "--initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0"
+#set-options "--fuel 0 --ifuel 0"
 //reports failing call to assert, and the failing formula
 [@@expect_failure [19]]
 let test0 = assert (0==1)

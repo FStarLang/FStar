@@ -45,7 +45,7 @@ module PRF_MAC     = Crypto.AEAD.Wrappers.PRF
 module EncodingWrapper = Crypto.AEAD.Wrappers.Encoding
 module CMAWrapper = Crypto.AEAD.Wrappers.CMA
 
-#reset-options "--z3rlimit 40 --initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0"
+#reset-options "--z3rlimit 40 --fuel 0 --ifuel 0"
 let ideal_ensures
 	 (#i: id)
  	 (st: aead_state i Writer)
@@ -90,7 +90,7 @@ let do_ideal #i st n #aadlen aad #plainlen plain cipher_tag =
     ST.recall (st_ilog st);
     st_ilog st := Seq.snoc !(st_ilog st) entry
 
-#reset-options "--z3rlimit 400 --initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0"
+#reset-options "--z3rlimit 400 --fuel 0 --ifuel 0"
 let encrypt_ensures  (#i:id) (st:aead_state i Writer)
 		     (n: Cipher.iv (alg i))
 		     (#aadlen:aadlen)
@@ -200,7 +200,7 @@ val encrypt_write_effect :
 	      let h_final = HS.pop h_ideal in
 	      encrypt_ensures st n aad plain cipher_tag h_init h_final /\
 	      encrypt_modifies st cipher_tag h_init h_final)))
-#reset-options "--z3rlimit 400 --initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0"
+#reset-options "--z3rlimit 400 --fuel 0 --ifuel 0"
 let encrypt_write_effect i st n #aadlen aad #plainlen plain cipher_tag k_0 ak acc
 			 h_init h_push h_prf h_enx h_acc h_mac h_ideal =
   let open HS in			 

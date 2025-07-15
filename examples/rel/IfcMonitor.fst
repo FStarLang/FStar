@@ -182,14 +182,14 @@ type high_pc_type (c:com) (h:heap) (env:label_fun) (pc:label) =
     (Some? o ==> no_sensitive_upd h env pc (Some?.v o))
   end
 
-#set-options "--z3rlimit 10 "
+#set-options "--z3rlimit 10"
 val high_pc_assign : (x:id) -> (e:exp) -> (h:heap) -> (env:label_fun) -> (pc:label) ->
   Lemma (high_pc_type (Assign x e) h env pc)
 let high_pc_assign x e h env pc = ()
 #reset-options
 
 
-#set-options "--z3rlimit 50 --initial_fuel 1 --max_fuel 1"
+#set-options "--z3rlimit 50 --fuel 1"
 val high_pc_while : (e:exp) -> (body:com) -> (v:exp) -> (h:heap) -> (env:label_fun) -> (pc:label) -> 
   Lemma 
     (requires 
@@ -260,7 +260,7 @@ let high_pc_while e body v h env pc =
 
 #reset-options
     
-#set-options "--z3rlimit 50 --initial_fuel 1 --max_fuel 1"
+#set-options "--z3rlimit 50 --fuel 1"
 val high_pc : (c:com) -> (h:heap) -> (env:label_fun) -> (pc:label) ->
   Lemma
     (requires True)
@@ -347,7 +347,7 @@ type ifc_type (c:com) (env:label_fun) (pc:label) (h:rel heap) =
   end
 
 
-#set-options "--z3rlimit 30 "
+#set-options "--z3rlimit 30"
 val dyn_ifc_assign : (x:id) -> (e:exp) -> (env:label_fun) -> (pc:label) -> (h:rel heap) -> 
   Lemma
       (requires (low_equiv env h))
@@ -356,7 +356,7 @@ let dyn_ifc_assign x e env pc h = dyn_ifc_exp e h env
 #reset-options
 
 
-#set-options "--z3rlimit 50 --initial_fuel 1 --max_fuel 2 "
+#set-options "--z3rlimit 50 --initial_fuel 1 --max_fuel 2"
 val dyn_ifc_while : (e:exp) -> (body:com) -> (v:exp) -> (env:label_fun) -> (pc:label) -> (h:rel heap) -> 
    Lemma
       (requires (low_equiv env h /\
@@ -476,7 +476,7 @@ let dyn_ifc_while e body v env pc h =
 
 #reset-options
 
-#set-options "--z3rlimit 50 --initial_fuel 1 --max_fuel 1" 
+#set-options "--z3rlimit 50 --fuel 1"
 val dyn_ifc' : (c:com) -> (env:label_fun) -> (pc:label) -> (h:(rel heap)) ->
     Lemma
       (requires (low_equiv env h))

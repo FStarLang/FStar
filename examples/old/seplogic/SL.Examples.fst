@@ -196,7 +196,7 @@ let split_lem #a #b sa sb = ()
 private let get_to_the_next_frame () :Tac unit =
   ignore (repeat (fun () -> apply_lemma (`split_lem); smt ()))
 
-#reset-options "--using_facts_from '* -FStar.Tactics -FStar.Reflection' --max_fuel 0 --initial_fuel 0 --max_ifuel 0 --initial_ifuel 0 --print_full_names"
+#reset-options "--using_facts_from '* -FStar.Tactics -FStar.Reflection' --fuel 0 --initial_fuel 0 --ifuel 0 --initial_ifuel 0 --print_full_names"
 
 (*
  * two commands

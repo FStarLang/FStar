@@ -353,7 +353,7 @@ let exec_equiv_sym
   [SMTPat (exec_equiv p p' f f')]
 = ()
 
-#push-options "--z3rlimit 5 --max_fuel 0 --max_ifuel 0"
+#push-options "--z3rlimit 5 --fuel 0 --ifuel 0"
 let eval_equiv_trans
   (#t: Type0)
   (p: sttype)

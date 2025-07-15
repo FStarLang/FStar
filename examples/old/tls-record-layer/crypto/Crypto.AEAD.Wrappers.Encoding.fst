@@ -134,7 +134,7 @@ val accumulate_enc
 	      CMA.mac_is_unset i PRF.(aead_st.prf.mac_rgn) ak h1) /\
 	  accumulate_modifies_nothing h0 h1 /\
 	  accumulate_ensures ak aad cipher h0 acc h1))
-#reset-options "--z3rlimit 400 --initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0"
+#reset-options "--z3rlimit 400 --fuel 0 --ifuel 0"
 let accumulate_freshness (#i:mac_id) (acc:CMA.accBuffer i) (h0:mem) (h1:mem) = 
     (mac_log ==> fresh_sref h0 h1 (CMA.alog acc)) /\
     (fresh_sref h0 h1 (Buffer.content (MAC.as_buffer (CMA.abuf acc))))
