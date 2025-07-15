@@ -23,12 +23,14 @@ open Pulse.Checker.Base
 open Pulse.Checker.Pure
 open Pulse.Checker.Prover
 open Pulse.Show
+open Pulse.Checker.Util
 
 module T = FStar.Tactics.V2
 module P = Pulse.Syntax.Printer
 module Metatheory = Pulse.Typing.Metatheory
 module Abs = Pulse.Checker.Abs
 module RU = Pulse.Reflection.Util
+
 #push-options "--z3rlimit_factor 4 --split_queries no"
 let check_bind_fn
   (g:env)
@@ -129,10 +131,7 @@ let check_bind'
 
   debug_prover g (fun _ ->
     Printf.sprintf "checking bind:\n%s\n" (P.st_term_to_string t));
-
-  if None? post_hint
-  then fail g (Some t.range) "check_bind: post hint is not set, please add an annotation";
-
+  
   let Tm_Bind { binder; head=e1; body=e2 } = t.term in
   if Tm_Admit? e1.term
   then ( //Discard the continuation if the head is an admit
@@ -199,10 +198,6 @@ let check_tot_bind
   (check:check_t)
 : T.Tac (checker_result_t g pre post_hint)
 = let g = Pulse.Typing.Env.push_context g "check_tot_bind" t.range in
-
-  if None? post_hint
-  then fail g (Some t.range) "check_tot_bind: post hint is not set, please add an annotation";
-
 
   let Tm_TotBind { binder=b; head=e1; body=e2 } = t.term in
   let rebuild (head:either term st_term) : T.Tac (t:st_term { Tm_Bind? t.term }) =

@@ -260,3 +260,6 @@ val compose_checker_result_t
   (r1:checker_result_t g ctxt None)
   (r2:checker_result_t g' ctxt' post_hint { composable r1 r2 })
 : T.Tac (checker_result_t g ctxt post_hint)
+
+val infer_post #g #ctxt (r:checker_result_t g ctxt None)
+: T.Tac (post_hint_for_env g)

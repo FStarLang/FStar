@@ -276,13 +276,14 @@ let rec check
           Bind.check_tot_bind g pre pre_typing post_hint res_ppname t check
 
         | Tm_If { b; then_=e1; else_=e2; post=post_if } -> (
-          let post =
+          let post : post_hint_opt g =
             match post_if, post_hint with
-            | None, Some p -> p
+            | None, Some p ->
+              post_hint
             | Some p, None ->
               //We set the computation type to be STT in this case
               //We might allow the post_if annotation to also set the effect tag
-              Checker.Base.intro_post_hint g EffectAnnotSTT None p
+              Some <| Checker.Base.intro_post_hint g EffectAnnotSTT None p
             | Some p, Some q ->
               Pulse.Typing.Env.fail g (Some t.range) 
                 (Printf.sprintf 
@@ -292,12 +293,9 @@ let rec check
                     (P.term_to_string (q <: post_hint_t).post)
                     (P.term_to_string p))
             | _, _ ->
-              Pulse.Typing.Env.fail g (Some t.range) 
-                (Printf.sprintf
-                    "Pulse cannot yet infer a postcondition for a non-tail conditional statement;\n\
-                    Either annotate this `if` with `returns` clause; or rewrite your code to use a tail conditional")
+              None
           in
-          let (| x, t, pre', g1, k |) : checker_result_t g pre (Some post) =
+          let (| x, t, pre', g1, k |) : checker_result_t g pre post =
             If.check g pre pre_typing post res_ppname b e1 e2 check in
           (| x, t, pre', g1, k |)
         )
