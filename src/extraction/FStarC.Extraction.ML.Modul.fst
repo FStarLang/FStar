@@ -1306,7 +1306,7 @@ let extract' (g:uenv) (m:modul) : uenv & option mlmodule =
                        (BU.format1 "---Extracted {%s}" nm)
                        (fun () -> extract_sig g se)
                  in
-                 BU.print1 "Extraction result: %s\n" (Class.Show.show (snd r));
+                 // BU.print1 "Extraction result: %s\n" (Class.Show.show (snd r));
                  r
             else extract_sig g se)
         g m.declarations in
