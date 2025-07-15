@@ -150,6 +150,10 @@ val egcd (a b u1 u2 u3 v1 v2 v3:int) : Pure (int & int & int)
   (ensures (fun (u, v, d) -> u * a + v * b = d /\ is_gcd a b d))
   (decreases v3)
 
+let lemma_div_mod_alt (a:int) (p:nonzero)
+: Lemma (a - (a / p) * p == a % p)
+= lemma_div_mod a p
+
 let rec egcd a b u1 u2 u3 v1 v2 v3 =
   if v3 = 0 then
     begin

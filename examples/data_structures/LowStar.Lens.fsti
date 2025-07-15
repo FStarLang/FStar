@@ -225,7 +225,7 @@ effect LensST (a:Type)
 
 /// `reveal_inv`: Revealing the abstract invariant
 val reveal_inv (_:unit)
-  : Lemma ((forall #a #b (l:hs_lens a b) h. {:pattern inv l h}
+  : Lemma ((forall (#a:Type u#a) (#b:Type u#b) (l:hs_lens a b) h. {:pattern inv l h}
             inv l h <==>
             (l.invariant l.x h /\
              B.modifies (as_loc l.footprint) l.snapshot h /\
