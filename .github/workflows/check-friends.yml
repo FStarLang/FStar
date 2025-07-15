@@ -225,9 +225,6 @@ jobs:
           path: hacl-star/
           repository: hacl-star/hacl-star
 
-      # Patch HACL* for new lib
-      - run: sed -i 's/^\(OCAMLSHARED.*\)fstar\.lib/\1fstar.pluginlib/' hacl-star/Makefile.common
-
       - run: echo "HACL_HOME=$(pwd)/hacl-star" >> $GITHUB_ENV
 
       - name: Get Vale
