@@ -109,6 +109,6 @@ let sprintf
     : normalize_term (dir_type (Some?.v (parse_format_string s)))
     = string_of_dirs (Some?.v (parse_format_string s)) (fun s -> s)
 
-#set-options "--max_fuel 0" //no SMT reasoning about recursive functions
+#set-options "--fuel 0" //no SMT reasoning about recursive functions
 let test () = sprintf "%d: Hello %s, sprintf %s" 0 "#fstar-hackery" "works!"
 // let test2 () = sprintf "%d: Hello %s, sprintf %s" "huh?" "#fstar-hackery" "works!"

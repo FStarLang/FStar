@@ -50,7 +50,7 @@ let fib_inner_aux n =
    nested recursive aux function.
    Here's one way to do it. *)
 
-#set-options "--initial_fuel 1 --max_fuel 1 --initial_ifuel 0 --max_ifuel 0"
+#set-options "--fuel 1 --ifuel 0"
 
 val fib_inner_aux_2: n:nat -> Tot (f:nat{f = fibonacci n})
 let fib_inner_aux_2 n =

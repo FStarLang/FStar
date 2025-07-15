@@ -17,7 +17,7 @@
 (** Propositional sets (on any types): membership is a predicate *)
 module FStar.TSet
 
-#set-options "--initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0"
+#set-options "--fuel 0 --ifuel 0"
 
 (*
  * AR: mark it must_erase_for_extraction temporarily until CMI comes in

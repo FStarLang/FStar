@@ -16,7 +16,7 @@
 *)
 module FStar.GhostSet
 (** Ghost computational sets: membership is a ghost boolean function *)
-#set-options "--initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0"
+#set-options "--fuel 0 --ifuel 0"
 
 [@@must_erase_for_extraction; erasable]
 val set (a: Type u#a) : Type u#a

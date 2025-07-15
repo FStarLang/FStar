@@ -121,7 +121,7 @@ private val fail : (#a:Type) -> string -> tm a
 private let fail #a s = fun i -> Inl s
 
 val as_arith_expr : term -> tm expr
-#push-options "--initial_fuel 4 --max_fuel 4"
+#push-options "--fuel 4"
 let rec as_arith_expr (t:term) =
     let hd, tl = collect_app_ln t in
     // Invoke [collect_app_order]: forall (arg, qual) ∈ tl, (arg, qual) << t

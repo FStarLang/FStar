@@ -34,7 +34,7 @@ let length #b vb =
 
 let length_eq #_ _ = ()
 
-//#reset-options "--max_fuel 0 --max_ifuel 1"
+//#reset-options "--fuel 0 --max_ifuel 1"
 let view_indexing #b vb i
   = let n = View?.n (get_view vb) in
     length_eq vb;
@@ -200,6 +200,6 @@ let as_seq_sel (#b: _) (h:HS.mem) (vb:buffer b) (i:nat{i < length vb})
       in
       as_seq'_as_seq' 0 i
 
-#set-options "--max_fuel 0 --max_ifuel 1"
+#set-options "--fuel 0 --max_ifuel 1"
 let get_sel (#b: _) (h:HS.mem) (vb:buffer b) (i:nat{i < length vb}) = ()
 let put_sel (#b: _) (h:HS.mem) (vb:buffer b) (i:nat{i < length vb}) = ()

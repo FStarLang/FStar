@@ -407,7 +407,7 @@ let lemma_sender_connection_ctr_equals_length_log
   :Lemma (ctr c h == Seq.length (log c h))
   = ()
 
-#push-options "--z3rlimit 200 --max_fuel 0 --max_ifuel 0"
+#push-options "--z3rlimit 200 --fuel 0 --ifuel 0"
 val send_aux 
           (#n:nat) 
           (file:iarray byte n) 
@@ -561,7 +561,7 @@ val receive_aux
                    h1 `live_connection` c /\
                    receive_aux_post #n file c h_init from pos ropt h1))
 
-#reset-options "--max_fuel 0 --max_ifuel 0 --z3rlimit 20 --using_facts_from '* -ArrayUtils.lemma_get_some_equivalent_append'"
+#reset-options "--fuel 0 --ifuel 0 --z3rlimit 20 --using_facts_from '* -ArrayUtils.lemma_get_some_equivalent_append'"
 let rec receive_aux #n file c h_init from pos
    = let h0 = ST.get() in
      let filled0 = prefix file pos in

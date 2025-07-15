@@ -47,7 +47,7 @@ let bound27 h b = bound27 h b
 let w : U32.t -> Tot int = U32.v
 
 
-#reset-options "--initial_fuel 0 --max_fuel 0 --z3rlimit 5"
+#reset-options "--fuel 0 --z3rlimit 5"
 
 let u26 = x:U64.t{v x < pow2 26}
 
@@ -65,7 +65,7 @@ let lemma_mult_le_left (a:pos) (b:nat) (c:nat) : Lemma (requires (b <= c)) (ensu
   = ()
 
 
-#reset-options "--initial_fuel 0 --max_fuel 0 --z3rlimit 20"
+#reset-options "--fuel 0 --z3rlimit 20"
 
 val lemma_finalize_1:
   b0:u26 -> b1:u26 -> b2:u26 -> b3:u26 -> b4:u26 ->
@@ -129,7 +129,7 @@ let lemma_finalize_1 b0 b1 b2 b3 b4 b0' b1' b2' b3' b4' mask =
 
 
 
-#reset-options "--initial_fuel 0 --max_fuel 0 --z3rlimit 20"
+#reset-options "--fuel 0 --z3rlimit 20"
 
 val lemma_finalize_2:
   b0:u26 -> b1:u26 -> b2:u26 -> b3:u26 -> b4:u26 ->
@@ -186,7 +186,7 @@ let lemma_finalize_0 b0 b1 b2 b3 b4 b0' b1' b2' b3' b4' mask =
   Math.Lemmas.modulo_lemma (v b0' + pow2 26 * v b1' + pow2 52 * v b2' + pow2 78 * v b3' + pow2 104 * v b4') (pow2 130 - 5)
 
 
-#reset-options "--initial_fuel 0 --max_fuel 0 --z3rlimit 20"
+#reset-options "--fuel 0 --z3rlimit 20"
 
 val lemma_eval_5: h:HyperStack.mem -> b:bigint{live h b} -> Lemma
   (eval h b 5 = v (get h b 0) + pow2 26 * v (get h b 1) + pow2 52 * v (get h b 2) + pow2 78 * v (get h b 3) + pow2 104 * v (get h b 4))
@@ -211,7 +211,7 @@ val lemma_norm_5: h:HyperStack.mem -> b:bigint{live h b} -> Lemma
 let lemma_norm_5 h b = ()
 
 
-#reset-options "--initial_fuel 0 --max_fuel 0 --z3rlimit 20"
+#reset-options "--fuel 0 --z3rlimit 20"
 
 val lemma_finalize:
   h:HyperStack.mem ->

@@ -216,7 +216,7 @@ assume val fly_robot_army: #rs:set rid -> bs:bots rs -> ST unit
 val main: unit -> ST unit
     (requires (fun _ -> True))
     (ensures (fun m0 _ m1 -> modifies_transitively Set.empty m0 m1))
-#set-options "--z3rlimit 20 --initial_fuel 1 --max_fuel 1 --initial_ifuel 1 --max_ifuel 1"
+#set-options "--z3rlimit 20 --fuel 1 --ifuel 1"
 let main () =
   witness_region root;
   let b1 = new_robot root in

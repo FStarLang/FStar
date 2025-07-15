@@ -17,7 +17,7 @@ module DelimitedRelease
 open FStar.List.Tot
 open FStar.DM4F.Heap
 open FStar.DM4F.Heap.ST
-#reset-options "--initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0"
+#reset-options "--fuel 0 --ifuel 0"
 
 
 let wallet (hi:ref int) (lo:ref int) (k:int) 

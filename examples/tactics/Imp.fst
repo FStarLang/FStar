@@ -124,7 +124,7 @@ let _ = assert_norm (forall x y. equiv (add2 x y) (add4 x y))
 let _ = assert_norm (forall x y. equiv (add3 x y) (add4 x y))
 
 (* Without normalizing, they require fuel, or else fail *)
-#push-options "--max_fuel 0"
+#push-options "--fuel 0"
 [@@expect_failure] let _ = assert (forall x y. equiv (add1 x y) (add2 x y))
 [@@expect_failure] let _ = assert (forall x y. equiv (add1 x y) (add3 x y))
 [@@expect_failure] let _ = assert (forall x y. equiv (add1 x y) (add4 x y))
@@ -196,7 +196,7 @@ let _ = assert_norm (eval (poly5' 3) == 3*3*3*3*3 + 3*3*3*3 + 3*3*3 + 3*3 + 3 + 
 //#set-options "--z3rlimit 10"
 //let _ = assert_norm (forall x. (poly5 (eval (poly5 x)) `equiv` poly5' (eval (poly5' x))))
 
-#set-options "--max_fuel 0"
+#set-options "--fuel 0"
 // --tactic_trace"
 let _ = assert (forall x. poly5 x `equiv` poly5' x)
             by (let _ = forall_intros () in

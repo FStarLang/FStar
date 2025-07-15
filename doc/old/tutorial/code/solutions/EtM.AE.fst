@@ -111,7 +111,7 @@ let keygen parent =
      /\ invariant h1 k)))
 
 
-#set-options "--initial_fuel 0 --max_fuel 0 --initial_ifuel 1 --max_ifuel 1 --z3rlimit 100"
+#set-options "--fuel 0 --ifuel 1 --z3rlimit 100"
 // BEGIN: EtMAEEncrypt
 let encrypt k plain =
   (* let h0 = ST.get () in *)

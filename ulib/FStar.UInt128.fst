@@ -35,7 +35,7 @@ module T = FStar.Stubs.Tactics.V2.Builtins
 module TD = FStar.Tactics.V2.Derived
 module TM = FStar.Tactics.MApply
 
-#set-options "--max_fuel 0 --max_ifuel 0 --split_queries no"
+#set-options "--fuel 0 --ifuel 0 --split_queries no"
 #set-options "--using_facts_from '*,-FStar.Tactics,-FStar.Reflection'"
 
 (* TODO: explain why exactly this is needed? It leads to failures in

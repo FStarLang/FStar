@@ -41,7 +41,7 @@ let log_t = if mac_log then text else unit
 val ilog: l:log_t{mac_log} -> Tot text
 let ilog l = l
 
-#set-options "--initial_fuel 1 --max_fuel 1"
+#set-options "--fuel 1"
 
 val poly_cons: x:word -> xs:text -> r:elem ->
   Lemma (poly (Seq.cons x xs) r == (encode x +@ poly xs r) *@ r)
@@ -54,7 +54,7 @@ val poly_empty: t:text{Seq.length t == 0} -> r:elem ->
   Lemma (poly t r == 0)
 let poly_empty t r = ()
 
-#set-options "--z3rlimit 60 --initial_fuel 0 --max_fuel 0"
+#set-options "--z3rlimit 60 --fuel 0"
 
 (**
    Update function:
@@ -156,7 +156,7 @@ let rec encode_bytes txt =
     Seq.snoc (encode_bytes txt) w // snoc, not cons!
 (***)
 
-#set-options "--initial_fuel 1 --max_fuel 1"
+#set-options "--fuel 1"
 
 (** Auxiliary lemmas *)
 
@@ -239,7 +239,7 @@ let rec encode_bytes_append len s w =
     end
 
 
-#set-options "--z3rlimit 60 --initial_fuel 0 --max_fuel 0"
+#set-options "--z3rlimit 60 --fuel 0"
 
 (* Loop over Poly1305_update; could go below MAC *)
 val poly1305_loop: log:log_t -> msg:bytes -> acc:elemB{disjoint msg acc} ->
@@ -300,7 +300,7 @@ val div_aux: a:UInt32.t -> b:UInt32.t{w b <> 0} -> Lemma
   [SMTPat (FStar.UInt32(UInt.size (v a / v b) n))]
 let div_aux a b = ()
 
-#reset-options "--z3rlimit 200 --initial_fuel 0 --max_fuel 0 --max_ifuel 0 --initial_ifuel 0"
+#reset-options "--z3rlimit 200 --fuel 0 --ifuel 0 --initial_ifuel 0"
 
 val poly1305_process:
     msg:bytes

@@ -367,7 +367,7 @@ let lemma_fresh_or_old_disjoint (h0 h1 h2:heap)
       FStar.Classical.forall_to_exists #memory (fun m_fresh -> 
         lemma_fresh_or_old_disjoint'' h0 h1 h2 m_old m_fresh))
 
-#set-options "--max_fuel 0 --max_ifuel 0"
+#set-options "--fuel 0 --ifuel 0"
 
 private let lemma_fresh_or_old_sep' (h0 h1 h2:heap) (m_old m_fresh:memory) 
   : Lemma (requires (fresh_or_old' h0 h1 m_old m_fresh /\ 
