@@ -3697,7 +3697,7 @@ and desugar_redefine_effect env d d_attrs trans_qual quals eff_name eff_binders 
     env, [se]
 
 
-and desugar_decl_maybe_fail_attr env (d: decl): (env_t & sigelts) =
+and desugar_decl_maybe_fail_attr env (d: decl) (attrs : list S.term) : (env_t & sigelts) =
   let no_fail_attrs (ats : list S.term) : list S.term =
       List.filter (fun at -> Option.isNone (get_fail_attr1 false at)) ats
   in
@@ -3706,8 +3706,6 @@ and desugar_decl_maybe_fail_attr env (d: decl): (env_t & sigelts) =
    * If it does, check that the errors match as we normally do.
    * If it doesn't fail, leave it alone! The typechecker will check the failure. *)
   let env, sigelts =
-    let attrs = List.map (desugar_term env) d.attrs in
-    let attrs = U.deduplicate_terms attrs in
     match get_fail_attr false attrs with
     | Some (expected_errs, err_rng, lax) ->
       // The `fail` attribute behaves
@@ -3771,7 +3769,14 @@ and desugar_decl_maybe_fail_attr env (d: decl): (env_t & sigelts) =
 
 and desugar_decl env (d:decl) :(env_t & sigelts) =
   FStarC.GenSym.reset_gensym ();
-  let env, ses = desugar_decl_maybe_fail_attr env d in
+  let attrs = List.map (desugar_term env) d.attrs in
+  let attrs = U.deduplicate_terms attrs in
+  let env, ses = desugar_decl_maybe_fail_attr env d attrs in
+  let ses =
+    if U.has_attribute attrs Const.admitted_lid
+    then ses |> List.map (fun se -> { se with sigmeta = { se.sigmeta with sigmeta_admit = true } })
+    else ses
+  in
   env, ses |> List.map generalize_annotated_univs
 
 and desugar_decl_core env (d_attrs:list S.term) (d:decl) : (env_t & sigelts) =
@@ -4319,6 +4324,7 @@ and desugar_decl_core env (d_attrs:list S.term) (d:decl) : (env_t & sigelts) =
         let quals = d'.quals @ d.quals in
         let attrs = d'.attrs @ d.attrs in
         desugar_decl_maybe_fail_attr env { d' with quals; attrs; drange=d.drange; interleaved=d.interleaved }
+           (attrs |> List.map (desugar_term env) |> U.deduplicate_terms)
   )
 
   | DeclToBeDesugared tbs -> (
