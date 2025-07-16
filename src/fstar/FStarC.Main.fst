@@ -29,6 +29,8 @@ open FStarC.Class.Show
 module E = FStarC.Errors
 module UF = FStarC.Syntax.Unionfind
 
+let cleanup () = Util.kill_all ()
+
 let print_stats () =
   if !Stats.ever_enabled then
     print1_error "Stats:\n%s\n" (Stats.print_all ())
@@ -70,6 +72,7 @@ let report_errors fmods =
   if nerrs > 0 then begin
     finished_message fmods nerrs;
     print_stats ();
+    cleanup ();
     exit 1
   end
 
@@ -429,6 +432,7 @@ let main () =
               (FStarC.Util.string_of_int time)
               (String.concat " " (FStarC.Getopt.cmdline()));
     print_stats();
+    cleanup ();
     exit 0
   with
   | e ->
