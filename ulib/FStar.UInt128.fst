@@ -953,6 +953,7 @@ val u32_product_bound : a:nat{a < pow2 32} -> b:nat{b < pow2 32} ->
 let u32_product_bound a b =
   uint_product_bound #32 a b
 
+#push-options "--z3rlimit 15 --retry 5" // sporadically fails
 let mul32 x y =
   let x0 = u64_mod_32 x in
   let x1 = U64.shift_right x u32_32 in
@@ -979,6 +980,7 @@ let mul32 x y =
   mul32_digits (U64.v x) (U32.v y);
   assert (U64.v x * U32.v y == U64.v x1y' * pow2 32 + U64.v x0y);
   r
+#pop-options
 
 let l32 (x: UInt.uint_t 64) : UInt.uint_t 32 = x % pow2 32
 let h32 (x: UInt.uint_t 64) : UInt.uint_t 32 = x / pow2 32
