@@ -43,8 +43,6 @@ unfold let n = 16
 open FStar.UInt
 open FStar.Mul
 
-#set-options "--fuel 0 --ifuel 0"
-
 (** Abstract type of machine integers, with an underlying
     representation using a bounded mathematical integer *)
 new val t : eqtype
@@ -248,8 +246,6 @@ let minus (a:t) = add_mod (lognot a) (uint_to_t 1)
 inline_for_extraction
 let n_minus_one = UInt32.uint_to_t (n - 1)
 
-#set-options "--z3rlimit 80 --fuel 1"
-
 (** A constant-time way to compute the equality of
     two machine integers.
 
@@ -257,6 +253,7 @@ let n_minus_one = UInt32.uint_to_t (n - 1)
 
     Note, the branching on [a=b] is just for proof-purposes.
   *)
+#push-options "--z3rlimit 80 --fuel 1"
 [@ CNoInline ]
 let eq_mask (a:t) (b:t)
   : Pure t
@@ -315,7 +312,7 @@ let gte_mask (a:t) (b:t)
     lemma_msb_gte (v x) (v y);
     lemma_msb_gte (v y) (v x);
     c
-#reset-options
+#pop-options
 
 (*** Infix notations *)
 unfold let ( +^ )  = add
@@ -353,7 +350,6 @@ val to_string_hex_pad: t -> Tot string
 
 val of_string: string -> Tot t
 
-#set-options "--admit_smt_queries true"
 //This private primitive is used internally by the
 //compiler to translate bounded integer constants
 //with a desugaring-time check of the size of the number,
@@ -361,8 +357,8 @@ val of_string: string -> Tot t
 //Since it is marked private, client programs cannot call it directly
 //Since it is marked unfold, it eagerly reduces,
 //eliminating the verification overhead of the wrapper
+[@@admitted]
 private
 unfold
-let __uint_to_t (x:int) : Tot t
-    = uint_to_t x
-#reset-options
+let __uint_to_t (x:int) : t =
+  uint_to_t x
