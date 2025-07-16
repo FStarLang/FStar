@@ -123,6 +123,18 @@ fn fill_array (x:array U32.t) (n:SZ.t) (v:U32.t)
 }
 
 
+fn sub_array (x: array U32.t)
+  requires pts_to x seq![0ul; 1ul]
+  ensures pts_to x seq![0ul; 42ul]
+{
+  to_mask x;
+  mask_write (Pulse.Lib.Array.sub x 1sz 2) 0sz 42ul;
+  return_sub x;
+  mask_vext x seq![0ul; 42ul];
+  from_mask x;
+}
+
+
 module SZ = FStar.SizeT
 let test0 (x:SZ.t) (y:(y:SZ.t { SZ.v y <> 0 })) = let open SZ in x %^ y
 type opt a =

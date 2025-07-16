@@ -24,7 +24,7 @@ module I = PulseCore.InstantiatedSemantics
 module F = FStar.FunctionalExtensionality
 module ST = PulseCore.HoareStateMonad
 module Set = FStar.GhostSet
-module U = FStar.Universe
+module U = Pulse.Lib.Raise
 friend PulseCore.InstantiatedSemantics
 
 open FStar.PCM
@@ -106,7 +106,7 @@ let stt_of_action4 (#a:Type u#4) #ak #pre #post (m:ITA._act_except a ak GhostSet
   in
   let action : Sem.action state a = {pre=pre; post=F.on_dom _ post; step} in
   let lift : Sem.liftable u#4 u#100 = {
-    downgrade_val = (fun t x -> FStar.Universe.downgrade_val x);
+    downgrade_val = (fun t x -> U.downgrade_val x);
     laws = ()
   } in
   fun _ -> Sem.act_as_m_poly u#_ u#4 u#100 lift action
@@ -236,6 +236,10 @@ let lift_pre_act0_act (#a: Type u#0) #r #opens #pre #post
     fun m0 frame ->
     let x, m1 = m #ictx m0 frame in
     U.raise_val x, m1 |)
+
+instance raisable14 : U.raisable u#1 u#4 = U.raisable_inst u#1 u#4
+instance raisable24 : U.raisable u#2 u#4 = U.raisable_inst u#2 u#4
+instance raisable34 : U.raisable u#3 u#4 = U.raisable_inst u#3 u#4
 
 let lift_pre_act1_act (#a: Type u#1) #r #opens #pre #post
   (m: (#ictx:inames_disj opens -> pre_act a r ictx pre post))

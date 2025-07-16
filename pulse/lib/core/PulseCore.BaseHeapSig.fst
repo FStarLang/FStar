@@ -245,7 +245,7 @@ let gather #a #p r x y =
     #(fun _ -> pts_to r (op p x y))
 let pts_to_not_null_action #a #p r x = lift_heap_action (H2.pts_to_not_null_action #a #p r x)
 
-module U = FStar.Universe
+module U = Pulse.Lib.Raise
 module R = Pulse.Lib.PCM.Raise
 
 let ghost_pts_to' #a #p r x =

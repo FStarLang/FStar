@@ -90,10 +90,12 @@ ghost
 fn to_ref_pts_to (#a:Type0) (b:box a) (#p:perm) (#v:a)
   requires b |-> Frac p v
   ensures  box_to_ref b |-> Frac p v
+  ensures  pure (R.is_full_ref (box_to_ref b))
 
 ghost
 fn to_box_pts_to (#a:Type0) (b:box a) (#p:perm) (#v:a)
   requires box_to_ref b |-> Frac p v
+  requires  pure (R.is_full_ref (box_to_ref b))
   ensures  b |-> Frac p v
 
 ghost

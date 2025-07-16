@@ -23,11 +23,15 @@ open Pulse.Main
 open Pulse.Lib.Core
 open Pulse.Class.PtsTo
 open PulseCore.FractionalPermission
+open Pulse.Lib.Array.Core
 
+inline_for_extraction
 val ref ([@@@unused] a:Type u#0) : Type u#0
 
+inline_for_extraction
 val null (#a:Type u#0) : ref a
 
+inline_for_extraction
 val is_null #a (r : ref a) : b:bool{b <==> r == null #a}
 
 val pts_to
@@ -46,13 +50,18 @@ val pts_to_timeless (#a:Type) ([@@@mkey] r:ref a) (p:perm) (x:a)
   : Lemma (timeless (pts_to r #p x))
           [SMTPat (timeless (pts_to r #p x))]
 
+val is_full_ref #a (x: ref a) : prop
+
 [@@deprecated "Reference.alloc is unsound; use Box.alloc instead"]
+inline_for_extraction
 fn alloc
   (#a:Type)
   (x:a)
   returns  r : ref a
   ensures  r |-> x
+  ensures  pure (is_full_ref r)
 
+inline_for_extraction
 fn read
   (#a:Type)
   (r:ref a)
@@ -63,6 +72,7 @@ fn read
   ensures rewrites_to x n
 
 (* alias for read *)
+inline_for_extraction
 fn ( ! )
   (#a:Type)
   (r:ref a)
@@ -73,6 +83,7 @@ fn ( ! )
   ensures rewrites_to x n
 
 (* := *)
+inline_for_extraction
 fn write
   (#a:Type)
   (r:ref a)
@@ -82,6 +93,7 @@ fn write
   ensures  r |-> x
 
 (* alias for write *)
+inline_for_extraction
 fn op_Colon_Equals
   (#a:Type)
   (r:ref a)
@@ -93,12 +105,13 @@ fn op_Colon_Equals
 
 [@@deprecated "Reference.free is unsound; use Box.free instead"]
 
+inline_for_extraction
 fn free
   (#a:Type)
   (r:ref a)
   (#n:erased a)
   requires r |-> n
-  ensures  emp
+  requires pure (is_full_ref r)
 
 ghost
 fn share
@@ -126,7 +139,7 @@ val with_local
   (#ret_t:Type)
   (#post:ret_t -> slprop)
   (body:(r:ref a) -> stt ret_t (pre ** pts_to r init)
-                              (fun v -> post v ** op_exists_Star (pts_to r)))
+                              (fun v -> post v ** (exists* v. pts_to r v)))
   : stt ret_t pre post
 (* NOTE: Pulse does not have  universe polymorphism yet,
 (and ret_t is in a polymorphic universe), so we retain the val above.
@@ -180,3 +193,40 @@ fn replace
   ensures  r |-> x
   ensures  rewrites_to res v
 
+
+val to_array_ghost #a (r: ref a) : GTot (array a)
+
+inline_for_extraction
+unobservable
+fn to_array #a (r: ref a) #p (#v: erased a)
+  requires r |-> Frac p v
+  returns arr: array a
+  ensures rewrites_to arr (to_array_ghost r)
+  ensures arr |-> Frac p (seq![reveal v])
+  ensures pure (length arr == 1)
+
+ghost
+fn return_to_array #a (r: ref a) #p (#v: Seq.seq a)
+  requires to_array_ghost r |-> Frac p v
+  requires pure (length (to_array_ghost r) == 1)
+  returns _: squash (Seq.length v == 1)
+  ensures r |-> Frac p (Seq.index v 0)
+
+val array_at_ghost #a (arr: array a) (i: nat { i < length arr }) : GTot (r:ref a { to_array_ghost r == gsub arr i (i+1) })
+
+inline_for_extraction
+unobservable
+fn array_at #a (arr: array a) (i: SizeT.t) #p (#v: erased (Seq.seq a) { SizeT.v i < length arr /\ length arr == Seq.length v }) #mask
+  requires pts_to_mask arr #p v mask
+  requires pure (mask (SizeT.v i))
+  returns r: ref a
+  ensures rewrites_to r (array_at_ghost arr (SizeT.v i))
+  ensures r |-> Frac p (Seq.index v (SizeT.v i))
+  ensures pts_to_mask arr #p v (fun k -> mask k /\ k <> SizeT.v i)
+
+ghost
+fn return_array_at #a (arr: array a) (i: nat) (#p: perm) (#v: a) (#v': Seq.seq a { i < length arr /\ length arr == Seq.length v' }) (#mask: nat->prop)
+  requires array_at_ghost arr i |-> Frac p v
+  requires pts_to_mask arr #p v' mask
+  requires pure (~(mask i))
+  ensures pts_to_mask arr #p (Seq.upd v' i v) (fun k -> mask k \/ k == i)

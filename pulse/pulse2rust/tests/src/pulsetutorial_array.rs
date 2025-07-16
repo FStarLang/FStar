@@ -10,6 +10,10 @@ pub fn read_i<T: Copy>(arr: &mut [T], p: (), s: (), i: usize) -> T {
 pub fn write_i<T>(arr: &mut [T], s: (), x: T, i: usize) -> () {
     arr[i] = x;
 }
+pub fn incr(y: &mut i64, __v: ()) -> () {
+    let __anf = *y;
+    *y = __anf + 2;
+}
 pub fn compare<T: PartialEq + Copy>(
     p1: (),
     p2: (),
@@ -23,20 +27,18 @@ pub fn compare<T: PartialEq + Copy>(
     while {
         let vi = i;
         if vi < l {
-            let v1 = a1[vi];
-            let v2 = a2[vi];
-            v1 == v2
+            let __anf = a1[vi];
+            let __anf1 = a2[vi];
+            __anf == __anf1
         } else {
             false
         }
     } {
-        let vi = i;
-        i = vi + 1;
+        let __anf = i;
+        i = __anf + 1;
     }
-    let vi = i;
-    let res = vi == l;
-    let i1 = res;
-    i1
+    let __anf = i;
+    __anf == l
 }
 pub fn copy<T: Copy>(
     a1: &mut [T],
@@ -48,12 +50,12 @@ pub fn copy<T: Copy>(
 ) -> () {
     let mut i = 0;
     while {
-        let vi = i;
-        vi < l
+        let __anf = i;
+        __anf < l
     } {
         let vi = i;
-        let v = a2[vi];
-        a1[vi] = v;
+        let __anf = a2[vi];
+        a1[vi] = __anf;
         i = vi + 1;
     }
 }
@@ -90,5 +92,12 @@ pub fn heap_arrays(uu___: ()) -> std::vec::Vec<i64> {
 pub fn copy_app(mut v: std::vec::Vec<i64>) -> () {
     let a = &mut [0; 2];
     super::pulsetutorial_array::copy2(&mut v, a, 2, (), (), ())
+}
+pub fn test_match_head(x: &mut std::option::Option<i64>, __v: ()) -> i64 {
+    let __anf = *x;
+    match __anf {
+        Some(mut v) => v,
+        None => 0,
+    }
 }
 

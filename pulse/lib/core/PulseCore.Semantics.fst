@@ -15,7 +15,7 @@
 *)
 module PulseCore.Semantics
 
-module U = FStar.Universe
+module U = Pulse.Lib.Raise
 module ST = PulseCore.HoareStateMonad
 module NST = PulseCore.NondeterministicHoareStateMonad
 module PNST = PulseCore.PartialNondeterministicHoareStateMonad
@@ -168,6 +168,7 @@ type step_result (#st:state u#s) (a:Type u#a) (q:post st a) (frame:st.pred) =
           m:m a next q -> //the reduct
           step_result a q frame
 
+#push-options "--z3rlimit 10"
 (**
  * [step f frame]: Reduces a single step of [f], while framing
  * the assertion [frame]
@@ -216,6 +217,7 @@ let rec step
                 (fun x -> return <| Step _ <| Par m0 (Step?.m x))
     in
     weaken <| bind (lift <| NST.flip()) choose 
+#pop-options
 
 let rec loop #t () : Dv t = loop ()
 
@@ -274,7 +276,7 @@ let raise_action
       step = (fun frame ->
                ST.weaken <|
                ST.bind (a.step frame) <|
-               (fun x -> ST.return <| U.raise_val u#a u#(max a b) x))
+               (fun x -> ST.return <| U.raise_val u#a u#(max a b) #_ #U.raisable_inst x))
    }
 
 let act

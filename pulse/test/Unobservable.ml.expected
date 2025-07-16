@@ -1,6 +1,5 @@
 open Prims
 let rec (incr : Prims.int -> Prims.int) = fun x -> x + Prims.int_one
 let rec (test : unit -> Prims.int) =
-  fun uu___ -> let x = incr Prims.int_one in let x1 = incr x in x1
-let rec (test2 : unit -> Prims.int) =
-  fun uu___ -> let x = incr Prims.int_one in x
+  fun uu___ -> let x = incr Prims.int_one in incr x
+let rec (test2 : unit -> Prims.int) = fun uu___ -> incr Prims.int_one

@@ -189,7 +189,11 @@ let rec simplify_st_term (g:env) (e:st_term) : T.Tac st_term =
       | None ->        
         let head = simplify_st_term g head in
         let body = with_open binder body in
-        ret (Tm_Bind { binder; head; body })
+        if is_return_bv0 body then
+          // apply `let x = e in x ~~> e`
+          head
+        else
+          ret (Tm_Bind { binder; head; body })
     end
 
   | Tm_TotBind { binder; head; body } ->
@@ -502,9 +506,14 @@ and extract_dv_branch g (b:Pulse.Syntax.Base.branch) : T.Tac R.branch =
     (L.map fst bs)
 
 let extract_pulse_dv (g: env) (p:st_term) : T.Tac ECL.term =
+  debug g (fun _ -> Printf.sprintf "input: %s" (show p));
   let p = erase_ghost_subterms g p in
+  debug g (fun _ -> Printf.sprintf "post erasure: %s" (show p));
   let p = simplify_st_term g p in
-  extract_dv g p
+  debug g (fun _ -> Printf.sprintf "after simp: %s" (show p));
+  let p = extract_dv g p in
+  debug g (fun _ -> Printf.sprintf "output: %s" (show p));
+  p
 
 let rec extract_dv_recursive g (p:st_term) (rec_name:R.fv)
   : T.Tac ECL.term

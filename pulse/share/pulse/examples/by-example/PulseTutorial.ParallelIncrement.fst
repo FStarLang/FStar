@@ -463,7 +463,7 @@ ensures pts_to x ('i + 2)
 
 open FStar.PCM
 
-module U = FStar.Universe
+module U = Pulse.Lib.Raise
 module G = FStar.Ghost
 module Prod = Pulse.Lib.PCM.Product
 module Frac = Pulse.Lib.PCM.Fraction

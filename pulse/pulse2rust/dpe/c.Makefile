@@ -16,7 +16,7 @@ INCLUDE_PATHS += $(DICE_DIR)/external $(DICE_DIR)/dpe $(DICE_DIR)/engine $(DICE_
 INCLUDE_PATHS += $(PULSE_HOME)/out/lib/pulse
 ROOTS := $(DICE_DIR)/dpe/DPE.fst
 # ALREADY_CACHED_LIST = *,-HACL,-EverCrypt,-Spec.Hash.Definitions,-L0Core
-OTHERFLAGS += --warn_error -342
+OTHERFLAGS += --warn_error -342 --cmi
 DEPFLAGS += --extract '+EverCrypt +L0Core'
 all: verify extract
 
