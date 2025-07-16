@@ -1,6 +1,5 @@
 use ocaml_interop::{
-    impl_from_ocaml_record, impl_from_ocaml_variant, ocaml_export, OCaml, OCamlList, OCamlRef,
-    ToOCaml,
+    impl_from_ocaml_record, impl_from_ocaml_variant, OCaml, OCamlList, OCamlRuntime, ToOCaml
 };
 use proc_macro2::Span;
 use quote::ToTokens;
@@ -2408,55 +2407,26 @@ impl fmt::Display for File {
     }
 }
 
-ocaml_export! {
-  fn rust_fn_to_string(cr, e:OCamlRef<Fn>) -> OCaml<String> {
-    let e = cr.get(e);
-    let e: Fn = e.to_rust ();
-    fn_to_string(&e).to_owned ().to_ocaml(cr)
-  }
-
-  fn rust_expr_to_string(cr, e:OCamlRef<Expr>) -> OCaml<String> {
-    let e = cr.get(e);
-    let e: Expr = e.to_rust ();
-    e.to_string().to_owned().to_ocaml(cr)
-  }
-
-  fn rust_typ_to_string(cr, e:OCamlRef<Typ>) -> OCaml<String> {
-    let e = cr.get(e);
-    let e: Typ = e.to_rust ();
-    e.to_string().to_owned().to_ocaml(cr)
-  }
-
-  fn rust_file_to_syn_string(cr, e:OCamlRef<File>) -> OCaml<String> {
-    let e = cr.get(e);
-    let e: File = e.to_rust ();
-    file_to_syn_string(&e).to_owned ().to_ocaml(cr)
-  }
-
-  // fn rust_add_2(cr, x:OCamlRef<OCamlInt64>) -> OCaml<String> {
-  //   let x: OCaml<OCamlInt64> = cr.get(x);
-  //   let x: i64 = FromOCaml::from_ocaml(x);
-  //   let z = x + 2;
-  //   z.to_string().to_owned().to_ocaml(cr)
-  // }
-
-  // fn rust_dflt(cr, x:OCamlRef<Option<OCamlInt64>>) -> OCaml<String> {
-  //   let x: OCaml<Option<OCamlInt64>> = cr.get(x);
-  //   let x: Option<i64> = FromOCaml::from_ocaml(x);
-  //   let z = match x {
-  //     Some(x) => x,
-  //     None => 0,
-  //   };
-  //   z.to_string().to_owned().to_ocaml(cr)
-  // }
+#[ocaml_interop::export]
+fn rust_fn_to_string(cr: &mut OCamlRuntime, e: OCaml<Fn>) -> OCaml<String> {
+    let e: Fn = e.to_rust();
+    fn_to_string(&e).to_owned().to_ocaml(cr)
 }
 
-// use std::sync::Mutex;
+#[ocaml_interop::export]
+fn rust_expr_to_string(cr: &mut OCamlRuntime, e: OCaml<Expr>) -> OCaml<String> {
+    let e: Expr = e.to_rust();
+    e.to_string().to_owned().to_ocaml(cr)
+}
 
-// fn test(m: Mutex<i32>) -> Mutex<i32 {
-//     let mut data = m.lock().unwrap();
-//     *data = 5;
-//     let x = std::mem::replace::<i32>(&mut data, 6);
-//     let y = *data;
-//     drop(data);
-// }
+#[ocaml_interop::export]
+fn rust_typ_to_string(cr: &mut OCamlRuntime, e: OCaml<Typ>) -> OCaml<String> {
+    let e: Typ = e.to_rust();
+    e.to_string().to_owned().to_ocaml(cr)
+}
+
+#[ocaml_interop::export]
+fn rust_file_to_syn_string(cr: &mut OCamlRuntime, e: OCaml<File>) -> OCaml<String> {
+    let e: File = e.to_rust();
+    file_to_syn_string(&e).to_owned().to_ocaml(cr)
+}

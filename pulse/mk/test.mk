@@ -32,7 +32,7 @@ OTHERFLAGS += --ext optimize_let_vc
 OTHERFLAGS += --z3version 4.13.3
 ifdef TESTNOLIB
 OTHERFLAGS += --include $(PULSE_ROOT)/lib/common
-OTHERFLAGS += --include $(PULSE_ROOT)/lib/pulse/_cache
+OTHERFLAGS += --include $(PULSE_ROOT)/build/lib.common.checked
 OTHERFLAGS += --include $(PULSE_ROOT)/build/ocaml/installed/lib/pulse
 else
 OTHERFLAGS += --include $(PULSE_ROOT)/out/lib/pulse
@@ -53,7 +53,7 @@ FSTAR = $(RUNLIM) $(FSTAR_EXE) $(SIL) 				\
 	--cache_checked_modules				\
 	--odir $(OUTPUT_DIR)				\
 	--cache_dir $(CACHE_DIR)			\
-	--already_cached Prims,FStar,Pulse.Lib,Pulse.Class,PulseCore	\
+	--already_cached Prims,FStar,Pulse.Nolib,Pulse.Lib,Pulse.Class,PulseCore	\
 	 $(OTHERFLAGS) $(MAYBE_ADMIT) $(HINTS_ENABLED)
 
 ifneq ($(MAKECMDGOALS),clean)

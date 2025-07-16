@@ -95,6 +95,9 @@ let push_binding_bs _ _ _ _ = ()
 
 let push_binding_as_map _ _ _ _ = ()
 
+let push_univ_vars g us =
+  { g with f = RU.push_univ_vars g.f us }
+
 let fresh g =
   let v = RU.next_id () in
   assume ~(v `Set.mem` dom g);

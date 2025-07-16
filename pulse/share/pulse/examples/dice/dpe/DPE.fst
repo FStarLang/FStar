@@ -278,7 +278,7 @@ fn frame_session_perm_on_range
 
 let emp_to_start_valid () : Lemma (valid_transition emp_trace G_SessionStart) = ()
 
-#push-options "--fuel 0 --ifuel 2 --split_queries no --z3rlimit_factor 2"
+#push-options "--fuel 0 --ifuel 2 --split_queries no --z3rlimit_factor 6"
 
 fn __open_session (s:st)
   requires dpe_inv trace_ref (Some s)

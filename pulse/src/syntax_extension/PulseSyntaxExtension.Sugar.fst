@@ -55,8 +55,8 @@ type computation_type = {
 (* Not used in this module, but the list in annots above
 is translated to this type before doing anything meaningful with it. *)
 type parsed_annots = {
-  precondition: Sugar.slprop;
-  postcondition: Sugar.slprop;
+  precondition: slprop;
+  postcondition: slprop;
   return_name: ident;
   return_type: A.term;
   opens: option A.term
@@ -205,6 +205,7 @@ and lambda = {
 and fn_defn = {
   id:ident;
   is_rec:bool;
+  us:list ident;
   binders:binders;
   ascription:either computation_type (option A.term);
   measure:option A.term; // with binders in scope
@@ -229,6 +230,7 @@ instance showable_let_init : showable let_init = {
 
 type fn_decl = {
   id:ident;
+  us:list ident;
   binders:binders;
   ascription:either computation_type (option A.term); (* always Inl for now *)
   decorations:list A.decoration;
@@ -378,11 +380,13 @@ let rec eq_decl (d1 d2:decl) =
   | _ -> false
 and eq_fn_decl (f1 f2:fn_decl) =
   eq_ident f1.id f2.id &&
+  forall2 eq_ident f1.us f2.us &&
   forall2 AD.eq_binder f1.binders f2.binders &&
   eq_ascription f1.ascription f2.ascription
 and eq_fn_defn (f1 f2:fn_defn) =
   eq_ident f1.id f2.id &&
   f1.is_rec = f2.is_rec &&
+  forall2 eq_ident f1.us f2.us &&
   forall2 AD.eq_binder f1.binders f2.binders &&
   eq_ascription f1.ascription f2.ascription &&
   eq_opt AD.eq_term f1.measure f2.measure &&
@@ -642,12 +646,12 @@ let mk_while guard id invariant body = While { guard; id; invariant; body }
 let mk_intro slprop witnesses = Introduce { slprop; witnesses }
 let mk_sequence s1 s2 = Sequence { s1; s2 }
 let mk_stmt s range = { s; range; source=true }
-let mk_fn_defn id is_rec binders ascription measure body decorations range
+let mk_fn_defn id is_rec us binders ascription measure body decorations range
 : fn_defn
-= { id; is_rec; binders; ascription; measure; body; decorations; range }
-let mk_fn_decl id binders ascription decorations range
+= { id; is_rec; us; binders; ascription; measure; body; decorations; range }
+let mk_fn_decl id us binders ascription decorations range
 : fn_decl
-= { id; binders; ascription; decorations; range }
+= { id; us; binders; ascription; decorations; range }
 let mk_open lid = Open lid
 let mk_par p1 p2 q1 q2 b1 b2 = Parallel { p1; p2; q1; q2; b1; b2 }
 let mk_proof_hint_with_binders ht bs =  ProofHintWithBinders { hint_type=ht; binders=bs }

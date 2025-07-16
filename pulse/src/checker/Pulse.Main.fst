@@ -81,7 +81,8 @@ let check_fndefn
     else d
   in
 
-  let FnDefn { id; isrec; bs; comp; meas; body } = d.d in
+  let FnDefn { id; isrec; us; bs; comp; meas; body } = d.d in
+  let g = push_univ_vars g us in
   let nm_aux = fst (inspect_ident id) in
 
   if Nil? bs then
@@ -97,9 +98,8 @@ let check_fndefn
               (P.st_term_to_string body)
               (P.comp_to_string c));
   debug_main g
-    (fun _ -> Printf.sprintf "\nchecker call returned in main with:\n%s\nderivation=%s\n"
-              (P.st_term_to_string body)
-              (Pulse.Typing.Printer.print_st_typing t_typing));
+    (fun _ -> Printf.sprintf "\nchecker call returned in main with:\n%s\n"
+              (P.st_term_to_string body));
 
   let refl_t = elab_comp c in
   
@@ -124,7 +124,7 @@ let check_fndefn
     (refl_t:typ)
     (_:squash (RT.tot_typing (elab_env g) (elab_st_typing t_typing) refl_t)) =
     let nm = fst (inspect_ident id) in
-    Reflection.Util.mk_opaque_let (fstar_env g) cur_module nm (elab_st_typing t_typing) refl_t
+    Reflection.Util.mk_opaque_let (fstar_env g) cur_module nm us (elab_st_typing t_typing) refl_t
   in
 
   if fn_d.isrec
@@ -147,7 +147,7 @@ let check_fndefn
     let main_decl = chk, se, Some blob in
     let recursive_decl : RT.sigelt_for (elab_env g) expected_t =
       Rec.tie_knot g rng nm_orig nm_aux refl_t blob in
-    [main_decl], maybe_add_impl _ recursive_decl, []
+    [main_decl], maybe_add_impl expected_t recursive_decl, []
   end
   else begin
     //
@@ -179,7 +179,7 @@ let check_fndefn
     let main_decl = mk_main_decl refl_t () in
     let chk, se, _ = main_decl in
     let main_decl = chk, se, Some blob in
-    [], maybe_add_impl _ main_decl, []
+    [], maybe_add_impl (Some refl_t) main_decl, []
   end
 #pop-options
 
@@ -188,7 +188,8 @@ let check_fndecl
     (g : Soundness.Common.stt_env{bindings g == []})
   : T.Tac (RT.dsl_tac_result_t (fstar_env g) None)
 =
-  let FnDecl { id; bs; comp } = d.d in
+  let FnDecl { id; us; bs; comp } = d.d in
+  let g = push_univ_vars g us in
   if Nil? bs then
     fail g (Some d.range) "main: FnDecl does not have binders";
 
@@ -218,7 +219,7 @@ let check_fndecl
     pack_sigelt <|
     Sg_Val {
       nm = cur_module () @ [nm];
-      univs = [];
+      univs = Tactics.Util.map (fun u -> inspect_ident u) us;
       typ = typ
     }
   in

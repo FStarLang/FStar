@@ -729,13 +729,13 @@ let mk_szv (n:R.term) =
   let t = pack_ln (Tv_FVar (pack_fv szv_lid)) in
   pack_ln (Tv_App t (n, Q_Explicit))
 
-let mk_opaque_let (g:R.env) (cur_module:R.name) (nm:string) (tm:Ghost.erased R.term) (ty:R.typ{RT.typing g tm (T.E_Total, ty)})
+let mk_opaque_let (g:R.env) (cur_module:R.name) (nm:string) (us: list R.univ_name) (tm:Ghost.erased R.term) (ty:R.typ{RT.typing g tm (T.E_Total, ty)})
   : T.Tac (RT.sigelt_for g (Some ty)) =
   let fv = R.pack_fv (cur_module @ [nm]) in
-  let lb = R.pack_lb ({ lb_fv = fv; lb_us = []; lb_typ = ty; lb_def = (`_) }) in
+  let lb = R.pack_lb ({ lb_fv = fv; lb_us = us; lb_typ = ty; lb_def = (`_) }) in
   let se = R.pack_sigelt (R.Sg_Let false [lb]) in
   let pf : RT.sigelt_typing g se =
-    RT.ST_Let_Opaque g fv ty ()
+    RT.ST_Let_Opaque g fv us ty ()
   in
   (true, se, None)
 
@@ -778,3 +778,51 @@ let head_has_attr_string (attr_name:string) (t : R.term) : T.Tac bool =
   | None -> false
   | Some (hfv, _, _) ->
     fv_has_attr_string attr_name hfv
+
+let rec eq_list (f:'a -> 'a -> bool) (l1 l2:list 'a) : bool =
+  match l1, l2 with
+  | [], [] -> true
+  | x1::xs1, x2::xs2 -> f x1 x2 && eq_list f xs1 xs2
+  | _ -> false
+
+let eq_ident (i1 i2:R.ident) : bool =
+  R.compare_ident i1 i2 = Order.Eq
+
+let qual_eq (q1 q2:R.qualifier) : bool =
+  let open R in
+  match q1, q2 with
+  | Assumption, Assumption
+  | InternalAssumption, InternalAssumption
+  | New, New
+  | Private, Private
+  | Unfold_for_unification_and_vcgen, Unfold_for_unification_and_vcgen
+  | Visible_default, Visible_default
+  | Irreducible, Irreducible
+  | Inline_for_extraction, Inline_for_extraction
+  | NoExtract, NoExtract
+  | Noeq, Noeq
+  | Unopteq, Unopteq
+  | TotalEffect, TotalEffect
+  | Logic, Logic
+  | Reifiable, Reifiable -> true
+  | Reflectable n1, Reflectable n2
+  | Discriminator n1, Discriminator n2 
+  | Action n1, Action n2 -> n1 = n2 
+  | Projector (n1, i1), Projector (n2, i2) ->
+    n1 = n2 && eq_ident i1 i2
+  | RecordType (ids1, ids1'), RecordType (ids2, ids2')
+  | RecordConstructor (ids1, ids1'), RecordConstructor (ids2, ids2') ->
+    eq_list eq_ident ids1 ids2 &&
+    eq_list eq_ident ids1' ids2'
+  | ExceptionConstructor, ExceptionConstructor
+  | HasMaskedEffect, HasMaskedEffect
+  | Effect, Effect
+  | OnlyName, OnlyName -> true
+  | _ -> false
+
+let fv_has_qual (qual:R.qualifier) (f : R.fv) : T.Tac bool =
+  match T.lookup_typ (T.top_env ()) (T.inspect_fv f) with
+  | None -> false
+  | Some se ->
+    let quals = T.sigelt_quals se in
+    quals |> T.tryFind (fun x -> qual_eq qual x)

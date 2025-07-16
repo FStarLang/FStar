@@ -22,6 +22,9 @@ jobs:
       - run: echo "HOME=/home/user" | sudo tee -a $GITHUB_ENV
       - uses: mtzguido/set-opam-env@master
 
+      # For task pool test
+      - run: opam install -t domainslib
+
       - uses: actions/checkout@master
         id: checkout-fstar
         with:

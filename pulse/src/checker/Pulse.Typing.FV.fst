@@ -115,7 +115,8 @@ let freevars_close_proof_hint' (ht:proof_hint_type) (x:var) (i:index)
     | SHOW_PROOF_STATE _ -> ()
 
 // Needs a bit more rlimit sometimes. Also splitting is too expensive
-#push-options "--z3rlimit 20 --split_queries no"
+#push-options "--z3rlimit 20 --split_queries always"
+#restart-solver
 let rec freevars_close_st_term' (t:st_term) (x:var) (i:index)
   : Lemma
     (ensures (freevars_st (close_st_term' t x i) `Set.equal`
@@ -145,17 +146,17 @@ let rec freevars_close_st_term' (t:st_term) (x:var) (i:index)
           freevars_close_comp c x (i + 1)
       );
       freevars_close_st_term' body x (i + 1)
-
+    
     | Tm_Bind { binder; head; body } ->
       freevars_close_term' binder.binder_ty x i;
       freevars_close_st_term' head x i;
       freevars_close_st_term' body x (i + 1)
-
+    
     | Tm_TotBind { binder; head; body } ->
       freevars_close_term' binder.binder_ty x i;
       freevars_close_term' head x i;
       freevars_close_st_term' body x (i + 1)
-      
+
     | Tm_If { b; then_; else_; post } ->
       freevars_close_term' b x i;    
       freevars_close_st_term' then_ x i;    
@@ -519,7 +520,8 @@ fun d _cb ->
     freevars_open_comp res arg 0;
     freevars_tm_arrow (as_binder ty) q res
 
-#push-options "--z3rlimit 30"
+#push-options "--z3rlimit_factor 20 --fuel 3 --ifuel 2 --split_queries no"
+#restart-solver
 let st_typing_freevars_return : st_typing_freevars_case T_Return? =
 fun d cb ->
   match d with

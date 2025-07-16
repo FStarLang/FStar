@@ -23,6 +23,7 @@ open Pulse.Syntax
 module L = FStar.List.Tot
 
 module RT = FStar.Reflection.Typing
+module R = FStar.Reflection.V2
 module T = FStar.Tactics.V2
 module Pprint = FStar.Pprint
 
@@ -88,6 +89,8 @@ val push_binding_bs (g:env) (x:var { ~ (Set.mem x (dom g)) }) (n:ppname) (t:typ)
 val push_binding_as_map (g:env) (x:var { ~ (Set.mem x (dom g)) }) (n:ppname) (t:typ)
   : Lemma (as_map (push_binding g x n t) == Map.upd (as_map g) x t)
           [SMTPat (as_map (push_binding g x n t))]
+
+val push_univ_vars (g: env) (us: list R.univ_name) : g':env { g' == g }
 
 let lookup (g:env) (x:var) : option typ =
   let m = as_map g in

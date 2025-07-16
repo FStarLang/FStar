@@ -43,7 +43,7 @@ plugin.src: checker.src extraction.src syntax_extension.src
 ## Building the plugin with dune
 plugin.build: plugin.src .force
 	$(FSTAR_EXE) --ocamlenv \
-	  dune build --root=build/ocaml
+	  dune build --no-print-directory --root=build/ocaml
 
 ## Installing the plugin into out/
 plugin: plugin.build .force
@@ -82,6 +82,8 @@ do-install: plugin lib-pulse
 	# so I'm keeping this for now (it's already the case) and will do a PR later
 	# to change their namespace.
 	find lib/pulse lib/common \
+	     build/lib.common.checked/ build/lib.pulse.checked/ \
+		-type f \
 		\( -name '*.fst' -o -name '*.fsti' -o -name '*.checked' -o -name '*.ml' \) -and \
 		-exec cp -p {} $(PREFIX)/lib/pulse/lib \;
 	# Set up fstar.include so users only include lib/pulse
@@ -113,14 +115,10 @@ test-pulse2rust: pulse2rust test-share # test-pulse2rust uses .checked files fro
 	+$(MAKE) -C pulse2rust test
 
 .PHONY: test
-test: test-pulse test-share test-qs
+test: test-pulse test-share
 ifeq ($(PULSE_NO_RUST),)
 test: test-pulse2rust
 endif
-
-.PHONY: test-qs
-test-qs: local-install
-	$(MAKE) -C qs test
 
 .PHONY: pulse2rust
 pulse2rust: lib-pulse plugin
