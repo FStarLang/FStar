@@ -30,6 +30,9 @@ open FStarC.Class.PP
 
 module BU = FStarC.Util
 
+let no_pragmas (iface : list decl) : list decl =
+  List.filter (fun d -> not (Pragma? d.d)) iface
+
 (* Some basic utilities *)
 let id_eq_lid i (l:lident) = (string_of_id i) = (string_of_id (ident_of_lid l))
 
@@ -212,10 +215,6 @@ let rec prefix_with_iface_decls
          rest_iface, iface_hd::take_iface@[impl]
        )
 
-     | Pragma _ ->
-        (* Don't interleave pragmas on interface into implementation *)
-        prefix_with_iface_decls iface_tl impl
-
      | _ ->
        let iface, ds = prefix_with_iface_decls iface_tl impl in
        iface, iface_hd::ds
@@ -353,6 +352,8 @@ let prefix_with_interface_decls mname (impl:decl) : E.withenv (list decl) =
       | None ->
         [impl], env
       | Some iface ->
+        (* Don't interleave pragmas on interface into implementation *)
+        let iface = no_pragmas iface in
         let iface = fixup_interleaved_decls iface in
         let iface, impl = prefix_one_decl mname iface impl in
         let env = E.set_iface_decls env (E.current_module env) iface in
@@ -371,6 +372,8 @@ let interleave_module (a:modul) (expect_complete_modul:bool) : E.withenv modul =
       match E.iface_decls env l with
       | None -> a, env
       | Some iface ->
+        (* Don't interleave pragmas on interface into implementation *)
+        let iface = no_pragmas iface in
         let iface = fixup_interleaved_decls iface in
         let iface, impls =
             List.fold_left
