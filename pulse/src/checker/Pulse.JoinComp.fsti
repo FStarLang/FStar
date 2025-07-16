@@ -26,10 +26,6 @@ effect TacS (a:Type) (pre : Type0) (post : (_:a{pre}) -> Type0) =
                                       | Tactics.Result.Success r _ -> post r
                                       | _ -> True))) // does not guarantee anything on failure
 
-
-let g_with_eq g hyp b (eq_v:term) =
-  push_binding g hyp (mk_ppname_no_range "_if_hyp") (mk_eq2 u0 tm_bool b eq_v)
-
 val join_post #g #hyp #b
     (p1:post_hint_for_env (g_with_eq g hyp b tm_true))
     (p2:post_hint_for_env (g_with_eq g hyp b tm_false))

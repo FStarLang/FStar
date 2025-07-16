@@ -29,8 +29,6 @@ module J = Pulse.JoinComp
 module RW = Pulse.Checker.Prover.RewritesTo
 #set-options "--z3rlimit 40"
 
-let g_with_eq g hyp b (eq_v:term) =
-  push_binding g hyp (mk_ppname_no_range "_if_hyp") (RW.mk_sq_rewrites_to_p u0 tm_bool b eq_v)
 
 let retype_checker_result_post_hint #g #pre (ph:post_hint_for_env g)
     (ph':post_hint_opt g {Some? ph' ==> Some?.v ph' == ph})
@@ -66,7 +64,7 @@ let check
       Metatheory.tot_typing_weakening_single
         pre_typing
         hyp 
-        (mk_eq2 u0 tm_bool b eq_v)
+        (mk_sq_rewrites_to_p u0 tm_bool b eq_v)
     in
 
     let br =

@@ -19,8 +19,6 @@ open Pulse.Syntax
 open Pulse.Typing.Env
 module PS = Pulse.Checker.Prover.Substs
 
-val mk_sq_rewrites_to_p (u:universe) (t x y:term) : term 
-
 val extract_rewrites_to_p (t: typ) : option (var & term)
 
 val get_subst_from_env (g: env) : PS.ss_t

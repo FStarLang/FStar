@@ -20,15 +20,6 @@ open Pulse.Typing.Env
 module PS = Pulse.Checker.Prover.Substs
 module R = FStar.Reflection.V2
 
-let rewrites_to_p_lid = Pulse.Reflection.Util.mk_pulse_lib_core_lid "rewrites_to_p"
-
-let mk_sq_rewrites_to_p u t x y =
-  let open R in
-  let hd = pack_fv rewrites_to_p_lid in
-  let hd = pack_ln (Tv_UInst hd [u]) in
-  let args = [(t, Q_Implicit); (x, Q_Explicit); (y, Q_Explicit)] in
-  mk_squash u_zero (R.mk_app hd args)
-
 let extract_rewrites_to_p (t: typ) =
   let hd, args = R.collect_app_ln t in
   match R.inspect_ln hd, args with
@@ -37,7 +28,7 @@ let extract_rewrites_to_p (t: typ) =
     let hd, args = R.collect_app_ln t in
     (match R.inspect_ln hd, args with
     | R.Tv_UInst hd _, [_; lhs, _; rhs, _] ->
-      if R.inspect_fv hd <> rewrites_to_p_lid then None else
+      if R.inspect_fv hd <> Pulse.Typing.rewrites_to_p_lid then None else
       (match R.inspect_ln lhs with
       | R.Tv_Var x ->
         let x = R.inspect_namedv x in

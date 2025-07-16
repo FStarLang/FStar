@@ -259,6 +259,16 @@ let bind_soundness
 #pop-options
 
 #push-options "--z3rlimit_factor 4 --fuel 4 --ifuel 2"
+let retype_hyp #g #hyp #t0 #t1 #e #t 
+      (_:RT.tot_typing (RT.extend_env g hyp t0) e t)
+      (equiv:RT.equiv g t0 t1)
+: GTot (RT.tot_typing (RT.extend_env g hyp t1) e t)
+= admit()
+
+let equiv_rw #u #t #x #y g
+: GTot (RT.equiv g (mk_sq_rewrites_to_p u t x y) (RT.eq2 u t x y))
+= admit()
+
 let if_soundness
   (g:stt_env)
   (t:st_term)
@@ -279,31 +289,26 @@ let if_soundness
                                 b
                                 RT.bool_ty =
     tot_typing_soundness b_typing in
-  let g_then = push_binding g hyp ppname_default (mk_eq2 u0 tm_bool b tm_true) in
-  elab_push_binding g hyp (mk_eq2 u0 tm_bool b tm_true);
+  let g_then = g_with_eq g hyp b tm_true in
+  let rw_true = (mk_sq_rewrites_to_p u0 tm_bool b tm_true) in
+  elab_push_binding g hyp rw_true;
   let re1_typing
-
     : RT.tot_typing (RT.extend_env (elab_env g)
                                hyp
-                               (RT.eq2 (R.pack_universe R.Uv_Zero)
-                                       RT.bool_ty
-                                       b
-                                       RT.true_bool))
+                                 (RT.eq2 u0 tm_bool b tm_true))
                 (elab_st_typing e1_typing)
                 (elab_comp c) =
-    soundness g_then e1 c e1_typing in
-  let g_else = push_binding g hyp ppname_default (mk_eq2 u0 tm_bool b tm_false) in
-  elab_push_binding g hyp (mk_eq2 u0 tm_bool b tm_false);
+    retype_hyp (soundness g_then e1 c e1_typing) (equiv_rw _) in
+  let g_else = g_with_eq g hyp b tm_false in
+  let rw_false = (mk_sq_rewrites_to_p u0 tm_bool b tm_false) in
+  elab_push_binding g hyp rw_false;
   let re2_typing
     : RT.tot_typing (RT.extend_env (elab_env g)
                                hyp
-                               (RT.eq2 (R.pack_universe R.Uv_Zero)
-                                       RT.bool_ty
-                                       b
-                                       RT.false_bool))
+                               (RT.eq2 u0 tm_bool b tm_false))
                 (elab_st_typing e2_typing)
                 (elab_comp c) =
-    soundness g_else e2 c e2_typing in
+    retype_hyp (soundness g_else e2 c e2_typing) (equiv_rw _) in
   let c_typing = 
     ct_soundness _ _ _ c_typing
   in
