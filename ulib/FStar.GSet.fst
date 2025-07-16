@@ -16,7 +16,7 @@
 *)
 module FStar.GSet
 (** Computational sets (on Types): membership is a boolean function *)
-#set-options "--fuel 0 --ifuel 0"
+
 open FStar.FunctionalExtensionality
 module F = FStar.FunctionalExtensionality
 

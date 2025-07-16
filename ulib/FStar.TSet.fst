@@ -17,7 +17,6 @@
 (** Propositional sets (on any types): membership is a predicate *)
 module FStar.TSet
 
-#set-options "--fuel 0 --ifuel 0"
 module F = FStar.FunctionalExtensionality
 
 (*
