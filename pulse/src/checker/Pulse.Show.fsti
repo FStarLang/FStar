@@ -34,7 +34,10 @@ instance val tac_showable_option (a:Type) (_ : tac_showable a)
 
 instance val tac_showable_list (a:Type) (_ : tac_showable a)
   : tac_showable (list a)
-  
+
+instance val tac_showable_either (a b:Type) (_ : tac_showable a) (_ : tac_showable b)
+  : tac_showable (either a b)
+
 instance val tac_showable_ctag : tac_showable ctag
 instance val tac_showable_term : tac_showable term
 instance val tac_showable_aqualv : tac_showable aqualv
