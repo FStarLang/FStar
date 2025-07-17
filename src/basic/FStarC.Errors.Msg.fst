@@ -54,8 +54,11 @@ let subdoc' (indent:bool) d =
 
 let subdoc d = subdoc' true d
 
+let render_as_doc (ds : list document) : document =
+  concat (List.map (fun d -> subdoc (group d)) ds)
+
 let rendermsg (ds : list document) : string =
-  renderdoc (concat (List.map (fun d -> subdoc (group d)) ds))
+  renderdoc (render_as_doc ds)
 
 let json_of_error_message (err_msg: list document): FStarC.Json.json
   = FStarC.List.map
