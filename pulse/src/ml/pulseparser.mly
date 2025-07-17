@@ -1,8 +1,8 @@
 %{
 (*
-Warning: 26 states have shift/reduce conflicts.
+Warning: 27 states have shift/reduce conflicts.
 Warning: one state has reduce/reduce conflicts.
-Warning: 311 shift/reduce conflicts were arbitrarily resolved.
+Warning: 342 shift/reduce conflicts were arbitrarily resolved.
 Warning: one reduce/reduce conflict was arbitrarily resolved.
 Warning: 234 end-of-stream conflicts were arbitrarily resolved.
 *)

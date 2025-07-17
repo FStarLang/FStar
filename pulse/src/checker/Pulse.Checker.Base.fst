@@ -1032,6 +1032,8 @@ let rec close_post x_ret dom_g g1 (bs1:list (ppname & var & typ)) (post:slprop)
       tm_exists_sl u b (close_term post y)
     )
   in
+  (* generate exists (_:squash pr). post 
+     Useful if the well-formedness of post depends on pr in scope *)
   let guard_with_squash pr (post:slprop) : T.Tac slprop =
     let n, u, pr = pr in
     let b = {binder_ty=mk_squash u pr; binder_ppname=n; binder_attrs=Sealed.seal []} in
@@ -1043,7 +1045,7 @@ let rec close_post x_ret dom_g g1 (bs1:list (ppname & var & typ)) (post:slprop)
     let hd, args = T.collect_app_ln property in
     match T.inspect_ln hd, args with
     | Tv_UInst hd [u], [(typ, Q_Implicit); (lhs, Q_Explicit); (rhs, Q_Explicit)] ->
-      if T.inspect_fv hd = ["Pulse"; "Lib"; "Core"; "rewrites_to_p"]
+      if T.inspect_fv hd = rewrites_to_p_lid
       then (
         match T.inspect_ln lhs with
         | Tv_Var n1 ->
@@ -1053,8 +1055,8 @@ let rec close_post x_ret dom_g g1 (bs1:list (ppname & var & typ)) (post:slprop)
           let eq = RT.eq2 u typ lhs rhs in
           tm_star post (tm_pure eq)
       )
-      else tm_star post (tm_pure property) //guard_with_squash pr post
-    | _ -> tm_star post (tm_pure property) //guard_with_squash pr post
+      else tm_star post (tm_pure property) //guard_with_squash pr post?
+    | _ -> tm_star post (tm_pure property) //guard_with_squash pr post?
   in
   let close_post = close_post x_ret dom_g g1 in
   match bs1 with

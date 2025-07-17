@@ -146,15 +146,9 @@ let join_slprop g b (ex1 ex2:list (universe & binder)) (p1 p2:slprop)
   | Tm_ExistsSL .., _
   | Tm_ForallSL .., _
   | _, Tm_ExistsSL ..
-  | _, Tm_ForallSL .. -> RT.mk_if b p1 p2
-    // let x1 = fresh g in
-    // let p1 = open_term_nv p1 (b1.binder_ppname, x1) in
-    // join_slprop g b ((u1, b1, p1)::ex1) ex2 p1 p2
-
-  // | _, Tm_ExistsSL u2 b2 p2 ->
-  //   let x2 = fresh g in
-  //   let p2 = open_term_nv p2 (b2.binder_ppname, x2) in
-  //   join_slprop g b ex1 ((u2, b2, p2)::ex2) p1 p2
+  | _, Tm_ForallSL .. ->
+    //Not doing anything interesting to share binders
+    RT.mk_if b p1 p2
 
   | _ ->
     let open Pulse.Show in
