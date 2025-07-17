@@ -57,7 +57,6 @@ type context_t = list string
 type error = error_code & error_message & Range.t & context_t
 
 exception Error   of error
-exception Warning of error
 exception Stop
 exception Empty_frag
 

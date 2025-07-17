@@ -114,7 +114,6 @@ let update_flags (l:list (error_flag & (int & int)))
   @ default_settings
 
 exception Error   of error
-exception Warning of error
 exception Stop
 exception Empty_frag
 
