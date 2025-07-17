@@ -1423,14 +1423,23 @@ let translate_let' env flavor lb: option decl =
         begin try
           let body = translate_expr env body in
           Some (DFunction (cc, meta, List.length tvars, t, name, binders, body))
-        with e ->
+        with
+        | e ->
+          let open FStarC.Pprint in
+          let open FStarC.Errors.Msg in
           // JP: TODO: figure out what are the remaining things we don't extract
-          let msg = BU.print_exn e in
-          Errors.log_issue0 Errors.Warning_FunctionNotExtacted [
-            Errors.Msg.text <| BU.format1 "Error while extracting %s to KaRaMeL." (Syntax.string_of_mlpath name);
-            Pprint.arbitrary_string msg;
-          ];
-          let msg = "This function was not extracted:\n" ^ msg in
+          let sub_msg : list document =
+            match e with
+            | Errors.Error (code, msg, pos, ctx) ->
+              [prefix 2 1 (text (BU.format2 "Got error %s at %s." (show (Errors.errno code)) (show pos)))
+                (Errors.render_as_doc msg)]
+            | e ->
+              [text "Got an exception: " ^^ arbitrary_string (BU.print_exn e)]
+          in
+          Errors.log_issue0 Errors.Warning_FunctionNotExtacted ([
+            Errors.Msg.text <| BU.format1 "Error while extracting %s to KaRaMeL." (show name);
+          ] @ sub_msg);
+          let msg = "This function was not extracted:\n" ^ show name in
           Some (DFunction (cc, meta, List.length tvars, t, name, binders, EAbortS msg))
         end
 
