@@ -57,8 +57,10 @@ let rec mk_abs (g:env) (qbs:list (option qualifier & binder & bv)) (body:st_term
     let body = close_st_term body bv.bv_index in
     with_range (Pulse.Syntax.Builder.tm_abs b q empty_ascription body) body.range
 
-let set_impl #g #t (se: RT.sigelt_for g t) (r: bool) (impl: R.term) : Dv (RT.sigelt_for g t) =
+let set_impl src_g #g #t (se: RT.sigelt_for g t) (r: bool) (impl: R.term) : T.Tac (RT.sigelt_for g t) =
   let checked, se, blob = se in
+  debug_main src_g (fun _ ->
+    Printf.sprintf "Extracted term to %s\n" (T.term_to_string impl));
   let se = RU.add_attribute se (Extract.CompilerLib.mk_extracted_as_attr impl) in
   checked, se, blob
 
@@ -115,9 +117,9 @@ let check_fndefn
       se
     else if fn_d.isrec then
       let impl = extract_dv_recursive g body (R.pack_fv (cur_module @ [nm_orig])) in
-      set_impl se true impl
+      set_impl g se true impl
     else
-      set_impl se false (extract_pulse_dv g body)
+      set_impl g se false (extract_pulse_dv g body)
     end in
 
   let mk_main_decl
