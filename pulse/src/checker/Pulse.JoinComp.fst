@@ -30,6 +30,47 @@ module RT = FStar.Reflection.Typing
 module R = FStar.Reflection.V2
 module RU = Pulse.RuntimeUtils
 
+let mk_imp lhs rhs =
+  let open R in
+  let implies_lid = ["Prims"; "l_imp"] in
+  let hd = R.pack_ln (Tv_FVar (R.pack_fv implies_lid)) in
+  R.mk_app hd [(lhs, Q_Explicit); (rhs, Q_Explicit)]
+
+let rec guard_pures then_ b (ps:list slprop) 
+: list slprop & list slprop
+= let guard_pure pp =
+    let def () = 
+      let payload =
+        if then_ then mk_imp (RT.eq2 u0 tm_bool b tm_true) pp
+        else mk_imp (RT.eq2 u0 tm_bool b tm_false) pp
+      in
+      pack_term_view (Tm_Pure payload) (T.range_of_term pp)
+    in    
+    let hd, args = T.collect_app_ln pp in
+    match R.inspect_ln hd, args with
+    | R.Tv_UInst _ _, [(ty, _); _; _] -> //no need to retain unit equalities
+      if FStar.Reflection.TermEq.term_eq hd (`(Prims.eq2 u#0))
+      && FStar.Reflection.TermEq.term_eq ty (`Prims.unit)
+      then tm_emp
+      else def()
+    | _ -> def ()
+  in
+  let guard_pures = guard_pures then_ in
+  match ps with
+  | [] -> [], []
+  | p::ps -> (
+    match inspect_term p with
+    | Tm_Pure pp -> (
+      let pure = guard_pure pp in
+      let pures, ps = guard_pures b ps in
+      pure::pures, ps
+    )
+  
+    | _ ->
+      let pures, ps = guard_pures b ps in
+      pures, p::ps
+  )
+
 let may_match g (p:slprop) (q:slprop) = MKeys.eligible_for_smt_equality g p q
 
 let find_match g (p:slprop) (qs:list slprop)
@@ -38,6 +79,7 @@ let find_match g (p:slprop) (qs:list slprop)
   : T.Tac (list (slprop & slprop) & list slprop & list slprop)
   = match qs with
     | [] -> [], [p], rest
+
     | q::qs ->
       if may_match g p q 
       then [p,q], [], qs@rest
@@ -59,7 +101,7 @@ let partition_matches g (ps qs:list slprop)
 
 let rec combine_terms top g b pq : T.Tac term =
   let p, q = pq in
-  T.print (
+  Pulse.Checker.Util.debug g "pulse.join_comp" (fun _ ->
     Printf.sprintf "Combine terms %s and %s\n" (show p) (show q)
   );
   let pack t = pack_term_view t (T.range_of_term p) in
@@ -79,7 +121,7 @@ let rec combine_terms top g b pq : T.Tac term =
     if not top then def () else
     let hd1, args1 = T.collect_app_ln f1 in
     let hd2, args2 = T.collect_app_ln f2 in //not proving termination because collect_app_ln's type is not strong enough
-    T.print (
+    Pulse.Checker.Util.debug g "pulse.join_comp" (fun _ ->
       Printf.sprintf "Destructed\nlhs as %s [%s]\nrhs as %s [%s]"
         (show hd1) (show args1)
         (show hd2) (show args2)
@@ -118,7 +160,7 @@ let join_slprop g b (ex1 ex2:list (universe & binder)) (p1 p2:slprop)
     let open Pulse.Show in
     let p1s, p2s = slprop_as_list p1, slprop_as_list p2 in
     let matches, p1s, p2s = partition_matches g p1s p2s in
-    T.print (
+    Pulse.Checker.Util.debug g "pulse.join_comp" (fun _ ->
       Printf.sprintf
         "Matches: %s\nRemaining ps=%s\nRemaining qs=%s\n"
           (show matches)
@@ -126,11 +168,13 @@ let join_slprop g b (ex1 ex2:list (universe & binder)) (p1 p2:slprop)
           (show p2s)
     );
     let matched = T.map (fun x -> combine_terms true g b x) matches in
+    let pures1, p1s = guard_pures true b p1s in
+    let pures2, p2s = guard_pures false b p2s in
     match p1s, p2s with
-    | [], [] -> list_as_slprop matched
+    | [], [] -> list_as_slprop (pures1@pures2@matched)
     | _ ->
       let remaining = RT.mk_if b (list_as_slprop p1s) (list_as_slprop p2s) in
-      list_as_slprop (remaining::matched)
+      list_as_slprop (remaining::pures1@pures2@matched)
 
 let rec join_effect_annot g (e1 e2:effect_annot)
 : T.Tac (e:effect_annot & effect_annot_typing g e)
@@ -178,12 +222,11 @@ let join_post #g #hyp #b
     (p1:post_hint_for_env (g_with_eq g hyp b tm_true))
     (p2:post_hint_for_env (g_with_eq g hyp b tm_false))
 : T.Tac (post_hint_for_env g)
-= T.print (
+= Pulse.Checker.Util.debug g "pulse.join_comp" (fun _ ->
     Printf.sprintf "Joining postconditions:\n%s\nand\n%s\n"
       (T.term_to_string p1.post)
       (T.term_to_string p2.post)
   );
-
   if not (T.term_eq p1.ret_ty p2.ret_ty)
   then (
     fail_doc g (Some (T.range_of_term p1.ret_ty))
@@ -192,12 +235,25 @@ let join_post #g #hyp #b
          text (Printf.sprintf "The types %s and %s are not equal" (T.term_to_string p1.ret_ty) (T.term_to_string p2.ret_ty))]
       )
   );
-  let joined_post = join_slprop g b [] [] p1.post p2.post in
-  T.print (
+  let x = fresh g in
+  let p1_post = open_term_nv p1.post (ppname_default, x) in
+  let (| p1_post, _ |) = 
+    Pulse.Checker.Prover.normalize_slprop 
+      (push_binding_def g x p1.ret_ty) 
+      p1_post true 
+  in
+  let p2_post = open_term_nv p2.post (ppname_default, x) in
+  let (| p2_post, _ |) =
+    Pulse.Checker.Prover.normalize_slprop 
+      (push_binding_def g x p1.ret_ty) 
+      p2_post true 
+  in
+  let joined_post = join_slprop g b [] [] p1_post p2_post in
+  let joined_post = close_term joined_post x in
+  Pulse.Checker.Util.debug g "pulse.join_comp" (fun _ ->
     Printf.sprintf "Inferred joint postcondition:\n%s\n"
       (T.term_to_string joined_post)
   );
-  let x = fresh g in
   assume (fresh_wrt x g (freevars joined_post));
   let (| u, ty_typing |) = Pulse.Checker.Pure.check_universe g p1.ret_ty in
   let joined_post' = open_term_nv joined_post (ppname_default, x) in 

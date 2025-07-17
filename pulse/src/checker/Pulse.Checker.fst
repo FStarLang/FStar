@@ -237,15 +237,22 @@ let rec check
   then Pulse.Checker.AssertWithBinders.check g0 pre0 pre0_typing post_hint res_ppname t check
   else (
     maybe_trace t g0 pre0 t.range;  
-    if RU.debug_at_level (fstar_env g0) "pulse.checker" then
+    if RU.debug_at_level (fstar_env g0) "pulse.checker" then (
       T.print (Printf.sprintf "At %s{\nerr context:\n>%s\n\n{\n\tenv=%s\ncontext:\n%s,\n\nst_term: %s\nis_source: %s}}\n"
                 (show t.range)
                 (RU.print_context (get_context g0))
                 (show g0)
                 (show pre0)
                 (show t)
-                (show (T.unseal t.source)));
-    
+                (show (T.unseal t.source)))
+    );
+
+    if RU.debug_at_level (fstar_env g0) "pulse.dump_proof_state" then (
+      T.print (Printf.sprintf "At %s\ncontext:\n%s\n"
+                (show t.range)
+                (show pre0))
+    );
+
     match maybe_elaborate_stateful_head g0 t with
     | Some t -> 
       check g0 pre0 pre0_typing post_hint res_ppname t

@@ -40,7 +40,6 @@ ensures pts_to x #p 'vx ** pts_to y #q 'vy
 }
 //end max$
 
-[@@expect_failure]
 //max_alt_fail$
 fn max_alt #p #q (x y:ref int)
 requires pts_to x #p 'vx ** pts_to y #q 'vy
@@ -65,7 +64,7 @@ ensures pts_to x #p 'vx ** pts_to y #q 'vy
 
 
 //max_alt$
-fn max_alt #p #q (x y:ref int)
+fn max_alt2 #p #q (x y:ref int)
 requires pts_to x #p 'vx ** pts_to y #q 'vy
 returns n:int
 ensures pts_to x #p 'vx ** pts_to y #q 'vy
