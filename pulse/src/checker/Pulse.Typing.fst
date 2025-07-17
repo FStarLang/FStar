@@ -76,6 +76,16 @@ let mk_sq_eq2 (u:universe)
 let mk_slprop_eq (e0 e1:term) : term =
   mk_eq2 u2 tm_slprop e0 e1
 
+let rewrites_to_p_lid = Pulse.Reflection.Util.mk_pulse_lib_core_lid "rewrites_to_p"
+
+let mk_sq_rewrites_to_p u t x y =
+  let open R in
+  let hd = pack_fv rewrites_to_p_lid in
+  let hd = pack_ln (Tv_UInst hd [u]) in
+  let args = [(t, Q_Implicit); (x, Q_Explicit); (y, Q_Explicit)] in
+  mk_squash u_zero (R.mk_app hd args)
+
+
 let mk_ref (t:term) : term = tm_pureapp (tm_fvar (as_fv ref_lid)) None t
 
 let mk_pts_to (ty:term) (r:term) (v:term) : term =
@@ -754,6 +764,9 @@ let eff_of_ctag = function
   | STT_Ghost -> T.E_Ghost
   | _ -> T.E_Total
 
+let g_with_eq g hyp b (eq_v:term) =
+  push_binding g hyp (mk_ppname_no_range "_if_hyp") (mk_sq_rewrites_to_p u0 tm_bool b eq_v)
+
 [@@ erasable; no_auto_projectors]
 noeq
 type st_typing : env -> st_term -> comp -> Type =
@@ -873,8 +886,8 @@ type st_typing : env -> st_term -> comp -> Type =
                ~(hyp `Set.mem` (freevars_st e1 `Set.union` freevars_st e2))
               } ->
       tot_typing g b tm_bool ->
-      st_typing (push_binding g hyp ppname_default (mk_eq2 u0 tm_bool b tm_true)) e1 c ->
-      st_typing (push_binding g hyp ppname_default (mk_eq2 u0 tm_bool b tm_false)) e2 c ->
+      st_typing (g_with_eq g hyp b tm_true) e1 c ->
+      st_typing (g_with_eq g hyp b tm_false) e2 c ->
       my_erased (comp_typing_u g c) ->
       st_typing g (wrst c (Tm_If { b; then_=e1; else_=e2; post=None })) c
 

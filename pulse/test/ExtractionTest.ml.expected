@@ -52,9 +52,9 @@ let rec (fill_array :
 let rec (sub_array : FStar_UInt32.t Pulse_Lib_HigherArray_Core.array -> unit)
   =
   fun x ->
-    let __anf =
+    let __anf1247 =
       Pulse_Lib_HigherArray_Core.sub x () () Stdint.Uint64.one () () in
-    Pulse_Lib_HigherArray_Core.mask_write __anf Stdint.Uint64.zero
+    Pulse_Lib_HigherArray_Core.mask_write __anf1247 Stdint.Uint64.zero
       (Stdint.Uint32.of_int (42)) () ()
 let (test0 : FStar_SizeT.t -> FStar_SizeT.t -> FStar_SizeT.t) =
   fun x -> fun y -> FStar_SizeT.rem x y

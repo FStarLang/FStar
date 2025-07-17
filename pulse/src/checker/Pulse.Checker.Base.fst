@@ -23,6 +23,7 @@ module Metatheory = Pulse.Typing.Metatheory
 module CP = Pulse.Checker.Pure
 module RU = Pulse.RuntimeUtils
 module FV = Pulse.Typing.FV
+open Pulse.Checker.Util
 open Pulse.Show
 
 open Pulse.Typing.Combinators
@@ -905,15 +906,16 @@ let decompose_app (g:env) (tt:either term st_term)
   )
   | Inr st -> decompose_st_app st
 
-let anf_binder = T.pack (T.Tv_FVar (T.pack_fv (Pulse.Reflection.Util.mk_pulse_lib_core_lid "__anf_binder__")))
+let anf_binder name = T.pack (T.Tv_FVar (T.pack_fv (Pulse.Reflection.Util.mk_pulse_lib_core_lid (Printf.sprintf "__%s_binder__" name))))
   
 let bind_st_term (g:env) (s:st_term) 
 : T.Tac (env & binder & var & term)
 = let open Pulse.Syntax in
+  let anf_name = Printf.sprintf "__anf%d" (RU.next_id()) in
   let b = {
     binder_ty = tm_unknown;
-    binder_ppname = mk_ppname (FStar.Reflection.Typing.seal_pp_name "__anf") s.range;
-    binder_attrs = FStar.Sealed.seal [anf_binder];
+    binder_ppname = mk_ppname (FStar.Reflection.Typing.seal_pp_name anf_name) s.range;
+    binder_attrs = FStar.Sealed.seal [anf_binder anf_name];
   } in
   let x = Pulse.Typing.Env.fresh g in
   let g = Pulse.Typing.Env.push_binding g x b.binder_ppname b.binder_ty in
@@ -1008,3 +1010,108 @@ let hoist_stateful_apps
           bind_term
         in
         Some res
+
+ 
+let compose_checker_result_t 
+  (#g:env) (#g':env { g' `env_extends` g }) (#ctxt #ctxt':slprop) (#post_hint:post_hint_opt g)
+  (r1:checker_result_t g ctxt None)
+  (r2:checker_result_t g' ctxt' post_hint { composable r1 r2 })
+: T.Tac (checker_result_t g ctxt post_hint)
+= let (| x1, g1, t1, (| _, ctxt'_typing |), k1 |) = r1 in
+  let (| x2, g2, t2, ctxt2, k2 |) = r2 in
+  let k = k_elab_trans k1 k2 in
+  (| x2, g2, t2, ctxt2, k |)
+
+let rec close_post x_ret dom_g g1 (bs1:list (ppname & var & typ)) (post:slprop)
+: T.Tac slprop
+= let maybe_close (n, y,ty) (post:slprop) = 
+    if not (y `Set.mem` freevars post) then post
+    else (
+      let b = {binder_ty=ty; binder_ppname=n; binder_attrs=Sealed.seal []} in
+      let (| u, _ |) = Pulse.Checker.Pure.check_universe g1 ty in
+      tm_exists_sl u b (close_term post y)
+    )
+  in
+  (* generate exists (_:squash pr). post 
+     Useful if the well-formedness of post depends on pr in scope *)
+  let guard_with_squash pr (post:slprop) : T.Tac slprop =
+    let n, u, pr = pr in
+    let b = {binder_ty=mk_squash u pr; binder_ppname=n; binder_attrs=Sealed.seal []} in
+    tm_exists_sl u_zero b post
+  in
+  let maybe_elim_rewrites_to pr (post:term) : T.Tac term =
+    let _, _, property = pr in
+    let open R in
+    let hd, args = T.collect_app_ln property in
+    match T.inspect_ln hd, args with
+    | Tv_UInst hd [u], [(typ, Q_Implicit); (lhs, Q_Explicit); (rhs, Q_Explicit)] ->
+      if T.inspect_fv hd = rewrites_to_p_lid
+      then (
+        match T.inspect_ln lhs with
+        | Tv_Var n1 ->
+          let n1 = inspect_namedv n1 in
+          Pulse.Syntax.Naming.subst_term post [RT.NT n1.uniq rhs]
+        | _ -> 
+          let eq = RT.eq2 u typ lhs rhs in
+          tm_star post (tm_pure eq)
+      )
+      else tm_star post (tm_pure property) //guard_with_squash pr post?
+    | _ -> tm_star post (tm_pure property) //guard_with_squash pr post?
+  in
+  let close_post = close_post x_ret dom_g g1 in
+  match bs1 with
+  | [] -> post
+  | (n,y,ty)::tl -> (
+    if y = x_ret
+    then close_post tl post
+    else if y `Set.mem` dom_g
+    then close_term post x_ret
+    else (
+      let open R in
+      match T.inspect_ln ty with
+      | Tv_App hd (p, Q_Explicit) -> (
+        match T.inspect_ln hd with
+        | Tv_UInst fv [u]->
+          if inspect_fv fv = ["Prims"; "squash"]
+          then close_post tl (maybe_elim_rewrites_to (n, u, p) post)
+          else close_post tl (maybe_close (n,y,ty) post)
+        | _ -> close_post tl (maybe_close (n,y,ty) post)
+      )
+      | _ -> close_post tl (maybe_close (n,y,ty) post)
+    )
+  )
+
+let infer_post #g #ctxt (r:checker_result_t g ctxt None)
+: T.Tac (post_hint_for_env g)
+= let (| x, g1, (| u, t, _ |), (| post, _ |), k |) = r in
+  let bs0 = bindings g in
+  let dom_g = dom g in
+  let fvs_t = freevars t in
+  let fail_fv_typ #a (x:string) 
+  : T.Tac a =
+    fail_doc g (Some (T.range_of_term t))
+        [Pulse.PP.text "Could not infer a type for this block; the return type `";
+          Pulse.PP.text (T.term_to_string t); 
+          Pulse.PP.text "` contains free variable ";
+          Pulse.PP.text x;
+          Pulse.PP.text " that escape its environment"]
+  in
+  let mk_post_hint (post:term) : T.Tac (post_hint_for_env g) = 
+    let (| u, ty_typing |) = Pulse.Checker.Pure.check_universe g t in
+    let x = fresh g in
+    let post' = open_term_nv post (ppname_default, x) in 
+    let g' = push_binding g x ppname_default t in
+    let post_typing_src = Pulse.Checker.Pure.check_slprop_with_core g' post' in
+    assume (fresh_wrt x g (freevars post));
+    {
+      g; effect_annot=EffectAnnotSTT; effect_annot_typing=();
+      ret_ty=t; u; ty_typing;
+      post; x; post_typing_src; post_typing=RU.magic()
+    }
+  in
+  let close_post = close_post x dom_g g1 (bindings_with_ppname g1) post in
+  Pulse.Checker.Util.debug g "pulse.infer_post" (fun _ ->
+    Printf.sprintf "Original postcondition: %s |= %s\nInferred postcondition: %s |= %s\n" 
+    (env_to_string g1) (T.term_to_string post) (env_to_string g) (T.term_to_string close_post));
+  let ph = mk_post_hint close_post in
+  ph

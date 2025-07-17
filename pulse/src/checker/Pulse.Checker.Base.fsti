@@ -245,3 +245,21 @@ val hoist_stateful_apps
         (hoist_top_level_st /\ Inl? tt ==> Inl? x)
       } -> T.Tac st_term))
 : T.Tac (option st_term)
+
+let composable
+  (#g:env) (#g':env { g' `env_extends` g }) (#ctxt #ctxt':slprop) (#post_hint:post_hint_opt g)
+  (r1:checker_result_t g ctxt None)
+  (r2:checker_result_t g' ctxt' post_hint) =
+  let (| x1, g1, t1, ctxt1, k1 |) = r1 in
+  g1 == g' /\
+  dfst ctxt1 == ctxt'
+
+ 
+val compose_checker_result_t 
+  (#g:env) (#g':env { g' `env_extends` g }) (#ctxt #ctxt':slprop) (#post_hint:post_hint_opt g)
+  (r1:checker_result_t g ctxt None)
+  (r2:checker_result_t g' ctxt' post_hint { composable r1 r2 })
+: T.Tac (checker_result_t g ctxt post_hint)
+
+val infer_post #g #ctxt (r:checker_result_t g ctxt None)
+: T.Tac (post_hint_for_env g)

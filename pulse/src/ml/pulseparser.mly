@@ -1,8 +1,10 @@
 %{
 (*
-Warning: 6 states have shift/reduce conflicts.
-Warning: 8 shift/reduce conflicts were arbitrarily resolved.
-Warning: 221 end-of-stream conflicts were arbitrarily resolved.
+Warning: 27 states have shift/reduce conflicts.
+Warning: one state has reduce/reduce conflicts.
+Warning: 342 shift/reduce conflicts were arbitrarily resolved.
+Warning: one reduce/reduce conflict was arbitrarily resolved.
+Warning: 234 end-of-stream conflicts were arbitrarily resolved.
 *)
 (* (c) Microsoft Corporation. All rights reserved *)
 open Fstarcompiler
@@ -275,11 +277,10 @@ pulseStmtNoSeq:
       let pat = mk_pattern (PatVar (id, None, [])) (rr $loc) in
       PulseSyntaxExtension_Sugar.mk_let_binding false None pat None (Some (Lambda_initializer fndefn))
     }
-  | p=ifStmt { p }
-  | p=matchStmt { p }
   | LBRACE s=pulseStmt RBRACE
     { PulseSyntaxExtension_Sugar.mk_block s }
-
+  | p=matchStmt { p }
+  
 matchStmt:
   | MATCH tm=appTermNoRecordExp c=option(ensuresSLProp) LBRACE brs=list(pulseMatchBranch) RBRACE
     { PulseSyntaxExtension_Sugar.mk_match tm c brs }
@@ -288,11 +289,12 @@ bindableTerm:
   | p=pulseBindableTerm { let p = PulseSyntaxExtension_Sugar.mk_stmt p (rr $loc) in Stmt_initializer p }
   | s=noSeqTerm { Default_initializer s }
   | LBRACK_BAR v=noSeqTerm SEMICOLON n=noSeqTerm BAR_RBRACK { Array_initializer { init=v; len=n } }
-  
+ 
 pulseBindableTerm:
   | WITH_INVS names=nonempty_list(atomicTerm) r=option(ensuresSLProp) LBRACE body=pulseStmt RBRACE
     { PulseSyntaxExtension_Sugar.mk_with_invs names body r }
-  
+  | p=ifStmt { p }
+ 
 pulseLambda:
   | bs=pulseBinderList
     ascription=option(pulseComputationType)

@@ -318,7 +318,9 @@ let open_ascription (c:comp_ascription) (nv:nvar) : comp_ascription =
 let close_ascription (c:comp_ascription) (nv:nvar) : comp_ascription =
   subst_ascription c [RT.ND (snd nv) 0]
 
-#push-options "--z3rlimit_factor 8 --fuel 0 --ifuel 1 --split_queries no"
+module R = FStar.Reflection.V2
+#push-options "--z3rlimit_factor 20 --fuel 0 --ifuel 1 --split_queries no --query_stats"
+#restart-solver
 let rec check_abs_core
   (g:env)
   (t:st_term{Tm_Abs? t.term})
@@ -424,8 +426,7 @@ let rec check_abs_core
       let post : post_hint_opt g' =
         match post_hint_body with
         | None ->
-          let open Pulse.PP in
-          fail_doc g (Some body.range) [text "Top-level functions must be annotated with pre and post conditions"]
+          None
         | Some post ->
           let post_hint_typing
             : post_hint_t
@@ -440,6 +441,17 @@ let rec check_abs_core
 
       let ppname_ret = mk_ppname_no_range "_fret" in
       let r  = check g' pre_opened pre_typing post ppname_ret body_opened  in
+      let (| post, r |) : (ph:post_hint_opt g' & checker_result_t g' pre_opened ph) =
+        match post with
+        | None ->
+          (* we support inference of postconditions for functions,
+             but this functionality is still unusable from the front end,
+             which expects functions to be annotated *)
+          let ph = Pulse.Checker.Base.infer_post r in
+          let r = Pulse.Checker.Prover.prove_post_hint r (Some ph) (T.range_of_term t) in
+          (| Some ph, r |)
+        | _ -> (| post, r |)
+      in
       let (| body, c_body, body_typing |) : st_typing_in_ctxt g' pre_opened post =
         apply_checker_result_k #_ #_ #(Some?.v post) r ppname_ret in
 

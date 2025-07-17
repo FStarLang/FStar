@@ -19,7 +19,7 @@ module Pulse.Typing.Combinators
 module RT = FStar.Reflection.Typing
 module T = FStar.Tactics.V2
 module P = Pulse.Syntax.Printer
-
+module CU = Pulse.Checker.Util
 module RU = Pulse.RuntimeUtils
 
 module Metatheory = Pulse.Typing.Metatheory.Base
@@ -473,13 +473,10 @@ let bind_res_and_post_typing g c2 x post_hint
         res_typing, post_typing
       )
     | Some post -> 
-      if x `Set.mem` freevars s2.post
-      then fail g None "Unexpected mismatched postcondition in bind" //exclude with a stronger type on check'
-      else (
-         let pr = post_hint_typing g post x in
-         pr.ty_typing, pr.post_typing
-      )
-
+      CU.debug g "pulse.main" (fun _ -> "bind_res_and_post_typing (with post_hint)\n");
+      let pr = post_hint_typing g post x in
+      pr.ty_typing, pr.post_typing
+     
 let add_frame (#g:env) (#t:st_term) (#c:comp_st) (t_typing:st_typing g t c)
   (#frame:slprop)
   (frame_typing:tot_typing g frame tm_slprop)

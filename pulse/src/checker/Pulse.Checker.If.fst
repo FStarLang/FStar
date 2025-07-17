@@ -26,41 +26,45 @@ open Pulse.Checker.Prover
 module T = FStar.Tactics.V2
 module Metatheory = Pulse.Typing.Metatheory
 module J = Pulse.JoinComp
-
+module RW = Pulse.Checker.Prover.RewritesTo
 #set-options "--z3rlimit 40"
 
+
+let retype_checker_result_post_hint #g #pre (ph:post_hint_for_env g)
+    (ph':post_hint_opt g {Some? ph' ==> Some?.v ph' == ph})
+    (r:checker_result_t g pre (Some ph))
+: T.Tac (checker_result_t g pre ph')
+= let (| x, g1, t, ctxt', k |) = r in
+  (| x, g1, t, ctxt', k |)
+
+#push-options "--fuel 0 --ifuel 1 --query_stats"
+#restart-solver
 let check
   (g:env)
   (pre:term)
   (pre_typing: tot_typing g pre tm_slprop)
-  (post_hint:post_hint_for_env g)
+  (post_hint:post_hint_opt g)
   (res_ppname:ppname)
   (b:term)
   (e1 e2:st_term)
   (check:check_t)
-  : T.Tac (checker_result_t g pre (Some post_hint)) =
+  : T.Tac (checker_result_t g pre post_hint) =
   
   let g = Pulse.Typing.Env.push_context g "check_if" e1.range in
 
   let (| b, b_typing |) =
     check_tot_term g b tm_bool in
 
-  let post = post_hint.post in
   let hyp = fresh g in
-  let g_with_eq (eq_v:term) =
-    push_binding g hyp (mk_ppname_no_range "_if_hyp") (mk_eq2 u0 tm_bool b eq_v)
-  in
 
+  let g_with_eq = g_with_eq g hyp b in  
   let check_branch (eq_v:term) (br:st_term) (is_then:bool)
-    : T.Tac (br:st_term { ~(hyp `Set.mem` freevars_st br) } &
-             c:comp_st { comp_pre c == pre /\ comp_post_matches_hint c (Some post_hint)} &
-             st_typing (g_with_eq eq_v) br c) =
-    let g_with_eq = g_with_eq eq_v in
-    let pre_typing = 
+  : T.Tac (checker_result_t (g_with_eq eq_v) pre post_hint)
+  = let pre_typing = 
       Metatheory.tot_typing_weakening_single
         pre_typing
         hyp 
-        (mk_eq2 u0 tm_bool b eq_v)
+        (mk_sq_rewrites_to_p u0 tm_bool b eq_v)
     in
 
     let br =
@@ -74,28 +78,53 @@ let check
       { t with effect_tag = br.effect_tag }
     in
 
-    let (| br, c, d |) =
+    let ppname = mk_ppname_no_range "_if_br" in
+    let r = check (g_with_eq eq_v) pre pre_typing post_hint ppname br in
+    r
+  in
+
+  let then_ = check_branch tm_true e1 true in
+  let else_ = check_branch tm_false e2 false in
+  let joinable : (
+    ph:post_hint_for_env g & 
+    checker_result_t (g_with_eq tm_true) pre (Some ph) &
+    checker_result_t (g_with_eq tm_false) pre (Some ph)
+  ) = match post_hint with
+      | None ->
+        let post_then = Pulse.Checker.Base.infer_post then_ in
+        let post_else = Pulse.Checker.Base.infer_post else_ in
+        let post = Pulse.JoinComp.join_post #g #hyp #b post_then post_else in
+        let then_ = Pulse.Checker.Prover.prove_post_hint then_ (Some post) e1.range in
+        let else_ = Pulse.Checker.Prover.prove_post_hint else_ (Some post) e2.range in
+        (| post, then_, else_ |)
+      | Some ph -> 
+        (| ph, then_, else_ |)
+  in
+  let (| post_hint', then_, else_ |) = joinable in
+
+  let extract #g #pre (#ph:post_hint_for_env g) (r:checker_result_t g pre (Some ph)) (is_then:bool)
+  : T.Tac (br:st_term { ~(hyp `Set.mem` freevars_st br) } &
+           c:comp_st { comp_pre c == pre /\ comp_post_matches_hint c (Some ph)} &
+           st_typing g br c)
+  = let (| br, c, d |) =
       let ppname = mk_ppname_no_range "_if_br" in
-      let r =
-        check g_with_eq pre pre_typing (Some post_hint) ppname br in
-      apply_checker_result_k r ppname in
-
+      apply_checker_result_k r ppname
+    in
     let br_name = if is_then then "then" else "else" in
-
     if hyp `Set.mem` freevars_st br
     then fail g (Some br.range)
            (Printf.sprintf "check_if: branch hypothesis is in freevars of checked %s branch" br_name)
     else (| br, c, d |)
   in
-
-  let (| e1, c1, e1_typing |) = check_branch tm_true e1 true in
-  let (| e2, c2, e2_typing |) = check_branch tm_false e2 false in    
+  let (| e1, c1, e1_typing |) = extract then_ true in
+  let (| e2, c2, e2_typing |) = extract else_ false in
   let (| c, e1_typing, e2_typing |) =
-    J.join_comps _ _ _ e1_typing _ _ _ e2_typing post_hint in
+    J.join_comps _ _ _ e1_typing _ _ _ e2_typing post_hint' in
 
-  let c_typing = comp_typing_from_post_hint c pre_typing post_hint in
+  let c_typing = comp_typing_from_post_hint c pre_typing post_hint' in
 
-  let d : st_typing_in_ctxt g pre (Some post_hint) =
+  let d : st_typing_in_ctxt g pre (Some post_hint') =
     (| _, c, T_If g b e1 e2 c hyp b_typing e1_typing e2_typing (E c_typing) |) in
 
-  checker_result_for_st_typing d res_ppname
+  let res : checker_result_t g pre (Some post_hint') = checker_result_for_st_typing d res_ppname in
+  retype_checker_result_post_hint post_hint' post_hint res

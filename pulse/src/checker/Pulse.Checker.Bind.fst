@@ -23,12 +23,14 @@ open Pulse.Checker.Base
 open Pulse.Checker.Pure
 open Pulse.Checker.Prover
 open Pulse.Show
+open Pulse.Checker.Util
 
 module T = FStar.Tactics.V2
 module P = Pulse.Syntax.Printer
 module Metatheory = Pulse.Typing.Metatheory
 module Abs = Pulse.Checker.Abs
 module RU = Pulse.Reflection.Util
+
 #push-options "--z3rlimit_factor 4 --split_queries no"
 let check_bind_fn
   (g:env)
@@ -115,20 +117,6 @@ let check_binder_typ
       ]
   end
 
-let maybe_close_post 
-  (g:env)
-  (post_hint:post_hint_opt g {Some? post_hint})
-  (ctxt:slprop)
-  (ctxt_typing:tot_typing g ctxt tm_slprop)
-  (res_ppname:ppname)
-  (r:checker_result_t g ctxt post_hint)
-: T.Tac (st_typing_in_ctxt g ctxt post_hint)
-= match post_hint with
-  | Some ph ->
-    let d = apply_checker_result_k #_ #_ #ph r res_ppname in
-    let (| _, _, dd |) = d in
-    d
-
 let check_bind'
   (maybe_elaborate:bool)
   (g:env)
@@ -143,10 +131,7 @@ let check_bind'
 
   debug_prover g (fun _ ->
     Printf.sprintf "checking bind:\n%s\n" (P.st_term_to_string t));
-
-  if None? post_hint
-  then fail g (Some t.range) "check_bind: post hint is not set, please add an annotation";
-
+  
   let Tm_Bind { binder; head=e1; body=e2 } = t.term in
   if Tm_Admit? e1.term
   then ( //Discard the continuation if the head is an admit
@@ -158,20 +143,13 @@ let check_bind'
   )
   else (
     let dflt () =
-      let (| x, g1, _, (| ctxt', ctxt'_typing |), k1 |) =
-        let r = check g ctxt ctxt_typing None binder.binder_ppname e1 in
-        check_if_seq_lhs g ctxt None r e1;
-        check_binder_typ g ctxt None r binder e1;
-        r
-      in
+      let r0 = check g ctxt ctxt_typing None binder.binder_ppname e1 in
+      check_if_seq_lhs g ctxt None r0 e1;
+      check_binder_typ g ctxt None r0 binder e1;
+      let (| x, g1, _, (| ctxt', ctxt'_typing |), k1 |) = r0 in
       let g1 = reset_context g1 g in
-      let d : st_typing_in_ctxt g1 ctxt' post_hint =
-        let ppname = mk_ppname_no_range "_bind_c" in
-        let r = check g1 ctxt' ctxt'_typing post_hint ppname (open_st_term_nv e2 (binder.binder_ppname, x)) in
-        maybe_close_post _ _ _ ctxt'_typing ppname r
-      in
-      let d : st_typing_in_ctxt g ctxt post_hint = k1 post_hint d in
-      checker_result_for_st_typing d res_ppname
+      let r1 = check g1 ctxt' ctxt'_typing post_hint ppname_default (open_st_term_nv e2 (binder.binder_ppname, x)) in
+      Pulse.Checker.Base.compose_checker_result_t r0 r1 
     in
     if not maybe_elaborate then dflt()
     else (
@@ -220,10 +198,6 @@ let check_tot_bind
   (check:check_t)
 : T.Tac (checker_result_t g pre post_hint)
 = let g = Pulse.Typing.Env.push_context g "check_tot_bind" t.range in
-
-  if None? post_hint
-  then fail g (Some t.range) "check_tot_bind: post hint is not set, please add an annotation";
-
 
   let Tm_TotBind { binder=b; head=e1; body=e2 } = t.term in
   let rebuild (head:either term st_term) : T.Tac (t:st_term { Tm_Bind? t.term }) =

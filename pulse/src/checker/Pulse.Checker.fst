@@ -237,15 +237,22 @@ let rec check
   then Pulse.Checker.AssertWithBinders.check g0 pre0 pre0_typing post_hint res_ppname t check
   else (
     maybe_trace t g0 pre0 t.range;  
-    if RU.debug_at_level (fstar_env g0) "pulse.checker" then
+    if RU.debug_at_level (fstar_env g0) "pulse.checker" then (
       T.print (Printf.sprintf "At %s{\nerr context:\n>%s\n\n{\n\tenv=%s\ncontext:\n%s,\n\nst_term: %s\nis_source: %s}}\n"
                 (show t.range)
                 (RU.print_context (get_context g0))
                 (show g0)
                 (show pre0)
                 (show t)
-                (show (T.unseal t.source)));
-    
+                (show (T.unseal t.source)))
+    );
+
+    if RU.debug_at_level (fstar_env g0) "pulse.dump_proof_state" then (
+      T.print (Printf.sprintf "At %s\ncontext:\n%s\n"
+                (show t.range)
+                (show pre0))
+    );
+
     match maybe_elaborate_stateful_head g0 t with
     | Some t -> 
       check g0 pre0 pre0_typing post_hint res_ppname t
@@ -304,13 +311,14 @@ let rec check
           Bind.check_tot_bind g pre pre_typing post_hint res_ppname t check
 
         | Tm_If { b; then_=e1; else_=e2; post=post_if } -> (
-          let post =
+          let post : post_hint_opt g =
             match post_if, post_hint with
-            | None, Some p -> p
+            | None, Some p ->
+              post_hint
             | Some p, None ->
               //We set the computation type to be STT in this case
               //We might allow the post_if annotation to also set the effect tag
-              Checker.Base.intro_post_hint g EffectAnnotSTT None p
+              Some <| Checker.Base.intro_post_hint g EffectAnnotSTT None p
             | Some p, Some q ->
               Pulse.Typing.Env.fail g (Some t.range) 
                 (Printf.sprintf 
@@ -320,12 +328,9 @@ let rec check
                     (P.term_to_string (q <: post_hint_t).post)
                     (P.term_to_string p))
             | _, _ ->
-              Pulse.Typing.Env.fail g (Some t.range) 
-                (Printf.sprintf
-                    "Pulse cannot yet infer a postcondition for a non-tail conditional statement;\n\
-                    Either annotate this `if` with `returns` clause; or rewrite your code to use a tail conditional")
+              None
           in
-          let (| x, t, pre', g1, k |) : checker_result_t g pre (Some post) =
+          let (| x, t, pre', g1, k |) : checker_result_t g pre post =
             If.check g pre pre_typing post res_ppname b e1 e2 check in
           (| x, t, pre', g1, k |)
         )

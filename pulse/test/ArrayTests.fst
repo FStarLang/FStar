@@ -343,8 +343,6 @@ fn sort3 (a:array U32.t)
 
 
 //Pulse does not yet implement join point inference
-[@@expect_failure [228]]
-
 fn sort3_alt (a:array U32.t)
              (#s:(s:Ghost.erased (Seq.seq U32.t) {Seq.length s == 3}))
    requires (A.pts_to a s)
@@ -368,23 +366,10 @@ fn sort3_alt (a:array U32.t)
    let vx = !x;
    let vz = !z;
    if (vz <^ vx)
-   ensures
-      exists* vx vy vz.
-        A.pts_to a s **
-        pts_to x vx **
-        pts_to y vy **
-        pts_to z vz **
-        pure (vz <= vx ** vx <= vy ** permutation s [vx;vy;vz])
    {
       x := vz;
       z := vx;
-   }
-   else if (vz <^ vy)
-   {  
-      y := vz;
-      z := vy;
    };
-   admit();
    let vy = !y;
    let vz = !z;
    if (vz <^ vy)
@@ -392,10 +377,9 @@ fn sort3_alt (a:array U32.t)
       y := vz;
       z := vy;
    };
-   a.(0sz) <- x;
-   a.(1sz) <- y;
-   a.(2sz) <- z;
-   ()
+   a.(0sz) <- !x;
+   a.(1sz) <- !y;
+   a.(2sz) <- !z;
 }
 
 

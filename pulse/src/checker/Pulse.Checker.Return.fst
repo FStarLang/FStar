@@ -126,11 +126,13 @@ let check_core
          let ty_rec = post_hint_typing g post x in
          (| open_term_nv post.post px, ty_rec.post_typing |)
   in
+  //if we're inferring a postcondition, then add an equality (if it is non-trivial)
+  let use_eq = use_eq || (None? post_hint && not (T.term_eq ty (`unit))) in
   assume (open_term (close_term post_opened x) x == post_opened);
   let post = close_term post_opened x in
   let d = T_Return g c use_eq u ty t post x uty d post_typing in
   let dd = (match_comp_res_with_post_hint d post_hint) in
-  debug g (fun _ -> 
+  Pulse.Checker.Util.debug g "pulse.return" (fun _ -> 
     let (| _, c, _ |) = dd in
     Printf.sprintf "Return comp is: %s"
       (Pulse.Syntax.Printer.comp_to_string c));
