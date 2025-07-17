@@ -22,7 +22,7 @@ pub fn authenticate_l0_image(
         (),
     );
     let mut b = false;
-    let b1 = if valid_header_sig {
+    if valid_header_sig {
         let hash_buf = &mut [0; 32];
         super::hacl::hacl_hash(
             super::hacl::dice_hash_alg0(()),
@@ -42,14 +42,10 @@ pub fn authenticate_l0_image(
             (),
             (),
         );
-        let res1 = (record, res);
-        let hash_buf1 = res1;
-        hash_buf1
+        (record, res)
     } else {
-        let res = (record, false);
-        res
-    };
-    b1
+        (record, false)
+    }
 }
 pub fn compute_cdi(
     cdi: &mut [u8],
@@ -94,9 +90,7 @@ pub fn compute_cdi(
         (),
         (),
     );
-    let l0_digest1 = record;
-    let uds_digest1 = l0_digest1;
-    uds_digest1
+    record
 }
 pub fn engine_main(
     cdi: &mut [u8],
@@ -111,11 +105,9 @@ pub fn engine_main(
     let b = super::enginecore::authenticate_l0_image(record, (), ());
     if b.1 {
         let record1 = super::enginecore::compute_cdi(cdi, uds, b.0, (), (), (), (), ());
-        let res = (record1, super::enginetypes::dice_return_code::DICE_SUCCESS);
-        res
+        (record1, super::enginetypes::dice_return_code::DICE_SUCCESS)
     } else {
-        let res = (b.0, super::enginetypes::dice_return_code::DICE_ERROR);
-        res
+        (b.0, super::enginetypes::dice_return_code::DICE_ERROR)
     }
 }
 

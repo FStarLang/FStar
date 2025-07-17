@@ -64,7 +64,7 @@ fn new_mutex (#a:Type0) (v:a -> slprop) (x:a)
 
 
 let belongs_to (#a:Type0) (r:mutex_guard a) (m:mutex a) : slprop =
-  pure (r == B.box_to_ref m.r) ** lock_acquired m.l
+  pure (r == B.box_to_ref m.r /\ R.is_full_ref r) ** lock_acquired m.l
 
 
 fn lock (#a:Type0) (#v:a -> slprop) (#p:perm) (m:mutex a)
@@ -75,6 +75,7 @@ fn lock (#a:Type0) (#v:a -> slprop) (#p:perm) (m:mutex a)
   unfold (mutex_live m#p v);
   acquire m.l;
   unfold lock_inv;
+  Box.to_ref_pts_to m.r; Box.to_box_pts_to m.r; // get is_full_ref
   fold (belongs_to (B.box_to_ref m.r) m);
   fold (mutex_live m #p v);
   B.to_ref_pts_to m.r;

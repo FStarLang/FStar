@@ -96,12 +96,7 @@ pub fn lookup<KT: Copy + PartialEq + Clone, VT: Clone>(
     let o = ret;
     let vcontents = contents;
     let ht1 = super::pulse_lib_hashtable::mk_ht(ht.sz, ht.hashf, vcontents);
-    let res = (ht1, o);
-    let ret1 = res;
-    let cont1 = ret1;
-    let off1 = cont1;
-    let contents1 = off1;
-    contents1
+    (ht1, o)
 }
 pub fn replace<KT: Copy + PartialEq + Clone, VT: Clone>(
     pht: (),
@@ -118,16 +113,11 @@ pub fn replace<KT: Copy + PartialEq + Clone, VT: Clone>(
     >(&mut contents[idx], super::pulse_lib_hashtable::mk_used_cell(k, v));
     let vcontents = contents;
     let ht1 = super::pulse_lib_hashtable::mk_ht(ht.sz, hashf, vcontents);
-    let _bind_c = match v_ {
-        super::pulse_lib_hashtable_spec::cell::Used(mut k_, mut v_1) => {
-            let res = (ht1, v_1);
-            res
-        }
+    match v_ {
+        super::pulse_lib_hashtable_spec::cell::Used(mut k_, mut v_1) => (ht1, v_1),
         super::pulse_lib_hashtable_spec::cell::Clean => panic!(),
         super::pulse_lib_hashtable_spec::cell::Zombie => panic!(),
-    };
-    let contents1 = _bind_c;
-    contents1
+    }
 }
 pub fn insert<KT: Copy + PartialEq + Clone, VT: Clone>(
     ht: super::pulse_lib_hashtable_type::ht_t<KT, VT>,
@@ -203,23 +193,16 @@ pub fn insert<KT: Copy + PartialEq + Clone, VT: Clone>(
     }
     let vcont = cont;
     let vidx = idx;
-    let _bind_c = if vcont == false {
+    if vcont == false {
         contents[vidx] = super::pulse_lib_hashtable::mk_used_cell(k, v);
         let vcontents = contents;
         let ht1 = super::pulse_lib_hashtable::mk_ht(ht.sz, hashf, vcontents);
-        let res = (ht1, true);
-        res
+        (ht1, true)
     } else {
         let vcontents = contents;
         let ht1 = super::pulse_lib_hashtable::mk_ht(ht.sz, hashf, vcontents);
-        let res = (ht1, false);
-        res
-    };
-    let idx1 = _bind_c;
-    let cont1 = idx1;
-    let off1 = cont1;
-    let contents1 = off1;
-    contents1
+        (ht1, false)
+    }
 }
 pub fn is_used<K: Copy + PartialEq + Clone, V: Clone>(
     c: super::pulse_lib_hashtable_spec::cell<K, V>,
@@ -258,10 +241,7 @@ pub fn not_full<KT: Copy + PartialEq + Clone, VT: Clone>(
     let res = vi < ht.sz;
     let vcontents = contents;
     let ht1 = super::pulse_lib_hashtable::mk_ht(ht.sz, hashf, vcontents);
-    let b = (ht1, res);
-    let i1 = b;
-    let contents1 = i1;
-    contents1
+    (ht1, res)
 }
 pub fn insert_if_not_full<KT: Copy + PartialEq + Clone, VT: Clone>(
     ht: super::pulse_lib_hashtable_type::ht_t<KT, VT>,
@@ -270,11 +250,6 @@ pub fn insert_if_not_full<KT: Copy + PartialEq + Clone, VT: Clone>(
     pht: (),
 ) -> (super::pulse_lib_hashtable_type::ht_t<KT, VT>, bool) {
     let b = super::pulse_lib_hashtable::not_full(ht, ());
-    if b.1 {
-        super::pulse_lib_hashtable::insert(b.0, k, v, ())
-    } else {
-        let res = (b.0, false);
-        res
-    }
+    if b.1 { super::pulse_lib_hashtable::insert(b.0, k, v, ()) } else { (b.0, false) }
 }
 

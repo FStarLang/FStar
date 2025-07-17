@@ -51,19 +51,16 @@ val cas (r:ref U32.t) (u v:U32.t) (#i:erased U32.t)
       cond b (pts_to r v ** pure (reveal i == u)) 
              (pts_to r i))
 
-val read_atomic_box (r:B.box U32.t) (#n:erased U32.t) (#p:perm)
-  : stt_atomic U32.t emp_inames
-    (pts_to r #p n)
-    (fun x -> pts_to r #p n ** pure (x == reveal n))
+atomic fn read_atomic_box (r:B.box U32.t) (#n:erased U32.t) (#p:perm)
+  preserves r |-> Frac p n
+  returns x:U32.t
+  ensures pure (reveal n == x)
 
-val write_atomic_box (r:B.box U32.t) (x:U32.t) (#n:erased U32.t)
-  : stt_atomic unit emp_inames
-        (pts_to r n) 
-        (fun _ -> pts_to r (hide x))
+atomic fn write_atomic_box (r:B.box U32.t) (x:U32.t) (#n:erased U32.t)
+  requires r |-> n
+  ensures r |-> x
 
-val cas_box (r:B.box U32.t) (u v:U32.t) (#i:erased U32.t)
-  : stt_atomic bool #Observable emp_inames 
-    (pts_to r i)
-    (fun b ->
-      cond b (pts_to r v ** pure (reveal i == u)) 
-             (pts_to r i))
+atomic fn cas_box (r:B.box U32.t) (u v:U32.t) (#i:erased U32.t)
+  requires r |-> i
+  returns b: bool
+  ensures cond b ((r |-> v) ** pure (reveal i == u)) (r |-> i)

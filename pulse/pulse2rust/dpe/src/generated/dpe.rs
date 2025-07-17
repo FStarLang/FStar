@@ -53,8 +53,7 @@ pub fn __open_session(
                 st_ctr: ctr,
                 st_tbl: tbl,
             };
-            let ret = (s1, None);
-            ret
+            (s1, None)
         }
         Some(mut ctr1) => {
             let ret = super::pulse_lib_hashtable::insert_if_not_full(
@@ -70,15 +69,13 @@ pub fn __open_session(
                     st_ctr: ctr1,
                     st_tbl: tbl1,
                 };
-                let ret1 = (s1, Some(ctr));
-                ret1
+                (s1, Some(ctr))
             } else {
                 let s1 = super::dpe::st {
                     st_ctr: ctr,
                     st_tbl: tbl1,
                 };
-                let ret1 = (s1, None);
-                ret1
+                (s1, None)
             }
         }
     }
@@ -89,11 +86,10 @@ pub fn maybe_mk_session_tbl(
     match sopt {
         None => {
             let tbl = super::pulse_lib_hashtable::alloc(super::dpe::sid_hash, 256);
-            let s = super::dpe::st {
+            super::dpe::st {
                 st_ctr: 0,
                 st_tbl: tbl,
-            };
-            s
+            }
         }
         Some(mut s) => s,
     }
@@ -171,8 +167,7 @@ pub fn init_engine_ctxt(
         (),
     );
     let engine_context = super::dpetypes::mk_engine_context_t(uds_buf);
-    let ctxt = super::dpetypes::mk_context_t_engine(engine_context);
-    ctxt
+    super::dpetypes::mk_context_t_engine(engine_context)
 }
 pub fn initialize_context(
     sid: super::dpe::sid_t,
@@ -280,22 +275,16 @@ pub fn derive_child_from_context(
                         super::dpetypes::context_t::Engine_context(c),
                         (),
                     );
-                    let _bind_c = match ret.1 {
+                    match ret.1 {
                         super::enginetypes::dice_return_code::DICE_SUCCESS => {
                             let l0_ctxt = super::dpe::init_l0_ctxt(cdi, (), (), (), ());
-                            let ret1 = Some(
-                                super::dpetypes::context_t::L0_context(l0_ctxt),
-                            );
-                            ret1
+                            Some(super::dpetypes::context_t::L0_context(l0_ctxt))
                         }
                         super::enginetypes::dice_return_code::DICE_ERROR => {
                             crate::pulse_lib_array::zeroize(32, cdi, ());
-                            let ret1 = None;
-                            ret1
+                            None
                         }
-                    };
-                    let cdi1 = _bind_c;
-                    cdi1
+                    }
                 }
                 super::dpetypes::record_t::L0_record(_) => panic!(),
             }
@@ -369,8 +358,7 @@ pub fn derive_child_from_context(
                         super::dpetypes::context_t::L0_context(c),
                         (),
                     );
-                    let ret = Some(super::dpetypes::context_t::L1_context(l1_context));
-                    ret
+                    Some(super::dpetypes::context_t::L1_context(l1_context))
                 }
                 super::dpetypes::record_t::Engine_record(_) => panic!(),
             }

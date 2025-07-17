@@ -52,10 +52,10 @@ let tr_typ (g:uenv) (t:term) : mlty =
   let Some (fv, us, args) = hua in
   // if !dbg then BU.print1 "GGG checking typ %s\n" (show hua);
   match fv, us, args with
-  | _, _, [(t, _)] when S.fv_eq_lid fv (Ident.lid_of_str "Pulse.Lib.Array.Core.array") ->
+  | _, _, [(t, _)] when S.fv_eq_lid fv (Ident.lid_of_str "Pulse.Lib.HigherArray.Core.array") ->
     MLTY_Named ([cb g t], ([], "array"))
 
-  | _, _, [(t, _)] when S.fv_eq_lid fv (Ident.lid_of_str "Pulse.Lib.Reference.ref") ->
+  | _, _, [(t, _)] when S.fv_eq_lid fv (Ident.lid_of_str "Pulse.Lib.HigherReference.ref") ->
     MLTY_Named ([cb g t], ([], "ref"))
   | _, _, [(t, _)] when S.fv_eq_lid fv (Ident.lid_of_str "Pulse.Lib.Box.box") ->
     MLTY_Named ([cb g t], ([], "ref"))
@@ -110,21 +110,27 @@ let tr_expr (g:uenv) (t:term) : mlexpr & e_tag & mlty =
 
   (* Pulse.Lib.Reference *)
   | _, _, [(t, _); (v0, None)]
-      when S.fv_eq_lid fv (Ident.lid_of_str "Pulse.Lib.Reference.alloc")
-        || S.fv_eq_lid fv (Ident.lid_of_str "Pulse.Lib.Box.alloc") ->
+      when S.fv_eq_lid fv (Ident.lid_of_str "Pulse.Lib.Box.alloc") ->
+    let mlty = term_as_mlty g t in
+    let bang = with_ty ml_unit_ty <| MLE_Var "ref" in
+    let e = with_ty mlty <| MLE_App (bang, [(cb g v0)._1]) in
+    e, E_PURE, mlty
+
+  | _, _, [(t, _); _; (v0, None)]
+      when S.fv_eq_lid fv (Ident.lid_of_str "Pulse.Lib.HigherReference.alloc") ->
     let mlty = term_as_mlty g t in
     let bang = with_ty ml_unit_ty <| MLE_Var "ref" in
     let e = with_ty mlty <| MLE_App (bang, [(cb g v0)._1]) in
     e, E_PURE, mlty
 
   | _, _, [(t, _); (v0, None)]
-      when S.fv_eq_lid fv (Ident.lid_of_str "Pulse.Lib.Reference.free")
+      when S.fv_eq_lid fv (Ident.lid_of_str "Pulse.Lib.HigherReference.free")
         || S.fv_eq_lid fv (Ident.lid_of_str "Pulse.Lib.Box.free") ->
     (* We translate 'free' as no-ops in OCaml. *)
     ml_unit, E_PURE, ml_unit_ty
 
   | _, _, [(t, _); (r, None); _n; _p]
-      when S.fv_eq_lid fv (Ident.lid_of_str "Pulse.Lib.Reference.op_Bang")
+      when S.fv_eq_lid fv (Ident.lid_of_str "Pulse.Lib.HigherReference.read")
         || S.fv_eq_lid fv (Ident.lid_of_str "Pulse.Lib.Box.op_Bang") ->
     let mlty = term_as_mlty g t in
     let bang = with_ty ml_unit_ty <| MLE_Var "!" in
@@ -132,33 +138,22 @@ let tr_expr (g:uenv) (t:term) : mlexpr & e_tag & mlty =
     e, E_PURE, mlty
 
   | _, _, [(t, _); (r, None); (x, None); _n]
-      when S.fv_eq_lid fv (Ident.lid_of_str "Pulse.Lib.Reference.op_Colon_Equals")
+      when S.fv_eq_lid fv (Ident.lid_of_str "Pulse.Lib.HigherReference.write")
         || S.fv_eq_lid fv (Ident.lid_of_str "Pulse.Lib.Box.op_Colon_Equals") ->
     let mlty = term_as_mlty g t in
     let bang = with_ty ml_unit_ty <| MLE_Var "(:=)" in
     let e = with_ty mlty <| MLE_App (bang, [(cb g r)._1; (cb g x)._1]) in
     e, E_PURE, mlty
 
-  | _, _, [(t, _); (x, None); (sz, None)]
-      when S.fv_eq_lid fv (Ident.lid_of_str "Pulse.Lib.Array.Core.alloc") ->
+  | _, _, [(t, _); _; (x, None); (sz, None)]
+      when S.fv_eq_lid fv (Ident.lid_of_str "Pulse.Lib.HigherArray.Core.mask_alloc") ->
     let mlty = term_as_mlty g t in
     let bang = with_ty ml_unit_ty <| MLE_Var "Array.make" in
     let e = with_ty mlty <| MLE_App (bang, [(cb g sz)._1; (cb g x)._1]) in
     e, E_PURE, mlty
 
-  (* TWO VARIANTS *)
-  | _, _, [(t, _); (a, None); (i, None); _p; _s]
-      when S.fv_eq_lid fv (Ident.lid_of_str "Pulse.Lib.Array.Core.op_Array_Access") ->
-    let mlty = term_as_mlty g t in
-    let bang = with_ty ml_unit_ty <| MLE_Var "Array.get" in
-    let a = (cb g a)._1 in
-    // let i = U.mk_app (S.fvar (Ident.lid_of_str "FStar.SizeT.v") None) [S.as_arg i] in
-    let i = (cb g i)._1 in
-    // let i = with_ty ml_unit_ty <| MLE_App ((with_ty ml_unit_ty <| MLE_Var "Z.to_int"), [i]) in
-    let e = with_ty mlty <| MLE_App (bang, [a; i]) in
-    e, E_PURE, mlty
-  | _, _, [(t, _); (a, None); (i, None); _l; _r; _p; _s]
-      when S.fv_eq_lid fv (Ident.lid_of_str "Pulse.Lib.Array.Core.pts_to_range_index") ->
+  | _, _, [(t, _); (a, None); (i, None); _p; _s; _m]
+      when S.fv_eq_lid fv (Ident.lid_of_str "Pulse.Lib.HigherArray.Core.mask_read") ->
     let mlty = term_as_mlty g t in
     let bang = with_ty ml_unit_ty <| MLE_Var "Array.get" in
     let a = (cb g a)._1 in
@@ -168,20 +163,8 @@ let tr_expr (g:uenv) (t:term) : mlexpr & e_tag & mlty =
     let e = with_ty mlty <| MLE_App (bang, [a; i]) in
     e, E_PURE, mlty
 
-  (* TWO VARIANTS *)
-  | _, _, [(t, _); (a, None); (i, None); (v, None); _s]
-      when S.fv_eq_lid fv (Ident.lid_of_str "Pulse.Lib.Array.Core.op_Array_Assignment") ->
-    let mlty = term_as_mlty g t in
-    let bang = with_ty ml_unit_ty <| MLE_Var "Array.set" in
-    let a = (cb g a)._1 in
-    // let i = U.mk_app (S.fvar (Ident.lid_of_str "FStar.SizeT.v") None) [S.as_arg i] in
-    let i = (cb g i)._1 in
-    // let i = with_ty ml_unit_ty <| MLE_App ((with_ty ml_unit_ty <| MLE_Var "Z.to_int"), [i]) in
-    let v = (cb g v)._1 in
-    let e = with_ty mlty <| MLE_App (bang, [a; i; v]) in
-    e, E_PURE, mlty
-  | _, _, [(t, _); (a, None); (i, None); (v, None); _l; _r; _s]
-      when S.fv_eq_lid fv (Ident.lid_of_str "Pulse.Lib.Array.Core.pts_to_range_upd") ->
+  | _, _, [(t, _); (a, None); (i, None); (v, None); _s; _m]
+      when S.fv_eq_lid fv (Ident.lid_of_str "Pulse.Lib.HigherArray.Core.mask_write") ->
     let mlty = term_as_mlty g t in
     let bang = with_ty ml_unit_ty <| MLE_Var "Array.set" in
     let a = (cb g a)._1 in

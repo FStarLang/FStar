@@ -31,7 +31,7 @@ let is_null #a (r : box a)
   : b:bool{b <==> r == null #a}
 = R.is_null (B?.r r)
 
-let pts_to b #p v = R.pts_to b.r #p v
+let pts_to b #p v = R.pts_to b.r #p v ** pure (R.is_full_ref b.r)
 
 let pts_to_timeless _ _ _ = ()
 
@@ -45,7 +45,7 @@ fn alloc (#a:Type0) (x:a)
   ensures  pts_to b x
 {
   let r = R.alloc x;
-  rewrite R.pts_to r x as pts_to (B r) x;
+  fold pts_to (B r) x;
   (B r);
 }
 #pop-options
@@ -70,23 +70,64 @@ fn op_Colon_Equals (#a:Type0) (b:box a) (x:a) (#v:erased a)
   fold (pts_to b (hide x));
 }
 
-#lang-fstar // 'rewrite' below is not the keyword!
-
 (* Same comment as for alloc. *)
 #push-options "--warn_error -288"
-let free b #v = R.free b.r #v
+fn free (#a:Type0) (b:box a) (#v:erased a)
+  requires pts_to b v
+{
+  unfold pts_to b v;
+  R.free b.r
+}
 #pop-options
 
-let share b = R.share b.r
-let gather b = R.gather b.r
-let pts_to_injective_eq b = R.pts_to_injective_eq b.r
-let box_to_ref b = b.r
-let to_ref_pts_to #a b #p #v =
-  rewrite (pts_to b #p v) (R.pts_to b.r #p v) (slprop_equiv_refl _)
-let to_box_pts_to #a b #p #v =
-  rewrite (R.pts_to b.r #p v) (pts_to b #p v) (slprop_equiv_refl _)
+ghost
+fn share (#a:Type) (r:box a) (#v:erased a) (#p:perm)
+  requires pts_to r #p v
+  ensures pts_to r #(p /. 2.0R) v ** pts_to r #(p /. 2.0R) v
+{
+  unfold pts_to r #p v;
+  R.share r.r;
+  fold pts_to r #(p /. 2.0R) v;
+  fold pts_to r #(p /. 2.0R) v;
+}
 
+[@@allow_ambiguous]
+ghost
+fn gather (#a:Type) (r:box a) (#x0 #x1:erased a) (#p0 #p1:perm)
+  requires pts_to r #p0 x0 ** pts_to r #p1 x1
+  ensures  pts_to r #(p0 +. p1) x0 ** pure (x0 == x1)
+{
+  unfold pts_to r #p0 x0;
+  unfold pts_to r #p1 x1;
+  R.gather r.r;
+  fold pts_to r #(p0 +. p1) x0;
+}
+
+[@@allow_ambiguous]
+ghost
+fn pts_to_injective_eq (#a:_)
+                        (#p #q:_)
+                        (#v0 #v1:a)
+                        (r:box a)
+  requires pts_to r #p v0 ** pts_to r #q v1
+  ensures  pts_to r #p v0 ** pts_to r #q v1 ** pure (v0 == v1)
+{
+  unfold pts_to r #p v0;
+  unfold pts_to r #q v1;
+  R.pts_to_injective_eq r.r;
+  fold pts_to r #p v0;
+  fold pts_to r #q v1;
+}
+
+let box_to_ref b = b.r
+
+#lang-fstar // 'rewrite' below is not the keyword!
+let to_ref_pts_to #a b #p #v =
+  rewrite _ _ (slprop_equiv_refl _)
+let to_box_pts_to #a b #p #v =
+  rewrite _ _ (slprop_equiv_refl _)
 #lang-pulse
+
 ghost
 fn pts_to_not_null (#a:_) (#p:_) (r:box a) (#v:a)
   preserves r |-> Frac p v

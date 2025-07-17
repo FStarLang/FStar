@@ -2,6 +2,7 @@ PULSE_ROOT ?= ../../..
 OTHERFLAGS += --include $(PULSE_ROOT)/out/lib/pulse
 OTHERFLAGS += --include $(PULSE_ROOT)/share/pulse/examples
 OTHERFLAGS += --ext pulse:extract_ocaml_bare
+OTHERFLAGS += --cmi
 
 DEPFLAGS += --extract '-*'
 DEPFLAGS += --extract +Quicksort

@@ -3,7 +3,7 @@ module Pulse.Lib.GhostPCMReference
 open Pulse.Lib.Pervasives
 open FStar.PCM
 module PR = Pulse.Lib.PCM.Raise
-module U = FStar.Universe
+module U = Pulse.Lib.Raise
 
 let pts_to
     (#a:Type u#0)
