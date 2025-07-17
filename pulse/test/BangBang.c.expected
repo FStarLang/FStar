@@ -5,13 +5,13 @@
 
 int32_t BangBang_modify_nested_ptr(int32_t **x)
 {
-  int32_t *__anf2737 = *x;
-  int32_t *__anf2733 = *x;
-  int32_t __anf2735 = *__anf2733;
-  *__anf2737 = __anf2735 + (int32_t)2;
-  int32_t *__anf3458 = *x;
-  int32_t __anf3460 = *__anf3458;
-  return __anf3460 + (int32_t)1;
+  int32_t *__anf2731 = *x;
+  int32_t *__anf2727 = *x;
+  int32_t __anf2729 = *__anf2727;
+  *__anf2731 = __anf2729 + (int32_t)2;
+  int32_t *__anf3452 = *x;
+  int32_t __anf3454 = *__anf3452;
+  return __anf3454 + (int32_t)1;
 }
 
 void BangBang_decr_uint(void)
