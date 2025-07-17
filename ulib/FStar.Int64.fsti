@@ -22,8 +22,6 @@ unfold let n = 64
 open FStar.Int
 open FStar.Mul
 
-#set-options "--fuel 0 --ifuel 0"
-
 (* NOTE: anything that you fix/update here should be reflected in [FStar.UIntN.fstp], which is mostly
  * a copy-paste of this module. *)
 
@@ -139,6 +137,7 @@ unfold let ( >=^ ) = gte
 unfold let ( <^ )  = lt
 unfold let ( <=^ ) = lte
 
+#push-options "--fuel 0 --ifuel 0"
 inline_for_extraction
 let ct_abs (a:t{min_int n < v a}) : Tot (b:t{v b = abs (v a)}) =
   let mask = a >>>^ UInt32.uint_to_t (n - 1) in
@@ -157,6 +156,7 @@ let ct_abs (a:t{min_int n < v a}) : Tot (b:t{v b = abs (v a)}) =
     UInt.lemma_lognot_value #n (to_uint (v a))
     end;
   (a ^^ mask) -^ mask
+#pop-options
 
 (* To input / output constants *)
 (* .. in decimal representation *)
@@ -164,7 +164,6 @@ val to_string: t -> Tot string
 
 val of_string: string -> Tot t
 
-#set-options "--admit_smt_queries true"
 //This private primitive is used internally by the
 //compiler to translate bounded integer constants
 //with a desugaring-time check of the size of the number,
@@ -172,8 +171,8 @@ val of_string: string -> Tot t
 //Since it is marked private, client programs cannot call it directly
 //Since it is marked unfold, it eagerly reduces,
 //eliminating the verification overhead of the wrapper
+[@@admitted]
 private
 unfold
-let __int_to_t (x:int) : Tot t
-    = int_to_t x
-#reset-options
+let __int_to_t (x:int) : t =
+  int_to_t x
