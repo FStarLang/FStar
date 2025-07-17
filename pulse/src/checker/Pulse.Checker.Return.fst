@@ -126,7 +126,7 @@ let check_core
          let ty_rec = post_hint_typing g post x in
          (| open_term_nv post.post px, ty_rec.post_typing |)
   in
-  let use_eq = use_eq || None? post_hint in
+  let use_eq = use_eq || (None? post_hint && not (T.term_eq ty (`unit))) in
   assume (open_term (close_term post_opened x) x == post_opened);
   let post = close_term post_opened x in
   let d = T_Return g c use_eq u ty t post x uty d post_typing in
