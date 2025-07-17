@@ -27,6 +27,7 @@ open FStarC.Const
 open FStarC.BaseTypes
 
 open FStarC.Class.Show
+open FStarC.Class.PP
 
 (* -------------------------------------------------------------------- *)
 type mlsymbol = string
@@ -253,8 +254,14 @@ val mltybody_to_string     (d:mltybody)     : string
 val one_mltydecl_to_string (d:one_mltydecl) : string
 val mlmodule1_to_string    (d:mlmodule1)    : string
 
-instance val showable_mlty      : showable mlty
-instance val showable_mlconstant : showable mlconstant
-instance val showable_mlexpr     : showable mlexpr
-instance val showable_mlmodule1 : showable mlmodule1
+instance val showable_mlty         : showable mlty
+instance val showable_mlconstant   : showable mlconstant
+instance val showable_mlexpr       : showable mlexpr
+instance val showable_mlmodule1    : showable mlmodule1
 instance val showable_mlmodulebody : showable mlmodulebody
+
+instance val pp_mlty               : pretty mlty
+instance val pp_mlconstant         : pretty mlconstant
+instance val pp_mlexpr             : pretty mlexpr
+instance val pp_mlmodule1          : pretty mlmodule1
+instance val pp_mlmodulebody       : pretty mlmodulebody
