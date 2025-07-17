@@ -26,6 +26,7 @@ open FStarC.Const
 open FStarC.BaseTypes
 
 open FStarC.Class.Show
+open FStarC.Class.PP
 open FStarC.Pprint
 
 (* -------------------------------------------------------------------- *)
@@ -277,8 +278,14 @@ let mlmodulebody_to_doc (m:mlmodulebody) : document =
   group <| brackets <| spaced <| separate_map (semi ^^ break_ 1) mlmodule1_to_doc m
 let mlmodulebody_to_string (m:mlmodulebody) : string = render (mlmodulebody_to_doc m)
 
-instance showable_mlty : showable mlty = { show = mlty_to_string }
-instance showable_mlconstant : showable mlconstant = { show = mlconstant_to_string }
-instance showable_mlexpr : showable mlexpr = { show = mlexpr_to_string }
-instance showable_mlmodule1 : showable mlmodule1 = { show = mlmodule1_to_string }
+instance showable_mlty         : showable mlty         = { show = mlty_to_string }
+instance showable_mlconstant   : showable mlconstant   = { show = mlconstant_to_string }
+instance showable_mlexpr       : showable mlexpr       = { show = mlexpr_to_string }
+instance showable_mlmodule1    : showable mlmodule1    = { show = mlmodule1_to_string }
 instance showable_mlmodulebody : showable mlmodulebody = { show = mlmodulebody_to_string }
+
+instance pp_mlty               : pretty mlty           = { pp   = mlty_to_doc }
+instance pp_mlconstant         : pretty mlconstant     = { pp   = mlconstant_to_doc }
+instance pp_mlexpr             : pretty mlexpr         = { pp   = mlexpr_to_doc }
+instance pp_mlmodule1          : pretty mlmodule1      = { pp   = mlmodule1_to_doc }
+instance pp_mlmodulebody       : pretty mlmodulebody   = { pp   = mlmodulebody_to_doc }
