@@ -1082,7 +1082,7 @@ let rec close_post x_ret dom_g g1 (bs1:list (ppname & var & typ)) (post:slprop)
   )
 
 let infer_post #g #ctxt (r:checker_result_t g ctxt None)
-: T.Tac (post_hint_for_env g)
+: T.Tac (p:post_hint_for_env g { p.g == g /\ p.effect_annot == EffectAnnotSTT })
 = let (| x, g1, (| u, t, _ |), (| post, _ |), k |) = r in
   let bs0 = bindings g in
   let dom_g = dom g in
@@ -1096,7 +1096,7 @@ let infer_post #g #ctxt (r:checker_result_t g ctxt None)
           Pulse.PP.text x;
           Pulse.PP.text " that escape its environment"]
   in
-  let mk_post_hint (post:term) : T.Tac (post_hint_for_env g) = 
+  let mk_post_hint (post:term) : T.Tac (p:post_hint_for_env g {p.g==g /\ p.effect_annot == EffectAnnotSTT }) = 
     let (| u, ty_typing |) = Pulse.Checker.Pure.check_universe g t in
     let x = fresh g in
     let post' = open_term_nv post (ppname_default, x) in 
