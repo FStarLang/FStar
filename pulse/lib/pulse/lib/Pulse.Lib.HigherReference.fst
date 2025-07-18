@@ -112,13 +112,13 @@ fn gather u#a (#a: Type u#a) (r:ref a) (#x0 #x1:erased a) (#p0 #p1:perm)
 fn alloc_with_frame u#a (#a: Type u#a) {| small_type u#a |} (init: a) pre
   requires pre
   returns r: ref a
-  ensures (pre ** pts_to r init) ** pure (is_full_ref r)
+  ensures no_extrude <| (pre ** pts_to r init) ** pure (is_full_ref r)
 {
   alloc init
 }
 
 fn free_with_frame u#a (#a: Type u#a) (r:ref a) (frame:slprop)
-  requires ((frame ** (exists* (x: a). pts_to r x)) ** pure (is_full_ref r))
+  requires no_extrude <| ((frame ** (exists* (x: a). pts_to r x)) ** pure (is_full_ref r))
   ensures frame
 {
   free r;

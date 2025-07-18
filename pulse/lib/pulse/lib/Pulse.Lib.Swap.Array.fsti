@@ -32,18 +32,18 @@ let array_swap_post
       SZ.v mb' == SZ.v lb + (SZ.v rb - SZ.v mb)
 
 inline_for_extraction noextract [@@noextract_to "krml"]
-val array_swap
+fn array_swap
   (#t: Type0)
   (a: A.array t)
   (lb: SZ.t) (rb: SZ.t)
   (mb: SZ.t)
   (#s1 #s2: Ghost.erased (Seq.seq t))
-: stt SZ.t
-  (
+  requires (
     A.pts_to_range a (SZ.v lb) (SZ.v mb) s1 **
     A.pts_to_range a (SZ.v mb) (SZ.v rb) s2
   )
-  (fun mb' ->
+  returns mb' : SZ.t
+  ensures (
     A.pts_to_range a (SZ.v lb) (SZ.v mb') s2 **
     A.pts_to_range a (SZ.v mb') (SZ.v rb) s1 **
     pure (array_swap_post lb rb mb mb')

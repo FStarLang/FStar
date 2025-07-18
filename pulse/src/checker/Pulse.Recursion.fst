@@ -183,7 +183,8 @@ let add_knot (g : env) (rng : R.range)
     fail g (Some d.range) "error: r_ty is Tv_unknown in add_knot?";
   let b_knot =
     let s, rng = inspect_ident id in
-    let b = mk_binder s rng (wr r_ty rng) in
+    let attr = R.pack_ln (R.Tv_FVar (R.pack_fv Pulse.Reflection.Util.rec_attr_lid)) in
+    let b = mk_binder_with_attrs (wr r_ty rng) (mk_ppname (RT.seal_pp_name s) rng) (T.seal [attr]) in
     let bv = {
       bv_index = b_knot._3.bv_index;
       bv_ppname = { name = seal s; range = rng }

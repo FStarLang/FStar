@@ -252,7 +252,7 @@ fn on_range_cons_with_implies
   on_range_le p #(i + 1) #k;
   ghost
   fn aux ()
-  requires emp ** on_range p i k
+  requires no_extrude <| emp ** on_range p i k
   ensures p i ** on_range p (i + 1) k
   {
     rewrite (on_range p i k) as (p i ** on_range p (i + 1) k);
@@ -277,7 +277,7 @@ fn rec on_range_snoc
   if (i = j) 
   {
     rewrite (on_range p i j) as emp;
-    rewrite (p j ** emp) as (on_range p i (j + 1))
+    rewrite no_extrude (p j ** emp) as (on_range p i (j + 1))
   }
   else
   {
@@ -326,7 +326,7 @@ fn on_range_snoc_with_implies
   on_range_le p #i #j;
   ghost
   fn aux ()
-  requires emp ** on_range p i (j + 1)
+  requires no_extrude <| emp ** on_range p i (j + 1)
   ensures on_range p i j ** p j
   {
     on_range_unsnoc ();
@@ -337,7 +337,6 @@ fn on_range_snoc_with_implies
 }
 
 
-
 ghost
 fn rec on_range_get
   (j:nat)
@@ -345,7 +344,7 @@ fn rec on_range_get
   (#i:nat{i <= j})
   (#k:nat{j < k})
   requires on_range p i k
-  ensures on_range p i j ** p j ** on_range p (j + 1) k
+  ensures on_range p i j ** (p j ** on_range p (j + 1) k)
   decreases (j - i)
 {
   if (j = i)
@@ -369,7 +368,7 @@ fn rec on_range_put
   (j:nat{ i <= j })
   (k:nat{ j < k })
   (#p: (nat -> slprop))
-  requires on_range p i j ** p j ** on_range p (j + 1) k
+  requires on_range p i j ** (p j ** on_range p (j + 1) k)
   ensures on_range p i k
   decreases (j - i)
 {
@@ -402,7 +401,7 @@ fn on_range_focus
   on_range_get j;
   ghost
   fn aux ()
-  requires (on_range p i j ** on_range p (j + 1) k) ** p j
+  requires no_extrude (on_range p i j ** on_range p (j + 1) k) ** p j
   ensures on_range p i k
   {
     on_range_put i j k;

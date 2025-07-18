@@ -34,7 +34,7 @@ fn rec t_quicksort
   (lo : nat) (hi : (hi:nat{lo <= hi}))
   (#lb #rb : erased int)
   (#s0 : erased (Seq.seq int))
-  requires
+  requires no_extrude <|
     T.pool_alive #f p **
     A.pts_to_range a lo hi s0 **
     pure (pure_pre_quicksort a lo hi lb rb s0)
@@ -67,11 +67,11 @@ fn rec t_quicksort
       // will not commute or in anyway modify each side of the pledge. The function
       // above must also be in this exact shape. To obtain the shape, I just manually looked
       // at the context. Automation should likely help here.
-      requires
-        ((T.pool_alive #(f /. 2.0R) p ** quicksort_post a lo p31 s1 lb pivot) **
-         A.pts_to_range a p31 p32 s2) **
+      requires no_extrude <|
+        (T.pool_alive #(f /. 2.0R) p ** quicksort_post a lo p31 s1 lb pivot) **
+        A.pts_to_range a p31 p32 s2 **
         (T.pool_alive #(f /. 2.0R) p ** quicksort_post a p32 hi s3 pivot rb)
-      ensures
+      ensures no_extrude <|
         T.pool_alive #f p **
         quicksort_post a lo hi s0 lb rb
     {

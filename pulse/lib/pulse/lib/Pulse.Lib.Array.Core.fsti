@@ -192,7 +192,7 @@ instance has_pts_to_larray (a:Type u#0) (n : nat) : has_pts_to (larray a n) (Seq
   pts_to = pts_to;
 }
 
-ghost fn to_mask #t (arr: array t) #f #v
+ghost fn to_mask #t (arr: array t) #f (#v: erased _)
   requires arr |-> Frac f v
   ensures pts_to_mask arr #f v (fun _ -> True)
 

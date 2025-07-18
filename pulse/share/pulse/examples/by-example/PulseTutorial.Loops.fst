@@ -204,10 +204,10 @@ noextract
  //fib_rec$
 fn rec fib_rec (n:pos) (out:ref (nat & nat))
 requires
-    pts_to out 'v
+    pts_to out #1.0R 'v
 ensures
     exists* v.
-        pts_to out v **
+        pts_to out #1.0R v **
         pure (
           fst v == fib (n - 1) /\
           snd v == fib n 

@@ -30,6 +30,7 @@ OTHERFLAGS += --cmi
 OTHERFLAGS += --warn_error -321
 OTHERFLAGS += --warn_error @247 # couldn't write a checked file? FAIL RIGHT NOW
 OTHERFLAGS += --ext optimize_let_vc
+OTHERFLAGS += --ext compat:open_metas
 OTHERFLAGS += --z3version 4.13.3
 ifdef TESTNOLIB
 OTHERFLAGS += --include $(PULSE_ROOT)/lib/common

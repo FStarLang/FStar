@@ -164,7 +164,7 @@ fn par (#pf #pg #qf #qg:_)
 
 
 fn par_atomic (#is #js #pf #pg #qf #qg:_)
-       (f: unit -> stt_atomic unit is pf (fun _ -> qf))
+       (f: unit -> stt_atomic unit #Observable is pf (fun _ -> qf))
        (g: unit -> stt_atomic unit js pg (fun _ -> qg))
   requires pf ** pg
   ensures qf ** qg
@@ -180,7 +180,7 @@ fn par_atomic (#is #js #pf #pg #qf #qg:_)
 
 
 fn par_atomic_l (#is #pf #pg #qf #qg:_)
-       (f: unit -> stt_atomic unit is pf (fun _ -> qf))
+       (f: unit -> stt_atomic unit #Observable is pf (fun _ -> qf))
        (g: unit -> stt unit pg (fun _ -> qg))
   requires pf ** pg
   ensures qf ** qg

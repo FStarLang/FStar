@@ -71,7 +71,7 @@ let __normalize_slprop
   lambdas. *)
 
   (* Unfold anything marked with the "pulse_unfold" attribute. *)
-  let steps = steps @ [delta_attr ["Pulse.Lib.Core.pulse_unfold"]] in
+  let steps = steps @ [delta_attr ["Pulse.Lib.Core.pulse_unfold"; "Pulse.Lib.Core.pulse_eager_unfold"]] in
   (* Unfold anything marked with F*'s "unfold" qualifier . *)
   let steps = steps @ [delta_qualifier ["unfold"]] in
   (* Unfold recursive definitions too, but only the ones that match the filters above. *)

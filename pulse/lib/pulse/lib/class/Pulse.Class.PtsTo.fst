@@ -18,7 +18,11 @@ class has_pts_to (p r : Type) = {
 
 (* Always full permission *)
 [@@pulse_unfold]
-let ( |-> ) #p #r {| has_pts_to p r |} = pts_to #p #r
+let ( |-> ) #p #r {| has_pts_to p r |} x y = pts_to #p #r x y
+
+[@@pulse_unfold; pulse_eager_unfold]
+let live #p #r {| has_pts_to p r |} (x: p) (#[full_default()] f: perm) =
+  exists* y. pts_to x #f y
 
 (* We can always have an erased value. *)
 [@@pulse_unfold]

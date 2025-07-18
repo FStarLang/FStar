@@ -230,7 +230,7 @@ fn cons (#t:Type) (v:t) (x:llist t)
 
 
 fn rec append (#t:Type0) (x y:llist t)
-  requires is_list x 'l1 ** is_list y 'l2 ** pure (Cons? 'l1)
+  requires is_list x 'l1 ** (is_list y 'l2 ** pure (Cons? 'l1))
   ensures is_list x ('l1 @ 'l2)
 {
   some_iff_cons x;

@@ -33,7 +33,7 @@ fn trans_compose (#a #b #c:Type0) (p:a -> slprop) (q:b -> slprop) (r:c -> slprop
         ensures p x @==> r (g (f x))
     {
         ghost fn aux (_:unit) 
-        requires ((forall* x. p x @==> q (f x)) ** (forall* x. q x @==> r (g x))) ** p x
+        requires no_extrude ((forall* x. p x @==> q (f x)) ** (forall* x. q x @==> r (g x))) ** p x
         ensures r (g (f x))
         {
             elim #_ #(fun x -> p x @==> q (f x)) x;

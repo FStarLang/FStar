@@ -117,9 +117,15 @@ let check
   : T.Tac (checker_result_t g pre post_hint) =
 
   let g = push_context "check_rewrite" t.range g in
-  let Tm_Rewrite {t1=p; t2=q; tac_opt} = t.term in
-  let (| p, p_typing |) = check_slprop g p in
-  let (| q, q_typing |) = check_slprop g q in
+  let Tm_Rewrite {t1=p; t2=q; tac_opt; elaborated} = t.term in
+  let ctxt = Pulse.Checker.ImpureSpec.({ ctxt_now = pre; ctxt_old = None }) in
+  let (| p, p_typing |), (| q, q_typing |) =
+    if elaborated then
+      check_slprop g p,
+      check_slprop g q
+    else
+      ImpureSpec.purify_and_check_spec g ctxt p,
+      ImpureSpec.purify_and_check_spec g ctxt q in
 
   let equiv_p_q =
     (* If we don't have a tactic, we just call the check_slprop_equiv

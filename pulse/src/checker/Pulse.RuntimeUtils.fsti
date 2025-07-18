@@ -64,7 +64,9 @@ val deep_compress (t:T.term) : r:T.term { t == r }
 val deep_transform_to_unary_applications (t:T.term) : r:T.term { t == r }
 val map_seal (s:FStar.Sealed.sealed 't) (f: 't -> 'u) : FStar.Sealed.sealed 'u
 val float_one : FStar.Float.float
-val lax_check_term_with_unknown_universes (g:env) (t:T.term) : option T.term
+val lax_check_term_with_unknown_universes (g:env) (t:T.term) : Dv (option T.term)
+val tc_term_phase1 (g:env) (t:T.term) (must_tot:bool) (instantiate_imps:bool) : Dv (option (T.term & T.term) & T.issues)
+val teq_nosmt_force (g:env) (ty1 ty2:T.term) : bool
 val whnf_lax (g:env) (t:T.term) : T.term
 val hnf_lax (g:env) (t:T.term) : T.term
 module RT = FStar.Reflection.Typing

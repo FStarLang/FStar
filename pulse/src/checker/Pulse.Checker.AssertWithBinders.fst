@@ -317,14 +317,14 @@ let check_renaming
    let body = {st with term = Tm_ProofHintWithBinders { ht with binders = [] };
                        source = Sealed.seal false; } in
    { st with
-       term = Tm_ProofHintWithBinders { hint_type=ASSERT { p = goal }; binders=bs; t=body };
+       term = Tm_ProofHintWithBinders { hint_type=ASSERT { p = goal; elaborated = true }; binders=bs; t=body };
        source = Sealed.seal false;
    }
 
   | [], None ->
     // if there is no goal, take the goal to be the full current pre
     let lhs, rhs = rewrite_all (T.unseal st.source) g pairs pre tac_opt in
-    let t = { st with term = Tm_Rewrite { t1 = lhs; t2 = rhs; tac_opt};
+    let t = { st with term = Tm_Rewrite { t1 = lhs; t2 = rhs; tac_opt; elaborated = true };
                       source = Sealed.seal false; } in
     { st with
         term = Tm_Bind { binder = as_binder tm_unit; head = t; body };
@@ -334,7 +334,7 @@ let check_renaming
   | [], Some goal -> (
       let goal, _ = PC.instantiate_term_implicits g goal None false in
       let lhs, rhs = rewrite_all (T.unseal st.source) g pairs goal tac_opt in
-      let t = { st with term = Tm_Rewrite { t1 = lhs; t2 = rhs; tac_opt };
+      let t = { st with term = Tm_Rewrite { t1 = lhs; t2 = rhs; tac_opt; elaborated = true };
                         source = Sealed.seal false; } in
       { st with term = Tm_Bind { binder = as_binder tm_unit; head = t; body };
                 source = Sealed.seal false;
@@ -374,7 +374,7 @@ let check_wild
         if n = 0
         then (
           let ex_body = t in
-          { st with term = Tm_ProofHintWithBinders { ht with hint_type = ASSERT { p = ex_body } }}
+          { st with term = Tm_ProofHintWithBinders { ht with hint_type = ASSERT { p = ex_body; elaborated = true } }}
         )
         else (
           match inspect_term t with
@@ -439,25 +439,30 @@ let check
     let st = check_renaming g pre st in
     check g pre pre_typing post_hint res_ppname st
 
-  | REWRITE { t1; t2; tac_opt } -> (
+  | REWRITE { t1; t2; tac_opt; elaborated } -> (
     match bs with
     | [] -> 
-      let t = { st with term = Tm_Rewrite { t1; t2; tac_opt } } in
+      let t = { st with term = Tm_Rewrite { t1; t2; tac_opt; elaborated } } in
       check g pre pre_typing post_hint res_ppname 
           { st with term = Tm_Bind { binder = as_binder tm_unit; head = t; body } } 
     | _ ->
-      let t = { st with term = Tm_Rewrite { t1; t2; tac_opt } } in
+      let t = { st with term = Tm_Rewrite { t1; t2; tac_opt; elaborated } } in
       let body = { st with term = Tm_Bind { binder = as_binder tm_unit; head = t; body } } in
-      let st = { st with term = Tm_ProofHintWithBinders { hint_type = ASSERT { p = t1 }; binders = bs; t = body } } in
+      let st = { st with term = Tm_ProofHintWithBinders { hint_type = ASSERT { p = t1; elaborated }; binders = bs; t = body } } in
       check g pre pre_typing post_hint res_ppname st
   )
   
-  | ASSERT { p = v } ->
+  | ASSERT { p = v; elaborated } ->
     FStar.Tactics.BreakVC.break_vc(); // Some stabilization
     let bs = infer_binder_types g bs v in
     let (| uvs, v_opened, body_opened |) = open_binders g bs (mk_env (fstar_env g)) v body in
     let v, body = v_opened, body_opened in
-    let (| v, d |) = PC.check_slprop (push_env g uvs) v in
+    let ctxt = Pulse.Checker.ImpureSpec.({ctxt_now = pre; ctxt_old = None}) in
+    let (| v, d |) =
+      if elaborated then
+        PC.check_slprop (push_env g uvs) v
+      else
+        ImpureSpec.purify_and_check_spec (push_env g uvs) ctxt v in
     let (| g1, nts, _, pre', k_frame |) = Prover.prove false pre_typing uvs d in
     //
     // No need to check effect labels for the uvs solution here,
@@ -519,7 +524,7 @@ let check
       ] in
       info_doc_env g (Some st.range) msg
     end;
-    let rw = mk_term (Tm_Rewrite { t1 = lhs; t2 = rhs; tac_opt = Some tac }) st.range in
+    let rw = mk_term (Tm_Rewrite { t1 = lhs; t2 = rhs; tac_opt = Some tac; elaborated = true }) st.range in
     let rw = { rw with effect_tag = as_effect_hint STT_Ghost } in
 
     let st = mk_term (Tm_Bind { binder = as_binder (wr (`unit) st.range); head = rw; body }) st.range in
@@ -529,7 +534,7 @@ let check
       match bs with
       | [] -> st
       | _ ->
-        let t = mk_term (Tm_ProofHintWithBinders { hint_type = ASSERT { p = lhs }; binders = bs; t = st }) st.range in
+        let t = mk_term (Tm_ProofHintWithBinders { hint_type = ASSERT { p = lhs; elaborated = true }; binders = bs; t = st }) st.range in
         { t with effect_tag = st.effect_tag }
     in
     check g pre pre_typing post_hint res_ppname st

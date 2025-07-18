@@ -14,15 +14,19 @@
    limitations under the License.
 *)
 
-module Pulse.Checker.Prover.RewritesTo
-open Pulse.Syntax
-open Pulse.Typing.Env
-module PS = Pulse.Checker.Prover.Substs
+module Pulse.Checker.ImpureSpec
+module T = FStar.Tactics.V2
+open Pulse.Syntax.Base
+open Pulse.Syntax.Pure
+open Pulse.Typing
 
-val is_rewrites_to_p (t: typ) : option (term & term)
+noeq type ctxt = {
+  ctxt_now: slprop;
+  ctxt_old: option slprop;
+}
 
-val extract_rewrites_to_p (t: typ) : option (var & term)
+val purify_spec (g: env) (ctxt: ctxt) (t: slprop) :
+  T.Tac slprop
 
-val get_subst_from_env (g: env) : PS.ss_t
-
-val get_new_substs_from_env (g: env) (g': env { env_extends g' g }) (ss: PS.ss_t) : PS.ss_t
+val purify_and_check_spec (g: env) (ctxt: ctxt) (t: slprop) :
+  T.Tac (t:slprop & tot_typing g t tm_slprop)

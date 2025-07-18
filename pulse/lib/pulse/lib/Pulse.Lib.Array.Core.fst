@@ -123,7 +123,7 @@ fn alloc_with_pre
     (pre:slprop)
   requires pre
   returns arr:array a
-  ensures (pre **
+  ensures no_extrude <| (pre **
          (pts_to arr (Seq.create (SZ.v len) init) ** (
           pure (is_full_array arr) **
           pure (length arr == SZ.v len)))) **
@@ -135,7 +135,7 @@ fn alloc_with_pre
 
 
 fn free_with_post (#a:Type u#0) (arr:array a) (post:slprop)
-  requires (post ** (exists* v. pts_to arr v)) ** pure (is_full_array arr)
+  requires no_extrude <| (post ** (exists* v. pts_to arr v)) ** pure (is_full_array arr)
   ensures post
 {
   free arr  

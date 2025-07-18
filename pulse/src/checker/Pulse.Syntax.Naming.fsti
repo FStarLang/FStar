@@ -459,7 +459,7 @@ let rec subst_term_pairs (t:list (term & term)) (ss:subst)
 let subst_proof_hint (ht:proof_hint_type) (ss:subst) 
   : proof_hint_type
   = match ht with
-    | ASSERT { p } -> ASSERT { p=subst_term p ss }
+    | ASSERT { p; elaborated } -> ASSERT { p=subst_term p ss; elaborated }
     | UNFOLD { names; p } -> UNFOLD {names; p=subst_term p ss}
     | FOLD { names; p } -> FOLD { names; p=subst_term p ss }
     | RENAME { pairs; goal; tac_opt } ->
@@ -467,10 +467,11 @@ let subst_proof_hint (ht:proof_hint_type) (ss:subst)
                goal=subst_term_opt goal ss;
                tac_opt=subst_term_opt tac_opt ss;
              }
-    | REWRITE { t1; t2; tac_opt } ->
+    | REWRITE { t1; t2; tac_opt; elaborated } ->
       REWRITE { t1=subst_term t1 ss;
                 t2=subst_term t2 ss;
                 tac_opt = subst_term_opt tac_opt ss;
+                elaborated;
               }
     | WILD
     | SHOW_PROOF_STATE _ -> ht
@@ -599,10 +600,11 @@ let rec subst_st_term (t:st_term) (ss:subst)
                           length = subst_term length ss;
                           body = subst_st_term body (shift_subst ss) }
 
-    | Tm_Rewrite { t1; t2; tac_opt } ->
+    | Tm_Rewrite { t1; t2; tac_opt; elaborated } ->
       Tm_Rewrite { t1 = subst_term t1 ss;
                    t2 = subst_term t2 ss;
-                   tac_opt = subst_term_opt tac_opt ss }
+                   tac_opt = subst_term_opt tac_opt ss;
+                   elaborated }
 
     | Tm_Admit { ctag; u; typ; post } ->
       Tm_Admit { ctag;

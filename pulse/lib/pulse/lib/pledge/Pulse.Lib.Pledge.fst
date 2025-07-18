@@ -176,7 +176,7 @@ fn bind_pledge'
 {
   ghost
   fn aux ()
-    requires f ** extra ** v1
+    requires no_extrude (f ** extra) ** v1
     ensures f ** pledge is f v2
     opens is
   {
@@ -326,7 +326,7 @@ fn do_elim_body_l
     by the other subpledge, so we just extract our resource. *)
     assert (r1 |-> false);
     r1 := true;
-    rewrite emp ** split_switch is false true f v1 v2
+    rewrite no_extrude <| emp ** split_switch is false true f v1 v2
         as  split_switch is true true f v1 v2 ** v1;
 
     (* This should just disappear when we start normalizing
@@ -387,7 +387,8 @@ ghost
 fn elim_body_l
   (#is:inames) (#f:slprop) (i : iname) (v1:slprop) (v2:slprop) (r1 r2 : GR.ref bool)
   ()
-  requires f ** ((r1 |-> Frac 0.5R false) ** later_credit 1 ** inv i (inv_p is f v1 v2 r1 r2) ** pure (not (mem_inv is i)))
+  requires no_extrude <|
+    f ** ((r1 |-> Frac 0.5R false) ** later_credit 1 ** inv i (inv_p is f v1 v2 r1 r2) ** pure (not (mem_inv is i)))
   ensures  f ** v1
   opens add_inv is i
 {
@@ -460,7 +461,8 @@ ghost
 fn elim_body_r
   (#is:inames) (#f:slprop) (i : iname) (v1:slprop) (v2:slprop) (r1 r2 : GR.ref bool)
   ()
-  requires f ** ((r2 |-> Frac 0.5R false) ** later_credit 1 ** inv i (inv_p is f v1 v2 r1 r2) ** pure (not (mem_inv is i)))
+  requires no_extrude <|
+    f ** ((r2 |-> Frac 0.5R false) ** later_credit 1 ** inv i (inv_p is f v1 v2 r1 r2) ** pure (not (mem_inv is i)))
   ensures  f ** v2
   opens add_inv is i
 {

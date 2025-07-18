@@ -55,9 +55,9 @@ ensures c.inv 1.0R 0
     let ii = CI.new_cancellable_invariant (inv_core x mr);
 
     fn next (p:perm) (i:erased int)
-    requires inv (iname_of ii) (cinv_vp ii (inv_core x mr)) ** CI.active ii p ** MR.snapshot mr i
+    requires no_extrude <| inv (iname_of ii) (cinv_vp ii (inv_core x mr)) ** CI.active ii p ** MR.snapshot mr i
     returns j:int
-    ensures (inv (iname_of ii) (cinv_vp ii (inv_core x mr)) ** CI.active ii p ** MR.snapshot mr j) ** pure (i < j)
+    ensures no_extrude <| (inv (iname_of ii) (cinv_vp ii (inv_core x mr)) ** CI.active ii p ** MR.snapshot mr j) ** pure (i < j)
     { 
         later_credit_buy 1;
         with_invariants (iname_of ii) {
@@ -78,8 +78,9 @@ ensures c.inv 1.0R 0
 
     ghost
     fn share (p:perm) (i:erased int)
-    requires inv (iname_of ii) (cinv_vp ii (inv_core x mr)) ** CI.active ii p ** MR.snapshot mr i
-    ensures (inv (iname_of ii) (cinv_vp ii (inv_core x mr)) ** CI.active ii (p /. 2.0R) ** MR.snapshot mr i) **
+    requires no_extrude <| inv (iname_of ii) (cinv_vp ii (inv_core x mr)) ** CI.active ii p ** MR.snapshot mr i
+    ensures no_extrude <|
+            (inv (iname_of ii) (cinv_vp ii (inv_core x mr)) ** CI.active ii (p /. 2.0R) ** MR.snapshot mr i) **
             (inv (iname_of ii) (cinv_vp ii (inv_core x mr)) ** CI.active ii (p /. 2.0R) ** MR.snapshot mr i)
     {
         MR.dup_snapshot mr;
@@ -89,9 +90,11 @@ ensures c.inv 1.0R 0
 
     ghost
     fn gather (p q:perm) (i j:erased int)
-    requires (inv (iname_of ii) (cinv_vp ii (inv_core x mr)) ** CI.active ii p ** MR.snapshot mr i) **
-             (inv (iname_of ii) (cinv_vp ii (inv_core x mr)) ** CI.active ii q ** MR.snapshot mr j)
-    ensures (inv (iname_of ii) (cinv_vp ii (inv_core x mr)) ** CI.active ii (p +. q) ** MR.snapshot mr i)
+    requires no_extrude <|
+            (inv (iname_of ii) (cinv_vp ii (inv_core x mr)) ** CI.active ii p ** MR.snapshot mr i) **
+            (inv (iname_of ii) (cinv_vp ii (inv_core x mr)) ** CI.active ii q ** MR.snapshot mr j)
+    ensures no_extrude <|
+            (inv (iname_of ii) (cinv_vp ii (inv_core x mr)) ** CI.active ii (p +. q) ** MR.snapshot mr i)
     {
         CI.gather #p #q ii;
         drop_ (MR.snapshot mr j);
@@ -99,7 +102,7 @@ ensures c.inv 1.0R 0
     };
 
     fn destroy (i:erased int)
-    requires inv (iname_of ii) (cinv_vp ii (inv_core x mr)) ** CI.active ii 1.0R ** MR.snapshot mr i
+    requires no_extrude <| inv (iname_of ii) (cinv_vp ii (inv_core x mr)) ** CI.active ii 1.0R ** MR.snapshot mr i
     ensures emp
     {
         later_credit_buy 1;
@@ -113,7 +116,7 @@ ensures c.inv 1.0R 0
     let c = { inv = (fun p i -> inv (iname_of ii) (cinv_vp ii (inv_core x mr)) ** CI.active ii p ** MR.snapshot mr i);
               next; share; gather; destroy };
             
-    rewrite (inv (iname_of ii) (cinv_vp ii (inv_core x mr)) ** CI.active ii 1.0R ** MR.snapshot mr 0) as (c.inv 1.0R 0);
+    rewrite no_extrude (inv (iname_of ii) (cinv_vp ii (inv_core x mr)) ** CI.active ii 1.0R ** MR.snapshot mr 0) as (c.inv 1.0R 0);
     c
 }
 

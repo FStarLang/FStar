@@ -21,6 +21,7 @@ open Pulse.Typing
 open Pulse.Checker.Pure
 open Pulse.Checker.Base
 open Pulse.Checker.Prover
+open Pulse.Checker.ImpureSpec
 
 module T = FStar.Tactics.V2
 module P = Pulse.Syntax.Printer
@@ -52,7 +53,8 @@ let check
   let g = push_context "while loop" t.range g in
   let Tm_While { invariant=inv; condition=cond; body; condition_var } = t.term in
   let (| ex_inv, inv_typing |) =
-    check_slprop (push_context "invariant" (term_range inv) g) 
+    purify_and_check_spec (push_context "invariant" (term_range inv) g) 
+                { ctxt_now = pre; ctxt_old = Some pre }
                 (tm_exists_sl u0 (mk_binder_ppname tm_bool condition_var) inv)
   in
   let ex_inv_v = inspect_term ex_inv in
@@ -167,7 +169,9 @@ let check_nuwhile
   let g = push_context "nu while loop" t.range g in
   let Tm_NuWhile { invariant=inv; condition=cond; body } = t.term in
   let (| inv, inv_typing |) =
-    check_slprop (push_context "invariant" (term_range inv) g) inv
+    purify_and_check_spec (push_context "invariant" (term_range inv) g)
+      { ctxt_now = pre; ctxt_old = Some pre }
+      inv
   in
   let (| g1, nts, labs, remaining, k |) = Pulse.Checker.Prover.prove false pre_typing (empty_env g) inv_typing in
   let inv = tm_star (Pulse.Checker.Prover.Substs.nt_subst_term inv nts) remaining in

@@ -219,8 +219,8 @@ fn spawned_f_i
   (e:perm)
   (f : (i:nat -> stt unit (pre i) (fun () -> post i)))
   (i:nat)
-  requires emp ** (pre i ** pool_alive #e p)
-  ensures emp ** (pledge emp_inames (pool_done p) (post i) ** pool_alive #e p)
+  requires no_extrude <| emp ** (pre i ** pool_alive #e p)
+  ensures no_extrude <| emp ** (pledge emp_inames (pool_done p) (post i) ** pool_alive #e p)
 {
   let _h = spawn_ p #e #(pre i) #(post i) (fun () -> f i);
   ()

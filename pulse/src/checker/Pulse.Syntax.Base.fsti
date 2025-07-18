@@ -163,7 +163,8 @@ let ctag_of_effect_annot (x:effect_annot) : option ctag =
 noeq
 type proof_hint_type =
   | ASSERT {
-      p:slprop
+      p:slprop;
+      elaborated: bool; (* internally created by the checker, don't purify *)
     }
   | FOLD { 
       names:option (list string);
@@ -182,6 +183,7 @@ type proof_hint_type =
       t1:slprop;
       t2:slprop;
       tac_opt : option term; (* optional tactic *)
+      elaborated: bool; (* internally created by the checker, don't purify *)
     }
     (* NB: A REWRITE proof hint will elaborate to a Tm_Rewrite
     after solving all of the binders (if any). Tm_Rewrite is what
@@ -279,6 +281,7 @@ type st_term' =
       t1:term;
       t2:term;
       tac_opt : option term;
+      elaborated: bool; (* internally created by the checker, don't purify *)
     } 
   | Tm_Admit {
       ctag:ctag;

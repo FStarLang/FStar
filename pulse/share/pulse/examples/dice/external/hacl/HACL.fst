@@ -56,7 +56,7 @@ let spec_hmac
 
 // inline_for_extraction noextract [@@noextract_to "krml"]
 
-fn hacl_hmac0 (alg:alg_t { alg == Spec.Hash.Definitions.sha2_256 })
+fn hacl_hmac (alg:alg_t { alg == Spec.Hash.Definitions.sha2_256 })
               (dst:A.larray U8.t (US.v (digest_len alg)))
               (key:A.array U8.t)
               (key_len: hashable_len { US.v key_len == A.length key })
@@ -81,11 +81,6 @@ ensures    (
 }
 
 
-let hacl_hmac = hacl_hmac0
-
-// let hacl_hmac alg dst key key_len msg msg_len #pkey #pmsg #dst_seq #key_seq #msg_seq =
-//  hacl_hmac0 alg dst key key_len msg msg_len #pkey #pmsg #dst_seq #key_seq #msg_seq
-
 let spec_ed25519_verify
   pubk hdr sig
 = Seq.length pubk == 32 /\
@@ -95,7 +90,7 @@ let spec_ed25519_verify
 
 // inline_for_extraction noextract [@@noextract_to "krml"]
 
-fn ed25519_verify0
+fn ed25519_verify
   (pubk:A.larray U8.t (US.v v32us))
   (hdr:A.array U8.t)
   (hdr_len:signable_len { US.v hdr_len == A.length hdr })
@@ -119,11 +114,6 @@ ensures
 }
 
 
-let ed25519_verify = ed25519_verify0
-
-// let ed25519_verify pubk hdr hdr_len sig #ppubk #phdr #psig #pubk_seq #hdr_seq #sig_seq =
-// ed25519_verify0 pubk hdr hdr_len sig #ppubk #phdr #psig #pubk_seq #hdr_seq #sig_seq
-
 let spec_ed25519_sign
   privk msg
 = if Seq.length privk = 32 && Seq.length msg <= EverCrypt.Ed25519.max_size_t
@@ -132,7 +122,7 @@ let spec_ed25519_sign
 
 // inline_for_extraction noextract [@@noextract_to "krml"]
 
-fn ed25519_sign0
+fn ed25519_sign
   (buf:A.larray U8.t 64)
   (privk:A.larray U8.t (US.v v32us))
   (len:US.t { US.v len < pow2 32 })
@@ -157,10 +147,6 @@ ensures
 }
 
 
-let ed25519_sign = ed25519_sign0
-
-// let ed25519_sign buf privk len msg #pprivk #pmsg #buf0 #privk_seq #msg_seq =
-//  ed25519_sign0 buf privk len msg #pprivk #pmsg #buf0 #privk_seq #msg_seq
 
 let dice_hash_alg1 (_: unit) : alg_t = Spec.Hash.Definitions.sha2_256
 

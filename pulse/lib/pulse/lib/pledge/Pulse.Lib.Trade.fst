@@ -158,7 +158,7 @@ fn trade_compose
 {
   ghost
   fn aux ()
-    requires (trade #is p q ** trade #is q r) ** p
+    requires no_extrude <| (trade #is p q ** trade #is q r) ** p
     ensures  r
     opens is
   {
@@ -176,7 +176,7 @@ fn eq_as_trade
 {
   ghost
   fn aux ()
-    requires emp ** p2
+    requires no_extrude <| emp ** p2
     ensures p1
   {
     rewrite p2 as p1;

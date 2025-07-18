@@ -1034,6 +1034,15 @@ let (@@) : inames -> inames -> inames = join_inames
 (* Attribute to eagerly unfold slprops in the context and goal. *)
 val pulse_unfold : unit
 
+val pulse_eager_unfold : unit
+
+[@@pulse_unfold]
+let no_extrude (p: slprop) : slprop = p
+
+let old () = ()
+
+let _rec_knot = ()
+
 let rewrites_to_p #t (x y: t) = (x == y)
 
 (*

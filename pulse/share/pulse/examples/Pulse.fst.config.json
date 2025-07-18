@@ -8,6 +8,7 @@
     "-249",
     "--ext",
     "optimize_let_vc",
+    "--ext", "compat:open_metas",
     "--z3version",
     "4.13.3"
   ],

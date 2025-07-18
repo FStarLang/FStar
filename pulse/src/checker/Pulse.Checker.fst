@@ -91,7 +91,7 @@ let instantiate_unknown_witnesses (g:env) (t:st_term { Tm_IntroExists? t.term })
   | _ ->
     let e2 = {t with term=Tm_IntroExists { p; witnesses=new_ws }} in
     let e1 =
-      let hint_type = ASSERT { p = opened_p } in
+      let hint_type = ASSERT { p = opened_p; elaborated = true } in
       let binders = [] in
       let t = mk_term (Tm_ProofHintWithBinders { hint_type;binders;t=e2 }) t.range in
       { t with effect_tag = as_effect_hint STT_Ghost }

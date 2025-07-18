@@ -454,3 +454,4 @@ let as_atomic #a pre post (e:stt a pre post) = admit () // intentional since it 
 let unfold_check_opens = ()
 
 let pulse_unfold = ()
+let pulse_eager_unfold = ()

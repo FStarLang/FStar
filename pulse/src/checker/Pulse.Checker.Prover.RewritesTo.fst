@@ -20,22 +20,34 @@ open Pulse.Typing.Env
 module PS = Pulse.Checker.Prover.Substs
 module R = FStar.Reflection.V2
 
-let extract_rewrites_to_p (t: typ) =
+let is_rewrites_to_p (t: typ) : option (term & term) =
+  let hd, args = R.collect_app_ln t in
+  match R.inspect_ln hd, args with
+  | R.Tv_UInst hd _, [_; lhs, _; rhs, _] ->
+    if R.inspect_fv hd <> Pulse.Typing.rewrites_to_p_lid then None else
+    Some (lhs, rhs)
+  | _ -> None
+
+let is_squash (t: typ) : option typ =
   let hd, args = R.collect_app_ln t in
   match R.inspect_ln hd, args with
   | R.Tv_UInst hd _, [t, _] ->
     if R.inspect_fv hd <> R.squash_qn then None else
-    let hd, args = R.collect_app_ln t in
-    (match R.inspect_ln hd, args with
-    | R.Tv_UInst hd _, [_; lhs, _; rhs, _] ->
-      if R.inspect_fv hd <> Pulse.Typing.rewrites_to_p_lid then None else
-      (match R.inspect_ln lhs with
+    Some t
+  | _ -> None
+
+let extract_rewrites_to_p (t: typ) =
+  match is_squash t with
+  | None -> None
+  | Some t ->
+    match is_rewrites_to_p t with
+    | None -> None
+    | Some (lhs, rhs) ->
+      match R.inspect_ln lhs with
       | R.Tv_Var x ->
         let x = R.inspect_namedv x in
         Some (x.uniq, rhs)
-      | _ -> None)
-    | _ -> None)
-  | _ -> None
+      | _ -> None
 
 let maybe_add_binding_to_subst (ss: PS.ss_t) (t: typ) =
   match extract_rewrites_to_p t with

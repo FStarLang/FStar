@@ -868,7 +868,7 @@ fn rec is_deque_suffix_nolast_helper
       rewrite each p as tail;
       with v. assert (pts_to tail v);
       ghost fn pf ()
-        requires
+        requires no_extrude <|
           emp **
           pts_to tail ({ v with dnext = last' })
         ensures
@@ -897,7 +897,7 @@ fn rec is_deque_suffix_nolast_helper
       let v = is_deque_suffix_nolast_helper p' (h2 :: tl2) (Some p) tail last last';
 
       ghost fn pf ()
-        requires
+        requires no_extrude <|
           (
             pts_to p vp **
             trade (pts_to tail { v with dnext = last' }) (is_deque_suffix p' (h2 :: tl2) (Some p) tail last')

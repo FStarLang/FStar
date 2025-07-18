@@ -113,14 +113,14 @@ ensures pts_to x ('i + 2)
         (lr:GR.ref int)
         (b:bool { if b then lr == left else lr == right })
         (v vq:int)
-      requires 
+      requires no_extrude <|
         (exists* (vl vr:int).
             pts_to left #0.5R vl **
             pts_to right #0.5R vr **
             pure (v == 'i + vl + vr)) **
         pts_to lr #0.5R vq **
         pts_to x (v + 1)
-      ensures
+      ensures no_extrude <|
         (exists* (vl vr:int).
             pts_to left #0.5R vl **
             pts_to right #0.5R vr **
@@ -376,7 +376,7 @@ module C = Pulse.Lib.CancellableInvariant
 
 fn atomic_increment_f6
         (x: ref int)
-        (#p:_)
+        (#p:perm)
         (#pred #qpred: int -> slprop)
         (c:C.cinv)
         (f: (v:int -> vq:int -> stt_ghost unit
@@ -423,14 +423,14 @@ ensures pts_to x ('i + 2)
         (lr:GR.ref int)
         (b:bool { if b then lr == left else lr == right })
         (v vq:int)
-      requires 
+      requires no_extrude <|
         (exists* (vl vr:int).
             pts_to left #0.5R vl **
             pts_to right #0.5R vr **
             pure (v == 'i + vl + vr)) **
         pts_to lr #0.5R vq **
         pts_to x (v + 1)
-      ensures
+      ensures no_extrude <|
         (exists* (vl vr:int).
             pts_to left #0.5R vl **
             pts_to right #0.5R vr **

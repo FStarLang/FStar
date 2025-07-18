@@ -223,7 +223,7 @@ instance shift_duplicable
 ghost
 fn dup_star (p q:slprop) {| duplicable p |} {| duplicable q |}
 requires p ** q
-ensures (p ** q) ** (p ** q)
+ensures no_extrude <| (p ** q) ** (p ** q)
 {
   open Pulse.Class.Duplicable;
   dup p ();
@@ -243,7 +243,7 @@ ensures  shift #is p r
 {
   ghost
   fn aux ()
-    requires (shift #is p q ** shift #is q r) ** p
+    requires no_extrude <| (shift #is p q ** shift #is q r) ** p
     ensures r
     opens is
   {

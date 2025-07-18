@@ -13,7 +13,7 @@ fn refl
   ensures (trade #is p p)
 {
   ghost fn aux (_: unit)
-    requires emp ** p
+    requires no_extrude <| emp ** p
     ensures p
     opens is
   {
@@ -45,7 +45,7 @@ fn curry
     ensures trade #is q r
     { 
         ghost fn aux (_:unit)
-        requires ((trade #is (p ** q) r) ** p) ** q
+        requires no_extrude ((trade #is (p ** q) r) ** p) ** q
         ensures r
         opens is
         { 
@@ -171,7 +171,7 @@ fn weak_concl_l
   ghost
   fn aux
     (_foo: unit)
-    requires ((trade #is p1 p2) ** p) ** p1
+    requires no_extrude ((trade #is p1 p2) ** p) ** p1
     ensures p ** p2
     opens is
   {
@@ -203,7 +203,7 @@ fn prod
   ghost
   fn aux
     (_foo: unit)
-    requires ((trade #is l1 r1) ** (trade #is l2 r2)) ** (l1 ** l2)
+    requires no_extrude ((trade #is l1 r1) ** (trade #is l2 r2)) ** (l1 ** l2)
     ensures r1 ** r2
     opens is
   {
@@ -224,7 +224,7 @@ fn rewrite_with_trade
   ghost
   fn aux
     (_: unit)
-    requires emp ** p2
+    requires no_extrude <| emp ** p2
     ensures p1
     opens is
   {

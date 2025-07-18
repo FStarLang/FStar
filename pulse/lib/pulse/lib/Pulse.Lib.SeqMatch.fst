@@ -341,9 +341,6 @@ ensures
 }
 
 
-assume val foo : slprop
-assume val bar : slprop
-
 ghost
 fn seq_seq_match_singleton_elim
 (#t1 #t2: Type0)
@@ -557,7 +554,7 @@ ensures
     c2 c2'
     i j;
   ghost fn aux2 (_: unit)
-    requires emp ** (seq_seq_match p c1' c2' i j)
+    requires no_extrude <| emp ** (seq_seq_match p c1' c2' i j)
     ensures seq_seq_match p c1 c2 i j
   {
       seq_seq_match_weaken
@@ -809,7 +806,7 @@ ensures
 {
   seq_seq_match_seq_list_match p c l;
   ghost fn aux (_: unit)
-  requires
+  requires no_extrude <|
     emp ** seq_list_match c l p
   ensures
     seq_seq_match p c (Seq.seq_of_list l) 0 (List.Tot.length l)
@@ -837,7 +834,7 @@ ensures
 {
   seq_list_match_seq_seq_match p c l; 
   ghost fn aux (_: unit)
-  requires
+  requires no_extrude <|
     emp ** seq_seq_match p c (Seq.seq_of_list l) 0 (List.Tot.length l)
   ensures
     seq_list_match c l p

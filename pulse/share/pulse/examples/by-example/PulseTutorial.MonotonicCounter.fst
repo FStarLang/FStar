@@ -33,7 +33,7 @@ ensures c.inv 0
     fn next (i:erased int)
     requires pts_to x i ** MR.pts_to mr #1.0R i
     returns j:int
-    ensures (pts_to x (i + 1) ** MR.pts_to mr #1.0R (i + 1)) ** pure (j == reveal i)
+    ensures no_extrude <| (pts_to x (i + 1) ** MR.pts_to mr #1.0R (i + 1)) ** pure (j == reveal i)
     {
         let j = !x;
         x := j + 1;
@@ -50,14 +50,14 @@ ensures c.inv 0
     ghost
     fn snap (i:erased int)
     requires pts_to x i ** MR.pts_to mr #1.0R i
-    ensures  MR.snapshot mr i ** (pts_to x i ** MR.pts_to mr #1.0R i)
+    ensures  no_extrude <| MR.snapshot mr i ** (pts_to x i ** MR.pts_to mr #1.0R i)
     {
         MR.take_snapshot mr #1.0R i;
     };
     ghost
     fn recall (i:erased int) (j:erased int)
-    requires  MR.snapshot mr i ** (pts_to x j ** MR.pts_to mr #1.0R j)
-    ensures  MR.snapshot mr i ** (pts_to x j ** MR.pts_to mr #1.0R j) ** pure (i <= j)
+    requires no_extrude <| MR.snapshot mr i ** (pts_to x j ** MR.pts_to mr #1.0R j)
+    ensures  no_extrude <| MR.snapshot mr i ** (pts_to x j ** MR.pts_to mr #1.0R j) ** pure (i <= j)
     {
         MR.recall_snapshot mr;
     };

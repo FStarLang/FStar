@@ -229,11 +229,11 @@ ensures pts_to x ('i + 2)
         (lr:GR.ref int)
         (b:bool { if b then lr == left else lr == right })
         (v vq:int)
-      requires 
+      requires no_extrude <|
         contributions left right 'i v **
         GR.pts_to lr #0.5R vq **
         pts_to x (v + 1)
-      ensures
+      ensures no_extrude <|
         contributions left right 'i (v + 1) **
         GR.pts_to lr #0.5R (vq + 1) **
         pts_to x (v + 1)
@@ -408,11 +408,11 @@ ensures pts_to x ('i + 2)
         (lr:GR.ref int)
         (b:bool { if b then lr == left else lr == right })
         (v vq:int)
-      requires 
+      requires no_extrude <|
         contributions left right 'i v **
         GR.pts_to lr #0.5R vq **
         pts_to x (v + 1)
-      ensures
+      ensures no_extrude <|
         contributions left right 'i (v + 1) **
         GR.pts_to lr #0.5R (vq + 1) **
         pts_to x (v + 1)
