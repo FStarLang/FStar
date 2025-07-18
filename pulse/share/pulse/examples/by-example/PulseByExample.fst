@@ -167,13 +167,12 @@ fn max (n:SZ.t) (a:larray nat (v n))
   let mut i : SZ.t = 0sz;
   let mut max : nat = 0;
   while ((!i < n))
-  invariant b. exists* (vi:SZ.t) (vmax:nat).
+  invariant exists* (vi:SZ.t) (vmax:nat).
     A.pts_to a #'p 's **
     R.pts_to i vi **
     R.pts_to max vmax **
     pure (vi <= n
-       /\ (forall (j:nat). j < v vi ==> Seq.index 's j <= vmax)
-       /\ b == (vi < n))
+       /\ (forall (j:nat). j < v vi ==> Seq.index 's j <= vmax))
   {
     let vi = !i;
     let v = a.(vi);

@@ -153,3 +153,15 @@ ensures pure (b == Seq.index s 0)
     false
   }
 }
+
+fn test2 (x:ref (ref int)) (#v:erased (ref int))
+requires x |-> v
+requires (Ghost.reveal v) |-> 'n
+returns n:int
+ensures x |-> v
+ensures (Ghost.reveal v) |-> 'n
+ensures pure (n == 'n)
+{
+  let mut v = !(!x);
+  !v
+}
