@@ -277,12 +277,17 @@ jobs:
     container: mtzguido/dev-base
     needs:
       - build-krml
+      - build-pulse
     steps:
       - name: Cleanup
         run: sudo find . -delete
       - run: echo "HOME=/home/user" >> $GITHUB_ENV
       - uses: mtzguido/set-opam-env@master
       - run: opam install -y hex re ctypes sha sexplib
+      - run: sudo apt-get update && sudo apt-get install -y libssl-dev
+
+      # Install rust toolchain
+      - uses: dtolnay/rust-toolchain@stable
 
       - uses: actions/download-artifact@v4
         with:
@@ -294,6 +299,14 @@ jobs:
         with:
           name: karamel
 
+      - uses: mtzguido/gci-download@master
+        with:
+          name: pulse
+
+      # everparse expects PULSE_HOME to be the root of the installation,
+      # not the root of the repo
+      - run: echo "PULSE_HOME=$PULSE_HOME/out" >> $GITHUB_ENV
+
       - name: Checkout everparse
         uses: actions/checkout@master
         with:
@@ -301,8 +314,10 @@ jobs:
           repository: project-everest/everparse
 
       - name: Build
-        run: |
-          make -C everparse -skj$(nproc)
+        # NOTE: override HACL_HOME to empty to skip some COSE tests
+        # that need HACL. Everparse CI can test that. Depending on
+        # HACL here would make the check-world workflow way too long.
+        run: make -C everparse -skj$(nproc) all HACL_HOME=
 
       - uses: mtzguido/gci-upload@master
         with:
@@ -320,6 +335,10 @@ jobs:
       - run: echo "HOME=/home/user" >> $GITHUB_ENV
       - uses: mtzguido/set-opam-env@master
       - run: opam install -y hex re ctypes sha sexplib
+      - run: sudo apt-get update && sudo apt-get install -y libssl-dev
+
+      # Install rust toolchain
+      - uses: dtolnay/rust-toolchain@stable
 
       - uses: actions/download-artifact@v4
         with:
@@ -333,10 +352,20 @@ jobs:
 
       - uses: mtzguido/gci-download@master
         with:
+          name: pulse
+      # everparse expects PULSE_HOME to be the root of the installation,
+      # not the root of the repo
+      - run: echo "PULSE_HOME=$PULSE_HOME/out" >> $GITHUB_ENV
+
+      - uses: mtzguido/gci-download@master
+        with:
           name: everparse
 
       - name: Test
-        run: make -C everparse -skj$(nproc) test
+        # NOTE: override HACL_HOME to empty to skip some COSE tests
+        # that need HACL. Everparse CI can test that. Depending on
+        # HACL here would make the check-world workflow way too long.
+        run: make -C everparse -skj$(nproc) test HACL_HOME=
 
   build-merkle-tree:
     runs-on: ubuntu-latest
