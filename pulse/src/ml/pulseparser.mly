@@ -246,8 +246,8 @@ pulseStmtNoSeq:
     { PulseSyntaxExtension_Sugar.mk_let_binding norw q p typOpt (Some init) }
   | s=pulseBindableTerm
     { s }
-  | WHILE LPAREN tm=pulseStmt RPAREN INVARIANT i=lident DOT v=pulseSLProp LBRACE body=pulseStmt RBRACE
-    { PulseSyntaxExtension_Sugar.mk_while tm i v body }
+  | WHILE LPAREN tm=pulseStmt RPAREN INVARIANT iopt=option (i=lident DOT{ i }) v=pulseSLProp LBRACE body=pulseStmt RBRACE
+    { PulseSyntaxExtension_Sugar.mk_while tm iopt v body }
   | INTRO p=pulseSLProp WITH ws=nonempty_list(indexingTerm)
     { PulseSyntaxExtension_Sugar.mk_intro p ws }
   | PARALLEL REQUIRES p1=pulseSLProp AND p2=pulseSLProp

@@ -47,6 +47,7 @@ let tm_match sc returns_ brs = Tm_Match {sc; returns_; brs}
 let tm_elim_exists p = Tm_ElimExists { p }
 let tm_intro_exists p witnesses = Tm_IntroExists { p; witnesses }
 let tm_while invariant condition condition_var body = Tm_While { invariant; condition; condition_var; body }
+let tm_nuwhile invariant condition body = Tm_NuWhile { invariant; condition; body }
 let tm_par pre1 body1 post1 pre2 body2 post2 = Tm_Par { pre1; body1; post1; pre2; body2; post2 }
 let tm_with_inv name body returns_inv = Tm_WithInv { name; body; returns_inv }
 let tm_add_inv names n r = tm_add_inv names n

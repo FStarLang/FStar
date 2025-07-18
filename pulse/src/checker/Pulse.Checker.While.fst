@@ -128,3 +128,73 @@ let check
                           (P.comp_to_string cond_comp)
                           (P.comp_to_string (comp_while_cond nm inv)))
 #pop-options
+
+let body_typing_subst_true #g #x #post (_:tot_typing (push_binding g x ppname_default tm_bool) (open_term post x) tm_slprop)
+: tot_typing g (open_term' post tm_true 0) tm_slprop = admit()
+let body_typing_subst_false #g #x #post (_:tot_typing (push_binding g x ppname_default tm_bool) (open_term post x) tm_slprop)
+: tot_typing g (open_term' post tm_false 0) tm_slprop = admit()
+let body_typing_ex #g #x #post (_:tot_typing (push_binding g x ppname_default tm_bool) (open_term post x) tm_slprop)
+: tot_typing g (tm_exists_sl u0 (as_binder tm_bool) post) tm_slprop = admit()
+let unit_typing g : universe_of g tm_unit u0 = admit()
+module RU = Pulse.RuntimeUtils
+let inv_typing_weakening (#g:env) (#inv:slprop) (inv_typing:tot_typing g inv tm_slprop) 
+: (x:FStar.Ghost.erased var {fresh_wrt x g (freevars inv)} & tot_typing (push_binding g x ppname_default tm_unit) (open_term inv x) tm_slprop)
+ = let x : (x:FStar.Ghost.erased var {fresh_wrt x g (freevars inv)}) = RU.magic () in
+   let tt : tot_typing (push_binding g x ppname_default tm_unit) (open_term inv x) tm_slprop = RU.magic () in
+   (|x, tt|)
+
+let inv_as_post_hint (#g:env) (#inv:slprop) (inv_typing:tot_typing g inv tm_slprop) 
+: T.Tac (ph:post_hint_for_env g { ph.post == inv /\ ph.ret_ty == tm_unit /\ ph.u == u0 /\ ph.effect_annot == EffectAnnotSTT })
+= let (| x, post_typing_src |) = inv_typing_weakening inv_typing in
+  { g; effect_annot=EffectAnnotSTT; effect_annot_typing=();
+    ret_ty=tm_unit; u=u0; ty_typing=unit_typing g; post=inv;
+    x; post_typing_src; post_typing=RU.magic() }
+
+
+#push-options "--fuel 0 --ifuel 1 --z3rlimit_factor 8"
+let check_nuwhile
+  (g:env)
+  (pre:term)
+  (pre_typing:tot_typing g pre tm_slprop)
+  (post_hint:post_hint_opt g)
+  (res_ppname:ppname)
+  (t:st_term{Tm_NuWhile? t.term})
+  (check:check_t)
+  : T.Tac (checker_result_t g pre post_hint) =
+
+  let g = push_context "nu while loop" t.range g in
+  let Tm_NuWhile { invariant=inv; condition=cond; body } = t.term in
+  let (| inv, inv_typing |) =
+    check_slprop (push_context "invariant" (term_range inv) g) inv
+  in
+
+  let (| post_cond, r_cond |) : (ph:post_hint_for_env g & checker_result_t g inv (Some ph)) =
+    let r_cond = check (push_context "check_while_condition" cond.range g) inv inv_typing None ppname_default cond in
+    let ph = Pulse.Checker.Base.infer_post r_cond in
+    (| ph, Pulse.Checker.Prover.prove_post_hint r_cond (Some ph) cond.range |)
+  in
+  if not (T.term_eq post_cond.ret_ty tm_bool)
+  || not (T.univ_eq post_cond.u u0)
+  then T.fail "Expected while condition to return a bool";
+  let inv_ph : post_hint_for_env g = inv_as_post_hint inv_typing in
+  let body_pre_open = post_cond.post in
+  let x = fresh g in
+  assume (post_cond.effect_annot == EffectAnnotSTT);
+  assume (g == post_cond.g);
+  assume (x == Ghost.reveal post_cond.x);
+  let body_open_pre_typing : tot_typing (push_binding g x ppname_default tm_bool) (open_term body_pre_open x) tm_slprop =
+    post_cond.post_typing_src
+  in
+  let body_pre_typing = body_typing_subst_true body_open_pre_typing in
+  let r_body = 
+    check 
+      (push_context "check_while_body" body.range g) 
+      _ body_pre_typing (Some inv_ph) ppname_default body
+  in
+  let (| cond, comp_cond, cond_typing |) = apply_checker_result_k r_cond ppname_default in
+  let (| body, comp_body, body_typing |) = apply_checker_result_k r_body ppname_default in
+  assert (comp_cond == (comp_nuwhile_cond inv body_pre_open));
+  assert (comp_body == comp_nuwhile_body inv body_pre_open);
+  let d = T_NuWhile g inv body_pre_open cond body inv_typing (body_typing_ex body_open_pre_typing) cond_typing body_typing in
+  prove_post_hint (try_frame_pre false pre_typing (match_comp_res_with_post_hint d post_hint) res_ppname) post_hint t.range
+#pop-options

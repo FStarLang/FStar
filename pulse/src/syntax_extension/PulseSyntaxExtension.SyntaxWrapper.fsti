@@ -98,6 +98,7 @@ val tm_totbind (x:binder) (e1:term) (e2:st_term) (_:range) : st_term
 val tm_let_mut (x:binder) (v:term) (k:st_term) (_:range) : st_term
 val tm_let_mut_array (x:binder) (v:term) (n:term) (k:st_term) (_:range) : st_term
 val tm_while (head:st_term) (invariant: (ident & slprop)) (body:st_term) (_:range) : st_term 
+val tm_nuwhile (head:st_term) (invariant: slprop) (body:st_term) (_:range) : st_term 
 val tm_if (head:term) (returns_annot:option slprop) (then_ else_:st_term) (_:range) : st_term
 val tm_match (head:term) (returns_:option slprop) (brs:list branch) (_:range) : st_term
 val tm_intro_exists (vp:slprop) (witnesses:list term) (_:range) : st_term

@@ -337,6 +337,9 @@ let rec check
         | Tm_While _ ->
           While.check g pre pre_typing post_hint res_ppname t check
 
+        | Tm_NuWhile .. ->
+          While.check_nuwhile g pre pre_typing post_hint res_ppname t check
+          
         | Tm_Match {sc;returns_=post_match;brs} ->
           // TODO : dedup
           let post =

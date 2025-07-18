@@ -31,3 +31,13 @@ val check
   (t:st_term{Tm_While? t.term})
   (check:check_t)
   : T.Tac (checker_result_t g pre post_hint)
+
+val check_nuwhile
+  (g:env)
+  (pre:term)
+  (pre_typing:tot_typing g pre tm_slprop)
+  (post_hint:post_hint_opt g)
+  (res_ppname:ppname)
+  (t:st_term{Tm_NuWhile? t.term})
+  (check:check_t)
+  : T.Tac (checker_result_t g pre post_hint)

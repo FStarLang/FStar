@@ -179,6 +179,11 @@ let rec freevars_close_st_term' (t:st_term) (x:var) (i:index)
       freevars_close_st_term' condition x i;
       freevars_close_st_term' body x i
 
+    | Tm_NuWhile { invariant; condition; body } ->
+      freevars_close_term' invariant x i;
+      freevars_close_st_term' condition x i;
+      freevars_close_st_term' body x i
+
     | Tm_Par { pre1; body1; post1; pre2; body2; post2 } ->
       freevars_close_term' pre1 x i;
       freevars_close_st_term' body1 x i;
@@ -656,6 +661,18 @@ fun d cb ->
     assert (freevars tm_false `Set.equal` Set.empty);
     freevars_open_term inv tm_false 0;
     assert (freevars (open_term' inv tm_false 0) `Set.subset` freevars inv)
+
+let st_typing_freevars_nuwhile : st_typing_freevars_case T_NuWhile? =
+fun d cb ->
+  match d with
+  | T_NuWhile _ inv post _ _ inv_typing post_typing cond_typing body_typing ->
+    tot_or_ghost_typing_freevars inv_typing;
+    tot_or_ghost_typing_freevars post_typing;
+    cb cond_typing;
+    cb body_typing;
+    assert (freevars tm_false `Set.equal` Set.empty);
+    freevars_open_term inv tm_false 0;
+    assert (freevars (open_term' inv tm_false 0) `Set.subset` freevars inv)
 #pop-options
 
 #push-options "--z3rlimit 40 --fuel 3 --ifuel 2"
@@ -770,6 +787,8 @@ let rec st_typing_freevars
     st_equiv_freevars deq
   | T_While .. ->
     st_typing_freevars_while d st_typing_freevars
+  | T_NuWhile .. ->
+    st_typing_freevars_nuwhile d st_typing_freevars
   | T_Par .. ->
     st_typing_freevars_par d st_typing_freevars
   | T_Rewrite .. ->

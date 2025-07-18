@@ -233,6 +233,12 @@ let rec eq_st_term (t1 t2:st_term)
       eq_st_term cond1 cond2 &&
       eq_st_term body1 body2
 
+    | Tm_NuWhile { invariant=inv1; condition=cond1; body=body1 },
+      Tm_NuWhile { invariant=inv2; condition=cond2; body=body2 } ->
+      eq_tm inv1 inv2 &&
+      eq_st_term cond1 cond2 &&
+      eq_st_term body1 body2
+
     | Tm_Par {pre1=preL1; body1=eL1; post1=postL1; pre2=preR1; body2=eR1; post2=postR1 },
       Tm_Par {pre1=preL2; body1=eL2; post1=postL2; pre2=preR2; body2=eR2; post2=postR2 } ->
       eq_tm preL1 preL2 &&

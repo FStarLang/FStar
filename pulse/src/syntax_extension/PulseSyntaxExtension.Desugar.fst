@@ -585,7 +585,7 @@ let rec desugar_stmt' (env:env_t) (s:Sugar.stmt)
       let! branches = branches |> mapM (desugar_branch env) in
       return (SW.tm_match head returns_annot branches s.range)
 
-    | While { guard; id; invariant; body } ->
+    | While { guard; id=Some id; invariant; body } ->
       let! guard = desugar_stmt env guard in
       let! invariant = 
         let env, bv = push_bv env id in
@@ -594,6 +594,12 @@ let rec desugar_stmt' (env:env_t) (s:Sugar.stmt)
       in
       let! body = desugar_stmt env body in
       return (SW.tm_while guard (id, invariant) body s.range)
+
+    | While { guard; id=None; invariant; body } ->
+      let! guard = desugar_stmt env guard in
+      let! invariant = desugar_slprop env invariant in
+      let! body = desugar_stmt env body in
+      return (SW.tm_nuwhile guard invariant body s.range)
 
     | Introduce { slprop; witnesses } -> (
       let! vp = desugar_slprop env slprop in

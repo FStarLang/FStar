@@ -395,6 +395,34 @@ let comp_while (x:ppname) (inv:term)
            post=open_term' inv tm_false 0
          }
 
+let comp_nuwhile_cond (inv:term) (post_cond:term)
+  : comp
+  = C_ST {
+           u=u0;
+           res=tm_bool;
+           pre=inv;
+           post=post_cond
+         }
+
+let comp_nuwhile_body (inv:term) (post_cond:term)
+  : comp
+  = C_ST {
+           u=u0;
+           res=tm_unit;
+           pre=open_term' post_cond tm_true 0;
+           post=inv
+         }
+
+let comp_nuwhile (inv:term) (post_cond:term)
+  : comp
+  = C_ST {
+           u=u0;
+           res=tm_unit;
+           pre=inv;
+           post=open_term' post_cond tm_false 0;
+         }
+
+
 let mk_tuple2 (u1 u2:universe) (t1 t2:term) : term =
   tm_pureapp (tm_pureapp (tm_uinst (as_fv tuple2_lid) [u1; u2])
                          None
@@ -977,6 +1005,21 @@ type st_typing : env -> st_term -> comp -> Type =
                                               body;
                                               condition_var = ppname_default } ))
                   (comp_while ppname_default inv)
+
+  | T_NuWhile:
+      g:env ->
+      inv:term ->
+      post_cond:term ->
+      cond:st_term ->
+      body:st_term ->
+      tot_typing g inv tm_slprop ->
+      tot_typing g (tm_exists_sl u0 (as_binder tm_bool) post_cond) tm_slprop ->
+      st_typing g cond (comp_nuwhile_cond inv post_cond) ->
+      st_typing g body (comp_nuwhile_body inv post_cond) ->
+      st_typing g (wtag (Some STT) (Tm_NuWhile { invariant = inv;
+                                               condition = cond;
+                                               body }))
+                  (comp_nuwhile inv post_cond)
 
   | T_Par:
       g:env ->

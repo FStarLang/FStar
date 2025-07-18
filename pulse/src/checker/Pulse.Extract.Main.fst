@@ -210,7 +210,12 @@ let rec simplify_st_term (g:env) (e:st_term) : T.Tac st_term =
     let condition = simplify_st_term g condition in
     let body = simplify_st_term g body in
     { e with term = Tm_While { invariant; condition; condition_var; body } }
-  
+
+  | Tm_NuWhile { invariant; condition; body } ->
+    let condition = simplify_st_term g condition in
+    let body = simplify_st_term g body in
+    { e with term = Tm_NuWhile { invariant; condition; body } }
+
   | Tm_Par { pre1; body1; post1; pre2; body2; post2 } ->
     let body1 = simplify_st_term g body1 in
     let body2 = simplify_st_term g body2 in
@@ -299,6 +304,11 @@ let rec erase_ghost_subterms (g:env) (p:st_term) : T.Tac st_term =
       let condition = erase_ghost_subterms g condition in
       let body = erase_ghost_subterms g body in
       ret (Tm_While { invariant; condition; condition_var; body })
+
+    | Tm_NuWhile { invariant; condition; body } ->
+      let condition = erase_ghost_subterms g condition in
+      let body = erase_ghost_subterms g body in
+      ret (Tm_NuWhile { invariant; condition; body })
 
     | Tm_Par { pre1; body1; post1; pre2; body2; post2 } ->
       let body1 = erase_ghost_subterms g body1 in
@@ -449,7 +459,8 @@ let rec extract_dv g (p:st_term) : T.Tac R.term =
     | Tm_Match { sc; brs } ->
       R.pack_ln (R.Tv_Match sc None (T.map (extract_dv_branch g) brs))
 
-    | Tm_While { condition; body } ->
+    | Tm_While { condition; body } 
+    | Tm_NuWhile { condition; body } ->
       let condition = extract_dv g condition in
       let body = extract_dv g body in
       ECL.mk_meta_monadic

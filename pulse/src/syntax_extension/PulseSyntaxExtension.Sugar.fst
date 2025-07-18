@@ -152,7 +152,7 @@ type stmt' =
 
   | While {
       guard: stmt;
-      id: ident;
+      id: option ident;
       invariant: slprop;
       body: stmt;
     }
@@ -442,7 +442,7 @@ and eq_stmt' (s1 s2:stmt') =
     forall2 (fun (norw1, p1, s1) (norw2, p2, s2) -> norw1 = norw2 && AD.eq_pattern p1 p2 && eq_stmt s1 s2) b1 b2
   | While { guard=g1; id=id1; invariant=i1; body=b1 }, While { guard=g2; id=id2; invariant=i2; body=b2 } ->
     eq_stmt g1 g2 &&
-    eq_ident id1 id2 &&
+    eq_opt eq_ident id1 id2 &&
     eq_slprop i1 i2 &&
     eq_stmt b1 b2
   | Introduce { slprop=s1; witnesses=w1 }, Introduce { slprop=s2; witnesses=w2 } ->
