@@ -16,9 +16,10 @@
    limitations under the License.
 *)
 module FStarC.TypeChecker.TcInductive
+
+open FStarC
 open FStarC.Effect
 open FStarC.List
-open FStarC
 open FStarC.Errors
 open FStarC.TypeChecker
 open FStarC.TypeChecker.Env
@@ -1095,7 +1096,7 @@ let mk_discriminator_and_indexed_projectors iquals                   (* Qualifie
                     then U.exp_true_bool   // If we have at most one constructor
                     else
                         let arg_pats = all_params |> List.mapi (fun j ({binder_bv=x;binder_qual=imp}) ->
-                            let b = S.is_bqual_implicit imp in
+                            let b = S.is_bqual_implicit_or_meta imp in
                             if b && j < ntps
                             then pos (Pat_dot_term None), b
                             else pos (Pat_var (S.gen_bv (string_of_id x.ppname) None tun)), b)
@@ -1195,7 +1196,7 @@ let mk_discriminator_and_indexed_projectors iquals                   (* Qualifie
           else
               let projection = S.gen_bv (string_of_id x.ppname) None tun in
               let arg_pats = all_params |> List.mapi (fun j ({binder_bv=x;binder_qual=imp}) ->
-                  let b = S.is_bqual_implicit imp in
+                  let b = S.is_bqual_implicit_or_meta imp in
                   if i+ntps=j  //this is the one to project
                   then pos (Pat_var projection), b
                   else if b && j < ntps
