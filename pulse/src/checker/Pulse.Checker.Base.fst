@@ -991,7 +991,7 @@ let hoist_stateful_apps
     | _ ->
       let tt' = rebuild args in
       let _, binders', tt' = maybe_hoist_top (hoist_top_level && Inl? tt) g tt' in 
-      let binders = binders' @ binders in
+      let binders = binders @ binders' in
       match binders with
       | [] -> (
         match tt, tt' with

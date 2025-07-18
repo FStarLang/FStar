@@ -98,3 +98,58 @@ ensures pure (v == 0)
   let mut x = [| array_initializer(); pure_length_inline2() |];
   x.(16sz);
 }
+
+
+fn hoist_nested_stateful_apps_let_mut
+(arr : array bool)
+(i : ref SizeT.t)
+(#s:erased _ { Seq.length s > 0 })
+requires arr |-> s
+requires i |-> 0sz
+returns b:bool
+ensures arr |-> s
+ensures i |-> 0sz
+ensures pure (b == Seq.index s 0)
+{
+  pts_to_len arr;
+  let mut x = arr.(!i);
+  !x;
+}
+
+fn hoist_nested_stateful_apps_let_mut_array
+(arr : array bool)
+(i : ref SizeT.t)
+(#s:erased _ { Seq.length s > 0 })
+requires arr |-> s
+requires i |-> 0sz
+returns b:bool
+ensures arr |-> s
+ensures i |-> 0sz
+ensures pure (b == Seq.index s 0)
+{
+  pts_to_len arr;
+  let mut x = [| arr.(!i); 17sz |];
+  (x.(0sz));
+}
+
+fn hoist_nested_stateful_apps_if
+(arr : array bool)
+(i : ref SizeT.t)
+(#s:erased _ { Seq.length s > 0 })
+requires arr |-> s
+requires i |-> 0sz
+returns b:bool
+ensures arr |-> s
+ensures i |-> 0sz
+ensures pure (b == Seq.index s 0)
+{
+  pts_to_len arr;
+  if (arr.(!i))
+  {
+    true;
+  }
+  else
+  { 
+    false
+  }
+}

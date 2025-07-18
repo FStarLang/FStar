@@ -47,6 +47,10 @@ instance tac_showable_list (a:Type) (tac_showable_a : tac_showable a) : tac_show
   show = string_of_list show;
 }
 
+instance tac_showable_either (a b:Type) (sa : tac_showable a) (sb : tac_showable b) : tac_showable (either a b) = {
+  show = function | Inl x -> Printf.sprintf "Inl %s" (show x)  | Inr x -> Printf.sprintf "Inr %s" (show x)
+}
+
 instance tac_showable_ctag : tac_showable ctag = {
   show = (fun t -> ctag_to_string t);
 }
