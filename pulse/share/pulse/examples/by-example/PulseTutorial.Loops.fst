@@ -48,6 +48,31 @@ ensures  R.pts_to x 0
 }
 //end count_down$
 
+fn count_down2 (x:ref nat) (#v:erased nat)
+requires R.pts_to x v
+ensures  R.pts_to x 0
+{
+    let mut keep_going = true;
+    let mut decr : nat = 1;
+    while (
+        !keep_going
+    )
+    invariant
+      exists* (b:bool) (v:nat).
+        pts_to keep_going b **
+        pts_to x v **
+        pure (not b ==> v == 0)
+    {   let n = !x;
+        if (n = 0) 
+        {
+            keep_going := false;
+        } 
+        else
+        {
+            x := n - !decr;
+        }
+    }
+}
 
 //count_down3$
 fn count_down3 (x:ref nat)
