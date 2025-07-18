@@ -313,7 +313,9 @@ let read_interactive_query (st:repl_state) : query & repl_state =
     match st.repl_buffered_input_queries with
     | [] -> (
       match Util.read_line st.repl_stdin with
-      | None -> exit 0
+      | None ->
+        Util.kill_all ();
+        exit 0
       | Some line -> parse_interactive_query line, st
     )
     | q :: qs ->

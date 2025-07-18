@@ -127,6 +127,7 @@ let set_error_trap () =
   let h' s =
     let open FStarC.Pprint in
     let open FStarC.Errors.Msg in
+    Util.kill_all ();
     Debug.enable (); (* make sure diag is printed *)
     Options.set_option "error_contexts" (Options.Bool true);
     (* ^ Print context. Stack trace will be added since we have trace_error. *)
