@@ -102,12 +102,18 @@ let rec elaborate_pat env p = //Adds missing implicit patterns to constructor pa
                                          (show p))
               end
 
-            | (_, Some (Implicit _)) when p_imp ->
+            | (_, Some (Implicit _))
+            | (_, Some (Meta _)) when p_imp ->
                 (p, true)::aux formals' pats'
 
             | (_, Some (Implicit inaccessible)) ->
                 let a = Syntax.new_bv (Some p.p) tun in
                 let p = maybe_dot inaccessible a (range_of_lid fv.fv_name.v) in
+                (p, true)::aux formals' pats
+
+            | (_, Some (Meta _)) ->
+                let a = Syntax.new_bv (Some p.p) tun in
+                let p = maybe_dot false a (range_of_lid fv.fv_name.v) in
                 (p, true)::aux formals' pats
 
             | (_, imp) ->

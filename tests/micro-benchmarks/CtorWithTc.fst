@@ -21,3 +21,18 @@ let p2 (x:pack) : deq (p1 x) =
 let x = Mk 5
 
 let y = Mk?.dict x
+
+[@@expect_failure [175]] // branch is missing implicit
+let p2' (x:pack) : deq (p1 x) =
+  match x with
+  | Mk #_ d _ -> d
+
+let p3 (x:pack) : p1 x =
+  match x with
+  | Mk #_ #_ e -> e
+
+let p3' (x:pack) : p1 x =
+  match x with
+  | Mk e -> e
+
+let _ = assert_norm (p3' x == 5)
