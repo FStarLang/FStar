@@ -313,13 +313,14 @@ let rec check
         | Tm_If { b; then_=e1; else_=e2; post=post_if } -> (
           let post : post_hint_opt g =
             match post_if, post_hint with
-            | None, Some p ->
+            | None, PostHint p ->
               post_hint
-            | Some p, None ->
+            | Some p, NoHint 
+            | Some p, TypeHint _ ->
               //We set the computation type to be STT in this case
               //We might allow the post_if annotation to also set the effect tag
-              Some <| Checker.Base.intro_post_hint g EffectAnnotSTT None p
-            | Some p, Some q ->
+              PostHint <| Checker.Base.intro_post_hint g EffectAnnotSTT None p
+            | Some p, PostHint q ->
               Pulse.Typing.Env.fail g (Some t.range) 
                 (Printf.sprintf 
                     "Multiple annotated postconditions---remove one of them.\n\
@@ -328,7 +329,7 @@ let rec check
                     (P.term_to_string (q <: post_hint_t).post)
                     (P.term_to_string p))
             | _, _ ->
-              None
+              NoHint
           in
           let (| x, t, pre', g1, k |) : checker_result_t g pre post =
             If.check g pre pre_typing post res_ppname b e1 e2 check in
@@ -339,16 +340,17 @@ let rec check
 
         | Tm_NuWhile .. ->
           While.check_nuwhile g pre pre_typing post_hint res_ppname t check
-          
+
         | Tm_Match {sc;returns_=post_match;brs} ->
           // TODO : dedup
           let post =
             match post_match, post_hint with
-            | None, Some p -> p
-            | Some p, None ->
+            | None, PostHint p -> p
+            | Some p, NoHint
+            | Some p, TypeHint _ ->
               //See same remark in the If case
               Checker.Base.intro_post_hint g EffectAnnotSTT None p
-            | Some p, Some q ->
+            | Some p, PostHint q ->
               Pulse.Typing.Env.fail g (Some t.range)
                 (Printf.sprintf
                   "Multiple annotated postconditions---remove one of them.\n\

@@ -83,7 +83,7 @@ let check
       (push_context "check_while_condition" cond.range g)
       (comp_pre (comp_while_cond nm inv))
       cond_pre_typing
-      (Some while_cond_hint)
+      (PostHint while_cond_hint)
       ppname
       cond in
     apply_checker_result_k r ppname
@@ -107,7 +107,7 @@ let check
         (push_context "check_while_body" body.range g)
         (comp_pre (comp_while_body nm inv))
         body_pre_typing
-        (Some while_post_hint)
+        (PostHint while_post_hint)
         ppname
         body in
       apply_checker_result_k r ppname in
@@ -172,10 +172,10 @@ let check_nuwhile
   let (| g1, nts, labs, remaining, k |) = Pulse.Checker.Prover.prove false pre_typing (empty_env g) inv_typing in
   let inv = tm_star (Pulse.Checker.Prover.Substs.nt_subst_term inv nts) remaining in
   let inv_typing : tot_typing g1 inv tm_slprop = RU.magic () in
-  let (| post_cond, r_cond |) : (ph:post_hint_for_env g1 & checker_result_t g1 inv (Some ph)) =
-    let r_cond = check (push_context "check_while_condition" cond.range g1) inv inv_typing None ppname_default cond in
+  let (| post_cond, r_cond |) : (ph:post_hint_for_env g1 & checker_result_t g1 inv (PostHint ph)) =
+    let r_cond = check (push_context "check_while_condition" cond.range g1) inv inv_typing (TypeHint tm_bool) ppname_default cond in
     let ph = Pulse.Checker.Base.infer_post r_cond in
-    (| ph, Pulse.Checker.Prover.prove_post_hint r_cond (Some ph) cond.range |)
+    (| ph, Pulse.Checker.Prover.prove_post_hint r_cond (PostHint ph) cond.range |)
   in
   if not (T.term_eq post_cond.ret_ty tm_bool)
   || not (T.univ_eq post_cond.u u0)
@@ -191,14 +191,14 @@ let check_nuwhile
   let r_body = 
     check 
       (push_context "check_while_body" body.range g1) 
-      _ body_pre_typing (Some inv_ph) ppname_default body
+      _ body_pre_typing (PostHint inv_ph) ppname_default body
   in
   let (| cond, comp_cond, cond_typing |) = apply_checker_result_k r_cond ppname_default in
   let (| body, comp_body, body_typing |) = apply_checker_result_k r_body ppname_default in
   assert (comp_cond == (comp_nuwhile_cond inv body_pre_open));
   assert (comp_body == comp_nuwhile_body inv body_pre_open);
   let d = T_NuWhile g1 inv body_pre_open cond body inv_typing (body_typing_ex body_open_pre_typing) cond_typing body_typing in
-  let d_st : Pulse.Typing.Combinators.st_typing_in_ctxt g1 inv None =  (| _, _, d |) in
-  let d_st : Pulse.Typing.Combinators.st_typing_in_ctxt g pre None = k None d_st in
+  let d_st : Pulse.Typing.Combinators.st_typing_in_ctxt g1 inv _ =  (| _, _, d |) in
+  let d_st : Pulse.Typing.Combinators.st_typing_in_ctxt g pre _ = k _ d_st in
   prove_post_hint (checker_result_for_st_typing d_st ppname_default) post_hint t.range
 #pop-options

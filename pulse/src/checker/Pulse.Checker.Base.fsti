@@ -69,7 +69,7 @@ val comp_typing_from_post_hint
     (#g: env)
     (c: comp_st)
     (pre_typing: tot_typing g (comp_pre c) tm_slprop)
-    (p:post_hint_for_env g { comp_post_matches_hint c (Some p) })
+    (p:post_hint_for_env g { comp_post_matches_hint c (PostHint p) })
 : T.Tac (comp_typing_u g c)
 
 val extend_post_hint (g:env) (p:post_hint_for_env g)
@@ -147,11 +147,11 @@ let checker_res_matches_post_hint
   (x:var) (t:term) (ctxt':slprop) =
 
   match post_hint with
-  | None -> True
-  | Some post_hint ->
+  | PostHint post_hint ->
     t == post_hint.ret_ty /\
     ctxt' == open_term post_hint.post x
-
+  | _ -> True
+  
 let checker_result_inv (g:env) (post_hint:post_hint_opt g)
   (x:var)
   (g1:env)
@@ -193,9 +193,9 @@ val match_comp_res_with_post_hint (#g:env) (#t:st_term) (#c:comp_st)
            st_typing g t' c')
 
 val apply_checker_result_k (#g:env) (#ctxt:slprop) (#post_hint:post_hint_for_env g)
-  (r:checker_result_t g ctxt (Some post_hint))
+  (r:checker_result_t g ctxt (PostHint post_hint))
   (res_ppname:ppname)
-  : T.Tac (st_typing_in_ctxt g ctxt (Some post_hint))
+  : T.Tac (st_typing_in_ctxt g ctxt (PostHint post_hint))
 
 val checker_result_for_st_typing (#g:env) (#ctxt:slprop) (#post_hint:post_hint_opt g)
   (d:st_typing_in_ctxt g ctxt post_hint)
@@ -247,8 +247,9 @@ val hoist_stateful_apps
 : T.Tac (option st_term)
 
 let composable
-  (#g:env) (#g':env { g' `env_extends` g }) (#ctxt #ctxt':slprop) (#post_hint:post_hint_opt g)
-  (r1:checker_result_t g ctxt None)
+  (#g:env) (#g':env { g' `env_extends` g }) (#ctxt #ctxt':slprop) 
+  (#ph1:post_hint_opt g { not (PostHint? ph1) }) (#post_hint:post_hint_opt g)
+  (r1:checker_result_t g ctxt ph1)
   (r2:checker_result_t g' ctxt' post_hint) =
   let (| x1, g1, t1, ctxt1, k1 |) = r1 in
   g1 == g' /\
@@ -257,9 +258,9 @@ let composable
  
 val compose_checker_result_t 
   (#g:env) (#g':env { g' `env_extends` g }) (#ctxt #ctxt':slprop) (#post_hint:post_hint_opt g)
-  (r1:checker_result_t g ctxt None)
+  (r1:checker_result_t g ctxt NoHint)
   (r2:checker_result_t g' ctxt' post_hint { composable r1 r2 })
 : T.Tac (checker_result_t g ctxt post_hint)
 
-val infer_post #g #ctxt (r:checker_result_t g ctxt None)
+val infer_post #g #ctxt (r:checker_result_t g ctxt NoHint)
 : T.Tac (p:post_hint_for_env g {p.g == g /\ p.effect_annot==EffectAnnotSTT})

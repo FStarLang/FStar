@@ -264,8 +264,8 @@ let check0
   //
   let post_hint : post_hint_t =
     match returns_inv, post_hint with
-    | None, Some post -> post
-    | Some (b, post, opens), None ->
+    | None, PostHint post -> post
+    | Some (b, post, opens), _ ->
       //
       // The with_invariants block is annotated with an ensures
       // For something like inv i p, the ensures only has p in it
@@ -304,7 +304,7 @@ let check0
             post_typing_src = post'_typing;
             post_typing = post_typing_as_abstraction #_ #x #_ #post'_closed post'_typing }
       end
-    | Some (_, post, _), Some q ->
+    | Some (_, post, _), PostHint q ->
       fail_doc g (Some t.range) 
         [ doc_of_string "Fatal: multiple annotated postconditions on with_invariant";
           prefix 4 1 (text "First postcondition:") (pp post);
@@ -400,7 +400,7 @@ let check0
 
   let (| body, c_body, body_typing |) =
     let ppname = mk_ppname_no_range "with_inv_body" in
-    let r = check g pre_body pre_body_typing (Some post_hint_body) ppname body in
+    let r = check g pre_body pre_body_typing (PostHint post_hint_body) ppname body in
     apply_checker_result_k r ppname
   in
 

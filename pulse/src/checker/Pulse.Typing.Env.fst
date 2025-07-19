@@ -42,7 +42,7 @@ type env = {
   bs : list (var & typ);
   names : list ppname;
   m : m:bmap { related bs m /\ L.length names == L.length bs };
-  ctxt: Pulse.RuntimeUtils.context
+  ctxt: Pulse.RuntimeUtils.context;
 }
 
 let fstar_env g = RU.env_set_context g.f g.ctxt

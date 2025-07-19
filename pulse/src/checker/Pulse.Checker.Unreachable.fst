@@ -35,10 +35,10 @@ let check
 : T.Tac (checker_result_t g pre post_hint)
 = let rng = t.range in
   match post_hint with
-  | None ->
+  | NoHint | TypeHint _ ->
     fail g (Some t.range)
       "Expected a postcondition to be annotated when unreachable is used"
-  | Some post ->
+  | PostHint post ->
     let ff = (wr (`False) rng) in
     let (|eff, ff_typing |) = Pulse.Checker.Pure.core_check_term_at_type g ff tm_prop in
     if eff <> T.E_Total then T.fail "Impossible: False has effect Ghost"

@@ -125,12 +125,13 @@ irreducible
 let extend_post_hint_opt_g (g:env) (post_hint:post_hint_opt g) (g1:env { g1 `env_extends` g })
   : p:post_hint_opt g1 { p == post_hint } =
   match post_hint with
-  | None -> None
-  | Some post_hint ->
+  | PostHint post_hint ->
     assert (g `env_extends` post_hint.g);
     assert (g1 `env_extends` g);
     assert (g1 `env_extends` post_hint.g);
-    Some post_hint
+    PostHint post_hint
+  | p -> p
+  
 
 let ss_extends (ss1 ss2:PS.ss_t) =
   Set.subset (PS.dom ss2) (PS.dom ss1) /\

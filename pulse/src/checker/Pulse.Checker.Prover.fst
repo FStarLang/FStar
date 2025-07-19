@@ -559,7 +559,7 @@ let try_frame_pre_uvs
   (d:(t:st_term & c:comp_st & st_typing (push_env g uvs) t c))
   (res_ppname:ppname)
 
-  : T.Tac (checker_result_t g ctxt None) =
+  : T.Tac (checker_result_t g ctxt NoHint) =
 
   let (| t, c, d |) = d in
 
@@ -636,7 +636,7 @@ let try_frame_pre_uvs
   let ctxt' : (ctxt':slprop & tot_typing g2 ctxt' tm_slprop) = (| ctxt', RU.magic #(tot_typing _ _ _) () |) in
   let k : continuation_elaborator g ctxt g2 (dfst ctxt') = k in
   assert_spinoff (lookup g2 x == Some ty);
-  assert_spinoff (checker_result_inv g None x g2 t ctxt');
+  assert_spinoff (checker_result_inv g NoHint x g2 t ctxt');
   (| x, g2, t, ctxt', k |)
 #pop-options
 
@@ -646,14 +646,20 @@ let try_frame_pre
   (d:(t:st_term & c:comp_st & st_typing g t c))
   (res_ppname:ppname)
 
-  : T.Tac (checker_result_t g ctxt None) =
+  : T.Tac (checker_result_t g ctxt NoHint) =
 
   let uvs = mk_env (fstar_env g) in
   assert (equal g (push_env g uvs));
   try_frame_pre_uvs allow_ambiguous ctxt_typing uvs d res_ppname
 
+let retype_checker_result (#g:env) (#ctxt:slprop) (#ph:post_hint_opt g) (ph':post_hint_opt g { not (PostHint? ph')})
+  (r:checker_result_t g ctxt ph)
+: checker_result_t g ctxt ph'
+= let (| x, g1, t, ctxt, k |) = r in
+  (| x, g1, t, ctxt, k |)
+
 let prove_post_hint (#g:env) (#ctxt:slprop)
-  (r:checker_result_t g ctxt None)
+  (r:checker_result_t g ctxt NoHint)
   (post_hint:post_hint_opt g)
   (rng:range)
   
@@ -662,8 +668,9 @@ let prove_post_hint (#g:env) (#ctxt:slprop)
   let g = push_context g "prove_post_hint" rng in
 
   match post_hint with
-  | None -> r
-  | Some post_hint ->
+  | NoHint -> r
+  | TypeHint _ -> retype_checker_result post_hint r
+  | PostHint post_hint ->
     let (| x, g2, (| u_ty, ty, ty_typing |), (| ctxt', ctxt'_typing |), k |) = r in
 
     let ppname = mk_ppname_no_range "_posth" in

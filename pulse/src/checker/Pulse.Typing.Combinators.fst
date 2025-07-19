@@ -278,7 +278,7 @@ let mk_bind_ghost_ghost : bind_t C_STGhost? C_STGhost? =
     let bc = Bind_comp g x c1 c2 res_typing x post_typing in
     (| _, _, T_Bind _ e1 e2 _ _ b _ _ d_e1 d_c1res d_e2 bc |)
   end
-  else if (Some? post_hint)
+  else if (PostHint? post_hint)
   then (
     let pv = check_prop_validity _ _ (tm_inames_subset_typing _ _ _) in
     let d_e1 = T_Sub _ _ _ _ d_e1 (STS_GhostInvs _ sc1 inames1 inames2 pv) in
@@ -312,7 +312,7 @@ let mk_bind_atomic_atomic
           let bc = Bind_comp g x c1 c2 res_typing x post_typing in
           (| _, _, T_Bind _ e1 e2 _ _ b _ _ d_e1 d_c1res d_e2 bc |)
         end
-        else if (Some? post_hint)
+        else if (PostHint? post_hint)
         then (
           let pv = check_prop_validity _ _ (tm_inames_subset_typing _ _ _) in
           let d_e1 = T_Sub _ _ _ _ d_e1 (STS_AtomicInvs _ sc1 inames1 inames2 obs1 obs1 pv) in
@@ -388,7 +388,7 @@ let rec mk_bind (g:env)
     then (
       mk_bind_atomic_atomic g pre e1 e2 c1 c2 px d_e1 d_c1res d_e2 res_typing post_typing post_hint
     ) 
-    else if (Some? post_hint)
+    else if (PostHint? post_hint)
     then fail_bias "atomic"
     else (
       let d_e1 = T_Lift _ _ _ _ d_e1 (Lift_STAtomic_ST _ c1) in
@@ -400,7 +400,7 @@ let rec mk_bind (g:env)
     mk_bind g pre e1 e2 _ c2 px d_e1 d_c1res d_e2 res_typing post_typing post_hint
 
   | C_ST _, C_STAtomic inames _ _ ->
-    if (Some? post_hint)
+    if (PostHint? post_hint)
     then fail_bias "atomic"
     else (
       let d_e2  = T_Lift _ _ _ _ d_e2 (Lift_STAtomic_ST _ c2) in
@@ -414,8 +414,9 @@ let rec mk_bind (g:env)
       mk_bind g pre e1 e2 _ c2 px d_e1 d_c1res d_e2 res_typing post_typing post_hint
     | None ->
       match post_hint with
-      | None
-      | Some { effect_annot = EffectAnnotAtomicOrGhost _ } ->
+      | TypeHint _
+      | NoHint
+      | PostHint { effect_annot = EffectAnnotAtomicOrGhost _ } ->
         let d_e2 = T_Lift _ _ _ _ d_e2 (Lift_Neutral_Ghost _ c2) in
         let (| t, c, d |) = mk_bind g pre e1 e2 _ _ px d_e1 d_c1res d_e2 res_typing post_typing post_hint in
         (| t, c, d |)
@@ -424,7 +425,9 @@ let rec mk_bind (g:env)
 
   | C_STAtomic _ Neutral _, C_STGhost _ _ -> (
     match post_hint with
-    | Some { effect_annot = EffectAnnotGhost _ } ->
+    | TypeHint _
+    | NoHint
+    | PostHint { effect_annot = EffectAnnotGhost _ } ->
       let d_e1 = T_Lift _ _ _ _ d_e1 (Lift_Neutral_Ghost _ c1) in
       mk_bind g pre e1 e2 _ c2 px d_e1 d_c1res d_e2 res_typing post_typing post_hint
 
@@ -445,7 +448,7 @@ let rec mk_bind (g:env)
 
   | C_ST _, C_STGhost _ _
   | C_STAtomic _ _ _, C_STGhost _ _ ->
-    if (Some? post_hint)
+    if (PostHint? post_hint)
     then fail_bias "ghost"
     else (
       let d_e2 = lift_ghost_atomic d_e2 in
@@ -457,7 +460,7 @@ let rec mk_bind (g:env)
 let bind_res_and_post_typing g c2 x post_hint 
   = let s2 = st_comp_of_comp c2 in
     match post_hint with
-    | None -> 
+    | NoHint | TypeHint _ -> 
       (* We're inferring a post, so these checks are unavoidable *)
       (* since we need to type the result in a smaller env g *)          
       let (| u, res_typing |) = check_universe g s2.res in 
@@ -472,7 +475,7 @@ let bind_res_and_post_typing g c2 x post_hint
           check_slprop_with_core (push_binding g y ppname_default s2.res) s2_post_opened in
         res_typing, post_typing
       )
-    | Some post -> 
+    | PostHint post -> 
       CU.debug g "pulse.main" (fun _ -> "bind_res_and_post_typing (with post_hint)\n");
       let pr = post_hint_typing g post x in
       pr.ty_typing, pr.post_typing
@@ -520,7 +523,7 @@ let apply_frame (#g:env)
 let comp_for_post_hint #g (#pre:slprop) (pre_typing:tot_typing g pre tm_slprop)
   (post:post_hint_t { g `env_extends` post.g })
   (x:var { lookup g x == None })
-  : T.Tac (c:comp_st { comp_pre c == pre /\ comp_post_matches_hint c (Some post) } &
+  : T.Tac (c:comp_st { comp_pre c == pre /\ comp_post_matches_hint c (PostHint post) } &
            comp_typing g c (universe_of_comp c)) =
 
   if x `Set.mem` freevars post.post

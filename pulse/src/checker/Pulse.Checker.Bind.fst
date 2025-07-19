@@ -47,7 +47,7 @@ let check_bind_fn
     let (| t, c, head_typing |) = Abs.check_abs g head check in
     if not (C_Tot? c)
     then fail g (Some t.range) "check_bind_fn: head is not a total abstraction";
-    if None? post_hint
+    if not (PostHint? post_hint)
     then fail g (Some t.range) "check_bind: please annotate the postcondition";
 
     let x = fresh g in
@@ -56,7 +56,7 @@ let check_bind_fn
     let ctxt_typing' : tot_typing g' ctxt tm_slprop =
       Metatheory.tot_typing_weakening_single ctxt_typing x b.binder_ty in
     let r = check g' _ ctxt_typing' post_hint res_ppname (open_st_term_nv body (binder.binder_ppname, x)) in
-    let body_typing = apply_checker_result_k #_ #_ #(Some?.v post_hint) r res_ppname in
+    let body_typing = apply_checker_result_k #_ #_ #(PostHint?.v post_hint) r res_ppname in
     let k = Pulse.Checker.Base.continuation_elaborator_with_bind_fn ctxt_typing b head_typing (binder.binder_ppname, x) in
     let d = k post_hint body_typing in
     checker_result_for_st_typing d res_ppname
@@ -143,9 +143,9 @@ let check_bind'
   )
   else (
     let dflt () =
-      let r0 = check g ctxt ctxt_typing None binder.binder_ppname e1 in
-      check_if_seq_lhs g ctxt None r0 e1;
-      check_binder_typ g ctxt None r0 binder e1;
+      let r0 = check g ctxt ctxt_typing NoHint binder.binder_ppname e1 in
+      check_if_seq_lhs g ctxt _ r0 e1;
+      check_binder_typ g ctxt _ r0 binder e1;
       let (| x, g1, _, (| ctxt', ctxt'_typing |), k1 |) = r0 in
       let g1 = reset_context g1 g in
       let r1 = check g1 ctxt' ctxt'_typing post_hint ppname_default (open_st_term_nv e2 (binder.binder_ppname, x)) in

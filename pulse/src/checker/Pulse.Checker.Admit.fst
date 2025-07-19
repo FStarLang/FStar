@@ -48,10 +48,11 @@ let check
     : (c:comp_st { comp_pre c == pre /\ comp_post_matches_hint c post_hint } &
        comp_typing g c (universe_of_comp c))
     = match post, post_hint with
-      | None, None ->
+      | None, NoHint
+      | None, TypeHint _ ->
         fail g None "could not find a post annotation on admit, please add one"
 
-      | Some post1, Some post2 ->
+      | Some post1, PostHint post2 ->
         fail g None
           (Printf.sprintf "found two post annotations on admit: %s and %s, please remove one"
              (P.term_to_string post1)
@@ -72,7 +73,7 @@ let check
          | STT_Ghost -> (| _, CT_STGhost _ tm_emp_inames _ (RU.magic ()) d_s |)
          | STT_Atomic -> (| _, CT_STAtomic _ tm_emp_inames Neutral _ (RU.magic ()) d_s |))
 
-      | _, Some post -> Pulse.Typing.Combinators.comp_for_post_hint pre_typing post x
+      | _, PostHint post -> Pulse.Typing.Combinators.comp_for_post_hint pre_typing post x
   in
   let (| c, d_c |) = res in
   let d = T_Admit _ _ d_c in

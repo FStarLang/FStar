@@ -1252,7 +1252,13 @@ let post_hint_for_env_extends (g:env) (p:post_hint_t) (x:var { ~ (Set.mem x (dom
   = env_extends_push g x ppname_default b
   
 let post_hint_for_env (g:env) = p:post_hint_t { post_hint_for_env_p g p }
-let post_hint_opt (g:env) = o:option post_hint_t { None? o \/ post_hint_for_env_p g (Some?.v o) }
+noeq
+type post_hint_opt_t =
+| PostHint : v:post_hint_t -> post_hint_opt_t
+| TypeHint of typ
+| NoHint
+
+let post_hint_opt (g:env) = p:post_hint_opt_t { PostHint? p ==> post_hint_for_env_p g (PostHint?.v p) }
 
 noeq
 type post_hint_typing_t (g:env) (p:post_hint_t) (x:var { ~ (Set.mem x (dom g)) }) = {
@@ -1291,11 +1297,11 @@ let effect_annot_matches (c:comp_st) (effect_annot:effect_annot) : prop =
     (C_STAtomic? c \/ C_STGhost? c)  /\ (comp_inames c == opens)
   | _ -> False
 
-let comp_post_matches_hint (c:comp_st) (post_hint:option post_hint_t) =
+let comp_post_matches_hint (c:comp_st) (post_hint:post_hint_opt_t) =
   match post_hint with
-  | None -> True
-  | Some post_hint ->
+  | PostHint post_hint ->
     comp_res c == post_hint.ret_ty /\
     comp_u c == post_hint.u /\
     comp_post c == post_hint.post /\
     effect_annot_matches c post_hint.effect_annot
+  | _ -> True

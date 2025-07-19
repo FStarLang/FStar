@@ -109,5 +109,5 @@ type st_typing_in_ctxt (g:env) (ctxt:slprop) (post_hint:post_hint_opt g) =
 val comp_for_post_hint #g (#pre:slprop) (pre_typing:tot_typing g pre tm_slprop)
   (post:post_hint_t { g `env_extends` post.g })
   (x:var { lookup g x == None })
-  : T.Tac (c:comp_st { comp_pre c == pre /\ comp_post_matches_hint c (Some post) } &
+  : T.Tac (c:comp_st { comp_pre c == pre /\ comp_post_matches_hint c (PostHint post) } &
            comp_typing g c (universe_of_comp c))

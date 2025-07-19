@@ -45,7 +45,7 @@ let check
   let postL_hint = intro_post_hint g EffectAnnotSTT None postL in
   let (| eL, cL, eL_typing |) =
     let ppname = mk_ppname_no_range "_par_l" in
-    let r = check g preL preL_typing (Some postL_hint) ppname eL in
+    let r = check g preL preL_typing (PostHint postL_hint) ppname eL in
     apply_checker_result_k r ppname
   in
   let cL_typing = MT.st_typing_correctness eL_typing in
@@ -53,7 +53,7 @@ let check
   let postR_hint = intro_post_hint g EffectAnnotSTT None postR in
   let (| eR, cR, eR_typing |) =
     let ppname = mk_ppname_no_range "_par_r" in
-    let r = check g preR preR_typing (Some postR_hint) ppname eR in
+    let r = check g preR preR_typing (PostHint postR_hint) ppname eR in
     apply_checker_result_k r ppname
   in
   let cR_typing = MT.st_typing_correctness eR_typing in

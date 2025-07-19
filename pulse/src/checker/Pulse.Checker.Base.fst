@@ -180,7 +180,7 @@ let comp_typing_from_post_hint
     (#g: env)
     (c: comp_st)
     (pre_typing: tot_typing g (comp_pre c) tm_slprop)
-    (p:post_hint_for_env g { comp_post_matches_hint c (Some p) })
+    (p:post_hint_for_env g { comp_post_matches_hint c (PostHint p) })
 : T.Tac (comp_typing_u g c)
 = let x = fresh g in
   if x `Set.mem` freevars p.post //exclude this
@@ -273,7 +273,7 @@ let simplify_post (#g:env) (#t:st_term) (#c:comp_st) (d:st_typing g t c)
   : Dv (st_typing g t (comp_st_with_post c post))
   = st_equiv_post d post (fun x -> ve_unit_r (push_binding g x ppname_default (comp_res c)) (open_term post x))
 
-let simplify_lemma (c:comp_st) (c':comp_st) (post_hint:option post_hint_t)
+let simplify_lemma (c:comp_st) (c':comp_st) (post_hint:post_hint_opt_t)
   : Lemma
     (requires
         comp_post_matches_hint c post_hint /\
@@ -449,11 +449,11 @@ let coerce_eq (#a #b:Type) (x:a) (_:squash (a == b)) : y:b{y == x} = x
 let st_comp_typing_with_post_hint 
       (#g:env) (#ctxt:_)
       (ctxt_typing:tot_typing g ctxt tm_slprop)
-      (post_hint:post_hint_opt g { Some? post_hint })
+      (post_hint:post_hint_opt g { PostHint? post_hint })
       (c:comp_st { comp_pre c == ctxt /\ comp_post_matches_hint c post_hint })
 : st_comp_typing g (st_comp_of_comp c)
 = let st = st_comp_of_comp c in
-  let Some ph = post_hint in
+  let PostHint ph = post_hint in
   let post_typing_src
     : tot_typing (push_binding ph.g ph.x ppname_default ph.ret_ty)
                  (open_term ph.post ph.x) tm_slprop
@@ -509,7 +509,7 @@ let continuation_elaborator_with_bind_fn (#g:env) (#ctxt:term)
 = let t1 = comp_res c1 in
   assert ((push_binding g (snd x) (fst x) t1) `env_extends` g);
   fun post_hint (| e2, c2, d2 |) ->
-    if None? post_hint then T.fail "bind_fn: expects the post_hint to be set";
+    if not (PostHint? post_hint) then T.fail "bind_fn: expects the post_hint to be set";
     let ppname, x = x in
     let e2_closed = close_st_term e2 x in
     assume (open_st_term (close_st_term e2 x) x == e2);
@@ -557,11 +557,11 @@ let emp_inames_included (g:env) (i:term) (_:tot_typing g i tm_inames)
 
 let return_in_ctxt (g:env) (y:var) (y_ppname:ppname) (u:universe) (ty:term) (ctxt:slprop)
   (ty_typing:universe_of g ty u)
-  (post_hint0:post_hint_opt g { Some? post_hint0 /\ checker_res_matches_post_hint g post_hint0 y ty ctxt})
+  (post_hint0:post_hint_opt g { PostHint? post_hint0 /\ checker_res_matches_post_hint g post_hint0 y ty ctxt})
 : Div  (st_typing_in_ctxt g ctxt post_hint0)
        (requires lookup g y == Some ty)
        (ensures fun _ -> True)
-= let Some post_hint = post_hint0 in
+= let PostHint post_hint = post_hint0 in
   let x = fresh g in
   assume (~ (x `Set.mem` freevars post_hint.post));
   let ctag =
@@ -606,8 +606,9 @@ let match_comp_res_with_post_hint (#g:env) (#t:st_term) (#c:comp_st)
            st_typing g t' c') =
 
   match post_hint with
-  | None -> (| t, c, d |)
-  | Some { ret_ty } ->
+  | NoHint -> (| t, c, d |)
+  | TypeHint ret_ty
+  | PostHint { ret_ty } ->
     let cres = comp_res c in
     if eq_tm cres ret_ty
     then (| t, c, d |)
@@ -633,19 +634,19 @@ let match_comp_res_with_post_hint (#g:env) (#t:st_term) (#c:comp_st)
            (| t, c', Pulse.Typing.Combinators.t_equiv d d_stequiv |)
 
 let apply_checker_result_k (#g:env) (#ctxt:slprop) (#post_hint:post_hint_for_env g)
-  (r:checker_result_t g ctxt (Some post_hint))
+  (r:checker_result_t g ctxt (PostHint post_hint))
   (res_ppname:ppname)
-  : T.Tac (st_typing_in_ctxt g ctxt (Some post_hint)) =
+  : T.Tac (st_typing_in_ctxt g ctxt (PostHint post_hint)) =
 
   // TODO: FIXME add to checker result type?
   let (| y, g1, (| u_ty, ty_y, d_ty_y |), (| pre', _ |), k |) = r in
 
   let (| u_ty_y, d_ty_y |) = Pulse.Checker.Pure.check_universe g1 ty_y in
 
-  let d : st_typing_in_ctxt g1 pre' (Some post_hint) =
-    return_in_ctxt g1 y res_ppname u_ty_y ty_y pre' d_ty_y (Some post_hint) in
+  let d : st_typing_in_ctxt g1 pre' (PostHint post_hint) =
+    return_in_ctxt g1 y res_ppname u_ty_y ty_y pre' d_ty_y (PostHint post_hint) in
 
-  k (Some post_hint) d
+  k (PostHint post_hint) d
 
 #push-options "--z3rlimit_factor 4 --fuel 0 --ifuel 1"
 //TODO: refactor and merge with continuation_elaborator_with_bind
@@ -685,9 +686,9 @@ let checker_result_for_st_typing (#g:env) (#ctxt:slprop) (#post_hint:post_hint_o
   in
   let _ : squash (checker_res_matches_post_hint g post_hint x (comp_res c1) ctxt') =
     match post_hint with
-    | None -> ()
-    | Some post_hint -> () in
-
+    | PostHint post_hint -> ()
+    | _ -> () in
+    
   assert (g' `env_extends` g);
   let u_of_1_g' : universe_of _ _ _ = Pulse.Typing.Metatheory.tot_typing_weakening_standard g u_of_1 g' in
   assert (~ (x `Set.mem` freevars (comp_post c1)));
@@ -1014,7 +1015,7 @@ let hoist_stateful_apps
  
 let compose_checker_result_t 
   (#g:env) (#g':env { g' `env_extends` g }) (#ctxt #ctxt':slprop) (#post_hint:post_hint_opt g)
-  (r1:checker_result_t g ctxt None)
+  (r1:checker_result_t g ctxt NoHint)
   (r2:checker_result_t g' ctxt' post_hint { composable r1 r2 })
 : T.Tac (checker_result_t g ctxt post_hint)
 = let (| x1, g1, t1, (| _, ctxt'_typing |), k1 |) = r1 in
@@ -1081,7 +1082,7 @@ let rec close_post x_ret dom_g g1 (bs1:list (ppname & var & typ)) (post:slprop)
     )
   )
 
-let infer_post #g #ctxt (r:checker_result_t g ctxt None)
+let infer_post #g #ctxt (r:checker_result_t g ctxt NoHint)
 : T.Tac (p:post_hint_for_env g { p.g == g /\ p.effect_annot == EffectAnnotSTT })
 = let (| x, g1, (| u, t, _ |), (| post, _ |), k |) = r in
   let bs0 = bindings g in

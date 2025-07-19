@@ -61,17 +61,17 @@ let check
   (check:check_t)
 : T.Tac (checker_result_t g pre post_hint)
 = match post_hint with
-  | None ->
+  | NoHint | TypeHint _ ->
     fail g (Some <| head_range t)
       "Allocating a mutable local variable expects an annotated post-condition"
 
-  | Some { effect_annot = EffectAnnotGhost _ }
-  | Some { effect_annot = EffectAnnotAtomic _ }
-  | Some { effect_annot = EffectAnnotAtomicOrGhost _ } ->
+  | PostHint { effect_annot = EffectAnnotGhost _ }
+  | PostHint { effect_annot = EffectAnnotAtomic _ }
+  | PostHint { effect_annot = EffectAnnotAtomicOrGhost _ } ->
     fail g (Some <| head_range t)
       "Allocating a mutable local variable is only allowed in non-ghost and non-atomic code"
 
-  | Some post ->
+  | PostHint post ->
     let g = push_context "check_withlocal" t.range g in
     let Tm_WithLocal {binder; initializer=init; body} = t.term in
     let (| init, init_u, init_t, init_t_typing, init_typing |) =
@@ -116,7 +116,7 @@ let check
           let body_post = extend_post_hint_for_local g post init_t x in
           let (| opened_body, c_body, body_typing |) =
             let r =
-              check g_extended body_pre body_pre_typing (Some body_post) binder.binder_ppname (open_st_term_nv body px) in
+              check g_extended body_pre body_pre_typing (PostHint body_post) binder.binder_ppname (open_st_term_nv body px) in
             apply_checker_result_k r binder.binder_ppname in
           let body = close_st_term opened_body x in
           assume (open_st_term (close_st_term opened_body x) x == opened_body);
