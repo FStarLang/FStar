@@ -284,7 +284,8 @@ jobs:
       - run: echo "HOME=/home/user" >> $GITHUB_ENV
       - uses: mtzguido/set-opam-env@master
       - run: opam install -y hex re ctypes sha sexplib
-
+      - run: sudo apt-get update && sudo apt-get install -y libssl-dev
+      
       # Install rust toolchain
       - uses: dtolnay/rust-toolchain@stable
 
