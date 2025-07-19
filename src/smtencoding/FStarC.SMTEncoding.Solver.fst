@@ -1071,10 +1071,18 @@ let ask_solver_quake
             BU.format2 " (best fuel=%s, best ifuel=%s)" (string_of_int f) (string_of_int i)
           | _, _ -> ""
         in
-        BU.print5 "Quake: query %s succeeded %s/%s times%s%s\n"
+        let ratio =
+          let s = BU.format2 "%s/%s" (show nsuccess) (show total_ran) in
+          if nsuccess = total_ran then
+            BU.colorize_green s
+          else if nsuccess >= lo then
+            BU.colorize_yellow s
+          else
+            BU.colorize_red s
+        in
+        BU.print4 "Quake: query %s \tsucceeded %s times%s%s\n"
                   name
-                  (string_of_int nsuccess)
-                  (string_of_int total_ran)
+                  ratio
                   (if total_ran < hi then " (early finish)" else "")
                   fuel_msg
     end;
