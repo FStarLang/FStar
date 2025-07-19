@@ -19,7 +19,6 @@ module PulseTutorial.Loops
 open Pulse.Lib.Pervasives
 module R = Pulse.Lib.Reference
 
-// #push-options "--debug pulse.checker"
 //count_down$
 fn count_down (x:ref nat)
 requires R.pts_to x 'v
@@ -130,10 +129,7 @@ fn multiply_by_repeated_addition (x y:nat)
 {
     let mut ctr : nat = 0;
     let mut acc : nat = 0;
-    while (
-        let c = !ctr;
-        (c < x)
-    )
+    while ( (!ctr < x) )
     invariant 
     exists* (c a : nat).
         R.pts_to ctr c **
@@ -286,10 +282,7 @@ fn fibonacci32 (k:U32.t)
   let mut i = 1ul;
   let mut j = 1ul;
   let mut ctr = 1ul;
-  while (
-    let c = !ctr;
-    (c < k <: bool)
-  )
+  while ((!ctr < k))
   invariant
     exists* vi vj vctr. 
      R.pts_to i vi **

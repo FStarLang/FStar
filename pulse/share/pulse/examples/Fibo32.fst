@@ -44,7 +44,7 @@ fn fibo32 (k:U32.t) (_:squash(0ul < k /\ fits #U32.t (fib (v k))))
   let mut i = 1ul;
   let mut j = 1ul;
   let mut ctr = 1ul;
-  while (let v = !ctr; (v < k <: bool))
+  while ((!ctr < k))
   invariant exists* (vi vj vctr : U32.t). (
      pts_to i vi **
      pts_to j vj **
