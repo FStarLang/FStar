@@ -158,7 +158,9 @@ instance nbe_machint (k : machint_kind) : Tot (NBE.embedding (machint k)) =
        | _ -> (a, None))
     in
     match a.nbe_t with
-    | FV (fv1, [], [(a, _)]) when Ident.lid_equals (fv1.fv_name.v) (int_to_t_lid_for k) ->
+    | FV (fv1, [], [(a, _)])
+      when Ident.lid_equals (fv1.fv_name.v) (int_to_t_lid_for k)
+      || Ident.lid_equals (fv1.fv_name.v) (__int_to_t_lid_for k) ->
       let! a : Z.t = unembed e_int cbs a in
       Some (Mk a m)
     | _ -> None
