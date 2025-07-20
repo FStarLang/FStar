@@ -1197,7 +1197,6 @@ let js_repl_init_opts () =
   let res, fnames = Options.parse_cmd_line () in
   match res with
   | Getopt.Error (msg, _) -> failwith ("repl_init: " ^ msg)
-  | Getopt.Help -> failwith "repl_init: --help unexpected"
   | Getopt.Success ->
     match fnames with
     | [] ->
