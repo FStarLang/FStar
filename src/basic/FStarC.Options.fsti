@@ -150,7 +150,7 @@ val file_list                   : unit    -> list string
 val force                       : unit    -> bool
 val fstar_bin_directory         : string
 val get_option                  : string  -> option_val
-val full_context_dependency     : unit    -> bool
+val help                        : unit    -> bool
 val hide_uvar_nums              : unit    -> bool
 val hint_info                   : unit    -> bool
 val hint_file_for_src           : string  -> string
@@ -185,6 +185,7 @@ val normalize_pure_terms_for_extraction
 val output_to                   : unit    -> option string
 val krmloutput                  : unit    -> option string
 val list_plugins                : unit    -> bool
+val expand_include              : unit    -> option string
 val locate                      : unit    -> bool
 val locate_lib                  : unit    -> bool
 val locate_ocaml                : unit    -> bool

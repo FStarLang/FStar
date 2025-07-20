@@ -808,6 +808,11 @@ let geq (i:int) (j:int) = i >= j
    executable, we must resolve all links, so we use realpath. *)
 let exec_name = Unix.realpath Sys.executable_name
 
+(* This is how F* was called, i.e. argv[0] in Unix. For example
+   it may be `./bin/fstar.exe` if we are running it from the
+   repository. *)
+let argv0 = Sys.argv.(0)
+
 let get_exec_dir () = Filename.dirname exec_name
 let get_cmd_args () = Array.to_list Sys.argv
 let expand_environment_variable x = try Some (Sys.getenv x) with Not_found -> None

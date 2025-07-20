@@ -1590,8 +1590,6 @@ let set_options (s : string) : tac unit = wrap_err "set_options" <| (
         replace_cur g'
     | FStarC.Getopt.Error (err, _) ->
         fail2 "Setting options `%s` failed: %s" s err
-    | FStarC.Getopt.Help ->
-        fail1 "Setting options `%s` failed (got `Help`?)" s
     )
 
 let top_env     () : tac env  = bind get (fun ps -> ret <| ps.main_context)

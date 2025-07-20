@@ -141,8 +141,11 @@ let set_error_trap () =
 
 let print_help_for (o : string) : unit =
   match Options.help_for_option o with
-  | None -> ()
-  | Some doc -> Util.print_error (Errors.Msg.renderdoc doc)
+  | None ->
+    Util.print_string "Use `--help` to see all available options.\n";
+    ()
+  | Some doc ->
+    Util.print_error (Errors.Msg.renderdoc doc)
 
 (* Normal mode with some flags, files, etc *)
 let go_normal () =
@@ -204,8 +207,16 @@ let go_normal () =
   in
   if Options.trace_error () then set_error_trap ();
   match res with
-    | Empty     -> Options.display_usage(); exit 1
-    | Help      -> Options.display_usage(); exit 0
+    | _ when Options.help () ->
+      Options.display_usage();
+      exit 0
+
+    | Empty ->
+      Util.print1 "F* version %s\n" !Options._version;
+      Util.print1 "Usage: %s [options] file.fst\n" Util.argv0;
+      Util.print_string "Use `--help` to see all available options.\n";
+      exit 1
+
     | Error (msg, opt) ->
       Util.print_error ("error: " ^ msg);
       print_help_for opt;
@@ -276,6 +287,12 @@ let go_normal () =
       ()
 
     (* --locate, --locate_lib, --locate_ocaml, --locate_file *)
+    | Success when Some? (Options.expand_include ()) ->
+      let Some d = Options.expand_include () in
+      let ds = Find.expand_include_d d in
+      List.iter (fun s -> print_string (Filepath.canonicalize s ^ "\n")) ds;
+      exit 0
+
     | Success when Options.locate () ->
       check_no_filenames "--locate";
       Util.print1 "%s\n" (Find.locate ());
