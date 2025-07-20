@@ -44,6 +44,10 @@ val fstar_bin_directory : string
 (* The root directory of the F* library, if any *)
 val lib_root () : option string
 
+(* Given a directory, follow the fstar.include files and return
+all transitive includes. *)
+val expand_include_d (dirname : string) : list string
+
 (* The full include path. We search files in all of these directories. *)
 val full_include_path () : list string
 

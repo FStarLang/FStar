@@ -226,6 +226,7 @@ let defaults =
       ("extract_all"                  , Bool false);
       ("extract_module"               , List []);
       ("extract_namespace"            , List []);
+      ("expand_include"               , Unset);
       ("help"                         , Bool false);
       ("hide_uvar_nums"               , Bool false);
       ("hint_hook"                    , Unset);
@@ -550,6 +551,7 @@ let get_locate                  ()      = lookup_opt "locate"                   
 let get_locate_lib              ()      = lookup_opt "locate_lib"               as_bool
 let get_locate_ocaml            ()      = lookup_opt "locate_ocaml"             as_bool
 let get_locate_file             ()      = lookup_opt "locate_file"              (as_option as_string)
+let get_expand_include          ()      = lookup_opt "expand_include"           (as_option as_string)
 let get_locate_z3               ()      = lookup_opt "locate_z3"                (as_option as_string)
 let get_record_hints            ()      = lookup_opt "record_hints"             as_bool
 let get_record_options          ()      = lookup_opt "record_options"           as_bool
@@ -1671,6 +1673,12 @@ let rec specs_with_types warn_unsafe : list (char & string & opt_type & Pprint.d
                      (Const (Bool true))),
     text "List all debug keys and exit");
 
+  ( noshort,
+    "expand_include",
+    SimpleStr "directory",
+    text "Print all directories that would be transitively included (due to fstar.include files) \
+          by including the given directory.");
+
   (* FIXME: all of these should really be modes, not a boolean option *)
   ( noshort,
     "list_plugins",
@@ -2154,6 +2162,7 @@ let query_cache                  () = get_query_cache                 ()
 let query_stats                  () = get_query_stats                 ()
 let read_checked_file            () = get_read_checked_file           ()
 let list_plugins                 () = get_list_plugins                ()
+let expand_include               () = get_expand_include              ()
 let locate                       () = get_locate                      ()
 let locate_lib                   () = get_locate_lib                  ()
 let locate_ocaml                 () = get_locate_ocaml                ()

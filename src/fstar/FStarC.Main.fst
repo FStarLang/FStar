@@ -287,6 +287,12 @@ let go_normal () =
       ()
 
     (* --locate, --locate_lib, --locate_ocaml, --locate_file *)
+    | Success when Some? (Options.expand_include ()) ->
+      let Some d = Options.expand_include () in
+      let ds = Find.expand_include_d d in
+      List.iter (fun s -> print_string (Filepath.canonicalize s ^ "\n")) ds;
+      exit 0
+
     | Success when Options.locate () ->
       check_no_filenames "--locate";
       Util.print1 "%s\n" (Find.locate ());

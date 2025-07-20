@@ -185,6 +185,7 @@ val normalize_pure_terms_for_extraction
 val output_to                   : unit    -> option string
 val krmloutput                  : unit    -> option string
 val list_plugins                : unit    -> bool
+val expand_include              : unit    -> option string
 val locate                      : unit    -> bool
 val locate_lib                  : unit    -> bool
 val locate_ocaml                : unit    -> bool
