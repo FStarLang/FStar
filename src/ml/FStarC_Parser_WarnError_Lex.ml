@@ -3,7 +3,7 @@ to --warn_error. *)
 
 open FStarC_Parser_WarnError
 
-module Sedlexing = FStarC_Sedlexing
+module Sedlexing = FStarC_Sedlexing (* KEEP: somehow needed if even unused? *)
 module L     = FStarC_Sedlexing
 module E     = FStarC_Errors
 module Codes = FStarC_Errors_Codes
