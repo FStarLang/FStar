@@ -226,7 +226,6 @@ let defaults =
       ("extract_all"                  , Bool false);
       ("extract_module"               , List []);
       ("extract_namespace"            , List []);
-      ("full_context_dependency"      , Bool true);
       ("help"                         , Bool false);
       ("hide_uvar_nums"               , Bool false);
       ("hint_hook"                    , Unset);
@@ -2073,7 +2072,6 @@ let message_format               () =
   | illegal -> failwith ("print_issue: option `message_format` was expected to be `human` or `json`, not `" ^ illegal ^ "`. This should be impossible: `message_format` was supposed to be validated.")
 
 let force                        () = get_force ()
-let full_context_dependency      () = true
 let help                         () = get_help                        ()
 let hide_uvar_nums               () = get_hide_uvar_nums              ()
 let hint_info                    () = get_hint_info                   ()
