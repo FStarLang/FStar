@@ -141,8 +141,11 @@ let set_error_trap () =
 
 let print_help_for (o : string) : unit =
   match Options.help_for_option o with
-  | None -> ()
-  | Some doc -> Util.print_error (Errors.Msg.renderdoc doc)
+  | None ->
+    Util.print_string "Use `--help` to see all available options.\n";
+    ()
+  | Some doc ->
+    Util.print_error (Errors.Msg.renderdoc doc)
 
 (* Normal mode with some flags, files, etc *)
 let go_normal () =
@@ -209,7 +212,9 @@ let go_normal () =
       exit 0
 
     | Empty ->
-      Options.display_usage();
+      Util.print1 "F* version %s\n" !Options._version;
+      Util.print1 "Usage: %s [options] file.fst\n" Util.argv0;
+      Util.print_string "Use `--help` to see all available options.\n";
       exit 1
 
     | Error (msg, opt) ->
