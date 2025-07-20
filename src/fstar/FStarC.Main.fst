@@ -204,8 +204,14 @@ let go_normal () =
   in
   if Options.trace_error () then set_error_trap ();
   match res with
-    | Empty     -> Options.display_usage(); exit 1
-    | Help      -> Options.display_usage(); exit 0
+    | _ when Options.help () ->
+      Options.display_usage();
+      exit 0
+
+    | Empty ->
+      Options.display_usage();
+      exit 1
+
     | Error (msg, opt) ->
       Util.print_error ("error: " ^ msg);
       print_help_for opt;

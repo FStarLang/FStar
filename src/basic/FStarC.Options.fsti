@@ -151,6 +151,7 @@ val force                       : unit    -> bool
 val fstar_bin_directory         : string
 val get_option                  : string  -> option_val
 val full_context_dependency     : unit    -> bool
+val help                        : unit    -> bool
 val hide_uvar_nums              : unit    -> bool
 val hint_info                   : unit    -> bool
 val hint_file_for_src           : string  -> string
