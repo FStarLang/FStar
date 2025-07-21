@@ -293,7 +293,7 @@ let compute_term_type_and_u (g:env) (t:term)
 let check_term (g:env) (e:term) (eff:T.tot_or_ghost) (t:term)
   : T.Tac (e:term & typing g e eff t) =
 
-  let e, _ = instantiate_term_implicits g e (Some t) (*inst_extra:*)false in
+  let e, _ = instantiate_term_implicits g e (Some t) (*inst_extra:*)true in
 
   let fg = elab_env g in
 
