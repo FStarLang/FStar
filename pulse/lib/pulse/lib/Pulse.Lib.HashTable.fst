@@ -430,45 +430,39 @@ fn not_full
   let mut contents = ht.contents;
 
   let mut i = 0sz;
+  let mut break = false;
   unfold (models ht pht);
 
   while
-  (
-    let vi = !i;
-    if SZ.(vi <^ ht.sz)
-    {
-      let c = V.replace_i_ref contents vi Zombie;
-      let b = is_used c;
-      let _ = V.replace_i_ref contents vi (snd b);
-      with vcontents. assert (pts_to contents vcontents);
-      with s. assert (V.pts_to vcontents s);
-      assert (pure (Seq.equal s pht.repr.seq));
-      (fst b)
-    }
-    else
-    {
-      false
-    }
-  )
-  invariant b. exists* (vi:SZ.t) vcontents. (
+  ((SZ.(!i <^ ht.sz) && not !(break)))
+  invariant //b.
+   exists* (vi:SZ.t) vcontents (br:bool). (
     pts_to contents vcontents **
     V.pts_to vcontents pht.repr.seq **
     pts_to i vi **
+    pts_to break br **
     pure (
       V.is_full_vec vcontents /\
       SZ.v ht.sz == pht_sz pht /\
       SZ.(vi <=^ ht.sz) /\
-      (b == (SZ.(vi <^ ht.sz) && Used? (pht.repr @@ (SZ.v vi)))) /\
+      (br ==> (vi =!= ht.sz /\ not (Used? (pht.repr @@ (SZ.v vi))))) /\
       (forall (i:nat). i < SZ.v vi ==> Used? (pht.repr @@ i))
     )
   )
   {
     let vi = !i;
-    i := SZ.(vi +^ 1sz);
+    let c = V.replace_i_ref contents vi Zombie;
+    let b = is_used c;
+    let _ = V.replace_i_ref contents vi (snd b);
+    with vcontents. assert (pts_to contents vcontents);
+    with s. assert (V.pts_to vcontents s);
+    assert (pure (Seq.equal s pht.repr.seq));
+    break := not (fst b);
+    if (not (!break)) { i := SZ.add (!i) 1sz; }
   };
 
   let vi = !i;
-  let res = SZ.(vi <^ ht.sz);
+  let res = !break;//SZ.(vi <^ ht.sz);
 
   let vcontents = !contents;
   let ht = mk_ht ht.sz hashf vcontents;
