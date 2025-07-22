@@ -37,7 +37,13 @@ let retype_checker_result_post_hint #g #pre (ph:post_hint_for_env g)
 = let (| x, g1, t, ctxt', k |) = r in
   (| x, g1, t, ctxt', k |)
 
-#push-options "--fuel 0 --ifuel 1 --query_stats"
+let retype_checker_result (#g:env) (#ctxt:slprop) (#ph:post_hint_opt g) (ph':post_hint_opt g { not (PostHint? ph')})
+  (r:checker_result_t g ctxt ph)
+: checker_result_t g ctxt ph'
+= let (| x, g1, t, ctxt, k |) = r in
+  (| x, g1, t, ctxt, k |)
+
+#push-options "--fuel 0 --ifuel 1 --z3rlimit_factor 2"
 #restart-solver
 let check
   (g:env)
@@ -93,6 +99,8 @@ let check
       | PostHint ph -> 
         (| ph, then_, else_ |)
       | _ ->
+        let then_ : checker_result_t _ _ NoHint = retype_checker_result _ then_ in
+        let else_ : checker_result_t _ _ NoHint = retype_checker_result _ else_ in
         let post_then = Pulse.Checker.Base.infer_post then_ in
         let post_else = Pulse.Checker.Base.infer_post else_ in
         let post = Pulse.JoinComp.join_post #g #hyp #b post_then post_else in
@@ -128,3 +136,4 @@ let check
 
   let res : checker_result_t g pre (PostHint post_hint') = checker_result_for_st_typing d res_ppname in
   retype_checker_result_post_hint post_hint' post_hint res
+  #pop-options

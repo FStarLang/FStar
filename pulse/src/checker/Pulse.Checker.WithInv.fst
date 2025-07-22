@@ -236,35 +236,21 @@ let withinv_post (#g:env) (#p:term) (#i:term) (#post:term)
   let (| post, _, post_typing |) = Prover.normalize_slprop_welltyped g post post_typing in
   __withinv_post #g #p #i #post p_typing i_typing post_typing
 
+#push-options "--z3rlimit_factor 40 --split_queries no --fuel 0 --ifuel 1 --z3cliopt 'smt.qi.eager_threshold=100'"
 #restart-solver
-#push-options "--z3rlimit_factor 40 --split_queries no"
-let check0
-  (g:env)
-  (pre:term)
-  (pre_typing:tot_typing g pre tm_slprop)
-  (post_hint:post_hint_opt g)
-  (res_ppname:ppname)
-  (t:st_term{Tm_WithInv? t.term})
-  (check:check_t)
-: T.Tac (checker_result_t g pre post_hint)
-= let Tm_WithInv {name=i; returns_inv; body} = t.term in
-  let (| i, _ |) = check_tot_term g i tm_iname in
-  let i_range = Pulse.RuntimeUtils.range_of_term i in
-  let res = find_inv pre_typing i in
-  if None? res then
-    fail_doc g (Some i_range) [
-        prefix 2 1 (text "Cannot find invariant resource for iname ") (pp i) ^/^
-        prefix 2 1 (text " in the precondition ") (pp pre)
-      ];
-    
-  let Some (| p, pre_frame, _, pre_frame_typing, d_pre_frame_eq |) = res in
-
-  //
+let mk_post_hint g returns_inv i p (ph:post_hint_opt g) rng
+: T.Tac (q:post_hint_for_env g { PostHint? ph ==> q == PostHint?.v ph })
+= //
   // post_hint for the with_invariants block
   //
-  let post_hint : post_hint_t =
-    match returns_inv, post_hint with
+  let post_hint : (q:post_hint_for_env g { PostHint? ph ==> q == PostHint?.v ph }) =
+    match returns_inv, ph with
     | None, PostHint post -> post
+    | Some (_, post, _), PostHint q ->
+      fail_doc g (Some rng) 
+        [ doc_of_string "Fatal: multiple annotated postconditions on with_invariant";
+          prefix 4 1 (text "First postcondition:") (pp post);
+          prefix 4 1 (text "Second postcondition:") (pp q) ]
     | Some (b, post, opens), _ ->
       //
       // The with_invariants block is annotated with an ensures
@@ -304,14 +290,34 @@ let check0
             post_typing_src = post'_typing;
             post_typing = post_typing_as_abstraction #_ #x #_ #post'_closed post'_typing }
       end
-    | Some (_, post, _), PostHint q ->
-      fail_doc g (Some t.range) 
-        [ doc_of_string "Fatal: multiple annotated postconditions on with_invariant";
-          prefix 4 1 (text "First postcondition:") (pp post);
-          prefix 4 1 (text "Second postcondition:") (pp q) ]
     | _, _ ->
-      fail g (Some t.range) "Fatal: no post hint on with_invariant"
+      fail g (Some rng) "Fatal: no post hint on with_invariant"
   in
+  post_hint
+
+let check0
+  (g:env)
+  (pre:term)
+  (pre_typing:tot_typing g pre tm_slprop)
+  (post_hint:post_hint_opt g)
+  (res_ppname:ppname)
+  (t:st_term{Tm_WithInv? t.term})
+  (check:check_t)
+: T.Tac (checker_result_t g pre post_hint)
+= let Tm_WithInv {name=i; returns_inv; body} = t.term in
+  let (| i, _ |) = check_tot_term g i tm_iname in
+  let i_range = Pulse.RuntimeUtils.range_of_term i in
+  let res = find_inv pre_typing i in
+  if None? res then
+    fail_doc g (Some i_range) [
+        prefix 2 1 (text "Cannot find invariant resource for iname ") (pp i) ^/^
+        prefix 2 1 (text " in the precondition ") (pp pre)
+      ];
+    
+  let Some (| p, pre_frame, _, pre_frame_typing, d_pre_frame_eq |) = res in
+
+  let post_hint = mk_post_hint g returns_inv i p post_hint t.range in
+
   (* Checking the body seems to change its range, so store the original one
   for better errors. *)
   let body_range = body.range in
@@ -471,8 +477,7 @@ let check0
       | C_STGhost add_inv st ->
         (| C_STGhost opens st,
           STS_GhostInvs _ st add_inv opens tok |) in
-    let d : st_typing _ _ c_out_opens =
-      T_Sub _ _ _ _ d d_sub_c in
+    let d : st_typing _ _ c_out_opens = T_Sub _ _ _ _ d d_sub_c in
     checker_result_for_st_typing (| _, _, d |) res_ppname
 
   | EffectAnnotSTT ->

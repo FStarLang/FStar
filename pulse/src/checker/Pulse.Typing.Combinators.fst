@@ -337,7 +337,8 @@ let mk_bind_atomic_atomic
       )
 #pop-options
 
-#push-options "--z3rlimit_factor 10 --fuel 0 --ifuel 1"
+#push-options "--z3rlimit_factor 20 --fuel 0 --ifuel 1 --z3cliopt 'smt.qi.eager_threshold=100'"
+#restart-solver
 let rec mk_bind (g:env) 
                 (pre:term)
                 (e1:st_term)

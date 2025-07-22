@@ -174,6 +174,7 @@ let check_nuwhile
   let inv_typing : tot_typing g1 inv tm_slprop = RU.magic () in
   let (| post_cond, r_cond |) : (ph:post_hint_for_env g1 & checker_result_t g1 inv (PostHint ph)) =
     let r_cond = check (push_context "check_while_condition" cond.range g1) inv inv_typing (TypeHint tm_bool) ppname_default cond in
+    let r_cond = retype_checker_result NoHint r_cond in
     let ph = Pulse.Checker.Base.infer_post r_cond in
     (| ph, Pulse.Checker.Prover.prove_post_hint r_cond (PostHint ph) cond.range |)
   in

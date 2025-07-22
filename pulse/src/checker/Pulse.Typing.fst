@@ -1287,6 +1287,7 @@ let post_hint_typing (g:env)
     post_typing = RU.magic ();
   }
 
+
 let effect_annot_matches (c:comp_st) (effect_annot:effect_annot) : prop =
   match c, effect_annot with
   | C_ST _, EffectAnnotSTT -> True

@@ -652,12 +652,6 @@ let try_frame_pre
   assert (equal g (push_env g uvs));
   try_frame_pre_uvs allow_ambiguous ctxt_typing uvs d res_ppname
 
-let retype_checker_result (#g:env) (#ctxt:slprop) (#ph:post_hint_opt g) (ph':post_hint_opt g { not (PostHint? ph')})
-  (r:checker_result_t g ctxt ph)
-: checker_result_t g ctxt ph'
-= let (| x, g1, t, ctxt, k |) = r in
-  (| x, g1, t, ctxt, k |)
-
 let prove_post_hint (#g:env) (#ctxt:slprop)
   (r:checker_result_t g ctxt NoHint)
   (post_hint:post_hint_opt g)

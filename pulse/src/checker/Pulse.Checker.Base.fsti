@@ -176,6 +176,13 @@ type checker_result_t (g:env) (ctxt:slprop) (post_hint:post_hint_opt g) =
     checker_result_inv g post_hint x g1 t ctxt'
   }
 
+
+let retype_checker_result (#g:env) (#ctxt:slprop) (#ph:post_hint_opt g) (ph':post_hint_opt g { not (PostHint? ph')})
+  (r:checker_result_t g ctxt ph)
+: checker_result_t g ctxt ph'
+= let (| x, g1, t, ctxt, k |) = r in
+  (| x, g1, t, ctxt, k |)
+  
 type check_t =
   g:env ->
   ctxt:slprop ->
