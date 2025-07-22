@@ -139,7 +139,7 @@ fn copy
   while (
     (!i <^ l)
   )
-  invariant b.
+  invariant
   exists* vi s1. ( 
     R.pts_to i vi **
     A.pts_to a1 s1 **
@@ -147,7 +147,6 @@ fn copy
     pure (
       Seq.length s1 == Seq.length 's2 /\
       SZ.v vi <= SZ.v l /\
-      (b == (SZ.v vi < SZ.v l)) /\
       (forall (i:nat). i < SZ.v vi ==> Seq.index s1 i == Seq.index 's2 i)
     )
   )
@@ -179,10 +178,9 @@ fn copy2
 {
   let mut i = 0sz;
   while (
-    let vi = !i;
-    (vi <^ l)
+    (!i <^ l)
   )
-  invariant b.
+  invariant
   exists* vi s1. ( 
     R.pts_to i vi **
     A.pts_to a1 s1 **
@@ -190,7 +188,6 @@ fn copy2
     pure (
       Seq.length s1 == Seq.length 's2 /\
       SZ.v vi <= SZ.v l /\
-      (b == (SZ.v vi < SZ.v l)) /\
       (forall (i:nat). i < SZ.v vi ==> Seq.index s1 i == Seq.index 's2 i)
     )
   )

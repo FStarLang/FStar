@@ -20,14 +20,13 @@ fn gcd (n0: SZ.t) (l0: SZ.t)
 {
   let mut pn = n0;
   let mut pl = l0;
-  while (let l = !pl ; (l `SZ.gt` 0sz))
-  invariant b . exists* n l . (
+  while ((!pl `SZ.gt` 0sz))
+  invariant exists* n l . (
     pts_to pn n **
     pts_to pl l **
     pure (
       SZ.v l < SZ.v n /\
-      (Prf.mk_bezout (SZ.v n0) (SZ.v l0)).d == (Prf.mk_bezout (SZ.v n) (SZ.v l)).d /\
-      b == (SZ.v l > 0)
+      (Prf.mk_bezout (SZ.v n0) (SZ.v l0)).d == (Prf.mk_bezout (SZ.v n) (SZ.v l)).d
     ))
   {
     let n = !pn;

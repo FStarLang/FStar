@@ -184,9 +184,6 @@ fn max (n:SZ.t) (a:larray nat (v n))
   !max;
 }
 
-//this option should become the default, once I shake out the handling of address-taking
-#push-options "--ext 'pulse:rvalues'"
-
 fn max_alt (n:SZ.t) (a:larray nat (v n))
   requires
     A.pts_to a #'p 's **
@@ -199,22 +196,19 @@ fn max_alt (n:SZ.t) (a:larray nat (v n))
 {
   let mut i = 0sz;
   let mut max : nat = 0;
-  while ((i < n))
-  invariant b. exists* (vi:SZ.t) (vmax:nat).
+  while ((!i < n))
+  invariant exists* (vi:SZ.t) (vmax:nat).
     A.pts_to a #'p 's **
     R.pts_to i vi **
     R.pts_to max vmax **
     pure (vi <= n
-       /\ (forall (j:nat). j < v vi ==> Seq.index 's j <= vmax)
-       /\ b == (vi < n))
+       /\ (forall (j:nat). j < v vi ==> Seq.index 's j <= vmax))
   {
-    let v = a.(i);
-    i := i + 1sz;
-    if (v > max) {
+    let v = a.(!i);
+    i := !i + 1sz;
+    if (v > !max) {
       max := v;
     }
   };
-  max
+  !max
 }
-
-#pop-options

@@ -18,7 +18,6 @@ module Demo.MultiplyByRepeatedAddition
 #lang-pulse
 open Pulse.Lib.Pervasives
 open FStar.UInt32
-#set-options "--ext 'pulse:rvalues'"
 
 module U32 = FStar.UInt32
 open FStar.Mul
@@ -32,21 +31,20 @@ fn mult (x y:nat)
     returns z:nat
     ensures pure (z == x * y)
 {
-    let mut ctr = 0;
-    let mut acc = 0;
-    while ((ctr < x))
-    invariant b.
-    exists* c a.
+    let mut ctr : nat = 0;
+    let mut acc : nat = 0;
+    while ((!ctr < x))
+    invariant
+    exists* (c a:nat).
         pts_to ctr c **
         pts_to acc a **
         pure (a == (c * y) /\
-              c <= x /\
-              b == (c < x))
+              c <= x)
     {
-        acc := acc + y;
-        ctr := ctr + 1;
+        acc := !acc + y;
+        ctr := !ctr + 1;
     };
-    acc
+    !acc
 }
 
 
@@ -58,19 +56,18 @@ fn mult32 (x y:U32.t)
 {  
     let mut ctr = 0ul;
     let mut acc = 0ul;
-    while ((ctr < x))
-    invariant b.
+    while ((!ctr < x))
+    invariant
     exists* c (a : UInt32.t). // FIXME: this type should have been instantiate by fundeps?
         pts_to ctr c **
         pts_to acc a **
         pure (c <= x /\
-              v a == (v c * v y) /\
-              b == (c < x))
+              v a == (v c * v y))
     {
-        acc := acc + y;
-        ctr := ctr + 1ul;
+        acc := !acc + y;
+        ctr := !ctr + 1ul;
     };
-    acc
+    !acc
 }
 
 open FStar.UInt32
@@ -83,18 +80,16 @@ fn mult32' (x y:U32.t)
 {  
     let mut ctr = 0ul;
     let mut acc = 0ul;
-    while ((ctr <^ x))
-    invariant b.
+    while ((!ctr <^ x))
+    invariant
     exists* c a.
         pts_to ctr c **
         pts_to acc a **
         pure (c <=^ x /\
-              i a == (i c * i y) /\
-              b == (c <^ x))
+              i a == (i c * i y))
     {
-        acc := acc +^ y;
-        ctr := ctr +^ 1ul;
+        acc := !acc +^ y;
+        ctr := !ctr +^ 1ul;
     };
-    acc
+    !acc
 }
-

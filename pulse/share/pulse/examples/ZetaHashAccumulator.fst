@@ -323,7 +323,7 @@ fn reclaim (#h:hash_value_t) (s:ha)
 // Note, I had first tried a vairant of this with a refinement on wi
 // in the invariant to constrain its length, but that led to various problems.
 // I should try that again and open issues. 
-#push-options "--retry 2 --ext 'pulse:rvalues'" // GM: Part of this VC fails on batch mode, not on ide...
+#push-options "--retry 2" // GM: Part of this VC fails on batch mode, not on ide...
 
 fn aggregate_raw_hashes (#s1 #s2:e_raw_hash_value_t)
                         (b1 b2: hash_value_buf)
@@ -334,22 +334,22 @@ fn aggregate_raw_hashes (#s1 #s2:e_raw_hash_value_t)
     V.pts_to b1 (xor_bytes s1 s2) **
     V.pts_to b2 s2
 {
+    open Pulse.Lib.Reference;
     let mut i = 0sz;
     assert (pure (s1 `Seq.equal` xor_bytes_pfx s1 s2 0));
-    while ((i < 32sz))
-    invariant b.
-        exists* wi.
+    while ((!i < 32sz))
+    invariant
+        exists* (wi:SizeT.t).
             pts_to i wi **
             V.pts_to b1 (xor_bytes_pfx s1 s2 (v wi)) **
-            V.pts_to b2 s2 **
-            pure (b == (wi < 32sz))
+            V.pts_to b2 s2
     {
-      let x1 = b1.(i);
-      let x2 = b2.(i);
-      b1.(i) <- U8.logxor x1 x2;
-      extend_hash_value s1 s2 (v i);
-      open Pulse.Lib.Reference;
-      i := i + 1sz;
+      let x1 = b1.(!i);
+      let x2 = b2.(!i);
+      b1.(!i) <- U8.logxor x1 x2;
+      with vi. assert (pts_to i vi);
+      extend_hash_value s1 s2 (v vi);
+      i := !i + 1sz;
     };
     assert (pure (xor_bytes_pfx s1 s2 32 `Seq.equal` xor_bytes s1 s2))
 }

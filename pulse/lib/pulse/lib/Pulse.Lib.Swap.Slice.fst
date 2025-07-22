@@ -40,22 +40,21 @@ fn slice_swap_aux(#t: Type0) (a: S.slice t) (mb: (mb: SZ.t {0 < SZ.v mb /\ SZ.v 
 {   
     S.pts_to_len a;
     let mut pi = 0sz;
-    while (let i = !pi; (i `SZ.lt` d))
-    invariant b . exists* s i . (
+    while ((!pi `SZ.lt` d))
+    invariant exists* s i . (
       pts_to a s **
       pts_to pi i **
       pure (
         Seq.length s == SZ.v (S.len a) /\
         SZ.v i < SZ.v (S.len a) /\
-        Prf.array_swap_outer_invariant s0 (SZ.v (S.len a)) (SZ.v mb) bz s (SZ.v i) /\
-        b == (SZ.v i < bz.d)
+        Prf.array_swap_outer_invariant s0 (SZ.v (S.len a)) (SZ.v mb) bz s (SZ.v i)
     )) {
       let i = !pi;
       let save = S.op_Array_Access a i;
       let mut pj = 0sz;
       let mut pidx = i;
-      while (let j = !pj; (SZ.lt j (SZ.sub q 1sz)))
-      invariant b . exists* s j idx . (
+      while ((SZ.lt !pj (SZ.sub q 1sz)))
+      invariant exists* s j idx . (
         pts_to a s **
         pts_to pi i **
         pts_to pj j **
@@ -63,8 +62,7 @@ fn slice_swap_aux(#t: Type0) (a: S.slice t) (mb: (mb: SZ.t {0 < SZ.v mb /\ SZ.v 
         pure (
           Seq.length s == SZ.v (S.len a) /\
           SZ.v idx < SZ.v (S.len a) /\
-          Prf.array_swap_inner_invariant s0 (SZ.v (S.len a)) (SZ.v mb) bz s (SZ.v i) (SZ.v j) (SZ.v idx) /\
-          b == (SZ.v j < bz.q_n - 1)
+          Prf.array_swap_inner_invariant s0 (SZ.v (S.len a)) (SZ.v mb) bz s (SZ.v i) (SZ.v j) (SZ.v idx) 
         )
       ) {
         let j = !pj;

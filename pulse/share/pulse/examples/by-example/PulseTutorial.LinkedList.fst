@@ -272,16 +272,14 @@ ensures is_list x 'l ** pure (n == List.Tot.length 'l)
   let mut ctr = 0; 
   I.refl (is_list x 'l); //initialize the trade for the invariant
   while (
-    let v = !cur;
-    Some? v
+    Some? !cur
   )
-  invariant b.  
+  invariant
   exists* n ll suffix.
     pts_to ctr n **
     pts_to cur ll **
     is_list ll suffix **
-    pure (n == List.Tot.length 'l - List.Tot.length suffix /\
-          b == (Some? ll)) **
+    pure (n == List.Tot.length 'l - List.Tot.length suffix) **
     (is_list ll suffix @==> is_list x 'l)
   {
     let n = !ctr;

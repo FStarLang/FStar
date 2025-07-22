@@ -32,17 +32,14 @@ ensures
   let mut i1 : SZ.t = 0sz;
   let mut i2 : SZ.t = len - 1sz;
   while (
-    let v1 = !i1;
-    let v2 = !i2;
-    (v1 <> v2)
+    (!i1 <> !i2)
   )
-  invariant b . (
+  invariant (
     exists* v1 v2.
       pts_to i1 v1 **
       pts_to i2 v2 **
       pts_to a #p s **
       pure (
-        (b == (v1 <> v2)) /\
         v2 < len /\
         (exists (i:SZ.t). v1 <= i /\ i <= v2 /\ Seq.index s (SZ.v i) == key) /\
         (forall (i j: SZ.t). {:pattern Seq.index s (SZ.v i); Seq.index s (SZ.v j)}
