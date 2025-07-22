@@ -28,7 +28,6 @@ module U = FStarC.Syntax.Util
 module SS = FStarC.Syntax.Subst
 module R = FStarC.Range
 module BU = FStarC.Util
-module LR = PulseSyntaxExtension.TransformRValues
 
 open FStarC.Class.Show
 open FStarC.Class.HasRange
@@ -354,10 +353,6 @@ let mk_totbind b s1 s2 r : SW.st_term =
 
 let mk_bind b s1 s2 r : SW.st_term = 
   SW.tm_bind b s1 s2 r
-
-let explicit_rvalues (env:env_t) (s:Sugar.stmt)
-  : Sugar.stmt
-  = s
 
 let qual = option SW.qualifier
 
@@ -901,11 +896,6 @@ and desugar_lambda (env:env_t) (l:Sugar.lambda)
         let! comp = desugar_computation_type env c in
         return (env, bs, bvs, Some comp)
     in
-    let! body = 
-      if FStarC.Options.Ext.get "pulse:rvalues" <> ""
-      then LR.transform env body
-      else return body
-    in
     let! body = desugar_stmt env body in
     let! qbs = map2 faux bs bvs in
     let abs = mk_abs_with_comp qbs comp body range in
@@ -943,11 +933,6 @@ and desugar_decl (env:env_t)
     let bs = bs@bs' in
     let bvs = bvs@bvs' in
     let! comp = desugar_computation_type env ascription in
-    let! body = 
-      if FStarC.Options.Ext.get "pulse:rvalues" <> ""
-      then LR.transform env body
-      else return body
-    in
     let! meas = map_err_opt (desugar_term env) measure in
     (* Perhaps push the recursive binding. *)
     let! (env, bs, bvs) =
