@@ -411,6 +411,7 @@ let is_used
   | Used _ _ -> true, c
   | _ -> false, c
 
+let not_ b = if b then false else true //Rust extraction does not recognize F*'s not/op_Negation
 
 fn not_full
   (#[@@@ Rust_generics_bounds ["Copy"; "PartialEq"; "Clone"]] kt:eqtype)
@@ -432,7 +433,7 @@ fn not_full
   unfold (models ht pht);
 
   while
-  ((SZ.(!i <^ ht.sz) && not !(break_)))
+  ((SZ.(!i <^ ht.sz) && not_ !(break_)))
   invariant //b.
    exists* (vi:SZ.t) vcontents (br:bool). (
     pts_to contents vcontents **
@@ -455,8 +456,8 @@ fn not_full
     with vcontents. assert (pts_to contents vcontents);
     with s. assert (V.pts_to vcontents s);
     assert (pure (Seq.equal s pht.repr.seq));
-    break_ := not (fst b);
-    if (not (!break_)) { i := SZ.add (!i) 1sz; }
+    break_ := not_ (fst b);
+    if (not_ (!break_)) { i := SZ.add (!i) 1sz; }
   };
 
   let vi = !i;
@@ -530,7 +531,7 @@ fn delete
 
   while
   (
-    (!cont && not (!err))
+    (!cont && not_ (!err))
   )
   invariant exists* (voff:SZ.t) (vcont verr:bool) (contents_v:V.vec _). (
     pts_to off voff **
