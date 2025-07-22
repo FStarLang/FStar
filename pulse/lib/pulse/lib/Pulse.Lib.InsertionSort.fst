@@ -149,11 +149,10 @@ ensures exists* s'. (a |-> s') **
   while (
     SZ.(!j <^ len)
   )
-  invariant b. (
+  invariant (
     exists* vj (s':Seq.seq t).
       (j |-> vj) **
       (a |-> s') **
-      pure (b == SZ.(vj <^ len)) **
       pure (
         1 <= SZ.v vj /\ 
         SZ.v vj <= SZ.v len /\
@@ -173,13 +172,9 @@ ensures exists* s'. (a |-> s') **
     while (
       (not !done && a.(!i) >? key)
     )
-    invariant b. (
-      exists* (vi:SZ.t) (d:bool) (s':Seq.seq t). 
-        (i |-> vi) **
-        (a |-> s') **
-        (done |-> d) **
-        pure (inner_invariant ss s' key vi vj d /\
-              b == (not d && Seq.index s' (SZ.v vi) >? key))
+    invariant (
+      exists* (vi:SZ.t) (d:bool) (s':Seq.seq t { inner_invariant ss s' key vi vj d}).
+        (i |-> vi) ** (a |-> s') ** (done |-> d) 
     )
     {
       let vi = !i;
