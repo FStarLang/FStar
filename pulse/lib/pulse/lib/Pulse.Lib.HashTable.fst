@@ -83,7 +83,6 @@ let size_t_mod (x:SZ.t) (y : SZ.t { y =!= 0sz })
   = SZ.(x %^ y)
 
 #push-options "--fuel 1 --ifuel 1"
-
 fn lookup
   (#[@@@ Rust_generics_bounds ["Copy"; "PartialEq"; "Clone"]] kt:eqtype)
   (#[@@@ Rust_generics_bounds ["Clone"]] vt:Type0)
@@ -192,7 +191,6 @@ fn lookup
   rewrite (models ht pht) as (models (fst res) pht);
   res
 }
-
 #pop-options
 
 
@@ -430,17 +428,17 @@ fn not_full
   let mut contents = ht.contents;
 
   let mut i = 0sz;
-  let mut break = false;
+  let mut break_ = false;
   unfold (models ht pht);
 
   while
-  ((SZ.(!i <^ ht.sz) && not !(break)))
+  ((SZ.(!i <^ ht.sz) && not !(break_)))
   invariant //b.
    exists* (vi:SZ.t) vcontents (br:bool). (
     pts_to contents vcontents **
     V.pts_to vcontents pht.repr.seq **
     pts_to i vi **
-    pts_to break br **
+    pts_to break_ br **
     pure (
       V.is_full_vec vcontents /\
       SZ.v ht.sz == pht_sz pht /\
@@ -457,12 +455,12 @@ fn not_full
     with vcontents. assert (pts_to contents vcontents);
     with s. assert (V.pts_to vcontents s);
     assert (pure (Seq.equal s pht.repr.seq));
-    break := not (fst b);
-    if (not (!break)) { i := SZ.add (!i) 1sz; }
+    break_ := not (fst b);
+    if (not (!break_)) { i := SZ.add (!i) 1sz; }
   };
 
   let vi = !i;
-  let res = !break;//SZ.(vi <^ ht.sz);
+  let res = !break_;
 
   let vcontents = !contents;
   let ht = mk_ht ht.sz hashf vcontents;
