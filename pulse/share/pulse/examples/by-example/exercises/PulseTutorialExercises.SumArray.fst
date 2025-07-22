@@ -93,14 +93,13 @@ fn compare (#t:eqtype) #p1 #p2 (a1 a2:A.array t) (l:SZ.t)
       false
     }
   )
-  invariant b.
+  invariant
   exists* vi. ( 
     R.pts_to i vi **
     A.pts_to a1 #p1 's1 **
     A.pts_to a2 #p2 's2 **
     pure (
       vi <= l /\
-      (b == (vi < l && Seq.index 's1 (v vi) = Seq.index 's2 (v vi))) /\
       (forall (i:nat). i < v vi ==> Seq.index 's1 i == Seq.index 's2 i)
     )
   )
