@@ -653,7 +653,7 @@ let inspect_namedv (v:bv) : namedv_view =
     if v.index < 0 then (
         Err.log_issue0 Err.Warning_CantInspect
           (BU.format3 "inspect_namedv: uniq is negative (%s : %s), uniq = %s"
-                (Ident.string_of_id v.ppname) (show v.sort) (string_of_int v.index))
+                (Ident.string_of_id v.ppname) (show v.sort) (show v.index))
     );
     {
       uniq   = Z.of_int_fs v.index;
@@ -677,7 +677,7 @@ let inspect_bv (bv:bv) : bv_view =
     if bv.index < 0 then (
         Err.log_issue0 Err.Warning_CantInspect
           (BU.format3 "inspect_bv: index is negative (%s : %s), index = %s"
-                (Ident.string_of_id bv.ppname) (show bv.sort) (string_of_int bv.index))
+                (Ident.string_of_id bv.ppname) (show bv.sort) (show bv.index))
     );
     {
       index  = Z.of_int_fs bv.index;

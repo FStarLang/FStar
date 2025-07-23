@@ -49,7 +49,7 @@ let rng_included r1 r2 =
     r2.end_pos >=? r1.end_pos
 
 let string_of_pos pos =
-    format2 "%s,%s" (string_of_int pos.line) (string_of_int pos.col)
+    format2 "%s,%s" (show pos.line) (show pos.col)
 let file_of_range r = r.def_range.file_name
 let set_file_of_range r (f:string) = {r with def_range = {r.def_range with file_name = Filepath.basename f}}
 let string_of_rng r =

@@ -44,7 +44,7 @@ let escape (s:string) = BU.replace_char s '\'' '_'
 let mk_term_projector_name lid (a:bv) =
     escape <| BU.format2 "%s_%s" (string_of_lid lid) (string_of_id a.ppname)
 let primitive_projector_by_pos env lid i =
-    let fail () = failwith (BU.format2 "Projector %s on data constructor %s not found" (string_of_int i) (string_of_lid lid)) in
+    let fail () = failwith (BU.format2 "Projector %s on data constructor %s not found" (show i) (string_of_lid lid)) in
     let _, t = Env.lookup_datacon env lid in
     match (SS.compress t).n with
         | Tm_arrow {bs; comp=c} ->
@@ -54,7 +54,7 @@ let primitive_projector_by_pos env lid i =
           else let b = List.nth binders i in
                 mk_term_projector_name lid b.binder_bv
         | _ -> fail ()
-let mk_term_projector_name_by_pos lid (i:int) = escape <| BU.format2 "%s_%s" (string_of_lid lid) (string_of_int i)
+let mk_term_projector_name_by_pos lid (i:int) = escape <| BU.format2 "%s_%s" (string_of_lid lid) (show i)
 let mk_term_projector (lid:lident) (a:bv) : term =
     mkFreeV <| mk_fv (mk_term_projector_name lid a, Arrow(Term_sort, Term_sort))
 let mk_term_projector_by_pos (lid:lident) (i:int) : term =
@@ -83,15 +83,15 @@ let varops =
         let y = escape y in
         let y = match BU.find_map (!scopes) (fun names -> SMap.try_find names y) with
                   | None -> y
-                  | Some _ -> BU.incr ctr; y ^ "__" ^ (string_of_int !ctr) in
+                  | Some _ -> BU.incr ctr; y ^ "__" ^ (show !ctr) in
         let top_scope = List.hd !scopes in
         SMap.add top_scope y true; y in
-    let new_var pp rn = mk_unique <| (string_of_id pp) ^ "__" ^ (string_of_int rn) in
+    let new_var pp rn = mk_unique <| (string_of_id pp) ^ "__" ^ (show rn) in
     let new_fvar lid = mk_unique (string_of_lid lid) in
     let next_id () = BU.incr ctr; !ctr in
     //AR: adding module name after the prefix, else it interferes for name matching for fuel arguments
     //    see try_lookup_free_var below
-    let fresh mname pfx = BU.format3 "%s_%s_%s" pfx mname (string_of_int <| next_id()) in
+    let fresh mname pfx = BU.format3 "%s_%s_%s" pfx mname (show <| next_id()) in
     //the fresh counter is reset after every module
     let reset_fresh () = ctr := initial_ctr in
     let push () = scopes := new_scope() :: !scopes in // already signal-atomic
@@ -129,18 +129,15 @@ let fvb_to_string fvb =
   in
   let term_pair_opt_to_string = function
     | None -> "None"
-    | Some (s0, s1) ->
-      BU.format2 "(%s, %s)"
-        (Term.print_smt_term s0)
-        (Term.print_smt_term s1)
+    | Some (s0, s1) -> show (s0, s1)
   in
   BU.format6 "{ lid = %s;\n  smt_arity = %s;\n  smt_id = %s;\n  smt_token = %s;\n  smt_fuel_partial_app = %s;\n  fvb_thunked = %s }"
-    (Ident.string_of_lid fvb.fvar_lid)
-    (string_of_int fvb.smt_arity)
+    (show fvb.fvar_lid)
+    (show fvb.smt_arity)
     fvb.smt_id
     (term_opt_to_string fvb.smt_token)
     (term_pair_opt_to_string fvb.smt_fuel_partial_app)
-    (BU.string_of_bool fvb.fvb_thunked)
+    (show fvb.fvb_thunked)
 
 let check_valid_fvb fvb =
     if (Option.isSome fvb.smt_token
@@ -206,7 +203,7 @@ let fresh_fvar mname x s = let xsym = varops.fresh mname x in xsym, mkFreeV <| m
 
 (* Bound term variables *)
 let gen_term_var (env:env_t) (x:bv) =
-    let ysym = "@x"^(string_of_int env.depth) in
+    let ysym = "@x"^(show env.depth) in
     let y = mkFreeV <| mk_fv (ysym, Term_sort) in
     (* Note: the encoding of impure function arrows (among other places
     probably) relies on the fact that this is exactly a FreeV. See getfreeV in

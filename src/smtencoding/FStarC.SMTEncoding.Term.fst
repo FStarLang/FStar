@@ -46,7 +46,7 @@ let rec strSort x = match x with
   | Term_sort -> "Term"
   | String_sort -> "FString"
   | Fuel_sort -> "Fuel"
-  | BitVec_sort n -> format1 "(_ BitVec %s)" (string_of_int n)
+  | BitVec_sort n -> format1 "(_ BitVec %s)" (show n)
   | Array(s1, s2) -> format2 "(Array %s %s)" (strSort s1) (strSort s2)
   | Arrow(s1, s2) -> format2 "(%s -> %s)" (strSort s1) (strSort s2)
   | Sort s -> s
@@ -57,7 +57,7 @@ let rec docSort x = match x with
   | Term_sort -> doc_of_string "Term"
   | String_sort -> doc_of_string "FString"
   | Fuel_sort -> doc_of_string "Fuel"
-  | BitVec_sort n -> form "_" [doc_of_string "BitVec"; doc_of_string (string_of_int n)]
+  | BitVec_sort n -> form "_" [doc_of_string "BitVec"; doc_of_string (show n)]
   | Array(s1, s2) -> form "Array" [docSort s1; docSort s2]
   | Arrow(s1, s2) ->
     nest 1 (group (parens (docSort s1 ^^ doc_of_string " ->" ^/^ docSort s2)))
@@ -265,17 +265,17 @@ let op_to_string = function
   | BvMul -> "bvmul"
   | BvUlt -> "bvult"
   | BvToNat -> "bv2int"
-  | BvUext n -> format1 "(_ zero_extend %s)" (string_of_int n)
-  | NatToBv n -> format1 "(_ int2bv %s)" (string_of_int n)
+  | BvUext n -> format1 "(_ zero_extend %s)" (show n)
+  | NatToBv n -> format1 "(_ int2bv %s)" (show n)
   | Var s -> s
 
-let weightToSmtStr = function
+let weightToSmtStr : option int -> string = function
   | None -> ""
-  | Some i -> BU.format1 ":weight %s\n" (string_of_int i)
+  | Some i -> BU.format1 ":weight %s\n" (show i)
 
-let weightToSmt = function
+let weightToSmt : option int -> list document = function
   | None -> []
-  | Some i -> [nest 1 (group (doc_of_string ":weight" ^/^ doc_of_string (string_of_int i)))]
+  | Some i -> [nest 1 (group (doc_of_string ":weight" ^/^ doc_of_string (show i)))]
 
 (* NOTE: these hashes are used for variable names in the encoding (Tm_refine_xxx, etc).
 These names can affect the behavior of Z3 and make the difference between a success and
@@ -287,7 +287,7 @@ let rec hash_of_term' t =
   | Integer i ->  i
   | String s -> s
   | Real r -> r
-  | BoundV i  -> "@"^string_of_int i
+  | BoundV i  -> "@"^show i
   | FreeV x   -> fv_name x ^ ":" ^ strSort (fv_sort x) //Question: Why is the sort part of the hash?
   | App(op, tms) -> "("^(op_to_string op)^(List.map hash_of_term tms |> String.concat " ")^")"
   | Labeled(t, _, _) ->
@@ -313,7 +313,7 @@ let mkBoxFunctions s = (s, s ^ "_proj_0")
 let boxIntFun        = mkBoxFunctions "BoxInt"
 let boxBoolFun       = mkBoxFunctions "BoxBool"
 let boxStringFun     = mkBoxFunctions "BoxString"
-let boxBitVecFun sz  = mkBoxFunctions ("BoxBitVec" ^ (string_of_int sz))
+let boxBitVecFun (sz:int) = mkBoxFunctions ("BoxBitVec" ^ show sz)
 let boxRealFun       = mkBoxFunctions "BoxReal"
 
 // Assume the Box/Unbox functions to be injective
@@ -328,7 +328,7 @@ let mkTrue  r       = mk (App(TrueOp, [])) r
 let mkFalse r       = mk (App(FalseOp, [])) r
 let mkUnreachable   = mk (App(Var "Unreachable", [])) Range.dummyRange
 let mkInteger i  r  = mk (Integer (ensure_decimal i)) r
-let mkInteger' i r  = mkInteger (string_of_int i) r
+let mkInteger' i r  = mkInteger (show i) r
 let mkReal i r      = mk (Real i) r
 let mkBoundV i r    = mk (BoundV i) r
 let mkFreeV x r     = mk (FreeV x) r
@@ -486,7 +486,7 @@ let check_pattern_ok (t:term) : option term =
   | Integer n               -> BU.format1 "(Integer %s)" n
   | String s                -> BU.format1 "(String %s)" s
   | Real r                  -> BU.format1 "(Real %s)" r
-  | BoundV  n               -> BU.format1 "(BoundV %s)" (BU.string_of_int n)
+  | BoundV  n               -> BU.format1 "(BoundV %s)" (show n)
   | FreeV  fv               -> BU.format1 "(FreeV %s)" (fv_name fv)
   | App (op, l)             -> BU.format2 "(%s %s)" (op_to_string op) (print_smt_term_list l)
   | Labeled(t, r1, r2)      -> BU.format2 "(Labeled '%s' %s)" (Errors.Msg.rendermsg r1) (print_smt_term t)
@@ -615,8 +615,8 @@ let fresh_token (tok_name, sort) id =
     Assume a
 
 let fresh_constructor rng (name, arg_sorts, sort, id) =
-  let id = string_of_int id in
-  let bvars = arg_sorts |> List.mapi (fun i s -> mkFreeV(mk_fv ("x_" ^ string_of_int i, s)) norng) in
+  let id = show id in
+  let bvars = arg_sorts |> List.mapi (fun i s -> mkFreeV(mk_fv ("x_" ^ show i, s)) norng) in
   let bvar_names = List.map fv_of_term bvars in
   let capp = mkApp(name, bvars) norng in
   let cid_app = mkApp(constr_id_of_sort sort, [capp]) norng in
@@ -635,7 +635,7 @@ let injective_constructor
   (rng:Range.t)
   ((name, fields, sort):(string & list constructor_field & sort)) :list decl =
     let n_bvars = List.length fields in
-    let bvar_name i = "x_" ^ string_of_int i in
+    let bvar_name i = "x_" ^ show i in
     let bvar_index i = n_bvars - (i + 1) in
     let bvar i s = mkFreeV <| mk_fv (bvar_name i, s) in
     let bvars = fields |> List.mapi (fun i f -> bvar i f.field_sort norng) in
@@ -679,7 +679,7 @@ let constructor_to_decl rng constr =
          |> List.mapi (fun i {field_projectible=projectible; field_sort=s; field_name=proj} ->
                 if projectible
                 then mkApp(proj, [xx]) norng, []
-                else let fi = mk_fv ("f_" ^ BU.string_of_int i, s) in
+                else let fi = mk_fv ("f_" ^ show i, s) in
                      mkFreeV fi norng, [fi])
          |> List.split in
         let ex_vars = List.flatten ex_vars in
@@ -691,7 +691,7 @@ let constructor_to_decl rng constr =
           match constr.constr_id with
           | None -> disc_inv_body
           | Some id ->
-            let disc_eq = mkEq(mkApp(constr_id_of_sort constr.constr_sort, [xx]) norng, mkInteger (string_of_int id) norng) norng in
+            let disc_eq = mkEq(mkApp(constr_id_of_sort constr.constr_sort, [xx]) norng, mkInteger (show id) norng) norng in
             mkAnd(disc_eq, disc_inv_body) norng in
         let def = mkDefineFun(disc_name, [xfv], Bool_sort,
                     disc_ax,
@@ -709,7 +709,7 @@ let constructor_to_decl rng constr =
         in
         let base_name = constr.constr_name ^ "@base" in
         let decl = DeclFun(base_name, arg_sorts, Term_sort, Some "Constructor base") in
-        let formals = List.mapi (fun i _ -> mk_fv ("x" ^ string_of_int i, Term_sort)) constr.constr_fields in
+        let formals = List.mapi (fun i _ -> mk_fv ("x" ^ show i, Term_sort)) constr.constr_fields in
         let constructed_term = mkApp(constr.constr_name, List.map (fun fv -> mkFreeV fv norng) formals) norng in
         let inj_formals = List.flatten <| List.map2 (fun f fld -> if fld.field_projectible then [f] else []) formals constr.constr_fields in
         let base_term = mkApp(base_name, List.map (fun fv -> mkFreeV fv norng) inj_formals) norng in
@@ -743,7 +743,7 @@ let name_binders_inner prefix_opt (outer_names:list fv) start sorts =
             match prefix_opt with
             | None -> prefix
             | Some p -> p ^ prefix in
-        let nm = prefix ^ string_of_int n in
+        let nm = prefix ^ show n in
         let names = mk_fv (nm,s)::names in
         let b = form nm [docSort s] in
         names, b::binders, n+1)
@@ -770,7 +770,7 @@ let termToSmt
             let n = !ctr in
             BU.incr ctr;
             if n = 0 then enclosing_name
-            else BU.format2 "%s.%s" enclosing_name (BU.string_of_int n)
+            else BU.format2 "%s.%s" enclosing_name (show n)
       in
       let remove_guard_free pats =
         pats |> List.map (fun ps ->
@@ -790,7 +790,7 @@ let termToSmt
           doc_of_string (match id_opt with
            | Some id -> id
            | None ->
-             let id = !string_id_counter |> string_of_int in
+             let id = !string_id_counter |> show in
              BU.incr string_id_counter;
              SMap.add string_cache s id;
              id)
@@ -820,7 +820,7 @@ let termToSmt
           (* substitution should occur in parallel and order should not matter *)
           let names, binders, n =
             List.fold_left (fun (names0, binders, n0) e ->
-              let nm = "@lb" ^ string_of_int n0 in
+              let nm = "@lb" ^ show n0 in
               let names0 = mk_fv (nm, Term_sort)::names0 in
               let b = form nm [aux n names e] in
               names0, b::binders, n0+1)
@@ -857,7 +857,7 @@ let rec declToSmt' print_captions z3options decl : document =
       doc_of_string ";;; Start " ^^ doc_of_string s ^^ hardline ^^
       res ^^ hardline ^^
       doc_of_string ";;; End " ^^ doc_of_string s ^^
-        parens (doc_of_string (BU.string_of_int (List.length decls)) ^^ doc_of_string " decls") ^^ hardline
+        parens (doc_of_string (show (List.length decls)) ^^ doc_of_string " decls") ^^ hardline
     else res
   | Caption c ->
     if print_captions

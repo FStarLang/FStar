@@ -3643,7 +3643,7 @@ let try_lookup_record_type env (typename:lident)
 
            else (
             //  BU.print3 "Not enough formals; nparms=%s; type = %s; formals=%s\n"
-            //    (string_of_int nparms)
+            //    (show nparms)
             //    (show t)
             //    (Print.binders_to_string ", " formals);
              None

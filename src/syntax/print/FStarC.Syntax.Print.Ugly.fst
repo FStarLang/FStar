@@ -47,14 +47,14 @@ let lid_to_string (l:lid) = sli l
 
 // let fv_to_string fv = Printf.sprintf "%s@%A" (lid_to_string fv.fv_name.v) fv.fv_delta
 let fv_to_string fv = lid_to_string fv.fv_name.v //^ "(@@" ^ showfv.fv_delta ^ ")"
-let bv_to_string bv = (string_of_id bv.ppname) ^ "#" ^ (string_of_int bv.index)
+let bv_to_string bv = (string_of_id bv.ppname) ^ "#" ^ (show bv.index)
 
 let nm_to_string bv =
     if Options.print_real_names()
     then bv_to_string bv
     else (string_of_id bv.ppname)
 
-let db_to_string bv = (string_of_id bv.ppname) ^ "@" ^ string_of_int bv.index
+let db_to_string bv = (string_of_id bv.ppname) ^ "@" ^ show bv.index
 
 let filter_imp aq =
    (* keep typeclass args *)
@@ -74,12 +74,12 @@ let lbname_to_string = function
   | Inl l -> bv_to_string l
   | Inr l -> lid_to_string l.fv_name.v
 
-let uvar_to_string u = if (Options.hide_uvar_nums()) then "?" else "?" ^ (Unionfind.uvar_id u |> string_of_int)
-let version_to_string v = U.format2 "%s.%s" (U.string_of_int v.major) (U.string_of_int v.minor)
+let uvar_to_string u = if (Options.hide_uvar_nums()) then "?" else "?" ^ (Unionfind.uvar_id u |> show)
+let version_to_string v = U.format2 "%s.%s" (show v.major) (show v.minor)
 let univ_uvar_to_string u =
     if (Options.hide_uvar_nums())
     then "?"
-    else "?" ^ (Unionfind.univ_uvar_id u |> string_of_int)
+    else "?" ^ (Unionfind.univ_uvar_id u |> show)
             ^ ":" ^ (u |> (fun (_, u, _) -> version_to_string u))
 
 let rec int_of_univ n u = match Subst.compress_univ u with
@@ -92,12 +92,12 @@ Errors.with_ctx "While printing universe" (fun () ->
   match Subst.compress_univ u with
     | U_unif u -> "U_unif "^univ_uvar_to_string u
     | U_name x -> "U_name "^(string_of_id x)
-    | U_bvar x -> "@"^string_of_int x
+    | U_bvar x -> "@"^show x
     | U_zero   -> "0"
     | U_succ u ->
         begin match int_of_univ 1 u with
-            | n, None -> string_of_int n
-            | n, Some u -> U.format2 "(%s + %s)" (univ_to_string u) (string_of_int n)
+            | n, None -> show n
+            | n, Some u -> U.format2 "(%s + %s)" (univ_to_string u) (show n)
         end
     | U_max us -> U.format1 "(max %s)" (List.map univ_to_string us |> String.concat ", ")
     | U_unknown -> "unknown"
@@ -204,12 +204,12 @@ let rec term_to_string x =
         if Options.print_bound_var_types()
         && Options.print_effect_args()
         then ctx_uvar_to_string_aux true u
-        else "?" ^ (string_of_int <| Unionfind.uvar_id u.ctx_uvar_head)
+        else "?" ^ (show <| Unionfind.uvar_id u.ctx_uvar_head)
       | Tm_uvar (u, s) ->
         if Options.print_bound_var_types()
         && Options.print_effect_args()
         then U.format2 "(%s @ %s)" (ctx_uvar_to_string_aux true u) (List.map subst_to_string (fst s) |> String.concat "; ")
-        else "?" ^ (string_of_int <| Unionfind.uvar_id u.ctx_uvar_head)
+        else "?" ^ (show <| Unionfind.uvar_id u.ctx_uvar_head)
       | Tm_constant c ->    const_to_string c
       | Tm_type u ->        if (Options.print_universes()) then U.format1 "Type u#(%s)" (univ_to_string u) else "Type"
       | Tm_arrow {bs; comp=c} ->  U.format2 "(%s -> %s)"  (binders_to_string " -> " bs) (comp_to_string c)
@@ -294,12 +294,12 @@ and ctx_uvar_to_string_aux print_reason ctx_uvar =
 
 
 and subst_elt_to_string = function
-   | DB(i, x) -> U.format2 "DB (%s, %s)" (string_of_int i) (bv_to_string x)
-   | DT(i, t) -> U.format2 "DT (%s, %s)" (string_of_int i) (term_to_string t)
-   | NM(x, i) -> U.format2 "NM (%s, %s)" (bv_to_string x) (string_of_int i)
+   | DB(i, x) -> U.format2 "DB (%s, %s)" (show i) (bv_to_string x)
+   | DT(i, t) -> U.format2 "DT (%s, %s)" (show i) (term_to_string t)
+   | NM(x, i) -> U.format2 "NM (%s, %s)" (bv_to_string x) (show i)
    | NT(x, t) -> U.format2 "NT (%s, %s)" (bv_to_string x) (term_to_string t)
-   | UN(i, u) -> U.format2 "UN (%s, %s)" (string_of_int i) (univ_to_string u)
-   | UD(u, i) -> U.format2 "UD (%s, %s)" (string_of_id u) (string_of_int i)
+   | UN(i, u) -> U.format2 "UN (%s, %s)" (show i) (univ_to_string u)
+   | UD(u, i) -> U.format2 "UD (%s, %s)" (string_of_id u) (show i)
 
 and subst_to_string s = s |> List.map subst_elt_to_string |> String.concat "; "
 
@@ -637,8 +637,8 @@ let rec sigelt_to_string (x: sigelt) =
       | Sig_bundle {ses} -> "(* Sig_bundle *)" ^ (List.map sigelt_to_string ses |> String.concat "\n")
       | Sig_fail {errs; fail_in_lax=lax; ses} ->
         U.format3 "(* Sig_fail %s %s *)\n%s\n(* / Sig_fail*)\n"
-            (string_of_bool lax)
-            (FStarC.Common.string_of_list string_of_int errs)
+            (show lax)
+            (show errs)
             (List.map sigelt_to_string ses |> String.concat "\n")
 
       | Sig_new_effect(ed) ->

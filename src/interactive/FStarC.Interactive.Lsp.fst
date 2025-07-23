@@ -23,6 +23,7 @@ open FStarC.Errors
 open FStarC.Universal
 open FStarC.Interactive.Ide.Types
 open FStarC.Interactive.JsonHelper
+open FStarC.Class.Show
 
 module U = FStarC.Util
 module QH = FStarC.Interactive.QueryHelper
@@ -214,7 +215,7 @@ let rec read_lsp_query (stream: stream_reader) : lsp_query =
     let n = parse_header_len stream 0 in
     match U.nread stream n with
     | Some s -> parse_lsp_query s
-    | None -> wrap_content_szerr (U.format1 "Could not read %s bytes" (U.string_of_int n))
+    | None -> wrap_content_szerr (U.format1 "Could not read %s bytes" (show n))
   with
   // At no cost should the server go down
   | MalformedHeader -> U.print_error "[E] Malformed Content Header\n"; read_lsp_query stream

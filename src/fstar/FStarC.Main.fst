@@ -61,7 +61,7 @@ let finished_message fmods errs =
     if errs > 0
     then if errs = 1
          then Util.print_error "1 error was reported (see above)\n"
-         else Util.print1_error "%s errors were reported (see above)\n" (string_of_int errs)
+         else Util.print1_error "%s errors were reported (see above)\n" (show errs)
     else print1 "%s\n" (Util.colorize_bold "All verification conditions discharged successfully")
   end
 
@@ -224,7 +224,7 @@ let go_normal () =
 
     | Success when Options.print_cache_version () ->
       Util.print1 "F* cache version number: %s\n"
-                   (string_of_int FStarC.CheckedFiles.cache_version_number);
+                   (show FStarC.CheckedFiles.cache_version_number);
       exit 0
 
     (* --dep: Just compute and print the transitive dependency graph;
@@ -447,7 +447,7 @@ let main () =
     let _, time = Timing.record_ms go in
     if FStarC.Options.query_stats()
     then Util.print2_error "TOTAL TIME %s ms: %s\n"
-              (FStarC.Util.string_of_int time)
+              (show time)
               (String.concat " " (FStarC.Getopt.cmdline()));
     print_stats();
     cleanup ();

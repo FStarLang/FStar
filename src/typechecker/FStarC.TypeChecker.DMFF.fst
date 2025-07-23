@@ -422,7 +422,7 @@ let gen_wps_for_free
           List.fold_left U.mk_conj rel0 rels
         | Tm_arrow {bs=binders; comp={ n = GTotal b }}
         | Tm_arrow {bs=binders; comp={ n = Total b }} ->
-          let bvs = List.mapi (fun i ({binder_bv=bv;binder_qual=q}) -> S.gen_bv ("a" ^ string_of_int i) None bv.sort) binders in
+          let bvs = List.mapi (fun i ({binder_bv=bv;binder_qual=q}) -> S.gen_bv ("a" ^ show i) None bv.sort) binders in
           let args = List.map (fun ai -> S.as_arg (S.bv_to_name ai)) bvs in
           let body = mk_stronger b (U.mk_app x args) (U.mk_app y args) in
           List.fold_right (fun bv body -> mk_forall bv body) bvs body
@@ -1044,9 +1044,9 @@ and infer (env: env) (e: term): nm & term & term =
         raise_error0 Errors.Fatal_BinderAndArgsLengthMismatch (BU.format3 "The head of this application, after being applied to %s \
           arguments, is an effectful computation (leaving %s arguments to be \
           applied). Please let-bind the head applied to the %s first \
-          arguments." (string_of_int n) (string_of_int (n' - n)) (show n));
+          arguments." (show n) (show (n' - n)) (show n));
       // BU.print2 "[debug] length binders=%s, length args=%s\n"
-      //  (string_of_int n) (string_of_int n');
+      //  (show n) (show n');
 
       let binders, comp = SS.open_comp binders comp in
       let rec final_type subst (binders, comp) args =

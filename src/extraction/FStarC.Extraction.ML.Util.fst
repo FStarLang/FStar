@@ -72,7 +72,7 @@ let mlconst_of_const (p:Range.t) (c:sconst) =
 
 let mlexpr_of_range (r:Range.t) : mlexpr' =
     let cint (i : int) : mlexpr =
-        MLC_Int (string_of_int i, None) |> MLE_Const |> with_ty ml_int_ty
+        MLC_Int (show i, None) |> MLE_Const |> with_ty ml_int_ty
     in
     let cstr (s : string) : mlexpr =
         MLC_String s |> MLE_Const |> with_ty ml_string_ty
@@ -136,8 +136,8 @@ let udelta_unfold (g:UEnv.uenv) = function
             | None ->
               failwith (BU.format3 "Substitution must be fully applied; got an application of %s with %s args whereas %s were expected (see GitHub issue #490)"
                                                  (string_of_mlpath n)
-                                                 (BU.string_of_int (List.length args))
-                                                 (BU.string_of_int (List.length (fst ts))))
+                                                 (show (List.length args))
+                                                 (show (List.length (fst ts))))
             | Some r -> Some r
           end
         | _ -> None

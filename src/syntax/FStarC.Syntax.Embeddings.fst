@@ -230,7 +230,7 @@ let e_bool =
         em
         un
         (fun () -> S.t_bool)
-        BU.string_of_bool
+        string_of_bool
         (fun () -> ET_app(PC.bool_lid |> Ident.string_of_lid, []))
 
 let e_char =

@@ -79,7 +79,7 @@ let string_of_repl_stack_entry
   : repl_stack_entry_t -> string
   = fun ((depth, i), (task, state)) ->
       BU.format "{depth=%s; task=%s}"
-                [string_of_int i;
+                [show i;
                 string_of_repl_task task]
                 
 
@@ -97,8 +97,8 @@ let repl_state_to_string (r:repl_state)
       repl_cur_mod=%s;\n\t\      
       repl_deps_stack={%s}\n\
      }"
-     [string_of_int r.repl_line;
-      string_of_int r.repl_column;
+     [show r.repl_line;
+      show r.repl_column;
       r.repl_fname;
       (match r.repl_curmod with
        | None -> "None"
@@ -113,9 +113,9 @@ let push_query_to_string pq =
   in
   FStarC.Util.format "{ push_kind = %s; push_line = %s; \
                push_column = %s; push_peek_only = %s; push_code_or_decl = %s }"
-    [show pq.push_kind; string_of_int pq.push_line;
-     string_of_int pq.push_column;
-     string_of_bool pq.push_peek_only;
+    [show pq.push_kind; show pq.push_line;
+     show pq.push_column;
+     show pq.push_peek_only;
      code_or_decl]
 
 let query_to_string (q:query) = match q.qq with
@@ -134,7 +134,7 @@ let query_to_string (q:query) = match q.qq with
                  | None -> "None"
                  | Some (f, i, j) ->
                    BU.format3 "(%s, %s, %s)"
-                              f (string_of_int i) (string_of_int j))
+                              f (show i) (show j))
                 (String.concat "; " features)
 | Compute _ -> "Compute"
 | Search _ -> "Search"

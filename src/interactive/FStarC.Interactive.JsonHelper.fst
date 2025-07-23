@@ -26,6 +26,7 @@ open FStarC.Errors
 open FStarC.Range
 open FStarC.Json
 open FStarC.TypeChecker.Env
+open FStarC.Class.Show
 
 module U = FStarC.Util
 
@@ -52,7 +53,7 @@ let write_json (js: json) =
 let write_jsonrpc (js: json) : unit =
   // TODO: utf-8 strings: byte buffers?
   let js_str = string_of_json js in
-  let len = U.string_of_int (String.length js_str) in
+  let len = show (String.length js_str) in
   U.print_raw (U.format2 "Content-Length: %s\r\n\r\n%s" len js_str)
 
 // Only used in IDE
@@ -171,7 +172,7 @@ let errorcode_to_int : error_code -> int = function
 let json_debug = function
   | JsonNull -> "null"
   | JsonBool b -> U.format1 "bool (%s)" (if b then "true" else "false")
-  | JsonInt i -> U.format1 "int (%s)" (U.string_of_int i)
+  | JsonInt i -> U.format1 "int (%s)" (show i)
   | JsonStr s -> U.format1 "string (%s)" s
   | JsonList _ -> "list (...)"
   | JsonAssoc _ -> "dictionary (...)"

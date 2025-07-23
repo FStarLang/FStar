@@ -57,7 +57,7 @@ let gen_univs env (x:FlatSet.t universe_uvar) : list univ_name =
            let u_name = Syntax.new_univ_name r in
            if !dbg_Gen then
             BU.print3 "Setting ?%s (%s) to %s\n"
-                            (string_of_int <| UF.univ_uvar_id u)
+                            (show <| UF.univ_uvar_id u)
                             (show (U_unif u))
                             (show (U_name u_name));
            UF.univ_change u (U_name u_name);

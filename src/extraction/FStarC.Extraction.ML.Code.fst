@@ -66,7 +66,7 @@ let empty    = Doc ""
 let hardline = Doc "\n"
 
 let text (s : string) = Doc s
-let num (i : int) = Doc (string_of_int i)
+let num (i : int) = Doc (show i)
 
 let break1 = text " "
 
@@ -273,7 +273,7 @@ let string_of_mlconstant (sctt : mlconstant) =
   | MLC_Char c -> (* Unicode characters, in OCaml we use BatUChar (wraper for int) *)
     if Util.codegen_fsharp() then "'" ^ (string_of_char c) ^ "'" else
     let nc = FStar.Char.int_of_char c in 
-    (string_of_int nc) ^ (if nc >= 32 && nc  = 127 && nc < 34 then " (*" ^ (string_of_char c) ^"*)" else "")
+    (show nc) ^ (if nc >= 32 && nc  = 127 && nc < 34 then " (*" ^ (string_of_char c) ^"*)" else "")
   | MLC_Int (s, Some (Signed, Int32)) -> s ^"l"
   | MLC_Int (s, Some (Signed, Int64)) -> s ^"L"
   | MLC_Int (s, Some (_, Int8))

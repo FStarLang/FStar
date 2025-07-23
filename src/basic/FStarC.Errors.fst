@@ -88,17 +88,17 @@ let update_flags (l:list (error_flag & (int & int)))
       | (CError, CAlwaysError) ->
         raise (Invalid_warn_error_setting
                  (BU.format1 "cannot turn error %s into warning"
-                             (BU.string_of_int i)))
+                             (show i)))
       | (CSilent, CAlwaysError) ->
         raise (Invalid_warn_error_setting
                  (BU.format1 "cannot silence error %s"
-                             (BU.string_of_int i)))
+                             (show i)))
       | (CSilent, CFatal)
       | (CWarning, CFatal)
       | (CError, CFatal) ->
         raise (Invalid_warn_error_setting
                  (BU.format1 "cannot change the error level of fatal error %s"
-                             (BU.string_of_int i)))
+                             (show i)))
       | (CAlwaysError, CFatal) ->
         CFatal
       | _ -> flag
@@ -175,7 +175,7 @@ let issue_to_doc' (print_hdr:bool) (issue:issue) : PP.document =
       let level_header = doc_of_string (string_of_issue_level issue.issue_level) in
       let num_opt =
         if issue.issue_level = EError || issue.issue_level = EWarning
-        then blank 1 ^^ optional_def (fun n -> doc_of_string (string_of_int n)) (doc_of_string "<unknown>") issue.issue_number
+        then blank 1 ^^ optional_def (fun n -> doc_of_string (show n)) (doc_of_string "<unknown>") issue.issue_number
         else empty
       in
       let atrng : document =

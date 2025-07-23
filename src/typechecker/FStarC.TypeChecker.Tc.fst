@@ -89,7 +89,7 @@ let set_hint_correlator env se =
       let lids = U.lids_of_sigelt se in
       let lid = match lids with
             | [] -> Ident.lid_add_suffix (Env.current_module env)
-                                         (GenSym.next_id () |> BU.string_of_int) // GM: Should we really touch the gensym?
+                                         (GenSym.next_id () |> show) // GM: Should we really touch the gensym?
             | l::_ -> l in
       {env with qtbl_name_and_index=Some (lid, typ, get_n lid), tbl}
 
@@ -619,7 +619,7 @@ let tc_decl' env0 se: list sigelt & list sigelt & Env.env =
      * don't pop the context (spoiler: we prove false). *)
 
     if Debug.low () then
-        BU.print1 ">> Expecting errors: [%s]\n" (String.concat "; " <| List.map string_of_int expected_errors);
+        BU.print1 ">> Expecting errors: [%s]\n" (String.concat "; " <| List.map show expected_errors);
 
     let errs, _ = Errors.catch_errors (fun () ->
                     Options.with_saved_options (fun () ->
@@ -801,9 +801,9 @@ let tc_decl' env0 se: list sigelt & list sigelt & Env.env =
   | Sig_splice {is_typed; lids; tac=t} ->
     if Debug.any () then
       BU.print3 "%s: Found splice of (%s) with is_typed: %s\n"
-        (string_of_lid env.curmodule)
+        (show env.curmodule)
         (show t)
-        (string_of_bool is_typed);
+        (show is_typed);
 
     // env.splice will check the tactic
 

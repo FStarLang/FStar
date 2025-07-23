@@ -250,7 +250,7 @@ let default_tests =
 
 let run_either i r expected normalizer =
 //    force_term r;
-    BU.print1 "%s: ... \n\n" (BU.string_of_int i);
+    BU.print1 "%s: ... \n\n" (show i);
     let tcenv = Pars.init() in
     Options.parse_cmd_line() |> ignore; //set the command line args for debugging
     let x = normalizer tcenv r in
@@ -365,7 +365,7 @@ let compare_times l_int l_nbe =
                 if (t1 = t2) // sanity check
                 then
                   BU.print3 "Test %s\nNBE %s\nInterpreter %s\n"
-                    (BU.string_of_int t1)
+                    (show t1)
                     (BU.string_of_float time_nbe)
                     (BU.string_of_float time_int)
                 else

@@ -471,7 +471,7 @@ and encode_arith_term env head args_e =
       we do not want to encode this*)
     let (tm_sz, _) : arg = List.hd args_e in
     let sz = getInteger tm_sz.n in
-    let sz_key = FStarC.Util.format1 "BitVector_%s" (string_of_int sz) in
+    let sz_key = FStarC.Util.format1 "BitVector_%s" (show sz) in
     let sz_decls =
       let t_decls, constr_name, discriminator_name = mkBvConstructor sz in
       //Typing inversion for bv_t n
@@ -986,7 +986,7 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
                           Some "Uvar typing",
                           varops.mk_unique
                             (BU.format1 "uvar_typing_%s"
-                                        (BU.string_of_int
+                                        (show
                                             (Unionfind.uvar_id uv.ctx_uvar_head))))
         in
         ttm, decls@([d] |> mk_decls_trivial)
@@ -1520,7 +1520,7 @@ and encode_formula (phi:typ) (env:env_t) : (term & decls_t)  = (* expects phi to
     let eq_op r args : (term & decls_t) =
         let rf = List.filter (fun (a,q) -> match q with | Some ({ aqual_implicit = true }) -> false | _ -> true) args in
         if List.length rf <> 2
-        then failwith (BU.format1 "eq_op: got %s non-implicit arguments instead of 2?" (string_of_int (List.length rf)))
+        then failwith (BU.format1 "eq_op: got %s non-implicit arguments instead of 2?" (show (List.length rf)))
         else enc (bin_op mkEq) r rf
     in
 

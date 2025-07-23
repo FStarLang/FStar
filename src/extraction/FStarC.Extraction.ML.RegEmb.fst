@@ -126,7 +126,7 @@ let fresh : string -> string =
   fun s ->
     let v = !r in
     r := v+1;
-    s^"_"^(string_of_int v)
+    s^"_"^(show v)
 
 let not_implemented_warning (r: Range.t) (t: string) (msg: string) =
   let open FStarC.Pprint in
@@ -375,7 +375,7 @@ let interpret_plugin_as_term_fun (env:UEnv.uenv) (fv:fv) (t:typ) (arity_opt:opti
         | SyntaxTerm -> "mk_tactic_interpretation_"
         | NBETerm    -> "mk_nbe_tactic_interpretation_"
       in
-      as_name (["Fstarcompiler.FStarC_Tactics_InterpFuns"], idroot^string_of_int arity)
+      as_name (["Fstarcompiler.FStarC_Tactics_InterpFuns"], idroot^show arity)
     in
     let mk_from_tactic l arity =
       let idroot =
@@ -383,7 +383,7 @@ let interpret_plugin_as_term_fun (env:UEnv.uenv) (fv:fv) (t:typ) (arity_opt:opti
         | SyntaxTerm -> "from_tactic_"
         | NBETerm    -> "from_nbe_tactic_"
       in
-      as_name (["Fstarcompiler.FStarC_Tactics_Native"], idroot^string_of_int arity)
+      as_name (["Fstarcompiler.FStarC_Tactics_Native"], idroot^show arity)
     in
     let mk_arrow_as_prim_step k (arity: int) : mlexpr =
       let modul =
@@ -391,7 +391,7 @@ let interpret_plugin_as_term_fun (env:UEnv.uenv) (fv:fv) (t:typ) (arity_opt:opti
         | SyntaxTerm -> ["Fstarcompiler.FStarC"; "Syntax"; "Embeddings"]
         | NBETerm    -> ["Fstarcompiler.FStarC"; "TypeChecker"; "NBETerm"]
       in
-      as_name (modul, "arrow_as_prim_step_" ^ string_of_int arity)
+      as_name (modul, "arrow_as_prim_step_" ^ show arity)
     in
     (*  Generates the ML syntax of a term of type
            `FStarC.Syntax.Embeddings.embedding [[t]]`
@@ -467,8 +467,8 @@ let interpret_plugin_as_term_fun (env:UEnv.uenv) (fv:fv) (t:typ) (arity_opt:opti
                 BU.format3
                     "Embedding not defined for %s; expected arity at least %s; got %s"
                     (Ident.string_of_lid fv_lid)
-                    (BU.string_of_int n)
-                    (BU.string_of_int n_bs) in
+                    (show n)
+                    (show n_bs) in
                raise (NoEmbedding msg)
     in
     let result_typ = U.comp_result c in
@@ -494,7 +494,7 @@ let interpret_plugin_as_term_fun (env:UEnv.uenv) (fv:fv) (t:typ) (arity_opt:opti
     *)
     let tvar_arity = List.length type_vars in
     let non_tvar_arity = List.length bs in
-    let tvar_names = List.mapi (fun i tv -> ("tv_" ^ string_of_int i)) type_vars in
+    let tvar_names = List.mapi (fun i tv -> ("tv_" ^ show i)) type_vars in
     let tvar_context : list (bv & string) = List.map2 (fun b nm -> b.binder_bv, nm) type_vars tvar_names in
     // The tvar_context records all the ML type variables in scope
     // All their embeddings will be just identity embeddings
@@ -683,7 +683,7 @@ let mk_embed
 let __do_handle_plugin (g: uenv) (arity_opt: option int) (se: sigelt) : list mlmodule1 =
   // BU.print2 "Got plugin with attrs = %s; arity_opt=%s"
   //          (List.map show se.sigattrs |> String.concat " ")
-  //          (match arity_opt with None -> "None" | Some x -> "Some " ^ string_of_int x);
+  //          (match arity_opt with None -> "None" | Some x -> "Some " ^ show x);
   let r = se.sigrng in
   match se.sigel with
   | Sig_let {lbs} ->
@@ -700,7 +700,7 @@ let __do_handle_plugin (g: uenv) (arity_opt: option int) (se: sigelt) : list mlm
                else (["Fstarcompiler.FStarC_Tactics_Native"], "register_tactic"), [interp]
              in
              let h = with_ty MLTY_Top <| MLE_Name register in
-             let arity  = MLE_Const (MLC_Int(string_of_int arity, None)) in
+             let arity  = MLE_Const (MLC_Int(show arity, None)) in
              let app = with_ty MLTY_Top <| MLE_App (h, [mk ml_name_str; mk arity] @ args) in
              [MLM_Top app |> mk_mlmodule1]
          | None -> []

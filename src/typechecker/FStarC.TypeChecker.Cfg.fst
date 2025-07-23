@@ -24,7 +24,7 @@ let steps_to_string f =
     | None -> "None"
     | Some x -> "Some ("^ f x ^ ")"
   in
-  let b = BU.string_of_bool in
+  let b = string_of_bool in
   BU.format
   "{\n\
     beta = %s;\n\
@@ -311,7 +311,7 @@ let fixto n s =
 let primop_time_report () : string =
     let pairs = SMap.fold primop_time_map (fun nm ns rest -> (nm, ns)::rest) [] in
     let pairs = BU.sort_with (fun (_, t1) (_, t2) -> t1 - t2) pairs in
-    List.fold_right (fun (nm, ns) rest -> (BU.format2 "%sms --- %s\n" (fixto 10 (BU.string_of_int (ns / 1000000))) nm) ^ rest) pairs ""
+    List.fold_right (fun (nm, ns) rest -> (BU.format2 "%sms --- %s\n" (fixto 10 (show (ns / 1000000))) nm) ^ rest) pairs ""
 
 let extendable_primops_dirty : ref bool = mk_ref true
 

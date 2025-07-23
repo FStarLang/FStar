@@ -37,6 +37,7 @@ module BU = FStarC.Util
 open FStarC.Parser.AST
 open FStarC.Parser.AST.Util
 open FStarC.Parser.AST.Diff { eq_decl }
+open FStarC.Class.Show
 
 let qid = string & int
 let qst a = qid -> a & qid
@@ -77,7 +78,7 @@ let as_query (q:query')
     return 
       {
         qq=q;
-        qid=qid_prefix ^ "." ^ string_of_int i
+        qid=qid_prefix ^ "." ^ show i
       }
 
 (* This function dumps a symbol table for the decl that has just been checked *)
@@ -294,7 +295,7 @@ let run_full_buffer (st:repl_state)
       | IncrementalFragment (decls, _, err_opt) -> (
         // This is a diagnostic message that is send to the IDE as an info message
         // The script test-incremental.py in tests/ide/ depends on this message
-        BU.print1 "Parsed %s declarations\n" (string_of_int (List.length decls));
+        BU.print1 "Parsed %s declarations\n" (show (List.length decls));
         match request_type, decls with
         | ReloadDeps, d::_ ->
           run_qst (let! queries = reload_deps (!repl_stack) in
