@@ -149,11 +149,10 @@ ensures exists* s'. (a |-> s') **
   while (
     SZ.(!j <^ len)
   )
-  invariant b. (
+  invariant (
     exists* vj (s':Seq.seq t).
       (j |-> vj) **
       (a |-> s') **
-      pure (b == SZ.(vj <^ len)) **
       pure (
         1 <= SZ.v vj /\ 
         SZ.v vj <= SZ.v len /\
@@ -173,13 +172,9 @@ ensures exists* s'. (a |-> s') **
     while (
       (not !done && a.(!i) >? key)
     )
-    invariant b. (
-      exists* (vi:SZ.t) (d:bool) (s':Seq.seq t). 
-        (i |-> vi) **
-        (a |-> s') **
-        (done |-> d) **
-        pure (inner_invariant ss s' key vi vj d /\
-              b == (not d && Seq.index s' (SZ.v vi) >? key))
+    invariant (
+      exists* (vi:SZ.t) (d:bool) (s':Seq.seq t { inner_invariant ss s' key vi vj d}).
+        (i |-> vi) ** (a |-> s') ** (done |-> d) 
     )
     {
       let vi = !i;
@@ -188,7 +183,7 @@ ensures exists* s'. (a |-> s') **
       with s1. assert (a |-> s1);
       step_inner_invariant ss s0 s1 key vi vj;
       if (vi = 0sz) { done := true }
-      else { assert pure (SZ.v vi > 0); i := SZ.(vi -^ 1sz); }
+      else { i := SZ.(vi -^ 1sz); }
     };
     with s0. assert (a |-> s0);
     let vi = !i;

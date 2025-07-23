@@ -229,12 +229,12 @@ fn memcpy
     pts_to dst (Seq.slice s0 0 (SZ.v len) `Seq.append` Seq.slice s1 (SZ.v len) (Seq.length s1))
 {
   let mut i = 0sz;
-  while (let vi = !i; SZ.lt vi len)
-    invariant b. exists* s1' vi.
+  while (SZ.lt !i len)
+    invariant exists* s1' vi.
       R.pts_to i vi **
       pts_to src #p0 s0 **
       pts_to dst s1' **
-      pure (b == SZ.lt vi len /\ SZ.lte vi len /\
+      pure (SZ.lte vi len /\
         Seq.length s1' == Seq.length s1 /\
         forall (j:nat). j < Seq.length s1' ==>
           Seq.index s1' j == (if j < SZ.v vi then Seq.index s0 j else Seq.index s1 j))

@@ -147,7 +147,7 @@ ensures
     let prf1 : squash (Ghost.reveal va1 `Seq.equal` Seq.slice va1 0 (SZ.v sz)) = ();
     let prf2 : squash (Ghost.reveal va2 `Seq.equal` Seq.slice va2 0 (SZ.v sz)) = ();
     while (let i = !pi; let res = !pres; ((i `SZ.lt` sz) && (res = 0s)))
-    invariant cont . exists* i res .
+    invariant exists* i res .
         pts_to a1 #p1 va1 ** pts_to a2 #p2 va2 **
         pts_to pi i ** pts_to pres res **
         pure (
@@ -156,8 +156,7 @@ ensures
                 if res = 0s
                 then Cbor.bytes_lex_compare (Seq.slice va1 (SZ.v i) (SZ.v sz)) (Seq.slice va2 (SZ.v i) (SZ.v sz))
                 else I16.v res
-            ) /\
-            (cont == (SZ.v i < SZ.v sz && res = 0s))
+            )
         )
     {
         let i = !pi;

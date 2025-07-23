@@ -86,14 +86,21 @@ let check_core
   let return_type
     : option (ty:term & u:universe & universe_of g ty u) =
     match post_hint with
-    | Some post ->
+    | PostHint post ->
       assert (g `env_extends` post.g);
       let ty_typing : universe_of g post.ret_ty post.u =
         Metatheory.tot_typing_weakening_standard post.g post.ty_typing g in
       Some (| post.ret_ty, post.u, ty_typing |)
     | _ ->
       match inspect_term expected_type with
-      | Tm_Unknown -> None
+      | Tm_Unknown -> (
+        match post_hint with
+        | NoHint -> None
+        | TypeHint expected_type -> 
+          let ty, _ = Pulse.Checker.Pure.instantiate_term_implicits g expected_type None false in
+          let (| u, d |) = check_universe g ty in
+          Some (| ty, u, d |)
+      )
       | _ ->
         let ty, _ = Pulse.Checker.Pure.instantiate_term_implicits g expected_type None false in
         let (| u, d |) = check_universe g ty in
@@ -111,11 +118,7 @@ let check_core
   let px = res_ppname, x in
   let (| post_opened, post_typing |) : t:term & tot_typing (push_binding g x (fst px) ty)  t tm_slprop =
       match post_hint with
-      | None -> 
-        let (| t, ty |) = check_tot_term (push_binding g x (fst px) ty) tm_emp tm_slprop in
-        (| t, ty |)
-        
-      | Some post ->
+      | PostHint post ->
         // we already checked for the return type
         let post : post_hint_t = post in
         if x `Set.mem` (freevars post.post)
@@ -125,9 +128,12 @@ let check_core
         else 
          let ty_rec = post_hint_typing g post x in
          (| open_term_nv post.post px, ty_rec.post_typing |)
+      | _ ->
+        let (| t, ty |) = check_tot_term (push_binding g x (fst px) ty) tm_emp tm_slprop in
+        (| t, ty |)    
   in
   //if we're inferring a postcondition, then add an equality (if it is non-trivial)
-  let use_eq = use_eq || (None? post_hint && not (T.term_eq ty (`unit))) in
+  let use_eq = use_eq || (not (PostHint? post_hint) && not (T.term_eq ty (`unit))) in
   assume (open_term (close_term post_opened x) x == post_opened);
   let post = close_term post_opened x in
   let d = T_Return g c use_eq u ty t post x uty d post_typing in
@@ -162,7 +168,7 @@ let check
     check g ctxt ctxt_typing post_hint res_ppname tt
   | None -> (
     match post_hint with
-    | Some p -> (
+    | PostHint p -> (
       let ctag =
         match ctag_of_effect_annot p.effect_annot with
         | Some c -> c

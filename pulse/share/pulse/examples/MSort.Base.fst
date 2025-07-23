@@ -43,10 +43,9 @@ copy_array
   let mut i = 0sz;
 
   while (
-    let vi = !i;
-    (vi `SZ.lt` len)
+    (!i `SZ.lt` len)
   )
-    invariant b. exists* vi s_tgt'.
+    invariant exists* vi s_tgt'.
       pts_to i vi **
       pts_to_range src (SZ.v s_lo) (SZ.v s_lo + SZ.v len) s_src **
       pts_to_range tgt (SZ.v t_lo) (SZ.v t_lo + SZ.v len) s_tgt' **
@@ -55,8 +54,7 @@ copy_array
             s_tgt' == stake (SZ.v vi) s_src `S.append` sdrop (SZ.v vi) s_tgt /\
             SZ.v len == S.length s_src /\
             SZ.v len == S.length s_tgt /\
-            (vi `SZ.lt` len == false ==> SZ.v vi == SZ.v len)) **
-      pure (b == (SZ.v vi <  SZ.v len)) // can't use <==>, why?
+            (vi `SZ.lt` len == false ==> SZ.v vi == SZ.v len))
   {
     let ii = !i;
 
@@ -117,11 +115,9 @@ merge_impl
   pts_to_range_join a (SZ.v lo) (SZ.v mid) (SZ.v hi);
   
   while (
-    let vi = !i;
-    let vj = !j;
-    (vi `SZ.lt` l1 || vj `SZ.lt` l2)
+    (!i `SZ.lt` l1 || !j `SZ.lt` l2)
   )
-    invariant b.
+    invariant //b.
       exists* vi vj vk ss.
       pts_to i vi **
       pts_to j vj **
@@ -131,8 +127,7 @@ merge_impl
       pts_to_range a (SZ.v lo) (SZ.v hi) ss **
       pure (SZ.v vi <= SZ.v l1 /\ SZ.v vj <= SZ.v l2 /\ vk == vi `SZ.add` vj /\
             (ss == S.append (merge (stake (SZ.v vi) (reveal s1)) (stake (SZ.v vj) (reveal s2)))
-                                (sdrop (SZ.v vk) (S.append s1 s2))) /\
-            (b == (vi `SZ.lt` l1 || vj `SZ.lt` l2)))
+                                (sdrop (SZ.v vk) (S.append s1 s2))))
   {
     let vi = !i;
     let vj = !j;

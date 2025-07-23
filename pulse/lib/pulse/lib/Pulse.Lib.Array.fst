@@ -41,12 +41,11 @@ fn compare (#t:eqtype) (l:US.t) (a1 a2:larray t (US.v l)) (#p1 #p2:perm)
   let mut i = 0sz;
   while (let vi = !i; 
     if (vi < l) { (a1.(vi) = a2.(vi)) } else { false } )
-  invariant b. exists* (vi:US.t). ( 
+  invariant exists* (vi:US.t). ( 
     pts_to i vi **
     pts_to a1 #p1 's1 **
     pts_to a2 #p2 's2 **
     pure (vi <= l
-       /\ (b == (vi < l && Seq.index 's1 (US.v vi) = Seq.index 's2 (US.v vi)))
        /\ (forall (i:nat). i < US.v vi ==> Seq.index 's1 i == Seq.index 's2 i)))
   {
     i := !i + 1sz;
@@ -66,14 +65,13 @@ fn memcpy_l (#t:eqtype) (l:US.t) (src dst:(a:array t { US.v l <= A.length a }))
   pts_to_len src #p #src0;
   pts_to_len dst #1.0R #dst0;
   let mut i = 0sz;
-  while (let vi = !i; (vi < l) )
-  invariant b. exists* (vi:US.t) (s:Seq.seq t). ( 
+  while ((!i < l))
+  invariant exists* (vi:US.t) (s:Seq.seq t). ( 
     pts_to i vi **
     pts_to src #p src0 **
     pts_to dst s **
     pure (vi <= l
        /\ Seq.length s == Seq.length dst0
-       /\ (b == (vi < l))
        /\ (forall (i:nat). i < US.v vi ==> Seq.index src0 i == Seq.index s i)
        /\ (forall (i:nat). (US.v vi <= i /\ i < Seq.length s) ==> Seq.index s i == Seq.index dst0 i)))
 
@@ -117,13 +115,12 @@ fn fill (#t:Type0) (l:US.t) (a:larray t (US.v l)) (v:t)
 {
   pts_to_len a #1.0R #'s;
   let mut i = 0sz;
-  while (let vi = !i; (vi < l))
-  invariant b. exists* (vi:US.t) (s:Seq.seq t). ( 
+  while ((!i < l))
+  invariant exists* (vi:US.t) (s:Seq.seq t). ( 
     pts_to i vi **
     pts_to a s **
     pure (vi <= l
         /\ Seq.length s == US.v l
-        /\ (b == (vi < l))
         /\ (forall (i:nat). i < US.v vi ==> Seq.index s i == v)))
   {
     let vi = !i; 

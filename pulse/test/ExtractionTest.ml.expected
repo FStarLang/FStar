@@ -24,13 +24,13 @@ let rec (write10 :
         Pulse_Lib_HigherReference.alloc () (Stdint.Uint32.of_int (10)) in
       Pulse_Lib_Dv.while_
         (fun while_cond ->
-           let ctr@1 = Pulse_Lib_HigherReference.read ctr () () in
-           FStar_UInt32.gt ctr@1 Stdint.Uint32.zero)
+           let __anf1443 = Pulse_Lib_HigherReference.read ctr () () in
+           FStar_UInt32.gt __anf1443 Stdint.Uint32.zero)
         (fun while_body ->
            test_write_10 x ();
-           (let ctr@2 = Pulse_Lib_HigherReference.read ctr () () in
+           (let __anf2123 = Pulse_Lib_HigherReference.read ctr () () in
             Pulse_Lib_HigherReference.write ctr
-              (FStar_UInt32.sub ctr@2 Stdint.Uint32.one) ()))
+              (FStar_UInt32.sub __anf2123 Stdint.Uint32.one) ()))
 let rec (fill_array :
   FStar_UInt32.t Pulse_Lib_HigherArray_Core.array ->
     FStar_SizeT.t -> FStar_UInt32.t -> unit -> unit)
@@ -42,13 +42,14 @@ let rec (fill_array :
           let i = Pulse_Lib_HigherReference.alloc () Stdint.Uint64.zero in
           Pulse_Lib_Dv.while_
             (fun while_cond ->
-               let i@1 = Pulse_Lib_HigherReference.read i () () in
-               FStar_SizeT.lt i@1 n)
+               let __anf2937 = Pulse_Lib_HigherReference.read i () () in
+               FStar_SizeT.lt __anf2937 n)
             (fun while_body ->
-               let i@2 = Pulse_Lib_HigherReference.read i () () in
-               Pulse_Lib_HigherArray_Core.mask_write x i@2 v () ();
-               Pulse_Lib_HigherReference.write i
-                 (FStar_SizeT.add i@2 Stdint.Uint64.one) ())
+               let __anf3722 = Pulse_Lib_HigherReference.read i () () in
+               Pulse_Lib_HigherArray_Core.mask_write x __anf3722 v () ();
+               (let __anf4108 = Pulse_Lib_HigherReference.read i () () in
+                Pulse_Lib_HigherReference.write i
+                  (FStar_SizeT.add __anf4108 Stdint.Uint64.one) ()))
 let rec (sub_array : FStar_UInt32.t Pulse_Lib_HigherArray_Core.array -> unit)
   =
   fun x ->

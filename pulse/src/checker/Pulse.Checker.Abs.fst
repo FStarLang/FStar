@@ -426,7 +426,7 @@ let rec check_abs_core
       let post : post_hint_opt g' =
         match post_hint_body with
         | None ->
-          None
+          NoHint
         | Some post ->
           let post_hint_typing
             : post_hint_t
@@ -436,24 +436,24 @@ let rec check_abs_core
                   ret_ty
                   post
           in
-          Some post_hint_typing
+          PostHint post_hint_typing
       in
 
       let ppname_ret = mk_ppname_no_range "_fret" in
       let r  = check g' pre_opened pre_typing post ppname_ret body_opened  in
       let (| post, r |) : (ph:post_hint_opt g' & checker_result_t g' pre_opened ph) =
         match post with
-        | None ->
+        | PostHint _ -> (| post, r |)
+        | _ ->
           (* we support inference of postconditions for functions,
              but this functionality is still unusable from the front end,
              which expects functions to be annotated *)
           let ph = Pulse.Checker.Base.infer_post r in
-          let r = Pulse.Checker.Prover.prove_post_hint r (Some ph) (T.range_of_term t) in
-          (| Some ph, r |)
-        | _ -> (| post, r |)
+          let r = Pulse.Checker.Prover.prove_post_hint r (PostHint ph) (T.range_of_term t) in
+          (| PostHint ph, r |)
       in
       let (| body, c_body, body_typing |) : st_typing_in_ctxt g' pre_opened post =
-        apply_checker_result_k #_ #_ #(Some?.v post) r ppname_ret in
+        apply_checker_result_k #_ #_ #(PostHint?.v post) r ppname_ret in
 
       let c_opened : comp_ascription = { annotated = None; elaborated = Some (open_comp_nv elab_c px) } in
 

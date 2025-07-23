@@ -83,7 +83,6 @@ let size_t_mod (x:SZ.t) (y : SZ.t { y =!= 0sz })
   = SZ.(x %^ y)
 
 #push-options "--fuel 1 --ifuel 1"
-
 fn lookup
   (#[@@@ Rust_generics_bounds ["Copy"; "PartialEq"; "Clone"]] kt:eqtype)
   (#[@@@ Rust_generics_bounds ["Clone"]] vt:Type0)
@@ -106,10 +105,8 @@ fn lookup
   let mut ret = None #SZ.t;
   unfold (models ht pht);
 
-  while (let voff = !off;
-         let vcont = !cont;
-         (voff <=^ ht.sz && vcont = true))
-  invariant b. exists* (voff:SZ.t) (vcont :bool) vcontents. (
+  while ((!off <=^ ht.sz && !cont))
+  invariant exists* (voff:SZ.t) (vcont :bool) vcontents. (
     pts_to contents vcontents **
     V.pts_to vcontents pht.repr.seq **
     pts_to off voff **
@@ -120,8 +117,7 @@ fn lookup
       V.is_full_vec vcontents /\
       voff <=^ ht.sz /\
       walk_get_idx pht.repr (SZ.v cidx) k (SZ.v voff)
-        == lookup_repr_index pht.repr k /\
-      b == (voff <=^ ht.sz && vcont = true)
+        == lookup_repr_index pht.repr k
     ))
   {
     let voff = !off;
@@ -195,7 +191,6 @@ fn lookup
   rewrite (models ht pht) as (models (fst res) pht);
   res
 }
-
 #pop-options
 
 
@@ -268,12 +263,8 @@ fn insert
   let mut cont = true;
   let mut idx = 0sz;
 
-  while
-  (
-    let vcont = !cont;
-    (vcont = true)
-  )
-  invariant b. exists* (voff:SZ.t) (vcont :bool) (vcontents:V.vec _) vidx s. (
+  while ((!cont))
+  invariant exists* (voff:SZ.t) (vcont :bool) (vcontents:V.vec _) vidx s. (
     pts_to off voff **
     pts_to cont vcont **
     pts_to idx vidx **
@@ -293,9 +284,7 @@ fn insert
         (insert_repr #kt #vt #(pht_sz pht) #pht.spec pht.repr k v).seq `Seq.equal`
         Seq.upd s (SZ.v vidx) (mk_used_cell k v))) /\
 
-      ((vcont) ==> s `Seq.equal` pht.repr.seq) /\  // insert failed
-
-      b == (vcont = true)
+      ((vcont) ==> s `Seq.equal` pht.repr.seq)
     ))
   {
     let voff = !off;
@@ -422,6 +411,7 @@ let is_used
   | Used _ _ -> true, c
   | _ -> false, c
 
+let not_ b = if b then false else true //Rust extraction does not recognize F*'s not/op_Negation
 
 fn not_full
   (#[@@@ Rust_generics_bounds ["Copy"; "PartialEq"; "Clone"]] kt:eqtype)
@@ -439,45 +429,39 @@ fn not_full
   let mut contents = ht.contents;
 
   let mut i = 0sz;
+  let mut break_ = false;
   unfold (models ht pht);
 
   while
-  (
-    let vi = !i;
-    if SZ.(vi <^ ht.sz)
-    {
-      let c = V.replace_i_ref contents vi Zombie;
-      let b = is_used c;
-      let _ = V.replace_i_ref contents vi (snd b);
-      with vcontents. assert (pts_to contents vcontents);
-      with s. assert (V.pts_to vcontents s);
-      assert (pure (Seq.equal s pht.repr.seq));
-      (fst b)
-    }
-    else
-    {
-      false
-    }
-  )
-  invariant b. exists* (vi:SZ.t) vcontents. (
+  ((SZ.(!i <^ ht.sz) && not_ !(break_)))
+  invariant //b.
+   exists* (vi:SZ.t) vcontents (br:bool). (
     pts_to contents vcontents **
     V.pts_to vcontents pht.repr.seq **
     pts_to i vi **
+    pts_to break_ br **
     pure (
       V.is_full_vec vcontents /\
       SZ.v ht.sz == pht_sz pht /\
       SZ.(vi <=^ ht.sz) /\
-      (b == (SZ.(vi <^ ht.sz) && Used? (pht.repr @@ (SZ.v vi)))) /\
+      (br ==> (vi =!= ht.sz /\ not (Used? (pht.repr @@ (SZ.v vi))))) /\
       (forall (i:nat). i < SZ.v vi ==> Used? (pht.repr @@ i))
     )
   )
   {
     let vi = !i;
-    i := SZ.(vi +^ 1sz);
+    let c = V.replace_i_ref contents vi Zombie;
+    let b = is_used c;
+    let _ = V.replace_i_ref contents vi (snd b);
+    with vcontents. assert (pts_to contents vcontents);
+    with s. assert (V.pts_to vcontents s);
+    assert (pure (Seq.equal s pht.repr.seq));
+    break_ := not_ (fst b);
+    if (not_ (!break_)) { i := SZ.add (!i) 1sz; }
   };
 
   let vi = !i;
-  let res = SZ.(vi <^ ht.sz);
+  let res = !break_;
 
   let vcontents = !contents;
   let ht = mk_ht ht.sz hashf vcontents;
@@ -547,11 +531,9 @@ fn delete
 
   while
   (
-    let vcont = !cont;
-    let verr = !err;
-    (vcont = true && verr = false)
+    (!cont && not_ (!err))
   )
-  invariant b. exists* (voff:SZ.t) (vcont verr:bool) (contents_v:V.vec _). (
+  invariant exists* (voff:SZ.t) (vcont verr:bool) (contents_v:V.vec _). (
     pts_to off voff **
     pts_to cont vcont **
     pts_to err verr **
@@ -564,8 +546,7 @@ fn delete
       all_used_not_by pht.repr (SZ.v cidx) (SZ.v voff) k /\
       walk pht.repr (SZ.v cidx) k (SZ.v voff) == lookup_repr pht.repr k /\
       delete_repr_walk #kt #vt #(pht_sz pht) #pht.spec pht.repr k (SZ.v voff) (SZ.v cidx) () ()
-        == delete_repr #kt #vt #(pht_sz pht) #pht.spec pht.repr k /\
-      b == (vcont = true && verr = false)
+        == delete_repr #kt #vt #(pht_sz pht) #pht.spec pht.repr k
     ))
   {
     with vcont. assert (pts_to cont vcont);

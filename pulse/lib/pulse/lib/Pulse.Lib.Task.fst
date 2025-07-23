@@ -897,13 +897,12 @@ fn await (#p:pool)
   ensures  pool_alive #f p ** post
 {
   let mut done = false;
-  while (let v = Pulse.Lib.Reference.(!done); (not v))
-    invariant b.
+  while (Pulse.Lib.Reference.(not !done))
+    invariant
       exists* v_done.
         pool_alive #f p **
         pts_to done v_done **
-        (if v_done then post else joinable p post h) **
-        pure (b == not v_done)
+        (if v_done then post else joinable p post h)
   {
     with v_done. assert (pts_to done v_done);
     rewrite each v_done as false;
@@ -1247,13 +1246,12 @@ fn await_help
   ensures  pool_alive #f p ** post
 {
   let mut done = false;
-  while (let v = Pulse.Lib.Reference.(!done); (not v))
-    invariant b.
+  while (Pulse.Lib.Reference.(not !done))
+    invariant
       exists* v_done.
         pool_alive #f p **
         pts_to done v_done **
-        (if v_done then post else joinable p post h) **
-        pure (b == not v_done)
+        (if v_done then post else joinable p post h)
   {
     with v_done. assert (pts_to done v_done);
     rewrite each v_done as false;
@@ -1388,13 +1386,12 @@ fn await_pool
 {
   let mut done = false;
   fold (ite false q (pledge is (pool_done p) q));
-  while (let v = Pulse.Lib.Reference.(!done); not v)
-    invariant b.
+  while (Pulse.Lib.Reference.(not !done))
+    invariant
       exists* v_done.
         pool_alive #f p **
         pts_to done v_done **
-        ite v_done q (pledge is (pool_done p) q) **
-        pure (b == not v_done)
+        ite v_done q (pledge is (pool_done p) q)
   {
     with v_done. assert (pts_to done v_done);
     rewrite each v_done as false;

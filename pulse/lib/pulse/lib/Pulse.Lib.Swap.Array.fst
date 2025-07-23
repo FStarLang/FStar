@@ -67,22 +67,22 @@ fn array_swap_aux(#t: Type0) (a: A.array t) (lb: SZ.t) (rb: SZ.t) (mb: (mb: SZ.t
 {   
     A.pts_to_range_prop a;
     let mut pi = lb;
-    while (let i = !pi; ((i `SZ.sub` lb) `size_lt` d))
-    invariant b . exists* s i . (
+    while (((!pi `SZ.sub` lb) `size_lt` d))
+    invariant
+     exists* s (i:_ { SZ.v i >= SZ.v lb }) . (
       A.pts_to_range a (Ghost.reveal (SZ.v lb)) (Ghost.reveal (SZ.v rb)) s **
       pts_to pi i **
       pure (
-        SZ.v i >= SZ.v lb /\
         SZ.v i < SZ.v rb /\
-        Prf.array_swap_outer_invariant s0 (SZ.v rb - SZ.v lb) (SZ.v mb - SZ.v lb) bz s (SZ.v i - SZ.v lb) /\
-        b == (SZ.v i - SZ.v lb < bz.d)
+        Prf.array_swap_outer_invariant s0 (SZ.v rb - SZ.v lb) (SZ.v mb - SZ.v lb) bz s (SZ.v i - SZ.v lb)
     )) {
       let i = !pi;
       let save = A.pts_to_range_index a i;
       let mut pj = 0sz;
       let mut pidx = i;
-      while (let j = !pj; (j `size_lt` (size_sub q 1sz ())))
-      invariant b . exists* s j idx . (
+      while ((!pj `size_lt` (size_sub q 1sz ())))
+      invariant
+      exists* s j idx . (
         A.pts_to_range a (Ghost.reveal (SZ.v lb)) (Ghost.reveal (SZ.v rb)) s **
         pts_to pi i **
         pts_to pj j **
@@ -90,8 +90,7 @@ fn array_swap_aux(#t: Type0) (a: A.array t) (lb: SZ.t) (rb: SZ.t) (mb: (mb: SZ.t
         pure (
           SZ.v idx >= SZ.v lb /\
           SZ.v idx < SZ.v rb /\
-          Prf.array_swap_inner_invariant s0 (SZ.v rb - SZ.v lb) (SZ.v mb - SZ.v lb) bz s (SZ.v i - SZ.v lb) (SZ.v j) (SZ.v idx - SZ.v lb) /\
-          b == (SZ.v j < bz.q_n - 1)
+          Prf.array_swap_inner_invariant s0 (SZ.v rb - SZ.v lb) (SZ.v mb - SZ.v lb) bz s (SZ.v i - SZ.v lb) (SZ.v j) (SZ.v idx - SZ.v lb)
         )
       ) {
         let j = !pj;

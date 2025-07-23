@@ -39,14 +39,11 @@ ensures
     let mut i1 : SZ.t = j;
     let mut break : bool = false;
     while (
-      let vb = !break;
-      let v0 = !i0;
-      let v1 = !i1;
-      (not vb &&
-       v0 <> len0 &&
-       v1 <> len1)
+      (not !break &&
+       !i0 <> len0 &&
+       !i1 <> len1)
     )
-    invariant b . (
+    invariant (
       exists* v0 v1 vb.
         pts_to i0 v0 **
         pts_to i1 v1 **
@@ -57,9 +54,8 @@ ensures
           v0 <= len0 /\
           v1 <= len1 /\
           (v1 == j + v0) /\
-          b == (not vb && v0 <> len0 && v1 <> len1) /\
           starts_with_at (SZ.v j) (take s0 (SZ.v v0)) s1 /\
-          (vb ==> v1 <> len1 /\ v0 <> len0 /\ Seq.index s1 (SZ.v v1) =!= Seq.index s0 (SZ.v v0))
+          (vb==true ==> v1 <> len1 /\ v0 <> len0 /\ Seq.index s1 (SZ.v v1) =!= Seq.index s0 (SZ.v v0))
         )
     )
     {
@@ -105,20 +101,17 @@ ensures
   let mut j : SZ.t = 0sz;
   let mut found : bool = false;
   while (
-    let vb = !found;
-    let vj = !j;
-    (not vb &&
-     vj <> len1)
+    (not !found &&
+     !j <> len1)
   )
-  invariant b . (
-    exists* vj vb.
+  invariant (
+    exists* vj (vb:bool).
       pts_to j vj **
       pts_to found vb **
       pts_to a0 #p s0 **
       pts_to a1 #p s1 **
       pure (
         vj <= len1 /\
-        b == (not vb && vj < len1) /\
         (vb ==> SZ.v vj < SZ.v len1 /\ starts_with_at (SZ.v vj) s0 s1) /\
         (~vb ==> forall (j:nat{ j < SZ.v vj }). ~(starts_with_at j s0 s1))
       )

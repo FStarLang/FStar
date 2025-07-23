@@ -337,6 +337,16 @@ let rec st_term_to_string' (level:string) (t:st_term)
         level
         (term_list_to_string " " witnesses)
 
+    | Tm_NuWhile { invariant; condition; body } ->
+      sprintf "nuwhile (%s)\n%sinvariant %s\n%s{\n%s%s\n%s}"
+        (st_term_to_string' level condition)
+        level
+        (term_to_string invariant)
+        level
+        (indent level)
+        (st_term_to_string' (indent level) body)
+        level
+
     | Tm_While { invariant; condition; body } ->
       sprintf "while (%s)\n%sinvariant %s\n%s{\n%s%s\n%s}"
         (st_term_to_string' level condition)
@@ -492,6 +502,7 @@ let tag_of_st_term (t:st_term) =
   | Tm_ElimExists _ -> "Tm_ElimExists"
   | Tm_IntroExists _ -> "Tm_IntroExists"
   | Tm_While _ -> "Tm_While"
+  | Tm_NuWhile _ -> "Tm_NuWhile"
   | Tm_Par _ -> "Tm_Par"
   | Tm_WithLocal _ -> "Tm_WithLocal"
   | Tm_WithLocalArray _ -> "Tm_WithLocalArray"
@@ -520,6 +531,7 @@ let rec print_st_head (t:st_term)
   | Tm_If _ -> "If"
   | Tm_Match _ -> "Match"
   | Tm_While _ -> "While"
+  | Tm_NuWhile _ -> "NuWhile"
   | Tm_Admit _ -> "Admit"
   | Tm_Unreachable _ -> "Unreachable"
   | Tm_Par _ -> "Par"
@@ -549,6 +561,7 @@ let rec print_skel (t:st_term) =
   | Tm_If _ -> "If"
   | Tm_Match _ -> "Match"
   | Tm_While _ -> "While"
+  | Tm_NuWhile _ -> "NuWhile"
   | Tm_Admit _ -> "Admit"
   | Tm_Unreachable _ -> "Unreachable"
   | Tm_Par _ -> "Par"

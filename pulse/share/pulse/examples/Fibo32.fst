@@ -44,16 +44,15 @@ fn fibo32 (k:U32.t) (_:squash(0ul < k /\ fits #U32.t (fib (v k))))
   let mut i = 1ul;
   let mut j = 1ul;
   let mut ctr = 1ul;
-  while (let vctr = !ctr; (vctr < k))
-  invariant b . exists* (vi vj vctr : U32.t). (
+  while ((!ctr < k))
+  invariant exists* (vi vj vctr : U32.t). (
      pts_to i vi **
      pts_to j vj **
      pts_to ctr vctr **     
      pure (1ul <= vctr /\
            vctr <= k /\
            fib (v vctr - 1) == v vi/\
-           fib (v vctr) == v vj /\
-           b == (vctr < k))
+           fib (v vctr) == v vj)
   )
   {
      let vc = !ctr;
@@ -63,7 +62,6 @@ fn fibo32 (k:U32.t) (_:squash(0ul < k /\ fits #U32.t (fib (v k))))
      i := vj;
      fib_mono (v k) (v vc + 1);
      j := vi + vj;
-     ()
   };
   let r = !j;
   r

@@ -290,6 +290,16 @@ let mk_while (inv cond body:R.term) : R.term =
   let t = R.pack_ln (R.Tv_App t (cond, R.Q_Explicit)) in
   R.pack_ln (R.Tv_App t (body, R.Q_Explicit))
 
+
+let nu_while_lid = ["Pulse"; "Lib"; "WhileLoop"; "nu_while_loop"]
+
+let mk_nu_while (inv post cond body:R.term) : R.term =
+  let t = R.pack_ln (R.Tv_FVar (R.pack_fv nu_while_lid)) in
+  let t = R.pack_ln (R.Tv_App t (inv, R.Q_Explicit)) in
+  let t = R.pack_ln (R.Tv_App t (post, R.Q_Explicit)) in
+  let t = R.pack_ln (R.Tv_App t (cond, R.Q_Explicit)) in
+  R.pack_ln (R.Tv_App t (body, R.Q_Explicit))
+
 let slprop_eq_tm t1 t2 =
   let open R in
   let u2 =

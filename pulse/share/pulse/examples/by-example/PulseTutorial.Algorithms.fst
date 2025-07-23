@@ -92,10 +92,9 @@ fn majority
   assert (pure (count_until votes_0 s 1 == 1));
   // while loop for phase 1
   while (
-    let vi = !i;
-    (vi <^ len)
+    (!i <^ len)
   )
-  invariant b.
+  invariant (
     pts_to votes #p s **
     (exists* vi vk vcand.
        R.pts_to i vi       **
@@ -108,8 +107,8 @@ fn majority
          // constraint for the current candidate,
          2 * (count_until vcand s (v vi) - v vk) <= v vi - v vk /\
          // constraint for the rest of the candidates
-         (forall (vcand':a). vcand' =!= vcand ==> 2 * count_until vcand' s (v vi) <= v vi - v vk) /\
-         b == (v vi < v len)))
+         (forall (vcand':a). vcand' =!= vcand ==> 2 * count_until vcand' s (v vi) <= v vi - v vk)))
+    )
   {
     let vi = !i;
     let vk = !k;
@@ -142,17 +141,16 @@ fn majority
     k := 0sz;
     // while loop for phase 2
     while (
-      let vi = !i;
-      (vi <^ len)
+      (!i <^ len)
     )
-    invariant b.
+    invariant (
       pts_to votes #p s **
       (exists* vi vk.
          R.pts_to i vi **
          R.pts_to k vk **
          pure (SZ.v vi <= Seq.length s /\
-               SZ.v vk == count_until vcand s (SZ.v vi) /\
-               b == (SZ.v vi < SZ.v len)))
+               SZ.v vk == count_until vcand s (SZ.v vi)))
+    )
     {
       let vi = !i;
       let vk = !k;

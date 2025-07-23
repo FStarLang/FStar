@@ -31,13 +31,19 @@ module RW = Pulse.Checker.Prover.RewritesTo
 
 
 let retype_checker_result_post_hint #g #pre (ph:post_hint_for_env g)
-    (ph':post_hint_opt g {Some? ph' ==> Some?.v ph' == ph})
-    (r:checker_result_t g pre (Some ph))
+    (ph':post_hint_opt g {PostHint? ph' ==> PostHint?.v ph' == ph})
+    (r:checker_result_t g pre (PostHint ph))
 : T.Tac (checker_result_t g pre ph')
 = let (| x, g1, t, ctxt', k |) = r in
   (| x, g1, t, ctxt', k |)
 
-#push-options "--fuel 0 --ifuel 1 --query_stats"
+let retype_checker_result (#g:env) (#ctxt:slprop) (#ph:post_hint_opt g) (ph':post_hint_opt g { not (PostHint? ph')})
+  (r:checker_result_t g ctxt ph)
+: checker_result_t g ctxt ph'
+= let (| x, g1, t, ctxt, k |) = r in
+  (| x, g1, t, ctxt, k |)
+
+#push-options "--fuel 0 --ifuel 1 --z3rlimit_factor 2"
 #restart-solver
 let check
   (g:env)
@@ -87,24 +93,26 @@ let check
   let else_ = check_branch tm_false e2 false in
   let joinable : (
     ph:post_hint_for_env g & 
-    checker_result_t (g_with_eq tm_true) pre (Some ph) &
-    checker_result_t (g_with_eq tm_false) pre (Some ph)
+    checker_result_t (g_with_eq tm_true) pre (PostHint ph) &
+    checker_result_t (g_with_eq tm_false) pre (PostHint ph)
   ) = match post_hint with
-      | None ->
+      | PostHint ph -> 
+        (| ph, then_, else_ |)
+      | _ ->
+        let then_ : checker_result_t _ _ NoHint = retype_checker_result _ then_ in
+        let else_ : checker_result_t _ _ NoHint = retype_checker_result _ else_ in
         let post_then = Pulse.Checker.Base.infer_post then_ in
         let post_else = Pulse.Checker.Base.infer_post else_ in
         let post = Pulse.JoinComp.join_post #g #hyp #b post_then post_else in
-        let then_ = Pulse.Checker.Prover.prove_post_hint then_ (Some post) e1.range in
-        let else_ = Pulse.Checker.Prover.prove_post_hint else_ (Some post) e2.range in
+        let then_ = Pulse.Checker.Prover.prove_post_hint then_ (PostHint post) e1.range in
+        let else_ = Pulse.Checker.Prover.prove_post_hint else_ (PostHint post) e2.range in
         (| post, then_, else_ |)
-      | Some ph -> 
-        (| ph, then_, else_ |)
   in
   let (| post_hint', then_, else_ |) = joinable in
 
-  let extract #g #pre (#ph:post_hint_for_env g) (r:checker_result_t g pre (Some ph)) (is_then:bool)
+  let extract #g #pre (#ph:post_hint_for_env g) (r:checker_result_t g pre (PostHint ph)) (is_then:bool)
   : T.Tac (br:st_term { ~(hyp `Set.mem` freevars_st br) } &
-           c:comp_st { comp_pre c == pre /\ comp_post_matches_hint c (Some ph)} &
+           c:comp_st { comp_pre c == pre /\ comp_post_matches_hint c (PostHint ph)} &
            st_typing g br c)
   = let (| br, c, d |) =
       let ppname = mk_ppname_no_range "_if_br" in
@@ -123,8 +131,9 @@ let check
 
   let c_typing = comp_typing_from_post_hint c pre_typing post_hint' in
 
-  let d : st_typing_in_ctxt g pre (Some post_hint') =
+  let d : st_typing_in_ctxt g pre (PostHint post_hint') =
     (| _, c, T_If g b e1 e2 c hyp b_typing e1_typing e2_typing (E c_typing) |) in
 
-  let res : checker_result_t g pre (Some post_hint') = checker_result_for_st_typing d res_ppname in
+  let res : checker_result_t g pre (PostHint post_hint') = checker_result_for_st_typing d res_ppname in
   retype_checker_result_post_hint post_hint' post_hint res
+  #pop-options

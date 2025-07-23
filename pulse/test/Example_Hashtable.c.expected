@@ -113,9 +113,9 @@ lookup__size_t_Example_Hashtable_data(ht_t__size_t_Example_Hashtable_data ht, si
   size_t off = (size_t)0U;
   bool cont = true;
   option__size_t ret = { .tag = None };
-  size_t voff0 = off;
-  bool vcont0 = cont;
-  bool cond = voff0 <= ht.sz && vcont0 == true;
+  size_t __anf6058 = off;
+  bool __anf60560 = cont;
+  bool cond = __anf6058 <= ht.sz && __anf60560;
   while (cond)
   {
     size_t voff = off;
@@ -173,9 +173,9 @@ lookup__size_t_Example_Hashtable_data(ht_t__size_t_Example_Hashtable_data ht, si
         KRML_HOST_EXIT(255U);
       }
     }
-    size_t voff0 = off;
-    bool vcont = cont;
-    cond = voff0 <= ht.sz && vcont == true;
+    size_t __anf6058 = off;
+    bool __anf6056 = cont;
+    cond = __anf6058 <= ht.sz && __anf6056;
   }
   option__size_t o = ret;
   cell__size_t_Example_Hashtable_data *vcontents = contents;
@@ -234,9 +234,7 @@ insert__size_t_Example_Hashtable_data(
   size_t off = (size_t)0U;
   bool cont = true;
   size_t idx = (size_t)0U;
-  bool vcont = cont;
-  bool cond = vcont == true;
-  while (cond)
+  while (cont)
   {
     size_t voff = off;
     if (voff == ht.sz)
@@ -328,12 +326,10 @@ insert__size_t_Example_Hashtable_data(
         KRML_HOST_EXIT(255U);
       }
     }
-    bool vcont = cont;
-    cond = vcont == true;
   }
-  bool vcont0 = cont;
+  bool vcont = cont;
   size_t vidx = idx;
-  if (vcont0 == false)
+  if (vcont == false)
   {
     write_ref__Pulse_Lib_HashTable_Spec_cell_size_t_Example_Hashtable_data(&contents,
       vidx,

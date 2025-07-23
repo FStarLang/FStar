@@ -253,7 +253,7 @@ let check_branch
         (bs:list R.binding)
   : T.Tac (p:pattern{elab_pat p == p0}
           & e:st_term
-          & c:comp_st{comp_pre c == pre /\ comp_post_matches_hint c (Some post_hint)}
+          & c:comp_st{comp_pre c == pre /\ comp_post_matches_hint c (PostHint post_hint)}
           & br_typing_vis g sc_u sc_ty sc p e c)
   =
   let p = (match readback_pat p0 with | Some p -> p | None ->
@@ -297,7 +297,7 @@ let check_branch
 
   let (| e, c, e_d |) =
     let ppname = mk_ppname_no_range "_br" in
-    let r = check g' pre pre_typing (Some post_hint) ppname e in
+    let r = check g' pre pre_typing (PostHint post_hint) ppname e in
     apply_checker_result_k r ppname in
   let br_d : br_typing_vis g sc_u sc_ty sc p (close_st_term_n e (L.map fst pulse_bs)) c = TBRV g sc_u sc_ty sc c p e bs () () () hyp_var e_d in
   (| p, close_st_term_n e (L.map fst pulse_bs), c, br_d |)
@@ -312,7 +312,7 @@ let check_branches_aux_t
         (sc_ty : typ)
         (sc : term)
 = (br:branch
-   & c:comp_st{comp_pre c == pre /\ comp_post_matches_hint c (Some post_hint)}
+   & c:comp_st{comp_pre c == pre /\ comp_post_matches_hint c (PostHint post_hint)}
    & br_typing_vis g sc_u sc_ty sc br.pat br.e c)
 
 let check_branches_aux
@@ -358,7 +358,7 @@ let weaken_branch_observability
       (c:comp_st{
           C_STAtomic? c /\
           comp_pre c == pre /\
-          comp_post_matches_hint c (Some post_hint) /\
+          comp_post_matches_hint c (PostHint post_hint) /\
           comp_observability c == obs
         })
       (checked_br : check_branches_aux_t #g pre post_hint sc_u sc_ty sc { ctag_of_br checked_br == STT_Atomic})
@@ -397,7 +397,7 @@ let rec max_obs
 let join_branches (#g #pre #post_hint #sc_u #sc_ty #sc:_) 
                   (ct:ctag)
                   (checked_brs : list (cbr:check_branches_aux_t #g pre post_hint sc_u sc_ty sc {ctag_of_br cbr == ct}))
-: T.Tac (c:comp_st { comp_pre c == pre /\ comp_post_matches_hint c (Some post_hint) } &
+: T.Tac (c:comp_st { comp_pre c == pre /\ comp_post_matches_hint c (PostHint post_hint) } &
          list (br:branch & br_typing_vis g sc_u sc_ty sc br.pat br.e c))
 = match checked_brs with
   | [] -> T.fail "Impossible: empty match"
@@ -520,7 +520,7 @@ let check_branches
         (brs0:list branch)
         (bnds: list (R.pattern & list R.binding){L.length brs0 == L.length bnds})
 : T.Tac (brs:list branch
-         & c:comp_st{comp_pre c == pre /\ comp_post_matches_hint c (Some post_hint)}
+         & c:comp_st{comp_pre c == pre /\ comp_post_matches_hint c (PostHint post_hint)}
          & brs_typing g sc_u sc_ty sc brs c)
 = let checked_brs = check_branches_aux g pre pre_typing post_hint check sc_u sc_ty sc brs0 bnds in
   let (| ct, checked_brs |) = maybe_weaken_branch_tags checked_brs in
@@ -538,7 +538,7 @@ let check
         (sc:term)
         (brs:list branch)
         (check:check_t)
-  : T.Tac (checker_result_t g pre (Some post_hint))
+  : T.Tac (checker_result_t g pre (PostHint post_hint))
   =
 
   let g = Pulse.Typing.Env.push_context_no_range g "check_match" in

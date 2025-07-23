@@ -14,7 +14,7 @@ let lock_inv (r:ref U32.t) (gr:GR.ref U32.t) (p:slprop) =
     pts_to r v **
     GR.pts_to gr #perm v **
     maybe (v = 0ul) p **
-    pure (if v=0ul then perm == full_perm else perm == one_half)
+    pure (if v=0ul then perm == 1.0R else perm == 0.5R)
 
 noeq
 type lock (p:slprop) = {

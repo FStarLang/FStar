@@ -45,9 +45,9 @@ val join_comps
         st_typing g_then e_then c &
         st_typing g_else e_else c)
     (requires
-      comp_post_matches_hint c_then (Some post) /\
-      comp_post_matches_hint c_else (Some post) /\
+      comp_post_matches_hint c_then (PostHint post) /\
+      comp_post_matches_hint c_else (PostHint post) /\
       comp_pre c_then == comp_pre c_else)
     (ensures fun (| c, _, _ |) ->
         st_comp_of_comp c == st_comp_of_comp c_then /\
-        comp_post_matches_hint c (Some post))
+        comp_post_matches_hint c (PostHint post))

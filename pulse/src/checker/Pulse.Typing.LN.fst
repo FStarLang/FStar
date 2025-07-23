@@ -248,6 +248,11 @@ let rec open_st_term_ln' (e:st_term)
       open_st_term_ln' condition x i;
       open_st_term_ln' body x i
 
+    | Tm_NuWhile { invariant; condition; body } ->
+      open_term_ln' invariant x i;
+      open_st_term_ln' condition x i;
+      open_st_term_ln' body x i
+
     | Tm_Par { pre1; body1; post1; pre2; body2; post2 } ->
       open_term_ln' pre1 x i;
       open_st_term_ln' body1 x i;
@@ -443,6 +448,11 @@ let rec ln_weakening_st (t:st_term) (i j:int)
       ln_weakening_st condition i j;
       ln_weakening_st body i j
     
+    | Tm_NuWhile { invariant; condition; body } ->
+      ln_weakening invariant i j;
+      ln_weakening_st condition i j;
+      ln_weakening_st body i j
+    
     | Tm_If { b; then_; else_; post } ->
       ln_weakening b i j;    
       ln_weakening_st then_ i j;    
@@ -635,6 +645,12 @@ let rec open_term_ln_inv_st' (t:st_term)
     | Tm_While { invariant; condition; body } ->
       FStar.Pure.BreakVC.break_vc();
       open_term_ln_inv' invariant x (i + 1);
+      open_term_ln_inv_st' condition x i;
+      open_term_ln_inv_st' body x i
+
+    | Tm_NuWhile { invariant; condition; body } ->
+      FStar.Pure.BreakVC.break_vc();
+      open_term_ln_inv' invariant x i;
       open_term_ln_inv_st' condition x i;
       open_term_ln_inv_st' body x i
 
@@ -841,6 +857,12 @@ let rec close_st_term_ln' (t:st_term) (x:var) (i:index)
     | Tm_While { invariant; condition; body } ->
       FStar.Pure.BreakVC.break_vc();
       close_term_ln' invariant x (i + 1);
+      close_st_term_ln' condition x i;
+      close_st_term_ln' body x i
+
+    | Tm_NuWhile { invariant; condition; body } ->
+      FStar.Pure.BreakVC.break_vc();
+      close_term_ln' invariant x i;
       close_st_term_ln' condition x i;
       close_st_term_ln' body x i
 
@@ -1264,6 +1286,14 @@ let rec st_typing_ln (#g:_) (#t:_) (#c:_)
       st_typing_ln cond_typing;
       st_typing_ln body_typing;
       open_term_ln_inv' inv tm_false 0
+
+    | T_NuWhile _ inv post _ _ inv_typing post_typing cond_typing body_typing ->
+      FStar.Pure.BreakVC.break_vc ();
+      tot_or_ghost_typing_ln inv_typing;
+      tot_or_ghost_typing_ln post_typing;
+      st_typing_ln cond_typing;
+      st_typing_ln body_typing;
+      open_term_ln_inv' post tm_false 0
 
     | T_Par _ _ cL _ cR x _ _ eL_typing eR_typing ->
       st_typing_ln_par d st_typing_ln

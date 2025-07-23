@@ -24,18 +24,16 @@ fn sum #p (#s:erased _) (arr:array int) (len:SZ.t { v len == Seq.length s })
   let mut res = 0;
 
   while (
-    let vi = !i;
-    (vi < len)
+    (!i < len)
   )
-  invariant b.
+  invariant
     pts_to arr #p s **
     (exists* vi vres. (
        R.pts_to i vi **
        R.pts_to res vres **
        pure (
          v vi <= v len /\
-         vres == sum_spec (Seq.slice s 0 (v vi)) /\
-         (b == (vi < len))
+         vres == sum_spec (Seq.slice s 0 (v vi))
        )))
   {
     let vi = !i;

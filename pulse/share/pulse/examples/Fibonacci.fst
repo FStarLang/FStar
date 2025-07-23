@@ -18,7 +18,6 @@ module Fibonacci
 #lang-pulse
 open Pulse.Lib.Pervasives
 module U32 = FStar.UInt32
-#push-options "--ext 'pulse:rvalues'"
 
 let rec fib (n:nat) : nat =
   if n <= 1 then 1
@@ -42,8 +41,8 @@ fn fibonacci (k:pos)
   let mut i = 1;
   let mut j = 1;
   let mut ctr = 1;
-  while ((ctr < k))
-  invariant b . 
+  while ((!ctr < k))
+  invariant
     exists* (vi vj vctr : int).
     pts_to i vi **
     pts_to j vj **
@@ -51,15 +50,14 @@ fn fibonacci (k:pos)
     pure (1 <= vctr /\
           vctr <= k /\
           vi == fib (vctr - 1) /\
-          vj == fib vctr /\
-          b == (vctr < k))
+          vj == fib vctr)
   {
-      let vi = i;
-      ctr := ctr + 1;
-      i := j;
-      j := vi + j;
+      let vi = !i;
+      ctr := !ctr + 1;
+      i := !j;
+      j := vi + !j;
   };
-  j
+  !j
 }
 
 
@@ -71,8 +69,8 @@ fn fibonacci32 (k:U32.t)
   let mut i = 1ul;
   let mut j = 1ul;
   let mut ctr = 1ul;
-  while ((ctr < k))
-  invariant b . 
+  while ((!ctr < k))
+  invariant
     exists* (vi vj vctr : U32.t).
      pts_to i vi **
      pts_to j vj **
@@ -80,16 +78,16 @@ fn fibonacci32 (k:U32.t)
      pure (1ul <=  vctr /\
            vctr <= k /\
            fib (v (vctr - 1ul)) == v vi/\
-           fib (v vctr) == v vj /\
-           b == (vctr < k))
+           fib (v vctr) == v vj)
   {
-     let vi = i;
-     ctr := ctr + 1ul;
-     fib_mono (v k) (v ctr);
-     i := j;
-     j := vi + j;
+     let vi = !i;
+     ctr := !ctr + 1ul;
+     with vc. assert (pts_to ctr vc);
+     fib_mono (v k) (v vc);
+     i := !j;
+     j := vi + !j;
   };
-  j
+  !j
 }
 
 
@@ -102,8 +100,8 @@ fn fibo (n:pos)
   let mut i = 1;
   let mut j = 1;
   let mut ctr = 1;
-  while ((ctr < n))
-  invariant b.
+  while ((!ctr < n))
+  invariant
     exists* (vi vj vctr : int). (
      pts_to i vi **
      pts_to j vj **
@@ -111,16 +109,15 @@ fn fibo (n:pos)
      pure (1 <= vctr /\
            vctr <= n /\
            vi == fib (vctr - 1) /\
-           vj == fib vctr /\
-           b == (vctr < n))
+           vj == fib vctr)
   )
   {
-     let vi = i;
-     i := j;
-     j := vi + j;
-     ctr := ctr + 1;
+     let vi = !i;
+     i := !j;
+     j := vi + !j;
+     ctr := !ctr + 1;
   };
-  j
+  !j
 }
 
 
@@ -132,24 +129,23 @@ fn fibo2 (n:pos)
   let mut i : nat = 1;
   let mut j : nat = 1;
   let mut ctr : nat = 1;
-  while ((ctr < n))
-  invariant b . exists* (vi vj vctr : nat). (
+  while ((!ctr < n))
+  invariant exists* (vi vj vctr : nat). (
      pts_to i vi **
      pts_to j vj **
      pts_to ctr vctr **     
      pure (1 <= vctr /\
            vctr <= n /\
            vi == fib (vctr - 1) /\
-           vj == fib vctr /\
-           b == (vctr < n))
+           vj == fib vctr)
   )
   {
-     let vi = i;
-     i := j;
-     j := vi + j;
-     ctr := ctr + 1;
+     let vi = !i;
+     i := !j;
+     j := vi + !j;
+     ctr := !ctr + 1;
   };
-  j
+  !j
 }
 
 fn fibo3 (n:pos)
@@ -160,24 +156,22 @@ fn fibo3 (n:pos)
   let mut i : nat = 1;
   let mut j : nat = 1;
   let mut ctr : nat = 1;
-  while ((ctr < n))
-  invariant b. exists* (vi vj vctr : nat). (
+  while ((!ctr < n))
+  invariant exists* (vi vj vctr : nat). (
      pts_to i vi **
      pts_to j vj **
      pts_to ctr vctr **     
      pure (1 <= vctr /\
            vctr <= n /\
            vi == fib (vctr - 1) /\
-           vj == fib vctr /\
-           b == (vctr < n))
+           vj == fib vctr)
   )
   {
-     let vi = i;
-     i := j;
-     j := vi + j;
-     ctr := ctr + 1;
+     let vi = !i;
+     i := !j;
+     j := vi + !j;
+     ctr := !ctr + 1;
   };
-  j
+  let res = !j;
+  res
 }
-
- 

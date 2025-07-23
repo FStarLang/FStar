@@ -28,11 +28,11 @@ ensures  R.pts_to x 0
     while (
         !keep_going
     )
-    invariant b. 
-      exists* (v:nat).
+    invariant
+      exists* (b:bool) (v:nat).
         pts_to keep_going b **
         pts_to x v **
-        pure (b == false ==> v == 0)
+        pure (not b  ==> v == 0)
     {
         let n = !x;
         if (n = 0) 
@@ -47,6 +47,31 @@ ensures  R.pts_to x 0
 }
 //end count_down$
 
+fn count_down2 (x:ref nat) (#v:erased nat)
+requires R.pts_to x v
+ensures  R.pts_to x 0
+{
+    let mut keep_going = true;
+    let mut decr : nat = 1;
+    while (
+        !keep_going
+    )
+    invariant
+      exists* (b:bool) (v:nat).
+        pts_to keep_going b **
+        pts_to x v **
+        pure (not b ==> v == 0)
+    {   let n = !x;
+        if (n = 0) 
+        {
+            keep_going := false;
+        } 
+        else
+        {
+            x := n - !decr;
+        }
+    }
+}
 
 //count_down3$
 fn count_down3 (x:ref nat)
@@ -65,10 +90,8 @@ ensures  R.pts_to x 0
             true
         }
     )
-    invariant b. 
-      exists* (v:nat).
-        pts_to x v **
-        pure (b == false ==> v == 0)
+    invariant
+      exists* (v:nat). pts_to x v
     { () }
 }
 //end count_down3$
@@ -91,10 +114,7 @@ ensures  R.pts_to x 0
             true
         }
     )
-    invariant b. 
-      exists* v.
-        R.pts_to x v **
-        pure (b == false ==> v == 0)
+    invariant exists* v. R.pts_to x v
     { () }
 }
 //end count_down_loopy$
@@ -109,17 +129,13 @@ fn multiply_by_repeated_addition (x y:nat)
 {
     let mut ctr : nat = 0;
     let mut acc : nat = 0;
-    while (
-        let c = !ctr;
-        (c < x)
-    )
-    invariant b.
+    while ( (!ctr < x) )
+    invariant 
     exists* (c a : nat).
         R.pts_to ctr c **
         R.pts_to acc a **
         pure (c <= x /\
-              a == (c * y) /\
-              b == (c < x))
+              a == (c * y))
     {
         let a = !acc;
         acc := a + y;
@@ -158,17 +174,13 @@ ensures pure ((n * (n + 1) / 2) == z)
 {
     let mut acc : nat = 0;
     let mut ctr : nat = 0;
-    while (
-        let c = !ctr;
-        (c < n)
-    )
-    invariant b.
+    while ( (!ctr < n ) )
+    invariant 
     exists* (c a : nat).
         R.pts_to ctr c **
         R.pts_to acc a **
         pure (c <= n /\
-              a == sum c /\
-              b == (c < n))
+              a == sum c)
     {
         let a = !acc;
         let c = !ctr;
@@ -226,11 +238,8 @@ fn fib_loop (k:pos)
   let mut i : nat = 1;
   let mut j : nat = 1;
   let mut ctr : nat = 1;
-  while (
-    let c = !ctr;
-    (c < k)
-  )
-  invariant b . 
+  while ((!ctr < k))
+  invariant
     exists* (vi vj vctr : nat).
         R.pts_to i vi **
         R.pts_to j vj **
@@ -239,9 +248,7 @@ fn fib_loop (k:pos)
             1 <= vctr /\
             vctr <= k /\
             vi == fib (vctr - 1) /\
-            vj == fib vctr /\
-            b == (vctr < k)
-        )
+            vj == fib vctr) 
   {
       let vi = !i;
       let vj = !j;
@@ -265,7 +272,6 @@ open FStar.UInt32
 open Pulse.Lib.BoundedIntegers
 module U32 = FStar.UInt32
 
-
 noextract
 //fibonacci32$
 fn fibonacci32 (k:U32.t)
@@ -276,11 +282,8 @@ fn fibonacci32 (k:U32.t)
   let mut i = 1ul;
   let mut j = 1ul;
   let mut ctr = 1ul;
-  while (
-    let c = !ctr;
-    (c < k)
-  )
-  invariant b . 
+  while ((!ctr < k))
+  invariant
     exists* vi vj vctr. 
      R.pts_to i vi **
      R.pts_to j vj **
@@ -288,8 +291,7 @@ fn fibonacci32 (k:U32.t)
      pure (1ul <= vctr /\
            vctr <= k /\
            fib (v (vctr - 1ul)) == v vi/\
-           fib (v vctr) == v vj /\
-           b == (vctr < k))
+           fib (v vctr) == v vj)
   {
      let vi = !i;
      let vj = !j;

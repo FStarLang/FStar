@@ -250,7 +250,12 @@ type st_term' =
   | Tm_While {
       invariant:term;
       condition:st_term;
-      condition_var: ppname;
+      condition_var:ppname;
+      body:st_term;
+    }
+   | Tm_NuWhile {
+      invariant:term;
+      condition:st_term;
       body:st_term;
     }
   | Tm_Par {

@@ -317,7 +317,7 @@ fn length_iter (#t:Type) (x: llist t)
     let v = Pulse.Lib.Reference.(!cur); 
     Some? v
   )
-  invariant b.  
+  invariant
   exists* (n:int) ll suffix.
     pts_to ctr n **
     pts_to cur ll **
@@ -325,11 +325,10 @@ fn length_iter (#t:Type) (x: llist t)
     (is_list ll suffix @==> is_list x 'l) **
     pure (
         List.Tot.length 'l >= List.Tot.length suffix /\
-        n == List.Tot.length 'l - List.Tot.length suffix) **
+        n == List.Tot.length 'l - List.Tot.length suffix)
     (* ^ Having the bounded_int nat instance in BoundedIntegers means we try to
     to check the subtraction as a nat, which fails without the extra condition.
     We can also just write `n + len suff = len 'l`. *)
-    pure (b == (Some? ll))
   {
     with _n _ll suffix. _;
     let n = Pulse.Lib.Reference.(!ctr);

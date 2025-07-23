@@ -57,19 +57,17 @@ val try_frame_pre_uvs
   (uvs:env { disjoint g uvs })
   (d:(t:st_term & c:comp_st & st_typing (push_env g uvs) t c))
   (res_ppname:ppname)
-
-  : T.Tac (checker_result_t g ctxt None)
+  : T.Tac (checker_result_t g ctxt NoHint)
 
 val try_frame_pre
   (allow_ambiguous : bool)
   (#g:env) (#ctxt:slprop) (ctxt_typing:tot_typing g ctxt tm_slprop)
   (d:(t:st_term & c:comp_st & st_typing g t c))
   (res_ppname:ppname)
-
-  : T.Tac (checker_result_t g ctxt None)
+  : T.Tac (checker_result_t g ctxt NoHint)
 
 val prove_post_hint (#g:env) (#ctxt:slprop)
-  (r:checker_result_t g ctxt None)
+  (r:checker_result_t g ctxt NoHint)
   (post_hint:post_hint_opt g)
   (rng:range)
   

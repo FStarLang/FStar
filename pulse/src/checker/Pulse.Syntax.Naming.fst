@@ -179,6 +179,11 @@ let rec close_open_inverse_st'  (t:st_term)
       close_open_inverse_st' condition x i;
       close_open_inverse_st' body x i
 
+    | Tm_NuWhile { invariant; condition; body } ->
+      close_open_inverse' invariant x i;
+      close_open_inverse_st' condition x i;
+      close_open_inverse_st' body x i
+
     | Tm_If { b; then_; else_; post } ->
       close_open_inverse' b x i;    
       close_open_inverse_st' then_ x i;    
