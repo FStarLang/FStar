@@ -11,7 +11,7 @@ open FStarC.Errors.Msg
 open FStarC.Pprint
 open FStarC.Class.Setlike
 
-let () = let open FStarC.Syntax.Print in ()
+open FStarC.Syntax.Print {}
 
 val __def_check_scoped :
   #env_t:Type -> #thing_t:Type ->
