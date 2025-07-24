@@ -298,10 +298,6 @@ let string_of_mlconstant (sctt : mlconstant) =
   | MLC_Int (s, None) -> "(Prims.parse_int \"" ^s^ "\")"
   | MLC_Float d -> string_of_float d
 
-  | MLC_Bytes bytes ->
-      (* A byte buffer. Not meant to be readable. *)
-      "\"" ^ FStarC.Bytes.f_encode escape_byte_hex bytes ^ "\""
-
   | MLC_String chars ->
       (* It was a string literal. Escape what was (likely) escaped originally.
          Leave everything else as is. That way, we get the OCaml semantics,
