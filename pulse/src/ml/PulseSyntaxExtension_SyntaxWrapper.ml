@@ -247,7 +247,7 @@ let binder_to_string (env:Env.env) (b:binder)
   = tac_to_string env (Pulse_Syntax_Printer.binder_to_string b)
 let bv_to_string (x:bv) : string =
     x.bv_ppname.name ^ "@" ^
-     (FStarC_Util.string_of_int x.bv_index)
+     (string_of_int x.bv_index)
 let term_to_string (env:Env.env) (t:term)
   : string
   = tac_to_string env (Pulse_Syntax_Printer.term_to_string t)
