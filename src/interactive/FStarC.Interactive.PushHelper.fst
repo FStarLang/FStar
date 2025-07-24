@@ -44,7 +44,7 @@ let set_check_kind env check_kind =
 
 (** Build a list of dependency loading tasks from a list of dependencies **)
 let repl_ld_tasks_of_deps (deps: list string) (final_tasks: list repl_task) =
-  let wrap fname = { tf_fname = fname; tf_modtime = U.get_time_of_day () } in
+  let wrap fname = { tf_fname = fname; tf_modtime = Time.get_time_of_day () } in
   let rec aux (deps:list string) (final_tasks:list repl_task)
     : list repl_task =
     match deps with
@@ -83,7 +83,7 @@ let deps_and_repl_ld_tasks_of_our_file filename
       if not (Parser.Dep.is_implementation impl) then
          raise_error0 Errors.Fatal_MissingImplementation
            (U.format1 "Expecting an implementation, got %s" impl);
-      [LDInterfaceOfCurrentFile ({ tf_fname = intf; tf_modtime = U.get_time_of_day () }) ]
+      [LDInterfaceOfCurrentFile ({ tf_fname = intf; tf_modtime = Time.get_time_of_day () }) ]
     | [impl] ->
       []
     | _ ->

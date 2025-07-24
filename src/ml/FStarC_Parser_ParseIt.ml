@@ -40,18 +40,18 @@ let find_file filename =
     | None ->
       raise_error_text FStarC_Range.dummyRange Fatal_ModuleOrFileNotFound (U.format1 "Unable to find file: %s\n" filename)
 
-let vfs_entries : (U.time_of_day * string) SMap.t = SMap.create (Z.of_int 1)
+let vfs_entries : (FStarC_Time.time_of_day * string) SMap.t = SMap.create (Z.of_int 1)
 
 let read_vfs_entry fname =
   SMap.try_find vfs_entries (Filepath.normalize_file_path fname)
 
 let add_vfs_entry fname contents =
-  SMap.add vfs_entries (Filepath.normalize_file_path fname) (U.get_time_of_day (), contents)
+  SMap.add vfs_entries (Filepath.normalize_file_path fname) (FStarC_Time.get_time_of_day (), contents)
 
 let get_file_last_modification_time filename =
   match read_vfs_entry filename with
   | Some (mtime, _contents) -> mtime
-  | None -> U.get_file_last_modification_time filename
+  | None -> FStarC_Time.get_file_last_modification_time filename
 
 let read_physical_file (filename: string) =
   (* BatFile.with_file_in uses Unix.openfile (which isn't available in

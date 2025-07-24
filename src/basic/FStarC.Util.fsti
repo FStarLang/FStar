@@ -25,13 +25,6 @@ exception Impos
 val max_int: int
 val return_all: 'a -> ML 'a
 
-type time_of_day
-val get_time_of_day : unit -> time_of_day
-val get_time_of_day_ms : unit -> int
-val is_before: time_of_day -> time_of_day -> bool
-val get_file_last_modification_time: string -> time_of_day
-val string_of_time_of_day: time_of_day -> string
-
 (* generic utils *)
 
 (* pure version *)

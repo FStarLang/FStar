@@ -49,7 +49,7 @@ instance showable_push_kind : showable push_kind = {
 (* REPL tasks and states *)
 (*************************)
 
-let t0 = Util.get_time_of_day ()
+let t0 = Time.get_time_of_day ()
 
 (** Create a timed_fname with a dummy modtime **)
 let dummy_tf_of_fname fname =
@@ -58,7 +58,7 @@ let dummy_tf_of_fname fname =
 
 let string_of_timed_fname { tf_fname = fname; tf_modtime = modtime } =
   if modtime = t0 then Util.format1 "{ %s }" fname
-  else Util.format2 "{ %s; %s }" fname (string_of_time_of_day modtime)
+  else Util.format2 "{ %s; %s }" fname (show modtime)
 
 let string_of_repl_task = function
   | LDInterleaved (intf, impl) ->

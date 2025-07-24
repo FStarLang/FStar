@@ -607,7 +607,7 @@ let fresh () : tac Z.t =
   return (Z.of_int_fs n)
 
 let curms () : tac Z.t =
-    return (BU.get_time_of_day_ms () |> Z.of_int_fs)
+    return (Time.get_time_of_day_ms () |> Z.of_int_fs)
 
 (* Annoying duplication here *)
 let __tc (e : env) (t : term) : tac (term & typ & guard_t) =
