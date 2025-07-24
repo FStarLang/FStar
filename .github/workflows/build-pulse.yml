@@ -1,0 +1,38 @@
+name: Check Pulse breakage
+
+# This workflow must be called ONLY after a run of build.yml
+on:
+  workflow_call:
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  # This checks that we can build the Pulse plugin, admitting all
+  # queries. Since Pulse uses internal FStar compiler modules,
+  # refactorings can break it. We do NOT require this to be green in
+  # order to merge, but it increases visibility into these breakages.
+  build-pulse-plugin:
+    runs-on: ubuntu-latest
+    container: mtzguido/dev-base
+    steps:
+      - name: Cleanup
+        run: sudo find . -delete
+      - run: echo "HOME=/home/user" >> $GITHUB_ENV
+      - uses: mtzguido/set-opam-env@master
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: fstar.tar.gz
+      - run: tar -xzf fstar.tar.gz
+      - run: echo "FSTAR_EXE=$(pwd)/fstar/bin/fstar.exe" >> $GITHUB_ENV
+
+      - name: Checkout pulse
+        uses: actions/checkout@master
+        with:
+          path: pulse/
+          repository: FStarLang/pulse
+
+      - name: Build plugin
+        run: make -C pulse -skj$(nproc) ADMIT=1 plugin
