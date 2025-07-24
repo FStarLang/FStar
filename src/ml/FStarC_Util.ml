@@ -12,8 +12,6 @@ let is_symbol c = if c > 255 then false else BatChar.is_symbol (BatChar.chr c)
 let is_punctuation c = List.mem c [33; 34; 35; 37; 38; 39; 40; 41; 42; 44; 45; 46; 47; 58; 59; 63; 64; 91; 92; 93; 95; 123; 125]
 (*'!','"','#','%','&','\'','(',')','*',',','-','.','/',':',';','?','@','[','\\',']','_','{','}'*)
 
-let return_all x = x
-
 exception Impos
 
 let cur_sigint_handler : Sys.signal_behavior ref =
@@ -345,12 +343,6 @@ let poll_stdin (f:float) =
     with
     | _ -> false
 
-type string_builder = BatBuffer.t
-let new_string_builder () = BatBuffer.create 256
-let clear_string_builder b = BatBuffer.clear b
-let string_of_string_builder b = BatBuffer.contents b
-let string_builder_append b s = BatBuffer.add_string b s
-
 let message_of_exn (e:exn) = Printexc.to_string e
 let trace_of_exn (e:exn) = Printexc.get_backtrace ()
 
@@ -364,13 +356,13 @@ let format (fmt:string) (args:string list) =
   if BatList.length frags <> BatList.length args + 1 then
     failwith ("Not enough arguments to format string " ^fmt^ " : expected " ^ (Stdlib.string_of_int (BatList.length frags)) ^ " got [" ^ (BatString.concat ", " args) ^ "] frags are [" ^ (BatString.concat ", " frags) ^ "]")
   else
-    let sbldr = new_string_builder () in
-    string_builder_append sbldr (List.hd frags);
+    let open FStarC_StringBuffer in
+    let sbldr = create (Z.of_int 80) in
+    ignore (add (List.hd frags) sbldr);
     BatList.iter2
-        (fun frag arg -> string_builder_append sbldr arg;
-                         string_builder_append sbldr frag)
+        (fun frag arg -> sbldr |> add arg |> add frag |> ignore)
         (List.tl frags) args;
-    string_of_string_builder sbldr
+    contents sbldr
 
 let format1 f a = format f [a]
 let format2 f a b = format f [a;b]

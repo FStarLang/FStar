@@ -3588,7 +3588,7 @@ let get_mlift_for_subeff env (sub:S.sub_eff) : Env.mlift =
        //and not using the lift term (I don't think the lift term is even supported for DM4F, is it?)
        mlift_term =
          match sub.lift with
-         | None -> Some (fun _ _ e -> return_all e)
+         | None -> Some (fun _ _ e -> e)
          | Some ts -> Some (mk_mlift_term ts) })
 
 

@@ -1222,7 +1222,7 @@ let is_layered_effect env l =
 
 let identity_mlift : mlift =
   { mlift_wp=(fun _ c -> c, trivial_guard);
-    mlift_term=Some (fun _ _ e -> return_all e) }
+    mlift_term=Some (fun _ _ e -> e) }
 
 let join_opt env (l1:lident) (l2:lident) : option (lident & mlift & mlift) =
   if lid_equals l1 l2

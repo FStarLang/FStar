@@ -24,6 +24,7 @@ open FStarC.Util
 open FStarC.Getopt
 open FStarC.Ident
 open FStarC.Class.Show
+module SB = FStarC.StringBuffer
 
 open FStarC.Universal
 open FStarC.TypeChecker.Env
@@ -103,7 +104,7 @@ type input_chunks =
 type interactive_state = {
   // The current chunk -- chunks end on #end boundaries per the communication
   // protocol.
-  chunk: string_builder;
+  chunk: SB.t;
   stdin: ref (option stream_reader); // Initialized once.
   // A list of chunks read so far
   buffer: ref (list input_chunks);
@@ -112,7 +113,7 @@ type interactive_state = {
 
 
 let the_interactive_state = {
-  chunk = Util.new_string_builder ();
+  chunk = SB.create 100;
   stdin = mk_ref None;
   buffer = mk_ref [];
   log = mk_ref None
@@ -160,12 +161,12 @@ let rec read_chunk () =
       match Util.split l " " with
       | [_; ok; fail] -> (ok, fail)
       | _ -> ("ok", "fail") in
-    let str = Util.string_of_string_builder s.chunk in
-    Util.clear_string_builder s.chunk; Code (str, responses)
+    let str = SB.contents s.chunk in
+    ignore (SB.clear s.chunk); Code (str, responses)
     end
-  else if Util.starts_with l "#pop" then (Util.clear_string_builder s.chunk; Pop l)
+  else if Util.starts_with l "#pop" then (ignore (SB.clear s.chunk); Pop l)
   else if Util.starts_with l "#push" then (
-        Util.clear_string_builder s.chunk;
+        ignore (SB.clear s.chunk);
         let lc_lax = Util.trim_string (Util.substring_from l (String.length "#push")) in
         let lc = match Util.split lc_lax " " with
             | [l; c; "#lax"] -> true, Util.int_of_string l, Util.int_of_string c
@@ -178,10 +179,10 @@ let rec read_chunk () =
   else if Util.starts_with l "#info " then
       match Util.split l " " with
       | [_; symbol] ->
-        Util.clear_string_builder s.chunk;
+        ignore (SB.clear s.chunk);
         Info (symbol, true, None)
       | [_; symbol; file; row; col] ->
-        Util.clear_string_builder s.chunk;
+        ignore (SB.clear s.chunk);
         Info (symbol, false, Some (file, Util.int_of_string row, Util.int_of_string col))
       | _ ->
         Errors.log_issue0 Errors.Error_IDEUnrecognized ("Unrecognized \"#info\" request: " ^ l);
@@ -189,16 +190,16 @@ let rec read_chunk () =
   else if Util.starts_with l "#completions " then
       match Util.split l " " with
       | [_; prefix; "#"] -> // Extra "#" marks the end of the input.  FIXME protocol could take more structured messages.
-        Util.clear_string_builder s.chunk;
+        ignore (SB.clear s.chunk);
         Completions (prefix)
       | _ ->
         Errors.log_issue0 Errors.Error_IDEUnrecognized ("Unrecognized \"#completions\" request: " ^ l);
         exit 1
   else if l = "#finish" then exit 0
-  else
-    (Util.string_builder_append s.chunk line;
-     Util.string_builder_append s.chunk "\n";
-     read_chunk())
+  else (
+    s.chunk |> SB.add line |> SB.add "\n" |> ignore;
+    read_chunk ()
+  )
 
 let shift_chunk () =
   let s = the_interactive_state in
