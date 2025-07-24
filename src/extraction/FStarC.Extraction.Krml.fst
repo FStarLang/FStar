@@ -1308,8 +1308,6 @@ and translate_constant c: expr =
       EConstant (translate_width (Some (sg, wd)), s)
   | MLC_Float _ ->
       failwith "todo: translate_expr [MLC_Float]"
-  | MLC_Bytes _ ->
-      failwith "todo: translate_expr [MLC_Bytes]"
   | MLC_Int (s, None) ->
       EConstant (CInt, s)
 

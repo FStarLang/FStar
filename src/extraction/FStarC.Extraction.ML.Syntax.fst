@@ -217,7 +217,6 @@ and mlconstant_to_doc mlc =
   | MLC_Float f -> ctor "MLC_Float" underscore
   | MLC_Char c -> ctor "MLC_Char" underscore
   | MLC_String s -> ctor "MLC_String" (doc_of_string s)
-  | MLC_Bytes b -> ctor "MLC_Bytes" underscore
 
 and mlpattern_to_doc mlp =
   match mlp with

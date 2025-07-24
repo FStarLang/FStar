@@ -157,7 +157,6 @@ let build_constant (c: mlconstant): Parsetree.constant =
   | MLC_Float v -> Const.float (string_of_float v)
   | MLC_Char v -> Const.int v
   | MLC_String v -> Const.string v
-  | MLC_Bytes _ -> failwith "Case not handled" (* do we need this? *)
   | _ -> failwith "Case not handled"
 
 let build_constant_expr (c: mlconstant): expression =
