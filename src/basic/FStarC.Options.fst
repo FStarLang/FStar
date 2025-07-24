@@ -793,7 +793,7 @@ let set_option_warning_callback_aux,
     set, call
 let set_option_warning_callback f = set_option_warning_callback_aux f
 
-let rec specs_with_types warn_unsafe : list (char & string & opt_type & Pprint.document) =
+let specs_with_types warn_unsafe : list (char & string & opt_type & Pprint.document) =
   let open FStarC.Pprint in
   let open FStarC.Errors.Msg in
   let text (s:string) : document = flow (break_ 1) (words s) in
@@ -1731,7 +1731,7 @@ let rec specs_with_types warn_unsafe : list (char & string & opt_type & Pprint.d
     text "A helper. This runs 'ocamlopt' in the environment set up by --ocamlenv, for building an F* plugin.");
   ]
 
-and specs (warn_unsafe:bool) : list (FStarC.Getopt.opt & Pprint.document) =
+let specs (warn_unsafe:bool) : list (FStarC.Getopt.opt & Pprint.document) =
   List.map (fun (short, long, typ, doc) ->
             mk_spec (short, long, arg_spec_of_opt_type long typ), doc)
            (specs_with_types warn_unsafe)
