@@ -77,7 +77,7 @@ let rec elaborate_pat env p = //Adds missing implicit patterns to constructor pa
 
                     | _ ->
                     raise_error fv.fv_name.v Errors.Fatal_InsufficientPatternArguments
-                                (BU.format1 "Insufficient pattern arguments (%s)"
+                                (Format.fmt1 "Insufficient pattern arguments (%s)"
                                             (show p)))
 
             | f::formals', (p, p_imp)::pats' ->
@@ -98,7 +98,7 @@ let rec elaborate_pat env p = //Adds missing implicit patterns to constructor pa
 
               | _ ->
                 raise_error p.p Errors.Fatal_InsufficientPatternArguments
-                             (BU.format1 "This pattern (%s) binds an inaccesible argument; use a wildcard ('_') pattern"
+                             (Format.fmt1 "This pattern (%s) binds an inaccesible argument; use a wildcard ('_') pattern"
                                          (show p))
               end
 
@@ -215,7 +215,7 @@ let pat_as_exp (introduce_bv_uvars:bool)
                 if !dbg_Patterns
                 then begin
                   if not env.phase1
-                  then BU.print1 "Found a non-instantiated dot pattern in phase2 (%s)\n"
+                  then Format.print1 "Found a non-instantiated dot pattern in phase2 (%s)\n"
                          (show p)
                 end;
                 let k, _ = U.type_u () in
@@ -269,7 +269,7 @@ let pat_as_exp (introduce_bv_uvars:bool)
         match b |> BU.find_dup bv_eq with
             | Some x ->
               let m = show x in
-              raise_error p.p Errors.Fatal_NonLinearPatternVars (format1 "The pattern variable \"%s\" was used more than once" m)
+              raise_error p.p Errors.Fatal_NonLinearPatternVars (Format.fmt1 "The pattern variable \"%s\" was used more than once" m)
             | _ -> b, a, w, arg, guard, p
     in
     let b, _, _, tm, guard, p = one_pat env p in

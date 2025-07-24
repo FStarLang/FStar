@@ -68,7 +68,7 @@ let mlconst_of_const' (sctt : sconst) =
 
 let mlconst_of_const (p:Range.t) (c:sconst) =
     try mlconst_of_const' c
-    with _ -> failwith (BU.format2 "(%s) Failed to translate constant %s " (Range.string_of_range p) (show c))
+    with _ -> failwith (Format.fmt2 "(%s) Failed to translate constant %s " (Range.string_of_range p) (show c))
 
 let mlexpr_of_range (r:Range.t) : mlexpr' =
     let cint (i : int) : mlexpr =
@@ -134,7 +134,7 @@ let udelta_unfold (g:UEnv.uenv) = function
           begin
             match try_subst ts args with
             | None ->
-              failwith (BU.format3 "Substitution must be fully applied; got an application of %s with %s args whereas %s were expected (see GitHub issue #490)"
+              failwith (Format.fmt3 "Substitution must be fully applied; got an application of %s with %s args whereas %s were expected (see GitHub issue #490)"
                                                  (string_of_mlpath n)
                                                  (show (List.length args))
                                                  (show (List.length (fst ts))))
@@ -163,7 +163,7 @@ let join r f f' = match f, f' with
     | E_PURE  , E_ERASABLE  -> E_ERASABLE
     | E_ERASABLE , E_PURE   -> E_ERASABLE
     | E_PURE  , E_PURE   -> E_PURE
-    | _ -> failwith (BU.format3 "Impossible (%s): Inconsistent effects %s and %s"
+    | _ -> failwith (Format.fmt3 "Impossible (%s): Inconsistent effects %s and %s"
                             (Range.string_of_range r)
                             (eff_to_string f) (eff_to_string f'))
 

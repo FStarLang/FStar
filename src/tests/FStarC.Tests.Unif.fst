@@ -48,7 +48,7 @@ let guard_to_string g = match g with
 let success = mk_ref true
 
 let fail msg =
-    BU.print_string msg;
+    Format.print_string msg;
     success := false
 
 let guard_eq i g g' =
@@ -60,15 +60,15 @@ let guard_eq i g g' =
           term_eq f f', NonTrivial f, NonTrivial f'
         | _ -> false, g, g' in
     if not b
-    then fail <| BU.format3 "Test %s failed:\n\t\
+    then fail <| Format.fmt3 "Test %s failed:\n\t\
                         Expected guard %s;\n\t\
                         Got guard      %s\n" (show i) (guard_to_string g') (guard_to_string g);
     success := !success && b
 
 let unify i bvs x y g' check =
-    BU.print1 "%s ..." (show i);
+    Format.print1 "%s ..." (show i);
     Options.parse_cmd_line () |> ignore; //set options
-    BU.print2 "Unify %s\nand %s\n" (show x) (show y);
+    Format.print2 "Unify %s\nand %s\n" (show x) (show y);
     let tcenv = tcenv() in
     let tcenv = Env.push_bvs tcenv bvs in
     let g = Rel.teq tcenv x y |> Rel.solve_deferred_constraints tcenv |> Rel.simplify_guard tcenv in
@@ -80,15 +80,15 @@ let should_fail x y =
     try
         let g = Rel.teq (tcenv()) x y |> Rel.solve_deferred_constraints (tcenv()) in
         match g.guard_f with
-            | Trivial -> fail (BU.format2 "%s and %s should not be unifiable\n" (show x) (show y))
-            | NonTrivial f -> BU.print3 "%s and %s are unifiable if %s\n"  (show x) (show y) (show f)
-    with Error(e, msg, r, _ctx) -> BU.print1 "%s\n" (Errors.rendermsg msg) // FIXME?
+            | Trivial -> fail (Format.fmt2 "%s and %s should not be unifiable\n" (show x) (show y))
+            | NonTrivial f -> Format.print3 "%s and %s are unifiable if %s\n"  (show x) (show y) (show f)
+    with Error(e, msg, r, _ctx) -> Format.print1 "%s\n" (Errors.rendermsg msg) // FIXME?
 
 let unify' x y =
     let x = pars x in
     let y = pars y in
     let g = Rel.teq (tcenv()) x y |> Rel.solve_deferred_constraints (tcenv()) in
-    BU.print3 "%s and %s are unifiable with guard %s\n"  (show x) (show y) (guard_to_string g.guard_f)
+    Format.print3 "%s and %s are unifiable with guard %s\n"  (show x) (show y) (guard_to_string g.guard_f)
 
 let norm t = N.normalize [] (tcenv()) t
 
@@ -103,14 +103,14 @@ let check_core i subtyping guard_ok x y =
   let _ = 
     match res with
     | Inl None ->
-      BU.print1 "%s core check ok\n" (show i)
+      Format.print1 "%s core check ok\n" (show i)
     | Inl (Some g) ->
-      BU.print2 "%s core check computed guard %s ok\n" (show i) (show g);
+      Format.print2 "%s core check computed guard %s ok\n" (show i) (show g);
       if not guard_ok
       then success := false
     | Inr err ->
       success := false;
-      BU.print2 "%s failed\n%s\n" (show i) (FStarC.TypeChecker.Core.print_error err)
+      Format.print2 "%s failed\n%s\n" (show i) (FStarC.TypeChecker.Core.print_error err)
   in
   Options.init()
 
@@ -120,13 +120,13 @@ let check_core_typing i e t =
   let _ =
     match FStarC.TypeChecker.Core.check_term env e t true with
     | Inl None -> 
-      BU.print1 "%s core typing ok\n" (show i)
+      Format.print1 "%s core typing ok\n" (show i)
     | Inl (Some g) -> 
-      BU.print1 "%s core typing produced a guard\n" (show i);
+      Format.print1 "%s core typing produced a guard\n" (show i);
       success := false
     | Inr err ->
       success := false;
-      BU.print2 "%s failed\n%s\n" (show i) (FStarC.TypeChecker.Core.print_error err)      
+      Format.print2 "%s failed\n%s\n" (show i) (FStarC.TypeChecker.Core.print_error err)      
   in
   Options.init()
 
@@ -140,7 +140,7 @@ let inst n tm =
    norm (app tm us), us
 
 let run_all () =
-    BU.print_string "Testing the unifier\n";
+    Format.print_string "Testing the unifier\n";
 
     Options.__set_unit_tests();
     let unify_check n bvs x y g f = unify n bvs x y g f in
@@ -330,5 +330,5 @@ let run_all () =
     Options.__clear_unit_tests();
 
     if !success
-    then BU.print_string "Unifier ok\n";
+    then Format.print_string "Unifier ok\n";
     !success

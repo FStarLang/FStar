@@ -159,7 +159,7 @@ let inspect_const (c:sconst) : vconst =
     | FStarC.Const.Const_reify _ -> C_Reify
     | FStarC.Const.Const_reflect l -> C_Reflect (Ident.path_of_lid l)
     | FStarC.Const.Const_real s -> C_Real s
-    | _ -> failwith (BU.format1 "unknown constant: %s" (show c))
+    | _ -> failwith (Format.fmt1 "unknown constant: %s" (show c))
 
 let inspect_universe u =
   match u with
@@ -283,7 +283,7 @@ let rec inspect_ln (t:term) : term_view =
         i |> U.unfold_lazy |> inspect_ln
 
     | _ ->
-        Err.log_issue t Err.Warning_CantInspect (BU.format2 "inspect_ln: outside of expected syntax (%s, %s)" (tag_of t) (show t));
+        Err.log_issue t Err.Warning_CantInspect (Format.fmt2 "inspect_ln: outside of expected syntax (%s, %s)" (tag_of t) (show t));
         Tv_Unsupp
 
 let inspect_comp (c : comp) : comp_view =
@@ -293,7 +293,7 @@ let inspect_comp (c : comp) : comp_view =
         | Some (DECREASES (Decreases_lex ts)) -> ts
         | Some (DECREASES (Decreases_wf _)) ->
           Err.log_issue c Err.Warning_CantInspect
-            (BU.format1 "inspect_comp: inspecting comp with wf decreases clause is not yet supported: %s \
+            (Format.fmt1 "inspect_comp: inspecting comp with wf decreases clause is not yet supported: %s \
               skipping the decreases clause"
               (show c));
           []
@@ -651,7 +651,7 @@ let pack_lb (lbv:lb_view) : letbinding =
 let inspect_namedv (v:bv) : namedv_view =
     if v.index < 0 then (
         Err.log_issue0 Err.Warning_CantInspect
-          (BU.format3 "inspect_namedv: uniq is negative (%s : %s), uniq = %s"
+          (Format.fmt3 "inspect_namedv: uniq is negative (%s : %s), uniq = %s"
                 (Ident.string_of_id v.ppname) (show v.sort) (show v.index))
     );
     {
@@ -663,7 +663,7 @@ let inspect_namedv (v:bv) : namedv_view =
 let pack_namedv (vv:namedv_view) : namedv =
     if vv.uniq < 0 then (
         Err.log_issue0 Err.Warning_CantInspect 
-          (BU.format2 "pack_namedv: uniq is negative (%s), uniq = %s"
+          (Format.fmt2 "pack_namedv: uniq is negative (%s), uniq = %s"
                 (Sealed.unseal vv.ppname) (show vv.uniq))
     );
     {
@@ -675,7 +675,7 @@ let pack_namedv (vv:namedv_view) : namedv =
 let inspect_bv (bv:bv) : bv_view =
     if bv.index < 0 then (
         Err.log_issue0 Err.Warning_CantInspect
-          (BU.format3 "inspect_bv: index is negative (%s : %s), index = %s"
+          (Format.fmt3 "inspect_bv: index is negative (%s : %s), index = %s"
                 (Ident.string_of_id bv.ppname) (show bv.sort) (show bv.index))
     );
     {
@@ -687,7 +687,7 @@ let inspect_bv (bv:bv) : bv_view =
 let pack_bv (bvv:bv_view) : bv =
     if bvv.index < 0 then (
         Err.log_issue0 Err.Warning_CantInspect
-          (BU.format2 "pack_bv: index is negative (%s), index = %s"
+          (Format.fmt2 "pack_bv: index is negative (%s), index = %s"
                 (Sealed.unseal bvv.ppname) (show bvv.index))
     );
     {

@@ -135,7 +135,7 @@ let print_mlpath_map (g:uenv) =
     in
     let entries =
       PSMap.fold g.mlpath_of_lid (fun key value entries ->
-        BU.format2 "%s -> %s" key (string_of_mlpath value) :: entries) []
+        Format.fmt2 "%s -> %s" key (string_of_mlpath value) :: entries) []
     in
     String.concat "\n" entries
 
@@ -182,10 +182,10 @@ let try_lookup_fv (r:Range.t) (g:uenv) (fv:fv) : option exp_binding =
     (* Log an error/warning and return None *)
     let open FStarC.Errors.Msg in
     Errors.log_issue r Errors.Error_CallToErased [
-       text <| BU.format1 "Will not extract reference to variable `%s` since it has the `noextract` qualifier." (string_of_lid fv.fv_name.v);
-       text <| BU.format2 "Either remove the noextract qualifier from %s (defined in %s) or add it to this definition."
+       text <| Format.fmt1 "Will not extract reference to variable `%s` since it has the `noextract` qualifier." (string_of_lid fv.fv_name.v);
+       text <| Format.fmt2 "Either remove the noextract qualifier from %s (defined in %s) or add it to this definition."
                  (string_of_lid fv.fv_name.v) (show pos);
-       text <| BU.format1 "This error can be ignored with `--warn_error -%s`." (show Errors.call_to_erased_errno)];
+       text <| Format.fmt1 "This error can be ignored with `--warn_error -%s`." (show Errors.call_to_erased_errno)];
     None
   | NotFound ->
     None
@@ -195,7 +195,7 @@ let lookup_fv (r:Range.t) (g:uenv) (fv:fv) : exp_binding =
   match lookup_fv_generic g fv with
   | Found t -> t
   | res ->
-    failwith (BU.format3 "Internal error: (%s) free variable %s not found during extraction (res=%s)\n"
+    failwith (Format.fmt3 "Internal error: (%s) free variable %s not found during extraction (res=%s)\n"
               (Range.string_of_range fv.fv_name.p)
               (show fv.fv_name.v)
               (show res))
@@ -211,7 +211,7 @@ let lookup_bv (g:uenv) (bv:bv) : ty_or_exp_b =
     in
     match x with
     | None ->
-      failwith (BU.format2 "(%s) bound Variable %s not found\n"
+      failwith (Format.fmt2 "(%s) bound Variable %s not found\n"
                            (Range.string_of_range (range_of_id bv.ppname))
                            (show bv))
     | Some y -> y
@@ -248,8 +248,8 @@ let mlpath_of_lident (g:uenv) (x:lident) : mlpath =
     match PSMap.try_find g.mlpath_of_lid (string_of_lid x) with
     | None ->
       debug g (fun _ ->
-        BU.print1 "Identifier not found: %s" (string_of_lid x);
-        BU.print1 "Env is \n%s\n" (print_mlpath_map g));
+        Format.print1 "Identifier not found: %s" (string_of_lid x);
+        Format.print1 "Env is \n%s\n" (print_mlpath_map g));
       failwith ("Identifier not found: " ^ string_of_lid x)
     | Some mlp -> mlp
 
@@ -556,7 +556,7 @@ let extend_fv (g:uenv) (x:fv) (t_x:mltyscheme) (add_unit:bool)
         let gamma = Fv(x, exp_binding)::g.env_bindings in
         let mlident_map = PSMap.add g.env_mlident_map mlsymbol "" in
         {g with env_bindings=gamma; env_mlident_map=mlident_map}, mlsymbol, exp_binding
-    else failwith (BU.format1 "freevars found (%s)" (mltyscheme_to_string t_x))
+    else failwith (Format.fmt1 "freevars found (%s)" (mltyscheme_to_string t_x))
 
 let extend_erased_fv (g:uenv) (f:fv) : uenv =
   { g with env_bindings = ErasedFv f :: g.env_bindings }

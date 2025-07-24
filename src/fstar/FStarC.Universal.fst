@@ -205,7 +205,7 @@ let tc_one_fragment curmod (env:TcEnv.env_t) frag =
       if not (acceptable_mod_name modul) then
       begin
         let msg : string =
-            BU.format1 "Interactive mode only supports a single module at the top-level. Expected module %s"
+            Format.fmt1 "Interactive mode only supports a single module at the top-level. Expected module %s"
                                     (Parser.Dep.module_name_of_file (fname env))
         in
         Errors.raise_error (range_of_first_mod_decl ast_modul) Errors.Fatal_NonSingletonTopLevelModule msg
@@ -290,7 +290,7 @@ let load_interface_decls env interface_file_name : TcEnv.env_t =
     snd (with_dsenv_of_tcenv env <| FStarC.ToSyntax.Interleave.initialize_interface l decls)
   | Pars.ASTFragment _ ->
     Errors.raise_error0 FStarC.Errors.Fatal_ParseErrors
-      (BU.format1 "Unexpected result from parsing %s; expected a single interface" interface_file_name)
+      (Format.fmt1 "Unexpected result from parsing %s; expected a single interface" interface_file_name)
   | Pars.ParseError (err, msg, rng) ->
     raise (FStarC.Errors.Error(err, msg, rng, []))
   | Pars.Term _ ->
@@ -507,7 +507,7 @@ let tc_one_file
         if Options.should_be_already_cached (FStarC.Parser.Dep.module_name_of_file fn)
         && not (Options.force ())
         then FStarC.Errors.raise_error0 FStarC.Errors.Error_AlreadyCachedAssertionFailure [
-                 text <| BU.format1 "Expected %s to already be checked." fn
+                 text <| Format.fmt1 "Expected %s to already be checked." fn
                ];
 
         if (Option.isSome (Options.codegen())
@@ -515,7 +515,7 @@ let tc_one_file
         && not (Options.force ())
         then FStarC.Errors.raise_error0 FStarC.Errors.Error_AlreadyCachedAssertionFailure [
                  text "Cross-module inlining expects all modules to be checked first.";
-                 text <| BU.format1 "Module %s was not checked." fn;
+                 text <| Format.fmt1 "Module %s was not checked." fn;
                ];
 
         let tc_result, mllib, env = tc_source_file () in
@@ -533,7 +533,7 @@ let tc_one_file
         let tcmod = tc_result.checked_module in
         let smt_decls = tc_result.smt_decls in
         if Options.dump_module (string_of_lid tcmod.name)
-        then BU.print1 "Module after type checking:\n%s\n" (show tcmod);
+        then Format.print1 "Module after type checking:\n%s\n" (show tcmod);
 
         let extend_tcenv tcmod tcenv =
             let _, tcenv =
@@ -646,10 +646,10 @@ let rec tc_fold_interleave (deps:FStarC.Parser.Dep.deps)  //used to query parsin
 let dbg_dep = Debug.get_toggle "Dep"
 let batch_mode_tc filenames dep_graph =
   if !dbg_dep then begin
-    FStarC.Util.print_endline "Auto-deps kicked in; here's some info.";
-    FStarC.Util.print1 "Here's the list of filenames we will process: %s\n"
+    Format.print_string "Auto-deps kicked in; here's some info.\n";
+    Format.print1 "Here's the list of filenames we will process: %s\n"
       (String.concat " " filenames);
-    FStarC.Util.print1 "Here's the list of modules we will verify: %s\n"
+    Format.print1 "Here's the list of modules we will verify: %s\n"
       (String.concat " " (filenames |> List.filter Options.should_verify_file))
   end;
   let env = FStarC.Extraction.ML.UEnv.new_uenv (init_env dep_graph) in

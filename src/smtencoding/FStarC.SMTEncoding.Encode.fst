@@ -585,7 +585,7 @@ let encode_top_level_val uninterpreted env us fv t quals =
       else norm_before_encoding_us env us t
     in
     // if !dbg_SMTEncoding
-    // then BU.print3 "Encoding top-level val %s : %s\Normalized to is %s\n"
+    // then Format.print3 "Encoding top-level val %s : %s\Normalized to is %s\n"
     //        (show fv)
     //        (show t)
     //        (show tt);
@@ -776,7 +776,7 @@ let encode_top_level_let :
                 let (binders, body, t_body_comp) = destruct_bound_function t_norm e in
                 let t_body = U.comp_result t_body_comp in
                 if !dbg_SMTEncoding
-                then BU.print2 "Encoding let : binders=[%s], body=%s\n"
+                then Format.print2 "Encoding let : binders=[%s], body=%s\n"
                                 (show binders)
                                 (show body);
                 (* Encode binders *)
@@ -808,7 +808,7 @@ let encode_top_level_let :
                     //But the guard is unnecessary given the pattern
                     Util.mkAssume(mkForall (S.range_of_lbname lbn)
                                            ([[pat]], vars, mkEq(app,body)),
-                                  Some (BU.format1 "Equation for %s" (string_of_lid flid)),
+                                  Some (Format.fmt1 "Equation for %s" (string_of_lid flid)),
                                   (name ^ "_" ^ fvb.smt_id))
                 in
                 let eqns,decls2 =
@@ -825,7 +825,7 @@ let encode_top_level_let :
                       then (
                         Util.mkAssume(mkForall (S.range_of_lbname lbn)
                                             ([[app_is_prop]], vars, mkImp(mk_and_l binder_guards, mk_Valid <| app_is_prop)),
-                                      Some (BU.format1 "Prop-typing for %s" (string_of_lid flid)),
+                                      Some (Format.fmt1 "Prop-typing for %s" (string_of_lid flid)),
                                     (basic_eqn_name ^ "_" ^ fvb.smt_id)),
                         []
                       )
@@ -886,7 +886,7 @@ let encode_top_level_let :
                 {env with tcenv=tcenv'}, e, t_norm
             in
             if !dbg_SMTEncoding
-            then BU.print3 "Encoding let rec %s : %s = %s\n"
+            then Format.print3 "Encoding let rec %s : %s = %s\n"
                         (show lbn)
                         (show t_norm)
                         (show e);
@@ -896,7 +896,7 @@ let encode_top_level_let :
             let curry = fvb.smt_arity <> List.length binders in
             let pre_opt, tres = TcUtil.pure_or_ghost_pre_and_post env.tcenv tres_comp in
             if !dbg_SMTEncoding
-            then BU.print4 "Encoding let rec %s: \n\tbinders=[%s], \n\tbody=%s, \n\ttres=%s\n"
+            then Format.print4 "Encoding let rec %s: \n\tbinders=[%s], \n\tbody=%s, \n\ttres=%s\n"
                               (show lbn)
                               (show binders)
                               (show body)
@@ -938,7 +938,7 @@ let encode_top_level_let :
                 Util.mkAssume
                     (mkForall' (S.range_of_lbname lbn)
                                ([[gsapp]], Some 0, fuel::vars, mkImp(guard, mkEq(gsapp, body_tm))),
-                     Some (BU.format1 "Equation for fuel-instrumented recursive function: %s" (string_of_lid fvb.fvar_lid)),
+                     Some (Format.fmt1 "Equation for fuel-instrumented recursive function: %s" (string_of_lid fvb.fvar_lid)),
                      "equation_with_fuel_" ^g) in
             let eqn_f = Util.mkAssume(mkForall (S.range_of_lbname lbn) ([[app]], vars, mkEq(app, gmax)),
                                     Some "Correspondence of recursive function to instrumented version",
@@ -1021,7 +1021,7 @@ let encode_top_level_let :
                 env.tcenv
                 [(Errors.Warning_DefinitionNotTranslated,
                   // FIXME
-                  [Errors.text <| BU.format3
+                  [Errors.text <| Format.fmt3
                     "Definitions of inner let-rec%s %s and %s enclosing top-level letbinding are not encoded to the solver, you will only be able to reason with their types"
                     (if plural then "s" else "")
                     (List.map fst names |> String.concat ",")
@@ -1410,7 +1410,7 @@ let encode_datacon (env:env_t) (se:sigelt)
 
       | _ ->
         Errors.log_issue se Errors.Warning_ConstructorBuildsUnexpectedType
-          (BU.format2 "Constructor %s builds an unexpected type %s" (show d) (show head));
+          (Format.fmt2 "Constructor %s builds an unexpected type %s" (show d) (show head));
         [], []
   in
   let decls2, elim = encode_elim () in
@@ -1479,7 +1479,7 @@ let encode_datacon (env:env_t) (se:sigelt)
   let g = binder_decls
           @decls2
           @decls3
-          @([Term.DeclFun(ddtok, [], Term_sort, Some (BU.format1 "data constructor proxy: %s" (show d)))]
+          @([Term.DeclFun(ddtok, [], Term_sort, Some (Format.fmt1 "data constructor proxy: %s" (show d)))]
             @proxy_fresh |> mk_decls_trivial)
           @decls_pred
           @([Util.mkAssume(tok_typing, Some "typing for data constructor proxy", ("typing_tok_"^ddtok));
@@ -1493,7 +1493,7 @@ let encode_datacon (env:env_t) (se:sigelt)
 
 let rec encode_sigelt (env:env_t) (se:sigelt) : (decls_t & env_t) =
     let nm = Print.sigelt_to_string_short se in
-    let g, env = Errors.with_ctx (BU.format1 "While encoding top-level declaration `%s`"
+    let g, env = Errors.with_ctx (Format.fmt1 "While encoding top-level declaration `%s`"
                                              (Print.sigelt_to_string_short se))
                    (fun () -> encode_sigelt' env se)
     in
@@ -1502,18 +1502,18 @@ let rec encode_sigelt (env:env_t) (se:sigelt) : (decls_t & env_t) =
          | [] ->
             begin
             if !dbg_SMTEncoding then
-              BU.print1 "Skipped encoding of %s\n" nm;
-            [Caption (BU.format1 "<Skipped %s/>" nm); EmptyLine] |> mk_decls_trivial
+              Format.print1 "Skipped encoding of %s\n" nm;
+            [Caption (Format.fmt1 "<Skipped %s/>" nm); EmptyLine] |> mk_decls_trivial
             end
 
-         | _ -> ([Caption (BU.format1 "<Start encoding %s>" nm)] |> mk_decls_trivial)
+         | _ -> ([Caption (Format.fmt1 "<Start encoding %s>" nm)] |> mk_decls_trivial)
                 @g
-                @([Caption (BU.format1 "</end encoding %s>" nm); EmptyLine] |> mk_decls_trivial) in
+                @([Caption (Format.fmt1 "</end encoding %s>" nm); EmptyLine] |> mk_decls_trivial) in
     g, env
 
 and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t & env_t) =
     if !dbg_SMTEncoding
-    then (BU.print1 "@@@Encoding sigelt %s\n" (show se));
+    then (Format.print1 "@@@Encoding sigelt %s\n" (show se));
 
     let is_opaque_to_smt (t:S.term) =
         match (SS.compress t).n with
@@ -1622,7 +1622,7 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t & env_t) =
         let env = { env with tcenv = Env.push_univ_vars env.tcenv uvs } in
         let f = norm_before_encoding env f in
         let f, decls = encode_formula f env in
-        let g = [Util.mkAssume(f, Some (BU.format1 "Assumption: %s" (show l)), (varops.mk_unique ("assumption_"^(string_of_lid l))))]
+        let g = [Util.mkAssume(f, Some (Format.fmt1 "Assumption: %s" (show l)), (varops.mk_unique ("assumption_"^(string_of_lid l))))]
                 |> mk_decls_trivial in
         decls@g, env
 
@@ -1666,7 +1666,7 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t & env_t) =
     | Sig_let _ when (se.sigquals |> BU.for_some (function Discriminator _ -> true | _ -> false)) ->
       //Discriminators are encoded directly via (our encoding of) theory of datatypes
       if !dbg_SMTEncoding then
-        BU.print1 "Not encoding discriminator '%s'\n" (Print.sigelt_to_string_short se);
+        Format.print1 "Not encoding discriminator '%s'\n" (Print.sigelt_to_string_short se);
       [], env
 
     (* `unfold let` definitions in prims do not get encoded. *)
@@ -1674,7 +1674,7 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t & env_t) =
                              && se.sigquals |> BU.for_some (function Unfold_for_unification_and_vcgen -> true | _ -> false)) ->
         //inline lets from prims are never encoded as definitions --- since they will be inlined
       if !dbg_SMTEncoding then
-        BU.print1 "Not encoding unfold let from Prims '%s'\n" (Print.sigelt_to_string_short se);
+        Format.print1 "Not encoding unfold let from Prims '%s'\n" (Print.sigelt_to_string_short se);
       [], env
 
     (* Projectors *)
@@ -1794,7 +1794,7 @@ let encode_env_bindings (env:env_t) (bindings:list S.binding) : (decls_t & env_t
         | S.Binding_var x ->
             let t1 = norm_before_encoding env x.sort in
             if !dbg_SMTEncoding
-            then (BU.print3 "Normalized %s : %s to %s\n" (show x) (show x.sort) (show t1));
+            then (Format.print3 "Normalized %s : %s to %s\n" (show x) (show x.sort) (show t1));
             let t, decls' = encode_term t1 env in
             let t_hash = Term.hash_of_term t in
             let xxsym, xx, env' =
@@ -1803,7 +1803,7 @@ let encode_env_bindings (env:env_t) (bindings:list S.binding) : (decls_t & env_t
             let t = mk_HasTypeWithFuel None xx t in
             let caption =
                 if Options.log_queries()
-                then Some (BU.format3 "%s : %s (%s)" (show x) (show x.sort) (show t1))
+                then Some (Format.fmt3 "%s : %s (%s)" (show x) (show x.sort) (show t1))
                 else None in
             let ax =
                 let a_name = ("binder_"^xxsym) in
@@ -1926,7 +1926,7 @@ let encode_sig tcenv se =
     then Term.Caption ("encoding sigelt " ^ Print.sigelt_to_string_short se)::decls
     else decls in
    if Debug.medium ()
-   then BU.print1 "+++++++++++Encoding sigelt %s\n" (show se);
+   then Format.print1 "+++++++++++Encoding sigelt %s\n" (show se);
    let env = get_env (Env.current_module tcenv) tcenv in
    let decls, env = encode_top_level_facts env se in
    set_env env;
@@ -1949,9 +1949,9 @@ let encode_modul tcenv modul =
     let tcenv = Env.set_current_module tcenv modul.name in
     UF.with_uf_enabled (fun () ->
     varops.reset_fresh ();
-    let name = BU.format2 "%s %s" (if modul.is_interface then "interface" else "module")  (string_of_lid modul.name) in
+    let name = Format.fmt2 "%s %s" (if modul.is_interface then "interface" else "module")  (string_of_lid modul.name) in
     if Debug.medium ()
-    then BU.print2 "+++++++++++Encoding externals for %s ... %s declarations\n" name (List.length modul.declarations |> show);
+    then Format.print2 "+++++++++++Encoding externals for %s ... %s declarations\n" name (List.length modul.declarations |> show);
     let env = get_env modul.name tcenv |> reset_current_module_fvbs in
     let encode_signature (env:env_t) (ses:sigelts) =
       let g', env =
@@ -1963,7 +1963,7 @@ let encode_modul tcenv modul =
     in
     let decls, env = encode_signature ({env with warn=false}) modul.declarations in
     give_decls_to_z3_and_set_env env name decls;
-    if Debug.medium () then BU.print1 "Done encoding externals for %s\n" name;
+    if Debug.medium () then Format.print1 "Done encoding externals for %s\n" name;
     decls, env |> get_current_module_fvbs
   ) end
 
@@ -1971,16 +1971,16 @@ let encode_modul_from_cache tcenv tcmod (decls, fvbs) =
   if Options.lax () && Options.ml_ish () then ()
   else
     let tcenv = Env.set_current_module tcenv tcmod.name in
-    let name = BU.format2 "%s %s" (if tcmod.is_interface then "interface" else "module") (string_of_lid tcmod.name) in
+    let name = Format.fmt2 "%s %s" (if tcmod.is_interface then "interface" else "module") (string_of_lid tcmod.name) in
     if Debug.medium ()
-    then BU.print2 "+++++++++++Encoding externals from cache for %s ... %s decls\n" name (List.length decls |> show);
+    then Format.print2 "+++++++++++Encoding externals from cache for %s ... %s decls\n" name (List.length decls |> show);
     let env = get_env tcmod.name tcenv |> reset_current_module_fvbs in
     let env =
       fvbs |> List.rev |> List.fold_left (fun env fvb ->
         add_fvar_binding_to_env fvb env
       ) env in
     give_decls_to_z3_and_set_env env name decls;
-    if Debug.medium () then BU.print1 "Done encoding externals from cache for %s\n" name
+    if Debug.medium () then Format.print1 "Done encoding externals from cache for %s\n" name
 
 open FStarC.SMTEncoding.Z3
 let encode_query use_env_msg (tcenv:Env.env) (q:S.term)
@@ -2012,7 +2012,7 @@ let encode_query use_env_msg (tcenv:Env.env) (q:S.term)
     in
     let env_decls, env = encode_env_bindings env bindings in
     if Debug.medium () || !dbg_SMTEncoding || !dbg_SMTQuery
-    then BU.print1 "Encoding query formula {: %s\n" (show q);
+    then Format.print1 "Encoding query formula {: %s\n" (show q);
     let (phi, qdecls), ms = Timing.record_ms (fun () -> encode_formula q env) in
     let labels, phi = ErrorReporting.label_goals use_env_msg (Env.get_range tcenv) phi in
     let label_prefix, label_suffix = encode_labels labels in
@@ -2033,8 +2033,8 @@ let encode_query use_env_msg (tcenv:Env.env) (q:S.term)
     let qry = Util.mkAssume(mkNot phi, Some "query", (varops.mk_unique "@query")) in
     let suffix = [Term.Echo "<labels>"] @ label_suffix @ [Term.Echo "</labels>"; Term.Echo "Done!"] in
     if Debug.medium () || !dbg_SMTEncoding || !dbg_SMTQuery
-    then BU.print_string "} Done encoding\n";
+    then Format.print_string "} Done encoding\n";
     if Debug.medium () || !dbg_SMTEncoding || !dbg_Time
-    then BU.print1 "Encoding took %sms\n" (show ms);
+    then Format.print1 "Encoding took %sms\n" (show ms);
     query_prelude, labels, qry, suffix
   )

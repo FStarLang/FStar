@@ -53,7 +53,7 @@ let lazy_chooser (k:Syntax.Syntax.lazy_kind) (i:Syntax.Syntax.lazyinfo) : Syntax
     | Syntax.Syntax.Lazy_tref             -> FStarC.Syntax.Util.exp_string "((tref))"
 
     | Syntax.Syntax.Lazy_embedding (_, t) -> Thunk.force t
-    | Syntax.Syntax.Lazy_extension s      -> FStarC.Syntax.Util.exp_string (format1 "((extension %s))" s)
+    | Syntax.Syntax.Lazy_extension s      -> FStarC.Syntax.Util.exp_string (Format.fmt1 "((extension %s))" s)
 
 // This is called directly by the Javascript port (it doesn't call Main)
 let setup_hooks () =

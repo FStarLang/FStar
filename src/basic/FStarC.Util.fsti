@@ -15,6 +15,8 @@
 *)
 module FStarC.Util
 
+(* generic utils *)
+
 open FStarC.Effect
 open FStarC.Json
 open FStarC.BaseTypes
@@ -23,49 +25,6 @@ open FStarC.Array
 exception Impos
 
 val max_int: int
-(* generic utils *)
-
-(* pure version *)
-
-val format: string -> list string -> string
-val format1: string -> string -> string
-val format2: string -> string -> string -> string
-val format3: string -> string -> string -> string -> string
-val format4: string -> string -> string -> string -> string -> string
-val format5: string -> string -> string -> string -> string -> string -> string
-val format6: string -> string -> string -> string -> string -> string -> string -> string
-
-val print: string -> list string -> unit
-val print1: string -> string -> unit
-val print2: string -> string -> string -> unit
-val print3: string -> string -> string -> string -> unit
-val print4: string -> string -> string -> string -> string -> unit
-val print5: string -> string -> string -> string -> string -> string -> unit
-val print6: string -> string -> string -> string -> string -> string -> string -> unit
-
-val print_error: string -> unit
-val print1_error: string -> string -> unit
-val print2_error: string -> string -> string -> unit
-val print3_error: string -> string -> string -> string -> unit
-
-val print_warning: string -> unit
-val print1_warning: string -> string -> unit
-val print2_warning: string -> string -> string -> unit
-val print3_warning: string -> string -> string -> string -> unit
-
-val flush_stdout: unit -> unit
-
-val stdout_isatty: unit -> option bool
-
-// These functions have no effect
-val colorize: string -> (string & string) -> string
-val colorize_bold: string -> string
-val colorize_red: string -> string
-val colorize_yellow: string -> string
-val colorize_cyan: string -> string
-val colorize_green: string -> string
-val colorize_magenta : string -> string
-
 
 type out_channel
 
@@ -83,20 +42,6 @@ val fprint: out_channel -> string -> list string -> unit
 (* Adds a newline and flushes *)
 val append_to_file: out_channel -> string -> unit
 
-type printer = {
-  printer_prinfo: string -> unit;
-  printer_prwarning: string -> unit;
-  printer_prerror: string -> unit;
-  printer_prgeneric: string -> (unit -> string) -> (unit -> json) -> unit
-}
-
-val default_printer : printer
-val set_printer : printer -> unit
-
-val print_raw : string -> unit
-val print_string : string -> unit
-val print_generic: string -> ('a -> string) -> ('a -> json) -> 'a -> unit
-val print_any : 'a -> unit
 val strcat : string -> string -> string
 val concat_l : string -> list string -> string
 

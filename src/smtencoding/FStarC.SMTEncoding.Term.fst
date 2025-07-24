@@ -46,9 +46,9 @@ let rec strSort x = match x with
   | Term_sort -> "Term"
   | String_sort -> "FString"
   | Fuel_sort -> "Fuel"
-  | BitVec_sort n -> format1 "(_ BitVec %s)" (show n)
-  | Array(s1, s2) -> format2 "(Array %s %s)" (strSort s1) (strSort s2)
-  | Arrow(s1, s2) -> format2 "(%s -> %s)" (strSort s1) (strSort s2)
+  | BitVec_sort n -> Format.fmt1 "(_ BitVec %s)" (show n)
+  | Array(s1, s2) -> Format.fmt2 "(Array %s %s)" (strSort s1) (strSort s2)
+  | Arrow(s1, s2) -> Format.fmt2 "(%s -> %s)" (strSort s1) (strSort s2)
   | Sort s -> s
 
 let rec docSort x = match x with
@@ -265,13 +265,13 @@ let op_to_string = function
   | BvMul -> "bvmul"
   | BvUlt -> "bvult"
   | BvToNat -> "bv2int"
-  | BvUext n -> format1 "(_ zero_extend %s)" (show n)
-  | NatToBv n -> format1 "(_ int2bv %s)" (show n)
+  | BvUext n -> Format.fmt1 "(_ zero_extend %s)" (show n)
+  | NatToBv n -> Format.fmt1 "(_ int2bv %s)" (show n)
   | Var s -> s
 
 let weightToSmtStr : option int -> string = function
   | None -> ""
-  | Some i -> BU.format1 ":weight %s\n" (show i)
+  | Some i -> Format.fmt1 ":weight %s\n" (show i)
 
 let weightToSmt : option int -> list document = function
   | None -> []
@@ -483,16 +483,16 @@ let check_pattern_ok (t:term) : option term =
 
  let rec print_smt_term (t:term) :string =
   match t.tm with
-  | Integer n               -> BU.format1 "(Integer %s)" n
-  | String s                -> BU.format1 "(String %s)" s
-  | Real r                  -> BU.format1 "(Real %s)" r
-  | BoundV  n               -> BU.format1 "(BoundV %s)" (show n)
-  | FreeV  fv               -> BU.format1 "(FreeV %s)" (fv_name fv)
-  | App (op, l)             -> BU.format2 "(%s %s)" (op_to_string op) (print_smt_term_list l)
-  | Labeled(t, r1, r2)      -> BU.format2 "(Labeled '%s' %s)" (Errors.Msg.rendermsg r1) (print_smt_term t)
-  | LblPos(t, s)            -> BU.format2 "(LblPos %s %s)" s (print_smt_term t)
-  | Quant (qop, l, _, _, t) -> BU.format3 "(%s %s %s)" (qop_to_string qop) (print_smt_term_list_list l) (print_smt_term t)
-  | Let (es, body) -> BU.format2 "(let %s %s)" (print_smt_term_list es) (print_smt_term body)
+  | Integer n               -> Format.fmt1 "(Integer %s)" n
+  | String s                -> Format.fmt1 "(String %s)" s
+  | Real r                  -> Format.fmt1 "(Real %s)" r
+  | BoundV  n               -> Format.fmt1 "(BoundV %s)" (show n)
+  | FreeV  fv               -> Format.fmt1 "(FreeV %s)" (fv_name fv)
+  | App (op, l)             -> Format.fmt2 "(%s %s)" (op_to_string op) (print_smt_term_list l)
+  | Labeled(t, r1, r2)      -> Format.fmt2 "(Labeled '%s' %s)" (Errors.Msg.rendermsg r1) (print_smt_term t)
+  | LblPos(t, s)            -> Format.fmt2 "(LblPos %s %s)" s (print_smt_term t)
+  | Quant (qop, l, _, _, t) -> Format.fmt3 "(%s %s %s)" (qop_to_string qop) (print_smt_term_list_list l) (print_smt_term t)
+  | Let (es, body) -> Format.fmt2 "(let %s %s)" (print_smt_term_list es) (print_smt_term body)
 
 and print_smt_term_list (l:list term) :string = List.map print_smt_term l |> String.concat " "
 
@@ -507,7 +507,7 @@ let mkQuant r check_pats (qop, pats, wopt, vars, body) =
         | Some p ->
           begin
             Errors.log_issue r Errors.Warning_SMTPatternIllFormed
-              (BU.format1 "Pattern (%s) contains illegal symbols; dropping it" (print_smt_term p));
+              (Format.fmt1 "Pattern (%s) contains illegal symbols; dropping it" (print_smt_term p));
             []
            end
     in
@@ -601,7 +601,7 @@ let mkLet' (bindings, body) r =
 
 let norng = Range.dummyRange
 let mkDefineFun (nm, vars, s, tm, c) = DefineFun(nm, List.map fv_sort vars, s, abstr vars tm, c)
-let constr_id_of_sort sort = format1 "%s_constr_id" (strSort sort)
+let constr_id_of_sort sort = Format.fmt1 "%s_constr_id" (strSort sort)
 let fresh_token (tok_name, sort) id =
     let a_name = "fresh_token_" ^tok_name in
     let tm = mkEq(mkInteger' id norng,
@@ -727,9 +727,9 @@ let constructor_to_decl rng constr =
         [decl; Assume a]
     )
     in
-    Caption (format1 "<start constructor %s>" constr.constr_name)::
+    Caption (Format.fmt1 "<start constructor %s>" constr.constr_name)::
     [cdecl]@cid@projs@[disc]@base
-    @[Caption (format1 "</end constructor %s>" constr.constr_name)]
+    @[Caption (Format.fmt1 "</end constructor %s>" constr.constr_name)]
 
 (****************************************************************************)
 (* Standard SMTLib prelude for F* and some term constructors                *)
@@ -770,7 +770,7 @@ let termToSmt
             let n = !ctr in
             BU.incr ctr;
             if n = 0 then enclosing_name
-            else BU.format2 "%s.%s" enclosing_name (show n)
+            else Format.fmt2 "%s.%s" enclosing_name (show n)
       in
       let remove_guard_free pats =
         pats |> List.map (fun ps ->
@@ -892,7 +892,7 @@ let rec declToSmt' print_captions z3options decl : document =
     in
     let fids =
         if print_captions
-        then BU.format1 ";;; Fact-ids: %s\n"
+        then Format.fmt1 ";;; Fact-ids: %s\n"
                         (String.concat "; " (fact_ids_to_string a.assumption_fact_ids))
         else "" in
     let n = a.assumption_name in
@@ -1198,8 +1198,8 @@ let decl_to_string_short d =
   | Eval _ -> "Eval"
   | Echo s -> "Echo " ^ s
   | RetainAssumptions _ -> "RetainAssumptions"
-  | Push n -> BU.format1 "push %s" (show n)
-  | Pop n -> BU.format1 "pop %s" (show n)
+  | Push n -> Format.fmt1 "push %s" (show n)
+  | Pop n -> Format.fmt1 "pop %s" (show n)
   | CheckSat -> "check-sat"
   | GetUnsatCore -> "get-unsat-core"
   | EmptyLine -> "; empty line"

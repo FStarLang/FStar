@@ -20,6 +20,7 @@ open FStarC.Effect
 open FStarC.List
 open FStarC.Range
 open FStarC.Util
+open FStarC.Format
 open FStarC.Getopt
 open FStarC.Ident
 open FStarC.Errors
@@ -64,7 +65,7 @@ let with_captured_errors' env sigint_handler f =
     None
 
   | Util.SigInt ->
-    Util.print_string "Interrupted"; None
+    Format.print_string "Interrupted"; None
 
   | Error (e, msg, r, ctx) ->
     TcErr.add_errors env [(e, msg, r, ctx)];
@@ -140,7 +141,7 @@ let run_repl_ld_transactions (st: repl_state) (tasks: list repl_task)
                              (progress_callback: repl_task -> unit) =
   let debug verb task =
     if !dbg then
-      Util.print2 "%s %s" verb (string_of_repl_task task) in
+      Format.print2 "%s %s" verb (string_of_repl_task task) in
 
   (* Run as many ``pop_repl`` as there are entries in the input stack.
   Elements of the input stack are expected to match the topmost ones of
@@ -191,14 +192,14 @@ let run_repl_ld_transactions (st: repl_state) (tasks: list repl_task)
 
 let wrap_js_failure qid expected got =
   { qid = qid;
-    qq = ProtocolViolation (Util.format2 "JSON decoding failed: expected %s, got %s"
+    qq = ProtocolViolation (Format.fmt2 "JSON decoding failed: expected %s, got %s"
                             expected (json_debug got)) }
 
 let unpack_interactive_query json =
   let assoc errloc key a =
     match try_assoc key a with
     | Some v -> v
-    | None -> raise (InvalidQuery (Util.format2 "Missing key [%s] in %s." key errloc)) in
+    | None -> raise (InvalidQuery (Format.fmt2 "Missing key [%s] in %s." key errloc)) in
 
   let request = json |> js_assoc in
 
@@ -268,7 +269,7 @@ let unpack_interactive_query json =
            | "format" -> Format (arg "code" |> js_str)
            | "restart-solver" -> RestartSolver
            | "cancel" -> Cancel (Some("<input>", arg "cancel-line" |> js_int, arg "cancel-column" |> js_int))
-           | _ -> ProtocolViolation (Util.format1 "Unknown query '%s'" query) }
+           | _ -> ProtocolViolation (Format.fmt1 "Unknown query '%s'" query) }
   with
   | InvalidQuery msg -> { qid = qid; qq = ProtocolViolation msg }
   | UnexpectedJsonType (expected, got) -> wrap_js_failure qid expected got
@@ -748,7 +749,7 @@ let run_push_without_deps st query
 
 let run_push_with_deps st query =
   if !dbg then
-    Util.print_string "Reloading dependencies";
+    Format.print_string "Reloading dependencies";
   TcEnv.toggle_id_info st.repl_env false;
   match load_deps st with
   | Inr st ->
@@ -895,7 +896,7 @@ let run_and_rewind st sigint_default task =
 
 let run_with_parsed_and_tc_term st term line column continuation =
   let dummy_let_fragment term =
-    let dummy_decl = Util.format1 "let __compute_dummy__ = (%s)" term in
+    let dummy_decl = Format.fmt1 "let __compute_dummy__ = (%s)" term in
     { frag_fname = " input"; frag_text = dummy_decl; frag_line = 0; frag_col = 0 } in
 
   let find_let_body ses =
@@ -1021,13 +1022,13 @@ let run_search st search_str =
           Util.substring str 1 (String.length term - 2) in
       let parsed =
         if beg_quote <> end_quote then
-          raise (InvalidSearch (Util.format1 "Improperly quoted search term: %s" term))
+          raise (InvalidSearch (Format.fmt1 "Improperly quoted search term: %s" term))
         else if beg_quote then
           NameContainsStr (strip_quotes term)
         else
           let lid = Ident.lid_of_str term in
           match DsEnv.resolve_to_fully_qualified_name tcenv.dsenv lid with
-          | None -> raise (InvalidSearch (Util.format1 "Unknown identifier: %s" term))
+          | None -> raise (InvalidSearch (Format.fmt1 "Unknown identifier: %s" term))
           | Some lid -> TypeContainsLid lid in
       { st_negate = negate; st_term = parsed } in
 
@@ -1038,8 +1039,8 @@ let run_search st search_str =
   let pprint_one term =
     (if term.st_negate then "-" else "")
     ^ (match term.st_term with
-       | NameContainsStr s -> Util.format1 "\"%s\"" s
-       | TypeContainsLid l -> Util.format1 "%s" (string_of_lid l)) in
+       | NameContainsStr s -> Format.fmt1 "\"%s\"" s
+       | TypeContainsLid l -> Format.fmt1 "%s" (string_of_lid l)) in
 
   let results =
     try
@@ -1053,7 +1054,7 @@ let run_search st search_str =
       let js = List.map (json_of_search_result tcenv) sorted in
       match results with
       | [] -> let kwds = Util.concat_l " " (List.map pprint_one terms) in
-              raise (InvalidSearch (Util.format1 "No results found for query [%s]" kwds))
+              raise (InvalidSearch (Format.fmt1 "No results found for query [%s]" kwds))
       | _ -> (QueryOK, JsonList js)
     with InvalidSearch s -> (QueryNOK, JsonStr s) in
   (results, Inl st)
@@ -1078,7 +1079,7 @@ let run_query_result = (query_status & list json) & either repl_state int
 let maybe_cancel_queries st l = 
   let log_cancellation l = 
       if !dbg
-      then List.iter (fun q -> BU.print1 "Cancelling query: %s\n" (query_to_string q)) l
+      then List.iter (fun q -> Format.print1 "Cancelling query: %s\n" (query_to_string q)) l
   in
   match st.repl_buffered_input_queries with
   | { qq = Cancel p } :: rest -> (
@@ -1175,7 +1176,7 @@ and validate_and_run_query st query =
   let query = validate_query st query in
   repl_current_qid := Some query.qid;
   if !dbg
-  then BU.print2 "Running query %s: %s\n" query.qid (query_to_string query);
+  then Format.print2 "Running query %s: %s\n" query.qid (query_to_string query);
   run_query st query
 
 (** This is the body of the JavaScript port's main loop. **)
@@ -1225,7 +1226,7 @@ let interactive_printer printer =
                          forward_message printer label (get_json ())) }
 
 let install_ide_mode_hooks printer =
-  FStarC.Util.set_printer (interactive_printer printer);
+  Format.set_printer (interactive_printer printer);
   FStarC.Errors.set_handler interactive_error_handler
 
 

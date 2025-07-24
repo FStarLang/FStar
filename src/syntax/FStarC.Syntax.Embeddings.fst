@@ -122,16 +122,16 @@ let force_shadow (s:shadow_term) = BU.map_opt s Thunk.force
 type printer 'a = 'a -> string
 
 let unknown_printer (typ:typ) _ =
-    BU.format1 "unknown %s" (show typ)
+    Format.fmt1 "unknown %s" (show typ)
 
 let term_as_fv t =
     match (SS.compress t).n with
     | Tm_fvar fv -> fv
-    | _ -> failwith (BU.format1 "Embeddings not defined for type %s" (show t))
+    | _ -> failwith (Format.fmt1 "Embeddings not defined for type %s" (show t))
 
 let lazy_embed (pa:printer 'a) (et:unit -> emb_typ) rng (ta: unit -> term) (x:'a) (f:unit -> term) =
     if !Options.debug_embedding
-    then BU.print3 "Embedding a %s\n\temb_typ=%s\n\tvalue is %s\n"
+    then Format.print3 "Embedding a %s\n\temb_typ=%s\n\tvalue is %s\n"
                          (show (ta ()))
                          (show (et ()))
                          (pa x);
@@ -149,7 +149,7 @@ let lazy_unembed (pa:printer 'a) (et: unit -> emb_typ) (x:term) (ta: unit -> ter
       || !Options.eager_embedding
       then let res = f (Thunk.force t) in
            let _ = if !Options.debug_embedding
-                   then BU.print3 "Unembed cancellation failed\n\t%s <> %s\nvalue is %s\n"
+                   then Format.print3 "Unembed cancellation failed\n\t%s <> %s\nvalue is %s\n"
                                 (show et)
                                 (show et')
                                 (match res with None -> "None" | Some x -> "Some " ^ (pa x))
@@ -157,7 +157,7 @@ let lazy_unembed (pa:printer 'a) (et: unit -> emb_typ) (x:term) (ta: unit -> ter
            res
       else let a = Dyn.undyn b in
            let _ = if !Options.debug_embedding
-                   then BU.print2 "Unembed cancelled for %s\n\tvalue is %s\n"
+                   then Format.print2 "Unembed cancelled for %s\n\tvalue is %s\n"
                                 (show et)
                                   (pa a)
            in
@@ -165,7 +165,7 @@ let lazy_unembed (pa:printer 'a) (et: unit -> emb_typ) (x:term) (ta: unit -> ter
     | _ ->
       let aopt = f x in
       let _ = if !Options.debug_embedding
-              then BU.print3 "Unembedding:\n\temb_typ=%s\n\tterm is %s\n\tvalue is %s\n"
+              then Format.print3 "Unembedding:\n\temb_typ=%s\n\tterm is %s\n\tvalue is %s\n"
                                (show et)
                                (show x)
                                (match aopt with None -> "None" | Some a -> "Some " ^ pa a) in
@@ -175,12 +175,12 @@ let lazy_unembed (pa:printer 'a) (et: unit -> emb_typ) (x:term) (ta: unit -> ter
 let mk_any_emb typ =
     let em = fun t _r _shadow _norm ->
       if !Options.debug_embedding then
-        BU.print1 "Embedding abstract: %s\n" (unknown_printer typ t);
+        Format.print1 "Embedding abstract: %s\n" (unknown_printer typ t);
       t
     in
     let un = fun t _n ->
       if !Options.debug_embedding then
-        BU.print1 "Unembedding abstract: %s\n" (unknown_printer typ t);
+        Format.print1 "Unembedding abstract: %s\n" (unknown_printer typ t);
       Some t
     in
     mk_emb_full
@@ -376,7 +376,7 @@ let e_tuple2 (ea:embedding 'a) (eb:embedding 'b) =
         ET_app(PC.lid_tuple2 |> Ident.string_of_lid, [emb_typ_of 'a (); emb_typ_of 'b ()])
     in
     let printer (x, y) =
-        BU.format2 "(%s, %s)" (printer_of ea x) (printer_of eb y)
+        Format.fmt2 "(%s, %s)" (printer_of ea x) (printer_of eb y)
     in
     let em (x:('a & 'b)) (rng:range) shadow norm : term =
         lazy_embed
@@ -433,7 +433,7 @@ let e_tuple3 (ea:embedding 'a) (eb:embedding 'b) (ec:embedding 'c) =
         ET_app(PC.lid_tuple3 |> Ident.string_of_lid, [emb_typ_of 'a (); emb_typ_of 'b (); emb_typ_of 'c ()])
     in
     let printer (x, y, z) =
-        BU.format3 "(%s, %s, %s)" (printer_of ea x) (printer_of eb y) (printer_of ec z)
+        Format.fmt3 "(%s, %s, %s)" (printer_of ea x) (printer_of eb y) (printer_of ec z)
     in
     let em ((x1, x2, x3):('a & 'b & 'c)) (rng:range) shadow norm : term =
         lazy_embed
@@ -495,7 +495,7 @@ let e_tuple4 (ea:embedding 'a) (eb:embedding 'b) (ec:embedding 'c) (ed:embedding
         ET_app(PC.lid_tuple4 |> Ident.string_of_lid, [emb_typ_of 'a (); emb_typ_of 'b (); emb_typ_of 'c (); emb_typ_of 'd ()])
     in
     let printer (x, y, z, w) =
-        BU.format4 "(%s, %s, %s, %s)" (printer_of ea x) (printer_of eb y) (printer_of ec z) (printer_of ed w)
+        Format.fmt4 "(%s, %s, %s, %s)" (printer_of ea x) (printer_of eb y) (printer_of ec z) (printer_of ed w)
     in
     let em (x1, x2, x3, x4) (rng:range) shadow norm : term =
         lazy_embed
@@ -562,7 +562,7 @@ let e_tuple5 (ea:embedding 'a) (eb:embedding 'b) (ec:embedding 'c) (ed:embedding
         ET_app(PC.lid_tuple5 |> Ident.string_of_lid, [emb_typ_of 'a (); emb_typ_of 'b (); emb_typ_of 'c (); emb_typ_of 'd (); emb_typ_of 'e ()])
     in
     let printer (x, y, z, w, v) =
-        BU.format5 "(%s, %s, %s, %s, %s)" (printer_of ea x) (printer_of eb y) (printer_of ec z) (printer_of ed w) (printer_of ee v)
+        Format.fmt5 "(%s, %s, %s, %s, %s)" (printer_of ea x) (printer_of eb y) (printer_of ec z) (printer_of ed w) (printer_of ee v)
     in
     let em (x1, x2, x3, x4, x5) (rng:range) shadow norm : term =
         lazy_embed
@@ -635,8 +635,8 @@ let e_either (ea:embedding 'a) (eb:embedding 'b) =
     in
     let printer s =
         match s with
-        | Inl a -> BU.format1 "Inl %s" (printer_of ea a)
-        | Inr b -> BU.format1 "Inr %s" (printer_of eb b)
+        | Inl a -> Format.fmt1 "Inl %s" (printer_of ea a)
+        | Inr b -> Format.fmt1 "Inr %s" (printer_of eb b)
     in
     let em (s:either 'a 'b) (rng:range) shadow norm : term =
         lazy_embed
@@ -1127,12 +1127,12 @@ let e_arrow (ea:embedding 'a) (eb:embedding 'b) : Tot (embedding ('a -> 'b)) =
                 | None -> raise Embedding_failure //TODO: dodgy
                 | Some repr_f ->
                   if !Options.debug_embedding then
-                  BU.print2 "e_arrow forced back to term using shadow %s; repr=%s\n"
+                  Format.print2 "e_arrow forced back to term using shadow %s; repr=%s\n"
                                    (show repr_f)
                                    (BU.stack_dump());
                   let res = norm (Inr repr_f) in
                   if !Options.debug_embedding then
-                  BU.print3 "e_arrow forced back to term using shadow %s; repr=%s\n\t%s\n"
+                  Format.print3 "e_arrow forced back to term using shadow %s; repr=%s\n\t%s\n"
                                    (show repr_f)
                                    (show res)
                                    (BU.stack_dump());
@@ -1147,7 +1147,7 @@ let e_arrow (ea:embedding 'a) (eb:embedding 'b) : Tot (embedding ('a -> 'b)) =
             (fun f ->
                 let f_wrapped (a:'a) : 'b =
                     if !Options.debug_embedding then
-                    BU.print2 "Calling back into normalizer for %s\n%s\n"
+                    Format.print2 "Calling back into normalizer for %s\n%s\n"
                               (show f)
                               (BU.stack_dump());
                     let a_tm = embed a f.pos None norm in
@@ -1300,10 +1300,10 @@ let arrow_as_prim_step_3 (ea:embedding 'a) (eb:embedding 'b)
 
 let debug_wrap (s:string) (f:unit -> 'a) =
     if !Options.debug_embedding
-    then BU.print1 "++++starting %s\n" s;
+    then Format.print1 "++++starting %s\n" s;
     let res = f () in
     if !Options.debug_embedding
-    then BU.print1 "------ending %s\n" s;
+    then Format.print1 "------ending %s\n" s;
     res
 
 instance e_abstract_term : embedding abstract_term =

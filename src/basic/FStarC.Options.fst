@@ -423,7 +423,7 @@ let show_options () =
     | Unset -> "<unset>"
   in
   let show1 (k, v) =
-    Util.format2 "--%s %s" k (show_optionval v)
+    Format.fmt2 "--%s %s" k (show_optionval v)
   in
   kvs |> List.map show1 |> String.concat "\n"
 
@@ -612,20 +612,20 @@ let _date = mk_ref " not set"
 let _commit = mk_ref ""
 
 let display_version () =
-  Util.print_string (Util.format5 "F* %s\nplatform=%s\ncompiler=%s\ndate=%s\ncommit=%s\n"
+  Format.print_string (Format.fmt5 "F* %s\nplatform=%s\ncompiler=%s\ndate=%s\ncommit=%s\n"
                                   !_version !_platform !_compiler !_date !_commit)
 
 let bold_doc (d:Pprint.document) : Pprint.document =
   let open FStarC.Pprint in
   (* very hacky, this would make no sense for documents going elsewhere
   other than stdout *)
-  if stdout_isatty () = Some true
+  if Format.stdout_isatty () = Some true
   then fancystring "\x1b[39;1m" 0 ^^ d ^^ fancystring "\x1b[0m" 0
   else d
 
 let display_debug_keys () =
   let keys = Debug.list_all_toggles () in
-  keys |> List.sortWith String.compare |> List.iter (fun s -> Util.print_string (s ^ "\n"))
+  keys |> List.sortWith String.compare |> List.iter (fun s -> Format.print_string (s ^ "\n"))
 
 let usage_for (o : opt & Pprint.document) : Pprint.document =
   let open FStarC.Pprint in
@@ -655,10 +655,10 @@ let display_usage_aux (specs : list (opt & Pprint.document)) : unit =
   let text (s:string) : document = flow (break_ 1) (words s) in
   let d : document =
     doc_of_string "fstar.exe [options] file[s] [@respfile...]" ^/^
-    doc_of_string (Util.format1 "  %srespfile: read command-line options from respfile\n" (Util.colorize_bold "@")) ^/^
+    doc_of_string (Format.fmt1 "  %srespfile: read command-line options from respfile\n" (Format.colorize_bold "@")) ^/^
     List.fold_right (fun o rest -> usage_for o ^^ rest) specs empty
   in
-  Util.print_string (pretty_string (float_of_string "1.0") 80 d)
+  Format.print_string (pretty_string (float_of_string "1.0") 80 d)
 
 let mk_spec (o : char & string & opt_variant option_val) : opt =
     let ns, name, arg = o in
@@ -726,7 +726,7 @@ let rec parse_opt_val (opt_name: string) (typ: opt_type) (str_val: string) : opt
                                                 parse_opt_val opt_name elem_spec str_val
   with
   | InvalidArgument opt_name ->
-    failwith (Util.format1 "Invalid argument to --%s" opt_name)
+    failwith (Format.fmt1 "Invalid argument to --%s" opt_name)
 
 let rec desc_of_opt_type typ : option string =
   let desc_of_enum cases = Some (String.concat "|" cases) in
@@ -1709,24 +1709,24 @@ let specs_with_types warn_unsafe : list (char & string & opt_type & Pprint.docum
           but the version check is not performed at this point.");
   ( noshort,
     "ocamlenv",
-    WithSideEffect ((fun _ -> print_error "--ocamlenv must be the first argument, see fstar.exe --help for details\n"; exit 1),
+    WithSideEffect ((fun _ -> Format.print_error "--ocamlenv must be the first argument, see fstar.exe --help for details\n"; exit 1),
                      (Const (Bool true))),
     text "With no arguments: print shell code to set up an environment with the OCaml libraries in scope (similar to 'opam env'). \
           With arguments: run a command in that environment. \
           NOTE: this must be the FIRST argument passed to F* and other options are NOT processed.");
   ( noshort,
     "ocamlc",
-    WithSideEffect ((fun _ -> print_error "--ocamlc must be the first argument, see fstar.exe --help for details\n"; exit 1),
+    WithSideEffect ((fun _ -> Format.print_error "--ocamlc must be the first argument, see fstar.exe --help for details\n"; exit 1),
                      (Const (Bool true))),
     text "A helper. This runs 'ocamlc' in the environment set up by --ocamlenv, for building an F* application bytecode executable.");
   ( noshort,
     "ocamlopt",
-    WithSideEffect ((fun _ -> print_error "--ocamlopt must be the first argument, see fstar.exe --help for details\n"; exit 1),
+    WithSideEffect ((fun _ -> Format.print_error "--ocamlopt must be the first argument, see fstar.exe --help for details\n"; exit 1),
                      (Const (Bool true))),
     text "A helper. This runs 'ocamlopt' in the environment set up by --ocamlenv, for building an F* application native executable.");
   ( noshort,
     "ocamlopt_plugin",
-    WithSideEffect ((fun _ -> print_error "--ocamlopt_plugin must be the first argument, see fstar.exe --help for details\n"; exit 1),
+    WithSideEffect ((fun _ -> Format.print_error "--ocamlopt_plugin must be the first argument, see fstar.exe --help for details\n"; exit 1),
                      (Const (Bool true))),
     text "A helper. This runs 'ocamlopt' in the environment set up by --ocamlenv, for building an F* plugin.");
   ]
@@ -2096,7 +2096,7 @@ let hint_file_for_src src_filename =
             Util.concat_dir_filename dir (Filepath.basename src_filename)
           | _ -> src_filename
         in
-        Util.format1 "%s.hints" file_name
+        Format.fmt1 "%s.hints" file_name
 let ide                          () = get_ide                         ()
 let ide_id_info_off              () = get_ide_id_info_off             ()
 let ide_file_name_st =
@@ -2279,10 +2279,10 @@ type parsed_extract_setting = {
 }
 
 let print_pes pes =
-  Util.format2 "{ target_specific_settings = %s;\n\t
+  Format.fmt2 "{ target_specific_settings = %s;\n\t
                default_settings = %s }"
             (List.map (fun (tgt, s) ->
-                         Util.format2 "(%s, %s)"
+                         Format.fmt2 "(%s, %s)"
                            (print_codegen tgt)
                            s)
                       pes.target_specific_settings
@@ -2326,7 +2326,7 @@ let extract_settings
       let result, set = !memo in
       let fail msg =
            display_usage();
-           failwith (Util.format1 "Could not parse '%s' passed to the --extract option" msg)
+           failwith (Format.fmt1 "Could not parse '%s' passed to the --extract option" msg)
       in
       if set then result
       else match get_extract () with
@@ -2354,7 +2354,7 @@ let extract_settings
                let fail_duplicate msg tgt =
                    display_usage();
                    failwith
-                     (Util.format2
+                     (Format.fmt2
                        "Could not parse '%s'; multiple setting for %s target"
                        msg tgt)
                in
@@ -2475,7 +2475,7 @@ let set_options s =
              then set_error_flags()
              else res
     with
-    | File_argument s -> Getopt.Error (Util.format1 "File %s is not a valid option" s, "")
+    | File_argument s -> Getopt.Error (Format.fmt1 "File %s is not a valid option" s, "")
 
 let with_options s f =
   with_saved_options (fun () ->

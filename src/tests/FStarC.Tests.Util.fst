@@ -39,7 +39,7 @@ open FStarC.Syntax.Print {}
 let always id b =
     if b
     then ()
-    else raise_error0 Errors.Fatal_AssertionFailure (BU.format1 "Assertion failed: test %s" (show id))
+    else raise_error0 Errors.Fatal_AssertionFailure (Format.fmt1 "Assertion failed: test %s" (show id))
 
 let x = gen_bv "x" None S.tun
 let y = gen_bv "y" None S.tun
@@ -114,15 +114,15 @@ let rec term_eq' t1 t2 =
 
       | Tm_delayed _, _
       | _, Tm_delayed _ ->
-        failwith (BU.format2 "Impossible: %s and %s" (tag_of t1) (tag_of t2))
+        failwith (Format.fmt2 "Impossible: %s and %s" (tag_of t1) (tag_of t2))
 
       | Tm_unknown, Tm_unknown -> true
       | _ -> false
 
 let term_eq t1 t2 =
-//    BU.print2 "Comparing %s and\n\t%s\n" (show t1) (show t2);
+//    Format.print2 "Comparing %s and\n\t%s\n" (show t1) (show t2);
     let b = term_eq' t1 t2 in
     if not b then (
-      BU.print2 ">>>>>>>>>>>Term %s is not equal to %s\n" (show t1) (show t2)
+      Format.print2 ">>>>>>>>>>>Term %s is not equal to %s\n" (show t1) (show t2)
     );
     b

@@ -49,7 +49,7 @@ let parse_mod mod_name dsenv =
     | ParseError (err, msg, r) ->
         raise (Error(err, msg, r, []))
     | ASTFragment (Inr _, _) ->
-        let msg = BU.format1 "%s: expected a module\n" mod_name in
+        let msg = Format.fmt1 "%s: expected a module\n" mod_name in
         raise_error0 Errors.Fatal_ModuleExpected msg
     | Term _ ->
         failwith "Impossible: parsing a Filename always results in an ASTFragment"
@@ -127,8 +127,8 @@ let pars s =
     with
         | Error(err, msg, r, _ctx) when not <| FStarC.Options.trace_error() ->
           if r = FStarC.Range.dummyRange
-          then BU.print_string (Errors.rendermsg msg)
-          else BU.print2 "%s: %s\n" (FStarC.Range.string_of_range r) (Errors.rendermsg msg);
+          then Format.print_string (Errors.rendermsg msg)
+          else Format.print2 "%s: %s\n" (FStarC.Range.string_of_range r) (Errors.rendermsg msg);
           exit 1
 
         | e when not ((Options.trace_error())) -> raise e
@@ -169,7 +169,7 @@ let pars_and_tc_fragment (s:string) =
           let n = get_err_count () in
           if n <> 0
           then (report ();
-                raise_error0 Errors.Fatal_ErrorsReported (BU.format1 "%s errors were reported" (show n)))
+                raise_error0 Errors.Fatal_ErrorsReported (Format.fmt1 "%s errors were reported" (show n)))
         with e -> report(); raise_error0 Errors.Fatal_TcOneFragmentFailed ("tc_one_fragment failed: " ^s)
     with
         | e when not ((Options.trace_error())) -> raise e
@@ -184,7 +184,7 @@ let test_hashes () =
     in
     let tm = tc (aux n) in
     let hc = FStarC.Syntax.Hash.ext_hash_term tm in
-    BU.print2 "Hash of unary %s is %s\n"
+    Format.print2 "Hash of unary %s is %s\n"
               (show n)
               (FStarC.Hash.string_of_hash_code hc)
   in

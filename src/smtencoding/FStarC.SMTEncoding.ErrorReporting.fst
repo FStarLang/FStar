@@ -15,11 +15,11 @@
 *)
 
 module FStarC.SMTEncoding.ErrorReporting
+
+open FStarC
 open FStarC.Effect
 open FStarC.List
-open FStarC
 open FStarC.BaseTypes
-open FStarC.Util
 open FStarC.SMTEncoding.Term
 open FStarC.SMTEncoding.Util
 open FStarC.SMTEncoding.Z3
@@ -40,7 +40,7 @@ let __ctr = mk_ref 0
 
 let fresh_label : Errors.error_message -> Range.t -> term -> label & term =
     fun message range t ->
-        let l = incr __ctr; format1 "label_%s" (show !__ctr) in
+        let l = incr __ctr; Format.fmt1 "label_%s" (show !__ctr) in
         let lvar = mk_fv (l, Bool_sort) in
         let label = (lvar, message, range) in
         let lterm = mkFreeV lvar in
@@ -317,25 +317,25 @@ let detail_errors hint_replay
 
     let print_banner () =
         let msg =
-            BU.format4
+            Format.fmt4
                 "Detailed %s report follows for %s\nTaking %s seconds per proof obligation (%s proofs in total)\n"
                     (if hint_replay then "hint replay" else "error")
                     (Range.string_of_range (TypeChecker.Env.get_range env))
                     (show 5)
                     (show (List.length all_labels)) in
-        BU.print_error msg
+        Format.print_error msg
     in
 
     let print_result ((_, msg, r), success) =
       let open FStarC.Pprint in
       let open FStarC.Errors.Msg in
         if success
-        then BU.print1 "OK: proof obligation at %s was proven in isolation\n" (Range.string_of_range r)
+        then Format.print1 "OK: proof obligation at %s was proven in isolation\n" (Range.string_of_range r)
         else if hint_replay
         then FStarC.Errors.log_issue r Errors.Warning_HintFailedToReplayProof
                (text "Hint failed to replay this sub-proof" :: msg)
         else FStarC.Errors.log_issue r Errors.Error_ProofObligationFailed ([
-                 text <| BU.format1 "XX: proof obligation at %s failed." (Class.Show.show r);
+                 text <| Format.fmt1 "XX: proof obligation at %s failed." (Class.Show.show r);
                ] @ msg)
     in
 
@@ -364,7 +364,7 @@ let detail_errors hint_replay
             sort_labels results
 
         | hd::tl ->
-          BU.print1 "%s, " (show (List.length active));
+          Format.print1 "%s, " (show (List.length active));
           let decls = elim <| (eliminated @ errors @ tl) in
           let result = askZ3 decls in //hd is the only thing to prove
           match result.z3result_status with
@@ -376,7 +376,7 @@ let detail_errors hint_replay
     print_banner ();
     Options.set_option "z3rlimit" (Options.Int 5);
     let res = linear_check [] [] all_labels in
-    BU.print_string "\n";
+    Format.print_string "\n";
     res |> List.iter print_result;
     if BU.for_all snd res
-    then BU.print_string "Failed: the heuristic of trying each proof in isolation failed to identify a precise error\n"
+    then Format.print_string "Failed: the heuristic of trying each proof in isolation failed to identify a precise error\n"

@@ -32,6 +32,7 @@ open FStarC.Class.Show
 
 module Const = FStarC.Parser.Const
 module BU = FStarC.Util
+module F = FStarC.Format
 
 let dbg              = Debug.get_toggle "Dep"
 let dbg_CheckedFiles = Debug.get_toggle "CheckedFiles"
@@ -75,13 +76,13 @@ let intf_and_impl_to_string ii =
 
 
 let files_for_module_name_to_string (m:files_for_module_name) =
-  BU.print_string "Printing the file system map {\n";
+  Format.print_string "Printing the file system map {\n";
   let str_opt_to_string sopt =
     match sopt with
     | None -> "<None>"
     | Some s -> s in
-  SMap.iter m (fun k v -> BU.print2 "%s:%s\n" k (intf_and_impl_to_string v));
-  BU.print_string "}\n"
+  SMap.iter m (fun k v -> Format.print2 "%s:%s\n" k (intf_and_impl_to_string v));
+  Format.print_string "}\n"
 
 type color = | White | Gray | Black
 
@@ -123,7 +124,7 @@ let module_name_of_file f =
       longname
     | None ->
       raise_error0 Errors.Fatal_NotValidFStarFile (
-        [ text <| Util.format1 "Not a valid FStar file: '%s'" f; ] @
+        [ text <| Format.fmt1 "Not a valid FStar file: '%s'" f; ] @
         (if Platform.windows && f = ".." then [
           text <| "Note: In Windows-compiled versions of F*, a literal
           asterisk as argument will be expanded to a list of files,
@@ -341,10 +342,10 @@ let cache_file_name =
         else path
       | None ->
         if !dbg_CheckedFiles then
-          BU.print1 "find_file(%s) returned None\n" (cache_fn |> Filepath.basename);
+          Format.print1 "find_file(%s) returned None\n" (cache_fn |> Filepath.basename);
         if mname |> Options.should_be_already_cached then
           raise_error0 FStarC.Errors.Error_AlreadyCachedAssertionFailure [
-             text (BU.format1 "Expected %s to be already checked but could not find it." mname)
+             text (Format.fmt1 "Expected %s to be already checked but could not find it." mname)
            ];
         Find.prepend_cache_dir cache_fn
     in
@@ -382,7 +383,7 @@ let file_of_dep_aux
       (match interface_of_internal file_system_map key with
        | None ->
          assert false; //should be unreachable; see the only use of UseInterface in discover_one
-         raise_error0 Errors.Fatal_MissingInterface (BU.format1 "Expected an interface for module %s, but couldn't find one" key)
+         raise_error0 Errors.Fatal_MissingInterface (Format.fmt1 "Expected an interface for module %s, but couldn't find one" key)
        | Some f ->
          f)
 
@@ -393,7 +394,7 @@ let file_of_dep_aux
       then if Options.expose_interfaces()
            then maybe_use_cache_of (Option.get (implementation_of_internal file_system_map key))
            else raise_error0 Errors.Fatal_MissingExposeInterfacesOption [
-                    text <| BU.format3 "You may have a cyclic dependence on module %s: use --dep full to confirm. \
+                    text <| Format.fmt3 "You may have a cyclic dependence on module %s: use --dep full to confirm. \
                                 Alternatively, invoking fstar with %s on the command line breaks \
                                 the abstraction imposed by its interface %s."
                                 key
@@ -413,7 +414,7 @@ let file_of_dep_aux
           //the previous case already established that the interface doesn't exist
           //     since if the implementation was on the command line, it must exist because of option validation
           raise_error0 Errors.Fatal_MissingImplementation
-            (BU.format1 "Expected an implementation of module %s, but couldn't find one" key)
+            (Format.fmt1 "Expected an implementation of module %s, but couldn't find one" key)
         | Some f -> maybe_use_cache_of f
 
 let file_of_dep = file_of_dep_aux false
@@ -435,9 +436,9 @@ let print_graph (outc : out_channel) (fn : string) (graph:dependence_graph)
  : unit
  =
   if not (Options.silent ()) then begin
-    Util.print1 "A DOT-format graph has been dumped in the current directory as `%s`\n" fn;
-    Util.print1 "With GraphViz installed, try: fdp -Tpng -odep.png %s\n" fn;
-    Util.print1 "Hint: cat %s | grep -v _ | grep -v prims\n" fn
+    F.print1 "A DOT-format graph has been dumped in the current directory as `%s`\n" fn;
+    F.print1 "With GraphViz installed, try: fdp -Tpng -odep.png %s\n" fn;
+    F.print1 "Hint: cat %s | grep -v _ | grep -v prims\n" fn
   end;
   let sb = FStarC.StringBuffer.create 10000 in
   let pr str = ignore <| FStarC.StringBuffer.add str sb in
@@ -448,7 +449,7 @@ let print_graph (outc : out_channel) (fn : string) (graph:dependence_graph)
       let l = Filepath.basename k in
       let r = Filepath.basename <| file_of_dep file_system_map cmd_lined_files dep in
       if not <| Options.should_be_already_cached (module_name_of_dep dep) then
-        pr (Util.format2 "  \"%s\" -> \"%s\"\n" l r)
+        pr (Format.fmt2 "  \"%s\" -> \"%s\"\n" l r)
     ) deps
   );
   pr "}\n";
@@ -528,7 +529,7 @@ let check_module_declaration_against_filename (lid: lident) (filename: string): 
   let k' = string_of_lid lid true in
   if must (check_and_strip_suffix (Filepath.basename filename)) <> k' then
     log_issue lid Errors.Error_ModuleFileNameMismatch [
-        Errors.Msg.text (Util.format2 "The module declaration \"module %s\" \
+        Errors.Msg.text (Format.fmt2 "The module declaration \"module %s\" \
           found in file %s does not match its filename." (string_of_lid lid true) filename);
         Errors.Msg.text "Dependencies will be incorrect and the module will not be verified.";
       ]
@@ -693,7 +694,7 @@ let collect_one
          else begin
            if let_open then
              log_issue lid Errors.Warning_ModuleOrFileNotFoundWarning
-               (Util.format1 "Module not found: %s" (string_of_lid lid true));
+               (Format.fmt1 "Module not found: %s" (string_of_lid lid true));
            false
          end
        in
@@ -703,7 +704,7 @@ let collect_one
          let r = enter_namespace original_map working_map key implicit_open in
          if not r && not implicit_open then  //suppress the warning for implicit opens
            log_issue lid Errors.Warning_ModuleOrFileNotFoundWarning
-             (Util.format1 "No modules in namespace %s and no file with that name either" (string_of_lid lid true))
+             (Format.fmt1 "No modules in namespace %s and no file with that name either" (string_of_lid lid true))
        in
 
        let record_open let_open lid =
@@ -730,7 +731,7 @@ let collect_one
            true
          | None ->
            log_issue lid Errors.Warning_ModuleOrFileNotFoundWarning
-             (Util.format1 "module not found in search path: %s" alias);
+             (Format.fmt1 "module not found in search path: %s" alias);
            false
        in
 
@@ -739,7 +740,7 @@ let collect_one
          then ()
          else if !dbg then
            log_issue module_name Errors.Warning_UnboundModuleReference
-             (BU.format1 "Unbound module reference %s" (show module_name))
+             (Format.fmt1 "Unbound module reference %s" (show module_name))
        in
 
        let record_lid lid =
@@ -785,7 +786,7 @@ let collect_one
   if data_from_cache |> is_some then begin  //we found the parsing data in the checked file
     let deps, has_inline_for_extraction, mo_roots = from_parsing_data (data_from_cache |> must) original_map filename in
     if !dbg then
-      BU.print2 "Reading the parsing data for %s from its checked file .. found %s\n" filename (show deps);
+      Format.print2 "Reading the parsing data for %s from its checked file .. found %s\n" filename (show deps);
     data_from_cache |> must,
     deps, has_inline_for_extraction, mo_roots
   end
@@ -874,7 +875,7 @@ let collect_one
             incr num_of_toplevelmods;
             if (!num_of_toplevelmods > 1) then
               raise_error lid Errors.Fatal_OneModulePerFile
-                (Util.format1 "Automatic dependency analysis demands one module per file (module %s not supported)" (string_of_lid lid true)) 
+                (Format.fmt1 "Automatic dependency analysis demands one module per file (module %s not supported)" (string_of_lid lid true)) 
       and collect_tycon = function
         | TyconAbstract (_, binders, k) ->
             collect_binders binders;
@@ -937,7 +938,7 @@ let collect_one
         | Const_int (_, Some (signedness, width)) ->
             let u = match signedness with | Unsigned -> "u" | Signed -> "" in
             let w = match width with | Int8 -> "8" | Int16 -> "16" | Int32 -> "32" | Int64 -> "64" in
-            add_to_parsing_data (P_dep (false, (Util.format2 "fstar.%sint%s" u w |> Ident.lid_of_str)))
+            add_to_parsing_data (P_dep (false, (Format.fmt2 "fstar.%sint%s" u w |> Ident.lid_of_str)))
         | Const_char _ ->
             add_to_parsing_data (P_dep (false, ("fstar.char" |> Ident.lid_of_str)))
         | Const_range_of
@@ -1288,7 +1289,7 @@ let topological_dependences_of'
         all_friends, all_files
     | White ->
         if !dbg
-        then BU.print2 "Visiting %s: direct deps are %s\n"
+        then Format.print2 "Visiting %s: direct deps are %s\n"
                 filename (show dep_node.edges);
         (* Unvisited. Compute. *)
         deps_add_dep dep_graph filename ({dep_node with color=Gray});
@@ -1303,7 +1304,7 @@ let topological_dependences_of'
         (* Mutate the graph to mark the node as visited *)
         deps_add_dep dep_graph filename ({dep_node with color=Black});
         if !dbg
-        then BU.print1 "Adding %s\n" filename;
+        then Format.print1 "Adding %s\n" filename;
         (* Also build the topological sort (Tarjan's algorithm). *)
         List.collect
           (function | FriendImplementation m -> [m]
@@ -1385,7 +1386,7 @@ let topological_dependences_of'
         all_friend_deps dep_graph [] ([], []) root_files
     in
     if !dbg
-    then BU.print3 "Phase1 complete:\n\t\
+    then Format.print3 "Phase1 complete:\n\t\
                        all_files = %s\n\t\
                        all_friends=%s\n\t\
                        interfaces_with_inlining=%s\n"
@@ -1397,11 +1398,11 @@ let topological_dependences_of'
     in
     let _, all_files =
         if !dbg
-        then BU.print_string "==============Phase2==================\n";
+        then Format.print_string "==============Phase2==================\n";
         all_friend_deps dep_graph [] ([], []) root_files
     in
     if !dbg
-    then BU.print1 "Phase2 complete: all_files = %s\n" (String.concat ", " all_files);
+    then Format.print1 "Phase2 complete: all_files = %s\n" (String.concat ", " all_files);
     all_files,
     widened
 
@@ -1412,7 +1413,7 @@ let phase1
         for_extraction
 =
     if !dbg
-    then BU.print_string "==============Phase1==================\n";
+    then Format.print_string "==============Phase1==================\n";
     let widened = false in
     if Options.cmi()
     && for_extraction
@@ -1463,7 +1464,7 @@ let collect (all_cmd_line_files: list file_name)
         match Find.find_file fn with
         | None ->
           raise_error0 Errors.Fatal_ModuleOrFileNotFound
-            (Util.format1 "File %s could not be found" fn)
+            (Format.fmt1 "File %s could not be found" fn)
         | Some fn -> fn) in
   (* The dependency graph; keys are lowercased module names, values = list of
    * lowercased module names this file depends on. *)
@@ -1519,15 +1520,15 @@ let collect (all_cmd_line_files: list file_name)
   (* At this point, dep_graph has all the (immediate) dependency graph of all the files. *)
   let cycle_detected (dep_graph:dependence_graph) cycle filename =
       let cycle = List.rev cycle in
-      Util.print1 "The cycle contains a subset of the modules in:\n  %s \n" (String.concat "\n  `uses` " cycle);
+      F.print1 "The cycle contains a subset of the modules in:\n  %s \n" (String.concat "\n  `uses` " cycle);
 
       (* Write the graph to a file for the user to see. *)
       let fn = "dep.graph" in
       with_file_outchannel fn (fun outc -> print_graph outc fn dep_graph file_system_map all_cmd_line_files);
 
-      print_string "\n";
+      Format.print_string "\n";
       raise_error0 Errors.Fatal_CyclicDependence [
-        text (BU.format1 "Recursive dependency on module %s." filename);
+        text (Format.fmt1 "Recursive dependency on module %s." filename);
         text "A full dependency graph was written to dep.graph.";
       ]
   in
@@ -1564,7 +1565,7 @@ let collect (all_cmd_line_files: list file_name)
             match deps_try_find dep_graph filename with
             | Some node -> node
             | None ->
-              failwith (BU.format1 "Impossible: Failed to find dependencies of %s" filename)
+              failwith (Format.fmt1 "Impossible: Failed to find dependencies of %s" filename)
         in
         let direct_deps = node.edges |> List.collect (fun x ->
             match x with
@@ -1638,7 +1639,7 @@ let collect (all_cmd_line_files: list file_name)
       "FStarC.Parser.Dep.topological_dependences_of"
   in
   if !dbg
-  then BU.print1 "Interfaces needing inlining: %s\n" (String.concat ", " inlining_ifaces);
+  then Format.print1 "Interfaces needing inlining: %s\n" (String.concat ", " inlining_ifaces);
   all_files,
   mk_deps dep_graph file_system_map all_cmd_line_files all_files inlining_ifaces parse_results
 
@@ -1661,7 +1662,7 @@ let deps_of_modul deps (m:module_name) : list module_name =
 (* In public interface *)
 let print_digest (dig:list (string & string)) : string =
     dig
-    |> List.map (fun (m, d) -> BU.format2 "%s:%s" m (BU.base64_encode d))
+    |> List.map (fun (m, d) -> Format.fmt2 "%s:%s" m (BU.base64_encode d))
     |> String.concat "\n"
 
 (** Print the dependencies as returned by [collect] in a Makefile-compatible
@@ -1681,13 +1682,13 @@ let print_make (outc : out_channel) deps : unit =
           let files = List.map (fun s -> replace_chars s ' ' "\\ ") files in
           //this one prints:
           //   a.fst: b.fst c.fsti a.fsti
-          Util.print2 "%s: %s\n\n" f (String.concat " " files))
+          F.print2 "%s: %s\n\n" f (String.concat " " files))
 
 (* In public interface *)
 let print_raw (outc : out_channel) (deps:deps) =
     let (Deps deps) = deps.dep_graph in
       SMap.fold deps (fun k dep_node out ->
-        BU.format2 "%s -> [\n\t%s\n] " k (List.map dep_to_string dep_node.edges |> String.concat ";\n\t") :: out) []
+        Format.fmt2 "%s -> [\n\t%s\n] " k (List.map dep_to_string dep_node.edges |> String.concat ";\n\t") :: out) []
       |> String.concat ";;\n"
       |> (fun s -> BU.fprint outc "%s\n" [s])
 
@@ -1729,7 +1730,7 @@ let print_full (outc : out_channel) (deps:deps) : unit =
                 | None -> ()
                 | Some file_name ->
                   match deps_try_find deps.dep_graph file_name with
-                  | None -> failwith (BU.format2 "Impossible: module %s: %s not found" lc_module_name file_name)
+                  | None -> failwith (Format.fmt2 "Impossible: module %s: %s not found" lc_module_name file_name)
                   | Some ({edges=immediate_deps}) ->
                     let immediate_deps =
                         List.map (fun x -> String.lowercase (module_name_of_dep x)) immediate_deps
@@ -2003,7 +2004,7 @@ let print_full (outc : out_channel) (deps:deps) : unit =
          in
          if not (has_implementation deps.file_system_map mn) then
            log_issue (range_of_file fsti) Warning_WarnOnUse
-             (BU.format1 "Interface %s is admitted without an implementation" (module_name_of_file fsti)));
+             (Format.fmt1 "Interface %s is admitted without an implementation" (module_name_of_file fsti)));
     print_all "ALL_FST_FILES" all_fst_files;
     print_all "ALL_FSTI_FILES" all_fsti_files;
     print_all "ALL_CHECKED_FILES" all_checked_files;

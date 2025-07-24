@@ -128,7 +128,7 @@ let disentangle_abbrevs_from_bundle
                   begin match U.find_map type_abbrev_sigelts replacee with
                       | Some se ->
                           if FStarC.List.existsb (fun x -> lid_equals x fv.fv_name.v) !in_progress
-                          then let msg = U.format1 "Cycle on %s in mutually recursive type abbreviations" (string_of_lid fv.fv_name.v) in
+                          then let msg = Format.fmt1 "Cycle on %s in mutually recursive type abbreviations" (string_of_lid fv.fv_name.v) in
                                raise_error fv.fv_name.v Errors.Fatal_CycleInRecTypeAbbreviation msg
                           else unfold_abbrev se
                       | _ -> t

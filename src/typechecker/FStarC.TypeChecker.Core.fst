@@ -161,7 +161,7 @@ type relation =
 let relation_to_string = function
   | EQUALITY -> "=?="
   | SUBTYPING None -> "<:?"
-  | SUBTYPING (Some tm) -> BU.format1 "( <:? %s)" (show tm)
+  | SUBTYPING (Some tm) -> Format.fmt1 "( <:? %s)" (show tm)
 
 type context_term =
   | CtxTerm : term -> context_term
@@ -171,7 +171,7 @@ let context_term_to_string (c:context_term) =
   match c with
   | CtxTerm term -> show term
   | CtxRel t0 r t1 ->
-    BU.format3 "%s %s %s"
+    Format.fmt3 "%s %s %s"
               (show t0)
               (relation_to_string r)
               (show t1)
@@ -185,7 +185,7 @@ type context = {
 (* The instance prints some brief info on the error_context. `print_context`
 below is a full printer. *)
 instance showable_context : showable context = {
-  show = (fun context -> BU.format3 "{no_guard=%s; unfolding_ok=%s; error_context=%s}"
+  show = (fun context -> Format.fmt3 "{no_guard=%s; unfolding_ok=%s; error_context=%s}"
                                     (show context.no_guard)
                                     (show context.unfolding_ok)
                                     (show (List.map fst context.error_context)));
@@ -198,7 +198,7 @@ let print_context (ctx:context)
     | [] -> ""
     | (msg, ctx_term)::tl ->
       let hd =
-        BU.format3
+        Format.fmt3
           "%s %s (%s)\n"
           depth
           msg
@@ -213,7 +213,7 @@ let error = context & Errors.error_message (* = list doc *)
 
 let print_error (err:error) =
   let ctx, msg = err in
-  BU.format2 "%s%s" (print_context ctx) (Errors.Msg.rendermsg msg)
+  Format.fmt2 "%s%s" (print_context ctx) (Errors.Msg.rendermsg msg)
 
 let print_error_short (err:error) =
   let _, msg = err in
@@ -305,7 +305,7 @@ let fail #a msg : result a = fun ctx -> Error (ctx, msg)
 let dump_context
   : result unit
   = fun ctx ->
-      BU.print_string (print_context ctx);
+      Format.print_string (print_context ctx);
       return () ctx
 
 inline_for_extraction
@@ -451,7 +451,7 @@ let check_bqual (b0 b1:bqual)
     | Some (Meta t1), Some (Meta t2) when equal_term t1 t2 ->
       return ()
     | _ ->
-      fail_str (BU.format2 "Binder qualifier mismatch, %s vs %s" (show b0) (show b1))
+      fail_str (Format.fmt2 "Binder qualifier mismatch, %s vs %s" (show b0) (show b1))
 
 let check_aqual (a0 a1:aqual)
   : result unit
@@ -564,7 +564,7 @@ let no_guard (g:result 'a)
   = fun ctx ->
       match g ({ ctx with no_guard = true}) with
       | Success (x, None) -> Success (x, None)
-      | Success (x, Some g) -> fail_str (BU.format1 "Unexpected guard: %s" (show g)) ctx
+      | Success (x, Some g) -> fail_str (Format.fmt1 "Unexpected guard: %s" (show g)) ctx
       | err -> err
 
 let equatable g t =
@@ -627,7 +627,7 @@ let lookup (g:env) (e:term) : result (tot_or_ghost & typ) =
      then (
        record_cache_hit();
        if !dbg then
-         BU.print4 "cache hit\n %s |- %s : %s\nmatching env %s\n"
+         Format.print4 "cache hit\n %s |- %s : %s\nmatching env %s\n"
            (show g.tcenv.gamma)
            (show e)
            (show (snd (fst he.he_res)))
@@ -832,7 +832,7 @@ let rec check_relation (g:env) (rel:relation) (t0 t1:typ)
       | SUBTYPING _ -> "<:?"
     in
     if !dbg
-    then BU.print5 "check_relation (%s) %s %s (%s) %s\n"
+    then Format.print5 "check_relation (%s) %s %s (%s) %s\n"
                    (tag_of t0)
                    (show t0)
                    (rel_to_string rel)
@@ -999,7 +999,7 @@ let rec check_relation (g:env) (rel:relation) (t0 t1:typ)
           match! maybe_unfold x0.sort x1.sort with
           | None ->
             if !dbg then
-              BU.print2 "Cannot match ref heads %s and %s\n" (show x0.sort) (show x1.sort);
+              Format.print2 "Cannot match ref heads %s and %s\n" (show x0.sort) (show x1.sort);
             fallback t0 t1
           | Some (t0, t1) ->
             let lhs = S.mk (Tm_refine {b={x0 with sort = t0}; phi=f0}) t0.pos in
@@ -1326,7 +1326,7 @@ and do_check (g:env) (e:term)
     begin
     match Env.try_lookup_bv g.tcenv x with
     | None ->
-      fail_str (BU.format1 "Variable not found: %s" (show x))
+      fail_str (Format.fmt1 "Variable not found: %s" (show x))
     | Some (t, _) ->
       return (E_Total, t)
     end
@@ -1345,7 +1345,7 @@ and do_check (g:env) (e:term)
     begin
     match Env.try_lookup_and_inst_lid g.tcenv us f.fv_name.v with
     | None ->
-      fail_str (BU.format1 "Top-level name not found: %s" (Ident.string_of_lid f.fv_name.v))
+      fail_str (Format.fmt1 "Top-level name not found: %s" (Ident.string_of_lid f.fv_name.v))
 
     | Some (t, _) ->
       return (E_Total, t)
@@ -1446,7 +1446,7 @@ and do_check (g:env) (e:term)
       let Some (eff, t) = comp_as_tot_or_ghost_and_type c in
       return (eff, t)
     )
-    else fail_str (BU.format1 "Effect ascriptions are not fully handled yet: %s" (show c))
+    else fail_str (Format.fmt1 "Effect ascriptions are not fully handled yet: %s" (show c))
 
   | Tm_let {lbs=(false, [lb]); body} ->
     let Inl x = lb.lbname in
@@ -1464,7 +1464,7 @@ and do_check (g:env) (e:term)
       )
     )
     else (
-      fail_str (format1 "Let binding is effectful (lbeff = %s)" (show lb.lbeff))
+      fail_str (Format.fmt1 "Let binding is effectful (lbeff = %s)" (show lb.lbeff))
     )
 
   | Tm_match {scrutinee=sc; ret_opt=None; brs=branches; rc_opt} ->
@@ -1611,7 +1611,7 @@ and do_check (g:env) (e:term)
     fail_str "Match with effect returns ascription, or tactic handler"
 
   | _ ->
-    fail_str (BU.format1 "Unexpected term: %s" (tag_of e))
+    fail_str (Format.fmt1 "Unexpected term: %s" (tag_of e))
 
 and check_binders (g_initial:env) (xs:binders)
   : result (list universe)
@@ -1773,16 +1773,16 @@ and check_scrutinee_pattern_type_compatible (g:env) (t_sc t_pat:typ)
         if Rel.teq_nosmt_force g.tcenv head_sc head_pat
         then return fv_head
         else err "Incompatible universe instantiations"
-      | _, _ -> err (BU.format2 "Head constructors(%s and %s) not fvar"
+      | _, _ -> err (Format.fmt2 "Head constructors(%s and %s) not fvar"
                       (tag_of head_sc)
                       (tag_of head_pat)) in
 
     (if Env.is_type_constructor g.tcenv (lid_of_fv t_fv)
      then return t_fv
-     else err (BU.format1 "%s is not a type constructor" (show t_fv)));!
+     else err (Format.fmt1 "%s is not a type constructor" (show t_fv)));!
 
     (if List.length args_sc = List.length args_pat then return t_fv
-     else err (BU.format2 "Number of arguments don't match (%s and %s)"
+     else err (Format.fmt2 "Number of arguments don't match (%s and %s)"
                           (show (List.length args_sc))
                           (show (List.length args_pat))));!
 
@@ -1926,11 +1926,11 @@ let simplify_steps =
 let check_term_top_gh g e topt (must_tot:bool) (gh:option guard_handler_t)
   : __result ((tot_or_ghost & S.typ) & precondition)
   = if !dbg_Eq
-    then BU.print1 "(%s) Entering core ... \n"
+    then Format.print1 "(%s) Entering core ... \n"
                    (show (get_goal_ctr()));
 
     if !dbg || !dbg_Top
-    then BU.print3 "(%s) Entering core with %s <: %s\n"
+    then Format.print3 "(%s) Entering core with %s <: %s\n"
                    (show (get_goal_ctr())) (show e) (show topt);
     THT.reset_counters table;
     reset_cache_stats();
@@ -1954,7 +1954,7 @@ let check_term_top_gh g e topt (must_tot:bool) (gh:option guard_handler_t)
         // Options.pop();
         if !dbg || !dbg_Top || !dbg_Exit
         then begin
-          BU.print3 "(%s) Exiting core: Simplified guard from {{%s}} to {{%s}}\n"
+          Format.print3 "(%s) Exiting core: Simplified guard from {{%s}} to {{%s}}\n"
             (show (get_goal_ctr()))
             (show guard0)
             (show guard);
@@ -1964,20 +1964,20 @@ let check_term_top_gh g e topt (must_tot:bool) (gh:option guard_handler_t)
             | Binding_var bv_env -> not (S.bv_eq bv_env bv)
             | _ -> true) g.gamma) guard_names with
           | Some bv ->
-            BU.print1 "WARNING: %s is free in the core generated guard\n" (show (S.bv_to_name bv))
+            Format.print1 "WARNING: %s is free in the core generated guard\n" (show (S.bv_to_name bv))
           | _ -> ()
         end;
         Success (et, Some guard)
 
       | Success _ ->
         if !dbg || !dbg_Top
-        then BU.print1 "(%s) Exiting core (ok)\n"
+        then Format.print1 "(%s) Exiting core (ok)\n"
                     (show (get_goal_ctr()));
         res
 
       | Error _ ->
         if !dbg || !dbg_Top
-        then BU.print1 "(%s) Exiting core (failed)\n"
+        then Format.print1 "(%s) Exiting core (failed)\n"
                        (show (get_goal_ctr()));
         res
     in
@@ -1985,7 +1985,7 @@ let check_term_top_gh g e topt (must_tot:bool) (gh:option guard_handler_t)
     then (
       THT.print_stats table;
       let cs = report_cache_stats() in
-      BU.print2 "Cache_stats { hits = %s; misses = %s }\n"
+      Format.print2 "Cache_stats { hits = %s; misses = %s }\n"
                      (show cs.hits)
                      (show cs.misses)
     );
@@ -2024,12 +2024,12 @@ let open_binders_in_comp (env:Env.env) (bs:binders) (c:comp) =
 let check_term_equality guard_ok unfolding_ok g t0 t1
   = let g = initial_env g None in
     if !dbg_Top then
-       BU.print4 "Entering check_term_equality with %s and %s (guard_ok=%s; unfolding_ok=%s) {\n"
+       Format.print4 "Entering check_term_equality with %s and %s (guard_ok=%s; unfolding_ok=%s) {\n"
          (show t0) (show t1) (show guard_ok) (show unfolding_ok);
     let ctx = { unfolding_ok = unfolding_ok; no_guard = not guard_ok; error_context = [("Eq", None)] } in
     let r = check_relation g EQUALITY t0 t1 ctx in
     if !dbg_Top then
-       BU.print3 "} Exiting check_term_equality (%s, %s). Result = %s.\n" (show t0) (show t1) (show r);
+       Format.print3 "} Exiting check_term_equality (%s, %s). Result = %s.\n" (show t0) (show t1) (show r);
     let r =
       match r with
       | Success (_, g) -> Inl g

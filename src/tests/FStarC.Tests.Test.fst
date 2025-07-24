@@ -23,16 +23,16 @@ module O = FStarC.Options
 module G = FStarC.Getopt
 
 let main argv =
-    BU.print_string "Initializing tests...\n";
+    Format.print_string "Initializing tests...\n";
     try
         let res, fs = O.parse_cmd_line () in
         match res with
         | G.Help ->
-          BU.print_string "F* unit tests. This binary can take the same options \
+          Format.print_string "F* unit tests. This binary can take the same options \
                            as F*, but not all of them are meaningful.";
           exit 0
         | G.Error (msg, _) ->
-          BU.print_error msg; exit 1
+          Format.print_error msg; exit 1
         | G.Empty
         | G.Success ->
           FStarC.Hooks.setup_hooks();
@@ -51,9 +51,9 @@ let main argv =
     with 
       | Error(err, msg, r, _ctx) when not <| O.trace_error() ->
         if r = FStarC.Range.dummyRange
-        then BU.print_string (Errors.rendermsg msg)
-        else BU.print2 "%s: %s\n" (FStarC.Range.string_of_range r) (Errors.rendermsg msg);
+        then Format.print_string (Errors.rendermsg msg)
+        else Format.print2 "%s: %s\n" (FStarC.Range.string_of_range r) (Errors.rendermsg msg);
         exit 1
       | e ->
-        BU.print2_error "Error\n%s\n%s\n" (BU.message_of_exn e) (BU.trace_of_exn e);
+        Format.print2_error "Error\n%s\n%s\n" (BU.message_of_exn e) (BU.trace_of_exn e);
         exit 1

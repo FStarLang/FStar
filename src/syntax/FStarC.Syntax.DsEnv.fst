@@ -1099,8 +1099,8 @@ let push_sigelt' fail_on_dup env s =
         end
       | None -> "<unknown>" in
     raise_error l Errors.Fatal_DuplicateTopLevelNames [
-      Errors.text (BU.format1 "Duplicate top-level names [%s]" (string_of_lid l));
-      Errors.text (BU.format1 "Previously declared at %s" r)
+      Errors.text (Format.fmt1 "Duplicate top-level names [%s]" (string_of_lid l));
+      Errors.text (Format.fmt1 "Previously declared at %s" r)
     ]
   in
   let globals = mk_ref env.scope_mods in
@@ -1264,13 +1264,13 @@ let elab_restriction f env ns restriction =
           }
         ) others |> add_issues;
         raise_error id Errors.Fatal_DuplicateTopLevelNames
-          (BU.format1 ("The name %s was imported " ^ show (List.length others + 1) ^ " times") (string_of_id id))
+          (Format.fmt1 ("The name %s was imported " ^ show (List.length others + 1) ^ " times") (string_of_id id))
       | None -> ()
     in
     l |> List.iter (fun (id, _renamed) ->
         if name_exists id |> not then
           raise_error id Errors.Fatal_NameNotFound [
-            text <| BU.format1 "Definition %s cannot be found." (mk_lid id |> string_of_lid);
+            text <| Format.fmt1 "Definition %s cannot be found." (mk_lid id |> string_of_lid);
           ]);
     f env ns (AllowList l)
 
@@ -1296,7 +1296,7 @@ let push_namespace' env ns restriction =
         let open FStarC.Pprint in
         let open FStarC.Class.PP in
         raise_error ns Errors.Fatal_NameSpaceNotFound [
-          text <| BU.format1 "Namespace '%s' cannot be found." (Ident.string_of_lid ns);
+          text <| Format.fmt1 "Namespace '%s' cannot be found." (Ident.string_of_lid ns);
           typo_msg (Ident.string_of_lid ns) (List.map Ident.string_of_lid module_names);
         ]
     )
@@ -1342,11 +1342,11 @@ let push_include' env ns restriction =
       | None ->
         (* module to be included was not prepared, so forbid the 'include'. It may be the case for modules such as FStarC.Effect, etc. *)
         raise_error ns Errors.Fatal_IncludeModuleNotPrepared
-          (BU.format1 "include: Module %s was not prepared" (string_of_lid ns))
+          (Format.fmt1 "include: Module %s was not prepared" (string_of_lid ns))
       end
     | _ ->
       raise_error ns Errors.Fatal_ModuleNotFound
-        (BU.format1 "include: Module %s cannot be found" (string_of_lid ns))
+        (Format.fmt1 "include: Module %s cannot be found" (string_of_lid ns))
 
 let push_namespace = elab_restriction push_namespace'
 let push_include   = elab_restriction push_include'
@@ -1359,7 +1359,7 @@ let push_module_abbrev env x l =
        env.ds_hooks.ds_push_module_abbrev_hook env x l;
        push_scope_mod env (Module_abbrev (x,l))
   end else raise_error l Errors.Fatal_ModuleNotFound
-             (BU.format1 "Module %s cannot be found" (Ident.string_of_lid l))
+             (Format.fmt1 "Module %s cannot be found" (Ident.string_of_lid l))
 
 let check_admits env m =
   let admitted_sig_lids =
@@ -1582,7 +1582,7 @@ let prepare_module_or_interface intf admitted env mname (mii:module_inclusion_in
     | Some (_, m) ->
         if not (Options.interactive ()) && (not m.is_interface || intf)
         then raise_error mname Errors.Fatal_DuplicateModuleOrInterface
-               (BU.format1 "Duplicate module or interface name: %s" (string_of_lid mname));
+               (Format.fmt1 "Duplicate module or interface name: %s" (string_of_lid mname));
         //we have an interface for this module already; if we're not interactive then do not export any symbols from this module
         prep (push env), true //push a context so that we can pop it when we're done // FIXME PUSH POP
 

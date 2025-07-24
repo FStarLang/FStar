@@ -146,7 +146,7 @@ let on () =
 let query_cache_add (g:env) (q:term) : unit =
   if on () then (
     let h = hash (g, q) in
-//     BU.print1 "Adding query cache for %s\n" (show h);
+//     Format.print1 "Adding query cache for %s\n" (show h);
     query_cache_ref := add h !query_cache_ref
   )
 
@@ -154,7 +154,7 @@ let try_find_query_cache (g:env) (q:term) : bool =
   if on () then (
     let h = hash (g, q) in
     let r = mem h !query_cache_ref in
-//     BU.print2 "Looked up query cache for %s, r = %s\n" (show h) (show r);
+//     Format.print2 "Looked up query cache for %s, r = %s\n" (show h) (show r);
     r
   ) else
     false

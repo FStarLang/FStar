@@ -173,15 +173,15 @@ let constant_to_string (c: constant) =
   | Unit -> "Unit"
   | Bool b -> if b then "Bool true" else "Bool false"
   | Int i -> show i
-  | Char c -> BU.format1 "'%s'" (BU.string_of_char c)
-  | String (s, _) -> BU.format1 "\"%s\"" s
-  | Range r -> BU.format1 "Range %s" (Range.string_of_range r)
+  | Char c -> Format.fmt1 "'%s'" (BU.string_of_char c)
+  | String (s, _) -> Format.fmt1 "\"%s\"" s
+  | Range r -> Format.fmt1 "Range %s" (Range.string_of_range r)
   | SConst s -> show s
-  | Real s -> BU.format1 "Real %s" s
+  | Real s -> Format.fmt1 "Real %s" s
 
 let rec t_to_string (x:t) =
   match x.nbe_t with
-  | Lam {interp=b; arity} -> BU.format1 "Lam (_, %s args)"  (show arity)
+  | Lam {interp=b; arity} -> Format.fmt1 "Lam (_, %s args)"  (show arity)
   | Accu (a, l) ->
     "Accu (" ^ (atom_to_string a) ^ ") (" ^
     (String.concat "; " (List.map (fun x -> t_to_string (fst x)) l)) ^ ")"
@@ -204,8 +204,8 @@ let rec t_to_string (x:t) =
   | Unknown -> "Unknown"
   | Reflect t -> "Reflect " ^ t_to_string t
   | Quote _ -> "Quote _"
-  | Lazy (Inl li, _) -> BU.format1 "Lazy (Inl {%s})" (show (U.unfold_lazy li))
-  | Lazy (Inr (_, et), _) -> BU.format1 "Lazy (Inr (?, %s))" (show et)
+  | Lazy (Inl li, _) -> Format.fmt1 "Lazy (Inl {%s})" (show (U.unfold_lazy li))
+  | Lazy (Inr (_, et), _) -> Format.fmt1 "Lazy (Inr (?, %s))" (show et)
   | LocalLetRec (_, l, _, _, _, _, _) -> "LocalLetRec (" ^ (show (true, [l])) ^ ")"
   | TopLevelLet (lb, _, _) -> "TopLevelLet (" ^ show (BU.right lb.lbname) ^ ")"
   | TopLevelRec (lb, _, _, _) -> "TopLevelRec (" ^ show (BU.right lb.lbname) ^ ")"
@@ -269,7 +269,7 @@ let make_arrow1 t1 (a:arg) : t = mk_t <| Arrow (Inr ([a], Tot t1))
 
 let lazy_embed (et:unit -> emb_typ) (x:'a) (f:unit -> t) =
     if !Options.debug_embedding
-    then BU.print1 "Embedding\n\temb_typ=%s\n"
+    then Format.print1 "Embedding\n\temb_typ=%s\n"
                          (show (et ()));
     if !Options.eager_embedding
     then f()
@@ -287,21 +287,21 @@ let lazy_unembed (et:unit -> emb_typ) (x:t) (f:t -> option 'a) : option 'a =
       || !Options.eager_embedding
       then let res = f (Thunk.force thunk) in
            let _ = if !Options.debug_embedding
-                   then BU.print2 "Unembed cancellation failed\n\t%s <> %s\n"
+                   then Format.print2 "Unembed cancellation failed\n\t%s <> %s\n"
                                 (show (et ()))
                                 (show et')
            in
            res
       else let a = FStarC.Dyn.undyn b in
            let _ = if !Options.debug_embedding
-                   then BU.print1 "Unembed cancelled for %s\n"
+                   then Format.print1 "Unembed cancelled for %s\n"
                                      (show (et ()))
            in
            Some a
     | _ ->
       let aopt = f x in
       let _ = if !Options.debug_embedding
-              then BU.print1 "Unembedding:\n\temb_typ=%s\n"
+              then Format.print1 "Unembedding:\n\temb_typ=%s\n"
                                (show (et ())) in
       aopt
 
@@ -755,7 +755,7 @@ let e_norm_step =
             Some <| NormSteps.UnfoldNamespace ss)
         | _ ->
             Errors.log_issue0 Errors.Warning_NotEmbedded
-              (BU.format1 "Not an embedded norm_step: %s" (t_to_string t0));
+              (Format.fmt1 "Not an embedded norm_step: %s" (t_to_string t0));
             None
     in
     mk_emb em un (fun () -> mkFV (lid_as_fv PC.norm_step_lid None) [] [])

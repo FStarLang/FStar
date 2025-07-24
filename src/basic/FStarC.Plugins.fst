@@ -28,19 +28,19 @@ open FStarC.Class.Show
 let loaded : ref (list string) = mk_ref []
 let loaded_plugin_lib : ref bool = mk_ref false
 
-let pout  s   = if Debug.any () then BU.print_string s
-let pout1 s x = if Debug.any () then BU.print1 s x
-let perr  s   = if Debug.any () then BU.print_error s
-let perr1 s x = if Debug.any () then BU.print1_error s x
+let pout  s   = if Debug.any () then Format.print_string s
+let pout1 s x = if Debug.any () then Format.print1 s x
+let perr  s   = if Debug.any () then Format.print_error s
+let perr1 s x = if Debug.any () then Format.print1_error s x
 
 let do_dynlink (fname:string) : unit =
   try
     dynlink_loadfile fname
   with DynlinkError e ->
     E.log_issue0 E.Error_PluginDynlink [
-      E.text (BU.format1 "Failed to load plugin file %s" fname);
+      E.text (Format.fmt1 "Failed to load plugin file %s" fname);
       Pprint.prefix 2 1 (E.text "Reason:") (E.text e);
-      E.text (BU.format1 "Remove the `--load` option or use `--warn_error -%s` to ignore and continue."
+      E.text (Format.fmt1 "Remove the `--load` option or use `--warn_error -%s` to ignore and continue."
                 (show (E.errno E.Error_PluginDynlink)))
     ];
     (* If we weren't ignoring this error, just stop now *)
@@ -92,7 +92,7 @@ let compile_modules dir ms =
        | Some s -> s
        | None -> ""
      in
-     let env_setter = BU.format3 "env OCAMLPATH=\"%s%s%s\""
+     let env_setter = Format.fmt3 "env OCAMLPATH=\"%s%s%s\""
        (Find.locate_ocaml ())
        Platform.ocamlpath_sep
       //  Options.fstar_bin_directory // needed?
@@ -104,7 +104,7 @@ let compile_modules dir ms =
      if rc <> 0
      then E.raise_error0 E.Fatal_FailToCompileNativeTactic [
             E.text "Failed to compile native tactic.";
-            E.text (BU.format2 "Command\n`%s`\nreturned with exit code %s"
+            E.text (Format.fmt2 "Command\n`%s`\nreturned with exit code %s"
                                   cmd (show rc))
           ]
      else ()
@@ -114,7 +114,7 @@ let compile_modules dir ms =
       |> List.map (fun m -> dir ^ "/" ^ m)
       |> List.iter compile
    with e ->
-     perr (BU.format1 "Failed to load native tactic: %s\n" (BU.print_exn e));
+     perr (Format.fmt1 "Failed to load native tactic: %s\n" (Util.print_exn e));
      raise e
 
 (* Tries to load a plugin named like the extension. Returns true
@@ -123,13 +123,13 @@ if loading the plugin fails. *)
 let autoload_plugin (ext:string) : bool =
   if Options.Ext.enabled "noautoload" then false else (
   if Debug.any () then
-    BU.print1 "Trying to find a plugin for extension %s\n" ext;
+    Format.print1 "Trying to find a plugin for extension %s\n" ext;
   match Find.find_file (ext ^ ".cmxs") with
   | Some fn ->
     if List.mem fn !loaded then false
     else (
     if Debug.any () then
-      BU.print1 "Autoloading plugin %s ...\n" fn;
+      Format.print1 "Autoloading plugin %s ...\n" fn;
     load_plugin fn;
     true
     )

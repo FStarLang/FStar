@@ -57,20 +57,20 @@ let dummy_tf_of_fname fname =
     tf_modtime = t0 }
 
 let string_of_timed_fname { tf_fname = fname; tf_modtime = modtime } =
-  if modtime = t0 then Util.format1 "{ %s }" fname
-  else Util.format2 "{ %s; %s }" fname (show modtime)
+  if modtime = t0 then Format.fmt1 "{ %s }" fname
+  else Format.fmt2 "{ %s; %s }" fname (show modtime)
 
 let string_of_repl_task = function
   | LDInterleaved (intf, impl) ->
-    Util.format2 "LDInterleaved (%s, %s)" (string_of_timed_fname intf) (string_of_timed_fname impl)
+    Format.fmt2 "LDInterleaved (%s, %s)" (string_of_timed_fname intf) (string_of_timed_fname impl)
   | LDSingle intf_or_impl ->
-    Util.format1 "LDSingle %s" (string_of_timed_fname intf_or_impl)
+    Format.fmt1 "LDSingle %s" (string_of_timed_fname intf_or_impl)
   | LDInterfaceOfCurrentFile intf ->
-    Util.format1 "LDInterfaceOfCurrentFile %s" (string_of_timed_fname intf)
+    Format.fmt1 "LDInterfaceOfCurrentFile %s" (string_of_timed_fname intf)
   | PushFragment (Inl frag, _, _) ->
-    Util.format1 "PushFragment { code = %s }" frag.frag_text
+    Format.fmt1 "PushFragment { code = %s }" frag.frag_text
   | PushFragment (Inr d, _, _) ->
-    Util.format1 "PushFragment { decl = %s }" (show d)
+    Format.fmt1 "PushFragment { decl = %s }" (show d)
   | Noop -> "Noop {}"
 
 module BU = FStarC.Util
@@ -78,7 +78,7 @@ module BU = FStarC.Util
 let string_of_repl_stack_entry
   : repl_stack_entry_t -> string
   = fun ((depth, i), (task, state)) ->
-      BU.format "{depth=%s; task=%s}"
+      Format.fmt "{depth=%s; task=%s}"
                 [show i;
                 string_of_repl_task task]
                 
@@ -89,7 +89,7 @@ let string_of_repl_stack s =
 
 let repl_state_to_string (r:repl_state)
   : string
-  = BU.format 
+  = Format.fmt 
     "{\n\t\
       repl_line=%s;\n\t\
       repl_column=%s;\n\t\
@@ -111,7 +111,7 @@ let push_query_to_string pq =
     | Inl code -> code
     | Inr (_decl, code) -> code.code
   in
-  FStarC.Util.format "{ push_kind = %s; push_line = %s; \
+  FStarC.Format.fmt "{ push_kind = %s; push_line = %s; \
                push_column = %s; push_peek_only = %s; push_code_or_decl = %s }"
     [show pq.push_kind; show pq.push_line;
      show pq.push_column;
@@ -129,11 +129,11 @@ let query_to_string (q:query) = match q.qq with
 | VfsAdd _ -> "VfsAdd"
 | AutoComplete _ -> "AutoComplete"
 | Lookup(s, _lc, pos, features, _sr) ->
-  BU.format3 "(Lookup %s %s [%s])"
+  Format.fmt3 "(Lookup %s %s [%s])"
               s (match pos with
                  | None -> "None"
                  | Some (f, i, j) ->
-                   BU.format3 "(%s, %s, %s)"
+                   Format.fmt3 "(%s, %s, %s)"
                               f (show i) (show j))
                 (String.concat "; " features)
 | Compute _ -> "Compute"

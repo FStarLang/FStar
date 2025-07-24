@@ -38,7 +38,7 @@ let find_file filename =
     | Some s ->
       s
     | None ->
-      raise_error_text FStarC_Range.dummyRange Fatal_ModuleOrFileNotFound (U.format1 "Unable to find file: %s\n" filename)
+      raise_error_text FStarC_Range.dummyRange Fatal_ModuleOrFileNotFound (FStarC_Format.fmt1 "Unable to find file: %s\n" filename)
 
 let vfs_entries : (FStarC_Time.time_of_day * string) SMap.t = SMap.create (Z.of_int 1)
 
@@ -63,17 +63,17 @@ let read_physical_file (filename: string) =
       (fun channel -> really_input_string channel (in_channel_length channel))
       channel
   with e ->
-    raise_error_text FStarC_Range.dummyRange Fatal_UnableToReadFile (U.format1 "Unable to read file %s\n" filename)
+    raise_error_text FStarC_Range.dummyRange Fatal_UnableToReadFile (FStarC_Format.fmt1 "Unable to read file %s\n" filename)
 
 let read_file (filename:string) =
   let debug = FStarC_Debug.any () in
   match read_vfs_entry filename with
   | Some (_mtime, contents) ->
-    if debug then U.print1 "Reading in-memory file %s\n" filename;
+    if debug then FStarC_Format.print1 "Reading in-memory file %s\n" filename;
     filename, contents
   | None ->
     let filename = find_file filename in
-    if debug then U.print1 "Opening file %s\n" filename;
+    if debug then FStarC_Format.print1 "Opening file %s\n" filename;
     filename, read_physical_file filename
 
 let fst_extensions = [".fst"; ".fsti"]
@@ -84,7 +84,7 @@ let has_extension file extensions =
 
 let check_extension fn =
   if (not (has_extension fn fst_extensions)) then
-    let message = U.format1 "Unrecognized extension '%s'" fn in
+    let message = FStarC_Format.fmt1 "Unrecognized extension '%s'" fn in
     raise_error_text FStarC_Range.dummyRange Fatal_UnrecognizedExtension message
 
 type parse_frag =
@@ -553,7 +553,7 @@ let parse (lang_opt:lang_opts) fn =
           check_extension f;
           let f', contents = read_file f in
           (try create contents f' 1 0, f', contents
-          with _ -> raise_error_text FStarC_Range.dummyRange Fatal_InvalidUTF8Encoding (U.format1 "File %s has invalid UTF-8 encoding." f'))
+          with _ -> raise_error_text FStarC_Range.dummyRange Fatal_InvalidUTF8Encoding (FStarC_Format.fmt1 "File %s has invalid UTF-8 encoding." f'))
       | Incremental s
       | Toplevel s
       | Fragment s ->

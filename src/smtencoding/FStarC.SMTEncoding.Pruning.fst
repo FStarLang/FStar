@@ -62,7 +62,7 @@ let print_pruning_state (p:pruning_state)
     PSMap.fold
       p.assumption_to_triggers
       (fun k v acc ->
-        BU.format2 "[%s -> %s]" 
+        Format.fmt2 "[%s -> %s]" 
             k
             (show v) :: acc)
       []
@@ -71,12 +71,12 @@ let print_pruning_state (p:pruning_state)
     PSMap.fold
       p.macro_freenames
       (fun k v acc ->
-        BU.format2 "[%s -> %s]" 
+        Format.fmt2 "[%s -> %s]" 
             k
             (show v) :: acc)
       []
   in
-  BU.format3 "Pruning state:\n\tTriggers to assumptions:\n\t%s\nAssumptions to triggers:\n\t%s\nMacros:\n\t%s\n"
+  Format.fmt3 "Pruning state:\n\tTriggers to assumptions:\n\t%s\nAssumptions to triggers:\n\t%s\nMacros:\n\t%s\n"
     (String.concat "\n\t" (List.map show t_to_a))
     (String.concat "\n\t" a_to_t)
     (String.concat "\n\t" macros)
@@ -290,7 +290,7 @@ let remove_trigger_for_assumption (p:pruning_state) (trig:string) (aname:string)
 : pruning_state & bool
 = match PSMap.try_find p.assumption_to_triggers aname with
   | None ->
-    // debug (fun _ -> BU.print2 "Removing trigger %s for assumption %s---no assumption found\n" trig aname);
+    // debug (fun _ -> Format.print2 "Removing trigger %s for assumption %s---no assumption found\n" trig aname);
     p, false
   | Some l -> 
     let remaining_triggers =
@@ -298,7 +298,7 @@ let remove_trigger_for_assumption (p:pruning_state) (trig:string) (aname:string)
     in
     let eligible = BU.for_some is_empty remaining_triggers in
     // debug (fun _ ->
-    //   BU.print5 "Removing trigger %s for assumption %s---eligible? %s, original triggers %s, remaining triggers %s\n"
+    //   Format.print5 "Removing trigger %s for assumption %s---eligible? %s, original triggers %s, remaining triggers %s\n"
     //     trig aname (show eligible) (show l) (show remaining_triggers));
     { p with assumption_to_triggers = PSMap.add p.assumption_to_triggers aname remaining_triggers },
     eligible
@@ -392,7 +392,7 @@ let trigger_pending_assumptions (lids:list sym)
       match! find_assumptions_waiting_on_trigger lid with
       | [] -> return acc
       | assumptions ->
-        // debug (fun _ -> BU.print2 "Found assumptions waiting on trigger %s: %s\n" lid (show <| List.map (fun a -> a.assumption_name) assumptions));
+        // debug (fun _ -> Format.print2 "Found assumptions waiting on trigger %s: %s\n" lid (show <| List.map (fun a -> a.assumption_name) assumptions));
         mark_trigger_reached lid ;!
         foldM_left
           (fun acc assumption ->
@@ -416,8 +416,8 @@ let rec scan (ds:list assumption)
   // Collect the free names of all assumptions and macro expand them
   let new_syms = List.collect (fun a -> List.collect macro_expand (elems (assumption_free_names a))) ds in
   // debug (fun _ -> 
-  //   BU.print1 ">>>Scanning %s\n"
-  //     (ds |> List.map (fun a -> BU.format2 "%s -> [%s]" a.assumption_name (elems (assumption_free_names a) |> show)) |> String.concat "\n\t"));
+  //   Format.print1 ">>>Scanning %s\n"
+  //     (ds |> List.map (fun a -> Format.fmt2 "%s -> [%s]" a.assumption_name (elems (assumption_free_names a) |> show)) |> String.concat "\n\t"));
 
   // Trigger all assumptions that are waiting on the new symbols
   match! trigger_pending_assumptions new_syms with
@@ -443,7 +443,7 @@ let rec scan (ds:list assumption)
 
 let prune (p:pruning_state) (roots:list decl)
 : list decl
-= // debug (fun _ -> BU.print_string (show p));
+= // debug (fun _ -> Format.print_string (show p));
   // Collect all assumptions from the roots
   let roots = List.collect assumptions_of_decl roots in
   let init = { p; reached = empty () } in
@@ -462,6 +462,6 @@ let prune (p:pruning_state) (roots:list decl)
   in
   // if Options.Ext.enabled "debug_context_pruning"
   // then (
-  //   BU.print1 "Retained %s assumptions\n" (show (List.length reached_assumptions))
+  //   Format.print1 "Retained %s assumptions\n" (show (List.length reached_assumptions))
   // );
   reached_assumptions
