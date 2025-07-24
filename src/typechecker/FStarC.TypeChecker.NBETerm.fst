@@ -172,7 +172,7 @@ let constant_to_string (c: constant) =
   match c with
   | Unit -> "Unit"
   | Bool b -> if b then "Bool true" else "Bool false"
-  | Int i -> Z.string_of_big_int i
+  | Int i -> show i
   | Char c -> BU.format1 "'%s'" (BU.string_of_char c)
   | String (s, _) -> BU.format1 "\"%s\"" s
   | Range r -> BU.format1 "Range %s" (Range.string_of_range r)
@@ -362,7 +362,7 @@ let e_string : embedding string =
   mk_emb' em un (fun () -> lid_as_typ PC.string_lid [] []) (SE.emb_typ_of string)
 
 // Embeddind at type int
-let e_int : embedding Z.t =
+let e_int : embedding int =
     let em _cb c = Constant (Int c) in
     let un _cb c =
         match c with
@@ -379,8 +379,6 @@ let e_real : embedding Real.real =
         | _ -> None
     in
     mk_emb' em un (fun () -> lid_as_typ PC.real_lid [] [])  (SE.emb_typ_of Real.real)
-
-let e_fsint = embed_as e_int Z.to_int_fs Z.of_int_fs None
 
 // Embedding at option type
 let e_option (ea : embedding 'a) : Prims.Tot _ =

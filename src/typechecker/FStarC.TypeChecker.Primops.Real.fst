@@ -11,7 +11,6 @@ open FStarC.Syntax.Syntax
 open FStarC.Syntax.Embeddings
 
 module PC = FStarC.Parser.Const
-module Z = FStarC.BigInt
 module U = FStarC.Syntax.Util
 module NBETerm = FStarC.TypeChecker.NBETerm
 
@@ -125,8 +124,8 @@ let mul_op_nbe =
       else None
     | _ -> None
 
-let of_int (i:Z.t) : Real.real =
-  Real.Real (string_of_int (Z.to_int_fs i) ^ ".0")
+let of_int (i:int) : Real.real =
+  Real.Real (string_of_int i ^ ".0")
 
 let as_primitive_step is_strong (l, arity, u_arity, f, f_nbe) =
   as_primitive_step_nbecbs is_strong (l, arity, u_arity, f, (fun cb univs args -> f_nbe univs args))

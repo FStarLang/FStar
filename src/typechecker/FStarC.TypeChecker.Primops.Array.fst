@@ -16,12 +16,11 @@ module PC      = FStarC.Parser.Const
 module S       = FStarC.Syntax.Syntax
 module SS      = FStarC.Syntax.Subst
 module U       = FStarC.Syntax.Util
-module Z       = FStarC.BigInt
 
 let as_primitive_step is_strong (l, arity, u_arity, f, f_nbe) =
   FStarC.TypeChecker.Primops.Base.as_primitive_step_nbecbs is_strong (l, arity, u_arity, f, (fun cb univs args -> f_nbe univs args))
 
-let arg_as_int (a:arg) : option Z.t = fst a |> try_unembed_simple
+let arg_as_int (a:arg) : option int = fst a |> try_unembed_simple
 
 let arg_as_list {|e:EMB.embedding 'a|} (a:arg)
 : option (list 'a)
@@ -148,8 +147,8 @@ let ops : list primitive_step =
       | _ -> None
   in
   let length_op =
-    let embed_int (r:Range.t) (i:Z.t) : term = embed_simple r i in
-    let run_op (blob:FStarC.Dyn.dyn) : option Z.t =
+    let embed_int (r:Range.t) (i:int) : term = embed_simple r i in
+    let run_op (blob:FStarC.Dyn.dyn) : option int =
         Some (BU.array_length #term (FStarC.Dyn.undyn blob))
     in
     ( PC.immutable_array_length_lid, 2, 1,
@@ -161,7 +160,7 @@ let ops : list primitive_step =
       NBETerm.mixed_binary_op
          (fun (elt_t, _) -> Some elt_t)
          arg2_as_blob_nbe
-         (fun (i:Z.t) -> NBETerm.embed NBETerm.e_int bogus_cbs i)
+         (fun (i:int) -> NBETerm.embed NBETerm.e_int bogus_cbs i)
          (fun _universes _ blob -> run_op blob) )
   in
   let index_op =

@@ -32,7 +32,6 @@ module PC    = FStarC.Parser.Const
 module S     = FStarC.Syntax.Syntax
 module SS    = FStarC.Syntax.Subst
 module U     = FStarC.Syntax.Util
-module Z     = FStarC.BigInt
 
 open FStarC.Syntax.Print {}
 open FStarC.Syntax.Embeddings.Base
@@ -253,34 +252,32 @@ let e_char =
 let e_int =
     let ty = S.t_int in
     let emb_t_int = ET_app(PC.int_lid |> Ident.string_of_lid, []) in
-    let em (i:Z.t) (rng:range) _shadow _norm : term =
+    let em (i:int) (rng:range) _shadow _norm : term =
         lazy_embed
-            BigInt.string_of_big_int
+            Prims.string_of_int
             (fun () -> emb_t_int)
             rng
             (fun () -> ty)
             i
-            (fun () -> U.exp_int (Z.string_of_big_int i))
+            (fun () -> U.exp_int (show i))
     in
-    let un (t:term) _norm : option Z.t =
+    let un (t:term) _norm : option int =
         lazy_unembed
-            BigInt.string_of_big_int
+            Prims.string_of_int
             (fun () -> emb_t_int)
             t
             (fun () -> ty)
             (fun t ->
                 match t.n with
-                | Tm_constant(FStarC.Const.Const_int (s, _)) -> Some (Z.big_int_of_string s)
+                | Tm_constant(FStarC.Const.Const_int (s, _)) -> Some (BU.int_of_string s)
                 | _ -> None)
     in
     mk_emb_full
         em
         un
         (fun () -> ty)
-        BigInt.string_of_big_int
+        show
         (fun () -> emb_t_int)
-
-let e_fsint = embed_as e_int Z.to_int_fs Z.of_int_fs None
 
 let e_string =
     let emb_t_string = ET_app(PC.string_lid |> Ident.string_of_lid, []) in

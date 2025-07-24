@@ -328,8 +328,8 @@ val marshal: 'a -> string
 val unmarshal: string -> 'a
 
 val print_array (f: 'a -> string) (s:FStar.ImmutableArray.Base.t 'a) : string 
-val array_length (s:FStar.ImmutableArray.Base.t 'a) : FStarC.BigInt.t
-val array_index (s:FStar.ImmutableArray.Base.t 'a) (i:FStarC.BigInt.t) : 'a
+val array_length (s:FStar.ImmutableArray.Base.t 'a) : int
+val array_index (s:FStar.ImmutableArray.Base.t 'a) (i : int) : 'a
 
 (* From OCaml's Unix module (simplified).
 NOTE: execv and friends are evil on Windows, do not use them. *)

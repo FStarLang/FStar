@@ -9,29 +9,28 @@ open FStarC.TypeChecker.Primops.Base
 open FStarC.Range
 
 module PC = FStarC.Parser.Const
-module Z = FStarC.BigInt
 
 (* Range ops *)
 
 (* this type only here to use typeclass hackery *)
 type unsealedRange = | U of Range.t
 
-let mk_range (fn : string) (from_l from_c to_l to_c : Z.t) : Range.t =
-  Range.mk_range fn (mk_pos (Z.to_int_fs from_l) (Z.to_int_fs from_c))
-                    (mk_pos (Z.to_int_fs to_l) (Z.to_int_fs to_c))
+let mk_range (fn : string) (from_l from_c to_l to_c : int) : Range.t =
+  Range.mk_range fn (mk_pos from_l from_c)
+                    (mk_pos to_l   to_c)
 
-let __mk_range (fn : string) (from_l from_c to_l to_c : Z.t) : unsealedRange =
+let __mk_range (fn : string) (from_l from_c to_l to_c : int) : unsealedRange =
   U (mk_range fn from_l from_c to_l to_c)
 
-let explode (r : unsealedRange) : (string & Z.t & Z.t & Z.t & Z.t) =
+let explode (r : unsealedRange) : (string & int & int & int & int) =
   match r with
   | U r ->
     let open FStarC.Range.Type in
     (file_of_range r,
-     Z.of_int_fs (line_of_pos (start_of_range r)),
-     Z.of_int_fs (col_of_pos  (start_of_range r)),
-     Z.of_int_fs (line_of_pos (end_of_range r)),
-     Z.of_int_fs (col_of_pos  (end_of_range r)))
+     line_of_pos (start_of_range r),
+     col_of_pos  (start_of_range r),
+     line_of_pos (end_of_range r),
+     col_of_pos  (end_of_range r))
 
 instance e_unsealedRange : Syntax.Embeddings.embedding unsealedRange =
   let open FStarC.Syntax.Embeddings in

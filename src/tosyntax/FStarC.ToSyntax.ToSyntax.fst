@@ -3333,7 +3333,7 @@ let parse_attr_with_list warn (at:S.term) (head:lident) : option (list int & Ran
          begin
          match EMB.unembed a1 EMB.id_norm_cb with
          | Some es ->
-           Some (List.map FStarC.BigInt.to_int_fs es, at.pos), true
+           Some (es, at.pos), true
          | _ ->
            warn();
            None, true

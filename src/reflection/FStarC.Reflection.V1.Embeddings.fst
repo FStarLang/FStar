@@ -21,6 +21,7 @@ open FStarC.Syntax.Syntax
 open FStarC.Syntax.Embeddings
 open FStar.Order
 open FStarC.Errors
+open FStarC.Class.Show
 
 module BU      = FStarC.Util
 module EMB     = FStarC.Syntax.Embeddings
@@ -31,7 +32,6 @@ module RD      = FStarC.Reflection.V1.Data
 module S       = FStarC.Syntax.Syntax
 module SS      = FStarC.Syntax.Subst
 module U       = FStarC.Syntax.Util
-module Z       = FStarC.BigInt
 
 module EmbV2 = FStarC.Reflection.V2.Embeddings
 
@@ -171,7 +171,7 @@ instance e_const =
         | C_False   -> ref_C_False.t
 
         | C_Int i ->
-            S.mk_Tm_app ref_C_Int.t [S.as_arg (U.exp_int (Z.string_of_big_int i))]
+            S.mk_Tm_app ref_C_Int.t [S.as_arg (U.exp_int (show i))]
                         Range.dummyRange
         | C_String s ->
             S.mk_Tm_app ref_C_String.t [S.as_arg (embed rng s)]

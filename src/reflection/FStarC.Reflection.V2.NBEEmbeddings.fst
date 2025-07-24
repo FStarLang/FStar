@@ -34,7 +34,6 @@ module PC      = FStarC.Parser.Const
 module Range   = FStarC.Range
 module S       = FStarC.Syntax.Syntax // TODO: remove, it's open
 module U       = FStarC.Syntax.Util
-module Z       = FStarC.BigInt
 
 (*
  * embed   : from compiler to user
@@ -408,22 +407,22 @@ let e_universe_view =
 let e_subst_elt =
     let embed_const cb (e:subst_elt) : t =
         match e with
-        | DB (i, x) -> mkConstruct ref_DB.fv [] [as_arg (embed e_int cb (Z.of_int_fs i)); as_arg (embed e_namedv cb x)]
-        | NM (x, i) -> mkConstruct ref_NM.fv [] [as_arg (embed e_namedv cb x); as_arg (embed e_int cb (Z.of_int_fs i))]
+        | DB (i, x) -> mkConstruct ref_DB.fv [] [as_arg (embed e_int cb i); as_arg (embed e_namedv cb x)]
+        | NM (x, i) -> mkConstruct ref_NM.fv [] [as_arg (embed e_namedv cb x); as_arg (embed e_int cb i)]
         | NT (x, t) -> mkConstruct ref_NT.fv [] [as_arg (embed e_namedv cb x); as_arg (embed e_term cb t)]
-        | UN (i, u) -> mkConstruct ref_UN.fv [] [as_arg (embed e_int cb (Z.of_int_fs i)); as_arg (embed e_universe cb u)]
-        | UD (n, i) -> mkConstruct ref_UD.fv [] [as_arg (embed e_univ_name cb n); as_arg (embed e_int cb (Z.of_int_fs i))]
+        | UN (i, u) -> mkConstruct ref_UN.fv [] [as_arg (embed e_int cb i); as_arg (embed e_universe cb u)]
+        | UD (n, i) -> mkConstruct ref_UD.fv [] [as_arg (embed e_univ_name cb n); as_arg (embed e_int cb i)]
     in
     let unembed_const cb (t:t) : option subst_elt =
         match t.nbe_t with
         | Construct (fv, [], [(x, _); (i, _)]) when S.fv_eq_lid fv ref_DB.lid ->
             BU.bind_opt (unembed e_int cb i) (fun i ->
             BU.bind_opt (unembed e_namedv cb x) (fun x ->
-            Some <| DB (Z.to_int_fs i, x)))
+            Some <| DB (i, x)))
         | Construct (fv, [], [(i, _); (x, _)]) when S.fv_eq_lid fv ref_NM.lid ->
             BU.bind_opt (unembed e_namedv cb x) (fun x ->
             BU.bind_opt (unembed e_int cb i) (fun i ->
-            Some <| NM (x, Z.to_int_fs i)))
+            Some <| NM (x, i)))
         | Construct (fv, [], [(t, _); (x, _)]) when S.fv_eq_lid fv ref_NT.lid ->
             BU.bind_opt (unembed e_namedv cb x) (fun x ->
             BU.bind_opt (unembed e_term cb t) (fun t ->
@@ -431,11 +430,11 @@ let e_subst_elt =
         | Construct (fv, [], [(u, _); (i, _)]) when S.fv_eq_lid fv ref_UN.lid ->
             BU.bind_opt (unembed e_int cb i) (fun i ->
             BU.bind_opt (unembed e_universe cb u) (fun u ->
-            Some <| UN (Z.to_int_fs i, u)))
+            Some <| UN (i, u)))
         | Construct (fv, [], [(i, _); (n, _)]) when S.fv_eq_lid fv ref_UD.lid ->
             BU.bind_opt (unembed e_univ_name cb n) (fun n ->
             BU.bind_opt (unembed e_int cb i) (fun i ->
-            Some <| UD (n, Z.to_int_fs i)))
+            Some <| UD (n, i)))
         | _ ->
             Err.log_issue0 Err.Warning_NotEmbedded (BU.format1 "Not an embedded vconst: %s" (t_to_string t));
             None

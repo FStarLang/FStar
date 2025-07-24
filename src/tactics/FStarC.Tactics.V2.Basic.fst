@@ -52,7 +52,6 @@ module TcComm = FStarC.TypeChecker.Common
 module TcTerm = FStarC.TypeChecker.TcTerm
 module UF     = FStarC.Syntax.Unionfind
 module U      = FStarC.Syntax.Util
-module Z      = FStarC.BigInt
 module Core   = FStarC.TypeChecker.Core
 module PO     = FStarC.TypeChecker.Primops
 module TC     = FStar.Tactics.Typeclasses
@@ -599,15 +598,15 @@ let tadmit_t (t:term) : tac unit = wrap_err "tadmit_t" <| (
     ];
   solve' g t)
 
-let fresh () : tac Z.t =
+let fresh () : tac int =
   let! ps = get in
   let n = ps.freshness in
   let ps = { ps with freshness = n + 1 } in
   set ps;!
-  return (Z.of_int_fs n)
+  return n
 
-let curms () : tac Z.t =
-    return (Time.get_time_of_day_ms () |> Z.of_int_fs)
+let curms () : tac int =
+    return (Time.get_time_of_day_ms ())
 
 (* Annoying duplication here *)
 let __tc (e : env) (t : term) : tac (term & typ & guard_t) =
@@ -668,7 +667,7 @@ let rec map (tau:tac 'a): tac (list 'a) =
   match ps.goals with
   | [] -> return []
   | _::_ ->
-    let! (h,t) = divide Z.one tau (map tau) in
+    let! (h,t) = divide 1 tau (map tau) in
     return (h :: t)
 
 (* Applies t1 to the current head goal
@@ -685,7 +684,7 @@ let bnorm_and_replace g = replace_cur (bnorm_goal g)
 
 let bv_to_binding (bv : bv) : RD.binding =
   {
-    uniq   = Z.of_int_fs bv.index;
+    uniq   = bv.index;
     sort   = bv.sort;
     ppname = Sealed.seal (show bv.ppname);
   }
@@ -694,14 +693,14 @@ let binder_to_binding (b:binder) : RD.binding =
   bv_to_binding b.binder_bv
 
 let binding_to_string (b : RD.binding) : string =
-  Sealed.unseal b.ppname ^ "#" ^ show (Z.to_int_fs b.uniq)
+  Sealed.unseal b.ppname ^ "#" ^ show b.uniq
 
 
 let binding_to_bv (b : RD.binding) : bv =
   {
     sort = b.sort;
     ppname = mk_ident (Sealed.unseal b.ppname, Range.dummyRange);
-    index = Z.to_int_fs b.uniq;
+    index = b.uniq;
   }
 
 let binding_to_binder (b:RD.binding) : S.binder =
@@ -784,8 +783,7 @@ let intro () : tac RD.binding = wrap_err "intro" <| (
 
 (* As [intro], but will introduce n binders at once when the expected type is a
 literal arrow. *)
-let intros (max:Z.t) : tac (list RD.binding) = wrap_err "intros" <| (
-    let max = Z.to_int_fs max in
+let intros (max:int) : tac (list RD.binding) = wrap_err "intros" <| (
     let! goal = cur_goal in
     let bs, c = U.arrow_formals_comp_ln (goal_type goal) in
     let bs, c =
@@ -1350,7 +1348,7 @@ let rename_to (b : RD.binding) (s : string) : tac RD.binding = wrap_err "rename_
     | None -> fail "binder not found in environment"
     | Some (bv', goal) ->
       replace_cur goal ;!
-      let uniq = Z.of_int_fs bv'.index in
+      let uniq = bv'.index in
       return {b with uniq=uniq; ppname = Sealed.seal s}
     )
 
@@ -1880,7 +1878,7 @@ let failwhen (b:bool) (msg:string) : tac unit =
     then fail msg
     else return ()
 
-let t_destruct (s_tm : term) : tac (list (fv & Z.t)) = wrap_err "destruct" <| (
+let t_destruct (s_tm : term) : tac (list (fv & int)) = wrap_err "destruct" <| (
     let! g = cur_goal in
     let! s_tm, s_ty, guard = __tc (goal_env g) s_tm in
     proc_guard "destruct" (goal_env g) guard (Some (should_check_goal_uvar g)) (rangeof g) ;!
@@ -2015,7 +2013,7 @@ let t_destruct (s_tm : term) : tac (list (fv & Z.t)) = wrap_err "destruct" <| (
                         (* Provide the scrutinee equality, which is trivially provable *)
                         let brt = U.mk_app brt [S.as_arg U.exp_unit] in
                         let br = SS.close_branch (pat, None, brt) in
-                        return (g', br, (fv, Z.of_int_fs (List.length bs)))
+                        return (g', br, (fv, (List.length bs <: int)))
                     | _ ->
                         fail "impossible: not a ctor")
                  c_lids
@@ -2061,9 +2059,9 @@ let lset (_ty:term) (k:string) (t:term) : tac unit = wrap_err "lset" <| (
     set ps
     )
 
-let set_urgency (u:Z.t) : tac unit =
+let set_urgency (u:int) : tac unit =
     let! ps = get in
-    let ps = { ps with urgency = Z.to_int_fs u } in
+    let ps = { ps with urgency = u } in
     set ps
 
 let set_dump_on_failure (b:bool) : tac unit =
@@ -2157,7 +2155,7 @@ let term_eq_old (t1:term) (t2:term) : tac bool
   = return ();!
     return (Syntax.Util.term_eq t1 t2)
 
-let with_compat_pre_core (n:Z.t) (f:tac 'a) : tac 'a =
+let with_compat_pre_core (n:int) (f:tac 'a) : tac 'a =
     mk_tac (fun ps ->
       Options.with_saved_options (fun () ->
         let _res = FStarC.Options.set_options ("--compat_pre_core 0") in
@@ -2212,11 +2210,11 @@ let t_smt_sync (vcfg : vconfig) : tac unit = wrap_err "t_smt_sync" <| (
       ) else fail "SMT did not solve this goal"
 )
 
-let free_uvars (tm : term) : tac (list Z.t)
+let free_uvars (tm : term) : tac (list int)
   = return ();!
     let uvs = Free.uvars_uncached tm
                |> elems // GGG bad, order dependent, but userspace does not have sets
-               |> List.map (fun u -> Z.of_int_fs (UF.uvar_id u.ctx_uvar_head))
+               |> List.map (fun u -> UF.uvar_id u.ctx_uvar_head)
     in
     return uvs
 

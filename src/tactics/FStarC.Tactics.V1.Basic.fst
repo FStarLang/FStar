@@ -50,7 +50,6 @@ module TcComm = FStarC.TypeChecker.Common
 module TcTerm = FStarC.TypeChecker.TcTerm
 module UF     = FStarC.Syntax.Unionfind
 module U      = FStarC.Syntax.Util
-module Z      = FStarC.BigInt
 module Core   = FStarC.TypeChecker.Core
 module PO     = FStarC.TypeChecker.Primops
 
@@ -581,15 +580,15 @@ let tadmit_t (t:term) : tac unit = wrap_err "tadmit_t" <|
       (BU.format1 "Tactics admitted goal <%s>\n\n" (goal_to_string "" None ps g));
     solve' g t))
 
-let fresh () : tac Z.t =
+let fresh () : tac int =
     bind get (fun ps ->
     let n = ps.freshness in
     let ps = { ps with freshness = n + 1 } in
     bind (set ps) (fun () ->
-    ret (Z.of_int_fs n)))
+    ret n))
 
-let curms () : tac Z.t =
-    ret (Time.get_time_of_day_ms () |> Z.of_int_fs)
+let curms () : tac int =
+    ret (Time.get_time_of_day_ms ())
 
 (* Annoying duplication here *)
 let __tc (e : env) (t : term) : tac (term & typ & guard_t) =
@@ -643,9 +642,9 @@ let tcc (e : env) (t : term) : tac comp = wrap_err "tcc" <|
 let tc (e : env) (t : term) : tac typ = wrap_err "tc" <|
     bind (tcc e t) (fun c -> ret (U.comp_result c))
 
-let divide (n:Z.t) (l : tac 'a) (r : tac 'b) : tac ('a & 'b) =
+let divide (n:int) (l : tac 'a) (r : tac 'b) : tac ('a & 'b) =
     bind get (fun p ->
-    bind (try ret (List.splitAt (Z.to_int_fs n) p.goals) with | _ -> fail "divide: not enough goals") (fun (lgs, rgs) ->
+    bind (try ret (List.splitAt n p.goals) with | _ -> fail "divide: not enough goals") (fun (lgs, rgs) ->
     let lp = { p with goals = lgs; smt_goals = [] } in
     bind (set lp) (fun _ ->
     bind l        (fun a ->
@@ -662,7 +661,7 @@ let divide (n:Z.t) (l : tac 'a) (r : tac 'b) : tac ('a & 'b) =
 (* focus: runs f on the current goal only, and then restores all the goals *)
 (* There is a user defined version as well, we just use this one internally, but can't mark it as private *)
 let focus (f:tac 'a) : tac 'a =
-    bind (divide Z.one f idtac) (fun (a, ()) -> ret a)
+    bind (divide 1 f idtac) (fun (a, ()) -> ret a)
 
 (* Applies t to each of the current goals
       fails if t fails on any of the goals
@@ -672,7 +671,7 @@ let rec map (tau:tac 'a): tac (list 'a) =
         match p.goals with
         | [] -> ret []
         | _::_ ->
-            bind (divide Z.one tau (map tau)) (fun (h,t) -> ret (h :: t))
+            bind (divide 1 tau (map tau)) (fun (h,t) -> ret (h :: t))
         )
 
 (* Applies t1 to the current head goal
@@ -1754,7 +1753,7 @@ let failwhen (b:bool) (msg:string) : tac unit =
     then fail msg
     else ret ()
 
-let t_destruct (s_tm : term) : tac (list (fv & Z.t)) = wrap_err "destruct" <| (
+let t_destruct (s_tm : term) : tac (list (fv & int)) = wrap_err "destruct" <| (
     let! g = cur_goal in
     let! s_tm, s_ty, guard = __tc (goal_env g) s_tm in
     proc_guard "destruct" (goal_env g) guard (Some (should_check_goal_uvar g)) (rangeof g) ;!
@@ -1878,7 +1877,7 @@ let t_destruct (s_tm : term) : tac (list (fv & Z.t)) = wrap_err "destruct" <| (
                         (* Provide the scrutinee equality, which is trivially provable *)
                         let brt = U.mk_app brt [S.as_arg U.exp_unit] in
                         let br = SS.close_branch (pat, None, brt) in
-                        ret (g', br, (fv, Z.of_int_fs (List.length bs)))
+                        ret (g', br, (fv, (List.length bs <: int)))
                     | _ ->
                         fail "impossible: not a ctor")
                  c_lids
@@ -2001,7 +2000,7 @@ let rec inspect (t:term) : tac term_view = wrap_err "inspect" (
         ret <| Tv_Const (inspect_const c)
 
     | Tm_uvar (ctx_u, s) ->
-        ret <| Tv_Uvar (Z.of_int_fs (UF.uvar_unique_id ctx_u.ctx_uvar_head), (ctx_u, s))
+        ret <| Tv_Uvar (UF.uvar_unique_id ctx_u.ctx_uvar_head, (ctx_u, s))
 
     | Tm_let {lbs=(false, [lb]); body=t2} ->
         if lb.lbunivs <> [] then ret <| Tv_Unsupp else
@@ -2144,9 +2143,9 @@ let lset (_ty:term) (k:string) (t:term) : tac unit = wrap_err "lset" <| (
     set ps
     )
 
-let set_urgency (u:Z.t) : tac unit =
+let set_urgency (u:int) : tac unit =
     let! ps = get in
-    let ps = { ps with urgency = Z.to_int_fs u } in
+    let ps = { ps with urgency = u } in
     set ps
 
 let t_commute_applied_match () : tac unit = wrap_err "t_commute_applied_match" <| (
@@ -2222,7 +2221,7 @@ let term_eq_old (t1:term) (t2:term) : tac bool
   = idtac ;!
     ret (Syntax.Util.term_eq t1 t2)
 
-let with_compat_pre_core (n:Z.t) (f:tac 'a) : tac 'a =
+let with_compat_pre_core (n:int) (f:tac 'a) : tac 'a =
     mk_tac (fun ps ->
       Options.with_saved_options (fun () ->
         let _res = FStarC.Options.set_options ("--compat_pre_core 0") in
@@ -2277,9 +2276,9 @@ let t_smt_sync (vcfg : vconfig) : tac unit = wrap_err "t_smt_sync" <| (
       ) else fail "SMT did not solve this goal"
 )
 
-let free_uvars (tm : term) : tac (list Z.t)
+let free_uvars (tm : term) : tac (list int)
   = idtac ;!
-    let uvs = Syntax.Free.uvars_uncached tm |> elems |> List.map (fun u -> Z.of_int_fs (UF.uvar_id u.ctx_uvar_head)) in
+    let uvs = Syntax.Free.uvars_uncached tm |> elems |> List.map (fun u -> UF.uvar_id u.ctx_uvar_head) in
     ret uvs
 
 (***** Builtins used in the meta DSL framework *****)

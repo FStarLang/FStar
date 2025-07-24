@@ -6,7 +6,6 @@ open FStarC.Effect
 module EMB = FStarC.Syntax.Embeddings
 module NBE = FStarC.TypeChecker.NBETerm
 module S  = FStarC.Syntax.Syntax
-module Z = FStarC.BigInt
 
 open FStarC.Class.Show
 
@@ -28,16 +27,16 @@ val is_unsigned (k : machint_kind) : bool
 val is_signed (k : machint_kind) : bool
 val width (k : machint_kind) : int
 val module_name_for (k:machint_kind) : string 
-val mask (k:machint_kind) : Z.t
+val mask (k:machint_kind) : int
 
 new val machint (k : machint_kind) : Type0
 
-val mk (#k:_) (i : Z.t) (m : option S.meta_source_info) : machint k // no checks at all, use with care
-val v #k (x : machint k) : Z.t
+val mk (#k:_) (i : int) (m : option S.meta_source_info) : machint k // no checks at all, use with care
+val v #k (x : machint k) : int
 val meta #k (x : machint k) : option S.meta_source_info
 
 (* Make a machint k copying the meta off an existing one *)
-val make_as #k (x : machint k) (z : Z.t) : machint k
+val make_as #k (x : machint k) (z : int) : machint k
 
 instance val showable_bounded_k k : Tot (showable (machint k))
 instance val e_machint (k : machint_kind) : Tot (EMB.embedding (machint k))
