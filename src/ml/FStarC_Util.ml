@@ -12,8 +12,6 @@ let is_symbol c = if c > 255 then false else BatChar.is_symbol (BatChar.chr c)
 let is_punctuation c = List.mem c [33; 34; 35; 37; 38; 39; 40; 41; 42; 44; 45; 46; 47; 58; 59; 63; 64; 91; 92; 93; 95; 123; 125]
 (*'!','"','#','%','&','\'','(',')','*',',','-','.','/',':',';','?','@','[','\\',']','_','{','}'*)
 
-let return_all x = x
-
 exception Impos
 
 let cur_sigint_handler : Sys.signal_behavior ref =

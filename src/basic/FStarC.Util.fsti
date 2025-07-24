@@ -23,8 +23,6 @@ open FStarC.Array
 exception Impos
 
 val max_int: int
-val return_all: 'a -> ML 'a
-
 (* generic utils *)
 
 (* pure version *)

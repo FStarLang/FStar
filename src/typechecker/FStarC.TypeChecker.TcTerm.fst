@@ -4356,7 +4356,7 @@ and check_let_bound_def top_level env lb
     //NS: Maybe redundant strengthen
     // let c1, guard_f = c1, wf_annot in
     let c1, guard_f = TcUtil.strengthen_precondition
-                        (Some (fun () -> return_all Err.ill_kinded_type))
+                        (Some (fun () -> Err.ill_kinded_type))
                         (Env.set_range env1 e1.pos) e1 c1 wf_annot in
     let g1 = g1 ++ guard_f in
 
