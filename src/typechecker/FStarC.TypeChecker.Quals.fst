@@ -204,13 +204,13 @@ let check_sigelt_quals_pre (env:FStarC.TypeChecker.Env.env) se =
 let check_erasable env quals (r:Range.t) se =
   let lids = U.lids_of_sigelt se in
   let val_exists =
-    lids |> BU.for_some (fun l -> Option.isSome (Env.try_lookup_val_decl env l))
+    lids |> BU.for_some (fun l -> Some? (Env.try_lookup_val_decl env l))
   in
   let val_has_erasable_attr =
     lids |> BU.for_some (fun l ->
       let attrs_opt = Env.lookup_attrs_of_lid env l in
-      Option.isSome attrs_opt
-      && U.has_attribute (Option.get attrs_opt) FStarC.Parser.Const.erasable_attr)
+      Some? attrs_opt
+      && U.has_attribute (Option.must attrs_opt) FStarC.Parser.Const.erasable_attr)
   in
   let se_has_erasable_attr = U.has_attribute se.sigattrs FStarC.Parser.Const.erasable_attr in
   if ((val_exists && val_has_erasable_attr) && not se_has_erasable_attr)

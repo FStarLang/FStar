@@ -140,8 +140,8 @@ let fvb_to_string fvb =
     (show fvb.fvb_thunked)
 
 let check_valid_fvb fvb =
-    if (Option.isSome fvb.smt_token
-     || Option.isSome fvb.smt_fuel_partial_app)
+    if (Some? fvb.smt_token
+     || Some? fvb.smt_fuel_partial_app)
     && fvb.fvb_thunked
     then failwith (Format.fmt1 "Unexpected thunked SMT symbol: %s" (Ident.string_of_lid fvb.fvar_lid))
     else if fvb.fvb_thunked && fvb.smt_arity <> 0
@@ -193,7 +193,7 @@ let lookup_fvar_binding env lid =
 let add_bvar_binding bvb bvbs =
   PSMap.modify bvbs (string_of_id (fst bvb).ppname)
     (fun pimap_opt ->
-     PIMap.add (BU.dflt (PIMap.empty ()) pimap_opt) (fst bvb).index bvb)
+     PIMap.add (Option.dflt (PIMap.empty ()) pimap_opt) (fst bvb).index bvb)
 
 let add_fvar_binding fvb (fvb_map, fvb_list) =
   (PSMap.add fvb_map (string_of_lid fvb.fvar_lid) fvb, fvb::fvb_list)
@@ -262,7 +262,7 @@ let new_term_constant_and_tok_from_lid_aux (env:env_t) (x:lident) arity thunked 
     fname, ftok_name, {env with fvar_bindings=add_fvar_binding fvb env.fvar_bindings}
 let new_term_constant_and_tok_from_lid (env:env_t) (x:lident) arity =
     let fname, ftok_name_opt, env = new_term_constant_and_tok_from_lid_aux env x arity false in
-    fname, Option.get ftok_name_opt, env
+    fname, Some?.v ftok_name_opt, env
 let new_term_constant_and_tok_from_lid_maybe_thunked (env:env_t) (x:lident) arity th =
     new_term_constant_and_tok_from_lid_aux env x arity th
 let fail_fvar_lookup env a =
@@ -272,8 +272,8 @@ let fail_fvar_lookup env a =
     failwith (Format.fmt1 "Name %s not found in the smtencoding and typechecker env" (show a))
   | _ ->
     let quals = Env.quals_of_qninfo q in
-    if BU.is_some quals &&
-       (quals |> BU.must |> List.contains Unfold_for_unification_and_vcgen)
+    if Some? quals &&
+       (quals |> Some?.v |> List.contains Unfold_for_unification_and_vcgen)
     then Errors.raise_error a Errors.Fatal_IdentifierNotFound
            (Format.fmt1 "Name %s not found in the smtencoding env (the symbol is marked unfold, expected it to reduce)" (show a))
     else failwith (Format.fmt1 "Name %s not found in the smtencoding env" (show a))

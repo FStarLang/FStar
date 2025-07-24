@@ -67,7 +67,7 @@ let should_unfold cfg should_reify fv qninfo : should_unfold_res =
         if b then reif else no
 
     // If it is handled primitively, then don't unfold
-    | _ when Option.isSome (find_prim_step cfg fv) ->
+    | _ when Some? (find_prim_step cfg fv) ->
         log_unfolding cfg (fun () -> Format.print_string " >> It's a primop, not unfolding\n");
         no
 
@@ -106,7 +106,7 @@ let should_unfold cfg should_reify fv qninfo : should_unfold_res =
         let meets_some_criterion =
             comb_or [
             (if cfg.steps.for_extraction
-             then yesno <| Option.isSome (Env.lookup_definition_qninfo [Eager_unfolding_only; InliningDelta] fv.fv_name.v qninfo)
+             then yesno <| Some? (Env.lookup_definition_qninfo [Eager_unfolding_only; InliningDelta] fv.fv_name.v qninfo)
              else no)
            ;(match cfg.steps.unfold_only with
              | None -> no

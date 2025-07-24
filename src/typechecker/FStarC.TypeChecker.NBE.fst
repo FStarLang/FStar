@@ -111,7 +111,7 @@ let rec drop (p: 'a -> bool) (l: list 'a): list 'a =
   | x::xs -> if p x then x::xs else drop p xs
 
 let fmap_opt (f : 'a -> 'b) (x : option 'a) : option 'b =
-  BU.bind_opt x (fun x -> Some (f x))
+  Option.bind x (fun x -> Some (f x))
 
 let drop_until (f : 'a -> bool) (l : list 'a) : list 'a =
   let rec aux l =
@@ -314,7 +314,7 @@ let find_sigelt_in_gamma cfg (env: Env.env) (lid:lident): option sigelt =
         debug cfg (fun () -> Format.print1 "Universes in local declaration: %s\n" (show us));
         Some elt
     | _ -> None in
-  BU.bind_opt (Env.lookup_qname env lid) mapper
+  Option.bind (Env.lookup_qname env lid) mapper
 
 let is_univ (tm : t) =
   match tm.nbe_t with
@@ -579,7 +579,7 @@ let rec translate (cfg:config) (bs:list t) (e:term) : t =
               (mkAccuVar x :: bs, Pat_var x)
             | Pat_dot_term eopt ->
               (bs,
-               Pat_dot_term (BU.map_option (fun e -> readback cfg (translate cfg bs e)) eopt))
+               Pat_dot_term (Option.map (fun e -> readback cfg (translate cfg bs e)) eopt))
           in
           (bs, {p with v = p_new}) (* keep the info and change the pattern *)
         in
@@ -602,7 +602,7 @@ let rec translate (cfg:config) (bs:list t) (e:term) : t =
           debug (fun () ->
                  Format.print1 "Match args: %s\n"
                             (args
-                             |> List.map (fun (x, q) -> (if BU.is_some q then "#" else "") ^ t_to_string x)
+                             |> List.map (fun (x, q) -> (if Some? q then "#" else "") ^ t_to_string x)
                              |> String.concat "; "));
           begin
           match pickBranch cfg scrut branches with
@@ -926,7 +926,7 @@ and translate_fv (cfg: config) (bs:list t) (fvar:fv): t =
      | NU.Should_unfold_yes ->
        let t =
          let is_qninfo_visible =
-           Option.isSome (Env.lookup_definition_qninfo cfg.core_cfg.delta_level fvar.fv_name.v qninfo)
+           Some? (Env.lookup_definition_qninfo cfg.core_cfg.delta_level fvar.fv_name.v qninfo)
          in
          if is_qninfo_visible
          then begin
@@ -1028,12 +1028,12 @@ and translate_residual_comp cfg bs (c:S.residual_comp) : residual_comp =
       residual_typ =
         (if cfg.core_cfg.steps.for_extraction
          then None
-         else BU.map_opt residual_typ (translate cfg bs));
+         else Option.map (translate cfg bs) residual_typ);
       residual_flags = List.map (translate_flag cfg bs) residual_flags }
 
 and readback_residual_comp cfg (c:residual_comp) : S.residual_comp =
     { S.residual_effect = c.residual_effect;
-      S.residual_typ = BU.map_opt c.residual_typ (fun x -> debug cfg (fun () -> Format.print1 "Reading back residualtype %s\n" (t_to_string x)); readback cfg x);
+      S.residual_typ    = c.residual_typ |> Option.map (fun x -> debug cfg (fun () -> Format.print1 "Reading back residualtype %s\n" (t_to_string x)); readback cfg x);
       S.residual_flags = List.map (readback_flag cfg) c.residual_flags }
 
 and translate_flag cfg bs (f : S.cflag) : cflag =
@@ -1092,7 +1092,7 @@ and translate_monadic (m, ty) cfg bs e : t =
            else []
        in
        let t =
-       iapp cfg (iapp cfg (translate cfg' [] (U.un_uinst (ed |> U.get_bind_repr |> BU.must |> snd)))
+       iapp cfg (iapp cfg (translate cfg' [] (U.un_uinst (ed |> U.get_bind_repr |> Some?.v |> snd)))
                       [mk_t <| Univ U_unknown, None;  //We are cheating here a bit
                        mk_t <| Univ U_unknown, None])  //to avoid re-computing the universe of lb.lbtyp
                                               //and ty below; but this should be okay since these
@@ -1137,7 +1137,7 @@ and translate_monadic (m, ty) cfg bs e : t =
 
         (* Fallback if it does not have a definition. This happens,
          * but I'm not sure why. *)
-        if Option.isNone (Env.lookup_definition_qninfo cfg.core_cfg.delta_level fv.fv_name.v qninfo)
+        if None? (Env.lookup_definition_qninfo cfg.core_cfg.delta_level fv.fv_name.v qninfo)
         then fallback2 ()
         else
 
@@ -1166,7 +1166,7 @@ and translate_monadic_lift (msrc, mtgt, ty) cfg bs e : t =
    let e = U.unascribe e in
    if U.is_pure_effect msrc || U.is_div_effect msrc
    then let ed = Env.get_effect_decl cfg.core_cfg.tcenv (Env.norm_eff_name cfg.core_cfg.tcenv mtgt) in
-        let ret = match (SS.compress (ed |> U.get_return_repr |> BU.must |> snd)).n with
+        let ret = match (SS.compress (ed |> U.get_return_repr |> Some?.v |> snd)).n with
                   | Tm_uinst (ret, [_]) -> S.mk (Tm_uinst (ret, [U_unknown])) e.pos
                   | _ -> failwith "NYI: Reification of indexed effect (NBE)"
         in

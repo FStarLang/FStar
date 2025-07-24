@@ -159,7 +159,7 @@ let rec term_to_string x =
         term_to_string (Thunk.force thunk) ^ "]"
       | Tm_lazy i ->
         "[lazy:" ^
-        term_to_string (must !lazy_chooser i.lkind i) // can't call into Syntax.Util here..
+        term_to_string (Option.must !lazy_chooser i.lkind i) // can't call into Syntax.Util here..
         ^"]"
 
       | Tm_quoted (tm, qi) ->
@@ -220,7 +220,7 @@ let rec term_to_string x =
                             (binders_to_string " " bs)
                             (term_to_string t2)
                             (string_of_lid rc.residual_effect)
-                            (if Option.isNone rc.residual_typ then "None" else term_to_string (Option.get rc.residual_typ))
+                            (if None? rc.residual_typ then "None" else term_to_string (Option.must rc.residual_typ))
             | _ ->
               Format.fmt2 "(fun %s -> %s)" (binders_to_string " " bs) (term_to_string t2)
         end
@@ -229,7 +229,7 @@ let rec term_to_string x =
       | Tm_let {lbs; body=e} ->   Format.fmt2 "%s\nin\n%s" (lbs_to_string [] lbs) (term_to_string e)
       | Tm_ascribed {tm=e;asc=(annot, topt, b);eff_opt=eff_name} ->
         let annot = match annot with
-            | Inl t -> Format.fmt2 "[%s] %s" (map_opt eff_name Ident.string_of_lid |> dflt "default") (term_to_string t)
+            | Inl t -> Format.fmt2 "[%s] %s" (Option.map Ident.string_of_lid eff_name |> Option.dflt "default") (term_to_string t)
             | Inr c -> comp_to_string c in
         let topt = match topt with
             | None -> ""
@@ -241,7 +241,7 @@ let rec term_to_string x =
           match lc with
           | Some lc when (Options.print_implicits ()) ->
             Format.fmt1 " (residual_comp:%s)"
-              (if Option.isNone lc.residual_typ then "None" else term_to_string (Option.get lc.residual_typ))
+              (if None? lc.residual_typ then "None" else term_to_string (Option.must lc.residual_typ))
           | _ -> "" in
         Format.fmt4 "(match %s %swith\n\t| %s%s)"
           (term_to_string head)
@@ -318,7 +318,7 @@ and pat_to_string x =
                 (List.map (fun (x, b) -> let p = pat_to_string x in if b then "#"^p else p) pats |> String.concat " ")
     | Pat_dot_term topt ->
       if Options.print_bound_var_types()
-      then Format.fmt1 ".%s" (if topt = None then "_" else topt |> U.must |> term_to_string)
+      then Format.fmt1 ".%s" (if topt = None then "_" else topt |> Option.must |> term_to_string)
       else "._"
     | Pat_var x ->
       if Options.print_bound_var_types()
@@ -540,7 +540,7 @@ let wp_eff_combinators_to_string combs =
 
 let sub_eff_to_string se =
   let tsopt_to_string ts_opt =
-    if is_some ts_opt then ts_opt |> must |> tscheme_to_string
+    if Some? ts_opt then ts_opt |> Option.must |> tscheme_to_string
     else "<None>" in
   Format.fmt4 "sub_effect %s ~> %s : lift = %s ;; lift_wp = %s"
     (lid_to_string se.source) (lid_to_string se.target)
@@ -571,7 +571,7 @@ let layered_eff_combinators_to_string combs =
       to_str  combs.l_if_then_else;
 
       (if None? combs.l_close then ""
-       else Format.fmt1 "; l_close = %s\n" (combs.l_close |> must |> to_str2));
+       else Format.fmt1 "; l_close = %s\n" (combs.l_close |> Option.must |> to_str2));
     ]
 
 let eff_combinators_to_string = function

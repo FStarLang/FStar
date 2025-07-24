@@ -409,7 +409,7 @@ let compress_implicits : tac unit =
 
 module N = FStarC.TypeChecker.Normalize
 let get_phi (g:goal) : option term = U.un_squash (N.unfold_whnf (goal_env g) (goal_type g))
-let is_irrelevant (g:goal) : bool = Option.isSome (get_phi g)
+let is_irrelevant (g:goal) : bool = Some? (get_phi g)
 let goal_typedness_deps (g:goal) = U.ctx_uvar_typedness_deps g.goal_ctx_uvar
 
 let set_uvar_expected_typ (u:ctx_uvar) (t:typ)

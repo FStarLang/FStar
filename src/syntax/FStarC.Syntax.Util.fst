@@ -465,7 +465,7 @@ let rec ascribe t k = match t.n with
   | Tm_ascribed {tm=t'} -> ascribe t' k
   | _ -> mk (Tm_ascribed {tm=t; asc=k; eff_opt=None}) t.pos
 
-let unfold_lazy i = must !lazy_chooser i.lkind i
+let unfold_lazy i = Option.must !lazy_chooser i.lkind i
 
 let rec unlazy t =
     match (compress t).n with
@@ -685,7 +685,7 @@ let qualifier_equal q1 q2 = match q1, q2 with
 let abs bs t lopt =
   let close_lopt lopt = match lopt with
       | None -> None
-      | Some rc -> Some ({rc with residual_typ=FStarC.Util.map_opt rc.residual_typ (close bs)})
+      | Some rc -> Some ({rc with residual_typ = Option.map (close bs) rc.residual_typ })
   in
   match bs with
   | [] -> t
@@ -738,7 +738,7 @@ let branch b = Subst.close_branch b
 let has_decreases (c:comp) : bool =
   match c.n with
   | Comp ct ->
-    begin match ct.flags |> U.find_opt (function DECREASES _ -> true | _ -> false) with
+    begin match ct.flags |> Option.find (function DECREASES _ -> true | _ -> false) with
     | Some (DECREASES _) -> true
     | _ -> false
     end
@@ -797,7 +797,7 @@ let let_rec_arity (lb:letbinding) : int & option (list bool) =
         | Tm_arrow {bs; comp=c} ->
             let bs, c = Subst.open_comp bs c in
            (match
-                c |> comp_flags |> U.find_opt (function DECREASES _ -> true | _ -> false)
+                c |> comp_flags |> Option.find (function DECREASES _ -> true | _ -> false)
             with
             | Some (DECREASES d) ->
                 bs, Some d
@@ -815,7 +815,7 @@ let let_rec_arity (lb:letbinding) : int & option (list bool) =
     let bs, dopt = arrow_until_decreases lb.lbtyp in
     let n_univs = List.length lb.lbunivs in
     n_univs + List.length bs,
-    U.map_opt dopt (fun d ->
+    dopt |> Option.map (fun d ->
        let d_bvs =
          match d with
          | Decreases_lex l ->
@@ -829,7 +829,7 @@ let let_rec_arity (lb:letbinding) : int & option (list bool) =
 let abs_formals_maybe_unascribe_body maybe_unascribe t =
     let subst_lcomp_opt s l = match l with
         | Some rc ->
-          Some ({rc with residual_typ=FStarC.Util.map_opt rc.residual_typ (Subst.subst s)})
+          Some ({rc with residual_typ = Option.map (Subst.subst s) rc.residual_typ})
         | _ -> l
     in
     let rec aux t abs_body_lcomp =
@@ -1221,7 +1221,7 @@ let arrow_one_ln (t:typ) : option (binder & comp) =
         None
 
 let arrow_one (t:typ) : option (binder & comp) =
-    bind_opt (arrow_one_ln t) (fun (b, c) ->
+    Option.bind (arrow_one_ln t) (fun (b, c) ->
     let bs, c = Subst.open_comp [b] c in
     let b = match bs with
             | [b] -> b
@@ -1783,7 +1783,7 @@ let rec list_elements (e:term) : option (list term) =
   | Tm_fvar fv, _ when fv_eq_lid fv PC.nil_lid ->
       Some []
   | Tm_fvar fv, [_; (hd, _); (tl, _)] when fv_eq_lid fv PC.cons_lid ->
-      Some (hd::must (list_elements tl))
+      Some (hd :: Option.must (list_elements tl))
   | _ ->
       None
 
@@ -1940,9 +1940,9 @@ let apply_wp_eff_combinators (f:tscheme -> tscheme) (combs:wp_eff_combinators)
     close_wp = f combs.close_wp;
     trivial = f combs.trivial;
 
-    repr = map_option f combs.repr;
-    return_repr = map_option f combs.return_repr;
-    bind_repr = map_option f combs.bind_repr }
+    repr = Option.map f combs.repr;
+    return_repr = Option.map f combs.return_repr;
+    bind_repr = Option.map f combs.bind_repr }
 
 let apply_layered_eff_combinators (f:tscheme -> tscheme) (combs:layered_eff_combinators)
 : layered_eff_combinators
@@ -1953,7 +1953,7 @@ let apply_layered_eff_combinators (f:tscheme -> tscheme) (combs:layered_eff_comb
     l_bind = map3 combs.l_bind;
     l_subcomp = map3 combs.l_subcomp;
     l_if_then_else = map3 combs.l_if_then_else;
-    l_close = map_option map2 combs.l_close; }
+    l_close = Option.map map2 combs.l_close; }
 
 let apply_eff_combinators (f:tscheme -> tscheme) (combs:eff_combinators) : eff_combinators =
   match combs with

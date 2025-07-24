@@ -51,7 +51,7 @@ open FStarC.Syntax.Print {}
     unembed:
     match t with
     | Construct (fvar, us, [(a, _); _]) when S.fv_eq_lid fvar PC.some_lid
-         BU.bind_opt (unembed ea cb a) (fun a -> Some (Some a))
+         Option.bind (unembed ea cb a) (fun a -> Some (Some a))
  *
  * Note how the implicit argument is seemingly *after* the explicit one.
  *)
@@ -251,7 +251,7 @@ let embed_as (ea:embedding 'a)
              (ot:option t)
              : embedding 'b
  = mk_emb (fun cbs (x:'b) -> embed ea cbs (ba x))
-          (fun cbs t -> BU.map_opt (unembed ea cbs t) ab)
+          (fun cbs t -> Option.map ab (unembed ea cbs t))
           (fun () -> match ot with | Some t -> t | None -> ea.typ ())
           ea.e_typ
 
@@ -400,7 +400,7 @@ let e_option (ea : embedding 'a) : Prims.Tot _ =
         | Construct (fvar, us, args) when S.fv_eq_lid fvar PC.none_lid ->
           Some None
         | Construct (fvar, us, [(a, _); _]) when S.fv_eq_lid fvar PC.some_lid ->
-          BU.bind_opt (unembed ea cb a) (fun a -> Some (Some a))
+          Option.bind (unembed ea cb a) (fun a -> Some (Some a))
         | _ -> None)
     in
     mk_emb em un (fun () -> lid_as_typ PC.option_lid [U_zero] [as_arg (type_of ea)]) etyp
@@ -553,10 +553,10 @@ let e_either (ea:embedding 'a) (eb:embedding 'b) =
         lazy_unembed etyp trm (fun trm ->
         match trm.nbe_t with
         | Construct (fvar, us, [(a, _); _; _]) when S.fv_eq_lid fvar PC.inl_lid ->
-          BU.bind_opt (unembed ea cb a) (fun a ->
+          Option.bind (unembed ea cb a) (fun a ->
           Some (Inl a))
         | Construct (fvar, us, [(b, _); _; _]) when S.fv_eq_lid fvar PC.inr_lid ->
-          BU.bind_opt (unembed eb cb b) (fun b ->
+          Option.bind (unembed eb cb b) (fun b ->
           Some (Inr b))
         | _ -> None)
     in
@@ -645,8 +645,8 @@ let e_list (ea:embedding 'a) =
           // GM: Maybe it's not, but I'm unsure on whether we can rely on all these terms being type-correct
         | Construct (fv, _, [(tl, None); (hd, None)])
             when S.fv_eq_lid fv PC.cons_lid ->
-          BU.bind_opt (unembed ea cb hd) (fun hd ->
-          BU.bind_opt (un cb tl) (fun tl ->
+          Option.bind (unembed ea cb hd) (fun hd ->
+          Option.bind (un cb tl) (fun tl ->
           Some (hd :: tl)))
         | _ -> None)
     in
@@ -739,19 +739,19 @@ let e_norm_step =
         | FV (fv, _, []) when S.fv_eq_lid fv PC.steps_unascribe ->
             Some NormSteps.Unascribe
         | FV (fv, _, [(l, _)]) when S.fv_eq_lid fv PC.steps_unfoldonly ->
-            BU.bind_opt (unembed (e_list e_string) cb l) (fun ss ->
+            Option.bind (unembed (e_list e_string) cb l) (fun ss ->
             Some <| NormSteps.UnfoldOnly ss)
         | FV (fv, _, [(l, _)]) when S.fv_eq_lid fv PC.steps_unfoldfully ->
-            BU.bind_opt (unembed (e_list e_string) cb l) (fun ss ->
+            Option.bind (unembed (e_list e_string) cb l) (fun ss ->
             Some <| NormSteps.UnfoldFully ss)
         | FV (fv, _, [(l, _)]) when S.fv_eq_lid fv PC.steps_unfoldattr ->
-            BU.bind_opt (unembed (e_list e_string) cb l) (fun ss ->
+            Option.bind (unembed (e_list e_string) cb l) (fun ss ->
             Some <| NormSteps.UnfoldAttr ss)
         | FV (fv, _, [(l, _)]) when S.fv_eq_lid fv PC.steps_unfoldqual ->
-            BU.bind_opt (unembed (e_list e_string) cb l) (fun ss ->
+            Option.bind (unembed (e_list e_string) cb l) (fun ss ->
             Some <| NormSteps.UnfoldQual ss)
         | FV (fv, _, [(l, _)]) when S.fv_eq_lid fv PC.steps_unfoldnamespace ->
-            BU.bind_opt (unembed (e_list e_string) cb l) (fun ss ->
+            Option.bind (unembed (e_list e_string) cb l) (fun ss ->
             Some <| NormSteps.UnfoldNamespace ss)
         | _ ->
             Errors.log_issue0 Errors.Warning_NotEmbedded
@@ -869,9 +869,9 @@ let arrow_as_prim_step_1 (ea:embedding 'a) (eb:embedding 'b)
    : universes -> args -> option t =
     let f_wrapped _us args =
         let x, _ = List.hd args in //arity mismatches are handled by code that dispatches here
-        BU.map_opt
-                (unembed ea cb x) (fun x ->
-                 embed eb cb (f x))
+        Option.map 
+                (fun x -> embed eb cb (f x))
+                (unembed ea cb x)
     in
     f_wrapped
 
@@ -881,8 +881,8 @@ let arrow_as_prim_step_2 (ea:embedding 'a) (eb:embedding 'b) (ec:embedding 'c)
     let f_wrapped _us args =
         let x, _ = List.hd args in //arity mismatches are handled by code that dispatches here
         let y, _ = List.hd (List.tl args) in
-        BU.bind_opt (unembed ea cb x) (fun x ->
-        BU.bind_opt (unembed eb cb y) (fun y ->
+        Option.bind (unembed ea cb x) (fun x ->
+        Option.bind (unembed eb cb y) (fun y ->
         Some (embed ec cb (f x y))))
     in
     f_wrapped
@@ -896,9 +896,9 @@ let arrow_as_prim_step_3 (ea:embedding 'a) (eb:embedding 'b)
         let x, _ = List.hd args in //arity mismatches are handled by code that dispatches here
         let y, _ = List.hd (List.tl args) in
         let z, _ = List.hd (List.tl (List.tl args)) in
-        BU.bind_opt (unembed ea cb x) (fun x ->
-        BU.bind_opt (unembed eb cb y) (fun y ->
-        BU.bind_opt (unembed ec cb z) (fun z ->
+        Option.bind (unembed ea cb x) (fun x ->
+        Option.bind (unembed eb cb y) (fun y ->
+        Option.bind (unembed ec cb z) (fun z ->
         Some (embed ed cb (f x y z)))))
     in
     f_wrapped

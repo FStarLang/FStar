@@ -1086,7 +1086,7 @@ let lemma_or_sq (c : comp) : option (term & term) =
         Some (pre, post)
     else if U.is_pure_effect eff_name
          || U.is_ghost_effect eff_name then
-        map_opt (U.un_squash res) (fun post -> (U.t_true, post))
+        Option.map (fun post -> (U.t_true, post)) (U.un_squash res)
     else
         None
 
@@ -1211,9 +1211,9 @@ let split_env (bvar : bv) (e : env) : option (env & bv & list bv) =
         | Some (bv', e') ->
             if S.bv_eq bvar bv'
             then Some (e', bv', [])
-            else map_opt (aux e') (fun (e'', bv, bvs) -> (e'', bv, bv'::bvs ))
+            else Option.map (fun (e'', bv, bvs) -> (e'', bv, bv'::bvs )) (aux e') 
     in
-    map_opt (aux e) (fun (e', bv, bvs) -> (e', bv, List.rev bvs))
+    Option.map (fun (e', bv, bvs) -> (e', bv, List.rev bvs)) (aux e)
 
 let subst_goal (b1 : bv) (b2 : bv) (g:goal) : tac (option (bv & goal)) =
     match split_env b1 (goal_env g) with
@@ -2080,8 +2080,8 @@ let t_commute_applied_match () : tac unit = wrap_err "t_commute_applied_match" <
       //
       // If residual comp is set, apply arguments to it
       //
-      let lopt' = lopt |> BU.map_option (fun rc -> {rc with residual_typ=
-        rc.residual_typ |> BU.map_option (fun t ->
+      let lopt' = lopt |> Option.map (fun rc -> {rc with residual_typ=
+        rc.residual_typ |> Option.map (fun t ->
           let bs, c = N.get_n_binders (goal_env g) (List.length las) t in
           let bs, c = SS.open_comp bs c in
           let ss = List.map2 (fun b a -> NT (b.binder_bv, fst a)) bs las in
@@ -2314,7 +2314,7 @@ let __refl_typing_builtin_wrapper (f:unit -> 'a & list refl_guard_t) : tac (opti
   in
 
   (* If r is Some, extract the result, that's what we return *)
-  let r = BU.map_opt r fst in
+  let r = Option.map fst r in
 
   (* Compress the id info table. *)
   let! ps = get in
@@ -2898,7 +2898,7 @@ let refl_maybe_unfold_head (g:env) (e:term) : tac (option term & issues) =
     if eopt = None
     then Errors.raise_error e Errors.Fatal_UnexpectedTerm
            (Format.fmt1 "Could not unfold head: %s\n" (show e))
-    else (eopt |> must, []))
+    else (eopt |> Some?.v, []))
   else return (None, [unexpected_uvars_issue (Env.get_range g)])
 
 let push_open_namespace (e:env) (ns:list string) =

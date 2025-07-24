@@ -673,7 +673,7 @@ let close_wp_comp env bvs (c:comp) =
              *)
             let env_bvs = Env.push_bvs env bvs in
             let close_wp u_res md res_t bvs wp0 =
-              let close = md |> U.get_wp_close_combinator |> must in
+              let close = md |> U.get_wp_close_combinator |> Option.must in
               List.fold_right (fun x wp ->
                   let bs = [mk_binder x] in
                   let us = u_res::[env.universe_of env_bvs x.sort] in
@@ -759,7 +759,7 @@ let close_layered_comp_with_combinator (env:env) (bvs:list bv) (c:comp) : comp =
     | Layered_eff_sig (n, _) -> n
     | _ -> raise_error r Errors.Fatal_UnexpectedEffect "mk_indexed_close called with a non-indexed effect"
   in
-  let close_ts = U.get_layered_close_combinator ed |> must in
+  let close_ts = U.get_layered_close_combinator ed |> Option.must in
   let effect_args = List.fold_right (fun x args ->
     let u_a = List.hd ct.comp_univs in
     let u_b = env.universe_of env_bvs x.sort in
@@ -1303,7 +1303,7 @@ let mk_bind env
           | _ -> failwith "Impossible (mk_bind expected an indexed effect)" in
         let bind_t, bind_kind = m_ed |> U.get_bind_vc_combinator in
         let has_range_args = U.has_attribute m_ed.eff_attrs C.bind_has_range_args_attr in
-        mk_indexed_bind env m m m bind_t (bind_kind |> must) ct1 b ct2 flags r1 num_effect_params has_range_args
+        mk_indexed_bind env m m m bind_t (bind_kind |> Option.must) ct1 b ct2 flags r1 num_effect_params has_range_args
       else mk_wp_bind env m ct1 b ct2 flags r1, Env.trivial_guard in
     c, Env.conj_guard g_lift g_bind
 
@@ -1691,10 +1691,10 @@ let bind
               | None -> env.universe_of env t, t
               | Some u -> u, t in
             //c1 and c2 are bound to the input comps
-            if Option.isSome b
+            if Some? b
             && should_return env e1opt lc1
-            then let e1 = Option.get e1opt in
-                 let x = Option.get b in
+            then let e1 = Option.must e1opt in
+                 let x = Option.must b in
                  //we will inline e1 in the WP of c2
                  //Aiming to build a VC of the form
                  //
@@ -1784,9 +1784,9 @@ let assume_result_eq_pure_term_in_m env (m_opt:option lident) (e:term) (lc:lcomp
    * AR: m is the effect that we are going to do return in
    *)
   let m =
-    if m_opt |> is_none || is_ghost_effect env lc.eff_name
+    if m_opt |> None? || is_ghost_effect env lc.eff_name
     then C.effect_PURE_lid
-    else m_opt |> must in
+    else m_opt |> Option.must in
 
   let flags =
     if TcComm.is_total_lcomp lc then RETURN::lc.cflags else PARTIAL_RETURN::lc.cflags in
@@ -1869,8 +1869,8 @@ let maybe_return_e2_and_bind
          *     we must return eff2 into eff1,
          *)
         if lid_equals eff2 C.effect_PURE_lid &&
-           Env.join_opt env eff1 eff2 |> is_none &&
-           Env.exists_polymonadic_bind env eff1 eff2 |> is_none
+           Env.join_opt env eff1 eff2 |> None? &&
+           Env.exists_polymonadic_bind env eff1 eff2 |> None?
         then assume_result_eq_pure_term_in_m env_x (eff1 |> Some) e2 lc2
         else if (not (is_pure_or_ghost_effect env eff1)
              ||  should_not_inline_lc lc1)
@@ -2051,9 +2051,9 @@ let mk_layered_conjunction env (ed:S.eff_decl) (u_a:universe) (a:term) (p:typ) (
   in
 
   let conjunction, kind =
-    let ts, kopt = ed |> U.get_layered_if_then_else_combinator |> must in
+    let ts, kopt = ed |> U.get_layered_if_then_else_combinator |> Option.must in
     let _, conjunction = Env.inst_tscheme_with ts [u_a] in
-    conjunction, kopt |> must in
+    conjunction, kopt |> Option.must in
 
   let bs, body, _ = U.abs_formals conjunction in
 
@@ -2097,7 +2097,7 @@ let mk_non_layered_conjunction env (ed:S.eff_decl) (u_a:universe) (a:term) (p:ty
 : comp & guard_t =
   //p is a boolean guard, so b2t it
   let p = U.b2t p in
-  let if_then_else = ed |> U.get_wp_if_then_else_combinator |> must in
+  let if_then_else = ed |> U.get_wp_if_then_else_combinator |> Option.must in
   let _, _, wp_t = destruct_wp_comp ct1 in
   let _, _, wp_e = destruct_wp_comp ct2 in
   let wp = mk_Tm_app (inst_effect_fun_with [u_a] env ed if_then_else)
@@ -2296,12 +2296,12 @@ let bind_cases env0 (res_t:typ)
             | []
             | [_] -> comp, g_comp
             | _ ->
-              if md |> must |> U.is_layered then comp, g_comp
+              if md |> Option.must |> U.is_layered then comp, g_comp
               else
                 let comp = Env.comp_to_comp_typ env comp in
                 let md = Env.get_effect_decl env comp.effect_name in
                 let _, _, wp = destruct_wp_comp comp in
-                let ite_wp = md |> U.get_wp_ite_combinator |> must in
+                let ite_wp = md |> U.get_wp_ite_combinator |> Option.must in
                 let wp = mk_Tm_app (inst_effect_fun_with [u_res_t] env md ite_wp)
                                    [S.as_arg res_t; S.as_arg wp]
                                    wp.pos in
@@ -2351,7 +2351,7 @@ let check_trivial_precondition_wp env c =
   let md = Env.get_effect_decl env ct.effect_name in
   let u_t, t, wp = destruct_wp_comp ct in
   let vc = mk_Tm_app
-    (inst_effect_fun_with [u_t] env md (md |> U.get_wp_trivial_combinator |> must))
+    (inst_effect_fun_with [u_t] env md (md |> U.get_wp_trivial_combinator |> Option.must))
     [S.as_arg t; S.as_arg wp]
     (Env.get_range env)
   in
@@ -2482,9 +2482,9 @@ let rec check_erased (env:Env.env) (t:term) : isErased =
 let rec first_opt (f : 'a -> option 'b) (xs : list 'a) : option 'b =
   match xs with
   | [] -> None
-  | x::xs -> BU.catch_opt (f x) (fun () -> first_opt f xs)
+  | x::xs -> Option.catch (f x) (fun () -> first_opt f xs)
 
-let (let?) = BU.bind_opt
+let (let?) = Option.bind
 let bool_guard (b:bool) : option unit =
   if b then Some () else None
 
@@ -2664,14 +2664,14 @@ let maybe_coerce_lc env (e:term) (lc:lcomp) (exp_t:term) : term & lcomp & guard_
             //     we still let coerce_with happen just above,
             //     since it has logic to compute the correct lc
             //  
-            let e_hide = BU.dflt e_hide (strip_hide_or_reveal e C.reveal) in
+            let e_hide = Option.dflt e_hide (strip_hide_or_reveal e C.reveal) in
             e_hide, lc, g
           end
 
       | Yes ty, No ->
         let u = env.universe_of env ty in
         let e_reveal, lc = coerce_with env e lc C.reveal [u] [S.iarg ty] (S.mk_GTotal ty) in
-        let e_reveal = BU.dflt e_reveal (strip_hide_or_reveal e C.hide) in
+        let e_reveal = Option.dflt e_reveal (strip_hide_or_reveal e C.hide) in
         e_reveal, lc, Env.trivial_guard
 
       | _ ->
@@ -2956,7 +2956,7 @@ let maybe_instantiate (env:Env.env) (e:term) (t:typ) : term & typ & guard_t =
        let number_of_implicits t =
             let formals = unfolded_arrow_formals env t in
             let n_implicits =
-            match formals |> BU.prefix_until (fun ({binder_qual=imp}) -> Option.isNone imp || U.eq_bqual imp (Some Equality)) with
+            match formals |> BU.prefix_until (fun ({binder_qual=imp}) -> None? imp || U.eq_bqual imp (Some Equality)) with
                 | None -> List.length formals
                 | Some (implicits, _first_explicit, _rest) -> List.length implicits in
             n_implicits
@@ -3515,10 +3515,10 @@ let lift_tf_layered_effect (tgt:lident) (lift_ts:tscheme) (kind:S.indexed_effect
 let lift_tf_layered_effect_term env (sub:sub_eff)
   (u:universe) (a:typ) (e:term) : term =
 
-  let lift = sub.lift |> must |> (fun ts -> inst_tscheme_with ts [u]) |> snd in
+  let lift = sub.lift |> Option.must |> (fun ts -> inst_tscheme_with ts [u]) |> snd in
 
   let rest_bs =
-    let lift_t = sub.lift_wp |> must in
+    let lift_t = sub.lift_wp |> Option.must in
     match (lift_t |> snd |> SS.compress).n with
     | Tm_arrow {bs=_::bs} when List.length bs >= 1 ->
       bs |> List.splitAt (List.length bs - 1) |> fst
@@ -3551,7 +3551,7 @@ let get_mlift_for_subeff env (sub:S.sub_eff) : Env.mlift =
   if Env.is_layered_effect env sub.source || Env.is_layered_effect env sub.target
 
   then
-    ({ mlift_wp = lift_tf_layered_effect sub.target (sub.lift_wp |> must) (sub.kind |> must);
+    ({ mlift_wp = lift_tf_layered_effect sub.target (sub.lift_wp |> Option.must) (sub.kind |> Option.must);
        mlift_term = Some (lift_tf_layered_effect_term env sub) })
 
   else
@@ -3572,7 +3572,7 @@ let get_mlift_for_subeff env (sub:S.sub_eff) : Env.mlift =
       mk (Tm_app {hd=lift_t; args=[as_arg r; as_arg S.tun; as_arg e]}) e.pos
     in
 
-    ({ mlift_wp = sub.lift_wp |> must |> mk_mlift_wp;
+    ({ mlift_wp = sub.lift_wp |> Option.must |> mk_mlift_wp;
        //AR: this is funky
        //it is saying, if you don't give us a lift term (a function that lifts terms),
        //we are assuming that the function is an identity

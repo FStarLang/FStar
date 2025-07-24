@@ -147,13 +147,13 @@ let rec elim_mlexpr' (env:env_t) (e:mlexpr') =
   | MLE_Tuple es -> MLE_Tuple (List.map (elim_mlexpr env) es)
   | MLE_Record(syms, nm, fields) -> MLE_Record(syms, nm, List.map (fun (s, e) -> s, elim_mlexpr env e) fields)
   | MLE_Proj (e, p) -> MLE_Proj(elim_mlexpr env e, p)
-  | MLE_If(e, e1, e2_opt) -> MLE_If(elim_mlexpr env e, elim_mlexpr env e1, BU.map_opt e2_opt (elim_mlexpr env))
+  | MLE_If(e, e1, e2_opt) -> MLE_If(elim_mlexpr env e, elim_mlexpr env e1, Option.map (elim_mlexpr env) e2_opt)
   | MLE_Raise(p, es) -> MLE_Raise (p, List.map (elim_mlexpr env) es)
   | MLE_Try(e, branches) -> MLE_Try(elim_mlexpr env e, List.map (elim_branch env) branches)
 
 and elim_letbinding env (flavor, lbs) =
   let elim_one_lb lb =
-    let ts = BU.map_opt lb.mllb_tysc (fun (vars, t) -> vars, elim_mlty env t) in
+    let ts = Option.map (fun (vars, t) -> vars, elim_mlty env t) lb.mllb_tysc in
     let expr = elim_mlexpr env lb.mllb_def in
     { lb with
       mllb_tysc = ts;
@@ -162,7 +162,7 @@ and elim_letbinding env (flavor, lbs) =
   flavor, List.map elim_one_lb lbs
 
 and elim_branch env (pat, wopt, e) =
-  pat, BU.map_opt wopt (elim_mlexpr env), elim_mlexpr env e
+  pat, Option.map (elim_mlexpr env) wopt, elim_mlexpr env e
 
 and elim_mlexpr (env:env_t) (e:mlexpr) =
   { e with expr = elim_mlexpr' env e.expr; mlty = elim_mlty env e.mlty }

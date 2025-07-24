@@ -31,7 +31,7 @@ open FStarC.Class.Show
 module U = FStarC.Util
 
 let try_assoc (key: string) (d: assoct) =
-  U.map_option snd (U.try_find (fun (k, _) -> k = key) d)
+  Option.map snd (U.try_find (fun (k, _) -> k = key) d)
 
 // All exceptions are guaranteed to be caught in the LSP server implementation
 exception MissingKey of string // Only in LSP
@@ -99,7 +99,7 @@ let path_to_uri u = if U.char_at u 1 = ':' then
 let js_compl_context : json -> completion_context = function
   | JsonAssoc a ->
   { trigger_kind = assoc "triggerKind" a |> js_int;
-    trigger_char = try_assoc "triggerChar" a |> U.map_option js_str; }
+    trigger_char = try_assoc "triggerChar" a |> Option.map js_str; }
   | other -> js_fail "dictionary" other
 
 // May throw

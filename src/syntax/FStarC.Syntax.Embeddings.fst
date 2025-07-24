@@ -116,8 +116,8 @@ exception Embedding_failure
 exception Unembedding_failure
 
 let map_shadow (s:shadow_term) (f:term -> term) : shadow_term =
-    BU.map_opt s (Thunk.map f)
-let force_shadow (s:shadow_term) = BU.map_opt s Thunk.force
+    Option.map (Thunk.map f) s
+let force_shadow (s:shadow_term) = Option.map Thunk.force s
 
 type printer 'a = 'a -> string
 
@@ -360,7 +360,7 @@ let e_option (ea : embedding 'a) : Tot _ =
                 match (U.un_uinst hd).n, args with
                 | Tm_fvar fv, _ when S.fv_eq_lid fv PC.none_lid -> Some None
                 | Tm_fvar fv, [_; (a, _)] when S.fv_eq_lid fv PC.some_lid ->
-                     BU.bind_opt (try_unembed a norm) (fun a -> Some (Some a))
+                     Option.bind (try_unembed a norm) (fun a -> Some (Some a))
                 | _ -> None)
     in
     mk_emb_full
@@ -689,10 +689,10 @@ let e_either (ea:embedding 'a) (eb:embedding 'b) =
                 let hd, args = U.head_and_args_full t in
                 match (U.un_uinst hd).n, args with
                 | Tm_fvar fv, [_; _; (a, _)] when S.fv_eq_lid fv PC.inl_lid ->
-                    BU.bind_opt (try_unembed a norm) (fun a ->
+                    Option.bind (try_unembed a norm) (fun a ->
                     Some (Inl a))
                 | Tm_fvar fv, [_; _; (b, _)] when S.fv_eq_lid fv PC.inr_lid ->
-                    BU.bind_opt (try_unembed b norm) (fun b ->
+                    Option.bind (try_unembed b norm) (fun b ->
                     Some (Inr b))
                 | _ ->
                     None)
@@ -762,8 +762,8 @@ let e_list (ea:embedding 'a) =
                 | Tm_fvar fv, [(_, Some ({aqual_implicit=true})); (hd, None); (tl, None)]
                 | Tm_fvar fv, [(hd, None); (tl, None)]
                     when S.fv_eq_lid fv PC.cons_lid ->
-                    BU.bind_opt (try_unembed hd norm) (fun hd ->
-                    BU.bind_opt (un tl norm) (fun tl ->
+                    Option.bind (try_unembed hd norm) (fun hd ->
+                    Option.bind (un tl norm) (fun tl ->
                     Some (hd :: tl)))
                 | _ ->
                     None)
@@ -896,22 +896,22 @@ let e_norm_step : embedding NormSteps.norm_step =
                 | Tm_fvar fv, [] when S.fv_eq_lid fv PC.steps_norm_debug ->
                     Some NormDebug
                 | Tm_fvar fv, [(l, _)] when S.fv_eq_lid fv PC.steps_unfoldonly ->
-                    BU.bind_opt (try_unembed l norm) (fun ss ->
+                    Option.bind (try_unembed l norm) (fun ss ->
                     Some <| UnfoldOnly ss)
                 | Tm_fvar fv, [(l, _)] when S.fv_eq_lid fv PC.steps_unfoldonce ->
-                    BU.bind_opt (try_unembed l norm) (fun ss ->
+                    Option.bind (try_unembed l norm) (fun ss ->
                     Some <| UnfoldOnce ss)
                 | Tm_fvar fv, [(l, _)] when S.fv_eq_lid fv PC.steps_unfoldfully ->
-                    BU.bind_opt (try_unembed l norm) (fun ss ->
+                    Option.bind (try_unembed l norm) (fun ss ->
                     Some <| UnfoldFully ss)
                 | Tm_fvar fv, [(l, _)] when S.fv_eq_lid fv PC.steps_unfoldattr ->
-                    BU.bind_opt (try_unembed l norm) (fun ss ->
+                    Option.bind (try_unembed l norm) (fun ss ->
                     Some <| UnfoldAttr ss)
                 | Tm_fvar fv, [(l, _)] when S.fv_eq_lid fv PC.steps_unfoldqual ->
-                    BU.bind_opt (try_unembed l norm) (fun ss ->
+                    Option.bind (try_unembed l norm) (fun ss ->
                     Some <| UnfoldQual ss)
                 | Tm_fvar fv, [(l, _)] when S.fv_eq_lid fv PC.steps_unfoldnamespace ->
-                    BU.bind_opt (try_unembed l norm) (fun ss ->
+                    Option.bind (try_unembed l norm) (fun ss ->
                     Some <| UnfoldNamespace ss)
                 | _ -> None)
     in
@@ -991,34 +991,34 @@ let e_vconfig =
             (trivial_pre_for_unannotated_effectful_fns, _);
             (reuse_hint_for, _)
             ] when S.fv_eq_lid fv PC.mkvconfig_lid ->
-                  BU.bind_opt (try_unembed initial_fuel norm) (fun initial_fuel ->
-                  BU.bind_opt (try_unembed max_fuel norm) (fun max_fuel ->
-                  BU.bind_opt (try_unembed initial_ifuel norm) (fun initial_ifuel ->
-                  BU.bind_opt (try_unembed max_ifuel norm) (fun max_ifuel ->
-                  BU.bind_opt (try_unembed detail_errors norm) (fun detail_errors ->
-                  BU.bind_opt (try_unembed detail_hint_replay norm) (fun detail_hint_replay ->
-                  BU.bind_opt (try_unembed no_smt norm) (fun no_smt ->
-                  BU.bind_opt (try_unembed quake_lo norm) (fun quake_lo ->
-                  BU.bind_opt (try_unembed quake_hi norm) (fun quake_hi ->
-                  BU.bind_opt (try_unembed quake_keep norm) (fun quake_keep ->
-                  BU.bind_opt (try_unembed retry norm) (fun retry ->
-                  BU.bind_opt (try_unembed smtencoding_elim_box norm) (fun smtencoding_elim_box ->
-                  BU.bind_opt (try_unembed smtencoding_nl_arith_repr norm) (fun smtencoding_nl_arith_repr ->
-                  BU.bind_opt (try_unembed smtencoding_l_arith_repr norm) (fun smtencoding_l_arith_repr ->
-                  BU.bind_opt (try_unembed smtencoding_valid_intro norm) (fun smtencoding_valid_intro ->
-                  BU.bind_opt (try_unembed smtencoding_valid_elim norm) (fun smtencoding_valid_elim ->
-                  BU.bind_opt (try_unembed tcnorm norm) (fun tcnorm ->
-                  BU.bind_opt (try_unembed no_plugins norm) (fun no_plugins ->
-                  BU.bind_opt (try_unembed no_tactics norm) (fun no_tactics ->
-                  BU.bind_opt (try_unembed z3cliopt norm) (fun z3cliopt ->
-                  BU.bind_opt (try_unembed z3smtopt norm) (fun z3smtopt ->
-                  BU.bind_opt (try_unembed z3refresh norm) (fun z3refresh ->
-                  BU.bind_opt (try_unembed z3rlimit norm) (fun z3rlimit ->
-                  BU.bind_opt (try_unembed z3rlimit_factor norm) (fun z3rlimit_factor ->
-                  BU.bind_opt (try_unembed z3seed norm) (fun z3seed ->
-                  BU.bind_opt (try_unembed z3version norm) (fun z3version ->
-                  BU.bind_opt (try_unembed trivial_pre_for_unannotated_effectful_fns norm) (fun trivial_pre_for_unannotated_effectful_fns ->
-                  BU.bind_opt (try_unembed reuse_hint_for norm) (fun reuse_hint_for ->
+                  Option.bind (try_unembed initial_fuel norm) (fun initial_fuel ->
+                  Option.bind (try_unembed max_fuel norm) (fun max_fuel ->
+                  Option.bind (try_unembed initial_ifuel norm) (fun initial_ifuel ->
+                  Option.bind (try_unembed max_ifuel norm) (fun max_ifuel ->
+                  Option.bind (try_unembed detail_errors norm) (fun detail_errors ->
+                  Option.bind (try_unembed detail_hint_replay norm) (fun detail_hint_replay ->
+                  Option.bind (try_unembed no_smt norm) (fun no_smt ->
+                  Option.bind (try_unembed quake_lo norm) (fun quake_lo ->
+                  Option.bind (try_unembed quake_hi norm) (fun quake_hi ->
+                  Option.bind (try_unembed quake_keep norm) (fun quake_keep ->
+                  Option.bind (try_unembed retry norm) (fun retry ->
+                  Option.bind (try_unembed smtencoding_elim_box norm) (fun smtencoding_elim_box ->
+                  Option.bind (try_unembed smtencoding_nl_arith_repr norm) (fun smtencoding_nl_arith_repr ->
+                  Option.bind (try_unembed smtencoding_l_arith_repr norm) (fun smtencoding_l_arith_repr ->
+                  Option.bind (try_unembed smtencoding_valid_intro norm) (fun smtencoding_valid_intro ->
+                  Option.bind (try_unembed smtencoding_valid_elim norm) (fun smtencoding_valid_elim ->
+                  Option.bind (try_unembed tcnorm norm) (fun tcnorm ->
+                  Option.bind (try_unembed no_plugins norm) (fun no_plugins ->
+                  Option.bind (try_unembed no_tactics norm) (fun no_tactics ->
+                  Option.bind (try_unembed z3cliopt norm) (fun z3cliopt ->
+                  Option.bind (try_unembed z3smtopt norm) (fun z3smtopt ->
+                  Option.bind (try_unembed z3refresh norm) (fun z3refresh ->
+                  Option.bind (try_unembed z3rlimit norm) (fun z3rlimit ->
+                  Option.bind (try_unembed z3rlimit_factor norm) (fun z3rlimit_factor ->
+                  Option.bind (try_unembed z3seed norm) (fun z3seed ->
+                  Option.bind (try_unembed z3version norm) (fun z3version ->
+                  Option.bind (try_unembed trivial_pre_for_unannotated_effectful_fns norm) (fun trivial_pre_for_unannotated_effectful_fns ->
+                  Option.bind (try_unembed reuse_hint_for norm) (fun reuse_hint_for ->
                   Some ({
                     initial_fuel = initial_fuel;
                     max_fuel = max_fuel;
@@ -1245,8 +1245,8 @@ let arrow_as_prim_step_1 (ea:embedding 'a) (eb:embedding 'b)
             Some (Thunk.mk (fun () -> S.mk_Tm_app (norm (Inl fv_lid)) args rng))
         in
         match
-            (BU.map_opt (try_unembed x norm) (fun x ->
-             embed (f x) rng shadow_app norm))
+            try_unembed x norm |> Option.map (fun x ->
+            embed (f x) rng shadow_app norm)
         with
         // NB: this always returns a Some
         | Some x -> Some x
@@ -1265,8 +1265,8 @@ let arrow_as_prim_step_2 (ea:embedding 'a) (eb:embedding 'b) (ec:embedding 'c)
             Some (Thunk.mk (fun () -> S.mk_Tm_app (norm (Inl fv_lid)) args rng))
         in
         match
-            (BU.bind_opt (try_unembed x norm) (fun x ->
-             BU.bind_opt (try_unembed y norm) (fun y ->
+            (Option.bind (try_unembed x norm) (fun x ->
+             Option.bind (try_unembed y norm) (fun y ->
              Some (embed (f x y) rng shadow_app norm))))
         with
         // NB: this always returns a Some
@@ -1287,9 +1287,9 @@ let arrow_as_prim_step_3 (ea:embedding 'a) (eb:embedding 'b)
             Some (Thunk.mk (fun () -> S.mk_Tm_app (norm (Inl fv_lid)) args rng))
         in
         match
-            (BU.bind_opt (try_unembed x norm) (fun x ->
-             BU.bind_opt (try_unembed y norm) (fun y ->
-             BU.bind_opt (try_unembed z norm) (fun z ->
+            (Option.bind (try_unembed x norm) (fun x ->
+             Option.bind (try_unembed y norm) (fun y ->
+             Option.bind (try_unembed z norm) (fun z ->
              Some (embed (f x y z) rng shadow_app norm)))))
         with
         // NB: this always returns a Some

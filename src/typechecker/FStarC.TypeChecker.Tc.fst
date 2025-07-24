@@ -15,9 +15,10 @@
 *)
 
 module FStarC.TypeChecker.Tc
+
+open FStarC
 open FStarC.Effect
 open FStarC.List
-open FStarC
 open FStarC.Errors
 open FStarC.TypeChecker
 open FStarC.TypeChecker.Common
@@ -75,7 +76,7 @@ let set_hint_correlator env se =
     let tbl = env.qtbl_name_and_index |> snd in
     let get_n lid =
       let n_opt = SMap.try_find tbl (show lid) in
-      if is_some n_opt then n_opt |> must else 0
+      if Some? n_opt then n_opt |> Option.must else 0
     in
 
     let typ = match sigelt_typ se with | Some t -> t | _ -> S.tun in
@@ -551,9 +552,9 @@ let tc_sig_let env r se lbs lids : list sigelt & list sigelt & Env.env =
                    |> List.tryFind (fun lid ->
                                    not (lid |> Ident.path_of_lid |> List.hd = "Prims" ||
                                         lid_equals lid PC.pattern_lid)) in
-             if lid_opt |> is_some             
+             if lid_opt |> Some?             
              then err (Format.fmt1 "%s is not allowed in no_subtyping lemmas (only prims symbols)"
-                         (lid_opt |> must |> string_of_lid)) lb.lbpos
+                         (lid_opt |> Option.must |> string_of_lid)) lb.lbpos
              else let t, _ = U.type_u () in
                   let uvs, lbtyp = SS.open_univ_vars lb.lbunivs lb.lbtyp in
                   let _, _, g = TcTerm.tc_check_tot_or_gtot_term
@@ -623,7 +624,7 @@ let tc_decl' env0 se: list sigelt & list sigelt & Env.env =
 
     let errs, _ = Errors.catch_errors (fun () ->
                     Options.with_saved_options (fun () ->
-                      BU.must (!tc_decls_knot) env' ses)) in
+                      Some?.v (!tc_decls_knot) env' ses)) in
 
     if Options.print_expected_failures ()
        || Debug.low () then
@@ -1023,9 +1024,9 @@ let add_sigelt_to_env (env:Env.env) (se:sigelt) (from_cache:bool) : Env.env =
 
     | Sig_sub_effect sub -> TcUtil.update_env_sub_eff env sub se.sigrng
 
-    | Sig_polymonadic_bind {m_lid=m;n_lid=n;p_lid=p;typ=ty;kind=k} -> TcUtil.update_env_polymonadic_bind env m n p ty (k |> must)
+    | Sig_polymonadic_bind {m_lid=m;n_lid=n;p_lid=p;typ=ty;kind=k} -> TcUtil.update_env_polymonadic_bind env m n p ty (k |> Option.must)
 
-    | Sig_polymonadic_subcomp {m_lid=m; n_lid=n; typ=ty; kind=k} -> Env.add_polymonadic_subcomp env m n (ty, k |> must)
+    | Sig_polymonadic_subcomp {m_lid=m; n_lid=n; typ=ty; kind=k} -> Env.add_polymonadic_subcomp env m n (ty, k |> Option.must)
 
     | _ -> env
 

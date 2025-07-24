@@ -252,7 +252,7 @@ let bg_z3_proc =
       the_z3proc_version := Options.z3_version ();
     let z3proc () =
       if !the_z3proc = None then make_new_z3_proc (z3_cmd_and_args ());
-      must (!the_z3proc)
+      Option.must (!the_z3proc)
     in
     let ask input =
         incr the_z3proc_ask_count;
@@ -261,7 +261,7 @@ let bg_z3_proc =
     in
     let maybe_kill_z3proc () =
       if !the_z3proc <> None then begin
-        let old_params = must (!the_z3proc_params) in
+        let old_params = Option.must (!the_z3proc_params) in
         let old_version = !the_z3proc_version in
 
         if Options.hint_info () then
@@ -269,7 +269,7 @@ let bg_z3_proc =
             (show !the_z3proc_ask_count)
             (show old_params);
 
-         BU.kill_process (must (!the_z3proc));
+         BU.kill_process (Option.must (!the_z3proc));
          the_z3proc_ask_count := 0;
          the_z3proc := None
       end
@@ -330,7 +330,7 @@ let smt_output_sections (log_file:option string) (r:Range.t) (lines:list string)
         | [] -> None
         | l::lines ->
           if tag = l then Some ([], lines)
-          else BU.map_opt (until tag lines) (fun (until_tag, rest) ->
+          else until tag lines |> Option.map (fun (until_tag, rest) ->
                           (l::until_tag, rest))
     in
     let start_tag tag = "<" ^ tag ^ ">" in
@@ -374,7 +374,7 @@ let smt_output_sections (log_file:option string) (r:Range.t) (lines:list string)
           in
           warn_handler suf msg
     in
-    {smt_result = BU.must result_opt;
+    {smt_result = Some?.v result_opt;
      smt_reason_unknown = reason_unknown;
      smt_unsat_core = unsat_core;
      smt_initial_statistics = initial_stats_opt;
@@ -468,7 +468,7 @@ let doZ3Exe (log_file:_) (r:Range.t) (fresh:bool) (input:string) (label_messages
     in
     let initial_statistics = parse_stats smt_output.smt_initial_statistics in
     let statistics = parse_stats smt_output.smt_statistics in
-    let reason_unknown = BU.map_opt smt_output.smt_reason_unknown (fun x ->
+    let reason_unknown = smt_output.smt_reason_unknown |> Option.map (fun x ->
         let ru = String.concat " " x in
         if BU.starts_with ru "(:reason-unknown \""
         then let reason = FStarC.Util.substring_from ru (String.length "(:reason-unknown \"" ) in
@@ -635,7 +635,7 @@ let mk_input (fresh : bool) (theory : list decl) : string & option string & opti
             let prefix, check_sat, suffix =
                 theory |>
                 BU.prefix_until (function CheckSat -> true | _ -> false) |>
-                Option.get
+                Option.must
             in
             let pp = List.map (declToSmt options) in
             let suffix = check_sat::suffix in

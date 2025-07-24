@@ -110,7 +110,7 @@ let qualify_field_names record_or_dc_lid field_names =
         (fun (ns_opt, out) l ->
           match nsstr l with
           | "" ->
-            if Option.isSome ns_opt
+            if Some? ns_opt
             then (ns_opt, qualify_to_record l::out)
             else (ns_opt, l::out)
 
@@ -208,7 +208,7 @@ let rec is_comp_type env t =
       true
 
     | Name l
-    | Construct(l, _) -> Env.try_lookup_effect_name env l |> Option.isSome
+    | Construct(l, _) -> Env.try_lookup_effect_name env l |> Some?
     | App(head, _, _) -> is_comp_type env head
     | Paren t -> failwith "impossible"
     | Ascribed(t, _, _, _)
@@ -874,7 +874,7 @@ let rec desugar_data_pat
      * the cases of a PatOr, so different ocurrences of
      * a same (surface) variable are mapped to exactly the
      * same internal variable. *)
-    match BU.find_opt (fun y -> (string_of_id y.ppname = string_of_id x)) l with
+    match Option.find (fun y -> (string_of_id y.ppname = string_of_id x)) l with
     | Some y -> l, e, y
     | _ ->
       let e, xbv = push_bv e x in
@@ -1089,11 +1089,11 @@ and desugar_binding_pat_maybe_top top env p
     | PatVar (x, _, _) ->
         mklet x (tun_r (range_of_id x)) None, []
     | PatAscribed({pat=PatOp x}, (t, tacopt)) ->
-        let tacopt = BU.map_opt tacopt (desugar_term env) in
+        let tacopt = Option.map (desugar_term env) tacopt in
         let t, aq = desugar_term_aq env t in
         mklet (op_to_ident x) t tacopt, aq
     | PatAscribed({pat=PatVar (x, _, _)}, (t, tacopt)) ->
-        let tacopt = BU.map_opt tacopt (desugar_term env) in
+        let tacopt = Option.map (desugar_term env) tacopt in
         let t, aq = desugar_term_aq env t in
         mklet x t tacopt, aq
     | _ ->
@@ -1224,7 +1224,7 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term & an
     (* if op_Star has not been rebound, then it's reserved for tuples *)
     | Op(op_star, [lhs;rhs]) when
       (Ident.string_of_id op_star = "*" &&
-       op_as_term env 2 op_star |> Option.isNone) ->
+       op_as_term env 2 op_star |> None?) ->
       (* See the comment in parse.mly to understand why this implicitly relies
        * on the presence of a Paren node in the AST. *)
       let rec flatten t = match t.tm with
@@ -1729,7 +1729,7 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term & an
                               ] in
                          t
                     else if Options.ml_ish () //we're type-checking the compiler itself, e.g.
-                    && Option.isSome (Env.try_lookup_effect_name env (C.effect_ML_lid())) //ML is in scope (not still in prims, e.g)
+                    && Some? (Env.try_lookup_effect_name env (C.effect_ML_lid())) //ML is in scope (not still in prims, e.g)
                     && (not is_rec || List.length args <> 0) //and we don't have something like `let rec f : t -> t' = fun x -> e`
                     then AST.ml_comp t
                     else AST.tot_comp t
@@ -1788,8 +1788,8 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term & an
         let tm, aq1 =
          match binder with
          | LetBinder(l, (t, tacopt)) ->
-           if tacopt |> is_some
-           then Errors.log_issue (tacopt |> must) Errors.Warning_DefinitionNotTranslated
+           if tacopt |> Some?
+           then Errors.log_issue (tacopt |> Option.must) Errors.Warning_DefinitionNotTranslated
                   "Tactic annotation with a value type is not supported yet, \
                     try annotating with a computation type; this tactic annotation will be ignored";
            let body, aq = desugar_term_aq env t2 in
@@ -1917,11 +1917,11 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term & an
       let uc =
         match record_opt with
         | None ->
-          { uc_base_term = Option.isSome eopt;
+          { uc_base_term = Some? eopt;
             uc_typename = None;
             uc_fields = field_names }
         | Some record ->
-          { uc_base_term = Option.isSome eopt;
+          { uc_base_term = Some? eopt;
             uc_typename = Some record.typename;
             uc_fields = qualify_field_names record.typename field_names }
       in
@@ -2414,7 +2414,7 @@ and desugar_ascription env t tac_opt use_eq : S.ascription & antiquotations_temp
               (Inr comp, [])
     else let tm, aq = desugar_term_aq env t in
          (Inl tm, aq) in
-  (annot, BU.map_opt tac_opt (desugar_term env), use_eq), aq0
+  (annot, Option.map (desugar_term env) tac_opt, use_eq), aq0
 
 and desugar_args env args =
     args |> List.map (fun (a, imp) -> arg_withimp_t imp (desugar_term env a))
@@ -2953,7 +2953,7 @@ let mk_typ_abbrev env d lid uvs typars kopt t lids quals rng =
         lbname=Inr (S.lid_and_dd_as_fv lid None);
         lbunivs=uvs;
         lbdef=no_annot_abs typars t;
-        lbtyp=if is_some kopt then U.arrow typars (S.mk_Total (kopt |> must)) else tun;
+        lbtyp=if Some? kopt then U.arrow typars (S.mk_Total (kopt |> Option.must)) else tun;
         lbeff=C.effect_Tot_lid;
         lbattrs=[];
         lbpos=rng;
@@ -3280,7 +3280,7 @@ let rec desugar_tycon env (d: AST.decl) (d_attrs_initial:list S.term) quals tcs 
                                      let data_quals =
                                        let data_se = sigelts |> List.find (fun se -> match se.sigel with
                                                                                      | Sig_datacon {lid=name} -> lid_equals name data_lid
-                                                                                     | _ -> false) |> must in
+                                                                                     | _ -> false) |> Option.must in
                                        data_se.sigquals in
                                      not (data_quals |> List.existsb (function | RecordConstructor _ -> true | _ -> false))))
             se.sigattrs
@@ -3699,7 +3699,7 @@ and desugar_redefine_effect env d d_attrs trans_qual quals eff_name eff_binders 
 
 and desugar_decl_maybe_fail_attr env (d: decl) (attrs : list S.term) : (env_t & sigelts) =
   let no_fail_attrs (ats : list S.term) : list S.term =
-      List.filter (fun at -> Option.isNone (get_fail_attr1 false at)) ats
+      List.filter (fun at -> None? (get_fail_attr1 false at)) ats
   in
 
   (* If this is an expect_failure, check to see if it fails.

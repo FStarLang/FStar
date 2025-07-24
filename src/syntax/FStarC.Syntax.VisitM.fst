@@ -1,5 +1,6 @@
 module FStarC.Syntax.VisitM
 
+open FStarC
 open FStarC.Effect
 open FStarC.List
 open FStarC.Util
@@ -112,7 +113,7 @@ let rec compress (tm:term) : term =
   match tm.n with
   (* unfold and retry *)
   | Tm_lazy li ->
-    let tm' = must !lazy_chooser li.lkind li in
+    let tm' = Option.must !lazy_chooser li.lkind li in
     compress tm'
 
   | _ -> tm

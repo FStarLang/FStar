@@ -176,7 +176,7 @@ let prims =
             prims |>
             List.find (fun (l', _) -> lid_equals l l') |>
             Option.map (fun (_, b) -> b (Ident.range_of_lid l) v) |>
-            Option.get in
+            Option.must in
     let is : lident -> bool =
         fun l -> prims |> BU.for_some (fun (l', _) -> lid_equals l l') in
     {mk=mk;
@@ -375,7 +375,7 @@ let primitive_type_axioms : env -> lident -> string -> term -> list decl =
                  (Const.inversion_lid,mk_inversion_axiom);
                 ] in
     (fun (env:env) (t:lident) (s:string) (tt:term) ->
-        match BU.find_opt (fun (l, _) -> lid_equals l t) prims with
+        match Option.find (fun (l, _) -> lid_equals l t) prims with
             | None -> []
             | Some(_, f) -> f env s tt)
 
@@ -472,7 +472,7 @@ let encode_free_var uninterpreted env fv tt t_norm quals :decls_t & env_t =
               in
               let arity = List.length formals in
               let vname, vtok_opt, env = new_term_constant_and_tok_from_lid_maybe_thunked env lid arity thunked in
-              let get_vtok () = Option.get vtok_opt in
+              let get_vtok () = Option.must vtok_opt in
               let vtok_tm =
                     match formals with
                     | [] when not thunked -> mkApp(vname, []) //mkFreeV <| mk_fv (vname, Term_sort)
@@ -990,7 +990,7 @@ let encode_top_level_let :
               //decls is a list of decls_elt ... each of which contains a list decl in it
               //we need to go through each of those, accumulate DeclFuns and remove them from there
               let prefix_decls, elts, rest = List.fold_left (fun (prefix_decls, elts, rest) elt ->
-                if elt.key |> BU.is_some && List.existsb isDeclFun elt.decls
+                if elt.key |> Some? && List.existsb isDeclFun elt.decls
                 then prefix_decls, elts@[elt], rest
                 else let elt_decl_funs, elt_rest = List.partition isDeclFun elt.decls in
                      prefix_decls @ elt_decl_funs, elts, rest @ [{ elt with decls = elt_rest }]
@@ -1050,7 +1050,7 @@ let encode_sig_inductive (env:env_t) (se:sigelt)
     then [Term.DeclFun(c.constr_name, c.constr_fields |> List.map (fun f -> f.field_sort), Term_sort, None)]
     else constructor_to_decl (Ident.range_of_lid t) c in
   let inversion_axioms env tapp vars =
-    if datas |> BU.for_some (fun l -> Env.try_lookup_lid env.tcenv l |> Option.isNone) //Q: Why would this happen?
+    if datas |> BU.for_some (fun l -> Env.try_lookup_lid env.tcenv l |> None?) //Q: Why would this happen?
     then []
     else (
       let xxsym, xx = fresh_fvar env.current_module_name "x" Term_sort in
@@ -1612,7 +1612,7 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t & env_t) =
                  (se.sigattrs |> BU.for_some is_uninterpreted_by_smt)
                  env us fv t quals in
              let tname = (string_of_lid lid) in
-             let tsym = Option.get (try_lookup_free_var env lid) in
+             let tsym = Option.must (try_lookup_free_var env lid) in
              decls
              @ (primitive_type_axioms env.tcenv lid tname tsym |> mk_decls_trivial),
              env
@@ -1634,7 +1634,7 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t & env_t) =
        let attrs = se.sigattrs in
        let env, decls = BU.fold_map (fun env lb ->
         let lid = (BU.right lb.lbname).fv_name.v in
-        if Option.isNone <| Env.try_lookup_val_decl env.tcenv lid
+        if None? <| Env.try_lookup_val_decl env.tcenv lid
         then let val_decl = { se with sigel = Sig_declare_typ {lid; us=lb.lbunivs; t=lb.lbtyp};
                                       sigquals = S.Irreducible :: se.sigquals } in
              let decls, env = encode_sigelt' env val_decl in
@@ -1745,7 +1745,7 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t & env_t) =
       let decls, elts, rest =
         List.fold_left
           (fun (decls, elts, rest) elt ->
-            if BU.is_some elt.key //NS: Not sure what this case is for
+            if Some? elt.key //NS: Not sure what this case is for
             && List.existsb (function | Term.DeclFun _ -> true | _ -> false) elt.decls
             then decls, elts@[elt], rest 
             else ( //Pull the function symbol decls to the front
@@ -1911,11 +1911,11 @@ let recover_caching_and_update_env (env:env_t) (decls:decls_t) :decls_t =
   decls |> List.collect (fun elt ->
     if elt.key = None then [elt]  //not meant to be hashconsed, keep it
     else (
-      match SMap.try_find env.global_cache (elt.key |> BU.must) with
+      match SMap.try_find env.global_cache (elt.key |> Some?.v) with
       | Some cache_elt -> [Term.RetainAssumptions cache_elt.a_names] |> mk_decls_trivial  //hit, retain a_names from the hit entry
                                                                                              //AND drop elt
       | None ->  //no hit, update cache and retain elt
-        SMap.add env.global_cache (elt.key |> BU.must) elt;
+        SMap.add env.global_cache (elt.key |> Some?.v) elt;
         [elt]
     )
   )

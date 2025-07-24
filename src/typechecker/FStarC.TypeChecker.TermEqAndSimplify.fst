@@ -147,7 +147,7 @@ let rec eq_tm (env:env_t) (t1:term) (t2:term) : eq_result =
       equal_if (bv_eq a b)
 
     | _ when heads_and_args_in_case_both_data |> Some? ->  //matches only when both are data constructors
-      heads_and_args_in_case_both_data |> must |> (fun (f, args1, g, args2, n) ->
+      heads_and_args_in_case_both_data |> Option.must |> (fun (f, args1, g, args2, n) ->
         equal_data f args1 g args2 n
       )
 

@@ -1132,7 +1132,7 @@ let extend_universe_solution (pid : int) sol wl =
 
 let solve_prob (prob : prob) (logical_guard : option term) (uvis : list uvi) (wl:worklist) : worklist =
     def_check_prob "solve_prob.prob" prob;
-    BU.iter_opt logical_guard (def_check_term_scoped_in_prob "solve_prob.guard" prob);
+    Option.iter (def_check_term_scoped_in_prob "solve_prob.guard" prob) logical_guard;
     if !dbg_Rel
     then Format.print2 "Solving %s: with %s\n" (show <| p_pid prob)
                                            (uvis_to_string wl.tcenv uvis);
@@ -1604,7 +1604,7 @@ let next_prob wl : option (prob & list prob & rank_t) =
                | None -> Some (hd, out@tl, rank)
                | Some m -> Some (hd, out@m::tl, rank)
           else if min_rank = None
-               || rank_less_than rank (Option.get min_rank)
+               || rank_less_than rank (Option.must min_rank)
           then match min with
                | None -> aux (Some rank, Some hd, out) tl
                | Some m -> aux (Some rank, Some hd, m::out) tl
@@ -2765,7 +2765,7 @@ and imitate_arrow (orig:prob) (wl:worklist)
          if not occurs_ok
          then giveup_or_defer orig wl
                 Deferred_occur_check_failed
-                (mklstr (fun () -> "occurs-check failed: " ^ (Option.get msg)))
+                (mklstr (fun () -> "occurs-check failed: " ^ (Option.must msg)))
          else aux [] [] formals wl
 
 and solve_binders (bs1:binders) (bs2:binders) (orig:prob) (wl:worklist)
@@ -3050,7 +3050,7 @@ and solve_t_flex_rigid_eq (orig:prob) (wl:worklist) (lhs:flex_t) (rhs:term)
           let (Flex (t_lhs, ctx_u, args)) = lhs in
           let uvars, occurs_ok, msg = occurs_check ctx_u rhs in
           if not occurs_ok
-          then Inl ("quasi-pattern, occurs-check failed: " ^ (Option.get msg)), wl
+          then Inl ("quasi-pattern, occurs-check failed: " ^ (Option.must msg)), wl
           else let fvs_lhs = binders_as_bv_set (ctx_u.ctx_uvar_binders@bs) in
                let fvs_rhs = Free.names rhs in
                if not (subset fvs_rhs fvs_lhs)
@@ -3353,7 +3353,7 @@ and solve_t_flex_rigid_eq (orig:prob) (wl:worklist) (lhs:flex_t) (rhs:term)
         if not occurs_ok
         then giveup_or_defer orig wl
                Deferred_occur_check_failed
-               (Thunk.mkv <| "occurs-check failed: " ^ (Option.get msg))
+               (Thunk.mkv <| "occurs-check failed: " ^ (Option.must msg))
         else if subset fvs2 fvs1
         then let sol = mk_solution env lhs lhs_binders rhs in
              let wl = restrict_all_uvars env ctx_uv lhs_binders uvars wl in
@@ -4273,13 +4273,13 @@ and solve_t' (problem:tprob) (wl:worklist) : solution =
                 (* Open the first branch, and use that same substitution for the second branch *)
                 let (p1, w1, e1), s = SS.open_branch' br1 in
                 let (p2, w2, e2) = br2 in
-                let w2 = BU.map_opt w2 (SS.subst s) in
+                let w2 = Option.map (SS.subst s) w2 in
                 let e2 = SS.subst s e2 in
 
                 let scope = List.map S.mk_binder <| S.pat_bvs p1 in
 
                 (* Subproblem for then `when` clause *)
-                BU.bind_opt (
+                Option.bind (
                     match w1, w2 with
                     | Some _, None
                     | None, Some _ -> None
@@ -4296,7 +4296,7 @@ and solve_t' (problem:tprob) (wl:worklist) : solution =
                 then Format.print2 "Created problem for branches %s with scope %s\n"
                                         (prob_to_string' wl prob)
                                         (show scope);
-                BU.bind_opt (solve_branches wl rs1 rs2) (fun (r, wl) ->
+                Option.bind (solve_branches wl rs1 rs2) (fun (r, wl) ->
                 Some ((scope, prob)::(wprobs @ r), wl)))
 
             | [], [] -> Some ([], wl)
@@ -4494,7 +4494,7 @@ and solve_c (problem:problem comp) (wl:worklist) : solution =
         && Env.is_reifiable_effect wl.tcenv c2 in
                   // GM: What I would like to write instead of these two
                   // last conjuncts is something like
-                  // [Option.isSome edge.mlift.mlift_term],
+                  // [Some? edge.mlift.mlift_term],
                   // but it seems that we always carry around a Some
                   // (fun _ _ e -> e) instead of a None even for
                   // primitive effects.
@@ -4544,7 +4544,7 @@ and solve_c (problem:problem comp) (wl:worklist) : solution =
                  let ed2 = c2.effect_name |> Env.get_effect_decl env in
                  let tsopt, k = ed2
                    |> U.get_stronger_vc_combinator
-                   |> (fun (ts, kopt) -> Env.inst_tscheme_with ts c2.comp_univs |> snd |> Some, kopt |> must) in
+                   |> (fun (ts, kopt) -> Env.inst_tscheme_with ts c2.comp_univs |> snd |> Some, kopt |> Option.must) in
                  let num_eff_params =
                    match ed2.signature with
                    | Layered_eff_sig (n, _) -> n
@@ -4557,12 +4557,12 @@ and solve_c (problem:problem comp) (wl:worklist) : solution =
               0,
               true in
 
-          if is_none stronger_t_opt
+          if None? stronger_t_opt
           then giveup wl (mklstr (fun () -> Format.fmt2 "incompatible monad ordering: %s </: %s"
                                           (show c1.effect_name)
                                           (show c2.effect_name))) orig
           else
-            let stronger_t = stronger_t_opt |> must in
+            let stronger_t = stronger_t_opt |> Option.must in
             // we will account for g_lift logical guard later
             let wl = extend_wl wl g_lift.deferred g_lift.deferred_to_tac g_lift.implicits in
 
@@ -4683,7 +4683,7 @@ and solve_c (problem:problem comp) (wl:worklist) : solution =
 
              if BU.physical_equality wpc1 wpc2
              then solve_t (problem_using_guard orig c1.result_typ problem.relation c2.result_typ None "result type") wl
-             else let c2_decl, qualifiers = must (Env.effect_decl_opt env c2.effect_name) in
+             else let c2_decl, qualifiers = Option.must (Env.effect_decl_opt env c2.effect_name) in
                   if qualifiers |> List.contains Reifiable
                   then let c1_repr =
                            norm_with_steps "FStarC.TypeChecker.Rel.norm_with_steps.4"
@@ -5386,7 +5386,7 @@ let try_solve_single_valued_implicits env is_tac (imps:Env.implicits) : Env.impl
       | _ -> None in
 
     let b = List.fold_left (fun b imp ->  //check that the imp is still unsolved
-      if UF.find imp.imp_uvar.ctx_uvar_head |> is_none &&
+      if UF.find imp.imp_uvar.ctx_uvar_head |> None? &&
          U.ctx_uvar_should_check imp.imp_uvar = Strict
       then match imp_value imp with
            | Some tm -> commit env ([TERM (imp.imp_uvar, tm)]); true
@@ -5635,7 +5635,7 @@ let resolve_implicits' env is_tac is_gen (implicits:Env.implicits)
                        env
                        imp
                        is_tac
-                       force_univ_constraints |> must in
+                       force_univ_constraints |> Option.must in
                    until_fixpoint ([], false, true) (Listlike.to_list imps ++ List.map fst rest))
       )
 
@@ -5711,7 +5711,7 @@ let resolve_implicits' env is_tac is_gen (implicits:Env.implicits)
                  hd
                  is_tac
                  force_univ_constraints in
-               let res = BU.map_opt res Listlike.to_list in
+               let res = Option.map Listlike.to_list res in
                if res <> Some []
                then failwith "Impossible: check_implicit_solution_and_discharge_guard for tac must return Some []"
                else ()
@@ -5796,7 +5796,7 @@ let teq_nosmt_force (env:env) (t1:typ) (t2:typ) :bool =
 let layered_effect_teq env (t1:term) (t2:term) (reason:option string) : guard_t =
   if !dbg_LayeredEffectsEqns
   then Format.print3 "Layered Effect (%s) %s = %s\n"
-         (if reason |> is_none then "_" else reason |> must)
+         (if reason |> None? then "_" else reason |> Option.must)
          (show t1) (show t2);
   teq env t1 t2  //AR: teq_nosmt?
 

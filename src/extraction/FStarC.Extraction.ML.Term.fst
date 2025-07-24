@@ -580,7 +580,7 @@ let apply_coercion (pos:Range.t) (g:uenv) (e:mlexpr) (ty:mlty) (expect:mlty) : m
           with_ty expect <| MLE_Match(s, List.map coerce_branch branches)
 
         | MLE_If(s, b1, b2_opt), _, _ ->
-          with_ty expect <| MLE_If(s, aux b1 ty expect, BU.map_opt b2_opt (fun b2 -> aux b2 ty expect))
+          with_ty expect <| MLE_If(s, aux b1 ty expect, Option.map (fun b2 -> aux b2 ty expect) b2_opt)
 
         | MLE_Seq es, _, _ ->
           let prefix, last = BU.prefix es in
@@ -1481,7 +1481,7 @@ and term_as_mlexpr' (g:uenv) (top:term) : (mlexpr & e_tag & mlty) =
           begin match t.n with
             | Tm_let {lbs=(false, [lb]); body} when (BU.is_left lb.lbname) ->
               let tcenv = tcenv_of_uenv g in
-              let ed, qualifiers = must (TypeChecker.Env.effect_decl_opt tcenv m) in
+              let ed, qualifiers = Option.must (TypeChecker.Env.effect_decl_opt tcenv m) in
               if TcUtil.effect_extraction_mode tcenv ed.mname = S.Extract_primitive
               then term_as_mlexpr g t
               else
@@ -1844,7 +1844,7 @@ and term_as_mlexpr' (g:uenv) (top:term) : (mlexpr & e_tag & mlty) =
 
         | Tm_let {lbs=(false, [lb]); body=e'}
           when not (is_top_level [lb])
-          && BU.is_some (U.get_attribute FStarC.Parser.Const.rename_let_attr lb.lbattrs) ->
+          && Some? (U.get_attribute FStarC.Parser.Const.rename_let_attr lb.lbattrs) ->
           let b = S.mk_binder (BU.left lb.lbname) in
           let ({binder_bv=x}), body = SS.open_term_1 b e' in
           // Format.print_string "Reached let with rename_let attribute\n";
@@ -1878,7 +1878,7 @@ and term_as_mlexpr' (g:uenv) (top:term) : (mlexpr & e_tag & mlty) =
           let remove_attr attrs =
             let _, other_attrs =
               List.partition
-                (fun attr -> BU.is_some (U.get_attribute PC.rename_let_attr [attr]))
+                (fun attr -> Some? (U.get_attribute PC.rename_let_attr [attr]))
                 lb.lbattrs
             in
             other_attrs

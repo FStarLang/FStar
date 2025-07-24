@@ -272,7 +272,7 @@ let subst_ascription' s (asc:ascription) =
               | Inl t -> Inl (subst' s t)
               | Inr c -> Inr (subst_comp' s c) in
   annot,
-  U.map_opt topt (subst' s),
+  Option.map (subst' s) topt,
   use_eq
 
 let shift n s = match s with
@@ -329,14 +329,14 @@ let subst_pat' s p : (pat & int) =
 
       | Pat_dot_term eopt ->
         let s = shift_subst' n s in
-        let eopt = U.map_option (subst' s) eopt in
+        let eopt = Option.map (subst' s) eopt in
         {p with v=Pat_dot_term eopt}, n
   in aux 0 p
 
 let push_subst_lcomp s lopt = match lopt with
     | None -> None
     | Some rc ->
-        let residual_typ = U.map_opt rc.residual_typ (subst' s) in
+        let residual_typ = Option.map (subst' s) rc.residual_typ in
         (* NB: residual flags MUST be closed. DECREASES cannot
         appear there *)
         let rc = { residual_effect = rc.residual_effect
@@ -391,7 +391,7 @@ let rec push_subst_aux (resolve_uvars:bool) s t =
             (* These might be open! Just unfold and descend.
              * The hope is that this does not occur often and so
              * we still get good performance. *)
-          let t = must !lazy_chooser i.lkind i in // Can't call Syntax.Util from here
+          let t = Option.must !lazy_chooser i.lkind i in // Can't call Syntax.Util from here
           push_subst_aux resolve_uvars s t
         | _ ->
             (* All others must be closed, so don't bother *)
@@ -612,7 +612,7 @@ let open_pat (p:pat) : pat & subst_t =
             {p with v=Pat_var x'}, sub
 
         | Pat_dot_term eopt ->
-            let eopt = U.map_option (subst sub) eopt in
+            let eopt = Option.map (subst sub) eopt in
             {p with v=Pat_dot_term eopt}, sub
     in
     open_pat_aux [] p
@@ -661,7 +661,7 @@ let close_pat p =
          {p with v=Pat_var x}, sub
 
        | Pat_dot_term eopt ->
-         let eopt = U.map_option (subst sub) eopt in
+         let eopt = Option.map (subst sub) eopt in
          {p with v=Pat_dot_term eopt}, sub in
     aux [] p
 

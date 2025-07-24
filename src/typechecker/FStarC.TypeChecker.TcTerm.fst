@@ -428,7 +428,7 @@ let get_pat_vars all pats = get_pat_vars' all false pats
 
 let check_pat_fvs (rng:Range.t) env pats bs =
     let pat_vars = get_pat_vars (List.map (fun b -> b.binder_bv) bs) (N.normalize [Env.Beta] env pats) in
-    begin match bs |> BU.find_opt (fun ({binder_bv=b}) -> not (mem b pat_vars)) with
+    begin match bs |> Option.find (fun ({binder_bv=b}) -> not (mem b pat_vars)) with
         | None -> ()
         | Some ({binder_bv=x}) ->
           Errors.log_issue pats Errors.Warning_SMTPatternIllFormed
@@ -929,9 +929,9 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
    *)
 
   | Tm_ascribed {asc=(Inr expected_c, None, use_eq)}
-    when top |> is_comp_ascribed_reflect |> is_some ->
+    when top |> is_comp_ascribed_reflect |> Some? ->
 
-    let (effect_lid, e, aqual) = top |> is_comp_ascribed_reflect |> must in
+    let (effect_lid, e, aqual) = top |> is_comp_ascribed_reflect |> Option.must in
 
     let env0, _ = Env.clear_expected_typ env in
 
@@ -948,7 +948,7 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
            (Format.fmt1 "Effect %s cannot be reflected" (show effect_lid));
 
     let u_c = expected_ct.comp_univs |> List.hd in
-    let repr = Env.effect_repr env0 (expected_ct |> S.mk_Comp) u_c |> must in
+    let repr = Env.effect_repr env0 (expected_ct |> S.mk_Comp) u_c |> Option.must in
 
     // e <: Tot repr
     let e = S.mk (Tm_ascribed {tm=e; asc=(Inr (S.mk_Total repr), None, use_eq); eff_opt=None}) e.pos in
@@ -1043,7 +1043,7 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
     raise_error e Errors.Fatal_IllAppliedConstant (Format.fmt1 "Ill-applied constant %s" (show top))
 
   | Tm_app {hd={n=Tm_constant (Const_reify _)}; args=[(e, aqual)]} ->
-    if Option.isSome aqual
+    if Some? aqual
     then Errors.log_issue e
            Errors.Warning_IrrelevantQualifierOnArgumentToReify
             "Qualifier on argument to reify is irrelevant and will be ignored";
@@ -1087,7 +1087,7 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
     e, c, g ++ (g_c ++ g')
 
   | Tm_app {hd={n=Tm_constant (Const_reflect l)}; args=[(e, aqual)]}->
-    if Option.isSome aqual then
+    if Some? aqual then
       Errors.log_issue e
         Errors.Warning_IrrelevantQualifierOnArgumentToReflect
          "Qualifier on argument to reflect is irrelevant and will be ignored";
@@ -1529,7 +1529,7 @@ and tc_match (env : Env.env) (top : term) : term & lcomp & guard_t =
         let cases, g, erasable =
           List.fold_right
             (fun (branch, f, eff_label, cflags, c, g, erasable_branch) (caccum, gaccum, erasable) ->
-               (f, eff_label, cflags |> must, c |> must)::caccum,
+               (f, eff_label, cflags |> Option.must, c |> Option.must)::caccum,
                g ++ gaccum,
                erasable || erasable_branch) t_eqns ([], mzero, false) in
         match ret_opt with
@@ -1537,7 +1537,7 @@ and tc_match (env : Env.env) (top : term) : term & lcomp & guard_t =
           //no returns annotation, just bind_cases
           //when the returns annotation is absent, env_branches contains the expected type
           // (which may either be coming from top, or a new uvar)
-          let res_t = Env.expected_typ env_branches |> must |> fst in
+          let res_t = Env.expected_typ env_branches |> Option.must |> fst in
           TcUtil.bind_cases env res_t cases guard_x, g, erasable
 
         | Some (b, (Inl t, _, _)) ->  //a returns annotation, with type
@@ -1906,7 +1906,7 @@ and tc_constant (env:env_t) r (c:sconst) : typ =
       | Const_real _ -> t_real
       | Const_char _ ->
         FStarC.Syntax.DsEnv.try_lookup_lid env.dsenv FStarC.Parser.Const.char_lid
-        |> BU.must
+        |> Some?.v
 
       (* TODO (KM) : Try to change this to U.ktype1 *)
       (* (because that's the minimal universe level of the WP) *)
@@ -2329,7 +2329,7 @@ and tc_abs env (top:term) (bs:binders) (body:term) : term & lcomp & guard_t =
           match topt with
           | Some (_, use_eq) -> use_eq |> Some
           | _ -> None in
-        if c_opt |> is_some &&
+        if c_opt |> Some? &&
            (match (SS.compress body).n with  //body is an M.reflect
             | Tm_app {hd=head; args} when List.length args = 1 ->
               (match (SS.compress head).n with
@@ -2340,7 +2340,7 @@ and tc_abs env (top:term) (bs:binders) (body:term) : term & lcomp & guard_t =
           Env.clear_expected_typ envbody |> fst,
           S.mk
             //since copt is Some, topt, and hence use_eq_opt must also be Some
-            (Tm_ascribed {tm=body; asc=(Inr (c_opt |> must), None, use_eq_opt |> must); eff_opt=None})
+            (Tm_ascribed {tm=body; asc=(Inr (c_opt |> Option.must), None, use_eq_opt |> Option.must); eff_opt=None})
             Range.dummyRange,
           Inr ()  //no need to check expected type
         else
@@ -2353,7 +2353,7 @@ and tc_abs env (top:term) (bs:binders) (body:term) : term & lcomp & guard_t =
              //Not only is it redundant and inefficient, it also sometimes leads to bizarre errors
              //e.g., Issue #1208
              Inr ()
-           | _ -> Inl (BU.dflt false use_eq_opt))
+           | _ -> Inl (Option.dflt false use_eq_opt))
       in
       let body, cbody, guard_body =
         tc_term ({envbody with top_level=false}) body in
@@ -2401,7 +2401,7 @@ and tc_abs env (top:term) (bs:binders) (body:term) : term & lcomp & guard_t =
 
     let guard = TcUtil.close_guard_implicits env false bs guard in //TODO: this is a noop w.r.t scoping; remove it and the eager_subtyping flag
     let tfun_computed = U.arrow bs cbody in
-    let e = U.abs bs body (Some (U.residual_comp_of_comp (dflt cbody c_opt))) in
+    let e = U.abs bs body (Some (U.residual_comp_of_comp (Option.dflt cbody c_opt))) in
 
     (*
      * AR: Check strictly_positive annotations on the binders, if any
@@ -2576,7 +2576,7 @@ and check_application_args env head (chead:comp) ghead args expected_topt : term
         let term = S.mk_Tm_app head (List.rev arg_rets_rev) head.pos in
         if TcComm.is_pure_or_ghost_lcomp cres
         && (head_is_pure_and_some_arg_is_effectful)
-            // || Option.isSome (Env.expected_typ env))
+            // || Some? (Env.expected_typ env))
         then let _ = if Debug.extreme () then Format.print1 "(a) Monadic app: Return inserted in monadic application: %s\n" (show term) in
              TcUtil.maybe_assume_result_eq_pure_term env term cres, true
         else let _ = if Debug.extreme () then Format.print1 "(a) Monadic app: No return inserted in monadic application: %s\n" (show term) in
@@ -2618,8 +2618,8 @@ and check_application_args env head (chead:comp) ghead args expected_topt : term
 
         let push_option_names_to_env =
           List.fold_left (fun env name_opt ->
-            name_opt |> BU.map_option (Env.push_bv env)
-                     |> BU.dflt env) in
+            name_opt |> Option.map (Env.push_bv env)
+                     |> Option.dflt env) in
 
         //Bind arguments
         let _, comp =
@@ -3207,7 +3207,7 @@ and tc_pat env (pat_t:typ) (p0:pat) :
             | Tm_fvar fv ->
               fv |> lid_of_fv |> Env.num_inductive_ty_params env
                  |> (fun nopt ->
-                    BU.dflt [] (nopt |> BU.map_option (fun n ->
+                    Option.dflt [] (nopt |> Option.map (fun n ->
                                          if List.length args >= n
                                          then args |> List.splitAt n |> fst
                                          else [])))
@@ -3390,7 +3390,7 @@ and tc_pat env (pat_t:typ) (p0:pat) :
                 | (hd, b)::simple_pats ->
                   match hd.v with
                   | Pat_dot_term eopt ->
-                    let eopt = BU.map_option (SS.subst subst) eopt in
+                    let eopt = Option.map (SS.subst subst) eopt in
                     let hd = {hd with v=Pat_dot_term eopt} in
                     (hd, b) :: aux simple_pats bvs sub_pats
                   | Pat_var x ->
@@ -3699,8 +3699,8 @@ and tc_eqn (scrutinee:bv) (env:Env.env) (ret_opt : option match_returns_ascripti
     | Some (_, (Inr c, _, _)) ->
       let pat_bs = List.map S.mk_binder pat_bvs in
       let g_branch =
-        (if eqs |> is_some
-         then TcComm.weaken_guard_formula g_branch (eqs |> must)
+        (if eqs |> Some?
+         then TcComm.weaken_guard_formula g_branch (eqs |> Option.must)
          else g_branch)
         |> Env.close_guard env pat_bs
         |> TcUtil.close_guard_implicits env true pat_bs in
@@ -4016,8 +4016,8 @@ and check_inner_let env e =
          xb g2 in
        let guard = g1 ++ g2 in
 
-       if Option.isSome (Env.expected_typ env)
-       then (let tt = Env.expected_typ env |> Option.get |> fst in
+       if Some? (Env.expected_typ env)
+       then (let tt = Env.expected_typ env |> Option.must |> fst in
              if !dbg_Exports
              then Format.print2 "Got expected type from env %s\ncres.res_typ=%s\n"
                         (show tt)
@@ -4366,7 +4366,7 @@ and check_let_bound_def top_level env lb
             (TcComm.lcomp_to_string c1)
             (Rel.guard_to_string env g1);
 
-    e1, univ_vars, c1, g1, Option.isSome topt
+    e1, univ_vars, c1, g1, Some? topt
 
 
 (* Extracting the type of non-recursive let binding *)
@@ -4786,14 +4786,15 @@ let rec __typeof_tot_or_gtot_term_fastpath (env:env) (t:term) (must_tot:bool) : 
       then Some S.mk_GTotal
       else None
     in
-    bind_opt mk_comp (fun f ->
+    Option.bind mk_comp (fun f ->
       let tbody =
         match tbody with
         | Some _ -> tbody
         | None ->
           let bs, body = SS.open_term bs body in
-          BU.map_opt (__typeof_tot_or_gtot_term_fastpath (Env.push_binders env bs) body false) (SS.close bs) in
-      bind_opt tbody (fun tbody ->
+          Option.map (SS.close bs) (__typeof_tot_or_gtot_term_fastpath (Env.push_binders env bs) body false)
+      in
+      Option.bind tbody (fun tbody ->
         let bs, tbody = SS.open_term bs tbody in
         let u = universe_of (Env.push_binders env bs) tbody in
         Some (U.arrow bs (f tbody))))
@@ -4826,10 +4827,10 @@ let rec __typeof_tot_or_gtot_term_fastpath (env:env) (t:term) (must_tot:bool) : 
 
   | Tm_app {hd; args} ->
     let t_hd = __typeof_tot_or_gtot_term_fastpath env hd must_tot in
-    bind_opt t_hd (fun t_hd ->
-      bind_opt (apply_well_typed env t_hd args) (fun t ->
+    Option.bind t_hd (fun t_hd ->
+      Option.bind (apply_well_typed env t_hd args) (fun t ->
         if (effect_ok t) ||
-           (List.for_all (fun (a, _) -> __typeof_tot_or_gtot_term_fastpath env a must_tot |> is_some) args)
+           (List.for_all (fun (a, _) -> __typeof_tot_or_gtot_term_fastpath env a must_tot |> Some?) args)
         then Some t
         else None))
 
@@ -4861,7 +4862,7 @@ let rec __typeof_tot_or_gtot_term_fastpath (env:env) (t:term) (must_tot:bool) : 
     let x = xbinder.binder_bv in
     let env_x = Env.push_bv env x in
     let t = __typeof_tot_or_gtot_term_fastpath env_x body must_tot in
-    bind_opt t (fun t ->
+    Option.bind t (fun t ->
       let t = FStarC.Syntax.Subst.close xb t in
       Some t)
 
@@ -4921,12 +4922,12 @@ let rec effectof_tot_or_gtot_term_fastpath (env:env) (t:term) : option lident =
       then Some ghost
       else None in
 
-    bind_opt (effectof_tot_or_gtot_term_fastpath env hd) (fun eff_hd ->
-      bind_opt (List.fold_left (fun eff_opt arg ->
-                                bind_opt eff_opt (fun eff ->
-                                  bind_opt (effectof_tot_or_gtot_term_fastpath env (fst arg))
+    Option.bind (effectof_tot_or_gtot_term_fastpath env hd) (fun eff_hd ->
+      Option.bind (List.fold_left (fun eff_opt arg ->
+                                Option.bind eff_opt (fun eff ->
+                                  Option.bind (effectof_tot_or_gtot_term_fastpath env (fst arg))
                                     (join_effects eff))) (Some eff_hd) args) (fun eff_hd_and_args ->
-        bind_opt (typeof_tot_or_gtot_term_fastpath env hd true) (fun t_hd ->
+        Option.bind (typeof_tot_or_gtot_term_fastpath env hd true) (fun t_hd ->
           let rec maybe_arrow t =
             let t = N.unfold_whnf env t in
             match t.n with

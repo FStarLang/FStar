@@ -186,7 +186,7 @@ let rec resugar_term_as_op (t:S.term) : option (string&expected_arity) =
     (C.calc_finish_lid, "calc_finish");
   ] in
   let fallback fv =
-    match infix_prim_ops |> BU.find_opt (fun d -> fv_eq_lid fv (fst d)) with
+    match infix_prim_ops |> Option.find (fun d -> fv_eq_lid fv (fst d)) with
     | Some op ->
       Some (snd op, None)
     | _ ->
@@ -266,7 +266,7 @@ let parse_machine_integer_desc =
     List.tryFind (fun (_, d) -> d = Ident.string_of_lid (lid_of_fv fv)) descs
 
 let can_resugar_machine_integer_fv fv =
-  Option.isSome (parse_machine_integer_desc fv)
+  Some? (parse_machine_integer_desc fv)
 
 let resugar_machine_integer fv (i:string) pos =
   match parse_machine_integer_desc fv with
@@ -977,7 +977,7 @@ and resugar_ascription env (asc, tac_opt, b) =
      resugar_term' env n
    | Inr n -> (* comp *)
      resugar_comp' env n),
-  BU.map_opt tac_opt (resugar_term' env),
+  Option.map (resugar_term' env) tac_opt,
   b
 
 (* This entire function is of course very tied to the the desugaring
@@ -1072,7 +1072,7 @@ and resugar_calc (env:DsEnv.env) (t0:S.term) : option A.term =
   let rec resugar_all_steps (pack:S.term) : option (list (S.term & S.term & S.term) & S.term) =
     match resugar_step pack with
     | Some (t, r, j, k) ->
-        BU.bind_opt (resugar_all_steps k) (fun (steps, k) ->
+        Option.bind (resugar_all_steps k) (fun (steps, k) ->
         Some ((t, r, j)::steps, k))
     | None ->
         Some ([], pack)
@@ -1119,7 +1119,7 @@ and resugar_match_returns env scrutinee r asc_opt =
              None, SS.subst_ascription [NT (b.binder_bv, S.bv_to_name sbv)] asc
            | _ -> None, asc
       else Some b, asc in
-    let bopt = BU.map_option (fun b ->
+    let bopt = Option.map (fun b ->
       resugar_binder' env b r
       |> A.ident_of_binder r) bopt in
     let asc, use_eq =
@@ -1233,7 +1233,7 @@ and resugar_pat' env (p:S.pat) (branch_bv: FlatSet.t bv) : A.pattern =
   (* We lose information when desugar PatAscribed to able to resugar it back *)
   let mk a = A.mk_pattern a p.p in
   let to_arg_qual bopt = // FIXME do (Some false) and None mean the same thing?
-    BU.bind_opt bopt (fun b -> if b then Some A.Implicit else None) in
+    Option.bind bopt (fun b -> if b then Some A.Implicit else None) in
   let must_print args =
     args |> List.existsML (fun (pattern, is_implicit) ->
       match pattern.v with

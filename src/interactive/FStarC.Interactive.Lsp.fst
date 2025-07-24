@@ -35,7 +35,7 @@ module TcEnv = FStarC.TypeChecker.Env
 
 // nothrow
 let unpack_lsp_query (r : list (string & json)) : lsp_query =
-  let qid = try_assoc "id" r |> U.map_option js_str_int in // noexcept
+  let qid = try_assoc "id" r |> Option.map js_str_int in // noexcept
 
   // If we make it this far, exceptions will come with qid info.
   // Wrap in `try` because all `js_*` functions and `assoc` throw
@@ -134,7 +134,7 @@ let invoke_full_lax (gst: grepl_state) (fname: string) (text: string) (force: bo
     let diag, st' = PH.full_lax text (repl_state_init fname) in
     let repls = PSMap.add gst.grepl_repls fname st' in
     // explicitly clear diags
-    let diag = if U.is_some diag then diag else Some (js_diag_clear fname) in
+    let diag = if Some? diag then diag else Some (js_diag_clear fname) in
     diag, Inl ({ gst with grepl_repls = repls }) in
  match PSMap.try_find gst.grepl_repls fname with
  | Some _ -> if force then aux () else None, Inl gst

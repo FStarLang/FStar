@@ -299,7 +299,7 @@ and on_subterms
           // For dependent binders, we need to re-compute the substitution incrementally; applying subst to bs doesn't work
           let bs = SS.close_binders bs in
           let t = SS.subst subst t in
-          let k = BU.map_option (SS.subst_residual_comp subst) k in
+          let k = Option.map (SS.subst_residual_comp subst) k in
           return (rebuild bs t k,
                par_combine (accum_flag, (par_combine (t_flag, k_flag))))
         end
@@ -327,7 +327,7 @@ and on_subterms
       (* Open, descend, rebuild *)
       | Tm_abs {bs; body=t; rc_opt=k} ->
         let bs_orig, t, subst = SS.open_term' bs t in
-        let k = k |> BU.map_option (SS.subst_residual_comp subst) in
+        let k = k |> Option.map (SS.subst_residual_comp subst) in
         descend_binders tm [] [] Continue env bs_orig t k
                         (fun bs t k -> Tm_abs {bs; body=t; rc_opt=k})
 

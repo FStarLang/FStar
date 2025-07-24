@@ -579,9 +579,9 @@ instance show_restriction: showable restriction = {
 let is_ident_allowed_by_restriction' id
   = function | Unrestricted         -> Some id
              | AllowList allow_list ->
-               map_opt (find FStarC.Class.Deq.(fun (dest_id, renamed_id) ->
-                       dflt dest_id renamed_id =? id
-               ) allow_list) fst
+               Option.map fst (find FStarC.Class.Deq.(fun (dest_id, renamed_id) ->
+                       Option.dflt dest_id renamed_id =? id
+               ) allow_list)
 
 let is_ident_allowed_by_restriction
   = let debug = FStarC.Debug.get_toggle "open_include_restrictions" in

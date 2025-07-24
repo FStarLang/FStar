@@ -122,13 +122,13 @@ let hash_dependences (deps:Dep.deps) (fn:string) :either string (list (string & 
   in
   let module_name = Dep.lowercase_module_name fn in
   let source_hash = BU.digest_of_file fn in
-  let has_interface = Option.isSome (Dep.interface_of deps module_name) in
+  let has_interface = Some? (Dep.interface_of deps module_name) in
   let interface_checked_file_name =
     if Dep.is_implementation fn
     && has_interface
     then module_name
       |> Dep.interface_of deps
-      |> must
+      |> Option.must
       |> Dep.cache_file_name
       |> Some
     else None
@@ -206,12 +206,12 @@ let load_checked_file (fn:string) (checked_fn:string) :cache_t =
   if !dbg then
     Format.print1 "Trying to load checked file result %s\n" checked_fn;
   let elt = checked_fn |> SMap.try_find mcache in
-  if elt |> is_some
+  if elt |> Some?
   then (
     //already loaded
     if !dbg then
       Format.print1 "Already loaded checked file %s\n" checked_fn;
-    elt |> must
+    elt |> Option.must
   ) else
     let add_and_return elt = SMap.add mcache checked_fn elt; elt in
     if not (Filepath.file_exists checked_fn)
@@ -444,8 +444,8 @@ let load_module_from_cache =
       (Dep.lowercase_module_name fn) in
 
     if Dep.is_implementation fn
-    && (i_fn_opt |> is_some)
-    then let i_fn = i_fn_opt |> must in
+    && (i_fn_opt |> Some?)
+    then let i_fn = i_fn_opt |> Option.must in
          let i_tc = load_with_profiling i_fn in
          match i_tc with
          | None -> None

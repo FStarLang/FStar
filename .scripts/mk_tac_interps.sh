@@ -34,9 +34,9 @@ function make_tactic_interp_def () {
     for i in $(seq 2 $((n+1))); do echo -n "; (a$i, _)"; done
     echo "] ->"
     for i in $(seq 1 $n); do
-    echo "    BU.bind_opt (unembed e$i a$i ncb) (fun a$i ->"
+    echo "    Option.bind (unembed e$i a$i ncb) (fun a$i ->"
     done
-    echo "    BU.bind_opt (unembed E.e_proofstate a$((n+1)) ncb) (fun ps ->"
+    echo "    Option.bind (unembed E.e_proofstate a$((n+1)) ncb) (fun ps ->"
     echo "    let ps = set_ps_psc psc ps in"
     echo -n "    let r = interp_ctx name (fun () -> run_safe (t"
     for i in $(seq 1 $n); do echo -n " a$i"; done; echo ") ps) in"
@@ -70,9 +70,9 @@ function make_tactic_nbe_interp_def () {
     for i in $(seq 2 $((n+1))); do echo -n "; (a$i, _)"; done
     echo "] ->"
     for i in $(seq 1 $n); do
-    echo "    BU.bind_opt (NBET.unembed e$i cb a$i) (fun a$i ->"
+    echo "    Option.bind (NBET.unembed e$i cb a$i) (fun a$i ->"
     done
-    echo "    BU.bind_opt (NBET.unembed E.e_proofstate_nbe cb a$((n+1))) (fun ps ->"
+    echo "    Option.bind (NBET.unembed E.e_proofstate_nbe cb a$((n+1))) (fun ps ->"
     echo -n "    let r = interp_ctx name (fun () -> run_safe (t"
     for i in $(seq 1 $n); do echo -n " a$i"; done; echo ") ps) in"
     echo -n "    Some (NBET.embed (E.e_result_nbe er) cb r)"
@@ -106,7 +106,7 @@ function make_total_interp_def () {
     for i in $(seq 2 $n); do echo -n "; (a$i, _)"; done
     echo "] ->"
     for i in $(seq 1 $n); do
-    echo "    BU.bind_opt (unembed e$i a$i ncb) (fun a$i ->"
+    echo "    Option.bind (unembed e$i a$i ncb) (fun a$i ->"
     done
     echo -n "    let r = interp_ctx name (fun () -> f"
     for i in $(seq 1 $n); do echo -n " a$i"; done; echo ") in"
@@ -140,7 +140,7 @@ function make_total_nbe_interp_def () {
     for i in $(seq 2 $n); do echo -n "; (a$i, _)"; done
     echo "] ->"
     for i in $(seq 1 $n); do
-    echo "    BU.bind_opt (NBET.unembed e$i cb a$i) (fun a$i ->"
+    echo "    Option.bind (NBET.unembed e$i cb a$i) (fun a$i ->"
     done
     echo -n "    let r = interp_ctx name (fun () -> f"
     for i in $(seq 1 $n); do echo -n " a$i"; done; echo ") in"

@@ -889,7 +889,7 @@ and infer (env: env) (e: term): nm & term & term =
         match rc_opt with
         | Some {residual_typ=None}
         | None -> rc_opt
-        | Some rc -> Some ({rc with residual_typ=Some (SS.subst subst (BU.must rc.residual_typ))}) in
+        | Some rc -> Some ({rc with residual_typ=Some (SS.subst subst (Some?.v rc.residual_typ))}) in
 
       //NS: note, this is explicitly written with opening binders
       //    rather than U.abs_formals
@@ -1392,7 +1392,7 @@ let cps_and_elaborate (env:FStarC.TypeChecker.Env.env) (ed:S.eff_decl)
   let mk x = mk x signature.pos in
 
   // TODO: check that [_comp] is [Tot Type]
-  let repr, _comp = open_and_check env [] (ed |> U.get_eff_repr |> must |> snd) in
+  let repr, _comp = open_and_check env [] (ed |> U.get_eff_repr |> Option.must |> snd) in
   if !dbg then
     Format.print1 "Representation is: %s\n" (show repr);
 
@@ -1431,9 +1431,9 @@ let cps_and_elaborate (env:FStarC.TypeChecker.Env.env) (ed:S.eff_decl)
   in
 
   let dmff_env, _, bind_wp, bind_elab =
-    elaborate_and_star dmff_env [] (ed |> U.get_bind_repr |> must) in
+    elaborate_and_star dmff_env [] (ed |> U.get_bind_repr |> Option.must) in
   let dmff_env, _, return_wp, return_elab =
-    elaborate_and_star dmff_env [] (ed |> U.get_return_repr |> must) in
+    elaborate_and_star dmff_env [] (ed |> U.get_return_repr |> Option.must) in
   let rc_gtot = {
             residual_effect = PC.effect_GTot_lid;
             residual_typ = None;
@@ -1473,11 +1473,11 @@ let cps_and_elaborate (env:FStarC.TypeChecker.Env.env) (ed:S.eff_decl)
         | None -> fail ()
         | Some rc ->
           if not (U.is_pure_effect rc.residual_effect) then fail ();
-          BU.map_opt rc.residual_typ (fun rt ->
+          Option.iter (fun rt ->
               let g_opt = Rel.try_teq true env rt U.ktype0 in
               match g_opt with
                 | Some g' -> Rel.force_trivial_guard env g'
-                | None -> fail ()) |> ignore
+                | None -> fail ()) rc.residual_typ
         end ;
 
         let wp =

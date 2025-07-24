@@ -202,7 +202,7 @@ let error_to_short_string err =
             (show err.error_rlimit)
             (show err.error_fuel)
             (show err.error_ifuel)
-            (if Option.isSome err.error_hint then "; with hint" else "")
+            (if Some? err.error_hint then "; with hint" else "")
 
 let error_to_is_timeout err =
     if BU.ends_with err.error_reason "canceled"
@@ -211,7 +211,7 @@ let error_to_is_timeout err =
             (show err.error_rlimit)
             (show err.error_fuel)
             (show err.error_ifuel)
-            (if Option.isSome err.error_hint then "with hint" else "")]
+            (if Some? err.error_hint then "with hint" else "")]
     else []
 
 type query_settings = {
@@ -280,7 +280,7 @@ let with_fuel_and_diagnostics settings label_assumptions =
     @settings.query_suffix //recover error labels and a final "Done!" message
 
 
-let used_hint s = Option.isSome s.query_hint
+let used_hint s = Some? s.query_hint
 
 let get_hint_for qname qindex =
     match !replaying_hints with
@@ -679,8 +679,8 @@ let query_info settings z3result =
           try
             let open FStar.Mul in
             let decimals = 3 in
-            let r0 = int_of_string <| BU.must <| SMap.try_find z3result.z3result_initial_statistics "rlimit-count" in
-            let r1 = int_of_string <| BU.must <| SMap.try_find z3result.z3result_statistics "rlimit-count" in
+            let r0 = int_of_string <| Some?.v <| SMap.try_find z3result.z3result_initial_statistics "rlimit-count" in
+            let r1 = int_of_string <| Some?.v <| SMap.try_find z3result.z3result_statistics "rlimit-count" in
             let used = r1 - r0 in
             div_with_decimals decimals used (convert_rlimit 1)
           with
@@ -732,7 +732,7 @@ let record_hint settings z3result =
       match z3result.z3result_status with
       | UNSAT None ->
         // we succeeded by just matching a query hash
-        store_hint (Option.get (get_hint_for settings.query_name settings.query_index))
+        store_hint (Option.must (get_hint_for settings.query_name settings.query_index))
       | UNSAT unsat_core ->
         if used_hint settings //if we already successfully use a hint
         then //just re-use the successful hint, but record the hash of the pruned theory
@@ -891,9 +891,9 @@ let make_solver_configs
 
     (* Fetch hints, if any. *)
     let use_hints_setting =
-        if use_hints () && next_hint |> is_some
+        if use_hints () && next_hint |> Some?
         then
-          let ({unsat_core=Some core; fuel=i; ifuel=j; hash=h}) = next_hint |> must in
+          let ({unsat_core=Some core; fuel=i; ifuel=j; hash=h}) = next_hint |> Option.must in
           (* Make sure the recorded fuels are allowed now, so we don't
           keep succeeding with a hint even after reducing the maximum allowed
           fuels. *)
@@ -1234,9 +1234,9 @@ let ask_solver
     let ans =
       if skip
       then (
-        if Options.record_hints () && next_hint |> is_some then
+        if Options.record_hints () && next_hint |> Some? then
           //restore the hint as is, cf. #1651
-          next_hint |> must |> store_hint;
+          next_hint |> Option.must |> store_hint;
         ans_ok
       ) else (
         // Feed the context of the query to the solver. We do this only

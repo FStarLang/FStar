@@ -476,7 +476,7 @@ let extract_bundle_iface env se
        let env_iparams, vars  = binders_as_mlty_binders env ind.iparams in
        let env, ctors = ind.idatas |> BU.fold_map (extract_ctor env_iparams vars) env in
        let env =
-         match BU.find_opt (function RecordType _ -> true | _ -> false) ind.iquals with
+         match Option.find (function RecordType _ -> true | _ -> false) ind.iquals with
          | Some (RecordType (ns, ids)) ->
            let g =
             List.fold_right
@@ -601,14 +601,14 @@ let extract_reifiable_effect g ed
     in
 
     let g, return_iface, return_decl =
-        let return_tm, ty_sc = extract_fv (ed |> U.get_return_repr |> must |> snd) in
+        let return_tm, ty_sc = extract_fv (ed |> U.get_return_repr |> Option.must |> snd) in
         let return_nm, return_lid, return_b, g = extend_with_monad_op_name g ed "return" ty_sc in
         let iface, impl = extend_iface return_lid return_nm return_tm return_b in
         g, iface, impl
     in
 
     let g, bind_iface, bind_decl =
-        let bind_tm, ty_sc = extract_fv (ed |> U.get_bind_repr |> must |> snd) in
+        let bind_tm, ty_sc = extract_fv (ed |> U.get_bind_repr |> Option.must |> snd) in
         let bind_nm, bind_lid, bind_b, g = extend_with_monad_op_name g ed "bind" ty_sc in
         let iface, impl = extend_iface bind_lid bind_nm bind_tm bind_b in
         g, iface, impl
@@ -696,7 +696,7 @@ let extract_let_rec_types se (env:uenv) (lbs:list letbinding) =
             lbs
       in
       env,
-      Option.get iface_opt,
+      Option.must iface_opt,
       List.rev impls |> List.flatten
 
 
@@ -707,7 +707,7 @@ let get_noextract_to (se:sigelt) (backend:option Options.codegen_t) : bool =
     | Tm_fvar fv, [(a, _)] when S.fv_eq_lid fv PC.noextract_to_attr ->
         begin match EMB.try_unembed a EMB.id_norm_cb with
         | Some s ->
-          Option.isSome backend && Options.parse_codegen s = backend
+          Some? backend && Options.parse_codegen s = backend
         | None ->
           false
         end
@@ -946,7 +946,7 @@ let extract_bundle env se =
         ty_param_attrs = []
        })) in
        let tbody, env =
-         match BU.find_opt (function RecordType _ -> true | _ -> false) ind.iquals with
+         match Option.find (function RecordType _ -> true | _ -> false) ind.iquals with
          | Some (RecordType (ns, ids)) ->
              let _, c_ty = List.hd ctors in
              assert (List.length ids = List.length c_ty);
@@ -1109,7 +1109,7 @@ let rec extract_sig (g:env_t) (se:sigelt) : env_t & list mlmodule1 =
             match d.mlmodule1_m with
             | MLM_Let (maybe_rec, [mllb]) ->
               let g, mlid, _ =
-                UEnv.extend_lb g lb.lbname lb.lbtyp (must mllb.mllb_tysc) mllb.mllb_add_unit in
+                UEnv.extend_lb g lb.lbname lb.lbtyp (Option.must mllb.mllb_tysc) mllb.mllb_add_unit in
               let mllb = { mllb with mllb_name = mlid; mllb_attrs = mlattrs; mllb_meta = meta } in
               g, decls@[mk_mlmodule1_with_attrs (MLM_Let (maybe_rec, [mllb])) mlattrs]
             | _ ->
@@ -1271,11 +1271,11 @@ and extract_sig_let (g:uenv) (se:sigelt) : uenv & list mlmodule1 =
                                     UEnv.extend_fv
                                           env
                                           (right lbname)
-                                          (must ml_lb.mllb_tysc)
+                                          (Option.must ml_lb.mllb_tysc)
                                           ml_lb.mllb_add_unit
                                 in
                                 env, {ml_lb with mllb_name=mls }
-                          else let env, _, _ = UEnv.extend_lb env lbname t (must ml_lb.mllb_tysc) ml_lb.mllb_add_unit in
+                          else let env, _, _ = UEnv.extend_lb env lbname t (Option.must ml_lb.mllb_tysc) ml_lb.mllb_add_unit in
                                 env, ml_lb in
                   g, ml_lb::ml_lbs)
           (g, [])

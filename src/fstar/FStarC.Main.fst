@@ -112,8 +112,7 @@ let load_native_tactics () =
 
     let cmxs_files = (modules_to_load@cmxs_to_load) |> List.map cmxs_file in
     Plugins.load_plugins cmxs_files;
-    iter_opt (Options.use_native_tactics ())
-      Plugins.load_plugins_dir;
+    Options.use_native_tactics () |> Option.iter Plugins.load_plugins_dir;
     ()
 
 
@@ -197,8 +196,8 @@ let go_normal () =
   F* has done this for a long time, only sinc it simplified
   the handling of options. I think this should probably be removed,
   but a few makefiles here and there rely on it. *)
-  iter_opt (Find.get_odir ()) (mkdir false true);
-  iter_opt (Find.get_cache_dir ()) (mkdir false true);
+  Option.iter (mkdir false true) (Find.get_odir ());
+  Option.iter (mkdir false true) (Find.get_cache_dir ());
 
   let check_no_filenames opt =
     if Cons? filenames then (
@@ -350,7 +349,7 @@ let go_normal () =
       if Debug.any () then (
         print3 "- F* version %s -- %s (on %s)\n"  !Options._version !Options._commit (Platform.kernel ());
         print1 "- Executable: %s\n" (Util.exec_name);
-        print1 "- Library root: %s\n" (Util.dflt "<none>" (Find.lib_root ()));
+        print1 "- Library root: %s\n" (Option.dflt "<none>" (Find.lib_root ()));
         print1 "- Full include path: %s\n" (show (Find.full_include_path ()));
         print_string "\n";
         ()

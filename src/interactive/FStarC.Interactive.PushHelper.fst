@@ -326,7 +326,7 @@ let repl_ldtx (st: repl_state) (tasks: list repl_task) : either_replst =
     | task :: tasks, [] ->
       let timestamped_task = update_task_timestamps task in
       let diag, st = repl_tx st LaxCheck timestamped_task in
-      if not (U.is_some diag) then aux ({ st with repl_deps_stack = !repl_stack }) tasks []
+      if None? diag then aux ({ st with repl_deps_stack = !repl_stack }) tasks []
       else Inr st
 
     // We've already run ``task`` previously, and no update is needed: skip.
