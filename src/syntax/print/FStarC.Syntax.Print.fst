@@ -46,7 +46,7 @@ let nm_to_string bv =
     then bv_to_string bv
     else (string_of_id bv.ppname)
 
-let db_to_string bv = (string_of_id bv.ppname) ^ "@" ^ string_of_int bv.index
+let db_to_string bv = (string_of_id bv.ppname) ^ "@" ^ show bv.index
 
 let filter_imp aq =
    (* keep typeclass args *)
@@ -66,12 +66,12 @@ let lbname_to_string : lbname -> string = function
   | Inl l -> bv_to_string l
   | Inr l -> show l
 
-let uvar_to_string u = if (Options.hide_uvar_nums()) then "?" else "?" ^ (Unionfind.uvar_id u |> string_of_int)
-let version_to_string v = U.format2 "%s.%s" (U.string_of_int v.major) (U.string_of_int v.minor)
+let uvar_to_string u = if (Options.hide_uvar_nums()) then "?" else "?" ^ (Unionfind.uvar_id u |> show)
+let version_to_string v = U.format2 "%s.%s" (show v.major) (show v.minor)
 let univ_uvar_to_string u =
     if (Options.hide_uvar_nums())
     then "?"
-    else "?" ^ (Unionfind.univ_uvar_id u |> string_of_int)
+    else "?" ^ (Unionfind.univ_uvar_id u |> show)
             ^ ":" ^ (u |> (fun (_, u, _) -> version_to_string u))
 
 let rec int_of_univ n u = match Subst.compress_univ u with
@@ -88,12 +88,12 @@ Errors.with_ctx "While printing universe" (fun () ->
   match Subst.compress_univ u with
     | U_unif u -> "U_unif "^univ_uvar_to_string u
     | U_name x -> "U_name "^(string_of_id x)
-    | U_bvar x -> "@"^string_of_int x
+    | U_bvar x -> "@"^show x
     | U_zero   -> "0"
     | U_succ u ->
         begin match int_of_univ 1 u with
-            | n, None -> string_of_int n
-            | n, Some u -> U.format2 "(%s + %s)" (univ_to_string u) (string_of_int n)
+            | n, None -> show n
+            | n, Some u -> U.format2 "(%s + %s)" (univ_to_string u) (show n)
         end
     | U_max us -> U.format1 "(max %s)" (List.map univ_to_string us |> String.concat ", ")
     | U_unknown -> "unknown"
@@ -259,12 +259,12 @@ let bqual_to_string (q:bqual) : string =
   bqual_to_string' "" q
 
 let subst_elt_to_string = function
-   | DB(i, x) -> U.format2 "DB (%s, %s)" (string_of_int i) (bv_to_string x)
-   | DT(i, t) -> U.format2 "DT (%s, %s)" (string_of_int i) (term_to_string t)
-   | NM(x, i) -> U.format2 "NM (%s, %s)" (bv_to_string x) (string_of_int i)
+   | DB(i, x) -> U.format2 "DB (%s, %s)" (show i) (bv_to_string x)
+   | DT(i, t) -> U.format2 "DT (%s, %s)" (show i) (term_to_string t)
+   | NM(x, i) -> U.format2 "NM (%s, %s)" (bv_to_string x) (show i)
    | NT(x, t) -> U.format2 "NT (%s, %s)" (bv_to_string x) (term_to_string t)
-   | UN(i, u) -> U.format2 "UN (%s, %s)" (string_of_int i) (univ_to_string u)
-   | UD(u, i) -> U.format2 "UD (%s, %s)" (string_of_id u) (string_of_int i)
+   | UN(i, u) -> U.format2 "UN (%s, %s)" (show i) (univ_to_string u)
+   | UD(u, i) -> U.format2 "UD (%s, %s)" (string_of_id u) (show i)
 
 (*
  * AR: 07/19: exports is redundant, keeping it here until vale is fixed to not parse it

@@ -1783,8 +1783,8 @@ and check_scrutinee_pattern_type_compatible (g:env) (t_sc t_pat:typ)
 
     (if List.length args_sc = List.length args_pat then return t_fv
      else err (BU.format2 "Number of arguments don't match (%s and %s)"
-                          (string_of_int (List.length args_sc))
-                          (string_of_int (List.length args_pat))));!
+                          (show (List.length args_sc))
+                          (show (List.length args_pat))));!
 
    let params_sc, params_pat =
      match Env.num_inductive_ty_params g.tcenv (S.lid_of_fv t_fv) with
@@ -1972,13 +1972,13 @@ let check_term_top_gh g e topt (must_tot:bool) (gh:option guard_handler_t)
       | Success _ ->
         if !dbg || !dbg_Top
         then BU.print1 "(%s) Exiting core (ok)\n"
-                    (BU.string_of_int (get_goal_ctr()));
+                    (show (get_goal_ctr()));
         res
 
       | Error _ ->
         if !dbg || !dbg_Top
         then BU.print1 "(%s) Exiting core (failed)\n"
-                       (BU.string_of_int (get_goal_ctr()));
+                       (show (get_goal_ctr()));
         res
     in
     if !dbg_Eq
@@ -1986,8 +1986,8 @@ let check_term_top_gh g e topt (must_tot:bool) (gh:option guard_handler_t)
       THT.print_stats table;
       let cs = report_cache_stats() in
       BU.print2 "Cache_stats { hits = %s; misses = %s }\n"
-                     (BU.string_of_int cs.hits)
-                     (BU.string_of_int cs.misses)
+                     (show cs.hits)
+                     (show cs.misses)
     );
     res
     )

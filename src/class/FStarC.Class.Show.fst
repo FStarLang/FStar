@@ -12,14 +12,14 @@ instance showable_bool : showable bool =
   show = Prims.string_of_bool
 }
 
-instance showable_nat : showable nat =
+instance showable_int : showable int =
 {
   show = Prims.string_of_int
 }
 
-instance showable_int : showable int =
+instance showable_nat : showable nat =
 {
-  show = Prims.string_of_int
+  show = show #int
 }
 
 instance showable_string : showable string =

@@ -491,8 +491,6 @@ let float_of_int64 = BatInt64.to_float
 let int_of_int32 i = i
 let int32_of_int i = BatInt32.of_int i
 
-let string_of_int = Z.to_string
-let string_of_bool = string_of_bool
 let string_of_int32 = BatInt32.to_string
 let string_of_int64 = BatInt64.to_string
 let string_of_float = string_of_float

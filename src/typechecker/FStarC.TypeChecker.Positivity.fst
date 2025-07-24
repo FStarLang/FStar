@@ -352,7 +352,7 @@ let max_uniformly_recursive_parameters (env:env_t)
       BU.format3 "result: max_uniformly_recursive_parameters(params=%s in %s) = %s"
                  (params_to_string())
                  (show ty)
-                 (string_of_int res));
+                 (show res));
     res
 
 (* The sig : sigelt is a Sig_bundle describing a mutually inductive nest of types
@@ -569,7 +569,7 @@ let check_no_index_occurrences_in_arities env mutuals (t:term) =
           debug_positivity env (fun _ -> 
             BU.format2 "Checking arity indexes of %s (num uniform params = %s)"
                      (show t)
-                     (string_of_int n));
+                     (show n));
           let params, indices = List.splitAt n args in
           let inst_i_typ = apply_constr_arrow fv.fv_name.v i_typ params in
           let formals, _sort = U.arrow_formals inst_i_typ in
@@ -1112,7 +1112,7 @@ and ty_strictly_positive_in_arguments_to_fvar
           debug_positivity env (fun _ -> 
             BU.format3 "Checking positivity in datacon, number of type parameters is %s, \
                        adding %s %s to the memo table"          
-                       (string_of_int num_uniform_params)
+                       (show num_uniform_params)
                        (Ident.string_of_lid ilid)
                        (Print.args_to_string params));
           //update the memo table with the inductive name and the args,
@@ -1171,7 +1171,7 @@ and ty_strictly_positive_in_datacon_of_applied_inductive (env:env_t)
         "Checking positivity in the data constructor type: %s\n\t\
          num_ibs=%s, args=%s,"
          (show dt)
-         (string_of_int num_ibs)
+         (show num_ibs)
          (Print.args_to_string args));
 
     //get the number of arguments that cover the type parameters num_ibs,

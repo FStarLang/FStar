@@ -199,9 +199,9 @@ let str_of_parsing_data_elt elt =
   in
   match elt with
   | P_begin_module lid -> "P_begin_module (" ^ (string_of_lid lid) ^ ")"
-  | P_open (b, lid) -> "P_open (" ^ (string_of_bool b) ^ ", " ^ (string_of_lid lid) ^ ")"
+  | P_open (b, lid) -> "P_open (" ^ (show b) ^ ", " ^ (string_of_lid lid) ^ ")"
   | P_implicit_open_module_or_namespace (k, lid) -> "P_implicit_open_module_or_namespace (" ^ (str_of_open_kind k) ^ ", " ^ (string_of_lid lid) ^ ")"
-  | P_dep (b, lid) -> "P_dep (" ^ (string_of_lid lid) ^ ", " ^ (string_of_bool b) ^ ")"
+  | P_dep (b, lid) -> "P_dep (" ^ (string_of_lid lid) ^ ", " ^ (show b) ^ ")"
   | P_alias (id, lid) -> "P_alias (" ^ (string_of_id id) ^ ", " ^ (string_of_lid lid) ^ ")"
   | P_lid lid -> "P_lid (" ^ (string_of_lid lid) ^ ")"
   | P_inline_for_extraction -> "P_inline_for_extraction"

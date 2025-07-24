@@ -438,7 +438,7 @@ let inst_effect_fun_with (insts:universes) (env:env) (ed:eff_decl) (us, t)  =
   check_effect_is_not_a_template ed env.range;
   if List.length insts <> List.length us
   then failwith (BU.format4 "Expected %s instantiations; got %s; failed universe instantiation in effect %s\n\t%s\n"
-                   (string_of_int <| List.length us) (string_of_int <| List.length insts)
+                   (show <| List.length us) (show <| List.length insts)
                    (show ed.mname) (show t));
   snd (inst_tscheme_with (us, t) insts)
 
@@ -592,8 +592,8 @@ let effect_signature (us_opt:option universes) (se:sigelt) rng : option ((univer
      | Some us ->
        if List.length us <> List.length (fst sig_ts)
        then failwith ("effect_signature: incorrect number of universes for the signature of " ^
-         (string_of_lid ne.mname) ^ ", expected " ^ (string_of_int (List.length (fst sig_ts))) ^
-         ", got " ^ (string_of_int (List.length us)))
+         (string_of_lid ne.mname) ^ ", expected " ^ (show (List.length (fst sig_ts))) ^
+         ", got " ^ (show (List.length us)))
        else ());
 
     Some (inst_ts us_opt sig_ts, se.sigrng)
@@ -995,12 +995,12 @@ let lookup_effect_abbrev env (univ_insts:universes) lid0 =
                        else failwith (BU.format3 "(%s) Unexpected instantiation of effect %s with %s universes"
                                             (Range.string_of_range (get_range env))
                                             (show lid)
-                                            (List.length univ_insts |> BU.string_of_int)) in
+                                            (List.length univ_insts |> show)) in
            begin match binders, univs with
              | [], _ -> failwith "Unexpected effect abbreviation with no arguments"
              | _, _::_::_ ->
                 failwith (BU.format2 "Unexpected effect abbreviation %s; polymorphic in %s universes"
-                           (show lid) (string_of_int <| List.length univs))
+                           (show lid) (show <| List.length univs))
              | _ -> let _, t = inst_tscheme_with (univs, U.arrow binders c) insts in
                     let t = Subst.set_use_range (range_of_lid lid) t in
                     begin match (Subst.compress t).n with
@@ -1069,7 +1069,7 @@ let lookup_effect_quals env l =
     | _ -> []
 
 let lookup_projector env lid i =
-    let fail () = failwith (BU.format2 "Impossible: projecting field #%s from constructor %s is undefined" (BU.string_of_int i) (show lid)) in
+    let fail () = failwith (BU.format2 "Impossible: projecting field #%s from constructor %s is undefined" (show i) (show lid)) in
     let _, t = lookup_datacon env lid in
     match (compress t).n with
         | Tm_arrow {bs=binders} ->
@@ -1346,7 +1346,7 @@ let effect_repr_aux only_reifiable env c u_res =
       let message = BU.format3 "Not enough arguments for effect %s, \
         This usually happens when you use a partially applied DM4F effect, \
         like [TAC int] instead of [Tac int] (given:%s, expected:%s)."
-        (Ident.string_of_lid eff_name) (string_of_int given) (string_of_int expected) in
+        (Ident.string_of_lid eff_name) (show given) (show expected) in
       raise_error r Errors.Fatal_NotEnoughArgumentsForEffect message
   in
 

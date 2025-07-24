@@ -54,7 +54,7 @@ let bv_as_unique_ident (x:S.bv) : I.ident =
   let unique_name =
     if starts_with reserved_prefix (string_of_id x.ppname)
     ||  Options.print_real_names () then
-      (string_of_id x.ppname) ^ (string_of_int x.index)
+      (string_of_id x.ppname) ^ (show x.index)
     else
       (string_of_id x.ppname)
   in
@@ -118,10 +118,10 @@ let rec resugar_universe (u:S.universe) r: A.term =
       let (n, u) = universe_to_int 0 u in
       begin match u with
       | U_zero ->
-        mk (A.Const(Const_int(string_of_int n, None))) r
+        mk (A.Const(Const_int(show n, None))) r
 
       | _ ->
-        let e1 = mk (A.Const(Const_int(string_of_int n, None))) r in
+        let e1 = mk (A.Const(Const_int(show n, None))) r in
         let e2 = resugar_universe u r in
         mk (A.Op(Ident.id_of_text "+", [e1; e2])) r
       end
@@ -138,7 +138,7 @@ let rec resugar_universe (u:S.universe) r: A.term =
     | U_unif _ -> mk A.Wild r
     | U_bvar x ->
       (* This case can happen when trying to print a subterm of a term that is not opened.*)
-      let id = I.mk_ident (strcat "uu__univ_bvar_" (string_of_int x), r) in
+      let id = I.mk_ident (strcat "uu__univ_bvar_" (show x), r) in
       mk (A.Uvar(id)) r
 
     | U_unknown -> mk A.Wild r (* not sure what to resugar to since it is not created by desugar *)
@@ -922,7 +922,7 @@ let rec resugar_term' (env: DsEnv.env) (t : S.term) : A.term =
       mk (A.Let(qual, bnds, body))
 
     | Tm_uvar (u, _) ->
-      let s = "?u" ^ (UF.uvar_id u.ctx_uvar_head |> string_of_int) in
+      let s = "?u" ^ (UF.uvar_id u.ctx_uvar_head |> show) in
       (* TODO : should we put a pretty_non_parseable option for these cases ? *)
       label s (mk A.Wild)
 

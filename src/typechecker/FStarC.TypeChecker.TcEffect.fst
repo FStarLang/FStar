@@ -73,7 +73,7 @@ let check_and_gen env (eff_name:string) (comb:string) (n:int) (us, t) : (univ_na
     if List.length g_us <> n then
       let error = BU.format5
         "Expected %s:%s to be universe-polymorphic in %s universes, but found %s (tscheme: %s)"
-        eff_name comb (string_of_int n) (g_us |> List.length |> string_of_int)
+        eff_name comb (show n) (g_us |> List.length |> show)
         (Print.tscheme_to_string (g_us, t)) in
       raise_error t Errors.Fatal_MismatchUniversePolymorphic error;
     match us with
@@ -162,7 +162,7 @@ let bind_combinator_kind (env:env)
 
   debug (BU.format1
            "Checking bind combinator kind with %s effect parameters"
-           (string_of_int num_effect_params));
+           (show num_effect_params));
 
   // we know k = a:Type u_a -> b:Type u_b -> rest_bs -> optional_range_bs -> f -> g -> Pure repr wp
 
@@ -2049,7 +2049,7 @@ Errors.with_ctx (BU.format1 "While checking effect definition `%s`" (string_of_l
       if List.length g_us <> n then
         let error = BU.format4
           "Expected %s:%s to be universe-polymorphic in %s universes, found %s"
-          (string_of_lid ed.mname) comb (string_of_int n) (g_us |> List.length |> string_of_int) in
+          (string_of_lid ed.mname) comb (show n) (g_us |> List.length |> show) in
         raise_error t Errors.Fatal_MismatchUniversePolymorphic error
     end;
     match us with
@@ -2060,7 +2060,7 @@ Errors.with_ctx (BU.format1 "While checking effect definition `%s`" (string_of_l
      then g_us, t
      else raise_error t Errors.Fatal_UnexpectedNumberOfUniverse
             (BU.format4 "Expected and generalized universes in the declaration for %s:%s are different, expected: %s, but found %s"
-               (string_of_lid ed.mname) comb (BU.string_of_int (List.length us)) (BU.string_of_int (List.length g_us)))
+               (string_of_lid ed.mname) comb (show (List.length us)) (show (List.length g_us)))
   in
 
   let signature = check_and_gen' "signature" 1 None (U.effect_sig_ts ed.signature) None in
@@ -2563,12 +2563,12 @@ let tc_lift env sub r =
       raise_error r Errors.Fatal_TooManyUniverse
         (BU.format3 "Sub effect wp must be polymorphic in exactly 1 universe; %s ~> %s has %s universes"
                     (show sub.source) (show sub.target)
-                    (lift_wp |> fst |> List.length |> string_of_int));
+                    (lift_wp |> fst |> List.length |> show));
     if is_some lift && lift |> must |> fst |> List.length <> 1 then
       raise_error r Errors.Fatal_TooManyUniverse
         (BU.format3 "Sub effect lift must be polymorphic in exactly 1 universe; %s ~> %s has %s universes"
                     (show sub.source) (show sub.target)
-                    (lift |> must |> fst |> List.length |> string_of_int));
+                    (lift |> must |> fst |> List.length |> show));
     ({ sub with lift_wp=Some lift_wp; lift=lift })
 
 let tc_effect_abbrev env (lid, uvs, tps, c) r =

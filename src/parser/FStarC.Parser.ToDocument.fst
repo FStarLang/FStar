@@ -2165,7 +2165,7 @@ and p_projectionLHS e = match e.tm with
   (* they are considered as invalid AST. We try to fail as soon as possible in order *)
   (* to prevent the pretty printer from looping *)
   | Op (op, args) when not (handleable_op op args) ->
-    failwith ("Operation " ^ Ident.string_of_id op ^ " with " ^ string_of_int (List.length args) ^
+    failwith ("Operation " ^ Ident.string_of_id op ^ " with " ^ show (List.length args) ^
               " arguments couldn't be handled by the pretty printer")
   | Uvar id ->
     failwith "Unexpected universe variable out of universe context"

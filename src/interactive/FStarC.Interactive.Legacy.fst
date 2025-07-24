@@ -22,6 +22,7 @@ open FStarC.List
 open FStarC.Util
 open FStarC.Getopt
 open FStarC.Ident
+open FStarC.Class.Show
 
 open FStarC.Universal
 open FStarC.TypeChecker.Env
@@ -495,7 +496,7 @@ let rec go (line_col:(int&int))
     in
     List.iter (fun (candidate, ns, match_len) ->
                Util.print3 "%s %s %s \n"
-               (Util.string_of_int match_len) ns candidate)
+               (show match_len) ns candidate)
               (Util.sort_with (fun (cd1, ns1, _) (cd2, ns2, _) ->
                                match String.compare cd1 cd2 with
                                | 0 -> String.compare ns1 ns2

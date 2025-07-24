@@ -385,7 +385,7 @@ let print_expected_ty_str env =
     BU.format2
       "Expected type is (%s, use_eq = %s)"
       (show t)
-      (string_of_bool use_eq)
+      (show use_eq)
            
 
 let print_expected_ty env = BU.print1 "%s\n" (print_expected_ty_str env)
@@ -731,7 +731,7 @@ let rec tc_term env e =
     if Debug.medium () then
         BU.print5 "(%s) Starting tc_term (phase1=%s) of %s (%s), %s {\n"
           (Range.string_of_range <| Env.get_range env)
-          (string_of_bool env.phase1)
+          (show env.phase1)
           (show e)
           (tag_of (SS.compress e))
           (print_expected_ty_str env);
@@ -742,7 +742,7 @@ let rec tc_term env e =
         BU.print4 "(%s) } tc_term of %s (%s) took %sms\n" (Range.string_of_range <| Env.get_range env)
                                                         (show e)
                                                         (tag_of (SS.compress e))
-                                                        (string_of_int ms);
+                                                        (show ms);
         let e, lc , _ = r in
         BU.print4 "(%s) Result is: (%s:%s) (%s)\n" (Range.string_of_range <| Env.get_range env)
                                                    (show e)
@@ -2804,7 +2804,7 @@ and check_application_args env head (chead:comp) ghead args expected_topt : term
                    (tag_of e)
                    (show e)
                    (show targ)
-                   (bqual |> is_eq |> string_of_bool);
+                   (bqual |> is_eq |> show);
             let e, c, g_e = tc_term env e in
             let g = g_ex ++ g ++ g_e in
 //                if debug env Options.High then BU.print2 "Guard on this arg is %s;\naccumulated guard is %s\n" (guard_to_string env g_e) (guard_to_string env g);
@@ -3305,8 +3305,8 @@ and tc_pat env (pat_t:typ) (p0:pat) :
           then failwith (BU.format4 "(%s) Impossible: pattern bvar mismatch: %s; expected %s sub pats; got %s"
                                           (Range.string_of_range p.p)
                                           (show simple_pat)
-                                          (BU.string_of_int (List.length sub_pats))
-                                          (BU.string_of_int (List.length simple_bvs_pat)));
+                                          (show (List.length sub_pats))
+                                          (show (List.length simple_bvs_pat)));
           let simple_pat_e, simple_bvs, g1, erasable =
               //
               // guard is the typechecking guard
@@ -4264,7 +4264,7 @@ and build_let_rec_env _top_level env lbs : list letbinding & env_t & guard_t =
             | Some (arity, lbdef) ->
               if Debug.extreme ()
               then BU.print2 "termination_check_enabled returned arity: %s and lbdef: %s\n"
-                     (string_of_int arity) (show lbdef);
+                     (show arity) (show lbdef);
               let lb = {lb with lbtyp=lbtyp; lbunivs=univ_vars; lbdef=lbdef} in
               let env = {env with letrecs=(lb.lbname, arity, lbtyp, univ_vars)::env.letrecs} in
               lb, env

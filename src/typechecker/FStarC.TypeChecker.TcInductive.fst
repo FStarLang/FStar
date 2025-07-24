@@ -917,7 +917,7 @@ let check_inductive_well_typedness (env:env_t) (ses:list sigelt) (quals:list qua
         then raise_error se
                Errors.Fatal_UnexpectedInductivetype
                 (BU.format2 "Could not get %s type parameters from val type %s"
-                            (binders |> List.length |> string_of_int)
+                            (binders |> List.length |> show)
                             (show expected))
         else List.map2 (fun (ex_attrs, pqual) b ->
                if not (Common.check_positivity_qual true pqual b.binder_positivity)

@@ -108,7 +108,7 @@ let prims =
             List.fold_left (fun (axioms, app, vars) var ->
               let app = mk_Apply app [var] in
               let vars = vars @ [var] in
-              let axiom_name = axiom_name ^ "." ^ (string_of_int (vars |> List.length)) in
+              let axiom_name = axiom_name ^ "." ^ (show (vars |> List.length)) in
               Util.mkAssume (mkForall rng ([[app]], vars, mk_IsTotFun app), None, axiom_name) :: axioms,
               app,
               vars
@@ -1799,7 +1799,7 @@ let encode_env_bindings (env:env_t) (bindings:list S.binding) : (decls_t & env_t
             let t_hash = Term.hash_of_term t in
             let xxsym, xx, env' =
                 new_term_constant_from_string env x
-                    ("x_" ^ BU.digest_of_string t_hash ^ "_" ^ (string_of_int i)) in
+                    ("x_" ^ BU.digest_of_string t_hash ^ "_" ^ (show i)) in
             let t = mk_HasTypeWithFuel None xx t in
             let caption =
                 if Options.log_queries()
@@ -1951,7 +1951,7 @@ let encode_modul tcenv modul =
     varops.reset_fresh ();
     let name = BU.format2 "%s %s" (if modul.is_interface then "interface" else "module")  (string_of_lid modul.name) in
     if Debug.medium ()
-    then BU.print2 "+++++++++++Encoding externals for %s ... %s declarations\n" name (List.length modul.declarations |> string_of_int);
+    then BU.print2 "+++++++++++Encoding externals for %s ... %s declarations\n" name (List.length modul.declarations |> show);
     let env = get_env modul.name tcenv |> reset_current_module_fvbs in
     let encode_signature (env:env_t) (ses:sigelts) =
       let g', env =
@@ -1973,7 +1973,7 @@ let encode_modul_from_cache tcenv tcmod (decls, fvbs) =
     let tcenv = Env.set_current_module tcenv tcmod.name in
     let name = BU.format2 "%s %s" (if tcmod.is_interface then "interface" else "module") (string_of_lid tcmod.name) in
     if Debug.medium ()
-    then BU.print2 "+++++++++++Encoding externals from cache for %s ... %s decls\n" name (List.length decls |> string_of_int);
+    then BU.print2 "+++++++++++Encoding externals from cache for %s ... %s decls\n" name (List.length decls |> show);
     let env = get_env tcmod.name tcenv |> reset_current_module_fvbs in
     let env =
       fvbs |> List.rev |> List.fold_left (fun env fvb ->
@@ -2035,6 +2035,6 @@ let encode_query use_env_msg (tcenv:Env.env) (q:S.term)
     if Debug.medium () || !dbg_SMTEncoding || !dbg_SMTQuery
     then BU.print_string "} Done encoding\n";
     if Debug.medium () || !dbg_SMTEncoding || !dbg_Time
-    then BU.print1 "Encoding took %sms\n" (string_of_int ms);
+    then BU.print1 "Encoding took %sms\n" (show ms);
     query_prelude, labels, qry, suffix
   )

@@ -254,14 +254,14 @@ let with_fuel_and_diagnostics settings label_assumptions =
     let rlimit = convert_rlimit settings.query_rlimit in
     [  //fuel and ifuel settings
         Term.Caption (BU.format2 "<fuel='%s' ifuel='%s'>"
-                        (string_of_int n)
-                        (string_of_int i));
+                        (show n)
+                        (show i));
         Util.mkAssume(mkEq(mkApp("MaxFuel", []), n_fuel n), None, "@MaxFuel_assumption");
         Util.mkAssume(mkEq(mkApp("MaxIFuel", []), n_fuel i), None, "@MaxIFuel_assumption");
         settings.query_decl        //the query itself
     ]
     @label_assumptions         //the sub-goals that are currently disabled
-    @[  Term.SetOption ("rlimit", string_of_int rlimit); //the rlimit setting for the check-sat
+    @[  Term.SetOption ("rlimit", show rlimit); //the rlimit setting for the check-sat
 
         // Print stats just before the query, so we know the initial rlimit.
         Term.Echo "<initial_stats>";
@@ -323,7 +323,7 @@ let detail_hint_replay settings z3result =
                       settings.query_hash
                       settings.query_all_labels
                       (with_fuel_and_diagnostics settings label_assumptions)
-                      (BU.format2 "(%s, %s)" settings.query_name (string_of_int settings.query_index))
+                      (BU.format2 "(%s, %s)" settings.query_name (show settings.query_index))
                       false
                       None
                       // settings.query_hint
@@ -494,7 +494,7 @@ let errors_to_report (tried_recovery : bool) (settings : query_settings) : list 
                       settings.query_hash
                       settings.query_all_labels
                       (with_fuel_and_diagnostics initial_fuel label_assumptions)
-                      (BU.format2 "(%s, %s)" settings.query_name (string_of_int settings.query_index))
+                      (BU.format2 "(%s, %s)" settings.query_name (show settings.query_index))
                       false
                       None
               in
@@ -548,7 +548,7 @@ let div_with_decimals (ndec : nat) (x y : int) : string =
   let frac =
     let len = String.length (show frac) in
     let pad = ndec - len in
-    String.make pad '0' ^ string_of_int frac
+    String.make pad '0' ^ show frac
   in
   show intg ^ "." ^ frac // pad
 
@@ -774,7 +774,7 @@ let fold_queries (qs:list query_settings)
     aux [] qs
 
 let full_query_id settings =
-    "(" ^ settings.query_name ^ ", " ^ (BU.string_of_int settings.query_index) ^ ")"
+    "(" ^ settings.query_name ^ ", " ^ (show settings.query_index) ^ ")"
 
 let collect_dups (l : list 'a) : list ('a & int) =
     let acc : list ('a & int) = [] in
@@ -961,7 +961,7 @@ let __ask_solver
                   config.query_hash
                   config.query_all_labels
                   (with_fuel_and_diagnostics config [])
-                  (BU.format2 "(%s, %s)" config.query_name (string_of_int config.query_index))
+                  (BU.format2 "(%s, %s)" config.query_name (show config.query_index))
                   (used_hint config)
                   config.query_hint
     in
@@ -1042,11 +1042,11 @@ let ask_solver_quake
                    BU.print5 "%s: so far query %s %sfailed %s (%s runs remain)\n"
                        (if quaking then "Quake" else "Retry")
                        name
-                       (if quaking then BU.format1 "succeeded %s times and " (string_of_int nsucc) else "")
+                       (if quaking then BU.format1 "succeeded %s times and " (show nsucc) else "")
                        (* ^ if --retrying, it does not make sense to print successes since
                         * they must be exactly 0 *)
-                       (if quaking then string_of_int nfail else string_of_int nfail ^ " times")
-                       (string_of_int (hi-n));
+                       (if quaking then show nfail else show nfail ^ " times")
+                       (show (hi-n));
                  let r = run_one (seed+n) in
                  let nsucc, nfail =
                     match r with
@@ -1068,7 +1068,7 @@ let ask_solver_quake
         let fuel_msg =
           match !best_fuel, !best_ifuel with
           | Some f, Some i ->
-            BU.format2 " (best fuel=%s, best ifuel=%s)" (string_of_int f) (string_of_int i)
+            BU.format2 " (best fuel=%s, best ifuel=%s)" (show f) (show i)
           | _, _ -> ""
         in
         let ratio =
@@ -1193,7 +1193,7 @@ let maybe_save_failing_query (env:env_t) (qs:query_settings) : unit =
                             qs.query_hash
                             qs.query_all_labels
                             (with_fuel_and_diagnostics qs [])
-                            (BU.format2 "(%s, %s)" qs.query_name (string_of_int qs.query_index))
+                            (BU.format2 "(%s, %s)" qs.query_name (show qs.query_index))
                             qs.query_hint
     in
     write_file file_name query_str;
@@ -1280,7 +1280,7 @@ let report (env:Env.env) (default_settings : query_settings) (a : answer) : unit
             let m =
               let open FStarC.Pprint in
               if n > 1
-              then m @ [doc_of_string (format1 "Repeated %s times" (string_of_int n))]
+              then m @ [doc_of_string (format1 "Repeated %s times" (show n))]
               else m
             in
             (e, m, r, ctx))
@@ -1304,10 +1304,10 @@ let report (env:Env.env) (default_settings : query_settings) (a : answer) : unit
                 "Query %s failed the quake test, %s out of %s attempts succeded, \
                  but the threshold was %s out of %s%s"
                  name
-                (string_of_int nsuccess)
-                (string_of_int total_ran)
-                (string_of_int lo)
-                (string_of_int hi)
+                (show nsuccess)
+                (show total_ran)
+                (show lo)
+                (show hi)
                 (if total_ran < hi then " (early abort)" else "")])
         end
 
@@ -1400,7 +1400,7 @@ let encode_and_ask (can_split:bool) (is_retry:bool) use_env_msg tcenv q : (list 
                 (BU.format3 "Encoded split query %s\nto %s\nwith %s labels"
                           (show q)
                           (Term.declToSmt "" qry)
-                          (BU.string_of_int n))
+                          (show n))
         );
         let env = FStarC.SMTEncoding.Encode.get_current_env tcenv in
         let configs, next_hint =

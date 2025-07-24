@@ -315,7 +315,7 @@ let compile_op arity s r =
       |':' -> "Colon"
       |'$' -> "Dollar"
       |'.' -> "Dot"
-      | c -> "u" ^ (Util.string_of_int (Util.int_of_char c))
+      | c -> "u" ^ show (Util.int_of_char c)
     in
     match s with
     | ".[]<-" -> "op_String_Assignment"

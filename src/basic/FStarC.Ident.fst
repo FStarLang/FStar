@@ -25,7 +25,7 @@ let reserved_prefix = "uu___"
 
 let gen' s r =
     let i = GS.next_id() in
-    mk_ident (s ^ string_of_int i, r)
+    mk_ident (s ^ show i, r)
 
 let gen r = gen' reserved_prefix r
 

@@ -181,7 +181,7 @@ let constant_to_string (c: constant) =
 
 let rec t_to_string (x:t) =
   match x.nbe_t with
-  | Lam {interp=b; arity} -> BU.format1 "Lam (_, %s args)"  (BU.string_of_int arity)
+  | Lam {interp=b; arity} -> BU.format1 "Lam (_, %s args)"  (show arity)
   | Accu (a, l) ->
     "Accu (" ^ (atom_to_string a) ^ ") (" ^
     (String.concat "; " (List.map (fun x -> t_to_string (fst x)) l)) ^ ")"

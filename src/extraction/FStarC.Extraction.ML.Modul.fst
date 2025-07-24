@@ -942,7 +942,7 @@ let extract_bundle env se =
        let env, ctors = ind.idatas |> BU.fold_map (extract_ctor env_iparams vars) env in
        let indices, _ = U.arrow_formals ind.ityp in
        let ml_params = List.append vars (indices |> List.mapi (fun i _ -> {
-        ty_param_name = "'dummyV" ^ BU.string_of_int i;
+        ty_param_name = "'dummyV" ^ show i;
         ty_param_attrs = []
        })) in
        let tbody, env =

@@ -153,7 +153,7 @@ let set_memo cfg (r:memo (Cfg.cfg & 'a)) (t:'a) : unit =
   end
 
 let closure_to_string = function
-    | Clos (env, t, _, _) -> BU.format2 "(env=%s elts; %s)" (List.length env |> string_of_int) (show t)
+    | Clos (env, t, _, _) -> BU.format2 "(env=%s elts; %s)" (List.length env |> show) (show t)
     | Univ _ -> "Univ"
     | Dummy -> "dummy"
 
@@ -231,10 +231,10 @@ let norm_universe cfg (env:env) u =
                            else ();  aux u
                       | Dummy -> [u]
                       | _ -> failwith (BU.format1 "Impossible: universe variable u@%s bound to a term"
-                                                   (string_of_int x))
+                                                   (show x))
                 with _ -> if cfg.steps.allow_unbound_universes
                           then [U_unknown]
-                          else failwith ("Universe variable not found: u@" ^ string_of_int x)
+                          else failwith ("Universe variable not found: u@" ^ show x)
             end
           | U_unif _ when cfg.steps.default_univs_to_zero ->
             [U_zero]
@@ -984,7 +984,7 @@ let rec norm : cfg -> env -> stack -> term -> term =
                      let rc = maybe_drop_rc_typ cfg rc in
                      Some {rc with residual_typ = BU.map_option (SS.subst opening) rc.residual_typ}
                    in
-                   log cfg  (fun () -> BU.print1 "\tShifted %s dummies\n" (string_of_int <| List.length bs));
+                   log cfg  (fun () -> BU.print1 "\tShifted %s dummies\n" (show <| List.length bs));
                    let cfg' = { cfg with strong = true } in
                    let body_norm = norm cfg env' (Abs(env, bs, env', rc_opt, t.pos) :: []) body in
                    rebuild cfg env stack body_norm
@@ -1070,7 +1070,7 @@ let rec norm : cfg -> env -> stack -> term -> term =
                   args
                   stack
               in
-              log cfg  (fun () -> BU.print1 "\tPushed %s arguments\n" (string_of_int <| List.length args));
+              log cfg  (fun () -> BU.print1 "\tPushed %s arguments\n" (show <| List.length args));
               norm cfg env stack head
 
             | Some strict_args ->
@@ -1094,7 +1094,7 @@ let rec norm : cfg -> env -> stack -> term -> term =
                        Arg (Clos(env, a, mk_ref (Some (cfg, ([], a))), false),aq,t.pos)::stack)
                      norm_args
                    in
-                   log cfg  (fun () -> BU.print1 "\tPushed %s arguments\n" (string_of_int <| List.length args));
+                   log cfg  (fun () -> BU.print1 "\tPushed %s arguments\n" (show <| List.length args));
                    norm cfg env stack head
               else let head = closure_as_term cfg env head in
                    let term = S.mk_Tm_app head norm_args t.pos in

@@ -22,6 +22,7 @@ open FStarC.Options
 module BU = FStarC.Util
 module SMap = FStarC.SMap
 open FStarC.Json
+open FStarC.Class.Show
 
 (*
    A counter id is the name of a profiling phase;
@@ -106,7 +107,7 @@ let report_human tag c =
     BU.print4 "%s, profiled %s:\t %s ms%s\n"
                   tag
                   c.cid
-                  (BU.string_of_int (!c.total_time / 1000000))
+                  (show (!c.total_time / 1000000))
                   warn
 
 let report tag c =

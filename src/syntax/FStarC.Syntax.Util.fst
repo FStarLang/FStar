@@ -96,7 +96,7 @@ let args_of_binders (binders:Syntax.binders) : (Syntax.binders & args) =
 let name_binders binders =
     binders |> List.mapi (fun i b ->
             if is_null_binder b
-            then let bname = id_of_text ("_" ^ string_of_int i) in
+            then let bname = id_of_text ("_" ^ show i) in
                  let bv = {ppname=bname; index=0; sort=b.binder_bv.sort} in
                  { b with binder_bv = bv }
             else b)
@@ -285,7 +285,7 @@ let destruct_comp c : (universe & typ & typ) =
       failwith (U.format2
         "Impossible: Got a computation %s with %s effect args"
         (string_of_lid c.effect_name)
-        (c.effect_args |> List.length |> string_of_int)) in
+        (c.effect_args |> List.length |> show)) in
   List.hd c.comp_univs, c.result_typ, wp
 
 let is_named_tot c =
@@ -651,7 +651,7 @@ let mk_field_projector_name_from_ident lid (i : ident) =
 
 let mk_field_projector_name lid (x:bv) i =
     let nm = if Syntax.is_null_bv x
-             then mk_ident("_" ^ U.string_of_int i, Syntax.range_of_bv x)
+             then mk_ident("_" ^ show i, Syntax.range_of_bv x)
              else x.ppname in
     mk_field_projector_name_from_ident lid nm
 
@@ -664,7 +664,7 @@ let set_uvar uv t =
   match Unionfind.find uv with
     | Some t' ->
       failwith (U.format3 "Changing a fixed uvar! ?%s to %s but \
-                           it is already set to %s\n" (U.string_of_int <| Unionfind.uvar_id uv)
+                           it is already set to %s\n" (show <| Unionfind.uvar_id uv)
                           (tts t)
                           (tts t'))
     | _ -> Unionfind.change uv t

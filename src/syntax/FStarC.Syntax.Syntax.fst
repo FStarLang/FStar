@@ -62,8 +62,8 @@ instance showable_emb_typ = {
 
 
 let rec delta_depth_to_string = function
-    | Delta_constant_at_level i   -> "Delta_constant_at_level " ^ string_of_int i
-    | Delta_equational_at_level i -> "Delta_equational_at_level " ^ string_of_int i
+    | Delta_constant_at_level i   -> "Delta_constant_at_level " ^ show i
+    | Delta_equational_at_level i -> "Delta_equational_at_level " ^ show i
     | Delta_abstract d -> "Delta_abstract (" ^ delta_depth_to_string d ^ ")"
 
 instance showable_delta_depth = {
@@ -438,7 +438,7 @@ let freshen_binder (b:binder) = { b with binder_bv = freshen_bv b.binder_bv }
 
 let new_univ_name ropt =
     let id = GS.next_id() in
-    mk_ident (Ident.reserved_prefix ^ Util.string_of_int id, range_of_ropt ropt)
+    mk_ident (Ident.reserved_prefix ^ show id, range_of_ropt ropt)
 let lbname_eq l1 l2 = match l1, l2 with
   | Inl x, Inl y -> bv_eq x y
   | Inr l, Inr m -> lid_equals l m

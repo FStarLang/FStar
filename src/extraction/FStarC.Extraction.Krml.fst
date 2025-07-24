@@ -1300,7 +1300,7 @@ and translate_constant c: expr =
       EString s
   | MLC_Char c ->
       let i = BU.int_of_char c in
-      let s = BU.string_of_int i in
+      let s = show i in
       let c = EConstant (CInt, s) in
       let char_of_int = EQualified (["FStar"; "Char"], "char_of_int") in
       EApp(char_of_int, [c])

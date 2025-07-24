@@ -10,6 +10,7 @@ open FStar.String
 open FStarC.Syntax
 open FStarC.Syntax.Syntax
 open FStarC.Class.Monad
+open FStarC.Class.Show
 
 module BU = FStarC.Util
 module PC = FStarC.Parser.Const
@@ -64,7 +65,7 @@ let division_modulus_op (f : Z.t -> Z.t -> Z.t) (x y : Z.t) : option Z.t =
 over embeddable types. *)
 let simple_ops : list primitive_step = [
   (* Basic *)
-  mk1 0 PC.string_of_int_lid (fun z -> string_of_int (Z.to_int_fs z));
+  mk1 0 PC.string_of_int_lid (fun z -> show (Z.to_int_fs z));
   mk1 0 PC.int_of_string_lid (fun s -> fmap Z.of_int_fs (BU.safe_int_of_string s));
   mk1 0 PC.string_of_bool_lid string_of_bool;
   mk1 0 PC.bool_of_string_lid (function "true" -> Some true | "false" -> Some false | _ -> None);

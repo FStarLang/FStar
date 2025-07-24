@@ -333,7 +333,7 @@ let def_check_comp_scoped_in_prob msg prob phi =
 
 let def_check_prob msg prob =
     if not (Options.defensive ()) then () else
-    let msgf m = msg ^ "." ^ string_of_int (p_pid prob) ^ "." ^ m in
+    let msgf m = msg ^ "." ^ show (p_pid prob) ^ "." ^ m in
     def_scope_wf (msgf "scope") (p_loc prob) (p_scope prob);
     def_check_term_scoped_in_prob (msgf "guard") prob (p_guard prob);
     match prob with
@@ -374,7 +374,7 @@ let prob_to_string env prob =
   match prob with
   | TProb p ->
     BU.format "\n%s:\t%s \n\t\t%s\n\t%s\n\t(reason:%s) (logical:%s)\n" //\twith guard %s\n\telement= %s\n" //  (guard %s)\n\t\t<Reason>\n\t\t\t%s\n\t\t</Reason>"
-        [(BU.string_of_int p.pid);
+        [(show p.pid);
          (term_to_string p.lhs);
          (rel_to_string p.relation);
          (term_to_string p.rhs);
@@ -386,7 +386,7 @@ let prob_to_string env prob =
          (* (p.reason |> String.concat "\n\t\t\t") *)]
   | CProb p ->
     BU.format4 "\n%s:\t%s \n\t\t%s\n\t%s"
-                 (BU.string_of_int p.pid)
+                 (show p.pid)
                  (N.comp_to_string env p.lhs)
                  (rel_to_string p.relation)
                  (N.comp_to_string env p.rhs)
@@ -397,11 +397,11 @@ let prob_to_string' (wl:worklist) (prob:prob) : string =
 
 let uvi_to_string env = function
     | UNIV (u, t) ->
-      let x = if (Options.hide_uvar_nums()) then "?" else UF.univ_uvar_id u |> string_of_int in
+      let x = if (Options.hide_uvar_nums()) then "?" else UF.univ_uvar_id u |> show in
       BU.format2 "UNIV %s <- %s" x (show t)
 
     | TERM (u, t) ->
-      let x = if (Options.hide_uvar_nums()) then "?" else UF.uvar_id u.ctx_uvar_head |> string_of_int in
+      let x = if (Options.hide_uvar_nums()) then "?" else UF.uvar_id u.ctx_uvar_head |> show in
       BU.format2 "TERM %s <- %s" x (N.term_to_string env t)
 let uvis_to_string env uvis = FStarC.Common.string_of_list (uvi_to_string env) uvis
 
@@ -1084,11 +1084,11 @@ let solve_prob' resolve_ok prob logical_guard uvis wl =
     let assign_solution xs uv phi =
         if !dbg_Rel
         then BU.print3 "Solving %s (%s) with formula %s\n"
-                            (string_of_int (p_pid prob))
+                            (show (p_pid prob))
                             (show uv)
                             (show phi);
         let phi = U.abs xs phi (Some (U.residual_tot U.ktype0)) in
-        def_check_scoped (p_loc prob) ("solve_prob'.sol." ^ string_of_int (p_pid prob))
+        def_check_scoped (p_loc prob) ("solve_prob'.sol." ^ show (p_pid prob))
                          (List.map (fun b -> b.binder_bv) <| p_scope prob) phi;
         set_uvar wl.tcenv uv None phi
     in
@@ -1123,9 +1123,9 @@ let solve_prob' resolve_ok prob logical_guard uvis wl =
     commit wl.tcenv uvis;
     {wl with ctr=wl.ctr + 1}
 
-let extend_universe_solution pid sol wl =
+let extend_universe_solution (pid : int) sol wl =
     if !dbg_Rel
-    then BU.print2 "Solving %s: with [%s]\n" (string_of_int pid)
+    then BU.print2 "Solving %s: with [%s]\n" (show pid)
                                              (uvis_to_string wl.tcenv sol);
     commit wl.tcenv sol;
     {wl with ctr=wl.ctr+1}
@@ -1134,7 +1134,7 @@ let solve_prob (prob : prob) (logical_guard : option term) (uvis : list uvi) (wl
     def_check_prob "solve_prob.prob" prob;
     BU.iter_opt logical_guard (def_check_term_scoped_in_prob "solve_prob.guard" prob);
     if !dbg_Rel
-    then BU.print2 "Solving %s: with %s\n" (string_of_int <| p_pid prob)
+    then BU.print2 "Solving %s: with %s\n" (show <| p_pid prob)
                                            (uvis_to_string wl.tcenv uvis);
     solve_prob' false prob logical_guard uvis wl
 
@@ -1288,7 +1288,7 @@ let pat_vars env ctx args : option binders =
 
 let string_of_match_result = function
     | MisMatch (d1, d2) -> "MisMatch " ^ show (d1, d2)
-    | HeadMatch u -> "HeadMatch " ^ string_of_bool u
+    | HeadMatch u -> "HeadMatch " ^ show u
     | FullMatch -> "FullMatch"
 
 instance showable_match_result = { show = string_of_match_result; }
@@ -2552,7 +2552,7 @@ and solve_rigid_flex_or_flex_rigid_subtyping
              | None -> giveup_lit wl "flex-arrow subtyping, not a quasi pattern" (TProb tp)
              | Some (flex_bs, flex_t) ->
                if !dbg_Rel
-               then BU.print1 "Trying to solve by imitating arrow:%s\n" (string_of_int tp.pid);
+               then BU.print1 "Trying to solve by imitating arrow:%s\n" (show tp.pid);
                imitate_arrow (TProb tp) wl flex flex_bs flex_t tp.relation this_rigid
              end
         else //imitating subtyping with WPs is hopeless
@@ -2695,11 +2695,11 @@ and solve_rigid_flex_or_flex_rigid_subtyping
 
     | _ when flip ->
       failwith (BU.format2 "Impossible: (rank=%s) Not a flex-rigid: %s"
-                            (BU.string_of_int (rank_t_num rank))
+                            (show (rank_t_num rank))
                             (prob_to_string env (TProb tp)))
     | _ ->
       failwith (BU.format2 "Impossible: (rank=%s) Not a rigid-flex: %s"
-                            (BU.string_of_int (rank_t_num rank))
+                            (show (rank_t_num rank))
                             (prob_to_string env (TProb tp)))
     end
   end
@@ -3605,7 +3605,7 @@ and solve_t' (problem:tprob) (wl:worklist) : solution =
                    if !dbg_Rel
                    then BU.print2
                             "Adding subproblems for arguments (smtok=%s): %s"
-                            (string_of_bool wl.smt_ok)
+                            (show wl.smt_ok)
                             (FStarC.Common.string_of_list (prob_to_string env) subprobs);
                    if Options.defensive ()
                    then List.iter (def_check_prob "solve_t' subprobs") subprobs;
@@ -4009,7 +4009,7 @@ and solve_t' (problem:tprob) (wl:worklist) : solution =
     def_check_scoped (p_loc orig) "ref.t2" (List.map (fun b -> b.binder_bv) (p_scope orig)) t2;
     let _ =
         if !dbg_Rel
-        then BU.print5 "Attempting %s (%s vs %s); rel = (%s); number of problems in wl = %s\n" (string_of_int problem.pid)
+        then BU.print5 "Attempting %s (%s vs %s); rel = (%s); number of problems in wl = %s\n" (show problem.pid)
                             (tag_of t1 ^ "::" ^ show t1)
                             (tag_of t2 ^ "::" ^ show t2)
                             (rel_to_string problem.relation)
@@ -4854,16 +4854,16 @@ let solve_and_commit wl err
 
   if !dbg_RelBench then
     BU.print1 "solving problems %s {\n"
-      (FStarC.Common.string_of_list (fun p -> string_of_int (p_pid p)) wl.attempting);
+      (FStarC.Common.string_of_list (fun p -> show (p_pid p)) wl.attempting);
   let (sol, ms) = Timing.record_ms (fun () -> solve wl) in
   if !dbg_RelBench then
-    BU.print1 "} solved in %s ms\n" (string_of_int ms);
+    BU.print1 "} solved in %s ms\n" (show ms);
 
   match sol with
     | Success (deferred, defer_to_tac, implicits) ->
       let ((), ms) = Timing.record_ms (fun () -> UF.commit tx) in
       if !dbg_RelBench then
-        BU.print1 "committed in %s ms\n" (string_of_int ms);
+        BU.print1 "committed in %s ms\n" (show ms);
       Some (deferred, defer_to_tac, implicits)
     | Failed (d,s) ->
       if !dbg_ExplainRel
@@ -4948,7 +4948,7 @@ let sub_or_eq_comp env (use_eq:bool) c1 c2 =
                   (fun () -> with_guard env prob <| solve_and_commit (singleton wl prob true)  (fun _ -> None))
     in
     if !dbg_Rel || !dbg_RelTop || !dbg_RelBench then
-      BU.print4 "sub_comp of %s --and-- %s --with-- %s --- solved in %s ms\n" (show c1) (show c2) (if rel = EQ then "EQ" else "SUB") (string_of_int ms);
+      BU.print4 "sub_comp of %s --and-- %s --with-- %s --- solved in %s ms\n" (show c1) (show c2) (if rel = EQ then "EQ" else "SUB") (show ms);
     r)
   (Some (Ident.string_of_lid (Env.current_module env)))
   "FStarC.TypeChecker.Rel.sub_comp"

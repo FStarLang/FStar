@@ -169,7 +169,7 @@ let pars_and_tc_fragment (s:string) =
           let n = get_err_count () in
           if n <> 0
           then (report ();
-                raise_error0 Errors.Fatal_ErrorsReported (BU.format1 "%s errors were reported" (string_of_int n)))
+                raise_error0 Errors.Fatal_ErrorsReported (BU.format1 "%s errors were reported" (show n)))
         with e -> report(); raise_error0 Errors.Fatal_TcOneFragmentFailed ("tc_one_fragment failed: " ^s)
     with
         | e when not ((Options.trace_error())) -> raise e
@@ -185,7 +185,7 @@ let test_hashes () =
     let tm = tc (aux n) in
     let hc = FStarC.Syntax.Hash.ext_hash_term tm in
     BU.print2 "Hash of unary %s is %s\n"
-              (string_of_int n)
+              (show n)
               (FStarC.Hash.string_of_hash_code hc)
   in
   let rec aux (n:int) =
@@ -242,10 +242,10 @@ let parse_incremental_decls () =
           if line_of_pos p = l && col_of_pos p = c
           then ()
           else failwith (format4 "Incremental parsing failed: Expected syntax error at (%s, %s), got error at (%s, %s)"
-                                 (string_of_int l)
-                                 (string_of_int c)
-                                 (string_of_int (line_of_pos p))
-                                 (string_of_int (col_of_pos p)))
+                                 (show l)
+                                 (show c)
+                                 (show (line_of_pos p))
+                                 (show (col_of_pos p)))
       in
       let _ =
         match parse_err0, parse_err1 with
@@ -267,8 +267,8 @@ let parse_incremental_decls () =
           failwith ("Incremental parsing failed; unexpected change in a decl")
         )
       | _ -> failwith (format2 "Incremental parsing failed; expected 6 decls got %s and %s\n"
-                              (string_of_int (List.length decls0))
-                              (string_of_int (List.length decls1)))
+                              (show (List.length decls0))
+                              (show (List.length decls1)))
       )
 
 

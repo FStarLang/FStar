@@ -174,10 +174,8 @@ val float_of_int64: int64 -> Tot float
 val float_of_string: string -> Tot float
 val int_of_int32: int32 -> Tot int
 val int32_of_int:   int -> int32 //potentially failing int32 coercion
-val string_of_int:   int -> string
-val string_of_bool:   bool -> string
-val string_of_int64: int64 -> Tot string
-val string_of_int32: int32 -> Tot string
+val show64: int64 -> Tot string
+val show32: int32 -> Tot string
 val string_of_float: float -> Tot string
 val string_of_char:  char -> Tot string
 val hex_string_of_byte:  byte -> Tot string

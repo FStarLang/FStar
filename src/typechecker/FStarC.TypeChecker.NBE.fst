@@ -259,8 +259,8 @@ let pickBranch (cfg:config) (scrut : t) (branches : list branch) : option (term 
               Inr true
         in
         let res_to_string = function
-        | Inr b -> "Inr " ^ BU.string_of_bool b
-        | Inl bs -> "Inl " ^ BU.string_of_int (List.length bs)
+        | Inr b -> "Inr " ^ show b
+        | Inl bs -> "Inl " ^ show (List.length bs)
         in
         debug cfg (fun () -> BU.print3 "matches_pat (%s, %s) = %s\n" (t_to_string scrutinee) (show p) (res_to_string r));
         r

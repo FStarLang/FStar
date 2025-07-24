@@ -185,7 +185,7 @@ let try_lookup_fv (r:Range.t) (g:uenv) (fv:fv) : option exp_binding =
        text <| BU.format1 "Will not extract reference to variable `%s` since it has the `noextract` qualifier." (string_of_lid fv.fv_name.v);
        text <| BU.format2 "Either remove the noextract qualifier from %s (defined in %s) or add it to this definition."
                  (string_of_lid fv.fv_name.v) (show pos);
-       text <| BU.format1 "This error can be ignored with `--warn_error -%s`." (string_of_int Errors.call_to_erased_errno)];
+       text <| BU.format1 "This error can be ignored with `--warn_error -%s`." (show Errors.call_to_erased_errno)];
     None
   | NotFound ->
     None
@@ -397,7 +397,7 @@ let root_name_of_bv (x:bv): mlident =
  *)
 let find_uniq ml_ident_map root_name is_local_type_variable =
   let rec aux i root_name =
-    let target_mlident = if i = 0 then root_name else root_name ^ (string_of_int i) in
+    let target_mlident = if i = 0 then root_name else root_name ^ (show i) in
     match PSMap.try_find ml_ident_map target_mlident with
       | Some x -> aux (i+1) root_name
       | None ->

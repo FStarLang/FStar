@@ -72,7 +72,7 @@ let query_logging =
               n
             | Some (_, k) ->
               used_file_names := (n, k+1)::!used_file_names;
-              BU.format2 "%s-%s" n (BU.string_of_int (k+1))
+              BU.format2 "%s-%s" n (show (k+1))
         in
         BU.format1 "queries-%s.smt2" file_name
     in
@@ -138,7 +138,7 @@ let z3_cmd_and_args () =
   let cmd_args =
     List.append ["-smt2";
                  "-in";
-                 Util.format1 "smt.random_seed=%s" (string_of_int (Options.z3_seed ()))]
+                 Util.format1 "smt.random_seed=%s" (show (Options.z3_seed ()))]
                 (Options.z3_cliopt ()) in
   (cmd, cmd_args)
 
@@ -218,7 +218,7 @@ let new_z3proc (id:string) (cmd_and_args : string & list string) : BU.proc =
 let new_z3proc_with_id =
     let ctr = mk_ref (-1) in
     (fun cmd_and_args ->
-      let p = new_z3proc (BU.format1 "z3-bg-%s" (incr ctr; !ctr |> string_of_int)) cmd_and_args in
+      let p = new_z3proc (BU.format1 "z3-bg-%s" (incr ctr; !ctr |> show)) cmd_and_args in
       p)
 
 type bgproc = {
@@ -602,12 +602,12 @@ let context_profile (theory:list decl) =
     let modules = List.sortWith (fun (_, n) (_, m) -> m - n) modules in
     if modules <> []
     then BU.print1 "Z3 Proof Stats: context_profile with %s assertions\n"
-                  (BU.string_of_int total_decls);
+                  (show total_decls);
     List.iter (fun (m, n) ->
         if n <> 0 then
             BU.print2 "Z3 Proof Stats: %s produced %s SMT decls\n"
                         m
-                        (string_of_int n))
+                        (show n))
                modules
 
 let mk_input (fresh : bool) (theory : list decl) : string & option string & option string =
@@ -658,8 +658,8 @@ let mk_input (fresh : bool) (theory : list decl) : string & option string & opti
             seed), then decrease the limit (change the seed) and the proof would still succeed with the
             old hash (seed), but be broken. *)
             let hs = hs ^ "Z3 version: " ^ ver in
-            let hs = hs ^ "Z3 rlimit: " ^ (Options.z3_rlimit() |> string_of_int) in
-            let hs = hs ^ "Z3 seed: " ^ (Options.z3_seed() |> string_of_int) in
+            let hs = hs ^ "Z3 rlimit: " ^ (Options.z3_rlimit() |> show) in
+            let hs = hs ^ "Z3 seed: " ^ (Options.z3_seed() |> show) in
             ps ^ "\n" ^ ss, Some (BU.digest_of_string hs)
         else
             List.map (declToSmt options) theory |> String.concat "\n", None
