@@ -28,7 +28,6 @@ open FStarC.Class.Show
 open FStarC.Pprint
 open FStarC.Class.PP
 
-module BU = FStarC.Util
 
 (* Some basic utilities *)
 let id_eq_lid i (l:lident) = (string_of_id i) = (string_of_id (ident_of_lid l))

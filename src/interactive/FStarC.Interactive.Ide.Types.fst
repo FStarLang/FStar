@@ -73,7 +73,6 @@ let string_of_repl_task = function
     Format.fmt1 "PushFragment { decl = %s }" (show d)
   | Noop -> "Noop {}"
 
-module BU = FStarC.Util
 
 let string_of_repl_stack_entry
   : repl_stack_entry_t -> string

@@ -15,7 +15,6 @@ module SS = FStarC.Syntax.Subst
 module U = FStarC.Syntax.Util
 module PC = FStarC.Parser.Const
 module S = FStarC.Syntax.Syntax
-module BU = FStarC.Util
 
 open FStarC.Class.Tagged
 open FStarC.Class.Show

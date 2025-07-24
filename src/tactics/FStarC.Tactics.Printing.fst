@@ -26,7 +26,6 @@ open FStarC.TypeChecker.Env
 open FStarC.Tactics.Types
 open FStarC.Class.Show
 
-module BU      = FStarC.Util
 module Range   = FStarC.Range
 module Options = FStarC.Options
 module Print   = FStarC.Syntax.Print

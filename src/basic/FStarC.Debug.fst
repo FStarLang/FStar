@@ -16,7 +16,7 @@
 
 module FStarC.Debug
 
-module BU = FStarC.Util
+open FStarC.Effect
 
 (* Mutable state *)
 let anyref = mk_ref false

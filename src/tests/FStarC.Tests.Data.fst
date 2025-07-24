@@ -19,7 +19,6 @@ module FStarC.Tests.Data
 
 open FStarC
 open FStarC.Effect
-module BU = FStarC.Util
 
 module FlatSet = FStarC.FlatSet
 module RBSet = FStarC.RBSet

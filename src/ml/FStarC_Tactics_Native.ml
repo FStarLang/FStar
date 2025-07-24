@@ -4,7 +4,6 @@ open FStarC_Tactics_Result
 open FStarC_Tactics_Monad
 open FStarC_Syntax_Syntax
 
-module BU = FStarC_Util
 module NBETerm = FStarC_TypeChecker_NBETerm
 module POB = FStarC_TypeChecker_Primops_Base
 

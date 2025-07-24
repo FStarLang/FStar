@@ -41,7 +41,6 @@ open FStarC.Class.Monad
 open FStarC.Syntax.Print {}
 module Listlike = FStarC.Class.Listlike
 
-module BU      = FStarC.Util
 module E       = FStarC.Tactics.Embedding
 module Env     = FStarC.TypeChecker.Env
 module Err     = FStarC.Errors

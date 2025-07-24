@@ -185,7 +185,6 @@ and lidents_of_effect_decl (ed:effect_decl) =
     concat_map lidents_of_binder bs @
     lidents_of_term t
 
-module BU = FStarC.Util
 let extension_parser_table : SMap.t extension_parser = SMap.create 20
 let register_extension_parser (ext:string) (parser:extension_parser) =
   SMap.add extension_parser_table ext parser

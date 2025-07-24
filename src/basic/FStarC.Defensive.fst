@@ -2,12 +2,10 @@
 
 open FStarC
 open FStarC.Effect
-open FStarC.Util
 open FStarC.Class.Binders
 open FStarC.Class.Show
 open FStarC.Class.Ord
 open FStarC.Errors
-open FStarC.Errors.Msg
 open FStarC.Pprint
 open FStarC.Class.Setlike
 

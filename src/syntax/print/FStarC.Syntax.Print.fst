@@ -27,7 +27,6 @@ open FStarC.Const
 open FStarC.Json
 
 module Errors     = FStarC.Errors
-module U          = FStarC.Util
 module Unionfind  = FStarC.Syntax.Unionfind
 module C          = FStarC.Parser.Const
 module SU         = FStarC.Syntax.Util

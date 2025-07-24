@@ -21,7 +21,6 @@ open FStarC.Effect
 open FStarC.TypeChecker.Env
 open FStarC.Syntax.Syntax
 
-module BU = FStarC.Util
 open FStarC.RBSet
 
 open FStarC.Class.Show

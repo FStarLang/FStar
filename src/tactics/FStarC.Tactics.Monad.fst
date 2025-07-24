@@ -35,7 +35,6 @@ open FStarC.Syntax.Print {}
 module Setlike = FStarC.Class.Setlike
 module Listlike = FStarC.Class.Listlike
 
-module BU      = FStarC.Util
 module Err     = FStarC.Errors
 module Range   = FStarC.Range
 module U       = FStarC.Syntax.Util
