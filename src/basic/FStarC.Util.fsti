@@ -121,12 +121,6 @@ val read_line: stream_reader -> option string
 val nread : stream_reader -> int -> option string
 val poll_stdin : float -> bool
 
-type string_builder
-val new_string_builder: unit -> string_builder
-val clear_string_builder: string_builder -> unit
-val string_of_string_builder: string_builder -> string
-val string_builder_append: string_builder -> string -> unit
-
 val message_of_exn: exn -> string
 val trace_of_exn: exn -> string
 val stack_dump : unit -> string
