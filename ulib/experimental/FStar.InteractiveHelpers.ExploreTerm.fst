@@ -1,7 +1,7 @@
 module FStar.InteractiveHelpers.ExploreTerm
 
 open FStar.List.Tot
-open FStar.Tactics
+open FStar.Tactics.V1
 open FStar.Mul
 open FStar.InteractiveHelpers.Base
 
