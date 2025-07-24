@@ -73,7 +73,7 @@ type optmod_t = option Syntax.Syntax.modul
 
 type timed_fname =
   { tf_fname: string;
-    tf_modtime: time_of_day }
+    tf_modtime: Time.time_of_day }
 
 (** Every snapshot pushed in the repl stack is annotated with one of these.  The
 ``LD``-prefixed (“Load Dependency”) onces are useful when loading or updating

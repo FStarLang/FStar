@@ -14,13 +14,6 @@ let is_punctuation c = List.mem c [33; 34; 35; 37; 38; 39; 40; 41; 42; 44; 45; 4
 
 let return_all x = x
 
-type time_of_day = float
-let get_time_of_day () = BatUnix.gettimeofday()
-let get_time_of_day_ms () = Z.of_int (int_of_float (get_time_of_day () *. 1000.0))
-let get_file_last_modification_time f = (BatUnix.stat f).BatUnix.st_mtime
-let is_before t1 t2 = compare t1 t2 < 0
-let string_of_time_of_day = string_of_float
-
 exception Impos
 
 let cur_sigint_handler : Sys.signal_behavior ref =
@@ -90,7 +83,7 @@ type proc =
      stop_marker: (string -> bool) option;
      id : string;
      prog : string;
-     start_time : time_of_day}
+    }
 
 let all_procs : (proc list) ref = ref []
 
@@ -146,8 +139,7 @@ let start_process'
                errc = Unix.in_channel_of_descr stderr_r;
                outc = Unix.out_channel_of_descr stdin_w;
                stop_marker = stop_marker;
-               killed = false;
-               start_time = get_time_of_day()} in
+               killed = false; } in
   (* print_string ("Started process " ^ proc.id ^ "\n" ^ (stack_dump())); *)
   all_procs := proc :: !all_procs;
   proc
