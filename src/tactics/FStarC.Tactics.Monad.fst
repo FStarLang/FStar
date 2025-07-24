@@ -437,12 +437,11 @@ let goal_with_type g t
     set_uvar_expected_typ u t;
     g
 
-module Z = FStarC.BigInt
 
-let divide (n:Z.t) (l : tac 'a) (r : tac 'b) : tac ('a & 'b) =
+let divide (n:int) (l : tac 'a) (r : tac 'b) : tac ('a & 'b) =
   let! p = get in
   let! lgs, rgs =
-    try return (List.splitAt (Z.to_int_fs n) p.goals) with
+    try return (List.splitAt n p.goals) with
     | _ -> fail "divide: not enough goals"
   in
   let lp = { p with goals = lgs; smt_goals = [] } in
@@ -463,5 +462,5 @@ let divide (n:Z.t) (l : tac 'a) (r : tac 'b) : tac ('a & 'b) =
 (* focus: runs f on the current goal only, and then restores all the goals *)
 (* There is a user defined version as well, we just use this one internally, but can't mark it as private *)
 let focus (f:tac 'a) : tac 'a =
-    let! (a, _) = divide FStarC.BigInt.one f (return ()) in
+    let! (a, _) = divide 1 f (return ()) in
     return a

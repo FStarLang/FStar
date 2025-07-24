@@ -3,7 +3,6 @@
 to --warn_error. *)
 open Prims
 open FStarC_Errors_Codes
-module Z = FStarC_BigInt
 
 %}
 

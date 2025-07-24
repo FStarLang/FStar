@@ -104,8 +104,8 @@ let try_with_ident () =
 (* For integer constants (not 0/1) in this range we will use Prims.of_int
  * Outside this range we will use string parsing to allow arbitrary sized
  * integers.
- * Using int_zero/int_one removes int processing to create the Z.t
- * Using of_int removes string processing to create the Z.t
+ * Using int_zero/int_one removes int processing to create the int
+ * Using of_int removes string processing to create the int
  *)
 let max_of_int_const = Z.of_int   65535
 let min_of_int_const = Z.of_int (-65536)

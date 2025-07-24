@@ -15,7 +15,7 @@
 *)
 module FStarC.Real
 
-module Z = FStarC.BigInt
+module BU = FStarC.Util
 
 let rec dropWhile f xs =
   match xs with
@@ -48,10 +48,10 @@ let cmp (r1 r2 : real) : option order =
   match int_frac r1, int_frac r2 with
   | Some (i1, f1), Some (i2, f2) ->
     let f1, f2 = zeropad_match f1 f2 in
-    let i1 = Z.to_int_fs <| Z.big_int_of_string i1 in
-    let i2 = Z.to_int_fs <| Z.big_int_of_string i2 in
-    let f1 = Z.to_int_fs <| Z.big_int_of_string f1 in
-    let f2 = Z.to_int_fs <| Z.big_int_of_string f2 in
+    let i1 = BU.int_of_string i1 in
+    let i2 = BU.int_of_string i2 in
+    let f1 = BU.int_of_string f1 in
+    let f2 = BU.int_of_string f2 in
     Some <| FStarC.Class.Ord.cmp (i1, f1) (i2, f2) // lex order
 
   | _ ->

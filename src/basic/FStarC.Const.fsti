@@ -16,7 +16,6 @@
 module FStarC.Const
 
 open FStarC.Effect
-open FStarC.BigInt
 open FStarC.Range.Type
 open FStar.Char
 
@@ -56,6 +55,6 @@ type sconst =
 
 val eq_const (c1 c2 : sconst) : bool
 
-val bounds : signedness -> width -> bigint & bigint
+val bounds : signedness -> width -> int & int
 
 val within_bounds : string -> signedness -> width -> bool

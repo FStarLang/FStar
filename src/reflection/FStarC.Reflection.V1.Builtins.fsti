@@ -26,7 +26,6 @@ open FStarC.Ident
 
 module Env = FStarC.TypeChecker.Env
 module RD  = FStarC.Reflection.V1.Data
-module Z   = FStarC.BigInt
 
 (* Primitives *)
 val compare_bv            : bv -> bv -> order
@@ -85,7 +84,7 @@ val close_term     : binder -> term -> term
 FStarC.Tactics into FStar.String, which pulls a LOT of modules. *)
 val implode_qn     : list string -> string
 val explode_qn     : string -> list string
-val compare_string : string -> string -> Z.t
+val compare_string : string -> string -> int
 
 val push_binder    : Env.env -> binder -> Env.env
 

@@ -7,7 +7,6 @@ module Sedlexing = FStarC_Sedlexing (* KEEP: somehow needed if even unused? *)
 module L     = FStarC_Sedlexing
 module E     = FStarC_Errors
 module Codes = FStarC_Errors_Codes
-module Z     = FStarC_BigInt
 
 let digit   = [%sedlex.regexp? '0'..'9']
 let integer = [%sedlex.regexp? Plus digit]
