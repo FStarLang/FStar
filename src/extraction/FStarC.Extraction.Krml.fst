@@ -519,13 +519,13 @@ let find env x =
   try
     List.index (fun name -> name.pretty = x) env.names
   with _ ->
-    failwith (BU.format1 "Internal error: name not found %s\n" x)
+    failwith (Format.fmt1 "Internal error: name not found %s\n" x)
 
 let find_t env x =
   try
     List.index (fun name -> name = x) env.names_t
   with _ ->
-    failwith (BU.format1 "Internal error: name not found %s\n" x)
+    failwith (Format.fmt1 "Internal error: name not found %s\n" x)
 
 let add_binders env bs =
   List.fold_left (fun env {mlbinder_name} -> extend env mlbinder_name) env bs
@@ -1187,10 +1187,10 @@ and translate_expr' env e: expr =
   | MLE_Let _ ->
       (* Things not supported (yet): let-bindings for functions; meaning, rec flags are not
        * supported, and quantified type schemes are not supported either *)
-      failwith (BU.format1 "todo: translate_expr [MLE_Let] (expr is: %s)"
+      failwith (Format.fmt1 "todo: translate_expr [MLE_Let] (expr is: %s)"
         (ML.Code.string_of_mlexpr ([],"") e))
   | MLE_App (head, _) ->
-      failwith (BU.format1 "todo: translate_expr [MLE_App] (head is: %s)"
+      failwith (Format.fmt1 "todo: translate_expr [MLE_App] (head is: %s)"
         (ML.Code.string_of_mlexpr ([], "") head))
   | MLE_Seq seqs ->
       ESequence (List.map (translate_expr env) seqs)
@@ -1223,7 +1223,7 @@ and assert_lid env t =
         TApp (lid, List.map (translate_type env) ts)
       else
         TQualified lid
-  | _ -> failwith (BU.format1 "invalid argument: expected MLTY_Named, got %s"
+  | _ -> failwith (Format.fmt1 "invalid argument: expected MLTY_Named, got %s"
                              (ML.Code.string_of_mlty ([], "") t))
 
 and translate_branches env branches =
@@ -1296,7 +1296,7 @@ and translate_constant c: expr =
   | MLC_String s ->
       if FStar.String.list_of_string s
       |> BU.for_some (fun (c:FStar.Char.char) -> c = FStar.Char.char_of_int 0)
-      then failwith (BU.format1 "Refusing to translate a string literal that contains a null character: %s" s);
+      then failwith (Format.fmt1 "Refusing to translate a string literal that contains a null character: %s" s);
       EString s
   | MLC_Char c ->
       let i = BU.int_of_char c in
@@ -1329,7 +1329,7 @@ let translate_type_decl' env ty: option decl =
           Some (DTypeAbstractStruct name)
         else if assumed then
           let name = string_of_mlpath name in
-          BU.print1_warning "Not extracting type definition %s to KaRaMeL (assumed type)\n" name;
+          Format.print1_warning "Not extracting type definition %s to KaRaMeL (assumed type)\n" name;
           // JP: TODO: shall we be smarter here?
           None
         else
@@ -1359,7 +1359,7 @@ let translate_type_decl' env ty: option decl =
     | {tydecl_name=name} ->
         // JP: TODO: figure out why and how this happens
         Errors.log_issue0 Errors.Warning_DefinitionNotTranslated [
-            Errors.Msg.text <| BU.format1 "Error extracting type definition %s to KaRaMeL." name;
+            Errors.Msg.text <| Format.fmt1 "Error extracting type definition %s to KaRaMeL." name;
           ];
         None
 
@@ -1379,7 +1379,7 @@ let translate_let' env flavor lb: option decl =
       if List.length tvars = 0 then
         Some (DExternal (translate_cc meta, translate_flags meta, name, translate_type env t0, arg_names))
       else begin
-        BU.print1_warning "Not extracting %s to KaRaMeL (polymorphic assumes are not supported)\n" (Syntax.string_of_mlpath name);
+        Format.print1_warning "Not extracting %s to KaRaMeL (polymorphic assumes are not supported)\n" (Syntax.string_of_mlpath name);
         None
       end
 
@@ -1407,7 +1407,7 @@ let translate_let' env flavor lb: option decl =
           let msg = "function type annotation has less arrows than the \
             number of arguments; please mark the return type abbreviation as \
             inline_for_extraction" in
-          BU.print2_warning "Not extracting %s to KaRaMeL (%s)\n" (Syntax.string_of_mlpath name) msg
+          Format.print2_warning "Not extracting %s to KaRaMeL (%s)\n" (Syntax.string_of_mlpath name) msg
         end;
         let t = translate_type env t in
         let binders = translate_binders env args in
@@ -1429,13 +1429,13 @@ let translate_let' env flavor lb: option decl =
           let sub_msg : list document =
             match e with
             | Errors.Error (code, msg, pos, ctx) ->
-              [prefix 2 1 (text (BU.format2 "Got error %s at %s." (show (Errors.errno code)) (show pos)))
+              [prefix 2 1 (text (Format.fmt2 "Got error %s at %s." (show (Errors.errno code)) (show pos)))
                 (Errors.render_as_doc msg)]
             | e ->
               [text "Got an exception: " ^^ arbitrary_string (BU.print_exn e)]
           in
           Errors.log_issue0 Errors.Warning_FunctionNotExtacted ([
-            Errors.Msg.text <| BU.format1 "Error while extracting %s to KaRaMeL." (show name);
+            Errors.Msg.text <| Format.fmt1 "Error while extracting %s to KaRaMeL." (show name);
           ] @ sub_msg);
           let msg = "This function was not extracted:\n" ^ show name in
           Some (DFunction (cc, meta, List.length tvars, t, name, binders, EAbortS msg))
@@ -1460,7 +1460,7 @@ let translate_let' env flavor lb: option decl =
           Some (DGlobal (meta, name, List.length tvars, t, expr))
         with e ->
           Errors.log_issue0 Errors.Warning_DefinitionNotTranslated [
-              Errors.Msg.text <| BU.format1 "Error extracting %s to KaRaMeL." (Syntax.string_of_mlpath name);
+              Errors.Msg.text <| Format.fmt1 "Error extracting %s to KaRaMeL." (Syntax.string_of_mlpath name);
               Pprint.arbitrary_string (BU.print_exn e);
             ];
           Some (DGlobal (meta, name, List.length tvars, t, EAny))
@@ -1469,10 +1469,10 @@ let translate_let' env flavor lb: option decl =
   | { mllb_name = name; mllb_tysc = ts } ->
       // TODO JP: figure out what exactly we're hitting here...?
       Errors.log_issue0 Errors.Warning_DefinitionNotTranslated
-        (BU.format1 "Not extracting %s to KaRaMeL\n" name);
+        (Format.fmt1 "Not extracting %s to KaRaMeL\n" name);
       begin match ts with
       | Some (tps, t) ->
-          BU.print2 "Type scheme is: forall %s. %s\n"
+          Format.print2 "Type scheme is: forall %s. %s\n"
             (String.concat ", " (ty_param_names tps))
             (ML.Code.string_of_mlty ([], "") t)
       | None ->
@@ -1516,7 +1516,7 @@ let translate_decl env d: list decl =
       failwith "todo: translate_decl [MLM_Top]"
 
   | MLM_Exn (m, _) ->
-      BU.print1_warning "Not extracting exception %s to KaRaMeL (exceptions unsupported)\n" m;
+      Format.print1_warning "Not extracting exception %s to KaRaMeL (exceptions unsupported)\n" m;
       []
 
 let translate_module uenv (m : mlpath & option (mlsig & mlmodulebody)) : file =
@@ -1537,11 +1537,11 @@ let translate (ue:uenv) (modules : list mlmodule): list file =
       Syntax.string_of_mlpath path
     in
     try
-      if not (Options.silent()) then (BU.print1 "Attempting to translate module %s\n" m_name);
+      if not (Options.silent()) then (Format.print1 "Attempting to translate module %s\n" m_name);
       Some (translate_module ue m)
     with
     | e ->
-        BU.print2 "Unable to translate module: %s because:\n  %s\n"
+        Format.print2 "Unable to translate module: %s because:\n  %s\n"
           m_name (BU.print_exn e);
         None
   ) modules

@@ -132,7 +132,7 @@ let __do_rewrite
                (rangeof g0)
     in
     if_verbose (fun () ->
-                  BU.print2 "do_rewrite: making equality\n\t%s ==\n\t%s\n"
+                  Format.print2 "do_rewrite: making equality\n\t%s ==\n\t%s\n"
                     (show tm) (show ut)) ;!
     add_irrelevant_goal
                       g0
@@ -145,7 +145,7 @@ let __do_rewrite
     // Try to get rid of all the unification lambdas
     let ut = N.reduce_uvar_solutions env ut in
     if_verbose (fun () ->
-       BU.print2 "rewrite_rec: succeeded rewriting\n\t%s to\n\t%s\n"
+       Format.print2 "rewrite_rec: succeeded rewriting\n\t%s to\n\t%s\n"
                    (show tm)
                    (show ut)) ;!
     return ut
@@ -412,7 +412,7 @@ and on_subterms
        return (Tm_meta {tm=t; meta=m}, flag)
 
      | _ ->
-       (* BU.print1 "GG ignoring %s\n" (tag_of tm); *)
+       (* Format.print1 "GG ignoring %s\n" (tag_of tm); *)
        return (tm.n, Continue)
     in
     let! (tmn', flag) = go () in
@@ -443,12 +443,12 @@ let ctrl_rewrite
     dismiss_all ;!
     let gt = (goal_type g) in
     if_verbose (fun () ->
-        BU.print1 "ctrl_rewrite starting with %s\n" (show gt)) ;!
+        Format.print1 "ctrl_rewrite starting with %s\n" (show gt)) ;!
 
     let! gt' = do_ctrl_rewrite g dir controller rewriter (goal_env g) gt in
 
     if_verbose (fun () ->
-        BU.print1 "ctrl_rewrite seems to have succeded with %s\n" (show gt')) ;!
+        Format.print1 "ctrl_rewrite seems to have succeded with %s\n" (show gt')) ;!
 
     push_goals gs ;!
     let g = goal_with_type g gt' in

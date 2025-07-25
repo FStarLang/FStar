@@ -15,6 +15,8 @@
 *)
 
 module FStarC.Syntax.Unionfind
+
+open FStarC
 open FStarC.Effect
 open FStarC.Errors
 open FStarC.Syntax.Syntax
@@ -67,7 +69,7 @@ let empty (v:version) = {
   }
 
 (*private*)
-let version_to_string v = BU.format2 "%s.%s" (show v.major) (show v.minor)
+let version_to_string v = Format.fmt2 "%s.%s" (show v.major) (show v.minor)
 
 (* private *)
 let state : ref uf =

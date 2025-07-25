@@ -119,7 +119,7 @@ let qualify_field_names record_or_dc_lid field_names =
             | Some ns' ->
               if ns <> ns'
               then raise_error l Errors.Fatal_MissingFieldInRecord
-                     (BU.format2 "Field %s of record type was expected to be scoped to namespace %s" (show l) ns')
+                     (Format.fmt2 "Field %s of record type was expected to be scoped to namespace %s" (show l) ns')
               else (
                 ns_opt, qualify_to_record l :: out
               )
@@ -756,10 +756,10 @@ let check_no_aq (aq : antiquotations_temp) : unit =
     | [] -> ()
     | (bv, { n = Tm_quoted (e, { qkind = Quote_dynamic })})::_ ->
         raise_error e Errors.Fatal_UnexpectedAntiquotation
-          (BU.format1 "Unexpected antiquotation: `@(%s)" (show e))
+          (Format.fmt1 "Unexpected antiquotation: `@(%s)" (show e))
     | (bv, e)::_ ->
         raise_error e Errors.Fatal_UnexpectedAntiquotation
-          (BU.format1 "Unexpected antiquotation: `#(%s)" (show e))
+          (Format.fmt1 "Unexpected antiquotation: `#(%s)" (show e))
 
 let check_linear_pattern_variables pats (r:Range.t) =
   // returns the set of pattern variables
@@ -782,7 +782,7 @@ let check_linear_pattern_variables pats (r:Range.t) =
           else
             let duplicate_bv = List.hd (elems intersection) in
             raise_error duplicate_bv Errors.Fatal_NonLinearPatternNotPermitted
-              (BU.format1 "Non-linear patterns are not permitted: `%s` appears more than once in this pattern."
+              (Format.fmt1 "Non-linear patterns are not permitted: `%s` appears more than once in this pattern."
                 (show duplicate_bv.ppname))
       in
       List.fold_left aux (empty ()) pats
@@ -801,7 +801,7 @@ let check_linear_pattern_variables pats (r:Range.t) =
       let first_nonlinear_var = List.hd (elems nonlinear_vars) in
       raise_error first_nonlinear_var Errors.Fatal_IncoherentPatterns [
         text "Patterns in this match are incoherent.";
-        text (BU.format1 "Variable %s is bound in some but not all patterns."
+        text (Format.fmt1 "Variable %s is bound in some but not all patterns."
                        (show first_nonlinear_var.ppname));
       ]
     in
@@ -1143,7 +1143,7 @@ and desugar_machine_integer env repr (signedness, width) range =
   //Rather than relying on a verification condition to check this trivial property
   if not (within_bounds repr signedness width)
   then FStarC.Errors.log_issue range Errors.Error_OutOfRange
-         (BU.format2 "%s is not in the expected range for %s" repr tnm);
+         (Format.fmt2 "%s is not in the expected range for %s" repr tnm);
   let private_intro_nm = tnm ^
     ".__" ^ (match signedness with | Unsigned -> "u" | Signed -> "") ^ "int_to_t"
   in
@@ -1164,7 +1164,7 @@ and desugar_machine_integer env repr (signedness, width) range =
       end
     | None ->
       raise_error range Errors.Fatal_UnexpectedNumericLiteral
-        (BU.format1 "Unexpected numeric literal.  Restart F* to load %s." tnm) in
+        (Format.fmt1 "Unexpected numeric literal.  Restart F* to load %s." tnm) in
   let repr' = S.mk (Tm_constant (Const_int (repr, None))) range in
   let app = S.mk (Tm_app {hd=lid; args=[repr', S.as_aqual_implicit false]}) range in
   S.mk (Tm_meta {tm=app;
@@ -1194,7 +1194,7 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term & an
         raise_error b Fatal_UnexpectedTerm "Unexpected qualified binder in ELIM_EXISTS"
   in
   if !dbg_ToSyntax then
-    BU.print1 "desugaring (%s)\n\n" (show top);
+    Format.print1 "desugaring (%s)\n\n" (show top);
   begin match (unparen top).tm with
     | Wild -> setpos tun, noaqs
 
@@ -1307,7 +1307,7 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term & an
           let lid = U.dm4f_lid ed txt in
           S.fvar_with_dd lid None, noaqs
         | None ->
-          failwith (BU.format2 "Member %s of effect %s is not accessible \
+          failwith (Format.fmt2 "Member %s of effect %s is not accessible \
                                 (using an effect abbreviation instead of the original effect ?)"
                                (Ident.string_of_lid eff_name)
                                txt)
@@ -1330,13 +1330,13 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term & an
       | Some (resolve, new_name) ->
         desugar_name mk setpos env resolve (mk_field_projector_name_from_ident new_name i), noaqs
       | _ ->
-        raise_error top Errors.Fatal_EffectNotFound (BU.format1 "Data constructor or effect %s not found" (string_of_lid l))
+        raise_error top Errors.Fatal_EffectNotFound (Format.fmt1 "Data constructor or effect %s not found" (string_of_lid l))
       end
 
     | Discrim lid ->
       begin match Env.try_lookup_datacon env lid with
       | None ->
-        raise_error top Errors.Fatal_DataContructorNotFound (BU.format1 "Data constructor %s not found" (string_of_lid lid))
+        raise_error top Errors.Fatal_DataContructorNotFound (Format.fmt1 "Data constructor %s not found" (string_of_lid lid))
       | _ ->
         let lid' = U.mk_discriminator lid in
         desugar_name mk setpos env true lid', noaqs
@@ -1595,14 +1595,14 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term & an
         | Var l -> l
         | _ ->
           raise_error rty Errors.Error_BadLetOpenRecord
-            (BU.format1 "This type must be a (possibly applied) record name" (term_to_string rty))
+            (Format.fmt1 "This type must be a (possibly applied) record name" (term_to_string rty))
       in
       let record =
         match Env.try_lookup_record_type env tycon_name with
         | Some r -> r
         | None ->
           raise_error rty Errors.Error_BadLetOpenRecord
-            (BU.format1 "Not a record type: `%s`" (term_to_string rty))
+            (Format.fmt1 "Not a record type: `%s`" (term_to_string rty))
       in
       let constrname = lid_of_ns_and_id (ns_of_lid record.typename) record.constrname in
       let mk_pattern p = mk_pattern p r.range in
@@ -1995,7 +1995,7 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term & an
         let fvs = Free.names tm in
         if not (is_empty fvs) then
           raise_error e Errors.Fatal_MissingFieldInRecord
-                     (BU.format1 "Static quotation refers to external variables: %s" (show fvs))
+                     (Format.fmt1 "Static quotation refers to external variables: %s" (show fvs))
       in
 
       let qi = { qkind = Quote_static; antiquotations = (0, vt_tms) } in
@@ -2591,7 +2591,7 @@ and desugar_comp r (allow_type_promotion:bool) env t =
     in
     let (eff, cattributes), args = pre_process_comp_typ t in
     if List.length args = 0 then
-      fail Errors.Fatal_NotEnoughArgsToEffect (BU.format1 "Not enough args to effect %s" (show eff));
+      fail Errors.Fatal_NotEnoughArgsToEffect (Format.fmt1 "Not enough args to effect %s" (show eff));
     let is_universe (_, imp) = imp = UnivApp in
     let universes, args = BU.take is_universe args in
     let universes = List.map (fun (u, imp) -> desugar_universe u) universes in
@@ -2752,7 +2752,7 @@ and desugar_formula env (f:term) : S.term =
         match op_as_term env 0 i with
         | None -> 
           raise_error i Errors.Fatal_VariableNotFound
-                      (BU.format1 "quantifier operator %s not found" (Ident.string_of_id i))
+                      (Format.fmt1 "quantifier operator %s not found" (Ident.string_of_id i))
         | Some t -> t
       in
       desugar_quant q_head b pats false body
@@ -3031,13 +3031,13 @@ let rec desugar_tycon env (d: AST.decl) (d_attrs_initial:list S.term) quals tcs 
       let mfields = List.map (fun (x,q,attrs,t) -> FStarC.Parser.AST.mk_binder_with_attrs (Annotated(x,t)) (range_of_id x) Expr q attrs) fields in
       let result = apply_binders (mk_term (Var (lid_of_ids [id])) (range_of_id id) Type_level) parms in
       let constrTyp = mk_term (Product(mfields, with_constructor_effect result)) (range_of_id id) Type_level in
-      //let _ = BU.print_string (BU.format2 "Translated record %s to constructor %s\n" ((string_of_id id)) (term_to_string constrTyp)) in
+      //let _ = Format.print_string (Format.fmt2 "Translated record %s to constructor %s\n" ((string_of_id id)) (term_to_string constrTyp)) in
 
       let names = id :: binder_idents parms in
       List.iter (fun (f, _, _, _) ->
           if BU.for_some (fun i -> ident_equals f i) names then
               raise_error f Errors.Error_FieldShadow
-                (BU.format1 "Field %s shadows the record's name or a parameter of it, please rename it" (string_of_id f)))
+                (Format.fmt1 "Field %s shadows the record's name or a parameter of it, please rename it" (string_of_id f)))
           fields;
 
       TyconVariant(id, parms, kopt, [(constrName, Some (VpArbitrary constrTyp), attrs)]), fields |> List.map (fun (f, _, _, _) -> f)
@@ -3090,7 +3090,7 @@ let rec desugar_tycon env (d: AST.decl) (d_attrs_initial:list S.term) quals tcs 
                          then quals
                          else (if not (Options.ml_ish ()) then
                                  log_issue se Errors.Warning_AddImplicitAssumeNewQualifier
-                                   (BU.format1 "Adding an implicit 'assume new' qualifier on %s" (show l));
+                                   (Format.fmt1 "Adding an implicit 'assume new' qualifier on %s" (show l));
                                  S.Assumption :: S.New :: quals) in
              let t = match typars with
                 | [] -> k
@@ -3242,7 +3242,7 @@ let rec desugar_tycon env (d: AST.decl) (d_attrs_initial:list S.term) quals tcs 
           in
           if !dbg_attrs
           then (
-            BU.print3 "Adding attributes to type %s: val_attrs=[@@%s] attrs=[@@%s]\n" 
+            Format.print3 "Adding attributes to type %s: val_attrs=[@@%s] attrs=[@@%s]\n" 
               (show tname) (show val_attrs) (show d_attrs)
           );
           ([], { sigel = Sig_inductive_typ {lid=tname;
@@ -3266,7 +3266,7 @@ let rec desugar_tycon env (d: AST.decl) (d_attrs_initial:list S.term) quals tcs 
       let bundle, abbrevs = FStarC.Syntax.MutRecTy.disentangle_abbrevs_from_bundle sigelts quals (List.collect U.lids_of_sigelt sigelts) rng in
       if !dbg_attrs
       then (
-        BU.print1 "After disentangling: %s\n" (show bundle)
+        Format.print1 "After disentangling: %s\n" (show bundle)
       );
       let env = push_sigelt env0 bundle in
       let env = List.fold_left push_sigelt env abbrevs in
@@ -3321,7 +3321,7 @@ let parse_attr_with_list warn (at:S.term) (head:lident) : option (list int & Ran
   let warn () =
     if warn then
       Errors.log_issue at Errors.Warning_UnappliedFail
-        (BU.format1 "Found ill-applied '%s', argument should be a non-empty list of integer literals" (string_of_lid head))
+        (Format.fmt1 "Found ill-applied '%s', argument should be a non-empty list of integer literals" (string_of_lid head))
   in
   let hd, args = U.head_and_args at in
    match (SS.compress hd).n with
@@ -3394,7 +3394,7 @@ let rec desugar_effect env d (d_attrs:list S.term) (quals: qualifiers) (is_layer
     let for_free = num_indices = 1 && not is_layered in
     if for_free
     then Errors.log_issue d Errors.Warning_DeprecatedGeneric
-            (BU.format1 "DM4Free feature is deprecated and will be removed soon, \
+            (Format.fmt1 "DM4Free feature is deprecated and will be removed soon, \
               use layered effects to define %s" (Ident.string_of_id eff_name));
 
     let mandatory_members =
@@ -3737,9 +3737,9 @@ and desugar_decl_maybe_fail_attr env (d: decl) (attrs : list S.term) : (env_t & 
         let errnos = List.concatMap (fun i -> FStarC.Common.list_of_option i.issue_number) errs in
         if Options.print_expected_failures () then (
           (* Print errors if asked for *)
-          BU.print_string ">> Got issues: [\n";
+          Format.print_string ">> Got issues: [\n";
           List.iter Errors.print_issue errs;
-          BU.print_string ">>]\n"
+          Format.print_string ">>]\n"
         );
         if expected_errs = [] then
           env0, []
@@ -3756,7 +3756,7 @@ and desugar_decl_maybe_fail_attr env (d: decl) (attrs : list S.term) : (env_t & 
                   (pp (Class.Ord.sort expected_errs)) ^/^
                 prefix 2 1 (text "but it raised")
                   (pp (Class.Ord.sort errnos)) ^^ text "(at desugaring time)" ^^ dot;
-                text (BU.format3 "Error #%s was raised %s times, instead of %s."
+                text (Format.fmt3 "Error #%s was raised %s times, instead of %s."
                                       (show e) (show n2) (show n1));
               ];
             env0, []
@@ -3847,7 +3847,7 @@ and desugar_decl_core env (d_attrs:list S.term) (d:decl) : (env_t & sigelts) =
     let env, ses = desugar_tycon env d d_attrs (List.map (trans_qual None) quals) tcs in
     if !dbg_attrs
     then (
-      BU.print2 "Desugared tycon from {%s} to {%s}\n" (show d) (show ses)
+      Format.print2 "Desugared tycon from {%s} to {%s}\n" (show d) (show ses)
     );
     (* Handling typeclasses: we typecheck the tcs as usual, and then need to add
      * %splice[new_meth_lids] (mk_class type_lid)
@@ -4005,7 +4005,7 @@ and desugar_decl_core env (d_attrs:list S.term) (d:decl) : (env_t & sigelts) =
             let lbs0 = lbs0 |> List.map (fun lb -> { lb with lbattrs = U.deduplicate_terms (List.rev_append lb.lbattrs top_attrs) }) in
             (isrec, lbs0)
           in
-          // BU.print3 "Desugaring %s, val_quals are %s, val_attrs are %s\n"
+          // Format.print3 "Desugaring %s, val_quals are %s, val_attrs are %s\n"
           //   (List.map show fvs |> String.concat ", ")
           //   (show val_quals)
           //   (List.map show val_attrs |> String.concat ", ");
@@ -4310,7 +4310,7 @@ and desugar_decl_core env (d_attrs:list S.term) (d:decl) : (env_t & sigelts) =
     match extension_parser with
     | None ->
       raise_error range Errors.Fatal_SyntaxError
-         (BU.format1 "Unknown syntax extension %s" extension_name)
+         (Format.fmt1 "Unknown syntax extension %s" extension_name)
     | Some parser ->
       let open FStarC.Parser.AST.Util in
       let opens = {
@@ -4331,7 +4331,7 @@ and desugar_decl_core env (d_attrs:list S.term) (d:decl) : (env_t & sigelts) =
     match lookup_extension_tosyntax tbs.lang_name with
     | None -> 
       raise_error d Errors.Fatal_SyntaxError
-        (BU.format1 "Could not find desugaring callback for extension %s" tbs.lang_name)
+        (Format.fmt1 "Could not find desugaring callback for extension %s" tbs.lang_name)
     | Some desugar ->
       let mk_sig sigel = 
         let top_attrs = d_attrs in
@@ -4417,7 +4417,7 @@ let desugar_modul env (m:AST.modul) : env_t & Syntax.modul =
     let env, modul, pop_when_done = desugar_modul_common None env m in
     let env, modul = Env.finish_module_or_interface env modul in
     if Options.dump_module (string_of_lid modul.name)
-    then BU.print1 "Module after desugaring:\n%s\n" (show modul);
+    then Format.print1 "Module after desugaring:\n%s\n" (show modul);
     (if pop_when_done then export_interface modul.name env else env), modul
   )
 

@@ -282,7 +282,7 @@ let destruct_comp c : (universe & typ & typ) =
   let wp = match c.effect_args with
     | [(wp, _)] -> wp
     | _ ->
-      failwith (U.format2
+      failwith (Format.fmt2
         "Impossible: Got a computation %s with %s effect args"
         (string_of_lid c.effect_name)
         (c.effect_args |> List.length |> show)) in
@@ -488,7 +488,7 @@ let unlazy_as_t k t =
     | Tm_lazy ({lkind=k'; blob=v}) ->
       if k =? k'
       then Dyn.undyn v
-      else failwith (U.format2 "Expected Tm_lazy of kind %s, got %s"
+      else failwith (Format.fmt2 "Expected Tm_lazy of kind %s, got %s"
                        (show k) (show k'))
     | _ ->
       failwith "Not a Tm_lazy of the expected kind"
@@ -663,7 +663,7 @@ let ses_of_sigbundle (se:sigelt) :list sigelt =
 let set_uvar uv t =
   match Unionfind.find uv with
     | Some t' ->
-      failwith (U.format3 "Changing a fixed uvar! ?%s to %s but \
+      failwith (Format.fmt3 "Changing a fixed uvar! ?%s to %s but \
                            it is already set to %s\n" (show <| Unionfind.uvar_id uv)
                           (tts t)
                           (tts t'))
@@ -1339,7 +1339,7 @@ let debug_term_eq = mk_ref false
 let check dbg msg cond =
   if cond
   then true
-  else (if dbg then U.print1 ">>> term_eq failing: %s\n" msg; false)
+  else (if dbg then Format.print1 ">>> term_eq failing: %s\n" msg; false)
 
 let fail dbg msg = check dbg msg false
 
@@ -1589,7 +1589,7 @@ let process_pragma p r =
       with
       | Options.NotSettable x ->
         Errors.raise_error r Errors.Fatal_FailToProcessPragma [
-          Errors.Msg.text <| U.format1 "Option '%s' is not settable via a pragma." x;
+          Errors.Msg.text <| Format.fmt1 "Option '%s' is not settable via a pragma." x;
         ]
     in
     match p with

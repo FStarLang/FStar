@@ -231,12 +231,12 @@ let deps_of_our_file filename =
   let maybe_intf = match same_name with
     | [ intf; impl ] ->
         if not (Parser.Dep.is_interface intf) || not (Parser.Dep.is_implementation impl) then
-          Errors.log_issue0 Errors.Warning_MissingInterfaceOrImplementation (Util.format2 "Found %s and %s but not an interface + implementation" intf impl);
+          Errors.log_issue0 Errors.Warning_MissingInterfaceOrImplementation (Format.fmt2 "Found %s and %s but not an interface + implementation" intf impl);
         Some intf
     | [ impl ] ->
         None
     | _ ->
-        Errors.log_issue0 Errors.Warning_UnexpectedFile (Util.format1 "Unexpected: ended up with %s" (String.concat " " same_name));
+        Errors.log_issue0 Errors.Warning_UnexpectedFile (Format.fmt1 "Unexpected: ended up with %s" (String.concat " " same_name));
         None
   in
   deps, maybe_intf, dep_graph
@@ -355,12 +355,12 @@ let update_deps (filename:string) (m:modul_t) (stk:stack_t) (env:env_t) (ts:m_ti
   iterate filenames (List.rev_append stk []) env (List.rev_append ts []) [] []
 
 let format_info env name typ range (doc: option string) =
-  Util.format4 "(defined at %s) %s: %s%s"
+  Format.fmt4 "(defined at %s) %s: %s%s"
     (Range.string_of_range range)
     name
     (FStarC.TypeChecker.Normalize.term_to_string env typ)
     (match doc with
-     | Some docstring -> Util.format1 "#doc %s" docstring
+     | Some docstring -> Format.fmt1 "#doc %s" docstring
      | None -> "")
 
 let rec go (line_col:(int&int))
@@ -383,13 +383,13 @@ let rec go (line_col:(int&int))
              try_lookup_lid env lid
                |> Util.map_option (fun ((_, typ), r) -> (Inr lid, typ, r)) in
     (match info_opt with
-     | None -> Util.print_string "\n#done-nok\n"
+     | None -> Format.print_string "\n#done-nok\n"
      | Some (name_or_lid, typ, rng) ->
        let name, doc =
          match name_or_lid with
          | Inl name -> name, None
          | Inr lid -> Ident.string_of_lid lid, None in
-       Util.print1 "%s\n#done-ok\n" (format_info env name typ rng doc));
+       Format.print1 "%s\n#done-ok\n" (format_info env name typ rng doc));
     go line_col filename stack curmod env ts
   | Completions search_term ->
     //search_term is the partially written identifer by the user
@@ -497,14 +497,14 @@ let rec go (line_col:(int&int))
         List.map (fun x -> prepare_candidate (shorten_namespace x))
     in
     List.iter (fun (candidate, ns, match_len) ->
-               Util.print3 "%s %s %s \n"
+               Format.print3 "%s %s %s \n"
                (show match_len) ns candidate)
               (Util.sort_with (fun (cd1, ns1, _) (cd2, ns2, _) ->
                                match String.compare cd1 cd2 with
                                | 0 -> String.compare ns1 ns2
                                | n -> n)
                               matches);
-    Util.print_string "#done-ok\n";
+    Format.print_string "#done-ok\n";
     go line_col filename stack curmod env ts
   | Pop msg ->
       // This shrinks all internal stacks by 1
@@ -532,7 +532,7 @@ let rec go (line_col:(int&int))
       // This does not grow any of the internal stacks.
       let fail curmod tcenv =
         report_fail();
-        Util.print1 "%s\n" fail;
+        Format.print1 "%s\n" fail;
         // The interactive mode will send a pop here
         go line_col filename stack curmod tcenv ts
       in
@@ -545,7 +545,7 @@ let rec go (line_col:(int&int))
         match res with
         | Some (curmod, env, n_errs) ->
             if n_errs=0 then begin
-              Util.print1 "\n%s\n" ok;
+              Format.print1 "\n%s\n" ok;
               go line_col filename stack curmod env ts
               end
             else fail curmod env

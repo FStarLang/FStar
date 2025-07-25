@@ -295,7 +295,7 @@ let run_full_buffer (st:repl_state)
       | IncrementalFragment (decls, _, err_opt) -> (
         // This is a diagnostic message that is send to the IDE as an info message
         // The script test-incremental.py in tests/ide/ depends on this message
-        BU.print1 "Parsed %s declarations\n" (show (List.length decls));
+        Format.print1 "Parsed %s declarations\n" (show (List.length decls));
         match request_type, decls with
         | ReloadDeps, d::_ ->
           run_qst (let! queries = reload_deps (!repl_stack) in
@@ -317,7 +317,7 @@ let run_full_buffer (st:repl_state)
           if request_type <> Cache then log_syntax_issues err_opt;
           if Debug.any()
           then (
-            BU.print1 "Generating queries\n%s\n" 
+            Format.print1 "Generating queries\n%s\n" 
                       (String.concat "\n" (List.map query_to_string queries))
           );
           if request_type <> Cache then (queries, issues) else ([] , issues)

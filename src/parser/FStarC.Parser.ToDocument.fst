@@ -254,7 +254,7 @@ let rec extract_from_ref_set e = match e.tm with
   | App ({tm=Var _}, {tm=App({tm=Var _}, e, Nothing)}, Nothing) -> [e]
   | App({tm = App({tm=Var _}, e1, Nothing)}, e2, Nothing) ->
       extract_from_ref_set e1 @ extract_from_ref_set e2
-  | _ -> failwith (Util.format1 "Not a ref set %s" (term_to_string e))
+  | _ -> failwith (Format.fmt1 "Not a ref set %s" (term_to_string e))
 
 let is_general_application e =
   not (is_array e || is_ref_set e)
@@ -362,7 +362,7 @@ let max_level l =
   let find_level_and_max n level =
     match List.tryFind (fun (_, tokens) -> tokens = snd level) level_table with
       | Some ((_,l,_), _) -> max n l
-      | None -> failwith (Util.format1 "Undefined associativity level %s"
+      | None -> failwith (Format.fmt1 "Undefined associativity level %s"
                                       (String.concat "," (List.map token_to_string (snd level))))
   in List.fold_left find_level_and_max 0 l
 
@@ -1014,7 +1014,7 @@ and p_effectDecl ps d = match d.d with
   | Tycon(false, _, [TyconAbbrev(lid, [], None, e)]) ->
       prefix2 (p_lident lid ^^ space ^^ equals) (p_simpleTerm ps false e)
   | _ ->
-      failwith (Util.format1 "Not a declaration of an effect member... or at least I hope so : %s"
+      failwith (Format.fmt1 "Not a declaration of an effect member... or at least I hope so : %s"
                               (show d))
 
 and p_subEffect lift =
@@ -1164,7 +1164,7 @@ and p_atomicPattern p = match p.pat with
   | PatApp ({pat = PatName _}, _)
   | PatTuple (_, false) ->
       soft_parens_with_nesting (p_tuplePattern p)
-  | _ -> failwith (Util.format1 "Invalid pattern %s" (pat_to_string p))
+  | _ -> failwith (Format.fmt1 "Invalid pattern %s" (pat_to_string p))
 
 (* Skipping patternOrMultibinder since it would need retro-engineering the flattening of binders *)
 
@@ -2013,7 +2013,7 @@ and p_refinedBinder b phi =
     | TAnnotated _ -> failwith "Is this still used ?"
     | TVariable _
     | NoName _ ->
-      failwith (Util.format1 "Impossible: a refined binder ought to be annotated (%s)" (binder_to_string b))
+      failwith (Format.fmt1 "Impossible: a refined binder ought to be annotated (%s)" (binder_to_string b))
 
 (* A simple def can be followed by a ';'. Protect except for the last one. *)
 and p_simpleDef ps (lid, e) =
@@ -2262,7 +2262,7 @@ and p_universeFrom u = match u.tm with
               separate_map space (fun (u,_) -> p_atomicUniverse u) args)
       | _ ->
         (* TODO : refine the failwiths with informations *)
-        failwith (Util.format1 ("Invalid term in universe context %s") (term_to_string u))
+        failwith (Format.fmt1 ("Invalid term in universe context %s") (term_to_string u))
     end
   | _ -> p_atomicUniverse u
 
@@ -2273,7 +2273,7 @@ and p_atomicUniverse u = match u.tm with
   | Paren u -> soft_parens_with_nesting (p_universeFrom u)
   | App _ -> soft_parens_with_nesting (p_universeFrom u)
   | Op(id, [_ ; _]) when string_of_id id = "+" -> soft_parens_with_nesting (p_universeFrom u)
-  | _ -> failwith (Util.format1 "Invalid term in universe context %s" (term_to_string u))
+  | _ -> failwith (Format.fmt1 "Invalid term in universe context %s" (term_to_string u))
 
 let term_to_document e =
   p_term false false e

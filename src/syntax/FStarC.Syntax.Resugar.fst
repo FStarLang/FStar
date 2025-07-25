@@ -249,8 +249,8 @@ let serialize_machine_integer_desc (s,w) : list string =
     | Int64 -> "64"
   in
   let su = match s with | Unsigned -> "u" | Signed -> "" in
-  [ BU.format3 "FStar.%sInt%s.__%sint_to_t" sU sW su;
-    BU.format3 "FStar.%sInt%s.%sint_to_t" sU sW su ]
+  [ Format.fmt3 "FStar.%sInt%s.__%sint_to_t" sU sW su;
+    Format.fmt3 "FStar.%sInt%s.%sint_to_t" sU sW su ]
 
 let parse_machine_integer_desc =
   let signs = [Unsigned; Signed] in

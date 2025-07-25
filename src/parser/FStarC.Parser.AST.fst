@@ -55,14 +55,14 @@ let check_id id =
     let first_char = String.substring (string_of_id id) 0 1 in
     if not (String.lowercase first_char = first_char) then
       raise_error id Fatal_InvalidIdentifier
-        (Util.format1 "Invalid identifer '%s'; expected a symbol that begins with a lower-case character" (show id))
+        (Format.fmt1 "Invalid identifer '%s'; expected a symbol that begins with a lower-case character" (show id))
 
 let at_most_one s (r:range) l = match l with
   | [ x ] -> Some x
   | [] -> None
   | _ ->
     raise_error r Fatal_MoreThanOneDeclaration
-      (Util.format1 "At most one %s is allowed on declarations" s)
+      (Format.fmt1 "At most one %s is allowed on declarations" s)
 
 let mk_binder_with_attrs b r l i attrs = {b=b; brange=r; blevel=l; aqual=i; battributes=attrs}
 let mk_binder b r l i = mk_binder_with_attrs b r l i []
@@ -421,51 +421,51 @@ let imp_to_string = function
     | _ -> ""
 let rec term_to_string (x:term) = match x.tm with
   | Wild -> "_"
-  | LexList l -> Util.format1 "%[%s]"
+  | LexList l -> Format.fmt1 "%[%s]"
     (match l with
      | [] -> " "
      | hd::tl ->
        tl |> List.fold_left (fun s t -> s ^ "; " ^ term_to_string t) (term_to_string hd))
-  | Decreases (t, _) -> Util.format1 "(decreases %s)" (term_to_string t)
-  | Requires (t, _) -> Util.format1 "(requires %s)" (term_to_string t)
-  | Ensures (t, _) -> Util.format1 "(ensures %s)" (term_to_string t)
-  | Labeled (t, l, _) -> Util.format2 "(labeled %s %s)" l (term_to_string t)
+  | Decreases (t, _) -> Format.fmt1 "(decreases %s)" (term_to_string t)
+  | Requires (t, _) -> Format.fmt1 "(requires %s)" (term_to_string t)
+  | Ensures (t, _) -> Format.fmt1 "(ensures %s)" (term_to_string t)
+  | Labeled (t, l, _) -> Format.fmt2 "(labeled %s %s)" l (term_to_string t)
   | Const c -> C.const_to_string c
   | Op(s, xs) ->
-      Util.format2 "%s(%s)" (string_of_id s) (String.concat ", " (List.map (fun x -> x|> term_to_string) xs))
+      Format.fmt2 "%s(%s)" (string_of_id s) (String.concat ", " (List.map (fun x -> x|> term_to_string) xs))
   | Tvar id
   | Uvar id -> (string_of_id id)
   | Var l
   | Name l -> (string_of_lid l)
 
   | Projector (rec_lid, field_id) ->
-    Util.format2 "%s?.%s" (string_of_lid rec_lid) ((string_of_id field_id))
+    Format.fmt2 "%s?.%s" (string_of_lid rec_lid) ((string_of_id field_id))
 
   | Construct (l, args) ->
-    Util.format2 "(%s %s)" (string_of_lid l) (to_string_l " " (fun (a,imp) -> Util.format2 "%s%s" (imp_to_string imp) (term_to_string a)) args)
+    Format.fmt2 "(%s %s)" (string_of_lid l) (to_string_l " " (fun (a,imp) -> Format.fmt2 "%s%s" (imp_to_string imp) (term_to_string a)) args)
   | Function (branches, r) ->
-    Util.format1 "(function %s)"
-      (to_string_l " | " (fun (p,w,e) -> Util.format2 "%s -> %s"
+    Format.fmt1 "(function %s)"
+      (to_string_l " | " (fun (p,w,e) -> Format.fmt2 "%s -> %s"
         (p |> pat_to_string)
         (e |> term_to_string)) branches)
 
   | Abs(pats, t) ->
-    Util.format2 "(fun %s -> %s)" (to_string_l " " pat_to_string pats) (t|> term_to_string)
-  | App(t1, t2, imp) -> Util.format3 "%s %s%s" (t1|> term_to_string) (imp_to_string imp) (t2|> term_to_string)
+    Format.fmt2 "(fun %s -> %s)" (to_string_l " " pat_to_string pats) (t|> term_to_string)
+  | App(t1, t2, imp) -> Format.fmt3 "%s %s%s" (t1|> term_to_string) (imp_to_string imp) (t2|> term_to_string)
   | Let (LocalRec, (a,(p,b))::lbs, body) ->
-    Util.format4 "%slet rec %s%s in %s"
+    Format.fmt4 "%slet rec %s%s in %s"
         (attrs_opt_to_string a)
-        (Util.format2 "%s=%s" (p|> pat_to_string) (b|> term_to_string))
+        (Format.fmt2 "%s=%s" (p|> pat_to_string) (b|> term_to_string))
         (to_string_l " "
             (fun (a,(p,b)) ->
-                Util.format3 "%sand %s=%s"
+                Format.fmt3 "%sand %s=%s"
                               (attrs_opt_to_string a)
                               (p|> pat_to_string)
                               (b|> term_to_string))
             lbs)
         (body|> term_to_string)
   | Let (q, [(attrs,(pat,tm))], body) ->
-    Util.format5 "%slet %s %s = %s in %s"
+    Format.fmt5 "%slet %s %s = %s in %s"
         (attrs_opt_to_string attrs)
         (string_of_local_let_qualifier q)
         (pat|> pat_to_string)
@@ -475,26 +475,26 @@ let rec term_to_string (x:term) = match x.tm with
     raise_error x Fatal_EmptySurfaceLet "Internal error: found an invalid surface Let"
 
   | LetOpen (lid, t) ->
-    Util.format2 "let open %s in %s" (string_of_lid lid) (term_to_string t)
+    Format.fmt2 "let open %s in %s" (string_of_lid lid) (term_to_string t)
 
   | Seq(t1, t2) ->
-    Util.format2 "%s; %s" (t1|> term_to_string) (t2|> term_to_string)
+    Format.fmt2 "%s; %s" (t1|> term_to_string) (t2|> term_to_string)
 
   | Bind (id, t1, t2) ->
-    Util.format3 "%s <- %s; %s" (string_of_id id) (term_to_string t1) (term_to_string t2)
+    Format.fmt3 "%s <- %s; %s" (string_of_id id) (term_to_string t1) (term_to_string t2)
 
   | If(t1, op_opt, ret_opt, t2, t3) ->
-    Util.format5 "if%s %s %sthen %s else %s"
+    Format.fmt5 "if%s %s %sthen %s else %s"
       (match op_opt with | Some op -> string_of_id op | None -> "")
       (t1|> term_to_string)
       (match ret_opt with
        | None -> ""
        | Some (as_opt, ret, use_eq) ->
          let s = if use_eq then "returns$" else "returns" in
-         Util.format3 "%s%s %s "
+         Format.fmt3 "%s%s %s "
            (match as_opt with
             | None -> ""
-            | Some as_ident -> Util.format1 " as %s " (string_of_id as_ident))
+            | Some as_ident -> Format.fmt1 " as %s " (string_of_id as_ident))
            s
            (term_to_string ret))
       (t2|> term_to_string)
@@ -505,91 +505,91 @@ let rec term_to_string (x:term) = match x.tm with
 
   | Ascribed(t1, t2, None, flag) ->
     let s = if flag then "$:" else "<:" in
-    Util.format3 "(%s %s %s)" (t1|> term_to_string) s (t2|> term_to_string)
+    Format.fmt3 "(%s %s %s)" (t1|> term_to_string) s (t2|> term_to_string)
   | Ascribed(t1, t2, Some tac, flag) ->
     let s = if flag then "$:" else "<:" in
-    Util.format4 "(%s %s %s by %s)" (t1|> term_to_string) s (t2|> term_to_string) (tac |> term_to_string)
+    Format.fmt4 "(%s %s %s by %s)" (t1|> term_to_string) s (t2|> term_to_string) (tac |> term_to_string)
   | Record(Some e, fields) ->
-    Util.format2 "{%s with %s}" (e|> term_to_string) (to_string_l " " (fun (l,e) -> Util.format2 "%s=%s" ((string_of_lid l)) (e|> term_to_string)) fields)
+    Format.fmt2 "{%s with %s}" (e|> term_to_string) (to_string_l " " (fun (l,e) -> Format.fmt2 "%s=%s" ((string_of_lid l)) (e|> term_to_string)) fields)
   | Record(None, fields) ->
-    Util.format1 "{%s}" (to_string_l " " (fun (l,e) -> Util.format2 "%s=%s" ((string_of_lid l)) (e|> term_to_string)) fields)
+    Format.fmt1 "{%s}" (to_string_l " " (fun (l,e) -> Format.fmt2 "%s=%s" ((string_of_lid l)) (e|> term_to_string)) fields)
   | Project(e,l) ->
-    Util.format2 "%s.%s" (e|> term_to_string) ((string_of_lid l))
+    Format.fmt2 "%s.%s" (e|> term_to_string) ((string_of_lid l))
   | Product([], t) ->
     term_to_string t
   | Product(b::hd::tl, t) ->
     term_to_string (mk_term (Product([b], mk_term (Product(hd::tl, t)) x.range x.level)) x.range x.level)
   | Product([b], t) when (x.level = Type_level) ->
-    Util.format2 "%s -> %s" (b|> binder_to_string) (t|> term_to_string)
+    Format.fmt2 "%s -> %s" (b|> binder_to_string) (t|> term_to_string)
   | Product([b], t) when (x.level = Kind) ->
-    Util.format2 "%s => %s" (b|> binder_to_string) (t|> term_to_string)
+    Format.fmt2 "%s => %s" (b|> binder_to_string) (t|> term_to_string)
   | Sum(binders, t) ->
     (binders@[Inr t]) |>
     List.map (function Inl b -> binder_to_string b
                      | Inr t -> term_to_string t) |>
     String.concat " & "
   | QForall(bs, (_, pats), t) ->
-    Util.format3 "forall %s.{:pattern %s} %s"
+    Format.fmt3 "forall %s.{:pattern %s} %s"
       (to_string_l " " binder_to_string bs)
       (to_string_l " \/ " (to_string_l "; " term_to_string) pats)
       (t|> term_to_string)
   | QExists(bs, (_, pats), t) ->
-    Util.format3 "exists %s.{:pattern %s} %s"
+    Format.fmt3 "exists %s.{:pattern %s} %s"
       (to_string_l " " binder_to_string bs)
       (to_string_l " \/ " (to_string_l "; " term_to_string) pats)
       (t|> term_to_string)
   | QuantOp(i, bs, (_, []), t) ->
-    Util.format3 "%s %s. %s"
+    Format.fmt3 "%s %s. %s"
       (string_of_id i)
       (to_string_l " " binder_to_string bs)
       (t|> term_to_string)
   | QuantOp(i, bs, (_, pats), t) ->
-    Util.format4 "%s %s.{:pattern %s} %s"
+    Format.fmt4 "%s %s.{:pattern %s} %s"
       (string_of_id i)
       (to_string_l " " binder_to_string bs)
       (to_string_l " \/ " (to_string_l "; " term_to_string) pats)
       (t|> term_to_string)
   | Refine(b, t) ->
-    Util.format2 "%s:{%s}" (b|> binder_to_string) (t|> term_to_string)
+    Format.fmt2 "%s:{%s}" (b|> binder_to_string) (t|> term_to_string)
   | NamedTyp(x, t) ->
-    Util.format2 "%s:%s" (string_of_id x)  (t|> term_to_string)
-  | Paren t -> Util.format1 "(%s)" (t|> term_to_string)
+    Format.fmt2 "%s:%s" (string_of_id x)  (t|> term_to_string)
+  | Paren t -> Format.fmt1 "(%s)" (t|> term_to_string)
   | Product(bs, t) ->
-        Util.format2 "Unidentified product: [%s] %s"
+        Format.fmt2 "Unidentified product: [%s] %s"
           (bs |> List.map binder_to_string |> String.concat ",") (t|> term_to_string)
 
   | Discrim lid ->
-    Util.format1 "%s?" (string_of_lid lid)
+    Format.fmt1 "%s?" (string_of_lid lid)
 
   | Attributes ts ->
-    Util.format1 "(attributes %s)" (String.concat " " <| List.map term_to_string ts)
+    Format.fmt1 "(attributes %s)" (String.concat " " <| List.map term_to_string ts)
 
   | Antiquote t ->
-    Util.format1 "(`#%s)" (term_to_string t)
+    Format.fmt1 "(`#%s)" (term_to_string t)
 
   | Quote (t, Static) ->
-    Util.format1 "(`(%s))" (term_to_string t)
+    Format.fmt1 "(`(%s))" (term_to_string t)
 
   | Quote (t, Dynamic) ->
-    Util.format1 "quote (%s)" (term_to_string t)
+    Format.fmt1 "quote (%s)" (term_to_string t)
 
   | VQuote t ->
-    Util.format1 "`%%%s" (term_to_string t)
+    Format.fmt1 "`%%%s" (term_to_string t)
 
   | CalcProof (rel, init, steps) ->
-    Util.format3 "calc (%s) { %s %s }" (term_to_string rel)
+    Format.fmt3 "calc (%s) { %s %s }" (term_to_string rel)
                                        (term_to_string init)
                                        (String.concat " " <| List.map calc_step_to_string steps)
 
 
   | ElimForall(bs, t, vs) ->
-    Util.format3 "_elim_ forall %s. %s using %s"
+    Format.fmt3 "_elim_ forall %s. %s using %s"
         (binders_to_string " " bs)
         (term_to_string t)
         (String.concat " " (List.map term_to_string vs))
 
   | ElimExists(bs, p, q, b, e) ->
-    Util.format5 "_elim_ exists %s. %s _to_ %s\n\with %s. %s"
+    Format.fmt5 "_elim_ exists %s. %s _to_ %s\n\with %s. %s"
         (binders_to_string " " bs)
         (term_to_string p)
         (term_to_string q)
@@ -597,13 +597,13 @@ let rec term_to_string (x:term) = match x.tm with
         (term_to_string e)
 
   | ElimImplies(p, q, e) ->
-    Util.format3 "_elim_ %s ==> %s with %s"
+    Format.fmt3 "_elim_ %s ==> %s with %s"
       (term_to_string p)
       (term_to_string q)
       (term_to_string e)
 
   | ElimOr(p, q, r, x, e, y, e') ->
-     Util.format "_elim_ %s \/ %s _to_ %s\n\with %s. %s\n\and %s.%s"
+     Format.fmt "_elim_ %s \/ %s _to_ %s\n\with %s. %s\n\and %s.%s"
        [term_to_string p;
         term_to_string q;
         term_to_string r;
@@ -613,7 +613,7 @@ let rec term_to_string (x:term) = match x.tm with
         term_to_string e']
 
   | ElimAnd(p, q, r, x, y, e) ->
-     Util.format "_elim_ %s /\ %s _to_ %s\n\with %s %s. %s"
+     Format.fmt "_elim_ %s /\ %s _to_ %s\n\with %s %s. %s"
        [term_to_string p;
         term_to_string q;
         term_to_string r;
@@ -622,44 +622,44 @@ let rec term_to_string (x:term) = match x.tm with
         term_to_string e]
 
   | IntroForall(xs, p, e) -> 
-    Util.format3 "_intro_ forall %s. %s with %s"
+    Format.fmt3 "_intro_ forall %s. %s with %s"
       (binders_to_string " " xs)
       (term_to_string p)
       (term_to_string e)
         
   | IntroExists(xs, t, vs, e) ->
-    Util.format4 "_intro_ exists %s. %s using %s with %s"
+    Format.fmt4 "_intro_ exists %s. %s using %s with %s"
       (binders_to_string " " xs)
       (term_to_string t)
       (String.concat " " (List.map term_to_string vs))
       (term_to_string e)
   
   | IntroImplies(p, q, x, e) ->
-    Util.format4 ("_intro_ %s ==> %s with %s. %s")
+    Format.fmt4 ("_intro_ %s ==> %s with %s. %s")
       (term_to_string p)
       (term_to_string q)
       (binder_to_string x)
       (term_to_string p)
       
   | IntroOr(b, p, q, r) ->
-    Util.format4 ("_intro_ %s \/ %s using %s with %s")
+    Format.fmt4 ("_intro_ %s \/ %s using %s with %s")
       (term_to_string p)
       (term_to_string q)
       (if b then "Left" else "Right")
       (term_to_string r)
       
   | IntroAnd(p, q, e1, e2) ->
-    Util.format4 ("_intro_ %s /\ %s with %s and %s")  
+    Format.fmt4 ("_intro_ %s /\ %s with %s and %s")  
       (term_to_string p)
       (term_to_string q)
       (term_to_string e1)
       (term_to_string e2)
 
   | ListLiteral ts ->
-    Util.format1 "[%s]" (to_string_l "; " term_to_string ts)
+    Format.fmt1 "[%s]" (to_string_l "; " term_to_string ts)
 
   | SeqLiteral ts ->
-    Util.format1 "seq![%s]" (to_string_l "; " term_to_string ts)
+    Format.fmt1 "seq![%s]" (to_string_l "; " term_to_string ts)
     
 and binders_to_string sep bs =
     List.map binder_to_string bs |> String.concat sep
@@ -670,7 +670,7 @@ and try_or_match_to_string (x:term) scrutinee branches op_opt ret_opt =
     | Match _ -> "match"
     | TryWith _ -> "try"
     | _ -> failwith "impossible" in
-  Util.format5 "%s%s %s %swith %s"
+  Format.fmt5 "%s%s %s %swith %s"
     s
     (match op_opt with | Some op -> string_of_id op | None -> "")
     (scrutinee|> term_to_string)
@@ -678,28 +678,28 @@ and try_or_match_to_string (x:term) scrutinee branches op_opt ret_opt =
      | None -> ""
      | Some (as_opt, ret, use_eq) ->
        let s = if use_eq then "returns$" else "returns" in
-       Util.format3 "%s%s %s " s
+       Format.fmt3 "%s%s %s " s
          (match as_opt with
           | None -> ""
-          | Some as_ident -> Util.format1 "as %s " (string_of_id as_ident))
+          | Some as_ident -> Format.fmt1 "as %s " (string_of_id as_ident))
          (term_to_string ret))
-    (to_string_l " | " (fun (p,w,e) -> Util.format3 "%s %s -> %s"
+    (to_string_l " | " (fun (p,w,e) -> Format.fmt3 "%s %s -> %s"
       (p |> pat_to_string)
-      (match w with | None -> "" | Some e -> Util.format1 "when %s" (term_to_string e))
+      (match w with | None -> "" | Some e -> Format.fmt1 "when %s" (term_to_string e))
       (e |> term_to_string)) branches)
 
 and calc_step_to_string (CalcStep (rel, just, next)) =
-    Util.format3 "%s{ %s } %s" (term_to_string rel) (term_to_string just) (term_to_string next)
+    Format.fmt3 "%s{ %s } %s" (term_to_string rel) (term_to_string just) (term_to_string next)
 
 and binder_to_string x =
   let pr x =
     let s = match x.b with
     | Variable i -> (string_of_id i)
-    | TVariable i -> Util.format1 "%s:_" ((string_of_id i))
+    | TVariable i -> Format.fmt1 "%s:_" ((string_of_id i))
     | TAnnotated(i,t)
-    | Annotated(i,t) -> Util.format2 "%s:%s" ((string_of_id i)) (t |> term_to_string)
+    | Annotated(i,t) -> Format.fmt2 "%s:%s" ((string_of_id i)) (t |> term_to_string)
     | NoName t -> t |> term_to_string in
-    Util.format3 "%s%s%s"
+    Format.fmt3 "%s%s%s"
       (aqual_to_string x.aqual)
       (attr_list_to_string x.battributes)
       s
@@ -724,27 +724,27 @@ and pat_to_string x = match x.pat with
   | PatWild (None, attrs) -> attr_list_to_string attrs ^ "_"
   | PatWild (_, attrs) -> "#" ^ (attr_list_to_string attrs) ^ "_" 
   | PatConst c -> C.const_to_string c
-  | PatVQuote t -> Util.format1 "`%%%s" (term_to_string t)
-  | PatApp(p, ps) -> Util.format2 "(%s %s)" (p |> pat_to_string) (to_string_l " " pat_to_string ps)
+  | PatVQuote t -> Format.fmt1 "`%%%s" (term_to_string t)
+  | PatApp(p, ps) -> Format.fmt2 "(%s %s)" (p |> pat_to_string) (to_string_l " " pat_to_string ps)
   | PatTvar (i, aq, attrs)
-  | PatVar (i,  aq, attrs) -> Util.format3 "%s%s%s"
+  | PatVar (i,  aq, attrs) -> Format.fmt3 "%s%s%s"
     (aqual_to_string aq)
     (attr_list_to_string attrs)
     (string_of_id i)
   | PatName l -> (string_of_lid l)
-  | PatList l -> Util.format1 "[%s]" (to_string_l "; " pat_to_string l)
-  | PatTuple (l, false) -> Util.format1 "(%s)" (to_string_l ", " pat_to_string l)
-  | PatTuple (l, true) -> Util.format1 "(|%s|)" (to_string_l ", " pat_to_string l)
-  | PatRecord l -> Util.format1 "{%s}" (to_string_l "; " (fun (f,e) -> Util.format2 "%s=%s" ((string_of_lid f)) (e |> pat_to_string)) l)
+  | PatList l -> Format.fmt1 "[%s]" (to_string_l "; " pat_to_string l)
+  | PatTuple (l, false) -> Format.fmt1 "(%s)" (to_string_l ", " pat_to_string l)
+  | PatTuple (l, true) -> Format.fmt1 "(|%s|)" (to_string_l ", " pat_to_string l)
+  | PatRecord l -> Format.fmt1 "{%s}" (to_string_l "; " (fun (f,e) -> Format.fmt2 "%s=%s" ((string_of_lid f)) (e |> pat_to_string)) l)
   | PatOr l ->  to_string_l "|\n " pat_to_string l
-  | PatOp op ->  Util.format1 "(%s)" (Ident.string_of_id op)
-  | PatAscribed(p,(t, None)) -> Util.format2 "(%s:%s)" (p |> pat_to_string) (t |> term_to_string)
-  | PatAscribed(p,(t, Some tac)) -> Util.format3 "(%s:%s by %s)" (p |> pat_to_string) (t |> term_to_string) (tac |> term_to_string)
+  | PatOp op ->  Format.fmt1 "(%s)" (Ident.string_of_id op)
+  | PatAscribed(p,(t, None)) -> Format.fmt2 "(%s:%s)" (p |> pat_to_string) (t |> term_to_string)
+  | PatAscribed(p,(t, Some tac)) -> Format.fmt3 "(%s:%s by %s)" (p |> pat_to_string) (t |> term_to_string) (tac |> term_to_string)
   | PatRest -> ".."
 
 and attrs_opt_to_string = function
   | None -> ""
-  | Some attrs -> Util.format1 "[@ %s]" (List.map term_to_string attrs |> String.concat "; ")
+  | Some attrs -> Format.fmt1 "[@ %s]" (List.map term_to_string attrs |> String.concat "; ")
 
 let rec head_id_of_pat p = match p.pat with
   | PatName l -> [l]
@@ -763,9 +763,9 @@ let id_of_tycon = function
 
 let string_of_pragma = function
   | ShowOptions  ->   "show-options"
-  | SetOptions s ->   Util.format1 "set-options \"%s\""   s
-  | ResetOptions s -> Util.format1 "reset-options \"%s\"" (Util.dflt "" s)
-  | PushOptions s ->  Util.format1 "push-options \"%s\""  (Util.dflt "" s)
+  | SetOptions s ->   Format.fmt1 "set-options \"%s\""   s
+  | ResetOptions s -> Format.fmt1 "reset-options \"%s\"" (Util.dflt "" s)
+  | PushOptions s ->  Format.fmt1 "push-options \"%s\""  (Util.dflt "" s)
   | PopOptions -> "pop-options"
   | RestartSolver -> "restart-solver"
   | PrintEffectsGraph -> "print-effects-graph"
@@ -780,7 +780,7 @@ let rec decl_to_string (d:decl) = match d.d with
   | Open (l, r) -> "open " ^ string_of_lid l ^ restriction_to_string r
   | Friend l -> "friend " ^ (string_of_lid l)
   | Include (l, r) -> "include " ^ string_of_lid l ^ restriction_to_string r
-  | ModuleAbbrev (i, l) -> Util.format2 "module %s = %s" (string_of_id i) (string_of_lid l)
+  | ModuleAbbrev (i, l) -> Format.fmt2 "module %s = %s" (string_of_id i) (string_of_lid l)
   | TopLevelLet(_, pats) -> "let " ^ (lids_of_let pats |> List.map (fun l -> (string_of_lid l)) |> String.concat ", ")
   | Assume(i, _) -> "assume " ^ (string_of_id i)
   | Tycon(_, _, tys) -> "type " ^ (tys |> List.map id_of_tycon |> String.concat ", ")
@@ -791,10 +791,10 @@ let rec decl_to_string (d:decl) = match d.d with
   | LayeredEffect(DefineEffect(i, _, _, _))
   | LayeredEffect(RedefineEffect(i, _, _)) -> "layered_effect " ^ (string_of_id i)
   | Polymonadic_bind (l1, l2, l3, _) ->
-      Util.format3 "polymonadic_bind (%s, %s) |> %s"
+      Format.fmt3 "polymonadic_bind (%s, %s) |> %s"
                     (string_of_lid l1) (string_of_lid l2) (string_of_lid l3)
   | Polymonadic_subcomp (l1, l2, _) ->
-      Util.format2 "polymonadic_subcomp %s <: %s"
+      Format.fmt2 "polymonadic_subcomp %s <: %s"
                     (string_of_lid l1) (string_of_lid l2)
   | Splice (is_typed, ids, t) ->
     "splice" ^ (if is_typed then "_t" else "")
@@ -807,7 +807,7 @@ let rec decl_to_string (d:decl) = match d.d with
   | DeclToBeDesugared tbs ->
     "(to_be_desugared: " ^ tbs.to_string tbs.blob^ ")"
   | UseLangDecls str ->
-    format1 "#lang-%s" str
+    Format.fmt1 "#lang-%s" str
   | Unparseable ->
     "unparseable"
 
@@ -856,7 +856,7 @@ let add_decorations d decorations =
       | [], attrs -> [DeclAttributes attrs]
       | _ ->
         raise_error d Fatal_MoreThanOneDeclaration
-          (format2
+          (Format.fmt2
             "At most one attribute set is allowed on declarations\n got %s;\n and %s"
             (String.concat ", " (List.map (function DeclAttributes a -> show a | _ -> "") attrs))
             (String.concat ", " (List.map show d.attrs)))

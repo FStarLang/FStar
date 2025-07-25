@@ -129,12 +129,12 @@ class embedding (a:Type0) = {
 let emb_typ_of a #e () = e.e_typ ()
 
 let unknown_printer (typ : term) (_ : 'a) : string =
-    BU.format1 "unknown %s" (show typ)
+    Format.fmt1 "unknown %s" (show typ)
 
 let term_as_fv t =
     match (SS.compress t).n with
     | Tm_fvar fv -> fv
-    | _ -> failwith (BU.format1 "Embeddings not defined for type %s" (show t))
+    | _ -> failwith (Format.fmt1 "Embeddings not defined for type %s" (show t))
 
 let mk_emb em un fv : Tot _ =
     {
@@ -215,7 +215,7 @@ let embed_as (ea:embedding 'a) (ab : 'a -> 'b) (ba : 'b -> 'a) (o:option S.typ) 
     mk_emb_full (fun (x:'b) -> embed (ba x))
                 (fun (t:term) cb -> BU.map_opt (try_unembed t cb) ab)
                 (fun () -> match o with | Some t -> t | _ -> type_of ea)
-                (fun (x:'b) -> BU.format1 "(embed_as>> %s)\n" (ea.print (ba x)))
+                (fun (x:'b) -> Format.fmt1 "(embed_as>> %s)\n" (ea.print (ba x)))
                 ea.e_typ
 
 (* A simple lazy embedding, without cancellations nor an expressive type. *)
@@ -228,7 +228,7 @@ let e_lazy #a (k:lazy_kind) (ty : S.typ) : embedding a =
     | Tm_lazy {blob=b; lkind=lkind} ->
       (* This is very likely a bug, warn! *)
       Err.log_issue t0 Err.Warning_NotEmbedded
-                (BU.format3 "Warning, lazy unembedding failed, tag mismatch.\n\t\
+                (Format.fmt3 "Warning, lazy unembedding failed, tag mismatch.\n\t\
                             Expected %s, got %s\n\t\
                             t = %s."
                             (show k) (show lkind) (show t0));
@@ -240,7 +240,7 @@ let e_lazy #a (k:lazy_kind) (ty : S.typ) : embedding a =
 
 let lazy_embed (pa:printer 'a) (et:emb_typ) rng (ta:term) (x:'a) (f:unit -> term) =
     if !Options.debug_embedding
-    then BU.print3 "Embedding a %s\n\temb_typ=%s\n\tvalue is %s\n"
+    then Format.print3 "Embedding a %s\n\temb_typ=%s\n\tvalue is %s\n"
                          (show ta)
                          (show et)
                          (pa x);
@@ -257,7 +257,7 @@ let lazy_unembed (pa:printer 'a) (et:emb_typ) (x:term) (ta:term) (f:term -> opti
       || !Options.eager_embedding
       then let res = f (Thunk.force t) in
            let _ = if !Options.debug_embedding
-                   then BU.print3 "Unembed cancellation failed\n\t%s <> %s\nvalue is %s\n"
+                   then Format.print3 "Unembed cancellation failed\n\t%s <> %s\nvalue is %s\n"
                                 (show et)
                                 (show et')
                                 (match res with None -> "None" | Some x -> "Some " ^ (pa x))
@@ -265,14 +265,14 @@ let lazy_unembed (pa:printer 'a) (et:emb_typ) (x:term) (ta:term) (f:term -> opti
            res
       else let a = Dyn.undyn b in
            let _ = if !Options.debug_embedding
-                   then BU.print2 "Unembed cancelled for %s\n\tvalue is %s\n"
+                   then Format.print2 "Unembed cancelled for %s\n\tvalue is %s\n"
                                 (show et) (pa a)
            in
            Some a
     | _ ->
       let aopt = f x in
       let _ = if !Options.debug_embedding
-              then BU.print3 "Unembedding:\n\temb_typ=%s\n\tterm is %s\n\tvalue is %s\n"
+              then Format.print3 "Unembedding:\n\temb_typ=%s\n\tterm is %s\n\tvalue is %s\n"
                                (show et) (show x)
                                (match aopt with None -> "None" | Some a -> "Some " ^ pa a) in
       aopt

@@ -42,7 +42,7 @@ let rollback (pop: unit -> 'a) (stackref: ref (list 'c)) (depth: option int) =
 
 // This function is separate to make it easier to put breakpoints on it
 let raise_failed_assertion msg =
-  failwith (BU.format1 "Assertion failed: %s" msg)
+  failwith (Format.fmt1 "Assertion failed: %s" msg)
 
 let runtime_assert b msg =
   if not b then raise_failed_assertion msg

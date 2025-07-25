@@ -116,7 +116,7 @@ let deflookup (env: TcEnv.env) (pos: txdoc_pos) : option assoct =
 let hoverlookup (env: TcEnv.env) (pos: txdoc_pos) : option assoct =
   match symlookup env "" (Some (pos_munge pos)) ["type"; "definition"] with
   | Some { slr_name = n; slr_def_range = _; slr_typ = (Some t); slr_doc = _; slr_def = (Some d) } ->
-    let hovertxt = U.format2 "```fstar\n%s\n````\n---\n```fstar\n%s\n```" t d in
+    let hovertxt = Format.fmt2 "```fstar\n%s\n````\n---\n```fstar\n%s\n```" t d in
     resultResponse (JsonAssoc [("contents", JsonAssoc [("kind", JsonStr "markdown");
                                                        ("value", JsonStr hovertxt)])])
   | _ -> nullResponse

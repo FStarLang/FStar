@@ -28,11 +28,11 @@ exception ReportedError
 exception StopProcessing
 
 let warningHandler = ref (fun (e:exn) -> 
-                          FStarC_Util.print_string "no warning handler installed\n" ; 
-                          FStarC_Util.print_any e; ())
+                          FStarC_Format.print_string "no warning handler installed\n" ; 
+                          FStarC_Format.print_any e; ())
 let errorHandler = ref (fun (e:exn) -> 
-                        FStarC_Util.print_string "no warning handler installed\n" ; 
-                        FStarC_Util.print_any e; ())
+                        FStarC_Format.print_string "no warning handler installed\n" ; 
+                        FStarC_Format.print_any e; ())
 let errorAndWarningCount = ref 0
 let errorR  exn = incr errorAndWarningCount; match exn with StopProcessing | ReportedError -> raise exn | _ -> !errorHandler exn
 let warning exn = incr errorAndWarningCount; match exn with StopProcessing | ReportedError -> raise exn | _ -> !warningHandler exn

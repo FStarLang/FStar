@@ -31,12 +31,12 @@ let z3_install_suggestion (v : string) : list Pprint.document =
   let open FStarC.Errors.Msg in
   let open FStarC.Pprint in
   [
-    prefix 4 1 (text <| BU.format1 "Please download version %s of Z3 from" v)
+    prefix 4 1 (text <| Format.fmt1 "Please download version %s of Z3 from" v)
               (url z3url) ^/^
       group (text "and install it into your $PATH as" ^/^ squotes
         (doc_of_string (Platform.exe ("z3-" ^ v))) ^^ dot);
     if List.mem v packaged_z3_versions then
-      text <| BU.format1 "Version %s of Z3 should be included in binary packages \
+      text <| Format.fmt1 "Version %s of Z3 should be included in binary packages \
               of F*. If you are using a binary package and are seeing
               this error, please file a bug report." v
     else
@@ -98,7 +98,7 @@ let do_locate_z3 (v:string) : option string =
     from_path "z3" <|> (fun _ -> None)) ()
   in
   if Debug.any () then
-    BU.print2 "do_locate_z3(%s) = %s\n" (Class.Show.show v) (Class.Show.show path);
+    Format.print2 "do_locate_z3(%s) = %s\n" (Class.Show.show v) (Class.Show.show path);
   path
 
 let locate_z3 : (v : string) -> option string =

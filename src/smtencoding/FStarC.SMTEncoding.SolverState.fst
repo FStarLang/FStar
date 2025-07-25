@@ -66,13 +66,13 @@ let solver_state_to_string (s:solver_state) =
   let levels =
     List.map 
       (fun level ->
-        BU.format3 "Level { all_decls=%s; given_decls=%s; to_flush=%s }"
+        Format.fmt3 "Level { all_decls=%s; given_decls=%s; to_flush=%s }"
           (show <| List.length level.all_decls_at_level_rev)
           (show level.given_some_decls)
           (show <| List.length level.to_flush_rev))
       s.levels
   in
-  BU.format2 "Solver state { levels=%s; pending_flushes=%s }"
+  Format.fmt2 "Solver state { levels=%s; pending_flushes=%s }"
     (show levels)
     (show <| List.length s.pending_flushes_rev)
 
@@ -81,7 +81,7 @@ instance showable_solver_state : showable solver_state = { show = solver_state_t
 let debug (msg:string) (s0 s1:solver_state) =
   if Options.Ext.enabled "debug_solver_state"
   then (
-    BU.print3 "Debug (%s):{\n\t before=%s\n\t after=%s\n}" msg
+    Format.print3 "Debug (%s):{\n\t before=%s\n\t after=%s\n}" msg
       (solver_state_to_string s0)
       (solver_state_to_string s1)
   )
@@ -179,7 +179,7 @@ let filter_using_facts_from
       let new_n = List.length ds' in
       if orig_n <> new_n
       then (
-        BU.print4
+        Format.print4
           "Pruned using facts from:\n\t\
             Original (%s): [%s];\n\t\
             Pruned (%s): [%s]\n"

@@ -38,10 +38,10 @@ let pragma_to_string (p:pragma) : string =
   match p with
   | ShowOptions           -> "#show-options"
   | ResetOptions None     -> "#reset-options"
-  | ResetOptions (Some s) -> format1 "#reset-options \"%s\"" s
-  | SetOptions s          -> format1 "#set-options \"%s\"" s
+  | ResetOptions (Some s) -> Format.fmt1 "#reset-options \"%s\"" s
+  | SetOptions s          -> Format.fmt1 "#set-options \"%s\"" s
   | PushOptions None      -> "#push-options"
-  | PushOptions (Some s)  -> format1 "#push-options \"%s\"" s
+  | PushOptions (Some s)  -> Format.fmt1 "#push-options \"%s\"" s
   | RestartSolver         -> "#restart-solver"
   | PrintEffectsGraph     -> "#print-effects-graph"
   | PopOptions            -> "#pop-options"

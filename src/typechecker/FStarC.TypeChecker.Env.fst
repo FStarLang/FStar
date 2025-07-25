@@ -428,7 +428,7 @@ let inst_tscheme_with_range (r:range) (t:tscheme) =
 let check_effect_is_not_a_template (ed:eff_decl) (rng:Range.t) : unit =
   if List.length ed.univs <> 0 || List.length ed.binders <> 0
   then
-    let msg = BU.format2
+    let msg = Format.fmt2
       "Effect template %s should be applied to arguments for its binders (%s) before it can be used at an effect position"
       (show ed.mname)
       (String.concat "," <| List.map Print.binder_to_string_with_type ed.binders) in
@@ -437,7 +437,7 @@ let check_effect_is_not_a_template (ed:eff_decl) (rng:Range.t) : unit =
 let inst_effect_fun_with (insts:universes) (env:env) (ed:eff_decl) (us, t)  =
   check_effect_is_not_a_template ed env.range;
   if List.length insts <> List.length us
-  then failwith (BU.format4 "Expected %s instantiations; got %s; failed universe instantiation in effect %s\n\t%s\n"
+  then failwith (Format.fmt4 "Expected %s instantiations; got %s; failed universe instantiation in effect %s\n\t%s\n"
                    (show <| List.length us) (show <| List.length insts)
                    (show ed.mname) (show t));
   snd (inst_tscheme_with (us, t) insts)
@@ -554,7 +554,7 @@ let try_lookup_bv env (bv:bv) =
       | _ -> None)
   in
   if Debug.extreme () then
-    BU.print2 "lookup_bv %s -> %s\n" (show bv) (show r);
+    Format.print2 "lookup_bv %s -> %s\n" (show bv) (show r);
   r
 
 let lookup_type_of_let us_opt se lid =
@@ -690,7 +690,7 @@ let lookup_bv env bv =
     let bvr = range_of_bv bv in
     match try_lookup_bv env bv with
     | None -> raise_error bvr Errors.Fatal_VariableNotFound
-                (format1 "Variable \"%s\" not found" (show bv))
+                (Format.fmt1 "Variable \"%s\" not found" (show bv))
     | Some (t, r) -> Subst.set_use_range bvr t,
                      Range.set_use_range r (Range.use_range bvr)
 
@@ -712,7 +712,7 @@ let try_lookup_and_inst_lid env us l =
 
 let name_not_found (#a:Type) (l:lid) : a =
   raise_error l Errors.Fatal_NameNotFound
-    (format1 "Name \"%s\" not found" (string_of_lid l))
+    (Format.fmt1 "Name \"%s\" not found" (string_of_lid l))
 
 let lookup_lid env l =
     match try_lookup_lid env l with
@@ -758,7 +758,7 @@ let datacons_of_typ env lid =
 let typ_of_datacon env lid =
   match lookup_qname env lid with
     | Some (Inr ({ sigel = Sig_datacon {ty_lid=l} }, _), _) -> l
-    | _ -> failwith (BU.format1 "Not a datacon: %s" (show lid))
+    | _ -> failwith (Format.fmt1 "Not a datacon: %s" (show lid))
 
 let num_datacon_non_injective_ty_params env lid =
   match lookup_qname env lid with
@@ -856,7 +856,7 @@ and delta_depth_of_fv (env:env) (fv:S.fv) : delta_depth =
     // we will return delta_equational. If not, we override the cache with the correct delta_depth.
     let d = delta_depth_of_qninfo env fv (lookup_qname env fv.fv_name.v) in
     // if Debug.any () then
-    //  BU.print2_error "Memoizing delta_depth_of_fv %s ->\t%s\n" (show lid) (show d);
+    //  Format.print2_error "Memoizing delta_depth_of_fv %s ->\t%s\n" (show lid) (show d);
     SMap.add env.fv_delta_depths (string_of_lid lid) d;
     d)
 
@@ -992,14 +992,14 @@ let lookup_effect_abbrev env (univ_insts:universes) lid0 =
       then None
       else let insts = if List.length univ_insts = List.length univs
                        then univ_insts
-                       else failwith (BU.format3 "(%s) Unexpected instantiation of effect %s with %s universes"
+                       else failwith (Format.fmt3 "(%s) Unexpected instantiation of effect %s with %s universes"
                                             (Range.string_of_range (get_range env))
                                             (show lid)
                                             (List.length univ_insts |> show)) in
            begin match binders, univs with
              | [], _ -> failwith "Unexpected effect abbreviation with no arguments"
              | _, _::_::_ ->
-                failwith (BU.format2 "Unexpected effect abbreviation %s; polymorphic in %s universes"
+                failwith (Format.fmt2 "Unexpected effect abbreviation %s; polymorphic in %s universes"
                            (show lid) (show <| List.length univs))
              | _ -> let _, t = inst_tscheme_with (univs, U.arrow binders c) insts in
                     let t = Subst.set_use_range (range_of_lid lid) t in
@@ -1059,7 +1059,7 @@ let num_effect_indices env name r =
   | Tm_arrow {bs=_a::bs} -> List.length bs
   | _ ->
     raise_error r Errors.Fatal_UnexpectedSignatureForMonad
-      (BU.format2 "Signature for %s not an arrow (%s)" (show name) (show sig_t))
+      (Format.fmt2 "Signature for %s not an arrow (%s)" (show name) (show sig_t))
 
 let lookup_effect_quals env l =
     let l = norm_eff_name env l in
@@ -1069,7 +1069,7 @@ let lookup_effect_quals env l =
     | _ -> []
 
 let lookup_projector env lid i =
-    let fail () = failwith (BU.format2 "Impossible: projecting field #%s from constructor %s is undefined" (show i) (show lid)) in
+    let fail () = failwith (Format.fmt2 "Impossible: projecting field #%s from constructor %s is undefined" (show i) (show lid)) in
     let _, t = lookup_datacon env lid in
     match (compress t).n with
         | Tm_arrow {bs=binders} ->
@@ -1168,7 +1168,7 @@ let num_inductive_uniform_ty_params env lid =
       match num_uniform with
       | None ->
         raise_error lid Errors.Fatal_UnexpectedInductivetype
-          (BU.format1 "Internal error: Inductive %s is not decorated with its uniform type parameters"
+          (Format.fmt1 "Internal error: Inductive %s is not decorated with its uniform type parameters"
                                 (show lid))
       | Some n -> Some n
     )
@@ -1207,7 +1207,7 @@ let get_lid_valued_effect_attr env
               | Tm_constant (FStarC.Const.Const_string (s, _)) -> s |> Ident.lid_of_str |> Some
               | _ ->
                 raise_error t Errors.Fatal_UnexpectedEffect
-                   (BU.format2 "The argument for the effect attribute for %s is not a constant string, it is %s\n"
+                   (Format.fmt2 "The argument for the effect attribute for %s is not a constant string, it is %s\n"
                      (show eff_lid)
                      (show t)))
 
@@ -1238,7 +1238,7 @@ let join env l1 l2 : (lident & mlift & mlift) =
   match join_opt env l1 l2 with
   | None ->
     raise_error env Errors.Fatal_EffectsCannotBeComposed
-      (BU.format2 "Effects %s and %s cannot be composed" (show l1) (show l2))
+      (Format.fmt2 "Effects %s and %s cannot be composed" (show l1) (show l2))
   | Some t -> t
 
 let monad_leq env l1 l2 : option edge =
@@ -1249,7 +1249,7 @@ let monad_leq env l1 l2 : option edge =
 
 let wp_sig_aux decls m =
   match decls |> BU.find_opt (fun (d, _) -> lid_equals d.mname m) with
-  | None -> failwith (BU.format1 "Impossible: declaration for monad %s not found" (string_of_lid m))
+  | None -> failwith (Format.fmt1 "Impossible: declaration for monad %s not found" (string_of_lid m))
   | Some (md, _q) ->
     (*
      * AR: this code used to be inst_tscheme md.univs md.signature
@@ -1329,7 +1329,7 @@ let rec unfold_effect_abbrev env comp =
       let binders, cdef = Subst.open_comp binders cdef in
       if List.length binders <> List.length c.effect_args + 1 then
         raise_error comp Errors.Fatal_ConstructorArgLengthMismatch
-          (BU.format3 "Effect constructor is not fully applied; expected %s args, got %s args, i.e., %s"
+          (Format.fmt3 "Effect constructor is not fully applied; expected %s args, got %s args, i.e., %s"
                          (show (List.length binders)) (show (List.length c.effect_args + 1))
                          (show (S.mk_Comp c)));
       let inst = List.map2 (fun b (t, _) -> NT(b.binder_bv, t)) binders (as_arg c.result_typ::c.effect_args) in
@@ -1343,7 +1343,7 @@ let effect_repr_aux only_reifiable env c u_res =
     let given, expected = List.length args, num_effect_indices env eff_name r in
     if given = expected  then ()
     else
-      let message = BU.format3 "Not enough arguments for effect %s, \
+      let message = Format.fmt3 "Not enough arguments for effect %s, \
         This usually happens when you use a partially applied DM4F effect, \
         like [TAC int] instead of [Tac int] (given:%s, expected:%s)."
         (Ident.string_of_lid eff_name) (show given) (show expected) in
@@ -1409,7 +1409,7 @@ let reify_comp env c u_c : term =
     let l = U.comp_effect_name c in
     if not (is_reifiable_effect env l) then
       raise_error env Errors.Fatal_EffectCannotBeReified
-        (BU.format1 "Effect %s cannot be reified" (Ident.string_of_lid l));
+        (Format.fmt1 "Effect %s cannot be reified" (Ident.string_of_lid l));
     match effect_repr_aux true env c u_c with
     | None -> failwith "internal error: reifiable effect has no repr?"
     | Some tm -> tm
@@ -1528,11 +1528,11 @@ let print_effects_graph env =
     | None -> smap_add m (eff_name tgt) (path_str path));
 
   env.effects.polymonadic_binds |> List.iter (fun (m, n, p, _) ->
-    let key = BU.format3 "%s, %s |> %s" (eff_name m) (eff_name n) (eff_name p) in
+    let key = Format.fmt3 "%s, %s |> %s" (eff_name m) (eff_name n) (eff_name p) in
     smap_add pbinds key "");
 
   env.effects.polymonadic_subcomps |> List.iter (fun (m, n, _, _) ->
-    let key = BU.format2 "%s <: %s" (eff_name m) (eff_name n) in
+    let key = Format.fmt2 "%s <: %s" (eff_name m) (eff_name n) in
     smap_add psubcomps key "");
 
   //
@@ -1544,7 +1544,7 @@ let print_effects_graph env =
   //    around subgraphs (!)
   //
 
-  BU.format3 "digraph {\n\
+  Format.fmt3 "digraph {\n\
     label=\"Effects ordering\"\n\
     subgraph cluster_lifts {\n\
       label = \"Lifts\"\n
@@ -1561,9 +1561,9 @@ let print_effects_graph env =
 
     ((smap_fold lifts (fun src m s ->
         smap_fold m (fun tgt path s ->
-          (BU.format3 "%s -> %s [label=\"%s\"]" src tgt path)::s) s) []) |> String.concat "\n")
-    (smap_fold pbinds (fun k _ s -> (BU.format1 "\"%s\" [shape=\"plaintext\"]" k)::s) [] |> String.concat "\n")
-    (smap_fold psubcomps (fun k _ s -> (BU.format1 "\"%s\" [shape=\"plaintext\"]" k)::s) [] |> String.concat "\n")
+          (Format.fmt3 "%s -> %s [label=\"%s\"]" src tgt path)::s) s) []) |> String.concat "\n")
+    (smap_fold pbinds (fun k _ s -> (Format.fmt1 "\"%s\" [shape=\"plaintext\"]" k)::s) [] |> String.concat "\n")
+    (smap_fold psubcomps (fun k _ s -> (Format.fmt1 "\"%s\" [shape=\"plaintext\"]" k)::s) [] |> String.concat "\n")
 
 let update_effect_lattice env src tgt st_mlift =
   let compose_edges e1 e2 : edge =
@@ -1630,7 +1630,7 @@ let update_effect_lattice env src tgt st_mlift =
   let check_cycle src tgt =
     if lid_equals src tgt
     then raise_error env Errors.Fatal_Effects_Ordering_Coherence
-           (BU.format3 "Adding an edge %s~>%s induces a cycle %s"
+           (Format.fmt3 "Adding an edge %s~>%s induces a cycle %s"
              (show edge.msource) (show edge.mtarget) (show src))
   in
 
@@ -1666,7 +1666,7 @@ let update_effect_lattice env src tgt st_mlift =
     && lookup_effect_quals env edge.mtarget |> List.contains TotalEffect
     then
       raise_error env Errors.Fatal_DivergentComputationCannotBeIncludedInTotal
-        (BU.format1 "Divergent computations cannot be included in an effect %s marked 'total'"
+        (Format.fmt1 "Divergent computations cannot be included in an effect %s marked 'total'"
                         (show edge.mtarget)));
 
   //
@@ -1714,7 +1714,7 @@ let update_effect_lattice env src tgt st_mlift =
       if List.length lubs <> 1
       then
         raise_error env Errors.Fatal_Effects_Ordering_Coherence
-          (BU.format1 "Effects %s have incomparable upper bounds" s)
+          (Format.fmt1 "Effects %s have incomparable upper bounds" s)
       else lubs@joins) [] in
 
   let effects = {env.effects with order=order; joins=joins} in
@@ -2030,7 +2030,7 @@ let new_tac_implicit_var
             ; imp_range  = r
             } in
   if !dbg_ImplicitTrace then
-    BU.print1 "Just created uvar for implicit {%s}\n" (show ctx_uvar.ctx_uvar_head);
+    Format.print1 "Just created uvar for implicit {%s}\n" (show ctx_uvar.ctx_uvar_head);
   let g = {trivial_guard with implicits = Listlike.cons imp Listlike.empty} in
   t, (ctx_uvar, r), g
 
@@ -2087,7 +2087,7 @@ let uvars_for_binders env (bs:S.binders) substs reason r =
     in
 
     if !dbg_LayeredEffectsEqns then
-      BU.print1 "Layered Effect uvar: %s\n" (show l_ctx_uvars);
+      Format.print1 "Layered Effect uvar: %s\n" (show l_ctx_uvars);
 
     substs@[NT (b.binder_bv, t)],
     uvars@[t],

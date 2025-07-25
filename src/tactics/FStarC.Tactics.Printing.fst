@@ -26,7 +26,6 @@ open FStarC.TypeChecker.Env
 open FStarC.Tactics.Types
 open FStarC.Class.Show
 
-module BU      = FStarC.Util
 module Range   = FStarC.Range
 module Options = FStarC.Options
 module Print   = FStarC.Syntax.Print
@@ -41,11 +40,11 @@ let term_to_string (e:Env.env) (t:term) : string =
     Print.term_to_string' e.dsenv t
 
 let goal_to_string_verbose (g:goal) : string =
-    BU.format2 "%s%s\n"
+    Format.fmt2 "%s%s\n"
         (show g.goal_ctx_uvar)
         (match check_goal_solved' g with
          | None -> ""
-         | Some t -> BU.format1 "\tGOAL ALREADY SOLVED!: %s" (term_to_string (goal_env g) t))
+         | Some t -> Format.fmt1 "\tGOAL ALREADY SOLVED!: %s" (term_to_string (goal_env g) t))
 
 let unshadow (bs : binders) (t : term) : binders & term =
     (* string name of a bv *)
@@ -84,7 +83,7 @@ let goal_to_string (kind : string) (maybe_num : option (int & int)) (ps:proofsta
     in
     let num = match maybe_num with
               | None -> ""
-              | Some (i, n) -> BU.format2 " %s/%s" (show i) (show n)
+              | Some (i, n) -> Format.fmt2 " %s/%s" (show i) (show n)
     in
     let maybe_label =
         match g.label with
@@ -117,11 +116,11 @@ let goal_to_string (kind : string) (maybe_num : option (int & int)) (ps:proofsta
     let actual_goal =
         if ps.tac_verb_dbg
         then goal_to_string_verbose g
-        else BU.format3 "%s |- %s : %s\n" (String.concat ", " (map Print.binder_to_string_with_type goal_binders))
+        else Format.fmt3 "%s |- %s : %s\n" (String.concat ", " (map Print.binder_to_string_with_type goal_binders))
                                           w
                                           (term_to_string (goal_env g) goal_ty)
     in
-    BU.format4 "%s%s%s:\n%s\n" kind num maybe_label actual_goal
+    Format.fmt4 "%s%s%s:\n%s\n" kind num maybe_label actual_goal
 
 (* Note: we use def ranges. In tactics we keep the position in there, while the
  * use range is the original position of the assertion / synth / splice. *)
@@ -131,12 +130,12 @@ let ps_to_string (msg, ps) =
     let n_smt    = List.length ps.smt_goals in
     let n = n_active + n_smt in
     String.concat ""
-              ([BU.format2 "State dump @ depth %s (%s):\n" (show ps.depth) msg;
+              ([Format.fmt2 "State dump @ depth %s (%s):\n" (show ps.depth) msg;
                 (if ps.entry_range <> Range.dummyRange
-                 then BU.format1 "Location: %s\n" (Range.string_of_def_range ps.entry_range)
+                 then Format.fmt1 "Location: %s\n" (Range.string_of_def_range ps.entry_range)
                  else "");
                 (if !dbg_Imp
-                 then BU.format1 "Imps: %s\n" (FStarC.Common.string_of_list p_imp ps.all_implicits)
+                 then Format.fmt1 "Imps: %s\n" (FStarC.Common.string_of_list p_imp ps.all_implicits)
                  else "")]
                  @ (List.mapi (fun i g -> goal_to_string "Goal"     (Some (1 + i, n))            ps g) ps.goals)
                  @ (List.mapi (fun i g -> goal_to_string "SMT Goal" (Some (1 + n_active + i, n)) ps g) ps.smt_goals))
@@ -168,6 +167,6 @@ let do_dump_proofstate ps msg =
     if not (Options.silent ()) || Options.interactive () then
         Options.with_saved_options (fun () ->
             Options.set_option "print_effect_args" (Options.Bool true);
-            print_generic "proof-state" ps_to_string ps_to_json (msg, ps);
-            BU.flush_stdout () (* in case this is going to stdout, flush it immediately *)
+            Format.print_generic "proof-state" ps_to_string ps_to_json (msg, ps);
+            Format.flush_stdout () (* in case this is going to stdout, flush it immediately *)
         )

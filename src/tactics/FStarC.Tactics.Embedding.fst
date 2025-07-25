@@ -172,7 +172,7 @@ let e_proofstate_nbe =
           if !Options.debug_embedding then
             Err.log_issue0
               Err.Warning_NotEmbedded
-              (BU.format1 "Not an embedded NBE proofstate: %s\n"
+              (Format.fmt1 "Not an embedded NBE proofstate: %s\n"
                  (NBETerm.t_to_string t));
             None
     in
@@ -198,7 +198,7 @@ let e_goal_nbe =
             Some <| FStarC.Dyn.undyn b
         | _ ->
             if !Options.debug_embedding then
-              Err.log_issue0 Err.Warning_NotEmbedded (BU.format1 "Not an embedded NBE goal: %s" (NBETerm.t_to_string t));
+              Err.log_issue0 Err.Warning_NotEmbedded (Format.fmt1 "Not an embedded NBE goal: %s" (NBETerm.t_to_string t));
             None
     in
     { NBETerm.em = embed_goal
@@ -271,7 +271,7 @@ let e_exn_nbe =
             mkConstruct fstar_tactics_SKIP.fv [] []
 
         | _ ->
-            failwith (BU.format1 "cannot embed exn (NBE) : %s" (BU.message_of_exn e))
+            failwith (Format.fmt1 "cannot embed exn (NBE) : %s" (BU.message_of_exn e))
     in
     let unembed_exn cb (t:NBET.t) : option exn =
         match NBETerm.nbe_t_of_t t with
@@ -389,7 +389,7 @@ let e_direction_nbe  =
         | NBETerm.Construct (fv, _, []) when S.fv_eq_lid fv fstar_tactics_bottomup.lid -> Some BottomUp
         | _ ->
           if !Options.debug_embedding then
-            Err.log_issue0 Err.Warning_NotEmbedded (BU.format1 "Not an embedded direction: %s" (NBETerm.t_to_string t));
+            Err.log_issue0 Err.Warning_NotEmbedded (Format.fmt1 "Not an embedded direction: %s" (NBETerm.t_to_string t));
           None
     in
     { NBETerm.em = embed_direction
@@ -427,7 +427,7 @@ let e_ctrl_flag_nbe  =
         | NBETerm.Construct (fv, _, []) when S.fv_eq_lid fv fstar_tactics_Abort.lid -> Some Abort
         | _ ->
           if !Options.debug_embedding then
-            Err.log_issue0 Err.Warning_NotEmbedded (BU.format1 "Not an embedded ctrl_flag: %s" (NBETerm.t_to_string t));
+            Err.log_issue0 Err.Warning_NotEmbedded (Format.fmt1 "Not an embedded ctrl_flag: %s" (NBETerm.t_to_string t));
           None
     in
     { NBETerm.em = embed_ctrl_flag
@@ -476,7 +476,7 @@ let e_unfold_side_nbe  =
       Some Neither
     | _ ->
       if !Options.debug_embedding then
-        Err.log_issue0 Err.Warning_NotEmbedded (BU.format1 "Not an embedded unfold_side: %s" (NBETerm.t_to_string t));
+        Err.log_issue0 Err.Warning_NotEmbedded (Format.fmt1 "Not an embedded unfold_side: %s" (NBETerm.t_to_string t));
       None
   in
   { NBETerm.em = embed_unfold_side
@@ -516,7 +516,7 @@ let e_tot_or_ghost_nbe  =
       Some E_Ghost
     | _ ->
       if !Options.debug_embedding then
-        Err.log_issue0 Err.Warning_NotEmbedded (BU.format1 "Not an embedded tot_or_ghost: %s" (NBETerm.t_to_string t));
+        Err.log_issue0 Err.Warning_NotEmbedded (Format.fmt1 "Not an embedded tot_or_ghost: %s" (NBETerm.t_to_string t));
       None
   in
   { NBETerm.em = embed_tot_or_ghost
@@ -563,7 +563,7 @@ let e_tref_nbe #a =
       if !Options.debug_embedding then
         Err.log_issue0
           Err.Warning_NotEmbedded
-          (BU.format1 "Not an embedded NBE tref: %s\n"
+          (Format.fmt1 "Not an embedded NBE tref: %s\n"
              (NBETerm.t_to_string t));
       None
   in

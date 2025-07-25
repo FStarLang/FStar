@@ -133,7 +133,7 @@ let not_implemented_warning (r: Range.t) (t: string) (msg: string) =
   let open FStarC.Errors.Msg in
   let open FStarC.Class.PP in
   Errors.log_issue r Errors.Warning_PluginNotImplemented [
-    prefix 2 1 (text (BU.format1 "Plugin `%s' can not run natively because:" t))
+    prefix 2 1 (text (Format.fmt1 "Plugin `%s' can not run natively because:" t))
       (text msg);
     text "Use --warn_error -"
       ^^ pp (Errors.error_number (Errors.lookup Errors.Warning_PluginNotImplemented))
@@ -206,7 +206,7 @@ let dbg_plugin = Debug.get_toggle "Plugins"
 let local_fv_embeddings : ref (list (Ident.lident & embedding_data)) = mk_ref []
 let register_embedding (l: Ident.lident) (d: embedding_data) : unit =
   if !dbg_plugin then
-    BU.print1 "Registering local embedding for %s\n" (Ident.string_of_lid l);
+    Format.print1 "Registering local embedding for %s\n" (Ident.string_of_lid l);
   local_fv_embeddings := (l,d) :: !local_fv_embeddings
 
 let list_local () = !local_fv_embeddings
@@ -341,10 +341,10 @@ let rec embedding_for
 
   (* An fv which we do not have registered, and did not unfold *)
   | Tm_fvar fv ->
-    raise (NoEmbedding (BU.format1 "Embedding not defined for name `%s'" (show t)))
+    raise (NoEmbedding (Format.fmt1 "Embedding not defined for name `%s'" (show t)))
 
   | _ ->
-    raise (NoEmbedding (BU.format2 "Cannot embed type `%s' (%s)" (show t) (tag_of t)))
+    raise (NoEmbedding (Format.fmt2 "Cannot embed type `%s' (%s)" (show t) (tag_of t)))
 
 type wrapped_term = mlexpr & mlexpr & int & bool
 
@@ -464,7 +464,7 @@ let interpret_plugin_as_term_fun (env:UEnv.uenv) (fv:fv) (t:typ) (arity_opt:opti
                bs, c
           else // n > bs
                let msg =
-                BU.format3
+                Format.fmt3
                     "Embedding not defined for %s; expected arity at least %s; got %s"
                     (Ident.string_of_lid fv_lid)
                     (show n)
@@ -681,7 +681,7 @@ let mk_embed
 
 
 let __do_handle_plugin (g: uenv) (arity_opt: option int) (se: sigelt) : list mlmodule1 =
-  // BU.print2 "Got plugin with attrs = %s; arity_opt=%s"
+  // Format.print2 "Got plugin with attrs = %s; arity_opt=%s"
   //          (List.map show se.sigattrs |> String.concat " ")
   //          (match arity_opt with None -> "None" | Some x -> "Some " ^ show x);
   let r = se.sigrng in
@@ -792,7 +792,7 @@ let do_handle_plugin (g: uenv) (arity_opt: option int) (se: sigelt) : list mlmod
   | Unsupported msg ->
     // Change error code?
     Errors.log_issue se Errors.Warning_PluginNotImplemented
-      (BU.format2 "Could not generate a plugin for %s, reason = %s" (Print.sigelt_to_string_short se) msg);
+      (Format.fmt2 "Could not generate a plugin for %s, reason = %s" (Print.sigelt_to_string_short se) msg);
     []
   | NoEmbedding msg ->
     not_implemented_warning se.sigrng

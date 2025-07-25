@@ -87,17 +87,17 @@ let update_flags (l:list (error_flag & (int & int)))
       | (CWarning, CAlwaysError)
       | (CError, CAlwaysError) ->
         raise (Invalid_warn_error_setting
-                 (BU.format1 "cannot turn error %s into warning"
+                 (Format.fmt1 "cannot turn error %s into warning"
                              (show i)))
       | (CSilent, CAlwaysError) ->
         raise (Invalid_warn_error_setting
-                 (BU.format1 "cannot silence error %s"
+                 (Format.fmt1 "cannot silence error %s"
                              (show i)))
       | (CSilent, CFatal)
       | (CWarning, CFatal)
       | (CError, CFatal) ->
         raise (Invalid_warn_error_setting
-                 (BU.format1 "cannot change the error level of fatal error %s"
+                 (Format.fmt1 "cannot change the error level of fatal error %s"
                              (show i)))
       | (CAlwaysError, CFatal) ->
         CFatal
@@ -221,7 +221,7 @@ let format_issue' (print_hdr:bool) (issue:issue) : string =
 let format_issue issue : string = format_issue' true issue
 
 let print_issue_json issue =
-    json_of_issue issue |> string_of_json |> BU.print1_error "%s\n"
+    json_of_issue issue |> string_of_json |> Format.print1_error "%s\n"
 
 (*
   Printing for nicer display in github actions runs. See
@@ -244,10 +244,10 @@ let print_issue_github issue =
     let num =
       match issue.issue_number with
       | None -> ""
-      | Some n -> BU.format1 "(%s) " (show n)
+      | Some n -> Format.fmt1 "(%s) " (show n)
     in
-    BU.print_warning <|
-      BU.format6 "::%s file=%s,line=%s,endLine=%s::%s%s\n"
+    Format.print_warning <|
+      Format.fmt6 "::%s file=%s,line=%s,endLine=%s::%s%s\n"
         level
         (Range.file_of_range rng)
         (show (rng |> Range.start_of_range |> Range.line_of_pos))
@@ -258,10 +258,10 @@ let print_issue_github issue =
 let print_issue_rendered issue =
     let printer =
         match issue.issue_level with
-        | EInfo -> (fun s -> BU.print_string (colorize_cyan s))
-        | EWarning -> BU.print_warning
-        | EError -> BU.print_error
-        | ENotImplemented -> BU.print_error in
+        | EInfo -> (fun s -> Format.print_string (Format.colorize_cyan s))
+        | EWarning -> Format.print_warning
+        | EError -> Format.print_error
+        | ENotImplemented -> Format.print_error in
     printer (format_issue issue ^ "\n")
 
 let print_issue issue =

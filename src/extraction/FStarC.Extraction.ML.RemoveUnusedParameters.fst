@@ -211,7 +211,7 @@ let elim_tydef (env:env_t) name metadata parameters mlty
                if must_eliminate i
                then begin
                  FStarC.Errors.log_issue range_of_tydef Errors.Error_RemoveUnusedTypeParameter
-                     (BU.format2 "Expected parameter %s of %s to be unused in its definition and eliminated" p name)
+                     (Format.fmt2 "Expected parameter %s of %s to be unused in its definition and eliminated" p name)
                end;
                i+1, param::params, Retain::entry
              end
@@ -229,7 +229,7 @@ let elim_tydef (env:env_t) name metadata parameters mlty
                     in
                     let open FStarC.Errors.Msg in
                     FStarC.Errors.log_issue range FStarC.Errors.Error_RemoveUnusedTypeParameter [
-                      text <| BU.format3
+                      text <| Format.fmt3
                         "Parameter %s of %s is unused and must be eliminated for F#; \
                          add `[@@ remove_unused_type_parameters [%s; ...]]` to the interface signature."
                          (show i) name (show i);

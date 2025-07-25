@@ -82,7 +82,7 @@ let e_bv =
         | Lazy (Inl {blob=b; lkind=Lazy_bv}, _) ->
             Some <| FStarC.Dyn.undyn b
         | _ ->
-            Err.log_issue0 Err.Warning_NotEmbedded (BU.format1 "Not an embedded bv: %s" (t_to_string t));
+            Err.log_issue0 Err.Warning_NotEmbedded (Format.fmt1 "Not an embedded bv: %s" (t_to_string t));
             None
     in
     mk_emb' embed_bv unembed_bv fstar_refl_bv_fv
@@ -97,7 +97,7 @@ let e_binder =
         | Lazy (Inl {blob=b; lkind=Lazy_binder}, _) ->
             Some (undyn b)
         | _ ->
-            Err.log_issue0 Err.Warning_NotEmbedded (BU.format1 "Not an embedded binder: %s" (t_to_string t));
+            Err.log_issue0 Err.Warning_NotEmbedded (Format.fmt1 "Not an embedded binder: %s" (t_to_string t));
             None
     in
     mk_emb' embed_binder unembed_binder fstar_refl_binder_fv
@@ -150,7 +150,7 @@ let e_aqualv =
             Some (Data.Q_Meta t))
 
         | _ ->
-            Err.log_issue0 Err.Warning_NotEmbedded (BU.format1 "Not an embedded aqualv: %s" (t_to_string t));
+            Err.log_issue0 Err.Warning_NotEmbedded (Format.fmt1 "Not an embedded aqualv: %s" (t_to_string t));
             None
     in
     mk_emb embed_aqualv unembed_aqualv
@@ -168,7 +168,7 @@ let e_fv =
         | Lazy (Inl {blob=b; lkind=Lazy_fvar}, _) ->
             Some (undyn b)
         | _ ->
-            Err.log_issue0 Err.Warning_NotEmbedded (BU.format1 "Not an embedded fvar: %s" (t_to_string t));
+            Err.log_issue0 Err.Warning_NotEmbedded (Format.fmt1 "Not an embedded fvar: %s" (t_to_string t));
             None
     in
     mk_emb' embed_fv unembed_fv fstar_refl_fv_fv
@@ -182,7 +182,7 @@ let e_comp =
         | Lazy (Inl {blob=b; lkind=Lazy_comp}, _) ->
             Some (undyn b)
         | _ ->
-            Err.log_issue0 Err.Warning_NotEmbedded (BU.format1 "Not an embedded comp: %s" (t_to_string t));
+            Err.log_issue0 Err.Warning_NotEmbedded (Format.fmt1 "Not an embedded comp: %s" (t_to_string t));
             None
     in
     mk_emb' embed_comp unembed_comp fstar_refl_comp_fv
@@ -196,7 +196,7 @@ let e_env =
         | Lazy (Inl {blob=b; lkind=Lazy_env}, _) ->
             Some (undyn b)
         | _ ->
-            Err.log_issue0 Err.Warning_NotEmbedded (BU.format1 "Not an embedded env: %s" (t_to_string t));
+            Err.log_issue0 Err.Warning_NotEmbedded (Format.fmt1 "Not an embedded env: %s" (t_to_string t));
             None
     in
     mk_emb' embed_env unembed_env fstar_refl_env_fv
@@ -244,7 +244,7 @@ let e_const =
             Some <| C_Reflect ns)
 
         | _ ->
-            Err.log_issue0 Err.Warning_NotEmbedded (BU.format1 "Not an embedded vconst: %s" (t_to_string t));
+            Err.log_issue0 Err.Warning_NotEmbedded (Format.fmt1 "Not an embedded vconst: %s" (t_to_string t));
             None
     in
     mk_emb' embed_const unembed_const fstar_refl_vconst_fv
@@ -258,7 +258,7 @@ let e_universe =
       Some (undyn b)
     | _ ->
       Err.log_issue0 Err.Warning_NotEmbedded
-         (BU.format1 "Not an embedded universe: %s" (t_to_string t));
+         (Format.fmt1 "Not an embedded universe: %s" (t_to_string t));
       None
     in
     mk_emb' embed_universe unembed_universe fstar_refl_universe_fv
@@ -300,7 +300,7 @@ let rec e_pattern_aq aq =
             Some <| Pat_Dot_Term eopt)
 
         | _ ->
-            Err.log_issue0 Err.Warning_NotEmbedded (BU.format1 "Not an embedded pattern: %s" (t_to_string t));
+            Err.log_issue0 Err.Warning_NotEmbedded (Format.fmt1 "Not an embedded pattern: %s" (t_to_string t));
             None
     in
     mk_emb' embed_pattern unembed_pattern fstar_refl_pattern_fv
@@ -375,7 +375,7 @@ let e_universe_view =
     | Construct (fv, _, []) when S.fv_eq_lid fv ref_Uv_Unk.lid -> Some Uv_Unk
     | _ ->
       Err.log_issue0 Err.Warning_NotEmbedded
-         (BU.format1 "Not an embedded universe view: %s" (t_to_string t));
+         (Format.fmt1 "Not an embedded universe view: %s" (t_to_string t));
       None in
 
   mk_emb' embed_universe_view unembed_universe_view fstar_refl_universe_view_fv
@@ -542,7 +542,7 @@ let e_term_view_aq aq =
             Some <| Tv_Unsupp
 
         | _ ->
-            Err.log_issue0 Err.Warning_NotEmbedded (BU.format1 "Not an embedded term_view: %s" (t_to_string t));
+            Err.log_issue0 Err.Warning_NotEmbedded (Format.fmt1 "Not an embedded term_view: %s" (t_to_string t));
             None
     in
     mk_emb' embed_term_view unembed_term_view fstar_refl_term_view_fv
@@ -562,7 +562,7 @@ let e_bv_view =
             Some <| { bv_ppname = nm ; bv_index = idx }))
 
         | _ ->
-            Err.log_issue0 Err.Warning_NotEmbedded (BU.format1 "Not an embedded bv_view: %s" (t_to_string t));
+            Err.log_issue0 Err.Warning_NotEmbedded (Format.fmt1 "Not an embedded bv_view: %s" (t_to_string t));
             None
     in
     mk_emb' embed_bv_view unembed_bv_view fstar_refl_bv_view_fv
@@ -588,7 +588,7 @@ let e_binder_view =
       Some <| RD.({binder_bv=bv;binder_qual=q;binder_attrs=attrs;binder_sort=sort})))))
 
     | _ ->
-      Err.log_issue0 Err.Warning_NotEmbedded (BU.format1 "Not an embedded binder_view: %s" (t_to_string t));
+      Err.log_issue0 Err.Warning_NotEmbedded (Format.fmt1 "Not an embedded binder_view: %s" (t_to_string t));
             None
     in
     mk_emb' embed_binder_view unembed_binder_view fstar_refl_binder_view_fv
@@ -643,7 +643,7 @@ let e_comp_view =
             Some <| C_Eff (us, eff, res, args, decrs))))))
 
         | _ ->
-            Err.log_issue0 Err.Warning_NotEmbedded (BU.format1 "Not an embedded comp_view: %s" (t_to_string t));
+            Err.log_issue0 Err.Warning_NotEmbedded (Format.fmt1 "Not an embedded comp_view: %s" (t_to_string t));
             None
     in
     mk_emb' embed_comp_view unembed_comp_view fstar_refl_comp_view_fv
@@ -657,7 +657,7 @@ let e_sigelt =
         | Lazy (Inl {blob=b; lkind=Lazy_sigelt}, _) ->
             Some (undyn b)
         | _ ->
-            Err.log_issue0 Err.Warning_NotEmbedded (BU.format1 "Not an embedded sigelt: %s" (t_to_string t));
+            Err.log_issue0 Err.Warning_NotEmbedded (Format.fmt1 "Not an embedded sigelt: %s" (t_to_string t));
             None
     in
     mk_emb' embed_sigelt unembed_sigelt fstar_refl_sigelt_fv
@@ -691,7 +691,7 @@ let e_lb_view =
 	      { lb_fv = fv'; lb_us = us; lb_typ = typ; lb_def = def }))))
 
         | _ ->
-            Err.log_issue0 Err.Warning_NotEmbedded (BU.format1 "Not an embedded lb_view: %s" (t_to_string t));
+            Err.log_issue0 Err.Warning_NotEmbedded (Format.fmt1 "Not an embedded lb_view: %s" (t_to_string t));
             None
     in
     mk_emb' embed_lb_view unembed_lb_view fstar_refl_lb_view_fv
@@ -718,7 +718,7 @@ let e_letbinding =
             Some (undyn lb)
 
         | _ ->
-            Err.log_issue0 Err.Warning_NotEmbedded (BU.format1 "Not an embedded letbinding: %s" (t_to_string t));
+            Err.log_issue0 Err.Warning_NotEmbedded (Format.fmt1 "Not an embedded letbinding: %s" (t_to_string t));
             None
     in
     mk_emb' embed_letbinding unembed_letbinding fstar_refl_letbinding_fv
@@ -771,7 +771,7 @@ let e_sigelt_view =
             Some Unk
 
         | _ ->
-            Err.log_issue0 Err.Warning_NotEmbedded (BU.format1 "Not an embedded sigelt_view: %s" (t_to_string t));
+            Err.log_issue0 Err.Warning_NotEmbedded (Format.fmt1 "Not an embedded sigelt_view: %s" (t_to_string t));
             None
     in
     mk_emb' embed_sigelt_view unembed_sigelt_view fstar_refl_sigelt_view_fv
@@ -866,7 +866,7 @@ let e_qualifier =
             Some (RD.RecordConstructor (ids1, ids2))))
 
         | _ ->
-            Err.log_issue0 Err.Warning_NotEmbedded (BU.format1 "Not an embedded qualifier: %s" (t_to_string t));
+            Err.log_issue0 Err.Warning_NotEmbedded (Format.fmt1 "Not an embedded qualifier: %s" (t_to_string t));
             None
     in
     mk_emb embed unembed

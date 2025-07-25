@@ -2,16 +2,14 @@
 
 open FStarC
 open FStarC.Effect
-open FStarC.Util
 open FStarC.Class.Binders
 open FStarC.Class.Show
 open FStarC.Class.Ord
 open FStarC.Errors
-open FStarC.Errors.Msg
 open FStarC.Pprint
 open FStarC.Class.Setlike
 
-let () = let open FStarC.Syntax.Print in ()
+open FStarC.Syntax.Print {}
 
 val __def_check_scoped :
   #env_t:Type -> #thing_t:Type ->
