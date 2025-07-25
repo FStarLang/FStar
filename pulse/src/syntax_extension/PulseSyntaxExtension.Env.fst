@@ -95,12 +95,12 @@ let resolve_lid (env:env_t) (lid:lident)
   : err lident
   = match D.try_lookup_lid env.dsenv lid with
     | None -> 
-      fail (BU.format1 "Name %s not found" (show lid)) (pos lid)
+      fail (Format.fmt1 "Name %s not found" (show lid)) (pos lid)
     | Some t ->
       match (SS.compress t).n with
       | S.Tm_fvar fv -> return (S.lid_of_fv fv)
       | _ -> 
-        fail (BU.format2 "Name %s resolved unexpectedly to %s" (show lid) (show t))
+        fail (Format.fmt2 "Name %s resolved unexpectedly to %s" (show lid) (show t))
              (pos lid)
 
 let resolve_names (env:env_t) (ns:option (list lident)) 

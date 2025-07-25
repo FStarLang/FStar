@@ -18,6 +18,7 @@ module Pulse2Rust
 
 open FStarC
 open FStarC.Util
+open FStarC.Format
 open FStarC.List
 open FStarC.Effect
 
@@ -54,20 +55,20 @@ let extract_one
   //   | Some r -> r
   //   | None -> failwith "Could not load file" in
 
-  // print2 "Loaded file %s with deps: %s\n" file (String.concat "; " deps);  
+  // Format.print2 "Loaded file %s with deps: %s\n" file (String.concat "; " deps);  
   let items, env = List.fold_left (fun (items, g) d ->
-    // print1 "Decl: %s\n" (S.mlmodule1_to_string d);
-    // print1 "Decl deps: %s\n"
+    // Format.print1 "Decl: %s\n" (S.mlmodule1_to_string d);
+    // Format.print1 "Decl deps: %s\n"
     //   (String.concat "\n" (reachable_defs_mlmodule1 d |> elems));
     if not (decl_reachable g.reachable_defs mname d)
     then begin
-      // print1 "decl %s is not reachable\n" (String.concat ";" (mlmodule1_name d));
+      // Format.print1 "decl %s is not reachable\n" (String.concat ";" (mlmodule1_name d));
       // if mname = "Pulse.Lib.HashTable.Type"
-      // then print1 "decl %s is not reachable\n" (S.mlmodule1_to_string d);
+      // then Format.print1 "decl %s is not reachable\n" (S.mlmodule1_to_string d);
       items, g
     end
     else
-    // let _ = print1 "decl %s is reachable\n" (String.concat ";" (mlmodule1_name d)) in
+    // let _ = Format.print1 "decl %s is reachable\n" (String.concat ";" (mlmodule1_name d)) in
     //
     // NOTE: Rust extraction of discriminators doesn't work for unit variants
     //       (i.e. variants that do not have payloads)
@@ -83,15 +84,15 @@ let extract_one
            starts_with mllb_name "__proj__" -> items, g
     | S.MLM_Let lb ->
       let f, g = extract_top_level_lb g lb in
-      // print_string "Extracted to:\n";
-      // print_string (RustBindings.fn_to_rust f ^ "\n");
+      // Format.print_string "Extracted to:\n";
+      // Format.print_string (RustBindings.fn_to_rust f ^ "\n");
       items@[f],
       g
     | S.MLM_Loc _ -> items, g
     | S.MLM_Ty td ->
       let d_items, g = extract_mltydecl g d.S.mlmodule1_attrs td in
       items@d_items, g
-    | _ -> fail_nyi (format1 "top level decl %s" (S.mlmodule1_to_string d))
+    | _ -> fail_nyi (Format.fmt1 "top level decl %s" (S.mlmodule1_to_string d))
   ) ([], g) decls in
   
   let f = mk_file "a.rs" items in
@@ -110,7 +111,7 @@ let read_all_ast_files (files:list string) : dict =
     let contents  : (list string & list UEnv.mlbinding & S.mlmodulebody) =
       match load_value_from_file f with
       | Some r -> r
-      | None -> failwith (format1 "Could not load file %s" f) in
+      | None -> failwith (Format.fmt1 "Could not load file %s" f) in
     SMap.add d (file_to_module_name f) contents);
   d
 
@@ -134,7 +135,7 @@ let rec collect_reachable_defs_aux
   then reachable_defs
   else let hd::_ = elems worklist in
        let worklist = remove hd worklist in
-      //  print1 "Adding %s to reachable_defs\n" hd;
+      //  Format.print1 "Adding %s to reachable_defs\n" hd;
        let reachable_defs = add hd reachable_defs in
        let worklist =
          let hd_decl = SMap.try_find dd hd in
@@ -177,14 +178,14 @@ let extract (files:list string) (odir:string) (libs:string) : unit =
   //   i.e., main function first
   //
   let all_modules = topsort_all d [] in
-  // print1 "all_modules: %s\n" (String.concat " " all_modules);
+  // Format.print1 "all_modules: %s\n" (String.concat " " all_modules);
   let root_module = file_to_module_name (let root_file::_ = files in root_file) in
-  // print1 "root_module: %s\n" root_module;
+  // Format.print1 "root_module: %s\n" root_module;
   let reachable_defs = collect_reachable_defs d root_module in
   let external_libs = FStarC.Util.split libs "," |> List.map trim_string in
   let g = empty_env external_libs d all_modules reachable_defs in
   let _, all_rust_files = List.fold_left (fun (g, all_rust_files) f ->
-    // print1 "Extracting file: %s\n" f;
+    // Format.print1 "Extracting file: %s\n" f;
     let (_, bs, ds) = SMap.try_find d f |> must in
     let s, g = extract_one g f bs ds in
     let rust_fname = concat_dir_filename odir (rust_file_name f) in
@@ -195,4 +196,4 @@ let extract (files:list string) (odir:string) (libs:string) : unit =
     g, rust_fname::all_rust_files
   ) (g, []) all_modules in
   
-  print1 "\n\nExtracted: %s\n\n" (String.concat " " all_rust_files)
+  Format.print1 "\n\nExtracted: %s\n\n" (String.concat " " all_rust_files)

@@ -110,7 +110,7 @@ let my_types_without_decay () =
     Syntax.string_of_mlpath p = "Pulse.C.Types.Base.void_ptr"
     || Syntax.string_of_mlpath p = "Pulse.C.Types.Array.array_void_ptr"
     ->
-      BU.print1 "Converting %s to TAny" (Syntax.string_of_mlpath p);
+      Format.print1 "Converting %s to TAny" (Syntax.string_of_mlpath p);
       TAny
 
   | MLTY_Named ([t; n; s], p)
@@ -324,7 +324,7 @@ let parse_steel_c_fields env (fields: mlty): option (list _) =
       in
       match go fields with
       | None ->
-        BU.print1 "Failed to parse fields from %s.\n"
+        Format.print1 "Failed to parse fields from %s.\n"
           (FStarC.Extraction.ML.Code.string_of_mlty ([], "") fields);
         None
 
@@ -332,7 +332,7 @@ let parse_steel_c_fields env (fields: mlty): option (list _) =
           print_endline "Got fields:";
           List.fold_left
             (fun () (field, ty) ->
-               BU.print2 "  %s : %s\n"
+               Format.print2 "  %s : %s\n"
                  field
                  (FStarC.Extraction.ML.Code.string_of_mlty ([], "") ty))
             ()
@@ -340,7 +340,7 @@ let parse_steel_c_fields env (fields: mlty): option (list _) =
           Some (
             List.map
               (fun (field, ty) ->
-                 BU.print1 "Translating %s.\n"
+                 Format.print1 "Translating %s.\n"
                    (FStarC.Extraction.ML.Code.string_of_mlty ([], "") ty);
                  (field, translate_type_without_decay env ty))
               fields)
@@ -360,7 +360,7 @@ let define_struct
   print_endline "Parsing struct definition.";
   match lident_of_typestring tag with
   | None ->
-    BU.print1 "Failed to parse struct tag from %s.\n"
+    Format.print1 "Failed to parse struct tag from %s.\n"
       (FStarC.Extraction.ML.Code.string_of_mlty ([], "") tag);
     None
   | Some p ->
@@ -380,7 +380,7 @@ let define_union
   print_endline "Parsing union definition.";
   match lident_of_typestring tag with
   | None ->
-    BU.print1 "Failed to parse union tag from %s.\n"
+    Format.print1 "Failed to parse union tag from %s.\n"
       (FStarC.Extraction.ML.Code.string_of_mlty ([], "") tag);
     None
   | Some p ->

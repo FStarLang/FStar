@@ -248,7 +248,7 @@ let tosyntax' (env:env_t) (t:A.term)
           just_fail ()
 
         | None -> 
-          fail (BU.format2 "Failed to desugar Pulse term %s\nUnexpected exception: %s\n"
+          fail (Format.fmt2 "Failed to desugar Pulse term %s\nUnexpected exception: %s\n"
                              (A.term_to_string t)
                              (SW.print_exn e))
                 t.range
@@ -284,7 +284,7 @@ let idents_as_binders (env:env_t) (l:list ident)
     if L.length non_tick_idents <> 0
     then let s = non_tick_idents |> L.map Ident.string_of_id |> BU.concat_l ", " in
          fail
-           (BU.format1 "Identifiers (%s) not found, consider adding them as binders" s)
+           (Format.fmt1 "Identifiers (%s) not found, consider adding them as binders" s)
            (non_tick_idents |> L.hd |> Ident.range_of_id)
     else begin
       let erased_tm = A.(mk_term (Var FStarC.Parser.Const.erased_lid) FStarC.Range.dummyRange Un) in
@@ -415,7 +415,7 @@ let desugar_datacon (env:env_t) (l:lid) : err SW.fv =
     match (SS.compress tt).n with
     | S.Tm_fvar fv -> return fv
     | S.Tm_uinst ({n = S.Tm_fvar fv}, _) -> return fv
-    | _ -> fail (BU.format1 "Not a datacon? %s" (Ident.string_of_lid l)) rng
+    | _ -> fail (Format.fmt1 "Not a datacon? %s" (Ident.string_of_lid l)) rng
   in
   return (SW.mk_fv (S.lid_of_fv sfv) rng)
 
@@ -469,7 +469,7 @@ let rec desugar_stmt' (env:env_t) (s:Sugar.stmt)
           return env
         with
           | FStarC.Errors.Error(e, msg, r, ctx) ->
-            fail (BU.format2
+            fail (Format.fmt2
             "Failed to open namespace %s; \
             You may need to bind this namespace outside Pulse for the F* dependency scanner to pick it up, \
             e.g., write ``module _X = %s`` in F*"
@@ -539,7 +539,7 @@ let rec desugar_stmt' (env:env_t) (s:Sugar.stmt)
         let s'' =
           seq t_let t_match
         in
-        // BU.print2 "GG Rewrote \n(%s)\n to \n(%s)\n\n" (show s) (show s'');
+        // Format.print2 "GG Rewrote \n(%s)\n to \n(%s)\n\n" (show s) (show s'');
         desugar_stmt env s''
       end
 

@@ -50,7 +50,7 @@ let tr_typ (g:uenv) (t:term) : mlty =
   if None? hua then
     raise NotSupportedByExtension;
   let Some (fv, us, args) = hua in
-  // if !dbg then BU.print1 "GGG checking typ %s\n" (show hua);
+  // if !dbg then Format.print1 "GGG checking typ %s\n" (show hua);
   match fv, us, args with
   | _, _, [(t, _)] when S.fv_eq_lid fv (Ident.lid_of_str "Pulse.Lib.HigherArray.Core.array") ->
     MLTY_Named ([cb g t], ([], "array"))
@@ -83,7 +83,7 @@ let tr_expr (g:uenv) (t:term) : mlexpr & e_tag & mlty =
   if None? hua then
     raise NotSupportedByExtension;
   let Some (fv, us, args) = hua in
-  // if !dbg then BU.print1 "GGG checking expr %s\n" (show hua);
+  // if !dbg then Format.print1 "GGG checking expr %s\n" (show hua);
   match fv, us, args with
   | _, _, [(x, _)]
       when S.fv_eq_lid fv (Ident.lid_of_str "FStar.SizeT.uint_to_t") ->

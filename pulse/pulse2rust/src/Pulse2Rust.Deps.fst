@@ -176,7 +176,7 @@ let rec topsort (d:dict) (grey:list string) (black:list string) (root:string)
   let deps = root |> SMap.try_find d |> must |> (fun (deps, _, _) -> deps) in
   let deps = deps |> List.filter (fun f -> List.mem f (SMap.keys d) && not (f = root)) in
   if List.existsb (fun d -> List.mem d grey) deps
-  then failwith (format1 "cyclic dependency: %s" root);
+  then failwith (Format.fmt1 "cyclic dependency: %s" root);
   let deps = deps |> List.filter (fun f -> not (List.mem f black)) in
   let grey, black = List.fold_left (fun (grey, black) dep ->
     topsort d grey black dep) (grey, black) deps in
