@@ -153,7 +153,7 @@ let rec collect_reachable_defs_aux
 
 let collect_reachable_defs (d:dict) (root_module:string) : reachable_defs =
   let dd = build_decls_dict d in
-  let root_decls = SMap.try_find d root_module |> must |> (fun (_, _, decls) -> decls) in
+  let root_decls = SMap.try_find d root_module |> Option.must |> (fun (_, _, decls) -> decls) in
   let worklist = List.fold_left (fun worklist decl ->
     addn
       (decl |> mlmodule1_name |> List.map (fun s -> root_module ^ "." ^ s))
@@ -186,7 +186,7 @@ let extract (files:list string) (odir:string) (libs:string) : unit =
   let g = empty_env external_libs d all_modules reachable_defs in
   let _, all_rust_files = List.fold_left (fun (g, all_rust_files) f ->
     // Format.print1 "Extracting file: %s\n" f;
-    let (_, bs, ds) = SMap.try_find d f |> must in
+    let (_, bs, ds) = SMap.try_find d f |> Option.must in
     let s, g = extract_one g f bs ds in
     let rust_fname = concat_dir_filename odir (rust_file_name f) in
     let rust_f = open_file_for_writing rust_fname in

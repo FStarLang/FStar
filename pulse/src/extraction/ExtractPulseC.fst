@@ -89,7 +89,7 @@ let my_types_without_decay () =
     BU.starts_with (Syntax.string_of_mlpath p) "Pulse.C.Types.Struct.struct_t0"
     || BU.starts_with (Syntax.string_of_mlpath p) "Pulse.C.Types.Union.union_t0"
     ->
-      TQualified (must (lident_of_typestring tag))
+      TQualified (Option.must (lident_of_typestring tag))
 
   | MLTY_Named ([arg], p) when
       Syntax.string_of_mlpath p = "Pulse.C.Types.Array.array_ptr_gen"
@@ -119,7 +119,7 @@ let my_types_without_decay () =
     ->
       TArray (
         translate_type_without_decay env t,
-        (UInt32, string_of_int (must (int_of_typenat n))))
+        (UInt32, string_of_int (Option.must (int_of_typenat n))))
   
   | _ -> raise NotSupportedByKrmlExtension
 end
@@ -196,7 +196,7 @@ let my_exprs () = register_pre_translate_expr begin fun env e ->
     || string_of_mlpath p = "Pulse.C.Types.Union.union_switch_field0"
     ->
       EAddrOf (EField (
-        TQualified (must (lident_of_string struct_name)),
+        TQualified (Option.must (lident_of_string struct_name)),
         EBufRead (translate_expr env r, EQualified (["C"], "_zero_for_deref")),
         field_name))
 
@@ -349,7 +349,7 @@ let define_struct_gen
   env p args fields
 =
     let env = List.fold_left (fun env name -> extend_t env name) env args in
-    let fields = must (parse_steel_c_fields env fields) in
+    let fields = Option.must (parse_steel_c_fields env fields) in
     Some (DTypeFlat (p, [], List.length args,
       List.map (fun (field, ty) -> (field, (ty, true))) fields))
 
@@ -370,7 +370,7 @@ let define_union_gen
   env p args fields
 =
     let env = List.fold_left (fun env name -> extend_t env name) env args in
-    let fields = must (parse_steel_c_fields env fields) in
+    let fields = Option.must (parse_steel_c_fields env fields) in
     Some (DUntaggedUnion (p, [], List.length args, fields))
 
 let define_union

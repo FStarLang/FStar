@@ -376,12 +376,12 @@ let desugar_hint_type (env:env_t) (ht:Sugar.hint_type)
     | UNFOLD (ns, vp) -> 
       let! vp = desugar_slprop env vp in
       let! ns = resolve_names env ns in
-      let ns = BU.map_opt ns (L.map FStarC.Ident.string_of_lid) in
+      let ns = Option.map (L.map FStarC.Ident.string_of_lid) ns in
       return (SW.mk_unfold_hint_type ns vp)
     | FOLD (ns, vp) -> 
       let! vp = desugar_slprop env vp in
       let! ns = resolve_names env ns in
-      let ns = BU.map_opt ns (L.map FStarC.Ident.string_of_lid) in
+      let ns = Option.map (L.map FStarC.Ident.string_of_lid) ns in
       return (SW.mk_fold_hint_type ns vp)
     | RENAME (pairs, goal, tac_opt) ->
       let! pairs =
