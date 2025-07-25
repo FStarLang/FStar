@@ -161,11 +161,6 @@ val all_defs_in_env       : env -> list fv
 (** Returns all top-level names in a given module. *)
 val defs_in_module        : env -> name -> list fv
 
-(** Compare two terms for equality using the internal implementation.
-Deprecated, we should use the userland version instead. *)
-[@@(deprecated "Use FStar.Reflection.V2.TermEq.term_eq")]
-val term_eq               : term -> term -> bool
-
 (** Return all module names which are opened in the given scope. *)
 val env_open_modules      : env -> list name
 

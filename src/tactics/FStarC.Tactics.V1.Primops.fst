@@ -227,11 +227,6 @@ let ops =
     comp_to_string ;
 
   mk_tac_step_1 0 "range_to_string" range_to_string range_to_string ;
-  mk_tac_step_2 0 "term_eq_old"
-    #RE.e_term #RE.e_term #e_bool
-    #NRE.e_term #NRE.e_term #NBET.e_bool
-    term_eq_old
-    term_eq_old ;
 
   mk_tac_step_3 1 "with_compat_pre_core"
     #e_any #e_int #(TI.e_tactic_thunk e_any) #e_any
