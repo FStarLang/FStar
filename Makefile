@@ -158,9 +158,12 @@ $(FSTAR1_FULL_EXE): .bare1.src.touch .full1.src.touch .src.ml.touch $(MAYBEFORCE
 	  OUTPUT_DIR=stage1/ulib.pluginml/ \
 	  CODEGEN=PluginNoLib \
 	  TAG=pluginlib \
-	  DEPFLAGS='--extract +FStar.Tactics,+FStar.Reflection,+FStar.Sealed' \
+	  DEPFLAGS='--extract +FStar.Tactics,+FStar.Reflection,+FStar.Sealed,-FStar.SizeT,-FStar.PtrDiffT' \
 	  TOUCH=$@ \
 	  $(MAKE) -f mk/lib.mk ocaml
+	  # NOTE: not extracting SizeT/PtrDiff in stage 1 as that is currently broken but
+	  # to requiring some staging (it uses FStar.UInt64.ne, which is not there
+	  # in the parent compiler). Remove after bumping stage0.
 
 .plib1.touch: .plib1.src.touch .src.ml.touch $(MAYBEFORCE)
 	$(call bold_msg, "BUILD", "STAGE 1 PLUGLIB")
