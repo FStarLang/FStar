@@ -271,7 +271,7 @@ let find_prim_step cfg fv =
     PSMap.try_find cfg.primitive_steps (I.string_of_lid fv.fv_name.v)
 
 let is_prim_step cfg fv =
-    BU.is_some (PSMap.try_find cfg.primitive_steps (I.string_of_lid fv.fv_name.v))
+    Some? (PSMap.try_find cfg.primitive_steps (I.string_of_lid fv.fv_name.v))
 
 let log cfg f =
     if cfg.debug.gen then f () else ()

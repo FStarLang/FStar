@@ -18,7 +18,6 @@ open FStarC
 open FStarC.Effect
 open FStarC.Range
 open FStarC.Parser
-open FStarC.Util
 open FStarC.Syntax
 open FStarC.Syntax.Syntax
 open FStarC.Errors
@@ -30,7 +29,6 @@ module SMT = FStarC.SMTEncoding.Solver
 module Tc = FStarC.TypeChecker.Tc
 module TcTerm = FStarC.TypeChecker.TcTerm
 module ToSyntax = FStarC.ToSyntax.ToSyntax
-module BU = FStarC.Util
 module Rel = FStarC.TypeChecker.Rel
 module NBE = FStarC.TypeChecker.NBE
 
@@ -77,7 +75,7 @@ let init_once () : unit =
                 FStarC.Universal.core_check
   in
   env.solver.init env;
-  let dsenv, prims_mod = parse_mod (Find.find_file "FStar.Prelude.fsti" |> BU.must) (DsEnv.empty_env Parser.Dep.empty_deps) in
+  let dsenv, prims_mod = parse_mod (Find.find_file "FStar.Prelude.fsti" |> Some?.v) (DsEnv.empty_env Parser.Dep.empty_deps) in
   let env = {env with dsenv=dsenv} in
   let _prims_mod, env = Tc.check_module env prims_mod false in
   // needed to run tests with chars

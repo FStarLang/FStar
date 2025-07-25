@@ -20,7 +20,6 @@
 module FStarC.Interactive.PushHelper
 open FStarC
 open FStarC.Effect
-open FStarC.Util
 open FStarC.Ident
 open FStarC.TypeChecker.Env
 open FStarC.Interactive.JsonHelper

@@ -15,6 +15,7 @@
 *)
 module FStarC.Reflection.V2.Embeddings
 
+open FStarC
 open FStarC.Effect
 open FStarC.Reflection.V2.Data
 open FStarC.Syntax.Syntax
@@ -85,8 +86,8 @@ let rec mapM_opt (f : ('a -> option 'b)) (l : list 'a) : option (list 'b) =
     match l with
     | [] -> Some []
     | x::xs ->
-        BU.bind_opt (f x) (fun x ->
-        BU.bind_opt (mapM_opt f xs) (fun xs ->
+        Option.bind (f x) (fun x ->
+        Option.bind (mapM_opt f xs) (fun xs ->
         Some (x :: xs)))
 
 let e_term_aq aq =
@@ -99,7 +100,7 @@ let e_term_aq aq =
             let shift, aqs = aq in
             let aqs = List.rev aqs in
             // Try to unembed all antiquotations
-            BU.bind_opt (mapM_opt unembed_term aqs) (fun aq_ts ->
+            Option.bind (mapM_opt unembed_term aqs) (fun aq_ts ->
             // Create a substitution of the DB indices of t for the antiquotations
             (* let n = List.length aq_ts - 1 in *)
             let subst_open, subst =

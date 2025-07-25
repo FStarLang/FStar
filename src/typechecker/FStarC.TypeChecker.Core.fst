@@ -2,7 +2,6 @@ module FStarC.TypeChecker.Core
 open FStarC
 open FStar.List.Tot
 open FStarC
-open FStarC.Util
 open FStarC.Effect
 open FStarC.Syntax.Syntax
 open FStarC.TypeChecker
@@ -101,7 +100,7 @@ let open_pat (g:env) (p:pat)
           g, {p with v=Pat_var bx'.binder_bv}, sub
 
         | Pat_dot_term eopt ->
-          let eopt = BU.map_option (Subst.subst sub) eopt in
+          let eopt = Option.map (Subst.subst sub) eopt in
           g, {p with v=Pat_dot_term eopt}, sub
     in
     open_pat_aux g p []
@@ -139,7 +138,7 @@ let open_branch (g:env) (br:S.branch)
   : env & branch
   = let (p, wopt, e) = br in
     let g, p, s = open_pat g p in
-    g, (p, BU.map_option (Subst.subst s) wopt, Subst.subst s e)
+    g, (p, Option.map (Subst.subst s) wopt, Subst.subst s e)
 
 //br0 and br1 are expected to have equal patterns
 let open_branches_eq_pat (g:env) (br0 br1:S.branch)
@@ -147,8 +146,8 @@ let open_branches_eq_pat (g:env) (br0 br1:S.branch)
     let (_,  wopt1, e1) = br1 in
     let g, p0, s = open_pat g p0 in
     g,
-    (p0, BU.map_option (Subst.subst s) wopt0, Subst.subst s e0),
-    (p0, BU.map_option (Subst.subst s) wopt1, Subst.subst s e1)
+    (p0, Option.map (Subst.subst s) wopt0, Subst.subst s e0),
+    (p0, Option.map (Subst.subst s) wopt1, Subst.subst s e1)
 
 let precondition = option typ
 
@@ -530,12 +529,12 @@ let abs (a:typ) (f: binder -> term) : term =
 let weaken_subtyping_guard (p:term)
                            (g:precondition)
   : precondition
-  = BU.map_opt g (fun q -> U.mk_imp p q)
+  = Option.map (fun q -> U.mk_imp p q) g
 
 let strengthen_subtyping_guard (p:term)
                                (g:precondition)
   : precondition
-  = Some (BU.dflt p (BU.map_opt g (fun q -> U.mk_conj p q)))
+  = Some (Option.dflt p (Option.map (fun q -> U.mk_conj p q) g))
 
 let weaken (p:term) (g:result 'a)
   = fun ctx ->
@@ -1495,7 +1494,7 @@ and do_check (g:env) (e:term)
           let! branch_condition = pattern_branch_condition g sc p in
           let pat_sc_eq =
             U.mk_eq2 u_sc t_sc sc
-            (PatternUtils.raw_pat_as_exp g.tcenv p |> must |> fst) in
+            (PatternUtils.raw_pat_as_exp g.tcenv p |> Option.must |> fst) in
           let this_path_condition, next_path_condition =
               combine_path_and_branch_condition path_condition branch_condition pat_sc_eq
           in
@@ -1574,7 +1573,7 @@ and do_check (g:env) (e:term)
           let! branch_condition = pattern_branch_condition g sc p in
           let pat_sc_eq =
             U.mk_eq2 u_sc t_sc sc
-            (PatternUtils.raw_pat_as_exp g.tcenv p |> must |> fst) in
+            (PatternUtils.raw_pat_as_exp g.tcenv p |> Option.must |> fst) in
           let this_path_condition, next_path_condition =
               combine_path_and_branch_condition path_condition branch_condition pat_sc_eq
           in
@@ -1699,7 +1698,7 @@ and check_pat (g:env) (p:pat) (t_sc:typ) : result (binders & universes) =
     return ([b], [u])
 
   | Pat_cons (fv, usopt, pats) ->
-    let us = if is_none usopt then [] else usopt |> must in
+    let us = if None? usopt then [] else usopt |> Option.must in
 
     let formals, t_pat =
       Env.lookup_and_inst_datacon g.tcenv us (S.lid_of_fv fv)
@@ -1710,9 +1709,9 @@ and check_pat (g:env) (p:pat) (t_sc:typ) : result (binders & universes) =
       pats |> BU.prefix_until (fun p -> match p.v with
                                     | Pat_dot_term _ -> false
                                     | _ -> true)
-           |> BU.map_option (fun (dot_pats, pat, rest_pats) ->
+           |> Option.map (fun (dot_pats, pat, rest_pats) ->
                             dot_pats, (pat::rest_pats))
-           |> BU.dflt (pats, []) in
+           |> Option.dflt (pats, []) in
 
     let dot_formals, rest_formals = List.splitAt (List.length dot_pats) formals in
 
@@ -1731,7 +1730,7 @@ and check_pat (g:env) (p:pat) (t_sc:typ) : result (binders & universes) =
     let! _, ss, bs, us = fold2 (fun (g, ss, bs, us) {binder_bv=f} p ->
       let expected_t = Subst.subst ss f.sort in
       let! (bs_p, us_p) = with_binders bs us (check_pat g p expected_t) in
-      let p_e = PatternUtils.raw_pat_as_exp g.tcenv p |> must |> fst in
+      let p_e = PatternUtils.raw_pat_as_exp g.tcenv p |> Option.must |> fst in
       return (push_binders g bs_p,
               ss@[NT (f, p_e)],
               bs@bs_p,

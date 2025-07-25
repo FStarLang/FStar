@@ -20,7 +20,6 @@
 module FStarC.Interactive.QueryHelper
 open FStarC
 open FStarC.Range
-open FStarC.Util
 open FStarC.TypeChecker.Env
 open FStarC.Interactive.JsonHelper
 open FStarC.Interactive.Ide.Types

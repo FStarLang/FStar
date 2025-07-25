@@ -22,7 +22,6 @@ open FStarC.Syntax
 open FStarC.Syntax.Syntax
 open FStarC.Syntax.Subst
 open FStarC.Syntax.Util
-open FStarC.Util
 open FStarC.SMap
 open FStarC.Ident
 open FStarC.Range
@@ -480,7 +479,7 @@ let lookup_qname env (lid:lident) : qninfo =
       | se -> se
     else None
   in
-  if is_some found
+  if Some? found
   then found
   else match find_in_sigtab env lid with
         | Some se -> Some (Inr (se, None), U.range_of_sigelt se)
@@ -643,9 +642,9 @@ let try_lookup_lid_aux us_opt env lid =
 
         | _ ->
           effect_signature us_opt (fst se) env.range
-      end |> BU.map_option (fun (us_t, rng) -> (us_t, rng))
+      end |> Option.map (fun (us_t, rng) -> (us_t, rng))
   in
-    match BU.bind_opt (lookup_qname env lid) mapper with
+    match Option.bind (lookup_qname env lid) mapper with
       | Some ((us, t), r) -> Some ((us, setPos (pos lid) t), r)
       | None -> None
 
@@ -723,7 +722,7 @@ let lookup_univ env x =
     List.find (function
         | Binding_univ y -> (string_of_id x = string_of_id y)
         | _ -> false) env.gamma
-    |> Option.isSome
+    |> Some?
 
 let try_lookup_val_decl env lid =
   //QUESTION: Why does this not inst_tscheme?
@@ -777,7 +776,7 @@ let lookup_definition_qninfo_aux rec_ok delta_levels lid (qninfo : qninfo) =
         when visible_with delta_levels se.sigquals
           && (not is_rec || rec_ok) ->
           BU.find_map lbs (fun lb ->
-              let fv = right lb.lbname in
+              let fv = Inr?.v lb.lbname in
               if fv_eq_lid fv lid
               then Some (lb.lbunivs, lb.lbdef)
               else None)
@@ -817,10 +816,10 @@ let rec delta_depth_of_qninfo_lid env lid (qn:qninfo) : delta_depth =
 
     | Sig_let {lbs=(_,lbs)} ->
       BU.find_map lbs (fun lb ->
-          let fv = right lb.lbname in
+          let fv = Inr?.v lb.lbname in
           if fv_eq_lid fv lid then
             Some (incr_delta_depth <| delta_depth_of_term env lb.lbdef)
-          else None) |> must
+          else None) |> Option.must
 
     | Sig_fail _
     | Sig_splice  _ ->
@@ -966,7 +965,7 @@ let fv_has_strict_args env fv =
             fst (FStarC.ToSyntax.ToSyntax.parse_attr_with_list
                 false x FStarC.Parser.Const.strict_on_arguments_attr))
       in
-      true, BU.map_opt res fst
+      true, Option.map fst res
   in
   cache_in_fv_tab env.strict_args_tab fv f
 
@@ -1150,7 +1149,7 @@ let is_type_constructor env lid =
               Some true
             | _ -> Some false
            end in
-    match BU.bind_opt (lookup_qname env lid) mapper with
+    match Option.bind (lookup_qname env lid) mapper with
       | Some b -> b
       | None -> false
 
@@ -1179,7 +1178,7 @@ let num_inductive_uniform_ty_params env lid =
 // Operations on the monad lattice                        //
 ////////////////////////////////////////////////////////////
 let effect_decl_opt env l =
-  env.effects.decls |> BU.find_opt (fun (d, _) -> lid_equals d.mname l)
+  env.effects.decls |> Option.find (fun (d, _) -> lid_equals d.mname l)
 
 let get_effect_decl env l =
   match effect_decl_opt env l with
@@ -1193,7 +1192,7 @@ let get_lid_valued_effect_attr env
   = let attr_args =
       eff_lid |> norm_eff_name env
               |> lookup_attrs_of_lid env
-              |> BU.dflt []
+              |> Option.dflt []
               |> U.get_attribute attr_name_lid in
     match attr_args with
     | None -> None
@@ -1230,7 +1229,7 @@ let join_opt env (l1:lident) (l2:lident) : option (lident & mlift & mlift) =
   else if lid_equals l1 Const.effect_GTot_lid && lid_equals l2 Const.effect_Tot_lid
        || lid_equals l2 Const.effect_GTot_lid && lid_equals l1 Const.effect_Tot_lid
   then Some (Const.effect_GTot_lid, identity_mlift, identity_mlift)
-  else match env.effects.joins |> BU.find_opt (fun (m1, m2, _, _, _) -> lid_equals l1 m1 && lid_equals l2 m2) with
+  else match env.effects.joins |> Option.find (fun (m1, m2, _, _, _) -> lid_equals l1 m1 && lid_equals l2 m2) with
         | None -> None
         | Some (_, _, m3, j1, j2) -> Some (m3, j1, j2)
 
@@ -1245,10 +1244,10 @@ let monad_leq env l1 l2 : option edge =
   if lid_equals l1 l2
   || (lid_equals l1 Const.effect_Tot_lid && lid_equals l2 Const.effect_GTot_lid)
   then Some ({msource=l1; mtarget=l2; mlift=identity_mlift; mpath=[]})
-  else env.effects.order |> BU.find_opt (fun e -> lid_equals l1 e.msource && lid_equals l2 e.mtarget)
+  else env.effects.order |> Option.find (fun e -> lid_equals l1 e.msource && lid_equals l2 e.mtarget)
 
 let wp_sig_aux decls m =
-  match decls |> BU.find_opt (fun (d, _) -> lid_equals d.mname m) with
+  match decls |> Option.find (fun (d, _) -> lid_equals d.mname m) with
   | None -> failwith (Format.fmt1 "Impossible: declaration for monad %s not found" (string_of_lid m))
   | Some (md, _q) ->
     (*
@@ -1476,13 +1475,13 @@ let push_new_effect env (ed, quals) =
 
 let exists_polymonadic_bind env m n =
   match env.effects.polymonadic_binds
-        |> BU.find_opt (fun (m1, n1, _, _) -> lid_equals m m1 && lid_equals n n1) with
+        |> Option.find (fun (m1, n1, _, _) -> lid_equals m m1 && lid_equals n n1) with
   | Some (_, _, p, t) -> Some (p, t)
   | _ -> None
 
 let exists_polymonadic_subcomp env m n =
   match env.effects.polymonadic_subcomps
-        |> BU.find_opt (fun (m1, n1, _, _) -> lid_equals m m1 && lid_equals n n1) with
+        |> Option.find (fun (m1, n1, _, _) -> lid_equals m m1 && lid_equals n n1) with
   | Some (_, _, ts, k) -> Some (ts, k)
   | _ -> None
 
@@ -1602,7 +1601,7 @@ let update_effect_lattice env src tgt st_mlift =
   let find_edge order (i, j) =
     if lid_equals i j
     then id_edge i |> Some
-    else order |> BU.find_opt (fun e -> lid_equals e.msource i && lid_equals e.mtarget j) in
+    else order |> Option.find (fun e -> lid_equals e.msource i && lid_equals e.mtarget j) in
 
   let ms = env.effects.decls |> List.map (fun (e, _) -> e.mname) in
 
@@ -1709,7 +1708,7 @@ let update_effect_lattice env src tgt st_mlift =
       //Filter entries that have an edge to every other entry
       let lubs = List.filter (fun (i, j, k, ik, jk) ->
         List.for_all (fun (_, _, k', _, _) ->
-          find_edge order (k, k') |> is_some) l) l in
+          find_edge order (k, k') |> Some?) l) l in
       //Make sure there is only one such entry
       if List.length lubs <> 1
       then
@@ -1971,7 +1970,7 @@ let close_forall (env:env) (bs:binders) (f:formula) : formula =
 
     let (f', e) =
       List.fold_right (fun bv (f, e) ->
-        let e' = pop_bv e |> must |> snd in
+        let e' = pop_bv e |> Option.must |> snd in
         def_check_scoped Range.dummyRange "close_forall.sort" e' bv.sort;
         let f' =
               if Syntax.is_null_bv bv then f
@@ -2096,7 +2095,7 @@ let uvars_for_binders env (bs:S.binders) substs reason r =
 
 let pure_precondition_for_trivial_post env u t wp r =
   let trivial_post =
-    let post_ts = lookup_definition [NoDelta] env Const.trivial_pure_post_lid |> must in
+    let post_ts = lookup_definition [NoDelta] env Const.trivial_pure_post_lid |> Option.must in
     let _, post = inst_tscheme_with post_ts [u] in
     S.mk_Tm_app
       post
@@ -2114,7 +2113,7 @@ let get_letrec_arity (env:env) (lbname:lbname) : option int =
       | Inr v1, Inr v2 -> f2 v1 v2
       | _ -> false
   in
-  match BU.find_opt (fun (lbname', _, _, _) -> compare_either S.bv_eq S.fv_eq lbname lbname')
+  match Option.find (fun (lbname', _, _, _) -> compare_either S.bv_eq S.fv_eq lbname lbname')
                     env.letrecs with
   | Some (_, arity, _, _) -> Some arity
   | None -> None

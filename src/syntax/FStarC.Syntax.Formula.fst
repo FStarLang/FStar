@@ -190,11 +190,11 @@ let destruct_typ_as_formula f : option connective =
   let phi = unmeta_monadic f in
   let r = 
     // Try all possibilities, stopping at the first
-    BU.catch_opt (destruct_base_conn phi) (fun () ->
-    BU.catch_opt (destruct_q_conn phi) (fun () ->
-    BU.catch_opt (destruct_sq_base_conn phi) (fun () ->
-    BU.catch_opt (destruct_sq_forall phi) (fun () ->
-    BU.catch_opt (destruct_sq_exists phi) (fun () ->
+    Option.catch (destruct_base_conn phi) (fun () ->
+    Option.catch (destruct_q_conn phi) (fun () ->
+    Option.catch (destruct_sq_base_conn phi) (fun () ->
+    Option.catch (destruct_sq_forall phi) (fun () ->
+    Option.catch (destruct_sq_exists phi) (fun () ->
               None)))))
   in
   r

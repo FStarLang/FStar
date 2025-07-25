@@ -20,7 +20,6 @@ open FStarC
 open FStarC.Effect
 open FStarC.Syntax.Syntax
 open FStarC.Syntax.Embeddings
-open FStarC.Util
 open FStarC.List
 open FStarC.Class.Show
 
@@ -240,7 +239,7 @@ instance e_exn : embedding exn =
     let unembed_exn (t:term) _ : option exn =
         match hd'_and_args t with
         | Tm_fvar fv, [(s, _)] when S.fv_eq_lid fv fstar_tactics_TacticFailure.lid ->
-            BU.bind_opt (unembed' s) (fun s ->
+            Option.bind (unembed' s) (fun s ->
             Some (TacticFailure s))
 
         | Tm_fvar fv, [] when S.fv_eq_lid fv fstar_tactics_SKIP.lid ->
@@ -276,7 +275,7 @@ let e_exn_nbe =
     let unembed_exn cb (t:NBET.t) : option exn =
         match NBETerm.nbe_t_of_t t with
         | NBETerm.Construct (fv, _, [(s, _)]) when S.fv_eq_lid fv fstar_tactics_TacticFailure.lid ->
-            BU.bind_opt (NBETerm.unembed FStar.Tactics.Typeclasses.solve cb s) (fun s ->
+            Option.bind (NBETerm.unembed FStar.Tactics.Typeclasses.solve cb s) (fun s ->
             Some (TacticFailure s))
 
         | NBETerm.Construct (fv, _, []) when S.fv_eq_lid fv fstar_tactics_SKIP.lid ->
@@ -310,13 +309,13 @@ let e_result (ea : embedding 'a) : Tot _ =
     let unembed_result (t:term) _ : option (__result 'a) =
         match hd'_and_args t with
         | Tm_fvar fv, [_t; (a, _); (ps, _)] when S.fv_eq_lid fv fstar_tactics_Success.lid ->
-            BU.bind_opt (unembed' a) (fun a ->
-            BU.bind_opt (unembed' ps) (fun ps ->
+            Option.bind (unembed' a) (fun a ->
+            Option.bind (unembed' ps) (fun ps ->
             Some (Success (a, ps))))
 
         | Tm_fvar fv, [_t; (e, _); (ps, _)] when S.fv_eq_lid fv fstar_tactics_Failed.lid ->
-            BU.bind_opt (unembed' e) (fun e ->
-            BU.bind_opt (unembed' ps) (fun ps ->
+            Option.bind (unembed' e) (fun e ->
+            Option.bind (unembed' ps) (fun ps ->
             Some (Failed (e, ps))))
 
         | _ -> None
@@ -347,13 +346,13 @@ let e_result_nbe (ea : NBET.embedding 'a)  =
     let unembed_result cb (t:NBET.t) : option (__result 'a) =
         match NBETerm.nbe_t_of_t t with
         | NBETerm.Construct (fv, _, [(ps, _); (a, _); _t]) when S.fv_eq_lid fv fstar_tactics_Success.lid ->
-            BU.bind_opt (NBETerm.unembed ea cb a) (fun a ->
-            BU.bind_opt (NBETerm.unembed e_proofstate_nbe cb ps) (fun ps ->
+            Option.bind (NBETerm.unembed ea cb a) (fun a ->
+            Option.bind (NBETerm.unembed e_proofstate_nbe cb ps) (fun ps ->
             Some (Success (a, ps))))
 
         | NBETerm.Construct (fv, _, [(ps, _); (e, _); _t]) when S.fv_eq_lid fv fstar_tactics_Failed.lid ->
-            BU.bind_opt (NBETerm.unembed e_exn_nbe cb e) (fun e ->
-            BU.bind_opt (NBETerm.unembed e_proofstate_nbe cb ps) (fun ps ->
+            Option.bind (NBETerm.unembed e_exn_nbe cb e) (fun e ->
+            Option.bind (NBETerm.unembed e_proofstate_nbe cb ps) (fun ps ->
             Some (Failed (e, ps))))
         | _ ->
             None

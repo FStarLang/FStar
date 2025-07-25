@@ -19,7 +19,6 @@ open FStarC
 open FStarC.Effect
 open FStarC.Syntax.Syntax
 open FStarC.Syntax.Print {}
-open FStarC.Util
 open FStarC.TypeChecker.Env
 open FStarC.Range
 open FStarC.Ident

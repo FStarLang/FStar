@@ -18,7 +18,6 @@ open FStarC.Effect
 open FStarC.List
 open FStarC
 open FStarC.TypeChecker.Env
-open FStarC.Util
 open FStarC.Const
 open FStarC.Ident
 open FStarC.Extraction
@@ -266,14 +265,14 @@ let rec is_type_aux env t =
       is_type_aux env body
 
     | Tm_let {lbs=(false, [lb]); body} ->
-      let x = BU.left lb.lbname in
+      let x = Inl?.v lb.lbname in
       let bs, body = SS.open_term [S.mk_binder x] body in
       let env = push_tcenv_binders env bs in
       is_type_aux env body
 
     | Tm_let {lbs=(_, lbs); body} ->
       let lbs, body = SS.open_let_rec lbs body in
-      let env = push_tcenv_binders env (List.map (fun lb -> S.mk_binder (BU.left lb.lbname)) lbs) in
+      let env = push_tcenv_binders env (List.map (fun lb -> S.mk_binder (Inl?.v lb.lbname)) lbs) in
       is_type_aux env body
 
     | Tm_match {brs=branches} ->
@@ -580,7 +579,7 @@ let apply_coercion (pos:Range.t) (g:uenv) (e:mlexpr) (ty:mlty) (expect:mlty) : m
           with_ty expect <| MLE_Match(s, List.map coerce_branch branches)
 
         | MLE_If(s, b1, b2_opt), _, _ ->
-          with_ty expect <| MLE_If(s, aux b1 ty expect, BU.map_opt b2_opt (fun b2 -> aux b2 ty expect))
+          with_ty expect <| MLE_If(s, aux b1 ty expect, Option.map (fun b2 -> aux b2 ty expect) b2_opt)
 
         | MLE_Seq es, _, _ ->
           let prefix, last = BU.prefix es in
@@ -1349,11 +1348,11 @@ and extract_lb_iface (g:uenv) (lbs:letbindings)
     let is_top = FStarC.Syntax.Syntax.is_top_level (snd lbs) in
     let is_rec = not is_top && fst lbs in
     let lbs = extract_lb_sig g lbs in
-    BU.fold_map (fun env
+    BU.fold_map #_ #(Syntax.Syntax.lbname & _ & _ & _ & _ & _) (fun env
                      (lbname, _e_tag, (typ, (_binders, mltyscheme)), add_unit, _has_c_inline, _body) ->
                   let env, _, exp_binding =
                       UEnv.extend_lb env lbname typ mltyscheme add_unit in
-                  env, (BU.right lbname, exp_binding))
+                  env, (Inr?.v lbname, exp_binding))
                 g
                 lbs
 
@@ -1479,9 +1478,9 @@ and term_as_mlexpr' (g:uenv) (top:term) : (mlexpr & e_tag & mlty) =
           //
           let t = SS.compress t in
           begin match t.n with
-            | Tm_let {lbs=(false, [lb]); body} when (BU.is_left lb.lbname) ->
+            | Tm_let {lbs=(false, [lb]); body} when Inl? lb.lbname ->
               let tcenv = tcenv_of_uenv g in
-              let ed, qualifiers = must (TypeChecker.Env.effect_decl_opt tcenv m) in
+              let ed, qualifiers = Option.must (TypeChecker.Env.effect_decl_opt tcenv m) in
               if TcUtil.effect_extraction_mode tcenv ed.mname = S.Extract_primitive
               then term_as_mlexpr g t
               else
@@ -1844,8 +1843,8 @@ and term_as_mlexpr' (g:uenv) (top:term) : (mlexpr & e_tag & mlty) =
 
         | Tm_let {lbs=(false, [lb]); body=e'}
           when not (is_top_level [lb])
-          && BU.is_some (U.get_attribute FStarC.Parser.Const.rename_let_attr lb.lbattrs) ->
-          let b = S.mk_binder (BU.left lb.lbname) in
+          && Some? (U.get_attribute FStarC.Parser.Const.rename_let_attr lb.lbattrs) ->
+          let b = S.mk_binder (Inl?.v lb.lbname) in
           let ({binder_bv=x}), body = SS.open_term_1 b e' in
           // Format.print_string "Reached let with rename_let attribute\n";
           let suggested_name =
@@ -1878,7 +1877,7 @@ and term_as_mlexpr' (g:uenv) (top:term) : (mlexpr & e_tag & mlty) =
           let remove_attr attrs =
             let _, other_attrs =
               List.partition
-                (fun attr -> BU.is_some (U.get_attribute PC.rename_let_attr [attr]))
+                (fun attr -> Some? (U.get_attribute PC.rename_let_attr [attr]))
                 lb.lbattrs
             in
             other_attrs
@@ -1907,7 +1906,7 @@ and term_as_mlexpr' (g:uenv) (top:term) : (mlexpr & e_tag & mlty) =
             else if is_top_level lbs
                  then lbs, e'
                  else let lb = List.hd lbs in
-                      let x = S.freshen_bv (left lb.lbname) in
+                      let x = S.freshen_bv (Inl?.v lb.lbname) in
                       let lb = {lb with lbname=Inl x} in
                       let e' = SS.subst [DB(0, x)] e' in
                       [lb], e' in

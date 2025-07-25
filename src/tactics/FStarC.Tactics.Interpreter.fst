@@ -23,7 +23,6 @@ open FStarC
 open FStarC.Effect
 open FStarC.List
 open FStarC.Range
-open FStarC.Util
 open FStarC.Syntax.Syntax
 open FStarC.Syntax.Embeddings
 open FStarC.TypeChecker.Common

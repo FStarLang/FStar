@@ -18,7 +18,6 @@ module FStarC.Parser.ParseIt
 open FStarC
 open FStarC.Effect
 open FStarC.Parser
-open FStarC.Util
 open FStarC.Errors
 open FStarC.Time
 

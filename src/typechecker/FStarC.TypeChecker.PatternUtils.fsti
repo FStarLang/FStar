@@ -17,7 +17,6 @@
 module FStarC.TypeChecker.PatternUtils
 open FStarC.Effect
 open FStarC
-open FStarC.Util
 open FStarC.Errors
 open FStarC.TypeChecker
 open FStarC.Syntax

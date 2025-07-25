@@ -18,7 +18,6 @@ module FStarC.Extraction.ML.Util
 open FStarC
 open FStarC.Effect
 open FStarC.List
-open FStarC.Util
 open FStarC.Syntax
 open FStarC.Syntax.Syntax
 open FStarC.Syntax.Print {}
@@ -106,7 +105,7 @@ let mlexpr_of_const (p:Range.t) (c:sconst) : mlexpr' =
 
 let rec subst_aux (subst:list (mlident & mlty)) (t:mlty)  : mlty =
     match t with
-    | MLTY_Var  x -> (match BU.find_opt (fun (y, _) -> y=x) subst with
+    | MLTY_Var  x -> (match Option.find (fun (y, _) -> y=x) subst with
                      | Some ts -> snd ts
                      | None -> t) // TODO : previously, this case would abort. why? this case was encountered while extracting st3.fst
     | MLTY_Fun (t1, f, t2) -> MLTY_Fun(subst_aux subst t1, f, subst_aux subst t2)

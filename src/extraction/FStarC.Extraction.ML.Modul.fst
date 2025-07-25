@@ -359,7 +359,7 @@ let extract_typ_abbrev env quals attrs lb
     let lbtyp = FStarC.TypeChecker.Normalize.normalize [Env.Beta;Env.UnfoldUntil delta_constant; Env.ForExtraction; Env.Unrefine; Env.Unascribe ] tcenv lbtyp in
     //eta expansion is important; see issue #490, including unrefining and unascribing
     let lbdef = FStarC.TypeChecker.Normalize.eta_expand_with_type tcenv lbdef lbtyp in
-    let fv = right lb.lbname in
+    let fv = Inr?.v lb.lbname in
     let lid = fv.fv_name.v in
     let def = SS.compress lbdef |> U.unmeta |> U.un_uinst in
     let def =
@@ -425,7 +425,7 @@ let extract_let_rec_type env quals attrs lb
     in
     let bs, _ = U.arrow_formals lbtyp in
     let env1, ml_bs = binders_as_mlty_binders env bs in
-    let fv = right lb.lbname in
+    let fv = Inr?.v lb.lbname in
     let lid = fv.fv_name.v in
     let body = MLTY_Top in
     let metadata = extract_metadata attrs @ List.choose flag_of_qual quals in
@@ -476,7 +476,7 @@ let extract_bundle_iface env se
        let env_iparams, vars  = binders_as_mlty_binders env ind.iparams in
        let env, ctors = ind.idatas |> BU.fold_map (extract_ctor env_iparams vars) env in
        let env =
-         match BU.find_opt (function RecordType _ -> true | _ -> false) ind.iquals with
+         match Option.find (function RecordType _ -> true | _ -> false) ind.iquals with
          | Some (RecordType (ns, ids)) ->
            let g =
             List.fold_right
@@ -601,14 +601,14 @@ let extract_reifiable_effect g ed
     in
 
     let g, return_iface, return_decl =
-        let return_tm, ty_sc = extract_fv (ed |> U.get_return_repr |> must |> snd) in
+        let return_tm, ty_sc = extract_fv (ed |> U.get_return_repr |> Option.must |> snd) in
         let return_nm, return_lid, return_b, g = extend_with_monad_op_name g ed "return" ty_sc in
         let iface, impl = extend_iface return_lid return_nm return_tm return_b in
         g, iface, impl
     in
 
     let g, bind_iface, bind_decl =
-        let bind_tm, ty_sc = extract_fv (ed |> U.get_bind_repr |> must |> snd) in
+        let bind_tm, ty_sc = extract_fv (ed |> U.get_bind_repr |> Option.must |> snd) in
         let bind_nm, bind_lid, bind_b, g = extend_with_monad_op_name g ed "bind" ty_sc in
         let iface, impl = extend_iface bind_lid bind_nm bind_tm bind_b in
         g, iface, impl
@@ -665,7 +665,7 @@ let split_let_rec_types_and_terms se (env:uenv) (lbs:list letbinding)
     in
     let sigs, lbs = aux [] [] lbs in
     let lb = {se with sigel = Sig_let {lbs=(true, lbs);
-                                       lids=List.map (fun lb -> lb.lbname |> BU.right |> lid_of_fv) lbs} } in
+                                       lids=List.map (fun lb -> lb.lbname |> Inr?.v |> lid_of_fv) lbs} } in
     let sigs = sigs@[lb] in
     // Format.print1 "Split let recs into %s\n"
     //   (List.map show sigs |> String.concat ";;\n");
@@ -696,7 +696,7 @@ let extract_let_rec_types se (env:uenv) (lbs:list letbinding) =
             lbs
       in
       env,
-      Option.get iface_opt,
+      Option.must iface_opt,
       List.rev impls |> List.flatten
 
 
@@ -707,7 +707,7 @@ let get_noextract_to (se:sigelt) (backend:option Options.codegen_t) : bool =
     | Tm_fvar fv, [(a, _)] when S.fv_eq_lid fv PC.noextract_to_attr ->
         begin match EMB.try_unembed a EMB.id_norm_cb with
         | Some s ->
-          Option.isSome backend && Options.parse_codegen s = backend
+          Some? backend && Options.parse_codegen s = backend
         | None ->
           false
         end
@@ -946,7 +946,7 @@ let extract_bundle env se =
         ty_param_attrs = []
        })) in
        let tbody, env =
-         match BU.find_opt (function RecordType _ -> true | _ -> false) ind.iquals with
+         match Option.find (function RecordType _ -> true | _ -> false) ind.iquals with
          | Some (RecordType (ns, ids)) ->
              let _, c_ty = List.hd ctors in
              assert (List.length ids = List.length c_ty);
@@ -1109,7 +1109,7 @@ let rec extract_sig (g:env_t) (se:sigelt) : env_t & list mlmodule1 =
             match d.mlmodule1_m with
             | MLM_Let (maybe_rec, [mllb]) ->
               let g, mlid, _ =
-                UEnv.extend_lb g lb.lbname lb.lbtyp (must mllb.mllb_tysc) mllb.mllb_add_unit in
+                UEnv.extend_lb g lb.lbname lb.lbtyp (Option.must mllb.mllb_tysc) mllb.mllb_add_unit in
               let mllb = { mllb with mllb_name = mlid; mllb_attrs = mlattrs; mllb_meta = meta } in
               g, decls@[mk_mlmodule1_with_attrs (MLM_Let (maybe_rec, [mllb])) mlattrs]
             | _ ->
@@ -1254,7 +1254,7 @@ and extract_sig_let (g:uenv) (se:sigelt) : uenv & list mlmodule1 =
                   then env, ml_lbs
                   else
                       // debug g (fun () -> printfn "Translating source lb %s at type %s to %A" (show lbname) (show t) (must (mllb.mllb_tysc)));
-                      let lb_lid = (right lbname).fv_name.v in
+                      let lb_lid = (Inr?.v lbname).fv_name.v in
                       let flags'' =
                           match (SS.compress t).n with
                           | Tm_arrow {comp={ n = Comp { effect_name = e }}}
@@ -1270,12 +1270,12 @@ and extract_sig_let (g:uenv) (se:sigelt) : uenv & list mlmodule1 =
                           then let env, mls, _ =
                                     UEnv.extend_fv
                                           env
-                                          (right lbname)
-                                          (must ml_lb.mllb_tysc)
+                                          (Inr?.v lbname)
+                                          (Option.must ml_lb.mllb_tysc)
                                           ml_lb.mllb_add_unit
                                 in
                                 env, {ml_lb with mllb_name=mls }
-                          else let env, _, _ = UEnv.extend_lb env lbname t (must ml_lb.mllb_tysc) ml_lb.mllb_add_unit in
+                          else let env, _, _ = UEnv.extend_lb env lbname t (Option.must ml_lb.mllb_tysc) ml_lb.mllb_add_unit in
                                 env, ml_lb in
                   g, ml_lb::ml_lbs)
           (g, [])

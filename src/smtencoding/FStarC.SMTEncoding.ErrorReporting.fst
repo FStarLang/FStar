@@ -38,6 +38,8 @@ type ranges = list (option string & Range.t)
 //decorate a term with an error label
 let __ctr = mk_ref 0
 
+let incr r = r := !r + 1
+
 let fresh_label : Errors.error_message -> Range.t -> term -> label & term =
     fun message range t ->
         let l = incr __ctr; Format.fmt1 "label_%s" (show !__ctr) in

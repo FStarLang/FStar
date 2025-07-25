@@ -22,7 +22,6 @@ open Prims
 open FStar_Pervasives
 open FStarC_Errors
 open FStarC_List
-open FStarC_Util
 open FStarC_Range
 
 (* TODO : these files should be deprecated and removed *)

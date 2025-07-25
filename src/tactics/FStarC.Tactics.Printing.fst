@@ -16,7 +16,6 @@
 module FStarC.Tactics.Printing
 
 open FStarC
-open FStarC.Util
 open FStarC.Effect
 open FStarC.List
 open FStarC.Ident

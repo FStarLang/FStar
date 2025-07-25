@@ -614,7 +614,7 @@ let pack_sigelt (sv:sigelt_view) : sigelt =
       in
 
       let ctor_ses : list sigelt = List.map pack_ctor ctors in
-      let c_lids : list Ident.lid = List.map (fun se -> BU.must (U.lid_of_sigelt se)) ctor_ses in
+      let c_lids : list Ident.lid = List.map (fun se -> Some?.v (U.lid_of_sigelt se)) ctor_ses in
 
       let ind_se : sigelt =
         //We can't trust the assignment of num uniform binders from the reflection API

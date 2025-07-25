@@ -19,7 +19,6 @@ open FStarC
 open FStarC.Effect
 open FStarC.Syntax.Syntax
 open FStarC.Ident
-open FStarC.Util
 open FStarC.Const
 open FStarC.Range.Type
 

@@ -327,7 +327,7 @@ let mk t r = {tm=t; freevars=mk_ref None; rng=r}
 let mkTrue  r       = mk (App(TrueOp, [])) r
 let mkFalse r       = mk (App(FalseOp, [])) r
 let mkUnreachable   = mk (App(Var "Unreachable", [])) Range.dummyRange
-let mkInteger i  r  = mk (Integer (ensure_decimal i)) r
+let mkInteger i  r  = mk (Integer (BU.ensure_decimal i)) r
 let mkInteger' i r  = mkInteger (show i) r
 let mkReal i r      = mk (Real i) r
 let mkBoundV i r    = mk (BoundV i) r
@@ -1104,21 +1104,21 @@ let boxTerm sort t = match sort with
   | String_sort -> boxString t
   | BitVec_sort sz -> boxBitVec sz t
   | Sort "Real" -> boxReal t
-  | _ -> raise Impos
+  | _ -> raise BU.Impos
 let unboxTerm sort t = match sort with
   | Int_sort -> unboxInt t
   | Bool_sort -> unboxBool t
   | String_sort -> unboxString t
   | BitVec_sort sz -> unboxBitVec sz t
   | Sort "Real" -> unboxReal t
-  | _ -> raise Impos
+  | _ -> raise BU.Impos
 
 let getBoxedInteger (t:term) =
   match t.tm with
   | App(Var s, [t2]) when s = fst boxIntFun ->
     begin
     match t2.tm with
-    | Integer n -> Some (int_of_string n)
+    | Integer n -> Some (BU.int_of_string n)
     | _ -> None
     end
   | _ -> None
@@ -1136,7 +1136,7 @@ let mk_Valid t        = match t.tm with
     | App(Var "Prims.b2t", [{tm=App(Var "Prims.op_Negation", [t])}]) -> mkNot (unboxBool t) t.rng
     | App(Var "Prims.b2t", [{tm=App(Var "FStar.BV.bvult", [t0; t1;t2])}])
     | App(Var "Prims.equals", [_; {tm=App(Var "FStar.BV.bvult", [t0; t1;t2])}; _])
-            when (FStarC.Util.is_some (getBoxedInteger t0))->
+            when (Some? (getBoxedInteger t0))->
         // sometimes b2t gets needlessly normalized...
         let sz = match getBoxedInteger t0 with | Some sz -> sz | _ -> failwith "impossible" in
         mkBvUlt (unboxBitVec sz t1, unboxBitVec sz t2) t.rng

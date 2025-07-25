@@ -19,7 +19,6 @@ open FStarC
 open FStarC.Effect
 open FStarC.List
 open FStarC.Range
-open FStarC.Util
 open FStarC.Format
 open FStarC.Getopt
 open FStarC.Ident
@@ -256,15 +255,15 @@ let unpack_interactive_query json =
            | "lookup" -> Lookup (arg "symbol" |> js_str,
                                 try_arg "context" |> js_optional_lookup_context,
                                 try_arg "location"
-                                  |> Util.map_option js_assoc
-                                  |> Util.map_option (read_position "[location]"),
+                                  |> Option.map js_assoc
+                                  |> Option.map (read_position "[location]"),
                                 arg "requested-info" |> js_list js_str,
                                 try_arg "symbol-range")
            | "compute" -> Compute (arg "term" |> js_str,
                                   try_arg "rules"
-                                    |> Util.map_option (js_list js_reductionrule))
+                                    |> Option.map (js_list js_reductionrule))
            | "search" -> Search (arg "terms" |> js_str)
-           | "vfs-add" -> VfsAdd (try_arg "filename" |> Util.map_option js_str,
+           | "vfs-add" -> VfsAdd (try_arg "filename" |> Option.map js_str,
                                  arg "contents" |> js_str)
            | "format" -> Format (arg "code" |> js_str)
            | "restart-solver" -> RestartSolver
@@ -292,7 +291,7 @@ let buffer_input_queries (st:repl_state) : repl_state =
         {st with repl_buffered_input_queries =
                  st.repl_buffered_input_queries @ List.rev qs}
     in
-    if not (Util.poll_stdin (float_of_string "0.0"))
+    if not (Util.poll_stdin (Util.float_of_string "0.0"))
     then done qs st
     else (
       match Util.read_line st.repl_stdin with
@@ -323,7 +322,7 @@ let read_interactive_query (st:repl_state) : query & repl_state =
       q, { st with repl_buffered_input_queries = qs }
   
 let json_of_opt json_of_a opt_a =
-  Util.dflt JsonNull (Util.map_option json_of_a opt_a)
+  Option.dflt JsonNull (Option.map json_of_a opt_a)
 
 let alist_of_symbol_lookup_result lr symbol symrange_opt=
   [("name", JsonStr lr.slr_name);
@@ -462,7 +461,7 @@ let fstar_options_list_cache =
   Options.all_specs_with_types
   |> List.filter_map (fun (_shortname, name, typ, doc) ->
        SMap.try_find defaults name // Keep only options with a default value
-       |> Util.map_option (fun default_value ->
+       |> Option.map (fun default_value ->
              { opt_name = name;
                opt_sig = sig_of_fstar_option name typ;
                opt_value = Options.Unset;
@@ -558,7 +557,7 @@ let run_segment (st: repl_state) (code: string) =
       ((QueryOK, JsonAssoc [("decls", js_decls)]), Inl st)
 
 let run_vfs_add st opt_fname contents =
-  let fname = Util.dflt st.repl_fname opt_fname in
+  let fname = Option.dflt st.repl_fname opt_fname in
   Parser.ParseIt.add_vfs_entry fname contents;
   ((QueryOK, JsonNull), Inl st)
 
@@ -1240,7 +1239,7 @@ let build_initial_repl_state (filename: string) =
     repl_curmod = None;
     repl_env = env;
     repl_deps_stack = [];
-    repl_stdin = open_stdin ();
+    repl_stdin = Util.open_stdin ();
     repl_names = CompletionTable.empty;
     repl_buffered_input_queries = [];
     repl_lang = [] }
@@ -1259,7 +1258,7 @@ let interactive_mode (filename:string): unit =
   // Ignore unexpected interrupts (some methods override this handler)
   Util.set_sigint_handler Util.sigint_ignore;
 
-  if Option.isSome (Options.codegen ()) then
+  if Some? (Options.codegen ()) then
     Errors.log_issue0 Errors.Warning_IDEIgnoreCodeGen "--ide: ignoring --codegen";
 
   let init = build_initial_repl_state filename in

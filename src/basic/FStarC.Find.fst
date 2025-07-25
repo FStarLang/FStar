@@ -196,7 +196,7 @@ let locate () =
   Util.get_exec_dir () |> Filepath.normalize_file_path
 
 let locate_lib () =
-  BU.map_opt (lib_root ()) Filepath.normalize_file_path
+  Option.map Filepath.normalize_file_path (lib_root ())
 
 let locate_ocaml () =
   // This is correct right now, but probably should change.

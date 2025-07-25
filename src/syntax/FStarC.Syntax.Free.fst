@@ -18,7 +18,6 @@ open FStarC.Effect
 open FStarC.List
 
 open FStarC
-open FStarC.Util
 open FStarC.Syntax
 open FStarC.Syntax.Syntax
 module UF = FStarC.Syntax.Unionfind

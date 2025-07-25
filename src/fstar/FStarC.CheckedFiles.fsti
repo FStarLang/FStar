@@ -17,7 +17,6 @@
 module FStarC.CheckedFiles
 open FStarC.Effect
 open FStarC
-open FStarC.Util
 open FStarC.TypeChecker.Env
 open FStarC.Syntax
 

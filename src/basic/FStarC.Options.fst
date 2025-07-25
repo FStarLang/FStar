@@ -406,7 +406,7 @@ let show_options () =
     let! k = Common.psmap_keys s in
     (* verify_module is only set internally. *)
     if k = "verify_module" then [] else
-    let v = must <| psmap_try_find s k in
+    let v = Some?.v <| psmap_try_find s k in
     let v0 = list_try_find k defaults in
     if v0 =? Some v then
       []
@@ -462,7 +462,7 @@ let set_verification_options o =
     "z3version";
     "trivial_pre_for_unannotated_effectful_fns";
   ] in
-  List.iter (fun k -> set_option k (psmap_try_find o k |> Util.must)) verifopts
+  List.iter (fun k -> set_option k (psmap_try_find o k |> Some?.v)) verifopts
 
 let lookup_opt s c =
   c (get_option s)
@@ -674,11 +674,11 @@ let mk_spec (o : char & string & opt_variant option_val) : opt =
     ns, name, arg
 
 let accumulated_option name value =
-    let prev_values = Util.dflt [] (lookup_opt name (as_option as_list')) in
+    let prev_values = Option.dflt [] (lookup_opt name (as_option as_list')) in
     List (value :: prev_values)
 
 let reverse_accumulated_option name value =
-    let prev_values = Util.dflt [] (lookup_opt name (as_option as_list')) in
+    let prev_values = Option.dflt [] (lookup_opt name (as_option as_list')) in
     List (prev_values @ [value])
 
 let accumulate_string name post_processor value =
@@ -2046,8 +2046,8 @@ let print_codegen =
   | Extension -> "Extension"
 
 let codegen                      () =
-    Util.map_opt (get_codegen())
-                 (fun s -> parse_codegen s |> must)
+    Option.map (fun s -> parse_codegen s |> Some?.v)
+               (get_codegen())
 
 let codegen_libs                 () = get_codegen_lib () |> List.map (fun x -> Util.split x ".")
 
@@ -2192,7 +2192,7 @@ let parse_split_queries (s:string) : option split_queries_t =
   | "always" -> Some Always
   | _ -> None
 
-let split_queries                () = get_split_queries () |> parse_split_queries |> Util.must
+let split_queries                () = get_split_queries () |> parse_split_queries |> Some?.v 
 let stats                        () = get_stats ()
 let tactic_raw_binders           () = get_tactic_raw_binders          ()
 let tactics_failhard             () = get_tactics_failhard            ()

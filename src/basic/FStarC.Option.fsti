@@ -14,10 +14,20 @@
    limitations under the License.
 *)
 module FStarC.Option
+
 open FStarC.Effect
 
-val isNone: option 'a -> Tot bool
-val isSome: option 'a -> Tot bool
-val map: ('a -> ML 'b) -> option 'a -> ML (option 'b)
-val mapTot: ('a -> Tot 'b) -> option 'a -> Tot (option 'b)
-val get: option 'a -> ML 'a
+val map (f : 'a -> 'b) (o : option 'a)
+  : option 'b
+
+val must : option 'a -> 'a (* clearly partial *)
+
+val dflt : 'a -> option 'a -> Tot 'a
+
+val find: ('a -> bool) -> list 'a -> option 'a
+
+val bind : option 'a -> ('a -> option 'b) -> option 'b
+
+val catch : option 'a -> (unit -> option 'a) -> option 'a
+
+val iter : ('a -> unit) -> option 'a -> unit

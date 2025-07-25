@@ -19,11 +19,21 @@ open FStarC
 open FStarC.Effect
 open FStarC.List
 open FStarC.Range
-open FStarC.Util
 open FStarC.Const
 open FStarC.Errors
 open FStarC.Ident
 open FStarC.Class.Show
+(* All of these should be in FStar.String. *)
+open FStarC.Util {
+  starts_with,
+  substring,
+  substring_from,
+  string_of_char,
+  char_of_int,
+  safe_int_of_string,
+  split
+}
+
 module C = FStarC.Parser.Const
 
 instance hasRange_term : hasRange term = {
@@ -380,7 +390,7 @@ let string_to_op s =
          match frags with
          | [op] ->
                 if starts_with op "u"
-                then map_opt (safe_int_of_string (substring_from op 1)) (
+                then safe_int_of_string (substring_from op 1) |> Option.map (
                        fun op -> (string_of_char (char_of_int op), None)
                      )
                 else name_of_op op
@@ -395,7 +405,7 @@ let string_to_op s =
                             (Some "")
                             (List.map name_of_op frags)
            in
-           map_opt maybeop (fun o -> (o, None))
+           Option.map (fun o -> (o, None)) maybeop
     else None
 
 //////////////////////////////////////////////////////////////////////////////////////////////
@@ -764,8 +774,8 @@ let id_of_tycon = function
 let string_of_pragma = function
   | ShowOptions  ->   "show-options"
   | SetOptions s ->   Format.fmt1 "set-options \"%s\""   s
-  | ResetOptions s -> Format.fmt1 "reset-options \"%s\"" (Util.dflt "" s)
-  | PushOptions s ->  Format.fmt1 "push-options \"%s\""  (Util.dflt "" s)
+  | ResetOptions s -> Format.fmt1 "reset-options \"%s\"" (Option.dflt "" s)
+  | PushOptions s ->  Format.fmt1 "push-options \"%s\""  (Option.dflt "" s)
   | PopOptions -> "pop-options"
   | RestartSolver -> "restart-solver"
   | PrintEffectsGraph -> "print-effects-graph"
@@ -773,7 +783,7 @@ let string_of_pragma = function
 let restriction_to_string: FStarC.Syntax.Syntax.restriction -> string =
   let open FStarC.Syntax.Syntax in
   function | Unrestricted -> ""
-           | AllowList allow_list  -> " {" ^ String.concat ", " (List.map (fun (id, renamed) -> string_of_id id ^ dflt "" (map_opt renamed (fun renamed -> " as " ^ string_of_id renamed))) allow_list)  ^ "}"
+           | AllowList allow_list  -> " {" ^ String.concat ", " (List.map (fun (id, renamed) -> string_of_id id ^ Option.dflt "" (Option.map (fun renamed -> " as " ^ string_of_id renamed) renamed)) allow_list)  ^ "}"
 
 let rec decl_to_string (d:decl) = match d.d with
   | TopLevelModule l -> "module " ^ (string_of_lid l)
@@ -868,7 +878,7 @@ let add_decorations d decorations =
   let attributes_ = at_most_one "attribute set" d.drange (
     List.choose (function DeclAttributes a -> Some a | _ -> None) decorations
   ) in
-  let attributes_ = Util.dflt [] attributes_ in
+  let attributes_ = Option.dflt [] attributes_ in
   let qualifiers = List.choose (function Qualifier q -> Some q | _ -> None) decorations in
   { d with quals=qualifiers; attrs=attributes_ }
 

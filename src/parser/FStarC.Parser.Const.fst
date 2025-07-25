@@ -17,7 +17,6 @@ module FStarC.Parser.Const
 
 open FStarC
 open FStarC.Effect
-open FStarC.Util
 open FStarC.Ident
 open FStarC.Range.Type
 open FStarC.Const

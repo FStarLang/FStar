@@ -381,7 +381,7 @@ let rec go (line_col:(int&int))
                             | None -> lid
                             | Some lid -> lid in
              try_lookup_lid env lid
-               |> Util.map_option (fun ((_, typ), r) -> (Inr lid, typ, r)) in
+               |> Option.map (fun ((_, typ), r) -> (Inr lid, typ, r)) in
     (match info_opt with
      | None -> Format.print_string "\n#done-nok\n"
      | Some (name_or_lid, typ, rng) ->
@@ -417,7 +417,7 @@ let rec go (line_col:(int&int))
                match ts with
                | [] -> Some (candidate, String.length hs)
                | _ -> measure_anchored_match ts tc |>
-                        Util.map_option (fun (matched, len) -> (hc :: matched, String.length hc_text + 1 + len))
+                        Option.map (fun (matched, len) -> (hc :: matched, String.length hc_text + 1 + len))
             else None in
     let rec locate_match
       : list string -> list ident -> option (list ident & list ident & int)
@@ -429,7 +429,7 @@ let rec go (line_col:(int&int))
         | [] -> None
         | hc :: tc ->
           locate_match needle tc |>
-            Util.map_option (fun (prefix, matched, len) -> (hc :: prefix, matched, len)) in
+            Option.map (fun (prefix, matched, len) -> (hc :: prefix, matched, len)) in
     let str_of_ids ids = Util.concat_l "." (List.map FStarC.Ident.string_of_id ids) in
     let match_lident_against needle lident =
         locate_match needle (ns_of_lid lident @ [ident_of_lid lident])
@@ -556,7 +556,7 @@ end
 // filename is the name of the file currently edited
 let interactive_mode (filename:string): unit =
 
-  if Option.isSome (Options.codegen()) then
+  if Some? (Options.codegen()) then
     Errors.log_issue0 Errors.Warning_IDEIgnoreCodeGen "Code-generation is not supported in interactive mode, ignoring the codegen flag";
 
   //type check prims and the dependencies

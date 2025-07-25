@@ -18,7 +18,6 @@ module FStarC.Syntax.DsEnv
 open FStarC.Effect
 open FStarC.List
 open FStarC
-open FStarC.Util
 open FStarC.Syntax
 open FStarC.Syntax.Syntax
 open FStarC.Syntax.Util
@@ -277,7 +276,7 @@ let unmangleMap = [("op_ColonColon", "Cons", Some Data_ctor);
                    ("not", "op_Negation", None)]
 
 let unmangleOpName (id:ident) : option term =
-  find_map unmangleMap (fun (x,y,dq) ->
+  FStarC.Util.find_map unmangleMap (fun (x,y,dq) ->
     if string_of_id id = x
     then Some (S.fvar_with_dd (lid_of_path ["Prims"; y] (range_of_id id)) dq)
     else None)
@@ -353,7 +352,7 @@ let find_in_module_with_includes
     | Some minc ->
       !minc |> filter_map (fun (ns, restriction) ->
         let opt = is_ident_allowed_by_restriction id restriction in
-        map_opt opt (fun id -> (ns, id)))
+        Option.map (fun id -> (ns, id)) opt)
     in
     let look_into =
      if not_shadowed
@@ -533,7 +532,7 @@ let shorten_module_path env ids is_full_path =
          | [] -> None
          | ns_last_id :: rev_ns_prefix ->
            aux rev_ns_prefix ns_last_id |>
-             BU.map_option (fun (stripped_ids, rev_kept_ids) ->
+             Option.map (fun (stripped_ids, rev_kept_ids) ->
                             (stripped_ids, id :: rev_kept_ids)) in
   let do_shorten env ids =
     // Do the actual shortening.  FIXME This isn't optimal (no includes).
@@ -610,8 +609,8 @@ let fv_qual_of_se = fun se -> match se.sigel with
 
 let lb_fv lbs lid =
      BU.find_map lbs  (fun lb ->
-        let fv = right lb.lbname in
-        if S.fv_eq_lid fv lid then Some fv else None) |> must
+        let fv = Inr?.v lb.lbname in
+        if S.fv_eq_lid fv lid then Some fv else None) |> Option.must
 
 let ns_of_lid_equals (lid: lident) (ns: lident) =
     List.length (ns_of_lid lid) = List.length (ids_of_lid ns) &&
@@ -919,7 +918,7 @@ let extract_record (e:env) (new_globs: ref (list scope_mod)) = fun se -> match s
       | _ -> false) in
 
     let find_dc dc =
-      sigs |> BU.find_opt (function
+      sigs |> Option.find (function
         | { sigel = Sig_datacon {lid} } -> lid_equals dc lid
         | _ -> false) in
 
@@ -928,7 +927,7 @@ let extract_record (e:env) (new_globs: ref (list scope_mod)) = fun se -> match s
                                      us=univs;
                                      params=parms;
                                      ds=[dc]}; sigquals = typename_quals } ->
-        begin match must <| find_dc dc with
+        begin match Option.must (find_dc dc) with
             | { sigel = Sig_datacon {lid=constrname; t; num_ty_params=n} } ->
                 let all_formals, _ = U.arrow_formals t in
                 (* Ignore parameters, we don't create projectors for them *)
@@ -1093,7 +1092,7 @@ let push_sigelt' fail_on_dup env s =
     let sopt = SMap.try_find (sigmap env) (string_of_lid l) in
     let r = match sopt with
       | Some (se, _) ->
-        begin match BU.find_opt (lid_equals l) (lids_of_sigelt se) with
+        begin match Option.find (lid_equals l) (lids_of_sigelt se) with
           | Some l -> Range.string_of_range <| range_of_lid l
           | None -> "<unknown>"
         end
@@ -1169,7 +1168,7 @@ let find_binders_for_datacons: env -> lident -> option (list ident) =
           |> Some
         | _ -> None in
     let result = resolve_in_open_namespaces' env lid (fun _ -> None) (fun _ -> None) k_global_def in
-    if !debug then print_endline ("find_binders_for_datacons(_, " ^ show lid ^ ") = " ^ show result);
+    if !debug then Format.print_string ("find_binders_for_datacons(_, " ^ show lid ^ ") = " ^ show result ^ "\n");
     result
 
 (** Elaborates a `restriction`: this function adds implicit names
@@ -1186,11 +1185,11 @@ let elab_restriction f env ns restriction =
       let lid = mk_lid id in
       match try_lookup_lid env lid with
       | Some _ -> true
-      | None   -> try_lookup_record_or_dc_by_field_name env lid |> is_some
+      | None   -> try_lookup_record_or_dc_by_field_name env lid |> Some?
     in
     // For every inductive, we include its constructors
     let l = List.map (fun (id, renamed) ->
-      let with_id_range = dflt id renamed |> range_of_id |> set_id_range in
+      let with_id_range = Option.dflt id renamed |> range_of_id |> set_id_range in
         match find_data_constructors_for_typ env (mk_lid id) with
       | Some idents -> List.map (fun id -> (ident_of_lid id |> with_id_range, None)) idents
       | None -> []
@@ -1220,8 +1219,8 @@ let elab_restriction f env ns restriction =
        |> List.append l
     in
     let l = List.map (fun (id, renamed) ->
-      let with_renamed_range = dflt id renamed |> range_of_id |> set_id_range in
-      let with_id_range = dflt id renamed |> range_of_id |> set_id_range in
+      let with_renamed_range = Option.dflt id renamed |> range_of_id |> set_id_range in
+      let with_id_range = Option.dflt id renamed |> range_of_id |> set_id_range in
       let lid = mk_lid id in
       begin
       // If `id` is a datatype, we include its projections
@@ -1229,28 +1228,28 @@ let elab_restriction f env ns restriction =
       |> List.map (fun binder ->
         ( mk_field_projector_name_from_ident lid binder
           |> ident_of_lid
-        , map_opt renamed (fun renamed ->
+        , Option.map (fun renamed ->
             mk_field_projector_name_from_ident (lid_of_ids [renamed]) binder
             |> ident_of_lid
-          )
+          ) renamed
         )
       ))
       // If `id` is a datatype, we include its discriminator
       // (actually, we always include a discriminator, it will be
       // removed if it doesn't exist)
       @ ( [ mk_discriminator (lid_of_ids [id])
-          , map_opt renamed (fun renamed -> mk_discriminator (lid_of_ids [renamed]))
-          ] |> List.map (fun (x, y) -> (ident_of_lid x, map_opt y ident_of_lid))
+          , Option.map (fun renamed -> mk_discriminator (lid_of_ids [renamed])) renamed
+          ] |> List.map (fun (x, y) -> (ident_of_lid x, Option.map ident_of_lid y))
             |> List.filter (fun (x, _) -> name_exists x))
       // If `id` is a record, we include its fields
       @ ( match try_lookup_record_type env lid with
         | Some {constrname; fields} -> List.map (fun (id, _) -> (id, None)) fields
         | None -> [])
-      end |> List.map (fun (id, renamed) -> (with_id_range id, map_opt renamed with_renamed_range))
+      end |> List.map (fun (id, renamed) -> (with_id_range id, Option.map with_renamed_range renamed))
     ) l |> List.flatten |> List.append l in
     let _error_on_duplicates =
-      let final_idents = List.mapi (fun i (id, renamed) -> (dflt id renamed, i)) l in
-      match final_idents |> find_dup (fun (x, _) (y, _) -> x =? y) with
+      let final_idents = List.mapi (fun i (id, renamed) -> (Option.dflt id renamed, i)) l in
+      match final_idents |> FStarC.Util.find_dup (fun (x, _) (y, _) -> x =? y) with
       | Some (id, i) ->
         let others = List.filter (fun (id', i') -> id =? id' && not (i =? i')) final_idents in
         List.mapi (fun nth (other, _) ->
@@ -1328,7 +1327,7 @@ let push_include' env ns restriction =
         let () = match (get_exported_id_set env curmod, get_trans_exported_id_set env curmod) with
         | (Some cur_exports, Some cur_trans_exports) ->
           let update_exports (k: exported_id_kind) =
-            let ns_ex = ! (ns_trans_exports k) |> filter (fun id -> is_ident_allowed_by_restriction (id_of_text id) restriction |> is_some) in
+            let ns_ex = ! (ns_trans_exports k) |> filter (fun id -> is_ident_allowed_by_restriction (id_of_text id) restriction |> Some?) in
             let ex = cur_exports k in
             let () = ex := diff (!ex) ns_ex in
             let trans_ex = cur_trans_exports k in
@@ -1415,7 +1414,7 @@ let finish env modul =
     | Sig_let {lbs=(_,lbs)} ->
       if List.contains Private quals
       then begin
-           lbs |> List.iter (fun lb -> SMap.remove (sigmap env) (string_of_lid (right lb.lbname).fv_name.v))
+           lbs |> List.iter (fun lb -> SMap.remove (sigmap env) (string_of_lid (Inr?.v lb.lbname).fv_name.v))
       end
 
     | _ -> ());
@@ -1532,12 +1531,12 @@ let as_includes = function
 let inclusion_info env (l:lident) =
    let mname = FStarC.Ident.string_of_lid l in
    let as_ids_opt m =
-      BU.map_opt (SMap.try_find m mname) as_exported_ids
+      Option.map as_exported_ids (SMap.try_find m mname)
    in
    {
       mii_exported_ids = as_ids_opt env.exported_ids;
       mii_trans_exported_ids = as_ids_opt env.trans_exported_ids;
-      mii_includes = BU.map_opt (SMap.try_find env.includes mname) (fun r -> !r);
+      mii_includes = Option.map (fun r -> !r) (SMap.try_find env.includes mname);
       mii_no_prelude = env.no_prelude;
    }
 
@@ -1576,7 +1575,7 @@ let prepare_module_or_interface intf admitted env mname (mii:module_inclusion_in
     env'
   in
 
-  match env.modules |> BU.find_opt (fun (l, _) -> lid_equals l mname) with
+  match env.modules |> Option.find (fun (l, _) -> lid_equals l mname) with
     | None ->
         prep env, false
     | Some (_, m) ->

@@ -198,7 +198,7 @@ let rec prefix_with_iface_decls
              let val_ys, iface = aux ys iface_tl in
              iface_hd::val_ys, iface
 
-           | y::ys, iface_hd::iface_tl when Option.isSome <| List.tryFind (is_val (ident_of_lid y)) iface_tl ->
+           | y::ys, iface_hd::iface_tl when Some? <| List.tryFind (is_val (ident_of_lid y)) iface_tl ->
              raise_error iface_hd Errors.Fatal_WrongDefinitionOrder [
                  text (Format.fmt2 "%s is out of order with the definition of %s"
                                          (show iface_hd)

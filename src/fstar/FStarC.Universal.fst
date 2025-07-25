@@ -448,7 +448,7 @@ let tc_one_file
                          | [] -> ()
                          | _ -> failwith "Impossible: gamma contains leaked names"
                  in
-                 let modul, env = Tc.check_module tcenv fmod (is_some pre_fn) in
+                 let modul, env = Tc.check_module tcenv fmod (Some? pre_fn) in
                  //AR: encode the module to to smt
                  restore_opts ();
                  let smt_decls =
@@ -510,7 +510,7 @@ let tc_one_file
                  text <| Format.fmt1 "Expected %s to already be checked." fn
                ];
 
-        if (Option.isSome (Options.codegen())
+        if (Some? (Options.codegen())
         && Options.cmi())
         && not (Options.force ())
         then FStarC.Errors.raise_error0 FStarC.Errors.Error_AlreadyCachedAssertionFailure [

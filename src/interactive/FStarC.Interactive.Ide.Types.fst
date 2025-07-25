@@ -19,7 +19,6 @@ open FStarC
 open FStarC.Effect
 open FStarC.List
 open FStarC.Range
-open FStarC.Util
 open FStarC.Getopt
 open FStarC.Ident
 open FStarC.Errors
@@ -172,7 +171,7 @@ let json_of_issue_level i =
            | EError -> "error")
 
 let json_of_issue issue =
-  let r = map_opt issue.issue_range Range.refind_range in
+  let r = Option.map Range.refind_range issue.issue_range in
   JsonAssoc <|
      [("level", json_of_issue_level issue.issue_level)]
     @(match issue.issue_number with

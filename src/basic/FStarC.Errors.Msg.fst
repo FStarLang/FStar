@@ -2,7 +2,6 @@ module FStarC.Errors.Msg
 
 open FStarC
 open FStarC.Effect
-open FStarC.Util
 open FStarC.Pprint
 
 instance is_error_message_string   : is_error_message string = {
@@ -33,13 +32,13 @@ let mkmsg (s:string) : list document =
   [arbitrary_string s]
 
 let renderdoc (d : document) : string =
-  let one = float_of_string "1.0" in
+  let one = Util.float_of_string "1.0" in
   pretty_string one 80 d
 
 let backtrace_doc () : document =
-  let s = stack_dump () in
+  let s = Util.stack_dump () in
   text "Stack trace:" ^/^
-  arbitrary_string (trim_string s)
+  arbitrary_string (Util.trim_string s)
 
 let subdoc' (indent:bool) d =
   (* NOTE: slight hack here, using equality on Pprint documents. This works

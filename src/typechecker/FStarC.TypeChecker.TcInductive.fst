@@ -23,7 +23,6 @@ open FStarC.List
 open FStarC.Errors
 open FStarC.TypeChecker
 open FStarC.TypeChecker.Env
-open FStarC.Util
 open FStarC.Ident
 open FStarC.Syntax
 open FStarC.Syntax.Syntax
@@ -219,7 +218,7 @@ let tc_data (env:env_t) (tcs : list (sigelt & universe))
          let env, t = Env.push_univ_vars env _uvs, SS.subst usubst t in
          let (env, tps, u_tc) = //u_tc is the universe of the inductive that c constructs
             let tps_u_opt = BU.find_map tcs (fun (se, u_tc) ->
-                if lid_equals tc_lid (must (U.lid_of_sigelt se))
+                if lid_equals tc_lid (Option.must (U.lid_of_sigelt se))
                 then match se.sigel with
                      | Sig_inductive_typ {params=tps} ->
                         let tps = tps |> SS.subst_binders usubst |> List.map (fun x -> {x with binder_qual=Some S.imp_tag}) in
@@ -1120,7 +1119,7 @@ let mk_discriminator_and_indexed_projectors iquals                   (* Qualifie
                             []
                             Range.dummyRange
                 in
-                let impl = { sigel = Sig_let {lbs=(false, [lb]); lids=[lb.lbname |> right |> (fun fv -> fv.fv_name.v)]};
+                let impl = { sigel = Sig_let {lbs=(false, [lb]); lids=[lb.lbname |> Inr?.v |> (fun fv -> fv.fv_name.v)]};
                              sigquals = quals;
                              sigrng = p;
                              sigmeta = default_sigmeta;
@@ -1230,7 +1229,7 @@ let mk_discriminator_and_indexed_projectors iquals                   (* Qualifie
                   lbattrs=[];
                   lbpos=Range.dummyRange;
               } in
-              let impl = { sigel = Sig_let {lbs=(false, [lb]); lids=[lb.lbname |> right |> (fun fv -> fv.fv_name.v)]};
+              let impl = { sigel = Sig_let {lbs=(false, [lb]); lids=[lb.lbname |> Inr?.v |> (fun fv -> fv.fv_name.v)]};
                            sigquals = quals;
                            sigrng = p;
                            sigmeta = default_sigmeta;
@@ -1263,7 +1262,7 @@ let mk_data_operations iquals attrs env tcs se =
 
     let inductive_tps, typ0, should_refine =
         let tps_opt = BU.find_map tcs (fun se ->
-            if lid_equals typ_lid (must (U.lid_of_sigelt se))
+            if lid_equals typ_lid (Option.must (U.lid_of_sigelt se))
             then match se.sigel with
                   | Sig_inductive_typ {us=uvs'; params=tps; t=typ0; ds=constrs} ->
                       assert (List.length uvs = List.length uvs') ;

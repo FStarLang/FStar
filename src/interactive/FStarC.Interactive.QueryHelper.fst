@@ -22,7 +22,6 @@ open FStarC.Effect
 open FStarC.List
 open FStarC
 open FStarC.Range
-open FStarC.Util
 open FStarC.TypeChecker.Env
 open FStarC.TypeChecker.Common
 open FStarC.Interactive.JsonHelper
@@ -48,18 +47,18 @@ let sigelt_to_string tcenv se =
 let symlookup tcenv symbol pos_opt requested_info =
   let info_of_lid_str lid_str =
     let lid = Ident.lid_of_ids (List.map Ident.id_of_text (U.split lid_str ".")) in
-    let lid = U.dflt lid <| DsEnv.resolve_to_fully_qualified_name tcenv.dsenv lid in
-    try_lookup_lid tcenv lid |> U.map_option (fun ((_, typ), r) -> (Inr lid, typ, r)) in
+    let lid = Option.dflt lid <| DsEnv.resolve_to_fully_qualified_name tcenv.dsenv lid in
+    try_lookup_lid tcenv lid |> Option.map (fun ((_, typ), r) -> (Inr lid, typ, r)) in
 
   let docs_of_lid lid = None in
 
   let def_of_lid lid =
-    U.bind_opt (TcEnv.lookup_qname tcenv lid) (function
+    Option.bind (TcEnv.lookup_qname tcenv lid) (function
       | (Inr (se, _), _) -> Some (sigelt_to_string tcenv se)
       | _ -> None) in
 
   let info_at_pos_opt =
-    U.bind_opt pos_opt (fun (file, row, col) ->
+    Option.bind pos_opt (fun (file, row, col) ->
       TcErr.info_at_pos tcenv file row col) in
 
   let info_opt =

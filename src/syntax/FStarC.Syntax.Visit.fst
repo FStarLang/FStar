@@ -2,7 +2,6 @@ module FStarC.Syntax.Visit
 
 open FStarC.Effect
 open FStarC.List
-open FStarC.Util
 
 open FStarC.Syntax.VisitM
 open FStarC.Class.Monad

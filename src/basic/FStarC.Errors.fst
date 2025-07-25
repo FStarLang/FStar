@@ -128,11 +128,10 @@ let json_of_issue issue =
     JsonAssoc [
         "msg",    json_of_error_message issue.issue_msg;
         "level",  json_of_issue_level issue.issue_level;
-        "range",  dflt JsonNull (json_of_range <$> map_opt issue.issue_range Range.refind_range);
-        "number", dflt JsonNull (JsonInt <$> issue.issue_number);
+        "range",  Option.dflt JsonNull (json_of_range <$> Option.map Range.refind_range issue.issue_range);
+        "number", Option.dflt JsonNull (JsonInt <$> issue.issue_number);
         "ctx",    JsonList (JsonStr <$> issue.issue_ctx);
     ]
-
 
 let ctx_doc (ctx : list string) : PP.document =
   let open FStarC.Pprint in
@@ -169,7 +168,7 @@ let optional_def (f : 'a -> PP.document) (def : PP.document) (o : option 'a) : P
 
 let issue_to_doc' (print_hdr:bool) (issue:issue) : PP.document =
   let open FStarC.Pprint in
-  let r = BU.map_opt issue.issue_range Range.refind_range in
+  let r = Option.map Range.refind_range issue.issue_range in
   let hdr : document =
     if print_hdr then (
       let level_header = doc_of_string (string_of_issue_level issue.issue_level) in
@@ -238,7 +237,7 @@ let print_issue_github issue =
   | EError
   | EWarning ->
     let level = if EError? issue.issue_level then "error" else "warning" in
-    let rng = dflt dummyRange issue.issue_range in
+    let rng = Option.dflt dummyRange issue.issue_range in
     let msg = format_issue' true issue in
     let msg = msg |> BU.splitlines |> String.concat "%0A" in
     let num =
@@ -307,7 +306,7 @@ let fixup_issue_range (rng:option Range.t) : option Range.t =
       in
       Some (set_use_range range use_rng')
   in
-  map_opt rng maybe_bound_range
+  Option.map maybe_bound_range rng
 
 (* This handler prints to the error output immediately. *)
 let mk_default_handler () =

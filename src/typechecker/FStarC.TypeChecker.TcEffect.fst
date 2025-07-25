@@ -20,7 +20,6 @@ open FStarC
 open FStarC.Syntax
 open FStarC.TypeChecker
 
-open FStarC.Util
 open FStarC.Ident
 open FStarC.Errors
 open FStarC.Syntax.Syntax
@@ -94,7 +93,7 @@ let check_and_gen env (eff_name:string) (comb:string) (n:int) (us, t) : (univ_na
  *)
 let pure_wp_uvar env (t:typ) (reason:string) (r:Range.t) : term & guard_t =
   let pure_wp_t =
-    let pure_wp_ts = Env.lookup_definition [Env.NoDelta] env PC.pure_wp_lid |> must in
+    let pure_wp_ts = Env.lookup_definition [Env.NoDelta] env PC.pure_wp_lid |> Option.must in
     let _, pure_wp_t = Env.inst_tscheme pure_wp_ts in
     S.mk_Tm_app
       pure_wp_t
@@ -1279,7 +1278,7 @@ Errors.with_ctx (Format.fmt1 "While checking layered effect definition `%s`" (st
    *)
   let repr =
     Errors.with_ctx ("While checking the effect repr") (fun () ->
-      let repr_ts = ed |> U.get_eff_repr |> must in
+      let repr_ts = ed |> U.get_eff_repr |> Option.must in
       let r = (snd repr_ts).pos in
       let repr_us, repr_t, repr_ty = check_and_gen "repr" 1 repr_ts in
   
@@ -1328,7 +1327,7 @@ Errors.with_ctx (Format.fmt1 "While checking layered effect definition `%s`" (st
    *)
   let return_repr =
     Errors.with_ctx ("While checking the return combinator") (fun () ->
-      let return_repr_ts = ed |> U.get_return_repr |> must in
+      let return_repr_ts = ed |> U.get_return_repr |> Option.must in
       let r = (snd return_repr_ts).pos in
       let ret_us, ret_t, ret_ty = check_and_gen "return_repr" 1 return_repr_ts in
 
@@ -1368,7 +1367,7 @@ Errors.with_ctx (Format.fmt1 "While checking layered effect definition `%s`" (st
    *)
   let bind_repr, bind_kind =
     Errors.with_ctx ("While checking the bind combinator") (fun () ->
-      let bind_repr_ts = ed |> U.get_bind_repr |> must in
+      let bind_repr_ts = ed |> U.get_bind_repr |> Option.must in
       let r = (snd bind_repr_ts).pos in
       let bind_us, bind_t, bind_ty = check_and_gen "bind_repr" 2 bind_repr_ts in
 
@@ -1408,7 +1407,7 @@ Errors.with_ctx (Format.fmt1 "While checking layered effect definition `%s`" (st
   let stronger_repr, subcomp_kind =
     Errors.with_ctx ("While checking the subcomp combinator") (fun () ->
       let stronger_repr =
-        let ts = ed |> U.get_stronger_repr |> must in
+        let ts = ed |> U.get_stronger_repr |> Option.must in
         match (ts |> snd |> SS.compress).n with
         | Tm_unknown ->
           let signature_ts = let (us, t, _) = signature in (us, t) in
@@ -1465,7 +1464,7 @@ Errors.with_ctx (Format.fmt1 "While checking layered effect definition `%s`" (st
   let if_then_else, ite_kind =
     Errors.with_ctx ("While checking the if_then_else combinator") (fun () ->
       let if_then_else_ts =
-        let ts = ed |> U.get_layered_if_then_else_combinator |> must |> fst in
+        let ts = ed |> U.get_layered_if_then_else_combinator |> Option.must |> fst in
         match (ts |> snd |> SS.compress).n with
         | Tm_unknown ->
           let signature_ts = let (us, t, _) = signature in (us, t) in
@@ -1567,7 +1566,7 @@ Errors.with_ctx (Format.fmt1 "While checking layered effect definition `%s`" (st
    *   if one is in scope
    *)
   let _if_then_else_is_sound = Errors.with_ctx "While checking if-then-else soundness" (fun () ->
-    let r = (ed |> U.get_layered_if_then_else_combinator |> must |> fst |> snd).pos in
+    let r = (ed |> U.get_layered_if_then_else_combinator |> Option.must |> fst |> snd).pos in
 
     let ite_us, ite_t, _ = if_then_else in
 
@@ -1614,7 +1613,7 @@ Errors.with_ctx (Format.fmt1 "While checking layered effect definition `%s`" (st
         (fun (subst, uvars, g) b ->
           let sort = SS.subst subst b.binder_bv.sort in
           let t, _, g_t =
-            let ctx_uvar_meta = BU.map_option Ctx_uvar_meta_attr attr_opt in
+            let ctx_uvar_meta = Option.map Ctx_uvar_meta_attr attr_opt in
             Env.new_implicit_var_aux
               (Format.fmt1 "uvar for subcomp %s binder when checking ite soundness"
                 (show b))
@@ -2034,7 +2033,7 @@ Errors.with_ctx (Format.fmt1 "While checking effect definition `%s`" (string_of_
    *     env_opt is an optional env (e.g. bind_repr is typechecked lax)
    *)
   let check_and_gen' (comb:string) (n:int) env_opt (us, t) k : tscheme =
-    let env = if is_some env_opt then env_opt |> must else env in
+    let env = if Some? env_opt then env_opt |> Option.must else env in
     let us, t = SS.open_univ_vars us t in
     let t =
       match k with
@@ -2130,14 +2129,14 @@ Errors.with_ctx (Format.fmt1 "While checking effect definition `%s`" (string_of_
       S.null_binder wp_sort_a;
       S.null_binder wp_sort_a ] (S.mk_Total wp_sort_a) in
 
-    check_and_gen' "if_then_else" 1 None (ed |> U.get_wp_if_then_else_combinator |> must) (Some k) in
+    check_and_gen' "if_then_else" 1 None (ed |> U.get_wp_if_then_else_combinator |> Option.must) (Some k) in
 
   log_combinator "if_then_else" if_then_else;
 
   let ite_wp =
     let a, wp_sort_a = fresh_a_and_wp () in
     let k = U.arrow [S.mk_binder a; S.null_binder wp_sort_a] (S.mk_Total wp_sort_a) in
-    check_and_gen' "ite_wp" 1 None (ed |> U.get_wp_ite_combinator |> must) (Some k) in
+    check_and_gen' "ite_wp" 1 None (ed |> U.get_wp_ite_combinator |> Option.must) (Some k) in
 
   log_combinator "ite_wp" ite_wp;
 
@@ -2147,7 +2146,7 @@ Errors.with_ctx (Format.fmt1 "While checking effect definition `%s`" (string_of_
     let wp_sort_b_a = U.arrow [S.null_binder (S.bv_to_name b)] (S.mk_Total wp_sort_a) in
 
     let k = U.arrow [S.mk_binder a; S.mk_binder b; S.null_binder wp_sort_b_a] (S.mk_Total wp_sort_a) in
-    check_and_gen' "close_wp" 2 None (ed |> U.get_wp_close_combinator |> must) (Some k) in
+    check_and_gen' "close_wp" 2 None (ed |> U.get_wp_close_combinator |> Option.must) (Some k) in
 
   log_combinator "close_wp" close_wp;
 
@@ -2155,7 +2154,7 @@ Errors.with_ctx (Format.fmt1 "While checking effect definition `%s`" (string_of_
     let a, wp_sort_a = fresh_a_and_wp () in
     let t, _ = U.type_u () in
     let k = U.arrow [S.mk_binder a; S.null_binder wp_sort_a] (S.mk_GTotal t) in
-    let trivial = check_and_gen' "trivial" 1 None (ed |> U.get_wp_trivial_combinator |> must) (Some k) in
+    let trivial = check_and_gen' "trivial" 1 None (ed |> U.get_wp_trivial_combinator |> Option.must) (Some k) in
 
     log_combinator "trivial" trivial;
 
@@ -2169,7 +2168,7 @@ Errors.with_ctx (Format.fmt1 "While checking effect definition `%s`" (string_of_
         let a, wp_sort_a = fresh_a_and_wp () in
         let t, _ = U.type_u () in
         let k = U.arrow [S.mk_binder a; S.null_binder wp_sort_a] (S.mk_GTotal t) in
-        check_and_gen' "repr" 1 None (ed |> U.get_eff_repr |> must) (Some k) in
+        check_and_gen' "repr" 1 None (ed |> U.get_eff_repr |> Option.must) (Some k) in
 
       log_combinator "repr" repr;
 
@@ -2184,7 +2183,7 @@ Errors.with_ctx (Format.fmt1 "While checking effect definition `%s`" (string_of_
         | _ -> failwith "Unexpected repr type" in
 
       let return_repr =
-        let return_repr_ts = ed |> U.get_return_repr |> must in
+        let return_repr_ts = ed |> U.get_return_repr |> Option.must in
         let a, _ = fresh_a_and_wp () in
         let x_a = S.gen_bv "x_a" None (S.bv_to_name a) in
         let res =
@@ -2200,7 +2199,7 @@ Errors.with_ctx (Format.fmt1 "While checking effect definition `%s`" (string_of_
       log_combinator "return_repr" return_repr;
 
       let bind_repr =
-        let bind_repr_ts = ed |> U.get_bind_repr |> must in
+        let bind_repr_ts = ed |> U.get_bind_repr |> Option.must in
         let a, wp_sort_a = fresh_a_and_wp () in
         let b, wp_sort_b = fresh_a_and_wp () in
         let wp_sort_a_b = U.arrow [S.null_binder (S.bv_to_name a)] (S.mk_Total wp_sort_b) in
@@ -2418,7 +2417,7 @@ let tc_layered_lift env0 (sub:S.sub_eff) : S.sub_eff =
   if !dbg_LayeredEffectsTc then
     Format.print1 "Typechecking sub_effect: %s\n" (show sub);
 
-  let lift_ts = sub.lift |> must in
+  let lift_ts = sub.lift |> Option.must in
   let r = (lift_ts |> snd).pos in
 
   let us, lift, lift_ty = check_and_gen env0 "" "lift" 1 lift_ts in
@@ -2487,7 +2486,7 @@ let tc_lift env sub r =
       match Env.effect_decl_opt env eff_name with
       | None -> failwith "internal error: reifiable effect has no decl?"
       | Some (ed, qualifiers) ->
-        let repr = Env.inst_effect_fun_with [U_unknown] env ed (ed |> U.get_eff_repr |> must) in
+        let repr = Env.inst_effect_fun_with [U_unknown] env ed (ed |> U.get_eff_repr |> Option.must) in
         mk (Tm_app {hd=repr; args=[as_arg a; as_arg wp]}) (Env.get_range env)
     in
     let lift, lift_wp =
@@ -2564,11 +2563,11 @@ let tc_lift env sub r =
         (Format.fmt3 "Sub effect wp must be polymorphic in exactly 1 universe; %s ~> %s has %s universes"
                     (show sub.source) (show sub.target)
                     (lift_wp |> fst |> List.length |> show));
-    if is_some lift && lift |> must |> fst |> List.length <> 1 then
+    if Some? lift && lift |> Option.must |> fst |> List.length <> 1 then
       raise_error r Errors.Fatal_TooManyUniverse
         (Format.fmt3 "Sub effect lift must be polymorphic in exactly 1 universe; %s ~> %s has %s universes"
                     (show sub.source) (show sub.target)
-                    (lift |> must |> fst |> List.length |> show));
+                    (lift |> Option.must |> fst |> List.length |> show));
     ({ sub with lift_wp=Some lift_wp; lift=lift })
 
 let tc_effect_abbrev env (lid, uvs, tps, c) r =

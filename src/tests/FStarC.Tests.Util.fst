@@ -19,7 +19,6 @@ open FStarC
 open FStarC
 open FStarC.Effect
 open FStarC.Errors
-open FStarC.Util
 open FStarC.Syntax
 open FStarC.Syntax.Syntax
 module S = FStarC.Syntax.Syntax

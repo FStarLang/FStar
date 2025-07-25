@@ -21,7 +21,6 @@ open FStarC.Effect
 open FStarC.List
 open FStarC
 open FStarC.Ident
-open FStarC.Util
 open FStarC.Const
 open FStarC.BaseTypes
 

@@ -692,9 +692,9 @@ let rec translate_type_without_decay' env t: typ =
   | MLTY_Named ([], p) when (Syntax.string_of_mlpath p = "Prims.bool") ->
       TBool
   | MLTY_Named ([], ([ "FStar"; m ], "t")) when is_machine_int m ->
-      TInt (must (mk_width m))
+      TInt (Option.must (mk_width m))
   | MLTY_Named ([], ([ "FStar"; m ], "t'")) when is_machine_int m ->
-      TInt (must (mk_width m))
+      TInt (Option.must (mk_width m))
   | MLTY_Named ([], p) when (Syntax.string_of_mlpath p = "FStar.Monotonic.HyperStack.mem") ->
       TUnit
   
@@ -809,10 +809,10 @@ and translate_expr' env e: expr =
 
   // Some of these may not appear beneath an [EApp] node because of partial applications
   | MLE_Name ([ "FStar"; m ], op) when (is_machine_int m && is_op op) ->
-      EOp (must (mk_op op), must (mk_width m))
+      EOp (Option.must (mk_op op), Option.must (mk_width m))
 
   | MLE_Name ([ "Prims" ], op) when (is_bool_op op) ->
-      EOp (must (mk_bool_op op), Bool)
+      EOp (Option.must (mk_bool_op op), Bool)
 
   | MLE_Name n ->
       EQualified n
@@ -1075,15 +1075,15 @@ and translate_expr' env e: expr =
 
   // Operators from fixed-width integer modules, e.g. [FStar.Int32.addw].
   | MLE_App ({ expr = MLE_Name ([ "FStar"; m ], op) }, args) when (is_machine_int m && is_op op) ->
-      mk_op_app env (must (mk_width m)) (must (mk_op op)) args
+      mk_op_app env (Option.must (mk_width m)) (Option.must (mk_op op)) args
 
   | MLE_App ({ expr = MLE_Name ([ "Prims" ], op) }, args) when (is_bool_op op) ->
-      mk_op_app env Bool (must (mk_bool_op op)) args
+      mk_op_app env Bool (Option.must (mk_bool_op op)) args
 
   // Fixed-width literals are represented as calls to [FStar.Int32.uint_to_t]
   | MLE_App ({ expr = MLE_Name ([ "FStar"; m ], "int_to_t") }, [ { expr = MLE_Const (MLC_Int (c, None)) }])
   | MLE_App ({ expr = MLE_Name ([ "FStar"; m ], "uint_to_t") }, [ { expr = MLE_Const (MLC_Int (c, None)) }]) when is_machine_int m ->
-      EConstant (must (mk_width m), c)
+      EConstant (Option.must (mk_width m), c)
 
   | MLE_App ({ expr = MLE_Name ([ "C" ], "string_of_literal") }, [ { expr = e } ])
   | MLE_App ({ expr = MLE_Name ([ "C"; "Compat"; "String" ], "of_literal") }, [ { expr = e } ])

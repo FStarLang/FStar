@@ -22,7 +22,6 @@ open FStarC.Errors
 open FStarC.Range
 open FStarC.Ident
 open FStarC
-open FStarC.Util
 open FStarC.Const
 open FStarC.Parser.AST
 

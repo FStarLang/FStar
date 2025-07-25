@@ -25,7 +25,6 @@ open FStarC.Class.PP
 open FStarC.Class.Deq
 open FStarC.Syntax.Print {}
 
-module BU    = FStarC.Util
 module Err   = FStarC.Errors
 module Ident = FStarC.Ident
 module PC    = FStarC.Parser.Const
@@ -113,8 +112,8 @@ exception Embedding_failure
 exception Unembedding_failure
 
 let map_shadow (s:shadow_term) (f:term -> term) : shadow_term =
-    BU.map_opt s (Thunk.map f)
-let force_shadow (s:shadow_term) = BU.map_opt s Thunk.force
+    Option.map (Thunk.map f) s
+let force_shadow (s:shadow_term) = Option.map Thunk.force s
 
 class embedding (a:Type0) = {
   em      : a -> embed_t;
@@ -213,7 +212,7 @@ let unembed #a {| e:embedding a |} t n =
 
 let embed_as (ea:embedding 'a) (ab : 'a -> 'b) (ba : 'b -> 'a) (o:option S.typ) : Tot (embedding 'b) =
     mk_emb_full (fun (x:'b) -> embed (ba x))
-                (fun (t:term) cb -> BU.map_opt (try_unembed t cb) ab)
+                (fun (t:term) cb -> Option.map ab (try_unembed t cb))
                 (fun () -> match o with | Some t -> t | _ -> type_of ea)
                 (fun (x:'b) -> Format.fmt1 "(embed_as>> %s)\n" (ea.print (ba x)))
                 ea.e_typ
@@ -277,7 +276,7 @@ let lazy_unembed (pa:printer 'a) (et:emb_typ) (x:term) (ta:term) (f:term -> opti
                                (match aopt with None -> "None" | Some a -> "Some " ^ pa a) in
       aopt
 
-let (let?) o f = BU.bind_opt o f
+let (let?) o f = Option.bind o f
 
 let mk_extracted_embedding (name: string) (u: string & list term -> option 'a) (e: 'a -> term) : embedding 'a =
   let uu (t:term) _norm : option 'a =

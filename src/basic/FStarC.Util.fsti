@@ -128,10 +128,6 @@ val compare: string -> string -> Tot int
 val splitlines: string -> Tot (list string)
 val split: str:string -> sep:string -> Tot (list string)
 
-val is_left: either 'a 'b -> bool
-val is_right: either 'a 'b -> bool
-val left: either 'a 'b -> 'a
-val right: either 'a 'b -> 'b
 val find_dup: ('a -> 'a -> bool) -> list 'a -> option 'a
 val nodups: ('a -> 'a -> bool) -> list 'a -> bool
 val sort_with: ('a -> 'a -> int) -> list 'a -> list 'a
@@ -152,18 +148,6 @@ val take: ('a -> bool) -> list 'a -> list 'a & list 'a
 (* Variation on fold_left which pushes the list returned by the functional *)
 (* on top of the leftover input list *)
 val fold_flatten:('a -> 'b -> 'a & list 'b) -> 'a -> list 'b -> 'a
-
-val is_none: option 'a -> Tot bool
-val is_some: option 'a -> Tot bool
-val must: option 'a -> 'a
-val dflt: 'a -> option 'a -> Tot 'a
-val find_opt: ('a -> bool) -> list 'a -> option 'a
-(* FIXME: these functions have the wrong argument order when compared to
- List.map, List.iter, etc. *)
-val bind_opt: option 'a -> ('a -> option 'b) -> option 'b
-val catch_opt: option 'a -> (unit -> option 'a) -> option 'a
-val map_opt: option 'a -> ('a -> 'b) -> option 'b
-val iter_opt: option 'a -> ('a -> unit) -> unit
 
 val first_N: int -> list 'a -> (list 'a & list 'a)
 val nth_tail: int -> list 'a -> list 'a
@@ -237,8 +221,6 @@ val sleep: int -> unit
 val atomically: (unit -> 'a) -> 'a
 val spawn: (unit -> unit) -> unit
 val print_endline: string -> unit
-
-val map_option: ('a -> 'b) -> option 'a -> option 'b
 
 (* for a filepath, create the parent directory if it doesn't exist (and leading directories too) *)
 val maybe_create_parent : string -> unit

@@ -326,7 +326,7 @@ let repl_ldtx (st: repl_state) (tasks: list repl_task) : either_replst =
     | task :: tasks, [] ->
       let timestamped_task = update_task_timestamps task in
       let diag, st = repl_tx st LaxCheck timestamped_task in
-      if not (U.is_some diag) then aux ({ st with repl_deps_stack = !repl_stack }) tasks []
+      if None? diag then aux ({ st with repl_deps_stack = !repl_stack }) tasks []
       else Inr st
 
     // We've already run ``task`` previously, and no update is needed: skip.
@@ -351,7 +351,7 @@ let ld_deps st =
     | Inl st -> Inl (st, deps)
   with
   | Error (e, msg, _rng, ctx) -> Format.print1_error "[E] Failed to load deps. %s" (Errors.rendermsg msg); Inr st
-  | exn -> Format.print1_error "[E] Failed to load deps. Message: %s" (message_of_exn exn); Inr st
+  | exn -> Format.print1_error "[E] Failed to load deps. Message: %s" (Util.message_of_exn exn); Inr st
 
 let add_module_completions this_fname deps table =
   let open FStarC.PSMap in

@@ -88,7 +88,7 @@ let head_normal env t =
     | Tm_abs _
     | Tm_constant _ -> true
     | Tm_fvar fv
-    | Tm_app {hd={n=Tm_fvar fv}} -> Env.lookup_definition [Env.Eager_unfolding_only] env.tcenv fv.fv_name.v |> Option.isNone
+    | Tm_app {hd={n=Tm_fvar fv}} -> Env.lookup_definition [Env.Eager_unfolding_only] env.tcenv fv.fv_name.v |> None?
     | _ -> false
 
 let head_redex env t =
@@ -99,7 +99,7 @@ let head_redex env t =
       || List.existsb (function TOTAL -> true | _ -> false) rc.residual_flags
 
     | Tm_fvar fv ->
-      Env.lookup_definition [Env.Eager_unfolding_only] env.tcenv fv.fv_name.v |> Option.isSome
+      Env.lookup_definition [Env.Eager_unfolding_only] env.tcenv fv.fv_name.v |> Some?
 
     | _ -> false
 
@@ -227,7 +227,7 @@ let check_pattern_vars env vars pats =
     | [] -> ()
     | hd::tl ->
         let pat_vars = List.fold_left (fun out x -> union out (Free.names x)) (Free.names hd) tl in
-        match vars |> BU.find_opt (fun ({binder_bv=b}) -> not (mem b pat_vars)) with
+        match vars |> Option.find (fun ({binder_bv=b}) -> not (mem b pat_vars)) with
         | None -> ()
         | Some ({binder_bv=x}) ->
         let pos = List.fold_left (fun out t -> Range.union_ranges out t.pos) hd.pos tl in
@@ -462,7 +462,7 @@ and encode_arith_term env head args_e =
     in
     let _, op =
         List.tryFind (fun (l, _) -> S.fv_eq_lid head_fv l) ops |>
-        BU.must
+        Some?.v
     in
     op arg_tms, decls
 
@@ -579,7 +579,7 @@ and encode_arith_term env head args_e =
     in
     let _, op =
         List.tryFind (fun (l, _) -> S.fv_eq_lid head_fv l) ops |>
-        BU.must
+        Some?.v
     in
     op arg_tms, sz_decls @ decls
 
@@ -1013,7 +1013,7 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
             when
              (S.fv_eq_lid fv Const.squash_lid
               || S.fv_eq_lid fv Const.auto_squash_lid)
-              && Option.isSome (Syntax.Formula.destruct_typ_as_formula arg) ->
+              && Some? (Syntax.Formula.destruct_typ_as_formula arg) ->
           let dummy = S.new_bv None t_unit in
           let t = U.refine dummy arg in (* so that `squash f`, when f is a formula, benefits from shallow embedding *)
           encode_term t env
@@ -1349,7 +1349,7 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
       | Tm_let {lbs=(_, lbs)} ->
         let names = lbs |> List.map (fun lb ->
                                         let {lbname = lbname} = lb in
-                                        let x = BU.left lbname in (* has to be Inl *)
+                                        let x = Inl?.v lbname in (* has to be Inl *)
                                         (Ident.string_of_id x.ppname, S.range_of_bv x)) in
         raise (Inner_let_rec names)
 

@@ -880,8 +880,8 @@ and p_typeDecl pre = function
   | TyconVariant (lid, bs, typ_opt, ct_decls) ->
     let p_constructorBranchAndComments (uid, payload, attrs) =
         let range = extend_to_end_of_line (
-          dflt (range_of_id uid) 
-               (bind_opt payload 
+          Option.dflt (range_of_id uid) 
+               (Option.bind payload 
                    (function | VpOfNotation t | VpArbitrary t -> Some t.range
                              | VpRecord (record, _)           -> None))) in
         let comm, ctor = with_comment_sep p_constructorBranch (uid, payload, attrs) range in
@@ -1368,8 +1368,8 @@ and p_noSeqTerm' ps pb e = match e.tm with
        * semicolons. We forward our caller's [ps] parameter, though, because
        * something in [e2] may swallow. *)
       if is_unit e3
-      then group ((str ("if" ^ (dflt "" (op_opt `map_opt` string_of_id
-                                          `bind_opt` strip_prefix "let")))
+      then group ((str ("if" ^ (Option.dflt "" (Option.map string_of_id op_opt
+                                          `Option.bind` strip_prefix "let")))
                   ^/+^ p_noSeqTermAndComment false false e1) ^/^ (str "then" ^/+^ p_noSeqTermAndComment ps pb e2))
       else
            let e2_doc =
@@ -1402,8 +1402,8 @@ and p_noSeqTerm' ps pb e = match e.tm with
               separate_map_last hardline p_patternBranch branches))
   | Match (e, op_opt, ret_opt, branches) ->
       let match_doc
-        = str ("match" ^ (dflt "" (op_opt `map_opt` string_of_id
-                                          `bind_opt` strip_prefix "let"))) in
+        = str ("match" ^ (Option.dflt "" (Option.map string_of_id op_opt
+                                          `Option.bind` strip_prefix "let"))) in
       paren_if (ps || pb) (
       (match ret_opt with
        | None ->

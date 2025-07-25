@@ -147,7 +147,7 @@ let set_memo cfg (r:memo (Cfg.cfg & 'a)) (t:'a) : unit =
   if cfg.memoize_lazy then begin
     (* We do this only as a sanity check. The only situation where we
      * should set a memo again is when the cfg has changed. *)
-    if Option.isSome (read_memo cfg r) then
+    if Some? (read_memo cfg r) then
       failwith "Unexpected set_memo: thunk already evaluated";
     r := Some (cfg, t)
   end
@@ -982,7 +982,7 @@ let rec norm : cfg -> env -> stack -> term -> term =
                      let open FStarC.Class.Monad in
                      let! rc = rc_opt in
                      let rc = maybe_drop_rc_typ cfg rc in
-                     Some {rc with residual_typ = BU.map_option (SS.subst opening) rc.residual_typ}
+                     Some {rc with residual_typ = Option.map (SS.subst opening) rc.residual_typ}
                    in
                    log cfg  (fun () -> Format.print1 "\tShifted %s dummies\n" (show <| List.length bs));
                    let cfg' = { cfg with strong = true } in
@@ -1170,7 +1170,7 @@ let rec norm : cfg -> env -> stack -> term -> term =
             )
 
           | Tm_match {scrutinee=head; ret_opt=asc_opt; brs=branches; rc_opt=lopt} ->
-            let lopt = BU.map_option (maybe_drop_rc_typ cfg) lopt in
+            let lopt = Option.map (maybe_drop_rc_typ cfg) lopt in
             let stack = Match(env, asc_opt, branches, lopt, cfg, t.pos)::stack in
             if cfg.steps.iota
                 && cfg.steps.weakly_reduce_scrutinee
@@ -1197,7 +1197,7 @@ let rec norm : cfg -> env -> stack -> term -> term =
 
           | Tm_let {lbs=(false, [lb]); body} ->
             if Cfg.should_reduce_local_let cfg lb
-            then let binder = S.mk_binder (BU.left lb.lbname) in
+            then let binder = S.mk_binder (Inl?.v lb.lbname) in
                  (* If this let is effectful, and marked with @inline_let
                   * (and it passed the typechecker), then its definition
                   * must be pure. But, it will be lifted into an effectful
@@ -1212,7 +1212,7 @@ let rec norm : cfg -> env -> stack -> term -> term =
             (* This is important for tactics, see issue #1594 *)
             else if cfg.steps.tactics
                     && U.is_div_effect (Env.norm_eff_name cfg.tcenv lb.lbeff)
-            then let ffun = S.mk (Tm_abs {bs=[S.mk_binder (lb.lbname |> BU.left)]; body; rc_opt=None}) t.pos in
+            then let ffun = S.mk (Tm_abs {bs=[S.mk_binder (lb.lbname |> Inl?.v)]; body; rc_opt=None}) t.pos in
                  let stack = (CBVApp (env, ffun, None, t.pos)) :: stack in
                  log cfg (fun () -> Format.print_string "+++ Evaluating DIV Tm_let\n");
                  norm cfg env stack lb.lbdef
@@ -1221,7 +1221,7 @@ let rec norm : cfg -> env -> stack -> term -> term =
             then (log cfg (fun () -> Format.print_string "+++ Not touching Tm_let\n");
                   rebuild cfg env stack (closure_as_term cfg env t))
 
-            else let bs, body = Subst.open_term [lb.lbname |> BU.left |> S.mk_binder] body in
+            else let bs, body = Subst.open_term [lb.lbname |> Inl?.v |> S.mk_binder] body in
                  log cfg (fun () -> Format.print_string "+++ Normalizing Tm_let -- type");
                  let ty = norm cfg env [] lb.lbtyp in
                  let lbname =
@@ -1246,7 +1246,7 @@ let rec norm : cfg -> env -> stack -> term -> term =
             let lbs, body = Subst.open_let_rec lbs body in
             let lbs = List.map (fun lb ->
                 let ty = norm cfg env [] lb.lbtyp in
-                let lbname = Inl ({BU.left lb.lbname with sort=ty}) in
+                let lbname = Inl ({Inl?.v lb.lbname with sort=ty}) in
                 let xs, def_body, lopt = U.abs_formals lb.lbdef in
                 let xs = norm_binders cfg env xs in
                 let env = List.map (fun _ -> dummy ()) xs //first the bound vars for the arguments
@@ -1255,7 +1255,7 @@ let rec norm : cfg -> env -> stack -> term -> term =
                 let def_body = norm cfg env [] def_body in
                 let lopt =
                   match lopt with
-                  | Some rc -> Some ({rc with residual_typ=BU.map_opt rc.residual_typ (norm cfg env [])})
+                  | Some rc -> Some ({rc with residual_typ = Option.map (norm cfg env []) rc.residual_typ })
                   | _ -> lopt in
                 let def = U.abs xs def_body lopt in
                 { lb with lbname = lbname;
@@ -1282,7 +1282,7 @@ let rec norm : cfg -> env -> stack -> term -> term =
             //i.e., we set memo := Some (rec_env, \x. f x)
 
             let rec_env, memos, _ = List.fold_right (fun lb (rec_env, memos, i) ->
-                    let bv = {left lb.lbname with index=i} in
+                    let bv = {Inl?.v lb.lbname with index=i} in
                     let f_i = Syntax.bv_to_tm bv in
                     let fix_f_i = mk (Tm_let {lbs; body=f_i}) t.pos in
                     let memo = fresh_memo () in
@@ -1595,8 +1595,8 @@ and do_reify_monadic fallback cfg env stack (top : term) (m : monad_name) (t : t
       (* ****************************************************************************)
       let eff_name = Env.norm_eff_name cfg.tcenv m in
       let ed = Env.get_effect_decl cfg.tcenv eff_name in
-      let _, repr = ed |> U.get_eff_repr |> must in
-      let _, bind_repr = ed |> U.get_bind_repr |> must in
+      let _, repr = ed |> U.get_eff_repr |> Option.must in
+      let _, bind_repr = ed |> U.get_bind_repr |> Option.must in
       begin match lb.lbname with
         | Inr _ -> failwith "Cannot reify a top-level let binding"
         | Inl x ->
@@ -1811,7 +1811,7 @@ and do_reify_monadic fallback cfg env stack (top : term) (m : monad_name) (t : t
 
             (* Fallback if it does not have a definition. This happens,
              * but I'm not sure why. *)
-            if Option.isNone (Env.lookup_definition_qninfo cfg.delta_level fv.fv_name.v qninfo)
+            if None? (Env.lookup_definition_qninfo cfg.delta_level fv.fv_name.v qninfo)
             then fallback2 ()
             else
 
@@ -1862,8 +1862,8 @@ and reify_lift cfg e msrc mtgt t : term =
      not (mtgt |> Env.is_layered_effect env)
   then
     let ed = Env.get_effect_decl env (Env.norm_eff_name cfg.tcenv mtgt) in
-    let _, repr = ed |> U.get_eff_repr |> must in
-    let _, return_repr = ed |> U.get_return_repr |> must in
+    let _, repr = ed |> U.get_eff_repr |> Option.must in
+    let _, return_repr = ed |> U.get_return_repr |> Option.must in
     let return_inst = match (SS.compress return_repr).n with
         | Tm_uinst(return_tm, [_]) ->
             S.mk (Tm_uinst (return_tm, [env.universe_of env t])) e.pos
@@ -2272,8 +2272,8 @@ and rebuild (cfg:cfg) (env:env) (stack:stack) (t:term) : term =
            failwith "DIE!");
 
   let f_opt = is_fext_on_domain t in
-  if f_opt |> is_some && (match stack with | Arg _::_ -> true | _ -> false)  //AR: it is crucial to check that (on_domain a #b) is actually applied, else it would be unsound to reduce it to f
-  then f_opt |> must |> norm cfg env stack
+  if f_opt |> Some? && (match stack with | Arg _::_ -> true | _ -> false)  //AR: it is crucial to check that (on_domain a #b) is actually applied, else it would be unsound to reduce it to f
+  then f_opt |> Option.must |> norm cfg env stack
   else
       let t, renorm = maybe_simplify cfg env stack t in
       if renorm
@@ -2312,7 +2312,7 @@ and do_rebuild (cfg:cfg) (env:env) (stack:stack) (t:term) : term =
 
       | Abs (env', bs, env'', lopt, r)::stack ->
         let bs = norm_binders cfg env' bs in
-        let lopt = BU.map_option (norm_residual_comp cfg env'') lopt in
+        let lopt = Option.map (norm_residual_comp cfg env'') lopt in
         rebuild cfg env stack ({abs bs t lopt with pos=r})
 
       | Arg (Univ _,  _, _)::_
@@ -2468,7 +2468,7 @@ and do_rebuild (cfg:cfg) (env:env) (stack:stack) (t:term) : term =
         norm cfg env' (Arg (Clos (env, t, fresh_memo (), false), aq, t.pos) :: stack) head
 
       | Match(env', asc_opt, branches, lopt, cfg, r) :: stack ->
-        let lopt = BU.map_option (norm_residual_comp cfg env') lopt in
+        let lopt = Option.map (norm_residual_comp cfg env') lopt in
         log cfg  (fun () -> Format.print1 "Rebuilding with match, scrutinee is %s ...\n" (show t));
         //the scrutinee is always guaranteed to be a pure or ghost term
         //see tc.fs, the case of Tm_match and the comment related to issue #594
@@ -2531,7 +2531,7 @@ and do_rebuild (cfg:cfg) (env:env) (stack:stack) (t:term) : term =
               let x = {x with sort=norm_or_whnf env x.sort} in
               {p with v=Pat_var x}, dummy () ::env
             | Pat_dot_term eopt ->
-              let eopt = BU.map_option (norm_or_whnf env) eopt in
+              let eopt = Option.map (norm_or_whnf env) eopt in
               {p with v=Pat_dot_term eopt}, env
           in
           let norm_branches () =
@@ -2731,11 +2731,11 @@ and norm_ascription cfg env (tc, tacopt, use_eq) =
   (match tc with
    | Inl t -> Inl (norm cfg env [] t)
    | Inr c -> Inr (norm_comp cfg env c)),
-  BU.map_opt tacopt (norm cfg env []),
+  Option.map (norm cfg env []) tacopt,
   use_eq
 
 and norm_residual_comp cfg env (rc:residual_comp) : residual_comp =
-  {rc with residual_typ = BU.map_option (closure_as_term cfg env) rc.residual_typ}
+  {rc with residual_typ = Option.map (closure_as_term cfg env) rc.residual_typ}
 
 let reflection_env_hook = mk_ref None
 
@@ -3014,11 +3014,11 @@ let elim_uvars_aux_tc (env:Env.env) (univ_names:univ_names) (binders:binders) (t
 
 let elim_uvars_aux_t env univ_names binders t =
    let univ_names, binders, tc = elim_uvars_aux_tc env univ_names binders (Inl t) in
-   univ_names, binders, BU.left tc
+   univ_names, binders, Inl?.v tc
 
 let elim_uvars_aux_c env univ_names binders c =
    let univ_names, binders, tc = elim_uvars_aux_tc env univ_names binders (Inr c) in
-   univ_names, binders, BU.right tc
+   univ_names, binders, Inr?.v tc
 
 let rec elim_uvars (env:Env.env) (s:sigelt) =
     let sigattrs = List.map Mktuple3?._3 <| List.map (elim_uvars_aux_t env [] []) s.sigattrs in
@@ -3267,7 +3267,7 @@ let maybe_unfold_head_fv (env:Env.env) (head:term)
 let rec maybe_unfold_aux (env:Env.env) (t:term) : option term =
   match (SS.compress t).n with
   | Tm_match {scrutinee=t0; ret_opt; brs; rc_opt} ->
-    BU.map_option
+    Option.map
       (fun t0 -> S.mk (Tm_match {scrutinee=t0; ret_opt; brs; rc_opt}) t.pos)
       (maybe_unfold_aux env t0)
   | Tm_fvar _
@@ -3282,6 +3282,6 @@ let rec maybe_unfold_aux (env:Env.env) (t:term) : option term =
       | Some head -> S.mk_Tm_app head args t.pos |> Some
 
 let maybe_unfold_head (env:Env.env) (t:term) : option term =
-  BU.map_option
+  Option.map
     (normalize [Beta;Iota;Weak;HNF] env)
     (maybe_unfold_aux env t)

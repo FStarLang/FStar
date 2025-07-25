@@ -18,7 +18,6 @@ module FStarC.Tactics.V1.Basic
 open FStarC
 open FStarC.Effect
 open FStarC.List
-open FStarC.Util
 open FStarC.Ident
 open FStarC.TypeChecker.Env
 open FStarC.TypeChecker.Common
@@ -70,7 +69,7 @@ rewrite this whole (deprecated) file. *)
 (* Internal, repeated from V2 too. Could be in Types, but that
 constrains dependencies and F* claims a cycle. *)
 let get_phi (g:goal) : option term = U.un_squash (N.unfold_whnf (goal_env g) (goal_type g))
-let is_irrelevant (g:goal) : bool = Option.isSome (get_phi g)
+let is_irrelevant (g:goal) : bool = Some? (get_phi g)
 
 let core_check env sol t must_tot
   : either (option typ) Core.error
@@ -1016,7 +1015,7 @@ let lemma_or_sq (c : comp) : option (term & term) =
         Some (pre, post)
     else if U.is_pure_effect eff_name
          || U.is_ghost_effect eff_name then
-        map_opt (U.un_squash res) (fun post -> (U.t_true, post))
+        Option.map (fun post -> (U.t_true, post)) (U.un_squash res)
     else
         None
 
@@ -1133,9 +1132,9 @@ let split_env (bvar : bv) (e : env) : option (env & bv & list bv) =
         | Some (bv', e') ->
             if S.bv_eq bvar bv'
             then Some (e', bv', [])
-            else map_opt (aux e') (fun (e'', bv, bvs) -> (e'', bv, bv'::bvs ))
+            else Option.map (fun (e'', bv, bvs) -> (e'', bv, bv'::bvs )) (aux e')
     in
-    map_opt (aux e) (fun (e', bv, bvs) -> (e', bv, List.rev bvs))
+    Option.map (fun (e', bv, bvs) -> (e', bv, List.rev bvs)) (aux e)
 
 let subst_goal (b1 : bv) (b2 : bv) (g:goal) : tac (option (bv & goal)) =
     match split_env b1 (goal_env g) with
@@ -2159,8 +2158,8 @@ let t_commute_applied_match () : tac unit = wrap_err "t_commute_applied_match" <
       //
       // If residual comp is set, apply arguments to it
       //
-      let lopt' = lopt |> BU.map_option (fun rc -> {rc with residual_typ=
-        rc.residual_typ |> BU.map_option (fun t ->
+      let lopt' = lopt |> Option.map (fun rc -> {rc with residual_typ=
+        rc.residual_typ |> Option.map (fun t ->
           let bs, c = N.get_n_binders (goal_env g) (List.length las) t in
           let bs, c = SS.open_comp bs c in
           let ss = List.map2 (fun b a -> NT (b.binder_bv, fst a)) bs las in

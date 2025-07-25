@@ -95,7 +95,7 @@ let cons_lid       = Ident.lid_of_str "Prims.Cons"
 
 let embed      = mk (MLE_Name (splitlast ["Fstarcompiler.FStarC"; "Syntax"; "Embeddings"; "Base"; "extracted_embed"]))
 let unembed    = mk (MLE_Name (splitlast ["Fstarcompiler.FStarC"; "Syntax"; "Embeddings"; "Base"; "extracted_unembed"]))
-let bind_opt   = mk (MLE_Name (splitlast ["Fstarcompiler.FStarC"; "Util"; "bind_opt"]))
+let bind_opt   = mk (MLE_Name (splitlast ["Fstarcompiler.FStarC"; "Option"; "bind"]))
 
 let ml_nbe_unsupported : mlexpr =
   (* extraction thunks this definition *)
@@ -265,7 +265,7 @@ let rec embedding_for
       | SyntaxTerm -> mk <| MLE_Name (["Fstarcompiler.FStarC"; "Syntax"; "Embeddings"], "mk_any_emb")
       | NBETerm    -> mk <| MLE_Name (["Fstarcompiler.FStarC"; "TypeChecker"; "NBETerm"], "mk_any_emb")
     in
-    let s = snd (BU.must (BU.find_opt (find_env_entry bv) env)) in
+    let s = snd (Some?.v (Option.find (find_env_entry bv) env)) in
     mk <| MLE_App(comb, [str_to_name s])
 
   (* Refinements are irrelevant for embeddings. *)
@@ -688,7 +688,7 @@ let __do_handle_plugin (g: uenv) (arity_opt: option int) (se: sigelt) : list mlm
   match se.sigel with
   | Sig_let {lbs} ->
       let mk_registration lb : list mlmodule1 =
-         let fv = BU.right lb.lbname in
+         let fv = Inr?.v lb.lbname in
          let fv_lid = fv.fv_name.v in
          let fv_t = lb.lbtyp in
          let ml_name_str = MLE_Const (MLC_String (Ident.string_of_lid fv_lid)) in

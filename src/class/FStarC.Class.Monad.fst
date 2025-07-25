@@ -5,7 +5,7 @@ open FStarC.Effect
 
 instance monad_option : monad option = {
   return = (fun x -> Some x); // FIXME: without the we gell ill-typed ML
-  ( let! ) = Util.bind_opt;
+  ( let! ) = Option.bind;
 }
 
 instance monad_list : monad list = {

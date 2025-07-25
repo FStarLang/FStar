@@ -416,21 +416,6 @@ let fprint (oc:out_channel) fmt args : unit = Printf.fprintf oc "%s" (FStarC_For
 
 [@@deriving yojson,show]
 
-let is_left = function
-  | FStar_Pervasives.Inl _ -> true
-  | _ -> false
-
-let is_right = function
-  | FStar_Pervasives.Inr _ -> true
-  | _ -> false
-
-let left = function
-  | FStar_Pervasives.Inl x -> x
-  | _ -> failwith "Not in left"
-let right = function
-  | FStar_Pervasives.Inr x -> x
-  | _ -> failwith "Not in right"
-
 let (-<-) f g x = f (g x)
 
 let find_dup f l =
@@ -451,48 +436,8 @@ let remove_dups f l =
     | _ -> out in
   aux [] l
 
-let is_none = function
-  | None -> true
-  | Some _ -> false
-
-let is_some = function
-  | None -> false
-  | Some _ -> true
-
-let must = function
-  | Some x -> x
-  | None -> failwith "Empty option"
-
-let dflt x = function
-  | None   -> x
-  | Some x -> x
-
-let find_opt f l =
-  let rec aux = function
-    | [] -> None
-    | hd::tl -> if f hd then Some hd else aux tl in
-  aux l
-
 (* JP: why so many duplicates? :'( *)
 let sort_with = FStar_List.sortWith
-
-let bind_opt opt f =
-  match opt with
-  | None -> None
-  | Some x -> f x
-
-let catch_opt opt f =
-  match opt with
-  | Some x -> opt
-  | None -> f ()
-
-let map_opt opt f =
-  match opt with
-  | None -> None
-  | Some x -> Some (f x)
-
-let iter_opt opt f =
-  ignore (map_opt opt f)
 
 let rec find_map l f =
   match l with
@@ -783,8 +728,6 @@ let get_oreader (filename:string) : oReader = {
 let getcwd = Sys.getcwd
 
 let print_endline = print_endline
-
-let map_option f opt = BatOption.map f opt
 
 let maybe_create_parent (fname:string) : unit =
   let d = Filename.dirname fname in

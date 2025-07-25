@@ -396,7 +396,7 @@ let rec doc_of_expr (currentModule : mlsymbol) (outer : level) (e : mlexpr) : do
     | MLE_CTor (ctor, []) ->
        let name =
          if is_standard_constructor ctor then
-           snd (Option.get (as_standard_constructor ctor))
+           snd (Option.must (as_standard_constructor ctor))
          else
            ptctor currentModule  ctor in
         text name
@@ -404,7 +404,7 @@ let rec doc_of_expr (currentModule : mlsymbol) (outer : level) (e : mlexpr) : do
     | MLE_CTor (ctor, args) ->
        let name =
          if is_standard_constructor ctor then
-           snd (Option.get (as_standard_constructor ctor))
+           snd (Option.must (as_standard_constructor ctor))
          else
            ptctor currentModule  ctor in
         let args = List.map (doc_of_expr currentModule (min_op_prec, NonAssoc)) args in
@@ -536,14 +536,14 @@ let rec doc_of_expr (currentModule : mlsymbol) (outer : level) (e : mlexpr) : do
         // We just skip them here.
         doc_of_expr currentModule outer head
 and  doc_of_binop currentModule p e1 e2 : doc =
-        let (_, prio, txt) = Option.get (as_bin_op p) in
+        let (_, prio, txt) = Option.must (as_bin_op p) in
         let e1  = doc_of_expr  currentModule (prio, Left ) e1 in
         let e2  = doc_of_expr  currentModule (prio, Right) e2 in
         let doc = reduce1 [e1; text txt; e2] in
         parens doc
 
 and  doc_of_uniop currentModule p e1  : doc =
-        let (_, txt) = Option.get (as_uni_op p) in
+        let (_, txt) = Option.must (as_uni_op p) in
         let e1  = doc_of_expr  currentModule  (min_op_prec, NonAssoc ) e1 in
         let doc = reduce1 [text txt; parens e1] in
         parens doc
@@ -561,7 +561,7 @@ and doc_of_pattern (currentModule : mlsymbol) (pattern : mlpattern) : doc =
     | MLP_CTor (ctor, []) ->
        let name =
          if is_standard_constructor ctor then
-           snd (Option.get (as_standard_constructor ctor))
+           snd (Option.must (as_standard_constructor ctor))
          else
            ptctor currentModule  ctor in
         text name
@@ -569,7 +569,7 @@ and doc_of_pattern (currentModule : mlsymbol) (pattern : mlpattern) : doc =
     | MLP_CTor (ctor, pats) ->
        let name =
          if is_standard_constructor ctor then
-           snd (Option.get (as_standard_constructor ctor))
+           snd (Option.must (as_standard_constructor ctor))
          else
            ptctor currentModule  ctor in
        let doc =
