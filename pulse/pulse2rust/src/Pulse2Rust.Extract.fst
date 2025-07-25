@@ -86,7 +86,7 @@ let type_of (g:env) (e:expr) : bool =  // is_mut
   | Expr_path [{path_segment_name}] ->
     (match lookup_local g path_segment_name with
      | Some (_t, b) -> b
-     | None -> fail (format1 "lookup in env for %s" path_segment_name))
+     | None -> fail (Format.fmt1 "lookup in env for %s" path_segment_name))
   
   | _ -> false
 
@@ -110,7 +110,7 @@ let arg_ts_and_ret_t (t:S.mltyscheme)
   | S.MLTY_Fun (_, S.E_IMPURE, _) ->
     let arg_ts, ret_t = uncurry_arrow t in
     tvars, arg_ts, ret_t
-  | _ -> fail_nyi (format1 "top level arg_ts and ret_t %s" (S.mlty_to_string t))
+  | _ -> fail_nyi (Format.fmt1 "top level arg_ts and ret_t %s" (S.mlty_to_string t))
 
 let should_extract_mlpath_with_symbol (g:env) (path:list S.mlsymbol) : bool =
   let p = String.concat "." path in
@@ -213,7 +213,7 @@ let rec extract_mlty (g:env) (t:S.mlty) : typ =
 
   | S.MLTY_Top -> Typ_infer
 
-  | _ -> fail_nyi (format1 "mlty %s" (S.mlty_to_string t))
+  | _ -> fail_nyi (Format.fmt1 "mlty %s" (S.mlty_to_string t))
 
 let extract_mltyopt (g:env) (t:option S.mlty) : typ =
   match t with
@@ -385,7 +385,7 @@ let extract_mlconstant_to_lit (c:S.mlconstant) : lit =
     Lit_int {lit_int_val; lit_int_signed; lit_int_width}
   | S.MLC_Bool b -> Lit_bool b
   | S.MLC_String s -> Lit_string s
-  | _ -> fail_nyi (format1 "mlconstant_to_lit %s" (S.mlconstant_to_string c))
+  | _ -> fail_nyi (Format.fmt1 "mlconstant_to_lit %s" (S.mlconstant_to_string c))
 
 let rec extract_mlpattern_to_pat (g:env) (p:S.mlpattern) : env & pat =
   match p with
@@ -422,7 +422,7 @@ let rec extract_mlpattern_to_pat (g:env) (p:S.mlpattern) : env & pat =
   | S.MLP_Tuple ps ->
     let g, ps = fold_left_map extract_mlpattern_to_pat g ps in
     g, mk_pat_tuple ps
-  | _ -> fail_nyi (format1 "mlpattern_to_pat %s" (S.mlpattern_to_string p))
+  | _ -> fail_nyi (Format.fmt1 "mlpattern_to_pat %s" (S.mlpattern_to_string p))
 
 //
 // Given an mllb,
@@ -678,7 +678,7 @@ and extract_mlexpr (g:env) (e:S.mlexpr) : expr =
   | S.MLE_App ({expr=S.MLE_TApp ({expr=S.MLE_Name p}, [_])}, [_; e1; e2])
     when S.string_of_mlpath p = "Pulse.Lib.HigherArray.Core.mask_alloc" ->
 
-    fail_nyi (format1 "mlexpr %s" (S.mlexpr_to_string e))
+    fail_nyi (Format.fmt1 "mlexpr %s" (S.mlexpr_to_string e))
 
   | S.MLE_App ({expr=S.MLE_TApp ({expr=S.MLE_Name p}, [_])}, [e; _])
     when S.string_of_mlpath p = "Pulse.Lib.Vec.free" ||
@@ -712,7 +712,7 @@ and extract_mlexpr (g:env) (e:S.mlexpr) : expr =
   | S.MLE_App ({expr=S.MLE_TApp ({expr=S.MLE_Name p}, [_])}, [e1; e2; _])
     when S.string_of_mlpath p = "Pulse.Lib.HigherArray.Core.mask_free" ->
 
-    fail_nyi (format1 "mlexpr %s" (S.mlexpr_to_string e))
+    fail_nyi (Format.fmt1 "mlexpr %s" (S.mlexpr_to_string e))
 
   | S.MLE_App ({expr=S.MLE_Name p}, [{expr=S.MLE_Fun (_, cond)}; {expr=S.MLE_Fun (_, body)}])
     when S.string_of_mlpath p = "Pulse.Lib.Dv.while_" ->
@@ -805,7 +805,7 @@ and extract_mlexpr (g:env) (e:S.mlexpr) : expr =
 
   | S.MLE_Tuple l -> mk_expr_tuple (List.map (extract_mlexpr g) l)
 
-  | _ -> fail_nyi (format1 "mlexpr %s" (S.mlexpr_to_string e))
+  | _ -> fail_nyi (Format.fmt1 "mlexpr %s" (S.mlexpr_to_string e))
 
 and extract_mlexpr_to_stmts (g:env) (e:S.mlexpr) : list stmt =
   match e.expr with
@@ -851,7 +851,7 @@ and extract_mlexpr_to_stmts (g:env) (e:S.mlexpr) : list stmt =
 
 and extract_mlbranch_to_arm (g:env) ((pat, pat_guard, body):S.mlbranch) : arm =
   match pat_guard with
-  | Some e -> fail_nyi (format1 "mlbranch_to_arm with pat guard %s" (S.mlexpr_to_string e))
+  | Some e -> fail_nyi (Format.fmt1 "mlbranch_to_arm with pat guard %s" (S.mlexpr_to_string e))
   | None ->
     let g, pat = extract_mlpattern_to_pat g pat in
     let arm_body = extract_mlexpr g body in
@@ -935,7 +935,7 @@ let extract_top_level_lb (g:env) (lbs:S.mlletbinding) : item & env =
         (mk_item_static name ty (extract_mlexpr g lb.mllb_def)),
         push_static g name ty
       | _ ->
-        fail_nyi (format1 "top level lb def with either no tysc or generics %s" (S.mlexpr_to_string lb.mllb_def))
+        fail_nyi (Format.fmt1 "top level lb def with either no tysc or generics %s" (S.mlexpr_to_string lb.mllb_def))
   end
 
 let has_rust_derive_attr (attrs:list S.mlattribute) : option attribute =
@@ -985,7 +985,7 @@ let extract_mltydecl (g:env) (mlattrs:list S.mlexpr) (d:S.mltydecl) : list item 
       | Some (S.MLTD_Abbrev _) -> extract_type_abbrev
       | Some (S.MLTD_Record _) -> extract_struct_defn
       | Some (S.MLTD_DType _) -> extract_enum
-      | _ -> fail_nyi (format1 "mltydecl %s" (S.one_mltydecl_to_string d))
+      | _ -> fail_nyi (Format.fmt1 "mltydecl %s" (S.one_mltydecl_to_string d))
     in
     let item, g = f g mlattrs d in
     items@[item], g) ([], g) d

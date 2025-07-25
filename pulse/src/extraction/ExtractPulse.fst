@@ -61,7 +61,7 @@ let zero_for_deref = EQualified (["C"], "_zero_for_deref")
 let pulse_translate_expr : translate_expr_t = fun env e ->
   let e = flatten_app e in
   if !dbg
-  then BU.print1_warning "ExtractPulse.pulse_translate_expr %s\n" (mlexpr_to_string e);
+  then Format.print1_warning "ExtractPulse.pulse_translate_expr %s\n" (mlexpr_to_string e);
   let cb = translate_expr env in
   match e.expr with
 

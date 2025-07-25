@@ -16,6 +16,7 @@
 
 module Pulse2Rust.Env
 
+open FStarC
 open FStarC.Util
 open FStarC.List
 open FStarC.Effect
@@ -29,13 +30,13 @@ open RustBindings
 
 
 let fail (s:string) =
-  failwith (format1 "Pulse to Rust extraction failed: %s" s)
+  failwith (Format.fmt1 "Pulse to Rust extraction failed: %s" s)
 
 let fail_nyi (s:string) =
-  failwith (format1 "Pulse to Rust extraction failed: no support yet for %s" s)
+  failwith (Format.fmt1 "Pulse to Rust extraction failed: no support yet for %s" s)
 
 let reachable_defs_to_string (d:reachable_defs) : string =
-  d |> elems |> String.concat ";" |> format1 "[%s]"
+  d |> elems |> String.concat ";" |> Format.fmt1 "[%s]"
 
 let empty_env (external_libs:list string) (d:dict) (all_modules:list string) (reachable_defs:reachable_defs) =
   { external_libs;
