@@ -433,48 +433,27 @@ let is_bool_op op =
   mk_bool_op op <> None
 
 let mk_op = function
-  | "add" | "op_Plus_Hat" | "add_underspec" ->
-      Some Add
-  | "add_mod" | "op_Plus_Percent_Hat" ->
-      Some AddW
-  | "sub" | "op_Subtraction_Hat" | "sub_underspec" ->
-      Some Sub
-  | "sub_mod" | "op_Subtraction_Percent_Hat" ->
-      Some SubW
-  | "mul" | "op_Star_Hat" | "mul_underspec" ->
-      Some Mult
-  | "mul_mod" | "op_Star_Percent_Hat" ->
-      Some MultW
-  | "div" | "op_Slash_Hat" ->
-      Some Div
-  | "div_mod" | "op_Slash_Percent_Hat" ->
-      Some DivW
-  | "rem" | "op_Percent_Hat" ->
-      Some Mod
-  | "logor" | "op_Bar_Hat" ->
-      Some BOr
-  | "logxor" | "op_Hat_Hat" ->
-      Some BXor
-  | "logand" | "op_Amp_Hat" ->
-      Some BAnd
-  | "lognot" ->
-      Some BNot
-  | "shift_right" | "op_Greater_Greater_Hat" ->
-      Some BShiftR
-  | "shift_left" | "op_Less_Less_Hat" ->
-      Some BShiftL
-  | "eq" | "op_Equals_Hat" ->
-      Some Eq
-  | "op_Greater_Hat" | "gt" ->
-      Some Gt
-  | "op_Greater_Equals_Hat" | "gte" ->
-      Some Gte
-  | "op_Less_Hat" | "lt" ->
-      Some Lt
-  | "op_Less_Equals_Hat" | "lte" ->
-      Some Lte
-  | _ ->
-      None
+  | "add" | "add_underspec"  -> Some Add
+  | "add_mod"                -> Some AddW
+  | "sub" | "sub_underspec"  -> Some Sub
+  | "sub_mod"                -> Some SubW
+  | "mul" |  "mul_underspec" -> Some Mult
+  | "mul_mod"                -> Some MultW
+  | "div"                    -> Some Div
+  | "div_mod"                -> Some DivW
+  | "rem"                    -> Some Mod
+  | "logor"                  -> Some BOr
+  | "logxor"                 -> Some BXor
+  | "logand"                 -> Some BAnd
+  | "lognot"                 -> Some BNot
+  | "shift_right"            -> Some BShiftR
+  | "shift_left"             -> Some BShiftL
+  | "eq"                     -> Some Eq
+  |  "gt"                    -> Some Gt
+  |  "gte"                   -> Some Gte
+  | "lt"                     -> Some Lt
+  | "lte"                    -> Some Lte
+  | _                        -> None
 
 let is_op op =
   mk_op op <> None

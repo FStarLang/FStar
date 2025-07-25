@@ -294,28 +294,28 @@ let gte_mask (a:t) (b:t)
 #pop-options
 
 (*** Infix notations *)
-unfold let ( +^ )  = add
-unfold let ( +?^ ) = add_underspec
-unfold let ( +%^ ) = add_mod
-unfold let ( -^ )  = sub
-unfold let ( -?^ ) = sub_underspec
-unfold let ( -%^ ) = sub_mod
-unfold let ( *^ ) = mul
-unfold let ( *?^ )= mul_underspec
-unfold let ( *%^ )= mul_mod
-unfold let ( /^ )  = div
-unfold let ( %^ )  = rem
-unfold let ( ^^ )  = logxor
-unfold let ( &^ )  = logand
-unfold let ( |^ )  = logor
-unfold let ( <<^ ) = shift_left
-unfold let ( >>^ ) = shift_right
-unfold let ( =^ )  = eq
-unfold let ( <>^ ) = ne
-unfold let ( >^ )  = gt
-unfold let ( >=^ ) = gte
-unfold let ( <^ )  = lt
-unfold let ( <=^ ) = lte
+inline_for_extraction unfold let ( +^ )  = add
+inline_for_extraction unfold let ( +?^ ) = add_underspec
+inline_for_extraction unfold let ( +%^ ) = add_mod
+inline_for_extraction unfold let ( -^ )  = sub
+inline_for_extraction unfold let ( -?^ ) = sub_underspec
+inline_for_extraction unfold let ( -%^ ) = sub_mod
+inline_for_extraction unfold let ( *^ ) = mul
+inline_for_extraction unfold let ( *?^ )= mul_underspec
+inline_for_extraction unfold let ( *%^ )= mul_mod
+inline_for_extraction unfold let ( /^ )  = div
+inline_for_extraction unfold let ( %^ )  = rem
+inline_for_extraction unfold let ( ^^ )  = logxor
+inline_for_extraction unfold let ( &^ )  = logand
+inline_for_extraction unfold let ( |^ )  = logor
+inline_for_extraction unfold let ( <<^ ) = shift_left
+inline_for_extraction unfold let ( >>^ ) = shift_right
+inline_for_extraction unfold let ( =^ )  = eq
+inline_for_extraction unfold let ( <>^ ) = ne
+inline_for_extraction unfold let ( >^ )  = gt
+inline_for_extraction unfold let ( >=^ ) = gte
+inline_for_extraction unfold let ( <^ )  = lt
+inline_for_extraction unfold let ( <=^ ) = lte
 
 (**** To input / output constants *)
 (** In decimal representation *)
