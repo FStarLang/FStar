@@ -497,6 +497,16 @@ val alloc (#a:Type) (x:a) : Tac (tref a)
 val read (#a:Type) (r:tref a) : TacRO a
 val write (#a:Type) (r:tref a) (x:a) : Tac unit
 
+(* During a %splice call, return the list of qualifiers
+attached to the splice declaration. Returns empty if the tactic
+was started outside of a splice. *)
+val splice_quals () : TacRO (list qualifier)
+
+(* During a %splice call, return the list of attributes
+attached to the splice declaration. Returns empty if the tactic
+was started outside of a splice. *)
+val splice_attrs () : TacRO (list term)
+
 (***** APIs used in the meta DSL framework *****)
 
 (** Meta DSL framework is an experimental feature

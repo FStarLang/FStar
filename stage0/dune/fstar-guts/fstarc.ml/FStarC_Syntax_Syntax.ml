@@ -51,11 +51,11 @@ let (pragma_to_string : pragma -> Prims.string) =
     | ShowOptions -> "#show-options"
     | ResetOptions (FStar_Pervasives_Native.None) -> "#reset-options"
     | ResetOptions (FStar_Pervasives_Native.Some s) ->
-        FStarC_Util.format1 "#reset-options \"%s\"" s
-    | SetOptions s -> FStarC_Util.format1 "#set-options \"%s\"" s
+        FStarC_Format.fmt1 "#reset-options \"%s\"" s
+    | SetOptions s -> FStarC_Format.fmt1 "#set-options \"%s\"" s
     | PushOptions (FStar_Pervasives_Native.None) -> "#push-options"
     | PushOptions (FStar_Pervasives_Native.Some s) ->
-        FStarC_Util.format1 "#push-options \"%s\"" s
+        FStarC_Format.fmt1 "#push-options \"%s\"" s
     | RestartSolver -> "#restart-solver"
     | PrintEffectsGraph -> "#print-effects-graph"
     | PopOptions -> "#pop-options"
@@ -1315,10 +1315,10 @@ let rec (delta_depth_to_string : delta_depth -> Prims.string) =
   fun uu___ ->
     match uu___ with
     | Delta_constant_at_level i ->
-        let uu___1 = FStarC_Util.string_of_int i in
+        let uu___1 = FStarC_Class_Show.show FStarC_Class_Show.showable_int i in
         Prims.strcat "Delta_constant_at_level " uu___1
     | Delta_equational_at_level i ->
-        let uu___1 = FStarC_Util.string_of_int i in
+        let uu___1 = FStarC_Class_Show.show FStarC_Class_Show.showable_int i in
         Prims.strcat "Delta_equational_at_level " uu___1
     | Delta_abstract d ->
         let uu___1 =
@@ -2849,16 +2849,17 @@ let (as_aqual_implicit : Prims.bool -> aqual) =
     else FStar_Pervasives_Native.None
 let (pat_bvs : pat -> bv Prims.list) =
   fun p ->
-    let rec aux b p1 =
-      match p1.v with
-      | Pat_dot_term uu___ -> b
-      | Pat_constant uu___ -> b
-      | Pat_var x -> x :: b
-      | Pat_cons (uu___, uu___1, pats) ->
-          FStarC_List.fold_left
-            (fun b1 ->
-               fun uu___2 -> match uu___2 with | (p2, uu___3) -> aux b1 p2) b
-            pats in
+    let rec aux b =
+      fun p1 ->
+        match p1.v with
+        | Pat_dot_term uu___ -> b
+        | Pat_constant uu___ -> b
+        | Pat_var x -> x :: b
+        | Pat_cons (uu___, uu___1, pats) ->
+            FStarC_List.fold_left
+              (fun b1 ->
+                 fun uu___2 -> match uu___2 with | (p2, uu___3) -> aux b1 p2)
+              b pats in
     let uu___ = aux [] p in FStarC_List.rev uu___
 let (freshen_binder : binder -> binder) =
   fun b ->
@@ -2875,7 +2876,7 @@ let (new_univ_name :
     let id = FStarC_GenSym.next_id () in
     let uu___ =
       let uu___1 =
-        let uu___2 = FStarC_Util.string_of_int id in
+        let uu___2 = FStarC_Class_Show.show FStarC_Class_Show.showable_int id in
         Prims.strcat FStarC_Ident.reserved_prefix uu___2 in
       (uu___1, (range_of_ropt ropt)) in
     FStarC_Ident.mk_ident uu___
@@ -3173,8 +3174,8 @@ let (is_ident_allowed_by_restriction' :
                  match uu___2 with
                  | (dest_id, renamed_id) ->
                      FStarC_Class_Deq.op_Equals_Question deq_univ_name
-                       (FStarC_Util.dflt dest_id renamed_id) id) allow_list in
-          FStarC_Util.map_opt uu___1 FStar_Pervasives_Native.fst
+                       (FStarC_Option.dflt dest_id renamed_id) id) allow_list in
+          FStarC_Option.map FStar_Pervasives_Native.fst uu___1
 let (is_ident_allowed_by_restriction :
   FStarC_Ident.ident ->
     restriction -> FStarC_Ident.ident FStar_Pervasives_Native.option)
@@ -3196,15 +3197,17 @@ let (is_ident_allowed_by_restriction :
                    FStarC_Class_Show.show show_restriction restriction1 in
                  let uu___8 =
                    let uu___9 =
-                     FStarC_Class_Show.show
-                       (FStarC_Class_Show.show_option
-                          FStarC_Ident.showable_ident) result in
+                     let uu___10 =
+                       FStarC_Class_Show.show
+                         (FStarC_Class_Show.show_option
+                            FStarC_Ident.showable_ident) result in
+                     Prims.strcat uu___10 "\n" in
                    Prims.strcat ") = " uu___9 in
                  Prims.strcat uu___7 uu___8 in
                Prims.strcat ", " uu___6 in
              Prims.strcat uu___4 uu___5 in
            Prims.strcat "is_ident_allowed_by_restriction(" uu___3 in
-         FStarC_Util.print_endline uu___2
+         FStarC_Format.print_string uu___2
        else ());
       result
 let has_range_syntax : 'a . unit -> 'a syntax FStarC_Class_HasRange.hasRange
@@ -3281,6 +3284,16 @@ let (hasRange_ctx_uvar : ctx_uvar FStarC_Class_HasRange.hasRange) =
              ctx_uvar_meta = (u.ctx_uvar_meta)
            })
   }
+let (sli : FStarC_Ident.lident -> Prims.string) =
+  fun l ->
+    let uu___ = FStarC_Options.print_real_names () in
+    if uu___
+    then FStarC_Ident.string_of_lid l
+    else
+      (let uu___2 = FStarC_Ident.ident_of_lid l in
+       FStarC_Ident.string_of_id uu___2)
+let (showable_fv : fv FStarC_Class_Show.showable) =
+  { FStarC_Class_Show.show = (fun fv1 -> sli (fv1.fv_name).v) }
 let (showable_lazy_kind : lazy_kind FStarC_Class_Show.showable) =
   {
     FStarC_Class_Show.show =
@@ -3324,6 +3337,73 @@ let (showable_restriction : restriction FStarC_Class_Show.showable) =
                        (FStarC_Class_Show.show_option
                           FStarC_Ident.showable_ident))) l in
              Prims.strcat "AllowList " uu___1)
+  }
+let (showable_unresolved_constructor :
+  unresolved_constructor FStarC_Class_Show.showable) =
+  {
+    FStarC_Class_Show.show =
+      (fun uc ->
+         let uu___ =
+           let uu___1 =
+             FStarC_Class_Show.show FStarC_Class_Show.showable_bool
+               uc.uc_base_term in
+           let uu___2 =
+             let uu___3 =
+               let uu___4 =
+                 FStarC_Class_Show.show
+                   (FStarC_Class_Show.show_option
+                      FStarC_Ident.showable_lident) uc.uc_typename in
+               let uu___5 =
+                 let uu___6 =
+                   let uu___7 =
+                     FStarC_Class_Show.show
+                       (FStarC_Class_Show.show_list
+                          FStarC_Ident.showable_lident) uc.uc_fields in
+                   Prims.strcat uu___7 " }" in
+                 Prims.strcat "; uc_fields = " uu___6 in
+               Prims.strcat uu___4 uu___5 in
+             Prims.strcat "; uc_typename = " uu___3 in
+           Prims.strcat uu___1 uu___2 in
+         Prims.strcat "{ uc_base_term = " uu___)
+  }
+let (showable_fv_qual : fv_qual FStarC_Class_Show.showable) =
+  {
+    FStarC_Class_Show.show =
+      (fun uu___ ->
+         match uu___ with
+         | Data_ctor -> "Data_ctor"
+         | Record_projector p ->
+             let uu___1 =
+               let uu___2 =
+                 FStarC_Class_Show.show
+                   (FStarC_Class_Show.show_tuple2
+                      FStarC_Ident.showable_lident
+                      FStarC_Ident.showable_ident) p in
+               Prims.strcat uu___2 ")" in
+             Prims.strcat "Record_projector (" uu___1
+         | Record_ctor p ->
+             let uu___1 =
+               let uu___2 =
+                 FStarC_Class_Show.show
+                   (FStarC_Class_Show.show_tuple2
+                      FStarC_Ident.showable_lident
+                      (FStarC_Class_Show.show_list
+                         FStarC_Ident.showable_ident)) p in
+               Prims.strcat uu___2 ")" in
+             Prims.strcat "Record_ctor (" uu___1
+         | Unresolved_projector p ->
+             let uu___1 =
+               let uu___2 =
+                 FStarC_Class_Show.show
+                   (FStarC_Class_Show.show_option showable_fv) p in
+               Prims.strcat uu___2 ")" in
+             Prims.strcat "Unresolved_projector (" uu___1
+         | Unresolved_constructor p ->
+             let uu___1 =
+               let uu___2 =
+                 FStarC_Class_Show.show showable_unresolved_constructor p in
+               Prims.strcat uu___2 ")" in
+             Prims.strcat "Unresolved_constructor (" uu___1)
   }
 let (deq_lazy_kind : lazy_kind FStarC_Class_Deq.deq) =
   {

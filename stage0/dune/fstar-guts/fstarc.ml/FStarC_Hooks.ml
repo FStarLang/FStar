@@ -47,7 +47,7 @@ let (lazy_chooser :
       | FStarC_Syntax_Syntax.Lazy_embedding (uu___, t) ->
           FStarC_Thunk.force t
       | FStarC_Syntax_Syntax.Lazy_extension s ->
-          let uu___ = FStarC_Util.format1 "((extension %s))" s in
+          let uu___ = FStarC_Format.fmt1 "((extension %s))" s in
           FStarC_Syntax_Util.exp_string uu___
 let (setup_hooks : unit -> unit) =
   fun uu___ ->

@@ -12,15 +12,6 @@ let is_symbol c = if c > 255 then false else BatChar.is_symbol (BatChar.chr c)
 let is_punctuation c = List.mem c [33; 34; 35; 37; 38; 39; 40; 41; 42; 44; 45; 46; 47; 58; 59; 63; 64; 91; 92; 93; 95; 123; 125]
 (*'!','"','#','%','&','\'','(',')','*',',','-','.','/',':',';','?','@','[','\\',']','_','{','}'*)
 
-let return_all x = x
-
-type time_of_day = float
-let get_time_of_day () = BatUnix.gettimeofday()
-let get_time_of_day_ms () = Z.of_int (int_of_float (get_time_of_day () *. 1000.0))
-let get_file_last_modification_time f = (BatUnix.stat f).BatUnix.st_mtime
-let is_before t1 t2 = compare t1 t2 < 0
-let string_of_time_of_day = string_of_float
-
 exception Impos
 
 let cur_sigint_handler : Sys.signal_behavior ref =
@@ -90,7 +81,7 @@ type proc =
      stop_marker: (string -> bool) option;
      id : string;
      prog : string;
-     start_time : time_of_day}
+    }
 
 let all_procs : (proc list) ref = ref []
 
@@ -146,8 +137,7 @@ let start_process'
                errc = Unix.in_channel_of_descr stderr_r;
                outc = Unix.out_channel_of_descr stdin_w;
                stop_marker = stop_marker;
-               killed = false;
-               start_time = get_time_of_day()} in
+               killed = false; } in
   (* print_string ("Started process " ^ proc.id ^ "\n" ^ (stack_dump())); *)
   all_procs := proc :: !all_procs;
   proc
@@ -353,112 +343,12 @@ let poll_stdin (f:float) =
     with
     | _ -> false
 
-type string_builder = BatBuffer.t
-let new_string_builder () = BatBuffer.create 256
-let clear_string_builder b = BatBuffer.clear b
-let string_of_string_builder b = BatBuffer.contents b
-let string_builder_append b s = BatBuffer.add_string b s
-
 let message_of_exn (e:exn) = Printexc.to_string e
 let trace_of_exn (e:exn) = Printexc.get_backtrace ()
-
-(* restore pre-2.11 BatString.nsplit behavior,
-   see https://github.com/ocaml-batteries-team/batteries-included/issues/845 *)
-let batstring_nsplit s t =
-  if s = "" then [] else BatString.split_on_string t s
-
-let format (fmt:string) (args:string list) =
-  let frags = batstring_nsplit fmt "%s" in
-  if BatList.length frags <> BatList.length args + 1 then
-    failwith ("Not enough arguments to format string " ^fmt^ " : expected " ^ (Stdlib.string_of_int (BatList.length frags)) ^ " got [" ^ (BatString.concat ", " args) ^ "] frags are [" ^ (BatString.concat ", " frags) ^ "]")
-  else
-    let sbldr = new_string_builder () in
-    string_builder_append sbldr (List.hd frags);
-    BatList.iter2
-        (fun frag arg -> string_builder_append sbldr arg;
-                         string_builder_append sbldr frag)
-        (List.tl frags) args;
-    string_of_string_builder sbldr
-
-let format1 f a = format f [a]
-let format2 f a b = format f [a;b]
-let format3 f a b c = format f [a;b;c]
-let format4 f a b c d = format f [a;b;c;d]
-let format5 f a b c d e = format f [a;b;c;d;e]
-let format6 f a b c d e g = format f [a;b;c;d;e;g]
-
-let flush_stdout () = flush stdout
-
-let stdout_isatty () = Some (Unix.isatty Unix.stdout)
-
-(* NOTE: this is deciding whether or not to color by looking
-   at stdout_isatty(), which may be a wrong choice if
-   we're instead outputting to stderr. e.g.
-     fstar.exe Blah.fst 2>errlog
-   will colorize the errors in the file if stdout is not
-   also redirected.
-*)
-let colorize s colors =
-  match colors with
-  | (c1,c2) ->
-     match stdout_isatty () with
-     | Some true -> format3 "%s%s%s" c1 s c2
-     | _ -> s
-
-let colorize_bold s =
-  match stdout_isatty () with
-  | Some true -> format3 "%s%s%s" "\x1b[39;1m" s "\x1b[0m"
-  | _ -> s
-
-let colorize_red s =
-  match stdout_isatty () with
-  | Some true -> format3 "%s%s%s" "\x1b[31;1m" s "\x1b[0m"
-  | _ -> s
-
-let colorize_yellow s =
-  match stdout_isatty () with
-  | Some true -> format3 "%s%s%s" "\x1b[33;1m" s "\x1b[0m"
-  | _ -> s
-
-let colorize_cyan s =
-  match stdout_isatty () with
-  | Some true -> format3 "%s%s%s" "\x1b[36;1m" s "\x1b[0m"
-  | _ -> s
-
-let colorize_green s =
-  match stdout_isatty () with
-  | Some true -> format3 "%s%s%s" "\x1b[32;1m" s "\x1b[0m"
-  | _ -> s
-
-let colorize_magenta  s =
-  match stdout_isatty () with
-  | Some true -> format3 "%s%s%s" "\x1b[35;1m" s "\x1b[0m"
-  | _ -> s
-
 let pr  = Printf.printf
 let spr = Printf.sprintf
 let fpr = Printf.fprintf
 
-type printer = {
-  printer_prinfo: string -> unit;
-  printer_prwarning: string -> unit;
-  printer_prerror: string -> unit;
-  printer_prgeneric: string -> (unit -> string) -> (unit -> json) -> unit
-}
-
-let default_printer =
-  { printer_prinfo = (fun s -> pr "%s" s; flush stdout);
-    printer_prwarning = (fun s -> fpr stderr "%s" (colorize_yellow s); flush stdout; flush stderr);
-    printer_prerror = (fun s -> fpr stderr "%s" (colorize_red s); flush stdout; flush stderr);
-    printer_prgeneric = fun label get_string get_json -> pr "%s: %s" label (get_string ())}
-
-let current_printer = ref default_printer
-let set_printer printer = current_printer := printer
-
-let print_raw s = set_binary_mode_out stdout true; pr "%s" s; flush stdout
-let print_string s = (!current_printer).printer_prinfo s
-let print_generic label to_string to_json a = (!current_printer).printer_prgeneric label (fun () -> to_string a) (fun () -> to_json a)
-let print_any s = (!current_printer).printer_prinfo (Marshal.to_string s [])
 let strcat s1 s2 = s1 ^ s2
 let concat_l sep (l:string list) = BatString.concat sep l
 
@@ -491,8 +381,6 @@ let float_of_int64 = BatInt64.to_float
 let int_of_int32 i = i
 let int32_of_int i = BatInt32.of_int i
 
-let string_of_int = Z.to_string
-let string_of_bool = string_of_bool
 let string_of_int32 = BatInt32.to_string
 let string_of_int64 = BatInt64.to_string
 let string_of_float = string_of_float
@@ -524,42 +412,9 @@ let splitlines s = split s "\n"
 let iof = int_of_float
 let foi = float_of_int
 
-let print1 a b = print_string (format1 a b)
-let print2 a b c = print_string (format2 a b c)
-let print3 a b c d = print_string (format3 a b c d)
-let print4 a b c d e = print_string (format4 a b c d e)
-let print5 a b c d e f = print_string (format5 a b c d e f)
-let print6 a b c d e f g = print_string (format6 a b c d e f g)
-let print fmt args = print_string (format fmt args)
-
-let print_error s = (!current_printer).printer_prerror s
-let print1_error a b = print_error (format1 a b)
-let print2_error a b c = print_error (format2 a b c)
-let print3_error a b c d = print_error (format3 a b c d)
-
-let print_warning s = (!current_printer).printer_prwarning s
-let print1_warning a b = print_warning (format1 a b)
-let print2_warning a b c = print_warning (format2 a b c)
-let print3_warning a b c d = print_warning (format3 a b c d)
-
-let fprint (oc:out_channel) fmt args : unit = Printf.fprintf oc "%s" (format fmt args)
+let fprint (oc:out_channel) fmt args : unit = Printf.fprintf oc "%s" (FStarC_Format.fmt fmt args)
 
 [@@deriving yojson,show]
-
-let is_left = function
-  | FStar_Pervasives.Inl _ -> true
-  | _ -> false
-
-let is_right = function
-  | FStar_Pervasives.Inr _ -> true
-  | _ -> false
-
-let left = function
-  | FStar_Pervasives.Inl x -> x
-  | _ -> failwith "Not in left"
-let right = function
-  | FStar_Pervasives.Inr x -> x
-  | _ -> failwith "Not in right"
 
 let (-<-) f g x = f (g x)
 
@@ -581,48 +436,8 @@ let remove_dups f l =
     | _ -> out in
   aux [] l
 
-let is_none = function
-  | None -> true
-  | Some _ -> false
-
-let is_some = function
-  | None -> false
-  | Some _ -> true
-
-let must = function
-  | Some x -> x
-  | None -> failwith "Empty option"
-
-let dflt x = function
-  | None   -> x
-  | Some x -> x
-
-let find_opt f l =
-  let rec aux = function
-    | [] -> None
-    | hd::tl -> if f hd then Some hd else aux tl in
-  aux l
-
 (* JP: why so many duplicates? :'( *)
 let sort_with = FStar_List.sortWith
-
-let bind_opt opt f =
-  match opt with
-  | None -> None
-  | Some x -> f x
-
-let catch_opt opt f =
-  match opt with
-  | Some x -> opt
-  | None -> f ()
-
-let map_opt opt f =
-  match opt with
-  | None -> None
-  | Some x -> Some (f x)
-
-let iter_opt opt f =
-  ignore (map_opt opt f)
 
 let rec find_map l f =
   match l with
@@ -808,12 +623,20 @@ let geq (i:int) (j:int) = i >= j
    executable, we must resolve all links, so we use realpath. *)
 let exec_name = Unix.realpath Sys.executable_name
 
+(* This is how F* was called, i.e. argv[0] in Unix. For example
+   it may be `./bin/fstar.exe` if we are running it from the
+   repository. *)
+let argv0 = Sys.argv.(0)
+
 let get_exec_dir () = Filename.dirname exec_name
 let get_cmd_args () = Array.to_list Sys.argv
 let expand_environment_variable x = try Some (Sys.getenv x) with Not_found -> None
 
 let physical_equality (x:'a) (y:'a) = x == y
-let check_sharing a b msg = if physical_equality a b then print1 "Sharing OK: %s\n" msg else print1 "Sharing broken in %s\n" msg
+let check_sharing a b msg =
+  if physical_equality a b
+  then pr "Sharing OK: %s\n" msg
+  else pr "Sharing broken in %s\n" msg
 
 type oWriter = {
   write_byte: char -> unit;
@@ -906,8 +729,6 @@ let getcwd = Sys.getcwd
 
 let print_endline = print_endline
 
-let map_option f opt = BatOption.map f opt
-
 let maybe_create_parent (fname:string) : unit =
   let d = Filename.dirname fname in
   if Sys.file_exists d && Sys.is_directory d then ()
@@ -996,7 +817,7 @@ let ensure_decimal s = Z.to_string (Z.of_string s)
 let measure_execution_time tag f =
   let t = Sys.time () in
   let retv = f () in
-  print2 "Execution time of %s: %s ms\n" tag (string_of_float (1000.0 *. (Sys.time() -. t)));
+  pr "Execution time of %s: %s ms\n" tag (string_of_float (1000.0 *. (Sys.time() -. t)));
   retv
 
 let return_execution_time f =
@@ -1051,7 +872,7 @@ let print_array (f: 'a -> string)
                 (s: 'a array)
   : string 
   = let ls = Array.fold_left (fun out a -> f a  :: out) [] s in
-    format1 "[| %s |]" (String.concat "; " (List.rev ls))
+    Printf.sprintf "[| %s |]" (String.concat "; " (List.rev ls))
 
 let array_of_list (l:'a list) = FStar_ImmutableArray_Base.of_list l
 

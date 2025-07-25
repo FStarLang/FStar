@@ -21,7 +21,12 @@ let (gbrackets : FStarC_Pprint.document -> FStarC_Pprint.document) =
 let (pp_unit : unit pretty) =
   { pp = (fun uu___ -> FStarC_Pprint.doc_of_string "()") }
 let (pp_int : Prims.int pretty) =
-  { pp = (fun x -> FStarC_Pprint.doc_of_string (Prims.string_of_int x)) }
+  {
+    pp =
+      (fun x ->
+         let uu___ = FStarC_Class_Show.show FStarC_Class_Show.showable_int x in
+         FStarC_Pprint.doc_of_string uu___)
+  }
 let (pp_bool : Prims.bool pretty) = { pp = FStarC_Pprint.doc_of_bool }
 let pp_list : 'a . 'a pretty -> 'a Prims.list pretty =
   fun uu___ ->

@@ -20,27 +20,27 @@ let rec __knot_e_binder _ =
        match tm_0 with
        | ("FStar.Tactics.NamedView.Mkbinder",
           uniq_2::ppname_3::sort_4::qual_5::attrs_6::[]) ->
-           Fstarcompiler.FStarC_Util.bind_opt
+           Fstarcompiler.FStarC_Option.bind
              (Fstarcompiler.FStarC_Syntax_Embeddings_Base.extracted_unembed
                 Fstarcompiler.FStarC_Syntax_Embeddings.e_int uniq_2)
              (fun uniq_2 ->
-                Fstarcompiler.FStarC_Util.bind_opt
+                Fstarcompiler.FStarC_Option.bind
                   (Fstarcompiler.FStarC_Syntax_Embeddings_Base.extracted_unembed
                      (Fstarcompiler.FStarC_Syntax_Embeddings.e_sealed
                         Fstarcompiler.FStarC_Syntax_Embeddings.e_string)
                      ppname_3)
                   (fun ppname_3 ->
-                     Fstarcompiler.FStarC_Util.bind_opt
+                     Fstarcompiler.FStarC_Option.bind
                        (Fstarcompiler.FStarC_Syntax_Embeddings_Base.extracted_unembed
                           Fstarcompiler.FStarC_Reflection_V2_Embeddings.e_term
                           sort_4)
                        (fun sort_4 ->
-                          Fstarcompiler.FStarC_Util.bind_opt
+                          Fstarcompiler.FStarC_Option.bind
                             (Fstarcompiler.FStarC_Syntax_Embeddings_Base.extracted_unembed
                                Fstarcompiler.FStarC_Reflection_V2_Embeddings.e_aqualv
                                qual_5)
                             (fun qual_5 ->
-                               Fstarcompiler.FStarC_Util.bind_opt
+                               Fstarcompiler.FStarC_Option.bind
                                  (Fstarcompiler.FStarC_Syntax_Embeddings_Base.extracted_unembed
                                     (Fstarcompiler.FStarC_Syntax_Embeddings.e_list
                                        Fstarcompiler.FStarC_Reflection_V2_Embeddings.e_term)
@@ -118,25 +118,25 @@ let rec __knot_e_named_universe_view _ =
        | ("FStar.Tactics.NamedView.Uv_Zero", []) ->
            FStar_Pervasives_Native.Some Uv_Zero
        | ("FStar.Tactics.NamedView.Uv_Succ", _0_17::[]) ->
-           Fstarcompiler.FStarC_Util.bind_opt
+           Fstarcompiler.FStarC_Option.bind
              (Fstarcompiler.FStarC_Syntax_Embeddings_Base.extracted_unembed
                 Fstarcompiler.FStarC_Reflection_V2_Embeddings.e_universe
                 _0_17)
              (fun _0_17 -> FStar_Pervasives_Native.Some (Uv_Succ _0_17))
        | ("FStar.Tactics.NamedView.Uv_Max", _0_19::[]) ->
-           Fstarcompiler.FStarC_Util.bind_opt
+           Fstarcompiler.FStarC_Option.bind
              (Fstarcompiler.FStarC_Syntax_Embeddings_Base.extracted_unembed
                 (Fstarcompiler.FStarC_Syntax_Embeddings.e_list
                    Fstarcompiler.FStarC_Reflection_V2_Embeddings.e_universe)
                 _0_19)
              (fun _0_19 -> FStar_Pervasives_Native.Some (Uv_Max _0_19))
        | ("FStar.Tactics.NamedView.Uv_BVar", _0_21::[]) ->
-           Fstarcompiler.FStarC_Util.bind_opt
+           Fstarcompiler.FStarC_Option.bind
              (Fstarcompiler.FStarC_Syntax_Embeddings_Base.extracted_unembed
                 Fstarcompiler.FStarC_Syntax_Embeddings.e_int _0_21)
              (fun _0_21 -> FStar_Pervasives_Native.Some (Uv_BVar _0_21))
        | ("FStar.Tactics.NamedView.Uv_Name", _0_23::[]) ->
-           Fstarcompiler.FStarC_Util.bind_opt
+           Fstarcompiler.FStarC_Option.bind
              (Fstarcompiler.FStarC_Syntax_Embeddings_Base.extracted_unembed
                 (Fstarcompiler.FStarC_Syntax_Embeddings.e_tuple2
                    Fstarcompiler.FStarC_Syntax_Embeddings.e_string
@@ -145,7 +145,7 @@ let rec __knot_e_named_universe_view _ =
                 _0_23)
              (fun _0_23 -> FStar_Pervasives_Native.Some (Uv_Name _0_23))
        | ("FStar.Tactics.NamedView.Uv_Unif", _0_25::[]) ->
-           Fstarcompiler.FStarC_Util.bind_opt
+           Fstarcompiler.FStarC_Option.bind
              (Fstarcompiler.FStarC_Syntax_Embeddings_Base.extracted_unembed
                 Fstarcompiler.FStarC_Reflection_V2_Embeddings.e_universe_uvar
                 _0_25)
@@ -262,7 +262,7 @@ let rec __knot_e_pattern__Pat_Constant__payload _ =
        match tm_40 with
        | ("FStar.Tactics.NamedView.Mkpattern__Pat_Constant__payload",
           c_42::[]) ->
-           Fstarcompiler.FStarC_Util.bind_opt
+           Fstarcompiler.FStarC_Option.bind
              (Fstarcompiler.FStarC_Syntax_Embeddings_Base.extracted_unembed
                 Fstarcompiler.FStarC_Reflection_V2_Embeddings.e_vconst c_42)
              (fun c_42 -> FStar_Pervasives_Native.Some { c = c_42 })
@@ -284,18 +284,18 @@ and __knot_e_pattern__Pat_Cons__payload _ =
        match tm_46 with
        | ("FStar.Tactics.NamedView.Mkpattern__Pat_Cons__payload",
           head_48::univs_49::subpats_50::[]) ->
-           Fstarcompiler.FStarC_Util.bind_opt
+           Fstarcompiler.FStarC_Option.bind
              (Fstarcompiler.FStarC_Syntax_Embeddings_Base.extracted_unembed
                 Fstarcompiler.FStarC_Reflection_V2_Embeddings.e_fv head_48)
              (fun head_48 ->
-                Fstarcompiler.FStarC_Util.bind_opt
+                Fstarcompiler.FStarC_Option.bind
                   (Fstarcompiler.FStarC_Syntax_Embeddings_Base.extracted_unembed
                      (Fstarcompiler.FStarC_Syntax_Embeddings.e_option
                         (Fstarcompiler.FStarC_Syntax_Embeddings.e_list
                            Fstarcompiler.FStarC_Reflection_V2_Embeddings.e_universe))
                      univs_49)
                   (fun univs_49 ->
-                     Fstarcompiler.FStarC_Util.bind_opt
+                     Fstarcompiler.FStarC_Option.bind
                        (Fstarcompiler.FStarC_Syntax_Embeddings_Base.extracted_unembed
                           (Fstarcompiler.FStarC_Syntax_Embeddings.e_list
                              (Fstarcompiler.FStarC_Syntax_Embeddings.e_tuple2
@@ -338,12 +338,12 @@ and __knot_e_pattern__Pat_Var__payload _ =
        match tm_56 with
        | ("FStar.Tactics.NamedView.Mkpattern__Pat_Var__payload",
           v_58::sort_59::[]) ->
-           Fstarcompiler.FStarC_Util.bind_opt
+           Fstarcompiler.FStarC_Option.bind
              (Fstarcompiler.FStarC_Syntax_Embeddings_Base.extracted_unembed
                 Fstarcompiler.FStarC_Reflection_V2_Embeddings.e_namedv_view
                 v_58)
              (fun v_58 ->
-                Fstarcompiler.FStarC_Util.bind_opt
+                Fstarcompiler.FStarC_Option.bind
                   (Fstarcompiler.FStarC_Syntax_Embeddings_Base.extracted_unembed
                      (Fstarcompiler.FStarC_Syntax_Embeddings.e_sealed
                         Fstarcompiler.FStarC_Reflection_V2_Embeddings.e_term)
@@ -373,7 +373,7 @@ and __knot_e_pattern__Pat_Dot_Term__payload _ =
        match tm_64 with
        | ("FStar.Tactics.NamedView.Mkpattern__Pat_Dot_Term__payload",
           t_66::[]) ->
-           Fstarcompiler.FStarC_Util.bind_opt
+           Fstarcompiler.FStarC_Option.bind
              (Fstarcompiler.FStarC_Syntax_Embeddings_Base.extracted_unembed
                 (Fstarcompiler.FStarC_Syntax_Embeddings.e_option
                    Fstarcompiler.FStarC_Reflection_V2_Embeddings.e_term) t_66)
@@ -396,22 +396,22 @@ and __knot_e_pattern _ =
     (fun tm_70 ->
        match tm_70 with
        | ("FStar.Tactics.NamedView.Pat_Constant", _0_72::[]) ->
-           Fstarcompiler.FStarC_Util.bind_opt
+           Fstarcompiler.FStarC_Option.bind
              (Fstarcompiler.FStarC_Syntax_Embeddings_Base.extracted_unembed
                 (__knot_e_pattern__Pat_Constant__payload ()) _0_72)
              (fun _0_72 -> FStar_Pervasives_Native.Some (Pat_Constant _0_72))
        | ("FStar.Tactics.NamedView.Pat_Cons", _0_74::[]) ->
-           Fstarcompiler.FStarC_Util.bind_opt
+           Fstarcompiler.FStarC_Option.bind
              (Fstarcompiler.FStarC_Syntax_Embeddings_Base.extracted_unembed
                 (__knot_e_pattern__Pat_Cons__payload ()) _0_74)
              (fun _0_74 -> FStar_Pervasives_Native.Some (Pat_Cons _0_74))
        | ("FStar.Tactics.NamedView.Pat_Var", _0_76::[]) ->
-           Fstarcompiler.FStarC_Util.bind_opt
+           Fstarcompiler.FStarC_Option.bind
              (Fstarcompiler.FStarC_Syntax_Embeddings_Base.extracted_unembed
                 (__knot_e_pattern__Pat_Var__payload ()) _0_76)
              (fun _0_76 -> FStar_Pervasives_Native.Some (Pat_Var _0_76))
        | ("FStar.Tactics.NamedView.Pat_Dot_Term", _0_78::[]) ->
-           Fstarcompiler.FStarC_Util.bind_opt
+           Fstarcompiler.FStarC_Option.bind
              (Fstarcompiler.FStarC_Syntax_Embeddings_Base.extracted_unembed
                 (__knot_e_pattern__Pat_Dot_Term__payload ()) _0_78)
              (fun _0_78 -> FStar_Pervasives_Native.Some (Pat_Dot_Term _0_78))
@@ -535,27 +535,27 @@ let rec __knot_e_named_term_view _ =
     (fun tm_88 ->
        match tm_88 with
        | ("FStar.Tactics.NamedView.Tv_Var", v_90::[]) ->
-           Fstarcompiler.FStarC_Util.bind_opt
+           Fstarcompiler.FStarC_Option.bind
              (Fstarcompiler.FStarC_Syntax_Embeddings_Base.extracted_unembed
                 Fstarcompiler.FStarC_Reflection_V2_Embeddings.e_namedv_view
                 v_90)
              (fun v_90 -> FStar_Pervasives_Native.Some (Tv_Var v_90))
        | ("FStar.Tactics.NamedView.Tv_BVar", v_92::[]) ->
-           Fstarcompiler.FStarC_Util.bind_opt
+           Fstarcompiler.FStarC_Option.bind
              (Fstarcompiler.FStarC_Syntax_Embeddings_Base.extracted_unembed
                 Fstarcompiler.FStarC_Reflection_V2_Embeddings.e_bv_view v_92)
              (fun v_92 -> FStar_Pervasives_Native.Some (Tv_BVar v_92))
        | ("FStar.Tactics.NamedView.Tv_FVar", v_94::[]) ->
-           Fstarcompiler.FStarC_Util.bind_opt
+           Fstarcompiler.FStarC_Option.bind
              (Fstarcompiler.FStarC_Syntax_Embeddings_Base.extracted_unembed
                 Fstarcompiler.FStarC_Reflection_V2_Embeddings.e_fv v_94)
              (fun v_94 -> FStar_Pervasives_Native.Some (Tv_FVar v_94))
        | ("FStar.Tactics.NamedView.Tv_UInst", v_96::us_97::[]) ->
-           Fstarcompiler.FStarC_Util.bind_opt
+           Fstarcompiler.FStarC_Option.bind
              (Fstarcompiler.FStarC_Syntax_Embeddings_Base.extracted_unembed
                 Fstarcompiler.FStarC_Reflection_V2_Embeddings.e_fv v_96)
              (fun v_96 ->
-                Fstarcompiler.FStarC_Util.bind_opt
+                Fstarcompiler.FStarC_Option.bind
                   (Fstarcompiler.FStarC_Syntax_Embeddings_Base.extracted_unembed
                      (Fstarcompiler.FStarC_Syntax_Embeddings.e_list
                         Fstarcompiler.FStarC_Reflection_V2_Embeddings.e_universe)
@@ -563,11 +563,11 @@ let rec __knot_e_named_term_view _ =
                   (fun us_97 ->
                      FStar_Pervasives_Native.Some (Tv_UInst (v_96, us_97))))
        | ("FStar.Tactics.NamedView.Tv_App", hd_99::a_100::[]) ->
-           Fstarcompiler.FStarC_Util.bind_opt
+           Fstarcompiler.FStarC_Option.bind
              (Fstarcompiler.FStarC_Syntax_Embeddings_Base.extracted_unembed
                 Fstarcompiler.FStarC_Reflection_V2_Embeddings.e_term hd_99)
              (fun hd_99 ->
-                Fstarcompiler.FStarC_Util.bind_opt
+                Fstarcompiler.FStarC_Option.bind
                   (Fstarcompiler.FStarC_Syntax_Embeddings_Base.extracted_unembed
                      (Fstarcompiler.FStarC_Syntax_Embeddings.e_tuple2
                         Fstarcompiler.FStarC_Reflection_V2_Embeddings.e_term
@@ -576,39 +576,39 @@ let rec __knot_e_named_term_view _ =
                   (fun a_100 ->
                      FStar_Pervasives_Native.Some (Tv_App (hd_99, a_100))))
        | ("FStar.Tactics.NamedView.Tv_Abs", b_102::body_103::[]) ->
-           Fstarcompiler.FStarC_Util.bind_opt
+           Fstarcompiler.FStarC_Option.bind
              (Fstarcompiler.FStarC_Syntax_Embeddings_Base.extracted_unembed
                 e_binder b_102)
              (fun b_102 ->
-                Fstarcompiler.FStarC_Util.bind_opt
+                Fstarcompiler.FStarC_Option.bind
                   (Fstarcompiler.FStarC_Syntax_Embeddings_Base.extracted_unembed
                      Fstarcompiler.FStarC_Reflection_V2_Embeddings.e_term
                      body_103)
                   (fun body_103 ->
                      FStar_Pervasives_Native.Some (Tv_Abs (b_102, body_103))))
        | ("FStar.Tactics.NamedView.Tv_Arrow", b_105::c_106::[]) ->
-           Fstarcompiler.FStarC_Util.bind_opt
+           Fstarcompiler.FStarC_Option.bind
              (Fstarcompiler.FStarC_Syntax_Embeddings_Base.extracted_unembed
                 e_binder b_105)
              (fun b_105 ->
-                Fstarcompiler.FStarC_Util.bind_opt
+                Fstarcompiler.FStarC_Option.bind
                   (Fstarcompiler.FStarC_Syntax_Embeddings_Base.extracted_unembed
                      Fstarcompiler.FStarC_Reflection_V2_Embeddings.e_comp_view
                      c_106)
                   (fun c_106 ->
                      FStar_Pervasives_Native.Some (Tv_Arrow (b_105, c_106))))
        | ("FStar.Tactics.NamedView.Tv_Type", _0_108::[]) ->
-           Fstarcompiler.FStarC_Util.bind_opt
+           Fstarcompiler.FStarC_Option.bind
              (Fstarcompiler.FStarC_Syntax_Embeddings_Base.extracted_unembed
                 Fstarcompiler.FStarC_Reflection_V2_Embeddings.e_universe
                 _0_108)
              (fun _0_108 -> FStar_Pervasives_Native.Some (Tv_Type _0_108))
        | ("FStar.Tactics.NamedView.Tv_Refine", b_110::ref_111::[]) ->
-           Fstarcompiler.FStarC_Util.bind_opt
+           Fstarcompiler.FStarC_Option.bind
              (Fstarcompiler.FStarC_Syntax_Embeddings_Base.extracted_unembed
                 e_binder b_110)
              (fun b_110 ->
-                Fstarcompiler.FStarC_Util.bind_opt
+                Fstarcompiler.FStarC_Option.bind
                   (Fstarcompiler.FStarC_Syntax_Embeddings_Base.extracted_unembed
                      Fstarcompiler.FStarC_Reflection_V2_Embeddings.e_term
                      ref_111)
@@ -616,16 +616,16 @@ let rec __knot_e_named_term_view _ =
                      FStar_Pervasives_Native.Some
                        (Tv_Refine (b_110, ref_111))))
        | ("FStar.Tactics.NamedView.Tv_Const", _0_113::[]) ->
-           Fstarcompiler.FStarC_Util.bind_opt
+           Fstarcompiler.FStarC_Option.bind
              (Fstarcompiler.FStarC_Syntax_Embeddings_Base.extracted_unembed
                 Fstarcompiler.FStarC_Reflection_V2_Embeddings.e_vconst _0_113)
              (fun _0_113 -> FStar_Pervasives_Native.Some (Tv_Const _0_113))
        | ("FStar.Tactics.NamedView.Tv_Uvar", _0_115::_1_116::[]) ->
-           Fstarcompiler.FStarC_Util.bind_opt
+           Fstarcompiler.FStarC_Option.bind
              (Fstarcompiler.FStarC_Syntax_Embeddings_Base.extracted_unembed
                 Fstarcompiler.FStarC_Syntax_Embeddings.e_int _0_115)
              (fun _0_115 ->
-                Fstarcompiler.FStarC_Util.bind_opt
+                Fstarcompiler.FStarC_Option.bind
                   (Fstarcompiler.FStarC_Syntax_Embeddings_Base.extracted_unembed
                      Fstarcompiler.FStarC_Reflection_V2_Embeddings.e_ctx_uvar_and_subst
                      _1_116)
@@ -633,26 +633,26 @@ let rec __knot_e_named_term_view _ =
                      FStar_Pervasives_Native.Some (Tv_Uvar (_0_115, _1_116))))
        | ("FStar.Tactics.NamedView.Tv_Let",
           recf_118::attrs_119::b_120::def_121::body_122::[]) ->
-           Fstarcompiler.FStarC_Util.bind_opt
+           Fstarcompiler.FStarC_Option.bind
              (Fstarcompiler.FStarC_Syntax_Embeddings_Base.extracted_unembed
                 Fstarcompiler.FStarC_Syntax_Embeddings.e_bool recf_118)
              (fun recf_118 ->
-                Fstarcompiler.FStarC_Util.bind_opt
+                Fstarcompiler.FStarC_Option.bind
                   (Fstarcompiler.FStarC_Syntax_Embeddings_Base.extracted_unembed
                      (Fstarcompiler.FStarC_Syntax_Embeddings.e_list
                         Fstarcompiler.FStarC_Reflection_V2_Embeddings.e_term)
                      attrs_119)
                   (fun attrs_119 ->
-                     Fstarcompiler.FStarC_Util.bind_opt
+                     Fstarcompiler.FStarC_Option.bind
                        (Fstarcompiler.FStarC_Syntax_Embeddings_Base.extracted_unembed
                           e_binder b_120)
                        (fun b_120 ->
-                          Fstarcompiler.FStarC_Util.bind_opt
+                          Fstarcompiler.FStarC_Option.bind
                             (Fstarcompiler.FStarC_Syntax_Embeddings_Base.extracted_unembed
                                Fstarcompiler.FStarC_Reflection_V2_Embeddings.e_term
                                def_121)
                             (fun def_121 ->
-                               Fstarcompiler.FStarC_Util.bind_opt
+                               Fstarcompiler.FStarC_Option.bind
                                  (Fstarcompiler.FStarC_Syntax_Embeddings_Base.extracted_unembed
                                     Fstarcompiler.FStarC_Reflection_V2_Embeddings.e_term
                                     body_122)
@@ -663,12 +663,12 @@ let rec __knot_e_named_term_view _ =
                                            def_121, body_122)))))))
        | ("FStar.Tactics.NamedView.Tv_Match",
           scrutinee_124::ret_125::brs_126::[]) ->
-           Fstarcompiler.FStarC_Util.bind_opt
+           Fstarcompiler.FStarC_Option.bind
              (Fstarcompiler.FStarC_Syntax_Embeddings_Base.extracted_unembed
                 Fstarcompiler.FStarC_Reflection_V2_Embeddings.e_term
                 scrutinee_124)
              (fun scrutinee_124 ->
-                Fstarcompiler.FStarC_Util.bind_opt
+                Fstarcompiler.FStarC_Option.bind
                   (Fstarcompiler.FStarC_Syntax_Embeddings_Base.extracted_unembed
                      (Fstarcompiler.FStarC_Syntax_Embeddings.e_option
                         (Fstarcompiler.FStarC_Syntax_Embeddings.e_tuple2
@@ -682,7 +682,7 @@ let rec __knot_e_named_term_view _ =
                               Fstarcompiler.FStarC_Syntax_Embeddings.e_bool)))
                      ret_125)
                   (fun ret_125 ->
-                     Fstarcompiler.FStarC_Util.bind_opt
+                     Fstarcompiler.FStarC_Option.bind
                        (Fstarcompiler.FStarC_Syntax_Embeddings_Base.extracted_unembed
                           (Fstarcompiler.FStarC_Syntax_Embeddings.e_list
                              (Fstarcompiler.FStarC_Syntax_Embeddings.e_tuple2
@@ -694,22 +694,22 @@ let rec __knot_e_named_term_view _ =
                             (Tv_Match (scrutinee_124, ret_125, brs_126)))))
        | ("FStar.Tactics.NamedView.Tv_AscribedT",
           e_128::t_129::tac_130::use_eq_131::[]) ->
-           Fstarcompiler.FStarC_Util.bind_opt
+           Fstarcompiler.FStarC_Option.bind
              (Fstarcompiler.FStarC_Syntax_Embeddings_Base.extracted_unembed
                 Fstarcompiler.FStarC_Reflection_V2_Embeddings.e_term e_128)
              (fun e_128 ->
-                Fstarcompiler.FStarC_Util.bind_opt
+                Fstarcompiler.FStarC_Option.bind
                   (Fstarcompiler.FStarC_Syntax_Embeddings_Base.extracted_unembed
                      Fstarcompiler.FStarC_Reflection_V2_Embeddings.e_term
                      t_129)
                   (fun t_129 ->
-                     Fstarcompiler.FStarC_Util.bind_opt
+                     Fstarcompiler.FStarC_Option.bind
                        (Fstarcompiler.FStarC_Syntax_Embeddings_Base.extracted_unembed
                           (Fstarcompiler.FStarC_Syntax_Embeddings.e_option
                              Fstarcompiler.FStarC_Reflection_V2_Embeddings.e_term)
                           tac_130)
                        (fun tac_130 ->
-                          Fstarcompiler.FStarC_Util.bind_opt
+                          Fstarcompiler.FStarC_Option.bind
                             (Fstarcompiler.FStarC_Syntax_Embeddings_Base.extracted_unembed
                                Fstarcompiler.FStarC_Syntax_Embeddings.e_bool
                                use_eq_131)
@@ -719,22 +719,22 @@ let rec __knot_e_named_term_view _ =
                                     (e_128, t_129, tac_130, use_eq_131))))))
        | ("FStar.Tactics.NamedView.Tv_AscribedC",
           e_133::c_134::tac_135::use_eq_136::[]) ->
-           Fstarcompiler.FStarC_Util.bind_opt
+           Fstarcompiler.FStarC_Option.bind
              (Fstarcompiler.FStarC_Syntax_Embeddings_Base.extracted_unembed
                 Fstarcompiler.FStarC_Reflection_V2_Embeddings.e_term e_133)
              (fun e_133 ->
-                Fstarcompiler.FStarC_Util.bind_opt
+                Fstarcompiler.FStarC_Option.bind
                   (Fstarcompiler.FStarC_Syntax_Embeddings_Base.extracted_unembed
                      Fstarcompiler.FStarC_Reflection_V2_Embeddings.e_comp_view
                      c_134)
                   (fun c_134 ->
-                     Fstarcompiler.FStarC_Util.bind_opt
+                     Fstarcompiler.FStarC_Option.bind
                        (Fstarcompiler.FStarC_Syntax_Embeddings_Base.extracted_unembed
                           (Fstarcompiler.FStarC_Syntax_Embeddings.e_option
                              Fstarcompiler.FStarC_Reflection_V2_Embeddings.e_term)
                           tac_135)
                        (fun tac_135 ->
-                          Fstarcompiler.FStarC_Util.bind_opt
+                          Fstarcompiler.FStarC_Option.bind
                             (Fstarcompiler.FStarC_Syntax_Embeddings_Base.extracted_unembed
                                Fstarcompiler.FStarC_Syntax_Embeddings.e_bool
                                use_eq_136)
@@ -1110,11 +1110,11 @@ let rec __knot_e_letbinding _ =
        match tm_190 with
        | ("FStar.Tactics.NamedView.Mkletbinding",
           lb_fv_192::lb_us_193::lb_typ_194::lb_def_195::[]) ->
-           Fstarcompiler.FStarC_Util.bind_opt
+           Fstarcompiler.FStarC_Option.bind
              (Fstarcompiler.FStarC_Syntax_Embeddings_Base.extracted_unembed
                 Fstarcompiler.FStarC_Reflection_V2_Embeddings.e_fv lb_fv_192)
              (fun lb_fv_192 ->
-                Fstarcompiler.FStarC_Util.bind_opt
+                Fstarcompiler.FStarC_Option.bind
                   (Fstarcompiler.FStarC_Syntax_Embeddings_Base.extracted_unembed
                      (Fstarcompiler.FStarC_Syntax_Embeddings.e_list
                         (Fstarcompiler.FStarC_Syntax_Embeddings.e_tuple2
@@ -1123,12 +1123,12 @@ let rec __knot_e_letbinding _ =
                               Fstarcompiler.FStarC_Syntax_Embeddings.e___range)))
                      lb_us_193)
                   (fun lb_us_193 ->
-                     Fstarcompiler.FStarC_Util.bind_opt
+                     Fstarcompiler.FStarC_Option.bind
                        (Fstarcompiler.FStarC_Syntax_Embeddings_Base.extracted_unembed
                           Fstarcompiler.FStarC_Reflection_V2_Embeddings.e_term
                           lb_typ_194)
                        (fun lb_typ_194 ->
-                          Fstarcompiler.FStarC_Util.bind_opt
+                          Fstarcompiler.FStarC_Option.bind
                             (Fstarcompiler.FStarC_Syntax_Embeddings_Base.extracted_unembed
                                Fstarcompiler.FStarC_Reflection_V2_Embeddings.e_term
                                lb_def_195)
@@ -1209,11 +1209,11 @@ let rec __knot_e_named_sigelt_view__Sg_Let__payload _ =
        match tm_202 with
        | ("FStar.Tactics.NamedView.Mknamed_sigelt_view__Sg_Let__payload",
           isrec_204::lbs_205::[]) ->
-           Fstarcompiler.FStarC_Util.bind_opt
+           Fstarcompiler.FStarC_Option.bind
              (Fstarcompiler.FStarC_Syntax_Embeddings_Base.extracted_unembed
                 Fstarcompiler.FStarC_Syntax_Embeddings.e_bool isrec_204)
              (fun isrec_204 ->
-                Fstarcompiler.FStarC_Util.bind_opt
+                Fstarcompiler.FStarC_Option.bind
                   (Fstarcompiler.FStarC_Syntax_Embeddings_Base.extracted_unembed
                      (Fstarcompiler.FStarC_Syntax_Embeddings.e_list
                         e_letbinding) lbs_205)
@@ -1241,12 +1241,12 @@ and __knot_e_named_sigelt_view__Sg_Inductive__payload _ =
        match tm_210 with
        | ("FStar.Tactics.NamedView.Mknamed_sigelt_view__Sg_Inductive__payload",
           nm_212::univs_213::params_214::typ_215::ctors_216::[]) ->
-           Fstarcompiler.FStarC_Util.bind_opt
+           Fstarcompiler.FStarC_Option.bind
              (Fstarcompiler.FStarC_Syntax_Embeddings_Base.extracted_unembed
                 (Fstarcompiler.FStarC_Syntax_Embeddings.e_list
                    Fstarcompiler.FStarC_Syntax_Embeddings.e_string) nm_212)
              (fun nm_212 ->
-                Fstarcompiler.FStarC_Util.bind_opt
+                Fstarcompiler.FStarC_Option.bind
                   (Fstarcompiler.FStarC_Syntax_Embeddings_Base.extracted_unembed
                      (Fstarcompiler.FStarC_Syntax_Embeddings.e_list
                         (Fstarcompiler.FStarC_Syntax_Embeddings.e_tuple2
@@ -1255,17 +1255,17 @@ and __knot_e_named_sigelt_view__Sg_Inductive__payload _ =
                               Fstarcompiler.FStarC_Syntax_Embeddings.e___range)))
                      univs_213)
                   (fun univs_213 ->
-                     Fstarcompiler.FStarC_Util.bind_opt
+                     Fstarcompiler.FStarC_Option.bind
                        (Fstarcompiler.FStarC_Syntax_Embeddings_Base.extracted_unembed
                           (Fstarcompiler.FStarC_Syntax_Embeddings.e_list
                              e_binder) params_214)
                        (fun params_214 ->
-                          Fstarcompiler.FStarC_Util.bind_opt
+                          Fstarcompiler.FStarC_Option.bind
                             (Fstarcompiler.FStarC_Syntax_Embeddings_Base.extracted_unembed
                                Fstarcompiler.FStarC_Reflection_V2_Embeddings.e_term
                                typ_215)
                             (fun typ_215 ->
-                               Fstarcompiler.FStarC_Util.bind_opt
+                               Fstarcompiler.FStarC_Option.bind
                                  (Fstarcompiler.FStarC_Syntax_Embeddings_Base.extracted_unembed
                                     (Fstarcompiler.FStarC_Syntax_Embeddings.e_list
                                        (Fstarcompiler.FStarC_Syntax_Embeddings.e_tuple2
@@ -1322,12 +1322,12 @@ and __knot_e_named_sigelt_view__Sg_Val__payload _ =
        match tm_224 with
        | ("FStar.Tactics.NamedView.Mknamed_sigelt_view__Sg_Val__payload",
           nm_226::univs_227::typ_228::[]) ->
-           Fstarcompiler.FStarC_Util.bind_opt
+           Fstarcompiler.FStarC_Option.bind
              (Fstarcompiler.FStarC_Syntax_Embeddings_Base.extracted_unembed
                 (Fstarcompiler.FStarC_Syntax_Embeddings.e_list
                    Fstarcompiler.FStarC_Syntax_Embeddings.e_string) nm_226)
              (fun nm_226 ->
-                Fstarcompiler.FStarC_Util.bind_opt
+                Fstarcompiler.FStarC_Option.bind
                   (Fstarcompiler.FStarC_Syntax_Embeddings_Base.extracted_unembed
                      (Fstarcompiler.FStarC_Syntax_Embeddings.e_list
                         (Fstarcompiler.FStarC_Syntax_Embeddings.e_tuple2
@@ -1336,7 +1336,7 @@ and __knot_e_named_sigelt_view__Sg_Val__payload _ =
                               Fstarcompiler.FStarC_Syntax_Embeddings.e___range)))
                      univs_227)
                   (fun univs_227 ->
-                     Fstarcompiler.FStarC_Util.bind_opt
+                     Fstarcompiler.FStarC_Option.bind
                        (Fstarcompiler.FStarC_Syntax_Embeddings_Base.extracted_unembed
                           Fstarcompiler.FStarC_Reflection_V2_Embeddings.e_term
                           typ_228)
@@ -1375,18 +1375,18 @@ and __knot_e_named_sigelt_view _ =
     (fun tm_234 ->
        match tm_234 with
        | ("FStar.Tactics.NamedView.Sg_Let", _0_236::[]) ->
-           Fstarcompiler.FStarC_Util.bind_opt
+           Fstarcompiler.FStarC_Option.bind
              (Fstarcompiler.FStarC_Syntax_Embeddings_Base.extracted_unembed
                 (__knot_e_named_sigelt_view__Sg_Let__payload ()) _0_236)
              (fun _0_236 -> FStar_Pervasives_Native.Some (Sg_Let _0_236))
        | ("FStar.Tactics.NamedView.Sg_Inductive", _0_238::[]) ->
-           Fstarcompiler.FStarC_Util.bind_opt
+           Fstarcompiler.FStarC_Option.bind
              (Fstarcompiler.FStarC_Syntax_Embeddings_Base.extracted_unembed
                 (__knot_e_named_sigelt_view__Sg_Inductive__payload ()) _0_238)
              (fun _0_238 ->
                 FStar_Pervasives_Native.Some (Sg_Inductive _0_238))
        | ("FStar.Tactics.NamedView.Sg_Val", _0_240::[]) ->
-           Fstarcompiler.FStarC_Util.bind_opt
+           Fstarcompiler.FStarC_Option.bind
              (Fstarcompiler.FStarC_Syntax_Embeddings_Base.extracted_unembed
                 (__knot_e_named_sigelt_view__Sg_Val__payload ()) _0_240)
              (fun _0_240 -> FStar_Pervasives_Native.Some (Sg_Val _0_240))
@@ -2230,16 +2230,18 @@ let (close_term_n :
   =
   fun bs ->
     fun t ->
-      let rec aux bs1 cbs s =
-        match bs1 with
-        | [] -> (cbs, s)
-        | b::bs2 ->
-            let b1 = subst_binder_sort s b in
-            let nv = r_binder_to_namedv b1 in
-            let b2 = close_binder b1 in
-            aux bs2 (b2 :: cbs)
-              ((FStarC_Syntax_Syntax.NM (nv, Prims.int_zero)) ::
-              (FStar_Reflection_V2_Derived.shift_subst Prims.int_one s)) in
+      let rec aux bs1 =
+        fun cbs ->
+          fun s ->
+            match bs1 with
+            | [] -> (cbs, s)
+            | b::bs2 ->
+                let b1 = subst_binder_sort s b in
+                let nv = r_binder_to_namedv b1 in
+                let b2 = close_binder b1 in
+                aux bs2 (b2 :: cbs)
+                  ((FStarC_Syntax_Syntax.NM (nv, Prims.int_zero)) ::
+                  (FStar_Reflection_V2_Derived.shift_subst Prims.int_one s)) in
       let uu___ = aux bs [] [] in
       match uu___ with
       | (cbs, s) ->

@@ -84,7 +84,8 @@ let (tag : Prims.string -> unit) =
     let uu___ = any () in
     if uu___
     then
-      FStarC_Util.print_string (Prims.strcat "DEBUG:" (Prims.strcat s "\n"))
+      FStarC_Format.print_string
+        (Prims.strcat "DEBUG:" (Prims.strcat s "\n"))
     else ()
 let (enable : unit -> unit) =
   fun uu___ -> FStarC_Effect.op_Colon_Equals anyref true
@@ -123,7 +124,18 @@ let (enable_toggles : Prims.string Prims.list -> unit) =
          | "High" -> set_level_high ()
          | "Extreme" -> set_level_extreme ()
          | uu___1 ->
-             let t = get_toggle k in FStarC_Effect.op_Colon_Equals t true)
+             let uu___2 =
+               ((FStarC_String.length k) > Prims.int_zero) &&
+                 (let uu___3 = FStarC_String.get k Prims.int_zero in
+                  uu___3 = 45) in
+             if uu___2
+             then
+               let k1 =
+                 FStarC_String.substring k Prims.int_one
+                   ((FStarC_String.length k) - Prims.int_one) in
+               let t = get_toggle k1 in FStarC_Effect.op_Colon_Equals t false
+             else
+               (let t = get_toggle k in FStarC_Effect.op_Colon_Equals t true))
       keys
 let (disable_all : unit -> unit) =
   fun uu___ ->

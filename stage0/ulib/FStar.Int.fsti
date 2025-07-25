@@ -62,7 +62,7 @@ let op_At_Percent (v:int) (p:int{p>0/\ p%2=0}) : Tot int =
 
 let zero (n:pos) : Tot (int_t n) = 0
 
-#push-options "--initial_fuel 1 --max_fuel 1"
+#push-options "--fuel 1"
 
 let pow2_n (#n:pos) (p:nat{p < n-1}) : Tot (int_t n) =
   pow2_le_compat (n - 2) p; pow2 p
@@ -114,7 +114,7 @@ val add_underspec: #n:pos -> a:int_t n -> b:int_t n -> Pure (int_t n)
   (ensures (fun c ->
     size (a + b) n ==> a + b = c))
 
-#push-options "--initial_fuel 1 --max_fuel 1"
+#push-options "--fuel 1"
 
 let add_mod (#n:pos) (a:int_t n) (b:int_t n) : Tot (int_t n) =
   (a + b) @% (pow2 n)
@@ -177,10 +177,11 @@ let mod (#n:pos) (a:int_t n) (b:int_t n{b <> 0}) : Tot (int_t n) =
   a - ((a/b) * b)
 
 (* Comparison operators *)
-let eq #n (a:int_t n) (b:int_t n) : Tot bool = a = b
-let gt #n (a:int_t n) (b:int_t n) : Tot bool = a > b
+let eq  #n (a:int_t n) (b:int_t n) : Tot bool = a = b
+let ne  #n (a:int_t n) (b:int_t n) : Tot bool = a <> b
+let gt  #n (a:int_t n) (b:int_t n) : Tot bool = a > b
 let gte #n (a:int_t n) (b:int_t n) : Tot bool = a >= b
-let lt #n (a:int_t n) (b:int_t n) : Tot bool = a < b
+let lt  #n (a:int_t n) (b:int_t n) : Tot bool = a < b
 let lte #n (a:int_t n) (b:int_t n) : Tot bool = a <= b
 
 /// Casts

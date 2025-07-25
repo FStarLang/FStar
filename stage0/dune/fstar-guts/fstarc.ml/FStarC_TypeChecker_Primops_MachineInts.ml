@@ -1,7 +1,7 @@
 open Prims
 type 'a mymon =
-  (FStarC_TypeChecker_Primops_Base.primitive_step Prims.list, unit, 'a)
-    FStarC_Writer.writer
+  (FStarC_TypeChecker_Primops_Base.primitive_step Prims.list, Obj.t, 
+    'a) FStarC_Writer.writer
 let (bounded_arith_ops_for : FStarC_MachineInts.machint_kind -> unit mymon) =
   fun k ->
     let mod_name = FStarC_MachineInts.module_name_for k in
@@ -33,8 +33,7 @@ let (bounded_arith_ops_for : FStarC_MachineInts.machint_kind -> unit mymon) =
                  fun y ->
                    let uu___6 =
                      let uu___7 = FStarC_MachineInts.v k x in
-                     let uu___8 = FStarC_MachineInts.v k y in
-                     FStarC_BigInt.add_big_int uu___7 uu___8 in
+                     let uu___8 = FStarC_MachineInts.v k y in uu___7 + uu___8 in
                    FStarC_MachineInts.make_as k x uu___6) in
           let uu___5 =
             let uu___6 =
@@ -51,7 +50,7 @@ let (bounded_arith_ops_for : FStarC_MachineInts.machint_kind -> unit mymon) =
                      let uu___8 =
                        let uu___9 = FStarC_MachineInts.v k x in
                        let uu___10 = FStarC_MachineInts.v k y in
-                       FStarC_BigInt.sub_big_int uu___9 uu___10 in
+                       uu___9 - uu___10 in
                      FStarC_MachineInts.make_as k x uu___8) in
             let uu___7 =
               let uu___8 =
@@ -68,7 +67,7 @@ let (bounded_arith_ops_for : FStarC_MachineInts.machint_kind -> unit mymon) =
                        let uu___10 =
                          let uu___11 = FStarC_MachineInts.v k x in
                          let uu___12 = FStarC_MachineInts.v k y in
-                         FStarC_BigInt.mult_big_int uu___11 uu___12 in
+                         uu___11 * uu___12 in
                        FStarC_MachineInts.make_as k x uu___10) in
               let uu___9 =
                 let uu___10 =
@@ -84,7 +83,7 @@ let (bounded_arith_ops_for : FStarC_MachineInts.machint_kind -> unit mymon) =
                        fun y ->
                          let uu___12 = FStarC_MachineInts.v k x in
                          let uu___13 = FStarC_MachineInts.v k y in
-                         FStarC_BigInt.gt_big_int uu___12 uu___13) in
+                         uu___12 > uu___13) in
                 let uu___11 =
                   let uu___12 =
                     let uu___13 = nm "gte" in
@@ -99,7 +98,7 @@ let (bounded_arith_ops_for : FStarC_MachineInts.machint_kind -> unit mymon) =
                          fun y ->
                            let uu___14 = FStarC_MachineInts.v k x in
                            let uu___15 = FStarC_MachineInts.v k y in
-                           FStarC_BigInt.ge_big_int uu___14 uu___15) in
+                           uu___14 >= uu___15) in
                   let uu___13 =
                     let uu___14 =
                       let uu___15 = nm "lt" in
@@ -114,7 +113,7 @@ let (bounded_arith_ops_for : FStarC_MachineInts.machint_kind -> unit mymon) =
                            fun y ->
                              let uu___16 = FStarC_MachineInts.v k x in
                              let uu___17 = FStarC_MachineInts.v k y in
-                             FStarC_BigInt.lt_big_int uu___16 uu___17) in
+                             uu___16 < uu___17) in
                     let uu___15 =
                       let uu___16 =
                         let uu___17 = nm "lte" in
@@ -129,7 +128,7 @@ let (bounded_arith_ops_for : FStarC_MachineInts.machint_kind -> unit mymon) =
                              fun y ->
                                let uu___18 = FStarC_MachineInts.v k x in
                                let uu___19 = FStarC_MachineInts.v k y in
-                               FStarC_BigInt.le_big_int uu___18 uu___19) in
+                               uu___18 <= uu___19) in
                       [uu___16] in
                     uu___14 :: uu___15 in
                   uu___12 :: uu___13 in
@@ -146,10 +145,8 @@ let (bounded_arith_ops_for : FStarC_MachineInts.machint_kind -> unit mymon) =
          (fun uu___1 ->
             let uu___1 = Obj.magic uu___1 in
             let sz = FStarC_MachineInts.width k in
-            let modulus =
-              let uu___2 = FStarC_BigInt.of_int_fs sz in
-              FStarC_BigInt.shift_left_big_int FStarC_BigInt.one uu___2 in
-            let mod1 x = FStarC_BigInt.mod_big_int x modulus in
+            let modulus = Prims.pow2 sz in
+            let mod1 x = x mod modulus in
             let uu___2 =
               let uu___3 = FStarC_MachineInts.is_unsigned k in
               if uu___3
@@ -170,7 +167,7 @@ let (bounded_arith_ops_for : FStarC_MachineInts.machint_kind -> unit mymon) =
                              let uu___8 =
                                let uu___9 = FStarC_MachineInts.v k x in
                                let uu___10 = FStarC_MachineInts.v k y in
-                               FStarC_BigInt.add_big_int uu___9 uu___10 in
+                               uu___9 + uu___10 in
                              mod1 uu___8 in
                            FStarC_MachineInts.make_as k x uu___7) in
                   let uu___6 =
@@ -189,7 +186,7 @@ let (bounded_arith_ops_for : FStarC_MachineInts.machint_kind -> unit mymon) =
                                let uu___10 =
                                  let uu___11 = FStarC_MachineInts.v k x in
                                  let uu___12 = FStarC_MachineInts.v k y in
-                                 FStarC_BigInt.sub_big_int uu___11 uu___12 in
+                                 uu___11 - uu___12 in
                                mod1 uu___10 in
                              FStarC_MachineInts.make_as k x uu___9) in
                     let uu___8 =
@@ -208,7 +205,7 @@ let (bounded_arith_ops_for : FStarC_MachineInts.machint_kind -> unit mymon) =
                                  let uu___12 =
                                    let uu___13 = FStarC_MachineInts.v k x in
                                    let uu___14 = FStarC_MachineInts.v k y in
-                                   FStarC_BigInt.div_big_int uu___13 uu___14 in
+                                   uu___13 / uu___14 in
                                  mod1 uu___12 in
                                FStarC_MachineInts.make_as k x uu___11) in
                       let uu___10 =
@@ -227,8 +224,7 @@ let (bounded_arith_ops_for : FStarC_MachineInts.machint_kind -> unit mymon) =
                                    let uu___14 =
                                      let uu___15 = FStarC_MachineInts.v k x in
                                      let uu___16 = FStarC_MachineInts.v k y in
-                                     FStarC_BigInt.mod_big_int uu___15
-                                       uu___16 in
+                                     uu___15 mod uu___16 in
                                    mod1 uu___14 in
                                  FStarC_MachineInts.make_as k x uu___13) in
                         let uu___12 =
@@ -247,8 +243,7 @@ let (bounded_arith_ops_for : FStarC_MachineInts.machint_kind -> unit mymon) =
                                    let uu___15 =
                                      let uu___16 = FStarC_MachineInts.v k x in
                                      let uu___17 = FStarC_MachineInts.v k y in
-                                     FStarC_BigInt.logor_big_int uu___16
-                                       uu___17 in
+                                     FStarC_Int_Extra.logor uu___16 uu___17 in
                                    FStarC_MachineInts.make_as k x uu___15) in
                           let uu___14 =
                             let uu___15 =
@@ -266,7 +261,7 @@ let (bounded_arith_ops_for : FStarC_MachineInts.machint_kind -> unit mymon) =
                                      let uu___17 =
                                        let uu___18 = FStarC_MachineInts.v k x in
                                        let uu___19 = FStarC_MachineInts.v k y in
-                                       FStarC_BigInt.logand_big_int uu___18
+                                       FStarC_Int_Extra.logand uu___18
                                          uu___19 in
                                      FStarC_MachineInts.make_as k x uu___17) in
                             let uu___16 =
@@ -287,7 +282,7 @@ let (bounded_arith_ops_for : FStarC_MachineInts.machint_kind -> unit mymon) =
                                            FStarC_MachineInts.v k x in
                                          let uu___21 =
                                            FStarC_MachineInts.v k y in
-                                         FStarC_BigInt.logxor_big_int uu___20
+                                         FStarC_Int_Extra.logxor uu___20
                                            uu___21 in
                                        FStarC_MachineInts.make_as k x uu___19) in
                               let uu___18 =
@@ -304,11 +299,10 @@ let (bounded_arith_ops_for : FStarC_MachineInts.machint_kind -> unit mymon) =
                                          let uu___22 =
                                            let uu___23 =
                                              FStarC_MachineInts.v k x in
-                                           FStarC_BigInt.lognot_big_int
-                                             uu___23 in
+                                           FStarC_Int_Extra.lognot uu___23 in
                                          let uu___23 =
                                            FStarC_MachineInts.mask k in
-                                         FStarC_BigInt.logand_big_int uu___22
+                                         FStarC_Int_Extra.logand uu___22
                                            uu___23 in
                                        FStarC_MachineInts.make_as k x uu___21) in
                                 let uu___20 =
@@ -334,12 +328,12 @@ let (bounded_arith_ops_for : FStarC_MachineInts.machint_kind -> unit mymon) =
                                                  FStarC_MachineInts.v
                                                    FStarC_MachineInts.UInt32
                                                    y in
-                                               FStarC_BigInt.shift_left_big_int
+                                               FStarC_Int_Extra.shift_left
                                                  uu___25 uu___26 in
                                              let uu___25 =
                                                FStarC_MachineInts.mask k in
-                                             FStarC_BigInt.logand_big_int
-                                               uu___24 uu___25 in
+                                             FStarC_Int_Extra.logand uu___24
+                                               uu___25 in
                                            FStarC_MachineInts.make_as k x
                                              uu___23) in
                                   let uu___22 =
@@ -365,11 +359,11 @@ let (bounded_arith_ops_for : FStarC_MachineInts.machint_kind -> unit mymon) =
                                                    FStarC_MachineInts.v
                                                      FStarC_MachineInts.UInt32
                                                      y in
-                                                 FStarC_BigInt.shift_right_big_int
+                                                 FStarC_Int_Extra.shift_right
                                                    uu___27 uu___28 in
                                                let uu___27 =
                                                  FStarC_MachineInts.mask k in
-                                               FStarC_BigInt.logand_big_int
+                                               FStarC_Int_Extra.logand
                                                  uu___26 uu___27 in
                                              FStarC_MachineInts.make_as k x
                                                uu___25) in
@@ -421,8 +415,7 @@ let (bounded_arith_ops_for : FStarC_MachineInts.machint_kind -> unit mymon) =
                                             FStarC_MachineInts.v k x in
                                           let uu___12 =
                                             FStarC_MachineInts.v k y in
-                                          FStarC_BigInt.add_big_int uu___11
-                                            uu___12 in
+                                          uu___11 + uu___12 in
                                         mod1 uu___10 in
                                       FStarC_MachineInts.make_as k x uu___9) in
                              let uu___8 =
@@ -444,8 +437,7 @@ let (bounded_arith_ops_for : FStarC_MachineInts.machint_kind -> unit mymon) =
                                               FStarC_MachineInts.v k x in
                                             let uu___14 =
                                               FStarC_MachineInts.v k y in
-                                            FStarC_BigInt.sub_big_int uu___13
-                                              uu___14 in
+                                            uu___13 - uu___14 in
                                           mod1 uu___12 in
                                         FStarC_MachineInts.make_as k x
                                           uu___11) in
@@ -468,8 +460,7 @@ let (bounded_arith_ops_for : FStarC_MachineInts.machint_kind -> unit mymon) =
                                                 FStarC_MachineInts.v k x in
                                               let uu___16 =
                                                 FStarC_MachineInts.v k y in
-                                              FStarC_BigInt.mult_big_int
-                                                uu___15 uu___16 in
+                                              uu___15 * uu___16 in
                                             mod1 uu___14 in
                                           FStarC_MachineInts.make_as k x
                                             uu___13) in
@@ -519,8 +510,7 @@ let (bounded_arith_ops_for : FStarC_MachineInts.machint_kind -> unit mymon) =
                                                      let uu___14 =
                                                        FStarC_MachineInts.v k
                                                          y in
-                                                     FStarC_BigInt.mult_big_int
-                                                       uu___13 uu___14 in
+                                                     uu___13 * uu___14 in
                                                    mod1 uu___12 in
                                                  FStarC_MachineInts.make_as k
                                                    x uu___11) in
@@ -571,8 +561,7 @@ let (ops : FStarC_TypeChecker_Primops_Base.primitive_step Prims.list) =
                     (FStarC_MachineInts.e_machint FStarC_MachineInts.UInt32)
                     (FStarC_MachineInts.nbe_machint FStarC_MachineInts.UInt32)
                     (fun c ->
-                       let n =
-                         FStarC_BigInt.of_int_fs (FStarC_Util.int_of_char c) in
+                       let n = FStarC_Util.int_of_char c in
                        FStarC_MachineInts.mk FStarC_MachineInts.UInt32 n
                          FStar_Pervasives_Native.None) in
                 [uu___5] in

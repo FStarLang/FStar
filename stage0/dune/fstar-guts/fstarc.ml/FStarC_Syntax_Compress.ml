@@ -13,7 +13,7 @@ let (compress1_t :
             let uu___ =
               let uu___1 =
                 FStarC_Class_Show.show FStarC_Syntax_Print.showable_ctxu uv in
-              FStarC_Util.format1
+              FStarC_Format.fmt1
                 "Internal error: unexpected unresolved uvar in deep_compress: %s"
                 uu___1 in
             FStarC_Errors.raise_error0
@@ -28,7 +28,7 @@ let (compress1_t :
                 let uu___2 =
                   let uu___3 =
                     FStarC_Class_Show.show FStarC_Syntax_Print.showable_bv bv in
-                  FStarC_Util.format1 "Tm_name %s in deep compress" uu___3 in
+                  FStarC_Format.fmt1 "Tm_name %s in deep compress" uu___3 in
                 FStarC_Errors.log_issue
                   (FStarC_Syntax_Syntax.has_range_syntax ()) t
                   FStarC_Errors_Codes.Warning_NameEscape ()
@@ -91,7 +91,7 @@ let (compress1_u :
                 let uu___2 =
                   let uu___3 =
                     FStarC_Class_Show.show FStarC_Ident.showable_ident bv in
-                  FStarC_Util.format1 "U_name %s in deep compress" uu___3 in
+                  FStarC_Format.fmt1 "U_name %s in deep compress" uu___3 in
                 FStarC_Errors.log_issue0
                   FStarC_Errors_Codes.Warning_NameEscape ()
                   (Obj.magic FStarC_Errors_Msg.is_error_message_string)
@@ -104,7 +104,7 @@ let (compress1_u :
               let uu___1 =
                 let uu___2 = FStarC_Syntax_Unionfind.univ_uvar_id uv in
                 FStarC_Class_Show.show FStarC_Class_Show.showable_int uu___2 in
-              FStarC_Util.format1
+              FStarC_Format.fmt1
                 "Internal error: unexpected unresolved (universe) uvar in deep_compress: %s"
                 uu___1 in
             FStarC_Errors.raise_error0
@@ -119,11 +119,13 @@ let (deep_compress :
   fun allow_uvars ->
     fun allow_names ->
       fun tm ->
-        FStarC_Errors.with_ctx "While deep-compressing a term"
+        FStarC_Stats.record "deep_compress"
           (fun uu___ ->
-             let uu___1 = compress1_t allow_uvars allow_names in
-             let uu___2 = compress1_u allow_uvars allow_names in
-             FStarC_Syntax_Visit.visit_term_univs true uu___1 uu___2 tm)
+             FStarC_Errors.with_ctx "While deep-compressing a term"
+               (fun uu___1 ->
+                  let uu___2 = compress1_t allow_uvars allow_names in
+                  let uu___3 = compress1_u allow_uvars allow_names in
+                  FStarC_Syntax_Visit.visit_term_univs true uu___2 uu___3 tm))
 let (deep_compress_uvars :
   FStarC_Syntax_Syntax.term -> FStarC_Syntax_Syntax.term) =
   deep_compress false true
@@ -156,11 +158,13 @@ let (deep_compress_se :
   fun allow_uvars ->
     fun allow_names ->
       fun se ->
-        let uu___ =
-          let uu___1 = FStarC_Syntax_Print.sigelt_to_string_short se in
-          FStarC_Util.format1 "While deep-compressing %s" uu___1 in
-        FStarC_Errors.with_ctx uu___
-          (fun uu___1 ->
-             let uu___2 = compress1_t allow_uvars allow_names in
-             let uu___3 = compress1_u allow_uvars allow_names in
-             FStarC_Syntax_Visit.visit_sigelt true uu___2 uu___3 se)
+        FStarC_Stats.record "deep_compress_se"
+          (fun uu___ ->
+             let uu___1 =
+               let uu___2 = FStarC_Syntax_Print.sigelt_to_string_short se in
+               FStarC_Format.fmt1 "While deep-compressing %s" uu___2 in
+             FStarC_Errors.with_ctx uu___1
+               (fun uu___2 ->
+                  let uu___3 = compress1_t allow_uvars allow_names in
+                  let uu___4 = compress1_u allow_uvars allow_names in
+                  FStarC_Syntax_Visit.visit_sigelt true uu___3 uu___4 se))

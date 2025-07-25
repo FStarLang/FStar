@@ -7,8 +7,8 @@ let show : 'a . 'a showable -> 'a -> Prims.string =
   fun projectee -> match projectee with | { show = show1;_} -> show1
 let (showable_unit : unit showable) = { show = (fun uu___ -> "()") }
 let (showable_bool : Prims.bool showable) = { show = Prims.string_of_bool }
-let (showable_nat : Prims.nat showable) = { show = Prims.string_of_int }
 let (showable_int : Prims.int showable) = { show = Prims.string_of_int }
+let (showable_nat : Prims.nat showable) = { show = (show showable_int) }
 let (showable_string : Prims.string showable) =
   { show = (fun x -> Prims.strcat "\"" (Prims.strcat x "\"")) }
 let show_list : 'a . 'a showable -> 'a Prims.list showable =

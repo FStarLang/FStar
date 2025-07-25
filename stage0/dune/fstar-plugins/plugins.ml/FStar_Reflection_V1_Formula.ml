@@ -752,12 +752,13 @@ let (term_as_formula_total :
     term_as_formula' (FStar_Reflection_V1_Derived.maybe_unsquash_term t)
 let (formula_as_term_view : formula -> FStarC_Reflection_V1_Data.term_view) =
   fun f ->
-    let mk_app' tv args =
-      FStar_List_Tot_Base.fold_left
-        (fun tv1 ->
-           fun a ->
-             FStarC_Reflection_V1_Data.Tv_App
-               ((FStarC_Reflection_V1_Builtins.pack_ln tv1), a)) tv args in
+    let mk_app' tv =
+      fun args ->
+        FStar_List_Tot_Base.fold_left
+          (fun tv1 ->
+             fun a ->
+               FStarC_Reflection_V1_Data.Tv_App
+                 ((FStarC_Reflection_V1_Builtins.pack_ln tv1), a)) tv args in
     let e = FStarC_Reflection_V1_Data.Q_Explicit in
     let i = FStarC_Reflection_V1_Data.Q_Implicit in
     match f with

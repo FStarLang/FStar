@@ -22,3 +22,4 @@ trigger a cycle. *)
 include FStar.Tactics.V2.Bare
 include FStar.Tactics.MApply0
 include FStar.Tactics.MApply
+include FStar.Tactics.Easy

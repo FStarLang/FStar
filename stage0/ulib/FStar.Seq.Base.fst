@@ -16,7 +16,7 @@
 
 (* A logical theory of sequences indexed by natural numbers in [0, n) *)
 module FStar.Seq.Base
-//#set-options "--initial_fuel 0 --max_fuel 0 --initial_ifuel 1 --max_ifuel 1"
+//#set-options "--fuel 0 --ifuel 1"
 
 module List = FStar.List.Tot
 

@@ -83,14 +83,15 @@ let (subdoc' :
          FStarC_Pprint.op_Hat_Hat uu___1 uu___2)
 let (subdoc : FStarC_Pprint.document -> FStarC_Pprint.document) =
   fun d -> subdoc' true d
-let (rendermsg : error_message -> Prims.string) =
+let (render_as_doc :
+  FStarC_Pprint.document Prims.list -> FStarC_Pprint.document) =
   fun ds ->
     let uu___ =
-      let uu___1 =
-        FStarC_List.map
-          (fun d -> let uu___2 = FStarC_Pprint.group d in subdoc uu___2) ds in
-      FStarC_Pprint.concat uu___1 in
-    renderdoc uu___
+      FStarC_List.map
+        (fun d -> let uu___1 = FStarC_Pprint.group d in subdoc uu___1) ds in
+    FStarC_Pprint.concat uu___
+let (rendermsg : error_message -> Prims.string) =
+  fun ds -> let uu___ = render_as_doc ds in renderdoc uu___
 let (json_of_error_message :
   FStarC_Pprint.document Prims.list -> FStarC_Json.json) =
   fun err_msg ->

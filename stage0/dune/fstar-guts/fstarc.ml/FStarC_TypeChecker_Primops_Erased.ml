@@ -10,59 +10,63 @@ let e_erased :
       'a emb_erased FStarC_Syntax_Embeddings_Base.embedding
   =
   fun d ->
-    let em x rng shadow cbs =
-      let uu___ = x in
-      match uu___ with
-      | Hide x1 ->
-          let h =
-            FStarC_Syntax_Syntax.fvar FStarC_Parser_Const.hide
-              FStar_Pervasives_Native.None in
-          let uu___1 =
-            let uu___2 =
-              let uu___3 = FStarC_Syntax_Embeddings_Base.type_of d in
-              FStarC_Syntax_Syntax.iarg uu___3 in
-            let uu___3 =
-              let uu___4 =
-                let uu___5 =
-                  let uu___6 = FStarC_Syntax_Embeddings_Base.embed d x1 in
-                  uu___6 rng shadow cbs in
-                FStarC_Syntax_Syntax.as_arg uu___5 in
-              [uu___4] in
-            uu___2 :: uu___3 in
-          FStarC_Syntax_Util.mk_app h uu___1 in
-    let un uu___1 uu___ =
-      (fun t ->
-         fun cbs ->
-           let uu___ = FStarC_Syntax_Util.head_and_args t in
-           match uu___ with
-           | (head, args) ->
-               let uu___1 =
-                 let uu___2 =
-                   let uu___3 = FStarC_Syntax_Util.un_uinst head in
-                   uu___3.FStarC_Syntax_Syntax.n in
-                 (uu___2, args) in
-               (match uu___1 with
-                | (FStarC_Syntax_Syntax.Tm_fvar fv,
-                   _t::(a1, FStar_Pervasives_Native.None)::[]) when
-                    FStarC_Syntax_Syntax.fv_eq_lid fv
-                      FStarC_Parser_Const.hide
-                    ->
-                    Obj.magic
-                      (Obj.repr
-                         (let uu___2 =
-                            FStarC_Syntax_Embeddings_Base.unembed d a1 cbs in
-                          FStarC_Class_Monad.op_let_Bang
-                            FStarC_Class_Monad.monad_option () ()
-                            (Obj.magic uu___2)
-                            (fun uu___3 ->
-                               (fun v ->
-                                  let v = Obj.magic v in
-                                  Obj.magic
-                                    (FStarC_Class_Monad.return
-                                       FStarC_Class_Monad.monad_option ()
-                                       (Obj.magic (Hide v)))) uu___3)))
-                | uu___2 -> Obj.magic (Obj.repr FStar_Pervasives_Native.None)))
-        uu___1 uu___ in
+    let em x =
+      fun rng ->
+        fun shadow ->
+          fun cbs ->
+            let uu___ = x in
+            match uu___ with
+            | Hide x1 ->
+                let h =
+                  FStarC_Syntax_Syntax.fvar FStarC_Parser_Const.hide
+                    FStar_Pervasives_Native.None in
+                let ty = FStarC_Syntax_Embeddings_Base.type_of d in
+                let uu___1 =
+                  let uu___2 = FStarC_Syntax_Syntax.iarg ty in
+                  let uu___3 =
+                    let uu___4 =
+                      let uu___5 =
+                        let uu___6 = FStarC_Syntax_Embeddings_Base.embed d x1 in
+                        uu___6 rng shadow cbs in
+                      FStarC_Syntax_Syntax.as_arg uu___5 in
+                    [uu___4] in
+                  uu___2 :: uu___3 in
+                FStarC_Syntax_Util.mk_app h uu___1 in
+    let un uu___1 =
+      fun uu___ ->
+        (fun t ->
+           fun cbs ->
+             let uu___ = FStarC_Syntax_Util.head_and_args t in
+             match uu___ with
+             | (head, args) ->
+                 let uu___1 =
+                   let uu___2 =
+                     let uu___3 = FStarC_Syntax_Util.un_uinst head in
+                     uu___3.FStarC_Syntax_Syntax.n in
+                   (uu___2, args) in
+                 (match uu___1 with
+                  | (FStarC_Syntax_Syntax.Tm_fvar fv,
+                     _t::(a1, FStar_Pervasives_Native.None)::[]) when
+                      FStarC_Syntax_Syntax.fv_eq_lid fv
+                        FStarC_Parser_Const.hide
+                      ->
+                      Obj.magic
+                        (Obj.repr
+                           (let uu___2 =
+                              FStarC_Syntax_Embeddings_Base.unembed d a1 cbs in
+                            FStarC_Class_Monad.op_let_Bang
+                              FStarC_Class_Monad.monad_option () ()
+                              (Obj.magic uu___2)
+                              (fun uu___3 ->
+                                 (fun v ->
+                                    let v = Obj.magic v in
+                                    Obj.magic
+                                      (FStarC_Class_Monad.return
+                                         FStarC_Class_Monad.monad_option ()
+                                         (Obj.magic (Hide v)))) uu___3)))
+                  | uu___2 ->
+                      Obj.magic (Obj.repr FStar_Pervasives_Native.None)))
+          uu___1 uu___ in
     FStarC_Syntax_Embeddings_Base.mk_emb_full em un
       (fun uu___ ->
          let uu___1 = FStarC_Syntax_Embeddings_Base.type_of d in
@@ -81,43 +85,51 @@ let nbe_e_erased :
       'a emb_erased FStarC_TypeChecker_NBETerm.embedding
   =
   fun d ->
-    let em cbs x =
-      let uu___ = x in
-      match uu___ with
-      | Hide x1 ->
-          let fv =
-            FStarC_Syntax_Syntax.lid_as_fv FStarC_Parser_Const.hide
-              FStar_Pervasives_Native.None in
-          let uu___1 =
-            let uu___2 =
-              let uu___3 = FStarC_TypeChecker_NBETerm.embed d cbs x1 in
-              FStarC_TypeChecker_NBETerm.as_arg uu___3 in
-            [uu___2] in
-          FStarC_TypeChecker_NBETerm.mkFV fv [] uu___1 in
-    let un uu___1 uu___ =
-      (fun cbs ->
-         fun t ->
-           let uu___ = FStarC_TypeChecker_NBETerm.nbe_t_of_t t in
-           match uu___ with
-           | FStarC_TypeChecker_NBETerm.FV
-               (fv, uu___1, (_t, uu___2)::(body, uu___3)::[]) when
-               FStarC_Syntax_Syntax.fv_eq_lid fv FStarC_Parser_Const.hide ->
-               Obj.magic
-                 (Obj.repr
-                    (let uu___4 =
-                       FStarC_TypeChecker_NBETerm.unembed d cbs body in
-                     FStarC_Class_Monad.op_let_Bang
-                       FStarC_Class_Monad.monad_option () ()
-                       (Obj.magic uu___4)
-                       (fun uu___5 ->
-                          (fun v ->
-                             let v = Obj.magic v in
-                             Obj.magic
-                               (FStarC_Class_Monad.return
-                                  FStarC_Class_Monad.monad_option ()
-                                  (Obj.magic (Hide v)))) uu___5)))
-           | uu___1 -> Obj.magic (Obj.repr FStar_Pervasives_Native.None))
-        uu___1 uu___ in
+    let em cbs =
+      fun x ->
+        let uu___ = x in
+        match uu___ with
+        | Hide x1 ->
+            let fv =
+              FStarC_Syntax_Syntax.lid_as_fv FStarC_Parser_Const.hide
+                FStar_Pervasives_Native.None in
+            let uu___1 =
+              let uu___2 =
+                let uu___3 = FStarC_TypeChecker_NBETerm.embed d cbs x1 in
+                FStarC_TypeChecker_NBETerm.as_arg uu___3 in
+              let uu___3 =
+                let uu___4 =
+                  let uu___5 = FStarC_TypeChecker_NBETerm.type_of d in
+                  FStarC_TypeChecker_NBETerm.as_iarg uu___5 in
+                [uu___4] in
+              uu___2 :: uu___3 in
+            FStarC_TypeChecker_NBETerm.mkFV fv [] uu___1 in
+    let un uu___1 =
+      fun uu___ ->
+        (fun cbs ->
+           fun t ->
+             let uu___ = FStarC_TypeChecker_NBETerm.nbe_t_of_t t in
+             match uu___ with
+             | FStarC_TypeChecker_NBETerm.FV
+                 (fv, uu___1, (body, uu___2)::(_t, uu___3)::[]) when
+                 FStarC_Syntax_Syntax.fv_eq_lid fv FStarC_Parser_Const.hide
+                 ->
+                 Obj.magic
+                   (Obj.repr
+                      (let uu___4 =
+                         FStarC_TypeChecker_NBETerm.unembed d cbs body in
+                       FStarC_Class_Monad.op_let_Bang
+                         FStarC_Class_Monad.monad_option () ()
+                         (Obj.magic uu___4)
+                         (fun uu___5 ->
+                            (fun v ->
+                               let v = Obj.magic v in
+                               Obj.magic
+                                 (FStarC_Class_Monad.return
+                                    FStarC_Class_Monad.monad_option ()
+                                    (Obj.magic (Hide v)))) uu___5)))
+             | uu___1 -> Obj.magic (Obj.repr FStar_Pervasives_Native.None))
+          uu___1 uu___ in
     FStarC_TypeChecker_NBETerm.mk_emb em un (fun uu___ -> Prims.magic ())
       (fun uu___ -> FStarC_Syntax_Syntax.ET_abstract)
 let (s_reveal :

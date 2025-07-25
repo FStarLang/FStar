@@ -19,7 +19,7 @@ open FStar.Tactics.Effect
 open FStar.Reflection.V2
 open FStar.Reflection.V2.Formula
 open FStar.Tactics.NamedView
-open FStar.Tactics.V1.Logic.Lemmas {} (* bring lemmas into TC scope *)
+open FStar.Tactics.Logic.Lemmas {} (* bring lemmas into TC scope *)
 
 (* Repeated to avoid importing FStar.Tactics.V1.Derived. *)
 private let cur_goal () : Tac typ =
@@ -149,14 +149,6 @@ val instantiate_as (fa : term) (x : term) (s : string) : Tac binding
 
 [@@plugin]
 val skolem () : Tac (list (list binding & binding))
-
-[@@plugin]
-val easy_fill () : Tac unit
-
-(* We mark this as a plugin so it can reduce. Some kind of 'transparent' attribute
-would be better. `inline_for_extraction` is almost that? *)
-[@@plugin]
-val easy : #a:Type -> (#[easy_fill ()] _ : a) -> a
 
 (** Add a lemma into the local context, quantified for all arguments.
 Only works for lemmas with up to 3 arguments for now. It is expected

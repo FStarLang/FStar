@@ -62,10 +62,10 @@ let () =
   Hashtbl.add keywords "end"           END         ;
   Hashtbl.add keywords "ensures"       ENSURES     ;
   Hashtbl.add keywords "exception"     EXCEPTION   ;
-  Hashtbl.add keywords "exists"        (EXISTS false);
+  Hashtbl.add keywords "exists"        EXISTS      ;
   Hashtbl.add keywords "false"         FALSE       ;
   Hashtbl.add keywords "friend"        FRIEND      ;
-  Hashtbl.add keywords "forall"        (FORALL false);
+  Hashtbl.add keywords "forall"        FORALL      ;
   Hashtbl.add keywords "fun"           FUN         ;
   Hashtbl.add keywords "λ"             FUN         ;
   Hashtbl.add keywords "function"      FUNCTION    ;
@@ -77,7 +77,7 @@ let () =
   Hashtbl.add keywords "instance"      INSTANCE    ;
   Hashtbl.add keywords "introduce"     INTRO ;
   Hashtbl.add keywords "irreducible"   IRREDUCIBLE ;
-  Hashtbl.add keywords "let"           (LET false) ;
+  Hashtbl.add keywords "let"           LET         ;
   Hashtbl.add keywords "logic"         LOGIC       ;
   Hashtbl.add keywords "match"         MATCH       ;
   Hashtbl.add keywords "returns"       RETURNS     ;
@@ -193,8 +193,8 @@ let () =
    "}", RBRACE;
    "$", DOLLAR;
      (* New Unicode equivalents *)
-   "∀", (FORALL false);
-   "∃", (EXISTS false);
+   "∀", FORALL;
+   "∃", EXISTS;
    "⊤", NAME "True";
    "⊥", NAME "False";
    "⟹", IMPLIES;
@@ -474,7 +474,7 @@ match%sedlex lexbuf with
  | "#restart-solver" -> PRAGMA_RESTART_SOLVER
  | "#print-effects-graph" -> PRAGMA_PRINT_EFFECTS_GRAPH
  | "__SOURCE_FILE__" -> STRING (Filepath.basename (L.source_file lexbuf))
- | "__LINE__" -> INT (string_of_int (L.current_line lexbuf), false)
+ | "__LINE__" -> INT (string_of_int (L.current_line lexbuf))
  | "__FILELINE__"   -> STRING (Filepath.basename (L.source_file lexbuf) ^ "(" ^ (string_of_int (L.current_line lexbuf)) ^ ")")
 
  | Plus anywhite -> token lexbuf
@@ -502,35 +502,35 @@ match%sedlex lexbuf with
  | "let", Plus op_char ->
     ensure_no_comment lexbuf (fun s ->
         match BatString.lchop ~n:3 s with
-        | "" -> LET false
+        | "" -> LET
         | s  -> LET_OP s
       )
 
  | "exists", Plus op_char ->
     ensure_no_comment lexbuf (fun s ->
         match BatString.lchop ~n:6 s with
-        | "" -> EXISTS false
+        | "" -> EXISTS
         | s  -> EXISTS_OP s
       )
 
  | Utf8 "∃", Plus op_char ->
     ensure_no_comment lexbuf (fun s ->
         match BatString.lchop ~n:1 s with
-        | "" -> EXISTS false
+        | "" -> EXISTS
         | s  -> EXISTS_OP s
       )
  
  | "forall", Plus op_char ->
     ensure_no_comment lexbuf (fun s ->
         match BatString.lchop ~n:6 s with
-        | "" -> FORALL false
+        | "" -> FORALL
         | s  -> FORALL_OP s
       )
 
  | Utf8 "∀", Plus op_char ->
     ensure_no_comment lexbuf (fun s ->
         match BatString.lchop ~n:1 s with
-        | "" -> FORALL false
+        | "" -> FORALL
         | s  -> FORALL_OP s
       )
     
@@ -559,21 +559,20 @@ match%sedlex lexbuf with
    Hashtbl.find_option constructors id |> Option.default (NAME id)
 
  | tvar -> TVAR (L.lexeme lexbuf)
- | (integer | xinteger) -> INT (clean_number (L.lexeme lexbuf), false)
+ | (integer | xinteger) -> INT (clean_number (L.lexeme lexbuf))
  | (uint8 | char8) ->
    let c = clean_number (L.lexeme lexbuf) in
    let cv = int_of_string c in
    if cv < 0 || cv > 255 then fail lexbuf (Codes.Fatal_SyntaxError, "Out-of-range character literal")
    else UINT8 (c)
- | int8 -> INT8 (clean_number (L.lexeme lexbuf), false)
+ | int8 -> INT8 (clean_number (L.lexeme lexbuf))
  | uint16 -> UINT16 (clean_number (L.lexeme lexbuf))
- | int16 -> INT16 (clean_number (L.lexeme lexbuf), false)
+ | int16 -> INT16 (clean_number (L.lexeme lexbuf))
  | uint32 -> UINT32 (clean_number (L.lexeme lexbuf))
- | int32 -> INT32 (clean_number (L.lexeme lexbuf), false)
+ | int32 -> INT32 (clean_number (L.lexeme lexbuf))
  | uint64 -> UINT64 (clean_number (L.lexeme lexbuf))
- | int64 -> INT64 (clean_number (L.lexeme lexbuf), false)
+ | int64 -> INT64 (clean_number (L.lexeme lexbuf))
  | sizet -> SIZET (clean_number (L.lexeme lexbuf))
- | range -> RANGE (L.lexeme lexbuf)
  | real -> REAL(trim_right lexbuf 1)
  | (integer | xinteger | ieee64 | xieee64), Plus ident_char ->
    fail lexbuf (Codes.Fatal_SyntaxError, "This is not a valid numeric literal: " ^ L.lexeme lexbuf)
@@ -596,6 +595,8 @@ match%sedlex lexbuf with
  (* Pipe operators have special treatment in the parser. *)
  | "<|" -> PIPE_LEFT
  | "|>" -> PIPE_RIGHT
+
+ | ".." -> DOT_DOT
 
  | op_token_1
  | op_token_2
