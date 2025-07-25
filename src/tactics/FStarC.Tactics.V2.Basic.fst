@@ -2150,10 +2150,6 @@ let comp_to_doc (c:comp) : tac Pprint.document
 let range_to_string (r:FStarC.Range.t) : tac string
   = return (show r)
 
-let term_eq_old (t1:term) (t2:term) : tac bool
-  = return ();!
-    return (Syntax.Util.term_eq t1 t2)
-
 let with_compat_pre_core (n:int) (f:tac 'a) : tac 'a =
     mk_tac (fun ps ->
       Options.with_saved_options (fun () ->
