@@ -48,10 +48,10 @@ let empty_env (external_libs:list string) (d:dict) (all_modules:list string) (re
     reachable_defs }
 
 let lookup_global_fn (g:env) (s:string) : option fn_signature =
-  map_option (fun (_, t) -> t) (tryFind (fun (f, _) -> f = s) g.fns)
+  Option.map snd (tryFind (fun (f, _) -> f = s) g.fns)
 
 let lookup_local (g:env) (s:string) : option (typ & bool) =
-  map_option (fun (_, t, b) -> t, b) (tryFind (fun (x, _, _) -> x = s) g.gamma)
+  Option.map (fun (_, t, b) -> t, b) (tryFind (fun (x, _, _) -> x = s) g.gamma)
 
 let push_fn (g:env) (s:string) (t:fn_signature) : env =
   { g with fns = (s, t)::g.fns }

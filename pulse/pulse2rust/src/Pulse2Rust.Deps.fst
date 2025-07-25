@@ -173,7 +173,7 @@ let decl_reachable (reachable_defs:reachable_defs) (mname:string) (d:S.mlmodule1
 let rec topsort (d:dict) (grey:list string) (black:list string) (root:string)
   : (list string & list string) =  // grey and black
   let grey = root::grey in
-  let deps = root |> SMap.try_find d |> must |> (fun (deps, _, _) -> deps) in
+  let deps = root |> SMap.try_find d |> Option.must |> (fun (deps, _, _) -> deps) in
   let deps = deps |> List.filter (fun f -> List.mem f (SMap.keys d) && not (f = root)) in
   if List.existsb (fun d -> List.mem d grey) deps
   then failwith (Format.fmt1 "cyclic dependency: %s" root);

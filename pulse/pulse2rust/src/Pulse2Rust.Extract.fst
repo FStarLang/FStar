@@ -68,7 +68,7 @@ let lookup_datacon_in_module1 (s:S.mlident) (m:S.mlmodule1) : option S.mlsymbol 
 let lookup_datacon (g:env) (s:S.mlident) : option (list string & S.mlsymbol) =
   let d_keys = SMap.keys g.d in
   find_map d_keys (fun k ->
-    let (_, _, decls) = SMap.try_find g.d k |> must in
+    let (_, _, decls) = SMap.try_find g.d k |> Option.must in
     let ropt = find_map decls (lookup_datacon_in_module1 s) in
     match ropt with
     | None -> None
@@ -464,7 +464,7 @@ let rec lb_init_and_def (g:env) (lb:S.mllb)
       let len = extract_mlexpr g len in
       let is_mut = false in
       is_mut,
-      lb.mllb_tysc |> must |> snd |> extract_mlty g,
+      lb.mllb_tysc |> Option.must |> snd |> extract_mlty g,
       mk_reference_expr true (mk_repeat init len)
 
     | _ ->
@@ -477,7 +477,7 @@ let rec lb_init_and_def (g:env) (lb:S.mllb)
         S.string_of_mlpath p = "Pulse.Lib.Mutex.lock"
       | _ -> false in
     is_mut,
-    lb.mllb_tysc |> must |> snd |> extract_mlty g,
+    lb.mllb_tysc |> Option.must |> snd |> extract_mlty g,
     extract_mlexpr g lb.mllb_def
 
 //
@@ -740,7 +740,7 @@ and extract_mlexpr (g:env) (e:S.mlexpr) : expr =
   | S.MLE_App ({expr=S.MLE_Name p}, [e1; e2])
     when p |> S.string_of_mlpath |> is_binop |> Some? ->
     let e1 = extract_mlexpr g e1 in
-    let op = p |> S.string_of_mlpath |> is_binop |> must in
+    let op = p |> S.string_of_mlpath |> is_binop |> Option.must in
     let e2 = extract_mlexpr g e2 in
     mk_binop e1 op e2
 
@@ -776,7 +776,7 @@ and extract_mlexpr (g:env) (e:S.mlexpr) : expr =
   | S.MLE_If (cond, if_then, if_else_opt) ->
     let cond = extract_mlexpr g cond in
     let then_ = extract_mlexpr_to_stmts g if_then in
-    let else_ = map_option (extract_mlexpr g) if_else_opt in
+    let else_ = Option.map (extract_mlexpr g) if_else_opt in
     //
     // make sure that else is either another if or block
     //
@@ -873,7 +873,7 @@ let extract_generic_type_param_trait_bounds (attrs:list S.mlexpr) : list (list s
        | MLE_CTor (p, _)
          when string_of_mlpath p = "Pulse.Lib.Pervasives.Rust_generics_bounds" -> true
        | _ -> false)
-  |> map_option (fun attr ->
+  |> Option.map (fun attr ->
        let MLE_CTor (p, args) = attr.expr in
        let Some l = EUtil.list_elements (List.hd args) in
        l |> List.map (fun e ->
@@ -881,7 +881,7 @@ let extract_generic_type_param_trait_bounds (attrs:list S.mlexpr) : list (list s
                       | MLE_Const (MLC_String s) -> s
                       | _ -> failwith "unexpected generic type param bounds")
          |> List.map (fun bound -> FStarC.Util.split bound "::"))
-  |> dflt []
+  |> Option.dflt []
 
 let extract_generic_type_params (tyvars:list S.ty_param)
   : list generic_type_param =
@@ -945,7 +945,7 @@ let has_rust_derive_attr (attrs:list S.mlattribute) : option attribute =
        | S.MLE_CTor (p, _)
          when S.string_of_mlpath p = "Pulse.Lib.Pervasives.Rust_derive" -> true
        | _ -> false)
-    |> map_option (fun attr ->
+    |> Option.map (fun attr ->
        let S.MLE_CTor (p, arg::_) = attr.S.expr in
        let S.MLE_Const (S.MLC_String s) = arg.S.expr in
        mk_derive_attr s)
@@ -954,7 +954,7 @@ let extract_struct_defn (g:env) (attrs:list S.mlattribute) (d:S.one_mltydecl) : 
   let Some (S.MLTD_Record fts) = d.tydecl_defn in
   // print1 "Adding to record field with %s\n" d.tydecl_name;
   mk_item_struct
-    (attrs |> has_rust_derive_attr |> map_option (fun a -> [a]) |> dflt [])
+    (attrs |> has_rust_derive_attr |> Option.map (fun a -> [a]) |> Option.dflt [])
     (d.tydecl_name |> enum_or_struct_name)
     (extract_generic_type_params d.tydecl_parameters)
     (List.map (fun (f, t) -> f, extract_mlty g t) fts),
@@ -972,7 +972,7 @@ let extract_enum (g:env) (attrs:list S.mlattribute) (d:S.one_mltydecl) : item & 
   let Some (S.MLTD_DType cts) = d.tydecl_defn in
   // print1 "enum attrs: %s\n" (String.concat ";" (List.map S.mlexpr_to_string attrs));
   mk_item_enum
-    (attrs |> has_rust_derive_attr |> map_option (fun a -> [a]) |> dflt [])
+    (attrs |> has_rust_derive_attr |> Option.map (fun a -> [a]) |> Option.dflt [])
     (d.tydecl_name |> enum_or_struct_name)
     (extract_generic_type_params d.tydecl_parameters)
     (List.map (fun (cname, dts) -> cname, List.map (fun (_, t) -> extract_mlty g t) dts) cts),
