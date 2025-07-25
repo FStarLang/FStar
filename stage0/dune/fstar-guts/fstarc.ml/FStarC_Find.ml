@@ -217,7 +217,7 @@ let (locate : unit -> Prims.string) =
 let (locate_lib : unit -> Prims.string FStar_Pervasives_Native.option) =
   fun uu___ ->
     let uu___1 = lib_root () in
-    FStarC_Util.map_opt uu___1 FStarC_Filepath.normalize_file_path
+    FStarC_Option.map FStarC_Filepath.normalize_file_path uu___1
 let (locate_ocaml : unit -> Prims.string) =
   fun uu___ ->
     let uu___1 =

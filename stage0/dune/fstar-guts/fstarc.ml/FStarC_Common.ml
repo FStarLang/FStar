@@ -38,7 +38,7 @@ let rollback :
         FStarC_Util.atomically (fun uu___ -> aux n)
 let raise_failed_assertion : 'uuuuu . Prims.string -> 'uuuuu =
   fun msg ->
-    let uu___ = FStarC_Util.format1 "Assertion failed: %s" msg in
+    let uu___ = FStarC_Format.fmt1 "Assertion failed: %s" msg in
     failwith uu___
 let (runtime_assert : Prims.bool -> Prims.string -> unit) =
   fun b ->
@@ -52,17 +52,21 @@ let __string_of_list :
         match l with
         | [] -> "[]"
         | x::xs ->
-            let strb = FStarC_Util.new_string_builder () in
-            (FStarC_Util.string_builder_append strb "[";
-             (let uu___2 = f x in
-              FStarC_Util.string_builder_append strb uu___2);
+            let strb = FStarC_StringBuffer.create (Prims.of_int (80)) in
+            ((let uu___1 =
+                let uu___2 = f x in
+                let uu___3 = FStarC_StringBuffer.add "[" strb in
+                FStarC_StringBuffer.add uu___2 uu___3 in
+              ());
              FStarC_List.iter
                (fun x1 ->
-                  FStarC_Util.string_builder_append strb delim;
-                  (let uu___4 = f x1 in
-                   FStarC_Util.string_builder_append strb uu___4)) xs;
-             FStarC_Util.string_builder_append strb "]";
-             FStarC_Util.string_of_string_builder strb)
+                  let uu___2 =
+                    let uu___3 = f x1 in
+                    let uu___4 = FStarC_StringBuffer.add delim strb in
+                    FStarC_StringBuffer.add uu___3 uu___4 in
+                  ()) xs;
+             (let uu___3 = FStarC_StringBuffer.add "]" strb in ());
+             FStarC_StringBuffer.contents strb)
 let string_of_list :
   'a . ('a -> Prims.string) -> 'a Prims.list -> Prims.string =
   fun f -> fun l -> __string_of_list ", " f l
@@ -111,11 +115,12 @@ let max_suffix :
   =
   fun f ->
     fun xs ->
-      let rec aux acc xs1 =
-        match xs1 with
-        | [] -> (acc, [])
-        | x::xs2 when f x -> aux (x :: acc) xs2
-        | x::xs2 -> (acc, (x :: xs2)) in
+      let rec aux acc =
+        fun xs1 ->
+          match xs1 with
+          | [] -> (acc, [])
+          | x::xs2 when f x -> aux (x :: acc) xs2
+          | x::xs2 -> (acc, (x :: xs2)) in
       let uu___ = aux [] (FStarC_List.rev xs) in
       match uu___ with | (xs1, ys) -> ((FStarC_List.rev ys), xs1)
 let rec eq_list :

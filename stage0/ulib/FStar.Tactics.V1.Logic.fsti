@@ -18,7 +18,7 @@ module FStar.Tactics.V1.Logic
 open FStar.Tactics.Effect
 open FStar.Reflection.V1
 open FStar.Reflection.V1.Formula
-open FStar.Tactics.V1.Logic.Lemmas {} (* bring lemmas into TC scope *)
+open FStar.Tactics.Logic.Lemmas {} (* bring lemmas into TC scope *)
 
 (* Repeated to avoid importing FStar.Tactics.V1.Derived. *)
 private let cur_goal () : Tac typ =

@@ -396,7 +396,7 @@ let rec (compress : FStarC_Syntax_Syntax.term -> FStarC_Syntax_Syntax.term) =
           let uu___ =
             let uu___1 =
               FStarC_Effect.op_Bang FStarC_Syntax_Syntax.lazy_chooser in
-            FStarC_Util.must uu___1 in
+            FStarC_Option.must uu___1 in
           uu___ li.FStarC_Syntax_Syntax.lkind li in
         compress tm'
     | uu___ -> tm1

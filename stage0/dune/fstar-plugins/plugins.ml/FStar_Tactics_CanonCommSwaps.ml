@@ -2,7 +2,7 @@ open Fstarcompiler
 open Prims
 type 'n swap = Prims.nat
 let rec apply_swap_aux :
-  'a . Prims.nat -> 'a Prims.list -> unit swap -> 'a Prims.list =
+  'a . Prims.nat -> 'a Prims.list -> Obj.t swap -> 'a Prims.list =
   fun n ->
     fun xs ->
       fun s ->
@@ -13,20 +13,21 @@ let rec apply_swap_aux :
             if n = s
             then x2 :: x1 :: xs'
             else x1 :: (apply_swap_aux (n + Prims.int_one) (x2 :: xs') s)
-let apply_swap : 'a . unit -> 'a Prims.list -> unit swap -> 'a Prims.list =
+let apply_swap : 'a . unit -> 'a Prims.list -> Obj.t swap -> 'a Prims.list =
   fun uu___ -> apply_swap_aux Prims.int_zero
 let rec apply_swaps :
-  'a . 'a Prims.list -> unit swap Prims.list -> 'a Prims.list =
+  'a . 'a Prims.list -> Obj.t swap Prims.list -> 'a Prims.list =
   fun xs ->
     fun ss ->
       match ss with
       | [] -> xs
       | s::ss' -> apply_swaps ((apply_swap ()) xs s) ss'
 type ('a, 'xs, 'ys) equal_counts = unit
-type ('a, 'xs) swap_for = unit swap
-type ('a, 'xs) swaps_for = unit swap Prims.list
+type ('a, 'xs) swap_for = Obj.t swap
+type ('a, 'xs) swaps_for = Obj.t swap Prims.list
 let rec lift_swaps_cons :
-  'a . 'a -> 'a Prims.list -> unit swap Prims.list -> unit swap Prims.list =
+  'a . 'a -> 'a Prims.list -> Obj.t swap Prims.list -> Obj.t swap Prims.list
+  =
   fun h ->
     fun xs ->
       fun ss ->
@@ -34,7 +35,7 @@ let rec lift_swaps_cons :
         | [] -> []
         | s::st -> (s + Prims.int_one) ::
             (lift_swaps_cons h ((apply_swap ()) xs s) st)
-let rec swap_to_front : 'a . 'a -> 'a Prims.list -> unit swap Prims.list =
+let rec swap_to_front : 'a . 'a -> 'a Prims.list -> Obj.t swap Prims.list =
   fun h ->
     fun xs ->
       match xs with
@@ -47,7 +48,7 @@ let rec swap_to_front : 'a . 'a -> 'a Prims.list -> unit swap Prims.list =
              let ss' = lift_swaps_cons x xt ss in
              let s = Prims.int_zero in FStar_List_Tot_Base.op_At ss' [s])
 let rec equal_counts_implies_swaps :
-  'a . 'a Prims.list -> 'a Prims.list -> unit swap Prims.list =
+  'a . 'a Prims.list -> 'a Prims.list -> Obj.t swap Prims.list =
   fun xs ->
     fun ys ->
       match ys with

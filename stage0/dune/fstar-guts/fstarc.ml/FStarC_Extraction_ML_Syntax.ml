@@ -222,7 +222,6 @@ type mlconstant =
   | MLC_Float of FStarC_BaseTypes.float 
   | MLC_Char of FStarC_BaseTypes.char 
   | MLC_String of Prims.string 
-  | MLC_Bytes of FStarC_BaseTypes.byte FStarC_Array.array 
 let (uu___is_MLC_Unit : mlconstant -> Prims.bool) =
   fun projectee -> match projectee with | MLC_Unit -> true | uu___ -> false
 let (uu___is_MLC_Bool : mlconstant -> Prims.bool) =
@@ -252,12 +251,6 @@ let (uu___is_MLC_String : mlconstant -> Prims.bool) =
     match projectee with | MLC_String _0 -> true | uu___ -> false
 let (__proj__MLC_String__item___0 : mlconstant -> Prims.string) =
   fun projectee -> match projectee with | MLC_String _0 -> _0
-let (uu___is_MLC_Bytes : mlconstant -> Prims.bool) =
-  fun projectee ->
-    match projectee with | MLC_Bytes _0 -> true | uu___ -> false
-let (__proj__MLC_Bytes__item___0 :
-  mlconstant -> FStarC_BaseTypes.byte FStarC_Array.array) =
-  fun projectee -> match projectee with | MLC_Bytes _0 -> _0
 type mlpattern =
   | MLP_Wild 
   | MLP_Const of mlconstant 
@@ -322,8 +315,8 @@ type meta =
   | CMacro 
   | Deprecated of Prims.string 
   | RemoveUnusedTypeParameters of (Prims.int Prims.list *
-  FStarC_Range_Type.range) 
-  | HasValDecl of FStarC_Range_Type.range 
+  FStarC_Range_Type.t) 
+  | HasValDecl of FStarC_Range_Type.t 
   | CNoInline 
 let (uu___is_Mutable : meta -> Prims.bool) =
   fun projectee -> match projectee with | Mutable -> true | uu___ -> false
@@ -396,12 +389,12 @@ let (uu___is_RemoveUnusedTypeParameters : meta -> Prims.bool) =
     | RemoveUnusedTypeParameters _0 -> true
     | uu___ -> false
 let (__proj__RemoveUnusedTypeParameters__item___0 :
-  meta -> (Prims.int Prims.list * FStarC_Range_Type.range)) =
+  meta -> (Prims.int Prims.list * FStarC_Range_Type.t)) =
   fun projectee -> match projectee with | RemoveUnusedTypeParameters _0 -> _0
 let (uu___is_HasValDecl : meta -> Prims.bool) =
   fun projectee ->
     match projectee with | HasValDecl _0 -> true | uu___ -> false
-let (__proj__HasValDecl__item___0 : meta -> FStarC_Range_Type.range) =
+let (__proj__HasValDecl__item___0 : meta -> FStarC_Range_Type.t) =
   fun projectee -> match projectee with | HasValDecl _0 -> _0
 let (uu___is_CNoInline : meta -> Prims.bool) =
   fun projectee -> match projectee with | CNoInline -> true | uu___ -> false
@@ -1095,8 +1088,7 @@ and (mllb_to_doc : mllb -> FStarC_Pprint.document) =
           let uu___6 =
             let uu___7 =
               let uu___8 =
-                let uu___9 = FStarC_Util.string_of_bool lb.mllb_add_unit in
-                FStarC_Pprint.doc_of_string uu___9 in
+                FStarC_Class_PP.pp FStarC_Class_PP.pp_bool lb.mllb_add_unit in
               fld "mllb_add_unit" uu___8 in
             let uu___8 =
               let uu___9 =
@@ -1113,9 +1105,7 @@ and (mlconstant_to_doc : mlconstant -> FStarC_Pprint.document) =
     match mlc with
     | MLC_Unit -> FStarC_Pprint.doc_of_string "MLC_Unit"
     | MLC_Bool b ->
-        let uu___ =
-          let uu___1 = FStarC_Util.string_of_bool b in
-          FStarC_Pprint.doc_of_string uu___1 in
+        let uu___ = FStarC_Class_PP.pp FStarC_Class_PP.pp_bool b in
         ctor "MLC_Bool" uu___
     | MLC_Int (s, FStar_Pervasives_Native.None) ->
         let uu___ = FStarC_Pprint.doc_of_string s in ctor "MLC_Int" uu___
@@ -1128,7 +1118,6 @@ and (mlconstant_to_doc : mlconstant -> FStarC_Pprint.document) =
     | MLC_Char c -> ctor "MLC_Char" FStarC_Pprint.underscore
     | MLC_String s ->
         let uu___ = FStarC_Pprint.doc_of_string s in ctor "MLC_String" uu___
-    | MLC_Bytes b -> ctor "MLC_Bytes" FStarC_Pprint.underscore
 and (mlpattern_to_doc : mlpattern -> FStarC_Pprint.document) =
   fun mlp ->
     match mlp with
@@ -1309,3 +1298,13 @@ let (showable_mlmodule1 : mlmodule1 FStarC_Class_Show.showable) =
   { FStarC_Class_Show.show = mlmodule1_to_string }
 let (showable_mlmodulebody : mlmodulebody FStarC_Class_Show.showable) =
   { FStarC_Class_Show.show = mlmodulebody_to_string }
+let (pp_mlty : mlty FStarC_Class_PP.pretty) =
+  { FStarC_Class_PP.pp = mlty_to_doc }
+let (pp_mlconstant : mlconstant FStarC_Class_PP.pretty) =
+  { FStarC_Class_PP.pp = mlconstant_to_doc }
+let (pp_mlexpr : mlexpr FStarC_Class_PP.pretty) =
+  { FStarC_Class_PP.pp = mlexpr_to_doc }
+let (pp_mlmodule1 : mlmodule1 FStarC_Class_PP.pretty) =
+  { FStarC_Class_PP.pp = mlmodule1_to_doc }
+let (pp_mlmodulebody : mlmodulebody FStarC_Class_PP.pretty) =
+  { FStarC_Class_PP.pp = mlmodulebody_to_doc }

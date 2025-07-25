@@ -37,9 +37,10 @@ let (ops : FStarC_TypeChecker_Primops_Base.primitive_step Prims.list) =
                fun args ->
                  match args with
                  | (ta, uu___)::(tb, uu___1)::(s, uu___2)::(f, uu___3)::[] ->
-                     let try_unembed e x =
-                       FStarC_Syntax_Embeddings_Base.try_unembed e x
-                         FStarC_Syntax_Embeddings_Base.id_norm_cb in
+                     let try_unembed e =
+                       fun x ->
+                         FStarC_Syntax_Embeddings_Base.try_unembed e x
+                           FStarC_Syntax_Embeddings_Base.id_norm_cb in
                      let uu___4 =
                        let uu___5 =
                          try_unembed FStarC_Syntax_Embeddings.e_any ta in
@@ -80,8 +81,9 @@ let (ops : FStarC_TypeChecker_Primops_Base.primitive_step Prims.list) =
              fun args ->
                match args with
                | (ta, uu___)::(tb, uu___1)::(s, uu___2)::(f, uu___3)::[] ->
-                   let try_unembed e x =
-                     FStarC_TypeChecker_NBETerm.unembed e bogus_cbs x in
+                   let try_unembed e =
+                     fun x ->
+                       FStarC_TypeChecker_NBETerm.unembed e bogus_cbs x in
                    let uu___4 =
                      let uu___5 =
                        try_unembed FStarC_TypeChecker_NBETerm.e_any ta in
@@ -124,9 +126,10 @@ let (ops : FStarC_TypeChecker_Primops_Base.primitive_step Prims.list) =
               fun args ->
                 match args with
                 | (ta, uu___)::(tb, uu___1)::(s, uu___2)::(f, uu___3)::[] ->
-                    let try_unembed e x =
-                      FStarC_Syntax_Embeddings_Base.try_unembed e x
-                        FStarC_Syntax_Embeddings_Base.id_norm_cb in
+                    let try_unembed e =
+                      fun x ->
+                        FStarC_Syntax_Embeddings_Base.try_unembed e x
+                          FStarC_Syntax_Embeddings_Base.id_norm_cb in
                     let uu___4 =
                       let uu___5 =
                         try_unembed FStarC_Syntax_Embeddings.e_any ta in
@@ -163,8 +166,8 @@ let (ops : FStarC_TypeChecker_Primops_Base.primitive_step Prims.list) =
             fun args ->
               match args with
               | (ta, uu___)::(tb, uu___1)::(s, uu___2)::(f, uu___3)::[] ->
-                  let try_unembed e x =
-                    FStarC_TypeChecker_NBETerm.unembed e bogus_cbs x in
+                  let try_unembed e =
+                    fun x -> FStarC_TypeChecker_NBETerm.unembed e bogus_cbs x in
                   let uu___4 =
                     let uu___5 =
                       try_unembed FStarC_TypeChecker_NBETerm.e_any ta in

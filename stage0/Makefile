@@ -29,15 +29,6 @@ FSTAR_DUNE_BUILD_OPTIONS := $(FSTAR_DUNE_OPTIONS)
 .PHONY: .force
 .force:
 
-# In some places, we need to compute absolute paths, and in a Cygwin
-# enviroment we need Windows-style paths (forward slashes ok, but no
-# /cygdrive/).
-ifeq ($(OS),Windows_NT)
-cygpath=$(shell cygpath -m "$(abspath $(1))")
-else
-cygpath=$(abspath "$(1)")
-endif
-
 build:
 	$(call msg, "DUNE BUILD")
 	dune build --root=dune $(FSTAR_DUNE_BUILD_OPTIONS)
@@ -127,5 +118,5 @@ package:
 	.scripts/bin-install.sh pkgtmp/fstar
 	.scripts/mk-package.sh pkgtmp fstar$(FSTAR_TAG)
 ## LINES BELOW ADDED BY src-install.sh
-export FSTAR_COMMITDATE=2025-03-28 20:24:13 -0700
-export FSTAR_COMMIT=81d91f7d59780d9ea62eaa212c6322ba74dcbd54
+export FSTAR_COMMITDATE=2025-07-24 18:37:46 -0700
+export FSTAR_COMMIT=a50a3b8b184a64c5bfe3900725de3fe9347de47d

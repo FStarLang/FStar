@@ -103,36 +103,30 @@ let (eq_const : sconst -> sconst -> Prims.bool) =
       | (Const_reflect l1, Const_reflect l2) -> FStarC_Ident.lid_equals l1 l2
       | (Const_reify uu___, Const_reify uu___1) -> true
       | uu___ -> c1 = c2
-let rec (pow2 : FStarC_BigInt.bigint -> FStarC_BigInt.bigint) =
+let rec (pow2 : Prims.int -> Prims.int) =
   fun x ->
-    let uu___ = FStarC_BigInt.eq_big_int x FStarC_BigInt.zero in
-    if uu___
-    then FStarC_BigInt.one
+    if x = Prims.int_zero
+    then Prims.int_one
     else
-      (let uu___2 = let uu___3 = FStarC_BigInt.pred_big_int x in pow2 uu___3 in
-       FStarC_BigInt.mult_big_int FStarC_BigInt.two uu___2)
-let (bounds :
-  signedness -> width -> (FStarC_BigInt.bigint * FStarC_BigInt.bigint)) =
+      (let uu___1 = pow2 (x - Prims.int_one) in (Prims.of_int (2)) * uu___1)
+let (bounds : signedness -> width -> (Prims.int * Prims.int)) =
   fun signedness1 ->
     fun width1 ->
       let n =
         match width1 with
-        | Int8 -> FStarC_BigInt.big_int_of_string "8"
-        | Int16 -> FStarC_BigInt.big_int_of_string "16"
-        | Int32 -> FStarC_BigInt.big_int_of_string "32"
-        | Int64 -> FStarC_BigInt.big_int_of_string "64"
-        | Sizet -> FStarC_BigInt.big_int_of_string "16" in
+        | Int8 -> (Prims.of_int (8))
+        | Int16 -> (Prims.of_int (16))
+        | Int32 -> (Prims.of_int (32))
+        | Int64 -> (Prims.of_int (64))
+        | Sizet -> (Prims.of_int (16)) in
       let uu___ =
         match signedness1 with
         | Unsigned ->
-            let uu___1 =
-              let uu___2 = pow2 n in FStarC_BigInt.pred_big_int uu___2 in
-            (FStarC_BigInt.zero, uu___1)
+            let uu___1 = let uu___2 = pow2 n in uu___2 - Prims.int_one in
+            (Prims.int_zero, uu___1)
         | Signed ->
-            let upper =
-              let uu___1 = FStarC_BigInt.pred_big_int n in pow2 uu___1 in
-            let uu___1 = FStarC_BigInt.minus_big_int upper in
-            let uu___2 = FStarC_BigInt.pred_big_int upper in (uu___1, uu___2) in
+            let upper = pow2 (n - Prims.int_one) in
+            ((- upper), (upper - Prims.int_one)) in
       match uu___ with | (lower, upper) -> (lower, upper)
 let (within_bounds : Prims.string -> signedness -> width -> Prims.bool) =
   fun repr ->
@@ -143,6 +137,5 @@ let (within_bounds : Prims.string -> signedness -> width -> Prims.bool) =
         | (lower, upper) ->
             let value =
               let uu___1 = FStarC_Util.ensure_decimal repr in
-              FStarC_BigInt.big_int_of_string uu___1 in
-            (FStarC_BigInt.le_big_int lower value) &&
-              (FStarC_BigInt.le_big_int value upper)
+              FStarC_Util.int_of_string uu___1 in
+            (lower <= value) && (value <= upper)

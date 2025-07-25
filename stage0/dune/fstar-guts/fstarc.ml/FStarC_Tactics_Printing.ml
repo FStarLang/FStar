@@ -18,8 +18,8 @@ let (goal_to_string_verbose : FStarC_Tactics_Types.goal -> Prims.string) =
           let uu___3 =
             let uu___4 = FStarC_Tactics_Types.goal_env g in
             term_to_string uu___4 t in
-          FStarC_Util.format1 "\tGOAL ALREADY SOLVED!: %s" uu___3 in
-    FStarC_Util.format2 "%s%s\n" uu___ uu___1
+          FStarC_Format.fmt1 "\tGOAL ALREADY SOLVED!: %s" uu___3 in
+    FStarC_Format.fmt2 "%s%s\n" uu___ uu___1
 let (unshadow :
   FStarC_Syntax_Syntax.binders ->
     FStarC_Syntax_Syntax.term ->
@@ -27,59 +27,69 @@ let (unshadow :
   =
   fun bs ->
     fun t ->
-      let sset bv s =
-        let uu___ =
-          let uu___1 =
-            FStarC_Ident.range_of_id bv.FStarC_Syntax_Syntax.ppname in
-          FStar_Pervasives_Native.Some uu___1 in
-        FStarC_Syntax_Syntax.gen_bv s uu___ bv.FStarC_Syntax_Syntax.sort in
-      let fresh_until b f =
-        let rec aux i =
-          let t1 =
-            let uu___ =
-              let uu___1 =
-                FStarC_Class_Show.show FStarC_Class_Show.showable_int i in
-              Prims.strcat "'" uu___1 in
-            Prims.strcat b uu___ in
-          let uu___ = f t1 in if uu___ then t1 else aux (i + Prims.int_one) in
-        let uu___ = f b in if uu___ then b else aux Prims.int_zero in
-      let rec go seen subst bs1 bs' t1 =
-        match bs1 with
-        | [] ->
-            let uu___ = FStarC_Syntax_Subst.subst subst t1 in
-            ((FStarC_List.rev bs'), uu___)
-        | b::bs2 ->
-            let b1 =
-              let uu___ = FStarC_Syntax_Subst.subst_binders subst [b] in
-              match uu___ with
-              | b2::[] -> b2
-              | uu___1 -> failwith "impossible: unshadow subst_binders" in
-            let uu___ =
-              ((b1.FStarC_Syntax_Syntax.binder_bv),
-                (b1.FStarC_Syntax_Syntax.binder_qual)) in
-            (match uu___ with
-             | (bv0, q) ->
-                 let nbs =
-                   let uu___1 =
-                     FStarC_Class_Show.show FStarC_Ident.showable_ident
-                       bv0.FStarC_Syntax_Syntax.ppname in
-                   fresh_until uu___1
-                     (fun s -> Prims.op_Negation (FStarC_List.mem s seen)) in
-                 let bv = sset bv0 nbs in
-                 let b2 =
-                   FStarC_Syntax_Syntax.mk_binder_with_attrs bv q
-                     b1.FStarC_Syntax_Syntax.binder_positivity
-                     b1.FStarC_Syntax_Syntax.binder_attrs in
-                 let uu___1 =
-                   let uu___2 =
-                     let uu___3 =
-                       let uu___4 =
-                         let uu___5 = FStarC_Syntax_Syntax.bv_to_name bv in
-                         (bv0, uu___5) in
-                       FStarC_Syntax_Syntax.NT uu___4 in
-                     [uu___3] in
-                   FStarC_List.op_At subst uu___2 in
-                 go (nbs :: seen) uu___1 bs2 (b2 :: bs') t1) in
+      let sset bv =
+        fun s ->
+          let uu___ =
+            let uu___1 =
+              FStarC_Ident.range_of_id bv.FStarC_Syntax_Syntax.ppname in
+            FStar_Pervasives_Native.Some uu___1 in
+          FStarC_Syntax_Syntax.gen_bv s uu___ bv.FStarC_Syntax_Syntax.sort in
+      let fresh_until b =
+        fun f ->
+          let rec aux i =
+            let t1 =
+              let uu___ =
+                let uu___1 =
+                  FStarC_Class_Show.show FStarC_Class_Show.showable_int i in
+                Prims.strcat "'" uu___1 in
+              Prims.strcat b uu___ in
+            let uu___ = f t1 in if uu___ then t1 else aux (i + Prims.int_one) in
+          let uu___ = f b in if uu___ then b else aux Prims.int_zero in
+      let rec go seen =
+        fun subst ->
+          fun bs1 ->
+            fun bs' ->
+              fun t1 ->
+                match bs1 with
+                | [] ->
+                    let uu___ = FStarC_Syntax_Subst.subst subst t1 in
+                    ((FStarC_List.rev bs'), uu___)
+                | b::bs2 ->
+                    let b1 =
+                      let uu___ = FStarC_Syntax_Subst.subst_binders subst [b] in
+                      match uu___ with
+                      | b2::[] -> b2
+                      | uu___1 ->
+                          failwith "impossible: unshadow subst_binders" in
+                    let uu___ =
+                      ((b1.FStarC_Syntax_Syntax.binder_bv),
+                        (b1.FStarC_Syntax_Syntax.binder_qual)) in
+                    (match uu___ with
+                     | (bv0, q) ->
+                         let nbs =
+                           let uu___1 =
+                             FStarC_Class_Show.show
+                               FStarC_Ident.showable_ident
+                               bv0.FStarC_Syntax_Syntax.ppname in
+                           fresh_until uu___1
+                             (fun s ->
+                                Prims.op_Negation (FStarC_List.mem s seen)) in
+                         let bv = sset bv0 nbs in
+                         let b2 =
+                           FStarC_Syntax_Syntax.mk_binder_with_attrs bv q
+                             b1.FStarC_Syntax_Syntax.binder_positivity
+                             b1.FStarC_Syntax_Syntax.binder_attrs in
+                         let uu___1 =
+                           let uu___2 =
+                             let uu___3 =
+                               let uu___4 =
+                                 let uu___5 =
+                                   FStarC_Syntax_Syntax.bv_to_name bv in
+                                 (bv0, uu___5) in
+                               FStarC_Syntax_Syntax.NT uu___4 in
+                             [uu___3] in
+                           FStarC_List.op_At subst uu___2 in
+                         go (nbs :: seen) uu___1 bs2 (b2 :: bs') t1) in
       go [] [] bs [] t
 let (goal_to_string :
   Prims.string ->
@@ -114,46 +124,47 @@ let (goal_to_string :
                   FStarC_Class_Show.show FStarC_Class_Show.showable_int i in
                 let uu___1 =
                   FStarC_Class_Show.show FStarC_Class_Show.showable_int n in
-                FStarC_Util.format2 " %s/%s" uu___ uu___1 in
+                FStarC_Format.fmt2 " %s/%s" uu___ uu___1 in
           let maybe_label =
             match g.FStarC_Tactics_Types.label with
             | "" -> ""
             | l -> Prims.strcat " (" (Prims.strcat l ")") in
           let uu___ =
-            let rename_binders subst bs =
-              FStarC_List.map
-                (fun uu___1 ->
-                   let x = uu___1.FStarC_Syntax_Syntax.binder_bv in
-                   let y =
-                     let uu___2 = FStarC_Syntax_Syntax.bv_to_name x in
-                     FStarC_Syntax_Subst.subst subst uu___2 in
-                   let uu___2 =
-                     let uu___3 = FStarC_Syntax_Subst.compress y in
-                     uu___3.FStarC_Syntax_Syntax.n in
-                   match uu___2 with
-                   | FStarC_Syntax_Syntax.Tm_name y1 ->
-                       let uu___3 =
-                         let uu___4 = uu___1.FStarC_Syntax_Syntax.binder_bv in
-                         let uu___5 =
-                           FStarC_Syntax_Subst.subst subst
-                             x.FStarC_Syntax_Syntax.sort in
+            let rename_binders subst =
+              fun bs ->
+                FStarC_List.map
+                  (fun uu___1 ->
+                     let x = uu___1.FStarC_Syntax_Syntax.binder_bv in
+                     let y =
+                       let uu___2 = FStarC_Syntax_Syntax.bv_to_name x in
+                       FStarC_Syntax_Subst.subst subst uu___2 in
+                     let uu___2 =
+                       let uu___3 = FStarC_Syntax_Subst.compress y in
+                       uu___3.FStarC_Syntax_Syntax.n in
+                     match uu___2 with
+                     | FStarC_Syntax_Syntax.Tm_name y1 ->
+                         let uu___3 =
+                           let uu___4 = uu___1.FStarC_Syntax_Syntax.binder_bv in
+                           let uu___5 =
+                             FStarC_Syntax_Subst.subst subst
+                               x.FStarC_Syntax_Syntax.sort in
+                           {
+                             FStarC_Syntax_Syntax.ppname =
+                               (uu___4.FStarC_Syntax_Syntax.ppname);
+                             FStarC_Syntax_Syntax.index =
+                               (uu___4.FStarC_Syntax_Syntax.index);
+                             FStarC_Syntax_Syntax.sort = uu___5
+                           } in
                          {
-                           FStarC_Syntax_Syntax.ppname =
-                             (uu___4.FStarC_Syntax_Syntax.ppname);
-                           FStarC_Syntax_Syntax.index =
-                             (uu___4.FStarC_Syntax_Syntax.index);
-                           FStarC_Syntax_Syntax.sort = uu___5
-                         } in
-                       {
-                         FStarC_Syntax_Syntax.binder_bv = uu___3;
-                         FStarC_Syntax_Syntax.binder_qual =
-                           (uu___1.FStarC_Syntax_Syntax.binder_qual);
-                         FStarC_Syntax_Syntax.binder_positivity =
-                           (uu___1.FStarC_Syntax_Syntax.binder_positivity);
-                         FStarC_Syntax_Syntax.binder_attrs =
-                           (uu___1.FStarC_Syntax_Syntax.binder_attrs)
-                       }
-                   | uu___3 -> failwith "Not a renaming") bs in
+                           FStarC_Syntax_Syntax.binder_bv = uu___3;
+                           FStarC_Syntax_Syntax.binder_qual =
+                             (uu___1.FStarC_Syntax_Syntax.binder_qual);
+                           FStarC_Syntax_Syntax.binder_positivity =
+                             (uu___1.FStarC_Syntax_Syntax.binder_positivity);
+                           FStarC_Syntax_Syntax.binder_attrs =
+                             (uu___1.FStarC_Syntax_Syntax.binder_attrs)
+                         }
+                     | uu___3 -> failwith "Not a renaming") bs in
             let goal_binders =
               (g.FStarC_Tactics_Types.goal_ctx_uvar).FStarC_Syntax_Syntax.ctx_uvar_binders in
             let goal_ty = FStarC_Tactics_Types.goal_type g in
@@ -185,8 +196,8 @@ let (goal_to_string :
                         let uu___4 =
                           let uu___5 = FStarC_Tactics_Types.goal_env g in
                           term_to_string uu___5 goal_ty1 in
-                        FStarC_Util.format3 "%s |- %s : %s\n" uu___3 w uu___4) in
-                   FStarC_Util.format4 "%s%s%s:\n%s\n" kind num maybe_label
+                        FStarC_Format.fmt3 "%s |- %s : %s\n" uu___3 w uu___4) in
+                   FStarC_Format.fmt4 "%s%s%s:\n%s\n" kind num maybe_label
                      actual_goal)
 let (ps_to_string :
   (Prims.string * FStarC_Tactics_Types.proofstate) -> Prims.string) =
@@ -205,7 +216,7 @@ let (ps_to_string :
               let uu___4 =
                 FStarC_Class_Show.show FStarC_Class_Show.showable_int
                   ps.FStarC_Tactics_Types.depth in
-              FStarC_Util.format2 "State dump @ depth %s (%s):\n" uu___4 msg in
+              FStarC_Format.fmt2 "State dump @ depth %s (%s):\n" uu___4 msg in
             let uu___4 =
               let uu___5 =
                 if
@@ -215,7 +226,7 @@ let (ps_to_string :
                   let uu___6 =
                     FStarC_Range_Ops.string_of_def_range
                       ps.FStarC_Tactics_Types.entry_range in
-                  FStarC_Util.format1 "Location: %s\n" uu___6
+                  FStarC_Format.fmt1 "Location: %s\n" uu___6
                 else "" in
               let uu___6 =
                 let uu___7 =
@@ -225,7 +236,7 @@ let (ps_to_string :
                     let uu___9 =
                       FStarC_Common.string_of_list p_imp
                         ps.FStarC_Tactics_Types.all_implicits in
-                    FStarC_Util.format1 "Imps: %s\n" uu___9
+                    FStarC_Format.fmt1 "Imps: %s\n" uu___9
                   else "" in
                 [uu___7] in
               uu___5 :: uu___6 in
@@ -355,7 +366,7 @@ let (do_dump_proofstate :
           (fun uu___1 ->
              FStarC_Options.set_option "print_effect_args"
                (FStarC_Options.Bool true);
-             FStarC_Util.print_generic "proof-state" ps_to_string ps_to_json
-               (msg, ps);
-             FStarC_Util.flush_stdout ())
+             FStarC_Format.print_generic "proof-state" ps_to_string
+               ps_to_json (msg, ps);
+             FStarC_Format.flush_stdout ())
       else ()

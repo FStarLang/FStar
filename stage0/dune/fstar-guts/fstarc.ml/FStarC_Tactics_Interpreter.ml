@@ -4,7 +4,7 @@ let solve : 'a . 'a -> 'a = fun ev -> ev
 let embed :
   'a .
     'a FStarC_Syntax_Embeddings_Base.embedding ->
-      FStarC_Range_Type.range ->
+      FStarC_Range_Type.t ->
         'a ->
           FStarC_Syntax_Embeddings_Base.norm_cb -> FStarC_Syntax_Syntax.term
   =
@@ -507,15 +507,19 @@ let e_tactic_1_alt :
   =
   fun ea ->
     fun er ->
-      let em uu___ uu___1 uu___2 uu___3 =
-        failwith "Impossible: embedding tactic (1)?" in
-      let un t0 n =
-        let uu___ = unembed_tactic_1_alt ea er t0 n in
-        match uu___ with
-        | FStar_Pervasives_Native.Some f ->
-            FStar_Pervasives_Native.Some
-              ((fun x -> let uu___1 = f x in FStarC_Tactics_Monad.run uu___1))
-        | FStar_Pervasives_Native.None -> FStar_Pervasives_Native.None in
+      let em uu___ =
+        fun uu___1 ->
+          fun uu___2 ->
+            fun uu___3 -> failwith "Impossible: embedding tactic (1)?" in
+      let un t0 =
+        fun n ->
+          let uu___ = unembed_tactic_1_alt ea er t0 n in
+          match uu___ with
+          | FStar_Pervasives_Native.Some f ->
+              FStar_Pervasives_Native.Some
+                ((fun x ->
+                    let uu___1 = f x in FStarC_Tactics_Monad.run uu___1))
+          | FStar_Pervasives_Native.None -> FStar_Pervasives_Native.None in
       let uu___ =
         FStarC_Syntax_Embeddings_Base.term_as_fv FStarC_Syntax_Syntax.t_unit in
       FStarC_Syntax_Embeddings_Base.mk_emb em un uu___
@@ -781,6 +785,10 @@ let run_unembedded_tactic_on_ps :
                     (ps.FStarC_Tactics_Types.goals);
                   FStarC_Tactics_Types.smt_goals =
                     (ps.FStarC_Tactics_Types.smt_goals);
+                  FStarC_Tactics_Types.splice_quals =
+                    (ps.FStarC_Tactics_Types.splice_quals);
+                  FStarC_Tactics_Types.splice_attrs =
+                    (ps.FStarC_Tactics_Types.splice_attrs);
                   FStarC_Tactics_Types.depth =
                     (ps.FStarC_Tactics_Types.depth);
                   FStarC_Tactics_Types.__dump =
@@ -917,6 +925,10 @@ let run_unembedded_tactic_on_ps :
                     (ps1.FStarC_Tactics_Types.goals);
                   FStarC_Tactics_Types.smt_goals =
                     (ps1.FStarC_Tactics_Types.smt_goals);
+                  FStarC_Tactics_Types.splice_quals =
+                    (ps1.FStarC_Tactics_Types.splice_quals);
+                  FStarC_Tactics_Types.splice_attrs =
+                    (ps1.FStarC_Tactics_Types.splice_attrs);
                   FStarC_Tactics_Types.depth =
                     (ps1.FStarC_Tactics_Types.depth);
                   FStarC_Tactics_Types.__dump =
@@ -952,7 +964,7 @@ let run_unembedded_tactic_on_ps :
                      FStarC_Tactics_Monad.run_safe uu___2 ps2) uu___
                   "FStarC.Tactics.Interpreter.run_safe" in
               (let uu___1 = FStarC_Effect.op_Bang dbg_Tac in
-               if uu___1 then FStarC_Util.print_string "}\n" else ());
+               if uu___1 then FStarC_Format.print_string "}\n" else ());
               (match res with
                | FStarC_Tactics_Result.Success (ret, ps3) ->
                    ((let uu___2 = FStarC_Effect.op_Bang dbg_Tac in
@@ -979,7 +991,7 @@ let run_unembedded_tactic_on_ps :
                                      FStarC_Tactics_Types.goal_witness g in
                                    FStarC_Class_Show.show
                                      FStarC_Syntax_Print.showable_term uu___8 in
-                                 FStarC_Util.print1
+                                 FStarC_Format.print1
                                    "Assigning irrelevant goal %s\n" uu___7
                                else ());
                               (let uu___6 =
@@ -998,7 +1010,7 @@ let run_unembedded_tactic_on_ps :
                                       FStarC_Class_Show.show
                                         FStarC_Syntax_Print.showable_term
                                         uu___10 in
-                                    FStarC_Util.format1
+                                    FStarC_Format.fmt1
                                       "Irrelevant tactic witness does not unify with (): %s"
                                       uu___9 in
                                   failwith uu___8)))
@@ -1016,7 +1028,7 @@ let run_unembedded_tactic_on_ps :
                                       FStarC_Syntax_Print.showable_ctxu
                                       imp.FStarC_TypeChecker_Common.imp_uvar)
                                  ps3.FStarC_Tactics_Types.all_implicits in
-                             FStarC_Util.print1
+                             FStarC_Format.print1
                                "About to check tactic implicits: %s\n" uu___7
                            else ());
                           (let g =
@@ -1051,7 +1063,7 @@ let run_unembedded_tactic_on_ps :
                                   (FStarC_Class_Show.show_list
                                      FStarC_TypeChecker_Common.showable_implicit)
                                   ps3.FStarC_Tactics_Types.all_implicits in
-                              FStarC_Util.print2
+                              FStarC_Format.print2
                                 "Checked %s implicits (1): %s\n" uu___8
                                 uu___9
                             else ());
@@ -1071,7 +1083,7 @@ let run_unembedded_tactic_on_ps :
                                    (FStarC_Class_Show.show_list
                                       FStarC_TypeChecker_Common.showable_implicit)
                                    ps3.FStarC_Tactics_Types.all_implicits in
-                               FStarC_Util.print2
+                               FStarC_Format.print2
                                  "Checked %s implicits (2): %s\n" uu___9
                                  uu___10
                              else ());
@@ -1160,8 +1172,8 @@ let run_unembedded_tactic_on_ps :
                            (Obj.magic uu___3))))
 let run_tactic_on_ps' :
   'a 'b .
-    FStarC_Range_Type.range ->
-      FStarC_Range_Type.range ->
+    FStarC_Range_Type.t ->
+      FStarC_Range_Type.t ->
         Prims.bool ->
           'a FStarC_Syntax_Embeddings_Base.embedding ->
             'a ->
@@ -1191,7 +1203,7 @@ let run_tactic_on_ps' :
                          FStarC_Class_Show.show
                            FStarC_Class_Show.showable_bool
                            tactic_already_typed in
-                       FStarC_Util.print2
+                       FStarC_Format.print2
                          "Typechecking tactic: (%s) (already_typed: %s) {\n"
                          uu___2 uu___3
                      else ());
@@ -1208,7 +1220,7 @@ let run_tactic_on_ps' :
                               env tactic in
                           match uu___2 with | (uu___3, uu___4, g1) -> g1) in
                      (let uu___2 = FStarC_Effect.op_Bang dbg_Tac in
-                      if uu___2 then FStarC_Util.print_string "}\n" else ());
+                      if uu___2 then FStarC_Format.print_string "}\n" else ());
                      FStarC_TypeChecker_Rel.force_trivial_guard env g;
                      FStarC_Errors.stop_if_err ();
                      (let tau =

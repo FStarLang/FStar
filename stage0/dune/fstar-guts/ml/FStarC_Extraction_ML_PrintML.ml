@@ -104,8 +104,8 @@ let try_with_ident () =
 (* For integer constants (not 0/1) in this range we will use Prims.of_int
  * Outside this range we will use string parsing to allow arbitrary sized
  * integers.
- * Using int_zero/int_one removes int processing to create the Z.t
- * Using of_int removes string processing to create the Z.t
+ * Using int_zero/int_one removes int processing to create the int
+ * Using of_int removes string processing to create the int
  *)
 let max_of_int_const = Z.of_int   65535
 let min_of_int_const = Z.of_int (-65536)
@@ -157,7 +157,6 @@ let build_constant (c: mlconstant): Parsetree.constant =
   | MLC_Float v -> Const.float (string_of_float v)
   | MLC_Char v -> Const.int v
   | MLC_String v -> Const.string v
-  | MLC_Bytes _ -> failwith "Case not handled" (* do we need this? *)
   | _ -> failwith "Case not handled"
 
 let build_constant_expr (c: mlconstant): expression =

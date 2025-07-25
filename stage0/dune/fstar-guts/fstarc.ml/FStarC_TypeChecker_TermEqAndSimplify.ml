@@ -58,32 +58,38 @@ let rec (eq_tm :
       fun t2 ->
         let t11 = FStarC_Syntax_Util.canon_app t1 in
         let t21 = FStarC_Syntax_Util.canon_app t2 in
-        let equal_data f1 args1 f2 args2 n_parms =
-          let uu___ = FStarC_Syntax_Syntax.fv_eq f1 f2 in
-          if uu___
-          then
-            let n1 = FStarC_List.length args1 in
-            let n2 = FStarC_List.length args2 in
-            (if (n1 = n2) && (n_parms <= n1)
-             then
-               let uu___1 = FStarC_List.splitAt n_parms args1 in
-               match uu___1 with
-               | (parms1, args11) ->
-                   let uu___2 = FStarC_List.splitAt n_parms args2 in
-                   (match uu___2 with
-                    | (parms2, args21) ->
-                        let eq_arg_list as1 as2 =
-                          FStarC_List.fold_left2
-                            (fun acc ->
-                               fun uu___3 ->
-                                 fun uu___4 ->
-                                   match (uu___3, uu___4) with
-                                   | ((a1, q1), (a2, q2)) ->
-                                       let uu___5 = eq_tm env a1 a2 in
-                                       eq_inj acc uu___5) Equal as1 as2 in
-                        eq_arg_list args11 args21)
-             else Unknown)
-          else NotEqual in
+        let equal_data f1 =
+          fun args1 ->
+            fun f2 ->
+              fun args2 ->
+                fun n_parms ->
+                  let uu___ = FStarC_Syntax_Syntax.fv_eq f1 f2 in
+                  if uu___
+                  then
+                    let n1 = FStarC_List.length args1 in
+                    let n2 = FStarC_List.length args2 in
+                    (if (n1 = n2) && (n_parms <= n1)
+                     then
+                       let uu___1 = FStarC_List.splitAt n_parms args1 in
+                       match uu___1 with
+                       | (parms1, args11) ->
+                           let uu___2 = FStarC_List.splitAt n_parms args2 in
+                           (match uu___2 with
+                            | (parms2, args21) ->
+                                let eq_arg_list as1 =
+                                  fun as2 ->
+                                    FStarC_List.fold_left2
+                                      (fun acc ->
+                                         fun uu___3 ->
+                                           fun uu___4 ->
+                                             match (uu___3, uu___4) with
+                                             | ((a1, q1), (a2, q2)) ->
+                                                 let uu___5 = eq_tm env a1 a2 in
+                                                 eq_inj acc uu___5) Equal as1
+                                      as2 in
+                                eq_arg_list args11 args21)
+                     else Unknown)
+                  else NotEqual in
         let qual_is_inj uu___ =
           match uu___ with
           | FStar_Pervasives_Native.Some (FStarC_Syntax_Syntax.Data_ctor) ->
@@ -147,7 +153,7 @@ let rec (eq_tm :
             FStar_Pervasives_Native.uu___is_Some
               heads_and_args_in_case_both_data
             ->
-            let uu___1 = FStarC_Util.must heads_and_args_in_case_both_data in
+            let uu___1 = FStarC_Option.must heads_and_args_in_case_both_data in
             (match uu___1 with
              | (f, args1, g, args2, n) -> equal_data f args1 g args2 n)
         | (FStarC_Syntax_Syntax.Tm_fvar f, FStarC_Syntax_Syntax.Tm_fvar g) ->
@@ -321,13 +327,15 @@ and (branch_matches :
   fun env ->
     fun b1 ->
       fun b2 ->
-        let related_by f o1 o2 =
-          match (o1, o2) with
-          | (FStar_Pervasives_Native.None, FStar_Pervasives_Native.None) ->
-              true
-          | (FStar_Pervasives_Native.Some x, FStar_Pervasives_Native.Some y)
-              -> f x y
-          | (uu___, uu___1) -> false in
+        let related_by f =
+          fun o1 ->
+            fun o2 ->
+              match (o1, o2) with
+              | (FStar_Pervasives_Native.None, FStar_Pervasives_Native.None)
+                  -> true
+              | (FStar_Pervasives_Native.Some x, FStar_Pervasives_Native.Some
+                 y) -> f x y
+              | (uu___, uu___1) -> false in
         let uu___ = b1 in
         match uu___ with
         | (p1, w1, t1) ->
@@ -430,74 +438,80 @@ let (simplify :
               FStarC_Syntax_Syntax.fv_eq_lid fv FStarC_Parser_Const.false_lid
               -> FStar_Pervasives_Native.Some false
           | uu___1 -> FStar_Pervasives_Native.None in
-        let rec args_are_binders args bs =
-          match (args, bs) with
-          | ((t, uu___)::args1, b::bs1) ->
-              let uu___1 =
-                let uu___2 = FStarC_Syntax_Subst.compress t in
-                uu___2.FStarC_Syntax_Syntax.n in
-              (match uu___1 with
-               | FStarC_Syntax_Syntax.Tm_name bv' ->
-                   (FStarC_Syntax_Syntax.bv_eq
-                      b.FStarC_Syntax_Syntax.binder_bv bv')
-                     && (args_are_binders args1 bs1)
-               | uu___2 -> false)
-          | ([], []) -> true
-          | (uu___, uu___1) -> false in
-        let is_applied bs t =
-          if debug
-          then
-            (let uu___1 =
-               FStarC_Class_Show.show FStarC_Syntax_Print.showable_term t in
-             let uu___2 =
-               FStarC_Class_Tagged.tag_of FStarC_Syntax_Syntax.tagged_term t in
-             FStarC_Util.print2 "WPE> is_applied %s -- %s\n" uu___1 uu___2)
-          else ();
-          (let uu___1 = FStarC_Syntax_Util.head_and_args_full t in
-           match uu___1 with
-           | (hd, args) ->
+        let rec args_are_binders args =
+          fun bs ->
+            match (args, bs) with
+            | ((t, uu___)::args1, b::bs1) ->
+                let uu___1 =
+                  let uu___2 = FStarC_Syntax_Subst.compress t in
+                  uu___2.FStarC_Syntax_Syntax.n in
+                (match uu___1 with
+                 | FStarC_Syntax_Syntax.Tm_name bv' ->
+                     (FStarC_Syntax_Syntax.bv_eq
+                        b.FStarC_Syntax_Syntax.binder_bv bv')
+                       && (args_are_binders args1 bs1)
+                 | uu___2 -> false)
+            | ([], []) -> true
+            | (uu___, uu___1) -> false in
+        let is_applied bs =
+          fun t ->
+            if debug
+            then
+              (let uu___1 =
+                 FStarC_Class_Show.show FStarC_Syntax_Print.showable_term t in
                let uu___2 =
-                 let uu___3 = FStarC_Syntax_Subst.compress hd in
-                 uu___3.FStarC_Syntax_Syntax.n in
-               (match uu___2 with
-                | FStarC_Syntax_Syntax.Tm_name bv when
-                    args_are_binders args bs ->
-                    (if debug
-                     then
-                       (let uu___4 =
-                          FStarC_Class_Show.show
-                            FStarC_Syntax_Print.showable_term t in
-                        let uu___5 =
-                          FStarC_Class_Show.show
-                            FStarC_Syntax_Print.showable_bv bv in
-                        let uu___6 =
-                          FStarC_Class_Show.show
-                            FStarC_Syntax_Print.showable_term hd in
-                        FStarC_Util.print3
-                          "WPE> got it\n>>>>top = %s\n>>>>b = %s\n>>>>hd = %s\n"
-                          uu___4 uu___5 uu___6)
-                     else ();
-                     FStar_Pervasives_Native.Some bv)
-                | uu___3 -> FStar_Pervasives_Native.None)) in
-        let is_applied_maybe_squashed bs t =
-          if debug
-          then
-            (let uu___1 =
-               FStarC_Class_Show.show FStarC_Syntax_Print.showable_term t in
-             let uu___2 =
-               FStarC_Class_Tagged.tag_of FStarC_Syntax_Syntax.tagged_term t in
-             FStarC_Util.print2 "WPE> is_applied_maybe_squashed %s -- %s\n"
-               uu___1 uu___2)
-          else ();
-          (let uu___1 = FStarC_Syntax_Util.is_squash t in
-           match uu___1 with
-           | FStar_Pervasives_Native.Some (uu___2, t') -> is_applied bs t'
-           | uu___2 ->
-               let uu___3 = FStarC_Syntax_Util.is_auto_squash t in
-               (match uu___3 with
-                | FStar_Pervasives_Native.Some (uu___4, t') ->
-                    is_applied bs t'
-                | uu___4 -> is_applied bs t)) in
+                 FStarC_Class_Tagged.tag_of FStarC_Syntax_Syntax.tagged_term
+                   t in
+               FStarC_Format.print2 "WPE> is_applied %s -- %s\n" uu___1
+                 uu___2)
+            else ();
+            (let uu___1 = FStarC_Syntax_Util.head_and_args_full t in
+             match uu___1 with
+             | (hd, args) ->
+                 let uu___2 =
+                   let uu___3 = FStarC_Syntax_Subst.compress hd in
+                   uu___3.FStarC_Syntax_Syntax.n in
+                 (match uu___2 with
+                  | FStarC_Syntax_Syntax.Tm_name bv when
+                      args_are_binders args bs ->
+                      (if debug
+                       then
+                         (let uu___4 =
+                            FStarC_Class_Show.show
+                              FStarC_Syntax_Print.showable_term t in
+                          let uu___5 =
+                            FStarC_Class_Show.show
+                              FStarC_Syntax_Print.showable_bv bv in
+                          let uu___6 =
+                            FStarC_Class_Show.show
+                              FStarC_Syntax_Print.showable_term hd in
+                          FStarC_Format.print3
+                            "WPE> got it\n>>>>top = %s\n>>>>b = %s\n>>>>hd = %s\n"
+                            uu___4 uu___5 uu___6)
+                       else ();
+                       FStar_Pervasives_Native.Some bv)
+                  | uu___3 -> FStar_Pervasives_Native.None)) in
+        let is_applied_maybe_squashed bs =
+          fun t ->
+            if debug
+            then
+              (let uu___1 =
+                 FStarC_Class_Show.show FStarC_Syntax_Print.showable_term t in
+               let uu___2 =
+                 FStarC_Class_Tagged.tag_of FStarC_Syntax_Syntax.tagged_term
+                   t in
+               FStarC_Format.print2
+                 "WPE> is_applied_maybe_squashed %s -- %s\n" uu___1 uu___2)
+            else ();
+            (let uu___1 = FStarC_Syntax_Util.is_squash t in
+             match uu___1 with
+             | FStar_Pervasives_Native.Some (uu___2, t') -> is_applied bs t'
+             | uu___2 ->
+                 let uu___3 = FStarC_Syntax_Util.is_auto_squash t in
+                 (match uu___3 with
+                  | FStar_Pervasives_Native.Some (uu___4, t') ->
+                      is_applied bs t'
+                  | uu___4 -> is_applied bs t)) in
         let is_const_match phi =
           let uu___ =
             let uu___1 = FStarC_Syntax_Subst.compress phi in

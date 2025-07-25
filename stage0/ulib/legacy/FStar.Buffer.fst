@@ -25,7 +25,7 @@ module L = FStar.List.Tot.Base
 module HS = FStar.HyperStack
 module HST = FStar.HyperStack.ST
 
-#set-options "--initial_fuel 0 --max_fuel 0"
+#set-options "--fuel 0"
 
 //17-01-04 usage? move to UInt? 
 let lemma_size (x:int) : Lemma (requires (UInt.size x n))
@@ -580,7 +580,7 @@ let lemma_reveal_modifies_region (rid:rid) bufs h0 h1 : Lemma
   (ensures  (modifies_one rid h0 h1 /\ modifies_bufs rid bufs h0 h1 /\ HS.get_tip h0 == HS.get_tip h1))
   = ()
 
-#reset-options "--z3rlimit 100 --max_fuel 0 --max_ifuel 0 --initial_fuel 0 --initial_ifuel 0"
+#reset-options "--z3rlimit 100 --fuel 0 --ifuel 0 --initial_fuel 0 --initial_ifuel 0"
 
 (* Stack effect specific lemmas *)
 let lemma_stack_1 (#a:Type) (b:buffer a) h0 h1 h2 h3 : Lemma
@@ -682,7 +682,7 @@ val lemma_modifies_0_0: h0:mem -> h1:mem -> h2:mem -> Lemma
   [SMTPat (modifies_0 h0 h1); SMTPat (modifies_0 h1 h2)]
 let lemma_modifies_0_0 h0 h1 h2 = ()
 
-#reset-options "--z3rlimit 20 --initial_fuel 0 --max_fuel 0"
+#reset-options "--z3rlimit 20 --fuel 0"
 
 let lemma_modifies_1_0 (#a:Type) (b:buffer a) h0 h1 h2 : Lemma
   (requires (live h0 b /\ modifies_1 b h0 h1 /\ modifies_0 h1 h2))
@@ -702,7 +702,7 @@ let lemma_modifies_0_1' (#a:Type) (b:buffer a) h0 h1 h2 : Lemma
   [SMTPat (modifies_0 h0 h1); SMTPat (modifies_1 b h1 h2)]
   = ()
 
-#reset-options "--z3rlimit 100 --initial_fuel 0 --max_fuel 0"
+#reset-options "--z3rlimit 100 --fuel 0"
 
 let lemma_modifies_1_1 (#a:Type) (#a':Type) (b:buffer a) (b':buffer a') h0 h1 h2 : Lemma
   (requires (live h0 b /\ live h0 b' /\ modifies_1 b h0 h1 /\ modifies_1 b' h1 h2))
@@ -711,7 +711,7 @@ let lemma_modifies_1_1 (#a:Type) (#a':Type) (b:buffer a) (b':buffer a') h0 h1 h2
   = if frameOf b = frameOf b' then modifies_trans_1_1' (frameOf b) b b' h0 h1 h2
     else ()
 
-#reset-options "--z3rlimit 200 --initial_fuel 0 --max_fuel 0"
+#reset-options "--z3rlimit 200 --fuel 0"
 
 let lemma_modifies_0_2 (#t:Type) (#t':Type) (b:buffer t) (b':buffer t') h0 h1 h2 : Lemma
   (requires (live h0 b /\ b' `unused_in` h0 /\ modifies_0 h0 h1 /\ live h1 b'
@@ -801,7 +801,7 @@ let lemma_modifies_0_none_trans h0 h1 h2 : Lemma
   (ensures (modifies_0 h0 h2))
   = ()
 
-#reset-options "--initial_fuel 0 --max_fuel 0"
+#reset-options "--fuel 0"
 
 (** Concrete getters and setters *)
 val create: #a:Type -> init:a -> len:UInt32.t -> StackInline (buffer a)
@@ -820,7 +820,7 @@ let create #a init len =
   assert (Seq.equal (as_seq h b) (sel h b));
   b
 
-#reset-options "--initial_fuel 0 --max_fuel 0"
+#reset-options "--fuel 0"
 
 unfold let p (#a:Type0) (init:list a) : GTot Type0 =
   normalize (0 < L.length init) /\
@@ -842,7 +842,7 @@ val createL: #a:Type0 -> init:list a -> StackInline (buffer a)
      /\ modifies_0 h0 h1
      /\ as_seq h1 b == Seq.seq_of_list init
      /\ q #a len b))
-#set-options "--initial_fuel 1 --max_fuel 1" //the normalize_term (length init) in the pre-condition will be unfolded
+#set-options "--fuel 1" //the normalize_term (length init) in the pre-condition will be unfolded
 	                                     //whereas the L.length init below will not
 let createL #a init =
   let len = UInt32.uint_to_t (L.length init) in
@@ -855,7 +855,7 @@ let createL #a init =
   b
 
 
-#reset-options "--initial_fuel 0 --max_fuel 0"
+#reset-options "--fuel 0"
 let lemma_upd (#a:Type) (h:mem) (x:reference a{live_region h (HS.frameOf x)}) (v:a) : Lemma
   (requires True)
   (ensures  (Map.domain (HS.get_hmap h) == Map.domain (HS.get_hmap (upd h x v))))
@@ -919,7 +919,7 @@ let rfree (#a:Type) (b:buffer a)
            (ensures  (fun h0 _ h1 -> is_mm (content b) /\ is_eternal_region (frameOf b) /\ h1 == HS.free (content b) h0))
   = rfree b.content
 
-(* #reset-options "--z3rlimit 100 --initial_fuel 0 --max_fuel 0" *)
+(* #reset-options "--z3rlimit 100 --fuel 0" *)
 
 (* val create_null: #a:Type -> init:a -> len:UInt32.t -> Stack (buffer a) *)
 (*   (requires (fun h -> True)) *)
@@ -931,7 +931,7 @@ let rfree (#a:Type) (b:buffer a)
 (*   r *)
 
 
-#reset-options "--initial_fuel 0 --max_fuel 0"
+#reset-options "--fuel 0"
 
 // ocaml-only, used for conversions to Platform.bytes
 val to_seq: #a:Type -> b:buffer a -> l:UInt32.t{v l <= length b} -> STL (seq a)
@@ -984,7 +984,7 @@ private let lemma_aux_1
   = let open FStar.Classical in
     forall_intro (move_requires (lemma_aux_0 b n z h0 tt))
 
-#reset-options "--initial_fuel 0 --max_fuel 0"
+#reset-options "--fuel 0"
 
 private let lemma_aux_2
   (#a:Type) (b:buffer a) (n:UInt32.t{v n < length b}) (z:a) (h0:mem)
@@ -1169,7 +1169,7 @@ val blit: #t:Type
       /\ Seq.slice (as_seq h1 b) (v idx_b+v len) (length b) ==
         Seq.slice (as_seq h0 b) (v idx_b+v len) (length b) ))
 
-#push-options "--z3rlimit 150 --max_fuel 0 --max_ifuel 0 --initial_fuel 0 --initial_ifuel 0"
+#push-options "--z3rlimit 150 --fuel 0 --ifuel 0 --initial_fuel 0 --initial_ifuel 0"
 #restart-solver
 let rec blit #t a idx_a b idx_b len =
   let h0 = HST.get () in
@@ -1233,7 +1233,7 @@ val no_upd_lemma_1: #t:Type -> #t':Type -> h0:mem -> h1:mem -> a:buffer t -> b:b
   [SMTPat (modifies_1 a h0 h1); SMTPat (live h0 b)]
 let no_upd_lemma_1 #t #t' h0 h1 a b = ()
 
-#reset-options "--z3rlimit 30 --initial_fuel 0 --max_fuel 0"
+#reset-options "--z3rlimit 30 --fuel 0"
 
 val no_upd_lemma_2: #t:Type -> #t':Type -> #t'':Type -> h0:mem -> h1:mem -> a:buffer t -> a':buffer t' -> b:buffer t'' -> Lemma
   (requires (live h0 b /\ disjoint a b /\ disjoint a' b /\ modifies_2 a a' h0 h1))
@@ -1284,7 +1284,7 @@ let lemma_modifies_sub_2_1 #t h0 h1 (b:buffer t) : Lemma
   [SMTPat (live h0 b); SMTPat (modifies_2_1 b h0 h1)]
   = ()
 
-#reset-options "--z3rlimit 100 --initial_fuel 0 --max_fuel 0"
+#reset-options "--z3rlimit 100 --fuel 0"
 
 let modifies_subbuffer_1 (#t:Type) h0 h1 (sub:buffer t) (a:buffer t) : Lemma
   (requires (live h0 a /\ modifies_1 sub h0 h1 /\ includes a sub))

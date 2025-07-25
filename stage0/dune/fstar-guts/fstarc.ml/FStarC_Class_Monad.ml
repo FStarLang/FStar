@@ -29,7 +29,7 @@ let (monad_option : unit FStar_Pervasives_Native.option monad) =
          fun uu___2 ->
            fun uu___1 ->
              fun uu___ ->
-               (fun uu___1 -> fun uu___ -> Obj.magic FStarC_Util.bind_opt)
+               (fun uu___1 -> fun uu___ -> Obj.magic FStarC_Option.bind)
                  uu___3 uu___2 uu___1 uu___)
   }
 let (monad_list : unit Prims.list monad) =
@@ -82,21 +82,23 @@ let mapMi :
       fun b ->
         fun f ->
           fun l ->
-            let rec mapMi_go i f1 l1 =
-              match l1 with
-              | [] -> return uu___ () (Obj.magic [])
-              | x::xs ->
-                  let uu___1 = f1 i x in
-                  op_let_Bang uu___ () () uu___1
-                    (fun y ->
-                       let uu___2 = mapMi_go (i + Prims.int_one) f1 xs in
-                       op_let_Bang uu___ () () uu___2
-                         (fun uu___3 ->
-                            (fun ys ->
-                               let ys = Obj.magic ys in
-                               Obj.magic
-                                 (return uu___ () (Obj.magic (y :: ys))))
-                              uu___3)) in
+            let rec mapMi_go i =
+              fun f1 ->
+                fun l1 ->
+                  match l1 with
+                  | [] -> return uu___ () (Obj.magic [])
+                  | x::xs ->
+                      let uu___1 = f1 i x in
+                      op_let_Bang uu___ () () uu___1
+                        (fun y ->
+                           let uu___2 = mapMi_go (i + Prims.int_one) f1 xs in
+                           op_let_Bang uu___ () () uu___2
+                             (fun uu___3 ->
+                                (fun ys ->
+                                   let ys = Obj.magic ys in
+                                   Obj.magic
+                                     (return uu___ () (Obj.magic (y :: ys))))
+                                  uu___3)) in
             mapMi_go Prims.int_zero f l
 let map_optM :
   'm .
