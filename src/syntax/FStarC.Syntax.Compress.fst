@@ -2,7 +2,6 @@ module FStarC.Syntax.Compress
 open FStarC
 
 open FStarC
-open FStarC.Util
 open FStarC.Effect
 open FStarC.Syntax.Syntax
 open FStarC.Syntax.Subst

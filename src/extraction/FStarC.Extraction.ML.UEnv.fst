@@ -40,7 +40,6 @@ module FStarC.Extraction.ML.UEnv
 open FStarC
 open FStarC.Effect
 open FStarC.List
-open FStarC.Util
 open FStarC.Ident
 open FStarC.Extraction.ML.Syntax
 open FStarC.Syntax

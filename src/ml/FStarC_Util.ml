@@ -416,21 +416,6 @@ let fprint (oc:out_channel) fmt args : unit = Printf.fprintf oc "%s" (FStarC_For
 
 [@@deriving yojson,show]
 
-let is_left = function
-  | FStar_Pervasives.Inl _ -> true
-  | _ -> false
-
-let is_right = function
-  | FStar_Pervasives.Inr _ -> true
-  | _ -> false
-
-let left = function
-  | FStar_Pervasives.Inl x -> x
-  | _ -> failwith "Not in left"
-let right = function
-  | FStar_Pervasives.Inr x -> x
-  | _ -> failwith "Not in right"
-
 let (-<-) f g x = f (g x)
 
 let find_dup f l =

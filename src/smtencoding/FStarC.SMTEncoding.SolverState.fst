@@ -18,7 +18,6 @@ open FStarC.Effect
 open FStarC
 open FStarC.SMTEncoding.Term
 open FStarC.BaseTypes
-open FStarC.Util
 open FStar.List.Tot
 open FStarC.Class.Show
 open FStarC.Class.Setlike

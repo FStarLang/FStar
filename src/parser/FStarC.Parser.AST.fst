@@ -19,11 +19,21 @@ open FStarC
 open FStarC.Effect
 open FStarC.List
 open FStarC.Range
-open FStarC.Util
 open FStarC.Const
 open FStarC.Errors
 open FStarC.Ident
 open FStarC.Class.Show
+(* All of these should be in FStar.String. *)
+open FStarC.Util {
+  starts_with,
+  substring,
+  substring_from,
+  string_of_char,
+  char_of_int,
+  safe_int_of_string,
+  split
+}
+
 module C = FStarC.Parser.Const
 
 instance hasRange_term : hasRange term = {

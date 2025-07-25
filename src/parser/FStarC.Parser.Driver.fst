@@ -20,7 +20,6 @@ open FStarC
 open FStarC.Parser
 open FStarC.Parser.AST
 open FStarC.Parser.ParseIt
-open FStarC.Util
 open FStarC.Errors
 open FStarC.Class.Show
 

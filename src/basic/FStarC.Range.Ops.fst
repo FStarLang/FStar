@@ -23,7 +23,6 @@ friend FStarC.Range.Type
 
 open FStarC.Json
 open FStarC.Effect 
-open FStarC.Util { max_int }
 open FStarC.Class.Ord
 
 
@@ -85,7 +84,7 @@ let compare_use_range r1 r2 = compare_rng r1.use_range r2.use_range
 let range_before_pos m1 p =
     p >=? end_of_range m1
 
-let end_of_line p = {p with col=max_int}
+let end_of_line p = {p with col = Util.max_int} // silly to depend on Util for this only...
 let extend_to_end_of_line r = mk_range (file_of_range r)
                                        (start_of_range r)
                                        (end_of_line (end_of_range r))

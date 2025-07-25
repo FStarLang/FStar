@@ -1563,7 +1563,7 @@ let resugar_sigelt' env se : option A.decl =
        * ident without a path, so it gets printed correctly. *)
       let nopath_lbs ((is_rec, lbs) : letbindings) : letbindings =
         let nopath fv = lid_as_fv (lid_of_ids [ident_of_lid (lid_of_fv fv)]) None in
-        let lbs = List.map (fun lb ->  { lb with lbname = Inr (nopath <| right lb.lbname)} ) lbs in
+        let lbs = List.map (fun lb ->  { lb with lbname = Inr (nopath <| Inr?.v lb.lbname)} ) lbs in
         (is_rec, lbs)
       in
       let lbs = nopath_lbs lbs in

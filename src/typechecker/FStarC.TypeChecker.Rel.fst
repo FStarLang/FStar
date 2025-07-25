@@ -23,7 +23,6 @@ module FStarC.TypeChecker.Rel
 open FStarC
 open FStarC.Effect
 open FStarC.List
-open FStarC.Util
 open FStarC.Errors
 open FStarC.Defensive
 open FStarC.TypeChecker
@@ -473,6 +472,7 @@ let set_logical (b:bool) = function
    | CProb p -> CProb {p with logical=b}
 
 let is_top_level_prob p = p_reason p |> List.length = 1
+let incr r = r := !r + 1
 let next_pid =
     let ctr = mk_ref 0 in
     fun () -> incr ctr; !ctr

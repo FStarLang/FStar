@@ -17,7 +17,6 @@
 module FStarC.CheckedFiles
 open FStarC
 open FStarC.Effect
-open FStarC.Util
 open FStarC.SMap
 
 open FStarC.Class.Show

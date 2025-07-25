@@ -21,7 +21,6 @@ open FStarC.List
 open FStarC.TypeChecker
 open FStarC.TypeChecker.Common
 open FStarC.TypeChecker.Env
-open FStarC.Util
 open FStarC.Ident
 open FStarC.Errors
 open FStarC.Syntax
@@ -1189,7 +1188,7 @@ and mk_let (env: env_) (binding: letbinding) (e2: term)
   let mk x = mk x e2.pos in
   let e1 = binding.lbdef in
   // This is [let x = e1 in e2]. Open [x] in [e2].
-  let x = BU.left binding.lbname in
+  let x = Inl?.v binding.lbname in
   let x_binders = [ S.mk_binder x ] in
   let x_binders, e2 = SS.open_term x_binders e2 in
   begin match infer env e1 with

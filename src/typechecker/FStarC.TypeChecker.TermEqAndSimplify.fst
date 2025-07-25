@@ -2,7 +2,6 @@ module FStarC.TypeChecker.TermEqAndSimplify
 
 open FStarC
 open FStarC.Effect
-open FStarC.Util
 open FStarC.Syntax
 open FStarC.Const
 open FStarC.Ident

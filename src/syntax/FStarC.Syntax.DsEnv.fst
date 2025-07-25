@@ -18,7 +18,6 @@ module FStarC.Syntax.DsEnv
 open FStarC.Effect
 open FStarC.List
 open FStarC
-open FStarC.Util
 open FStarC.Syntax
 open FStarC.Syntax.Syntax
 open FStarC.Syntax.Util
@@ -277,7 +276,7 @@ let unmangleMap = [("op_ColonColon", "Cons", Some Data_ctor);
                    ("not", "op_Negation", None)]
 
 let unmangleOpName (id:ident) : option term =
-  find_map unmangleMap (fun (x,y,dq) ->
+  FStarC.Util.find_map unmangleMap (fun (x,y,dq) ->
     if string_of_id id = x
     then Some (S.fvar_with_dd (lid_of_path ["Prims"; y] (range_of_id id)) dq)
     else None)
@@ -610,7 +609,7 @@ let fv_qual_of_se = fun se -> match se.sigel with
 
 let lb_fv lbs lid =
      BU.find_map lbs  (fun lb ->
-        let fv = right lb.lbname in
+        let fv = Inr?.v lb.lbname in
         if S.fv_eq_lid fv lid then Some fv else None) |> Option.must
 
 let ns_of_lid_equals (lid: lident) (ns: lident) =
@@ -1169,7 +1168,7 @@ let find_binders_for_datacons: env -> lident -> option (list ident) =
           |> Some
         | _ -> None in
     let result = resolve_in_open_namespaces' env lid (fun _ -> None) (fun _ -> None) k_global_def in
-    if !debug then print_endline ("find_binders_for_datacons(_, " ^ show lid ^ ") = " ^ show result);
+    if !debug then Format.print_string ("find_binders_for_datacons(_, " ^ show lid ^ ") = " ^ show result ^ "\n");
     result
 
 (** Elaborates a `restriction`: this function adds implicit names
@@ -1250,7 +1249,7 @@ let elab_restriction f env ns restriction =
     ) l |> List.flatten |> List.append l in
     let _error_on_duplicates =
       let final_idents = List.mapi (fun i (id, renamed) -> (Option.dflt id renamed, i)) l in
-      match final_idents |> find_dup (fun (x, _) (y, _) -> x =? y) with
+      match final_idents |> FStarC.Util.find_dup (fun (x, _) (y, _) -> x =? y) with
       | Some (id, i) ->
         let others = List.filter (fun (id', i') -> id =? id' && not (i =? i')) final_idents in
         List.mapi (fun nth (other, _) ->
@@ -1415,7 +1414,7 @@ let finish env modul =
     | Sig_let {lbs=(_,lbs)} ->
       if List.contains Private quals
       then begin
-           lbs |> List.iter (fun lb -> SMap.remove (sigmap env) (string_of_lid (right lb.lbname).fv_name.v))
+           lbs |> List.iter (fun lb -> SMap.remove (sigmap env) (string_of_lid (Inr?.v lb.lbname).fv_name.v))
       end
 
     | _ -> ());

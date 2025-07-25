@@ -25,7 +25,6 @@ open FStarC.Errors
 open FStarC.Dyn
 open FStarC.Reflection.V2.Constants
 
-module BU      = FStarC.Util
 module Env     = FStarC.TypeChecker.Env
 module Err     = FStarC.Errors
 module I       = FStarC.Ident

@@ -29,6 +29,7 @@ open FStarC.Parser.AST
 open FStarC.Const
 open FStarC.Errors
 open FStarC.Class.Show
+open FStarC.Util
 
 module Const = FStarC.Parser.Const
 module BU = FStarC.Util

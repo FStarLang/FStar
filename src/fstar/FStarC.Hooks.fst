@@ -18,7 +18,6 @@ module FStarC.Hooks
 open FStarC
 open FStarC.Effect
 open FStarC.List
-open FStarC.Util
 open FStarC.Ident
 open FStarC.Class.Show
 open FStarC.Syntax.Print {}

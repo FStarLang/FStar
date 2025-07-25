@@ -17,7 +17,6 @@ module FStarC.ToSyntax.ToSyntax
 open FStarC.Effect
 
 open FStarC
-open FStarC.Util
 open FStarC.Syntax
 open FStarC.Syntax.Syntax
 open FStarC.Syntax.Util

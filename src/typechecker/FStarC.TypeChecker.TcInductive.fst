@@ -23,7 +23,6 @@ open FStarC.List
 open FStarC.Errors
 open FStarC.TypeChecker
 open FStarC.TypeChecker.Env
-open FStarC.Util
 open FStarC.Ident
 open FStarC.Syntax
 open FStarC.Syntax.Syntax
@@ -1120,7 +1119,7 @@ let mk_discriminator_and_indexed_projectors iquals                   (* Qualifie
                             []
                             Range.dummyRange
                 in
-                let impl = { sigel = Sig_let {lbs=(false, [lb]); lids=[lb.lbname |> right |> (fun fv -> fv.fv_name.v)]};
+                let impl = { sigel = Sig_let {lbs=(false, [lb]); lids=[lb.lbname |> Inr?.v |> (fun fv -> fv.fv_name.v)]};
                              sigquals = quals;
                              sigrng = p;
                              sigmeta = default_sigmeta;
@@ -1230,7 +1229,7 @@ let mk_discriminator_and_indexed_projectors iquals                   (* Qualifie
                   lbattrs=[];
                   lbpos=Range.dummyRange;
               } in
-              let impl = { sigel = Sig_let {lbs=(false, [lb]); lids=[lb.lbname |> right |> (fun fv -> fv.fv_name.v)]};
+              let impl = { sigel = Sig_let {lbs=(false, [lb]); lids=[lb.lbname |> Inr?.v |> (fun fv -> fv.fv_name.v)]};
                            sigquals = quals;
                            sigrng = p;
                            sigmeta = default_sigmeta;

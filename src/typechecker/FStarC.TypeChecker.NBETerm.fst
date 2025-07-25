@@ -207,8 +207,8 @@ let rec t_to_string (x:t) =
   | Lazy (Inl li, _) -> Format.fmt1 "Lazy (Inl {%s})" (show (U.unfold_lazy li))
   | Lazy (Inr (_, et), _) -> Format.fmt1 "Lazy (Inr (?, %s))" (show et)
   | LocalLetRec (_, l, _, _, _, _, _) -> "LocalLetRec (" ^ (show (true, [l])) ^ ")"
-  | TopLevelLet (lb, _, _) -> "TopLevelLet (" ^ show (BU.right lb.lbname) ^ ")"
-  | TopLevelRec (lb, _, _, _) -> "TopLevelRec (" ^ show (BU.right lb.lbname) ^ ")"
+  | TopLevelLet (lb, _, _) -> "TopLevelLet (" ^ show (Inr?.v lb.lbname) ^ ")"
+  | TopLevelRec (lb, _, _, _) -> "TopLevelRec (" ^ show (Inr?.v lb.lbname) ^ ")"
   | Meta (t, _) -> "Meta " ^ t_to_string t
 and atom_to_string (a: atom) =
   match a with

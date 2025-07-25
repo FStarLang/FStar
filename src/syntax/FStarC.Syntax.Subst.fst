@@ -21,7 +21,6 @@ open FStarC
 open FStarC.Range
 open FStarC.Syntax
 open FStarC.Syntax.Syntax
-open FStarC.Util
 open FStarC.Ident
 
 module U = FStarC.Util
@@ -466,7 +465,7 @@ let rec push_subst_aux (resolve_uvars:bool) s t =
         let body = subst' sn body in
         let lbs = lbs |> List.map (fun lb ->
           let lbt = subst' s lb.lbtyp in
-          let lbd = if is_rec && U.is_left (lb.lbname) //if it is a recursive local let, then all the let bound names are in scope for the body
+          let lbd = if is_rec && Inl? (lb.lbname) //if it is a recursive local let, then all the let bound names are in scope for the body
                     then subst' sn lb.lbdef
                     else subst' s lb.lbdef in
           let lbname = match lb.lbname with
@@ -708,7 +707,7 @@ let open_let_rec lbs (t:term) =
                        //if any (see below)
       else List.fold_right
               (fun lb (i, lbs, out) ->
-                 let x = Syntax.freshen_bv (left lb.lbname) in
+                 let x = Syntax.freshen_bv (Inl?.v lb.lbname) in
                  i+1, {lb with lbname=Inl x}::lbs, DB(i, x)::out)
               lbs
               (0, [], [])
@@ -755,7 +754,7 @@ let close_let_rec lbs (t:term) =
       then 0, [] //top-level let recs do not have to be closed
                  //except for their universe binders, if any (see below)
       else List.fold_right
-               (fun lb (i, out) -> i+1, NM(left lb.lbname, i)::out)
+               (fun lb (i, out) -> i+1, NM(Inl?.v lb.lbname, i)::out)
                lbs
                (0, [])
     in

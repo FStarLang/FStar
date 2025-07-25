@@ -20,7 +20,6 @@ open FStarC
 open FStarC.Syntax
 open FStarC.TypeChecker
 
-open FStarC.Util
 open FStarC.Ident
 open FStarC.Errors
 open FStarC.Syntax.Syntax

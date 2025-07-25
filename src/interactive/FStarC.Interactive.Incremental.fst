@@ -19,7 +19,6 @@ open FStarC.Effect
 open FStarC.List
 open FStarC
 open FStarC.Range
-open FStarC.Util
 open FStarC.Getopt
 open FStarC.Ident
 open FStarC.Errors
@@ -343,7 +342,7 @@ let format_code (st:repl_state) (code:string)
     match parse_result with
     | IncrementalFragment (decls, comments, None) ->
       let doc_to_string doc =
-          FStarC.Pprint.pretty_string (float_of_string "1.0") 100 doc
+          FStarC.Pprint.pretty_string (Util.float_of_string "1.0") 100 doc
       in
       let formatted_code_rev, leftover_comments =
         List.fold_left

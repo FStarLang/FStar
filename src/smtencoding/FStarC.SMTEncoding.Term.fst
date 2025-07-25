@@ -327,7 +327,7 @@ let mk t r = {tm=t; freevars=mk_ref None; rng=r}
 let mkTrue  r       = mk (App(TrueOp, [])) r
 let mkFalse r       = mk (App(FalseOp, [])) r
 let mkUnreachable   = mk (App(Var "Unreachable", [])) Range.dummyRange
-let mkInteger i  r  = mk (Integer (ensure_decimal i)) r
+let mkInteger i  r  = mk (Integer (BU.ensure_decimal i)) r
 let mkInteger' i r  = mkInteger (show i) r
 let mkReal i r      = mk (Real i) r
 let mkBoundV i r    = mk (BoundV i) r
@@ -1104,21 +1104,21 @@ let boxTerm sort t = match sort with
   | String_sort -> boxString t
   | BitVec_sort sz -> boxBitVec sz t
   | Sort "Real" -> boxReal t
-  | _ -> raise Impos
+  | _ -> raise BU.Impos
 let unboxTerm sort t = match sort with
   | Int_sort -> unboxInt t
   | Bool_sort -> unboxBool t
   | String_sort -> unboxString t
   | BitVec_sort sz -> unboxBitVec sz t
   | Sort "Real" -> unboxReal t
-  | _ -> raise Impos
+  | _ -> raise BU.Impos
 
 let getBoxedInteger (t:term) =
   match t.tm with
   | App(Var s, [t2]) when s = fst boxIntFun ->
     begin
     match t2.tm with
-    | Integer n -> Some (int_of_string n)
+    | Integer n -> Some (BU.int_of_string n)
     | _ -> None
     end
   | _ -> None

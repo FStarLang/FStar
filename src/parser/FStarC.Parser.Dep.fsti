@@ -17,8 +17,8 @@ module FStarC.Parser.Dep
 
 open FStarC
 open FStarC.Effect
-open FStarC.Util
 open FStarC.Ident
+open FStarC.Util { out_channel }
 
 type open_kind = | Open_module | Open_namespace
 type module_name = string

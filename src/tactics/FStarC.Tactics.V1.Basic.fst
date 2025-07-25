@@ -18,7 +18,6 @@ module FStarC.Tactics.V1.Basic
 open FStarC
 open FStarC.Effect
 open FStarC.List
-open FStarC.Util
 open FStarC.Ident
 open FStarC.TypeChecker.Env
 open FStarC.TypeChecker.Common

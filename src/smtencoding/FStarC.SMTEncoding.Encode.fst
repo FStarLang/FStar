@@ -597,7 +597,7 @@ let encode_top_level_val uninterpreted env us fv t quals =
 let encode_top_level_vals env bindings quals =
   let decls, env =
     bindings |> List.fold_left (fun (decls, env) lb ->
-        let decls', env = encode_top_level_val false env lb.lbunivs (BU.right lb.lbname) lb.lbtyp quals in
+        let decls', env = encode_top_level_val false env lb.lbunivs (Inr?.v lb.lbname) lb.lbtyp quals in
         List.rev_append decls' decls, env) ([], env)
   in
   List.rev decls, env
@@ -732,7 +732,7 @@ let encode_top_level_let :
             (* non-reified reifiable computation type. *)
             (* TODO : clear this mess, the declaration should have a type corresponding to *)
             (* the encoded term *)
-            let tok, decl, env = declare_top_level_let env (BU.right lb.lbname) lb.lbtyp t_norm in
+            let tok, decl, env = declare_top_level_let env (Inr?.v lb.lbname) lb.lbtyp t_norm in
             tok::toks, t_norm::typs, decl::decls, env)
             ([], [], [], env)
         in
@@ -795,7 +795,7 @@ let encode_top_level_let :
                   | _ -> false
                 in
                 let is_smt_theory_symbol =
-                    let fv = FStarC.Util.right lbn in
+                    let fv = Inr?.v lbn in
                     Env.fv_has_attr env.tcenv fv FStarC.Parser.Const.smt_theory_symbol_attr_lid
                 in
                 let is_sub_singleton = U.is_sub_singleton body in
@@ -1633,7 +1633,7 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t & env_t) =
           || se.sigattrs |> BU.for_some is_opaque_to_smt ->
        let attrs = se.sigattrs in
        let env, decls = BU.fold_map (fun env lb ->
-        let lid = (BU.right lb.lbname).fv_name.v in
+        let lid = (Inr?.v lb.lbname).fv_name.v in
         if None? <| Env.try_lookup_val_decl env.tcenv lid
         then let val_decl = { se with sigel = Sig_declare_typ {lid; us=lb.lbunivs; t=lb.lbtyp};
                                       sigquals = S.Irreducible :: se.sigquals } in
@@ -1682,7 +1682,7 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t & env_t) =
          when (se.sigquals |> BU.for_some (function Projector _ -> true | _ -> false)) ->
      //Projectors are also are encoded directly via (our encoding of) theory of datatypes
      //Except in some cases where the front-end does not emit a declare_typ for some projector, because it doesn't know how to compute it
-     let fv = BU.right lb.lbname in
+     let fv = Inr?.v lb.lbname in
      let l = fv.fv_name.v in
      begin match try_lookup_free_var env l with
         | Some _ ->

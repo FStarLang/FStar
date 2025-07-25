@@ -20,7 +20,6 @@ open FStarC
 open FStarC.Effect
 open FStarC.Syntax.Syntax
 open FStarC.Syntax.Embeddings
-open FStarC.Util
 open FStarC.List
 open FStarC.Class.Show
 

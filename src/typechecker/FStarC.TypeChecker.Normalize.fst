@@ -1197,7 +1197,7 @@ let rec norm : cfg -> env -> stack -> term -> term =
 
           | Tm_let {lbs=(false, [lb]); body} ->
             if Cfg.should_reduce_local_let cfg lb
-            then let binder = S.mk_binder (BU.left lb.lbname) in
+            then let binder = S.mk_binder (Inl?.v lb.lbname) in
                  (* If this let is effectful, and marked with @inline_let
                   * (and it passed the typechecker), then its definition
                   * must be pure. But, it will be lifted into an effectful
@@ -1212,7 +1212,7 @@ let rec norm : cfg -> env -> stack -> term -> term =
             (* This is important for tactics, see issue #1594 *)
             else if cfg.steps.tactics
                     && U.is_div_effect (Env.norm_eff_name cfg.tcenv lb.lbeff)
-            then let ffun = S.mk (Tm_abs {bs=[S.mk_binder (lb.lbname |> BU.left)]; body; rc_opt=None}) t.pos in
+            then let ffun = S.mk (Tm_abs {bs=[S.mk_binder (lb.lbname |> Inl?.v)]; body; rc_opt=None}) t.pos in
                  let stack = (CBVApp (env, ffun, None, t.pos)) :: stack in
                  log cfg (fun () -> Format.print_string "+++ Evaluating DIV Tm_let\n");
                  norm cfg env stack lb.lbdef
@@ -1221,7 +1221,7 @@ let rec norm : cfg -> env -> stack -> term -> term =
             then (log cfg (fun () -> Format.print_string "+++ Not touching Tm_let\n");
                   rebuild cfg env stack (closure_as_term cfg env t))
 
-            else let bs, body = Subst.open_term [lb.lbname |> BU.left |> S.mk_binder] body in
+            else let bs, body = Subst.open_term [lb.lbname |> Inl?.v |> S.mk_binder] body in
                  log cfg (fun () -> Format.print_string "+++ Normalizing Tm_let -- type");
                  let ty = norm cfg env [] lb.lbtyp in
                  let lbname =
@@ -1246,7 +1246,7 @@ let rec norm : cfg -> env -> stack -> term -> term =
             let lbs, body = Subst.open_let_rec lbs body in
             let lbs = List.map (fun lb ->
                 let ty = norm cfg env [] lb.lbtyp in
-                let lbname = Inl ({BU.left lb.lbname with sort=ty}) in
+                let lbname = Inl ({Inl?.v lb.lbname with sort=ty}) in
                 let xs, def_body, lopt = U.abs_formals lb.lbdef in
                 let xs = norm_binders cfg env xs in
                 let env = List.map (fun _ -> dummy ()) xs //first the bound vars for the arguments
@@ -1282,7 +1282,7 @@ let rec norm : cfg -> env -> stack -> term -> term =
             //i.e., we set memo := Some (rec_env, \x. f x)
 
             let rec_env, memos, _ = List.fold_right (fun lb (rec_env, memos, i) ->
-                    let bv = {left lb.lbname with index=i} in
+                    let bv = {Inl?.v lb.lbname with index=i} in
                     let f_i = Syntax.bv_to_tm bv in
                     let fix_f_i = mk (Tm_let {lbs; body=f_i}) t.pos in
                     let memo = fresh_memo () in
@@ -3014,11 +3014,11 @@ let elim_uvars_aux_tc (env:Env.env) (univ_names:univ_names) (binders:binders) (t
 
 let elim_uvars_aux_t env univ_names binders t =
    let univ_names, binders, tc = elim_uvars_aux_tc env univ_names binders (Inl t) in
-   univ_names, binders, BU.left tc
+   univ_names, binders, Inl?.v tc
 
 let elim_uvars_aux_c env univ_names binders c =
    let univ_names, binders, tc = elim_uvars_aux_tc env univ_names binders (Inr c) in
-   univ_names, binders, BU.right tc
+   univ_names, binders, Inr?.v tc
 
 let rec elim_uvars (env:Env.env) (s:sigelt) =
     let sigattrs = List.map Mktuple3?._3 <| List.map (elim_uvars_aux_t env [] []) s.sigattrs in

@@ -23,7 +23,6 @@ open FStarC.Defensive
 open FStarC.TypeChecker
 open FStarC.TypeChecker.Common
 open FStarC.TypeChecker.Env
-open FStarC.Util
 open FStarC.Ident
 open FStarC.Syntax
 open FStarC.Syntax.Syntax
@@ -3959,7 +3958,7 @@ and check_inner_let env e =
                              (show e1)
                              (show c1.eff_name))
        in
-       let x = {BU.left lb.lbname with sort=c1.res_typ} in
+       let x = {Inl?.v lb.lbname with sort=c1.res_typ} in
        let xb, e2 = SS.open_term [S.mk_binder x] e2 in
        let xbinder = List.hd xb in
        let x = xbinder.binder_bv in
@@ -4053,7 +4052,7 @@ and check_top_level_let_rec env top =
            let lbs, g_lbs = check_let_recs rec_env lbs in
            let g_lbs = g_t ++ g_lbs |> Rel.solve_deferred_constraints env |> Rel.resolve_implicits env in
 
-           let all_lb_names = lbs |> List.map (fun lb -> right lb.lbname) |> Some in
+           let all_lb_names = lbs |> List.map (fun lb -> Inr?.v lb.lbname) |> Some in
 
            let lbs, g_lbs =
               if not env.generalize
@@ -4115,12 +4114,12 @@ and check_inner_let_rec env top =
           let lbs, g_lbs = check_let_recs rec_env lbs |> (fun (lbs, g) -> lbs, g_t ++ g) in
 
           let env, lbs = lbs |> BU.fold_map (fun env lb ->
-            let x = {left lb.lbname with sort=lb.lbtyp} in
+            let x = {Inl?.v lb.lbname with sort=lb.lbtyp} in
             let lb = {lb with lbname=Inl x} in
             let env = Env.push_let_binding env lb.lbname ([], lb.lbtyp) in //local let recs are not universe polymorphic
             env, lb) env in
 
-          let bvs = lbs |> List.map (fun lb -> left (lb.lbname)) in
+          let bvs = lbs |> List.map (fun lb -> Inl?.v (lb.lbname)) in
 
           let e2, cres, g2 = tc_term env e2 in
           let cres =
@@ -4163,7 +4162,7 @@ and check_inner_let_rec env top =
           let cres = {cres with res_typ=tres} in
 
           let guard =
-            let bs = lbs |> List.map (fun lb -> S.mk_binder (BU.left lb.lbname)) in
+            let bs = lbs |> List.map (fun lb -> S.mk_binder (Inl?.v lb.lbname)) in
             TcUtil.close_guard_implicits env false bs guard
           in
 
@@ -4856,7 +4855,7 @@ let rec __typeof_tot_or_gtot_term_fastpath (env:env) (t:term) (must_tot:bool) : 
   | Tm_match {rc_opt=Some rc} -> rc.residual_typ
 
   | Tm_let {lbs=(false, [lb]); body} ->
-    let x = BU.left lb.lbname in
+    let x = Inl?.v lb.lbname in
     let xb, body = SS.open_term [S.mk_binder x] body in
     let xbinder = List.hd xb in
     let x = xbinder.binder_bv in

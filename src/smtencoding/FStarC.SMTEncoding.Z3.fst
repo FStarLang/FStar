@@ -14,9 +14,11 @@
    limitations under the License.
 *)
 module FStarC.SMTEncoding.Z3
+
+open FStarC
 open FStarC.Effect
 open FStarC.List
-open FStarC
+open FStarC.Util
 open FStarC.SMTEncoding.Term
 open FStarC.BaseTypes
 open FStarC.Class.Show

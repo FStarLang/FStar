@@ -351,7 +351,7 @@ let ld_deps st =
     | Inl st -> Inl (st, deps)
   with
   | Error (e, msg, _rng, ctx) -> Format.print1_error "[E] Failed to load deps. %s" (Errors.rendermsg msg); Inr st
-  | exn -> Format.print1_error "[E] Failed to load deps. Message: %s" (message_of_exn exn); Inr st
+  | exn -> Format.print1_error "[E] Failed to load deps. Message: %s" (Util.message_of_exn exn); Inr st
 
 let add_module_completions this_fname deps table =
   let open FStarC.PSMap in

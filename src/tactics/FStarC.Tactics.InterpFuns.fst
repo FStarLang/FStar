@@ -31,7 +31,6 @@ open FStarC.Tactics.Native
 open FStarC.Tactics.Monad
 
 module PC    = FStarC.Parser.Const
-module BU    = FStarC.Util
 module E     = FStarC.Tactics.Embedding
 module NBET    = FStarC.TypeChecker.NBETerm
 module PO    = FStarC.TypeChecker.Primops

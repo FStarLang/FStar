@@ -19,7 +19,6 @@ open FStarC
 open FStarC.Effect
 open FStarC.List
 open FStarC.Range
-open FStarC.Util
 open FStarC.Format
 open FStarC.Getopt
 open FStarC.Ident
@@ -292,7 +291,7 @@ let buffer_input_queries (st:repl_state) : repl_state =
         {st with repl_buffered_input_queries =
                  st.repl_buffered_input_queries @ List.rev qs}
     in
-    if not (Util.poll_stdin (float_of_string "0.0"))
+    if not (Util.poll_stdin (Util.float_of_string "0.0"))
     then done qs st
     else (
       match Util.read_line st.repl_stdin with
@@ -1240,7 +1239,7 @@ let build_initial_repl_state (filename: string) =
     repl_curmod = None;
     repl_env = env;
     repl_deps_stack = [];
-    repl_stdin = open_stdin ();
+    repl_stdin = Util.open_stdin ();
     repl_names = CompletionTable.empty;
     repl_buffered_input_queries = [];
     repl_lang = [] }

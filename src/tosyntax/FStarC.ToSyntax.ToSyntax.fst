@@ -2908,7 +2908,7 @@ let mk_indexed_projector_names iquals fvq attrs env lid (fields:list S.binder) =
                 lbpos=Range.dummyRange;
             } in
             let impl = { sigel = Sig_let {lbs=(false, [lb]);
-                                          lids=[lb.lbname |> right |> (fun fv -> fv.fv_name.v)]};
+                                          lids=[lb.lbname |> Inr?.v |> (fun fv -> fv.fv_name.v)]};
                          sigquals = quals;
                          sigrng = p;
                          sigmeta = default_sigmeta;
@@ -3989,7 +3989,7 @@ and desugar_decl_core env (d_attrs:list S.term) (d:decl) : (env_t & sigelts) =
       check_no_aq aq;
       match (Subst.compress <| ds_lets).n with
         | Tm_let {lbs} ->
-          let fvs = snd lbs |> List.map (fun lb -> right lb.lbname) in
+          let fvs = snd lbs |> List.map (fun lb -> Inr?.v lb.lbname) in
           let val_quals, val_attrs =
             List.fold_right (fun fv (qs, ats) ->
                 let qs', ats' = Env.lookup_letbinding_quals_and_attrs env fv.fv_name.v in

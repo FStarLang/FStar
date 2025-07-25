@@ -18,7 +18,6 @@ open FStarC
 open FStarC.Effect
 open FStarC.Range
 open FStarC.Parser
-open FStarC.Util
 open FStarC.Syntax
 open FStarC.Syntax.Syntax
 open FStarC.Errors
@@ -30,7 +29,6 @@ module SMT = FStarC.SMTEncoding.Solver
 module Tc = FStarC.TypeChecker.Tc
 module TcTerm = FStarC.TypeChecker.TcTerm
 module ToSyntax = FStarC.ToSyntax.ToSyntax
-module BU = FStarC.Util
 module Rel = FStarC.TypeChecker.Rel
 module NBE = FStarC.TypeChecker.NBE
 

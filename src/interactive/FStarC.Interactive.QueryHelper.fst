@@ -22,7 +22,6 @@ open FStarC.Effect
 open FStarC.List
 open FStarC
 open FStarC.Range
-open FStarC.Util
 open FStarC.TypeChecker.Env
 open FStarC.TypeChecker.Common
 open FStarC.Interactive.JsonHelper

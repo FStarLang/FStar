@@ -2,7 +2,6 @@ module FStarC.TypeChecker.Core
 open FStarC
 open FStar.List.Tot
 open FStarC
-open FStarC.Util
 open FStarC.Effect
 open FStarC.Syntax.Syntax
 open FStarC.TypeChecker

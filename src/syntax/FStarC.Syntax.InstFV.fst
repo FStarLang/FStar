@@ -17,12 +17,10 @@ module FStarC.Syntax.InstFV
 open FStarC.Effect
 open FStarC.Syntax.Syntax
 open FStarC.Ident
-open FStarC.Util
 open FStarC
 
 module S = FStarC.Syntax.Syntax
 module SS = FStarC.Syntax.Subst
-module U = FStarC.Util
 
 let mk t s = S.mk s t.pos
 

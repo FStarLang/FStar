@@ -18,7 +18,6 @@ module FStarC.TypeChecker.Generalize
 open FStarC
 open FStarC.Effect
 open FStarC.List
-open FStarC.Util
 open FStarC.Errors
 open FStarC.Syntax
 open FStarC.Syntax.Syntax
@@ -224,7 +223,7 @@ let gen env (is_rec:bool) (lecs:list (lbname & term & comp)) : option (list (lbn
      let gen_univs = gen_univs env univs in
      let gen_tvars = gen_types uvs in
 
-     let ecs = lecs |> List.map (fun (lbname, e, c) ->
+     let ecs = lecs |> List.map #(lbname & _ & _) (fun (lbname, e, c) ->
          let e, c, gvs =
             match gen_tvars, gen_univs with
             | [], [] ->
@@ -240,7 +239,7 @@ let gen env (is_rec:bool) (lecs:list (lbname & term & comp)) : option (list (lbn
                 if is_rec
                 then let tvar_args = List.map (fun (x, _) -> S.iarg (S.bv_to_name x)) gen_tvars in
                      let instantiate_lbname_with_app tm fv =
-                        if S.fv_eq fv (right lbname)
+                        if S.fv_eq fv (Inr?.v lbname)
                         then S.mk_Tm_app tm tvar_args tm.pos
                         else tm
                     in FStarC.Syntax.InstFV.inst instantiate_lbname_with_app e
@@ -262,7 +261,7 @@ let gen env (is_rec:bool) (lecs:list (lbname & term & comp)) : option (list (lbn
      Some ecs
 
 let generalize' env (is_rec:bool) (lecs:list (lbname&term&comp)) : (list (lbname&univ_names&term&comp&list binder)) =
-  assert (List.for_all (fun (l, _, _) -> is_right l) lecs); //only generalize top-level lets
+  assert (List.for_all (fun (l, _, _) -> Inr? l) lecs); //only generalize top-level lets
   if Debug.low () then
      Format.print1 "Generalizing: %s\n"
        (show <| List.map (fun (lb, _, _) -> show lb) lecs);

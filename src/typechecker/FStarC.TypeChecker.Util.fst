@@ -19,7 +19,6 @@ module FStarC.TypeChecker.Util
 open FStarC
 open FStarC.Effect
 open FStarC.List
-open FStarC.Util
 open FStarC.Errors
 open FStarC.Errors.Msg
 open FStarC.Pprint
@@ -2555,7 +2554,7 @@ let find_coercion (env:Env.env) (checked: lcomp) (exp_t: typ) (e:term)
       (* `f` is the candidate coercion, `e` the term to coerce *)
       let? f_name, f_us, f_typ =
         match se.sigel with
-        | Sig_let {lbs=(_,[lb])} -> Some (S.lid_of_fv (BU.right lb.lbname), lb.lbunivs, lb.lbtyp)
+        | Sig_let {lbs=(_,[lb])} -> Some (S.lid_of_fv (Inr?.v lb.lbname), lb.lbunivs, lb.lbtyp)
         | Sig_declare_typ {lid; us; t} -> Some (lid, us, t)
         | _ -> None
       in

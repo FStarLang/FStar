@@ -17,13 +17,12 @@ module FStarC.Main
 open FStarC
 open FStarC.Effect
 open FStarC.List
-open FStarC.Util
 open FStarC.Format
 open FStarC.Getopt
 open FStarC.Ident
 open FStarC.CheckedFiles
 open FStarC.Universal
-open FStarC
+open FStarC.Util
 
 open FStarC.Class.Show
 

@@ -22,7 +22,6 @@ open FStarC.Syntax
 open FStarC.Syntax.Syntax
 open FStarC.Syntax.Subst
 open FStarC.Syntax.Util
-open FStarC.Util
 open FStarC.SMap
 open FStarC.Ident
 open FStarC.Range
@@ -777,7 +776,7 @@ let lookup_definition_qninfo_aux rec_ok delta_levels lid (qninfo : qninfo) =
         when visible_with delta_levels se.sigquals
           && (not is_rec || rec_ok) ->
           BU.find_map lbs (fun lb ->
-              let fv = right lb.lbname in
+              let fv = Inr?.v lb.lbname in
               if fv_eq_lid fv lid
               then Some (lb.lbunivs, lb.lbdef)
               else None)
@@ -817,7 +816,7 @@ let rec delta_depth_of_qninfo_lid env lid (qn:qninfo) : delta_depth =
 
     | Sig_let {lbs=(_,lbs)} ->
       BU.find_map lbs (fun lb ->
-          let fv = right lb.lbname in
+          let fv = Inr?.v lb.lbname in
           if fv_eq_lid fv lid then
             Some (incr_delta_depth <| delta_depth_of_term env lb.lbdef)
           else None) |> Option.must

@@ -19,7 +19,6 @@ open FStarC.Effect
 
 open FStarC
 open FStarC.Syntax
-open FStarC.Util
 open FStarC.Syntax.Syntax
 open FStarC.Syntax.Subst
 open FStarC.Ident

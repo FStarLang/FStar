@@ -688,7 +688,7 @@ let __do_handle_plugin (g: uenv) (arity_opt: option int) (se: sigelt) : list mlm
   match se.sigel with
   | Sig_let {lbs} ->
       let mk_registration lb : list mlmodule1 =
-         let fv = BU.right lb.lbname in
+         let fv = Inr?.v lb.lbname in
          let fv_lid = fv.fv_name.v in
          let fv_t = lb.lbtyp in
          let ml_name_str = MLE_Const (MLC_String (Ident.string_of_lid fv_lid)) in

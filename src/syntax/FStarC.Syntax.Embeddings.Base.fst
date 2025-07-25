@@ -25,7 +25,6 @@ open FStarC.Class.PP
 open FStarC.Class.Deq
 open FStarC.Syntax.Print {}
 
-module BU    = FStarC.Util
 module Err   = FStarC.Errors
 module Ident = FStarC.Ident
 module PC    = FStarC.Parser.Const

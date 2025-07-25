@@ -19,7 +19,6 @@ open FStarC
 open FStarC.Effect
 open FStarC.List
 open FStarC.Range
-open FStarC.Util
 open FStarC.Getopt
 open FStarC.Ident
 open FStarC.Errors

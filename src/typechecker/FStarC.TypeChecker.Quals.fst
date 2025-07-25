@@ -277,7 +277,7 @@ let check_must_erase_attribute env se =
 
      | Some iface_decls ->
        snd lbs |> List.iter (fun lb ->
-           let lbname = BU.right lb.lbname in
+           let lbname = Inr?.v lb.lbname in
            let has_iface_val =
                iface_decls |> BU.for_some (Parser.AST.decl_is_val (ident_of_lid lbname.fv_name.v))
            in

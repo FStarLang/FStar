@@ -23,7 +23,6 @@ open FStarC.Errors
 open FStarC.TypeChecker
 open FStarC.TypeChecker.Common
 open FStarC.TypeChecker.Env
-open FStarC.Util
 open FStarC.Ident
 open FStarC.Syntax
 open FStarC.Syntax.Syntax
@@ -394,7 +393,7 @@ let tc_sig_let env r se lbs lids : list sigelt & list sigelt & Env.env =
       *)
     let should_generalize, lbs', quals_opt =
        snd lbs |> List.fold_left (fun (gen, lbs, quals_opt) lb ->
-          let lbname = right lb.lbname in //this is definitely not a local let binding
+          let lbname = Inr?.v lb.lbname in //this is definitely not a local let binding
           let gen, lb, quals_opt = match Env.try_lookup_val_decl env lbname.fv_name.v with
             | None ->
                 gen, lb, quals_opt
@@ -567,12 +566,12 @@ let tc_sig_let env r se lbs lids : list sigelt & list sigelt & Env.env =
 
     (* 4. Record the type of top-level lets, and log if requested *)
     snd lbs |> List.iter (fun lb ->
-        let fv = right lb.lbname in
+        let fv = Inr?.v lb.lbname in
         Env.insert_fv_info env fv lb.lbtyp);
 
     if log env
     then Format.print1 "%s\n" (snd lbs |> List.map (fun lb ->
-          let should_log = match Env.try_lookup_val_decl env (right lb.lbname).fv_name.v with
+          let should_log = match Env.try_lookup_val_decl env (Inr?.v lb.lbname).fv_name.v with
               | None -> true
               | _ -> false in
           if should_log

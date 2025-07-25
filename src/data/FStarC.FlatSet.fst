@@ -21,7 +21,6 @@ module FStarC.FlatSet
 open FStarC.Class.Ord
 open FStarC.Effect
 open FStarC.Order
-open FStarC.Util
 open FStarC.Class.Show
 
 (* This is a slow implementation that mimics FStarC.Util.set,

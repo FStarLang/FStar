@@ -19,7 +19,6 @@ open FStarC.List
 (* Type definitions for the core AST *)
 
 open FStarC
-open FStarC.Util
 open FStarC.Range
 open FStarC.Ident
 open FStarC.Const
@@ -587,9 +586,9 @@ let is_ident_allowed_by_restriction
   = let debug = FStarC.Debug.get_toggle "open_include_restrictions" in
     fun id restriction ->
     let result = is_ident_allowed_by_restriction' id restriction in
-    if !debug then print_endline ( "is_ident_allowed_by_restriction(" ^ show id ^ ", "
+    if !debug then Format.print_string ( "is_ident_allowed_by_restriction(" ^ show id ^ ", "
                                                                       ^ show restriction ^ ") = "
-                                                                      ^ show result );
+                                                                      ^ show result ^ "\n" );
     result
 
 instance has_range_syntax #a (_:unit) : Tot (hasRange (syntax a)) = {
