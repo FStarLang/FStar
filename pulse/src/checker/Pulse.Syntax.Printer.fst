@@ -94,7 +94,13 @@ and term_to_string' (level:string) (t:term) : T.Tac string
         (term_to_string' level p1)
         level
         (term_to_string' level p2)
-                          
+
+    | Tm_WithPure p n v ->
+      sprintf "(with_pure %s fun _ ->\n%s%s)"
+              (term_to_string' (indent level) p)
+              level
+              (term_to_string' (indent level) v)
+                      
     | Tm_ExistsSL _ _ _ ->
       let bs, body = collect_binders Tm_ExistsSL? t in
       sprintf "(exists* %s.\n%s%s)"
@@ -166,6 +172,12 @@ and term_to_doc t : T.Tac document
       the one introduced by ^/^ is breakable. *)
       group <|
         fold_right1 (fun p q -> (p ^^ doc_of_string " " ^^ star_doc) ^/^ q) docs
+    
+    | Tm_WithPure p n v ->
+      parens <|
+        prefix 2 1 (prefix 2 1 (doc_of_string "with_pure") (parens (term_to_doc p)
+            ^/^ doc_of_string "fun _ ->"))
+          (term_to_doc v)
 
     | Tm_ExistsSL _ _ _ ->
       let bs, body = collect_binders Tm_ExistsSL? t in
@@ -482,6 +494,7 @@ let tag_of_term (t:term) =
   | Tm_Star _ _ -> "Tm_Star"
   | Tm_ExistsSL _ _ _ -> "Tm_ExistsSL"
   | Tm_ForallSL _ _ _ -> "Tm_ForallSL"
+  | Tm_WithPure .. -> "Tm_WithPure"
   | Tm_SLProp -> "Tm_SLProp"
   | Tm_Inames -> "Tm_Inames"
   | Tm_EmpInames -> "Tm_EmpInames"

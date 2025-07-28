@@ -1,5 +1,5 @@
 (*
-   Copyright 2025 Microsoft Research
+   Copyright 2023 Microsoft Research
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -14,16 +14,17 @@
    limitations under the License.
 *)
 
-module Pulse.Checker.Prover.IntroPure
+module Pulse.Checker.Prover.IntroWithPure
 
 module T = FStar.Tactics
 
 open Pulse.Syntax
-open Pulse.Typing
 open Pulse.Checker.Prover.Base
 
-val intro_pure (#preamble:_) (pst:prover_state preamble)
-  (t:term)
+val intro_with_pure (#preamble:_) (pst:prover_state preamble)
+  p n v
   (unsolved':list slprop)
-  (_:squash (pst.unsolved == (tm_pure t)::unsolved'))
-  : T.Tac (option (pst':prover_state preamble { pst' `pst_extends` pst }))
+  (_:squash (pst.unsolved == tm_with_pure p n v::unsolved'))
+  (prover:prover_t)
+  : T.Tac (pst':prover_state preamble { pst' `pst_extends` pst /\
+                                        is_terminal pst' })

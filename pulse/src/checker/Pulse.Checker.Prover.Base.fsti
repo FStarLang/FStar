@@ -106,7 +106,7 @@ type prover_state (preamble:preamble) = {
   k : continuation_elaborator preamble.g0 (preamble.ctxt * preamble.frame)
                               pg ((list_as_slprop remaining_ctxt * preamble.frame) * ss.(solved));
 
-  // GM: Why isn't the rhs substituted here?
+  // // GM: Why isn't the rhs substituted here?
   goals_inv : slprop_equiv (push_env pg uvs)
                 preamble.goals
                 (list_as_slprop unsolved * solved);

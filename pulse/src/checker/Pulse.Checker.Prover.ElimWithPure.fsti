@@ -14,16 +14,11 @@
    limitations under the License.
 *)
 
-module Pulse.Checker.Prover.IntroPure
+module Pulse.Checker.Prover.ElimWithPure
 
-module T = FStar.Tactics
-
-open Pulse.Syntax
-open Pulse.Typing
 open Pulse.Checker.Prover.Base
+module T = FStar.Tactics.V2
 
-val intro_pure (#preamble:_) (pst:prover_state preamble)
-  (t:term)
-  (unsolved':list slprop)
-  (_:squash (pst.unsolved == (tm_pure t)::unsolved'))
-  : T.Tac (option (pst':prover_state preamble { pst' `pst_extends` pst }))
+val elim_with_pure_pst (#preamble:_) (pst:prover_state preamble)
+  : T.Tac (pst':prover_state preamble { pst' `pst_extends` pst /\
+                                        pst'.unsolved == pst.unsolved })
