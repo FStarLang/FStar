@@ -462,64 +462,50 @@ let append_assoc_singleton (l1 l2:list 'a) (x:'a)
     [SMTPat (l1@(x::l2))]
 = List.Tot.Properties.append_assoc l1 [x] l2
 
-let trigger (x:'a) : slprop = emp
-
+fn not_is_last_cell (#t:Type) (x:llist t)
+    preserves is_list x 'l
+    requires pure (Cons? 'l)
+    returns b:bool
+    ensures pure (b == (List.Tot.length 'l <> 1))
+{
+  not (is_last_cell x)
+}
 
 fn append_iter (#t:Type) (x y:llist t)
   requires is_list x 'l1 ** is_list y 'l2 ** pure (Cons? 'l1)
   ensures is_list x ('l1 @ 'l2)
 {
-  some_iff_cons x;
   let mut cur = x;
   (* the base case, set up the initial invariant *)
   forall_intro_is_list_idem x;
   rewrite (forall* l. is_list x l @==> is_list x l)
       as  (forall* l. is_list x l @==> is_list x ([]@l));
-  while (
-    with _b ll pfx sfx. _;
-    let l = Pulse.Lib.Reference.(!cur);
-    some_iff_cons l;
-    let b = is_last_cell l;
-    if b 
-    { 
-      false
-    }
-    else 
-    {
-      let next = move_next_forall l;
-      with hd tl. _;
-      (* this is the key induction step *)
-      FA.trans_compose 
-          (is_list next) (is_list l) (is_list x)
-          (fun tl -> hd :: tl)
-          (fun tl -> pfx @ tl);
-      rewrite (forall* tl. is_list next tl @==> is_list x (pfx@(hd::tl)))
-           as (forall* tl. is_list next tl @==> is_list x ((pfx@[hd])@tl));
-      Pulse.Lib.Reference.(cur := next);
-      non_empty_list next; (* need to prove Some? next *)
-      true
-    }
-  )
-  invariant b.
-  exists* ll pfx sfx.
-      pts_to cur ll **
+  while (not_is_last_cell Pulse.Lib.Reference.(!cur))
+    invariant exists* ll pfx sfx.
+      (cur |-> ll) **
       is_list ll sfx **
       (forall* sfx'. is_list ll sfx' @==> is_list x (pfx @ sfx')) **
-      pure (
-        (b==false ==> List.Tot.length sfx == 1) /\
-        pfx@sfx == 'l1 /\
-        Some? ll)
-  { () };
+      pure (pfx @ sfx == 'l1 /\ Cons? sfx)
+  {
+    with ll pfx sfx. _;
+    some_iff_cons ll;
+    let next = move_next_forall Pulse.Lib.Reference.(!cur);
+    with hd tl. _;
+    (* this is the key induction step *)
+    FA.trans_compose
+        (is_list next) (is_list ll) (is_list x)
+        (fun tl -> hd :: tl)
+        (fun tl -> pfx @ tl);
+    rewrite (forall* tl. is_list next tl @==> is_list x (pfx@(hd::tl)))
+          as (forall* tl. is_list next tl @==> is_list x ((pfx@[hd])@tl));
+    Pulse.Lib.Reference.(cur := next);
+  };
   with ll pfx sfx. _;
-  let last = Pulse.Lib.Reference.(!cur);
-  append_at_last_cell last y;
+  append_at_last_cell Pulse.Lib.Reference.(!cur) y;
   (* finally, use the quqnatified postcondition of the invariant *)
-  FA.elim_forall_imp (is_list last) (fun sfx' -> is_list x (pfx @ sfx')) (sfx@'l2);
+  FA.elim_forall_imp (is_list ll) (fun sfx' -> is_list x (pfx @ sfx')) (sfx@'l2);
   List.Tot.Properties.append_assoc pfx sfx 'l2;
-  ()
 }
-
-
 
 
 fn detach_next (#t:Type) (x:llist t)
@@ -559,34 +545,8 @@ fn split (#t:Type0) (x:llist t) (n:U32.t) (#xl:erased (list t))
   forall_intro_is_list_idem x;
   rewrite (forall* l. is_list x l @==> is_list x l)
       as  (forall* l. is_list x l @==> is_list x ([]@l));
-  while (
-    with _b _i ll pfx sfx. _;
-    let i = Pulse.Lib.Reference.(!ctr);
-    if (i = n - 1ul)
-    {
-      false
-    }
-    else 
-    {
-      let l = Pulse.Lib.Reference.(!cur);
-      let next = move_next_forall l;
-      with hd tl. _;
-      (* this is the key induction step *)
-      FA.trans_compose 
-          (is_list next) (is_list l) (is_list x)
-          (fun tl -> hd :: tl)
-          (fun tl -> pfx @ tl);
-      rewrite (forall* tl. is_list next tl @==> is_list x (pfx@(hd::tl)))
-           as (forall* tl. is_list next tl @==> is_list x ((pfx@[hd])@tl));
-      Pulse.Lib.Reference.(cur := next);
-      Pulse.Lib.Reference.(ctr := i + 1ul);
-      List.Tot.append_length pfx [hd];
-      non_empty_list next; (* need to prove Some? next *)
-      true
-    }
-  )
-  invariant b.
-    exists* i ll pfx sfx.
+  while ((Pulse.Lib.Reference.(!ctr) <> (n - 1ul)))
+    invariant exists* i ll pfx sfx.
       pts_to ctr i **
       pts_to cur ll **
       is_list ll sfx **
@@ -595,10 +555,24 @@ fn split (#t:Type0) (x:llist t) (n:U32.t) (#xl:erased (list t))
          v i == List.Tot.length pfx /\
          i <= n - 1ul /\
          Some? ll /\
-         pfx@sfx == xl /\
-        (b==false ==> i == (n - 1ul))
+         pfx@sfx == xl
       )
-  { () };
+  {
+    with i ll pfx sfx. _;
+    let next = move_next_forall Pulse.Lib.Reference.(!cur);
+    with hd tl. _;
+    (* this is the key induction step *)
+    FA.trans_compose
+        (is_list next) (is_list ll) (is_list x)
+        (fun tl -> hd :: tl)
+        (fun tl -> pfx @ tl);
+    rewrite (forall* tl. is_list next tl @==> is_list x (pfx@(hd::tl)))
+          as (forall* tl. is_list next tl @==> is_list x ((pfx@[hd])@tl));
+    Pulse.Lib.Reference.(cur := next);
+    Pulse.Lib.Reference.(ctr := !(ctr) + 1ul);
+    List.Tot.append_length pfx [hd];
+    non_empty_list next; (* need to prove Some? next *)
+  };
   with i ll pfx sfx. _;
   let last = Pulse.Lib.Reference.(!cur);
   let y = detach_next last;

@@ -405,6 +405,14 @@ ensures is_list x 'l ** pure (Some? x)
 }
 //end non_empty_list$
 
+fn not_is_last_cell (#t:Type) (x:llist t)
+requires is_list x 'l ** pure (Some? x)
+returns b:bool
+ensures is_list x 'l ** pure (b == (List.Tot.length 'l <> 1))
+{
+  not (is_last_cell x)
+}
+
 //append_iter$
 fn append_iter (#t:Type) (x y:llist t)
 requires is_list x 'l1 ** is_list y 'l2 ** pure (Some? x)
@@ -415,46 +423,35 @@ ensures is_list x ('l1 @ 'l2)
   FA.intro emp (fun l -> I.refl #[] (is_list x l));
   rewrite (forall* l. is_list x l @==> is_list x l)
       as  (forall* l. is_list x l @==> is_list x ([]@l));
-  while (
-    with _b ll pfx sfx. _;
-    let l = !cur;
-    let b = is_last_cell l; //check if we are at the last cell
-    if b 
-    { 
-      false //yes, break out of the loop
-    }
-    else 
-    {
-      let next = tail_alt l;
-      with hd tl. _;
-      (* this is the key induction step *)
-      FA.trans_compose 
-          (is_list next) (is_list l) (is_list x)
-          (fun tl -> hd :: tl)
-          (fun tl -> pfx @ tl);
-      //Use F* sugar for classical connectives to introduce a property
-      //needed for the next rewrite
-      (introduce forall tl. pfx @ (hd :: tl) == (pfx @ [hd]) @ tl
-       with List.Tot.Properties.append_assoc pfx [hd] tl);
-      rewrite (forall* tl. is_list next tl @==> is_list x (pfx@(hd::tl)))
-           as (forall* tl. is_list next tl @==> is_list x ((pfx@[hd])@tl));
-      cur := next;
-      non_empty_list next; //need to prove that Some? next, for the invariant
-      true
-    }
-  )
-  invariant b.
-  exists* ll pfx sfx.
+  while (not_is_last_cell (!cur)) //check if we are at the last cell
+  invariant exists* ll pfx sfx.
     pts_to cur ll **   //cur holds the pointer to the current head of the traversal, ll
     is_list ll sfx **  //ll points to some suffix of the original list, since `pfx@sfx = 'l1` below
     //the main bit: whatever ll points to `sfx'`, trade it for x pointing to the concatenation ``pfx @ sfx'`` 
     (forall* sfx'. is_list ll sfx' @==> is_list x (pfx @ sfx')) ** 
     pure (
-      (b==false ==> List.Tot.length sfx == 1) /\ //the loop ends when we reach the last cell
       pfx@sfx == 'l1 /\ //sfx is really the suffix
       Some? ll          //and the current list is always non-null
     )
-  { () };
+  {
+    with ll pfx sfx. _;
+    let l = !cur;
+    let next = tail_alt l;
+    with hd tl. _;
+    (* this is the key induction step *)
+    FA.trans_compose
+        (is_list next) (is_list l) (is_list x)
+        (fun tl -> hd :: tl)
+        (fun tl -> pfx @ tl);
+    //Use F* sugar for classical connectives to introduce a property
+    //needed for the next rewrite
+    (introduce forall tl. pfx @ (hd :: tl) == (pfx @ [hd]) @ tl
+      with List.Tot.Properties.append_assoc pfx [hd] tl);
+    rewrite (forall* tl. is_list next tl @==> is_list x (pfx@(hd::tl)))
+          as (forall* tl. is_list next tl @==> is_list x ((pfx@[hd])@tl));
+    cur := next;
+    non_empty_list next; //need to prove that Some? next, for the invariant
+  };
   with ll pfx sfx. _;
   let last = !cur;
   append_at_last_cell last y;
