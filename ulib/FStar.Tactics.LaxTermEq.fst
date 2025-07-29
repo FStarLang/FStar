@@ -4,7 +4,6 @@ open FStar.Stubs.Reflection.Types
 open FStar.Stubs.Reflection.V2.Builtins
 open FStar.Stubs.Reflection.V2.Data
 open FStar.Stubs.Tactics.V2.Builtins
-open FStar.Tactics.NamedView
 
 type comparator_for (t:Type) = x:t -> y:t -> Tac bool
 
@@ -42,7 +41,8 @@ let rec univ_eq (u1 u2 : universe) =
   | Uv_Succ u1, Uv_Succ u2 -> univ_eq u1 u2
   | Uv_Max us1, Uv_Max us2 -> list_eq univ_eq us1 us2
   | Uv_BVar v1, Uv_BVar v2 -> v1 = v2
-  | Uv_Name (n1, _), Uv_Name (n2, _) -> n1 = n2
+  | Uv_Name id1, Uv_Name id2 ->
+    fst (inspect_ident id1) = fst (inspect_ident id2)
   | Uv_Unif u1, Uv_Unif u2 -> false // We can't tell.
   | Uv_Unk, Uv_Unk -> false
   | _ -> false
@@ -72,19 +72,23 @@ val br_eq           : comparator_for branch
 val match_returns_ascription_eq : comparator_for match_returns_ascription
 
 let rec term_eq (t1 t2 : term) : Tac bool =
-  let tv1 = inspect t1 in
-  let tv2 = inspect t2 in
+  let t1 = compress t1 in
+  let t2 = compress t2 in
+  let tv1 = inspect_ln t1 in
+  let tv2 = inspect_ln t2 in
   match tv1, tv2 with
   | Tv_Unsupp, _
   | _, Tv_Unsupp -> false
 
-  | Tv_Var v1, Tv_Var v2 -> v1.uniq = v2.uniq
-  | Tv_BVar v1, Tv_BVar v2 -> v1.index = v2.index
+  | Tv_Var v1, Tv_Var v2 ->
+    (inspect_namedv v1).uniq = (inspect_namedv v2).uniq
+  | Tv_BVar v1, Tv_BVar v2 ->
+    (inspect_bv v1).index = (inspect_bv v2).index
 
   (* Ignore universe annotations on fvs *)
-  | Tv_FVar f1,    Tv_FVar f2
+  | Tv_FVar  f1,   Tv_FVar f2
   | Tv_UInst f1 _, Tv_FVar f2
-  | Tv_UInst f1 _, Tv_UInst f2 _
+  | Tv_FVar  f1,   Tv_UInst f2 _
   | Tv_UInst f1 _, Tv_UInst f2 _ ->
     inspect_fv f1 = inspect_fv f2
 
@@ -109,12 +113,12 @@ let rec term_eq (t1 t2 : term) : Tac bool =
     const_eq c1 c2
 
   | Tv_Uvar n1 u1, Tv_Uvar n2 u2 ->
-    // We can't tell.
+    // Unresolved uvars. We can't tell.
     false
 
   | Tv_Let r1 attrs1 sb1 e1 b1, Tv_Let r2 attrs2 sb2 e2 b2 ->
     if not <| r1 = r2 then false else
-    if not <| list_eq term_eq attrs1 attrs2 then false else
+    (* if not <| list_eq term_eq attrs1 attrs2 then false else *)
     if not <| binder_eq sb1 sb2 then false else
     if not <| term_eq e1 e2 then false else
     term_eq b1 b2
@@ -124,10 +128,11 @@ let rec term_eq (t1 t2 : term) : Tac bool =
     if not <| opt_eq match_returns_ascription_eq o1 o2 then false else
     list_eq br_eq brs1 brs2
 
-  | Tv_AscribedT t1 _ _ _, t2
-  | Tv_AscribedC t1 _ _ _, t2
-  | t1, Tv_AscribedT t2 _ _ _
-  | t1, Tv_AscribedC t2 _ _ _ ->
+  | Tv_AscribedT t1 _ _ _, _
+  | Tv_AscribedC t1 _ _ _, _ ->
+    term_eq t1 t2
+  | _, Tv_AscribedT t2 _ _ _
+  | _, Tv_AscribedC t2 _ _ _ ->
     term_eq t1 t2
 
   | Tv_Unknown, Tv_Unknown -> true
@@ -154,12 +159,16 @@ and match_returns_ascription_eq asc1 asc2 =
   eq1 = eq2
 
 and binder_eq b1 b2 =
-  if not <| term_eq b1.sort b2.sort then false else
-  if not <| aqual_eq b1.qual b2.qual then false else
-  list_eq term_eq b1.attrs b2.attrs
+  let bv1 = inspect_binder b1 in
+  let bv2 = inspect_binder b2 in
+  if not <| term_eq bv1.sort bv2.sort then false else
+  if not <| aqual_eq bv1.qual bv2.qual then false else
+  list_eq term_eq bv1.attrs bv2.attrs
 
 and comp_eq c1 c2 =
-  match c1, c2 with
+  let cv1 = inspect_comp c1 in
+  let cv2 = inspect_comp c2 in
+  match cv1, cv2 with
   | C_Total t1, C_Total t2
   | C_GTotal t1, C_GTotal t2 ->
     term_eq t1 t2
@@ -174,8 +183,10 @@ and comp_eq c1 c2 =
     (* if not <| list_eq univ_eq us1 us2 then false else *)
     if not <| (ef1 = ef2) then false else
     if not <| term_eq t1 t2 then false else
-    if not <| list_eq arg_eq args1 args2 then false else
-    list_eq term_eq dec1 dec2
+    // Ignore effect args
+    (* if not <| list_eq arg_eq args1 args2 then false else *)
+    (* if not <| list_eq term_eq dec1 dec2 then false else *)
+    true
 
   | _ -> false
 
@@ -186,14 +197,14 @@ and br_eq br1 br2 =
 
 and pat_eq p1 p2 =
   match p1, p2 with
-  | Pat_Var {v=v1; sort=sort1}, Pat_Var {v=v2; sort=sort2} ->
+  | Pat_Var v1 sort1, Pat_Var v2 sort2 ->
     true
-  | Pat_Constant {c=x1}, Pat_Constant {c=x2} -> const_eq x1 x2
-  | Pat_Dot_Term {t=x1}, Pat_Dot_Term {t=x2} -> opt_eq term_eq x1 x2
-  | Pat_Cons {head=head1; univs=us1; subpats=subpats1},
-    Pat_Cons {head=head2; univs=us2; subpats=subpats2} ->
+  | Pat_Constant x1, Pat_Constant x2 -> const_eq x1 x2
+  | Pat_Dot_Term x1, Pat_Dot_Term x2 -> opt_eq term_eq x1 x2
+  | Pat_Cons head1 us1 subpats1,
+    Pat_Cons head2 us2 subpats2 ->
     if not <| (inspect_fv head1 = inspect_fv head2) then false else
-    if not <| opt_eq (list_eq univ_eq) us1 us2 then false else
+    (* if not <| opt_eq (list_eq univ_eq) us1 us2 then false else *)
     list_eq pat_arg_eq subpats1 subpats2
 
   | _ -> false
