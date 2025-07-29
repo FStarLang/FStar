@@ -257,6 +257,7 @@ let lift_comp_subst
   | Lift_Observability _ c o ->
     Lift_Observability _ (subst_comp c ss) o
 
+#push-options "--z3rlimit 20"
 let bind_comp_subst
   (g:env) (x:var) (t:typ) (g':env { pairwise_disjoint g (singleton_env (fstar_env g) x t) g' })
   (#e:term)
@@ -280,7 +281,7 @@ let bind_comp_subst
                   (RU.magic ())
                   z
                   (RU.magic ())
-
+#pop-options
 
 let st_equiv_subst (g:env) (x:var) (t:typ) (g':env { pairwise_disjoint g (singleton_env (fstar_env g) x t) g' })
   (#e:term)
