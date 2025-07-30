@@ -282,6 +282,13 @@ let mk_intro_exists_erased (u:R.universe) (a p:R.term) (e:R.term) : R.term =
   let t = R.pack_ln (R.Tv_App t (p, R.Q_Explicit)) in
   R.pack_ln (R.Tv_App t (e, R.Q_Explicit))
 
+let with_pure_lid = ["Pulse"; "Lib"; "WithPure"; "with_pure"]
+
+let mk_with_pure (a p: R.term) =
+  let t = R.pack_ln (R.Tv_FVar (R.pack_fv with_pure_lid)) in
+  let t = R.pack_ln (R.Tv_App t (a, R.Q_Explicit)) in
+  R.pack_ln (R.Tv_App t (p, R.Q_Explicit))
+
 let while_lid = ["Pulse"; "Lib"; "WhileLoop"; "while_loop"]
 
 let mk_while (inv cond body:R.term) : R.term =

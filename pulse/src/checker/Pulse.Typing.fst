@@ -35,6 +35,7 @@ let debug_log (level:string)  (g:env) (f: unit -> T.Tac string) : T.Tac unit =
   then T.print (Printf.sprintf "Debug@%s:{ %s }\n" level (f ()))
 
 let tm_unit = tm_fvar (as_fv unit_lid)
+let unit_const = tm_constant R.C_Unit
 let tm_bool = RT.bool_ty
 let tm_int  = tm_fvar (as_fv int_lid)
 let tm_nat  = tm_fvar (as_fv nat_lid)

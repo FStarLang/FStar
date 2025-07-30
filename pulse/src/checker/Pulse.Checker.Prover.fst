@@ -36,9 +36,11 @@ module RT = FStar.Reflection.Typing
 
 module ElimExists  = Pulse.Checker.Prover.ElimExists
 module ElimPure    = Pulse.Checker.Prover.ElimPure
+module ElimWithPure = Pulse.Checker.Prover.ElimWithPure
 module Match       = Pulse.Checker.Prover.Match
 module IntroExists = Pulse.Checker.Prover.IntroExists
 module IntroPure   = Pulse.Checker.Prover.IntroPure
+module IntroWithPure = Pulse.Checker.Prover.IntroWithPure
 module Explode     = Pulse.Checker.Prover.Explode
 
 let coerce_eq (#a #b:Type) (x:a) (_:squash (a == b)) : y:b{y == x} = x
@@ -159,6 +161,8 @@ let rec __intro_any_exists (n:nat)
         //     pp hd;
         // ];
         IntroExists.intro_exists pst u b body unsolved' () prover
+      | Tm_WithPure p n v ->
+        IntroWithPure.intro_with_pure pst p n v unsolved' () prover
       | _ ->
         let pst = {
           pst with
@@ -337,6 +341,7 @@ let rec prover
   so we don't complain about a possible "leak". I think it'd be nicer
   to use a typeclass for safely-droppable resources. *)
   let _, pst = ElimExists.elim_exists_pst pst in
+  let pst = ElimWithPure.elim_with_pure_pst pst in
   let pst = ElimPure.elim_pure_pst pst in
   debug_prover pst.pg (fun _ ->
   Printf.sprintf "At the prover top-level with\n  remaining_ctxt: %s\n  unsolved: %s\n  allow_ambiguous: %s\n  ss: %s\n  rwr_ss: %s\n  env: %s\n"

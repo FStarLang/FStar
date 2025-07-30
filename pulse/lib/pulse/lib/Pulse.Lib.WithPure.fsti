@@ -19,7 +19,7 @@ fn intro_with_pure
   (p : prop)
   (v : squash p -> slprop)
   (_ : squash p)
-  requires pure p ** v ()
+  requires v ()
   ensures  with_pure p v
 
 ghost
