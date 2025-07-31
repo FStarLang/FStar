@@ -2914,7 +2914,7 @@ let instantiate_one_binder (env:env_t) (r:Range.t) (b:binder) : term & typ & aqu
       in
       let name = "'" ^ show x ^ "'" in
       if is_typeclass then "Typeclass constraint argument"
-      else if Some? ctx_uvar_meta then "Instantiating meta argument" ^ name
+      else if Some? ctx_uvar_meta then "Instantiating meta argument " ^ name
       else "Instantiating implicit argument " ^ name
     in
     Env.new_implicit_var_aux msg r env t Strict ctx_uvar_meta should_unrefine
