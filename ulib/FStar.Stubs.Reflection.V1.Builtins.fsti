@@ -104,7 +104,6 @@ val moduleof              : env -> name
 val lookup_attr           : term -> env -> list fv
 val all_defs_in_env       : env -> list fv
 val defs_in_module        : env -> name -> list fv
-val term_eq               : term -> term -> bool
 val env_open_modules      : env -> list name
 
 (** [push_binder] extends the environment with a single binder.
