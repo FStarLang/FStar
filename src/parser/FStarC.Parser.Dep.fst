@@ -1462,7 +1462,10 @@ let collect (all_cmd_line_files: list file_name)
   in
   let all_cmd_line_files =
       all_cmd_line_files |> List.map (fun fn ->
-        match Find.find_file fn with
+        if Some? (FStarC.Parser.ParseIt.read_vfs_entry fn) then
+          // This allows the IDE to check files that are not saved yet.
+          fn
+        else match Find.find_file fn with
         | None ->
           raise_error0 Errors.Fatal_ModuleOrFileNotFound
             (Format.fmt1 "File %s could not be found" fn)
