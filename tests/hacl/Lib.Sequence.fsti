@@ -552,7 +552,7 @@ val index_generate_blocks:
            let _,s2 = f (i / len) () in
            Seq.index s1 i == Seq.index s2 (i % len))
 
-#push-options "--using_facts_from '+FStar.UInt.pow2_values'"
+#push-options "--using_facts_from '+FStar.Math.Lemmas.pow2_values'"
 
 val create2: #a:Type -> x0:a -> x1:a -> lseq a 2
 
