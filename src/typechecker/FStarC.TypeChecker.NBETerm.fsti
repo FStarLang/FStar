@@ -236,6 +236,10 @@ class embedding (a:Type0) = {
   e_typ : unit -> emb_typ;
 }
 
+(* Syntatic equality. *)
+val term_eq : t -> t -> bool
+
+(* Implementation for decidable equality, aka (=). *)
 val eq_t : Env.env_t -> t -> t -> TEQ.eq_result
 
 // Printing functions
