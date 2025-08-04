@@ -418,15 +418,6 @@ val comp_to_string : comp -> Tac string
 (** Print a source range as a string *)
 val range_to_string : range -> Tac string
 
-(** A variant of Reflection.term_eq that may inspect more underlying
-details of terms. This function could distinguish two _otherwise equal
-terms_, but that distinction cannot leave the Tac effect.
-
-This is only exposed as a migration path. Please use
-[Reflection.term_eq] instead. *)
-[@@deprecated "Use Reflection.term_eq instead"]
-val term_eq_old : term -> term -> Tac bool
-
 (** Runs the input tactic `f` with compat pre core setting `n`.
 It is an escape hatch for maintaining backward compatibility
 for code that breaks with the core typechecker. *)
