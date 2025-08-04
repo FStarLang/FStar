@@ -575,9 +575,8 @@ let declare_top_level_let env x t t_norm : fvar_binding & decls_t & env_t =
 let encode_top_level_val uninterpreted env us fv t quals =
     let tt =
       if FStarC.Ident.nsstr (lid_of_fv fv) = "FStar.Ghost"
-      then norm_with_steps //no primops for FStar.Ghost, otherwise things like reveal/hide get simplified away too early
+      then norm_with_steps //no primops nor Simplify for FStar.Ghost, otherwise things like reveal/hide get simplified away too early
                 [Env.Eager_unfolding;
-                 Env.Simplify;
                  Env.AllowUnboundUniverses;
                  Env.EraseUniverses;
                  Env.Exclude Env.Zeta]
