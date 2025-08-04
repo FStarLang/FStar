@@ -222,7 +222,7 @@ let loop' (s:bad) : GTot (squash ⊥) =
   return_squash (f s))
   
 let loop'' : squash (bad → GTot ⊥) = FStar.Squash.squash_double_arrow (FStar.Squash.return_squash loop')
-let loop : squash bad = bind_squash loop'' (λ l → FStar.Squash.return_squash (l (Bad loop'')))
+let loop : squash bad = bind_squash loop'' (λ f → f (Bad loop''))
 let ff (_:unit) : squash ⊥ = bind_squash loop loop'
 
 
