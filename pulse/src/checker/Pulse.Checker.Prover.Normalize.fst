@@ -47,6 +47,8 @@ let __normalize_slprop
   (* Reduce applied projections like {x=1; ..}.x *)
   let steps = steps @ [reduce_projections] in
 
+  let steps = steps @ [simplify] in
+
   let v' = PCP.norm_well_typed_term (elab_env g) steps v in
   let v' = Pulse.Simplify.simplify v' in (* NOTE: the simplify stage is unverified *)
   v'
