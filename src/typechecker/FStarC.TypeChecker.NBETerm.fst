@@ -112,6 +112,33 @@ match c1, c2 with
 | Real r1, Real r2 -> equal_if (r1 = r2) (* conservative, cannot use iff since strings could be 1.0 and 01.0 *)
 | _, _ -> TEQ.NotEqual
 
+let rec term_eq (t1 t2 : t) : bool =
+  match t1.nbe_t, t2.nbe_t with
+  | Lam {interp=interp1; arity=arity1}, Lam {interp=interp2; arity=arity2} ->
+    interp1 = interp2 && arity1 = arity2
+  | Accu(a1, as1), Accu(a2, as2) -> atom_eq a1 a2 // && eq_args as1 as2
+  | Construct(fv1, us1, args1), Construct(fv2, us2, args2) ->
+    fv1 = fv2 && U.eq_univs_list us1 us2 && args_eq args1 args2
+  | FV(fv1, us1, args1), FV(fv2, us2, args2) ->
+    fv1 = fv2 && U.eq_univs_list us1 us2 && args_eq args1 args2
+  | Constant c1, Constant c2 -> c1 = c2
+  | Type_t u1, Type_t u2
+  | Univ u1, Univ u2 -> u1 = u2
+  | Refinement(r1, t1), Refinement(r2, t2) ->
+    let x =  S.new_bv None S.t_unit in (* bogus type *)
+    term_eq (fst (t1 ())) (fst (t2 ())) &&
+    term_eq (r1 (mkAccuVar x)) (r2 (mkAccuVar x))
+  | Unknown, Unknown -> true
+  | _, _ -> false
+and atom_eq (a1 : atom) (a2 : atom) : bool =
+  match a1, a2 with
+  | Var bv1, Var bv2 -> bv_eq bv1 bv2
+  | _, _ -> false
+and args_eq (as1 : args) (as2 : args) : bool =
+  match as1, as2 with
+  | [], [] -> true
+  | (x, qx) :: xs, (y, qy) :: ys -> term_eq x y && qx = qy && args_eq xs ys
+  | _, _ -> false
 
 let rec eq_t env (t1 : t) (t2 : t) : TEQ.eq_result =
   match t1.nbe_t, t2.nbe_t with
@@ -163,7 +190,7 @@ and eq_args env (as1 : args) (as2 : args) : TEQ.eq_result =
   match as1, as2 with
   | [], [] -> TEQ.Equal
   | x :: xs, y :: ys -> eq_and (eq_arg env x y) (fun () -> eq_args env xs ys)
-  | _, _ -> TEQ.Unknown (* ZP: following tm_eq, but why not TEQ.NotEqual? *)
+  | _, _ -> TEQ.Unknown
 
 
 // Printing functions

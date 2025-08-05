@@ -59,7 +59,6 @@ module TcComm = FStarC.TypeChecker.Common
 module TEQ = FStarC.TypeChecker.TermEqAndSimplify
 module CList = FStarC.CList
 
-let dbg_Disch                = Debug.get_toggle "Disch"
 let dbg_Discharge            = Debug.get_toggle "Discharge"
 let dbg_EQ                   = Debug.get_toggle "EQ"
 let dbg_ExplainRel           = Debug.get_toggle "ExplainRel"

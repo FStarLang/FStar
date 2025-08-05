@@ -130,3 +130,4 @@ let env_dependent_ops (env:Env.env_t) = Primops.Eq.dec_eq_ops env
 let simplification_ops_list (env:Env.env_t) : list primitive_step =
   Primops.Eq.prop_eq_ops env
   @ Primops.Real.simplify_ops
+  @ Primops.Erased.simplify_ops
