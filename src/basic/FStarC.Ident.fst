@@ -46,6 +46,10 @@ let lid_of_ns_and_id ns id =
      ident=id;
      nsstr=nsstr;
      str=(if nsstr="" then id.idText else nsstr ^ "." ^ id.idText)}
+
+let id_as_lid (id:ident) : lident =
+  lid_of_ns_and_id [] id
+
 let lid_of_ids ids =
     let ns, id = Util.prefix ids in
     lid_of_ns_and_id ns id

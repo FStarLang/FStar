@@ -46,10 +46,11 @@ type term' =
   | Wild
   | Const     of sconst
   | Op        of ident & list term
-  | Tvar      of ident
   | Uvar      of ident                                (* universe variable *)
-  | Var       of lid // a qualified identifier that starts with a lowercase (Foo.Bar.baz)
-  | Name      of lid // a qualified identifier that starts with an uppercase (Foo.Bar.Baz)
+
+  | Var       of lid // a (possibly) qualified identifier that starts with a lowercase (Foo.Bar.baz)
+  | Name      of lid // a (possibly) qualified identifier that starts with an uppercase (Foo.Bar.Baz)
+
   | Projector of lid & ident (* a data constructor followed by one of
                                 its formal parameters, or an effect
                                 followed by one  of its actions or
@@ -122,9 +123,7 @@ and attributes_ = list term
 
 and binder' =
   | Variable of ident
-  | TVariable of ident
   | Annotated of ident & term
-  | TAnnotated of ident & term
   | NoName of term
 
 and binder = {b:binder'; brange:range; blevel:level; aqual:aqual; battributes:attributes_}
@@ -135,7 +134,6 @@ and pattern' =
   | PatApp      of pattern & list pattern
   | PatVar      of ident & aqual & attributes_
   | PatName     of lid
-  | PatTvar     of ident & aqual & attributes_
   | PatList     of list pattern
   | PatRest     (* For '..', which matches all extra args *)
   | PatTuple    of list pattern & bool (* dependent if flag is set *)

@@ -31,6 +31,7 @@ open FStarC.Errors
 open FStarC.Class.Setlike
 open FStarC.Class.Show
 open FStarC.Syntax.Print {}
+open FStarC.ToSyntax.TickedVars
 
 module C   = FStarC.Parser.Const
 module S   = FStarC.Syntax.Syntax
@@ -275,188 +276,6 @@ let op_as_term env arity op : option S.term =
   | Some t -> Some t
   | _ -> fallback()
 
-let sort_ftv ftv =
-  BU.sort_with (fun x y -> String.compare (string_of_id x) (string_of_id y)) <|
-      BU.remove_dups (fun x y -> (string_of_id x) = (string_of_id y)) ftv
-
-let rec free_vars_b tvars_only env binder : (Env.env & list ident) =
-  match binder.b with
-  | Variable x ->
-    if tvars_only
-    then env, [] //tvars can't clash with vars
-    else (
-      let env, _ = Env.push_bv env x in
-      env, []
-    )
-  | TVariable x ->
-    let env, _ = Env.push_bv env x in
-    env, [x]
-  | Annotated(x, term) ->
-    if tvars_only  //tvars can't clash with vars
-    then env, free_vars tvars_only env term
-    else (
-      let env', _ = Env.push_bv env x in
-      env', free_vars tvars_only env term
-    )
-  | TAnnotated(id, term) ->
-    let env', _ = Env.push_bv env id in
-    env', free_vars tvars_only env term
-  | NoName t ->
-    env, free_vars tvars_only env t
-
-and free_vars_bs tvars_only env binders =
-    List.fold_left
-      (fun (env, free) binder ->
-        let env, f = free_vars_b tvars_only env binder in
-        env, f@free)
-      (env, [])
-      binders
-
-and free_vars tvars_only env t = match (unparen t).tm with
-  | Labeled _ -> failwith "Impossible --- labeled source term"
-
-  | Tvar a ->
-    (match Env.try_lookup_id env a with
-      | None -> [a]
-      | _ -> [])
-
-  | Var x ->
-    if tvars_only 
-    then []
-    else (
-      let ids = Ident.ids_of_lid x in
-      match ids with
-      | [id] -> ( //unqualified name
-        if None? (Env.try_lookup_id env id)
-        && None? (Env.try_lookup_lid env x)
-        then [id]
-        else []
-      )
-      | _ -> []
-    )
-    
-  | Wild
-  | Const _
-  | Uvar _
-
-  | Projector _
-  | Discrim _
-  | Name _  -> []
-
-  | Requires (t, _)
-  | Ensures (t, _)
-  | Decreases (t, _)
-  | NamedTyp(_, t) -> free_vars tvars_only env t
-
-  | LexList l -> List.collect (free_vars tvars_only env) l
-  | WFOrder (rel, e) ->
-    (free_vars tvars_only env rel) @ (free_vars tvars_only env e)
-
-  | Paren t -> failwith "impossible"
-
-  | Ascribed(t, t', tacopt, _) ->
-    let ts = t::t'::(match tacopt with None -> [] | Some t -> [t]) in
-    List.collect (free_vars tvars_only env) ts
-
-  | Construct(_, ts) -> List.collect (fun (t, _) -> free_vars tvars_only env t) ts
-
-  | Op(_, ts) -> List.collect (free_vars tvars_only env) ts
-
-  | App(t1,t2,_) -> free_vars tvars_only env t1@free_vars tvars_only env t2
-
-  | Refine (b, t) ->
-    let env, f = free_vars_b tvars_only env b in
-    f@free_vars tvars_only env t
-
-  | Sum(binders, body) ->
-    let env, free = List.fold_left (fun (env, free) bt ->
-      let env, f =
-        match bt with
-        | Inl binder -> free_vars_b tvars_only env binder
-        | Inr t -> env, free_vars tvars_only env t
-      in
-      env, f@free) (env, []) binders in
-    free@free_vars tvars_only env body
-
-  | Product(binders, body) ->
-    let env, free = free_vars_bs tvars_only env binders in
-    free@free_vars tvars_only env body
-
-  | Project(t, _) -> free_vars tvars_only env t
-
-  | Attributes cattributes ->
-      (* attributes should be closed but better safe than sorry *)
-      List.collect (free_vars tvars_only env) cattributes
-
-  | CalcProof (rel, init, steps) ->
-    free_vars tvars_only env rel
-    @ free_vars tvars_only env init
-    @ List.collect (fun (CalcStep (rel, just, next)) ->
-                            free_vars tvars_only env rel
-                            @ free_vars tvars_only env just
-                            @ free_vars tvars_only env next) steps
-
-  | ElimForall  (bs, t, ts) ->
-    let env', free = free_vars_bs tvars_only env bs in
-    free@
-    free_vars tvars_only env' t@
-    List.collect (free_vars tvars_only env') ts
-
-  | ElimExists (binders, p, q, y, e) ->
-    let env', free = free_vars_bs tvars_only env binders in
-    let env'', free' = free_vars_b tvars_only env' y in
-    free@
-    free_vars tvars_only env' p@
-    free_vars tvars_only env  q@
-    free'@
-    free_vars tvars_only env'' e
-
-  | ElimImplies (p, q, e) ->
-    free_vars tvars_only env p@
-    free_vars tvars_only env q@
-    free_vars tvars_only env e
-
-  | ElimOr(p, q, r, x, e, x', e') ->
-    free_vars tvars_only env p@
-    free_vars tvars_only env q@
-    free_vars tvars_only env r@
-    (let env', free = free_vars_b tvars_only env x in
-     free@free_vars tvars_only env' e)@
-    (let env', free = free_vars_b tvars_only env x' in
-     free@free_vars tvars_only env' e')
-
-  | ElimAnd(p, q, r, x, y, e) ->
-    free_vars tvars_only env p@
-    free_vars tvars_only env q@
-    free_vars tvars_only env r@
-    (let env', free = free_vars_bs tvars_only env [x;y] in
-     free@free_vars tvars_only env' e)
-
-  | ListLiteral ts ->
-    List.collect (free_vars tvars_only env) ts
-
-  | SeqLiteral ts ->
-    List.collect (free_vars tvars_only env) ts
-
-  | Abs _  (* not closing implicitly over free vars in all these forms: TODO: Fixme! *)
-  | Function _
-  | Let _
-  | LetOpen _
-  | If _
-  | QForall _
-  | QExists _
-  | QuantOp _
-  | Record _
-  | Match _
-  | TryWith _
-  | Bind _
-  | Quote _
-  | VQuote _
-  | Antiquote _
-  | Seq _ -> []
-
-let free_type_vars = free_vars true
-
 let head_and_args t =
     let rec aux args t = match (unparen t).tm with
         | App(t, arg, imp) -> aux ((arg,imp)::args) t
@@ -464,32 +283,12 @@ let head_and_args t =
         | _ -> t, args in
     aux [] t
 
-let close env t =
-  let ftv = sort_ftv <| free_type_vars env t in
-  if List.length ftv = 0
-  then t
-  else let binders = ftv |> List.map (fun x -> mk_binder (TAnnotated(x, tm_type (range_of_id x))) (range_of_id x) Type_level (Some Implicit)) in
-       let result = mk_term (Product(binders, t)) t.range t.level in
-       result
-
-let close_fun env t =
-  let ftv = sort_ftv <| free_type_vars env t in
-  if List.length ftv = 0
-  then t
-  else let binders = ftv |> List.map (fun x -> mk_binder (TAnnotated(x, tm_type (range_of_id x))) (range_of_id x) Type_level (Some Implicit)) in
-       let t = match (unparen t).tm with
-        | Product _ -> t
-        | _ -> mk_term (App(mk_term (Name C.effect_Tot_lid) t.range t.level, t, Nothing)) t.range t.level in
-       let result = mk_term (Product(binders, t)) t.range t.level in
-       result
-
 let rec uncurry bs t = match t.tm with
     | Product(binders, t) -> uncurry (bs@binders) t
     | _ -> bs, t
 
 let rec is_var_pattern p = match p.pat with
   | PatWild _
-  | PatTvar _
   | PatVar _ -> true
   | PatAscribed(p, _) -> is_var_pattern p
   | _ -> false
@@ -532,7 +331,6 @@ let rec gather_pattern_bound_vars_maybe_top (acc : FlatSet.t ident) p =
   | PatRest
   | PatOp _ -> acc
   | PatApp (phead, pats) -> gather_pattern_bound_vars_from_list (phead::pats)
-  | PatTvar (x, _, _)
   | PatVar (x, _, _) -> add x acc
   | PatList pats
   | PatTuple  (pats, _)
@@ -944,7 +742,6 @@ let rec desugar_data_pat
         let pat = PatConst (Const_string (desugar_vquote env e p.prange, p.prange)) in
         aux' top loc aqs env ({ p with pat })
 
-      | PatTvar(x, aq, attrs)
       | PatVar (x, aq, attrs) ->
         let aq = trans_bqual env aq in
         let attrs = attrs |> List.map (desugar_term env) in
@@ -1239,9 +1036,6 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term & an
       let t = {top with tm=Sum(List.map Inr terms, rhs)} in
       desugar_term_maybe_top top_level env t
 
-    | Tvar a ->
-      setpos <| (fail_or2 env (try_lookup_id env) a), noaqs
-
     | Uvar u ->
       raise_error top Errors.Fatal_UnexpectedUniverseVariable
           ("Unexpected universe variable " ^
@@ -1467,12 +1261,12 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term & an
       let binders = binders |> List.map replace_unit_pattern in
       let _, ftv = List.fold_left (fun (env, ftvs) pat ->
         match pat.pat with
-          | PatAscribed(_, (t, None)) -> env, free_type_vars env t@ftvs
-          | PatAscribed(_, (t, Some tac)) -> env, free_type_vars env t@free_type_vars env tac@ftvs
+          | PatAscribed(_, (t, None)) -> env, free_ticked_vars env t@ftvs
+          | PatAscribed(_, (t, Some tac)) -> env, free_ticked_vars env t@free_ticked_vars env tac@ftvs
           | _ -> env, ftvs) (env, []) binders in
-      let ftv = sort_ftv ftv in
+      let ftv = Class.Ord.sort_dedup ftv in
       let binders = (ftv |> List.map (fun a ->
-                        mk_pattern (PatTvar(a, Some AST.Implicit, [])) top.range))
+                        mk_pattern (PatVar(a, Some AST.Implicit, [])) top.range))
                     @binders in //close over the free type variables
       (*
          fun (P1 x1) (P2 x2) (P3 x3) -> e
@@ -2034,14 +1828,7 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term & an
             | Some t -> is_impl_t t
             | None -> false
             end
-        | Tvar id ->
-        (* GM: This case does not seem exercised even if the user writes "l_imp"
-         * as the relation... I thought those are meant to be Tvar nodes but
-         * it ends up as a Var. Bug? *)
-            begin match try_lookup_id env id with
-            | Some t -> is_impl_t t
-            | None -> false
-            end
+
         | _ -> false
       in
 
@@ -2052,8 +1839,8 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term & an
       let eta_and_annot rel =
         let x = Ident.gen' "x" rel.range in
         let y = Ident.gen' "y" rel.range in
-        let xt = mk_term (Tvar x) rel.range Expr in
-        let yt = mk_term (Tvar y) rel.range Expr in
+        let xt = mk_term (Var (Ident.id_as_lid x)) rel.range Expr in
+        let yt = mk_term (Var (Ident.id_as_lid y)) rel.range Expr in
         let pats = [mk_pattern (PatVar (x, None, [])) rel.range; mk_pattern (PatVar (y, None,[])) rel.range] in
         mk_term (Abs (pats,
             mk_term (Ascribed (
@@ -2764,20 +2551,24 @@ and desugar_formula env (f:term) : S.term =
 and desugar_binder_aq env b : (option ident & S.term & list S.attribute) & antiquotations_temp =
   let attrs = b.battributes |> List.map (desugar_term env) in
   match b.b with
-   | TAnnotated(x, t)
-   | Annotated(x, t) ->
-     let ty, aqs = desugar_typ_aq env t in
-     (Some x, ty, attrs), aqs
+  | Annotated(x, t) ->
+    let ty, aqs = desugar_typ_aq env t in
+    (Some x, ty, attrs), aqs
 
-   | NoName t        ->
-     let ty, aqs = desugar_typ_aq env t in
-     (None, ty, attrs), aqs
+  | NoName t        ->
+    let ty, aqs = desugar_typ_aq env t in
+    (None, ty, attrs), aqs
 
-   | TVariable x     -> 
-    (Some x, mk (Tm_type U_unknown) (range_of_id x), attrs), []
-
-   | Variable x      ->
-    (Some x, tun_r (range_of_id x), attrs), []
+  | Variable x      ->
+    let ident_is_ticked (id: ident) : bool =
+      let nm   = string_of_id id in
+      String.length nm > 0 && String.get nm 0 = '\''
+    in
+    if ident_is_ticked x
+    then
+      (Some x, setPos (range_of_id x) U.ktype, attrs), []
+    else
+      (Some x, tun_r (range_of_id x), attrs), []
 
 and desugar_binder env b : option ident & S.term & list S.attribute =
   let r, aqs = desugar_binder_aq env b in
@@ -2829,9 +2620,7 @@ let desugar_attributes (env:env_t) (cattributes:list term) : list cflag =
 
 let binder_ident (b:binder) : option ident =
   match b.b with
-  | TAnnotated (x, _)
   | Annotated (x, _)
-  | TVariable x
   | Variable x -> Some x
   | NoName _ -> None
 
@@ -2977,8 +2766,6 @@ let rec desugar_tycon env (d: AST.decl) (d_attrs_initial:list S.term) quals tcs 
   let binder_to_term b = match b.b with
     | Annotated (x, _)
     | Variable x -> mk_term (Var (lid_of_ids [x])) (range_of_id x) Expr
-    | TAnnotated(a, _)
-    | TVariable a -> mk_term (Tvar a) (range_of_id a) Type_level
     | NoName t -> t in
   let desugar_tycon_variant_record = function
     // for every variant, each constructor whose payload is a record

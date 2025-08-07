@@ -109,7 +109,6 @@ and eq_pattern' (p1 p2:pattern')
     | PatApp (p1, ps1), PatApp(p2, ps2) ->
       eq_pattern p1 p2 &&
       eq_list eq_pattern ps1 ps2
-    | PatTvar (i1, aq1, as1), PatTvar(i2, aq2, as2)
     | PatVar (i1, aq1, as1), PatVar(i2, aq2, as2) ->
       Ident.ident_equals i1 i2 &&
       eq_aqual aq1 aq2 &&
@@ -147,7 +146,6 @@ and eq_term' (t1 t2:term')
     | Op (i1, ts1), Op (i2, ts2) ->
       eq_ident i1 i2 &&
       eq_terms ts1 ts2
-    | Tvar i1, Tvar i2
     | Uvar i1, Uvar i2 ->
       eq_ident i1 i2
     | Var l1, Var l2
@@ -376,11 +374,7 @@ and eq_binder (b1 b2:binder) =
 and eq_binder' (b1 b2:binder') =
   match b1, b2 with
   | Variable i1, Variable i2 -> eq_ident i1 i2
-  | TVariable i1, TVariable i2 -> eq_ident i1 i2
   | Annotated (i1, t1), Annotated (i2, t2) ->
-      eq_ident i1 i2 &&
-      eq_term t1 t2
-  | TAnnotated (i1, t1), TAnnotated (i2, t2) ->
       eq_ident i1 i2 &&
       eq_term t1 t2
   | NoName t1, NoName t2 ->

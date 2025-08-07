@@ -443,7 +443,6 @@ let rec term_to_string (x:term) = match x.tm with
   | Const c -> C.const_to_string c
   | Op(s, xs) ->
       Format.fmt2 "%s(%s)" (string_of_id s) (String.concat ", " (List.map (fun x -> x|> term_to_string) xs))
-  | Tvar id
   | Uvar id -> (string_of_id id)
   | Var l
   | Name l -> (string_of_lid l)
@@ -705,8 +704,6 @@ and binder_to_string x =
   let pr x =
     let s = match x.b with
     | Variable i -> (string_of_id i)
-    | TVariable i -> Format.fmt1 "%s:_" ((string_of_id i))
-    | TAnnotated(i,t)
     | Annotated(i,t) -> Format.fmt2 "%s:%s" ((string_of_id i)) (t |> term_to_string)
     | NoName t -> t |> term_to_string in
     Format.fmt3 "%s%s%s"
@@ -736,7 +733,6 @@ and pat_to_string x = match x.pat with
   | PatConst c -> C.const_to_string c
   | PatVQuote t -> Format.fmt1 "`%%%s" (term_to_string t)
   | PatApp(p, ps) -> Format.fmt2 "(%s %s)" (p |> pat_to_string) (to_string_l " " pat_to_string ps)
-  | PatTvar (i, aq, attrs)
   | PatVar (i,  aq, attrs) -> Format.fmt3 "%s%s%s"
     (aqual_to_string aq)
     (attr_list_to_string attrs)
@@ -840,9 +836,7 @@ let thunk (ens : term) : term =
 let ident_of_binder r b =
   match b.b with
   | Variable i
-  | TVariable i
-  | Annotated (i, _)
-  | TAnnotated (i, _) -> i
+  | Annotated (i, _) -> i
   | NoName _ ->
     raise_error r Fatal_MissingQuantifierBinder "Wildcard binders in quantifiers are not allowed"
 

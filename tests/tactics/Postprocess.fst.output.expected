@@ -98,9 +98,9 @@ let  xx  : _ = (C1 (fun uu___0 -> (match uu___0@0:(Tm_unknown) with
 [@ ]
 let  q_as_lem  : _ = (fun p x -> ())
 [@ ]
-let  congruence_fun  : _ = (fun f g x -> (assert_by_tactic (eq2 (fun x -> (f@3:(Tm_unknown) x@0:(Tm_unknown))) (fun x -> (g@2:(Tm_unknown) x@0:(Tm_unknown)))) (fun uu___ -> let  uu___#15  : unit = ()
+let  congruence_fun  : _ = (fun f g x -> (assert_by_tactic (eq2 (fun x -> (f@3:(Tm_unknown) x@0:(Tm_unknown))) (fun x -> (g@2:(Tm_unknown) x@0:(Tm_unknown)))) (fun uu___ -> let  uu___#19  : unit = ()
 in
-let  uu___#16  : unit = (l_to_r (Cons quote ((q_as_lem x@2:(Tm_unknown))) Nil))
+let  uu___#20  : unit = (l_to_r (Cons quote ((q_as_lem x@2:(Tm_unknown))) Nil))
 in
 (trefl ()))))
 [@ ]
@@ -270,9 +270,9 @@ let  xx  : _ = (C1 (fun uu___0 -> (match uu___0@0:(Tm_unknown) with
 [@ ]
 let  q_as_lem  : _ = (fun p x -> ())
 [@ ]
-let  congruence_fun  : _ = (fun f g x -> (assert_by_tactic (eq2 (fun x -> (f@3:(Tm_unknown) x@0:(Tm_unknown))) (fun x -> (g@2:(Tm_unknown) x@0:(Tm_unknown)))) (fun uu___ -> let  uu___#15  : unit = ()
+let  congruence_fun  : _ = (fun f g x -> (assert_by_tactic (eq2 (fun x -> (f@3:(Tm_unknown) x@0:(Tm_unknown))) (fun x -> (g@2:(Tm_unknown) x@0:(Tm_unknown)))) (fun uu___ -> let  uu___#19  : unit = ()
 in
-let  uu___#16  : unit = (l_to_r (Cons quote ((q_as_lem x@2:(Tm_unknown))) Nil))
+let  uu___#20  : unit = (l_to_r (Cons quote ((q_as_lem x@2:(Tm_unknown))) Nil))
 in
 (trefl ()))))
 [@ ]
