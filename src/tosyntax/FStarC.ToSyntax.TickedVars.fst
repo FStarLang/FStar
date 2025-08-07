@@ -27,7 +27,6 @@ open FStarC.Class.Monad
 open FStarC.Writer
 open FStarC.Class.Setlike
 
-module S   = FStarC.Syntax.Syntax
 module C   = FStarC.Parser.Const
 module Env = FStarC.Syntax.DsEnv
 
@@ -230,7 +229,7 @@ let rec unparen t = match t.tm with
   | Paren t -> unparen t
   | _ -> t
 
-let tm_type r = mk_term (Name (lid_of_path   [ "Type"] r)) r Kind
+let tm_type r = mk_term (Name (lid_of_path ["Type"] r)) r Kind
 
 let close env t =
   let ftv = free_ticked_vars env t in
