@@ -115,10 +115,6 @@ and (eq_pattern' :
           eq_sconst s1 s2
       | (FStarC_Parser_AST.PatApp (p11, ps1), FStarC_Parser_AST.PatApp
          (p21, ps2)) -> (eq_pattern p11 p21) && (eq_list eq_pattern ps1 ps2)
-      | (FStarC_Parser_AST.PatTvar (i1, aq1, as1), FStarC_Parser_AST.PatTvar
-         (i2, aq2, as2)) ->
-          ((FStarC_Ident.ident_equals i1 i2) && (eq_aqual aq1 aq2)) &&
-            (eq_terms as1 as2)
       | (FStarC_Parser_AST.PatVar (i1, aq1, as1), FStarC_Parser_AST.PatVar
          (i2, aq2, as2)) ->
           ((FStarC_Ident.ident_equals i1 i2) && (eq_aqual aq1 aq2)) &&
@@ -159,8 +155,6 @@ and (eq_term' :
           FStarC_Const.eq_const s1 s2
       | (FStarC_Parser_AST.Op (i1, ts1), FStarC_Parser_AST.Op (i2, ts2)) ->
           (eq_ident i1 i2) && (eq_terms ts1 ts2)
-      | (FStarC_Parser_AST.Tvar i1, FStarC_Parser_AST.Tvar i2) ->
-          eq_ident i1 i2
       | (FStarC_Parser_AST.Uvar i1, FStarC_Parser_AST.Uvar i2) ->
           eq_ident i1 i2
       | (FStarC_Parser_AST.Var l1, FStarC_Parser_AST.Var l2) ->
@@ -399,11 +393,7 @@ and (eq_binder' :
       match (b1, b2) with
       | (FStarC_Parser_AST.Variable i1, FStarC_Parser_AST.Variable i2) ->
           eq_ident i1 i2
-      | (FStarC_Parser_AST.TVariable i1, FStarC_Parser_AST.TVariable i2) ->
-          eq_ident i1 i2
       | (FStarC_Parser_AST.Annotated (i1, t1), FStarC_Parser_AST.Annotated
-         (i2, t2)) -> (eq_ident i1 i2) && (eq_term t1 t2)
-      | (FStarC_Parser_AST.TAnnotated (i1, t1), FStarC_Parser_AST.TAnnotated
          (i2, t2)) -> (eq_ident i1 i2) && (eq_term t1 t2)
       | (FStarC_Parser_AST.NoName t1, FStarC_Parser_AST.NoName t2) ->
           eq_term t1 t2

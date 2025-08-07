@@ -6827,7 +6827,7 @@ let (instantiate_one_binder :
                       then "Typeclass constraint argument"
                       else
                         if FStar_Pervasives_Native.uu___is_Some ctx_uvar_meta
-                        then Prims.strcat "Instantiating meta argument" name
+                        then Prims.strcat "Instantiating meta argument " name
                         else
                           Prims.strcat "Instantiating implicit argument "
                             name in

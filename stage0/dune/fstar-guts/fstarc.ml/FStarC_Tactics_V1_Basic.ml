@@ -9296,22 +9296,6 @@ let (range_to_string :
   fun r ->
     let uu___ = FStarC_Class_Show.show FStarC_Range_Ops.showable_range r in
     ret uu___
-let (term_eq_old :
-  FStarC_Syntax_Syntax.term ->
-    FStarC_Syntax_Syntax.term -> Prims.bool FStarC_Tactics_Monad.tac)
-  =
-  fun uu___1 ->
-    fun uu___ ->
-      (fun t1 ->
-         fun t2 ->
-           Obj.magic
-             (FStarC_Class_Monad.op_let_Bang FStarC_Tactics_Monad.monad_tac
-                () () idtac
-                (fun uu___ ->
-                   (fun uu___ ->
-                      let uu___ = Obj.magic uu___ in
-                      let uu___1 = FStarC_Syntax_Util.term_eq t1 t2 in
-                      Obj.magic (ret uu___1)) uu___))) uu___1 uu___
 let with_compat_pre_core :
   'a .
     Prims.int -> 'a FStarC_Tactics_Monad.tac -> 'a FStarC_Tactics_Monad.tac

@@ -444,4 +444,6 @@ let (simplification_ops_list :
   =
   fun env ->
     let uu___ = FStarC_TypeChecker_Primops_Eq.prop_eq_ops env in
-    FStarC_List.op_At uu___ FStarC_TypeChecker_Primops_Real.simplify_ops
+    FStarC_List.op_At uu___
+      (FStarC_List.op_At FStarC_TypeChecker_Primops_Real.simplify_ops
+         FStarC_TypeChecker_Primops_Erased.simplify_ops)

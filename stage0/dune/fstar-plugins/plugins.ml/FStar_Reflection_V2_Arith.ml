@@ -364,13 +364,20 @@ let (atom : FStarC_Reflection_Types.term -> expr tm) =
       match uu___ with
       | (n, atoms) ->
           let uu___1 =
-            find_idx (FStarC_Tactics_V2_Builtins.term_eq_old t) atoms in
+            find_idx
+              (fun uu___2 ->
+                 (fun a ->
+                    Obj.magic
+                      (FStar_Tactics_Effect.lift_div_tac
+                         (fun uu___2 ->
+                            FStar_Reflection_TermEq_Simple.term_eq t a)))
+                   uu___2) atoms in
           FStar_Tactics_Effect.tac_bind
             (FStar_Sealed.seal
                (Obj.magic
                   (FStar_Range.mk_range "FStar.Reflection.V2.Arith.fst"
                      (Prims.of_int (116)) (Prims.of_int (10))
-                     (Prims.of_int (116)) (Prims.of_int (40)))))
+                     (Prims.of_int (116)) (Prims.of_int (47)))))
             (FStar_Sealed.seal
                (Obj.magic
                   (FStar_Range.mk_range "FStar.Reflection.V2.Arith.fst"

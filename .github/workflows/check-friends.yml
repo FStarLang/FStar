@@ -314,10 +314,7 @@ jobs:
           repository: project-everest/everparse
 
       - name: Build
-        # NOTE: override HACL_HOME to empty to skip some COSE tests
-        # that need HACL. Everparse CI can test that. Depending on
-        # HACL here would make the check-world workflow way too long.
-        run: make -C everparse -skj$(nproc) all HACL_HOME=
+        run: make -C everparse -skj$(nproc) all
 
       - uses: mtzguido/gci-upload@master
         with:
@@ -362,13 +359,10 @@ jobs:
           name: everparse
 
       - name: Test
-        # NOTE: override HACL_HOME to empty to skip some COSE tests
-        # that need HACL. Everparse CI can test that. Depending on
-        # HACL here would make the check-world workflow way too long.
-        # NOTE: We also do not check against the expected C/Rust
+        # NOTE: We do not check against the expected C/Rust
         # outputs, they are too noisy (they have gensym'd names) and do
         # not really indicate a failure.
-        run: make -C everparse -skj$(nproc) test HACL_HOME= EVERPARSE_NO_DIFF=1
+        run: make -C everparse -skj$(nproc) test EVERPARSE_NO_DIFF=1
 
   build-merkle-tree:
     runs-on: ubuntu-latest

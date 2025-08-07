@@ -24,6 +24,7 @@ open FStar.Tactics.Util
 open FStar.Stubs.Tactics.V1.Builtins
 open FStar.Tactics.V1.SyntaxHelpers
 open FStar.Stubs.VConfig
+open FStar.Reflection.TermEq.Simple { term_eq }
 include FStar.Tactics.Names
 
 module L = FStar.List.Tot.Base

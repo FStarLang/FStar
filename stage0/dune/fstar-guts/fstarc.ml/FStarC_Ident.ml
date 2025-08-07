@@ -75,6 +75,7 @@ let (lid_of_ns_and_id : ipath -> ident -> lident) =
            then id.idText
            else Prims.strcat nsstr (Prims.strcat "." id.idText))
       }
+let (id_as_lid : ident -> lident) = fun id -> lid_of_ns_and_id [] id
 let (lid_of_ids : ipath -> lident) =
   fun ids ->
     let uu___ = FStarC_Util.prefix ids in

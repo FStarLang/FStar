@@ -72,7 +72,6 @@ type tc_constraint = {
 %token <string> STRING
 %token <string> IDENT
 %token <string> NAME
-%token <string> TVAR
 %token <string> TILDE
 
 %token <string> INT
@@ -460,8 +459,8 @@ typars:
   | x=binders                { x }
 
 tvarinsts:
-  | TYP_APP_LESS tvs=separated_nonempty_list(COMMA, tvar) TYP_APP_GREATER
-      { map (fun tv -> mk_binder (TVariable(tv)) (range_of_id tv) Kind None) tvs }
+  | TYP_APP_LESS tvs=separated_nonempty_list(COMMA, ident) TYP_APP_GREATER
+      { map (fun tv -> mk_binder (Variable(tv)) (range_of_id tv) Kind None) tvs }
 
 %inline recordDefinition:
   | LBRACE record_field_decls=right_flexible_nonempty_list(SEMICOLON, recordFieldDecl) RBRACE
@@ -718,7 +717,6 @@ atomicPattern:
   | LENS_PAREN_LEFT pat0=constructorPattern COMMA pats=separated_nonempty_list(COMMA, constructorPattern) LENS_PAREN_RIGHT
       { mk_pattern (PatTuple(pat0::pats, true)) (rr $loc) }
   | LPAREN pat=tuplePattern RPAREN   { pat }
-  | tv=tvar                   { mk_pattern (PatTvar (tv, None, [])) (rr $loc(tv)) }
   | LPAREN op=operator RPAREN
       { mk_pattern (PatOp op) (rr $loc) }
   | UNDERSCORE
@@ -805,9 +803,6 @@ binder:
        let (q, attrs), lid = aqualifiedWithAttrs_lid in
        mk_binder_with_attrs (Variable lid) (rr $loc(aqualifiedWithAttrs_lid)) Type_level q attrs
      }
-
-  | tv=tvar { mk_binder (TVariable tv) (rr $loc) Kind None  }
-       (* small regression here : fun (=x : t) ... is not accepted anymore *)
 
 %public
 multiBinder:
@@ -902,9 +897,6 @@ lident:
 
 uident:
   | id=NAME { mk_ident(id, rr $loc(id)) }
-
-tvar:
-  | tv=TVAR { mk_ident(tv, rr $loc(tv)) }
 
 
 /******************************************************************************/
@@ -1510,7 +1502,6 @@ atomicTermQUident:
 
 atomicTermNotQUident:
   | UNDERSCORE { mk_term Wild (rr $loc) Un }
-  | tv=tvar     { mk_term (Tvar tv) (rr $loc) Type_level }
   | c=constant { mk_term (Const c) (rr $loc) Expr }
   | x=opPrefixTerm(atomicTermNotQUident)
     { x }

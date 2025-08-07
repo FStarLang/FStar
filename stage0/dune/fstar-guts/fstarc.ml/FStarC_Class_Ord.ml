@@ -81,22 +81,26 @@ let dedup : 'a . 'a ord -> 'a Prims.list -> 'a Prims.list =
                    out1 in
                if uu___1 then out1 else x :: out1) [] xs in
       FStarC_List.rev out
+let rec insert_nodup : 'a . 'a ord -> 'a -> 'a Prims.list -> 'a Prims.list =
+  fun uu___ ->
+    fun x ->
+      fun xs ->
+        match xs with
+        | [] -> [x]
+        | y::ys ->
+            let uu___1 = cmp uu___ x y in
+            (match uu___1 with
+             | FStarC_Order.Eq -> xs
+             | FStarC_Order.Lt -> x :: xs
+             | FStarC_Order.Gt ->
+                 let uu___2 = insert_nodup uu___ x ys in y :: uu___2)
 let rec sort_dedup : 'a . 'a ord -> 'a Prims.list -> 'a Prims.list =
   fun uu___ ->
     fun xs ->
-      let rec insert x =
-        fun xs1 ->
-          match xs1 with
-          | [] -> [x]
-          | y::ys ->
-              let uu___1 = cmp uu___ x y in
-              (match uu___1 with
-               | FStarC_Order.Eq -> ys
-               | FStarC_Order.Lt -> x :: y :: ys
-               | FStarC_Order.Gt -> let uu___2 = insert x ys in y :: uu___2) in
       match xs with
       | [] -> []
-      | x::xs1 -> let uu___1 = sort_dedup uu___ xs1 in insert x uu___1
+      | x::xs1 ->
+          let uu___1 = sort_dedup uu___ xs1 in insert_nodup uu___ x uu___1
 let ord_list_diff :
   'a .
     'a ord ->

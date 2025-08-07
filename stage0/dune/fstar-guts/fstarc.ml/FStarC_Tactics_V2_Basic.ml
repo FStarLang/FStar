@@ -10183,28 +10183,6 @@ let (range_to_string :
        Obj.magic
          (FStarC_Class_Monad.return FStarC_Tactics_Monad.monad_tac ()
             (Obj.magic uu___))) uu___
-let (term_eq_old :
-  FStarC_Syntax_Syntax.term ->
-    FStarC_Syntax_Syntax.term -> Prims.bool FStarC_Tactics_Monad.tac)
-  =
-  fun uu___1 ->
-    fun uu___ ->
-      (fun t1 ->
-         fun t2 ->
-           let uu___ =
-             FStarC_Class_Monad.return FStarC_Tactics_Monad.monad_tac ()
-               (Obj.repr ()) in
-           Obj.magic
-             (FStarC_Class_Monad.op_let_Bang FStarC_Tactics_Monad.monad_tac
-                () () uu___
-                (fun uu___1 ->
-                   (fun uu___1 ->
-                      let uu___1 = Obj.magic uu___1 in
-                      let uu___2 = FStarC_Syntax_Util.term_eq t1 t2 in
-                      Obj.magic
-                        (FStarC_Class_Monad.return
-                           FStarC_Tactics_Monad.monad_tac ()
-                           (Obj.magic uu___2))) uu___1))) uu___1 uu___
 let with_compat_pre_core :
   'a .
     Prims.int -> 'a FStarC_Tactics_Monad.tac -> 'a FStarC_Tactics_Monad.tac

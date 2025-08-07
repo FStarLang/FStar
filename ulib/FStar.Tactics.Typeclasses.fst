@@ -271,7 +271,6 @@ let rec tac_unrefine () : Tac bool =
 
     (* Make the term uvar the new goal *)
     unshelve uv;
-    dump ("Unrefined from " ^ term_to_string g ^ " to this");
     (* Keep on unrefining, maybe *)
     ignore (tac_unrefine ());
     true

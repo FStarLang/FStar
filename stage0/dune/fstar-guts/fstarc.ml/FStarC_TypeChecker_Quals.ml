@@ -657,8 +657,10 @@ let (check_typeclass_instance_attribute :
           match uu___ with
           | (uu___1, res) ->
               ((let uu___3 =
-                  let uu___4 = FStarC_Syntax_Util.is_total_comp res in
-                  Prims.op_Negation uu___4 in
+                  (let uu___4 = FStarC_Options.ml_ish () in
+                   Prims.op_Negation uu___4) &&
+                    (let uu___4 = FStarC_Syntax_Util.is_total_comp res in
+                     Prims.op_Negation uu___4) in
                 if uu___3
                 then
                   let uu___4 =
@@ -674,7 +676,7 @@ let (check_typeclass_instance_attribute :
                             FStarC_Syntax_Util.comp_effect_name res in
                           FStarC_Class_PP.pp FStarC_Ident.pretty_lident
                             uu___10 in
-                        FStarC_Pprint.op_Hat_Hat uu___8 uu___9 in
+                        FStarC_Pprint.op_Hat_Slash_Hat uu___8 uu___9 in
                       [uu___7] in
                     uu___5 :: uu___6 in
                   FStarC_Errors.log_issue
