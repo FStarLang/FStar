@@ -227,13 +227,15 @@ instance e_exn : embedding exn =
           let open FStarC.Pprint in
           let open FStarC.Class.PP in
           let open FStarC.Errors.Msg in
-          let msg : error_message = [
-            text "Uncaught exception";
-            arbitrary_string (BU.message_of_exn e);
-           ]
-          in
+          let msg, range =
+            match FStarC.Errors.issue_of_exn e with
+            | Some { issue_range; issue_msg } ->
+              issue_msg, issue_range
+            | None ->
+              [arbitrary_string (BU.message_of_exn e)], None in
+          let msg = text "Uncaught exception" :: msg in
           S.mk_Tm_app fstar_tactics_TacticFailure.t
-              [S.as_arg (embed rng (msg, None #Range.t))]
+              [S.as_arg (embed rng (msg, range))]
               rng
     in
     let unembed_exn (t:term) _ : option exn =
