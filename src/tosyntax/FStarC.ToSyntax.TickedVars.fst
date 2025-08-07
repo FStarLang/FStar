@@ -25,6 +25,7 @@ open FStarC.Parser.AST
 open FStarC.Ident
 open FStarC.Class.Monad
 open FStarC.Writer
+open FStarC.Class.Setlike
 
 module S   = FStarC.Syntax.Syntax
 module C   = FStarC.Parser.Const
@@ -40,9 +41,21 @@ let lident_is_ticked (id: lident) : bool =
   let id = ident_of_lid id in
   Nil? ns && ident_is_ticked id
 
-(* The monad we use to collect free ticked variables. TODO:
-move to using a FlatSet. It is not trivial. *)
-let m = writer (list ident)
+instance _ : Class.Monoid.monoid (RBSet.t ident) = {
+  mzero = RBSet.empty ();
+  mplus = RBSet.union;
+}
+
+(* A monad for collecting free ticked variables in a term. *)
+
+(* The monad we use to collect free ticked variables.
+TODO: this should probably be a flatset if we want to collect
+these variables in order of appearence, but the current code
+will sort the list at the end, so an RBSet works fne. *)
+let m = writer (RBSet.t ident)
+
+let emit1 (x : ident) : m unit =
+  emit (singleton x)
 
 let rec go_term (env : DsEnv.env) (t: term) : m unit =
   match t.tm with
@@ -51,7 +64,7 @@ let rec go_term (env : DsEnv.env) (t: term) : m unit =
 
   | Var a ->
     if lident_is_ticked a && None? (Env.try_lookup_id env (Ident.ident_of_lid a)) then
-      emit [Ident.ident_of_lid a]
+      emit1 (Ident.ident_of_lid a)
     else
       return ()
 
@@ -184,7 +197,7 @@ and go_binder (env : DsEnv.env) (b: binder) : m DsEnv.env =
     (* This handles ticks in declarations like `type foo 'a`. The 'a
     is used in a binding position. *)
     if ident_is_ticked x && None? (Env.try_lookup_id env x) then
-      emit [x]
+      emit1 x
     else
       return ();!
     let env', _ = Env.push_bv env x in
@@ -192,7 +205,7 @@ and go_binder (env : DsEnv.env) (b: binder) : m DsEnv.env =
 
   | Annotated (x, t) ->
     if ident_is_ticked x && None? (Env.try_lookup_id env x) then
-      emit [x]
+      emit1 x
     else
       return ();!
     go_term env t;!
@@ -204,14 +217,14 @@ and go_binder (env : DsEnv.env) (b: binder) : m DsEnv.env =
     return env
 
 and go_binders (env : DsEnv.env) (bs: list binder) : m DsEnv.env =
-  foldM_left (fun env b -> go_binder env b) env bs
+  foldM_left go_binder env bs
 
 (* GM: Note: variables are sorted alphabetically. This is weird to me,
    I would expect them to be abstracted over in textual order, but I'm
    retaining this feature. *)
 let free_ticked_vars env t : list ident =
   let fvs, () = run_writer <| go_term env t in
-  Class.Ord.sort_dedup fvs
+  elems fvs // relying on elems from RBSet returning a sorted list
 
 let rec unparen t = match t.tm with
   | Paren t -> unparen t
@@ -222,14 +235,14 @@ let tm_type r = mk_term (Name (lid_of_path   [ "Type"] r)) r Kind
 let close env t =
   let ftv = free_ticked_vars env t in
   if Nil? ftv then t else
-    let binders = ftv |> List.map (fun x -> mk_binder (Annotated(x, tm_type (range_of_id x))) (range_of_id x) Type_level (Some Implicit)) in
+    let binders = ftv |> List.map (fun x -> mk_binder (Annotated(x, tm_type (pos x))) (pos x) Type_level (Some Implicit)) in
     let result = mk_term (Product(binders, t)) t.range t.level in
     result
 
 let close_fun env (t:term) =
   let ftv = free_ticked_vars env t in
   if Nil? ftv then t else
-    let binders = ftv |> List.map (fun x -> mk_binder (Annotated(x, tm_type (range_of_id x))) (range_of_id x) Type_level (Some Implicit)) in
+    let binders = ftv |> List.map (fun x -> mk_binder (Annotated(x, tm_type (pos x))) (pos x) Type_level (Some Implicit)) in
     let t = match (unparen t).tm with
      | Product _ -> t
      | _ -> mk_term (App(mk_term (Name C.effect_Tot_lid) t.range t.level, t, Nothing)) t.range t.level in
