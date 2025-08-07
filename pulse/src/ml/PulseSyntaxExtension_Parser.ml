@@ -188,7 +188,6 @@ let rewrite_token (tok:FP.token)
     | TOTAL -> PP.TOTAL 
     | TRUE -> PP.TRUE 
     | TRY -> PP.TRY 
-    | TVAR s -> PP.TVAR s 
     | TYPE -> PP.TYPE 
     | TYP_APP_GREATER -> PP.TYP_APP_GREATER 
     | TYP_APP_LESS -> PP.TYP_APP_LESS 

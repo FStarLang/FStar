@@ -107,7 +107,7 @@ fn foo5 ()
   1
 }
 
-[@@expect_failure [168]] // desugaring failure, precondition
+[@@expect_failure [72]] // desugaring failure, precondition
 fn foo6 ()
   requires res v
   returns v : int

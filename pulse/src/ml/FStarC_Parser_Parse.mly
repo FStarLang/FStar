@@ -59,9 +59,6 @@ let old_attribute_syntax_warning =
   "The `[@ ...]` syntax of attributes is deprecated. \
    Use `[@@ a1; a2; ...; an]`, a semi-colon separated list of attributes, instead"
 
-let do_notation_deprecation_warning =
-  "The lightweight do notation [x <-- y; z] or [x ;; z] is deprecated, use let operators (i.e. [let* x = y in z] or [y ;* z], [*] being any sequence of operator characters) instead."
-
 let none_to_empty_list x =
   match x with
   | None -> []
@@ -83,7 +80,7 @@ let parse_use_lang_blob (extension_name:string)
 type tc_constraint = {
   id: FStarC_Ident.ident;
   t: FStarC_Parser_AST.term;
-  r: FStarC_Range.range;
+  r: FStarC_Range.t;
 }
 
 %}
@@ -91,7 +88,6 @@ type tc_constraint = {
 %token <string> STRING
 %token <string> IDENT
 %token <string> NAME
-%token <string> TVAR
 %token <string> TILDE
 
 %token <string> INT
@@ -479,8 +475,8 @@ typars:
   | x=binders                { x }
 
 tvarinsts:
-  | TYP_APP_LESS tvs=separated_nonempty_list(COMMA, tvar) TYP_APP_GREATER
-      { map (fun tv -> mk_binder (TVariable(tv)) (range_of_id tv) Kind None) tvs }
+  | TYP_APP_LESS tvs=separated_nonempty_list(COMMA, ident) TYP_APP_GREATER
+      { map (fun tv -> mk_binder (Variable(tv)) (range_of_id tv) Kind None) tvs }
 
 %inline recordDefinition:
   | LBRACE record_field_decls=right_flexible_nonempty_list(SEMICOLON, recordFieldDecl) RBRACE
@@ -737,7 +733,6 @@ atomicPattern:
   | LENS_PAREN_LEFT pat0=constructorPattern COMMA pats=separated_nonempty_list(COMMA, constructorPattern) LENS_PAREN_RIGHT
       { mk_pattern (PatTuple(pat0::pats, true)) (rr $loc) }
   | LPAREN pat=tuplePattern RPAREN   { pat }
-  | tv=tvar                   { mk_pattern (PatTvar (tv, None, [])) (rr $loc(tv)) }
   | LPAREN op=operator RPAREN
       { mk_pattern (PatOp op) (rr $loc) }
   | UNDERSCORE
@@ -824,9 +819,6 @@ binder:
        let (q, attrs), lid = aqualifiedWithAttrs_lid in
        mk_binder_with_attrs (Variable lid) (rr $loc(aqualifiedWithAttrs_lid)) Type_level q attrs
      }
-
-  | tv=tvar { mk_binder (TVariable tv) (rr $loc) Kind None  }
-       (* small regression here : fun (=x : t) ... is not accepted anymore *)
 
 %public
 multiBinder:
@@ -922,9 +914,6 @@ lident:
 uident:
   | id=NAME { mk_ident(id, rr $loc(id)) }
 
-tvar:
-  | tv=TVAR { mk_ident(tv, rr $loc(tv)) }
-
 
 /******************************************************************************/
 /*                            Types and terms                                 */
@@ -961,18 +950,16 @@ term:
 (*     exists for the previous production *)
   | e1=noSeqTerm op=SEMICOLON_OP e2=term
       { let t = match op with
-	  | Some op ->
-	     let op = mk_ident ("let" ^ op, rr $loc(op)) in
-	     let pat = mk_pattern (PatWild(None, [])) (rr $loc(op)) in
-	     LetOperator ([(op, pat, e1)], e2)
-	  | None   ->
-             log_issue_text (rr $loc) Warning_DeprecatedLightDoNotation do_notation_deprecation_warning;
-	     Bind(gen (rr $loc(op)), e1, e2)
-        in mk_term t (rr2 $loc(e1) $loc(e2)) Expr
+        | Some op ->
+          let op = mk_ident ("let" ^ op, rr $loc(op)) in
+          let pat = mk_pattern (PatWild(None, [])) (rr $loc(op)) in
+          LetOperator ([(op, pat, e1)], e2)
+        | None ->
+          Bind(gen (rr $loc(op)), e1, e2)
+        in mk_term t (rr $loc) Expr
       }
   | x=lidentOrUnderscore LONG_LEFT_ARROW e1=noSeqTerm SEMICOLON e2=term
-    { log_issue_text (rr $loc) Warning_DeprecatedLightDoNotation do_notation_deprecation_warning;
-      mk_term (Bind(x, e1, e2)) (rr2 $loc(x) $loc(e2)) Expr }
+    { mk_term (Bind(x, e1, e2)) (rr $loc) Expr }
 
 match_returning:
   | as_opt=option(AS i=lident {i}) RETURNS t=tmIff {as_opt,t,false}
@@ -1531,7 +1518,6 @@ atomicTermQUident:
 
 atomicTermNotQUident:
   | UNDERSCORE { mk_term Wild (rr $loc) Un }
-  | tv=tvar     { mk_term (Tvar tv) (rr $loc) Type_level }
   | c=constant { mk_term (Const c) (rr $loc) Expr }
   | x=opPrefixTerm(atomicTermNotQUident)
     { x }

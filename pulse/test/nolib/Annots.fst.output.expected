@@ -34,7 +34,7 @@
 
 >>]
 >> Got issues: [
-* Error 168 at Annots.fst(112,15-112,16):
-  - Identifiers (v) not found, consider adding them as binders
+* Error 72 at Annots.fst(112,15-112,16):
+  - Identifier not found: v
 
 >>]
