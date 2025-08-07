@@ -1046,7 +1046,6 @@ and p_qualifier = function
   | Noeq -> str "noeq"
   | Unopteq -> str "unopteq"
   | Assumption -> str "assume"
-  | DefaultEffect -> str "default"
   | TotalEffect -> str "total"
   | Effect_qual -> empty
   | New -> str "new"

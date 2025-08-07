@@ -166,7 +166,6 @@ let trans_qual (r:Range.t) maybe_effect_id = function
   | AST.Reifiable ->     S.Reifiable
   | AST.Noeq ->          S.Noeq
   | AST.Unopteq ->       S.Unopteq
-  | AST.DefaultEffect -> raise_error r Errors.Fatal_DefaultQualifierNotAllowedOnEffects "The 'default' qualifier on effects is no longer supported"
   | AST.Inline
   | AST.Visible ->
     raise_error r Errors.Fatal_UnsupportedQualifier "Unsupported qualifier"
