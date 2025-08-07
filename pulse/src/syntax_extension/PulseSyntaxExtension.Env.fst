@@ -114,20 +114,20 @@ let destruct_binder (b:A.binder)
 : A.aqual & ident & A.term & list A.term
 = let attrs = b.battributes in
   match b.b with
-  | A.Annotated (x, t)
-  | A.TAnnotated (x, t) ->
+  | A.Annotated (x, t) ->
     b.aqual, x, t, attrs
   | A.NoName t ->
     b.aqual, Ident.id_of_text "_", t, attrs
-  | A.Variable x
-  | A.TVariable x ->
+  | A.Variable x ->
     b.aqual, x, A.mk_term A.Wild (Ident.range_of_id x) A.Un, attrs
 
 let free_vars_list (#a:Type0) (f : env_t -> a -> list ident) (env:env_t) (xs : list a) : list ident =
   L.collect (f env) xs
 
+(* These functions return only the free "ticked" variables, i.e.
+   those that we implicitly quantify over. *)
 let rec free_vars_term (env:env_t) (t:A.term) =
-  ToSyntax.free_vars false env.dsenv t
+  ToSyntax.TickedVars.free_ticked_vars env.dsenv t
 
 and free_vars_binders (env:env_t) (bs:Sugar.binders)
   : env_t & list ident

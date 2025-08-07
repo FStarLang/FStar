@@ -44,9 +44,9 @@ pub fn lookup<KT: Copy + PartialEq + Clone, VT: Clone>(
     let mut cont = true;
     let mut ret = None;
     while {
-        let voff = off;
-        let vcont = cont;
-        voff <= ht.sz && vcont == true
+        let __anf6058 = off;
+        let __anf6056 = cont;
+        __anf6058 <= ht.sz && __anf6056
     } {
         let voff = off;
         if voff == ht.sz {
@@ -131,10 +131,7 @@ pub fn insert<KT: Copy + PartialEq + Clone, VT: Clone>(
     let mut off = 0;
     let mut cont = true;
     let mut idx = 0;
-    while {
-        let vcont = cont;
-        vcont == true
-    } {
+    while cont {
         let voff = off;
         if voff == ht.sz {
             panic!()
@@ -212,6 +209,12 @@ pub fn is_used<K: Copy + PartialEq + Clone, V: Clone>(
         _ => (false, c),
     }
 }
+pub fn not_(b: bool) -> bool {
+    match b {
+        true => false,
+        _ => true,
+    }
+}
 pub fn not_full<KT: Copy + PartialEq + Clone, VT: Clone>(
     ht: super::pulse_lib_hashtable_type::ht_t<KT, VT>,
     pht: (),
@@ -219,26 +222,31 @@ pub fn not_full<KT: Copy + PartialEq + Clone, VT: Clone>(
     let hashf = ht.hashf;
     let mut contents = ht.contents;
     let mut i = 0;
+    let mut break_ = false;
     while {
-        let vi = i;
-        if vi < ht.sz {
-            let c = std::mem::replace::<
-                super::pulse_lib_hashtable_spec::cell<KT, VT>,
-            >(&mut contents[vi], super::pulse_lib_hashtable_spec::cell::Zombie);
-            let b = super::pulse_lib_hashtable::is_used(c);
-            let uu___1 = std::mem::replace::<
-                super::pulse_lib_hashtable_spec::cell<KT, VT>,
-            >(&mut contents[vi], b.1);
-            b.0
-        } else {
-            false
-        }
+        let __anf4846 = i;
+        let __anf4844 = break_;
+        __anf4846 < ht.sz && super::pulse_lib_hashtable::not_(__anf4844)
     } {
         let vi = i;
-        i = vi + 1;
+        let c = std::mem::replace::<
+            super::pulse_lib_hashtable_spec::cell<KT, VT>,
+        >(&mut contents[vi], super::pulse_lib_hashtable_spec::cell::Zombie);
+        let b = super::pulse_lib_hashtable::is_used(c);
+        let uu___1 = std::mem::replace::<
+            super::pulse_lib_hashtable_spec::cell<KT, VT>,
+        >(&mut contents[vi], b.1);
+        break_ = super::pulse_lib_hashtable::not_(b.0);
+        let __anf11543 = break_;
+        if super::pulse_lib_hashtable::not_(__anf11543) {
+            let __anf13055 = i;
+            i = __anf13055 + 1;
+        } else {
+            ()
+        }
     }
     let vi = i;
-    let res = vi < ht.sz;
+    let res = break_;
     let vcontents = contents;
     let ht1 = super::pulse_lib_hashtable::mk_ht(ht.sz, hashf, vcontents);
     (ht1, res)

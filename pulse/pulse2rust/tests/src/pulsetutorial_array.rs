@@ -27,18 +27,18 @@ pub fn compare<T: PartialEq + Copy>(
     while {
         let vi = i;
         if vi < l {
-            let __anf4051 = a1[vi];
-            let __anf4049 = a2[vi];
-            __anf4051 == __anf4049
+            let __anf3853 = a1[vi];
+            let __anf3851 = a2[vi];
+            __anf3853 == __anf3851
         } else {
             false
         }
     } {
-        let __anf10964 = i;
-        i = __anf10964 + 1;
+        let __anf10301 = i;
+        i = __anf10301 + 1;
     }
-    let __anf13777 = i;
-    __anf13777 == l
+    let __anf14869 = i;
+    __anf14869 == l
 }
 pub fn copy<T: Copy>(
     a1: &mut [T],
@@ -50,12 +50,12 @@ pub fn copy<T: Copy>(
 ) -> () {
     let mut i = 0;
     while {
-        let __anf3224 = i;
-        __anf3224 < l
+        let __anf3273 = i;
+        __anf3273 < l
     } {
         let vi = i;
-        let __anf6362 = a2[vi];
-        a1[vi] = __anf6362;
+        let __anf4272 = a2[vi];
+        a1[vi] = __anf4272;
         i = vi + 1;
     }
 }
@@ -69,8 +69,8 @@ pub fn copy2<T: Copy>(
 ) -> () {
     let mut i = 0;
     while {
-        let vi = i;
-        vi < l
+        let __anf3090 = i;
+        __anf3090 < l
     } {
         let vi = i;
         let v = a2[vi];
