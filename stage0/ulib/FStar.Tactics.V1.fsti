@@ -36,3 +36,5 @@ include FStar.Tactics.Visit
 include FStar.Tactics.Easy
 
 include FStar.Tactics.SMT (* Version agnostic *)
+
+include FStar.Reflection.TermEq.Simple

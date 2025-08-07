@@ -2169,7 +2169,6 @@ and (p_atomicPattern : FStarC_Parser_AST.pattern -> FStarC_Pprint.document) =
           FStarC_Pprint.op_Hat_Hat FStarC_Pprint.bar FStarC_Pprint.rparen in
         FStarC_Pprint.surround (Prims.of_int (2)) Prims.int_one uu___ uu___1
           uu___2
-    | FStarC_Parser_AST.PatTvar (tv, arg_qualifier_opt, attrs) -> p_tvar tv
     | FStarC_Parser_AST.PatOp op ->
         let uu___ =
           let uu___1 =
@@ -2255,12 +2254,6 @@ and (p_binder' :
                 FStarC_Pprint.op_Hat_Hat uu___3 uu___4 in
               FStarC_Pprint.op_Hat_Hat uu___1 uu___2 in
             (uu___, FStar_Pervasives_Native.None)
-        | FStarC_Parser_AST.TVariable lid ->
-            let uu___ =
-              let uu___1 = p_attributes false b.FStarC_Parser_AST.battributes in
-              let uu___2 = p_lident lid in
-              FStarC_Pprint.op_Hat_Hat uu___1 uu___2 in
-            (uu___, FStar_Pervasives_Native.None)
         | FStarC_Parser_AST.Annotated (lid, t) ->
             let uu___ =
               match t.FStarC_Parser_AST.tm with
@@ -2323,8 +2316,6 @@ and (p_binder' :
                           let uu___2 = cat_with_colon x y in
                           FStarC_Pprint.group uu___2) in
                  (b', (FStar_Pervasives_Native.Some (t', catf1))))
-        | FStarC_Parser_AST.TAnnotated uu___ ->
-            failwith "Is this still used ?"
         | FStarC_Parser_AST.NoName t ->
             (match t.FStarC_Parser_AST.tm with
              | FStarC_Parser_AST.Refine
@@ -4553,14 +4544,6 @@ and (p_refinedBinder :
               FStarC_Parser_AST.Type_level in
           p_refinement b.FStarC_Parser_AST.aqual
             b.FStarC_Parser_AST.battributes uu___ uu___1 phi
-      | FStarC_Parser_AST.TAnnotated uu___ -> failwith "Is this still used ?"
-      | FStarC_Parser_AST.TVariable uu___ ->
-          let uu___1 =
-            let uu___2 = FStarC_Parser_AST.binder_to_string b in
-            FStarC_Format.fmt1
-              "Impossible: a refined binder ought to be annotated (%s)"
-              uu___2 in
-          failwith uu___1
       | FStarC_Parser_AST.NoName uu___ ->
           let uu___1 =
             let uu___2 = FStarC_Parser_AST.binder_to_string b in
@@ -4781,7 +4764,6 @@ and (p_atomicTermNotQUident :
     | FStarC_Parser_AST.Var lid when
         FStarC_Ident.lid_equals lid FStarC_Parser_Const.assume_lid ->
         str "assume"
-    | FStarC_Parser_AST.Tvar tv -> p_tvar tv
     | FStarC_Parser_AST.Const c -> p_constant c
     | FStarC_Parser_AST.Name lid when
         FStarC_Ident.lid_equals lid FStarC_Parser_Const.true_lid ->
@@ -4892,8 +4874,6 @@ and (p_projectionLHS : FStarC_Parser_AST.term -> FStarC_Pprint.document) =
     | FStarC_Parser_AST.Const uu___ ->
         let uu___1 = p_term false false e in soft_parens_with_nesting uu___1
     | FStarC_Parser_AST.Op uu___ ->
-        let uu___1 = p_term false false e in soft_parens_with_nesting uu___1
-    | FStarC_Parser_AST.Tvar uu___ ->
         let uu___1 = p_term false false e in soft_parens_with_nesting uu___1
     | FStarC_Parser_AST.Var uu___ ->
         let uu___1 = p_term false false e in soft_parens_with_nesting uu___1

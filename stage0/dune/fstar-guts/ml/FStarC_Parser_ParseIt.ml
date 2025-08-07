@@ -296,7 +296,6 @@ let string_of_token =
   | STRING s -> "STRING " ^ s
   | IDENT s -> "IDENT " ^ s
   | NAME s -> "NAME " ^ s
-  | TVAR s -> "TVAR " ^ s
   | TILDE s -> "TILDE " ^ s
   | INT8 s   -> "INT8 " ^ s
   | INT16 s  -> "INT16 " ^ s

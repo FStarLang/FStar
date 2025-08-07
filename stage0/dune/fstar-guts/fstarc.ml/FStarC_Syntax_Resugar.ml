@@ -625,10 +625,12 @@ let rec (resugar_term' :
                  let uu___4 =
                    let uu___5 =
                      let uu___6 =
-                       let uu___7 = FStarC_Ident.range_of_lid a in
-                       ("SMTPat", uu___7) in
-                     FStarC_Ident.mk_ident uu___6 in
-                   FStarC_Parser_AST.Tvar uu___5 in
+                       let uu___7 =
+                         let uu___8 = FStarC_Ident.range_of_lid a in
+                         ("SMTPat", uu___8) in
+                       FStarC_Ident.mk_ident uu___7 in
+                     FStarC_Ident.id_as_lid uu___6 in
+                   FStarC_Parser_AST.Var uu___5 in
                  mk uu___4
                else
                  (let uu___5 =
@@ -639,10 +641,12 @@ let rec (resugar_term' :
                     let uu___6 =
                       let uu___7 =
                         let uu___8 =
-                          let uu___9 = FStarC_Ident.range_of_lid a in
-                          ("SMTPatOr", uu___9) in
-                        FStarC_Ident.mk_ident uu___8 in
-                      FStarC_Parser_AST.Tvar uu___7 in
+                          let uu___9 =
+                            let uu___10 = FStarC_Ident.range_of_lid a in
+                            ("SMTPatOr", uu___10) in
+                          FStarC_Ident.mk_ident uu___9 in
+                        FStarC_Ident.id_as_lid uu___8 in
+                      FStarC_Parser_AST.Var uu___7 in
                     mk uu___6
                   else
                     (let uu___7 =

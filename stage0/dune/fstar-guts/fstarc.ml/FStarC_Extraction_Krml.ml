@@ -1464,46 +1464,27 @@ let (mk_op : Prims.string -> op FStar_Pervasives_Native.option) =
   fun uu___ ->
     match uu___ with
     | "add" -> FStar_Pervasives_Native.Some Add
-    | "op_Plus_Hat" -> FStar_Pervasives_Native.Some Add
     | "add_underspec" -> FStar_Pervasives_Native.Some Add
     | "add_mod" -> FStar_Pervasives_Native.Some AddW
-    | "op_Plus_Percent_Hat" -> FStar_Pervasives_Native.Some AddW
     | "sub" -> FStar_Pervasives_Native.Some Sub
-    | "op_Subtraction_Hat" -> FStar_Pervasives_Native.Some Sub
     | "sub_underspec" -> FStar_Pervasives_Native.Some Sub
     | "sub_mod" -> FStar_Pervasives_Native.Some SubW
-    | "op_Subtraction_Percent_Hat" -> FStar_Pervasives_Native.Some SubW
     | "mul" -> FStar_Pervasives_Native.Some Mult
-    | "op_Star_Hat" -> FStar_Pervasives_Native.Some Mult
     | "mul_underspec" -> FStar_Pervasives_Native.Some Mult
     | "mul_mod" -> FStar_Pervasives_Native.Some MultW
-    | "op_Star_Percent_Hat" -> FStar_Pervasives_Native.Some MultW
     | "div" -> FStar_Pervasives_Native.Some Div
-    | "op_Slash_Hat" -> FStar_Pervasives_Native.Some Div
     | "div_mod" -> FStar_Pervasives_Native.Some DivW
-    | "op_Slash_Percent_Hat" -> FStar_Pervasives_Native.Some DivW
     | "rem" -> FStar_Pervasives_Native.Some Mod
-    | "op_Percent_Hat" -> FStar_Pervasives_Native.Some Mod
     | "logor" -> FStar_Pervasives_Native.Some BOr
-    | "op_Bar_Hat" -> FStar_Pervasives_Native.Some BOr
     | "logxor" -> FStar_Pervasives_Native.Some BXor
-    | "op_Hat_Hat" -> FStar_Pervasives_Native.Some BXor
     | "logand" -> FStar_Pervasives_Native.Some BAnd
-    | "op_Amp_Hat" -> FStar_Pervasives_Native.Some BAnd
     | "lognot" -> FStar_Pervasives_Native.Some BNot
     | "shift_right" -> FStar_Pervasives_Native.Some BShiftR
-    | "op_Greater_Greater_Hat" -> FStar_Pervasives_Native.Some BShiftR
     | "shift_left" -> FStar_Pervasives_Native.Some BShiftL
-    | "op_Less_Less_Hat" -> FStar_Pervasives_Native.Some BShiftL
     | "eq" -> FStar_Pervasives_Native.Some Eq
-    | "op_Equals_Hat" -> FStar_Pervasives_Native.Some Eq
-    | "op_Greater_Hat" -> FStar_Pervasives_Native.Some Gt
     | "gt" -> FStar_Pervasives_Native.Some Gt
-    | "op_Greater_Equals_Hat" -> FStar_Pervasives_Native.Some Gte
     | "gte" -> FStar_Pervasives_Native.Some Gte
-    | "op_Less_Hat" -> FStar_Pervasives_Native.Some Lt
     | "lt" -> FStar_Pervasives_Native.Some Lt
-    | "op_Less_Equals_Hat" -> FStar_Pervasives_Native.Some Lte
     | "lte" -> FStar_Pervasives_Native.Some Lte
     | uu___1 -> FStar_Pervasives_Native.None
 let (is_op : Prims.string -> Prims.bool) =

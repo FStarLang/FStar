@@ -25,7 +25,6 @@ and (lidents_of_term' :
     | FStarC_Parser_AST.Wild -> []
     | FStarC_Parser_AST.Const uu___ -> []
     | FStarC_Parser_AST.Op (s, ts) -> (concat_map ()) lidents_of_term ts
-    | FStarC_Parser_AST.Tvar uu___ -> []
     | FStarC_Parser_AST.Uvar uu___ -> []
     | FStarC_Parser_AST.Var lid -> [lid]
     | FStarC_Parser_AST.Name lid -> [lid]
@@ -252,7 +251,6 @@ and (lidents_of_pattern :
     | FStarC_Parser_AST.PatVar (i, uu___, uu___1) ->
         let uu___2 = FStarC_Ident.lid_of_ids [i] in [uu___2]
     | FStarC_Parser_AST.PatName lid -> [lid]
-    | FStarC_Parser_AST.PatTvar (i, uu___, uu___1) -> []
     | FStarC_Parser_AST.PatList ps -> (concat_map ()) lidents_of_pattern ps
     | FStarC_Parser_AST.PatTuple (ps, uu___) ->
         (concat_map ()) lidents_of_pattern ps
@@ -276,7 +274,6 @@ and (lidents_of_binder :
   fun b ->
     match b.FStarC_Parser_AST.b with
     | FStarC_Parser_AST.Annotated (uu___, t) -> lidents_of_term t
-    | FStarC_Parser_AST.TAnnotated (uu___, t) -> lidents_of_term t
     | FStarC_Parser_AST.NoName t -> lidents_of_term t
     | uu___ -> []
 let lidents_of_tycon_record :

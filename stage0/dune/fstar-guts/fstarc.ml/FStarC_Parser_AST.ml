@@ -46,7 +46,6 @@ type term' =
   | Wild 
   | Const of FStarC_Const.sconst 
   | Op of (FStarC_Ident.ident * term Prims.list) 
-  | Tvar of FStarC_Ident.ident 
   | Uvar of FStarC_Ident.ident 
   | Var of FStarC_Ident.lid 
   | Name of FStarC_Ident.lid 
@@ -121,9 +120,7 @@ and calc_step =
   | CalcStep of (term * term * term) 
 and binder' =
   | Variable of FStarC_Ident.ident 
-  | TVariable of FStarC_Ident.ident 
   | Annotated of (FStarC_Ident.ident * term) 
-  | TAnnotated of (FStarC_Ident.ident * term) 
   | NoName of term 
 and binder =
   {
@@ -140,8 +137,6 @@ and pattern' =
   | PatVar of (FStarC_Ident.ident * arg_qualifier
   FStar_Pervasives_Native.option * term Prims.list) 
   | PatName of FStarC_Ident.lid 
-  | PatTvar of (FStarC_Ident.ident * arg_qualifier
-  FStar_Pervasives_Native.option * term Prims.list) 
   | PatList of pattern Prims.list 
   | PatRest 
   | PatTuple of (pattern Prims.list * Prims.bool) 
@@ -175,10 +170,6 @@ let (uu___is_Op : term' -> Prims.bool) =
   fun projectee -> match projectee with | Op _0 -> true | uu___ -> false
 let (__proj__Op__item___0 : term' -> (FStarC_Ident.ident * term Prims.list))
   = fun projectee -> match projectee with | Op _0 -> _0
-let (uu___is_Tvar : term' -> Prims.bool) =
-  fun projectee -> match projectee with | Tvar _0 -> true | uu___ -> false
-let (__proj__Tvar__item___0 : term' -> FStarC_Ident.ident) =
-  fun projectee -> match projectee with | Tvar _0 -> _0
 let (uu___is_Uvar : term' -> Prims.bool) =
   fun projectee -> match projectee with | Uvar _0 -> true | uu___ -> false
 let (__proj__Uvar__item___0 : term' -> FStarC_Ident.ident) =
@@ -470,21 +461,11 @@ let (uu___is_Variable : binder' -> Prims.bool) =
     match projectee with | Variable _0 -> true | uu___ -> false
 let (__proj__Variable__item___0 : binder' -> FStarC_Ident.ident) =
   fun projectee -> match projectee with | Variable _0 -> _0
-let (uu___is_TVariable : binder' -> Prims.bool) =
-  fun projectee ->
-    match projectee with | TVariable _0 -> true | uu___ -> false
-let (__proj__TVariable__item___0 : binder' -> FStarC_Ident.ident) =
-  fun projectee -> match projectee with | TVariable _0 -> _0
 let (uu___is_Annotated : binder' -> Prims.bool) =
   fun projectee ->
     match projectee with | Annotated _0 -> true | uu___ -> false
 let (__proj__Annotated__item___0 : binder' -> (FStarC_Ident.ident * term)) =
   fun projectee -> match projectee with | Annotated _0 -> _0
-let (uu___is_TAnnotated : binder' -> Prims.bool) =
-  fun projectee ->
-    match projectee with | TAnnotated _0 -> true | uu___ -> false
-let (__proj__TAnnotated__item___0 : binder' -> (FStarC_Ident.ident * term)) =
-  fun projectee -> match projectee with | TAnnotated _0 -> _0
 let (uu___is_NoName : binder' -> Prims.bool) =
   fun projectee -> match projectee with | NoName _0 -> true | uu___ -> false
 let (__proj__NoName__item___0 : binder' -> term) =
@@ -535,13 +516,6 @@ let (uu___is_PatName : pattern' -> Prims.bool) =
   fun projectee -> match projectee with | PatName _0 -> true | uu___ -> false
 let (__proj__PatName__item___0 : pattern' -> FStarC_Ident.lid) =
   fun projectee -> match projectee with | PatName _0 -> _0
-let (uu___is_PatTvar : pattern' -> Prims.bool) =
-  fun projectee -> match projectee with | PatTvar _0 -> true | uu___ -> false
-let (__proj__PatTvar__item___0 :
-  pattern' ->
-    (FStarC_Ident.ident * arg_qualifier FStar_Pervasives_Native.option * term
-      Prims.list))
-  = fun projectee -> match projectee with | PatTvar _0 -> _0
 let (uu___is_PatList : pattern' -> Prims.bool) =
   fun projectee -> match projectee with | PatList _0 -> true | uu___ -> false
 let (__proj__PatList__item___0 : pattern' -> pattern Prims.list) =
@@ -2027,7 +2001,6 @@ let rec (term_to_string : term -> Prims.string) =
           let uu___2 = FStarC_List.map (fun x1 -> term_to_string x1) xs in
           FStarC_String.concat ", " uu___2 in
         FStarC_Format.fmt2 "%s(%s)" uu___ uu___1
-    | Tvar id -> FStarC_Ident.string_of_id id
     | Uvar id -> FStarC_Ident.string_of_id id
     | Var l -> FStarC_Ident.string_of_lid l
     | Name l -> FStarC_Ident.string_of_lid l
@@ -2437,13 +2410,6 @@ and (binder_to_string : binder -> Prims.string) =
       let s =
         match x1.b with
         | Variable i -> FStarC_Ident.string_of_id i
-        | TVariable i ->
-            let uu___ = FStarC_Ident.string_of_id i in
-            FStarC_Format.fmt1 "%s:_" uu___
-        | TAnnotated (i, t) ->
-            let uu___ = FStarC_Ident.string_of_id i in
-            let uu___1 = term_to_string t in
-            FStarC_Format.fmt2 "%s:%s" uu___ uu___1
         | Annotated (i, t) ->
             let uu___ = FStarC_Ident.string_of_id i in
             let uu___1 = term_to_string t in
@@ -2487,11 +2453,6 @@ and (pat_to_string : pattern -> Prims.string) =
         let uu___ = pat_to_string p in
         let uu___1 = to_string_l " " pat_to_string ps in
         FStarC_Format.fmt2 "(%s %s)" uu___ uu___1
-    | PatTvar (i, aq, attrs) ->
-        let uu___ = aqual_to_string aq in
-        let uu___1 = attr_list_to_string attrs in
-        let uu___2 = FStarC_Ident.string_of_id i in
-        FStarC_Format.fmt3 "%s%s%s" uu___ uu___1 uu___2
     | PatVar (i, aq, attrs) ->
         let uu___ = aqual_to_string aq in
         let uu___1 = attr_list_to_string attrs in
@@ -2724,9 +2685,7 @@ let (ident_of_binder :
     fun b ->
       match b.b with
       | Variable i -> i
-      | TVariable i -> i
       | Annotated (i, uu___) -> i
-      | TAnnotated (i, uu___) -> i
       | NoName uu___ ->
           FStarC_Errors.raise_error FStarC_Class_HasRange.hasRange_range r
             FStarC_Errors_Codes.Fatal_MissingQuantifierBinder ()

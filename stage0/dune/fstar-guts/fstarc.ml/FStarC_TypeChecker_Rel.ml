@@ -45,8 +45,6 @@ let (__proj__Implicit_has_typing_guard__item___0 :
     (FStarC_Syntax_Syntax.term * FStarC_Syntax_Syntax.typ))
   =
   fun projectee -> match projectee with | Implicit_has_typing_guard _0 -> _0
-let (dbg_Disch : Prims.bool FStarC_Effect.ref) =
-  FStarC_Debug.get_toggle "Disch"
 let (dbg_Discharge : Prims.bool FStarC_Effect.ref) =
   FStarC_Debug.get_toggle "Discharge"
 let (dbg_EQ : Prims.bool FStarC_Effect.ref) = FStarC_Debug.get_toggle "EQ"

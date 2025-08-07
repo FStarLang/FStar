@@ -2424,7 +2424,6 @@ let (encode_top_level_val :
                 then
                   norm_with_steps
                     [FStarC_TypeChecker_Env.Eager_unfolding;
-                    FStarC_TypeChecker_Env.Simplify;
                     FStarC_TypeChecker_Env.AllowUnboundUniverses;
                     FStarC_TypeChecker_Env.EraseUniverses;
                     FStarC_TypeChecker_Env.Exclude

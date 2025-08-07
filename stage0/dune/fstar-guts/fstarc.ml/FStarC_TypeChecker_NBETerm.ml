@@ -477,6 +477,51 @@ let (eq_constant :
       | (Range r1, Range r2) -> FStarC_TypeChecker_TermEqAndSimplify.Unknown
       | (Real r1, Real r2) -> equal_if (r1 = r2)
       | (uu___, uu___1) -> FStarC_TypeChecker_TermEqAndSimplify.NotEqual
+let rec (term_eq : t -> t -> Prims.bool) =
+  fun t1 ->
+    fun t2 ->
+      match ((t1.nbe_t), (t2.nbe_t)) with
+      | (Lam { interp = interp1; shape = uu___; arity = arity1;_}, Lam
+         { interp = interp2; shape = uu___1; arity = arity2;_}) ->
+          (interp1 = interp2) && (arity1 = arity2)
+      | (Accu (a1, as1), Accu (a2, as2)) -> atom_eq a1 a2
+      | (Construct (fv1, us1, args1), Construct (fv2, us2, args2)) ->
+          ((fv1 = fv2) && (FStarC_Syntax_Util.eq_univs_list us1 us2)) &&
+            (args_eq args1 args2)
+      | (FV (fv1, us1, args1), FV (fv2, us2, args2)) ->
+          ((fv1 = fv2) && (FStarC_Syntax_Util.eq_univs_list us1 us2)) &&
+            (args_eq args1 args2)
+      | (Constant c1, Constant c2) -> c1 = c2
+      | (Type_t u1, Type_t u2) -> u1 = u2
+      | (Univ u1, Univ u2) -> u1 = u2
+      | (Refinement (r1, t11), Refinement (r2, t21)) ->
+          let x =
+            FStarC_Syntax_Syntax.new_bv FStar_Pervasives_Native.None
+              FStarC_Syntax_Syntax.t_unit in
+          (let uu___ =
+             let uu___1 = t11 () in FStar_Pervasives_Native.fst uu___1 in
+           let uu___1 =
+             let uu___2 = t21 () in FStar_Pervasives_Native.fst uu___2 in
+           term_eq uu___ uu___1) &&
+            (let uu___ = let uu___1 = mkAccuVar x in r1 uu___1 in
+             let uu___1 = let uu___2 = mkAccuVar x in r2 uu___2 in
+             term_eq uu___ uu___1)
+      | (Unknown, Unknown) -> true
+      | (uu___, uu___1) -> false
+and (atom_eq : atom -> atom -> Prims.bool) =
+  fun a1 ->
+    fun a2 ->
+      match (a1, a2) with
+      | (Var bv1, Var bv2) -> FStarC_Syntax_Syntax.bv_eq bv1 bv2
+      | (uu___, uu___1) -> false
+and (args_eq : args -> args -> Prims.bool) =
+  fun as1 ->
+    fun as2 ->
+      match (as1, as2) with
+      | ([], []) -> true
+      | ((x, qx)::xs, (y, qy)::ys) ->
+          ((term_eq x y) && (qx = qy)) && (args_eq xs ys)
+      | (uu___, uu___1) -> false
 let rec (eq_t :
   FStarC_TypeChecker_Env.env_t ->
     t -> t -> FStarC_TypeChecker_TermEqAndSimplify.eq_result)

@@ -1535,13 +1535,6 @@ let (collect_one :
                   FStarC_Parser_AST.blevel = uu___5;
                   FStarC_Parser_AST.aqual = uu___6;
                   FStarC_Parser_AST.battributes = uu___7;_} -> collect_term t
-              | {
-                  FStarC_Parser_AST.b = FStarC_Parser_AST.TAnnotated
-                    (uu___3, t);
-                  FStarC_Parser_AST.brange = uu___4;
-                  FStarC_Parser_AST.blevel = uu___5;
-                  FStarC_Parser_AST.aqual = uu___6;
-                  FStarC_Parser_AST.battributes = uu___7;_} -> collect_term t
               | { FStarC_Parser_AST.b = FStarC_Parser_AST.NoName t;
                   FStarC_Parser_AST.brange = uu___3;
                   FStarC_Parser_AST.blevel = uu___4;
@@ -1630,7 +1623,6 @@ let (collect_one :
              | FStarC_Parser_AST.Const c -> collect_constant c
              | FStarC_Parser_AST.Op (uu___2, ts) ->
                  FStarC_List.iter collect_term ts
-             | FStarC_Parser_AST.Tvar uu___2 -> ()
              | FStarC_Parser_AST.Uvar uu___2 -> ()
              | FStarC_Parser_AST.Var lid -> add_to_parsing_data (P_lid lid)
              | FStarC_Parser_AST.Projector (lid, uu___2) ->
@@ -1909,8 +1901,6 @@ let (collect_one :
            and collect_pattern' uu___1 =
              match uu___1 with
              | FStarC_Parser_AST.PatVar (uu___2, aqual, attrs) ->
-                 (collect_aqual aqual; FStarC_List.iter collect_term attrs)
-             | FStarC_Parser_AST.PatTvar (uu___2, aqual, attrs) ->
                  (collect_aqual aqual; FStarC_List.iter collect_term attrs)
              | FStarC_Parser_AST.PatWild (aqual, attrs) ->
                  (collect_aqual aqual; FStarC_List.iter collect_term attrs)
@@ -2206,16 +2196,23 @@ let (collect :
            let all_cmd_line_files2 =
              FStarC_List.map
                (fun fn ->
-                  let uu___1 = FStarC_Find.find_file fn in
-                  match uu___1 with
-                  | FStar_Pervasives_Native.None ->
-                      let uu___2 =
-                        FStarC_Format.fmt1 "File %s could not be found" fn in
-                      FStarC_Errors.raise_error0
-                        FStarC_Errors_Codes.Fatal_ModuleOrFileNotFound ()
-                        (Obj.magic FStarC_Errors_Msg.is_error_message_string)
-                        (Obj.magic uu___2)
-                  | FStar_Pervasives_Native.Some fn1 -> fn1)
+                  let uu___1 =
+                    let uu___2 = FStarC_Parser_ParseIt.read_vfs_entry fn in
+                    FStar_Pervasives_Native.uu___is_Some uu___2 in
+                  if uu___1
+                  then fn
+                  else
+                    (let uu___3 = FStarC_Find.find_file fn in
+                     match uu___3 with
+                     | FStar_Pervasives_Native.None ->
+                         let uu___4 =
+                           FStarC_Format.fmt1 "File %s could not be found" fn in
+                         FStarC_Errors.raise_error0
+                           FStarC_Errors_Codes.Fatal_ModuleOrFileNotFound ()
+                           (Obj.magic
+                              FStarC_Errors_Msg.is_error_message_string)
+                           (Obj.magic uu___4)
+                     | FStar_Pervasives_Native.Some fn1 -> fn1))
                all_cmd_line_files1 in
            let dep_graph = deps_empty () in
            let file_system_map = build_map all_cmd_line_files2 in
