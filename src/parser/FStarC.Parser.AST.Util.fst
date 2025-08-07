@@ -37,7 +37,6 @@ and lidents_of_term' (t:term')
   | Wild -> []
   | Const _ -> []
   | Op (s, ts) -> concat_map lidents_of_term ts
-  | Tvar _ -> []
   | Uvar _ -> []
   | Var lid -> [lid]
   | Name lid -> [lid]
@@ -100,7 +99,6 @@ and lidents_of_pattern p =
   | PatApp (p, ps) -> lidents_of_pattern p @ concat_map lidents_of_pattern ps
   | PatVar (i, _, _) -> [FStarC.Ident.lid_of_ids [i]]
   | PatName lid -> [lid]
-  | PatTvar (i, _, _) -> []
   | PatList ps -> concat_map lidents_of_pattern ps
   | PatTuple (ps, _) -> concat_map lidents_of_pattern ps
   | PatRecord ps -> concat_map (fun (_, p) -> lidents_of_pattern p) ps
@@ -112,7 +110,6 @@ and lidents_of_pattern p =
 and lidents_of_binder b =
   match b.b with
   | Annotated (_, t)
-  | TAnnotated(_, t)
   | NoName t -> lidents_of_term t
   | _ -> []
 

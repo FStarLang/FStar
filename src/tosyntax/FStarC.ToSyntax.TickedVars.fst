@@ -30,6 +30,16 @@ module S   = FStarC.Syntax.Syntax
 module C   = FStarC.Parser.Const
 module Env = FStarC.Syntax.DsEnv
 
+let ident_is_ticked (id: ident) : bool =
+  let nm   = string_of_id id in
+  String.length nm > 0 && String.get nm 0 = '\''
+
+(* Empty namespace (so a local variable) and its name component starts with a tick *)
+let lident_is_ticked (id: lident) : bool =
+  let ns = ns_of_lid id in
+  let id = ident_of_lid id in
+  Nil? ns && ident_is_ticked id
+
 (* The monad we use to collect free ticked variables. TODO:
 move to using a FlatSet. It is not trivial. *)
 let m = writer (list ident)
@@ -39,9 +49,9 @@ let rec go_term (env : DsEnv.env) (t: term) : m unit =
   | Paren t -> go_term env t
   | Labeled _ -> failwith "Impossible --- labeled source term"
 
-  | Tvar a ->
-    if None? (Env.try_lookup_id env a) then
-      emit [a]
+  | Var a ->
+    if lident_is_ticked a && None? (Env.try_lookup_id env (Ident.ident_of_lid a)) then
+      emit [Ident.ident_of_lid a]
     else
       return ()
 
@@ -171,18 +181,20 @@ let rec go_term (env : DsEnv.env) (t: term) : m unit =
 and go_binder (env : DsEnv.env) (b: binder) : m DsEnv.env =
   match b.b with
   | Variable x ->
-    return (fst <| Env.push_bv env x)
-
-  | TVariable x ->
-    emit [x];!
-    return (fst <| Env.push_bv env x)
-
-  | Annotated (x, t) ->
-    go_term env t;!
+    (* This handles ticks in declarations like `type foo 'a`. The 'a
+    is used in a binding position. *)
+    if ident_is_ticked x && None? (Env.try_lookup_id env x) then
+      emit [x]
+    else
+      return ();!
     let env', _ = Env.push_bv env x in
     return env'
 
-  | TAnnotated(x, t) ->
+  | Annotated (x, t) ->
+    if ident_is_ticked x && None? (Env.try_lookup_id env x) then
+      emit [x]
+    else
+      return ();!
     go_term env t;!
     let env', _ = Env.push_bv env x in
     return env'

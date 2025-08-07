@@ -1145,10 +1145,6 @@ and p_atomicPattern p = match p.pat with
     soft_braces_with_nesting (separate_break_map semi p_recordFieldPat pats)
   | PatTuple(pats, true) ->
     surround 2 1 (lparen ^^ bar) (separate_break_map comma p_constructorPattern pats) (bar ^^ rparen)
-  | PatTvar (tv, arg_qualifier_opt, attrs) ->
-    assert (arg_qualifier_opt = None) ;
-    assert (attrs = []);
-    p_tvar tv
   | PatOp op ->
     lparen ^^ space ^^ str (Ident.string_of_id op) ^^ space ^^ rparen
   | PatWild (aqual, attrs) ->
@@ -1193,7 +1189,6 @@ and p_binder is_atomic b =
 and p_binder' (no_pars: bool) (is_atomic: bool) (b: binder): document & option (document & catf) =
   match b.b with
   | Variable lid -> optional p_aqual b.aqual ^^ p_attributes false b.battributes ^^ p_lident lid, None
-  | TVariable lid -> p_attributes false b.battributes ^^ p_lident lid, None
   | Annotated (lid, t) ->
       let b', t' =
         match t.tm with
@@ -1214,7 +1209,6 @@ and p_binder' (no_pars: bool) (is_atomic: bool) (b: binder): document & option (
             (fun x y -> group (cat_with_colon x y))
         in
         b', Some (t', catf)
-  | TAnnotated _ -> failwith "Is this still used ?"
   | NoName t ->
     begin match t.tm with
       | Refine ({b = NoName t}, phi) ->
@@ -2010,8 +2004,6 @@ and p_refinedBinder b phi =
     match b.b with
     | Annotated (lid, t) -> p_refinement b.aqual b.battributes (p_lident lid) t phi
     | Variable lid ->       p_refinement b.aqual b.battributes (p_lident lid) (mk_term Wild (range_of_id lid) Type_level) phi
-    | TAnnotated _ -> failwith "Is this still used ?"
-    | TVariable _
     | NoName _ ->
       failwith (Format.fmt1 "Impossible: a refined binder ought to be annotated (%s)" (binder_to_string b))
 
@@ -2110,7 +2102,6 @@ and p_atomicTermNotQUident e = match e.tm with
   | Wild -> underscore
   | Var lid when lid_equals lid C.assert_lid -> str "assert"
   | Var lid when lid_equals lid C.assume_lid -> str "assume"
-  | Tvar tv -> p_tvar tv
   | Const c -> p_constant c
   | Name lid when lid_equals lid C.true_lid ->
     str "True"
@@ -2175,7 +2166,6 @@ and p_projectionLHS e = match e.tm with
   | Wild        (* p_atomicTermNotQUident *)
   | Const _     (* p_atomicTermNotQUident *)
   | Op _        (* All handleable cases should be caught in the recursion loop *)
-  | Tvar _      (* p_atomicTermNotQUident *)
   | Var _       (* p_projectionLHS *)
   | Name _      (* p_atomicTerm *)
   | Construct _ (* p_atomicTerm and p_appTerm *)

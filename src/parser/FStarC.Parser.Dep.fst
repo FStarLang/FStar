@@ -921,7 +921,6 @@ let collect_one
         b.battributes |> List.iter collect_term;
         match b with
         | { b = Annotated (_, t) }
-        | { b = TAnnotated (_, t) }
         | { b = NoName t } -> collect_term t
         | _ -> ()
 
@@ -960,7 +959,6 @@ let collect_one
             collect_constant c
         | Op (_, ts) ->
             List.iter collect_term ts
-        | Tvar _
         | AST.Uvar _ ->
             ()
         | Var lid
@@ -1175,7 +1173,6 @@ let collect_one
 
       and collect_pattern' = function
         | PatVar (_, aqual, attrs)
-        | PatTvar (_, aqual, attrs)
         | PatWild (aqual, attrs) ->
             collect_aqual aqual;
             attrs |> List.iter collect_term

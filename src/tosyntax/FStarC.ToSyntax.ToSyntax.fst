@@ -289,7 +289,6 @@ let rec uncurry bs t = match t.tm with
 
 let rec is_var_pattern p = match p.pat with
   | PatWild _
-  | PatTvar _
   | PatVar _ -> true
   | PatAscribed(p, _) -> is_var_pattern p
   | _ -> false
@@ -332,7 +331,6 @@ let rec gather_pattern_bound_vars_maybe_top (acc : FlatSet.t ident) p =
   | PatRest
   | PatOp _ -> acc
   | PatApp (phead, pats) -> gather_pattern_bound_vars_from_list (phead::pats)
-  | PatTvar (x, _, _)
   | PatVar (x, _, _) -> add x acc
   | PatList pats
   | PatTuple  (pats, _)
@@ -744,7 +742,6 @@ let rec desugar_data_pat
         let pat = PatConst (Const_string (desugar_vquote env e p.prange, p.prange)) in
         aux' top loc aqs env ({ p with pat })
 
-      | PatTvar(x, aq, attrs)
       | PatVar (x, aq, attrs) ->
         let aq = trans_bqual env aq in
         let attrs = attrs |> List.map (desugar_term env) in
@@ -1039,9 +1036,6 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term & an
       let t = {top with tm=Sum(List.map Inr terms, rhs)} in
       desugar_term_maybe_top top_level env t
 
-    | Tvar a ->
-      setpos <| (fail_or2 env (try_lookup_id env) a), noaqs
-
     | Uvar u ->
       raise_error top Errors.Fatal_UnexpectedUniverseVariable
           ("Unexpected universe variable " ^
@@ -1272,7 +1266,7 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term & an
           | _ -> env, ftvs) (env, []) binders in
       let ftv = Class.Ord.sort_dedup ftv in
       let binders = (ftv |> List.map (fun a ->
-                        mk_pattern (PatTvar(a, Some AST.Implicit, [])) top.range))
+                        mk_pattern (PatVar(a, Some AST.Implicit, [])) top.range))
                     @binders in //close over the free type variables
       (*
          fun (P1 x1) (P2 x2) (P3 x3) -> e
@@ -1834,14 +1828,7 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term & an
             | Some t -> is_impl_t t
             | None -> false
             end
-        | Tvar id ->
-        (* GM: This case does not seem exercised even if the user writes "l_imp"
-         * as the relation... I thought those are meant to be Tvar nodes but
-         * it ends up as a Var. Bug? *)
-            begin match try_lookup_id env id with
-            | Some t -> is_impl_t t
-            | None -> false
-            end
+
         | _ -> false
       in
 
@@ -1852,8 +1839,8 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term & an
       let eta_and_annot rel =
         let x = Ident.gen' "x" rel.range in
         let y = Ident.gen' "y" rel.range in
-        let xt = mk_term (Tvar x) rel.range Expr in
-        let yt = mk_term (Tvar y) rel.range Expr in
+        let xt = mk_term (Var (Ident.id_as_lid x)) rel.range Expr in
+        let yt = mk_term (Var (Ident.id_as_lid y)) rel.range Expr in
         let pats = [mk_pattern (PatVar (x, None, [])) rel.range; mk_pattern (PatVar (y, None,[])) rel.range] in
         mk_term (Abs (pats,
             mk_term (Ascribed (
@@ -2564,20 +2551,24 @@ and desugar_formula env (f:term) : S.term =
 and desugar_binder_aq env b : (option ident & S.term & list S.attribute) & antiquotations_temp =
   let attrs = b.battributes |> List.map (desugar_term env) in
   match b.b with
-   | TAnnotated(x, t)
-   | Annotated(x, t) ->
-     let ty, aqs = desugar_typ_aq env t in
-     (Some x, ty, attrs), aqs
+  | Annotated(x, t) ->
+    let ty, aqs = desugar_typ_aq env t in
+    (Some x, ty, attrs), aqs
 
-   | NoName t        ->
-     let ty, aqs = desugar_typ_aq env t in
-     (None, ty, attrs), aqs
+  | NoName t        ->
+    let ty, aqs = desugar_typ_aq env t in
+    (None, ty, attrs), aqs
 
-   | TVariable x     -> 
-    (Some x, mk (Tm_type U_unknown) (range_of_id x), attrs), []
-
-   | Variable x      ->
-    (Some x, tun_r (range_of_id x), attrs), []
+  | Variable x      ->
+    let ident_is_ticked (id: ident) : bool =
+      let nm   = string_of_id id in
+      String.length nm > 0 && String.get nm 0 = '\''
+    in
+    if ident_is_ticked x
+    then
+      (Some x, setPos (range_of_id x) U.ktype, attrs), []
+    else
+      (Some x, tun_r (range_of_id x), attrs), []
 
 and desugar_binder env b : option ident & S.term & list S.attribute =
   let r, aqs = desugar_binder_aq env b in
@@ -2629,9 +2620,7 @@ let desugar_attributes (env:env_t) (cattributes:list term) : list cflag =
 
 let binder_ident (b:binder) : option ident =
   match b.b with
-  | TAnnotated (x, _)
   | Annotated (x, _)
-  | TVariable x
   | Variable x -> Some x
   | NoName _ -> None
 
@@ -2777,8 +2766,6 @@ let rec desugar_tycon env (d: AST.decl) (d_attrs_initial:list S.term) quals tcs 
   let binder_to_term b = match b.b with
     | Annotated (x, _)
     | Variable x -> mk_term (Var (lid_of_ids [x])) (range_of_id x) Expr
-    | TAnnotated(a, _)
-    | TVariable a -> mk_term (Tvar a) (range_of_id a) Type_level
     | NoName t -> t in
   let desugar_tycon_variant_record = function
     // for every variant, each constructor whose payload is a record
