@@ -109,14 +109,19 @@ let orskip #a (s : string) (k : unit -> Tac a) : Tac a =
   try k () with
   | e -> skip s
 
+let ( >>> ) #a (t1 t2 : unit -> Tac a) () : Tac a =
+  try t1 ()
+  with | Next -> t2 ()
+       | e -> raise e
+
+let run #a (t : unit -> Tac a) : Tac a = t ()
+
 private
 let rec first (f : 'a -> Tac 'b) (l : list 'a) : Tac 'b =
     match l with
     | [] -> raise Next
     | x::xs ->
-      try f x with
-      | Next -> first f xs
-      | e -> raise e
+      run ((fun () -> f x) >>> (fun () -> first f xs))
 
 private
 let rec maybe_intros () : Tac unit =
@@ -234,13 +239,73 @@ let global (st:st_t) (g:tc_goal) (k : st_t -> Tac unit) () : Tac unit =
               trywith st g (pack (Tv_FVar fv)) typ attrs k)
           st.glb
 
-let try_trivial (st:st_t) (g:tc_goal) (k : st_t -> Tac unit) () : Tac unit =
-  match g.g with
-  | Tv_FVar fv ->
-    if implode_qn (inspect_fv fv) = `%unit
-    then exact (`())
+let rec unrefine t : Tac term =
+  match t with
+  | Tv_Refine b t -> unrefine b.sort
+  | Tv_AscribedT e _ _ _ -> unrefine e
+  | Tv_AscribedC e _ _ _ -> unrefine e
+  | _ -> t
+
+let try_trivial (g:term) (k : st_t -> Tac unit) () : Tac unit =
+  match hua (unrefine g) with
+  | Some (fv, u, a)-> (
+    if implode_qn (inspect_fv fv) = `%unit then
+      exact (`())
+    else if implode_qn (inspect_fv fv) = `%squash then
+      smt ()
     else raise Next
+  )
   | _ -> raise Next
+
+(* returns true iff it did anything *)
+let rec tac_unrefine () : Tac bool =
+  let g = cur_goal () in
+  (* the named view is uncomfortable here, since we need to use the subst_t type. *)
+  match inspect_ln g with
+  | R.Tv_Refine b ref ->
+    let t = (inspect_binder b).sort in
+    (* goal for the actual term *)
+    let uv = fresh_uvar (Some t) in
+
+    exact_with_ref uv;
+
+    (* Make the term uvar the new goal *)
+    unshelve uv;
+    dump ("Unrefined from " ^ term_to_string g ^ " to this");
+    (* Keep on unrefining, maybe *)
+    ignore (tac_unrefine ());
+    true
+
+  | _ -> false
+
+let try_unrefining (st:st_t) (k : st_t -> Tac unit) () : Tac unit =
+  if tac_unrefine () then
+    k st
+  else
+    raise Next
+
+let try_instances (st:st_t) (k : st_t -> Tac unit) () : Tac unit =
+  let g = cur_goal () in
+  match hua g with
+  | None ->
+    debug (fun () -> "Goal does not look like a typeclass: " ^ term_to_string g);
+    raise Next
+
+  | Some (head_fv, us, args) ->
+    (* ^ Maybe should check is this really is a class too? *)
+    let c_se = lookup_typ (cur_env ()) (inspect_fv head_fv) in
+    let fundeps = match c_se with
+      | None -> None
+      | Some se -> extract_fundeps se
+    in
+
+    let args_and_uvars = args |> Util.map (fun (a, q) -> (a, q), Cons? (free_uvars a )) in
+    let st = { st with seen = g :: st.seen } in
+    let g = { g; head_fv; c_se; fundeps; args_and_uvars } in
+    run <| (
+      local st g k >>>
+      global st g k
+    )
 
 (*
   tcresolve': the main typeclass instantiation function.
@@ -271,29 +336,10 @@ let rec tcresolve' (st:st_t) : Tac unit =
       raise Next
     );
 
-    match hua g with
-    | None ->
-      debug (fun () -> "Goal does not look like a typeclass");
-      raise Next
-
-    | Some (head_fv, us, args) ->
-      (* ^ Maybe should check is this really is a class too? *)
-      let c_se = lookup_typ (cur_env ()) (inspect_fv head_fv) in
-      let fundeps = match c_se with
-        | None -> None
-        | Some se -> extract_fundeps se
-      in
-
-      let args_and_uvars = args |> Util.map (fun (a, q) -> (a, q), Cons? (free_uvars a )) in
-      let st = { st with seen = g :: st.seen } in
-      let g = { g; head_fv; c_se; fundeps; args_and_uvars } in
-      try try_trivial st g tcresolve' () with
-        | Next -> (
-          try local st g tcresolve' () with
-          | Next -> global st g tcresolve' ()
-          | e -> raise e
-        )
-        | e -> raise e
+    run <| (
+      try_trivial g tcresolve' >>>
+      try_instances st tcresolve' >>>
+      try_unrefining st tcresolve')
 
 [@@plugin]
 let tcresolve () : Tac unit =
