@@ -40,19 +40,19 @@ let dedup #a xs =
   let out = fold_left (fun out x -> if existsb (fun y -> x =? y) out then out else x :: out) [] xs in
   List.rev out
 
+let rec insert_nodup #a {| ord a |} (x:a) (xs:list a) : list a =
+  match xs with
+  | [] -> [x]
+  | y::ys ->
+    match cmp x y with
+    | Eq -> xs
+    | Lt -> x :: xs
+    | Gt -> y :: insert_nodup x ys
+
 let rec sort_dedup #a xs =
-   let rec insert (x:a) (xs:list a) : list a =
-   match xs with
-   | [] -> [x]
-   | y::ys ->
-     match cmp x y with
-     | Eq -> ys
-     | Lt -> x :: y :: ys
-     | Gt -> y :: insert x ys
-  in
   match xs with
   | [] -> []
-  | x::xs -> insert x (sort_dedup xs)
+  | x::xs -> insert_nodup x (sort_dedup xs)
 
 let ord_list_diff (#a:Type0) {| ord a |} (xs ys : list a) : list a & list a =
   let open FStarC.Order in
