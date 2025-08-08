@@ -23,6 +23,8 @@ open FStarC.Const
 open FStarC.Errors
 open FStarC.Ident
 open FStarC.Class.Show
+open FStarC.Class.Tagged
+
 (* All of these should be in FStar.String. *)
 open FStarC.Util {
   starts_with,
@@ -35,6 +37,67 @@ open FStarC.Util {
 }
 
 module C = FStarC.Parser.Const
+
+
+instance tagged_term : tagged term = {
+  tag_of = (fun t -> match t.tm with
+  | Wild             -> "Wild"
+  | Const          _ -> "Const"
+  | Op             _ -> "Op"
+  | Uvar           _ -> "Uvar"
+  | Var            _ -> "Var"
+  | Name           _ -> "Name"
+  | Projector      _ -> "Projector"
+  | Construct      _ -> "Construct"
+  | Abs            _ -> "Abs"
+  | Function       _ -> "Function"
+  | App            _ -> "App"
+  | Let            _ -> "Let"
+  | LetOperator    _ -> "LetOperator"
+  | LetOpen        _ -> "LetOpen"
+  | LetOpenRecord  _ -> "LetOpenRecord"
+  | Seq            _ -> "Seq"
+  | Bind           _ -> "Bind"
+  | If             _ -> "If"
+  | Match          _ -> "Match"
+  | TryWith        _ -> "TryWith"
+  | Ascribed       _ -> "Ascribed"
+  | Record         _ -> "Record"
+  | Project        _ -> "Project"
+  | Product        _ -> "Product"
+  | Sum            _ -> "Sum"
+  | QForall        _ -> "QForall"
+  | QExists        _ -> "QExists"
+  | QuantOp        _ -> "QuantOp"
+  | Refine         _ -> "Refine"
+  | NamedTyp       _ -> "NamedTyp"
+  | Paren          _ -> "Paren"
+  | Requires       _ -> "Requires"
+  | Ensures        _ -> "Ensures"
+  | LexList        _ -> "LexList"
+  | WFOrder        _ -> "WFOrder"
+  | Decreases      _ -> "Decreases"
+  | Labeled        _ -> "Labeled"
+  | Discrim        _ -> "Discrim"
+  | Attributes     _ -> "Attributes"
+  | Antiquote      _ -> "Antiquote"
+  | Quote          _ -> "Quote"
+  | VQuote         _ -> "VQuote"
+  | CalcProof      _ -> "CalcProof"
+  | IntroForall    _ -> "IntroForall"
+  | IntroExists    _ -> "IntroExists"
+  | IntroImplies   _ -> "IntroImplies"
+  | IntroOr        _ -> "IntroOr"
+  | IntroAnd       _ -> "IntroAnd"
+  | ElimForall     _ -> "ElimForall"
+  | ElimExists     _ -> "ElimExists"
+  | ElimImplies    _ -> "ElimImplies"
+  | ElimOr         _ -> "ElimOr"
+  | ElimAnd        _ -> "ElimAnd"
+  | ListLiteral    _ -> "ListLiteral"
+  | SeqLiteral     _ -> "SeqLiteral"
+  );
+}
 
 instance hasRange_term : hasRange term = {
   pos = (fun t -> t.range);
@@ -669,7 +732,8 @@ let rec term_to_string (x:term) = match x.tm with
 
   | SeqLiteral ts ->
     Format.fmt1 "seq![%s]" (to_string_l "; " term_to_string ts)
-    
+  | _ -> failwith ("AST.term_to_string missing case: " ^ tag_of x)
+
 and binders_to_string sep bs =
     List.map binder_to_string bs |> String.concat sep
 
