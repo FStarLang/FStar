@@ -253,6 +253,7 @@ let tc_one_fragment curmod (env:TcEnv.env_t) frag =
     match d.d with
     | FStarC.Parser.AST.TopLevelModule lid ->
       let no_prelude =
+        Options.no_prelude () || (* only affects current module *)
         d.attrs |> List.existsb (function t ->
           match t.tm with
           | Const (FStarC.Const.Const_string ("no_prelude", _)) -> true

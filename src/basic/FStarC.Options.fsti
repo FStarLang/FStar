@@ -178,6 +178,7 @@ val ml_ish                      : unit    -> bool
 val ml_ish_effect               : unit    -> string
 val set_ml_ish                  : unit    -> unit
 val no_location_info            : unit    -> bool
+val no_prelude                  : unit    -> bool
 val no_plugins                  : unit    -> bool
 val no_smt                      : unit    -> bool
 val normalize_pure_terms_for_extraction
