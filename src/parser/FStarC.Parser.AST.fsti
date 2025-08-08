@@ -159,6 +159,8 @@ and imp =
     | Infix
     | Nothing
 
+instance val tagged_term : Class.Tagged.tagged term
+
 instance val hasRange_term    : hasRange term
 instance val hasRange_pattern : hasRange pattern
 instance val hasRange_binder  : hasRange binder
