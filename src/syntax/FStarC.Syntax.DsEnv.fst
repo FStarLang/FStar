@@ -1088,7 +1088,7 @@ let push_top_level_rec_binding env0 (x:ident) : env & ref bool =
          ("Duplicate top-level names " ^ (string_of_lid l))
 
 let push_sigelt' fail_on_dup env s =
-  let err l =
+  let err #a (l : lident) : a =
     let sopt = SMap.try_find (sigmap env) (string_of_lid l) in
     let r = match sopt with
       | Some (se, _) ->
@@ -1104,19 +1104,32 @@ let push_sigelt' fail_on_dup env s =
   in
   let globals = mk_ref env.scope_mods in
   let env =
-      let any_val, exclude_interface = match s.sigel with
+      let exclude_interface = match s.sigel with
         | Sig_let _
-        | Sig_bundle _ -> false, true
-        | _ -> false, false in
+        | Sig_bundle _ -> true
+        | _ -> false
+      in
       let lids = lids_of_sigelt s in
-      begin match BU.find_map lids (fun l -> if not (unique any_val exclude_interface env l) then Some l else None) with
-        | Some l when fail_on_dup -> err l
-        | _ -> extract_record env globals s; {env with sigaccum=s::env.sigaccum}
-      end in
+
+      (* Discriminators and projectors do not affect the dsenv. The names become
+        in-scope immediately after the type's sigelt is pushed. *)
+      let lids = List.filter (fun lid -> not (BU.starts_with (show (ident_of_lid lid))  "uu___is_")) lids in
+      let lids = List.filter (fun lid -> not (BU.starts_with (show (ident_of_lid lid))  "__proj__")) lids in
+
+      (* Maybe check for duplicates. *)
+      if fail_on_dup then
+        (match BU.find_map lids (fun l -> if not (unique (*any_val:*)false exclude_interface env l) then Some l else None) with
+          | Some l -> err l
+          | _ -> ());
+
+      extract_record env globals s;
+      {env with sigaccum=s::env.sigaccum}
+  in
   let env = {env with scope_mods = !globals} in
-  let env, lss = match s.sigel with
-    | Sig_bundle {ses} -> env, List.map (fun se -> (lids_of_sigelt se, se)) ses
-    | _ -> env, [lids_of_sigelt s, s] in
+  let lss = match s.sigel with
+    | Sig_bundle {ses} -> List.map (fun se -> (lids_of_sigelt se, se)) ses
+    | _ -> [lids_of_sigelt s, s]
+  in
   let push_top_level_def id stack =
     match stack with
     | Top_level_defs ids :: rest ->
@@ -1124,24 +1137,37 @@ let push_sigelt' fail_on_dup env s =
     | _ ->
       Top_level_defs (PSMap.add (PSMap.empty()) (string_of_id id) ()) :: stack
   in
+  let add1 lid se : unit =
+    let () = globals := push_top_level_def (ident_of_lid lid) !globals in
+    (* the identifier is added into the list of global identifiers
+       of the corresponding module to shadow any "include" *)
+    let modul = string_of_lid (lid_of_ids (ns_of_lid lid)) in
+    let () = match get_exported_id_set env modul with
+    | Some f ->
+      let my_exported_ids = f Exported_id_term_type in
+      my_exported_ids := add (string_of_id (ident_of_lid lid)) !my_exported_ids
+    | None -> () (* current module was not prepared? should not happen *)
+    in
+    let is_iface = env.iface && not env.admitted_iface in
+    // printfn "Adding %s at key %s with flag %A" (FStarC.Syntax.Print.sigelt_to_string_short se) (string_of_lid lid) is_iface;
+    SMap.add (sigmap env) (string_of_lid lid) (se, env.iface && not env.admitted_iface);
+    ()
+  in
   lss |> List.iter (fun (lids, se) ->
-    lids |> List.iter (fun lid ->
-      (* the identifier is added into the list of global
-      declarations, to allow shadowing of definitions that were
-      formerly reachable by previous "open"s. *)
-      let () = globals := push_top_level_def (ident_of_lid lid) !globals in
-      (* the identifier is added into the list of global identifiers
-         of the corresponding module to shadow any "include" *)
-      let modul = string_of_lid (lid_of_ids (ns_of_lid lid)) in
-      let () = match get_exported_id_set env modul with
-      | Some f ->
-        let my_exported_ids = f Exported_id_term_type in
-        my_exported_ids := add (string_of_id (ident_of_lid lid)) !my_exported_ids
-      | None -> () (* current module was not prepared? should not happen *)
-      in
-      let is_iface = env.iface && not env.admitted_iface in
-//      printfn "Adding %s at key %s with flag %A" (FStarC.Syntax.Print.sigelt_to_string_short se) (string_of_lid lid) is_iface;
-      SMap.add (sigmap env) (string_of_lid lid) (se, env.iface && not env.admitted_iface)));
+    let dummysig l =
+      let se = mk_sigelt (Sig_declare_typ {us=[]; lid=l; t=S.tun}) in
+      { se with sigquals = [S.Assumption] }
+    in
+    lids |> List.iter (fun lid -> add1 lid se);
+    (* Also add projs/discriminators *)
+    let () =
+      match se.sigel with
+      | Sig_datacon {lid; proj_disc_lids} ->
+        proj_disc_lids |> List.iter (fun lid -> add1 lid (dummysig lid))
+      | _ -> ()
+    in
+    ()
+  );
   let env = {env with scope_mods = !globals } in
   env
 

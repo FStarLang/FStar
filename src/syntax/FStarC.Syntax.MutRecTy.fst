@@ -205,7 +205,7 @@ let disentangle_abbrevs_from_bundle
 
               | Sig_datacon {lid; us=univs; t=ty; ty_lid=res;
                              num_ty_params=npars; mutuals=mut;
-                             injective_type_params } ->
+                             injective_type_params; proj_disc_lids } ->
                 let ty' = inst unfold_fv ty in
                 let mut' = filter_out_type_abbrevs mut in
                 [{ x with sigel = Sig_datacon {lid;
@@ -214,7 +214,8 @@ let disentangle_abbrevs_from_bundle
                                                ty_lid=res;
                                                num_ty_params=npars;
                                                mutuals=mut';
-                                               injective_type_params } }]
+                                               injective_type_params;
+                                               proj_disc_lids } }]
 
               | Sig_let _ ->
                 []

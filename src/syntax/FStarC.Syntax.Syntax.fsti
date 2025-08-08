@@ -700,8 +700,9 @@ type sigelt' =
       ty_lid:lident;          //the inductive type of the value this constructs
       num_ty_params:int;        //and the number of parameters of the inductive
       mutuals:list lident;    //mutually defined types
-      injective_type_params:bool   //is this type injective in its type parameters?
-    }      
+      injective_type_params:bool;   //is this type injective in its type parameters?
+      proj_disc_lids : list lident; // the lids of the discriminators and projectors to come for this constructor
+    }
   | Sig_declare_typ     {
       lid:lident;
       us:univ_names;
