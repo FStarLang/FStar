@@ -678,7 +678,5 @@ jobs:
       - name: Build
         run: make -C repo/sciostar -skj$(nproc) verify
 
-      # Note: extraction and building of the webserver is broken currently.
-      # Seems like a bug similar to #3865
-      - name: Verify case study
-        run: make -C repo/sciostar/case-studies/webserver -skj$(nproc) verify
+      - name: Verify and build case study
+        run: make -C repo/sciostar/case-studies/webserver -skj$(nproc) build
