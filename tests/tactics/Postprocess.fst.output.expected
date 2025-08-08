@@ -38,16 +38,6 @@ datacon Postprocess.A1 : t1
 datacon Postprocess.B1 : (_0:int -> Tot t1)
 [@ ]
 datacon Postprocess.C1 : (_0:(_:int -> Tot t1) -> Tot t1)
-[@ (discriminator)]
-assume OnlyName (Discriminator A1) val Postprocess.uu___is_A1  : _
-[@ (discriminator)]
-assume OnlyName (Discriminator B1) val Postprocess.uu___is_B1  : _
-[@ (discriminator)]
-assume OnlyName (Discriminator C1) val Postprocess.uu___is_C1  : _
-[@ (projector)]
-assume OnlyName (Projector B1 _0) val Postprocess.__proj__B1__item___0  : _
-[@ (projector)]
-assume OnlyName (Projector C1 _0) val Postprocess.__proj__C1__item___0  : _
 [@ ]
 (* Sig_bundle *)[@ ]
 noeq type Postprocess.t2  : Type
@@ -57,16 +47,6 @@ datacon Postprocess.A2 : t2
 datacon Postprocess.B2 : (_0:int -> Tot t2)
 [@ ]
 datacon Postprocess.C2 : (_0:(_:int -> Tot t2) -> Tot t2)
-[@ (discriminator)]
-assume OnlyName (Discriminator A2) val Postprocess.uu___is_A2  : _
-[@ (discriminator)]
-assume OnlyName (Discriminator B2) val Postprocess.uu___is_B2  : _
-[@ (discriminator)]
-assume OnlyName (Discriminator C2) val Postprocess.uu___is_C2  : _
-[@ (projector)]
-assume OnlyName (Projector B2 _0) val Postprocess.__proj__B2__item___0  : _
-[@ (projector)]
-assume OnlyName (Projector C2 _0) val Postprocess.__proj__C2__item___0  : _
 [@ ]
 let rec lift  : _ = (fun uu___1 -> (match uu___1@0:(Tm_unknown) with
 	| (A1 )  -> A2
@@ -202,16 +182,6 @@ datacon Postprocess.A1 : t1
 datacon Postprocess.B1 : (_0:int -> Tot t1)
 [@ ]
 datacon Postprocess.C1 : (_0:(_:int -> Tot t1) -> Tot t1)
-[@ (discriminator)]
-assume OnlyName (Discriminator A1) val Postprocess.uu___is_A1  : _
-[@ (discriminator)]
-assume OnlyName (Discriminator B1) val Postprocess.uu___is_B1  : _
-[@ (discriminator)]
-assume OnlyName (Discriminator C1) val Postprocess.uu___is_C1  : _
-[@ (projector)]
-assume OnlyName (Projector B1 _0) val Postprocess.__proj__B1__item___0  : _
-[@ (projector)]
-assume OnlyName (Projector C1 _0) val Postprocess.__proj__C1__item___0  : _
 [@ ]
 (* Sig_bundle *)[@ ]
 noeq type Postprocess.t2  : Type
@@ -221,16 +191,6 @@ datacon Postprocess.A2 : t2
 datacon Postprocess.B2 : (_0:int -> Tot t2)
 [@ ]
 datacon Postprocess.C2 : (_0:(_:int -> Tot t2) -> Tot t2)
-[@ (discriminator)]
-assume OnlyName (Discriminator A2) val Postprocess.uu___is_A2  : _
-[@ (discriminator)]
-assume OnlyName (Discriminator B2) val Postprocess.uu___is_B2  : _
-[@ (discriminator)]
-assume OnlyName (Discriminator C2) val Postprocess.uu___is_C2  : _
-[@ (projector)]
-assume OnlyName (Projector B2 _0) val Postprocess.__proj__B2__item___0  : _
-[@ (projector)]
-assume OnlyName (Projector C2 _0) val Postprocess.__proj__C2__item___0  : _
 [@ ]
 let rec lift  : _ = (fun uu___1 -> (match uu___1@0:(Tm_unknown) with
 	| (A1 )  -> A2

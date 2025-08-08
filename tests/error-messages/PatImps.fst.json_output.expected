@@ -9,8 +9,6 @@ let f1 x =
   Prims.int
 noeq
 type t2 = | A : PatImps.t2
-
-
 let f2 x =
   (let PatImps.A #i = x in
     i)
@@ -20,10 +18,6 @@ noeq
 type t3 =
   | B : PatImps.t3
   | C : PatImps.t3
-
-
-
-
 let f3 x =
   (match x with
     | PatImps.B #i -> i
@@ -43,8 +37,6 @@ let f1 x =
   Prims.int
 noeq
 type t2 = | A : PatImps.t2
-
-
 let f2 x =
   (let PatImps.A #i = x in
     i)
@@ -54,10 +46,6 @@ noeq
 type t3 =
   | B : PatImps.t3
   | C : PatImps.t3
-
-
-
-
 let f3 x =
   (match x with
     | PatImps.B #i -> i
