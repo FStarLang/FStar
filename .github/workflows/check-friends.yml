@@ -654,3 +654,31 @@ jobs:
         run: make -C repo/secrefstar -skj$(nproc)
       - name: Build and run examples
         run: make -C repo/secrefstar -skj$(nproc) build-all
+
+  sciostar:
+    runs-on: ubuntu-latest
+    container: mtzguido/dev-base
+    steps:
+      - name: Cleanup
+        run: sudo find . -delete
+      - run: echo "HOME=/home/user" >> $GITHUB_ENV
+      - uses: mtzguido/set-opam-env@master
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: fstar.tar.gz
+      - run: tar -xzf fstar.tar.gz
+      - run: echo "FSTAR_EXE=$(pwd)/fstar/bin/fstar.exe" >> $GITHUB_ENV
+
+      - uses: actions/checkout@master
+        with:
+          path: repo/
+          repository: andricicezar/fstar-io
+
+      - name: Build
+        run: make -C repo/sciostar -skj$(nproc) verify
+
+      # Note: extraction and building of the webserver is broken currently.
+      # Seems like a bug similar to #3865
+      - name: Verify case study
+        run: make -C repo/sciostar/case-studies/webserver -skj$(nproc) verify
