@@ -2657,17 +2657,8 @@ let mk_indexed_projector_names iquals fvq attrs env lid (fields:list S.binder) =
     fields |> List.mapi (fun i fld ->
         let x = fld.binder_bv in
         let field_name = U.mk_field_projector_name lid x i in
-        let only_decl =
-            lid_equals C.prims_lid  (Env.current_module env)
-            || fvq<>Data_ctor
-            || U.has_attribute attrs C.no_auto_projectors_attr
-        in
         let no_decl = Syntax.is_type x.sort in
-        let quals q =
-            if only_decl
-            then S.Assumption::q
-            else q
-        in
+        let quals q = S.Assumption::q in
         let quals =
             let iquals = iquals |> List.filter (function
                 | S.NoExtract
@@ -2684,28 +2675,8 @@ let mk_indexed_projector_names iquals fvq attrs env lid (fields:list S.binder) =
                      sigattrs = attrs;
                      sigopts = None;
                      sigopens_and_abbrevs = opens_and_abbrevs env } in
-        if only_decl
-        then [decl] //only the signature
-        else
-            let lb = {
-                lbname=Inr (S.lid_and_dd_as_fv field_name None);
-                lbunivs=[];
-                lbtyp=tun;
-                lbeff=C.effect_Tot_lid;
-                lbdef=tun;
-                lbattrs=[];
-                lbpos=Range.dummyRange;
-            } in
-            let impl = { sigel = Sig_let {lbs=(false, [lb]);
-                                          lids=[lb.lbname |> Inr?.v |> (fun fv -> fv.fv_name.v)]};
-                         sigquals = quals;
-                         sigrng = p;
-                         sigmeta = default_sigmeta;
-                         sigattrs = attrs;
-                         sigopts = None;
-                         sigopens_and_abbrevs = opens_and_abbrevs env
-                        } in
-            if no_decl then [impl] else [decl;impl]) |> List.flatten
+        [decl] //only the signature
+    ) |> List.flatten
 
 let mk_data_projector_names iquals env se : list sigelt =
   match se.sigel with

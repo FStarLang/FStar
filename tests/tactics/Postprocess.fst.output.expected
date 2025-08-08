@@ -45,13 +45,9 @@ assume OnlyName (Discriminator B1) val Postprocess.uu___is_B1  : _
 [@ (discriminator)]
 assume OnlyName (Discriminator C1) val Postprocess.uu___is_C1  : _
 [@ (projector)]
-OnlyName (Projector B1 _0) val Postprocess.__proj__B1__item___0  : _
+assume OnlyName (Projector B1 _0) val Postprocess.__proj__B1__item___0  : _
 [@ (projector)]
-OnlyName (Projector B1 _0) let  __proj__B1__item___0  : _ = _
-[@ (projector)]
-OnlyName (Projector C1 _0) val Postprocess.__proj__C1__item___0  : _
-[@ (projector)]
-OnlyName (Projector C1 _0) let  __proj__C1__item___0  : _ = _
+assume OnlyName (Projector C1 _0) val Postprocess.__proj__C1__item___0  : _
 [@ ]
 (* Sig_bundle *)[@ ]
 noeq type Postprocess.t2  : Type
@@ -68,13 +64,9 @@ assume OnlyName (Discriminator B2) val Postprocess.uu___is_B2  : _
 [@ (discriminator)]
 assume OnlyName (Discriminator C2) val Postprocess.uu___is_C2  : _
 [@ (projector)]
-OnlyName (Projector B2 _0) val Postprocess.__proj__B2__item___0  : _
+assume OnlyName (Projector B2 _0) val Postprocess.__proj__B2__item___0  : _
 [@ (projector)]
-OnlyName (Projector B2 _0) let  __proj__B2__item___0  : _ = _
-[@ (projector)]
-OnlyName (Projector C2 _0) val Postprocess.__proj__C2__item___0  : _
-[@ (projector)]
-OnlyName (Projector C2 _0) let  __proj__C2__item___0  : _ = _
+assume OnlyName (Projector C2 _0) val Postprocess.__proj__C2__item___0  : _
 [@ ]
 let rec lift  : _ = (fun uu___1 -> (match uu___1@0:(Tm_unknown) with
 	| (A1 )  -> A2
@@ -217,13 +209,9 @@ assume OnlyName (Discriminator B1) val Postprocess.uu___is_B1  : _
 [@ (discriminator)]
 assume OnlyName (Discriminator C1) val Postprocess.uu___is_C1  : _
 [@ (projector)]
-OnlyName (Projector B1 _0) val Postprocess.__proj__B1__item___0  : _
+assume OnlyName (Projector B1 _0) val Postprocess.__proj__B1__item___0  : _
 [@ (projector)]
-OnlyName (Projector B1 _0) let  __proj__B1__item___0  : _ = _
-[@ (projector)]
-OnlyName (Projector C1 _0) val Postprocess.__proj__C1__item___0  : _
-[@ (projector)]
-OnlyName (Projector C1 _0) let  __proj__C1__item___0  : _ = _
+assume OnlyName (Projector C1 _0) val Postprocess.__proj__C1__item___0  : _
 [@ ]
 (* Sig_bundle *)[@ ]
 noeq type Postprocess.t2  : Type
@@ -240,13 +228,9 @@ assume OnlyName (Discriminator B2) val Postprocess.uu___is_B2  : _
 [@ (discriminator)]
 assume OnlyName (Discriminator C2) val Postprocess.uu___is_C2  : _
 [@ (projector)]
-OnlyName (Projector B2 _0) val Postprocess.__proj__B2__item___0  : _
+assume OnlyName (Projector B2 _0) val Postprocess.__proj__B2__item___0  : _
 [@ (projector)]
-OnlyName (Projector B2 _0) let  __proj__B2__item___0  : _ = _
-[@ (projector)]
-OnlyName (Projector C2 _0) val Postprocess.__proj__C2__item___0  : _
-[@ (projector)]
-OnlyName (Projector C2 _0) let  __proj__C2__item___0  : _ = _
+assume OnlyName (Projector C2 _0) val Postprocess.__proj__C2__item___0  : _
 [@ ]
 let rec lift  : _ = (fun uu___1 -> (match uu___1@0:(Tm_unknown) with
 	| (A1 )  -> A2
