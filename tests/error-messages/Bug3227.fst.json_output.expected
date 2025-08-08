@@ -7,7 +7,6 @@ let proj b = x (x (x b)) <: Prims.int
 type box2 (a: Type) = | Box2 : x: a -> Bug3227.box2 a
 
 
-
 let test b = Box2? b && Box2? b.x
 noeq
 type boxf (a: Type) = { ff:_: a -> a }
@@ -27,7 +26,6 @@ type box (a: Type) = { x:a }
 
 let proj b = x (x (x b)) <: Prims.int
 type box2 (a: Type) = | Box2 : x: a -> Bug3227.box2 a
-
 
 
 let test b = Box2? b && Box2? b.x

@@ -19,11 +19,6 @@ type monoid (m: Type) =
 
 
 
-
-
-
-
-
 let intro_monoid m u15 mult = Monoid.Monoid u15 mult () () () <: Prims.Pure (Monoid.monoid m)
 let nat_plus_monoid =
   let add x y = x + y <: Prims.nat in
@@ -117,8 +112,6 @@ type monoid_morphism (f: (_: a -> b)) (ma: Monoid.monoid a) (mb: Monoid.monoid b
 
 
 
-
-
 let intro_monoid_morphism f ma mb =
   Monoid.MonoidMorphism () () <: Prims.Pure (Monoid.monoid_morphism f ma mb)
 let embed_nat_int n = n <: Prims.int
@@ -160,9 +153,6 @@ type left_action (mm: Monoid.monoid m) (a: Type) =
       mult_lemma: Prims.squash (Monoid.mult_act_lemma m a mm.mult act) ->
       unit_lemma: Prims.squash (Monoid.unit_act_lemma m a mm.unit act)
     -> Monoid.left_action mm a
-
-
-
 
 
 
@@ -191,11 +181,6 @@ type monoid (m: Type) =
 
 
 
-
-
-
-
-
 let intro_monoid m u15 mult = Monoid.Monoid u15 mult () () () <: Prims.Pure (Monoid.monoid m)
 let nat_plus_monoid =
   let add x y = x + y <: Prims.nat in
@@ -289,8 +274,6 @@ type monoid_morphism (f: (_: a -> b)) (ma: Monoid.monoid a) (mb: Monoid.monoid b
 
 
 
-
-
 let intro_monoid_morphism f ma mb =
   Monoid.MonoidMorphism () () <: Prims.Pure (Monoid.monoid_morphism f ma mb)
 let embed_nat_int n = n <: Prims.int
@@ -332,9 +315,6 @@ type left_action (mm: Monoid.monoid m) (a: Type) =
       mult_lemma: Prims.squash (Monoid.mult_act_lemma m a mm.mult act) ->
       unit_lemma: Prims.squash (Monoid.unit_act_lemma m a mm.unit act)
     -> Monoid.left_action mm a
-
-
-
 
 
 
