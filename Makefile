@@ -404,7 +404,17 @@ package-src-2: .stage2.src.touch .force
 package: package-2
 package-src: package-src-2
 
-test: test-2
+test-1-bare: override FSTAR_EXE := $(abspath $(FSTAR1_BARE_EXE))
+test-1-bare: override FSTAR_LIB := $(abspath ulib)
+test-1-bare: $(FSTAR1_BARE_EXE)
+	$(MAKE) -C bare-tests
+
+test-2-bare: override FSTAR_EXE := $(abspath $(FSTAR2_BARE_EXE))
+test-2-bare: override FSTAR_LIB := $(abspath ulib)
+test-2-bare: $(FSTAR2_BARE_EXE)
+	$(MAKE) -C bare-tests
+
+test: test-2-bare test-2
 
 test-1: override FSTAR_EXE := $(abspath stage1/out/bin/fstar.exe)
 test-1: stage1
