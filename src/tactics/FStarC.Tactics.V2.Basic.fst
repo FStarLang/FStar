@@ -24,6 +24,7 @@ open FStarC.TypeChecker.Common
 open FStarC.Pprint
 open FStarC.Reflection.V2.Data
 open FStarC.Reflection.V2.Builtins
+open FStarC.Tactics.Common
 open FStarC.Tactics.Result
 open FStarC.Tactics.Types
 open FStarC.Tactics.Monad
@@ -266,9 +267,9 @@ let proc_guard_formula
       then fail1 "Forcing the guard failed (%s)" reason
       else return ()
     with
-    | _ ->
+    | e ->
       log (fun () -> Format.print1 "guard = %s\n" (show f));!
-      fail1 "Forcing the guard failed (%s)" reason
+      fail2 "Forcing the guard failed (%s)\n%s\n" reason (BU.message_of_exn e)
     end
 
   | ForceSMT ->
@@ -278,9 +279,9 @@ let proc_guard_formula
         then fail1 "Forcing the guard failed (%s)" reason
         else return ()
     with
-    | _ ->
+    | e ->
       log (fun () -> Format.print1 "guard = %s\n" (show f));!
-      fail1 "Forcing the guard failed (%s)" reason
+      fail2 "Forcing the guard failed (%s)\n%s\n" reason (BU.message_of_exn e)
 
 let proc_guard' (simplify:bool) (reason:string) (e : env) (g : guard_t) (sc_opt:option should_check_uvar) (rng:Range.t) : tac unit =
     log (fun () -> Format.print2 "Processing guard (%s:%s)\n" reason (Rel.guard_to_string e g));!
@@ -2327,20 +2328,22 @@ let __refl_typing_builtin_wrapper (f:unit -> 'a & list refl_guard_t) : tac (opti
         match! catch (refl_typing_guard e g) with
         | Inr () -> return (ok, errs)
         | Inl e ->
-          (* the exception is not really useful. *)
+          let issue_msg = [
+              Pprint.doc_of_string "Discharging guard failed.";
+              Pprint.doc_of_string "g = " ^^ pp g;
+              Pprint.doc_of_string "Guard policy is" ^/^ pp ps.guard_policy;
+            ] in
+          let issue_number = Some 17 in
           let iss =
-            FStarC.Errors.({
-              issue_msg = [
-                Pprint.doc_of_string "Discharging guard failed.";
-                Pprint.doc_of_string "g = " ^^ pp g;
-                Pprint.doc_of_string "Guard policy is" ^/^ pp ps.guard_policy;
-              ];
-              issue_level = EError;
-              issue_range = None;
-              issue_number = (Some 17);
-              issue_ctx = get_ctx ()
-            })
-          in
+            let open FStarC.Errors in
+            match issue_of_exn e with
+            | Some iss -> { iss with issue_msg = issue_msg @ iss.issue_msg; issue_number }
+            | None -> match e with
+              | TacticFailure (msg, issue_range) ->
+                { issue_msg = issue_msg @ msg; issue_level = EError; issue_range; issue_number; issue_ctx = get_ctx () }
+              | _ ->
+                { issue_msg = issue_msg @ [Pprint.arbitrary_string (BU.message_of_exn e)];
+                  issue_level = EError; issue_range = None; issue_number; issue_ctx = get_ctx () } in
           return (false, iss :: errs)
       ) gs (true, [])
     in
