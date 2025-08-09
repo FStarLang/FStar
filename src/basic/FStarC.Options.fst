@@ -331,7 +331,7 @@ let defaults =
       ("z3seed"                       , Int 0);
       ("z3cliopt"                     , List []);
       ("z3smtopt"                     , List []);
-      ("z3version"                    , String "4.8.5");
+      ("z3version"                    , String "4.13.3");
       ("__no_positivity"              , Bool false);
       ("__tactics_nbe"                , Bool false);
       ("warn_error"                   , List []);
@@ -1601,7 +1601,7 @@ let specs_with_types warn_unsafe : list (char & string & opt_type & Pprint.docum
   ( noshort,
     "z3version",
     SimpleStr "version",
-    text "Set the version of Z3 that is to be used. Default: 4.8.5");
+    text "Set the version of Z3 that is to be used. Default: 4.13.3");
 
   ( noshort,
     "__no_positivity",
