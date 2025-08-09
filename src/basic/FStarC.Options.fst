@@ -257,6 +257,7 @@ let defaults =
       ("MLish_effect"                 , String "FStar.Effect");
       ("no_extract"                   , List []);
       ("no_location_info"             , Bool false);
+      ("no_prelude"                   , Bool false);
       ("no_smt"                       , Bool false);
       ("no_plugins"                   , Bool false);
       ("no_tactics"                   , Bool false);
@@ -521,6 +522,7 @@ let get_MLish                   ()      = lookup_opt "MLish"                    
 let get_MLish_effect            ()      = lookup_opt "MLish_effect"             as_string
 let get_no_extract              ()      = lookup_opt "no_extract"               (as_list as_string)
 let get_no_location_info        ()      = lookup_opt "no_location_info"         as_bool
+let get_no_prelude              ()      = lookup_opt "no_prelude"               as_bool
 let get_no_plugins              ()      = lookup_opt "no_plugins"               as_bool
 let get_no_smt                  ()      = lookup_opt "no_smt"                   as_bool
 let get_normalize_pure_terms_for_extraction
@@ -1195,6 +1197,13 @@ let specs_with_types warn_unsafe : list (char & string & opt_type & Pprint.docum
     "no_location_info",
     Const (Bool true),
     text "Suppress location information in the generated OCaml output (only relevant with --codegen OCaml)");
+
+  ( noshort,
+    "no_prelude",
+    Const (Bool true),
+    text "Do not include the prelude module (FStar.Prelude) when checking the files \
+          given in the command line. This is similar to attaching [@@\"no_prelude\"] to \
+          the module.");
 
   ( noshort,
     "no_smt",
@@ -2134,6 +2143,7 @@ let no_extract                   s  = get_no_extract() |> List.existsb (module_n
 let normalize_pure_terms_for_extraction
                                  () = get_normalize_pure_terms_for_extraction ()
 let no_location_info             () = get_no_location_info            ()
+let no_prelude                   () = get_no_prelude                  ()
 let no_plugins                   () = get_no_plugins                  ()
 let no_smt                       () = get_no_smt                      ()
 
