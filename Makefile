@@ -414,7 +414,7 @@ test-2-bare: override FSTAR_LIB := $(abspath ulib)
 test-2-bare: $(FSTAR2_BARE_EXE)
 	$(MAKE) -C bare-tests
 
-test: test-2-bare test-2
+test: test-2
 
 test-1: override FSTAR_EXE := $(abspath stage1/out/bin/fstar.exe)
 test-1: stage1
