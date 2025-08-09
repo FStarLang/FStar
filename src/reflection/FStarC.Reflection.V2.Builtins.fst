@@ -610,7 +610,7 @@ let pack_sigelt (sv:sigelt_view) : sigelt =
       let pack_ctor (c:ctor) : sigelt =
         let (nm, ty) = c in
         let lid = Ident.lid_of_path nm Range.dummyRange in
-        mk_sigelt <| Sig_datacon {lid; us=us_names; t=ty; ty_lid=ind_lid; num_ty_params=nparam; mutuals=[]; injective_type_params }
+        mk_sigelt <| Sig_datacon {lid; us=us_names; t=ty; ty_lid=ind_lid; num_ty_params=nparam; mutuals=[]; injective_type_params; proj_disc_lids=[] } // hmmmm
       in
 
       let ctor_ses : list sigelt = List.map pack_ctor ctors in

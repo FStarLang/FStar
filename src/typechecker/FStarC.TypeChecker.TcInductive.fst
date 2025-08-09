@@ -212,7 +212,7 @@ let mk_implicit : bqual -> bqual = function
 let tc_data (env:env_t) (tcs : list (sigelt & universe))
   : sigelt -> sigelt & guard_t =
     fun se -> match se.sigel with
-    | Sig_datacon {lid=c; us=_uvs; t; ty_lid=tc_lid; num_ty_params=ntps; mutuals=mutual_tcs} ->
+    | Sig_datacon {lid=c; us=_uvs; t; ty_lid=tc_lid; num_ty_params=ntps; mutuals=mutual_tcs; proj_disc_lids} ->
          //assert (_uvs = []);
          let usubst, _uvs = SS.univ_var_opening _uvs in
          let env, t = Env.push_univ_vars env _uvs, SS.subst usubst t in
@@ -325,7 +325,8 @@ let tc_data (env:env_t) (tcs : list (sigelt & universe))
                                         ty_lid=tc_lid;
                                         num_ty_params=ntps;
                                         mutuals=mutual_tcs;
-                                        injective_type_params=false} },
+                                        injective_type_params=false;
+                                        proj_disc_lids} },
          g
 
    | _ -> failwith "impossible"
@@ -394,7 +395,7 @@ let generalize_and_inst_within (env:env_t) (tcs:list (sigelt & universe)) (datas
              let tc_insts = tcs |> List.map (function { sigel = Sig_inductive_typ {lid=tc} } -> (tc, uvs_universes) | _ -> failwith "Impossible") in
              List.map2 (fun ({binder_bv=t}) d ->
                 match d.sigel with
-                    | Sig_datacon {lid=l; ty_lid=tc; num_ty_params=ntps; mutuals} ->
+                    | Sig_datacon {lid=l; ty_lid=tc; num_ty_params=ntps; mutuals; proj_disc_lids} ->
                         let ty = InstFV.instantiate tc_insts t.sort |> SS.close_univ_vars uvs in
                         { d with sigel = Sig_datacon {lid=l;
                                                       us=uvs;
@@ -402,7 +403,8 @@ let generalize_and_inst_within (env:env_t) (tcs:list (sigelt & universe)) (datas
                                                       ty_lid=tc;
                                                       num_ty_params=ntps;
                                                       mutuals;
-                                                      injective_type_params=false} }
+                                                      injective_type_params=false;
+                                                      proj_disc_lids} }
                     | _ -> failwith "Impossible")
              data_types datas
         in

@@ -13,12 +13,6 @@ type monoid (m: Type) =
       left_unitality: Prims.squash (Monoid.left_unitality_lemma m unit mult) ->
       associativity: Prims.squash (Monoid.associativity_lemma m mult)
     -> Monoid.monoid m
-
-
-
-
-
-
 let intro_monoid m u15 mult = Monoid.Monoid u15 mult () () () <: Prims.Pure (Monoid.monoid m)
 let nat_plus_monoid =
   let add x y = x + y <: Prims.nat in
@@ -109,9 +103,6 @@ type monoid_morphism (f: (_: a -> b)) (ma: Monoid.monoid a) (mb: Monoid.monoid b
       unit: Prims.squash (Monoid.monoid_morphism_unit_lemma f ma mb) ->
       mult: Prims.squash (Monoid.monoid_morphism_mult_lemma f ma mb)
     -> Monoid.monoid_morphism f ma mb
-
-
-
 let intro_monoid_morphism f ma mb =
   Monoid.MonoidMorphism () () <: Prims.Pure (Monoid.monoid_morphism f ma mb)
 let embed_nat_int n = n <: Prims.int
@@ -153,10 +144,6 @@ type left_action (mm: Monoid.monoid m) (a: Type) =
       mult_lemma: Prims.squash (Monoid.mult_act_lemma m a mm.mult act) ->
       unit_lemma: Prims.squash (Monoid.unit_act_lemma m a mm.unit act)
     -> Monoid.left_action mm a
-
-
-
-
 let left_action_morphism f mf la lb = forall (g: ma) (x: a). lb.act (mf g) (f x) == f (la.act g x)
 ]
 
@@ -175,12 +162,6 @@ type monoid (m: Type) =
       left_unitality: Prims.squash (Monoid.left_unitality_lemma m unit mult) ->
       associativity: Prims.squash (Monoid.associativity_lemma m mult)
     -> Monoid.monoid m
-
-
-
-
-
-
 let intro_monoid m u15 mult = Monoid.Monoid u15 mult () () () <: Prims.Pure (Monoid.monoid m)
 let nat_plus_monoid =
   let add x y = x + y <: Prims.nat in
@@ -271,9 +252,6 @@ type monoid_morphism (f: (_: a -> b)) (ma: Monoid.monoid a) (mb: Monoid.monoid b
       unit: Prims.squash (Monoid.monoid_morphism_unit_lemma f ma mb) ->
       mult: Prims.squash (Monoid.monoid_morphism_mult_lemma f ma mb)
     -> Monoid.monoid_morphism f ma mb
-
-
-
 let intro_monoid_morphism f ma mb =
   Monoid.MonoidMorphism () () <: Prims.Pure (Monoid.monoid_morphism f ma mb)
 let embed_nat_int n = n <: Prims.int
@@ -315,10 +293,6 @@ type left_action (mm: Monoid.monoid m) (a: Type) =
       mult_lemma: Prims.squash (Monoid.mult_act_lemma m a mm.mult act) ->
       unit_lemma: Prims.squash (Monoid.unit_act_lemma m a mm.unit act)
     -> Monoid.left_action mm a
-
-
-
-
 let left_action_morphism f mf la lb = forall (g: ma) (x: a). lb.act (mf g) (f x) == f (la.act g x)
 ]
 

@@ -393,9 +393,9 @@ let rec on_sub_sigelt' #m {|d : lvm m |} (se : sigelt') : m sigelt' =
     let! ses = ses |> mapM on_sub_sigelt in
     return <| Sig_bundle {ses; lids}
 
-  | Sig_datacon {lid; us; t; ty_lid; num_ty_params; mutuals; injective_type_params } ->
+  | Sig_datacon {lid; us; t; ty_lid; num_ty_params; mutuals; injective_type_params; proj_disc_lids} ->
     let! t = t |> f_term in
-    return <| Sig_datacon {lid; us; t; ty_lid; num_ty_params; mutuals; injective_type_params }
+    return <| Sig_datacon {lid; us; t; ty_lid; num_ty_params; mutuals; injective_type_params; proj_disc_lids }
 
   | Sig_declare_typ {lid; us; t} ->
     let! t = t |> f_term in
