@@ -6,7 +6,7 @@ module P = FStar.Preorder
    
 let witnessed (state:Type u#a)
               (rel:P.preorder state)
-              (p:s_predicate state)
+              ([@@@unused] p:s_predicate state)
   : Type0
   = unit
   
