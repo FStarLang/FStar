@@ -500,6 +500,8 @@ let rec term_to_string (x:term) = match x.tm with
      | [] -> " "
      | hd::tl ->
        tl |> List.fold_left (fun s t -> s ^ "; " ^ term_to_string t) (term_to_string hd))
+  | WFOrder (rel, e) ->
+    Format.fmt2 "{:well-founded %s %s}" (term_to_string rel) (term_to_string e)
   | Decreases t -> Format.fmt1 "(decreases %s)" (term_to_string t)
   | Requires t -> Format.fmt1 "(requires %s)" (term_to_string t)
   | Ensures t -> Format.fmt1 "(ensures %s)" (term_to_string t)
