@@ -11,7 +11,8 @@ let x =
          a SIGTERM. This is what VS Code sends when a file is closed. *)
       if Fstarcompiler.FStarC_Platform.unix then (
         let hdlr (s:int) =
-          Fstarcompiler.FStarC_Util.kill_all ()
+          Fstarcompiler.FStarC_Util.kill_all ();
+          exit 130
         in
         let _ = Sys.signal Sys.sigterm (Sys.Signal_handle hdlr) in
         ()
