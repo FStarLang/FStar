@@ -7,13 +7,13 @@ let f (x : 'a) : 'a = x
 
 let g (x : 'a) : 'a = f x
 
-let h : _:'a -> 'a = fun x -> x
+// Should work (#3087)
+(* let h : 'a -> 'a = fun x -> x *)
 
 (* Should probably forbid this *)
 type endo 'a = 'a -> 'a
 let endo2 = fun x -> x -> x
 
-[@@expect_failure] // should fail DIFFERENTLY
 let endo3 = fun 'a -> 'a -> 'a 
 
 let test : endo int = fun x -> x + 1
@@ -51,3 +51,11 @@ let noconfuse2 (f : 'a -> 'a) (x : 'a) : 'a =
     h
   in
   g x
+
+let inner : int =
+  let h : 'a -> 'a = fun y -> y in // polymorphic
+  let j = // also polymorphic
+    let h : 'a -> 'a = fun y -> y in
+    h #int
+  in
+  h 42 + j 10
