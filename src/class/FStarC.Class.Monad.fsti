@@ -12,6 +12,11 @@ class monad (m : Type -> Type) = {
 let ( let! ) : #m:(Type -> Type) -> {| monad m |} -> #a:Type -> #b:Type -> m a -> (a -> m b) -> m b = bind
 let ( >>=  ) : #m:(Type -> Type) -> {| monad m |} -> #a:Type -> #b:Type -> m a -> (a -> m b) -> m b = bind
 
+inline_for_extraction
+let ( >=> ) #m {| monad m |} #a #b #c
+  (f : a -> m b) (g : b -> m c) :  a -> m c =
+  fun x -> f x >>= g
+
 instance val monad_option : monad option
 instance val monad_list   : monad list
 
