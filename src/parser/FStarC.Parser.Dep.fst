@@ -1058,8 +1058,8 @@ let collect_one
             collect_term t
         | Paren t ->
             collect_term t
-        | Requires (t, _)
-        | Ensures (t, _)
+        | Requires t
+        | Ensures t
         | Labeled (t, _, _) ->
             collect_term t
         | LexList l -> List.iter collect_term l
@@ -1068,7 +1068,7 @@ let collect_one
           begin
            collect_term t1; collect_term t2
           end
-        | Decreases (t, _) -> collect_term t
+        | Decreases t -> collect_term t
         | Quote (t, _)
         | Antiquote t
         | VQuote t ->

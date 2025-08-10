@@ -269,20 +269,17 @@ and eq_term' (t1 t2:term')
       eq_term t1 t2
     | Paren t1, Paren t2 ->
       eq_term t1 t2
-    | Requires (t1, s1), Requires (t2, s2) ->
-      eq_term t1 t2 &&
-      eq_option ( = ) s1 s2
-    | Ensures (t1, s1), Ensures (t2, s2) ->
-      eq_term t1 t2 &&
-      eq_option ( = ) s1 s2
+    | Requires t1, Requires t2 ->
+      eq_term t1 t2
+    | Ensures t1, Ensures t2 ->
+      eq_term t1 t2
     | LexList ts1, LexList ts2 ->
       eq_list eq_term ts1 ts2
     | WFOrder (t1, t2), WFOrder (t3, t4) ->
       eq_term t1 t3 &&
       eq_term t2 t4
-    | Decreases (t1, s1), Decreases (t2, s2) ->
-      eq_term t1 t2 &&
-      eq_option ( = ) s1 s2
+    | Decreases t1, Decreases t2 ->
+      eq_term t1 t2
     | Labeled (t1, s1, b1), Labeled (t2, s2, b2) ->
       eq_term t1 t2 &&
       s1 = s2 &&

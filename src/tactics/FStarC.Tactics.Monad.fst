@@ -131,8 +131,8 @@ let bind (t1:tac 'a) (t2:'a -> tac 'b) : tac 'b =
             | Failed (msg, q) -> Failed (msg, q))
 
 instance monad_tac : monad tac = {
-    return   = ret;
-    ( let! ) = bind;
+    return = ret;
+    bind   = bind;
 }
 
 (* Set the current proofstate *)

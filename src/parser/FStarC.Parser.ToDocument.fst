@@ -1341,18 +1341,15 @@ and p_noSeqTerm' ps pb e = match e.tm with
       group (
         group (p_atomicTermNotQUident e1 ^^ dot ^^ soft_brackets_lens_access_with_nesting (p_term false false e2)
           ^^ space ^^ larrow) ^^ jump2 (p_noSeqTermAndComment ps pb e3))
-  | Requires (e, wtf) ->
-      assert (wtf = None);
+  | Requires e ->
       group (str "requires" ^/^ p_typ ps pb e)
-  | Ensures (e, wtf) ->
-      assert (wtf = None);
+  | Ensures e ->
       group (str "ensures" ^/^ p_typ ps pb e)
   | WFOrder (rel, e) ->
     p_dec_wf ps pb rel e
   | LexList l ->
       group (str "%" ^^ p_term_list ps pb l)
-  | Decreases (e, wtf) ->
-      assert (wtf = None);
+  | Decreases e ->
       group (str "decreases" ^/^ p_typ ps pb e)
   | Attributes es ->
       group (str "attributes" ^/^ separate_map break1 p_atomicTerm es)

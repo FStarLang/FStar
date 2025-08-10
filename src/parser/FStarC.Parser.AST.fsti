@@ -81,11 +81,11 @@ type term' =
   | Refine    of binder & term
   | NamedTyp  of ident & term
   | Paren     of term
-  | Requires  of term & option string
-  | Ensures   of term & option string
+  | Requires  of term
+  | Ensures   of term
   | LexList   of list term  (* a decreases clause mentions either a lexicographically ordered list, *)
   | WFOrder   of term & term  (* or a well-founded relation or some type and an expression of the same type *)
-  | Decreases of term & option string
+  | Decreases of term
   | Labeled   of term & string & bool
   | Discrim   of lid   (* Some?  (formerly is_Some) *)
   | Attributes of list term   (* attributes decorating a term *)

@@ -1163,7 +1163,7 @@ and resugar_comp' (env: DsEnv.env) (c:S.comp) : A.term =
                 mk (LexList (ts |> List.map (resugar_term' env)))
               | Decreases_wf (rel, e) ->
                 mk (WFOrder (resugar_term' env rel, resugar_term' env e)) in
-            let e = mk (Decreases (d, None)) in
+            let e = mk (Decreases d) in
             aux (e::l) tl
           | _ -> aux l tl
       in
@@ -1181,8 +1181,8 @@ and resugar_comp' (env: DsEnv.env) (c:S.comp) : A.term =
       let post = U.unthunk_lemma_post post in
       let pats = if U.is_fvar C.nil_lid (U.head_of pats) then [] else [pats] in
 
-      let pre = List.map (fun t -> mk (Requires (resugar_term' env t, None))) pre in
-      let post = mk (Ensures (resugar_term' env post, None)) in
+      let pre = List.map (fun t -> mk (Requires (resugar_term' env t))) pre in
+      let post = mk (Ensures (resugar_term' env post)) in
       let pats = List.map (resugar_term' env) pats in
       let decrease = mk_decreases c.flags in
 

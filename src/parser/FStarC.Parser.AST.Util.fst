@@ -65,11 +65,11 @@ and lidents_of_term' (t:term')
   | Refine (b, t) -> lidents_of_term t
   | NamedTyp (i, t) -> lidents_of_term t
   | Paren t -> lidents_of_term t
-  | Requires (t, _) -> lidents_of_term t
-  | Ensures (t, _) -> lidents_of_term t
+  | Requires t -> lidents_of_term t
+  | Ensures t -> lidents_of_term t
   | LexList ts -> concat_map lidents_of_term ts
   | WFOrder (t1, t2) -> lidents_of_term t1 @ lidents_of_term t2
-  | Decreases (t, _) -> lidents_of_term t
+  | Decreases t -> lidents_of_term t
   | Labeled (t, _, _) -> lidents_of_term t
   | Discrim lid -> [lid]
   | Attributes ts -> concat_map lidents_of_term ts

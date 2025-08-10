@@ -12,7 +12,7 @@ type id (a:Type) = | I : run:a -> id a
 
 instance _ : monad id = {
   return = (fun a -> I a);
-  ( let! ) = (fun (I a) f -> f a);
+  bind   = (fun (I a) f -> f a);
 }
 
 let (<<) f g = fun x -> f (g x)

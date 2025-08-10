@@ -342,8 +342,8 @@ let st a = ctxt -> (a & ctxt)
 let get : st ctxt = fun s -> (s, s)
 let put (c:ctxt) : st unit = fun _ -> ((), c)
 instance st_monad: monad st = {
-  return= (fun (#a:Type) (x:a) -> (fun s -> (x, s)) <: st a);
-  ( let! ) = (fun (#a #b:Type) (m:st a) (f:a -> st b) (s:ctxt) ->
+  return = (fun (#a:Type) (x:a) -> (fun s -> (x, s)) <: st a);
+  bind   = (fun (#a #b:Type) (m:st a) (f:a -> st b) (s:ctxt) ->
                 let (x, s) = m s in
                 f x s)
 }

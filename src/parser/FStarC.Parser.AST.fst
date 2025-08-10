@@ -500,9 +500,9 @@ let rec term_to_string (x:term) = match x.tm with
      | [] -> " "
      | hd::tl ->
        tl |> List.fold_left (fun s t -> s ^ "; " ^ term_to_string t) (term_to_string hd))
-  | Decreases (t, _) -> Format.fmt1 "(decreases %s)" (term_to_string t)
-  | Requires (t, _) -> Format.fmt1 "(requires %s)" (term_to_string t)
-  | Ensures (t, _) -> Format.fmt1 "(ensures %s)" (term_to_string t)
+  | Decreases t -> Format.fmt1 "(decreases %s)" (term_to_string t)
+  | Requires t -> Format.fmt1 "(requires %s)" (term_to_string t)
+  | Ensures t -> Format.fmt1 "(ensures %s)" (term_to_string t)
   | Labeled (t, l, _) -> Format.fmt2 "(labeled %s %s)" l (term_to_string t)
   | Const c -> C.const_to_string c
   | Op(s, xs) ->
