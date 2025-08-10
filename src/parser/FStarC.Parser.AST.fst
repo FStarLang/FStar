@@ -547,8 +547,24 @@ let rec term_to_string (x:term) = match x.tm with
   | Let (_, _, _) ->
     raise_error x Fatal_EmptySurfaceLet "Internal error: found an invalid surface Let"
 
+  | LetOperator ((i,p,b)::lbs, body) ->
+    Format.fmt4 "let%s rec %s%s in %s"
+        (show i)
+        (Format.fmt2 "%s=%s" (p|> pat_to_string) (b|> term_to_string))
+        (to_string_l " "
+            (fun (i,p,b) ->
+                Format.fmt3 "and%s %s=%s"
+                              (show i)
+                              (p|> pat_to_string)
+                              (b|> term_to_string))
+            lbs)
+        (body|> term_to_string)
+
   | LetOpen (lid, t) ->
     Format.fmt2 "let open %s in %s" (string_of_lid lid) (term_to_string t)
+
+  | LetOpenRecord (e, t, body) ->
+    Format.fmt3 "let open %s <: %s in %s\n" (e|> term_to_string) (t|> term_to_string) (body|> term_to_string)
 
   | Seq(t1, t2) ->
     Format.fmt2 "%s; %s" (t1|> term_to_string) (t2|> term_to_string)
