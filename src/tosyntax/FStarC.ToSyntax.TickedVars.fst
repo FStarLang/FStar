@@ -78,9 +78,9 @@ let rec go_term (env : DsEnv.env) (t: term) : m unit =
   | Discrim _
   | Name _  -> return ()
 
-  | Requires (t, _)
-  | Ensures (t, _)
-  | Decreases (t, _)
+  | Requires t
+  | Ensures t
+  | Decreases t
   | NamedTyp(_, t) -> go_term env t
 
   | LexList l -> iterM (go_term env) l

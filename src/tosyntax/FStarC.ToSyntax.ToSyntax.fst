@@ -999,10 +999,10 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term & an
 
     | Labeled _ -> desugar_formula env top, noaqs
 
-    | Requires (t, lopt) ->
+    | Requires t ->
       desugar_formula env t, noaqs
 
-    | Ensures (t, lopt) ->
+    | Ensures t ->
       desugar_formula env t, noaqs
 
     | Attributes ts ->
@@ -2252,7 +2252,7 @@ and desugar_comp r (allow_type_promotion:bool) env t =
         let unit_tm = mk_term (Name C.unit_lid) t.range Type_level, Nothing in
         let nil_pat = mk_term (Name C.nil_lid) t.range Expr, Nothing in
         let req_true =
-          let req = Requires (mk_term (Name C.true_lid) t.range Formula, None) in
+          let req = Requires (mk_term (Name C.true_lid) t.range Formula) in
           mk_term req t.range Type_level, Nothing
         in
         (* The postcondition for Lemma is thunked, to allow to assume the precondition
@@ -2396,7 +2396,7 @@ and desugar_comp r (allow_type_promotion:bool) env t =
     let rest = desugar_args env rest in
     let decreases_clause = dec |>
       List.map (fun t -> match (unparen (fst t)).tm with
-                      | Decreases (t, _) ->
+                      | Decreases t ->
                         let dec_order =
                           let t = unparen t in
                           match t.tm with
