@@ -46,7 +46,7 @@ let return (x:'a) : err 'a = fun ctr -> Inl x, ctr
 
 instance err_monad : monad err = {
   return = return;
-  ( let! ) = bind_err
+  bind   = bind_err
 }
 
 let fail #a (message:string) (range:R.range) : err a =
