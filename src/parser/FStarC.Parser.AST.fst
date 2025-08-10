@@ -923,13 +923,12 @@ let ident_of_binder r b =
 
 let idents_of_binders bs r = bs |> List.map (ident_of_binder r)
 
-instance showable_decl : showable decl = {
-  show = decl_to_string;
-}
-
-instance showable_term : showable term = {
-  show = term_to_string;
-}
+instance showable_decl : showable decl = { show = decl_to_string; }
+instance showable_term : showable term = { show = term_to_string; }
+instance showable_pattern : showable pattern = { show = pat_to_string; }
+instance showable_binder : showable binder = { show = binder_to_string; }
+instance showable_modul : showable modul = { show = modul_to_string; }
+instance showable_pragma : showable pragma = { show = string_of_pragma; }
 
 let add_decorations d decorations =
   let decorations = 
