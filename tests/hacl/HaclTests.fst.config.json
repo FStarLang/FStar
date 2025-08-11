@@ -2,8 +2,7 @@
   "fstar_exe": "fstar.exe",
   "options": [
     "--ext", "optimize_let_vc",
-    "--z3rlimit_factor", "2",
-    "--z3version", "4.13.3"
+    "--z3rlimit_factor", "2"
   ],
   "include_dirs": [
   ]
