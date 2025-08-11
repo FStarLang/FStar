@@ -864,13 +864,13 @@ let restriction_to_string: FStarC.Syntax.Syntax.restriction -> string =
   function | Unrestricted -> ""
            | AllowList allow_list  -> " {" ^ String.concat ", " (List.map (fun (id, renamed) -> string_of_id id ^ Option.dflt "" (Option.map (fun renamed -> " as " ^ string_of_id renamed) renamed)) allow_list)  ^ "}"
 
-let rec decl_to_string (d:decl) = match d.d with
+let decl_to_string (d:decl) = match d.d with
   | TopLevelModule l -> "module " ^ (string_of_lid l)
   | Open (l, r) -> "open " ^ string_of_lid l ^ restriction_to_string r
   | Friend l -> "friend " ^ (string_of_lid l)
   | Include (l, r) -> "include " ^ string_of_lid l ^ restriction_to_string r
   | ModuleAbbrev (i, l) -> Format.fmt2 "module %s = %s" (string_of_id i) (string_of_lid l)
-  | TopLevelLet(_, pats) -> "let " ^ (lids_of_let pats |> List.map (fun l -> (string_of_lid l)) |> String.concat ", ")
+  | TopLevelLet(_, pats) -> "let " ^ (pats |> List.map (fun (p, t) -> pat_to_string p ^ " = " ^ term_to_string t) |> String.concat ", ")
   | Assume(i, _) -> "assume " ^ (string_of_id i)
   | Tycon(_, _, tys) -> "type " ^ (tys |> List.map id_of_tycon |> String.concat ", ")
   | Val(i, _) -> "val " ^ (string_of_id i)
