@@ -298,7 +298,7 @@ let try_instances (st:st_t) (k : st_t -> Tac unit) () : Tac unit =
       | Some se -> extract_fundeps se
     in
 
-    let args_and_uvars = args |> Util.map (fun (a, q) -> (a, q), Cons? (free_uvars a )) in
+    let args_and_uvars = args |> Util.map (fun (a, q) -> (a, q), Cons? (free_uvars a)) in
     let st = { st with seen = g :: st.seen } in
     let g = { g; head_fv; c_se; fundeps; args_and_uvars } in
     run <| (
@@ -326,6 +326,7 @@ let rec tcresolve' (st:st_t) : Tac unit =
     );
     debug (fun () -> "fuel = " ^ string_of_int st.fuel);
 
+    norm [primops; iota];
     maybe_intros();
     let g = cur_goal () in
 
@@ -344,7 +345,6 @@ let rec tcresolve' (st:st_t) : Tac unit =
 let tcresolve () : Tac unit =
     let open FStar.Pprint in
     debug (fun () -> dump ""; "tcresolve entry point");
-    norm [];
     let w = cur_witness () in
     set_dump_on_failure false; (* We report our own errors *)
 
