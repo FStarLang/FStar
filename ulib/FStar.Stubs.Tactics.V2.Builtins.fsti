@@ -35,6 +35,9 @@ val fixup_range : Range.range -> TacRO Range.range
 (** Resolve unification variable indirections at the top of the term. *)
 val compress : term -> TacRO term
 
+(** Resolve unification variable indirections at the top of the universe. *)
+val compress_univ : universe -> TacRO universe
+
 (** [top_env] returns the environment where the tactic started running.
  * This works even if no goals are present. *)
 val top_env : unit -> TacRO env

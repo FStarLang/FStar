@@ -45,6 +45,7 @@ val proofstate_of_all_implicits: Range.t -> env -> implicits -> proofstate & ter
 
 val fixup_range (r : Range.t) : tac (Range.t)
 val compress               : term -> tac term
+val compress_univ          : universe -> tac universe
 val top_env                : unit -> tac env
 val fresh                  : unit -> tac int
 val refine_intro           : unit -> tac unit
