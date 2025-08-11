@@ -34,6 +34,8 @@ let rec list_eq #a cmp l1 l2 =
 
 val univ_eq : comparator_for universe
 let rec univ_eq (u1 u2 : universe) =
+  let u1 = compress_univ u1 in
+  let u2 = compress_univ u2 in
   let uv1 = inspect_universe u1 in
   let uv2 = inspect_universe u2 in
   match uv1, uv2 with
@@ -112,9 +114,11 @@ let rec term_eq (t1 t2 : term) : Tac bool =
   | Tv_Const c1, Tv_Const c2 ->
     const_eq c1 c2
 
-  | Tv_Uvar n1 u1, Tv_Uvar n2 u2 ->
-    // Unresolved uvars. We can't tell.
-    false
+  | Tv_Uvar n1 _u1, Tv_Uvar n2 _u2 ->
+    (* This case is sketchy, as the substitutions u1/u2 could
+       be different, but this is what term_eq_old used to do.
+       Apparently some Steel examples rely on this. *)
+    n1 = n2
 
   | Tv_Let r1 attrs1 sb1 e1 b1, Tv_Let r2 attrs2 sb2 e2 b2 ->
     if not <| r1 = r2 then false else

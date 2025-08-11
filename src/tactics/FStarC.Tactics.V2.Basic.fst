@@ -74,6 +74,10 @@ let compress (t:term) : tac term =
   return ();!
   return (SS.compress t)
 
+let compress_univ (u:universe) : tac universe =
+  return ();!
+  return (SS.compress_univ u)
+
 let core_check env sol t must_tot
   : either (option typ) Core.error
   = if not (Options.compat_pre_core_should_check()) then Inl None else

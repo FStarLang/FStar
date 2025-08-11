@@ -104,6 +104,35 @@ jobs:
           name: steel
           hometag: STEEL
 
+  build-steel-proofs:
+    runs-on: ubuntu-latest
+    container: mtzguido/dev-base
+    needs:
+      - build-krml
+      - build-steel
+    steps:
+      - name: Cleanup
+        run: sudo find . -delete
+      - run: echo "HOME=/home/user" >> $GITHUB_ENV
+      - uses: mtzguido/set-opam-env@master
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: fstar.tar.gz
+      - run: tar -xzf fstar.tar.gz
+      - run: echo "FSTAR_EXE=$(pwd)/fstar/bin/fstar.exe" >> $GITHUB_ENV
+
+      - uses: mtzguido/gci-download@master
+        with:
+          name: karamel
+
+      - uses: mtzguido/gci-download@master
+        with:
+          name: steel
+
+      - name: Test
+        run: make -C steel -skj$(nproc) verify-proofs
+
   test-steel:
     runs-on: ubuntu-latest
     container: mtzguido/dev-base
