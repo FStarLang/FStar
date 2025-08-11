@@ -24,7 +24,7 @@ assume val as_Pure: #a:Type -> #b:(a -> Type)
 
 open FStar.Monotonic.Pure
 
-val f : x:int -> PURE int (as_pure_wp (fun 'p -> x > 0 /\ 'p (x + 1)))
+val f : x:int -> PURE int (as_pure_wp (fun p -> x > 0 /\ p (x + 1)))
 let f x = assert (x > 0); x + 1
 
 val h : #req:(int -> Type) -> #ens:(int -> int -> Type) -> $f:(x:int -> Pure int (req x) (ens x)) -> y:int -> Pure int (req y) (ens y)

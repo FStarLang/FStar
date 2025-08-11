@@ -500,6 +500,8 @@ let rec term_to_string (x:term) = match x.tm with
      | [] -> " "
      | hd::tl ->
        tl |> List.fold_left (fun s t -> s ^ "; " ^ term_to_string t) (term_to_string hd))
+  | WFOrder (rel, e) ->
+    Format.fmt2 "{:well-founded %s %s}" (term_to_string rel) (term_to_string e)
   | Decreases t -> Format.fmt1 "(decreases %s)" (term_to_string t)
   | Requires t -> Format.fmt1 "(requires %s)" (term_to_string t)
   | Ensures t -> Format.fmt1 "(ensures %s)" (term_to_string t)
@@ -547,8 +549,24 @@ let rec term_to_string (x:term) = match x.tm with
   | Let (_, _, _) ->
     raise_error x Fatal_EmptySurfaceLet "Internal error: found an invalid surface Let"
 
+  | LetOperator ((i,p,b)::lbs, body) ->
+    Format.fmt4 "let%s rec %s%s in %s"
+        (show i)
+        (Format.fmt2 "%s=%s" (p|> pat_to_string) (b|> term_to_string))
+        (to_string_l " "
+            (fun (i,p,b) ->
+                Format.fmt3 "and%s %s=%s"
+                              (show i)
+                              (p|> pat_to_string)
+                              (b|> term_to_string))
+            lbs)
+        (body|> term_to_string)
+
   | LetOpen (lid, t) ->
     Format.fmt2 "let open %s in %s" (string_of_lid lid) (term_to_string t)
+
+  | LetOpenRecord (e, t, body) ->
+    Format.fmt3 "let open %s <: %s in %s\n" (e|> term_to_string) (t|> term_to_string) (body|> term_to_string)
 
   | Seq(t1, t2) ->
     Format.fmt2 "%s; %s" (t1|> term_to_string) (t2|> term_to_string)
@@ -907,13 +925,12 @@ let ident_of_binder r b =
 
 let idents_of_binders bs r = bs |> List.map (ident_of_binder r)
 
-instance showable_decl : showable decl = {
-  show = decl_to_string;
-}
-
-instance showable_term : showable term = {
-  show = term_to_string;
-}
+instance showable_decl : showable decl = { show = decl_to_string; }
+instance showable_term : showable term = { show = term_to_string; }
+instance showable_pattern : showable pattern = { show = pat_to_string; }
+instance showable_binder : showable binder = { show = binder_to_string; }
+instance showable_modul : showable modul = { show = modul_to_string; }
+instance showable_pragma : showable pragma = { show = string_of_pragma; }
 
 let add_decorations d decorations =
   let decorations = 

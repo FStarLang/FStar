@@ -380,6 +380,10 @@ val idents_of_binders : list binder -> range -> list ident
 
 instance val showable_decl : showable decl
 instance val showable_term : showable term
+instance val showable_pattern : showable pattern
+instance val showable_binder : showable binder
+instance val showable_modul   : showable modul
+instance val showable_pragma : showable pragma
 
 val as_interface (m:modul) : modul
 
