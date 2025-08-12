@@ -908,15 +908,20 @@ let decompose_app (g:env) (tt:either term st_term)
   | Inr st -> decompose_st_app st
 
 let anf_binder name = T.pack (T.Tv_FVar (T.pack_fv (Pulse.Reflection.Util.mk_pulse_lib_core_lid (Printf.sprintf "__%s_binder__" name))))
-  
+
+let fresh_anf_name (g:env) : T.Tac (env & string) =
+  let g, id = Pulse.Typing.Env.fresh_anf g in
+  let nm = Printf.sprintf "__anf%d" id in
+  g, nm
+
 let bind_st_term (g:env) (s:st_term) 
 : T.Tac (env & binder & var & term)
 = let open Pulse.Syntax in
-  let anf_name = Printf.sprintf "__anf%d" (RU.next_id()) in
+  let g, anf_name = fresh_anf_name g in
   let b = {
     binder_ty = tm_unknown;
     binder_ppname = mk_ppname (FStar.Reflection.Typing.seal_pp_name anf_name) s.range;
-    binder_attrs = FStar.Sealed.seal [anf_binder anf_name];
+    binder_attrs = FStar.Sealed.seal [anf_binder anf_name]; // What is this for?
   } in
   let x = Pulse.Typing.Env.fresh g in
   let g = Pulse.Typing.Env.push_binding g x b.binder_ppname b.binder_ty in

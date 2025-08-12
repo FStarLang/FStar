@@ -113,9 +113,9 @@ lookup__size_t_Example_Hashtable_data(ht_t__size_t_Example_Hashtable_data ht, si
   size_t off = (size_t)0U;
   bool cont = true;
   option__size_t ret = { .tag = None };
-  size_t __anf6058 = off;
-  bool __anf60560 = cont;
-  bool cond = __anf6058 <= ht.sz && __anf60560;
+  size_t __anf1 = off;
+  bool __anf00 = cont;
+  bool cond = __anf1 <= ht.sz && __anf00;
   while (cond)
   {
     size_t voff = off;
@@ -173,9 +173,9 @@ lookup__size_t_Example_Hashtable_data(ht_t__size_t_Example_Hashtable_data ht, si
         KRML_HOST_EXIT(255U);
       }
     }
-    size_t __anf6058 = off;
-    bool __anf6056 = cont;
-    cond = __anf6058 <= ht.sz && __anf6056;
+    size_t __anf1 = off;
+    bool __anf0 = cont;
+    cond = __anf1 <= ht.sz && __anf0;
   }
   option__size_t o = ret;
   cell__size_t_Example_Hashtable_data *vcontents = contents;
