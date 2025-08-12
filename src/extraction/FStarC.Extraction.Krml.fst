@@ -1308,7 +1308,8 @@ let translate_type_decl' env ty: option decl =
           Some (DTypeAbstractStruct name)
         else if assumed then
           let name = string_of_mlpath name in
-          Format.print1_warning "Not extracting type definition %s to KaRaMeL (assumed type)\n" name;
+          if not (Options.silent ()) then
+            Format.print1_warning "Not extracting type definition %s to KaRaMeL (assumed type)\n" name;
           // JP: TODO: shall we be smarter here?
           None
         else
@@ -1358,7 +1359,8 @@ let translate_let' env flavor lb: option decl =
       if List.length tvars = 0 then
         Some (DExternal (translate_cc meta, translate_flags meta, name, translate_type env t0, arg_names))
       else begin
-        Format.print1_warning "Not extracting %s to KaRaMeL (polymorphic assumes are not supported)\n" (Syntax.string_of_mlpath name);
+        if not (Options.silent ()) then
+          Format.print1_warning "Not extracting %s to KaRaMeL (polymorphic assumes are not supported)\n" (Syntax.string_of_mlpath name);
         None
       end
 
@@ -1382,7 +1384,7 @@ let translate_let' env flavor lb: option decl =
         in
         let name = env.module_name, name in
         let i, eff, t = find_return_type E_PURE (List.length args) t0 in
-        if i > 0 then begin
+        if i > 0 && not (Options.silent ()) then begin
           let msg = "function type annotation has less arrows than the \
             number of arguments; please mark the return type abbreviation as \
             inline_for_extraction" in
@@ -1495,7 +1497,8 @@ let translate_decl env d: list decl =
       failwith "todo: translate_decl [MLM_Top]"
 
   | MLM_Exn (m, _) ->
-      Format.print1_warning "Not extracting exception %s to KaRaMeL (exceptions unsupported)\n" m;
+      if not (Options.silent ()) then
+        Format.print1_warning "Not extracting exception %s to KaRaMeL (exceptions unsupported)\n" m;
       []
 
 let translate_module uenv (m : mlpath & option (mlsig & mlmodulebody)) : file =
