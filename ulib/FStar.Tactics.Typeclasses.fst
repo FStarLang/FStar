@@ -29,6 +29,8 @@ open FStar.Tactics.NamedView
 module L = FStar.List.Tot.Base
 let (@) = L.op_At
 
+let tc_norm_steps = [primops; iota; delta_qualifier ["unfold"]]
+
 irreducible let tcinstance : unit = ()
 irreducible let tcclass : unit = ()
 irreducible let tcmethod : unit = ()
@@ -185,17 +187,30 @@ let extract_fundeps (se : sigelt) : Tac (option (list int)) =
     aux attrs
 
 let trywith (st:st_t) (g:tc_goal) (t typ : term) (attrs : list term) (k : st_t -> Tac unit) : Tac unit =
-    // print ("head_fv = " ^ fv_to_string g.head_fv);
+    (* debug st (fun () -> "trying " ^ term_to_string t); *)
+    (* debug st (fun () -> "of type: " ^ term_to_string typ); *)
+    (* print ("head_fv = " ^ fv_to_string g.head_fv); *)
     // print ("fundeps = " ^ Util.string_of_option (Util.string_of_list (fun i -> string_of_int i)) fundeps);
     // print ("unresolved_args = " ^ Util.string_of_list (fun i -> string_of_int i) unresolved_args);
+
+    (* Try to normalize the type, but this can fail due to out-of-scope
+       variables. This should *not* be possible, it indicates a bug
+       somewhere. We should investigate and remove this catching. *)
+    let typ =
+      try norm_term tc_norm_steps typ with
+      | _ -> typ
+    in
 
     match head_of (res_typ typ) with
     | None ->
       debug st (fun () -> "no head for typ of this? " ^ term_to_string t ^ "    typ=" ^ term_to_string typ);
       raise Next
     | Some fv' ->
-      if not (fv_eq fv' g.head_fv) then
-        raise Next; // class mismatch, would be better to not even get here
+      if not (fv_eq fv' g.head_fv) then (
+        (* print ("fv' = " ^ implode_qn (inspect_fv fv')); *)
+        (* print ("g.head_fv = " ^ implode_qn (inspect_fv g.head_fv)); *)
+        skip st "class mismatch" // class mismatch, would be better to not even get here
+      );
       let unresolved_args = g.args_and_uvars |> Util.mapi (fun i (_, b) -> if b then [i <: int] else []) |> List.Tot.flatten in
       debug st (fun () -> "Trying to apply hypothesis/instance: " ^ term_to_string t);
       (fun () ->
@@ -328,7 +343,7 @@ let rec tcresolve' (st:st_t) : Tac unit =
     );
     debug st (fun () -> "fuel = " ^ string_of_int st.fuel);
 
-    norm [primops; iota];
+    norm tc_norm_steps;
     maybe_intros();
     let g = cur_goal () in
 
