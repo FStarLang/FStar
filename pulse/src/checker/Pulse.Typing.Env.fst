@@ -43,9 +43,17 @@ type env = {
   names : list ppname;
   m : m:bmap { related bs m /\ L.length names == L.length bs };
   ctxt: Pulse.RuntimeUtils.context;
+
+  anf_ctr : Sealed.sealed nat;
+  (* ^ Used to generate more stable ANF binders. *)
 }
 
 let fstar_env g = RU.env_set_context g.f g.ctxt
+
+let fresh_anf (g:env) =
+  let id = T.unseal g.anf_ctr in
+  let g = { g with anf_ctr = Sealed.seal (id + 1) } in
+  g, id
 
 let bindings g = g.bs
 
@@ -75,12 +83,13 @@ let rec equal_names (l1 l2:list ppname)
 
 let equal_elim g1 g2 =
   equal_names g1.names g2.names;
+  Sealed.sealed_singl g1.anf_ctr g2.anf_ctr;
   assert (Map.equal g1.m g2.m)
 
 let default_context : Pulse.RuntimeUtils.context = FStar.Sealed.seal []
 
 let mk_env (f:RT.fstar_top_env) : env =
-  { f; bs = []; names=[]; m = empty_bmap; ctxt = default_context }
+  { f; bs = []; names=[]; m = empty_bmap; ctxt = default_context; anf_ctr = Sealed.seal 0 }
 
 let mk_env_bs _ = ()
 
@@ -115,7 +124,7 @@ let rec append_memP (#a:Type) (l1 l2:list a) (x:a)
 
 let push_env (g1:env) (g2:env { disjoint g1 g2 }) : env =
   { f = g1.f; bs = g2.bs @ g1.bs; names= g2.names @ g1.names;
-    m = Map.concat g2.m g1.m; ctxt = g1.ctxt }
+    m = Map.concat g2.m g1.m; ctxt = g1.ctxt ; anf_ctr = g1.anf_ctr }
 
 let push_env_fstar_env _ _ = ()
 
@@ -248,6 +257,7 @@ let diff g1 g2 =
     names = names3;
     m = m3;
     ctxt = g1.ctxt;
+    anf_ctr = g1.anf_ctr;
   } in
   assume (disjoint g2 g3);  // needs distinct entries in g
   assert (equal g1 (push_env g2 g3));

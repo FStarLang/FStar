@@ -44,9 +44,9 @@ pub fn lookup<KT: Copy + PartialEq + Clone, VT: Clone>(
     let mut cont = true;
     let mut ret = None;
     while {
-        let __anf6058 = off;
-        let __anf6056 = cont;
-        __anf6058 <= ht.sz && __anf6056
+        let __anf1 = off;
+        let __anf0 = cont;
+        __anf1 <= ht.sz && __anf0
     } {
         let voff = off;
         if voff == ht.sz {
@@ -224,9 +224,9 @@ pub fn not_full<KT: Copy + PartialEq + Clone, VT: Clone>(
     let mut i = 0;
     let mut break_ = false;
     while {
-        let __anf4846 = i;
-        let __anf4844 = break_;
-        __anf4846 < ht.sz && super::pulse_lib_hashtable::not_(__anf4844)
+        let __anf1 = i;
+        let __anf0 = break_;
+        __anf1 < ht.sz && super::pulse_lib_hashtable::not_(__anf0)
     } {
         let vi = i;
         let c = std::mem::replace::<
@@ -237,10 +237,10 @@ pub fn not_full<KT: Copy + PartialEq + Clone, VT: Clone>(
             super::pulse_lib_hashtable_spec::cell<KT, VT>,
         >(&mut contents[vi], b.1);
         break_ = super::pulse_lib_hashtable::not_(b.0);
-        let __anf11543 = break_;
-        if super::pulse_lib_hashtable::not_(__anf11543) {
-            let __anf13055 = i;
-            i = __anf13055 + 1;
+        let __anf0 = break_;
+        if super::pulse_lib_hashtable::not_(__anf0) {
+            let __anf01 = i;
+            i = __anf01 + 1;
         } else {
             ()
         }
