@@ -769,7 +769,7 @@ let resolve_to_fully_qualified_name (env:env) (l:lident) : option lident =
     match try_lookup_name true false env l with
     | Some (Term_name (e, attrs)) ->
       begin match (Subst.compress e).n with
-      | Tm_fvar fv -> Some fv.fv_name.v
+      | Tm_fvar fv -> Some fv.fv_name
       | _ -> None
       end
     | Some (Eff_name (o, l)) -> Some l
@@ -1440,7 +1440,7 @@ let finish env modul =
     | Sig_let {lbs=(_,lbs)} ->
       if List.contains Private quals
       then begin
-           lbs |> List.iter (fun lb -> SMap.remove (sigmap env) (string_of_lid (Inr?.v lb.lbname).fv_name.v))
+           lbs |> List.iter (fun lb -> SMap.remove (sigmap env) (string_of_lid (Inr?.v lb.lbname).fv_name))
       end
 
     | _ -> ());

@@ -58,7 +58,7 @@ let mkFV fv us ts = mkFV fv (List.rev us) (List.rev ts)
 let mkConstruct fv us ts = mkConstruct fv (List.rev us) (List.rev ts)
 (* ^ We still need to match on them in reverse order though, so this is pretty dumb *)
 
-let fv_as_emb_typ fv = S.ET_app (FStarC.Ident.string_of_lid fv.fv_name.v, [])
+let fv_as_emb_typ fv = S.ET_app (FStarC.Ident.string_of_lid fv.fv_name, [])
 let mk_emb' x y fv = mk_emb x y (fun () -> mkFV fv [] []) (fun () -> fv_as_emb_typ fv)
 
 let mk_lazy cb obj ty kind =

@@ -394,12 +394,12 @@ let tc_sig_let env r se lbs lids : list sigelt & list sigelt & Env.env =
     let should_generalize, lbs', quals_opt =
        snd lbs |> List.fold_left (fun (gen, lbs, quals_opt) lb ->
           let lbname = Inr?.v lb.lbname in //this is definitely not a local let binding
-          let gen, lb, quals_opt = match Env.try_lookup_val_decl env lbname.fv_name.v with
+          let gen, lb, quals_opt = match Env.try_lookup_val_decl env lbname.fv_name with
             | None ->
                 gen, lb, quals_opt
 
             | Some ((uvs,tval), quals) ->
-              let quals_opt = check_quals_eq lbname.fv_name.v quals_opt quals in
+              let quals_opt = check_quals_eq lbname.fv_name quals_opt quals in
               let def = match lb.lbtyp.n with
                 | Tm_unknown -> lb.lbdef
                 | _ ->
@@ -571,7 +571,7 @@ let tc_sig_let env r se lbs lids : list sigelt & list sigelt & Env.env =
 
     if log env
     then Format.print1 "%s\n" (snd lbs |> List.map (fun lb ->
-          let should_log = match Env.try_lookup_val_decl env (Inr?.v lb.lbname).fv_name.v with
+          let should_log = match Env.try_lookup_val_decl env (Inr?.v lb.lbname).fv_name with
               | None -> true
               | _ -> false in
           if should_log

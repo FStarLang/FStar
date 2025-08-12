@@ -176,10 +176,10 @@ let zeta_false (cfg:config) =
       new_config cfg_core' //blow away cache
     else cfg
 let cache_add (cfg:config) (fv:fv) (v:t) =
-  let lid = fv.fv_name.v in
+  let lid = fv.fv_name in
   SMap.add cfg.fv_cache (string_of_lid lid) v
 let try_in_cache (cfg:config) (fv:fv) : option t =
-  let lid = fv.fv_name.v in
+  let lid = fv.fv_name in
   SMap.try_find cfg.fv_cache (string_of_lid lid)
 let debug cfg f = log_nbe cfg.core_cfg f
 
@@ -926,7 +926,7 @@ and translate_fv (cfg: config) (bs:list t) (fvar:fv): t =
      | NU.Should_unfold_yes ->
        let t =
          let is_qninfo_visible =
-           Some? (Env.lookup_definition_qninfo cfg.core_cfg.delta_level fvar.fv_name.v qninfo)
+           Some? (Env.lookup_definition_qninfo cfg.core_cfg.delta_level fvar.fv_name qninfo)
          in
          if is_qninfo_visible
          then begin
@@ -1137,7 +1137,7 @@ and translate_monadic (m, ty) cfg bs e : t =
 
         (* Fallback if it does not have a definition. This happens,
          * but I'm not sure why. *)
-        if None? (Env.lookup_definition_qninfo cfg.core_cfg.delta_level fv.fv_name.v qninfo)
+        if None? (Env.lookup_definition_qninfo cfg.core_cfg.delta_level fv.fv_name qninfo)
         then fallback2 ()
         else
 

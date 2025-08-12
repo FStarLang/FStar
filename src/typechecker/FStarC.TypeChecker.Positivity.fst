@@ -457,7 +457,7 @@ let may_be_an_arity env (t:term)
         let head, args = U.head_and_args t in
         match (U.un_uinst head).n with
         | Tm_fvar fv ->
-          (match Env.lookup_sigelt env fv.fv_name.v with
+          (match Env.lookup_sigelt env fv.fv_name with
            | None ->
              //We couldn't find it; err conservatively ... this could be an arity
              true
@@ -555,7 +555,7 @@ let check_no_index_occurrences_in_arities env mutuals (t:term) =
   match (U.un_uinst head).n with
   | Tm_fvar fv -> 
     begin
-    match Env.num_inductive_uniform_ty_params env fv.fv_name.v with
+    match Env.num_inductive_uniform_ty_params env fv.fv_name with
     | None -> 
       //the head is not (visibly) a inductive type; nothing to check
       ()
@@ -563,15 +563,15 @@ let check_no_index_occurrences_in_arities env mutuals (t:term) =
       if List.length args <= n
       then () //they are all uniform parameters, nothing to check
       else (
-        match Env.try_lookup_lid env fv.fv_name.v with
-        | None -> no_occurrence_in_indexes fv.fv_name.v mutuals args
+        match Env.try_lookup_lid env fv.fv_name with
+        | None -> no_occurrence_in_indexes fv.fv_name mutuals args
         | Some ((_us, i_typ), _) ->
           debug_positivity env (fun _ -> 
             Format.fmt2 "Checking arity indexes of %s (num uniform params = %s)"
                      (show t)
                      (show n));
           let params, indices = List.splitAt n args in
-          let inst_i_typ = apply_constr_arrow fv.fv_name.v i_typ params in
+          let inst_i_typ = apply_constr_arrow fv.fv_name i_typ params in
           let formals, _sort = U.arrow_formals inst_i_typ in
           let rec aux subst formals indices =
             match formals, indices with
@@ -584,7 +584,7 @@ let check_no_index_occurrences_in_arities env mutuals (t:term) =
                   Format.fmt2 "Checking %s : %s (arity)"
                     (show (fst i))
                     (show f_t));
-                no_occurrence_in_index fv.fv_name.v mutuals i
+                no_occurrence_in_index fv.fv_name mutuals i
               )
               else (
                 debug_positivity env (fun _ ->
@@ -595,7 +595,7 @@ let check_no_index_occurrences_in_arities env mutuals (t:term) =
               let subst = NT(f.binder_bv, fst i)::subst in
               aux subst formals indices
             | [], _ ->
-              no_occurrence_in_indexes fv.fv_name.v mutuals indices
+              no_occurrence_in_indexes fv.fv_name mutuals indices
           in
           aux [] formals indices
         )
@@ -812,7 +812,7 @@ let rec ty_strictly_positive_in_type (env:env)
           
         | Some (Inl (fv, us)) ->
           begin
-          if FStarC.List.existsML (Ident.lid_equals fv.fv_name.v) mutuals
+          if FStarC.List.existsML (Ident.lid_equals fv.fv_name) mutuals
           then (
             //if the head is one of the mutually inductive types
             //then check that ty_lid does not occur in the arguments
@@ -824,7 +824,7 @@ let rec ty_strictly_positive_in_type (env:env)
                 Format.fmt1 
                   "Checking strict positivity in the Tm_app node where head lid is %s itself, \
                    checking that ty does not occur in the arguments"
-                  (Ident.string_of_lid fv.fv_name.v));
+                  (Ident.string_of_lid fv.fv_name));
               List.for_all (fun (t, _) -> mutuals_unused_in_type mutuals t) args
           )
           else (
@@ -840,7 +840,7 @@ let rec ty_strictly_positive_in_type (env:env)
               env
               mutuals
               in_type
-              fv.fv_name.v 
+              fv.fv_name 
               us
               args
               unfolded

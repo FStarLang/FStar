@@ -2676,7 +2676,7 @@ let rec desugar_tycon env (d: AST.decl) (d_attrs_initial:list S.term) quals tcs 
                   let payload_typ = mkApp record_id_t (List.map (fun bd -> binder_to_term bd, Nothing) bds) (range_of_id record_id) in
                   let desugar_marker = 
                     let range = range_of_id record_id in
-                    let desugar_attr_fv = {fv_name = {v = FStarC.Parser.Const.desugar_of_variant_record_lid; p = range}; fv_qual = None} in
+                    let desugar_attr_fv = {fv_name = setPos range FStarC.Parser.Const.desugar_of_variant_record_lid; fv_qual = None} in
                     let desugar_attr = S.mk (Tm_fvar desugar_attr_fv) range in
                     let cid_as_constant = EMB.embed (string_of_lid (qualify env cid)) range None EMB.id_norm_cb in
                     S.mk_Tm_app desugar_attr [(cid_as_constant, None)] range
@@ -3670,7 +3670,7 @@ and desugar_decl_core env (d_attrs:list S.term) (d:decl) : (env_t & sigelts) =
           let fvs = snd lbs |> List.map (fun lb -> Inr?.v lb.lbname) in
           let val_quals, val_attrs =
             List.fold_right (fun fv (qs, ats) ->
-                let qs', ats' = Env.lookup_letbinding_quals_and_attrs env fv.fv_name.v in
+                let qs', ats' = Env.lookup_letbinding_quals_and_attrs env fv.fv_name in
                 (List.rev_append qs' qs, List.rev_append ats' ats))
                 fvs
                 ([], [])
@@ -3697,7 +3697,7 @@ and desugar_decl_core env (d_attrs:list S.term) (d:decl) : (env_t & sigelts) =
             then S.Logic::quals
             else quals
           in
-          let names = fvs |> List.map (fun fv -> fv.fv_name.v) in
+          let names = fvs |> List.map (fun fv -> fv.fv_name) in
           let s = { sigel = Sig_let {lbs; lids=names};
                     sigquals = quals;
                     sigrng = d.drange;

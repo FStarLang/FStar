@@ -835,7 +835,7 @@ let rec delta_depth_of_qninfo_lid env lid (qn:qninfo) : delta_depth =
       delta_constant
 
 and delta_depth_of_qninfo env (fv:fv) (qn:qninfo) : delta_depth =
-  delta_depth_of_qninfo_lid env fv.fv_name.v qn
+  delta_depth_of_qninfo_lid env fv.fv_name qn
 
 (* Computes the canonical delta_depth of a given fvar, by looking at its
 definition (and recursing) if needed. Results are memoized in the env.
@@ -845,7 +845,7 @@ if we memoize the delta_depth of a `val` before seeing the corresponding
 `let`, but I don't think that can happen. Before seeing the `let`, other code
 cannot refer to the name. *)
 and delta_depth_of_fv (env:env) (fv:S.fv) : delta_depth =
-  let lid = fv.fv_name.v in
+  let lid = fv.fv_name in
   (string_of_lid lid) |> SMap.try_find env.fv_delta_depths |> (function
   | Some dd -> dd
   | None ->
@@ -853,7 +853,7 @@ and delta_depth_of_fv (env:env) (fv:S.fv) : delta_depth =
     // ^ To prevent an infinite loop on recursive functions, we pre-seed the cache with
     // a delta_equational. If we run into the same function while computing its delta_depth,
     // we will return delta_equational. If not, we override the cache with the correct delta_depth.
-    let d = delta_depth_of_qninfo env fv (lookup_qname env fv.fv_name.v) in
+    let d = delta_depth_of_qninfo env fv (lookup_qname env fv.fv_name) in
     // if Debug.any () then
     //  Format.print2_error "Memoizing delta_depth_of_fv %s ->\t%s\n" (show lid) (show d);
     SMap.add env.fv_delta_depths (string_of_lid lid) d;
@@ -865,7 +865,7 @@ and fv_delta_depth (env:env) (fv:S.fv) : delta_depth =
     let d = delta_depth_of_fv env fv in
     match d with
     | Delta_abstract (Delta_constant_at_level l) ->
-      if string_of_lid env.curmodule = nsstr fv.fv_name.v && not env.is_iface
+      if string_of_lid env.curmodule = nsstr fv.fv_name && not env.is_iface
        //AR: TODO: this is to prevent unfolding of abstract symbols in the extracted interface
        //a better way would be create new fvs with appripriate delta_depth at extraction time
       then Delta_constant_at_level l //we're in the defining module
@@ -928,7 +928,7 @@ let fv_with_lid_has_attr env fv_lid attr_lid : bool =
   snd (fv_exists_and_has_attr env fv_lid attr_lid)
 
 let fv_has_attr env fv attr_lid =
-  fv_with_lid_has_attr env fv.fv_name.v attr_lid
+  fv_with_lid_has_attr env fv.fv_name attr_lid
 
 let cache_in_fv_tab (tab:SMap.t 'a) (fv:fv) (f:unit -> (bool & 'a)) : 'a =
   let s = string_of_lid (S.lid_of_fv fv) in
@@ -943,7 +943,7 @@ let cache_in_fv_tab (tab:SMap.t 'a) (fv:fv) (f:unit -> (bool & 'a)) : 'a =
 
 let fv_has_erasable_attr env fv =
   let f () =
-     let ex, erasable = fv_exists_and_has_attr env fv.fv_name.v Const.erasable_attr in
+     let ex, erasable = fv_exists_and_has_attr env fv.fv_name Const.erasable_attr in
      ex,erasable
      //unfortunately, treating the Const.must_erase_for_extraction_attr
      //in the same way here as erasable_attr leads to regressions in fragile proofs,
@@ -1125,7 +1125,7 @@ let is_interpreted =
     fun (env:env) head ->
         match (U.un_uinst head).n with
         | Tm_fvar fv ->
-          BU.for_some (Ident.lid_equals fv.fv_name.v) interpreted_symbols ||
+          BU.for_some (Ident.lid_equals fv.fv_name) interpreted_symbols ||
             (match delta_depth_of_fv env fv with
              | Delta_equational_at_level _ -> true
              | _ -> false)
@@ -1757,7 +1757,7 @@ let binding_of_lb (x:lbname) t = match x with
     let x = {x with sort=snd t} in
     Binding_var x
   | Inr fv ->
-    Binding_lid(fv.fv_name.v, t)
+    Binding_lid(fv.fv_name, t)
 
 let push_let_binding env lb ts =
     push_local_binding env (binding_of_lb lb ts)

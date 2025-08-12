@@ -955,6 +955,6 @@ let e_order =
       | Construct (fv, _, []) when S.fv_eq_lid fv ord_Gt_lid -> Some Gt
       | _ -> None
   in
-  let fv_as_emb_typ fv = S.ET_app (FStarC.Ident.string_of_lid fv.fv_name.v, []) in
+  let fv_as_emb_typ fv = S.ET_app (FStarC.Ident.string_of_lid fv.fv_name, []) in
   let fv = lid_as_fv PC.order_lid None in
   mk_emb embed_order unembed_order (fun () -> mkFV fv [] []) (fun () -> fv_as_emb_typ fv)

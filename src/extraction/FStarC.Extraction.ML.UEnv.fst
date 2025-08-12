@@ -181,9 +181,9 @@ let try_lookup_fv (r:Range.t) (g:uenv) (fv:fv) : option exp_binding =
     (* Log an error/warning and return None *)
     let open FStarC.Errors.Msg in
     Errors.log_issue r Errors.Error_CallToErased [
-       text <| Format.fmt1 "Will not extract reference to variable `%s` since it has the `noextract` qualifier." (string_of_lid fv.fv_name.v);
+       text <| Format.fmt1 "Will not extract reference to variable `%s` since it has the `noextract` qualifier." (string_of_lid fv.fv_name);
        text <| Format.fmt2 "Either remove the noextract qualifier from %s (defined in %s) or add it to this definition."
-                 (string_of_lid fv.fv_name.v) (show pos);
+                 (string_of_lid fv.fv_name) (show pos);
        text <| Format.fmt1 "This error can be ignored with `--warn_error -%s`." (show Errors.call_to_erased_errno)];
     None
   | NotFound ->
@@ -195,8 +195,8 @@ let lookup_fv (r:Range.t) (g:uenv) (fv:fv) : exp_binding =
   | Found t -> t
   | res ->
     failwith (Format.fmt3 "Internal error: (%s) free variable %s not found during extraction (res=%s)\n"
-              (Range.string_of_range fv.fv_name.p)
-              (show fv.fv_name.v)
+              (Range.string_of_range (pos fv))
+              (show fv.fv_name)
               (show res))
 
 (** An F* local variable (bv) can be mapped either to
@@ -546,7 +546,7 @@ let extend_fv (g:uenv) (x:fv) (t_x:mltyscheme) (add_unit:bool)
         let ml_ty = match t_x with
             | ([], t) -> t
             | _ -> MLTY_Top in
-        let mlpath, g = new_mlpath_of_lident g x.fv_name.v in
+        let mlpath, g = new_mlpath_of_lident g x.fv_name in
         let mlsymbol = snd mlpath in
         let mly = MLE_Name mlpath in
         let mly = if add_unit then with_ty MLTY_Top <| MLE_App(with_ty MLTY_Top mly, [ml_unit]) else with_ty ml_ty mly in
@@ -575,7 +575,7 @@ let extend_lb (g:uenv) (l:lbname) (t:typ) (t_x:mltyscheme) (add_unit:bool)
 (** Extend with an abbreviation [fv] for the type scheme [ts] *)
 let extend_tydef (g:uenv) (fv:fv) (ts:mltyscheme) (meta:FStarC.Extraction.ML.Syntax.metadata)
   : tydef & mlpath & uenv =
-    let name, g = new_mlpath_of_lident g fv.fv_name.v in
+    let name, g = new_mlpath_of_lident g fv.fv_name in
     let tydef = {
         tydef_fv = fv;
         tydef_mlmodule_name=fst name;
@@ -592,7 +592,7 @@ let extend_with_tydef_declaration u l =
 
 (** Extend with [fv], the identifer for an F* inductive type *)
 let extend_type_name (g:uenv) (fv:fv) : mlpath & uenv =
-  let name, g = new_mlpath_of_lident g fv.fv_name.v in
+  let name, g = new_mlpath_of_lident g fv.fv_name in
   name,
   {g with type_names=(fv,name)::g.type_names}
 

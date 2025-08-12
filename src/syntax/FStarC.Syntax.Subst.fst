@@ -162,12 +162,9 @@ let tag_with_range t s =
       else begin
       let r = Range.set_use_range t.pos (Range.use_range r) in
       let t' = match t.n with
-        | Tm_bvar bv -> Tm_bvar (Syntax.set_range_of_bv bv r)
-        | Tm_name bv -> Tm_name (Syntax.set_range_of_bv bv r)
-        | Tm_fvar fv -> let l = Syntax.lid_of_fv fv in
-                        let v = {fv.fv_name with v=Ident.set_lid_range l r} in
-                        let fv = {fv with fv_name=v} in
-                        Tm_fvar fv
+        | Tm_bvar bv -> Tm_bvar (setPos r bv)
+        | Tm_name bv -> Tm_name (setPos r bv)
+        | Tm_fvar fv -> Tm_fvar (setPos r fv)
         | t' -> t' in
       {t with n=t'; pos=r}
       end

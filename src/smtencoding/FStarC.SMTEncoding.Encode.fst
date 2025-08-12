@@ -380,13 +380,13 @@ let primitive_type_axioms : env -> lident -> string -> term -> list decl =
             | Some(_, f) -> f env s tt)
 
 let encode_smt_lemma env fv t =
-    let lid = fv.fv_name.v in
+    let lid = fv.fv_name in
     let form, decls = encode_function_type_as_formula t env in
     decls@([Util.mkAssume(form, Some ("Lemma: " ^ (string_of_lid lid)), ("lemma_"^(string_of_lid lid)))]
            |> mk_decls_trivial)
 
 let encode_free_var uninterpreted env fv tt t_norm quals :decls_t & env_t =
-    let lid = fv.fv_name.v in
+    let lid = fv.fv_name in
     if not <| (U.is_pure_or_ghost_function t_norm || is_smt_reifiable_function env.tcenv t_norm)
     || U.is_lemma t_norm
     || uninterpreted
@@ -560,11 +560,11 @@ let encode_free_var uninterpreted env fv tt t_norm quals :decls_t & env_t =
 
 
 let declare_top_level_let env x t t_norm : fvar_binding & decls_t & env_t =
-  match lookup_fvar_binding env x.fv_name.v with
+  match lookup_fvar_binding env x.fv_name with
   (* Need to introduce a new name decl *)
   | None ->
       let decls, env = encode_free_var false env x t t_norm [] in
-      let fvb = lookup_lid env x.fv_name.v in
+      let fvb = lookup_lid env x.fv_name in
       fvb, decls, env
 
   (* already declared, only need an equation *)
@@ -1267,7 +1267,7 @@ let encode_datacon (env:env_t) (se:sigelt)
             data_arg_params
             arg_params
         in
-        let ty = maybe_curry_fvb fv.fv_name.p encoded_head_fvb arg_vars in
+        let ty = maybe_curry_fvb (pos fv.fv_name) encoded_head_fvb arg_vars in
         let xvars = List.map mkFreeV vars in
         let dapp =  mkApp(ddconstrsym, xvars) in //arity ok; |xvars| = |formals| = arity
         let ty_pred = mk_HasTypeWithFuel (Some s_fuel_tm) dapp ty in
@@ -1632,7 +1632,7 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t & env_t) =
           || se.sigattrs |> BU.for_some is_opaque_to_smt ->
        let attrs = se.sigattrs in
        let env, decls = BU.fold_map (fun env lb ->
-        let lid = (Inr?.v lb.lbname).fv_name.v in
+        let lid = (Inr?.v lb.lbname).fv_name in
         if None? <| Env.try_lookup_val_decl env.tcenv lid
         then let val_decl = { se with sigel = Sig_declare_typ {lid; us=lb.lbunivs; t=lb.lbtyp};
                                       sigquals = S.Irreducible :: se.sigquals } in
@@ -1643,12 +1643,12 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t & env_t) =
 
      (* Special encoding for b2t *)
      | Sig_let {lbs=(_, [{lbname=Inr b2t}])} when S.fv_eq_lid b2t Const.b2t_lid ->
-       let tname, ttok, env = new_term_constant_and_tok_from_lid env b2t.fv_name.v 1 in
+       let tname, ttok, env = new_term_constant_and_tok_from_lid env b2t.fv_name 1 in
        let xx = mk_fv ("x", Term_sort) in
        let x = mkFreeV xx in
        let b2t_x = mkApp("Prims.b2t", [x]) in
        let valid_b2t_x = mkApp("Valid", [b2t_x]) in //NS: Explicitly avoid the Vaild(b2t t) inlining
-       let bool_ty = lookup_free_var env (withsort Const.bool_lid) in
+       let bool_ty = lookup_free_var env Const.bool_lid in
        let decls = [Term.DeclFun(tname, [Term_sort], Term_sort, None);
                     Util.mkAssume(mkForall (S.range_of_fv b2t) ([[b2t_x]], [xx],
                                            mkEq(valid_b2t_x, mkApp(snd boxBoolFun, [x]))),
@@ -1682,7 +1682,7 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t & env_t) =
      //Projectors are also are encoded directly via (our encoding of) theory of datatypes
      //Except in some cases where the front-end does not emit a declare_typ for some projector, because it doesn't know how to compute it
      let fv = Inr?.v lb.lbname in
-     let l = fv.fv_name.v in
+     let l = fv.fv_name in
      begin match try_lookup_free_var env l with
         | Some _ ->
           [], env //already encoded

@@ -451,7 +451,7 @@ let primops =
 let is_primop_lid l = primops |> U.for_some (lid_equals l)
 
 let is_primop f = match f.n with
-  | Tm_fvar fv -> is_primop_lid fv.fv_name.v
+  | Tm_fvar fv -> is_primop_lid fv.fv_name
   | _ -> false
 
 let rec unascribe e =
@@ -878,7 +878,7 @@ let close_univs_and_mk_letbinding recs lbname univ_vars typ eff def attrs pos =
         | _, [] -> def
         | Some fvs, _ ->
           let universes = univ_vars |> List.map U_name in
-          let inst = fvs |> List.map (fun fv -> fv.fv_name.v, universes) in
+          let inst = fvs |> List.map (fun fv -> fv.fv_name, universes) in
           FStarC.Syntax.InstFV.instantiate inst def
     in
     let typ = Subst.close_univ_vars univ_vars typ in
@@ -902,11 +902,11 @@ let open_univ_vars_binders_and_comp uvs binders c =
 (********************************************************************************)
 
 let is_tuple_constructor (t:typ) = match t.n with
-  | Tm_fvar fv -> PC.is_tuple_constructor_lid fv.fv_name.v
+  | Tm_fvar fv -> PC.is_tuple_constructor_lid fv.fv_name
   | _ -> false
 
 let is_dtuple_constructor (t:typ) = match t.n with
-  | Tm_fvar fv -> PC.is_dtuple_constructor_lid fv.fv_name.v
+  | Tm_fvar fv -> PC.is_dtuple_constructor_lid fv.fv_name
   | _ -> false
 
 let is_lid_equality x = lid_equals x PC.eq2_lid
@@ -922,7 +922,7 @@ let lid_is_connective =
 
 let is_constructor t lid =
   match (pre_typ t).n with
-    | Tm_fvar tc -> lid_equals tc.fv_name.v lid
+    | Tm_fvar tc -> lid_equals tc.fv_name lid
     | _ -> false
 
 let rec is_constructed_typ t lid =
