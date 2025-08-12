@@ -360,7 +360,7 @@ let extract_typ_abbrev env quals attrs lb
     //eta expansion is important; see issue #490, including unrefining and unascribing
     let lbdef = FStarC.TypeChecker.Normalize.eta_expand_with_type tcenv lbdef lbtyp in
     let fv = Inr?.v lb.lbname in
-    let lid = fv.fv_name.v in
+    let lid = fv.fv_name in
     let def = SS.compress lbdef |> U.unmeta |> U.un_uinst in
     let def =
         match def.n with
@@ -426,7 +426,7 @@ let extract_let_rec_type env quals attrs lb
     let bs, _ = U.arrow_formals lbtyp in
     let env1, ml_bs = binders_as_mlty_binders env bs in
     let fv = Inr?.v lb.lbname in
-    let lid = fv.fv_name.v in
+    let lid = fv.fv_name in
     let body = MLTY_Top in
     let metadata = extract_metadata attrs @ List.choose flag_of_qual quals in
     let assumed = false in
@@ -565,7 +565,7 @@ let extract_reifiable_effect g ed
         match (SS.compress tm).n with
         | Tm_uinst (tm, _) -> extract_fv tm
         | Tm_fvar fv ->
-            let mlp = mlpath_of_lident g fv.fv_name.v in
+            let mlp = mlpath_of_lident g fv.fv_name in
             let ({exp_b_tscheme=tysc}) = UEnv.lookup_fv tm.pos g fv in
             with_ty MLTY_Top <| MLE_Name mlp, tysc
         | _ -> failwith (Format.fmt2 "(%s) Not an fv: %s"
@@ -1254,7 +1254,7 @@ and extract_sig_let (g:uenv) (se:sigelt) : uenv & list mlmodule1 =
                   then env, ml_lbs
                   else
                       // debug g (fun () -> printfn "Translating source lb %s at type %s to %A" (show lbname) (show t) (must (mllb.mllb_tysc)));
-                      let lb_lid = (Inr?.v lbname).fv_name.v in
+                      let lb_lid = (Inr?.v lbname).fv_name in
                       let flags'' =
                           match (SS.compress t).n with
                           | Tm_arrow {comp={ n = Comp { effect_name = e }}}

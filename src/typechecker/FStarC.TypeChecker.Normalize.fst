@@ -416,7 +416,7 @@ let reduce_primops norm_cb cfg (env:env) tm : term & bool =
                   let r =
                       if false
                       then begin let (r, ns) = Timing.record_ns (fun () -> prim_step.interpretation psc norm_cb universes args_1) in
-                                 primop_time_count (show fv.fv_name.v) ns;
+                                 primop_time_count (show fv.fv_name) ns;
                                  r
                            end
                       else prim_step.interpretation psc norm_cb universes args_1
@@ -1387,7 +1387,7 @@ let rec norm : cfg -> env -> stack -> term -> term =
  * have any free indices. Hence, we use empty_env as environment when needed. *)
 and do_unfold_fv (cfg:Cfg.cfg) stack (t0:term) (qninfo : qninfo) (f:fv) : term =
     // Second, try to unfold to the definition itself.
-    let defn () = Env.lookup_definition_qninfo cfg.delta_level f.fv_name.v qninfo in
+    let defn () = Env.lookup_definition_qninfo cfg.delta_level f.fv_name qninfo in
     let is_plugin () =
       match qninfo with
       | Some (Inr (se, None), _) -> BU.for_some (U.is_fvar PC.plugin_attr) se.sigattrs  // it is a plugin
@@ -1401,7 +1401,7 @@ and do_unfold_fv (cfg:Cfg.cfg) stack (t0:term) (qninfo : qninfo) (f:fv) : term =
      then begin
        // then warn about it
        let msg = Format.fmt1 "Unfolding name which is marked as a plugin: %s" (show f) in
-       Errors.log_issue f.fv_name.p Errors.Warning_UnfoldPlugin msg;
+       Errors.log_issue f Errors.Warning_UnfoldPlugin msg;
        plugin_unfold_warn_ctr := !plugin_unfold_warn_ctr - 1
      end
     in
@@ -1446,7 +1446,7 @@ and do_unfold_fv (cfg:Cfg.cfg) stack (t0:term) (qninfo : qninfo) (f:fv) : term =
                   norm cfg env stack t
                 | _ when cfg.steps.erase_universes || cfg.steps.allow_unbound_universes ->
                   norm cfg empty_env stack t
-                | _ -> failwith (Format.fmt1 "Impossible: missing universe instantiation on %s" (show f.fv_name.v))
+                | _ -> failwith (Format.fmt1 "Impossible: missing universe instantiation on %s" (show f.fv_name))
          else norm cfg empty_env stack t
          end
 
@@ -1811,7 +1811,7 @@ and do_reify_monadic fallback cfg env stack (top : term) (m : monad_name) (t : t
 
             (* Fallback if it does not have a definition. This happens,
              * but I'm not sure why. *)
-            if None? (Env.lookup_definition_qninfo cfg.delta_level fv.fv_name.v qninfo)
+            if None? (Env.lookup_definition_qninfo cfg.delta_level fv.fv_name qninfo)
             then fallback2 ()
             else
 
@@ -3197,7 +3197,7 @@ let erase_universes env t =
 
 let unfold_head_once env t =
   let aux f us args =
-      match Env.lookup_nonrec_definition [Env.Unfold delta_constant] env f.fv_name.v with
+      match Env.lookup_nonrec_definition [Env.Unfold delta_constant] env f.fv_name with
       | None -> None
       | Some head_def_ts ->
         let _, head_def = Env.inst_tscheme_with head_def_ts us in
@@ -3260,7 +3260,7 @@ let maybe_unfold_head_fv (env:Env.env) (head:term)
     match fv_us_opt with
     | None -> None
     | Some (fv, us) ->
-      match Env.lookup_nonrec_definition [Unfold delta_constant] env fv.fv_name.v with
+      match Env.lookup_nonrec_definition [Unfold delta_constant] env fv.fv_name with
       | None -> None
       | Some (us_formals, defn) ->
         let subst = mk_univ_subst us_formals us in

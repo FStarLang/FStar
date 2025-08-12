@@ -1379,7 +1379,7 @@ let head_matches_delta env (logical:bool) smt_ok t1 t2 : (match_result & option 
                     [Env.Unfold delta_constant;
                      Env.Eager_unfolding_only]
                     env
-                    fv.fv_name.v
+                    fv.fv_name
           with
           | None ->
             if !dbg_RelDelta then

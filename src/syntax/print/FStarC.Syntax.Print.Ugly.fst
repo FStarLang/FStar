@@ -44,8 +44,8 @@ let sli (l:lident) : string =
 
 let lid_to_string (l:lid) = sli l
 
-// let fv_to_string fv = Printf.sprintf "%s@%A" (lid_to_string fv.fv_name.v) fv.fv_delta
-let fv_to_string fv = lid_to_string fv.fv_name.v //^ "(@@" ^ showfv.fv_delta ^ ")"
+// let fv_to_string fv = Printf.sprintf "%s@%A" (lid_to_string fv.fv_name) fv.fv_delta
+let fv_to_string fv = lid_to_string fv.fv_name //^ "(@@" ^ showfv.fv_delta ^ ")"
 let bv_to_string bv = (string_of_id bv.ppname) ^ "#" ^ (show bv.index)
 
 let nm_to_string bv =
@@ -71,7 +71,7 @@ let const_to_string = C.const_to_string
 
 let lbname_to_string = function
   | Inl l -> bv_to_string l
-  | Inr l -> lid_to_string l.fv_name.v
+  | Inr l -> lid_to_string l.fv_name
 
 let uvar_to_string u = if (Options.hide_uvar_nums()) then "?" else "?" ^ (Unionfind.uvar_id u |> show)
 let version_to_string v = Format.fmt2 "%s.%s" (show v.major) (show v.minor)

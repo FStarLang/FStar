@@ -187,7 +187,7 @@ and hash_pat p =
 
 
 and hash_bv b = hash_term b.sort
-and hash_fv fv = of_string (Ident.string_of_lid fv.fv_name.v)
+and hash_fv fv = of_string (Ident.string_of_lid fv.fv_name)
 and hash_binder (b:binder) =
   mix_list_lit
     [hash_bv b.binder_bv;
@@ -465,7 +465,7 @@ and equal_bv b1 b2 =
 
 and equal_fv f1 f2 =
   if physical_equality f1 f2 then true else
-  Ident.lid_equals f1.fv_name.v f2.fv_name.v
+  Ident.lid_equals f1.fv_name f2.fv_name
 
 and equal_universe u1 u2 =
   if physical_equality u1 u2 then true else
@@ -591,7 +591,7 @@ and equal_arg_qualifier a1 a2 =
 and equal_lbname l1 l2 =
   match l1, l2 with
   | Inl b1, Inl b2 -> Ident.ident_equals b1.ppname b2.ppname
-  | Inr f1, Inr f2 -> Ident.lid_equals f1.fv_name.v f2.fv_name.v
+  | Inr f1, Inr f2 -> Ident.lid_equals f1.fv_name f2.fv_name
 
 and equal_subst_elt s1 s2 =
   match s1, s2 with

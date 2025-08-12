@@ -327,13 +327,13 @@ let try_lookup_free_var env l =
         | _ -> None
         end
       end
-let lookup_free_var env a =
-    match try_lookup_free_var env a.v with
+let lookup_free_var env (a : lident) =
+    match try_lookup_free_var env a with
     | Some t -> t
-    | None -> fail_fvar_lookup env a.v
-let lookup_free_var_name env a = lookup_lid env a.v
-let lookup_free_var_sym env a =
-    let fvb = lookup_lid env a.v in
+    | None -> fail_fvar_lookup env a
+let lookup_free_var_name env (a : lident) = lookup_lid env a
+let lookup_free_var_sym env (a : lident) =
+    let fvb = lookup_lid env a in
     match fvb.smt_fuel_partial_app with
     | Some({tm=App(g, zf)}, _)
         when env.use_zfuel_name ->

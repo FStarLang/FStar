@@ -929,7 +929,7 @@ let splice
         let r =
           (* If this name was provided in the definition list of the splice,
           prefer that range. Otherwise set range to the full splice. *)
-          match tryFind (fun i -> Ident.lid_equals i fv.fv_name.v) lids with
+          match tryFind (fun i -> Ident.lid_equals i fv.fv_name) lids with
           | Some i -> pos i
           | _ -> rng
         in

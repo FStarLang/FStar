@@ -629,7 +629,7 @@ let unoptimized_haseq_data (usubst:list subst_elt) (bs:binders) (haseq_ind:term)
   //TODO: we now have a get_free_names in Syntax.Free, use that
   let rec is_mutual (t:term) =  //TODO: this should handle more cases
     match (SS.compress t).n with
-    | Tm_fvar fv         -> List.existsb (fun lid -> lid_equals lid fv.fv_name.v) mutuals
+    | Tm_fvar fv         -> List.existsb (fun lid -> lid_equals lid fv.fv_name) mutuals
     | Tm_uinst (t', _)   -> is_mutual t'
     | Tm_refine {b=bv} -> is_mutual bv.sort
     | Tm_app {hd=t'; args}  -> if is_mutual t' then true else exists_mutual (List.map fst args)
@@ -1121,7 +1121,7 @@ let mk_discriminator_and_indexed_projectors iquals                   (* Qualifie
                             []
                             Range.dummyRange
                 in
-                let impl = { sigel = Sig_let {lbs=(false, [lb]); lids=[lb.lbname |> Inr?.v |> (fun fv -> fv.fv_name.v)]};
+                let impl = { sigel = Sig_let {lbs=(false, [lb]); lids=[lb.lbname |> Inr?.v |> (fun fv -> fv.fv_name)]};
                              sigquals = quals;
                              sigrng = p;
                              sigmeta = default_sigmeta;
@@ -1231,7 +1231,7 @@ let mk_discriminator_and_indexed_projectors iquals                   (* Qualifie
                   lbattrs=[];
                   lbpos=Range.dummyRange;
               } in
-              let impl = { sigel = Sig_let {lbs=(false, [lb]); lids=[lb.lbname |> Inr?.v |> (fun fv -> fv.fv_name.v)]};
+              let impl = { sigel = Sig_let {lbs=(false, [lb]); lids=[lb.lbname |> Inr?.v |> (fun fv -> fv.fv_name)]};
                            sigquals = quals;
                            sigrng = p;
                            sigmeta = default_sigmeta;

@@ -106,7 +106,7 @@ let should_unfold cfg should_reify fv qninfo : should_unfold_res =
         let meets_some_criterion =
             comb_or [
             (if cfg.steps.for_extraction
-             then yesno <| Some? (Env.lookup_definition_qninfo [Eager_unfolding_only; InliningDelta] fv.fv_name.v qninfo)
+             then yesno <| Some? (Env.lookup_definition_qninfo [Eager_unfolding_only; InliningDelta] fv.fv_name qninfo)
              else no)
            ;(match cfg.steps.unfold_only with
              | None -> no

@@ -50,7 +50,7 @@ instance hashable_bv : hashable bv = {
 }
 
 instance hashable_fv : hashable fv = {
-  hash = (fun f -> hash f.fv_name.v);
+  hash = (fun f -> hash f.fv_name);
 }
 
 instance hashable_binder : hashable binder = {

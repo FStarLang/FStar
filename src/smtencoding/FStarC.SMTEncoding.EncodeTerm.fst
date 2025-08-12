@@ -88,7 +88,7 @@ let head_normal env t =
     | Tm_abs _
     | Tm_constant _ -> true
     | Tm_fvar fv
-    | Tm_app {hd={n=Tm_fvar fv}} -> Env.lookup_definition [Env.Eager_unfolding_only] env.tcenv fv.fv_name.v |> None?
+    | Tm_app {hd={n=Tm_fvar fv}} -> Env.lookup_definition [Env.Eager_unfolding_only] env.tcenv fv.fv_name |> None?
     | _ -> false
 
 let head_redex env t =
@@ -99,7 +99,7 @@ let head_redex env t =
       || List.existsb (function TOTAL -> true | _ -> false) rc.residual_flags
 
     | Tm_fvar fv ->
-      Env.lookup_definition [Env.Eager_unfolding_only] env.tcenv fv.fv_name.v |> Some?
+      Env.lookup_definition [Env.Eager_unfolding_only] env.tcenv fv.fv_name |> Some?
 
     | _ -> false
 
@@ -1155,7 +1155,7 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
                 | Tm_uinst({n=Tm_name x}, _)
                 | Tm_name x -> Some x.sort
                 | Tm_uinst({n=Tm_fvar fv}, _)
-                | Tm_fvar fv -> Some (Env.lookup_lid env.tcenv fv.fv_name.v |> fst |> snd)
+                | Tm_fvar fv -> Some (Env.lookup_lid env.tcenv fv.fv_name |> fst |> snd)
                 | Tm_ascribed {asc=(Inl t, _, _)} -> Some t
                 | Tm_ascribed {asc=(Inr c, _, _)} -> Some (U.comp_result c)
                 | _ -> None
@@ -1413,13 +1413,13 @@ and encode_pat (env:env_t) (pat:S.pat) : (env_t & pattern) =
             mkEq(scrutinee, tm)
         | Pat_cons(f, _, args) ->
             let is_f =
-                let tc_name = Env.typ_of_datacon env.tcenv f.fv_name.v in
+                let tc_name = Env.typ_of_datacon env.tcenv f.fv_name in
                 match Env.datacons_of_typ env.tcenv tc_name with
                 | _, [_] -> mkTrue //single constructor type; no need for a test
-                | _ -> mk_data_tester env f.fv_name.v scrutinee
+                | _ -> mk_data_tester env f.fv_name scrutinee
             in
             let sub_term_guards = args |> List.mapi (fun i (arg, _) ->
-                let proj = primitive_projector_by_pos env.tcenv f.fv_name.v i in
+                let proj = primitive_projector_by_pos env.tcenv f.fv_name i in
                 mk_guard arg (mkApp(proj, [scrutinee]))) in //arity ok, primitive projector (#1383)
             mk_and_l (is_f::sub_term_guards)
     in
@@ -1434,7 +1434,7 @@ and encode_pat (env:env_t) (pat:S.pat) : (env_t & pattern) =
         | Pat_cons(f, _, args) ->
             args
             |> List.mapi (fun i (arg, _) ->
-                let proj = primitive_projector_by_pos env.tcenv f.fv_name.v i in
+                let proj = primitive_projector_by_pos env.tcenv f.fv_name i in
                 mk_projections arg (mkApp(proj, [scrutinee]))) //arity ok, primitive projector (#1383)
             |> List.flatten
     in

@@ -40,7 +40,7 @@ type withinfo_t 'a = {
 
 (* Free term and type variables *)
 [@@ PpxDerivingYoJson; PpxDerivingShow ]
-type var  = withinfo_t lident
+type var  = lident
 
 (* Term language *)
 [@@ PpxDerivingYoJson; PpxDerivingShow ]

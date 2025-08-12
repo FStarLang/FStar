@@ -1332,7 +1332,7 @@ and do_check (g:env) (e:term)
 
   | Tm_fvar f ->
     begin
-    match Env.try_lookup_lid g.tcenv f.fv_name.v with
+    match Env.try_lookup_lid g.tcenv f.fv_name with
     | Some (([], t), _) ->
       return (E_Total, t)
 
@@ -1342,9 +1342,9 @@ and do_check (g:env) (e:term)
 
   | Tm_uinst ({n=Tm_fvar f}, us) ->
     begin
-    match Env.try_lookup_and_inst_lid g.tcenv us f.fv_name.v with
+    match Env.try_lookup_and_inst_lid g.tcenv us f.fv_name with
     | None ->
-      fail_str (Format.fmt1 "Top-level name not found: %s" (Ident.string_of_lid f.fv_name.v))
+      fail_str (Format.fmt1 "Top-level name not found: %s" (Ident.string_of_lid f.fv_name))
 
     | Some (t, _) ->
       return (E_Total, t)
@@ -1833,10 +1833,10 @@ and pattern_branch_condition (g:env)
         S.mk (Tm_match {scrutinee; ret_opt=None; brs=[eqn]; rc_opt=None}) scrutinee.pos
       in
       let discrimination =
-        let is_induc, datacons = Env.datacons_of_typ g.tcenv (Env.typ_of_datacon g.tcenv fv.fv_name.v) in
+        let is_induc, datacons = Env.datacons_of_typ g.tcenv (Env.typ_of_datacon g.tcenv fv.fv_name) in
         (* Why the `not is_induc`? We may be checking an exception pattern. See issue #1535. *)
         if not is_induc || List.length datacons > 1
-        then let discriminator = U.mk_discriminator fv.fv_name.v in
+        then let discriminator = U.mk_discriminator fv.fv_name in
              match Env.try_lookup_lid g.tcenv discriminator with
              | None ->
                // We don't use the discriminator if we are typechecking it

@@ -151,7 +151,7 @@ let unfold_lazy_goal (i : lazyinfo) : term =
 (* On that note, we use this (inefficient, FIXME) hack in this module *)
 let mkFV fv us ts = NBETerm.mkFV fv (List.rev us) (List.rev ts)
 let mkConstruct fv us ts = NBETerm.mkConstruct fv (List.rev us) (List.rev ts)
-let fv_as_emb_typ fv = S.ET_app (show fv.fv_name.v, [])
+let fv_as_emb_typ fv = S.ET_app (show fv.fv_name, [])
 
 let e_proofstate_nbe =
     let embed_proofstate _cb (ps:proofstate) : NBETerm.t =

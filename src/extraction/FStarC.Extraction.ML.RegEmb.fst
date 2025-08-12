@@ -307,13 +307,13 @@ let rec embedding_for
   all of them, using a name prefix __knot_e, and later define the e_X at the
   top-level by unthunking.
   *)
-  | Tm_fvar fv when List.existsb (Ident.lid_equals fv.fv_name.v) mutuals ->
-    let head = mk <| MLE_Var ("__knot_e_" ^ Ident.string_of_id (Ident.ident_of_lid fv.fv_name.v)) in
+  | Tm_fvar fv when List.existsb (Ident.lid_equals fv.fv_name) mutuals ->
+    let head = mk <| MLE_Var ("__knot_e_" ^ Ident.string_of_id (Ident.ident_of_lid fv.fv_name)) in
     mk (MLE_App (head, [ml_unit]))
 
   (* An fv for which we have an embedding already registered. *)
-  | Tm_fvar fv when Some? (find_fv_embedding' fv.fv_name.v) ->
-    let emb_data = find_fv_embedding fv.fv_name.v in
+  | Tm_fvar fv when Some? (find_fv_embedding' fv.fv_name) ->
+    let emb_data = find_fv_embedding fv.fv_name in
     begin match k with
     | SyntaxTerm -> ml_name emb_data.syn_emb
     | NBETerm ->
@@ -332,7 +332,7 @@ let rec embedding_for
   | Tm_fvar fv when Env.fv_has_attr tcenv fv PC.plugin_attr ->
     begin match k with
     | SyntaxTerm ->
-      let lid = fv.fv_name.v in
+      let lid = fv.fv_name in
       as_name (List.map Ident.string_of_id (Ident.ns_of_lid lid),
                "e_" ^ Ident.string_of_id (Ident.ident_of_lid lid))
     | NBETerm ->
@@ -350,7 +350,7 @@ type wrapped_term = mlexpr & mlexpr & int & bool
 
 let interpret_plugin_as_term_fun (env:UEnv.uenv) (fv:fv) (t:typ) (arity_opt:option int) (ml_fv:mlexpr')
     : option wrapped_term =
-    let fv_lid = fv.fv_name.v in
+    let fv_lid = fv.fv_name in
     let tcenv = UEnv.tcenv_of_uenv env in
     let t = N.normalize [
       Env.EraseUniverses;
@@ -513,7 +513,7 @@ let interpret_plugin_as_term_fun (env:UEnv.uenv) (fv:fv) (t:typ) (arity_opt:opti
         | [] ->
           let arg_unembeddings = List.rev accum_embeddings in
           let res_embedding = embedding_for tcenv [] loc tvar_context result_typ in
-          let fv_lid = fv.fv_name.v in
+          let fv_lid = fv.fv_name in
           if U.is_pure_comp c
           then begin
             let cb = str_to_name "cb" in
@@ -572,7 +572,7 @@ let interpret_plugin_as_term_fun (env:UEnv.uenv) (fv:fv) (t:typ) (arity_opt:opti
         Some (w, w', a, b)
     with
     | NoEmbedding msg ->
-      not_implemented_warning (Ident.range_of_lid fv.fv_name.v)
+      not_implemented_warning (Ident.range_of_lid fv.fv_name)
                               (show fv)
                               msg;
       None
@@ -689,7 +689,7 @@ let __do_handle_plugin (g: uenv) (arity_opt: option int) (se: sigelt) : list mlm
   | Sig_let {lbs} ->
       let mk_registration lb : list mlmodule1 =
          let fv = Inr?.v lb.lbname in
-         let fv_lid = fv.fv_name.v in
+         let fv_lid = fv.fv_name in
          let fv_t = lb.lbtyp in
          let ml_name_str = MLE_Const (MLC_String (Ident.string_of_lid fv_lid)) in
          match interpret_plugin_as_term_fun g fv fv_t arity_opt ml_name_str with
