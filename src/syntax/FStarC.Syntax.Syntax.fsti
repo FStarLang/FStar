@@ -790,7 +790,6 @@ type subst_t = list subst_elt
 
 val contains_reflectable:  list qualifier -> bool
 
-val withsort: 'a -> withinfo_t 'a
 val withinfo: 'a -> range -> withinfo_t 'a
 
 (* Constructors for each term form; NO HASH CONSING; just makes all the auxiliary data at each node *)
