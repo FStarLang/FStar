@@ -577,6 +577,12 @@ val invariant_name_identifies_invariant
 
 (***** end computation types and combinators *****)
 
+(* This tactic is called to find non_informative witnesses.
+It must run fast in the simple cases like unit and squash, but
+also default to tcresolve before failing. *)
+let non_info_tac () : T.Tac unit =
+  Pulse.Lib.Tactics.non_info_tac ()
+
 //////////////////////////////////////////////////////////////////////////
 // Some basic actions and ghost operations
 //////////////////////////////////////////////////////////////////////////
@@ -591,6 +597,8 @@ than SMT. This tactic is also used by the checker when elaborating fold/unfold. 
 let slprop_equiv_norm (_:unit) : T.Tac unit =
     T.mapply (`slprop_equiv_refl)
 
+(* TODO: Can these be made plugins? They would have to go into another module
+   probably. *)
 
 let slprop_equiv_unfold (head_sym:string) (_:unit) : T.Tac unit =
     T.mapply (`slprop_equiv_trans);

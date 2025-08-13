@@ -388,6 +388,9 @@ let non_informative_class_typing
   : my_erased (typing_token (elab_env g) (non_informative_class u ty) (E_Total, R.pack_ln (R.Tv_Type u)))
   = E (magic())
 
+let non_info_tac_tm : term =
+  pack_ln (Tv_FVar (pack_fv (explode_qn "Pulse.Lib.Core.non_info_tac")))
+
 (* This function attempts to construct a dictionary for `NonInformative.non_informative ty`.
 To do so, we simply create that constraint (and prove it's well-typed), and then
 call the tcresolve typeclass resolution tactic on it to obtain a dictionary and
@@ -400,7 +403,7 @@ let try_get_non_informative_witness_aux (g:env) (u:universe) (ty:term) (ty_typin
     let goal_typing_tok : squash (typing_token r_env goal (E_Total, R.pack_ln (R.Tv_Type u))) =
       match constraint_typing with | E tok -> Squash.return_squash tok
     in
-    let r = T.call_subtac r_env FStar.Tactics.Typeclasses.tcresolve u goal in
+    let r = T.call_subtac_tm r_env non_info_tac_tm u goal in
     match r with
     | None, issues ->
       None, issues
