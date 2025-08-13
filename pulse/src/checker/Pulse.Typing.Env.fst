@@ -40,6 +40,7 @@ noeq
 type env = {
   f : RT.fstar_top_env;
   bs : list (var & typ);
+  f_bs : (f_bs : R.env { f_bs == extend_env_l f bs });
   names : list ppname;
   m : m:bmap { related bs m /\ L.length names == L.length bs };
   ctxt: Pulse.RuntimeUtils.context;
@@ -50,13 +51,7 @@ type env = {
 
 let fstar_env g = RU.env_set_context g.f g.ctxt
 
-let fresh_anf (g:env) =
-  let id = T.unseal g.anf_ctr in
-  let g = { g with anf_ctr = Sealed.seal (id + 1) } in
-  g, id
-
 let bindings g = g.bs
-
 let rec bindings_with_ppname_aux (bs:list (var & typ)) (names:list ppname)
   : T.Tac (list (ppname & var & typ)) =
 
@@ -65,6 +60,17 @@ let rec bindings_with_ppname_aux (bs:list (var & typ)) (names:list ppname)
   | (x, t)::bs, n::names -> (n, x, t)::(bindings_with_ppname_aux bs names)
   | _ -> T.fail "impossible! env bs and names have different lengths"
 let bindings_with_ppname g = bindings_with_ppname_aux g.bs g.names  
+
+
+let elab_env g = g.f_bs
+
+let elab_env_lemma g = ()
+
+let fresh_anf (g:env) =
+  let id = T.unseal g.anf_ctr in
+  let g = { g with anf_ctr = Sealed.seal (id + 1) } in
+  g, id
+
 
 let as_map g = g.m
 
@@ -89,7 +95,7 @@ let equal_elim g1 g2 =
 let default_context : Pulse.RuntimeUtils.context = FStar.Sealed.seal []
 
 let mk_env (f:RT.fstar_top_env) : env =
-  { f; bs = []; names=[]; m = empty_bmap; ctxt = default_context; anf_ctr = Sealed.seal 0 }
+  { f; bs = []; f_bs=f; names=[]; m = empty_bmap; ctxt = default_context; anf_ctr = Sealed.seal 0 }
 
 let mk_env_bs _ = ()
 
@@ -98,6 +104,7 @@ let mk_env_dom _ = assert (Set.equal (Map.domain empty_bmap) Set.empty)
 let push_binding g x p t =
   { g with bs = (x, t)::g.bs;
            names = p::g.names;
+           f_bs = RT.extend_env g.f_bs x t;
            m = Map.upd g.m x t }
 
 let push_binding_bs _ _ _ _ = ()
@@ -105,7 +112,7 @@ let push_binding_bs _ _ _ _ = ()
 let push_binding_as_map _ _ _ _ = ()
 
 let push_univ_vars g us =
-  { g with f = RU.push_univ_vars g.f us }
+  { g with f = RU.push_univ_vars g.f us; f_bs = RU.push_univ_vars g.f_bs us }
 
 let fresh g =
   let v = RU.next_id () in
@@ -123,8 +130,16 @@ let rec append_memP (#a:Type) (l1 l2:list a) (x:a)
   | _::tl -> append_memP tl l2 x
 
 let push_env (g1:env) (g2:env { disjoint g1 g2 }) : env =
-  { f = g1.f; bs = g2.bs @ g1.bs; names= g2.names @ g1.names;
-    m = Map.concat g2.m g1.m; ctxt = g1.ctxt ; anf_ctr = g1.anf_ctr }
+  assume (extend_env_l (extend_env_l g1.f g1.bs) g2.bs == extend_env_l g1.f (g2.bs @ g1.bs));
+  {
+    f = g1.f;
+    bs = g2.bs @ g1.bs;
+    f_bs = extend_env_l g1.f_bs g2.bs;
+    names= g2.names @ g1.names;
+    m = Map.concat g2.m g1.m;
+    ctxt = g1.ctxt ;
+    anf_ctr = g1.anf_ctr;
+  }
 
 let push_env_fstar_env _ _ = ()
 
@@ -160,7 +175,12 @@ let rec remove_binding_aux (g:env)
     // we need uniqueness invariant in the representation
     assume (forall (b:var & typ). List.Tot.memP b prefix <==> (List.Tot.memP b g.bs /\
                                                                fst b =!= x));
-    let g' = {g with bs = prefix; names=prefix_names; m} in
+
+    let g' = {g with bs = prefix;
+                     f_bs = extend_env_l g.f prefix; // Recomputing, not ideal
+                     names=prefix_names;
+                     m
+    } in
     assert (equal g (push_env (push_binding (mk_env (fstar_env g)) x ppname_default t) g'));
     x, t, g'
   | (x, t)::suffix_rest, n::suffix_names_rest ->
@@ -178,7 +198,11 @@ let remove_latest_binding g =
     // we need uniqueness invariant in the representation
     assume (forall (b:var & typ). List.Tot.memP b rest <==> (List.Tot.memP b g.bs /\
                                                              fst b =!= x));
-    let g' = {g with bs = rest; names=L.tl g.names; m} in
+    let g' = {g with bs = rest;
+                     f_bs = extend_env_l g.f rest; // Recomputing, not ideal
+                     names=L.tl g.names;
+                     m;
+    } in
     assert (equal g (push_binding g' x ppname_default t));
     x, t, g'    
 
@@ -254,6 +278,7 @@ let diff g1 g2 =
   let g3 = {
     f = g1.f;
     bs = bs3;
+    f_bs = extend_env_l g1.f bs3; // Recomputing, but probably ok
     names = names3;
     m = m3;
     ctxt = g1.ctxt;

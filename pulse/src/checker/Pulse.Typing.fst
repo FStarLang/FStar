@@ -118,15 +118,6 @@ let comp_return (c:ctag) (use_eq:bool) (u:universe) (t:term) (e:term) (post:term
       { u; res = t; pre = open_term' post e 0; post = post_maybe_eq }
 
 
-module L = FStar.List.Tot
-let extend_env_l (f:R.env) (g:env_bindings) : R.env = 
-  L.fold_right 
-    (fun (x, b) g ->  
-      RT.extend_env g x b)
-     g
-     f
-let elab_env (e:env) : R.env = extend_env_l (fstar_env e) (bindings e)
-
 
 (*
  * If I call this fresh, I get:
