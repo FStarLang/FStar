@@ -64,18 +64,14 @@ let compose_subst (s1 s2 : subst_ts) : subst_ts =
                | _ -> snd s1 in
     (s, ropt)
 
-//apply a delayed substitution s to t,
-//composing it with any other delayed substitution that may already be there
+// Apply a delayed substitution s to t.
+// This may nest Tm_delayed nodes, that is fine. If we coallesce
+// them, that implies composing the substitutions and potentially breaking
+// sharing.
+let delay' (t:term) (s : subst_ts) rng : term =
+    mk_Tm_delayed (t, s) rng
 let delay (t:term) (s : subst_ts) : term =
- match t.n with
- | Tm_delayed {tm=t'; substs=s'} ->
-    //s' is the subsitution already associated with this node;
-    //s is the new subsitution to add to it
-    //compose substitutions by concatenating them
-    //the order of concatenation is important!
-    mk_Tm_delayed (t', compose_subst s' s) t.pos
- | _ ->
-    mk_Tm_delayed (t, s) t.pos
+    delay' t s t.pos
 
 (*
     force_uvar' (t:term) : term * bool
@@ -198,11 +194,11 @@ let rec subst' (s:subst_ts) (t:term) : term =
     | Tm_fvar _ -> tag_with_range t0 s   //fvars are never subject to substitution
 
     | Tm_delayed {tm=t';substs=s'} ->
-        //s' is the subsitution already associated with this node;
-        //s is the new subsitution to add to it
-        //compose substitutions by concatenating them
-        //the order of concatenation is important!
-        mk_Tm_delayed (t', compose_subst s' s) t.pos
+        (* I really just want this:
+           delay t s
+        Or to remove this completely and fall in the default case above.
+        But somehow, that's incredibly bad for ranges. *)
+        delay' t' (compose_subst s' s) t.pos
 
     | Tm_bvar a ->
         apply_until_some_then_map (subst_bv a) (fst s) subst_tail t0
@@ -214,10 +210,7 @@ let rec subst' (s:subst_ts) (t:term) : term =
         mk (Tm_type (subst_univ (fst s) u)) (mk_range t0.pos s)
 
     | _ ->
-      //NS: 04/12/2018
-      //    Substitutions on Tm_uvar just gets delayed
-      //    since its solution may eventually end up being an open term
-      mk_Tm_delayed (t0, s) (mk_range t.pos s)
+      delay' t0 s (mk_range t.pos s)
 
 let subst_dec_order' s = function
   | Decreases_lex l -> Decreases_lex (l |> List.map (subst' s))
@@ -347,7 +340,8 @@ let rec push_subst_aux (resolve_uvars:bool) s t =
     //makes a syntax node, setting it's use range as appropriate from s
     let mk t' = Syntax.mk t' (mk_range t.pos s) in
     match t.n with
-    | Tm_delayed _ -> failwith "Impossible (delayed node in push_subst)"
+    | Tm_delayed _ ->
+      push_subst_aux resolve_uvars s (compress_subst t)
 
     | Tm_lazy i ->
         begin match i.lkind with
@@ -460,19 +454,19 @@ let rec push_subst_aux (resolve_uvars:bool) s t =
 
     | Tm_meta {tm=t; meta=m} ->
         mk (Tm_meta {tm=subst' s t; meta=m})
-
-let push_subst s t = push_subst_aux true s t
-
 //
 // Only push the pending substitution down,
 //   no resolving uvars
 //
-let compress_subst (t:term) : term =
+and compress_subst (t:term) : term =
   match t.n with
   | Tm_delayed {tm=t; substs=s} ->
     let resolve_uvars = false in
     push_subst_aux resolve_uvars s t
   | _ -> t
+
+let push_subst s t = push_subst_aux true s t
+
 
 (* compress:
       This is used pervasively, throughout the codebase
