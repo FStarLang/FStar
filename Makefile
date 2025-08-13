@@ -479,8 +479,10 @@ bump-stage0: stage0_new
 	# Now that stage0 supports all features, we can return to a clean state
 	# where the 01 makefile is equal to the 12 makefile. Same for stage1
 	# support and config code, we just take it from the stage2.
-	rm -f mk/fstar-01.mk
-	ln -s fstar-12.mk mk/fstar-01.mk
+	rm -f mk/generic-0.mk
+	ln -s generic-1.mk mk/generic-0.mk
+	cp mk/fstar-12.mk mk/fstar-01.mk
+	sed -i 's,include mk/generic-1.mk,include mk/generic-0.mk,' mk/fstar-01.mk
 	rm -rf stage1
 	cp -r stage2 stage1
 	rm -f stage1/dune/fstar-guts/app
