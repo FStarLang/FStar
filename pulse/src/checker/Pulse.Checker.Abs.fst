@@ -38,6 +38,28 @@ module PCP = Pulse.Checker.Pure
 open Pulse.Checker.ImpureSpec
 open Pulse.Show
 
+let rec mk_abs (g:env) (qbs:list (option qualifier & binder & bv) { Cons? qbs }) (body:st_term) (comp:comp)
+: T.Tac (t:st_term {Tm_Abs? t.term})
+=
+  let with_range (s:st_term') (r:range) : st_term =
+    { term = s;
+      range = r;
+      effect_tag = default_effect_hint;
+      source=Sealed.seal false;
+      seq_lhs=Sealed.seal false;
+    }
+  in
+  match qbs with
+  | [(q, last, last_bv)] -> 
+    let body = close_st_term body last_bv.bv_index in
+    let comp = close_comp comp last_bv.bv_index in
+    let ascription = { annotated = Some comp; elaborated = None } in
+    with_range (Tm_Abs { b = last; q; ascription; body }) body.range
+  | (q, b, bv)::qbs ->
+    let body = mk_abs g qbs body comp in
+    let body = close_st_term body bv.bv_index in
+    with_range (Tm_Abs { b; q; ascription=empty_ascription; body }) body.range
+
 let debug_abs g (s: unit -> T.Tac string) : T.Tac unit =
   if RU.debug_at_level (fstar_env g) "pulse.abs"
   then T.print (s ())
@@ -78,7 +100,7 @@ let tc_term_phase1_with_type_twice g t must_tot ty =
   let t = tc_term_phase1_with_type g t must_tot ty in
   t
 
-let preproc_ascription (g: env) (c: comp) (do_purify:bool) : T.Tac (env & list (var & binder & option qualifier) & comp) =
+let preproc_ascription (g: env) (c: comp) : T.Tac (env & list (var & binder & option qualifier) & comp) =
   let preproc_inames is : T.Tac R.term =
     let is = tc_term_phase1_with_type g is true tm_inames in
     let is = T.norm_well_typed_term (elab_env g)
@@ -89,21 +111,15 @@ let preproc_ascription (g: env) (c: comp) (do_purify:bool) : T.Tac (env & list (
     let {u;res;pre;post} = c in
     let res, u = tc_type_phase1 g res true in
     let g, bs, pre =
-      if do_purify then
-        let pre = purify_spec g { ctxt_now = tm_emp; ctxt_old = None } pre in
-        exists_as_binders g pre
-      else
-        g, [], tc_term_phase1_with_type_twice g pre true tm_slprop in
+      let pre = purify_spec g { ctxt_now = tm_emp; ctxt_old = None } pre in
+      exists_as_binders g pre in
     let x = fresh g in
     let post =
       let g' = push_binding g x ppname_default res in
       let post = open_term_nv post (v_as_nv x) in
-      if do_purify then
         purify_spec g'
           { ctxt_old = Some pre; ctxt_now = tm_emp }
-          post
-      else
-        tc_term_phase1_with_type_twice g' post true tm_slprop in
+          post in
     let post = close_term post x in
     g, bs, ({u;res;pre;post} <: st_comp) in
   match c with
@@ -189,16 +205,7 @@ let rec arrow_of_abs (env:_) (prog:st_term { Tm_Abs? prog.term })
       
       | Some c -> ( //we're taking the annotation as is; remove it from the abstraction to avoid rechecking it
         let c = open_comp_nv c px in
-        let is_rec =
-          match T.unseal b.binder_attrs with
-          | [attr] ->
-            (match R.inspect_ln attr with
-             | R.Tv_FVar fv -> R.inspect_fv fv = Pulse.Reflection.Util.rec_attr_lid
-             | _ -> false)
-          | _ -> false in
-        let g, bs, c =
-          let do_purify = not is_rec in // TODO: recursive functions
-          preproc_ascription env c do_purify in
+        let g, bs, c = preproc_ascription env c in
         let bs = (x, b, q) :: bs in
         let ty = tm_arrow_binders bs (elab_comp c) in
         let prog' = tm_abs_binders bs body in

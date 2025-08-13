@@ -22,6 +22,12 @@ open Pulse.Syntax
 open Pulse.Typing
 open Pulse.Checker.Base
 
+val mk_abs (g:env) (qbs:list (option qualifier & binder & bv) { Cons? qbs }) (body:st_term) (comp:comp)
+  : T.Tac (t:st_term {Tm_Abs? t.term})
+
+val arrow_of_abs (g:env) (prog:st_term { Tm_Abs? prog.term })
+  : T.Tac (term & t:st_term { Tm_Abs? t.term })
+
 val check_abs
   (g:env)
   (t:st_term{Tm_Abs? t.term})

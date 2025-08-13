@@ -59,3 +59,13 @@ fn test6 () {
   };
   assert pure (10 <= !y /\ !y <= 20);
 }
+
+fn rec test7 (r: ref int)
+  preserves live r
+  ensures pure (!r <= old !r)
+{
+  if (!r > 1) {
+    r := !r - 1;
+    test7 r
+  }
+}

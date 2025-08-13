@@ -408,10 +408,6 @@ let desugar_datacon (env:env_t) (l:lid) : err SW.fv =
   in
   return (SW.mk_fv (S.lid_of_fv sfv) rng)
 
-let close_st_term_binders qbs body =
-  let bvs = List.Tot.map (fun (_, _, b) -> b) qbs in
-  close_st_term_bvs body bvs
-
 let mk_abs_with_comp qbs comp body range =
   let _, abs =
     L.fold_right
@@ -900,27 +896,7 @@ and desugar_lambda (env:env_t) (l:Sugar.lambda)
 and desugar_decl (env:env_t)
                  (d:Sugar.decl)
 : err SW.decl
-= let mk_knot_arr
-        (env:env_t) 
-        (meas : option A.term)
-        (bs:Sugar.binders)
-        (res:Sugar.computation_type)
-  : err A.term
-  = // can we just use a unknown type here?
-    let! annots = parse_annots res.range res.annots in
-    let r = range_of_id annots.Sugar.return_name in
-    let! env, bs', _ = desugar_binders env bs in
-    let! res_t = comp_to_ast_term res in
-    let bs'' = bs |> L.map (fun b ->
-      let (q, x, ty, _) = destruct_binder b in
-      A.mk_binder (A.Annotated (x, ty)) r A.Expr q)
-    in
-    let last = L.last bs'' in
-    let init = L.init bs'' in
-    let bs'' = init @ [last] in
-    return (A.mk_term (A.Product (bs'', res_t)) r A.Expr)
-  in
-  match d with
+= match d with
   | Sugar.FnDefn { id; is_rec; us; binders; ascription=Inl ascription; measure; body=Inl body; range } ->
     let! env, bs, bvs = desugar_binders env binders in
     let! pannots = parse_annots ascription.range ascription.annots in
@@ -934,8 +910,7 @@ and desugar_decl (env:env_t)
     let! (env, bs, bvs) =
       if is_rec
       then
-        let! ty = mk_knot_arr env measure binders ascription in
-        let! ty = desugar_term env ty in
+        let ty = SW.tm_unknown FStarC.Range.dummyRange in
         let env, bv = push_bv env id in
         let b = SW.mk_binder id ty in
         return (env, bs@[(None, b)], bvs@[bv])
@@ -944,7 +919,6 @@ and desugar_decl (env:env_t)
     in
     let! body = desugar_stmt env body in
     let! qbs = map2 faux bs bvs in
-    let body = close_st_term_binders qbs body in
     return (SW.fn_defn range id is_rec us qbs comp meas body)
 
   | Sugar.FnDefn { id; is_rec=false; us; binders; ascription=Inr ascription; measure=None; body=Inr body; range } ->
@@ -956,7 +930,6 @@ and desugar_decl (env:env_t)
     in
     let! body = desugar_lambda env body in
     let! qbs = map2 faux bs bvs in
-    let body = close_st_term_binders qbs body in
     return (SW.fn_defn range id false us qbs comp None body)
 
   | Sugar.FnDecl { id; us; binders; ascription=Inl ascription; range } ->

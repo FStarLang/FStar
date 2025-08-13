@@ -60,7 +60,6 @@ let szv_tm = R.pack_ln (R.Tv_FVar szv_fv)
 let seq_lid = ["FStar"; "Seq"; "Base"; "seq"]
 let seq_create_lid = ["FStar"; "Seq"; "Base"; "create"]
 let tot_lid = ["Prims"; "Tot"]
-let rec_attr_lid = mk_pulse_lib_core_lid "_rec_knot"
 
 let slprop_equiv_norm_tm = R.pack_ln (R.Tv_FVar (R.pack_fv (mk_pulse_lib_core_lid "slprop_equiv_norm")))
 let slprop_equiv_fold_tm (s:string) = 
