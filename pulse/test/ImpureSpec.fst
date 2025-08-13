@@ -78,3 +78,18 @@ fn test8b (r: ref int)
   preserves live r
   requires with_pure (!r > 10)
 { test8a r } // make sure we can call functions with with_pure pres.
+
+[@@pulse_unfold]
+let nested_pts_to (x: ref (ref int)) (y: int) =
+  exists* (z: ref int). (x |-> z) ** (z |-> y)
+
+[@@pulse_eager_unfold]
+let nested_live (x: ref (ref int)) =
+  exists* y. nested_pts_to x y
+
+fn test9 (x: ref (ref int))
+  preserves nested_live x
+  ensures pure (!(!x) == 10)
+{
+  !x := 10;
+}

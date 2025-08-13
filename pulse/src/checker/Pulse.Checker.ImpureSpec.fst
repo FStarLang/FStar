@@ -239,6 +239,34 @@ and symb_eval_subterms_args (g:env) (ctxt: ctxt) (args:list T.argv)
     args
     (g, false, [])
 
+let rec run_elim_core (g: env) (ctxt: list slprop) : T.Tac (env & list nvar & list slprop) =
+  match ctxt with
+  | [] ->
+    g, [], []
+  | c::ctxt ->
+    match inspect_term c with
+    | Tm_WithPure p n b ->
+      run_elim_core g (open_term_list' ctxt unit_const 0)
+    | Tm_ExistsSL u b body ->
+      let x = fresh g in
+      let px = b.binder_ppname, x in
+      let g' = push_binding g x (fst px) b.binder_ty in
+      let body = open_term_nv body px in
+      let g', xs, ctxt' = run_elim_core g' (body::ctxt) in
+      g', px::xs, ctxt'
+    | Tm_Star a b ->
+      run_elim_core g (a::b::ctxt)
+    | Tm_Pure _ | Tm_Emp ->
+      run_elim_core g ctxt
+    | _ ->
+      let g', xs, ctxt' = run_elim_core g ctxt in
+      g', xs, c::ctxt'
+
+let run_elim (g: env) (ctxt: slprop) : T.Tac (env & list nvar & slprop) =
+  let (| ctxt, _ |) = Pulse.Checker.Prover.normalize_slprop g ctxt true in
+  let g', xs, ctxt = run_elim_core g (slprop_as_list ctxt) in
+  g', xs, list_as_slprop ctxt
+
 (* Adds add to the ctxt in a way that the prover will prefer it when ambiguous. *)
 let push_ctxt ctxt add = { ctxt with ctxt_now = tm_star add ctxt.ctxt_now }
 
@@ -363,14 +391,29 @@ and extrude (g: env) (ctxt: ctxt) (todo: list slprop) (ts: list slprop) : T.Tac 
       Some (tm_with_pure p n body)
 
     | _ ->
-      let ctxt = push_ctxt ctxt t in
-      match extrude g ctxt todo ts with
+      let g', xs, t' = run_elim g t in
+      let ctxt = push_ctxt ctxt t' in
+      match extrude g' ctxt todo ts with
       | None -> Some t
-      | Some todo -> Some (tm_star t todo)
+      | Some todo ->
+        // TODO: check that xs is not free in todo
+        Some (tm_star t todo)
+
+let run_elim_ctxt (g: env) (ctxt: ctxt) =
+  let g, xs, now = run_elim g ctxt.ctxt_now in
+  let g, ys, old =
+    match ctxt.ctxt_old with
+    | None -> g, [], None
+    | Some old ->
+      let g, ys, old = run_elim g old in
+      g, ys, Some old in
+  g, xs @ ys, { ctxt_old = old; ctxt_now = now }
 
 let purify_spec (g: env) (ctxt: ctxt) (t0: slprop) : T.Tac slprop =
   let t = t0 in
-  let t = purify_spec_core g ctxt [t] |> or_emp in
+  let g', xs, ctxt = run_elim_ctxt g ctxt in
+  let t = purify_spec_core g' ctxt [t] |> or_emp in
+  // TODO: check that xs is not free in t
   // If we call phase1 TC only once, then the universe instantiation in
   // op_Exists_Star can remain unresolved.
   let t = tc_term_phase1_with_type g t true tm_slprop in
