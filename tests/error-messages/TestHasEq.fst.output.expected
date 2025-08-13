@@ -10,7 +10,7 @@
 
 >>]
 >> Got issues: [
-* Error 19 at TestHasEq.fst(84,10-84,70):
+* Error 19 at TestHasEq.fst(85,7-85,8):
   - Subtyping check failed
   - Expected type Prims.eqtype got type Type0
   - The SMT solver could not prove the query. Use --query_stats for more
