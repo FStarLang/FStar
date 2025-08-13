@@ -80,7 +80,6 @@ let rec exists_as_binders (g: env) (t: slprop) : T.Tac (env & list (var & binder
     let t = open_term' t (mk_reveal u b.binder_ty (term_of_nvar px)) 0 in
     let g, bs, t = exists_as_binders g t in
     g, (x, { b with binder_ty = x_ty }, Some Implicit) :: bs, t
-(* Sadly, we can't call functions with implicit squash arguments...
   | Tm_WithPure p n t ->
     let x = fresh g in
     let px = n, x in
@@ -89,7 +88,6 @@ let rec exists_as_binders (g: env) (t: slprop) : T.Tac (env & list (var & binder
     let t = open_term_nv t px in
     let g, bs, t = exists_as_binders g t in
     g, (x, { binder_ty = x_ty; binder_ppname = n; binder_attrs = T.seal [] }, Some Implicit) :: bs, t
-*)
   | _ ->
     g, [], t
 

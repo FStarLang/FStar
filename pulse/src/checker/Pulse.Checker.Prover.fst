@@ -439,6 +439,30 @@ let rec get_q_at_hd (g:env) (l:list slprop) (q:slprop { L.existsb (fun v -> eq_t
     else let (| tl', _ |) = get_q_at_hd g tl q in
          (| hd::tl', RU.magic #(slprop_equiv _ _ _) () |)
 
+// When we elaborate a term like `foo : x:ref int -> #y:erased int -> #_:squash (y < 1) -> ...`,
+// the implicit squashed argument remain unresolved uvars after running the prover.
+// This function instantiates them with ().
+let prove_squash_uvars #preamble (g: env) (pst: prover_state preamble) : T.Tac (prover_state preamble) =
+  let rec check bs pst =
+    match bs with
+    | (x,t)::bs ->
+      if not (PS.contains pst.ss x) then
+        match is_squash t with
+        | Some t' ->
+          let pst = { pst with
+            ss = PS.push pst.ss x unit_const;
+            nts = None;
+            solved_inv = RU.magic ();
+            k = k_elab_equiv pst.k (VE_Refl _ _) (RU.magic ());
+          } in
+          // NOTE: we don't need to check prop validity here, since we'll recheck the term anyhow
+          check bs pst
+        | None -> check bs pst
+      else
+        check bs pst
+    | [] -> pst in
+  check (bindings pst.uvs) pst
+
 #push-options "--z3rlimit_factor 8 --ifuel 2 --fuel 1 --split_queries no"
 #restart-solver
 let prove
@@ -488,6 +512,8 @@ let prove
   } in
 
   let pst = RU.record_stats "Pulse.prover" fun _ -> prover pst0 in
+
+  let pst = prove_squash_uvars g pst in
 
   let (| nts, effect_labels |)
     : nts:PS.nt_substs &

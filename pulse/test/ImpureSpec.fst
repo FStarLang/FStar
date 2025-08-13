@@ -69,3 +69,12 @@ fn rec test7 (r: ref int)
     test7 r
   }
 }
+
+fn test8a (r: ref int)
+  preserves live r
+  requires with_pure (!r > 10)
+{ () }
+fn test8b (r: ref int)
+  preserves live r
+  requires with_pure (!r > 10)
+{ test8a r } // make sure we can call functions with with_pure pres.

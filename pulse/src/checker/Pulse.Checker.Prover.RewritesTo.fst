@@ -28,14 +28,6 @@ let is_rewrites_to_p (t: typ) : option (term & term) =
     Some (lhs, rhs)
   | _ -> None
 
-let is_squash (t: typ) : option typ =
-  let hd, args = R.collect_app_ln t in
-  match R.inspect_ln hd, args with
-  | R.Tv_UInst hd _, [t, _] ->
-    if R.inspect_fv hd <> R.squash_qn then None else
-    Some t
-  | _ -> None
-
 let extract_rewrites_to_p (t: typ) =
   match is_squash t with
   | None -> None
