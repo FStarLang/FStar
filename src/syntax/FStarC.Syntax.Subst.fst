@@ -337,35 +337,6 @@ let push_subst_lcomp s lopt = match lopt with
                  ; residual_flags  = rc.residual_flags } in
         Some rc
 
-let compose_uvar_subst (u:ctx_uvar) (s0:subst_ts) (s:subst_ts) : subst_ts =
-    let should_retain x =
-        u.ctx_uvar_binders |> U.for_some (fun b -> S.bv_eq x b.binder_bv)
-    in
-    let rec aux = function
-        | [] -> []
-        | hd_subst::rest ->
-          let hd =
-              hd_subst |> List.collect (function
-              | NT(x, t) ->
-                if should_retain x
-                then [NT(x, delay t (rest, NoUseRange))]
-                else []
-              | NM(x, i) ->
-                if should_retain x
-                then let x_i = S.bv_to_tm ({x with index=i}) in
-                     let t = subst' (rest, NoUseRange) x_i in
-                     match t.n with
-                     | Tm_bvar x_j -> [NM(x, x_j.index)]
-                     | _ -> [NT(x, t)]
-                else []
-              | _ -> [])
-          in
-          hd @ aux rest
-    in
-    match aux (fst s0 @ fst s) with
-    | [] -> [], snd s
-    |  s' -> [s'], snd s
-
 //
 // If resolve_uvars is true, it will lookup the unionfind graph
 //   and use uvar solution, if it has already been solved
@@ -397,7 +368,7 @@ let rec push_subst_aux (resolve_uvars:bool) s t =
 
     | Tm_uvar (uv, s0) ->
       let fallback () =
-        tag_with_range ({t with n = Tm_uvar(uv, compose_uvar_subst uv s0 s)}) s
+        tag_with_range ({t with n = Tm_uvar(uv, compose_subst s0 s)}) s
       in
       if not resolve_uvars
       then fallback ()
