@@ -454,6 +454,16 @@ and compress_subst (t:term) : term =
     push_subst s t
   | _ -> t
 
+let compress_post_check (t:term) : unit =
+  match t.n with
+  | Tm_delayed _ -> failwith "compress attempting to return a Tm_delayed"
+  | Tm_uvar ({ctx_uvar_head=uv}, s) -> (
+    match Unionfind.find uv with
+        | Some t' -> failwith "compress attempting to return a solved uvar"
+        | None -> ()
+  )
+  | _ -> ()
+
 (* compress:
       This is used pervasively, throughout the codebase
 
@@ -464,41 +474,21 @@ and compress_subst (t:term) : term =
          2. eliminate any top-level (Tm_uvar uv) node,
             when uv has been assigned a solution already
 
-      `compress` should will *not* memoize the result of uvar
-      solutions (since those could be reverted), nor the result
-      of `push_subst` (since it internally uses the unionfind
-      graph too).
-
-      The function is broken into a fast-path where the
-      result can be easily determined and a recursive slow
-      path.
-
-      Warning: if force_uvar changes to operate on inputs other than
-      Tm_uvar then the fastpath out match in compress will need to be
-      updated.
-
-      This function should NEVER return a Tm_delayed. If you do any
-      non-trivial change to it, it would be wise to uncomment the check
-      below and run a full regression build.
+      This function should NEVER return a Tm_delayed, nor a resolved uvar. If
+      you do any non-trivial change to it, it would be wise to uncomment the
+      check below and run a full regression build.
 *)
-let rec compress_slow (t:term) =
+let rec compress (t:term) =
+  let r =
     let t = force_uvar t in
     match t.n with
     | Tm_delayed {tm=t'; substs=s} ->
-        compress (push_subst s t')
+      compress (push_subst s t')
     | _ ->
-        t
-and compress (t:term) =
-  match t.n with
-    | Tm_delayed _ | Tm_uvar _ ->
-        let r = compress_slow t in
-        (* begin match r.n with *)
-        (* | Tm_delayed _ -> failwith "compress attempting to return a Tm_delayed" *)
-        (* | _ -> () *)
-        (* end; *)
-        r
-    | _ ->
-        t
+      t
+  in
+  // compress_post_check r;
+  r
 
 let subst s t = subst' ([s], NoUseRange) t
 let set_use_range r t = subst' ([], SomeUseRange (Range.set_def_range r (Range.use_range r))) t
