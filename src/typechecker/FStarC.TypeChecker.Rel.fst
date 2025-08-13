@@ -1656,7 +1656,7 @@ let ufailed_thunk (s: unit -> string) : univ_eq_sol =
   UFailed (mklstr s)
 
 
-let rec really_solve_universe_eq pid_orig wl u1 u2 =
+let rec solve_universe_eq pid_orig wl u1 u2 =
     let u1 = N.normalize_universe wl.tcenv u1 in
     let u2 = N.normalize_universe wl.tcenv u2 in
     let rec occurs_univ v1 u = match u with
@@ -1688,7 +1688,7 @@ let rec really_solve_universe_eq pid_orig wl u1 u2 =
               if List.length us1 = List.length us2 //go for a structural match
               then let rec aux wl us1 us2 = match us1, us2 with
                         | u1::us1, u2::us2 ->
-                          begin match really_solve_universe_eq pid_orig wl u1 u2 with
+                          begin match solve_universe_eq pid_orig wl u1 u2 with
                             | USolved wl ->
                                 aux wl us1 us2
                             | failed -> failed
@@ -1705,7 +1705,7 @@ let rec really_solve_universe_eq pid_orig wl u1 u2 =
                 let rec aux wl us = match us with
                 | [] -> USolved wl
                 | u::us ->
-                    begin match really_solve_universe_eq pid_orig wl u u' with
+                    begin match solve_universe_eq pid_orig wl u u' with
                     | USolved wl ->
                       aux wl us
                     | failed -> failed
@@ -1735,7 +1735,7 @@ let rec really_solve_universe_eq pid_orig wl u1 u2 =
           USolved wl
 
         | U_succ u1, U_succ u2 ->
-          really_solve_universe_eq pid_orig wl u1 u2
+          solve_universe_eq pid_orig wl u1 u2
 
         | U_unif v1, U_unif v2 ->
           if UF.univ_equiv v1 v2
@@ -1768,11 +1768,6 @@ let rec really_solve_universe_eq pid_orig wl u1 u2 =
         | U_name _, U_succ _
         | U_name _, U_zero ->
           ufailed_simple "Incompatible universes"
-
-let solve_universe_eq orig wl u1 u2 =
-    if wl.tcenv.lax_universes
-    then USolved wl
-    else really_solve_universe_eq orig wl u1 u2
 
 (* This balances two lists.  Given (xs, f) (ys, g), it will
  * take a maximal same-length prefix from each list, getting
