@@ -5762,9 +5762,9 @@ let force_trivial_guard env g =
                     (guard_to_string env g);
     let g = solve_deferred_constraints env g in
     let g = resolve_implicits env g in
-    match Listlike.to_list g.implicits with
-    | [] -> ignore <| discharge_guard env g
-    | imp::_ ->
+    match Listlike.view g.implicits with
+    | VNil -> ignore <| discharge_guard env g
+    | VCons imp _ ->
       let open FStarC.Pprint in
       raise_error imp.imp_range Errors.Fatal_FailToResolveImplicitArgument [
         prefix 4 1 (text "Failed to resolve implicit argument")
