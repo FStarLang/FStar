@@ -442,15 +442,18 @@ let rec get_q_at_hd (g:env) (l:list slprop) (q:slprop { L.existsb (fun v -> eq_t
 // When we elaborate a term like `foo : x:ref int -> #y:erased int -> #_:squash (y < 1) -> ...`,
 // the implicit squashed argument remain unresolved uvars after running the prover.
 // This function instantiates them with ().
-let prove_squash_uvars #preamble (g: env) (pst: prover_state preamble) : T.Tac (prover_state preamble) =
-  let rec check bs pst =
+let prove_squash_uvars #preamble (g: env) (pst: prover_state preamble) :
+    T.Tac (pst':prover_state preamble { pst_extends pst' pst /\ (is_terminal pst ==> is_terminal pst') }) =
+  let rec check bs pst : T.Tac (pst':prover_state preamble { pst_extends pst' pst /\ (is_terminal pst ==> is_terminal pst') }) =
     match bs with
     | (x,t)::bs ->
       if not (PS.contains pst.ss x) then
         match is_squash t with
         | Some t' ->
+          let ss = PS.push pst.ss x unit_const in
+          assume (ss `ss_extends` pst.ss);
           let pst = { pst with
-            ss = PS.push pst.ss x unit_const;
+            ss;
             nts = None;
             solved_inv = RU.magic ();
             k = k_elab_equiv pst.k (VE_Refl _ _) (RU.magic ());
@@ -463,7 +466,7 @@ let prove_squash_uvars #preamble (g: env) (pst: prover_state preamble) : T.Tac (
     | [] -> pst in
   check (bindings pst.uvs) pst
 
-#push-options "--z3rlimit_factor 8 --ifuel 2 --fuel 1 --split_queries no"
+#push-options "--z3rlimit_factor 16 --ifuel 2 --fuel 1 --split_queries no"
 #restart-solver
 let prove
   (allow_ambiguous : bool)
