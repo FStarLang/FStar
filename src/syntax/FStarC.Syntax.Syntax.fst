@@ -222,7 +222,6 @@ let contains_reflectable (l: list qualifier): bool =
 (* Identifiers to/from strings *)
 (*********************************************************************************)
 let withinfo v r = {v=v; p=r}
-let withsort v = withinfo v dummyRange
 
 let order_bv (x y : bv) : int  = x.index - y.index
 let bv_eq    (x y : bv) : bool = order_bv x y = 0
