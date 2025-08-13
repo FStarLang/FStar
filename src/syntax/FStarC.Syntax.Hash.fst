@@ -423,6 +423,7 @@ and equal_comp c1 c2 =
     equal_term ct1.result_typ ct2.result_typ &&
     equal_list equal_arg ct1.effect_args ct2.effect_args &&
     equal_list equal_flag ct1.flags ct2.flags
+  | _ -> false
 
 and equal_binder b1 b2 =
   if physical_equality b1 b2 then true else
@@ -552,6 +553,7 @@ and equal_meta m1 m2 =
     Ident.lid_equals m1 m2 &&
     Ident.lid_equals n1 n2 &&
     equal_term t1 t2
+  | _ -> false
 
 and equal_lazyinfo l1 l2 =
   (* We cannot really compare the blobs. Just try physical
@@ -583,6 +585,7 @@ and equal_decreases_order d1 d2 =
   | Decreases_wf (t1, t1'), Decreases_wf (t2, t2') ->
     equal_term t1 t2 &&
     equal_term t1' t2'
+  | _ -> false
 
 and equal_arg_qualifier a1 a2 =
   a1.aqual_implicit = a2.aqual_implicit &&
@@ -592,6 +595,7 @@ and equal_lbname l1 l2 =
   match l1, l2 with
   | Inl b1, Inl b2 -> Ident.ident_equals b1.ppname b2.ppname
   | Inr f1, Inr f2 -> Ident.lid_equals f1.fv_name f2.fv_name
+  | _ -> false
 
 and equal_subst_elt s1 s2 =
   match s1, s2 with
@@ -607,6 +611,10 @@ and equal_subst_elt s1 s2 =
   | UD (un1, i1), UD (un2, i2) ->
     i1 = i2 &&
     Ident.ident_equals un1 un2
+  | DT (i1, t1), DT (i2, t2) ->
+    i1 = i2 &&
+    equal_term t1 t2
+  | _ -> false
 
 instance hashable_term : hashable term = {
   hash = ext_hash_term;
