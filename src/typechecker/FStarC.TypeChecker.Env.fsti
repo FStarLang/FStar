@@ -578,3 +578,5 @@ instance val pretty_guard     : FStarC.Class.PP.pretty guard_t
 
 val fv_delta_depth : env -> fv -> delta_depth
 val delta_depth_of_term : env -> term -> delta_depth
+
+instance val hashable_env : Class.Hashable.hashable env

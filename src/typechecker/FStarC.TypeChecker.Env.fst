@@ -22,6 +22,7 @@ open FStarC.Syntax
 open FStarC.Syntax.Syntax
 open FStarC.Syntax.Subst
 open FStarC.Syntax.Util
+open FStarC.Syntax.Hash {}
 open FStarC.SMap
 open FStarC.Ident
 open FStarC.Range
@@ -32,6 +33,7 @@ open FStarC.Class.Setlike
 open FStarC.Class.Show
 open FStarC.Class.PP
 open FStarC.Class.HasRange
+open FStarC.Class.Hashable
 module Listlike = FStarC.Class.Listlike
 
 module S = FStarC.Syntax.Syntax
@@ -2127,3 +2129,13 @@ let split_smt_query (e:env) (q:term)
   = match e.solver.spinoff_strictly_positive_goals with
     | None -> None
     | Some p -> Some (p e q)
+
+(* We hash as much as needed for the query cache. *)
+instance hashable_env : hashable env = {
+  hash = (fun e ->
+    hash e.gamma `FStarC.Hash.mix`
+    hash e.gamma_sig `FStarC.Hash.mix`
+    hash e.proof_ns `FStarC.Hash.mix`
+    hash e.admit
+  );
+}

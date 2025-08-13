@@ -215,9 +215,6 @@ instance tagged_eff_extraction_mode : tagged eff_extraction_mode = {
 
 let mod_name (m: modul) = m.name
 
-let contains_reflectable (l: list qualifier): bool =
-    Util.for_some (function Reflectable _ -> true | _ -> false) l
-
 (*********************************************************************************)
 (* Identifiers to/from strings *)
 (*********************************************************************************)
