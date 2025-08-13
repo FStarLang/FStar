@@ -331,17 +331,14 @@ let push_subst_lcomp s lopt = match lopt with
         Some rc
 
 //
-// If resolve_uvars is true, it will lookup the unionfind graph
-//   and use uvar solution, if it has already been solved
-//   see the Tm_uvar case in this function
-// Otherwise it will just compose s with the uvar subst
+// Push a substitution one level down.
 // 
-let rec push_subst_aux (resolve_uvars:bool) s t =
+let rec push_subst (s : subst_ts) (t : term) : term =
     //makes a syntax node, setting it's use range as appropriate from s
     let mk t' = Syntax.mk t' (mk_range t.pos s) in
     match t.n with
     | Tm_delayed _ ->
-      push_subst_aux resolve_uvars s (compress_subst t)
+      push_subst s (compress_subst t)
 
     | Tm_lazy i ->
         begin match i.lkind with
@@ -350,7 +347,7 @@ let rec push_subst_aux (resolve_uvars:bool) s t =
              * The hope is that this does not occur often and so
              * we still get good performance. *)
           let t = Option.must !lazy_chooser i.lkind i in // Can't call Syntax.Util from here
-          push_subst_aux resolve_uvars s t
+          push_subst s t
         | _ ->
             (* All others must be closed, so don't bother *)
             tag_with_range t s
@@ -361,14 +358,7 @@ let rec push_subst_aux (resolve_uvars:bool) s t =
     | Tm_unknown -> tag_with_range t s //these are always closed
 
     | Tm_uvar (uv, s0) ->
-      let fallback () =
-        tag_with_range ({t with n = Tm_uvar(uv, compose_subst s0 s)}) s
-      in
-      if not resolve_uvars
-      then fallback ()
-      else (match (Unionfind.find uv.ctx_uvar_head) with
-            | None -> fallback ()
-            | Some t -> push_subst_aux resolve_uvars (compose_subst s0 s) t)
+      tag_with_range ({t with n = Tm_uvar(uv, compose_subst s0 s)}) s
 
     | Tm_type _
     | Tm_bvar _
@@ -461,12 +451,8 @@ let rec push_subst_aux (resolve_uvars:bool) s t =
 and compress_subst (t:term) : term =
   match t.n with
   | Tm_delayed {tm=t; substs=s} ->
-    let resolve_uvars = false in
-    push_subst_aux resolve_uvars s t
+    push_subst s t
   | _ -> t
-
-let push_subst s t = push_subst_aux true s t
-
 
 (* compress:
       This is used pervasively, throughout the codebase
