@@ -1,16 +1,13 @@
->> Got issues: [
-* Error 118 at RecordFields.fst(8,29-8,30):
+* Info at RecordFields.fst(8,29-8,30):
+  - Expected failure:
   - No field 'd' in record type 'RecordFields.r'.
 
->>]
->> Got issues: [
-* Error 118 at RecordFields.fst(11,14-11,22):
+* Info at RecordFields.fst(11,14-11,22):
+  - Expected failure:
   - Missing fields for record type 'RecordFields.r': 'c'
 
->>]
->> Got issues: [
-* Error 118 at RecordFields.fst(14,24-14,25):
+* Info at RecordFields.fst(14,24-14,25):
+  - Expected failure:
   - No field 'd' in record type 'RecordFields.r'.
   - Missing fields: 'c'
 
->>]

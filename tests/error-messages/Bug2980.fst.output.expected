@@ -1,7 +1,6 @@
->> Got issues: [
-* Error 189 at Bug2980.fst(5,4-5,5):
+* Info at Bug2980.fst(5,4-5,5):
+  - Expected failure:
   - Expected expression of type Type0
     got expression Bug2980.t
     of type _: Prims.int -> Type0
 
->>]

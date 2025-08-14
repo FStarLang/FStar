@@ -1,15 +1,12 @@
->> Got issues: [
-* Error 360 at UnresolvedFields.fst(10,4-10,5):
+* Info at UnresolvedFields.fst(10,4-10,5):
+  - Expected failure:
   - Field name c could not be resolved.
 
->>]
->> Got issues: [
-* Error 118 at UnresolvedFields.fst(17,4-17,5):
+* Info at UnresolvedFields.fst(17,4-17,5):
+  - Expected failure:
   - No field 'c' in record type 'UnresolvedFields.t'.
 
->>]
->> Got issues: [
-* Error 118 at UnresolvedFields.fst(26,4-26,5):
+* Info at UnresolvedFields.fst(26,4-26,5):
+  - Expected failure:
   - No field 'c' in record type 'UnresolvedFields.t'.
 
->>]

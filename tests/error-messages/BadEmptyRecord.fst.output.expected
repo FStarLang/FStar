@@ -1,5 +1,4 @@
->> Got issues: [
-* Error 360 at BadEmptyRecord.fst(9,6-9,8):
+* Info at BadEmptyRecord.fst(9,6-9,8):
+  - Expected failure:
   - Could not resolve the type for this record.
 
->>]

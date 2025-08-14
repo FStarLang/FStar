@@ -3408,12 +3408,8 @@ and desugar_decl_maybe_fail_attr env (d: decl) (attrs : list S.term) : (env_t & 
 
       | errs, ropt -> (* failed! check that it failed as expected *)
         let errnos = List.concatMap (fun i -> FStarC.Common.list_of_option i.issue_number) errs in
-        if Options.print_expected_failures () then (
-          (* Print errors if asked for *)
-          Format.print_string ">> Got issues: [\n";
-          List.iter Errors.print_issue errs;
-          Format.print_string ">>]\n"
-        );
+        if Options.print_expected_failures () then
+          Errors.print_expected_failures errs;
         if expected_errs = [] then
           env0, []
         else begin

@@ -1,9 +1,8 @@
->> Got issues: [
-* Error 19 at Bug446.fst(34,59-34,62):
+* Info at Bug446.fst(34,59-34,62):
+  - Expected failure:
   - Subtyping check failed
   - Expected type wP a got type wP b
   - The SMT solver could not prove the query. Use --query_stats for more
     details.
   - See also Bug446.fst(33,55-33,58)
 
->>]
