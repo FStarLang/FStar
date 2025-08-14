@@ -1,22 +1,18 @@
->> Got issues: [
-* Error 72 at Bug.DesugaringError.fst(11,4-11,5):
+* Info at Bug.DesugaringError.fst(11,4-11,5):
+  - Expected failure:
   - Identifier not found: a
   - Hint: Did you mean x or y?
 
->>]
->> Got issues: [
-* Error 72 at Bug.DesugaringError.fst(16,12-16,21):
+* Info at Bug.DesugaringError.fst(16,12-16,21):
+  - Expected failure:
   - Identifier not found: something
 
->>]
->> Got issues: [
-* Error 189 at Bug.DesugaringError.fst(31,9-31,10):
+* Info at Bug.DesugaringError.fst(31,9-31,10):
+  - Expected failure:
   - Expected expression of type Prims.nat got expression y of type Prims.bool
   - See also Bug.DesugaringError.fst(31,4-31,10)
 
->>]
->> Got issues: [
-* Error 189 at Bug.DesugaringError.fst(46,4-46,8):
+* Info at Bug.DesugaringError.fst(46,4-46,8):
+  - Expected failure:
   - Expected expression of type Prims.nat got expression true of type Prims.bool
 
->>]

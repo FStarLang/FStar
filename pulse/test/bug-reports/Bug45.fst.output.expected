@@ -1,5 +1,4 @@
->> Got issues: [
-* Error 339 at Bug45.fst(64,13-64,58):
+* Info at Bug45.fst(64,13-64,58):
+  - Expected failure:
   - Elaborated term has unresolved univ uvars: Bug45.spawn (Bug45.pth n)
 
->>]

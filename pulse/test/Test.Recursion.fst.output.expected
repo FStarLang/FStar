@@ -1,5 +1,5 @@
->> Got issues: [
-* Error 19 at Test.Recursion.fst(94,2-94,20):
+* Info at Test.Recursion.fst(94,2-94,20):
+  - Expected failure:
   - Ill-typed term: ()
   - Expected a term of type
       x':
@@ -11,9 +11,8 @@
   - The SMT solver could not prove the query. Use --query_stats for more
     details.
 
->>]
->> Got issues: [
-* Error 19 at Test.Recursion.fst(141,4-141,22):
+* Info at Test.Recursion.fst(141,4-141,22):
+  - Expected failure:
   - Ill-typed term: y - 1
   - Expected a term of type
       y':
@@ -25,4 +24,3 @@
   - The SMT solver could not prove the query. Use --query_stats for more
     details.
 
->>]

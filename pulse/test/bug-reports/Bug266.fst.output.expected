@@ -1,12 +1,11 @@
->> Got issues: [
-* Error 19 at Bug266.fst(12,2-12,14):
+* Info at Bug266.fst(12,2-12,14):
+  - Expected failure:
   - Failed to prove pure property: Prims.l_False
   - Assertion failed
   - The SMT solver could not prove the query. Use --query_stats for more
     details.
   - See also Bug266.fst(12,31-12,36)
 
->>]
 * Info at Bug266.fst(28,2-28,9):
   - Admitting continuation.
   - Current context:

@@ -1,11 +1,10 @@
->> Got issues: [
-* Error 228 at PartialApp.fst(26,2-26,3):
+* Info at PartialApp.fst(26,2-26,3):
+  - Expected failure:
   - This statement returns a value of type: Prims.int
   - Did you forget to assign it or ignore it?
 
->>]
->> Got issues: [
-* Error 228 at PartialApp.fst(60,2-60,9):
+* Info at PartialApp.fst(60,2-60,9):
+  - Expected failure:
   - This function is partially applied. Remaining type:
       y: t
         -> Pulse.Lib.Core.stt Prims.unit
@@ -13,4 +12,3 @@
             (fun _ -> Pulse.Lib.Core.emp)
   - Did you forget to apply some arguments?
 
->>]

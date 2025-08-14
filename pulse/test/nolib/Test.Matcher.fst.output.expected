@@ -1,5 +1,5 @@
->> Got issues: [
-* Error 228 at Test.Matcher.fst(69,2-69,4):
+* Info at Test.Matcher.fst(69,2-69,4):
+  - Expected failure:
   - Cannot prove:
       Test.Matcher.fpts_to #Prims.int
         r
@@ -11,4 +11,3 @@
         #(p +. 0.1R)
         (FStar.Ghost.hide #Prims.int 1)
 
->>]
