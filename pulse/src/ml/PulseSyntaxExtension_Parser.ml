@@ -232,7 +232,7 @@ let parse_decl (s:string) (r:range) =
     Inr (Some (FStarC_Errors_Msg.mkmsg "Syntax error", r))
 
  
-let parse_peek_id (s:string) (r:range) : (string, FStarC_Pprint.document list * range) either =
+let parse_peek_id (s:string) (r:range) : (string, FStar_Pprint.document list * range) either =
   (* print_string ("About to parse <" ^ s ^ ">"); *)
   let fn = file_of_range r in
   let lexbuf, lexer = lexbuf_and_lexer s r in
