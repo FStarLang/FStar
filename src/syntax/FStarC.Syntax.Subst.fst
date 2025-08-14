@@ -30,26 +30,23 @@ module S = FStarC.Syntax.Syntax
 // A few utility functions for working with lists of parallel substitutions
 ///////////////////////////////////////////////////////////////////////////
 
-(* A subst_t is a composition of parallel substitutions, expressed as a list of lists *)
-let subst_to_string s =
-    s |> List.map (fun (b, _) -> (string_of_id b.ppname)) |> String.concat ", "
-
 (* apply_until_some f s
       applies f to each element of s until it returns (Some t)
 *)
-let rec apply_until_some f s =
-    match s with
-    | [] -> None
-    | s0::rest ->
-        match f s0 with
-        | None -> apply_until_some f rest
-        | Some st -> Some (rest, st)
+let rec apply_until_some (f : 'a -> option 'b) (s : list 'a) : option (list 'a & 'b) =
+  match s with
+  | [] -> None
+  | s0::rest ->
+      match f s0 with
+      | None -> apply_until_some f rest
+      | Some st -> Some (rest, st)
 
-let map_some_curry f x = function
-    | None -> x
-    | Some (a, b) -> f a b
+let map_some_curry (f : 'a -> 'b -> 'c) (x : 'c) : option ('a & 'b) -> 'c =
+  function
+  | None -> x
+  | Some (a, b) -> f a b
 
-let apply_until_some_then_map f s g t =
+let apply_until_some_then_map (f : 'a -> option 'b) (s : list 'a) (g : list 'a -> 'b -> 'c) (t : 'c) : 'c =
     apply_until_some f s
     |> map_some_curry g t
 /////////////////////////////////////////////////////////////////////////
@@ -60,7 +57,7 @@ let apply_until_some_then_map f s g t =
 //compose substitutions by concatenating them
 //the order of concatenation is important!
 //the range of s2 take precedence, if present
-let compose_subst s1 s2 =
+let compose_subst (s1 s2 : subst_ts) : subst_ts =
     let s = fst s1 @ fst s2 in
     let ropt = match snd s2 with
                | SomeUseRange _ -> snd s2
@@ -69,7 +66,7 @@ let compose_subst s1 s2 =
 
 //apply a delayed substitution s to t,
 //composing it with any other delayed substitution that may already be there
-let delay t s =
+let delay (t:term) (s : subst_ts) : term =
  match t.n with
  | Tm_delayed {tm=t'; substs=s'} ->
     //s' is the subsitution already associated with this node;
@@ -153,7 +150,7 @@ let rec subst_univ s u =
       | U_succ u -> U_succ (subst_univ s u)
       | U_max us -> U_max (List.map (subst_univ s) us)
 
-let tag_with_range t s =
+let tag_with_range (t : term) (s : subst_ts) : term =
     match snd s with
     | NoUseRange -> t
     | SomeUseRange r ->
@@ -499,7 +496,7 @@ let push_subst s t = push_subst_aux true s t
 // Only push the pending substitution down,
 //   no resolving uvars
 //
-let compress_subst t =
+let compress_subst (t:term) : term =
   match t.n with
   | Tm_delayed {tm=t; substs=s} ->
     let resolve_uvars = false in

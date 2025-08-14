@@ -2019,10 +2019,9 @@ and tc_universe env u : universe =
           if Env.lookup_univ env x
           then u
           else failwith ("Universe variable " ^ (show u) ^ " not found")
-   in if env.lax_universes then U_zero
-      else (match u with
-            | U_unknown -> U.type_u () |> snd
-            | _ -> aux u)
+   in (match u with
+       | U_unknown -> U.type_u () |> snd
+       | _ -> aux u)
 
 (* Several complex cases from the main type-checker are factored in to separate functions below *)
 

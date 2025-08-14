@@ -231,7 +231,6 @@ let initial_env deps
     use_eq_strict=false;
     is_iface=false;
     admit=false;
-    lax_universes=false;
     phase1=false;
     nocoerce=false;
     failhard=false;
