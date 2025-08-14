@@ -271,4 +271,10 @@ let ops = [
 
   mk_tac_step_4 0 "call_subtac_tm"
     call_subtac_tm call_subtac_tm;
+
+  mk_tac_step_4 1 "stats_record"
+    #e_any      #e_any      #_ #(TI.e_tactic_thunk e_any)          #e_any
+    #NBET.e_any #NBET.e_any #_ #(TI.e_tactic_nbe_thunk NBET.e_any) #NBET.e_any
+    stats_record
+    stats_record;
 ]

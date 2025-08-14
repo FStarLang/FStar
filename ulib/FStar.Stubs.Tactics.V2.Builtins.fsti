@@ -644,3 +644,9 @@ val call_subtac_tm
     (g:env) (t : term) (u:universe)
     (goal_ty : term{typing_token g goal_ty (E_Total, pack_ln (Tv_Type u))})
   : Tac (ret_t (w:term{typing_token g w (E_Total, goal_ty)}))
+
+(* This will call the function [f] and log the time it takes under the stat key
+[s]. The stats can be printed by running F* with `--stats true`. Other than
+that, there is no observable difference from calling [f].  We could also expose
+a pure version of this function. *)
+val stats_record #a #wp (s : string) ($f : unit -> TAC a wp) : TAC a wp

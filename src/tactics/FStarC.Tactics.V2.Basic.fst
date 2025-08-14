@@ -3065,3 +3065,7 @@ let call_subtac_tm (g:env) (f_tm : term) (_u:universe) (goal_ty : typ) : tac (op
     return (Some w, [])
   | issues, _ ->
     return (None, issues)
+
+let stats_record (a:'a) (wp:'b) (s:string) (f : tac 'c) : tac 'c =
+  mk_tac (fun ps ->
+    Stats.record s (fun () -> run f ps))

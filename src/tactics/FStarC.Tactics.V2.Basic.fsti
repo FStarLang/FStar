@@ -158,3 +158,5 @@ val log_issues                        : list Errors.issue -> tac unit
 
 val call_subtac                       : env -> tac unit -> universe -> typ -> refl_tac term
 val call_subtac_tm                    : env -> term     -> universe -> typ -> refl_tac term
+
+val stats_record (a:'a) (wp:'b) (s:string) (f : tac 'c) : tac 'c
