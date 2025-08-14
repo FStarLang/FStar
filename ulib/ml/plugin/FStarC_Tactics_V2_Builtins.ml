@@ -180,3 +180,6 @@ let call_subtac g (t : unit -> unit __tac) u ty =
   from_tac_4 "B.call_subtac" B.call_subtac g t u ty
 
 let call_subtac_tm               = from_tac_4 "B.call_subtac_tm" B.call_subtac_tm
+
+let stats_record (s : string) (f : unit -> 'c __tac) : 'c __tac =
+  from_tac_2 "B.stats_record" (B.stats_record () ()) s (to_tac_0 (f ()))
