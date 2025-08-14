@@ -254,7 +254,7 @@ let initial_env deps
     normalized_eff_names=SMap.create 20;  //20?
     fv_delta_depths = SMap.create 50;
     proof_ns = Options.using_facts_from ();
-    synth_hook = (fun e g tau -> failwith "no synthesizer available");
+    synth_hook = (fun e g tau rng -> failwith "no synthesizer available");
     try_solve_implicits_hook = (fun e tau imps -> failwith "no implicit hook available");
     splice = (fun e is_typed _quals _attrs lids tau range -> failwith "no splicer available");
     mpreprocess = (fun e tau tm -> failwith "no preprocessor available");

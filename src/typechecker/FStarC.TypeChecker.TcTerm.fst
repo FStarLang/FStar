@@ -1661,7 +1661,7 @@ and tc_synth head env args rng =
     let tau, _, g2 = tc_tactic t_unit t_unit env tau in
     Rel.force_trivial_guard env g2;
 
-    let t = env.synth_hook env typ ({ tau with pos = rng }) in
+    let t = env.synth_hook env typ ({ tau with pos = rng }) typ.pos in
     if !dbg_Tac then
         Format.print1 "Got %s\n" (show t);
 

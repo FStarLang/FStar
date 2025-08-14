@@ -203,7 +203,7 @@ and env = {
   normalized_eff_names:SMap.t lident;           (* cache for normalized effect name, used to be captured in the function norm_eff_name, which made it harder to roll back etc. *)
   fv_delta_depths:SMap.t delta_depth;           (* cache for fv delta depths, its preferable to use Env.delta_depth_of_fv, soon fv.delta_depth should be removed *)
   proof_ns       :proof_namespace;                (* the current names that will be encoded to SMT (a.k.a. hint db) *)
-  synth_hook          :env -> typ -> term -> term;     (* hook for synthesizing terms via tactics, third arg is tactic term *)
+  synth_hook          :env -> typ -> term -> Range.t -> term;     (* hook for synthesizing terms via tactics, third arg is tactic term *)
   try_solve_implicits_hook :env -> term -> implicits -> unit;     (* *)
   splice : splice_t;   (* hook for synthesizing top-level sigelts via tactics *)
   mpreprocess    :env -> term -> term -> term;    (* hook for preprocessing typechecked terms via metaprograms *)
