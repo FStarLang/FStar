@@ -625,13 +625,8 @@ let tc_decl' env0 se: list sigelt & list sigelt & Env.env =
                     Options.with_saved_options (fun () ->
                       Some?.v (!tc_decls_knot) env' ses)) in
 
-    if Options.print_expected_failures ()
-       || Debug.low () then
-    begin
-        Format.print_string ">> Got issues: [\n";
-        List.iter Errors.print_issue errs;
-        Format.print_string ">>]\n"
-    end;
+    if Options.print_expected_failures () || Debug.low () then
+      Errors.print_expected_failures errs;
 
     (* Pop environment, reset SMT context *)
     let _ = Env.pop env' "expect_failure" in

@@ -2,15 +2,14 @@
   - NegativeTests.ZZImplicitFalse.test is declared but no definition was found
   - Add an 'assume' if this is intentional
 
->> Got issues: [
-* Error 19 at NegativeTests.ZZImplicitFalse.fst(20,27-20,28):
+* Info at NegativeTests.ZZImplicitFalse.fst(20,27-20,28):
+  - Expected failure:
   - Subtyping check failed
   - Expected type Prims.l_False got type Prims.unit
   - The SMT solver could not prove the query. Use --query_stats for more
     details.
   - See also Prims.fst(167,29-167,34)
 
->>]
 * Warning 240 at NegativeTests.ZZImplicitFalse.fst(20,0-20,34):
   - Missing definitions in module NegativeTests.ZZImplicitFalse: test
 

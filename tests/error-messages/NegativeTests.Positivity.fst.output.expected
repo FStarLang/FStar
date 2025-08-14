@@ -1,32 +1,26 @@
->> Got issues: [
-* Error 3 at NegativeTests.Positivity.fst(22,10-22,12):
+* Info at NegativeTests.Positivity.fst(22,10-22,12):
+  - Expected failure:
   - Inductive type NegativeTests.Positivity.t1 does not satisfy the strict positivity condition
 
->>]
->> Got issues: [
-* Error 3 at NegativeTests.Positivity.fst(37,10-37,12):
+* Info at NegativeTests.Positivity.fst(37,10-37,12):
+  - Expected failure:
   - Inductive type NegativeTests.Positivity.t5 does not satisfy the strict positivity condition
 
->>]
->> Got issues: [
-* Error 3 at NegativeTests.Positivity.fst(49,4-49,7):
+* Info at NegativeTests.Positivity.fst(49,4-49,7):
+  - Expected failure:
   - Type NegativeTests.Positivity.t7 is not strictly positive since it instantiates a non-uniformly recursive parameter or index NegativeTests.Positivity.t7 of NegativeTests.Positivity.t6
   - See also NegativeTests.Positivity.fst(49,12-49,14)
 
->>]
->> Got issues: [
-* Error 3 at NegativeTests.Positivity.fst(54,4-54,7):
+* Info at NegativeTests.Positivity.fst(54,4-54,7):
+  - Expected failure:
   - Type NegativeTests.Positivity.t8 is not strictly positive since it instantiates a non-uniformly recursive parameter or index NegativeTests.Positivity.t8 of NegativeTests.Positivity.t6
   - See also NegativeTests.Positivity.fst(54,16-54,18)
 
->>]
->> Got issues: [
-* Error 3 at NegativeTests.Positivity.fst(61,10-61,13):
+* Info at NegativeTests.Positivity.fst(61,10-61,13):
+  - Expected failure:
   - Inductive type NegativeTests.Positivity.t10 does not satisfy the strict positivity condition
 
->>]
->> Got issues: [
-* Error 3 at NegativeTests.Positivity.fst(66,10-66,13):
+* Info at NegativeTests.Positivity.fst(66,10-66,13):
+  - Expected failure:
   - Inductive type NegativeTests.Positivity.t11 does not satisfy the strict positivity condition
 
->>]

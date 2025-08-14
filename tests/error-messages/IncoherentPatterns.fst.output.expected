@@ -1,6 +1,5 @@
->> Got issues: [
-* Error 297 at IncoherentPatterns.fst(6,9-6,10):
+* Info at IncoherentPatterns.fst(6,9-6,10):
+  - Expected failure:
   - Patterns in this match are incoherent.
   - Variable x is bound in some but not all patterns.
 
->>]

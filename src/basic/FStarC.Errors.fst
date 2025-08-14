@@ -742,3 +742,11 @@ let _ = Options.check_include_dir := (fun s ->
                 (Pprint.doc_of_string s)
             ]
 )
+
+let print_expected_failures (issues : list issue) : unit =
+  (* Add them as diagnostics so we see them in the IDE. *)
+  let issues = issues |> List.map (fun i -> { i with
+    issue_level = EInfo;
+    issue_msg   = (text "Expected failure:") :: i.issue_msg;
+  }) in
+  add_issues issues

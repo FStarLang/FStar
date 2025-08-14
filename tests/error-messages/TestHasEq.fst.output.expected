@@ -1,5 +1,5 @@
->> Got issues: [
-* Error 19 at TestHasEq.fst(58,10-58,11):
+* Info at TestHasEq.fst(58,10-58,11):
+  - Expected failure:
   - Failed to prove that the type
     'TestHasEq.t3'
     supports decidable equality because of this argument.
@@ -8,20 +8,17 @@
     details.
   - See also TestHasEq.fst(57,0-58,19)
 
->>]
->> Got issues: [
-* Error 19 at TestHasEq.fst(84,10-84,70):
+* Info at TestHasEq.fst(84,10-84,70):
+  - Expected failure:
   - Subtyping check failed
   - Expected type Prims.eqtype got type Type0
   - The SMT solver could not prove the query. Use --query_stats for more
     details.
   - See also TestHasEq.fst(84,12-84,22)
 
->>]
->> Got issues: [
-* Error 162 at TestHasEq.fst(88,8-89,30):
+* Info at TestHasEq.fst(88,8-89,30):
+  - Expected failure:
   - Invalid qualifiers for declaration `type TestHasEq.erasable_t2`
   - The `unopteq` qualifier is not allowed on erasable inductives since they
     don't have decidable equality.
 
->>]
