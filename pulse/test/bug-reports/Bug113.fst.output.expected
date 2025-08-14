@@ -1,5 +1,4 @@
->> Got issues: [
-* Error 72 at Bug113.fst(29,38-29,44):
+* Info at Bug113.fst(29,38-29,44):
+  - Expected failure:
   - Identifier not found: erased
 
->>]

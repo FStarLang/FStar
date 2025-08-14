@@ -1,10 +1,9 @@
->> Got issues: [
-* Error 228 at Bug267.fst(14,4-14,6):
+* Info at Bug267.fst(14,4-14,6):
+  - Expected failure:
   - Expected a total term, but this term has Ghost effect
 
->>]
->> Got issues: [
-* Error 19 at Bug267.fst(62,4-62,5):
+* Info at Bug267.fst(62,4-62,5):
+  - Expected failure:
   - Could not prove equality between computed type Prims.int
     and expected type Prims.nat
   - Assertion failed
@@ -13,9 +12,7 @@
   - Also see: Prims.fst(161,28-183,79)
   - See also Bug267.fst(62,4-62,8)
 
->>]
->> Got issues: [
-* Error 12 at Bug267.fst(67,13-67,14):
+* Info at Bug267.fst(67,13-67,14):
+  - Expected failure:
   - Expected type Pulse.Lib.Core.slprop but n >= 1 has type Prims.bool
 
->>]

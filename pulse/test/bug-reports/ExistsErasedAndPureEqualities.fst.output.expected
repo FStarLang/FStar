@@ -1,15 +1,13 @@
->> Got issues: [
-* Error 228 at ExistsErasedAndPureEqualities.fst(32,4-33,21):
+* Info at ExistsErasedAndPureEqualities.fst(32,4-33,21):
+  - Expected failure:
   - Could not resolve all free variables in the proposition: v == v_
   - See also ExistsErasedAndPureEqualities.fst(32,4-34,12)
 
->>]
->> Got issues: [
-* Error 228 at ExistsErasedAndPureEqualities.fst(50,4-51,21):
+* Info at ExistsErasedAndPureEqualities.fst(50,4-51,21):
+  - Expected failure:
   - Could not resolve all free variables in the proposition: v == v_
   - See also ExistsErasedAndPureEqualities.fst(50,4-52,12)
 
->>]
 * Info at ExistsErasedAndPureEqualities.fst(68,4-68,11):
   - Admitting continuation.
   - Current context:
@@ -21,9 +19,8 @@
       v#116 : FStar.Ghost.erased Prims.int,
       x#111 : Pulse.Lib.Reference.ref Prims.int
 
->> Got issues: [
-* Error 228 at ExistsErasedAndPureEqualities.fst(79,4-80,21):
+* Info at ExistsErasedAndPureEqualities.fst(79,4-80,21):
+  - Expected failure:
   - Could not resolve all free variables in the proposition: v == v_
   - See also ExistsErasedAndPureEqualities.fst(79,4-81,12)
 
->>]

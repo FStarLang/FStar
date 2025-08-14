@@ -1,5 +1,5 @@
->> Got issues: [
-* Error 19 at MatchBasic.fst(154,2-156,3):
+* Info at MatchBasic.fst(154,2-156,3):
+  - Expected failure:
   - Could not verify that this match is exhaustive.
   - Patterns are incomplete
   - The SMT solver could not prove the query. Use --query_stats for more
@@ -7,4 +7,3 @@
   - Also see: MatchBasic.fst(154,8-154,10)
   - Other related locations: dummy(0,0-0,0)
 
->>]

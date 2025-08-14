@@ -1,6 +1,5 @@
->> Got issues: [
-* Error 114 at Bug111.fst(13,2-20,3):
+* Info at Bug111.fst(13,2-20,3):
+  - Expected failure:
   - Could not verify that this match is exhaustive.
   - Type of pattern (Prims.int) does not match type of scrutinee (FStar.Ghost.erased Prims.int)
 
->>]

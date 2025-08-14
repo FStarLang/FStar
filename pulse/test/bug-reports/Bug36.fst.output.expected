@@ -1,6 +1,5 @@
->> Got issues: [
-* Error 189 at Bug36.fst(13,6-13,7):
+* Info at Bug36.fst(13,6-13,7):
+  - Expected failure:
   - Expected expression of type Type got expression n of type Prims.nat
   - See also Bug36.fst(13,2-13,7)
 
->>]

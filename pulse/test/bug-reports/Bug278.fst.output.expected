@@ -1,5 +1,4 @@
->> Got issues: [
-* Error 339 at Bug278.fst(36,11-36,56):
+* Info at Bug278.fst(36,11-36,56):
+  - Expected failure:
   - Elaborated term has unresolved univ uvars: Bug278.spawn (Bug278.pth n)
 
->>]
