@@ -697,14 +697,14 @@ let spinoff_strictly_positive_goals (env:Env.env) (goal:term)
   )
 
 
-let synthesize (env:Env.env) (typ:typ) (tau:term) : term =
+let synthesize (env:Env.env) (typ:typ) (tau:term) rng : term =
   Errors.with_ctx "While synthesizing term with a tactic" (fun () ->
     // Don't run the tactic (and end with a magic) when flychecking is set, cf. issue #73 in fstar-mode.el
     if env.flychecking
     then mk_Tm_app (TcUtil.fvar_env env PC.magic_lid) [S.as_arg U.exp_unit] typ.pos
     else begin
 
-    let gs, w = run_tactic_on_typ tau.pos typ.pos tau env typ in
+    let gs, w = run_tactic_on_typ tau.pos rng tau env typ in
     // Check that all goals left are irrelevant and provable
     // TODO: It would be nicer to combine all of these into a guard and return
     // that to TcTerm, but the varying environments make it awkward.

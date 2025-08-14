@@ -1893,7 +1893,7 @@ let run_meta_arg_tac (env:env_t) (ctx_u:ctx_uvar) : term =
     if !dbg_Tac then
       Format.print1 "Running tactic for meta-arg %s\n" (show ctx_u);
     Errors.with_ctx "Running tactic for meta-arg"
-      (fun () -> env.synth_hook env (U.ctx_uvar_typ ctx_u) tau)
+      (fun () -> env.synth_hook env (U.ctx_uvar_typ ctx_u) tau (pos ctx_u))
   | _ ->
     failwith "run_meta_arg_tac must have been called with a uvar that has a meta tac"
 
