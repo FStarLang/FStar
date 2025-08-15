@@ -34,7 +34,7 @@ module LE = LowStar.Endianness
  * Implementation for LowStar.PrefixfreezableBuffer
  *)
 
-#set-options "--max_fuel 0 --max_ifuel 0"
+#set-options "--fuel 0 --ifuel 0"
 
 let le_to_n s = E.le_to_n s
 

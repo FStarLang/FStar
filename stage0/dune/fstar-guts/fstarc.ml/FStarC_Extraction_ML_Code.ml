@@ -72,7 +72,9 @@ let (empty : doc) = Doc ""
 let (hardline : doc) = Doc "\n"
 let (text : Prims.string -> doc) = fun s -> Doc s
 let (num : Prims.int -> doc) =
-  fun i -> let uu___ = FStarC_Util.string_of_int i in Doc uu___
+  fun i ->
+    let uu___ = FStarC_Class_Show.show FStarC_Class_Show.showable_int i in
+    Doc uu___
 let (break1 : doc) = text " "
 let (enclose : doc -> doc -> doc -> doc) =
   fun uu___ ->
@@ -301,27 +303,29 @@ let (maybe_paren :
       fun doc1 ->
         match uu___ with
         | (outer, side) ->
-            let noparens _inner _outer side1 =
-              let uu___1 = _inner in
-              match uu___1 with
-              | (pi, fi) ->
-                  let uu___2 = _outer in
-                  (match uu___2 with
-                   | (po, fo) ->
-                       (pi > po) ||
-                         ((match (fi, side1) with
-                           | (Postfix, Left) -> true
-                           | (Prefix, Right) -> true
-                           | (Infix (Left), Left) ->
-                               (pi = po) && (fo = (Infix Left))
-                           | (Infix (Right), Right) ->
-                               (pi = po) && (fo = (Infix Right))
-                           | (Infix (Left), ILeft) ->
-                               (pi = po) && (fo = (Infix Left))
-                           | (Infix (Right), IRight) ->
-                               (pi = po) && (fo = (Infix Right))
-                           | (uu___3, NonAssoc) -> (pi = po) && (fi = fo)
-                           | (uu___3, uu___4) -> false))) in
+            let noparens _inner =
+              fun _outer ->
+                fun side1 ->
+                  let uu___1 = _inner in
+                  match uu___1 with
+                  | (pi, fi) ->
+                      let uu___2 = _outer in
+                      (match uu___2 with
+                       | (po, fo) ->
+                           (pi > po) ||
+                             ((match (fi, side1) with
+                               | (Postfix, Left) -> true
+                               | (Prefix, Right) -> true
+                               | (Infix (Left), Left) ->
+                                   (pi = po) && (fo = (Infix Left))
+                               | (Infix (Right), Right) ->
+                                   (pi = po) && (fo = (Infix Right))
+                               | (Infix (Left), ILeft) ->
+                                   (pi = po) && (fo = (Infix Left))
+                               | (Infix (Right), IRight) ->
+                                   (pi = po) && (fo = (Infix Right))
+                               | (uu___3, NonAssoc) -> (pi = po) && (fi = fo)
+                               | (uu___3, uu___4) -> false))) in
             if noparens inner outer side then doc1 else parens doc1
 let (escape_byte_hex : FStarC_BaseTypes.byte -> Prims.string) =
   fun x -> Prims.strcat "\\x" (FStarC_Util.hex_string_of_byte x)
@@ -380,7 +384,8 @@ let (string_of_mlconstant :
           Prims.strcat "'" (Prims.strcat (FStarC_Util.string_of_char c) "'")
         else
           (let nc = FStar_Char.int_of_char c in
-           let uu___2 = FStarC_Util.string_of_int nc in
+           let uu___2 =
+             FStarC_Class_Show.show FStarC_Class_Show.showable_nat nc in
            Prims.strcat uu___2
              (if
                 ((nc >= (Prims.of_int (32))) && (nc = (Prims.of_int (127))))
@@ -432,11 +437,6 @@ let (string_of_mlconstant :
         -> Prims.strcat "(Prims.parse_int \"" (Prims.strcat s "\")")
     | FStarC_Extraction_ML_Syntax.MLC_Float d ->
         FStarC_Util.string_of_float d
-    | FStarC_Extraction_ML_Syntax.MLC_Bytes bytes ->
-        let uu___ =
-          let uu___1 = FStarC_Bytes.f_encode escape_byte_hex bytes in
-          Prims.strcat uu___1 "\"" in
-        Prims.strcat "\"" uu___
     | FStarC_Extraction_ML_Syntax.MLC_String chars ->
         let uu___ =
           let uu___1 =
@@ -562,7 +562,7 @@ let rec (doc_of_expr :
               then
                 let uu___1 =
                   let uu___2 = as_standard_constructor ctor in
-                  FStarC_Option.get uu___2 in
+                  FStarC_Option.must uu___2 in
                 FStar_Pervasives_Native.snd uu___1
               else ptctor currentModule ctor in
             text name
@@ -573,7 +573,7 @@ let rec (doc_of_expr :
               then
                 let uu___1 =
                   let uu___2 = as_standard_constructor ctor in
-                  FStarC_Option.get uu___2 in
+                  FStarC_Option.must uu___2 in
                 FStar_Pervasives_Native.snd uu___1
               else ptctor currentModule ctor in
             let args1 =
@@ -735,29 +735,30 @@ let rec (doc_of_expr :
                  reduce uu___2) in
             doc1
         | FStarC_Extraction_ML_Syntax.MLE_Fun (ids, body) ->
-            let bvar_annot x xt =
-              let uu___ = FStarC_Extraction_ML_Util.codegen_fsharp () in
-              if uu___
-              then
-                let uu___1 =
-                  let uu___2 =
-                    let uu___3 =
-                      let uu___4 =
-                        match xt with
-                        | FStar_Pervasives_Native.Some xxt ->
-                            let uu___5 =
-                              let uu___6 =
-                                let uu___7 =
-                                  doc_of_mltype currentModule outer xxt in
-                                [uu___7] in
-                              (text " : ") :: uu___6 in
-                            reduce1 uu___5
-                        | uu___5 -> text "" in
-                      [uu___4; text ")"] in
-                    (text x) :: uu___3 in
-                  (text "(") :: uu___2 in
-                reduce1 uu___1
-              else text x in
+            let bvar_annot x =
+              fun xt ->
+                let uu___ = FStarC_Extraction_ML_Util.codegen_fsharp () in
+                if uu___
+                then
+                  let uu___1 =
+                    let uu___2 =
+                      let uu___3 =
+                        let uu___4 =
+                          match xt with
+                          | FStar_Pervasives_Native.Some xxt ->
+                              let uu___5 =
+                                let uu___6 =
+                                  let uu___7 =
+                                    doc_of_mltype currentModule outer xxt in
+                                  [uu___7] in
+                                (text " : ") :: uu___6 in
+                              reduce1 uu___5
+                          | uu___5 -> text "" in
+                        [uu___4; text ")"] in
+                      (text x) :: uu___3 in
+                    (text "(") :: uu___2 in
+                  reduce1 uu___1
+                else text x in
             let ids1 =
               FStarC_List.map
                 (fun uu___ ->
@@ -872,7 +873,7 @@ and (doc_of_binop :
     fun p ->
       fun e1 ->
         fun e2 ->
-          let uu___ = let uu___1 = as_bin_op p in FStarC_Option.get uu___1 in
+          let uu___ = let uu___1 = as_bin_op p in FStarC_Option.must uu___1 in
           match uu___ with
           | (uu___1, prio, txt) ->
               let e11 = doc_of_expr currentModule (prio, Left) e1 in
@@ -886,7 +887,7 @@ and (doc_of_uniop :
   fun currentModule ->
     fun p ->
       fun e1 ->
-        let uu___ = let uu___1 = as_uni_op p in FStarC_Option.get uu___1 in
+        let uu___ = let uu___1 = as_uni_op p in FStarC_Option.must uu___1 in
         match uu___ with
         | (uu___1, txt) ->
             let e11 = doc_of_expr currentModule (min_op_prec, NonAssoc) e1 in
@@ -927,7 +928,7 @@ and (doc_of_pattern :
             then
               let uu___1 =
                 let uu___2 = as_standard_constructor ctor in
-                FStarC_Option.get uu___2 in
+                FStarC_Option.must uu___2 in
               FStar_Pervasives_Native.snd uu___1
             else ptctor currentModule ctor in
           text name
@@ -938,7 +939,7 @@ and (doc_of_pattern :
             then
               let uu___1 =
                 let uu___2 = as_standard_constructor ctor in
-                FStarC_Option.get uu___2 in
+                FStarC_Option.must uu___2 in
               FStar_Pervasives_Native.snd uu___1
             else ptctor currentModule ctor in
           let doc1 =
@@ -1318,43 +1319,45 @@ let (doc_of_mlmodule_r :
                | FStar_Pervasives_Native.None -> empty
                | FStar_Pervasives_Native.Some s -> cat s hardline);
               cat tail hardline]
-      and p_mod istop mod2 =
-        let uu___ = mod2 in
-        match uu___ with
-        | (mod_name, sigmod) ->
-            let target_mod_name =
-              FStarC_Extraction_ML_Util.flatten_mlpath mod_name in
-            let head =
-              reduce1
-                (if fsharp
-                 then [text "module"; text target_mod_name]
-                 else
-                   if Prims.op_Negation istop
-                   then
-                     [text "module";
-                     text target_mod_name;
-                     text "=";
-                     text "struct"]
-                   else []) in
-            let tail =
-              if Prims.op_Negation istop
-              then reduce1 [text "end"]
-              else reduce1 [] in
-            let doc1 =
-              FStarC_Option.map
-                (fun uu___1 ->
-                   match uu___1 with
-                   | (uu___2, m) -> doc_of_modbody target_mod_name m) sigmod in
-            let prefix =
-              if fsharp then [cat (text "#light \"off\"") hardline] else [] in
-            reduce
-              (FStarC_List.op_At prefix
-                 [head;
-                 hardline;
-                 (match doc1 with
-                  | FStar_Pervasives_Native.None -> empty
-                  | FStar_Pervasives_Native.Some s -> cat s hardline);
-                 cat tail hardline]) in
+      and p_mod istop =
+        fun mod2 ->
+          let uu___ = mod2 in
+          match uu___ with
+          | (mod_name, sigmod) ->
+              let target_mod_name =
+                FStarC_Extraction_ML_Util.flatten_mlpath mod_name in
+              let head =
+                reduce1
+                  (if fsharp
+                   then [text "module"; text target_mod_name]
+                   else
+                     if Prims.op_Negation istop
+                     then
+                       [text "module";
+                       text target_mod_name;
+                       text "=";
+                       text "struct"]
+                     else []) in
+              let tail =
+                if Prims.op_Negation istop
+                then reduce1 [text "end"]
+                else reduce1 [] in
+              let doc1 =
+                FStarC_Option.map
+                  (fun uu___1 ->
+                     match uu___1 with
+                     | (uu___2, m) -> doc_of_modbody target_mod_name m)
+                  sigmod in
+              let prefix =
+                if fsharp then [cat (text "#light \"off\"") hardline] else [] in
+              reduce
+                (FStarC_List.op_At prefix
+                   [head;
+                   hardline;
+                   (match doc1 with
+                    | FStar_Pervasives_Native.None -> empty
+                    | FStar_Pervasives_Native.Some s -> cat s hardline);
+                   cat tail hardline]) in
       p_mod true mod1
 let (pretty : Prims.int -> doc -> Prims.string) =
   fun sz -> fun uu___ -> match uu___ with | Doc doc1 -> doc1

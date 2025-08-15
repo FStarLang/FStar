@@ -30,7 +30,7 @@ let shellescape (s:string) : string =
 
 let new_ocamlpath () : string =
   let ocamldir = Find.locate_ocaml () in
-  let old_ocamlpath = Util.dflt "" (Util.expand_environment_variable "OCAMLPATH") in
+  let old_ocamlpath = Option.dflt "" (Util.expand_environment_variable "OCAMLPATH") in
   let new_ocamlpath = ocamldir ^ Platform.ocamlpath_sep ^ old_ocamlpath in
   new_ocamlpath
 

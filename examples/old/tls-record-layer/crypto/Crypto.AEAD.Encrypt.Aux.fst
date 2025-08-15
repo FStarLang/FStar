@@ -36,7 +36,7 @@ module CMA = Crypto.Symmetric.UF1CMA
 module Seq = FStar.Seq
 
 
-#reset-options "--z3rlimit 400 --initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0"
+#reset-options "--z3rlimit 400 --fuel 0 --ifuel 0"
 val extend_refines_aux: (i:id) -> (st:state i Writer) -> (nonce:Cipher.iv (alg i)) ->
 		       (aadlen: UInt32.t {aadlen <=^ aadmax}) ->
 		       (aad: lbuffer (v aadlen)) ->
@@ -86,7 +86,7 @@ let extend_refines_aux i st nonce aadlen aad len plain cipher h0 h1 =
      let entry = Entry nonce ad len p c_tagged in
      extend_refines h0 i mac_rgn entries_0 blocks_0 entry blocks_1 h1
 
-#reset-options "--z3rlimit 400 --initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0"
+#reset-options "--z3rlimit 400 --fuel 0 --ifuel 0"
 let encrypt_ensures' (regions:Set.set HH.rid)
 		     (i:id) (st:state i Writer)
 		     (n: Cipher.iv (alg i))
@@ -174,7 +174,7 @@ val finish_after_mac: h0:mem -> h3:mem -> i:id -> st:state i Writer ->
    (ensures (fun _ _ h5 -> 
               encrypt_ensures_tip i st n aadlen aad plainlen plain cipher_tagged h0 h5))
 
-#reset-options "--z3rlimit 1000 --initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0"
+#reset-options "--z3rlimit 1000 --fuel 0 --ifuel 0"
 let finish_after_mac h0 h3 i st n aadlen aad plainlen plain cipher_tagged ak acc tag = 
   if prf i then recall (itable i st.prf);
   if safeId i then recall st.log;

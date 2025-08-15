@@ -25,7 +25,7 @@ open FStar.Buffer
 module U32 = FStar.UInt32
 type u32 = FStar.UInt32.t
 
-#set-options "--z3rlimit 10 --max_fuel 0 --initial_fuel 0"
+#set-options "--z3rlimit 10 --fuel 0 --initial_fuel 0"
 
 type bytes = buffer byte
 
@@ -111,7 +111,7 @@ let authenticate #k alg ciphertext tag key nonce cnt ad adlen len =
   auth_body #k alg ciphertext tag key nonce cnt ad adlen len tmp;
   pop_frame()
 
-#reset-options "--initial_fuel 0 --max_fuel 0 --z3rlimit 50"
+#reset-options "--fuel 0 --z3rlimit 50"
 
 private val encrypt_loop: #k:pos -> alg:cipher_alg k ->
     ciphertext:bytes ->
@@ -152,7 +152,7 @@ let rec encrypt_loop #k alg ciphertext key cnt plaintext len tmp dep =
     assert(live h1 ciphertext /\ live h1 key /\ live h1 plaintext /\ live h1 tmp /\ modifies_2 ciphertext tmp h0 h1)
   end
 
-#reset-options "--initial_fuel 0 --max_fuel 0 --z3rlimit 20"
+#reset-options "--fuel 0 --z3rlimit 20"
 
 private val encrypt_body: #k:pos -> alg:cipher_alg k ->
     ciphertext:bytes ->
@@ -176,7 +176,7 @@ let encrypt_body #k alg ciphertext tag key nonce cnt ad adlen plaintext len =
   authenticate #k alg ciphertext tag key nonce cnt ad adlen len;
   pop_frame()
 
-#reset-options "--initial_fuel 0 --max_fuel 0"
+#reset-options "--fuel 0"
 
 (* * In GCM, an initialization vector is used to generate a 96-bit nonce, and can have any length. **)
 (* * This version only allows 96-bit iv. This needs to be fixed.                                   **)

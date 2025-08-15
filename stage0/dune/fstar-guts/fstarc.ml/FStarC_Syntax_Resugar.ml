@@ -29,7 +29,9 @@ let (bv_as_unique_ident : FStarC_Syntax_Syntax.bv -> FStarC_Ident.ident) =
       if uu___
       then
         let uu___1 = FStarC_Ident.string_of_id x.FStarC_Syntax_Syntax.ppname in
-        let uu___2 = FStarC_Util.string_of_int x.FStarC_Syntax_Syntax.index in
+        let uu___2 =
+          FStarC_Class_Show.show FStarC_Class_Show.showable_int
+            x.FStarC_Syntax_Syntax.index in
         Prims.strcat uu___1 uu___2
       else FStarC_Ident.string_of_id x.FStarC_Syntax_Syntax.ppname in
     let uu___ =
@@ -123,11 +125,12 @@ let (universe_to_string : FStarC_Ident.ident Prims.list -> Prims.string) =
     else ""
 let rec (resugar_universe :
   FStarC_Syntax_Syntax.universe ->
-    FStarC_Range_Type.range -> FStarC_Parser_AST.term)
+    FStarC_Range_Type.t -> FStarC_Parser_AST.term)
   =
   fun u ->
     fun r ->
-      let mk a r1 = FStarC_Parser_AST.mk_term a r1 FStarC_Parser_AST.Un in
+      let mk a =
+        fun r1 -> FStarC_Parser_AST.mk_term a r1 FStarC_Parser_AST.Un in
       let u1 = FStarC_Syntax_Subst.compress_univ u in
       match u1 with
       | FStarC_Syntax_Syntax.U_zero ->
@@ -144,7 +147,9 @@ let rec (resugar_universe :
                     let uu___2 =
                       let uu___3 =
                         let uu___4 =
-                          let uu___5 = FStarC_Util.string_of_int n in
+                          let uu___5 =
+                            FStarC_Class_Show.show
+                              FStarC_Class_Show.showable_int n in
                           (uu___5, FStar_Pervasives_Native.None) in
                         FStarC_Const.Const_int uu___4 in
                       FStarC_Parser_AST.Const uu___3 in
@@ -154,7 +159,9 @@ let rec (resugar_universe :
                       let uu___3 =
                         let uu___4 =
                           let uu___5 =
-                            let uu___6 = FStarC_Util.string_of_int n in
+                            let uu___6 =
+                              FStarC_Class_Show.show
+                                FStarC_Class_Show.showable_int n in
                             (uu___6, FStar_Pervasives_Native.None) in
                           FStarC_Const.Const_int uu___5 in
                         FStarC_Parser_AST.Const uu___4 in
@@ -190,7 +197,8 @@ let rec (resugar_universe :
           let id =
             let uu___ =
               let uu___1 =
-                let uu___2 = FStarC_Util.string_of_int x in
+                let uu___2 =
+                  FStarC_Class_Show.show FStarC_Class_Show.showable_int x in
                 FStarC_Util.strcat "uu__univ_bvar_" uu___2 in
               (uu___1, r) in
             FStarC_Ident.mk_ident uu___ in
@@ -199,7 +207,7 @@ let rec (resugar_universe :
 let (resugar_universe' :
   FStarC_Syntax_DsEnv.env ->
     FStarC_Syntax_Syntax.universe ->
-      FStarC_Range_Type.range -> FStarC_Parser_AST.term)
+      FStarC_Range_Type.t -> FStarC_Parser_AST.term)
   = fun env -> fun u -> fun r -> resugar_universe u r
 type expected_arity = Prims.int FStar_Pervasives_Native.option
 let rec (resugar_term_as_op :
@@ -240,7 +248,7 @@ let rec (resugar_term_as_op :
       (FStarC_Parser_Const.calc_finish_lid, "calc_finish")] in
     let fallback fv =
       let uu___ =
-        FStarC_Util.find_opt
+        FStarC_Option.find
           (fun d ->
              FStarC_Syntax_Syntax.fv_eq_lid fv
                (FStar_Pervasives_Native.fst d)) infix_prim_ops in
@@ -373,11 +381,9 @@ let (serialize_machine_integer_desc :
           match s with
           | FStarC_Const.Unsigned -> "u"
           | FStarC_Const.Signed -> "" in
-        let uu___1 =
-          FStarC_Util.format3 "FStar.%sInt%s.__%sint_to_t" sU sW su in
+        let uu___1 = FStarC_Format.fmt3 "FStar.%sInt%s.__%sint_to_t" sU sW su in
         let uu___2 =
-          let uu___3 =
-            FStarC_Util.format3 "FStar.%sInt%s.%sint_to_t" sU sW su in
+          let uu___3 = FStarC_Format.fmt3 "FStar.%sInt%s.%sint_to_t" sU sW su in
           [uu___3] in
         uu___1 :: uu___2
 let (parse_machine_integer_desc :
@@ -430,7 +436,8 @@ let (parse_machine_integer_desc :
 let (can_resugar_machine_integer_fv : FStarC_Syntax_Syntax.fv -> Prims.bool)
   =
   fun fv ->
-    let uu___ = parse_machine_integer_desc fv in FStarC_Option.isSome uu___
+    let uu___ = parse_machine_integer_desc fv in
+    FStar_Pervasives_Native.uu___is_Some uu___
 let (resugar_machine_integer :
   FStarC_Syntax_Syntax.fv ->
     Prims.string -> FStarC_Range_Type.range -> FStarC_Parser_AST.term)
@@ -542,9 +549,10 @@ let rec (resugar_term' :
       let mk a =
         FStarC_Parser_AST.mk_term a t.FStarC_Syntax_Syntax.pos
           FStarC_Parser_AST.Un in
-      let name a r =
-        let uu___ = FStarC_Ident.lid_of_path [a] r in
-        FStarC_Parser_AST.Name uu___ in
+      let name a =
+        fun r ->
+          let uu___ = FStarC_Ident.lid_of_path [a] r in
+          FStarC_Parser_AST.Name uu___ in
       let uu___ =
         let uu___1 = FStarC_Syntax_Subst.compress t in
         uu___1.FStarC_Syntax_Syntax.n in
@@ -617,10 +625,12 @@ let rec (resugar_term' :
                  let uu___4 =
                    let uu___5 =
                      let uu___6 =
-                       let uu___7 = FStarC_Ident.range_of_lid a in
-                       ("SMTPat", uu___7) in
-                     FStarC_Ident.mk_ident uu___6 in
-                   FStarC_Parser_AST.Tvar uu___5 in
+                       let uu___7 =
+                         let uu___8 = FStarC_Ident.range_of_lid a in
+                         ("SMTPat", uu___8) in
+                       FStarC_Ident.mk_ident uu___7 in
+                     FStarC_Ident.id_as_lid uu___6 in
+                   FStarC_Parser_AST.Var uu___5 in
                  mk uu___4
                else
                  (let uu___5 =
@@ -631,10 +641,12 @@ let rec (resugar_term' :
                     let uu___6 =
                       let uu___7 =
                         let uu___8 =
-                          let uu___9 = FStarC_Ident.range_of_lid a in
-                          ("SMTPatOr", uu___9) in
-                        FStarC_Ident.mk_ident uu___8 in
-                      FStarC_Parser_AST.Tvar uu___7 in
+                          let uu___9 =
+                            let uu___10 = FStarC_Ident.range_of_lid a in
+                            ("SMTPatOr", uu___10) in
+                          FStarC_Ident.mk_ident uu___9 in
+                        FStarC_Ident.id_as_lid uu___8 in
+                      FStarC_Parser_AST.Var uu___7 in
                     mk uu___6
                   else
                     (let uu___7 =
@@ -765,13 +777,14 @@ let rec (resugar_term' :
                              resugar_binder' env b t.FStarC_Syntax_Syntax.pos)
                           xs2 in
                       FStarC_List.rev uu___4 in
-                    let rec aux body3 uu___4 =
-                      match uu___4 with
-                      | [] -> body3
-                      | hd::tl ->
-                          let body4 =
-                            mk (FStarC_Parser_AST.Product ([hd], body3)) in
-                          aux body4 tl in
+                    let rec aux body3 =
+                      fun uu___4 ->
+                        match uu___4 with
+                        | [] -> body3
+                        | hd::tl ->
+                            let body4 =
+                              mk (FStarC_Parser_AST.Product ([hd], body3)) in
+                            aux body4 tl in
                     aux body2 xs3))
       | FStarC_Syntax_Syntax.Tm_refine
           { FStarC_Syntax_Syntax.b = x; FStarC_Syntax_Syntax.phi = phi;_} ->
@@ -851,33 +864,35 @@ let rec (resugar_term' :
                  | [] -> failwith "not_enough explicit_arguments"
                  | uu___4::[] -> failwith "not_enough explicit_arguments"
                  | a1::a2::uu___4 -> [a1; a2] in
-               let resugar_as_app e1 args1 =
-                 let args2 =
-                   FStarC_List.map
-                     (fun uu___3 ->
-                        match uu___3 with
-                        | (e2, qual) ->
-                            let uu___4 = resugar_term' env e2 in
-                            let uu___5 = resugar_aqual env qual in
-                            (uu___4, uu___5)) args1 in
-                 let uu___3 = resugar_term' env e1 in
-                 match uu___3 with
-                 | {
-                     FStarC_Parser_AST.tm = FStarC_Parser_AST.Construct
-                       (hd, previous_args);
-                     FStarC_Parser_AST.range = r;
-                     FStarC_Parser_AST.level = l;_} ->
-                     FStarC_Parser_AST.mk_term
-                       (FStarC_Parser_AST.Construct
-                          (hd, (FStarC_List.op_At previous_args args2))) r l
-                 | e2 ->
-                     FStarC_List.fold_left
-                       (fun acc ->
-                          fun uu___4 ->
-                            match uu___4 with
-                            | (x, qual) ->
-                                mk (FStarC_Parser_AST.App (acc, x, qual))) e2
-                       args2 in
+               let resugar_as_app e1 =
+                 fun args1 ->
+                   let args2 =
+                     FStarC_List.map
+                       (fun uu___3 ->
+                          match uu___3 with
+                          | (e2, qual) ->
+                              let uu___4 = resugar_term' env e2 in
+                              let uu___5 = resugar_aqual env qual in
+                              (uu___4, uu___5)) args1 in
+                   let uu___3 = resugar_term' env e1 in
+                   match uu___3 with
+                   | {
+                       FStarC_Parser_AST.tm = FStarC_Parser_AST.Construct
+                         (hd, previous_args);
+                       FStarC_Parser_AST.range = r;
+                       FStarC_Parser_AST.level = l;_} ->
+                       FStarC_Parser_AST.mk_term
+                         (FStarC_Parser_AST.Construct
+                            (hd, (FStarC_List.op_At previous_args args2))) r
+                         l
+                   | e2 ->
+                       FStarC_List.fold_left
+                         (fun acc ->
+                            fun uu___4 ->
+                              match uu___4 with
+                              | (x, qual) ->
+                                  mk (FStarC_Parser_AST.App (acc, x, qual)))
+                         e2 args2 in
                let args1 = filter_imp_args args in
                let is_projector t2 =
                  let uu___3 =
@@ -979,88 +994,106 @@ let rec (resugar_term' :
                     | (e1, uu___7)::[] -> resugar_term' env e1
                   else
                     (let unsnoc l =
-                       let rec unsnoc' acc uu___7 =
-                         match uu___7 with
-                         | [] -> failwith "unsnoc: empty list"
-                         | x::[] -> ((FStarC_List.rev acc), x)
-                         | x::xs -> unsnoc' (x :: acc) xs in
+                       let rec unsnoc' acc =
+                         fun uu___7 ->
+                           match uu___7 with
+                           | [] -> failwith "unsnoc: empty list"
+                           | x::[] -> ((FStarC_List.rev acc), x)
+                           | x::xs -> unsnoc' (x :: acc) xs in
                        unsnoc' [] l in
-                     let resugar_tuple_type env1 args2 =
-                       let typs =
-                         FStarC_List.map
-                           (fun uu___7 ->
-                              match uu___7 with
-                              | (x, uu___8) -> resugar_term' env1 x) args2 in
-                       let uu___7 = unsnoc typs in
-                       match uu___7 with
-                       | (pre, last1) ->
-                           let uu___8 =
-                             let uu___9 =
-                               let uu___10 =
-                                 FStarC_List.map
-                                   (fun uu___11 ->
-                                      FStar_Pervasives.Inr uu___11) pre in
-                               (uu___10, last1) in
-                             FStarC_Parser_AST.Sum uu___9 in
-                           mk uu___8 in
-                     let resugar_dtuple_type env1 hd args2 =
-                       let fancy_resugar uu___7 =
-                         (fun uu___7 ->
-                            let n = FStarC_List.length args2 in
-                            let take n1 l =
-                              let uu___8 = FStarC_List.splitAt n1 l in
-                              FStar_Pervasives_Native.fst uu___8 in
-                            let uu___8 =
-                              let uu___9 =
-                                let uu___10 = FStarC_List.last args2 in
-                                FStar_Pervasives_Native.fst uu___10 in
-                              FStarC_Syntax_Util.abs_formals uu___9 in
-                            match uu___8 with
-                            | (bs, uu___9, uu___10) ->
-                                Obj.magic
-                                  (FStarC_Class_Monad.op_let_Bang
-                                     FStarC_Class_Monad.monad_option () ()
-                                     (if
-                                        (FStarC_List.length bs) <
-                                          (n - Prims.int_one)
-                                      then FStar_Pervasives_Native.None
-                                      else FStar_Pervasives_Native.Some ())
+                     let resugar_tuple_type env1 =
+                       fun args2 ->
+                         let typs =
+                           FStarC_List.map
+                             (fun uu___7 ->
+                                match uu___7 with
+                                | (x, uu___8) -> resugar_term' env1 x) args2 in
+                         let uu___7 = unsnoc typs in
+                         match uu___7 with
+                         | (pre, last1) ->
+                             let uu___8 =
+                               let uu___9 =
+                                 let uu___10 =
+                                   FStarC_List.map
                                      (fun uu___11 ->
-                                        (fun uu___11 ->
-                                           let uu___11 = Obj.magic uu___11 in
-                                           let bs1 =
-                                             take (n - Prims.int_one) bs in
-                                           let concatM uu___12 l =
-                                             FStarC_Class_Monad.mapM uu___12
-                                               () ()
-                                               (fun uu___13 ->
-                                                  (fun x ->
-                                                     let x = Obj.magic x in
-                                                     Obj.magic x) uu___13)
-                                               (Obj.magic l) in
-                                           let rec open_lambda_binders
-                                             uu___13 uu___12 =
-                                             (fun t2 ->
-                                                fun bs2 ->
-                                                  match bs2 with
-                                                  | [] ->
-                                                      Obj.magic
-                                                        (Obj.repr
-                                                           (FStar_Pervasives_Native.Some
-                                                              t2))
-                                                  | b::bs3 ->
-                                                      Obj.magic
-                                                        (Obj.repr
-                                                           (let uu___12 =
-                                                              FStarC_Syntax_Util.abs_one_ln
-                                                                t2 in
-                                                            FStarC_Class_Monad.op_let_Bang
-                                                              FStarC_Class_Monad.monad_option
-                                                              () ()
-                                                              (Obj.magic
-                                                                 uu___12)
-                                                              (fun uu___13 ->
-                                                                 (fun uu___13
+                                        FStar_Pervasives.Inr uu___11) pre in
+                                 (uu___10, last1) in
+                               FStarC_Parser_AST.Sum uu___9 in
+                             mk uu___8 in
+                     let resugar_dtuple_type env1 =
+                       fun hd ->
+                         fun args2 ->
+                           let fancy_resugar uu___7 =
+                             (fun uu___7 ->
+                                let n = FStarC_List.length args2 in
+                                let take n1 =
+                                  fun l ->
+                                    let uu___8 = FStarC_List.splitAt n1 l in
+                                    FStar_Pervasives_Native.fst uu___8 in
+                                let uu___8 =
+                                  let uu___9 =
+                                    let uu___10 = FStarC_List.last args2 in
+                                    FStar_Pervasives_Native.fst uu___10 in
+                                  FStarC_Syntax_Util.abs_formals uu___9 in
+                                match uu___8 with
+                                | (bs, uu___9, uu___10) ->
+                                    Obj.magic
+                                      (FStarC_Class_Monad.op_let_Bang
+                                         FStarC_Class_Monad.monad_option ()
+                                         ()
+                                         (if
+                                            (FStarC_List.length bs) <
+                                              (n - Prims.int_one)
+                                          then FStar_Pervasives_Native.None
+                                          else
+                                            FStar_Pervasives_Native.Some ())
+                                         (fun uu___11 ->
+                                            (fun uu___11 ->
+                                               let uu___11 =
+                                                 Obj.magic uu___11 in
+                                               let bs1 =
+                                                 take (n - Prims.int_one) bs in
+                                               let concatM uu___12 =
+                                                 fun l ->
+                                                   FStarC_Class_Monad.mapM
+                                                     uu___12 () ()
+                                                     (fun uu___13 ->
+                                                        (fun x ->
+                                                           let x =
+                                                             Obj.magic x in
+                                                           Obj.magic x)
+                                                          uu___13)
+                                                     (Obj.magic l) in
+                                               let rec open_lambda_binders
+                                                 uu___13 =
+                                                 fun uu___12 ->
+                                                   (fun t2 ->
+                                                      fun bs2 ->
+                                                        match bs2 with
+                                                        | [] ->
+                                                            Obj.magic
+                                                              (Obj.repr
+                                                                 (FStar_Pervasives_Native.Some
+                                                                    t2))
+                                                        | b::bs3 ->
+                                                            Obj.magic
+                                                              (Obj.repr
+                                                                 (let uu___12
+                                                                    =
+                                                                    FStarC_Syntax_Util.abs_one_ln
+                                                                    t2 in
+                                                                  FStarC_Class_Monad.op_let_Bang
+                                                                    FStarC_Class_Monad.monad_option
+                                                                    () ()
+                                                                    (
+                                                                    Obj.magic
+                                                                    uu___12)
+                                                                    (
+                                                                    fun
+                                                                    uu___13
+                                                                    ->
+                                                                    (fun
+                                                                    uu___13
                                                                     ->
                                                                     let uu___13
                                                                     =
@@ -1083,117 +1116,126 @@ let rec (resugar_term' :
                                                                     Obj.magic
                                                                     (open_lambda_binders
                                                                     body1 bs3)))
-                                                                   uu___13))))
-                                               uu___13 uu___12 in
-                                           let uu___12 =
-                                             Obj.magic
-                                               (FStarC_Class_Monad.mapMi
-                                                  FStarC_Class_Monad.monad_option
-                                                  () ()
-                                                  (fun uu___14 ->
-                                                     fun uu___13 ->
-                                                       (fun i ->
-                                                          fun uu___13 ->
-                                                            let uu___13 =
-                                                              Obj.magic
-                                                                uu___13 in
-                                                            match uu___13
-                                                            with
-                                                            | (t2, uu___14)
-                                                                ->
-                                                                let uu___15 =
-                                                                  take i bs1 in
-                                                                Obj.magic
-                                                                  (open_lambda_binders
+                                                                    uu___13))))
+                                                     uu___13 uu___12 in
+                                               let uu___12 =
+                                                 Obj.magic
+                                                   (FStarC_Class_Monad.mapMi
+                                                      FStarC_Class_Monad.monad_option
+                                                      () ()
+                                                      (fun uu___14 ->
+                                                         fun uu___13 ->
+                                                           (fun i ->
+                                                              fun uu___13 ->
+                                                                let uu___13 =
+                                                                  Obj.magic
+                                                                    uu___13 in
+                                                                match uu___13
+                                                                with
+                                                                | (t2,
+                                                                   uu___14)
+                                                                    ->
+                                                                    let uu___15
+                                                                    =
+                                                                    take i
+                                                                    bs1 in
+                                                                    Obj.magic
+                                                                    (open_lambda_binders
                                                                     t2
                                                                     uu___15))
-                                                         uu___14 uu___13)
-                                                  (Obj.magic args2)) in
-                                           Obj.magic
-                                             (FStarC_Class_Monad.op_let_Bang
-                                                FStarC_Class_Monad.monad_option
-                                                () () (Obj.magic uu___12)
-                                                (fun uu___13 ->
-                                                   (fun opened_bs_types ->
-                                                      let opened_bs_types =
-                                                        Obj.magic
-                                                          opened_bs_types in
-                                                      let set_binder_sort t2
-                                                        b =
-                                                        {
-                                                          FStarC_Syntax_Syntax.binder_bv
+                                                             uu___14 uu___13)
+                                                      (Obj.magic args2)) in
+                                               Obj.magic
+                                                 (FStarC_Class_Monad.op_let_Bang
+                                                    FStarC_Class_Monad.monad_option
+                                                    () () (Obj.magic uu___12)
+                                                    (fun uu___13 ->
+                                                       (fun opened_bs_types
+                                                          ->
+                                                          let opened_bs_types
                                                             =
-                                                            (let uu___13 =
-                                                               b.FStarC_Syntax_Syntax.binder_bv in
-                                                             {
-                                                               FStarC_Syntax_Syntax.ppname
-                                                                 =
-                                                                 (uu___13.FStarC_Syntax_Syntax.ppname);
-                                                               FStarC_Syntax_Syntax.index
-                                                                 =
-                                                                 (uu___13.FStarC_Syntax_Syntax.index);
-                                                               FStarC_Syntax_Syntax.sort
-                                                                 = t2
-                                                             });
-                                                          FStarC_Syntax_Syntax.binder_qual
-                                                            =
-                                                            (b.FStarC_Syntax_Syntax.binder_qual);
-                                                          FStarC_Syntax_Syntax.binder_positivity
-                                                            =
-                                                            (b.FStarC_Syntax_Syntax.binder_positivity);
-                                                          FStarC_Syntax_Syntax.binder_attrs
-                                                            =
-                                                            (b.FStarC_Syntax_Syntax.binder_attrs)
-                                                        } in
-                                                      let uu___13 =
-                                                        unsnoc
-                                                          opened_bs_types in
-                                                      match uu___13 with
-                                                      | (pre_bs_types,
-                                                         last_type) ->
-                                                          let bs2 =
-                                                            FStarC_List.map2
-                                                              (fun b ->
-                                                                 fun t2 ->
-                                                                   let b1 =
+                                                            Obj.magic
+                                                              opened_bs_types in
+                                                          let set_binder_sort
+                                                            t2 =
+                                                            fun b ->
+                                                              {
+                                                                FStarC_Syntax_Syntax.binder_bv
+                                                                  =
+                                                                  (let uu___13
+                                                                    =
+                                                                    b.FStarC_Syntax_Syntax.binder_bv in
+                                                                   {
+                                                                    FStarC_Syntax_Syntax.ppname
+                                                                    =
+                                                                    (uu___13.FStarC_Syntax_Syntax.ppname);
+                                                                    FStarC_Syntax_Syntax.index
+                                                                    =
+                                                                    (uu___13.FStarC_Syntax_Syntax.index);
+                                                                    FStarC_Syntax_Syntax.sort
+                                                                    = t2
+                                                                   });
+                                                                FStarC_Syntax_Syntax.binder_qual
+                                                                  =
+                                                                  (b.FStarC_Syntax_Syntax.binder_qual);
+                                                                FStarC_Syntax_Syntax.binder_positivity
+                                                                  =
+                                                                  (b.FStarC_Syntax_Syntax.binder_positivity);
+                                                                FStarC_Syntax_Syntax.binder_attrs
+                                                                  =
+                                                                  (b.FStarC_Syntax_Syntax.binder_attrs)
+                                                              } in
+                                                          let uu___13 =
+                                                            unsnoc
+                                                              opened_bs_types in
+                                                          match uu___13 with
+                                                          | (pre_bs_types,
+                                                             last_type) ->
+                                                              let bs2 =
+                                                                FStarC_List.map2
+                                                                  (fun b ->
+                                                                    fun t2 ->
+                                                                    let b1 =
                                                                     set_binder_sort
                                                                     t2 b in
-                                                                   resugar_binder'
+                                                                    resugar_binder'
                                                                     env1 b1
                                                                     t2.FStarC_Syntax_Syntax.pos)
-                                                              bs1
-                                                              pre_bs_types in
-                                                          let uu___14 =
-                                                            let uu___15 =
-                                                              let uu___16 =
-                                                                let uu___17 =
-                                                                  FStarC_List.map
-                                                                    (
-                                                                    fun
+                                                                  bs1
+                                                                  pre_bs_types in
+                                                              let uu___14 =
+                                                                let uu___15 =
+                                                                  let uu___16
+                                                                    =
+                                                                    let uu___17
+                                                                    =
+                                                                    FStarC_List.map
+                                                                    (fun
                                                                     uu___18
                                                                     ->
                                                                     FStar_Pervasives.Inl
                                                                     uu___18)
                                                                     bs2 in
-                                                                let uu___18 =
-                                                                  resugar_term'
+                                                                    let uu___18
+                                                                    =
+                                                                    resugar_term'
                                                                     env1
                                                                     last_type in
-                                                                (uu___17,
-                                                                  uu___18) in
-                                                              FStarC_Parser_AST.Sum
-                                                                uu___16 in
-                                                            mk uu___15 in
-                                                          Obj.magic
-                                                            (FStar_Pervasives_Native.Some
-                                                               uu___14))
-                                                     uu___13))) uu___11)))
-                           uu___7 in
-                       let uu___7 = fancy_resugar () in
-                       match uu___7 with
-                       | FStar_Pervasives_Native.Some r -> r
-                       | FStar_Pervasives_Native.None ->
-                           resugar_as_app hd args2 in
+                                                                    (uu___17,
+                                                                    uu___18) in
+                                                                  FStarC_Parser_AST.Sum
+                                                                    uu___16 in
+                                                                mk uu___15 in
+                                                              Obj.magic
+                                                                (FStar_Pervasives_Native.Some
+                                                                   uu___14))
+                                                         uu___13))) uu___11)))
+                               uu___7 in
+                           let uu___7 = fancy_resugar () in
+                           match uu___7 with
+                           | FStar_Pervasives_Native.Some r -> r
+                           | FStar_Pervasives_Native.None ->
+                               resugar_as_app hd args2 in
                      let uu___7 = is_list_literal t1 in
                      match uu___7 with
                      | FStar_Pervasives_Native.Some ts ->
@@ -1404,29 +1446,37 @@ let rec (resugar_term' :
                                    (FStarC_Util.starts_with op "forall") ||
                                      (FStarC_Util.starts_with op "exists")
                                    ->
-                                   let rec uncurry xs pats t2 flavor_matches
-                                     =
-                                     match t2.FStarC_Parser_AST.tm with
-                                     | FStarC_Parser_AST.QExists
-                                         (xs', (uu___11, pats'), body) when
-                                         flavor_matches t2 ->
-                                         uncurry (FStarC_List.op_At xs xs')
-                                           (FStarC_List.op_At pats pats')
-                                           body flavor_matches
-                                     | FStarC_Parser_AST.QForall
-                                         (xs', (uu___11, pats'), body) when
-                                         flavor_matches t2 ->
-                                         uncurry (FStarC_List.op_At xs xs')
-                                           (FStarC_List.op_At pats pats')
-                                           body flavor_matches
-                                     | FStarC_Parser_AST.QuantOp
-                                         (uu___11, xs', (uu___12, pats'),
-                                          body)
-                                         when flavor_matches t2 ->
-                                         uncurry (FStarC_List.op_At xs xs')
-                                           (FStarC_List.op_At pats pats')
-                                           body flavor_matches
-                                     | uu___11 -> (xs, pats, t2) in
+                                   let rec uncurry xs =
+                                     fun pats ->
+                                       fun t2 ->
+                                         fun flavor_matches ->
+                                           match t2.FStarC_Parser_AST.tm with
+                                           | FStarC_Parser_AST.QExists
+                                               (xs', (uu___11, pats'), body)
+                                               when flavor_matches t2 ->
+                                               uncurry
+                                                 (FStarC_List.op_At xs xs')
+                                                 (FStarC_List.op_At pats
+                                                    pats') body
+                                                 flavor_matches
+                                           | FStarC_Parser_AST.QForall
+                                               (xs', (uu___11, pats'), body)
+                                               when flavor_matches t2 ->
+                                               uncurry
+                                                 (FStarC_List.op_At xs xs')
+                                                 (FStarC_List.op_At pats
+                                                    pats') body
+                                                 flavor_matches
+                                           | FStarC_Parser_AST.QuantOp
+                                               (uu___11, xs',
+                                                (uu___12, pats'), body)
+                                               when flavor_matches t2 ->
+                                               uncurry
+                                                 (FStarC_List.op_At xs xs')
+                                                 (FStarC_List.op_At pats
+                                                    pats') body
+                                                 flavor_matches
+                                           | uu___11 -> (xs, pats, t2) in
                                    let resugar_forall_body body =
                                      let uu___11 =
                                        let uu___12 =
@@ -1718,7 +1768,7 @@ let rec (resugar_term' :
                let body = resugar_term' env t2 in
                mk
                  (FStarC_Parser_AST.Let
-                    (FStarC_Parser_AST.NoLetQualifier, bnds, body)))
+                    (FStarC_Parser_AST.LocalNoLetQualifier, bnds, body)))
       | FStarC_Syntax_Syntax.Tm_match
           { FStarC_Syntax_Syntax.scrutinee = e;
             FStarC_Syntax_Syntax.ret_opt = asc_opt;
@@ -1883,35 +1933,81 @@ let rec (resugar_term' :
                                          (uu___8, uu___9)) in
                                     (attrs_opt, uu___6)))) in
                let r = FStarC_List.map resugar_one_binding source_lbs1 in
-               let bnds =
-                 let f uu___2 =
-                   match uu___2 with
-                   | (attrs, (pb, univs)) ->
-                       let uu___3 =
-                         let uu___4 = FStarC_Options.print_universes () in
-                         Prims.op_Negation uu___4 in
-                       if uu___3
-                       then (attrs, pb)
-                       else
-                         (let uu___5 =
-                            let uu___6 =
-                              label univs (FStar_Pervasives_Native.snd pb) in
-                            ((FStar_Pervasives_Native.fst pb), uu___6) in
-                          (attrs, uu___5)) in
-                 FStarC_List.map f r in
-               let body2 = resugar_term' env body1 in
-               mk
-                 (FStarC_Parser_AST.Let
-                    ((if is_rec
-                      then FStarC_Parser_AST.Rec
-                      else FStarC_Parser_AST.NoLetQualifier), bnds, body2)))
+               let resugar_one_binding1 uu___2 =
+                 match uu___2 with
+                 | (attrs, (pb, univs)) ->
+                     let uu___3 =
+                       let uu___4 = FStarC_Options.print_universes () in
+                       Prims.op_Negation uu___4 in
+                     if uu___3
+                     then (attrs, pb)
+                     else
+                       (let uu___5 =
+                          let uu___6 =
+                            label univs (FStar_Pervasives_Native.snd pb) in
+                          ((FStar_Pervasives_Native.fst pb), uu___6) in
+                        (attrs, uu___5)) in
+               let uu___2 =
+                 match r with
+                 | (FStar_Pervasives_Native.Some attrs, (pb, univs))::[] when
+                     Prims.op_Negation is_rec ->
+                     let uu___3 =
+                       let is_inline_let_attr a =
+                         match a.FStarC_Parser_AST.tm with
+                         | FStarC_Parser_AST.Var l ->
+                             FStarC_Ident.lid_equals l
+                               FStarC_Parser_Const.inline_let_attr
+                         | uu___4 -> false in
+                       let is_inline_let_vc_attr a =
+                         match a.FStarC_Parser_AST.tm with
+                         | FStarC_Parser_AST.Var l ->
+                             FStarC_Ident.lid_equals l
+                               FStarC_Parser_Const.inline_let_vc_attr
+                         | uu___4 -> false in
+                       let uu___4 =
+                         FStarC_List.partition
+                           (fun a ->
+                              (is_inline_let_attr a) ||
+                                (is_inline_let_vc_attr a)) attrs in
+                       match uu___4 with
+                       | (inline_attrs, rest) ->
+                           let uu___5 =
+                             (FStarC_List.existsb is_inline_let_attr
+                                inline_attrs)
+                               &&
+                               (FStarC_List.existsb is_inline_let_vc_attr
+                                  inline_attrs) in
+                           if uu___5
+                           then (FStarC_Parser_AST.LocalUnfold, rest)
+                           else
+                             (FStarC_Parser_AST.LocalNoLetQualifier, attrs) in
+                     (match uu___3 with
+                      | (qual, attrs1) ->
+                          let attrs2 =
+                            match attrs1 with
+                            | [] -> FStar_Pervasives_Native.None
+                            | uu___4 -> FStar_Pervasives_Native.Some attrs1 in
+                          let uu___4 =
+                            let uu___5 =
+                              resugar_one_binding1 (attrs2, (pb, univs)) in
+                            [uu___5] in
+                          (qual, uu___4))
+                 | uu___3 ->
+                     let uu___4 = FStarC_List.map resugar_one_binding1 r in
+                     ((if is_rec
+                       then FStarC_Parser_AST.LocalRec
+                       else FStarC_Parser_AST.LocalNoLetQualifier), uu___4) in
+               (match uu___2 with
+                | (qual, bnds) ->
+                    let body2 = resugar_term' env body1 in
+                    mk (FStarC_Parser_AST.Let (qual, bnds, body2))))
       | FStarC_Syntax_Syntax.Tm_uvar (u, uu___1) ->
           let s =
             let uu___2 =
               let uu___3 =
                 FStarC_Syntax_Unionfind.uvar_id
                   u.FStarC_Syntax_Syntax.ctx_uvar_head in
-              FStarC_Util.string_of_int uu___3 in
+              FStarC_Class_Show.show FStarC_Class_Show.showable_int uu___3 in
             Prims.strcat "?u" uu___2 in
           let uu___2 = mk FStarC_Parser_AST.Wild in label s uu___2
       | FStarC_Syntax_Syntax.Tm_quoted (tm, qi) ->
@@ -1977,7 +2073,7 @@ and (resugar_ascription :
             match asc with
             | FStar_Pervasives.Inl n -> resugar_term' env n
             | FStar_Pervasives.Inr n -> resugar_comp' env n in
-          let uu___2 = FStarC_Util.map_opt tac_opt (resugar_term' env) in
+          let uu___2 = FStarC_Option.map (resugar_term' env) tac_opt in
           (uu___1, uu___2, b)
 and (resugar_calc :
   FStarC_Syntax_DsEnv.env ->
@@ -2028,14 +2124,15 @@ and (resugar_calc :
                       FStar_Pervasives_Native.Some (rel, pf1)
                   | uu___2 -> FStar_Pervasives_Native.None) in
            let un_eta_rel rel =
-             let bv_eq_tm b t =
-               let uu___ =
-                 let uu___1 = FStarC_Syntax_Subst.compress t in
-                 uu___1.FStarC_Syntax_Syntax.n in
-               match uu___ with
-               | FStarC_Syntax_Syntax.Tm_name b' when
-                   FStarC_Syntax_Syntax.bv_eq b b' -> true
-               | uu___1 -> false in
+             let bv_eq_tm b =
+               fun t ->
+                 let uu___ =
+                   let uu___1 = FStarC_Syntax_Subst.compress t in
+                   uu___1.FStarC_Syntax_Syntax.n in
+                 match uu___ with
+                 | FStarC_Syntax_Syntax.Tm_name b' when
+                     FStarC_Syntax_Syntax.bv_eq b b' -> true
+                 | uu___1 -> false in
              let uu___ =
                let uu___1 = FStarC_Syntax_Subst.compress rel in
                uu___1.FStarC_Syntax_Syntax.n in
@@ -2146,7 +2243,7 @@ and (resugar_calc :
              match uu___ with
              | FStar_Pervasives_Native.Some (t, r, j, k) ->
                  let uu___1 = resugar_all_steps k in
-                 FStarC_Util.bind_opt uu___1
+                 FStarC_Option.bind uu___1
                    (fun uu___2 ->
                       match uu___2 with
                       | (steps, k1) ->
@@ -2183,25 +2280,28 @@ and (resugar_calc :
                    FStarC_Parser_AST.Op uu___3 in
                  mk uu___2
              | uu___1 -> fallback () in
-           let build_calc rel x0 steps =
-             let r = resugar_term' env in
-             let uu___ =
-               let uu___1 =
-                 let uu___2 = resugar_rel rel in
-                 let uu___3 = r x0 in
-                 let uu___4 =
-                   FStarC_List.map
-                     (fun uu___5 ->
-                        match uu___5 with
-                        | (z, rel1, j) ->
-                            let uu___6 =
-                              let uu___7 = resugar_rel rel1 in
-                              let uu___8 = r j in
-                              let uu___9 = r z in (uu___7, uu___8, uu___9) in
-                            FStarC_Parser_AST.CalcStep uu___6) steps in
-                 (uu___2, uu___3, uu___4) in
-               FStarC_Parser_AST.CalcProof uu___1 in
-             mk uu___ in
+           let build_calc rel =
+             fun x0 ->
+               fun steps ->
+                 let r = resugar_term' env in
+                 let uu___ =
+                   let uu___1 =
+                     let uu___2 = resugar_rel rel in
+                     let uu___3 = r x0 in
+                     let uu___4 =
+                       FStarC_List.map
+                         (fun uu___5 ->
+                            match uu___5 with
+                            | (z, rel1, j) ->
+                                let uu___6 =
+                                  let uu___7 = resugar_rel rel1 in
+                                  let uu___8 = r j in
+                                  let uu___9 = r z in
+                                  (uu___7, uu___8, uu___9) in
+                                FStarC_Parser_AST.CalcStep uu___6) steps in
+                     (uu___2, uu___3, uu___4) in
+                   FStarC_Parser_AST.CalcProof uu___1 in
+                 mk uu___ in
            let uu___ = resugar_calc_finish t0 in
            Obj.magic
              (FStarC_Class_Monad.op_let_Bang FStarC_Class_Monad.monad_option
@@ -2294,7 +2394,7 @@ and (resugar_match_returns :
               (match uu___ with
                | (bopt, asc1) ->
                    let bopt1 =
-                     FStarC_Util.map_option
+                     FStarC_Option.map
                        (fun b1 ->
                           let uu___1 = resugar_binder' env b1 r in
                           FStarC_Parser_AST.ident_of_binder r uu___1) bopt in
@@ -2340,36 +2440,37 @@ and (resugar_comp' :
             let uu___ = resugar_term' env c1.FStarC_Syntax_Syntax.result_typ in
             (uu___, FStarC_Parser_AST.Nothing) in
           let mk_decreases fl =
-            let rec aux l uu___ =
-              match uu___ with
-              | [] -> l
-              | hd::tl ->
-                  (match hd with
-                   | FStarC_Syntax_Syntax.DECREASES dec_order ->
-                       let d =
-                         match dec_order with
-                         | FStarC_Syntax_Syntax.Decreases_lex (t::[]) ->
-                             resugar_term' env t
-                         | FStarC_Syntax_Syntax.Decreases_lex ts ->
-                             let uu___1 =
-                               let uu___2 =
-                                 FStarC_List.map (resugar_term' env) ts in
-                               FStarC_Parser_AST.LexList uu___2 in
-                             mk uu___1
-                         | FStarC_Syntax_Syntax.Decreases_wf (rel, e) ->
-                             let uu___1 =
-                               let uu___2 =
-                                 let uu___3 = resugar_term' env rel in
-                                 let uu___4 = resugar_term' env e in
-                                 (uu___3, uu___4) in
-                               FStarC_Parser_AST.WFOrder uu___2 in
-                             mk uu___1 in
-                       let e =
-                         mk
-                           (FStarC_Parser_AST.Decreases
-                              (d, FStar_Pervasives_Native.None)) in
-                       aux (e :: l) tl
-                   | uu___1 -> aux l tl) in
+            let rec aux l =
+              fun uu___ ->
+                match uu___ with
+                | [] -> l
+                | hd::tl ->
+                    (match hd with
+                     | FStarC_Syntax_Syntax.DECREASES dec_order ->
+                         let d =
+                           match dec_order with
+                           | FStarC_Syntax_Syntax.Decreases_lex (t::[]) ->
+                               resugar_term' env t
+                           | FStarC_Syntax_Syntax.Decreases_lex ts ->
+                               let uu___1 =
+                                 let uu___2 =
+                                   FStarC_List.map (resugar_term' env) ts in
+                                 FStarC_Parser_AST.LexList uu___2 in
+                               mk uu___1
+                           | FStarC_Syntax_Syntax.Decreases_wf (rel, e) ->
+                               let uu___1 =
+                                 let uu___2 =
+                                   let uu___3 = resugar_term' env rel in
+                                   let uu___4 = resugar_term' env e in
+                                   (uu___3, uu___4) in
+                                 FStarC_Parser_AST.WFOrder uu___2 in
+                               mk uu___1 in
+                         let e =
+                           mk
+                             (FStarC_Parser_AST.Decreases
+                                (d, FStar_Pervasives_Native.None)) in
+                         aux (e :: l) tl
+                     | uu___1 -> aux l tl) in
             aux [] fl in
           let uu___ =
             (FStarC_Ident.lid_equals c1.FStarC_Syntax_Syntax.effect_name
@@ -2473,7 +2574,7 @@ and (resugar_comp' :
 and (resugar_binder' :
   FStarC_Syntax_DsEnv.env ->
     FStarC_Syntax_Syntax.binder ->
-      FStarC_Range_Type.range -> FStarC_Parser_AST.binder)
+      FStarC_Range_Type.t -> FStarC_Parser_AST.binder)
   =
   fun env ->
     fun b ->
@@ -2581,7 +2682,7 @@ and (resugar_pat' :
       fun branch_bv ->
         let mk a = FStarC_Parser_AST.mk_pattern a p.FStarC_Syntax_Syntax.p in
         let to_arg_qual bopt =
-          FStarC_Util.bind_opt bopt
+          FStarC_Option.bind bopt
             (fun b ->
                if b
                then FStar_Pervasives_Native.Some FStarC_Parser_AST.Implicit
@@ -2600,146 +2701,154 @@ and (resugar_pat' :
                                    FStarC_Syntax_Syntax.ord_bv)) bv
                              (Obj.magic branch_bv))
                     | uu___1 -> false)) args in
-        let resugar_plain_pat_cons' fv args =
-          let uu___ =
-            let uu___1 =
-              let uu___2 =
+        let resugar_plain_pat_cons' fv =
+          fun args ->
+            let uu___ =
+              let uu___1 =
+                let uu___2 =
+                  mk
+                    (FStarC_Parser_AST.PatName
+                       ((fv.FStarC_Syntax_Syntax.fv_name).FStarC_Syntax_Syntax.v)) in
+                (uu___2, args) in
+              FStarC_Parser_AST.PatApp uu___1 in
+            mk uu___ in
+        let rec resugar_plain_pat_cons fv =
+          fun args ->
+            let args1 =
+              let uu___ =
+                let uu___1 = must_print args in Prims.op_Negation uu___1 in
+              if uu___ then filter_pattern_imp args else args in
+            let args2 =
+              FStarC_List.map
+                (fun uu___ ->
+                   match uu___ with
+                   | (p1, b) -> aux p1 (FStar_Pervasives_Native.Some b))
+                args1 in
+            resugar_plain_pat_cons' fv args2
+        and aux p1 =
+          fun imp_opt ->
+            match p1.FStarC_Syntax_Syntax.v with
+            | FStarC_Syntax_Syntax.Pat_constant c ->
+                mk (FStarC_Parser_AST.PatConst c)
+            | FStarC_Syntax_Syntax.Pat_cons (fv, uu___, args) when
+                FStarC_Ident.lid_equals
+                  (fv.FStarC_Syntax_Syntax.fv_name).FStarC_Syntax_Syntax.v
+                  FStarC_Parser_Const.nil_lid
+                ->
+                let uu___1 = filter_pattern_imp args in
+                (match uu___1 with
+                 | [] -> mk (FStarC_Parser_AST.PatList [])
+                 | uu___2 -> resugar_plain_pat_cons fv args)
+            | FStarC_Syntax_Syntax.Pat_cons (fv, uu___, args) when
+                FStarC_Ident.lid_equals
+                  (fv.FStarC_Syntax_Syntax.fv_name).FStarC_Syntax_Syntax.v
+                  FStarC_Parser_Const.cons_lid
+                ->
+                let uu___1 = filter_pattern_imp args in
+                (match uu___1 with
+                 | (hd, false)::(tl, false)::[] ->
+                     let hd' = aux hd (FStar_Pervasives_Native.Some false) in
+                     let uu___2 = aux tl (FStar_Pervasives_Native.Some false) in
+                     (match uu___2 with
+                      | {
+                          FStarC_Parser_AST.pat = FStarC_Parser_AST.PatList
+                            tl';
+                          FStarC_Parser_AST.prange = p2;_} ->
+                          FStarC_Parser_AST.mk_pattern
+                            (FStarC_Parser_AST.PatList (hd' :: tl')) p2
+                      | tl' -> resugar_plain_pat_cons' fv [hd'; tl'])
+                 | uu___2 -> resugar_plain_pat_cons fv args)
+            | FStarC_Syntax_Syntax.Pat_cons (fv, uu___, []) ->
                 mk
                   (FStarC_Parser_AST.PatName
-                     ((fv.FStarC_Syntax_Syntax.fv_name).FStarC_Syntax_Syntax.v)) in
-              (uu___2, args) in
-            FStarC_Parser_AST.PatApp uu___1 in
-          mk uu___ in
-        let rec resugar_plain_pat_cons fv args =
-          let args1 =
-            let uu___ =
-              let uu___1 = must_print args in Prims.op_Negation uu___1 in
-            if uu___ then filter_pattern_imp args else args in
-          let args2 =
-            FStarC_List.map
-              (fun uu___ ->
-                 match uu___ with
-                 | (p1, b) -> aux p1 (FStar_Pervasives_Native.Some b)) args1 in
-          resugar_plain_pat_cons' fv args2
-        and aux p1 imp_opt =
-          match p1.FStarC_Syntax_Syntax.v with
-          | FStarC_Syntax_Syntax.Pat_constant c ->
-              mk (FStarC_Parser_AST.PatConst c)
-          | FStarC_Syntax_Syntax.Pat_cons (fv, uu___, args) when
-              FStarC_Ident.lid_equals
-                (fv.FStarC_Syntax_Syntax.fv_name).FStarC_Syntax_Syntax.v
-                FStarC_Parser_Const.nil_lid
-              ->
-              let uu___1 = filter_pattern_imp args in
-              (match uu___1 with
-               | [] -> mk (FStarC_Parser_AST.PatList [])
-               | uu___2 -> resugar_plain_pat_cons fv args)
-          | FStarC_Syntax_Syntax.Pat_cons (fv, uu___, args) when
-              FStarC_Ident.lid_equals
-                (fv.FStarC_Syntax_Syntax.fv_name).FStarC_Syntax_Syntax.v
-                FStarC_Parser_Const.cons_lid
-              ->
-              let uu___1 = filter_pattern_imp args in
-              (match uu___1 with
-               | (hd, false)::(tl, false)::[] ->
-                   let hd' = aux hd (FStar_Pervasives_Native.Some false) in
-                   let uu___2 = aux tl (FStar_Pervasives_Native.Some false) in
-                   (match uu___2 with
-                    | {
-                        FStarC_Parser_AST.pat = FStarC_Parser_AST.PatList tl';
-                        FStarC_Parser_AST.prange = p2;_} ->
-                        FStarC_Parser_AST.mk_pattern
-                          (FStarC_Parser_AST.PatList (hd' :: tl')) p2
-                    | tl' -> resugar_plain_pat_cons' fv [hd'; tl'])
-               | uu___2 -> resugar_plain_pat_cons fv args)
-          | FStarC_Syntax_Syntax.Pat_cons (fv, uu___, []) ->
-              mk
-                (FStarC_Parser_AST.PatName
-                   ((fv.FStarC_Syntax_Syntax.fv_name).FStarC_Syntax_Syntax.v))
-          | FStarC_Syntax_Syntax.Pat_cons (fv, uu___, args) when
-              (is_tuple_constructor_lid
-                 (fv.FStarC_Syntax_Syntax.fv_name).FStarC_Syntax_Syntax.v)
-                && (let uu___1 = must_print args in Prims.op_Negation uu___1)
-              ->
-              let args1 =
-                FStarC_List.filter_map
-                  (fun uu___1 ->
-                     match uu___1 with
-                     | (p2, is_implicit) ->
-                         if is_implicit
-                         then FStar_Pervasives_Native.None
-                         else
-                           (let uu___3 =
-                              aux p2 (FStar_Pervasives_Native.Some false) in
-                            FStar_Pervasives_Native.Some uu___3)) args in
-              let is_dependent_tuple =
-                FStarC_Parser_Const_Tuples.is_dtuple_datacon_lid
-                  (fv.FStarC_Syntax_Syntax.fv_name).FStarC_Syntax_Syntax.v in
-              mk (FStarC_Parser_AST.PatTuple (args1, is_dependent_tuple))
-          | FStarC_Syntax_Syntax.Pat_cons
-              ({ FStarC_Syntax_Syntax.fv_name = uu___;
-                 FStarC_Syntax_Syntax.fv_qual = FStar_Pervasives_Native.Some
-                   (FStarC_Syntax_Syntax.Record_ctor (name, fields));_},
-               uu___1, args)
-              ->
-              let fields1 =
-                let uu___2 =
-                  FStarC_List.map (fun f -> FStarC_Ident.lid_of_ids [f])
-                    fields in
-                FStarC_List.rev uu___2 in
-              let args1 =
-                let uu___2 =
-                  FStarC_List.map
-                    (fun uu___3 ->
-                       match uu___3 with
-                       | (p2, b) -> aux p2 (FStar_Pervasives_Native.Some b))
-                    args in
-                FStarC_List.rev uu___2 in
-              let rec map2 l1 l2 =
-                match (l1, l2) with
-                | ([], []) -> []
-                | ([], hd::tl) -> []
-                | (hd::tl, []) ->
-                    let uu___2 =
-                      let uu___3 =
-                        mk
-                          (FStarC_Parser_AST.PatWild
-                             (FStar_Pervasives_Native.None, [])) in
-                      (hd, uu___3) in
-                    let uu___3 = map2 tl [] in uu___2 :: uu___3
-                | (hd1::tl1, hd2::tl2) ->
-                    let uu___2 = map2 tl1 tl2 in (hd1, hd2) :: uu___2 in
-              let args2 =
-                let uu___2 = map2 fields1 args1 in FStarC_List.rev uu___2 in
-              mk (FStarC_Parser_AST.PatRecord args2)
-          | FStarC_Syntax_Syntax.Pat_cons (fv, uu___, args) ->
-              resugar_plain_pat_cons fv args
-          | FStarC_Syntax_Syntax.Pat_var v ->
-              let uu___ =
-                let uu___1 =
-                  FStarC_Ident.string_of_id v.FStarC_Syntax_Syntax.ppname in
-                FStarC_Parser_AST.string_to_op uu___1 in
-              (match uu___ with
-               | FStar_Pervasives_Native.Some (op, uu___1) ->
-                   let uu___2 =
-                     let uu___3 =
-                       let uu___4 =
-                         let uu___5 =
-                           FStarC_Ident.range_of_id
-                             v.FStarC_Syntax_Syntax.ppname in
-                         (op, uu___5) in
-                       FStarC_Ident.mk_ident uu___4 in
-                     FStarC_Parser_AST.PatOp uu___3 in
-                   mk uu___2
-               | FStar_Pervasives_Native.None ->
-                   let uu___1 = to_arg_qual imp_opt in
-                   resugar_bv_as_pat' env v uu___1 branch_bv
-                     FStar_Pervasives_Native.None)
-          | FStarC_Syntax_Syntax.Pat_dot_term uu___ ->
-              mk
-                (FStarC_Parser_AST.PatWild
-                   ((FStar_Pervasives_Native.Some FStarC_Parser_AST.Implicit),
-                     [])) in
+                     ((fv.FStarC_Syntax_Syntax.fv_name).FStarC_Syntax_Syntax.v))
+            | FStarC_Syntax_Syntax.Pat_cons (fv, uu___, args) when
+                (is_tuple_constructor_lid
+                   (fv.FStarC_Syntax_Syntax.fv_name).FStarC_Syntax_Syntax.v)
+                  &&
+                  (let uu___1 = must_print args in Prims.op_Negation uu___1)
+                ->
+                let args1 =
+                  FStarC_List.filter_map
+                    (fun uu___1 ->
+                       match uu___1 with
+                       | (p2, is_implicit) ->
+                           if is_implicit
+                           then FStar_Pervasives_Native.None
+                           else
+                             (let uu___3 =
+                                aux p2 (FStar_Pervasives_Native.Some false) in
+                              FStar_Pervasives_Native.Some uu___3)) args in
+                let is_dependent_tuple =
+                  FStarC_Parser_Const_Tuples.is_dtuple_datacon_lid
+                    (fv.FStarC_Syntax_Syntax.fv_name).FStarC_Syntax_Syntax.v in
+                mk (FStarC_Parser_AST.PatTuple (args1, is_dependent_tuple))
+            | FStarC_Syntax_Syntax.Pat_cons
+                ({ FStarC_Syntax_Syntax.fv_name = uu___;
+                   FStarC_Syntax_Syntax.fv_qual =
+                     FStar_Pervasives_Native.Some
+                     (FStarC_Syntax_Syntax.Record_ctor (name, fields));_},
+                 uu___1, args)
+                ->
+                let fields1 =
+                  let uu___2 =
+                    FStarC_List.map (fun f -> FStarC_Ident.lid_of_ids [f])
+                      fields in
+                  FStarC_List.rev uu___2 in
+                let args1 =
+                  let uu___2 =
+                    FStarC_List.map
+                      (fun uu___3 ->
+                         match uu___3 with
+                         | (p2, b) -> aux p2 (FStar_Pervasives_Native.Some b))
+                      args in
+                  FStarC_List.rev uu___2 in
+                let rec map2 l1 =
+                  fun l2 ->
+                    match (l1, l2) with
+                    | ([], []) -> []
+                    | ([], hd::tl) -> []
+                    | (hd::tl, []) ->
+                        let uu___2 =
+                          let uu___3 =
+                            mk
+                              (FStarC_Parser_AST.PatWild
+                                 (FStar_Pervasives_Native.None, [])) in
+                          (hd, uu___3) in
+                        let uu___3 = map2 tl [] in uu___2 :: uu___3
+                    | (hd1::tl1, hd2::tl2) ->
+                        let uu___2 = map2 tl1 tl2 in (hd1, hd2) :: uu___2 in
+                let args2 =
+                  let uu___2 = map2 fields1 args1 in FStarC_List.rev uu___2 in
+                mk (FStarC_Parser_AST.PatRecord args2)
+            | FStarC_Syntax_Syntax.Pat_cons (fv, uu___, args) ->
+                resugar_plain_pat_cons fv args
+            | FStarC_Syntax_Syntax.Pat_var v ->
+                let uu___ =
+                  let uu___1 =
+                    FStarC_Ident.string_of_id v.FStarC_Syntax_Syntax.ppname in
+                  FStarC_Parser_AST.string_to_op uu___1 in
+                (match uu___ with
+                 | FStar_Pervasives_Native.Some (op, uu___1) ->
+                     let uu___2 =
+                       let uu___3 =
+                         let uu___4 =
+                           let uu___5 =
+                             FStarC_Ident.range_of_id
+                               v.FStarC_Syntax_Syntax.ppname in
+                           (op, uu___5) in
+                         FStarC_Ident.mk_ident uu___4 in
+                       FStarC_Parser_AST.PatOp uu___3 in
+                     mk uu___2
+                 | FStar_Pervasives_Native.None ->
+                     let uu___1 = to_arg_qual imp_opt in
+                     resugar_bv_as_pat' env v uu___1 branch_bv
+                       FStar_Pervasives_Native.None)
+            | FStarC_Syntax_Syntax.Pat_dot_term uu___ ->
+                mk
+                  (FStarC_Parser_AST.PatWild
+                     ((FStar_Pervasives_Native.Some
+                         FStarC_Parser_AST.Implicit), [])) in
         aux p FStar_Pervasives_Native.None
 and (resugar_bqual :
   FStarC_Syntax_DsEnv.env ->
@@ -2941,32 +3050,33 @@ let (resugar_typ :
                               FStarC_Parser_AST.TyconRecord uu___9
                           | uu___6 -> failwith "ggg1")
                    else
-                     (let resugar_datacon constructors se1 =
-                        match se1.FStarC_Syntax_Syntax.sigel with
-                        | FStarC_Syntax_Syntax.Sig_datacon
-                            { FStarC_Syntax_Syntax.lid1 = l;
-                              FStarC_Syntax_Syntax.us1 = univs;
-                              FStarC_Syntax_Syntax.t1 = typ;
-                              FStarC_Syntax_Syntax.ty_lid = uu___6;
-                              FStarC_Syntax_Syntax.num_ty_params = num;
-                              FStarC_Syntax_Syntax.mutuals1 = uu___7;
-                              FStarC_Syntax_Syntax.injective_type_params1 =
-                                uu___8;_}
-                            ->
-                            let typ1 = drop_n_bs num typ in
-                            let c =
-                              let uu___9 = FStarC_Ident.ident_of_lid l in
-                              let uu___10 =
+                     (let resugar_datacon constructors =
+                        fun se1 ->
+                          match se1.FStarC_Syntax_Syntax.sigel with
+                          | FStarC_Syntax_Syntax.Sig_datacon
+                              { FStarC_Syntax_Syntax.lid1 = l;
+                                FStarC_Syntax_Syntax.us1 = univs;
+                                FStarC_Syntax_Syntax.t1 = typ;
+                                FStarC_Syntax_Syntax.ty_lid = uu___6;
+                                FStarC_Syntax_Syntax.num_ty_params = num;
+                                FStarC_Syntax_Syntax.mutuals1 = uu___7;
+                                FStarC_Syntax_Syntax.injective_type_params1 =
+                                  uu___8;_}
+                              ->
+                              let typ1 = drop_n_bs num typ in
+                              let c =
+                                let uu___9 = FStarC_Ident.ident_of_lid l in
+                                let uu___10 =
+                                  let uu___11 =
+                                    let uu___12 = resugar_term' env typ1 in
+                                    FStarC_Parser_AST.VpArbitrary uu___12 in
+                                  FStar_Pervasives_Native.Some uu___11 in
                                 let uu___11 =
-                                  let uu___12 = resugar_term' env typ1 in
-                                  FStarC_Parser_AST.VpArbitrary uu___12 in
-                                FStar_Pervasives_Native.Some uu___11 in
-                              let uu___11 =
-                                FStarC_List.map (resugar_term' env)
-                                  se1.FStarC_Syntax_Syntax.sigattrs in
-                              (uu___9, uu___10, uu___11) in
-                            c :: constructors
-                        | uu___6 -> failwith "unexpected" in
+                                  FStarC_List.map (resugar_term' env)
+                                    se1.FStarC_Syntax_Syntax.sigattrs in
+                                (uu___9, uu___10, uu___11) in
+                              c :: constructors
+                          | uu___6 -> failwith "unexpected" in
                       let constructors =
                         FStarC_List.fold_left resugar_datacon []
                           current_datacons in
@@ -3040,11 +3150,12 @@ let (resugar_wp_eff_combinators :
   fun env ->
     fun for_free ->
       fun combs ->
-        let resugar_opt name tsopt =
-          match tsopt with
-          | FStar_Pervasives_Native.Some ts ->
-              let uu___ = resugar_tscheme'' env name ts in [uu___]
-          | FStar_Pervasives_Native.None -> [] in
+        let resugar_opt name =
+          fun tsopt ->
+            match tsopt with
+            | FStar_Pervasives_Native.Some ts ->
+                let uu___ = resugar_tscheme'' env name ts in [uu___]
+            | FStar_Pervasives_Native.None -> [] in
         let repr = resugar_opt "repr" combs.FStarC_Syntax_Syntax.repr in
         let return_repr =
           resugar_opt "return_repr" combs.FStarC_Syntax_Syntax.return_repr in
@@ -3095,11 +3206,13 @@ let (resugar_layered_eff_combinators :
   =
   fun env ->
     fun combs ->
-      let resugar name uu___ =
-        match uu___ with
-        | (ts, uu___1, uu___2) -> resugar_tscheme'' env name ts in
-      let resugar2 name uu___ =
-        match uu___ with | (ts, uu___1) -> resugar_tscheme'' env name ts in
+      let resugar name =
+        fun uu___ ->
+          match uu___ with
+          | (ts, uu___1, uu___2) -> resugar_tscheme'' env name ts in
+      let resugar2 name =
+        fun uu___ ->
+          match uu___ with | (ts, uu___1) -> resugar_tscheme'' env name ts in
       let uu___ = resugar2 "repr" combs.FStarC_Syntax_Syntax.l_repr in
       let uu___1 =
         let uu___2 = resugar2 "return" combs.FStarC_Syntax_Syntax.l_return in
@@ -3138,69 +3251,71 @@ let (resugar_eff_decl' :
     fun ed ->
       let r = FStarC_Range_Type.dummyRange in
       let q = [] in
-      let resugar_action d for_free =
-        let action_params =
-          FStarC_Syntax_Subst.open_binders
-            d.FStarC_Syntax_Syntax.action_params in
-        let uu___ =
-          FStarC_Syntax_Subst.open_term action_params
-            d.FStarC_Syntax_Syntax.action_defn in
-        match uu___ with
-        | (bs, action_defn) ->
-            let uu___1 =
-              FStarC_Syntax_Subst.open_term action_params
-                d.FStarC_Syntax_Syntax.action_typ in
-            (match uu___1 with
-             | (bs1, action_typ) ->
-                 let action_params1 = filter_imp_bs action_params in
-                 let action_params2 =
-                   let uu___2 =
-                     FStarC_List.map (fun b -> resugar_binder' env b r)
-                       action_params1 in
-                   FStarC_List.rev uu___2 in
-                 let action_defn1 = resugar_term' env action_defn in
-                 let action_typ1 = resugar_term' env action_typ in
-                 if for_free
-                 then
-                   let a =
+      let resugar_action d =
+        fun for_free ->
+          let action_params =
+            FStarC_Syntax_Subst.open_binders
+              d.FStarC_Syntax_Syntax.action_params in
+          let uu___ =
+            FStarC_Syntax_Subst.open_term action_params
+              d.FStarC_Syntax_Syntax.action_defn in
+          match uu___ with
+          | (bs, action_defn) ->
+              let uu___1 =
+                FStarC_Syntax_Subst.open_term action_params
+                  d.FStarC_Syntax_Syntax.action_typ in
+              (match uu___1 with
+               | (bs1, action_typ) ->
+                   let action_params1 = filter_imp_bs action_params in
+                   let action_params2 =
                      let uu___2 =
-                       let uu___3 = FStarC_Ident.lid_of_str "construct" in
-                       (uu___3,
-                         [(action_defn1, FStarC_Parser_AST.Nothing);
-                         (action_typ1, FStarC_Parser_AST.Nothing)]) in
-                     FStarC_Parser_AST.Construct uu___2 in
-                   let t = FStarC_Parser_AST.mk_term a r FStarC_Parser_AST.Un in
-                   let uu___2 =
-                     let uu___3 =
-                       let uu___4 =
-                         let uu___5 =
-                           let uu___6 =
-                             let uu___7 =
-                               FStarC_Ident.ident_of_lid
-                                 d.FStarC_Syntax_Syntax.action_name in
-                             (uu___7, action_params2,
-                               FStar_Pervasives_Native.None, t) in
-                           FStarC_Parser_AST.TyconAbbrev uu___6 in
-                         [uu___5] in
-                       (false, false, uu___4) in
-                     FStarC_Parser_AST.Tycon uu___3 in
-                   mk_decl r q uu___2
-                 else
-                   (let uu___3 =
-                      let uu___4 =
-                        let uu___5 =
-                          let uu___6 =
-                            let uu___7 =
-                              let uu___8 =
-                                FStarC_Ident.ident_of_lid
-                                  d.FStarC_Syntax_Syntax.action_name in
-                              (uu___8, action_params2,
-                                FStar_Pervasives_Native.None, action_defn1) in
-                            FStarC_Parser_AST.TyconAbbrev uu___7 in
-                          [uu___6] in
-                        (false, false, uu___5) in
-                      FStarC_Parser_AST.Tycon uu___4 in
-                    mk_decl r q uu___3)) in
+                       FStarC_List.map (fun b -> resugar_binder' env b r)
+                         action_params1 in
+                     FStarC_List.rev uu___2 in
+                   let action_defn1 = resugar_term' env action_defn in
+                   let action_typ1 = resugar_term' env action_typ in
+                   if for_free
+                   then
+                     let a =
+                       let uu___2 =
+                         let uu___3 = FStarC_Ident.lid_of_str "construct" in
+                         (uu___3,
+                           [(action_defn1, FStarC_Parser_AST.Nothing);
+                           (action_typ1, FStarC_Parser_AST.Nothing)]) in
+                       FStarC_Parser_AST.Construct uu___2 in
+                     let t =
+                       FStarC_Parser_AST.mk_term a r FStarC_Parser_AST.Un in
+                     let uu___2 =
+                       let uu___3 =
+                         let uu___4 =
+                           let uu___5 =
+                             let uu___6 =
+                               let uu___7 =
+                                 FStarC_Ident.ident_of_lid
+                                   d.FStarC_Syntax_Syntax.action_name in
+                               (uu___7, action_params2,
+                                 FStar_Pervasives_Native.None, t) in
+                             FStarC_Parser_AST.TyconAbbrev uu___6 in
+                           [uu___5] in
+                         (false, false, uu___4) in
+                       FStarC_Parser_AST.Tycon uu___3 in
+                     mk_decl r q uu___2
+                   else
+                     (let uu___3 =
+                        let uu___4 =
+                          let uu___5 =
+                            let uu___6 =
+                              let uu___7 =
+                                let uu___8 =
+                                  FStarC_Ident.ident_of_lid
+                                    d.FStarC_Syntax_Syntax.action_name in
+                                (uu___8, action_params2,
+                                  FStar_Pervasives_Native.None, action_defn1) in
+                              FStarC_Parser_AST.TyconAbbrev uu___7 in
+                            [uu___6] in
+                          (false, false, uu___5) in
+                        FStarC_Parser_AST.Tycon uu___4 in
+                      mk_decl r q uu___3)) in
       let eff_name = FStarC_Ident.ident_of_lid ed.FStarC_Syntax_Syntax.mname in
       let uu___ =
         let sig_ts =
@@ -3251,16 +3366,17 @@ let (resugar_sigelt' :
                 ses in
             (match uu___1 with
              | (decl_typ_ses, datacon_ses) ->
-                 let retrieve_datacons_and_resugar uu___2 se1 =
-                   match uu___2 with
-                   | (datacon_ses1, tycons) ->
-                       let uu___3 = resugar_typ env datacon_ses1 se1 in
-                       (match uu___3 with
-                        | (datacon_ses2, tyc) ->
-                            (datacon_ses2, (tyc :: tycons))) in
+                 let retrieve_datacons_and_resugar uu___2 =
+                   fun se1 ->
+                     match uu___2 with
+                     | (datacon_ses1, tycons) ->
+                         let uu___3 = resugar_typ env datacon_ses1 se1 in
+                         (match uu___3 with
+                          | (datacon_ses2, tyc) ->
+                              (datacon_ses2, (tyc :: tycons))) in
                  let uu___2 =
                    FStarC_List.fold_left retrieve_datacons_and_resugar
-                     (datacon_ses, []) decl_typ_ses in
+                     ((FStarC_List.rev datacon_ses), []) decl_typ_ses in
                  (match uu___2 with
                   | (leftover_datacons, tycons) ->
                       (match leftover_datacons with
@@ -3313,6 +3429,12 @@ let (resugar_sigelt' :
               (let mk e =
                  FStarC_Syntax_Syntax.mk e se.FStarC_Syntax_Syntax.sigrng in
                let dummy = mk FStarC_Syntax_Syntax.Tm_unknown in
+               let lq_as_q uu___3 =
+                 match uu___3 with
+                 | FStarC_Parser_AST.LocalRec -> FStarC_Parser_AST.Rec
+                 | FStarC_Parser_AST.LocalNoLetQualifier ->
+                     FStarC_Parser_AST.NoLetQualifier
+                 | FStarC_Parser_AST.LocalUnfold -> failwith "Impossible" in
                let nopath_lbs uu___3 =
                  match uu___3 with
                  | (is_rec, lbs1) ->
@@ -3331,10 +3453,9 @@ let (resugar_sigelt' :
                          (fun lb ->
                             let uu___4 =
                               let uu___5 =
-                                let uu___6 =
-                                  FStarC_Util.right
-                                    lb.FStarC_Syntax_Syntax.lbname in
-                                nopath uu___6 in
+                                nopath
+                                  (FStar_Pervasives.__proj__Inr__item__v
+                                     lb.FStarC_Syntax_Syntax.lbname) in
                               FStar_Pervasives.Inr uu___5 in
                             {
                               FStarC_Syntax_Syntax.lbname = uu___4;
@@ -3366,9 +3487,10 @@ let (resugar_sigelt' :
                    let uu___4 =
                      let uu___5 =
                        let uu___6 =
-                         let uu___7 =
+                         let uu___7 = lq_as_q isrec in
+                         let uu___8 =
                            FStarC_List.map FStar_Pervasives_Native.snd lets in
-                         (isrec, uu___7) in
+                         (uu___7, uu___8) in
                        FStarC_Parser_AST.TopLevelLet uu___6 in
                      decl'_to_decl se uu___5 in
                    FStar_Pervasives_Native.Some uu___4
@@ -3588,7 +3710,7 @@ let (resugar_pat :
     fun branch_bv -> let uu___ = noenv resugar_pat' in uu___ p branch_bv
 let (resugar_binder :
   FStarC_Syntax_Syntax.binder ->
-    FStarC_Range_Type.range -> FStarC_Parser_AST.binder)
+    FStarC_Range_Type.t -> FStarC_Parser_AST.binder)
   = fun b -> fun r -> let uu___ = noenv resugar_binder' in uu___ b r
 let (resugar_tscheme :
   FStarC_Syntax_Syntax.tscheme -> FStarC_Parser_AST.decl) =

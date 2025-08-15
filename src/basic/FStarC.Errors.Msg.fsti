@@ -61,6 +61,9 @@ val renderdoc : document -> string
 (* Returns a document with the current stack trace *)
 val backtrace_doc : unit -> document
 
+(* Render an error message as a document. *)
+val render_as_doc (ds : list document) : document
+
 (* Render an error message as a string. *)
 val rendermsg : error_message -> string
 

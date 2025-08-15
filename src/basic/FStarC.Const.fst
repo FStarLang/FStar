@@ -16,8 +16,8 @@
 module FStarC.Const
 open FStarC.Effect
 
-open FStarC.BigInt
 open FStar.Char
+open FStar.Mul
 
 let eq_const c1 c2 =
     match c1, c2 with
@@ -29,31 +29,31 @@ let eq_const c1 c2 =
     | Const_reify _, Const_reify _ -> true
     | _ -> c1=c2
 
-let rec pow2 (x:bigint) : bigint =
-  if eq_big_int x zero
-  then one
-  else mult_big_int two (pow2 (pred_big_int x))
+let rec pow2 (x : int) : int =
+  if x = 0
+  then 1
+  else 2 * pow2 (x - 1)
 
 let bounds signedness width =
     let n =
         match width with
-        | Int8 -> big_int_of_string "8"
-        | Int16 -> big_int_of_string "16"
-        | Int32 -> big_int_of_string "32"
-        | Int64 -> big_int_of_string "64"
-        | Sizet -> big_int_of_string "16"
+        | Int8  -> 8
+        | Int16 -> 16
+        | Int32 -> 32
+        | Int64 -> 64
+        | Sizet -> 16
     in
     let lower, upper =
       match signedness with
       | Unsigned ->
-        zero, pred_big_int (pow2 n)
+        0, pow2 n - 1
       | Signed ->
-        let upper = pow2 (pred_big_int n) in
-        minus_big_int upper, pred_big_int upper
+        let upper = pow2 (n - 1) in
+        - upper, upper - 1
     in
     lower, upper
 
 let within_bounds repr signedness width =
   let lower, upper = bounds signedness width in
-  let value = big_int_of_string (FStarC.Util.ensure_decimal repr) in
-  le_big_int lower value && le_big_int value upper
+  let value = Util.int_of_string (FStarC.Util.ensure_decimal repr) in
+  lower <= value && value <= upper

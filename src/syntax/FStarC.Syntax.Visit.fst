@@ -2,7 +2,6 @@ module FStarC.Syntax.Visit
 
 open FStarC.Effect
 open FStarC.List
-open FStarC.Util
 
 open FStarC.Syntax.VisitM
 open FStarC.Class.Monad
@@ -13,7 +12,7 @@ type id (a:Type) = | I : run:a -> id a
 
 instance _ : monad id = {
   return = (fun a -> I a);
-  ( let! ) = (fun (I a) f -> f a);
+  bind   = (fun (I a) f -> f a);
 }
 
 let (<<) f g = fun x -> f (g x)

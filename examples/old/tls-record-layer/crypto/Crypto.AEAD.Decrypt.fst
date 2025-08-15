@@ -46,7 +46,7 @@ module PRF_MAC    = Crypto.AEAD.Wrappers.PRF
 let decrypt_modifies (#i:id) (#len:u32) (st:aead_state i Reader) (pb:plainBuffer i (v len)) (h0:mem) (h1:mem) =
    Crypto.AEAD.BufferUtils.decrypt_modifies st.log_region st.prf.mac_rgn (as_buffer pb) h0 h1
 
-#reset-options "--z3rlimit 100 --initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0"
+#reset-options "--z3rlimit 100 --fuel 0 --ifuel 0"
 let post_pop (#i:id) (n:Cipher.iv (alg i)) (st:aead_state i Reader) 
 	     (#aadlen:aadlen) (aad:lbuffer (v aadlen))
 	     (#plainlen:txtlen_32) 
@@ -113,7 +113,7 @@ val decrypt:
     inv st h1 /\
     decrypt_modifies st plain h0 h1 /\
     (verified ==> Dexor.decrypt_ok n st aad plain cipher_tagged h1)))
-#reset-options "--z3rlimit 1000 --initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0"
+#reset-options "--z3rlimit 1000 --fuel 0 --ifuel 0"
 let decrypt i st iv aadlen aad plainlen plain cipher_tagged =
   let h_init = get() in
   push_frame();

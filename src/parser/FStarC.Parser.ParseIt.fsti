@@ -14,12 +14,15 @@
    limitations under the License.
 *)
 module FStarC.Parser.ParseIt
+
+open FStarC
 open FStarC.Effect
 open FStarC.Parser
-open FStarC.Util
-open FStarC
 open FStarC.Errors
+open FStarC.Time
+
 module AU = FStarC.Parser.AST.Util
+
 type filename = string
 
 type input_frag = {

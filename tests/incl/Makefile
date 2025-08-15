@@ -1,7 +1,7 @@
 # Test the 'include' functionality
 
 # Do not warn about missing checked files in these tests.
-OTHERFLAGS += --warn_error -241 --z3version 4.13.3 --ext optimize_let_vc
+OTHERFLAGS += --warn_error -241 --ext optimize_let_vc
 
 POSTESTS=$(wildcard *.pos)
 POSTARGETS=$(addsuffix .pver,$(POSTESTS))

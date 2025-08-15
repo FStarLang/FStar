@@ -413,6 +413,10 @@ val no_auto_projectors_decls : unit
 *)
 val no_subtyping : unit
 
+(* This can be attached to a top-level declaration to admit its verification
+   conditions. *)
+val admitted : unit
+
 (* This can be attached to a recursive definition to admit its proof
    of termination (but nothing else). *)
 val admit_termination : unit

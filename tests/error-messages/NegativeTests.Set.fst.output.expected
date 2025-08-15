@@ -10,27 +10,24 @@
   - NegativeTests.Set.should_fail1 is declared but no definition was found
   - Add an 'assume' if this is intentional
 
->> Got issues: [
-* Error 19 at NegativeTests.Set.fst(28,9-28,30):
+* Info at NegativeTests.Set.fst(28,9-28,30):
+  - Expected failure:
   - Assertion failed
   - The SMT solver could not prove the query. Use --query_stats for more
     details.
 
->>]
->> Got issues: [
-* Error 19 at NegativeTests.Set.fst(33,9-33,67):
+* Info at NegativeTests.Set.fst(33,9-33,67):
+  - Expected failure:
   - Assertion failed
   - The SMT solver could not prove the query. Use --query_stats for more
     details.
 
->>]
->> Got issues: [
-* Error 19 at NegativeTests.Set.fst(38,9-38,52):
+* Info at NegativeTests.Set.fst(38,9-38,52):
+  - Expected failure:
   - Assertion failed
   - The SMT solver could not prove the query. Use --query_stats for more
     details.
 
->>]
 * Warning 240 at NegativeTests.Set.fst(37,0-38,52):
   - Missing definitions in module NegativeTests.Set:
       should_fail1

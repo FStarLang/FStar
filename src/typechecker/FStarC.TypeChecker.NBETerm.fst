@@ -51,7 +51,7 @@ open FStarC.Syntax.Print {}
     unembed:
     match t with
     | Construct (fvar, us, [(a, _); _]) when S.fv_eq_lid fvar PC.some_lid
-         BU.bind_opt (unembed ea cb a) (fun a -> Some (Some a))
+         Option.bind (unembed ea cb a) (fun a -> Some (Some a))
  *
  * Note how the implicit argument is seemingly *after* the explicit one.
  *)
@@ -112,6 +112,33 @@ match c1, c2 with
 | Real r1, Real r2 -> equal_if (r1 = r2) (* conservative, cannot use iff since strings could be 1.0 and 01.0 *)
 | _, _ -> TEQ.NotEqual
 
+let rec term_eq (t1 t2 : t) : bool =
+  match t1.nbe_t, t2.nbe_t with
+  | Lam {interp=interp1; arity=arity1}, Lam {interp=interp2; arity=arity2} ->
+    interp1 = interp2 && arity1 = arity2
+  | Accu(a1, as1), Accu(a2, as2) -> atom_eq a1 a2 // && eq_args as1 as2
+  | Construct(fv1, us1, args1), Construct(fv2, us2, args2) ->
+    fv1 = fv2 && U.eq_univs_list us1 us2 && args_eq args1 args2
+  | FV(fv1, us1, args1), FV(fv2, us2, args2) ->
+    fv1 = fv2 && U.eq_univs_list us1 us2 && args_eq args1 args2
+  | Constant c1, Constant c2 -> c1 = c2
+  | Type_t u1, Type_t u2
+  | Univ u1, Univ u2 -> u1 = u2
+  | Refinement(r1, t1), Refinement(r2, t2) ->
+    let x =  S.new_bv None S.t_unit in (* bogus type *)
+    term_eq (fst (t1 ())) (fst (t2 ())) &&
+    term_eq (r1 (mkAccuVar x)) (r2 (mkAccuVar x))
+  | Unknown, Unknown -> true
+  | _, _ -> false
+and atom_eq (a1 : atom) (a2 : atom) : bool =
+  match a1, a2 with
+  | Var bv1, Var bv2 -> bv_eq bv1 bv2
+  | _, _ -> false
+and args_eq (as1 : args) (as2 : args) : bool =
+  match as1, as2 with
+  | [], [] -> true
+  | (x, qx) :: xs, (y, qy) :: ys -> term_eq x y && qx = qy && args_eq xs ys
+  | _, _ -> false
 
 let rec eq_t env (t1 : t) (t2 : t) : TEQ.eq_result =
   match t1.nbe_t, t2.nbe_t with
@@ -163,7 +190,7 @@ and eq_args env (as1 : args) (as2 : args) : TEQ.eq_result =
   match as1, as2 with
   | [], [] -> TEQ.Equal
   | x :: xs, y :: ys -> eq_and (eq_arg env x y) (fun () -> eq_args env xs ys)
-  | _, _ -> TEQ.Unknown (* ZP: following tm_eq, but why not TEQ.NotEqual? *)
+  | _, _ -> TEQ.Unknown
 
 
 // Printing functions
@@ -172,16 +199,16 @@ let constant_to_string (c: constant) =
   match c with
   | Unit -> "Unit"
   | Bool b -> if b then "Bool true" else "Bool false"
-  | Int i -> Z.string_of_big_int i
-  | Char c -> BU.format1 "'%s'" (BU.string_of_char c)
-  | String (s, _) -> BU.format1 "\"%s\"" s
-  | Range r -> BU.format1 "Range %s" (Range.string_of_range r)
+  | Int i -> show i
+  | Char c -> Format.fmt1 "'%s'" (BU.string_of_char c)
+  | String (s, _) -> Format.fmt1 "\"%s\"" s
+  | Range r -> Format.fmt1 "Range %s" (Range.string_of_range r)
   | SConst s -> show s
-  | Real s -> BU.format1 "Real %s" s
+  | Real s -> Format.fmt1 "Real %s" s
 
 let rec t_to_string (x:t) =
   match x.nbe_t with
-  | Lam {interp=b; arity} -> BU.format1 "Lam (_, %s args)"  (BU.string_of_int arity)
+  | Lam {interp=b; arity} -> Format.fmt1 "Lam (_, %s args)"  (show arity)
   | Accu (a, l) ->
     "Accu (" ^ (atom_to_string a) ^ ") (" ^
     (String.concat "; " (List.map (fun x -> t_to_string (fst x)) l)) ^ ")"
@@ -204,11 +231,11 @@ let rec t_to_string (x:t) =
   | Unknown -> "Unknown"
   | Reflect t -> "Reflect " ^ t_to_string t
   | Quote _ -> "Quote _"
-  | Lazy (Inl li, _) -> BU.format1 "Lazy (Inl {%s})" (show (U.unfold_lazy li))
-  | Lazy (Inr (_, et), _) -> BU.format1 "Lazy (Inr (?, %s))" (show et)
+  | Lazy (Inl li, _) -> Format.fmt1 "Lazy (Inl {%s})" (show (U.unfold_lazy li))
+  | Lazy (Inr (_, et), _) -> Format.fmt1 "Lazy (Inr (?, %s))" (show et)
   | LocalLetRec (_, l, _, _, _, _, _) -> "LocalLetRec (" ^ (show (true, [l])) ^ ")"
-  | TopLevelLet (lb, _, _) -> "TopLevelLet (" ^ show (BU.right lb.lbname) ^ ")"
-  | TopLevelRec (lb, _, _, _) -> "TopLevelRec (" ^ show (BU.right lb.lbname) ^ ")"
+  | TopLevelLet (lb, _, _) -> "TopLevelLet (" ^ show (Inr?.v lb.lbname) ^ ")"
+  | TopLevelRec (lb, _, _, _) -> "TopLevelRec (" ^ show (Inr?.v lb.lbname) ^ ")"
   | Meta (t, _) -> "Meta " ^ t_to_string t
 and atom_to_string (a: atom) =
   match a with
@@ -251,7 +278,7 @@ let embed_as (ea:embedding 'a)
              (ot:option t)
              : embedding 'b
  = mk_emb (fun cbs (x:'b) -> embed ea cbs (ba x))
-          (fun cbs t -> BU.map_opt (unembed ea cbs t) ab)
+          (fun cbs t -> Option.map ab (unembed ea cbs t))
           (fun () -> match ot with | Some t -> t | None -> ea.typ ())
           ea.e_typ
 
@@ -269,7 +296,7 @@ let make_arrow1 t1 (a:arg) : t = mk_t <| Arrow (Inr ([a], Tot t1))
 
 let lazy_embed (et:unit -> emb_typ) (x:'a) (f:unit -> t) =
     if !Options.debug_embedding
-    then BU.print1 "Embedding\n\temb_typ=%s\n"
+    then Format.print1 "Embedding\n\temb_typ=%s\n"
                          (show (et ()));
     if !Options.eager_embedding
     then f()
@@ -287,21 +314,21 @@ let lazy_unembed (et:unit -> emb_typ) (x:t) (f:t -> option 'a) : option 'a =
       || !Options.eager_embedding
       then let res = f (Thunk.force thunk) in
            let _ = if !Options.debug_embedding
-                   then BU.print2 "Unembed cancellation failed\n\t%s <> %s\n"
+                   then Format.print2 "Unembed cancellation failed\n\t%s <> %s\n"
                                 (show (et ()))
                                 (show et')
            in
            res
       else let a = FStarC.Dyn.undyn b in
            let _ = if !Options.debug_embedding
-                   then BU.print1 "Unembed cancelled for %s\n"
+                   then Format.print1 "Unembed cancelled for %s\n"
                                      (show (et ()))
            in
            Some a
     | _ ->
       let aopt = f x in
       let _ = if !Options.debug_embedding
-              then BU.print1 "Unembedding:\n\temb_typ=%s\n"
+              then Format.print1 "Unembedding:\n\temb_typ=%s\n"
                                (show (et ())) in
       aopt
 
@@ -362,7 +389,7 @@ let e_string : embedding string =
   mk_emb' em un (fun () -> lid_as_typ PC.string_lid [] []) (SE.emb_typ_of string)
 
 // Embeddind at type int
-let e_int : embedding Z.t =
+let e_int : embedding int =
     let em _cb c = Constant (Int c) in
     let un _cb c =
         match c with
@@ -379,8 +406,6 @@ let e_real : embedding Real.real =
         | _ -> None
     in
     mk_emb' em un (fun () -> lid_as_typ PC.real_lid [] [])  (SE.emb_typ_of Real.real)
-
-let e_fsint = embed_as e_int Z.to_int_fs Z.of_int_fs None
 
 // Embedding at option type
 let e_option (ea : embedding 'a) : Prims.Tot _ =
@@ -402,7 +427,7 @@ let e_option (ea : embedding 'a) : Prims.Tot _ =
         | Construct (fvar, us, args) when S.fv_eq_lid fvar PC.none_lid ->
           Some None
         | Construct (fvar, us, [(a, _); _]) when S.fv_eq_lid fvar PC.some_lid ->
-          BU.bind_opt (unembed ea cb a) (fun a -> Some (Some a))
+          Option.bind (unembed ea cb a) (fun a -> Some (Some a))
         | _ -> None)
     in
     mk_emb em un (fun () -> lid_as_typ PC.option_lid [U_zero] [as_arg (type_of ea)]) etyp
@@ -555,10 +580,10 @@ let e_either (ea:embedding 'a) (eb:embedding 'b) =
         lazy_unembed etyp trm (fun trm ->
         match trm.nbe_t with
         | Construct (fvar, us, [(a, _); _; _]) when S.fv_eq_lid fvar PC.inl_lid ->
-          BU.bind_opt (unembed ea cb a) (fun a ->
+          Option.bind (unembed ea cb a) (fun a ->
           Some (Inl a))
         | Construct (fvar, us, [(b, _); _; _]) when S.fv_eq_lid fvar PC.inr_lid ->
-          BU.bind_opt (unembed eb cb b) (fun b ->
+          Option.bind (unembed eb cb b) (fun b ->
           Some (Inr b))
         | _ -> None)
     in
@@ -647,8 +672,8 @@ let e_list (ea:embedding 'a) =
           // GM: Maybe it's not, but I'm unsure on whether we can rely on all these terms being type-correct
         | Construct (fv, _, [(tl, None); (hd, None)])
             when S.fv_eq_lid fv PC.cons_lid ->
-          BU.bind_opt (unembed ea cb hd) (fun hd ->
-          BU.bind_opt (un cb tl) (fun tl ->
+          Option.bind (unembed ea cb hd) (fun hd ->
+          Option.bind (un cb tl) (fun tl ->
           Some (hd :: tl)))
         | _ -> None)
     in
@@ -741,23 +766,23 @@ let e_norm_step =
         | FV (fv, _, []) when S.fv_eq_lid fv PC.steps_unascribe ->
             Some NormSteps.Unascribe
         | FV (fv, _, [(l, _)]) when S.fv_eq_lid fv PC.steps_unfoldonly ->
-            BU.bind_opt (unembed (e_list e_string) cb l) (fun ss ->
+            Option.bind (unembed (e_list e_string) cb l) (fun ss ->
             Some <| NormSteps.UnfoldOnly ss)
         | FV (fv, _, [(l, _)]) when S.fv_eq_lid fv PC.steps_unfoldfully ->
-            BU.bind_opt (unembed (e_list e_string) cb l) (fun ss ->
+            Option.bind (unembed (e_list e_string) cb l) (fun ss ->
             Some <| NormSteps.UnfoldFully ss)
         | FV (fv, _, [(l, _)]) when S.fv_eq_lid fv PC.steps_unfoldattr ->
-            BU.bind_opt (unembed (e_list e_string) cb l) (fun ss ->
+            Option.bind (unembed (e_list e_string) cb l) (fun ss ->
             Some <| NormSteps.UnfoldAttr ss)
         | FV (fv, _, [(l, _)]) when S.fv_eq_lid fv PC.steps_unfoldqual ->
-            BU.bind_opt (unembed (e_list e_string) cb l) (fun ss ->
+            Option.bind (unembed (e_list e_string) cb l) (fun ss ->
             Some <| NormSteps.UnfoldQual ss)
         | FV (fv, _, [(l, _)]) when S.fv_eq_lid fv PC.steps_unfoldnamespace ->
-            BU.bind_opt (unembed (e_list e_string) cb l) (fun ss ->
+            Option.bind (unembed (e_list e_string) cb l) (fun ss ->
             Some <| NormSteps.UnfoldNamespace ss)
         | _ ->
             Errors.log_issue0 Errors.Warning_NotEmbedded
-              (BU.format1 "Not an embedded norm_step: %s" (t_to_string t0));
+              (Format.fmt1 "Not an embedded norm_step: %s" (t_to_string t0));
             None
     in
     mk_emb em un (fun () -> mkFV (lid_as_fv PC.norm_step_lid None) [] [])
@@ -871,9 +896,9 @@ let arrow_as_prim_step_1 (ea:embedding 'a) (eb:embedding 'b)
    : universes -> args -> option t =
     let f_wrapped _us args =
         let x, _ = List.hd args in //arity mismatches are handled by code that dispatches here
-        BU.map_opt
-                (unembed ea cb x) (fun x ->
-                 embed eb cb (f x))
+        Option.map 
+                (fun x -> embed eb cb (f x))
+                (unembed ea cb x)
     in
     f_wrapped
 
@@ -883,8 +908,8 @@ let arrow_as_prim_step_2 (ea:embedding 'a) (eb:embedding 'b) (ec:embedding 'c)
     let f_wrapped _us args =
         let x, _ = List.hd args in //arity mismatches are handled by code that dispatches here
         let y, _ = List.hd (List.tl args) in
-        BU.bind_opt (unembed ea cb x) (fun x ->
-        BU.bind_opt (unembed eb cb y) (fun y ->
+        Option.bind (unembed ea cb x) (fun x ->
+        Option.bind (unembed eb cb y) (fun y ->
         Some (embed ec cb (f x y))))
     in
     f_wrapped
@@ -898,9 +923,9 @@ let arrow_as_prim_step_3 (ea:embedding 'a) (eb:embedding 'b)
         let x, _ = List.hd args in //arity mismatches are handled by code that dispatches here
         let y, _ = List.hd (List.tl args) in
         let z, _ = List.hd (List.tl (List.tl args)) in
-        BU.bind_opt (unembed ea cb x) (fun x ->
-        BU.bind_opt (unembed eb cb y) (fun y ->
-        BU.bind_opt (unembed ec cb z) (fun z ->
+        Option.bind (unembed ea cb x) (fun x ->
+        Option.bind (unembed eb cb y) (fun y ->
+        Option.bind (unembed ec cb z) (fun z ->
         Some (embed ed cb (f x y z)))))
     in
     f_wrapped
@@ -930,6 +955,6 @@ let e_order =
       | Construct (fv, _, []) when S.fv_eq_lid fv ord_Gt_lid -> Some Gt
       | _ -> None
   in
-  let fv_as_emb_typ fv = S.ET_app (FStarC.Ident.string_of_lid fv.fv_name.v, []) in
+  let fv_as_emb_typ fv = S.ET_app (FStarC.Ident.string_of_lid fv.fv_name, []) in
   let fv = lid_as_fv PC.order_lid None in
   mk_emb embed_order unembed_order (fun () -> mkFV fv [] []) (fun () -> fv_as_emb_typ fv)

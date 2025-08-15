@@ -70,7 +70,7 @@ let (maybe_dump_module : FStarC_Parser_AST.modul -> unit) =
                 (FStarC_Class_Show.show FStarC_Parser_AST.showable_decl)
                 decls in
             FStarC_String.concat "\n" uu___4 in
-          FStarC_Util.print2 "Parsed module %s\n%s\n" uu___2 uu___3
+          FStarC_Format.print2 "Parsed module %s\n%s\n" uu___2 uu___3
         else ()
     | FStarC_Parser_AST.Interface
         { FStarC_Parser_AST.no_prelude1 = uu___;
@@ -90,11 +90,11 @@ let (maybe_dump_module : FStarC_Parser_AST.modul -> unit) =
                 (FStarC_Class_Show.show FStarC_Parser_AST.showable_decl)
                 decls in
             FStarC_String.concat "\n" uu___5 in
-          FStarC_Util.print2 "Parsed module %s\n%s\n" uu___3 uu___4
+          FStarC_Format.print2 "Parsed module %s\n%s\n" uu___3 uu___4
         else ()
 let (parse_file :
   Prims.string ->
-    (FStarC_Parser_AST.file * (Prims.string * FStarC_Range_Type.range)
+    (FStarC_Parser_AST.file * (Prims.string * FStarC_Range_Type.t)
       Prims.list))
   =
   fun fn ->
@@ -106,7 +106,7 @@ let (parse_file :
         -> (ast, comments)
     | FStarC_Parser_ParseIt.ASTFragment (FStar_Pervasives.Inr uu___1, uu___2)
         ->
-        let msg = FStarC_Util.format1 "%s: expected a module\n" fn in
+        let msg = FStarC_Format.fmt1 "%s: expected a module\n" fn in
         let r = FStarC_Range_Type.dummyRange in
         FStarC_Errors.raise_error FStarC_Class_HasRange.hasRange_range r
           FStarC_Errors_Codes.Fatal_ModuleExpected ()

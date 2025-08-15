@@ -311,7 +311,7 @@ let poly_cons #i x xs r =
     PL.poly_cons x (text_to_PS_text xs) r
   | GHASH    ->  GS.poly_cons x xs r; GS.add_comm (poly #i xs r) (encode i x)
 
-#set-options "--z3rlimit 20 --initial_fuel 0 --max_fuel 0"
+#set-options "--z3rlimit 20 --fuel 0"
 
 (** Process one message block and update the accumulator *)
 val update: #i:id -> r:elemB i -> a:elemB i -> w:wordB_16 -> Stack unit

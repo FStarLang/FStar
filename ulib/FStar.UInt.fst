@@ -96,7 +96,7 @@ let from_vec_aux #n a s1 s2 =
 
 let seq_slice_lemma #n a s1 t1 s2 t2 = ()
 
-#push-options "--initial_fuel 1 --max_fuel 1"
+#push-options "--fuel 1"
 let rec from_vec_propriety #n a s =
   if s = n - 1 then () else begin
     from_vec_propriety #n a (s + 1);
@@ -416,7 +416,7 @@ let lemma_msb_gte #n a b =
 
 (* Lemmas toward showing ~n + 1 = -a *)
 
-// #set-options "--initial_fuel 1 --max_fuel 1 --initial_ifuel 1 --max_ifuel 1"
+// #set-options "--fuel 1 --ifuel 1"
 
 #push-options "--z3rlimit 80"
 let lemma_uint_mod #n a = ()

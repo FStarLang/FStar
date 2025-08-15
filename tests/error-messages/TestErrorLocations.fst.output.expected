@@ -10,89 +10,79 @@
   - TestErrorLocations.test5 is declared but no definition was found
   - Add an 'assume' if this is intentional
 
->> Got issues: [
-* Error 19 at TestErrorLocations.fst(20,21-20,23):
+* Info at TestErrorLocations.fst(20,21-20,23):
+  - Expected failure:
   - Assertion failed
   - The SMT solver could not prove the query. Use --query_stats for more
     details.
 
->>]
->> Got issues: [
-* Error 19 at TestErrorLocations.fst(24,21-24,23):
+* Info at TestErrorLocations.fst(24,21-24,23):
+  - Expected failure:
   - Assertion failed
   - The SMT solver could not prove the query. Use --query_stats for more
     details.
 
->>]
->> Got issues: [
-* Error 19 at TestErrorLocations.fst(31,10-31,19):
-  - Assertion failed
-  - The SMT solver could not prove the query. Use --query_stats for more
-    details.
-  - See also TestErrorLocations.fst(27,50-27,58)
-
->>]
->> Got issues: [
-* Error 19 at TestErrorLocations.fst(37,10-37,11):
+* Info at TestErrorLocations.fst(31,10-31,19):
+  - Expected failure:
   - Assertion failed
   - The SMT solver could not prove the query. Use --query_stats for more
     details.
   - See also TestErrorLocations.fst(27,50-27,58)
 
->>]
->> Got issues: [
-* Error 19 at TestErrorLocations.fst(43,20-43,21):
+* Info at TestErrorLocations.fst(37,10-37,11):
+  - Expected failure:
+  - Assertion failed
+  - The SMT solver could not prove the query. Use --query_stats for more
+    details.
+  - See also TestErrorLocations.fst(27,50-27,58)
+
+* Info at TestErrorLocations.fst(43,20-43,21):
+  - Expected failure:
   - Subtyping check failed
   - Expected type Prims.nat got type Prims.int
   - The SMT solver could not prove the query. Use --query_stats for more
     details.
   - See also Prims.fst(682,18-682,24)
 
->>]
->> Got issues: [
-* Error 19 at TestErrorLocations.fst(48,14-48,19):
+* Info at TestErrorLocations.fst(48,14-48,19):
+  - Expected failure:
   - Could not prove post-condition
   - The SMT solver could not prove the query. Use --query_stats for more
     details.
   - See also TestErrorLocations.fst(46,84-46,90)
 
->>]
->> Got issues: [
-* Error 19 at TestErrorLocations.fst(58,15-58,17):
+* Info at TestErrorLocations.fst(58,15-58,17):
+  - Expected failure:
   - Assertion failed
   - The SMT solver could not prove the query. Use --query_stats for more
     details.
   - See also Prims.fst(459,90-459,102)
 
->>]
->> Got issues: [
-* Error 19 at TestErrorLocations.fst(62,15-62,17):
+* Info at TestErrorLocations.fst(62,15-62,17):
+  - Expected failure:
   - Assertion failed
   - The SMT solver could not prove the query. Use --query_stats for more
     details.
   - See also Prims.fst(459,90-459,102)
 
->>]
->> Got issues: [
-* Error 19 at TestErrorLocations.fst(66,27-66,28):
+* Info at TestErrorLocations.fst(66,27-66,28):
+  - Expected failure:
   - Subtyping check failed
   - Expected type Prims.nat got type Prims.int
   - The SMT solver could not prove the query. Use --query_stats for more
     details.
   - See also Prims.fst(682,18-682,24)
 
->>]
->> Got issues: [
-* Error 19 at TestErrorLocations.fst(70,25-70,34):
+* Info at TestErrorLocations.fst(70,25-70,34):
+  - Expected failure:
   - Subtyping check failed
   - Expected type Type0 got type Type0
   - The SMT solver could not prove the query. Use --query_stats for more
     details.
   - See also TestErrorLocations.fst(68,52-68,66)
 
->>]
->> Got issues: [
-* Error 19 at TestErrorLocations.fst(89,20-89,36):
+* Info at TestErrorLocations.fst(89,20-89,36):
+  - Expected failure:
   - Subtyping check failed
   - Expected type Prims.squash (exists (x: Prims.nat). x = 0)
     got type Prims.unit
@@ -100,43 +90,38 @@
     details.
   - See also FStar.Classical.Sugar.fsti(66,22-66,41)
 
->>]
->> Got issues: [
-* Error 19 at TestErrorLocations.fst(97,28-97,33):
+* Info at TestErrorLocations.fst(97,28-97,33):
+  - Expected failure:
   - Subtyping check failed
   - Expected type Prims.squash (forall (x: Prims.nat). x = 0)
     got type Prims.unit
   - The SMT solver could not prove the query. Use --query_stats for more
     details.
 
->>]
->> Got issues: [
-* Error 19 at TestErrorLocations.fst(102,12-102,13):
+* Info at TestErrorLocations.fst(102,12-102,13):
+  - Expected failure:
   - Subtyping check failed
   - Expected type Prims.squash (p /\ q) got type Prims.unit
   - The SMT solver could not prove the query. Use --query_stats for more
     details.
   - See also TestErrorLocations.fst(101,19-101,20)
 
->>]
->> Got issues: [
-* Error 19 at TestErrorLocations.fst(108,17-108,18):
+* Info at TestErrorLocations.fst(108,17-108,18):
+  - Expected failure:
   - Subtyping check failed
   - Expected type Prims.squash (p /\ q) got type Prims.unit
   - The SMT solver could not prove the query. Use --query_stats for more
     details.
   - See also TestErrorLocations.fst(107,21-107,22)
 
->>]
->> Got issues: [
-* Error 19 at TestErrorLocations.fst(114,12-114,18):
+* Info at TestErrorLocations.fst(114,12-114,18):
+  - Expected failure:
   - Subtyping check failed
   - Expected type Prims.squash (p \/ q) got type Prims.unit
   - The SMT solver could not prove the query. Use --query_stats for more
     details.
   - See also FStar.Classical.Sugar.fsti(88,21-88,31)
 
->>]
 * Warning 240 at TestErrorLocations.fst(113,0-117,17):
   - Missing definitions in module TestErrorLocations:
       test5

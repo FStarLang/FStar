@@ -63,3 +63,8 @@ instance deq_tuple5 #a #b #c #d #e (d1 : deq a) (d2 : deq b) (d3 : deq c) (d4 : 
 instance deq_tuple6 #a #b #c #d #e #f (d1 : deq a) (d2 : deq b) (d3 : deq c) (d4 : deq d) (d5 : deq e) (d6 : deq f) : Tot (deq (a & b & c & d & e & f)) = {
    (=?) = (fun (x1, x2, x3, x4, x5, x6) (y1, y2, y3, y4, y5, y6) -> x1 =? y1 && x2 =? y2 && x3 =? y3 && x4 =? y4 && x5 =? y5 && x6 =? y6)
 }
+
+let rec mem (#a:Type) {| deq a |} (x : a) (xs : list a) : bool =
+  match xs with
+  | [] -> false
+  | y::ys -> x =? y || mem x ys

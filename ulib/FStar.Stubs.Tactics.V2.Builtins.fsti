@@ -35,6 +35,9 @@ val fixup_range : Range.range -> TacRO Range.range
 (** Resolve unification variable indirections at the top of the term. *)
 val compress : term -> TacRO term
 
+(** Resolve unification variable indirections at the top of the universe. *)
+val compress_univ : universe -> TacRO universe
+
 (** [top_env] returns the environment where the tactic started running.
  * This works even if no goals are present. *)
 val top_env : unit -> TacRO env
@@ -440,15 +443,6 @@ val comp_to_doc : comp -> TacRO Pprint.document
 (** Print a source range as a string *)
 val range_to_string : range -> TacRO string
 
-(** A variant of Reflection.term_eq that may inspect more underlying
-details of terms. This function could distinguish two _otherwise equal
-terms_, but that distinction cannot leave the Tac effect.
-
-This is only exposed as a migration path. Please use
-[Reflection.term_eq] instead. *)
-[@@deprecated "Use Reflection.term_eq instead"]
-val term_eq_old : term -> term -> TacRO bool
-
 (** Runs the input tactic `f` with compat pre core setting `n`.
 It is an escape hatch for maintaining backward compatibility
 for code that breaks with the core typechecker. *)
@@ -650,3 +644,9 @@ val call_subtac_tm
     (g:env) (t : term) (u:universe)
     (goal_ty : term{typing_token g goal_ty (E_Total, pack_ln (Tv_Type u))})
   : Tac (ret_t (w:term{typing_token g w (E_Total, goal_ty)}))
+
+(* This will call the function [f] and log the time it takes under the stat key
+[s]. The stats can be printed by running F* with `--stats true`. Other than
+that, there is no observable difference from calling [f].  We could also expose
+a pure version of this function. *)
+val stats_record #a #wp (s : string) ($f : unit -> TAC a wp) : TAC a wp

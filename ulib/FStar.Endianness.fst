@@ -218,7 +218,7 @@ let rec be_of_seq_uint64 s =
 /// Pure indexing & update over sequences
 /// -------------------------------------
 
-#set-options "--max_fuel 1 --max_ifuel 0 --z3rlimit 50"
+#set-options "--max_fuel 1 --ifuel 0 --z3rlimit 50"
 
 let rec offset_uint32_be (b: bytes) (n: nat) (i: nat) =
   if S.length b = 0 then

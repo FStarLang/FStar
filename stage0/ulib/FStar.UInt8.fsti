@@ -43,8 +43,6 @@ unfold let n = 8
 open FStar.UInt
 open FStar.Mul
 
-#set-options "--max_fuel 0 --max_ifuel 0"
-
 (** Abstract type of machine integers, with an underlying
     representation using a bounded mathematical integer *)
 new val t : eqtype
@@ -224,6 +222,9 @@ val shift_left (a:t) (s:UInt32.t) : Pure t
     operator [=] *)
 let eq (a:t) (b:t) : Tot bool = eq #n (v a) (v b)
 
+(** Inequality *)
+let ne (a:t) (b:t) : Tot bool = ne #n (v a) (v b)
+
 (** Greater than *)
 let gt (a:t) (b:t) : Tot bool = gt #n (v a) (v b)
 
@@ -245,8 +246,6 @@ let minus (a:t) = add_mod (lognot a) (uint_to_t 1)
 inline_for_extraction
 let n_minus_one = UInt32.uint_to_t (n - 1)
 
-#set-options "--z3rlimit 80 --initial_fuel 1 --max_fuel 1"
-
 (** A constant-time way to compute the equality of
     two machine integers.
 
@@ -254,6 +253,7 @@ let n_minus_one = UInt32.uint_to_t (n - 1)
 
     Note, the branching on [a=b] is just for proof-purposes.
   *)
+#push-options "--z3rlimit 80 --fuel 1"
 [@ CNoInline ]
 let eq_mask (a:t) (b:t)
   : Pure t
@@ -312,30 +312,31 @@ let gte_mask (a:t) (b:t)
     lemma_msb_gte (v x) (v y);
     lemma_msb_gte (v y) (v x);
     c
-#reset-options
+#pop-options
 
 (*** Infix notations *)
-unfold let op_Plus_Hat = add
-unfold let op_Plus_Question_Hat = add_underspec
-unfold let op_Plus_Percent_Hat = add_mod
-unfold let op_Subtraction_Hat = sub
-unfold let op_Subtraction_Question_Hat = sub_underspec
-unfold let op_Subtraction_Percent_Hat = sub_mod
-unfold let op_Star_Hat = mul
-unfold let op_Star_Question_Hat = mul_underspec
-unfold let op_Star_Percent_Hat = mul_mod
-unfold let op_Slash_Hat = div
-unfold let op_Percent_Hat = rem
-unfold let op_Hat_Hat = logxor
-unfold let op_Amp_Hat = logand
-unfold let op_Bar_Hat = logor
-unfold let op_Less_Less_Hat = shift_left
-unfold let op_Greater_Greater_Hat = shift_right
-unfold let op_Equals_Hat = eq
-unfold let op_Greater_Hat = gt
-unfold let op_Greater_Equals_Hat = gte
-unfold let op_Less_Hat = lt
-unfold let op_Less_Equals_Hat = lte
+inline_for_extraction unfold let ( +^ )  = add
+inline_for_extraction unfold let ( +?^ ) = add_underspec
+inline_for_extraction unfold let ( +%^ ) = add_mod
+inline_for_extraction unfold let ( -^ )  = sub
+inline_for_extraction unfold let ( -?^ ) = sub_underspec
+inline_for_extraction unfold let ( -%^ ) = sub_mod
+inline_for_extraction unfold let ( *^ ) = mul
+inline_for_extraction unfold let ( *?^ )= mul_underspec
+inline_for_extraction unfold let ( *%^ )= mul_mod
+inline_for_extraction unfold let ( /^ )  = div
+inline_for_extraction unfold let ( %^ )  = rem
+inline_for_extraction unfold let ( ^^ )  = logxor
+inline_for_extraction unfold let ( &^ )  = logand
+inline_for_extraction unfold let ( |^ )  = logor
+inline_for_extraction unfold let ( <<^ ) = shift_left
+inline_for_extraction unfold let ( >>^ ) = shift_right
+inline_for_extraction unfold let ( =^ )  = eq
+inline_for_extraction unfold let ( <>^ ) = ne
+inline_for_extraction unfold let ( >^ )  = gt
+inline_for_extraction unfold let ( >=^ ) = gte
+inline_for_extraction unfold let ( <^ )  = lt
+inline_for_extraction unfold let ( <=^ ) = lte
 
 (**** To input / output constants *)
 (** In decimal representation *)
@@ -349,7 +350,6 @@ val to_string_hex_pad: t -> Tot string
 
 val of_string: string -> Tot t
 
-#set-options "--admit_smt_queries true"
 //This private primitive is used internally by the
 //compiler to translate bounded integer constants
 //with a desugaring-time check of the size of the number,
@@ -357,9 +357,10 @@ val of_string: string -> Tot t
 //Since it is marked private, client programs cannot call it directly
 //Since it is marked unfold, it eagerly reduces,
 //eliminating the verification overhead of the wrapper
+[@@admitted]
 private
 unfold
-let __uint_to_t (x:int) : Tot t
-    = uint_to_t x
-#reset-options
+let __uint_to_t (x:int) : t =
+  uint_to_t x
+
 unfold inline_for_extraction type byte = t

@@ -433,48 +433,27 @@ let is_bool_op op =
   mk_bool_op op <> None
 
 let mk_op = function
-  | "add" | "op_Plus_Hat" | "add_underspec" ->
-      Some Add
-  | "add_mod" | "op_Plus_Percent_Hat" ->
-      Some AddW
-  | "sub" | "op_Subtraction_Hat" | "sub_underspec" ->
-      Some Sub
-  | "sub_mod" | "op_Subtraction_Percent_Hat" ->
-      Some SubW
-  | "mul" | "op_Star_Hat" | "mul_underspec" ->
-      Some Mult
-  | "mul_mod" | "op_Star_Percent_Hat" ->
-      Some MultW
-  | "div" | "op_Slash_Hat" ->
-      Some Div
-  | "div_mod" | "op_Slash_Percent_Hat" ->
-      Some DivW
-  | "rem" | "op_Percent_Hat" ->
-      Some Mod
-  | "logor" | "op_Bar_Hat" ->
-      Some BOr
-  | "logxor" | "op_Hat_Hat" ->
-      Some BXor
-  | "logand" | "op_Amp_Hat" ->
-      Some BAnd
-  | "lognot" ->
-      Some BNot
-  | "shift_right" | "op_Greater_Greater_Hat" ->
-      Some BShiftR
-  | "shift_left" | "op_Less_Less_Hat" ->
-      Some BShiftL
-  | "eq" | "op_Equals_Hat" ->
-      Some Eq
-  | "op_Greater_Hat" | "gt" ->
-      Some Gt
-  | "op_Greater_Equals_Hat" | "gte" ->
-      Some Gte
-  | "op_Less_Hat" | "lt" ->
-      Some Lt
-  | "op_Less_Equals_Hat" | "lte" ->
-      Some Lte
-  | _ ->
-      None
+  | "add" | "add_underspec"  -> Some Add
+  | "add_mod"                -> Some AddW
+  | "sub" | "sub_underspec"  -> Some Sub
+  | "sub_mod"                -> Some SubW
+  | "mul" |  "mul_underspec" -> Some Mult
+  | "mul_mod"                -> Some MultW
+  | "div"                    -> Some Div
+  | "div_mod"                -> Some DivW
+  | "rem"                    -> Some Mod
+  | "logor"                  -> Some BOr
+  | "logxor"                 -> Some BXor
+  | "logand"                 -> Some BAnd
+  | "lognot"                 -> Some BNot
+  | "shift_right"            -> Some BShiftR
+  | "shift_left"             -> Some BShiftL
+  | "eq"                     -> Some Eq
+  |  "gt"                    -> Some Gt
+  |  "gte"                   -> Some Gte
+  | "lt"                     -> Some Lt
+  | "lte"                    -> Some Lte
+  | _                        -> None
 
 let is_op op =
   mk_op op <> None
@@ -519,13 +498,13 @@ let find env x =
   try
     List.index (fun name -> name.pretty = x) env.names
   with _ ->
-    failwith (BU.format1 "Internal error: name not found %s\n" x)
+    failwith (Format.fmt1 "Internal error: name not found %s\n" x)
 
 let find_t env x =
   try
     List.index (fun name -> name = x) env.names_t
   with _ ->
-    failwith (BU.format1 "Internal error: name not found %s\n" x)
+    failwith (Format.fmt1 "Internal error: name not found %s\n" x)
 
 let add_binders env bs =
   List.fold_left (fun env {mlbinder_name} -> extend env mlbinder_name) env bs
@@ -692,9 +671,9 @@ let rec translate_type_without_decay' env t: typ =
   | MLTY_Named ([], p) when (Syntax.string_of_mlpath p = "Prims.bool") ->
       TBool
   | MLTY_Named ([], ([ "FStar"; m ], "t")) when is_machine_int m ->
-      TInt (must (mk_width m))
+      TInt (Option.must (mk_width m))
   | MLTY_Named ([], ([ "FStar"; m ], "t'")) when is_machine_int m ->
-      TInt (must (mk_width m))
+      TInt (Option.must (mk_width m))
   | MLTY_Named ([], p) when (Syntax.string_of_mlpath p = "FStar.Monotonic.HyperStack.mem") ->
       TUnit
   
@@ -809,10 +788,10 @@ and translate_expr' env e: expr =
 
   // Some of these may not appear beneath an [EApp] node because of partial applications
   | MLE_Name ([ "FStar"; m ], op) when (is_machine_int m && is_op op) ->
-      EOp (must (mk_op op), must (mk_width m))
+      EOp (Option.must (mk_op op), Option.must (mk_width m))
 
   | MLE_Name ([ "Prims" ], op) when (is_bool_op op) ->
-      EOp (must (mk_bool_op op), Bool)
+      EOp (Option.must (mk_bool_op op), Bool)
 
   | MLE_Name n ->
       EQualified n
@@ -1075,15 +1054,15 @@ and translate_expr' env e: expr =
 
   // Operators from fixed-width integer modules, e.g. [FStar.Int32.addw].
   | MLE_App ({ expr = MLE_Name ([ "FStar"; m ], op) }, args) when (is_machine_int m && is_op op) ->
-      mk_op_app env (must (mk_width m)) (must (mk_op op)) args
+      mk_op_app env (Option.must (mk_width m)) (Option.must (mk_op op)) args
 
   | MLE_App ({ expr = MLE_Name ([ "Prims" ], op) }, args) when (is_bool_op op) ->
-      mk_op_app env Bool (must (mk_bool_op op)) args
+      mk_op_app env Bool (Option.must (mk_bool_op op)) args
 
   // Fixed-width literals are represented as calls to [FStar.Int32.uint_to_t]
   | MLE_App ({ expr = MLE_Name ([ "FStar"; m ], "int_to_t") }, [ { expr = MLE_Const (MLC_Int (c, None)) }])
   | MLE_App ({ expr = MLE_Name ([ "FStar"; m ], "uint_to_t") }, [ { expr = MLE_Const (MLC_Int (c, None)) }]) when is_machine_int m ->
-      EConstant (must (mk_width m), c)
+      EConstant (Option.must (mk_width m), c)
 
   | MLE_App ({ expr = MLE_Name ([ "C" ], "string_of_literal") }, [ { expr = e } ])
   | MLE_App ({ expr = MLE_Name ([ "C"; "Compat"; "String" ], "of_literal") }, [ { expr = e } ])
@@ -1187,10 +1166,10 @@ and translate_expr' env e: expr =
   | MLE_Let _ ->
       (* Things not supported (yet): let-bindings for functions; meaning, rec flags are not
        * supported, and quantified type schemes are not supported either *)
-      failwith (BU.format1 "todo: translate_expr [MLE_Let] (expr is: %s)"
+      failwith (Format.fmt1 "todo: translate_expr [MLE_Let] (expr is: %s)"
         (ML.Code.string_of_mlexpr ([],"") e))
   | MLE_App (head, _) ->
-      failwith (BU.format1 "todo: translate_expr [MLE_App] (head is: %s)"
+      failwith (Format.fmt1 "todo: translate_expr [MLE_App] (head is: %s)"
         (ML.Code.string_of_mlexpr ([], "") head))
   | MLE_Seq seqs ->
       ESequence (List.map (translate_expr env) seqs)
@@ -1223,7 +1202,7 @@ and assert_lid env t =
         TApp (lid, List.map (translate_type env) ts)
       else
         TQualified lid
-  | _ -> failwith (BU.format1 "invalid argument: expected MLTY_Named, got %s"
+  | _ -> failwith (Format.fmt1 "invalid argument: expected MLTY_Named, got %s"
                              (ML.Code.string_of_mlty ([], "") t))
 
 and translate_branches env branches =
@@ -1296,11 +1275,11 @@ and translate_constant c: expr =
   | MLC_String s ->
       if FStar.String.list_of_string s
       |> BU.for_some (fun (c:FStar.Char.char) -> c = FStar.Char.char_of_int 0)
-      then failwith (BU.format1 "Refusing to translate a string literal that contains a null character: %s" s);
+      then failwith (Format.fmt1 "Refusing to translate a string literal that contains a null character: %s" s);
       EString s
   | MLC_Char c ->
       let i = BU.int_of_char c in
-      let s = BU.string_of_int i in
+      let s = show i in
       let c = EConstant (CInt, s) in
       let char_of_int = EQualified (["FStar"; "Char"], "char_of_int") in
       EApp(char_of_int, [c])
@@ -1308,8 +1287,6 @@ and translate_constant c: expr =
       EConstant (translate_width (Some (sg, wd)), s)
   | MLC_Float _ ->
       failwith "todo: translate_expr [MLC_Float]"
-  | MLC_Bytes _ ->
-      failwith "todo: translate_expr [MLC_Bytes]"
   | MLC_Int (s, None) ->
       EConstant (CInt, s)
 
@@ -1331,7 +1308,8 @@ let translate_type_decl' env ty: option decl =
           Some (DTypeAbstractStruct name)
         else if assumed then
           let name = string_of_mlpath name in
-          BU.print1_warning "Not extracting type definition %s to KaRaMeL (assumed type)\n" name;
+          if not (Options.silent ()) then
+            Format.print1_warning "Not extracting type definition %s to KaRaMeL (assumed type)\n" name;
           // JP: TODO: shall we be smarter here?
           None
         else
@@ -1361,7 +1339,7 @@ let translate_type_decl' env ty: option decl =
     | {tydecl_name=name} ->
         // JP: TODO: figure out why and how this happens
         Errors.log_issue0 Errors.Warning_DefinitionNotTranslated [
-            Errors.Msg.text <| BU.format1 "Error extracting type definition %s to KaRaMeL." name;
+            Errors.Msg.text <| Format.fmt1 "Error extracting type definition %s to KaRaMeL." name;
           ];
         None
 
@@ -1381,7 +1359,8 @@ let translate_let' env flavor lb: option decl =
       if List.length tvars = 0 then
         Some (DExternal (translate_cc meta, translate_flags meta, name, translate_type env t0, arg_names))
       else begin
-        BU.print1_warning "Not extracting %s to KaRaMeL (polymorphic assumes are not supported)\n" (Syntax.string_of_mlpath name);
+        if not (Options.silent ()) then
+          Format.print1_warning "Not extracting %s to KaRaMeL (polymorphic assumes are not supported)\n" (Syntax.string_of_mlpath name);
         None
       end
 
@@ -1405,11 +1384,11 @@ let translate_let' env flavor lb: option decl =
         in
         let name = env.module_name, name in
         let i, eff, t = find_return_type E_PURE (List.length args) t0 in
-        if i > 0 then begin
+        if i > 0 && not (Options.silent ()) then begin
           let msg = "function type annotation has less arrows than the \
             number of arguments; please mark the return type abbreviation as \
             inline_for_extraction" in
-          BU.print2_warning "Not extracting %s to KaRaMeL (%s)\n" (Syntax.string_of_mlpath name) msg
+          Format.print2_warning "Not extracting %s to KaRaMeL (%s)\n" (Syntax.string_of_mlpath name) msg
         end;
         let t = translate_type env t in
         let binders = translate_binders env args in
@@ -1423,14 +1402,23 @@ let translate_let' env flavor lb: option decl =
         begin try
           let body = translate_expr env body in
           Some (DFunction (cc, meta, List.length tvars, t, name, binders, body))
-        with e ->
+        with
+        | e ->
+          let open FStarC.Pprint in
+          let open FStarC.Errors.Msg in
           // JP: TODO: figure out what are the remaining things we don't extract
-          let msg = BU.print_exn e in
-          Errors.log_issue0 Errors.Warning_FunctionNotExtacted [
-            Errors.Msg.text <| BU.format1 "Error while extracting %s to KaRaMeL." (Syntax.string_of_mlpath name);
-            Pprint.arbitrary_string msg;
-          ];
-          let msg = "This function was not extracted:\n" ^ msg in
+          let sub_msg : list document =
+            match e with
+            | Errors.Error (code, msg, pos, ctx) ->
+              [prefix 2 1 (text (Format.fmt2 "Got error %s at %s." (show (Errors.errno code)) (show pos)))
+                (Errors.render_as_doc msg)]
+            | e ->
+              [text "Got an exception: " ^^ arbitrary_string (BU.print_exn e)]
+          in
+          Errors.log_issue0 Errors.Warning_FunctionNotExtacted ([
+            Errors.Msg.text <| Format.fmt1 "Error while extracting %s to KaRaMeL." (show name);
+          ] @ sub_msg);
+          let msg = "This function was not extracted:\n" ^ show name in
           Some (DFunction (cc, meta, List.length tvars, t, name, binders, EAbortS msg))
         end
 
@@ -1453,7 +1441,7 @@ let translate_let' env flavor lb: option decl =
           Some (DGlobal (meta, name, List.length tvars, t, expr))
         with e ->
           Errors.log_issue0 Errors.Warning_DefinitionNotTranslated [
-              Errors.Msg.text <| BU.format1 "Error extracting %s to KaRaMeL." (Syntax.string_of_mlpath name);
+              Errors.Msg.text <| Format.fmt1 "Error extracting %s to KaRaMeL." (Syntax.string_of_mlpath name);
               Pprint.arbitrary_string (BU.print_exn e);
             ];
           Some (DGlobal (meta, name, List.length tvars, t, EAny))
@@ -1462,10 +1450,10 @@ let translate_let' env flavor lb: option decl =
   | { mllb_name = name; mllb_tysc = ts } ->
       // TODO JP: figure out what exactly we're hitting here...?
       Errors.log_issue0 Errors.Warning_DefinitionNotTranslated
-        (BU.format1 "Not extracting %s to KaRaMeL\n" name);
+        (Format.fmt1 "Not extracting %s to KaRaMeL\n" name);
       begin match ts with
       | Some (tps, t) ->
-          BU.print2 "Type scheme is: forall %s. %s\n"
+          Format.print2 "Type scheme is: forall %s. %s\n"
             (String.concat ", " (ty_param_names tps))
             (ML.Code.string_of_mlty ([], "") t)
       | None ->
@@ -1509,7 +1497,8 @@ let translate_decl env d: list decl =
       failwith "todo: translate_decl [MLM_Top]"
 
   | MLM_Exn (m, _) ->
-      BU.print1_warning "Not extracting exception %s to KaRaMeL (exceptions unsupported)\n" m;
+      if not (Options.silent ()) then
+        Format.print1_warning "Not extracting exception %s to KaRaMeL (exceptions unsupported)\n" m;
       []
 
 let translate_module uenv (m : mlpath & option (mlsig & mlmodulebody)) : file =
@@ -1530,11 +1519,11 @@ let translate (ue:uenv) (modules : list mlmodule): list file =
       Syntax.string_of_mlpath path
     in
     try
-      if not (Options.silent()) then (BU.print1 "Attempting to translate module %s\n" m_name);
+      if not (Options.silent()) then (Format.print1 "Attempting to translate module %s\n" m_name);
       Some (translate_module ue m)
     with
     | e ->
-        BU.print2 "Unable to translate module: %s because:\n  %s\n"
+        Format.print2 "Unable to translate module: %s because:\n  %s\n"
           m_name (BU.print_exn e);
         None
   ) modules

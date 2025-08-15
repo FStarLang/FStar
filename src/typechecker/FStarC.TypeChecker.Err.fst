@@ -19,7 +19,6 @@ open FStarC
 open FStarC.Effect
 open FStarC.Syntax.Syntax
 open FStarC.Syntax.Print {}
-open FStarC.Util
 open FStarC.TypeChecker.Env
 open FStarC.Range
 open FStarC.Ident
@@ -188,12 +187,12 @@ let ill_kinded_type = Errors.mkmsg "Ill-kinded type"
 
 let unexpected_signature_for_monad #a env (rng:Range.t) (m:lident) k : a =
   Errors.raise_error rng Errors.Fatal_UnexpectedSignatureForMonad
-    (format2 "Unexpected signature for monad \"%s\". Expected a signature of the form (a:Type -> WP a -> Effect); got %s"
+    (Format.fmt2 "Unexpected signature for monad \"%s\". Expected a signature of the form (a:Type -> WP a -> Effect); got %s"
     (show m) (N.term_to_string env k))
 
 let expected_a_term_of_type_t_got_a_function env (rng:Range.t) msg (t:typ) (e:term) =
   Errors.raise_error rng Errors.Fatal_ExpectTermGotFunction
-    (format3 "Expected a term of type \"%s\"; got a function \"%s\" (%s)"
+    (Format.fmt3 "Expected a term of type \"%s\"; got a function \"%s\" (%s)"
     (N.term_to_string env t) (show e) msg)
 
 let unexpected_implicit_argument =
@@ -214,7 +213,7 @@ let expected_expression_of_type #a env (rng:Range.t) t1 e t2 : a =
 
 let expected_pattern_of_type env (t1 e t2 : term) =
   let s1, s2 = err_msg_type_strings env t1 t2 in
-  (Errors.Fatal_UnexpectedPattern, (format3 "Expected pattern of type \"%s\"; got pattern \"%s\" of type \"%s\""
+  (Errors.Fatal_UnexpectedPattern, (Format.fmt3 "Expected pattern of type \"%s\"; got pattern \"%s\" of type \"%s\""
     s1 (show e) s2))
 
 let basic_type_error env (rng:Range.t) eopt t1 t2 =
@@ -255,15 +254,15 @@ let occurs_check =
   (Errors.Fatal_PossibleInfiniteTyp, "Possibly infinite typ (occurs check failed)")
 
 let constructor_fails_the_positivity_check env (d:term) (l:lid) =
-  (Errors.Fatal_ConstructorFailedCheck, (format2 "Constructor \"%s\" fails the strict positivity check; the constructed type \"%s\" occurs to the left of a pure function type"
+  (Errors.Fatal_ConstructorFailedCheck, (Format.fmt2 "Constructor \"%s\" fails the strict positivity check; the constructed type \"%s\" occurs to the left of a pure function type"
     (show d) (show l)))
 
 let inline_type_annotation_and_val_decl (l:lid) =
-  (Errors.Fatal_DuplicateTypeAnnotationAndValDecl, (format1 "\"%s\" has a val declaration as well as an inlined type annotation; remove one" (show l)))
+  (Errors.Fatal_DuplicateTypeAnnotationAndValDecl, (Format.fmt1 "\"%s\" has a val declaration as well as an inlined type annotation; remove one" (show l)))
 
 (* CH: unsure if the env is good enough for normalizing t here *)
 let inferred_type_causes_variable_to_escape env t (x:bv) =
-  (Errors.Fatal_InferredTypeCauseVarEscape, (format2 "Inferred type \"%s\" causes variable \"%s\" to escape its scope"
+  (Errors.Fatal_InferredTypeCauseVarEscape, (Format.fmt2 "Inferred type \"%s\" causes variable \"%s\" to escape its scope"
     (N.term_to_string env t) (show x)))
 
 let expected_function_typ #a env (rng:Range.t) t : a =
@@ -274,13 +273,13 @@ let expected_function_typ #a env (rng:Range.t) t : a =
     ]
 
 let expected_poly_typ env (f:term) t targ =
-  (Errors.Fatal_PolyTypeExpected, (format3 "Expected a polymorphic function; got an expression \"%s\" of type \"%s\" applied to a type \"%s\""
+  (Errors.Fatal_PolyTypeExpected, (Format.fmt3 "Expected a polymorphic function; got an expression \"%s\" of type \"%s\" applied to a type \"%s\""
     (show f) (N.term_to_string env t) (N.term_to_string env targ)))
 
 let disjunctive_pattern_vars (v1 v2 : list bv) =
   let vars v =
     v |> List.map show |> String.concat ", " in
-  (Errors.Fatal_DisjuctivePatternVarsMismatch, (format2
+  (Errors.Fatal_DisjuctivePatternVarsMismatch, (Format.fmt2
     "Every alternative of an 'or' pattern must bind the same variables; here one branch binds (\"%s\") and another (\"%s\")"
     (vars v1) (vars v2)))
 
@@ -311,7 +310,7 @@ let computed_computation_type_does_not_match_annotation_eq #a env (r:Range.t) e 
 
 let unexpected_non_trivial_precondition_on_term #a env f : a =
   Errors.raise_error env Errors.Fatal_UnExpectedPreCondition
-    (format1 "Term has an unexpected non-trivial pre-condition: %s" (N.term_to_string env f))
+    (Format.fmt1 "Term has an unexpected non-trivial pre-condition: %s" (N.term_to_string env f))
 
 let __expected_eff_expression (effname:string) (rng:Range.t) (e:term) (c:comp) (reason:option string) =
   let open FStarC.Class.PP in
@@ -332,10 +331,10 @@ let expected_ghost_expression (rng:Range.t)(e:term) (c:comp) (reason:option stri
   __expected_eff_expression "ghost" rng e c reason
 
 let expected_effect_1_got_effect_2 (c1:lident) (c2:lident) =
-  (Errors.Fatal_UnexpectedEffect, (format2 "Expected a computation with effect %s; but it has effect %s" (show c1) (show c2)))
+  (Errors.Fatal_UnexpectedEffect, (Format.fmt2 "Expected a computation with effect %s; but it has effect %s" (show c1) (show c2)))
 
 let failed_to_prove_specification_of (l : lbname) (lbls : list string) =
-  (Errors.Error_TypeCheckerFailToProve, (format2 "Failed to prove specification of %s; assertions at [%s] may fail" (show l) (lbls |> String.concat ", ")))
+  (Errors.Error_TypeCheckerFailToProve, (Format.fmt2 "Failed to prove specification of %s; assertions at [%s] may fail" (show l) (lbls |> String.concat ", ")))
 
 let warn_top_level_effect (rng:Range.t) : unit =
   Errors.log_issue rng

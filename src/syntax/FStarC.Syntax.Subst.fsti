@@ -19,7 +19,6 @@ open FStarC.Effect
 open FStarC
 open FStarC.Syntax
 open FStarC.Syntax.Syntax
-open FStarC.Util
 
 val shift_subst:        int -> subst_t -> subst_t
 val subst:              list subst_elt -> term -> term

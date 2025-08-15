@@ -2,20 +2,14 @@ Module after desugaring:
 module Bug3227
 Declarations: [
 type box (a: Type) = { x:a }
-
 let proj b = x (x (x b)) <: Prims.int
 type box2 (a: Type) = | Box2 : x: a -> Bug3227.box2 a
-
-
-
 let test b = Box2? b && Box2? b.x
 noeq
 type boxf (a: Type) = { ff:_: a -> a }
-
 let test2 r = ff r 5
 noeq
 type boxfi (a: Type) = { ff:a }
-
 let test3 r = ff r
 let test4 r x = ff r x <: a
 ]
@@ -24,20 +18,14 @@ Module before type checking:
 module Bug3227
 Declarations: [
 type box (a: Type) = { x:a }
-
 let proj b = x (x (x b)) <: Prims.int
 type box2 (a: Type) = | Box2 : x: a -> Bug3227.box2 a
-
-
-
 let test b = Box2? b && Box2? b.x
 noeq
 type boxf (a: Type) = { ff:_: a -> a }
-
 let test2 r = ff r 5
 noeq
 type boxfi (a: Type) = { ff:a }
-
 let test3 r = ff r
 let test4 r x = ff r x <: a
 ]

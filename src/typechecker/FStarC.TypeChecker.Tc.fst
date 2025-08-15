@@ -15,14 +15,14 @@
 *)
 
 module FStarC.TypeChecker.Tc
+
+open FStarC
 open FStarC.Effect
 open FStarC.List
-open FStarC
 open FStarC.Errors
 open FStarC.TypeChecker
 open FStarC.TypeChecker.Common
 open FStarC.TypeChecker.Env
-open FStarC.Util
 open FStarC.Ident
 open FStarC.Syntax
 open FStarC.Syntax.Syntax
@@ -75,7 +75,7 @@ let set_hint_correlator env se =
     let tbl = env.qtbl_name_and_index |> snd in
     let get_n lid =
       let n_opt = SMap.try_find tbl (show lid) in
-      if is_some n_opt then n_opt |> must else 0
+      if Some? n_opt then n_opt |> Option.must else 0
     in
 
     let typ = match sigelt_typ se with | Some t -> t | _ -> S.tun in
@@ -89,7 +89,7 @@ let set_hint_correlator env se =
       let lids = U.lids_of_sigelt se in
       let lid = match lids with
             | [] -> Ident.lid_add_suffix (Env.current_module env)
-                                         (GenSym.next_id () |> BU.string_of_int) // GM: Should we really touch the gensym?
+                                         (GenSym.next_id () |> show) // GM: Should we really touch the gensym?
             | l::_ -> l in
       {env with qtbl_name_and_index=Some (lid, typ, get_n lid), tbl}
 
@@ -133,7 +133,7 @@ let tc_decl_attributes env se =
 
 let tc_inductive' env ses quals attrs lids =
     if Debug.low () then
-        BU.print1 ">>>>>>>>>>>>>>tc_inductive %s\n" (show ses);
+        Format.print1 ">>>>>>>>>>>>>>tc_inductive %s\n" (show ses);
 
     let ses = List.map (tc_decl_attributes env) ses in
 
@@ -276,7 +276,7 @@ let read_postprocess_with_attr (for_extraction : bool) (env:Env.env) (ats:list a
       ats, Some tau
     | Some (ats, args) ->
       Errors.log_issue env Errors.Warning_UnrecognizedAttribute [
-        text <| BU.format1 "Ill-formed application of `%s`" (show lid);
+        text <| Format.fmt1 "Ill-formed application of `%s`" (show lid);
       ];
       ats, None
   in
@@ -381,7 +381,7 @@ let tc_sig_let env r se lbs lids : list sigelt & list sigelt & Env.env =
                | false, false ->
                  // if (string_of_id body_bv.ppname) <> (string_of_id val_bv.ppname) then
                  //   Errors.warn (range_of_id body_bv.ppname)
-                 //     (BU.format2 "Parameter name %s doesn't match name %s used in val declaration"
+                 //     (Format.fmt2 "Parameter name %s doesn't match name %s used in val declaration"
                  //                  (string_of_id body_bv.ppname) (string_of_id val_bv.ppname));
                  val_b) :: rename_binders bt vt in
           Syntax.mk (Tm_arrow {bs=rename_binders def_bs val_bs; comp=c}) r end
@@ -393,13 +393,13 @@ let tc_sig_let env r se lbs lids : list sigelt & list sigelt & Env.env =
       *)
     let should_generalize, lbs', quals_opt =
        snd lbs |> List.fold_left (fun (gen, lbs, quals_opt) lb ->
-          let lbname = right lb.lbname in //this is definitely not a local let binding
-          let gen, lb, quals_opt = match Env.try_lookup_val_decl env lbname.fv_name.v with
+          let lbname = Inr?.v lb.lbname in //this is definitely not a local let binding
+          let gen, lb, quals_opt = match Env.try_lookup_val_decl env lbname.fv_name with
             | None ->
                 gen, lb, quals_opt
 
             | Some ((uvs,tval), quals) ->
-              let quals_opt = check_quals_eq lbname.fv_name.v quals_opt quals in
+              let quals_opt = check_quals_eq lbname.fv_name quals_opt quals in
               let def = match lb.lbtyp.n with
                 | Tm_unknown -> lb.lbdef
                 | _ ->
@@ -443,7 +443,7 @@ let tc_sig_let env r se lbs lids : list sigelt & list sigelt & Env.env =
     let preprocess_lb (tau:term) (lb:letbinding) : letbinding =
         let lbdef = Env.preprocess env tau lb.lbdef in
         if Debug.medium () || !dbg_TwoPhases then
-          BU.print1 "lb preprocessed into: %s\n" (show lbdef);
+          Format.print1 "lb preprocessed into: %s\n" (show lbdef);
         { lb with lbdef = lbdef }
     in
     // Preprocess the letbindings with the tactic, if any
@@ -490,12 +490,12 @@ let tc_sig_let env r se lbs lids : list sigelt & list sigelt & Env.env =
         in
 
         if Debug.medium () || !dbg_TwoPhases then
-          BU.print1 "Let binding after phase 1, before removing uvars: %s\n" (show e);
+          Format.print1 "Let binding after phase 1, before removing uvars: %s\n" (show e);
 
         let e = N.remove_uvar_solutions env' e |> drop_lbtyp in
 
         if Debug.medium () || !dbg_TwoPhases then
-          BU.print1 "Let binding after phase 1, uvars removed: %s\n" (show e);
+          Format.print1 "Let binding after phase 1, uvars removed: %s\n" (show e);
         e)
       else e
     in
@@ -551,9 +551,9 @@ let tc_sig_let env r se lbs lids : list sigelt & list sigelt & Env.env =
                    |> List.tryFind (fun lid ->
                                    not (lid |> Ident.path_of_lid |> List.hd = "Prims" ||
                                         lid_equals lid PC.pattern_lid)) in
-             if lid_opt |> is_some             
-             then err (BU.format1 "%s is not allowed in no_subtyping lemmas (only prims symbols)"
-                         (lid_opt |> must |> string_of_lid)) lb.lbpos
+             if lid_opt |> Some?             
+             then err (Format.fmt1 "%s is not allowed in no_subtyping lemmas (only prims symbols)"
+                         (lid_opt |> Option.must |> string_of_lid)) lb.lbpos
              else let t, _ = U.type_u () in
                   let uvs, lbtyp = SS.open_univ_vars lb.lbunivs lb.lbtyp in
                   let _, _, g = TcTerm.tc_check_tot_or_gtot_term
@@ -566,16 +566,16 @@ let tc_sig_let env r se lbs lids : list sigelt & list sigelt & Env.env =
 
     (* 4. Record the type of top-level lets, and log if requested *)
     snd lbs |> List.iter (fun lb ->
-        let fv = right lb.lbname in
+        let fv = Inr?.v lb.lbname in
         Env.insert_fv_info env fv lb.lbtyp);
 
     if log env
-    then BU.print1 "%s\n" (snd lbs |> List.map (fun lb ->
-          let should_log = match Env.try_lookup_val_decl env (right lb.lbname).fv_name.v with
+    then Format.print1 "%s\n" (snd lbs |> List.map (fun lb ->
+          let should_log = match Env.try_lookup_val_decl env (Inr?.v lb.lbname).fv_name with
               | None -> true
               | _ -> false in
           if should_log
-          then BU.format2 "let %s : %s" (show lb.lbname) (show (*env*) lb.lbtyp)
+          then Format.fmt2 "let %s : %s" (show lb.lbname) (show (*env*) lb.lbtyp)
           else "") |> String.concat "\n");
 
     [se], [], env0
@@ -606,7 +606,7 @@ let tc_decl' env0 se: list sigelt & list sigelt & Env.env =
   (* If we're --laxing, and this is not an `expect_lax_failure`, then just ignore the definition *)
   | Sig_fail {fail_in_lax=false} when env.admit ->
     if Debug.any () then
-      BU.print1 "Skipping %s since env.admit=true and this is not an expect_lax_failure\n"
+      Format.print1 "Skipping %s since env.admit=true and this is not an expect_lax_failure\n"
         (Print.sigelt_to_string_short se);
     [], [], env
 
@@ -619,19 +619,14 @@ let tc_decl' env0 se: list sigelt & list sigelt & Env.env =
      * don't pop the context (spoiler: we prove false). *)
 
     if Debug.low () then
-        BU.print1 ">> Expecting errors: [%s]\n" (String.concat "; " <| List.map string_of_int expected_errors);
+        Format.print1 ">> Expecting errors: [%s]\n" (String.concat "; " <| List.map show expected_errors);
 
     let errs, _ = Errors.catch_errors (fun () ->
                     Options.with_saved_options (fun () ->
-                      BU.must (!tc_decls_knot) env' ses)) in
+                      Some?.v (!tc_decls_knot) env' ses)) in
 
-    if Options.print_expected_failures ()
-       || Debug.low () then
-    begin
-        BU.print_string ">> Got issues: [\n";
-        List.iter Errors.print_issue errs;
-        BU.print_string ">>]\n"
-    end;
+    if Options.print_expected_failures () || Debug.low () then
+      Errors.print_expected_failures errs;
 
     (* Pop environment, reset SMT context *)
     let _ = Env.pop env' "expect_failure" in
@@ -659,7 +654,7 @@ let tc_decl' env0 se: list sigelt & list sigelt & Env.env =
                 prefix 2 1 (text "but it raised")
                   (pp (sort actual_errors)) ^^
                 dot;
-                text (BU.format3 "Error #%s was raised %s times, instead of %s."
+                text (Format.fmt3 "Error #%s was raised %s times, instead of %s."
                                       (show e) (show n2) (show n1));
               ]
     end;
@@ -677,7 +672,7 @@ let tc_decl' env0 se: list sigelt & list sigelt & Env.env =
           |> N.elim_uvars env
           |> U.ses_of_sigbundle in
         if Debug.medium () || !dbg_TwoPhases
-        then BU.print1 "Inductive after phase 1: %s\n" (show ({ se with sigel = Sig_bundle {ses; lids} }));
+        then Format.print1 "Inductive after phase 1: %s\n" (show ({ se with sigel = Sig_bundle {ses; lids} }));
         ses)
       else ses
     in
@@ -718,7 +713,7 @@ let tc_decl' env0 se: list sigelt & list sigelt & Env.env =
             |> (fun ne -> { se with sigel = Sig_new_effect ne })
             |> N.elim_uvars env |> U.eff_decl_of_new_effect in
           if Debug.medium () || !dbg_TwoPhases
-          then BU.print1 "Effect decl after phase 1: %s\n"
+          then Format.print1 "Effect decl after phase 1: %s\n"
                  (show ({ se with sigel = Sig_new_effect ne }));
           ne)
         else ne in
@@ -765,7 +760,7 @@ let tc_decl' env0 se: list sigelt & list sigelt & Env.env =
 
     if lid_exists env lid then
       raise_error r Errors.Fatal_AlreadyDefinedTopLevelDeclaration [
-        text (BU.format1 "Top-level declaration %s for a name that is already used in this module." (show lid));
+        text (Format.fmt1 "Top-level declaration %s for a name that is already used in this module." (show lid));
         text "Top-level declarations must be unique in their module."
       ];
 
@@ -773,7 +768,7 @@ let tc_decl' env0 se: list sigelt & list sigelt & Env.env =
     let uvs, t =
       if do_two_phases env then run_phase1 (fun _ ->
         let uvs, t = tc_declare_typ ({ env with phase1 = true; admit = true }) (uvs, t) se.sigrng in //|> N.normalize [Env.NoFullNorm; Env.Beta; Env.DoNotUnfoldPureLets] env in
-        if Debug.medium () || !dbg_TwoPhases then BU.print2 "Val declaration after phase 1: %s and uvs: %s\n" (show t) (show uvs);
+        if Debug.medium () || !dbg_TwoPhases then Format.print2 "Val declaration after phase 1: %s and uvs: %s\n" (show t) (show uvs);
         uvs, t)
       else uvs, t
     in
@@ -784,13 +779,13 @@ let tc_decl' env0 se: list sigelt & list sigelt & Env.env =
   | Sig_assume {lid; us=uvs; phi=t} ->
     if not (List.contains S.InternalAssumption se.sigquals) then
       FStarC.Errors.log_issue r Warning_WarnOnUse 
-        (BU.format1 "Admitting a top-level assumption %s" (show lid));
+        (Format.fmt1 "Admitting a top-level assumption %s" (show lid));
     let env = Env.set_range env r in
 
     let uvs, t =
       if do_two_phases env then run_phase1 (fun _ ->
         let uvs, t = tc_assume ({ env with phase1 = true; admit = true }) (uvs, t) se.sigrng in
-        if Debug.medium () || !dbg_TwoPhases then BU.print2 "Assume after phase 1: %s and uvs: %s\n" (show t) (show uvs);
+        if Debug.medium () || !dbg_TwoPhases then Format.print2 "Assume after phase 1: %s and uvs: %s\n" (show t) (show uvs);
         uvs, t)
       else uvs, t
     in
@@ -800,17 +795,17 @@ let tc_decl' env0 se: list sigelt & list sigelt & Env.env =
 
   | Sig_splice {is_typed; lids; tac=t} ->
     if Debug.any () then
-      BU.print3 "%s: Found splice of (%s) with is_typed: %s\n"
-        (string_of_lid env.curmodule)
+      Format.print3 "%s: Found splice of (%s) with is_typed: %s\n"
+        (show env.curmodule)
         (show t)
-        (string_of_bool is_typed);
+        (show is_typed);
 
     // env.splice will check the tactic
 
     let ses = env.splice env se.sigquals se.sigattrs is_typed lids t se.sigrng in
 
     if Debug.low () then
-      BU.print1 "Will splice decls:\n%s\n" (show ses);
+      Format.print1 "Will splice decls:\n%s\n" (show ses);
 
     let ses = 
       (* For non-typed splices, they choose their own attributes and qualifiers.
@@ -842,7 +837,7 @@ let tc_decl' env0 se: list sigelt & list sigelt & Env.env =
     let env = { env with dsenv = dsenv } in
 
     if Debug.low () then
-      BU.print1 "Splice returned sigelts {\n%s\n}\n"
+      Format.print1 "Splice returned sigelts {\n%s\n}\n"
         (String.concat "\n" <| List.map show ses);
 
     (* sigelts returned by splice_t can be marked with sigmeta
@@ -874,7 +869,7 @@ let tc_decl' env0 se: list sigelt & list sigelt & Env.env =
              | Sig_polymonadic_bind {tm=t; typ=ty} -> t, ty
              | _ -> failwith "Impossible! tc for Sig_polymonadic_bind must be a Sig_polymonadic_bind") in
         if Debug.medium () || !dbg_TwoPhases
-          then BU.print1 "Polymonadic bind after phase 1: %s\n"
+          then Format.print1 "Polymonadic bind after phase 1: %s\n"
                  (show ({ se with sigel = Sig_polymonadic_bind {m_lid=m;
                                                                                   n_lid=n;
                                                                                   p_lid=p;
@@ -908,7 +903,7 @@ let tc_decl' env0 se: list sigelt & list sigelt & Env.env =
              | Sig_polymonadic_subcomp {tm=t; typ=ty} -> t, ty
              | _ -> failwith "Impossible! tc for Sig_polymonadic_subcomp must be a Sig_polymonadic_subcomp") in
         if Debug.medium () || !dbg_TwoPhases
-          then BU.print1 "Polymonadic subcomp after phase 1: %s\n"
+          then Format.print1 "Polymonadic subcomp after phase 1: %s\n"
                  (show ({ se with sigel = Sig_polymonadic_subcomp {m_lid=m;
                                                                                      n_lid=n;
                                                                                      tm=t;
@@ -942,9 +937,9 @@ let tc_decl env se: list sigelt & list sigelt & Env.env =
     else env
   in
   if Debug.any () then
-    BU.print1 "Processing %s\n" (Print.sigelt_to_string_short se);
+    Format.print1 "Processing %s\n" (Print.sigelt_to_string_short se);
   if Debug.medium () then
-    BU.print2 ">>>>>>>>>>>>>>tc_decl admit=%s %s\n" (show env.admit) (show se);
+    Format.print2 ">>>>>>>>>>>>>>tc_decl admit=%s %s\n" (show env.admit) (show se);
   let result =
     if se.sigmeta.sigmeta_already_checked then
       [se], [], env
@@ -970,7 +965,7 @@ let tc_decl env se: list sigelt & list sigelt & Env.env =
 (* AR: we now call this function when loading checked modules as well to be more consistent *)
 let add_sigelt_to_env (env:Env.env) (se:sigelt) (from_cache:bool) : Env.env =
   if Debug.low ()
-  then BU.print2
+  then Format.print2
     ">>>>>>>>>>>>>>Adding top-level decl to environment: %s (from_cache:%s)\n"
     (Print.sigelt_to_string_short se) (show from_cache);
 
@@ -978,7 +973,7 @@ let add_sigelt_to_env (env:Env.env) (se:sigelt) (from_cache:bool) : Env.env =
   | Sig_inductive_typ _
   | Sig_datacon _ ->
     raise_error se Errors.Fatal_UnexpectedInductivetype
-      (BU.format1 "add_sigelt_to_env: unexpected bare type/data constructor: %s" (show se))
+      (Format.fmt1 "add_sigelt_to_env: unexpected bare type/data constructor: %s" (show se))
 
   | Sig_declare_typ _
   | Sig_let _ when se.sigquals |> BU.for_some (function OnlyName -> true | _ -> false) -> env
@@ -1023,9 +1018,9 @@ let add_sigelt_to_env (env:Env.env) (se:sigelt) (from_cache:bool) : Env.env =
 
     | Sig_sub_effect sub -> TcUtil.update_env_sub_eff env sub se.sigrng
 
-    | Sig_polymonadic_bind {m_lid=m;n_lid=n;p_lid=p;typ=ty;kind=k} -> TcUtil.update_env_polymonadic_bind env m n p ty (k |> must)
+    | Sig_polymonadic_bind {m_lid=m;n_lid=n;p_lid=p;typ=ty;kind=k} -> TcUtil.update_env_polymonadic_bind env m n p ty (k |> Option.must)
 
-    | Sig_polymonadic_subcomp {m_lid=m; n_lid=n; typ=ty; kind=k} -> Env.add_polymonadic_subcomp env m n (ty, k |> must)
+    | Sig_polymonadic_subcomp {m_lid=m; n_lid=n; typ=ty; kind=k} -> Env.add_polymonadic_subcomp env m n (ty, k |> Option.must)
 
     | _ -> env
 
@@ -1057,7 +1052,7 @@ let tc_decls env ses =
     then (ses, env), []
     else begin
     if Debug.low ()
-    then BU.print2 ">>>>>>>>>>>>>>Checking top-level %s decl %s\n"
+    then Format.print2 ">>>>>>>>>>>>>>Checking top-level %s decl %s\n"
                         (tag_of se)
                         (Print.sigelt_to_string_short se);
 
@@ -1065,7 +1060,7 @@ let tc_decls env ses =
     if !dbg_IdInfoOn then Env.toggle_id_info env true;
 
     let ses', ses_elaborated, env =
-            Errors.with_ctx (BU.format2 "While typechecking the %stop-level declaration `%s`"
+            Errors.with_ctx (Format.fmt2 "While typechecking the %stop-level declaration `%s`"
                                   (if se.sigmeta.sigmeta_spliced then "(spliced) " else "")
                                   (Print.sigelt_to_string_short se))
                     (fun () -> tc_decl env se)
@@ -1073,11 +1068,11 @@ let tc_decls env ses =
 
     let ses' = ses' |> List.map (fun se ->
         if !dbg_UF
-        then BU.print1 "About to elim vars from %s\n" (show se);
+        then Format.print1 "About to elim vars from %s\n" (show se);
         N.elim_uvars env se) in
     let ses_elaborated = ses_elaborated |> List.map (fun se ->
         if !dbg_UF
-        then BU.print1 "About to elim vars from (elaborated) %s\n" (show se);
+        then Format.print1 "About to elim vars from (elaborated) %s\n" (show se);
         N.elim_uvars env se) in
 
     Env.promote_id_info env (compress_and_norm env);
@@ -1091,13 +1086,13 @@ let tc_decls env ses =
     // let fixup_dd_lb (lb:letbinding) : letbinding =
     //   (* The delta depth of the fv is 1 + the dd of its body *)
     //   let Inr fv = lb.lbname in
-    //   // BU.print2_error "Checking depth of %s = %s\n" (show lb.lbname) (show fv.fv_delta);
+    //   // Format.print2_error "Checking depth of %s = %s\n" (show lb.lbname) (show fv.fv_delta);
     //   // let dd = incr_delta_depth <| delta_qualifier lb.lbdef in
     //   let dd = incr_delta_depth <| delta_depth_of_term env lb.lbdef in
     //   // if Some dd <> fv.fv_delta then (
-    //   //   BU.print3_error "Fixing up delta depth of %s from %s to %s\n" (show lb.lbname) (show fv.fv_delta) (show dd)
+    //   //   Format.print3_error "Fixing up delta depth of %s from %s to %s\n" (show lb.lbname) (show fv.fv_delta) (show dd)
     //   // );
-    //   // BU.print1_error "Definition = (%s)\n\n" (show lb.lbdef);
+    //   // Format.print1_error "Definition = (%s)\n\n" (show lb.lbdef);
     //   let fv = { fv with fv_delta = Some dd } in
     //   { lb with lbname = Inr fv }
     // in
@@ -1115,7 +1110,7 @@ let tc_decls env ses =
     UF.reset();
 
     if Options.log_types () || Debug.medium () || !dbg_LogTypes
-    then BU.print1 "Checked: %s\n" (show ses');
+    then Format.print1 "Checked: %s\n" (show ses');
 
     Profiling.profile 
       (fun () -> List.iter (fun se -> env.solver.encode_sig env se) ses')
@@ -1177,18 +1172,18 @@ let tc_partial_modul env modul =
   let action = if verify then "verifying" else "lax-checking" in
   let label = if modul.is_interface then "interface" else "implementation" in
   if Debug.any () then
-    BU.print3 "Now %s %s of %s\n" action label (string_of_lid modul.name);
+    Format.print3 "Now %s %s of %s\n" action label (string_of_lid modul.name);
 
   let dsnap = Debug.snapshot () in
   if not (Options.should_check (string_of_lid modul.name)) && not (Options.debug_all_modules ())
   then Debug.disable_all ();
 
-  let name = BU.format2 "%s %s" (if modul.is_interface then "interface" else "module") (string_of_lid modul.name) in
+  let name = Format.fmt2 "%s %s" (if modul.is_interface then "interface" else "module") (string_of_lid modul.name) in
   let env = {env with Env.is_iface=modul.is_interface; admit=not verify} in
   let env = Env.set_current_module env modul.name in
   (* Only set a context for dependencies *)
   Errors.with_ctx_if (not (Options.should_check (string_of_lid modul.name)))
-                     (BU.format2 "While loading dependency %s%s"
+                     (Format.fmt2 "While loading dependency %s%s"
                                     (string_of_lid modul.name)
                                     (if modul.is_interface then " (interface)" else "")) (fun () ->
     let ses, env = tc_decls env modul.declarations in
@@ -1209,7 +1204,7 @@ let finish_partial_modul (loading_from_cache:bool) (iface_exists:bool) (en:env) 
     let missing = missing_definition_list env in
     if Cons? missing then
       log_issue env Errors.Error_AdmitWithoutDefinition [
-          Pprint.prefix 2 1 (text <| BU.format1 "Missing definitions in module %s:" (string_of_lid m.name))
+          Pprint.prefix 2 1 (text <| Format.fmt1 "Missing definitions in module %s:" (string_of_lid m.name))
             (Pprint.separate_map Pprint.hardline (fun l -> pp (ident_of_lid l)) missing)
         ]
   );
@@ -1281,9 +1276,9 @@ let load_partial_checked_module (en:env) (m:modul) : env =
 
 let check_module env0 m b =
   if Debug.any()
-  then BU.print2 "Checking %s: %s\n" (if m.is_interface then "i'face" else "module") (show m.name);
+  then Format.print2 "Checking %s: %s\n" (if m.is_interface then "i'face" else "module") (show m.name);
   if Options.dump_module (string_of_lid m.name)
-  then BU.print1 "Module before type checking:\n%s\n" (show m);
+  then Format.print1 "Module before type checking:\n%s\n" (show m);
 
   let env = {env0 with admit = not (Options.should_verify (string_of_lid m.name))} in
   let m, env = tc_modul env m b in
@@ -1292,7 +1287,7 @@ let check_module env0 m b =
 
   (* Debug information for level Normalize : normalizes all toplevel declarations an dump the current module *)
   if Options.dump_module (string_of_lid m.name)
-  then BU.print1 "Module after type checking:\n%s\n" (show m);
+  then Format.print1 "Module after type checking:\n%s\n" (show m);
   if Options.dump_module (string_of_lid m.name) && !dbg_Normalize
   then begin
     let normalize_toplevel_lets = fun se -> match se.sigel with
@@ -1306,7 +1301,7 @@ let check_module env0 m b =
         | _ -> se
     in
     let normalized_module = { m with declarations = List.map normalize_toplevel_lets m.declarations } in
-    BU.print1 "%s\n" (show normalized_module)
+    Format.print1 "%s\n" (show normalized_module)
   end;
 
   m, env

@@ -366,7 +366,7 @@ let prf_sk0 #i t =
     keyBuffer
 
 
-#reset-options "--initial_fuel 0 --max_fuel 0 --z3rlimit 20"
+#reset-options "--fuel 0 --z3rlimit 20"
 
 let extends (#rgn:region) (#i:id) (s0:Seq.seq (entry rgn i))
       (s1:Seq.seq (entry rgn i)) (x:domain i{ctr_0 i <^ x.ctr}) =

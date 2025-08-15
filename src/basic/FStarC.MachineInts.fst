@@ -12,7 +12,6 @@ module NBE = FStarC.TypeChecker.NBETerm
 module S  = FStarC.Syntax.Syntax
 module SS = FStarC.Syntax.Subst
 module U  = FStarC.Syntax.Util
-module Z = FStarC.BigInt
 
 open FStarC.Class.Show
 open FStarC.Class.Monad
@@ -60,13 +59,13 @@ let module_name_for (k:machint_kind) : string =
   | UInt128 -> "UInt128"
   | SizeT   -> "SizeT"
 
-let mask (k:machint_kind) : Z.t =
+let mask (k:machint_kind) : int =
   match width k with
-  | 8 -> Z.of_hex "ff"
-  | 16 -> Z.of_hex "ffff"
-  | 32 -> Z.of_hex "ffffffff"
-  | 64 -> Z.of_hex "ffffffffffffffff"
-  | 128 -> Z.of_hex "ffffffffffffffffffffffffffffffff"
+  | 8   -> 0xff
+  | 16  -> 0xffff
+  | 32  -> 0xffffffff
+  | 64  -> 0xffffffffffffffff
+  | 128 -> 0xffffffffffffffffffffffffffffffff
 
 let int_to_t_lid_for (k:machint_kind) : Ident.lid =
   let path = "FStar" :: module_name_for k :: (if is_unsigned k then "uint_to_t" else "int_to_t") :: [] in
@@ -85,19 +84,19 @@ let __int_to_t_for (k:machint_kind) : S.term =
   S.fvar lid None
 
 (* just a newtype really, no checks or conditions here *)
-type machint (k : machint_kind) = | Mk : Z.t -> option S.meta_source_info -> machint k
+type machint (k : machint_kind) = | Mk : int -> option S.meta_source_info -> machint k
 
 let mk #k x m = Mk #k x m
 let v #k (x : machint k) =
   let Mk v _ = x in v
 let meta #k (x : machint k) =
   let Mk _ meta = x in meta
-let make_as #k (x : machint k) (z : Z.t) : machint k =
+let make_as #k (x : machint k) (z : int) : machint k =
   Mk z (meta x)
 
 (* just for debugging *)
 instance showable_bounded_k k : Tot (showable (machint k)) = {
-  show = (function Mk x m -> "machine integer " ^ show (Z.to_int_fs x) ^ "@@" ^ module_name_for k);
+  show = (function Mk x m -> "machine integer " ^ show x ^ "@@" ^ module_name_for k);
 }
 
 instance e_machint (k : machint_kind) : Tot (EMB.embedding (machint k)) =
@@ -124,7 +123,7 @@ instance e_machint (k : machint_kind) : Tot (EMB.embedding (machint k)) =
     | Tm_app {hd; args=[(a,_)]} when U.is_fvar (int_to_t_lid_for k) hd
                                   || U.is_fvar (__int_to_t_lid_for k) hd ->
       let a = U.unlazy_emb a in
-      let! a : Z.t = EMB.try_unembed a cb in
+      let! a : int = EMB.try_unembed a cb in
       Some (Mk a m)
     | _ ->
       None
@@ -158,8 +157,10 @@ instance nbe_machint (k : machint_kind) : Tot (NBE.embedding (machint k)) =
        | _ -> (a, None))
     in
     match a.nbe_t with
-    | FV (fv1, [], [(a, _)]) when Ident.lid_equals (fv1.fv_name.v) (int_to_t_lid_for k) ->
-      let! a : Z.t = unembed e_int cbs a in
+    | FV (fv1, [], [(a, _)])
+      when Ident.lid_equals (fv1.fv_name) (int_to_t_lid_for k)
+      || Ident.lid_equals (fv1.fv_name) (__int_to_t_lid_for k) ->
+      let! a : int = unembed e_int cbs a in
       Some (Mk a m)
     | _ -> None
   in

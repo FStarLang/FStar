@@ -20,7 +20,7 @@ module FStar.UInt8
 open FStar.UInt
 open FStar.Mul
 
-#set-options "--max_fuel 0 --max_ifuel 0"
+#set-options "--fuel 0 --ifuel 0"
 
 type t : eqtype =
   | Mk: v:uint_t n -> t

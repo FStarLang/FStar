@@ -1,6 +1,5 @@
 module S = FStarC_Syntax_Syntax
 module P = FStarC_Profiling
-module BU = FStarC_Util
 let now () = BatUnix.gettimeofday ()
 let record_time f = 
     let start = now () in
@@ -55,8 +54,8 @@ let clear (x:'a hashtable) =
 
 let print_stats (x:'a hashtable) : unit =
   let stats = HT.stats x in
-  let string_of_ctr ctr = let n, t = !ctr in BU.format2 "%s in %s ms" (string_of_int n) (string_of_int t) in
-  BU.print4 "THT Statistics { num_bindings = %s; max_bucket_length = %s; num_eq_term_calls = %s; eq_term_ctr = %s }\n"
+  let string_of_ctr ctr = let n, t = !ctr in FStarC_Format.fmt2 "%s in %s ms" (string_of_int n) (string_of_int t) in
+  FStarC_Format.print4 "THT Statistics { num_bindings = %s; max_bucket_length = %s; num_eq_term_calls = %s; eq_term_ctr = %s }\n"
     (string_of_int stats.num_bindings)
     (string_of_int stats.max_bucket_length)
     (string_of_ctr num_eq_term_calls)

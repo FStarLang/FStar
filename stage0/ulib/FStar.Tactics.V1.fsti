@@ -33,5 +33,8 @@ include FStar.Tactics.V1.Logic
 include FStar.Tactics.Util
 include FStar.Tactics.Print
 include FStar.Tactics.Visit
+include FStar.Tactics.Easy
 
 include FStar.Tactics.SMT (* Version agnostic *)
+
+include FStar.Reflection.TermEq.Simple

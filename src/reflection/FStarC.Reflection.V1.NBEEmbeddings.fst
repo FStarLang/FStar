@@ -25,7 +25,6 @@ open FStarC.Errors
 
 module S = FStarC.Syntax.Syntax // TODO: remove, it's open
 
-module BU      = FStarC.Util
 module Env     = FStarC.TypeChecker.Env
 module Err     = FStarC.Errors
 module I       = FStarC.Ident
@@ -59,7 +58,7 @@ let mkFV fv us ts = mkFV fv (List.rev us) (List.rev ts)
 let mkConstruct fv us ts = mkConstruct fv (List.rev us) (List.rev ts)
 (* ^ We still need to match on them in reverse order though, so this is pretty dumb *)
 
-let fv_as_emb_typ fv = S.ET_app (FStarC.Ident.string_of_lid fv.fv_name.v, [])
+let fv_as_emb_typ fv = S.ET_app (FStarC.Ident.string_of_lid fv.fv_name, [])
 let mk_emb' x y fv = mk_emb x y (fun () -> mkFV fv [] []) (fun () -> fv_as_emb_typ fv)
 
 let mk_lazy cb obj ty kind =
@@ -82,7 +81,7 @@ let e_bv =
         | Lazy (Inl {blob=b; lkind=Lazy_bv}, _) ->
             Some <| FStarC.Dyn.undyn b
         | _ ->
-            Err.log_issue0 Err.Warning_NotEmbedded (BU.format1 "Not an embedded bv: %s" (t_to_string t));
+            Err.log_issue0 Err.Warning_NotEmbedded (Format.fmt1 "Not an embedded bv: %s" (t_to_string t));
             None
     in
     mk_emb' embed_bv unembed_bv fstar_refl_bv_fv
@@ -97,7 +96,7 @@ let e_binder =
         | Lazy (Inl {blob=b; lkind=Lazy_binder}, _) ->
             Some (undyn b)
         | _ ->
-            Err.log_issue0 Err.Warning_NotEmbedded (BU.format1 "Not an embedded binder: %s" (t_to_string t));
+            Err.log_issue0 Err.Warning_NotEmbedded (Format.fmt1 "Not an embedded binder: %s" (t_to_string t));
             None
     in
     mk_emb' embed_binder unembed_binder fstar_refl_binder_fv
@@ -106,8 +105,8 @@ let rec mapM_opt (f : ('a -> option 'b)) (l : list 'a) : option (list 'b) =
     match l with
     | [] -> Some []
     | x::xs ->
-        BU.bind_opt (f x) (fun x ->
-        BU.bind_opt (mapM_opt f xs) (fun xs ->
+        Option.bind (f x) (fun x ->
+        Option.bind (mapM_opt f xs) (fun xs ->
         Some (x :: xs)))
 
 let e_term_aq aq =
@@ -146,11 +145,11 @@ let e_aqualv =
         | Construct (fv, [], []) when S.fv_eq_lid fv ref_Q_Explicit.lid -> Some Data.Q_Explicit
         | Construct (fv, [], []) when S.fv_eq_lid fv ref_Q_Implicit.lid -> Some Data.Q_Implicit
         | Construct (fv, [], [(t, _)]) when S.fv_eq_lid fv ref_Q_Meta.lid ->
-            BU.bind_opt (unembed e_term cb t) (fun t ->
+            Option.bind (unembed e_term cb t) (fun t ->
             Some (Data.Q_Meta t))
 
         | _ ->
-            Err.log_issue0 Err.Warning_NotEmbedded (BU.format1 "Not an embedded aqualv: %s" (t_to_string t));
+            Err.log_issue0 Err.Warning_NotEmbedded (Format.fmt1 "Not an embedded aqualv: %s" (t_to_string t));
             None
     in
     mk_emb embed_aqualv unembed_aqualv
@@ -168,7 +167,7 @@ let e_fv =
         | Lazy (Inl {blob=b; lkind=Lazy_fvar}, _) ->
             Some (undyn b)
         | _ ->
-            Err.log_issue0 Err.Warning_NotEmbedded (BU.format1 "Not an embedded fvar: %s" (t_to_string t));
+            Err.log_issue0 Err.Warning_NotEmbedded (Format.fmt1 "Not an embedded fvar: %s" (t_to_string t));
             None
     in
     mk_emb' embed_fv unembed_fv fstar_refl_fv_fv
@@ -182,7 +181,7 @@ let e_comp =
         | Lazy (Inl {blob=b; lkind=Lazy_comp}, _) ->
             Some (undyn b)
         | _ ->
-            Err.log_issue0 Err.Warning_NotEmbedded (BU.format1 "Not an embedded comp: %s" (t_to_string t));
+            Err.log_issue0 Err.Warning_NotEmbedded (Format.fmt1 "Not an embedded comp: %s" (t_to_string t));
             None
     in
     mk_emb' embed_comp unembed_comp fstar_refl_comp_fv
@@ -196,7 +195,7 @@ let e_env =
         | Lazy (Inl {blob=b; lkind=Lazy_env}, _) ->
             Some (undyn b)
         | _ ->
-            Err.log_issue0 Err.Warning_NotEmbedded (BU.format1 "Not an embedded env: %s" (t_to_string t));
+            Err.log_issue0 Err.Warning_NotEmbedded (Format.fmt1 "Not an embedded env: %s" (t_to_string t));
             None
     in
     mk_emb' embed_env unembed_env fstar_refl_env_fv
@@ -225,26 +224,26 @@ let e_const =
             Some C_False
 
         | Construct (fv, [], [(i, _)]) when S.fv_eq_lid fv ref_C_Int.lid ->
-            BU.bind_opt (unembed e_int cb i) (fun i ->
+            Option.bind (unembed e_int cb i) (fun i ->
             Some <| C_Int i)
 
         | Construct (fv, [], [(s, _)]) when S.fv_eq_lid fv ref_C_String.lid ->
-            BU.bind_opt (unembed e_string cb s) (fun s ->
+            Option.bind (unembed e_string cb s) (fun s ->
             Some <| C_String s)
 
         | Construct (fv, [], [(r, _)]) when S.fv_eq_lid fv ref_C_Range.lid ->
-            BU.bind_opt (unembed e_range cb r) (fun r ->
+            Option.bind (unembed e_range cb r) (fun r ->
             Some <| C_Range r)
 
         | Construct (fv, [], []) when S.fv_eq_lid fv ref_C_Reify.lid ->
             Some C_Reify
 
         | Construct (fv, [], [(ns, _)]) when S.fv_eq_lid fv ref_C_Reflect.lid ->
-            BU.bind_opt (unembed e_string_list cb ns) (fun ns ->
+            Option.bind (unembed e_string_list cb ns) (fun ns ->
             Some <| C_Reflect ns)
 
         | _ ->
-            Err.log_issue0 Err.Warning_NotEmbedded (BU.format1 "Not an embedded vconst: %s" (t_to_string t));
+            Err.log_issue0 Err.Warning_NotEmbedded (Format.fmt1 "Not an embedded vconst: %s" (t_to_string t));
             None
     in
     mk_emb' embed_const unembed_const fstar_refl_vconst_fv
@@ -258,7 +257,7 @@ let e_universe =
       Some (undyn b)
     | _ ->
       Err.log_issue0 Err.Warning_NotEmbedded
-         (BU.format1 "Not an embedded universe: %s" (t_to_string t));
+         (Format.fmt1 "Not an embedded universe: %s" (t_to_string t));
       None
     in
     mk_emb' embed_universe unembed_universe fstar_refl_universe_fv
@@ -281,26 +280,26 @@ let rec e_pattern_aq aq =
     let unembed_pattern cb (t : t) : option pattern =
         match t.nbe_t with
         | Construct (fv, [], [(c, _)]) when S.fv_eq_lid fv ref_Pat_Constant.lid ->
-            BU.bind_opt (unembed e_const cb c) (fun c ->
+            Option.bind (unembed e_const cb c) (fun c ->
             Some <| Pat_Constant c)
 
         | Construct (fv, [], [(ps, _); (us_opt, _); (f, _)]) when S.fv_eq_lid fv ref_Pat_Cons.lid ->
-            BU.bind_opt (unembed e_fv cb f) (fun f ->
-            BU.bind_opt (unembed (e_option (e_list e_universe)) cb us_opt) (fun us ->
-            BU.bind_opt (unembed (e_list (e_tuple2 (e_pattern_aq aq) e_bool)) cb ps) (fun ps ->
+            Option.bind (unembed e_fv cb f) (fun f ->
+            Option.bind (unembed (e_option (e_list e_universe)) cb us_opt) (fun us ->
+            Option.bind (unembed (e_list (e_tuple2 (e_pattern_aq aq) e_bool)) cb ps) (fun ps ->
             Some <| Pat_Cons (f, us, ps))))
 
         | Construct (fv, [], [(sort, _); (bv, _)]) when S.fv_eq_lid fv ref_Pat_Var.lid ->
-            BU.bind_opt (unembed e_bv cb bv) (fun bv ->
-            BU.bind_opt (unembed e_sort cb sort) (fun sort ->
+            Option.bind (unembed e_bv cb bv) (fun bv ->
+            Option.bind (unembed e_sort cb sort) (fun sort ->
             Some <| Pat_Var (bv, sort)))
 
         | Construct (fv, [], [(eopt, _)]) when S.fv_eq_lid fv ref_Pat_Dot_Term.lid ->
-            BU.bind_opt (unembed (e_option e_term) cb eopt) (fun eopt ->
+            Option.bind (unembed (e_option e_term) cb eopt) (fun eopt ->
             Some <| Pat_Dot_Term eopt)
 
         | _ ->
-            Err.log_issue0 Err.Warning_NotEmbedded (BU.format1 "Not an embedded pattern: %s" (t_to_string t));
+            Err.log_issue0 Err.Warning_NotEmbedded (Format.fmt1 "Not an embedded pattern: %s" (t_to_string t));
             None
     in
     mk_emb' embed_pattern unembed_pattern fstar_refl_pattern_fv
@@ -362,20 +361,20 @@ let e_universe_view =
     match t.nbe_t with
     | Construct (fv, _, []) when S.fv_eq_lid fv ref_Uv_Zero.lid -> Some Uv_Zero
     | Construct (fv, _, [u, _]) when S.fv_eq_lid fv ref_Uv_Succ.lid ->
-      BU.bind_opt (unembed e_universe cb u) (fun u -> u |> Uv_Succ |> Some)
+      Option.bind (unembed e_universe cb u) (fun u -> u |> Uv_Succ |> Some)
     | Construct (fv, _, [us, _]) when S.fv_eq_lid fv ref_Uv_Max.lid ->
-      BU.bind_opt (unembed (e_list e_universe) cb us) (fun us -> us |> Uv_Max |> Some)
+      Option.bind (unembed (e_list e_universe) cb us) (fun us -> us |> Uv_Max |> Some)
     | Construct (fv, _, [n, _]) when S.fv_eq_lid fv ref_Uv_BVar.lid ->
-      BU.bind_opt (unembed e_int cb n) (fun n -> n |> Uv_BVar |> Some)
+      Option.bind (unembed e_int cb n) (fun n -> n |> Uv_BVar |> Some)
     | Construct (fv, _, [i, _]) when S.fv_eq_lid fv ref_Uv_Name.lid ->
-      BU.bind_opt (unembed (e_tuple2 e_string e_range) cb i) (fun i -> i |> Uv_Name |> Some)
+      Option.bind (unembed (e_tuple2 e_string e_range) cb i) (fun i -> i |> Uv_Name |> Some)
     | Construct (fv, _, [u, _]) when S.fv_eq_lid fv ref_Uv_Unif.lid ->
       let u : universe_uvar = unlazy_as_t Lazy_universe_uvar u in
       u |> Uv_Unif |> Some
     | Construct (fv, _, []) when S.fv_eq_lid fv ref_Uv_Unk.lid -> Some Uv_Unk
     | _ ->
       Err.log_issue0 Err.Warning_NotEmbedded
-         (BU.format1 "Not an embedded universe view: %s" (t_to_string t));
+         (Format.fmt1 "Not an embedded universe view: %s" (t_to_string t));
       None in
 
   mk_emb' embed_universe_view unembed_universe_view fstar_refl_universe_view_fv
@@ -456,83 +455,83 @@ let e_term_view_aq aq =
     let unembed_term_view cb (t:t) : option term_view =
         match t.nbe_t with
         | Construct (fv, _, [(b, _)]) when S.fv_eq_lid fv ref_Tv_Var.lid ->
-            BU.bind_opt (unembed e_bv cb b) (fun b ->
+            Option.bind (unembed e_bv cb b) (fun b ->
             Some <| Tv_Var b)
 
         | Construct (fv, _, [(b, _)]) when S.fv_eq_lid fv ref_Tv_BVar.lid ->
-            BU.bind_opt (unembed e_bv cb b) (fun b ->
+            Option.bind (unembed e_bv cb b) (fun b ->
             Some <| Tv_BVar b)
 
         | Construct (fv, _, [(f, _)]) when S.fv_eq_lid fv ref_Tv_FVar.lid ->
-            BU.bind_opt (unembed e_fv cb f) (fun f ->
+            Option.bind (unembed e_fv cb f) (fun f ->
             Some <| Tv_FVar f)
 
         | Construct (fv, _, [(f, _); (us, _)]) when S.fv_eq_lid fv ref_Tv_UInst.lid ->
-            BU.bind_opt (unembed e_fv cb f) (fun f ->
-            BU.bind_opt (unembed (e_list e_universe) cb us) (fun us ->
+            Option.bind (unembed e_fv cb f) (fun f ->
+            Option.bind (unembed (e_list e_universe) cb us) (fun us ->
             Some <| Tv_UInst (f, us)))
 
         | Construct (fv, _, [(r, _); (l, _)]) when S.fv_eq_lid fv ref_Tv_App.lid ->
-            BU.bind_opt (unembed e_term cb l) (fun l ->
-            BU.bind_opt (unembed e_argv cb r) (fun r ->
+            Option.bind (unembed e_term cb l) (fun l ->
+            Option.bind (unembed e_argv cb r) (fun r ->
             Some <| Tv_App (l, r)))
 
         | Construct (fv, _, [(t, _); (b, _)]) when S.fv_eq_lid fv ref_Tv_Abs.lid ->
-            BU.bind_opt (unembed e_binder cb b) (fun b ->
-            BU.bind_opt (unembed e_term cb t) (fun t ->
+            Option.bind (unembed e_binder cb b) (fun b ->
+            Option.bind (unembed e_term cb t) (fun t ->
             Some <| Tv_Abs (b, t)))
 
         | Construct (fv, _, [(t, _); (b, _)]) when S.fv_eq_lid fv ref_Tv_Arrow.lid ->
-            BU.bind_opt (unembed e_binder cb b) (fun b ->
-            BU.bind_opt (unembed e_comp cb t) (fun c ->
+            Option.bind (unembed e_binder cb b) (fun b ->
+            Option.bind (unembed e_comp cb t) (fun c ->
             Some <| Tv_Arrow (b, c)))
 
         | Construct (fv, _, [(u, _)]) when S.fv_eq_lid fv ref_Tv_Type.lid ->
-            BU.bind_opt (unembed e_universe cb u) (fun u ->
+            Option.bind (unembed e_universe cb u) (fun u ->
             Some <| Tv_Type u)
 
         | Construct (fv, _, [(t, _); (sort, _); (b, _)]) when S.fv_eq_lid fv ref_Tv_Refine.lid ->
-            BU.bind_opt (unembed e_bv cb b) (fun b ->
-            BU.bind_opt (unembed e_term cb sort) (fun sort ->
-            BU.bind_opt (unembed e_term cb t) (fun t ->
+            Option.bind (unembed e_bv cb b) (fun b ->
+            Option.bind (unembed e_term cb sort) (fun sort ->
+            Option.bind (unembed e_term cb t) (fun t ->
             Some <| Tv_Refine (b, sort, t))))
 
         | Construct (fv, _, [(c, _)]) when S.fv_eq_lid fv ref_Tv_Const.lid ->
-            BU.bind_opt (unembed e_const cb c) (fun c ->
+            Option.bind (unembed e_const cb c) (fun c ->
             Some <| Tv_Const c)
 
         | Construct (fv, _, [(l, _); (u, _)]) when S.fv_eq_lid fv ref_Tv_Uvar.lid ->
-            BU.bind_opt (unembed e_int cb u) (fun u ->
+            Option.bind (unembed e_int cb u) (fun u ->
             let ctx_u_s : ctx_uvar_and_subst = unlazy_as_t Lazy_uvar l in
             Some <| Tv_Uvar (u, ctx_u_s))
 
         | Construct (fv, _, [(t2, _); (t1, _); (ty, _); (b, _); (attrs, _); (r, _)]) when S.fv_eq_lid fv ref_Tv_Let.lid ->
-            BU.bind_opt (unembed e_bool cb r) (fun r ->
-            BU.bind_opt (unembed (e_list e_term) cb attrs) (fun attrs ->
-            BU.bind_opt (unembed e_bv cb b) (fun b ->
-            BU.bind_opt (unembed e_term cb ty) (fun ty ->
-            BU.bind_opt (unembed e_term cb t1) (fun t1 ->
-            BU.bind_opt (unembed e_term cb t2) (fun t2 ->
+            Option.bind (unembed e_bool cb r) (fun r ->
+            Option.bind (unembed (e_list e_term) cb attrs) (fun attrs ->
+            Option.bind (unembed e_bv cb b) (fun b ->
+            Option.bind (unembed e_term cb ty) (fun ty ->
+            Option.bind (unembed e_term cb t1) (fun t1 ->
+            Option.bind (unembed e_term cb t2) (fun t2 ->
             Some <| Tv_Let (r, attrs, b, ty, t1, t2)))))))
 
         | Construct (fv, _, [(brs, _); (ret_opt, _); (t, _)]) when S.fv_eq_lid fv ref_Tv_Match.lid ->
-            BU.bind_opt (unembed e_term cb t) (fun t ->
-            BU.bind_opt (unembed (e_list e_branch) cb brs) (fun brs ->
-            BU.bind_opt (unembed e_match_returns_annotation cb ret_opt) (fun ret_opt ->
+            Option.bind (unembed e_term cb t) (fun t ->
+            Option.bind (unembed (e_list e_branch) cb brs) (fun brs ->
+            Option.bind (unembed e_match_returns_annotation cb ret_opt) (fun ret_opt ->
             Some <| Tv_Match (t, ret_opt, brs))))
 
         | Construct (fv, _, [(tacopt, _); (t, _); (e, _); (use_eq, _)]) when S.fv_eq_lid fv ref_Tv_AscT.lid ->
-            BU.bind_opt (unembed e_term cb e) (fun e ->
-            BU.bind_opt (unembed e_term cb t) (fun t ->
-            BU.bind_opt (unembed (e_option e_term) cb tacopt) (fun tacopt ->
-            BU.bind_opt (unembed e_bool cb use_eq) (fun use_eq ->
+            Option.bind (unembed e_term cb e) (fun e ->
+            Option.bind (unembed e_term cb t) (fun t ->
+            Option.bind (unembed (e_option e_term) cb tacopt) (fun tacopt ->
+            Option.bind (unembed e_bool cb use_eq) (fun use_eq ->
             Some <| Tv_AscribedT (e, t, tacopt, use_eq)))))
 
         | Construct (fv, _, [(tacopt, _); (c, _); (e, _); (use_eq, _)]) when S.fv_eq_lid fv ref_Tv_AscC.lid ->
-            BU.bind_opt (unembed e_term cb e) (fun e ->
-            BU.bind_opt (unembed e_comp cb c) (fun c ->
-            BU.bind_opt (unembed (e_option e_term) cb tacopt) (fun tacopt ->
-            BU.bind_opt (unembed e_bool cb use_eq) (fun use_eq ->
+            Option.bind (unembed e_term cb e) (fun e ->
+            Option.bind (unembed e_comp cb c) (fun c ->
+            Option.bind (unembed (e_option e_term) cb tacopt) (fun tacopt ->
+            Option.bind (unembed e_bool cb use_eq) (fun use_eq ->
             Some <| Tv_AscribedC (e, c, tacopt, use_eq)))))
 
         | Construct (fv, _, []) when S.fv_eq_lid fv ref_Tv_Unknown.lid ->
@@ -542,7 +541,7 @@ let e_term_view_aq aq =
             Some <| Tv_Unsupp
 
         | _ ->
-            Err.log_issue0 Err.Warning_NotEmbedded (BU.format1 "Not an embedded term_view: %s" (t_to_string t));
+            Err.log_issue0 Err.Warning_NotEmbedded (Format.fmt1 "Not an embedded term_view: %s" (t_to_string t));
             None
     in
     mk_emb' embed_term_view unembed_term_view fstar_refl_term_view_fv
@@ -557,12 +556,12 @@ let e_bv_view =
     let unembed_bv_view cb (t : t) : option bv_view =
         match t.nbe_t with
         | Construct (fv, _, [(idx, _); (nm, _)]) when S.fv_eq_lid fv ref_Mk_bv.lid ->
-            BU.bind_opt (unembed (e_sealed e_string) cb nm) (fun nm ->
-            BU.bind_opt (unembed e_int cb idx) (fun idx ->
+            Option.bind (unembed (e_sealed e_string) cb nm) (fun nm ->
+            Option.bind (unembed e_int cb idx) (fun idx ->
             Some <| { bv_ppname = nm ; bv_index = idx }))
 
         | _ ->
-            Err.log_issue0 Err.Warning_NotEmbedded (BU.format1 "Not an embedded bv_view: %s" (t_to_string t));
+            Err.log_issue0 Err.Warning_NotEmbedded (Format.fmt1 "Not an embedded bv_view: %s" (t_to_string t));
             None
     in
     mk_emb' embed_bv_view unembed_bv_view fstar_refl_bv_view_fv
@@ -581,14 +580,14 @@ let e_binder_view =
     match t.nbe_t with
     | Construct (fv, _, [(sort, _); (attrs, _); (q, _); (bv, _)])
       when S.fv_eq_lid fv ref_Mk_binder.lid ->
-      BU.bind_opt (unembed e_bv cb bv) (fun bv ->
-      BU.bind_opt (unembed e_aqualv cb q) (fun q ->
-      BU.bind_opt (unembed e_attributes cb attrs) (fun attrs ->
-      BU.bind_opt (unembed e_term cb sort) (fun sort ->
+      Option.bind (unembed e_bv cb bv) (fun bv ->
+      Option.bind (unembed e_aqualv cb q) (fun q ->
+      Option.bind (unembed e_attributes cb attrs) (fun attrs ->
+      Option.bind (unembed e_term cb sort) (fun sort ->
       Some <| RD.({binder_bv=bv;binder_qual=q;binder_attrs=attrs;binder_sort=sort})))))
 
     | _ ->
-      Err.log_issue0 Err.Warning_NotEmbedded (BU.format1 "Not an embedded binder_view: %s" (t_to_string t));
+      Err.log_issue0 Err.Warning_NotEmbedded (Format.fmt1 "Not an embedded binder_view: %s" (t_to_string t));
             None
     in
     mk_emb' embed_binder_view unembed_binder_view fstar_refl_binder_view_fv
@@ -619,31 +618,31 @@ let e_comp_view =
         match t.nbe_t with
         | Construct (fv, _, [(t, _)])
           when S.fv_eq_lid fv ref_C_Total.lid ->
-            BU.bind_opt (unembed e_term cb t) (fun t ->
+            Option.bind (unembed e_term cb t) (fun t ->
             Some <| C_Total t)
 
         | Construct (fv, _, [(t, _)])
           when S.fv_eq_lid fv ref_C_GTotal.lid ->
-            BU.bind_opt (unembed e_term cb t) (fun t ->
+            Option.bind (unembed e_term cb t) (fun t ->
             Some <| C_GTotal t)
 
         | Construct (fv, _, [(post, _); (pre, _); (pats, _)]) when S.fv_eq_lid fv ref_C_Lemma.lid ->
-            BU.bind_opt (unembed e_term cb pre) (fun pre ->
-            BU.bind_opt (unembed e_term cb post) (fun post ->
-            BU.bind_opt (unembed e_term cb pats) (fun pats ->
+            Option.bind (unembed e_term cb pre) (fun pre ->
+            Option.bind (unembed e_term cb post) (fun post ->
+            Option.bind (unembed e_term cb pats) (fun pats ->
             Some <| C_Lemma (pre, post, pats))))
 
         | Construct (fv, _, [(decrs, _); (args, _); (res, _); (eff, _); (us, _)])
           when S.fv_eq_lid fv ref_C_Eff.lid ->
-            BU.bind_opt (unembed (e_list e_universe) cb us) (fun us ->
-            BU.bind_opt (unembed e_string_list cb eff) (fun eff ->
-            BU.bind_opt (unembed e_term cb res) (fun res->
-            BU.bind_opt (unembed (e_list e_argv) cb args) (fun args ->
-            BU.bind_opt (unembed (e_list e_term) cb decrs) (fun decrs ->
+            Option.bind (unembed (e_list e_universe) cb us) (fun us ->
+            Option.bind (unembed e_string_list cb eff) (fun eff ->
+            Option.bind (unembed e_term cb res) (fun res->
+            Option.bind (unembed (e_list e_argv) cb args) (fun args ->
+            Option.bind (unembed (e_list e_term) cb decrs) (fun decrs ->
             Some <| C_Eff (us, eff, res, args, decrs))))))
 
         | _ ->
-            Err.log_issue0 Err.Warning_NotEmbedded (BU.format1 "Not an embedded comp_view: %s" (t_to_string t));
+            Err.log_issue0 Err.Warning_NotEmbedded (Format.fmt1 "Not an embedded comp_view: %s" (t_to_string t));
             None
     in
     mk_emb' embed_comp_view unembed_comp_view fstar_refl_comp_view_fv
@@ -657,7 +656,7 @@ let e_sigelt =
         | Lazy (Inl {blob=b; lkind=Lazy_sigelt}, _) ->
             Some (undyn b)
         | _ ->
-            Err.log_issue0 Err.Warning_NotEmbedded (BU.format1 "Not an embedded sigelt: %s" (t_to_string t));
+            Err.log_issue0 Err.Warning_NotEmbedded (Format.fmt1 "Not an embedded sigelt: %s" (t_to_string t));
             None
     in
     mk_emb' embed_sigelt unembed_sigelt fstar_refl_sigelt_fv
@@ -683,15 +682,15 @@ let e_lb_view =
        match t.nbe_t with
        | Construct (fv, _, [(fv', _); (us, _); (typ, _); (def,_)])
 	  when S.fv_eq_lid fv ref_Mk_lb.lid ->
-            BU.bind_opt (unembed e_fv cb fv') (fun fv' ->
-	    BU.bind_opt (unembed e_univ_names cb us) (fun us ->
-            BU.bind_opt (unembed e_term cb typ) (fun typ ->
-            BU.bind_opt (unembed e_term cb def) (fun def ->
+            Option.bind (unembed e_fv cb fv') (fun fv' ->
+	    Option.bind (unembed e_univ_names cb us) (fun us ->
+            Option.bind (unembed e_term cb typ) (fun typ ->
+            Option.bind (unembed e_term cb def) (fun def ->
             Some <|
 	      { lb_fv = fv'; lb_us = us; lb_typ = typ; lb_def = def }))))
 
         | _ ->
-            Err.log_issue0 Err.Warning_NotEmbedded (BU.format1 "Not an embedded lb_view: %s" (t_to_string t));
+            Err.log_issue0 Err.Warning_NotEmbedded (Format.fmt1 "Not an embedded lb_view: %s" (t_to_string t));
             None
     in
     mk_emb' embed_lb_view unembed_lb_view fstar_refl_lb_view_fv
@@ -702,7 +701,7 @@ let e_lid : embedding I.lid =
         embed e_string_list rng (I.path_of_lid lid)
     in
     let unembed cb (t : t) : option I.lid =
-        BU.map_opt (unembed e_string_list cb t) (fun p -> I.lid_of_path p Range.dummyRange)
+        Option.map (fun p -> I.lid_of_path p Range.dummyRange) (unembed e_string_list cb t)
     in
     mk_emb embed unembed
         (fun () -> mkConstruct fstar_refl_aqualv_fv [] [])
@@ -718,7 +717,7 @@ let e_letbinding =
             Some (undyn lb)
 
         | _ ->
-            Err.log_issue0 Err.Warning_NotEmbedded (BU.format1 "Not an embedded letbinding: %s" (t_to_string t));
+            Err.log_issue0 Err.Warning_NotEmbedded (Format.fmt1 "Not an embedded letbinding: %s" (t_to_string t));
             None
     in
     mk_emb' embed_letbinding unembed_letbinding fstar_refl_letbinding_fv
@@ -749,29 +748,29 @@ let e_sigelt_view =
     let unembed_sigelt_view cb (t:t) : option sigelt_view =
         match t.nbe_t with
         | Construct (fv, _, [(dcs, _); (t, _); (bs, _); (us, _); (nm, _)]) when S.fv_eq_lid fv ref_Sg_Inductive.lid ->
-            BU.bind_opt (unembed e_string_list cb nm) (fun nm ->
-            BU.bind_opt (unembed e_univ_names cb us) (fun us ->
-            BU.bind_opt (unembed e_binders cb bs) (fun bs ->
-            BU.bind_opt (unembed e_term cb t) (fun t ->
-            BU.bind_opt (unembed (e_list e_ctor) cb dcs) (fun dcs ->
+            Option.bind (unembed e_string_list cb nm) (fun nm ->
+            Option.bind (unembed e_univ_names cb us) (fun us ->
+            Option.bind (unembed e_binders cb bs) (fun bs ->
+            Option.bind (unembed e_term cb t) (fun t ->
+            Option.bind (unembed (e_list e_ctor) cb dcs) (fun dcs ->
             Some <| Sg_Inductive (nm, us, bs, t, dcs))))))
 
         | Construct (fv, _, [(lbs, _); (r, _)]) when S.fv_eq_lid fv ref_Sg_Let.lid ->
-            BU.bind_opt (unembed e_bool cb r) (fun r ->
-            BU.bind_opt (unembed (e_list e_letbinding) cb lbs) (fun lbs ->
+            Option.bind (unembed e_bool cb r) (fun r ->
+            Option.bind (unembed (e_list e_letbinding) cb lbs) (fun lbs ->
             Some <| Sg_Let (r, lbs)))
 
         | Construct (fv, _, [(t, _); (us, _); (nm, _)]) when S.fv_eq_lid fv ref_Sg_Val.lid ->
-            BU.bind_opt (unembed e_string_list cb nm) (fun nm ->
-            BU.bind_opt (unembed e_univ_names cb us) (fun us ->
-            BU.bind_opt (unembed e_term cb t) (fun t ->
+            Option.bind (unembed e_string_list cb nm) (fun nm ->
+            Option.bind (unembed e_univ_names cb us) (fun us ->
+            Option.bind (unembed e_term cb t) (fun t ->
             Some <| Sg_Val(nm, us, t))))
 
         | Construct (fv, _, []) when S.fv_eq_lid fv ref_Unk.lid ->
             Some Unk
 
         | _ ->
-            Err.log_issue0 Err.Warning_NotEmbedded (BU.format1 "Not an embedded sigelt_view: %s" (t_to_string t));
+            Err.log_issue0 Err.Warning_NotEmbedded (Format.fmt1 "Not an embedded sigelt_view: %s" (t_to_string t));
             None
     in
     mk_emb' embed_sigelt_view unembed_sigelt_view fstar_refl_sigelt_view_fv
@@ -839,34 +838,34 @@ let e_qualifier =
         | Construct (fv, [], []) when S.fv_eq_lid fv ref_qual_OnlyName.lid -> Some RD.OnlyName
 
         | Construct (fv, [], [(l, _)]) when S.fv_eq_lid fv ref_qual_Reflectable.lid ->
-            BU.bind_opt (unembed e_name cb l) (fun l ->
+            Option.bind (unembed e_name cb l) (fun l ->
             Some (RD.Reflectable l))
 
         | Construct (fv, [], [(l, _)]) when S.fv_eq_lid fv ref_qual_Discriminator.lid ->
-            BU.bind_opt (unembed e_name cb l) (fun l ->
+            Option.bind (unembed e_name cb l) (fun l ->
             Some (RD.Discriminator l))
 
         | Construct (fv, [], [(l, _)]) when S.fv_eq_lid fv ref_qual_Action.lid ->
-            BU.bind_opt (unembed e_name cb l) (fun l ->
+            Option.bind (unembed e_name cb l) (fun l ->
             Some (RD.Action l))
 
         | Construct (fv, [], [(i, _); (l, _)]) when S.fv_eq_lid fv ref_qual_Projector.lid ->
-            BU.bind_opt (unembed e_ident cb i) (fun i ->
-            BU.bind_opt (unembed e_name cb l) (fun l ->
+            Option.bind (unembed e_ident cb i) (fun i ->
+            Option.bind (unembed e_name cb l) (fun l ->
             Some (RD.Projector (l, i))))
 
         | Construct (fv, [], [(ids2, _); (ids1, _)]) when S.fv_eq_lid fv ref_qual_RecordType.lid ->
-            BU.bind_opt (unembed (e_list e_ident) cb ids1) (fun ids1 ->
-            BU.bind_opt (unembed (e_list e_ident) cb ids2) (fun ids2 ->
+            Option.bind (unembed (e_list e_ident) cb ids1) (fun ids1 ->
+            Option.bind (unembed (e_list e_ident) cb ids2) (fun ids2 ->
             Some (RD.RecordType (ids1, ids2))))
 
         | Construct (fv, [], [(ids2, _); (ids1, _)]) when S.fv_eq_lid fv ref_qual_RecordConstructor.lid ->
-            BU.bind_opt (unembed (e_list e_ident) cb ids1) (fun ids1 ->
-            BU.bind_opt (unembed (e_list e_ident) cb ids2) (fun ids2 ->
+            Option.bind (unembed (e_list e_ident) cb ids1) (fun ids1 ->
+            Option.bind (unembed (e_list e_ident) cb ids2) (fun ids2 ->
             Some (RD.RecordConstructor (ids1, ids2))))
 
         | _ ->
-            Err.log_issue0 Err.Warning_NotEmbedded (BU.format1 "Not an embedded qualifier: %s" (t_to_string t));
+            Err.log_issue0 Err.Warning_NotEmbedded (Format.fmt1 "Not an embedded qualifier: %s" (t_to_string t));
             None
     in
     mk_emb embed unembed

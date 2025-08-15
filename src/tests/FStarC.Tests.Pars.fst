@@ -18,7 +18,6 @@ open FStarC
 open FStarC.Effect
 open FStarC.Range
 open FStarC.Parser
-open FStarC.Util
 open FStarC.Syntax
 open FStarC.Syntax.Syntax
 open FStarC.Errors
@@ -30,7 +29,6 @@ module SMT = FStarC.SMTEncoding.Solver
 module Tc = FStarC.TypeChecker.Tc
 module TcTerm = FStarC.TypeChecker.TcTerm
 module ToSyntax = FStarC.ToSyntax.ToSyntax
-module BU = FStarC.Util
 module Rel = FStarC.TypeChecker.Rel
 module NBE = FStarC.TypeChecker.NBE
 
@@ -49,7 +47,7 @@ let parse_mod mod_name dsenv =
     | ParseError (err, msg, r) ->
         raise (Error(err, msg, r, []))
     | ASTFragment (Inr _, _) ->
-        let msg = BU.format1 "%s: expected a module\n" mod_name in
+        let msg = Format.fmt1 "%s: expected a module\n" mod_name in
         raise_error0 Errors.Fatal_ModuleExpected msg
     | Term _ ->
         failwith "Impossible: parsing a Filename always results in an ASTFragment"
@@ -77,7 +75,7 @@ let init_once () : unit =
                 FStarC.Universal.core_check
   in
   env.solver.init env;
-  let dsenv, prims_mod = parse_mod (Find.find_file "FStar.Prelude.fsti" |> BU.must) (DsEnv.empty_env Parser.Dep.empty_deps) in
+  let dsenv, prims_mod = parse_mod (Find.find_file "FStar.Prelude.fsti" |> Some?.v) (DsEnv.empty_env Parser.Dep.empty_deps) in
   let env = {env with dsenv=dsenv} in
   let _prims_mod, env = Tc.check_module env prims_mod false in
   // needed to run tests with chars
@@ -127,8 +125,8 @@ let pars s =
     with
         | Error(err, msg, r, _ctx) when not <| FStarC.Options.trace_error() ->
           if r = FStarC.Range.dummyRange
-          then BU.print_string (Errors.rendermsg msg)
-          else BU.print2 "%s: %s\n" (FStarC.Range.string_of_range r) (Errors.rendermsg msg);
+          then Format.print_string (Errors.rendermsg msg)
+          else Format.print2 "%s: %s\n" (FStarC.Range.string_of_range r) (Errors.rendermsg msg);
           exit 1
 
         | e when not ((Options.trace_error())) -> raise e
@@ -169,7 +167,7 @@ let pars_and_tc_fragment (s:string) =
           let n = get_err_count () in
           if n <> 0
           then (report ();
-                raise_error0 Errors.Fatal_ErrorsReported (BU.format1 "%s errors were reported" (string_of_int n)))
+                raise_error0 Errors.Fatal_ErrorsReported (Format.fmt1 "%s errors were reported" (show n)))
         with e -> report(); raise_error0 Errors.Fatal_TcOneFragmentFailed ("tc_one_fragment failed: " ^s)
     with
         | e when not ((Options.trace_error())) -> raise e
@@ -184,8 +182,8 @@ let test_hashes () =
     in
     let tm = tc (aux n) in
     let hc = FStarC.Syntax.Hash.ext_hash_term tm in
-    BU.print2 "Hash of unary %s is %s\n"
-              (string_of_int n)
+    Format.print2 "Hash of unary %s is %s\n"
+              (show n)
               (FStarC.Hash.string_of_hash_code hc)
   in
   let rec aux (n:int) =
@@ -242,10 +240,10 @@ let parse_incremental_decls () =
           if line_of_pos p = l && col_of_pos p = c
           then ()
           else failwith (format4 "Incremental parsing failed: Expected syntax error at (%s, %s), got error at (%s, %s)"
-                                 (string_of_int l)
-                                 (string_of_int c)
-                                 (string_of_int (line_of_pos p))
-                                 (string_of_int (col_of_pos p)))
+                                 (show l)
+                                 (show c)
+                                 (show (line_of_pos p))
+                                 (show (col_of_pos p)))
       in
       let _ =
         match parse_err0, parse_err1 with
@@ -267,8 +265,8 @@ let parse_incremental_decls () =
           failwith ("Incremental parsing failed; unexpected change in a decl")
         )
       | _ -> failwith (format2 "Incremental parsing failed; expected 6 decls got %s and %s\n"
-                              (string_of_int (List.length decls0))
-                              (string_of_int (List.length decls1)))
+                              (show (List.length decls0))
+                              (show (List.length decls1)))
       )
 
 

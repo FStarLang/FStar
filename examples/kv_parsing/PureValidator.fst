@@ -101,7 +101,7 @@ let rec validate_many' n v =
   | 0 -> validate_accept
   | _ -> v `seq` validate_many' (n-1) v
 
-#reset-options "--max_fuel 0 --z3rlimit 20"
+#reset-options "--fuel 0 --z3rlimit 20"
 
 val intro_validator_checks (#t:Type) (v: validator) (p:parser t)
   (pf : (b:bytes{length b < pow2 32} -> Lemma (validator_checks_on v p b))) :

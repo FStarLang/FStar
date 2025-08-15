@@ -113,7 +113,7 @@ private let rec find_idx (f : 'a -> Tac bool) (l : list 'a) : Tac (option ((n:na
              end
 
 private let atom (t:term) : tm expr = fun (n, atoms) ->
-    match find_idx (term_eq_old t) atoms with
+    match find_idx (fun a -> term_eq t a) atoms with
     | None -> Inr (Atom n t, (n + 1, t::atoms))
     | Some (i, t) -> Inr (Atom (n - 1 - i) t, (n, atoms))
 
@@ -121,7 +121,7 @@ private val fail : (#a:Type) -> string -> tm a
 private let fail #a s = fun i -> Inl s
 
 val as_arith_expr : term -> tm expr
-#push-options "--initial_fuel 4 --max_fuel 4"
+#push-options "--fuel 4"
 let rec as_arith_expr (t:term) =
     let hd, tl = collect_app_ln t in
     // Invoke [collect_app_order]: forall (arg, qual) ∈ tl, (arg, qual) << t

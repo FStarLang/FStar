@@ -1,5 +1,5 @@
->> Got issues: [
-* Error 19 at NegativeTests.BST.fst(37,38-37,42):
+* Info at NegativeTests.BST.fst(37,38-37,42):
+  - Expected failure:
   - Subtyping check failed
   - Expected type
       right:
@@ -11,9 +11,8 @@
     details.
   - See also NegativeTests.BST.fst(27,36-27,58)
 
->>]
->> Got issues: [
-* Error 19 at NegativeTests.BST.fst(40,61-40,65):
+* Info at NegativeTests.BST.fst(40,61-40,65):
+  - Expected failure:
   - Subtyping check failed
   - Expected type
       right:
@@ -25,9 +24,8 @@
     details.
   - See also NegativeTests.BST.fst(27,36-27,58)
 
->>]
->> Got issues: [
-* Error 19 at NegativeTests.BST.fst(43,78-43,87):
+* Info at NegativeTests.BST.fst(43,78-43,87):
+  - Expected failure:
   - Subtyping check failed
   - Expected type
       right:
@@ -39,4 +37,3 @@
     details.
   - See also NegativeTests.BST.fst(27,36-27,58)
 
->>]

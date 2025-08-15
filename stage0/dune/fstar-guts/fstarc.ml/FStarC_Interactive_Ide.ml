@@ -30,7 +30,7 @@ let with_captured_errors' :
                (Obj.magic msg1);
              FStar_Pervasives_Native.None)
         | FStarC_Util.SigInt ->
-            (FStarC_Util.print_string "Interrupted";
+            (FStarC_Format.print_string "Interrupted";
              FStar_Pervasives_Native.None)
         | FStarC_Errors.Error (e, msg, r, ctx) ->
             (FStarC_TypeChecker_Err.add_errors env [(e, msg, r, ctx)];
@@ -148,112 +148,120 @@ let (run_repl_ld_transactions :
   fun st ->
     fun tasks ->
       fun progress_callback ->
-        let debug verb task =
-          let uu___ = FStarC_Effect.op_Bang dbg in
-          if uu___
-          then
-            let uu___1 =
-              FStarC_Interactive_Ide_Types.string_of_repl_task task in
-            FStarC_Util.print2 "%s %s" verb uu___1
-          else () in
-        let rec revert_many st1 uu___ =
-          match uu___ with
-          | [] -> st1
-          | (_id, (task, _st'))::entries ->
-              (debug "Reverting" task;
-               (let st' =
-                  FStarC_Interactive_PushHelper.pop_repl
-                    "run_repl_ls_transactions" st1 in
-                let dep_graph =
-                  FStarC_TypeChecker_Env.dep_graph
-                    st1.FStarC_Interactive_Ide_Types.repl_env in
-                let st'1 =
-                  let uu___3 =
-                    FStarC_TypeChecker_Env.set_dep_graph
-                      st'.FStarC_Interactive_Ide_Types.repl_env dep_graph in
-                  {
-                    FStarC_Interactive_Ide_Types.repl_line =
-                      (st'.FStarC_Interactive_Ide_Types.repl_line);
-                    FStarC_Interactive_Ide_Types.repl_column =
-                      (st'.FStarC_Interactive_Ide_Types.repl_column);
-                    FStarC_Interactive_Ide_Types.repl_fname =
-                      (st'.FStarC_Interactive_Ide_Types.repl_fname);
-                    FStarC_Interactive_Ide_Types.repl_deps_stack =
-                      (st'.FStarC_Interactive_Ide_Types.repl_deps_stack);
-                    FStarC_Interactive_Ide_Types.repl_curmod =
-                      (st'.FStarC_Interactive_Ide_Types.repl_curmod);
-                    FStarC_Interactive_Ide_Types.repl_env = uu___3;
-                    FStarC_Interactive_Ide_Types.repl_stdin =
-                      (st'.FStarC_Interactive_Ide_Types.repl_stdin);
-                    FStarC_Interactive_Ide_Types.repl_names =
-                      (st'.FStarC_Interactive_Ide_Types.repl_names);
-                    FStarC_Interactive_Ide_Types.repl_buffered_input_queries
-                      =
-                      (st'.FStarC_Interactive_Ide_Types.repl_buffered_input_queries);
-                    FStarC_Interactive_Ide_Types.repl_lang =
-                      (st'.FStarC_Interactive_Ide_Types.repl_lang)
-                  } in
-                revert_many st'1 entries)) in
-        let rec aux st1 tasks1 previous =
-          match (tasks1, previous) with
-          | ([], []) -> FStar_Pervasives.Inl st1
-          | (task::tasks2, []) ->
-              (debug "Loading" task;
-               progress_callback task;
-               (let uu___3 = FStarC_Options.restore_cmd_line_options false in
-                ());
-               (let timestamped_task =
-                  FStarC_Interactive_PushHelper.update_task_timestamps task in
-                let push_kind =
-                  let uu___3 = FStarC_Options.lax () in
-                  if uu___3
-                  then FStarC_Interactive_Ide_Types.LaxCheck
-                  else FStarC_Interactive_Ide_Types.FullCheck in
-                let uu___3 =
-                  run_repl_transaction st1
-                    (FStar_Pervasives_Native.Some push_kind) false
-                    timestamped_task in
-                match uu___3 with
-                | (success, st2) ->
-                    if success
-                    then
-                      let uu___4 =
-                        let uu___5 =
-                          FStarC_Effect.op_Bang
-                            FStarC_Interactive_PushHelper.repl_stack in
-                        {
-                          FStarC_Interactive_Ide_Types.repl_line =
-                            (st2.FStarC_Interactive_Ide_Types.repl_line);
-                          FStarC_Interactive_Ide_Types.repl_column =
-                            (st2.FStarC_Interactive_Ide_Types.repl_column);
-                          FStarC_Interactive_Ide_Types.repl_fname =
-                            (st2.FStarC_Interactive_Ide_Types.repl_fname);
-                          FStarC_Interactive_Ide_Types.repl_deps_stack =
-                            uu___5;
-                          FStarC_Interactive_Ide_Types.repl_curmod =
-                            (st2.FStarC_Interactive_Ide_Types.repl_curmod);
-                          FStarC_Interactive_Ide_Types.repl_env =
-                            (st2.FStarC_Interactive_Ide_Types.repl_env);
-                          FStarC_Interactive_Ide_Types.repl_stdin =
-                            (st2.FStarC_Interactive_Ide_Types.repl_stdin);
-                          FStarC_Interactive_Ide_Types.repl_names =
-                            (st2.FStarC_Interactive_Ide_Types.repl_names);
-                          FStarC_Interactive_Ide_Types.repl_buffered_input_queries
-                            =
-                            (st2.FStarC_Interactive_Ide_Types.repl_buffered_input_queries);
-                          FStarC_Interactive_Ide_Types.repl_lang =
-                            (st2.FStarC_Interactive_Ide_Types.repl_lang)
-                        } in
-                      aux uu___4 tasks2 []
-                    else FStar_Pervasives.Inr st2))
-          | (task::tasks2, prev::previous1) when
-              let uu___ =
-                FStarC_Interactive_PushHelper.update_task_timestamps task in
-              (FStar_Pervasives_Native.fst (FStar_Pervasives_Native.snd prev))
-                = uu___
-              -> (debug "Skipping" task; aux st1 tasks2 previous1)
-          | (tasks2, previous1) ->
-              let uu___ = revert_many st1 previous1 in aux uu___ tasks2 [] in
+        let debug verb =
+          fun task ->
+            let uu___ = FStarC_Effect.op_Bang dbg in
+            if uu___
+            then
+              let uu___1 =
+                FStarC_Interactive_Ide_Types.string_of_repl_task task in
+              FStarC_Format.print2 "%s %s" verb uu___1
+            else () in
+        let rec revert_many st1 =
+          fun uu___ ->
+            match uu___ with
+            | [] -> st1
+            | (_id, (task, _st'))::entries ->
+                (debug "Reverting" task;
+                 (let st' =
+                    FStarC_Interactive_PushHelper.pop_repl
+                      "run_repl_ls_transactions" st1 in
+                  let dep_graph =
+                    FStarC_TypeChecker_Env.dep_graph
+                      st1.FStarC_Interactive_Ide_Types.repl_env in
+                  let st'1 =
+                    let uu___3 =
+                      FStarC_TypeChecker_Env.set_dep_graph
+                        st'.FStarC_Interactive_Ide_Types.repl_env dep_graph in
+                    {
+                      FStarC_Interactive_Ide_Types.repl_line =
+                        (st'.FStarC_Interactive_Ide_Types.repl_line);
+                      FStarC_Interactive_Ide_Types.repl_column =
+                        (st'.FStarC_Interactive_Ide_Types.repl_column);
+                      FStarC_Interactive_Ide_Types.repl_fname =
+                        (st'.FStarC_Interactive_Ide_Types.repl_fname);
+                      FStarC_Interactive_Ide_Types.repl_deps_stack =
+                        (st'.FStarC_Interactive_Ide_Types.repl_deps_stack);
+                      FStarC_Interactive_Ide_Types.repl_curmod =
+                        (st'.FStarC_Interactive_Ide_Types.repl_curmod);
+                      FStarC_Interactive_Ide_Types.repl_env = uu___3;
+                      FStarC_Interactive_Ide_Types.repl_stdin =
+                        (st'.FStarC_Interactive_Ide_Types.repl_stdin);
+                      FStarC_Interactive_Ide_Types.repl_names =
+                        (st'.FStarC_Interactive_Ide_Types.repl_names);
+                      FStarC_Interactive_Ide_Types.repl_buffered_input_queries
+                        =
+                        (st'.FStarC_Interactive_Ide_Types.repl_buffered_input_queries);
+                      FStarC_Interactive_Ide_Types.repl_lang =
+                        (st'.FStarC_Interactive_Ide_Types.repl_lang)
+                    } in
+                  revert_many st'1 entries)) in
+        let rec aux st1 =
+          fun tasks1 ->
+            fun previous ->
+              match (tasks1, previous) with
+              | ([], []) -> FStar_Pervasives.Inl st1
+              | (task::tasks2, []) ->
+                  (debug "Loading" task;
+                   progress_callback task;
+                   (let uu___3 =
+                      FStarC_Options.restore_cmd_line_options false in
+                    ());
+                   (let timestamped_task =
+                      FStarC_Interactive_PushHelper.update_task_timestamps
+                        task in
+                    let push_kind =
+                      let uu___3 = FStarC_Options.lax () in
+                      if uu___3
+                      then FStarC_Interactive_Ide_Types.LaxCheck
+                      else FStarC_Interactive_Ide_Types.FullCheck in
+                    let uu___3 =
+                      run_repl_transaction st1
+                        (FStar_Pervasives_Native.Some push_kind) false
+                        timestamped_task in
+                    match uu___3 with
+                    | (success, st2) ->
+                        if success
+                        then
+                          let uu___4 =
+                            let uu___5 =
+                              FStarC_Effect.op_Bang
+                                FStarC_Interactive_PushHelper.repl_stack in
+                            {
+                              FStarC_Interactive_Ide_Types.repl_line =
+                                (st2.FStarC_Interactive_Ide_Types.repl_line);
+                              FStarC_Interactive_Ide_Types.repl_column =
+                                (st2.FStarC_Interactive_Ide_Types.repl_column);
+                              FStarC_Interactive_Ide_Types.repl_fname =
+                                (st2.FStarC_Interactive_Ide_Types.repl_fname);
+                              FStarC_Interactive_Ide_Types.repl_deps_stack =
+                                uu___5;
+                              FStarC_Interactive_Ide_Types.repl_curmod =
+                                (st2.FStarC_Interactive_Ide_Types.repl_curmod);
+                              FStarC_Interactive_Ide_Types.repl_env =
+                                (st2.FStarC_Interactive_Ide_Types.repl_env);
+                              FStarC_Interactive_Ide_Types.repl_stdin =
+                                (st2.FStarC_Interactive_Ide_Types.repl_stdin);
+                              FStarC_Interactive_Ide_Types.repl_names =
+                                (st2.FStarC_Interactive_Ide_Types.repl_names);
+                              FStarC_Interactive_Ide_Types.repl_buffered_input_queries
+                                =
+                                (st2.FStarC_Interactive_Ide_Types.repl_buffered_input_queries);
+                              FStarC_Interactive_Ide_Types.repl_lang =
+                                (st2.FStarC_Interactive_Ide_Types.repl_lang)
+                            } in
+                          aux uu___4 tasks2 []
+                        else FStar_Pervasives.Inr st2))
+              | (task::tasks2, prev::previous1) when
+                  let uu___ =
+                    FStarC_Interactive_PushHelper.update_task_timestamps task in
+                  (FStar_Pervasives_Native.fst
+                     (FStar_Pervasives_Native.snd prev))
+                    = uu___
+                  -> (debug "Skipping" task; aux st1 tasks2 previous1)
+              | (tasks2, previous1) ->
+                  let uu___ = revert_many st1 previous1 in
+                  aux uu___ tasks2 [] in
         aux st tasks
           (FStarC_List.rev st.FStarC_Interactive_Ide_Types.repl_deps_stack)
 let (wrap_js_failure :
@@ -266,7 +274,7 @@ let (wrap_js_failure :
         let uu___ =
           let uu___1 =
             let uu___2 = FStarC_Interactive_JsonHelper.json_debug got in
-            FStarC_Util.format2 "JSON decoding failed: expected %s, got %s"
+            FStarC_Format.fmt2 "JSON decoding failed: expected %s, got %s"
               expected uu___2 in
           FStarC_Interactive_Ide_Types.ProtocolViolation uu___1 in
         {
@@ -276,16 +284,18 @@ let (wrap_js_failure :
 let (unpack_interactive_query :
   FStarC_Json.json -> FStarC_Interactive_Ide_Types.query) =
   fun json ->
-    let assoc errloc key a =
-      let uu___ = FStarC_Interactive_JsonHelper.try_assoc key a in
-      match uu___ with
-      | FStar_Pervasives_Native.Some v -> v
-      | FStar_Pervasives_Native.None ->
-          let uu___1 =
-            let uu___2 =
-              FStarC_Util.format2 "Missing key [%s] in %s." key errloc in
-            FStarC_Interactive_JsonHelper.InvalidQuery uu___2 in
-          FStarC_Effect.raise uu___1 in
+    let assoc errloc =
+      fun key ->
+        fun a ->
+          let uu___ = FStarC_Interactive_JsonHelper.try_assoc key a in
+          match uu___ with
+          | FStar_Pervasives_Native.Some v -> v
+          | FStar_Pervasives_Native.None ->
+              let uu___1 =
+                let uu___2 =
+                  FStarC_Format.fmt2 "Missing key [%s] in %s." key errloc in
+                FStarC_Interactive_JsonHelper.InvalidQuery uu___2 in
+              FStarC_Effect.raise uu___1 in
     let request = FStarC_Interactive_JsonHelper.js_assoc json in
     let qid =
       let uu___ = assoc "query" "query-id" request in
@@ -307,17 +317,18 @@ let (unpack_interactive_query :
                | FStar_Pervasives_Native.Some (FStarC_Json.JsonNull) ->
                    FStar_Pervasives_Native.None
                | other -> other in
-             let read_position err loc =
-               let uu___1 =
-                 let uu___2 = assoc err "filename" loc in
-                 FStarC_Interactive_JsonHelper.js_str uu___2 in
-               let uu___2 =
-                 let uu___3 = assoc err "line" loc in
-                 FStarC_Interactive_JsonHelper.js_int uu___3 in
-               let uu___3 =
-                 let uu___4 = assoc err "column" loc in
-                 FStarC_Interactive_JsonHelper.js_int uu___4 in
-               (uu___1, uu___2, uu___3) in
+             let read_position err =
+               fun loc ->
+                 let uu___1 =
+                   let uu___2 = assoc err "filename" loc in
+                   FStarC_Interactive_JsonHelper.js_str uu___2 in
+                 let uu___2 =
+                   let uu___3 = assoc err "line" loc in
+                   FStarC_Interactive_JsonHelper.js_int uu___3 in
+                 let uu___3 =
+                   let uu___4 = assoc err "column" loc in
+                   FStarC_Interactive_JsonHelper.js_int uu___4 in
+                 (uu___1, uu___2, uu___3) in
              let read_to_position uu___1 =
                let to_pos =
                  let uu___2 = arg "to-position" in
@@ -452,10 +463,9 @@ let (unpack_interactive_query :
                      let uu___5 =
                        let uu___6 =
                          let uu___7 = try_arg "location" in
-                         FStarC_Util.map_option
+                         FStarC_Option.map
                            FStarC_Interactive_JsonHelper.js_assoc uu___7 in
-                       FStarC_Util.map_option (read_position "[location]")
-                         uu___6 in
+                       FStarC_Option.map (read_position "[location]") uu___6 in
                      let uu___6 =
                        let uu___7 = arg "requested-info" in
                        FStarC_Interactive_JsonHelper.js_list
@@ -470,7 +480,7 @@ let (unpack_interactive_query :
                        FStarC_Interactive_JsonHelper.js_str uu___4 in
                      let uu___4 =
                        let uu___5 = try_arg "rules" in
-                       FStarC_Util.map_option
+                       FStarC_Option.map
                          (FStarC_Interactive_JsonHelper.js_list
                             FStarC_Interactive_Ide_Types.js_reductionrule)
                          uu___5 in
@@ -485,8 +495,8 @@ let (unpack_interactive_query :
                    let uu___2 =
                      let uu___3 =
                        let uu___4 = try_arg "filename" in
-                       FStarC_Util.map_option
-                         FStarC_Interactive_JsonHelper.js_str uu___4 in
+                       FStarC_Option.map FStarC_Interactive_JsonHelper.js_str
+                         uu___4 in
                      let uu___4 =
                        let uu___5 = arg "contents" in
                        FStarC_Interactive_JsonHelper.js_str uu___5 in
@@ -512,8 +522,7 @@ let (unpack_interactive_query :
                      FStar_Pervasives_Native.Some uu___3 in
                    FStarC_Interactive_Ide_Types.Cancel uu___2
                | uu___2 ->
-                   let uu___3 =
-                     FStarC_Util.format1 "Unknown query '%s'" query in
+                   let uu___3 = FStarC_Format.fmt1 "Unknown query '%s'" query in
                    FStarC_Interactive_Ide_Types.ProtocolViolation uu___3 in
              {
                FStarC_Interactive_Ide_Types.qq = uu___1;
@@ -562,70 +571,73 @@ let (buffer_input_queries :
     FStarC_Interactive_Ide_Types.repl_state)
   =
   fun st ->
-    let rec aux qs st1 =
-      let done1 qs1 st2 =
-        {
-          FStarC_Interactive_Ide_Types.repl_line =
-            (st2.FStarC_Interactive_Ide_Types.repl_line);
-          FStarC_Interactive_Ide_Types.repl_column =
-            (st2.FStarC_Interactive_Ide_Types.repl_column);
-          FStarC_Interactive_Ide_Types.repl_fname =
-            (st2.FStarC_Interactive_Ide_Types.repl_fname);
-          FStarC_Interactive_Ide_Types.repl_deps_stack =
-            (st2.FStarC_Interactive_Ide_Types.repl_deps_stack);
-          FStarC_Interactive_Ide_Types.repl_curmod =
-            (st2.FStarC_Interactive_Ide_Types.repl_curmod);
-          FStarC_Interactive_Ide_Types.repl_env =
-            (st2.FStarC_Interactive_Ide_Types.repl_env);
-          FStarC_Interactive_Ide_Types.repl_stdin =
-            (st2.FStarC_Interactive_Ide_Types.repl_stdin);
-          FStarC_Interactive_Ide_Types.repl_names =
-            (st2.FStarC_Interactive_Ide_Types.repl_names);
-          FStarC_Interactive_Ide_Types.repl_buffered_input_queries =
-            (FStarC_List.op_At
-               st2.FStarC_Interactive_Ide_Types.repl_buffered_input_queries
-               (FStarC_List.rev qs1));
-          FStarC_Interactive_Ide_Types.repl_lang =
-            (st2.FStarC_Interactive_Ide_Types.repl_lang)
-        } in
-      let uu___ =
-        let uu___1 =
-          FStarC_Util.poll_stdin (FStarC_Util.float_of_string "0.0") in
-        Prims.op_Negation uu___1 in
-      if uu___
-      then done1 qs st1
-      else
-        (let uu___2 =
-           FStarC_Util.read_line st1.FStarC_Interactive_Ide_Types.repl_stdin in
-         match uu___2 with
-         | FStar_Pervasives_Native.None -> done1 qs st1
-         | FStar_Pervasives_Native.Some line ->
-             let q = parse_interactive_query line in
-             (match q.FStarC_Interactive_Ide_Types.qq with
-              | FStarC_Interactive_Ide_Types.Cancel uu___3 ->
-                  {
-                    FStarC_Interactive_Ide_Types.repl_line =
-                      (st1.FStarC_Interactive_Ide_Types.repl_line);
-                    FStarC_Interactive_Ide_Types.repl_column =
-                      (st1.FStarC_Interactive_Ide_Types.repl_column);
-                    FStarC_Interactive_Ide_Types.repl_fname =
-                      (st1.FStarC_Interactive_Ide_Types.repl_fname);
-                    FStarC_Interactive_Ide_Types.repl_deps_stack =
-                      (st1.FStarC_Interactive_Ide_Types.repl_deps_stack);
-                    FStarC_Interactive_Ide_Types.repl_curmod =
-                      (st1.FStarC_Interactive_Ide_Types.repl_curmod);
-                    FStarC_Interactive_Ide_Types.repl_env =
-                      (st1.FStarC_Interactive_Ide_Types.repl_env);
-                    FStarC_Interactive_Ide_Types.repl_stdin =
-                      (st1.FStarC_Interactive_Ide_Types.repl_stdin);
-                    FStarC_Interactive_Ide_Types.repl_names =
-                      (st1.FStarC_Interactive_Ide_Types.repl_names);
-                    FStarC_Interactive_Ide_Types.repl_buffered_input_queries
-                      = [q];
-                    FStarC_Interactive_Ide_Types.repl_lang =
-                      (st1.FStarC_Interactive_Ide_Types.repl_lang)
-                  }
-              | uu___3 -> aux (q :: qs) st1)) in
+    let rec aux qs =
+      fun st1 ->
+        let done1 qs1 =
+          fun st2 ->
+            {
+              FStarC_Interactive_Ide_Types.repl_line =
+                (st2.FStarC_Interactive_Ide_Types.repl_line);
+              FStarC_Interactive_Ide_Types.repl_column =
+                (st2.FStarC_Interactive_Ide_Types.repl_column);
+              FStarC_Interactive_Ide_Types.repl_fname =
+                (st2.FStarC_Interactive_Ide_Types.repl_fname);
+              FStarC_Interactive_Ide_Types.repl_deps_stack =
+                (st2.FStarC_Interactive_Ide_Types.repl_deps_stack);
+              FStarC_Interactive_Ide_Types.repl_curmod =
+                (st2.FStarC_Interactive_Ide_Types.repl_curmod);
+              FStarC_Interactive_Ide_Types.repl_env =
+                (st2.FStarC_Interactive_Ide_Types.repl_env);
+              FStarC_Interactive_Ide_Types.repl_stdin =
+                (st2.FStarC_Interactive_Ide_Types.repl_stdin);
+              FStarC_Interactive_Ide_Types.repl_names =
+                (st2.FStarC_Interactive_Ide_Types.repl_names);
+              FStarC_Interactive_Ide_Types.repl_buffered_input_queries =
+                (FStarC_List.op_At
+                   st2.FStarC_Interactive_Ide_Types.repl_buffered_input_queries
+                   (FStarC_List.rev qs1));
+              FStarC_Interactive_Ide_Types.repl_lang =
+                (st2.FStarC_Interactive_Ide_Types.repl_lang)
+            } in
+        let uu___ =
+          let uu___1 =
+            FStarC_Util.poll_stdin (FStarC_Util.float_of_string "0.0") in
+          Prims.op_Negation uu___1 in
+        if uu___
+        then done1 qs st1
+        else
+          (let uu___2 =
+             FStarC_Util.read_line
+               st1.FStarC_Interactive_Ide_Types.repl_stdin in
+           match uu___2 with
+           | FStar_Pervasives_Native.None -> done1 qs st1
+           | FStar_Pervasives_Native.Some line ->
+               let q = parse_interactive_query line in
+               (match q.FStarC_Interactive_Ide_Types.qq with
+                | FStarC_Interactive_Ide_Types.Cancel uu___3 ->
+                    {
+                      FStarC_Interactive_Ide_Types.repl_line =
+                        (st1.FStarC_Interactive_Ide_Types.repl_line);
+                      FStarC_Interactive_Ide_Types.repl_column =
+                        (st1.FStarC_Interactive_Ide_Types.repl_column);
+                      FStarC_Interactive_Ide_Types.repl_fname =
+                        (st1.FStarC_Interactive_Ide_Types.repl_fname);
+                      FStarC_Interactive_Ide_Types.repl_deps_stack =
+                        (st1.FStarC_Interactive_Ide_Types.repl_deps_stack);
+                      FStarC_Interactive_Ide_Types.repl_curmod =
+                        (st1.FStarC_Interactive_Ide_Types.repl_curmod);
+                      FStarC_Interactive_Ide_Types.repl_env =
+                        (st1.FStarC_Interactive_Ide_Types.repl_env);
+                      FStarC_Interactive_Ide_Types.repl_stdin =
+                        (st1.FStarC_Interactive_Ide_Types.repl_stdin);
+                      FStarC_Interactive_Ide_Types.repl_names =
+                        (st1.FStarC_Interactive_Ide_Types.repl_names);
+                      FStarC_Interactive_Ide_Types.repl_buffered_input_queries
+                        = [q];
+                      FStarC_Interactive_Ide_Types.repl_lang =
+                        (st1.FStarC_Interactive_Ide_Types.repl_lang)
+                    }
+                | uu___3 -> aux (q :: qs) st1)) in
     aux [] st
 let (read_interactive_query :
   FStarC_Interactive_Ide_Types.repl_state ->
@@ -638,7 +650,8 @@ let (read_interactive_query :
         let uu___ =
           FStarC_Util.read_line st.FStarC_Interactive_Ide_Types.repl_stdin in
         (match uu___ with
-         | FStar_Pervasives_Native.None -> FStarC_Effect.exit Prims.int_zero
+         | FStar_Pervasives_Native.None ->
+             (FStarC_Util.kill_all (); FStarC_Effect.exit Prims.int_zero)
          | FStar_Pervasives_Native.Some line ->
              let uu___1 = parse_interactive_query line in (uu___1, st))
     | q::qs ->
@@ -671,8 +684,8 @@ let json_of_opt :
   =
   fun json_of_a ->
     fun opt_a ->
-      let uu___ = FStarC_Util.map_option json_of_a opt_a in
-      FStarC_Util.dflt FStarC_Json.JsonNull uu___
+      let uu___ = FStarC_Option.map json_of_a opt_a in
+      FStarC_Option.dflt FStarC_Json.JsonNull uu___
 let (alist_of_symbol_lookup_result :
   FStarC_Interactive_QueryHelper.sl_reponse ->
     Prims.string ->
@@ -827,10 +840,11 @@ let (snippets_of_fstar_option :
     fun typ ->
       let mk_field field_name =
         Prims.strcat "${" (Prims.strcat field_name "}") in
-      let mk_snippet name1 argstring =
-        Prims.strcat "--"
-          (Prims.strcat name1
-             (if argstring <> "" then Prims.strcat " " argstring else "")) in
+      let mk_snippet name1 =
+        fun argstring ->
+          Prims.strcat "--"
+            (Prims.strcat name1
+               (if argstring <> "" then Prims.strcat " " argstring else "")) in
       let rec arg_snippets_of_type typ1 =
         match typ1 with
         | FStarC_Options.Const uu___ -> [""]
@@ -987,7 +1001,7 @@ let (fstar_options_list_cache : fstar_option Prims.list) =
          match uu___1 with
          | (_shortname, name, typ, doc) ->
              let uu___2 = FStarC_SMap.try_find defaults name in
-             FStarC_Util.map_option
+             FStarC_Option.map
                (fun default_value ->
                   let uu___3 = sig_of_fstar_option name typ in
                   let uu___4 = snippets_of_fstar_option name typ in
@@ -1217,7 +1231,7 @@ let run_vfs_add :
     fun opt_fname ->
       fun contents ->
         let fname =
-          FStarC_Util.dflt st.FStarC_Interactive_Ide_Types.repl_fname
+          FStarC_Option.dflt st.FStarC_Interactive_Ide_Types.repl_fname
             opt_fname in
         FStarC_Parser_ParseIt.add_vfs_entry fname contents;
         ((FStarC_Interactive_Ide_Types.QueryOK, FStarC_Json.JsonNull),
@@ -1439,14 +1453,15 @@ let (trunc_modul :
   =
   fun m ->
     fun pred ->
-      let rec filter decls acc =
-        match decls with
-        | [] -> (false, (FStarC_List.rev acc))
-        | d::ds ->
-            let uu___ = pred d in
-            if uu___
-            then (true, (FStarC_List.rev acc))
-            else filter ds (d :: acc) in
+      let rec filter decls =
+        fun acc ->
+          match decls with
+          | [] -> (false, (FStarC_List.rev acc))
+          | d::ds ->
+              let uu___ = pred d in
+              if uu___
+              then (true, (FStarC_List.rev acc))
+              else filter ds (d :: acc) in
       let uu___ = filter m.FStarC_Syntax_Syntax.declarations [] in
       match uu___ with
       | (found, decls) ->
@@ -1622,134 +1637,135 @@ let (run_push_without_deps :
   =
   fun st ->
     fun query ->
-      let set_flychecking_flag st1 flag =
-        {
-          FStarC_Interactive_Ide_Types.repl_line =
-            (st1.FStarC_Interactive_Ide_Types.repl_line);
-          FStarC_Interactive_Ide_Types.repl_column =
-            (st1.FStarC_Interactive_Ide_Types.repl_column);
-          FStarC_Interactive_Ide_Types.repl_fname =
-            (st1.FStarC_Interactive_Ide_Types.repl_fname);
-          FStarC_Interactive_Ide_Types.repl_deps_stack =
-            (st1.FStarC_Interactive_Ide_Types.repl_deps_stack);
-          FStarC_Interactive_Ide_Types.repl_curmod =
-            (st1.FStarC_Interactive_Ide_Types.repl_curmod);
-          FStarC_Interactive_Ide_Types.repl_env =
-            (let uu___ = st1.FStarC_Interactive_Ide_Types.repl_env in
-             {
-               FStarC_TypeChecker_Env.solver =
-                 (uu___.FStarC_TypeChecker_Env.solver);
-               FStarC_TypeChecker_Env.range =
-                 (uu___.FStarC_TypeChecker_Env.range);
-               FStarC_TypeChecker_Env.curmodule =
-                 (uu___.FStarC_TypeChecker_Env.curmodule);
-               FStarC_TypeChecker_Env.gamma =
-                 (uu___.FStarC_TypeChecker_Env.gamma);
-               FStarC_TypeChecker_Env.gamma_sig =
-                 (uu___.FStarC_TypeChecker_Env.gamma_sig);
-               FStarC_TypeChecker_Env.gamma_cache =
-                 (uu___.FStarC_TypeChecker_Env.gamma_cache);
-               FStarC_TypeChecker_Env.modules =
-                 (uu___.FStarC_TypeChecker_Env.modules);
-               FStarC_TypeChecker_Env.expected_typ =
-                 (uu___.FStarC_TypeChecker_Env.expected_typ);
-               FStarC_TypeChecker_Env.sigtab =
-                 (uu___.FStarC_TypeChecker_Env.sigtab);
-               FStarC_TypeChecker_Env.attrtab =
-                 (uu___.FStarC_TypeChecker_Env.attrtab);
-               FStarC_TypeChecker_Env.instantiate_imp =
-                 (uu___.FStarC_TypeChecker_Env.instantiate_imp);
-               FStarC_TypeChecker_Env.effects =
-                 (uu___.FStarC_TypeChecker_Env.effects);
-               FStarC_TypeChecker_Env.generalize =
-                 (uu___.FStarC_TypeChecker_Env.generalize);
-               FStarC_TypeChecker_Env.letrecs =
-                 (uu___.FStarC_TypeChecker_Env.letrecs);
-               FStarC_TypeChecker_Env.top_level =
-                 (uu___.FStarC_TypeChecker_Env.top_level);
-               FStarC_TypeChecker_Env.check_uvars =
-                 (uu___.FStarC_TypeChecker_Env.check_uvars);
-               FStarC_TypeChecker_Env.use_eq_strict =
-                 (uu___.FStarC_TypeChecker_Env.use_eq_strict);
-               FStarC_TypeChecker_Env.is_iface =
-                 (uu___.FStarC_TypeChecker_Env.is_iface);
-               FStarC_TypeChecker_Env.admit =
-                 (uu___.FStarC_TypeChecker_Env.admit);
-               FStarC_TypeChecker_Env.lax_universes =
-                 (uu___.FStarC_TypeChecker_Env.lax_universes);
-               FStarC_TypeChecker_Env.phase1 =
-                 (uu___.FStarC_TypeChecker_Env.phase1);
-               FStarC_TypeChecker_Env.failhard =
-                 (uu___.FStarC_TypeChecker_Env.failhard);
-               FStarC_TypeChecker_Env.flychecking = flag;
-               FStarC_TypeChecker_Env.uvar_subtyping =
-                 (uu___.FStarC_TypeChecker_Env.uvar_subtyping);
-               FStarC_TypeChecker_Env.intactics =
-                 (uu___.FStarC_TypeChecker_Env.intactics);
-               FStarC_TypeChecker_Env.nocoerce =
-                 (uu___.FStarC_TypeChecker_Env.nocoerce);
-               FStarC_TypeChecker_Env.tc_term =
-                 (uu___.FStarC_TypeChecker_Env.tc_term);
-               FStarC_TypeChecker_Env.typeof_tot_or_gtot_term =
-                 (uu___.FStarC_TypeChecker_Env.typeof_tot_or_gtot_term);
-               FStarC_TypeChecker_Env.universe_of =
-                 (uu___.FStarC_TypeChecker_Env.universe_of);
-               FStarC_TypeChecker_Env.typeof_well_typed_tot_or_gtot_term =
-                 (uu___.FStarC_TypeChecker_Env.typeof_well_typed_tot_or_gtot_term);
-               FStarC_TypeChecker_Env.teq_nosmt_force =
-                 (uu___.FStarC_TypeChecker_Env.teq_nosmt_force);
-               FStarC_TypeChecker_Env.subtype_nosmt_force =
-                 (uu___.FStarC_TypeChecker_Env.subtype_nosmt_force);
-               FStarC_TypeChecker_Env.qtbl_name_and_index =
-                 (uu___.FStarC_TypeChecker_Env.qtbl_name_and_index);
-               FStarC_TypeChecker_Env.normalized_eff_names =
-                 (uu___.FStarC_TypeChecker_Env.normalized_eff_names);
-               FStarC_TypeChecker_Env.fv_delta_depths =
-                 (uu___.FStarC_TypeChecker_Env.fv_delta_depths);
-               FStarC_TypeChecker_Env.proof_ns =
-                 (uu___.FStarC_TypeChecker_Env.proof_ns);
-               FStarC_TypeChecker_Env.synth_hook =
-                 (uu___.FStarC_TypeChecker_Env.synth_hook);
-               FStarC_TypeChecker_Env.try_solve_implicits_hook =
-                 (uu___.FStarC_TypeChecker_Env.try_solve_implicits_hook);
-               FStarC_TypeChecker_Env.splice =
-                 (uu___.FStarC_TypeChecker_Env.splice);
-               FStarC_TypeChecker_Env.mpreprocess =
-                 (uu___.FStarC_TypeChecker_Env.mpreprocess);
-               FStarC_TypeChecker_Env.postprocess =
-                 (uu___.FStarC_TypeChecker_Env.postprocess);
-               FStarC_TypeChecker_Env.identifier_info =
-                 (uu___.FStarC_TypeChecker_Env.identifier_info);
-               FStarC_TypeChecker_Env.tc_hooks =
-                 (uu___.FStarC_TypeChecker_Env.tc_hooks);
-               FStarC_TypeChecker_Env.dsenv =
-                 (uu___.FStarC_TypeChecker_Env.dsenv);
-               FStarC_TypeChecker_Env.nbe =
-                 (uu___.FStarC_TypeChecker_Env.nbe);
-               FStarC_TypeChecker_Env.strict_args_tab =
-                 (uu___.FStarC_TypeChecker_Env.strict_args_tab);
-               FStarC_TypeChecker_Env.erasable_types_tab =
-                 (uu___.FStarC_TypeChecker_Env.erasable_types_tab);
-               FStarC_TypeChecker_Env.enable_defer_to_tac =
-                 (uu___.FStarC_TypeChecker_Env.enable_defer_to_tac);
-               FStarC_TypeChecker_Env.unif_allow_ref_guards =
-                 (uu___.FStarC_TypeChecker_Env.unif_allow_ref_guards);
-               FStarC_TypeChecker_Env.erase_erasable_args =
-                 (uu___.FStarC_TypeChecker_Env.erase_erasable_args);
-               FStarC_TypeChecker_Env.core_check =
-                 (uu___.FStarC_TypeChecker_Env.core_check);
-               FStarC_TypeChecker_Env.missing_decl =
-                 (uu___.FStarC_TypeChecker_Env.missing_decl)
-             });
-          FStarC_Interactive_Ide_Types.repl_stdin =
-            (st1.FStarC_Interactive_Ide_Types.repl_stdin);
-          FStarC_Interactive_Ide_Types.repl_names =
-            (st1.FStarC_Interactive_Ide_Types.repl_names);
-          FStarC_Interactive_Ide_Types.repl_buffered_input_queries =
-            (st1.FStarC_Interactive_Ide_Types.repl_buffered_input_queries);
-          FStarC_Interactive_Ide_Types.repl_lang =
-            (st1.FStarC_Interactive_Ide_Types.repl_lang)
-        } in
+      let set_flychecking_flag st1 =
+        fun flag ->
+          {
+            FStarC_Interactive_Ide_Types.repl_line =
+              (st1.FStarC_Interactive_Ide_Types.repl_line);
+            FStarC_Interactive_Ide_Types.repl_column =
+              (st1.FStarC_Interactive_Ide_Types.repl_column);
+            FStarC_Interactive_Ide_Types.repl_fname =
+              (st1.FStarC_Interactive_Ide_Types.repl_fname);
+            FStarC_Interactive_Ide_Types.repl_deps_stack =
+              (st1.FStarC_Interactive_Ide_Types.repl_deps_stack);
+            FStarC_Interactive_Ide_Types.repl_curmod =
+              (st1.FStarC_Interactive_Ide_Types.repl_curmod);
+            FStarC_Interactive_Ide_Types.repl_env =
+              (let uu___ = st1.FStarC_Interactive_Ide_Types.repl_env in
+               {
+                 FStarC_TypeChecker_Env.solver =
+                   (uu___.FStarC_TypeChecker_Env.solver);
+                 FStarC_TypeChecker_Env.range =
+                   (uu___.FStarC_TypeChecker_Env.range);
+                 FStarC_TypeChecker_Env.curmodule =
+                   (uu___.FStarC_TypeChecker_Env.curmodule);
+                 FStarC_TypeChecker_Env.gamma =
+                   (uu___.FStarC_TypeChecker_Env.gamma);
+                 FStarC_TypeChecker_Env.gamma_sig =
+                   (uu___.FStarC_TypeChecker_Env.gamma_sig);
+                 FStarC_TypeChecker_Env.gamma_cache =
+                   (uu___.FStarC_TypeChecker_Env.gamma_cache);
+                 FStarC_TypeChecker_Env.modules =
+                   (uu___.FStarC_TypeChecker_Env.modules);
+                 FStarC_TypeChecker_Env.expected_typ =
+                   (uu___.FStarC_TypeChecker_Env.expected_typ);
+                 FStarC_TypeChecker_Env.sigtab =
+                   (uu___.FStarC_TypeChecker_Env.sigtab);
+                 FStarC_TypeChecker_Env.attrtab =
+                   (uu___.FStarC_TypeChecker_Env.attrtab);
+                 FStarC_TypeChecker_Env.instantiate_imp =
+                   (uu___.FStarC_TypeChecker_Env.instantiate_imp);
+                 FStarC_TypeChecker_Env.effects =
+                   (uu___.FStarC_TypeChecker_Env.effects);
+                 FStarC_TypeChecker_Env.generalize =
+                   (uu___.FStarC_TypeChecker_Env.generalize);
+                 FStarC_TypeChecker_Env.letrecs =
+                   (uu___.FStarC_TypeChecker_Env.letrecs);
+                 FStarC_TypeChecker_Env.top_level =
+                   (uu___.FStarC_TypeChecker_Env.top_level);
+                 FStarC_TypeChecker_Env.check_uvars =
+                   (uu___.FStarC_TypeChecker_Env.check_uvars);
+                 FStarC_TypeChecker_Env.use_eq_strict =
+                   (uu___.FStarC_TypeChecker_Env.use_eq_strict);
+                 FStarC_TypeChecker_Env.is_iface =
+                   (uu___.FStarC_TypeChecker_Env.is_iface);
+                 FStarC_TypeChecker_Env.admit =
+                   (uu___.FStarC_TypeChecker_Env.admit);
+                 FStarC_TypeChecker_Env.lax_universes =
+                   (uu___.FStarC_TypeChecker_Env.lax_universes);
+                 FStarC_TypeChecker_Env.phase1 =
+                   (uu___.FStarC_TypeChecker_Env.phase1);
+                 FStarC_TypeChecker_Env.failhard =
+                   (uu___.FStarC_TypeChecker_Env.failhard);
+                 FStarC_TypeChecker_Env.flychecking = flag;
+                 FStarC_TypeChecker_Env.uvar_subtyping =
+                   (uu___.FStarC_TypeChecker_Env.uvar_subtyping);
+                 FStarC_TypeChecker_Env.intactics =
+                   (uu___.FStarC_TypeChecker_Env.intactics);
+                 FStarC_TypeChecker_Env.nocoerce =
+                   (uu___.FStarC_TypeChecker_Env.nocoerce);
+                 FStarC_TypeChecker_Env.tc_term =
+                   (uu___.FStarC_TypeChecker_Env.tc_term);
+                 FStarC_TypeChecker_Env.typeof_tot_or_gtot_term =
+                   (uu___.FStarC_TypeChecker_Env.typeof_tot_or_gtot_term);
+                 FStarC_TypeChecker_Env.universe_of =
+                   (uu___.FStarC_TypeChecker_Env.universe_of);
+                 FStarC_TypeChecker_Env.typeof_well_typed_tot_or_gtot_term =
+                   (uu___.FStarC_TypeChecker_Env.typeof_well_typed_tot_or_gtot_term);
+                 FStarC_TypeChecker_Env.teq_nosmt_force =
+                   (uu___.FStarC_TypeChecker_Env.teq_nosmt_force);
+                 FStarC_TypeChecker_Env.subtype_nosmt_force =
+                   (uu___.FStarC_TypeChecker_Env.subtype_nosmt_force);
+                 FStarC_TypeChecker_Env.qtbl_name_and_index =
+                   (uu___.FStarC_TypeChecker_Env.qtbl_name_and_index);
+                 FStarC_TypeChecker_Env.normalized_eff_names =
+                   (uu___.FStarC_TypeChecker_Env.normalized_eff_names);
+                 FStarC_TypeChecker_Env.fv_delta_depths =
+                   (uu___.FStarC_TypeChecker_Env.fv_delta_depths);
+                 FStarC_TypeChecker_Env.proof_ns =
+                   (uu___.FStarC_TypeChecker_Env.proof_ns);
+                 FStarC_TypeChecker_Env.synth_hook =
+                   (uu___.FStarC_TypeChecker_Env.synth_hook);
+                 FStarC_TypeChecker_Env.try_solve_implicits_hook =
+                   (uu___.FStarC_TypeChecker_Env.try_solve_implicits_hook);
+                 FStarC_TypeChecker_Env.splice =
+                   (uu___.FStarC_TypeChecker_Env.splice);
+                 FStarC_TypeChecker_Env.mpreprocess =
+                   (uu___.FStarC_TypeChecker_Env.mpreprocess);
+                 FStarC_TypeChecker_Env.postprocess =
+                   (uu___.FStarC_TypeChecker_Env.postprocess);
+                 FStarC_TypeChecker_Env.identifier_info =
+                   (uu___.FStarC_TypeChecker_Env.identifier_info);
+                 FStarC_TypeChecker_Env.tc_hooks =
+                   (uu___.FStarC_TypeChecker_Env.tc_hooks);
+                 FStarC_TypeChecker_Env.dsenv =
+                   (uu___.FStarC_TypeChecker_Env.dsenv);
+                 FStarC_TypeChecker_Env.nbe =
+                   (uu___.FStarC_TypeChecker_Env.nbe);
+                 FStarC_TypeChecker_Env.strict_args_tab =
+                   (uu___.FStarC_TypeChecker_Env.strict_args_tab);
+                 FStarC_TypeChecker_Env.erasable_types_tab =
+                   (uu___.FStarC_TypeChecker_Env.erasable_types_tab);
+                 FStarC_TypeChecker_Env.enable_defer_to_tac =
+                   (uu___.FStarC_TypeChecker_Env.enable_defer_to_tac);
+                 FStarC_TypeChecker_Env.unif_allow_ref_guards =
+                   (uu___.FStarC_TypeChecker_Env.unif_allow_ref_guards);
+                 FStarC_TypeChecker_Env.erase_erasable_args =
+                   (uu___.FStarC_TypeChecker_Env.erase_erasable_args);
+                 FStarC_TypeChecker_Env.core_check =
+                   (uu___.FStarC_TypeChecker_Env.core_check);
+                 FStarC_TypeChecker_Env.missing_decl =
+                   (uu___.FStarC_TypeChecker_Env.missing_decl)
+               });
+            FStarC_Interactive_Ide_Types.repl_stdin =
+              (st1.FStarC_Interactive_Ide_Types.repl_stdin);
+            FStarC_Interactive_Ide_Types.repl_names =
+              (st1.FStarC_Interactive_Ide_Types.repl_names);
+            FStarC_Interactive_Ide_Types.repl_buffered_input_queries =
+              (st1.FStarC_Interactive_Ide_Types.repl_buffered_input_queries);
+            FStarC_Interactive_Ide_Types.repl_lang =
+              (st1.FStarC_Interactive_Ide_Types.repl_lang)
+          } in
       let uu___ = query in
       match uu___ with
       | { FStarC_Interactive_Ide_Types.push_kind = push_kind;
@@ -1855,7 +1871,7 @@ let (run_push_with_deps :
     fun query ->
       (let uu___1 = FStarC_Effect.op_Bang dbg in
        if uu___1
-       then FStarC_Util.print_string "Reloading dependencies"
+       then FStarC_Format.print_string "Reloading dependencies"
        else ());
       FStarC_TypeChecker_Env.toggle_id_info
         st.FStarC_Interactive_Ide_Types.repl_env false;
@@ -2290,7 +2306,7 @@ let run_with_parsed_and_tc_term :
           fun continuation ->
             let dummy_let_fragment term1 =
               let dummy_decl =
-                FStarC_Util.format1 "let __compute_dummy__ = (%s)" term1 in
+                FStarC_Format.fmt1 "let __compute_dummy__ = (%s)" term1 in
               {
                 FStarC_Parser_ParseIt.frag_fname = " input";
                 FStarC_Parser_ParseIt.frag_text = dummy_decl;
@@ -2331,14 +2347,17 @@ let run_with_parsed_and_tc_term :
                     FStarC_List.map FStar_Pervasives_Native.fst decls in
                   FStar_Pervasives_Native.Some uu___2
               | uu___1 -> FStar_Pervasives_Native.None in
-            let desugar env decls =
-              let uu___ =
-                let uu___1 = FStarC_ToSyntax_ToSyntax.decls_to_sigelts decls in
-                uu___1 env.FStarC_TypeChecker_Env.dsenv in
-              FStar_Pervasives_Native.fst uu___ in
-            let typecheck tcenv decls =
-              let uu___ = FStarC_TypeChecker_Tc.tc_decls tcenv decls in
-              match uu___ with | (ses, uu___1) -> ses in
+            let desugar env =
+              fun decls ->
+                let uu___ =
+                  let uu___1 =
+                    FStarC_ToSyntax_ToSyntax.decls_to_sigelts decls in
+                  uu___1 env.FStarC_TypeChecker_Env.dsenv in
+                FStar_Pervasives_Native.fst uu___ in
+            let typecheck tcenv =
+              fun decls ->
+                let uu___ = FStarC_TypeChecker_Tc.tc_decls tcenv decls in
+                match uu___ with | (ses, uu___1) -> ses in
             run_and_rewind st
               (FStarC_Interactive_Ide_Types.QueryNOK,
                 (FStarC_Json.JsonStr "Computation interrupted"))
@@ -2414,8 +2433,9 @@ let run_compute :
             FStarC_TypeChecker_Env.DontUnfoldAttr
               [FStarC_Parser_Const.tac_opaque_attr];
             FStarC_TypeChecker_Env.Primops] in
-        let normalize_term tcenv rules2 t =
-          FStarC_TypeChecker_Normalize.normalize rules2 tcenv t in
+        let normalize_term tcenv =
+          fun rules2 ->
+            fun t -> FStarC_TypeChecker_Normalize.normalize rules2 tcenv t in
         run_with_parsed_and_tc_term st term Prims.int_zero Prims.int_zero
           (fun tcenv ->
              fun def ->
@@ -2554,19 +2574,20 @@ let run_search :
   fun st ->
     fun search_str ->
       let tcenv = st.FStarC_Interactive_Ide_Types.repl_env in
-      let st_matches candidate term =
-        let found =
-          match term.st_term with
-          | NameContainsStr str ->
-              let uu___ = FStarC_Ident.string_of_lid candidate.sc_lid in
-              FStarC_Util.contains uu___ str
-          | TypeContainsLid lid ->
-              let uu___ = sc_fvars tcenv candidate in
-              FStarC_Class_Setlike.mem ()
-                (Obj.magic
-                   (FStarC_RBSet.setlike_rbset FStarC_Syntax_Syntax.ord_fv))
-                lid (Obj.magic uu___) in
-        found <> term.st_negate in
+      let st_matches candidate =
+        fun term ->
+          let found =
+            match term.st_term with
+            | NameContainsStr str ->
+                let uu___ = FStarC_Ident.string_of_lid candidate.sc_lid in
+                FStarC_Util.contains uu___ str
+            | TypeContainsLid lid ->
+                let uu___ = sc_fvars tcenv candidate in
+                FStarC_Class_Setlike.mem ()
+                  (Obj.magic
+                     (FStarC_RBSet.setlike_rbset FStarC_Syntax_Syntax.ord_fv))
+                  lid (Obj.magic uu___) in
+          found <> term.st_negate in
       let parse search_str1 =
         let parse_one term =
           let negate = FStarC_Util.starts_with term "-" in
@@ -2587,7 +2608,7 @@ let run_search :
             then
               let uu___ =
                 let uu___1 =
-                  FStarC_Util.format1 "Improperly quoted search term: %s"
+                  FStarC_Format.fmt1 "Improperly quoted search term: %s"
                     term1 in
                 InvalidSearch uu___1 in
               FStarC_Effect.raise uu___
@@ -2604,22 +2625,22 @@ let run_search :
                  | FStar_Pervasives_Native.None ->
                      let uu___3 =
                        let uu___4 =
-                         FStarC_Util.format1 "Unknown identifier: %s" term1 in
+                         FStarC_Format.fmt1 "Unknown identifier: %s" term1 in
                        InvalidSearch uu___4 in
                      FStarC_Effect.raise uu___3
                  | FStar_Pervasives_Native.Some lid1 -> TypeContainsLid lid1) in
           { st_negate = negate; st_term = parsed } in
         let terms =
           FStarC_List.map parse_one (FStarC_Util.split search_str1 " ") in
-        let cmp x y = (st_cost x.st_term) - (st_cost y.st_term) in
+        let cmp x = fun y -> (st_cost x.st_term) - (st_cost y.st_term) in
         FStarC_Util.sort_with cmp terms in
       let pprint_one term =
         let uu___ =
           match term.st_term with
-          | NameContainsStr s -> FStarC_Util.format1 "\"%s\"" s
+          | NameContainsStr s -> FStarC_Format.fmt1 "\"%s\"" s
           | TypeContainsLid l ->
               let uu___1 = FStarC_Ident.string_of_lid l in
-              FStarC_Util.format1 "%s" uu___1 in
+              FStarC_Format.fmt1 "%s" uu___1 in
         Prims.strcat (if term.st_negate then "-" else "") uu___ in
       let results =
         try
@@ -2631,10 +2652,11 @@ let run_search :
                  let all_candidates = FStarC_List.map sc_of_lid all_lidents in
                  let matches_all candidate =
                    FStarC_List.for_all (st_matches candidate) terms in
-                 let cmp r1 r2 =
-                   let uu___1 = FStarC_Ident.string_of_lid r1.sc_lid in
-                   let uu___2 = FStarC_Ident.string_of_lid r2.sc_lid in
-                   FStarC_Util.compare uu___1 uu___2 in
+                 let cmp r1 =
+                   fun r2 ->
+                     let uu___1 = FStarC_Ident.string_of_lid r1.sc_lid in
+                     let uu___2 = FStarC_Ident.string_of_lid r2.sc_lid in
+                     FStarC_Util.compare uu___1 uu___2 in
                  let results1 = FStarC_List.filter matches_all all_candidates in
                  let sorted = FStarC_Util.sort_with cmp results1 in
                  let js =
@@ -2646,7 +2668,7 @@ let run_search :
                         FStarC_Util.concat_l " " uu___1 in
                       let uu___1 =
                         let uu___2 =
-                          FStarC_Util.format1
+                          FStarC_Format.fmt1
                             "No results found for query [%s]" kwds in
                         InvalidSearch uu___2 in
                       FStarC_Effect.raise uu___1
@@ -2715,7 +2737,7 @@ let (maybe_cancel_queries :
           FStarC_List.iter
             (fun q ->
                let uu___1 = FStarC_Interactive_Ide_Types.query_to_string q in
-               FStarC_Util.print1 "Cancelling query: %s\n" uu___1) l1
+               FStarC_Format.print1 "Cancelling query: %s\n" uu___1) l1
         else () in
       match st.FStarC_Interactive_Ide_Types.repl_buffered_input_queries with
       | {
@@ -2747,14 +2769,15 @@ let (maybe_cancel_queries :
           (match p with
            | FStar_Pervasives_Native.None -> (log_cancellation l; ([], st1))
            | FStar_Pervasives_Native.Some p1 ->
-               let query_ahead_of p2 q =
-                 let uu___1 = p2 in
-                 match uu___1 with
-                 | (uu___2, l1, c) ->
-                     (match q.FStarC_Interactive_Ide_Types.qq with
-                      | FStarC_Interactive_Ide_Types.Push pq ->
-                          pq.FStarC_Interactive_Ide_Types.push_line >= l1
-                      | uu___3 -> false) in
+               let query_ahead_of p2 =
+                 fun q ->
+                   let uu___1 = p2 in
+                   match uu___1 with
+                   | (uu___2, l1, c) ->
+                       (match q.FStarC_Interactive_Ide_Types.qq with
+                        | FStarC_Interactive_Ide_Types.Push pq ->
+                            pq.FStarC_Interactive_Ide_Types.push_line >= l1
+                        | uu___3 -> false) in
                let l1 =
                  let uu___1 = FStarC_Util.prefix_until (query_ahead_of p1) l in
                  match uu___1 with
@@ -2910,7 +2933,7 @@ and (validate_and_run_query :
        if uu___2
        then
          let uu___3 = FStarC_Interactive_Ide_Types.query_to_string query1 in
-         FStarC_Util.print2 "Running query %s: %s\n"
+         FStarC_Format.print2 "Running query %s: %s\n"
            query1.FStarC_Interactive_Ide_Types.qid uu___3
        else ());
       run_query st query1
@@ -2965,7 +2988,6 @@ let (js_repl_init_opts : unit -> unit) =
         (match res with
          | FStarC_Getopt.Error (msg, uu___2) ->
              failwith (Prims.strcat "repl_init: " msg)
-         | FStarC_Getopt.Help -> failwith "repl_init: --help unexpected"
          | FStarC_Getopt.Success ->
              (match fnames with
               | [] ->
@@ -2990,51 +3012,18 @@ let rec (go : FStarC_Interactive_Ide_Types.repl_state -> Prims.int) =
                | FStar_Pervasives.Inl st' -> go st'
                | FStar_Pervasives.Inr exitcode -> exitcode)))
 let (interactive_error_handler : FStarC_Errors.error_handler) =
-  let issues = FStarC_Effect.mk_ref [] in
-  let add_one e =
-    let e1 =
-      let uu___ = FStarC_Errors.fixup_issue_range e.FStarC_Errors.issue_range in
-      {
-        FStarC_Errors.issue_msg = (e.FStarC_Errors.issue_msg);
-        FStarC_Errors.issue_level = (e.FStarC_Errors.issue_level);
-        FStarC_Errors.issue_range = uu___;
-        FStarC_Errors.issue_number = (e.FStarC_Errors.issue_number);
-        FStarC_Errors.issue_ctx = (e.FStarC_Errors.issue_ctx)
-      } in
-    let uu___ = let uu___1 = FStarC_Effect.op_Bang issues in e1 :: uu___1 in
-    FStarC_Effect.op_Colon_Equals issues uu___ in
-  let count_errors uu___ =
-    let issues1 =
-      let uu___1 = FStarC_Effect.op_Bang issues in
-      FStarC_Util.remove_dups (fun i0 -> fun i1 -> i0 = i1) uu___1 in
-    let uu___1 =
-      FStarC_List.filter
-        (fun e -> e.FStarC_Errors.issue_level = FStarC_Errors.EError) issues1 in
-    FStarC_List.length uu___1 in
-  let report uu___ =
-    let uu___1 =
-      let uu___2 = FStarC_Effect.op_Bang issues in
-      FStarC_Util.remove_dups (fun i0 -> fun i1 -> i0 = i1) uu___2 in
-    FStarC_List.sortWith FStarC_Errors.compare_issues uu___1 in
-  let clear uu___ = FStarC_Effect.op_Colon_Equals issues [] in
-  {
-    FStarC_Errors.eh_name = "interactive error handler";
-    FStarC_Errors.eh_add_one = add_one;
-    FStarC_Errors.eh_count_errors = count_errors;
-    FStarC_Errors.eh_report = report;
-    FStarC_Errors.eh_clear = clear
-  }
-let (interactive_printer : (FStarC_Json.json -> unit) -> FStarC_Util.printer)
-  =
+  FStarC_Errors.mk_catch_handler ()
+let (interactive_printer :
+  (FStarC_Json.json -> unit) -> FStarC_Format.printer) =
   fun printer ->
     {
-      FStarC_Util.printer_prinfo =
+      FStarC_Format.printer_prinfo =
         (fun s -> forward_message printer "info" (FStarC_Json.JsonStr s));
-      FStarC_Util.printer_prwarning =
+      FStarC_Format.printer_prwarning =
         (fun s -> forward_message printer "warning" (FStarC_Json.JsonStr s));
-      FStarC_Util.printer_prerror =
+      FStarC_Format.printer_prerror =
         (fun s -> forward_message printer "error" (FStarC_Json.JsonStr s));
-      FStarC_Util.printer_prgeneric =
+      FStarC_Format.printer_prgeneric =
         (fun label ->
            fun get_string ->
              fun get_json ->
@@ -3042,7 +3031,7 @@ let (interactive_printer : (FStarC_Json.json -> unit) -> FStarC_Util.printer)
     }
 let (install_ide_mode_hooks : (FStarC_Json.json -> unit) -> unit) =
   fun printer ->
-    FStarC_Util.set_printer (interactive_printer printer);
+    FStarC_Format.set_printer (interactive_printer printer);
     FStarC_Errors.set_handler interactive_error_handler
 let (build_initial_repl_state :
   Prims.string -> FStarC_Interactive_Ide_Types.repl_state) =
@@ -3081,7 +3070,8 @@ let (interactive_mode : Prims.string -> unit) =
     install_ide_mode_hooks FStarC_Interactive_JsonHelper.write_json;
     FStarC_Util.set_sigint_handler FStarC_Util.sigint_ignore;
     (let uu___3 =
-       let uu___4 = FStarC_Options.codegen () in FStarC_Option.isSome uu___4 in
+       let uu___4 = FStarC_Options.codegen () in
+       FStar_Pervasives_Native.uu___is_Some uu___4 in
      if uu___3
      then
        FStarC_Errors.log_issue0 FStarC_Errors_Codes.Warning_IDEIgnoreCodeGen

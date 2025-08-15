@@ -21,7 +21,6 @@ module FStarC.Interactive.PushHelper
 open FStarC
 open FStarC.Effect
 open FStarC.List
-open FStarC.Util
 open FStarC.Ident
 open FStarC.Errors
 open FStarC.Universal
@@ -44,7 +43,7 @@ let set_check_kind env check_kind =
 
 (** Build a list of dependency loading tasks from a list of dependencies **)
 let repl_ld_tasks_of_deps (deps: list string) (final_tasks: list repl_task) =
-  let wrap fname = { tf_fname = fname; tf_modtime = U.get_time_of_day () } in
+  let wrap fname = { tf_fname = fname; tf_modtime = Time.get_time_of_day () } in
   let rec aux (deps:list string) (final_tasks:list repl_task)
     : list repl_task =
     match deps with
@@ -79,17 +78,17 @@ let deps_and_repl_ld_tasks_of_our_file filename
     match same_name with
     | [intf; impl] ->
       if not (Parser.Dep.is_interface intf) then
-         raise_error0 Errors.Fatal_MissingInterface (U.format1 "Expecting an interface, got %s" intf);
+         raise_error0 Errors.Fatal_MissingInterface (Format.fmt1 "Expecting an interface, got %s" intf);
       if not (Parser.Dep.is_implementation impl) then
          raise_error0 Errors.Fatal_MissingImplementation
-           (U.format1 "Expecting an implementation, got %s" impl);
-      [LDInterfaceOfCurrentFile ({ tf_fname = intf; tf_modtime = U.get_time_of_day () }) ]
+           (Format.fmt1 "Expecting an implementation, got %s" impl);
+      [LDInterfaceOfCurrentFile ({ tf_fname = intf; tf_modtime = Time.get_time_of_day () }) ]
     | [impl] ->
       []
     | _ ->
       let mods_str = String.concat " " same_name in
       let message = "Too many or too few files matching %s: %s" in
-      raise_error0 Errors.Fatal_TooManyOrTooFewFileMatch (U.format message [our_mod_name; mods_str]);
+      raise_error0 Errors.Fatal_TooManyOrTooFewFileMatch (Format.fmt message [our_mod_name; mods_str]);
       [] in
 
   let tasks =
@@ -276,12 +275,12 @@ let repl_tx st push_kind task =
   | Failure (msg) ->
     Some (js_diag st.repl_fname msg None), st
   | U.SigInt ->
-    U.print_error "[E] Interrupt"; None, st
+    Format.print_error "[E] Interrupt"; None, st
   | Error (e, msg, r, _ctx) -> // TODO: display the error context somehow
     // FIXME, or is it OK to render?
     Some (js_diag st.repl_fname (Errors.rendermsg msg) (Some r)), st
   | Stop ->
-    U.print_error "[E] Stop"; None, st
+    Format.print_error "[E] Stop"; None, st
 
 // Little helper
 let tf_of_fname fname =
@@ -327,7 +326,7 @@ let repl_ldtx (st: repl_state) (tasks: list repl_task) : either_replst =
     | task :: tasks, [] ->
       let timestamped_task = update_task_timestamps task in
       let diag, st = repl_tx st LaxCheck timestamped_task in
-      if not (U.is_some diag) then aux ({ st with repl_deps_stack = !repl_stack }) tasks []
+      if None? diag then aux ({ st with repl_deps_stack = !repl_stack }) tasks []
       else Inr st
 
     // We've already run ``task`` previously, and no update is needed: skip.
@@ -351,8 +350,8 @@ let ld_deps st =
     | Inr st -> Inr st
     | Inl st -> Inl (st, deps)
   with
-  | Error (e, msg, _rng, ctx) -> U.print1_error "[E] Failed to load deps. %s" (Errors.rendermsg msg); Inr st
-  | exn -> U.print1_error "[E] Failed to load deps. Message: %s" (message_of_exn exn); Inr st
+  | Error (e, msg, _rng, ctx) -> Format.print1_error "[E] Failed to load deps. %s" (Errors.rendermsg msg); Inr st
+  | exn -> Format.print1_error "[E] Failed to load deps. Message: %s" (Util.message_of_exn exn); Inr st
 
 let add_module_completions this_fname deps table =
   let open FStarC.PSMap in

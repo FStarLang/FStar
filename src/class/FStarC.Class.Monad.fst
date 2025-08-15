@@ -5,12 +5,18 @@ open FStarC.Effect
 
 instance monad_option : monad option = {
   return = (fun x -> Some x); // FIXME: without the we gell ill-typed ML
-  ( let! ) = Util.bind_opt;
+  bind   = Option.bind;
 }
+
+(* Aliases. Need to declare a very precise type for them. *)
+(* FIXME: Having to repeat these here in the fst is due to bad interleaving
+   in --MLish mode. *)
+let ( let! ) : #m:(Type -> Type) -> {| monad m |} -> #a:Type -> #b:Type -> m a -> (a -> m b) -> m b = bind
+let ( >>=  ) : #m:(Type -> Type) -> {| monad m |} -> #a:Type -> #b:Type -> m a -> (a -> m b) -> m b = bind
 
 instance monad_list : monad list = {
   return = (fun x -> [x]);
-  ( let! ) = (fun x f -> List.concatMap f x)
+  bind   = (fun x f -> List.concatMap f x)
 }
 
 let rec mapM f l =

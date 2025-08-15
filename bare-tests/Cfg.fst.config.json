@@ -1,0 +1,9 @@
+{
+  "fstar_exe": "../stage1/dune/_build/default/fstarc-bare/fstarc1_bare.exe",
+  "options": [
+    "--no_prelude"
+  ],
+  "include_dirs": [
+    "../ulib"
+  ]
+}

@@ -5,7 +5,7 @@ open CanonCommSemiring
 open FStar.Tactics.V2
 open FStar.Mul
 
-#set-options "--max_fuel 0 --max_ifuel 0 --z3rlimit 10 --tactics_info"
+#set-options "--fuel 0 --ifuel 0 --z3rlimit 10 --tactics_info"
 
 ///
 ///  Ring of integers

@@ -1,6 +1,5 @@
 module FStarC.Class.Binders
 
-open FStarC.Util
 open FStarC.FlatSet
 open FStarC.Syntax.Syntax
 

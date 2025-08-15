@@ -24,7 +24,7 @@ module Math=FStar.Math.Lemmas
 #set-options "--smtencoding.l_arith_repr native"
 #set-options "--smtencoding.nl_arith_repr wrapped"
 #set-options "--z3rlimit_factor 4" //just being conservative
-#set-options "--initial_fuel 1 --max_fuel 1"
+#set-options "--fuel 1"
 
 noeq
 type buffer_view (src:Type0) (rrel rel:B.srel src) (dest:Type u#b) : Type u#b =
@@ -194,7 +194,7 @@ let as_seq #b h vb =
   as_seq'_len es v;
   bs
 
-#push-options "--max_ifuel 0"
+#push-options "--ifuel 0"
 val sel'_tail (#a #b:_) (v:view a b) (es:Seq.seq a{Seq.length es > 0})
               (i:nat{View?.n v <= i /\ i < Seq.length es * View?.n v})
   : Lemma (let j = i - View?.n v in

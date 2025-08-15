@@ -55,18 +55,10 @@ let (cmp : real -> real -> FStarC_Order.order FStar_Pervasives_Native.option)
           let uu___1 = zeropad_match f1 f2 in
           (match uu___1 with
            | (f11, f21) ->
-               let i11 =
-                 let uu___2 = FStarC_BigInt.big_int_of_string i1 in
-                 FStarC_BigInt.to_int_fs uu___2 in
-               let i21 =
-                 let uu___2 = FStarC_BigInt.big_int_of_string i2 in
-                 FStarC_BigInt.to_int_fs uu___2 in
-               let f12 =
-                 let uu___2 = FStarC_BigInt.big_int_of_string f11 in
-                 FStarC_BigInt.to_int_fs uu___2 in
-               let f22 =
-                 let uu___2 = FStarC_BigInt.big_int_of_string f21 in
-                 FStarC_BigInt.to_int_fs uu___2 in
+               let i11 = FStarC_Util.int_of_string i1 in
+               let i21 = FStarC_Util.int_of_string i2 in
+               let f12 = FStarC_Util.int_of_string f11 in
+               let f22 = FStarC_Util.int_of_string f21 in
                let uu___2 =
                  FStarC_Class_Ord.cmp
                    (FStarC_Class_Ord.ord_tuple2 FStarC_Class_Ord.ord_int

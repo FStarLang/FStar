@@ -24,7 +24,6 @@ open FStar.Char
 include FStarC.Syntax.Embeddings.Base
 
 module Range = FStarC.Range.Type
-module Z = FStarC.BigInt
 
 (* Embeddings, both ways and containing type information *)
 val e_any         : embedding term
@@ -34,8 +33,7 @@ val e_any         : embedding term
 instance val e_unit        : embedding unit
 instance val e_bool        : embedding bool
 instance val e_char        : embedding char
-instance val e_int         : embedding Z.t
-instance val e_fsint       : embedding int
+instance val e_int         : embedding int
 instance val e_string      : embedding string
 instance val e_real        : embedding Real.real
 instance val e_norm_step   : embedding NormSteps.norm_step

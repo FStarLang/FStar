@@ -18,7 +18,6 @@ module FStarC.Extraction.ML.Util
 open FStarC
 open FStarC.Effect
 open FStarC.List
-open FStarC.Util
 open FStarC.Syntax
 open FStarC.Syntax.Syntax
 open FStarC.Syntax.Print {}
@@ -68,11 +67,11 @@ let mlconst_of_const' (sctt : sconst) =
 
 let mlconst_of_const (p:Range.t) (c:sconst) =
     try mlconst_of_const' c
-    with _ -> failwith (BU.format2 "(%s) Failed to translate constant %s " (Range.string_of_range p) (show c))
+    with _ -> failwith (Format.fmt2 "(%s) Failed to translate constant %s " (Range.string_of_range p) (show c))
 
 let mlexpr_of_range (r:Range.t) : mlexpr' =
     let cint (i : int) : mlexpr =
-        MLC_Int (string_of_int i, None) |> MLE_Const |> with_ty ml_int_ty
+        MLC_Int (show i, None) |> MLE_Const |> with_ty ml_int_ty
     in
     let cstr (s : string) : mlexpr =
         MLC_String s |> MLE_Const |> with_ty ml_string_ty
@@ -106,7 +105,7 @@ let mlexpr_of_const (p:Range.t) (c:sconst) : mlexpr' =
 
 let rec subst_aux (subst:list (mlident & mlty)) (t:mlty)  : mlty =
     match t with
-    | MLTY_Var  x -> (match BU.find_opt (fun (y, _) -> y=x) subst with
+    | MLTY_Var  x -> (match Option.find (fun (y, _) -> y=x) subst with
                      | Some ts -> snd ts
                      | None -> t) // TODO : previously, this case would abort. why? this case was encountered while extracting st3.fst
     | MLTY_Fun (t1, f, t2) -> MLTY_Fun(subst_aux subst t1, f, subst_aux subst t2)
@@ -134,10 +133,10 @@ let udelta_unfold (g:UEnv.uenv) = function
           begin
             match try_subst ts args with
             | None ->
-              failwith (BU.format3 "Substitution must be fully applied; got an application of %s with %s args whereas %s were expected (see GitHub issue #490)"
+              failwith (Format.fmt3 "Substitution must be fully applied; got an application of %s with %s args whereas %s were expected (see GitHub issue #490)"
                                                  (string_of_mlpath n)
-                                                 (BU.string_of_int (List.length args))
-                                                 (BU.string_of_int (List.length (fst ts))))
+                                                 (show (List.length args))
+                                                 (show (List.length (fst ts))))
             | Some r -> Some r
           end
         | _ -> None
@@ -163,7 +162,7 @@ let join r f f' = match f, f' with
     | E_PURE  , E_ERASABLE  -> E_ERASABLE
     | E_ERASABLE , E_PURE   -> E_ERASABLE
     | E_PURE  , E_PURE   -> E_PURE
-    | _ -> failwith (BU.format3 "Impossible (%s): Inconsistent effects %s and %s"
+    | _ -> failwith (Format.fmt3 "Impossible (%s): Inconsistent effects %s and %s"
                             (Range.string_of_range r)
                             (eff_to_string f) (eff_to_string f'))
 

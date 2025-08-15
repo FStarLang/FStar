@@ -2,13 +2,12 @@
   - AQualMismatch.f is declared but no definition was found
   - Add an 'assume' if this is intentional
 
->> Got issues: [
-* Error 91 at AQualMismatch.fst(6,7-6,8):
+* Info at AQualMismatch.fst(6,7-6,8):
+  - Expected failure:
   - Inconsistent implicit argument annotation on argument x
   - Got: '#'
   - Expected: ''
 
->>]
 * Warning 240 at AQualMismatch.fst(6,0-6,12):
   - Missing definitions in module AQualMismatch: f
 

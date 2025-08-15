@@ -332,7 +332,6 @@ val r_while_terminates'
   (ensures (
     terminates_on (reify_computation (while b' c')) s0'
   ))
-  (decreases fuel)
 
 let flip (phi: gexp bool) : Tot (gexp bool) =
   let g s1 s2 = phi s2 s1 in
@@ -380,7 +379,6 @@ val r_while_correct
   (ensures (
     holds (interp (gand p (gnot (gor (exp_to_gexp b Left) (exp_to_gexp b' Right))))) (snd (reify_computation (while b c) fuel s0)) (snd (reify_computation (while b' c') fuel s0'))
   ))
-  (decreases fuel)
 
 val r_while
   (b b' : exp bool)

@@ -88,7 +88,6 @@ let (l_revert : unit -> (unit, unit) FStar_Tactics_Effect.tac_repr) =
                        (FStarC_Reflection_V2_Builtins.pack_fv
                           ["FStar";
                           "Tactics";
-                          "V1";
                           "Logic";
                           "Lemmas";
                           "revert_squash"]))))) uu___2)
@@ -157,12 +156,7 @@ let (forall_intro :
         (FStarC_Reflection_V2_Builtins.pack_ln
            (FStarC_Reflection_V2_Data.Tv_FVar
               (FStarC_Reflection_V2_Builtins.pack_fv
-                 ["FStar";
-                 "Tactics";
-                 "V1";
-                 "Logic";
-                 "Lemmas";
-                 "fa_intro_lem"]))) in
+                 ["FStar"; "Tactics"; "Logic"; "Lemmas"; "fa_intro_lem"]))) in
     FStar_Tactics_Effect.tac_bind
       (FStar_Sealed.seal
          (Obj.magic
@@ -200,12 +194,7 @@ let (forall_intro_as :
         (FStarC_Reflection_V2_Builtins.pack_ln
            (FStarC_Reflection_V2_Data.Tv_FVar
               (FStarC_Reflection_V2_Builtins.pack_fv
-                 ["FStar";
-                 "Tactics";
-                 "V1";
-                 "Logic";
-                 "Lemmas";
-                 "fa_intro_lem"]))) in
+                 ["FStar"; "Tactics"; "Logic"; "Lemmas"; "fa_intro_lem"]))) in
     FStar_Tactics_Effect.tac_bind
       (FStar_Sealed.seal
          (Obj.magic
@@ -264,12 +253,7 @@ let (split : unit -> (unit, unit) FStar_Tactics_Effect.tac_repr) =
                (FStarC_Reflection_V2_Builtins.pack_ln
                   (FStarC_Reflection_V2_Data.Tv_FVar
                      (FStarC_Reflection_V2_Builtins.pack_fv
-                        ["FStar";
-                        "Tactics";
-                        "V1";
-                        "Logic";
-                        "Lemmas";
-                        "split_lem"]))))
+                        ["FStar"; "Tactics"; "Logic"; "Lemmas"; "split_lem"]))))
       (fun uu___1 -> FStar_Tactics_V2_Derived.fail "Could not split goal")
 let _ =
   Fstarcompiler.FStarC_Tactics_Native.register_tactic
@@ -293,12 +277,7 @@ let (implies_intro :
         (FStarC_Reflection_V2_Builtins.pack_ln
            (FStarC_Reflection_V2_Data.Tv_FVar
               (FStarC_Reflection_V2_Builtins.pack_fv
-                 ["FStar";
-                 "Tactics";
-                 "V1";
-                 "Logic";
-                 "Lemmas";
-                 "imp_intro_lem"]))) in
+                 ["FStar"; "Tactics"; "Logic"; "Lemmas"; "imp_intro_lem"]))) in
     FStar_Tactics_Effect.tac_bind
       (FStar_Sealed.seal
          (Obj.magic
@@ -337,12 +316,7 @@ let (implies_intro_as :
         (FStarC_Reflection_V2_Builtins.pack_ln
            (FStarC_Reflection_V2_Data.Tv_FVar
               (FStarC_Reflection_V2_Builtins.pack_fv
-                 ["FStar";
-                 "Tactics";
-                 "V1";
-                 "Logic";
-                 "Lemmas";
-                 "imp_intro_lem"]))) in
+                 ["FStar"; "Tactics"; "Logic"; "Lemmas"; "imp_intro_lem"]))) in
     FStar_Tactics_Effect.tac_bind
       (FStar_Sealed.seal
          (Obj.magic
@@ -655,7 +629,6 @@ let (pose_lemma :
                                                                     (FStarC_Reflection_V2_Builtins.pack_fv
                                                                     ["FStar";
                                                                     "Tactics";
-                                                                    "V1";
                                                                     "Logic";
                                                                     "Lemmas";
                                                                     "__lemma_to_squash"]))),
@@ -742,7 +715,6 @@ let (pose_lemma :
                                                                     (FStarC_Reflection_V2_Builtins.pack_fv
                                                                     ["FStar";
                                                                     "Tactics";
-                                                                    "V1";
                                                                     "Logic";
                                                                     "Lemmas";
                                                                     "__lemma_to_squash"]))),
@@ -1450,7 +1422,7 @@ let (unsquash :
               FStarC_Reflection_V2_Builtins.pack_ln
                 (FStarC_Reflection_V2_Data.Tv_FVar
                    (FStarC_Reflection_V2_Builtins.pack_fv
-                      ["FStar"; "Tactics"; "V1"; "Logic"; "Lemmas"; "vbind"])))) in
+                      ["FStar"; "Tactics"; "Logic"; "Lemmas"; "vbind"])))) in
     FStar_Tactics_Effect.tac_bind
       (FStar_Sealed.seal
          (Obj.magic
@@ -1527,7 +1499,7 @@ let (cases_or :
          (FStarC_Reflection_V2_Builtins.pack_ln
             (FStarC_Reflection_V2_Data.Tv_FVar
                (FStarC_Reflection_V2_Builtins.pack_fv
-                  ["FStar"; "Tactics"; "V1"; "Logic"; "Lemmas"; "or_ind"])))
+                  ["FStar"; "Tactics"; "Logic"; "Lemmas"; "or_ind"]))) 
          [o])
 let _ =
   Fstarcompiler.FStarC_Tactics_Native.register_tactic
@@ -1552,12 +1524,7 @@ let (cases_bool :
               FStarC_Reflection_V2_Builtins.pack_ln
                 (FStarC_Reflection_V2_Data.Tv_FVar
                    (FStarC_Reflection_V2_Builtins.pack_fv
-                      ["FStar";
-                      "Tactics";
-                      "V1";
-                      "Logic";
-                      "Lemmas";
-                      "bool_ind"])))) in
+                      ["FStar"; "Tactics"; "Logic"; "Lemmas"; "bool_ind"])))) in
     FStar_Tactics_Effect.tac_bind
       (FStar_Sealed.seal
          (Obj.magic
@@ -1662,7 +1629,7 @@ let (left : unit -> (unit, unit) FStar_Tactics_Effect.tac_repr) =
       (FStarC_Reflection_V2_Builtins.pack_ln
          (FStarC_Reflection_V2_Data.Tv_FVar
             (FStarC_Reflection_V2_Builtins.pack_fv
-               ["FStar"; "Tactics"; "V1"; "Logic"; "Lemmas"; "or_intro_1"])))
+               ["FStar"; "Tactics"; "Logic"; "Lemmas"; "or_intro_1"])))
 let _ =
   Fstarcompiler.FStarC_Tactics_Native.register_tactic
     "FStar.Tactics.V2.Logic.left" (Prims.of_int (2))
@@ -1681,7 +1648,7 @@ let (right : unit -> (unit, unit) FStar_Tactics_Effect.tac_repr) =
       (FStarC_Reflection_V2_Builtins.pack_ln
          (FStarC_Reflection_V2_Data.Tv_FVar
             (FStarC_Reflection_V2_Builtins.pack_fv
-               ["FStar"; "Tactics"; "V1"; "Logic"; "Lemmas"; "or_intro_2"])))
+               ["FStar"; "Tactics"; "Logic"; "Lemmas"; "or_intro_2"])))
 let _ =
   Fstarcompiler.FStarC_Tactics_Native.register_tactic
     "FStar.Tactics.V2.Logic.right" (Prims.of_int (2))
@@ -1710,7 +1677,6 @@ let (and_elim :
                             (FStarC_Reflection_V2_Builtins.pack_fv
                                ["FStar";
                                "Tactics";
-                               "V1";
                                "Logic";
                                "Lemmas";
                                "__and_elim"]))),
@@ -1724,7 +1690,6 @@ let (and_elim :
                         (FStarC_Reflection_V2_Builtins.pack_fv
                            ["FStar";
                            "Tactics";
-                           "V1";
                            "Logic";
                            "Lemmas";
                            "__and_elim'"]))),
@@ -1822,7 +1787,7 @@ let (witness :
         (FStarC_Reflection_V2_Builtins.pack_ln
            (FStarC_Reflection_V2_Data.Tv_FVar
               (FStarC_Reflection_V2_Builtins.pack_fv
-                 ["FStar"; "Tactics"; "V1"; "Logic"; "Lemmas"; "__witness"]))) in
+                 ["FStar"; "Tactics"; "Logic"; "Lemmas"; "__witness"]))) in
     FStar_Tactics_Effect.tac_bind
       (FStar_Sealed.seal
          (Obj.magic
@@ -1863,7 +1828,6 @@ let (elim_exists :
                      (FStarC_Reflection_V2_Builtins.pack_fv
                         ["FStar";
                         "Tactics";
-                        "V1";
                         "Logic";
                         "Lemmas";
                         "__elim_exists'"]))),
@@ -1952,7 +1916,6 @@ let (instantiate :
                                      (FStarC_Reflection_V2_Builtins.pack_fv
                                         ["FStar";
                                         "Tactics";
-                                        "V1";
                                         "Logic";
                                         "Lemmas";
                                         "__forall_inst_sq"]))),
@@ -1973,7 +1936,6 @@ let (instantiate :
                                           (FStarC_Reflection_V2_Builtins.pack_fv
                                              ["FStar";
                                              "Tactics";
-                                             "V1";
                                              "Logic";
                                              "Lemmas";
                                              "__forall_inst"]))),
@@ -2061,7 +2023,6 @@ let rec (sk_binder' :
                                      (FStarC_Reflection_V2_Builtins.pack_fv
                                         ["FStar";
                                         "Tactics";
-                                        "V1";
                                         "Logic";
                                         "Lemmas";
                                         "sklem0"]))),
@@ -2306,119 +2267,6 @@ let _ =
                         Fstarcompiler.FStarC_Reflection_V2_Embeddings.e_binding)
                      Fstarcompiler.FStarC_Reflection_V2_Embeddings.e_binding))
                psc ncb us args)
-let (easy_fill : unit -> (unit, unit) FStar_Tactics_Effect.tac_repr) =
-  fun uu___ ->
-    let uu___1 =
-      FStar_Tactics_V2_Derived.repeat FStarC_Tactics_V2_Builtins.intro in
-    FStar_Tactics_Effect.tac_bind
-      (FStar_Sealed.seal
-         (Obj.magic
-            (FStar_Range.mk_range "FStar.Tactics.V2.Logic.fst"
-               (Prims.of_int (252)) (Prims.of_int (12)) (Prims.of_int (252))
-               (Prims.of_int (24)))))
-      (FStar_Sealed.seal
-         (Obj.magic
-            (FStar_Range.mk_range "FStar.Tactics.V2.Logic.fst"
-               (Prims.of_int (252)) (Prims.of_int (27)) (Prims.of_int (255))
-               (Prims.of_int (10))))) (Obj.magic uu___1)
-      (fun uu___2 ->
-         (fun uu___2 ->
-            let uu___3 =
-              FStar_Tactics_V2_Derived.trytac
-                (fun uu___4 ->
-                   let uu___5 =
-                     FStar_Tactics_V2_Derived.apply
-                       (FStarC_Reflection_V2_Builtins.pack_ln
-                          (FStarC_Reflection_V2_Data.Tv_FVar
-                             (FStarC_Reflection_V2_Builtins.pack_fv
-                                ["FStar";
-                                "Tactics";
-                                "V1";
-                                "Logic";
-                                "Lemmas";
-                                "lemma_from_squash"]))) in
-                   FStar_Tactics_Effect.tac_bind
-                     (FStar_Sealed.seal
-                        (Obj.magic
-                           (FStar_Range.mk_range "FStar.Tactics.V2.Logic.fst"
-                              (Prims.of_int (254)) (Prims.of_int (30))
-                              (Prims.of_int (254)) (Prims.of_int (56)))))
-                     (FStar_Sealed.seal
-                        (Obj.magic
-                           (FStar_Range.mk_range "FStar.Tactics.V2.Logic.fst"
-                              (Prims.of_int (254)) (Prims.of_int (58))
-                              (Prims.of_int (254)) (Prims.of_int (66)))))
-                     (Obj.magic uu___5)
-                     (fun uu___6 ->
-                        (fun uu___6 ->
-                           Obj.magic (FStarC_Tactics_V2_Builtins.intro ()))
-                          uu___6)) in
-            Obj.magic
-              (FStar_Tactics_Effect.tac_bind
-                 (FStar_Sealed.seal
-                    (Obj.magic
-                       (FStar_Range.mk_range "FStar.Tactics.V2.Logic.fst"
-                          (Prims.of_int (254)) (Prims.of_int (12))
-                          (Prims.of_int (254)) (Prims.of_int (67)))))
-                 (FStar_Sealed.seal
-                    (Obj.magic
-                       (FStar_Range.mk_range "FStar.Tactics.V2.Logic.fst"
-                          (Prims.of_int (255)) (Prims.of_int (4))
-                          (Prims.of_int (255)) (Prims.of_int (10)))))
-                 (Obj.magic uu___3)
-                 (fun uu___4 ->
-                    (fun uu___4 ->
-                       Obj.magic (FStar_Tactics_V2_Derived.smt ())) uu___4)))
-           uu___2)
-let _ =
-  Fstarcompiler.FStarC_Tactics_Native.register_tactic
-    "FStar.Tactics.V2.Logic.easy_fill" (Prims.of_int (2))
-    (fun psc ->
-       fun ncb ->
-         fun us ->
-           fun args ->
-             Fstarcompiler.FStarC_Tactics_InterpFuns.mk_tactic_interpretation_1
-               "FStar.Tactics.V2.Logic.easy_fill (plugin)"
-               (Fstarcompiler.FStarC_Tactics_Native.from_tactic_1 easy_fill)
-               Fstarcompiler.FStarC_Syntax_Embeddings.e_unit
-               Fstarcompiler.FStarC_Syntax_Embeddings.e_unit psc ncb us args)
-let easy : 'a . 'a -> 'a = fun x -> x
-let _ =
-  Fstarcompiler.FStarC_Tactics_Native.register_plugin
-    "FStar.Tactics.V2.Logic.easy" (Prims.of_int (2))
-    (fun _psc ->
-       fun cb ->
-         fun us ->
-           fun args ->
-             Fstarcompiler.FStarC_Syntax_Embeddings.debug_wrap
-               "FStar.Tactics.V2.Logic.easy"
-               (fun _ ->
-                  match args with
-                  | (tv_0, _)::args_tail ->
-                      (Fstarcompiler.FStarC_Syntax_Embeddings.arrow_as_prim_step_1
-                         (Fstarcompiler.FStarC_Syntax_Embeddings.mk_any_emb
-                            tv_0)
-                         (Fstarcompiler.FStarC_Syntax_Embeddings.mk_any_emb
-                            tv_0) easy
-                         (Fstarcompiler.FStarC_Ident.lid_of_str
-                            "FStar.Tactics.V2.Logic.easy") cb us) args_tail
-                  | _ -> failwith "arity mismatch"))
-    (fun cb ->
-       fun us ->
-         fun args ->
-           Fstarcompiler.FStarC_Syntax_Embeddings.debug_wrap
-             "FStar.Tactics.V2.Logic.easy"
-             (fun _ ->
-                match args with
-                | (tv_0, _)::args_tail ->
-                    (Fstarcompiler.FStarC_TypeChecker_NBETerm.arrow_as_prim_step_1
-                       (Fstarcompiler.FStarC_TypeChecker_NBETerm.mk_any_emb
-                          tv_0)
-                       (Fstarcompiler.FStarC_TypeChecker_NBETerm.mk_any_emb
-                          tv_0) easy
-                       (Fstarcompiler.FStarC_Ident.lid_of_str
-                          "FStar.Tactics.V2.Logic.easy") cb us) args_tail
-                | _ -> failwith "arity mismatch"))
 let (using_lemma :
   FStar_Tactics_NamedView.term ->
     (FStar_Tactics_NamedView.binding, unit) FStar_Tactics_Effect.tac_repr)
@@ -2436,7 +2284,6 @@ let (using_lemma :
                             (FStarC_Reflection_V2_Builtins.pack_fv
                                ["FStar";
                                "Tactics";
-                               "V1";
                                "Logic";
                                "Lemmas";
                                "lem1_fa"]))),
@@ -2454,7 +2301,6 @@ let (using_lemma :
                                  (FStarC_Reflection_V2_Builtins.pack_fv
                                     ["FStar";
                                     "Tactics";
-                                    "V1";
                                     "Logic";
                                     "Lemmas";
                                     "lem2_fa"]))),
@@ -2472,7 +2318,6 @@ let (using_lemma :
                                       (FStarC_Reflection_V2_Builtins.pack_fv
                                          ["FStar";
                                          "Tactics";
-                                         "V1";
                                          "Logic";
                                          "Lemmas";
                                          "lem3_fa"]))),

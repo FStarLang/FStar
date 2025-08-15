@@ -105,6 +105,9 @@ val ns_of_lid           : lident -> ipath
 (** Create an lid from a ipath and a name *)
 val lid_of_ns_and_id    : ipath -> ident -> lident
 
+(* Create a lid from an indent, with an empty path *)
+val id_as_lid           : ident -> lident
+
 (** Create an lid from a ipath (last ident is the name) *)
 val lid_of_ids          : ipath -> lident
 

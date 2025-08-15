@@ -52,7 +52,7 @@ let w : U32.t -> Tot int = U32.v
 
 (*** Addition ***)
 
-#reset-options "--z3rlimit 40 --initial_fuel 0 --max_fuel 0"
+#reset-options "--z3rlimit 40 --fuel 0"
 
 private val fsum_: a:bigint -> b:bigint{disjoint a b} -> Stack unit
   (requires (fun h -> norm h a /\ norm h b))
@@ -85,7 +85,7 @@ let fsum_ a b =
   a.(3ul) <- ab3;
   a.(4ul) <- ab4
 
-#reset-options "--z3rlimit 20 --initial_fuel 0 --max_fuel 0"
+#reset-options "--z3rlimit 20 --fuel 0"
 
 val fsum': a:bigint -> b:bigint{disjoint a b} -> Stack unit
     (requires (fun h -> norm h a /\ norm h b))
@@ -99,7 +99,7 @@ let fsum' a b =
   let h1 = ST.get() in
   lemma_fsum h0 h1 a b
 
-#reset-options "--z3rlimit 80 --initial_fuel 0 --max_fuel 0"
+#reset-options "--z3rlimit 80 --fuel 0"
 
 private val update_9: c:bigint{length c >= 2*norm_length-1} ->
   c0:U64.t -> c1:U64.t -> c2:U64.t ->
@@ -122,7 +122,7 @@ let update_9 c c0 c1 c2 c3 c4 c5 c6 c7 c8 =
   c.(7ul) <- c7;
   c.(8ul) <- c8
 
-#reset-options "--z3rlimit 20 --initial_fuel 0 --max_fuel 0 --initial_ifuel 0"
+#reset-options "--z3rlimit 20 --fuel 0 --initial_ifuel 0"
 
 private val multiplication_0:
   c:bigint{length c >= 2*norm_length-1} ->
@@ -211,7 +211,7 @@ let multiplication c a b =
   let h1 = ST.get() in
   lemma_multiplication h0 h1 c a b
 
-#reset-options "--z3rlimit 20 --initial_fuel 0 --max_fuel 0"
+#reset-options "--z3rlimit 20 --fuel 0"
 
 val times_5: b:U64.t{5 * v b < pow2 64} -> Tot (b':U64.t{v b' = 5 * v b})
 let times_5 b = assert_norm(pow2 2 = 4); (b <<^ 2ul) +^ b
@@ -262,7 +262,7 @@ let mod2_26 x =
   y
 
 private val div2_26: x:U64.t -> Tot (y:U64.t{v y = v x / pow2 26 /\ v y <= pow2 38})
-#reset-options "--z3rlimit 40 --initial_fuel 0 --max_fuel 0"
+#reset-options "--z3rlimit 40 --fuel 0"
 let div2_26 x =
     pow2_minus 64 26;
     let y = x >>^ 26ul in
@@ -287,7 +287,7 @@ let update_5 c c0 c1 c2 c3 c4 =
   c.(3ul) <- c3;
   c.(4ul) <- c4
 
-#reset-options "--z3rlimit 40 --initial_fuel 0 --max_fuel 0"
+#reset-options "--z3rlimit 40 --fuel 0"
 
 private val update_6: c:bigint{length c >= norm_length+1} ->
   c0:U64.t -> c1:U64.t -> c2:U64.t ->
@@ -330,7 +330,7 @@ let carry_1_0 b b0 b1 b2 b3 b4 =
   update_6 b b0' b1' b2' b3' b4' b5'
 
 
-#reset-options "--z3rlimit 20 --initial_fuel 0 --max_fuel 0"
+#reset-options "--z3rlimit 20 --fuel 0"
 
 private val carry_1_:
   b:bigint{length b >= norm_length+1} ->
@@ -465,7 +465,7 @@ let modulo b =
   freduce_coefficients b
 
 
-#reset-options "--initial_fuel 0 --max_fuel 0 --z3rlimit 100"
+#reset-options "--fuel 0 --z3rlimit 100"
 
 val finalize: b:bigint -> Stack unit
   (requires (fun h -> norm h b))

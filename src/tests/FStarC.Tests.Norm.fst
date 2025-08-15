@@ -250,7 +250,7 @@ let default_tests =
 
 let run_either i r expected normalizer =
 //    force_term r;
-    BU.print1 "%s: ... \n\n" (BU.string_of_int i);
+    Format.print1 "%s: ... \n\n" (show i);
     let tcenv = Pars.init() in
     Options.parse_cmd_line() |> ignore; //set the command line args for debugging
     let x = normalizer tcenv r in
@@ -311,36 +311,36 @@ let whnf_tests =
     tests
 
 let run_all_whnf () = 
-  BU.print_string "Testing Normlizer WHNF\n";
+  Format.print_string "Testing Normlizer WHNF\n";
   let _ = run_tests whnf_tests run_whnf in
-  BU.print_string "Normalizer WHNF ok\n"
+  Format.print_string "Normalizer WHNF ok\n"
 
 let run_all_nbe () =
-    BU.print_string "Testing NBE\n";
+    Format.print_string "Testing NBE\n";
     let _ = run_tests default_tests run_nbe in
-    BU.print_string "NBE ok\n"
+    Format.print_string "NBE ok\n"
 
 let run_all_interpreter () =
-    BU.print_string "Testing the normalizer\n";
+    Format.print_string "Testing the normalizer\n";
     let _ = run_tests default_tests run_interpreter in
-    BU.print_string "Normalizer ok\n"
+    Format.print_string "Normalizer ok\n"
 
 let run_all_whnf_with_time () =
-  BU.print_string "Testing WHNF\n";
+  Format.print_string "Testing WHNF\n";
   let l = run_tests whnf_tests run_whnf_with_time in
-  BU.print_string "WHNF ok\n";
+  Format.print_string "WHNF ok\n";
   l
 
 let run_all_nbe_with_time () =
-  BU.print_string "Testing NBE\n";
+  Format.print_string "Testing NBE\n";
   let l = run_tests default_tests run_nbe_with_time in
-  BU.print_string "NBE ok\n";
+  Format.print_string "NBE ok\n";
   l
 
 let run_all_interpreter_with_time () =
-  BU.print_string "Testing the normalizer\n";
+  Format.print_string "Testing the normalizer\n";
   let l = run_tests default_tests run_interpreter_with_time in
-  BU.print_string "Normalizer ok\n";
+  Format.print_string "Normalizer ok\n";
   l
 
 
@@ -349,31 +349,31 @@ let run_both_with_time i r expected =
   let nbe () = run_nbe i r expected in
   let norm () = run_interpreter i r expected in
   FStarC.Util.measure_execution_time "nbe" nbe;
-  BU.print_string "\n";
+  Format.print_string "\n";
   FStarC.Util.measure_execution_time "normalizer" norm;
-  BU.print_string "\n"
+  Format.print_string "\n"
 
 let compare () =
-  BU.print_string "Comparing times for normalization and nbe\n";
+  Format.print_string "Comparing times for normalization and nbe\n";
   run_both_with_time 14 (let_ x (encode 1000) (minus (nm x) (nm x))) z
 
 let compare_times l_int l_nbe =
-  BU.print_string "Comparing times for normalization and nbe\n";
+  Format.print_string "Comparing times for normalization and nbe\n";
   List.iter2 (fun res1 res2 ->
                 let (t1, time_int) = res1 in
                 let (t2, time_nbe) = res2 in
                 if (t1 = t2) // sanity check
                 then
-                  BU.print3 "Test %s\nNBE %s\nInterpreter %s\n"
-                    (BU.string_of_int t1)
+                  Format.print3 "Test %s\nNBE %s\nInterpreter %s\n"
+                    (show t1)
                     (BU.string_of_float time_nbe)
                     (BU.string_of_float time_int)
                 else
-                  BU.print_string "Test numbers do not match...\n"
+                  Format.print_string "Test numbers do not match...\n"
               ) l_int l_nbe
 
 let run_all () =
-    BU.print1 "%s" (show znat);
+    Format.print1 "%s" (show znat);
     let _ = run_all_whnf_with_time () in
     let l_int = run_all_interpreter_with_time () in
     let l_nbe = run_all_nbe_with_time () in

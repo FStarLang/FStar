@@ -22,7 +22,6 @@ open FStarC.Errors
 open FStarC.Range
 open FStarC.Ident
 open FStarC
-open FStarC.Util
 open FStarC.Const
 open FStarC.Parser.AST
 
@@ -38,7 +37,6 @@ and lidents_of_term' (t:term')
   | Wild -> []
   | Const _ -> []
   | Op (s, ts) -> concat_map lidents_of_term ts
-  | Tvar _ -> []
   | Uvar _ -> []
   | Var lid -> [lid]
   | Name lid -> [lid]
@@ -67,11 +65,11 @@ and lidents_of_term' (t:term')
   | Refine (b, t) -> lidents_of_term t
   | NamedTyp (i, t) -> lidents_of_term t
   | Paren t -> lidents_of_term t
-  | Requires (t, _) -> lidents_of_term t
-  | Ensures (t, _) -> lidents_of_term t
+  | Requires t -> lidents_of_term t
+  | Ensures t -> lidents_of_term t
   | LexList ts -> concat_map lidents_of_term ts
   | WFOrder (t1, t2) -> lidents_of_term t1 @ lidents_of_term t2
-  | Decreases (t, _) -> lidents_of_term t
+  | Decreases t -> lidents_of_term t
   | Labeled (t, _, _) -> lidents_of_term t
   | Discrim lid -> [lid]
   | Attributes ts -> concat_map lidents_of_term ts
@@ -101,7 +99,6 @@ and lidents_of_pattern p =
   | PatApp (p, ps) -> lidents_of_pattern p @ concat_map lidents_of_pattern ps
   | PatVar (i, _, _) -> [FStarC.Ident.lid_of_ids [i]]
   | PatName lid -> [lid]
-  | PatTvar (i, _, _) -> []
   | PatList ps -> concat_map lidents_of_pattern ps
   | PatTuple (ps, _) -> concat_map lidents_of_pattern ps
   | PatRecord ps -> concat_map (fun (_, p) -> lidents_of_pattern p) ps
@@ -113,7 +110,6 @@ and lidents_of_pattern p =
 and lidents_of_binder b =
   match b.b with
   | Annotated (_, t)
-  | TAnnotated(_, t)
   | NoName t -> lidents_of_term t
   | _ -> []
 
@@ -185,7 +181,6 @@ and lidents_of_effect_decl (ed:effect_decl) =
     concat_map lidents_of_binder bs @
     lidents_of_term t
 
-module BU = FStarC.Util
 let extension_parser_table : SMap.t extension_parser = SMap.create 20
 let register_extension_parser (ext:string) (parser:extension_parser) =
   SMap.add extension_parser_table ext parser
@@ -228,7 +223,7 @@ let parse_extension_lang (lang_name:string) (raw_text:string) (raw_text_pos:rang
   match extension_parser with
   | None ->
     raise_error raw_text_pos Errors.Fatal_SyntaxError
-      (BU.format1 "Unknown language extension %s" lang_name)
+      (Format.fmt1 "Unknown language extension %s" lang_name)
   | Some parser ->
     match parser.parse_decls raw_text raw_text_pos with
     | Inl error ->

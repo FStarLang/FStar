@@ -2,7 +2,6 @@ module FStarC.TypeChecker.TermEqAndSimplify
 
 open FStarC
 open FStarC.Effect
-open FStarC.Util
 open FStarC.Syntax
 open FStarC.Const
 open FStarC.Ident
@@ -15,7 +14,6 @@ module SS = FStarC.Syntax.Subst
 module U = FStarC.Syntax.Util
 module PC = FStarC.Parser.Const
 module S = FStarC.Syntax.Syntax
-module BU = FStarC.Util
 
 open FStarC.Class.Tagged
 open FStarC.Class.Show
@@ -99,8 +97,8 @@ let rec eq_tm (env:env_t) (t1:term) (t2:term) : eq_result =
                 List.fold_left2
                   (fun acc (a1, q1) (a2, q2) ->
                         //if q1 <> q2
-                        //then failwith (U.format1 "Arguments of %s mismatch on implicit qualifier\n"
-                        //                (Ident.string_of_lid f1.fv_name.v));
+                        //then failwith (Format.fmt1 "Arguments of %s mismatch on implicit qualifier\n"
+                        //                (Ident.string_of_lid f1.fv_name));
                         //NS: 05/06/2018 ...this does not always hold
                         //    it's been succeeding because the assert is disabled in the non-debug builds
                         //assert (q1 = q2);
@@ -148,7 +146,7 @@ let rec eq_tm (env:env_t) (t1:term) (t2:term) : eq_result =
       equal_if (bv_eq a b)
 
     | _ when heads_and_args_in_case_both_data |> Some? ->  //matches only when both are data constructors
-      heads_and_args_in_case_both_data |> must |> (fun (f, args1, g, args2, n) ->
+      heads_and_args_in_case_both_data |> Option.must |> (fun (f, args1, g, args2, n) ->
         equal_data f args1 g args2 n
       )
 
@@ -322,12 +320,12 @@ let simplify (debug:bool) (env:env_t) (tm:term) : term =
     in
     let is_applied (bs:binders) (t : term) : option bv =
         if debug then
-            BU.print2 "WPE> is_applied %s -- %s\n"  (show t) (tag_of t);
+            Format.print2 "WPE> is_applied %s -- %s\n"  (show t) (tag_of t);
         let hd, args = U.head_and_args_full t in
         match (SS.compress hd).n with
         | Tm_name bv when args_are_binders args bs ->
             if debug then
-                BU.print3 "WPE> got it\n>>>>top = %s\n>>>>b = %s\n>>>>hd = %s\n"
+                Format.print3 "WPE> got it\n>>>>top = %s\n>>>>b = %s\n>>>>hd = %s\n"
                             (show t)
                             (show bv)
                             (show hd);
@@ -336,7 +334,7 @@ let simplify (debug:bool) (env:env_t) (tm:term) : term =
     in
     let is_applied_maybe_squashed (bs : binders) (t : term) : option bv =
         if debug then
-            BU.print2 "WPE> is_applied_maybe_squashed %s -- %s\n"  (show t) (tag_of t);
+            Format.print2 "WPE> is_applied_maybe_squashed %s -- %s\n"  (show t) (tag_of t);
         match is_squash t with
 
         | Some (_, t') -> is_applied bs t'

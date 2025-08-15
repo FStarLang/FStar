@@ -19,9 +19,12 @@ module FStarC.Interactive.Legacy
 open FStarC
 open FStarC.Effect
 open FStarC.List
+open FStarC.Time
 open FStarC.Util
 open FStarC.Getopt
 open FStarC.Ident
+open FStarC.Class.Show
+module SB = FStarC.StringBuffer
 
 open FStarC.Universal
 open FStarC.TypeChecker.Env
@@ -101,7 +104,7 @@ type input_chunks =
 type interactive_state = {
   // The current chunk -- chunks end on #end boundaries per the communication
   // protocol.
-  chunk: string_builder;
+  chunk: SB.t;
   stdin: ref (option stream_reader); // Initialized once.
   // A list of chunks read so far
   buffer: ref (list input_chunks);
@@ -110,7 +113,7 @@ type interactive_state = {
 
 
 let the_interactive_state = {
-  chunk = Util.new_string_builder ();
+  chunk = SB.create 100;
   stdin = mk_ref None;
   buffer = mk_ref [];
   log = mk_ref None
@@ -158,12 +161,12 @@ let rec read_chunk () =
       match Util.split l " " with
       | [_; ok; fail] -> (ok, fail)
       | _ -> ("ok", "fail") in
-    let str = Util.string_of_string_builder s.chunk in
-    Util.clear_string_builder s.chunk; Code (str, responses)
+    let str = SB.contents s.chunk in
+    ignore (SB.clear s.chunk); Code (str, responses)
     end
-  else if Util.starts_with l "#pop" then (Util.clear_string_builder s.chunk; Pop l)
+  else if Util.starts_with l "#pop" then (ignore (SB.clear s.chunk); Pop l)
   else if Util.starts_with l "#push" then (
-        Util.clear_string_builder s.chunk;
+        ignore (SB.clear s.chunk);
         let lc_lax = Util.trim_string (Util.substring_from l (String.length "#push")) in
         let lc = match Util.split lc_lax " " with
             | [l; c; "#lax"] -> true, Util.int_of_string l, Util.int_of_string c
@@ -176,10 +179,10 @@ let rec read_chunk () =
   else if Util.starts_with l "#info " then
       match Util.split l " " with
       | [_; symbol] ->
-        Util.clear_string_builder s.chunk;
+        ignore (SB.clear s.chunk);
         Info (symbol, true, None)
       | [_; symbol; file; row; col] ->
-        Util.clear_string_builder s.chunk;
+        ignore (SB.clear s.chunk);
         Info (symbol, false, Some (file, Util.int_of_string row, Util.int_of_string col))
       | _ ->
         Errors.log_issue0 Errors.Error_IDEUnrecognized ("Unrecognized \"#info\" request: " ^ l);
@@ -187,16 +190,16 @@ let rec read_chunk () =
   else if Util.starts_with l "#completions " then
       match Util.split l " " with
       | [_; prefix; "#"] -> // Extra "#" marks the end of the input.  FIXME protocol could take more structured messages.
-        Util.clear_string_builder s.chunk;
+        ignore (SB.clear s.chunk);
         Completions (prefix)
       | _ ->
         Errors.log_issue0 Errors.Error_IDEUnrecognized ("Unrecognized \"#completions\" request: " ^ l);
         exit 1
   else if l = "#finish" then exit 0
-  else
-    (Util.string_builder_append s.chunk line;
-     Util.string_builder_append s.chunk "\n";
-     read_chunk())
+  else (
+    s.chunk |> SB.add line |> SB.add "\n" |> ignore;
+    read_chunk ()
+  )
 
 let shift_chunk () =
   let s = the_interactive_state in
@@ -228,12 +231,12 @@ let deps_of_our_file filename =
   let maybe_intf = match same_name with
     | [ intf; impl ] ->
         if not (Parser.Dep.is_interface intf) || not (Parser.Dep.is_implementation impl) then
-          Errors.log_issue0 Errors.Warning_MissingInterfaceOrImplementation (Util.format2 "Found %s and %s but not an interface + implementation" intf impl);
+          Errors.log_issue0 Errors.Warning_MissingInterfaceOrImplementation (Format.fmt2 "Found %s and %s but not an interface + implementation" intf impl);
         Some intf
     | [ impl ] ->
         None
     | _ ->
-        Errors.log_issue0 Errors.Warning_UnexpectedFile (Util.format1 "Unexpected: ended up with %s" (String.concat " " same_name));
+        Errors.log_issue0 Errors.Warning_UnexpectedFile (Format.fmt1 "Unexpected: ended up with %s" (String.concat " " same_name));
         None
   in
   deps, maybe_intf, dep_graph
@@ -352,12 +355,12 @@ let update_deps (filename:string) (m:modul_t) (stk:stack_t) (env:env_t) (ts:m_ti
   iterate filenames (List.rev_append stk []) env (List.rev_append ts []) [] []
 
 let format_info env name typ range (doc: option string) =
-  Util.format4 "(defined at %s) %s: %s%s"
+  Format.fmt4 "(defined at %s) %s: %s%s"
     (Range.string_of_range range)
     name
     (FStarC.TypeChecker.Normalize.term_to_string env typ)
     (match doc with
-     | Some docstring -> Util.format1 "#doc %s" docstring
+     | Some docstring -> Format.fmt1 "#doc %s" docstring
      | None -> "")
 
 let rec go (line_col:(int&int))
@@ -378,15 +381,15 @@ let rec go (line_col:(int&int))
                             | None -> lid
                             | Some lid -> lid in
              try_lookup_lid env lid
-               |> Util.map_option (fun ((_, typ), r) -> (Inr lid, typ, r)) in
+               |> Option.map (fun ((_, typ), r) -> (Inr lid, typ, r)) in
     (match info_opt with
-     | None -> Util.print_string "\n#done-nok\n"
+     | None -> Format.print_string "\n#done-nok\n"
      | Some (name_or_lid, typ, rng) ->
        let name, doc =
          match name_or_lid with
          | Inl name -> name, None
          | Inr lid -> Ident.string_of_lid lid, None in
-       Util.print1 "%s\n#done-ok\n" (format_info env name typ rng doc));
+       Format.print1 "%s\n#done-ok\n" (format_info env name typ rng doc));
     go line_col filename stack curmod env ts
   | Completions search_term ->
     //search_term is the partially written identifer by the user
@@ -414,7 +417,7 @@ let rec go (line_col:(int&int))
                match ts with
                | [] -> Some (candidate, String.length hs)
                | _ -> measure_anchored_match ts tc |>
-                        Util.map_option (fun (matched, len) -> (hc :: matched, String.length hc_text + 1 + len))
+                        Option.map (fun (matched, len) -> (hc :: matched, String.length hc_text + 1 + len))
             else None in
     let rec locate_match
       : list string -> list ident -> option (list ident & list ident & int)
@@ -426,7 +429,7 @@ let rec go (line_col:(int&int))
         | [] -> None
         | hc :: tc ->
           locate_match needle tc |>
-            Util.map_option (fun (prefix, matched, len) -> (hc :: prefix, matched, len)) in
+            Option.map (fun (prefix, matched, len) -> (hc :: prefix, matched, len)) in
     let str_of_ids ids = Util.concat_l "." (List.map FStarC.Ident.string_of_id ids) in
     let match_lident_against needle lident =
         locate_match needle (ns_of_lid lident @ [ident_of_lid lident])
@@ -494,14 +497,14 @@ let rec go (line_col:(int&int))
         List.map (fun x -> prepare_candidate (shorten_namespace x))
     in
     List.iter (fun (candidate, ns, match_len) ->
-               Util.print3 "%s %s %s \n"
-               (Util.string_of_int match_len) ns candidate)
+               Format.print3 "%s %s %s \n"
+               (show match_len) ns candidate)
               (Util.sort_with (fun (cd1, ns1, _) (cd2, ns2, _) ->
                                match String.compare cd1 cd2 with
                                | 0 -> String.compare ns1 ns2
                                | n -> n)
                               matches);
-    Util.print_string "#done-ok\n";
+    Format.print_string "#done-ok\n";
     go line_col filename stack curmod env ts
   | Pop msg ->
       // This shrinks all internal stacks by 1
@@ -529,7 +532,7 @@ let rec go (line_col:(int&int))
       // This does not grow any of the internal stacks.
       let fail curmod tcenv =
         report_fail();
-        Util.print1 "%s\n" fail;
+        Format.print1 "%s\n" fail;
         // The interactive mode will send a pop here
         go line_col filename stack curmod tcenv ts
       in
@@ -542,7 +545,7 @@ let rec go (line_col:(int&int))
         match res with
         | Some (curmod, env, n_errs) ->
             if n_errs=0 then begin
-              Util.print1 "\n%s\n" ok;
+              Format.print1 "\n%s\n" ok;
               go line_col filename stack curmod env ts
               end
             else fail curmod env
@@ -553,7 +556,7 @@ end
 // filename is the name of the file currently edited
 let interactive_mode (filename:string): unit =
 
-  if Option.isSome (Options.codegen()) then
+  if Some? (Options.codegen()) then
     Errors.log_issue0 Errors.Warning_IDEIgnoreCodeGen "Code-generation is not supported in interactive mode, ignoring the codegen flag";
 
   //type check prims and the dependencies

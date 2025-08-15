@@ -17,7 +17,7 @@ module Swap
 open FStar.List.Tot
 open FStar.DM4F.Heap
 open FStar.DM4F.Heap.ST
-#reset-options "--initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0 --z3rlimit 100"
+#reset-options "--fuel 0 --ifuel 0 --z3rlimit 100"
 
 // Heap relies on sets with decidable equality... we follow suit.
 module S = FStar.Set

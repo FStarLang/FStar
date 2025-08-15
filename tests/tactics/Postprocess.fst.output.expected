@@ -38,20 +38,6 @@ datacon Postprocess.A1 : t1
 datacon Postprocess.B1 : (_0:int -> Tot t1)
 [@ ]
 datacon Postprocess.C1 : (_0:(_:int -> Tot t1) -> Tot t1)
-[@ (discriminator)]
-assume OnlyName (Discriminator A1) val Postprocess.uu___is_A1  : _
-[@ (discriminator)]
-assume OnlyName (Discriminator B1) val Postprocess.uu___is_B1  : _
-[@ (discriminator)]
-assume OnlyName (Discriminator C1) val Postprocess.uu___is_C1  : _
-[@ (projector)]
-OnlyName (Projector B1 _0) val Postprocess.__proj__B1__item___0  : _
-[@ (projector)]
-OnlyName (Projector B1 _0) let  __proj__B1__item___0  : _ = _
-[@ (projector)]
-OnlyName (Projector C1 _0) val Postprocess.__proj__C1__item___0  : _
-[@ (projector)]
-OnlyName (Projector C1 _0) let  __proj__C1__item___0  : _ = _
 [@ ]
 (* Sig_bundle *)[@ ]
 noeq type Postprocess.t2  : Type
@@ -61,20 +47,6 @@ datacon Postprocess.A2 : t2
 datacon Postprocess.B2 : (_0:int -> Tot t2)
 [@ ]
 datacon Postprocess.C2 : (_0:(_:int -> Tot t2) -> Tot t2)
-[@ (discriminator)]
-assume OnlyName (Discriminator A2) val Postprocess.uu___is_A2  : _
-[@ (discriminator)]
-assume OnlyName (Discriminator B2) val Postprocess.uu___is_B2  : _
-[@ (discriminator)]
-assume OnlyName (Discriminator C2) val Postprocess.uu___is_C2  : _
-[@ (projector)]
-OnlyName (Projector B2 _0) val Postprocess.__proj__B2__item___0  : _
-[@ (projector)]
-OnlyName (Projector B2 _0) let  __proj__B2__item___0  : _ = _
-[@ (projector)]
-OnlyName (Projector C2 _0) val Postprocess.__proj__C2__item___0  : _
-[@ (projector)]
-OnlyName (Projector C2 _0) let  __proj__C2__item___0  : _ = _
 [@ ]
 let rec lift  : _ = (fun uu___1 -> (match uu___1@0:(Tm_unknown) with
 	| (A1 )  -> A2
@@ -98,9 +70,9 @@ let  xx  : _ = (C1 (fun uu___0 -> (match uu___0@0:(Tm_unknown) with
 [@ ]
 let  q_as_lem  : _ = (fun p x -> ())
 [@ ]
-let  congruence_fun  : _ = (fun f g x -> (assert_by_tactic (eq2 (fun x -> (f@3:(Tm_unknown) x@0:(Tm_unknown))) (fun x -> (g@2:(Tm_unknown) x@0:(Tm_unknown)))) (fun uu___ -> let  uu___#15  : unit = ()
+let  congruence_fun  : _ = (fun f g x -> (assert_by_tactic (eq2 (fun x -> (f@3:(Tm_unknown) x@0:(Tm_unknown))) (fun x -> (g@2:(Tm_unknown) x@0:(Tm_unknown)))) (fun uu___ -> let  uu___#19  : unit = ()
 in
-let  uu___#16  : unit = (l_to_r (Cons quote ((q_as_lem x@2:(Tm_unknown))) Nil))
+let  uu___#20  : unit = (l_to_r (Cons quote ((q_as_lem x@2:(Tm_unknown))) Nil))
 in
 (trefl ()))))
 [@ ]
@@ -210,20 +182,6 @@ datacon Postprocess.A1 : t1
 datacon Postprocess.B1 : (_0:int -> Tot t1)
 [@ ]
 datacon Postprocess.C1 : (_0:(_:int -> Tot t1) -> Tot t1)
-[@ (discriminator)]
-assume OnlyName (Discriminator A1) val Postprocess.uu___is_A1  : _
-[@ (discriminator)]
-assume OnlyName (Discriminator B1) val Postprocess.uu___is_B1  : _
-[@ (discriminator)]
-assume OnlyName (Discriminator C1) val Postprocess.uu___is_C1  : _
-[@ (projector)]
-OnlyName (Projector B1 _0) val Postprocess.__proj__B1__item___0  : _
-[@ (projector)]
-OnlyName (Projector B1 _0) let  __proj__B1__item___0  : _ = _
-[@ (projector)]
-OnlyName (Projector C1 _0) val Postprocess.__proj__C1__item___0  : _
-[@ (projector)]
-OnlyName (Projector C1 _0) let  __proj__C1__item___0  : _ = _
 [@ ]
 (* Sig_bundle *)[@ ]
 noeq type Postprocess.t2  : Type
@@ -233,20 +191,6 @@ datacon Postprocess.A2 : t2
 datacon Postprocess.B2 : (_0:int -> Tot t2)
 [@ ]
 datacon Postprocess.C2 : (_0:(_:int -> Tot t2) -> Tot t2)
-[@ (discriminator)]
-assume OnlyName (Discriminator A2) val Postprocess.uu___is_A2  : _
-[@ (discriminator)]
-assume OnlyName (Discriminator B2) val Postprocess.uu___is_B2  : _
-[@ (discriminator)]
-assume OnlyName (Discriminator C2) val Postprocess.uu___is_C2  : _
-[@ (projector)]
-OnlyName (Projector B2 _0) val Postprocess.__proj__B2__item___0  : _
-[@ (projector)]
-OnlyName (Projector B2 _0) let  __proj__B2__item___0  : _ = _
-[@ (projector)]
-OnlyName (Projector C2 _0) val Postprocess.__proj__C2__item___0  : _
-[@ (projector)]
-OnlyName (Projector C2 _0) let  __proj__C2__item___0  : _ = _
 [@ ]
 let rec lift  : _ = (fun uu___1 -> (match uu___1@0:(Tm_unknown) with
 	| (A1 )  -> A2
@@ -270,9 +214,9 @@ let  xx  : _ = (C1 (fun uu___0 -> (match uu___0@0:(Tm_unknown) with
 [@ ]
 let  q_as_lem  : _ = (fun p x -> ())
 [@ ]
-let  congruence_fun  : _ = (fun f g x -> (assert_by_tactic (eq2 (fun x -> (f@3:(Tm_unknown) x@0:(Tm_unknown))) (fun x -> (g@2:(Tm_unknown) x@0:(Tm_unknown)))) (fun uu___ -> let  uu___#15  : unit = ()
+let  congruence_fun  : _ = (fun f g x -> (assert_by_tactic (eq2 (fun x -> (f@3:(Tm_unknown) x@0:(Tm_unknown))) (fun x -> (g@2:(Tm_unknown) x@0:(Tm_unknown)))) (fun uu___ -> let  uu___#19  : unit = ()
 in
-let  uu___#16  : unit = (l_to_r (Cons quote ((q_as_lem x@2:(Tm_unknown))) Nil))
+let  uu___#20  : unit = (l_to_r (Cons quote ((q_as_lem x@2:(Tm_unknown))) Nil))
 in
 (trefl ()))))
 [@ ]

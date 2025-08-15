@@ -42,9 +42,9 @@ let vargs args = List.filter (function (Inl _, _) -> false | _ -> true) args
 (* Some operations on constants *)
 let escape (s:string) = BU.replace_char s '\'' '_'
 let mk_term_projector_name lid (a:bv) =
-    escape <| BU.format2 "%s_%s" (string_of_lid lid) (string_of_id a.ppname)
+    escape <| Format.fmt2 "%s_%s" (string_of_lid lid) (string_of_id a.ppname)
 let primitive_projector_by_pos env lid i =
-    let fail () = failwith (BU.format2 "Projector %s on data constructor %s not found" (string_of_int i) (string_of_lid lid)) in
+    let fail () = failwith (Format.fmt2 "Projector %s on data constructor %s not found" (show i) (string_of_lid lid)) in
     let _, t = Env.lookup_datacon env lid in
     match (SS.compress t).n with
         | Tm_arrow {bs; comp=c} ->
@@ -54,7 +54,7 @@ let primitive_projector_by_pos env lid i =
           else let b = List.nth binders i in
                 mk_term_projector_name lid b.binder_bv
         | _ -> fail ()
-let mk_term_projector_name_by_pos lid (i:int) = escape <| BU.format2 "%s_%s" (string_of_lid lid) (string_of_int i)
+let mk_term_projector_name_by_pos lid (i:int) = escape <| Format.fmt2 "%s_%s" (string_of_lid lid) (show i)
 let mk_term_projector (lid:lident) (a:bv) : term =
     mkFreeV <| mk_fv (mk_term_projector_name lid a, Arrow(Term_sort, Term_sort))
 let mk_term_projector_by_pos (lid:lident) (i:int) : term =
@@ -83,15 +83,15 @@ let varops =
         let y = escape y in
         let y = match BU.find_map (!scopes) (fun names -> SMap.try_find names y) with
                   | None -> y
-                  | Some _ -> BU.incr ctr; y ^ "__" ^ (string_of_int !ctr) in
+                  | Some _ -> BU.incr ctr; y ^ "__" ^ (show !ctr) in
         let top_scope = List.hd !scopes in
         SMap.add top_scope y true; y in
-    let new_var pp rn = mk_unique <| (string_of_id pp) ^ "__" ^ (string_of_int rn) in
+    let new_var pp rn = mk_unique <| (string_of_id pp) ^ "__" ^ (show rn) in
     let new_fvar lid = mk_unique (string_of_lid lid) in
     let next_id () = BU.incr ctr; !ctr in
     //AR: adding module name after the prefix, else it interferes for name matching for fuel arguments
     //    see try_lookup_free_var below
-    let fresh mname pfx = BU.format3 "%s_%s_%s" pfx mname (string_of_int <| next_id()) in
+    let fresh mname pfx = Format.fmt3 "%s_%s_%s" pfx mname (show <| next_id()) in
     //the fresh counter is reset after every module
     let reset_fresh () = ctr := initial_ctr in
     let push () = scopes := new_scope() :: !scopes in // already signal-atomic
@@ -129,29 +129,26 @@ let fvb_to_string fvb =
   in
   let term_pair_opt_to_string = function
     | None -> "None"
-    | Some (s0, s1) ->
-      BU.format2 "(%s, %s)"
-        (Term.print_smt_term s0)
-        (Term.print_smt_term s1)
+    | Some (s0, s1) -> show (s0, s1)
   in
-  BU.format6 "{ lid = %s;\n  smt_arity = %s;\n  smt_id = %s;\n  smt_token = %s;\n  smt_fuel_partial_app = %s;\n  fvb_thunked = %s }"
-    (Ident.string_of_lid fvb.fvar_lid)
-    (string_of_int fvb.smt_arity)
+  Format.fmt6 "{ lid = %s;\n  smt_arity = %s;\n  smt_id = %s;\n  smt_token = %s;\n  smt_fuel_partial_app = %s;\n  fvb_thunked = %s }"
+    (show fvb.fvar_lid)
+    (show fvb.smt_arity)
     fvb.smt_id
     (term_opt_to_string fvb.smt_token)
     (term_pair_opt_to_string fvb.smt_fuel_partial_app)
-    (BU.string_of_bool fvb.fvb_thunked)
+    (show fvb.fvb_thunked)
 
 let check_valid_fvb fvb =
-    if (Option.isSome fvb.smt_token
-     || Option.isSome fvb.smt_fuel_partial_app)
+    if (Some? fvb.smt_token
+     || Some? fvb.smt_fuel_partial_app)
     && fvb.fvb_thunked
-    then failwith (BU.format1 "Unexpected thunked SMT symbol: %s" (Ident.string_of_lid fvb.fvar_lid))
+    then failwith (Format.fmt1 "Unexpected thunked SMT symbol: %s" (Ident.string_of_lid fvb.fvar_lid))
     else if fvb.fvb_thunked && fvb.smt_arity <> 0
-    then failwith (BU.format1 "Unexpected arity of thunked SMT symbol: %s" (Ident.string_of_lid fvb.fvar_lid));
+    then failwith (Format.fmt1 "Unexpected arity of thunked SMT symbol: %s" (Ident.string_of_lid fvb.fvar_lid));
     match fvb.smt_token with
     | Some ({tm=FreeV _}) ->
-      failwith (BU.format1 "bad fvb\n%s" (fvb_to_string fvb))
+      failwith (Format.fmt1 "bad fvb\n%s" (fvb_to_string fvb))
     | _ -> ()
 
 
@@ -196,7 +193,7 @@ let lookup_fvar_binding env lid =
 let add_bvar_binding bvb bvbs =
   PSMap.modify bvbs (string_of_id (fst bvb).ppname)
     (fun pimap_opt ->
-     PIMap.add (BU.dflt (PIMap.empty ()) pimap_opt) (fst bvb).index bvb)
+     PIMap.add (Option.dflt (PIMap.empty ()) pimap_opt) (fst bvb).index bvb)
 
 let add_fvar_binding fvb (fvb_map, fvb_list) =
   (PSMap.add fvb_map (string_of_lid fvb.fvar_lid) fvb, fvb::fvb_list)
@@ -206,7 +203,7 @@ let fresh_fvar mname x s = let xsym = varops.fresh mname x in xsym, mkFreeV <| m
 
 (* Bound term variables *)
 let gen_term_var (env:env_t) (x:bv) =
-    let ysym = "@x"^(string_of_int env.depth) in
+    let ysym = "@x"^(show env.depth) in
     let y = mkFreeV <| mk_fv (ysym, Term_sort) in
     (* Note: the encoding of impure function arrows (among other places
     probably) relies on the fact that this is exactly a FreeV. See getfreeV in
@@ -235,7 +232,7 @@ let lookup_term_var env a =
     match lookup_bvar_binding env a with
     | Some (b,t) -> t
     | None ->
-      failwith (BU.format2 "Bound term variable not found  %s in environment: %s"
+      failwith (Format.fmt2 "Bound term variable not found  %s in environment: %s"
                            (show a)
                            (print_env env))
 
@@ -265,21 +262,21 @@ let new_term_constant_and_tok_from_lid_aux (env:env_t) (x:lident) arity thunked 
     fname, ftok_name, {env with fvar_bindings=add_fvar_binding fvb env.fvar_bindings}
 let new_term_constant_and_tok_from_lid (env:env_t) (x:lident) arity =
     let fname, ftok_name_opt, env = new_term_constant_and_tok_from_lid_aux env x arity false in
-    fname, Option.get ftok_name_opt, env
+    fname, Some?.v ftok_name_opt, env
 let new_term_constant_and_tok_from_lid_maybe_thunked (env:env_t) (x:lident) arity th =
     new_term_constant_and_tok_from_lid_aux env x arity th
 let fail_fvar_lookup env a =
   let q = Env.lookup_qname env.tcenv a in
   match q with
   | None ->
-    failwith (BU.format1 "Name %s not found in the smtencoding and typechecker env" (show a))
+    failwith (Format.fmt1 "Name %s not found in the smtencoding and typechecker env" (show a))
   | _ ->
     let quals = Env.quals_of_qninfo q in
-    if BU.is_some quals &&
-       (quals |> BU.must |> List.contains Unfold_for_unification_and_vcgen)
+    if Some? quals &&
+       (quals |> Some?.v |> List.contains Unfold_for_unification_and_vcgen)
     then Errors.raise_error a Errors.Fatal_IdentifierNotFound
-           (BU.format1 "Name %s not found in the smtencoding env (the symbol is marked unfold, expected it to reduce)" (show a))
-    else failwith (BU.format1 "Name %s not found in the smtencoding env" (show a))
+           (Format.fmt1 "Name %s not found in the smtencoding env (the symbol is marked unfold, expected it to reduce)" (show a))
+    else failwith (Format.fmt1 "Name %s not found in the smtencoding env" (show a))
 let lookup_lid env a =
     match lookup_fvar_binding env a with
     | None -> fail_fvar_lookup env a
@@ -306,7 +303,7 @@ let try_lookup_free_var env l =
     | None -> None
     | Some fvb ->
       if !dbg_PartialApp
-      then BU.print2 "Looked up %s found\n%s\n"
+      then Format.print2 "Looked up %s found\n%s\n"
              (Ident.string_of_lid l)
              (fvb_to_string fvb);
       if fvb.fvb_thunked
@@ -330,13 +327,13 @@ let try_lookup_free_var env l =
         | _ -> None
         end
       end
-let lookup_free_var env a =
-    match try_lookup_free_var env a.v with
+let lookup_free_var env (a : lident) =
+    match try_lookup_free_var env a with
     | Some t -> t
-    | None -> fail_fvar_lookup env a.v
-let lookup_free_var_name env a = lookup_lid env a.v
-let lookup_free_var_sym env a =
-    let fvb = lookup_lid env a.v in
+    | None -> fail_fvar_lookup env a
+let lookup_free_var_name env (a : lident) = lookup_lid env a
+let lookup_free_var_sym env (a : lident) =
+    let fvb = lookup_lid env a in
     match fvb.smt_fuel_partial_app with
     | Some({tm=App(g, zf)}, _)
         when env.use_zfuel_name ->

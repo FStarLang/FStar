@@ -31,7 +31,6 @@ open FStarC.Tactics.Types
 open FStarC.Tactics.Monad
 
 module Range  = FStarC.Range
-module Z      = FStarC.BigInt
 
 (* Internal utilities *)
 val goal_typedness_deps : goal -> list ctx_uvar
@@ -43,7 +42,7 @@ val focus                  : tac 'a -> tac 'a
  * Documented in `ulib/FStarC.Tactics.Builtins.fst` *)
 
 val top_env                : unit -> tac env
-val fresh                  : unit -> tac Z.t
+val fresh                  : unit -> tac int
 val refine_intro           : unit -> tac unit
 val tc                     : env -> term -> tac typ
 val tcc                    : env -> term -> tac comp
@@ -72,7 +71,7 @@ val t_trefl                : (*allow_guards:*)bool -> tac unit
 val dup                    : unit -> tac unit
 val prune                  : string -> tac unit
 val addns                  : string -> tac unit
-val t_destruct             : term -> tac (list (fv & Z.t))
+val t_destruct             : term -> tac (list (fv & int))
 val gather_explicit_guards_for_resolved_goals : unit -> tac unit
 val set_options            : string -> tac unit
 val uvar_env               : env -> option typ -> tac term
@@ -94,8 +93,8 @@ val pack_curried           : term_view -> tac term
 val join                   : unit -> tac unit
 val lget                   : typ -> string -> tac term
 val lset                   : typ -> string -> term -> tac unit
-val curms                  : unit -> tac Z.t
-val set_urgency            : Z.t -> tac unit
+val curms                  : unit -> tac int
+val set_urgency            : int -> tac unit
 val t_commute_applied_match : unit -> tac unit
 val goal_with_type : goal -> typ -> goal
 val mark_goal_implicit_already_checked : goal -> unit
@@ -105,10 +104,9 @@ val term_to_string         : term -> tac string
 val comp_to_string         : comp -> tac string
 val range_to_string        : Range.t -> tac string
 
-val term_eq_old            : term -> term -> tac bool
-val with_compat_pre_core   : Z.t -> tac 'a -> tac 'a
+val with_compat_pre_core   : int -> tac 'a -> tac 'a
 
 val get_vconfig            : unit -> tac FStarC.VConfig.vconfig
 val set_vconfig            : FStarC.VConfig.vconfig -> tac unit
 val t_smt_sync             : FStarC.VConfig.vconfig -> tac unit
-val free_uvars             : term -> tac (list Z.t)
+val free_uvars             : term -> tac (list int)

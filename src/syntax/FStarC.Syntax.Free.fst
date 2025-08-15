@@ -18,7 +18,6 @@ open FStarC.Effect
 open FStarC.List
 
 open FStarC
-open FStarC.Util
 open FStarC.Syntax
 open FStarC.Syntax.Syntax
 module UF = FStarC.Syntax.Unionfind
@@ -83,7 +82,7 @@ let no_free_vars : free_vars_and_fvars = {
 
 let singleton_fvar fv : free_vars_and_fvars =
     fst no_free_vars,
-    add fv.fv_name.v (empty ())
+    add fv.fv_name (empty ())
 
 let singleton_bv x =
   {fst no_free_vars with free_names = singleton x}, snd no_free_vars

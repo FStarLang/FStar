@@ -20,7 +20,6 @@ open FStarC
 open FStarC.Effect
 open FStarC.List
 open FStarC
-open FStarC.Util
 open FStarC.Reflection.V2.Data
 open FStarC.Reflection.V2.Builtins
 open FStarC.Tactics.Result
@@ -34,7 +33,6 @@ open FStarC.Class.Show
 open FStarC.Class.Monad
 open FStarC.Syntax.Print {}
 
-module BU     = FStarC.Util
 module S      = FStarC.Syntax.Syntax
 module U      = FStarC.Syntax.Util
 module SS     = FStarC.Syntax.Subst
@@ -132,7 +130,7 @@ let __do_rewrite
                (rangeof g0)
     in
     if_verbose (fun () ->
-                  BU.print2 "do_rewrite: making equality\n\t%s ==\n\t%s\n"
+                  Format.print2 "do_rewrite: making equality\n\t%s ==\n\t%s\n"
                     (show tm) (show ut)) ;!
     add_irrelevant_goal
                       g0
@@ -145,7 +143,7 @@ let __do_rewrite
     // Try to get rid of all the unification lambdas
     let ut = N.reduce_uvar_solutions env ut in
     if_verbose (fun () ->
-       BU.print2 "rewrite_rec: succeeded rewriting\n\t%s to\n\t%s\n"
+       Format.print2 "rewrite_rec: succeeded rewriting\n\t%s to\n\t%s\n"
                    (show tm)
                    (show ut)) ;!
     return ut
@@ -299,7 +297,7 @@ and on_subterms
           // For dependent binders, we need to re-compute the substitution incrementally; applying subst to bs doesn't work
           let bs = SS.close_binders bs in
           let t = SS.subst subst t in
-          let k = BU.map_option (SS.subst_residual_comp subst) k in
+          let k = Option.map (SS.subst_residual_comp subst) k in
           return (rebuild bs t k,
                par_combine (accum_flag, (par_combine (t_flag, k_flag))))
         end
@@ -327,7 +325,7 @@ and on_subterms
       (* Open, descend, rebuild *)
       | Tm_abs {bs; body=t; rc_opt=k} ->
         let bs_orig, t, subst = SS.open_term' bs t in
-        let k = k |> BU.map_option (SS.subst_residual_comp subst) in
+        let k = k |> Option.map (SS.subst_residual_comp subst) in
         descend_binders tm [] [] Continue env bs_orig t k
                         (fun bs t k -> Tm_abs {bs; body=t; rc_opt=k})
 
@@ -412,7 +410,7 @@ and on_subterms
        return (Tm_meta {tm=t; meta=m}, flag)
 
      | _ ->
-       (* BU.print1 "GG ignoring %s\n" (tag_of tm); *)
+       (* Format.print1 "GG ignoring %s\n" (tag_of tm); *)
        return (tm.n, Continue)
     in
     let! (tmn', flag) = go () in
@@ -443,12 +441,12 @@ let ctrl_rewrite
     dismiss_all ;!
     let gt = (goal_type g) in
     if_verbose (fun () ->
-        BU.print1 "ctrl_rewrite starting with %s\n" (show gt)) ;!
+        Format.print1 "ctrl_rewrite starting with %s\n" (show gt)) ;!
 
     let! gt' = do_ctrl_rewrite g dir controller rewriter (goal_env g) gt in
 
     if_verbose (fun () ->
-        BU.print1 "ctrl_rewrite seems to have succeded with %s\n" (show gt')) ;!
+        Format.print1 "ctrl_rewrite seems to have succeded with %s\n" (show gt')) ;!
 
     push_goals gs ;!
     let g = goal_with_type g gt' in

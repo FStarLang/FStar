@@ -17,6 +17,7 @@ module FStarC.Stats
 
 open FStarC.Effect
 open FStarC.Class.Monoid
+open FStarC.Class.Show
 
 let enabled = alloc false
 let ever_enabled = alloc false
@@ -131,12 +132,12 @@ let print_all () : string =
   let longest_key = List.fold_left (fun acc (k, _) -> max acc (String.length k)) 20 points in
   let pr1 (p : (string & stat)) : string =
     let k, st = p in
-    Util.format5 "  %s  %s %s ms %s ms %s ms"
+    Format.fmt5 "  %s  %s %s ms %s ms %s ms"
       (lpad longest_key k)
-      (lpad 8 (string_of_int st.ncalls))
-      (lpad 6 (string_of_int (st.ns_tree  / 1000000)))
-      (lpad 6 (string_of_int ((st.ns_tree - st.ns_sub) / 1000000)))
-      (lpad 6 (string_of_int (st.ns_exn   / 1000000)))
+      (lpad 8 (show st.ncalls))
+      (lpad 6 (show (st.ns_tree  / 1000000)))
+      (lpad 6 (show ((st.ns_tree - st.ns_sub) / 1000000)))
+      (lpad 6 (show (st.ns_exn   / 1000000)))
   in
-  Util.format5 "  %s  %s %s %s %s" (lpad longest_key "key") (lpad 8 "calls") (lpad 9 "tree") (lpad 9 "point") (lpad 9 "exn") ^ "\n" ^
+  Format.fmt5 "  %s  %s %s %s %s" (lpad longest_key "key") (lpad 8 "calls") (lpad 9 "tree") (lpad 9 "point") (lpad 9 "exn") ^ "\n" ^
   (points |> List.map pr1 |> String.concat "\n")

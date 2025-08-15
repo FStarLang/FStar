@@ -20,7 +20,6 @@ open FStarC
 open FStarC.Parser
 open FStarC.Parser.AST
 open FStarC.Parser.ParseIt
-open FStarC.Util
 open FStarC.Errors
 open FStarC.Class.Show
 
@@ -47,7 +46,7 @@ let maybe_dump_module (m:modul) =
     | Interface {mname; decls} ->
       if FStarC.Options.dump_module (Ident.string_of_lid mname)
       then (
-        print2 "Parsed module %s\n%s\n"
+        Format.print2 "Parsed module %s\n%s\n"
             (show mname)
             (List.map show decls |> String.concat "\n")
       )
@@ -57,7 +56,7 @@ let parse_file fn =
     | ASTFragment (Inl ast, comments) ->
         ast, comments
     | ASTFragment (Inr _ , _) ->
-        let msg = Util.format1 "%s: expected a module\n" fn in
+        let msg = Format.fmt1 "%s: expected a module\n" fn in
         let r = Range.dummyRange in
         raise_error r Errors.Fatal_ModuleExpected msg
     | ParseError (e, msg, r) ->

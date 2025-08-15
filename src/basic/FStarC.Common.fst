@@ -18,10 +18,13 @@
 
 module FStarC.Common
 
+open FStarC
 open FStarC.Effect
+open FStarC.PSMap
+
 module List = FStarC.List
 module BU = FStarC.Util
-open FStarC.PSMap
+module SB = FStarC.StringBuffer
 
 let snapshot (push: 'a -> 'b) (stackref: ref (list 'c)) (arg: 'a) : (int & 'b) = BU.atomically (fun () ->
   let len : int = List.length !stackref in
@@ -39,7 +42,7 @@ let rollback (pop: unit -> 'a) (stackref: ref (list 'c)) (depth: option int) =
 
 // This function is separate to make it easier to put breakpoints on it
 let raise_failed_assertion msg =
-  failwith (BU.format1 "Assertion failed: %s" msg)
+  failwith (Format.fmt1 "Assertion failed: %s" msg)
 
 let runtime_assert b msg =
   if not b then raise_failed_assertion msg
@@ -48,15 +51,13 @@ let __string_of_list (delim:string) (f : 'a -> string) (l : list 'a) : string =
   match l with
   | [] -> "[]"
   | x::xs ->
-    let strb = BU.new_string_builder () in
-    BU.string_builder_append strb "[";
-    BU.string_builder_append strb (f x);
+    let strb = SB.create 80 in
+    strb |> SB.add "[" |> SB.add (f x) |> ignore;
     List.iter (fun x ->
-               BU.string_builder_append strb delim;
-               BU.string_builder_append strb (f x)
+                strb |> SB.add delim |> SB.add (f x) |> ignore
                ) xs ;
-    BU.string_builder_append strb "]";
-    BU.string_of_string_builder strb
+    strb |> SB.add "]" |> ignore;
+    SB.contents strb
 
 (* Why two? This function was added during a refactoring, and
 both variants existed. We cannot simply move to ";" since that is a

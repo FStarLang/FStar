@@ -53,5 +53,13 @@ instance eq_option (_ : deq 'a) : deq (option 'a) = {
     | _, _ -> false);
 }
 
+instance eq_either (_ : deq 'a) (_ : deq 'b) : deq (either 'a 'b) = {
+  eq = (fun x y -> 
+    match x, y with
+    | Inl a1, Inl a2 -> eq a1 a2
+    | Inr b1, Inr b2 -> eq b1 b2
+    | _, _ -> false);
+}
+
 val (=) : #a:Type -> {| deq a |} -> a -> a -> bool
 let (=) = eq

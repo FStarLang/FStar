@@ -31,7 +31,6 @@ open FStarC.Tactics.Types
 open FStarC.Tactics.Monad
 
 module Range  = FStarC.Range
-module Z      = FStarC.BigInt
 module Core   = FStarC.TypeChecker.Core
 module RD     = FStarC.Reflection.V2.Data
 
@@ -46,8 +45,9 @@ val proofstate_of_all_implicits: Range.t -> env -> implicits -> proofstate & ter
 
 val fixup_range (r : Range.t) : tac (Range.t)
 val compress               : term -> tac term
+val compress_univ          : universe -> tac universe
 val top_env                : unit -> tac env
-val fresh                  : unit -> tac Z.t
+val fresh                  : unit -> tac int
 val refine_intro           : unit -> tac unit
 val tc                     : env -> term -> tac typ
 val tcc                    : env -> term -> tac comp
@@ -57,7 +57,7 @@ val norm                   : list NormSteps.norm_step -> tac unit
 val norm_term_env          : env -> list NormSteps.norm_step -> term -> tac term
 val norm_binding_type      : list NormSteps.norm_step -> RD.binding -> tac unit
 val intro                  : unit -> tac RD.binding
-val intros                 : (max:Z.t) -> tac (list RD.binding)
+val intros                 : (max:int) -> tac (list RD.binding)
 val intro_rec              : unit -> tac (RD.binding & RD.binding)
 val rename_to              : RD.binding -> string -> tac RD.binding
 val revert                 : unit -> tac unit
@@ -79,7 +79,7 @@ val t_trefl                : (*allow_guards:*)bool -> tac unit
 val dup                    : unit -> tac unit
 val prune                  : string -> tac unit
 val addns                  : string -> tac unit
-val t_destruct             : term -> tac (list (fv & Z.t))
+val t_destruct             : term -> tac (list (fv & int))
 val gather_explicit_guards_for_resolved_goals : unit -> tac unit
 val set_options            : string -> tac unit
 val uvar_env               : env -> option typ -> tac term
@@ -98,8 +98,8 @@ val tadmit_t               : term -> tac unit
 val join                   : unit -> tac unit
 val lget                   : typ -> string -> tac term
 val lset                   : typ -> string -> term -> tac unit
-val curms                  : unit -> tac Z.t
-val set_urgency            : Z.t -> tac unit
+val curms                  : unit -> tac int
+val set_urgency            : int -> tac unit
 val set_dump_on_failure    : bool -> tac unit
 val t_commute_applied_match : unit -> tac unit
 val string_to_term         : env -> string -> tac term
@@ -109,13 +109,12 @@ val comp_to_string         : comp -> tac string
 val term_to_doc            : term -> tac Pprint.document
 val comp_to_doc            : comp -> tac Pprint.document
 val range_to_string        : Range.t -> tac string
-val term_eq_old            : term -> term -> tac bool
-val with_compat_pre_core   : Z.t -> tac 'a -> tac 'a
+val with_compat_pre_core   : int -> tac 'a -> tac 'a
 
 val get_vconfig            : unit -> tac FStarC.VConfig.vconfig
 val set_vconfig            : FStarC.VConfig.vconfig -> tac unit
 val t_smt_sync             : FStarC.VConfig.vconfig -> tac unit
-val free_uvars             : term -> tac (list Z.t)
+val free_uvars             : term -> tac (list int)
 
 val all_ext_options        : unit -> tac (list (string & string))
 val ext_getv               : string -> tac string
@@ -159,3 +158,5 @@ val log_issues                        : list Errors.issue -> tac unit
 
 val call_subtac                       : env -> tac unit -> universe -> typ -> refl_tac term
 val call_subtac_tm                    : env -> term     -> universe -> typ -> refl_tac term
+
+val stats_record (a:'a) (wp:'b) (s:string) (f : tac 'c) : tac 'c

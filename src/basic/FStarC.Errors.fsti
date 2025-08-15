@@ -57,7 +57,6 @@ type context_t = list string
 type error = error_code & error_message & Range.t & context_t
 
 exception Error   of error
-exception Warning of error
 exception Stop
 exception Empty_frag
 
@@ -204,3 +203,6 @@ val raise_error_doc  : Range.t -> error_code -> error_message -> 'a
 val log_issue_doc    : Range.t -> error_code -> error_message -> unit
 val raise_error_text : Range.t -> error_code -> string -> 'a
 val log_issue_text   : Range.t -> error_code -> string -> unit
+
+(* Print expected failures as diagnostics, without failing. *)
+val print_expected_failures (issues : list issue) : unit

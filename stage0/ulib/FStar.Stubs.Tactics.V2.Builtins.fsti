@@ -440,15 +440,6 @@ val comp_to_doc : comp -> TacRO Pprint.document
 (** Print a source range as a string *)
 val range_to_string : range -> TacRO string
 
-(** A variant of Reflection.term_eq that may inspect more underlying
-details of terms. This function could distinguish two _otherwise equal
-terms_, but that distinction cannot leave the Tac effect.
-
-This is only exposed as a migration path. Please use
-[Reflection.term_eq] instead. *)
-[@@deprecated "Use Reflection.term_eq instead"]
-val term_eq_old : term -> term -> TacRO bool
-
 (** Runs the input tactic `f` with compat pre core setting `n`.
 It is an escape hatch for maintaining backward compatibility
 for code that breaks with the core typechecker. *)
@@ -496,6 +487,16 @@ val ext_getns (ns:string) : TacRO (list (string & string))
 val alloc (#a:Type) (x:a) : Tac (tref a)
 val read (#a:Type) (r:tref a) : TacRO a
 val write (#a:Type) (r:tref a) (x:a) : Tac unit
+
+(* During a %splice call, return the list of qualifiers
+attached to the splice declaration. Returns empty if the tactic
+was started outside of a splice. *)
+val splice_quals () : TacRO (list qualifier)
+
+(* During a %splice call, return the list of attributes
+attached to the splice declaration. Returns empty if the tactic
+was started outside of a splice. *)
+val splice_attrs () : TacRO (list term)
 
 (***** APIs used in the meta DSL framework *****)
 

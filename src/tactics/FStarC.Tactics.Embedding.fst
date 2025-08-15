@@ -20,7 +20,6 @@ open FStarC
 open FStarC.Effect
 open FStarC.Syntax.Syntax
 open FStarC.Syntax.Embeddings
-open FStarC.Util
 open FStarC.List
 open FStarC.Class.Show
 
@@ -152,7 +151,7 @@ let unfold_lazy_goal (i : lazyinfo) : term =
 (* On that note, we use this (inefficient, FIXME) hack in this module *)
 let mkFV fv us ts = NBETerm.mkFV fv (List.rev us) (List.rev ts)
 let mkConstruct fv us ts = NBETerm.mkConstruct fv (List.rev us) (List.rev ts)
-let fv_as_emb_typ fv = S.ET_app (show fv.fv_name.v, [])
+let fv_as_emb_typ fv = S.ET_app (show fv.fv_name, [])
 
 let e_proofstate_nbe =
     let embed_proofstate _cb (ps:proofstate) : NBETerm.t =
@@ -172,7 +171,7 @@ let e_proofstate_nbe =
           if !Options.debug_embedding then
             Err.log_issue0
               Err.Warning_NotEmbedded
-              (BU.format1 "Not an embedded NBE proofstate: %s\n"
+              (Format.fmt1 "Not an embedded NBE proofstate: %s\n"
                  (NBETerm.t_to_string t));
             None
     in
@@ -198,7 +197,7 @@ let e_goal_nbe =
             Some <| FStarC.Dyn.undyn b
         | _ ->
             if !Options.debug_embedding then
-              Err.log_issue0 Err.Warning_NotEmbedded (BU.format1 "Not an embedded NBE goal: %s" (NBETerm.t_to_string t));
+              Err.log_issue0 Err.Warning_NotEmbedded (Format.fmt1 "Not an embedded NBE goal: %s" (NBETerm.t_to_string t));
             None
     in
     { NBETerm.em = embed_goal
@@ -228,19 +227,21 @@ instance e_exn : embedding exn =
           let open FStarC.Pprint in
           let open FStarC.Class.PP in
           let open FStarC.Errors.Msg in
-          let msg : error_message = [
-            text "Uncaught exception";
-            arbitrary_string (BU.message_of_exn e);
-           ]
-          in
+          let msg, range =
+            match FStarC.Errors.issue_of_exn e with
+            | Some { issue_range; issue_msg } ->
+              issue_msg, issue_range
+            | None ->
+              [arbitrary_string (BU.message_of_exn e)], None in
+          let msg = text "Uncaught exception" :: msg in
           S.mk_Tm_app fstar_tactics_TacticFailure.t
-              [S.as_arg (embed rng (msg, None #Range.t))]
+              [S.as_arg (embed rng (msg, range))]
               rng
     in
     let unembed_exn (t:term) _ : option exn =
         match hd'_and_args t with
         | Tm_fvar fv, [(s, _)] when S.fv_eq_lid fv fstar_tactics_TacticFailure.lid ->
-            BU.bind_opt (unembed' s) (fun s ->
+            Option.bind (unembed' s) (fun s ->
             Some (TacticFailure s))
 
         | Tm_fvar fv, [] when S.fv_eq_lid fv fstar_tactics_SKIP.lid ->
@@ -271,12 +272,12 @@ let e_exn_nbe =
             mkConstruct fstar_tactics_SKIP.fv [] []
 
         | _ ->
-            failwith (BU.format1 "cannot embed exn (NBE) : %s" (BU.message_of_exn e))
+            failwith (Format.fmt1 "cannot embed exn (NBE) : %s" (BU.message_of_exn e))
     in
     let unembed_exn cb (t:NBET.t) : option exn =
         match NBETerm.nbe_t_of_t t with
         | NBETerm.Construct (fv, _, [(s, _)]) when S.fv_eq_lid fv fstar_tactics_TacticFailure.lid ->
-            BU.bind_opt (NBETerm.unembed FStar.Tactics.Typeclasses.solve cb s) (fun s ->
+            Option.bind (NBETerm.unembed FStar.Tactics.Typeclasses.solve cb s) (fun s ->
             Some (TacticFailure s))
 
         | NBETerm.Construct (fv, _, []) when S.fv_eq_lid fv fstar_tactics_SKIP.lid ->
@@ -310,13 +311,13 @@ let e_result (ea : embedding 'a) : Tot _ =
     let unembed_result (t:term) _ : option (__result 'a) =
         match hd'_and_args t with
         | Tm_fvar fv, [_t; (a, _); (ps, _)] when S.fv_eq_lid fv fstar_tactics_Success.lid ->
-            BU.bind_opt (unembed' a) (fun a ->
-            BU.bind_opt (unembed' ps) (fun ps ->
+            Option.bind (unembed' a) (fun a ->
+            Option.bind (unembed' ps) (fun ps ->
             Some (Success (a, ps))))
 
         | Tm_fvar fv, [_t; (e, _); (ps, _)] when S.fv_eq_lid fv fstar_tactics_Failed.lid ->
-            BU.bind_opt (unembed' e) (fun e ->
-            BU.bind_opt (unembed' ps) (fun ps ->
+            Option.bind (unembed' e) (fun e ->
+            Option.bind (unembed' ps) (fun ps ->
             Some (Failed (e, ps))))
 
         | _ -> None
@@ -347,13 +348,13 @@ let e_result_nbe (ea : NBET.embedding 'a)  =
     let unembed_result cb (t:NBET.t) : option (__result 'a) =
         match NBETerm.nbe_t_of_t t with
         | NBETerm.Construct (fv, _, [(ps, _); (a, _); _t]) when S.fv_eq_lid fv fstar_tactics_Success.lid ->
-            BU.bind_opt (NBETerm.unembed ea cb a) (fun a ->
-            BU.bind_opt (NBETerm.unembed e_proofstate_nbe cb ps) (fun ps ->
+            Option.bind (NBETerm.unembed ea cb a) (fun a ->
+            Option.bind (NBETerm.unembed e_proofstate_nbe cb ps) (fun ps ->
             Some (Success (a, ps))))
 
         | NBETerm.Construct (fv, _, [(ps, _); (e, _); _t]) when S.fv_eq_lid fv fstar_tactics_Failed.lid ->
-            BU.bind_opt (NBETerm.unembed e_exn_nbe cb e) (fun e ->
-            BU.bind_opt (NBETerm.unembed e_proofstate_nbe cb ps) (fun ps ->
+            Option.bind (NBETerm.unembed e_exn_nbe cb e) (fun e ->
+            Option.bind (NBETerm.unembed e_proofstate_nbe cb ps) (fun ps ->
             Some (Failed (e, ps))))
         | _ ->
             None
@@ -389,7 +390,7 @@ let e_direction_nbe  =
         | NBETerm.Construct (fv, _, []) when S.fv_eq_lid fv fstar_tactics_bottomup.lid -> Some BottomUp
         | _ ->
           if !Options.debug_embedding then
-            Err.log_issue0 Err.Warning_NotEmbedded (BU.format1 "Not an embedded direction: %s" (NBETerm.t_to_string t));
+            Err.log_issue0 Err.Warning_NotEmbedded (Format.fmt1 "Not an embedded direction: %s" (NBETerm.t_to_string t));
           None
     in
     { NBETerm.em = embed_direction
@@ -427,7 +428,7 @@ let e_ctrl_flag_nbe  =
         | NBETerm.Construct (fv, _, []) when S.fv_eq_lid fv fstar_tactics_Abort.lid -> Some Abort
         | _ ->
           if !Options.debug_embedding then
-            Err.log_issue0 Err.Warning_NotEmbedded (BU.format1 "Not an embedded ctrl_flag: %s" (NBETerm.t_to_string t));
+            Err.log_issue0 Err.Warning_NotEmbedded (Format.fmt1 "Not an embedded ctrl_flag: %s" (NBETerm.t_to_string t));
           None
     in
     { NBETerm.em = embed_ctrl_flag
@@ -476,7 +477,7 @@ let e_unfold_side_nbe  =
       Some Neither
     | _ ->
       if !Options.debug_embedding then
-        Err.log_issue0 Err.Warning_NotEmbedded (BU.format1 "Not an embedded unfold_side: %s" (NBETerm.t_to_string t));
+        Err.log_issue0 Err.Warning_NotEmbedded (Format.fmt1 "Not an embedded unfold_side: %s" (NBETerm.t_to_string t));
       None
   in
   { NBETerm.em = embed_unfold_side
@@ -516,7 +517,7 @@ let e_tot_or_ghost_nbe  =
       Some E_Ghost
     | _ ->
       if !Options.debug_embedding then
-        Err.log_issue0 Err.Warning_NotEmbedded (BU.format1 "Not an embedded tot_or_ghost: %s" (NBETerm.t_to_string t));
+        Err.log_issue0 Err.Warning_NotEmbedded (Format.fmt1 "Not an embedded tot_or_ghost: %s" (NBETerm.t_to_string t));
       None
   in
   { NBETerm.em = embed_tot_or_ghost
@@ -563,7 +564,7 @@ let e_tref_nbe #a =
       if !Options.debug_embedding then
         Err.log_issue0
           Err.Warning_NotEmbedded
-          (BU.format1 "Not an embedded NBE tref: %s\n"
+          (Format.fmt1 "Not an embedded NBE tref: %s\n"
              (NBETerm.t_to_string t));
       None
   in

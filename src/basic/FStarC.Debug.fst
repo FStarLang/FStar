@@ -16,7 +16,7 @@
 
 module FStarC.Debug
 
-module BU = FStarC.Util
+open FStarC.Effect
 
 (* Mutable state *)
 let anyref = mk_ref false
@@ -70,7 +70,7 @@ let any () = !anyref || !_debug_all
 
 let tag (s:string) =
   if any () then
-    BU.print_string ("DEBUG:" ^  s ^ "\n")
+    Format.print_string ("DEBUG:" ^  s ^ "\n")
 
 let enable () = anyref := true
 

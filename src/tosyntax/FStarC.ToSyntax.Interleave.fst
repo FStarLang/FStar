@@ -28,7 +28,6 @@ open FStarC.Class.Show
 open FStarC.Pprint
 open FStarC.Class.PP
 
-module BU = FStarC.Util
 
 (* Some basic utilities *)
 let id_eq_lid i (l:lident) = (string_of_id i) = (string_of_id (ident_of_lid l))
@@ -65,7 +64,7 @@ let definition_lids d =
       match ext_parser with
       | None ->
         raise_error d Errors.Fatal_SyntaxError
-           (BU.format1 "Unknown syntax extension %s" extension_name)
+           (Format.fmt1 "Unknown syntax extension %s" extension_name)
        | Some parser ->
          match parser.parse_decl_name code range with
          | Inl error ->
@@ -199,9 +198,9 @@ let rec prefix_with_iface_decls
              let val_ys, iface = aux ys iface_tl in
              iface_hd::val_ys, iface
 
-           | y::ys, iface_hd::iface_tl when Option.isSome <| List.tryFind (is_val (ident_of_lid y)) iface_tl ->
+           | y::ys, iface_hd::iface_tl when Some? <| List.tryFind (is_val (ident_of_lid y)) iface_tl ->
              raise_error iface_hd Errors.Fatal_WrongDefinitionOrder [
-                 text (Util.format2 "%s is out of order with the definition of %s"
+                 text (Format.fmt2 "%s is out of order with the definition of %s"
                                          (show iface_hd)
                                          (Ident.string_of_lid y))
                ]
@@ -234,7 +233,7 @@ let check_initial_interface (iface:list decl) =
             | Val(x, t) ->  //we have a 'val x' in the interface
               if Util.for_some (is_definition_of x) tl
               then raise_error hd Errors.Fatal_BothValAndLetInInterface 
-                     (Util.format2 "'val %s' and 'let %s' cannot both be provided in an interface" (string_of_id x) (string_of_id x))
+                     (Format.fmt2 "'val %s' and 'let %s' cannot both be provided in an interface" (string_of_id x) (string_of_id x))
               else if hd.quals |> List.contains Assumption
               then raise_error hd Errors.Fatal_AssumeValInInterface
                      "Interfaces cannot use `assume val x : t`; just write `val x : t` instead"
@@ -335,7 +334,7 @@ let initialize_interface (mname:Ident.lid) (l:list decl) : E.withenv unit =
     match E.iface_decls env mname with
     | Some _ ->
       raise_error mname Errors.Fatal_InterfaceAlreadyProcessed
-        (Util.format1 "Interface %s has already been processed" (show mname))
+        (Format.fmt1 "Interface %s has already been processed" (show mname))
     | None ->
       (), E.set_iface_decls env mname decls
 
@@ -359,9 +358,8 @@ let prefix_with_interface_decls mname (impl:decl) : E.withenv (list decl) =
         impl, env
     in
     if Options.dump_module (Ident.string_of_lid mname)
-    then Util.print1 "Interleaved decls:\n%s\n" (show decls);
+    then Format.print1 "Interleaved decls:\n%s\n" (show decls);
     decls,env
-    
 
 let interleave_module (a:modul) (expect_complete_modul:bool) : E.withenv modul =
   fun (env:E.env)  ->
@@ -400,12 +398,12 @@ let interleave_module (a:modul) (expect_complete_modul:bool) : E.withenv modul =
         | _::_ when expect_complete_modul ->
           let open FStarC.Pprint in
           log_issue l Errors.Fatal_InterfaceNotImplementedByModule [
-            text (Util.format1 "Some interface elements were not implemented by module %s:" (show l))
+            text (Format.fmt1 "Some interface elements were not implemented by module %s:" (show l))
                 ^^ sublist empty (List.map (fun d -> doc_of_string (show d)) remaining_iface_vals)
           ];
           a, env
         | _ ->
           if Options.dump_module (string_of_lid l)
-          then Util.print1 "Interleaved module is:\n%s\n" (FStarC.Parser.AST.modul_to_string a);
+          then Format.print1 "Interleaved module is:\n%s\n" (FStarC.Parser.AST.modul_to_string a);
           a, env
       end

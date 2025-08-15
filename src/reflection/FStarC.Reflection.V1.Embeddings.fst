@@ -15,12 +15,14 @@
 *)
 module FStarC.Reflection.V1.Embeddings
 
+open FStarC
 open FStarC.Effect
 open FStarC.Reflection.V1.Data
 open FStarC.Syntax.Syntax
 open FStarC.Syntax.Embeddings
 open FStar.Order
 open FStarC.Errors
+open FStarC.Class.Show
 
 module BU      = FStarC.Util
 module EMB     = FStarC.Syntax.Embeddings
@@ -31,7 +33,6 @@ module RD      = FStarC.Reflection.V1.Data
 module S       = FStarC.Syntax.Syntax
 module SS      = FStarC.Syntax.Subst
 module U       = FStarC.Syntax.Util
-module Z       = FStarC.BigInt
 
 module EmbV2 = FStarC.Reflection.V2.Embeddings
 
@@ -84,7 +85,7 @@ instance e_aqualv =
         | Tm_fvar fv, [] when S.fv_eq_lid fv ref_Q_Explicit.lid -> Some Data.Q_Explicit
         | Tm_fvar fv, [] when S.fv_eq_lid fv ref_Q_Implicit.lid -> Some Data.Q_Implicit
         | Tm_fvar fv, [(t, _)] when S.fv_eq_lid fv ref_Q_Meta.lid ->
-            BU.bind_opt (unembed #_ #e_term t) (fun t ->
+            Option.bind (unembed #_ #e_term t) (fun t ->
             Some (Data.Q_Meta t))
 
         | _ ->
@@ -133,13 +134,13 @@ instance e_universe_view =
     match (U.un_uinst hd).n, args with
     | Tm_fvar fv, [] when S.fv_eq_lid fv ref_Uv_Zero.lid -> Some Uv_Zero
     | Tm_fvar fv, [u, _] when S.fv_eq_lid fv ref_Uv_Succ.lid ->
-      BU.bind_opt (unembed u) (fun u -> u |> Uv_Succ |> Some)
+      Option.bind (unembed u) (fun u -> u |> Uv_Succ |> Some)
     | Tm_fvar fv, [us, _] when S.fv_eq_lid fv ref_Uv_Max.lid ->
-      BU.bind_opt (unembed  us) (fun us -> us |> Uv_Max |> Some)
+      Option.bind (unembed  us) (fun us -> us |> Uv_Max |> Some)
     | Tm_fvar fv, [n, _] when S.fv_eq_lid fv ref_Uv_BVar.lid ->
-      BU.bind_opt (unembed n) (fun n -> n |> Uv_BVar |> Some)
+      Option.bind (unembed n) (fun n -> n |> Uv_BVar |> Some)
     | Tm_fvar fv, [i, _] when S.fv_eq_lid fv ref_Uv_Name.lid ->
-      BU.bind_opt (unembed  i) (fun i -> i |> Uv_Name |> Some)
+      Option.bind (unembed  i) (fun i -> i |> Uv_Name |> Some)
     | Tm_fvar fv, [u, _] when S.fv_eq_lid fv ref_Uv_Unif.lid ->
       let u : universe_uvar = U.unlazy_as_t Lazy_universe_uvar u in
       u |> Uv_Unif |> Some
@@ -171,7 +172,7 @@ instance e_const =
         | C_False   -> ref_C_False.t
 
         | C_Int i ->
-            S.mk_Tm_app ref_C_Int.t [S.as_arg (U.exp_int (Z.string_of_big_int i))]
+            S.mk_Tm_app ref_C_Int.t [S.as_arg (U.exp_int (show i))]
                         Range.dummyRange
         | C_String s ->
             S.mk_Tm_app ref_C_String.t [S.as_arg (embed rng s)]
@@ -203,22 +204,22 @@ instance e_const =
             Some C_False
 
         | Tm_fvar fv, [(i, _)] when S.fv_eq_lid fv ref_C_Int.lid ->
-            BU.bind_opt (unembed i) (fun i ->
+            Option.bind (unembed i) (fun i ->
             Some <| C_Int i)
 
         | Tm_fvar fv, [(s, _)] when S.fv_eq_lid fv ref_C_String.lid ->
-            BU.bind_opt (unembed s) (fun s ->
+            Option.bind (unembed s) (fun s ->
             Some <| C_String s)
 
         | Tm_fvar fv, [(r, _)] when S.fv_eq_lid fv ref_C_Range.lid ->
-            BU.bind_opt (unembed r) (fun r ->
+            Option.bind (unembed r) (fun r ->
             Some <| C_Range r)
 
         | Tm_fvar fv, [] when S.fv_eq_lid fv ref_C_Reify.lid ->
             Some <| C_Reify
 
         | Tm_fvar fv, [(ns, _)] when S.fv_eq_lid fv ref_C_Reflect.lid ->
-            BU.bind_opt (unembed ns) (fun ns ->
+            Option.bind (unembed ns) (fun ns ->
             Some <| C_Reflect ns)
 
         | _ ->
@@ -247,22 +248,22 @@ let rec e_pattern_aq aq =
         let hd, args = U.head_and_args t in
         match (U.un_uinst hd).n, args with
         | Tm_fvar fv, [(c, _)] when S.fv_eq_lid fv ref_Pat_Constant.lid ->
-            BU.bind_opt (unembed c) (fun c ->
+            Option.bind (unembed c) (fun c ->
             Some <| Pat_Constant c)
 
         | Tm_fvar fv, [(f, _); (us_opt, _); (ps, _)] when S.fv_eq_lid fv ref_Pat_Cons.lid ->
-            BU.bind_opt (unembed f) (fun f ->
-            BU.bind_opt (unembed  us_opt) (fun us_opt ->
-            BU.bind_opt (unembed #_ #(e_list (e_tuple2 (e_pattern_aq aq) e_bool)) ps) (fun ps ->
+            Option.bind (unembed f) (fun f ->
+            Option.bind (unembed  us_opt) (fun us_opt ->
+            Option.bind (unembed #_ #(e_list (e_tuple2 (e_pattern_aq aq) e_bool)) ps) (fun ps ->
             Some <| Pat_Cons (f, us_opt, ps))))
 
         | Tm_fvar fv, [(bv, _); (sort, _)] when S.fv_eq_lid fv ref_Pat_Var.lid ->
-            BU.bind_opt (unembed #_ #e_bv bv) (fun bv ->
-            BU.bind_opt (unembed #_ #(e_sealed e_term) sort) (fun sort ->
+            Option.bind (unembed #_ #e_bv bv) (fun bv ->
+            Option.bind (unembed #_ #(e_sealed e_term) sort) (fun sort ->
             Some <| Pat_Var (bv, sort)))
 
         | Tm_fvar fv, [(eopt, _)] when S.fv_eq_lid fv ref_Pat_Dot_Term.lid ->
-            BU.bind_opt (unembed #_ #(e_option e_term) eopt) (fun eopt ->
+            Option.bind (unembed #_ #(e_option e_term) eopt) (fun eopt ->
             Some <| Pat_Dot_Term eopt)
 
         | _ ->
@@ -380,84 +381,84 @@ let e_term_view_aq aq =
         let hd, args = U.head_and_args t in
         match (U.un_uinst hd).n, args with
         | Tm_fvar fv, [(b, _)] when S.fv_eq_lid fv ref_Tv_Var.lid ->
-            BU.bind_opt (unembed #_ #e_bv b) (fun b ->
+            Option.bind (unembed #_ #e_bv b) (fun b ->
             Some <| Tv_Var b)
 
         | Tm_fvar fv, [(b, _)] when S.fv_eq_lid fv ref_Tv_BVar.lid ->
-            BU.bind_opt (unembed #_ #e_bv b) (fun b ->
+            Option.bind (unembed #_ #e_bv b) (fun b ->
             Some <| Tv_BVar b)
 
         | Tm_fvar fv, [(f, _)] when S.fv_eq_lid fv ref_Tv_FVar.lid ->
-            BU.bind_opt (unembed f) (fun f ->
+            Option.bind (unembed f) (fun f ->
             Some <| Tv_FVar f)
 
         | Tm_fvar fv, [(f, _); (us, _)]
           when S.fv_eq_lid fv ref_Tv_UInst.lid ->
-          BU.bind_opt (unembed f) (fun f ->
-          BU.bind_opt (unembed  us) (fun us ->
+          Option.bind (unembed f) (fun f ->
+          Option.bind (unembed  us) (fun us ->
           Some <| Tv_UInst (f, us)))
 
         | Tm_fvar fv, [(l, _); (r, _)] when S.fv_eq_lid fv ref_Tv_App.lid ->
-            BU.bind_opt (unembed #_ #e_term l) (fun l ->
-            BU.bind_opt (unembed #_ #e_argv r) (fun r ->
+            Option.bind (unembed #_ #e_term l) (fun l ->
+            Option.bind (unembed #_ #e_argv r) (fun r ->
             Some <| Tv_App (l, r)))
 
         | Tm_fvar fv, [(b, _); (t, _)] when S.fv_eq_lid fv ref_Tv_Abs.lid ->
-            BU.bind_opt (unembed b) (fun b ->
-            BU.bind_opt (unembed #_ #e_term t) (fun t ->
+            Option.bind (unembed b) (fun b ->
+            Option.bind (unembed #_ #e_term t) (fun t ->
             Some <| Tv_Abs (b, t)))
 
         | Tm_fvar fv, [(b, _); (t, _)] when S.fv_eq_lid fv ref_Tv_Arrow.lid ->
-            BU.bind_opt (unembed b) (fun b ->
-            BU.bind_opt (unembed t) (fun c ->
+            Option.bind (unembed b) (fun b ->
+            Option.bind (unembed t) (fun c ->
             Some <| Tv_Arrow (b, c)))
 
         | Tm_fvar fv, [(u, _)] when S.fv_eq_lid fv ref_Tv_Type.lid ->
-            BU.bind_opt (unembed u) (fun u ->
+            Option.bind (unembed u) (fun u ->
             Some <| Tv_Type u)
 
         | Tm_fvar fv, [(b, _); (sort, _); (t, _)] when S.fv_eq_lid fv ref_Tv_Refine.lid ->
-            BU.bind_opt (unembed #_ #e_bv b) (fun b ->
-            BU.bind_opt (unembed #_ #e_term sort) (fun sort ->
-            BU.bind_opt (unembed #_ #e_term t) (fun t ->
+            Option.bind (unembed #_ #e_bv b) (fun b ->
+            Option.bind (unembed #_ #e_term sort) (fun sort ->
+            Option.bind (unembed #_ #e_term t) (fun t ->
             Some <| Tv_Refine (b, sort, t))))
 
         | Tm_fvar fv, [(c, _)] when S.fv_eq_lid fv ref_Tv_Const.lid ->
-            BU.bind_opt (unembed c) (fun c ->
+            Option.bind (unembed c) (fun c ->
             Some <| Tv_Const c)
 
         | Tm_fvar fv, [(u, _); (l, _)] when S.fv_eq_lid fv ref_Tv_Uvar.lid ->
-            BU.bind_opt (unembed u) (fun u ->
+            Option.bind (unembed u) (fun u ->
             let ctx_u_s : ctx_uvar_and_subst = U.unlazy_as_t Lazy_uvar l in
             Some <| Tv_Uvar (u, ctx_u_s))
 
         | Tm_fvar fv, [(r, _); (attrs, _); (b, _); (ty, _); (t1, _); (t2, _)] when S.fv_eq_lid fv ref_Tv_Let.lid ->
-            BU.bind_opt (unembed r) (fun r ->
-            BU.bind_opt (unembed #_ #(e_list e_term) attrs) (fun attrs ->
-            BU.bind_opt (unembed #_ #e_bv b) (fun b ->
-            BU.bind_opt (unembed #_ #e_term ty) (fun ty->
-            BU.bind_opt (unembed #_ #e_term t1) (fun t1 ->
-            BU.bind_opt (unembed #_ #e_term t2) (fun t2 ->
+            Option.bind (unembed r) (fun r ->
+            Option.bind (unembed #_ #(e_list e_term) attrs) (fun attrs ->
+            Option.bind (unembed #_ #e_bv b) (fun b ->
+            Option.bind (unembed #_ #e_term ty) (fun ty->
+            Option.bind (unembed #_ #e_term t1) (fun t1 ->
+            Option.bind (unembed #_ #e_term t2) (fun t2 ->
             Some <| Tv_Let (r, attrs, b, ty, t1, t2)))))))
 
         | Tm_fvar fv, [(t, _); (ret_opt, _); (brs, _)] when S.fv_eq_lid fv ref_Tv_Match.lid ->
-            BU.bind_opt (unembed #_ #e_term t) (fun t ->
-            BU.bind_opt (unembed #_ #e_match_returns_annotation ret_opt) (fun ret_opt ->
-            BU.bind_opt (unembed #_ #(e_list e_branch) brs) (fun brs ->
+            Option.bind (unembed #_ #e_term t) (fun t ->
+            Option.bind (unembed #_ #e_match_returns_annotation ret_opt) (fun ret_opt ->
+            Option.bind (unembed #_ #(e_list e_branch) brs) (fun brs ->
             Some <| Tv_Match (t, ret_opt, brs))))
 
         | Tm_fvar fv, [(e, _); (t, _); (tacopt, _); (use_eq, _)] when S.fv_eq_lid fv ref_Tv_AscT.lid ->
-            BU.bind_opt (unembed #_ #e_term e) (fun e ->
-            BU.bind_opt (unembed #_ #e_term t) (fun t ->
-            BU.bind_opt (unembed #_ #(e_option e_term) tacopt) (fun tacopt ->
-            BU.bind_opt (unembed use_eq) (fun use_eq ->
+            Option.bind (unembed #_ #e_term e) (fun e ->
+            Option.bind (unembed #_ #e_term t) (fun t ->
+            Option.bind (unembed #_ #(e_option e_term) tacopt) (fun tacopt ->
+            Option.bind (unembed use_eq) (fun use_eq ->
             Some <| Tv_AscribedT (e, t, tacopt, use_eq)))))
 
         | Tm_fvar fv, [(e, _); (c, _); (tacopt, _); (use_eq, _)] when S.fv_eq_lid fv ref_Tv_AscC.lid ->
-            BU.bind_opt (unembed #_ #e_term e) (fun e ->
-            BU.bind_opt (unembed #_ #e_comp c) (fun c ->
-            BU.bind_opt (unembed #_ #(e_option e_term) tacopt) (fun tacopt ->
-            BU.bind_opt (unembed use_eq) (fun use_eq ->
+            Option.bind (unembed #_ #e_term e) (fun e ->
+            Option.bind (unembed #_ #e_comp c) (fun c ->
+            Option.bind (unembed #_ #(e_option e_term) tacopt) (fun tacopt ->
+            Option.bind (unembed use_eq) (fun use_eq ->
             Some <| Tv_AscribedC (e, c, tacopt, use_eq)))))
 
         | Tm_fvar fv, [] when S.fv_eq_lid fv ref_Tv_Unknown.lid ->
@@ -500,8 +501,8 @@ instance e_bv_view =
         let hd, args = U.head_and_args t in
         match (U.un_uinst hd).n, args with
         | Tm_fvar fv, [(nm, _); (idx, _)] when S.fv_eq_lid fv ref_Mk_bv.lid ->
-            BU.bind_opt (unembed #_ #(e_sealed e_string) nm) (fun nm ->
-            BU.bind_opt (unembed idx) (fun idx ->
+            Option.bind (unembed #_ #(e_sealed e_string) nm) (fun nm ->
+            Option.bind (unembed idx) (fun idx ->
             Some <| { bv_ppname = nm ; bv_index = idx }))
 
         | _ ->
@@ -527,10 +528,10 @@ instance e_binder_view =
     match (U.un_uinst hd).n, args with
     | Tm_fvar fv, [(bv, _); (q, _); (attrs, _); (sort, _)]
       when S.fv_eq_lid fv ref_Mk_binder.lid ->
-      BU.bind_opt (unembed #_ #e_bv bv) (fun bv ->
-      BU.bind_opt (unembed q) (fun q ->
-      BU.bind_opt (unembed #_ #e_attributes attrs) (fun attrs ->
-      BU.bind_opt (unembed #_ #e_term sort) (fun sort ->
+      Option.bind (unembed #_ #e_bv bv) (fun bv ->
+      Option.bind (unembed q) (fun q ->
+      Option.bind (unembed #_ #e_attributes attrs) (fun attrs ->
+      Option.bind (unembed #_ #e_term sort) (fun sort ->
       Some <| RD.({ binder_bv=bv;binder_qual=q; binder_attrs=attrs; binder_sort = sort})))))
 
     | _ ->
@@ -571,27 +572,27 @@ instance e_comp_view =
         match (U.un_uinst hd).n, args with
         | Tm_fvar fv, [(t, _)]
           when S.fv_eq_lid fv ref_C_Total.lid ->
-            BU.bind_opt (unembed #_ #e_term t) (fun t ->
+            Option.bind (unembed #_ #e_term t) (fun t ->
             Some <| C_Total t)
 
         | Tm_fvar fv, [(t, _)]
           when S.fv_eq_lid fv ref_C_GTotal.lid ->
-            BU.bind_opt (unembed #_ #e_term t) (fun t ->
+            Option.bind (unembed #_ #e_term t) (fun t ->
             Some <| C_GTotal t)
 
         | Tm_fvar fv, [(pre, _); (post, _); (pats, _)] when S.fv_eq_lid fv ref_C_Lemma.lid ->
-            BU.bind_opt (unembed #_ #e_term pre) (fun pre ->
-            BU.bind_opt (unembed #_ #e_term post) (fun post ->
-            BU.bind_opt (unembed #_ #e_term pats) (fun pats ->
+            Option.bind (unembed #_ #e_term pre) (fun pre ->
+            Option.bind (unembed #_ #e_term post) (fun post ->
+            Option.bind (unembed #_ #e_term pats) (fun pats ->
             Some <| C_Lemma (pre, post, pats))))
 
         | Tm_fvar fv, [(us, _); (eff, _); (res, _); (args, _); (decrs, _)]
                 when S.fv_eq_lid fv ref_C_Eff.lid ->
-            BU.bind_opt (unembed  us) (fun us ->
-            BU.bind_opt (unembed eff) (fun eff ->
-            BU.bind_opt (unembed #_ #e_term res)   (fun res->
-            BU.bind_opt (unembed #_ #(e_list e_argv) args)  (fun args ->
-            BU.bind_opt (unembed #_ #(e_list e_term) decrs)  (fun decrs ->
+            Option.bind (unembed  us) (fun us ->
+            Option.bind (unembed eff) (fun eff ->
+            Option.bind (unembed #_ #e_term res)   (fun res->
+            Option.bind (unembed #_ #(e_list e_argv) args)  (fun args ->
+            Option.bind (unembed #_ #(e_list e_term) decrs)  (fun decrs ->
             Some <| C_Eff (us, eff, res, args, decrs))))))
 
         | _ ->
@@ -631,10 +632,10 @@ let e_lb_view =
         match (U.un_uinst hd).n, args with
         | Tm_fvar fv, [(fv', _); (us, _); (typ, _); (def,_)]
           when S.fv_eq_lid fv ref_Mk_lb.lid ->
-            BU.bind_opt (unembed fv') (fun fv' ->
-            BU.bind_opt (unembed us) (fun us ->
-            BU.bind_opt (unembed #_ #e_term typ) (fun typ ->
-            BU.bind_opt (unembed #_ #e_term def) (fun def ->
+            Option.bind (unembed fv') (fun fv' ->
+            Option.bind (unembed us) (fun us ->
+            Option.bind (unembed #_ #e_term typ) (fun typ ->
+            Option.bind (unembed #_ #e_term def) (fun def ->
             Some <|
               { lb_fv = fv'; lb_us = us; lb_typ = typ; lb_def = def }))))
 
@@ -691,22 +692,22 @@ instance e_sigelt_view =
         let hd, args = U.head_and_args t in
         match (U.un_uinst hd).n, args with
         | Tm_fvar fv, [(nm, _); (us, _); (bs, _); (t, _); (dcs, _)] when S.fv_eq_lid fv ref_Sg_Inductive.lid ->
-            BU.bind_opt (unembed nm) (fun nm ->
-            BU.bind_opt (unembed us) (fun us ->
-            BU.bind_opt (unembed bs) (fun bs ->
-            BU.bind_opt (unembed #_ #e_term t) (fun t ->
-            BU.bind_opt (unembed #_ #(e_list e_ctor) dcs) (fun dcs ->
+            Option.bind (unembed nm) (fun nm ->
+            Option.bind (unembed us) (fun us ->
+            Option.bind (unembed bs) (fun bs ->
+            Option.bind (unembed #_ #e_term t) (fun t ->
+            Option.bind (unembed #_ #(e_list e_ctor) dcs) (fun dcs ->
             Some <| Sg_Inductive (nm, us, bs, t, dcs))))))
 
         | Tm_fvar fv, [(r, _); (lbs, _)] when S.fv_eq_lid fv ref_Sg_Let.lid ->
-            BU.bind_opt (unembed r) (fun r ->
-            BU.bind_opt (unembed lbs) (fun lbs ->
+            Option.bind (unembed r) (fun r ->
+            Option.bind (unembed lbs) (fun lbs ->
             Some <| Sg_Let (r, lbs)))
 
         | Tm_fvar fv, [(nm, _); (us, _); (t, _)] when S.fv_eq_lid fv ref_Sg_Val.lid ->
-            BU.bind_opt (unembed nm) (fun nm ->
-            BU.bind_opt (unembed us) (fun us ->
-            BU.bind_opt (unembed #_ #e_term t) (fun t ->
+            Option.bind (unembed nm) (fun nm ->
+            Option.bind (unembed us) (fun us ->
+            Option.bind (unembed #_ #e_term t) (fun t ->
             Some <| Sg_Val (nm, us, t))))
 
         | Tm_fvar fv, [] when S.fv_eq_lid fv ref_Unk.lid ->
@@ -824,27 +825,27 @@ let e_qualifier =
               Some RD.OnlyName
 
         | Tm_fvar fv, [(l, _)] when S.fv_eq_lid fv ref_qual_Reflectable.lid ->
-            BU.bind_opt (unembed l) (fun l ->
+            Option.bind (unembed l) (fun l ->
             Some <| RD.Reflectable l)
 
         | Tm_fvar fv, [(l, _)] when S.fv_eq_lid fv ref_qual_Discriminator.lid ->
-            BU.bind_opt (unembed l) (fun l ->
+            Option.bind (unembed l) (fun l ->
             Some <| RD.Discriminator l)
 
         | Tm_fvar fv, [(l, _)] when S.fv_eq_lid fv ref_qual_Action.lid ->
-            BU.bind_opt (unembed l) (fun l ->
+            Option.bind (unembed l) (fun l ->
             Some <| RD.Action l)
 
         | Tm_fvar fv, [(payload, _)] when S.fv_eq_lid fv ref_qual_Projector.lid ->
-            BU.bind_opt (unembed payload) (fun (l, i) ->
+            Option.bind (unembed payload) (fun (l, i) ->
             Some <| RD.Projector (l, i))
 
         | Tm_fvar fv, [(payload, _)] when S.fv_eq_lid fv ref_qual_RecordType.lid ->
-            BU.bind_opt (unembed payload) (fun (ids1, ids2) ->
+            Option.bind (unembed payload) (fun (ids1, ids2) ->
             Some <| RD.RecordType (ids1, ids2))
 
         | Tm_fvar fv, [(payload, _)] when S.fv_eq_lid fv ref_qual_RecordConstructor.lid ->
-            BU.bind_opt (unembed payload) (fun (ids1, ids2) ->
+            Option.bind (unembed payload) (fun (ids1, ids2) ->
             Some <| RD.RecordConstructor (ids1, ids2))
 
         | _ ->

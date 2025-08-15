@@ -3,8 +3,7 @@
 
   "fstar_exe": "../stage1/dune/_build/default/fstarc-full/fstarc1_full.exe",
   "options": [
-    "--ext", "optimize_let_vc",
-    "--z3version", "4.13.3"
+    "--ext", "optimize_let_vc"
   ],
   "include_dirs": [
     "../stage1/ulib.checked"

@@ -159,7 +159,7 @@ val mk_tac : (proofstate -> __result 'a) -> tac 'a
 (* inform the core of a well-typed goal *)
 val register_goal (g:goal) : unit
 
-val divide (n:BigInt.t) (l : tac 'a) (r : tac 'b) : tac ('a & 'b)
+val divide (n:int) (l : tac 'a) (r : tac 'b) : tac ('a & 'b)
 val focus (f:tac 'a) : tac 'a
 
 (* Internal utilities *)

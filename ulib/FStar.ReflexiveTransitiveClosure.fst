@@ -16,7 +16,7 @@
 module FStar.ReflexiveTransitiveClosure
 
 open FStar.Tactics.V2
-#set-options "--max_ifuel 1 --max_fuel 0"
+#set-options "--max_ifuel 1 --fuel 0"
 
 noeq
 type _closure (#a:Type u#a) (r:binrel u#a u#r a) : a -> a -> Type u#(max a r) =

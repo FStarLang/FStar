@@ -21,7 +21,6 @@ open FStarC
 open FStarC.Parser.AST
 open FStarC.Errors
 open FStarC.Interactive.Ide.Types
-open FStarC.Util
 
 (* Various kinds of progress messages to print back to the client *)
 type fragment_progress =

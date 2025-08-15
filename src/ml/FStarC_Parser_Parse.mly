@@ -22,7 +22,6 @@ open Prims
 open FStar_Pervasives
 open FStarC_Errors
 open FStarC_List
-open FStarC_Util
 open FStarC_Range
 
 (* TODO : these files should be deprecated and removed *)
@@ -73,7 +72,6 @@ type tc_constraint = {
 %token <string> STRING
 %token <string> IDENT
 %token <string> NAME
-%token <string> TVAR
 %token <string> TILDE
 
 %token <string> INT
@@ -405,8 +403,8 @@ rawDecl:
       {
         let r = rr $loc in
         let lbs = focusLetBindings lbs r in
-        if q <> Rec && List.length lbs <> 1
-        then raise_error_text r Fatal_MultipleLetBinding "Unexpected multiple let-binding (Did you forget some rec qualifier ?)";
+        if q <> Rec && FStarC_List.length lbs > Prims.parse_int "1"
+        then raise_error_text (fst (nth lbs (Prims.parse_int "1"))).prange Fatal_MultipleLetBinding "Unexpected multiple let-binding (Did you forget some rec qualifier ?)";
         TopLevelLet(q, lbs)
       }
   | VAL c=constant
@@ -461,8 +459,8 @@ typars:
   | x=binders                { x }
 
 tvarinsts:
-  | TYP_APP_LESS tvs=separated_nonempty_list(COMMA, tvar) TYP_APP_GREATER
-      { map (fun tv -> mk_binder (TVariable(tv)) (range_of_id tv) Kind None) tvs }
+  | TYP_APP_LESS tvs=separated_nonempty_list(COMMA, ident) TYP_APP_GREATER
+      { map (fun tv -> mk_binder (Variable(tv)) (range_of_id tv) Kind None) tvs }
 
 %inline recordDefinition:
   | LBRACE record_field_decls=right_flexible_nonempty_list(SEMICOLON, recordFieldDecl) RBRACE
@@ -719,7 +717,6 @@ atomicPattern:
   | LENS_PAREN_LEFT pat0=constructorPattern COMMA pats=separated_nonempty_list(COMMA, constructorPattern) LENS_PAREN_RIGHT
       { mk_pattern (PatTuple(pat0::pats, true)) (rr $loc) }
   | LPAREN pat=tuplePattern RPAREN   { pat }
-  | tv=tvar                   { mk_pattern (PatTvar (tv, None, [])) (rr $loc(tv)) }
   | LPAREN op=operator RPAREN
       { mk_pattern (PatOp op) (rr $loc) }
   | UNDERSCORE
@@ -806,9 +803,6 @@ binder:
        let (q, attrs), lid = aqualifiedWithAttrs_lid in
        mk_binder_with_attrs (Variable lid) (rr $loc(aqualifiedWithAttrs_lid)) Type_level q attrs
      }
-
-  | tv=tvar { mk_binder (TVariable tv) (rr $loc) Kind None  }
-       (* small regression here : fun (=x : t) ... is not accepted anymore *)
 
 %public
 multiBinder:
@@ -904,9 +898,6 @@ lident:
 uident:
   | id=NAME { mk_ident(id, rr $loc(id)) }
 
-tvar:
-  | tv=TVAR { mk_ident(tv, rr $loc(tv)) }
-
 
 /******************************************************************************/
 /*                            Types and terms                                 */
@@ -989,11 +980,11 @@ noSeqTerm:
         mk_term (Op(opid, [ e1; e2; e3 ])) (rr2 $loc(e1) $loc(e3)) Expr
       }
   | REQUIRES t=typ
-      { mk_term (Requires(t, None)) (rr2 $loc($1) $loc(t)) Type_level }
+      { mk_term (Requires t) (rr2 $loc($1) $loc(t)) Type_level }
   | ENSURES t=typ
-      { mk_term (Ensures(t, None)) (rr2 $loc($1) $loc(t)) Type_level }
+      { mk_term (Ensures t) (rr2 $loc($1) $loc(t)) Type_level }
   | DECREASES t=typ
-      { mk_term (Decreases (t, None)) (rr2 $loc($1) $loc(t)) Type_level }
+      { mk_term (Decreases t) (rr2 $loc($1) $loc(t)) Type_level }
   | DECREASES LBRACE_COLON_WELL_FOUNDED t=noSeqTerm RBRACE
       (*
        * decreases clause with relation is written as e1 e2,
@@ -1004,7 +995,7 @@ noSeqTerm:
       { match t.tm with
         | App (t1, t2, _) ->
           let ot = mk_term (WFOrder (t1, t2)) (rr2 $loc(t) $loc(t)) Type_level in
-          mk_term (Decreases (ot, None)) (rr2 $loc($1) $loc($4)) Type_level
+          mk_term (Decreases ot) (rr2 $loc($1) $loc($4)) Type_level
         | _ ->
           raise_error_text (rr $loc(t)) Fatal_SyntaxError
             "Syntax error: To use well-founded relations, write e1 e2"
@@ -1511,7 +1502,6 @@ atomicTermQUident:
 
 atomicTermNotQUident:
   | UNDERSCORE { mk_term Wild (rr $loc) Un }
-  | tv=tvar     { mk_term (Tvar tv) (rr $loc) Type_level }
   | c=constant { mk_term (Const c) (rr $loc) Expr }
   | x=opPrefixTerm(atomicTermNotQUident)
     { x }

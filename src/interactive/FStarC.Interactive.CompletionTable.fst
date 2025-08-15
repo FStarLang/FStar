@@ -235,7 +235,7 @@ let rec trie_descend_exact (tr: trie 'a) (query: query) : option (trie 'a) =
   match query with
   | [] -> Some tr
   | ns :: query ->
-    Util.bind_opt (names_find_exact tr.namespaces ns)
+    Option.bind (names_find_exact tr.namespaces ns)
       (fun scope -> trie_descend_exact scope query)
 
 let rec trie_find_exact (tr: trie 'a) (query: query) : option 'a =
@@ -243,7 +243,7 @@ let rec trie_find_exact (tr: trie 'a) (query: query) : option 'a =
   | [] -> failwith "Empty query in trie_find_exact"
   | [name] -> names_find_exact tr.bindings name
   | ns :: query ->
-    Util.bind_opt (names_find_exact tr.namespaces ns)
+    Option.bind (names_find_exact tr.namespaces ns)
       (fun scope -> trie_find_exact scope query)
 
 let names_insert (name_collections: names 'a) (id: string) (v: 'a) : names 'a =
@@ -257,7 +257,7 @@ let rec namespaces_mutate (namespaces: names (trie 'a)) (ns: string) (q: query)
                           (rev_acc: query)
                           (mut_node: trie 'a -> string -> query -> query -> names (trie 'a) -> trie 'a)
                           (mut_leaf: trie 'a -> query -> trie 'a)=
-  let trie = Util.dflt trie_empty (names_find_exact namespaces ns) in
+  let trie = Option.dflt trie_empty (names_find_exact namespaces ns) in
   names_insert namespaces ns (trie_mutate trie q rev_acc mut_node mut_leaf)
 
 and trie_mutate (tr: trie 'a) (q: query) (rev_acc: query)
@@ -279,7 +279,7 @@ let trie_insert (tr: trie 'a) (ns_query: query) (id: string) (v: 'a) : trie 'a =
 let trie_import (tr: trie 'a) (host_query: query) (included_query: query)
                 (mutator: trie 'a -> trie 'a -> string -> trie 'a) =
   let label = query_to_string included_query in
-  let included_trie = Util.dflt trie_empty (trie_descend_exact tr included_query) in
+  let included_trie = Option.dflt trie_empty (trie_descend_exact tr included_query) in
   trie_mutate_leaf tr host_query (fun tr _ -> mutator tr included_trie label)
 
 let trie_include (tr: trie 'a) (host_query: query) (included_query: query)
@@ -463,12 +463,12 @@ let json_of_completion_result (result: completion_result) =
 let completion_result_of_lid (path, _lid) =
   { completion_match_length = match_length_of_path path;
     completion_candidate = string_of_path path;
-    completion_annotation = Util.dflt "" (first_import_of_path path) }
+    completion_annotation = Option.dflt "" (first_import_of_path path) }
 
 let completion_result_of_mod annot loaded path =
   { completion_match_length = match_length_of_path path;
     completion_candidate = string_of_path path;
-    completion_annotation = Util.format1 (if loaded then " %s " else "(%s)") annot }
+    completion_annotation = Format.fmt1 (if loaded then " %s " else "(%s)") annot }
 
 let completion_result_of_ns_or_mod (path, symb) =
   match symb with

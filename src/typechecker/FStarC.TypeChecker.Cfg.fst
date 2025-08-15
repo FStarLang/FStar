@@ -24,8 +24,8 @@ let steps_to_string f =
     | None -> "None"
     | Some x -> "Some ("^ f x ^ ")"
   in
-  let b = BU.string_of_bool in
-  BU.format
+  let b = string_of_bool in
+  Format.fmt
   "{\n\
     beta = %s;\n\
     iota = %s;\n\
@@ -260,18 +260,18 @@ instance showable_cfg : showable cfg = {
   show = (fun cfg ->
              String.concat "\n"
                  ["{";
-                 BU.format1 "  steps = %s;" (steps_to_string cfg.steps);
-                 BU.format1 "  delta_level = %s;" (show cfg.delta_level);
+                 Format.fmt1 "  steps = %s;" (steps_to_string cfg.steps);
+                 Format.fmt1 "  delta_level = %s;" (show cfg.delta_level);
                  "}" ]);
 }
 
 let cfg_env cfg = cfg.tcenv
 
 let find_prim_step cfg fv =
-    PSMap.try_find cfg.primitive_steps (I.string_of_lid fv.fv_name.v)
+    PSMap.try_find cfg.primitive_steps (I.string_of_lid fv.fv_name)
 
 let is_prim_step cfg fv =
-    BU.is_some (PSMap.try_find cfg.primitive_steps (I.string_of_lid fv.fv_name.v))
+    Some? (PSMap.try_find cfg.primitive_steps (I.string_of_lid fv.fv_name))
 
 let log cfg f =
     if cfg.debug.gen then f () else ()
@@ -311,7 +311,7 @@ let fixto n s =
 let primop_time_report () : string =
     let pairs = SMap.fold primop_time_map (fun nm ns rest -> (nm, ns)::rest) [] in
     let pairs = BU.sort_with (fun (_, t1) (_, t2) -> t1 - t2) pairs in
-    List.fold_right (fun (nm, ns) rest -> (BU.format2 "%sms --- %s\n" (fixto 10 (BU.string_of_int (ns / 1000000))) nm) ^ rest) pairs ""
+    List.fold_right (fun (nm, ns) rest -> (Format.fmt2 "%sms --- %s\n" (fixto 10 (show (ns / 1000000))) nm) ^ rest) pairs ""
 
 let extendable_primops_dirty : ref bool = mk_ref true
 

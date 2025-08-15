@@ -43,7 +43,7 @@ module HS = FStar.HyperStack
 type u8 = UInt8.t
 type u32 = U32.t
 
-#set-options "--max_fuel 0 --max_ifuel 0"
+#set-options "--fuel 0 --ifuel 0"
 
 
 /// This is the frozen until index in the sequence representation of a PrefixFreezableBuffer

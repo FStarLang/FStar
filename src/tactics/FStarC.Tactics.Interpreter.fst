@@ -23,7 +23,6 @@ open FStarC
 open FStarC.Effect
 open FStarC.List
 open FStarC.Range
-open FStarC.Util
 open FStarC.Syntax.Syntax
 open FStarC.Syntax.Embeddings
 open FStarC.TypeChecker.Common
@@ -41,7 +40,6 @@ open FStarC.Class.Monad
 open FStarC.Syntax.Print {}
 module Listlike = FStarC.Class.Listlike
 
-module BU      = FStarC.Util
 module E       = FStarC.Tactics.Embedding
 module Env     = FStarC.TypeChecker.Env
 module Err     = FStarC.Errors
@@ -141,10 +139,10 @@ let unembed_tactic_0 (eb:embedding 'b) (embedded_tac_b:term) (ncb:norm_cb) : tac
                  else N.normalize_with_primitive_steps
     in
     (* if proof_state.tac_verb_dbg then *)
-    (*     BU.print1 "Starting normalizer with %s\n" (show tm); *)
+    (*     Format.print1 "Starting normalizer with %s\n" (show tm); *)
     let result = norm_f (primitive_steps ()) steps proof_state.main_context tm in
     (* if proof_state.tac_verb_dbg then *)
-    (*     BU.print1 "Reduced tactic: got %s\n" (show result); *)
+    (*     Format.print1 "Reduced tactic: got %s\n" (show result); *)
 
     let res = unembed result ncb in
 
@@ -299,7 +297,7 @@ let run_unembedded_tactic_on_ps
     let ps = { ps with main_context = { ps.main_context with range = rng_goal } } in
     let env = ps.main_context in
     (* if !dbg_Tac then *)
-    (*     BU.print1 "Running tactic with goal = (%s) {\n" (show typ); *)
+    (*     Format.print1 "Running tactic with goal = (%s) {\n" (show typ); *)
     let res =
       Profiling.profile
         (fun () -> run_safe (tau arg) ps)
@@ -307,7 +305,7 @@ let run_unembedded_tactic_on_ps
         "FStarC.Tactics.Interpreter.run_safe"
     in
     if !dbg_Tac then
-        BU.print_string "}\n";
+        Format.print_string "}\n";
 
     match res with
     | Success (ret, ps) ->
@@ -315,17 +313,17 @@ let run_unembedded_tactic_on_ps
             do_dump_proofstate ps "at the finish line";
 
         (* if !dbg_Tac || Options.tactics_info () then *)
-        (*     BU.print1 "Tactic generated proofterm %s\n" (show w); *)
+        (*     Format.print1 "Tactic generated proofterm %s\n" (show w); *)
         let remaining_smt_goals = ps.goals@ps.smt_goals in
         List.iter
           (fun g ->
             mark_goal_implicit_already_checked g;//all of these will be fed to SMT anyway
             if is_irrelevant g
             then (
-              if !dbg_Tac then BU.print1 "Assigning irrelevant goal %s\n" (show (goal_witness g));
+              if !dbg_Tac then Format.print1 "Assigning irrelevant goal %s\n" (show (goal_witness g));
               if TcRel.teq_nosmt_force (goal_env g) (goal_witness g) U.exp_unit
               then ()
-              else failwith (BU.format1 "Irrelevant tactic witness does not unify with (): %s"
+              else failwith (Format.fmt1 "Irrelevant tactic witness does not unify with (): %s"
                                                            (show (goal_witness g)))
             ))
           remaining_smt_goals;
@@ -333,19 +331,19 @@ let run_unembedded_tactic_on_ps
         // Check that all implicits were instantiated
         Errors.with_ctx "While checking implicits left by a tactic" (fun () ->
           if !dbg_Tac then
-              BU.print1 "About to check tactic implicits: %s\n" (FStarC.Common.string_of_list
+              Format.print1 "About to check tactic implicits: %s\n" (FStarC.Common.string_of_list
                                                                       (fun imp -> show imp.imp_uvar)
                                                                       ps.all_implicits);
 
           let g = {Env.trivial_guard with TcComm.implicits=Listlike.from_list ps.all_implicits} in
           let g = TcRel.solve_deferred_constraints env g in
           if !dbg_Tac then
-              BU.print2 "Checked %s implicits (1): %s\n"
+              Format.print2 "Checked %s implicits (1): %s\n"
                           (show (List.length ps.all_implicits))
                           (show ps.all_implicits);
           let tagged_implicits = TcRel.resolve_implicits_tac env g in
           if !dbg_Tac then
-              BU.print2 "Checked %s implicits (2): %s\n"
+              Format.print2 "Checked %s implicits (2): %s\n"
                           (show (List.length ps.all_implicits))
                           (show ps.all_implicits);
           report_implicits rng_goal tagged_implicits
@@ -413,7 +411,7 @@ let run_tactic_on_ps'
   =
     let env = ps.main_context in
     if !dbg_Tac then
-        BU.print2 "Typechecking tactic: (%s) (already_typed: %s) {\n"
+        Format.print2 "Typechecking tactic: (%s) (already_typed: %s) {\n"
           (show tactic)
           (show tactic_already_typed);
 
@@ -428,7 +426,7 @@ let run_tactic_on_ps'
     in
 
     if !dbg_Tac then
-        BU.print_string "}\n";
+        Format.print_string "}\n";
 
     TcRel.force_trivial_guard env g;
     Err.stop_if_err ();

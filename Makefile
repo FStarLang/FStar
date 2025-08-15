@@ -77,8 +77,8 @@ build: 2
 	# the timestamp of directories, and we would keep triggering
 	# rebuilds.
 	find stage0/ \
-	  -path stage0/dune/_build -prune -exec false -o \
-	  -path stage0/out -prune -exec false -o \
+	  \( -path stage0/dune/_build -prune -exec false \; \) -o \
+	  \( -path stage0/out -prune -exec false \; \) -o \
 	  -type f -newer $@ -exec touch $@ \; -quit
 
 stage0/out/bin/fstar.exe: .stage0.touch
@@ -158,9 +158,12 @@ $(FSTAR1_FULL_EXE): .bare1.src.touch .full1.src.touch .src.ml.touch $(MAYBEFORCE
 	  OUTPUT_DIR=stage1/ulib.pluginml/ \
 	  CODEGEN=PluginNoLib \
 	  TAG=pluginlib \
-	  DEPFLAGS='--extract +FStar.Tactics,+FStar.Reflection,+FStar.Sealed' \
+	  DEPFLAGS='--extract +FStar.Tactics,+FStar.Reflection,+FStar.Sealed,-FStar.SizeT,-FStar.PtrDiffT' \
 	  TOUCH=$@ \
 	  $(MAKE) -f mk/lib.mk ocaml
+	  # NOTE: not extracting SizeT/PtrDiff in stage 1 as that is currently broken but
+	  # to requiring some staging (it uses FStar.UInt64.ne, which is not there
+	  # in the parent compiler). Remove after bumping stage0.
 
 .plib1.touch: .plib1.src.touch .src.ml.touch $(MAYBEFORCE)
 	$(call bold_msg, "BUILD", "STAGE 1 PLUGLIB")
@@ -401,6 +404,16 @@ package-src-2: .stage2.src.touch .force
 package: package-2
 package-src: package-src-2
 
+test-1-bare: override FSTAR_EXE := $(abspath $(FSTAR1_BARE_EXE))
+test-1-bare: override FSTAR_LIB := $(abspath ulib)
+test-1-bare: $(FSTAR1_BARE_EXE)
+	$(MAKE) -C bare-tests
+
+test-2-bare: override FSTAR_EXE := $(abspath $(FSTAR2_BARE_EXE))
+test-2-bare: override FSTAR_LIB := $(abspath ulib)
+test-2-bare: $(FSTAR2_BARE_EXE)
+	$(MAKE) -C bare-tests
+
 test: test-2
 
 test-1: override FSTAR_EXE := $(abspath stage1/out/bin/fstar.exe)
@@ -466,8 +479,10 @@ bump-stage0: stage0_new
 	# Now that stage0 supports all features, we can return to a clean state
 	# where the 01 makefile is equal to the 12 makefile. Same for stage1
 	# support and config code, we just take it from the stage2.
-	rm -f mk/fstar-01.mk
-	ln -s fstar-12.mk mk/fstar-01.mk
+	rm -f mk/generic-0.mk
+	ln -s generic-1.mk mk/generic-0.mk
+	cp mk/fstar-12.mk mk/fstar-01.mk
+	sed -i 's,include mk/generic-1.mk,include mk/generic-0.mk,' mk/fstar-01.mk
 	rm -rf stage1
 	cp -r stage2 stage1
 	rm -f stage1/dune/fstar-guts/app

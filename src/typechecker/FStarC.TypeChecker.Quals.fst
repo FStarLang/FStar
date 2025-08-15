@@ -204,13 +204,13 @@ let check_sigelt_quals_pre (env:FStarC.TypeChecker.Env.env) se =
 let check_erasable env quals (r:Range.t) se =
   let lids = U.lids_of_sigelt se in
   let val_exists =
-    lids |> BU.for_some (fun l -> Option.isSome (Env.try_lookup_val_decl env l))
+    lids |> BU.for_some (fun l -> Some? (Env.try_lookup_val_decl env l))
   in
   let val_has_erasable_attr =
     lids |> BU.for_some (fun l ->
       let attrs_opt = Env.lookup_attrs_of_lid env l in
-      Option.isSome attrs_opt
-      && U.has_attribute (Option.get attrs_opt) FStarC.Parser.Const.erasable_attr)
+      Some? attrs_opt
+      && U.has_attribute (Option.must attrs_opt) FStarC.Parser.Const.erasable_attr)
   in
   let se_has_erasable_attr = U.has_attribute se.sigattrs FStarC.Parser.Const.erasable_attr in
   if ((val_exists && val_has_erasable_attr) && not se_has_erasable_attr)
@@ -277,9 +277,9 @@ let check_must_erase_attribute env se =
 
      | Some iface_decls ->
        snd lbs |> List.iter (fun lb ->
-           let lbname = BU.right lb.lbname in
+           let lbname = Inr?.v lb.lbname in
            let has_iface_val =
-               iface_decls |> BU.for_some (Parser.AST.decl_is_val (ident_of_lid lbname.fv_name.v))
+               iface_decls |> BU.for_some (Parser.AST.decl_is_val (ident_of_lid lbname.fv_name))
            in
            if has_iface_val
            then
@@ -287,14 +287,14 @@ let check_must_erase_attribute env se =
                let has_attr = Env.fv_has_attr env lbname C.must_erase_for_extraction_attr in
                if must_erase && not has_attr
                then log_issue lbname Error_MustEraseMissing [
-                        text (BU.format1 "Values of type `%s` will be erased during extraction, \
+                        text (Format.fmt1 "Values of type `%s` will be erased during extraction, \
                                but its interface hides this fact." (show lbname));
-                        text (BU.format1 "Add the `must_erase_for_extraction` \
+                        text (Format.fmt1 "Add the `must_erase_for_extraction` \
                                attribute to the `val %s` declaration for this symbol in the interface" (show lbname));
                       ]
                else if has_attr && not must_erase
                then log_issue lbname Error_MustEraseMissing [
-                        text (BU.format1 "Values of type `%s` cannot be erased during extraction, \
+                        text (Format.fmt1 "Values of type `%s` cannot be erased during extraction, \
                                but the `must_erase_for_extraction` attribute claims that it can."
                                (show lbname));
                         text "Please remove the attribute.";
@@ -312,10 +312,10 @@ let check_typeclass_instance_attribute env (rng:Range.t) se =
   in
   let check_instance_typ (ty:typ) : unit =
     let _, res = U.arrow_formals_comp ty in
-    if not (U.is_total_comp res) then
+    if not (Options.ml_ish ()) && not (U.is_total_comp res) then
       log_issue rng FStarC.Errors.Error_UnexpectedTypeclassInstance [
           text "Instances are expected to be total.";
-          text "This instance has effect" ^^ pp (U.comp_effect_name res);
+          text "This instance has effect" ^/^ pp (U.comp_effect_name res);
       ];
 
     let t = U.comp_result res in

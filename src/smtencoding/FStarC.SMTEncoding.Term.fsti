@@ -19,7 +19,6 @@ open FStarC
 
 open FStarC
 open FStarC.Effect
-open FStarC.Util
 open FStarC.Class.Show
 open FStarC.List
 open FStarC.Class.Ord

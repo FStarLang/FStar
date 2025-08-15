@@ -254,7 +254,7 @@ let rec extract_from_ref_set e = match e.tm with
   | App ({tm=Var _}, {tm=App({tm=Var _}, e, Nothing)}, Nothing) -> [e]
   | App({tm = App({tm=Var _}, e1, Nothing)}, e2, Nothing) ->
       extract_from_ref_set e1 @ extract_from_ref_set e2
-  | _ -> failwith (Util.format1 "Not a ref set %s" (term_to_string e))
+  | _ -> failwith (Format.fmt1 "Not a ref set %s" (term_to_string e))
 
 let is_general_application e =
   not (is_array e || is_ref_set e)
@@ -362,7 +362,7 @@ let max_level l =
   let find_level_and_max n level =
     match List.tryFind (fun (_, tokens) -> tokens = snd level) level_table with
       | Some ((_,l,_), _) -> max n l
-      | None -> failwith (Util.format1 "Undefined associativity level %s"
+      | None -> failwith (Format.fmt1 "Undefined associativity level %s"
                                       (String.concat "," (List.map token_to_string (snd level))))
   in List.fold_left find_level_and_max 0 l
 
@@ -880,8 +880,8 @@ and p_typeDecl pre = function
   | TyconVariant (lid, bs, typ_opt, ct_decls) ->
     let p_constructorBranchAndComments (uid, payload, attrs) =
         let range = extend_to_end_of_line (
-          dflt (range_of_id uid) 
-               (bind_opt payload 
+          Option.dflt (range_of_id uid) 
+               (Option.bind payload 
                    (function | VpOfNotation t | VpArbitrary t -> Some t.range
                              | VpRecord (record, _)           -> None))) in
         let comm, ctor = with_comment_sep p_constructorBranch (uid, payload, attrs) range in
@@ -1014,7 +1014,7 @@ and p_effectDecl ps d = match d.d with
   | Tycon(false, _, [TyconAbbrev(lid, [], None, e)]) ->
       prefix2 (p_lident lid ^^ space ^^ equals) (p_simpleTerm ps false e)
   | _ ->
-      failwith (Util.format1 "Not a declaration of an effect member... or at least I hope so : %s"
+      failwith (Format.fmt1 "Not a declaration of an effect member... or at least I hope so : %s"
                               (show d))
 
 and p_subEffect lift =
@@ -1145,10 +1145,6 @@ and p_atomicPattern p = match p.pat with
     soft_braces_with_nesting (separate_break_map semi p_recordFieldPat pats)
   | PatTuple(pats, true) ->
     surround 2 1 (lparen ^^ bar) (separate_break_map comma p_constructorPattern pats) (bar ^^ rparen)
-  | PatTvar (tv, arg_qualifier_opt, attrs) ->
-    assert (arg_qualifier_opt = None) ;
-    assert (attrs = []);
-    p_tvar tv
   | PatOp op ->
     lparen ^^ space ^^ str (Ident.string_of_id op) ^^ space ^^ rparen
   | PatWild (aqual, attrs) ->
@@ -1164,7 +1160,7 @@ and p_atomicPattern p = match p.pat with
   | PatApp ({pat = PatName _}, _)
   | PatTuple (_, false) ->
       soft_parens_with_nesting (p_tuplePattern p)
-  | _ -> failwith (Util.format1 "Invalid pattern %s" (pat_to_string p))
+  | _ -> failwith (Format.fmt1 "Invalid pattern %s" (pat_to_string p))
 
 (* Skipping patternOrMultibinder since it would need retro-engineering the flattening of binders *)
 
@@ -1193,7 +1189,6 @@ and p_binder is_atomic b =
 and p_binder' (no_pars: bool) (is_atomic: bool) (b: binder): document & option (document & catf) =
   match b.b with
   | Variable lid -> optional p_aqual b.aqual ^^ p_attributes false b.battributes ^^ p_lident lid, None
-  | TVariable lid -> p_attributes false b.battributes ^^ p_lident lid, None
   | Annotated (lid, t) ->
       let b', t' =
         match t.tm with
@@ -1214,7 +1209,6 @@ and p_binder' (no_pars: bool) (is_atomic: bool) (b: binder): document & option (
             (fun x y -> group (cat_with_colon x y))
         in
         b', Some (t', catf)
-  | TAnnotated _ -> failwith "Is this still used ?"
   | NoName t ->
     begin match t.tm with
       | Refine ({b = NoName t}, phi) ->
@@ -1347,18 +1341,15 @@ and p_noSeqTerm' ps pb e = match e.tm with
       group (
         group (p_atomicTermNotQUident e1 ^^ dot ^^ soft_brackets_lens_access_with_nesting (p_term false false e2)
           ^^ space ^^ larrow) ^^ jump2 (p_noSeqTermAndComment ps pb e3))
-  | Requires (e, wtf) ->
-      assert (wtf = None);
+  | Requires e ->
       group (str "requires" ^/^ p_typ ps pb e)
-  | Ensures (e, wtf) ->
-      assert (wtf = None);
+  | Ensures e ->
       group (str "ensures" ^/^ p_typ ps pb e)
   | WFOrder (rel, e) ->
     p_dec_wf ps pb rel e
   | LexList l ->
       group (str "%" ^^ p_term_list ps pb l)
-  | Decreases (e, wtf) ->
-      assert (wtf = None);
+  | Decreases e ->
       group (str "decreases" ^/^ p_typ ps pb e)
   | Attributes es ->
       group (str "attributes" ^/^ separate_map break1 p_atomicTerm es)
@@ -1368,8 +1359,8 @@ and p_noSeqTerm' ps pb e = match e.tm with
        * semicolons. We forward our caller's [ps] parameter, though, because
        * something in [e2] may swallow. *)
       if is_unit e3
-      then group ((str ("if" ^ (dflt "" (op_opt `map_opt` string_of_id
-                                          `bind_opt` strip_prefix "let")))
+      then group ((str ("if" ^ (Option.dflt "" (Option.map string_of_id op_opt
+                                          `Option.bind` strip_prefix "let")))
                   ^/+^ p_noSeqTermAndComment false false e1) ^/^ (str "then" ^/+^ p_noSeqTermAndComment ps pb e2))
       else
            let e2_doc =
@@ -1402,8 +1393,8 @@ and p_noSeqTerm' ps pb e = match e.tm with
               separate_map_last hardline p_patternBranch branches))
   | Match (e, op_opt, ret_opt, branches) ->
       let match_doc
-        = str ("match" ^ (dflt "" (op_opt `map_opt` string_of_id
-                                          `bind_opt` strip_prefix "let"))) in
+        = str ("match" ^ (Option.dflt "" (Option.map string_of_id op_opt
+                                          `Option.bind` strip_prefix "let"))) in
       paren_if (ps || pb) (
       (match ret_opt with
        | None ->
@@ -2010,10 +2001,8 @@ and p_refinedBinder b phi =
     match b.b with
     | Annotated (lid, t) -> p_refinement b.aqual b.battributes (p_lident lid) t phi
     | Variable lid ->       p_refinement b.aqual b.battributes (p_lident lid) (mk_term Wild (range_of_id lid) Type_level) phi
-    | TAnnotated _ -> failwith "Is this still used ?"
-    | TVariable _
     | NoName _ ->
-      failwith (Util.format1 "Impossible: a refined binder ought to be annotated (%s)" (binder_to_string b))
+      failwith (Format.fmt1 "Impossible: a refined binder ought to be annotated (%s)" (binder_to_string b))
 
 (* A simple def can be followed by a ';'. Protect except for the last one. *)
 and p_simpleDef ps (lid, e) =
@@ -2110,7 +2099,6 @@ and p_atomicTermNotQUident e = match e.tm with
   | Wild -> underscore
   | Var lid when lid_equals lid C.assert_lid -> str "assert"
   | Var lid when lid_equals lid C.assume_lid -> str "assume"
-  | Tvar tv -> p_tvar tv
   | Const c -> p_constant c
   | Name lid when lid_equals lid C.true_lid ->
     str "True"
@@ -2165,7 +2153,7 @@ and p_projectionLHS e = match e.tm with
   (* they are considered as invalid AST. We try to fail as soon as possible in order *)
   (* to prevent the pretty printer from looping *)
   | Op (op, args) when not (handleable_op op args) ->
-    failwith ("Operation " ^ Ident.string_of_id op ^ " with " ^ string_of_int (List.length args) ^
+    failwith ("Operation " ^ Ident.string_of_id op ^ " with " ^ show (List.length args) ^
               " arguments couldn't be handled by the pretty printer")
   | Uvar id ->
     failwith "Unexpected universe variable out of universe context"
@@ -2175,7 +2163,6 @@ and p_projectionLHS e = match e.tm with
   | Wild        (* p_atomicTermNotQUident *)
   | Const _     (* p_atomicTermNotQUident *)
   | Op _        (* All handleable cases should be caught in the recursion loop *)
-  | Tvar _      (* p_atomicTermNotQUident *)
   | Var _       (* p_projectionLHS *)
   | Name _      (* p_atomicTerm *)
   | Construct _ (* p_atomicTerm and p_appTerm *)
@@ -2262,7 +2249,7 @@ and p_universeFrom u = match u.tm with
               separate_map space (fun (u,_) -> p_atomicUniverse u) args)
       | _ ->
         (* TODO : refine the failwiths with informations *)
-        failwith (Util.format1 ("Invalid term in universe context %s") (term_to_string u))
+        failwith (Format.fmt1 ("Invalid term in universe context %s") (term_to_string u))
     end
   | _ -> p_atomicUniverse u
 
@@ -2273,7 +2260,7 @@ and p_atomicUniverse u = match u.tm with
   | Paren u -> soft_parens_with_nesting (p_universeFrom u)
   | App _ -> soft_parens_with_nesting (p_universeFrom u)
   | Op(id, [_ ; _]) when string_of_id id = "+" -> soft_parens_with_nesting (p_universeFrom u)
-  | _ -> failwith (Util.format1 "Invalid term in universe context %s" (term_to_string u))
+  | _ -> failwith (Format.fmt1 "Invalid term in universe context %s" (term_to_string u))
 
 let term_to_document e =
   p_term false false e

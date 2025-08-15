@@ -60,7 +60,6 @@ val unzip3 : list ('a & 'b & 'c) -> Tot ((list 'a) & (list 'b) & (list 'c))
 val zip : (list 'a) -> (list 'b) -> (list ('a & 'b))
 val zip3 : (list 'a) -> (list 'b) -> (list 'c) -> (list ('a & 'b & 'c))
 val sortWith : ('a -> 'a -> int) -> (list 'a) -> (list 'a)
-val bool_of_compare : ('a -> 'a -> Tot int) -> 'a -> 'a -> Tot bool
 val tail : (list '_1225) -> (list '_1225)
 val tl : list '_1230 -> list '_1230
 val rev_append : (list '_5110) -> (list '_5110) -> Tot (list '_5110)

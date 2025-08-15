@@ -16,7 +16,7 @@
 module OneTimePad
 
 open Bijection
-#reset-options "--z3rlimit 100 --initial_fuel 0 --max_fuel 0 --initial_ifuel 4 --max_ifuel 4"
+#reset-options "--z3rlimit 100 --fuel 0 --ifuel 4"
 let nib = bool & bool & bool & bool
 let xor_b (b1:bool) (b2:bool) = b1 <> b2
 let xor (a, b, c, d) (w, x, y, z) = (a `xor_b` w,  b `xor_b` x, c `xor_b` y, d `xor_b` z)

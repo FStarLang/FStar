@@ -6,22 +6,22 @@ let uu___is_EQ : 'a . 'a equiv -> Prims.bool = fun projectee -> true
 let equality_equiv : 'a . unit -> 'a equiv = fun uu___ -> EQ ((), (), (), ())
 type ('a, 'eq) cm =
   | CM of 'a * ('a -> 'a -> 'a) * unit * unit * unit * unit 
-let uu___is_CM : 'a . 'a equiv -> ('a, unit) cm -> Prims.bool =
+let uu___is_CM : 'a . 'a equiv -> ('a, Obj.t) cm -> Prims.bool =
   fun eq -> fun projectee -> true
-let __proj__CM__item__unit : 'a . 'a equiv -> ('a, unit) cm -> 'a =
+let __proj__CM__item__unit : 'a . 'a equiv -> ('a, Obj.t) cm -> 'a =
   fun eq ->
     fun projectee ->
       match projectee with
       | CM (unit, mult, identity, associativity, commutativity, congruence)
           -> unit
-let __proj__CM__item__mult : 'a . 'a equiv -> ('a, unit) cm -> 'a -> 'a -> 'a
-  =
+let __proj__CM__item__mult :
+  'a . 'a equiv -> ('a, Obj.t) cm -> 'a -> 'a -> 'a =
   fun eq ->
     fun projectee ->
       match projectee with
       | CM (unit, mult, identity, associativity, commutativity, congruence)
           -> mult
-let (int_plus_cm : (Prims.int, unit) cm) =
+let (int_plus_cm : (Prims.int, Obj.t) cm) =
   CM (Prims.int_zero, (+), (), (), (), ())
-let (int_multiply_cm : (Prims.int, unit) cm) =
+let (int_multiply_cm : (Prims.int, Obj.t) cm) =
   CM (Prims.int_one, ( * ), (), (), (), ())

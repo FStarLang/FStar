@@ -109,7 +109,6 @@ and eq_pattern' (p1 p2:pattern')
     | PatApp (p1, ps1), PatApp(p2, ps2) ->
       eq_pattern p1 p2 &&
       eq_list eq_pattern ps1 ps2
-    | PatTvar (i1, aq1, as1), PatTvar(i2, aq2, as2)
     | PatVar (i1, aq1, as1), PatVar(i2, aq2, as2) ->
       Ident.ident_equals i1 i2 &&
       eq_aqual aq1 aq2 &&
@@ -147,7 +146,6 @@ and eq_term' (t1 t2:term')
     | Op (i1, ts1), Op (i2, ts2) ->
       eq_ident i1 i2 &&
       eq_terms ts1 ts2
-    | Tvar i1, Tvar i2
     | Uvar i1, Uvar i2 ->
       eq_ident i1 i2
     | Var l1, Var l2
@@ -271,20 +269,17 @@ and eq_term' (t1 t2:term')
       eq_term t1 t2
     | Paren t1, Paren t2 ->
       eq_term t1 t2
-    | Requires (t1, s1), Requires (t2, s2) ->
-      eq_term t1 t2 &&
-      eq_option ( = ) s1 s2
-    | Ensures (t1, s1), Ensures (t2, s2) ->
-      eq_term t1 t2 &&
-      eq_option ( = ) s1 s2
+    | Requires t1, Requires t2 ->
+      eq_term t1 t2
+    | Ensures t1, Ensures t2 ->
+      eq_term t1 t2
     | LexList ts1, LexList ts2 ->
       eq_list eq_term ts1 ts2
     | WFOrder (t1, t2), WFOrder (t3, t4) ->
       eq_term t1 t3 &&
       eq_term t2 t4
-    | Decreases (t1, s1), Decreases (t2, s2) ->
-      eq_term t1 t2 &&
-      eq_option ( = ) s1 s2
+    | Decreases t1, Decreases t2 ->
+      eq_term t1 t2
     | Labeled (t1, s1, b1), Labeled (t2, s2, b2) ->
       eq_term t1 t2 &&
       s1 = s2 &&
@@ -376,11 +371,7 @@ and eq_binder (b1 b2:binder) =
 and eq_binder' (b1 b2:binder') =
   match b1, b2 with
   | Variable i1, Variable i2 -> eq_ident i1 i2
-  | TVariable i1, TVariable i2 -> eq_ident i1 i2
   | Annotated (i1, t1), Annotated (i2, t2) ->
-      eq_ident i1 i2 &&
-      eq_term t1 t2
-  | TAnnotated (i1, t1), TAnnotated (i2, t2) ->
       eq_ident i1 i2 &&
       eq_term t1 t2
   | NoName t1, NoName t2 ->

@@ -5,7 +5,7 @@ let (info_at_pos :
       Prims.int ->
         Prims.int ->
           ((Prims.string, FStarC_Ident.lident) FStar_Pervasives.either *
-            FStarC_Syntax_Syntax.typ * FStarC_Range_Type.range)
+            FStarC_Syntax_Syntax.typ * FStarC_Range_Type.t)
             FStar_Pervasives_Native.option)
   =
   fun env ->
@@ -47,12 +47,13 @@ let print_discrepancy : 'a 'b . ('a -> 'b) -> 'a -> 'a -> ('b * 'b) =
       fun y ->
         let print uu___ =
           let xs = f x in let ys = f y in (xs, ys, (xs <> ys)) in
-        let rec blist_leq l1 l2 =
-          match (l1, l2) with
-          | (h1::t1, h2::t2) ->
-              ((Prims.op_Negation h1) || h2) && (blist_leq t1 t2)
-          | ([], []) -> true
-          | uu___ -> failwith "print_discrepancy: bad lists" in
+        let rec blist_leq l1 =
+          fun l2 ->
+            match (l1, l2) with
+            | (h1::t1, h2::t2) ->
+                ((Prims.op_Negation h1) || h2) && (blist_leq t1 t2)
+            | ([], []) -> true
+            | uu___ -> failwith "print_discrepancy: bad lists" in
         let rec succ l =
           match l with
           | (false)::t -> true :: t
@@ -64,8 +65,8 @@ let print_discrepancy : 'a 'b . ('a -> 'b) -> 'a -> 'a -> ('b * 'b) =
           match uu___ with
           | FStarC_Options.Bool b1 -> b1
           | uu___1 -> failwith "print_discrepancy: impossible" in
-        let set_bool_option s b1 =
-          FStarC_Options.set_option s (FStarC_Options.Bool b1) in
+        let set_bool_option s =
+          fun b1 -> FStarC_Options.set_option s (FStarC_Options.Bool b1) in
         let get uu___ =
           let pi = get_bool_option "print_implicits" in
           let pu = get_bool_option "print_universes" in
@@ -170,7 +171,7 @@ let (add_errors :
       FStarC_Errors.add_errors uu___
 let (log_issue :
   FStarC_TypeChecker_Env.env ->
-    FStarC_Range_Type.range ->
+    FStarC_Range_Type.t ->
       (FStarC_Errors_Codes.error_code * FStarC_Errors_Msg.error_message) ->
         unit)
   =
@@ -186,7 +187,7 @@ let (log_issue :
             add_errors env uu___1
 let (log_issue_text :
   FStarC_TypeChecker_Env.env ->
-    FStarC_Range_Type.range ->
+    FStarC_Range_Type.t ->
       (FStarC_Errors_Codes.error_code * Prims.string) -> unit)
   =
   fun env ->
@@ -251,7 +252,7 @@ let (ill_kinded_type : FStarC_Errors_Msg.error_message) =
 let unexpected_signature_for_monad :
   'a .
     FStarC_TypeChecker_Env.env ->
-      FStarC_Range_Type.range ->
+      FStarC_Range_Type.t ->
         FStarC_Ident.lident -> FStarC_Syntax_Syntax.term -> 'a
   =
   fun env ->
@@ -262,7 +263,7 @@ let unexpected_signature_for_monad :
             let uu___1 =
               FStarC_Class_Show.show FStarC_Ident.showable_lident m in
             let uu___2 = FStarC_TypeChecker_Normalize.term_to_string env k in
-            FStarC_Util.format2
+            FStarC_Format.fmt2
               "Unexpected signature for monad \"%s\". Expected a signature of the form (a:Type -> WP a -> Effect); got %s"
               uu___1 uu___2 in
           FStarC_Errors.raise_error FStarC_Class_HasRange.hasRange_range rng
@@ -272,7 +273,7 @@ let unexpected_signature_for_monad :
 let expected_a_term_of_type_t_got_a_function :
   'a .
     FStarC_TypeChecker_Env.env ->
-      FStarC_Range_Type.range ->
+      FStarC_Range_Type.t ->
         Prims.string ->
           FStarC_Syntax_Syntax.typ -> FStarC_Syntax_Syntax.term -> 'a
   =
@@ -285,7 +286,7 @@ let expected_a_term_of_type_t_got_a_function :
               let uu___1 = FStarC_TypeChecker_Normalize.term_to_string env t in
               let uu___2 =
                 FStarC_Class_Show.show FStarC_Syntax_Print.showable_term e in
-              FStarC_Util.format3
+              FStarC_Format.fmt3
                 "Expected a term of type \"%s\"; got a function \"%s\" (%s)"
                 uu___1 uu___2 msg in
             FStarC_Errors.raise_error FStarC_Class_HasRange.hasRange_range
@@ -299,7 +300,7 @@ let (unexpected_implicit_argument :
 let expected_expression_of_type :
   'a .
     FStarC_TypeChecker_Env.env ->
-      FStarC_Range_Type.range ->
+      FStarC_Range_Type.t ->
         FStarC_Syntax_Syntax.term ->
           FStarC_Syntax_Syntax.term -> FStarC_Syntax_Syntax.term -> 'a
   =
@@ -351,13 +352,13 @@ let (expected_pattern_of_type :
               let uu___1 =
                 let uu___2 =
                   FStarC_Class_Show.show FStarC_Syntax_Print.showable_term e in
-                FStarC_Util.format3
+                FStarC_Format.fmt3
                   "Expected pattern of type \"%s\"; got pattern \"%s\" of type \"%s\""
                   s1 uu___2 s2 in
               (FStarC_Errors_Codes.Fatal_UnexpectedPattern, uu___1)
 let (basic_type_error :
   FStarC_TypeChecker_Env.env ->
-    FStarC_Range_Type.range ->
+    FStarC_Range_Type.t ->
       FStarC_Syntax_Syntax.term FStar_Pervasives_Native.option ->
         FStarC_Syntax_Syntax.typ -> FStarC_Syntax_Syntax.typ -> unit)
   =
@@ -418,7 +419,7 @@ let (basic_type_error :
 let raise_basic_type_error :
   'a .
     FStarC_TypeChecker_Env.env ->
-      FStarC_Range_Type.range ->
+      FStarC_Range_Type.t ->
         FStarC_Syntax_Syntax.term FStar_Pervasives_Native.option ->
           FStarC_Syntax_Syntax.typ -> FStarC_Syntax_Syntax.typ -> 'a
   =
@@ -492,7 +493,7 @@ let (constructor_fails_the_positivity_check :
           let uu___1 =
             FStarC_Class_Show.show FStarC_Syntax_Print.showable_term d in
           let uu___2 = FStarC_Class_Show.show FStarC_Ident.showable_lident l in
-          FStarC_Util.format2
+          FStarC_Format.fmt2
             "Constructor \"%s\" fails the strict positivity check; the constructed type \"%s\" occurs to the left of a pure function type"
             uu___1 uu___2 in
         (FStarC_Errors_Codes.Fatal_ConstructorFailedCheck, uu___)
@@ -501,7 +502,7 @@ let (inline_type_annotation_and_val_decl :
   fun l ->
     let uu___ =
       let uu___1 = FStarC_Class_Show.show FStarC_Ident.showable_lident l in
-      FStarC_Util.format1
+      FStarC_Format.fmt1
         "\"%s\" has a val declaration as well as an inlined type annotation; remove one"
         uu___1 in
     (FStarC_Errors_Codes.Fatal_DuplicateTypeAnnotationAndValDecl, uu___)
@@ -518,14 +519,14 @@ let (inferred_type_causes_variable_to_escape :
           let uu___1 = FStarC_TypeChecker_Normalize.term_to_string env t in
           let uu___2 =
             FStarC_Class_Show.show FStarC_Syntax_Print.showable_bv x in
-          FStarC_Util.format2
+          FStarC_Format.fmt2
             "Inferred type \"%s\" causes variable \"%s\" to escape its scope"
             uu___1 uu___2 in
         (FStarC_Errors_Codes.Fatal_InferredTypeCauseVarEscape, uu___)
 let expected_function_typ :
   'a .
     FStarC_TypeChecker_Env.env ->
-      FStarC_Range_Type.range -> FStarC_Syntax_Syntax.term -> 'a
+      FStarC_Range_Type.t -> FStarC_Syntax_Syntax.term -> 'a
   =
   fun env ->
     fun rng ->
@@ -561,7 +562,7 @@ let (expected_poly_typ :
               FStarC_Class_Show.show FStarC_Syntax_Print.showable_term f in
             let uu___2 = FStarC_TypeChecker_Normalize.term_to_string env t in
             let uu___3 = FStarC_TypeChecker_Normalize.term_to_string env targ in
-            FStarC_Util.format3
+            FStarC_Format.fmt3
               "Expected a polymorphic function; got an expression \"%s\" of type \"%s\" applied to a type \"%s\""
               uu___1 uu___2 uu___3 in
           (FStarC_Errors_Codes.Fatal_PolyTypeExpected, uu___)
@@ -580,7 +581,7 @@ let (disjunctive_pattern_vars :
       let uu___ =
         let uu___1 = vars v1 in
         let uu___2 = vars v2 in
-        FStarC_Util.format2
+        FStarC_Format.fmt2
           "Every alternative of an 'or' pattern must bind the same variables; here one branch binds (\"%s\") and another (\"%s\")"
           uu___1 uu___2 in
       (FStarC_Errors_Codes.Fatal_DisjuctivePatternVarsMismatch, uu___)
@@ -600,7 +601,7 @@ let (name_and_result :
 let computed_computation_type_does_not_match_annotation :
   'a .
     FStarC_TypeChecker_Env.env ->
-      FStarC_Range_Type.range ->
+      FStarC_Range_Type.t ->
         FStarC_Syntax_Syntax.term ->
           FStarC_Syntax_Syntax.comp -> FStarC_Syntax_Syntax.comp -> 'a
   =
@@ -657,7 +658,7 @@ let computed_computation_type_does_not_match_annotation :
 let computed_computation_type_does_not_match_annotation_eq :
   'a .
     FStarC_TypeChecker_Env.env ->
-      FStarC_Range_Type.range ->
+      FStarC_Range_Type.t ->
         FStarC_Syntax_Syntax.term ->
           FStarC_Syntax_Syntax.comp -> FStarC_Syntax_Syntax.comp -> 'a
   =
@@ -696,7 +697,7 @@ let unexpected_non_trivial_precondition_on_term :
     fun f ->
       let uu___ =
         let uu___1 = FStarC_TypeChecker_Normalize.term_to_string env f in
-        FStarC_Util.format1
+        FStarC_Format.fmt1
           "Term has an unexpected non-trivial pre-condition: %s" uu___1 in
       FStarC_Errors.raise_error FStarC_TypeChecker_Env.hasRange_env env
         FStarC_Errors_Codes.Fatal_UnExpectedPreCondition ()
@@ -705,7 +706,7 @@ let unexpected_non_trivial_precondition_on_term :
 let __expected_eff_expression :
   'uuuuu .
     Prims.string ->
-      FStarC_Range_Type.range ->
+      FStarC_Range_Type.t ->
         FStarC_Syntax_Syntax.term ->
           FStarC_Syntax_Syntax.comp ->
             Prims.string FStar_Pervasives_Native.option -> 'uuuuu
@@ -763,7 +764,7 @@ let __expected_eff_expression :
               (Obj.magic uu___)
 let expected_pure_expression :
   'a .
-    FStarC_Range_Type.range ->
+    FStarC_Range_Type.t ->
       FStarC_Syntax_Syntax.term ->
         FStarC_Syntax_Syntax.comp ->
           Prims.string FStar_Pervasives_Native.option -> 'a
@@ -773,7 +774,7 @@ let expected_pure_expression :
       fun c -> fun reason -> __expected_eff_expression "pure" rng e c reason
 let expected_ghost_expression :
   'a .
-    FStarC_Range_Type.range ->
+    FStarC_Range_Type.t ->
       FStarC_Syntax_Syntax.term ->
         FStarC_Syntax_Syntax.comp ->
           Prims.string FStar_Pervasives_Native.option -> 'a
@@ -790,7 +791,7 @@ let (expected_effect_1_got_effect_2 :
       let uu___ =
         let uu___1 = FStarC_Class_Show.show FStarC_Ident.showable_lident c1 in
         let uu___2 = FStarC_Class_Show.show FStarC_Ident.showable_lident c2 in
-        FStarC_Util.format2
+        FStarC_Format.fmt2
           "Expected a computation with effect %s; but it has effect %s"
           uu___1 uu___2 in
       (FStarC_Errors_Codes.Fatal_UnexpectedEffect, uu___)
@@ -805,12 +806,12 @@ let (failed_to_prove_specification_of :
         let uu___1 =
           FStarC_Class_Show.show
             (FStarC_Class_Show.show_either FStarC_Syntax_Print.showable_bv
-               FStarC_Syntax_Print.showable_fv) l in
-        FStarC_Util.format2
+               FStarC_Syntax_Syntax.showable_fv) l in
+        FStarC_Format.fmt2
           "Failed to prove specification of %s; assertions at [%s] may fail"
           uu___1 (FStarC_String.concat ", " lbls) in
       (FStarC_Errors_Codes.Error_TypeCheckerFailToProve, uu___)
-let (warn_top_level_effect : FStarC_Range_Type.range -> unit) =
+let (warn_top_level_effect : FStarC_Range_Type.t -> unit) =
   fun rng ->
     FStarC_Errors.log_issue FStarC_Class_HasRange.hasRange_range rng
       FStarC_Errors_Codes.Warning_TopLevelEffect ()

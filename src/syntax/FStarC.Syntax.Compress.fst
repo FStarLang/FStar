@@ -2,8 +2,6 @@ module FStarC.Syntax.Compress
 open FStarC
 
 open FStarC
-open FStarC
-open FStarC.Util
 open FStarC.Effect
 open FStarC.Syntax.Syntax
 open FStarC.Syntax.Subst
@@ -22,12 +20,12 @@ let compress1_t (allow_uvars: bool) (allow_names: bool) : term -> term =
     match t.n with
     | Tm_uvar (uv, s) when not allow_uvars ->
       Err.raise_error0 Err.Error_UnexpectedUnresolvedUvar
-        (format1 "Internal error: unexpected unresolved uvar in deep_compress: %s" (show uv))
+        (Format.fmt1 "Internal error: unexpected unresolved uvar in deep_compress: %s" (show uv))
 
     | Tm_name bv when not allow_names ->
       (* This currently happens, and often, but it should not! *)
       if Debug.any () then
-        Errors.log_issue t Err.Warning_NameEscape (format1 "Tm_name %s in deep compress" (show bv));
+        Errors.log_issue t Err.Warning_NameEscape (Format.fmt1 "Tm_name %s in deep compress" (show bv));
       mk (Tm_name ({bv with sort = mk Tm_unknown}))
 
     (* The sorts are not needed. Delete them. *)
@@ -41,12 +39,12 @@ let compress1_u (allow_uvars:bool) (allow_names:bool) : universe -> universe =
     match u with
     | U_name bv when not allow_names ->
       if Debug.any () then
-        Errors.log_issue0 Err.Warning_NameEscape (format1 "U_name %s in deep compress" (show bv));
+        Errors.log_issue0 Err.Warning_NameEscape (Format.fmt1 "U_name %s in deep compress" (show bv));
       u
 
     | U_unif uv when not allow_uvars ->
       Err.raise_error0 Err.Error_UnexpectedUnresolvedUvar
-        (format1 "Internal error: unexpected unresolved (universe) uvar in deep_compress: %s" (show (Syntax.Unionfind.univ_uvar_id uv)))
+        (Format.fmt1 "Internal error: unexpected unresolved (universe) uvar in deep_compress: %s" (show (Syntax.Unionfind.univ_uvar_id uv)))
     | _ -> u
 
 (* deep_compress_*: eliminating all unification variables and delayed
@@ -95,7 +93,7 @@ let deep_compress_if_no_uvars (tm : term) : option term =
 
 let deep_compress_se (allow_uvars:bool) (allow_names:bool) (se : sigelt) : sigelt =
   Stats.record "deep_compress_se" fun () ->
-  Err.with_ctx (format1 "While deep-compressing %s" (Syntax.Print.sigelt_to_string_short se)) (fun () ->
+  Err.with_ctx (Format.fmt1 "While deep-compressing %s" (Syntax.Print.sigelt_to_string_short se)) (fun () ->
     Visit.visit_sigelt true
       (compress1_t allow_uvars allow_names)
       (compress1_u allow_uvars allow_names)

@@ -17,7 +17,7 @@ let writer_bind #m {| monoid m |} #a #b (x : writer m a) (f : a -> writer m b) :
 
 instance monad_writer (m :_ ) (d : monoid m) : Tot (monad (writer m)) = {
   return = writer_return;
-  ( let! ) = writer_bind;
+  bind   = writer_bind;
 }
 
 let emit #m {| monoid m |} (x : m) : writer m unit =

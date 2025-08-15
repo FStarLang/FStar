@@ -61,3 +61,4 @@ instance val deq_tuple6
    (_ : deq 'f)
 : Tot (deq ('a & 'b & 'c & 'd & 'e & 'f))
 
+val mem (#a:Type) {| deq a |} (x : a) (xs : list a) : bool

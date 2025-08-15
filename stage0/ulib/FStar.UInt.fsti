@@ -163,10 +163,11 @@ let mod (#n:nat) (a:uint_t n) (b:uint_t n{b <> 0}) : Tot (uint_t n) =
   a - ((a/b) * b)
 
 (* Comparison operators *)
-let eq #n (a:uint_t n) (b:uint_t n) : Tot bool = (a = b)
-let gt #n (a:uint_t n) (b:uint_t n) : Tot bool = (a > b)
+let eq  #n (a:uint_t n) (b:uint_t n) : Tot bool = (a = b)
+let ne  #n (a:uint_t n) (b:uint_t n) : Tot bool = (a <> b)
+let gt  #n (a:uint_t n) (b:uint_t n) : Tot bool = (a > b)
 let gte #n (a:uint_t n) (b:uint_t n) : Tot bool = (a >= b)
-let lt #n (a:uint_t n) (b:uint_t n) : Tot bool = (a < b)
+let lt  #n (a:uint_t n) (b:uint_t n) : Tot bool = (a < b)
 let lte #n (a:uint_t n) (b:uint_t n) : Tot bool = (a <= b)
 
 /// Casts

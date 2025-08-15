@@ -187,7 +187,7 @@ and hash_pat p =
 
 
 and hash_bv b = hash_term b.sort
-and hash_fv fv = of_string (Ident.string_of_lid fv.fv_name.v)
+and hash_fv fv = of_string (Ident.string_of_lid fv.fv_name)
 and hash_binder (b:binder) =
   mix_list_lit
     [hash_bv b.binder_bv;
@@ -423,6 +423,7 @@ and equal_comp c1 c2 =
     equal_term ct1.result_typ ct2.result_typ &&
     equal_list equal_arg ct1.effect_args ct2.effect_args &&
     equal_list equal_flag ct1.flags ct2.flags
+  | _ -> false
 
 and equal_binder b1 b2 =
   if physical_equality b1 b2 then true else
@@ -465,7 +466,7 @@ and equal_bv b1 b2 =
 
 and equal_fv f1 f2 =
   if physical_equality f1 f2 then true else
-  Ident.lid_equals f1.fv_name.v f2.fv_name.v
+  Ident.lid_equals f1.fv_name f2.fv_name
 
 and equal_universe u1 u2 =
   if physical_equality u1 u2 then true else
@@ -552,6 +553,7 @@ and equal_meta m1 m2 =
     Ident.lid_equals m1 m2 &&
     Ident.lid_equals n1 n2 &&
     equal_term t1 t2
+  | _ -> false
 
 and equal_lazyinfo l1 l2 =
   (* We cannot really compare the blobs. Just try physical
@@ -583,6 +585,7 @@ and equal_decreases_order d1 d2 =
   | Decreases_wf (t1, t1'), Decreases_wf (t2, t2') ->
     equal_term t1 t2 &&
     equal_term t1' t2'
+  | _ -> false
 
 and equal_arg_qualifier a1 a2 =
   a1.aqual_implicit = a2.aqual_implicit &&
@@ -591,7 +594,8 @@ and equal_arg_qualifier a1 a2 =
 and equal_lbname l1 l2 =
   match l1, l2 with
   | Inl b1, Inl b2 -> Ident.ident_equals b1.ppname b2.ppname
-  | Inr f1, Inr f2 -> Ident.lid_equals f1.fv_name.v f2.fv_name.v
+  | Inr f1, Inr f2 -> Ident.lid_equals f1.fv_name f2.fv_name
+  | _ -> false
 
 and equal_subst_elt s1 s2 =
   match s1, s2 with
@@ -607,7 +611,108 @@ and equal_subst_elt s1 s2 =
   | UD (un1, i1), UD (un2, i2) ->
     i1 = i2 &&
     Ident.ident_equals un1 un2
+  | DT (i1, t1), DT (i2, t2) ->
+    i1 = i2 &&
+    equal_term t1 t2
+  | _ -> false
 
 instance hashable_term : hashable term = {
   hash = ext_hash_term;
+}
+
+instance hashable_lident : hashable Ident.lident = {
+  hash = (fun l -> hash (Ident.string_of_lid l));
+}
+
+instance hashable_ident : hashable Ident.ident = {
+  hash = (fun i -> hash (Ident.string_of_id i));
+}
+
+instance hashable_binding : hashable binding = {
+  hash = (function
+          | Binding_var bv -> hash bv.sort
+          | Binding_lid (l, (us, t)) -> hash l `H.mix` hash us `H.mix` hash t
+          | Binding_univ u -> hash u);
+}
+
+instance hashable_bv : hashable bv = {
+  // hash name?
+  hash = (fun b -> hash b.sort);
+}
+
+instance hashable_fv : hashable fv = {
+  hash = (fun f -> hash f.fv_name);
+}
+
+instance hashable_binder : hashable binder = {
+  hash = (fun b -> hash b.binder_bv);
+}
+
+instance hashable_letbinding : hashable letbinding = {
+  hash = (fun lb -> hash lb.lbname `H.mix` hash lb.lbtyp `H.mix` hash lb.lbdef);
+}
+
+instance hashable_pragma : hashable pragma = {
+  hash = (function
+          | ShowOptions -> hash 1
+          | SetOptions s -> hash 2 `H.mix` hash s
+          | ResetOptions s -> hash 3 `H.mix` hash s
+          | PushOptions s -> hash 4 `H.mix` hash s
+          | PopOptions -> hash 5
+          | RestartSolver -> hash 6
+          | PrintEffectsGraph -> hash 7);
+}
+
+let rec hash_sigelt (se:sigelt) : hash_code =
+  hash_sigelt' se.sigel
+
+and hash_sigelt' (se:sigelt') : hash_code =
+  match se with
+  | Sig_inductive_typ {lid; us; params; num_uniform_params; t; mutuals; ds; injective_type_params} ->
+    hash 0 `H.mix`
+    hash lid `H.mix`
+    hash us `H.mix`
+    hash params `H.mix`
+    hash num_uniform_params `H.mix`
+    hash t `H.mix`
+    hash mutuals `H.mix`
+    hash ds `H.mix`
+    hash injective_type_params
+  | Sig_bundle {ses; lids} ->
+    hash 1 `H.mix`
+    (hashable_list #_ {hash=hash_sigelt}).hash ses // sigh, reusing hashable instance when we don't have an instance
+    `H.mix` hash lids
+  | Sig_datacon {lid; us; t; ty_lid; num_ty_params; mutuals; injective_type_params} ->
+    hash 2 `H.mix`
+    hash lid `H.mix`
+    hash us `H.mix`
+    hash t `H.mix`
+    hash ty_lid `H.mix`
+    hash num_ty_params `H.mix`
+    hash mutuals `H.mix`
+    hash injective_type_params
+  | Sig_declare_typ {lid; us; t} ->
+    hash 3 `H.mix`
+    hash lid `H.mix`
+    hash us `H.mix`
+    hash t
+  | Sig_let {lbs; lids} ->
+    hash 4 `H.mix`
+    hash lbs `H.mix`
+    hash lids
+  | Sig_assume {lid; us; phi} ->
+    hash 5 `H.mix`
+    hash lid `H.mix`
+    hash us `H.mix`
+    hash phi
+  | Sig_pragma p ->
+    hash 6 `H.mix`
+    hash p
+  | _ ->
+    (* FIXME: hash is not completely faithful. In particular
+    it ignores effect decls and hashes them the same. *)
+    hash 0
+
+instance hashable_sigelt : hashable sigelt = {
+  hash = hash_sigelt;
 }

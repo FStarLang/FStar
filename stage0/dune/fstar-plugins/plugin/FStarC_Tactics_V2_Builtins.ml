@@ -119,7 +119,6 @@ let comp_to_string          = from_tac_1 "B.comp_to_string" B.comp_to_string
 let term_to_doc             = from_tac_1 "B.term_to_doc" B.term_to_doc
 let comp_to_doc             = from_tac_1 "B.comp_to_doc" B.comp_to_doc
 let range_to_string         = from_tac_1 "B.range_to_string" B.range_to_string
-let term_eq_old             = from_tac_2 "B.term_eq_old" B.term_eq_old
 
 let with_compat_pre_core (n:Prims.int) (f: unit -> 'a __tac) : 'a __tac =
   from_tac_2 "B.with_compat_pre_core" B.with_compat_pre_core n (to_tac_0 (f ()))
@@ -136,6 +135,9 @@ let ext_getns               = from_tac_1 "B.ext_getns" B.ext_getns
 let alloc x                 = from_tac_1 "B.alloc" B.alloc x
 let read  r                 = from_tac_1 "B.read" B.read r
 let write r x               = from_tac_2 "B.write" B.write r x
+
+let splice_quals x         = from_tac_1 "B.splice_quals" B.splice_quals x
+let splice_attrs x         = from_tac_1 "B.splice_attrs" B.splice_attrs x
 
 type ('env, 't) prop_validity_token = unit
 type ('env, 'sc, 't, 'pats, 'bnds) match_complete_token = unit

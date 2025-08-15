@@ -19,7 +19,6 @@ open FStarC
 open FStarC.Effect
 open FStarC.List
 open FStarC.Range
-open FStarC.Util
 open FStarC.Getopt
 open FStarC.Ident
 open FStarC.Errors
@@ -49,7 +48,7 @@ instance showable_push_kind : showable push_kind = {
 (* REPL tasks and states *)
 (*************************)
 
-let t0 = Util.get_time_of_day ()
+let t0 = Time.get_time_of_day ()
 
 (** Create a timed_fname with a dummy modtime **)
 let dummy_tf_of_fname fname =
@@ -57,29 +56,28 @@ let dummy_tf_of_fname fname =
     tf_modtime = t0 }
 
 let string_of_timed_fname { tf_fname = fname; tf_modtime = modtime } =
-  if modtime = t0 then Util.format1 "{ %s }" fname
-  else Util.format2 "{ %s; %s }" fname (string_of_time_of_day modtime)
+  if modtime = t0 then Format.fmt1 "{ %s }" fname
+  else Format.fmt2 "{ %s; %s }" fname (show modtime)
 
 let string_of_repl_task = function
   | LDInterleaved (intf, impl) ->
-    Util.format2 "LDInterleaved (%s, %s)" (string_of_timed_fname intf) (string_of_timed_fname impl)
+    Format.fmt2 "LDInterleaved (%s, %s)" (string_of_timed_fname intf) (string_of_timed_fname impl)
   | LDSingle intf_or_impl ->
-    Util.format1 "LDSingle %s" (string_of_timed_fname intf_or_impl)
+    Format.fmt1 "LDSingle %s" (string_of_timed_fname intf_or_impl)
   | LDInterfaceOfCurrentFile intf ->
-    Util.format1 "LDInterfaceOfCurrentFile %s" (string_of_timed_fname intf)
+    Format.fmt1 "LDInterfaceOfCurrentFile %s" (string_of_timed_fname intf)
   | PushFragment (Inl frag, _, _) ->
-    Util.format1 "PushFragment { code = %s }" frag.frag_text
+    Format.fmt1 "PushFragment { code = %s }" frag.frag_text
   | PushFragment (Inr d, _, _) ->
-    Util.format1 "PushFragment { decl = %s }" (show d)
+    Format.fmt1 "PushFragment { decl = %s }" (show d)
   | Noop -> "Noop {}"
 
-module BU = FStarC.Util
 
 let string_of_repl_stack_entry
   : repl_stack_entry_t -> string
   = fun ((depth, i), (task, state)) ->
-      BU.format "{depth=%s; task=%s}"
-                [string_of_int i;
+      Format.fmt "{depth=%s; task=%s}"
+                [show i;
                 string_of_repl_task task]
                 
 
@@ -89,7 +87,7 @@ let string_of_repl_stack s =
 
 let repl_state_to_string (r:repl_state)
   : string
-  = BU.format 
+  = Format.fmt 
     "{\n\t\
       repl_line=%s;\n\t\
       repl_column=%s;\n\t\
@@ -97,8 +95,8 @@ let repl_state_to_string (r:repl_state)
       repl_cur_mod=%s;\n\t\      
       repl_deps_stack={%s}\n\
      }"
-     [string_of_int r.repl_line;
-      string_of_int r.repl_column;
+     [show r.repl_line;
+      show r.repl_column;
       r.repl_fname;
       (match r.repl_curmod with
        | None -> "None"
@@ -111,11 +109,11 @@ let push_query_to_string pq =
     | Inl code -> code
     | Inr (_decl, code) -> code.code
   in
-  FStarC.Util.format "{ push_kind = %s; push_line = %s; \
+  FStarC.Format.fmt "{ push_kind = %s; push_line = %s; \
                push_column = %s; push_peek_only = %s; push_code_or_decl = %s }"
-    [show pq.push_kind; string_of_int pq.push_line;
-     string_of_int pq.push_column;
-     string_of_bool pq.push_peek_only;
+    [show pq.push_kind; show pq.push_line;
+     show pq.push_column;
+     show pq.push_peek_only;
      code_or_decl]
 
 let query_to_string (q:query) = match q.qq with
@@ -129,12 +127,12 @@ let query_to_string (q:query) = match q.qq with
 | VfsAdd _ -> "VfsAdd"
 | AutoComplete _ -> "AutoComplete"
 | Lookup(s, _lc, pos, features, _sr) ->
-  BU.format3 "(Lookup %s %s [%s])"
+  Format.fmt3 "(Lookup %s %s [%s])"
               s (match pos with
                  | None -> "None"
                  | Some (f, i, j) ->
-                   BU.format3 "(%s, %s, %s)"
-                              f (string_of_int i) (string_of_int j))
+                   Format.fmt3 "(%s, %s, %s)"
+                              f (show i) (show j))
                 (String.concat "; " features)
 | Compute _ -> "Compute"
 | Search _ -> "Search"
@@ -173,7 +171,7 @@ let json_of_issue_level i =
            | EError -> "error")
 
 let json_of_issue issue =
-  let r = map_opt issue.issue_range Range.refind_range in
+  let r = Option.map Range.refind_range issue.issue_range in
   JsonAssoc <|
      [("level", json_of_issue_level issue.issue_level)]
     @(match issue.issue_number with

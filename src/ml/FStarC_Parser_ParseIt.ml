@@ -38,20 +38,20 @@ let find_file filename =
     | Some s ->
       s
     | None ->
-      raise_error_text FStarC_Range.dummyRange Fatal_ModuleOrFileNotFound (U.format1 "Unable to find file: %s\n" filename)
+      raise_error_text FStarC_Range.dummyRange Fatal_ModuleOrFileNotFound (FStarC_Format.fmt1 "Unable to find file: %s\n" filename)
 
-let vfs_entries : (U.time_of_day * string) SMap.t = SMap.create (Z.of_int 1)
+let vfs_entries : (FStarC_Time.time_of_day * string) SMap.t = SMap.create (Z.of_int 1)
 
 let read_vfs_entry fname =
   SMap.try_find vfs_entries (Filepath.normalize_file_path fname)
 
 let add_vfs_entry fname contents =
-  SMap.add vfs_entries (Filepath.normalize_file_path fname) (U.get_time_of_day (), contents)
+  SMap.add vfs_entries (Filepath.normalize_file_path fname) (FStarC_Time.get_time_of_day (), contents)
 
 let get_file_last_modification_time filename =
   match read_vfs_entry filename with
   | Some (mtime, _contents) -> mtime
-  | None -> U.get_file_last_modification_time filename
+  | None -> FStarC_Time.get_file_last_modification_time filename
 
 let read_physical_file (filename: string) =
   (* BatFile.with_file_in uses Unix.openfile (which isn't available in
@@ -63,17 +63,17 @@ let read_physical_file (filename: string) =
       (fun channel -> really_input_string channel (in_channel_length channel))
       channel
   with e ->
-    raise_error_text FStarC_Range.dummyRange Fatal_UnableToReadFile (U.format1 "Unable to read file %s\n" filename)
+    raise_error_text FStarC_Range.dummyRange Fatal_UnableToReadFile (FStarC_Format.fmt1 "Unable to read file %s\n" filename)
 
 let read_file (filename:string) =
   let debug = FStarC_Debug.any () in
   match read_vfs_entry filename with
   | Some (_mtime, contents) ->
-    if debug then U.print1 "Reading in-memory file %s\n" filename;
+    if debug then FStarC_Format.print1 "Reading in-memory file %s\n" filename;
     filename, contents
   | None ->
     let filename = find_file filename in
-    if debug then U.print1 "Opening file %s\n" filename;
+    if debug then FStarC_Format.print1 "Opening file %s\n" filename;
     filename, read_physical_file filename
 
 let fst_extensions = [".fst"; ".fsti"]
@@ -84,7 +84,7 @@ let has_extension file extensions =
 
 let check_extension fn =
   if (not (has_extension fn fst_extensions)) then
-    let message = U.format1 "Unrecognized extension '%s'" fn in
+    let message = FStarC_Format.fmt1 "Unrecognized extension '%s'" fn in
     raise_error_text FStarC_Range.dummyRange Fatal_UnrecognizedExtension message
 
 type parse_frag =
@@ -296,7 +296,6 @@ let string_of_token =
   | STRING s -> "STRING " ^ s
   | IDENT s -> "IDENT " ^ s
   | NAME s -> "NAME " ^ s
-  | TVAR s -> "TVAR " ^ s
   | TILDE s -> "TILDE " ^ s
   | INT8 s   -> "INT8 " ^ s
   | INT16 s  -> "INT16 " ^ s
@@ -553,7 +552,7 @@ let parse (lang_opt:lang_opts) fn =
           check_extension f;
           let f', contents = read_file f in
           (try create contents f' 1 0, f', contents
-          with _ -> raise_error_text FStarC_Range.dummyRange Fatal_InvalidUTF8Encoding (U.format1 "File %s has invalid UTF-8 encoding." f'))
+          with _ -> raise_error_text FStarC_Range.dummyRange Fatal_InvalidUTF8Encoding (FStarC_Format.fmt1 "File %s has invalid UTF-8 encoding." f'))
       | Incremental s
       | Toplevel s
       | Fragment s ->

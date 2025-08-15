@@ -5,15 +5,15 @@ type binders = FStarC_Syntax_Syntax.binder Prims.list
 type ppname_t = Prims.string FStarC_Sealed.sealed
 let (as_ppname : Prims.string -> ppname_t) = fun x -> FStarC_Sealed.seal x
 type simple_binder = FStarC_Syntax_Syntax.binder
-type ident_view = (Prims.string * FStarC_Range_Type.range)
+type ident_view = (Prims.string * FStarC_Range_Type.t)
 type namedv = FStarC_Syntax_Syntax.bv
 type vconst =
   | C_Unit 
-  | C_Int of FStarC_BigInt.t 
+  | C_Int of Prims.int 
   | C_True 
   | C_False 
   | C_String of Prims.string 
-  | C_Range of FStarC_Range_Type.range 
+  | C_Range of FStarC_Range_Type.t 
   | C_Reify 
   | C_Reflect of name 
   | C_Real of Prims.string 
@@ -21,7 +21,7 @@ let (uu___is_C_Unit : vconst -> Prims.bool) =
   fun projectee -> match projectee with | C_Unit -> true | uu___ -> false
 let (uu___is_C_Int : vconst -> Prims.bool) =
   fun projectee -> match projectee with | C_Int _0 -> true | uu___ -> false
-let (__proj__C_Int__item___0 : vconst -> FStarC_BigInt.t) =
+let (__proj__C_Int__item___0 : vconst -> Prims.int) =
   fun projectee -> match projectee with | C_Int _0 -> _0
 let (uu___is_C_True : vconst -> Prims.bool) =
   fun projectee -> match projectee with | C_True -> true | uu___ -> false
@@ -34,7 +34,7 @@ let (__proj__C_String__item___0 : vconst -> Prims.string) =
   fun projectee -> match projectee with | C_String _0 -> _0
 let (uu___is_C_Range : vconst -> Prims.bool) =
   fun projectee -> match projectee with | C_Range _0 -> true | uu___ -> false
-let (__proj__C_Range__item___0 : vconst -> FStarC_Range_Type.range) =
+let (__proj__C_Range__item___0 : vconst -> FStarC_Range_Type.t) =
   fun projectee -> match projectee with | C_Range _0 -> _0
 let (uu___is_C_Reify : vconst -> Prims.bool) =
   fun projectee -> match projectee with | C_Reify -> true | uu___ -> false
@@ -108,10 +108,10 @@ let (__proj__Q_Meta__item___0 : aqualv -> FStarC_Syntax_Syntax.term) =
 type argv = (FStarC_Syntax_Syntax.term * aqualv)
 type namedv_view =
   {
-  uniq: FStarC_BigInt.t ;
+  uniq: Prims.int ;
   sort: typ FStarC_Sealed.sealed ;
   ppname: ppname_t }
-let (__proj__Mknamedv_view__item__uniq : namedv_view -> FStarC_BigInt.t) =
+let (__proj__Mknamedv_view__item__uniq : namedv_view -> Prims.int) =
   fun projectee -> match projectee with | { uniq; sort; ppname;_} -> uniq
 let (__proj__Mknamedv_view__item__sort :
   namedv_view -> typ FStarC_Sealed.sealed) =
@@ -120,10 +120,10 @@ let (__proj__Mknamedv_view__item__ppname : namedv_view -> ppname_t) =
   fun projectee -> match projectee with | { uniq; sort; ppname;_} -> ppname
 type bv_view =
   {
-  index: FStarC_BigInt.t ;
+  index: Prims.int ;
   sort1: typ FStarC_Sealed.sealed ;
   ppname1: ppname_t }
-let (__proj__Mkbv_view__item__index : bv_view -> FStarC_BigInt.t) =
+let (__proj__Mkbv_view__item__index : bv_view -> Prims.int) =
   fun projectee ->
     match projectee with
     | { index; sort1 = sort; ppname1 = ppname;_} -> index
@@ -158,10 +158,10 @@ let (__proj__Mkbinder_view__item__ppname : binder_view -> ppname_t) =
     match projectee with
     | { sort2 = sort; qual; attrs; ppname2 = ppname;_} -> ppname
 type binding = {
-  uniq1: FStarC_BigInt.t ;
+  uniq1: Prims.int ;
   sort3: typ ;
   ppname3: ppname_t }
-let (__proj__Mkbinding__item__uniq : binding -> FStarC_BigInt.t) =
+let (__proj__Mkbinding__item__uniq : binding -> Prims.int) =
   fun projectee ->
     match projectee with
     | { uniq1 = uniq; sort3 = sort; ppname3 = ppname;_} -> uniq
@@ -178,7 +178,7 @@ type universe_view =
   | Uv_Zero 
   | Uv_Succ of FStarC_Syntax_Syntax.universe 
   | Uv_Max of universes 
-  | Uv_BVar of FStarC_BigInt.t 
+  | Uv_BVar of Prims.int 
   | Uv_Name of FStarC_Syntax_Syntax.univ_name 
   | Uv_Unif of FStarC_Syntax_Syntax.universe_uvar 
   | Uv_Unk 
@@ -195,7 +195,7 @@ let (__proj__Uv_Max__item___0 : universe_view -> universes) =
   fun projectee -> match projectee with | Uv_Max _0 -> _0
 let (uu___is_Uv_BVar : universe_view -> Prims.bool) =
   fun projectee -> match projectee with | Uv_BVar _0 -> true | uu___ -> false
-let (__proj__Uv_BVar__item___0 : universe_view -> FStarC_BigInt.t) =
+let (__proj__Uv_BVar__item___0 : universe_view -> Prims.int) =
   fun projectee -> match projectee with | Uv_BVar _0 -> _0
 let (uu___is_Uv_Name : universe_view -> Prims.bool) =
   fun projectee -> match projectee with | Uv_Name _0 -> true | uu___ -> false
@@ -220,7 +220,7 @@ type term_view =
   | Tv_Type of FStarC_Syntax_Syntax.universe 
   | Tv_Refine of (FStarC_Syntax_Syntax.binder * FStarC_Syntax_Syntax.term) 
   | Tv_Const of vconst 
-  | Tv_Uvar of (FStarC_BigInt.t * FStarC_Syntax_Syntax.ctx_uvar_and_subst) 
+  | Tv_Uvar of (Prims.int * FStarC_Syntax_Syntax.ctx_uvar_and_subst) 
   | Tv_Let of (Prims.bool * FStarC_Syntax_Syntax.term Prims.list *
   FStarC_Syntax_Syntax.binder * FStarC_Syntax_Syntax.term *
   FStarC_Syntax_Syntax.term) 
@@ -285,7 +285,7 @@ let (__proj__Tv_Const__item___0 : term_view -> vconst) =
 let (uu___is_Tv_Uvar : term_view -> Prims.bool) =
   fun projectee -> match projectee with | Tv_Uvar _0 -> true | uu___ -> false
 let (__proj__Tv_Uvar__item___0 :
-  term_view -> (FStarC_BigInt.t * FStarC_Syntax_Syntax.ctx_uvar_and_subst)) =
+  term_view -> (Prims.int * FStarC_Syntax_Syntax.ctx_uvar_and_subst)) =
   fun projectee -> match projectee with | Tv_Uvar _0 -> _0
 let (uu___is_Tv_Let : term_view -> Prims.bool) =
   fun projectee -> match projectee with | Tv_Let _0 -> true | uu___ -> false
@@ -512,7 +512,7 @@ let (uu___is_Effect : qualifier -> Prims.bool) =
 let (uu___is_OnlyName : qualifier -> Prims.bool) =
   fun projectee -> match projectee with | OnlyName -> true | uu___ -> false
 type qualifiers = qualifier Prims.list
-type var = FStarC_BigInt.t
+type var = Prims.int
 type exp =
   | Unit 
   | Var of var 

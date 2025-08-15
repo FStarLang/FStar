@@ -21,7 +21,7 @@ FStar namespace, Seq resolves to QuickSort.Seq instead of FStar.Seq,
 so we have to fix this explicitly as a module abbrev. *)
 module Seq = FStar.Seq
 
-#reset-options "--z3rlimit 100 --max_fuel 0 --initial_fuel 0 --initial_ifuel 0 --max_ifuel 0"
+#reset-options "--z3rlimit 100 --fuel 0 --initial_fuel 0 --ifuel 0"
 
 val partition: #a:eqtype -> f:(a -> a -> Tot bool){total_order a f}
     -> s:seq a -> pivot:nat{pivot < length s} -> back:nat{pivot <= back /\ back < length s} ->
@@ -62,7 +62,7 @@ let rec partition #a f s pivot back =
 
 #reset-options
 
-#set-options "--initial_fuel 1 --max_fuel 1 --initial_ifuel 1 --max_ifuel 1"
+#set-options "--fuel 1 --ifuel 1"
 val sort: #a:eqtype -> f:(a -> a -> Tot bool){total_order a f}
        -> s1:seq a
        -> Tot (s2:seq a{sorted f s2 /\ permutation a s1 s2})

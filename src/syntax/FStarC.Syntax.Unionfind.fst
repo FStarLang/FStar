@@ -15,9 +15,12 @@
 *)
 
 module FStarC.Syntax.Unionfind
+
+open FStarC
 open FStarC.Effect
 open FStarC.Errors
 open FStarC.Syntax.Syntax
+open FStarC.Class.Show
 
 module Range = FStarC.Range
 module S     = FStarC.Syntax.Syntax
@@ -66,7 +69,7 @@ let empty (v:version) = {
   }
 
 (*private*)
-let version_to_string v = BU.format2 "%s.%s" (BU.string_of_int v.major) (BU.string_of_int v.minor)
+let version_to_string v = Format.fmt2 "%s.%s" (show v.major) (show v.minor)
 
 (* private *)
 let state : ref uf =
@@ -144,7 +147,7 @@ let set_term_graph tg =
 (*private*)
 let chk_v_t (su:S.uvar) = 
     let u, v, rng = su in
-    let uvar_to_string u = "?" ^ (PU.puf_unique_id u |> BU.string_of_int) in
+    let uvar_to_string u = "?" ^ (PU.puf_unique_id u |> show) in
     let expected = get_version () in
     if v.major = expected.major
     && v.minor <= expected.minor
@@ -181,7 +184,7 @@ let get_univ_graph () = (get()).univ_graph
 
 (*private*)
 let chk_v_u (u, v, rng) =
-    let uvar_to_string u = "?" ^ (PU.puf_unique_id u |> BU.string_of_int) in
+    let uvar_to_string u = "?" ^ (PU.puf_unique_id u |> show) in
     let expected = get_version () in
     if v.major = expected.major
     && v.minor <= expected.minor
