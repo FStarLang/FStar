@@ -54,7 +54,6 @@ let () =
   Hashtbl.add keywords "by"            BY          ;
   Hashtbl.add keywords "calc"          CALC        ;
   Hashtbl.add keywords "class"         CLASS       ;
-  Hashtbl.add keywords "default"       DEFAULT     ;
   Hashtbl.add keywords "decreases"     DECREASES   ;
   Hashtbl.add keywords "effect"        EFFECT      ;
   Hashtbl.add keywords "eliminate"     ELIM;
