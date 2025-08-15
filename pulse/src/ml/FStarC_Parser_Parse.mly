@@ -419,8 +419,8 @@ rawDecl:
       {
         let r = rr $loc in
         let lbs = focusLetBindings lbs r in
-        if q <> Rec && List.length lbs <> 1
-        then raise_error_text r Fatal_MultipleLetBinding "Unexpected multiple let-binding (Did you forget some rec qualifier ?)";
+        if q <> Rec && FStarC_List.length lbs > Prims.parse_int "1"
+        then raise_error_text (fst (nth lbs (Prims.parse_int "1"))).prange Fatal_MultipleLetBinding "Unexpected multiple let-binding (Did you forget some rec qualifier ?)";
         TopLevelLet(q, lbs)
       }
   | VAL c=constant
