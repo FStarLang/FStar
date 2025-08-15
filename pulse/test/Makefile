@@ -9,6 +9,8 @@ include $(PULSE_ROOT)/mk/test.mk
 # automatically computed. I am just retaining them from the previous
 # Makefile.
 
+$(OUTPUT_DIR)/VecAlloc.c: KRML_FLAGS=-faggressive-inlining
+
 $(OUTPUT_DIR)/Example_Hashtable.c: $(addprefix $(OUTPUT_DIR)/,\
 	FStar_Pervasives.krml \
 	FStar_Pervasives_Native.krml \
