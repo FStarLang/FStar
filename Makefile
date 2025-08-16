@@ -119,7 +119,6 @@ $(FSTAR1_BARE_EXE): .bare1.src.touch .src.ml.touch $(MAYBEFORCE)
 	  CACHE_DIR=stage1/plugins.checked/ \
 	  OUTPUT_DIR=stage1/plugins.ml/ \
 	  CODEGEN=PluginNoLib \
-	  OTHERFLAGS="--ext __guts $(OTHERFLAGS)" \
 	  TAG=plugins \
 	  TOUCH=$@ \
 	  $(MAKE) -f mk/plugins.mk ocaml
@@ -200,7 +199,6 @@ $(FSTAR2_BARE_EXE): .bare2.src.touch .src.ml.touch $(MAYBEFORCE)
 	  CACHE_DIR=stage2/plugins.checked/ \
 	  OUTPUT_DIR=stage2/plugins.ml/ \
 	  CODEGEN=PluginNoLib \
-	  OTHERFLAGS="--ext __guts $(OTHERFLAGS)" \
 	  TAG=plugins \
 	  TOUCH=$@ \
 	  $(MAKE) -f mk/plugins.mk ocaml
