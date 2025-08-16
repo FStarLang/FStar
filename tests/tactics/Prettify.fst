@@ -32,17 +32,17 @@ type named_ty =
     (named "Case1" ((named "x" int & int) & (named "y" int & string)))
     (named "Case2" (named "b" bool))
 
-// bijection record disabled for now
-(*
 %splice[
   named_ty_pretty;
-  Case1;
-  Case2;
-  named_ty_pretty_bij;
+  Mknamed_ty_pretty_Case1;
+  Mknamed_ty_pretty_Case2;
+// named_ty_pretty_bij; // bijection record disabled for now
 ] (entry "_pretty" (`%named_ty))
 
 // test bijection
 
+// bijection record disabled for now
+(*
 let _ = assert (Inl ((1, 2), (3, "a")) >> named_ty_pretty_bij == Case1 1 2 3 "a")
 let _ = assert (Case2 false << named_ty_pretty_bij == Inr false)
 *)
@@ -51,13 +51,37 @@ let _ = assert (Case2 false << named_ty_pretty_bij == Inr false)
 type can't be called? *)
 // let test (i : named_ty_pretty) =
 //   match i with
-//   | Case1 _ _ _ _ ->
-//     let _ = Case1?.x i in
-//     let _ = Case1?.y i in
+//   | Mknamed_ty_pretty_Case1 _ _ _ _ ->
+//     let _ = Mknamed_ty_pretty_Case1?.x i in
+//     let _ = Mknamed_ty_pretty_Case1?.y i in
 //     ()
-//   | Case2 _ ->
-//     let _ = Case2?.b i in
+//   | Mknamed_ty_pretty_Case2 _ ->
+//     let _ = Mknamed_ty_pretty_Case2?.b i in
 //     ()
+
+let test_named_ty1 (i : named_ty_pretty) =
+  match i with
+  | Mknamed_ty_pretty_Case1 _ _ _ _
+  | Mknamed_ty_pretty_Case2 _ ->
+    ()
+
+(* Named test: *)
+type named_ty2 =
+  either
+    (named "Case1" ((named "x" int & int) & (named "y" int & string)))
+    (named "Case2" (named "b" bool))
+
+%splice[
+  named_ty2_pretty;
+  Mknamed_ty2_pretty_Case1;
+  Mknamed_ty2_pretty_Case2;
+] (entry "_pretty" (`%named_ty2))
+
+let test_named_ty2 (i : named_ty2_pretty) =
+  match i with
+  | Mknamed_ty2_pretty_Case1 _ _ _ _
+  | Mknamed_ty2_pretty_Case2 _ ->
+    ()
 
 type t2 = tuple2 int int
 %splice[t2_pretty] (entry "_pretty" (`%t2))
