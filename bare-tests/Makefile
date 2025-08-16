@@ -7,7 +7,7 @@
 
 
 FSTAR_ARGS += --no_prelude
-FSTAR_ARGS += --already_cached '-*'  # remove this which test.mk adds by default
+OTHERFLAGS += --already_cached '-Prims,-FStar,-LowStar'  # remove this which test.mk adds by default
 
 FSTAR_ROOT ?= ..
 FSTAR_EXE ?= $(abspath $(FSTAR_ROOT)/stage1/dune/_build/default/fstarc-bare/fstarc1_bare.exe)
