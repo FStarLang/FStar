@@ -43,12 +43,6 @@ module Ext = FStarC.Options.Ext
 let debug_embedding = mk_ref false
 let eager_embedding = mk_ref false
 
-(* A FLAG TO INDICATE THAT WE'RE RUNNING UNIT TESTS *)
-let __unit_tests__ = mk_ref false
-let __unit_tests() = !__unit_tests__
-let __set_unit_tests () = __unit_tests__ := true
-let __clear_unit_tests () = __unit_tests__ := false
-
 let as_bool = function
   | Bool b -> b
   | _ -> failwith "Impos: expected Bool"

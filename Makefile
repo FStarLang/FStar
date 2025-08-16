@@ -9,7 +9,7 @@ include mk/common.mk
 FSTAR_DEFAULT_GOAL ?= build
 .DEFAULT_GOAL := $(FSTAR_DEFAULT_GOAL)
 
-all: stage1 stage2 stage3-bare lib-fsharp
+all: stage1 stage2 1.tests 2.tests stage3-bare lib-fsharp
 all-packages: package-1 package-2 package-src-1 package-src-2
 
 ### STAGES
@@ -38,12 +38,14 @@ FSTAR0_EXE ?= stage0/out/bin/fstar.exe
 # stage 1 libraries for the stage 2, which does not need them at all (currently?).
 #
 # I'd love a better alternative.
-FSTAR1_BARE_EXE := stage1/dune/_build/default/fstarc-bare/fstarc1_bare.exe
-FSTAR1_FULL_EXE := stage1/dune/_build/default/fstarc-full/fstarc1_full.exe
+FSTAR1_BARE_EXE           := stage1/dune/_build/default/fstarc-bare/fstarc1_bare.exe
+FSTAR1_FULL_EXE           := stage1/dune/_build/default/fstarc-full/fstarc1_full.exe
 INSTALLED_FSTAR1_FULL_EXE := stage1/out/bin/fstar.exe
-FSTAR2_BARE_EXE := stage2/dune/_build/default/fstarc-bare/fstarc2_bare.exe
-FSTAR2_FULL_EXE := stage2/dune/_build/default/fstarc-full/fstarc2_full.exe
+FSTAR2_BARE_EXE           := stage2/dune/_build/default/fstarc-bare/fstarc2_bare.exe
+FSTAR2_FULL_EXE           := stage2/dune/_build/default/fstarc-full/fstarc2_full.exe
 INSTALLED_FSTAR2_FULL_EXE := stage2/out/bin/fstar.exe
+TESTS1_EXE                := stage1/dune/_build/default/tests/fstarc1_tests.exe
+TESTS2_EXE                := stage2/dune/_build/default/tests/fstarc2_tests.exe
 
 .PHONY: .force
 .force:
@@ -59,10 +61,12 @@ endif
 build: 2
 
 0: $(FSTAR0_EXE)
-1.bare: $(FSTAR1_BARE_EXE)
-1.full: $(FSTAR1_FULL_EXE)
-2.bare: $(FSTAR2_BARE_EXE)
-2.full: $(FSTAR2_FULL_EXE)
+1.bare:  $(FSTAR1_BARE_EXE)
+1.tests: $(TESTS1_EXE)
+1.full:  $(FSTAR1_FULL_EXE)
+2.bare:  $(FSTAR2_BARE_EXE)
+2.tests: $(TESTS2_EXE)
+2.full:  $(FSTAR2_FULL_EXE)
 
 # This file's timestamp is updated whenever anything in stage0/
 # (excluding some build directories)
@@ -92,12 +96,26 @@ stage0/out/bin/fstar.exe: .stage0.touch
 	env \
 	  SRC=src/ \
 	  FSTAR_EXE=$(FSTAR0_EXE) \
+	  FSTAR_LIB=$(abspath ulib) \
 	  CACHE_DIR=stage1/fstarc.checked/ \
 	  OUTPUT_DIR=stage1/fstarc.ml/ \
 	  CODEGEN=OCaml \
 	  TAG=fstarc \
 	  TOUCH=$@ \
 	  $(MAKE) -f mk/fstar-01.mk ocaml
+
+.tests1.src.touch: .bare1.src.touch $(FSTAR0_EXE) .force
+	$(call bold_msg, "EXTRACT", "STAGE 1 TESTS")
+	env \
+	  SRC=src/ \
+	  FSTAR_EXE=$(FSTAR0_EXE) \
+	  FSTAR_LIB=$(abspath ulib) \
+	  CACHE_DIR=stage1/tests.checked/ \
+	  OUTPUT_DIR=stage1/tests.ml/ \
+	  CODEGEN=PluginNoLib \
+	  TAG=fstarc \
+	  TOUCH=$@ \
+	  $(MAKE) -f mk/tests-1.mk ocaml
 
 # These files are regenerated as soon as *any* ml file reachable from
 # stage*/dune changes. This makes sure we trigger dune rebuilds when we
@@ -110,6 +128,14 @@ $(FSTAR1_BARE_EXE): .bare1.src.touch .src.ml.touch $(MAYBEFORCE)
 	$(call bold_msg, "BUILD", "STAGE 1 FSTARC-BARE")
 	$(MAKE) -C stage1 fstarc-bare
 	touch -c $@
+
+$(TESTS1_EXE): .tests1.src.touch .src.ml.touch $(MAYBEFORCE)
+	$(call bold_msg, "BUILD", "STAGE 1 TESTS")
+	$(MAKE) -C stage1 tests
+	touch -c $@
+
+stage1-unit-tests: $(TESTS1_EXE)
+	FSTAR_LIB=$(CURDIR)/ulib $(TESTS1_EXE)
 
 .full1.src.touch: $(FSTAR1_BARE_EXE) .force
 	$(call bold_msg, "EXTRACT", "STAGE 1 PLUGINS")
@@ -183,6 +209,19 @@ $(FSTAR1_FULL_EXE): .bare1.src.touch .full1.src.touch .src.ml.touch $(MAYBEFORCE
 	  TOUCH=$@ \
 	  $(MAKE) -f mk/fstar-12.mk ocaml
 
+.tests2.src.touch: .bare2.src.touch $(FSTAR1_FULL_EXE) .force
+	$(call bold_msg, "EXTRACT", "STAGE 2 TESTS")
+	env \
+	  SRC=src/ \
+	  FSTAR_EXE=$(FSTAR1_FULL_EXE) \
+	  FSTAR_LIB=$(abspath ulib) \
+	  CACHE_DIR=stage2/tests.checked/ \
+	  OUTPUT_DIR=stage2/tests.ml/ \
+	  CODEGEN=PluginNoLib \
+	  TAG=fstarc \
+	  TOUCH=$@ \
+	  $(MAKE) -f mk/tests-2.mk ocaml
+
 $(FSTAR2_BARE_EXE): .bare2.src.touch .src.ml.touch $(MAYBEFORCE)
 	$(call bold_msg, "BUILD", "STAGE 2 FSTARC-BARE")
 	$(MAKE) -C stage2 fstarc-bare FSTAR_DUNE_RELEASE=1
@@ -190,6 +229,14 @@ $(FSTAR2_BARE_EXE): .bare2.src.touch .src.ml.touch $(MAYBEFORCE)
 	# ^ Note, even if we don't release fstar-bare itself,
 	# it is still part of the build of the full fstar, so
 	# we set the release flag to have a more incremental build.
+
+$(TESTS2_EXE): .tests2.src.touch .src.ml.touch $(MAYBEFORCE)
+	$(call bold_msg, "BUILD", "STAGE 2 TESTS")
+	$(MAKE) -C stage2 tests
+	touch -c $@
+
+stage2-unit-tests: $(TESTS2_EXE)
+	FSTAR_LIB=$(CURDIR)/ulib $(TESTS2_EXE)
 
 .full2.src.touch: $(FSTAR2_BARE_EXE) .force
 	$(call bold_msg, "EXTRACT", "STAGE 2 PLUGINS")
@@ -451,7 +498,7 @@ _examples: need_fstar_exe .force
 
 ci: .force
 	+$(MAKE) 2
-	+$(MAKE) test lib-fsharp stage3-diff
+	+$(MAKE) test lib-fsharp stage3-diff test-2-bare stage2-unit-tests
 
 save: stage0_new
 
