@@ -303,14 +303,14 @@ endif
 	touch $@
 
 .install-stage1.touch: export FSTAR_LINK_LIBDIRS=$(LINK_OK)
-.install-stage1.touch: .stage1.src.touch
+.install-stage1.touch: .stage1.src.touch $(MAYBEFORCE)
 	$(call bold_msg, "INSTALL", "STAGE 1")
 	$(MAKE) -C stage1 install PREFIX=$(CURDIR)/stage1/out
 	@# ^ pass PREFIX to make sure we don't get it from env
 	touch $@
 
 .install-stage2.touch: export FSTAR_LINK_LIBDIRS=$(LINK_OK)
-.install-stage2.touch: .stage2.src.touch
+.install-stage2.touch: .stage2.src.touch $(MAYBEFORCE)
 	$(call bold_msg, "INSTALL", "STAGE 2")
 	$(MAKE) -C stage2 install PREFIX=$(CURDIR)/stage2/out FSTAR_DUNE_RELEASE=1
 	@# ^ pass PREFIX to make sure we don't get it from env
