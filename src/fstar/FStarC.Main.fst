@@ -24,6 +24,8 @@ open FStarC.CheckedFiles
 open FStarC.Universal
 open FStarC.Util
 
+open FStarC.Hooks (* KEEP: we need this module for its top-level effect. *)
+
 open FStarC.Class.Show
 
 module E = FStarC.Errors
@@ -442,7 +444,6 @@ let handle_error e =
 
 let main () =
   try
-    Hooks.setup_hooks ();
     let _, time = Timing.record_ms go in
     if FStarC.Options.query_stats()
     then print2_error "TOTAL TIME %s ms: %s\n"
