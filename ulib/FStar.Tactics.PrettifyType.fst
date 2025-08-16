@@ -113,7 +113,9 @@ let rec flatten_type (pretty_tynm : name) (ctr:nat) (t:parsed_type) : Tac (nat &
     ctr, Sum (aa @ bb)
   | Named s t ->
     let _, p = as_prod_type 0 t in
-    ctr, Sum [(s, p)]
+    assume (List.length pretty_tynm > 0);
+    let _, s0 = unsnoc pretty_tynm in
+    ctr, Sum [("Mk" ^ s0 ^ "_" ^ s, p)]
   | t ->
     let _, p = as_prod_type 0 t in
     assume (List.length pretty_tynm > 0);
