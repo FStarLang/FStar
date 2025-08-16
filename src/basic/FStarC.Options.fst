@@ -836,7 +836,7 @@ let specs_with_types warn_unsafe : list (char & string & opt_type & Pprint.docum
 
   ( noshort,
     "already_cached",
-    Accumulated (SimpleStr "One or more space-separated occurrences of '[+|-]( * | namespace | module)'"),
+    ReverseAccumulated (SimpleStr "One or more space-separated occurrences of '[+|-]( * | namespace | module)'"),
     text "Expects all modules whose names or namespaces match the provided options \
           to already have valid .checked files in the include path");
 
