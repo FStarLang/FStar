@@ -113,10 +113,10 @@ let (label_goals :
           FStarC_Util.for_some is_guard_free (conjuncts lhs) in
         let uu___ =
           match use_env_msg with
-          | FStar_Pervasives_Native.None -> (false, FStarC_Pprint.empty)
+          | FStar_Pervasives_Native.None -> (false, FStar_Pprint.empty)
           | FStar_Pervasives_Native.Some f ->
               let uu___1 =
-                let uu___2 = f () in FStarC_Pprint.doc_of_string uu___2 in
+                let uu___2 = f () in FStar_Pprint.doc_of_string uu___2 in
               (true, uu___1) in
         match uu___ with
         | (flag, msg_prefix) ->
@@ -131,7 +131,7 @@ let (label_goals :
                           let uu___2 =
                             FStarC_Errors_Msg.text
                               "Failed to verify implicit argument: " in
-                          FStarC_Pprint.op_Hat_Hat uu___2 msg_prefix in
+                          FStar_Pprint.op_Hat_Hat uu___2 msg_prefix in
                         uu___1 :: msg1
                       else msg1 in
                     let rng1 =

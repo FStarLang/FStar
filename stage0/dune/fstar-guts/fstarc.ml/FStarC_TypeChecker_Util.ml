@@ -429,9 +429,9 @@ let (extract_let_rec_annotation :
                                         FStarC_Syntax_Print.pretty_comp c in
                                     let uu___15 =
                                       FStarC_Errors_Msg.text "instead" in
-                                    FStarC_Pprint.op_Hat_Slash_Hat uu___14
+                                    FStar_Pprint.op_Hat_Slash_Hat uu___14
                                       uu___15 in
-                                  FStarC_Pprint.op_Hat_Slash_Hat uu___12
+                                  FStar_Pprint.op_Hat_Slash_Hat uu___12
                                     uu___13 in
                                 [uu___11] in
                               uu___9 :: uu___10 in
@@ -535,13 +535,13 @@ let (extract_let_rec_annotation :
                                                   FStarC_Class_PP.pp
                                                     FStarC_Syntax_Print.pretty_term
                                                     t3 in
-                                                FStarC_Pprint.parens uu___17 in
+                                                FStar_Pprint.parens uu___17 in
                                               let uu___17 =
                                                 FStarC_Errors_Msg.text
                                                   "is not yet supported." in
-                                              FStarC_Pprint.op_Hat_Slash_Hat
+                                              FStar_Pprint.op_Hat_Slash_Hat
                                                 uu___16 uu___17 in
-                                            FStarC_Pprint.op_Hat_Slash_Hat
+                                            FStar_Pprint.op_Hat_Slash_Hat
                                               uu___14 uu___15 in
                                           let uu___14 =
                                             let uu___15 =
@@ -653,9 +653,9 @@ let (extract_let_rec_annotation :
                                      FStarC_Syntax_Print.pretty_term e3 in
                                  let uu___14 =
                                    FStarC_Errors_Msg.text "instead" in
-                                 FStarC_Pprint.op_Hat_Slash_Hat uu___13
+                                 FStar_Pprint.op_Hat_Slash_Hat uu___13
                                    uu___14 in
-                               FStarC_Pprint.op_Hat_Slash_Hat uu___11 uu___12 in
+                               FStar_Pprint.op_Hat_Slash_Hat uu___11 uu___12 in
                              [uu___10] in
                            uu___8 :: uu___9 in
                          FStarC_Errors.raise_error
@@ -817,9 +817,9 @@ let (effect_args_from_repr :
                   let uu___7 = FStarC_Errors_Msg.text "with is_layered=" in
                   let uu___8 =
                     FStarC_Class_PP.pp FStarC_Class_PP.pp_bool is_layered in
-                  FStarC_Pprint.op_Hat_Hat uu___7 uu___8 in
-                FStarC_Pprint.op_Hat_Slash_Hat uu___5 uu___6 in
-              FStarC_Pprint.op_Hat_Slash_Hat uu___3 uu___4 in
+                  FStar_Pprint.op_Hat_Hat uu___7 uu___8 in
+                FStar_Pprint.op_Hat_Slash_Hat uu___5 uu___6 in
+              FStar_Pprint.op_Hat_Slash_Hat uu___3 uu___4 in
             [uu___2] in
           FStarC_Errors.raise_error FStarC_Class_HasRange.hasRange_range r
             FStarC_Errors_Codes.Fatal_UnexpectedEffect ()
@@ -908,7 +908,7 @@ let (mk_wp_return :
                else ());
               c
 let (label :
-  FStarC_Pprint.document Prims.list ->
+  FStar_Pprint.document Prims.list ->
     FStarC_Range_Type.t ->
       FStarC_Syntax_Syntax.typ -> FStarC_Syntax_Syntax.typ)
   =
@@ -924,8 +924,8 @@ let (label :
              }) f.FStarC_Syntax_Syntax.pos
 let (label_opt :
   FStarC_TypeChecker_Env.env ->
-    (unit -> FStarC_Pprint.document Prims.list)
-      FStar_Pervasives_Native.option ->
+    (unit -> FStar_Pprint.document Prims.list) FStar_Pervasives_Native.option
+      ->
       FStarC_Range_Type.t ->
         FStarC_Syntax_Syntax.typ -> FStarC_Syntax_Syntax.typ)
   =
@@ -944,7 +944,7 @@ let (label_opt :
               else (let uu___2 = reason1 () in label uu___2 r f)
 let (label_guard :
   FStarC_Range_Type.t ->
-    FStarC_Pprint.document Prims.list ->
+    FStar_Pprint.document Prims.list ->
       FStarC_TypeChecker_Env.guard_t -> FStarC_TypeChecker_Env.guard_t)
   =
   fun r ->
@@ -1027,11 +1027,10 @@ let (join_effects :
                                     FStarC_Ident.pretty_lident l2_in in
                                 let uu___12 =
                                   FStarC_Errors_Msg.text "cannot be composed" in
-                                FStarC_Pprint.op_Hat_Slash_Hat uu___11
-                                  uu___12 in
-                              FStarC_Pprint.op_Hat_Slash_Hat uu___9 uu___10 in
-                            FStarC_Pprint.op_Hat_Slash_Hat uu___7 uu___8 in
-                          FStarC_Pprint.op_Hat_Slash_Hat uu___5 uu___6 in
+                                FStar_Pprint.op_Hat_Slash_Hat uu___11 uu___12 in
+                              FStar_Pprint.op_Hat_Slash_Hat uu___9 uu___10 in
+                            FStar_Pprint.op_Hat_Slash_Hat uu___7 uu___8 in
+                          FStar_Pprint.op_Hat_Slash_Hat uu___5 uu___6 in
                         [uu___4] in
                       FStarC_Errors.raise_error
                         FStarC_TypeChecker_Env.hasRange_env env
@@ -1131,10 +1130,10 @@ let (lift_comps_sep_guards :
                               c21.FStarC_Syntax_Syntax.effect_name in
                           let uu___10 =
                             FStarC_Errors_Msg.text "cannot be composed" in
-                          FStarC_Pprint.op_Hat_Slash_Hat uu___9 uu___10 in
-                        FStarC_Pprint.op_Hat_Slash_Hat uu___7 uu___8 in
-                      FStarC_Pprint.op_Hat_Slash_Hat uu___5 uu___6 in
-                    FStarC_Pprint.op_Hat_Slash_Hat uu___3 uu___4 in
+                          FStar_Pprint.op_Hat_Slash_Hat uu___9 uu___10 in
+                        FStar_Pprint.op_Hat_Slash_Hat uu___7 uu___8 in
+                      FStar_Pprint.op_Hat_Slash_Hat uu___5 uu___6 in
+                    FStar_Pprint.op_Hat_Slash_Hat uu___3 uu___4 in
                   [uu___2] in
                 FStarC_Errors.raise_error FStarC_TypeChecker_Env.hasRange_env
                   env FStarC_Errors_Codes.Fatal_EffectsCannotBeComposed ()
@@ -2307,13 +2306,13 @@ let (mk_indexed_return :
                              let uu___8 =
                                FStarC_Errors_Msg.text
                                  "does not have proper shape" in
-                             FStarC_Pprint.op_Hat_Slash_Hat uu___7 uu___8 in
-                           FStarC_Pprint.op_Hat_Slash_Hat uu___5 uu___6 in
+                             FStar_Pprint.op_Hat_Slash_Hat uu___7 uu___8 in
+                           FStar_Pprint.op_Hat_Slash_Hat uu___5 uu___6 in
                          let uu___5 =
                            let uu___6 =
                              let uu___7 = FStarC_Errors_Msg.text "Reason: " in
                              let uu___8 = FStarC_Errors_Msg.text s in
-                             FStarC_Pprint.op_Hat_Hat uu___7 uu___8 in
+                             FStar_Pprint.op_Hat_Hat uu___7 uu___8 in
                            [uu___6] in
                          uu___4 :: uu___5 in
                        FStarC_Errors.raise_error
@@ -2536,7 +2535,7 @@ let (mk_indexed_bind :
                                          let uu___8 =
                                            let uu___9 =
                                              let uu___10 = bind_name () in
-                                             FStarC_Pprint.doc_of_string
+                                             FStar_Pprint.doc_of_string
                                                uu___10 in
                                            let uu___10 =
                                              let uu___11 =
@@ -2549,14 +2548,14 @@ let (mk_indexed_bind :
                                                let uu___14 =
                                                  FStarC_Errors_Msg.text
                                                    "is not erasable and one of the computations is informative." in
-                                               FStarC_Pprint.op_Hat_Slash_Hat
+                                               FStar_Pprint.op_Hat_Slash_Hat
                                                  uu___13 uu___14 in
-                                             FStarC_Pprint.op_Hat_Slash_Hat
+                                             FStar_Pprint.op_Hat_Slash_Hat
                                                uu___11 uu___12 in
-                                           FStarC_Pprint.op_Hat_Slash_Hat
+                                           FStar_Pprint.op_Hat_Slash_Hat
                                              uu___9 uu___10 in
-                                         FStarC_Pprint.op_Hat_Slash_Hat
-                                           uu___7 uu___8 in
+                                         FStar_Pprint.op_Hat_Slash_Hat uu___7
+                                           uu___8 in
                                        [uu___6] in
                                      FStarC_Errors.raise_error
                                        FStarC_Class_HasRange.hasRange_range
@@ -2863,8 +2862,8 @@ let (mk_bind :
                                       (c, uu___5)))))
 let (strengthen_comp :
   FStarC_TypeChecker_Env.env ->
-    (unit -> FStarC_Pprint.document Prims.list)
-      FStar_Pervasives_Native.option ->
+    (unit -> FStar_Pprint.document Prims.list) FStar_Pervasives_Native.option
+      ->
       FStarC_Syntax_Syntax.comp ->
         FStarC_Syntax_Syntax.formula ->
           FStarC_Syntax_Syntax.cflag Prims.list ->
@@ -3053,7 +3052,7 @@ let (weaken_precondition :
           lc.FStarC_TypeChecker_Common.eff_name
           lc.FStarC_TypeChecker_Common.res_typ uu___ weaken
 let (strengthen_precondition :
-  (unit -> FStarC_Pprint.document Prims.list) FStar_Pervasives_Native.option
+  (unit -> FStar_Pprint.document Prims.list) FStar_Pervasives_Native.option
     ->
     FStarC_TypeChecker_Env.env ->
       FStarC_Syntax_Syntax.term ->
@@ -4006,7 +4005,7 @@ let (assume_result_eq_pure_term_in_m :
                     "assume_result_eq_pure_term cannot inline an non-inlineable lc : " in
                 let uu___4 =
                   FStarC_Class_PP.pp FStarC_Syntax_Print.pretty_term e in
-                FStarC_Pprint.op_Hat_Hat uu___3 uu___4 in
+                FStar_Pprint.op_Hat_Hat uu___3 uu___4 in
               [uu___2] in
             FStarC_Errors.raise_error
               (FStarC_Syntax_Syntax.has_range_syntax ()) e
@@ -4381,13 +4380,13 @@ let (ad_hoc_indexed_ite_substs :
                           let uu___5 =
                             FStarC_Errors_Msg.text
                               "does not have proper shape." in
-                          FStarC_Pprint.op_Hat_Hat uu___4 uu___5 in
-                        FStarC_Pprint.op_Hat_Hat uu___2 uu___3 in
+                          FStar_Pprint.op_Hat_Hat uu___4 uu___5 in
+                        FStar_Pprint.op_Hat_Hat uu___2 uu___3 in
                       let uu___2 =
                         let uu___3 =
                           let uu___4 = FStarC_Errors_Msg.text "Reason: " in
                           let uu___5 = FStarC_Errors_Msg.text s in
-                          FStarC_Pprint.op_Hat_Hat uu___4 uu___5 in
+                          FStar_Pprint.op_Hat_Hat uu___4 uu___5 in
                         [uu___3] in
                       uu___1 :: uu___2 in
                     FStarC_Errors.raise_error
@@ -4552,13 +4551,13 @@ let (mk_layered_conjunction :
                             let uu___5 =
                               FStarC_Errors_Msg.text
                                 "does not have proper shape." in
-                            FStarC_Pprint.op_Hat_Hat uu___4 uu___5 in
-                          FStarC_Pprint.op_Hat_Hat uu___2 uu___3 in
+                            FStar_Pprint.op_Hat_Hat uu___4 uu___5 in
+                          FStar_Pprint.op_Hat_Hat uu___2 uu___3 in
                         let uu___2 =
                           let uu___3 =
                             let uu___4 = FStarC_Errors_Msg.text "Reason: " in
                             let uu___5 = FStarC_Errors_Msg.text s in
-                            FStarC_Pprint.op_Hat_Hat uu___4 uu___5 in
+                            FStar_Pprint.op_Hat_Hat uu___4 uu___5 in
                           [uu___3] in
                         uu___1 :: uu___2 in
                       FStarC_Errors.raise_error
@@ -5877,9 +5876,6 @@ let (find_coercion :
                                                                     (env.FStarC_TypeChecker_Env.is_iface);
                                                                     FStarC_TypeChecker_Env.admit
                                                                     = true;
-                                                                    FStarC_TypeChecker_Env.lax_universes
-                                                                    =
-                                                                    (env.FStarC_TypeChecker_Env.lax_universes);
                                                                     FStarC_TypeChecker_Env.phase1
                                                                     =
                                                                     (env.FStarC_TypeChecker_Env.phase1);
@@ -6962,13 +6958,12 @@ let (maybe_instantiate :
                                     FStarC_Class_PP.pp FStarC_Class_PP.pp_int
                                       n_available in
                                   let uu___17 = FStarC_Errors_Msg.text "." in
-                                  FStarC_Pprint.op_Hat_Hat uu___16 uu___17 in
-                                FStarC_Pprint.op_Hat_Slash_Hat uu___14
-                                  uu___15 in
-                              FStarC_Pprint.op_Hat_Slash_Hat uu___12 uu___13 in
-                            FStarC_Pprint.op_Hat_Slash_Hat uu___10 uu___11 in
-                          FStarC_Pprint.op_Hat_Slash_Hat uu___8 uu___9 in
-                        FStarC_Pprint.op_Hat_Slash_Hat uu___6 uu___7 in
+                                  FStar_Pprint.op_Hat_Hat uu___16 uu___17 in
+                                FStar_Pprint.op_Hat_Slash_Hat uu___14 uu___15 in
+                              FStar_Pprint.op_Hat_Slash_Hat uu___12 uu___13 in
+                            FStar_Pprint.op_Hat_Slash_Hat uu___10 uu___11 in
+                          FStar_Pprint.op_Hat_Slash_Hat uu___8 uu___9 in
+                        FStar_Pprint.op_Hat_Slash_Hat uu___6 uu___7 in
                       [uu___5] in
                     FStarC_Errors.raise_error
                       FStarC_TypeChecker_Env.hasRange_env env
@@ -7451,7 +7446,7 @@ let (short_circuit :
         uu___ :: uu___1 in
       match head.FStarC_Syntax_Syntax.n with
       | FStarC_Syntax_Syntax.Tm_fvar fv ->
-          let lid = (fv.FStarC_Syntax_Syntax.fv_name).FStarC_Syntax_Syntax.v in
+          let lid = fv.FStarC_Syntax_Syntax.fv_name in
           let uu___ =
             FStarC_Util.find_map table
               (fun uu___1 ->
@@ -8431,8 +8426,6 @@ let (update_env_sub_eff :
                 (env.FStarC_TypeChecker_Env.is_iface);
               FStarC_TypeChecker_Env.admit =
                 (env.FStarC_TypeChecker_Env.admit);
-              FStarC_TypeChecker_Env.lax_universes =
-                (env.FStarC_TypeChecker_Env.lax_universes);
               FStarC_TypeChecker_Env.phase1 =
                 (env.FStarC_TypeChecker_Env.phase1);
               FStarC_TypeChecker_Env.failhard =
@@ -8534,8 +8527,6 @@ let (update_env_sub_eff :
           FStarC_TypeChecker_Env.is_iface =
             (env1.FStarC_TypeChecker_Env.is_iface);
           FStarC_TypeChecker_Env.admit = (env1.FStarC_TypeChecker_Env.admit);
-          FStarC_TypeChecker_Env.lax_universes =
-            (env1.FStarC_TypeChecker_Env.lax_universes);
           FStarC_TypeChecker_Env.phase1 =
             (env1.FStarC_TypeChecker_Env.phase1);
           FStarC_TypeChecker_Env.failhard =
@@ -8651,24 +8642,25 @@ let (try_lookup_record_type :
                                FStarC_Syntax_Syntax.num_ty_params = nparms;
                                FStarC_Syntax_Syntax.mutuals1 = uu___6;
                                FStarC_Syntax_Syntax.injective_type_params1 =
-                                 uu___7;_};
-                           FStarC_Syntax_Syntax.sigrng = uu___8;
-                           FStarC_Syntax_Syntax.sigquals = uu___9;
-                           FStarC_Syntax_Syntax.sigmeta = uu___10;
-                           FStarC_Syntax_Syntax.sigattrs = uu___11;
+                                 uu___7;
+                               FStarC_Syntax_Syntax.proj_disc_lids = uu___8;_};
+                           FStarC_Syntax_Syntax.sigrng = uu___9;
+                           FStarC_Syntax_Syntax.sigquals = uu___10;
+                           FStarC_Syntax_Syntax.sigmeta = uu___11;
+                           FStarC_Syntax_Syntax.sigattrs = uu___12;
                            FStarC_Syntax_Syntax.sigopens_and_abbrevs =
-                             uu___12;
-                           FStarC_Syntax_Syntax.sigopts = uu___13;_}
+                             uu___13;
+                           FStarC_Syntax_Syntax.sigopts = uu___14;_}
                          ->
-                         let uu___14 = FStarC_Syntax_Util.arrow_formals t in
-                         (match uu___14 with
+                         let uu___15 = FStarC_Syntax_Util.arrow_formals t in
+                         (match uu___15 with
                           | (formals, c) ->
                               if nparms < (FStarC_List.length formals)
                               then
-                                let uu___15 =
+                                let uu___16 =
                                   FStarC_List.splitAt nparms formals in
-                                (match uu___15 with
-                                 | (uu___16, fields) ->
+                                (match uu___16 with
+                                 | (uu___17, fields) ->
                                      let fields1 =
                                        FStarC_List.filter
                                          (fun b ->
@@ -8676,8 +8668,8 @@ let (try_lookup_record_type :
                                             with
                                             | FStar_Pervasives_Native.Some
                                                 (FStarC_Syntax_Syntax.Implicit
-                                                uu___17) -> false
-                                            | uu___17 -> true) fields in
+                                                uu___18) -> false
+                                            | uu___18 -> true) fields in
                                      let fields2 =
                                        FStarC_List.map
                                          (fun b ->
@@ -8688,13 +8680,13 @@ let (try_lookup_record_type :
                                        FStarC_TypeChecker_Env.is_record env
                                          typename in
                                      let r =
-                                       let uu___17 =
+                                       let uu___18 =
                                          FStarC_Ident.ident_of_lid dc in
                                        {
                                          FStarC_Syntax_DsEnv.typename =
                                            typename;
                                          FStarC_Syntax_DsEnv.constrname =
-                                           uu___17;
+                                           uu___18;
                                          FStarC_Syntax_DsEnv.parms = [];
                                          FStarC_Syntax_DsEnv.fields = fields2;
                                          FStarC_Syntax_DsEnv.is_private =
@@ -8782,7 +8774,7 @@ let (find_record_or_dc_from_typ :
                       | FStarC_Syntax_Syntax.Tm_fvar type_name ->
                           let uu___3 =
                             try_lookup_record_type env
-                              (type_name.FStarC_Syntax_Syntax.fv_name).FStarC_Syntax_Syntax.v in
+                              type_name.FStarC_Syntax_Syntax.fv_name in
                           (match uu___3 with
                            | FStar_Pervasives_Native.None -> default_rdc ()
                            | FStar_Pervasives_Native.Some r -> r)
@@ -8944,17 +8936,16 @@ let make_record_fields_in_order :
                 match uu___ with
                 | (rest, as_rev, missing) ->
                     let pp_missing uu___1 =
-                      let uu___2 =
-                        let uu___3 = FStarC_Pprint.break_ Prims.int_one in
-                        FStarC_Pprint.op_Hat_Hat FStarC_Pprint.comma uu___3 in
-                      FStarC_Pprint.separate_map uu___2
+                      FStarC_Pprint.separate_map
+                        (FStar_Pprint.op_Hat_Hat FStar_Pprint.comma
+                           (FStar_Pprint.break_ Prims.int_one))
                         (fun f ->
-                           let uu___3 =
-                             let uu___4 =
+                           let uu___2 =
+                             let uu___3 =
                                FStarC_Class_Show.show
                                  FStarC_Ident.showable_ident f in
-                             FStarC_Pprint.doc_of_string uu___4 in
-                           FStarC_Pprint.squotes uu___3) missing in
+                             FStar_Pprint.doc_of_string uu___3 in
+                           FStar_Pprint.squotes uu___2) missing in
                     ((match (rest, missing) with
                       | ([], []) -> ()
                       | ((f, uu___2)::uu___3, uu___4) ->
@@ -8979,9 +8970,9 @@ let make_record_fields_in_order :
                                   let uu___9 =
                                     FStarC_Errors_Msg.text "Missing fields:" in
                                   let uu___10 = pp_missing () in
-                                  FStarC_Pprint.prefix (Prims.of_int (2))
+                                  FStar_Pprint.prefix (Prims.of_int (2))
                                     Prims.int_one uu___9 uu___10
-                                else FStarC_Pprint.empty in
+                                else FStar_Pprint.empty in
                               [uu___8] in
                             uu___6 :: uu___7 in
                           FStarC_Errors.raise_error
@@ -9004,7 +8995,7 @@ let make_record_fields_in_order :
                                     uu___7 in
                                 FStarC_Errors_Msg.text uu___6 in
                               let uu___6 = pp_missing () in
-                              FStarC_Pprint.prefix (Prims.of_int (2))
+                              FStar_Pprint.prefix (Prims.of_int (2))
                                 Prims.int_one uu___5 uu___6 in
                             [uu___4] in
                           FStarC_Errors.raise_error

@@ -1006,7 +1006,7 @@ let (fstar_options_list_cache : fstar_option Prims.list) =
                   let uu___3 = sig_of_fstar_option name typ in
                   let uu___4 = snippets_of_fstar_option name typ in
                   let uu___5 =
-                    if doc = FStarC_Pprint.empty
+                    if doc = FStar_Pprint.empty
                     then FStar_Pervasives_Native.None
                     else
                       (let uu___7 = FStarC_Errors_Msg.renderdoc doc in
@@ -1691,8 +1691,6 @@ let (run_push_without_deps :
                    (uu___.FStarC_TypeChecker_Env.is_iface);
                  FStarC_TypeChecker_Env.admit =
                    (uu___.FStarC_TypeChecker_Env.admit);
-                 FStarC_TypeChecker_Env.lax_universes =
-                   (uu___.FStarC_TypeChecker_Env.lax_universes);
                  FStarC_TypeChecker_Env.phase1 =
                    (uu___.FStarC_TypeChecker_Env.phase1);
                  FStarC_TypeChecker_Env.failhard =

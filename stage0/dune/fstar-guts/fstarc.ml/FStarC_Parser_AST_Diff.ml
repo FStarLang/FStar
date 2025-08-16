@@ -291,16 +291,16 @@ and (eq_term' :
          (i2, t21)) -> (eq_ident i1 i2) && (eq_term t11 t21)
       | (FStarC_Parser_AST.Paren t11, FStarC_Parser_AST.Paren t21) ->
           eq_term t11 t21
-      | (FStarC_Parser_AST.Requires (t11, s1), FStarC_Parser_AST.Requires
-         (t21, s2)) -> (eq_term t11 t21) && (eq_option (=) s1 s2)
-      | (FStarC_Parser_AST.Ensures (t11, s1), FStarC_Parser_AST.Ensures
-         (t21, s2)) -> (eq_term t11 t21) && (eq_option (=) s1 s2)
+      | (FStarC_Parser_AST.Requires t11, FStarC_Parser_AST.Requires t21) ->
+          eq_term t11 t21
+      | (FStarC_Parser_AST.Ensures t11, FStarC_Parser_AST.Ensures t21) ->
+          eq_term t11 t21
       | (FStarC_Parser_AST.LexList ts1, FStarC_Parser_AST.LexList ts2) ->
           eq_list eq_term ts1 ts2
       | (FStarC_Parser_AST.WFOrder (t11, t21), FStarC_Parser_AST.WFOrder
          (t3, t4)) -> (eq_term t11 t3) && (eq_term t21 t4)
-      | (FStarC_Parser_AST.Decreases (t11, s1), FStarC_Parser_AST.Decreases
-         (t21, s2)) -> (eq_term t11 t21) && (eq_option (=) s1 s2)
+      | (FStarC_Parser_AST.Decreases t11, FStarC_Parser_AST.Decreases t21) ->
+          eq_term t11 t21
       | (FStarC_Parser_AST.Labeled (t11, s1, b1), FStarC_Parser_AST.Labeled
          (t21, s2, b2)) -> ((eq_term t11 t21) && (s1 = s2)) && (b1 = b2)
       | (FStarC_Parser_AST.Discrim l1, FStarC_Parser_AST.Discrim l2) ->

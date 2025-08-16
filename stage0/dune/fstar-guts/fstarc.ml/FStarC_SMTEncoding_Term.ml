@@ -451,81 +451,57 @@ let (__proj__Mkdecls_elt__item__a_names :
 type decls_t = decls_elt Prims.list
 let (escape : Prims.string -> Prims.string) =
   fun s -> FStarC_Util.replace_char s 39 95
-let (render : FStarC_Pprint.document -> Prims.string) =
+let (render : FStar_Pprint.document -> Prims.string) =
   FStarC_Pprint.pretty_string (FStarC_Util.float_of_string "1.0")
     (Prims.of_int (100))
-let (form_core : FStarC_Pprint.document Prims.list -> FStarC_Pprint.document)
-  =
+let (form_core : FStar_Pprint.document Prims.list -> FStar_Pprint.document) =
   fun children ->
-    let uu___ =
-      let uu___1 =
-        let uu___2 =
-          let uu___3 = FStarC_Pprint.break_ Prims.int_one in
-          FStarC_Pprint.separate uu___3 children in
-        FStarC_Pprint.group uu___2 in
-      FStarC_Pprint.nest Prims.int_one uu___1 in
-    FStarC_Pprint.parens uu___
+    FStar_Pprint.parens
+      (FStar_Pprint.nest Prims.int_one
+         (FStar_Pprint.group
+            (FStar_Pprint.separate (FStar_Pprint.break_ Prims.int_one)
+               children)))
 let (form :
-  Prims.string -> FStarC_Pprint.document Prims.list -> FStarC_Pprint.document)
-  =
-  fun fn ->
-    fun args ->
-      let uu___ =
-        let uu___1 = FStarC_Pprint.doc_of_string fn in uu___1 :: args in
-      form_core uu___
+  Prims.string -> FStar_Pprint.document Prims.list -> FStar_Pprint.document)
+  = fun fn -> fun args -> form_core ((FStar_Pprint.doc_of_string fn) :: args)
 let (binder :
   Prims.string ->
-    FStarC_Pprint.document ->
-      FStarC_Pprint.document Prims.list -> FStarC_Pprint.document)
+    FStar_Pprint.document ->
+      FStar_Pprint.document Prims.list -> FStar_Pprint.document)
   =
   fun fn ->
     fun b ->
       fun args ->
-        let uu___ =
-          let uu___1 =
-            let uu___2 =
-              let uu___3 =
-                let uu___4 = FStarC_Pprint.doc_of_string fn in
-                FStarC_Pprint.op_Hat_Slash_Hat uu___4 b in
-              FStarC_Pprint.group uu___3 in
-            FStarC_Pprint.nest Prims.int_one uu___2 in
-          uu___1 :: args in
-        form_core uu___
-let (mk_qid : Prims.string -> FStarC_Pprint.document) =
+        form_core
+          ((FStar_Pprint.nest Prims.int_one
+              (FStar_Pprint.group
+                 (FStar_Pprint.op_Hat_Slash_Hat
+                    (FStar_Pprint.doc_of_string fn) b))) :: args)
+let (mk_qid : Prims.string -> FStar_Pprint.document) =
   fun id ->
-    let uu___ =
-      let uu___1 =
-        let uu___2 = FStarC_Pprint.doc_of_string ":qid" in
-        let uu___3 = FStarC_Pprint.doc_of_string id in
-        FStarC_Pprint.op_Hat_Slash_Hat uu___2 uu___3 in
-      FStarC_Pprint.group uu___1 in
-    FStarC_Pprint.nest Prims.int_one uu___
-let (mk_lblpos : Prims.string -> FStarC_Pprint.document) =
+    FStar_Pprint.nest Prims.int_one
+      (FStar_Pprint.group
+         (FStar_Pprint.op_Hat_Slash_Hat (FStar_Pprint.doc_of_string ":qid")
+            (FStar_Pprint.doc_of_string id)))
+let (mk_lblpos : Prims.string -> FStar_Pprint.document) =
   fun id ->
-    let uu___ =
-      let uu___1 =
-        let uu___2 = FStarC_Pprint.doc_of_string ":lblpos" in
-        let uu___3 = FStarC_Pprint.doc_of_string id in
-        FStarC_Pprint.op_Hat_Slash_Hat uu___2 uu___3 in
-      FStarC_Pprint.group uu___1 in
-    FStarC_Pprint.nest Prims.int_one uu___
-let (mk_named : Prims.string -> FStarC_Pprint.document) =
+    FStar_Pprint.nest Prims.int_one
+      (FStar_Pprint.group
+         (FStar_Pprint.op_Hat_Slash_Hat
+            (FStar_Pprint.doc_of_string ":lblpos")
+            (FStar_Pprint.doc_of_string id)))
+let (mk_named : Prims.string -> FStar_Pprint.document) =
   fun id ->
-    let uu___ =
-      let uu___1 =
-        let uu___2 = FStarC_Pprint.doc_of_string ":named" in
-        let uu___3 = FStarC_Pprint.doc_of_string id in
-        FStarC_Pprint.op_Hat_Slash_Hat uu___2 uu___3 in
-      FStarC_Pprint.group uu___1 in
-    FStarC_Pprint.nest Prims.int_one uu___
-let (mk_pattern : FStarC_Pprint.document -> FStarC_Pprint.document) =
+    FStar_Pprint.nest Prims.int_one
+      (FStar_Pprint.group
+         (FStar_Pprint.op_Hat_Slash_Hat (FStar_Pprint.doc_of_string ":named")
+            (FStar_Pprint.doc_of_string id)))
+let (mk_pattern : FStar_Pprint.document -> FStar_Pprint.document) =
   fun pat1 ->
-    let uu___ =
-      let uu___1 =
-        let uu___2 = FStarC_Pprint.doc_of_string ":pattern" in
-        FStarC_Pprint.op_Hat_Slash_Hat uu___2 pat1 in
-      FStarC_Pprint.group uu___1 in
-    FStarC_Pprint.nest Prims.int_one uu___
+    FStar_Pprint.nest Prims.int_one
+      (FStar_Pprint.group
+         (FStar_Pprint.op_Hat_Slash_Hat
+            (FStar_Pprint.doc_of_string ":pattern") pat1))
 let rec (strSort : sort -> Prims.string) =
   fun x ->
     match x with
@@ -546,24 +522,23 @@ let rec (strSort : sort -> Prims.string) =
         let uu___1 = strSort s2 in
         FStarC_Format.fmt2 "(%s -> %s)" uu___ uu___1
     | Sort s -> s
-let rec (docSort : sort -> FStarC_Pprint.document) =
+let rec (docSort : sort -> FStar_Pprint.document) =
   fun x ->
     match x with
-    | Bool_sort -> FStarC_Pprint.doc_of_string "Bool"
-    | Int_sort -> FStarC_Pprint.doc_of_string "Int"
-    | Term_sort -> FStarC_Pprint.doc_of_string "Term"
-    | String_sort -> FStarC_Pprint.doc_of_string "FString"
-    | Fuel_sort -> FStarC_Pprint.doc_of_string "Fuel"
+    | Bool_sort -> FStar_Pprint.doc_of_string "Bool"
+    | Int_sort -> FStar_Pprint.doc_of_string "Int"
+    | Term_sort -> FStar_Pprint.doc_of_string "Term"
+    | String_sort -> FStar_Pprint.doc_of_string "FString"
+    | Fuel_sort -> FStar_Pprint.doc_of_string "Fuel"
     | BitVec_sort n ->
         let uu___ =
-          let uu___1 = FStarC_Pprint.doc_of_string "BitVec" in
-          let uu___2 =
-            let uu___3 =
-              let uu___4 =
+          let uu___1 =
+            let uu___2 =
+              let uu___3 =
                 FStarC_Class_Show.show FStarC_Class_Show.showable_int n in
-              FStarC_Pprint.doc_of_string uu___4 in
-            [uu___3] in
-          uu___1 :: uu___2 in
+              FStar_Pprint.doc_of_string uu___3 in
+            [uu___2] in
+          (FStar_Pprint.doc_of_string "BitVec") :: uu___1 in
         form "_" uu___
     | Array (s1, s2) ->
         let uu___ =
@@ -577,14 +552,14 @@ let rec (docSort : sort -> FStarC_Pprint.document) =
             let uu___2 =
               let uu___3 = docSort s1 in
               let uu___4 =
-                let uu___5 = FStarC_Pprint.doc_of_string " ->" in
-                let uu___6 = docSort s2 in
-                FStarC_Pprint.op_Hat_Slash_Hat uu___5 uu___6 in
-              FStarC_Pprint.op_Hat_Hat uu___3 uu___4 in
-            FStarC_Pprint.parens uu___2 in
-          FStarC_Pprint.group uu___1 in
-        FStarC_Pprint.nest Prims.int_one uu___
-    | Sort s -> FStarC_Pprint.doc_of_string s
+                let uu___5 = docSort s2 in
+                FStar_Pprint.op_Hat_Slash_Hat
+                  (FStar_Pprint.doc_of_string " ->") uu___5 in
+              FStar_Pprint.op_Hat_Hat uu___3 uu___4 in
+            FStar_Pprint.parens uu___2 in
+          FStar_Pprint.group uu___1 in
+        FStar_Pprint.nest Prims.int_one uu___
+    | Sort s -> FStar_Pprint.doc_of_string s
 let (mk_decls :
   Prims.string ->
     Prims.string -> decl Prims.list -> decls_elt Prims.list -> decls_t)
@@ -833,7 +808,7 @@ let (weightToSmtStr :
         FStarC_Format.fmt1 ":weight %s\n" uu___1
 let (weightToSmt :
   Prims.int FStar_Pervasives_Native.option ->
-    FStarC_Pprint.document Prims.list)
+    FStar_Pprint.document Prims.list)
   =
   fun uu___ ->
     match uu___ with
@@ -842,14 +817,14 @@ let (weightToSmt :
         let uu___1 =
           let uu___2 =
             let uu___3 =
-              let uu___4 = FStarC_Pprint.doc_of_string ":weight" in
-              let uu___5 =
-                let uu___6 =
+              let uu___4 =
+                let uu___5 =
                   FStarC_Class_Show.show FStarC_Class_Show.showable_int i in
-                FStarC_Pprint.doc_of_string uu___6 in
-              FStarC_Pprint.op_Hat_Slash_Hat uu___4 uu___5 in
-            FStarC_Pprint.group uu___3 in
-          FStarC_Pprint.nest Prims.int_one uu___2 in
+                FStar_Pprint.doc_of_string uu___5 in
+              FStar_Pprint.op_Hat_Slash_Hat
+                (FStar_Pprint.doc_of_string ":weight") uu___4 in
+            FStar_Pprint.group uu___3 in
+          FStar_Pprint.nest Prims.int_one uu___2 in
         [uu___1]
 let rec (hash_of_term' : term' -> Prims.string) =
   fun t ->
@@ -1880,7 +1855,7 @@ let (name_binders_inner :
     fv Prims.list ->
       Prims.int ->
         sort Prims.list ->
-          (fv Prims.list * FStarC_Pprint.document Prims.list * Prims.int))
+          (fv Prims.list * FStar_Pprint.document Prims.list * Prims.int))
   =
   fun prefix_opt ->
     fun outer_names ->
@@ -1914,7 +1889,7 @@ let (name_binders_inner :
           match uu___ with
           | (names, binders1, n) -> (names, (FStarC_List.rev binders1), n)
 let (name_macro_binders :
-  sort Prims.list -> (fv Prims.list * FStarC_Pprint.document Prims.list)) =
+  sort Prims.list -> (fv Prims.list * FStar_Pprint.document Prims.list)) =
   fun sorts ->
     let uu___ =
       name_binders_inner (FStar_Pervasives_Native.Some "__") []
@@ -1922,19 +1897,16 @@ let (name_macro_binders :
     match uu___ with
     | (names, binders1, n) -> ((FStarC_List.rev names), binders1)
 let (mk_tag :
-  FStarC_Pprint.document ->
-    FStarC_Pprint.document Prims.list -> FStarC_Pprint.document)
+  FStar_Pprint.document ->
+    FStar_Pprint.document Prims.list -> FStar_Pprint.document)
   =
   fun f ->
     fun attrs ->
-      let uu___ =
-        let uu___1 =
-          let uu___2 = FStarC_Pprint.doc_of_string "! " in
-          FStarC_Pprint.op_Hat_Hat uu___2 f in
-        uu___1 :: attrs in
-      form_core uu___
-let (termToSmt :
-  Prims.bool -> Prims.string -> term -> FStarC_Pprint.document) =
+      form_core
+        ((FStar_Pprint.op_Hat_Hat (FStar_Pprint.doc_of_string "! ") f) ::
+        attrs)
+let (termToSmt : Prims.bool -> Prims.string -> term -> FStar_Pprint.document)
+  =
   let string_id_counter = FStarC_Effect.mk_ref Prims.int_zero in
   let string_cache = FStarC_SMap.create (Prims.of_int (20)) in
   fun print_ranges ->
@@ -1970,8 +1942,8 @@ let (termToSmt :
               fun t1 ->
                 let aux1 = aux (depth + Prims.int_one) in
                 match t1.tm with
-                | Integer i -> FStarC_Pprint.doc_of_string i
-                | Real r -> FStarC_Pprint.doc_of_string r
+                | Integer i -> FStar_Pprint.doc_of_string i
+                | Real r -> FStar_Pprint.doc_of_string r
                 | String s ->
                     let id_opt = FStarC_SMap.try_find string_cache s in
                     let uu___ =
@@ -1986,23 +1958,19 @@ let (termToSmt :
                           (FStarC_Util.incr string_id_counter;
                            FStarC_SMap.add string_cache s id;
                            id) in
-                    FStarC_Pprint.doc_of_string uu___
+                    FStar_Pprint.doc_of_string uu___
                 | BoundV i ->
                     let uu___ =
                       let uu___1 = FStarC_List.nth names i in fv_name uu___1 in
-                    FStarC_Pprint.doc_of_string uu___
+                    FStar_Pprint.doc_of_string uu___
                 | FreeV x when fv_force x ->
                     let uu___ = fv_name x in
-                    let uu___1 =
-                      let uu___2 = FStarC_Pprint.doc_of_string "Dummy_value" in
-                      [uu___2] in
-                    form uu___ uu___1
+                    form uu___ [FStar_Pprint.doc_of_string "Dummy_value"]
                 | FreeV x ->
-                    let uu___ = fv_name x in
-                    FStarC_Pprint.doc_of_string uu___
+                    let uu___ = fv_name x in FStar_Pprint.doc_of_string uu___
                 | App (op1, []) ->
                     let uu___ = op_to_string op1 in
-                    FStarC_Pprint.doc_of_string uu___
+                    FStar_Pprint.doc_of_string uu___
                 | App (op1, tms) ->
                     let uu___ = op_to_string op1 in
                     let uu___1 = FStarC_List.map (aux1 n names) tms in
@@ -2081,28 +2049,27 @@ let (termToSmt :
                 let s = aux' depth n names t1 in
                 if print_ranges && (t1.rng <> norng)
                 then
-                  let uu___ = FStarC_Pprint.doc_of_string ";; def=" in
-                  let uu___1 =
+                  let uu___ =
+                    let uu___1 =
+                      let uu___2 = FStarC_Range_Ops.string_of_range t1.rng in
+                      FStar_Pprint.doc_of_string uu___2 in
                     let uu___2 =
-                      let uu___3 = FStarC_Range_Ops.string_of_range t1.rng in
-                      FStarC_Pprint.doc_of_string uu___3 in
-                    let uu___3 =
-                      let uu___4 = FStarC_Pprint.doc_of_string "; use=" in
-                      let uu___5 =
-                        let uu___6 =
-                          let uu___7 =
+                      let uu___3 =
+                        let uu___4 =
+                          let uu___5 =
                             FStarC_Range_Ops.string_of_use_range t1.rng in
-                          FStarC_Pprint.doc_of_string uu___7 in
-                        let uu___7 =
-                          FStarC_Pprint.op_Hat_Hat FStarC_Pprint.hardline s in
-                        FStarC_Pprint.op_Hat_Hat uu___6 uu___7 in
-                      FStarC_Pprint.op_Hat_Hat uu___4 uu___5 in
-                    FStarC_Pprint.op_Hat_Hat uu___2 uu___3 in
-                  FStarC_Pprint.op_Hat_Hat uu___ uu___1
+                          FStar_Pprint.doc_of_string uu___5 in
+                        FStar_Pprint.op_Hat_Hat uu___4
+                          (FStar_Pprint.op_Hat_Hat FStar_Pprint.hardline s) in
+                      FStar_Pprint.op_Hat_Hat
+                        (FStar_Pprint.doc_of_string "; use=") uu___3 in
+                    FStar_Pprint.op_Hat_Hat uu___1 uu___2 in
+                  FStar_Pprint.op_Hat_Hat
+                    (FStar_Pprint.doc_of_string ";; def=") uu___
                 else s in
         aux Prims.int_zero Prims.int_zero [] t
 let rec (declToSmt' :
-  Prims.bool -> Prims.string -> decl -> FStarC_Pprint.document) =
+  Prims.bool -> Prims.string -> decl -> FStar_Pprint.document) =
   fun print_captions ->
     fun z3options ->
       fun decl1 ->
@@ -2115,74 +2082,69 @@ let rec (declToSmt' :
                     FStarC_List.map FStarC_Util.trim_string
                       (FStarC_String.split [10] c1) in
                   FStarC_String.concat " " uu___ in
-                let uu___ =
-                  FStarC_Pprint.doc_of_string (Prims.strcat "; " c2) in
-                let uu___1 =
-                  FStarC_Pprint.op_Hat_Hat FStarC_Pprint.hardline body in
-                FStarC_Pprint.op_Hat_Hat uu___ uu___1
+                FStar_Pprint.op_Hat_Hat
+                  (FStar_Pprint.doc_of_string (Prims.strcat "; " c2))
+                  (FStar_Pprint.op_Hat_Hat FStar_Pprint.hardline body)
             | uu___ -> body in
         match decl1 with
         | DefPrelude ->
             let uu___ = mkPrelude z3options in
-            FStarC_Pprint.doc_of_string uu___
+            FStar_Pprint.doc_of_string uu___
         | Module (s, decls) ->
             let res =
-              FStarC_Pprint.separate_map FStarC_Pprint.hardline
+              FStarC_Pprint.separate_map FStar_Pprint.hardline
                 (declToSmt' print_captions z3options) decls in
             let uu___ = FStarC_Options.keep_query_captions () in
             if uu___
             then
-              let uu___1 = FStarC_Pprint.doc_of_string ";;; Start " in
-              let uu___2 =
-                let uu___3 = FStarC_Pprint.doc_of_string s in
-                let uu___4 =
-                  let uu___5 =
-                    let uu___6 =
-                      let uu___7 =
-                        let uu___8 = FStarC_Pprint.doc_of_string ";;; End " in
-                        let uu___9 =
-                          let uu___10 = FStarC_Pprint.doc_of_string s in
-                          let uu___11 =
-                            let uu___12 =
-                              let uu___13 =
-                                let uu___14 =
-                                  let uu___15 =
+              let uu___1 =
+                let uu___2 =
+                  let uu___3 =
+                    let uu___4 =
+                      let uu___5 =
+                        let uu___6 =
+                          let uu___7 =
+                            let uu___8 =
+                              let uu___9 =
+                                let uu___10 =
+                                  let uu___11 =
                                     FStarC_Class_Show.show
                                       FStarC_Class_Show.showable_nat
                                       (FStarC_List.length decls) in
-                                  FStarC_Pprint.doc_of_string uu___15 in
-                                let uu___15 =
-                                  FStarC_Pprint.doc_of_string " decls" in
-                                FStarC_Pprint.op_Hat_Hat uu___14 uu___15 in
-                              FStarC_Pprint.parens uu___13 in
-                            FStarC_Pprint.op_Hat_Hat uu___12
-                              FStarC_Pprint.hardline in
-                          FStarC_Pprint.op_Hat_Hat uu___10 uu___11 in
-                        FStarC_Pprint.op_Hat_Hat uu___8 uu___9 in
-                      FStarC_Pprint.op_Hat_Hat FStarC_Pprint.hardline uu___7 in
-                    FStarC_Pprint.op_Hat_Hat res uu___6 in
-                  FStarC_Pprint.op_Hat_Hat FStarC_Pprint.hardline uu___5 in
-                FStarC_Pprint.op_Hat_Hat uu___3 uu___4 in
-              FStarC_Pprint.op_Hat_Hat uu___1 uu___2
+                                  FStar_Pprint.doc_of_string uu___11 in
+                                FStar_Pprint.op_Hat_Hat uu___10
+                                  (FStar_Pprint.doc_of_string " decls") in
+                              FStar_Pprint.parens uu___9 in
+                            FStar_Pprint.op_Hat_Hat uu___8
+                              FStar_Pprint.hardline in
+                          FStar_Pprint.op_Hat_Hat
+                            (FStar_Pprint.doc_of_string s) uu___7 in
+                        FStar_Pprint.op_Hat_Hat
+                          (FStar_Pprint.doc_of_string ";;; End ") uu___6 in
+                      FStar_Pprint.op_Hat_Hat FStar_Pprint.hardline uu___5 in
+                    FStar_Pprint.op_Hat_Hat res uu___4 in
+                  FStar_Pprint.op_Hat_Hat FStar_Pprint.hardline uu___3 in
+                FStar_Pprint.op_Hat_Hat (FStar_Pprint.doc_of_string s) uu___2 in
+              FStar_Pprint.op_Hat_Hat
+                (FStar_Pprint.doc_of_string ";;; Start ") uu___1
             else res
         | Caption c ->
             if print_captions
             then
-              FStarC_Pprint.separate_map FStarC_Pprint.hardline
-                (fun s -> FStarC_Pprint.doc_of_string (Prims.strcat "; " s))
+              FStarC_Pprint.separate_map FStar_Pprint.hardline
+                (fun s -> FStar_Pprint.doc_of_string (Prims.strcat "; " s))
                 (FStarC_Util.splitlines c)
-            else FStarC_Pprint.empty
+            else FStar_Pprint.empty
         | DeclFun (f, argsorts, retsort, c) ->
             let uu___ =
               let uu___1 =
-                let uu___2 = FStarC_Pprint.doc_of_string f in
-                let uu___3 =
-                  let uu___4 =
-                    let uu___5 = FStarC_List.map docSort argsorts in
-                    form_core uu___5 in
-                  let uu___5 = let uu___6 = docSort retsort in [uu___6] in
-                  uu___4 :: uu___5 in
-                uu___2 :: uu___3 in
+                let uu___2 =
+                  let uu___3 =
+                    let uu___4 = FStarC_List.map docSort argsorts in
+                    form_core uu___4 in
+                  let uu___4 = let uu___5 = docSort retsort in [uu___5] in
+                  uu___3 :: uu___4 in
+                (FStar_Pprint.doc_of_string f) :: uu___2 in
               form "declare-fun" uu___1 in
             with_caption c uu___
         | DefineFun (f, arg_sorts, retsort, body, c) ->
@@ -2198,22 +2160,20 @@ let rec (declToSmt' :
                      let uu___3 =
                        let uu___4 =
                          let uu___5 =
-                           let uu___6 = FStarC_Pprint.break_ Prims.int_one in
-                           let uu___7 =
-                             let uu___8 =
-                               FStarC_Pprint.doc_of_string "define-fun" in
-                             let uu___9 =
-                               let uu___10 = FStarC_Pprint.doc_of_string f in
-                               let uu___11 =
-                                 let uu___12 = form_core binders1 in
-                                 let uu___13 =
-                                   let uu___14 = docSort retsort in [uu___14] in
-                                 uu___12 :: uu___13 in
-                               uu___10 :: uu___11 in
-                             uu___8 :: uu___9 in
-                           FStarC_Pprint.separate uu___6 uu___7 in
-                         FStarC_Pprint.nest Prims.int_one uu___5 in
-                       FStarC_Pprint.group uu___4 in
+                           let uu___6 =
+                             let uu___7 =
+                               let uu___8 =
+                                 let uu___9 = form_core binders1 in
+                                 let uu___10 =
+                                   let uu___11 = docSort retsort in [uu___11] in
+                                 uu___9 :: uu___10 in
+                               (FStar_Pprint.doc_of_string f) :: uu___8 in
+                             (FStar_Pprint.doc_of_string "define-fun") ::
+                               uu___7 in
+                           FStar_Pprint.separate
+                             (FStar_Pprint.break_ Prims.int_one) uu___6 in
+                         FStar_Pprint.nest Prims.int_one uu___5 in
+                       FStar_Pprint.group uu___4 in
                      let uu___4 =
                        let uu___5 =
                          let uu___6 = escape f in
@@ -2244,69 +2204,60 @@ let rec (declToSmt' :
               else "" in
             let n = a.assumption_name in
             let uu___ =
-              let uu___1 = FStarC_Pprint.doc_of_string fids in
-              let uu___2 =
-                let uu___3 =
-                  let uu___4 =
-                    let uu___5 = termToSmt print_captions n a.assumption_term in
-                    let uu___6 = let uu___7 = mk_named n in [uu___7] in
-                    mk_tag uu___5 uu___6 in
-                  [uu___4] in
-                form "assert" uu___3 in
-              FStarC_Pprint.op_Hat_Hat uu___1 uu___2 in
+              let uu___1 =
+                let uu___2 =
+                  let uu___3 =
+                    let uu___4 = termToSmt print_captions n a.assumption_term in
+                    let uu___5 = let uu___6 = mk_named n in [uu___6] in
+                    mk_tag uu___4 uu___5 in
+                  [uu___3] in
+                form "assert" uu___2 in
+              FStar_Pprint.op_Hat_Hat (FStar_Pprint.doc_of_string fids)
+                uu___1 in
             with_caption a.assumption_caption uu___
         | Eval t ->
             let uu___ =
               let uu___1 = termToSmt print_captions "eval" t in [uu___1] in
             form "eval" uu___
         | Echo s ->
-            let uu___ =
-              let uu___1 =
-                let uu___2 = FStarC_Pprint.doc_of_string "\"" in
-                let uu___3 =
-                  let uu___4 = FStarC_Pprint.doc_of_string s in
-                  let uu___5 = FStarC_Pprint.doc_of_string "\"" in
-                  FStarC_Pprint.op_Hat_Hat uu___4 uu___5 in
-                FStarC_Pprint.op_Hat_Hat uu___2 uu___3 in
-              [uu___1] in
-            form "echo" uu___
-        | RetainAssumptions uu___ -> FStarC_Pprint.empty
+            form "echo"
+              [FStar_Pprint.op_Hat_Hat (FStar_Pprint.doc_of_string "\"")
+                 (FStar_Pprint.op_Hat_Hat (FStar_Pprint.doc_of_string s)
+                    (FStar_Pprint.doc_of_string "\""))]
+        | RetainAssumptions uu___ -> FStar_Pprint.empty
         | CheckSat ->
-            FStarC_Pprint.doc_of_string
+            FStar_Pprint.doc_of_string
               "(echo \"<result>\")\n(check-sat)\n(echo \"</result>\")"
         | GetUnsatCore ->
-            FStarC_Pprint.doc_of_string
+            FStar_Pprint.doc_of_string
               "(echo \"<unsat-core>\")\n(get-unsat-core)\n(echo \"</unsat-core>\")"
-        | EmptyLine -> FStarC_Pprint.empty
+        | EmptyLine -> FStar_Pprint.empty
         | Push n ->
-            let uu___ = FStarC_Pprint.doc_of_string "(push) ;; push{" in
-            let uu___1 =
-              let uu___2 =
-                FStarC_Class_Show.show FStarC_Class_Show.showable_int n in
-              FStarC_Pprint.doc_of_string uu___2 in
-            FStarC_Pprint.op_Hat_Hat uu___ uu___1
-        | Pop n ->
-            let uu___ = FStarC_Pprint.doc_of_string "(pop) ;; " in
-            let uu___1 =
-              let uu___2 =
-                let uu___3 =
-                  FStarC_Class_Show.show FStarC_Class_Show.showable_int n in
-                FStarC_Pprint.doc_of_string uu___3 in
-              let uu___3 = FStarC_Pprint.doc_of_string "}pop" in
-              FStarC_Pprint.op_Hat_Hat uu___2 uu___3 in
-            FStarC_Pprint.op_Hat_Hat uu___ uu___1
-        | SetOption (s, v) ->
             let uu___ =
-              let uu___1 = FStarC_Pprint.doc_of_string (Prims.strcat ":" s) in
-              let uu___2 =
-                let uu___3 = FStarC_Pprint.doc_of_string v in [uu___3] in
-              uu___1 :: uu___2 in
-            form "set-option" uu___
+              let uu___1 =
+                FStarC_Class_Show.show FStarC_Class_Show.showable_int n in
+              FStar_Pprint.doc_of_string uu___1 in
+            FStar_Pprint.op_Hat_Hat
+              (FStar_Pprint.doc_of_string "(push) ;; push{") uu___
+        | Pop n ->
+            let uu___ =
+              let uu___1 =
+                let uu___2 =
+                  FStarC_Class_Show.show FStarC_Class_Show.showable_int n in
+                FStar_Pprint.doc_of_string uu___2 in
+              FStar_Pprint.op_Hat_Hat uu___1
+                (FStar_Pprint.doc_of_string "}pop") in
+            FStar_Pprint.op_Hat_Hat (FStar_Pprint.doc_of_string "(pop) ;; ")
+              uu___
+        | SetOption (s, v) ->
+            form "set-option"
+              [FStar_Pprint.doc_of_string (Prims.strcat ":" s);
+              FStar_Pprint.doc_of_string v]
         | GetStatistics ->
-            FStarC_Pprint.doc_of_string
+            FStar_Pprint.doc_of_string
               "(echo \"<statistics>\") (get-info :all-statistics) (echo \"</statistics>\")"
         | GetReasonUnknown ->
-            FStarC_Pprint.doc_of_string
+            FStar_Pprint.doc_of_string
               "(echo \"<reason-unknown>\") (get-info :reason-unknown) (echo \"</reason-unknown>\")"
 and (declToSmt : Prims.string -> decl -> Prims.string) =
   fun z3options ->

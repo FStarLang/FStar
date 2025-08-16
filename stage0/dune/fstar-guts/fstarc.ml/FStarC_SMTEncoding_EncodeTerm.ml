@@ -87,7 +87,7 @@ let (head_normal :
             FStarC_TypeChecker_Env.lookup_definition
               [FStarC_TypeChecker_Env.Eager_unfolding_only]
               env.FStarC_SMTEncoding_Env.tcenv
-              (fv.FStarC_Syntax_Syntax.fv_name).FStarC_Syntax_Syntax.v in
+              fv.FStarC_Syntax_Syntax.fv_name in
           FStar_Pervasives_Native.uu___is_None uu___
       | FStarC_Syntax_Syntax.Tm_app
           {
@@ -102,7 +102,7 @@ let (head_normal :
             FStarC_TypeChecker_Env.lookup_definition
               [FStarC_TypeChecker_Env.Eager_unfolding_only]
               env.FStarC_SMTEncoding_Env.tcenv
-              (fv.FStarC_Syntax_Syntax.fv_name).FStarC_Syntax_Syntax.v in
+              fv.FStarC_Syntax_Syntax.fv_name in
           FStar_Pervasives_Native.uu___is_None uu___4
       | uu___ -> false
 let (head_redex :
@@ -134,7 +134,7 @@ let (head_redex :
             FStarC_TypeChecker_Env.lookup_definition
               [FStarC_TypeChecker_Env.Eager_unfolding_only]
               env.FStarC_SMTEncoding_Env.tcenv
-              (fv.FStarC_Syntax_Syntax.fv_name).FStarC_Syntax_Syntax.v in
+              fv.FStarC_Syntax_Syntax.fv_name in
           FStar_Pervasives_Native.uu___is_Some uu___1
       | uu___1 -> false
 let (norm_with_steps :
@@ -1589,8 +1589,6 @@ and (encode_term :
                             FStarC_TypeChecker_Env.is_iface =
                               (uu___6.FStarC_TypeChecker_Env.is_iface);
                             FStarC_TypeChecker_Env.admit = true;
-                            FStarC_TypeChecker_Env.lax_universes =
-                              (uu___6.FStarC_TypeChecker_Env.lax_universes);
                             FStarC_TypeChecker_Env.phase1 =
                               (uu___6.FStarC_TypeChecker_Env.phase1);
                             FStarC_TypeChecker_Env.failhard =
@@ -2553,7 +2551,7 @@ and (encode_term :
                                               let uu___14 =
                                                 FStarC_TypeChecker_Env.lookup_lid
                                                   env.FStarC_SMTEncoding_Env.tcenv
-                                                  (fv.FStarC_Syntax_Syntax.fv_name).FStarC_Syntax_Syntax.v in
+                                                  fv.FStarC_Syntax_Syntax.fv_name in
                                               FStar_Pervasives_Native.fst
                                                 uu___14 in
                                             FStar_Pervasives_Native.snd
@@ -2566,7 +2564,7 @@ and (encode_term :
                                               let uu___10 =
                                                 FStarC_TypeChecker_Env.lookup_lid
                                                   env.FStarC_SMTEncoding_Env.tcenv
-                                                  (fv.FStarC_Syntax_Syntax.fv_name).FStarC_Syntax_Syntax.v in
+                                                  fv.FStarC_Syntax_Syntax.fv_name in
                                               FStar_Pervasives_Native.fst
                                                 uu___10 in
                                             FStar_Pervasives_Native.snd
@@ -2810,7 +2808,7 @@ and (encode_term :
                             let uu___7 =
                               FStarC_Class_PP.pp
                                 FStarC_Syntax_Print.pretty_term t0 in
-                            FStarC_Pprint.prefix (Prims.of_int (2))
+                            FStar_Pprint.prefix (Prims.of_int (2))
                               Prims.int_one uu___6 uu___7 in
                           let uu___6 =
                             let uu___7 =
@@ -3331,7 +3329,7 @@ and (encode_pat :
                           let tc_name =
                             FStarC_TypeChecker_Env.typ_of_datacon
                               env1.FStarC_SMTEncoding_Env.tcenv
-                              (f.FStarC_Syntax_Syntax.fv_name).FStarC_Syntax_Syntax.v in
+                              f.FStarC_Syntax_Syntax.fv_name in
                           let uu___4 =
                             FStarC_TypeChecker_Env.datacons_of_typ
                               env1.FStarC_SMTEncoding_Env.tcenv tc_name in
@@ -3340,8 +3338,7 @@ and (encode_pat :
                               FStarC_SMTEncoding_Util.mkTrue
                           | uu___5 ->
                               FStarC_SMTEncoding_Env.mk_data_tester env1
-                                (f.FStarC_Syntax_Syntax.fv_name).FStarC_Syntax_Syntax.v
-                                scrutinee in
+                                f.FStarC_Syntax_Syntax.fv_name scrutinee in
                         let sub_term_guards =
                           FStarC_List.mapi
                             (fun i ->
@@ -3351,8 +3348,7 @@ and (encode_pat :
                                      let proj =
                                        FStarC_SMTEncoding_Env.primitive_projector_by_pos
                                          env1.FStarC_SMTEncoding_Env.tcenv
-                                         (f.FStarC_Syntax_Syntax.fv_name).FStarC_Syntax_Syntax.v
-                                         i in
+                                         f.FStarC_Syntax_Syntax.fv_name i in
                                      let uu___6 =
                                        FStarC_SMTEncoding_Util.mkApp
                                          (proj, [scrutinee]) in
@@ -3375,8 +3371,7 @@ and (encode_pat :
                                      let proj =
                                        FStarC_SMTEncoding_Env.primitive_projector_by_pos
                                          env1.FStarC_SMTEncoding_Env.tcenv
-                                         (f.FStarC_Syntax_Syntax.fv_name).FStarC_Syntax_Syntax.v
-                                         i in
+                                         f.FStarC_Syntax_Syntax.fv_name i in
                                      let uu___7 =
                                        FStarC_SMTEncoding_Util.mkApp
                                          (proj, [scrutinee]) in

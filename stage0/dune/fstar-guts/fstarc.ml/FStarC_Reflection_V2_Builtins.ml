@@ -840,15 +840,16 @@ let (inspect_sigelt :
                     FStarC_Syntax_Syntax.ty_lid = uu___4;
                     FStarC_Syntax_Syntax.num_ty_params = nparam;
                     FStarC_Syntax_Syntax.mutuals1 = uu___5;
-                    FStarC_Syntax_Syntax.injective_type_params1 = uu___6;_};
-                FStarC_Syntax_Syntax.sigrng = uu___7;
-                FStarC_Syntax_Syntax.sigquals = uu___8;
-                FStarC_Syntax_Syntax.sigmeta = uu___9;
-                FStarC_Syntax_Syntax.sigattrs = uu___10;
-                FStarC_Syntax_Syntax.sigopens_and_abbrevs = uu___11;
-                FStarC_Syntax_Syntax.sigopts = uu___12;_}
+                    FStarC_Syntax_Syntax.injective_type_params1 = uu___6;
+                    FStarC_Syntax_Syntax.proj_disc_lids = uu___7;_};
+                FStarC_Syntax_Syntax.sigrng = uu___8;
+                FStarC_Syntax_Syntax.sigquals = uu___9;
+                FStarC_Syntax_Syntax.sigmeta = uu___10;
+                FStarC_Syntax_Syntax.sigattrs = uu___11;
+                FStarC_Syntax_Syntax.sigopens_and_abbrevs = uu___12;
+                FStarC_Syntax_Syntax.sigopts = uu___13;_}
               ->
-              let uu___13 = FStarC_Ident.path_of_lid lid1 in (uu___13, cty)
+              let uu___14 = FStarC_Ident.path_of_lid lid1 in (uu___14, cty)
           | uu___4 ->
               failwith "impossible: inspect_sigelt: did not find ctor" in
         let uu___3 =
@@ -932,7 +933,8 @@ let (pack_sigelt :
                        FStarC_Syntax_Syntax.num_ty_params = nparam;
                        FStarC_Syntax_Syntax.mutuals1 = [];
                        FStarC_Syntax_Syntax.injective_type_params1 =
-                         injective_type_params
+                         injective_type_params;
+                       FStarC_Syntax_Syntax.proj_disc_lids = []
                      }) in
           let ctor_ses = FStarC_List.map pack_ctor ctors in
           let c_lids =

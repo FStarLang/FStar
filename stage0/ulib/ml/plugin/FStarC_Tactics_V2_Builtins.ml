@@ -57,6 +57,7 @@ let from_tac_5 s (t: 'a -> 'b -> 'c -> 'd -> 'e -> 'r TM.tac): 'a  -> 'b -> 'c -
 (* Pointing to the internal primitives *)
 let fixup_range             = from_tac_1 "B.fixup_range" B.fixup_range
 let compress                = from_tac_1 "B.compress" B.compress
+let compress_univ           = from_tac_1 "B.compress_univ" B.compress_univ
 let set_goals               = from_tac_1 "TM.set_goals" TM.set_goals
 let set_smt_goals           = from_tac_1 "TM.set_smt_goals" TM.set_smt_goals
 let top_env                 = from_tac_1 "B.top_env" B.top_env
@@ -179,3 +180,6 @@ let call_subtac g (t : unit -> unit __tac) u ty =
   from_tac_4 "B.call_subtac" B.call_subtac g t u ty
 
 let call_subtac_tm               = from_tac_4 "B.call_subtac_tm" B.call_subtac_tm
+
+let stats_record (s : string) (f : unit -> 'c __tac) : 'c __tac =
+  from_tac_2 "B.stats_record" (B.stats_record () ()) s (to_tac_0 (f ()))

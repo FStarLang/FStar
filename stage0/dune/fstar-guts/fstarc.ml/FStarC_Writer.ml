@@ -57,7 +57,7 @@ let monad_writer :
       FStarC_Class_Monad.return =
         (fun uu___1 ->
            fun uu___ -> (Obj.magic (writer_return d)) uu___1 uu___);
-      FStarC_Class_Monad.op_let_Bang =
+      FStarC_Class_Monad.bind =
         (fun uu___3 ->
            fun uu___2 ->
              fun uu___1 ->

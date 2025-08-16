@@ -10,15 +10,15 @@ let (tts : FStarC_Syntax_Syntax.term -> Prims.string) =
     | FStar_Pervasives_Native.None -> "<<hook unset>>"
     | FStar_Pervasives_Native.Some f -> f t
 let (ttd_f :
-  (FStarC_Syntax_Syntax.term -> FStarC_Pprint.document)
+  (FStarC_Syntax_Syntax.term -> FStar_Pprint.document)
     FStar_Pervasives_Native.option FStarC_Effect.ref)
   = FStarC_Effect.mk_ref FStar_Pervasives_Native.None
-let (ttd : FStarC_Syntax_Syntax.term -> FStarC_Pprint.document) =
+let (ttd : FStarC_Syntax_Syntax.term -> FStar_Pprint.document) =
   fun t ->
     let uu___ = FStarC_Effect.op_Bang ttd_f in
     match uu___ with
     | FStar_Pervasives_Native.None ->
-        FStarC_Pprint.doc_of_string "<<hook unset>>"
+        FStar_Pprint.doc_of_string "<<hook unset>>"
     | FStar_Pervasives_Native.Some f -> f t
 let (mk_discriminator : FStarC_Ident.lident -> FStarC_Ident.lident) =
   fun lid ->
@@ -829,8 +829,7 @@ let (is_primop : FStarC_Syntax_Syntax.term -> Prims.bool) =
   fun f ->
     match f.FStarC_Syntax_Syntax.n with
     | FStarC_Syntax_Syntax.Tm_fvar fv ->
-        is_primop_lid
-          (fv.FStarC_Syntax_Syntax.fv_name).FStarC_Syntax_Syntax.v
+        is_primop_lid fv.FStarC_Syntax_Syntax.fv_name
     | uu___ -> false
 let rec (unascribe : FStarC_Syntax_Syntax.term -> FStarC_Syntax_Syntax.term)
   =
@@ -1094,7 +1093,8 @@ let (lids_of_sigelt :
           FStarC_Syntax_Syntax.ty_lid = uu___2;
           FStarC_Syntax_Syntax.num_ty_params = uu___3;
           FStarC_Syntax_Syntax.mutuals1 = uu___4;
-          FStarC_Syntax_Syntax.injective_type_params1 = uu___5;_}
+          FStarC_Syntax_Syntax.injective_type_params1 = uu___5;
+          FStarC_Syntax_Syntax.proj_disc_lids = uu___6;_}
         -> [lid]
     | FStarC_Syntax_Syntax.Sig_declare_typ
         { FStarC_Syntax_Syntax.lid2 = lid; FStarC_Syntax_Syntax.us2 = uu___;
@@ -1793,8 +1793,8 @@ let (close_univs_and_mk_letbinding :
                         let inst =
                           FStarC_List.map
                             (fun fv ->
-                               (((fv.FStarC_Syntax_Syntax.fv_name).FStarC_Syntax_Syntax.v),
-                                 universes)) fvs in
+                               ((fv.FStarC_Syntax_Syntax.fv_name), universes))
+                            fvs in
                         FStarC_Syntax_InstFV.instantiate inst def in
                   let typ1 =
                     FStarC_Syntax_Subst.close_univ_vars univ_vars typ in
@@ -1834,14 +1834,14 @@ let (is_tuple_constructor : FStarC_Syntax_Syntax.typ -> Prims.bool) =
     match t.FStarC_Syntax_Syntax.n with
     | FStarC_Syntax_Syntax.Tm_fvar fv ->
         FStarC_Parser_Const_Tuples.is_tuple_constructor_lid
-          (fv.FStarC_Syntax_Syntax.fv_name).FStarC_Syntax_Syntax.v
+          fv.FStarC_Syntax_Syntax.fv_name
     | uu___ -> false
 let (is_dtuple_constructor : FStarC_Syntax_Syntax.typ -> Prims.bool) =
   fun t ->
     match t.FStarC_Syntax_Syntax.n with
     | FStarC_Syntax_Syntax.Tm_fvar fv ->
         FStarC_Parser_Const_Tuples.is_dtuple_constructor_lid
-          (fv.FStarC_Syntax_Syntax.fv_name).FStarC_Syntax_Syntax.v
+          fv.FStarC_Syntax_Syntax.fv_name
     | uu___ -> false
 let (is_lid_equality : FStarC_Ident.lident -> Prims.bool) =
   fun x -> FStarC_Ident.lid_equals x FStarC_Parser_Const.eq2_lid
@@ -1866,8 +1866,7 @@ let (is_constructor :
       let uu___ = let uu___1 = pre_typ t in uu___1.FStarC_Syntax_Syntax.n in
       match uu___ with
       | FStarC_Syntax_Syntax.Tm_fvar tc ->
-          FStarC_Ident.lid_equals
-            (tc.FStarC_Syntax_Syntax.fv_name).FStarC_Syntax_Syntax.v lid
+          FStarC_Ident.lid_equals tc.FStarC_Syntax_Syntax.fv_name lid
       | uu___1 -> false
 let rec (is_constructed_typ :
   FStarC_Syntax_Syntax.term -> FStarC_Ident.lident -> Prims.bool) =
@@ -3972,7 +3971,7 @@ let (destruct_lemma_with_smt_patterns :
                      let uu___5 =
                        FStarC_Errors_Msg.text "Not an atomic SMT pattern:" in
                      let uu___6 = ttd p1 in
-                     FStarC_Pprint.prefix (Prims.of_int (2)) Prims.int_one
+                     FStar_Pprint.prefix (Prims.of_int (2)) Prims.int_one
                        uu___5 uu___6 in
                    let uu___5 =
                      let uu___6 =

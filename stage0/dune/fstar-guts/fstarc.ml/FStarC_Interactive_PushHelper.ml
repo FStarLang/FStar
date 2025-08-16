@@ -83,8 +83,6 @@ let (set_check_kind :
         FStarC_TypeChecker_Env.is_iface =
           (env.FStarC_TypeChecker_Env.is_iface);
         FStarC_TypeChecker_Env.admit = uu___;
-        FStarC_TypeChecker_Env.lax_universes =
-          (env.FStarC_TypeChecker_Env.lax_universes);
         FStarC_TypeChecker_Env.phase1 = (env.FStarC_TypeChecker_Env.phase1);
         FStarC_TypeChecker_Env.failhard =
           (env.FStarC_TypeChecker_Env.failhard);

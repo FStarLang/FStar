@@ -119,13 +119,13 @@ and (lidents_of_term' :
     | FStarC_Parser_AST.Refine (b, t1) -> lidents_of_term t1
     | FStarC_Parser_AST.NamedTyp (i, t1) -> lidents_of_term t1
     | FStarC_Parser_AST.Paren t1 -> lidents_of_term t1
-    | FStarC_Parser_AST.Requires (t1, uu___) -> lidents_of_term t1
-    | FStarC_Parser_AST.Ensures (t1, uu___) -> lidents_of_term t1
+    | FStarC_Parser_AST.Requires t1 -> lidents_of_term t1
+    | FStarC_Parser_AST.Ensures t1 -> lidents_of_term t1
     | FStarC_Parser_AST.LexList ts -> (concat_map ()) lidents_of_term ts
     | FStarC_Parser_AST.WFOrder (t1, t2) ->
         let uu___ = lidents_of_term t1 in
         let uu___1 = lidents_of_term t2 in FStarC_List.op_At uu___ uu___1
-    | FStarC_Parser_AST.Decreases (t1, uu___) -> lidents_of_term t1
+    | FStarC_Parser_AST.Decreases t1 -> lidents_of_term t1
     | FStarC_Parser_AST.Labeled (t1, uu___, uu___1) -> lidents_of_term t1
     | FStarC_Parser_AST.Discrim lid -> [lid]
     | FStarC_Parser_AST.Attributes ts -> (concat_map ()) lidents_of_term ts
@@ -416,10 +416,10 @@ let (__proj__Mkopen_namespaces_and_abbreviations__item__module_abbreviations
     | { open_namespaces; module_abbreviations;_} -> module_abbreviations
 type error_message =
   {
-  message: FStarC_Pprint.document Prims.list ;
+  message: FStar_Pprint.document Prims.list ;
   range: FStarC_Range_Type.t }
 let (__proj__Mkerror_message__item__message :
-  error_message -> FStarC_Pprint.document Prims.list) =
+  error_message -> FStar_Pprint.document Prims.list) =
   fun projectee -> match projectee with | { message; range;_} -> message
 let (__proj__Mkerror_message__item__range :
   error_message -> FStarC_Range_Type.t) =

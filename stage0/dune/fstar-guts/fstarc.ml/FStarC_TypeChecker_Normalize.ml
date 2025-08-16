@@ -3454,8 +3454,7 @@ and (do_unfold_fv :
             let defn uu___ =
               FStarC_TypeChecker_Env.lookup_definition_qninfo
                 cfg.FStarC_TypeChecker_Cfg.delta_level
-                (f.FStarC_Syntax_Syntax.fv_name).FStarC_Syntax_Syntax.v
-                qninfo in
+                f.FStarC_Syntax_Syntax.fv_name qninfo in
             let is_plugin uu___ =
               match qninfo with
               | FStar_Pervasives_Native.Some
@@ -3485,8 +3484,7 @@ and (do_unfold_fv :
                     FStarC_Class_Show.show FStarC_Syntax_Syntax.showable_fv f in
                   FStarC_Format.fmt1
                     "Unfolding name which is marked as a plugin: %s" uu___2 in
-                (FStarC_Errors.log_issue FStarC_Class_HasRange.hasRange_range
-                   (f.FStarC_Syntax_Syntax.fv_name).FStarC_Syntax_Syntax.p
+                (FStarC_Errors.log_issue FStarC_Syntax_Syntax.hasRange_fv f
                    FStarC_Errors_Codes.Warning_UnfoldPlugin ()
                    (Obj.magic FStarC_Errors_Msg.is_error_message_string)
                    (Obj.magic msg);
@@ -3592,7 +3590,7 @@ and (do_unfold_fv :
                           let uu___5 =
                             FStarC_Class_Show.show
                               FStarC_Ident.showable_lident
-                              (f.FStarC_Syntax_Syntax.fv_name).FStarC_Syntax_Syntax.v in
+                              f.FStarC_Syntax_Syntax.fv_name in
                           FStarC_Format.fmt1
                             "Impossible: missing universe instantiation on %s"
                             uu___5 in
@@ -4036,7 +4034,7 @@ and (handle_norm_request :
                                  (FStarC_Class_Show.show_list
                                     FStarC_TypeChecker_Env.showable_step) s in
                              FStarC_Errors_Msg.text uu___8 in
-                           FStarC_Pprint.op_Hat_Slash_Hat uu___6 uu___7 in
+                           FStar_Pprint.op_Hat_Slash_Hat uu___6 uu___7 in
                          [uu___5] in
                        uu___3 :: uu___4 in
                      FStarC_Errors.diag FStarC_Class_HasRange.hasRange_range
@@ -4884,8 +4882,7 @@ and (do_reify_monadic :
                                  let uu___8 =
                                    FStarC_TypeChecker_Env.lookup_definition_qninfo
                                      cfg.FStarC_TypeChecker_Cfg.delta_level
-                                     (fv.FStarC_Syntax_Syntax.fv_name).FStarC_Syntax_Syntax.v
-                                     qninfo in
+                                     fv.FStarC_Syntax_Syntax.fv_name qninfo in
                                  FStar_Pervasives_Native.uu___is_None uu___8 in
                                if uu___7
                                then fallback2 ()
@@ -8205,7 +8202,7 @@ let (warn_norm_failure : FStarC_Range_Type.t -> Prims.exn -> unit) =
         (Obj.magic uu___)
 let (term_to_doc :
   FStarC_TypeChecker_Env.env ->
-    FStarC_Syntax_Syntax.term -> FStarC_Pprint.document)
+    FStarC_Syntax_Syntax.term -> FStar_Pprint.document)
   =
   fun env1 ->
     fun t ->
@@ -8270,7 +8267,7 @@ let (comp_to_string :
            FStarC_Syntax_Print.comp_to_string' uu___1 c1)
 let (comp_to_doc :
   FStarC_TypeChecker_Env.env ->
-    FStarC_Syntax_Syntax.comp -> FStarC_Pprint.document)
+    FStarC_Syntax_Syntax.comp -> FStar_Pprint.document)
   =
   fun env1 ->
     fun c ->
@@ -8456,8 +8453,6 @@ let (eta_expand :
                                   FStarC_TypeChecker_Env.is_iface =
                                     (env1.FStarC_TypeChecker_Env.is_iface);
                                   FStarC_TypeChecker_Env.admit = true;
-                                  FStarC_TypeChecker_Env.lax_universes =
-                                    (env1.FStarC_TypeChecker_Env.lax_universes);
                                   FStarC_TypeChecker_Env.phase1 =
                                     (env1.FStarC_TypeChecker_Env.phase1);
                                   FStarC_TypeChecker_Env.failhard =
@@ -8576,8 +8571,6 @@ let (eta_expand :
                           FStarC_TypeChecker_Env.is_iface =
                             (env1.FStarC_TypeChecker_Env.is_iface);
                           FStarC_TypeChecker_Env.admit = true;
-                          FStarC_TypeChecker_Env.lax_universes =
-                            (env1.FStarC_TypeChecker_Env.lax_universes);
                           FStarC_TypeChecker_Env.phase1 =
                             (env1.FStarC_TypeChecker_Env.phase1);
                           FStarC_TypeChecker_Env.failhard =
@@ -8854,7 +8847,8 @@ let rec (elim_uvars :
             FStarC_Syntax_Syntax.num_ty_params = i;
             FStarC_Syntax_Syntax.mutuals1 = lids;
             FStarC_Syntax_Syntax.injective_type_params1 =
-              injective_type_params;_}
+              injective_type_params;
+            FStarC_Syntax_Syntax.proj_disc_lids = proj_disc_lids;_}
           ->
           let uu___ = elim_uvars_aux_t env1 univ_names [] typ in
           (match uu___ with
@@ -8870,7 +8864,8 @@ let rec (elim_uvars :
                         FStarC_Syntax_Syntax.num_ty_params = i;
                         FStarC_Syntax_Syntax.mutuals1 = lids;
                         FStarC_Syntax_Syntax.injective_type_params1 =
-                          injective_type_params
+                          injective_type_params;
+                        FStarC_Syntax_Syntax.proj_disc_lids = proj_disc_lids
                       });
                  FStarC_Syntax_Syntax.sigrng =
                    (s1.FStarC_Syntax_Syntax.sigrng);
@@ -9365,7 +9360,7 @@ let (unfold_head_once :
               FStarC_TypeChecker_Env.lookup_nonrec_definition
                 [FStarC_TypeChecker_Env.Unfold
                    FStarC_Syntax_Syntax.delta_constant] env1
-                (f.FStarC_Syntax_Syntax.fv_name).FStarC_Syntax_Syntax.v in
+                f.FStarC_Syntax_Syntax.fv_name in
             match uu___ with
             | FStar_Pervasives_Native.None -> FStar_Pervasives_Native.None
             | FStar_Pervasives_Native.Some head_def_ts ->
@@ -9480,7 +9475,7 @@ let (maybe_unfold_head_fv :
             FStarC_TypeChecker_Env.lookup_nonrec_definition
               [FStarC_TypeChecker_Env.Unfold
                  FStarC_Syntax_Syntax.delta_constant] env1
-              (fv.FStarC_Syntax_Syntax.fv_name).FStarC_Syntax_Syntax.v in
+              fv.FStarC_Syntax_Syntax.fv_name in
           (match uu___ with
            | FStar_Pervasives_Native.None -> FStar_Pervasives_Native.None
            | FStar_Pervasives_Native.Some (us_formals, defn) ->

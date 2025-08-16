@@ -243,8 +243,7 @@ let (should_unfold :
                                    FStarC_TypeChecker_Env.lookup_definition_qninfo
                                      [FStarC_TypeChecker_Env.Eager_unfolding_only;
                                      FStarC_TypeChecker_Env.InliningDelta]
-                                     (fv.FStarC_Syntax_Syntax.fv_name).FStarC_Syntax_Syntax.v
-                                     qninfo in
+                                     fv.FStarC_Syntax_Syntax.fv_name qninfo in
                                  FStar_Pervasives_Native.uu___is_Some uu___5 in
                                yesno uu___4
                              else no in

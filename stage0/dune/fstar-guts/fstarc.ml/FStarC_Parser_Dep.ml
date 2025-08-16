@@ -563,27 +563,24 @@ let (cache_file_name : Prims.string -> Prims.string) =
               let uu___4 =
                 let uu___5 = FStarC_Errors_Msg.text "Did not expect module" in
                 let uu___6 =
-                  let uu___7 = FStarC_Pprint.doc_of_string mname in
-                  let uu___8 =
+                  let uu___7 =
                     FStarC_Errors_Msg.text "to be already checked." in
-                  FStarC_Pprint.op_Hat_Slash_Hat uu___7 uu___8 in
-                FStarC_Pprint.op_Hat_Slash_Hat uu___5 uu___6 in
+                  FStar_Pprint.op_Hat_Slash_Hat
+                    (FStar_Pprint.doc_of_string mname) uu___7 in
+                FStar_Pprint.op_Hat_Slash_Hat uu___5 uu___6 in
               let uu___5 =
                 let uu___6 =
                   let uu___7 =
                     let uu___8 =
                       FStarC_Errors_Msg.text
                         "Found it in an unexpected location:" in
-                    let uu___9 = FStarC_Pprint.doc_of_string path in
-                    FStarC_Pprint.prefix (Prims.of_int (2)) Prims.int_one
-                      uu___8 uu___9 in
+                    FStar_Pprint.prefix (Prims.of_int (2)) Prims.int_one
+                      uu___8 (FStar_Pprint.doc_of_string path) in
                   let uu___8 =
                     let uu___9 = FStarC_Errors_Msg.text "instead of" in
-                    let uu___10 =
-                      FStarC_Pprint.doc_of_string expected_cache_file in
-                    FStarC_Pprint.prefix (Prims.of_int (2)) Prims.int_one
-                      uu___9 uu___10 in
-                  FStarC_Pprint.op_Hat_Slash_Hat uu___7 uu___8 in
+                    FStar_Pprint.prefix (Prims.of_int (2)) Prims.int_one
+                      uu___9 (FStar_Pprint.doc_of_string expected_cache_file) in
+                  FStar_Pprint.op_Hat_Slash_Hat uu___7 uu___8 in
                 [uu___6] in
               uu___4 :: uu___5 in
             FStarC_Errors.log_issue0
@@ -1009,57 +1006,45 @@ let (enter_namespace :
                          FStarC_Effect.op_Colon_Equals warned_about uu___5);
                         (let uu___5 =
                            let uu___6 =
-                             let uu___7 = FStarC_Pprint.break_ Prims.int_one in
-                             let uu___8 =
-                               let uu___9 =
+                             let uu___7 =
+                               let uu___8 =
                                  FStarC_Errors_Msg.text
                                    "Implicitly opening namespace" in
-                               let uu___10 =
-                                 let uu___11 =
-                                   let uu___12 =
-                                     FStarC_Pprint.doc_of_string sprefix1 in
-                                   FStarC_Pprint.squotes uu___12 in
-                                 let uu___12 =
-                                   let uu___13 =
+                               let uu___9 =
+                                 let uu___10 =
+                                   let uu___11 =
                                      FStarC_Errors_Msg.text "shadows module" in
-                                   let uu___14 =
-                                     let uu___15 =
-                                       let uu___16 =
-                                         FStarC_Pprint.doc_of_string suffix in
-                                       FStarC_Pprint.squotes uu___16 in
-                                     let uu___16 =
-                                       let uu___17 =
+                                   let uu___12 =
+                                     let uu___13 =
+                                       let uu___14 =
                                          FStarC_Errors_Msg.text "in file" in
-                                       let uu___18 =
-                                         let uu___19 =
-                                           let uu___20 =
-                                             let uu___21 =
-                                               FStarC_Pprint.doc_of_string
-                                                 str in
-                                             FStarC_Pprint.dquotes uu___21 in
-                                           FStarC_Pprint.op_Hat_Hat uu___20
-                                             FStarC_Pprint.dot in
-                                         [uu___19] in
-                                       uu___17 :: uu___18 in
-                                     uu___15 :: uu___16 in
-                                   uu___13 :: uu___14 in
-                                 uu___11 :: uu___12 in
-                               uu___9 :: uu___10 in
-                             FStarC_Pprint.flow uu___7 uu___8 in
+                                       [uu___14;
+                                       FStar_Pprint.op_Hat_Hat
+                                         (FStar_Pprint.dquotes
+                                            (FStar_Pprint.doc_of_string str))
+                                         FStar_Pprint.dot] in
+                                     (FStar_Pprint.squotes
+                                        (FStar_Pprint.doc_of_string suffix))
+                                       :: uu___13 in
+                                   uu___11 :: uu___12 in
+                                 (FStar_Pprint.squotes
+                                    (FStar_Pprint.doc_of_string sprefix1))
+                                   :: uu___10 in
+                               uu___8 :: uu___9 in
+                             FStar_Pprint.flow
+                               (FStar_Pprint.break_ Prims.int_one) uu___7 in
                            let uu___7 =
                              let uu___8 =
                                let uu___9 = FStarC_Errors_Msg.text "Rename" in
                                let uu___10 =
                                  let uu___11 =
-                                   let uu___12 =
-                                     FStarC_Pprint.doc_of_string str in
-                                   FStarC_Pprint.dquotes uu___12 in
-                                 let uu___12 =
                                    FStarC_Errors_Msg.text
                                      "to avoid conflicts." in
-                                 FStarC_Pprint.op_Hat_Slash_Hat uu___11
-                                   uu___12 in
-                               FStarC_Pprint.op_Hat_Slash_Hat uu___9 uu___10 in
+                                 FStar_Pprint.op_Hat_Slash_Hat
+                                   (FStar_Pprint.dquotes
+                                      (FStar_Pprint.doc_of_string str))
+                                   uu___11 in
+                               FStar_Pprint.op_Hat_Slash_Hat uu___9 uu___10 in
                              [uu___8] in
                            uu___6 :: uu___7 in
                          FStarC_Errors.log_issue0
@@ -1727,8 +1712,8 @@ let (collect_one :
                  (collect_binder binder; collect_term t)
              | FStarC_Parser_AST.NamedTyp (uu___2, t) -> collect_term t
              | FStarC_Parser_AST.Paren t -> collect_term t
-             | FStarC_Parser_AST.Requires (t, uu___2) -> collect_term t
-             | FStarC_Parser_AST.Ensures (t, uu___2) -> collect_term t
+             | FStarC_Parser_AST.Requires t -> collect_term t
+             | FStarC_Parser_AST.Ensures t -> collect_term t
              | FStarC_Parser_AST.Labeled (t, uu___2, uu___3) ->
                  collect_term t
              | FStarC_Parser_AST.LexList l -> FStarC_List.iter collect_term l
@@ -1742,7 +1727,7 @@ let (collect_one :
                    add_to_parsing_data uu___3);
                   collect_term t1;
                   collect_term t2)
-             | FStarC_Parser_AST.Decreases (t, uu___2) -> collect_term t
+             | FStarC_Parser_AST.Decreases t -> collect_term t
              | FStarC_Parser_AST.Quote (t, uu___2) -> collect_term t
              | FStarC_Parser_AST.Antiquote t -> collect_term t
              | FStarC_Parser_AST.VQuote t -> collect_term t

@@ -565,7 +565,8 @@ let (tc_data :
               FStarC_Syntax_Syntax.ty_lid = tc_lid;
               FStarC_Syntax_Syntax.num_ty_params = ntps;
               FStarC_Syntax_Syntax.mutuals1 = mutual_tcs;
-              FStarC_Syntax_Syntax.injective_type_params1 = uu___;_}
+              FStarC_Syntax_Syntax.injective_type_params1 = uu___;
+              FStarC_Syntax_Syntax.proj_disc_lids = proj_disc_lids;_}
             ->
             let uu___1 = FStarC_Syntax_Subst.univ_var_opening _uvs in
             (match uu___1 with
@@ -1045,7 +1046,10 @@ let (tc_data :
                                                               FStarC_Syntax_Syntax.mutuals1
                                                                 = mutual_tcs;
                                                               FStarC_Syntax_Syntax.injective_type_params1
-                                                                = false
+                                                                = false;
+                                                              FStarC_Syntax_Syntax.proj_disc_lids
+                                                                =
+                                                                proj_disc_lids
                                                             });
                                                        FStarC_Syntax_Syntax.sigrng
                                                          =
@@ -1110,7 +1114,8 @@ let (generalize_and_inst_within :
                      FStarC_Syntax_Syntax.ty_lid = uu___2;
                      FStarC_Syntax_Syntax.num_ty_params = uu___3;
                      FStarC_Syntax_Syntax.mutuals1 = uu___4;
-                     FStarC_Syntax_Syntax.injective_type_params1 = uu___5;_}
+                     FStarC_Syntax_Syntax.injective_type_params1 = uu___5;
+                     FStarC_Syntax_Syntax.proj_disc_lids = uu___6;_}
                    -> FStarC_Syntax_Syntax.null_binder t
                | uu___ -> failwith "Impossible") datas in
         let t =
@@ -1353,7 +1358,9 @@ let (generalize_and_inst_within :
                                                      FStarC_Syntax_Syntax.mutuals1
                                                        = mutuals;
                                                      FStarC_Syntax_Syntax.injective_type_params1
-                                                       = uu___14;_}
+                                                       = uu___14;
+                                                     FStarC_Syntax_Syntax.proj_disc_lids
+                                                       = proj_disc_lids;_}
                                                    ->
                                                    let ty =
                                                      let uu___15 =
@@ -1380,7 +1387,10 @@ let (generalize_and_inst_within :
                                                             FStarC_Syntax_Syntax.mutuals1
                                                               = mutuals;
                                                             FStarC_Syntax_Syntax.injective_type_params1
-                                                              = false
+                                                              = false;
+                                                            FStarC_Syntax_Syntax.proj_disc_lids
+                                                              =
+                                                              proj_disc_lids
                                                           });
                                                      FStarC_Syntax_Syntax.sigrng
                                                        =
@@ -1415,7 +1425,8 @@ let (datacon_typ : FStarC_Syntax_Syntax.sigelt -> FStarC_Syntax_Syntax.term)
           FStarC_Syntax_Syntax.ty_lid = uu___2;
           FStarC_Syntax_Syntax.num_ty_params = uu___3;
           FStarC_Syntax_Syntax.mutuals1 = uu___4;
-          FStarC_Syntax_Syntax.injective_type_params1 = uu___5;_}
+          FStarC_Syntax_Syntax.injective_type_params1 = uu___5;
+          FStarC_Syntax_Syntax.proj_disc_lids = uu___6;_}
         -> t
     | uu___ -> failwith "Impossible!"
 let (haseq_suffix : Prims.string) = "__uu___haseq"
@@ -1674,12 +1685,12 @@ let (optimized_haseq_soundness_for_data :
                                  let uu___7 =
                                    FStarC_Class_PP.pp
                                      FStarC_Ident.pretty_lident ty_lid in
-                                 FStarC_Pprint.squotes uu___7 in
+                                 FStar_Pprint.squotes uu___7 in
                                let uu___7 =
                                  FStarC_Errors_Msg.text
                                    "supports decidable equality because of this argument." in
-                               FStarC_Pprint.op_Hat_Slash_Hat uu___6 uu___7 in
-                             FStarC_Pprint.op_Hat_Slash_Hat uu___4 uu___5 in
+                               FStar_Pprint.op_Hat_Slash_Hat uu___6 uu___7 in
+                             FStar_Pprint.op_Hat_Slash_Hat uu___4 uu___5 in
                            let uu___4 =
                              let uu___5 =
                                FStarC_Errors_Msg.text
@@ -1773,7 +1784,9 @@ let (optimized_haseq_ty :
                                        FStarC_Syntax_Syntax.mutuals1 =
                                          uu___10;
                                        FStarC_Syntax_Syntax.injective_type_params1
-                                         = uu___11;_}
+                                         = uu___11;
+                                       FStarC_Syntax_Syntax.proj_disc_lids =
+                                         uu___12;_}
                                      -> t_lid = lid
                                  | uu___6 -> failwith "Impossible")
                               all_datas_in_the_bundle in
@@ -1926,8 +1939,7 @@ let (unoptimized_haseq_data :
                     FStarC_List.existsb
                       (fun lid ->
                          FStarC_Ident.lid_equals lid
-                           (fv.FStarC_Syntax_Syntax.fv_name).FStarC_Syntax_Syntax.v)
-                      mutuals
+                           fv.FStarC_Syntax_Syntax.fv_name) mutuals
                 | FStarC_Syntax_Syntax.Tm_uinst (t', uu___1) -> is_mutual t'
                 | FStarC_Syntax_Syntax.Tm_refine
                     { FStarC_Syntax_Syntax.b = bv;
@@ -2105,7 +2117,9 @@ let (unoptimized_haseq_ty :
                                       uu___5;
                                     FStarC_Syntax_Syntax.mutuals1 = uu___6;
                                     FStarC_Syntax_Syntax.injective_type_params1
-                                      = uu___7;_}
+                                      = uu___7;
+                                    FStarC_Syntax_Syntax.proj_disc_lids =
+                                      uu___8;_}
                                   -> t_lid = lid
                               | uu___2 -> failwith "Impossible")
                            all_datas_in_the_bundle in
@@ -2453,7 +2467,7 @@ let (check_inductive_well_typedness :
                                                  let uu___9 =
                                                    FStarC_Syntax_Print.tscheme_to_doc
                                                      expected in
-                                                 FStarC_Pprint.op_Hat_Slash_Hat
+                                                 FStar_Pprint.op_Hat_Slash_Hat
                                                    uu___8 uu___9 in
                                                let uu___8 =
                                                  let uu___9 =
@@ -2463,7 +2477,7 @@ let (check_inductive_well_typedness :
                                                    let uu___11 =
                                                      FStarC_Syntax_Print.tscheme_to_doc
                                                        inferred in
-                                                   FStarC_Pprint.op_Hat_Slash_Hat
+                                                   FStar_Pprint.op_Hat_Slash_Hat
                                                      uu___10 uu___11 in
                                                  [uu___9] in
                                                uu___7 :: uu___8 in
@@ -2750,7 +2764,10 @@ let (check_inductive_well_typedness :
                                                  =
                                                  (dd.FStarC_Syntax_Syntax.mutuals1);
                                                FStarC_Syntax_Syntax.injective_type_params1
-                                                 = uu___8
+                                                 = uu___8;
+                                               FStarC_Syntax_Syntax.proj_disc_lids
+                                                 =
+                                                 (dd.FStarC_Syntax_Syntax.proj_disc_lids)
                                              } in
                                            FStarC_Syntax_Syntax.Sig_datacon
                                              uu___7 in
@@ -3166,8 +3183,8 @@ let (mk_discriminator_and_indexed_projectors :
                                              FStarC_Syntax_Syntax.lbs1 =
                                                (false, [lb]);
                                              FStarC_Syntax_Syntax.lids1 =
-                                               [((FStar_Pervasives.__proj__Inr__item__v
-                                                    lb.FStarC_Syntax_Syntax.lbname).FStarC_Syntax_Syntax.fv_name).FStarC_Syntax_Syntax.v]
+                                               [(FStar_Pervasives.__proj__Inr__item__v
+                                                   lb.FStarC_Syntax_Syntax.lbname).FStarC_Syntax_Syntax.fv_name]
                                            });
                                       FStarC_Syntax_Syntax.sigrng = p;
                                       FStarC_Syntax_Syntax.sigquals = quals;
@@ -3582,8 +3599,8 @@ let (mk_discriminator_and_indexed_projectors :
                                                              = (false, [lb]);
                                                            FStarC_Syntax_Syntax.lids1
                                                              =
-                                                             [((FStar_Pervasives.__proj__Inr__item__v
-                                                                  lb.FStarC_Syntax_Syntax.lbname).FStarC_Syntax_Syntax.fv_name).FStarC_Syntax_Syntax.v]
+                                                             [(FStar_Pervasives.__proj__Inr__item__v
+                                                                 lb.FStarC_Syntax_Syntax.lbname).FStarC_Syntax_Syntax.fv_name]
                                                          });
                                                     FStarC_Syntax_Syntax.sigrng
                                                       = p1;
@@ -3666,55 +3683,56 @@ let (mk_data_operations :
                   FStarC_Syntax_Syntax.ty_lid = typ_lid;
                   FStarC_Syntax_Syntax.num_ty_params = n_typars;
                   FStarC_Syntax_Syntax.mutuals1 = uu___;
-                  FStarC_Syntax_Syntax.injective_type_params1 = uu___1;_}
+                  FStarC_Syntax_Syntax.injective_type_params1 = uu___1;
+                  FStarC_Syntax_Syntax.proj_disc_lids = uu___2;_}
                 ->
-                let uu___2 = FStarC_Syntax_Subst.univ_var_opening uvs in
-                (match uu___2 with
+                let uu___3 = FStarC_Syntax_Subst.univ_var_opening uvs in
+                (match uu___3 with
                  | (univ_opening, uvs1) ->
                      let t1 = FStarC_Syntax_Subst.subst univ_opening t in
-                     let uu___3 = FStarC_Syntax_Util.arrow_formals t1 in
-                     (match uu___3 with
-                      | (formals, uu___4) ->
-                          let uu___5 =
+                     let uu___4 = FStarC_Syntax_Util.arrow_formals t1 in
+                     (match uu___4 with
+                      | (formals, uu___5) ->
+                          let uu___6 =
                             let tps_opt =
                               FStarC_Util.find_map tcs
                                 (fun se1 ->
-                                   let uu___6 =
-                                     let uu___7 =
-                                       let uu___8 =
+                                   let uu___7 =
+                                     let uu___8 =
+                                       let uu___9 =
                                          FStarC_Syntax_Util.lid_of_sigelt se1 in
-                                       FStarC_Option.must uu___8 in
-                                     FStarC_Ident.lid_equals typ_lid uu___7 in
-                                   if uu___6
+                                       FStarC_Option.must uu___9 in
+                                     FStarC_Ident.lid_equals typ_lid uu___8 in
+                                   if uu___7
                                    then
                                      match se1.FStarC_Syntax_Syntax.sigel
                                      with
                                      | FStarC_Syntax_Syntax.Sig_inductive_typ
-                                         { FStarC_Syntax_Syntax.lid = uu___7;
+                                         { FStarC_Syntax_Syntax.lid = uu___8;
                                            FStarC_Syntax_Syntax.us = uvs';
                                            FStarC_Syntax_Syntax.params = tps;
                                            FStarC_Syntax_Syntax.num_uniform_params
-                                             = uu___8;
+                                             = uu___9;
                                            FStarC_Syntax_Syntax.t = typ0;
                                            FStarC_Syntax_Syntax.mutuals =
-                                             uu___9;
+                                             uu___10;
                                            FStarC_Syntax_Syntax.ds = constrs;
                                            FStarC_Syntax_Syntax.injective_type_params
-                                             = uu___10;_}
+                                             = uu___11;_}
                                          ->
                                          FStar_Pervasives_Native.Some
                                            (tps, typ0,
                                              ((FStarC_List.length constrs) >
                                                 Prims.int_one))
-                                     | uu___7 -> failwith "Impossible"
+                                     | uu___8 -> failwith "Impossible"
                                    else FStar_Pervasives_Native.None) in
                             match tps_opt with
                             | FStar_Pervasives_Native.Some x -> x
                             | FStar_Pervasives_Native.None ->
-                                let uu___6 =
+                                let uu___7 =
                                   FStarC_Ident.lid_equals typ_lid
                                     FStarC_Parser_Const.exn_lid in
-                                if uu___6
+                                if uu___7
                                 then ([], FStarC_Syntax_Util.ktype0, true)
                                 else
                                   FStarC_Errors.raise_error
@@ -3724,86 +3742,86 @@ let (mk_data_operations :
                                     (Obj.magic
                                        FStarC_Errors_Msg.is_error_message_string)
                                     (Obj.magic "Unexpected data constructor") in
-                          (match uu___5 with
+                          (match uu___6 with
                            | (inductive_tps, typ0, should_refine) ->
                                let inductive_tps1 =
                                  FStarC_Syntax_Subst.subst_binders
                                    univ_opening inductive_tps in
                                let typ01 =
-                                 let uu___6 =
+                                 let uu___7 =
                                    FStarC_Syntax_Subst.shift_subst
                                      (FStarC_List.length inductive_tps1)
                                      univ_opening in
-                                 FStarC_Syntax_Subst.subst uu___6 typ0 in
-                               let uu___6 =
+                                 FStarC_Syntax_Subst.subst uu___7 typ0 in
+                               let uu___7 =
                                  FStarC_Syntax_Util.arrow_formals typ01 in
-                               (match uu___6 with
-                                | (indices, uu___7) ->
+                               (match uu___7 with
+                                | (indices, uu___8) ->
                                     let refine_domain =
-                                      let uu___8 =
+                                      let uu___9 =
                                         FStarC_Util.for_some
-                                          (fun uu___9 ->
-                                             match uu___9 with
+                                          (fun uu___10 ->
+                                             match uu___10 with
                                              | FStarC_Syntax_Syntax.RecordConstructor
-                                                 uu___10 -> true
-                                             | uu___10 -> false)
+                                                 uu___11 -> true
+                                             | uu___11 -> false)
                                           se.FStarC_Syntax_Syntax.sigquals in
-                                      if uu___8 then false else should_refine in
+                                      if uu___9 then false else should_refine in
                                     let fv_qual =
-                                      let filter_records uu___8 =
-                                        match uu___8 with
+                                      let filter_records uu___9 =
+                                        match uu___9 with
                                         | FStarC_Syntax_Syntax.RecordConstructor
-                                            (uu___9, fns) ->
+                                            (uu___10, fns) ->
                                             FStar_Pervasives_Native.Some
                                               (FStarC_Syntax_Syntax.Record_ctor
                                                  (typ_lid, fns))
-                                        | uu___9 ->
+                                        | uu___10 ->
                                             FStar_Pervasives_Native.None in
-                                      let uu___8 =
+                                      let uu___9 =
                                         FStarC_Util.find_map
                                           se.FStarC_Syntax_Syntax.sigquals
                                           filter_records in
-                                      match uu___8 with
+                                      match uu___9 with
                                       | FStar_Pervasives_Native.None ->
                                           FStarC_Syntax_Syntax.Data_ctor
                                       | FStar_Pervasives_Native.Some q -> q in
                                     let fields =
-                                      let uu___8 =
+                                      let uu___9 =
                                         FStarC_Util.first_N n_typars formals in
-                                      match uu___8 with
+                                      match uu___9 with
                                       | (imp_tps, fields1) ->
                                           let rename =
                                             FStarC_List.map2
-                                              (fun uu___9 ->
-                                                 fun uu___10 ->
-                                                   match (uu___9, uu___10)
+                                              (fun uu___10 ->
+                                                 fun uu___11 ->
+                                                   match (uu___10, uu___11)
                                                    with
                                                    | ({
                                                         FStarC_Syntax_Syntax.binder_bv
                                                           = x;
                                                         FStarC_Syntax_Syntax.binder_qual
-                                                          = uu___11;
-                                                        FStarC_Syntax_Syntax.binder_positivity
                                                           = uu___12;
+                                                        FStarC_Syntax_Syntax.binder_positivity
+                                                          = uu___13;
                                                         FStarC_Syntax_Syntax.binder_attrs
-                                                          = uu___13;_},
+                                                          = uu___14;_},
                                                       {
                                                         FStarC_Syntax_Syntax.binder_bv
                                                           = x';
                                                         FStarC_Syntax_Syntax.binder_qual
-                                                          = uu___14;
-                                                        FStarC_Syntax_Syntax.binder_positivity
                                                           = uu___15;
+                                                        FStarC_Syntax_Syntax.binder_positivity
+                                                          = uu___16;
                                                         FStarC_Syntax_Syntax.binder_attrs
-                                                          = uu___16;_})
+                                                          = uu___17;_})
                                                        ->
-                                                       let uu___17 =
-                                                         let uu___18 =
+                                                       let uu___18 =
+                                                         let uu___19 =
                                                            FStarC_Syntax_Syntax.bv_to_name
                                                              x' in
-                                                         (x, uu___18) in
+                                                         (x, uu___19) in
                                                        FStarC_Syntax_Syntax.NT
-                                                         uu___17) imp_tps
+                                                         uu___18) imp_tps
                                               inductive_tps1 in
                                           FStarC_Syntax_Subst.subst_binders
                                             rename fields1 in

@@ -2,7 +2,7 @@ open Prims
 let (z3url : Prims.string) = "https://github.com/Z3Prover/z3/releases"
 let (packaged_z3_versions : Prims.string Prims.list) = ["4.8.5"; "4.13.3"]
 let (z3_install_suggestion :
-  Prims.string -> FStarC_Pprint.document Prims.list) =
+  Prims.string -> FStar_Pprint.document Prims.list) =
   fun v ->
     let uu___ =
       let uu___1 =
@@ -10,8 +10,8 @@ let (z3_install_suggestion :
           let uu___3 =
             FStarC_Format.fmt1 "Please download version %s of Z3 from" v in
           FStarC_Errors_Msg.text uu___3 in
-        let uu___3 = FStarC_Pprint.url z3url in
-        FStarC_Pprint.prefix (Prims.of_int (4)) Prims.int_one uu___2 uu___3 in
+        FStar_Pprint.prefix (Prims.of_int (4)) Prims.int_one uu___2
+          (FStar_Pprint.url z3url) in
       let uu___2 =
         let uu___3 =
           let uu___4 =
@@ -20,12 +20,12 @@ let (z3_install_suggestion :
             let uu___6 =
               let uu___7 =
                 let uu___8 = FStarC_Platform.exe (Prims.strcat "z3-" v) in
-                FStarC_Pprint.doc_of_string uu___8 in
-              FStarC_Pprint.squotes uu___7 in
-            FStarC_Pprint.op_Hat_Hat uu___6 FStarC_Pprint.dot in
-          FStarC_Pprint.op_Hat_Slash_Hat uu___4 uu___5 in
-        FStarC_Pprint.group uu___3 in
-      FStarC_Pprint.op_Hat_Slash_Hat uu___1 uu___2 in
+                FStar_Pprint.doc_of_string uu___8 in
+              FStar_Pprint.squotes uu___7 in
+            FStar_Pprint.op_Hat_Hat uu___6 FStar_Pprint.dot in
+          FStar_Pprint.op_Hat_Slash_Hat uu___4 uu___5 in
+        FStar_Pprint.group uu___3 in
+      FStar_Pprint.op_Hat_Slash_Hat uu___1 uu___2 in
     let uu___1 =
       let uu___2 =
         if FStarC_List.mem v packaged_z3_versions
@@ -35,7 +35,7 @@ let (z3_install_suggestion :
               "Version %s of Z3 should be included in binary packages of F*. If you are using a binary package and are seeing\n              this error, please file a bug report."
               v in
           FStarC_Errors_Msg.text uu___3
-        else FStarC_Pprint.empty in
+        else FStar_Pprint.empty in
       [uu___2] in
     uu___ :: uu___1
 let (z3_inpath : Prims.string -> Prims.bool) =

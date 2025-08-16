@@ -157,8 +157,7 @@ let (singleton_fvar : FStarC_Syntax_Syntax.fv -> free_vars_and_fvars) =
         (FStarC_Class_Setlike.add ()
            (Obj.magic
               (FStarC_RBSet.setlike_rbset FStarC_Syntax_Syntax.ord_fv))
-           (fv.FStarC_Syntax_Syntax.fv_name).FStarC_Syntax_Syntax.v
-           (Obj.magic uu___1)) in
+           fv.FStarC_Syntax_Syntax.fv_name (Obj.magic uu___1)) in
     ((FStar_Pervasives_Native.fst no_free_vars), uu___)
 let (singleton_bv :
   FStarC_Syntax_Syntax.bv ->

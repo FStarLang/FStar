@@ -588,33 +588,33 @@ let (errors_to_report :
     fun settings ->
       let format_smt_error msg =
         let d =
-          let uu___ = FStarC_Pprint.doc_of_string "SMT solver says:" in
-          let uu___1 =
-            let uu___2 = FStarC_Errors_Msg.sublist FStarC_Pprint.empty msg in
-            let uu___3 =
-              let uu___4 =
-                let uu___5 = FStarC_Pprint.doc_of_string "Note:" in
-                let uu___6 =
-                  let uu___7 =
-                    let uu___8 =
+          let uu___ =
+            let uu___1 = FStarC_Errors_Msg.sublist FStar_Pprint.empty msg in
+            let uu___2 =
+              let uu___3 =
+                let uu___4 =
+                  let uu___5 =
+                    let uu___6 =
                       FStarC_Errors_Msg.text
                         "'canceled' or 'resource limits reached' means the SMT query timed out, so you might want to increase the rlimit" in
-                    let uu___9 =
-                      let uu___10 =
+                    let uu___7 =
+                      let uu___8 =
                         FStarC_Errors_Msg.text
                           "'incomplete quantifiers' means Z3 could not prove the query, so try to spell out your proof out in greater detail, increase fuel or ifuel" in
-                      let uu___11 =
-                        let uu___12 =
+                      let uu___9 =
+                        let uu___10 =
                           FStarC_Errors_Msg.text
                             "'unknown' means Z3 provided no further reason for the proof failing" in
-                        [uu___12] in
-                      uu___10 :: uu___11 in
-                    uu___8 :: uu___9 in
-                  FStarC_Errors_Msg.bulleted uu___7 in
-                FStarC_Pprint.op_Hat_Hat uu___5 uu___6 in
-              FStarC_Pprint.op_Hat_Hat FStarC_Pprint.hardline uu___4 in
-            FStarC_Pprint.op_Hat_Hat uu___2 uu___3 in
-          FStarC_Pprint.op_Hat_Hat uu___ uu___1 in
+                        [uu___10] in
+                      uu___8 :: uu___9 in
+                    uu___6 :: uu___7 in
+                  FStarC_Errors_Msg.bulleted uu___5 in
+                FStar_Pprint.op_Hat_Hat (FStar_Pprint.doc_of_string "Note:")
+                  uu___4 in
+              FStar_Pprint.op_Hat_Hat FStar_Pprint.hardline uu___3 in
+            FStar_Pprint.op_Hat_Hat uu___1 uu___2 in
+          FStar_Pprint.op_Hat_Hat
+            (FStar_Pprint.doc_of_string "SMT solver says:") uu___ in
         [d] in
       let recovery_failed_msg =
         if tried_recovery
@@ -632,7 +632,7 @@ let (errors_to_report :
             let uu___1 =
               let uu___2 =
                 FStarC_List.map error_to_short_string settings.query_errors in
-              FStarC_List.map FStarC_Pprint.doc_of_string uu___2 in
+              FStarC_List.map FStar_Pprint.doc_of_string uu___2 in
             format_smt_error uu___1
           else
             (let uu___2 =
@@ -745,7 +745,7 @@ let (errors_to_report :
                        let uu___5 =
                          FStarC_Class_PP.pp FStarC_Syntax_Print.pretty_term
                            settings.query_term in
-                       FStarC_Pprint.op_Hat_Slash_Hat uu___4 uu___5 in
+                       FStar_Pprint.op_Hat_Slash_Hat uu___4 uu___5 in
                      [uu___3] in
                    let range =
                      FStarC_TypeChecker_Env.get_range
@@ -1126,10 +1126,9 @@ let (query_info : query_settings -> FStarC_SMTEncoding_Z3.z3result -> unit) =
                            let msg1 =
                              if used_hint settings
                              then
-                               let uu___7 =
-                                 FStarC_Pprint.doc_of_string
-                                   "Hint-replay failed" in
-                               uu___7 :: msg
+                               (FStar_Pprint.doc_of_string
+                                  "Hint-replay failed")
+                               :: msg
                              else msg in
                            FStarC_Errors.log_issue
                              FStarC_Class_HasRange.hasRange_range range1
@@ -1828,20 +1827,19 @@ let (uu___is_RestartAnd : recovery_hammer -> Prims.bool) =
     match projectee with | RestartAnd _0 -> true | uu___ -> false
 let (__proj__RestartAnd__item___0 : recovery_hammer -> recovery_hammer) =
   fun projectee -> match projectee with | RestartAnd _0 -> _0
-let rec (pp_hammer : recovery_hammer -> FStarC_Pprint.document) =
+let rec (pp_hammer : recovery_hammer -> FStar_Pprint.document) =
   fun h ->
     match h with
     | IncreaseRLimit factor ->
         let uu___ = FStarC_Errors_Msg.text "increasing its rlimit by" in
         let uu___1 =
           let uu___2 = FStarC_Class_PP.pp FStarC_Class_PP.pp_int factor in
-          let uu___3 = FStarC_Pprint.doc_of_string "x" in
-          FStarC_Pprint.op_Hat_Hat uu___2 uu___3 in
-        FStarC_Pprint.op_Hat_Slash_Hat uu___ uu___1
+          FStar_Pprint.op_Hat_Hat uu___2 (FStar_Pprint.doc_of_string "x") in
+        FStar_Pprint.op_Hat_Slash_Hat uu___ uu___1
     | RestartAnd h1 ->
         let uu___ = FStarC_Errors_Msg.text "restarting the solver and" in
         let uu___1 = pp_hammer h1 in
-        FStarC_Pprint.op_Hat_Slash_Hat uu___ uu___1
+        FStar_Pprint.op_Hat_Slash_Hat uu___ uu___1
 let (ask_solver_recover : query_settings Prims.list -> answer) =
   fun configs ->
     let uu___ = FStarC_Options.proof_recovery () in
@@ -1869,7 +1867,7 @@ let (ask_solver_recover : query_settings Prims.list -> answer) =
                     FStarC_Errors_Msg.text
                       "Retrying query with rlimit factor" in
                   let uu___7 = FStarC_Class_PP.pp FStarC_Class_PP.pp_int n in
-                  FStarC_Pprint.op_Hat_Slash_Hat uu___6 uu___7 in
+                  FStar_Pprint.op_Hat_Slash_Hat uu___6 uu___7 in
                 [uu___5] in
               FStarC_Errors.diag FStarC_Class_HasRange.hasRange_range
                 cfg.query_range ()
@@ -1937,7 +1935,7 @@ let (ask_solver_recover : query_settings Prims.list -> answer) =
                            FStarC_Errors_Msg.text
                              "This query succeeded after " in
                          let uu___7 = pp_hammer h in
-                         FStarC_Pprint.op_Hat_Slash_Hat uu___6 uu___7 in
+                         FStar_Pprint.op_Hat_Slash_Hat uu___6 uu___7 in
                        let uu___6 =
                          let uu___7 =
                            FStarC_Errors_Msg.text
@@ -2112,7 +2110,7 @@ let (report : FStarC_TypeChecker_Env.env -> query_settings -> answer -> unit)
                                       FStarC_Class_Show.showable_int n in
                                   FStarC_Format.fmt1 "Repeated %s times"
                                     uu___5 in
-                                FStarC_Pprint.doc_of_string uu___4 in
+                                FStar_Pprint.doc_of_string uu___4 in
                               [uu___3] in
                             FStarC_List.op_At m uu___2
                           else m in
@@ -2577,7 +2575,7 @@ let (solve :
                   let uu___6 = FStarC_Errors_Msg.text "Query = " in
                   let uu___7 =
                     FStarC_Class_PP.pp FStarC_Syntax_Print.pretty_term q in
-                  FStarC_Pprint.op_Hat_Slash_Hat uu___6 uu___7 in
+                  FStar_Pprint.op_Hat_Slash_Hat uu___6 uu___7 in
                 [uu___5] in
               uu___3 :: uu___4 in
             (FStarC_Errors_Codes.Error_NoSMTButNeeded, uu___2) in
@@ -2614,7 +2612,7 @@ let (solve_sync :
                         "Running synchronous SMT query. Q =" in
                     let uu___8 =
                       FStarC_Class_PP.pp FStarC_Syntax_Print.pretty_term q in
-                    FStarC_Pprint.prefix (Prims.of_int (2)) Prims.int_one
+                    FStar_Pprint.prefix (Prims.of_int (2)) Prims.int_one
                       uu___7 uu___8 in
                   [uu___6] in
                 FStarC_Errors.diag FStarC_Class_HasRange.hasRange_range

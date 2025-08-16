@@ -207,7 +207,7 @@ let (fv_as_emb_typ : FStarC_Syntax_Syntax.fv -> FStarC_Syntax_Syntax.emb_typ)
     let uu___ =
       let uu___1 =
         FStarC_Class_Show.show FStarC_Ident.showable_lident
-          (fv.FStarC_Syntax_Syntax.fv_name).FStarC_Syntax_Syntax.v in
+          fv.FStarC_Syntax_Syntax.fv_name in
       (uu___1, []) in
     FStarC_Syntax_Syntax.ET_app uu___
 let (e_proofstate_nbe :
@@ -373,28 +373,42 @@ let (e_exn : Prims.exn FStarC_Syntax_Embeddings_Base.embedding) =
                   (t.FStarC_Syntax_Syntax.hash_code)
               }
           | e1 ->
-              let msg =
-                let uu___2 = FStarC_Errors_Msg.text "Uncaught exception" in
-                let uu___3 =
-                  let uu___4 =
-                    let uu___5 = FStarC_Util.message_of_exn e1 in
-                    FStarC_Pprint.arbitrary_string uu___5 in
-                  [uu___4] in
-                uu___2 :: uu___3 in
               let uu___2 =
-                let uu___3 =
-                  let uu___4 =
-                    embed
-                      (FStarC_Syntax_Embeddings.e_tuple2
-                         (FStarC_Syntax_Embeddings.e_list
-                            FStarC_Syntax_Embeddings.e_document)
-                         (FStarC_Syntax_Embeddings.e_option
-                            FStarC_Syntax_Embeddings.e_range)) rng
-                      (msg, FStar_Pervasives_Native.None) in
-                  FStarC_Syntax_Syntax.as_arg uu___4 in
-                [uu___3] in
-              FStarC_Syntax_Syntax.mk_Tm_app fstar_tactics_TacticFailure.t
-                uu___2 rng in
+                let uu___3 = FStarC_Errors.issue_of_exn e1 in
+                match uu___3 with
+                | FStar_Pervasives_Native.Some
+                    { FStarC_Errors.issue_msg = issue_msg;
+                      FStarC_Errors.issue_level = uu___4;
+                      FStarC_Errors.issue_range = issue_range;
+                      FStarC_Errors.issue_number = uu___5;
+                      FStarC_Errors.issue_ctx = uu___6;_}
+                    -> (issue_msg, issue_range)
+                | FStar_Pervasives_Native.None ->
+                    let uu___4 =
+                      let uu___5 =
+                        let uu___6 = FStarC_Util.message_of_exn e1 in
+                        FStar_Pprint.arbitrary_string uu___6 in
+                      [uu___5] in
+                    (uu___4, FStar_Pervasives_Native.None) in
+              (match uu___2 with
+               | (msg, range) ->
+                   let msg1 =
+                     let uu___3 = FStarC_Errors_Msg.text "Uncaught exception" in
+                     uu___3 :: msg in
+                   let uu___3 =
+                     let uu___4 =
+                       let uu___5 =
+                         embed
+                           (FStarC_Syntax_Embeddings.e_tuple2
+                              (FStarC_Syntax_Embeddings.e_list
+                                 FStarC_Syntax_Embeddings.e_document)
+                              (FStarC_Syntax_Embeddings.e_option
+                                 FStarC_Syntax_Embeddings.e_range)) rng
+                           (msg1, range) in
+                       FStarC_Syntax_Syntax.as_arg uu___5 in
+                     [uu___4] in
+                   FStarC_Syntax_Syntax.mk_Tm_app
+                     fstar_tactics_TacticFailure.t uu___3 rng) in
   let unembed_exn t =
     fun uu___ ->
       let uu___1 = hd'_and_args t in
