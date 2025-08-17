@@ -99,9 +99,6 @@ let (__do_rewrite :
                                               (env.FStarC_TypeChecker_Env.is_iface);
                                             FStarC_TypeChecker_Env.admit =
                                               true;
-                                            FStarC_TypeChecker_Env.lax_universes
-                                              =
-                                              (env.FStarC_TypeChecker_Env.lax_universes);
                                             FStarC_TypeChecker_Env.phase1 =
                                               (env.FStarC_TypeChecker_Env.phase1);
                                             FStarC_TypeChecker_Env.failhard =

@@ -26,9 +26,7 @@ let (fv_as_emb_typ : FStarC_Syntax_Syntax.fv -> FStarC_Syntax_Syntax.emb_typ)
   =
   fun fv ->
     let uu___ =
-      let uu___1 =
-        FStarC_Ident.string_of_lid
-          (fv.FStarC_Syntax_Syntax.fv_name).FStarC_Syntax_Syntax.v in
+      let uu___1 = FStarC_Ident.string_of_lid fv.FStarC_Syntax_Syntax.fv_name in
       (uu___1, []) in
     FStarC_Syntax_Syntax.ET_app uu___
 let mk_emb' :

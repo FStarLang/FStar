@@ -907,31 +907,32 @@ let (inspect_sigelt :
                               FStarC_Syntax_Syntax.num_ty_params = nparam;
                               FStarC_Syntax_Syntax.mutuals1 = uu___7;
                               FStarC_Syntax_Syntax.injective_type_params1 =
-                                uu___8;_};
-                          FStarC_Syntax_Syntax.sigrng = uu___9;
-                          FStarC_Syntax_Syntax.sigquals = uu___10;
-                          FStarC_Syntax_Syntax.sigmeta = uu___11;
-                          FStarC_Syntax_Syntax.sigattrs = uu___12;
-                          FStarC_Syntax_Syntax.sigopens_and_abbrevs = uu___13;
-                          FStarC_Syntax_Syntax.sigopts = uu___14;_}
+                                uu___8;
+                              FStarC_Syntax_Syntax.proj_disc_lids = uu___9;_};
+                          FStarC_Syntax_Syntax.sigrng = uu___10;
+                          FStarC_Syntax_Syntax.sigquals = uu___11;
+                          FStarC_Syntax_Syntax.sigmeta = uu___12;
+                          FStarC_Syntax_Syntax.sigattrs = uu___13;
+                          FStarC_Syntax_Syntax.sigopens_and_abbrevs = uu___14;
+                          FStarC_Syntax_Syntax.sigopts = uu___15;_}
                         ->
                         let cty1 = FStarC_Syntax_Subst.subst s cty in
-                        let uu___15 =
-                          let uu___16 = get_env () in
-                          FStarC_TypeChecker_Normalize.get_n_binders uu___16
+                        let uu___16 =
+                          let uu___17 = get_env () in
+                          FStarC_TypeChecker_Normalize.get_n_binders uu___17
                             nparam cty1 in
-                        (match uu___15 with
+                        (match uu___16 with
                          | (param_ctor_bs, c) ->
                              (if (FStarC_List.length param_ctor_bs) <> nparam
                               then
                                 failwith
                                   "impossible: inspect_sigelt: could not obtain sufficient ctor param binders"
                               else ();
-                              (let uu___18 =
-                                 let uu___19 =
+                              (let uu___19 =
+                                 let uu___20 =
                                    FStarC_Syntax_Util.is_total_comp c in
-                                 Prims.op_Negation uu___19 in
-                               if uu___18
+                                 Prims.op_Negation uu___20 in
+                               if uu___19
                                then
                                  failwith
                                    "impossible: inspect_sigelt: removed parameters and got an effectful comp"
@@ -941,19 +942,19 @@ let (inspect_sigelt :
                                  FStarC_List.map2
                                    (fun b1 ->
                                       fun b2 ->
-                                        let uu___18 =
-                                          let uu___19 =
+                                        let uu___19 =
+                                          let uu___20 =
                                             FStarC_Syntax_Syntax.bv_to_name
                                               b2.FStarC_Syntax_Syntax.binder_bv in
                                           ((b1.FStarC_Syntax_Syntax.binder_bv),
-                                            uu___19) in
-                                        FStarC_Syntax_Syntax.NT uu___18)
+                                            uu___20) in
+                                        FStarC_Syntax_Syntax.NT uu___19)
                                    param_ctor_bs param_bs2 in
                                let cty3 = FStarC_Syntax_Subst.subst s' cty2 in
                                let cty4 =
                                  FStarC_Syntax_Util.remove_inacc cty3 in
-                               let uu___18 = FStarC_Ident.path_of_lid lid1 in
-                               (uu___18, cty4))))
+                               let uu___19 = FStarC_Ident.path_of_lid lid1 in
+                               (uu___19, cty4))))
                     | uu___6 ->
                         failwith
                           "impossible: inspect_sigelt: did not find ctor" in
@@ -1058,7 +1059,8 @@ let (pack_sigelt :
                        FStarC_Syntax_Syntax.num_ty_params = nparam;
                        FStarC_Syntax_Syntax.mutuals1 = [];
                        FStarC_Syntax_Syntax.injective_type_params1 =
-                         injective_type_params
+                         injective_type_params;
+                       FStarC_Syntax_Syntax.proj_disc_lids = []
                      }) in
           let ctor_ses = FStarC_List.map pack_ctor ctors in
           let c_lids =

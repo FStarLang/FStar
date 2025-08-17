@@ -5735,9 +5735,6 @@ let (tc_layered_eff_decl :
                                                                FStarC_TypeChecker_Env.admit
                                                                  =
                                                                  (uu___20.FStarC_TypeChecker_Env.admit);
-                                                               FStarC_TypeChecker_Env.lax_universes
-                                                                 =
-                                                                 (uu___20.FStarC_TypeChecker_Env.lax_universes);
                                                                FStarC_TypeChecker_Env.phase1
                                                                  =
                                                                  (uu___20.FStarC_TypeChecker_Env.phase1);
@@ -6658,14 +6655,14 @@ let (tc_non_layered_eff_decl :
                                                 let uu___17 =
                                                   FStarC_Ident.string_of_lid
                                                     ed.FStarC_Syntax_Syntax.mname in
-                                                FStarC_Pprint.doc_of_string
+                                                FStar_Pprint.doc_of_string
                                                   uu___17 in
                                               let uu___17 =
                                                 FStarC_Errors_Msg.text
                                                   "are different" in
-                                              FStarC_Pprint.op_Hat_Slash_Hat
+                                              FStar_Pprint.op_Hat_Slash_Hat
                                                 uu___16 uu___17 in
-                                            FStarC_Pprint.op_Hat_Slash_Hat
+                                            FStar_Pprint.op_Hat_Slash_Hat
                                               uu___14 uu___15 in
                                           let uu___14 =
                                             let uu___15 =
@@ -6686,11 +6683,11 @@ let (tc_non_layered_eff_decl :
                                                     FStarC_Class_PP.pp
                                                       FStarC_Class_PP.pp_int
                                                       (FStarC_List.length us) in
-                                                  FStarC_Pprint.op_Hat_Slash_Hat
+                                                  FStar_Pprint.op_Hat_Slash_Hat
                                                     uu___20 uu___21 in
-                                                FStarC_Pprint.op_Hat_Slash_Hat
+                                                FStar_Pprint.op_Hat_Slash_Hat
                                                   uu___18 uu___19 in
-                                              FStarC_Pprint.op_Hat_Slash_Hat
+                                              FStar_Pprint.op_Hat_Slash_Hat
                                                 uu___16 uu___17 in
                                             [uu___15] in
                                           uu___13 :: uu___14 in
@@ -7863,9 +7860,6 @@ let (tc_non_layered_eff_decl :
                                                                     (env1.FStarC_TypeChecker_Env.is_iface);
                                                                     FStarC_TypeChecker_Env.admit
                                                                     = true;
-                                                                    FStarC_TypeChecker_Env.lax_universes
-                                                                    =
-                                                                    (env1.FStarC_TypeChecker_Env.lax_universes);
                                                                     FStarC_TypeChecker_Env.phase1
                                                                     =
                                                                     (env1.FStarC_TypeChecker_Env.phase1);
@@ -8146,9 +8140,6 @@ let (tc_non_layered_eff_decl :
                                                                    FStarC_TypeChecker_Env.admit
                                                                     =
                                                                     (uu___24.FStarC_TypeChecker_Env.admit);
-                                                                   FStarC_TypeChecker_Env.lax_universes
-                                                                    =
-                                                                    (uu___24.FStarC_TypeChecker_Env.lax_universes);
                                                                    FStarC_TypeChecker_Env.phase1
                                                                     =
                                                                     (uu___24.FStarC_TypeChecker_Env.phase1);
@@ -8493,9 +8484,6 @@ let (tc_non_layered_eff_decl :
                                                                     (env1.FStarC_TypeChecker_Env.is_iface);
                                                                     FStarC_TypeChecker_Env.admit
                                                                     = true;
-                                                                    FStarC_TypeChecker_Env.lax_universes
-                                                                    =
-                                                                    (env1.FStarC_TypeChecker_Env.lax_universes);
                                                                     FStarC_TypeChecker_Env.phase1
                                                                     =
                                                                     (env1.FStarC_TypeChecker_Env.phase1);
@@ -9324,8 +9312,6 @@ let (tc_lift :
                                FStarC_TypeChecker_Env.is_iface =
                                  (env.FStarC_TypeChecker_Env.is_iface);
                                FStarC_TypeChecker_Env.admit = true;
-                               FStarC_TypeChecker_Env.lax_universes =
-                                 (env.FStarC_TypeChecker_Env.lax_universes);
                                FStarC_TypeChecker_Env.phase1 =
                                  (env.FStarC_TypeChecker_Env.phase1);
                                FStarC_TypeChecker_Env.failhard =

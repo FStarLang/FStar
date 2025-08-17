@@ -5,7 +5,7 @@ let (pp_bv : FStarC_Syntax_Syntax.bv FStarC_Class_PP.pretty) =
       (fun bv ->
          let uu___ =
            FStarC_Class_Show.show FStarC_Syntax_Print.showable_bv bv in
-         FStarC_Pprint.arbitrary_string uu___)
+         FStar_Pprint.arbitrary_string uu___)
   }
 let pp_set :
   'a .
@@ -18,13 +18,12 @@ let pp_set :
         FStarC_Class_PP.pp =
           (fun s ->
              let doclist ds =
-               let uu___2 = FStarC_Pprint.doc_of_string "[]" in
-               let uu___3 =
-                 let uu___4 = FStarC_Pprint.break_ Prims.int_one in
-                 FStarC_Pprint.op_Hat_Hat FStarC_Pprint.semi uu___4 in
-               FStarC_Pprint.surround_separate (Prims.of_int (2))
-                 Prims.int_zero uu___2 FStarC_Pprint.lbracket uu___3
-                 FStarC_Pprint.rbracket ds in
+               FStar_Pprint.surround_separate (Prims.of_int (2))
+                 Prims.int_zero (FStar_Pprint.doc_of_string "[]")
+                 FStar_Pprint.lbracket
+                 (FStar_Pprint.op_Hat_Hat FStar_Pprint.semi
+                    (FStar_Pprint.break_ Prims.int_one))
+                 FStar_Pprint.rbracket ds in
              let uu___2 =
                let uu___3 =
                  FStarC_Class_Setlike.elems ()
@@ -65,22 +64,20 @@ let __def_check_scoped :
                       let uu___6 =
                         FStarC_Errors_Msg.text
                           "Internal: term is not well-scoped " in
-                      let uu___7 =
-                        let uu___8 = FStarC_Pprint.doc_of_string msg in
-                        FStarC_Pprint.parens uu___8 in
-                      FStarC_Pprint.op_Hat_Slash_Hat uu___6 uu___7 in
+                      FStar_Pprint.op_Hat_Slash_Hat uu___6
+                        (FStar_Pprint.parens (FStar_Pprint.doc_of_string msg)) in
                     let uu___6 =
                       let uu___7 =
                         let uu___8 = FStarC_Errors_Msg.text "t =" in
                         let uu___9 = FStarC_Class_PP.pp uu___2 thing in
-                        FStarC_Pprint.op_Hat_Slash_Hat uu___8 uu___9 in
+                        FStar_Pprint.op_Hat_Slash_Hat uu___8 uu___9 in
                       let uu___8 =
                         let uu___9 =
                           let uu___10 = FStarC_Errors_Msg.text "FVs =" in
                           let uu___11 =
                             FStarC_Class_PP.pp
                               (pp_set FStarC_Syntax_Syntax.ord_bv pp_bv) free in
-                          FStarC_Pprint.op_Hat_Slash_Hat uu___10 uu___11 in
+                          FStar_Pprint.op_Hat_Slash_Hat uu___10 uu___11 in
                         let uu___10 =
                           let uu___11 =
                             let uu___12 = FStarC_Errors_Msg.text "Scope =" in
@@ -88,7 +85,7 @@ let __def_check_scoped :
                               FStarC_Class_PP.pp
                                 (pp_set FStarC_Syntax_Syntax.ord_bv pp_bv)
                                 scope in
-                            FStarC_Pprint.op_Hat_Slash_Hat uu___12 uu___13 in
+                            FStar_Pprint.op_Hat_Slash_Hat uu___12 uu___13 in
                           let uu___12 =
                             let uu___13 =
                               let uu___14 = FStarC_Errors_Msg.text "Diff =" in
@@ -103,7 +100,7 @@ let __def_check_scoped :
                                 FStarC_Class_PP.pp
                                   (pp_set FStarC_Syntax_Syntax.ord_bv pp_bv)
                                   uu___16 in
-                              FStarC_Pprint.op_Hat_Slash_Hat uu___14 uu___15 in
+                              FStar_Pprint.op_Hat_Slash_Hat uu___14 uu___15 in
                             [uu___13] in
                           uu___11 :: uu___12 in
                         uu___9 :: uu___10 in

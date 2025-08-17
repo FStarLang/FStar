@@ -478,7 +478,7 @@ bump-stage0: stage0_new
 	# where the 01 makefile is equal to the 12 makefile. Same for stage1
 	# support and config code, we just take it from the stage2.
 	rm -f mk/generic-0.mk
-	ln -s generic-1.mk mk/generic-0.mk
+	ln -sf generic-1.mk mk/generic-0.mk
 	cp mk/fstar-12.mk mk/fstar-01.mk
 	sed -i 's,include mk/generic-1.mk,include mk/generic-0.mk,' mk/fstar-01.mk
 	rm -rf stage1

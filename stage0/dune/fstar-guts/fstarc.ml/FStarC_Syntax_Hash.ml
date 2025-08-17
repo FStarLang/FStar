@@ -80,14 +80,14 @@ let hash_option :
             let uu___1 = FStarC_Hash.of_int (Prims.of_int (1249)) in
             ret uu___1 in
           let uu___1 = h o1 in mix uu___ uu___1
-let (hash_doc : FStarC_Pprint.document -> FStarC_Hash.hash_code mm) =
+let (hash_doc : FStar_Pprint.document -> FStarC_Hash.hash_code mm) =
   fun d ->
     let uu___ =
       FStarC_Pprint.pretty_string (FStarC_Util.float_of_string "1.0")
         (Prims.of_int (80)) d in
     of_string uu___
 let (hash_doc_list :
-  FStarC_Pprint.document Prims.list -> FStarC_Hash.hash_code mm) =
+  FStar_Pprint.document Prims.list -> FStarC_Hash.hash_code mm) =
   fun ds -> hash_list hash_doc ds
 let hash_pair :
   'a 'b .
@@ -370,9 +370,7 @@ and (hash_bv : FStarC_Syntax_Syntax.bv -> FStarC_Hash.hash_code mm) =
   fun b -> hash_term b.FStarC_Syntax_Syntax.sort
 and (hash_fv : FStarC_Syntax_Syntax.fv -> FStarC_Hash.hash_code mm) =
   fun fv ->
-    let uu___ =
-      FStarC_Ident.string_of_lid
-        (fv.FStarC_Syntax_Syntax.fv_name).FStarC_Syntax_Syntax.v in
+    let uu___ = FStarC_Ident.string_of_lid fv.FStarC_Syntax_Syntax.fv_name in
     of_string uu___
 and (hash_binder : FStarC_Syntax_Syntax.binder -> FStarC_Hash.hash_code mm) =
   fun b ->
@@ -865,7 +863,8 @@ and (equal_comp :
                    ct2.FStarC_Syntax_Syntax.effect_args))
                &&
                (equal_list equal_flag ct1.FStarC_Syntax_Syntax.flags
-                  ct2.FStarC_Syntax_Syntax.flags))
+                  ct2.FStarC_Syntax_Syntax.flags)
+         | uu___2 -> false)
 and (equal_binder :
   FStarC_Syntax_Syntax.binder -> FStarC_Syntax_Syntax.binder -> Prims.bool) =
   fun b1 ->
@@ -996,9 +995,8 @@ and (equal_fv :
       if uu___
       then true
       else
-        FStarC_Ident.lid_equals
-          (f1.FStarC_Syntax_Syntax.fv_name).FStarC_Syntax_Syntax.v
-          (f2.FStarC_Syntax_Syntax.fv_name).FStarC_Syntax_Syntax.v
+        FStarC_Ident.lid_equals f1.FStarC_Syntax_Syntax.fv_name
+          f2.FStarC_Syntax_Syntax.fv_name
 and (equal_universe :
   FStarC_Syntax_Syntax.universe ->
     FStarC_Syntax_Syntax.universe -> Prims.bool)
@@ -1168,6 +1166,7 @@ and (equal_meta :
           ((FStarC_Ident.lid_equals m11 m21) &&
              (FStarC_Ident.lid_equals n1 n2))
             && (equal_term t1 t2)
+      | uu___ -> false
 and (equal_lazyinfo :
   FStarC_Syntax_Syntax.lazyinfo ->
     FStarC_Syntax_Syntax.lazyinfo -> Prims.bool)
@@ -1228,6 +1227,7 @@ and (equal_decreases_order :
       | (FStarC_Syntax_Syntax.Decreases_wf (t1, t1'),
          FStarC_Syntax_Syntax.Decreases_wf (t2, t2')) ->
           (equal_term t1 t2) && (equal_term t1' t2')
+      | uu___ -> false
 and (equal_arg_qualifier :
   FStarC_Syntax_Syntax.arg_qualifier ->
     FStarC_Syntax_Syntax.arg_qualifier -> Prims.bool)
@@ -1252,9 +1252,9 @@ and (equal_lbname :
           FStarC_Ident.ident_equals b1.FStarC_Syntax_Syntax.ppname
             b2.FStarC_Syntax_Syntax.ppname
       | (FStar_Pervasives.Inr f1, FStar_Pervasives.Inr f2) ->
-          FStarC_Ident.lid_equals
-            (f1.FStarC_Syntax_Syntax.fv_name).FStarC_Syntax_Syntax.v
-            (f2.FStarC_Syntax_Syntax.fv_name).FStarC_Syntax_Syntax.v
+          FStarC_Ident.lid_equals f1.FStarC_Syntax_Syntax.fv_name
+            f2.FStarC_Syntax_Syntax.fv_name
+      | uu___ -> false
 and (equal_subst_elt :
   FStarC_Syntax_Syntax.subst_elt ->
     FStarC_Syntax_Syntax.subst_elt -> Prims.bool)
@@ -1272,6 +1272,307 @@ and (equal_subst_elt :
           -> (i1 = i2) && (equal_universe u1 u2)
       | (FStarC_Syntax_Syntax.UD (un1, i1), FStarC_Syntax_Syntax.UD
          (un2, i2)) -> (i1 = i2) && (FStarC_Ident.ident_equals un1 un2)
+      | (FStarC_Syntax_Syntax.DT (i1, t1), FStarC_Syntax_Syntax.DT (i2, t2))
+          -> (i1 = i2) && (equal_term t1 t2)
+      | uu___ -> false
 let (hashable_term :
   FStarC_Syntax_Syntax.term FStarC_Class_Hashable.hashable) =
   { FStarC_Class_Hashable.hash = ext_hash_term }
+let (hashable_lident : FStarC_Ident.lident FStarC_Class_Hashable.hashable) =
+  {
+    FStarC_Class_Hashable.hash =
+      (fun l ->
+         let uu___ = FStarC_Ident.string_of_lid l in
+         FStarC_Class_Hashable.hash FStarC_Class_Hashable.hashable_string
+           uu___)
+  }
+let (hashable_ident : FStarC_Ident.ident FStarC_Class_Hashable.hashable) =
+  {
+    FStarC_Class_Hashable.hash =
+      (fun i ->
+         let uu___ = FStarC_Ident.string_of_id i in
+         FStarC_Class_Hashable.hash FStarC_Class_Hashable.hashable_string
+           uu___)
+  }
+let (hashable_binding :
+  FStarC_Syntax_Syntax.binding FStarC_Class_Hashable.hashable) =
+  {
+    FStarC_Class_Hashable.hash =
+      (fun uu___ ->
+         match uu___ with
+         | FStarC_Syntax_Syntax.Binding_var bv ->
+             FStarC_Class_Hashable.hash hashable_term
+               bv.FStarC_Syntax_Syntax.sort
+         | FStarC_Syntax_Syntax.Binding_lid (l, (us, t)) ->
+             let uu___1 =
+               let uu___2 = FStarC_Class_Hashable.hash hashable_lident l in
+               let uu___3 =
+                 FStarC_Class_Hashable.hash
+                   (FStarC_Class_Hashable.hashable_list hashable_ident) us in
+               FStarC_Hash.mix uu___2 uu___3 in
+             let uu___2 = FStarC_Class_Hashable.hash hashable_term t in
+             FStarC_Hash.mix uu___1 uu___2
+         | FStarC_Syntax_Syntax.Binding_univ u ->
+             FStarC_Class_Hashable.hash hashable_ident u)
+  }
+let (hashable_bv : FStarC_Syntax_Syntax.bv FStarC_Class_Hashable.hashable) =
+  {
+    FStarC_Class_Hashable.hash =
+      (fun b ->
+         FStarC_Class_Hashable.hash hashable_term b.FStarC_Syntax_Syntax.sort)
+  }
+let (hashable_fv : FStarC_Syntax_Syntax.fv FStarC_Class_Hashable.hashable) =
+  {
+    FStarC_Class_Hashable.hash =
+      (fun f ->
+         FStarC_Class_Hashable.hash hashable_lident
+           f.FStarC_Syntax_Syntax.fv_name)
+  }
+let (hashable_binder :
+  FStarC_Syntax_Syntax.binder FStarC_Class_Hashable.hashable) =
+  {
+    FStarC_Class_Hashable.hash =
+      (fun b ->
+         FStarC_Class_Hashable.hash hashable_bv
+           b.FStarC_Syntax_Syntax.binder_bv)
+  }
+let (hashable_letbinding :
+  FStarC_Syntax_Syntax.letbinding FStarC_Class_Hashable.hashable) =
+  {
+    FStarC_Class_Hashable.hash =
+      (fun lb ->
+         let uu___ =
+           let uu___1 =
+             FStarC_Class_Hashable.hash
+               (FStarC_Class_Hashable.hashable_either hashable_bv hashable_fv)
+               lb.FStarC_Syntax_Syntax.lbname in
+           let uu___2 =
+             FStarC_Class_Hashable.hash hashable_term
+               lb.FStarC_Syntax_Syntax.lbtyp in
+           FStarC_Hash.mix uu___1 uu___2 in
+         let uu___1 =
+           FStarC_Class_Hashable.hash hashable_term
+             lb.FStarC_Syntax_Syntax.lbdef in
+         FStarC_Hash.mix uu___ uu___1)
+  }
+let (hashable_pragma :
+  FStarC_Syntax_Syntax.pragma FStarC_Class_Hashable.hashable) =
+  {
+    FStarC_Class_Hashable.hash =
+      (fun uu___ ->
+         match uu___ with
+         | FStarC_Syntax_Syntax.ShowOptions ->
+             FStarC_Class_Hashable.hash FStarC_Class_Hashable.hashable_int
+               Prims.int_one
+         | FStarC_Syntax_Syntax.SetOptions s ->
+             let uu___1 =
+               FStarC_Class_Hashable.hash FStarC_Class_Hashable.hashable_int
+                 (Prims.of_int (2)) in
+             let uu___2 =
+               FStarC_Class_Hashable.hash
+                 FStarC_Class_Hashable.hashable_string s in
+             FStarC_Hash.mix uu___1 uu___2
+         | FStarC_Syntax_Syntax.ResetOptions s ->
+             let uu___1 =
+               FStarC_Class_Hashable.hash FStarC_Class_Hashable.hashable_int
+                 (Prims.of_int (3)) in
+             let uu___2 =
+               FStarC_Class_Hashable.hash
+                 (FStarC_Class_Hashable.hashable_option
+                    FStarC_Class_Hashable.hashable_string) s in
+             FStarC_Hash.mix uu___1 uu___2
+         | FStarC_Syntax_Syntax.PushOptions s ->
+             let uu___1 =
+               FStarC_Class_Hashable.hash FStarC_Class_Hashable.hashable_int
+                 (Prims.of_int (4)) in
+             let uu___2 =
+               FStarC_Class_Hashable.hash
+                 (FStarC_Class_Hashable.hashable_option
+                    FStarC_Class_Hashable.hashable_string) s in
+             FStarC_Hash.mix uu___1 uu___2
+         | FStarC_Syntax_Syntax.PopOptions ->
+             FStarC_Class_Hashable.hash FStarC_Class_Hashable.hashable_int
+               (Prims.of_int (5))
+         | FStarC_Syntax_Syntax.RestartSolver ->
+             FStarC_Class_Hashable.hash FStarC_Class_Hashable.hashable_int
+               (Prims.of_int (6))
+         | FStarC_Syntax_Syntax.PrintEffectsGraph ->
+             FStarC_Class_Hashable.hash FStarC_Class_Hashable.hashable_int
+               (Prims.of_int (7)))
+  }
+let rec (hash_sigelt : FStarC_Syntax_Syntax.sigelt -> FStarC_Hash.hash_code)
+  = fun se -> hash_sigelt' se.FStarC_Syntax_Syntax.sigel
+and (hash_sigelt' : FStarC_Syntax_Syntax.sigelt' -> FStarC_Hash.hash_code) =
+  fun se ->
+    match se with
+    | FStarC_Syntax_Syntax.Sig_inductive_typ
+        { FStarC_Syntax_Syntax.lid = lid; FStarC_Syntax_Syntax.us = us;
+          FStarC_Syntax_Syntax.params = params;
+          FStarC_Syntax_Syntax.num_uniform_params = num_uniform_params;
+          FStarC_Syntax_Syntax.t = t; FStarC_Syntax_Syntax.mutuals = mutuals;
+          FStarC_Syntax_Syntax.ds = ds;
+          FStarC_Syntax_Syntax.injective_type_params = injective_type_params;_}
+        ->
+        let uu___ =
+          let uu___1 =
+            let uu___2 =
+              let uu___3 =
+                let uu___4 =
+                  let uu___5 =
+                    let uu___6 =
+                      let uu___7 =
+                        FStarC_Class_Hashable.hash
+                          FStarC_Class_Hashable.hashable_int Prims.int_zero in
+                      let uu___8 =
+                        FStarC_Class_Hashable.hash hashable_lident lid in
+                      FStarC_Hash.mix uu___7 uu___8 in
+                    let uu___7 =
+                      FStarC_Class_Hashable.hash
+                        (FStarC_Class_Hashable.hashable_list hashable_ident)
+                        us in
+                    FStarC_Hash.mix uu___6 uu___7 in
+                  let uu___6 =
+                    FStarC_Class_Hashable.hash
+                      (FStarC_Class_Hashable.hashable_list hashable_binder)
+                      params in
+                  FStarC_Hash.mix uu___5 uu___6 in
+                let uu___5 =
+                  FStarC_Class_Hashable.hash
+                    (FStarC_Class_Hashable.hashable_option
+                       FStarC_Class_Hashable.hashable_int) num_uniform_params in
+                FStarC_Hash.mix uu___4 uu___5 in
+              let uu___4 = FStarC_Class_Hashable.hash hashable_term t in
+              FStarC_Hash.mix uu___3 uu___4 in
+            let uu___3 =
+              FStarC_Class_Hashable.hash
+                (FStarC_Class_Hashable.hashable_list hashable_lident) mutuals in
+            FStarC_Hash.mix uu___2 uu___3 in
+          let uu___2 =
+            FStarC_Class_Hashable.hash
+              (FStarC_Class_Hashable.hashable_list hashable_lident) ds in
+          FStarC_Hash.mix uu___1 uu___2 in
+        let uu___1 =
+          FStarC_Class_Hashable.hash FStarC_Class_Hashable.hashable_bool
+            injective_type_params in
+        FStarC_Hash.mix uu___ uu___1
+    | FStarC_Syntax_Syntax.Sig_bundle
+        { FStarC_Syntax_Syntax.ses = ses; FStarC_Syntax_Syntax.lids = lids;_}
+        ->
+        let uu___ =
+          let uu___1 =
+            FStarC_Class_Hashable.hash FStarC_Class_Hashable.hashable_int
+              Prims.int_one in
+          let uu___2 =
+            (FStarC_Class_Hashable.hashable_list
+               { FStarC_Class_Hashable.hash = hash_sigelt }).FStarC_Class_Hashable.hash
+              ses in
+          FStarC_Hash.mix uu___1 uu___2 in
+        let uu___1 =
+          FStarC_Class_Hashable.hash
+            (FStarC_Class_Hashable.hashable_list hashable_lident) lids in
+        FStarC_Hash.mix uu___ uu___1
+    | FStarC_Syntax_Syntax.Sig_datacon
+        { FStarC_Syntax_Syntax.lid1 = lid; FStarC_Syntax_Syntax.us1 = us;
+          FStarC_Syntax_Syntax.t1 = t; FStarC_Syntax_Syntax.ty_lid = ty_lid;
+          FStarC_Syntax_Syntax.num_ty_params = num_ty_params;
+          FStarC_Syntax_Syntax.mutuals1 = mutuals;
+          FStarC_Syntax_Syntax.injective_type_params1 = injective_type_params;
+          FStarC_Syntax_Syntax.proj_disc_lids = uu___;_}
+        ->
+        let uu___1 =
+          let uu___2 =
+            let uu___3 =
+              let uu___4 =
+                let uu___5 =
+                  let uu___6 =
+                    let uu___7 =
+                      FStarC_Class_Hashable.hash
+                        FStarC_Class_Hashable.hashable_int (Prims.of_int (2)) in
+                    let uu___8 =
+                      FStarC_Class_Hashable.hash hashable_lident lid in
+                    FStarC_Hash.mix uu___7 uu___8 in
+                  let uu___7 =
+                    FStarC_Class_Hashable.hash
+                      (FStarC_Class_Hashable.hashable_list hashable_ident) us in
+                  FStarC_Hash.mix uu___6 uu___7 in
+                let uu___6 = FStarC_Class_Hashable.hash hashable_term t in
+                FStarC_Hash.mix uu___5 uu___6 in
+              let uu___5 = FStarC_Class_Hashable.hash hashable_lident ty_lid in
+              FStarC_Hash.mix uu___4 uu___5 in
+            let uu___4 =
+              FStarC_Class_Hashable.hash FStarC_Class_Hashable.hashable_int
+                num_ty_params in
+            FStarC_Hash.mix uu___3 uu___4 in
+          let uu___3 =
+            FStarC_Class_Hashable.hash
+              (FStarC_Class_Hashable.hashable_list hashable_lident) mutuals in
+          FStarC_Hash.mix uu___2 uu___3 in
+        let uu___2 =
+          FStarC_Class_Hashable.hash FStarC_Class_Hashable.hashable_bool
+            injective_type_params in
+        FStarC_Hash.mix uu___1 uu___2
+    | FStarC_Syntax_Syntax.Sig_declare_typ
+        { FStarC_Syntax_Syntax.lid2 = lid; FStarC_Syntax_Syntax.us2 = us;
+          FStarC_Syntax_Syntax.t2 = t;_}
+        ->
+        let uu___ =
+          let uu___1 =
+            let uu___2 =
+              FStarC_Class_Hashable.hash FStarC_Class_Hashable.hashable_int
+                (Prims.of_int (3)) in
+            let uu___3 = FStarC_Class_Hashable.hash hashable_lident lid in
+            FStarC_Hash.mix uu___2 uu___3 in
+          let uu___2 =
+            FStarC_Class_Hashable.hash
+              (FStarC_Class_Hashable.hashable_list hashable_ident) us in
+          FStarC_Hash.mix uu___1 uu___2 in
+        let uu___1 = FStarC_Class_Hashable.hash hashable_term t in
+        FStarC_Hash.mix uu___ uu___1
+    | FStarC_Syntax_Syntax.Sig_let
+        { FStarC_Syntax_Syntax.lbs1 = lbs;
+          FStarC_Syntax_Syntax.lids1 = lids;_}
+        ->
+        let uu___ =
+          let uu___1 =
+            FStarC_Class_Hashable.hash FStarC_Class_Hashable.hashable_int
+              (Prims.of_int (4)) in
+          let uu___2 =
+            FStarC_Class_Hashable.hash
+              (FStarC_Class_Hashable.hashable_tuple2
+                 FStarC_Class_Hashable.hashable_bool
+                 (FStarC_Class_Hashable.hashable_list hashable_letbinding))
+              lbs in
+          FStarC_Hash.mix uu___1 uu___2 in
+        let uu___1 =
+          FStarC_Class_Hashable.hash
+            (FStarC_Class_Hashable.hashable_list hashable_lident) lids in
+        FStarC_Hash.mix uu___ uu___1
+    | FStarC_Syntax_Syntax.Sig_assume
+        { FStarC_Syntax_Syntax.lid3 = lid; FStarC_Syntax_Syntax.us3 = us;
+          FStarC_Syntax_Syntax.phi1 = phi;_}
+        ->
+        let uu___ =
+          let uu___1 =
+            let uu___2 =
+              FStarC_Class_Hashable.hash FStarC_Class_Hashable.hashable_int
+                (Prims.of_int (5)) in
+            let uu___3 = FStarC_Class_Hashable.hash hashable_lident lid in
+            FStarC_Hash.mix uu___2 uu___3 in
+          let uu___2 =
+            FStarC_Class_Hashable.hash
+              (FStarC_Class_Hashable.hashable_list hashable_ident) us in
+          FStarC_Hash.mix uu___1 uu___2 in
+        let uu___1 = FStarC_Class_Hashable.hash hashable_term phi in
+        FStarC_Hash.mix uu___ uu___1
+    | FStarC_Syntax_Syntax.Sig_pragma p ->
+        let uu___ =
+          FStarC_Class_Hashable.hash FStarC_Class_Hashable.hashable_int
+            (Prims.of_int (6)) in
+        let uu___1 = FStarC_Class_Hashable.hash hashable_pragma p in
+        FStarC_Hash.mix uu___ uu___1
+    | uu___ ->
+        FStarC_Class_Hashable.hash FStarC_Class_Hashable.hashable_int
+          Prims.int_zero
+let (hashable_sigelt :
+  FStarC_Syntax_Syntax.sigelt FStarC_Class_Hashable.hashable) =
+  { FStarC_Class_Hashable.hash = hash_sigelt }

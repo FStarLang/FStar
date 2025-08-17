@@ -2434,17 +2434,14 @@ let (find_prim_step :
   =
   fun cfg1 ->
     fun fv ->
-      let uu___ =
-        FStarC_Ident.string_of_lid
-          (fv.FStarC_Syntax_Syntax.fv_name).FStarC_Syntax_Syntax.v in
+      let uu___ = FStarC_Ident.string_of_lid fv.FStarC_Syntax_Syntax.fv_name in
       FStarC_PSMap.try_find cfg1.primitive_steps uu___
 let (is_prim_step : cfg -> FStarC_Syntax_Syntax.fv -> Prims.bool) =
   fun cfg1 ->
     fun fv ->
       let uu___ =
         let uu___1 =
-          FStarC_Ident.string_of_lid
-            (fv.FStarC_Syntax_Syntax.fv_name).FStarC_Syntax_Syntax.v in
+          FStarC_Ident.string_of_lid fv.FStarC_Syntax_Syntax.fv_name in
         FStarC_PSMap.try_find cfg1.primitive_steps uu___1 in
       FStar_Pervasives_Native.uu___is_Some uu___
 let (log : cfg -> (unit -> unit) -> unit) =

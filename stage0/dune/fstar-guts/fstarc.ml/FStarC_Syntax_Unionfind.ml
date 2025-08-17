@@ -200,22 +200,22 @@ let (chk_v_t :
                    "Internal error: incompatible version for term unification variable" in
                let uu___5 =
                  let uu___6 = uvar_to_string u in
-                 FStarC_Pprint.doc_of_string uu___6 in
-               FStarC_Pprint.op_Hat_Slash_Hat uu___4 uu___5 in
+                 FStar_Pprint.doc_of_string uu___6 in
+               FStar_Pprint.op_Hat_Slash_Hat uu___4 uu___5 in
              let uu___4 =
                let uu___5 =
                  let uu___6 = FStarC_Errors_Msg.text "Current version: " in
                  let uu___7 =
                    let uu___8 = version_to_string expected in
-                   FStarC_Pprint.doc_of_string uu___8 in
-                 FStarC_Pprint.op_Hat_Slash_Hat uu___6 uu___7 in
+                   FStar_Pprint.doc_of_string uu___8 in
+                 FStar_Pprint.op_Hat_Slash_Hat uu___6 uu___7 in
                let uu___6 =
                  let uu___7 =
                    let uu___8 = FStarC_Errors_Msg.text "Got version: " in
                    let uu___9 =
                      let uu___10 = version_to_string v in
-                     FStarC_Pprint.doc_of_string uu___10 in
-                   FStarC_Pprint.op_Hat_Slash_Hat uu___8 uu___9 in
+                     FStar_Pprint.doc_of_string uu___10 in
+                   FStar_Pprint.op_Hat_Slash_Hat uu___8 uu___9 in
                  [uu___7] in
                uu___5 :: uu___6 in
              uu___3 :: uu___4 in
@@ -330,22 +330,22 @@ let chk_v_u :
                    "Internal error: incompatible version for universe unification variable" in
                let uu___5 =
                  let uu___6 = uvar_to_string u in
-                 FStarC_Pprint.doc_of_string uu___6 in
-               FStarC_Pprint.op_Hat_Slash_Hat uu___4 uu___5 in
+                 FStar_Pprint.doc_of_string uu___6 in
+               FStar_Pprint.op_Hat_Slash_Hat uu___4 uu___5 in
              let uu___4 =
                let uu___5 =
                  let uu___6 = FStarC_Errors_Msg.text "Current version: " in
                  let uu___7 =
                    let uu___8 = version_to_string expected in
-                   FStarC_Pprint.doc_of_string uu___8 in
-                 FStarC_Pprint.op_Hat_Slash_Hat uu___6 uu___7 in
+                   FStar_Pprint.doc_of_string uu___8 in
+                 FStar_Pprint.op_Hat_Slash_Hat uu___6 uu___7 in
                let uu___6 =
                  let uu___7 =
                    let uu___8 = FStarC_Errors_Msg.text "Got version: " in
                    let uu___9 =
                      let uu___10 = version_to_string v in
-                     FStarC_Pprint.doc_of_string uu___10 in
-                   FStarC_Pprint.op_Hat_Slash_Hat uu___8 uu___9 in
+                     FStar_Pprint.doc_of_string uu___10 in
+                   FStar_Pprint.op_Hat_Slash_Hat uu___8 uu___9 in
                  [uu___7] in
                uu___5 :: uu___6 in
              uu___3 :: uu___4 in

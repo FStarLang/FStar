@@ -254,9 +254,8 @@ let (z3_cmd_and_args : unit -> (Prims.string * Prims.string Prims.list)) =
               let uu___5 =
                 let uu___6 =
                   let uu___7 = FStarC_Errors_Msg.text "Required version: " in
-                  let uu___8 = FStarC_Pprint.doc_of_string ver in
-                  FStarC_Pprint.prefix (Prims.of_int (2)) Prims.int_one
-                    uu___7 uu___8 in
+                  FStar_Pprint.prefix (Prims.of_int (2)) Prims.int_one uu___7
+                    (FStar_Pprint.doc_of_string ver) in
                 [uu___6] in
               uu___4 :: uu___5 in
             let uu___4 = FStarC_Find_Z3.z3_install_suggestion ver in
@@ -288,17 +287,13 @@ let (warn_handler : FStarC_Errors_Msg.error_message -> Prims.string -> unit)
         let uu___1 =
           let uu___2 =
             let uu___3 = FStarC_Errors_Msg.text "Unexpected output from Z3:" in
-            let uu___4 =
-              let uu___5 =
-                let uu___6 = FStarC_Pprint.blank (Prims.of_int (2)) in
-                let uu___7 =
-                  let uu___8 =
-                    let uu___9 = FStarC_Pprint.arbitrary_string s in
-                    FStarC_Pprint.dquotes uu___9 in
-                  FStarC_Pprint.align uu___8 in
-                FStarC_Pprint.op_Hat_Hat uu___6 uu___7 in
-              FStarC_Pprint.op_Hat_Hat FStarC_Pprint.hardline uu___5 in
-            FStarC_Pprint.op_Hat_Hat uu___3 uu___4 in
+            FStar_Pprint.op_Hat_Hat uu___3
+              (FStar_Pprint.op_Hat_Hat FStar_Pprint.hardline
+                 (FStar_Pprint.op_Hat_Hat
+                    (FStar_Pprint.blank (Prims.of_int (2)))
+                    (FStar_Pprint.align
+                       (FStar_Pprint.dquotes
+                          (FStar_Pprint.arbitrary_string s))))) in
           [uu___2] in
         FStarC_List.op_At uu___1 suf in
       FStarC_Errors.log_issue0 FStarC_Errors_Codes.Warning_UnexpectedZ3Output
@@ -406,20 +401,17 @@ let (new_z3proc :
               let uu___3 =
                 let uu___4 =
                   let uu___5 = FStarC_Errors_Msg.text "Command:" in
-                  let uu___6 =
-                    let uu___7 =
-                      FStarC_Pprint.arbitrary_string
-                        (FStar_Pervasives_Native.fst cmd_and_args) in
-                    FStarC_Pprint.squotes uu___7 in
-                  FStarC_Pprint.prefix (Prims.of_int (2)) Prims.int_one
-                    uu___5 uu___6 in
+                  FStar_Pprint.prefix (Prims.of_int (2)) Prims.int_one uu___5
+                    (FStar_Pprint.squotes
+                       (FStar_Pprint.arbitrary_string
+                          (FStar_Pervasives_Native.fst cmd_and_args))) in
                 let uu___5 =
                   let uu___6 =
                     let uu___7 = FStarC_Errors_Msg.text "Exception:" in
                     let uu___8 =
                       let uu___9 = FStarC_Util.print_exn uu___ in
-                      FStarC_Pprint.arbitrary_string uu___9 in
-                    FStarC_Pprint.prefix (Prims.of_int (2)) Prims.int_one
+                      FStar_Pprint.arbitrary_string uu___9 in
+                    FStar_Pprint.prefix (Prims.of_int (2)) Prims.int_one
                       uu___7 uu___8 in
                   [uu___6] in
                 uu___4 :: uu___5 in
@@ -736,11 +728,10 @@ let (smt_output_sections :
                                                    let uu___9 =
                                                      FStarC_Errors_Msg.text
                                                        "Log file:" in
-                                                   let uu___10 =
-                                                     FStarC_Pprint.doc_of_string
-                                                       log_file1 in
-                                                   FStarC_Pprint.op_Hat_Slash_Hat
-                                                     uu___9 uu___10 in
+                                                   FStar_Pprint.op_Hat_Slash_Hat
+                                                     uu___9
+                                                     (FStar_Pprint.doc_of_string
+                                                        log_file1) in
                                                  [uu___8]
                                              | FStar_Pervasives_Native.None
                                                  -> [] in
