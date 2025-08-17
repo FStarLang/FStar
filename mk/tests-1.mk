@@ -6,6 +6,12 @@ FSTAR_OPTIONS += --MLish_effect 'FStarC.Effect'
 
 DEPFLAGS += --already_cached '+Prims,+FStar,+FStarC,-FStarC.Tests'
 
+DEPFLAGS += --already_cached '-FStar'
+# ^ FIXME: This should be removed. All of the modules we *actually* depend on
+# in the FStar namespace are indeed already checked. But, if we claim that, the
+# dependency analysis will complain about modules such as
+# FStar.Stubs.Reflection.V2.Builtins not being checked, which is irrelevant.
+
 # All other files have been extracted already into fstar-guts.
 EXTRACT :=
 EXTRACT += --extract +FStarC.Tests
