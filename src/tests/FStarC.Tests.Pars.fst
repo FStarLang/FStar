@@ -23,6 +23,8 @@ open FStarC.Syntax.Syntax
 open FStarC.Errors
 open FStarC.TypeChecker.Env
 open FStarC.Parser.ParseIt
+open FStarC.Class.Show
+
 module DsEnv = FStarC.Syntax.DsEnv
 module TcEnv = FStarC.TypeChecker.Env
 module SMT = FStarC.SMTEncoding.Solver
@@ -59,7 +61,7 @@ let add_mods mod_names dsenv env =
       (dsenv, env)
   ) (dsenv,env) mod_names
 
-let init_once () : unit =
+let do_init () =
   let solver = SMT.dummy in
   let env = TcEnv.initial_env
                 FStarC.Parser.Dep.empty_deps
@@ -75,7 +77,14 @@ let init_once () : unit =
                 FStarC.Universal.core_check
   in
   env.solver.init env;
-  let dsenv, prims_mod = parse_mod (Find.find_file "FStar.Prelude.fsti" |> Some?.v) (DsEnv.empty_env Parser.Dep.empty_deps) in
+  let prelude_file =
+    match Find.find_file "Prims.fst" with
+    | Some f -> f
+    | None -> failwith "Could not find Prims.fst: is FSTAR_LIB set?"
+  in
+  let dsenv, prims_mod =
+    parse_mod prelude_file (DsEnv.empty_env Parser.Dep.empty_deps)
+  in
   let env = {env with dsenv=dsenv} in
   let _prims_mod, env = Tc.check_module env prims_mod false in
   // needed to run tests with chars
@@ -97,18 +106,17 @@ let init_once () : unit =
 
   let env = {env with dsenv=dsenv} in (* VD: need to propagate add_mods to the dsenv in env *)
 
+  (* open Prims explicitly, we're not getting the prelude inserted *)
+  let env = { env with dsenv = DsEnv.push_namespace env.dsenv Const.prims_lid Unrestricted } in
+
   let env = TcEnv.set_current_module env test_lid in
   tcenv_ref := Some env
 
-let _ =
-  FStarC.Hooks.setup_hooks();
-  init_once()
-
 let init () =
-    match !tcenv_ref with
-    | Some f -> f
-    | _ ->
-      failwith "Should have already been initialized by the top-level effect"
+  match !tcenv_ref with
+  | Some f -> f
+  | _ ->
+    failwith "Should have already been initialized by the top-level effect"
 
 let frag_of_text s = {frag_fname=" input"; frag_text=s; frag_line=1; frag_col=0}
 
@@ -155,22 +163,12 @@ let tc_term tm =
     tm
 
 let pars_and_tc_fragment (s:string) =
-    Options.set_option "trace_error" (Options.Bool true);
-    let report () = FStarC.Errors.report_all () |> ignore in
-    try
-        let tcenv = init() in
-        let frag = frag_of_text s in
-        try
-          let test_mod', tcenv', _ = FStarC.Universal.tc_one_fragment !test_mod_ref tcenv (Inl (frag, [])) in
-          test_mod_ref := test_mod';
-          tcenv_ref := Some tcenv';
-          let n = get_err_count () in
-          if n <> 0
-          then (report ();
-                raise_error0 Errors.Fatal_ErrorsReported (Format.fmt1 "%s errors were reported" (show n)))
-        with e -> report(); raise_error0 Errors.Fatal_TcOneFragmentFailed ("tc_one_fragment failed: " ^s)
-    with
-        | e when not ((Options.trace_error())) -> raise e
+  Errors.with_ctx ("pars_and_tc_fragment " ^ s) fun () ->
+  let tcenv = init() in
+  let frag = frag_of_text s in
+  let test_mod', tcenv', _ = FStarC.Universal.tc_one_fragment !test_mod_ref tcenv (Inl (frag, [])) in
+  test_mod_ref := test_mod';
+  tcenv_ref := Some tcenv'
 
 let test_hashes () =
   Options.parse_cmd_line () |> ignore; //set options
@@ -239,7 +237,7 @@ let parse_incremental_decls () =
           let p = start_of_range r in
           if line_of_pos p = l && col_of_pos p = c
           then ()
-          else failwith (format4 "Incremental parsing failed: Expected syntax error at (%s, %s), got error at (%s, %s)"
+          else failwith (Format.fmt4 "Incremental parsing failed: Expected syntax error at (%s, %s), got error at (%s, %s)"
                                  (show l)
                                  (show c)
                                  (show (line_of_pos p))
@@ -258,13 +256,13 @@ let parse_incremental_decls () =
       match decls0, decls1 with
       | [d0;d1;d2;d3;d4;d5],
         [e0;e1;e2;e3;e4;e5] ->
-        let open FStarC.Parser.AST.Util in
+        let open FStarC.Parser.AST.Diff in
         if List.forall2 (fun (x, _) (y, _) -> eq_decl x y) decls0 decls1
         then ()
         else (
           failwith ("Incremental parsing failed; unexpected change in a decl")
         )
-      | _ -> failwith (format2 "Incremental parsing failed; expected 6 decls got %s and %s\n"
+      | _ -> failwith (Format.fmt2 "Incremental parsing failed; expected 6 decls got %s and %s\n"
                               (show (List.length decls0))
                               (show (List.length decls1)))
       )
@@ -273,7 +271,7 @@ let parse_incremental_decls () =
   | ParseError (code, message, range), _
   | _, ParseError (code, message, range) ->
       let msg =
-        format2 "Incremental parsing failed: Syntax error @ %s: %s"
+        Format.fmt2 "Incremental parsing failed: Syntax error @ %s: %s"
                 (Range.string_of_range range)
                 (Errors.rendermsg message) // FIXME
       in
@@ -320,7 +318,7 @@ let parse_incremental_decls_use_lang () =
 
   | ParseError (code, message, range) ->
       let msg =
-        format2 "Incremental parsing failed: Syntax error @ %s: %s"
+        Format.fmt2 "Incremental parsing failed: Syntax error @ %s: %s"
                 (Range.string_of_range range)
                 (Errors.rendermsg message) // FIXME
       in
