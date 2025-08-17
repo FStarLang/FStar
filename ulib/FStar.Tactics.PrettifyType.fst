@@ -453,7 +453,7 @@ let mk_bij cfg : Tac decls =
   [pack_sigelt sv]
 
 [@@plugin]
-let entry (suf nm : string) : Tac decls =
+let entry (pretty_tynm nm : string) : Tac decls =
   // print ("ENTRY, n quals = " ^ string_of_int (List.length (splice_quals ())));
   // print ("ENTRY, n attrs = " ^ string_of_int (List.length (splice_attrs ())));
   let quals = splice_quals () in
@@ -464,7 +464,9 @@ let entry (suf nm : string) : Tac decls =
   // print ("def: " ^ term_to_string def);
   let at = parse_type def in
   // print ("at: " ^ parsed_type_to_string at);
-  let pretty_tynm = add_suffix suf nm in
+  assume (List.length nm > 0);
+  let qns, _ = unsnoc nm in
+  let pretty_tynm = qns @ [pretty_tynm] in
   let _, fat = flatten_type pretty_tynm 0 at in
   // print ("fat: " ^ flat_type_to_string fat);
 
