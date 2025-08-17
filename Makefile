@@ -432,14 +432,14 @@ package-2: .stage2.src.touch .force
 	  INSTALL_RULE=__do-install-stage2 \
 	  $(MAKE) __do-archive
 
-package-src-1: .stage1.src.touch .force
+package-src-1: .stage1.src.touch .tests1.src.touch .force
 	env \
 	  PKGTMP=_srcpak1 \
 	  BROOT=stage1/ \
 	  ARCHIVE=fstar$(FSTAR_TAG)-stage1-src \
 	  $(MAKE) __do-src-archive
 
-package-src-2: .stage2.src.touch .force
+package-src-2: .stage2.src.touch .tests2.src.touch .force
 	env \
 	  PKGTMP=_srcpak2 \
 	  BROOT=stage2/ \
