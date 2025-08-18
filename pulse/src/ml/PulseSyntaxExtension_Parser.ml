@@ -136,7 +136,8 @@ let rewrite_token (tok:FP.token)
     | OPINFIX0d s -> PP.OPINFIX0d s 
     | OPINFIX1 s -> PP.OPINFIX1 s 
     | OPINFIX2 s -> PP.OPINFIX2 s 
-    | OPINFIX3 s -> PP.OPINFIX3 s 
+    | OPINFIX3L s -> PP.OPINFIX3L s
+    | OPINFIX3R s -> PP.OPINFIX3R s
     | OPINFIX4 s -> PP.OPINFIX4 s 
     | OPPREFIX s -> PP.OPPREFIX s 
     | OP_MIXFIX_ACCESS s -> PP.OP_MIXFIX_ACCESS s 

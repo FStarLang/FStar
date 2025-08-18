@@ -144,7 +144,7 @@ fn pts_to_injective_eq
     (#v0 #v1:a)
     (r:ref a)
   requires pts_to r #p0 v0 ** pts_to r #p1 v1
-  ensures pts_to r #p0 v0 ** pts_to r #p1 v1 ** pure (v0 == v1)
+  ensures (pts_to r #p0 v0 ** pts_to r #p1 v1) ** pure (v0 == v1)
 {
   unfold pts_to r #p0 v0;
   unfold pts_to r #p1 v1;
