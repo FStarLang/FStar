@@ -849,6 +849,7 @@ and p_pragma = function
   | PopOptions -> str "#pop-options"
   | RestartSolver -> str "#restart-solver"
   | PrintEffectsGraph -> str "#print-effects-graph"
+  | Check t -> str "#check" ^/^ p_term false false t
 
 (* TODO : needs to take the F# specific type instantiation *)
 and p_typars (bs: list binder): document = p_binders true bs

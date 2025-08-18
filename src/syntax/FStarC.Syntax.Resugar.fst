@@ -1367,7 +1367,7 @@ let resugar_qualifier : S.qualifier -> option A.qualifier = function
   | S.OnlyName -> None
 
 
-let resugar_pragma = function
+let resugar_pragma env = function
   | S.ShowOptions -> A.ShowOptions
   | S.SetOptions s -> A.SetOptions s
   | S.ResetOptions s -> A.ResetOptions s
@@ -1375,6 +1375,7 @@ let resugar_pragma = function
   | S.PopOptions -> A.PopOptions
   | S.RestartSolver -> A.RestartSolver
   | S.PrintEffectsGraph -> A.PrintEffectsGraph
+  | S.Check t -> A.Check (resugar_term' env t)
 
 (* drop the first n binders (implicit or explicit) from an arrow type *)
 let drop_n_bs (n:int) (t:S.term) : S.term =
@@ -1611,7 +1612,7 @@ let resugar_sigelt' env se : option A.decl =
     Some (decl'_to_decl se (A.Tycon(false, false, [A.TyconAbbrev(ident_of_lid lid, bs, None, resugar_comp' env c)])))
 
   | Sig_pragma p ->
-    Some (decl'_to_decl se (A.Pragma (resugar_pragma p)))
+    Some (decl'_to_decl se (A.Pragma (resugar_pragma env p)))
 
   | Sig_declare_typ {lid; us=uvs; t} ->
     if (se.sigquals |> BU.for_some (function S.Projector(_,_) | S.Discriminator _ -> true | _ -> false)) then

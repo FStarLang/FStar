@@ -46,18 +46,6 @@ type var  = lident
 [@@ PpxDerivingYoJson; PpxDerivingShow ]
 type sconst = FStarC.Const.sconst
 
-[@@ PpxDerivingYoJson; PpxDerivingShow ]
-type pragma =
-  | ShowOptions
-  | SetOptions of string
-  | ResetOptions of option string
-  | PushOptions of option string
-  | PopOptions
-  | RestartSolver
-  | PrintEffectsGraph  //#print-effects-graph dumps the current effects graph in a dot file named "effects.graph"
-
-instance val showable_pragma : showable pragma
-
 [@@ PpxDerivingYoJson; PpxDerivingShowConstant "None" ]
 type memo 'a = ref (option 'a)
 
@@ -449,6 +437,18 @@ and arg_qualifier = {
   aqual_attributes : list attribute
 }
 and aqual = option arg_qualifier
+
+type pragma =
+  | ShowOptions
+  | SetOptions of string
+  | ResetOptions of option string
+  | PushOptions of option string
+  | PopOptions
+  | RestartSolver
+  | PrintEffectsGraph  //#print-effects-graph dumps the current effects graph in a dot file named "effects.graph"
+  | Check of term
+
+instance val showable_pragma : showable pragma
 
 type freenames_l = list bv
 type formula = typ
