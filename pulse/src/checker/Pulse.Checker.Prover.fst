@@ -42,6 +42,7 @@ module IntroExists = Pulse.Checker.Prover.IntroExists
 module IntroPure   = Pulse.Checker.Prover.IntroPure
 module IntroWithPure = Pulse.Checker.Prover.IntroWithPure
 module Explode     = Pulse.Checker.Prover.Explode
+module PCP = Pulse.Checker.Pure
 
 let coerce_eq (#a #b:Type) (x:a) (_:squash (a == b)) : y:b{y == x} = x
 
@@ -76,7 +77,7 @@ let __normalize_slprop
   (* Unfold recursive definitions too, but only the ones that match the filters above. *)
   let steps = steps @ [zeta] in
 
-  let v' = T.norm_well_typed_term (elab_env g) steps v in
+  let v' = PCP.norm_well_typed_term (elab_env g) steps v in
   let v' = Simplify.simplify v' in (* NOTE: the simplify stage is unverified *)
   let v_equiv_v' = VE_Ext _ _ _ (RU.magic ()) in
   (| v', v_equiv_v' |)

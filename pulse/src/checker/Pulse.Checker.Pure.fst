@@ -208,7 +208,7 @@ let instantiate_term_implicits
     | [] ->
       t, ty
 
-let instantiate_term_implicits_uvs (g:env) (t0:term) =
+let instantiate_term_implicits_uvs' (g:env) (t0:term) =
   let f = elab_env g in
   let rng = RU.range_of_term t0 in
   let f = RU.env_set_range f (Pulse.Typing.Env.get_range g (Some rng)) in
@@ -232,20 +232,27 @@ let instantiate_term_implicits_uvs (g:env) (t0:term) =
     in
     (| uvs, subst_term t ss, subst_term ty ss|)
 
+let instantiate_term_implicits_uvs (g:env) (t0:term) =
+  RU.record_stats "instantiate_term_implicits"
+    (fun _ -> instantiate_term_implicits_uvs' g t0)
+
 let check_universe (g:env) (t:term)
   : T.Tac (u:universe & universe_of g t u)
-  = let f = elab_env g in
-    let ru_opt, issues = catch_all (fun _ -> rtb_universe_of g f t) in
-    match ru_opt with
-    | None -> 
-      fail_doc_with_subissues g (Some <| RU.range_of_term t) issues (ill_typed_term t (Some (tm_type u_unknown)) None)
+  = let aux () : T.Tac (u:universe & universe_of g t u) =
+      let f = elab_env g in
+      let ru_opt, issues = catch_all (fun _ -> rtb_universe_of g f t) in
+      match ru_opt with
+      | None -> 
+        fail_doc_with_subissues g (Some <| RU.range_of_term t) issues (ill_typed_term t (Some (tm_type u_unknown)) None)
 
-    | Some ru ->
-      let proof : squash (T.typing_token f t (E_Total, R.pack_ln (R.Tv_Type ru))) =
-          FStar.Squash.get_proof _
-      in
-      let proof : RT.typing f t (E_Total, R.pack_ln (R.Tv_Type ru)) = RT.T_Token _ _ _ proof in
-      (| ru, E proof |)
+      | Some ru ->
+        let proof : squash (T.typing_token f t (E_Total, R.pack_ln (R.Tv_Type ru))) =
+            FStar.Squash.get_proof _
+        in
+        let proof : RT.typing f t (E_Total, R.pack_ln (R.Tv_Type ru)) = RT.T_Token _ _ _ proof in
+        (| ru, E proof |)
+    in
+    RU.record_stats "check_universe" aux
 
 let tc_meta_callback g (f:R.env) (e:R.term) 
   : T.Tac (option (e:R.term & eff:T.tot_or_ghost & t:R.term & RT.typing f e (eff, t)) & issues)
@@ -260,122 +267,144 @@ let tc_meta_callback g (f:R.env) (e:R.term)
     res
 
 let compute_term_type (g:env) (t:term)
-  : T.Tac (t:term &
-           eff:T.tot_or_ghost &
-           ty:term &
-           typing g t eff ty)
-  = let fg = elab_env g in
-    debug g (fun _ ->
-            Printf.sprintf "check_tot : called on %s elaborated to %s"
-                      (P.term_to_string t)
-                      (T.term_to_string t));
-    let res, issues = tc_meta_callback g fg t in
-    match res with
-    | None -> 
-      fail_doc_with_subissues g (Some <| RU.range_of_term t) issues (ill_typed_term t None None)
-    | Some (| rt, eff, ty', tok |) -> (| rt, eff, ty', E tok |)
+  = let aux () 
+    : T.Tac (t:term &
+            eff:T.tot_or_ghost &
+            ty:term &
+            typing g t eff ty)
+    = let fg = elab_env g in
+      debug g (fun _ ->
+              Printf.sprintf "check_tot : called on %s elaborated to %s"
+                        (P.term_to_string t)
+                        (T.term_to_string t));
+      let res, issues = tc_meta_callback g fg t in
+      match res with
+      | None -> 
+        fail_doc_with_subissues g (Some <| RU.range_of_term t) issues (ill_typed_term t None None)
+      | Some (| rt, eff, ty', tok |) -> (| rt, eff, ty', E tok |)
+    in
+    RU.record_stats "Pulse.compute_term_type" aux
 
 let compute_term_type_and_u (g:env) (t:term)
-  : T.Tac (t:term &
+  = let aux ()
+    : T.Tac (t:term &
            eff:T.tot_or_ghost &
            ty:term &
            (u:universe & universe_of g ty u) &
            typing g t eff ty)
-  = let fg = elab_env g in
-    let res, issues = tc_meta_callback g fg t in
-    match res with
-    | None ->
-      fail_doc_with_subissues g (Some <| RU.range_of_term t) issues (ill_typed_term t None None)
-    | Some (| rt, eff, ty', tok |) ->
-      let (| u, uty |) = check_universe g ty' in
-      (| rt, eff, ty', (| u, uty |), E tok |)
+    = let fg = elab_env g in
+      let res, issues = tc_meta_callback g fg t in
+      match res with
+      | None ->
+        fail_doc_with_subissues g (Some <| RU.range_of_term t) issues (ill_typed_term t None None)
+      | Some (| rt, eff, ty', tok |) ->
+        let (| u, uty |) = check_universe g ty' in
+        (| rt, eff, ty', (| u, uty |), E tok |)
+    in
+    RU.record_stats "Pulse.compute_term_type_and_u" aux
 
 let check_term (g:env) (e:term) (eff:T.tot_or_ghost) (t:term)
-  : T.Tac (e:term & typing g e eff t) =
+= let aux ()
+  : T.Tac (e:term & typing g e eff t)
+  = let e, _ = instantiate_term_implicits g e (Some t) (*inst_extra:*)true in
+    let fg = elab_env g in
 
-  let e, _ = instantiate_term_implicits g e (Some t) (*inst_extra:*)true in
-
-  let fg = elab_env g in
-
-  let topt, issues =
-    catch_all (fun _ -> 
-      rtb_core_check_term 
-        (push_context g "check_term_with_expected_type_and_effect" (range_of_term e))
-         fg e eff t) in
-  match topt with
-  | None ->
-    fail_doc_with_subissues g (Some <| RU.range_of_term e) issues (ill_typed_term e (Some t) None)
-  | Some tok -> (| e, E (RT.T_Token _ _ _ (FStar.Squash.return_squash tok)) |)
+    let topt, issues =
+      catch_all (fun _ -> 
+        rtb_core_check_term 
+          (push_context g "check_term_with_expected_type_and_effect" (range_of_term e))
+          fg e eff t) in
+    match topt with
+    | None ->
+      fail_doc_with_subissues g (Some <| RU.range_of_term e) issues (ill_typed_term e (Some t) None)
+    | Some tok -> (| e, E (RT.T_Token _ _ _ (FStar.Squash.return_squash tok)) |)
+  in
+  RU.record_stats "Pulse.check_term" aux
 
 let check_term_at_type (g:env) (e:term) (t:term)
-  : T.Tac (e:term & eff:T.tot_or_ghost & typing g e eff t) =
+= let aux ()
+  : T.Tac (e:term & eff:T.tot_or_ghost & typing g e eff t)
+  = let e, _ = instantiate_term_implicits g e (Some t) true in
+    let fg = elab_env g in
 
-  let e, _ = instantiate_term_implicits g e (Some t) true in
-  let fg = elab_env g in
+    let effopt, issues =
+      catch_all (fun _ -> 
+      rtb_core_check_term_at_type 
+        (push_context g "check_term_with_expected_type" (range_of_term e))
+        fg e t) in
+    match effopt with
+    | None ->
+      fail_doc_with_subissues g (Some <| RU.range_of_term e) issues (ill_typed_term e (Some t) None)
+    | Some eff ->
+      (| e, eff, E (RT.T_Token _ _ _ (FStar.Squash.get_proof _)) |)
+  in
+  RU.record_stats "Pulse.check_term_at_type" aux
 
-  let effopt, issues =
-    catch_all (fun _ -> 
-    rtb_core_check_term_at_type 
-      (push_context g "check_term_with_expected_type" (range_of_term e))
-      fg e t) in
-  match effopt with
-  | None ->
-    fail_doc_with_subissues g (Some <| RU.range_of_term e) issues (ill_typed_term e (Some t) None)
-  | Some eff ->
-    (| e, eff, E (RT.T_Token _ _ _ (FStar.Squash.get_proof _)) |)
-
-let tc_with_core g (f:R.env) (e:R.term) 
+let tc_with_core g (f:R.env) (e:R.term)
+= let aux ()
   : T.Tac (option (eff:T.tot_or_ghost & t:R.term & RT.typing f e (eff, t)) & issues)
   = let ropt, issues = catch_all (fun _ -> rtb_core_compute_term_type (push_context g "tc_with_core" (range_of_term e)) f e) in
     match ropt with
     | None -> None, issues
     | Some (eff, t) ->
       Some (| eff, t, RT.T_Token _ _ _ (FStar.Squash.get_proof _) |), issues
+  in
+  RU.record_stats "Pulse.tc_with_core" aux
 
 let core_compute_term_type (g:env) (t:term)
+= let aux ()
   : T.Tac (eff:T.tot_or_ghost &
-           ty:term &
-           typing g t eff ty)
+            ty:term &
+            typing g t eff ty)
   = let fg = elab_env g in
     let res, issues = tc_with_core (push_context g "core_check_term" (range_of_term t)) fg t in
-    match res with
-    | None -> 
-      fail_doc_with_subissues g (Some <| RU.range_of_term t) issues (ill_typed_term t None None)
-    | Some (| eff, ty', tok |) -> (| eff, ty', E tok |)
+      match res with
+      | None -> 
+        fail_doc_with_subissues g (Some <| RU.range_of_term t) issues (ill_typed_term t None None)
+      | Some (| eff, ty', tok |) -> (| eff, ty', E tok |)
+  in
+  RU.record_stats "Pulse.core_compute_term_type" aux
 
-let core_check_term g e eff t =
-  let fg = elab_env g in
-  let topt, issues =
-    catch_all (fun _ ->
-     rtb_core_check_term
-      (push_context g "core_check_term" (range_of_term e))
-       fg e eff t) in
-  match topt with
-  | None ->
-    fail_doc_with_subissues g (Some <| RU.range_of_term e) issues (ill_typed_term e (Some t) None)
-  | Some tok -> E (RT.T_Token _ _ _ (FStar.Squash.return_squash tok))
+let core_check_term g e eff t
+= let aux () : T.Tac (typing g e eff t) 
+  = let fg = elab_env g in
+    let topt, issues =
+      catch_all (fun _ ->
+      rtb_core_check_term
+        (push_context g "core_check_term" (range_of_term e))
+        fg e eff t) in
+    match topt with   
+    | None ->
+      fail_doc_with_subissues g (Some <| RU.range_of_term e) issues (ill_typed_term e (Some t) None)
+    | Some tok -> E (RT.T_Token _ _ _ (FStar.Squash.return_squash tok))
+  in
+  RU.record_stats "Pulse.core_check_term" aux
 
-let core_check_term_at_type g e t =
-  let fg = elab_env g in
-  let effopt, issues =
-    catch_all (fun _ -> 
-    rtb_core_check_term_at_type 
-      (push_context g "core_check_term_at_type" (range_of_term e))
-       fg e t) in
-  match effopt with
-  | None ->
-    fail_doc_with_subissues g (Some <| RU.range_of_term e) issues (ill_typed_term e (Some t) None)
-  | Some eff ->
-    (| eff, E (RT.T_Token _ _ _ (FStar.Squash.get_proof _)) |)
+let core_check_term_at_type g e t
+= let aux () : T.Tac (eff:T.tot_or_ghost & typing g e eff t) 
+  = let fg = elab_env g in
+    let effopt, issues =
+      catch_all (fun _ -> 
+      rtb_core_check_term_at_type 
+        (push_context g "core_check_term_at_type" (range_of_term e))
+        fg e t) in
+    match effopt with
+    | None ->
+      fail_doc_with_subissues g (Some <| RU.range_of_term e) issues (ill_typed_term e (Some t) None)
+    | Some eff ->
+      (| eff, E (RT.T_Token _ _ _ (FStar.Squash.get_proof _)) |)
+  in
+  RU.record_stats "Pulse.core_check_term_at_type" aux
 
 let check_slprop (g:env)
                 (t:term)
-  : T.Tac (t:term & tot_typing g t tm_slprop) =
+: T.Tac (t:term & tot_typing g t tm_slprop)
+= RU.record_stats "Pulse.check_slprop" <| fun _ -> 
   check_term (push_context_no_range g "check_slprop") t T.E_Total tm_slprop
 
 let check_slprop_with_core (g:env)
                           (t:term)
-  : T.Tac (tot_typing g t tm_slprop) =
+: T.Tac (tot_typing g t tm_slprop) =
 
   core_check_term
     (push_context_no_range g "check_slprop_with_core") t T.E_Total tm_slprop
@@ -419,6 +448,7 @@ let try_get_non_informative_witness_aux (g:env) (u:universe) (ty:term) (ty_typin
     )
 
 let try_get_non_informative_witness g u ty ty_typing =
+  RU.record_stats "Pulse.try_get_noninformative_witness" <| fun _ -> 
   let ropt, _ = try_get_non_informative_witness_aux g u ty ty_typing in
   ropt
 
@@ -437,12 +467,14 @@ let get_non_informative_witness g u t t_typing
 
 let try_check_prop_validity (g:env) (p:term) (_:tot_typing g p tm_prop)
   : T.Tac (option (Pulse.Typing.prop_validity g p))
-  = let t_opt, issues = rtb_check_prop_validity g true (elab_env g) p in
+  = RU.record_stats "Pulse.try_check_prop_validity" fun _ -> 
+    let t_opt, issues = rtb_check_prop_validity g true (elab_env g) p in
     t_opt
 
 let check_prop_validity (g:env) (p:term) (_:tot_typing g p tm_prop)
   : T.Tac (Pulse.Typing.prop_validity g p)
-  = let t_opt, issues = rtb_check_prop_validity g false (elab_env g) p in
+  = RU.record_stats "Pulse.check_prop_validity" fun _ -> 
+    let t_opt, issues = rtb_check_prop_validity g false (elab_env g) p in
     match t_opt with
     | None -> 
       let open Pulse.PP in
@@ -479,11 +511,13 @@ let core_check_tot_term g e t =
   core_check_term g e T.E_Total t
 
 let is_non_informative g c = 
+  RU.record_stats "Pulse.is_non_informative" fun _ ->
   let ropt, issues = catch_all (fun _ -> T.is_non_informative (elab_env g) (elab_comp c)) in
   T.log_issues issues;
   ropt
 
 let check_subtyping g t1 t2 =
+  RU.record_stats "Pulse.check_subtyping" fun _ ->
   T.with_policy ForceSMT (fun () ->
   let res, issues = rtb_check_subtyping g t1 t2 in
   match res with
@@ -494,3 +528,27 @@ let check_subtyping g t1 t2 =
       text "Could not prove subtyping of" ^/^ pp t1 ^/^ text "and" ^/^ pp t2
     ]
   )
+
+  
+let norm_well_typed_term
+  (g:T.env) (steps : list norm_step) (t:term)
+: T.Tac (t':term{T.equiv_token g t t'})
+= RU.record_stats "Pulse.norm_well_typed_term" fun _ -> T.norm_well_typed_term g steps t
+
+let norm_well_typed_term_alt
+      (#g:T.env)
+      (#t:T.term)
+      (#eff:T.tot_or_ghost)
+      (#k:Ghost.erased T.term)
+      (ty:Ghost.erased (RT.typing g t (eff, Ghost.reveal k)))
+      (steps:list norm_step)
+ = let aux ()
+   : T.Tac (
+      t':T.term &
+      Ghost.erased (RT.typing g t' (eff, Ghost.reveal k)) &
+      Ghost.erased (RT.related g t RT.R_Eq t')
+    )
+  = let (| t, ty, rel |) = RU.norm_well_typed_term ty steps in
+    (|t, ty, rel|)
+    in
+    RU.record_stats "Pulse.norm_well_typed_term_alt" aux

@@ -32,7 +32,7 @@ module R = FStar.Reflection.V2
 module RU = Pulse.RuntimeUtils
 module Env = Pulse.Typing.Env
 module U = Pulse.Syntax.Pure
-
+module PCP = Pulse.Checker.Pure
 open Pulse.Show
 
 let debug_abs g (s: unit -> T.Tac string) : T.Tac unit =
@@ -396,7 +396,7 @@ let rec check_abs_core
           let inames_opened =
             if C_STGhost? c || C_STAtomic? c then
              let inames = open_term_nv (comp_inames c) px in
-             let inames = T.norm_well_typed_term (elab_env g)
+             let inames = PCP.norm_well_typed_term (elab_env g)
                [primops; iota; zeta; delta_attr ["Pulse.Lib.Core.unfold_check_opens"]]
                inames
              in

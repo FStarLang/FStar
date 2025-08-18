@@ -109,7 +109,7 @@ let check_effect_annot (g:env) (e:effect_annot)
   let check_opens opens : T.Tac (e:term & typing g e T.E_Total tm_inames) =
     let (| opens, d |) = CP.check_term g opens T.E_Total tm_inames in
     let opens' =
-      T.norm_well_typed_term
+      CP.norm_well_typed_term
         (elab_env g)
         [primops; iota; zeta; delta_attr ["Pulse.Lib.Core.unfold_check_opens"]]
         opens
@@ -817,7 +817,7 @@ let norm_typing
       Pulse.Typing.Metatheory.Base.typing_correctness d._0
     in
     let (| t', t'_typing, related_t_t' |) =
-      Pulse.RuntimeUtils.norm_well_typed_term (dsnd u_t_typing) steps
+      CP.norm_well_typed_term_alt (dsnd u_t_typing) steps
     in
     let d : typing g e eff t' = apply_conversion d related_t_t' in
     (| t', d |)
@@ -833,7 +833,7 @@ let norm_typing_inverse
   : T.Tac (option (typing g e eff t1))
   = let (| t1', t1'_typing, related_t1_t1' |) =
       let d1 = Ghost.hide d1._0 in
-      Pulse.RuntimeUtils.norm_well_typed_term d1 steps
+      CP.norm_well_typed_term_alt d1 steps
     in
     if TermEq.term_eq t0 t1'
     then (
@@ -856,7 +856,7 @@ let norm_st_typing_inverse
       = Ghost.hide (coerce_eq d1._0 ())
     in
     let (| t1', t1'_typing, related_t1_t1' |) =
-      Pulse.RuntimeUtils.norm_well_typed_term d1 steps
+      CP.norm_well_typed_term_alt d1 steps
     in
     if TermEq.term_eq t0 t1'
     then (

@@ -5,13 +5,14 @@ open Pulse.Syntax.Base
 open Pulse.Typing
 module T = FStar.Tactics.V2
 module RU = Pulse.RuntimeUtils
+module PCP = Pulse.Checker.Pure
 
 let discharge (vc : vc_t) : T.Tac (either (list issue) (discharged vc)) =
   match vc with
   | Trivial -> Inr ()
   | Equiv g t1 t2 -> (
-    let t1' = T.norm_well_typed_term (elab_env g) [NormSteps.unascribe; primops; iota] t1 in
-    let t2' = T.norm_well_typed_term (elab_env g) [NormSteps.unascribe; primops; iota] t2 in
+    let t1' = PCP.norm_well_typed_term (elab_env g) [NormSteps.unascribe; primops; iota] t1 in
+    let t2' = PCP.norm_well_typed_term (elab_env g) [NormSteps.unascribe; primops; iota] t2 in
     (* RT typing does not expose a way to prove these equal, but they are. *)
     let eq1 : erased (RT.equiv (elab_env g) t1  t1') = RU.magic () in
     let eq2 : erased (RT.equiv (elab_env g) t2  t2') = RU.magic () in
