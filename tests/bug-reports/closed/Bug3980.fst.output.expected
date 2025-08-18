@@ -21,3 +21,6 @@
     details.
   - See also Bug3980.fst(25,15-25,23)
 
+* Info at Bug3980.fst(33,0-33,29):
+  - Term "a" |-> 1 ** "b" |-> 2 has type Bug3980.slprop
+

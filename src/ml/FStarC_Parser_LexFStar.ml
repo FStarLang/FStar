@@ -612,6 +612,7 @@ match%sedlex lexbuf with
 
  (* Operators. *)
  | "**"     ,  Star symbolchar -> ensure_no_comment lexbuf (fun s -> OPINFIX3R  s)
+ | "|->"    ,  Star symbolchar -> ensure_no_comment lexbuf (fun s -> OPINFIX4  s)
  | op_prefix,  Star symbolchar -> ensure_no_comment lexbuf (fun s -> OPPREFIX  s)
  | op_infix0a, Star symbolchar -> ensure_no_comment lexbuf (fun s -> OPINFIX0a s)
  | op_infix0b, Star symbolchar -> ensure_no_comment lexbuf (fun s -> OPINFIX0b s)

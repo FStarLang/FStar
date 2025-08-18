@@ -312,7 +312,7 @@ let matches_level s (assoc_levels, tokens) =
 // GM 05/10/18, TODO: This still needs to be heavily annotated with the new unifier:
 
 (* Precedence and associativity levels, taken from ../src/parse.mly *)
-let opinfix4 : associativity_level = Right, [UnicodeOperator]
+let opinfix4 : associativity_level = Right, [Exact "|->"; UnicodeOperator]
 // level backtick won't be used here
 let opinfix3l : associativity_level = Left,  [StartsWith '*' ; StartsWith '/' ; StartsWith '%']
 let opinfix3r : associativity_level = Right, [Exact "**"]

@@ -27,4 +27,7 @@ let _ = assert (b == c)
 assume
 val ( |-> ) : string -> int -> slprop
 
-let _ = ("a" |-> 1) ** ("b" |-> 2)
+let _ = "a" |-> 1 ** "b" |-> 2
+
+
+#check "a" |-> 1 ** "b" |-> 2
