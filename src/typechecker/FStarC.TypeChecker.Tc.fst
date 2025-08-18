@@ -920,6 +920,16 @@ let tc_decl' env0 se: list sigelt & list sigelt & Env.env =
     [se], [], env0)
 
 
+let snapshot_context env msg = BU.atomically (fun () ->
+    TypeChecker.Env.snapshot env msg)
+
+let rollback_context solver msg depth : env = BU.atomically (fun () ->
+    let env = TypeChecker.Env.rollback solver msg depth in
+    env)
+
+let push_context env msg = snd (snapshot_context env msg)
+let pop_context env msg = rollback_context env.solver msg None
+
 (* [tc_decl env se] typechecks [se] in environment [env] and returns
  * the list of typechecked sig_elts, and a list of new sig_elts elaborated
  * during typechecking but not yet typechecked. This may also be called
@@ -1013,6 +1023,7 @@ let add_sigelt_to_env (env:Env.env) (se:sigelt) (from_cache:bool) : Env.env =
       env
 
     | Sig_pragma (Check t0) ->
+      let env = push_context env "#check" in
       let tx = UF.new_transaction () in
       let t, lc, g = tc_term { env with instantiate_imp = false } t0 in
       let c, g' = lcomp_comp lc in
@@ -1028,7 +1039,7 @@ let add_sigelt_to_env (env:Env.env) (se:sigelt) (from_cache:bool) : Env.env =
             empty
         ]
       );
-      UF.rollback tx;
+      let env = pop_context env "#check" in
       env
 
     | Sig_new_effect ne ->
@@ -1175,16 +1186,6 @@ let tc_decls env ses =
 
 let _ =
     tc_decls_knot := Some tc_decls
-
-let snapshot_context env msg = BU.atomically (fun () ->
-    TypeChecker.Env.snapshot env msg)
-
-let rollback_context solver msg depth : env = BU.atomically (fun () ->
-    let env = TypeChecker.Env.rollback solver msg depth in
-    env)
-
-let push_context env msg = snd (snapshot_context env msg)
-let pop_context env msg = rollback_context env.solver msg None
 
 let tc_partial_modul env modul =
   let verify = Options.should_verify (string_of_lid modul.name) in
