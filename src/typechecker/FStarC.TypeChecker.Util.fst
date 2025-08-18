@@ -2607,7 +2607,7 @@ let find_coercion (env:Env.env) (checked: lcomp) (exp_t: typ) (e:term)
 let maybe_coerce_lc env (e:term) (lc:lcomp) (exp_t:term) : term & lcomp & guard_t =
   let should_coerce =
       (env.phase1
-    || Options.lax ()) && not env.nocoerce
+    || Options.lax ()) && not env.nocoerce && not (Options.Ext.enabled "no_coerce")
   in
   if not should_coerce then (
     if !dbg_Coercions then
