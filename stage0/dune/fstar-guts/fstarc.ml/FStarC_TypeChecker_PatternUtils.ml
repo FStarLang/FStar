@@ -37,7 +37,7 @@ let rec (elaborate_pat :
                      let uu___1 = elaborate_pat env p1 in (uu___1, imp)) pats in
           let uu___ =
             FStarC_TypeChecker_Env.lookup_datacon env
-              (fv.FStarC_Syntax_Syntax.fv_name).FStarC_Syntax_Syntax.v in
+              fv.FStarC_Syntax_Syntax.fv_name in
           (match uu___ with
            | (uu___1, t) ->
                let uu___2 = FStarC_Syntax_Util.arrow_formals t in
@@ -50,7 +50,7 @@ let rec (elaborate_pat :
                         | ([], uu___4::uu___5) ->
                             FStarC_Errors.raise_error
                               FStarC_Ident.hasrange_lident
-                              (fv.FStarC_Syntax_Syntax.fv_name).FStarC_Syntax_Syntax.v
+                              fv.FStarC_Syntax_Syntax.fv_name
                               FStarC_Errors_Codes.Fatal_TooManyPatternArguments
                               ()
                               (Obj.magic
@@ -79,7 +79,7 @@ let rec (elaborate_pat :
                                               uu___7 FStarC_Syntax_Syntax.tun in
                                           let r =
                                             FStarC_Ident.range_of_lid
-                                              (fv.FStarC_Syntax_Syntax.fv_name).FStarC_Syntax_Syntax.v in
+                                              fv.FStarC_Syntax_Syntax.fv_name in
                                           let uu___7 =
                                             maybe_dot inaccessible a r in
                                           (uu___7, true)
@@ -94,7 +94,7 @@ let rec (elaborate_pat :
                                               uu___9 in
                                           FStarC_Errors.raise_error
                                             FStarC_Ident.hasrange_lident
-                                            (fv.FStarC_Syntax_Syntax.fv_name).FStarC_Syntax_Syntax.v
+                                            fv.FStarC_Syntax_Syntax.fv_name
                                             FStarC_Errors_Codes.Fatal_InsufficientPatternArguments
                                             ()
                                             (Obj.magic
@@ -126,7 +126,7 @@ let rec (elaborate_pat :
                                       let p2 =
                                         let uu___5 =
                                           FStarC_Ident.range_of_lid
-                                            (fv.FStarC_Syntax_Syntax.fv_name).FStarC_Syntax_Syntax.v in
+                                            fv.FStarC_Syntax_Syntax.fv_name in
                                         maybe_dot inaccessible a uu___5 in
                                       let uu___5 = aux formals' pats' in
                                       (p2, true) :: uu___5
@@ -168,7 +168,7 @@ let rec (elaborate_pat :
                                  let p2 =
                                    let uu___5 =
                                      FStarC_Ident.range_of_lid
-                                       (fv.FStarC_Syntax_Syntax.fv_name).FStarC_Syntax_Syntax.v in
+                                       fv.FStarC_Syntax_Syntax.fv_name in
                                    maybe_dot inaccessible a uu___5 in
                                  let uu___5 = aux formals' pats2 in
                                  (p2, true) :: uu___5
@@ -182,7 +182,7 @@ let rec (elaborate_pat :
                                  let p2 =
                                    let uu___6 =
                                      FStarC_Ident.range_of_lid
-                                       (fv.FStarC_Syntax_Syntax.fv_name).FStarC_Syntax_Syntax.v in
+                                       fv.FStarC_Syntax_Syntax.fv_name in
                                    maybe_dot false a uu___6 in
                                  let uu___6 = aux formals' pats2 in
                                  (p2, true) :: uu___6

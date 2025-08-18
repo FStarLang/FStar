@@ -211,8 +211,6 @@ lib: [
   "_build/install/default/lib/fstar/compiler/fstarc.ml/FStarC_VConfig.ml" {"compiler/fstarc.ml/FStarC_VConfig.ml"}
   "_build/install/default/lib/fstar/compiler/fstarc.ml/FStarC_Writer.ml" {"compiler/fstarc.ml/FStarC_Writer.ml"}
   "_build/install/default/lib/fstar/compiler/fstarc.ml/FStar_Pervasives.ml" {"compiler/fstarc.ml/FStar_Pervasives.ml"}
-  "_build/install/default/lib/fstar/compiler/fstarc.ml/FStar_Seq_Base.ml" {"compiler/fstarc.ml/FStar_Seq_Base.ml"}
-  "_build/install/default/lib/fstar/compiler/fstarc.ml/FStar_Seq_Properties.ml" {"compiler/fstarc.ml/FStar_Seq_Properties.ml"}
   "_build/install/default/lib/fstar/compiler/fstarcompiler.a" {"compiler/fstarcompiler.a"}
   "_build/install/default/lib/fstar/compiler/fstarcompiler.cmi" {"compiler/fstarcompiler.cmi"}
   "_build/install/default/lib/fstar/compiler/fstarcompiler.cmx" {"compiler/fstarcompiler.cmx"}
@@ -696,10 +694,6 @@ lib: [
   "_build/install/default/lib/fstar/compiler/fstarcompiler__FStar_Pprint.cmx" {"compiler/fstarcompiler__FStar_Pprint.cmx"}
   "_build/install/default/lib/fstar/compiler/fstarcompiler__FStar_ST.cmi" {"compiler/fstarcompiler__FStar_ST.cmi"}
   "_build/install/default/lib/fstar/compiler/fstarcompiler__FStar_ST.cmx" {"compiler/fstarcompiler__FStar_ST.cmx"}
-  "_build/install/default/lib/fstar/compiler/fstarcompiler__FStar_Seq_Base.cmi" {"compiler/fstarcompiler__FStar_Seq_Base.cmi"}
-  "_build/install/default/lib/fstar/compiler/fstarcompiler__FStar_Seq_Base.cmx" {"compiler/fstarcompiler__FStar_Seq_Base.cmx"}
-  "_build/install/default/lib/fstar/compiler/fstarcompiler__FStar_Seq_Properties.cmi" {"compiler/fstarcompiler__FStar_Seq_Properties.cmi"}
-  "_build/install/default/lib/fstar/compiler/fstarcompiler__FStar_Seq_Properties.cmx" {"compiler/fstarcompiler__FStar_Seq_Properties.cmx"}
   "_build/install/default/lib/fstar/compiler/fstarcompiler__FStar_String.cmi" {"compiler/fstarcompiler__FStar_String.cmi"}
   "_build/install/default/lib/fstar/compiler/fstarcompiler__FStar_String.cmx" {"compiler/fstarcompiler__FStar_String.cmx"}
   "_build/install/default/lib/fstar/compiler/fstarcompiler__FStar_UInt16.cmi" {"compiler/fstarcompiler__FStar_UInt16.cmi"}
@@ -999,8 +993,6 @@ lib: [
   "_build/install/default/lib/fstar/lib/fStar_RBMap.cmx" {"lib/fStar_RBMap.cmx"}
   "_build/install/default/lib/fstar/lib/fStar_RBSet.cmi" {"lib/fStar_RBSet.cmi"}
   "_build/install/default/lib/fstar/lib/fStar_RBSet.cmx" {"lib/fStar_RBSet.cmx"}
-  "_build/install/default/lib/fstar/lib/fStar_Real_Old.cmi" {"lib/fStar_Real_Old.cmi"}
-  "_build/install/default/lib/fstar/lib/fStar_Real_Old.cmx" {"lib/fStar_Real_Old.cmx"}
   "_build/install/default/lib/fstar/lib/fStar_Ref.cmi" {"lib/fStar_Ref.cmi"}
   "_build/install/default/lib/fstar/lib/fStar_Ref.cmx" {"lib/fStar_Ref.cmx"}
   "_build/install/default/lib/fstar/lib/fStar_RefinementExtensionality.cmi" {"lib/fStar_RefinementExtensionality.cmi"}
@@ -1207,7 +1199,6 @@ lib: [
   "_build/install/default/lib/fstar/lib/ulib.ml/FStar_Pure_BreakVC.ml" {"lib/ulib.ml/FStar_Pure_BreakVC.ml"}
   "_build/install/default/lib/fstar/lib/ulib.ml/FStar_RBMap.ml" {"lib/ulib.ml/FStar_RBMap.ml"}
   "_build/install/default/lib/fstar/lib/ulib.ml/FStar_RBSet.ml" {"lib/ulib.ml/FStar_RBSet.ml"}
-  "_build/install/default/lib/fstar/lib/ulib.ml/FStar_Real_Old.ml" {"lib/ulib.ml/FStar_Real_Old.ml"}
   "_build/install/default/lib/fstar/lib/ulib.ml/FStar_Ref.ml" {"lib/ulib.ml/FStar_Ref.ml"}
   "_build/install/default/lib/fstar/lib/ulib.ml/FStar_RefinementExtensionality.ml" {"lib/ulib.ml/FStar_RefinementExtensionality.ml"}
   "_build/install/default/lib/fstar/lib/ulib.ml/FStar_ReflexiveTransitiveClosure.ml" {"lib/ulib.ml/FStar_ReflexiveTransitiveClosure.ml"}
@@ -1524,8 +1515,6 @@ lib: [
   "_build/install/default/lib/fstar/pluginlib/fstar_pluginlib__FStar_RBSet.cmx" {"pluginlib/fstar_pluginlib__FStar_RBSet.cmx"}
   "_build/install/default/lib/fstar/pluginlib/fstar_pluginlib__FStar_Range.cmi" {"pluginlib/fstar_pluginlib__FStar_Range.cmi"}
   "_build/install/default/lib/fstar/pluginlib/fstar_pluginlib__FStar_Range.cmx" {"pluginlib/fstar_pluginlib__FStar_Range.cmx"}
-  "_build/install/default/lib/fstar/pluginlib/fstar_pluginlib__FStar_Real_Old.cmi" {"pluginlib/fstar_pluginlib__FStar_Real_Old.cmi"}
-  "_build/install/default/lib/fstar/pluginlib/fstar_pluginlib__FStar_Real_Old.cmx" {"pluginlib/fstar_pluginlib__FStar_Real_Old.cmx"}
   "_build/install/default/lib/fstar/pluginlib/fstar_pluginlib__FStar_Ref.cmi" {"pluginlib/fstar_pluginlib__FStar_Ref.cmi"}
   "_build/install/default/lib/fstar/pluginlib/fstar_pluginlib__FStar_Ref.cmx" {"pluginlib/fstar_pluginlib__FStar_Ref.cmx"}
   "_build/install/default/lib/fstar/pluginlib/fstar_pluginlib__FStar_RefinementExtensionality.cmi" {"pluginlib/fstar_pluginlib__FStar_RefinementExtensionality.cmi"}
@@ -1860,7 +1849,6 @@ lib: [
   "_build/install/default/lib/fstar/pluginlib/ulib.pluginml/FStar_Pure_BreakVC.ml" {"pluginlib/ulib.pluginml/FStar_Pure_BreakVC.ml"}
   "_build/install/default/lib/fstar/pluginlib/ulib.pluginml/FStar_RBMap.ml" {"pluginlib/ulib.pluginml/FStar_RBMap.ml"}
   "_build/install/default/lib/fstar/pluginlib/ulib.pluginml/FStar_RBSet.ml" {"pluginlib/ulib.pluginml/FStar_RBSet.ml"}
-  "_build/install/default/lib/fstar/pluginlib/ulib.pluginml/FStar_Real_Old.ml" {"pluginlib/ulib.pluginml/FStar_Real_Old.ml"}
   "_build/install/default/lib/fstar/pluginlib/ulib.pluginml/FStar_Ref.ml" {"pluginlib/ulib.pluginml/FStar_Ref.ml"}
   "_build/install/default/lib/fstar/pluginlib/ulib.pluginml/FStar_RefinementExtensionality.ml" {"pluginlib/ulib.pluginml/FStar_RefinementExtensionality.ml"}
   "_build/install/default/lib/fstar/pluginlib/ulib.pluginml/FStar_Reflection.ml" {"pluginlib/ulib.pluginml/FStar_Reflection.ml"}

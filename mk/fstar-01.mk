@@ -15,4 +15,4 @@ EXTRACT += --extract -FStar.Pervasives.Native
 ROOTS :=
 ROOTS += $(SRC)/fstar/FStarC.Main.fst
 
-include mk/generic-1.mk
+include mk/generic-0.mk

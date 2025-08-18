@@ -1012,6 +1012,25 @@ let add_sigelt_to_env (env:Env.env) (se:sigelt) (from_cache:bool) : Env.env =
       BU.write_file "effects.graph" (Env.print_effects_graph env);
       env
 
+    | Sig_pragma (Check t0) ->
+      let tx = UF.new_transaction () in
+      let t, lc, g = tc_term { env with instantiate_imp = false } t0 in
+      let c, g' = lcomp_comp lc in
+      let g = Class.Monoid.mplus g g' in
+      let open FStarC.Pprint in
+      Options.with_saved_options (fun () ->
+        ignore (Options.set_options "--print_effect_args");
+        Errors.info se [
+          text "Term" ^/^ pp t ^/^ text "has type" ^/^ pp c;
+          if not (is_trivial g) then
+            text "With guard: " ^/^ pp g
+          else
+            empty
+        ]
+      );
+      UF.rollback tx;
+      env
+
     | Sig_new_effect ne ->
       let env = Env.push_new_effect env (ne, se.sigquals) in
       ne.actions |> List.fold_left (fun env a -> Env.push_sigelt env (U.action_as_lb ne.mname a a.action_defn.pos)) env

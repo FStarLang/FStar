@@ -1808,7 +1808,7 @@ and (star_type' :
             | FStarC_Syntax_Syntax.Tm_fvar fv ->
                 let uu___1 =
                   FStarC_TypeChecker_Env.lookup_lid env1.tcenv
-                    (fv.FStarC_Syntax_Syntax.fv_name).FStarC_Syntax_Syntax.v in
+                    fv.FStarC_Syntax_Syntax.fv_name in
                 (match uu___1 with
                  | ((uu___2, ty), uu___3) ->
                      let uu___4 =
@@ -2724,19 +2724,16 @@ and (infer :
                            mk uu___4 in
                          ((N t), s_term, u_term))))
       | FStarC_Syntax_Syntax.Tm_fvar
-          {
-            FStarC_Syntax_Syntax.fv_name =
-              { FStarC_Syntax_Syntax.v = lid;
-                FStarC_Syntax_Syntax.p = uu___1;_};
-            FStarC_Syntax_Syntax.fv_qual = uu___2;_}
+          { FStarC_Syntax_Syntax.fv_name = lid;
+            FStarC_Syntax_Syntax.fv_qual = uu___1;_}
           ->
-          let uu___3 =
-            let uu___4 = FStarC_TypeChecker_Env.lookup_lid env1.tcenv lid in
-            FStar_Pervasives_Native.fst uu___4 in
-          (match uu___3 with
-           | (uu___4, t) ->
-               let uu___5 = let uu___6 = normalize t in N uu___6 in
-               (uu___5, e, e))
+          let uu___2 =
+            let uu___3 = FStarC_TypeChecker_Env.lookup_lid env1.tcenv lid in
+            FStar_Pervasives_Native.fst uu___3 in
+          (match uu___2 with
+           | (uu___3, t) ->
+               let uu___4 = let uu___5 = normalize t in N uu___5 in
+               (uu___4, e, e))
       | FStarC_Syntax_Syntax.Tm_app
           {
             FStarC_Syntax_Syntax.hd =

@@ -309,7 +309,7 @@ let (pat_to_string : FStarC_Syntax_Syntax.pat -> Prims.string) =
     else FStarC_Syntax_Print_Pretty.pat_to_string x
 let (term_to_doc' :
   FStarC_Syntax_DsEnv.env ->
-    FStarC_Syntax_Syntax.term -> FStarC_Pprint.document)
+    FStarC_Syntax_Syntax.term -> FStar_Pprint.document)
   =
   fun dsenv ->
     fun t ->
@@ -317,11 +317,11 @@ let (term_to_doc' :
       if uu___
       then
         let uu___1 = FStarC_Syntax_Print_Ugly.term_to_string t in
-        FStarC_Pprint.arbitrary_string uu___1
+        FStar_Pprint.arbitrary_string uu___1
       else FStarC_Syntax_Print_Pretty.term_to_doc' dsenv t
 let (univ_to_doc' :
   FStarC_Syntax_DsEnv.env ->
-    FStarC_Syntax_Syntax.universe -> FStarC_Pprint.document)
+    FStarC_Syntax_Syntax.universe -> FStar_Pprint.document)
   =
   fun dsenv ->
     fun t ->
@@ -329,11 +329,11 @@ let (univ_to_doc' :
       if uu___
       then
         let uu___1 = FStarC_Syntax_Print_Ugly.univ_to_string t in
-        FStarC_Pprint.arbitrary_string uu___1
+        FStar_Pprint.arbitrary_string uu___1
       else FStarC_Syntax_Print_Pretty.univ_to_doc' dsenv t
 let (comp_to_doc' :
   FStarC_Syntax_DsEnv.env ->
-    FStarC_Syntax_Syntax.comp -> FStarC_Pprint.document)
+    FStarC_Syntax_Syntax.comp -> FStar_Pprint.document)
   =
   fun dsenv ->
     fun t ->
@@ -341,11 +341,11 @@ let (comp_to_doc' :
       if uu___
       then
         let uu___1 = FStarC_Syntax_Print_Ugly.comp_to_string t in
-        FStarC_Pprint.arbitrary_string uu___1
+        FStar_Pprint.arbitrary_string uu___1
       else FStarC_Syntax_Print_Pretty.comp_to_doc' dsenv t
 let (sigelt_to_doc' :
   FStarC_Syntax_DsEnv.env ->
-    FStarC_Syntax_Syntax.sigelt -> FStarC_Pprint.document)
+    FStarC_Syntax_Syntax.sigelt -> FStar_Pprint.document)
   =
   fun dsenv ->
     fun t ->
@@ -353,39 +353,39 @@ let (sigelt_to_doc' :
       if uu___
       then
         let uu___1 = FStarC_Syntax_Print_Ugly.sigelt_to_string t in
-        FStarC_Pprint.arbitrary_string uu___1
+        FStar_Pprint.arbitrary_string uu___1
       else FStarC_Syntax_Print_Pretty.sigelt_to_doc' dsenv t
-let (term_to_doc : FStarC_Syntax_Syntax.term -> FStarC_Pprint.document) =
+let (term_to_doc : FStarC_Syntax_Syntax.term -> FStar_Pprint.document) =
   fun t ->
     let uu___ = FStarC_Options.ugly () in
     if uu___
     then
       let uu___1 = FStarC_Syntax_Print_Ugly.term_to_string t in
-      FStarC_Pprint.arbitrary_string uu___1
+      FStar_Pprint.arbitrary_string uu___1
     else FStarC_Syntax_Print_Pretty.term_to_doc t
-let (univ_to_doc : FStarC_Syntax_Syntax.universe -> FStarC_Pprint.document) =
+let (univ_to_doc : FStarC_Syntax_Syntax.universe -> FStar_Pprint.document) =
   fun t ->
     let uu___ = FStarC_Options.ugly () in
     if uu___
     then
       let uu___1 = FStarC_Syntax_Print_Ugly.univ_to_string t in
-      FStarC_Pprint.arbitrary_string uu___1
+      FStar_Pprint.arbitrary_string uu___1
     else FStarC_Syntax_Print_Pretty.univ_to_doc t
-let (comp_to_doc : FStarC_Syntax_Syntax.comp -> FStarC_Pprint.document) =
+let (comp_to_doc : FStarC_Syntax_Syntax.comp -> FStar_Pprint.document) =
   fun t ->
     let uu___ = FStarC_Options.ugly () in
     if uu___
     then
       let uu___1 = FStarC_Syntax_Print_Ugly.comp_to_string t in
-      FStarC_Pprint.arbitrary_string uu___1
+      FStar_Pprint.arbitrary_string uu___1
     else FStarC_Syntax_Print_Pretty.comp_to_doc t
-let (sigelt_to_doc : FStarC_Syntax_Syntax.sigelt -> FStarC_Pprint.document) =
+let (sigelt_to_doc : FStarC_Syntax_Syntax.sigelt -> FStar_Pprint.document) =
   fun t ->
     let uu___ = FStarC_Options.ugly () in
     if uu___
     then
       let uu___1 = FStarC_Syntax_Print_Ugly.sigelt_to_string t in
-      FStarC_Pprint.arbitrary_string uu___1
+      FStar_Pprint.arbitrary_string uu___1
     else FStarC_Syntax_Print_Pretty.sigelt_to_doc t
 let (binder_to_string : FStarC_Syntax_Syntax.binder -> Prims.string) =
   fun b ->
@@ -610,14 +610,14 @@ let (tscheme_to_string : FStarC_Syntax_Syntax.tscheme -> Prims.string) =
     if uu___
     then FStarC_Syntax_Print_Ugly.tscheme_to_string ts
     else FStarC_Syntax_Print_Pretty.tscheme_to_string ts
-let (tscheme_to_doc : FStarC_Syntax_Syntax.tscheme -> FStarC_Pprint.document)
+let (tscheme_to_doc : FStarC_Syntax_Syntax.tscheme -> FStar_Pprint.document)
   =
   fun ts ->
     let uu___ = FStarC_Options.ugly () in
     if uu___
     then
       let uu___1 = FStarC_Syntax_Print_Ugly.tscheme_to_string ts in
-      FStarC_Pprint.arbitrary_string uu___1
+      FStar_Pprint.arbitrary_string uu___1
     else FStarC_Syntax_Print_Pretty.tscheme_to_doc ts
 let (sub_eff_to_string : FStarC_Syntax_Syntax.sub_eff -> Prims.string) =
   fun se ->
@@ -672,8 +672,8 @@ let (pretty_binding : FStarC_Syntax_Syntax.binding FStarC_Class_PP.pretty) =
              let uu___1 = FStarC_Class_PP.pp FStarC_Ident.pretty_lident l in
              let uu___2 =
                let uu___3 = FStarC_Class_PP.pp pretty_term t in
-               FStarC_Pprint.op_Hat_Hat FStarC_Pprint.colon uu___3 in
-             FStarC_Pprint.op_Hat_Hat uu___1 uu___2
+               FStar_Pprint.op_Hat_Hat FStar_Pprint.colon uu___3 in
+             FStar_Pprint.op_Hat_Hat uu___1 uu___2
          | FStarC_Syntax_Syntax.Binding_univ u ->
              FStarC_Class_PP.pp FStarC_Ident.pretty_ident u)
   }
@@ -748,11 +748,12 @@ let rec (sigelt_to_string_short :
           FStarC_Syntax_Syntax.ty_lid = t_lid;
           FStarC_Syntax_Syntax.num_ty_params = uu___2;
           FStarC_Syntax_Syntax.mutuals1 = uu___3;
-          FStarC_Syntax_Syntax.injective_type_params1 = uu___4;_}
+          FStarC_Syntax_Syntax.injective_type_params1 = uu___4;
+          FStarC_Syntax_Syntax.proj_disc_lids = uu___5;_}
         ->
-        let uu___5 = FStarC_Ident.string_of_lid lid in
-        let uu___6 = FStarC_Ident.string_of_lid t_lid in
-        FStarC_Format.fmt2 "datacon %s for type %s" uu___5 uu___6
+        let uu___6 = FStarC_Ident.string_of_lid lid in
+        let uu___7 = FStarC_Ident.string_of_lid t_lid in
+        FStarC_Format.fmt2 "datacon %s for type %s" uu___6 uu___7
     | FStarC_Syntax_Syntax.Sig_assume
         { FStarC_Syntax_Syntax.lid3 = lid; FStarC_Syntax_Syntax.us3 = uu___;
           FStarC_Syntax_Syntax.phi1 = uu___1;_}

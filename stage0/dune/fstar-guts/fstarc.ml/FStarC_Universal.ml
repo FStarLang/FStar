@@ -54,8 +54,6 @@ let with_dsenv_of_tcenv :
                 (tcenv.FStarC_TypeChecker_Env.is_iface);
               FStarC_TypeChecker_Env.admit =
                 (tcenv.FStarC_TypeChecker_Env.admit);
-              FStarC_TypeChecker_Env.lax_universes =
-                (tcenv.FStarC_TypeChecker_Env.lax_universes);
               FStarC_TypeChecker_Env.phase1 =
                 (tcenv.FStarC_TypeChecker_Env.phase1);
               FStarC_TypeChecker_Env.failhard =
@@ -341,8 +339,6 @@ let (init_env : FStarC_Parser_Dep.deps -> FStarC_TypeChecker_Env.env) =
         FStarC_TypeChecker_Env.is_iface =
           (env.FStarC_TypeChecker_Env.is_iface);
         FStarC_TypeChecker_Env.admit = (env.FStarC_TypeChecker_Env.admit);
-        FStarC_TypeChecker_Env.lax_universes =
-          (env.FStarC_TypeChecker_Env.lax_universes);
         FStarC_TypeChecker_Env.phase1 = (env.FStarC_TypeChecker_Env.phase1);
         FStarC_TypeChecker_Env.failhard =
           (env.FStarC_TypeChecker_Env.failhard);
@@ -437,8 +433,6 @@ let (init_env : FStarC_Parser_Dep.deps -> FStarC_TypeChecker_Env.env) =
         FStarC_TypeChecker_Env.is_iface =
           (env1.FStarC_TypeChecker_Env.is_iface);
         FStarC_TypeChecker_Env.admit = (env1.FStarC_TypeChecker_Env.admit);
-        FStarC_TypeChecker_Env.lax_universes =
-          (env1.FStarC_TypeChecker_Env.lax_universes);
         FStarC_TypeChecker_Env.phase1 = (env1.FStarC_TypeChecker_Env.phase1);
         FStarC_TypeChecker_Env.failhard =
           (env1.FStarC_TypeChecker_Env.failhard);
@@ -535,8 +529,6 @@ let (init_env : FStarC_Parser_Dep.deps -> FStarC_TypeChecker_Env.env) =
         FStarC_TypeChecker_Env.is_iface =
           (env2.FStarC_TypeChecker_Env.is_iface);
         FStarC_TypeChecker_Env.admit = (env2.FStarC_TypeChecker_Env.admit);
-        FStarC_TypeChecker_Env.lax_universes =
-          (env2.FStarC_TypeChecker_Env.lax_universes);
         FStarC_TypeChecker_Env.phase1 = (env2.FStarC_TypeChecker_Env.phase1);
         FStarC_TypeChecker_Env.failhard =
           (env2.FStarC_TypeChecker_Env.failhard);
@@ -633,8 +625,6 @@ let (init_env : FStarC_Parser_Dep.deps -> FStarC_TypeChecker_Env.env) =
         FStarC_TypeChecker_Env.is_iface =
           (env3.FStarC_TypeChecker_Env.is_iface);
         FStarC_TypeChecker_Env.admit = (env3.FStarC_TypeChecker_Env.admit);
-        FStarC_TypeChecker_Env.lax_universes =
-          (env3.FStarC_TypeChecker_Env.lax_universes);
         FStarC_TypeChecker_Env.phase1 = (env3.FStarC_TypeChecker_Env.phase1);
         FStarC_TypeChecker_Env.failhard =
           (env3.FStarC_TypeChecker_Env.failhard);
@@ -730,8 +720,6 @@ let (init_env : FStarC_Parser_Dep.deps -> FStarC_TypeChecker_Env.env) =
         FStarC_TypeChecker_Env.is_iface =
           (env4.FStarC_TypeChecker_Env.is_iface);
         FStarC_TypeChecker_Env.admit = (env4.FStarC_TypeChecker_Env.admit);
-        FStarC_TypeChecker_Env.lax_universes =
-          (env4.FStarC_TypeChecker_Env.lax_universes);
         FStarC_TypeChecker_Env.phase1 = (env4.FStarC_TypeChecker_Env.phase1);
         FStarC_TypeChecker_Env.failhard =
           (env4.FStarC_TypeChecker_Env.failhard);
@@ -964,12 +952,14 @@ let (tc_one_fragment :
             (match d.FStarC_Parser_AST.d with
              | FStarC_Parser_AST.TopLevelModule lid ->
                  let no_prelude =
-                   FStarC_List.existsb
-                     (fun uu___ ->
-                        match uu___.FStarC_Parser_AST.tm with
-                        | FStarC_Parser_AST.Const (FStarC_Const.Const_string
-                            ("no_prelude", uu___1)) -> true
-                        | uu___1 -> false) d.FStarC_Parser_AST.attrs in
+                   (FStarC_Options.no_prelude ()) ||
+                     (FStarC_List.existsb
+                        (fun uu___ ->
+                           match uu___.FStarC_Parser_AST.tm with
+                           | FStarC_Parser_AST.Const
+                               (FStarC_Const.Const_string
+                               ("no_prelude", uu___1)) -> true
+                           | uu___1 -> false) d.FStarC_Parser_AST.attrs) in
                  let modul =
                    FStarC_Parser_AST.Module
                      {

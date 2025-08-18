@@ -321,7 +321,7 @@ let (__proj__Mkerror_handler__item__eh_clear : error_handler -> unit -> unit)
     match projectee with
     | { eh_name; eh_add_one; eh_count_errors; eh_report; eh_clear;_} ->
         eh_clear
-let (ctx_doc : Prims.string Prims.list -> FStarC_Pprint.document) =
+let (ctx_doc : Prims.string Prims.list -> FStar_Pprint.document) =
   fun ctx ->
     let uu___ = FStarC_Options.error_contexts () in
     if uu___
@@ -329,13 +329,11 @@ let (ctx_doc : Prims.string Prims.list -> FStarC_Pprint.document) =
       let uu___1 =
         FStarC_List.map
           (fun s ->
-             let uu___2 =
-               let uu___3 = FStarC_Pprint.doc_of_string "> " in
-               let uu___4 = FStarC_Pprint.doc_of_string s in
-               FStarC_Pprint.op_Hat_Hat uu___3 uu___4 in
-             FStarC_Pprint.op_Hat_Hat FStarC_Pprint.hardline uu___2) ctx in
-      FStarC_Pprint.concat uu___1
-    else FStarC_Pprint.empty
+             FStar_Pprint.op_Hat_Hat FStar_Pprint.hardline
+               (FStar_Pprint.op_Hat_Hat (FStar_Pprint.doc_of_string "> ")
+                  (FStar_Pprint.doc_of_string s))) ctx in
+      FStar_Pprint.concat uu___1
+    else FStar_Pprint.empty
 let (issue_message : issue -> FStarC_Errors_Msg.error_message) =
   fun i ->
     let uu___ = let uu___1 = ctx_doc i.issue_ctx in [uu___1] in
@@ -356,9 +354,9 @@ let (issue_level_of_string : Prims.string -> issue_level) =
     | uu___1 -> ENotImplemented
 let optional_def :
   'a .
-    ('a -> FStarC_Pprint.document) ->
-      FStarC_Pprint.document ->
-        'a FStar_Pervasives_Native.option -> FStarC_Pprint.document
+    ('a -> FStar_Pprint.document) ->
+      FStar_Pprint.document ->
+        'a FStar_Pervasives_Native.option -> FStar_Pprint.document
   =
   fun f ->
     fun def ->
@@ -366,7 +364,7 @@ let optional_def :
         match o with
         | FStar_Pervasives_Native.Some x -> f x
         | FStar_Pervasives_Native.None -> def
-let (issue_to_doc' : Prims.bool -> issue -> FStarC_Pprint.document) =
+let (issue_to_doc' : Prims.bool -> issue -> FStar_Pprint.document) =
   fun print_hdr ->
     fun issue1 ->
       let r =
@@ -376,55 +374,49 @@ let (issue_to_doc' : Prims.bool -> issue -> FStarC_Pprint.document) =
         then
           let level_header =
             let uu___ = string_of_issue_level issue1.issue_level in
-            FStarC_Pprint.doc_of_string uu___ in
+            FStar_Pprint.doc_of_string uu___ in
           let num_opt =
             if
               (issue1.issue_level = EError) ||
                 (issue1.issue_level = EWarning)
             then
-              let uu___ = FStarC_Pprint.blank Prims.int_one in
-              let uu___1 =
-                let uu___2 = FStarC_Pprint.doc_of_string "<unknown>" in
+              let uu___ =
                 optional_def
                   (fun n ->
-                     let uu___3 =
+                     let uu___1 =
                        FStarC_Class_Show.show FStarC_Class_Show.showable_int
                          n in
-                     FStarC_Pprint.doc_of_string uu___3) uu___2
+                     FStar_Pprint.doc_of_string uu___1)
+                  (FStar_Pprint.doc_of_string "<unknown>")
                   issue1.issue_number in
-              FStarC_Pprint.op_Hat_Hat uu___ uu___1
-            else FStarC_Pprint.empty in
+              FStar_Pprint.op_Hat_Hat (FStar_Pprint.blank Prims.int_one)
+                uu___
+            else FStar_Pprint.empty in
           let atrng =
             match r with
             | FStar_Pervasives_Native.Some r1 when
                 r1 <> FStarC_Range_Type.dummyRange ->
-                let uu___ = FStarC_Pprint.blank Prims.int_one in
-                let uu___1 =
-                  let uu___2 = FStarC_Pprint.doc_of_string "at" in
-                  let uu___3 =
-                    let uu___4 = FStarC_Pprint.blank Prims.int_one in
-                    let uu___5 =
-                      let uu___6 = FStarC_Range_Ops.string_of_use_range r1 in
-                      FStarC_Pprint.doc_of_string uu___6 in
-                    FStarC_Pprint.op_Hat_Hat uu___4 uu___5 in
-                  FStarC_Pprint.op_Hat_Hat uu___2 uu___3 in
-                FStarC_Pprint.op_Hat_Hat uu___ uu___1
-            | uu___ -> FStarC_Pprint.empty in
-          let uu___ = FStarC_Pprint.doc_of_string "*" in
-          let uu___1 =
-            let uu___2 = FStarC_Pprint.blank Prims.int_one in
-            let uu___3 =
-              let uu___4 =
-                let uu___5 =
-                  let uu___6 =
-                    let uu___7 = FStarC_Pprint.doc_of_string ":" in
-                    FStarC_Pprint.op_Hat_Hat uu___7 FStarC_Pprint.hardline in
-                  FStarC_Pprint.op_Hat_Hat atrng uu___6 in
-                FStarC_Pprint.op_Hat_Hat num_opt uu___5 in
-              FStarC_Pprint.op_Hat_Hat level_header uu___4 in
-            FStarC_Pprint.op_Hat_Hat uu___2 uu___3 in
-          FStarC_Pprint.op_Hat_Hat uu___ uu___1
-        else FStarC_Pprint.empty in
+                let uu___ =
+                  let uu___1 =
+                    let uu___2 =
+                      let uu___3 = FStarC_Range_Ops.string_of_use_range r1 in
+                      FStar_Pprint.doc_of_string uu___3 in
+                    FStar_Pprint.op_Hat_Hat
+                      (FStar_Pprint.blank Prims.int_one) uu___2 in
+                  FStar_Pprint.op_Hat_Hat (FStar_Pprint.doc_of_string "at")
+                    uu___1 in
+                FStar_Pprint.op_Hat_Hat (FStar_Pprint.blank Prims.int_one)
+                  uu___
+            | uu___ -> FStar_Pprint.empty in
+          FStar_Pprint.op_Hat_Hat (FStar_Pprint.doc_of_string "*")
+            (FStar_Pprint.op_Hat_Hat (FStar_Pprint.blank Prims.int_one)
+               (FStar_Pprint.op_Hat_Hat level_header
+                  (FStar_Pprint.op_Hat_Hat num_opt
+                     (FStar_Pprint.op_Hat_Hat atrng
+                        (FStar_Pprint.op_Hat_Hat
+                           (FStar_Pprint.doc_of_string ":")
+                           FStar_Pprint.hardline)))))
+        else FStar_Pprint.empty in
       let seealso =
         match r with
         | FStar_Pervasives_Native.Some r1 when
@@ -436,44 +428,40 @@ let (issue_to_doc' : Prims.bool -> issue -> FStarC_Pprint.document) =
                  FStarC_Range_Type.def_range FStarC_Range_Type.dummyRange in
                uu___ <> uu___1)
             ->
-            let uu___ = FStarC_Pprint.doc_of_string "See also" in
-            let uu___1 =
-              let uu___2 = FStarC_Pprint.blank Prims.int_one in
-              let uu___3 =
-                let uu___4 = FStarC_Range_Ops.string_of_range r1 in
-                FStarC_Pprint.doc_of_string uu___4 in
-              FStarC_Pprint.op_Hat_Hat uu___2 uu___3 in
-            FStarC_Pprint.op_Hat_Hat uu___ uu___1
-        | uu___ -> FStarC_Pprint.empty in
+            let uu___ =
+              let uu___1 =
+                let uu___2 = FStarC_Range_Ops.string_of_range r1 in
+                FStar_Pprint.doc_of_string uu___2 in
+              FStar_Pprint.op_Hat_Hat (FStar_Pprint.blank Prims.int_one)
+                uu___1 in
+            FStar_Pprint.op_Hat_Hat (FStar_Pprint.doc_of_string "See also")
+              uu___
+        | uu___ -> FStar_Pprint.empty in
       let ctx =
         match issue1.issue_ctx with
         | h::t when FStarC_Options.error_contexts () ->
             let d1 s =
-              let uu___ = FStarC_Pprint.doc_of_string "> " in
-              let uu___1 = FStarC_Pprint.doc_of_string s in
-              FStarC_Pprint.op_Hat_Hat uu___ uu___1 in
-            let uu___ = d1 h in
+              FStar_Pprint.op_Hat_Hat (FStar_Pprint.doc_of_string "> ")
+                (FStar_Pprint.doc_of_string s) in
             FStarC_List.fold_left
               (fun l ->
                  fun r1 ->
-                   let uu___1 =
-                     let uu___2 = d1 r1 in
-                     FStarC_Pprint.op_Hat_Hat FStarC_Pprint.hardline uu___2 in
-                   FStarC_Pprint.op_Hat_Hat l uu___1) uu___ t
-        | uu___ -> FStarC_Pprint.empty in
+                   FStar_Pprint.op_Hat_Hat l
+                     (FStar_Pprint.op_Hat_Hat FStar_Pprint.hardline (d1 r1)))
+              (d1 h) t
+        | uu___ -> FStar_Pprint.empty in
       let subdoc = FStarC_Errors_Msg.subdoc' print_hdr in
       let mainmsg =
         let uu___ =
-          FStarC_List.map
-            (fun d -> let uu___1 = FStarC_Pprint.group d in subdoc uu___1)
+          FStarC_List.map (fun d -> subdoc (FStar_Pprint.group d))
             issue1.issue_msg in
-        FStarC_Pprint.concat uu___ in
+        FStar_Pprint.concat uu___ in
       let uu___ =
         let uu___1 =
           let uu___2 = subdoc seealso in
-          let uu___3 = subdoc ctx in FStarC_Pprint.op_Hat_Hat uu___2 uu___3 in
-        FStarC_Pprint.op_Hat_Hat mainmsg uu___1 in
-      FStarC_Pprint.op_Hat_Hat hdr uu___
+          let uu___3 = subdoc ctx in FStar_Pprint.op_Hat_Hat uu___2 uu___3 in
+        FStar_Pprint.op_Hat_Hat mainmsg uu___1 in
+      FStar_Pprint.op_Hat_Hat hdr uu___
 let (format_issue' : Prims.bool -> issue -> Prims.string) =
   fun print_hdr ->
     fun issue1 ->
@@ -1288,9 +1276,8 @@ let (uu___1 : unit) =
            let uu___2 =
              let uu___3 =
                FStarC_Errors_Msg.text "Not a valid include directory:" in
-             let uu___4 = FStarC_Pprint.doc_of_string s in
-             FStarC_Pprint.prefix (Prims.of_int (2)) Prims.int_one uu___3
-               uu___4 in
+             FStar_Pprint.prefix (Prims.of_int (2)) Prims.int_one uu___3
+               (FStar_Pprint.doc_of_string s) in
            [uu___2] in
          log_issue FStarC_Class_HasRange.hasRange_range
            FStarC_Range_Type.dummyRange
@@ -1298,3 +1285,19 @@ let (uu___1 : unit) =
            (Obj.magic FStarC_Errors_Msg.is_error_message_list_doc)
            (Obj.magic uu___)
        else ())
+let (print_expected_failures : issue Prims.list -> unit) =
+  fun issues ->
+    let issues1 =
+      FStarC_List.map
+        (fun i ->
+           let uu___ =
+             let uu___2 = FStarC_Errors_Msg.text "Expected failure:" in
+             uu___2 :: (i.issue_msg) in
+           {
+             issue_msg = uu___;
+             issue_level = EInfo;
+             issue_range = (i.issue_range);
+             issue_number = (i.issue_number);
+             issue_ctx = (i.issue_ctx)
+           }) issues in
+    add_issues issues1

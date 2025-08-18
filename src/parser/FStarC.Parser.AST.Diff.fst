@@ -455,6 +455,7 @@ let eq_pragma (t1 t2: pragma) =
   | PopOptions, PopOptions -> true
   | RestartSolver, RestartSolver -> true
   | PrintEffectsGraph, PrintEffectsGraph -> true
+  | Check t1, Check t2 -> eq_term t1 t2
   | _ -> false
 
 

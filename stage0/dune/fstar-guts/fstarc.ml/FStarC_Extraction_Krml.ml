@@ -639,18 +639,18 @@ let (pretty_width : width FStarC_Class_PP.pretty) =
     FStarC_Class_PP.pp =
       (fun uu___ ->
          match uu___ with
-         | UInt8 -> FStarC_Pprint.doc_of_string "UInt8"
-         | UInt16 -> FStarC_Pprint.doc_of_string "UInt16"
-         | UInt32 -> FStarC_Pprint.doc_of_string "UInt32"
-         | UInt64 -> FStarC_Pprint.doc_of_string "UInt64"
-         | Int8 -> FStarC_Pprint.doc_of_string "Int8"
-         | Int16 -> FStarC_Pprint.doc_of_string "Int16"
-         | Int32 -> FStarC_Pprint.doc_of_string "Int32"
-         | Int64 -> FStarC_Pprint.doc_of_string "Int64"
-         | Bool -> FStarC_Pprint.doc_of_string "Bool"
-         | CInt -> FStarC_Pprint.doc_of_string "CInt"
-         | SizeT -> FStarC_Pprint.doc_of_string "SizeT"
-         | PtrdiffT -> FStarC_Pprint.doc_of_string "PtrdiffT")
+         | UInt8 -> FStar_Pprint.doc_of_string "UInt8"
+         | UInt16 -> FStar_Pprint.doc_of_string "UInt16"
+         | UInt32 -> FStar_Pprint.doc_of_string "UInt32"
+         | UInt64 -> FStar_Pprint.doc_of_string "UInt64"
+         | Int8 -> FStar_Pprint.doc_of_string "Int8"
+         | Int16 -> FStar_Pprint.doc_of_string "Int16"
+         | Int32 -> FStar_Pprint.doc_of_string "Int32"
+         | Int64 -> FStar_Pprint.doc_of_string "Int64"
+         | Bool -> FStar_Pprint.doc_of_string "Bool"
+         | CInt -> FStar_Pprint.doc_of_string "CInt"
+         | SizeT -> FStar_Pprint.doc_of_string "SizeT"
+         | PtrdiffT -> FStar_Pprint.doc_of_string "PtrdiffT")
   }
 let (record_string :
   (Prims.string * Prims.string) Prims.list -> Prims.string) =
@@ -666,29 +666,24 @@ let (record_string :
       Prims.strcat uu___1 "}" in
     Prims.strcat "{" uu___
 let (ctor :
-  Prims.string -> FStarC_Pprint.document Prims.list -> FStarC_Pprint.document)
+  Prims.string -> FStar_Pprint.document Prims.list -> FStar_Pprint.document)
   =
   fun n ->
     fun args ->
-      let uu___ =
-        let uu___1 =
-          let uu___2 =
-            let uu___3 = FStarC_Pprint.break_ Prims.int_one in
-            let uu___4 =
-              let uu___5 = FStarC_Pprint.doc_of_string n in uu___5 :: args in
-            FStarC_Pprint.flow uu___3 uu___4 in
-          FStarC_Pprint.parens uu___2 in
-        FStarC_Pprint.group uu___1 in
-      FStarC_Pprint.nest (Prims.of_int (2)) uu___
+      FStar_Pprint.nest (Prims.of_int (2))
+        (FStar_Pprint.group
+           (FStar_Pprint.parens
+              (FStar_Pprint.flow (FStar_Pprint.break_ Prims.int_one)
+                 ((FStar_Pprint.doc_of_string n) :: args))))
 let pp_list' :
   'a .
-    ('a -> FStarC_Pprint.document) -> 'a Prims.list -> FStarC_Pprint.document
+    ('a -> FStar_Pprint.document) -> 'a Prims.list -> FStar_Pprint.document
   =
   fun f ->
     fun xs ->
       (FStarC_Class_PP.pp_list { FStarC_Class_PP.pp = f }).FStarC_Class_PP.pp
         xs
-let rec (typ_to_doc : typ -> FStarC_Pprint.document) =
+let rec (typ_to_doc : typ -> FStar_Pprint.document) =
   fun t ->
     match t with
     | TInt w ->
@@ -698,7 +693,7 @@ let rec (typ_to_doc : typ -> FStarC_Pprint.document) =
     | TBuf t1 ->
         let uu___ = let uu___1 = typ_to_doc t1 in [uu___1] in
         ctor "TBuf" uu___
-    | TUnit -> FStarC_Pprint.doc_of_string "TUnit"
+    | TUnit -> FStar_Pprint.doc_of_string "TUnit"
     | TQualified x ->
         let uu___ =
           let uu___1 =
@@ -708,11 +703,11 @@ let rec (typ_to_doc : typ -> FStarC_Pprint.document) =
                    (FStarC_Class_Show.show_list
                       FStarC_Class_Show.showable_string)
                    FStarC_Class_Show.showable_string) x in
-            FStarC_Pprint.doc_of_string uu___2 in
+            FStar_Pprint.doc_of_string uu___2 in
           [uu___1] in
         ctor "TQualified" uu___
-    | TBool -> FStarC_Pprint.doc_of_string "TBool"
-    | TAny -> FStarC_Pprint.doc_of_string "TAny"
+    | TBool -> FStar_Pprint.doc_of_string "TBool"
+    | TAny -> FStar_Pprint.doc_of_string "TAny"
     | TArrow (t1, t2) ->
         let uu___ =
           let uu___1 = typ_to_doc t1 in
@@ -733,7 +728,7 @@ let rec (typ_to_doc : typ -> FStarC_Pprint.document) =
                    (FStarC_Class_Show.show_list
                       FStarC_Class_Show.showable_string)
                    FStarC_Class_Show.showable_string) x in
-            FStarC_Pprint.doc_of_string uu___2 in
+            FStar_Pprint.doc_of_string uu___2 in
           let uu___2 = let uu___3 = pp_list' typ_to_doc xs in [uu___3] in
           uu___1 :: uu___2 in
         ctor "TApp" uu___
@@ -753,14 +748,10 @@ let rec (typ_to_doc : typ -> FStarC_Pprint.document) =
                   let uu___6 =
                     FStarC_Class_PP.pp pretty_width
                       (FStar_Pervasives_Native.fst c) in
-                  let uu___7 =
-                    let uu___8 =
-                      FStarC_Pprint.doc_of_string
-                        (FStar_Pervasives_Native.snd c) in
-                    [uu___8] in
-                  uu___6 :: uu___7 in
-                FStarC_Pprint.separate FStarC_Pprint.comma uu___5 in
-              FStarC_Pprint.parens uu___4 in
+                  [uu___6;
+                  FStar_Pprint.doc_of_string (FStar_Pervasives_Native.snd c)] in
+                FStar_Pprint.separate FStar_Pprint.comma uu___5 in
+              FStar_Pprint.parens uu___4 in
             [uu___3] in
           uu___1 :: uu___2 in
         ctor "TArray" uu___
@@ -769,25 +760,23 @@ let (pretty_typ : typ FStarC_Class_PP.pretty) =
 let (pretty_string : Prims.string FStarC_Class_PP.pretty) =
   {
     FStarC_Class_PP.pp =
-      (fun s ->
-         let uu___ = FStarC_Pprint.doc_of_string s in
-         FStarC_Pprint.dquotes uu___)
+      (fun s -> FStar_Pprint.dquotes (FStar_Pprint.doc_of_string s))
   }
 let (pretty_flag : flag FStarC_Class_PP.pretty) =
   {
     FStarC_Class_PP.pp =
       (fun uu___ ->
          match uu___ with
-         | Private -> FStarC_Pprint.doc_of_string "Private"
-         | WipeBody -> FStarC_Pprint.doc_of_string "WipeBody"
-         | CInline -> FStarC_Pprint.doc_of_string "CInline"
-         | Substitute -> FStarC_Pprint.doc_of_string "Substitute"
-         | GCType -> FStarC_Pprint.doc_of_string "GCType"
+         | Private -> FStar_Pprint.doc_of_string "Private"
+         | WipeBody -> FStar_Pprint.doc_of_string "WipeBody"
+         | CInline -> FStar_Pprint.doc_of_string "CInline"
+         | Substitute -> FStar_Pprint.doc_of_string "Substitute"
+         | GCType -> FStar_Pprint.doc_of_string "GCType"
          | Comment s ->
              let uu___1 =
                let uu___2 = FStarC_Class_PP.pp pretty_string s in [uu___2] in
              ctor "Comment" uu___1
-         | MustDisappear -> FStarC_Pprint.doc_of_string "MustDisappear"
+         | MustDisappear -> FStar_Pprint.doc_of_string "MustDisappear"
          | Const s ->
              let uu___1 =
                let uu___2 = FStarC_Class_PP.pp pretty_string s in [uu___2] in
@@ -800,46 +789,35 @@ let (pretty_flag : flag FStarC_Class_PP.pretty) =
              let uu___1 =
                let uu___2 = FStarC_Class_PP.pp pretty_string s in [uu___2] in
              ctor "Epilogue" uu___1
-         | Abstract -> FStarC_Pprint.doc_of_string "Abstract"
-         | IfDef -> FStarC_Pprint.doc_of_string "IfDef"
-         | Macro -> FStarC_Pprint.doc_of_string "Macro"
+         | Abstract -> FStar_Pprint.doc_of_string "Abstract"
+         | IfDef -> FStar_Pprint.doc_of_string "IfDef"
+         | Macro -> FStar_Pprint.doc_of_string "Macro"
          | Deprecated s ->
              let uu___1 =
                let uu___2 = FStarC_Class_PP.pp pretty_string s in [uu___2] in
              ctor "Deprecated" uu___1
-         | CNoInline -> FStarC_Pprint.doc_of_string "CNoInline")
+         | CNoInline -> FStar_Pprint.doc_of_string "CNoInline")
   }
-let (spaced : FStarC_Pprint.document -> FStarC_Pprint.document) =
+let (spaced : FStar_Pprint.document -> FStar_Pprint.document) =
   fun a ->
-    let uu___ = FStarC_Pprint.break_ Prims.int_one in
-    let uu___1 =
-      let uu___2 = FStarC_Pprint.break_ Prims.int_one in
-      FStarC_Pprint.op_Hat_Hat a uu___2 in
-    FStarC_Pprint.op_Hat_Hat uu___ uu___1
-let (record : FStarC_Pprint.document Prims.list -> FStarC_Pprint.document) =
+    FStar_Pprint.op_Hat_Hat (FStar_Pprint.break_ Prims.int_one)
+      (FStar_Pprint.op_Hat_Hat a (FStar_Pprint.break_ Prims.int_one))
+let (record : FStar_Pprint.document Prims.list -> FStar_Pprint.document) =
   fun fs ->
-    let uu___ =
-      let uu___1 =
-        let uu___2 =
-          let uu___3 =
-            let uu___4 =
-              let uu___5 = FStarC_Pprint.break_ Prims.int_one in
-              FStarC_Pprint.op_Hat_Hat FStarC_Pprint.semi uu___5 in
-            FStarC_Pprint.separate uu___4 fs in
-          spaced uu___3 in
-        FStarC_Pprint.braces uu___2 in
-      FStarC_Pprint.nest (Prims.of_int (2)) uu___1 in
-    FStarC_Pprint.group uu___
-let (fld : Prims.string -> FStarC_Pprint.document -> FStarC_Pprint.document)
-  =
+    FStar_Pprint.group
+      (FStar_Pprint.nest (Prims.of_int (2))
+         (FStar_Pprint.braces
+            (spaced
+               (FStar_Pprint.separate
+                  (FStar_Pprint.op_Hat_Hat FStar_Pprint.semi
+                     (FStar_Pprint.break_ Prims.int_one)) fs))))
+let (fld : Prims.string -> FStar_Pprint.document -> FStar_Pprint.document) =
   fun n ->
     fun v ->
-      let uu___ =
-        let uu___1 =
-          let uu___2 = FStarC_Pprint.doc_of_string (Prims.strcat n " =") in
-          FStarC_Pprint.op_Hat_Slash_Hat uu___2 v in
-        FStarC_Pprint.nest (Prims.of_int (2)) uu___1 in
-      FStarC_Pprint.group uu___
+      FStar_Pprint.group
+        (FStar_Pprint.nest (Prims.of_int (2))
+           (FStar_Pprint.op_Hat_Slash_Hat
+              (FStar_Pprint.doc_of_string (Prims.strcat n " =")) v))
 let (pretty_binder : binder FStarC_Class_PP.pretty) =
   {
     FStarC_Class_PP.pp =
@@ -874,54 +852,54 @@ let (pretty_lifetime : lifetime FStarC_Class_PP.pretty) =
     FStarC_Class_PP.pp =
       (fun uu___ ->
          match uu___ with
-         | Eternal -> FStarC_Pprint.doc_of_string "Eternal"
-         | Stack -> FStarC_Pprint.doc_of_string "Stack"
-         | ManuallyManaged -> FStarC_Pprint.doc_of_string "ManuallyManaged")
+         | Eternal -> FStar_Pprint.doc_of_string "Eternal"
+         | Stack -> FStar_Pprint.doc_of_string "Stack"
+         | ManuallyManaged -> FStar_Pprint.doc_of_string "ManuallyManaged")
   }
 let (pretty_op : op FStarC_Class_PP.pretty) =
   {
     FStarC_Class_PP.pp =
       (fun uu___ ->
          match uu___ with
-         | Add -> FStarC_Pprint.doc_of_string "Add"
-         | AddW -> FStarC_Pprint.doc_of_string "AddW"
-         | Sub -> FStarC_Pprint.doc_of_string "Sub"
-         | SubW -> FStarC_Pprint.doc_of_string "SubW"
-         | Div -> FStarC_Pprint.doc_of_string "Div"
-         | DivW -> FStarC_Pprint.doc_of_string "DivW"
-         | Mult -> FStarC_Pprint.doc_of_string "Mult"
-         | MultW -> FStarC_Pprint.doc_of_string "MultW"
-         | Mod -> FStarC_Pprint.doc_of_string "Mod"
-         | BOr -> FStarC_Pprint.doc_of_string "BOr"
-         | BAnd -> FStarC_Pprint.doc_of_string "BAnd"
-         | BXor -> FStarC_Pprint.doc_of_string "BXor"
-         | BShiftL -> FStarC_Pprint.doc_of_string "BShiftL"
-         | BShiftR -> FStarC_Pprint.doc_of_string "BShiftR"
-         | BNot -> FStarC_Pprint.doc_of_string "BNot"
-         | Eq -> FStarC_Pprint.doc_of_string "Eq"
-         | Neq -> FStarC_Pprint.doc_of_string "Neq"
-         | Lt -> FStarC_Pprint.doc_of_string "Lt"
-         | Lte -> FStarC_Pprint.doc_of_string "Lte"
-         | Gt -> FStarC_Pprint.doc_of_string "Gt"
-         | Gte -> FStarC_Pprint.doc_of_string "Gte"
-         | And -> FStarC_Pprint.doc_of_string "And"
-         | Or -> FStarC_Pprint.doc_of_string "Or"
-         | Xor -> FStarC_Pprint.doc_of_string "Xor"
-         | Not -> FStarC_Pprint.doc_of_string "Not")
+         | Add -> FStar_Pprint.doc_of_string "Add"
+         | AddW -> FStar_Pprint.doc_of_string "AddW"
+         | Sub -> FStar_Pprint.doc_of_string "Sub"
+         | SubW -> FStar_Pprint.doc_of_string "SubW"
+         | Div -> FStar_Pprint.doc_of_string "Div"
+         | DivW -> FStar_Pprint.doc_of_string "DivW"
+         | Mult -> FStar_Pprint.doc_of_string "Mult"
+         | MultW -> FStar_Pprint.doc_of_string "MultW"
+         | Mod -> FStar_Pprint.doc_of_string "Mod"
+         | BOr -> FStar_Pprint.doc_of_string "BOr"
+         | BAnd -> FStar_Pprint.doc_of_string "BAnd"
+         | BXor -> FStar_Pprint.doc_of_string "BXor"
+         | BShiftL -> FStar_Pprint.doc_of_string "BShiftL"
+         | BShiftR -> FStar_Pprint.doc_of_string "BShiftR"
+         | BNot -> FStar_Pprint.doc_of_string "BNot"
+         | Eq -> FStar_Pprint.doc_of_string "Eq"
+         | Neq -> FStar_Pprint.doc_of_string "Neq"
+         | Lt -> FStar_Pprint.doc_of_string "Lt"
+         | Lte -> FStar_Pprint.doc_of_string "Lte"
+         | Gt -> FStar_Pprint.doc_of_string "Gt"
+         | Gte -> FStar_Pprint.doc_of_string "Gte"
+         | And -> FStar_Pprint.doc_of_string "And"
+         | Or -> FStar_Pprint.doc_of_string "Or"
+         | Xor -> FStar_Pprint.doc_of_string "Xor"
+         | Not -> FStar_Pprint.doc_of_string "Not")
   }
 let (pretty_cc : cc FStarC_Class_PP.pretty) =
   {
     FStarC_Class_PP.pp =
       (fun uu___ ->
          match uu___ with
-         | StdCall -> FStarC_Pprint.doc_of_string "StdCall"
-         | CDecl -> FStarC_Pprint.doc_of_string "CDecl"
-         | FastCall -> FStarC_Pprint.doc_of_string "FastCall")
+         | StdCall -> FStar_Pprint.doc_of_string "StdCall"
+         | CDecl -> FStar_Pprint.doc_of_string "CDecl"
+         | FastCall -> FStar_Pprint.doc_of_string "FastCall")
   }
-let rec (pattern_to_doc : pattern -> FStarC_Pprint.document) =
+let rec (pattern_to_doc : pattern -> FStar_Pprint.document) =
   fun p ->
     match p with
-    | PUnit -> FStarC_Pprint.doc_of_string "PUnit"
+    | PUnit -> FStar_Pprint.doc_of_string "PUnit"
     | PBool b ->
         let uu___ =
           let uu___1 = FStarC_Class_PP.pp FStarC_Class_PP.pp_bool b in
@@ -961,7 +939,7 @@ let rec (pattern_to_doc : pattern -> FStarC_Pprint.document) =
         ctor "PConstant" uu___
 let (pretty_pattern : pattern FStarC_Class_PP.pretty) =
   { FStarC_Class_PP.pp = pattern_to_doc }
-let rec (decl_to_doc : decl -> FStarC_Pprint.document) =
+let rec (decl_to_doc : decl -> FStar_Pprint.document) =
   fun d ->
     match d with
     | DGlobal (fs, x, i, t, e) ->
@@ -1149,7 +1127,7 @@ let rec (decl_to_doc : decl -> FStarC_Pprint.document) =
             uu___3 :: uu___4 in
           uu___1 :: uu___2 in
         ctor "DUntaggedUnion" uu___
-and (expr_to_doc : expr -> FStarC_Pprint.document) =
+and (expr_to_doc : expr -> FStar_Pprint.document) =
   fun e ->
     match e with
     | EBound x ->
@@ -1172,7 +1150,7 @@ and (expr_to_doc : expr -> FStarC_Pprint.document) =
               (FStarC_Class_PP.pp_tuple2 pretty_width pretty_string) x in
           [uu___1] in
         ctor "EConstant" uu___
-    | EUnit -> FStarC_Pprint.doc_of_string "EUnit"
+    | EUnit -> FStar_Pprint.doc_of_string "EUnit"
     | EApp (x, xs) ->
         let uu___ =
           let uu___1 = expr_to_doc x in
@@ -1280,15 +1258,15 @@ and (expr_to_doc : expr -> FStarC_Pprint.document) =
             let uu___3 = FStarC_Class_PP.pp pretty_typ y in [uu___3] in
           uu___1 :: uu___2 in
         ctor "ECast" uu___
-    | EPushFrame -> FStarC_Pprint.doc_of_string "EPushFrame"
-    | EPopFrame -> FStarC_Pprint.doc_of_string "EPopFrame"
+    | EPushFrame -> FStar_Pprint.doc_of_string "EPushFrame"
+    | EPopFrame -> FStar_Pprint.doc_of_string "EPopFrame"
     | EBool x ->
         let uu___ =
           let uu___1 = FStarC_Class_PP.pp FStarC_Class_PP.pp_bool x in
           [uu___1] in
         ctor "EBool" uu___
-    | EAny -> FStarC_Pprint.doc_of_string "EAny"
-    | EAbort -> FStarC_Pprint.doc_of_string "EAbort"
+    | EAny -> FStar_Pprint.doc_of_string "EAny"
+    | EAbort -> FStar_Pprint.doc_of_string "EAbort"
     | EReturn x ->
         let uu___ = let uu___1 = expr_to_doc x in [uu___1] in
         ctor "EReturn" uu___
@@ -1410,7 +1388,7 @@ and (expr_to_doc : expr -> FStarC_Pprint.document) =
           let uu___2 = let uu___3 = expr_to_doc y in [uu___3] in uu___1 ::
             uu___2 in
         ctor "EBufDiff" uu___
-and (pp_branch : branch -> FStarC_Pprint.document) =
+and (pp_branch : branch -> FStar_Pprint.document) =
   fun b ->
     let uu___ = b in
     match uu___ with
@@ -1419,9 +1397,9 @@ and (pp_branch : branch -> FStarC_Pprint.document) =
           let uu___2 = FStarC_Class_PP.pp pretty_pattern p in
           let uu___3 =
             let uu___4 = expr_to_doc e in
-            FStarC_Pprint.op_Hat_Slash_Hat FStarC_Pprint.comma uu___4 in
-          FStarC_Pprint.op_Hat_Hat uu___2 uu___3 in
-        FStarC_Pprint.parens uu___1
+            FStar_Pprint.op_Hat_Slash_Hat FStar_Pprint.comma uu___4 in
+          FStar_Pprint.op_Hat_Hat uu___2 uu___3 in
+        FStar_Pprint.parens uu___1
 let (pretty_decl : decl FStarC_Class_PP.pretty) =
   { FStarC_Class_PP.pp = decl_to_doc }
 let (showable_decl : decl FStarC_Class_Show.showable) =
@@ -3528,9 +3506,15 @@ let (translate_type_decl' :
             if assumed
             then
               (let name3 = FStarC_Extraction_ML_Syntax.string_of_mlpath name2 in
-               FStarC_Format.print1_warning
-                 "Not extracting type definition %s to KaRaMeL (assumed type)\n"
-                 name3;
+               (let uu___3 =
+                  let uu___4 = FStarC_Options.silent () in
+                  Prims.op_Negation uu___4 in
+                if uu___3
+                then
+                  FStarC_Format.print1_warning
+                    "Not extracting type definition %s to KaRaMeL (assumed type)\n"
+                    name3
+                else ());
                FStar_Pervasives_Native.None)
             else
               (let uu___3 =
@@ -3678,10 +3662,16 @@ let (translate_let' :
               FStar_Pervasives_Native.Some uu___3
             else
               ((let uu___5 =
-                  FStarC_Extraction_ML_Syntax.string_of_mlpath name2 in
-                FStarC_Format.print1_warning
-                  "Not extracting %s to KaRaMeL (polymorphic assumes are not supported)\n"
-                  uu___5);
+                  let uu___6 = FStarC_Options.silent () in
+                  Prims.op_Negation uu___6 in
+                if uu___5
+                then
+                  let uu___6 =
+                    FStarC_Extraction_ML_Syntax.string_of_mlpath name2 in
+                  FStarC_Format.print1_warning
+                    "Not extracting %s to KaRaMeL (polymorphic assumes are not supported)\n"
+                    uu___6
+                else ());
                FStar_Pervasives_Native.None)
         | { FStarC_Extraction_ML_Syntax.mllb_name = name1;
             FStarC_Extraction_ML_Syntax.mllb_tysc =
@@ -3722,15 +3712,19 @@ let (translate_let' :
                    (FStarC_List.length args) t0 in
                match uu___6 with
                | (i, eff, t) ->
-                   (if i > Prims.int_zero
-                    then
-                      (let msg =
+                   ((let uu___8 =
+                       (i > Prims.int_zero) &&
+                         (let uu___9 = FStarC_Options.silent () in
+                          Prims.op_Negation uu___9) in
+                     if uu___8
+                     then
+                       let msg =
                          "function type annotation has less arrows than the number of arguments; please mark the return type abbreviation as inline_for_extraction" in
-                       let uu___8 =
+                       let uu___9 =
                          FStarC_Extraction_ML_Syntax.string_of_mlpath name2 in
                        FStarC_Format.print2_warning
-                         "Not extracting %s to KaRaMeL (%s)\n" uu___8 msg)
-                    else ();
+                         "Not extracting %s to KaRaMeL (%s)\n" uu___9 msg
+                     else ());
                     (let t1 = translate_type env3 t in
                      let binders = translate_binders env3 args in
                      let env4 = add_binders env3 args in
@@ -3774,7 +3768,7 @@ let (translate_let' :
                                    FStarC_Errors_Msg.text uu___11 in
                                  let uu___11 =
                                    FStarC_Errors_Msg.render_as_doc msg in
-                                 FStarC_Pprint.prefix (Prims.of_int (2))
+                                 FStar_Pprint.prefix (Prims.of_int (2))
                                    Prims.int_one uu___10 uu___11 in
                                [uu___9]
                            | e ->
@@ -3784,8 +3778,8 @@ let (translate_let' :
                                      "Got an exception: " in
                                  let uu___11 =
                                    let uu___12 = FStarC_Util.print_exn e in
-                                   FStarC_Pprint.arbitrary_string uu___12 in
-                                 FStarC_Pprint.op_Hat_Hat uu___10 uu___11 in
+                                   FStar_Pprint.arbitrary_string uu___12 in
+                                 FStar_Pprint.op_Hat_Hat uu___10 uu___11 in
                                [uu___9] in
                          ((let uu___10 =
                              let uu___11 =
@@ -3865,7 +3859,7 @@ let (translate_let' :
                        let uu___8 =
                          let uu___9 =
                            let uu___10 = FStarC_Util.print_exn uu___4 in
-                           FStarC_Pprint.arbitrary_string uu___10 in
+                           FStar_Pprint.arbitrary_string uu___10 in
                          [uu___9] in
                        uu___7 :: uu___8 in
                      FStarC_Errors.log_issue0
@@ -3938,9 +3932,15 @@ let (translate_decl :
       | FStarC_Extraction_ML_Syntax.MLM_Top uu___ ->
           failwith "todo: translate_decl [MLM_Top]"
       | FStarC_Extraction_ML_Syntax.MLM_Exn (m, uu___) ->
-          (FStarC_Format.print1_warning
-             "Not extracting exception %s to KaRaMeL (exceptions unsupported)\n"
-             m;
+          ((let uu___2 =
+              let uu___3 = FStarC_Options.silent () in
+              Prims.op_Negation uu___3 in
+            if uu___2
+            then
+              FStarC_Format.print1_warning
+                "Not extracting exception %s to KaRaMeL (exceptions unsupported)\n"
+                m
+            else ());
            [])
 let (translate_module :
   FStarC_Extraction_ML_UEnv.uenv ->

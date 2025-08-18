@@ -432,8 +432,6 @@ let (copy_uvar :
                 (uu___.FStarC_TypeChecker_Env.is_iface);
               FStarC_TypeChecker_Env.admit =
                 (uu___.FStarC_TypeChecker_Env.admit);
-              FStarC_TypeChecker_Env.lax_universes =
-                (uu___.FStarC_TypeChecker_Env.lax_universes);
               FStarC_TypeChecker_Env.phase1 =
                 (uu___.FStarC_TypeChecker_Env.phase1);
               FStarC_TypeChecker_Env.failhard =
@@ -787,8 +785,6 @@ let (p_env :
         FStarC_TypeChecker_Env.is_iface =
           (uu___.FStarC_TypeChecker_Env.is_iface);
         FStarC_TypeChecker_Env.admit = (uu___.FStarC_TypeChecker_Env.admit);
-        FStarC_TypeChecker_Env.lax_universes =
-          (uu___.FStarC_TypeChecker_Env.lax_universes);
         FStarC_TypeChecker_Env.phase1 = (uu___.FStarC_TypeChecker_Env.phase1);
         FStarC_TypeChecker_Env.failhard =
           (uu___.FStarC_TypeChecker_Env.failhard);
@@ -895,8 +891,6 @@ let (p_guard_env :
         FStarC_TypeChecker_Env.is_iface =
           (uu___.FStarC_TypeChecker_Env.is_iface);
         FStarC_TypeChecker_Env.admit = (uu___.FStarC_TypeChecker_Env.admit);
-        FStarC_TypeChecker_Env.lax_universes =
-          (uu___.FStarC_TypeChecker_Env.lax_universes);
         FStarC_TypeChecker_Env.phase1 = (uu___.FStarC_TypeChecker_Env.phase1);
         FStarC_TypeChecker_Env.failhard =
           (uu___.FStarC_TypeChecker_Env.failhard);
@@ -3385,7 +3379,7 @@ let (head_matches_delta :
                        [FStarC_TypeChecker_Env.Unfold
                           FStarC_Syntax_Syntax.delta_constant;
                        FStarC_TypeChecker_Env.Eager_unfolding_only] env
-                       (fv.FStarC_Syntax_Syntax.fv_name).FStarC_Syntax_Syntax.v in
+                       fv.FStarC_Syntax_Syntax.fv_name in
                    (match uu___2 with
                     | FStar_Pervasives_Native.None ->
                         ((let uu___4 = FStarC_Effect.op_Bang dbg_RelDelta in
@@ -4059,7 +4053,7 @@ let (ufailed_simple : Prims.string -> univ_eq_sol) =
   fun s -> let uu___ = FStarC_Thunk.mkv s in UFailed uu___
 let (ufailed_thunk : (unit -> Prims.string) -> univ_eq_sol) =
   fun s -> let uu___ = mklstr s in UFailed uu___
-let rec (really_solve_universe_eq :
+let rec (solve_universe_eq :
   Prims.int ->
     worklist ->
       FStarC_Syntax_Syntax.universe ->
@@ -4131,8 +4125,8 @@ let rec (really_solve_universe_eq :
                                     match (us12, us22) with
                                     | (u13::us13, u23::us23) ->
                                         let uu___2 =
-                                          really_solve_universe_eq pid_orig
-                                            wl1 u13 u23 in
+                                          solve_universe_eq pid_orig wl1 u13
+                                            u23 in
                                         (match uu___2 with
                                          | USolved wl2 -> aux wl2 us13 us23
                                          | failed -> failed)
@@ -4157,7 +4151,7 @@ let rec (really_solve_universe_eq :
                            | [] -> USolved wl1
                            | u::us2 ->
                                let uu___1 =
-                                 really_solve_universe_eq pid_orig wl1 u u' in
+                                 solve_universe_eq pid_orig wl1 u u' in
                                (match uu___1 with
                                 | USolved wl2 -> aux wl2 us2
                                 | failed -> failed) in
@@ -4169,7 +4163,7 @@ let rec (really_solve_universe_eq :
                            | [] -> USolved wl1
                            | u::us2 ->
                                let uu___1 =
-                                 really_solve_universe_eq pid_orig wl1 u u' in
+                                 solve_universe_eq pid_orig wl1 u u' in
                                (match uu___1 with
                                 | USolved wl2 -> aux wl2 us2
                                 | failed -> failed) in
@@ -4245,7 +4239,7 @@ let rec (really_solve_universe_eq :
           | (FStarC_Syntax_Syntax.U_zero, FStarC_Syntax_Syntax.U_zero) ->
               USolved wl
           | (FStarC_Syntax_Syntax.U_succ u12, FStarC_Syntax_Syntax.U_succ
-             u22) -> really_solve_universe_eq pid_orig wl u12 u22
+             u22) -> solve_universe_eq pid_orig wl u12 u22
           | (FStarC_Syntax_Syntax.U_unif v1, FStarC_Syntax_Syntax.U_unif v2)
               ->
               let uu___ = FStarC_Syntax_Unionfind.univ_equiv v1 v2 in
@@ -4325,19 +4319,6 @@ let rec (really_solve_universe_eq :
              uu___1) -> ufailed_simple "Incompatible universes"
           | (FStarC_Syntax_Syntax.U_name uu___, FStarC_Syntax_Syntax.U_zero)
               -> ufailed_simple "Incompatible universes"
-let (solve_universe_eq :
-  Prims.int ->
-    worklist ->
-      FStarC_Syntax_Syntax.universe ->
-        FStarC_Syntax_Syntax.universe -> univ_eq_sol)
-  =
-  fun orig ->
-    fun wl ->
-      fun u1 ->
-        fun u2 ->
-          if (wl.tcenv).FStarC_TypeChecker_Env.lax_universes
-          then USolved wl
-          else really_solve_universe_eq orig wl u1 u2
 let match_num_binders :
   'a 'b .
     ('a Prims.list * ('a Prims.list -> 'b)) ->
@@ -4604,8 +4585,6 @@ let (run_meta_arg_tac :
                 (env.FStarC_TypeChecker_Env.is_iface);
               FStarC_TypeChecker_Env.admit =
                 (env.FStarC_TypeChecker_Env.admit);
-              FStarC_TypeChecker_Env.lax_universes =
-                (env.FStarC_TypeChecker_Env.lax_universes);
               FStarC_TypeChecker_Env.phase1 =
                 (env.FStarC_TypeChecker_Env.phase1);
               FStarC_TypeChecker_Env.failhard =
@@ -4681,7 +4660,10 @@ let (run_meta_arg_tac :
            FStarC_Errors.with_ctx "Running tactic for meta-arg"
              (fun uu___1 ->
                 let uu___2 = FStarC_Syntax_Util.ctx_uvar_typ ctx_u in
-                env1.FStarC_TypeChecker_Env.synth_hook env1 uu___2 tau))
+                let uu___3 =
+                  FStarC_Class_HasRange.pos
+                    FStarC_Syntax_Syntax.hasRange_ctx_uvar ctx_u in
+                env1.FStarC_TypeChecker_Env.synth_hook env1 uu___2 tau uu___3))
       | uu___ ->
           failwith
             "run_meta_arg_tac must have been called with a uvar that has a meta tac"
@@ -7726,9 +7708,6 @@ and (solve_t_flex_rigid_eq :
                                                     (env1.FStarC_TypeChecker_Env.is_iface);
                                                   FStarC_TypeChecker_Env.admit
                                                     = true;
-                                                  FStarC_TypeChecker_Env.lax_universes
-                                                    =
-                                                    (env1.FStarC_TypeChecker_Env.lax_universes);
                                                   FStarC_TypeChecker_Env.phase1
                                                     =
                                                     (env1.FStarC_TypeChecker_Env.phase1);
@@ -8120,9 +8099,6 @@ and (solve_t_flex_rigid_eq :
                                                             (env.FStarC_TypeChecker_Env.is_iface);
                                                           FStarC_TypeChecker_Env.admit
                                                             = true;
-                                                          FStarC_TypeChecker_Env.lax_universes
-                                                            =
-                                                            (env.FStarC_TypeChecker_Env.lax_universes);
                                                           FStarC_TypeChecker_Env.phase1
                                                             =
                                                             (env.FStarC_TypeChecker_Env.phase1);
@@ -16065,7 +16041,7 @@ let (do_discharge_vc :
                let uu___3 = FStarC_Errors_Msg.text "Checking VC:" in
                let uu___4 =
                  FStarC_Class_PP.pp FStarC_Syntax_Print.pretty_term vc in
-               FStarC_Pprint.op_Hat_Slash_Hat uu___3 uu___4 in
+               FStar_Pprint.op_Hat_Slash_Hat uu___3 uu___4 in
              [uu___2] in
            diag FStarC_Errors_Msg.is_error_message_list_doc uu___1)
         else ();
@@ -16094,9 +16070,9 @@ let (do_discharge_vc :
                                    FStarC_Class_PP.pp FStarC_Class_PP.pp_int
                                      (FStarC_List.length vcs1) in
                                  let uu___11 = FStarC_Errors_Msg.text "goals" in
-                                 FStarC_Pprint.op_Hat_Slash_Hat uu___10
+                                 FStar_Pprint.op_Hat_Slash_Hat uu___10
                                    uu___11 in
-                               FStarC_Pprint.op_Hat_Slash_Hat uu___8 uu___9 in
+                               FStar_Pprint.op_Hat_Slash_Hat uu___8 uu___9 in
                              [uu___7] in
                            diag FStarC_Errors_Msg.is_error_message_list_doc
                              uu___6)
@@ -16197,7 +16173,7 @@ let (do_discharge_vc :
                               let uu___8 =
                                 FStarC_Class_PP.pp
                                   FStarC_Syntax_Print.pretty_term goal in
-                              FStarC_Pprint.op_Hat_Slash_Hat uu___7 uu___8 in
+                              FStar_Pprint.op_Hat_Slash_Hat uu___7 uu___8 in
                             [uu___6] in
                           diag FStarC_Errors_Msg.is_error_message_list_doc
                             uu___5)
@@ -16273,7 +16249,7 @@ let (discharge_guard' :
                        let uu___7 =
                          FStarC_Class_PP.pp
                            FStarC_TypeChecker_Env.pretty_guard g1 in
-                       FStarC_Pprint.op_Hat_Slash_Hat uu___6 uu___7 in
+                       FStar_Pprint.op_Hat_Slash_Hat uu___6 uu___7 in
                      [uu___5] in
                    uu___3 :: uu___4 in
                  diag FStarC_Errors_Msg.is_error_message_list_doc uu___2)
@@ -16296,7 +16272,7 @@ let (discharge_guard' :
                           let uu___6 =
                             FStarC_Class_PP.pp
                               FStarC_Syntax_Print.pretty_term vc in
-                          FStarC_Pprint.op_Hat_Slash_Hat uu___5 uu___6 in
+                          FStar_Pprint.op_Hat_Slash_Hat uu___5 uu___6 in
                         [uu___4] in
                       diag FStarC_Errors_Msg.is_error_message_list_doc uu___3)
                    else ();
@@ -16675,8 +16651,6 @@ let (check_implicit_solution_and_discharge_guard :
                           (env.FStarC_TypeChecker_Env.is_iface);
                         FStarC_TypeChecker_Env.admit =
                           (env.FStarC_TypeChecker_Env.admit);
-                        FStarC_TypeChecker_Env.lax_universes =
-                          (env.FStarC_TypeChecker_Env.lax_universes);
                         FStarC_TypeChecker_Env.phase1 =
                           (env.FStarC_TypeChecker_Env.phase1);
                         FStarC_TypeChecker_Env.failhard =
@@ -17212,9 +17186,6 @@ let (resolve_implicits' :
                                                  (env.FStarC_TypeChecker_Env.is_iface);
                                                FStarC_TypeChecker_Env.admit =
                                                  (env.FStarC_TypeChecker_Env.admit);
-                                               FStarC_TypeChecker_Env.lax_universes
-                                                 =
-                                                 (env.FStarC_TypeChecker_Env.lax_universes);
                                                FStarC_TypeChecker_Env.phase1
                                                  =
                                                  (env.FStarC_TypeChecker_Env.phase1);
@@ -17475,9 +17446,6 @@ let (resolve_implicits' :
                                                  (env.FStarC_TypeChecker_Env.is_iface);
                                                FStarC_TypeChecker_Env.admit =
                                                  (env.FStarC_TypeChecker_Env.admit);
-                                               FStarC_TypeChecker_Env.lax_universes
-                                                 =
-                                                 (env.FStarC_TypeChecker_Env.lax_universes);
                                                FStarC_TypeChecker_Env.phase1
                                                  =
                                                  (env.FStarC_TypeChecker_Env.phase1);
@@ -17750,11 +17718,14 @@ let (force_trivial_guard :
       (let g1 = solve_deferred_constraints env g in
        let g2 = resolve_implicits env g1 in
        let uu___1 =
-         FStarC_Class_Listlike.to_list (FStarC_CList.listlike_clist ())
-           g2.FStarC_TypeChecker_Common.implicits in
+         Obj.magic
+           (FStarC_Class_Listlike.view ()
+              (Obj.magic (FStarC_CList.listlike_clist ()))
+              (Obj.magic g2.FStarC_TypeChecker_Common.implicits)) in
        match uu___1 with
-       | [] -> let uu___2 = discharge_guard env g2 in ()
-       | imp::uu___2 ->
+       | FStarC_Class_Listlike.VNil ->
+           let uu___2 = discharge_guard env g2 in ()
+       | FStarC_Class_Listlike.VCons (imp, uu___2) ->
            let uu___3 =
              let uu___4 =
                let uu___5 =
@@ -17765,8 +17736,8 @@ let (force_trivial_guard :
                    let uu___8 =
                      FStarC_Class_Show.show FStarC_Syntax_Print.showable_uvar
                        (imp.FStarC_TypeChecker_Common.imp_uvar).FStarC_Syntax_Syntax.ctx_uvar_head in
-                   FStarC_Pprint.arbitrary_string uu___8 in
-                 FStarC_Pprint.prefix (Prims.of_int (4)) Prims.int_one uu___6
+                   FStar_Pprint.arbitrary_string uu___8 in
+                 FStar_Pprint.prefix (Prims.of_int (4)) Prims.int_one uu___6
                    uu___7 in
                let uu___6 =
                  let uu___7 =
@@ -17776,17 +17747,17 @@ let (force_trivial_guard :
                        FStarC_Syntax_Util.ctx_uvar_typ
                          imp.FStarC_TypeChecker_Common.imp_uvar in
                      FStarC_TypeChecker_Normalize.term_to_doc env uu___10 in
-                   FStarC_Pprint.prefix (Prims.of_int (4)) Prims.int_one
+                   FStar_Pprint.prefix (Prims.of_int (4)) Prims.int_one
                      uu___8 uu___9 in
                  let uu___8 =
                    let uu___9 = FStarC_Errors_Msg.text "introduced for" in
                    let uu___10 =
                      FStarC_Errors_Msg.text
                        imp.FStarC_TypeChecker_Common.imp_reason in
-                   FStarC_Pprint.prefix (Prims.of_int (4)) Prims.int_one
+                   FStar_Pprint.prefix (Prims.of_int (4)) Prims.int_one
                      uu___9 uu___10 in
-                 FStarC_Pprint.op_Hat_Slash_Hat uu___7 uu___8 in
-               FStarC_Pprint.op_Hat_Slash_Hat uu___5 uu___6 in
+                 FStar_Pprint.op_Hat_Slash_Hat uu___7 uu___8 in
+               FStar_Pprint.op_Hat_Slash_Hat uu___5 uu___6 in
              [uu___4] in
            FStarC_Errors.raise_error FStarC_Class_HasRange.hasRange_range
              imp.FStarC_TypeChecker_Common.imp_range

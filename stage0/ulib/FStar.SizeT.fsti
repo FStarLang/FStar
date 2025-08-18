@@ -172,16 +172,17 @@ val lte (x y: t) : Pure bool
 
 (** Infix notations *)
 
-unfold let ( +^ ) = add
-unfold let ( -^ ) = sub
-unfold let ( *^ ) = mul
-unfold let ( %^ ) = rem
-unfold let ( =^ )  = eq
-unfold let ( <>^ ) = ne
-unfold let ( >^ )  = gt
-unfold let ( >=^ ) = gte
-unfold let ( <^ )  = lt
-unfold let ( <=^ ) = lte
+inline_for_extraction unfold let ( +^ )  = add
+inline_for_extraction unfold let ( -^ )  = sub
+inline_for_extraction unfold let ( *^ )  = mul
+inline_for_extraction unfold let ( /^ )  = div
+inline_for_extraction unfold let ( %^ )  = rem
+inline_for_extraction unfold let ( =^ )  = eq
+inline_for_extraction unfold let ( <>^ ) = ne
+inline_for_extraction unfold let ( >^ )  = gt
+inline_for_extraction unfold let ( >=^ ) = gte
+inline_for_extraction unfold let ( <^ )  = lt
+inline_for_extraction unfold let ( <=^ ) = lte
 
 //This private primitive is used internally by the
 //compiler to translate bounded integer constants

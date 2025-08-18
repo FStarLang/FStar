@@ -1,19 +1,8 @@
 open Prims
-let subst_to_string :
-  'uuuuu . (FStarC_Syntax_Syntax.bv * 'uuuuu) Prims.list -> Prims.string =
-  fun s ->
-    let uu___ =
-      FStarC_List.map
-        (fun uu___1 ->
-           match uu___1 with
-           | (b, uu___2) ->
-               FStarC_Ident.string_of_id b.FStarC_Syntax_Syntax.ppname) s in
-    FStarC_String.concat ", " uu___
 let rec apply_until_some :
-  'uuuuu 'uuuuu1 .
-    ('uuuuu -> 'uuuuu1 FStar_Pervasives_Native.option) ->
-      'uuuuu Prims.list ->
-        ('uuuuu Prims.list * 'uuuuu1) FStar_Pervasives_Native.option
+  'a 'b .
+    ('a -> 'b FStar_Pervasives_Native.option) ->
+      'a Prims.list -> ('a Prims.list * 'b) FStar_Pervasives_Native.option
   =
   fun f ->
     fun s ->
@@ -26,31 +15,29 @@ let rec apply_until_some :
            | FStar_Pervasives_Native.Some st ->
                FStar_Pervasives_Native.Some (rest, st))
 let map_some_curry :
-  'uuuuu 'uuuuu1 'uuuuu2 .
-    ('uuuuu -> 'uuuuu1 -> 'uuuuu2) ->
-      'uuuuu2 -> ('uuuuu * 'uuuuu1) FStar_Pervasives_Native.option -> 'uuuuu2
+  'a 'b 'c .
+    ('a -> 'b -> 'c) -> 'c -> ('a * 'b) FStar_Pervasives_Native.option -> 'c
   =
   fun f ->
     fun x ->
       fun uu___ ->
         match uu___ with
         | FStar_Pervasives_Native.None -> x
-        | FStar_Pervasives_Native.Some (a, b) -> f a b
+        | FStar_Pervasives_Native.Some (a1, b1) -> f a1 b1
 let apply_until_some_then_map :
-  'uuuuu 'uuuuu1 'uuuuu2 .
-    ('uuuuu -> 'uuuuu1 FStar_Pervasives_Native.option) ->
-      'uuuuu Prims.list ->
-        ('uuuuu Prims.list -> 'uuuuu1 -> 'uuuuu2) -> 'uuuuu2 -> 'uuuuu2
+  'a 'b 'c .
+    ('a -> 'b FStar_Pervasives_Native.option) ->
+      'a Prims.list -> ('a Prims.list -> 'b -> 'c) -> 'c -> 'c
   =
   fun f ->
     fun s ->
       fun g ->
-        fun t -> let uu___ = apply_until_some f s in map_some_curry g t uu___
-let compose_subst :
-  'uuuuu .
-    ('uuuuu Prims.list * FStarC_Syntax_Syntax.maybe_set_use_range) ->
-      ('uuuuu Prims.list * FStarC_Syntax_Syntax.maybe_set_use_range) ->
-        ('uuuuu Prims.list * FStarC_Syntax_Syntax.maybe_set_use_range)
+        fun t ->
+          let uu___ = apply_until_some f s in
+          let uu___1 = map_some_curry g t in uu___1 uu___
+let (compose_subst :
+  FStarC_Syntax_Syntax.subst_ts ->
+    FStarC_Syntax_Syntax.subst_ts -> FStarC_Syntax_Syntax.subst_ts)
   =
   fun s1 ->
     fun s2 ->
@@ -64,9 +51,8 @@ let compose_subst :
         | uu___ -> FStar_Pervasives_Native.snd s1 in
       (s, ropt)
 let (delay :
-  FStarC_Syntax_Syntax.term' FStarC_Syntax_Syntax.syntax ->
-    (FStarC_Syntax_Syntax.subst_elt Prims.list Prims.list *
-      FStarC_Syntax_Syntax.maybe_set_use_range) -> FStarC_Syntax_Syntax.term)
+  FStarC_Syntax_Syntax.term ->
+    FStarC_Syntax_Syntax.subst_ts -> FStarC_Syntax_Syntax.term)
   =
   fun t ->
     fun s ->
@@ -75,8 +61,8 @@ let (delay :
           { FStarC_Syntax_Syntax.tm1 = t';
             FStarC_Syntax_Syntax.substs = s';_}
           ->
-          FStarC_Syntax_Syntax.mk_Tm_delayed (t', (compose_subst s' s))
-            t.FStarC_Syntax_Syntax.pos
+          let uu___ = let uu___1 = compose_subst s' s in (t', uu___1) in
+          FStarC_Syntax_Syntax.mk_Tm_delayed uu___ t.FStarC_Syntax_Syntax.pos
       | uu___ ->
           FStarC_Syntax_Syntax.mk_Tm_delayed (t, s)
             t.FStarC_Syntax_Syntax.pos
@@ -225,11 +211,9 @@ let rec (subst_univ :
       | FStarC_Syntax_Syntax.U_max us ->
           let uu___ = FStarC_List.map (subst_univ s) us in
           FStarC_Syntax_Syntax.U_max uu___
-let tag_with_range :
-  'uuuuu .
-    FStarC_Syntax_Syntax.term' FStarC_Syntax_Syntax.syntax ->
-      ('uuuuu * FStarC_Syntax_Syntax.maybe_set_use_range) ->
-        FStarC_Syntax_Syntax.term' FStarC_Syntax_Syntax.syntax
+let (tag_with_range :
+  FStarC_Syntax_Syntax.term ->
+    FStarC_Syntax_Syntax.subst_ts -> FStarC_Syntax_Syntax.term)
   =
   fun t ->
     fun s ->
@@ -251,28 +235,20 @@ let tag_with_range :
              let t' =
                match t.FStarC_Syntax_Syntax.n with
                | FStarC_Syntax_Syntax.Tm_bvar bv ->
-                   let uu___2 = FStarC_Syntax_Syntax.set_range_of_bv bv r1 in
+                   let uu___2 =
+                     FStarC_Class_HasRange.setPos
+                       FStarC_Syntax_Syntax.hasRange_bv r1 bv in
                    FStarC_Syntax_Syntax.Tm_bvar uu___2
                | FStarC_Syntax_Syntax.Tm_name bv ->
-                   let uu___2 = FStarC_Syntax_Syntax.set_range_of_bv bv r1 in
+                   let uu___2 =
+                     FStarC_Class_HasRange.setPos
+                       FStarC_Syntax_Syntax.hasRange_bv r1 bv in
                    FStarC_Syntax_Syntax.Tm_name uu___2
                | FStarC_Syntax_Syntax.Tm_fvar fv ->
-                   let l = FStarC_Syntax_Syntax.lid_of_fv fv in
-                   let v =
-                     let uu___2 = fv.FStarC_Syntax_Syntax.fv_name in
-                     let uu___3 = FStarC_Ident.set_lid_range l r1 in
-                     {
-                       FStarC_Syntax_Syntax.v = uu___3;
-                       FStarC_Syntax_Syntax.p =
-                         (uu___2.FStarC_Syntax_Syntax.p)
-                     } in
-                   let fv1 =
-                     {
-                       FStarC_Syntax_Syntax.fv_name = v;
-                       FStarC_Syntax_Syntax.fv_qual =
-                         (fv.FStarC_Syntax_Syntax.fv_qual)
-                     } in
-                   FStarC_Syntax_Syntax.Tm_fvar fv1
+                   let uu___2 =
+                     FStarC_Class_HasRange.setPos
+                       FStarC_Syntax_Syntax.hasRange_fv r1 fv in
+                   FStarC_Syntax_Syntax.Tm_fvar uu___2
                | t'1 -> t'1 in
              {
                FStarC_Syntax_Syntax.n = t';
@@ -344,7 +320,8 @@ let rec (subst' :
                { FStarC_Syntax_Syntax.tm1 = t';
                  FStarC_Syntax_Syntax.substs = s';_}
                ->
-               FStarC_Syntax_Syntax.mk_Tm_delayed (t', (compose_subst s' s))
+               let uu___1 = let uu___2 = compose_subst s' s in (t', uu___2) in
+               FStarC_Syntax_Syntax.mk_Tm_delayed uu___1
                  t.FStarC_Syntax_Syntax.pos
            | FStarC_Syntax_Syntax.Tm_bvar a ->
                apply_until_some_then_map (subst_bv a)
@@ -803,7 +780,8 @@ let rec (push_subst_aux :
                match uu___1 with
                | FStar_Pervasives_Native.None -> fallback ()
                | FStar_Pervasives_Native.Some t1 ->
-                   push_subst_aux resolve_uvars (compose_subst s0 s) t1)
+                   let uu___2 = compose_subst s0 s in
+                   push_subst_aux resolve_uvars uu___2 t1)
         | FStarC_Syntax_Syntax.Tm_type uu___ -> subst' s t
         | FStarC_Syntax_Syntax.Tm_bvar uu___ -> subst' s t
         | FStarC_Syntax_Syntax.Tm_name uu___ -> subst' s t
