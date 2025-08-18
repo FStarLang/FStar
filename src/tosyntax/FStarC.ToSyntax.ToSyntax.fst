@@ -171,15 +171,6 @@ let trans_qual (r:Range.t) maybe_effect_id = function
   | AST.Visible ->
     raise_error r Errors.Fatal_UnsupportedQualifier "Unsupported qualifier"
 
-let trans_pragma = function
-  | AST.ShowOptions -> S.ShowOptions
-  | AST.SetOptions s -> S.SetOptions s
-  | AST.ResetOptions sopt -> S.ResetOptions sopt
-  | AST.PushOptions sopt -> S.PushOptions sopt
-  | AST.PopOptions -> S.PopOptions
-  | AST.RestartSolver -> S.RestartSolver
-  | AST.PrintEffectsGraph -> S.PrintEffectsGraph
-
 let as_imp = function
     | Hash -> S.as_aqual_implicit true
     | _ -> None
@@ -3054,6 +3045,19 @@ let lookup_effect_lid env (l:lident) (r:Range.t) : S.eff_decl =
       ("Effect name " ^ show l ^ " not found")
   | Some l -> l
 
+let trans_pragma env = function
+  | AST.ShowOptions -> S.ShowOptions
+  | AST.SetOptions s -> S.SetOptions s
+  | AST.ResetOptions sopt -> S.ResetOptions sopt
+  | AST.PushOptions sopt -> S.PushOptions sopt
+  | AST.PopOptions -> S.PopOptions
+  | AST.RestartSolver -> S.RestartSolver
+  | AST.PrintEffectsGraph -> S.PrintEffectsGraph
+  | AST.Check t ->
+    let t, aq = desugar_term_maybe_top true env t in
+    check_no_aq aq;
+    S.Check t
+
 let rec desugar_effect env d (d_attrs:list S.term) (quals: qualifiers) (is_layered:bool) eff_name eff_binders eff_typ eff_decls =
     let env0 = env in
     // qualified with effect name
@@ -3452,7 +3456,7 @@ and desugar_decl_core env (d_attrs:list S.term) (d:decl) : (env_t & sigelts) =
   let trans_qual = trans_qual d.drange in
   match d.d with
   | Pragma p ->
-    let p = trans_pragma p in
+    let p = trans_pragma env p in
     U.process_pragma p d.drange;
     let se = { sigel = Sig_pragma p;
                sigquals = [];

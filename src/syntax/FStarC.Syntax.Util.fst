@@ -1621,6 +1621,7 @@ let process_pragma p r =
           "Cannot #pop-options, stack would become empty"
 
     | PrintEffectsGraph -> ()  //Typechecker handles it
+    | Check _ -> ()  //Typechecker handles it
 
 ///////////////////////////////////////////////////////////////////////////////////////////////
 let rec unbound_variables tm :  list bv =

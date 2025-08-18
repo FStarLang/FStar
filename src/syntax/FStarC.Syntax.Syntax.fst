@@ -44,6 +44,7 @@ let pragma_to_string (p:pragma) : string =
   | RestartSolver         -> "#restart-solver"
   | PrintEffectsGraph     -> "#print-effects-graph"
   | PopOptions            -> "#pop-options"
+  | Check t               -> "check _" // can't print a term here... move this to Syntax.Print?
 
 instance showable_pragma = {
   show = pragma_to_string;

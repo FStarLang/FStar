@@ -660,7 +660,9 @@ instance hashable_pragma : hashable pragma = {
           | PushOptions s -> hash 4 `H.mix` hash s
           | PopOptions -> hash 5
           | RestartSolver -> hash 6
-          | PrintEffectsGraph -> hash 7);
+          | PrintEffectsGraph -> hash 7
+          | Check t -> hash 8 `H.mix` hash t
+          );
 }
 
 let rec hash_sigelt (se:sigelt) : hash_code =

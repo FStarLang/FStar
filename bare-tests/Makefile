@@ -9,6 +9,12 @@
 FSTAR_ARGS += --no_prelude
 OTHERFLAGS += --already_cached '-Prims,-FStar,-LowStar'  # remove this which test.mk adds by default
 
+OTHERFLAGS += --warn_error -241
+# ^ When running the output rules, we may not have checked files. This
+# is since the rule in ../mk/test.mk only depends on the fst and not on
+# the computed dependencies. That should be fixed. For now, just ignore
+# warnings about missing checked files since it will mess up the output.
+
 FSTAR_ROOT ?= ..
 FSTAR_EXE ?= $(abspath $(FSTAR_ROOT)/stage1/dune/_build/default/fstarc-bare/fstarc1_bare.exe)
 export FSTAR_LIB ?= $(abspath $(FSTAR_ROOT)/ulib)

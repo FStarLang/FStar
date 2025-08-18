@@ -234,6 +234,7 @@ type pragma =
   | PopOptions
   | RestartSolver
   | PrintEffectsGraph
+  | Check of term
 
 type dep_scan_callbacks = {
    scan_term: term -> unit;
