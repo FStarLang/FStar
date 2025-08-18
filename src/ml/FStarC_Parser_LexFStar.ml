@@ -209,10 +209,10 @@ let () =
    "¬", TILDE "~";
    "⸬", COLON_COLON;
    "▹", PIPE_RIGHT;
-   "÷", OPINFIX3 "÷";
+   "÷", OPINFIX3L "÷";
    "‖", OPINFIX0a "||";
    "×", IDENT "op_Multiply";
-   "∗", OPINFIX3 "*";
+   "∗", OPINFIX3L "*";
    "⇒", OPINFIX0c "=>";
    "≥", OPINFIX0c ">=";
    "≤", OPINFIX0c "<=";
@@ -611,6 +611,8 @@ match%sedlex lexbuf with
                | _ -> assert false end
 
  (* Operators. *)
+ | "**"     ,  Star symbolchar -> ensure_no_comment lexbuf (fun s -> OPINFIX3R  s)
+ | "|->"    ,  Star symbolchar -> ensure_no_comment lexbuf (fun s -> OPINFIX4  s)
  | op_prefix,  Star symbolchar -> ensure_no_comment lexbuf (fun s -> OPPREFIX  s)
  | op_infix0a, Star symbolchar -> ensure_no_comment lexbuf (fun s -> OPINFIX0a s)
  | op_infix0b, Star symbolchar -> ensure_no_comment lexbuf (fun s -> OPINFIX0b s)
@@ -620,9 +622,8 @@ match%sedlex lexbuf with
  | op_infix2,  Star symbolchar -> ensure_no_comment lexbuf (fun s -> OPINFIX2  s)
  | op_infix3,  Star symbolchar -> ensure_no_comment lexbuf (function
                                       | "" -> one_line_comment "" lexbuf
-                                      | s  -> OPINFIX3 s
+                                      | s  -> OPINFIX3L s
                                     )
- | "**"     ,  Star symbolchar -> ensure_no_comment lexbuf (fun s -> OPINFIX4  s)
 
  (* Unicode Operators *)
  | uoperator -> let id = L.lexeme lexbuf in
