@@ -437,7 +437,10 @@ let rec on_sub_sigelt' #m {|d : lvm m |} (se : sigelt') : m sigelt' =
     // ^ review: residual flags should not have terms
     return <| Sig_effect_abbrev {lid; us; bs; comp; cflags}
 
-  (* No content *)
+  (* No content, except for Check. *)
+  | Sig_pragma (Check t) ->
+    let! t = f_term t in
+    return <| Sig_pragma (Check t)
   | Sig_pragma _ -> return se
 
   | Sig_polymonadic_bind {m_lid; n_lid; p_lid; tm; typ; kind} ->
