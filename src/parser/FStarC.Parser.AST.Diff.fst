@@ -465,7 +465,6 @@ let eq_qualifier (t1 t2: qualifier) =
   | Noeq, Noeq -> true
   | Unopteq, Unopteq -> true
   | Assumption, Assumption -> true
-  | DefaultEffect, DefaultEffect -> true
   | TotalEffect, TotalEffect -> true
   | Effect_qual, Effect_qual -> true
   | New, New -> true
