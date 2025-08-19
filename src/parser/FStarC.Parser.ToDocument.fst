@@ -312,9 +312,10 @@ let matches_level s (assoc_levels, tokens) =
 // GM 05/10/18, TODO: This still needs to be heavily annotated with the new unifier:
 
 (* Precedence and associativity levels, taken from ../src/parse.mly *)
-let opinfix4 : associativity_level = Right, [Exact "**"; UnicodeOperator]
+let opinfix4 : associativity_level = Right, [Exact "|->"; UnicodeOperator]
 // level backtick won't be used here
-let opinfix3 : associativity_level = Left,  [StartsWith '*' ; StartsWith '/' ; StartsWith '%']
+let opinfix3l : associativity_level = Left,  [StartsWith '*' ; StartsWith '/' ; StartsWith '%']
+let opinfix3r : associativity_level = Right, [Exact "**"]
 let opinfix2 : associativity_level = Left,  [StartsWith '+' ; StartsWith '-' ]
 let minus_lvl : associativity_level = Left, [Exact "-"] // Sublevel of opinfix2, not a level on its own !!!
 let opinfix1 : associativity_level = Right, [StartsWith '@' ; StartsWith '^']
@@ -332,7 +333,8 @@ let colon_colon : associativity_level = Right, [Exact "::"]
 let level_associativity_spec : list associativity_level =
   [
     opinfix4 ;
-    opinfix3 ;
+    opinfix3r ;
+    opinfix3l ;
     opinfix2 ;
     opinfix1 ;
     pipe_right ;
@@ -389,7 +391,7 @@ let is_operatorInfix0ad12 op =
     List.tryFind (matches_level <| Ident.string_of_id op) operatorInfix0ad12 <> None
 
 let is_operatorInfix34 =
-    let opinfix34 = [ opinfix3 ; opinfix4 ] in
+    let opinfix34 = [ opinfix3l ; opinfix3r; opinfix4 ] in
     fun op -> List.tryFind (matches_level <| Ident.string_of_id op) opinfix34 <> None
 
 let handleable_args_length (op:ident) =
@@ -1948,7 +1950,7 @@ and p_tmEqWith' p_X curr e = match e.tm with
 
 and p_tmNoEqWith p_X e =
   (* TODO : this should be precomputed but F* complains about a potential ML effect *)
-  let n = max_level [colon_colon ; amp ; opinfix3 ; opinfix4] in
+  let n = max_level [colon_colon ; amp ; opinfix3l ; opinfix3r ; opinfix4] in
   p_tmNoEqWith' false p_X n e
 
 and p_tmNoEqWith' inside_tuple p_X curr e = match e.tm with
