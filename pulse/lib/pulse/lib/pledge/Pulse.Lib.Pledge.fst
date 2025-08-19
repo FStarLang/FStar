@@ -176,7 +176,7 @@ fn bind_pledge'
 {
   ghost
   fn aux ()
-    requires no_extrude (f ** extra) ** v1
+    requires f ** extra ** v1
     ensures f ** pledge is f v2
     opens is
   {
