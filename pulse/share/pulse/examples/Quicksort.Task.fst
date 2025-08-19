@@ -68,8 +68,8 @@ fn rec t_quicksort
       // above must also be in this exact shape. To obtain the shape, I just manually looked
       // at the context. Automation should likely help here.
       requires no_extrude <|
-        (T.pool_alive #(f /. 2.0R) p ** quicksort_post a lo p31 s1 lb pivot) **
-        A.pts_to_range a p31 p32 s2 **
+        ((T.pool_alive #(f /. 2.0R) p ** quicksort_post a lo p31 s1 lb pivot) **
+        A.pts_to_range a p31 p32 s2) **
         (T.pool_alive #(f /. 2.0R) p ** quicksort_post a p32 hi s3 pivot rb)
       ensures no_extrude <|
         T.pool_alive #f p **

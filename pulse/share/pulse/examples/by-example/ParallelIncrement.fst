@@ -376,7 +376,7 @@ module C = Pulse.Lib.CancellableInvariant
 
 fn atomic_increment_f6
         (x: ref int)
-        (#p:perm)
+        (#p:_)
         (#pred #qpred: int -> slprop)
         (c:C.cinv)
         (f: (v:int -> vq:int -> stt_ghost unit

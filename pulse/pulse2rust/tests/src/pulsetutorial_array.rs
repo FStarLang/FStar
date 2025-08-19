@@ -89,7 +89,7 @@ pub fn heap_arrays(uu___: ()) -> std::vec::Vec<i64> {
     drop(a1);
     a2
 }
-pub fn copy_app(mut v: std::vec::Vec<i64>) -> () {
+pub fn copy_app(mut v: std::vec::Vec<i64>, s: ()) -> () {
     let a = &mut [0; 2];
     super::pulsetutorial_array::copy2(&mut v, a, 2, (), (), ())
 }
