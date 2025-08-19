@@ -419,7 +419,7 @@ let run_tactic_on_ps'
      * will mess up the monadic lifts. We're just making sure it's well-typed
      * so it won't get stuck. c.f #1307 *)
     let g =
-      if tactic_already_typed || true
+      if tactic_already_typed
       then Env.trivial_guard
       else let _, _, g = TcTerm.tc_tactic (type_of e_arg) (type_of e_res) env tactic in
            g

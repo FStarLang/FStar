@@ -2740,20 +2740,7 @@ and norm_residual_comp cfg env (rc:residual_comp) : residual_comp =
 let reflection_env_hook = mk_ref None
 
 let normalize_with_primitive_steps ps s e (t:term) =
-  let key =
-    if !Stats.enabled
-    then (
-      if Options.Ext.enabled "stats_norm_stack"
-      then (
-        let sd = FStarC.Util.stack_dump () in
-        let len = String.length sd in
-        "norm_term:"^(String.substring sd 0 (if len < 1000 then len else 1000))
-      )
-      else "norm_term"
-    )
-    else "norm_term" 
-  in
-  Stats.record key fun () ->
+  Stats.record "norm_term" fun () ->
   let is_nbe = is_nbe_request s in
   let maybe_nbe = if is_nbe then " (NBE)" else "" in
   Errors.with_ctx ("While normalizing a term" ^ maybe_nbe) (fun () ->
