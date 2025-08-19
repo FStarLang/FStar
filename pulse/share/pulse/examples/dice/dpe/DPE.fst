@@ -1277,8 +1277,7 @@ fn certify_key (sid:sid_t)
               pts_to pub_key pub_key_repr **
               pts_to crt crt_repr)
   returns _:U32.t
-  ensures no_extrude <|
-        certify_key_client_perm sid t **
+  ensures certify_key_client_perm sid t **
           (exists* pub_key_repr crt_repr.
              pts_to pub_key pub_key_repr **
              pts_to crt crt_repr)
@@ -1380,8 +1379,7 @@ fn sign (sid:sid_t)
            (exists* signature_repr msg_repr.
               pts_to signature signature_repr **
               pts_to msg msg_repr)
-  ensures no_extrude <|
-        sign_client_perm sid t **
+  ensures sign_client_perm sid t **
           (exists* signature_repr msg_repr.
              pts_to signature signature_repr **
              pts_to msg msg_repr)
