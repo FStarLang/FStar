@@ -56,7 +56,6 @@ let rewrite_token (tok:FP.token)
     | COMMA -> PP.COMMA
     | CONJUNCTION -> PP.CONJUNCTION
     | DECREASES -> PP.DECREASES
-    | DEFAULT -> PP.DEFAULT
     | DISJUNCTION -> PP.DISJUNCTION
     | DOLLAR -> PP.DOLLAR 
     | DOT -> PP.DOT 
