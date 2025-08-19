@@ -309,17 +309,15 @@ let buffer_input_queries (st:repl_state) : repl_state =
   in
   aux [] st
 
-let read_interactive_query (st:repl_state) : query & repl_state =
+let read_interactive_query (st:repl_state) : option (query & repl_state) =
     match st.repl_buffered_input_queries with
     | [] -> (
       match Util.read_line st.repl_stdin with
-      | None ->
-        Util.kill_all ();
-        exit 0
-      | Some line -> parse_interactive_query line, st
+      | None -> Util.kill_all(); None
+      | Some line -> Some (parse_interactive_query line, st)
     )
     | q :: qs ->
-      q, { st with repl_buffered_input_queries = qs }
+      Some (q, { st with repl_buffered_input_queries = qs })
   
 let json_of_opt json_of_a opt_a =
   Option.dflt JsonNull (Option.map json_of_a opt_a)
@@ -1207,12 +1205,14 @@ let js_repl_init_opts () =
 
 (** This is the main loop for the desktop version **)
 let rec go st : int =
-  let query, st = read_interactive_query st in
-  let (status, responses), state_opt = validate_and_run_query st query in
-  List.iter (write_response query.qid status) responses;
-  match state_opt with
-  | Inl st' -> go st'
-  | Inr exitcode -> exitcode
+  match read_interactive_query st with
+  | None -> 0
+  | Some (query, st) ->
+    let (status, responses), state_opt = validate_and_run_query st query in
+    List.iter (write_response query.qid status) responses;
+    match state_opt with
+    | Inl st' -> go st'
+    | Inr exitcode -> exitcode
 
 // No printing here — collect everything for future use
 let interactive_error_handler = Errors.mk_catch_handler ()
@@ -1251,7 +1251,7 @@ let interactive_mode' init_st =
     let fn = List.hd (Options.file_list ()) in
     SMTEncoding.Solver.with_hints_db fn (fun () -> go init_st)
   in
-  exit exit_code
+  if exit_code <> 0 then exit exit_code
 
 let interactive_mode (filename:string): unit =
   install_ide_mode_hooks write_json;
