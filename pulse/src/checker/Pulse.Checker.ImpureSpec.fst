@@ -118,9 +118,9 @@ let prove (g: env) (goal: slprop) (ctxt: slprop) (r: range) : T.Tac unit =
   | unsolved_goals ->
     T.fail_doc_at [
       text "Cannot prove remaining precondition:";
-      separate (break_ 1) (T.map pp unsolved_goals);
+      separate hardline (T.map pp unsolved_goals);
       text "from context:";
-      separate (break_ 1) (T.map pp ctxt);
+      separate hardline (T.map pp ctxt);
     ] (Some r)
 
 let symb_eval_stateful_app (g: env) (ctxt: slprop) (t: term) : T.Tac R.term =
@@ -222,6 +222,7 @@ let rec symb_eval_subterms (g:env) (ctxt: ctxt) (t:R.term) : T.Tac (bool & R.ter
         | Some _, Some ctxt_old ->
           let head, args = T.collect_app_ln t in
           let g, changed, args = symb_eval_subterms_args g ctxt args in
+          let t = RU.mk_app_flat head args (T.range_of_term t) in
           let t' = symb_eval_stateful_app g ctxt_old t in
           true, t'
       else
