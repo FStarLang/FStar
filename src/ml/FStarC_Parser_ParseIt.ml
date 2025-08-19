@@ -358,7 +358,6 @@ let string_of_token =
   | IF -> "IF"
   | IN -> "IN"
   | MODULE -> "MODULE"
-  | DEFAULT -> "DEFAULT"
   | MATCH -> "MATCH"
   | OF -> "OF"
   | FRIEND -> "FRIEND"

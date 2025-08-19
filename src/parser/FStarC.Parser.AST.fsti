@@ -192,7 +192,6 @@ type qualifier =
   | Noeq
   | Unopteq
   | Assumption
-  | DefaultEffect
   | TotalEffect
   | Effect_qual
   | New
