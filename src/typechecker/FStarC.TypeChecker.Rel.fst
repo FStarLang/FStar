@@ -2301,28 +2301,33 @@ and solve_maybe_uinsts (orig:prob) (t1:term) (t2:term) (wl:worklist) : univ_eq_s
             | failed_or_deferred -> failed_or_deferred
           end
 
-        | _ -> ufailed_simple "Unequal number of universes" in
+        | _ -> ufailed_simple "Unequal number of universes"
+    in
 
     let env = p_env wl orig in
     def_check_scoped t1.pos "solve_maybe_uinsts.whnf1" env t1;
     def_check_scoped t2.pos "solve_maybe_uinsts.whnf2" env t2;
-    let t1, t2 =
-      if Options.Ext.enabled "no_norm_solve_uinsts"
-      then t1, t2
-      else whnf env t1, whnf env t2
-    in
-    match t1.n, t2.n with
-    | Tm_uinst({n=Tm_fvar f}, us1), Tm_uinst({n=Tm_fvar g}, us2) ->
-        let b = S.fv_eq f g in
-        assert b;
-        aux wl us1 us2
+    let rec inspect retry t1 t2 = 
+      match t1.n, t2.n with
+      | Tm_uinst({n=Tm_fvar f}, us1), Tm_uinst({n=Tm_fvar g}, us2) ->
+          let b = S.fv_eq f g in
+          assert b;
+          aux wl us1 us2
 
-    | Tm_uinst _, _
-    | _, Tm_uinst _ ->
-        failwith "Impossible: expect head symbols to match"
-
-    | _ ->
+      | Tm_fvar _, Tm_fvar _ ->
         USolved wl
+
+      | _ when retry -> 
+        inspect false (whnf env t1) (whnf env t2)
+
+      | Tm_uinst _, _
+      | _, Tm_uinst _ ->
+          failwith "Impossible: expect head symbols to match"
+
+      | _ ->
+          USolved wl
+    in
+    inspect true t1 t2
 
 and giveup_or_defer (orig:prob) (wl:worklist) (reason:deferred_reason) (msg:lstring) : solution =
     if wl.defer_ok = DeferAny
