@@ -2493,13 +2493,16 @@ let find_coercion (env:Env.env) (checked: lcomp) (exp_t: typ) (e:term)
 // or None if no coercion applied
 =
  Errors.with_ctx "find_coercion" (fun () ->
-  let is_type t =
-      let t = N.unfold_whnf env t in
-      let t = U.unrefine t in (* mostly to catch `prop` too *)
+  let rec is_type retry t =
       match (SS.compress t).n with
       | Tm_type _ -> true
+      | _ when retry ->
+        let t = N.unfold_whnf env t in
+        let t = U.unrefine t in (* mostly to catch `prop` too *)
+        is_type false t
       | _ -> false
   in
+  let is_type = is_type true in
   let rec head_of (t : term) : term =
       match (compress t).n with
       | Tm_app {hd=t}
