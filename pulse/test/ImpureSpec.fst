@@ -94,6 +94,11 @@ fn test9 (x: ref (ref int))
   !x := 10;
 }
 
+fn test10 (x: bool)
+  returns y: _
+  ensures pure (x == y)
+{ x }
+
 fn test11 (x:ref (ref int))
   preserves nested_live x
   returns w:_

@@ -119,6 +119,7 @@ let preproc_ascription (g: env) (c: comp) : T.Tac (env & list (var & binder & op
           { ctxt_old = Some pre; ctxt_now = tm_emp }
           post in
     let post = close_term post x in
+    let res, u = tc_type_phase1 g res true in // FIXME: unification fails to fill in u....
     g, bs, ({u;res;pre;post} <: st_comp) in
   match c with
   | C_Tot t -> g, [], C_Tot (fst (tc_type_phase1 g t true))
