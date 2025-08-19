@@ -690,8 +690,9 @@ let spinoff_strictly_positive_goals (env:Env.env) (goal:term)
               Some (env, t))
       in
 
-      FStarC.Errors.diag (Env.get_range env)
-              (Format.fmt1 "Split query into %s sub-goals" (show (List.length gs)));
+      if !dbg_Tac then
+        FStarC.Errors.diag (Env.get_range env)
+                (Format.fmt1 "Split query into %s sub-goals" (show (List.length gs)));
 
       main_goal@gs
   )

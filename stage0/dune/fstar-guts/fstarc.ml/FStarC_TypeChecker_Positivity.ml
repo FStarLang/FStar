@@ -421,31 +421,33 @@ let (mark_uniform_type_parameters :
                                        uu___5;
                                      FStarC_Syntax_Syntax.mutuals1 = uu___6;
                                      FStarC_Syntax_Syntax.injective_type_params1
-                                       = uu___7;_}
+                                       = uu___7;
+                                     FStarC_Syntax_Syntax.proj_disc_lids =
+                                       uu___8;_}
                                    ->
-                                   let uu___8 =
+                                   let uu___9 =
                                      FStarC_Ident.lid_equals tc_lid1 tc_lid' in
-                                   if uu___8
+                                   if uu___9
                                    then
                                      let dt1 =
-                                       let uu___9 =
-                                         let uu___10 =
-                                           FStarC_List.map
-                                             (fun uu___11 ->
-                                                FStarC_Syntax_Syntax.U_name
-                                                  uu___11) us1 in
-                                         FStarC_TypeChecker_Env.mk_univ_subst
-                                           d_us uu___10 in
-                                       FStarC_Syntax_Subst.subst uu___9 dt in
-                                     let uu___9 =
                                        let uu___10 =
                                          let uu___11 =
+                                           FStarC_List.map
+                                             (fun uu___12 ->
+                                                FStarC_Syntax_Syntax.U_name
+                                                  uu___12) us1 in
+                                         FStarC_TypeChecker_Env.mk_univ_subst
+                                           d_us uu___11 in
+                                       FStarC_Syntax_Subst.subst uu___10 dt in
+                                     let uu___10 =
+                                       let uu___11 =
+                                         let uu___12 =
                                            apply_constr_arrow d_lid dt1
                                              ty_param_args in
                                          FStarC_Syntax_Util.arrow_formals
-                                           uu___11 in
-                                       FStar_Pervasives_Native.fst uu___10 in
-                                     FStar_Pervasives_Native.Some uu___9
+                                           uu___12 in
+                                       FStar_Pervasives_Native.fst uu___11 in
+                                     FStar_Pervasives_Native.Some uu___10
                                    else FStar_Pervasives_Native.None
                                | uu___5 -> FStar_Pervasives_Native.None)
                             datas in
@@ -593,7 +595,7 @@ let (may_be_an_arity :
                   | FStarC_Syntax_Syntax.Tm_fvar fv ->
                       let uu___4 =
                         FStarC_TypeChecker_Env.lookup_sigelt env
-                          (fv.FStarC_Syntax_Syntax.fv_name).FStarC_Syntax_Syntax.v in
+                          fv.FStarC_Syntax_Syntax.fv_name in
                       (match uu___4 with
                        | FStar_Pervasives_Native.None -> true
                        | FStar_Pervasives_Native.Some se ->
@@ -612,7 +614,7 @@ let (may_be_an_arity :
                   | FStarC_Syntax_Syntax.Tm_fvar fv ->
                       let uu___4 =
                         FStarC_TypeChecker_Env.lookup_sigelt env
-                          (fv.FStarC_Syntax_Syntax.fv_name).FStarC_Syntax_Syntax.v in
+                          fv.FStarC_Syntax_Syntax.fv_name in
                       (match uu___4 with
                        | FStar_Pervasives_Native.None -> true
                        | FStar_Pervasives_Native.Some se ->
@@ -631,7 +633,7 @@ let (may_be_an_arity :
                   | FStarC_Syntax_Syntax.Tm_fvar fv ->
                       let uu___4 =
                         FStarC_TypeChecker_Env.lookup_sigelt env
-                          (fv.FStarC_Syntax_Syntax.fv_name).FStarC_Syntax_Syntax.v in
+                          fv.FStarC_Syntax_Syntax.fv_name in
                       (match uu___4 with
                        | FStar_Pervasives_Native.None -> true
                        | FStar_Pervasives_Native.Some se ->
@@ -756,8 +758,7 @@ let (check_no_index_occurrences_in_arities :
               | FStarC_Syntax_Syntax.Tm_fvar fv ->
                   let uu___3 =
                     FStarC_TypeChecker_Env.num_inductive_uniform_ty_params
-                      env
-                      (fv.FStarC_Syntax_Syntax.fv_name).FStarC_Syntax_Syntax.v in
+                      env fv.FStarC_Syntax_Syntax.fv_name in
                   (match uu___3 with
                    | FStar_Pervasives_Native.None -> ()
                    | FStar_Pervasives_Native.Some n ->
@@ -766,12 +767,11 @@ let (check_no_index_occurrences_in_arities :
                        else
                          (let uu___5 =
                             FStarC_TypeChecker_Env.try_lookup_lid env
-                              (fv.FStarC_Syntax_Syntax.fv_name).FStarC_Syntax_Syntax.v in
+                              fv.FStarC_Syntax_Syntax.fv_name in
                           match uu___5 with
                           | FStar_Pervasives_Native.None ->
                               no_occurrence_in_indexes
-                                (fv.FStarC_Syntax_Syntax.fv_name).FStarC_Syntax_Syntax.v
-                                mutuals args
+                                fv.FStarC_Syntax_Syntax.fv_name mutuals args
                           | FStar_Pervasives_Native.Some
                               ((_us, i_typ), uu___6) ->
                               (debug_positivity env
@@ -790,8 +790,8 @@ let (check_no_index_occurrences_in_arities :
                                 | (params, indices) ->
                                     let inst_i_typ =
                                       apply_constr_arrow
-                                        (fv.FStarC_Syntax_Syntax.fv_name).FStarC_Syntax_Syntax.v
-                                        i_typ params in
+                                        fv.FStarC_Syntax_Syntax.fv_name i_typ
+                                        params in
                                     let uu___9 =
                                       FStarC_Syntax_Util.arrow_formals
                                         inst_i_typ in
@@ -830,7 +830,7 @@ let (check_no_index_occurrences_in_arities :
                                                                uu___14
                                                                uu___15);
                                                         no_occurrence_in_index
-                                                          (fv.FStarC_Syntax_Syntax.fv_name).FStarC_Syntax_Syntax.v
+                                                          fv.FStarC_Syntax_Syntax.fv_name
                                                           mutuals i)
                                                      else
                                                        debug_positivity env
@@ -857,7 +857,7 @@ let (check_no_index_occurrences_in_arities :
                                                        indices2))
                                                | ([], uu___10) ->
                                                    no_occurrence_in_indexes
-                                                     (fv.FStarC_Syntax_Syntax.fv_name).FStarC_Syntax_Syntax.v
+                                                     fv.FStarC_Syntax_Syntax.fv_name
                                                      mutuals indices1 in
                                          aux [] formals indices)))))
               | uu___3 -> ()))
@@ -1097,15 +1097,14 @@ let rec (ty_strictly_positive_in_type :
                         let uu___5 =
                           FStarC_List.existsML
                             (FStarC_Ident.lid_equals
-                               (fv.FStarC_Syntax_Syntax.fv_name).FStarC_Syntax_Syntax.v)
-                            mutuals in
+                               fv.FStarC_Syntax_Syntax.fv_name) mutuals in
                         if uu___5
                         then
                           (debug_positivity env
                              (fun uu___7 ->
                                 let uu___8 =
                                   FStarC_Ident.string_of_lid
-                                    (fv.FStarC_Syntax_Syntax.fv_name).FStarC_Syntax_Syntax.v in
+                                    fv.FStarC_Syntax_Syntax.fv_name in
                                 FStarC_Format.fmt1
                                   "Checking strict positivity in the Tm_app node where head lid is %s itself, checking that ty does not occur in the arguments"
                                   uu___8);
@@ -1122,8 +1121,7 @@ let rec (ty_strictly_positive_in_type :
                                   "Checking strict positivity in the Tm_app node, head lid is not in %s, so checking nested positivity"
                                   uu___9);
                            ty_strictly_positive_in_arguments_to_fvar env
-                             mutuals in_type1
-                             (fv.FStarC_Syntax_Syntax.fv_name).FStarC_Syntax_Syntax.v
+                             mutuals in_type1 fv.FStarC_Syntax_Syntax.fv_name
                              us args unfolded))
                | FStarC_Syntax_Syntax.Tm_arrow
                    { FStarC_Syntax_Syntax.bs1 = uu___5;

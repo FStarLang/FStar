@@ -382,8 +382,7 @@ let (instantiate :
                      match uu___2 with
                      | (x, uu___3) ->
                          FStarC_Ident.lid_equals x
-                           (fv.FStarC_Syntax_Syntax.fv_name).FStarC_Syntax_Syntax.v)
-                  i in
+                           fv.FStarC_Syntax_Syntax.fv_name) i in
               match uu___1 with
               | FStar_Pervasives_Native.None -> t1
               | FStar_Pervasives_Native.Some (uu___2, us) ->

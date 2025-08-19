@@ -160,9 +160,9 @@ let rec (prefix_with_iface_decls :
                                FStarC_Class_PP.pp
                                  (FStarC_Class_PP.pp_list
                                     FStarC_Ident.pretty_lident) def_ids in
-                             FStarC_Pprint.op_Hat_Slash_Hat uu___10 uu___11 in
-                           FStarC_Pprint.op_Hat_Slash_Hat uu___8 uu___9 in
-                         FStarC_Pprint.op_Hat_Slash_Hat uu___6 uu___7 in
+                             FStar_Pprint.op_Hat_Slash_Hat uu___10 uu___11 in
+                           FStar_Pprint.op_Hat_Slash_Hat uu___8 uu___9 in
+                         FStar_Pprint.op_Hat_Slash_Hat uu___6 uu___7 in
                        [uu___5] in
                      FStarC_Errors.raise_error
                        FStarC_Parser_AST.hasRange_decl impl
@@ -250,9 +250,9 @@ let rec (prefix_with_iface_decls :
                                FStarC_Class_PP.pp
                                  (FStarC_Class_PP.pp_list
                                     FStarC_Ident.pretty_lident) def_ids in
-                             FStarC_Pprint.op_Hat_Slash_Hat uu___9 uu___10 in
-                           FStarC_Pprint.op_Hat_Slash_Hat uu___7 uu___8 in
-                         FStarC_Pprint.op_Hat_Slash_Hat uu___5 uu___6 in
+                             FStar_Pprint.op_Hat_Slash_Hat uu___9 uu___10 in
+                           FStar_Pprint.op_Hat_Slash_Hat uu___7 uu___8 in
+                         FStar_Pprint.op_Hat_Slash_Hat uu___5 uu___6 in
                        [uu___4] in
                      FStarC_Errors.raise_error
                        FStarC_Parser_AST.hasRange_decl impl
@@ -723,12 +723,12 @@ let (interleave_module :
                                                  FStarC_Class_Show.show
                                                    FStarC_Parser_AST.showable_decl
                                                    d in
-                                               FStarC_Pprint.doc_of_string
+                                               FStar_Pprint.doc_of_string
                                                  uu___11)
                                             remaining_iface_vals in
                                         FStarC_Errors_Msg.sublist
-                                          FStarC_Pprint.empty uu___10 in
-                                      FStarC_Pprint.op_Hat_Hat uu___8 uu___9 in
+                                          FStar_Pprint.empty uu___10 in
+                                      FStar_Pprint.op_Hat_Hat uu___8 uu___9 in
                                     [uu___7] in
                                   FStarC_Errors.log_issue
                                     FStarC_Ident.hasrange_lident l

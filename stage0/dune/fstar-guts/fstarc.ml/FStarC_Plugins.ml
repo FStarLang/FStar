@@ -37,7 +37,7 @@ let (do_dynlink : Prims.string -> unit) =
               let uu___5 =
                 let uu___6 = FStarC_Errors_Msg.text "Reason:" in
                 let uu___7 = FStarC_Errors_Msg.text e in
-                FStarC_Pprint.prefix (Prims.of_int (2)) Prims.int_one uu___6
+                FStar_Pprint.prefix (Prims.of_int (2)) Prims.int_one uu___6
                   uu___7 in
               let uu___6 =
                 let uu___7 =

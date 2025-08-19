@@ -44,6 +44,7 @@ let pragma_to_string (p:pragma) : string =
   | RestartSolver         -> "#restart-solver"
   | PrintEffectsGraph     -> "#print-effects-graph"
   | PopOptions            -> "#pop-options"
+  | Check t               -> "check _" // can't print a term here... move this to Syntax.Print?
 
 instance showable_pragma = {
   show = pragma_to_string;
@@ -279,14 +280,6 @@ instance ord_ident : ord ident =
   ord_instance_from_cmp (fun x y -> Order.order_from_int (order_ident x y))
 instance ord_fv : ord lident =
   ord_instance_from_cmp (fun x y -> Order.order_from_int (order_fv x y))
-
-let syn p k f = f k p
-let mk_fvs () = mk_ref None
-let mk_uvs () = mk_ref None
-
-//let memo_no_uvs = mk_ref (Some no_uvs)
-//let memo_no_names = mk_ref (Some no_names)
-let list_of_freenames (fvs:freenames) = elems fvs
 
 (* Constructors for each term form; NO HASH CONSING; just makes all the auxiliary data at each node *)
 let mk (t:'a) r = {

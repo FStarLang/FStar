@@ -121,92 +121,162 @@ let rec list_eq : 'a . 'a comparator_for -> 'a Prims.list comparator_for =
 let rec (univ_eq : FStarC_Reflection_Types.universe comparator_for) =
   fun u1 ->
     fun u2 ->
-      let uu___ =
-        Obj.magic
-          (FStar_Tactics_Effect.lift_div_tac
-             (fun uu___1 -> FStarC_Reflection_V2_Builtins.inspect_universe u1)) in
+      let uu___ = FStarC_Tactics_V2_Builtins.compress_univ u1 in
       FStar_Tactics_Effect.tac_bind
         (FStar_Sealed.seal
            (Obj.magic
               (FStar_Range.mk_range "FStar.Tactics.LaxTermEq.fst"
-                 (Prims.of_int (37)) (Prims.of_int (12)) (Prims.of_int (37))
-                 (Prims.of_int (31)))))
+                 (Prims.of_int (37)) (Prims.of_int (11)) (Prims.of_int (37))
+                 (Prims.of_int (27)))))
         (FStar_Sealed.seal
            (Obj.magic
               (FStar_Range.mk_range "FStar.Tactics.LaxTermEq.fst"
-                 (Prims.of_int (37)) (Prims.of_int (34)) (Prims.of_int (48))
+                 (Prims.of_int (37)) (Prims.of_int (30)) (Prims.of_int (50))
                  (Prims.of_int (14))))) (Obj.magic uu___)
         (fun uu___1 ->
-           (fun uv1 ->
-              let uu___1 =
-                Obj.magic
-                  (FStar_Tactics_Effect.lift_div_tac
-                     (fun uu___2 ->
-                        FStarC_Reflection_V2_Builtins.inspect_universe u2)) in
+           (fun u11 ->
+              let uu___1 = FStarC_Tactics_V2_Builtins.compress_univ u2 in
               Obj.magic
                 (FStar_Tactics_Effect.tac_bind
                    (FStar_Sealed.seal
                       (Obj.magic
                          (FStar_Range.mk_range "FStar.Tactics.LaxTermEq.fst"
-                            (Prims.of_int (38)) (Prims.of_int (12))
-                            (Prims.of_int (38)) (Prims.of_int (31)))))
+                            (Prims.of_int (38)) (Prims.of_int (11))
+                            (Prims.of_int (38)) (Prims.of_int (27)))))
                    (FStar_Sealed.seal
                       (Obj.magic
                          (FStar_Range.mk_range "FStar.Tactics.LaxTermEq.fst"
-                            (Prims.of_int (39)) (Prims.of_int (2))
-                            (Prims.of_int (48)) (Prims.of_int (14)))))
+                            (Prims.of_int (38)) (Prims.of_int (30))
+                            (Prims.of_int (50)) (Prims.of_int (14)))))
                    (Obj.magic uu___1)
                    (fun uu___2 ->
-                      (fun uv2 ->
-                         match (uv1, uv2) with
-                         | (FStarC_Reflection_V2_Data.Uv_Zero,
-                            FStarC_Reflection_V2_Data.Uv_Zero) ->
-                             Obj.magic
-                               (Obj.repr
-                                  (FStar_Tactics_Effect.lift_div_tac
-                                     (fun uu___2 -> true)))
-                         | (FStarC_Reflection_V2_Data.Uv_Succ u11,
-                            FStarC_Reflection_V2_Data.Uv_Succ u21) ->
-                             Obj.magic (Obj.repr (univ_eq u11 u21))
-                         | (FStarC_Reflection_V2_Data.Uv_Max us1,
-                            FStarC_Reflection_V2_Data.Uv_Max us2) ->
-                             Obj.magic (Obj.repr (list_eq univ_eq us1 us2))
-                         | (FStarC_Reflection_V2_Data.Uv_BVar v1,
-                            FStarC_Reflection_V2_Data.Uv_BVar v2) ->
-                             Obj.magic
-                               (Obj.repr
-                                  (FStar_Tactics_Effect.lift_div_tac
-                                     (fun uu___2 -> v1 = v2)))
-                         | (FStarC_Reflection_V2_Data.Uv_Name id1,
-                            FStarC_Reflection_V2_Data.Uv_Name id2) ->
-                             Obj.magic
-                               (Obj.repr
-                                  (FStar_Tactics_Effect.lift_div_tac
-                                     (fun uu___2 ->
-                                        (FStar_Pervasives_Native.fst
-                                           (FStarC_Reflection_V2_Builtins.inspect_ident
-                                              id1))
-                                          =
-                                          (FStar_Pervasives_Native.fst
-                                             (FStarC_Reflection_V2_Builtins.inspect_ident
-                                                id2)))))
-                         | (FStarC_Reflection_V2_Data.Uv_Unif u11,
-                            FStarC_Reflection_V2_Data.Uv_Unif u21) ->
-                             Obj.magic
-                               (Obj.repr
-                                  (FStar_Tactics_Effect.lift_div_tac
-                                     (fun uu___2 -> false)))
-                         | (FStarC_Reflection_V2_Data.Uv_Unk,
-                            FStarC_Reflection_V2_Data.Uv_Unk) ->
-                             Obj.magic
-                               (Obj.repr
-                                  (FStar_Tactics_Effect.lift_div_tac
-                                     (fun uu___2 -> false)))
-                         | uu___2 ->
-                             Obj.magic
-                               (Obj.repr
-                                  (FStar_Tactics_Effect.lift_div_tac
-                                     (fun uu___3 -> false)))) uu___2)))
+                      (fun u21 ->
+                         let uu___2 =
+                           Obj.magic
+                             (FStar_Tactics_Effect.lift_div_tac
+                                (fun uu___3 ->
+                                   FStarC_Reflection_V2_Builtins.inspect_universe
+                                     u11)) in
+                         Obj.magic
+                           (FStar_Tactics_Effect.tac_bind
+                              (FStar_Sealed.seal
+                                 (Obj.magic
+                                    (FStar_Range.mk_range
+                                       "FStar.Tactics.LaxTermEq.fst"
+                                       (Prims.of_int (39))
+                                       (Prims.of_int (12))
+                                       (Prims.of_int (39))
+                                       (Prims.of_int (31)))))
+                              (FStar_Sealed.seal
+                                 (Obj.magic
+                                    (FStar_Range.mk_range
+                                       "FStar.Tactics.LaxTermEq.fst"
+                                       (Prims.of_int (39))
+                                       (Prims.of_int (34))
+                                       (Prims.of_int (50))
+                                       (Prims.of_int (14)))))
+                              (Obj.magic uu___2)
+                              (fun uu___3 ->
+                                 (fun uv1 ->
+                                    let uu___3 =
+                                      Obj.magic
+                                        (FStar_Tactics_Effect.lift_div_tac
+                                           (fun uu___4 ->
+                                              FStarC_Reflection_V2_Builtins.inspect_universe
+                                                u21)) in
+                                    Obj.magic
+                                      (FStar_Tactics_Effect.tac_bind
+                                         (FStar_Sealed.seal
+                                            (Obj.magic
+                                               (FStar_Range.mk_range
+                                                  "FStar.Tactics.LaxTermEq.fst"
+                                                  (Prims.of_int (40))
+                                                  (Prims.of_int (12))
+                                                  (Prims.of_int (40))
+                                                  (Prims.of_int (31)))))
+                                         (FStar_Sealed.seal
+                                            (Obj.magic
+                                               (FStar_Range.mk_range
+                                                  "FStar.Tactics.LaxTermEq.fst"
+                                                  (Prims.of_int (41))
+                                                  (Prims.of_int (2))
+                                                  (Prims.of_int (50))
+                                                  (Prims.of_int (14)))))
+                                         (Obj.magic uu___3)
+                                         (fun uu___4 ->
+                                            (fun uv2 ->
+                                               match (uv1, uv2) with
+                                               | (FStarC_Reflection_V2_Data.Uv_Zero,
+                                                  FStarC_Reflection_V2_Data.Uv_Zero)
+                                                   ->
+                                                   Obj.magic
+                                                     (Obj.repr
+                                                        (FStar_Tactics_Effect.lift_div_tac
+                                                           (fun uu___4 ->
+                                                              true)))
+                                               | (FStarC_Reflection_V2_Data.Uv_Succ
+                                                  u12,
+                                                  FStarC_Reflection_V2_Data.Uv_Succ
+                                                  u22) ->
+                                                   Obj.magic
+                                                     (Obj.repr
+                                                        (univ_eq u12 u22))
+                                               | (FStarC_Reflection_V2_Data.Uv_Max
+                                                  us1,
+                                                  FStarC_Reflection_V2_Data.Uv_Max
+                                                  us2) ->
+                                                   Obj.magic
+                                                     (Obj.repr
+                                                        (list_eq univ_eq us1
+                                                           us2))
+                                               | (FStarC_Reflection_V2_Data.Uv_BVar
+                                                  v1,
+                                                  FStarC_Reflection_V2_Data.Uv_BVar
+                                                  v2) ->
+                                                   Obj.magic
+                                                     (Obj.repr
+                                                        (FStar_Tactics_Effect.lift_div_tac
+                                                           (fun uu___4 ->
+                                                              v1 = v2)))
+                                               | (FStarC_Reflection_V2_Data.Uv_Name
+                                                  id1,
+                                                  FStarC_Reflection_V2_Data.Uv_Name
+                                                  id2) ->
+                                                   Obj.magic
+                                                     (Obj.repr
+                                                        (FStar_Tactics_Effect.lift_div_tac
+                                                           (fun uu___4 ->
+                                                              (FStar_Pervasives_Native.fst
+                                                                 (FStarC_Reflection_V2_Builtins.inspect_ident
+                                                                    id1))
+                                                                =
+                                                                (FStar_Pervasives_Native.fst
+                                                                   (FStarC_Reflection_V2_Builtins.inspect_ident
+                                                                    id2)))))
+                                               | (FStarC_Reflection_V2_Data.Uv_Unif
+                                                  u12,
+                                                  FStarC_Reflection_V2_Data.Uv_Unif
+                                                  u22) ->
+                                                   Obj.magic
+                                                     (Obj.repr
+                                                        (FStar_Tactics_Effect.lift_div_tac
+                                                           (fun uu___4 ->
+                                                              false)))
+                                               | (FStarC_Reflection_V2_Data.Uv_Unk,
+                                                  FStarC_Reflection_V2_Data.Uv_Unk)
+                                                   ->
+                                                   Obj.magic
+                                                     (Obj.repr
+                                                        (FStar_Tactics_Effect.lift_div_tac
+                                                           (fun uu___4 ->
+                                                              false)))
+                                               | uu___4 ->
+                                                   Obj.magic
+                                                     (Obj.repr
+                                                        (FStar_Tactics_Effect.lift_div_tac
+                                                           (fun uu___5 ->
+                                                              false))))
+                                              uu___4))) uu___3))) uu___2)))
              uu___1)
 let (const_eq : FStarC_Reflection_V2_Data.vconst comparator_for) =
   fun c1 ->
@@ -242,12 +312,12 @@ let rec (term_eq : FStarC_Reflection_Types.term comparator_for) =
         (FStar_Sealed.seal
            (Obj.magic
               (FStar_Range.mk_range "FStar.Tactics.LaxTermEq.fst"
-                 (Prims.of_int (75)) (Prims.of_int (11)) (Prims.of_int (75))
+                 (Prims.of_int (77)) (Prims.of_int (11)) (Prims.of_int (77))
                  (Prims.of_int (22)))))
         (FStar_Sealed.seal
            (Obj.magic
               (FStar_Range.mk_range "FStar.Tactics.LaxTermEq.fst"
-                 (Prims.of_int (75)) (Prims.of_int (25)) (Prims.of_int (140))
+                 (Prims.of_int (77)) (Prims.of_int (25)) (Prims.of_int (144))
                  (Prims.of_int (14))))) (Obj.magic uu___)
         (fun uu___1 ->
            (fun t11 ->
@@ -257,13 +327,13 @@ let rec (term_eq : FStarC_Reflection_Types.term comparator_for) =
                    (FStar_Sealed.seal
                       (Obj.magic
                          (FStar_Range.mk_range "FStar.Tactics.LaxTermEq.fst"
-                            (Prims.of_int (76)) (Prims.of_int (11))
-                            (Prims.of_int (76)) (Prims.of_int (22)))))
+                            (Prims.of_int (78)) (Prims.of_int (11))
+                            (Prims.of_int (78)) (Prims.of_int (22)))))
                    (FStar_Sealed.seal
                       (Obj.magic
                          (FStar_Range.mk_range "FStar.Tactics.LaxTermEq.fst"
-                            (Prims.of_int (76)) (Prims.of_int (25))
-                            (Prims.of_int (140)) (Prims.of_int (14)))))
+                            (Prims.of_int (78)) (Prims.of_int (25))
+                            (Prims.of_int (144)) (Prims.of_int (14)))))
                    (Obj.magic uu___1)
                    (fun uu___2 ->
                       (fun t21 ->
@@ -279,17 +349,17 @@ let rec (term_eq : FStarC_Reflection_Types.term comparator_for) =
                                  (Obj.magic
                                     (FStar_Range.mk_range
                                        "FStar.Tactics.LaxTermEq.fst"
-                                       (Prims.of_int (77))
+                                       (Prims.of_int (79))
                                        (Prims.of_int (12))
-                                       (Prims.of_int (77))
+                                       (Prims.of_int (79))
                                        (Prims.of_int (25)))))
                               (FStar_Sealed.seal
                                  (Obj.magic
                                     (FStar_Range.mk_range
                                        "FStar.Tactics.LaxTermEq.fst"
-                                       (Prims.of_int (77))
+                                       (Prims.of_int (79))
                                        (Prims.of_int (28))
-                                       (Prims.of_int (140))
+                                       (Prims.of_int (144))
                                        (Prims.of_int (14)))))
                               (Obj.magic uu___2)
                               (fun uu___3 ->
@@ -306,17 +376,17 @@ let rec (term_eq : FStarC_Reflection_Types.term comparator_for) =
                                             (Obj.magic
                                                (FStar_Range.mk_range
                                                   "FStar.Tactics.LaxTermEq.fst"
-                                                  (Prims.of_int (78))
+                                                  (Prims.of_int (80))
                                                   (Prims.of_int (12))
-                                                  (Prims.of_int (78))
+                                                  (Prims.of_int (80))
                                                   (Prims.of_int (25)))))
                                          (FStar_Sealed.seal
                                             (Obj.magic
                                                (FStar_Range.mk_range
                                                   "FStar.Tactics.LaxTermEq.fst"
-                                                  (Prims.of_int (79))
+                                                  (Prims.of_int (81))
                                                   (Prims.of_int (2))
-                                                  (Prims.of_int (140))
+                                                  (Prims.of_int (144))
                                                   (Prims.of_int (14)))))
                                          (Obj.magic uu___3)
                                          (fun uu___4 ->
@@ -428,17 +498,17 @@ let rec (term_eq : FStarC_Reflection_Types.term comparator_for) =
                                                               (Obj.magic
                                                                  (FStar_Range.mk_range
                                                                     "FStar.Tactics.LaxTermEq.fst"
-                                                                    (Prims.of_int (96))
+                                                                    (Prims.of_int (98))
                                                                     (Prims.of_int (7))
-                                                                    (Prims.of_int (96))
+                                                                    (Prims.of_int (98))
                                                                     (Prims.of_int (20)))))
                                                            (FStar_Sealed.seal
                                                               (Obj.magic
                                                                  (FStar_Range.mk_range
                                                                     "FStar.Tactics.LaxTermEq.fst"
-                                                                    (Prims.of_int (96))
+                                                                    (Prims.of_int (98))
                                                                     (Prims.of_int (4))
-                                                                    (Prims.of_int (96))
+                                                                    (Prims.of_int (98))
                                                                     (Prims.of_int (49)))))
                                                            (Obj.magic uu___4)
                                                            (fun uu___5 ->
@@ -470,17 +540,17 @@ let rec (term_eq : FStarC_Reflection_Types.term comparator_for) =
                                                               (Obj.magic
                                                                  (FStar_Range.mk_range
                                                                     "FStar.Tactics.LaxTermEq.fst"
-                                                                    (Prims.of_int (99))
+                                                                    (Prims.of_int (101))
                                                                     (Prims.of_int (7))
-                                                                    (Prims.of_int (99))
+                                                                    (Prims.of_int (101))
                                                                     (Prims.of_int (22)))))
                                                            (FStar_Sealed.seal
                                                               (Obj.magic
                                                                  (FStar_Range.mk_range
                                                                     "FStar.Tactics.LaxTermEq.fst"
-                                                                    (Prims.of_int (99))
+                                                                    (Prims.of_int (101))
                                                                     (Prims.of_int (4))
-                                                                    (Prims.of_int (99))
+                                                                    (Prims.of_int (101))
                                                                     (Prims.of_int (52)))))
                                                            (Obj.magic uu___4)
                                                            (fun uu___5 ->
@@ -512,17 +582,17 @@ let rec (term_eq : FStarC_Reflection_Types.term comparator_for) =
                                                               (Obj.magic
                                                                  (FStar_Range.mk_range
                                                                     "FStar.Tactics.LaxTermEq.fst"
-                                                                    (Prims.of_int (102))
+                                                                    (Prims.of_int (104))
                                                                     (Prims.of_int (7))
-                                                                    (Prims.of_int (102))
+                                                                    (Prims.of_int (104))
                                                                     (Prims.of_int (22)))))
                                                            (FStar_Sealed.seal
                                                               (Obj.magic
                                                                  (FStar_Range.mk_range
                                                                     "FStar.Tactics.LaxTermEq.fst"
-                                                                    (Prims.of_int (102))
+                                                                    (Prims.of_int (104))
                                                                     (Prims.of_int (4))
-                                                                    (Prims.of_int (102))
+                                                                    (Prims.of_int (104))
                                                                     (Prims.of_int (52)))))
                                                            (Obj.magic uu___4)
                                                            (fun uu___5 ->
@@ -563,17 +633,17 @@ let rec (term_eq : FStarC_Reflection_Types.term comparator_for) =
                                                               (Obj.magic
                                                                  (FStar_Range.mk_range
                                                                     "FStar.Tactics.LaxTermEq.fst"
-                                                                    (Prims.of_int (110))
+                                                                    (Prims.of_int (112))
                                                                     (Prims.of_int (7))
-                                                                    (Prims.of_int (110))
+                                                                    (Prims.of_int (112))
                                                                     (Prims.of_int (24)))))
                                                            (FStar_Sealed.seal
                                                               (Obj.magic
                                                                  (FStar_Range.mk_range
                                                                     "FStar.Tactics.LaxTermEq.fst"
-                                                                    (Prims.of_int (110))
+                                                                    (Prims.of_int (112))
                                                                     (Prims.of_int (4))
-                                                                    (Prims.of_int (110))
+                                                                    (Prims.of_int (112))
                                                                     (Prims.of_int (54)))))
                                                            (Obj.magic uu___4)
                                                            (fun uu___5 ->
@@ -600,14 +670,14 @@ let rec (term_eq : FStarC_Reflection_Types.term comparator_for) =
                                                      (Obj.repr
                                                         (const_eq c1 c2))
                                                | (FStarC_Reflection_V2_Data.Tv_Uvar
-                                                  (n1, u1),
+                                                  (n1, _u1),
                                                   FStarC_Reflection_V2_Data.Tv_Uvar
-                                                  (n2, u2)) ->
+                                                  (n2, _u2)) ->
                                                    Obj.magic
                                                      (Obj.repr
                                                         (FStar_Tactics_Effect.lift_div_tac
                                                            (fun uu___4 ->
-                                                              false)))
+                                                              n1 = n2)))
                                                | (FStarC_Reflection_V2_Data.Tv_Let
                                                   (r1, attrs1, sb1, e1, b1),
                                                   FStarC_Reflection_V2_Data.Tv_Let
@@ -635,17 +705,17 @@ let rec (term_eq : FStarC_Reflection_Types.term comparator_for) =
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.Tactics.LaxTermEq.fst"
-                                                                    (Prims.of_int (122))
+                                                                    (Prims.of_int (126))
                                                                     (Prims.of_int (14))
-                                                                    (Prims.of_int (122))
+                                                                    (Prims.of_int (126))
                                                                     (Prims.of_int (31)))))
                                                                   (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.Tactics.LaxTermEq.fst"
-                                                                    (Prims.of_int (122))
+                                                                    (Prims.of_int (126))
                                                                     (Prims.of_int (7))
-                                                                    (Prims.of_int (122))
+                                                                    (Prims.of_int (126))
                                                                     (Prims.of_int (31)))))
                                                                   (Obj.magic
                                                                     uu___6)
@@ -661,17 +731,17 @@ let rec (term_eq : FStarC_Reflection_Types.term comparator_for) =
                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.Tactics.LaxTermEq.fst"
-                                                                    (Prims.of_int (122))
+                                                                    (Prims.of_int (126))
                                                                     (Prims.of_int (7))
-                                                                    (Prims.of_int (122))
+                                                                    (Prims.of_int (126))
                                                                     (Prims.of_int (31)))))
                                                                 (FStar_Sealed.seal
                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.Tactics.LaxTermEq.fst"
-                                                                    (Prims.of_int (122))
+                                                                    (Prims.of_int (126))
                                                                     (Prims.of_int (4))
-                                                                    (Prims.of_int (124))
+                                                                    (Prims.of_int (128))
                                                                     (Prims.of_int (17)))))
                                                                 (Obj.magic
                                                                    uu___5)
@@ -701,17 +771,17 @@ let rec (term_eq : FStarC_Reflection_Types.term comparator_for) =
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.Tactics.LaxTermEq.fst"
-                                                                    (Prims.of_int (123))
+                                                                    (Prims.of_int (127))
                                                                     (Prims.of_int (14))
-                                                                    (Prims.of_int (123))
+                                                                    (Prims.of_int (127))
                                                                     (Prims.of_int (27)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.Tactics.LaxTermEq.fst"
-                                                                    (Prims.of_int (123))
+                                                                    (Prims.of_int (127))
                                                                     (Prims.of_int (7))
-                                                                    (Prims.of_int (123))
+                                                                    (Prims.of_int (127))
                                                                     (Prims.of_int (27)))))
                                                                     (Obj.magic
                                                                     uu___9)
@@ -729,17 +799,17 @@ let rec (term_eq : FStarC_Reflection_Types.term comparator_for) =
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.Tactics.LaxTermEq.fst"
-                                                                    (Prims.of_int (123))
+                                                                    (Prims.of_int (127))
                                                                     (Prims.of_int (7))
-                                                                    (Prims.of_int (123))
+                                                                    (Prims.of_int (127))
                                                                     (Prims.of_int (27)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.Tactics.LaxTermEq.fst"
-                                                                    (Prims.of_int (123))
+                                                                    (Prims.of_int (127))
                                                                     (Prims.of_int (4))
-                                                                    (Prims.of_int (124))
+                                                                    (Prims.of_int (128))
                                                                     (Prims.of_int (17)))))
                                                                     (Obj.magic
                                                                     uu___8)
@@ -776,17 +846,17 @@ let rec (term_eq : FStarC_Reflection_Types.term comparator_for) =
                                                                 (Obj.magic
                                                                    (FStar_Range.mk_range
                                                                     "FStar.Tactics.LaxTermEq.fst"
-                                                                    (Prims.of_int (127))
+                                                                    (Prims.of_int (131))
                                                                     (Prims.of_int (14))
-                                                                    (Prims.of_int (127))
+                                                                    (Prims.of_int (131))
                                                                     (Prims.of_int (29)))))
                                                              (FStar_Sealed.seal
                                                                 (Obj.magic
                                                                    (FStar_Range.mk_range
                                                                     "FStar.Tactics.LaxTermEq.fst"
-                                                                    (Prims.of_int (127))
+                                                                    (Prims.of_int (131))
                                                                     (Prims.of_int (7))
-                                                                    (Prims.of_int (127))
+                                                                    (Prims.of_int (131))
                                                                     (Prims.of_int (29)))))
                                                              (Obj.magic
                                                                 uu___5)
@@ -801,17 +871,17 @@ let rec (term_eq : FStarC_Reflection_Types.term comparator_for) =
                                                               (Obj.magic
                                                                  (FStar_Range.mk_range
                                                                     "FStar.Tactics.LaxTermEq.fst"
-                                                                    (Prims.of_int (127))
+                                                                    (Prims.of_int (131))
                                                                     (Prims.of_int (7))
-                                                                    (Prims.of_int (127))
+                                                                    (Prims.of_int (131))
                                                                     (Prims.of_int (29)))))
                                                            (FStar_Sealed.seal
                                                               (Obj.magic
                                                                  (FStar_Range.mk_range
                                                                     "FStar.Tactics.LaxTermEq.fst"
-                                                                    (Prims.of_int (127))
+                                                                    (Prims.of_int (131))
                                                                     (Prims.of_int (4))
-                                                                    (Prims.of_int (129))
+                                                                    (Prims.of_int (133))
                                                                     (Prims.of_int (27)))))
                                                            (Obj.magic uu___4)
                                                            (fun uu___5 ->
@@ -839,17 +909,17 @@ let rec (term_eq : FStarC_Reflection_Types.term comparator_for) =
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.Tactics.LaxTermEq.fst"
-                                                                    (Prims.of_int (128))
+                                                                    (Prims.of_int (132))
                                                                     (Prims.of_int (14))
-                                                                    (Prims.of_int (128))
+                                                                    (Prims.of_int (132))
                                                                     (Prims.of_int (54)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.Tactics.LaxTermEq.fst"
-                                                                    (Prims.of_int (128))
+                                                                    (Prims.of_int (132))
                                                                     (Prims.of_int (7))
-                                                                    (Prims.of_int (128))
+                                                                    (Prims.of_int (132))
                                                                     (Prims.of_int (54)))))
                                                                     (Obj.magic
                                                                     uu___8)
@@ -866,17 +936,17 @@ let rec (term_eq : FStarC_Reflection_Types.term comparator_for) =
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.Tactics.LaxTermEq.fst"
-                                                                    (Prims.of_int (128))
+                                                                    (Prims.of_int (132))
                                                                     (Prims.of_int (7))
-                                                                    (Prims.of_int (128))
+                                                                    (Prims.of_int (132))
                                                                     (Prims.of_int (54)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.Tactics.LaxTermEq.fst"
-                                                                    (Prims.of_int (128))
+                                                                    (Prims.of_int (132))
                                                                     (Prims.of_int (4))
-                                                                    (Prims.of_int (129))
+                                                                    (Prims.of_int (133))
                                                                     (Prims.of_int (27)))))
                                                                     (Obj.magic
                                                                     uu___7)
@@ -954,13 +1024,13 @@ and (arg_eq : FStarC_Reflection_V2_Data.argv comparator_for) =
             (FStar_Sealed.seal
                (Obj.magic
                   (FStar_Range.mk_range "FStar.Tactics.LaxTermEq.fst"
-                     (Prims.of_int (143)) (Prims.of_int (5))
-                     (Prims.of_int (143)) (Prims.of_int (18)))))
+                     (Prims.of_int (147)) (Prims.of_int (5))
+                     (Prims.of_int (147)) (Prims.of_int (18)))))
             (FStar_Sealed.seal
                (Obj.magic
                   (FStar_Range.mk_range "FStar.Tactics.LaxTermEq.fst"
-                     (Prims.of_int (143)) (Prims.of_int (2))
-                     (Prims.of_int (143)) (Prims.of_int (49)))))
+                     (Prims.of_int (147)) (Prims.of_int (2))
+                     (Prims.of_int (147)) (Prims.of_int (49)))))
             (Obj.magic uu___2)
             (fun uu___3 ->
                (fun uu___3 ->
@@ -1004,13 +1074,13 @@ and (match_returns_ascription_eq :
         (FStar_Sealed.seal
            (Obj.magic
               (FStar_Range.mk_range "FStar.Tactics.LaxTermEq.fst"
-                 (Prims.of_int (154)) (Prims.of_int (34))
-                 (Prims.of_int (154)) (Prims.of_int (38)))))
+                 (Prims.of_int (158)) (Prims.of_int (34))
+                 (Prims.of_int (158)) (Prims.of_int (38)))))
         (FStar_Sealed.seal
            (Obj.magic
               (FStar_Range.mk_range "FStar.Tactics.LaxTermEq.fst"
-                 (Prims.of_int (153)) (Prims.of_int (43))
-                 (Prims.of_int (159)) (Prims.of_int (11)))))
+                 (Prims.of_int (157)) (Prims.of_int (43))
+                 (Prims.of_int (163)) (Prims.of_int (11)))))
         (Obj.magic uu___)
         (fun uu___1 ->
            (fun uu___1 ->
@@ -1025,14 +1095,14 @@ and (match_returns_ascription_eq :
                           (Obj.magic
                              (FStar_Range.mk_range
                                 "FStar.Tactics.LaxTermEq.fst"
-                                (Prims.of_int (155)) (Prims.of_int (34))
-                                (Prims.of_int (155)) (Prims.of_int (38)))))
+                                (Prims.of_int (159)) (Prims.of_int (34))
+                                (Prims.of_int (159)) (Prims.of_int (38)))))
                        (FStar_Sealed.seal
                           (Obj.magic
                              (FStar_Range.mk_range
                                 "FStar.Tactics.LaxTermEq.fst"
-                                (Prims.of_int (154)) (Prims.of_int (41))
-                                (Prims.of_int (159)) (Prims.of_int (11)))))
+                                (Prims.of_int (158)) (Prims.of_int (41))
+                                (Prims.of_int (163)) (Prims.of_int (11)))))
                        (Obj.magic uu___2)
                        (fun uu___3 ->
                           (fun uu___3 ->
@@ -1045,17 +1115,17 @@ and (match_returns_ascription_eq :
                                         (Obj.magic
                                            (FStar_Range.mk_range
                                               "FStar.Tactics.LaxTermEq.fst"
-                                              (Prims.of_int (156))
+                                              (Prims.of_int (160))
                                               (Prims.of_int (12))
-                                              (Prims.of_int (156))
+                                              (Prims.of_int (160))
                                               (Prims.of_int (27)))))
                                      (FStar_Sealed.seal
                                         (Obj.magic
                                            (FStar_Range.mk_range
                                               "FStar.Tactics.LaxTermEq.fst"
-                                              (Prims.of_int (156))
+                                              (Prims.of_int (160))
                                               (Prims.of_int (5))
-                                              (Prims.of_int (156))
+                                              (Prims.of_int (160))
                                               (Prims.of_int (27)))))
                                      (Obj.magic uu___5)
                                      (fun uu___6 ->
@@ -1068,17 +1138,17 @@ and (match_returns_ascription_eq :
                                          (Obj.magic
                                             (FStar_Range.mk_range
                                                "FStar.Tactics.LaxTermEq.fst"
-                                               (Prims.of_int (156))
+                                               (Prims.of_int (160))
                                                (Prims.of_int (5))
-                                               (Prims.of_int (156))
+                                               (Prims.of_int (160))
                                                (Prims.of_int (27)))))
                                       (FStar_Sealed.seal
                                          (Obj.magic
                                             (FStar_Range.mk_range
                                                "FStar.Tactics.LaxTermEq.fst"
-                                               (Prims.of_int (156))
+                                               (Prims.of_int (160))
                                                (Prims.of_int (2))
-                                               (Prims.of_int (159))
+                                               (Prims.of_int (163))
                                                (Prims.of_int (11)))))
                                       (Obj.magic uu___4)
                                       (fun uu___5 ->
@@ -1101,17 +1171,17 @@ and (match_returns_ascription_eq :
                                                            (Obj.magic
                                                               (FStar_Range.mk_range
                                                                  "FStar.Tactics.LaxTermEq.fst"
-                                                                 (Prims.of_int (157))
+                                                                 (Prims.of_int (161))
                                                                  (Prims.of_int (12))
-                                                                 (Prims.of_int (157))
+                                                                 (Prims.of_int (161))
                                                                  (Prims.of_int (45)))))
                                                         (FStar_Sealed.seal
                                                            (Obj.magic
                                                               (FStar_Range.mk_range
                                                                  "FStar.Tactics.LaxTermEq.fst"
-                                                                 (Prims.of_int (157))
+                                                                 (Prims.of_int (161))
                                                                  (Prims.of_int (5))
-                                                                 (Prims.of_int (157))
+                                                                 (Prims.of_int (161))
                                                                  (Prims.of_int (45)))))
                                                         (Obj.magic uu___8)
                                                         (fun uu___9 ->
@@ -1124,17 +1194,17 @@ and (match_returns_ascription_eq :
                                                          (Obj.magic
                                                             (FStar_Range.mk_range
                                                                "FStar.Tactics.LaxTermEq.fst"
-                                                               (Prims.of_int (157))
+                                                               (Prims.of_int (161))
                                                                (Prims.of_int (5))
-                                                               (Prims.of_int (157))
+                                                               (Prims.of_int (161))
                                                                (Prims.of_int (45)))))
                                                       (FStar_Sealed.seal
                                                          (Obj.magic
                                                             (FStar_Range.mk_range
                                                                "FStar.Tactics.LaxTermEq.fst"
-                                                               (Prims.of_int (157))
+                                                               (Prims.of_int (161))
                                                                (Prims.of_int (2))
-                                                               (Prims.of_int (159))
+                                                               (Prims.of_int (163))
                                                                (Prims.of_int (11)))))
                                                       (Obj.magic uu___7)
                                                       (fun uu___8 ->
@@ -1163,17 +1233,17 @@ and (match_returns_ascription_eq :
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.Tactics.LaxTermEq.fst"
-                                                                    (Prims.of_int (158))
+                                                                    (Prims.of_int (162))
                                                                     (Prims.of_int (12))
-                                                                    (Prims.of_int (158))
+                                                                    (Prims.of_int (162))
                                                                     (Prims.of_int (42)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.Tactics.LaxTermEq.fst"
-                                                                    (Prims.of_int (158))
+                                                                    (Prims.of_int (162))
                                                                     (Prims.of_int (5))
-                                                                    (Prims.of_int (158))
+                                                                    (Prims.of_int (162))
                                                                     (Prims.of_int (42)))))
                                                                     (Obj.magic
                                                                     uu___11)
@@ -1191,17 +1261,17 @@ and (match_returns_ascription_eq :
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.Tactics.LaxTermEq.fst"
-                                                                    (Prims.of_int (158))
+                                                                    (Prims.of_int (162))
                                                                     (Prims.of_int (5))
-                                                                    (Prims.of_int (158))
+                                                                    (Prims.of_int (162))
                                                                     (Prims.of_int (42)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.Tactics.LaxTermEq.fst"
-                                                                    (Prims.of_int (158))
+                                                                    (Prims.of_int (162))
                                                                     (Prims.of_int (2))
-                                                                    (Prims.of_int (159))
+                                                                    (Prims.of_int (163))
                                                                     (Prims.of_int (11)))))
                                                                     (Obj.magic
                                                                     uu___10)
@@ -1234,13 +1304,13 @@ and (binder_eq : FStarC_Reflection_Types.binder comparator_for) =
         (FStar_Sealed.seal
            (Obj.magic
               (FStar_Range.mk_range "FStar.Tactics.LaxTermEq.fst"
-                 (Prims.of_int (162)) (Prims.of_int (12))
-                 (Prims.of_int (162)) (Prims.of_int (29)))))
+                 (Prims.of_int (166)) (Prims.of_int (12))
+                 (Prims.of_int (166)) (Prims.of_int (29)))))
         (FStar_Sealed.seal
            (Obj.magic
               (FStar_Range.mk_range "FStar.Tactics.LaxTermEq.fst"
-                 (Prims.of_int (162)) (Prims.of_int (32))
-                 (Prims.of_int (166)) (Prims.of_int (37)))))
+                 (Prims.of_int (166)) (Prims.of_int (32))
+                 (Prims.of_int (170)) (Prims.of_int (37)))))
         (Obj.magic uu___)
         (fun uu___1 ->
            (fun bv1 ->
@@ -1254,13 +1324,13 @@ and (binder_eq : FStarC_Reflection_Types.binder comparator_for) =
                    (FStar_Sealed.seal
                       (Obj.magic
                          (FStar_Range.mk_range "FStar.Tactics.LaxTermEq.fst"
-                            (Prims.of_int (163)) (Prims.of_int (12))
-                            (Prims.of_int (163)) (Prims.of_int (29)))))
+                            (Prims.of_int (167)) (Prims.of_int (12))
+                            (Prims.of_int (167)) (Prims.of_int (29)))))
                    (FStar_Sealed.seal
                       (Obj.magic
                          (FStar_Range.mk_range "FStar.Tactics.LaxTermEq.fst"
-                            (Prims.of_int (164)) (Prims.of_int (2))
-                            (Prims.of_int (166)) (Prims.of_int (37)))))
+                            (Prims.of_int (168)) (Prims.of_int (2))
+                            (Prims.of_int (170)) (Prims.of_int (37)))))
                    (Obj.magic uu___1)
                    (fun uu___2 ->
                       (fun bv2 ->
@@ -1273,16 +1343,16 @@ and (binder_eq : FStarC_Reflection_Types.binder comparator_for) =
                                 (Obj.magic
                                    (FStar_Range.mk_range
                                       "FStar.Tactics.LaxTermEq.fst"
-                                      (Prims.of_int (164))
+                                      (Prims.of_int (168))
                                       (Prims.of_int (12))
-                                      (Prims.of_int (164))
+                                      (Prims.of_int (168))
                                       (Prims.of_int (37)))))
                              (FStar_Sealed.seal
                                 (Obj.magic
                                    (FStar_Range.mk_range
                                       "FStar.Tactics.LaxTermEq.fst"
-                                      (Prims.of_int (164)) (Prims.of_int (5))
-                                      (Prims.of_int (164))
+                                      (Prims.of_int (168)) (Prims.of_int (5))
+                                      (Prims.of_int (168))
                                       (Prims.of_int (37)))))
                              (Obj.magic uu___3)
                              (fun uu___4 ->
@@ -1294,17 +1364,17 @@ and (binder_eq : FStarC_Reflection_Types.binder comparator_for) =
                                  (Obj.magic
                                     (FStar_Range.mk_range
                                        "FStar.Tactics.LaxTermEq.fst"
-                                       (Prims.of_int (164))
+                                       (Prims.of_int (168))
                                        (Prims.of_int (5))
-                                       (Prims.of_int (164))
+                                       (Prims.of_int (168))
                                        (Prims.of_int (37)))))
                               (FStar_Sealed.seal
                                  (Obj.magic
                                     (FStar_Range.mk_range
                                        "FStar.Tactics.LaxTermEq.fst"
-                                       (Prims.of_int (164))
+                                       (Prims.of_int (168))
                                        (Prims.of_int (2))
-                                       (Prims.of_int (166))
+                                       (Prims.of_int (170))
                                        (Prims.of_int (37)))))
                               (Obj.magic uu___2)
                               (fun uu___3 ->
@@ -1328,17 +1398,17 @@ and (binder_eq : FStarC_Reflection_Types.binder comparator_for) =
                                                    (Obj.magic
                                                       (FStar_Range.mk_range
                                                          "FStar.Tactics.LaxTermEq.fst"
-                                                         (Prims.of_int (165))
+                                                         (Prims.of_int (169))
                                                          (Prims.of_int (12))
-                                                         (Prims.of_int (165))
+                                                         (Prims.of_int (169))
                                                          (Prims.of_int (38)))))
                                                 (FStar_Sealed.seal
                                                    (Obj.magic
                                                       (FStar_Range.mk_range
                                                          "FStar.Tactics.LaxTermEq.fst"
-                                                         (Prims.of_int (165))
+                                                         (Prims.of_int (169))
                                                          (Prims.of_int (5))
-                                                         (Prims.of_int (165))
+                                                         (Prims.of_int (169))
                                                          (Prims.of_int (38)))))
                                                 (Obj.magic uu___6)
                                                 (fun uu___7 ->
@@ -1351,17 +1421,17 @@ and (binder_eq : FStarC_Reflection_Types.binder comparator_for) =
                                                  (Obj.magic
                                                     (FStar_Range.mk_range
                                                        "FStar.Tactics.LaxTermEq.fst"
-                                                       (Prims.of_int (165))
+                                                       (Prims.of_int (169))
                                                        (Prims.of_int (5))
-                                                       (Prims.of_int (165))
+                                                       (Prims.of_int (169))
                                                        (Prims.of_int (38)))))
                                               (FStar_Sealed.seal
                                                  (Obj.magic
                                                     (FStar_Range.mk_range
                                                        "FStar.Tactics.LaxTermEq.fst"
-                                                       (Prims.of_int (165))
+                                                       (Prims.of_int (169))
                                                        (Prims.of_int (2))
-                                                       (Prims.of_int (166))
+                                                       (Prims.of_int (170))
                                                        (Prims.of_int (37)))))
                                               (Obj.magic uu___5)
                                               (fun uu___6 ->
@@ -1392,13 +1462,13 @@ and (comp_eq : FStarC_Reflection_Types.comp comparator_for) =
         (FStar_Sealed.seal
            (Obj.magic
               (FStar_Range.mk_range "FStar.Tactics.LaxTermEq.fst"
-                 (Prims.of_int (169)) (Prims.of_int (12))
-                 (Prims.of_int (169)) (Prims.of_int (27)))))
+                 (Prims.of_int (173)) (Prims.of_int (12))
+                 (Prims.of_int (173)) (Prims.of_int (27)))))
         (FStar_Sealed.seal
            (Obj.magic
               (FStar_Range.mk_range "FStar.Tactics.LaxTermEq.fst"
-                 (Prims.of_int (169)) (Prims.of_int (30))
-                 (Prims.of_int (191)) (Prims.of_int (14)))))
+                 (Prims.of_int (173)) (Prims.of_int (30))
+                 (Prims.of_int (195)) (Prims.of_int (14)))))
         (Obj.magic uu___)
         (fun uu___1 ->
            (fun cv1 ->
@@ -1412,13 +1482,13 @@ and (comp_eq : FStarC_Reflection_Types.comp comparator_for) =
                    (FStar_Sealed.seal
                       (Obj.magic
                          (FStar_Range.mk_range "FStar.Tactics.LaxTermEq.fst"
-                            (Prims.of_int (170)) (Prims.of_int (12))
-                            (Prims.of_int (170)) (Prims.of_int (27)))))
+                            (Prims.of_int (174)) (Prims.of_int (12))
+                            (Prims.of_int (174)) (Prims.of_int (27)))))
                    (FStar_Sealed.seal
                       (Obj.magic
                          (FStar_Range.mk_range "FStar.Tactics.LaxTermEq.fst"
-                            (Prims.of_int (171)) (Prims.of_int (2))
-                            (Prims.of_int (191)) (Prims.of_int (14)))))
+                            (Prims.of_int (175)) (Prims.of_int (2))
+                            (Prims.of_int (195)) (Prims.of_int (14)))))
                    (Obj.magic uu___1)
                    (fun uu___2 ->
                       (fun cv2 ->
@@ -1442,17 +1512,17 @@ and (comp_eq : FStarC_Reflection_Types.comp comparator_for) =
                                           (Obj.magic
                                              (FStar_Range.mk_range
                                                 "FStar.Tactics.LaxTermEq.fst"
-                                                (Prims.of_int (177))
+                                                (Prims.of_int (181))
                                                 (Prims.of_int (14))
-                                                (Prims.of_int (177))
+                                                (Prims.of_int (181))
                                                 (Prims.of_int (31)))))
                                        (FStar_Sealed.seal
                                           (Obj.magic
                                              (FStar_Range.mk_range
                                                 "FStar.Tactics.LaxTermEq.fst"
-                                                (Prims.of_int (177))
+                                                (Prims.of_int (181))
                                                 (Prims.of_int (7))
-                                                (Prims.of_int (177))
+                                                (Prims.of_int (181))
                                                 (Prims.of_int (31)))))
                                        (Obj.magic uu___3)
                                        (fun uu___4 ->
@@ -1464,17 +1534,17 @@ and (comp_eq : FStarC_Reflection_Types.comp comparator_for) =
                                         (Obj.magic
                                            (FStar_Range.mk_range
                                               "FStar.Tactics.LaxTermEq.fst"
-                                              (Prims.of_int (177))
+                                              (Prims.of_int (181))
                                               (Prims.of_int (7))
-                                              (Prims.of_int (177))
+                                              (Prims.of_int (181))
                                               (Prims.of_int (31)))))
                                      (FStar_Sealed.seal
                                         (Obj.magic
                                            (FStar_Range.mk_range
                                               "FStar.Tactics.LaxTermEq.fst"
-                                              (Prims.of_int (177))
+                                              (Prims.of_int (181))
                                               (Prims.of_int (4))
-                                              (Prims.of_int (179))
+                                              (Prims.of_int (183))
                                               (Prims.of_int (21)))))
                                      (Obj.magic uu___2)
                                      (fun uu___3 ->
@@ -1496,17 +1566,17 @@ and (comp_eq : FStarC_Reflection_Types.comp comparator_for) =
                                                           (Obj.magic
                                                              (FStar_Range.mk_range
                                                                 "FStar.Tactics.LaxTermEq.fst"
-                                                                (Prims.of_int (178))
+                                                                (Prims.of_int (182))
                                                                 (Prims.of_int (14))
-                                                                (Prims.of_int (178))
+                                                                (Prims.of_int (182))
                                                                 (Prims.of_int (33)))))
                                                        (FStar_Sealed.seal
                                                           (Obj.magic
                                                              (FStar_Range.mk_range
                                                                 "FStar.Tactics.LaxTermEq.fst"
-                                                                (Prims.of_int (178))
+                                                                (Prims.of_int (182))
                                                                 (Prims.of_int (7))
-                                                                (Prims.of_int (178))
+                                                                (Prims.of_int (182))
                                                                 (Prims.of_int (33)))))
                                                        (Obj.magic uu___6)
                                                        (fun uu___7 ->
@@ -1519,17 +1589,17 @@ and (comp_eq : FStarC_Reflection_Types.comp comparator_for) =
                                                         (Obj.magic
                                                            (FStar_Range.mk_range
                                                               "FStar.Tactics.LaxTermEq.fst"
-                                                              (Prims.of_int (178))
+                                                              (Prims.of_int (182))
                                                               (Prims.of_int (7))
-                                                              (Prims.of_int (178))
+                                                              (Prims.of_int (182))
                                                               (Prims.of_int (33)))))
                                                      (FStar_Sealed.seal
                                                         (Obj.magic
                                                            (FStar_Range.mk_range
                                                               "FStar.Tactics.LaxTermEq.fst"
-                                                              (Prims.of_int (178))
+                                                              (Prims.of_int (182))
                                                               (Prims.of_int (4))
-                                                              (Prims.of_int (179))
+                                                              (Prims.of_int (183))
                                                               (Prims.of_int (21)))))
                                                      (Obj.magic uu___5)
                                                      (fun uu___6 ->
@@ -1568,17 +1638,17 @@ and (comp_eq : FStarC_Reflection_Types.comp comparator_for) =
                                                (Obj.magic
                                                   (FStar_Range.mk_range
                                                      "FStar.Tactics.LaxTermEq.fst"
-                                                     (Prims.of_int (185))
+                                                     (Prims.of_int (189))
                                                      (Prims.of_int (14))
-                                                     (Prims.of_int (185))
+                                                     (Prims.of_int (189))
                                                      (Prims.of_int (27)))))
                                             (FStar_Sealed.seal
                                                (Obj.magic
                                                   (FStar_Range.mk_range
                                                      "FStar.Tactics.LaxTermEq.fst"
-                                                     (Prims.of_int (185))
+                                                     (Prims.of_int (189))
                                                      (Prims.of_int (7))
-                                                     (Prims.of_int (185))
+                                                     (Prims.of_int (189))
                                                      (Prims.of_int (27)))))
                                             (Obj.magic uu___4)
                                             (fun uu___5 ->
@@ -1590,17 +1660,17 @@ and (comp_eq : FStarC_Reflection_Types.comp comparator_for) =
                                              (Obj.magic
                                                 (FStar_Range.mk_range
                                                    "FStar.Tactics.LaxTermEq.fst"
-                                                   (Prims.of_int (185))
+                                                   (Prims.of_int (189))
                                                    (Prims.of_int (7))
-                                                   (Prims.of_int (185))
+                                                   (Prims.of_int (189))
                                                    (Prims.of_int (27)))))
                                           (FStar_Sealed.seal
                                              (Obj.magic
                                                 (FStar_Range.mk_range
                                                    "FStar.Tactics.LaxTermEq.fst"
-                                                   (Prims.of_int (185))
-                                                   (Prims.of_int (4))
                                                    (Prims.of_int (189))
+                                                   (Prims.of_int (4))
+                                                   (Prims.of_int (193))
                                                    (Prims.of_int (8)))))
                                           (Obj.magic uu___3)
                                           (fun uu___4 ->
@@ -1628,13 +1698,13 @@ and (br_eq : FStarC_Reflection_V2_Data.branch comparator_for) =
           (FStar_Sealed.seal
              (Obj.magic
                 (FStar_Range.mk_range "FStar.Tactics.LaxTermEq.fst"
-                   (Prims.of_int (195)) (Prims.of_int (12))
-                   (Prims.of_int (195)) (Prims.of_int (38)))))
+                   (Prims.of_int (199)) (Prims.of_int (12))
+                   (Prims.of_int (199)) (Prims.of_int (38)))))
           (FStar_Sealed.seal
              (Obj.magic
                 (FStar_Range.mk_range "FStar.Tactics.LaxTermEq.fst"
-                   (Prims.of_int (195)) (Prims.of_int (5))
-                   (Prims.of_int (195)) (Prims.of_int (38)))))
+                   (Prims.of_int (199)) (Prims.of_int (5))
+                   (Prims.of_int (199)) (Prims.of_int (38)))))
           (Obj.magic uu___1)
           (fun uu___2 ->
              FStar_Tactics_Effect.lift_div_tac
@@ -1643,12 +1713,12 @@ and (br_eq : FStarC_Reflection_V2_Data.branch comparator_for) =
         (FStar_Sealed.seal
            (Obj.magic
               (FStar_Range.mk_range "FStar.Tactics.LaxTermEq.fst"
-                 (Prims.of_int (195)) (Prims.of_int (5)) (Prims.of_int (195))
+                 (Prims.of_int (199)) (Prims.of_int (5)) (Prims.of_int (199))
                  (Prims.of_int (38)))))
         (FStar_Sealed.seal
            (Obj.magic
               (FStar_Range.mk_range "FStar.Tactics.LaxTermEq.fst"
-                 (Prims.of_int (195)) (Prims.of_int (2)) (Prims.of_int (196))
+                 (Prims.of_int (199)) (Prims.of_int (2)) (Prims.of_int (200))
                  (Prims.of_int (29))))) (Obj.magic uu___)
         (fun uu___1 ->
            (fun uu___1 ->
@@ -1704,13 +1774,13 @@ and (pat_arg_eq :
               (FStar_Sealed.seal
                  (Obj.magic
                     (FStar_Range.mk_range "FStar.Tactics.LaxTermEq.fst"
-                       (Prims.of_int (213)) (Prims.of_int (12))
-                       (Prims.of_int (213)) (Prims.of_int (24)))))
+                       (Prims.of_int (217)) (Prims.of_int (12))
+                       (Prims.of_int (217)) (Prims.of_int (24)))))
               (FStar_Sealed.seal
                  (Obj.magic
                     (FStar_Range.mk_range "FStar.Tactics.LaxTermEq.fst"
-                       (Prims.of_int (213)) (Prims.of_int (5))
-                       (Prims.of_int (213)) (Prims.of_int (24)))))
+                       (Prims.of_int (217)) (Prims.of_int (5))
+                       (Prims.of_int (217)) (Prims.of_int (24)))))
               (Obj.magic uu___3)
               (fun uu___4 ->
                  FStar_Tactics_Effect.lift_div_tac
@@ -1719,13 +1789,13 @@ and (pat_arg_eq :
             (FStar_Sealed.seal
                (Obj.magic
                   (FStar_Range.mk_range "FStar.Tactics.LaxTermEq.fst"
-                     (Prims.of_int (213)) (Prims.of_int (5))
-                     (Prims.of_int (213)) (Prims.of_int (24)))))
+                     (Prims.of_int (217)) (Prims.of_int (5))
+                     (Prims.of_int (217)) (Prims.of_int (24)))))
             (FStar_Sealed.seal
                (Obj.magic
                   (FStar_Range.mk_range "FStar.Tactics.LaxTermEq.fst"
-                     (Prims.of_int (213)) (Prims.of_int (2))
-                     (Prims.of_int (214)) (Prims.of_int (9)))))
+                     (Prims.of_int (217)) (Prims.of_int (2))
+                     (Prims.of_int (218)) (Prims.of_int (9)))))
             (Obj.magic uu___2)
             (fun uu___3 ->
                if uu___3
@@ -1743,12 +1813,12 @@ let (lax_term_eq :
         (FStar_Sealed.seal
            (Obj.magic
               (FStar_Range.mk_range "FStar.Tactics.LaxTermEq.fst"
-                 (Prims.of_int (217)) (Prims.of_int (10))
-                 (Prims.of_int (217)) (Prims.of_int (23)))))
+                 (Prims.of_int (221)) (Prims.of_int (10))
+                 (Prims.of_int (221)) (Prims.of_int (23)))))
         (FStar_Sealed.seal
            (Obj.magic
               (FStar_Range.mk_range "FStar.Tactics.LaxTermEq.fst"
-                 (Prims.of_int (217)) (Prims.of_int (6)) (Prims.of_int (217))
+                 (Prims.of_int (221)) (Prims.of_int (6)) (Prims.of_int (221))
                  (Prims.of_int (7))))) (Obj.magic uu___)
         (fun r -> FStar_Tactics_Effect.lift_div_tac (fun uu___1 -> r))
 let _ =

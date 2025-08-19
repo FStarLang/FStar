@@ -98,8 +98,6 @@ let (register_goal : FStarC_Tactics_Types.goal -> unit) =
                    (env.FStarC_TypeChecker_Env.is_iface);
                  FStarC_TypeChecker_Env.admit =
                    (env.FStarC_TypeChecker_Env.admit);
-                 FStarC_TypeChecker_Env.lax_universes =
-                   (env.FStarC_TypeChecker_Env.lax_universes);
                  FStarC_TypeChecker_Env.phase1 =
                    (env.FStarC_TypeChecker_Env.phase1);
                  FStarC_TypeChecker_Env.failhard =
@@ -272,7 +270,7 @@ let (monad_tac : unit tac FStarC_Class_Monad.monad) =
   {
     FStarC_Class_Monad.return =
       (fun uu___1 -> fun uu___ -> (fun uu___ -> Obj.magic ret) uu___1 uu___);
-    FStarC_Class_Monad.op_let_Bang =
+    FStarC_Class_Monad.bind =
       (fun uu___3 ->
          fun uu___2 ->
            fun uu___1 ->

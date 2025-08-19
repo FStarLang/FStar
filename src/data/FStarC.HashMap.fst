@@ -5,7 +5,6 @@ module FStarC.HashMap
 open FStarC
 open FStarC.Effect
 open FStarC.Class.Hashable
-module BU = FStarC.Util
 
 let hashmap (k v : Type) : Tot Type0 =
   PIMap.t (k & v)

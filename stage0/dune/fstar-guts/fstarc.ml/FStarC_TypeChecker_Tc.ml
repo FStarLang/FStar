@@ -28,7 +28,8 @@ let (sigelt_typ :
           FStarC_Syntax_Syntax.ty_lid = uu___2;
           FStarC_Syntax_Syntax.num_ty_params = uu___3;
           FStarC_Syntax_Syntax.mutuals1 = uu___4;
-          FStarC_Syntax_Syntax.injective_type_params1 = uu___5;_}
+          FStarC_Syntax_Syntax.injective_type_params1 = uu___5;
+          FStarC_Syntax_Syntax.proj_disc_lids = uu___6;_}
         -> FStar_Pervasives_Native.Some t
     | FStarC_Syntax_Syntax.Sig_declare_typ
         { FStarC_Syntax_Syntax.lid2 = uu___;
@@ -107,8 +108,6 @@ let (set_hint_correlator :
             FStarC_TypeChecker_Env.is_iface =
               (env.FStarC_TypeChecker_Env.is_iface);
             FStarC_TypeChecker_Env.admit = (env.FStarC_TypeChecker_Env.admit);
-            FStarC_TypeChecker_Env.lax_universes =
-              (env.FStarC_TypeChecker_Env.lax_universes);
             FStarC_TypeChecker_Env.phase1 =
               (env.FStarC_TypeChecker_Env.phase1);
             FStarC_TypeChecker_Env.failhard =
@@ -224,8 +223,6 @@ let (set_hint_correlator :
             FStarC_TypeChecker_Env.is_iface =
               (env.FStarC_TypeChecker_Env.is_iface);
             FStarC_TypeChecker_Env.admit = (env.FStarC_TypeChecker_Env.admit);
-            FStarC_TypeChecker_Env.lax_universes =
-              (env.FStarC_TypeChecker_Env.lax_universes);
             FStarC_TypeChecker_Env.phase1 =
               (env.FStarC_TypeChecker_Env.phase1);
             FStarC_TypeChecker_Env.failhard =
@@ -494,7 +491,9 @@ let (tc_inductive' :
                                      uu___9;
                                    FStarC_Syntax_Syntax.mutuals1 = uu___10;
                                    FStarC_Syntax_Syntax.injective_type_params1
-                                     = uu___11;_}
+                                     = uu___11;
+                                   FStarC_Syntax_Syntax.proj_disc_lids =
+                                     uu___12;_}
                                  -> (data_lid, ty_lid)
                              | uu___7 -> failwith "Impossible" in
                            match uu___6 with
@@ -867,8 +866,8 @@ let (tc_sig_let :
                                  let uu___5 =
                                    FStarC_Class_Show.show
                                      FStarC_Ident.showable_lident l in
-                                 FStarC_Pprint.doc_of_string uu___5 in
-                               FStarC_Pprint.op_Hat_Slash_Hat uu___3 uu___4 in
+                                 FStar_Pprint.doc_of_string uu___5 in
+                               FStar_Pprint.op_Hat_Slash_Hat uu___3 uu___4 in
                              let uu___3 =
                                let uu___4 =
                                  let uu___5 =
@@ -881,9 +880,9 @@ let (tc_sig_let :
                                            (FStarC_Class_Show.show_list
                                               FStarC_Syntax_Print.showable_qualifier)
                                            val_q1 in
-                                       FStarC_Pprint.arbitrary_string uu___9 in
-                                     FStarC_Pprint.squotes uu___8 in
-                                   FStarC_Pprint.prefix (Prims.of_int (4))
+                                       FStar_Pprint.arbitrary_string uu___9 in
+                                     FStar_Pprint.squotes uu___8 in
+                                   FStar_Pprint.prefix (Prims.of_int (4))
                                      Prims.int_one uu___6 uu___7 in
                                  let uu___6 =
                                    let uu___7 = FStarC_Errors_Msg.text "got" in
@@ -894,11 +893,11 @@ let (tc_sig_let :
                                            (FStarC_Class_Show.show_list
                                               FStarC_Syntax_Print.showable_qualifier)
                                            q'1 in
-                                       FStarC_Pprint.arbitrary_string uu___10 in
-                                     FStarC_Pprint.squotes uu___9 in
-                                   FStarC_Pprint.prefix (Prims.of_int (4))
+                                       FStar_Pprint.arbitrary_string uu___10 in
+                                     FStar_Pprint.squotes uu___9 in
+                                   FStar_Pprint.prefix (Prims.of_int (4))
                                      Prims.int_one uu___7 uu___8 in
-                                 FStarC_Pprint.op_Hat_Slash_Hat uu___5 uu___6 in
+                                 FStar_Pprint.op_Hat_Slash_Hat uu___5 uu___6 in
                                let uu___5 =
                                  let uu___6 =
                                    if Prims.uu___is_Cons d1
@@ -913,12 +912,12 @@ let (tc_sig_let :
                                              (FStarC_Class_Show.show_list
                                                 FStarC_Syntax_Print.showable_qualifier)
                                              d1 in
-                                         FStarC_Pprint.arbitrary_string
+                                         FStar_Pprint.arbitrary_string
                                            uu___10 in
-                                       FStarC_Pprint.squotes uu___9 in
-                                     FStarC_Pprint.prefix (Prims.of_int (2))
+                                       FStar_Pprint.squotes uu___9 in
+                                     FStar_Pprint.prefix (Prims.of_int (2))
                                        Prims.int_one uu___7 uu___8
-                                   else FStarC_Pprint.empty in
+                                   else FStar_Pprint.empty in
                                  let uu___7 =
                                    let uu___8 =
                                      if Prims.uu___is_Cons d2
@@ -933,13 +932,12 @@ let (tc_sig_let :
                                                (FStarC_Class_Show.show_list
                                                   FStarC_Syntax_Print.showable_qualifier)
                                                d2 in
-                                           FStarC_Pprint.arbitrary_string
+                                           FStar_Pprint.arbitrary_string
                                              uu___12 in
-                                         FStarC_Pprint.squotes uu___11 in
-                                       FStarC_Pprint.prefix
-                                         (Prims.of_int (2)) Prims.int_one
-                                         uu___9 uu___10
-                                     else FStarC_Pprint.empty in
+                                         FStar_Pprint.squotes uu___11 in
+                                       FStar_Pprint.prefix (Prims.of_int (2))
+                                         Prims.int_one uu___9 uu___10
+                                     else FStar_Pprint.empty in
                                    [uu___8] in
                                  uu___6 :: uu___7 in
                                uu___4 :: uu___5 in
@@ -1071,7 +1069,7 @@ let (tc_sig_let :
                          let uu___2 =
                            let uu___3 =
                              FStarC_TypeChecker_Env.try_lookup_val_decl env1
-                               (lbname.FStarC_Syntax_Syntax.fv_name).FStarC_Syntax_Syntax.v in
+                               lbname.FStarC_Syntax_Syntax.fv_name in
                            match uu___3 with
                            | FStar_Pervasives_Native.None ->
                                (gen, lb, quals_opt)
@@ -1079,7 +1077,7 @@ let (tc_sig_let :
                                ((uvs, tval), quals) ->
                                let quals_opt1 =
                                  check_quals_eq
-                                   (lbname.FStarC_Syntax_Syntax.fv_name).FStarC_Syntax_Syntax.v
+                                   lbname.FStarC_Syntax_Syntax.fv_name
                                    quals_opt quals in
                                let def =
                                  match (lb.FStarC_Syntax_Syntax.lbtyp).FStarC_Syntax_Syntax.n
@@ -1285,8 +1283,6 @@ let (tc_sig_let :
                             (env1.FStarC_TypeChecker_Env.is_iface);
                           FStarC_TypeChecker_Env.admit =
                             (env1.FStarC_TypeChecker_Env.admit);
-                          FStarC_TypeChecker_Env.lax_universes =
-                            (env1.FStarC_TypeChecker_Env.lax_universes);
                           FStarC_TypeChecker_Env.phase1 =
                             (env1.FStarC_TypeChecker_Env.phase1);
                           FStarC_TypeChecker_Env.failhard =
@@ -1507,9 +1503,6 @@ let (tc_sig_let :
                                               (env'.FStarC_TypeChecker_Env.is_iface);
                                             FStarC_TypeChecker_Env.admit =
                                               true;
-                                            FStarC_TypeChecker_Env.lax_universes
-                                              =
-                                              (env'.FStarC_TypeChecker_Env.lax_universes);
                                             FStarC_TypeChecker_Env.phase1 =
                                               true;
                                             FStarC_TypeChecker_Env.failhard =
@@ -1717,8 +1710,6 @@ let (tc_sig_let :
                                      (env'1.FStarC_TypeChecker_Env.is_iface);
                                    FStarC_TypeChecker_Env.admit =
                                      (env'1.FStarC_TypeChecker_Env.admit);
-                                   FStarC_TypeChecker_Env.lax_universes =
-                                     (env'1.FStarC_TypeChecker_Env.lax_universes);
                                    FStarC_TypeChecker_Env.phase1 =
                                      (env'1.FStarC_TypeChecker_Env.phase1);
                                    FStarC_TypeChecker_Env.failhard =
@@ -1897,8 +1888,6 @@ let (tc_sig_let :
                                       (env'1.FStarC_TypeChecker_Env.is_iface);
                                     FStarC_TypeChecker_Env.admit =
                                       (env'1.FStarC_TypeChecker_Env.admit);
-                                    FStarC_TypeChecker_Env.lax_universes =
-                                      (env'1.FStarC_TypeChecker_Env.lax_universes);
                                     FStarC_TypeChecker_Env.phase1 =
                                       (env'1.FStarC_TypeChecker_Env.phase1);
                                     FStarC_TypeChecker_Env.failhard =
@@ -2081,8 +2070,8 @@ let (tc_sig_let :
                                            let uu___11 =
                                              FStarC_TypeChecker_Env.try_lookup_val_decl
                                                env1
-                                               ((FStar_Pervasives.__proj__Inr__item__v
-                                                   lb.FStarC_Syntax_Syntax.lbname).FStarC_Syntax_Syntax.fv_name).FStarC_Syntax_Syntax.v in
+                                               (FStar_Pervasives.__proj__Inr__item__v
+                                                  lb.FStarC_Syntax_Syntax.lbname).FStarC_Syntax_Syntax.fv_name in
                                            match uu___11 with
                                            | FStar_Pervasives_Native.None ->
                                                true
@@ -2195,8 +2184,6 @@ let (tc_decl' :
                      FStarC_TypeChecker_Env.is_iface =
                        (env.FStarC_TypeChecker_Env.is_iface);
                      FStarC_TypeChecker_Env.admit = true;
-                     FStarC_TypeChecker_Env.lax_universes =
-                       (env.FStarC_TypeChecker_Env.lax_universes);
                      FStarC_TypeChecker_Env.phase1 =
                        (env.FStarC_TypeChecker_Env.phase1);
                      FStarC_TypeChecker_Env.failhard =
@@ -2293,10 +2280,7 @@ let (tc_decl' :
                          (FStarC_Options.print_expected_failures ()) ||
                            (FStarC_Debug.low ()) in
                        if uu___6
-                       then
-                         (FStarC_Format.print_string ">> Got issues: [\n";
-                          FStarC_List.iter FStarC_Errors.print_issue errs;
-                          FStarC_Format.print_string ">>]\n")
+                       then FStarC_Errors.print_expected_failures errs
                        else ());
                       (let uu___6 =
                          FStarC_TypeChecker_Env.pop env'1 "expect_failure" in
@@ -2345,7 +2329,7 @@ let (tc_decl' :
                                                (FStarC_Class_PP.pp_list
                                                   FStarC_Class_PP.pp_int)
                                                uu___16 in
-                                           FStarC_Pprint.prefix
+                                           FStar_Pprint.prefix
                                              (Prims.of_int (2)) Prims.int_one
                                              uu___14 uu___15 in
                                          let uu___14 =
@@ -2362,12 +2346,12 @@ let (tc_decl' :
                                                  (FStarC_Class_PP.pp_list
                                                     FStarC_Class_PP.pp_int)
                                                  uu___18 in
-                                             FStarC_Pprint.prefix
+                                             FStar_Pprint.prefix
                                                (Prims.of_int (2))
                                                Prims.int_one uu___16 uu___17 in
-                                           FStarC_Pprint.op_Hat_Hat uu___15
-                                             FStarC_Pprint.dot in
-                                         FStarC_Pprint.op_Hat_Slash_Hat
+                                           FStar_Pprint.op_Hat_Hat uu___15
+                                             FStar_Pprint.dot in
+                                         FStar_Pprint.op_Hat_Slash_Hat
                                            uu___13 uu___14 in
                                        let uu___13 =
                                          let uu___14 =
@@ -2454,8 +2438,6 @@ let (tc_decl' :
                                     FStarC_TypeChecker_Env.is_iface =
                                       (env1.FStarC_TypeChecker_Env.is_iface);
                                     FStarC_TypeChecker_Env.admit = true;
-                                    FStarC_TypeChecker_Env.lax_universes =
-                                      (env1.FStarC_TypeChecker_Env.lax_universes);
                                     FStarC_TypeChecker_Env.phase1 = true;
                                     FStarC_TypeChecker_Env.failhard =
                                       (env1.FStarC_TypeChecker_Env.failhard);
@@ -2743,8 +2725,6 @@ let (tc_decl' :
                                        FStarC_TypeChecker_Env.is_iface =
                                          (env.FStarC_TypeChecker_Env.is_iface);
                                        FStarC_TypeChecker_Env.admit = true;
-                                       FStarC_TypeChecker_Env.lax_universes =
-                                         (env.FStarC_TypeChecker_Env.lax_universes);
                                        FStarC_TypeChecker_Env.phase1 = true;
                                        FStarC_TypeChecker_Env.failhard =
                                          (env.FStarC_TypeChecker_Env.failhard);
@@ -2974,8 +2954,6 @@ let (tc_decl' :
                                   FStarC_TypeChecker_Env.is_iface =
                                     (env.FStarC_TypeChecker_Env.is_iface);
                                   FStarC_TypeChecker_Env.admit = true;
-                                  FStarC_TypeChecker_Env.lax_universes =
-                                    (env.FStarC_TypeChecker_Env.lax_universes);
                                   FStarC_TypeChecker_Env.phase1 = true;
                                   FStarC_TypeChecker_Env.failhard =
                                     (env.FStarC_TypeChecker_Env.failhard);
@@ -3211,8 +3189,6 @@ let (tc_decl' :
                                 FStarC_TypeChecker_Env.is_iface =
                                   (env1.FStarC_TypeChecker_Env.is_iface);
                                 FStarC_TypeChecker_Env.admit = true;
-                                FStarC_TypeChecker_Env.lax_universes =
-                                  (env1.FStarC_TypeChecker_Env.lax_universes);
                                 FStarC_TypeChecker_Env.phase1 = true;
                                 FStarC_TypeChecker_Env.failhard =
                                   (env1.FStarC_TypeChecker_Env.failhard);
@@ -3399,8 +3375,6 @@ let (tc_decl' :
                                 FStarC_TypeChecker_Env.is_iface =
                                   (env1.FStarC_TypeChecker_Env.is_iface);
                                 FStarC_TypeChecker_Env.admit = true;
-                                FStarC_TypeChecker_Env.lax_universes =
-                                  (env1.FStarC_TypeChecker_Env.lax_universes);
                                 FStarC_TypeChecker_Env.phase1 = true;
                                 FStarC_TypeChecker_Env.failhard =
                                   (env1.FStarC_TypeChecker_Env.failhard);
@@ -3695,8 +3669,6 @@ let (tc_decl' :
                         (env.FStarC_TypeChecker_Env.is_iface);
                       FStarC_TypeChecker_Env.admit =
                         (env.FStarC_TypeChecker_Env.admit);
-                      FStarC_TypeChecker_Env.lax_universes =
-                        (env.FStarC_TypeChecker_Env.lax_universes);
                       FStarC_TypeChecker_Env.phase1 =
                         (env.FStarC_TypeChecker_Env.phase1);
                       FStarC_TypeChecker_Env.failhard =
@@ -3844,8 +3816,6 @@ let (tc_decl' :
                                     FStarC_TypeChecker_Env.is_iface =
                                       (env.FStarC_TypeChecker_Env.is_iface);
                                     FStarC_TypeChecker_Env.admit = true;
-                                    FStarC_TypeChecker_Env.lax_universes =
-                                      (env.FStarC_TypeChecker_Env.lax_universes);
                                     FStarC_TypeChecker_Env.phase1 = true;
                                     FStarC_TypeChecker_Env.failhard =
                                       (env.FStarC_TypeChecker_Env.failhard);
@@ -4091,8 +4061,6 @@ let (tc_decl' :
                                     FStarC_TypeChecker_Env.is_iface =
                                       (env.FStarC_TypeChecker_Env.is_iface);
                                     FStarC_TypeChecker_Env.admit = true;
-                                    FStarC_TypeChecker_Env.lax_universes =
-                                      (env.FStarC_TypeChecker_Env.lax_universes);
                                     FStarC_TypeChecker_Env.phase1 = true;
                                     FStarC_TypeChecker_Env.failhard =
                                       (env.FStarC_TypeChecker_Env.failhard);
@@ -4332,8 +4300,6 @@ let (tc_decl :
              FStarC_TypeChecker_Env.is_iface =
                (env1.FStarC_TypeChecker_Env.is_iface);
              FStarC_TypeChecker_Env.admit = true;
-             FStarC_TypeChecker_Env.lax_universes =
-               (env1.FStarC_TypeChecker_Env.lax_universes);
              FStarC_TypeChecker_Env.phase1 =
                (env1.FStarC_TypeChecker_Env.phase1);
              FStarC_TypeChecker_Env.failhard =
@@ -4464,8 +4430,6 @@ let (tc_decl :
                      FStarC_TypeChecker_Env.is_iface =
                        (env2.FStarC_TypeChecker_Env.is_iface);
                      FStarC_TypeChecker_Env.admit = true;
-                     FStarC_TypeChecker_Env.lax_universes =
-                       (env2.FStarC_TypeChecker_Env.lax_universes);
                      FStarC_TypeChecker_Env.phase1 =
                        (env2.FStarC_TypeChecker_Env.phase1);
                      FStarC_TypeChecker_Env.failhard =
@@ -4585,8 +4549,6 @@ let (tc_decl :
                          (env3.FStarC_TypeChecker_Env.is_iface);
                        FStarC_TypeChecker_Env.admit =
                          (env0.FStarC_TypeChecker_Env.admit);
-                       FStarC_TypeChecker_Env.lax_universes =
-                         (env3.FStarC_TypeChecker_Env.lax_universes);
                        FStarC_TypeChecker_Env.phase1 =
                          (env3.FStarC_TypeChecker_Env.phase1);
                        FStarC_TypeChecker_Env.failhard =
@@ -4721,7 +4683,7 @@ let (add_sigelt_to_env :
                       let uu___5 =
                         let uu___6 =
                           let uu___7 = FStarC_Options.show_options () in
-                          FStarC_Pprint.arbitrary_string uu___7 in
+                          FStar_Pprint.arbitrary_string uu___7 in
                         [uu___6] in
                       uu___4 :: uu___5 in
                     FStarC_Errors.info FStarC_Syntax_Syntax.has_range_sigelt
@@ -4774,8 +4736,6 @@ let (add_sigelt_to_env :
                          (env1.FStarC_TypeChecker_Env.is_iface);
                        FStarC_TypeChecker_Env.admit =
                          (env1.FStarC_TypeChecker_Env.admit);
-                       FStarC_TypeChecker_Env.lax_universes =
-                         (env1.FStarC_TypeChecker_Env.lax_universes);
                        FStarC_TypeChecker_Env.phase1 =
                          (env1.FStarC_TypeChecker_Env.phase1);
                        FStarC_TypeChecker_Env.failhard =
@@ -4886,8 +4846,6 @@ let (add_sigelt_to_env :
                          (env1.FStarC_TypeChecker_Env.is_iface);
                        FStarC_TypeChecker_Env.admit =
                          (env1.FStarC_TypeChecker_Env.admit);
-                       FStarC_TypeChecker_Env.lax_universes =
-                         (env1.FStarC_TypeChecker_Env.lax_universes);
                        FStarC_TypeChecker_Env.phase1 =
                          (env1.FStarC_TypeChecker_Env.phase1);
                        FStarC_TypeChecker_Env.failhard =
@@ -4998,8 +4956,6 @@ let (add_sigelt_to_env :
                          (env1.FStarC_TypeChecker_Env.is_iface);
                        FStarC_TypeChecker_Env.admit =
                          (env1.FStarC_TypeChecker_Env.admit);
-                       FStarC_TypeChecker_Env.lax_universes =
-                         (env1.FStarC_TypeChecker_Env.lax_universes);
                        FStarC_TypeChecker_Env.phase1 =
                          (env1.FStarC_TypeChecker_Env.phase1);
                        FStarC_TypeChecker_Env.failhard =
@@ -5110,8 +5066,6 @@ let (add_sigelt_to_env :
                          (env1.FStarC_TypeChecker_Env.is_iface);
                        FStarC_TypeChecker_Env.admit =
                          (env1.FStarC_TypeChecker_Env.admit);
-                       FStarC_TypeChecker_Env.lax_universes =
-                         (env1.FStarC_TypeChecker_Env.lax_universes);
                        FStarC_TypeChecker_Env.phase1 =
                          (env1.FStarC_TypeChecker_Env.phase1);
                        FStarC_TypeChecker_Env.failhard =
@@ -5532,8 +5486,6 @@ let (tc_partial_modul :
             FStarC_TypeChecker_Env.is_iface =
               (modul.FStarC_Syntax_Syntax.is_interface);
             FStarC_TypeChecker_Env.admit = (Prims.op_Negation verify);
-            FStarC_TypeChecker_Env.lax_universes =
-              (env.FStarC_TypeChecker_Env.lax_universes);
             FStarC_TypeChecker_Env.phase1 =
               (env.FStarC_TypeChecker_Env.phase1);
             FStarC_TypeChecker_Env.failhard =
@@ -5678,12 +5630,12 @@ let (finish_partial_modul :
                          uu___5 in
                      FStarC_Errors_Msg.text uu___4 in
                    let uu___4 =
-                     FStarC_Pprint.separate_map FStarC_Pprint.hardline
+                     FStarC_Pprint.separate_map FStar_Pprint.hardline
                        (fun l ->
                           let uu___5 = FStarC_Ident.ident_of_lid l in
                           FStarC_Class_PP.pp FStarC_Ident.pretty_ident uu___5)
                        missing in
-                   FStarC_Pprint.prefix (Prims.of_int (2)) Prims.int_one
+                   FStar_Pprint.prefix (Prims.of_int (2)) Prims.int_one
                      uu___3 uu___4 in
                  [uu___2] in
                FStarC_Errors.log_issue FStarC_TypeChecker_Env.hasRange_env
@@ -5874,8 +5826,6 @@ let (check_module :
              FStarC_TypeChecker_Env.is_iface =
                (env0.FStarC_TypeChecker_Env.is_iface);
              FStarC_TypeChecker_Env.admit = uu___2;
-             FStarC_TypeChecker_Env.lax_universes =
-               (env0.FStarC_TypeChecker_Env.lax_universes);
              FStarC_TypeChecker_Env.phase1 =
                (env0.FStarC_TypeChecker_Env.phase1);
              FStarC_TypeChecker_Env.failhard =
@@ -5983,8 +5933,6 @@ let (check_module :
                    (env1.FStarC_TypeChecker_Env.is_iface);
                  FStarC_TypeChecker_Env.admit =
                    (env0.FStarC_TypeChecker_Env.admit);
-                 FStarC_TypeChecker_Env.lax_universes =
-                   (env1.FStarC_TypeChecker_Env.lax_universes);
                  FStarC_TypeChecker_Env.phase1 =
                    (env1.FStarC_TypeChecker_Env.phase1);
                  FStarC_TypeChecker_Env.failhard =

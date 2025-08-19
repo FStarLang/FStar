@@ -350,7 +350,7 @@ let (try_lookup_fv :
                   let uu___4 =
                     let uu___5 =
                       FStarC_Ident.string_of_lid
-                        (fv.FStarC_Syntax_Syntax.fv_name).FStarC_Syntax_Syntax.v in
+                        fv.FStarC_Syntax_Syntax.fv_name in
                     FStarC_Format.fmt1
                       "Will not extract reference to variable `%s` since it has the `noextract` qualifier."
                       uu___5 in
@@ -360,7 +360,7 @@ let (try_lookup_fv :
                     let uu___6 =
                       let uu___7 =
                         FStarC_Ident.string_of_lid
-                          (fv.FStarC_Syntax_Syntax.fv_name).FStarC_Syntax_Syntax.v in
+                          fv.FStarC_Syntax_Syntax.fv_name in
                       let uu___8 =
                         FStarC_Class_Show.show
                           FStarC_Range_Ops.showable_range pos in
@@ -399,11 +399,13 @@ let (lookup_fv :
         | res ->
             let uu___1 =
               let uu___2 =
-                FStarC_Range_Ops.string_of_range
-                  (fv.FStarC_Syntax_Syntax.fv_name).FStarC_Syntax_Syntax.p in
+                let uu___3 =
+                  FStarC_Class_HasRange.pos FStarC_Syntax_Syntax.hasRange_fv
+                    fv in
+                FStarC_Range_Ops.string_of_range uu___3 in
               let uu___3 =
                 FStarC_Class_Show.show FStarC_Ident.showable_lident
-                  (fv.FStarC_Syntax_Syntax.fv_name).FStarC_Syntax_Syntax.v in
+                  fv.FStarC_Syntax_Syntax.fv_name in
               let uu___4 = FStarC_Class_Show.show showable_lookup_res res in
               FStarC_Format.fmt3
                 "Internal error: (%s) free variable %s not found during extraction (res=%s)\n"
@@ -523,9 +525,7 @@ let (no_fstar_stubs_ns :
     match ns with
     | "FStar"::"NormSteps"::rest when plug () -> "Fstarcompiler.FStarC" ::
         "NormSteps" :: rest
-    | "FStar"::"Stubs"::rest when
-        (plug_no_lib ()) && (FStarC_Options_Ext.enabled "__guts") -> "FStarC"
-        :: rest
+    | "FStar"::"Stubs"::rest when plug_no_lib () -> "FStarC" :: rest
     | "FStar"::"Stubs"::"Tactics"::"V1"::"Builtins"::[] when plug () ->
         ["FStarC"; "Tactics"; "V1"; "Builtins"]
     | "FStar"::"Stubs"::"Tactics"::"V2"::"Builtins"::[] when plug () ->
@@ -927,8 +927,7 @@ let (extend_fv :
               | ([], t) -> t
               | uu___1 -> FStarC_Extraction_ML_Syntax.MLTY_Top in
             let uu___1 =
-              new_mlpath_of_lident g
-                (x.FStarC_Syntax_Syntax.fv_name).FStarC_Syntax_Syntax.v in
+              new_mlpath_of_lident g x.FStarC_Syntax_Syntax.fv_name in
             match uu___1 with
             | (mlpath, g1) ->
                 let mlsymbol = FStar_Pervasives_Native.snd mlpath in
@@ -1024,9 +1023,7 @@ let (extend_tydef :
     fun fv ->
       fun ts ->
         fun meta ->
-          let uu___ =
-            new_mlpath_of_lident g
-              (fv.FStarC_Syntax_Syntax.fv_name).FStarC_Syntax_Syntax.v in
+          let uu___ = new_mlpath_of_lident g fv.FStarC_Syntax_Syntax.fv_name in
           match uu___ with
           | (name, g1) ->
               let tydef1 =
@@ -1076,9 +1073,7 @@ let (extend_type_name :
   =
   fun g ->
     fun fv ->
-      let uu___ =
-        new_mlpath_of_lident g
-          (fv.FStarC_Syntax_Syntax.fv_name).FStarC_Syntax_Syntax.v in
+      let uu___ = new_mlpath_of_lident g fv.FStarC_Syntax_Syntax.fv_name in
       match uu___ with
       | (name, g1) ->
           (name,

@@ -135,7 +135,7 @@ let (errors_smt_detail :
                                   let uu___7 =
                                     FStarC_Range_Ops.string_of_use_range r1 in
                                   Prims.strcat "Also see: " uu___7 in
-                                FStarC_Pprint.doc_of_string uu___6 in
+                                FStar_Pprint.doc_of_string uu___6 in
                               let uu___6 =
                                 let uu___7 =
                                   let uu___8 =
@@ -152,8 +152,8 @@ let (errors_smt_detail :
                                           r1 in
                                       Prims.strcat
                                         "Other related locations: " uu___10 in
-                                    FStarC_Pprint.doc_of_string uu___9
-                                  else FStarC_Pprint.empty in
+                                    FStar_Pprint.doc_of_string uu___9
+                                  else FStar_Pprint.empty in
                                 [uu___7] in
                               uu___5 :: uu___6 in
                             FStar_List_Tot_Base.append msg1 uu___4 in
@@ -237,14 +237,14 @@ let (subtyping_failed :
               let uu___4 =
                 let uu___5 = FStarC_Errors_Msg.text "Expected type" in
                 let uu___6 = ppt t2 in
-                FStarC_Pprint.prefix (Prims.of_int (2)) Prims.int_one uu___5
+                FStar_Pprint.prefix (Prims.of_int (2)) Prims.int_one uu___5
                   uu___6 in
               let uu___5 =
                 let uu___6 = FStarC_Errors_Msg.text "got type" in
                 let uu___7 = ppt t1 in
-                FStarC_Pprint.prefix (Prims.of_int (2)) Prims.int_one uu___6
+                FStar_Pprint.prefix (Prims.of_int (2)) Prims.int_one uu___6
                   uu___7 in
-              FStarC_Pprint.op_Hat_Slash_Hat uu___4 uu___5 in
+              FStar_Pprint.op_Hat_Slash_Hat uu___4 uu___5 in
             [uu___3] in
           uu___1 :: uu___2
 let (ill_kinded_type : FStarC_Errors_Msg.error_message) =
@@ -317,19 +317,19 @@ let expected_expression_of_type :
                 let uu___2 =
                   let uu___3 =
                     FStarC_Errors_Msg.text "Expected expression of type" in
-                  FStarC_Pprint.prefix (Prims.of_int (4)) Prims.int_one
-                    uu___3 d1 in
+                  FStar_Pprint.prefix (Prims.of_int (4)) Prims.int_one uu___3
+                    d1 in
                 let uu___3 =
                   let uu___4 =
                     let uu___5 = FStarC_Errors_Msg.text "got expression" in
-                    FStarC_Pprint.prefix (Prims.of_int (4)) Prims.int_one
+                    FStar_Pprint.prefix (Prims.of_int (4)) Prims.int_one
                       uu___5 ed in
                   let uu___5 =
                     let uu___6 = FStarC_Errors_Msg.text "of type" in
-                    FStarC_Pprint.prefix (Prims.of_int (4)) Prims.int_one
+                    FStar_Pprint.prefix (Prims.of_int (4)) Prims.int_one
                       uu___6 d2 in
-                  FStarC_Pprint.op_Hat_Slash_Hat uu___4 uu___5 in
-                FStarC_Pprint.op_Hat_Slash_Hat uu___2 uu___3 in
+                  FStar_Pprint.op_Hat_Slash_Hat uu___4 uu___5 in
+                FStar_Pprint.op_Hat_Slash_Hat uu___2 uu___3 in
               [uu___1] in
             FStarC_Errors.raise_error FStarC_Class_HasRange.hasRange_range
               rng FStarC_Errors_Codes.Fatal_UnexpectedExpressionType ()
@@ -378,15 +378,15 @@ let (basic_type_error :
                           let uu___3 = FStarC_Errors_Msg.text "Expected type" in
                           let uu___4 =
                             FStarC_TypeChecker_Normalize.term_to_doc env t1 in
-                          FStarC_Pprint.prefix (Prims.of_int (4))
+                          FStar_Pprint.prefix (Prims.of_int (4))
                             Prims.int_one uu___3 uu___4 in
                         let uu___3 =
                           let uu___4 = FStarC_Errors_Msg.text "got type" in
                           let uu___5 =
                             FStarC_TypeChecker_Normalize.term_to_doc env t2 in
-                          FStarC_Pprint.prefix (Prims.of_int (4))
+                          FStar_Pprint.prefix (Prims.of_int (4))
                             Prims.int_one uu___4 uu___5 in
-                        FStarC_Pprint.op_Hat_Slash_Hat uu___2 uu___3 in
+                        FStar_Pprint.op_Hat_Slash_Hat uu___2 uu___3 in
                       [uu___1]
                   | FStar_Pervasives_Native.Some e ->
                       let uu___1 =
@@ -394,23 +394,23 @@ let (basic_type_error :
                           let uu___3 = FStarC_Errors_Msg.text "Expected type" in
                           let uu___4 =
                             FStarC_TypeChecker_Normalize.term_to_doc env t1 in
-                          FStarC_Pprint.prefix (Prims.of_int (4))
+                          FStar_Pprint.prefix (Prims.of_int (4))
                             Prims.int_one uu___3 uu___4 in
                         let uu___3 =
                           let uu___4 =
                             let uu___5 = FStarC_Errors_Msg.text "but" in
                             let uu___6 =
                               FStarC_TypeChecker_Normalize.term_to_doc env e in
-                            FStarC_Pprint.prefix (Prims.of_int (4))
+                            FStar_Pprint.prefix (Prims.of_int (4))
                               Prims.int_one uu___5 uu___6 in
                           let uu___5 =
                             let uu___6 = FStarC_Errors_Msg.text "has type" in
                             let uu___7 =
                               FStarC_TypeChecker_Normalize.term_to_doc env t2 in
-                            FStarC_Pprint.prefix (Prims.of_int (4))
+                            FStar_Pprint.prefix (Prims.of_int (4))
                               Prims.int_one uu___6 uu___7 in
-                          FStarC_Pprint.op_Hat_Slash_Hat uu___4 uu___5 in
-                        FStarC_Pprint.op_Hat_Slash_Hat uu___2 uu___3 in
+                          FStar_Pprint.op_Hat_Slash_Hat uu___4 uu___5 in
+                        FStar_Pprint.op_Hat_Slash_Hat uu___2 uu___3 in
                       [uu___1] in
                 FStarC_Errors.log_issue FStarC_Class_HasRange.hasRange_range
                   rng FStarC_Errors_Codes.Error_TypeError ()
@@ -439,15 +439,15 @@ let raise_basic_type_error :
                           let uu___3 = FStarC_Errors_Msg.text "Expected type" in
                           let uu___4 =
                             FStarC_TypeChecker_Normalize.term_to_doc env t1 in
-                          FStarC_Pprint.prefix (Prims.of_int (4))
+                          FStar_Pprint.prefix (Prims.of_int (4))
                             Prims.int_one uu___3 uu___4 in
                         let uu___3 =
                           let uu___4 = FStarC_Errors_Msg.text "got type" in
                           let uu___5 =
                             FStarC_TypeChecker_Normalize.term_to_doc env t2 in
-                          FStarC_Pprint.prefix (Prims.of_int (4))
+                          FStar_Pprint.prefix (Prims.of_int (4))
                             Prims.int_one uu___4 uu___5 in
-                        FStarC_Pprint.op_Hat_Slash_Hat uu___2 uu___3 in
+                        FStar_Pprint.op_Hat_Slash_Hat uu___2 uu___3 in
                       [uu___1]
                   | FStar_Pervasives_Native.Some e ->
                       let uu___1 =
@@ -455,23 +455,23 @@ let raise_basic_type_error :
                           let uu___3 = FStarC_Errors_Msg.text "Expected type" in
                           let uu___4 =
                             FStarC_TypeChecker_Normalize.term_to_doc env t1 in
-                          FStarC_Pprint.prefix (Prims.of_int (4))
+                          FStar_Pprint.prefix (Prims.of_int (4))
                             Prims.int_one uu___3 uu___4 in
                         let uu___3 =
                           let uu___4 =
                             let uu___5 = FStarC_Errors_Msg.text "but" in
                             let uu___6 =
                               FStarC_TypeChecker_Normalize.term_to_doc env e in
-                            FStarC_Pprint.prefix (Prims.of_int (4))
+                            FStar_Pprint.prefix (Prims.of_int (4))
                               Prims.int_one uu___5 uu___6 in
                           let uu___5 =
                             let uu___6 = FStarC_Errors_Msg.text "has type" in
                             let uu___7 =
                               FStarC_TypeChecker_Normalize.term_to_doc env t2 in
-                            FStarC_Pprint.prefix (Prims.of_int (4))
+                            FStar_Pprint.prefix (Prims.of_int (4))
                               Prims.int_one uu___6 uu___7 in
-                          FStarC_Pprint.op_Hat_Slash_Hat uu___4 uu___5 in
-                        FStarC_Pprint.op_Hat_Slash_Hat uu___2 uu___3 in
+                          FStar_Pprint.op_Hat_Slash_Hat uu___4 uu___5 in
+                        FStar_Pprint.op_Hat_Slash_Hat uu___2 uu___3 in
                       [uu___1] in
                 FStarC_Errors.raise_error
                   FStarC_Class_HasRange.hasRange_range rng
@@ -538,7 +538,7 @@ let expected_function_typ :
               let uu___4 =
                 FStarC_Errors_Msg.text "Got an expression of type:" in
               let uu___5 = FStarC_TypeChecker_Normalize.term_to_doc env t in
-              FStarC_Pprint.prefix (Prims.of_int (2)) Prims.int_one uu___4
+              FStar_Pprint.prefix (Prims.of_int (2)) Prims.int_one uu___4
                 uu___5 in
             [uu___3] in
           uu___1 :: uu___2 in
@@ -623,13 +623,13 @@ let computed_computation_type_does_not_match_annotation :
                            let uu___5 =
                              FStarC_Errors_Msg.text "Computed type" in
                            let uu___6 = ppt r1 in
-                           FStarC_Pprint.prefix (Prims.of_int (2))
+                           FStar_Pprint.prefix (Prims.of_int (2))
                              Prims.int_one uu___5 uu___6 in
                          let uu___5 =
                            let uu___6 =
                              let uu___7 = FStarC_Errors_Msg.text "and effect" in
                              let uu___8 = FStarC_Errors_Msg.text f1 in
-                             FStarC_Pprint.prefix (Prims.of_int (2))
+                             FStar_Pprint.prefix (Prims.of_int (2))
                                Prims.int_one uu___7 uu___8 in
                            let uu___7 =
                              let uu___8 =
@@ -637,17 +637,17 @@ let computed_computation_type_does_not_match_annotation :
                                  FStarC_Errors_Msg.text
                                    "is not compatible with the annotated type" in
                                let uu___10 = ppt r2 in
-                               FStarC_Pprint.prefix (Prims.of_int (2))
+                               FStar_Pprint.prefix (Prims.of_int (2))
                                  Prims.int_one uu___9 uu___10 in
                              let uu___9 =
                                let uu___10 =
                                  FStarC_Errors_Msg.text "and effect" in
                                let uu___11 = FStarC_Errors_Msg.text f2 in
-                               FStarC_Pprint.prefix (Prims.of_int (2))
+                               FStar_Pprint.prefix (Prims.of_int (2))
                                  Prims.int_one uu___10 uu___11 in
-                             FStarC_Pprint.op_Hat_Slash_Hat uu___8 uu___9 in
-                           FStarC_Pprint.op_Hat_Slash_Hat uu___6 uu___7 in
-                         FStarC_Pprint.op_Hat_Slash_Hat uu___4 uu___5 in
+                             FStar_Pprint.op_Hat_Slash_Hat uu___8 uu___9 in
+                           FStar_Pprint.op_Hat_Slash_Hat uu___6 uu___7 in
+                         FStar_Pprint.op_Hat_Slash_Hat uu___4 uu___5 in
                        [uu___3] in
                      FStarC_Errors.raise_error
                        FStarC_Class_HasRange.hasRange_range r
@@ -673,19 +673,19 @@ let computed_computation_type_does_not_match_annotation_eq :
                 let uu___2 =
                   let uu___3 = FStarC_Errors_Msg.text "Computed type" in
                   let uu___4 = ppc c in
-                  FStarC_Pprint.prefix (Prims.of_int (2)) Prims.int_one
-                    uu___3 uu___4 in
+                  FStar_Pprint.prefix (Prims.of_int (2)) Prims.int_one uu___3
+                    uu___4 in
                 let uu___3 =
                   let uu___4 =
                     let uu___5 =
                       FStarC_Errors_Msg.text "does not match annotated type" in
                     let uu___6 = ppc c' in
-                    FStarC_Pprint.prefix (Prims.of_int (2)) Prims.int_one
+                    FStar_Pprint.prefix (Prims.of_int (2)) Prims.int_one
                       uu___5 uu___6 in
                   let uu___5 =
                     FStarC_Errors_Msg.text "and no subtyping was allowed" in
-                  FStarC_Pprint.op_Hat_Slash_Hat uu___4 uu___5 in
-                FStarC_Pprint.op_Hat_Slash_Hat uu___2 uu___3 in
+                  FStar_Pprint.op_Hat_Slash_Hat uu___4 uu___5 in
+                FStar_Pprint.op_Hat_Slash_Hat uu___2 uu___3 in
               [uu___1] in
             FStarC_Errors.raise_error FStarC_Class_HasRange.hasRange_range r
               FStarC_Errors_Codes.Fatal_ComputedTypeNotMatchAnnotation ()
@@ -723,40 +723,35 @@ let __expected_eff_expression :
                      (Prims.strcat effname " expression.")) in
               let uu___2 =
                 let uu___3 =
-                  match reason with
-                  | FStar_Pervasives_Native.None -> FStarC_Pprint.empty
-                  | FStar_Pervasives_Native.Some msg ->
-                      let uu___4 = FStarC_Pprint.break_ Prims.int_one in
-                      let uu___5 =
-                        let uu___6 = FStarC_Pprint.doc_of_string "Because:" in
-                        let uu___7 =
-                          FStarC_Pprint.words (Prims.strcat msg ".") in
-                        uu___6 :: uu___7 in
-                      FStarC_Pprint.flow uu___4 uu___5 in
-                let uu___4 =
-                  let uu___5 =
-                    let uu___6 =
-                      let uu___7 = FStarC_Errors_Msg.text "Got an expression" in
-                      let uu___8 =
+                  let uu___4 =
+                    let uu___5 =
+                      let uu___6 = FStarC_Errors_Msg.text "Got an expression" in
+                      let uu___7 =
                         FStarC_Class_PP.pp FStarC_Syntax_Print.pretty_term e in
-                      FStarC_Pprint.prefix (Prims.of_int (2)) Prims.int_one
-                        uu___7 uu___8 in
-                    let uu___7 =
-                      let uu___8 =
-                        let uu___9 = FStarC_Errors_Msg.text "with effect" in
-                        let uu___10 =
-                          let uu___11 =
-                            let uu___12 =
-                              let uu___13 = name_and_result c in
-                              FStar_Pervasives_Native.fst uu___13 in
-                            FStarC_Pprint.doc_of_string uu___12 in
-                          FStarC_Pprint.squotes uu___11 in
-                        FStarC_Pprint.prefix (Prims.of_int (2)) Prims.int_one
-                          uu___9 uu___10 in
-                      FStarC_Pprint.op_Hat_Hat uu___8 FStarC_Pprint.dot in
-                    FStarC_Pprint.op_Hat_Slash_Hat uu___6 uu___7 in
-                  [uu___5] in
-                uu___3 :: uu___4 in
+                      FStar_Pprint.prefix (Prims.of_int (2)) Prims.int_one
+                        uu___6 uu___7 in
+                    let uu___6 =
+                      let uu___7 =
+                        let uu___8 = FStarC_Errors_Msg.text "with effect" in
+                        let uu___9 =
+                          let uu___10 =
+                            let uu___11 =
+                              let uu___12 = name_and_result c in
+                              FStar_Pervasives_Native.fst uu___12 in
+                            FStar_Pprint.doc_of_string uu___11 in
+                          FStar_Pprint.squotes uu___10 in
+                        FStar_Pprint.prefix (Prims.of_int (2)) Prims.int_one
+                          uu___8 uu___9 in
+                      FStar_Pprint.op_Hat_Hat uu___7 FStar_Pprint.dot in
+                    FStar_Pprint.op_Hat_Slash_Hat uu___5 uu___6 in
+                  [uu___4] in
+                (match reason with
+                 | FStar_Pervasives_Native.None -> FStar_Pprint.empty
+                 | FStar_Pervasives_Native.Some msg ->
+                     FStar_Pprint.flow (FStar_Pprint.break_ Prims.int_one)
+                       ((FStar_Pprint.doc_of_string "Because:") ::
+                       (FStar_Pprint.words (Prims.strcat msg "."))))
+                  :: uu___3 in
               uu___1 :: uu___2 in
             FStarC_Errors.raise_error FStarC_Class_HasRange.hasRange_range
               rng FStarC_Errors_Codes.Fatal_ExpectedGhostExpression ()

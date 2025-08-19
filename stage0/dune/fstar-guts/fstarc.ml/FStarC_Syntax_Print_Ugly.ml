@@ -9,8 +9,7 @@ let (sli : FStarC_Ident.lident -> Prims.string) =
        FStarC_Ident.string_of_id uu___2)
 let (lid_to_string : FStarC_Ident.lid -> Prims.string) = fun l -> sli l
 let (fv_to_string : FStarC_Syntax_Syntax.fv -> Prims.string) =
-  fun fv ->
-    lid_to_string (fv.FStarC_Syntax_Syntax.fv_name).FStarC_Syntax_Syntax.v
+  fun fv -> lid_to_string fv.FStarC_Syntax_Syntax.fv_name
 let (bv_to_string : FStarC_Syntax_Syntax.bv -> Prims.string) =
   fun bv ->
     let uu___ = FStarC_Ident.string_of_id bv.FStarC_Syntax_Syntax.ppname in
@@ -78,8 +77,7 @@ let (lbname_to_string :
   fun uu___ ->
     match uu___ with
     | FStar_Pervasives.Inl l -> bv_to_string l
-    | FStar_Pervasives.Inr l ->
-        lid_to_string (l.FStarC_Syntax_Syntax.fv_name).FStarC_Syntax_Syntax.v
+    | FStar_Pervasives.Inr l -> lid_to_string l.FStarC_Syntax_Syntax.fv_name
 let (uvar_to_string : FStarC_Syntax_Syntax.uvar -> Prims.string) =
   fun u ->
     let uu___ = FStarC_Options.hide_uvar_nums () in
@@ -1263,19 +1261,20 @@ let rec (sigelt_to_string : FStarC_Syntax_Syntax.sigelt -> Prims.string) =
             FStarC_Syntax_Syntax.ty_lid = uu___;
             FStarC_Syntax_Syntax.num_ty_params = uu___1;
             FStarC_Syntax_Syntax.mutuals1 = uu___2;
-            FStarC_Syntax_Syntax.injective_type_params1 = uu___3;_}
+            FStarC_Syntax_Syntax.injective_type_params1 = uu___3;
+            FStarC_Syntax_Syntax.proj_disc_lids = uu___4;_}
           ->
-          let uu___4 = FStarC_Options.print_universes () in
-          if uu___4
+          let uu___5 = FStarC_Options.print_universes () in
+          if uu___5
           then
-            let uu___5 = univ_names_to_string univs in
-            let uu___6 = FStarC_Ident.string_of_lid lid in
-            let uu___7 = term_to_string t in
-            FStarC_Format.fmt3 "datacon<%s> %s : %s" uu___5 uu___6 uu___7
+            let uu___6 = univ_names_to_string univs in
+            let uu___7 = FStarC_Ident.string_of_lid lid in
+            let uu___8 = term_to_string t in
+            FStarC_Format.fmt3 "datacon<%s> %s : %s" uu___6 uu___7 uu___8
           else
-            (let uu___6 = FStarC_Ident.string_of_lid lid in
-             let uu___7 = term_to_string t in
-             FStarC_Format.fmt2 "datacon %s : %s" uu___6 uu___7)
+            (let uu___7 = FStarC_Ident.string_of_lid lid in
+             let uu___8 = term_to_string t in
+             FStarC_Format.fmt2 "datacon %s : %s" uu___7 uu___8)
       | FStarC_Syntax_Syntax.Sig_declare_typ
           { FStarC_Syntax_Syntax.lid2 = lid;
             FStarC_Syntax_Syntax.us2 = univs; FStarC_Syntax_Syntax.t2 = t;_}

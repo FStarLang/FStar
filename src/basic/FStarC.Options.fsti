@@ -102,9 +102,6 @@ val set_verification_options    : optionstate -> unit
 "--z3rlimit 25 --include /some/path" *)
 val show_options                : unit -> string
 
-val __unit_tests                : unit    -> bool
-val __set_unit_tests            : unit    -> unit
-val __clear_unit_tests          : unit    -> unit
 val parse_cmd_line              : unit    -> parse_cmdline_res & list string
 val add_verify_module           : string  -> unit
 

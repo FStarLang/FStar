@@ -234,7 +234,7 @@ let (pretty_range : FStarC_Range_Type.range FStarC_Class_PP.pretty) =
   {
     FStarC_Class_PP.pp =
       (fun r ->
-         let uu___ = string_of_range r in FStarC_Pprint.doc_of_string uu___)
+         let uu___ = string_of_range r in FStar_Pprint.doc_of_string uu___)
   }
 let (refind_rng : FStarC_Range_Type.rng -> FStarC_Range_Type.rng) =
   fun r ->

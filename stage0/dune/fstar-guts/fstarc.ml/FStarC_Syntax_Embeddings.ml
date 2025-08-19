@@ -3223,7 +3223,7 @@ let (e_issue : FStarC_Errors.issue FStarC_Syntax_Embeddings_Base.embedding) =
       FStar_Pervasives_Native.None in
   FStarC_Syntax_Embeddings_Base.e_lazy FStarC_Syntax_Syntax.Lazy_issue uu___
 let (e_document :
-  FStarC_Pprint.document FStarC_Syntax_Embeddings_Base.embedding) =
+  FStar_Pprint.document FStarC_Syntax_Embeddings_Base.embedding) =
   let uu___ =
     FStarC_Syntax_Syntax.fvar FStarC_Parser_Const.document_lid
       FStar_Pervasives_Native.None in

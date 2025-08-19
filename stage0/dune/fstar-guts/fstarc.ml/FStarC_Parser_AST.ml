@@ -88,11 +88,11 @@ type term' =
   | Refine of (binder * term) 
   | NamedTyp of (FStarC_Ident.ident * term) 
   | Paren of term 
-  | Requires of (term * Prims.string FStar_Pervasives_Native.option) 
-  | Ensures of (term * Prims.string FStar_Pervasives_Native.option) 
+  | Requires of term 
+  | Ensures of term 
   | LexList of term Prims.list 
   | WFOrder of (term * term) 
-  | Decreases of (term * Prims.string FStar_Pervasives_Native.option) 
+  | Decreases of term 
   | Labeled of (term * Prims.string * Prims.bool) 
   | Discrim of FStarC_Ident.lid 
   | Attributes of term Prims.list 
@@ -327,13 +327,11 @@ let (__proj__Paren__item___0 : term' -> term) =
 let (uu___is_Requires : term' -> Prims.bool) =
   fun projectee ->
     match projectee with | Requires _0 -> true | uu___ -> false
-let (__proj__Requires__item___0 :
-  term' -> (term * Prims.string FStar_Pervasives_Native.option)) =
+let (__proj__Requires__item___0 : term' -> term) =
   fun projectee -> match projectee with | Requires _0 -> _0
 let (uu___is_Ensures : term' -> Prims.bool) =
   fun projectee -> match projectee with | Ensures _0 -> true | uu___ -> false
-let (__proj__Ensures__item___0 :
-  term' -> (term * Prims.string FStar_Pervasives_Native.option)) =
+let (__proj__Ensures__item___0 : term' -> term) =
   fun projectee -> match projectee with | Ensures _0 -> _0
 let (uu___is_LexList : term' -> Prims.bool) =
   fun projectee -> match projectee with | LexList _0 -> true | uu___ -> false
@@ -346,8 +344,7 @@ let (__proj__WFOrder__item___0 : term' -> (term * term)) =
 let (uu___is_Decreases : term' -> Prims.bool) =
   fun projectee ->
     match projectee with | Decreases _0 -> true | uu___ -> false
-let (__proj__Decreases__item___0 :
-  term' -> (term * Prims.string FStar_Pervasives_Native.option)) =
+let (__proj__Decreases__item___0 : term' -> term) =
   fun projectee -> match projectee with | Decreases _0 -> _0
 let (uu___is_Labeled : term' -> Prims.bool) =
   fun projectee -> match projectee with | Labeled _0 -> true | uu___ -> false
@@ -589,6 +586,67 @@ type patterns = (FStarC_Ident.ident Prims.list * term Prims.list Prims.list)
 type attributes_ = term Prims.list
 type branch = (pattern * term FStar_Pervasives_Native.option * term)
 type aqual = arg_qualifier FStar_Pervasives_Native.option
+let (tagged_term : term FStarC_Class_Tagged.tagged) =
+  {
+    FStarC_Class_Tagged.tag_of =
+      (fun t ->
+         match t.tm with
+         | Wild -> "Wild"
+         | Const uu___ -> "Const"
+         | Op uu___ -> "Op"
+         | Uvar uu___ -> "Uvar"
+         | Var uu___ -> "Var"
+         | Name uu___ -> "Name"
+         | Projector uu___ -> "Projector"
+         | Construct uu___ -> "Construct"
+         | Abs uu___ -> "Abs"
+         | Function uu___ -> "Function"
+         | App uu___ -> "App"
+         | Let uu___ -> "Let"
+         | LetOperator uu___ -> "LetOperator"
+         | LetOpen uu___ -> "LetOpen"
+         | LetOpenRecord uu___ -> "LetOpenRecord"
+         | Seq uu___ -> "Seq"
+         | Bind uu___ -> "Bind"
+         | If uu___ -> "If"
+         | Match uu___ -> "Match"
+         | TryWith uu___ -> "TryWith"
+         | Ascribed uu___ -> "Ascribed"
+         | Record uu___ -> "Record"
+         | Project uu___ -> "Project"
+         | Product uu___ -> "Product"
+         | Sum uu___ -> "Sum"
+         | QForall uu___ -> "QForall"
+         | QExists uu___ -> "QExists"
+         | QuantOp uu___ -> "QuantOp"
+         | Refine uu___ -> "Refine"
+         | NamedTyp uu___ -> "NamedTyp"
+         | Paren uu___ -> "Paren"
+         | Requires uu___ -> "Requires"
+         | Ensures uu___ -> "Ensures"
+         | LexList uu___ -> "LexList"
+         | WFOrder uu___ -> "WFOrder"
+         | Decreases uu___ -> "Decreases"
+         | Labeled uu___ -> "Labeled"
+         | Discrim uu___ -> "Discrim"
+         | Attributes uu___ -> "Attributes"
+         | Antiquote uu___ -> "Antiquote"
+         | Quote uu___ -> "Quote"
+         | VQuote uu___ -> "VQuote"
+         | CalcProof uu___ -> "CalcProof"
+         | IntroForall uu___ -> "IntroForall"
+         | IntroExists uu___ -> "IntroExists"
+         | IntroImplies uu___ -> "IntroImplies"
+         | IntroOr uu___ -> "IntroOr"
+         | IntroAnd uu___ -> "IntroAnd"
+         | ElimForall uu___ -> "ElimForall"
+         | ElimExists uu___ -> "ElimExists"
+         | ElimImplies uu___ -> "ElimImplies"
+         | ElimOr uu___ -> "ElimOr"
+         | ElimAnd uu___ -> "ElimAnd"
+         | ListLiteral uu___ -> "ListLiteral"
+         | SeqLiteral uu___ -> "SeqLiteral")
+  }
 let (hasRange_term : term FStarC_Class_HasRange.hasRange) =
   {
     FStarC_Class_HasRange.pos = (fun t -> t.range);
@@ -1694,12 +1752,13 @@ let (as_frag : decl Prims.list -> inputFragment) =
         (match d.d with
          | TopLevelModule m ->
              let no_prelude =
-               FStarC_List.existsb
-                 (fun uu___1 ->
-                    match uu___1.tm with
-                    | Const (FStarC_Const.Const_string
-                        ("no_prelude", uu___2)) -> true
-                    | uu___2 -> false) d.attrs in
+               (FStarC_Options.no_prelude ()) ||
+                 (FStarC_List.existsb
+                    (fun uu___1 ->
+                       match uu___1.tm with
+                       | Const (FStarC_Const.Const_string
+                           ("no_prelude", uu___2)) -> true
+                       | uu___2 -> false) d.attrs) in
              let m1 = as_mlist ((m, d, no_prelude), []) ds1 in
              FStar_Pervasives.Inl m1
          | uu___1 ->
@@ -1982,15 +2041,19 @@ let rec (term_to_string : term -> Prims.string) =
                        Prims.strcat "; " uu___3 in
                      Prims.strcat s uu___2) uu___1 tl in
         FStarC_Format.fmt1 "%[%s]" uu___
-    | Decreases (t, uu___) ->
-        let uu___1 = term_to_string t in
-        FStarC_Format.fmt1 "(decreases %s)" uu___1
-    | Requires (t, uu___) ->
-        let uu___1 = term_to_string t in
-        FStarC_Format.fmt1 "(requires %s)" uu___1
-    | Ensures (t, uu___) ->
-        let uu___1 = term_to_string t in
-        FStarC_Format.fmt1 "(ensures %s)" uu___1
+    | WFOrder (rel, e) ->
+        let uu___ = term_to_string rel in
+        let uu___1 = term_to_string e in
+        FStarC_Format.fmt2 "{:well-founded %s %s}" uu___ uu___1
+    | Decreases t ->
+        let uu___ = term_to_string t in
+        FStarC_Format.fmt1 "(decreases %s)" uu___
+    | Requires t ->
+        let uu___ = term_to_string t in
+        FStarC_Format.fmt1 "(requires %s)" uu___
+    | Ensures t ->
+        let uu___ = term_to_string t in
+        FStarC_Format.fmt1 "(ensures %s)" uu___
     | Labeled (t, l, uu___) ->
         let uu___1 = term_to_string t in
         FStarC_Format.fmt2 "(labeled %s %s)" l uu___1
@@ -2066,10 +2129,33 @@ let rec (term_to_string : term -> Prims.string) =
           FStarC_Errors_Codes.Fatal_EmptySurfaceLet ()
           (Obj.magic FStarC_Errors_Msg.is_error_message_string)
           (Obj.magic "Internal error: found an invalid surface Let")
+    | LetOperator ((i, p, b)::lbs, body) ->
+        let uu___ = FStarC_Class_Show.show FStarC_Ident.showable_ident i in
+        let uu___1 =
+          let uu___2 = pat_to_string p in
+          let uu___3 = term_to_string b in
+          FStarC_Format.fmt2 "%s=%s" uu___2 uu___3 in
+        let uu___2 =
+          to_string_l " "
+            (fun uu___3 ->
+               match uu___3 with
+               | (i1, p1, b1) ->
+                   let uu___4 =
+                     FStarC_Class_Show.show FStarC_Ident.showable_ident i1 in
+                   let uu___5 = pat_to_string p1 in
+                   let uu___6 = term_to_string b1 in
+                   FStarC_Format.fmt3 "and%s %s=%s" uu___4 uu___5 uu___6) lbs in
+        let uu___3 = term_to_string body in
+        FStarC_Format.fmt4 "let%s rec %s%s in %s" uu___ uu___1 uu___2 uu___3
     | LetOpen (lid, t) ->
         let uu___ = FStarC_Ident.string_of_lid lid in
         let uu___1 = term_to_string t in
         FStarC_Format.fmt2 "let open %s in %s" uu___ uu___1
+    | LetOpenRecord (e, t, body) ->
+        let uu___ = term_to_string e in
+        let uu___1 = term_to_string t in
+        let uu___2 = term_to_string body in
+        FStarC_Format.fmt3 "let open %s <: %s in %s\n" uu___ uu___1 uu___2
     | Seq (t1, t2) ->
         let uu___ = term_to_string t1 in
         let uu___1 = term_to_string t2 in
@@ -2337,6 +2423,11 @@ let rec (term_to_string : term -> Prims.string) =
     | SeqLiteral ts ->
         let uu___ = to_string_l "; " term_to_string ts in
         FStarC_Format.fmt1 "seq![%s]" uu___
+    | uu___ ->
+        let uu___1 =
+          let uu___2 = FStarC_Class_Tagged.tag_of tagged_term x in
+          Prims.strcat "AST.term_to_string missing case: " uu___2 in
+        failwith uu___1
 and (binders_to_string : Prims.string -> binder Prims.list -> Prims.string) =
   fun sep ->
     fun bs ->
@@ -2562,7 +2653,7 @@ let (restriction_to_string :
             FStarC_String.concat ", " uu___3 in
           Prims.strcat uu___2 "}" in
         Prims.strcat " {" uu___1
-let rec (decl_to_string : decl -> Prims.string) =
+let (decl_to_string : decl -> Prims.string) =
   fun d ->
     match d.d with
     | TopLevelModule l ->
@@ -2588,8 +2679,15 @@ let rec (decl_to_string : decl -> Prims.string) =
     | TopLevelLet (uu___, pats) ->
         let uu___1 =
           let uu___2 =
-            let uu___3 = lids_of_let pats in
-            FStarC_List.map (fun l -> FStarC_Ident.string_of_lid l) uu___3 in
+            FStarC_List.map
+              (fun uu___3 ->
+                 match uu___3 with
+                 | (p, t) ->
+                     let uu___4 = pat_to_string p in
+                     let uu___5 =
+                       let uu___6 = term_to_string t in
+                       Prims.strcat " = " uu___6 in
+                     Prims.strcat uu___4 uu___5) pats in
           FStarC_String.concat ", " uu___2 in
         Prims.strcat "let " uu___1
     | Assume (i, uu___) ->
@@ -2699,6 +2797,14 @@ let (showable_decl : decl FStarC_Class_Show.showable) =
   { FStarC_Class_Show.show = decl_to_string }
 let (showable_term : term FStarC_Class_Show.showable) =
   { FStarC_Class_Show.show = term_to_string }
+let (showable_pattern : pattern FStarC_Class_Show.showable) =
+  { FStarC_Class_Show.show = pat_to_string }
+let (showable_binder : binder FStarC_Class_Show.showable) =
+  { FStarC_Class_Show.show = binder_to_string }
+let (showable_modul : modul FStarC_Class_Show.showable) =
+  { FStarC_Class_Show.show = modul_to_string }
+let (showable_pragma : pragma FStarC_Class_Show.showable) =
+  { FStarC_Class_Show.show = string_of_pragma }
 let (add_decorations : decl -> decoration Prims.list -> decl) =
   fun d ->
     fun decorations ->
