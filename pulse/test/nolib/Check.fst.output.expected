@@ -1,0 +1,10 @@
+* Info at Check.fst(15,0-15,11):
+  - Term
+    Check.test
+    has type
+    x: Prims.int
+      -> Pulse.Lib.Core.stt_ghost Prims.int
+          Pulse.Lib.Core.emp_inames
+          (Pulse.Lib.Core.pure (x == 'y))
+          (fun x -> Pulse.Lib.Core.pure (x == x))
+

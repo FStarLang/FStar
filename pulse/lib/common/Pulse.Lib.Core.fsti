@@ -114,7 +114,7 @@ val slprop_equiv_comm (p1 p2:slprop)
   : slprop_equiv (p1 ** p2) (p2 ** p1)
 
 val slprop_equiv_assoc (p1 p2 p3:slprop)
-  : slprop_equiv (p1 ** p2 ** p3) (p1 ** (p2 ** p3))
+  : slprop_equiv ((p1 ** p2) ** p3) (p1 ** (p2 ** p3))
 
 val slprop_equiv_exists (#a:Type) (p q : a -> slprop)
   (_ : squash (forall x. slprop_equiv (p x) (q x)))

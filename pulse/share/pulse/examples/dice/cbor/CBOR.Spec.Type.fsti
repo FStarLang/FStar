@@ -15,7 +15,7 @@
 *)
 
 module CBOR.Spec.Type
-include CBOR.Spec.Constants
+include CBOR.Spec.Const
 
 module U8 = FStar.UInt8
 module U64 = FStar.UInt64

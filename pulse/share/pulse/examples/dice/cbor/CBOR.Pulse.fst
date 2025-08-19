@@ -16,7 +16,7 @@
 
 module CBOR.Pulse
 #lang-pulse
-include CBOR.Spec.Constants
+include CBOR.Spec.Const
 include CBOR.Pulse.Extern
 open Pulse.Lib.Pervasives
 open Pulse.Lib.Trade

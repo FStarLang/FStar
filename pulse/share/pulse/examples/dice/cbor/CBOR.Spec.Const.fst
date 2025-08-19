@@ -14,7 +14,7 @@
    limitations under the License.
 *)
 
-module CBOR.Spec.Constants
+module CBOR.Spec.Const
 
 module U8 = FStar.UInt8
 
