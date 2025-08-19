@@ -39,7 +39,7 @@ ensures c.inv 0
     fold (inv_core x mr);
     let ii = new_invariant (inv_core x mr);
     fn next (i:erased int)
-    requires no_extrude <| inv ii (inv_core x mr) ** MR.snapshot mr i
+    requires inv ii (inv_core x mr) ** MR.snapshot mr i
     returns j:int
     ensures no_extrude <| (inv ii (inv_core x mr) ** MR.snapshot mr j) ** pure (i < j)
     {
