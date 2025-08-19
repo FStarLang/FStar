@@ -1110,14 +1110,18 @@ let solve_prob' resolve_ok prob logical_guard uvis wl =
               [])
     in
     let wl =
-        let g = whnf (p_guard_env wl prob) (p_guard prob) in
-        if not (is_flex g)
-        then if resolve_ok
-             then wl
-             else (fail(); wl)
-        else let (Flex (_, uv, args), wl)  = destruct_flex_t g wl in
+      let rec aux retry env g =
+        if is_flex g
+        then let Flex (_, uv, args), wl  = destruct_flex_t g wl in
              assign_solution (args_as_binders args) uv phi;
              wl
+        else if retry
+        then aux false env (whnf env g)
+        else if resolve_ok
+        then wl
+        else (fail(); wl)
+      in
+      aux true (p_env wl prob) (p_guard prob)
     in
     commit wl.tcenv uvis;
     {wl with ctr=wl.ctr + 1}
