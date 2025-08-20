@@ -232,3 +232,5 @@ let record_stats (key:string) (f: unit -> 'a utac)
 : 'a utac
 = fun ps ->
     FStarC_Stats.record key (fun () -> f () ps)
+
+let stack_dump () = FStarC_Util.stack_dump()

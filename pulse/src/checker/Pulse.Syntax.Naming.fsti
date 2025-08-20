@@ -99,6 +99,7 @@ let rec freevars_st (t:st_term)
       freevars b.binder_ty ++
       freevars_st body ++
       freevars_ascription ascription
+    | Tm_ST { t } -> freevars t
     | Tm_STApp { head; arg } ->
       freevars head ++
       freevars arg
@@ -284,6 +285,8 @@ let rec ln_st' (t:st_term) (i:int)
       ln' b.binder_ty i &&
       ln_st' body (i + 1) &&
       ln_ascription' ascription (i + 1)
+
+    | Tm_ST { t } -> ln' t i
 
     | Tm_STApp { head; arg } ->
       ln' head i &&
@@ -540,6 +543,8 @@ let rec subst_st_term (t:st_term) (ss:subst)
                ascription=subst_ascription ascription (shift_subst ss);
                body=subst_st_term body (shift_subst ss) }
 
+    | Tm_ST { t } -> Tm_ST { t=subst_term t ss }
+    
     | Tm_STApp { head; arg_qual; arg } ->
       Tm_STApp { head = subst_term head ss;
                  arg_qual;

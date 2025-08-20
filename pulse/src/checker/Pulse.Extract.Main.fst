@@ -167,6 +167,7 @@ let rec simplify_st_term (g:env) (e:st_term) : T.Tac st_term =
   | Tm_IntroPure _
   | Tm_ElimExists _
   | Tm_IntroExists _
+  | Tm_ST _
   | Tm_STApp _
   | Tm_Rewrite _
   | Tm_Admit _
@@ -274,6 +275,7 @@ let rec erase_ghost_subterms (g:env) (p:st_term) : T.Tac st_term =
     
     | Tm_Return _ -> p
 
+    | Tm_ST _
     | Tm_STApp _ -> p
 
     | Tm_Bind { binder; head; body } ->
@@ -427,6 +429,8 @@ let rec extract_dv g (p:st_term) : T.Tac R.term =
       mk_abs b' (close_term body x._2)
 
     | Tm_Return { term } -> ECL.mk_return term
+
+    | Tm_ST { t } -> ECL.mk_meta_monadic t
 
     | Tm_STApp { head; arg_qual; arg } ->
       ECL.mk_meta_monadic (R.mk_app head [arg, Pulse.Elaborate.Pure.elab_qual arg_qual])

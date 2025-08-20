@@ -453,6 +453,7 @@ let rec check_abs_core
           (| PostHint ph, r |)
       in
       let (| body, c_body, body_typing |) : st_typing_in_ctxt g' pre_opened post =
+        RU.record_stats "apply_checker_result_k" fun _ ->
         apply_checker_result_k #_ #_ #(PostHint?.v post) r ppname_ret in
 
       let c_opened : comp_ascription = { annotated = None; elaborated = Some (open_comp_nv elab_c px) } in

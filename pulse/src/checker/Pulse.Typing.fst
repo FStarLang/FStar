@@ -802,6 +802,22 @@ type st_typing : env -> st_term -> comp -> Type =
       st_typing (push_binding g x ppname_default b.binder_ty) (open_st_term_nv body (b.binder_ppname, x)) c ->
       st_typing g (wtag None (Tm_Abs { b; q; body; ascription=empty_ascription}))
                   (C_Tot (tm_arrow b q (close_comp c x)))
+                
+  | T_ST:
+      g:env ->
+      t:term ->
+      c:comp_st ->
+      tot_typing g t (elab_comp c) ->
+      st_typing g (wrst c (Tm_ST { t } )) c
+ 
+  | T_STGhost:
+      g:env ->
+      t:term ->
+      c:comp_st ->
+      ghost_typing g t (elab_comp c) ->
+      non_informative g c ->
+      st_typing g (wrst c (Tm_ST { t } )) c
+ 
   | T_STApp :
       g:env ->
       head:term ->

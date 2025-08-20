@@ -96,7 +96,7 @@ let instantiate_implicits (g:env) (t:st_term { Tm_STApp? t.term })
   let range = t.range in
   let Tm_STApp { head; arg_qual=qual; arg } = t.term in
   let pure_app = tm_pureapp head qual arg in
-  let (| uvs, t, ty |) = instantiate_term_implicits_uvs g pure_app in
+  let (| uvs, t, ty |) = instantiate_term_implicits_uvs g pure_app false in
   match is_arrow ty with
   | Some (_, Some Implicit, _) ->
     //Some implicits to follow

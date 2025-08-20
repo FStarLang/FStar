@@ -135,9 +135,8 @@ let elim_pure_pst (#preamble:_) (pst:prover_state preamble)
 
   (* Hacking progress checking: we eliminate all exists, so if
   there's any in the ctxt then we will make progress. *)
-  // let prog = List.Tot.existsb (fun t -> Tm_Pure? (inspect_term t)) pst.remaining_ctxt in
-
-  // if not prog then pst else
+  let prog = T.existsb is_elim_pure pst.remaining_ctxt in
+  if not prog then pst else
 
   let (| g', remaining_ctxt', ty, k |) =
     elim_pure_frame
@@ -172,6 +171,7 @@ let elim_pure_pst (#preamble:_) (pst:prover_state preamble)
   assume (list_as_slprop (slprop_as_list remaining_ctxt') == remaining_ctxt');
 
   { pst with
+    progress=prog;
     pg = g';
     remaining_ctxt = slprop_as_list remaining_ctxt';
     remaining_ctxt_frame_typing = RU.magic ();

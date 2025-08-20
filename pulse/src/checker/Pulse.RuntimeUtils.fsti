@@ -100,3 +100,5 @@ val mk_app_flat (head:T.term) (args:list T.argv) (r:range)
 
 val record_stats (key : string) (f : unit -> Tac 'a)
   : Tac 'a
+
+val stack_dump : unit -> Dv string

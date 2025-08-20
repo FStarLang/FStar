@@ -277,7 +277,12 @@ let rec st_term_to_string' (level:string) (t:st_term)
       sprintf "return%s %s"
         (if insert_eq then "" else "_noeq")
         (term_to_string term)
-      
+
+    | Tm_ST { t } ->
+      sprintf "%s%s"
+        (if dbg_printing then "<st>" else "")
+        (term_to_string t)
+
     | Tm_STApp {head; arg_qual; arg } ->
       sprintf "(%s%s %s%s)"
         (if dbg_printing then "<stapp>" else "")
@@ -506,6 +511,7 @@ let tag_of_st_term (t:st_term) =
   match t.term with
   | Tm_Return _ -> "Tm_Return"
   | Tm_Abs _ -> "Tm_Abs"
+  | Tm_ST _ -> "Tm_ST"
   | Tm_STApp _ -> "Tm_STApp"
   | Tm_Bind _ -> "Tm_Bind"
   | Tm_TotBind _ -> "Tm_TotBind"
@@ -551,6 +557,7 @@ let rec print_st_head (t:st_term)
   | Tm_Rewrite _ -> "Rewrite"
   | Tm_WithLocal _ -> "WithLocal"
   | Tm_WithLocalArray _ -> "WithLocalArray"
+  | Tm_ST { t = p }
   | Tm_STApp { head = p } -> print_head p
   | Tm_IntroPure _ -> "IntroPure"
   | Tm_IntroExists _ -> "IntroExists"
@@ -581,6 +588,7 @@ let rec print_skel (t:st_term) =
   | Tm_Rewrite _ -> "Rewrite"
   | Tm_WithLocal _ -> "WithLocal"
   | Tm_WithLocalArray _ -> "WithLocalArray"
+  | Tm_ST { t = p }
   | Tm_STApp { head = p } -> print_head p
   | Tm_IntroPure _ -> "IntroPure"
   | Tm_IntroExists _ -> "IntroExists"

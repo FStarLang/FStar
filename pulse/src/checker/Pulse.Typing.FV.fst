@@ -127,6 +127,9 @@ let rec freevars_close_st_term' (t:st_term) (x:var) (i:index)
       freevars_close_term' expected_type x i;
       freevars_close_term' term x i
 
+    | Tm_ST { t } -> 
+      freevars_close_term' t x i
+
     | Tm_STApp { head; arg } ->
       freevars_close_term' head x i;
       freevars_close_term' arg x i
@@ -759,6 +762,8 @@ let rec st_typing_freevars
 = match d with
   | T_Abs .. ->
     st_typing_freevars_abs d st_typing_freevars
+  | T_ST ..
+  | T_STGhost .. -> admit()
   | T_STApp _ _ _ _ _ _ _ _
   | T_STGhostApp .. ->
     st_typing_freevars_stapp d st_typing_freevars

@@ -276,6 +276,10 @@ let rec check
           // )
           T.fail "Tm_Abs check should not have been called in the checker"
 
+        | Tm_ST _ ->
+          RU.record_stats "check_st" (fun _ ->
+          Pulse.Checker.ST.check g pre pre_typing post_hint res_ppname t)
+
         | Tm_STApp _ ->
           STApp.check g pre pre_typing post_hint res_ppname t
 

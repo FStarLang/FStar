@@ -165,6 +165,9 @@ let check
   in
   match Pulse.Checker.Base.hoist_stateful_apps g (Inl f.term) false rebuild with
   | Some tt -> //some elaboration, go back to top
+    Pulse.Checker.Util.debug g "pulse.hoist" (fun _ ->
+      Printf.sprintf "Hoisted term: %s" (Pulse.Syntax.Printer.st_term_to_string tt)
+    );
     check g ctxt ctxt_typing post_hint res_ppname tt
   | None -> (
     match post_hint with

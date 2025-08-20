@@ -208,11 +208,11 @@ let instantiate_term_implicits
     | [] ->
       t, ty
 
-let instantiate_term_implicits_uvs' (g:env) (t0:term) =
+let instantiate_term_implicits_uvs' (g:env) (t0:term) (inst_extra:bool) =
   let f = elab_env g in
   let rng = RU.range_of_term t0 in
   let f = RU.env_set_range f (Pulse.Typing.Env.get_range g (Some rng)) in
-  let topt, issues = catch_all (fun _ -> rtb_instantiate_implicits g f t0 None false) in (* false? *)
+  let topt, issues = catch_all (fun _ -> rtb_instantiate_implicits g f t0 None inst_extra) in
   match topt with
   | None -> (
     let open Pulse.PP in
@@ -232,9 +232,9 @@ let instantiate_term_implicits_uvs' (g:env) (t0:term) =
     in
     (| uvs, subst_term t ss, subst_term ty ss|)
 
-let instantiate_term_implicits_uvs (g:env) (t0:term) =
+let instantiate_term_implicits_uvs (g:env) (t0:term) (inst_extra:bool) =
   RU.record_stats "instantiate_term_implicits"
-    (fun _ -> instantiate_term_implicits_uvs' g t0)
+    (fun _ -> instantiate_term_implicits_uvs' g t0 inst_extra)
 
 let check_universe (g:env) (t:term)
   : T.Tac (u:universe & universe_of g t u)

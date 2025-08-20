@@ -177,6 +177,8 @@ let rec elab_st_typing (#g:env)
       let body = elab_st_typing body_typing in
       mk_abs_with_name ppname ty (elab_qual qual) (RT.close_term body x) //this closure should be provably redundant by strengthening the conditions on x
 
+    | T_ST _ t _ _
+    | T_STGhost _ t _ _ _ -> t
 
     | T_STApp _ head _ qual _ arg _ _
     | T_STGhostApp _ head _ qual _ arg _ _ _ _ ->

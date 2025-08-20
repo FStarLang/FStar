@@ -180,7 +180,7 @@ let mk_rewrite_hint_type p1 p2 tac_opt = PSB.mk_rewrite_hint_type p1 p2 tac_opt
 let tm_proof_hint_with_binders (ht:_) (binders: binder list)  (s:st_term) r : st_term =
   PSB.(with_range (Tm_ProofHintWithBinders { hint_type=ht;
                                              binders;
-                                             t=s }) r)
+                                             t3=s }) r)
 
 let tm_with_inv (name:term) (body:st_term) returns_inv r : st_term =
   PSB.(with_range (tm_with_inv name body returns_inv) r)

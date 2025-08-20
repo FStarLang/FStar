@@ -187,8 +187,6 @@ ensures emp
 
 
 assume val g :  (f:(bool -> stt bool emp (fun _ -> emp)){ f == f })
-[@@expect_failure] //this fails too, with unexpected head type in impure application
-
 fn apply_refined_function (b:bool)
 requires emp
 returns b:bool

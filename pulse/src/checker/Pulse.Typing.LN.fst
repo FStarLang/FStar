@@ -202,6 +202,8 @@ let rec open_st_term_ln' (e:st_term)
       open_term_ln' expected_type x i;
       open_term_ln' e x i
       
+    | Tm_ST { t } -> open_term_ln' t x i
+
     | Tm_STApp { head=l; arg=r } ->
       open_term_ln' l x i;
       open_term_ln' r x i
@@ -462,6 +464,8 @@ let rec ln_weakening_st (t:st_term) (i j:int)
     | Tm_Match _ ->
       admit ()
 
+    | Tm_ST { t } -> ln_weakening t i j
+
     | Tm_STApp { head; arg } ->
       ln_weakening head i j;
       ln_weakening arg i j      
@@ -676,6 +680,10 @@ let rec open_term_ln_inv_st' (t:st_term)
       open_term_ln_inv' head x i;
       open_term_ln_inv_st' body x (i + 1)
 
+    | Tm_ST { t } ->
+      FStar.Pure.BreakVC.break_vc();
+      open_term_ln_inv' t x i
+    
     | Tm_STApp { head; arg} ->
       FStar.Pure.BreakVC.break_vc();
       open_term_ln_inv' head x i;
@@ -887,6 +895,10 @@ let rec close_st_term_ln' (t:st_term) (x:var) (i:index)
       close_term_ln' binder.binder_ty x i;
       close_term_ln' head x i;
       close_st_term_ln' body x (i + 1)
+
+    | Tm_ST { t } ->
+      FStar.Pure.BreakVC.break_vc();
+      close_term_ln' t x i
 
     | Tm_STApp { head; arg } ->
       FStar.Pure.BreakVC.break_vc();
@@ -1196,6 +1208,9 @@ let rec st_typing_ln (#g:_) (#t:_) (#c:_)
       open_st_term_ln body x;
       close_comp_ln c x;
       Pulse.Elaborate.elab_ln_comp (close_comp c x) 0
+    
+    | T_ST ..
+    | T_STGhost .. -> admit()
 
     | T_STApp _ _ _ _ res arg st at
     | T_STGhostApp _ _ _ _ res arg _ st _ at ->

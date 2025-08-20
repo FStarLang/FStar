@@ -211,6 +211,10 @@ type st_term' =
       ascription: comp_ascription;
       body:st_term;
     }
+    
+  | Tm_ST { //promote a pure term with an stt/stt_ghost/stt_atomic type to an st_term
+      t:term;
+    }
   | Tm_STApp {
       head:term;
       arg_qual:option qualifier;

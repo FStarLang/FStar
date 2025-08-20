@@ -31,6 +31,7 @@ val instantiate_term_implicits
   : T.Tac (term & term)
 
 val instantiate_term_implicits_uvs (g:env) (t:term)
+    (inst_extra : bool) (* Should this instantiate implicits at the end of t? *)
   : T.Tac (uvs:env { disjoint g uvs } & term & term)  // uvs
 
 val check_universe (g:env) (t:term)
