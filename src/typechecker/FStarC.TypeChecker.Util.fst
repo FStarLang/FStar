@@ -2986,9 +2986,9 @@ let maybe_instantiate (env:Env.env) (e:term) (t:typ) : term & typ & guard_t =
                 | Some i -> Some (i - 1)
         in
         let t = N.unfold_whnf env t in
-        begin match t.n with
-            | Tm_arrow {bs; comp=c} ->
-              let bs, c = SS.open_comp bs c in
+        begin let bs,c = U.arrow_formals_comp t in
+              match bs with
+              | _::_ ->
               //instantiate at most inst_n implicit binders, when inst_n = Some n
               //otherwise, instantate all implicits
               //See issue #807 for why this is important
