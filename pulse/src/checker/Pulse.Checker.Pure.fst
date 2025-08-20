@@ -208,6 +208,55 @@ let instantiate_term_implicits
     | [] ->
       t, ty
 
+(* 
+  This function is a workaround used in instantaite_term_implicits_uvs, 
+  an ugliness discovered when revising the way application nodes are handled.
+
+  Instantiation currently works
+
+   1. Calling the unifier to instantiate implicits in a term t, elaborating it to t'
+
+   2. Then, rtb_instantiate_implicits collects all the unsolved uvars in t' in a set U
+      and for each element u in U, it generates a fresh name (x:u.typ) and returns a list
+      of these fresh names in some order
+
+   3. We then push these fresh names into the typing environment, but when there is dependency
+      among the types of fresh names we need to make sure to push them into the environment in the
+      proper order.
+
+   In case the elaborated t' is an application node, we can find the order of
+   the fresh names, going left to right among the arguments of the application.
+
+   Otherwise, the order is undetermined, and we just use the order provided by
+   rtb_instantiate_implicits, which is the existing behavior prior to changing the
+   way application nodes are handled.
+
+   The right fix is to abandon the current approach of turning uvars in to names and instead
+   just working with terms that contain uvars.
+*)
+let find_order namedvs t =
+  let h, args = T.collect_app_ln t in
+  match args with
+  | [] -> namedvs
+  | _ ->
+    let is_namedv nvs x = 
+      List.Tot.partition (fun (nv, _t) -> (R.inspect_namedv nv).uniq = (R.inspect_namedv x).uniq) nvs 
+    in
+    let nvs_ordered, remaining =
+      List.Tot.fold_left 
+        (fun (out, nvs) (arg, _) ->
+          match T.inspect_ln arg with
+          | Tv_Var v -> (
+            match is_namedv nvs v with
+            | [nv], nvs -> (nv::out, nvs)
+            | _ -> out, nvs)
+          | _ -> out, nvs)
+          ([], namedvs) args
+    in
+    match remaining with
+    | [] -> List.rev nvs_ordered
+    | _ -> namedvs
+
 let instantiate_term_implicits_uvs' (g:env) (t0:term) (inst_extra:bool) =
   let f = elab_env g in
   let rng = RU.range_of_term t0 in
@@ -219,6 +268,7 @@ let instantiate_term_implicits_uvs' (g:env) (t0:term) (inst_extra:bool) =
     fail_doc_with_subissues g (Some rng) issues []
   )
   | Some (namedvs, t, ty) ->
+    let namedvs = find_order namedvs t in
     let (ss , uvs)
       : list subst_elt & uvs:env { disjoint g uvs } =
       T.fold_left (fun (ss, uvs) (namedv, namedvt) ->
@@ -228,7 +278,9 @@ let instantiate_term_implicits_uvs' (g:env) (t0:term) (inst_extra:bool) =
         let namedvt = subst_term namedvt ss in
         let ss1 = [RT.NT nview.uniq (tm_var {nm_index = x; nm_ppname = ppname})] in
         let uvs : uvs:env { disjoint g uvs } = push_binding uvs x ppname namedvt in
-        (ss @ ss1, uvs)) ([], mk_env (fstar_env g)) namedvs
+        (ss @ ss1, uvs)) 
+        ([], mk_env (fstar_env g)) 
+        namedvs
     in
     (| uvs, subst_term t ss, subst_term ty ss|)
 

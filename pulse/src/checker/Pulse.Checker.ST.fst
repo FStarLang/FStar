@@ -15,7 +15,7 @@
 *)
 
 module Pulse.Checker.ST
-
+open FStar.Tactics.V2
 open Pulse.Syntax
 open Pulse.Typing
 open Pulse.Checker.Pure
@@ -48,13 +48,20 @@ let check
   let g' : env = push_env g uvs in
   assert (g' `env_extends` g);
   let post_hint: post_hint_opt g' = post_hint in
-  let (| e, eff, ty, typing |) = Pulse.Checker.Pure.compute_term_type g' e in 
+  let (| e, eff, ty, typing |) = Pulse.Checker.Pure.compute_term_type g' e in
   match Pulse.Readback.readback_comp ty with
-  | None
-  | Some (C_Tot _) -> 
-    fail g (Some range) 
-      (Printf.sprintf "Expected an application of a function returning a computation type { stt, stt_ghost, stt_atomic }, but got %s"
-        (P.term_to_string ty))
+  | None -> fail g (Some range) (Printf.sprintf "readback of %s failed" (show ty))
+  | Some (C_Tot _) ->
+    let h, a = T.collect_app_ln e in
+    let (| _, _, th, _ |) = Pulse.Checker.Pure.compute_term_type g h in
+    let open Pulse.PP in
+    fail_doc g 
+      (Some range)
+      [text "Expected an application of a function returning a computation type { stt, stt_ghost, stt_atomic }";
+       text "But the application:";
+       pp e;
+       text "is a total term";
+       text "Maybe it is not fully applied?"]
 
   | Some c -> (
     let allow_ambiguous = should_allow_ambiguous e in
