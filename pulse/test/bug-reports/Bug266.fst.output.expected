@@ -11,11 +11,11 @@
   - Current context:
       emp
   - In typing environment:
-      _#119 : Prims.squash (_ == Bug266.my_intro Prims.l_False),
-      _#118 :
+      _#34 : Prims.squash (_ == Bug266.my_intro Prims.l_False),
+      _#33 :
         Pulse.Lib.Core.stt_ghost Prims.unit
           Pulse.Lib.Core.emp_inames
           (Pulse.Lib.Core.pure Prims.l_False)
           Bug266.post,
-      uu___0#57 : Prims.unit
+      uu___0#23 : Prims.unit
 
