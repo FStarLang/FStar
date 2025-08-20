@@ -1110,14 +1110,18 @@ let solve_prob' resolve_ok prob logical_guard uvis wl =
               [])
     in
     let wl =
-        let g = whnf (p_guard_env wl prob) (p_guard prob) in
-        if not (is_flex g)
-        then if resolve_ok
-             then wl
-             else (fail(); wl)
-        else let (Flex (_, uv, args), wl)  = destruct_flex_t g wl in
+      let rec aux retry env g =
+        if is_flex g
+        then let Flex (_, uv, args), wl  = destruct_flex_t g wl in
              assign_solution (args_as_binders args) uv phi;
              wl
+        else if retry
+        then aux false env (whnf env g)
+        else if resolve_ok
+        then wl
+        else (fail(); wl)
+      in
+      aux true (p_env wl prob) (p_guard prob)
     in
     commit wl.tcenv uvis;
     {wl with ctr=wl.ctr + 1}
@@ -2297,25 +2301,33 @@ and solve_maybe_uinsts (orig:prob) (t1:term) (t2:term) (wl:worklist) : univ_eq_s
             | failed_or_deferred -> failed_or_deferred
           end
 
-        | _ -> ufailed_simple "Unequal number of universes" in
+        | _ -> ufailed_simple "Unequal number of universes"
+    in
 
     let env = p_env wl orig in
     def_check_scoped t1.pos "solve_maybe_uinsts.whnf1" env t1;
     def_check_scoped t2.pos "solve_maybe_uinsts.whnf2" env t2;
-    let t1 = whnf env t1 in
-    let t2 = whnf env t2 in
-    match t1.n, t2.n with
-        | Tm_uinst({n=Tm_fvar f}, us1), Tm_uinst({n=Tm_fvar g}, us2) ->
-            let b = S.fv_eq f g in
-            assert b;
-            aux wl us1 us2
+    let rec inspect retry t1 t2 = 
+      match t1.n, t2.n with
+      | Tm_uinst({n=Tm_fvar f}, us1), Tm_uinst({n=Tm_fvar g}, us2) ->
+          let b = S.fv_eq f g in
+          assert b;
+          aux wl us1 us2
 
-        | Tm_uinst _, _
-        | _, Tm_uinst _ ->
-            failwith "Impossible: expect head symbols to match"
+      | Tm_fvar _, Tm_fvar _ ->
+        USolved wl
 
-        | _ ->
-            USolved wl
+      | _ when retry -> 
+        inspect false (whnf env t1) (whnf env t2)
+
+      | Tm_uinst _, _
+      | _, Tm_uinst _ ->
+          failwith "Impossible: expect head symbols to match"
+
+      | _ ->
+          USolved wl
+    in
+    inspect true t1 t2
 
 and giveup_or_defer (orig:prob) (wl:worklist) (reason:deferred_reason) (msg:lstring) : solution =
     if wl.defer_ok = DeferAny

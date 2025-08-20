@@ -2493,13 +2493,16 @@ let find_coercion (env:Env.env) (checked: lcomp) (exp_t: typ) (e:term)
 // or None if no coercion applied
 =
  Errors.with_ctx "find_coercion" (fun () ->
-  let is_type t =
-      let t = N.unfold_whnf env t in
-      let t = U.unrefine t in (* mostly to catch `prop` too *)
+  let rec is_type retry t =
       match (SS.compress t).n with
       | Tm_type _ -> true
+      | _ when retry ->
+        let t = N.unfold_whnf env t in
+        let t = U.unrefine t in (* mostly to catch `prop` too *)
+        is_type false t
       | _ -> false
   in
+  let is_type = is_type true in
   let rec head_of (t : term) : term =
       match (compress t).n with
       | Tm_app {hd=t}
@@ -2605,9 +2608,15 @@ let find_coercion (env:Env.env) (checked: lcomp) (exp_t: typ) (e:term)
 )
 
 let maybe_coerce_lc env (e:term) (lc:lcomp) (exp_t:term) : term & lcomp & guard_t =
+  let head_types_equal t0 t1 =
+    match (U.un_uinst (U.unrefine t0)).n, (U.un_uinst (U.unrefine t1)).n with
+    | Tm_fvar fv0, Tm_fvar fv1 -> S.fv_eq fv0 fv1
+    | _ -> false
+  in
   let should_coerce =
-      (env.phase1
-    || Options.lax ()) && not env.nocoerce
+      (env.phase1 || Options.lax ()) &&
+      not env.nocoerce &&
+      not (head_types_equal lc.res_typ exp_t)
   in
   if not should_coerce then (
     if !dbg_Coercions then
