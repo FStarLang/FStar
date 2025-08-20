@@ -1523,23 +1523,14 @@ let rank_leq r1 r2 = rank_t_num r1 <= rank_t_num r2
 let rank_less_than r1 r2 =
     r1 <> r2 &&
     rank_t_num r1 <= rank_t_num r2
-let maybe_compress_t env t =
-  let t = SS.compress t in
-  let head, args = U.head_and_args t in
-  match head.n with
-  | Tm_bvar _
-  | Tm_name _
-  | Tm_fvar _
-  | Tm_arrow _ -> t
-  | _ -> whnf env t
 let compress_tprob wl p =
   let env = p_env wl (TProb p) in
-  {p with lhs=maybe_compress_t env p.lhs; rhs=maybe_compress_t env p.rhs}
+  {p with lhs=whnf env p.lhs; rhs=whnf env p.rhs}
 
 let compress_cprob wl p =
   let whnf_c env c =
     match c.n with
-    | Total ty -> S.mk_Total (maybe_compress_t env ty)
+    | Total ty -> S.mk_Total (whnf env ty)
     | _ -> c
   in
   let env = p_env wl (CProb p) in
