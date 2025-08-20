@@ -204,7 +204,7 @@ let namedv_to_binder (v : namedv) (sort : term) : binder =
   }
 
 [@@plugin; coercion]
-val inspect_universe (u:universe) : Tot named_universe_view
+val inspect_universe (u:universe) : Tac named_universe_view
 
 [@@plugin; coercion]
 val pack_universe (uv:named_universe_view) : Tot universe
