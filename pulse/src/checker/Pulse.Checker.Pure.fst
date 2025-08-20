@@ -40,8 +40,7 @@ let debug (g:env) (msg: unit -> T.Tac string) =
   then T.print (print_context g ^ "\n" ^ msg())
 
 let check_ln (g:env) (label:string) (t:R.term) : Tac unit =
-  // NOTE: CheckLN doesn't compress universe uvars.....
-  if not (CheckLN.check_ln (RU.deep_compress t)) then
+  if not (CheckLN.check_ln t) then
     fail_doc g (Some (RU.range_of_term t)) [
       text "Failure: not locally nameless!";
       text "Aborting before calling" ^/^ pp label;
