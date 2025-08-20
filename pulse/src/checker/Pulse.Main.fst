@@ -277,6 +277,10 @@ let main t pre : RT.dsl_tac_t = fun (g, expected_t) ->
   if ext_getv "pulse:guard_policy" <> "" then
     set_guard_policy (parse_guard_policy (ext_getv "pulse:guard_policy"));
 
+  // Allow tactics to run in environments with uvars
+  RU.push_options ();
+  RU.set_options "--ext compat:open_metas";
+
   let res = main' t pre g expected_t in
 
   if ext_getv "pulse:join" = "1"
@@ -284,6 +288,9 @@ let main t pre : RT.dsl_tac_t = fun (g, expected_t) ->
      // ^ Uncomment to make it true by default.
   then
     join_smt_goals();
+
+  RU.pop_options ();
+
   res
 
 let check_pulse_core 

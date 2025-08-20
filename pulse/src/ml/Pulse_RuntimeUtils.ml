@@ -251,3 +251,8 @@ let record_stats (key:string) (f: unit -> 'a utac)
     FStarC_Stats.record key (fun () -> f () ps)
 
 let stack_dump () = FStarC_Util.stack_dump()
+
+let push_options () : unit = FStarC_Options.push ()
+let pop_options () : unit = FStarC_Options.pop ()
+let set_options (opts: string) : unit =
+  ignore (FStarC_Options.set_options opts)

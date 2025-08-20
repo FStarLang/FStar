@@ -8,7 +8,6 @@
     "--with_fstarc",
     "--z3version",
     "4.13.3",
-    "--ext", "compat:open_metas",
     "--ext",
     "optimize_let_vc"
   ],

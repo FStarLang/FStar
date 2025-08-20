@@ -104,3 +104,7 @@ val record_stats (key : string) (f : unit -> Tac 'a)
   : Tac 'a
 
 val stack_dump : unit -> Dv string
+
+val push_options () : Dv unit
+val pop_options () : Dv unit
+val set_options (opts: string) : Dv unit
