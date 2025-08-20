@@ -614,6 +614,8 @@ let return_in_ctxt (g:env) (y:var) (y_ppname:ppname) (u:universe) (ty:term) (ctx
   | _ -> 
     (| _, _, d |)
 
+#push-options "--z3rlimit_factor 2"
+#restart-solver
 let match_comp_res_with_post_hint (#g:env) (#t:st_term) (#c:comp_st)
   (d:st_typing g t c)
   (post_hint:post_hint_opt g)
@@ -648,6 +650,7 @@ let match_comp_res_with_post_hint (#g:env) (#t:st_term) (#c:comp_st)
            in
 
            (| t, c', Pulse.Typing.Combinators.t_equiv d d_stequiv |)
+#pop-options
 
 let apply_checker_result_k (#g:env) (#ctxt:slprop) (#post_hint:post_hint_for_env g)
   (r:checker_result_t g ctxt (PostHint post_hint))

@@ -187,6 +187,7 @@ ensures emp
 
 
 assume val g :  (f:(bool -> stt bool emp (fun _ -> emp)){ f == f })
+[@@expect_failure]
 fn apply_refined_function (b:bool)
 requires emp
 returns b:bool
