@@ -142,6 +142,7 @@ and expr =
   | EBufNull of typ
   | EBufDiff of expr & expr
   | ESizeof of typ
+  | EGFor of expr & expr & expr & expr
 
 and op =
   | Add | AddW | Sub | SubW | Div | DivW | Mult | MultW | Mod
@@ -408,6 +409,7 @@ and expr_to_doc (e:expr) : ML document =
   | EBufNull x -> ctor "EBufNull" [pp x]
   | EBufDiff (x, y) -> ctor "EBufDiff" [expr_to_doc x; expr_to_doc y]
   | ESizeof t -> ctor "ESizeof" [pp t]
+  | EGFor (i, c, s, b) -> ctor "EGFor" [expr_to_doc i; expr_to_doc c; expr_to_doc s; expr_to_doc b]
 
 and pp_branch (b:branch) : ML document =
   let (p, e) = b in
