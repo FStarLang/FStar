@@ -140,6 +140,7 @@ and expr =
   | EAddrOf of expr
   | EBufNull of typ
   | EBufDiff of expr & expr
+  | EGFor of expr & expr & expr & expr
 
 and op =
   | Add | AddW | Sub | SubW | Div | DivW | Mult | MultW | Mod
@@ -392,6 +393,7 @@ and expr_to_doc (e:expr) : ML document =
   | EAddrOf x -> ctor "EAddrOf" [expr_to_doc x]
   | EBufNull x -> ctor "EBufNull" [pp x]
   | EBufDiff (x, y) -> ctor "EBufDiff" [expr_to_doc x; expr_to_doc y]
+  | EGFor (i, c, s, b) -> ctor "EGFor" [expr_to_doc i; expr_to_doc c; expr_to_doc s; expr_to_doc b]
   
 and pp_branch (b:branch) : ML document =
   let (p, e) = b in
@@ -1588,6 +1590,7 @@ and kflatten_expr (e : expr) : ML expr =
   | EAddrOf e -> EAddrOf (kflatten_expr e)
   | EBufNull ty -> EBufNull (kflatten_typ ty)
   | EBufDiff (e1, e2) -> EBufDiff (kflatten_expr e1, kflatten_expr e2)
+  | EGFor (i, c, s, b) -> EGFor (kflatten_expr i, kflatten_expr c, kflatten_expr s, kflatten_expr b)
 
 and kflatten_typ (t : typ) : ML typ =
   match t with
