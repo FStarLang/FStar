@@ -1,11 +1,8 @@
-* Info at Bug206.fst(18,7-18,8):
+* Info at Bug206.fst(18,2-18,6):
   - Expected failure:
-  - Ill-typed term: x
-  - Expected a term of type x: Prims.nat{x > 0}
+  - Ill-typed term: Bug206.test x
   - Assertion failed
   - The SMT solver could not prove the query. Use --query_stats for more
     details.
-  - Also see: Bug206.fst(18,2-18,6)
-  - Other related locations: Bug206.fst(6,20-6,20)
   - See also Bug206.fst(18,2-18,8)
 

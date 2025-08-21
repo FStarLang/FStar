@@ -127,9 +127,8 @@ let rec freevars_close_st_term' (t:st_term) (x:var) (i:index)
       freevars_close_term' expected_type x i;
       freevars_close_term' term x i
 
-    | Tm_STApp { head; arg } ->
-      freevars_close_term' head x i;
-      freevars_close_term' arg x i
+    | Tm_ST { t } -> 
+      freevars_close_term' t x i
     
     | Tm_Abs { b; ascription=c; body } ->
       freevars_close_term' b.binder_ty x i;
@@ -515,16 +514,6 @@ fun d cb ->
     freevars_open_st_term_inv body x;
     freevars_tm_arrow ty q (close_comp cres x)
 
-let st_typing_freevars_stapp : st_typing_freevars_case (fun d -> T_STApp? d || T_STGhostApp? d) =
-fun d _cb ->
-  match d with
-  | T_STApp _ head ty q res arg st at
-  | T_STGhostApp _ head ty q res arg _ st _ at ->
-    tot_or_ghost_typing_freevars st;
-    tot_or_ghost_typing_freevars at;
-    freevars_open_comp res arg 0;
-    freevars_tm_arrow (as_binder ty) q res
-
 #push-options "--z3rlimit_factor 20 --fuel 3 --ifuel 2 --split_queries no"
 #restart-solver
 let st_typing_freevars_return : st_typing_freevars_case T_Return? =
@@ -759,9 +748,8 @@ let rec st_typing_freevars
 = match d with
   | T_Abs .. ->
     st_typing_freevars_abs d st_typing_freevars
-  | T_STApp _ _ _ _ _ _ _ _
-  | T_STGhostApp .. ->
-    st_typing_freevars_stapp d st_typing_freevars
+  | T_ST ..
+  | T_STGhost .. -> admit()
   | T_Return .. ->
     st_typing_freevars_return d st_typing_freevars
   | T_Lift _ _ _ _ d1 _ ->

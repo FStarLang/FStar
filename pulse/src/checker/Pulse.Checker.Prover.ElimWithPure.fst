@@ -34,9 +34,12 @@ let wr t = wr t Range.range_0
 
 let mk_elim_with_pure (pred: term) (p:term)
   : st_term
-  = let t = Tm_STApp { head = tm_pureapp elim_with_pure_head None pred;
-                       arg_qual = None;
-                       arg = tm_pureabs ppname_default.name (mk_squash u0 pred) None p Range.range_0 }
+  = let t =
+      Tm_ST { 
+       t = T.mk_app
+            (tm_pureapp elim_with_pure_head None pred)
+            [tm_pureabs ppname_default.name (mk_squash u0 pred) None p Range.range_0, T.Q_Explicit] 
+      }
     in
     wtag (Some STT_Ghost) t
 
@@ -83,6 +86,9 @@ let elim_with_pure_frame (#g:env) (#ctxt:term) (#frame:term)
 let elim_with_pure_pst (#preamble:_) (pst:prover_state preamble)
   : T.Tac (pst':prover_state preamble { pst' `pst_extends` pst /\
                                         pst'.unsolved == pst.unsolved }) =
+
+  let prog = T.existsb is_elim_with_pure pst.remaining_ctxt in
+  if not prog then pst else
   let (| g', remaining_ctxt', ty, k |) =
     elim_with_pure_frame
       #pst.pg
@@ -116,6 +122,7 @@ let elim_with_pure_pst (#preamble:_) (pst:prover_state preamble)
   assume (list_as_slprop (slprop_as_list remaining_ctxt') == remaining_ctxt');
 
   { pst with
+    progress=true;
     pg = g';
     remaining_ctxt = slprop_as_list remaining_ctxt';
     remaining_ctxt_frame_typing = RU.magic ();

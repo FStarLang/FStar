@@ -14,7 +14,7 @@
    limitations under the License.
 *)
 
-module Pulse.Checker.STApp
+module Pulse.Checker.ST
 
 module T = FStar.Tactics.V2
 
@@ -28,5 +28,5 @@ val check
   (pre_typing:tot_typing g pre tm_slprop)
   (post_hint:post_hint_opt g)
   (res_ppname:ppname)
-  (t:st_term{Tm_STApp? t.term})
+  (t:st_term{Tm_ST? t.term})
   : T.Tac (checker_result_t g pre post_hint)

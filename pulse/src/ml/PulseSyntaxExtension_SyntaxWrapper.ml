@@ -128,8 +128,8 @@ let tm_abs (b:binder)
   = let asc = { annotated = c; elaborated = None } in
     PSB.(with_range (tm_abs b q asc body) r)
 
-let tm_st_app (head:term) (q:S.aqual) (arg:term) r : st_term =
-  PSB.(with_range (tm_stapp head (map_aqual q) arg) r)
+let tm_st (head:term) r : st_term =
+  PSB.(with_range (tm_st head) r)
     
 let tm_bind (x:binder) (e1:st_term) (e2:st_term) r : st_term =
   PSB.(with_range (tm_bind x e1 e2) r)
@@ -180,7 +180,7 @@ let mk_rewrite_hint_type p1 p2 tac_opt = PSB.mk_rewrite_hint_type p1 p2 tac_opt
 let tm_proof_hint_with_binders (ht:_) (binders: binder list)  (s:st_term) r : st_term =
   PSB.(with_range (Tm_ProofHintWithBinders { hint_type=ht;
                                              binders;
-                                             t=s }) r)
+                                             t3=s }) r)
 
 let tm_with_inv (name:term) (body:st_term) returns_inv r : st_term =
   PSB.(with_range (tm_with_inv name body returns_inv) r)

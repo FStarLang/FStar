@@ -167,7 +167,7 @@ let rec simplify_st_term (g:env) (e:st_term) : T.Tac st_term =
   | Tm_IntroPure _
   | Tm_ElimExists _
   | Tm_IntroExists _
-  | Tm_STApp _
+  | Tm_ST _
   | Tm_Rewrite _
   | Tm_Admit _
   | Tm_ProofHintWithBinders _ -> e
@@ -274,7 +274,7 @@ let rec erase_ghost_subterms (g:env) (p:st_term) : T.Tac st_term =
     
     | Tm_Return _ -> p
 
-    | Tm_STApp _ -> p
+    | Tm_ST _ -> p
 
     | Tm_Bind { binder; head; body } ->
       if is_erasable head
@@ -428,8 +428,7 @@ let rec extract_dv g (p:st_term) : T.Tac R.term =
 
     | Tm_Return { term } -> ECL.mk_return term
 
-    | Tm_STApp { head; arg_qual; arg } ->
-      ECL.mk_meta_monadic (R.mk_app head [arg, Pulse.Elaborate.Pure.elab_qual arg_qual])
+    | Tm_ST { t } -> ECL.mk_meta_monadic t
 
     | Tm_Bind { binder; head; body } ->
       let b' = extract_dv_binder binder None in

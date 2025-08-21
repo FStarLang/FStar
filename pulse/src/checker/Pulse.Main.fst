@@ -113,6 +113,11 @@ let check_fndefn
 
   let maybe_add_impl t (se: RT.sigelt_for (fstar_env g) t) : Tac (RT.sigelt_for (fstar_env g) t) =
     let open Pulse.Extract.Main in begin
+    if T.ext_enabled "pulse.noextract" then (
+      T.print ">>>>>Skipping extraction\n";
+      se
+    )
+    else
     if C_STGhost? comp then
       se
     else if fn_d.isrec then
