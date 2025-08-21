@@ -44,11 +44,12 @@ let wr t = wr t Range.range_0
 
 let mk_intro_with_pure (pred: term) (p:term)
   : st_term
-  = let t = Tm_STApp { head =
-                        tm_pureapp (tm_pureapp intro_with_pure_head None pred) None
-                          (tm_pureabs ppname_default.name (mk_squash u0 pred) None p Range.range_0);
-                       arg_qual = None;
-                       arg = unit_const }
+  = let t =
+      Tm_ST {
+          t = T.mk_app (tm_pureapp (tm_pureapp intro_with_pure_head None pred) None
+                          (tm_pureabs ppname_default.name (mk_squash u0 pred) None p Range.range_0))
+                        [unit_const, T.Q_Explicit] 
+      }
     in
     wtag (Some STT_Ghost) t
 

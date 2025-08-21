@@ -100,9 +100,6 @@ let rec freevars_st (t:st_term)
       freevars_st body ++
       freevars_ascription ascription
     | Tm_ST { t } -> freevars t
-    | Tm_STApp { head; arg } ->
-      freevars head ++
-      freevars arg
     | Tm_Bind { binder; head; body } ->
       freevars binder.binder_ty ++
       freevars_st head ++
@@ -287,10 +284,6 @@ let rec ln_st' (t:st_term) (i:int)
       ln_ascription' ascription (i + 1)
 
     | Tm_ST { t } -> ln' t i
-
-    | Tm_STApp { head; arg } ->
-      ln' head i &&
-      ln' arg i
 
     | Tm_Bind { binder; head; body } ->
       ln' binder.binder_ty i &&
@@ -545,11 +538,6 @@ let rec subst_st_term (t:st_term) (ss:subst)
 
     | Tm_ST { t } -> Tm_ST { t=subst_term t ss }
     
-    | Tm_STApp { head; arg_qual; arg } ->
-      Tm_STApp { head = subst_term head ss;
-                 arg_qual;
-                 arg=subst_term arg ss }
-
     | Tm_Bind { binder; head; body } ->
       Tm_Bind { binder = subst_binder binder ss;
                 head = subst_st_term head ss;

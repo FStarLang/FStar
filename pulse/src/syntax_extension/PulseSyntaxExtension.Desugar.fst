@@ -822,13 +822,13 @@ and desugar_proof_hint_with_binders (env:env_t) (s1:Sugar.stmt) (k:option Sugar.
       let assume_fv = SW.(mk_fv assume_lid r) in
       let assume_ : SW.term = SW.(tm_fvar assume_fv) in
       let! p = desugar_slprop env p in
-      let s1 = SW.tm_st_app assume_ None p r in
+      let s1 = SW.tm_st (S.mk_Tm_app assume_ [p, None] r) r in
       let! s2 =
         match k with
         | None -> return (SW.tm_ghost_return (SW.tm_expr S.unit_const r) r)
         | Some s2 -> desugar_stmt env s2 in
-     let annot = SW.mk_binder (Ident.id_of_text "_") (SW.tm_unknown r) in
-     return (mk_bind annot s1 s2 r)
+      let annot = SW.mk_binder (Ident.id_of_text "_") (SW.tm_unknown r) in
+      return (mk_bind annot s1 s2 r)
 
     | Sugar.ProofHintWithBinders { hint_type = Sugar.ASSUME _; binders=b1::_ } ->
       fail "'assume' cannot have binders" b1.brange

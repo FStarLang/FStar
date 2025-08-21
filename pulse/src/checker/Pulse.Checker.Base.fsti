@@ -215,9 +215,6 @@ val checker_result_t_equiv_ctxt (g:env) (ctxt ctxt' : slprop)
   (r : checker_result_t g ctxt post_hint)
 : checker_result_t g ctxt' post_hint
 
-// val is_stateful_application (g:env) (e:term) 
-//   : T.Tac (o:option st_term { Some? o ==> Tm_STApp? (Some?.v o).term })
-
 val norm_typing
       (g:env) (e:term) (eff:_) (t0:term)
       (d:typing g e eff t0)

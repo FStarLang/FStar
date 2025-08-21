@@ -790,21 +790,7 @@ let checker_result_t_equiv_ctxt (g:env) (ctxt ctxt' : slprop)
 
 module RU = Pulse.RuntimeUtils  
 let as_stateful_application (e:term) (head:term) (args:list T.argv { Cons? args })
-: T.Tac st_term =
-  if T.ext_enabled "revise_stapp"
-  then mk_term (Tm_ST { t = e }) (RU.range_of_term e)
-  else begin
-    let applied_args, (last_arg, qual) = List.unsnoc args in
-    let head = RU.mk_app_flat head applied_args (T.range_of_term head) in
-    let qual = 
-      match qual with
-      | T.Q_Implicit -> Some Implicit
-      | _ -> None
-    in
-    let st_app = Tm_STApp { head; arg=last_arg; arg_qual=qual} in
-    mk_term st_app (RU.range_of_term e)
-  end
-
+: st_term = mk_term (Tm_ST { t = e }) (RU.range_of_term e)
 
 let is_stateful_application (g:env) (e:term) 
 : T.Tac (option st_term) = 
@@ -907,16 +893,6 @@ let decompose_app (g:env) (tt:either term st_term)
 = let decompose_st_app (t:st_term)
   : T.Tac (option (term & list T.argv & (args:list T.argv{ Cons? args } -> T.Tac (res:either term st_term { Inr? tt ==> Inr? res }))))
   = match t.term with
-    | Tm_STApp { head; arg=last_arg; arg_qual=last_arg_qual } -> (
-      let head, args = T.collect_app_ln head in
-      let args = args @ [last_arg, Pulse.Elaborate.Pure.elab_qual last_arg_qual] in
-      let rebuild (args:list T.argv{Cons? args}) : T.Tac (res:either term st_term { Inr? res }) = 
-        let args, last_arg = List.unsnoc args in
-        let head = RU.mk_app_flat head args t.range in
-        Inr <| mk_term (Tm_STApp { head; arg=fst last_arg; arg_qual=last_arg_qual }) t.range
-      in
-      Some (head, args, rebuild)
-    )
     | Tm_ST { t=e } -> (
       let head, args = T.collect_app_ln e in
       match args with 

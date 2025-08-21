@@ -62,10 +62,7 @@ let elim_pure_head_typing (g:env)
 
 let mk_elim_pure (p:term)
   : st_term
-  = let t = Tm_STApp { head = elim_pure_head;
-                       arg_qual = None;
-                       arg = p }
-    in
+  = let t = Tm_ST { t = T.mk_app elim_pure_head [p, T.Q_Explicit] } in
     wtag (Some STT_Ghost) t
 
 
@@ -78,12 +75,10 @@ let elim_pure_comp (p:term) =
     } in
     C_STGhost tm_emp_inames st
 
-#push-options "--admit_smt_queries true"    
 let elim_pure_typing (g:env) (p:term)
                      (p_prop:tot_typing g (wr p) (wr RT.tm_prop))
    : st_typing g (mk_elim_pure (wr p)) (elim_pure_comp p)
-   = T_STApp g elim_pure_head (wr RT.tm_prop) None (elim_pure_comp p) _ (elim_pure_head_typing g) p_prop
-#pop-options
+   = admit()
 
 let is_elim_pure (vp:term) : T.Tac bool =
   match inspect_term vp with

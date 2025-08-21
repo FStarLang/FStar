@@ -26,7 +26,7 @@ module R = FStar.Reflection.V2
 
 module S = Pulse.Syntax
 module RU = Pulse.RuntimeUtils
-
+module T = FStar.Tactics.V2
 open Pulse.Reflection.Util
 
 let elab_frame (c:comp_st) (frame:term) (e:R.term) =
@@ -143,13 +143,12 @@ let intro_pure_tm (p:term) =
   let open Pulse.Reflection.Util in
   let rng = R.range_of_term p in
   wtag (Some STT_Ghost) 
-       (Tm_STApp
-        { head =
-            tm_pureapp (tm_fvar (as_fv (mk_pulse_lib_core_lid "intro_pure")))
+       (Tm_ST
+        { t = T.mk_app
+                (tm_pureapp (tm_fvar (as_fv (mk_pulse_lib_core_lid "intro_pure")))
                        None
-                       p;
-          arg_qual = None;
-          arg = S.wr (`()) rng })
+                       p)
+                [S.wr (`()) rng, T.Q_Explicit] })
 
 let simple_arr (t1 t2 : R.term) : R.term =
   let b = R.pack_binder {
@@ -179,10 +178,6 @@ let rec elab_st_typing (#g:env)
 
     | T_ST _ t _ _
     | T_STGhost _ t _ _ _ -> t
-
-    | T_STApp _ head _ qual _ arg _ _
-    | T_STGhostApp _ head _ qual _ arg _ _ _ _ ->
-      R.mk_app head [(arg, elab_qual qual)]
 
     | T_Return _ c use_eq u ty t post _ _ _ _ ->
       let rp = mk_abs ty R.Q_Explicit post in

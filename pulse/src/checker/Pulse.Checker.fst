@@ -39,7 +39,6 @@ module Match = Pulse.Checker.Match
 module WithLocal = Pulse.Checker.WithLocal
 module WithLocalArray = Pulse.Checker.WithLocalArray
 module While = Pulse.Checker.While
-module STApp = Pulse.Checker.STApp
 module Exists = Pulse.Checker.Exists
 module Par = Pulse.Checker.Par
 module Admit = Pulse.Checker.Admit
@@ -279,9 +278,6 @@ let rec check
         | Tm_ST _ ->
           RU.record_stats "check_st" (fun _ ->
           Pulse.Checker.ST.check g pre pre_typing post_hint res_ppname t)
-
-        | Tm_STApp _ ->
-          STApp.check g pre pre_typing post_hint res_ppname t
 
         | Tm_ElimExists _ ->
           Exists.check_elim_exists g pre pre_typing post_hint res_ppname t

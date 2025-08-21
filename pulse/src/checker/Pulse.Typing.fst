@@ -818,41 +818,6 @@ type st_typing : env -> st_term -> comp -> Type =
       non_informative g c ->
       st_typing g (wrst c (Tm_ST { t } )) c
  
-  | T_STApp :
-      g:env ->
-      head:term ->
-      ty:term ->
-      q:option qualifier ->
-      res:comp_st ->
-      arg:term ->
-      tot_typing g head (tm_arrow (as_binder ty) q res) ->
-      tot_typing g arg ty ->
-      st_typing g (wrst res (Tm_STApp {head; arg_qual=q; arg}))
-                  (open_comp_with res arg)
-
-    //
-    // this rule requires a non-informative judgment
-    // for C_STGhost, this will always be the case
-    // however, when doing the soundness proof,
-    //   we cannot call into the reflection API to get the token
-    // may be there is another way to make it so that we can get this once-and-for-all
-    //   for C_STGhost
-    //
-  | T_STGhostApp:
-      g:env ->
-      head:term ->
-      ty:term ->
-      q:option qualifier ->
-      res:comp_st ->
-      arg:term ->
-      x:var { None? (lookup g x) /\ ~ (x `Set.mem` freevars_comp res) } ->
-      ghost_typing g head (tm_arrow (as_binder ty) q res) ->
-      non_informative (push_binding g x ppname_default ty)
-                      (open_comp_with res (null_var x)) ->
-      ghost_typing g arg ty ->
-      st_typing g (wrst res (Tm_STApp {head; arg_qual=q; arg}))
-                  (open_comp_with res arg)
-
   | T_Return:
       g:env ->
       c:ctag ->
