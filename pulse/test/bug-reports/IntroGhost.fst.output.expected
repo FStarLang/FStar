@@ -1,10 +1,9 @@
 * Info at IntroGhost.fst(44,18-44,20):
   - Expected failure:
   - Cannot prove:
-      Pulse.Lib.Reference.pts_to r ?n
+      Pulse.Lib.Reference.pts_to r _
   - In the context:
       IntroGhost.my_inv b r
-  - See also IntroGhost.fst(44,9-44,30)
 
 * Info at IntroGhost.fst(71,2-71,4):
   - Expected failure:
