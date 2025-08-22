@@ -34,6 +34,16 @@ let elab_qual = function
   | Some TcArg -> R.Q_Meta (`FStar.Tactics.Typeclasses.tcresolve)
   | Some (Meta t) -> R.Q_Meta t
 
+(* When we want to apply a function, where the binder has
+qualifier q, this is the qualifier to set in the application.
+Basically, meta and typeclass parameters are applied with the
+same hash as normal implicits. *)
+let elab_qual_for_application = function
+  | None -> R.Q_Explicit
+  | Some Implicit
+  | Some TcArg
+  | Some (Meta _) -> R.Q_Implicit
+
 let elab_observability =
   let open R in
   function
