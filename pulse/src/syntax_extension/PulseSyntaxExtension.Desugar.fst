@@ -568,21 +568,29 @@ let rec desugar_stmt' (env:env_t) (s:Sugar.stmt)
       let! branches = branches |> mapM (desugar_branch env) in
       return (SW.tm_match head returns_annot branches s.range)
 
-    | While { guard; id=Some id; invariant; body } ->
+    | While { guard; invariant=[Old (id, inv)]; body } ->
       let! guard = desugar_stmt env guard in
-      let! invariant = 
+      let! inv =
         let env, bv = push_bv env id in
-        let! inv = desugar_slprop env invariant in
+        let! inv = desugar_slprop env inv in
         return (SW.close_term inv bv.index)
       in
       let! body = desugar_stmt env body in
-      return (SW.tm_while guard (id, invariant) body s.range)
+      return (SW.tm_while guard (id, inv) body s.range)
 
-    | While { guard; id=None; invariant; body } ->
+    | While { guard; invariant=invs; body } ->
+      (* If there are multiple invariants, they must all be in
+      the New style. *)
+      let! invs = invs |> mapM (function
+                        | New i -> return i
+                        | Old (_, p) -> fail "When using multiple invariants, they must all be in the \
+                        \"new\" style without a binder." (pos p))
+      in
+      let inv = sugar_star_of_list s.range invs in
       let! guard = desugar_stmt env guard in
-      let! invariant = desugar_slprop env invariant in
+      let! inv = desugar_slprop env inv in
       let! body = desugar_stmt env body in
-      return (SW.tm_nuwhile guard invariant body s.range)
+      return (SW.tm_nuwhile guard inv body s.range)
 
     | Introduce { slprop; witnesses } -> (
       let! vp = desugar_slprop env slprop in

@@ -225,6 +225,15 @@ optional_norewrite:
   | NOREWRITE { true }
   | { false }
 
+while_invariant1:
+  | INVARIANT i=lident DOT v=pulseSLProp
+    { PulseSyntaxExtension_Sugar.Old (i, v) }
+  | INVARIANT v=pulseSLProp
+    { PulseSyntaxExtension_Sugar.New v }
+
+while_invariant:
+  | is=list(while_invariant1) { is }
+
 pulseStmtNoSeq:
   | OPEN i=quident
     { PulseSyntaxExtension_Sugar.mk_open i }
@@ -246,8 +255,8 @@ pulseStmtNoSeq:
     { PulseSyntaxExtension_Sugar.mk_let_binding norw q p typOpt (Some init) }
   | s=pulseBindableTerm
     { s }
-  | WHILE LPAREN tm=pulseStmt RPAREN INVARIANT iopt=option (i=lident DOT{ i }) v=pulseSLProp LBRACE body=pulseStmt RBRACE
-    { PulseSyntaxExtension_Sugar.mk_while tm iopt v body }
+  | WHILE LPAREN tm=pulseStmt RPAREN inv=while_invariant LBRACE body=pulseStmt RBRACE
+    { PulseSyntaxExtension_Sugar.mk_while tm inv body }
   | INTRO p=pulseSLProp WITH ws=nonempty_list(indexingTerm)
     { PulseSyntaxExtension_Sugar.mk_intro p ws }
   | PARALLEL REQUIRES p1=pulseSLProp AND p2=pulseSLProp

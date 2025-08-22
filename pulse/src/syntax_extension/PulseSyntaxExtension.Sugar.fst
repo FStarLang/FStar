@@ -106,6 +106,12 @@ type array_init = {
 
 let ensures_slprop = option (ident & A.term) & slprop & option A.term
 
+type while_invariant1 =
+  | Old of ident & slprop
+  | New of slprop
+
+type while_invariant = list while_invariant1
+
 type stmt' =
   | Open of lident
   
@@ -152,8 +158,7 @@ type stmt' =
 
   | While {
       guard: stmt;
-      id: option ident;
-      invariant: slprop;
+      invariant: while_invariant;
       body: stmt;
     }
 
@@ -274,6 +279,12 @@ instance showable_a_binder : showable A.binder = {
   show = A.binder_to_string;
 }
 
+instance showable_while_invariant1 : showable while_invariant1 = {
+  show = (fun i -> match i with
+    | Old x -> "Old " ^ show x
+    | New x -> "New " ^ show x);
+}
+
 let rec stmt_to_string (s:stmt) : string =
   match s.s with
   | Open l -> "Open " ^ show l
@@ -311,10 +322,9 @@ let rec stmt_to_string (s:stmt) : string =
       "returns_annot", show returns_annot;
       "branches", FStarC.Common.string_of_list branch_to_string branches;
     ]
-  | While { guard; id; invariant; body } ->
+  | While { guard; invariant; body } ->
     "While " ^ record_string [
       "guard", stmt_to_string guard;
-      "id", show id;
       "invariant", show invariant;
       "body", stmt_to_string body;
     ]
@@ -373,6 +383,15 @@ let eq_opt (eq:'a -> 'a -> bool) (o1:option 'a) (o2:option 'a) =
   | Some x, Some y -> eq x y
   | None, None -> true
   | _, _ -> false
+let eq_slprop (s1 s2 : slprop) =
+  AD.eq_term s1 s2
+
+let eq_while_invariant1 (i1 i2:while_invariant1) =
+  match i1, i2 with
+  | Old (id1, t1), Old (id2, t2) -> eq_ident id1 id2 && eq_slprop t1 t2
+  | New t1, New t2 -> eq_slprop t1 t2
+  | _, _ -> false
+
 let rec eq_decl (d1 d2:decl) =
   match d1, d2 with
   | FnDefn f1, FnDefn f2 -> eq_fn_defn f1 f2
@@ -407,8 +426,6 @@ and eq_annot (a1 a2:computation_annot) =
   | Returns (i1, t1), Returns (i2, t2) -> eq_opt eq_ident i1 i2 && AD.eq_term t1 t2
   | Opens t1, Opens t2 -> AD.eq_term t1 t2
   | _, _ -> false
-and eq_slprop (s1 s2 : slprop) =
-  AD.eq_term s1 s2
 and eq_body (b1 b2:either stmt lambda) =
   match b1, b2 with
   | Inl s1, Inl s2 -> eq_stmt s1 s2
@@ -440,10 +457,9 @@ and eq_stmt' (s1 s2:stmt') =
     AD.eq_term h1 h2 &&
     eq_opt eq_ensures_slprop r1 r2 &&
     forall2 (fun (norw1, p1, s1) (norw2, p2, s2) -> norw1 = norw2 && AD.eq_pattern p1 p2 && eq_stmt s1 s2) b1 b2
-  | While { guard=g1; id=id1; invariant=i1; body=b1 }, While { guard=g2; id=id2; invariant=i2; body=b2 } ->
+  | While { guard=g1; invariant=i1; body=b1 }, While { guard=g2; invariant=i2; body=b2 } ->
     eq_stmt g1 g2 &&
-    eq_opt eq_ident id1 id2 &&
-    eq_slprop i1 i2 &&
+    forall2 eq_while_invariant1 i1 i2 &&
     eq_stmt b1 b2
   | Introduce { slprop=s1; witnesses=w1 }, Introduce { slprop=s2; witnesses=w2 } ->
     eq_slprop s1 s2 &&
@@ -554,6 +570,10 @@ and scan_lambda (cbs:A.dep_scan_callbacks) (l:lambda) =
   iter (scan_binder cbs) l.binders;
   iopt (scan_computation_type cbs) l.ascription;
   scan_stmt cbs l.body
+and scan_while_invariant1 (cbs:A.dep_scan_callbacks) (i:while_invariant1) =
+  match i with
+  | Old (id, t) -> cbs.scan_term t
+  | New t -> cbs.scan_term t
 and scan_stmt (cbs:A.dep_scan_callbacks) (s:stmt) =
   match s.s with
   | Open l -> cbs.add_open l
@@ -574,9 +594,9 @@ and scan_stmt (cbs:A.dep_scan_callbacks) (s:stmt) =
     cbs.scan_term h;
     iopt (scan_ensures_slprop cbs) r;
     iter (fun (_, p, s) -> cbs.scan_pattern p; scan_stmt cbs s) b
-  | While { guard=g; id=id; invariant=i; body=b } ->
+  | While { guard=g; invariant=i; body=b } ->
     scan_stmt cbs g;
-    scan_slprop cbs i;
+    iter (scan_while_invariant1 cbs) i;
     scan_stmt cbs b
   | Introduce { slprop=s; witnesses=w } ->
     scan_slprop cbs s;
@@ -642,7 +662,7 @@ let mk_let_binding norw qualifier pat typ init = LetBinding { norw; qualifier; p
 let mk_block stmt = Block { stmt }
 let mk_if head join_slprop then_ else_opt = If { head; join_slprop; then_; else_opt }
 let mk_match head returns_annot branches = Match { head; returns_annot; branches }
-let mk_while guard id invariant body = While { guard; id; invariant; body }
+let mk_while guard invariant body = While { guard; invariant; body }
 let mk_intro slprop witnesses = Introduce { slprop; witnesses }
 let mk_sequence s1 s2 = Sequence { s1; s2 }
 let mk_stmt s range = { s; range; source=true }
