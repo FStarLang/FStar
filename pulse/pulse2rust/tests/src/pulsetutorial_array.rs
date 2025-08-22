@@ -11,8 +11,8 @@ pub fn write_i<T>(arr: &mut [T], s: (), x: T, i: usize) -> () {
     arr[i] = x;
 }
 pub fn incr(y: &mut i64, __v: ()) -> () {
-    let __anf679 = *y;
-    *y = __anf679 + 2;
+    let __anf0 = *y;
+    *y = __anf0 + 2;
 }
 pub fn compare<T: PartialEq + Copy>(
     p1: (),
@@ -27,18 +27,18 @@ pub fn compare<T: PartialEq + Copy>(
     while {
         let vi = i;
         if vi < l {
-            let __anf4051 = a1[vi];
-            let __anf4049 = a2[vi];
-            __anf4051 == __anf4049
+            let __anf1 = a1[vi];
+            let __anf0 = a2[vi];
+            __anf1 == __anf0
         } else {
             false
         }
     } {
-        let __anf10964 = i;
-        i = __anf10964 + 1;
+        let __anf0 = i;
+        i = __anf0 + 1;
     }
-    let __anf13777 = i;
-    __anf13777 == l
+    let __anf0 = i;
+    __anf0 == l
 }
 pub fn copy<T: Copy>(
     a1: &mut [T],
@@ -50,12 +50,12 @@ pub fn copy<T: Copy>(
 ) -> () {
     let mut i = 0;
     while {
-        let __anf3224 = i;
-        __anf3224 < l
+        let __anf0 = i;
+        __anf0 < l
     } {
         let vi = i;
-        let __anf6362 = a2[vi];
-        a1[vi] = __anf6362;
+        let __anf0 = a2[vi];
+        a1[vi] = __anf0;
         i = vi + 1;
     }
 }
@@ -69,8 +69,8 @@ pub fn copy2<T: Copy>(
 ) -> () {
     let mut i = 0;
     while {
-        let vi = i;
-        vi < l
+        let __anf0 = i;
+        __anf0 < l
     } {
         let vi = i;
         let v = a2[vi];
@@ -94,8 +94,8 @@ pub fn copy_app(mut v: std::vec::Vec<i64>) -> () {
     super::pulsetutorial_array::copy2(&mut v, a, 2, (), (), ())
 }
 pub fn test_match_head(x: &mut std::option::Option<i64>, __v: ()) -> i64 {
-    let __anf950 = *x;
-    match __anf950 {
+    let __anf0 = *x;
+    match __anf0 {
         Some(mut v) => v,
         None => 0,
     }

@@ -82,7 +82,7 @@ let check
     let r = check
       (push_context "check_while_condition" cond.range g)
       (comp_pre (comp_while_cond nm inv))
-      cond_pre_typing
+      (coerce_eq () cond_pre_typing) // why is coerce_eq needed !?
       (PostHint while_cond_hint)
       ppname
       cond in
@@ -106,7 +106,7 @@ let check
       let r = check
         (push_context "check_while_body" body.range g)
         (comp_pre (comp_while_body nm inv))
-        body_pre_typing
+        (coerce_eq () body_pre_typing) // why is coerce_eq needed !?
         (PostHint while_post_hint)
         ppname
         body in

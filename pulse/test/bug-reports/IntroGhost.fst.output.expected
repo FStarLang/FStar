@@ -1,22 +1,19 @@
->> Got issues: [
-* Error 228 at IntroGhost.fst(44,18-44,20):
+* Info at IntroGhost.fst(44,18-44,20):
+  - Expected failure:
   - Cannot prove:
-      Pulse.Lib.Reference.pts_to r ?n
+      Pulse.Lib.Reference.pts_to r _
   - In the context:
       IntroGhost.my_inv b r
-  - See also IntroGhost.fst(44,9-44,30)
 
->>]
->> Got issues: [
-* Error 228 at IntroGhost.fst(71,2-71,4):
+* Info at IntroGhost.fst(71,2-71,4):
+  - Expected failure:
   - Cannot prove:
       Pulse.Lib.Reference.pts_to r 0
   - In the context:
       IntroGhost.my_inv b r
 
->>]
->> Got issues: [
-* Error 19 at IntroGhost.fst(89,46-92,24):
+* Info at IntroGhost.fst(89,46-92,24):
+  - Expected failure:
   - Failed to discharge match guard for goal:
       IntroGhost.my_inv true r
     with resource from context:
@@ -26,4 +23,3 @@
     details.
   - Also see: IntroGhost.fst(92,17-92,21)
 
->>]

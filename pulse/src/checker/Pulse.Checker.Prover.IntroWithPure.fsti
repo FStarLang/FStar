@@ -14,19 +14,17 @@
    limitations under the License.
 *)
 
-module Pulse.Checker.STApp
+module Pulse.Checker.Prover.IntroWithPure
 
-module T = FStar.Tactics.V2
+module T = FStar.Tactics
 
 open Pulse.Syntax
-open Pulse.Typing
-open Pulse.Checker.Base
+open Pulse.Checker.Prover.Base
 
-val check
-  (g:env)
-  (pre:term)
-  (pre_typing:tot_typing g pre tm_slprop)
-  (post_hint:post_hint_opt g)
-  (res_ppname:ppname)
-  (t:st_term{Tm_STApp? t.term})
-  : T.Tac (checker_result_t g pre post_hint)
+val intro_with_pure (#preamble:_) (pst:prover_state preamble)
+  p n v
+  (unsolved':list slprop)
+  (_:squash (pst.unsolved == tm_with_pure p n v::unsolved'))
+  (prover:prover_t)
+  : T.Tac (pst':prover_state preamble { pst' `pst_extends` pst /\
+                                        is_terminal pst' })

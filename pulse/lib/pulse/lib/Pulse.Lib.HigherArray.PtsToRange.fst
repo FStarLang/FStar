@@ -48,7 +48,6 @@ ghost fn fold_pts_to_range u#a (#a: Type u#a) (x: array a) (i: nat) (j: nat { i 
   pts_to_mask_len (gsub x i j);
   mask_ext (gsub x i j) s (fun _ -> True);
   from_mask (gsub x i j);
-  intro_with_pure (i <= j /\ j <= length x) (fun _ -> pts_to (gsub x i j) #p s) ();
   fold pts_to_range x i j #p s;
 }
 
@@ -58,7 +57,6 @@ ghost fn unfold_pts_to_range u#a (#a: Type u#a) (x: array a) (i j: nat) #p s
   ensures pts_to_mask (gsub x i j) #p s (fun _ -> True)
 {
   unfold pts_to_range x i j #p s;
-  elim_with_pure (i <= j /\ j <= length x) (fun _ -> pts_to (gsub x i j) #p s);
   to_mask (gsub x i j);
   ()
 }

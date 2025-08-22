@@ -165,10 +165,10 @@ let check_bind'
         in
         match Pulse.Checker.Base.hoist_stateful_apps g (Inl tm) false rebuild with
         | Some t -> //something was elaborated, go back to the top checking loop
-          debug_prover g (fun _ -> Printf.sprintf "Bind was elaborated to %s\n" (show t));
+          Util.debug g "pulse.hoist" (fun _ -> Printf.sprintf "Bind was elaborated to %s\n" (show t));
           check g ctxt ctxt_typing post_hint res_ppname t
         | None -> 
-          debug_prover g (fun _ -> "No elaboration in check_bind, proceeding to check head\n");
+          Util.debug g "pulse.hoist" (fun _ -> Printf.sprintf "No elaboration in check_bind, proceeding to check head\n");
           dflt()
       )
       | _ ->
@@ -212,10 +212,12 @@ let check_tot_bind
   match Pulse.Checker.Base.hoist_stateful_apps g (Inl e1) false rebuild with
   | None -> //no stateful apps; just return the head and check it
     let t = rebuild (Inl e1) in
-    debug_prover g (fun _ -> Printf.sprintf "No elaboration in check_tot_bind, proceeding to check\n%s\n" (show t));
+    Pulse.Checker.Util.debug g "pulse.hoist" (fun _ ->
+      Printf.sprintf "No elaboration in check_tot_bind, proceeding to check\n%s\n" (show t));
     check_bind' false g pre pre_typing post_hint res_ppname t check
   | Some t' ->
-    debug_prover g (fun _ -> Printf.sprintf "Elaborated and proceeding back to top-level\n%s\nto\n%s\n" 
+    Pulse.Checker.Util.debug g "pulse.hoist" (fun _ ->
+      Printf.sprintf "Elaborated and proceeding back to top-level\n%s\nto\n%s\n" 
       (show t)
       (show t'));
     check g pre pre_typing post_hint res_ppname t'

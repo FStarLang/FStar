@@ -109,7 +109,7 @@ let check_effect_annot (g:env) (e:effect_annot)
   let check_opens opens : T.Tac (e:term & typing g e T.E_Total tm_inames) =
     let (| opens, d |) = CP.check_term g opens T.E_Total tm_inames in
     let opens' =
-      T.norm_well_typed_term
+      CP.norm_well_typed_term
         (elab_env g)
         [primops; iota; zeta; delta_attr ["Pulse.Lib.Core.unfold_check_opens"]]
         opens
@@ -364,7 +364,7 @@ let k_elab_equiv
 
 #push-options "--fuel 3 --ifuel 2 --split_queries no --z3rlimit_factor 20"
 open Pulse.PP
-let continuation_elaborator_with_bind (#g:env) (ctxt:term)
+let continuation_elaborator_with_bind' (#g:env) (ctxt:term)
   (#c1:comp{stateful_comp c1})
   (#e1:st_term)
   (e1_typing:st_typing g e1 c1)
@@ -418,6 +418,7 @@ let continuation_elaborator_with_bind (#g:env) (ctxt:term)
     then fail g' None "Impossible: freevar clash when constructing continuation elaborator for bind, please file a bug-report"
     else (
       let t_typing, post_typing =
+        RU.record_stats "bind_res_and_post_typing" fun _ ->
         Pulse.Typing.Combinators.bind_res_and_post_typing g c2 x post_hint in
       let g = push_context g "mk_bind" e1.range in
       // info_doc g None
@@ -441,6 +442,21 @@ let continuation_elaborator_with_bind (#g:env) (ctxt:term)
   in
   k
 #pop-options
+
+let continuation_elaborator_with_bind (#g:env) (ctxt:term)
+  (#c1:comp{stateful_comp c1})
+  (#e1:st_term)
+  (e1_typing:st_typing g e1 c1)
+  (ctxt_pre1_typing:tot_typing g (tm_star ctxt (comp_pre c1)) tm_slprop)
+  (x:nvar { None? (lookup g (snd x)) })
+  : T.Tac (continuation_elaborator
+             g
+             (tm_star ctxt (comp_pre c1))
+             (push_binding g (snd x) (fst x) (comp_res c1))
+             (tm_star (open_term (comp_post c1) (snd x)) ctxt)) =
+  RU.record_stats "continuation_elaborator_with_bind" fun _ -> 
+    continuation_elaborator_with_bind' ctxt e1_typing ctxt_pre1_typing x
+
 
 let coerce_eq (#a #b:Type) (x:a) (_:squash (a == b)) : y:b{y == x} = x
 
@@ -598,6 +614,8 @@ let return_in_ctxt (g:env) (y:var) (y_ppname:ppname) (u:universe) (ty:term) (ctx
   | _ -> 
     (| _, _, d |)
 
+#push-options "--z3rlimit_factor 2"
+#restart-solver
 let match_comp_res_with_post_hint (#g:env) (#t:st_term) (#c:comp_st)
   (d:st_typing g t c)
   (post_hint:post_hint_opt g)
@@ -632,6 +650,7 @@ let match_comp_res_with_post_hint (#g:env) (#t:st_term) (#c:comp_st)
            in
 
            (| t, c', Pulse.Typing.Combinators.t_equiv d d_stequiv |)
+#pop-options
 
 let apply_checker_result_k (#g:env) (#ctxt:slprop) (#post_hint:post_hint_for_env g)
   (r:checker_result_t g ctxt (PostHint post_hint))
@@ -770,20 +789,12 @@ let checker_result_t_equiv_ctxt (g:env) (ctxt ctxt' : slprop)
   (| x, g1, t, ctxt', k_elab_equiv k equiv (VE_Refl _ _) |)
 
 module RU = Pulse.RuntimeUtils  
-let as_stateful_application (head:term) (args:list T.argv { Cons? args }) r =
-  let applied_args, (last_arg, qual) = List.unsnoc args in
-  let head = RU.mk_app_flat head applied_args (T.range_of_term head) in
-  let qual = 
-    match qual with
-    | T.Q_Implicit -> Some Implicit
-    | _ -> None
-  in
-  let st_app = Tm_STApp { head; arg=last_arg; arg_qual=qual} in
-  mk_term st_app r
-
+let as_stateful_application (e:term) (head:term) (args:list T.argv { Cons? args })
+: st_term = mk_term (Tm_ST { t = e }) (RU.range_of_term e)
 
 let is_stateful_application (g:env) (e:term) 
-  : T.Tac (o:option st_term { Some? o ==> Tm_STApp? (Some?.v o).term }) =
+: T.Tac (option st_term) = 
+  RU.record_stats "Pulse.is_stateful_application" fun _ -> 
   let head, args = T.collect_app_ln e in
   if Nil? args then None else
   match RU.lax_check_term_with_unknown_universes (elab_env g) head with
@@ -792,7 +803,7 @@ let is_stateful_application (g:env) (e:term)
     let head_t = wr ht (T.range_of_term ht) in
     match is_stateful_arrow g (Some (C_Tot head_t)) args [] with 
     | None -> None
-    | Some _ -> Some (as_stateful_application head args (RU.range_of_term e))
+    | Some _ -> Some (as_stateful_application e head args)
 
 let apply_conversion
       (#g:env) (#e:term) (#eff:_) (#t0:term)
@@ -817,7 +828,7 @@ let norm_typing
       Pulse.Typing.Metatheory.Base.typing_correctness d._0
     in
     let (| t', t'_typing, related_t_t' |) =
-      Pulse.RuntimeUtils.norm_well_typed_term (dsnd u_t_typing) steps
+      CP.norm_well_typed_term_alt (dsnd u_t_typing) steps
     in
     let d : typing g e eff t' = apply_conversion d related_t_t' in
     (| t', d |)
@@ -833,7 +844,7 @@ let norm_typing_inverse
   : T.Tac (option (typing g e eff t1))
   = let (| t1', t1'_typing, related_t1_t1' |) =
       let d1 = Ghost.hide d1._0 in
-      Pulse.RuntimeUtils.norm_well_typed_term d1 steps
+      CP.norm_well_typed_term_alt d1 steps
     in
     if TermEq.term_eq t0 t1'
     then (
@@ -856,7 +867,7 @@ let norm_st_typing_inverse
       = Ghost.hide (coerce_eq d1._0 ())
     in
     let (| t1', t1'_typing, related_t1_t1' |) =
-      Pulse.RuntimeUtils.norm_well_typed_term d1 steps
+      CP.norm_well_typed_term_alt d1 steps
     in
     if TermEq.term_eq t0 t1'
     then (
@@ -882,15 +893,17 @@ let decompose_app (g:env) (tt:either term st_term)
 = let decompose_st_app (t:st_term)
   : T.Tac (option (term & list T.argv & (args:list T.argv{ Cons? args } -> T.Tac (res:either term st_term { Inr? tt ==> Inr? res }))))
   = match t.term with
-    | Tm_STApp { head; arg=last_arg; arg_qual=last_arg_qual } ->
-      let head, args = T.collect_app_ln head in
-      let args = args @ [last_arg, Pulse.Elaborate.Pure.elab_qual last_arg_qual] in
-      let rebuild (args:list T.argv{Cons? args}) : T.Tac (res:either term st_term { Inr? res }) = 
-        let args, last_arg = List.unsnoc args in
-        let head = RU.mk_app_flat head args t.range in
-        Inr <| mk_term (Tm_STApp { head; arg=fst last_arg; arg_qual=last_arg_qual }) t.range
-      in
-      Some (head, args, rebuild)
+    | Tm_ST { t=e } -> (
+      let head, args = T.collect_app_ln e in
+      match args with 
+      | [] -> None
+      | _ -> 
+        let rebuild (args:list T.argv{Cons? args}) : T.Tac (res:either term st_term { Inr? res }) = 
+          let head = RU.mk_app_flat head args t.range in
+          Inr <| mk_term (Tm_ST { t=head }) t.range
+        in
+        Some (head, args, rebuild)
+    )
     | _ -> None
   in
   match tt with
@@ -908,15 +921,20 @@ let decompose_app (g:env) (tt:either term st_term)
   | Inr st -> decompose_st_app st
 
 let anf_binder name = T.pack (T.Tv_FVar (T.pack_fv (Pulse.Reflection.Util.mk_pulse_lib_core_lid (Printf.sprintf "__%s_binder__" name))))
-  
+
+let fresh_anf_name (g:env) : T.Tac (env & string) =
+  let g, id = Pulse.Typing.Env.fresh_anf g in
+  let nm = Printf.sprintf "__anf%d" id in
+  g, nm
+
 let bind_st_term (g:env) (s:st_term) 
 : T.Tac (env & binder & var & term)
 = let open Pulse.Syntax in
-  let anf_name = Printf.sprintf "__anf%d" (RU.next_id()) in
+  let g, anf_name = fresh_anf_name g in
   let b = {
     binder_ty = tm_unknown;
     binder_ppname = mk_ppname (FStar.Reflection.Typing.seal_pp_name anf_name) s.range;
-    binder_attrs = FStar.Sealed.seal [anf_binder anf_name];
+    binder_attrs = FStar.Sealed.seal [anf_binder anf_name]; // What is this for?
   } in
   let x = Pulse.Typing.Env.fresh g in
   let g = Pulse.Typing.Env.push_binding g x b.binder_ppname b.binder_ty in
@@ -941,7 +959,7 @@ let rec maybe_hoist (g:env) (arg:T.argv)
   | Some _ -> (
     let g, binders, args = maybe_hoist_args g args in
     if Nil? args then T.fail "Impossible";
-    let st_app = as_stateful_application head args (T.range_of_term t) in
+    let st_app = as_stateful_application t head args  in
     let g, b, x, t = bind_st_term g st_app in
     let arg = t, q in
     g, binders@[b, x, st_app], arg

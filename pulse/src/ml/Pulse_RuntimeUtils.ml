@@ -227,3 +227,10 @@ module RR = FStarC_Reflection_V2_Builtins
 let mk_app_flat (head:S.term) (args:_) r =
   let args = List.map (fun (x, q) -> x, RR.pack_aqual q) args in
   S.mk_Tm_app head args r
+
+let record_stats (key:string) (f: unit -> 'a utac)
+: 'a utac
+= fun ps ->
+    FStarC_Stats.record key (fun () -> f () ps)
+
+let stack_dump () = FStarC_Util.stack_dump()

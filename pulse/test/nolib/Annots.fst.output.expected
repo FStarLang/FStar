@@ -1,40 +1,32 @@
->> Got issues: [
-* Error 168 at Annots.fst(33,2-33,13):
+* Info at Annots.fst(33,2-33,13):
+  - Expected failure:
   - Multiple returns are not allowed.
 
->>]
->> Got issues: [
-* Error 168 at Annots.fst(43,2-43,13):
+* Info at Annots.fst(43,2-43,13):
+  - Expected failure:
   - returns must come before ensures (the name returned is in scope for the ensures clause)
 
->>]
->> Got issues: [
-* Error 168 at Annots.fst(52,2-52,16):
+* Info at Annots.fst(52,2-52,16):
+  - Expected failure:
   - requires must come before any ensures
 
->>]
->> Got issues: [
-* Error 168 at Annots.fst(60,2-60,16):
+* Info at Annots.fst(60,2-60,16):
+  - Expected failure:
   - requires must come before the return
 
->>]
->> Got issues: [
-* Error 168 at Annots.fst(71,2-71,11):
+* Info at Annots.fst(71,2-71,11):
+  - Expected failure:
   - opens must come before the return (the name returned is *not* in scope for the opens clause)
 
->>]
->> Got issues: [
-* Error 168 at Annots.fst(79,2-79,16):
+* Info at Annots.fst(79,2-79,16):
+  - Expected failure:
   - requires must come before any ensures
 
->>]
->> Got issues: [
-* Error 168 at Annots.fst(87,2-87,16):
+* Info at Annots.fst(87,2-87,16):
+  - Expected failure:
   - requires must come before the return
 
->>]
->> Got issues: [
-* Error 168 at Annots.fst(112,15-112,16):
-  - Identifiers (v) not found, consider adding them as binders
+* Info at Annots.fst(112,15-112,16):
+  - Expected failure:
+  - Identifier not found: v
 
->>]

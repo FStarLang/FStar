@@ -270,7 +270,8 @@ let st_ghost_as_atomic_matches_post_hint
 
 (* This matches the effects of the two branches, without
 necessarily matching inames. *)
-#push-options "--z3rlimit_factor 4"
+#push-options "--z3rlimit_factor 8"
+#restart-solver
 open Pulse.Checker.Base
 (* NB: g_then and g_else are equal except for containing one extra
 hypothesis according to which branch was taken. *)

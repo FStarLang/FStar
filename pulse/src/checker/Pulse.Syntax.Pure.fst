@@ -274,6 +274,7 @@ type term_view =
   | Tm_Star       : l:slprop -> r:slprop -> term_view
   | Tm_ExistsSL   : u:universe -> b:binder -> body:slprop -> term_view
   | Tm_ForallSL   : u:universe -> b:binder -> body:slprop -> term_view
+  | Tm_WithPure   : pred:term -> n:ppname -> body:slprop -> term_view
   | Tm_SLProp     : term_view
   | Tm_Inv        : iname:term -> p:slprop -> term_view
   | Tm_Inames     : term_view  // type inames
@@ -314,6 +315,10 @@ let pack_term_view (top:term_view) (r:range)
       then w (mk_exists u t abs)
       else w (mk_forall u t abs)
 
+    | Tm_WithPure pred n body ->
+      let abs = mk_abs_with_name n.name (mk_squash u0 pred) R.Q_Explicit body in
+      w (mk_with_pure pred abs)
+
     | Tm_Inames ->
       w (pack_ln (Tv_FVar (pack_fv inames_lid)))
 
@@ -336,6 +341,9 @@ let tm_pure (p:term) : term = pack_term_view (Tm_Pure p) (range_of_term p)
 let tm_star (l:slprop) (r:slprop) : term =
   pack_term_view (Tm_Star l r)
                  (union_ranges (range_of_term l) (range_of_term r))
+let tm_with_pure (pred:term) (n:ppname) (body:slprop) : term =
+  pack_term_view (Tm_WithPure pred n body)
+                 (union_ranges (range_of_term pred) (range_of_term body))
 let tm_exists_sl (u:universe) (b:binder) (body:slprop) : term =
   pack_term_view (Tm_ExistsSL u b body)
                  (union_ranges (range_of_term b.binder_ty) (range_of_term body))
@@ -371,6 +379,9 @@ let is_view_of (tv:term_view) (t:term) : prop =
   | Tm_ForallSL u b body ->
     t == tm_forall_sl u b body /\
     u << t /\ b << t /\ body << t
+  | Tm_WithPure pred n body ->
+    t == tm_with_pure pred n body /\
+    pred << t /\ body << t
   | Tm_Pure p ->
     t == tm_pure p /\
     p << t
@@ -413,6 +424,12 @@ let rec inspect_term (t:R.term)
         then Tm_Star (fst a1) (fst a2)
         else if inspect_fv fv = inv_lid
         then Tm_Inv (fst a1) (fst a2)
+        else if inspect_fv fv = with_pure_lid
+        then
+          (match inspect_ln (fst a2) with
+          | Tv_Abs b body ->
+            Tm_WithPure (fst a1) (mk_ppname (inspect_binder b).ppname (binder_range b)) body
+          | _ -> default_view)
         else default_view
       | Tv_UInst fv [u], [a1; a2] ->
         if inspect_fv fv = exists_lid ||

@@ -277,17 +277,7 @@ let desugar_term_opt (env:env_t) (t:option A.term)
 //
 let idents_as_binders (env:env_t) (l:list ident)
   : err (env_t & list (option SW.qualifier & SW.binder) & list S.bv)
-  = let non_tick_idents =
-      l |> L.filter (fun i ->
-                     i |> Ident.string_of_id
-                       |> (fun s -> not (BU.starts_with s "'"))) in
-    if L.length non_tick_idents <> 0
-    then let s = non_tick_idents |> L.map Ident.string_of_id |> BU.concat_l ", " in
-         fail
-           (Format.fmt1 "Identifiers (%s) not found, consider adding them as binders" s)
-           (non_tick_idents |> L.hd |> Ident.range_of_id)
-    else begin
-      let erased_tm = A.(mk_term (Var FStarC.Parser.Const.erased_lid) FStarC.Range.dummyRange Un) in
+  =   let erased_tm = A.(mk_term (Var FStarC.Parser.Const.erased_lid) FStarC.Range.dummyRange Un) in
       let mk_ty i =
         let wild = A.(mk_term Wild (Ident.range_of_id i) Un) in
         A.(mkApp erased_tm [wild, A.Nothing] (Ident.range_of_id i)) in
@@ -303,7 +293,6 @@ let idents_as_binders (env:env_t) (l:list ident)
             aux env ((qual, SW.mk_binder i ty)::binders) (bv::bvs) l
       in
       aux env [] [] l
-    end
 
 let desugar_slprop (env:env_t) (v:Sugar.slprop)
   : err SW.slprop
@@ -513,7 +502,7 @@ let rec desugar_stmt' (env:env_t) (s:Sugar.stmt)
         in
         let t_match =
           {
-          mk_stmt (Match { head = A.(mk_term (Tvar id) lb.pat.prange Expr);
+          mk_stmt (Match { head = A.(mk_term (Var (Ident.id_as_lid id)) lb.pat.prange Expr);
                           returns_annot = None;
                           branches = [(lb.norw, pat, s2)] }) s1range
                           with source = false }
@@ -522,14 +511,13 @@ let rec desugar_stmt' (env:env_t) (s:Sugar.stmt)
           (* We only inject a variable when the rhs is a variable *)
           if not lb.norw &&
               (match init_expr.A.tm with
-                | A.Tvar _ -> true
                 | A.Var _ -> true
                 | A.Name _ -> true
                 | _ -> false)
           then
             let s_rw =
               mk_stmt (ProofHintWithBinders {
-                    hint_type = RENAME ([(init_expr, A.mk_term (A.Tvar id) lb.pat.prange A.Expr)], None, None);
+                    hint_type = RENAME ([(init_expr, A.mk_term (A.Var (Ident.id_as_lid id)) lb.pat.prange A.Expr)], None, None);
                     binders = []}) s1range
             in
             let s_rw = { s_rw with source=false } in
@@ -834,13 +822,13 @@ and desugar_proof_hint_with_binders (env:env_t) (s1:Sugar.stmt) (k:option Sugar.
       let assume_fv = SW.(mk_fv assume_lid r) in
       let assume_ : SW.term = SW.(tm_fvar assume_fv) in
       let! p = desugar_slprop env p in
-      let s1 = SW.tm_st_app assume_ None p r in
+      let s1 = SW.tm_st (S.mk_Tm_app assume_ [p, None] r) r in
       let! s2 =
         match k with
         | None -> return (SW.tm_ghost_return (SW.tm_expr S.unit_const r) r)
         | Some s2 -> desugar_stmt env s2 in
-     let annot = SW.mk_binder (Ident.id_of_text "_") (SW.tm_unknown r) in
-     return (mk_bind annot s1 s2 r)
+      let annot = SW.mk_binder (Ident.id_of_text "_") (SW.tm_unknown r) in
+      return (mk_bind annot s1 s2 r)
 
     | Sugar.ProofHintWithBinders { hint_type = Sugar.ASSUME _; binders=b1::_ } ->
       fail "'assume' cannot have binders" b1.brange

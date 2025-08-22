@@ -202,9 +202,7 @@ let rec open_st_term_ln' (e:st_term)
       open_term_ln' expected_type x i;
       open_term_ln' e x i
       
-    | Tm_STApp { head=l; arg=r } ->
-      open_term_ln' l x i;
-      open_term_ln' r x i
+    | Tm_ST { t } -> open_term_ln' t x i
 
     | Tm_Abs { b; ascription=c; body } ->
       open_term_ln' b.binder_ty x i;
@@ -462,9 +460,7 @@ let rec ln_weakening_st (t:st_term) (i j:int)
     | Tm_Match _ ->
       admit ()
 
-    | Tm_STApp { head; arg } ->
-      ln_weakening head i j;
-      ln_weakening arg i j      
+    | Tm_ST { t } -> ln_weakening t i j
 
     | Tm_Bind { binder; head; body } ->
       ln_weakening binder.binder_ty i j;
@@ -676,11 +672,10 @@ let rec open_term_ln_inv_st' (t:st_term)
       open_term_ln_inv' head x i;
       open_term_ln_inv_st' body x (i + 1)
 
-    | Tm_STApp { head; arg} ->
+    | Tm_ST { t } ->
       FStar.Pure.BreakVC.break_vc();
-      open_term_ln_inv' head x i;
-      open_term_ln_inv' arg x i
-
+      open_term_ln_inv' t x i
+    
     | Tm_Abs { b; ascription=c; body } ->
       FStar.Pure.BreakVC.break_vc();
       open_term_ln_inv' b.binder_ty x i;
@@ -888,10 +883,9 @@ let rec close_st_term_ln' (t:st_term) (x:var) (i:index)
       close_term_ln' head x i;
       close_st_term_ln' body x (i + 1)
 
-    | Tm_STApp { head; arg } ->
+    | Tm_ST { t } ->
       FStar.Pure.BreakVC.break_vc();
-      close_term_ln' head x i;
-      close_term_ln' arg x i
+      close_term_ln' t x i
 
     | Tm_Abs { b; ascription=c; body } ->
       FStar.Pure.BreakVC.break_vc();
@@ -1196,17 +1190,9 @@ let rec st_typing_ln (#g:_) (#t:_) (#c:_)
       open_st_term_ln body x;
       close_comp_ln c x;
       Pulse.Elaborate.elab_ln_comp (close_comp c x) 0
-
-    | T_STApp _ _ _ _ res arg st at
-    | T_STGhostApp _ _ _ _ res arg _ st _ at ->
-      FStar.Pure.BreakVC.break_vc ();
-      tot_or_ghost_typing_ln st;
-      tot_or_ghost_typing_ln at;
-      // We have RT.ln' (elab_comp res),
-      //   from that we need to derive the following
-      assume (ln_c' res 0);
-      open_comp_ln_inv' res arg 0;
-      Pulse.Elaborate.elab_ln_comp (open_comp_with res arg) (-1)
+    
+    | T_ST ..
+    | T_STGhost .. -> admit()
 
     | T_Lift _ _ _ _ d1 l ->
       FStar.Pure.BreakVC.break_vc ();

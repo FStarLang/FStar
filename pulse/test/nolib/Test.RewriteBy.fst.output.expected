@@ -1,5 +1,5 @@
->> Got issues: [
-* Error 170 at Test.RewriteBy.fst(31,1-37,8):
+* Info at Test.RewriteBy.fst(31,1-37,8):
+  - Expected failure:
   - rewrite: could not prove equality of
   - Test.RewriteBy.p
   - Test.RewriteBy.q
@@ -14,4 +14,3 @@
           Test.RewriteBy.tac ())
         "(((proofstate)))"
 
->>]

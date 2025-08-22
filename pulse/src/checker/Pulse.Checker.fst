@@ -39,13 +39,13 @@ module Match = Pulse.Checker.Match
 module WithLocal = Pulse.Checker.WithLocal
 module WithLocalArray = Pulse.Checker.WithLocalArray
 module While = Pulse.Checker.While
-module STApp = Pulse.Checker.STApp
 module Exists = Pulse.Checker.Exists
 module Par = Pulse.Checker.Par
 module Admit = Pulse.Checker.Admit
 module Return = Pulse.Checker.Return
 module Rewrite = Pulse.Checker.Rewrite
 module WithInv = Pulse.Checker.WithInv
+module PCP = Pulse.Checker.Pure
 
 let terms_to_string (t:list term)
   : T.Tac string 
@@ -141,7 +141,7 @@ let trace (t:st_term) (g:env) (pre:term) (rng:range) : T.Tac unit =
   and environment. *)
   let open FStar.Pprint in
   let open Pulse.PP in
-  let pre = T.norm_well_typed_term (elab_env g) [unascribe; primops; iota] pre in
+  let pre = PCP.norm_well_typed_term (elab_env g) [unascribe; primops; iota] pre in
   let msg = [
     text "TRACE. Current context:" ^^
       indent (pp <| canon_slprop_print pre);
@@ -275,8 +275,9 @@ let rec check
           // )
           T.fail "Tm_Abs check should not have been called in the checker"
 
-        | Tm_STApp _ ->
-          STApp.check g pre pre_typing post_hint res_ppname t
+        | Tm_ST _ ->
+          RU.record_stats "check_st" (fun _ ->
+          Pulse.Checker.ST.check g pre pre_typing post_hint res_ppname t)
 
         | Tm_ElimExists _ ->
           Exists.check_elim_exists g pre pre_typing post_hint res_ppname t

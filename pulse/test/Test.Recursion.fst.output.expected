@@ -1,28 +1,14 @@
->> Got issues: [
-* Error 19 at Test.Recursion.fst(94,2-94,20):
-  - Ill-typed term: ()
-  - Expected a term of type
-      x':
-      Prims.unit
-        { FStar.Range.labeled FStar.Range.range_0
-            "Could not prove termination"
-            (() << ()) }
+* Info at Test.Recursion.fst(94,2-94,20):
+  - Expected failure:
+  - Ill-typed term: test_ghost_loop ()
   - Could not prove termination
   - The SMT solver could not prove the query. Use --query_stats for more
     details.
 
->>]
->> Got issues: [
-* Error 19 at Test.Recursion.fst(141,4-141,22):
-  - Ill-typed term: y - 1
-  - Expected a term of type
-      y':
-      Prims.nat
-        { FStar.Range.labeled FStar.Range.range_0
-            "Could not prove termination"
-            (z - 1 << z) }
+* Info at Test.Recursion.fst(141,4-141,22):
+  - Expected failure:
+  - Ill-typed term: test5' (z - 1) (y - 1)
   - Could not prove termination
   - The SMT solver could not prove the query. Use --query_stats for more
     details.
 
->>]

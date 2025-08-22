@@ -31,6 +31,7 @@ val instantiate_term_implicits
   : T.Tac (term & term)
 
 val instantiate_term_implicits_uvs (g:env) (t:term)
+    (inst_extra : bool) (* Should this instantiate implicits at the end of t? *)
   : T.Tac (uvs:env { disjoint g uvs } & term & term)  // uvs
 
 val check_universe (g:env) (t:term)
@@ -114,3 +115,22 @@ val is_non_informative (g:env) (c:comp)
 
 val check_subtyping (g:env) (t1 t2 : term)
   : T.Tac (subtyping_token g t1 t2)
+
+
+val norm_well_typed_term
+  (g:T.env) (steps : list norm_step) (t:term)
+: T.Tac (t':term{T.equiv_token g t t'})
+module RT = FStar.Reflection.Typing
+
+val norm_well_typed_term_alt
+      (#g:T.env)
+      (#t:T.term)
+      (#eff:T.tot_or_ghost)
+      (#k:Ghost.erased T.term)
+      (ty:Ghost.erased (RT.typing g t (eff, Ghost.reveal k)))
+      (steps:list norm_step)
+: T.Tac (
+      t':T.term &
+      Ghost.erased (RT.typing g t' (eff, Ghost.reveal k)) &
+      Ghost.erased (RT.related g t RT.R_Eq t')
+    )

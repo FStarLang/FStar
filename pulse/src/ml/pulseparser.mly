@@ -359,10 +359,10 @@ mutOrRefQualifier:
   | MUT { MUT }
   | REF { REF }
 
-typX(X,Y):
-  | t=Y { t }
+typX(X):
+  | t=X { t }
 
-  | q=quantifier bs=binders DOT trigger=trigger e=X
+  | q=quantifier bs=binders DOT trigger=trigger e=typX(X)
       {
         match bs with
         | [] ->
@@ -373,5 +373,5 @@ typX(X,Y):
       }
 
 pulseSLProp:
-  | p=typX(tmEqWith(appTermNoRecordExp), tmEqWith(appTermNoRecordExp))
+  | p=typX(tmEqWith(appTermNoRecordExp))
     { p }

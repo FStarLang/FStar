@@ -36,10 +36,13 @@ module RT = FStar.Reflection.Typing
 
 module ElimExists  = Pulse.Checker.Prover.ElimExists
 module ElimPure    = Pulse.Checker.Prover.ElimPure
+module ElimWithPure = Pulse.Checker.Prover.ElimWithPure
 module Match       = Pulse.Checker.Prover.Match
 module IntroExists = Pulse.Checker.Prover.IntroExists
 module IntroPure   = Pulse.Checker.Prover.IntroPure
+module IntroWithPure = Pulse.Checker.Prover.IntroWithPure
 module Explode     = Pulse.Checker.Prover.Explode
+module PCP = Pulse.Checker.Pure
 
 let coerce_eq (#a #b:Type) (x:a) (_:squash (a == b)) : y:b{y == x} = x
 
@@ -74,7 +77,7 @@ let __normalize_slprop
   (* Unfold recursive definitions too, but only the ones that match the filters above. *)
   let steps = steps @ [zeta] in
 
-  let v' = T.norm_well_typed_term (elab_env g) steps v in
+  let v' = PCP.norm_well_typed_term (elab_env g) steps v in
   let v' = Simplify.simplify v' in (* NOTE: the simplify stage is unverified *)
   let v_equiv_v' = VE_Ext _ _ _ (RU.magic ()) in
   (| v', v_equiv_v' |)
@@ -159,6 +162,8 @@ let rec __intro_any_exists (n:nat)
         //     pp hd;
         // ];
         IntroExists.intro_exists pst u b body unsolved' () prover
+      | Tm_WithPure p n v ->
+        IntroWithPure.intro_with_pure pst p n v unsolved' () prover
       | _ ->
         let pst = {
           pst with
@@ -331,15 +336,18 @@ let rec prover
 = (* Beta/iota/primops normalization in the context and goals.
       FIXME: do this incrementally instead of on every entry to the
       prover. *)
+  // if Nil? pst0.unsolved then pst0 else
   let pst = normalize_slprop_context pst0 in
   let pst = { pst with progress = false } in
   (* Always eagerly eliminate pure, even if the goals are empty,
   so we don't complain about a possible "leak". I think it'd be nicer
   to use a typeclass for safely-droppable resources. *)
   let _, pst = ElimExists.elim_exists_pst pst in
+  let pst = ElimWithPure.elim_with_pure_pst pst in
   let pst = ElimPure.elim_pure_pst pst in
   debug_prover pst.pg (fun _ ->
   Printf.sprintf "At the prover top-level with\n  remaining_ctxt: %s\n  unsolved: %s\n  allow_ambiguous: %s\n  ss: %s\n  rwr_ss: %s\n  env: %s\n"
+    // (RU.stack_dump ())
     (show (list_as_slprop pst.remaining_ctxt))
     (show (list_as_slprop pst.unsolved))
     (show pst.allow_ambiguous)
@@ -347,7 +355,7 @@ let rec prover
     (show pst.rwr_ss)
     (Pprint.render (env_to_doc pst.pg)));
 
-  if L.length (bindings pst.pg) > L.length (bindings pst0.pg) then begin
+  if pst.progress then begin
     (* We made progress, and need to renormalize, so start over. *)
     prover pst
   end else match pst.unsolved with
@@ -479,7 +487,7 @@ let prove
     allow_ambiguous = allow_ambiguous;
   } in
 
-  let pst = prover pst0 in
+  let pst = RU.record_stats "Pulse.prover" fun _ -> prover pst0 in
 
   let (| nts, effect_labels |)
     : nts:PS.nt_substs &
@@ -566,6 +574,7 @@ let try_frame_pre_uvs
   let g = push_context g "try_frame_pre" t.range in
 
   let (| g1, nts, effect_labels, remaining_ctxt, k_frame |) =
+    RU.record_stats "Pulse.prove" fun _ ->
     prove allow_ambiguous #g #_ ctxt_typing uvs #(comp_pre c) (RU.magic ()) in
   // assert (nts == []);
 

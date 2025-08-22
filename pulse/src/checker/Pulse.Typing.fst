@@ -35,6 +35,7 @@ let debug_log (level:string)  (g:env) (f: unit -> T.Tac string) : T.Tac unit =
   then T.print (Printf.sprintf "Debug@%s:{ %s }\n" level (f ()))
 
 let tm_unit = tm_fvar (as_fv unit_lid)
+let unit_const = tm_constant R.C_Unit
 let tm_bool = RT.bool_ty
 let tm_int  = tm_fvar (as_fv int_lid)
 let tm_nat  = tm_fvar (as_fv nat_lid)
@@ -116,15 +117,6 @@ let comp_return (c:ctag) (use_eq:bool) (u:universe) (t:term) (e:term) (post:term
       tm_emp_inames
       { u; res = t; pre = open_term' post e 0; post = post_maybe_eq }
 
-
-module L = FStar.List.Tot
-let extend_env_l (f:R.env) (g:env_bindings) : R.env = 
-  L.fold_right 
-    (fun (x, b) g ->  
-      RT.extend_env g x b)
-     g
-     f
-let elab_env (e:env) : R.env = extend_env_l (fstar_env e) (bindings e)
 
 
 (*
@@ -810,41 +802,22 @@ type st_typing : env -> st_term -> comp -> Type =
       st_typing (push_binding g x ppname_default b.binder_ty) (open_st_term_nv body (b.binder_ppname, x)) c ->
       st_typing g (wtag None (Tm_Abs { b; q; body; ascription=empty_ascription}))
                   (C_Tot (tm_arrow b q (close_comp c x)))
-  | T_STApp :
+                
+  | T_ST:
       g:env ->
-      head:term ->
-      ty:term ->
-      q:option qualifier ->
-      res:comp_st ->
-      arg:term ->
-      tot_typing g head (tm_arrow (as_binder ty) q res) ->
-      tot_typing g arg ty ->
-      st_typing g (wrst res (Tm_STApp {head; arg_qual=q; arg}))
-                  (open_comp_with res arg)
-
-    //
-    // this rule requires a non-informative judgment
-    // for C_STGhost, this will always be the case
-    // however, when doing the soundness proof,
-    //   we cannot call into the reflection API to get the token
-    // may be there is another way to make it so that we can get this once-and-for-all
-    //   for C_STGhost
-    //
-  | T_STGhostApp:
+      t:term ->
+      c:comp_st ->
+      tot_typing g t (elab_comp c) ->
+      st_typing g (wrst c (Tm_ST { t } )) c
+ 
+  | T_STGhost:
       g:env ->
-      head:term ->
-      ty:term ->
-      q:option qualifier ->
-      res:comp_st ->
-      arg:term ->
-      x:var { None? (lookup g x) /\ ~ (x `Set.mem` freevars_comp res) } ->
-      ghost_typing g head (tm_arrow (as_binder ty) q res) ->
-      non_informative (push_binding g x ppname_default ty)
-                      (open_comp_with res (null_var x)) ->
-      ghost_typing g arg ty ->
-      st_typing g (wrst res (Tm_STApp {head; arg_qual=q; arg}))
-                  (open_comp_with res arg)
-
+      t:term ->
+      c:comp_st ->
+      ghost_typing g t (elab_comp c) ->
+      non_informative g c ->
+      st_typing g (wrst c (Tm_ST { t } )) c
+ 
   | T_Return:
       g:env ->
       c:ctag ->

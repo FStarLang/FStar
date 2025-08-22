@@ -162,9 +162,8 @@ let rec close_open_inverse_st'  (t:st_term)
       close_open_inverse' head x i;
       close_open_inverse_st' body x (i + 1)
 
-    | Tm_STApp { head; arg } ->
-      close_open_inverse' head x i;
-      close_open_inverse' arg x i
+    | Tm_ST { t } ->
+      close_open_inverse' t x i
     
     | Tm_IntroExists { p; witnesses } ->
       close_open_inverse' p x i;

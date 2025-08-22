@@ -11,6 +11,19 @@ pub fn count_down(x: &mut i64, __v: ()) -> () {
         if n == 0 { keep_going = false } else { *x = n - 1 }
     }
 }
+pub fn count_down2(x: &mut i64, v: ()) -> () {
+    let mut keep_going = true;
+    let mut decr = 1;
+    while keep_going {
+        let n = *x;
+        if n == 0 {
+            keep_going = false
+        } else {
+            let __anf0 = decr;
+            *x = n - __anf0;
+        }
+    }
+}
 pub fn count_down3(x: &mut i64, __v: ()) -> () {
     while {
         let n = *x;
@@ -37,8 +50,8 @@ pub fn multiply_by_repeated_addition(x: i64, y: i64) -> i64 {
     let mut ctr = 0;
     let mut acc = 0;
     while {
-        let c = ctr;
-        c < x
+        let __anf0 = ctr;
+        __anf0 < x
     } {
         let a = acc;
         acc = a + y;
@@ -52,8 +65,8 @@ pub fn fib_loop(k: i64) -> i64 {
     let mut j = 1;
     let mut ctr = 1;
     while {
-        let c = ctr;
-        c < k
+        let __anf0 = ctr;
+        __anf0 < k
     } {
         let vi = i;
         let vj = j;

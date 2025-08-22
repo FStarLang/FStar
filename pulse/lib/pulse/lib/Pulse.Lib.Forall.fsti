@@ -15,32 +15,32 @@
 *)
 
 module Pulse.Lib.Forall
+
 #lang-pulse
 open Pulse.Lib.Core
+open Pulse.Main
 
 val ( forall* )
     (#a:Type u#a)
     (p:a -> slprop)
 : slprop
 
-(* Cannot use pulse vals yet: universe polymorphic definition. *)
+ghost
+fn elim_forall u#a
+  (#a : Type u#a)
+  (#p : a->slprop)
+  (x : a)
+  requires forall* x. p x
+  ensures  p x
 
-val elim_forall
-    (#a:Type)
-    (#p:a->slprop)
-    (x:a)
-: stt_ghost unit emp_inames
-    (forall* x. p x)
-    (fun _ -> p x)
-
-val intro_forall
-    (#a:Type)
-    (#p:a->slprop)
-    (v:slprop)
-    (f_elim : (x:a -> stt_ghost unit emp_inames v (fun _ -> p x)))
-: stt_ghost unit emp_inames
-    v
-    (fun _ -> forall* x. p x)
+ghost
+fn intro_forall u#a
+  (#a:Type u#a)
+  (#p:a->slprop)
+  (v:slprop)
+  (f_elim : (x:a -> stt_ghost unit emp_inames v (fun _ -> p x)))
+  requires v
+  ensures  forall* x. p x
 
 val slprop_equiv_forall
     (#a:Type)

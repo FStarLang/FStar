@@ -18,8 +18,8 @@ pub fn majority<A: Copy + PartialEq>(
     let votes_0 = votes[0];
     let mut cand = votes_0;
     while {
-        let vi = i;
-        vi < len
+        let __anf0 = i;
+        __anf0 < len
     } {
         let vi = i;
         let vk = k;
@@ -47,8 +47,8 @@ pub fn majority<A: Copy + PartialEq>(
         i = 0;
         k = 0;
         while {
-            let vi = i;
-            vi < len
+            let __anf0 = i;
+            __anf0 < len
         } {
             let vi = i;
             let vk1 = k;

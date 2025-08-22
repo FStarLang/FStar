@@ -94,7 +94,13 @@ and term_to_string' (level:string) (t:term) : T.Tac string
         (term_to_string' level p1)
         level
         (term_to_string' level p2)
-                          
+
+    | Tm_WithPure p n v ->
+      sprintf "(with_pure %s fun _ ->\n%s%s)"
+              (term_to_string' (indent level) p)
+              level
+              (term_to_string' (indent level) v)
+                      
     | Tm_ExistsSL _ _ _ ->
       let bs, body = collect_binders Tm_ExistsSL? t in
       sprintf "(exists* %s.\n%s%s)"
@@ -166,6 +172,12 @@ and term_to_doc t : T.Tac document
       the one introduced by ^/^ is breakable. *)
       group <|
         fold_right1 (fun p q -> (p ^^ doc_of_string " " ^^ star_doc) ^/^ q) docs
+    
+    | Tm_WithPure p n v ->
+      parens <|
+        prefix 2 1 (prefix 2 1 (doc_of_string "with_pure") (parens (term_to_doc p)
+            ^/^ doc_of_string "fun _ ->"))
+          (term_to_doc v)
 
     | Tm_ExistsSL _ _ _ ->
       let bs, body = collect_binders Tm_ExistsSL? t in
@@ -265,13 +277,11 @@ let rec st_term_to_string' (level:string) (t:st_term)
       sprintf "return%s %s"
         (if insert_eq then "" else "_noeq")
         (term_to_string term)
-      
-    | Tm_STApp {head; arg_qual; arg } ->
-      sprintf "(%s%s %s%s)"
-        (if dbg_printing then "<stapp>" else "")
-        (term_to_string head)
-        (qual_to_string arg_qual)
-        (term_to_string arg)
+
+    | Tm_ST { t } ->
+      sprintf "%s%s"
+        (if dbg_printing then "<st>" else "")
+        (term_to_string t)
         
     | Tm_Bind { binder; head; body } ->
       // if T.unseal binder.binder_ppname.name = "_"
@@ -482,6 +492,7 @@ let tag_of_term (t:term) =
   | Tm_Star _ _ -> "Tm_Star"
   | Tm_ExistsSL _ _ _ -> "Tm_ExistsSL"
   | Tm_ForallSL _ _ _ -> "Tm_ForallSL"
+  | Tm_WithPure .. -> "Tm_WithPure"
   | Tm_SLProp -> "Tm_SLProp"
   | Tm_Inames -> "Tm_Inames"
   | Tm_EmpInames -> "Tm_EmpInames"
@@ -493,7 +504,7 @@ let tag_of_st_term (t:st_term) =
   match t.term with
   | Tm_Return _ -> "Tm_Return"
   | Tm_Abs _ -> "Tm_Abs"
-  | Tm_STApp _ -> "Tm_STApp"
+  | Tm_ST _ -> "Tm_ST"
   | Tm_Bind _ -> "Tm_Bind"
   | Tm_TotBind _ -> "Tm_TotBind"
   | Tm_If _ -> "Tm_If"
@@ -538,7 +549,7 @@ let rec print_st_head (t:st_term)
   | Tm_Rewrite _ -> "Rewrite"
   | Tm_WithLocal _ -> "WithLocal"
   | Tm_WithLocalArray _ -> "WithLocalArray"
-  | Tm_STApp { head = p } -> print_head p
+  | Tm_ST { t = p } -> print_head p
   | Tm_IntroPure _ -> "IntroPure"
   | Tm_IntroExists _ -> "IntroExists"
   | Tm_ElimExists _ -> "ElimExists"  
@@ -568,7 +579,7 @@ let rec print_skel (t:st_term) =
   | Tm_Rewrite _ -> "Rewrite"
   | Tm_WithLocal _ -> "WithLocal"
   | Tm_WithLocalArray _ -> "WithLocalArray"
-  | Tm_STApp { head = p } -> print_head p
+  | Tm_ST { t = p } -> print_head p
   | Tm_IntroPure _ -> "IntroPure"
   | Tm_IntroExists _ -> "IntroExists"
   | Tm_ElimExists _ -> "ElimExists"

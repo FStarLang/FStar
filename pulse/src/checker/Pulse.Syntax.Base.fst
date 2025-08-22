@@ -184,12 +184,9 @@ let rec eq_st_term (t1 t2:st_term)
       eq_ascription c1 c2 &&
       eq_st_term t1 t2
   
-    | Tm_STApp { head=h1; arg_qual=q1; arg=t1},
-      Tm_STApp { head=h2; arg_qual=q2; arg=t2} ->
-      eq_tm h1 h2 &&
-      eq_opt_dec q1 q2 eq_aqual &&
+    | Tm_ST { t=t1}, Tm_ST { t=t2 } ->
       eq_tm t1 t2
-
+      
     | Tm_Bind { binder=b1; head=t1; body=k1 },
       Tm_Bind { binder=b2; head=t2; body=k2 } ->
       eq_tm b1.binder_ty b2.binder_ty &&

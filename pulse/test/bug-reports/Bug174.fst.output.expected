@@ -1,11 +1,8 @@
->> Got issues: [
-* Error 19 at Bug174.fst(16,10-16,42):
+* Info at Bug174.fst(16,30-16,42):
+  - Expected failure:
   - Ill-typed term: !r
   - Assertion failed
   - The SMT solver could not prove the query. Use --query_stats for more
     details.
-  - Also see: Bug174.fst(16,30-16,42)
-  - Other related locations: Bug174.fst(16,39-16,40)
-  - See also Bug174.fst(15,1-17,10)
+  - See also Bug174.fst(16,39-16,40)
 
->>]

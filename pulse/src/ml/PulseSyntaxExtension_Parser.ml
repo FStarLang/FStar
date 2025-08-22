@@ -56,7 +56,6 @@ let rewrite_token (tok:FP.token)
     | COMMA -> PP.COMMA
     | CONJUNCTION -> PP.CONJUNCTION
     | DECREASES -> PP.DECREASES
-    | DEFAULT -> PP.DEFAULT
     | DISJUNCTION -> PP.DISJUNCTION
     | DOLLAR -> PP.DOLLAR 
     | DOT -> PP.DOT 
@@ -136,7 +135,8 @@ let rewrite_token (tok:FP.token)
     | OPINFIX0d s -> PP.OPINFIX0d s 
     | OPINFIX1 s -> PP.OPINFIX1 s 
     | OPINFIX2 s -> PP.OPINFIX2 s 
-    | OPINFIX3 s -> PP.OPINFIX3 s 
+    | OPINFIX3L s -> PP.OPINFIX3L s
+    | OPINFIX3R s -> PP.OPINFIX3R s
     | OPINFIX4 s -> PP.OPINFIX4 s 
     | OPPREFIX s -> PP.OPPREFIX s 
     | OP_MIXFIX_ACCESS s -> PP.OP_MIXFIX_ACCESS s 
@@ -153,6 +153,7 @@ let rewrite_token (tok:FP.token)
     | PRAGMA_RESTART_SOLVER -> PP.PRAGMA_RESTART_SOLVER 
     | PRAGMA_SET_OPTIONS -> PP.PRAGMA_SET_OPTIONS 
     | PRAGMA_SHOW_OPTIONS -> PP.PRAGMA_SHOW_OPTIONS
+    | PRAGMA_CHECK -> PP.PRAGMA_CHECK
     | PRIVATE -> PP.PRIVATE 
     | QMARK -> PP.QMARK 
     | QMARK_DOT -> PP.QMARK_DOT 
@@ -188,7 +189,6 @@ let rewrite_token (tok:FP.token)
     | TOTAL -> PP.TOTAL 
     | TRUE -> PP.TRUE 
     | TRY -> PP.TRY 
-    | TVAR s -> PP.TVAR s 
     | TYPE -> PP.TYPE 
     | TYP_APP_GREATER -> PP.TYP_APP_GREATER 
     | TYP_APP_LESS -> PP.TYP_APP_LESS 
@@ -233,7 +233,7 @@ let parse_decl (s:string) (r:range) =
     Inr (Some (FStarC_Errors_Msg.mkmsg "Syntax error", r))
 
  
-let parse_peek_id (s:string) (r:range) : (string, FStarC_Pprint.document list * range) either =
+let parse_peek_id (s:string) (r:range) : (string, FStar_Pprint.document list * range) either =
   (* print_string ("About to parse <" ^ s ^ ">"); *)
   let fn = file_of_range r in
   let lexbuf, lexer = lexbuf_and_lexer s r in

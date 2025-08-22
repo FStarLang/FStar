@@ -1,5 +1,5 @@
->> Got issues: [
-* Error 19 at Bug416.fst(14,19-14,22):
+* Info at Bug416.fst(14,19-14,22):
+  - Expected failure:
   - Ill-typed term: Bug416.foo 2
   - Expected a term of type slprop
   - Assertion failed
@@ -7,4 +7,3 @@
     details.
   - See also Bug416.fst(8,23-8,28)
 
->>]
