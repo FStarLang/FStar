@@ -174,37 +174,33 @@ let is_fvar_app (t:term) : option (R.name &
 
 let is_arrow (t:term) : option (binder & option qualifier & comp) =
   match R.inspect_ln_unascribe t with
-  | R.Tv_Arrow b c ->
+  | R.Tv_Arrow b c -> (
     let {ppname;qual;sort} = R.inspect_binder b in
-    begin match qual with
-          | _ ->
-            let q = readback_qual qual in
-            let c_view = R.inspect_comp c in
-            let ret (c_t:R.typ) =
-              let binder_ty = sort in
-              let? c =
-                match readback_comp c_t with
-                | Some c -> Some c <: option Pulse.Syntax.Base.comp
-                | None -> None in
-              Some (mk_binder_ppname
-                      binder_ty
-                      (mk_ppname ppname (T.range_of_term t)),
-                      q,
-                      c) in
-                      
-            begin match c_view with
-            | R.C_Total c_t -> ret c_t
-            | R.C_Eff _ eff_name c_t _ _ ->
-              //
-              // Consider Tot effect with decreases also
-              //
-              if eff_name = tot_lid
-              then ret c_t
-              else None
-            | _ -> None
-            end
-    end
-          
+    let q = readback_qual qual in
+    let c_view = R.inspect_comp c in
+    let ret (c_t:R.typ) =
+      let binder_ty = sort in
+      let? c =
+        match readback_comp c_t with
+        | Some c -> Some c <: option Pulse.Syntax.Base.comp
+        | None -> None in
+      Some (mk_binder_ppname
+              binder_ty
+              (mk_ppname ppname (T.range_of_term t)),
+              q,
+              c)
+    in
+    match c_view with
+    | R.C_Total c_t -> ret c_t
+    | R.C_Eff _ eff_name c_t _ _ ->
+      //
+      // Consider Tot effect with decreases also
+      //
+      if eff_name = tot_lid
+      then ret c_t
+      else None
+    | _ -> None
+  )
   | _ -> None
 
 // TODO: write it better, with pattern matching on reflection syntax
