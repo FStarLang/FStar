@@ -79,7 +79,7 @@ let tm_let (t e1 e2:term) rng : term =
            rng
 
 let tm_pureapp (head:term) (q:option qualifier) (arg:term) : term =
-  set_range (R.mk_app head [(arg, elab_qual q)])
+  set_range (R.mk_app head [(arg, elab_qual_for_application q)])
             (union_ranges (range_of_term head) (range_of_term arg))
 
 let tm_pureabs (ppname:R.ppname_t) (ty : term) (q : option qualifier) (body:term) rng : term =
