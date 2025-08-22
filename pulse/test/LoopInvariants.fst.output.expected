@@ -1,0 +1,24 @@
+* Info at LoopInvariants.fst(64,17-64,20):
+  - Expected failure:
+  - When using multiple invariants, they must all be in the "new" style without a binder.
+
+* Info at LoopInvariants.fst(77,9-77,10):
+  - Expected failure:
+  - Failed to discharge match guard for goal:
+      Pulse.Lib.Reference.pts_to s 2
+    with resource from context:
+      Pulse.Lib.Reference.pts_to s 3
+  - Assertion failed
+  - The SMT solver could not prove the query. Use --query_stats for more
+    details.
+
+* Info at LoopInvariants.fst(88,9-88,10):
+  - Expected failure:
+  - Failed to discharge match guard for goal:
+      Pulse.Lib.Reference.pts_to s 2
+    with resource from context:
+      Pulse.Lib.Reference.pts_to s 3
+  - Assertion failed
+  - The SMT solver could not prove the query. Use --query_stats for more
+    details.
+
