@@ -797,9 +797,9 @@ let is_stateful_application (g:env) (e:term)
   RU.record_stats "Pulse.is_stateful_application" fun _ -> 
   let head, args = T.collect_app_ln e in
   if Nil? args then None else
-  match RU.tc_term_phase1 (elab_env g) head false false with
+  match RU.tc_term_phase1 (elab_env g) head false with
   | None, _ -> None
-  | Some (_, ht), _ -> 
+  | Some (_, ht, _), _ -> 
     let head_t = wr ht (T.range_of_term ht) in
     match is_stateful_arrow g (Some (C_Tot head_t)) args [] with 
     | None -> None

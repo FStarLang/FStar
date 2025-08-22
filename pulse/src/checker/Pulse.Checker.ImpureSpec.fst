@@ -63,7 +63,7 @@ let rec get_rewrites_to_from_post (g: env) xres (post: slprop) : T.Tac (option R
 
 let mk_uvar (g: env) (ty: term) : T.Tac term =
   // FIXME
-  tc_term_phase1_with_type g tm_unknown false ty
+  fst (tc_term_phase1_with_type g tm_unknown ty)
 
 let prove_this (g: env) (goal: slprop) (ctxt: list slprop) : T.Tac (option (list slprop)) =
   match inspect_term goal with
@@ -124,7 +124,7 @@ let prove (g: env) (goal: slprop) (ctxt: slprop) (r: range) : T.Tac unit =
     ] (Some r)
 
 let symb_eval_stateful_app (g: env) (ctxt: slprop) (t: term) : T.Tac R.term =
-  let t, ty = tc_term_phase1 g t false in
+  let t, ty, _ = tc_term_phase1 g t in
   debug g (fun _ -> [ text "impure spec inferred type"; pp t; pp ty ]);
   match readback_comp ty with
   | None | Some (C_Tot ..) ->
@@ -158,7 +158,7 @@ let rec symb_eval_subterms (g:env) (ctxt: ctxt) (t:R.term) : T.Tac (bool & R.ter
     let x = fresh g in
     let ppname = mk_ppname_no_range (T.unseal b.ppname) in
     let changed1, b_ty = symb_eval_subterms g ctxt b.sort in
-    let b_ty, b_u = tc_term_phase1 g b_ty false in
+    let b_ty, b_u = tc_type_phase1 g b_ty in
     debug g (fun _ -> [text "symb eval subterms abs 1"; pp changed1; pp b_ty]);
     let b = { b with sort = b_ty } in
     let g' = push_binding g x ppname b.sort in
@@ -176,7 +176,7 @@ let rec symb_eval_subterms (g:env) (ctxt: ctxt) (t:R.term) : T.Tac (bool & R.ter
     let x = fresh g in
     let ppname = mk_ppname_no_range (T.unseal b.ppname) in
     let changed1, b_ty = symb_eval_subterms g ctxt b.sort in
-    let b_ty, b_u = tc_term_phase1 g b_ty false in
+    let b_ty, b_u = tc_type_phase1 g b_ty in
     debug g (fun _ -> [text "symb eval subterms refine 1"; pp changed1; pp b_ty]);
     let b = { b with sort = b_ty } in
     let g' = push_binding g x ppname b.sort in
@@ -309,12 +309,12 @@ let inspect_ast_term (t: term) : term_view =
   | _ ->
     default_view
 
-let tc_term_phase1_with_type_twice g t must_tot ty =
+let tc_term_phase1_with_type_twice g t ty =
   // If we call phase1 TC only once, then the universe instantiation in
   // coercion-inserted reveal calls remains a uvar.
-  let t = tc_term_phase1_with_type g t must_tot ty in
-  let t = tc_term_phase1_with_type g t must_tot ty in
-  t
+  let t, eff = tc_term_phase1_with_type g t ty in
+  let t, eff = tc_term_phase1_with_type g t ty in
+  t, eff
 
 let or_emp (t: option slprop) : slprop =
   match t with Some t -> t | None -> tm_emp
@@ -330,7 +330,7 @@ let rec purify_spec_core (g: env) (ctxt: ctxt) (ts: list slprop) : T.Tac (option
     | Tm_ExistsSL _ b body ->
       let x = fresh g in
       let px = b.binder_ppname, x in
-      let x_ty, x_u = tc_type_phase1 g b.binder_ty false in
+      let x_ty, x_u = tc_type_phase1 g b.binder_ty in
       let b = { b with binder_ty = x_ty } in
       let g' = push_binding g x (fst px) x_ty in
       let body = open_term_nv body px in
@@ -345,7 +345,7 @@ let rec purify_spec_core (g: env) (ctxt: ctxt) (ts: list slprop) : T.Tac (option
       let x = fresh g in
       let px = n, x in
       let _, p = symb_eval_subterms g ctxt p in
-      let p, _ = tc_type_phase1 g p false in
+      let p, _ = tc_type_phase1 g p in
       let x_ty = mk_squash u0 p in
       let g' = push_binding g x (fst px) x_ty in
       let body = open_term_nv body px in
@@ -356,7 +356,7 @@ let rec purify_spec_core (g: env) (ctxt: ctxt) (ts: list slprop) : T.Tac (option
     | _ ->
       let _, t = symb_eval_subterms g ctxt t in
       debug g (fun _ -> [text "purify spec atom 1"; pp t]);
-      let t = tc_term_phase1_with_type_twice g t true tm_slprop in
+      let t, _ = tc_term_phase1_with_type_twice g t tm_slprop in
 
       let steps = [unascribe; primops; iota; delta_attr ["Pulse.Lib.Core.pulse_eager_unfold"]] in
       let t = T.norm_term_env (elab_env g) steps t in
@@ -383,7 +383,7 @@ and extrude (g: env) (ctxt: ctxt) (todo: list slprop) (ts: list slprop) : T.Tac 
     | Tm_WithPure p n body ->
       let x = fresh g in
       let px = n, x in
-      let p, _ = tc_type_phase1 g p false in
+      let p, _ = tc_type_phase1 g p in
       let x_ty = mk_squash u0 p in
       let g' = push_binding g x (fst px) x_ty in
       let body = open_term_nv body px in
@@ -417,7 +417,7 @@ let purify_spec (g: env) (ctxt: ctxt) (t0: slprop) : T.Tac slprop =
   // TODO: check that xs is not free in t
   // If we call phase1 TC only once, then the universe instantiation in
   // op_Exists_Star can remain unresolved.
-  let t = tc_term_phase1_with_type g t true tm_slprop in
+  let t, _ = tc_term_phase1_with_type g t tm_slprop in
   debug g (fun _ -> [ text "purified" ^/^ pp t0; text "to" ^/^ pp t ]);
   t
 

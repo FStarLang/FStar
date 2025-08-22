@@ -180,14 +180,17 @@ let lax_check_term_with_unknown_universes (g:TcEnv.env) (e:S.term)
     | Some None -> None
     | Some (Some x) -> Some x
 
-let tc_term_phase1 (g:TcEnv.env) (e:S.term) (must_tot:bool) (instantiate_imp:bool) =
+let tc_term_phase1 (g:TcEnv.env) (e:S.term) (instantiate_imp:bool) =
   let issues, res = FStarC_Errors.catch_errors (fun _ ->
     let g = TcEnv.set_range g e.pos in
     let g = {g with phase1=true; admit=true; instantiate_imp} in
-    let e, t, guard = g.typeof_tot_or_gtot_term g e must_tot in
+    let e, c, guard = FStarC_TypeChecker_TcTerm.tc_tot_or_gtot_term g e in
+    let t = c.res_typ in
+    let c = FStarC_TypeChecker_Normalize.maybe_ghost_to_pure_lcomp g c in
+    let eff = if FStarC_TypeChecker_Common.is_total_lcomp c then FStarC_TypeChecker_Core.E_Total else FStarC_TypeChecker_Core.E_Ghost in
     let guard = FStarC_TypeChecker_Rel.solve_deferred_constraints g guard in
     let guard = FStarC_TypeChecker_Rel.resolve_implicits g guard in
-    e, t) in
+    e, t, eff) in
   res, issues
 
 let teq_nosmt_force (g:TcEnv.env) (ty1:S.term) (ty2:S.term) =
