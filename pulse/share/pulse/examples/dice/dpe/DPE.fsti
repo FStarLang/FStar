@@ -15,6 +15,7 @@
 *)
 
 module DPE
+#lang-pulse
 open Pulse.Lib.Pervasives
 open DPETypes
 open EngineTypes
@@ -392,17 +393,16 @@ let initialize_context_client_perm (sid:sid_t) (uds:Seq.seq U8.t) =
   exists* t. sid_pts_to trace_ref sid t **
              pure (current_state t == G_Available (Engine_context_repr uds))
 
-val initialize_context (sid:sid_t) 
+fn initialize_context (sid:sid_t) 
   (t:G.erased trace { trace_valid_for_initialize_context t })
   (#p:perm) (#uds_bytes:Ghost.erased (Seq.seq U8.t))
   (uds:A.larray U8.t (SZ.v uds_len)) 
-  : stt unit
-        (requires
-           pts_to uds #p uds_bytes **
-           sid_pts_to trace_ref sid t)
-        (ensures fun b ->
-           pts_to uds #p uds_bytes **
-           initialize_context_client_perm sid uds_bytes)
+requires
+  pts_to uds #p uds_bytes **
+  sid_pts_to trace_ref sid t
+ensures
+  pts_to uds #p uds_bytes **
+  initialize_context_client_perm sid uds_bytes
 
 noextract
 let trace_and_record_valid_for_derive_child (t:trace) (r:repr_t) : prop =
@@ -428,16 +428,16 @@ let derive_child_client_perm (sid:sid_t) (t0:trace) (repr:repr_t) (res:bool)
     exists* t1. sid_pts_to trace_ref sid t1 **
                 pure (derive_child_post_trace repr t1)
 
-val derive_child (sid:sid_t)
+fn derive_child (sid:sid_t)
   (t:G.erased trace)
   (record:record_t)
   (#rrepr:erased repr_t { trace_and_record_valid_for_derive_child t rrepr })
-  : stt bool
-        (requires
-           record_perm record 1.0R rrepr **
-           sid_pts_to trace_ref sid t)
-        (ensures fun b ->
-           derive_child_client_perm sid t rrepr b)
+requires
+  record_perm record 1.0R rrepr **
+  sid_pts_to trace_ref sid t
+returns b:bool
+ensures
+  derive_child_client_perm sid t rrepr b
 
 noextract
 let trace_valid_for_close (t:trace) : prop =
@@ -451,14 +451,13 @@ let session_closed_client_perm (sid:sid_t) (t0:trace) =
   exists* t1. sid_pts_to trace_ref sid t1 **
               pure (current_state t1 == G_SessionClosed (G_InUse (current_state t0)))
 
-val close_session
+fn close_session
   (sid:sid_t)
   (t:G.erased trace { trace_valid_for_close t })
-  : stt unit
-        (requires
-           sid_pts_to trace_ref sid t)
-        (ensures fun m ->
-           session_closed_client_perm sid t)
+requires
+  sid_pts_to trace_ref sid t
+ensures
+  session_closed_client_perm sid t
 
 noextract
 let trace_valid_for_certify_key (t:trace) : prop =
@@ -470,22 +469,22 @@ let certify_key_client_perm (sid:sid_t) (t0:trace) : slprop =
   exists* t1. sid_pts_to trace_ref sid t1 **
               pure (current_state t1 == current_state t0)
 
-val certify_key (sid:sid_t)
+fn certify_key (sid:sid_t)
   (pub_key:A.larray U8.t 32)
   (crt_len:U32.t)
   (crt:A.larray U8.t (U32.v crt_len))
-  (t:G.erased trace { trace_valid_for_certify_key t })
-  : stt U32.t
-        (requires
-           sid_pts_to trace_ref sid t **
-           (exists* pub_key_repr crt_repr.
-              pts_to pub_key pub_key_repr **
-              pts_to crt crt_repr))
-        (ensures fun _ ->
-           certify_key_client_perm sid t **
-           (exists* pub_key_repr crt_repr.
-              pts_to pub_key pub_key_repr **
-              pts_to crt crt_repr))
+  (t:G.erased trace { trace_valid_for_certify_key t })  
+requires
+  sid_pts_to trace_ref sid t **
+  (exists* pub_key_repr crt_repr.
+      pts_to pub_key pub_key_repr **
+      pts_to crt crt_repr)
+returns U32.t
+ensures
+  certify_key_client_perm sid t **
+  (exists* pub_key_repr crt_repr.
+      pts_to pub_key pub_key_repr **
+      pts_to crt crt_repr)
 
 noextract
 let trace_valid_for_sign (t:trace) : prop =
@@ -497,19 +496,18 @@ let sign_client_perm (sid:sid_t) (t0:trace) : slprop =
   exists* t1. sid_pts_to trace_ref sid t1 **
               pure (current_state t1 == current_state t0)
 
-val sign (sid:sid_t)
+fn sign (sid:sid_t)
   (signature:A.larray U8.t 64)
   (msg_len:SZ.t { SZ.v msg_len < pow2 32 })
   (msg:A.larray U8.t (SZ.v msg_len))
   (t:G.erased trace { trace_valid_for_sign t })
-  : stt unit
-        (requires
-           sid_pts_to trace_ref sid t **
-           (exists* signature_repr msg_repr.
-              pts_to signature signature_repr **
-              pts_to msg msg_repr))
-        (ensures fun _ ->
-           certify_key_client_perm sid t **
-           (exists* signature_repr msg_repr.
-              pts_to signature signature_repr **
-              pts_to msg msg_repr))
+requires
+  sid_pts_to trace_ref sid t **
+  (exists* signature_repr msg_repr.
+    pts_to signature signature_repr **
+    pts_to msg msg_repr)
+ensures
+  certify_key_client_perm sid t **
+  (exists* signature_repr msg_repr.
+    pts_to signature signature_repr **
+    pts_to msg msg_repr)
