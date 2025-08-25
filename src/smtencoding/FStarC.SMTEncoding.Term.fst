@@ -917,16 +917,19 @@ and declToSmt z3options decl =
 
 and mkPrelude z3options =
   let basic = z3options ^
-                "(declare-sort FString)\n\
+                "(declare-sort FString 0)\n\
                 (declare-fun FString_constr_id (FString) Int)\n\
                 \n\
-                (declare-sort Term)\n\
+                (declare-sort Term 0)\n\
                 (declare-fun Term_constr_id (Term) Int)\n\
-                (declare-sort Dummy_sort)\n\
+                (declare-sort Dummy_sort 0)\n\
                 (declare-fun Dummy_value () Dummy_sort)\n\
-                (declare-datatypes () ((Fuel \n\
-                                        (ZFuel) \n\
-                                        (SFuel (prec Fuel)))))\n\
+(declare-datatypes\n\
+  ((Fuel 0))\n\
+  ((\n\
+   (ZFuel)\n\
+   (SFuel (prec Fuel))\n\
+  )))\n\
                 (declare-fun MaxIFuel () Fuel)\n\
                 (declare-fun MaxFuel () Fuel)\n\
                 (declare-fun PreType (Term) Term)\n\
