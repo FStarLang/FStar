@@ -236,8 +236,8 @@ let op_to_string = function
   | Not -> "not"
   | And -> "and"
   | Or  -> "or"
-  | Imp -> "implies"
-  | Iff -> "iff"
+  | Imp -> "=>"
+  | Iff -> "="
   | Eq  -> "="
   | LT  -> "<"
   | LTE -> "<="
@@ -953,10 +953,10 @@ and mkPrelude z3options =
                 (declare-fun ApplyTT (Term Term) Term)\n\
                 (declare-fun Prec (Term Term) Bool)\n\
                 (assert (forall ((x Term) (y Term) (z Term))\n\
-                                (! (implies (and (Prec x y) (Prec y z)) (Prec x z))\n\
+                                (! (=> (and (Prec x y) (Prec y z)) (Prec x z))\n\
                                    :pattern ((Prec x z) (Prec x y)))))\n\
                 (assert (forall ((x Term) (y Term))\n\
-                         (implies (Prec x y)\n\
+                         (=> (Prec x y)\n\
                                   (not (Prec y x)))))\n\
                 (declare-fun Closure (Term) Term)\n\
                 (declare-fun ConsTerm (Term Term) Term)\n\
@@ -1009,17 +1009,17 @@ and mkPrelude z3options =
 
    let lex_ordering = "\n(declare-fun Prims.lex_t () Term)\n\
                       (assert (forall ((t1 Term) (t2 Term) (e1 Term) (e2 Term))\n\
-                                                          (! (iff (Valid (Prims.precedes t1 t2 e1 e2))\n\
-                                                                  (Valid (Prims.precedes Prims.lex_t Prims.lex_t e1 e2)))\n\
-                                                          :pattern (Prims.precedes t1 t2 e1 e2))))\n\
+                                                          (! (= (Valid (Prims.precedes t1 t2 e1 e2))\n\
+                                                                (Valid (Prims.precedes Prims.lex_t Prims.lex_t e1 e2)))\n\
+                                                          :pattern ((Prims.precedes t1 t2 e1 e2)))))\n\
                       (assert (forall ((t1 Term) (t2 Term))\n\
-                                      (! (iff (Valid (Prims.precedes Prims.lex_t Prims.lex_t t1 t2)) \n\
-                                              (Prec t1 t2))\n\
+                                      (! (= (Valid (Prims.precedes Prims.lex_t Prims.lex_t t1 t2)) \n\
+                                            (Prec t1 t2))\n\
                                       :pattern ((Prims.precedes Prims.lex_t Prims.lex_t t1 t2)))))\n" in
 
    let valid_intro =
      "(assert (forall ((e Term) (t Term))\n\
-                      (! (implies (HasType e t)\n\
+                      (! (=> (HasType e t)\n\
                                   (Valid t))\n\
                        :pattern ((HasType e t)\n\
                                  (Valid t))\n\
@@ -1027,7 +1027,7 @@ and mkPrelude z3options =
    in
    let valid_elim =
      "(assert (forall ((t Term))\n\
-                      (! (implies (Valid t)\n\
+                      (! (=> (Valid t)\n\
                                   (exists ((e Term)) (HasType e t)))\n\
                        :pattern ((Valid t))\n\
                        :qid __prelude_valid_elim)))\n"
