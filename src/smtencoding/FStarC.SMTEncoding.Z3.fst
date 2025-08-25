@@ -521,9 +521,9 @@ let doZ3Exe (log_file:_) (r:Range.t) (fresh:bool) (input:string) (label_messages
           core |> List.filter (fun name ->
             not (BU.for_some (fun wl -> BU.contains name wl) whitelist) &&
             not (BU.starts_with name "binder_") &&
-            not (BU.starts_with name "@query") &&
-            not (BU.starts_with name "@MaxFuel") &&
-            not (BU.starts_with name "@MaxIFuel") &&
+            not (BU.starts_with name "_query") &&
+            not (BU.starts_with name "_MaxFuel") &&
+            not (BU.starts_with name "_MaxIFuel") &&
             not (BU.for_some (fun name' -> name=name') names))
         in
         // Format.print2 "Query %s: Pruned theory would keep %s\n" queryid (String.concat ", " names);

@@ -256,8 +256,8 @@ let with_fuel_and_diagnostics settings label_assumptions =
         Term.Caption (Format.fmt2 "<fuel='%s' ifuel='%s'>"
                         (show n)
                         (show i));
-        Util.mkAssume(mkEq(mkApp("MaxFuel", []), n_fuel n), None, "@MaxFuel_assumption");
-        Util.mkAssume(mkEq(mkApp("MaxIFuel", []), n_fuel i), None, "@MaxIFuel_assumption");
+        Util.mkAssume(mkEq(mkApp("MaxFuel", []), n_fuel n), None, "_MaxFuel_assumption");
+        Util.mkAssume(mkEq(mkApp("MaxIFuel", []), n_fuel i), None, "_MaxIFuel_assumption");
         settings.query_decl        //the query itself
     ]
     @label_assumptions         //the sub-goals that are currently disabled

@@ -438,7 +438,7 @@ let encode_free_var uninterpreted env fv tt t_norm quals :decls_t & env_t =
               let guard, decls1 = match pre_opt with
                 | None -> mk_and_l guards, decls1
                 | Some p -> let g, ds = encode_formula p env' in mk_and_l (g::guards), decls1@ds in
-              let dummy_var = mk_fv ("@dummy", dummy_sort) in
+              let dummy_var = mk_fv ("_dummy", dummy_sort) in
               let dummy_tm = Term.mkFreeV dummy_var Range.dummyRange in
               let should_thunk () =
                 //See note [Thunking Nullary Constants] in FStarC.SMTEncoding.Term.fs
@@ -782,7 +782,7 @@ let encode_top_level_let :
                 let vars, binder_guards, env', binder_decls, _ = encode_binders None binders env' in
                 let vars, app =
                     if fvb.fvb_thunked && vars = []
-                    then let dummy_var = mk_fv ("@dummy", dummy_sort) in
+                    then let dummy_var = mk_fv ("_dummy", dummy_sort) in
                          let dummy_tm = Term.mkFreeV dummy_var Range.dummyRange in
                          let app = Term.mkApp (fvb.smt_id, [dummy_tm]) (S.range_of_lbname lbn) in
                          [dummy_var], app
@@ -941,10 +941,10 @@ let encode_top_level_let :
                      "equation_with_fuel_" ^g) in
             let eqn_f = Util.mkAssume(mkForall (S.range_of_lbname lbn) ([[app]], vars, mkEq(app, gmax)),
                                     Some "Correspondence of recursive function to instrumented version",
-                                    ("@fuel_correspondence_"^g)) in
+                                    ("_fuel_correspondence_"^g)) in
             let eqn_g' = Util.mkAssume(mkForall (S.range_of_lbname lbn) ([[gsapp]], fuel::vars, mkEq(gsapp,  mk_g_app (Term.n_fuel 0::vars_tm))),
                                     Some "Fuel irrelevance",
-                                    ("@fuel_irrelevance_" ^g)) in
+                                    ("_fuel_irrelevance_" ^g)) in
             let aux_decls, g_typing =
               let gapp = mk_g_app (fuel_tm::vars_tm) in
               let tok_corr =
