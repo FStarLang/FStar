@@ -191,8 +191,7 @@ let rec freevars t = match t.tm with
   | FreeV fv -> [fv]
   | App(_, tms) -> List.collect freevars tms
   | Quant(_, _, _, _, t)
-  | Labeled(t, _, _)
-  | LblPos(t, _) -> freevars t
+  | Labeled(t, _, _) -> freevars t
   | Let (es, body) -> List.collect freevars (body::es)
 
 //memo-ized
@@ -219,8 +218,7 @@ let free_top_level_names (t:term)
     | Let(tms, t) ->
       let acc = List.fold_left free_top_level_names acc tms in
       free_top_level_names acc t
-    | Labeled(t, _, _)
-    | LblPos(t, _) -> free_top_level_names acc t
+    | Labeled(t, _, _) -> free_top_level_names acc t
     | _ -> acc
   in
   free_top_level_names (empty()) t
@@ -292,7 +290,6 @@ let rec hash_of_term' t =
   | App(op, tms) -> "("^(op_to_string op)^(List.map hash_of_term tms |> String.concat " ")^")"
   | Labeled(t, _, _) ->
     hash_of_term t // labels are semantically irrelevant, ignore them
-  | LblPos(t, r) -> "(! " ^hash_of_term t^ " :lblpos " ^r^ ")"
   | Quant(qop, pats, wopt, sorts, body) ->
       "("
     ^ (qop_to_string qop)
@@ -469,8 +466,7 @@ let check_pattern_ok (t:term) : option term =
             else aux_l terms
         | Labeled(t, _, _) ->
           aux t
-        | Quant _
-        | LblPos _ -> Some t
+        | Quant _ -> Some t
     and aux_l ts =
         match ts with
         | [] -> None
@@ -490,7 +486,6 @@ let check_pattern_ok (t:term) : option term =
   | FreeV  fv               -> Format.fmt1 "(FreeV %s)" (fv_name fv)
   | App (op, l)             -> Format.fmt2 "(%s %s)" (op_to_string op) (print_smt_term_list l)
   | Labeled(t, r1, r2)      -> Format.fmt2 "(Labeled '%s' %s)" (Errors.Msg.rendermsg r1) (print_smt_term t)
-  | LblPos(t, s)            -> Format.fmt2 "(LblPos %s %s)" s (print_smt_term t)
   | Quant (qop, l, _, _, t) -> Format.fmt3 "(%s %s %s)" (qop_to_string qop) (print_smt_term_list_list l) (print_smt_term t)
   | Let (es, body) -> Format.fmt2 "(let %s %s)" (print_smt_term_list es) (print_smt_term body)
 
@@ -545,7 +540,6 @@ let abstr fvs t = //fvs is a subset of the free vars of t; the result closes ove
           end
         | App(op, tms) -> mkApp'(op, List.map (aux ix) tms) t.rng
         | Labeled(t, r1, r2) -> mk (Labeled(aux ix t, r1, r2)) t.rng
-        | LblPos(t, r) -> mk (LblPos(aux ix t, r)) t.rng
         | Quant(qop, pats, wopt, vars, body) ->
           let n = List.length vars in
           mkQuant t.rng false (qop, pats |> List.map (List.map (aux (ix + n))), wopt, vars, aux (ix + n) body)
@@ -570,7 +564,6 @@ let inst tms t =
       else t
     | App(op, tms) -> mkApp'(op, List.map (aux shift) tms) t.rng
     | Labeled(t, r1, r2) -> mk (Labeled(aux shift t, r1, r2)) t.rng
-    | LblPos(t, r) -> mk (LblPos(aux shift t, r)) t.rng
     | Quant(qop, pats, wopt, vars, body) ->
       let m = List.length vars in
       let shift = shift + m in
@@ -801,7 +794,6 @@ let termToSmt
         | App(op, []) -> doc_of_string (op_to_string op)
         | App(op, tms) -> form (op_to_string op) (List.map (aux n names) tms)
         | Labeled(t, _, _) -> aux n names t
-        | LblPos(t, s) -> mk_tag (aux n names t) [mk_lblpos s]
         | Quant(qop, pats, wopt, sorts, body) ->
           let qid = next_qid () in
           let names, binders, n = name_binders_inner None names n sorts in
