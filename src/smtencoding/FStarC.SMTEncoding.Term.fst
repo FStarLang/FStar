@@ -268,10 +268,12 @@ let op_to_string = function
   | Var s -> s
 
 let weightToSmtStr : option int -> string = function
+  | _ when Options.Ext.enabled "cvc" -> ""
   | None -> ""
   | Some i -> Format.fmt1 ":weight %s\n" (show i)
 
 let weightToSmt : option int -> list document = function
+  | _ when Options.Ext.enabled "cvc" -> []
   | None -> []
   | Some i -> [nest 1 (group (doc_of_string ":weight" ^/^ doc_of_string (show i)))]
 

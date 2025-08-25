@@ -2029,8 +2029,13 @@ let encode_query use_env_msg (tcenv:Env.env) (q:S.term)
         @qdecls
         @(caption |> mk_decls_trivial) |> recover_caching_and_update_env env |> decls_list_of in  //recover caching and flatten
 
-    let qry = Util.mkAssume(mkNot phi, Some "query", (varops.mk_unique "@query")) in
-    let suffix = [Term.Echo "<labels>"] @ label_suffix @ [Term.Echo "</labels>"; Term.Echo "Done!"] in
+    let qry = Util.mkAssume(mkNot phi, Some "query", (varops.mk_unique "_query")) in
+    let suffix =
+      if Options.Ext.enabled "cvc"
+      then []
+      else [Term.Echo "<labels>"] @ label_suffix @ [Term.Echo "</labels>"]
+    in
+    let suffix = suffix @ [ Term.Echo "Done!"] in
     if Debug.medium () || !dbg_SMTEncoding || !dbg_SMTQuery
     then Format.print_string "} Done encoding\n";
     if Debug.medium () || !dbg_SMTEncoding || !dbg_Time
