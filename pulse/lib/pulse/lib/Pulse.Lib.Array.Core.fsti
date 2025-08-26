@@ -394,16 +394,18 @@ fn pts_to_range_gather
            pure (s0 == s1)
 
 (* Called by elaboration, not to be used directly. *)
-val with_local
+fn with_local u#a
   (#a:Type0)
   (init:a)
   (len:SZ.t)
   (#pre:slprop)
-  (ret_t:Type)
+  (ret_t:Type u#a)
   (#post:ret_t -> slprop)
   (body:(arr:array a) -> stt ret_t (pre **
                                     (pts_to arr (Seq.create (SZ.v len) init) **
                                      (pure (is_full_array arr) **
                                       pure (length arr == SZ.v len))))
                                    (fun r -> post r ** (exists* v. pts_to arr v)))
-  : stt ret_t pre post
+  requires pre
+  returns r: ret_t
+  ensures post r

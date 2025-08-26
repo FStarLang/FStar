@@ -107,35 +107,21 @@ fn gather u#a (#a: Type u#a) (r:ref a) (#x0 #x1:erased a) (#p0 #p1:perm)
   fold (pts_to r #(p0 +. p1) x0)
 }
 
-(* this is universe-polymorphic in ret_t; so can't define it in Pulse yet *)
-
-fn alloc_with_frame u#a (#a: Type u#a) {| small_type u#a |} (init: a) pre
-  requires pre
-  returns r: ref a
-  ensures no_extrude <| (pre ** pts_to r init) ** pure (is_full_ref r)
+fn with_local u#a u#b
+  (#a:Type u#a) {| small_type u#a |}
+  (init:a)
+  (#pre:slprop)
+  (#ret_t:Type u#b)
+  (#post:ret_t -> slprop)
+  (body:(r:ref a) -> stt ret_t (pre ** pts_to r init)
+                               (fun v -> post v ** (exists* (x:a). pts_to r x)))
+  : stt ret_t pre (fun r -> post r) =
 {
-  alloc init
+  let x = alloc init;
+  let r = body x;
+  free x;
+  r
 }
-
-fn free_with_frame u#a (#a: Type u#a) (r:ref a) (frame:slprop)
-  requires no_extrude <| ((frame ** (exists* (x: a). pts_to r x)) ** pure (is_full_ref r))
-  ensures frame
-{
-  free r;
-}
-
-let with_local
-    (#a: Type u#a) {| small_type u#a |}
-    (init:a)
-    (#pre:slprop)
-    (#ret_t:Type u#b)
-    (#post:ret_t -> slprop) 
-    (body: (r:ref a -> stt ret_t (pre ** pts_to u#a r init) (fun v -> post v ** (exists* (x:a). pts_to u#a r x))))
-= bind_stt (alloc_with_frame init pre) fun r ->
-  bind_stt (frame_stt (pure (is_full_ref r)) (body r)) fun ret ->
-  bind_stt (free_with_frame r _) fun _ ->
-  return_stt_noeq ret post
-  
 
 ghost
 fn pts_to_injective_eq

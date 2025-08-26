@@ -140,24 +140,7 @@ val with_local
   (#post:ret_t -> slprop)
   (body:(r:ref a) -> stt ret_t (pre ** pts_to r init)
                               (fun v -> post v ** (exists* v. pts_to r v)))
-  : stt ret_t pre post
-(* NOTE: Pulse does not have  universe polymorphism yet,
-(and ret_t is in a polymorphic universe), so we retain the val above.
-The fn below is what it would look like internally in Pulse, but we have to
-fix a universe for ret_t. *)
-// 
-// fn with_local
-//   (#a:Type0)
-//   (init:a)
-//   (#pre:slprop)
-//   (#ret_t:Type u#0)
-//   (#post:ret_t -> slprop)
-//   (body : (r:ref a) -> stt ret_t (pre ** pts_to r init)
-//                                  (fun v -> post v ** op_exists_Star (pts_to r)))
-//   requires pre
-//   returns  v : ret_t
-//   ensures  post v
-// 
+  : stt ret_t pre (fun r -> post r)
 
 [@@allow_ambiguous]
 ghost
