@@ -127,8 +127,7 @@ let triggers_of_term (t:term)
     | Quant(Forall, triggers, _, _, _) ->
       triggers |> List.map (fun disjunct ->
       disjunct |> List.fold_left (fun out t -> union out (free_top_level_names t)) (empty()))
-    | Labeled (t, _, _)
-    | LblPos (t, _) -> aux t
+    | Labeled (t, _, _) -> aux t
     | _ -> []
   in aux t
 

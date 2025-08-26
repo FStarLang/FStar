@@ -116,8 +116,6 @@ let label_goals use_env_msg  //when present, provides an alternate error message
         | Real _ ->
           labels, q
 
-        | LblPos _ -> failwith "Impossible" //these get added after errorReporting instrumentation only
-
         | Labeled(arg, [d], label_range) when Errors.Msg.renderdoc d = "Could not prove post-condition" ->
           //printfn "GOT A LABELED WP IMPLICATION\n\t%s"
           //        (Term.print_smt_term q);
