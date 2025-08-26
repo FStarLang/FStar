@@ -275,7 +275,7 @@ fn rec on_range_snoc
   if (i = j) 
   {
     rewrite (on_range p i j) as emp;
-    rewrite no_extrude (p j ** emp) as (on_range p i (j + 1))
+    rewrite (p j ** emp) as (on_range p i (j + 1))
   }
   else
   {

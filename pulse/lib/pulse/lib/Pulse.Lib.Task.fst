@@ -712,7 +712,7 @@ fn unfold_all_tasks_done_cons (t : task_t) (ts : list task_t)
   rewrite
     (all_tasks_done (t :: ts))
   as
-    no_extrude ((exists* (st : task_state).
+    ((exists* (st : task_state).
       pure (st == Done \/ st == Claimed) **
       AR.snapshot t.h.g_state st) **
       all_tasks_done ts)
@@ -730,7 +730,7 @@ fn fold_all_tasks_done_cons (t : task_t) (ts : list task_t)
   ensures  all_tasks_done (t :: ts)
 {
   // This should not be so hard.
-  rewrite no_extrude
+  rewrite
     ((exists* (st : task_state).
       pure (st == Done \/ st == Claimed) **
       AR.snapshot t.h.g_state st) **
@@ -1062,7 +1062,7 @@ fn rec grab_work'' (p:pool) (v_runnable : list task_t)
       match st {
         Ready -> {
           let topt = Some #task_t t;
-          rewrite no_extrude (emp ** state_res (up t.pre) (up t.post) t.h.g_state Ready)
+          rewrite (emp ** state_res (up t.pre) (up t.post) t.h.g_state Ready)
                as (state_res (up t.pre) (up t.post) t.h.g_state Running ** up t.pre);
 
           t.h.state := Running;
@@ -1074,7 +1074,7 @@ fn rec grab_work'' (p:pool) (v_runnable : list task_t)
           intro_state_pred_Running t.pre t.post t.h;
           add_one_state_pred t ts;
 
-          rewrite no_extrude (up t.pre ** pts_to t.h.state #0.5R Running ** pure (List.memP t v_runnable) ** task_thunk_typing t)
+          rewrite up t.pre ** pts_to t.h.state #0.5R Running ** pure (List.memP t v_runnable) ** task_thunk_typing t
                as vopt topt (fun t -> up t.pre ** pts_to t.h.state #0.5R Running ** pure (List.memP t v_runnable) ** task_thunk_typing t);
           
           topt

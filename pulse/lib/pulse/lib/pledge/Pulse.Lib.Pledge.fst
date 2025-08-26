@@ -295,7 +295,7 @@ fn do_elim_body_l
     by the other subpledge, so we just extract our resource. *)
     assert (r1 |-> false);
     r1 := true;
-    rewrite no_extrude <| emp ** split_switch is false true f v1 v2
+    rewrite emp ** split_switch is false true f v1 v2
         as  split_switch is true true f v1 v2 ** v1;
 
     (* This should just disappear when we start normalizing
