@@ -61,6 +61,7 @@ let const_eq c1 c2 =
   | C_Reify, C_Reify -> true
   | C_Reflect n1, C_Reflect n2 -> n1 = n2
   | C_Real s1, C_Real s2 -> s1 = s2
+  | C_Char s1, C_Char s2 -> s1 = s2
   | _ -> false
 
 val term_eq         : comparator_for term
