@@ -311,6 +311,7 @@ let preprocess_abs
   = let annot, t = arrow_of_abs g t in
     debug_abs g (fun _ -> Printf.sprintf "arrow_of_abs = %s\n" (P.term_to_string annot));
     let annot, _ = Pulse.Checker.Pure.instantiate_term_implicits g annot None false in
+    let annot = RU.hnf_lax (elab_env g) annot in
     let abs = rebuild_abs g t annot in
     debug_abs g (fun _ -> Printf.sprintf "rebuild_abs = %s\n" (P.st_term_to_string abs));
     abs

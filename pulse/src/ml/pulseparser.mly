@@ -175,8 +175,7 @@ pulseDeclEOF:
     }
 
 pulseBinderList:
-  /* |  { [] } We don't yet support nullary functions */
-  | bs=nonempty_list(multiBinder)
+  | bs=list(multiBinder)
     {  bs }
 
 localFnDefn:

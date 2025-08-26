@@ -3,28 +3,28 @@
   - Current context:
       AdmitDoesNotSimpl.foo x
   - In typing environment:
-      y#285 : Prims.int,
-      x#284 : Prims.int
+      y#287 : Prims.int,
+      x#286 : Prims.int
 
 * Info at AdmitDoesNotSimpl.fst(20,2-20,9):
   - Admitting continuation.
   - Current context:
       AdmitDoesNotSimpl.foo x
   - In typing environment:
-      y#285 : Prims.int,
-      x#284 : Prims.int
+      y#287 : Prims.int,
+      x#286 : Prims.int
 
 * Info at AdmitDoesNotSimpl.fst(27,2-27,9):
   - Admitting continuation.
   - Current context:
       AdmitDoesNotSimpl.foo 2
   - In typing environment:
-      uu___0#83 : Prims.unit
+      uu___0#84 : Prims.unit
 
 * Info at AdmitDoesNotSimpl.fst(35,2-35,9):
   - Admitting continuation.
   - Current context:
       AdmitDoesNotSimpl.foo 2
   - In typing environment:
-      uu___0#83 : Prims.unit
+      uu___0#84 : Prims.unit
 
