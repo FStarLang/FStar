@@ -122,11 +122,8 @@ fn proof
 }
 
 
-let cheat_proof (i:iname)
-  : (_:unit) ->
-      stt_ghost unit (add_inv emp_inames i)
-        (requires pts_to done #0.5R true ** (inv i inv_p ** pts_to claimed #0.5R false))
-        (ensures fun _ -> pts_to done #0.5R true ** goal)
+let cheat_proof (i:iname) ()
+  : pledge_f #[i] (pts_to done #0.5R true) #(inv i inv_p ** pts_to claimed #0.5R false) goal
   = admit() //proof is atomic, not ghost
 
 // #set-options "--debug SMTQuery"
@@ -154,12 +151,7 @@ fn setup (_:unit)
   let i = new_invariant inv_p;
   inames_live_inv i inv_p;
   GhostSet.lemma_equal_intro (add_inv emp_inames i) (single i);
-  make_pledge
-    (add_inv emp_inames i)
-    (pts_to done #0.5R true) //f
-    goal  //v
-    (inv i inv_p ** pts_to claimed #0.5R false)  //extra
-    (cheat_proof i);
+  make_pledge _ _ _ _ (cheat_proof i);
 
   i
 }

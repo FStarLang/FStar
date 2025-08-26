@@ -19,6 +19,8 @@ module Pulse.Lib.Pledge
 
 open Pulse.Lib.Pervasives
 
+module T = FStar.Tactics
+
 val pledge (is:inames) (f:slprop) (v:slprop) : slprop
 
 ghost
@@ -40,9 +42,13 @@ fn return_pledge (f v:slprop)
   requires v
   ensures pledge emp_inames f v
 
+[@@erasable]
+let pledge_f (#[T.exact (`emp_inames)] is: inames) (f: slprop) (#[T.exact (`emp)] extra: slprop) (v: slprop) =
+  stt_ghost unit is (f ** extra) (fun _ -> f ** v)
+
 ghost
 fn make_pledge (is:inames) (f:slprop) (v:slprop) (extra:slprop)
-  (k:unit -> stt_ghost unit is (f ** extra) (fun _ -> f ** v))
+  (k: unit -> pledge_f #is f #extra v)
   requires extra ** inames_live is
   ensures pledge is f v
 
@@ -57,37 +63,57 @@ fn squash_pledge (is:inames) (f:slprop) (v1:slprop)
   requires pledge is f (pledge is f v1)
   ensures pledge is f v1
 
+[@@erasable]
+let bind_pledge_f (#[T.exact (`emp_inames)] is) (#[T.exact (`emp_inames)] is_k: inames { inames_subset is_k is })
+    f (#[T.exact (`emp)] extra) v1 v2 =
+  stt_ghost unit is_k (f ** extra ** v1) (fun _ -> f ** pledge is f v2)
+
 // Unclear how useful/convenient this is
 ghost
 fn bind_pledge (#is:inames) (#f:slprop) (#v1:slprop) (#v2:slprop)
         (extra : slprop)
         (#is_k:inames { inames_subset is_k is })
-        (k:unit -> stt_ghost unit is_k (f ** extra ** v1) (fun _ -> f ** pledge is f v2))
+        (k:unit -> bind_pledge_f #is #is_k f #extra v1 v2)
   requires pledge is f v1 ** extra
   ensures pledge is f v2
 
 (* Weaker variant, the proof does not use f. It's implemented
 by framing k with f and then using the above combinator. Exposing
 only in case it's useful for inference. *)
+[@@erasable]
+let bind_pledge_f' (#[T.exact (`emp_inames)] is) (#[T.exact (`emp_inames)] is_k: inames { inames_subset is_k is })
+    f (#[T.exact (`emp)] extra) v1 v2 =
+  stt_ghost unit is_k (extra ** v1) (fun _ -> pledge is f v2)
+
 ghost
 fn bind_pledge' (#is:inames) (#f:slprop) (#v1:slprop) (#v2:slprop)
         (extra : slprop)
         (#is_k:inames { inames_subset is_k is })
-        (k:unit -> stt_ghost unit is_k (extra ** v1) (fun _ -> pledge is f v2))
+        (k:unit -> bind_pledge_f' #is #is_k f #extra v1 v2)
   requires pledge is f v1 ** extra
   ensures pledge is f v2
+
+[@@erasable]
+let rewrite_pledge_full_f (#[T.exact (`emp_inames)] is_k:inames)
+    (f:slprop) (v1 : slprop) (v2 : slprop) =
+  stt_ghost unit is_k (f ** v1) (fun _ -> f ** v2)
 
 ghost
 fn rewrite_pledge_full (#is:inames) (#f:slprop) (v1 : slprop) (v2 : slprop)
   (#is_k:inames { inames_subset is_k is })
-  (k:unit -> stt_ghost unit is_k (f ** v1) (fun _ -> f ** v2))
+  (k:unit -> rewrite_pledge_full_f #is_k f v1 v2)
   requires pledge is f v1
   ensures pledge is f v2
+
+[@@erasable]
+let rewrite_pledge_f (#[T.exact (`emp_inames)] is_k:inames)
+    (v1 : slprop) (v2 : slprop) =
+  stt_ghost unit is_k v1 (fun _ -> v2)
 
 ghost
 fn rewrite_pledge (#is:inames) (#f:slprop) (v1 : slprop) (v2 : slprop)
   (#is_k:inames { inames_subset is_k is })
-  (k:unit -> stt_ghost unit is_k v1 (fun _ -> v2))
+  (k:unit -> rewrite_pledge_f #is_k v1 v2)
   requires pledge is f v1
   ensures  pledge is f v2
 

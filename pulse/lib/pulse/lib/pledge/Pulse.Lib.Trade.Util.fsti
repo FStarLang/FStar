@@ -17,7 +17,6 @@ ghost
 fn refl
   (#[T.exact (`emp_inames)] is:inames)
   (p: slprop)
-  requires emp
   ensures (trade #is p p)
 
 ghost

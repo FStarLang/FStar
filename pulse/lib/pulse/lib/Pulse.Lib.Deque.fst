@@ -867,21 +867,14 @@ fn rec is_deque_suffix_nolast_helper
       unfold is_deque_suffix p [hd] prev tail last;
       rewrite each p as tail;
       with v. assert (pts_to tail v);
-      ghost fn pf ()
-        requires no_extrude <|
-          emp **
-          pts_to tail ({ v with dnext = last' })
-        ensures
-          is_deque_suffix p [hd] prev tail last'
+      ghost fn pf () :
+        trade_f (pts_to tail ({ v with dnext = last' }))
+          (is_deque_suffix p [hd] prev tail last') =
       {
         rewrite each tail as p;
         fold (is_deque_suffix p [hd] prev tail last');
       };
-      intro_trade
-        (pts_to tail { v with dnext = last' })
-        (is_deque_suffix p [hd] prev tail last')
-        emp
-        pf;
+      intro_trade _ _ _ pf;
       rewrite each [hd] as l;
       v;
     }
@@ -896,27 +889,16 @@ fn rec is_deque_suffix_nolast_helper
 
       let v = is_deque_suffix_nolast_helper p' (h2 :: tl2) (Some p) tail last last';
 
-      ghost fn pf ()
-        requires no_extrude <|
-          (
-            pts_to p vp **
-            trade (pts_to tail { v with dnext = last' }) (is_deque_suffix p' (h2 :: tl2) (Some p) tail last')
-          ) **
-          pts_to tail ({ v with dnext = last' })
-        ensures
-          is_deque_suffix p (hd :: h2 :: tl2) prev tail last'
+      ghost fn pf () :
+        trade_f
+          (pts_to tail ({ v with dnext = last' }))
+          #(pts_to p vp ** trade (pts_to tail { v with dnext = last' }) (is_deque_suffix p' (h2 :: tl2) (Some p) tail last'))
+          (is_deque_suffix p (hd :: h2 :: tl2) prev tail last') =
       {
         elim_trade _ _;
         fold (is_deque_suffix p (hd :: h2 :: tl2) prev tail last');
       };
-      intro_trade
-        (pts_to tail { v with dnext = last' })
-        (is_deque_suffix p (hd :: h2 :: tl2) prev tail last')
-        (
-          pts_to p vp **
-          trade (pts_to tail { v with dnext = last' }) (is_deque_suffix p' (h2 :: tl2) (Some p) tail last')
-        )
-        pf;
+      intro_trade _ _ _ pf;
 
       rewrite each (hd :: h2 :: tl2) as l;
       v;

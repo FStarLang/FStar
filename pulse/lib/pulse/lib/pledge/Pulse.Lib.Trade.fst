@@ -21,7 +21,7 @@ open Pulse.Lib.Pervasives
 
 
 let trade_elim_t is hyp extra concl : Type u#5 =
-  unit -> stt_ghost unit is (extra ** hyp) (fun _ -> concl)
+  unit -> trade_f #is hyp #extra concl
 
 let trade_elim_exists (is:inames) (hyp extra concl:slprop) : slprop =
   pure (squash (trade_elim_t is hyp extra concl))
@@ -34,11 +34,7 @@ ghost
 fn intro_trade
   (#[T.exact (`emp_inames)]is:inames)
   (hyp concl extra:slprop)
-  (f_elim: unit -> (
-    stt_ghost unit is
-    (extra ** hyp)
-    (fun _ -> concl)
-  ))
+  (f_elim: unit -> trade_f #is hyp #extra concl)
   requires extra
   ensures trade #is hyp concl
 {
@@ -87,7 +83,7 @@ fn deconstruct_trade (is:inames) (hyp concl: slprop)
   res
 }
 
-
+let call #t #is #req #ens (h: unit -> stt_ghost is t req (fun x -> ens x)) = h
 
 ghost
 fn elim_trade
@@ -100,7 +96,7 @@ fn elim_trade
   let res = deconstruct_trade is hyp concl;
   let f = dsnd res;
   rewrite dfst res as res._1;
-  f ()
+  call f ()
 }
 
 ghost
@@ -114,17 +110,14 @@ fn trade_sub_inv
   let res = deconstruct_trade is1 hyp concl;
 
   ghost
-  fn aux ()
-    requires (dfst res ** hyp)
-    ensures concl
-    opens is2
+  fn aux () : trade_f #is2 hyp #(dfst res) concl =
   {
     let f = dsnd res;
     rewrite dfst res as res._1;
-    f ()
+    call f ()
   };
   
-  intro_trade #is2 hyp concl (dfst res) aux
+  intro_trade _ _ _ aux
 }
 
 
@@ -137,15 +130,12 @@ fn trade_map
   ensures  trade #is p r
 {
   ghost
-  fn aux ()
-    requires trade #is p q ** p
-    ensures  r
-    opens is
+  fn aux () : trade_f #is p #(trade #is p q) r =
   {
     elim_trade #is _ _;
     f ();
   };
-  intro_trade #is p r (trade #is p q) aux;
+  intro_trade _ _ _ aux;
 }
 
 
@@ -157,15 +147,12 @@ fn trade_compose
   ensures  trade #is p r
 {
   ghost
-  fn aux ()
-    requires no_extrude <| (trade #is p q ** trade #is q r) ** p
-    ensures  r
-    opens is
+  fn aux () : trade_f #is p #(trade #is p q ** trade #is q r) r =
   {
     elim_trade #is p _;
     elim_trade #is _ _;
   };
-  intro_trade #is p r (trade #is p q ** trade #is q r) aux;
+  intro_trade _ _ _ aux;
 }
 
 ghost
@@ -175,14 +162,11 @@ fn eq_as_trade
   ensures  p2 @==> p1
 {
   ghost
-  fn aux ()
-    requires no_extrude <| emp ** p2
-    ensures p1
+  fn aux () : trade_f p2 p1 =
   {
     rewrite p2 as p1;
   };
-  intro_trade p2 p1 emp aux;
-  ();
+  intro_trade _ _ _ aux;
 }
 
 ghost

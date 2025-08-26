@@ -12,13 +12,22 @@ val incr_atomic_box (r:B.box int) (#n:erased int)
         (B.pts_to r n) 
         (fun i -> B.pts_to r i ** pure (i == n + 1))
 
+inline_for_extraction
+let next_f (inv: perm -> int -> slprop) =    p:perm -> i:erased int -> stt int (inv p i) (fun j -> inv p j ** pure (i < j))
+inline_for_extraction
+let share_f (inv: perm -> int -> slprop) =   p:perm -> i:erased int -> stt_ghost unit emp_inames (inv p i) (fun y -> inv (p /. 2.0R) i ** inv (p /. 2.0R) i)
+inline_for_extraction
+let gather_f (inv: perm -> int -> slprop) =  p:perm -> q:perm -> i:erased int -> j:erased int -> stt_ghost unit emp_inames (inv p i ** inv q j) (fun y -> inv (p +. q) i)
+inline_for_extraction
+let destroy_f (inv: perm -> int -> slprop) = i:erased int -> stt unit (inv 1.0R i) (fun _ -> emp)
+
 noeq
 type ctr = {
     inv:     perm -> int -> slprop;
-    next:    p:perm -> i:erased int -> stt int (inv p i) (fun j -> inv p j ** pure (i < j));
-    share:   p:perm -> i:erased int -> stt_ghost unit emp_inames (inv p i) (fun y -> inv (p /. 2.0R) i ** inv (p /. 2.0R) i);
-    gather:  p:perm -> q:perm -> i:erased int -> j:erased int -> stt_ghost unit emp_inames (inv p i ** inv q j) (fun y -> inv (p +. q) i);
-    destroy: i:erased int -> stt unit (inv 1.0R i) (fun _ -> emp);
+    next:    next_f inv;
+    share:   share_f inv;
+    gather:  gather_f inv;
+    destroy: destroy_f inv;
 }
 
 let next c #p #i = c.next p i
@@ -53,12 +62,11 @@ ensures c.inv 1.0R 0
     MR.take_snapshot mr #1.0R 0;
     fold (inv_core x mr);
     let ii = CI.new_cancellable_invariant (inv_core x mr);
+    
+    with inv. assert pure (inv == (fun p (i:int) ->
+        Pulse.Lib.Core.inv (iname_of ii) (cinv_vp ii (inv_core x mr)) ** CI.active ii p ** MR.snapshot mr i));
 
-    fn next (p:perm) (i:erased int)
-    requires no_extrude <| inv (iname_of ii) (cinv_vp ii (inv_core x mr)) ** CI.active ii p ** MR.snapshot mr i
-    returns j:int
-    ensures no_extrude <| (inv (iname_of ii) (cinv_vp ii (inv_core x mr)) ** CI.active ii p ** MR.snapshot mr j) ** pure (i < j)
-    { 
+    fn next (#_: unit) : next_f inv = p i {
         later_credit_buy 1;
         with_invariants (iname_of ii) {
             later_elim _;
@@ -77,34 +85,20 @@ ensures c.inv 1.0R 0
     };
 
     ghost
-    fn share (p:perm) (i:erased int)
-    requires no_extrude <| inv (iname_of ii) (cinv_vp ii (inv_core x mr)) ** CI.active ii p ** MR.snapshot mr i
-    ensures no_extrude <|
-            (inv (iname_of ii) (cinv_vp ii (inv_core x mr)) ** CI.active ii (p /. 2.0R) ** MR.snapshot mr i) **
-            (inv (iname_of ii) (cinv_vp ii (inv_core x mr)) ** CI.active ii (p /. 2.0R) ** MR.snapshot mr i)
-    {
+    fn share (#_: unit) : share_f inv = p i {
         MR.dup_snapshot mr;
         dup_inv (iname_of ii) _;
         CI.share ii;
     };
 
     ghost
-    fn gather (p q:perm) (i j:erased int)
-    requires no_extrude <|
-            (inv (iname_of ii) (cinv_vp ii (inv_core x mr)) ** CI.active ii p ** MR.snapshot mr i) **
-            (inv (iname_of ii) (cinv_vp ii (inv_core x mr)) ** CI.active ii q ** MR.snapshot mr j)
-    ensures no_extrude <|
-            (inv (iname_of ii) (cinv_vp ii (inv_core x mr)) ** CI.active ii (p +. q) ** MR.snapshot mr i)
-    {
+    fn gather (#_: unit) : gather_f inv = p q i j {
         CI.gather #p #q ii;
         drop_ (MR.snapshot mr j);
-        drop_ (inv (iname_of ii) (cinv_vp ii (inv_core x mr)));
+        drop_ (Pulse.Lib.Core.inv (iname_of ii) (cinv_vp ii (inv_core x mr)));
     };
 
-    fn destroy (i:erased int)
-    requires no_extrude <| inv (iname_of ii) (cinv_vp ii (inv_core x mr)) ** CI.active ii 1.0R ** MR.snapshot mr i
-    ensures emp
-    {
+    fn destroy (#_: unit) : destroy_f inv = i {
         later_credit_buy 1;
         CI.cancel ii;
         unfold inv_core;
@@ -113,10 +107,9 @@ ensures c.inv 1.0R 0
         drop_ (MR.snapshot mr _);
     };
 
-    let c = { inv = (fun p i -> inv (iname_of ii) (cinv_vp ii (inv_core x mr)) ** CI.active ii p ** MR.snapshot mr i);
-              next; share; gather; destroy };
+    let c = { inv; next; share; gather; destroy };
             
-    rewrite no_extrude (inv (iname_of ii) (cinv_vp ii (inv_core x mr)) ** CI.active ii 1.0R ** MR.snapshot mr 0) as (c.inv 1.0R 0);
+    rewrite inv 1.0R 0 as (c.inv 1.0R 0);
     c
 }
 

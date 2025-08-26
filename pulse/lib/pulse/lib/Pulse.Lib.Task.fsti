@@ -21,6 +21,9 @@ open Pulse.Lib.Pervasives
 open Pulse.Lib.Pledge
 module T = FStar.Tactics.V2
 
+inline_for_extraction
+let task_f pre post = stt unit pre (fun _ -> post)
+
 val handle : Type0
 val pool : Type0
 val pool_alive (#[T.exact (`1.0R)] f : perm) (p:pool) : slprop
@@ -32,7 +35,7 @@ fn spawn
   (#pf: perm)
   (#pre: slprop)
   (#post: slprop)
-  (f : unit -> stt unit pre (fun _ -> post))
+  (f : unit -> task_f pre post)
   requires pool_alive #pf p ** pre
   returns h : handle
   ensures pool_alive #pf p ** joinable p post h
@@ -53,7 +56,7 @@ fn spawn_
   (#pf : perm)
   (#pre : slprop)
   (#post : slprop)
-  (f : unit -> stt unit (pre) (fun _ -> post))
+  (f : unit -> task_f pre post)
   requires pool_alive #pf p ** pre
   ensures pool_alive #pf p ** pledge [] (pool_done p) post
 

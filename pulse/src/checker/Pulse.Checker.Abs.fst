@@ -409,7 +409,10 @@ let maybe_rewrite_body_typing
                  #_ #_ #t' d t t_typing [hnf;delta]
         with
         | None -> 
-          Env.fail g (Some e.range) "Inferred type is incompatible with annotation"
+          Env.fail g (Some e.range)
+            (Printf.sprintf "Inferred type is incompatible with annotation.\nInferred: %s\nAnnotated: %s"
+              (P.term_to_string t')
+              (P.term_to_string t))
         | Some d -> 
           debug_abs g 
             (fun _ -> Printf.sprintf "maybe_rewrite_body_typing:{\nfrom %s\nto %s}\n" 

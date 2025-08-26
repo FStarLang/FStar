@@ -553,9 +553,8 @@ ensures
     c1 c1'
     c2 c2'
     i j;
-  ghost fn aux2 (_: unit)
-    requires no_extrude <| emp ** (seq_seq_match p c1' c2' i j)
-    ensures seq_seq_match p c1 c2 i j
+  ghost fn aux2 () :
+    trade_f (seq_seq_match p c1' c2' i j) (seq_seq_match p c1 c2 i j) =
   {
       seq_seq_match_weaken
         p p aux1
@@ -563,11 +562,7 @@ ensures
         c2' c2
         i j
   };
-  intro_trade
-    (seq_seq_match p c1' c2' i j)
-    (seq_seq_match p c1 c2 i j)
-    emp
-    aux2
+  intro_trade _ _ _ aux2
 }
 
 (* Going between `seq_list_match` and `seq_seq_match` *)
@@ -805,19 +800,12 @@ ensures
     (seq_list_match c l p ** (seq_list_match c l p @==> seq_seq_match p c (Seq.seq_of_list l) 0 (List.Tot.length l)))
 {
   seq_seq_match_seq_list_match p c l;
-  ghost fn aux (_: unit)
-  requires no_extrude <|
-    emp ** seq_list_match c l p
-  ensures
-    seq_seq_match p c (Seq.seq_of_list l) 0 (List.Tot.length l)
+  ghost fn aux () :
+    trade_f (seq_list_match c l p) (seq_seq_match p c (Seq.seq_of_list l) 0 (List.Tot.length l)) =
   {
     seq_list_match_seq_seq_match p c l
   };
-  intro_trade
-    (seq_list_match c l p)
-    (seq_seq_match p c (Seq.seq_of_list l) 0 (List.Tot.length l))
-    emp
-    aux
+  intro_trade _ _ _ aux
 }
 
 ghost fn seq_list_match_seq_seq_match_with_implies
@@ -833,19 +821,13 @@ ensures
     ))
 {
   seq_list_match_seq_seq_match p c l; 
-  ghost fn aux (_: unit)
-  requires no_extrude <|
-    emp ** seq_seq_match p c (Seq.seq_of_list l) 0 (List.Tot.length l)
-  ensures
-    seq_list_match c l p
+  ghost fn aux () :
+    trade_f (seq_seq_match p c (Seq.seq_of_list l) 0 (List.Tot.length l))
+      (seq_list_match c l p) =
   {
     seq_seq_match_seq_list_match p c l
   }; 
-  intro_trade
-    (seq_seq_match p c (Seq.seq_of_list l) 0 (List.Tot.length l))
-    (seq_list_match c l p)
-    emp
-    aux
+  intro_trade _ _ _ aux
 }
 
 ghost fn seq_list_match_length

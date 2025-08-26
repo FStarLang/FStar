@@ -32,9 +32,10 @@ fn trans_compose (#a #b #c:Type0) (p:a -> slprop) (q:b -> slprop) (r:c -> slprop
         requires ((forall* x. p x @==> q (f x)) ** (forall* x. q x @==> r (g x)))
         ensures p x @==> r (g (f x))
     {
-        ghost fn aux (_:unit) 
-        requires no_extrude ((forall* x. p x @==> q (f x)) ** (forall* x. q x @==> r (g x))) ** p x
-        ensures r (g (f x))
+        ghost fn aux () :
+            T.trade_f (p x)
+                #((forall* x. p x @==> q (f x)) ** (forall* x. q x @==> r (g x)))
+                (r (g (f x))) =
         {
             elim #_ #(fun x -> p x @==> q (f x)) x;
             T.elim_trade _ _;
@@ -82,9 +83,7 @@ fn intro_forall_imp (#a:Type0) (p q: a -> slprop) (r:slprop)
     ensures p x @==> q x
     {
         ghost
-        fn aux ()
-        requires r ** p x 
-        ensures q x
+        fn aux () : T.trade_f (p x) #r (q x) =
         {
             elim x;
         };

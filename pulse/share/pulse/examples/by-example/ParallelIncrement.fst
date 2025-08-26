@@ -40,15 +40,17 @@ ensures  (L.lock_alive l #p (exists* v. pts_to x #0.5R v)) ** R.pts_to x #0.5R (
     with p _v. rewrite (R.pts_to x #p _v) as (R.pts_to x #0.5R _v);
 }
 
+[@@erasable]
+let increment_f_f (x: ref nat) (pred qpred: nat -> slprop) =
+  v:nat -> stt_ghost unit emp_inames
+    (pred v ** qpred v ** R.pts_to x #0.5R (v + 1))
+    (fun _ -> pred (v + 1) ** qpred (v + 1) ** R.pts_to x #0.5R (v + 1))
 
 fn increment_f (x: ref nat)
                (#p:perm)
                (#pred #qpred: nat -> slprop)
                (l:L.lock)
-               (f: (v:nat -> stt_ghost unit
-                        emp_inames
-                        (pred v ** qpred v ** R.pts_to x #0.5R (v + 1))
-                        (fun _ -> pred (v + 1) ** qpred (v + 1) ** R.pts_to x #0.5R (v + 1))))
+               (f: increment_f_f x pred qpred)
 requires L.lock_alive l #p (exists* v. pts_to x #0.5R v ** pred v) ** R.pts_to x #0.5R 'i ** qpred 'i
 ensures  L.lock_alive l #p (exists* v. pts_to x #0.5R v ** pred v) ** R.pts_to x #0.5R ('i + 1) ** qpred ('i + 1)
  {
@@ -68,15 +70,17 @@ ensures  L.lock_alive l #p (exists* v. pts_to x #0.5R v ** pred v) ** R.pts_to x
 }
 
 
+[@@erasable]
+let increment_f2_f (x: ref int) (pred qpred: int -> slprop) =
+  v:int -> vq:int -> stt_ghost unit emp_inames
+    (pred v ** qpred vq ** pts_to x (v + 1))
+    (fun _ -> pred (v + 1) ** qpred (vq + 1) ** pts_to x (v + 1))
 
 fn increment_f2 (x: ref int)
                 (#p:perm)
                 (#pred #qpred: int -> slprop)
                 (l:L.lock)
-                (f: (v:int -> vq:int -> stt_ghost unit
-                        emp_inames
-                        (pred v ** qpred vq ** pts_to x (v + 1))
-                        (fun _ -> pred (v + 1) ** qpred (vq + 1) ** pts_to x (v + 1))))
+                (f: increment_f2_f x pred qpred)
 requires L.lock_alive l #p (exists* v. pts_to x v ** pred v) ** qpred 'i
 ensures L.lock_alive l #p (exists* v. pts_to x v ** pred v) ** qpred ('i + 1)
  {
@@ -112,21 +116,14 @@ ensures pts_to x ('i + 2)
     fn step
         (lr:GR.ref int)
         (b:bool { if b then lr == left else lr == right })
-        (v vq:int)
-      requires no_extrude <|
-        (exists* (vl vr:int).
-            pts_to left #0.5R vl **
-            pts_to right #0.5R vr **
-            pure (v == 'i + vl + vr)) **
-        pts_to lr #0.5R vq **
-        pts_to x (v + 1)
-      ensures no_extrude <|
-        (exists* (vl vr:int).
-            pts_to left #0.5R vl **
-            pts_to right #0.5R vr **
-            pure (v + 1 == 'i + vl + vr)) **
-        pts_to lr #0.5R (vq + 1) **
-        pts_to x (v + 1)
+        : increment_f2_f x
+          (fun v ->
+            exists* (vl vr:int).
+                pts_to left #0.5R vl **
+                pts_to right #0.5R vr **
+                pure (v == 'i + vl + vr))
+          (fun vq -> pts_to lr #0.5R vq)
+      = v vq
     { 
       if b
       {
@@ -373,16 +370,18 @@ ensures inv l invp ** qpred ('i + 1)
 
 module C = Pulse.Lib.CancellableInvariant
 
+[@@erasable]
+let atomic_increment_f6_f (x: ref int) (pred qpred: int -> slprop) =
+  v:int -> vq:int -> stt_ghost unit emp_inames
+    (pred v ** qpred vq ** pts_to x (v + 1))
+    (fun _ -> pred (v + 1) ** qpred (vq + 1) ** pts_to x (v + 1))
 
 fn atomic_increment_f6
         (x: ref int)
         (#p:_)
         (#pred #qpred: int -> slprop)
         (c:C.cinv)
-        (f: (v:int -> vq:int -> stt_ghost unit
-                  emp_inames
-                  (pred v ** qpred vq ** pts_to x (v + 1))
-                  (fun _ -> pred (v + 1) ** qpred (vq + 1) ** pts_to x (v + 1))))
+        (f: atomic_increment_f6_f x pred qpred)
 requires inv (C.iname_of c) (C.cinv_vp c (exists* v. pts_to x v ** pred v)) ** qpred 'i ** C.active c p
 ensures inv (C.iname_of c) (C.cinv_vp c (exists* v. pts_to x v ** pred v)) ** qpred ('i + 1) ** C.active c p
 {
@@ -422,21 +421,13 @@ ensures pts_to x ('i + 2)
     fn step
         (lr:GR.ref int)
         (b:bool { if b then lr == left else lr == right })
-        (v vq:int)
-      requires no_extrude <|
-        (exists* (vl vr:int).
+      : atomic_increment_f6_f x
+        (fun v -> exists* (vl vr:int).
             pts_to left #0.5R vl **
             pts_to right #0.5R vr **
-            pure (v == 'i + vl + vr)) **
-        pts_to lr #0.5R vq **
-        pts_to x (v + 1)
-      ensures no_extrude <|
-        (exists* (vl vr:int).
-            pts_to left #0.5R vl **
-            pts_to right #0.5R vr **
-            pure (v + 1 == 'i + vl + vr)) **
-        pts_to lr #0.5R (vq + 1) **
-        pts_to x (v + 1)
+            pure (v == 'i + vl + vr))
+        (fun vq -> pts_to lr #0.5R vq)
+      = v vq
     { 
       if b
       {

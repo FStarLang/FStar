@@ -9,17 +9,13 @@ ghost
 fn refl
   (#[T.exact (`emp_inames)] is:inames)
   (p: slprop)
-  requires emp
   ensures (trade #is p p)
 {
-  ghost fn aux (_: unit)
-    requires no_extrude <| emp ** p
-    ensures p
-    opens is
+  ghost fn aux () : trade_f #is p p =
   {
     ()
   };
-  intro_trade p p emp aux
+  intro _ _ _ aux
 }
 
 ghost
@@ -40,14 +36,9 @@ fn curry
    requires trade #is (p ** q) r
    ensures trade #emp_inames p (trade #is q r)
 {
-    ghost fn aux (_:unit)
-    requires (trade #is (p ** q) r) ** p
-    ensures trade #is q r
+    ghost fn aux () : trade_f p #(trade #is (p ** q) r) (trade #is q r) =
     { 
-        ghost fn aux (_:unit)
-        requires no_extrude ((trade #is (p ** q) r) ** p) ** q
-        ensures r
-        opens is
+        ghost fn aux () : trade_f #is q #((trade #is (p ** q) r) ** p) r =
         { 
             elim _ _;
         };
@@ -137,15 +128,11 @@ fn reg_l
   ensures (trade #is (p ** p1) (p ** p2))
 {
   ghost
-  fn aux
-    (_foo: unit)
-  requires ((trade #is p1 p2) ** (p ** p1))
-  ensures (p ** p2)
-  opens is
+  fn aux () : trade_f #is (p ** p1) #(trade #is p1 p2) (p ** p2) =
   {
     elim_trade #is p1 p2
   };
-  intro_trade (p ** p1) (p ** p2) (trade #is p1 p2) aux
+  intro _ _ _ aux
 }
 
 ghost
@@ -169,15 +156,11 @@ fn weak_concl_l
   ensures (trade #is p1 (p ** p2))
 {
   ghost
-  fn aux
-    (_foo: unit)
-    requires no_extrude ((trade #is p1 p2) ** p) ** p1
-    ensures p ** p2
-    opens is
+  fn aux () : trade_f #is p1 #(trade #is p1 p2 ** p) (p ** p2) =
   {
     elim_trade #is p1 p2
   };
-  intro_trade p1 (p ** p2) ((trade #is p1 p2) ** p) aux
+  intro _ _ _ aux
 }
 
 ghost
@@ -201,16 +184,12 @@ fn prod
   ensures (trade #is (l1 ** l2) (r1 ** r2))
 {
   ghost
-  fn aux
-    (_foo: unit)
-    requires no_extrude ((trade #is l1 r1) ** (trade #is l2 r2)) ** (l1 ** l2)
-    ensures r1 ** r2
-    opens is
+  fn aux () : trade_f #is (l1 ** l2) #(trade #is l1 r1 ** trade #is l2 r2) (r1 ** r2) =
   {
     elim_trade #is l1 r1;
     elim_trade #is l2 r2
   };
-  intro_trade (l1 ** l2) (r1 ** r2) ((trade #is l1 r1) ** (trade #is l2 r2)) aux
+  intro _ _ _ aux
 }
 
 ghost
@@ -222,11 +201,7 @@ fn rewrite_with_trade
 {
   rewrite p1 as p2;
   ghost
-  fn aux
-    (_: unit)
-    requires no_extrude <| emp ** p2
-    ensures p1
-    opens is
+  fn aux () : trade_f #is p2 p1 =
   {
     rewrite p2 as p1
   };

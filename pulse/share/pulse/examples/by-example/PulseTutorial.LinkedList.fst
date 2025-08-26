@@ -231,11 +231,8 @@ ensures
   (is_list n.tail tl @==> is_list (Some v) (n.head::tl))
 {
   ghost
-  fn aux ()
-  requires 
-    pts_to v n ** is_list n.tail tl
-  ensures 
-    is_list (Some v) (n.head::tl)
+  fn aux () :
+    trade_f (is_list n.tail tl) #(pts_to v n) (is_list (Some v) (n.head::tl)) =
   {
     intro_is_list_cons (Some v) v
   };

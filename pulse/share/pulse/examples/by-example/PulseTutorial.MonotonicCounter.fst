@@ -3,15 +3,27 @@ module PulseTutorial.MonotonicCounter
 open Pulse.Lib.Pervasives
 open FStar.Preorder
 module MR = Pulse.Lib.MonotonicGhostRef
+
+inline_for_extraction let next_f (inv: int -> slprop) =
+    i:erased int -> stt int (inv i) (fun y -> inv (i + 1) ** pure (y == reveal i))
+inline_for_extraction let destroy_f (inv: int -> slprop) =
+    i:erased int -> stt unit (inv i) (fun _ -> emp)
+inline_for_extraction let snap_f (inv: int -> slprop) (snapshot: int -> slprop) =
+    i:erased int -> stt_ghost unit emp_inames (inv i) (fun _ -> snapshot i ** inv i)
+inline_for_extraction let recall_f (inv: int -> slprop) (snapshot: int -> slprop) =
+    i:erased int -> j:erased int -> stt_ghost unit emp_inames (snapshot i ** inv j) (fun y -> snapshot i ** inv j ** pure (i <= j))
+inline_for_extraction let dup_f (snapshot: int -> slprop) =
+    i:erased int -> stt_ghost unit emp_inames (snapshot i) (fun y -> snapshot i ** snapshot i)
+
 noeq
 type ctr = {
     inv: int -> slprop;
     snapshot : int -> slprop;
-    next:    i:erased int -> stt int (inv i) (fun y -> inv (i + 1) ** pure (y == reveal i));
-    destroy: i:erased int -> stt unit (inv i) (fun _ -> emp);
-    snap:    i:erased int -> stt_ghost unit emp_inames (inv i) (fun _ -> snapshot i ** inv i);
-    recall:  i:erased int -> j:erased int -> stt_ghost unit emp_inames (snapshot i ** inv j) (fun y -> snapshot i ** inv j ** pure (i <= j));
-    dup:     i:erased int -> stt_ghost unit emp_inames (snapshot i) (fun y -> snapshot i ** snapshot i);
+    next: next_f inv;
+    destroy: destroy_f inv;
+    snap: snap_f inv snapshot;
+    recall: recall_f inv snapshot;
+    dup: dup_f snapshot;
 }
 
 let next c #i = c.next i
@@ -30,54 +42,32 @@ ensures c.inv 0
     open Pulse.Lib.Box;
     let x = alloc 0;
     let mr : MR.mref increases = MR.alloc #int #increases 0;
-    fn next (i:erased int)
-    requires pts_to x i ** MR.pts_to mr #1.0R i
-    returns j:int
-    ensures no_extrude <| (pts_to x (i + 1) ** MR.pts_to mr #1.0R (i + 1)) ** pure (j == reveal i)
-    {
+    with inv. assert pure (inv == (fun (i: int) -> pts_to x i ** MR.pts_to mr #1.0R i));
+    fn next (#_:unit) : next_f inv = i {
         let j = !x;
         x := j + 1;
         MR.update mr (j + 1);
         j
     };
-    fn destroy (i:erased int)
-    requires pts_to x i ** MR.pts_to mr #1.0R i
-    ensures emp
-    {
+    fn destroy (#_:unit) : destroy_f inv = i {
        free x;
        drop_ (MR.pts_to mr _);
     };
+    with snapshot. assert pure (snapshot == MR.snapshot mr);
     ghost
-    fn snap (i:erased int)
-    requires pts_to x i ** MR.pts_to mr #1.0R i
-    ensures  no_extrude <| MR.snapshot mr i ** (pts_to x i ** MR.pts_to mr #1.0R i)
-    {
+    fn snap (#_:unit) : snap_f inv snapshot = i {
         MR.take_snapshot mr #1.0R i;
     };
     ghost
-    fn recall (i:erased int) (j:erased int)
-    requires no_extrude <| MR.snapshot mr i ** (pts_to x j ** MR.pts_to mr #1.0R j)
-    ensures  no_extrude <| MR.snapshot mr i ** (pts_to x j ** MR.pts_to mr #1.0R j) ** pure (i <= j)
-    {
+    fn recall (#_:unit) : recall_f inv snapshot = i j {
         MR.recall_snapshot mr;
     };
     ghost
-    fn dup (i:erased int)
-    requires MR.snapshot mr i
-    ensures MR.snapshot mr i ** MR.snapshot mr i
-    {
+    fn dup (#_:unit) : dup_f snapshot = i {
         MR.dup_snapshot mr;
     };
-    let c = { 
-        inv = (fun i -> pts_to x i ** MR.pts_to mr #1.0R i);
-        snapshot = MR.snapshot mr;
-        next;
-        destroy;
-        snap;
-        recall;
-        dup 
-    };
-    rewrite (pts_to x 0 ** MR.pts_to mr #1.0R 0) as (c.inv 0);
+    let c = { inv; snapshot; next; destroy; snap; recall; dup };
+    rewrite (inv 0) as (c.inv 0);
     c
 }
 

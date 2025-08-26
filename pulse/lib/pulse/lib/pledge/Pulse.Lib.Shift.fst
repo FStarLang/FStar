@@ -22,7 +22,7 @@ open Pulse.Lib.Pervasives
 
 
 let shift_elim_t is hyp extra concl : Type u#5 =
-  unit -> stt_ghost unit is (extra ** hyp) (fun _ -> concl)
+  unit -> shift_f #is hyp #extra concl
 
 let psquash (a:Type u#a) : prop = squash a
 
@@ -50,11 +50,7 @@ fn intro_shift_alt
   (hyp concl:slprop)
   (extra:slprop)
   {| d: duplicable extra |}
-  (f_elim: unit -> (
-    stt_ghost unit is
-    (extra ** hyp)
-    (fun _ -> concl)
-  ))
+  (f_elim: unit -> shift_f #is hyp #extra concl)
 requires extra
 ensures shift #is hyp concl
 {
@@ -136,6 +132,8 @@ ensures reveal (dfst res)
   res
 }
 
+let call #t #is #req #ens (h: unit -> stt_ghost is t req (fun x -> ens x)) = h
+
 ghost
 fn elim_shift_alt
   (is:inames)
@@ -148,7 +146,7 @@ opens is
   let f = dsnd res;
   rewrite (dfst res) as res._1;
   let g = snd f;
-  g()
+  call g()
 }
 
 let elim_shift #is = elim_shift_alt is
@@ -167,16 +165,13 @@ ensures shift #is2 hyp concl
   let f = snd (dsnd res);
 
   ghost
-  fn aux ()
-    requires (dfst res ** hyp)
-    ensures concl
-    opens is2
+  fn aux () : shift_f #is2 hyp #(dfst res) concl =
   {
     rewrite (dfst res) as res._1;
-    f ()
+    call f ()
   };
 
-  intro_shift #is2 hyp concl (dfst res) #d aux
+  intro_shift _ _ _ aux
 
 }
 
@@ -199,9 +194,7 @@ ensures shift_elim_exists is hyp extra concl ** shift_elim_exists is hyp extra c
 }
 
 ghost
-fn shift_dup #is p q
-requires shift #is p q
-ensures shift #is p q ** shift #is p q
+fn shift_dup #is p q : duplicable_f (shift #is p q) =
 {
   unfold (shift #is p q);
   dup_extra_duplicable _;
@@ -221,9 +214,7 @@ instance shift_duplicable
 }
 
 ghost
-fn dup_star (p q:slprop) {| duplicable p |} {| duplicable q |}
-requires p ** q
-ensures no_extrude <| (p ** q) ** (p ** q)
+fn dup_star (p q:slprop) {| duplicable p |} {| duplicable q |} : duplicable_f (p ** q) =
 {
   open Pulse.Class.Duplicable;
   dup p ();
@@ -242,14 +233,11 @@ requires shift #is p q ** shift #is q r
 ensures  shift #is p r
 {
   ghost
-  fn aux ()
-    requires no_extrude <| (shift #is p q ** shift #is q r) ** p
-    ensures r
-    opens is
+  fn aux () : shift_f #is p #(shift #is p q ** shift #is q r) r =
   {
     elim_shift #is p _;
     elim_shift #is _ _;
   };
-  intro_shift #is p r (shift #is p q ** shift #is q r) aux;
+  intro_shift _ _ _ aux;
 
 }

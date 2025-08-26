@@ -119,11 +119,14 @@ let div_perm (p:perm) (n:pos) : perm =
 // }
 // 
 
+inline_for_extraction
+let simple_for_f (pre post : nat -> slprop) (r : slprop) =
+  i:nat -> stt unit (r ** pre i) (fun () -> (r ** post i))
 
 fn rec simple_for
    (pre post : (nat -> slprop))
    (r : slprop) // This resource is passed around through iterations.
-   (f : (i:nat -> stt unit (r ** pre i) (fun () -> (r ** post i))))
+   (f : simple_for_f pre post r)
    (n : nat)
    requires r ** on_range pre 0 n
    ensures r ** on_range post 0 n
@@ -171,16 +174,14 @@ fn for_loop
   rewrite (on_range pre' (lo+(-lo)) (hi+(-lo))) as (on_range pre' 0 (hi-lo));
   assert (on_range pre' 0 (hi-lo));
 
-  fn f' (i:nat)
-    requires r ** pre' i
-    ensures r ** post' i
+  fn f' () : simple_for_f pre' post' r = i
   {
     rewrite pre' i as pre (i+lo);
     f (i+lo);
     rewrite post (i+lo) as post' i;
   };
 
-  simple_for pre' post' r f' (hi-lo);
+  simple_for _ _ _ (f' ()) (hi-lo);
 
   assert (on_range post' 0 (hi-lo));
 
@@ -217,10 +218,12 @@ fn spawned_f_i
   (pre : (nat -> slprop))
   (post : (nat -> slprop))
   (e:perm)
-  (f : (i:nat -> stt unit (pre i) (fun () -> post i)))
-  (i:nat)
-  requires no_extrude <| emp ** (pre i ** pool_alive #e p)
-  ensures no_extrude <| emp ** (pledge emp_inames (pool_done p) (post i) ** pool_alive #e p)
+  (f : (i:nat -> stt unit (pre i) (fun () -> post i))) :
+  simple_for_f
+    (fun i -> pre i ** pool_alive #e p)
+    (fun i -> pledge emp_inames (pool_done p) (post i) ** pool_alive #e p)
+    emp
+  = i
 {
   let _h = spawn_ p #e #(pre i) #(post i) (fun () -> f i);
   ()
@@ -275,12 +278,8 @@ parallel_for
     (fun i -> pool_alive #(div_perm 1.0R n) p)
     0 n;
 
-  simple_for
-    (fun i -> pre i ** pool_alive #(div_perm 1.0R n) p)
-    (fun i -> pledge emp_inames (pool_done p) (post i) ** pool_alive #(div_perm 1.0R n) p)
-    emp // Alternative: pass pool_alive p here and forget about the n-way split. See below.
-    (spawned_f_i p pre post (div_perm 1.0R n) f)
-    n;
+  // Alternative: pass pool_alive p here and forget about the n-way split. See below.
+  simple_for _ _ _ (spawned_f_i p pre post (div_perm 1.0R n) f) n;
 
   on_range_unzip
     (fun i -> pledge emp_inames (pool_done p) (post i))
@@ -299,15 +298,17 @@ parallel_for
 
 
 
+inline_for_extraction
+let spawned_f_i_alt_f (pre : nat -> slprop) (post : nat -> slprop) =
+  i:nat -> stt unit (pre i) (fun () -> post i)
 
 fn spawned_f_i_alt
   (p:pool)
   (pre : (nat -> slprop))
   (post : (nat -> slprop))
-  (f : (i:nat -> stt unit (pre i) (fun () -> post i)))
-  (i:nat)
-  requires pool_alive p ** pre i
-  ensures pool_alive p ** pledge emp_inames (pool_done p) (post i)
+  (f : spawned_f_i_alt_f pre post) :
+  simple_for_f pre (fun i -> pledge emp_inames (pool_done p) (post i)) (pool_alive p)
+  = i
 {
   let _h = spawn_ p #1.0R #(pre i) #(post i) (fun () -> f i);
   ()
@@ -328,12 +329,7 @@ parallel_for_alt
 {
   let p = setup_pool 42;
 
-  simple_for
-    pre
-    (fun i -> pledge emp_inames (pool_done p) (post i))
-    (pool_alive p)
-    (spawned_f_i_alt p pre post f)
-    n;
+  simple_for _ _ _ (spawned_f_i_alt p pre post f) n;
 
   teardown_pool p;
   redeem_range post (pool_done p) n;
