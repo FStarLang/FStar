@@ -204,6 +204,7 @@ let const_cmp c1 c2 =
   | C_Reify, C_Reify -> Eq
   | C_Reflect n1, C_Reflect n2 -> eq_cmp n1 n2
   | C_Real s1, C_Real s2 -> eq_cmp s1 s2
+  | C_Char c1, C_Char c2 -> eq_cmp c1 c2
   | _ -> Neq
 
 (* TODO. Or seal...? *)
