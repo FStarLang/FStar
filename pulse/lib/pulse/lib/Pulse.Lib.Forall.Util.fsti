@@ -18,6 +18,7 @@ module Pulse.Lib.Forall.Util
 #lang-pulse
 open Pulse.Lib.Pervasives
 include Pulse.Lib.Forall
+module T = FStar.Tactics.V2
 open Pulse.Lib.Trade { ( @==> ) }
 
 (* Aliases for clients *)
@@ -39,11 +40,12 @@ ghost fn elim_forall_imp (#a:Type0) (p q: a -> slprop) (x:a)
     requires (forall* x. p x @==> q x) ** p x
     ensures q x
 
+[@@erasable]
+let forall_imp_f #a (p: a -> slprop) (#[T.exact (`emp)] r: slprop) (q: a -> slprop) =
+    u:a -> stt_ghost unit emp_inames (r ** p u) (fun _ -> q u)
+
 ghost
 fn intro_forall_imp (#a:Type0) (p q: a -> slprop) (r:slprop)
-    (elim: (u:a -> stt_ghost unit
-                        emp_inames
-                        (r ** p u)
-                        (fun _ -> q u)))
+    (elim: forall_imp_f p #r q)
   requires r
   ensures forall* x. p x @==> q x
