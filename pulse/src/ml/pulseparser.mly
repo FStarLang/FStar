@@ -236,18 +236,17 @@ while_invariant:
 pulseStmtNoSeq:
   | OPEN i=quident
     { PulseSyntaxExtension_Sugar.mk_open i }
-  | tm=appTerm o=option(LARROW v=noSeqTerm { v })
+  | tm=appTerm LARROW arr_elt=noSeqTerm
     {
-        match o, tm.tm with
-        | None, _ ->
-          PulseSyntaxExtension_Sugar.mk_expr tm
+      match tm.tm with
+      | Op(op, [arr;ix]) when FStarC_Ident.string_of_id op = ".()" ->
+        PulseSyntaxExtension_Sugar.mk_array_assignment arr ix arr_elt
 
-        | Some arr_elt, Op(op, [arr;ix]) when FStarC_Ident.string_of_id op = ".()" ->
-          PulseSyntaxExtension_Sugar.mk_array_assignment arr ix arr_elt
-
-        | _ ->
-          raise_error_text (rr $loc) Fatal_SyntaxError "Expected an array assignment of the form x.(i) <- v"
+      | _ ->
+        raise_error_text (rr $loc) Fatal_SyntaxError "Expected an array assignment of the form x.(i) <- v"
     }
+  | tm=appTerm
+    { PulseSyntaxExtension_Sugar.mk_expr tm }
   | lhs=appTermNoRecordExp COLON_EQUALS a=noSeqTerm
     { PulseSyntaxExtension_Sugar.mk_assignment lhs a }
   | norw=optional_norewrite LET q=option(mutOrRefQualifier) p=pulsePattern typOpt=option(preceded(COLON, appTerm)) EQUALS init=bindableTerm
