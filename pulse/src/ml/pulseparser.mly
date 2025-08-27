@@ -340,15 +340,24 @@ pulseMatchBranch:
 pulsePattern:
   | p=tuplePattern { p }
 
-pulseStmt:
+pulseStmtNonempty:
   | s=pulseStmtNoSeq
     { PulseSyntaxExtension_Sugar.mk_stmt s (rr $loc) }
-  | s1=pulseStmtNoSeq SEMICOLON s2=option(pulseStmt)
+  | s1=pulseStmtNoSeq SEMICOLON s2=option(pulseStmtNonempty)
     {
       let s1 = PulseSyntaxExtension_Sugar.mk_stmt s1 (rr ($loc(s1))) in
       match s2 with
       | None -> s1
       | Some s2 -> PulseSyntaxExtension_Sugar.mk_stmt (PulseSyntaxExtension_Sugar.mk_sequence s1 s2) (rr ($loc))
+    }
+
+pulseStmt:
+  | s=pulseStmtNonempty
+    { s }
+  |
+    {
+      let s = PulseSyntaxExtension_Sugar.mk_unit (rr $loc) in
+      PulseSyntaxExtension_Sugar.mk_stmt s (rr $loc)
     }
 
 ifStmt:

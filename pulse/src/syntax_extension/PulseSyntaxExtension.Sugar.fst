@@ -659,6 +659,7 @@ let add_decorations d ds =
   
 // let mk_slprop_exists binders body = SLPropExists { binders; body }
 let mk_expr e = Expr { e }
+let mk_unit rng = Expr { e = A.mk_term (A.Const FStarC.Const.Const_unit) rng A.Expr }
 let mk_assignment id value = Assignment { lhs=id; value }
 let mk_array_assignment arr index value = ArrayAssignment { arr; index; value }
 let mk_let_binding norw qualifier pat typ init = LetBinding { norw; qualifier; pat; typ; init }
