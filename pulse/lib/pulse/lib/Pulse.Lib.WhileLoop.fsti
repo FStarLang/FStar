@@ -10,7 +10,8 @@ fn while_loop
   (inv : bool -> slprop)
   (cond : stt bool (exists* x. inv x) (fun b -> inv b))
   (body : stt unit (inv true) (fun _ -> exists* x. inv x))
-  requires no_extrude (exists* x. inv x)
+  norewrite
+  requires exists* x. inv x
   ensures inv false
 
 fn nu_while_loop

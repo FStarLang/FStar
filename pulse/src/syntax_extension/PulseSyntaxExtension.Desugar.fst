@@ -298,12 +298,21 @@ let desugar_slprop (env:env_t) (v:Sugar.slprop)
   : err SW.slprop
   = tosyntax env v
 
+let desugar_slprop_annot (env:env_t) (v:Sugar.slprop) (lit:bool)
+  : err SW.slprop
+  = let! p = tosyntax env v in
+    if lit then
+      return <| U.mk_app (S.tconst (FStarC.Parser.Const.p2l ["Pulse"; "Lib"; "Core"; "no_extrude"]))
+        [p, None]
+    else
+      return p
+
 let desugar_computation_type (env:env_t) (c:Sugar.computation_type)
   : err SW.comp
   = //let! pres = map_err (desugar_slprop env) c.preconditions in
     //let pre = fold_right1 (fun a b -> SW.tm_star a b c.range) pres in
     let! annots = parse_annots c.range c.annots in
-    let! pre = desugar_slprop env annots.Sugar.precondition in
+    let! pre = desugar_slprop_annot env annots.Sugar.precondition c.literally in
 
     let! ret = desugar_term env annots.Sugar.return_type in
 
@@ -320,7 +329,7 @@ let desugar_computation_type (env:env_t) (c:Sugar.computation_type)
     let env1, bv = push_bv env annots.Sugar.return_name in
     // let! posts = map_err (desugar_slprop env1) c.postconditions in
     // let post = fold_right1 (fun a b -> SW.tm_star a b c.range) posts in
-    let! post = desugar_slprop env1 annots.Sugar.postcondition in
+    let! post = desugar_slprop_annot env1 annots.Sugar.postcondition c.literally in
     let post = SW.close_term post bv.index in
 
     match c.tag with

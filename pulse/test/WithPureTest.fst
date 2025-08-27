@@ -10,7 +10,8 @@ ghost fn intro_test (p: slprop) (q: prop)
 { () }
 
 ghost fn elim_test (p: slprop) (q: prop)
-  requires no_extrude (with_pure q (fun _ -> p))
+  norewrite
+  requires with_pure q (fun _ -> p)
   ensures p
   ensures pure q
 { () }

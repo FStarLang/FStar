@@ -69,7 +69,8 @@ fn dealloc
   (#[@@@ Rust_generics_bounds ["Copy"; "PartialEq"; "Clone"]] k:eqtype)
   (#[@@@ Rust_generics_bounds ["Clone"]] v:Type0)
   (ht:ht_t k v)
-  requires no_extrude (exists* pht. models ht pht)
+  norewrite
+  requires exists* pht. models ht pht
   ensures emp
 {
   open SZ;

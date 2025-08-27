@@ -215,9 +215,9 @@ pulseComputationAnnot1:
   | a=pulseComputationAnnot1_ { (a, rr $loc) }
 
 pulseComputationType:
-  | annots=list(pulseComputationAnnot1)
+  | literally=optional_norewrite annots=list(pulseComputationAnnot1)
     {
-        PulseSyntaxExtension_Sugar.mk_comp ST annots (rr $loc)
+      PulseSyntaxExtension_Sugar.mk_comp ST literally annots (rr $loc)
     }
 
 optional_norewrite:
@@ -305,10 +305,9 @@ pulseBindableTerm:
  
 pulseLambda:
   | bs=pulseBinderList
-    ascription=option(pulseComputationType)
     LBRACE body=pulseStmt RBRACE
     {
-      PulseSyntaxExtension_Sugar.mk_lambda (List.flatten bs) ascription body (rr ($loc))
+      PulseSyntaxExtension_Sugar.mk_lambda (List.flatten bs) None body (rr ($loc))
     }
 
 rewriteBody:
