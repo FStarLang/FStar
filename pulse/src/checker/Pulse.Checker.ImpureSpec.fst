@@ -309,6 +309,19 @@ let inspect_ast_term (t: term) : term_view =
   | _ ->
     default_view
 
+let literally_lid = mk_pulse_lib_core_lid "literally"
+
+let is_literally (t: term) : option term =
+  let default_view = Tm_FStar t in
+  let head, args = T.collect_app_ln t in
+  match un_uinst head, args with
+  | R.Tv_FVar fv, [a1, R.Q_Explicit] ->
+    if R.inspect_fv fv = literally_lid then
+      Some a1
+    else
+      None
+  | _ -> None
+
 let tc_term_phase1_with_type_twice g t ty =
   // If we call phase1 TC only once, then the universe instantiation in
   // coercion-inserted reveal calls remains a uvar.
@@ -353,7 +366,15 @@ let rec purify_spec_core (g: env) (ctxt: ctxt) (ts: list slprop) : T.Tac (option
       let body = close_term body x in
       Some (tm_with_pure p n body)
 
-    | _ ->
+    | _ -> match is_literally t with
+
+    | Some t -> // literally t
+      let t, _ = tc_term_phase1_with_type_twice g t tm_slprop in
+      (match purify_spec_core g ctxt ts with
+      | None -> Some t
+      | Some todo -> Some (tm_star t todo))
+
+    | None ->
       let _, t = symb_eval_subterms g ctxt t in
       debug g (fun _ -> [text "purify spec atom 1"; pp t]);
       let t, _ = tc_term_phase1_with_type_twice g t tm_slprop in
