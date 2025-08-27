@@ -368,7 +368,9 @@ let rec purify_spec_core (g: env) (ctxt: ctxt) (ts: list slprop) : T.Tac (option
 
     | _ -> match is_literally t with
 
-    | Some t -> // literally t
+    | Some _ -> // literally t
+      // NOTE: we cannot unfold the literally here, or the abs checker might
+      // turn the nested exists* into a function argument.
       let t, _ = tc_term_phase1_with_type_twice g t tm_slprop in
       (match purify_spec_core g ctxt ts with
       | None -> Some t
