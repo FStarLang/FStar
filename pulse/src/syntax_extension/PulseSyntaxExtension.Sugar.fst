@@ -117,7 +117,8 @@ type stmt' =
   | Open of lident
   
   | Expr { 
-      e : A.term 
+      e : A.term;
+      args : list lambda;
     }
 
   | Assignment {
@@ -438,7 +439,7 @@ and eq_stmt (s1 s2:stmt) =
 and eq_stmt' (s1 s2:stmt') =
   match s1, s2 with
   | Open l1, Open l2 -> eq_lident l1 l2
-  | Expr e1, Expr e2 -> AD.eq_term e1.e e2.e
+  | Expr e1, Expr e2 -> AD.eq_term e1.e e2.e && forall2 eq_lambda e1.args e2.args
   | Assignment { lhs=l1; value=v1 }, Assignment { lhs=l2; value=v2 } ->
     AD.eq_term l1 l2 && AD.eq_term v1 v2
   | ArrayAssignment { arr=a1; index=i1; value=v1 }, ArrayAssignment { arr=a2; index=i2; value=v2 } ->
@@ -579,7 +580,7 @@ and scan_while_invariant1 (cbs:A.dep_scan_callbacks) (i:while_invariant1) =
 and scan_stmt (cbs:A.dep_scan_callbacks) (s:stmt) =
   match s.s with
   | Open l -> cbs.add_open l
-  | Expr e -> cbs.scan_term e.e
+  | Expr e -> cbs.scan_term e.e; iter (scan_lambda cbs) e.args
   | Assignment { lhs=l; value=v } -> cbs.scan_term l; cbs.scan_term v
   | ArrayAssignment { arr=a; index=i; value=v } -> cbs.scan_term a; cbs.scan_term i; cbs.scan_term v
   | LetBinding { qualifier=q; pat=p; typ=t; init=init } ->
@@ -658,8 +659,8 @@ let add_decorations d ds =
   | FnDecl f -> FnDecl { f with decorations=ds @ f.decorations }
   
 // let mk_slprop_exists binders body = SLPropExists { binders; body }
-let mk_expr e = Expr { e }
-let mk_unit rng = Expr { e = A.mk_term (A.Const FStarC.Const.Const_unit) rng A.Expr }
+let mk_expr e args = Expr { e; args }
+let mk_unit rng = Expr { e = A.mk_term (A.Const FStarC.Const.Const_unit) rng A.Expr; args = [] }
 let mk_assignment id value = Assignment { lhs=id; value }
 let mk_array_assignment arr index value = ArrayAssignment { arr; index; value }
 let mk_let_binding norw qualifier pat typ init = LetBinding { norw; qualifier; pat; typ; init }

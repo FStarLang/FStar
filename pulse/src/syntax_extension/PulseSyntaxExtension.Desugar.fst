@@ -437,9 +437,21 @@ let rec desugar_stmt' (env:env_t) (s:Sugar.stmt)
   = let open SW in
     let open Sugar in
     match s.s with
-    | Expr { e } -> 
+    | Expr { e; args } -> 
       let! tm = tosyntax env e in
-      return (st_term_of_admit_or_return (admit_or_return env tm))
+      if Nil? args then
+        return (st_term_of_admit_or_return (admit_or_return env tm))
+      else (
+        let rec desugar_args args : err (list SW.st_term) =
+          match args with
+          | arg::args ->
+            let! arg = desugar_lambda env arg in
+            let! args = desugar_args args in
+            return (arg::args)
+          | [] -> return [] in
+        let! args = desugar_args args in
+        return (SW.tm_st tm args s.range)
+      )
 
     | Assignment { lhs; value } ->
       let! lhs = tosyntax env lhs in
@@ -835,7 +847,7 @@ and desugar_proof_hint_with_binders (env:env_t) (s1:Sugar.stmt) (k:option Sugar.
       let assume_fv = SW.(mk_fv assume_lid r) in
       let assume_ : SW.term = SW.(tm_fvar assume_fv) in
       let! p = desugar_slprop env p in
-      let s1 = SW.tm_st (S.mk_Tm_app assume_ [p, None] r) r in
+      let s1 = SW.tm_st (S.mk_Tm_app assume_ [p, None] r) [] r in
       let! s2 =
         match k with
         | None -> return (SW.tm_ghost_return (SW.tm_expr S.unit_const r) r)

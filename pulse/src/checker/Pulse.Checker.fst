@@ -180,27 +180,33 @@ let maybe_setting_error_bound (t:st_term) (f : unit -> T.Tac 'a) : T.Tac 'a =
 let rec maybe_elaborate_stateful_head (g:env) (t:st_term)
 : T.Tac (option st_term)
 = match t.term with
+  | Tm_ST .. ->
+    let rebuild (b:either term st_term {Inr? b})
+    : T.Tac st_term
+    = let Inr b = b in
+      b in
+    Pulse.Checker.Base.hoist g (Inr t) true rebuild
   | Tm_If {b; then_=e1; else_=e2; post} ->
     let rebuild (b:either term st_term {Inl? b})
     : T.Tac st_term
     = let Inl b = b in
       {t with term=Tm_If { b; then_=e1; else_=e2; post }}
     in
-    Pulse.Checker.Base.hoist_stateful_apps g (Inl b) true rebuild  
+    Pulse.Checker.Base.hoist g (Inl b) true rebuild  
   | Tm_Match {sc; returns_=post_match; brs} ->
     let rebuild (sc:either term st_term {Inl? sc})
     : T.Tac st_term
     = let Inl sc = sc in
       { t with term=Tm_Match {sc; returns_=post_match; brs} }
     in
-    Pulse.Checker.Base.hoist_stateful_apps g (Inl sc) true rebuild
+    Pulse.Checker.Base.hoist g (Inl sc) true rebuild
   | Tm_WithLocal { binder; initializer; body } ->
     let rebuild (sc:either term st_term {Inl? sc})
     : T.Tac st_term
     = let Inl initializer = sc in
       { t with term=Tm_WithLocal {binder; initializer; body } }
     in
-    Pulse.Checker.Base.hoist_stateful_apps g (Inl initializer) true rebuild
+    Pulse.Checker.Base.hoist g (Inl initializer) true rebuild
   | Tm_WithLocalArray { binder; initializer; body; length } -> (
     (* Very awkward to compose two of these. *)
     let rebuild_len t (sc:either term st_term {Inl? sc})
@@ -212,14 +218,14 @@ let rec maybe_elaborate_stateful_head (g:env) (t:st_term)
     : T.Tac st_term
     = let Inl initializer = sc in
       let t = { t with term=Tm_WithLocalArray {binder; initializer; body; length } } in
-      match Pulse.Checker.Base.hoist_stateful_apps g (Inl length) true (rebuild_len t) with
+      match Pulse.Checker.Base.hoist g (Inl length) true (rebuild_len t) with
       | None -> t
       | Some t -> t
     in
-    match Pulse.Checker.Base.hoist_stateful_apps g (Inl initializer) true rebuild_init with
+    match Pulse.Checker.Base.hoist g (Inl initializer) true rebuild_init with
     | Some t -> Some t
     | None ->
-      Pulse.Checker.Base.hoist_stateful_apps g (Inl length) true (rebuild_len t)
+      Pulse.Checker.Base.hoist g (Inl length) true (rebuild_len t)
   )
 
   | _ -> None

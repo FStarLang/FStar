@@ -163,7 +163,7 @@ let check_bind'
             let head = mk_term head (Pulse.RuntimeUtils.range_of_term tm') in
             { t with term = Tm_Bind { binder; head; body=e2 } }
         in
-        match Pulse.Checker.Base.hoist_stateful_apps g (Inl tm) false rebuild with
+        match Pulse.Checker.Base.hoist g (Inl tm) false rebuild with
         | Some t -> //something was elaborated, go back to the top checking loop
           Util.debug g "pulse.hoist" (fun _ -> Printf.sprintf "Bind was elaborated to %s\n" (show t));
           check g ctxt ctxt_typing post_hint res_ppname t
@@ -176,7 +176,7 @@ let check_bind'
           let Inr e1' = head in
           { t with term = Tm_Bind { binder; head=e1'; body=e2 } }
         in
-        match Pulse.Checker.Base.hoist_stateful_apps g (Inr e1) false rebuild with
+        match Pulse.Checker.Base.hoist g (Inr e1) false rebuild with
         | Some t -> //something was elaborated, go back to the top checking loop
           debug_prover g (fun _ -> Printf.sprintf "Bind was elaborated to %s\n" (show t));
           check g ctxt ctxt_typing post_hint res_ppname t
@@ -209,7 +209,7 @@ let check_tot_bind
     | Inr e1' ->
       { t with term = Tm_Bind { binder=b; head=e1'; body=e2 } }
   in
-  match Pulse.Checker.Base.hoist_stateful_apps g (Inl e1) false rebuild with
+  match Pulse.Checker.Base.hoist g (Inl e1) false rebuild with
   | None -> //no stateful apps; just return the head and check it
     let t = rebuild (Inl e1) in
     Pulse.Checker.Util.debug g "pulse.hoist" (fun _ ->

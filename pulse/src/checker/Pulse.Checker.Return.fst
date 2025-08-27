@@ -163,7 +163,7 @@ let check
     | Inl t -> { st with term = Tm_Return { f with term = t } }
     | Inr st_app -> { st_app with source = st.source }
   in
-  match Pulse.Checker.Base.hoist_stateful_apps g (Inl f.term) false rebuild with
+  match Pulse.Checker.Base.hoist g (Inl f.term) false rebuild with
   | Some tt -> //some elaboration, go back to top
     Pulse.Checker.Util.debug g "pulse.hoist" (fun _ ->
       Printf.sprintf "Hoisted term: %s" (Pulse.Syntax.Printer.st_term_to_string tt)

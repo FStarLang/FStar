@@ -61,6 +61,8 @@ let instantiate_term_implicits_uvs (g:env) (t:term)
     | _ -> (| uvs, t, ty |) in
   add_implicits uvs t ty
 
+open Pulse.PP
+
 let check
   (g0:env)
   (ctxt:slprop)
@@ -73,7 +75,12 @@ let check
   let g = push_context "st" t.range g0 in
   let post_hint: post_hint_opt g = post_hint in
   let range = t.range in
-  let Tm_ST { t=e } = t.term in
+  let Tm_ST { t=e; args } = t.term in
+  if Cons? args then
+    fail_doc g0 (Some t.range) [
+      text "Internal error: trailing combinator arguments not lifted in Tm_ST";
+      pp t
+    ];
   let (| uvs, e, _ |) = instantiate_term_implicits_uvs g e in
   let g' : env = push_env g uvs in
   assert (g' `env_extends` g);
@@ -95,7 +102,7 @@ let check
 
   | Some c -> (
     let allow_ambiguous = should_allow_ambiguous e in
-    let t = { t with term = Tm_ST { t=e }  } in
+    let t = { t with term = Tm_ST { t=e; args=[] }  } in
     let d : ( st_typing g' t c ) =
     if eff = T.E_Total
     then T_ST g' e c typing

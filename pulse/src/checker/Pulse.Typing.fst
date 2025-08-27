@@ -808,7 +808,7 @@ type st_typing : env -> st_term -> comp -> Type =
       t:term ->
       c:comp_st ->
       tot_typing g t (elab_comp c) ->
-      st_typing g (wrst c (Tm_ST { t } )) c
+      st_typing g (wrst c (Tm_ST { t; args=[] } )) c
  
   | T_STGhost:
       g:env ->
@@ -816,7 +816,7 @@ type st_typing : env -> st_term -> comp -> Type =
       c:comp_st ->
       ghost_typing g t (elab_comp c) ->
       non_informative g c ->
-      st_typing g (wrst c (Tm_ST { t } )) c
+      st_typing g (wrst c (Tm_ST { t; args=[] } )) c
  
   | T_Return:
       g:env ->

@@ -790,7 +790,7 @@ let checker_result_t_equiv_ctxt (g:env) (ctxt ctxt' : slprop)
 
 module RU = Pulse.RuntimeUtils  
 let as_stateful_application (e:term) (head:term) (args:list T.argv { Cons? args })
-: st_term = mk_term (Tm_ST { t = e }) (RU.range_of_term e)
+: st_term = mk_term (Tm_ST { t = e; args = [] }) (RU.range_of_term e)
 
 let is_stateful_application (g:env) (e:term) 
 : T.Tac (option st_term) = 
@@ -893,14 +893,14 @@ let decompose_app (g:env) (tt:either term st_term)
 = let decompose_st_app (t:st_term)
   : T.Tac (option (term & list T.argv & (args:list T.argv{ Cons? args } -> T.Tac (res:either term st_term { Inr? tt ==> Inr? res }))))
   = match t.term with
-    | Tm_ST { t=e } -> (
+    | Tm_ST { t=e; args=st_args } -> (
       let head, args = T.collect_app_ln e in
       match args with 
       | [] -> None
       | _ -> 
         let rebuild (args:list T.argv{Cons? args}) : T.Tac (res:either term st_term { Inr? res }) = 
           let head = RU.mk_app_flat head args t.range in
-          Inr <| mk_term (Tm_ST { t=head }) t.range
+          Inr <| mk_term (Tm_ST { t=head; args=st_args }) t.range
         in
         Some (head, args, rebuild)
     )
@@ -1030,6 +1030,79 @@ let hoist_stateful_apps
         in
         Some res
 
+let hoist_st_lambda
+  (g:env)
+  (tt:either term st_term)
+  (hoist_top_level:bool)
+  (context: (
+    x:either term st_term { 
+      (Inr? tt ==> Inr? x) /\
+      (hoist_top_level /\ Inl? tt ==> Inl? x)
+    } -> T.Tac st_term))
+: T.Tac (option st_term)
+= match tt with
+  | Inr { term = Tm_ST { t = e; args = arg::args }; range } -> (
+    let _, e_ty, _ = CP.tc_term_phase1 g e in
+    match R.inspect_ln e_ty with
+    | R.Tv_Arrow bv _ ->
+      let bv = R.inspect_binder bv in
+      // TODO: check that bv.sort has no uvars
+      let n = T.unseal bv.ppname in
+      // NOTE: currently the only way to annotate the type of a lambda is to add
+      // an extra binder with the ascription
+      let g, b, x, t = bind_st_term g
+        (mk_term (Tm_Abs {
+          b = null_binder tm_unit;
+          q = None;
+          ascription = {
+            annotated = Some (C_Tot bv.sort);
+            elaborated = None;
+          };
+          body = arg;
+        }) arg.range) in
+      Some <|
+        mk_term (Tm_Bind {
+          binder = mk_binder n arg.range tm_unknown;
+          head = mk_term (Tm_Abs {
+            b = null_binder tm_unit;
+            q = None;
+            ascription = {
+              annotated = Some (C_Tot bv.sort);
+              elaborated = None;
+            };
+            body = arg;
+          }) arg.range;
+          body = Pulse.Syntax.Naming.close_st_term
+            (context <| Inr <|
+              { Inr?.v tt with
+                term = Tm_ST {
+                  t = R.mk_app e [R.mk_app t [unit_const, R.Q_Explicit], R.Q_Explicit];
+                  args;
+                }
+              }) x;
+        }) range
+    | _ ->
+      fail_doc g (Some (RU.range_of_term e)) [
+        text "Expected function";
+        text "Actual type:" ^^ hardline ^^
+          pp e_ty
+      ]
+    )
+  | _ -> None
+
+let hoist
+  (g:env)
+  (tt:either term st_term)
+  (hoist_top_level:bool)
+  (context: (
+    x:either term st_term { 
+      (Inr? tt ==> Inr? x) /\
+      (hoist_top_level /\ Inl? tt ==> Inl? x)
+    } -> T.Tac st_term))
+: T.Tac (option st_term)
+= match hoist_stateful_apps g tt hoist_top_level context with
+  | Some hoisted -> Some hoisted
+  | None -> hoist_st_lambda g tt hoist_top_level context
  
 let compose_checker_result_t 
   (#g:env) (#g':env { g' `env_extends` g }) (#ctxt #ctxt':slprop) (#post_hint:post_hint_opt g)

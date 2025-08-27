@@ -127,8 +127,9 @@ let rec freevars_close_st_term' (t:st_term) (x:var) (i:index)
       freevars_close_term' expected_type x i;
       freevars_close_term' term x i
 
-    | Tm_ST { t } -> 
-      freevars_close_term' t x i
+    | Tm_ST { t; args } -> 
+      freevars_close_term' t x i;
+      admit ()
     
     | Tm_Abs { b; ascription=c; body } ->
       freevars_close_term' b.binder_ty x i;

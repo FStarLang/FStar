@@ -62,7 +62,7 @@ let elim_pure_head_typing (g:env)
 
 let mk_elim_pure (p:term)
   : st_term
-  = let t = Tm_ST { t = T.mk_app elim_pure_head [p, T.Q_Explicit] } in
+  = let t = Tm_ST { t = T.mk_app elim_pure_head [p, T.Q_Explicit]; args = [] } in
     wtag (Some STT_Ghost) t
 
 

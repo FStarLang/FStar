@@ -92,7 +92,7 @@ val mk_branch : pattern -> st_term -> norw:bool -> branch
 val tm_return (t:term) (_:range) : st_term
 val tm_ghost_return (t:term) (_:range) : st_term
 val tm_abs (b:binder) (q:option qualifier) (_:option comp) (body:st_term) (_:range) : st_term
-val tm_st (head:term) (_:range): st_term
+val tm_st (head:term) (args:list st_term) (_:range): st_term
 val tm_bind (x:binder) (e1:st_term) (e2:st_term) (_:range) : st_term
 val tm_totbind (x:binder) (e1:term) (e2:st_term) (_:range) : st_term
 val tm_let_mut (x:binder) (v:term) (k:st_term) (_:range) : st_term
