@@ -1037,7 +1037,7 @@ val pulse_unfold : unit
 val pulse_eager_unfold : unit
 
 [@@pulse_unfold]
-let no_extrude (p: slprop) : slprop = p
+let literally (p: slprop) : slprop = p
 
 let old () = ()
 

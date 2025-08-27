@@ -302,7 +302,7 @@ let desugar_slprop_annot (env:env_t) (v:Sugar.slprop) (lit:bool)
   : err SW.slprop
   = let! p = tosyntax env v in
     if lit then
-      return <| U.mk_app (S.tconst (FStarC.Parser.Const.p2l ["Pulse"; "Lib"; "Core"; "no_extrude"]))
+      return <| U.mk_app (S.tconst (FStarC.Parser.Const.p2l ["Pulse"; "Lib"; "Core"; "literally"]))
         [p, None]
     else
       return p
