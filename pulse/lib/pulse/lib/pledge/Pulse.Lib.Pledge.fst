@@ -23,6 +23,7 @@ open Pulse.Lib.Trade
 module GR = Pulse.Lib.GhostReference
 
 open FStar.Tactics.V2
+open Pulse.Class.Introducable
 
 let slprop_equiv_refl_eq (v1 v2 : slprop) (_ : squash (v1 == v2)) : slprop_equiv v1 v2 =
   slprop_equiv_refl v1
@@ -61,12 +62,7 @@ fn return_pledge (f v : slprop)
   requires v
   ensures pledge emp_inames f v
 {
-  ghost
-  fn aux () : trade_f f #v (f ** v) =
-  {
-    ()
-  };
-  intro_trade _ _ _ aux;
+  intro (f @==> f ** v) #v =_{};
   inames_live_empty ();
   fold pledge;
 }
@@ -75,19 +71,15 @@ fn return_pledge (f v : slprop)
 let call #t #is #req #ens (h: unit -> stt_ghost is t req (fun x -> ens x)) = h
 
 ghost
-fn make_pledge
-  (is:inames) (f v extra:slprop)
-  (k:unit -> pledge_f #is f #extra v)
+fn make_pledge (is:inames) (f:slprop) (v:slprop) (extra:slprop)
+  (k: unit -> pledge_f #is f #extra v)
   requires extra ** inames_live is
   ensures pledge is f v
 {
-  ghost
-  fn aux () : trade_f #is f #extra (f ** v) =
-  {
+  intro (trade #is f (f ** v)) #extra = _ {
     call k ()
   };
 
-  intro_trade _ _ _ aux;
   fold pledge;
 }
 
@@ -120,14 +112,11 @@ fn squash_pledge (is:inames) (f:slprop) (v1:slprop)
   requires pledge is f (pledge is f v1)
   ensures pledge is f v1
 {
-  ghost
-  fn aux () : pledge_f #is f #(pledge is f (pledge is f v1)) v1 =
-  {
+  pledge_inames_live is f (pledge is f v1);
+  make_pledge is f v1 (pledge is f (pledge is f v1)) = _ {
     redeem_pledge is f (pledge is f v1);
     redeem_pledge is f v1
   };
-  pledge_inames_live is f (pledge is f v1);
-  make_pledge _ _ _ _ aux
 }
 
 
@@ -140,15 +129,11 @@ fn bind_pledge (#is:inames) (#f:slprop) (#v1:slprop) (#v2:slprop)
   requires pledge is f v1 ** extra
   ensures pledge is f v2
 {
-  ghost
-  fn aux () : pledge_f #is f #(extra ** pledge is f v1) (pledge is f v2) =
-  {
+  pledge_inames_live is f v1;
+  make_pledge is f (pledge is f v2) (extra ** pledge is f v1) = _ {
     redeem_pledge is f v1;
     call k ();
   };
-
-  pledge_inames_live is f v1;
-  make_pledge _ _ _ _ aux;
   squash_pledge is f v2
 }
 
@@ -162,12 +147,9 @@ fn bind_pledge' (#is:inames) (#f:slprop) (#v1:slprop) (#v2:slprop)
   requires pledge is f v1 ** extra
   ensures pledge is f v2
 {
-  ghost
-  fn aux () : bind_pledge_f #is #is_k f #extra v1 v2 =
-  {
+  bind_pledge #is #f #v1 #v2 extra #is_k = _ {
     call k ()
   };
-  bind_pledge _ aux
 }
 
 
@@ -179,14 +161,12 @@ fn rewrite_pledge_full (#is:inames) (#f:slprop) (v1 : slprop) (v2 : slprop)
   requires pledge is f v1
   ensures pledge is f v2
 {
-  ghost
-  fn aux () : pledge_f #is f #(pledge is f v1) v2 =
+  pledge_inames_live is f v1;
+  make_pledge is f v2 (pledge is f v1) = _
   {
     redeem_pledge is f v1;
     call k ()
   };
-  pledge_inames_live is f v1;
-  make_pledge _ _ _ _ aux;
 }
 
 
@@ -198,13 +178,10 @@ fn rewrite_pledge (#is:inames) (#f:slprop) (v1 : slprop) (v2 : slprop)
   requires pledge is f v1
   ensures  pledge is f v2
 {
-  ghost
-  fn aux () : rewrite_pledge_full_f #is_k f v1 v2 =
+  rewrite_pledge_full #is #f v1 v2 #is_k = _
   {
     call k ()
   };
-
-  rewrite_pledge_full #is _ _ aux;
 }
 
 
@@ -216,14 +193,12 @@ fn join_pledge
   requires pledge is f v1 ** pledge is f v2
   ensures pledge is f (v1 ** v2)
 {
-  ghost
-  fn aux () : pledge_f #is f #(pledge is f v1 ** pledge is f v2) (v1 ** v2) =
+  pledge_inames_live is f v1;
+  make_pledge is f (v1 ** v2) (pledge is f v1 ** pledge is f v2) = _
   {
     redeem_pledge is f v1;
     redeem_pledge is f v2;
   };
-  pledge_inames_live is f v1;
-  make_pledge _ _ _ _ aux;
 }
 
 
@@ -238,13 +213,11 @@ fn squash_pledge'
            inames_live is
   ensures pledge is f v1
 {
-  ghost
-  fn aux () : pledge_f #is f #(pledge is1 f (pledge is2 f v1)) v1 =
+  make_pledge is f v1 (pledge is1 f (pledge is2 f v1)) = _
   {
     redeem_pledge is1 f (pledge is2 f v1);
     redeem_pledge is2 f v1
   };
-  make_pledge _ _ _ _ aux
 }
 
 
@@ -353,21 +326,6 @@ fn elim_body_l1
 }
 
 ghost
-fn elim_body_l
-  (#is:inames) (#f:slprop) (i : iname) (v1:slprop) (v2:slprop) (r1 r2 : GR.ref bool)
-  () :
-  pledge_f #(add_inv is i) f
-    #((r1 |-> Frac 0.5R false) ** later_credit 1 ** inv i (inv_p is f v1 v2 r1 r2) ** pure (not (mem_inv is i)))
-    v1 =
-{
-  elim_body_l1 #is #f i v1 v2 r1 r2 ();
-  drop_ (inv i (inv_p is f v1 v2 r1 r2));
-  (* I couldn't make this work with an (annotated) with_invariants and
-  then a drop, so I used an auxiliary _l1 function. *)
-}
-
-
-ghost
 fn flip_invp
   (is:inames) (f:slprop) (v1:slprop) (v2:slprop) (r1 r2 : GR.ref bool)
   requires inv_p is f v1 v2 r1 r2
@@ -392,19 +350,6 @@ fn flip_invp
 }
 
 
-// ghost
-// fn elim_body_r
-//   (#is:inames) (#f:slprop) (i : iname{not (mem_inv is i)}) (v1:slprop) (v2:slprop) (r1 r2 : GR.ref bool)
-//   ()
-//   requires f ** ((r2 |-> Frac 0.5R false) ** later_credit 1 ** inv i (inv_p is f v1 v2 r1 r2))
-//   ensures  f ** v2 ** inv i (inv_p is f v1 v2 r1 r2)
-//   opens add_inv is i
-// {
-//   // flip_invp is f v1 v2 r1 r2;
-//   // elim_body_l #is #f v2 v1 r2 r1 ();
-//   // flip_invp is f v2 v1 r2 r1;
-// }
-
 ghost
 fn elim_body_r1
   (#is:inames) (#f:slprop) (i : iname) (v1:slprop) (v2:slprop) (r1 r2 : GR.ref bool)
@@ -423,18 +368,6 @@ fn elim_body_r1
     flip_invp is f v2 v1 r2 r1;
     later_intro (inv_p is f v1 v2 r1 r2);
   };
-}
-
-ghost
-fn elim_body_r
-  (#is:inames) (#f:slprop) (i : iname) (v1:slprop) (v2:slprop) (r1 r2 : GR.ref bool)
-  () :
-  pledge_f #(add_inv is i) f
-    #((r2 |-> Frac 0.5R false) ** later_credit 1 ** inv i (inv_p is f v1 v2 r1 r2) ** pure (not (mem_inv is i)))
-    v2 =
-{
-  elim_body_r1 #is #f i v1 v2 r1 r2 ();
-  drop_ (inv i (inv_p is f v1 v2 r1 r2));
 }
 
 ghost
@@ -470,9 +403,21 @@ fn ghost_split_pledge (#is:inames) (#f:slprop) (v1:slprop) (v2:slprop)
   as
     later_credit 1 ** later_credit 1;
 
-  make_pledge _ _ _ _ (elim_body_l #is #f i v1 v2 r1 r2);
+  make_pledge (add_inv is i) f v1
+    ((r1 |-> Frac 0.5R false) ** later_credit 1 ** inv i (inv_p is f v1 v2 r1 r2) ** pure (not (mem_inv is i))) = _
+  {
+    elim_body_l1 #is #f i v1 v2 r1 r2 ();
+    drop_ (inv i (inv_p is f v1 v2 r1 r2));
+    (* I couldn't make this work with an (annotated) with_invariants and
+    then a drop, so I used an auxiliary _l1 function. *)
+  };
 
-  make_pledge _ _ _ _ (elim_body_r #is #f i v1 v2 r1 r2);
+  make_pledge (add_inv is i) f v2
+    ((r2 |-> Frac 0.5R false) ** later_credit 1 ** inv i (inv_p is f v1 v2 r1 r2) ** pure (not (mem_inv is i))) = _
+  {
+    elim_body_r1 #is #f i v1 v2 r1 r2 ();
+    drop_ (inv i (inv_p is f v1 v2 r1 r2));
+  };
 
   i
 }

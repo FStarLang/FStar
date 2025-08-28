@@ -126,8 +126,8 @@ let simple_for_f (pre post : nat -> slprop) (r : slprop) =
 fn rec simple_for
    (pre post : (nat -> slprop))
    (r : slprop) // This resource is passed around through iterations.
-   (f : simple_for_f pre post r)
    (n : nat)
+   (f : simple_for_f pre post r)
    requires r ** on_range pre 0 n
    ensures r ** on_range post 0 n
 {
@@ -139,7 +139,7 @@ fn rec simple_for
     // rewrite (on_range pre 0 n) as (on_range pre (reveal (hide 0)) (reveal (hide n)));
     on_range_unsnoc ();
     f (n-1);
-    simple_for pre post r f (n-1);
+    simple_for pre post r (n-1) f;
     on_range_snoc ();
     ()
   }
@@ -158,45 +158,29 @@ fn for_loop
   on_range_le pre;
   let pre'  : (nat -> slprop) = (fun (i:nat) -> pre  (i + lo));
   let post' : (nat -> slprop) = (fun (i:nat) -> post (i + lo));
-  ghost
-  fn shift_back (k : nat{lo <= k /\ k < hi})
-    requires pre k
-    ensures pre' (k + (-lo))
-  {
-    rewrite pre k as pre' (k + (-lo));
-  };
   assert (on_range pre lo hi);
   on_range_weaken_and_shift
     pre pre'
     (-lo)
     lo hi
-    shift_back;
+    = k { rewrite pre k as pre' (k + (-lo)); };
   rewrite (on_range pre' (lo+(-lo)) (hi+(-lo))) as (on_range pre' 0 (hi-lo));
   assert (on_range pre' 0 (hi-lo));
 
-  fn f' () : simple_for_f pre' post' r = i
+  simple_for pre' post' r (hi-lo) = i
   {
     rewrite pre' i as pre (i+lo);
     f (i+lo);
     rewrite post (i+lo) as post' i;
   };
 
-  simple_for _ _ _ (f' ()) (hi-lo);
-
   assert (on_range post' 0 (hi-lo));
 
-  ghost
-  fn shift_forward (k : nat{k < hi-lo})
-    requires post' k
-    ensures post (k + lo)
-  {
-    rewrite post' k as post (k + lo);
-  };
   on_range_weaken_and_shift
     post' post
     lo
     0 (hi-lo)
-    shift_forward;
+    = k { rewrite post' k as post (k + lo) };
   rewrite
     on_range post (0+lo) ((hi-lo)+lo)
   as
@@ -211,23 +195,6 @@ assume val frac_n (n:pos) (p:pool) (e:perm)
 assume val unfrac_n (n:pos) (p:pool) (e:perm)
   : stt unit (on_range (fun i -> pool_alive #(div_perm e n) p) 0 n)
              (fun () -> pool_alive #e p)
-
-
-fn spawned_f_i
-  (p:pool)
-  (pre : (nat -> slprop))
-  (post : (nat -> slprop))
-  (e:perm)
-  (f : (i:nat -> stt unit (pre i) (fun () -> post i))) :
-  simple_for_f
-    (fun i -> pre i ** pool_alive #e p)
-    (fun i -> pledge emp_inames (pool_done p) (post i) ** pool_alive #e p)
-    emp
-  = i
-{
-  let _h = spawn_ p #e #(pre i) #(post i) (fun () -> f i);
-  ()
-}
 
 
 // In pulse, using fixpoint combinator below. Should be a ghost step eventually
@@ -279,7 +246,16 @@ parallel_for
     0 n;
 
   // Alternative: pass pool_alive p here and forget about the n-way split. See below.
-  simple_for _ _ _ (spawned_f_i p pre post (div_perm 1.0R n) f) n;
+  simple_for
+    (fun i -> pre i ** pool_alive #(div_perm 1.0R n) p)
+    (fun i -> pledge emp_inames (pool_done p) (post i) ** pool_alive #(div_perm 1.0R n) p)
+    emp
+    n
+    = i
+  {
+    let _h = spawn_ p #(div_perm 1.0R n) #(pre i) #(post i) (fun () -> f i);
+    ()
+  };
 
   on_range_unzip
     (fun i -> pledge emp_inames (pool_done p) (post i))
@@ -298,23 +274,6 @@ parallel_for
 
 
 
-inline_for_extraction
-let spawned_f_i_alt_f (pre : nat -> slprop) (post : nat -> slprop) =
-  i:nat -> stt unit (pre i) (fun () -> post i)
-
-fn spawned_f_i_alt
-  (p:pool)
-  (pre : (nat -> slprop))
-  (post : (nat -> slprop))
-  (f : spawned_f_i_alt_f pre post) :
-  simple_for_f pre (fun i -> pledge emp_inames (pool_done p) (post i)) (pool_alive p)
-  = i
-{
-  let _h = spawn_ p #1.0R #(pre i) #(post i) (fun () -> f i);
-  ()
-}
-
-
 (* Alternative; not splitting the pool_alive resource. We are anyway
 spawning sequentially. *)
 
@@ -329,7 +288,10 @@ parallel_for_alt
 {
   let p = setup_pool 42;
 
-  simple_for _ _ _ (spawned_f_i_alt p pre post f) n;
+  simple_for pre (fun i -> pledge emp_inames (pool_done p) (post i)) (pool_alive p) n = i {
+    let _h = spawn_ p #1.0R #(pre i) #(post i) (fun () -> f i);
+    ()
+  };
 
   teardown_pool p;
   redeem_range post (pool_done p) n;

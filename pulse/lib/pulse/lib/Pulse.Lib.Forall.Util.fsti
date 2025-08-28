@@ -23,7 +23,6 @@ open Pulse.Lib.Trade { ( @==> ) }
 
 (* Aliases for clients *)
 let elim #a #p = Pulse.Lib.Forall.elim_forall #a #p
-let intro #a #p = Pulse.Lib.Forall.intro_forall #a #p
 
 ghost
 fn trans_compose (#a #b #c:Type0) (p:a -> slprop) (q:b -> slprop) (r:c -> slprop)

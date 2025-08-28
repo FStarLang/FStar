@@ -18,6 +18,7 @@ module Pulse.Lib.Trade
 #lang-pulse
 
 open Pulse.Lib.Pervasives
+open Pulse.Class.Introducable
 
 module T = FStar.Tactics
 
@@ -54,6 +55,14 @@ fn intro_trade
   (f_elim: unit -> trade_f #is hyp #extra concl)
   requires extra
   ensures trade #is hyp concl
+
+instance val introducable_trade (t: Type u#a) is is'
+    hyp extra concl {| introducable is' (extra ** hyp) concl t |} :
+    introducable is extra (trade #is' hyp concl) t
+
+instance val introducable_trade' (t: Type u#a) is
+    hyp extra concl {| introducable emp_inames (extra ** hyp) concl t |} :
+    introducable is extra (hyp @==> concl) t
 
 val elim_trade
   (#[T.exact (`emp_inames)] is:inames)

@@ -64,14 +64,7 @@ requires
 ensures
   OR.on_range g i j
 {
-  ghost
-  fn weaken (k:nat { i <= k /\ k < j })
-  requires f k
-  ensures g k
-  {
-    rewrite (f k) as (g k)
-  };
-  OR.on_range_weaken f g i j weaken
+  OR.on_range_weaken f g i j = k { rewrite f k as g k }
 }
 
 let istar_singleton (p:slprop)

@@ -18,6 +18,7 @@ module Pulse.Lib.Forall
 
 #lang-pulse
 open Pulse.Lib.Core
+open Pulse.Class.Introducable
 open Pulse.Main
 module T = FStar.Tactics.V2
 
@@ -46,6 +47,9 @@ fn intro_forall u#a
   (f_elim : forall_f #a p #v)
   requires v
   ensures  forall* x. p x
+
+instance val introducable_forall (a: Type u#a) (t: a -> Type u#b) is extra concl {| (x:a -> introducable emp_inames extra (concl x) (t x)) |} :
+  introducable is extra (forall* x. concl x) (x:a -> t x)
 
 val slprop_equiv_forall
     (#a:Type)

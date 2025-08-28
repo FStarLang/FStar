@@ -8,3 +8,9 @@ fn test1 ()
 {
   intro_trade emp (emp ** emp) emp =_{}
 }
+
+fn test2 ()
+  ensures emp @==> (emp ** emp)
+{
+  intro (emp @==> emp ** emp) =_{}
+}

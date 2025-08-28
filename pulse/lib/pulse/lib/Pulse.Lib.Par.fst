@@ -26,14 +26,10 @@ fn par_stt' #preL #postL #preR #postR
   ensures postL ** postR
 {
   let c = create postL;
-  fn auxL ()
-    requires preL ** send c postL
-    ensures emp
-  {
+  fork #(preL ** send c postL) = _ {
     f ();
     signal c #postL;
   };
-  fork auxL;
   g ();
   wait c #postL;
 }

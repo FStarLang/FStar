@@ -56,12 +56,7 @@ fn gen_init_st (x : SizeT.t)
 fn use_gen_init_st ()
   returns Int32.t
 {
-  fn init ()
-    returns Int32.t
-  {
-    123l;
-  };
-  gen_init_st 2sz init;
+  gen_init_st 2sz =_{ 123l };
 }
 
 inline_for_extraction noextract
@@ -93,11 +88,5 @@ fn gen_len_st
 fn use_gen_len_st ()
   returns Int32.t
 {
-  fn len ()
-    returns r : SizeT.t
-    ensures pure (SizeT.v r > 0)
-  {
-    42sz;
-  };
-  gen_len_st len;
+  gen_len_st =_{ 42sz };
 }
