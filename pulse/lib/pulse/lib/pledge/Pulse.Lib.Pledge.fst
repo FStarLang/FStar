@@ -22,38 +22,36 @@ open Pulse.Lib.Trade
 
 module GR = Pulse.Lib.GhostReference
 
-open FStar.Tactics.V2
-open Pulse.Class.Introducable
+let pledge is f v = pure (is_finite is) ** trade #is f (f ** v)
 
-let slprop_equiv_refl_eq (v1 v2 : slprop) (_ : squash (v1 == v2)) : slprop_equiv v1 v2 =
-  slprop_equiv_refl v1
+fn introducable_pledge_aux u#a (t: Type u#a) (is: inames) (is': fin_inames)
+    (f v extra: slprop) {| inst: introducable is' (extra ** f) (f ** v) t |} (x:t) :
+    stt_ghost unit is extra (fun _ -> pledge is' f v) = {
+  intro #is (trade #is' f (f ** v)) #extra (fun _ -> x);
+  fold pledge is' f v;
+}
 
-let __tac () : Tac unit =
-  apply (`slprop_equiv_refl_eq)
-
-let pledge is f v = inames_live is ** trade #is f (f ** v)
-
+instance introducable_pledge (t: Type u#a) is (is': fin_inames)
+    f v extra {| introducable is' (extra ** f) (f ** v) t |} :
+    introducable is extra (pledge is' f v) t =
+  { intro_aux = introducable_pledge_aux t is is' f v extra }
 
 ghost
-fn pledge_inames_live (is:inames) (f p:slprop)
-  requires pledge is f p
-  ensures inames_live is ** pledge is f p
+fn pledge_inames_finite (is:inames) (f p:slprop)
+  preserves pledge is f p
+  ensures pure (is_finite is)
 {
   unfold pledge;
-  dup_inames_live is;
   fold pledge;
 }
 
 ghost
-fn pledge_sub_inv (is1:inames) (is2:inames { inames_subset is1 is2 })(f:slprop) (v:slprop)
-  requires pledge is1 f v ** inames_live is2
+fn pledge_sub_inv (is1:inames) (is2:fin_inames { inames_subset is1 is2 })(f:slprop) (v:slprop)
+  requires pledge is1 f v
   ensures pledge is2 f v
 {
   unfold pledge;
   trade_sub_inv #is1 #is2 _ _;
-  gather_inames_live is1 is2;
-  GhostSet.lemma_equal_intro (GhostSet.union is1 is2) is2;
-  rewrite (inames_live (GhostSet.union is1 is2)) as inames_live is2;
   fold pledge;
 } 
 
@@ -62,47 +60,33 @@ fn return_pledge (f v : slprop)
   requires v
   ensures pledge emp_inames f v
 {
-  intro (f @==> f ** v) #v fn _{};
-  inames_live_empty ();
-  fold pledge;
+  intro (pledge emp_inames f v) #v fn _ {};
 }
 
 
 let call #t #is #req #ens (h: unit -> stt_ghost is t req (fun x -> ens x)) = h
 
 ghost
-fn make_pledge (is:inames) (f:slprop) (v:slprop) (extra:slprop)
+fn make_pledge (is:fin_inames) (f:slprop) (v:slprop) (extra:slprop)
   (k: unit -> pledge_f #is f #extra v)
-  requires extra ** inames_live is
+  requires extra
   ensures pledge is f v
 {
-  intro (trade #is f (f ** v)) #extra fn _ {
-    call k ()
-  };
-
-  fold pledge;
+  intro (pledge is f v) #extra fn _ { call k () }
 }
 
 
-
-ghost
-fn redeem_pledge_aux (is:inames) (f v:slprop)
-  requires f ** pledge is f v
-  ensures f ** v ** inames_live is
-  opens is
-{
-  unfold pledge;
-  elim_trade #is f (f ** v);
-}
 
 ghost
 fn redeem_pledge (is:inames) (f v:slprop)
-  requires f ** pledge is f v
-  ensures f ** v
+  preserves f
+  requires pledge is f v
   opens is
+  ensures v
+  ensures pure (is_finite is)
 {
-  redeem_pledge_aux is f v;
-  drop_ (inames_live is)
+  unfold pledge;
+  elim_trade #is _ _
 }
 
 
@@ -112,11 +96,11 @@ fn squash_pledge (is:inames) (f:slprop) (v1:slprop)
   requires pledge is f (pledge is f v1)
   ensures pledge is f v1
 {
-  pledge_inames_live is f (pledge is f v1);
-  make_pledge is f v1 (pledge is f (pledge is f v1)) fn _ {
+  pledge_inames_finite is f (pledge is f v1);
+  intro (pledge is f v1) #(pledge is f (pledge is f v1)) fn _ {
     redeem_pledge is f (pledge is f v1);
-    redeem_pledge is f v1
-  };
+    redeem_pledge is f v1;
+  }
 }
 
 
@@ -129,12 +113,12 @@ fn bind_pledge (#is:inames) (#f:slprop) (#v1:slprop) (#v2:slprop)
   requires pledge is f v1 ** extra
   ensures pledge is f v2
 {
-  pledge_inames_live is f v1;
-  make_pledge is f (pledge is f v2) (extra ** pledge is f v1) fn _ {
+  pledge_inames_finite is f v1;
+  intro (pledge is f v2) #(extra ** pledge is f v1) fn _ {
     redeem_pledge is f v1;
     call k ();
-  };
-  squash_pledge is f v2
+    redeem_pledge is f v2;
+  }
 }
 
 
@@ -161,8 +145,8 @@ fn rewrite_pledge_full (#is:inames) (#f:slprop) (v1 : slprop) (v2 : slprop)
   requires pledge is f v1
   ensures pledge is f v2
 {
-  pledge_inames_live is f v1;
-  make_pledge is f v2 (pledge is f v1) fn _
+  pledge_inames_finite is f v1;
+  intro (pledge is f v2) #(pledge is f v1) fn _
   {
     redeem_pledge is f v1;
     call k ()
@@ -193,8 +177,8 @@ fn join_pledge
   requires pledge is f v1 ** pledge is f v2
   ensures pledge is f (v1 ** v2)
 {
-  pledge_inames_live is f v1;
-  make_pledge is f (v1 ** v2) (pledge is f v1 ** pledge is f v2) fn _
+  pledge_inames_finite is f v1;
+  intro (pledge is f (v1 ** v2)) #(pledge is f v1 ** pledge is f v2) fn _
   {
     redeem_pledge is f v1;
     redeem_pledge is f v2;
@@ -209,12 +193,11 @@ fn squash_pledge'
   (f v1:slprop)
   requires pure (inames_subset is1 is) **
            pure (inames_subset is2 is) **
-           pledge is1 f (pledge is2 f v1) **
-           inames_live is
+           pure (is_finite is) **
+           pledge is1 f (pledge is2 f v1)
   ensures pledge is f v1
 {
-  make_pledge is f v1 (pledge is1 f (pledge is2 f v1)) fn _
-  {
+  intro (pledge is f v1) #(pledge is1 f (pledge is2 f v1)) fn _ {
     redeem_pledge is1 f (pledge is2 f v1);
     redeem_pledge is2 f v1
   };
@@ -342,8 +325,7 @@ fn flip_invp
   assert (pure (v1 ** v2 == v2 ** v1));
 
   rewrite split_switch is b1 b2 f v1 v2
-       as split_switch is b2 b1 f v2 v1
-    by __tac ();
+       as split_switch is b2 b1 f v2 v1;
 
   fold (inv_p' is f v2 v1 r2 r1 b2 b1);
   fold inv_p;
@@ -380,7 +362,7 @@ fn ghost_split_pledge (#is:inames) (#f:slprop) (v1:slprop) (v2:slprop)
   returns i : iname
   ensures pledge (add_inv is i) f v1 ** pledge (add_inv is i) f v2 ** pure (not (mem_inv is i))
 {
-  pledge_inames_live is f (v1 ** v2);
+  pledge_inames_finite is f (v1 ** v2);
   let r1 = GR.alloc false;
   let r2 = GR.alloc false;
   GR.share r1;
@@ -389,22 +371,18 @@ fn ghost_split_pledge (#is:inames) (#f:slprop) (v1:slprop) (v2:slprop)
   fold (inv_p' is f v1 v2 r1 r2 false false);
   fold inv_p;
   let i = fresh_invariant is (inv_p is f v1 v2 r1 r2);
-  inames_live_inv i (inv_p is f v1 v2 r1 r2);
-  gather_inames_live is (single i);
-  Pulse.Class.Duplicable.dup (inv i (inv_p is f v1 v2 r1 r2)) ();
+  dup (inv i (inv_p is f v1 v2 r1 r2)) ();
 
   let is' = add_inv is i;
   GhostSet.lemma_equal_intro (GhostSet.union is (single i)) is';
-  rewrite (inames_live (GhostSet.union is (single i))) as (inames_live is');
-  dup_inames_live is';
   later_credit_add 1 1;
   rewrite
     later_credit 2
   as
     later_credit 1 ** later_credit 1;
 
-  make_pledge (add_inv is i) f v1
-    ((r1 |-> Frac 0.5R false) ** later_credit 1 ** inv i (inv_p is f v1 v2 r1 r2) ** pure (not (mem_inv is i))) fn _
+  intro (pledge (add_inv is i) f v1)
+    #((r1 |-> Frac 0.5R false) ** later_credit 1 ** inv i (inv_p is f v1 v2 r1 r2) ** pure (not (mem_inv is i))) fn _
   {
     elim_body_l1 #is #f i v1 v2 r1 r2 ();
     drop_ (inv i (inv_p is f v1 v2 r1 r2));
@@ -412,8 +390,8 @@ fn ghost_split_pledge (#is:inames) (#f:slprop) (v1:slprop) (v2:slprop)
     then a drop, so I used an auxiliary _l1 function. *)
   };
 
-  make_pledge (add_inv is i) f v2
-    ((r2 |-> Frac 0.5R false) ** later_credit 1 ** inv i (inv_p is f v1 v2 r1 r2) ** pure (not (mem_inv is i))) fn _
+  intro (pledge (add_inv is i) f v2)
+    #((r2 |-> Frac 0.5R false) ** later_credit 1 ** inv i (inv_p is f v1 v2 r1 r2) ** pure (not (mem_inv is i))) fn _
   {
     elim_body_r1 #is #f i v1 v2 r1 r2 ();
     drop_ (inv i (inv_p is f v1 v2 r1 r2));

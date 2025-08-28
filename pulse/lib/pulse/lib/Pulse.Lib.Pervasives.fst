@@ -204,20 +204,6 @@ type rust_extraction_attr =
 
 
 ghost
-fn dup_inames_live (is:inames)
-  requires inames_live is
-  ensures inames_live is ** inames_live is
-{
-  GhostSet.lemma_equal_intro is (GhostSet.union is is);
-  rewrite inames_live is as inames_live (GhostSet.union is is);
-  share_inames_live is is;
-}
-
-instance duplicable_inames_live (is:inames) : duplicable (inames_live is) = {
-  dup_f = (fun _ -> dup_inames_live is)
-}
-
-ghost
 fn dup_star (p q:slprop) {| duplicable p |} {| duplicable q |} : duplicable_f (p ** q) =
 {
   open Pulse.Class.Duplicable;

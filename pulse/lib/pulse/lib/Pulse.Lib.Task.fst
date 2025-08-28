@@ -739,8 +739,7 @@ fn disown (#p:pool)
   requires joinable p post h
   ensures  pledge [] (pool_done p) (post)
 {
-  inames_live_empty ();
-  make_pledge emp_inames (pool_done p) post (joinable p post h) fn _ {
+  intro (pledge emp_inames (pool_done p) post) #(joinable p post h) fn _ {
     unfold (pool_done p);
     unfold (joinable p post h);
     unfold (handle_spotted p post h);
@@ -902,8 +901,7 @@ fn pool_done_handle_done (#p:pool)
   requires handle_spotted p post h
   ensures pledge [] (pool_done p) (handle_done h)
 {
-  inames_live_empty();
-  make_pledge emp_inames (pool_done p) (handle_done h) (handle_spotted p post h) fn _ {
+  intro (pledge emp_inames (pool_done p) (handle_done h)) #(handle_spotted p post h) fn _ {
     unfold (pool_done p);
     pool_done_handle_done_aux2 #p #post h _;
     fold (pool_done p);
