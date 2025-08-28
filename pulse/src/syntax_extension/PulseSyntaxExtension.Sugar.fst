@@ -418,7 +418,8 @@ and eq_ascription (a1 a2:either computation_type (option A.term)) =
   | _, _ -> false
 and eq_computation_type (c1 c2:computation_type) =
   c1.tag = c2.tag &&
-  forall2 eq_annot c1.annots c2.annots
+  forall2 eq_annot c1.annots c2.annots &&
+  c1.literally = c2.literally
 and eq_annot (a1 a2:computation_annot) =
   match fst a1, fst a2 with
   | Preserves s1, Preserves s2 -> eq_slprop s1 s2
