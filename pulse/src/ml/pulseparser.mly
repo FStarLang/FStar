@@ -297,7 +297,7 @@ matchStmt:
 
 bindableTerm:
   | p=pulseBindableTerm { let p = PulseSyntaxExtension_Sugar.mk_stmt p (rr $loc) in Stmt_initializer p }
-  | s=noSeqTerm { Default_initializer s }
+  | s=noSeqTerm args=list(termPulseLambda) { Default_initializer (s, args) }
   | LBRACK_BAR v=noSeqTerm SEMICOLON n=noSeqTerm BAR_RBRACK { Array_initializer { init=v; len=n } }
  
 pulseBindableTerm:

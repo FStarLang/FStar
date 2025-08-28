@@ -223,7 +223,7 @@ and fn_defn = {
 
 and let_init =
   | Array_initializer of array_init
-  | Default_initializer of A.term
+  | Default_initializer of A.term & list lambda
   | Lambda_initializer of fn_defn
   | Stmt_initializer of stmt
 
@@ -487,7 +487,7 @@ and eq_stmt' (s1 s2:stmt') =
 and eq_let_init (i1 i2:let_init) =
   match i1, i2 with
   | Array_initializer a1, Array_initializer a2 -> eq_array_init a1 a2
-  | Default_initializer t1, Default_initializer t2 -> AD.eq_term t1 t2
+  | Default_initializer (t1, a1), Default_initializer (t2, a2) -> AD.eq_term t1 t2 && forall2 eq_lambda a1 a2
   | Lambda_initializer l1, Lambda_initializer l2 -> eq_fn_defn l1 l2
   | Stmt_initializer s1, Stmt_initializer s2 -> eq_stmt s1 s2
   | _, _ -> false
@@ -622,7 +622,7 @@ and scan_stmt (cbs:A.dep_scan_callbacks) (s:stmt) =
 and scan_let_init (cbs:A.dep_scan_callbacks) (i:let_init) =
   match i with
   | Array_initializer a -> cbs.scan_term a.init; cbs.scan_term a.len
-  | Default_initializer t -> cbs.scan_term t
+  | Default_initializer (t, a) -> cbs.scan_term t; iter (scan_lambda cbs) a
   | Lambda_initializer l -> scan_fn_defn cbs l
   | Stmt_initializer s -> scan_stmt cbs s
 and scan_ensures_slprop (cbs:A.dep_scan_callbacks) (e:ensures_slprop) =
