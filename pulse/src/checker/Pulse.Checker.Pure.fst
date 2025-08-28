@@ -171,6 +171,8 @@ let exn_as_issue (e:exn) : FStar.Issue.issue =
 let catch_all (f:unit -> Tac (option 'a & issues))
   : Tac (option 'a & issues)
   = match T.catch f with
+    | Inl (TacticFailure (s, _)) ->
+      None, [Issue.mk_issue_doc "Error" ((text "Tactic failure:") :: s) None None []]
     | Inl exn ->
       None, [exn_as_issue exn]
     | Inr v -> v
