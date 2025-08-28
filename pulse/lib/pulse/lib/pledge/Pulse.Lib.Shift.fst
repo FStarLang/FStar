@@ -62,7 +62,7 @@ fn intro_shift
 fn introducable_shift_aux u#a (t: Type u#a) is is'
     hyp extra concl {| duplicable extra |} {| introducable is' (extra ** hyp) concl t |} (k: t) :
     stt_ghost unit is extra (fun _ -> shift #is' hyp concl) = {
-  intro_shift #is' hyp concl extra = _ {
+  intro_shift #is' hyp concl extra fn _ {
     intro #is' concl #(extra ** hyp) (fun _ -> k);
   }
 }
@@ -175,7 +175,7 @@ ensures shift #is2 hyp concl
   let d = fst (dsnd res);
   let f = snd (dsnd res);
 
-  intro (shift #is2 hyp concl) #(dfst res) = _
+  intro (shift #is2 hyp concl) #(dfst res) fn _
   {
     rewrite (dfst res) as res._1;
     call f ()
@@ -227,7 +227,7 @@ fn shift_compose
 requires shift #is p q ** shift #is q r
 ensures  shift #is p r
 {
-  intro (shift #is p r) #(shift #is p q ** shift #is q r) = _
+  intro (shift #is p r) #(shift #is p q ** shift #is q r) fn _
   {
     elim_shift #is p _;
     elim_shift #is _ _;

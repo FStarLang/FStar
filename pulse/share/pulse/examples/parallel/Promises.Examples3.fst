@@ -147,7 +147,7 @@ fn setup (_:unit)
   let i = new_invariant inv_p;
   inames_live_inv i inv_p;
   GhostSet.lemma_equal_intro (add_inv emp_inames i) (single i);
-  make_pledge (add_inv emp_inames i) (pts_to done #0.5R true) goal (inv i inv_p ** pts_to claimed #0.5R false) = _ {
+  make_pledge (add_inv emp_inames i) (pts_to done #0.5R true) goal (inv i inv_p ** pts_to claimed #0.5R false) fn _ {
     //cheating: (proof i) is atomic, not ghost
     admit()
   };

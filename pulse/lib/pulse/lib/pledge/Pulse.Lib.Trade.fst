@@ -46,7 +46,7 @@ fn intro_trade
 fn introducable_trade_aux u#a (t: Type u#a) is is'
     hyp extra concl {| introducable is' (extra ** hyp) concl t |} (k: t) :
     stt_ghost unit is extra (fun _ -> trade #is' hyp concl) = {
-  intro_trade #is' hyp concl extra = _ {
+  intro_trade #is' hyp concl extra fn _ {
     intro #is' concl #(extra ** hyp) (fun _ -> k);
   }
 }
@@ -127,7 +127,7 @@ fn trade_sub_inv
 {
   let res = deconstruct_trade is1 hyp concl;
 
-  intro (trade #is2 hyp concl) #(dfst res) = _ {
+  intro (trade #is2 hyp concl) #(dfst res) fn _ {
     let f = dsnd res;
     rewrite dfst res as res._1;
     call f ()
@@ -143,7 +143,7 @@ fn trade_map
   requires trade #is p q
   ensures  trade #is p r
 {
-  intro (trade #is p r) #(trade #is p q) = _
+  intro (trade #is p r) #(trade #is p q) fn _
   {
     elim_trade #is _ _;
     f ();
@@ -158,7 +158,7 @@ fn trade_compose
   requires trade #is p q ** trade #is q r
   ensures  trade #is p r
 {
-  intro (trade #is p r) #(trade #is p q ** trade #is q r) = _
+  intro (trade #is p r) #(trade #is p q ** trade #is q r) fn _
   {
     elim_trade #is p _;
     elim_trade #is _ _;
@@ -171,7 +171,7 @@ fn eq_as_trade
   requires pure (p1 == p2)
   ensures  p2 @==> p1
 {
-  intro (p2 @==> p1) =_{ rewrite p2 as p1 }
+  intro (p2 @==> p1) fn _{ rewrite p2 as p1 }
 }
 
 ghost

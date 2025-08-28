@@ -156,6 +156,9 @@ pulseAscriptionMaybeBody:
   | COLON typ=option(appTerm) lam=option(eqPulseLambda) 
     { Inr(typ, lam) }
 
+termPulseLambda:
+  | FN lambda=pulseLambda { lambda }
+
 eqPulseLambda:
   | EQUALS lambda=pulseLambda
      { lambda }
@@ -245,7 +248,7 @@ pulseStmtNoSeq:
       | _ ->
         raise_error_text (rr $loc) Fatal_SyntaxError "Expected an array assignment of the form x.(i) <- v"
     }
-  | tm=appTerm args=list(eqPulseLambda)
+  | tm=appTerm args=list(termPulseLambda)
     { PulseSyntaxExtension_Sugar.mk_expr tm args }
   | lhs=appTermNoRecordExp COLON_EQUALS a=noSeqTerm
     { PulseSyntaxExtension_Sugar.mk_assignment lhs a }

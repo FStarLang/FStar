@@ -36,7 +36,7 @@ requires pts_to x 'v
 ensures pts_to x #0.5R 'v ** regain_half x 'v
 {
   GR.share x;
-  intro (pts_to x #0.5R 'v @==> pts_to x 'v) #(pts_to x #0.5R 'v) = _
+  intro (pts_to x #0.5R 'v @==> pts_to x 'v) #(pts_to x #0.5R 'v) fn _
   {
     GR.gather x;
   };
@@ -72,7 +72,7 @@ ensures pts_to x #0.5R 'v ** regain_half_q x
 {
   GR.share x;
   intro (forall* u. pts_to x #0.5R u @==> pts_to x u)
-      #(pts_to x #0.5R 'v) = _ u {
+      #(pts_to x #0.5R 'v) fn _ u {
     gather x;
   };
   fold regain_half_q;
@@ -106,7 +106,7 @@ ensures pts_to x #0.5R 'w ** can_update x
 {
   share x;
   intro (forall* u v. pts_to x #0.5R u @==> pts_to x v)
-      #(pts_to x #0.5R 'w) = _ u v {
+      #(pts_to x #0.5R 'w) fn _ u v {
     gather x;
     x := v;
   };

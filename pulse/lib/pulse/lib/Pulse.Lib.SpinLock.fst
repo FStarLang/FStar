@@ -263,7 +263,7 @@ ghost
 fn elim_inv_and_active_into_alive (l:lock) (v:slprop) (#p:perm)
   ensures (inv (iname_of l) (iname_v_of l v) ** lock_active #p l) @==> lock_alive l #p v
 {
-  intro (inv (iname_of l) (iname_v_of l v) ** lock_active #p l @==> lock_alive l #p v) = _
+  intro (inv (iname_of l) (iname_v_of l v) ** lock_active #p l @==> lock_alive l #p v) fn _
   {
     rewrite each
       iname_of l as CInv.iname_of l.i,
@@ -280,7 +280,7 @@ fn elim_alive_into_inv_and_active (l:lock) (v:slprop) (#p:perm)
   requires emp
   ensures lock_alive l #p v @==> (inv (iname_of l) (iname_v_of l v) ** lock_active #p l)
 {
-  intro (lock_alive l #p v @==> inv (iname_of l) (iname_v_of l v) ** lock_active #p l) = _
+  intro (lock_alive l #p v @==> inv (iname_of l) (iname_v_of l v) ** lock_active #p l) fn _
   {
     unfold (lock_alive l #p v);
     fold (lock_active #p l);

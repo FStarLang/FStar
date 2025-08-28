@@ -47,7 +47,7 @@ fn pledge_comm (f:slprop) (v1 v2 : slprop)
   requires pledge emp_inames f (v2 ** v1)
   ensures pledge emp_inames f (v1 ** v2)
 {
-  rewrite_pledge (v2 ** v1) (v1 ** v2) #emp_inames =_{};
+  rewrite_pledge (v2 ** v1) (v1 ** v2) #emp_inames fn _{};
   
   // if not fully automated (certainly cannot be for all rewrites)
   // maybe some syntax like

@@ -64,7 +64,7 @@ requires
 ensures
   OR.on_range g i j
 {
-  OR.on_range_weaken f g i j = k { rewrite f k as g k }
+  OR.on_range_weaken f g i j fn k { rewrite f k as g k }
 }
 
 let istar_singleton (p:slprop)

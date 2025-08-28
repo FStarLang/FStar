@@ -163,11 +163,11 @@ fn for_loop
     pre pre'
     (-lo)
     lo hi
-    = k { rewrite pre k as pre' (k + (-lo)); };
+    fn k { rewrite pre k as pre' (k + (-lo)); };
   rewrite (on_range pre' (lo+(-lo)) (hi+(-lo))) as (on_range pre' 0 (hi-lo));
   assert (on_range pre' 0 (hi-lo));
 
-  simple_for pre' post' r (hi-lo) = i
+  simple_for pre' post' r (hi-lo) fn i
   {
     rewrite pre' i as pre (i+lo);
     f (i+lo);
@@ -180,7 +180,7 @@ fn for_loop
     post' post
     lo
     0 (hi-lo)
-    = k { rewrite post' k as post (k + lo) };
+    fn k { rewrite post' k as post (k + lo) };
   rewrite
     on_range post (0+lo) ((hi-lo)+lo)
   as
@@ -251,7 +251,7 @@ parallel_for
     (fun i -> pledge emp_inames (pool_done p) (post i) ** pool_alive #(div_perm 1.0R n) p)
     emp
     n
-    = i
+    fn i
   {
     let _h = spawn_ p #(div_perm 1.0R n) #(pre i) #(post i) (fun () -> f i);
     ()
@@ -288,7 +288,7 @@ parallel_for_alt
 {
   let p = setup_pool 42;
 
-  simple_for pre (fun i -> pledge emp_inames (pool_done p) (post i)) (pool_alive p) n = i {
+  simple_for pre (fun i -> pledge emp_inames (pool_done p) (post i)) (pool_alive p) n fn i {
     let _h = spawn_ p #1.0R #(pre i) #(post i) (fun () -> f i);
     ()
   };

@@ -73,7 +73,7 @@ fn rec t_quicksort
         (T.pool_alive #f p **
           quicksort_post a lo hi s0 lb rb)
         #emp_inames
-      = _
+      fn _
     {
       (* Functional correctness *)
       unfold (quicksort_post a lo p31 s1 lb pivot);

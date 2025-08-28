@@ -72,7 +72,7 @@ fn introducable_forall_aux u#a u#b (a: Type u#a) (t: a -> Type u#b) is extra (co
       {| (x:a -> introducable emp_inames extra (concl x) (t x)) |}
       (k: (x:a -> t x)) :
     stt_ghost unit is extra (fun _ -> forall* x. concl x) = {
-  intro_forall #a #concl extra = x {
+  intro_forall #a #concl extra fn x {
     intro (concl x) #extra (fun _ -> k x)
   }
 }

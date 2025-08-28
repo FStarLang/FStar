@@ -336,7 +336,7 @@ fn rec extract_state_pred
         extract_state_pred p t #ts';
 
         intro (all_state_pred ts' @==> all_state_pred ts)
-            #(task_thunk_typing t' ** state_pred t'.pre t'.post t'.h) = _
+            #(task_thunk_typing t' ** state_pred t'.pre t'.post t'.h) fn _
         {
           add_one_state_pred t' ts';
         };
@@ -346,7 +346,7 @@ fn rec extract_state_pred
         take_one_h11 t ts';
 
         intro (state_pred t.pre t.post t.h @==> all_state_pred ts)
-            #(task_thunk_typing t' ** all_state_pred ts') = _
+            #(task_thunk_typing t' ** all_state_pred ts') fn _
         {
           add_one_state_pred t ts';
         };
@@ -417,7 +417,7 @@ ghost fn shift_up (x: slprop_ref) (y: slprop)
   requires slprop_ref_pts_to x y
   ensures shift (up x ** later_credit 1) y
 {
-  intro (shift (up x ** later_credit 1) y) #(slprop_ref_pts_to x y) = _ {
+  intro (shift (up x ** later_credit 1) y) #(slprop_ref_pts_to x y) fn _ {
     unfold up x;
     slprop_ref_gather _;
     later_elim _;
@@ -740,7 +740,7 @@ fn disown (#p:pool)
   ensures  pledge [] (pool_done p) (post)
 {
   inames_live_empty ();
-  make_pledge emp_inames (pool_done p) post (joinable p post h) = _ {
+  make_pledge emp_inames (pool_done p) post (joinable p post h) fn _ {
     unfold (pool_done p);
     unfold (joinable p post h);
     unfold (handle_spotted p post h);
@@ -903,7 +903,7 @@ fn pool_done_handle_done (#p:pool)
   ensures pledge [] (pool_done p) (handle_done h)
 {
   inames_live_empty();
-  make_pledge emp_inames (pool_done p) (handle_done h) (handle_spotted p post h) = _ {
+  make_pledge emp_inames (pool_done p) (handle_done h) (handle_spotted p post h) fn _ {
     unfold (pool_done p);
     pool_done_handle_done_aux2 #p #post h _;
     fold (pool_done p);

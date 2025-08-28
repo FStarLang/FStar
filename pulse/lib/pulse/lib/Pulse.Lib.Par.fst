@@ -26,7 +26,7 @@ fn par_stt' #preL #postL #preR #postR
   ensures postL ** postR
 {
   let c = create postL;
-  fork #(preL ** send c postL) = _ {
+  fork #(preL ** send c postL) fn _ {
     f ();
     signal c #postL;
   };

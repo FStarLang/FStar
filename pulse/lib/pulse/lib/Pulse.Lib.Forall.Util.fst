@@ -30,7 +30,7 @@ fn trans_compose (#a #b #c:Type0) (p:a -> slprop) (q:b -> slprop) (r:c -> slprop
 {
     intro (forall* x. p x @==> r (g (f x)))
             #((forall* x. p x @==> q (f x)) ** (forall* x. q x @==> r (g x)))
-            = _ x {
+            fn _ x {
         elim #_ #(fun x -> p x @==> q (f x)) x;
         T.elim_trade _ _;
         elim #_ #(fun x -> q x @==> r (g x)) (f x);
@@ -66,6 +66,6 @@ fn intro_forall_imp (#a:Type0) (p q: a -> slprop) (r:slprop)
   requires r
   ensures forall* x. p x @==> q x
 {
-    intro (forall* x. p x @==> q x) #r = _ x { elim x }
+    intro (forall* x. p x @==> q x) #r fn _ x { elim x }
 }
 

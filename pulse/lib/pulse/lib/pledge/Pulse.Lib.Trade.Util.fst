@@ -11,7 +11,7 @@ fn refl
   (p: slprop)
   ensures (trade #is p p)
 {
-  intro (trade #is p p) =_{ };
+  intro (trade #is p p) fn _{ };
 }
 
 ghost
@@ -33,7 +33,7 @@ fn curry
    ensures trade #emp_inames p (trade #is q r)
 {
   intro (trade p (trade #is q r)) #(trade #is (p ** q) r)
-    =_{ elim _ _ }
+    fn _{ elim _ _ }
 }
 
 ghost
@@ -116,7 +116,7 @@ fn reg_l
   requires (trade #is p1 p2)
   ensures (trade #is (p ** p1) (p ** p2))
 {
-  intro (trade #is (p ** p1) (p ** p2)) #(trade #is p1 p2) = _
+  intro (trade #is (p ** p1) (p ** p2)) #(trade #is p1 p2) fn _
   {
     elim_trade #is p1 p2
   };
@@ -142,7 +142,7 @@ fn weak_concl_l
   requires (trade #is p1 p2) ** p
   ensures (trade #is p1 (p ** p2))
 {
-  intro (trade #is p1 (p ** p2)) #(trade #is p1 p2 ** p) =_{ elim _ _ }
+  intro (trade #is p1 (p ** p2)) #(trade #is p1 p2 ** p) fn _{ elim _ _ }
 }
 
 ghost
@@ -165,7 +165,7 @@ fn prod
   requires (trade #is l1 r1 ** trade #is l2 r2)
   ensures (trade #is (l1 ** l2) (r1 ** r2))
 {
-  intro (trade #is (l1 ** l2) (r1 ** r2)) #(trade #is l1 r1 ** trade #is l2 r2) = _ {
+  intro (trade #is (l1 ** l2) (r1 ** r2)) #(trade #is l1 r1 ** trade #is l2 r2) fn _ {
     elim_trade #is l1 r1;
     elim_trade #is l2 r2
   }
@@ -179,7 +179,7 @@ fn rewrite_with_trade
   ensures p2 ** (trade #is p2 p1)
 {
   rewrite p1 as p2;
-  intro (trade #is p2 p1) =_{ rewrite p2 as p1 };
+  intro (trade #is p2 p1) fn _{ rewrite p2 as p1 };
 }
 
 ghost

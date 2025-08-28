@@ -270,7 +270,7 @@ ensures
   is_list n.tail tl **
   (is_list n.tail tl @==> is_list (Some v) (n.head::tl))
 {
-  intro (is_list n.tail tl @==> is_list (Some v) (n.head::tl)) #(v |-> n) = _ {
+  intro (is_list n.tail tl @==> is_list (Some v) (n.head::tl)) #(v |-> n) fn _ {
     intro_is_list_cons (Some v) v
   }
 }
@@ -419,7 +419,7 @@ fn move_next_forall (#t:Type) (x:llist t)
     let np = Some?.v x;
     is_list_cases_some x np;
     let node = !np;
-    intro (forall* tl'. is_list node.tail tl' @==> is_list x (node.head::tl')) #(np |-> node) =_ tl' {
+    intro (forall* tl'. is_list node.tail tl' @==> is_list x (node.head::tl')) #(np |-> node) fn _ tl' {
       intro_is_list_cons x np;
     };
     node.tail
@@ -447,7 +447,7 @@ fn append_iter (#t:Type) (x y:llist t)
 {
   let mut cur = x;
   (* the base case, set up the initial invariant *)
-  intro (forall* l. is_list x l @==> is_list x ([]@l)) =_ _{};
+  intro (forall* l. is_list x l @==> is_list x ([]@l)) fn _ _{};
   while (not_is_last_cell Pulse.Lib.Reference.(!cur))
     invariant exists* ll pfx sfx.
       (cur |-> ll) **
@@ -510,7 +510,7 @@ fn split (#t:Type0) (x:llist t) (n:U32.t) (#xl:erased (list t))
   let mut cur = x;
   let mut ctr = 0ul;
   (* the base case, set up the initial invariant *)
-  intro (forall* l. is_list x l @==> is_list x ([]@l)) =_ _{};
+  intro (forall* l. is_list x l @==> is_list x ([]@l)) fn _ _{};
   while ((Pulse.Lib.Reference.(!ctr) <> (n - 1ul)))
     invariant exists* i ll pfx sfx.
       pts_to ctr i **

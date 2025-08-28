@@ -868,7 +868,7 @@ fn rec is_deque_suffix_nolast_helper
       rewrite each p as tail;
       with v. assert (pts_to tail v);
       intro (pts_to tail ({ v with dnext = last' }) @==>
-          is_deque_suffix p [hd] prev tail last') = _
+          is_deque_suffix p [hd] prev tail last') fn _
       {
         rewrite each tail as p;
         fold (is_deque_suffix p [hd] prev tail last');
@@ -890,7 +890,7 @@ fn rec is_deque_suffix_nolast_helper
       intro (pts_to tail ({ v with dnext = last' }) @==>
           is_deque_suffix p (hd :: h2 :: tl2) prev tail last')
         #(pts_to p vp ** trade (pts_to tail { v with dnext = last' }) (is_deque_suffix p' (h2 :: tl2) (Some p) tail last'))
-        = _
+        fn _
       {
         elim_trade _ _;
         fold (is_deque_suffix p (hd :: h2 :: tl2) prev tail last');

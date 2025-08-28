@@ -60,7 +60,7 @@ fn append_split_trade (#t: Type) (input: S.slice t) (#p: perm) (i: SZ.t)
     s1, s2 -> {
       intro (pts_to s1 #p v1 ** pts_to s2 #p v2 @==> pts_to input #p (v1 `Seq.append` v2))
           #(S.is_split input s1 s2)
-        = _
+        fn _
       {
         S.join s1 s2 input
       };
@@ -88,7 +88,7 @@ fn split_trade (#t: Type) (s: S.slice t) (#p: perm) (i: SZ.t) (#v: Ghost.erased 
     s1, s2 -> {
       with v1 v2. assert pts_to s1 #p v1 ** pts_to s2 #p v2;
       intro (pts_to s1 #p v1 ** pts_to s2 #p v2 @==> pts_to s #p v)
-          #(S.is_split s s1 s2) = _
+          #(S.is_split s s1 s2) fn _
       {
         S.join s1 s2 s
       };
@@ -129,7 +129,7 @@ ghost fn ghost_append_split_trade (#t: Type) (input: S.slice t) (#p: perm) (i: S
       intro (pts_to (fst res) #p v1 ** pts_to (snd res) #p v2 @==>
             pts_to input #p (v1 `Seq.append` v2))
           #(S.is_split input (fst res) (snd res))
-        = _
+        fn _
       {
         S.join (fst res) (snd res) input
       };
@@ -152,7 +152,7 @@ ghost fn ghost_split_trade (#t: Type) (s: S.slice t) (#p: perm) (i: SZ.t) (#v: (
       with v1 v2. assert pts_to (fst s') #p v1 ** pts_to (snd s') #p v2;
       intro (pts_to (fst s') #p v1 ** pts_to (snd s') #p v2 @==> pts_to s #p v)
           #(S.is_split s (fst s') (snd s'))
-        = _
+        fn _
       {
         S.join (fst s') (snd s') s
       };
@@ -169,7 +169,7 @@ fn subslice_trade_mut #t (s: slice t) (i j: SZ.t) (#v: erased (Seq.seq t) { SZ.v
 {
   let res = subslice s i j;
   intro (forall* v'. trade (pts_to res v') (pts_to s (Seq.slice v 0 (SZ.v i) `Seq.append` v' `Seq.append` Seq.slice v (SZ.v j) (Seq.length v))))
-      #(subslice_rest res s 1.0R i j v) =_ v' {
+      #(subslice_rest res s 1.0R i j v) fn _ v' {
     unfold subslice_rest;
     join res _ _;
     join _ _ s;
@@ -195,7 +195,7 @@ fn subslice_trade #t (s: slice t) #p (i j: SZ.t) (#v: erased (Seq.seq t) { SZ.v 
   let res = subslice s i j;
   intro
       (pts_to res #p (Seq.slice v (SZ.v i) (SZ.v j)) @==> pts_to s #p v)
-      #(subslice_rest res s p i j v) = _
+      #(subslice_rest res s p i j v) fn _
   {
     unfold subslice_rest;
     join res _ _;
@@ -224,7 +224,7 @@ fn arrayptr_to_slice_intro_trade
     )
 {
   let s = arrayptr_to_slice_intro a alen;
-  intro (pts_to s #p v @==> AP.pts_to a #p v) #(arrayptr_to_slice a s) = _
+  intro (pts_to s #p v @==> AP.pts_to a #p v) #(arrayptr_to_slice a s) fn _
   {
     arrayptr_to_slice_elim s
   };
@@ -246,7 +246,7 @@ ensures
 {
   pts_to_len s;
   let a = slice_to_arrayptr_intro s;
-  intro (AP.pts_to a #p v @==> pts_to s #p v) #(slice_to_arrayptr s a) = _
+  intro (AP.pts_to a #p v @==> pts_to s #p v) #(slice_to_arrayptr s a) fn _
   {
     slice_to_arrayptr_elim a;
   };

@@ -62,7 +62,7 @@ fn return_pledge (f v : slprop)
   requires v
   ensures pledge emp_inames f v
 {
-  intro (f @==> f ** v) #v =_{};
+  intro (f @==> f ** v) #v fn _{};
   inames_live_empty ();
   fold pledge;
 }
@@ -76,7 +76,7 @@ fn make_pledge (is:inames) (f:slprop) (v:slprop) (extra:slprop)
   requires extra ** inames_live is
   ensures pledge is f v
 {
-  intro (trade #is f (f ** v)) #extra = _ {
+  intro (trade #is f (f ** v)) #extra fn _ {
     call k ()
   };
 
@@ -113,7 +113,7 @@ fn squash_pledge (is:inames) (f:slprop) (v1:slprop)
   ensures pledge is f v1
 {
   pledge_inames_live is f (pledge is f v1);
-  make_pledge is f v1 (pledge is f (pledge is f v1)) = _ {
+  make_pledge is f v1 (pledge is f (pledge is f v1)) fn _ {
     redeem_pledge is f (pledge is f v1);
     redeem_pledge is f v1
   };
@@ -130,7 +130,7 @@ fn bind_pledge (#is:inames) (#f:slprop) (#v1:slprop) (#v2:slprop)
   ensures pledge is f v2
 {
   pledge_inames_live is f v1;
-  make_pledge is f (pledge is f v2) (extra ** pledge is f v1) = _ {
+  make_pledge is f (pledge is f v2) (extra ** pledge is f v1) fn _ {
     redeem_pledge is f v1;
     call k ();
   };
@@ -147,7 +147,7 @@ fn bind_pledge' (#is:inames) (#f:slprop) (#v1:slprop) (#v2:slprop)
   requires pledge is f v1 ** extra
   ensures pledge is f v2
 {
-  bind_pledge #is #f #v1 #v2 extra #is_k = _ {
+  bind_pledge #is #f #v1 #v2 extra #is_k fn _ {
     call k ()
   };
 }
@@ -162,7 +162,7 @@ fn rewrite_pledge_full (#is:inames) (#f:slprop) (v1 : slprop) (v2 : slprop)
   ensures pledge is f v2
 {
   pledge_inames_live is f v1;
-  make_pledge is f v2 (pledge is f v1) = _
+  make_pledge is f v2 (pledge is f v1) fn _
   {
     redeem_pledge is f v1;
     call k ()
@@ -178,7 +178,7 @@ fn rewrite_pledge (#is:inames) (#f:slprop) (v1 : slprop) (v2 : slprop)
   requires pledge is f v1
   ensures  pledge is f v2
 {
-  rewrite_pledge_full #is #f v1 v2 #is_k = _
+  rewrite_pledge_full #is #f v1 v2 #is_k fn _
   {
     call k ()
   };
@@ -194,7 +194,7 @@ fn join_pledge
   ensures pledge is f (v1 ** v2)
 {
   pledge_inames_live is f v1;
-  make_pledge is f (v1 ** v2) (pledge is f v1 ** pledge is f v2) = _
+  make_pledge is f (v1 ** v2) (pledge is f v1 ** pledge is f v2) fn _
   {
     redeem_pledge is f v1;
     redeem_pledge is f v2;
@@ -213,7 +213,7 @@ fn squash_pledge'
            inames_live is
   ensures pledge is f v1
 {
-  make_pledge is f v1 (pledge is1 f (pledge is2 f v1)) = _
+  make_pledge is f v1 (pledge is1 f (pledge is2 f v1)) fn _
   {
     redeem_pledge is1 f (pledge is2 f v1);
     redeem_pledge is2 f v1
@@ -404,7 +404,7 @@ fn ghost_split_pledge (#is:inames) (#f:slprop) (v1:slprop) (v2:slprop)
     later_credit 1 ** later_credit 1;
 
   make_pledge (add_inv is i) f v1
-    ((r1 |-> Frac 0.5R false) ** later_credit 1 ** inv i (inv_p is f v1 v2 r1 r2) ** pure (not (mem_inv is i))) = _
+    ((r1 |-> Frac 0.5R false) ** later_credit 1 ** inv i (inv_p is f v1 v2 r1 r2) ** pure (not (mem_inv is i))) fn _
   {
     elim_body_l1 #is #f i v1 v2 r1 r2 ();
     drop_ (inv i (inv_p is f v1 v2 r1 r2));
@@ -413,7 +413,7 @@ fn ghost_split_pledge (#is:inames) (#f:slprop) (v1:slprop) (v2:slprop)
   };
 
   make_pledge (add_inv is i) f v2
-    ((r2 |-> Frac 0.5R false) ** later_credit 1 ** inv i (inv_p is f v1 v2 r1 r2) ** pure (not (mem_inv is i))) = _
+    ((r2 |-> Frac 0.5R false) ** later_credit 1 ** inv i (inv_p is f v1 v2 r1 r2) ** pure (not (mem_inv is i))) fn _
   {
     elim_body_r1 #is #f i v1 v2 r1 r2 ();
     drop_ (inv i (inv_p is f v1 v2 r1 r2));

@@ -250,7 +250,7 @@ fn on_range_cons_with_implies
   ensures on_range p i k ** (on_range p i k @==> (p i ** on_range p (i + 1) k))
 {
   on_range_le p #(i + 1) #k;
-  intro (on_range p i k @==> p i ** on_range p (i + 1) k) = _
+  intro (on_range p i k @==> p i ** on_range p (i + 1) k) fn _
   {
     rewrite (on_range p i k) as (p i ** on_range p (i + 1) k);
   };
@@ -320,7 +320,7 @@ fn on_range_snoc_with_implies
   ensures on_range p i (j + 1) **  (on_range p i (j + 1) @==> (on_range p i j ** p j))
 {
   on_range_le p #i #j;
-  intro (on_range p i (j + 1) @==> on_range p i j ** p j) = _
+  intro (on_range p i (j + 1) @==> on_range p i j ** p j) fn _
   {
     on_range_unsnoc ();
     rewrite (p (j + 1 - 1)) as (p j)
@@ -391,7 +391,7 @@ fn on_range_focus
   ensures p j ** (p j @==> on_range p i k)
 {
   on_range_get j;
-  intro (p j @==> on_range p i k) #(on_range p i j ** on_range p (j + 1) k) = _
+  intro (p j @==> on_range p i k) #(on_range p i j ** on_range p (j + 1) k) fn _
   {
     on_range_put i j k;
   };

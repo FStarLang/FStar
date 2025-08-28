@@ -230,7 +230,7 @@ requires
 ensures 
   (is_list n.tail tl @==> is_list (Some v) (n.head::tl))
 {
-  intro (is_list n.tail tl @==> is_list (Some v) (n.head::tl)) #(pts_to v n) = _
+  intro (is_list n.tail tl @==> is_list (Some v) (n.head::tl)) #(pts_to v n) fn _
   {
     intro_is_list_cons (Some v) v
   };
@@ -329,7 +329,7 @@ ensures exists* hd tl.
   with _node _tl. _;
   let node = !np;
   intro (forall* tl'. is_list node.tail tl' @==> is_list x (node.head::tl'))
-      #(pts_to np node) = _ tl' {
+      #(pts_to np node) fn _ tl' {
     intro_is_list_cons x np;
   };
   node.tail
@@ -410,7 +410,7 @@ ensures is_list x ('l1 @ 'l2)
 {
   let mut cur = x;
   //the base case, set up the initial invariant
-  intro (forall* l. is_list x l @==> is_list x ([] @ l)) = _ l {};
+  intro (forall* l. is_list x l @==> is_list x ([] @ l)) fn _ l {};
   while (not_is_last_cell (!cur)) //check if we are at the last cell
   invariant exists* ll pfx sfx.
     pts_to cur ll **   //cur holds the pointer to the current head of the traversal, ll
