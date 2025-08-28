@@ -21,6 +21,10 @@ open Pulse.Lib.Pervasives
 
 module T = FStar.Tactics
 
+[@@erasable]
+let trade_f (#[T.exact (`emp_inames)] is: inames) (hyp: slprop) (#[T.exact (`emp)] extra: slprop) (concl: slprop) =
+  stt_ghost unit is (requires extra ** hyp) (ensures fun _ -> concl)
+
 val trade
   (#[T.exact (`emp_inames)] is:inames)
   ([@@@mkey] hyp:slprop)
@@ -47,11 +51,7 @@ ghost
 fn intro_trade
   (#[T.exact (`emp_inames)]is:inames)
   (hyp concl extra:slprop)
-  (f_elim: unit -> (
-    stt_ghost unit is
-    (extra ** hyp)
-    (fun _ -> concl)
-  ))
+  (f_elim: unit -> trade_f #is hyp #extra concl)
   requires extra
   ensures trade #is hyp concl
 

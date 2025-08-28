@@ -68,9 +68,9 @@ let belongs_to (#a:Type0) (r:mutex_guard a) (m:mutex a) : slprop =
 
 
 fn lock (#a:Type0) (#v:a -> slprop) (#p:perm) (m:mutex a)
-  requires mutex_live m #p v
+  preserves mutex_live m #p v
   returns r:mutex_guard a
-  ensures mutex_live m #p v ** r `belongs_to` m ** (exists* x. pts_to r x ** v x)
+  ensures r `belongs_to` m ** (exists* x. pts_to r x ** v x)
 {
   unfold (mutex_live m#p v);
   acquire m.l;
@@ -87,8 +87,8 @@ fn lock (#a:Type0) (#v:a -> slprop) (#p:perm) (m:mutex a)
 
 
 fn unlock (#a:Type0) (#v:a -> slprop) (#p:perm) (m:mutex a) (mg:mutex_guard a)
-  requires mutex_live m #p v ** mg `belongs_to` m ** (exists* x. pts_to mg x ** v x)
-  ensures mutex_live m #p v
+  preserves mutex_live m #p v
+  requires mg `belongs_to` m ** (exists* x. pts_to mg x ** v x)
 {
   unfold (mutex_live m #p v);
   unfold (mg `belongs_to` m);

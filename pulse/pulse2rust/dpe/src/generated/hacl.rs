@@ -35,7 +35,7 @@ pub static hacl_hash: fn(
     (),
     (),
 ) -> () = super::hacl::hacl_hash0;
-pub fn hacl_hmac0(
+pub fn hacl_hmac(
     alg: super::hacl::alg_t,
     dst: &mut [u8],
     key: &mut [u8],
@@ -61,20 +61,7 @@ pub fn hacl_hmac0(
         crate::fstar_sizet::sizet_to_uint32(msg_len),
     )
 }
-pub static hacl_hmac: fn(
-    super::hacl::alg_t,
-    &mut [u8],
-    &mut [u8],
-    super::hacl::hashable_len,
-    &mut [u8],
-    super::hacl::hashable_len,
-    (),
-    (),
-    (),
-    (),
-    (),
-) -> () = super::hacl::hacl_hmac0;
-pub fn ed25519_verify0(
+pub fn ed25519_verify(
     pubk: &mut [u8],
     hdr: &mut [u8],
     hdr_len: super::hacl::signable_len,
@@ -99,19 +86,7 @@ pub fn ed25519_verify0(
         sig,
     )
 }
-pub static ed25519_verify: fn(
-    &mut [u8],
-    &mut [u8],
-    super::hacl::signable_len,
-    &mut [u8],
-    (),
-    (),
-    (),
-    (),
-    (),
-    (),
-) -> bool = super::hacl::ed25519_verify0;
-pub fn ed25519_sign0(
+pub fn ed25519_sign(
     buf: &mut [u8],
     privk: &mut [u8],
     len: usize,
@@ -133,17 +108,6 @@ pub fn ed25519_sign0(
         msg,
     )
 }
-pub static ed25519_sign: fn(
-    &mut [u8],
-    &mut [u8],
-    usize,
-    &mut [u8],
-    (),
-    (),
-    (),
-    (),
-    (),
-) -> () = super::hacl::ed25519_sign0;
 pub fn dice_hash_alg1(uu___: ()) -> super::hacl::alg_t {
     crate::spec_hash_definitions::sha2_256
 }

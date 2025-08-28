@@ -22,6 +22,10 @@ open Pulse.Main
 
 module T = FStar.Tactics
 
+[@@erasable]
+let shift_f (#[T.exact (`emp_inames)] is: inames) (hyp: slprop) (#[T.exact (`emp)] extra: slprop) (concl: slprop) =
+  stt_ghost unit is (requires extra ** hyp) (ensures fun _ -> concl)
+
 val shift :
   (#[T.exact (`emp_inames)] is:inames) ->
   (hyp:slprop) ->
@@ -34,11 +38,7 @@ fn intro_shift
   (hyp concl:slprop)
   (extra:slprop)
   {| duplicable extra |}
-  (f_elim: unit -> (
-    stt_ghost unit is
-    (extra ** hyp)
-    (fun _ -> concl)
-  ))
+  (f_elim: unit -> shift_f #is hyp #extra concl)
   requires extra
   ensures  shift #is hyp concl
 

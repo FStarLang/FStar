@@ -20,8 +20,12 @@ module Pulse.Class.Duplicable
 open Pulse.Lib.Core
 
 [@@erasable]
+let duplicable_f p =
+  stt_ghost unit emp_inames p (fun _ -> p ** p)
+
+[@@erasable]
 class duplicable (p : slprop) = {
-  dup_f : unit -> stt_ghost unit emp_inames p (fun _ -> p ** p);
+  dup_f : unit -> duplicable_f p;
 }
 
 let dup (p : slprop) {| d : duplicable p |} ()

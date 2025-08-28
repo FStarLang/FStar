@@ -56,12 +56,12 @@ let tm_with_local_array binder initializer length body = Tm_WithLocalArray { bin
 let tm_admit ctag u typ post = Tm_Admit { ctag; u; typ; post }
 let tm_unreachable = Tm_Unreachable
 let with_range t r = { term = t; range = r; effect_tag = default_effect_hint; source=Sealed.seal true; seq_lhs=Sealed.seal false; }
-let tm_assert_with_binders bs p t = Tm_ProofHintWithBinders { hint_type=ASSERT { p }; binders=bs; t }
-let mk_assert_hint_type p = ASSERT { p }
+let tm_assert_with_binders bs p t = Tm_ProofHintWithBinders { hint_type=ASSERT { p; elaborated=false }; binders=bs; t }
+let mk_assert_hint_type p = ASSERT { p; elaborated=false }
 let mk_unfold_hint_type names p = UNFOLD { names; p }
 let mk_fold_hint_type names p = FOLD { names; p }
 let mk_rename_hint_type pairs goal tac_opt = RENAME { pairs; goal; tac_opt=map_opt tac_opt thunk }
-let mk_rewrite_hint_type t1 t2 tac_opt = REWRITE { t1; t2; tac_opt=map_opt tac_opt thunk }
+let mk_rewrite_hint_type t1 t2 tac_opt = REWRITE { t1; t2; tac_opt=map_opt tac_opt thunk; elaborated=false }
 let mk_fn_defn id isrec us bs comp meas body : decl' = FnDefn { id; isrec; us; bs; comp; meas; body }
 let mk_fn_decl id us bs comp : decl' = FnDecl { id; us; bs; comp; }
 let mk_decl d range : decl = {d; range}

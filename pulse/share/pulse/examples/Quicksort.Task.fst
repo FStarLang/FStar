@@ -62,18 +62,18 @@ fn rec t_quicksort
     join_pledge (T.pool_alive #(f /. 2.0R) p ** quicksort_post a lo p31 s1 lb pivot) (A.pts_to_range a p31 p32 s2);
     join_pledge _ (T.pool_alive #(f /. 2.0R) p ** quicksort_post a p32 hi s3 pivot rb);
 
-    ghost fn rewrite_pf ()
+    ghost fn rewrite_pf () :
       // NB: These two slprops have to be in exactly this shape, as the Pulse checker
       // will not commute or in anyway modify each side of the pledge. The function
       // above must also be in this exact shape. To obtain the shape, I just manually looked
       // at the context. Automation should likely help here.
-      requires
-        ((T.pool_alive #(f /. 2.0R) p ** quicksort_post a lo p31 s1 lb pivot) **
-         A.pts_to_range a p31 p32 s2) **
-        (T.pool_alive #(f /. 2.0R) p ** quicksort_post a p32 hi s3 pivot rb)
-      ensures
-        T.pool_alive #f p **
-        quicksort_post a lo hi s0 lb rb
+      rewrite_pledge_f
+        (((T.pool_alive #(f /. 2.0R) p ** quicksort_post a lo p31 s1 lb pivot) **
+            A.pts_to_range a p31 p32 s2) **
+          (T.pool_alive #(f /. 2.0R) p ** quicksort_post a p32 hi s3 pivot rb))
+        (T.pool_alive #f p **
+          quicksort_post a lo hi s0 lb rb)
+      =
     {
       (* Functional correctness *)
       unfold (quicksort_post a lo p31 s1 lb pivot);

@@ -81,13 +81,21 @@ val slice_to_arrayptr
   (a: AP.ptr t)
 : slprop
 
-val slice_to_arrayptr_intro (#t: Type) (s: slice t) (#p: perm) (#v: Ghost.erased (Seq.seq t)) : stt (AP.ptr t)
-    (pts_to s #p v)
-    (fun a -> AP.pts_to a #p v ** slice_to_arrayptr s a)
+fn slice_to_arrayptr_intro
+  (#t: Type) (s: slice t) (#p: perm) (#v: Ghost.erased (Seq.seq t))
+requires
+  (pts_to s #p v)
+  returns a: AP.ptr t
+ensures
+  (AP.pts_to a #p v ** slice_to_arrayptr s a)
 
-val slice_to_arrayptr_elim (#t: Type) (a: AP.ptr t) (#p: perm) (#v: Seq.seq t) (#s: slice t) : stt_ghost unit emp_inames
-    (AP.pts_to a #p v ** slice_to_arrayptr s a ** pure (Seq.length v == SZ.v (len s)))
-    (fun _ -> pts_to s #p v)
+ghost
+fn slice_to_arrayptr_elim
+  (#t: Type) (a: AP.ptr t) (#p: perm) (#v: Seq.seq t) (#s: slice t)
+requires
+  (AP.pts_to a #p v ** slice_to_arrayptr s a ** pure (Seq.length v == SZ.v (len s)))
+ensures
+  pts_to s #p v
 
 (* END C only *)
 
@@ -144,23 +152,32 @@ val is_split_timeless (#t: Type) (s: slice t) (left: slice t) (right: slice t)
   : Lemma (timeless (is_split s left right))
           [SMTPat (timeless (is_split s left right))]
 
-val split (#t: Type) (s: slice t) (#p: perm) (i: SZ.t) (#v: Ghost.erased (Seq.seq t) { SZ.v i <= Seq.length v }) : stt (slice t & slice t)
-    (requires pts_to s #p v)
-    (ensures fun (s1, s2) ->
-      pts_to s1 #p (Seq.slice v 0 (SZ.v i)) **
-      pts_to s2 #p (Seq.slice v (SZ.v i) (Seq.length v)) **
-      is_split s s1 s2)
+fn split (#t: Type) (s: slice t) (#p: perm) (i: SZ.t)
+    (#v: Ghost.erased (Seq.seq t) { SZ.v i <= Seq.length v })
+  requires pts_to s #p v
+  returns res : (slice t & slice t)
+  ensures
+    (let (s1, s2) = res in
+    pts_to s1 #p (Seq.slice v 0 (SZ.v i)) **
+    pts_to s2 #p (Seq.slice v (SZ.v i) (Seq.length v)) **
+    is_split s s1 s2)
 
-val ghost_split (#t: Type) (s: slice t) (#p: perm) (i: SZ.t) (#v: Ghost.erased (Seq.seq t) { SZ.v i <= Seq.length v }) : stt_ghost (Ghost.erased (slice t & slice t)) emp_inames
-    (requires pts_to s #p v)
-    (ensures fun res ->
-      pts_to (fst res) #p (Seq.slice v 0 (SZ.v i)) **
-      pts_to (snd res) #p (Seq.slice v (SZ.v i) (Seq.length v)) **
-      is_split s (fst res) (snd res))
+ghost
+fn ghost_split (#t: Type) (s: slice t) (#p: perm) (i: SZ.t)
+    (#v: Ghost.erased (Seq.seq t) { SZ.v i <= Seq.length v })
+  requires pts_to s #p v
+  returns res : Ghost.erased (slice t & slice t)
+  ensures
+    (
+    pts_to (fst res) #p (Seq.slice v 0 (SZ.v i)) **
+    pts_to (snd res) #p (Seq.slice v (SZ.v i) (Seq.length v)) **
+    is_split s (fst res) (snd res)
+  )
 
-val join (#t: Type) (s1: slice t) (#p: perm) (#v1: Seq.seq t) (s2: slice t) (#v2: Seq.seq t) (s: slice t) : stt_ghost unit emp_inames
-    (pts_to s1 #p v1 ** pts_to s2 #p v2 ** is_split s s1 s2)
-    (fun _ -> pts_to s #p (Seq.append v1 v2))
+ghost
+fn join (#t: Type) (s1: slice t) (#p: perm) (#v1: Seq.seq t) (s2: slice t) (#v2: Seq.seq t) (s: slice t)
+    requires pts_to s1 #p v1 ** pts_to s2 #p v2 ** is_split s s1 s2
+    ensures pts_to s #p (Seq.append v1 v2)
 
 (* `subslice_rest r s p i j v` is the resource remaining after taking the subslice `r = s[i..j]` *)
 let subslice_rest #t (r: slice t) (s: slice t) p (i j: SZ.t) (v: erased (Seq.seq t) { SZ.v i <= SZ.v j /\ SZ.v j <= Seq.length v }) : slprop =
@@ -170,10 +187,14 @@ let subslice_rest #t (r: slice t) (s: slice t) p (i j: SZ.t) (v: erased (Seq.seq
     pts_to s1 #p (Seq.slice v 0 (SZ.v i)) **
     pts_to s3 #p (Seq.slice v (SZ.v j) (Seq.length v))
 
-val subslice #t (s: slice t) #p (i j: SZ.t) (#v: erased (Seq.seq t) { SZ.v i <= SZ.v j /\ SZ.v j <= Seq.length v }) :
-  stt (slice t) (pts_to s #p v)
-    fun res -> pts_to res #p (Seq.slice v (SZ.v i) (SZ.v j)) ** subslice_rest res s p i j v
+fn subslice #t (s: slice t) #p (i j: SZ.t) (#v: erased (Seq.seq t) { SZ.v i <= SZ.v j /\ SZ.v j <= Seq.length v })
+  requires pts_to s #p v
+  returns res: slice t
+  ensures pts_to res #p (Seq.slice v (SZ.v i) (SZ.v j)) ** subslice_rest res s p i j v
 
-val copy (#t: Type) (dst: slice t) (#p: perm) (src: slice t) (#v: Ghost.erased (Seq.seq t)) : stt unit
-    (exists* v_dst . pts_to dst v_dst ** pts_to src #p v ** pure (len src == len dst))
-    (fun _ -> pts_to dst v ** pts_to src #p v)
+fn copy
+  (#t: Type) (dst: slice t) (#p: perm) (src: slice t) (#v: Ghost.erased (Seq.seq t))
+requires
+  (exists* v_dst . pts_to dst v_dst ** pts_to src #p v ** pure (len src == len dst))
+ensures
+  (pts_to dst v ** pts_to src #p v)

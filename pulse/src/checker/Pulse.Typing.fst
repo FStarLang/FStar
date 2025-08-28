@@ -1056,7 +1056,7 @@ type st_typing : env -> st_term -> comp -> Type =
       tactic during Pulse checking time.
 
       The alternative is taking an optional tactic + typing, which is quite annoying. *)
-      st_typing g (wtag (Some STT_Ghost) (Tm_Rewrite { t1=p; t2=q; tac_opt=None } ))
+      st_typing g (wtag (Some STT_Ghost) (Tm_Rewrite { t1=p; t2=q; tac_opt=None; elaborated=true } ))
                   (comp_rewrite p q)
 
   | T_Admit:

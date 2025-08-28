@@ -10,6 +10,7 @@ ghost fn intro_test (p: slprop) (q: prop)
 { () }
 
 ghost fn elim_test (p: slprop) (q: prop)
+  norewrite
   requires with_pure q (fun _ -> p)
   ensures p
   ensures pure q

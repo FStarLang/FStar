@@ -77,13 +77,11 @@ ensures
 {
   seq_list_match_cons_elim c v item_match;
   ghost
-  fn aux ()
-    requires emp **
+  fn aux () :
+    trade_f
       (item_match (Seq.head c) (List.Tot.hd v) **
-          seq_list_match (Seq.tail c) (List.Tot.tl v) item_match
-      )
-    ensures
-      (seq_list_match c v item_match)
+          seq_list_match (Seq.tail c) (List.Tot.tl v) item_match)
+      (seq_list_match c v item_match) =
   {
     Seq.cons_head_tail c;
     seq_list_match_cons_intro (Seq.head c) (List.Tot.hd v) (Seq.tail c) (List.Tot.tl v) item_match;
@@ -112,11 +110,10 @@ ensures
     )
 {
   seq_list_match_cons_intro a a' c v item_match;
-  ghost fn aux (_: unit)
-  requires
-    emp ** seq_list_match (Seq.cons a c) (a' :: v) item_match
-  ensures
-    item_match a a' ** seq_list_match c v item_match
+  ghost fn aux () :
+    trade_f 
+      (seq_list_match (Seq.cons a c) (a' :: v) item_match)
+      (item_match a a' ** seq_list_match c v item_match) =
   {
     let _ = seq_list_match_cons_elim (Seq.cons a c) (a' :: v) item_match;
     rewrite (item_match (Seq.head (Seq.cons a c)) (List.Tot.hd (a' :: v))) as (item_match a a');
@@ -142,14 +139,11 @@ ensures
 {
   seq_list_match_nil_intro Seq.empty [] item_match;
   seq_list_match_cons_intro_trade a a' Seq.empty [] item_match;
-  ghost fn aux (_: unit)
-  requires
-    Trade.trade
-      (seq_list_match (Seq.cons a Seq.empty) [a'] item_match)
-      (item_match a a' ** seq_list_match Seq.empty [] item_match) **
-    seq_list_match (Seq.cons a Seq.empty) [a'] item_match
-  ensures
-    item_match a a'
+  ghost fn aux () :
+    trade_f (seq_list_match (Seq.cons a Seq.empty) [a'] item_match)
+      #(seq_list_match (Seq.cons a Seq.empty) [a'] item_match @==>
+        item_match a a' ** seq_list_match Seq.empty [] item_match)
+      (item_match a a') =
   {
     Trade.elim _ _;
     seq_list_match_nil_elim Seq.empty [] item_match
@@ -176,11 +170,9 @@ ensures
 {
   seq_list_match_length item_match c1 l1;
   seq_list_match_append_intro item_match c1 l1 c2 l2;
-  ghost fn aux (_: unit)
-  requires
-    emp ** seq_list_match (c1 `Seq.append` c2) (l1 `List.Tot.append` l2) item_match
-  ensures
-    seq_list_match c1 l1 item_match ** seq_list_match c2 l2 item_match
+  ghost fn aux () :
+    trade_f (seq_list_match (c1 `Seq.append` c2) (l1 `List.Tot.append` l2) item_match)
+      (seq_list_match c1 l1 item_match ** seq_list_match c2 l2 item_match) =
   {
     seq_list_match_append_elim item_match c1 l1 c2 l2
   };
@@ -210,11 +202,9 @@ ensures
     )
 {
   seq_list_match_append_elim item_match c1 l1 c2 l2;
-  ghost fn aux (_: unit)
-  requires
-    emp ** (seq_list_match c1 l1 item_match ** seq_list_match c2 l2 item_match)
-  ensures
-    seq_list_match (c1 `Seq.append` c2) (l1 `List.Tot.append` l2) item_match
+  ghost fn aux () :
+    trade_f (seq_list_match c1 l1 item_match ** seq_list_match c2 l2 item_match)
+      (seq_list_match (c1 `Seq.append` c2) (l1 `List.Tot.append` l2) item_match) =
   {
     seq_list_match_append_intro item_match c1 l1 c2 l2
   };
@@ -243,13 +233,12 @@ ensures
     )
 {
   seq_list_match_index p s1 s2 i;
-  ghost fn aux (_: unit)
-  requires
-    (p (Seq.index s1 i) (List.Tot.index s2 i) @==>
-      (seq_list_match s1 s2 p)) **
-    p (Seq.index s1 i) (List.Tot.index s2 i)
-  ensures
-    seq_list_match s1 s2 p
+  ghost fn aux () :
+    trade_f 
+      (p (Seq.index s1 i) (List.Tot.index s2 i))
+      #(p (Seq.index s1 i) (List.Tot.index s2 i) @==>
+        (seq_list_match s1 s2 p))
+      (seq_list_match s1 s2 p) =
   {
     Pulse.Lib.Trade.elim_trade (p (Seq.index s1 i) (List.Tot.index s2 i)) (seq_list_match s1 s2 p);
   };
@@ -274,9 +263,9 @@ ensures
     )
 {
   seq_seq_match_seq_list_match p c (Seq.seq_to_list s);
-  ghost fn aux (_: unit)
-  requires emp ** seq_list_match c (Seq.seq_to_list s) p
-  ensures seq_seq_match p c s 0 (Seq.length s)
+  ghost fn aux () :
+    trade_f (seq_list_match c (Seq.seq_to_list s) p)
+      (seq_seq_match p c s 0 (Seq.length s)) =
   {
     seq_list_match_seq_seq_match p c (Seq.seq_to_list s)
   };
@@ -298,9 +287,9 @@ ensures
     )
 {
   seq_list_match_seq_seq_match p c l;
-  ghost fn aux (_: unit)
-  requires emp ** seq_seq_match p c (Seq.seq_of_list l) 0 (List.Tot.length l)
-  ensures seq_list_match c l p
+  ghost fn aux () :
+    trade_f (seq_seq_match p c (Seq.seq_of_list l) 0 (List.Tot.length l))
+      (seq_list_match c l p) =
   {
     seq_seq_match_seq_list_match p c l
   };
@@ -321,9 +310,8 @@ ensures
   )
 {
   seq_seq_match_empty_intro p s1 s2 i;
-  ghost fn aux (_: unit)
-  requires emp ** seq_seq_match p s1 s2 i i
-  ensures emp
+  ghost fn aux () :
+    trade_f (seq_seq_match p s1 s2 i i) emp =
   {
     seq_seq_match_empty_elim p s1 s2 i
   };
@@ -350,13 +338,12 @@ ensures
 {
   seq_seq_match_length p s1 s2 i j;
   seq_seq_match_enqueue_left p s1 s2 i j x1 x2;
-  ghost fn aux (_: unit)
-  requires emp ** seq_seq_match p s1 s2 (i - 1) j
-  ensures seq_seq_match p s1 s2 i j ** p x1 x2
+  ghost fn aux () :
+    trade_f (seq_seq_match p s1 s2 (i - 1) j)
+      (seq_seq_match p s1 s2 i j ** p x1 x2) =
   {
     seq_seq_match_dequeue_left p s1 s2 (i - 1) j;
     rewrite (p (Seq.index s1 (i - 1)) (Seq.index s2 (i - 1))) as (p x1 x2);
-    ()
   };
   Trade.intro _ _ _ aux
 }
@@ -381,9 +368,9 @@ ensures
 {
   seq_seq_match_length p s1 s2 i j;
   seq_seq_match_enqueue_right p s1 s2 i j x1 x2;
-  ghost fn aux (_: unit)
-  requires emp ** seq_seq_match p s1 s2 i (j + 1)
-  ensures seq_seq_match p s1 s2 i j ** p x1 x2
+  ghost fn aux () :
+    trade_f (seq_seq_match p s1 s2 i (j + 1))
+      (seq_seq_match p s1 s2 i j ** p x1 x2) =
   {
     seq_seq_match_dequeue_right p s1 s2 i (j + 1);
     rewrite (p (Seq.index s1 (j + 1 - 1)) (Seq.index s2 (j + 1 - 1))) as (p x1 x2)
@@ -414,9 +401,8 @@ ensures
     )
 {
   seq_seq_match_rewrite_seq p c1 c1' c2 c2' i j;
-  ghost fn aux (_: unit)
-  requires emp ** seq_seq_match p c1' c2' i j
-  ensures seq_seq_match p c1 c2 i j
+  ghost fn aux () :
+    trade_f (seq_seq_match p c1' c2' i j) (seq_seq_match p c1 c2 i j) =
   {
     seq_seq_match_rewrite_seq p c1' c1 c2' c2 i j;
   };
@@ -443,9 +429,11 @@ ensures
 {
   seq_seq_match_split p s1 s2 i j k;
   seq_seq_match_dequeue_left p s1 s2 j k;
-  ghost fn aux (_: unit)
-  requires (seq_seq_match p s1 s2 i j ** seq_seq_match p s1 s2 (j + 1) k) ** p (Seq.index s1 j) (Seq.index s2 j)
-  ensures seq_seq_match p s1 s2 i k
+  ghost fn aux () :
+    trade_f
+      (p (Seq.index s1 j) (Seq.index s2 j))
+      #(seq_seq_match p s1 s2 i j ** seq_seq_match p s1 s2 (j + 1) k)
+      (seq_seq_match p s1 s2 i k) =
   {
     seq_seq_match_enqueue_left p s1 s2 (j + 1) k (Seq.index s1 j) (Seq.index s2 j);
     seq_seq_match_join p s1 s2 i j k

@@ -1,5 +1,5 @@
 (*
-   Copyright 2023 Microsoft Research
+   Copyright 2025 Microsoft Research
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -14,22 +14,19 @@
    limitations under the License.
 *)
 
-module Pulse.Checker.Abs
-
+module Pulse.Checker.ImpureSpec
 module T = FStar.Tactics.V2
-
-open Pulse.Syntax
+open Pulse.Syntax.Base
+open Pulse.Syntax.Pure
 open Pulse.Typing
-open Pulse.Checker.Base
 
-val mk_abs (g:env) (qbs:list (option qualifier & binder & bv) { Cons? qbs }) (body:st_term) (comp:comp)
-  : T.Tac (t:st_term {Tm_Abs? t.term})
+noeq type ctxt = {
+  ctxt_now: slprop;
+  ctxt_old: option slprop;
+}
 
-val arrow_of_abs (g:env) (prog:st_term { Tm_Abs? prog.term })
-  : T.Tac (term & t:st_term { Tm_Abs? t.term })
+val purify_spec (g: env) (ctxt: ctxt) (t: slprop) :
+  T.Tac slprop
 
-val check_abs
-  (g:env)
-  (t:st_term{Tm_Abs? t.term})
-  (check:check_t)
-  : T.Tac (t:st_term & c:comp & st_typing g t c)
+val purify_and_check_spec (g: env) (ctxt: ctxt) (t: slprop) :
+  T.Tac (t:slprop & tot_typing g t tm_slprop)

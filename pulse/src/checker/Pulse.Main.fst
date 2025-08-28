@@ -34,29 +34,6 @@ let debug_main g (s: unit -> T.Tac string) : T.Tac unit =
   if RU.debug_at_level (fstar_env g) "pulse.main" then
     T.print (s ())
 
-let rec mk_abs (g:env) (qbs:list (option qualifier & binder & bv)) (body:st_term) (comp:comp)
-: TacH st_term (fun _ -> not (Nil? qbs))
-               (fun _ r -> match r with FStar.Tactics.Result.Success v _ -> Tm_Abs? v.term | _ -> False)
-=
-  let with_range (s:st_term') (r:range) : st_term =
-    { term = s;
-      range = r;
-      effect_tag = default_effect_hint;
-      source=Sealed.seal false;
-      seq_lhs=Sealed.seal false;
-    }
-  in
-  match qbs with
-  | [(q, last, last_bv)] -> 
-    let body = close_st_term body last_bv.bv_index in
-    let comp = close_comp comp last_bv.bv_index in
-    let asc = { annotated = Some comp; elaborated = None } in
-    with_range (Pulse.Syntax.Builder.tm_abs last q asc body) body.range
-  | (q, b, bv)::qbs ->
-    let body = mk_abs g qbs body comp in
-    let body = close_st_term body bv.bv_index in
-    with_range (Pulse.Syntax.Builder.tm_abs b q empty_ascription body) body.range
-
 let set_impl src_g #g #t (se: RT.sigelt_for g t) (r: bool) (impl: R.term) : T.Tac (RT.sigelt_for g t) =
   let checked, se, blob = se in
   debug_main src_g (fun _ ->
@@ -73,6 +50,7 @@ let check_fndefn
     (pre : term) (pre_typing : tot_typing g pre tm_slprop)
   : T.Tac (RT.dsl_tac_result_t (fstar_env g) expected_t)
 = 
+  let g = let FnDefn {us} = d.d in push_univ_vars g us in
 
   (* Maybe add a recursive knot before starting *)
   let FnDefn fn_d = d.d in
@@ -84,12 +62,11 @@ let check_fndefn
   in
 
   let FnDefn { id; isrec; us; bs; comp; meas; body } = d.d in
-  let g = push_univ_vars g us in
   let nm_aux = fst (inspect_ident id) in
 
   if Nil? bs then
     fail g (Some d.range) "main: FnDefn does not have binders";
-  let body = mk_abs g bs body comp in
+  let body = Pulse.Checker.Abs.mk_abs g bs body comp in
   let rng = body.range in
   debug_main g (fun _ -> Printf.sprintf "\nbody after mk_abs:\n%s\n" (P.st_term_to_string body));
 
@@ -213,7 +190,7 @@ let check_fndecl
       post   = None; // Some stc.post?
     }) d.range
   in
-  let body = mk_abs g bs body comp in
+  let body = Pulse.Checker.Abs.mk_abs g bs body comp in
   let rng = body.range in
   let (| _, c, t_typing |) =
     (* We don't want to print the diagnostic for the admit in the body. *)
@@ -300,6 +277,10 @@ let main t pre : RT.dsl_tac_t = fun (g, expected_t) ->
   if ext_getv "pulse:guard_policy" <> "" then
     set_guard_policy (parse_guard_policy (ext_getv "pulse:guard_policy"));
 
+  // Allow tactics to run in environments with uvars
+  RU.push_options ();
+  RU.set_options "--ext compat:open_metas";
+
   let res = main' t pre g expected_t in
 
   if ext_getv "pulse:join" = "1"
@@ -307,6 +288,9 @@ let main t pre : RT.dsl_tac_t = fun (g, expected_t) ->
      // ^ Uncomment to make it true by default.
   then
     join_smt_goals();
+
+  RU.pop_options ();
+
   res
 
 let check_pulse_core 

@@ -180,6 +180,26 @@ let lax_check_term_with_unknown_universes (g:TcEnv.env) (e:S.term)
     | Some None -> None
     | Some (Some x) -> Some x
 
+let tc_term_phase1 (g:TcEnv.env) (e:S.term) (instantiate_imp:bool) =
+  let issues, res = FStarC_Errors.catch_errors (fun _ ->
+    let g = TcEnv.set_range g e.pos in
+    let g = {g with phase1=true; admit=true; instantiate_imp} in
+    let e, c, guard = FStarC_TypeChecker_TcTerm.tc_tot_or_gtot_term g e in
+    let t = c.res_typ in
+    let c = FStarC_TypeChecker_Normalize.maybe_ghost_to_pure_lcomp g c in
+    let eff = if FStarC_TypeChecker_Common.is_total_lcomp c then FStarC_TypeChecker_Core.E_Total else FStarC_TypeChecker_Core.E_Ghost in
+    let guard = FStarC_TypeChecker_Rel.solve_deferred_constraints g guard in
+    let guard = FStarC_TypeChecker_Rel.resolve_implicits g guard in
+    e, t, eff) in
+  res, issues
+
+let teq_nosmt_force (g:TcEnv.env) (ty1:S.term) (ty2:S.term) =
+  let issues, res = FStarC_Errors.catch_errors (fun _ ->
+    let g = TcEnv.set_range g ty1.pos in
+    let ok = FStarC_TypeChecker_Rel.teq_nosmt_force g ty1 ty2 in
+    ok) in
+  match res with Some true -> true | _ -> false
+
 let whnf_lax (g:TcEnv.env) (t:S.term) : S.term = 
   FStarC_TypeChecker_Normalize.unfold_whnf' [TcEnv.Unascribe] g t
 
@@ -234,3 +254,8 @@ let record_stats (key:string) (f: unit -> 'a utac)
     FStarC_Stats.record key (fun () -> f () ps)
 
 let stack_dump () = FStarC_Util.stack_dump()
+
+let push_options () : unit = FStarC_Options.push ()
+let pop_options () : unit = FStarC_Options.pop ()
+let set_options (opts: string) : unit =
+  ignore (FStarC_Options.set_options opts)

@@ -144,8 +144,8 @@ and eq_sub_pat (pb1 pb2 : pattern & bool) : b:bool{b <==> pb1 == pb2} =
 let eq_hint_type (ht1 ht2:proof_hint_type)
   : b:bool { b <==> (ht1 == ht2) }
   = match ht1, ht2 with
-    | ASSERT { p=p1 }, ASSERT { p=p2 } ->
-      eq_tm p1 p2
+    | ASSERT { p=p1; elaborated=e1 }, ASSERT { p=p2; elaborated=e2 } ->
+      eq_tm p1 p2 && e1 = e2
     | FOLD { names=ns1; p=p1}, FOLD { names=ns2; p=p2 }
     | UNFOLD { names=ns1; p=p1}, UNFOLD { names=ns2; p=p2 } ->
       eq_opt (eq_list (fun n1 n2 -> n1 = n2)) ns1 ns2 &&
@@ -154,10 +154,11 @@ let eq_hint_type (ht1 ht2:proof_hint_type)
       eq_list (fun (x1, y1) (x2, y2) -> eq_tm x1 x2 && eq_tm y1 y2) ps1 ps2 &&
       eq_opt eq_tm p1 p2 &&
       eq_tm_opt t1 t2
-    | REWRITE { t1; t2; tac_opt }, REWRITE { t1=s1; t2=s2; tac_opt=tac_opt2 } ->
+    | REWRITE { t1; t2; tac_opt; elaborated=e1 }, REWRITE { t1=s1; t2=s2; tac_opt=tac_opt2; elaborated=e2 } ->
       eq_tm t1 s1 &&
       eq_tm t2 s2 &&
-      eq_tm_opt tac_opt tac_opt2
+      eq_tm_opt tac_opt tac_opt2 &&
+      e1 = e2
     | WILD, WILD
     | SHOW_PROOF_STATE _, SHOW_PROOF_STATE _ -> true
     | _ -> false
@@ -258,11 +259,12 @@ let rec eq_st_term (t1 t2:st_term)
       eq_tm n1 n2 &&
       eq_st_term b1 b2
 
-    | Tm_Rewrite { t1=l1; t2=r1; tac_opt=tac1 },
-      Tm_Rewrite { t1=l2; t2=r2; tac_opt=tac2 } ->
+    | Tm_Rewrite { t1=l1; t2=r1; tac_opt=tac1; elaborated=e1 },
+      Tm_Rewrite { t1=l2; t2=r2; tac_opt=tac2; elaborated=e2 } ->
       eq_tm l1 l2 &&
       eq_tm r1 r2 &&
-      eq_tm_opt tac1 tac2
+      eq_tm_opt tac1 tac2 &&
+      e1 = e2
 
     | Tm_Admit { ctag=c1; u=u1; typ=t1; post=post1 }, 
       Tm_Admit { ctag=c2; u=u2; typ=t2; post=post2 } ->

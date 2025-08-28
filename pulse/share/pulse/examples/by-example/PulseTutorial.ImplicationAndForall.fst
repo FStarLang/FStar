@@ -36,9 +36,7 @@ requires pts_to x 'v
 ensures pts_to x #0.5R 'v ** regain_half x 'v
 {
   ghost
-  fn aux ()
-  requires pts_to x #0.5R 'v ** pts_to x #0.5R 'v
-  ensures pts_to x 'v
+  fn aux () : trade_f (pts_to x #0.5R 'v) #(pts_to x #0.5R 'v) (pts_to x 'v) =
   {
     GR.gather x;
   };

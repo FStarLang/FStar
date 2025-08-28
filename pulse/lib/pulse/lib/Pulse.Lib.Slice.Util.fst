@@ -57,9 +57,11 @@ fn append_split_trade (#t: Type) (input: S.slice t) (#p: perm) (i: SZ.t)
   let s = append_split input i;
   match s {
     s1, s2 -> {
-      ghost fn aux ()
-        requires S.is_split input s1 s2 ** (pts_to s1 #p v1 ** pts_to s2 #p v2)
-        ensures pts_to input #p (v1 `Seq.append` v2)
+      ghost fn aux () :
+        trade_f (pts_to s1 #p v1 ** pts_to s2 #p v2)
+          #(S.is_split input s1 s2)
+          (pts_to input #p (v1 `Seq.append` v2))
+        =
       {
         S.join s1 s2 input
       };
@@ -87,9 +89,11 @@ fn split_trade (#t: Type) (s: S.slice t) (#p: perm) (i: SZ.t) (#v: Ghost.erased 
   match s' {
     s1, s2 -> {
       with v1 v2. assert pts_to s1 #p v1 ** pts_to s2 #p v2;
-      ghost fn aux ()
-        requires S.is_split s s1 s2 ** (pts_to s1 #p v1 ** pts_to s2 #p v2)
-        ensures pts_to s #p v
+      ghost fn aux () :
+        trade_f (pts_to s1 #p v1 ** pts_to s2 #p v2)
+          #(S.is_split s s1 s2)
+          (pts_to s #p v)
+        =
       {
         S.join s1 s2 s
       };
@@ -128,9 +132,11 @@ ghost fn ghost_append_split_trade (#t: Type) (input: S.slice t) (#p: perm) (i: S
         (pts_to input #p (v1 `Seq.append` v2)))
 {
   let res = ghost_append_split input i;
-      ghost fn aux ()
-        requires S.is_split input (fst res) (snd res) ** (pts_to (fst res) #p v1 ** pts_to (snd res) #p v2)
-        ensures pts_to input #p (v1 `Seq.append` v2)
+      ghost fn aux () :
+        trade_f (pts_to (fst res) #p v1 ** pts_to (snd res) #p v2)
+          #(S.is_split input (fst res) (snd res))
+          (pts_to input #p (v1 `Seq.append` v2))
+        =
       {
         S.join (fst res) (snd res) input
       };
@@ -152,9 +158,12 @@ ghost fn ghost_split_trade (#t: Type) (s: S.slice t) (#p: perm) (i: SZ.t) (#v: (
   Seq.lemma_split v (SZ.v i);
   let s' = S.ghost_split s i;
       with v1 v2. assert pts_to (fst s') #p v1 ** pts_to (snd s') #p v2;
-      ghost fn aux ()
-        requires S.is_split s (fst s') (snd s') ** (pts_to (fst s') #p v1 ** pts_to (snd s') #p v2)
-        ensures pts_to s #p v
+      ghost fn aux () :
+        trade_f
+          (pts_to (fst s') #p v1 ** pts_to (snd s') #p v2)
+          #(S.is_split s (fst s') (snd s'))
+          (pts_to s #p v)
+        =
       {
         S.join (fst s') (snd s') s
       };
@@ -171,9 +180,11 @@ fn subslice_trade_mut #t (s: slice t) (i j: SZ.t) (#v: erased (Seq.seq t) { SZ.v
     (forall* v'. trade (pts_to res v') (pts_to s (Seq.slice v 0 (SZ.v i) `Seq.append` v' `Seq.append` Seq.slice v (SZ.v j) (Seq.length v))))
 {
   let res = subslice s i j;
-  ghost fn aux (v': Seq.seq t) ()
-    requires subslice_rest res s 1.0R i j v ** pts_to res v'
-    ensures pts_to s (Seq.slice v 0 (SZ.v i) `Seq.append` v' `Seq.append` Seq.slice v (SZ.v j) (Seq.length v))
+  ghost fn aux (v': Seq.seq t) () :
+    trade_f (pts_to res v')
+      #(subslice_rest res s 1.0R i j v)
+      (pts_to s (Seq.slice v 0 (SZ.v i) `Seq.append` v' `Seq.append` Seq.slice v (SZ.v j) (Seq.length v)))
+    =
   {
     unfold subslice_rest;
     join res _ _;
@@ -198,9 +209,12 @@ fn subslice_trade #t (s: slice t) #p (i j: SZ.t) (#v: erased (Seq.seq t) { SZ.v 
     trade (pts_to res #p (Seq.slice v (SZ.v i) (SZ.v j))) (pts_to s #p v)
 {
   let res = subslice s i j;
-  ghost fn aux ()
-    requires subslice_rest res s p i j v ** pts_to res #p (Seq.slice v (SZ.v i) (SZ.v j))
-    ensures pts_to s #p v
+  ghost fn aux () :
+    trade_f 
+      (pts_to res #p (Seq.slice v (SZ.v i) (SZ.v j)))
+      #(subslice_rest res s p i j v)
+      (pts_to s #p v)
+    =
   {
     unfold subslice_rest;
     join res _ _;
@@ -230,9 +244,9 @@ fn arrayptr_to_slice_intro_trade
     )
 {
   let s = arrayptr_to_slice_intro a alen;
-  ghost fn aux (_: unit)
-    requires arrayptr_to_slice a s ** pts_to s #p v
-    ensures AP.pts_to a #p v
+  ghost fn aux () :
+    trade_f (pts_to s #p v) #(arrayptr_to_slice a s)
+      (AP.pts_to a #p v) =
   {
     arrayptr_to_slice_elim s
   };
@@ -255,9 +269,9 @@ ensures
 {
   pts_to_len s;
   let a = slice_to_arrayptr_intro s;
-  ghost fn aux (_: unit)
-    requires slice_to_arrayptr s a ** AP.pts_to a #p v
-    ensures pts_to s #p v
+  ghost fn aux () :
+    trade_f (AP.pts_to a #p v) #(slice_to_arrayptr s a)
+      (pts_to s #p v) =
   {
     slice_to_arrayptr_elim a;
   };

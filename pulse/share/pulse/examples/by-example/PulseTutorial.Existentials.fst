@@ -80,7 +80,6 @@ requires
 ensures
   exists* wx' wy'. pts_to x wx' ** pts_to y wy' ** pure (wx' % 2 == 0)
 {
-  with wx wy. _;
   let vx = !x; 
   let vy = !y;
   x := vx + vy;

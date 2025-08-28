@@ -11,11 +11,16 @@ val incr_atomic_box (r:B.box int) (#n:erased int)
         (B.pts_to r n) 
         (fun i -> B.pts_to r i ** pure (i == n + 1))
 
+inline_for_extraction let next_f (inv: int -> slprop) =
+    i:erased int -> stt int (inv i) (fun j -> inv j ** pure (i < j))
+inline_for_extraction let dup_f (inv: int -> slprop) =
+    i:erased int -> stt_ghost unit emp_inames (inv i) (fun y -> inv i ** inv i)
+
 noeq
 type ctr = {
     inv:  int -> slprop;
-    next: i:erased int -> stt int (inv i) (fun j -> inv j ** pure (i < j));
-    dup:  i:erased int -> stt_ghost unit emp_inames (inv i) (fun y -> inv i ** inv i);
+    next: next_f inv;
+    dup: dup_f inv;
 }
 
 let next c #i = c.next i
@@ -38,11 +43,9 @@ ensures c.inv 0
     MR.take_snapshot mr #1.0R 0;
     fold (inv_core x mr);
     let ii = new_invariant (inv_core x mr);
-    fn next (i:erased int)
-    requires inv ii (inv_core x mr) ** MR.snapshot mr i
-    returns j:int
-    ensures (inv ii (inv_core x mr) ** MR.snapshot mr j) ** pure (i < j)
-    {
+    with inv. assert pure (inv == (fun (i: int) ->
+        Pulse.Lib.Core.inv ii (inv_core x mr) ** MR.snapshot mr i));
+    fn next (#_:unit) : next_f inv = i {
         with_invariants ii {
             later_elim_timeless _;
             unfold inv_core;
@@ -57,17 +60,12 @@ ensures c.inv 0
         }
     };
     ghost
-    fn dup (i:erased int)
-    requires inv ii (inv_core x mr) ** MR.snapshot mr i
-    ensures (inv ii (inv_core x mr) ** MR.snapshot mr i) **
-            (inv ii (inv_core x mr) ** MR.snapshot mr i)
-    {
+    fn dup (#_:unit) : dup_f inv = i {
         MR.dup_snapshot mr;
         dup_inv ii _;
     };
-    let c = { inv = (fun i -> inv ii (inv_core x mr) ** MR.snapshot mr i);
-              next; dup };
-    rewrite (inv ii (inv_core x mr) ** MR.snapshot mr 0) as (c.inv 0);
+    let c = { inv; next; dup };
+    rewrite inv 0 as (c.inv 0);
     c
 }
 

@@ -188,15 +188,16 @@ ensures  pts_to x ('i + 2)
 //Parameterize incr by the ghost steps it needs to take
 //give it an abstract spec in terms of some call-provided aspec
 //incr$
+[@@erasable]
+let incr_f (x: ref int) (refine aspec: int -> slprop) =
+  v:int -> vq:int -> stt_ghost unit emp_inames
+    (refine v ** aspec vq ** pts_to x (v + 1))
+    (fun _ -> refine (v + 1) ** aspec (vq + 1) ** pts_to x (v + 1))
 fn incr (x: ref int)
         (#p:perm)
         (#refine #aspec: int -> slprop)
         (l:L.lock)
-        (ghost_steps: 
-          (v:int -> vq:int -> stt_ghost unit
-               emp_inames
-               (refine v ** aspec vq ** pts_to x (v + 1))
-               (fun _ -> refine (v + 1) ** aspec (vq + 1) ** pts_to x (v + 1))))
+        (ghost_steps: incr_f x refine aspec)
 requires L.lock_alive l #p (exists* v. pts_to x v ** refine v) ** aspec 'i
 ensures L.lock_alive l #p (exists* v. pts_to x v ** refine v) ** aspec ('i + 1)
  {
@@ -228,15 +229,10 @@ ensures pts_to x ('i + 2)
     fn step
         (lr:GR.ref int)
         (b:bool { if b then lr == left else lr == right })
-        (v vq:int)
-      requires 
-        contributions left right 'i v **
-        GR.pts_to lr #0.5R vq **
-        pts_to x (v + 1)
-      ensures
-        contributions left right 'i (v + 1) **
-        GR.pts_to lr #0.5R (vq + 1) **
-        pts_to x (v + 1)
+      : incr_f x
+        (fun v -> contributions left right 'i v)
+        (fun vq -> GR.pts_to lr #0.5R vq)
+      = v vq
     { 
       unfold contributions;
       if b
@@ -308,10 +304,7 @@ fn incr_atomic
         (#p:perm)
         (#refine #aspec: int -> slprop)
         (c:C.cinv)
-        (f: (v:int -> vq:int -> stt_ghost unit
-                  emp_inames
-                  (refine v ** aspec vq ** pts_to x (v + 1))
-                  (fun _ -> refine (v + 1) ** aspec (vq + 1) ** pts_to x (v + 1))))
+        (f: incr_f x refine aspec)
 requires inv (C.iname_of c) (C.cinv_vp c (exists* v. pts_to x v ** refine v)) ** aspec 'i ** C.active c p
 ensures inv (C.iname_of c) (C.cinv_vp c (exists* v. pts_to x v ** refine v)) ** aspec ('i + 1) ** C.active c p
 //end incr_atomic_spec$
@@ -407,15 +400,10 @@ ensures pts_to x ('i + 2)
     fn step
         (lr:GR.ref int)
         (b:bool { if b then lr == left else lr == right })
-        (v vq:int)
-      requires 
-        contributions left right 'i v **
-        GR.pts_to lr #0.5R vq **
-        pts_to x (v + 1)
-      ensures
-        contributions left right 'i (v + 1) **
-        GR.pts_to lr #0.5R (vq + 1) **
-        pts_to x (v + 1)
+      : incr_f x
+        (fun v -> contributions left right 'i v)
+        (fun vq -> GR.pts_to lr #0.5R vq)
+      = v vq
     { 
       unfold contributions;
       if b

@@ -230,7 +230,7 @@ fn cons (#t:Type) (v:t) (x:llist t)
 
 
 fn rec append (#t:Type0) (x y:llist t)
-  requires is_list x 'l1 ** is_list y 'l2 ** pure (Cons? 'l1)
+  requires is_list x 'l1 ** (is_list y 'l2 ** pure (Cons? 'l1))
   ensures is_list x ('l1 @ 'l2)
 {
   some_iff_cons x;
@@ -443,9 +443,8 @@ fn move_next_forall (#t:Type) (x:llist t)
         requires pts_to np node
         ensures is_list node.tail tl' @==> is_list x (node.head::tl')
     {
-        ghost fn aux (_:unit)
-        requires pts_to np node ** is_list node.tail tl'
-        ensures is_list x (node.head::tl')
+        ghost fn aux () :
+          T.trade_f (is_list node.tail tl') #(pts_to np node) (is_list x (node.head::tl')) =
         {
             intro_is_list_cons x np;
         };

@@ -127,8 +127,8 @@ fn qsh_par (n:nat)
      back the permission we shared away, and then properly teardown. *)
   await_pool p #emp_inames (
     pool_alive #(1.0R /. 2.0R) p **
-    pledge emp_inames (pool_done p) (qsv 1) **
-    pledge emp_inames (pool_done p) (qsv 2)
+    (pledge emp_inames (pool_done p) (qsv 1) **
+    pledge emp_inames (pool_done p) (qsv 2))
   );
   gather_alive p _;
   teardown_pool p;

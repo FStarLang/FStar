@@ -71,8 +71,8 @@ fn new_lock (v:slprop)
 
 
 fn rec acquire (#v:slprop) (#p:perm) (l:lock)
-  requires lock_alive l #p v
-  ensures v **  lock_alive l #p v ** lock_acquired l
+  preserves lock_alive l #p v
+  ensures v ** lock_acquired l
 {
   unfold (lock_alive l #p v);
   later_credit_buy 1;
@@ -132,8 +132,8 @@ fn rec acquire (#v:slprop) (#p:perm) (l:lock)
 
 
 fn release (#v:slprop) (#p:perm) (l:lock)
-  requires lock_alive l #p v ** lock_acquired l ** v
-  ensures lock_alive l #p v
+  preserves lock_alive l #p v
+  requires lock_acquired l ** v
 {
   unfold (lock_alive l #p v);
   unfold (lock_acquired l);
@@ -192,8 +192,8 @@ fn gather (#v:slprop) (#p1 #p2 :perm) (l:lock)
 
 
 fn free (#v:slprop) (l:lock)
-  requires lock_alive l #1.0R v ** lock_acquired l
-  ensures emp
+  requires lock_alive l #1.0R v
+  requires lock_acquired l
 {
   unfold (lock_alive l #1.0R v);
   unfold (lock_acquired l);
@@ -261,13 +261,12 @@ fn gather_lock_active (#p1 #p2:perm) (l:lock)
 
 ghost
 fn elim_inv_and_active_into_alive (l:lock) (v:slprop) (#p:perm)
-  requires emp
   ensures (inv (iname_of l) (iname_v_of l v) ** lock_active #p l) @==> lock_alive l #p v
 {
   ghost
-  fn aux ()
-    requires emp ** (inv (iname_of l) (iname_v_of l v) ** lock_active #p l)
-    ensures lock_alive l #p v
+  fn aux () :
+    trade_f (inv (iname_of l) (iname_v_of l v) ** lock_active #p l)
+      (lock_alive l #p v) =
   {
     rewrite each
       iname_of l as CInv.iname_of l.i,
@@ -287,9 +286,9 @@ fn elim_alive_into_inv_and_active (l:lock) (v:slprop) (#p:perm)
   ensures lock_alive l #p v @==> (inv (iname_of l) (iname_v_of l v) ** lock_active #p l)
 {
   ghost
-  fn aux ()
-    requires emp ** lock_alive l #p v
-    ensures inv (iname_of l) (iname_v_of l v) ** lock_active #p l
+  fn aux () :
+    trade_f (lock_alive l #p v)
+      (inv (iname_of l) (iname_v_of l v) ** lock_active #p l) =
   {
     unfold (lock_alive l #p v);
     fold (lock_active #p l);

@@ -403,6 +403,43 @@ let tc_with_core g (f:R.env) (e:R.term)
   in
   RU.record_stats "Pulse.tc_with_core" aux
 
+let tc_term_phase1 g (t:term) : T.Tac (term & term & T.tot_or_ghost)
+  = let fg = elab_env g in
+    let t = RU.deep_transform_to_unary_applications t in
+    let instantiate_imps = true in
+    let res, issues = catch_all fun _ ->
+      RU.with_context (RU.extend_context "tc_term_phase1" (Some (range_of_term t)) (get_context g)) fun _ ->
+      RU.tc_term_phase1 fg t instantiate_imps in
+    match res with
+    | None ->
+      fail_doc_with_subissues g (Some <| RU.range_of_term t) issues (ill_typed_term t None None)
+    | Some (t, ty, eff) -> (t, ty, eff)
+
+let tc_term_phase1_with_type (g: env) (t:term) (expected_typ: term) : T.Tac (term & T.tot_or_ghost) =
+  let t = R.pack_ln (R.Tv_AscribedT t expected_typ None false) in
+  let t, _, eff = tc_term_phase1 g t in
+  match R.inspect_ln t with
+  | R.Tv_AscribedT t _ _ _ -> t, eff
+  | _ -> t, eff
+
+let tc_type_phase1 (g: env) (t: term) : T.Tac (term & universe) =
+  let t = R.pack_ln (R.Tv_AscribedT t (tm_type u_unknown) None false) in
+  let t, sort, _ = tc_term_phase1 g t in
+  let t = match R.inspect_ln t with
+    | R.Tv_AscribedT t _ _ _ -> t
+    | _ -> t in
+  let u = match R.inspect_ln sort with
+    | R.Tv_Type u -> u
+    | _ ->
+      let open Pulse.PP in
+      T.fail_doc_at [
+        text "Expected Type, got:";
+        pp sort;
+        text "This is the type of:";
+        pp t;
+      ] (Some (RU.range_of_term t)) in
+  t, u
+
 let core_compute_term_type (g:env) (t:term)
 = let aux ()
   : T.Tac (eff:T.tot_or_ghost &

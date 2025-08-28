@@ -19,6 +19,7 @@ open Pulse.Lib.Pervasives
 module A = Pulse.Lib.Array
 module US = FStar.SizeT
 module U8 = FStar.UInt8
+#lang-pulse
 
 inline_for_extraction noextract [@@noextract_to "krml"]
 let v32us : US.t = 32sz
@@ -79,7 +80,7 @@ val spec_hmac
   (m:Seq.seq U8.t) 
   : s:(Seq.seq U8.t){ Seq.length s = (US.v (digest_len a)) }
 
-val hacl_hmac (alg:alg_t { alg == Spec.Hash.Definitions.sha2_256 })
+fn hacl_hmac (alg:alg_t { alg == Spec.Hash.Definitions.sha2_256 })
               (dst:A.larray U8.t (US.v (digest_len alg)))
               (key:A.array U8.t)
               (key_len: hashable_len { US.v key_len == A.length key })
@@ -89,49 +90,53 @@ val hacl_hmac (alg:alg_t { alg == Spec.Hash.Definitions.sha2_256 })
               (#dst_seq:erased (Seq.seq U8.t))
               (#key_seq:erased (Seq.seq U8.t))
               (#msg_seq:erased (Seq.seq U8.t))
-  : stt unit
+requires
     (pts_to dst dst_seq **
      pts_to key #pkey key_seq **
      pts_to msg #pmsg msg_seq)
-    (fun _ ->
+ensures    (
        pts_to key #pkey key_seq **
        pts_to msg #pmsg msg_seq **
        pts_to dst (spec_hmac alg key_seq msg_seq))
 
 val spec_ed25519_verify (pubk hdr sig:Seq.seq U8.t) : prop 
 
-val ed25519_verify 
+fn ed25519_verify
   (pubk:A.larray U8.t (US.v v32us))
   (hdr:A.array U8.t)
   (hdr_len:signable_len { US.v hdr_len == A.length hdr })
   (sig:A.larray U8.t 64)
   (#ppubk #phdr #psig:perm)
   (#pubk_seq #hdr_seq #sig_seq:erased (Seq.seq U8.t))
-  : stt bool
+requires
     (pts_to pubk #ppubk pubk_seq **
      pts_to hdr #phdr hdr_seq **
      pts_to sig #psig sig_seq)
-    (fun res ->
+returns res: bool
+ensures
+    (
       pts_to pubk #ppubk pubk_seq **
       pts_to hdr #phdr hdr_seq **
       pts_to sig #psig sig_seq **
-      pure (res == true <==> spec_ed25519_verify pubk_seq hdr_seq sig_seq))
+      pure (res == true <==> spec_ed25519_verify pubk_seq hdr_seq sig_seq)
+    )
 
 noextract [@@noextract_to "krml"]
 val spec_ed25519_sign (privk msg:Seq.seq U8.t) : Seq.seq U8.t
 
-val ed25519_sign 
+fn ed25519_sign
   (buf:A.larray U8.t 64)
   (privk:A.larray U8.t (US.v v32us))
   (len:US.t { US.v len < pow2 32 })
   (msg:A.larray U8.t (US.v len))
   (#pprivk #pmsg:perm)
   (#buf0 #privk_seq #msg_seq:erased (Seq.seq U8.t))
-  : stt unit
+requires
     (pts_to buf buf0 **
      pts_to privk #pprivk privk_seq **
      pts_to msg #pmsg msg_seq)
-    (fun _ -> exists* (buf1:Seq.seq U8.t).
+ensures
+    (exists* (buf1:Seq.seq U8.t).
       pts_to buf buf1 ** 
       pts_to privk #pprivk privk_seq **
       pts_to msg #pmsg msg_seq **

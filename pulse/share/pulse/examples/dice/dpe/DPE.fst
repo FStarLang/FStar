@@ -1271,15 +1271,17 @@ fn certify_key (sid:sid_t)
   (crt_len:U32.t)
   (crt:A.larray U8.t (U32.v crt_len))
   (t:G.erased trace { trace_valid_for_certify_key t })
-  requires sid_pts_to trace_ref sid t **
-           (exists* pub_key_repr crt_repr.
-              pts_to pub_key pub_key_repr **
-              pts_to crt crt_repr)
-  returns _:U32.t
-  ensures certify_key_client_perm sid t **
-          (exists* pub_key_repr crt_repr.
-             pts_to pub_key pub_key_repr **
-             pts_to crt crt_repr)
+requires
+  sid_pts_to trace_ref sid t **
+  (exists* pub_key_repr crt_repr.
+    pts_to pub_key pub_key_repr **
+    pts_to crt crt_repr)
+returns _:U32.t
+ensures
+  certify_key_client_perm sid t **
+  (exists* pub_key_repr crt_repr.
+      pts_to pub_key pub_key_repr **
+      pts_to crt crt_repr)
 {
   rewrite emp as (session_state_related InUse (G_InUse (current_state t)));
   let s = replace_session sid t InUse (G_InUse (current_state t));
@@ -1373,14 +1375,16 @@ fn sign (sid:sid_t)
   (msg_len:SZ.t { SZ.v msg_len < pow2 32 })
   (msg:A.larray U8.t (SZ.v msg_len))
   (t:G.erased trace { trace_valid_for_sign t })
-  requires sid_pts_to trace_ref sid t **
-           (exists* signature_repr msg_repr.
-              pts_to signature signature_repr **
-              pts_to msg msg_repr)
-  ensures sign_client_perm sid t **
-          (exists* signature_repr msg_repr.
-             pts_to signature signature_repr **
-             pts_to msg msg_repr)
+requires 
+  sid_pts_to trace_ref sid t **
+  (exists* signature_repr msg_repr.
+    pts_to signature signature_repr **
+    pts_to msg msg_repr)
+ensures
+  sign_client_perm sid t **
+  (exists* signature_repr msg_repr.
+      pts_to signature signature_repr **
+      pts_to msg msg_repr)
 {
   rewrite emp as (session_state_related InUse (G_InUse (current_state t)));
   let s = replace_session sid t InUse (G_InUse (current_state t));

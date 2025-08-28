@@ -253,6 +253,14 @@ let is_fvar_app_tm_app (t:term)
                       t == tm_pureapp (tm_uinst (as_fv l) us) q_opt arg)) =
   admit ()
 
+let is_squash (t: typ) : option typ =
+  let hd, args = R.collect_app_ln t in
+  match R.inspect_ln hd, args with
+  | R.Tv_UInst hd _, [t, _] ->
+    if R.inspect_fv hd <> R.squash_qn then None else
+    Some t
+  | _ -> None
+
 let mk_squash (u:universe) (t:term) : term =
   tm_pureapp (tm_uinst (as_fv R.squash_qn) [u]) None t
 

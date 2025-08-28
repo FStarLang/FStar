@@ -175,23 +175,23 @@ val on_range_snoc_with_implies
     (on_range p i j ** p j)
     (fun _ -> on_range p i (j + 1) **  (on_range p i (j + 1) @==> (on_range p i j ** p j)))
 
-val on_range_get
+ghost
+fn on_range_get
   (j:nat)
   (#p: (nat -> slprop))
   (#i:nat{i <= j})
   (#k:nat{j < k})
-: stt_ghost unit emp_inames
-    (on_range p i k)
-    (fun _ -> on_range p i j ** p j ** on_range p (j + 1) k)
+  requires on_range p i k
+  ensures on_range p i j ** p j ** on_range p (j + 1) k
 
-val on_range_put
+ghost
+fn rec on_range_put
   (i:nat)
   (j:nat{ i <= j })
   (k:nat{ j < k })
   (#p: (nat -> slprop))
-: stt_ghost unit emp_inames
-    (on_range p i j ** p j ** on_range p (j + 1) k)
-    (fun _ -> on_range p i k)
+  requires on_range p i j ** p j ** on_range p (j + 1) k
+  ensures on_range p i k
  
 val on_range_focus
   (j:nat)

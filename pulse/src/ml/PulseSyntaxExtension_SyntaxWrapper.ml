@@ -125,7 +125,7 @@ let tm_abs (b:binder)
            (body:st_term)
            r
   : st_term 
-  = let asc = { annotated = c; elaborated = None } in
+  = let asc = { annotated = c; elaborated2 = None } in
     PSB.(with_range (tm_abs b q asc body) r)
 
 let tm_st (head:term) r : st_term =

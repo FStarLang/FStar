@@ -116,60 +116,24 @@ let with_pre (pre:slprop) (#a:Type) (#post:a -> slprop)(m:stt a emp post)
   sub_stt _ _ (slprop_equiv_unit pre) pf_post m1
 
 
-fn alloc_with_pre
-    (#a:Type u#0)
-    (init:a)
-    (len:SZ.t)
-    (pre:slprop)
-  requires pre
-  returns arr:array a
-  ensures (pre **
-         (pts_to arr (Seq.create (SZ.v len) init) ** (
-          pure (is_full_array arr) **
-          pure (length arr == SZ.v len)))) **
-        pure (is_full_array arr)
-{
-  alloc init len
-}
-
-
-
-fn free_with_post (#a:Type u#0) (arr:array a) (post:slprop)
-  requires (post ** (exists* v. pts_to arr v)) ** pure (is_full_array arr)
-  ensures post
-{
-  free arr  
-}
-
-(* this is universe-polymorphic in ret_t; so can't define it in Pulse yet *)
-let with_local
-    (#a:Type u#0)
-    (init:a)
-    (len:SZ.t)
-    (#pre:slprop)
-    (ret_t:Type u#a)
-    (#post:ret_t -> slprop) 
-      (body:(arr:array a) -> stt ret_t (pre **
-                                    (pts_to arr (Seq.create (SZ.v len) init) ** (
-                                     pure (is_full_array arr) **
-                                     pure (length arr == SZ.v len))))
+fn with_local u#a
+  (#a:Type0)
+  (init:a)
+  (len:SZ.t)
+  (#pre:slprop)
+  (ret_t:Type u#a)
+  (#post:ret_t -> slprop)
+  (body:(arr:array a) -> stt ret_t (pre **
+                                    (pts_to arr (Seq.create (SZ.v len) init) **
+                                     (pure (is_full_array arr) **
+                                      pure (length arr == SZ.v len))))
                                    (fun r -> post r ** (exists* v. pts_to arr v)))
-
-: stt ret_t pre post
-= let m1 = alloc_with_pre init len pre in
-   let body (arr:array a)
-    : stt ret_t 
-         ((pre ** 
-          (pts_to arr (Seq.create (SZ.v len) init) ** (
-           pure (is_full_array arr) **
-           pure (length arr == SZ.v len)))) **
-         pure (is_full_array arr))
-        post
-    = bind_stt
-        (frame_stt (pure (is_full_array arr)) (body arr))
-        (fun r ->
-          bind_stt
-            (free_with_post arr (post r)) 
-            (fun _ -> return_stt_noeq r post))
-  in
-  bind_stt m1 body
+  requires pre
+  returns r: ret_t
+  ensures post r
+{
+  let arr = alloc init len;
+  let r = body arr;
+  free arr;
+  r
+}

@@ -96,7 +96,7 @@ val with_local
   (#post:ret_t -> slprop)
   (body:(r:ref a) -> stt ret_t (pre ** pts_to r init)
                                (fun v -> post v ** (exists* (x:a). pts_to r x)))
-  : stt ret_t pre post
+  : stt ret_t pre (fun r -> post r)
 
 [@@allow_ambiguous]
 ghost

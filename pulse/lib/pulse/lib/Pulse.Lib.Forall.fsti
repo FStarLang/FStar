@@ -19,6 +19,11 @@ module Pulse.Lib.Forall
 #lang-pulse
 open Pulse.Lib.Core
 open Pulse.Main
+module T = FStar.Tactics.V2
+
+[@@erasable]
+let forall_f (#a:Type u#a) (p:a->slprop) (#[T.exact (`emp)] v:slprop) =
+  x:a -> stt_ghost unit emp_inames v (fun _ -> p x)
 
 val ( forall* )
     (#a:Type u#a)
@@ -38,7 +43,7 @@ fn intro_forall u#a
   (#a:Type u#a)
   (#p:a->slprop)
   (v:slprop)
-  (f_elim : (x:a -> stt_ghost unit emp_inames v (fun _ -> p x)))
+  (f_elim : forall_f #a p #v)
   requires v
   ensures  forall* x. p x
 

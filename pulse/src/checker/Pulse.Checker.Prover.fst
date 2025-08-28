@@ -71,7 +71,7 @@ let __normalize_slprop
   lambdas. *)
 
   (* Unfold anything marked with the "pulse_unfold" attribute. *)
-  let steps = steps @ [delta_attr ["Pulse.Lib.Core.pulse_unfold"]] in
+  let steps = steps @ [delta_attr ["Pulse.Lib.Core.pulse_unfold"; "Pulse.Lib.Core.pulse_eager_unfold"]] in
   (* Unfold anything marked with F*'s "unfold" qualifier . *)
   let steps = steps @ [delta_qualifier ["unfold"]] in
   (* Unfold recursive definitions too, but only the ones that match the filters above. *)
@@ -439,7 +439,34 @@ let rec get_q_at_hd (g:env) (l:list slprop) (q:slprop { L.existsb (fun v -> eq_t
     else let (| tl', _ |) = get_q_at_hd g tl q in
          (| hd::tl', RU.magic #(slprop_equiv _ _ _) () |)
 
-#push-options "--z3rlimit_factor 8 --ifuel 2 --fuel 1 --split_queries no"
+// When we elaborate a term like `foo : x:ref int -> #y:erased int -> #_:squash (y < 1) -> ...`,
+// the implicit squashed argument remain unresolved uvars after running the prover.
+// This function instantiates them with ().
+let prove_squash_uvars #preamble (g: env) (pst: prover_state preamble) :
+    T.Tac (pst':prover_state preamble { pst_extends pst' pst /\ (is_terminal pst ==> is_terminal pst') }) =
+  let rec check bs pst : T.Tac (pst':prover_state preamble { pst_extends pst' pst /\ (is_terminal pst ==> is_terminal pst') }) =
+    match bs with
+    | (x,t)::bs ->
+      if not (PS.contains pst.ss x) then
+        match is_squash t with
+        | Some t' ->
+          let ss = PS.push pst.ss x unit_const in
+          assume (ss `ss_extends` pst.ss);
+          let pst = { pst with
+            ss;
+            nts = None;
+            solved_inv = RU.magic ();
+            k = k_elab_equiv pst.k (VE_Refl _ _) (RU.magic ());
+          } in
+          // NOTE: we don't need to check prop validity here, since we'll recheck the term anyhow
+          check bs pst
+        | None -> check bs pst
+      else
+        check bs pst
+    | [] -> pst in
+  check (bindings pst.uvs) pst
+
+#push-options "--z3rlimit_factor 16 --ifuel 2 --fuel 1 --split_queries no"
 #restart-solver
 let prove
   (allow_ambiguous : bool)
@@ -488,6 +515,8 @@ let prove
   } in
 
   let pst = RU.record_stats "Pulse.prover" fun _ -> prover pst0 in
+
+  let pst = prove_squash_uvars g pst in
 
   let (| nts, effect_labels |)
     : nts:PS.nt_substs &

@@ -48,6 +48,7 @@ type computation_annot = computation_annot' & rng
 
 type computation_type = {
      tag: st_comp_tag;
+     literally : bool;
      annots : list computation_annot;
      range:rng
 }
@@ -643,9 +644,10 @@ let range_of_decl (d:decl) =
   | FnDefn f -> f.range
   | FnDecl d -> d.range
 (* Convenience builders for use from OCaml/Menhir, since field names get mangled in OCaml *)
-let mk_comp tag annots range =
+let mk_comp tag literally annots range =
   {
      tag;
+     literally;
      annots;
      range
   }

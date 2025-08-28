@@ -1034,6 +1034,27 @@ let (@@) : inames -> inames -> inames = join_inames
 (* Attribute to eagerly unfold slprops in the context and goal. *)
 val pulse_unfold : unit
 
+val pulse_eager_unfold : unit
+
+(*
+`literally p` disables purification/extrusion preprocessing on `p`.
+
+For example, `requires literally (exists* y. x |-> y)`
+will compile to `stt .. (exists* y. x |-> y) ..`
+instead of `#y: erased nat -> stt .. (x |-> y) ..`.
+
+You can also use the `norewrite` keyword to disable preprocessing
+for the whole function signature.
+*)
+unfold let literally (p: slprop) : slprop = p
+
+(*
+In a specification (i.e., after requires/ensures),
+`old t` refers to the return value of `t`
+where `t` is evaluated in the context of the precondition.
+*)
+let old () = ()
+
 let rewrites_to_p #t (x y: t) = (x == y)
 
 (*

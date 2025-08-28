@@ -25,25 +25,21 @@ module RU = Pulse.RuntimeUtils
 open FStar.List.Tot
 open Pulse.Syntax
 open Pulse.Typing
+open Pulse.PP
 module P = Pulse.Syntax.Printer
 
-exception Splitlast_empty
-
-let rec splitlast #a (l : list a) : Tac (list a & a) =
+let rec splitlast #a (l : list a { Cons? l }) :
+    res:(list a & a) { List.length (fst res) == List.length l - 1 } =
   match l with
-  | [] -> raise Splitlast_empty
   | [x] -> [], x
   | x::xs ->
     let init, last = splitlast xs in
     x::init, last
 
- exception Map2_length_mismatch
-
-let rec map2 #a #b #c (f : a -> b -> Tac c) (xs : list a) (ys : list b) : Tac (list c) =
+let rec map2 #a #b #c (f : a -> b -> Tac c) (xs : list a) (ys : list b { List.length xs == List.length ys }) : Tac (list c) =
   match xs, ys with
   | [], [] -> []
   | x::xx, y::yy -> f x y :: map2 f xx yy
-  | _ -> raise Map2_length_mismatch
 
 let debug_main g (s: unit -> Tac string) : Tac unit =
   if RU.debug_at_level (fstar_env g) "pulse.main"
@@ -53,21 +49,22 @@ let debug_main g (s: unit -> Tac string) : Tac unit =
 let string_as_term (s:string) : R.term =
   R.pack_ln (R.Tv_Const (C_String s))
 
-let freshen_binder (b:T.binder) : T.binder =
-  { b with uniq = 10000 + b.uniq
+let freshen_binder (g: env) (b:T.binder) : Tac T.binder =
+  { b with uniq = fresh g
          ; ppname = map_seal b.ppname (fun s -> s ^ "'") }
 
 let subst_binder_typ (s : FStar.Stubs.Syntax.Syntax.subst_t) (b : Tactics.NamedView.binder) : Tactics.NamedView.binder =
   { b with sort = FStar.Stubs.Reflection.V2.Builtins.subst_term s b.sort }
 
-let rec freshen_binders (bs:binders) : Tot binders (decreases length bs) =
+let rec freshen_binders (g: env) (bs:binders) :
+    Tac (res: binders { List.length res == List.length bs }) =
   match bs with
   | [] -> []
   | b::bs ->
-    let b' = freshen_binder b in
+    let b' = freshen_binder g b in
     let bs = map (subst_binder_typ [Stubs.Syntax.Syntax.NT (binder_to_namedv b |> FStar.Stubs.Reflection.V2.Builtins.pack_namedv)
                                                            (binder_to_term b')]) bs in
-    b' :: freshen_binders bs
+    b' :: freshen_binders g bs
 
 let elab_b (qbv : option qualifier & binder & bv) : Tot Tactics.NamedView.binder =
   let q, b, bv = qbv in
@@ -79,15 +76,52 @@ let elab_b (qbv : option qualifier & binder & bv) : Tot Tactics.NamedView.binder
     attrs = [];
   }
 
+let inspect_tot_arrow (ty: term) : option (binder_view & term) =
+  match R.inspect_ln ty with
+  | R.Tv_Arrow bv c ->
+    (match R.inspect_comp c with
+    | C_Total t -> Some (R.inspect_binder bv, t)
+    | _ -> None)
+  | _ -> None
+
+let rec recover_bs (g: env) (qbs: list (option qualifier & binder & bv)) (ty: term) (r: range) :
+    Tac (res:(list (option qualifier & binder & bv) & term) { List.length (fst res) >= List.length qbs }) =
+  debug_main g
+    (fun _ -> Printf.sprintf "recover_bs: qbs = %s, ty = %s\n"
+              (string_of_list (fun (_, b,_) -> P.binder_to_string b) qbs)
+              (Pulse.Show.show ty));
+  match qbs, inspect_tot_arrow ty with
+  | [], Some (bv, c) ->
+    let { attrs; sort; qual; ppname } = (bv <: R.binder_view) in
+    let x = fresh g in
+    let px = ({ name = ppname; range = r } <: Pulse.Syntax.Base.ppname), x in
+    let env = Pulse.Typing.Env.push_binding g x (fst px) sort in
+    let c = open_term_nv c px in
+    let bs, c = recover_bs g [] c r in
+    let qual =
+      match qual with
+      | Q_Implicit -> Some Implicit
+      | Q_Explicit | Q_Equality -> None
+      | Q_Meta t -> Some (Meta t) in
+    (qual, { binder_ty = sort; binder_ppname = fst px; binder_attrs = T.seal attrs }, { bv_index = x; bv_ppname = fst px }) :: bs, c
+  | qb::qbs, Some (_, c) ->
+    let q, b, qbv = qb in
+    let bs, c = recover_bs g qbs (open_term' c
+      (R.pack_ln (R.Tv_Var (R.pack_namedv { uniq = qbv.bv_index; sort = T.seal b.binder_ty; ppname = b.binder_ppname.name }))) 0) r in
+    qb::bs, c
+  | qb::qbs, _ ->
+    fail_doc g (Some r) [text "main: FnDefn: expected inferred type to be an arrow"; pp ty]
+  | [], _ ->
+    [], ty
+
 let add_knot (g : env) (rng : R.range)
              (d : decl{FnDefn? d.d})
 : Tac (d : decl{FnDefn? d.d})
 =
   let FnDefn { id; isrec; us; bs; comp; meas; body } = d.d in
-  if Nil? bs then
+  if List.length bs < 2 then
     fail g (Some d.range) "main: FnDefn does not have binders";
-  (* NB: bs and comp are open *)
-  let r_res = elab_comp comp in
+  (* NB: bs, comp, body are open *)
   debug_main g
     (fun _ -> Printf.sprintf "add_knot: bs = %s\n"
               (string_of_list (fun (_, b,_) -> P.binder_to_string b) bs));
@@ -125,9 +159,12 @@ let add_knot (g : env) (rng : R.range)
   *)
   (* Desugaring added a recursive knot argument at the end *)
   let bs, b_knot = splitlast bs in
+  let dummy_body = { body with term = Tm_Unreachable {c = C_Tot tm_unknown} } in
+  let d_typ, _ = Pulse.Checker.Abs.arrow_of_abs g (Pulse.Checker.Abs.mk_abs g bs dummy_body comp) in
+  let bs, comp = recover_bs g bs d_typ d.range in
   (* freshen *)
   let r_bs0 = List.Tot.map elab_b bs in
-  let r_bs = freshen_binders r_bs0 in
+  let r_bs = freshen_binders g r_bs0 in
   let binder_to_r_namedv (b:T.binder) : R.namedv =
     R.pack_namedv {
       uniq = b.uniq;
@@ -140,7 +177,8 @@ let add_knot (g : env) (rng : R.range)
                             (binder_to_term b2)) r_bs0 r_bs in
   let r_bs =
     (* If ghost/atomic, we need to add a decreases refinement on the last arg *)
-    if C_STAtomic? comp || C_STGhost? comp then (
+    match readback_comp comp with
+    | Some (C_STAtomic ..) | Some (C_STGhost ..) ->
       if None? meas then (
         let open FStar.Pprint in
         let open Pulse.PP in
@@ -169,10 +207,12 @@ let add_knot (g : env) (rng : R.range)
         }
       in
       init @ [last]
-    ) else
+    | Some (C_ST _) ->
       r_bs
+    | _ ->
+      fail_doc g (Some d.range) [text "main: FnDefn has unexpected type"; pp comp]
   in
-  let r_res = R.subst_term prime_subst r_res in
+  let r_res = R.subst_term prime_subst comp in
   let r_ty = FStar.Tactics.V2.SyntaxHelpers.mk_tot_arr r_bs r_res in
   // let open FStar.Pprint in
   // let open Pulse.PP in
@@ -197,10 +237,8 @@ let add_knot (g : env) (rng : R.range)
   in
   let bs' = bs @ [b_knot] in
 
-  (* NB: body and comp unchanged, they are already shifted properly
-     (we dropped one binder and added one) *)
   { d with d =
-    FnDefn { id=id'; isrec=false; us; bs=bs'; comp; meas=None; body }
+    FnDefn { id=id'; isrec=false; us; bs=bs'; comp = C_Tot comp; meas=None; body }
   }
 
 let tie_knot (g : env)

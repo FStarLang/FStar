@@ -23,9 +23,11 @@ open Pulse.Typing
 open Pulse.Typing.Combinators
 open Pulse.Checker.Pure
 open Pulse.Checker.Base
+open FStar.List.Tot
 
 module RT = FStar.Reflection.Typing
 module P = Pulse.Syntax.Printer
+module PSB = Pulse.Syntax.Builder
 module FV = Pulse.Typing.FV
 module T = FStar.Tactics.V2
 module R = FStar.Reflection.V2
@@ -33,7 +35,30 @@ module RU = Pulse.RuntimeUtils
 module Env = Pulse.Typing.Env
 module U = Pulse.Syntax.Pure
 module PCP = Pulse.Checker.Pure
+open Pulse.Checker.ImpureSpec
 open Pulse.Show
+
+let rec mk_abs (g:env) (qbs:list (option qualifier & binder & bv) { Cons? qbs }) (body:st_term) (comp:comp)
+: T.Tac (t:st_term {Tm_Abs? t.term})
+=
+  let with_range (s:st_term') (r:range) : st_term =
+    { term = s;
+      range = r;
+      effect_tag = default_effect_hint;
+      source=Sealed.seal false;
+      seq_lhs=Sealed.seal false;
+    }
+  in
+  match qbs with
+  | [(q, last, last_bv)] -> 
+    let body = close_st_term body last_bv.bv_index in
+    let comp = close_comp comp last_bv.bv_index in
+    let ascription = { annotated = Some comp; elaborated = None } in
+    with_range (Tm_Abs { b = last; q; ascription; body }) body.range
+  | (q, b, bv)::qbs ->
+    let body = mk_abs g qbs body comp in
+    let body = close_st_term body bv.bv_index in
+    with_range (Tm_Abs { b; q; ascription=empty_ascription; body }) body.range
 
 let debug_abs g (s: unit -> T.Tac string) : T.Tac unit =
   if RU.debug_at_level (fstar_env g) "pulse.abs"
@@ -41,12 +66,97 @@ let debug_abs g (s: unit -> T.Tac string) : T.Tac unit =
 
 (* Infers the the type of the binders from the specification alone, not the body *)
 
+let rec exists_as_binders (g: env) (t: slprop) : T.Tac (env & list (var & binder & option qualifier) & slprop) =
+  match inspect_term t with
+  | Tm_Star t s ->
+    let g, bs1, t = exists_as_binders g t in
+    let g, bs2, s = exists_as_binders g s in
+    g, bs1 @ bs2, tm_star t s
+  | Tm_ExistsSL u b t ->
+    let x = fresh g in
+    let px = b.binder_ppname, x in
+    let x_ty = mk_erased u b.binder_ty in
+    let g = push_binding g x (fst px) x_ty in
+    let t = open_term' t (mk_reveal u b.binder_ty (term_of_nvar px)) 0 in
+    let g, bs, t = exists_as_binders g t in
+    g, (x, { b with binder_ty = x_ty }, Some Implicit) :: bs, t
+  | Tm_WithPure p n t ->
+    let x = fresh g in
+    let px = n, x in
+    let x_ty = mk_squash u0 p in
+    let g = push_binding g x (fst px) x_ty in
+    let t = open_term_nv t px in
+    let g, bs, t = exists_as_binders g t in
+    g, (x, { binder_ty = x_ty; binder_ppname = n; binder_attrs = T.seal [] }, Some Implicit) :: bs, t
+  | _ ->
+    g, [], t
+
+let tc_term_phase1_with_type_twice g t ty =
+  // If we call phase1 TC only once, then the universe instantiation in
+  // coercion-inserted reveal calls remains a uvar.
+  let ty, eff = tc_term_phase1_with_type g t ty in
+  let ty, eff = tc_term_phase1_with_type g t ty in
+  ty, eff
+
+let preproc_ascription (g: env) (c: comp) : T.Tac (env & list (var & binder & option qualifier) & comp) =
+  let preproc_inames is : T.Tac R.term =
+    let is, _ = tc_term_phase1_with_type g is tm_inames in
+    let is = T.norm_well_typed_term (elab_env g)
+      [primops; iota; zeta; delta_attr ["Pulse.Lib.Core.unfold_check_opens"]]
+      is in
+    is in
+  let preproc_stcomp (c: st_comp) : T.Tac (env & list (var & binder & option qualifier) & st_comp) = 
+    let {u;res;pre;post} = c in
+    let res, u = tc_type_phase1 g res in
+    let g, bs, pre =
+      let pre = purify_spec g { ctxt_now = tm_emp; ctxt_old = None } pre in
+      exists_as_binders g pre in
+    let x = fresh g in
+    let post =
+      let g' = push_binding g x ppname_default res in
+      let post = open_term_nv post (v_as_nv x) in
+        purify_spec g'
+          { ctxt_old = Some pre; ctxt_now = tm_emp }
+          post in
+    let post = close_term post x in
+    let res, u = tc_type_phase1 g res in // FIXME: unification fails to fill in u....
+    g, bs, ({u;res;pre;post} <: st_comp) in
+  match c with
+  | C_Tot t -> g, [], C_Tot (fst (tc_type_phase1 g t))
+  | C_ST c ->
+    let g, bs, c = preproc_stcomp c in
+    g, bs, C_ST c
+  | C_STGhost is c ->
+    let g, bs, c = preproc_stcomp c in
+    g, bs, C_STGhost (preproc_inames is) c
+  | C_STAtomic is obs c ->
+    let g, bs, c = preproc_stcomp c in
+    g, bs, C_STAtomic (preproc_inames is) obs c
+
+let rec tm_abs_binders (bs: list (var & binder & option qualifier)) (t: st_term) : t':st_term { Cons? bs ==> Tm_Abs? t'.term } =
+  match bs with
+  | [] -> t
+  | (x, b, q) :: bs ->
+    let t = tm_abs_binders bs t in
+    let t = close_st_term t x in
+    PSB.with_range (Tm_Abs { b; q; ascription = empty_ascription; body = t }) t.range
+
+let rec tm_arrow_binders (bs: list (var & binder & option qualifier)) (t: term) : term =
+  match bs with
+  | [] -> t
+  | (x, b, q) :: bs ->
+    let t = tm_arrow_binders bs t in
+    let t = close_term t x in
+    Pulse.Reflection.Util.mk_arrow_with_name b.binder_ppname.name (b.binder_ty, elab_qual q) t
+
 let rec arrow_of_abs (env:_) (prog:st_term { Tm_Abs? prog.term })
   : T.Tac (term & t:st_term { Tm_Abs? t.term })
   = let Tm_Abs { b; q; ascription; body } = prog.term in
     let x = fresh env in
     let px = b.binder_ppname, x in
-    let env = push_binding env x (fst px) b.binder_ty in
+    let x_ty, _ = tc_type_phase1 env b.binder_ty in
+    let b = { b with binder_ty = x_ty } in
+    let env = push_binding env x (fst px) x_ty in
     let body = open_st_term_nv body px in
     let annot = ascription.annotated in
     if Some? ascription.elaborated
@@ -67,6 +177,7 @@ let rec arrow_of_abs (env:_) (prog:st_term { Tm_Abs? prog.term })
         let c = open_comp_with c (U.term_of_nvar px) in
         match c with
         | C_Tot tannot -> (
+          let tannot, _ = tc_type_phase1 env tannot in
           let t = RU.hnf_lax (elab_env env) tannot in
           //retain the original annotation, so that we check it wrt the inferred type in maybe_rewrite_body_typing
           let t = close_term t x in
@@ -92,11 +203,12 @@ let rec arrow_of_abs (env:_) (prog:st_term { Tm_Abs? prog.term })
         Env.fail env (Some prog.range) "Unannotated function body"
       
       | Some c -> ( //we're taking the annotation as is; remove it from the abstraction to avoid rechecking it
-        let ty : term = tm_arrow b q c in
-        let ascription = empty_ascription in
-        let body = close_st_term body x in
-        let prog : st_term = { prog with term = Tm_Abs { b; q; ascription; body} } in
-        ty, prog
+        let c = open_comp_nv c px in
+        let g, bs, c = preproc_ascription env c in
+        let bs = (x, b, q) :: bs in
+        let ty = tm_arrow_binders bs (elab_comp c) in
+        let prog' = tm_abs_binders bs body in
+        ty, { prog with term = prog'.term }
       )
     )
 
@@ -199,6 +311,7 @@ let preprocess_abs
   = let annot, t = arrow_of_abs g t in
     debug_abs g (fun _ -> Printf.sprintf "arrow_of_abs = %s\n" (P.term_to_string annot));
     let annot, _ = Pulse.Checker.Pure.instantiate_term_implicits g annot None false in
+    let annot = RU.hnf_lax (elab_env g) annot in
     let abs = rebuild_abs g t annot in
     debug_abs g (fun _ -> Printf.sprintf "rebuild_abs = %s\n" (P.st_term_to_string abs));
     abs
@@ -296,7 +409,10 @@ let maybe_rewrite_body_typing
                  #_ #_ #t' d t t_typing [hnf;delta]
         with
         | None -> 
-          Env.fail g (Some e.range) "Inferred type is incompatible with annotation"
+          Env.fail g (Some e.range)
+            (Printf.sprintf "Inferred type is incompatible with annotation.\nInferred: %s\nAnnotated: %s"
+              (P.term_to_string t')
+              (P.term_to_string t))
         | Some d -> 
           debug_abs g 
             (fun _ -> Printf.sprintf "maybe_rewrite_body_typing:{\nfrom %s\nto %s}\n" 

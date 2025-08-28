@@ -115,7 +115,7 @@ let state_pred
     state_res (up pre) (up post) h.g_state v_state
 
 let task_type (pre post : slprop) : Type0 =
-  unit -> stt unit pre (fun _ -> post)
+  unit -> task_f pre post
 
 let task_thunk_typing_core (t : task_t) (pre post: slprop) : slprop =
   slprop_ref_pts_to t.pre pre **
@@ -376,34 +376,28 @@ fn rec extract_state_pred
         extract_state_pred p t #ts';
 
         ghost
-        fn aux ()
-          requires (task_thunk_typing t' ** state_pred t'.pre t'.post t'.h) **
-                   all_state_pred ts'
-          ensures  all_state_pred ts
+        fn aux () :
+          trade_f (all_state_pred ts')
+            #(task_thunk_typing t' ** state_pred t'.pre t'.post t'.h)
+            (all_state_pred ts) =
         {
           add_one_state_pred t' ts';
         };
-        intro_trade (all_state_pred ts') (all_state_pred ts)
-                    (task_thunk_typing t' ** state_pred t'.pre t'.post t'.h) aux;
+        intro_trade _ _ _ aux;
 
         trade_compose (state_pred t.pre t.post t.h) (all_state_pred ts') (all_state_pred ts);
       } else {
-        rewrite each t' as t;
         take_one_h11 t ts';
 
         ghost
-        fn aux (_:unit)
-          requires (pure (ts == t'::ts') ** task_thunk_typing t' ** all_state_pred ts')
-                ** state_pred t'.pre t'.post t'.h
-          ensures all_state_pred ts
+        fn aux () :
+          trade_f (state_pred t.pre t.post t.h)
+            #(task_thunk_typing t' ** all_state_pred ts')
+            (all_state_pred ts) =
         {
-          add_one_state_pred t' ts';
+          add_one_state_pred t ts';
         };
-        intro_trade
-          (state_pred t.pre t.post t.h) (all_state_pred ts)
-          (pure (ts == t::ts') ** task_thunk_typing t ** all_state_pred ts')
-          aux;
-        ()
+        intro_trade _ _ _ aux;
       }
     }
   }
@@ -493,7 +487,7 @@ fn spawn (p:pool)
     (#pf:perm)
     (#pre : slprop)
     (#post : slprop)
-    (f : unit -> stt unit (pre) (fun _ -> post))
+    (f : unit -> task_f pre post)
     requires pool_alive #pf p ** pre
     returns  h : handle
     ensures  pool_alive #pf p ** joinable p post h
@@ -795,8 +789,8 @@ fn disown_aux
   (#p:pool)
   (#post : slprop)
   (h : handle)
-  requires pool_done p ** joinable p post h
-  ensures  pool_done p ** post
+  ()
+  : pledge_f (pool_done p) #(joinable p post h) post =
 {
   unfold (pool_done p);
   unfold (joinable p post h);
@@ -872,8 +866,7 @@ fn disown (#p:pool)
   ensures  pledge [] (pool_done p) (post)
 {
   inames_live_empty ();
-  make_pledge [] (pool_done p) (post) (joinable p post h)
-      (fun _ -> disown_aux #p #post h)
+  make_pledge _ _ _ _ (disown_aux #p #post h)
 }
 
 fn spawn_ (p:pool)
@@ -967,9 +960,8 @@ ghost
 fn pool_done_handle_done_aux (#p:pool)
       (#post : slprop)
       (h : handle)
-      (_ : unit)
-  requires pool_done p ** handle_spotted p post h
-  ensures  pool_done p ** handle_done h
+      ()
+  : pledge_f (pool_done p) #(handle_spotted p post h) (handle_done h) =
 {
   unfold (pool_done p);
   pool_done_handle_done_aux2 #p #post h _;
@@ -984,8 +976,7 @@ fn pool_done_handle_done (#p:pool)
   ensures pledge [] (pool_done p) (handle_done h)
 {
   inames_live_empty();
-  make_pledge [] (pool_done p) (handle_done h) (handle_spotted p post h)
-    (pool_done_handle_done_aux #p #post h)
+  make_pledge _ _ _ _ (pool_done_handle_done_aux #p #post h)
 }
 
 let vopt (#a:Type) (o : option a) (p : a -> slprop) =
@@ -1017,11 +1008,17 @@ fn get_vopt (#a:Type0) (#x : a) (#p : a -> slprop) ()
   unfold vopt (Some x) p;
 }
 
+[@@erasable]
+let weaken_vopt_f (p1: slprop) (#[T.exact (`emp)] extra : slprop) (p2: slprop) =
+  stt_ghost unit [] (extra ** p1) (fun _ -> p2)
+
+let call #t #is #req #ens (h: stt_ghost is t req (fun x -> ens x)) = h
+
 ghost
 fn weaken_vopt (#a:Type0) (o : option a)
     (#p1 #p2 : a -> slprop)
-    (extra : slprop) // CAUTION: this can be dropped!
-    (f : (x:a) -> stt_ghost unit [] (extra ** p1 x) (fun _ -> p2 x))
+    (#extra : slprop) // CAUTION: this can be dropped!
+    (f : (x:a -> weaken_vopt_f (p1 x) #extra (p2 x)))
   requires extra ** vopt o p1
   ensures  vopt o p2
 {
@@ -1033,7 +1030,7 @@ fn weaken_vopt (#a:Type0) (o : option a)
     }
     Some v -> {
       unfold vopt (Some v) p1;
-      f v;
+      call (f v);
       rewrite p2 v as vopt o p2;
     }
   }
@@ -1088,13 +1085,14 @@ fn rec grab_work'' (p:pool) (v_runnable : list task_t)
           add_one_state_pred t ts;
           
           (* Weaken the pure inside the vopt *)
-          ghost fn weaken (t : task_t)
-            requires emp ** (up t.pre ** pts_to t.h.state #0.5R Running ** pure (List.memP t ts) ** task_thunk_typing t)
-            ensures  up t.pre ** pts_to t.h.state #0.5R Running ** pure (List.memP t v_runnable) ** task_thunk_typing t
+          ghost fn weaken (t: task_t) : weaken_vopt_f
+              (up t.pre ** pts_to t.h.state #0.5R Running ** pure (List.memP t ts) ** task_thunk_typing t)
+              (up t.pre ** pts_to t.h.state #0.5R Running ** pure (List.memP t v_runnable) ** task_thunk_typing t)
+            =
           {
             ()
           };
-          weaken_vopt topt emp weaken;
+          weaken_vopt topt weaken;
 
           topt
         }
@@ -1119,13 +1117,15 @@ fn rec grab_work' (p:pool)
   AR.take_snapshot_full p.g_runnable;
 
   (* If Some, the task is spotted *)
-  ghost fn spot (t:task_t)
-    requires AR.snapshot p.g_runnable v_runnable ** (up t.pre ** pts_to t.h.state #0.5R Running ** pure (List.memP t v_runnable) ** task_thunk_typing t)
-    ensures  up t.pre ** pts_to t.h.state #0.5R Running ** task_spotted p t ** task_thunk_typing t
+  ghost fn spot (t:task_t) : weaken_vopt_f
+      (up t.pre ** pts_to t.h.state #0.5R Running ** pure (List.memP t v_runnable) ** task_thunk_typing t)
+      #(AR.snapshot p.g_runnable v_runnable)
+      (up t.pre ** pts_to t.h.state #0.5R Running ** task_spotted p t ** task_thunk_typing t)
+    =
   {
     intro_task_spotted p t v_runnable;
   };
-  weaken_vopt topt (AR.snapshot p.g_runnable v_runnable) spot;
+  weaken_vopt topt spot;
 
   fold (lock_inv p.runnable p.g_runnable);
   topt
@@ -1147,7 +1147,7 @@ fn grab_work (p:pool) #f
 }
 
 let undyn pre post (d: Dyn.dyn { Dyn.dyn_has_ty d (task_type pre post) }) : stt unit pre (fun _ -> post) =
-  hide_div (fun _ -> let f = Dyn.undyn d in f ())
+  hide_div (fun _ -> let f = Dyn.undyn #(task_type pre post) d in f ())
 
 fn perf_work (t : task_t)
   requires up t.pre ** task_thunk_typing t

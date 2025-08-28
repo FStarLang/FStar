@@ -48,16 +48,7 @@ let share r = H.share r
 let gather r = H.gather r
 
 
-let with_local
-    (#a:Type0)
-    (init:a)
-    (#pre:slprop)
-    (#ret_t:Type)
-    (#post:ret_t -> slprop)
-    (body:(r:ref a) -> stt ret_t (pre ** pts_to r init)
-                                 (fun v -> post v ** (exists* v. pts_to r v)))
-: stt ret_t pre post
-= H.with_local init #pre #ret_t #post (fun r -> body r)
+let with_local init = H.with_local init
 
 
 let pts_to_injective_eq r = H.pts_to_injective_eq r

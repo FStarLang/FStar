@@ -130,7 +130,7 @@ fn sample7 (x0:R.ref int) (x1:R.ref bool)
 requires exists* p0 p1 v0 v1. pts_to x0 #p0 v0 ** pts_to x1 #p1 v1
 ensures emp
 {
-    
+    assert exists* p0 p1 v0 v1. pts_to x0 #p0 v0 ** pts_to x1 #p1 v1;
     with p0 p1 v0 v1. _;
     drop (pts_to x0 #p0 v0);
     drop (pts_to x1 #p1 v1)

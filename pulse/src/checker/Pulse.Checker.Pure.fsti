@@ -56,6 +56,10 @@ val check_term (g:env) (e:term) (eff:T.tot_or_ghost) (t:term)
 val check_term_at_type (g:env) (e:term) (t:term)
   : T.Tac (e:term & eff:T.tot_or_ghost & typing g e eff t)
 
+val tc_term_phase1 (g:env) (t:term) : T.Tac (term & term & T.tot_or_ghost)
+val tc_term_phase1_with_type (g: env) (t:term) (expected_typ: term) : T.Tac (term & T.tot_or_ghost)
+val tc_type_phase1 (g: env) (t: term) : T.Tac (term & universe)
+
 val core_compute_term_type (g:env) (t:term)
   : T.Tac (eff:T.tot_or_ghost &
            ty:term &

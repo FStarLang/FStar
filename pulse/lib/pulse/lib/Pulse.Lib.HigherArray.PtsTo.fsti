@@ -38,7 +38,7 @@ instance has_pts_to_larray (a:Type u#a) (n : nat) : has_pts_to (larray a n) (Seq
   pts_to = pts_to;
 }
 
-ghost fn to_mask u#a (#t: Type u#a) (arr: array t) #f #v
+ghost fn to_mask u#a (#t: Type u#a) (arr: array t) #f (#v: erased _)
   requires arr |-> Frac f v
   ensures pts_to_mask arr #f v (fun _ -> True)
 
@@ -82,7 +82,7 @@ fn op_Array_Access
   requires pts_to a #p s
   returns  res : t
   ensures  pts_to a #p s **
-           pure (res == Seq.index s (SZ.v i))
+           rewrites_to res (Seq.index s (SZ.v i))
 
 (* Written x.(i) <- v *)
 inline_for_extraction
