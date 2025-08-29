@@ -48,7 +48,8 @@ let mk_intro_with_pure (pred: term) (p:term)
       Tm_ST {
           t = T.mk_app (tm_pureapp (tm_pureapp intro_with_pure_head None pred) None
                           (tm_pureabs ppname_default.name (mk_squash u0 pred) None p Range.range_0))
-                        [unit_const, T.Q_Explicit] 
+                        [unit_const, T.Q_Explicit];
+          args = []
       }
     in
     wtag (Some STT_Ghost) t

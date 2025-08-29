@@ -162,8 +162,10 @@ let rec close_open_inverse_st'  (t:st_term)
       close_open_inverse' head x i;
       close_open_inverse_st' body x (i + 1)
 
-    | Tm_ST { t } ->
-      close_open_inverse' t x i
+    | Tm_ST { t; args } ->
+      close_open_inverse' t x i;
+      admit(); // need map dec fusion
+      ()
     
     | Tm_IntroExists { p; witnesses } ->
       close_open_inverse' p x i;

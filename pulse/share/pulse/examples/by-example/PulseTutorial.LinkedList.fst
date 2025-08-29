@@ -230,13 +230,10 @@ requires
 ensures 
   (is_list n.tail tl @==> is_list (Some v) (n.head::tl))
 {
-  ghost
-  fn aux () :
-    trade_f (is_list n.tail tl) #(pts_to v n) (is_list (Some v) (n.head::tl)) =
+  intro (is_list n.tail tl @==> is_list (Some v) (n.head::tl)) #(pts_to v n) fn _
   {
     intro_is_list_cons (Some v) v
   };
-  I.intro _ _ _ aux;
 }
 //end tail_for_cons$
 
@@ -331,14 +328,10 @@ ensures exists* hd tl.
   is_list_case_some x np;
   with _node _tl. _;
   let node = !np;
-  ghost
-  fn aux (tl':list t)
-    requires pts_to np node ** is_list node.tail tl'
-    ensures is_list x (node.head::tl')
-  {
+  intro (forall* tl'. is_list node.tail tl' @==> is_list x (node.head::tl'))
+      #(pts_to np node) fn _ tl' {
     intro_is_list_cons x np;
   };
-  FA.intro_forall_imp _ _ _ aux;
   node.tail
 }
 //end tail_alt$
@@ -417,9 +410,7 @@ ensures is_list x ('l1 @ 'l2)
 {
   let mut cur = x;
   //the base case, set up the initial invariant
-  FA.intro emp (fun l -> I.refl #[] (is_list x l));
-  rewrite (forall* l. is_list x l @==> is_list x l)
-      as  (forall* l. is_list x l @==> is_list x ([]@l));
+  intro (forall* l. is_list x l @==> is_list x ([] @ l)) fn _ l {};
   while (not_is_last_cell (!cur)) //check if we are at the last cell
   invariant exists* ll pfx sfx.
     pts_to cur ll **   //cur holds the pointer to the current head of the traversal, ll

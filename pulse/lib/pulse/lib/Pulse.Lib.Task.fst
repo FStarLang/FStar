@@ -23,7 +23,9 @@ open FStar.Tactics
 open FStar.Preorder
 open Pulse.Lib.Pledge
 open Pulse.Lib.Trade
+open Pulse.Lib.Shift
 open Pulse.Class.Duplicable
+open Pulse.Class.Introducable
 
 open Pulse.Lib.SpinLock
 open Pulse.Lib.Box { box, (!), (:=) }
@@ -244,48 +246,6 @@ let task_spotted
     AR.snapshot p.g_runnable v_runnable **
     pure (List.memP t v_runnable)
 
-let gtrade_ty a b extra : Type u#5 =
-  unit -> stt_ghost unit [] (extra ** a) (fun _ -> b)
-let gtrade_fun a b extra {| duplicable extra |} (f: gtrade_ty a b extra) =
-  emp
-let gtrade (a b: slprop) : slprop =
-  exists* (extra: slprop) (h: duplicable extra) f.
-    extra ** gtrade_fun a b extra f
-
-ghost fn gtrade_intro (a b extra: slprop) {| h: duplicable extra |}
-    (f: unit -> stt_ghost unit [] (extra ** a) (fun _ -> b))
-  requires extra
-  ensures gtrade a b
-{
-  fold gtrade_fun a b extra #h f;
-  fold gtrade a b;
-}
-
-ghost fn gtrade_dup (a b: slprop)
-  requires gtrade a b
-  ensures gtrade a b ** gtrade a b
-{
-  unfold gtrade a b;
-  with extra h f. assert gtrade_fun a b extra #h f;
-  fold gtrade_fun a b extra #h f;
-  dup extra #h ();
-  fold gtrade a b;
-  fold gtrade a b;
-}
-
-instance gtrade_duplicable a b : duplicable (gtrade a b) = { dup_f = fun _ -> gtrade_dup a b }
-
-ghost fn gtrade_elim (a b: slprop)
-  requires a ** gtrade a b
-  ensures b
-{
-  unfold gtrade a b;
-  with extra h f. assert gtrade_fun a b extra #h f;
-  unfold gtrade_fun a b extra #h f;
-  let f: gtrade_ty a b extra = f;
-  f ();
-}
-
 let handle_spotted
   (p : pool)
   (post : slprop)
@@ -293,7 +253,7 @@ let handle_spotted
   : slprop =
     exists* (t : task_t).
       task_spotted p t **
-      gtrade (up t.post ** later_credit 1) post **
+      shift (up t.post ** later_credit 1) post **
       pure (t.h == h)
 
 ghost
@@ -315,7 +275,7 @@ fn intro_handle_spotted
     (t : task_t)
     (ts : list task_t)
   requires AR.snapshot p.g_runnable ts
-        ** gtrade (up t.post ** later_credit 1) post
+        ** shift (up t.post ** later_credit 1) post
         ** pure (List.memP t ts)
   ensures  handle_spotted p post t.h
 {
@@ -343,13 +303,13 @@ fn recall_handle_spotted
   requires AR.pts_to p.g_runnable #f ts ** handle_spotted p post h
   returns  task : erased task_t
   ensures AR.pts_to p.g_runnable #f ts ** handle_spotted p post h **
-          gtrade (up task.post ** later_credit 1) post **
+          shift (up task.post ** later_credit 1) post **
           pure (task.h == h /\ List.memP (reveal task) ts)
 {
   unfold (handle_spotted p post h);
   with t. assert (task_spotted p t);
   recall_task_spotted p t #ts;
-  dup (gtrade (up t.post ** later_credit 1) post) ();
+  dup (shift (up t.post ** later_credit 1) post) ();
   fold (handle_spotted p post h);
   hide t
 }
@@ -375,29 +335,21 @@ fn rec extract_state_pred
         take_one_h11 t' ts';
         extract_state_pred p t #ts';
 
-        ghost
-        fn aux () :
-          trade_f (all_state_pred ts')
-            #(task_thunk_typing t' ** state_pred t'.pre t'.post t'.h)
-            (all_state_pred ts) =
+        intro (all_state_pred ts' @==> all_state_pred ts)
+            #(task_thunk_typing t' ** state_pred t'.pre t'.post t'.h) fn _
         {
           add_one_state_pred t' ts';
         };
-        intro_trade _ _ _ aux;
 
         trade_compose (state_pred t.pre t.post t.h) (all_state_pred ts') (all_state_pred ts);
       } else {
         take_one_h11 t ts';
 
-        ghost
-        fn aux () :
-          trade_f (state_pred t.pre t.post t.h)
-            #(task_thunk_typing t' ** all_state_pred ts')
-            (all_state_pred ts) =
+        intro (state_pred t.pre t.post t.h @==> all_state_pred ts)
+            #(task_thunk_typing t' ** all_state_pred ts') fn _
         {
           add_one_state_pred t ts';
         };
-        intro_trade _ _ _ aux;
       }
     }
   }
@@ -461,14 +413,11 @@ instance duplicable_slprop_ref_pts_to x y : duplicable (slprop_ref_pts_to x y) =
   dup_f = (fun _ -> slprop_ref_share x #y)
 }
 
-ghost fn gtrade_up (x: slprop_ref) (y: slprop)
+ghost fn shift_up (x: slprop_ref) (y: slprop)
   requires slprop_ref_pts_to x y
-  ensures gtrade (up x ** later_credit 1) y
+  ensures shift (up x ** later_credit 1) y
 {
-  ghost fn aux ()
-    requires slprop_ref_pts_to x y ** (up x ** later_credit 1)
-    ensures y
-  {
+  intro (shift (up x ** later_credit 1) y) #(slprop_ref_pts_to x y) fn _ {
     unfold up x;
     slprop_ref_gather _;
     later_elim _;
@@ -476,7 +425,6 @@ ghost fn gtrade_up (x: slprop_ref) (y: slprop)
     equiv_elim _ _;
     drop_ (slprop_ref_pts_to _ _);
   };
-  gtrade_intro _ _ _ aux;
 }
 
 noextract
@@ -536,7 +484,7 @@ fn spawn (p:pool)
 
   AR.take_snapshot_full p.g_runnable;
 
-  gtrade_up task.post post;
+  shift_up task.post post;
   assert (pure (List.memP task (task :: v_runnable)));
   // intro_task_spotted p task (task :: v_runnable);
   intro_handle_spotted p post task (task :: v_runnable);
@@ -658,7 +606,7 @@ fn try_await
       (* Now claim it *)
       claim_done_task #p #(up t.pre) #(up t.post) t.h;
 
-      gtrade_elim (up t.post ** later_credit 1) post;
+      elim_shift (up t.post ** later_credit 1) post;
 
       intro_state_pred t.pre t.post t.h Claimed;
       elim_trade _ _; // undo extract_state_pred
@@ -785,88 +733,78 @@ let pool_done (p : pool) : slprop =
   exists* ts. AR.pts_to p.g_runnable #0.5R ts ** all_state_pred ts ** all_tasks_done ts
 
 ghost
-fn disown_aux
-  (#p:pool)
-  (#post : slprop)
-  (h : handle)
-  ()
-  : pledge_f (pool_done p) #(joinable p post h) post =
-{
-  unfold (pool_done p);
-  unfold (joinable p post h);
-  unfold (handle_spotted p post h);
-
-  with v_runnable. assert (AR.pts_to p.g_runnable #0.5R v_runnable);
-  with t. assert (task_spotted p t);
-
-  recall_task_spotted p t #v_runnable;
-  extract_state_pred p t #v_runnable;
-
-  unfold (state_pred t.pre t.post t.h);
-
-  with st. assert (AR.pts_to t.h.g_state st);
-  let st = reveal st;
-  
-  all_tasks_done_inst t v_runnable;
-
-  match st {
-    Done -> {
-      rewrite each h as t.h;
-      rewrite (state_res (up t.pre) (up t.post) t.h.g_state Done)
-           as up t.post;
-
-      AR.lift_anchor t.h.g_state Ready;
-      AR.write_full t.h.g_state Claimed;
-      AR.drop_anchor t.h.g_state;
-
-      fold (state_res (up t.pre) (up t.post) t.h.g_state Claimed);
-      
-      rewrite (pts_to t.h.state Done)
-           as (pts_to t.h.state (unclaimed Claimed));
-      
-      intro_state_pred t.pre t.post t.h Claimed;
-
-      drop_ (task_spotted p t);
-      
-      elim_trade _ _;
-      
-      drop_ (task_done t);
-      
-      gtrade_elim _ _;
-      fold (pool_done p);
-    }
-    Claimed -> {
-      assert (AR.anchored h.g_state Ready);
-      rewrite each h as t.h;
-      AR.recall_anchor t.h.g_state Ready;
-      unreachable();
-    }
-    Ready -> {
-      unfold (task_done t);
-      unfold (handle_done t.h);
-      with st. assert (AR.snapshot t.h.g_state st);
-      AR.recall_snapshot t.h.g_state;
-      unreachable();
-    }
-    Running -> { 
-      unfold (task_done t);
-      unfold (handle_done t.h);
-      with st. assert (AR.snapshot t.h.g_state st);
-      AR.recall_snapshot t.h.g_state;
-      unreachable();
-    }
-  }
-}
-
-ghost
 fn disown (#p:pool)
       (#post : slprop)
       (h : handle)
   requires joinable p post h
   ensures  pledge [] (pool_done p) (post)
 {
-  inames_live_empty ();
-  make_pledge _ _ _ _ (disown_aux #p #post h)
+  intro (pledge emp_inames (pool_done p) post) #(joinable p post h) fn _ {
+    unfold (pool_done p);
+    unfold (joinable p post h);
+    unfold (handle_spotted p post h);
+
+    with v_runnable. assert (AR.pts_to p.g_runnable #0.5R v_runnable);
+    with t. assert (task_spotted p t);
+
+    recall_task_spotted p t #v_runnable;
+    extract_state_pred p t #v_runnable;
+
+    unfold (state_pred t.pre t.post t.h);
+
+    with st. assert (AR.pts_to t.h.g_state st);
+    let st = reveal st;
+    
+    all_tasks_done_inst t v_runnable;
+
+    match st {
+      Done -> {
+        rewrite each h as t.h;
+        rewrite (state_res (up t.pre) (up t.post) t.h.g_state Done)
+            as up t.post;
+
+        AR.lift_anchor t.h.g_state Ready;
+        AR.write_full t.h.g_state Claimed;
+        AR.drop_anchor t.h.g_state;
+
+        fold (state_res (up t.pre) (up t.post) t.h.g_state Claimed);
+        
+        rewrite (pts_to t.h.state Done)
+            as (pts_to t.h.state (unclaimed Claimed));
+        
+        intro_state_pred t.pre t.post t.h Claimed;
+
+        drop_ (task_spotted p t);
+        
+        elim_trade _ _;
+        
+        drop_ (task_done t);
+        
+        elim_shift _ _;
+        fold (pool_done p);
+      }
+      Claimed -> {
+        assert (AR.anchored h.g_state Ready);
+        rewrite each h as t.h;
+        AR.recall_anchor t.h.g_state Ready;
+        unreachable();
+      }
+      Ready -> {
+        unfold (task_done t);
+        unfold (handle_done t.h);
+        with st. assert (AR.snapshot t.h.g_state st);
+        AR.recall_snapshot t.h.g_state;
+        unreachable();
+      }
+      Running -> { 
+        unfold (task_done t);
+        unfold (handle_done t.h);
+        with st. assert (AR.snapshot t.h.g_state st);
+        AR.recall_snapshot t.h.g_state;
+        unreachable();
+      }
+    }
+  };
 }
 
 fn spawn_ (p:pool)
@@ -952,20 +890,8 @@ fn pool_done_handle_done_aux2 (#p:pool)
   pool_done_task_done_aux t ts;
   unfold (task_done t);
   rewrite each t.h as h;
-  drop_ (gtrade _ _);
+  drop_ (shift _ _);
   drop_ (handle_spotted p post h);
-}
-
-ghost
-fn pool_done_handle_done_aux (#p:pool)
-      (#post : slprop)
-      (h : handle)
-      ()
-  : pledge_f (pool_done p) #(handle_spotted p post h) (handle_done h) =
-{
-  unfold (pool_done p);
-  pool_done_handle_done_aux2 #p #post h _;
-  fold (pool_done p);
 }
 
 ghost
@@ -975,8 +901,11 @@ fn pool_done_handle_done (#p:pool)
   requires handle_spotted p post h
   ensures pledge [] (pool_done p) (handle_done h)
 {
-  inames_live_empty();
-  make_pledge _ _ _ _ (pool_done_handle_done_aux #p #post h)
+  intro (pledge emp_inames (pool_done p) (handle_done h)) #(handle_spotted p post h) fn _ {
+    unfold (pool_done p);
+    pool_done_handle_done_aux2 #p #post h _;
+    fold (pool_done p);
+  }
 }
 
 let vopt (#a:Type) (o : option a) (p : a -> slprop) =

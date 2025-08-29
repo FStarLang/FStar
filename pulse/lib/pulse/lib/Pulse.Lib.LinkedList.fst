@@ -270,19 +270,9 @@ ensures
   is_list n.tail tl **
   (is_list n.tail tl @==> is_list (Some v) (n.head::tl))
 {
-  ghost
-  fn yields_elim (#t:Type) 
-                (v:node_ptr t)
-                (n:node t)
-                (tl:list t)
-  requires 
-    pts_to v n ** is_list n.tail tl
-  ensures 
-    is_list (Some v) (n.head::tl)
-  {
+  intro (is_list n.tail tl @==> is_list (Some v) (n.head::tl)) #(v |-> n) fn _ {
     intro_is_list_cons (Some v) v
-  };
-  T.intro _ _ _ (fun _ -> yields_elim v n tl);
+  }
 }
 
 
@@ -418,15 +408,6 @@ fn non_empty_list (#t:Type0) (x:llist t)
     intro_is_list_cons x v #n #tl;
 }
 
-ghost
-fn forall_intro_is_list_idem (#t:Type) (x:llist t)
-    requires emp
-    ensures forall* l. is_list x l @==> is_list x l
-{
-    intro_forall emp (fun l -> T.refl #emp_inames (is_list x l))
-    (* ^ Need to provide emp_inames due to bad meta implicit, fix (in F* ). *)
-}
-
 fn move_next_forall (#t:Type) (x:llist t)
     requires is_list x 'l ** pure (Some? x)
     returns y:llist t
@@ -438,19 +419,9 @@ fn move_next_forall (#t:Type) (x:llist t)
     let np = Some?.v x;
     is_list_cases_some x np;
     let node = !np;
-    with tail tl. assert (is_list #t tail tl);
-    ghost fn aux (tl':list t)
-        requires pts_to np node
-        ensures is_list node.tail tl' @==> is_list x (node.head::tl')
-    {
-        ghost fn aux () :
-          T.trade_f (is_list node.tail tl') #(pts_to np node) (is_list x (node.head::tl')) =
-        {
-            intro_is_list_cons x np;
-        };
-        T.intro _ _ _ aux;
+    intro (forall* tl'. is_list node.tail tl' @==> is_list x (node.head::tl')) #(np |-> node) fn _ tl' {
+      intro_is_list_cons x np;
     };
-    FA.intro _ aux;
     node.tail
 }
 
@@ -476,9 +447,7 @@ fn append_iter (#t:Type) (x y:llist t)
 {
   let mut cur = x;
   (* the base case, set up the initial invariant *)
-  forall_intro_is_list_idem x;
-  rewrite (forall* l. is_list x l @==> is_list x l)
-      as  (forall* l. is_list x l @==> is_list x ([]@l));
+  intro (forall* l. is_list x l @==> is_list x ([]@l)) fn _ _{};
   while (not_is_last_cell Pulse.Lib.Reference.(!cur))
     invariant exists* ll pfx sfx.
       (cur |-> ll) **
@@ -541,9 +510,7 @@ fn split (#t:Type0) (x:llist t) (n:U32.t) (#xl:erased (list t))
   let mut cur = x;
   let mut ctr = 0ul;
   (* the base case, set up the initial invariant *)
-  forall_intro_is_list_idem x;
-  rewrite (forall* l. is_list x l @==> is_list x l)
-      as  (forall* l. is_list x l @==> is_list x ([]@l));
+  intro (forall* l. is_list x l @==> is_list x ([]@l)) fn _ _{};
   while ((Pulse.Lib.Reference.(!ctr) <> (n - 1ul)))
     invariant exists* i ll pfx sfx.
       pts_to ctr i **

@@ -99,7 +99,7 @@ let rec freevars_st (t:st_term)
       freevars b.binder_ty ++
       freevars_st body ++
       freevars_ascription ascription
-    | Tm_ST { t } -> freevars t
+    | Tm_ST { t; args } -> freevars t ++ freevars_terms args
     | Tm_Bind { binder; head; body } ->
       freevars binder.binder_ty ++
       freevars_st head ++
@@ -179,6 +179,11 @@ and freevars_branches (t:list branch) : Set.set var =
   match t with
   | [] -> empty
   | b::tl -> freevars_st b.e ++ freevars_branches tl
+
+and freevars_terms (t:list st_term) : Set.set var =
+  match t with
+  | [] -> empty
+  | t::ts -> freevars_st t ++ freevars_terms ts
 
 
 let ln' (t:term) (i:int) : bool = RT.ln' t i
@@ -283,7 +288,7 @@ let rec ln_st' (t:st_term) (i:int)
       ln_st' body (i + 1) &&
       ln_ascription' ascription (i + 1)
 
-    | Tm_ST { t } -> ln' t i
+    | Tm_ST { t=tm; args } -> ln' tm i && ln_st_list' t args i
 
     | Tm_Bind { binder; head; body } ->
       ln' binder.binder_ty i &&
@@ -375,6 +380,9 @@ and ln_branch' (b : branch) (i:int) : Tot bool (decreases b) =
 
 and ln_branches' (t:st_term) (brs : list branch{brs << t}) (i:int) : Tot bool (decreases brs) =
   for_all_dec t brs (fun b -> ln_branch' b i)
+
+and ln_st_list' (t:st_term) (ts : list st_term { ts << t }) (i:int) : Tot bool (decreases ts) =
+  for_all_dec t ts (fun t -> ln_st' t i)
 
 let ln (t:term) = ln' t (-1)
 let ln_st (t:st_term) = ln_st' t (-1)
@@ -537,7 +545,7 @@ let rec subst_st_term (t:st_term) (ss:subst)
                ascription=subst_ascription ascription (shift_subst ss);
                body=subst_st_term body (shift_subst ss) }
 
-    | Tm_ST { t } -> Tm_ST { t=subst_term t ss }
+    | Tm_ST { t=tm; args } -> Tm_ST { t=subst_term tm ss; args=subst_st_term_list t ss args }
     
     | Tm_Bind { binder; head; body } ->
       Tm_Bind { binder = subst_binder binder ss;
@@ -636,6 +644,10 @@ let rec subst_st_term (t:st_term) (ss:subst)
 
     in
     { t with term = t' }
+
+and subst_st_term_list (t:st_term) (ss:subst) (ts : list st_term{ts << t})
+: Tot (list st_term) (decreases ts)
+= map_dec t ts (fun t -> subst_st_term t ss)
 
 and subst_branches (t:st_term) (ss:subst) (brs : list branch{brs << t})
 : Tot (list branch) (decreases brs)

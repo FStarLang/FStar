@@ -410,7 +410,7 @@ val inames_live_inv (i:iref) (p:slprop) (m:mem) : squash (interp (inv i p) m ==>
 val fresh_inv
     (p:slprop)
     (m:mem)
-    (ctx:inames { interp (inames_live ctx) m })
+    (ctx:inames { Pulse.Lib.GhostSet.is_finite ctx })
 : i:iref &
   m':mem { 
     not (GhostSet.mem i ctx) /\

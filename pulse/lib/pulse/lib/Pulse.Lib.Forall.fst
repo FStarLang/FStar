@@ -68,6 +68,19 @@ fn intro_forall u#a
   fold (forall* x. p x);
 }
 
+fn introducable_forall_aux u#a u#b (a: Type u#a) (t: a -> Type u#b) is extra (concl: a -> slprop)
+      {| (x:a -> introducable emp_inames extra (concl x) (t x)) |}
+      (k: (x:a -> t x)) :
+    stt_ghost unit is extra (fun _ -> forall* x. concl x) = {
+  intro_forall #a #concl extra fn x {
+    intro (concl x) #extra (fun _ -> k x)
+  }
+}
+
+instance introducable_forall (a: Type u#a) (t: a -> Type u#b) is extra concl {| (x:a -> introducable emp_inames extra (concl x) (t x)) |} :
+    introducable is extra (forall* x. concl x) (x:a -> t x) =
+  { intro_aux = introducable_forall_aux a t is extra concl }
+
 let slprop_equiv_forall
     (#a:Type)
     (p q: a -> slprop)

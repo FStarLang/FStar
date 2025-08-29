@@ -128,8 +128,8 @@ let tm_abs (b:binder)
   = let asc = { annotated = c; elaborated2 = None } in
     PSB.(with_range (tm_abs b q asc body) r)
 
-let tm_st (head:term) r : st_term =
-  PSB.(with_range (tm_st head) r)
+let tm_st (head:term) (args:st_term list) r : st_term =
+  PSB.(with_range (tm_st head args) r)
     
 let tm_bind (x:binder) (e1:st_term) (e2:st_term) r : st_term =
   PSB.(with_range (tm_bind x e1 e2) r)

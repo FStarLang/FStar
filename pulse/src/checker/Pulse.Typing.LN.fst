@@ -202,7 +202,9 @@ let rec open_st_term_ln' (e:st_term)
       open_term_ln' expected_type x i;
       open_term_ln' e x i
       
-    | Tm_ST { t } -> open_term_ln' t x i
+    | Tm_ST { t; args } ->
+      open_term_ln' t x i;
+      admit () // same as match
 
     | Tm_Abs { b; ascription=c; body } ->
       open_term_ln' b.binder_ty x i;
@@ -460,7 +462,9 @@ let rec ln_weakening_st (t:st_term) (i j:int)
     | Tm_Match _ ->
       admit ()
 
-    | Tm_ST { t } -> ln_weakening t i j
+    | Tm_ST { t } ->
+      ln_weakening t i j;
+      admit () // same as match
 
     | Tm_Bind { binder; head; body } ->
       ln_weakening binder.binder_ty i j;
@@ -674,7 +678,8 @@ let rec open_term_ln_inv_st' (t:st_term)
 
     | Tm_ST { t } ->
       FStar.Pure.BreakVC.break_vc();
-      open_term_ln_inv' t x i
+      open_term_ln_inv' t x i;
+      admit ()
     
     | Tm_Abs { b; ascription=c; body } ->
       FStar.Pure.BreakVC.break_vc();
@@ -885,7 +890,8 @@ let rec close_st_term_ln' (t:st_term) (x:var) (i:index)
 
     | Tm_ST { t } ->
       FStar.Pure.BreakVC.break_vc();
-      close_term_ln' t x i
+      close_term_ln' t x i;
+      admit ()
 
     | Tm_Abs { b; ascription=c; body } ->
       FStar.Pure.BreakVC.break_vc();

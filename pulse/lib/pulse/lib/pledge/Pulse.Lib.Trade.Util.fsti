@@ -5,10 +5,6 @@ include Pulse.Lib.Trade
 
 module T = FStar.Tactics
 
-let intro
-  (#[T.exact (`emp_inames)] is:inames)
-= intro_trade #is
-
 let elim
   (#is:inames)
 = elim_trade #is

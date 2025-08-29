@@ -185,8 +185,8 @@ let rec eq_st_term (t1 t2:st_term)
       eq_ascription c1 c2 &&
       eq_st_term t1 t2
   
-    | Tm_ST { t=t1}, Tm_ST { t=t2 } ->
-      eq_tm t1 t2
+    | Tm_ST { t=tm1; args=a1 }, Tm_ST { t=tm2; args=a2 } ->
+      eq_tm tm1 tm2 && eq_list_dec t1 t2 eq_st_term a1 a2
       
     | Tm_Bind { binder=b1; head=t1; body=k1 },
       Tm_Bind { binder=b2; head=t2; body=k2 } ->

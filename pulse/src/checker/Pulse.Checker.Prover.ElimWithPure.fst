@@ -38,7 +38,8 @@ let mk_elim_with_pure (pred: term) (p:term)
       Tm_ST { 
        t = T.mk_app
             (tm_pureapp elim_with_pure_head None pred)
-            [tm_pureabs ppname_default.name (mk_squash u0 pred) None p Range.range_0, T.Q_Explicit] 
+            [tm_pureabs ppname_default.name (mk_squash u0 pred) None p Range.range_0, T.Q_Explicit];
+       args = [];
       }
     in
     wtag (Some STT_Ghost) t

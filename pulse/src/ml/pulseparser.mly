@@ -156,6 +156,9 @@ pulseAscriptionMaybeBody:
   | COLON typ=option(appTerm) lam=option(eqPulseLambda) 
     { Inr(typ, lam) }
 
+termPulseLambda:
+  | FN lambda=pulseLambda { lambda }
+
 eqPulseLambda:
   | EQUALS lambda=pulseLambda
      { lambda }
@@ -236,18 +239,17 @@ while_invariant:
 pulseStmtNoSeq:
   | OPEN i=quident
     { PulseSyntaxExtension_Sugar.mk_open i }
-  | tm=appTerm o=option(LARROW v=noSeqTerm { v })
+  | tm=appTerm LARROW arr_elt=noSeqTerm
     {
-        match o, tm.tm with
-        | None, _ ->
-          PulseSyntaxExtension_Sugar.mk_expr tm
+      match tm.tm with
+      | Op(op, [arr;ix]) when FStarC_Ident.string_of_id op = ".()" ->
+        PulseSyntaxExtension_Sugar.mk_array_assignment arr ix arr_elt
 
-        | Some arr_elt, Op(op, [arr;ix]) when FStarC_Ident.string_of_id op = ".()" ->
-          PulseSyntaxExtension_Sugar.mk_array_assignment arr ix arr_elt
-
-        | _ ->
-          raise_error_text (rr $loc) Fatal_SyntaxError "Expected an array assignment of the form x.(i) <- v"
+      | _ ->
+        raise_error_text (rr $loc) Fatal_SyntaxError "Expected an array assignment of the form x.(i) <- v"
     }
+  | tm=appTerm args=list(termPulseLambda)
+    { PulseSyntaxExtension_Sugar.mk_expr tm args }
   | lhs=appTermNoRecordExp COLON_EQUALS a=noSeqTerm
     { PulseSyntaxExtension_Sugar.mk_assignment lhs a }
   | norw=optional_norewrite LET q=option(mutOrRefQualifier) p=pulsePattern typOpt=option(preceded(COLON, appTerm)) EQUALS init=bindableTerm
@@ -295,7 +297,7 @@ matchStmt:
 
 bindableTerm:
   | p=pulseBindableTerm { let p = PulseSyntaxExtension_Sugar.mk_stmt p (rr $loc) in Stmt_initializer p }
-  | s=noSeqTerm { Default_initializer s }
+  | s=noSeqTerm args=list(termPulseLambda) { Default_initializer (s, args) }
   | LBRACK_BAR v=noSeqTerm SEMICOLON n=noSeqTerm BAR_RBRACK { Array_initializer { init=v; len=n } }
  
 pulseBindableTerm:
@@ -341,15 +343,24 @@ pulseMatchBranch:
 pulsePattern:
   | p=tuplePattern { p }
 
-pulseStmt:
+pulseStmtNonempty:
   | s=pulseStmtNoSeq
     { PulseSyntaxExtension_Sugar.mk_stmt s (rr $loc) }
-  | s1=pulseStmtNoSeq SEMICOLON s2=option(pulseStmt)
+  | s1=pulseStmtNoSeq SEMICOLON s2=option(pulseStmtNonempty)
     {
       let s1 = PulseSyntaxExtension_Sugar.mk_stmt s1 (rr ($loc(s1))) in
       match s2 with
       | None -> s1
       | Some s2 -> PulseSyntaxExtension_Sugar.mk_stmt (PulseSyntaxExtension_Sugar.mk_sequence s1 s2) (rr ($loc))
+    }
+
+pulseStmt:
+  | s=pulseStmtNonempty
+    { s }
+  |
+    {
+      let s = PulseSyntaxExtension_Sugar.mk_unit (rr $loc) in
+      PulseSyntaxExtension_Sugar.mk_stmt s (rr $loc)
     }
 
 ifStmt:

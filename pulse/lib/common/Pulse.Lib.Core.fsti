@@ -163,6 +163,7 @@ instance val non_informative_iname
   : NonInformative.non_informative iname
 
 let inames = FStar.GhostSet.set iname
+let fin_inames = is: inames { Pulse.Lib.GhostSet.is_finite is }
 let emp_inames : inames = GhostSet.empty
 
 let join_inames (is1 is2 : inames) : inames =
@@ -175,9 +176,6 @@ let (/!) (is1 is2 : inames) : Type0 =
   GhostSet.disjoint is1 is2
 
 val inv (i:iname) (p:slprop) : slprop
-
-[@@no_mkeys]
-val inames_live (inames:inames) : slprop
 
 let mem_iname (e:inames) (i:iname) : erased bool = elift2 (fun e i -> GhostSet.mem i e) e i
 let mem_inv (e:inames) (i:iname) : GTot bool = mem_iname e i
@@ -523,21 +521,9 @@ val new_invariant (p:slprop)
 : stt_ghost iname emp_inames p (fun i -> inv i p)
 
 val fresh_invariant
-    (ctx:inames)
+    (ctx:inames { Pulse.Lib.GhostSet.is_finite ctx })
     (p:slprop)
-: stt_ghost (i:iname { ~(i `GhostSet.mem` ctx) }) emp_inames (p ** inames_live ctx) (fun i -> inv i p ** inames_live ctx)
-
-val inames_live_inv (i:iname) (p:slprop)
-: stt_ghost unit emp_inames (inv i p) fun _ -> inv i p ** inames_live (single i)
-
-val inames_live_empty ()
-: stt_ghost unit emp_inames emp fun _ -> inames_live emp_inames
-
-val share_inames_live (i j:inames)
-: stt_ghost unit emp_inames (inames_live (GhostSet.union i j)) fun _ -> inames_live i ** inames_live j
-
-val gather_inames_live (i j:inames)
-: stt_ghost unit emp_inames (inames_live i ** inames_live j) fun _ -> inames_live (GhostSet.union i j)
+: stt_ghost (i:iname { ~(i `GhostSet.mem` ctx) }) emp_inames p (fun i -> inv i p)
 
 val with_invariant
     (#a:Type)

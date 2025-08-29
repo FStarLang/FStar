@@ -18,22 +18,28 @@ module Pulse.Lib.Pledge
 #lang-pulse
 
 open Pulse.Lib.Pervasives
+open Pulse.Lib.GhostSet {is_finite}
+open Pulse.Class.Introducable
 
 module T = FStar.Tactics
 
 val pledge (is:inames) (f:slprop) (v:slprop) : slprop
 
+instance val introducable_pledge (t: Type u#a) is (is': fin_inames)
+    f v extra {| introducable is' (extra ** f) (f ** v) t |} :
+    introducable is extra (pledge is' f v) t
+
 ghost
-fn pledge_inames_live (is:inames) (f p:slprop)
-  requires pledge is f p
-  ensures inames_live is ** pledge is f p
+fn pledge_inames_finite (is:inames) (f p:slprop)
+  preserves pledge is f p
+  ensures pure (is_finite is)
 
 unfold
 let pledge0 (f:slprop) (v:slprop) : slprop = pledge emp_inames f v
 
 ghost
-fn pledge_sub_inv (is1:inames) (is2:inames { inames_subset is1 is2 }) (f v:slprop)
-  requires pledge is1 f v ** inames_live is2
+fn pledge_sub_inv (is1:inames) (is2:fin_inames { inames_subset is1 is2 }) (f v:slprop)
+  requires pledge is1 f v
   ensures pledge is2 f v
 
 (* Anything that holds now holds in the future too. *)
@@ -47,16 +53,18 @@ let pledge_f (#[T.exact (`emp_inames)] is: inames) (f: slprop) (#[T.exact (`emp)
   stt_ghost unit is (f ** extra) (fun _ -> f ** v)
 
 ghost
-fn make_pledge (is:inames) (f:slprop) (v:slprop) (extra:slprop)
+fn make_pledge (is:fin_inames) (f:slprop) (v:slprop) (extra:slprop)
   (k: unit -> pledge_f #is f #extra v)
-  requires extra ** inames_live is
+  requires extra
   ensures pledge is f v
 
 ghost
 fn redeem_pledge (is:inames) (f v:slprop)
-  requires f ** pledge is f v
-  ensures  f ** v
+  preserves f
+  requires pledge is f v
   opens is
+  ensures v
+  ensures pure (is_finite is)
 
 ghost
 fn squash_pledge (is:inames) (f:slprop) (v1:slprop)
@@ -125,11 +133,13 @@ fn join_pledge (#is:inames) (#f:slprop) (v1:slprop) (v2:slprop)
 (* Heterogenous variant. Takes the result invlist as an arg since we don't have
 a join defined yet. *)
 ghost
-fn squash_pledge' (is1 is2 is:inames) (f:slprop) (v1:slprop)
-  requires pure (inames_subset is1 is) ** 
+fn squash_pledge'
+  (is1 is2 is:inames)
+  (f v1:slprop)
+  requires pure (inames_subset is1 is) **
            pure (inames_subset is2 is) **
-           pledge is1 f (pledge is2 f v1) **
-           inames_live is
+           pure (is_finite is) **
+           pledge is1 f (pledge is2 f v1)
   ensures pledge is f v1
 
 ghost

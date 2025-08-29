@@ -237,11 +237,11 @@ val dup_inv (i:iref) (p:slprop)
 val new_invariant (p:slprop)
   : stt_ghost iref emp_inames p (fun i -> inv i p)
 
-val fresh_invariant (ctx:inames) (p:slprop)
+val fresh_invariant (ctx:inames { Pulse.Lib.GhostSet.is_finite ctx }) (p:slprop)
 : stt_ghost (i:iref { ~(i `GhostSet.mem` ctx) })
             emp_inames
-            (p ** Sep.inames_live ctx)
-            (fun i -> inv i p ** Sep.inames_live ctx)
+            p
+            (fun i -> inv i p)
 
 val inames_live_inv (i:iref) (p:slprop)
 : stt_ghost unit emp_inames (inv i p) (fun _ -> inv i p ** Sep.inames_live (singleton i))

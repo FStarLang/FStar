@@ -253,12 +253,12 @@ ensures
 ghost fn seq_seq_match_weaken
   (#t1 #t2: Type0)
   (p p': t1 -> t2 -> slprop)
-  (w: ((x1: t1) -> (x2: t2) -> stt_ghost unit emp_inames
-    (p x1 x2) (fun _ -> p' x1 x2)
-  ))
   (c1 c1': Seq.seq t1)
   (c2 c2': Seq.seq t2)
   (i j: nat)
+  (w: ((x1: t1) -> (x2: t2) -> stt_ghost unit emp_inames
+    (p x1 x2) (fun _ -> p' x1 x2)
+  ))
 requires
     (seq_seq_match p c1 c2 i j ** pure (
       (i <= j /\ (i == j \/ (

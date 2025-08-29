@@ -43,6 +43,24 @@ fn intro_trade
   fold (trade #is hyp concl)
 }
 
+fn introducable_trade_aux u#a (t: Type u#a) is is'
+    hyp extra concl {| introducable is' (extra ** hyp) concl t |} (k: t) :
+    stt_ghost unit is extra (fun _ -> trade #is' hyp concl) = {
+  intro_trade #is' hyp concl extra fn _ {
+    intro #is' concl #(extra ** hyp) (fun _ -> k);
+  }
+}
+
+instance introducable_trade (t: Type u#a) is is'
+    hyp extra concl {| introducable is' (extra ** hyp) concl t |} :
+    introducable is extra (trade #is' hyp concl) t =
+  { intro_aux = introducable_trade_aux t is is' hyp extra concl }
+
+instance introducable_trade' (t: Type u#a) is
+    hyp extra concl {| introducable emp_inames (extra ** hyp) concl t |} :
+    introducable is extra (hyp @==> concl) t =
+  { intro_aux = introducable_trade_aux t is emp_inames hyp extra concl }
+
 let sqeq (p : Type) (_ : squash p) : erased p =
   FStar.IndefiniteDescription.elim_squash #p ()
 
@@ -109,15 +127,11 @@ fn trade_sub_inv
 {
   let res = deconstruct_trade is1 hyp concl;
 
-  ghost
-  fn aux () : trade_f #is2 hyp #(dfst res) concl =
-  {
+  intro (trade #is2 hyp concl) #(dfst res) fn _ {
     let f = dsnd res;
     rewrite dfst res as res._1;
     call f ()
   };
-  
-  intro_trade _ _ _ aux
 }
 
 
@@ -129,13 +143,11 @@ fn trade_map
   requires trade #is p q
   ensures  trade #is p r
 {
-  ghost
-  fn aux () : trade_f #is p #(trade #is p q) r =
+  intro (trade #is p r) #(trade #is p q) fn _
   {
     elim_trade #is _ _;
     f ();
   };
-  intro_trade _ _ _ aux;
 }
 
 
@@ -146,13 +158,11 @@ fn trade_compose
   requires trade #is p q ** trade #is q r
   ensures  trade #is p r
 {
-  ghost
-  fn aux () : trade_f #is p #(trade #is p q ** trade #is q r) r =
+  intro (trade #is p r) #(trade #is p q ** trade #is q r) fn _
   {
     elim_trade #is p _;
     elim_trade #is _ _;
   };
-  intro_trade _ _ _ aux;
 }
 
 ghost
@@ -161,12 +171,7 @@ fn eq_as_trade
   requires pure (p1 == p2)
   ensures  p2 @==> p1
 {
-  ghost
-  fn aux () : trade_f p2 p1 =
-  {
-    rewrite p2 as p1;
-  };
-  intro_trade _ _ _ aux;
+  intro (p2 @==> p1) fn _{ rewrite p2 as p1 }
 }
 
 ghost

@@ -360,17 +360,17 @@ let intro_read_inv_later (i:iref) (p frame:slprop) (m:mem)
   intro_star (inv i p) (later p `star` frame) s1 (join s2 s3);
   intro_read_inv i p frame m
 
-let fresh_invariant (e:inames) (p:slprop) (ctx:inames)
-: ghost_act (i:iref{~(GhostSet.mem i ctx)}) e (p `star` inames_live ctx) (fun i -> inv i p `star` inames_live ctx)
+let fresh_invariant (e:inames) (p:slprop) (ctx:inames { Pulse.Lib.GhostSet.is_finite ctx })
+: ghost_act (i:iref{~(GhostSet.mem i ctx)}) e p (fun i -> inv i p)
 = fun frame s0 ->
     sep_laws();
     destruct_star_l (inames_live ctx) (p `star` frame `star` mem_invariant e s0) s0;
     let (| i, s0' |) = fresh_inv p s0 ctx in
     let s1 = join_mem s0 s0' in
     disjoint_join_levels s0 s0';
-    mem_invariant_disjoint e (single i) ((p `star` inames_live ctx) `star` frame) (inv i p) s0 s0';
+    mem_invariant_disjoint e (single i) (p `star` frame) (inv i p) s0 s0';
     assert (interp 
-              (((p `star` inames_live ctx) `star` frame) `star` inv i p `star`
+              ((p `star` frame) `star` inv i p `star`
                 (mem_invariant (GhostSet.union e (single i)) s1))
               s1);
     assert (GhostSet.union e (single i) `GhostSet.equal` (add_inv e i));
@@ -379,21 +379,20 @@ let fresh_invariant (e:inames) (p:slprop) (ctx:inames)
     assert (~(mem_inv e i));
     assert (interp 
               (inv i p `star`
-              (frame `star` p `star` inames_live ctx `star` mem_invariant (add_inv e i) s1))
+              (frame `star` p `star` mem_invariant (add_inv e i) s1))
               s1);
     destruct_star_l (inv i p)
-                    (frame `star` p `star` inames_live ctx `star` mem_invariant (add_inv e i) s1)
+                    (frame `star` p `star` mem_invariant (add_inv e i) s1)
                     s1;
     inames_ok_single i p s1;
     assert (iname_ok i s1);
-    intro_read_inv_later i p (frame `star` inames_live ctx `star` mem_invariant (add_inv e i) s1) s1;
+    intro_read_inv_later i p (frame `star` mem_invariant (add_inv e i) s1) s1;
     assert (interp (inv i p `star`
-                    inames_live ctx `star`
                     frame `star`
                     (mem_invariant (add_inv e i) s1 `star`
                     later (read_inv i s1))) s1);
     mem_invariant_equiv e s1 i;
-    assert (interp (inv i p `star` inames_live ctx `star` frame `star` mem_invariant e s1) s1);    
+    assert (interp (inv i p `star` frame `star` mem_invariant e s1) s1);    
     assert (is_ghost_action s0 s1);
     inames_ok_disjoint e (single i) s0 s0';
     inames_ok_union e (single i) s1;

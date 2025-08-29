@@ -232,6 +232,7 @@ let join_premem_associative
 
 open FStar.IndefiniteDescription { indefinite_description_ghost, strong_excluded_middle }
 
+#push-options "--z3rlimit 10"
 let mem_le_iff (w1 w2: premem) :
     Lemma (mem_le w1 w2 <==> exists w3. join_premem w1 w3 == w2) =
   reveal_mem_le ();
@@ -247,6 +248,7 @@ let mem_le_iff (w1 w2: premem) :
     } in
     mem_ext (join_premem w1 w3) w2 fun a -> ()
   )
+#pop-options
 
 let age_to_disjoint_mem (w1 w2: premem) n :
     Lemma (requires disjoint_mem w1 w2)
@@ -759,10 +761,9 @@ let inv (i:iref) (p:slprop) : slprop =
       read m i == Inv p' /\
       eq_at (level_ m) p p'
 
-let deq_iref = fun x y -> reveal x = reveal y
+module GS = Pulse.Lib.GhostSet
 
-
-module GS = FStar.GhostSet
+let deq_iref = GS.decide_eq_f
 
 let lower_inames i = GS.empty
 
@@ -1125,11 +1126,19 @@ let inames_live_inv (i:iref) (p:slprop) (m:mem)
 : Lemma ((inv i p) m ==> inames_live (FStar.GhostSet.singleton deq_iref i) m)
 = ()
 
-#push-options "--fuel 0 --ifuel 0"
-#restart-solver
-let fresh_inv p m ctx =
+let rec max_inames (xs: list iref) : y:iref { forall x. List.memP x xs ==> reveal x <= y } =
+  match xs with
+  | [] -> 0
+  | x::xs -> max x (max_inames xs)
+
+let fresh_inv_name (m:mem) (ctx:inames { GS.is_finite ctx }) : i:iref { None? (read m i) /\ not (GS.mem i ctx) } =
   let i = IndefiniteDescription.indefinite_description_ghost iref fun f ->
     fresh_addr m f in
+  let ctx = GS.is_finite_elim ctx in
+  max i (max_inames ctx + 1)
+
+let fresh_inv p m ctx =
+  let i = fresh_inv_name m ctx in
   let m': mem = hogs_fresh_inv p m i in
   let _: squash (inv i p `star` mem_invariant (single i) m' == inv i p) =
     hogs_single_invariant (level m) i p;
@@ -1137,7 +1146,6 @@ let fresh_inv p m ctx =
   Classical.forall_intro (H2.join_empty u#3);
   PM.ghost_action_preorder u#3 ();
   (| i, m' |)
-#pop-options
 
 let dup_inv_equiv i p =
   mem_pred_ext (inv i p) (inv i p `star` inv i p) fun w ->

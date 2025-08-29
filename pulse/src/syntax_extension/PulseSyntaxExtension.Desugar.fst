@@ -437,9 +437,14 @@ let rec desugar_stmt' (env:env_t) (s:Sugar.stmt)
   = let open SW in
     let open Sugar in
     match s.s with
-    | Expr { e } -> 
+    | Expr { e; args } -> 
       let! tm = tosyntax env e in
-      return (st_term_of_admit_or_return (admit_or_return env tm))
+      if Nil? args then
+        return (st_term_of_admit_or_return (admit_or_return env tm))
+      else (
+        let! args = desugar_st_args env args in
+        return (SW.tm_st tm args s.range)
+      )
 
     | Assignment { lhs; value } ->
       let! lhs = tosyntax env lhs in
@@ -489,7 +494,7 @@ let rec desugar_stmt' (env:env_t) (s:Sugar.stmt)
         let! init_expr =
           match lb.init with
           | None -> fail "Pattern bindings must have an initializer" lb.pat.prange
-          | Some (Default_initializer e) -> return e
+          | Some (Default_initializer (e, [])) -> return e
           | Some _ -> fail "Pattern bindings cannot have complext initializers" lb.pat.prange
         in
         let lb' =
@@ -649,6 +654,14 @@ let rec desugar_stmt' (env:env_t) (s:Sugar.stmt)
       let n1 : term = tm_expr n1 s.range in
       return (SW.tm_with_inv n1 tt returns_ s.range)
 
+and desugar_st_args (env:env_t) (args:list Sugar.lambda) : err (list SW.st_term) =
+  match args with
+  | arg::args ->
+    let! arg = desugar_lambda env arg in
+    let! args = desugar_st_args env args in
+    return (arg::args)
+  | [] -> return []
+
 and desugar_stmt (env:env_t) (s:Sugar.stmt) : err SW.st_term =
   let! r = desugar_stmt' env s in
   if not s.source then
@@ -787,7 +800,7 @@ and desugar_bind (env:env_t) (lb:_) (s2:Sugar.stmt) (r:R.range)
         | Sugar.Lambda_initializer _ ->
           fail "Nested functions are not yet fully supported" r
 
-        | Default_initializer e1 ->
+        | Default_initializer (e1, []) ->
           let! s1 = tosyntax env e1 in
           let t =
             match admit_or_return env s1 with
@@ -796,6 +809,12 @@ and desugar_bind (env:env_t) (lb:_) (s2:Sugar.stmt) (r:R.range)
             | Return s1 ->
               mk_totbind b (as_term s1) s2 r
           in
+          return t
+
+        | Default_initializer (e1, args) ->
+          let! s1 = tosyntax env e1 in
+          let! args = desugar_st_args env args in
+          let t = mk_bind b (SW.tm_st s1 args r) s2 r in
           return t
 
         | Stmt_initializer e ->
@@ -810,9 +829,11 @@ and desugar_bind (env:env_t) (lb:_) (s2:Sugar.stmt) (r:R.range)
           let! init = desugar_term env init in
           let! len = desugar_term env len in
           return (SW.tm_let_mut_array b init len s2 r)
-        | Sugar.Default_initializer e1 ->
+        | Sugar.Default_initializer (e1, []) ->
           let! e1 = desugar_term env e1 in
           return (SW.tm_let_mut b e1 s2 r)
+        | Sugar.Default_initializer (e1, args) ->
+          fail "Lambda arguments not yet supported in let mut" r
     )
 
 and desugar_sequence (env:env_t) (s1 s2:Sugar.stmt) r
@@ -835,7 +856,7 @@ and desugar_proof_hint_with_binders (env:env_t) (s1:Sugar.stmt) (k:option Sugar.
       let assume_fv = SW.(mk_fv assume_lid r) in
       let assume_ : SW.term = SW.(tm_fvar assume_fv) in
       let! p = desugar_slprop env p in
-      let s1 = SW.tm_st (S.mk_Tm_app assume_ [p, None] r) r in
+      let s1 = SW.tm_st (S.mk_Tm_app assume_ [p, None] r) [] r in
       let! s2 =
         match k with
         | None -> return (SW.tm_ghost_return (SW.tm_expr S.unit_const r) r)

@@ -454,12 +454,12 @@ ensures
 ghost fn seq_seq_match_weaken
   (#t1 #t2: Type0)
   (p p': t1 -> t2 -> slprop)
-  (w: ((x1: t1) -> (x2: t2) -> stt_ghost unit emp_inames
-    (p x1 x2) (fun _ -> p' x1 x2)
-  ))
   (c1 c1': Seq.seq t1)
   (c2 c2': Seq.seq t2)
   (i j: nat)
+  (w: ((x1: t1) -> (x2: t2) -> stt_ghost unit emp_inames
+    (p x1 x2) (fun _ -> p' x1 x2)
+  ))
 requires
     (seq_seq_match p c1 c2 i j ** pure (
       (i <= j /\ (i == j \/ (
@@ -473,24 +473,17 @@ ensures
     (seq_seq_match p' c1' c2' i j)
 {
   unfold (seq_seq_match p c1 c2 i j);
-  ghost fn aux
-    (k: (k: nat { i <= k /\ k < j }))
-  requires
-    seq_seq_match_item p c1 c2 k
-  ensures
-    seq_seq_match_item p' c1' c2' k
-  {
+  on_range_weaken
+    (seq_seq_match_item p c1 c2)
+    (seq_seq_match_item p' c1' c2')
+    i j
+  fn k {
     rewrite (seq_seq_match_item p c1 c2 k)
       as (p (Seq.index (Seq.slice c1 i j) (k - i)) (Seq.index (Seq.slice c2 i j) (k - i)));
     w _ _;
     rewrite (p' (Seq.index (Seq.slice c1 i j) (k - i)) (Seq.index (Seq.slice c2 i j) (k - i)))
       as (seq_seq_match_item p' c1' c2' k)
   };
-  on_range_weaken
-    (seq_seq_match_item p c1 c2)
-    (seq_seq_match_item p' c1' c2')
-    i j
-    aux;
   fold (seq_seq_match p' c1' c2' i j)
 }
 
@@ -512,13 +505,7 @@ requires
 ensures
     (seq_seq_match p c1' c2' i j)
 {
-  ghost fn aux (x1: t1) (x2: t2)
-  requires p x1 x2
-  ensures p x1 x2
-  {
-    ()
-  };
-  seq_seq_match_weaken p p aux c1 c1' c2 c2' i j
+  seq_seq_match_weaken p p c1 c1' c2 c2' i j fn x1 x2 {}
 }
 
 ghost fn seq_seq_match_weaken_with_implies
@@ -541,28 +528,21 @@ ensures
       (seq_seq_match p c1' c2' i j @==> seq_seq_match p c1 c2 i j)
     )
 {
-  ghost fn aux1
-    (x1: t1) (x2: t2)
-  requires (p x1 x2)
-  ensures (p x1 x2)
-  {
-    ()
-  };
   seq_seq_match_weaken
-    p p aux1
+    p p
     c1 c1'
     c2 c2'
-    i j;
-  ghost fn aux2 () :
-    trade_f (seq_seq_match p c1' c2' i j) (seq_seq_match p c1 c2 i j) =
+    i j
+    fn x1 x2 {};
+  intro (seq_seq_match p c1' c2' i j @==> seq_seq_match p c1 c2 i j) fn _
   {
       seq_seq_match_weaken
-        p p aux1
+        p p
         c1' c1
         c2' c2
         i j
+        fn x1 x2 {}
   };
-  intro_trade _ _ _ aux2
 }
 
 (* Going between `seq_list_match` and `seq_seq_match` *)
@@ -584,13 +564,12 @@ ensures
 {
   unfold (seq_seq_match p (Seq.slice c delta (Seq.length c)) (Seq.slice l delta (Seq.length l)) i j);
   on_range_le (seq_seq_match_item p _ _);
-  ghost fn aux
-    (k: nat { i <= k /\ k < j })
-  requires
-    seq_seq_match_item p (Seq.slice c delta (Seq.length c)) (Seq.slice l delta (Seq.length l)) k
-  ensures
-    seq_seq_match_item p c l (k + delta)
-  {
+  on_range_weaken_and_shift
+    (seq_seq_match_item p (Seq.slice c delta (Seq.length c)) (Seq.slice l delta (Seq.length l)))
+    (seq_seq_match_item p c l)
+    delta
+    i j
+  fn k {
     if (k < Seq.length c - delta && k < Seq.length l - delta) {
        seq_seq_match_item_tail p c l delta k;
        rewrite
@@ -605,12 +584,6 @@ ensures
       unreachable()
     }
   };
-  on_range_weaken_and_shift
-    (seq_seq_match_item p (Seq.slice c delta (Seq.length c)) (Seq.slice l delta (Seq.length l)))
-    (seq_seq_match_item p c l)
-    delta
-    i j
-    aux;
   fold (seq_seq_match p c l (i + delta) (j + delta))
 }
 
@@ -635,13 +608,12 @@ ensures
 {
   unfold (seq_seq_match p c l i j);
   on_range_le (seq_seq_match_item p _ _);
-  ghost fn aux
-    (k: nat { i <= k /\ k < j })
-  requires
-    seq_seq_match_item p c l k
-  ensures
-    seq_seq_match_item p (Seq.slice c delta (Seq.length c)) (Seq.slice l delta (Seq.length l)) (k + (0 - delta))
-  {
+  on_range_weaken_and_shift
+    (seq_seq_match_item p c l)
+    (seq_seq_match_item p (Seq.slice c delta (Seq.length c)) (Seq.slice l delta (Seq.length l)))
+    (0 - delta)
+    i j
+  fn k {
       if (k < Seq.length c && k < Seq.length l) {
         seq_seq_match_item_tail p c l delta (k - delta);
         rewrite
@@ -656,12 +628,6 @@ ensures
         unreachable()
       }
   };
-  on_range_weaken_and_shift
-    (seq_seq_match_item p c l)
-    (seq_seq_match_item p (Seq.slice c delta (Seq.length c)) (Seq.slice l delta (Seq.length l)))
-    (0 - delta)
-    i j
-    aux;
   fold (seq_seq_match p (Seq.slice c delta (Seq.length c)) (Seq.slice l delta (Seq.length l)) (i - delta) (j - delta));
   ()
 }
@@ -800,12 +766,10 @@ ensures
     (seq_list_match c l p ** (seq_list_match c l p @==> seq_seq_match p c (Seq.seq_of_list l) 0 (List.Tot.length l)))
 {
   seq_seq_match_seq_list_match p c l;
-  ghost fn aux () :
-    trade_f (seq_list_match c l p) (seq_seq_match p c (Seq.seq_of_list l) 0 (List.Tot.length l)) =
+  intro (seq_list_match c l p @==> seq_seq_match p c (Seq.seq_of_list l) 0 (List.Tot.length l)) fn _
   {
     seq_list_match_seq_seq_match p c l
   };
-  intro_trade _ _ _ aux
 }
 
 ghost fn seq_list_match_seq_seq_match_with_implies
@@ -821,13 +785,10 @@ ensures
     ))
 {
   seq_list_match_seq_seq_match p c l; 
-  ghost fn aux () :
-    trade_f (seq_seq_match p c (Seq.seq_of_list l) 0 (List.Tot.length l))
-      (seq_list_match c l p) =
+  intro (seq_seq_match p c (Seq.seq_of_list l) 0 (List.Tot.length l) @==> seq_list_match c l p) fn _
   {
     seq_seq_match_seq_list_match p c l
   }; 
-  intro_trade _ _ _ aux
 }
 
 ghost fn seq_list_match_length
@@ -903,24 +864,17 @@ requires
 ensures
     (seq_seq_match p s1 s2 i j)
 {
-  ghost fn aux
-    (k: (k: nat { i <= k /\ k < j }))
-  requires
-    (seq_seq_match_item (item_match_option p) s1 (seq_map Some s2)) k
-  ensures
-    (seq_seq_match_item p s1 s2) k
-  {
-      rewrite
-        (seq_seq_match_item (item_match_option p) s1 (seq_map Some s2) k)
-        as
-        (seq_seq_match_item p s1 s2 k)
-  };
   unfold (seq_seq_match (item_match_option p) s1 (seq_map Some s2) i j);
   on_range_weaken
     (seq_seq_match_item (item_match_option p) s1 (seq_map Some s2))
     (seq_seq_match_item p s1 s2)
     i j
-    aux;
+  fn k {
+    rewrite
+      (seq_seq_match_item (item_match_option p) s1 (seq_map Some s2) k)
+      as
+      (seq_seq_match_item p s1 s2 k)
+  };
   fold (seq_seq_match p s1 s2 i j)
 }
 
@@ -935,24 +889,17 @@ requires
 ensures
     (seq_seq_match (item_match_option p) s1 (seq_map Some s2) i j)
 {
-  ghost fn aux
-    (k: (k: nat { i <= k /\ k < j }))
-  requires
-    (seq_seq_match_item p s1 s2) k
-  ensures
-    (seq_seq_match_item (item_match_option p) s1 (seq_map Some s2)) k
-  {
-      rewrite
-        (seq_seq_match_item p s1 s2 k)
-        as
-        (seq_seq_match_item (item_match_option p) s1 (seq_map Some s2) k)
-  };
   unfold (seq_seq_match p s1 s2 i j);
   on_range_weaken
     (seq_seq_match_item p s1 s2)
     (seq_seq_match_item (item_match_option p) s1 (seq_map Some s2))
     i j
-    aux;
+  fn k {
+    rewrite
+      (seq_seq_match_item p s1 s2 k)
+      as
+      (seq_seq_match_item (item_match_option p) s1 (seq_map Some s2) k)
+  };
   fold (seq_seq_match (item_match_option p) s1 (seq_map Some s2) i j)
 }
 
@@ -972,25 +919,18 @@ ensures
   } else {
     seq_seq_match_item_match_option_init p (Seq.tail s);
     unfold (seq_seq_match (item_match_option p) (Seq.tail s) (Seq.create (Seq.length (Seq.tail s)) None) 0 (Seq.length (Seq.tail s)));
-    ghost fn aux
-      (k: (k: nat { 0 <= k /\ k < Seq.length (Seq.tail s) }))
-    requires
-      (seq_seq_match_item (item_match_option p) (Seq.tail s) (Seq.create (Seq.length (Seq.tail s)) None)) k
-    ensures
-      (seq_seq_match_item (item_match_option p) s (Seq.create (Seq.length s) None)) (k + 1)
-    {
-        rewrite
-          (seq_seq_match_item (item_match_option p) (Seq.tail s) (Seq.create (Seq.length (Seq.tail s)) None) k)
-          as
-          (seq_seq_match_item (item_match_option p) s (Seq.create (Seq.length s) None) (k + 1))
-    };
     on_range_weaken_and_shift
       (seq_seq_match_item (item_match_option p) (Seq.tail s) (Seq.create (Seq.length (Seq.tail s)) None))
       (seq_seq_match_item (item_match_option p) s (Seq.create (Seq.length s) None))
       1
       0
       (Seq.length (Seq.tail s))
-      aux;
+    fn k {
+      rewrite
+        (seq_seq_match_item (item_match_option p) (Seq.tail s) (Seq.create (Seq.length (Seq.tail s)) None) k)
+        as
+        (seq_seq_match_item (item_match_option p) s (Seq.create (Seq.length s) None) (k + 1))
+    };
     rewrite
       emp
       as
@@ -1029,26 +969,20 @@ ensures
     (p x1 x2)
     as
     (seq_seq_match_item p (Seq.upd s1 j x1) (Seq.upd s2 j x2) j);
-  ghost fn aux
-    (x1: t1)
-    (x2: t2)
-  requires p x1 x2
-  ensures p x1 x2
-  {
-    ()
-  };
   fold (seq_seq_match p s1 s2 i j);
   seq_seq_match_weaken
-    p p aux
+    p p
     s1 (Seq.upd s1 j x1)
     s2 (Seq.upd s2 j x2)
-    i j;
+    i j
+    fn _ _{};
   fold (seq_seq_match p s1 s2 (j + 1) k);
   seq_seq_match_weaken
-    p p aux
+    p p
     s1 (Seq.upd s1 j x1)
     s2 (Seq.upd s2 j x2)
-    (j + 1) k;
+    (j + 1) k
+    fn _ _{};
   unfold (seq_seq_match p (Seq.upd s1 j x1) (Seq.upd s2 j x2) i j);
   unfold (seq_seq_match p (Seq.upd s1 j x1) (Seq.upd s2 j x2) (j + 1) k);
   on_range_put
@@ -1116,26 +1050,20 @@ ensures
     emp
     as
     (seq_seq_match_item (item_match_option p) s1 (Seq.upd s2 j None) j);
-  ghost fn aux
-    (x1: t1)
-    (x2: option t2)
-  requires item_match_option p x1 x2
-  ensures item_match_option p x1 x2
-  {
-    ()
-  };
   fold (seq_seq_match (item_match_option p) s1 s2 i j);
   seq_seq_match_weaken
-    (item_match_option p) (item_match_option p) aux
+    (item_match_option p) (item_match_option p)
     s1 s1
     s2 (Seq.upd s2 j None)
-    i j;
+    i j
+    fn _ _{};
   fold (seq_seq_match (item_match_option p) s1 s2 (j + 1) k);
   seq_seq_match_weaken
-    (item_match_option p) (item_match_option p) aux
+    (item_match_option p) (item_match_option p)
     s1 s1
     s2 (Seq.upd s2 j None)
-    (j + 1) k;
+    (j + 1) k
+    fn _ _{};
   unfold (seq_seq_match (item_match_option p) s1 (Seq.upd s2 j None) i j);
   unfold (seq_seq_match (item_match_option p) s1 (Seq.upd s2 j None) (j + 1) k);
   on_range_put

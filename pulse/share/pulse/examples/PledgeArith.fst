@@ -47,18 +47,7 @@ fn pledge_comm (f:slprop) (v1 v2 : slprop)
   requires pledge emp_inames f (v2 ** v1)
   ensures pledge emp_inames f (v1 ** v2)
 {
-  // this one can also be proved by relying on the equality between v1**v2 and v2**v1,
-  // but that's not a scalable solution
-  // let _ = elim_slprop_equiv (slprop_equiv_comm v1 v2);
-  ghost
-  fn pf (_:unit)
-    (* a nested function may make this more convenient *)
-    requires v2 ** v1
-    ensures v1 ** v2
-  {
-    ()
-  };
-  rewrite_pledge #emp_inames #f (v2 ** v1) (v1 ** v2) pf;
+  rewrite_pledge (v2 ** v1) (v1 ** v2) #emp_inames fn _{};
   
   // if not fully automated (certainly cannot be for all rewrites)
   // maybe some syntax like

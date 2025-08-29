@@ -17,6 +17,7 @@
 module Pulse.Lib.Shift
 #lang-pulse
 open Pulse.Class.Duplicable
+open Pulse.Class.Introducable
 open Pulse.Lib.Core
 open Pulse.Main
 
@@ -42,6 +43,10 @@ fn intro_shift
   requires extra
   ensures  shift #is hyp concl
 
+instance val introducable_shift (t: Type u#a) is is'
+    hyp extra concl {| duplicable extra |} {| introducable is' (extra ** hyp) concl t |} :
+    introducable is extra (shift #is' hyp concl) t
+
 ghost
 fn elim_shift
   (#[T.exact (`emp_inames)] is:inames)
@@ -64,6 +69,11 @@ fn shift_dup
   (p q : slprop)
   requires shift #is p q
   ensures  shift #is p q ** shift #is p q
+
+instance val shift_duplicable
+  (#is : inames)
+  (p q : slprop)
+: duplicable (shift #is p q)
 
 ghost
 fn shift_compose

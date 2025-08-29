@@ -278,10 +278,11 @@ let rec st_term_to_string' (level:string) (t:st_term)
         (if insert_eq then "" else "_noeq")
         (term_to_string term)
 
-    | Tm_ST { t } ->
-      sprintf "%s%s"
+    | Tm_ST { t; args } ->
+      sprintf "%s%s%s"
         (if dbg_printing then "<st>" else "")
         (term_to_string t)
+        (T.fold_left (fun acc arg -> acc ^ " " ^ st_term_to_string' level arg) "" args)
         
     | Tm_Bind { binder; head; body } ->
       // if T.unseal binder.binder_ppname.name = "_"

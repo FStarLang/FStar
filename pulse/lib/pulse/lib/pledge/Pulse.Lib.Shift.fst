@@ -45,21 +45,32 @@ ensures p ** p
 
 
 ghost
-fn intro_shift_alt
-  (#is:inames)
+fn intro_shift
+  (#[T.exact (`emp_inames)] is:inames)
   (hyp concl:slprop)
   (extra:slprop)
-  {| d: duplicable extra |}
+  {| duplicable extra |}
   (f_elim: unit -> shift_f #is hyp #extra concl)
-requires extra
-ensures shift #is hyp concl
+  requires extra
+  ensures  shift #is hyp concl
 {
   fold (shift_elim_exists is hyp extra concl);
   fold (extra_duplicable extra);
   fold (shift #is hyp concl)
 }
 
-let intro_shift #is = intro_shift_alt #is
+fn introducable_shift_aux u#a (t: Type u#a) is is'
+    hyp extra concl {| duplicable extra |} {| introducable is' (extra ** hyp) concl t |} (k: t) :
+    stt_ghost unit is extra (fun _ -> shift #is' hyp concl) = {
+  intro_shift #is' hyp concl extra fn _ {
+    intro #is' concl #(extra ** hyp) (fun _ -> k);
+  }
+}
+
+instance introducable_shift (t: Type u#a) is is'
+    hyp extra concl {| duplicable extra |} {| introducable is' (extra ** hyp) concl t |} :
+    introducable is extra (shift #is' hyp concl) t =
+  { intro_aux = introducable_shift_aux t is is' hyp extra concl }
 
 
 let sqeq (p : Type) (_ : squash p) : erased p =
@@ -164,15 +175,11 @@ ensures shift #is2 hyp concl
   let d = fst (dsnd res);
   let f = snd (dsnd res);
 
-  ghost
-  fn aux () : shift_f #is2 hyp #(dfst res) concl =
+  intro (shift #is2 hyp concl) #(dfst res) fn _
   {
     rewrite (dfst res) as res._1;
     call f ()
   };
-
-  intro_shift _ _ _ aux
-
 }
 
 ghost
@@ -214,30 +221,15 @@ instance shift_duplicable
 }
 
 ghost
-fn dup_star (p q:slprop) {| duplicable p |} {| duplicable q |} : duplicable_f (p ** q) =
-{
-  open Pulse.Class.Duplicable;
-  dup p ();
-  dup q ()
-}
-
-instance duplicable_star (p q : slprop)  {| duplicable p |}  {| duplicable q|} : duplicable (p ** q) = {
-  dup_f = (fun _ -> dup_star p q)
-}
-
-ghost
 fn shift_compose
   (#is : inames)
   (p q r : slprop)
 requires shift #is p q ** shift #is q r
 ensures  shift #is p r
 {
-  ghost
-  fn aux () : shift_f #is p #(shift #is p q ** shift #is q r) r =
+  intro (shift #is p r) #(shift #is p q ** shift #is q r) fn _
   {
     elim_shift #is p _;
     elim_shift #is _ _;
   };
-  intro_shift _ _ _ aux;
-
 }

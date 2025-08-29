@@ -35,13 +35,11 @@ fn intro_regain_half (x:GR.ref int)
 requires pts_to x 'v
 ensures pts_to x #0.5R 'v ** regain_half x 'v
 {
-  ghost
-  fn aux () : trade_f (pts_to x #0.5R 'v) #(pts_to x #0.5R 'v) (pts_to x 'v) =
+  GR.share x;
+  intro (pts_to x #0.5R 'v @==> pts_to x 'v) #(pts_to x #0.5R 'v) fn _
   {
     GR.gather x;
   };
-  GR.share x;
-  I.intro _ _ _ aux;
   fold regain_half;
 }
 //end intro_regain_half$
@@ -72,15 +70,11 @@ fn intro_regain_half_q (x:GR.ref int)
 requires pts_to x 'v
 ensures pts_to x #0.5R 'v ** regain_half_q x
 {
-  ghost
-  fn aux1 (u:int)
-  requires pts_to x #0.5R 'v ** pts_to x #0.5R u
-  ensures pts_to x u
-  {
+  GR.share x;
+  intro (forall* u. pts_to x #0.5R u @==> pts_to x u)
+      #(pts_to x #0.5R 'v) fn _ u {
     gather x;
   };
-  GR.share x;
-  FA.intro_forall_imp _ _ _ aux1;
   fold regain_half_q;
 }
 //end intro_regain_half_q$
@@ -110,23 +104,12 @@ fn make_can_update (x:GR.ref int)
 requires pts_to x 'w
 ensures pts_to x #0.5R 'w ** can_update x
 {
-  ghost
-  fn aux (u:int)
-  requires pts_to x #0.5R 'w
-  ensures forall* v. pts_to x #0.5R u @==> pts_to x v
-  {
-    ghost
-    fn aux (v:int)
-    requires pts_to x #0.5R 'w ** pts_to x #0.5R u
-    ensures pts_to x v
-    {
-      gather x;
-      x := v;
-    };
-    FA.intro_forall_imp _ _ _ aux;
-  };
   share x;
-  FA.intro _ aux;
+  intro (forall* u v. pts_to x #0.5R u @==> pts_to x v)
+      #(pts_to x #0.5R 'w) fn _ u v {
+    gather x;
+    x := v;
+  };
   fold (can_update x);
 }
 //end make_can_update$

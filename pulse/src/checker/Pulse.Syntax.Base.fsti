@@ -215,6 +215,7 @@ type st_term' =
     }    
   | Tm_ST { //promote a pure term with an stt/stt_ghost/stt_atomic type to an st_term
       t:term;
+      args:list st_term;
     }
   | Tm_Bind { 
       binder:binder;

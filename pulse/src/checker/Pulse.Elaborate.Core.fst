@@ -148,7 +148,8 @@ let intro_pure_tm (p:term) =
                 (tm_pureapp (tm_fvar (as_fv (mk_pulse_lib_core_lid "intro_pure")))
                        None
                        p)
-                [S.wr (`()) rng, T.Q_Explicit] })
+                [S.wr (`()) rng, T.Q_Explicit];
+          args = [] })
 
 let simple_arr (t1 t2 : R.term) : R.term =
   let b = R.pack_binder {

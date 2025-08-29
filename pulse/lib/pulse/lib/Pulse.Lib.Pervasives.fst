@@ -23,6 +23,8 @@ include Pulse.Lib.Array
 include Pulse.Lib.Reference
 include Pulse.Lib.Primitives // TODO: what if we want to support several architectures?
 include Pulse.Class.PtsTo
+include Pulse.Class.Duplicable
+include Pulse.Class.Introducable { intro }
 include PulseCore.FractionalPermission
 include PulseCore.Observability
 include FStar.Ghost
@@ -202,11 +204,13 @@ type rust_extraction_attr =
 
 
 ghost
-fn dup_inames_live (is:inames)
-  requires inames_live is
-  ensures inames_live is ** inames_live is
+fn dup_star (p q:slprop) {| duplicable p |} {| duplicable q |} : duplicable_f (p ** q) =
 {
-  GhostSet.lemma_equal_intro is (GhostSet.union is is);
-  rewrite inames_live is as inames_live (GhostSet.union is is);
-  share_inames_live is is;
+  open Pulse.Class.Duplicable;
+  dup p ();
+  dup q ()
+}
+
+instance duplicable_star (p q : slprop)  {| duplicable p |}  {| duplicable q|} : duplicable (p ** q) = {
+  dup_f = (fun _ -> dup_star p q)
 }

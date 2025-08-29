@@ -242,7 +242,7 @@ val norm_st_typing_inverse
       (steps:list norm_step)
   : T.Tac (option (st_typing g e (C_Tot t1)))
 
-val hoist_stateful_apps
+val hoist
   (g:env)
   (tt:either term st_term)
   (hoist_top_level_st:bool)
