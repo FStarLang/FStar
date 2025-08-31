@@ -407,6 +407,7 @@ let tc_term_phase1 g (t:term) : T.Tac (term & term & T.tot_or_ghost)
   = let fg = elab_env g in
     let t = RU.deep_transform_to_unary_applications t in
     let instantiate_imps = true in
+    debug g (fun _ -> "tc_term_phase1: " ^ show t);
     let res, issues = catch_all fun _ ->
       RU.with_context (RU.extend_context "tc_term_phase1" (Some (range_of_term t)) (get_context g)) fun _ ->
       RU.tc_term_phase1 fg t instantiate_imps in

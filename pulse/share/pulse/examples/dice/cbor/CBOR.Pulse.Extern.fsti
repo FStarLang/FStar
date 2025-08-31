@@ -68,20 +68,20 @@ let sndp (#a1 #a2: Type) (x: (a1 & a2)) : Tot a2 = snd x
 
 val raw_data_item_match
   (p: perm)
-  (c: cbor)
+  ([@@@mkey]c: cbor)
   (v: Cbor.raw_data_item)
 : Tot slprop
 
 let raw_data_item_array_match
   (p: perm)
-  (c: Seq.seq cbor)
+  ([@@@mkey]c: Seq.seq cbor)
   (v: list Cbor.raw_data_item)
 : Tot slprop
 = SM.seq_list_match c v (raw_data_item_match p)
 
 let raw_data_item_map_entry_match
   (p: perm)
-  (c1: cbor_map_entry)
+  ([@@@mkey] c1: cbor_map_entry)
   (v1: (Cbor.raw_data_item & Cbor.raw_data_item))
 : Tot slprop
 = raw_data_item_match p (cbor_map_entry_key c1) (fstp v1) **
@@ -89,7 +89,7 @@ let raw_data_item_map_entry_match
 
 let raw_data_item_map_match
   (p: perm)
-  (c: Seq.seq cbor_map_entry)
+  ([@@@mkey] c: Seq.seq cbor_map_entry)
   (v: list (Cbor.raw_data_item & Cbor.raw_data_item))
 : Tot slprop
   (decreases v)

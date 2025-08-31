@@ -477,6 +477,7 @@ decreases remaining
     drop_ (can_give gs remaining);
     later_credit_buy 1;
     has_given_zero #_ #capacity r ci;
+    rewrite has_given gs 0 as has_given gs remaining;
   }
   else
   {
@@ -490,6 +491,7 @@ decreases remaining
     drop_ (inv _ _);
     CI.gather ci;
     gather_has_given gs;
+    rewrite has_given gs (1 + (remaining - 1)) as has_given gs remaining;
   }
 }
 

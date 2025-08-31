@@ -22,9 +22,6 @@ module R = Pulse.Lib.Reference
 assume
 val some_pred (x:R.ref int) (v:int) : slprop
 
-//Intro exists* with an erased variable fails
-[@@expect_failure]
-
 fn test1 (x:R.ref int) (#v:Ghost.erased int)
   requires some_pred x v
   ensures some_pred x v
@@ -37,11 +34,6 @@ fn test1 (x:R.ref int) (#v:Ghost.erased int)
 }
 
 
-//Intro exists* with an erased variable in an equality bound on the left,
-//fails weirdly with an SMT failure, where it tries to prove earsed int == int
-//and hide v == v
-//Intro exists* with an erased variable fails
-[@@expect_failure]
 
 fn test2 (x:R.ref int) (#v:Ghost.erased int)
   requires some_pred x v

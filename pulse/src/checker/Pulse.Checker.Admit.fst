@@ -22,7 +22,6 @@ open Pulse.Syntax
 open Pulse.Typing
 open Pulse.Checker.Pure
 open Pulse.Checker.Base
-open Pulse.Checker.Prover
 
 module RU = Pulse.RuntimeUtils
 module P = Pulse.Syntax.Printer

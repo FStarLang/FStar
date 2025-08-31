@@ -79,14 +79,22 @@ let rec zip3 (l1:list 'a) (l2:list 'b) (l3:list 'c) : T.Tac (list ('a & 'b & 'c)
   | _, _, _ ->
     T.fail "zip3: length mismatch"
 
-let same_head (t0 t1:term)
-  : T.Tac bool
-  = match T.hua t0, T.hua t1 with
-    | Some (h0, us0, args0), Some (h1, us1, args1) ->
-      T.inspect_fv h0 = T.inspect_fv h1 &&
-      L.length args0 = L.length args1
-    | _ ->
-      true // conservative
+let get_mkeys (g:env) (p: slprop) : T.Tac (option (list term)) =
+  match T.hua p with
+  | None -> None
+  | Some (hfv, _, args) ->
+    if Pulse.Reflection.Util.fv_has_attr_string "Pulse.Lib.Core.no_mkeys" hfv then Some [] else
+    match type_of_fv g hfv with | None -> None | Some t ->
+    let bs, _ = R.collect_arr_ln_bs t in
+    if L.length bs <> L.length args then None else
+    let bs_args = T.zip bs args in
+    let mkeys = T.filter_map (fun (b, (a, _)) ->
+      if binder_is_mkey b then
+        Some a
+      else
+        None
+    ) bs_args in
+    if Nil? mkeys then None else Some mkeys
 
 exception GFalse of string
 exception GTrue of string
@@ -184,17 +192,3 @@ let rec eligible_for_smt_equality (g:env) (t0 t1 : term)
     // ];
     true
   | e -> raise e
-
-let same_head_strict (t0 t1:term)
-  : T.Tac bool
-  = match T.hua t0, T.hua t1 with
-    | Some (h0, us0, args0), Some (h1, us1, args1) ->
-      T.inspect_fv h0 = T.inspect_fv h1 &&
-      L.length args0 = L.length args1
-    | _ ->
-      false
-
-let mkey_mismatch (g:env) (t0 t1 : term) : T.Tac bool =
-  if same_head_strict t0 t1
-  then not (eligible_for_smt_equality g t0 t1)
-  else false

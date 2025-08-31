@@ -141,4 +141,5 @@ let check
                  "Pulse.Checker.Rewrite.check_slprop_equiv_tac"
   in
 	let d = T_Rewrite _ p q p_typing equiv_p_q in
-	prove_post_hint (try_frame_pre false pre_typing (match_comp_res_with_post_hint d post_hint) res_ppname) post_hint t.range
+  let (| c,d |) = match_comp_res_with_post_hint d post_hint in
+	prove_post_hint (try_frame_pre false pre_typing (| _,c,d |) res_ppname) post_hint t.range

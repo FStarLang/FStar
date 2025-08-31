@@ -242,7 +242,7 @@ ensures
                     let res = !pres;
                     (res = 0s && not done)
                 )
-                invariant cont . exists* i1 i2 done res l1 l2 .
+                invariant exists* i1 i2 done res l1 l2 .
                     pts_to pi1 i1 ** pts_to pi2 i2 ** pts_to pdone done ** pts_to pres res **
                     cbor_array_iterator_match p1 i1 l1 **
                     cbor_array_iterator_match p2 i2 l2 **
@@ -251,9 +251,7 @@ ensures
                     pure (
                         List.Tot.length l1 == List.Tot.length l2 /\
                         Cbor.cbor_compare v1 v2 == (if res = 0s then Cbor.cbor_compare_array l1 l2 else I16.v res) /\
-                        (res == 0s ==> done == Nil? l1) /\
-                        cont == (Cons? l1 && res = 0s)
-                    )
+                        (res == 0s ==> done == Nil? l1))
                 {
                     let x1 = cbor_array_iterator_next pi1;
                     with v1' . assert (raw_data_item_match p1 x1 v1');
@@ -328,9 +326,8 @@ ensures
                     pure (
                         List.Tot.length l1 == List.Tot.length l2 /\
                         (Cbor.cbor_compare v1 v2 == (if res = 0s then Cbor.cbor_compare_map l1 l2 else I16.v res)) /\
-                        (res == 0s ==> done == Nil? l1) /\
-                        cont == (Cons? l1 && res = 0s)
-                    )
+                        (res == 0s ==> done == Nil? l1)) **
+                    pure (cont == (Cons? l1 && res = 0s))
                 {
                     let x1 = cbor_map_iterator_next pi1;
                     with v1' . assert (raw_data_item_map_entry_match p1 x1 v1');
@@ -575,16 +572,13 @@ ensures
         assert (pts_to pres gres ** cbor_map_get_invariant pmap vkey vmap map gres i l); // FIXME: WHY WHY WHY?
         not (done || Found? res)
     )
-    invariant cont . exists* (done: bool) (res: cbor_map_get_t) (i: cbor_map_iterator_t) (l: list (Cbor.raw_data_item & Cbor.raw_data_item)) .
+    invariant exists* (done: bool) (res: cbor_map_get_t) (i: cbor_map_iterator_t) (l: list (Cbor.raw_data_item & Cbor.raw_data_item)) .
         raw_data_item_match pkey key vkey ** 
         pts_to pdone done **
         pts_to pi i **
         pts_to pres res **
         cbor_map_get_invariant pmap vkey vmap map res i l **
-        pure (
-            done == Nil? l /\
-            cont == not (done || Found? res)
-        )
+        pure (done == Nil? l)
     {
         with gres gi l . assert (pts_to pres gres ** cbor_map_get_invariant pmap vkey vmap map gres gi l);
         rewrite each gres as NotFound;

@@ -11,7 +11,7 @@ let mref (#t:Type) (p:preorder t) = GR.gref (FP.fp_pcm p)
 
 let pts_to (#t:Type) 
            (#p:preorder t) 
-           (r:mref p)
+           ([@@@mkey] r:mref p)
            (#f:perm)
            (v:t)
 = exists* h. GR.pts_to r (Some f, h) ** pure (Cons? h /\ PulseCore.Preorder.curval h == v)
@@ -85,5 +85,5 @@ ensures pts_to r #1.0R v
   unfold pts_to;
   with f h. assert (GR.pts_to r (f, h));
   GR.write r _ _ (FP.mk_frame_preserving_upd p h v);
-  fold pts_to;
+  fold pts_to r v;
 }

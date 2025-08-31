@@ -51,9 +51,9 @@ fn test (x : t1) (y z : t2)
       ()
     }
     B -> {
-      let D = y;
-      let D = z;
-      ();
+      norewrite let D = y;
+      norewrite let D = z;
+      rewrite each B as x;
     }
   }
 }

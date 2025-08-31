@@ -170,12 +170,14 @@ decreases l
   match l {
     [] -> {
       unfold (all_at_most [] n);
-      fold (all_at_most [] n);
+      fold (all_at_most [] m);
+      rewrite all_at_most [] m as all_at_most l m;
     }
     hd :: tl -> {
       unfold (all_at_most (hd::tl) n);
       weaken_at_most tl n m;
       fold (all_at_most (hd::tl) m);
+      rewrite all_at_most (hd::tl) m as all_at_most l m;
     }
   }
 }

@@ -137,15 +137,14 @@ let check_core
   assume (open_term (close_term post_opened x) x == post_opened);
   let post = close_term post_opened x in
   let d = T_Return g c use_eq u ty t post x uty d post_typing in
-  let dd = (match_comp_res_with_post_hint d post_hint) in
+  let (|c',d'|) = match_comp_res_with_post_hint d post_hint in
   Pulse.Checker.Util.debug g "pulse.return" (fun _ -> 
-    let (| _, c, _ |) = dd in
     Printf.sprintf "Return comp is: %s"
-      (Pulse.Syntax.Printer.comp_to_string c));
+      (Pulse.Syntax.Printer.comp_to_string c'));
   prove_post_hint #g
-    (try_frame_pre false #g ctxt_typing dd res_ppname)
+    (try_frame_pre false #g ctxt_typing (|_,c',d'|) res_ppname)
     post_hint
-    (Pulse.RuntimeUtils.range_of_term t)
+    st.range
 #pop-options
 
 let check

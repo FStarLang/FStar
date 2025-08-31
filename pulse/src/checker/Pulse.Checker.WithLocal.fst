@@ -98,9 +98,7 @@ let check
     else
       let x = fresh g in
       let px = binder.binder_ppname, x in
-      if x `Set.mem` freevars_st body
-      then fail g (Some body.range) (Printf.sprintf "withlocal: %s is free in body" (T.unseal binder.binder_ppname.name))
-      else
+      assume not (x `Set.mem` freevars_st body);
         let x_tm = term_of_nvar px in
         let g_extended = push_binding g x binder.binder_ppname (mk_ref init_t) in
         let body_pre = comp_withlocal_body_pre pre init_t x_tm init in
@@ -108,10 +106,7 @@ let check
         // elaborating this post here,
         //   so that later we can check the computed post to be equal to this one
         let post : post_hint_for_env g = post in
-        if x `Set.mem` freevars post.post
-        then fail g None "Impossible! check_withlocal: unexpected name clash in with_local,\
-                          please file a bug-report"
-        else
+        assume not (x `Set.mem` freevars post.post);
           let open Pulse.Typing.Combinators in
           let body_post = extend_post_hint_for_local g post init_t x in
           let (| opened_body, c_body, body_typing |) =

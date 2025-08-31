@@ -20,7 +20,7 @@ open Pulse.Syntax
 open Pulse.Typing
 open Pulse.Checker.Pure
 open Pulse.Checker.Base
-open Pulse.Checker.Prover
+open Pulse.Checker.Prover.Normalize
 open Pulse.Checker.Comp
 open Pulse.Show
 open FStar.Pprint
@@ -232,8 +232,8 @@ let withinv_post (#g:env) (#p:term) (#i:term) (#post:term)
 
   : T.Tac (option (post':term &
                    tot_typing g post' tm_slprop)) =
-  let (| p, _, p_typing |) = Prover.normalize_slprop_welltyped g p p_typing in
-  let (| post, _, post_typing |) = Prover.normalize_slprop_welltyped g post post_typing in
+  let (| p, _, p_typing |) = normalize_slprop_welltyped g p p_typing in
+  let (| post, _, post_typing |) = normalize_slprop_welltyped g post post_typing in
   __withinv_post #g #p #i #post p_typing i_typing post_typing
 
 #push-options "--z3rlimit_factor 40 --split_queries no --fuel 0 --ifuel 1 --z3cliopt 'smt.qi.eager_threshold=100'"
@@ -495,7 +495,7 @@ let norm_and_check
   (t:st_term{Tm_WithInv? t.term})
   (check:check_t)
 : T.Tac (checker_result_t g pre post_hint)
-= let (| pre', pre_equiv, pre'_typing |) = Prover.normalize_slprop_welltyped g pre pre_typing in
+= let (| pre', pre_equiv, pre'_typing |) = normalize_slprop_welltyped g pre pre_typing in
   let r = check0 g pre' pre'_typing post_hint res_ppname t check in
   checker_result_t_equiv_ctxt _ _ _ _ (VE_Sym _ _ _ pre_equiv) r
 

@@ -55,18 +55,14 @@ requires L.lock_alive l #p (exists* v. pts_to x #0.5R v ** pred v) ** R.pts_to x
 ensures  L.lock_alive l #p (exists* v. pts_to x #0.5R v ** pred v) ** R.pts_to x #0.5R ('i + 1) ** qpred ('i + 1)
  {
     let vx = !x;
-    rewrite (qpred 'i) as (qpred vx);
     L.acquire l;
+    with v. assert R.pts_to x #0.5R 'i ** R.pts_to x #0.5R v ** pred v;
     R.gather x;
-    with p v. rewrite (R.pts_to x #p v) as (R.pts_to x v);
-    x := (vx + 1);
+    rewrite each v as 'i;
+    x := (!x + 1);
     R.share x;
-    with p _v. rewrite (R.pts_to x #p _v) as (R.pts_to x #0.5R _v);
-    with _v. rewrite (pred _v) as (pred vx);
     f vx;
     L.release l;
-    with p _v. rewrite (R.pts_to x #p _v) as (R.pts_to x #0.5R _v);
-    rewrite (qpred (vx + 1)) as (qpred ('i + 1));
 }
 
 
@@ -86,7 +82,6 @@ ensures L.lock_alive l #p (exists* v. pts_to x v ** pred v) ** qpred ('i + 1)
  {
     L.acquire l;
     let vx = !x;
-    with _v. rewrite (pred _v) as (pred vx);
     x := vx + 1;
     f vx 'i;
     L.release l;
@@ -198,7 +193,7 @@ ensures inv l (pts_to_refine x pred) ** qpred ('i + 1)
     with v. _;
     atomic_increment x;
     f v 'i;
-    fold pts_to_refine;
+    fold pts_to_refine x pred;
     later_intro (pts_to_refine x pred);
   }
 }
@@ -232,7 +227,7 @@ ensures inv l (pts_to_refine x pred) ** qpred ('i + 1)
     FA.elim #_ #(fun vq -> (pred v ** qpred vq ** pts_to x (v + 1)) @==>
                            (pred (v + 1) ** qpred (vq + 1) ** pts_to x (v + 1))) 'i;
     I.elim _ _;
-    fold pts_to_refine;
+    fold pts_to_refine x pred;
     later_intro (pts_to_refine x pred);
   }
 }
@@ -324,11 +319,14 @@ ensures inv l invp ** qpred ('i + 1)
   let mut continue = true;
   fold (cond true (qpred 'i) (qpred ('i + 1)));
   while (!continue)
-  invariant b.
+  invariant
+    exists* b.
     inv l invp **
     pts_to continue b **
     cond b (qpred 'i) (qpred ('i + 1))
   {
+    rewrite each (!continue) as true; // FIXME: rewrites_to goes the wrong direction?
+    elim_cond_true _ _ _;
     let v = read ();
     later_credit_buy 1;
     let next = 
@@ -340,13 +338,12 @@ ensures inv l invp ** qpred ('i + 1)
       {
         later_elim _;
         elim_inv ();
-        unfold cond;
+        with vv. assert pure (vv == !x);
         let b = cas x v (v + 1);
         if b
         {
           unfold cond;
-          with vv. assert (pred vv);
-          f vv _;
+          f vv 'i;
           intro_inv ();
           fold (cond false (qpred 'i) (qpred ('i + 1)));
           later_intro invp;
@@ -363,6 +360,7 @@ ensures inv l invp ** qpred ('i + 1)
       };
     continue := next
   };
+  rewrite each (!continue) as false; // FIXME: rewrites_to goes the wrong direction?
   unfold cond;
 }
  

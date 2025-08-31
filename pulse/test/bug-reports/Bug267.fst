@@ -45,14 +45,13 @@ fn multiply_by_repeated_addition (x y:nat)
         let c = !ctr;
         (c < x)
     )
-    invariant b.
+    invariant
     exists* (c a : int).
         pts_to ctr c **
         Pulse.Lib.Reference.pts_to acc a **
         pure (//0 <= c /\
               c <= x /\
-              a == (c * y) /\
-              b == (c < x))
+              a == (c * y))
     {
         let a = !acc;
         acc := a + y;

@@ -55,7 +55,6 @@ ghost fn share u#a (#a:Type u#a) (#pcm:pcm a) (r:pcm_ref pcm)
   ensures pcm_pts_to r v0
   ensures pcm_pts_to r v1
 
-[@@allow_ambiguous]
 ghost fn gather u#a (#a:Type u#a) (#pcm:pcm a) (r:pcm_ref pcm) (v0:a) (v1:a)
   requires pcm_pts_to r v0
   requires pcm_pts_to r v1

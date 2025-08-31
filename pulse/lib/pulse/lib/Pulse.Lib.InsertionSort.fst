@@ -134,6 +134,7 @@ let step_outer_invariant
 #pop-options
 
 
+#push-options "--z3rlimit_factor 2"
 fn insertion_sort
       (#t:Type)
       {| total_order t |}
@@ -202,6 +203,7 @@ ensures exists* s'. (a |-> s') **
   with s'. assert (a |-> s');
   assert pure (Seq.slice s' 0 (Seq.length s') `Seq.equal` s');
 }
+#pop-options
 
 instance total_order_int : total_order int = {
   compare = FStar.Order.compare_int;

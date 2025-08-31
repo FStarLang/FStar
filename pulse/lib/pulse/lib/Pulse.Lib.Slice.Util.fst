@@ -32,7 +32,7 @@ fn append_split (#t: Type) (s: S.slice t) (#p: perm) (i: SZ.t)
   requires pts_to s #p (v1 `Seq.append` v2)
   returns res: (slice t & slice t)
   ensures
-    (let (s1, s2) = res in
+    (let s1, s2 = fst res, snd res in
       pts_to s1 #p v1 **
       pts_to s2 #p v2 **
       S.is_split s s1 s2)

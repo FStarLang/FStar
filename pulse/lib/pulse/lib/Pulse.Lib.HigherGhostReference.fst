@@ -103,7 +103,7 @@ fn free #a (r:ref a) (#n:erased a)
 {
   unfold pts_to r #1.0R n;
   Pulse.Lib.Core.ghost_write r _ _ (mk_frame_preserving_upd_none n);
-  Pulse.Lib.Core.drop_ _;
+  Pulse.Lib.Core.drop_ (ghost_pcm_pts_to _ _);
 }
 
    

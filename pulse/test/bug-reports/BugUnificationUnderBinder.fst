@@ -27,7 +27,7 @@ requires exists* x. p x 5
 ensures emp
 {
     with zz. assert (exists* x. p x zz);
-    drop_ _;
+    drop_ (p _ zz);
 }
 
 
@@ -37,7 +37,7 @@ requires forall* x. p x 5
 ensures emp
 {
     with zz. assert (forall* x. p x zz);
-    drop_ _;
+    drop_ (forall* x. p x zz);
 } 
 
 

@@ -101,11 +101,12 @@ fn compare
     }
   )
   invariant
-  exists* (vi:_{SZ.v vi <= SZ.v l}). ( 
+  exists* (vi:SZ.t{SZ.v vi <= SZ.v l}). ( 
     R.pts_to i vi **
     A.pts_to a1 #p1 's1 **
     A.pts_to a2 #p2 's2 **
     pure (
+      SZ.v vi <= SZ.v l /\
       (forall (i:nat). i < SZ.v vi ==> Seq.index 's1 i == Seq.index 's2 i)
     )
   )

@@ -131,5 +131,5 @@ fn update (#t:Type) (#p:preorder t) (r:mref p) (#u:t) (v:t)
   unfold pts_to;
   with f h. assert (GR.pts_to r (f, h));
   GR.write r _ _ (FP.mk_frame_preserving_upd p h v);
-  fold pts_to;
+  fold pts_to r #1.0R v;
 }

@@ -27,7 +27,7 @@ type t_rep =
   | AR of int
   | BR of bool
 
-let t_perm (x:t) (v:t_rep) : slprop =
+let t_perm ([@@@mkey]x:t) (v:t_rep) : slprop =
     match x with
     | A r -> (
       match v with

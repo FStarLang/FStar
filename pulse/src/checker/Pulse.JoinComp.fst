@@ -22,6 +22,7 @@ open Pulse.Typing.Combinators
 open Pulse.Checker.Pure
 open Pulse.Checker.Base
 open Pulse.Checker.Prover
+open Pulse.Checker.Prover.Normalize
 open FStar.List.Tot
 open Pulse.Show
 module T = FStar.Tactics.V2
@@ -221,7 +222,7 @@ let join_post #g #hyp #b
       (T.term_to_string p1.post)
       (T.term_to_string p2.post)
   );
-  if not (T.term_eq p1.ret_ty p2.ret_ty)
+  if not (T.term_eq (RU.deep_compress_safe p1.ret_ty) (RU.deep_compress_safe p2.ret_ty))
   then (
     fail_doc g (Some (T.range_of_term p1.ret_ty))
       Pulse.PP.(
@@ -230,19 +231,12 @@ let join_post #g #hyp #b
       )
   );
   let x = fresh g in
+  let g' = push_binding_def g x p1.ret_ty in
   let p1_post = open_term_nv p1.post (ppname_default, x) in
-  let (| p1_post, _ |) = 
-    Pulse.Checker.Prover.normalize_slprop 
-      (push_binding_def g x p1.ret_ty) 
-      p1_post true 
-  in
+  let (| p1_post, _ |) = normalize_slprop g' p1_post true in
   let p2_post = open_term_nv p2.post (ppname_default, x) in
-  let (| p2_post, _ |) =
-    Pulse.Checker.Prover.normalize_slprop 
-      (push_binding_def g x p1.ret_ty) 
-      p2_post true 
-  in
-  let joined_post = join_slprop g b [] [] p1_post p2_post in
+  let (| p2_post, _ |) = normalize_slprop g' p2_post true in
+  let joined_post = join_slprop g' b [] [] p1_post p2_post in
   let joined_post = close_term joined_post x in
   Pulse.Checker.Util.debug g "pulse.join_comp" (fun _ ->
     Printf.sprintf "Inferred joint postcondition:\n%s\n"
@@ -251,7 +245,6 @@ let join_post #g #hyp #b
   assume (fresh_wrt x g (freevars joined_post));
   let (| u, ty_typing |) = Pulse.Checker.Pure.check_universe g p1.ret_ty in
   let joined_post' = open_term_nv joined_post (ppname_default, x) in 
-  let g' = push_binding g x ppname_default p1.ret_ty in
   let post_typing_src = Pulse.Checker.Pure.check_slprop_with_core g' joined_post' in
   let (| eff, eff_ty |) = join_effect_annot g p1.effect_annot p2.effect_annot in
   let res : post_hint_for_env g =

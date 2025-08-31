@@ -116,7 +116,8 @@ let check
     if eq_comp body_comp (comp_while_body nm inv)
     then
       let d = T_While g inv cond body inv_typing cond_typing body_typing in
-      prove_post_hint (try_frame_pre false pre_typing (match_comp_res_with_post_hint d post_hint) res_ppname) post_hint t.range
+      let (| c,d |) = match_comp_res_with_post_hint d post_hint in
+      prove_post_hint (try_frame_pre false pre_typing (|_,c,d|) res_ppname) post_hint t.range
     else fail g None
           (Printf.sprintf "Could not prove the inferred type of the while body matches the annotation\n\
                            Inferred type = %s\n\
@@ -173,8 +174,8 @@ let check_nuwhile
       { ctxt_now = pre; ctxt_old = Some pre }
       inv
   in
-  let (| g1, nts, labs, remaining, k |) = Pulse.Checker.Prover.prove false pre_typing (empty_env g) inv_typing in
-  let inv = tm_star (Pulse.Checker.Prover.Substs.nt_subst_term inv nts) remaining in
+  let (| g1, remaining, k |) = Pulse.Checker.Prover.prove t.range g pre inv false in
+  let inv = tm_star (RU.deep_compress_safe inv) remaining in
   let inv_typing : tot_typing g1 inv tm_slprop = RU.magic () in
   let (| post_cond, r_cond |) : (ph:post_hint_for_env g1 & checker_result_t g1 inv (PostHint ph)) =
     let r_cond = check (push_context "check_while_condition" cond.range g1) inv inv_typing (TypeHint tm_bool) ppname_default cond in

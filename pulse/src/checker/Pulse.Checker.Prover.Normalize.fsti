@@ -14,24 +14,26 @@
    limitations under the License.
 *)
 
-module Pulse.Checker.Prover.Match.Comb
+module Pulse.Checker.Prover.Normalize
 
-module T = FStar.Tactics
-
-open FStar.Pprint
+module T = FStar.Tactics.V2
 
 open Pulse.Syntax
 open Pulse.Typing
 
-open Pulse.Checker.Base
-open Pulse.Checker.Prover.Base
-open Pulse.Checker.Prover.Match.Base
+val __normalize_slprop
+  (g:env)
+  (v:slprop)
+  : T.Tac (v':slprop & slprop_equiv g v v')
 
-(* Combinators for matching passes (currently a single one) *)
+val normalize_slprop
+  (g:env)
+  (v:slprop)
+  (use_rewrites_to : bool)
+  : T.Tac (v':slprop & slprop_equiv g v v')
 
-(* Do a pass over all unsolved goals to see if any can be matched with the given matcher. *)
-val match_with
-  (label : string)
-  (matcher : matcher_t)
-  (#preamble:_) (pst:prover_state preamble)
-  : T.Tac (list (list document) & pst':prover_state preamble { pst' `pst_extends` pst })
+val normalize_slprop_welltyped
+  (g:env)
+  (v:slprop)
+  (v_typing:tot_typing g v tm_slprop)
+  : T.Tac (v':slprop & slprop_equiv g v v' & tot_typing g v' tm_slprop)

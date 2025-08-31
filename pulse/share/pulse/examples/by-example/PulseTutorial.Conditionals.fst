@@ -96,7 +96,7 @@ ensures pts_to x #p 'vx ** pts_to y #q 'vy
 let nullable_ref a = option (ref a)
 
 let pts_to_or_null #a
-        (x:nullable_ref a) 
+        ([@@@mkey] x:nullable_ref a) 
         (#[default_arg (`1.0R)] p:perm) //implicit argument with a default
         (v:option a)
 : slprop
@@ -166,7 +166,7 @@ fn intro_pts_to_or_null_some #a #p (r:nullable_ref a) (x:ref a)
 requires pts_to x #p 'v ** pure (r == Some x)
 ensures pts_to_or_null r #p (Some 'v)
 {
-    fold (pts_to_or_null (Some x) #p (Some 'v));
+    fold (pts_to_or_null (Some x) #p (Some (reveal 'v)));
     rewrite each (Some x) as r;
 }
 //end pts_to_or_null_helpers$
@@ -188,6 +188,7 @@ ensures pts_to_or_null r #p 'v
      None -> {
         unfold pts_to_or_null None 'v;
         fold pts_to_or_null None 'v;
+        rewrite each None #(ref a) as r;
         None
      }
     }

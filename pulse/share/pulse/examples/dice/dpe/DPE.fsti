@@ -292,7 +292,7 @@ let singleton (sid:sid_t) (p:perm) (t:trace) : GTot pcm_t =
 //   to capture the session history for a sid
 //
 noextract
-let sid_pts_to (r:gref) (sid:sid_t) (t:trace) : slprop =
+let sid_pts_to ([@@@mkey] r:gref) (sid:sid_t) (t:trace) : slprop =
   ghost_pcm_pts_to r (singleton sid 0.5R t)
 
 noextract
@@ -302,7 +302,7 @@ type pht_t = PHT.pht_t sid_t session_state
 // Towards the global state invariant
 //
 
-let session_state_related (s:session_state) (gs:g_session_state) : slprop =
+let session_state_related ([@@@mkey] s:session_state) (gs:g_session_state) : slprop =
   match s, gs with
   | SessionStart, G_SessionStart
   | InUse, G_InUse _
@@ -316,9 +316,11 @@ let session_state_related (s:session_state) (gs:g_session_state) : slprop =
 //
 // Invariant for sessions that have been started
 //
-let session_state_perm (r:gref) (pht:pht_t) (sid:sid_t) : slprop =
+let pht_contains ([@@@mkey] pht:pht_t) ([@@@mkey] sid:sid_t) (s: session_state) =
+  pure (PHT.lookup pht sid == Some s)
+let session_state_perm ([@@@mkey] r:gref) (pht:pht_t) (sid:sid_t) : slprop =
   exists* (s:session_state) (t:trace).
-    pure (PHT.lookup pht sid == Some s) **
+    pht_contains pht sid s **
     sid_pts_to r sid t **
     session_state_related s (current_state t)
 
@@ -327,7 +329,7 @@ let session_state_perm (r:gref) (pht:pht_t) (sid:sid_t) : slprop =
 //   if we parameterized it over a typeclass, we can directly use u32 keys
 //   and this should go away
 //
-let session_perm (r:gref) (pht:pht_t) (sid:nat) =
+let session_perm ([@@@mkey] r:gref) (pht:pht_t) (sid:nat) =
   if UInt.fits sid 16
   then session_state_perm r pht (U16.uint_to_t sid)
   else emp
@@ -345,7 +347,7 @@ let sids_above_unused (s:sid_t) : GTot pcm_t = map_literal (fun sid ->
 //
 // Main invariant
 //
-let dpe_inv (r:gref) (s:option st) : slprop =
+let dpe_inv ([@@@mkey] r:gref) (s:option st) : slprop =
   match s with
   //
   // Global state is not initialized,
@@ -374,6 +376,7 @@ val trace_ref : gref
 // The DPE API
 //
 
+[@@no_mkeys]
 let open_session_client_perm (s:option sid_t) : slprop =
   match s with
   | None -> emp
@@ -389,6 +392,7 @@ noextract
 let trace_valid_for_initialize_context (t:trace) : prop =
   current_state t == G_SessionStart
 
+[@@no_mkeys]
 let initialize_context_client_perm (sid:sid_t) (uds:Seq.seq U8.t) =
   exists* t. sid_pts_to trace_ref sid t **
              pure (current_state t == G_Available (Engine_context_repr uds))
@@ -418,6 +422,7 @@ let derive_child_post_trace (r:repr_t) (t:trace) =
   | L0_repr r, G_Available (L1_context_repr lrepr) -> lrepr.repr == r
   | _ -> False
 
+[@@no_mkeys]
 let derive_child_client_perm (sid:sid_t) (t0:trace) (repr:repr_t) (res:bool)
   : slprop =
   match res with
@@ -447,6 +452,7 @@ let trace_valid_for_close (t:trace) : prop =
   | G_InUse _ -> False
   | _ -> True
 
+[@@no_mkeys]
 let session_closed_client_perm (sid:sid_t) (t0:trace) =
   exists* t1. sid_pts_to trace_ref sid t1 **
               pure (current_state t1 == G_SessionClosed (G_InUse (current_state t0)))
@@ -465,6 +471,7 @@ let trace_valid_for_certify_key (t:trace) : prop =
   | G_Available (L1_context_repr _) -> True
   | _ -> False
 
+[@@no_mkeys]
 let certify_key_client_perm (sid:sid_t) (t0:trace) : slprop =
   exists* t1. sid_pts_to trace_ref sid t1 **
               pure (current_state t1 == current_state t0)
@@ -492,6 +499,7 @@ let trace_valid_for_sign (t:trace) : prop =
   | G_Available (L1_context_repr _) -> True
   | _ -> False
 
+[@@no_mkeys]
 let sign_client_perm (sid:sid_t) (t0:trace) : slprop =
   exists* t1. sid_pts_to trace_ref sid t1 **
               pure (current_state t1 == current_state t0)

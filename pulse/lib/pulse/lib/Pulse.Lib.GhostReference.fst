@@ -69,7 +69,7 @@ fn write (#a:Type) (r:ref a) (x:erased a) (#n:erased a)
   ensures pts_to r #1.0R x
 {
   unfold (pts_to r #1.0R n);
-  H.(r := (U.raise_val x));
+  H.(r := U.raise_val (reveal x));
   fold (pts_to r #1.0R x)
 }
 

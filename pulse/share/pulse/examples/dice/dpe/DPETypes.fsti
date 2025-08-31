@@ -163,7 +163,7 @@ let mk_l0_context_repr_t
 : GTot l0_context_repr_t 
 = {uds; cdi; repr}
 
-let l0_context_perm (c:l0_context_t) (r:l0_context_repr_t): slprop
+let l0_context_perm ([@@@mkey] c:l0_context_t) (r:l0_context_repr_t): slprop
   = pts_to c.cdi r.cdi **
     pure (V.is_full_vec c.cdi)
 
@@ -252,7 +252,7 @@ let mk_l1_context_repr_t
   { cdi; deviceID_label_len; aliasKey_label_len; deviceIDCSR_ingredients; aliasKeyCRT_ingredients;
     deviceID_pub; aliasKey_pub; aliasKey_priv; deviceIDCSR_len; deviceIDCSR; aliasKeyCRT_len; aliasKeyCRT; repr }
 
-let l1_context_perm (c:l1_context_t) (r:l1_context_repr_t)
+let l1_context_perm ([@@@mkey] c:l1_context_t) (r:l1_context_repr_t)
   : slprop
   = pts_to c.deviceID_pub r.deviceID_pub **
     pts_to c.aliasKey_pub r.aliasKey_pub **
@@ -287,7 +287,7 @@ let mk_context_repr_t_l0 (r:erased l0_context_repr_t)
 let mk_context_repr_t_l1 (r:erased l1_context_repr_t) 
 : erased context_repr_t = L1_context_repr r
 
-let context_perm (context:context_t) (repr:context_repr_t): slprop = 
+let context_perm ([@@@mkey] context:context_t) (repr:context_repr_t): slprop = 
   match context, repr with
   | Engine_context c, Engine_context_repr uds -> engine_context_perm c uds
   | L0_context c, L0_context_repr r -> l0_context_perm c r
@@ -408,7 +408,7 @@ type repr_t =
   | Engine_repr : r:engine_record_repr -> repr_t
   | L0_repr     : r:l0_record_repr_t -> repr_t
 
-let record_perm (record:record_t) (p:perm) (repr:repr_t)  : slprop = 
+let record_perm ([@@@mkey] record:record_t) (p:perm) (repr:repr_t)  : slprop = 
   match record, repr with
   | Engine_record r, Engine_repr r0 -> engine_record_perm r p r0
   | L0_record r, L0_repr r0 -> l0_record_perm r p r0

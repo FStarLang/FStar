@@ -44,9 +44,9 @@ fn compare (#t:eqtype) (#p1 #p2:perm) (l:US.t) (#s1 #s2:elseq t l) (a1 a2:A.larr
     R.pts_to i vi **
     A.pts_to a1 #p1 s1 **
     A.pts_to a2 #p2 s2 **
+    pure (b == (US.(vi <^ l) && Seq.index s1 (US.v vi) = Seq.index s2 (US.v vi))) **
     pure (
       US.v vi <= US.v l /\
-      (b == (US.(vi <^ l) && Seq.index s1 (US.v vi) = Seq.index s2 (US.v vi))) /\
       (forall (i:nat). i < US.v vi ==> Seq.index s1 i == Seq.index s2 i)
     )
   )
@@ -73,11 +73,10 @@ fn fill_array (#t:Type0) (l:US.t) (a:(a:A.array t{ US.v l == A.length a })) (v:t
 {
    let mut i = 0sz;
    while (let vi = !i; US.(vi <^ l))
-   invariant b. exists* (s:Seq.seq t) (vi:US.t). (
+   invariant exists* (s:Seq.seq t) (vi:US.t). (
       A.pts_to a s **
       R.pts_to i vi **
-      pure ((b == US.(vi <^ l)) /\
-            US.v vi <= US.v l /\
+      pure (US.v vi <= US.v l /\
             Seq.length s == A.length a /\
             (forall (i:nat). i < US.v vi ==> Seq.index s i == v))
    )

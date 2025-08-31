@@ -130,5 +130,6 @@ ensures emp
     share c;
     par (do_something c #_ #_) (do_something c #_ #_);
     gather c;
+    rewrite each (1.0R /. 2.0R +. 1.0R /. 2.0R) as 1.0R;
     destroy c
 }

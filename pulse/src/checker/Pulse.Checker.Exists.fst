@@ -89,7 +89,8 @@ let check_elim_exists
   if eq_univ u u'
   then let x = fresh g in
        let d = T_ElimExists g u ty p x ty_typing t_typing in
-       prove_post_hint (try_frame_pre false pre_typing (match_comp_res_with_post_hint d post_hint) res_ppname) post_hint t_rng
+       let (|_,d|) = match_comp_res_with_post_hint d post_hint in
+       prove_post_hint (try_frame_pre false pre_typing (|_,_,d|) res_ppname) post_hint t_rng
   else fail g (Some t_rng)
          (Printf.sprintf "check_elim_exists: universe checking failed, computed %s, expected %s"
             (P.univ_to_string u') (P.univ_to_string u))
@@ -131,7 +132,8 @@ let check_intro_exists
     check_term g witness T.E_Ghost b.binder_ty in
   let d = T_IntroExists g u b p witness ty_typing t_typing witness_typing in
   let (| c, d |) : (c:_ & st_typing g _ c) = (| _, d |) in
-  prove_post_hint (try_frame_pre false pre_typing (match_comp_res_with_post_hint d post_hint) res_ppname)
+  let (| c, d |) = match_comp_res_with_post_hint d post_hint in
+  prove_post_hint (try_frame_pre false pre_typing (|_,_,d|) res_ppname)
                   post_hint
                   (Pulse.RuntimeUtils.range_of_term t)
 #pop-options

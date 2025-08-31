@@ -305,11 +305,9 @@ fn sum (r:ref nat) (n:nat)
    with (zero <> n);
         
    while (let m = !i; (m <> n))
-   invariant b . exists* m s. (
-     pts_to i m  **
-     pts_to sum s  **
-     pure (s == sum_spec m /\
-           b == (m <> n)))
+    invariant live i
+    invariant live sum
+    invariant pure (!sum == sum_spec (!i))
    {
      let m = !i;
      let s = !sum;
@@ -339,10 +337,9 @@ fn sum2 (r:ref nat) (n:nat)
    let mut i = zero;
    let mut sum = zero;
    while (let m = !i; (m <> n))
-   invariant b . exists* m s.
-     pts_to i m  **
-     pts_to sum s **
-     pure (s == sum_spec m /\ b == (m <> n))
+    invariant live i
+    invariant live sum
+    invariant pure (!sum == sum_spec (!i))
    {
      let m = !i;
      let s = !sum;

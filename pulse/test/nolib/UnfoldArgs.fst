@@ -42,5 +42,6 @@ fn test4 (y : _)
   ensures  trade emp (rel (g y))
 {
   rewrite each rel2 (g y) as rel (g (f (g y))); // ideally automated?
+  rewrite each g (f (g y)) as g y;
   ();
 }

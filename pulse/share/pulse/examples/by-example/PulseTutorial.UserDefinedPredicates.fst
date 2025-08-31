@@ -21,7 +21,7 @@ open FStar.Mul
 //pts_to_diag$
 let pts_to_diag 
         #a 
-        (r:ref (a & a))
+        ([@@@mkey] r:ref (a & a))
         (v:a)
 : slprop
 = pts_to r (v, v)

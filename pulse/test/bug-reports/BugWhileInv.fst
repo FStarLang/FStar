@@ -19,6 +19,7 @@ module BugWhileInv
 open Pulse.Lib.Pervasives
 module R = Pulse.Lib.Reference
 
+[@@no_mkeys]
 let workaround (b:bool) (v:nat) : slprop =
     pure (not b ==> v == 0)
 
@@ -70,9 +71,6 @@ ensures  R.pts_to x 0
       true;
     }
   )
-  invariant b.
-    exists* v. 
-        R.pts_to x v **
-        pure ((b == false) ==> (v == 0))
+  invariant live x
   { () };
  }

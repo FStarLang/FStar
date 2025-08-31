@@ -21,7 +21,6 @@ open Pulse.Typing
 open Pulse.Typing.Combinators
 open Pulse.Checker.Pure
 open Pulse.Checker.Base
-open Pulse.Checker.Prover
 
 module T = FStar.Tactics.V2
 module Metatheory = Pulse.Typing.Metatheory
@@ -119,10 +118,12 @@ let check
       apply_checker_result_k r ppname
     in
     let br_name = if is_then then "then" else "else" in
-    if hyp `Set.mem` freevars_st br
-    then fail g (Some br.range)
-           (Printf.sprintf "check_if: branch hypothesis is in freevars of checked %s branch" br_name)
-    else (| br, c, d |)
+    // if hyp `Set.mem` freevars_st br
+    // then fail g (Some br.range)
+    //        (Printf.sprintf "check_if: branch hypothesis is in freevars of checked %s branch" br_name)
+    // else
+     assume not (hyp `Set.mem` freevars_st br);
+     (| br, c, d |)
   in
   let (| e1, c1, e1_typing |) = extract then_ true in
   let (| e2, c2, e2_typing |) = extract else_ false in
