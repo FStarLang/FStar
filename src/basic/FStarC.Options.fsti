@@ -71,9 +71,9 @@ type opt_type =
 | PostProcessed of ((option_val -> option_val) (* validator *) & opt_type (* elem spec *))
   // For options like --extract_module that require post-processing or validation
 | Accumulated of opt_type (* elem spec *)
-  // For options like --extract_module that can be repeated (LIFO)
+  // For options like --extract_module that can be repeated (LIFO, accumulate the new element via Cons, at the head)
 | ReverseAccumulated of opt_type (* elem spec *)
-  // For options like --include that can be repeated (FIFO)
+  // For options like --include that can be repeated (FIFO, accumulate the new element via snoc, at the tail)
 | WithSideEffect of ((unit -> unit) & opt_type (* elem spec *))
   // For options like --version that have side effects
 
