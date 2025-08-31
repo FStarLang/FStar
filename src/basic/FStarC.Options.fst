@@ -187,156 +187,152 @@ let set_option k v =
 let set_option' (k,v) =  set_option k v
 let set_admit_smt_queries (b:bool) = set_option "admit_smt_queries" (Bool b)
 
-let defaults =
-     [
-      ("abort_on"                     , Int 0);
-      ("admit_smt_queries"            , Bool false);
-      ("admit_except"                 , Unset);
-      ("disallow_unification_guards"  , Bool false);
-      ("already_cached"               , Unset);
-      ("cache_checked_modules"        , Bool false);
-      ("cache_off"                    , Bool false);
-      ("compat_pre_core"              , Unset);
-      ("compat_pre_typed_indexed_effects"
-                                      , Bool false);
-      ("print_cache_version"          , Bool false);
-      ("cmi"                          , Bool false);
-      ("codegen"                      , Unset);
-      ("codegen-lib"                  , List []);
-      ("defensive"                    , String "no");
-      ("debug"                        , List []);
-      ("debug_all"                    , Bool false);
-      ("debug_all_modules"            , Bool false);
-      ("dep"                          , Unset);
-      ("detail_errors"                , Bool false);
-      ("detail_hint_replay"           , Bool false);
-      ("dump_module"                  , List []);
-      ("eager_subtyping"              , Bool false);
-      ("error_contexts"               , Bool false);
-      ("expose_interfaces"            , Bool false);
-      ("message_format"               , String "auto");
-      ("ext"                          , Unset);
-      ("extract"                      , Unset);
-      ("extract_all"                  , Bool false);
-      ("extract_module"               , List []);
-      ("extract_namespace"            , List []);
-      ("expand_include"               , Unset);
-      ("help"                         , Bool false);
-      ("hide_uvar_nums"               , Bool false);
-      ("hint_hook"                    , Unset);
-      ("hint_info"                    , Bool false);
-      ("hint_dir"                     , Unset);
-      ("hint_file"                    , Unset);
-      ("in"                           , Bool false);
-      ("ide"                          , Bool false);
-      ("ide_id_info_off"              , Bool false);
-      ("lsp"                          , Bool false);
-      ("print"                        , Bool false);
-      ("print_in_place"               , Bool false);
-      ("force"                        , Bool false);
-      ("fuel"                         , Unset);
-      ("ifuel"                        , Unset);
-      ("initial_fuel"                 , Int 2);
-      ("initial_ifuel"                , Int 1);
-      ("keep_query_captions"          , Bool true);
-      ("lax"                          , Bool false);
-      ("load"                         , List []);
-      ("load_cmxs"                    , List []);
-      ("log_queries"                  , Bool false);
-      ("log_failing_queries"          , Bool false);
-      ("log_types"                    , Bool false);
-      ("max_fuel"                     , Int 8);
-      ("max_ifuel"                    , Int 2);
-      ("MLish"                        , Bool false);
-      ("MLish_effect"                 , String "FStar.Effect");
-      ("no_extract"                   , List []);
-      ("no_location_info"             , Bool false);
-      ("no_prelude"                   , Bool false);
-      ("no_smt"                       , Bool false);
-      ("no_plugins"                   , Bool false);
-      ("no_tactics"                   , Bool false);
-      ("normalize_pure_terms_for_extraction"
-                                      , Bool false);
-      ("output_to"                    , Unset);
-      ("krmloutput"                   , Unset);
-      ("output_deps_to"               , Unset);
-      ("prims"                        , Unset);
-      ("pretype"                      , Bool true);
-      ("prims_ref"                    , Unset);
-      ("print_bound_var_types"        , Bool false);
-      ("print_effect_args"            , Bool false);
-      ("print_expected_failures"      , Bool false);
-      ("print_full_names"             , Bool false);
-      ("print_implicits"              , Bool false);
-      ("print_universes"              , Bool false);
-      ("print_z3_statistics"          , Bool false);
-      ("prn"                          , Bool false);
-      ("proof_recovery"               , Bool false);
-      ("quake"                        , Int 0);
-      ("quake_lo"                     , Int 1);
-      ("quake_hi"                     , Int 1);
-      ("quake_keep"                   , Bool false);
-      ("query_cache"                  , Bool false);
-      ("query_stats"                  , Bool false);
-      ("read_checked_file"            , Unset);
-      ("list_plugins"                 , Bool false);
-      ("locate"                       , Bool false);
-      ("locate_lib"                   , Bool false);
-      ("locate_ocaml"                 , Bool false);
-      ("locate_file"                  , Unset);
-      ("locate_z3"                    , Unset);
-      ("read_krml_file"               , Unset);
-      ("record_hints"                 , Bool false);
-      ("record_options"               , Bool false);
-      ("report_assumes"               , Unset);
-      ("retry"                        , Bool false);
-      ("reuse_hint_for"               , Unset);
-      ("silent"                       , Bool false);
-      ("smt"                          , Unset);
-      ("smtencoding.elim_box"         , Bool false);
-      ("smtencoding.nl_arith_repr"    , String "boxwrap");
-      ("smtencoding.l_arith_repr"     , String "boxwrap");
-      ("smtencoding.valid_intro"      , Bool true);
-      ("smtencoding.valid_elim"       , Bool false);
-      ("split_queries"                , String "on_failure");
-      ("stats"                        , Bool false);
-      ("tactics_failhard"             , Bool false);
-      ("tactics_info"                 , Bool false);
-      ("tactic_raw_binders"           , Bool false);
-      ("tactic_trace"                 , Bool false);
-      ("tactic_trace_d"               , Int 0);
-
-      ("tcnorm"                       , Bool true);
-      ("timing"                       , Bool false);
-      ("trace_error"                  , Bool false);
-      ("ugly"                         , Bool false);
-      ("unthrottle_inductives"        , Bool false);
-      ("unsafe_tactic_exec"           , Bool false);
-      ("use_native_tactics"           , Unset);
-      ("use_eq_at_higher_order"       , Bool false);
-      ("use_hints"                    , Bool false);
-      ("use_hint_hashes"              , Bool false);
-      ("using_facts_from"             , Unset);
-      ("verify_module"                , List []);
-      ("warn_default_effects"         , Bool false);
-      ("z3refresh"                    , Bool false);
-      ("z3rlimit"                     , Int 5);
-      ("z3rlimit_factor"              , Int 1);
-      ("z3seed"                       , Int 0);
-      ("z3cliopt"                     , List []);
-      ("z3smtopt"                     , List []);
-      ("z3version"                    , String "4.13.3");
-      ("__no_positivity"              , Bool false);
-      ("__tactics_nbe"                , Bool false);
-      ("warn_error"                   , List []);
-      ("use_nbe"                      , Bool false);
-      ("use_nbe_for_extraction"       , Bool false);
-      ("trivial_pre_for_unannotated_effectful_fns"
-                                      , Bool true);
-      ("profile_group_by_decl"        , Bool false);
-      ("profile_component"            , Unset);
-      ("profile"                      , Unset);
-      ]
+let defaults = [
+  ("abort_on"                                  , Int 0);
+  ("admit_except"                              , Unset);
+  ("admit_smt_queries"                         , Bool false);
+  ("already_cached"                            , Unset);
+  ("cache_checked_modules"                     , Bool false);
+  ("cache_off"                                 , Bool false);
+  ("cmi"                                       , Bool false);
+  ("codegen-lib"                               , List []);
+  ("codegen"                                   , Unset);
+  ("compat_pre_core"                           , Unset);
+  ("compat_pre_typed_indexed_effects"          , Bool false);
+  ("debug_all"                                 , Bool false);
+  ("debug_all_modules"                         , Bool false);
+  ("debug"                                     , List []);
+  ("defensive"                                 , String "no");
+  ("dep"                                       , Unset);
+  ("detail_errors"                             , Bool false);
+  ("detail_hint_replay"                        , Bool false);
+  ("disallow_unification_guards"               , Bool false);
+  ("dump_module"                               , List []);
+  ("eager_subtyping"                           , Bool false);
+  ("error_contexts"                            , Bool false);
+  ("expand_include"                            , Unset);
+  ("expose_interfaces"                         , Bool false);
+  ("extract_all"                               , Bool false);
+  ("extract_module"                            , List []);
+  ("extract_namespace"                         , List []);
+  ("extract"                                   , Unset);
+  ("ext"                                       , Unset);
+  ("force"                                     , Bool false);
+  ("fuel"                                      , Unset);
+  ("help"                                      , Bool false);
+  ("hide_uvar_nums"                            , Bool false);
+  ("hint_dir"                                  , Unset);
+  ("hint_file"                                 , Unset);
+  ("hint_hook"                                 , Unset);
+  ("hint_info"                                 , Bool false);
+  ("ide"                                       , Bool false);
+  ("ide_id_info_off"                           , Bool false);
+  ("ifuel"                                     , Unset);
+  ("in"                                        , Bool false);
+  ("include"                                   , List []);
+  ("initial_fuel"                              , Int 2);
+  ("initial_ifuel"                             , Int 1);
+  ("keep_query_captions"                       , Bool true);
+  ("krmloutput"                                , Unset);
+  ("lax"                                       , Bool false);
+  ("list_plugins"                              , Bool false);
+  ("load_cmxs"                                 , List []);
+  ("load"                                      , List []);
+  ("locate"                                    , Bool false);
+  ("locate_file"                               , Unset);
+  ("locate_lib"                                , Bool false);
+  ("locate_ocaml"                              , Bool false);
+  ("locate_z3"                                 , Unset);
+  ("log_failing_queries"                       , Bool false);
+  ("log_queries"                               , Bool false);
+  ("log_types"                                 , Bool false);
+  ("lsp"                                       , Bool false);
+  ("max_fuel"                                  , Int 8);
+  ("max_ifuel"                                 , Int 2);
+  ("message_format"                            , String "auto");
+  ("MLish"                                     , Bool false);
+  ("MLish_effect"                              , String "FStar.Effect");
+  ("no_extract"                                , List []);
+  ("no_location_info"                          , Bool false);
+  ("no_plugins"                                , Bool false);
+  ("__no_positivity"                           , Bool false);
+  ("no_prelude"                                , Bool false);
+  ("normalize_pure_terms_for_extraction"       , Bool false);
+  ("no_smt"                                    , Bool false);
+  ("no_tactics"                                , Bool false);
+  ("output_deps_to"                            , Unset);
+  ("output_to"                                 , Unset);
+  ("pretype"                                   , Bool true);
+  ("prims_ref"                                 , Unset);
+  ("prims"                                     , Unset);
+  ("print"                                     , Bool false);
+  ("print_bound_var_types"                     , Bool false);
+  ("print_cache_version"                       , Bool false);
+  ("print_effect_args"                         , Bool false);
+  ("print_expected_failures"                   , Bool false);
+  ("print_full_names"                          , Bool false);
+  ("print_implicits"                           , Bool false);
+  ("print_in_place"                            , Bool false);
+  ("print_universes"                           , Bool false);
+  ("print_z3_statistics"                       , Bool false);
+  ("prn"                                       , Bool false);
+  ("profile_component"                         , Unset);
+  ("profile_group_by_decl"                     , Bool false);
+  ("profile"                                   , Unset);
+  ("proof_recovery"                            , Bool false);
+  ("quake_hi"                                  , Int 1);
+  ("quake"                                     , Int 0);
+  ("quake_keep"                                , Bool false);
+  ("quake_lo"                                  , Int 1);
+  ("query_cache"                               , Bool false);
+  ("query_stats"                               , Bool false);
+  ("read_checked_file"                         , Unset);
+  ("read_krml_file"                            , Unset);
+  ("record_hints"                              , Bool false);
+  ("record_options"                            , Bool false);
+  ("report_assumes"                            , Unset);
+  ("retry"                                     , Bool false);
+  ("reuse_hint_for"                            , Unset);
+  ("silent"                                    , Bool false);
+  ("smtencoding.elim_box"                      , Bool false);
+  ("smtencoding.l_arith_repr"                  , String "boxwrap");
+  ("smtencoding.nl_arith_repr"                 , String "boxwrap");
+  ("smtencoding.valid_elim"                    , Bool false);
+  ("smtencoding.valid_intro"                   , Bool true);
+  ("smt"                                       , Unset);
+  ("split_queries"                             , String "on_failure");
+  ("stats"                                     , Bool false);
+  ("tactic_raw_binders"                        , Bool false);
+  ("tactics_failhard"                          , Bool false);
+  ("tactics_info"                              , Bool false);
+  ("__tactics_nbe"                             , Bool false);
+  ("tactic_trace"                              , Bool false);
+  ("tactic_trace_d"                            , Int 0);
+  ("tcnorm"                                    , Bool true);
+  ("timing"                                    , Bool false);
+  ("trace_error"                               , Bool false);
+  ("trivial_pre_for_unannotated_effectful_fns" , Bool true);
+  ("ugly"                                      , Bool false);
+  ("unsafe_tactic_exec"                        , Bool false);
+  ("unthrottle_inductives"                     , Bool false);
+  ("use_eq_at_higher_order"                    , Bool false);
+  ("use_hint_hashes"                           , Bool false);
+  ("use_hints"                                 , Bool false);
+  ("use_native_tactics"                        , Unset);
+  ("use_nbe"                                   , Bool false);
+  ("use_nbe_for_extraction"                    , Bool false);
+  ("using_facts_from"                          , Unset);
+  ("verify_module"                             , List []);
+  ("warn_default_effects"                      , Bool false);
+  ("warn_error"                                , List []);
+  ("z3cliopt"                                  , List []);
+  ("z3refresh"                                 , Bool false);
+  ("z3rlimit_factor"                           , Int 1);
+  ("z3rlimit"                                  , Int 5);
+  ("z3seed"                                    , Int 0);
+  ("z3smtopt"                                  , List []);
+  ("z3version"                                 , String "4.13.3");
+]
 
 let init () =
   Debug.disable_all ();
@@ -1052,10 +1048,7 @@ let specs_with_types warn_unsafe : list (char & string & opt_type & Pprint.docum
 
   ( noshort,
     "include",
-    PostProcessed ((fun (Path s) ->
-      !check_include_dir s;
-      Find.set_include_path (Find.get_include_path () @ [s]);
-      Unset), PathStr "dir"),
+    ReverseAccumulated (PathStr "dir"),
     text "A directory in which to search for files included on the command line");
 
   ( noshort,
@@ -1918,6 +1911,15 @@ let parse_cmd_line () =
     if res = Success
     then set_error_flags()
     else res
+  in
+  (* Set the include path, and check that they exist. We do the existence check
+  here, and not in the handler for --include, to respect a --warn_error ignoring
+  this warning. *)
+  let () =
+    let paths = as_list as_string (get_option "include") in
+    paths |> List.iter (fun p -> !check_include_dir p);
+    Find.set_include_path (Find.get_include_path () @ paths);
+    ()
   in
   parsed_args_state := Some (snapshot_all ());
   res, !file_list_

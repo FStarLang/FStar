@@ -19,3 +19,7 @@ FSTAR_ROOT ?= ..
 FSTAR_EXE ?= $(abspath $(FSTAR_ROOT)/stage1/dune/_build/default/fstarc-bare/fstarc1_bare.exe)
 export FSTAR_LIB ?= $(abspath $(FSTAR_ROOT)/ulib)
 include $(FSTAR_ROOT)/mk/test.mk
+
+# For generating the output, add a bogus include and ignore the warning.
+# The output should be empty.
+$(OUTPUT_DIR)/NonexistentInclude.fst.output: OTHERFLAGS += --include bogus --warn_error -152
