@@ -229,6 +229,7 @@ let defaults = [
   ("ide_id_info_off"                           , Bool false);
   ("ifuel"                                     , Unset);
   ("in"                                        , Bool false);
+  ("include"                                   , List []);
   ("initial_fuel"                              , Int 2);
   ("initial_ifuel"                             , Int 1);
   ("keep_query_captions"                       , Bool true);
@@ -1047,10 +1048,7 @@ let specs_with_types warn_unsafe : list (char & string & opt_type & Pprint.docum
 
   ( noshort,
     "include",
-    PostProcessed ((fun (Path s) ->
-      !check_include_dir s;
-      Find.set_include_path (Find.get_include_path () @ [s]);
-      Unset), PathStr "dir"),
+    ReverseAccumulated (PathStr "dir"),
     text "A directory in which to search for files included on the command line");
 
   ( noshort,
@@ -1913,6 +1911,15 @@ let parse_cmd_line () =
     if res = Success
     then set_error_flags()
     else res
+  in
+  (* Set the include path, and check that they exist. We do the existence check
+  here, and not in the handler for --include, to respect a --warn_error ignoring
+  this warning. *)
+  let () =
+    let paths = as_list as_string (get_option "include") in
+    paths |> List.iter (fun p -> !check_include_dir p);
+    Find.set_include_path (Find.get_include_path () @ paths);
+    ()
   in
   parsed_args_state := Some (snapshot_all ());
   res, !file_list_
