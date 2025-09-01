@@ -1465,21 +1465,26 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
                 f, decls@decls'@decls''@(mk_decls fsym tkey_hash f_decls (decls@decls'@decls''))
           end
 
+      // Inr means a top-level name
       | Tm_let {lbs=(_, {lbname=Inr _}::_)} ->
         failwith "Impossible: already handled by encoding of Sig_let"
 
+      // A single non-recursive local let
       | Tm_let {lbs=(false, [{lbname=Inl x; lbtyp=t1; lbdef=e1}]); body=e2} ->
         encode_let x t1 e1 e2 env encode_term
 
       | Tm_let {lbs=(false, _::_)} ->
         failwith "Impossible: non-recursive let with multiple bindings"
 
-      | Tm_let {lbs=(_, lbs)} ->
-        let names = lbs |> List.map (fun lb ->
-                                        let {lbname = lbname} = lb in
-                                        let x = Inl?.v lbname in (* has to be Inl *)
-                                        (Ident.string_of_id x.ppname, S.range_of_bv x)) in
-        raise (Inner_let_rec names)
+      // A recursive local let. We encode this imprecisely, just generating a
+      // fresh variable.
+      | Tm_let {lbs=(true, lbs)} ->
+        let f = varops.fresh env.current_module_name "inner_let_rec" in
+        let decl = Term.DeclFun (f, [], Term_sort, Some "Inner let rec") in
+        mkFreeV <| mk_fv (f, Term_sort), [decl] |> mk_decls_trivial
+
+      | Tm_let _ ->
+        failwith "Impossible: all cases handled above (encode_term)."
 
       | Tm_match {scrutinee=e; brs=pats} ->
         encode_match e pats mk_Term_unit env encode_term
