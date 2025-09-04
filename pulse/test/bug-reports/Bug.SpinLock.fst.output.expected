@@ -1,7 +1,7 @@
 * Info at Bug.SpinLock.fst(45,2-45,4):
   - Expected failure:
   - Cannot prove:
-      Pulse.Lib.Reference.pts_to _ ?uu___
+      Pulse.Lib.Reference.pts_to __ ?__
   - In the context:
       Pulse.Lib.SpinLock.lock_alive my_lock
         (exists* (v: Prims.int). Pulse.Lib.Reference.pts_to r v)

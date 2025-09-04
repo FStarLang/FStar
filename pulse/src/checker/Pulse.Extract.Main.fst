@@ -111,7 +111,7 @@ let is_internal_binder (b:binder) : T.Tac bool =
   s = "_tbind_c" ||
   s = "_if_br" ||
   s = "_br" ||
-  s = "_"
+  s = "__"
 
 let is_return (e:st_term) : option term =
   match e.term with
@@ -347,7 +347,12 @@ let extract_dv_binder (b:Pulse.Syntax.Base.binder) (q:option Pulse.Syntax.Base.q
   : T.Tac R.binder =
   R.pack_binder {
     sort = b.binder_ty;
-    ppname = b.binder_ppname.name;
+    ppname =
+      // "__" binders become `int __1 = f();` in karamel
+      if T.unseal b.binder_ppname.name = "__" then
+        T.seal "_"
+      else
+        b.binder_ppname.name;
     attrs = T.unseal b.binder_attrs;
     qual = (match q with
       | Some Implicit -> R.Q_Implicit

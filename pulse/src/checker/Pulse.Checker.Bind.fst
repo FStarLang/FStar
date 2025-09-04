@@ -143,6 +143,12 @@ let check_bind'
   )
   else (
     let dflt () =
+      let binder =
+        // do not generate null binders, those are ignored by SMT...
+        if T.unseal binder.binder_ppname.name = "_" then
+          { binder with binder_ppname = ppname_default }
+        else
+          binder in
       let r0 = check g ctxt ctxt_typing NoHint binder.binder_ppname e1 in
       check_if_seq_lhs g ctxt _ r0 e1;
       check_binder_typ g ctxt _ r0 binder e1;

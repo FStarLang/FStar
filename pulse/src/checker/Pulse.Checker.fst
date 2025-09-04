@@ -244,11 +244,12 @@ let rec check
   else (
     maybe_trace t g0 pre0 t.range;  
     if RU.debug_at_level (fstar_env g0) "pulse.checker" then (
-      T.print (Printf.sprintf "At %s{\nerr context:\n>%s\n\n{\n\tenv=%s\ncontext:\n%s,\n\nst_term: %s\nis_source: %s}}\n"
+      T.print (Printf.sprintf "At %s{\nerr context:\n>%s\n\n{\n\tenv=%s\ncontext:\n%s,\n\nres_ppname: %s\nst_term: %s\nis_source: %s}}\n"
                 (show t.range)
                 (RU.print_context (get_context g0))
                 (show g0)
                 (show pre0)
+                (show (T.unseal res_ppname.name))
                 (show t)
                 (show (T.unseal t.source)))
     );

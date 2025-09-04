@@ -41,7 +41,7 @@ type env = {
   f : RT.fstar_top_env;
   bs : list (var & typ);
   f_bs : (f_bs : R.env { f_bs == extend_env_l f bs });
-  names : list ppname;
+  names : ns:list ppname { List.length ns == List.length bs };
   m : m:bmap { related bs m /\ L.length names == L.length bs };
   ctxt: Pulse.RuntimeUtils.context;
 
@@ -52,13 +52,11 @@ type env = {
 let fstar_env g = RU.env_set_context g.f g.ctxt
 
 let bindings g = g.bs
-let rec bindings_with_ppname_aux (bs:list (var & typ)) (names:list ppname)
-  : T.Tac (list (ppname & var & typ)) =
-
+let rec bindings_with_ppname_aux (bs:list (var & typ)) (names:list ppname { List.length bs == List.length names })
+  : list (ppname & var & typ) =
   match bs, names with
   | [], [] -> []
   | (x, t)::bs, n::names -> (n, x, t)::(bindings_with_ppname_aux bs names)
-  | _ -> T.fail "impossible! env bs and names have different lengths"
 let bindings_with_ppname g = bindings_with_ppname_aux g.bs g.names  
 
 
@@ -104,7 +102,7 @@ let mk_env_dom _ = assert (Set.equal (Map.domain empty_bmap) Set.empty)
 let push_binding g x p t =
   { g with bs = (x, t)::g.bs;
            names = p::g.names;
-           f_bs = RT.extend_env g.f_bs x t;
+           f_bs = R.push_binding g.f_bs { ppname = p.name; uniq = x; sort = t };
            m = Map.upd g.m x t }
 
 let push_binding_bs _ _ _ _ = ()
@@ -129,12 +127,20 @@ let rec append_memP (#a:Type) (l1 l2:list a) (x:a)
   | [] -> ()
   | _::tl -> append_memP tl l2 x
 
+let rec extend_env_impl (f:R.env) (g:env_bindings) (ns:list ppname { List.length ns == List.length g }) :
+    f':R.env { f' == extend_env_l f g } =
+  match g, ns with
+  | [], [] -> f
+  | (x, t)::g, n::ns ->
+    let f = extend_env_impl f g ns in
+    R.push_binding f { ppname = (n <: ppname).name; uniq = x; sort = t }
+
 let push_env (g1:env) (g2:env { disjoint g1 g2 }) : env =
   assume (extend_env_l (extend_env_l g1.f g1.bs) g2.bs == extend_env_l g1.f (g2.bs @ g1.bs));
   {
     f = g1.f;
     bs = g2.bs @ g1.bs;
-    f_bs = extend_env_l g1.f_bs g2.bs;
+    f_bs = extend_env_impl g1.f_bs g2.bs g2.names;
     names= g2.names @ g1.names;
     m = Map.concat g2.m g1.m;
     ctxt = g1.ctxt ;
@@ -177,7 +183,7 @@ let rec remove_binding_aux (g:env)
                                                                fst b =!= x));
 
     let g' = {g with bs = prefix;
-                     f_bs = extend_env_l g.f prefix; // Recomputing, not ideal
+                     f_bs = extend_env_impl g.f prefix prefix_names; // Recomputing, not ideal
                      names=prefix_names;
                      m
     } in
@@ -192,14 +198,14 @@ let remove_binding g =
   remove_binding_aux g [] [] g.bs g.names
 
 let remove_latest_binding g =
-  match g.bs with
-  | (x, t)::rest ->
+  match g.bs, g.names with
+  | (x, t)::rest, _::names_rest ->
     let m = Map.restrict (Set.complement (Set.singleton x)) (Map.upd g.m x tm_unknown) in
     // we need uniqueness invariant in the representation
     assume (forall (b:var & typ). List.Tot.memP b rest <==> (List.Tot.memP b g.bs /\
                                                              fst b =!= x));
     let g' = {g with bs = rest;
-                     f_bs = extend_env_l g.f rest; // Recomputing, not ideal
+                     f_bs = extend_env_impl g.f rest names_rest; // Recomputing, not ideal
                      names=L.tl g.names;
                      m;
     } in
@@ -278,7 +284,7 @@ let diff g1 g2 =
   let g3 = {
     f = g1.f;
     bs = bs3;
-    f_bs = extend_env_l g1.f bs3; // Recomputing, but probably ok
+    f_bs = extend_env_impl g1.f bs3 names3; // Recomputing, but probably ok
     names = names3;
     m = m3;
     ctxt = g1.ctxt;
@@ -393,7 +399,7 @@ let env_to_doc' (simplify:bool) (e:env) : T.Tac document =
       vtns |> T.filter (fun ((n, t), x) ->
         let is_unit = FStar.Reflection.TermEq.term_eq t (`unit) in
         let x : ppname = x in
-        let is_wild = T.unseal x.name = "_" in
+        let is_wild = T.unseal x.name = "__" in
         not (is_unit && is_wild)
       )
     else
