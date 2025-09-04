@@ -43,7 +43,8 @@ type ppname = {
 }
 
 let ppname_default =  {
-    name = FStar.Sealed.seal "_";
+    // This used to be "_", but that is a *null binder* and behaves very magically
+    name = FStar.Sealed.seal "__";
     range = FStar.Range.range_0
 }
 

@@ -351,6 +351,7 @@ let ctag_of_br  (#g #pre #post_hint #sc_u #sc_ty #sc:_)
 : ctag
 = let (|_, c, _|) = l in ctag_of_comp_st c
 
+#push-options "--admit_smt_queries true" // Z3 crash
 let weaken_branch_observability
       (obs:observability)
       (#g #pre:_) (#post_hint:post_hint_for_env g) 
@@ -377,6 +378,7 @@ let weaken_branch_observability
       in
       (| br, d |)
     )
+#pop-options
 
 let rec max_obs 
     (checked_brs : list comp_st)

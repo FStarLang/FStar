@@ -30,7 +30,8 @@ module Pprint = FStar.Pprint
 type binding = var & typ
 type env_bindings = list binding
 
-let extend_env_l (f:R.env) (g:env_bindings) : Tot R.env =
+// This function is marked ghost because it should not be used as it renames all variables to "x"
+let extend_env_l (f:R.env) (g:env_bindings) : GTot R.env =
   L.fold_right
     (fun (x, b) g ->
       RT.extend_env g x b)
@@ -45,7 +46,7 @@ val fstar_env (g:env) : RT.fstar_top_env
 // most recent binding at the head of the list
 //
 val bindings (g:env) : env_bindings
-val bindings_with_ppname (g:env) : T.Tac (list (ppname & var & typ))
+val bindings_with_ppname (g:env) : list (ppname & var & typ)
 
 (* Returns an F* reflection environment.
 The result is the same as taking the initial F*
