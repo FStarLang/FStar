@@ -392,8 +392,7 @@ let binomial_prime p k =
       factorial_mod_prime p (p - k)
     end
 
-#push-options "--z3rlimit 40"
-val freshman_aux (p:int{is_prime p}) (a b:int) (i:pos{i < p}): Lemma
+val freshman_aux (p:nat{is_prime p}) (a b:int) (i:pos{i < p}): Lemma
   ((binomial p i * pow a (p - i) * pow b i) % p == 0)
 let freshman_aux p a b i =
   calc (==) {
@@ -402,10 +401,10 @@ let freshman_aux p a b i =
     (binomial p i * (pow a (p - i) * pow b i)) % p;
     == { lemma_mod_mul_distr_l (binomial p i) (pow a (p - i) * pow b i) p }
     (binomial p i % p * (pow a (p - i) * pow b i)) % p;
-    == { binomial_prime p i }
+    == { binomial_prime p i;
+         lemma_mod_mul_distr_l (binomial p i) (pow a (p - i) * pow b i) p }
     0;
   }
-#pop-options
 
 val freshman (p:int{is_prime p}) (a b:int) : Lemma
   (pow (a + b) p % p = (pow a p + pow b p) % p)
