@@ -225,10 +225,10 @@ val get_range (g:env) (r:option range) : T.Tac range
 
 val fail_doc_env (#a:Type) (with_env:bool)
                  (g:env) (r:option range) (msg:list Pprint.document)
-  : T.TacH a (requires fun _ -> True) (ensures fun _ r -> FStar.Tactics.Result.Failed? r)
+  : T.TacH a (requires True) (ensures fun _ -> False)
 
 let fail_doc (#a:Type) (g:env) (r:option range) (msg:list Pprint.document)
-  : T.TacH a (requires fun _ -> True) (ensures fun _ r -> FStar.Tactics.Result.Failed? r)
+  : T.TacH a (requires True) (ensures fun _ -> False)
   = fail_doc_env false g r msg
 
 val warn_doc (g:env) (r:option range) (msg:list Pprint.document)
@@ -241,7 +241,7 @@ val info_doc_env (g:env) (r:option range) (msg:list Pprint.document)
   : T.Tac unit
 
 val fail (#a:Type) (g:env) (r:option range) (msg:string) 
-  : T.TAC a (fun _ post -> forall ex ps. post FStar.Tactics.Result.(Failed ex ps))
+  : T.TacH a (requires True) (ensures fun _ -> False)
 
 val warn (g:env) (r:option range) (msg:string)
   : T.Tac unit
@@ -252,7 +252,7 @@ val info (g:env) (r:option range) (msg:string)
 val fail_doc_with_subissues #a (g:env) (ro : option range)
   (sub : list Issue.issue)
   (msg : list Pprint.document)
-  : T.TacH a (requires fun _ -> True) (ensures fun _ r -> FStar.Tactics.Result.Failed? r)
+  : T.TacH a (requires True) (ensures fun _ -> False)
 
 val info_doc_with_subissues (g:env) (r:option range)
   (sub : list Issue.issue)

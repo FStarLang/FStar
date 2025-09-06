@@ -285,7 +285,7 @@ let rec join_comps
   (c_else:comp_st)
   (e_else_typing:st_typing g_else e_else c_else)
   (post:post_hint_t)
-  : TacS (c:comp_st &
+  : T.TacH (c:comp_st &
           st_typing g_then e_then c &
           st_typing g_else e_else c)
          (requires

@@ -58,14 +58,14 @@ val mk_bind (g:env)
             c:comp_st { st_comp_of_comp c == st_comp_with_pre (st_comp_of_comp c2) pre /\
                         comp_post_matches_hint c post_hint } &
             st_typing g t c)
-           (requires fun _ ->
-              let _, x = px in
+           (requires
+              (let _, x = px in
               comp_pre c1 == pre /\
               None? (lookup g x) /\
               (~(x `Set.mem` freevars_st e2)) /\
               open_term (comp_post c1) x == comp_pre c2 /\
-              (~ (x `Set.mem` freevars (comp_post c2))))
-           (ensures fun _ _ -> True)
+              (~ (x `Set.mem` freevars (comp_post c2)))))
+           (ensures fun _ -> True)
 
 
 val bind_res_and_post_typing (g:env) (s2:comp_st) (x:var { fresh_wrt x g (freevars (comp_post s2)) })

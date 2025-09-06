@@ -169,7 +169,6 @@ let rec slprop_equiv_typing (#g:_) (#t0 #t1:term) (v:slprop_equiv g t0 t1)
         let t0_typing = d1 t1_typing in
         construct_forall_typing #g #u #b #t0 x b_typing t0_typing)
         
-#push-options "--z3rlimit_factor 8 --ifuel 1 --fuel 2"
 let bind_t (case_c1 case_c2:comp_st -> bool) =
       (g:env) ->
       (pre:term) ->
@@ -190,15 +189,14 @@ let bind_t (case_c1 case_c2:comp_st -> bool) =
             c:comp_st { st_comp_of_comp c == st_comp_with_pre (st_comp_of_comp c2) pre  /\
                         comp_post_matches_hint c post_hint } &
             st_typing g t c)
-           (requires fun _ ->
-              let _, x = px in
+           (requires
+              (let _, x = px in
               comp_pre c1 == pre /\
               None? (lookup g x) /\
               (~(x `Set.mem` freevars_st e2)) /\
               open_term (comp_post c1) x == comp_pre c2 /\
-              (~ (x `Set.mem` freevars (comp_post c2))))
-           (ensures fun _ _ -> True)
-#pop-options
+              (~ (x `Set.mem` freevars (comp_post c2)))))
+           (ensures fun _ -> True)
 
 let mk_bind_st_st
   : bind_t C_ST? C_ST?
@@ -359,18 +357,18 @@ let rec mk_bind (g:env)
               st_comp_of_comp c == st_comp_with_pre (st_comp_of_comp c2) pre /\
               comp_post_matches_hint c post_hint } &
             st_typing g t c)
-           (requires fun _ ->
-              let _, x = px in
+           (requires
+              (let _, x = px in
               comp_pre c1 == pre /\
               None? (lookup g x) /\
               (~(x `Set.mem` freevars_st e2)) /\
               open_term (comp_post c1) x == comp_pre c2 /\
-              (~ (x `Set.mem` freevars (comp_post c2))))
-           (ensures fun _ _ -> True) =
+              (~ (x `Set.mem` freevars (comp_post c2)))))
+           (ensures fun _ -> True) =
   let _, x = px in
   let b = nvar_as_binder px (comp_res c1) in
-  let fail_bias (#a:Type) tag
-  : T.TacH a (requires fun _ -> True) (ensures fun _ r -> FStar.Tactics.Result.Failed? r)
+  let fail_bias tag
+  : T.TacH _ (requires True) (ensures fun _ -> False)
   = let open Pulse.PP in
     fail_doc g (Some e1.range)
       [text "Cannot compose computations in this " ^/^ text tag ^/^ text " block:";
