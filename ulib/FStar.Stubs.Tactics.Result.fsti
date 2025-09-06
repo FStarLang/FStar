@@ -23,6 +23,3 @@ open FStar.Stubs.Tactics.Types
 
 noeq type __result a =
     | Success : v:a -> ps:proofstate -> __result a
-    | Failed  : exn:exn         (* Error *)
-              -> ps:proofstate  (* The proofstate at time of failure *)
-              -> __result a

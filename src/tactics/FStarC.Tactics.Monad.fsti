@@ -54,9 +54,6 @@ val fail : string -> tac 'a
 (* Catch exceptions, restore UF graph on a failure *)
 val catch : tac 'a -> tac (either exn 'a)
 
-(* Catch exceptions, but keep UF graph at the time of the failure *)
-val recover : tac 'a -> tac (either exn 'a)
-
 (* Try running a tactic. If it fails, return None. *)
 val trytac : tac 'a -> tac (option 'a)
 
