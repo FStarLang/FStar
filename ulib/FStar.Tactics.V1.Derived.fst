@@ -49,11 +49,11 @@ let goals () : Tac (list goal) = goals_of (get ())
 let smt_goals () : Tac (list goal) = smt_goals_of (get ())
 
 let fail (#a:Type) (m:string)
-  : TAC a (fun ps post -> post (Failed (TacticFailure (mkmsg m, None)) ps))
+  : TacH a (requires fun _ -> True) (ensures fun _ _ -> False)
   = raise #a (TacticFailure (mkmsg m, None))
 
 let fail_silently (#a:Type) (m:string)
-  : TAC a (fun _ post -> forall ps. post (Failed (TacticFailure (mkmsg m, None)) ps))
+  : TacH a (requires fun _ -> True) (ensures fun _ _ -> False)
   = set_urgency 0;
     raise #a (TacticFailure (mkmsg m, None))
 
@@ -399,9 +399,7 @@ let fresh_implicit_binder t : Tac binder =
     fresh_implicit_binder_named ("x" ^ string_of_int i) t
 
 let guard (b : bool) : TacH unit (requires (fun _ -> True))
-                                 (ensures (fun ps r -> if b
-                                                       then Success? r /\ Success?.ps r == ps
-                                                       else Failed? r))
+                                 (ensures fun ps r -> b /\ (Success?.ps r == ps))
         (* ^ the proofstate on failure is not exactly equal (has the psc set) *)
     =
     if not b then

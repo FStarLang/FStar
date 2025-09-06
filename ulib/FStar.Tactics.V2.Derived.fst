@@ -69,29 +69,29 @@ let map_optRO (f:'a -> TacRO 'b) (x:option 'a) : TacRO (option 'b) =
   | Some x -> Some (f x)
 
 let fail_doc_at (#a:Type) (m:error_message) (r:option range)
-  : TAC a (fun ps post -> forall r. post (Failed (TacticFailure (m, r)) ps))
+  : TacH a (requires fun _ -> True) (ensures fun _ _ -> False)
   = let r = map_optRO fixup_range r in
     raise #a (TacticFailure (m, r))
 
 let fail_doc (#a:Type) (m:error_message)
-  : TAC a (fun ps post -> post (Failed (TacticFailure (m, None)) ps))
+  : TacH a (requires fun _ -> True) (ensures fun _ _ -> False)
   = raise #a (TacticFailure (m, None))
 
 let fail_at (#a:Type) (m:string) (r:option range)
-  : TAC a (fun ps post -> forall r. post (Failed (TacticFailure (mkmsg m, r)) ps))
+  : TacH a (requires fun _ -> True) (ensures fun _ _ -> False)
   = fail_doc_at (mkmsg m) r
 
 let fail (#a:Type) (m:string)
-  : TAC a (fun ps post -> forall r. post (Failed (TacticFailure (mkmsg m, r)) ps))
+  : TacH a (requires fun _ -> True) (ensures fun _ _ -> False)
   = fail_at m None
 
 let fail_silently_doc (#a:Type) (m:error_message)
-  : TAC a (fun _ post -> forall r ps. post (Failed (TacticFailure (m, r)) ps))
+  : TacH a (requires fun _ -> True) (ensures fun _ _ -> False)
   = set_urgency 0;
     raise #a (TacticFailure (m, None))
 
 let fail_silently (#a:Type) (m:string)
-  : TAC a (fun _ post -> forall r ps. post (Failed (TacticFailure (mkmsg m, r)) ps))
+  : TacH a (requires fun _ -> True) (ensures fun _ _ -> False)
   = fail_silently_doc (mkmsg m)
 
 (** Return the current *goal*, not its type. (Ignores SMT goals) *)
@@ -459,9 +459,7 @@ let fresh_implicit_binder (t : typ) : Tac binder =
   }
 
 let guard (b : bool) : TacH unit (requires (fun _ -> True))
-                                 (ensures (fun ps r -> if b
-                                                       then Success? r /\ Success?.ps r == ps
-                                                       else Failed? r))
+                                 (ensures fun ps r -> b /\ (Success?.ps r == ps))
         (* ^ the proofstate on failure is not exactly equal (has the psc set) *)
     =
     if not b then

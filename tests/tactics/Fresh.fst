@@ -32,6 +32,6 @@ let _ = assert True
                                     fail "" <: unit) in
                 let n = fresh () in
                 let n = fresh () in
-                if n = 11
+                if n = 6
                 then ()
-                else fail "WRONG!")
+                else fail ("WRONG!" ^ string_of_int n))
