@@ -116,10 +116,7 @@ let run (t:tac 'a) (ps:proofstate) : __result 'a =
     t.tac_f ps
 
 let run_safe t ps =
-    if Options.tactics_failhard ()
-    then run t ps
-    else try run t ps
-    with | e -> Failed (e, ps)
+    run t ps
 
 let ret (x:'a) : tac 'a =
     mk_tac (fun ps -> Success (x, ps))
@@ -127,8 +124,7 @@ let ret (x:'a) : tac 'a =
 let bind (t1:tac 'a) (t2:'a -> tac 'b) : tac 'b =
     mk_tac (fun ps ->
             match run t1 ps with
-            | Success (a, q)  -> run (t2 a) q
-            | Failed (msg, q) -> Failed (msg, q))
+            | Success (a, q)  -> run (t2 a) q)
 
 instance monad_tac : monad tac = {
     return = ret;
@@ -144,7 +140,7 @@ let get : tac proofstate =
     mk_tac (fun ps -> Success (ps, ps))
 
 let traise e =
-    mk_tac (fun ps -> Failed (e, ps))
+    mk_tac (fun ps -> raise e)
 
 let do_log ps (f : unit -> unit) : unit =
   if ps.tac_verb_dbg then
@@ -159,7 +155,7 @@ let fail_doc (msg:error_message) =
     mk_tac (fun ps ->
         if !dbg_TacFail then
           do_dump_proofstate ps ("TACTIC FAILING: " ^ renderdoc (hd msg));
-        Failed (TacticFailure (msg, None), ps)
+        raise <| TacticFailure (msg, None)
     )
 
 let fail msg = fail_doc [text msg]
@@ -168,22 +164,14 @@ let catch (t : tac 'a) : tac (either exn 'a) =
     mk_tac (fun ps ->
             let idtable = !ps.main_context.identifier_info in
             let tx = UF.new_transaction () in
-            match run t ps with
-            | Success (a, q) ->
-                UF.commit tx;
-                Success (Inr a, q)
-            | Failed (m, q) ->
+            try
+              let Success (a, q) = run t ps in
+              UF.commit tx;
+              Success (Inr a, q)
+            with | m ->
                 UF.rollback tx;
                 ps.main_context.identifier_info := idtable;
-                let ps = { ps with freshness = q.freshness } in //propagate the freshness even on failures
                 Success (Inl m, ps)
-           )
-
-let recover (t : tac 'a) : tac (either exn 'a) =
-    mk_tac (fun ps ->
-            match run t ps with
-            | Success (a, q) -> Success (Inr a, q)
-            | Failed (m, q)  -> Success (Inl m, q)
            )
 
 let trytac (t : tac 'a) : tac (option 'a) =
@@ -373,15 +361,10 @@ let goal_of_guard (reason:string) (e:Env.env)
 
 let wrap_err_doc (pref:error_message) (t : tac 'a) : tac 'a =
     mk_tac (fun ps ->
-            match run t ps with
-            | Success (a, q) ->
-                Success (a, q)
-
-            | Failed (TacticFailure (msg, r), q) ->
-                Failed (TacticFailure (pref @ msg, r), q)
-
-            | Failed (e, q) ->
-                Failed (e, q)
+            try run t ps with
+            | TacticFailure (msg, r) ->
+              raise (TacticFailure (pref @ msg, r))
+            | e -> raise e
            )
 
 let wrap_err (pref:string) (t : tac 'a) : tac 'a =

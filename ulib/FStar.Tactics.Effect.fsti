@@ -50,8 +50,7 @@ let tac_bind_wp (#a #b:Type) (wp_f:tac_wp_t a) (wp_g:a -> tac_wp_t b) : tac_wp_t
   fun ps post ->
   wp_f ps (fun r ->
            match r with
-           | Success x ps -> wp_g x ps post
-           | Failed ex ps -> post (Failed ex ps))
+           | Success x ps -> wp_g x ps post)
 
 /// An optimization to name the continuation
 
@@ -83,21 +82,11 @@ val tac_bind_interleave_begin : unit
 let tac_bind (a:Type) (b:Type)
   (wp_f:tac_wp_t a)
   (wp_g:a -> tac_wp_t b)
-  (r1 r2:range)
   (t1:tac_repr a wp_f)
   (t2:(x:a -> tac_repr b (wp_g x))) : tac_repr b (tac_wp_compact b (tac_bind_wp wp_f wp_g)) =
   fun ps ->
-  let ps = set_proofstate_range ps r1 in
-  let ps = incr_depth ps in
-  let r = t1 ps in
-  match r with
-  | Success a ps' ->
-    let ps' = set_proofstate_range ps' r2 in
-    // Force evaluation of __tracepoint q even on the interpreter
-    begin match tracepoint ps' with
-          | true -> t2 a (decr_depth ps')
-    end
-  | Failed e ps' -> Failed e ps'
+  let Success a ps' = t1 ps in
+  t2 a ps'
 #pop-options
 
 
@@ -142,7 +131,7 @@ let tac_close (a b:Type)
 /// And the bind combinator has range arguments
 ///   that will be provided when the effect is reified
 
-[@@ default_effect "FStar.Tactics.Effect.Tac"; bind_has_range_args]
+[@@ default_effect "FStar.Tactics.Effect.Tac"]
 reflectable
 effect {
   TAC (a:Type) (wp:tac_wp_t a)
@@ -162,7 +151,7 @@ effect TacH (a:Type) (pre : proofstate -> Tot Type0) (post : proofstate -> __res
 effect Tac (a:Type) = TacH a (requires (fun _ -> True)) (ensures (fun _ _ -> True))
 
 (* Metaprograms that succeed *)
-effect TacS (a:Type) = TacH a (requires (fun _ -> True)) (ensures (fun _ps r -> Success? r))
+effect TacS (a:Type) = Tac a
 
 (* Always succeed, no effect *)
 effect TacRO (a:Type) = TAC a (fun ps post -> forall r. post (Success r ps))
@@ -185,10 +174,6 @@ sub_effect DIV ~> TAC = lift_div_tac
 let get ()
   : TAC proofstate (fun ps post -> post (Success ps ps))
   = TAC?.reflect (fun ps -> Success ps ps)
-
-let raise (#a:Type) (e:exn)
-  : TAC a (fun ps post -> post (Failed e ps))
-  = TAC?.reflect (fun ps -> Failed #a e ps)
 
 
 /// assert p by t

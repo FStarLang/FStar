@@ -151,10 +151,6 @@ let unembed_tactic_0 (eb:embedding 'b) (embedded_tac_b:term) (ncb:norm_cb) : tac
       set ps;!
       return b
 
-    | Some (Failed (e, ps)) ->
-      set ps;!
-      traise e
-
     | None ->
         (* The tactic got stuck, try to provide a helpful error message. *)
         let h_result = t_head_of result in
@@ -189,10 +185,6 @@ let unembed_tactic_nbe_0 (eb:NBET.embedding 'b) (cb:NBET.nbe_cbs) (embedded_tac_
     | Some (Success (b, ps)) ->
       set ps;!
       return b
-
-    | Some (Failed (e, ps)) ->
-      set ps;!
-      traise e
 
     | None ->
         let open FStarC.Pprint in
@@ -300,7 +292,8 @@ let run_unembedded_tactic_on_ps
     (*     Format.print1 "Running tactic with goal = (%s) {\n" (show typ); *)
     let res =
       Profiling.profile
-        (fun () -> run_safe (tau arg) ps)
+        (fun () -> 
+          try Inr (run_safe (tau arg) ps) with | e -> Inl e)
         (Some (Ident.string_of_lid (Env.current_module ps.main_context)))
         "FStarC.Tactics.Interpreter.run_safe"
     in
@@ -308,7 +301,7 @@ let run_unembedded_tactic_on_ps
         Format.print_string "}\n";
 
     match res with
-    | Success (ret, ps) ->
+    | Inr (Success (ret, ps)) ->
         if !dbg_Tac then
             do_dump_proofstate ps "at the finish line";
 
@@ -352,11 +345,11 @@ let run_unembedded_tactic_on_ps
         (remaining_smt_goals, ret)
 
     (* Catch normal errors to add a "Tactic failed" at the top. *)
-    | Failed (Errors.Error (code, msg, rng, ctx), ps) ->
+    | Inl (Errors.Error (code, msg, rng, ctx)) ->
       let msg = FStarC.Pprint.doc_of_string "Tactic failed" :: msg in
       raise (Errors.Error (code, msg, rng, ctx))
 
-    | Failed (Errors.Stop, ps) ->
+    | Inl Errors.Stop ->
       if FStarC.Errors.get_err_count () > 0
       then raise Errors.Stop
       else
@@ -368,7 +361,7 @@ let run_unembedded_tactic_on_ps
         ]
 
     (* Any other error, including exceptions being raised by the metaprograms. *)
-    | Failed (e, ps) ->
+    | Inl e ->
         if ps.dump_on_failure then
           do_dump_proofstate ps "at the time of failure";
         let open FStarC.Pprint in
@@ -380,7 +373,11 @@ let run_unembedded_tactic_on_ps
                 [doc_of_string <| "Uncaught exception: " ^ (show t)],
                 None
             | e ->
-                raise e
+              match FStarC.Errors.issue_of_exn e with
+              | Some { issue_range; issue_msg } ->
+                issue_msg, issue_range
+              | None ->
+                [arbitrary_string (FStarC.Util.message_of_exn e)], None
         in
         let doc, rng = texn_to_doc e in
         let rng =

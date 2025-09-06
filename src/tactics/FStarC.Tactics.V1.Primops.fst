@@ -58,11 +58,7 @@ let ops =
     (fun _ -> catch)
     (fun _ -> catch);
 
-  mk_tac_step_2 1 "recover"
-    #e_any #(TI.e_tactic_thunk e_any) #(e_either E.e_exn e_any)
-    #NBET.e_any #(TI.e_tactic_nbe_thunk NBET.e_any) #(NBET.e_either E.e_exn_nbe NBET.e_any)
-    (fun _ -> recover)
-    (fun _ -> recover);
+  mk_tac_step_1 0 "raise_core" (traise <: exn -> tac unit) (traise <: exn -> tac unit) ;
 
   mk_tac_step_1 0 "intro" intro intro ;
   mk_tac_step_1 0 "intro_rec" intro_rec intro_rec ;
