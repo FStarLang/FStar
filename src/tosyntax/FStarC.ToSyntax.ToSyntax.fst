@@ -1381,7 +1381,7 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term & an
         | Var l -> l
         | _ ->
           raise_error rty Errors.Error_BadLetOpenRecord
-            (Format.fmt1 "This type must be a (possibly applied) record name" (term_to_string rty))
+            (Format.fmt1 "This type must be a (possibly applied) record name: %s" (term_to_string rty))
       in
       let record =
         match Env.try_lookup_record_type env tycon_name with
