@@ -21,6 +21,7 @@ open Pulse.Typing
 open Pulse.Checker.Pure
 open Pulse.Checker.Base
 open Pulse.Checker.Prover
+open Pulse.Checker.ImpureSpec
 open Pulse.PP
 module T = FStar.Tactics.V2
 module R = FStar.Reflection.V2
@@ -118,6 +119,12 @@ let check
 
   let g = push_context "check_rewrite" t.range g in
   let Tm_Rewrite {t1=p; t2=q; tac_opt; elaborated} = t.term in
+  let p, q =
+    if elaborated then
+      p, q
+    else
+      let ctxt = { ctxt_now = pre; ctxt_old = None } in
+      purify_term g ctxt p, purify_term g ctxt q in
   let (| p, p_typing |), (| q, q_typing |) =
     check_slprop g p, check_slprop g q in
 

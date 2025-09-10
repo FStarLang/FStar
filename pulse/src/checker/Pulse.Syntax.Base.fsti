@@ -179,6 +179,7 @@ type proof_hint_type =
       pairs:list (term & term);
       goal: option term;
       tac_opt : option term; (* optional tactic *)
+      elaborated: bool; (* internally created by the checker, don't purify *)
     }
   | REWRITE {
       t1:slprop;

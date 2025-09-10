@@ -30,7 +30,6 @@ open Pulse.Readback
 open Pulse.Syntax.Naming
 open Pulse.Reflection.Util
 open Pulse.PP
-open Pulse.Checker.Prover.Substs
 open Pulse.Show
 
 let old_lid = Pulse.Reflection.Util.mk_pulse_lib_core_lid "old"
@@ -432,6 +431,11 @@ let run_elim_ctxt (g: env) (ctxt: ctxt) =
       let g, ys, old = run_elim g old in
       g, ys, Some old in
   g, xs @ ys, { ctxt_old = old; ctxt_now = now }
+
+let purify_term (g: env) (ctxt: ctxt) (t: term) : T.Tac term =
+  let g', xs, ctxt = run_elim_ctxt g ctxt in
+  let _, t = symb_eval_subterms g ctxt t in
+  t
 
 let purify_spec (g: env) (ctxt: ctxt) (t0: slprop) : T.Tac slprop =
   let t = t0 in
