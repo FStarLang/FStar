@@ -1,12 +1,11 @@
 module Part5.Pow2
 
-(* Now (2023/08/30), importing the tactics module bring FStar.Pprint
-into scope, which depends on FStar.Char, which depends on FStar.UInt.
-We therefore get some facts about pow2 (FStar.UInt.pow2_values) that
-break this example (break = make more things work than they should). So,
+(* Now (2025/7/16), the pow2_values lemma is in FStar.Math.Lemmas, which
+we mention and therefore depend on. We therefore get some facts
+about pow2 that break this example (break = make more things work than they should). So,
 ignore these facts here to retain the example. What we would really want
 though is a way to scope SMT patterns. *)
-#set-options "--using_facts_from -FStar.UInt"
+#set-options "--using_facts_from -FStar.Math.Lemmas"
 
 [@@expect_failure [19]]
 //SNIPPET_START: pow2_0
