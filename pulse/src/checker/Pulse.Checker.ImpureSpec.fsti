@@ -25,6 +25,8 @@ noeq type ctxt = {
   ctxt_old: option slprop;
 }
 
+val purify_term (g: env) (ctxt: ctxt) (t: term) : T.Tac term
+
 val purify_spec (g: env) (ctxt: ctxt) (t: slprop) :
   T.Tac slprop
 

@@ -106,3 +106,9 @@ fn test11 (x:ref (ref int))
 {
   !(!x);
 }
+
+fn test12 ()
+{
+  let mut x = 2;
+  rewrite x |-> !x as x |-> (0 + !x * 1);
+}
