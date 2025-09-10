@@ -19,6 +19,7 @@ module Pulse.Checker.AssertWithBinders
 open Pulse.Syntax
 open Pulse.Typing
 open Pulse.Checker.Base
+open Pulse.Checker.ImpureSpec
 open Pulse.Elaborate.Pure
 open Pulse.Typing.Env
 
@@ -486,6 +487,7 @@ let check
 
     check_unfoldable g v;
 
+    let v_opened = purify_term g { ctxt_now = pre; ctxt_old = None } v_opened in
     let v_opened, t_rem = PC.instantiate_term_implicits (push_env g uvs) v_opened None false in
 
     let uvs, v_opened =

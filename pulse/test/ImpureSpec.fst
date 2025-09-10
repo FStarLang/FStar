@@ -112,3 +112,12 @@ fn test12 ()
   let mut x = 2;
   rewrite x |-> !x as x |-> (0 + !x * 1);
 }
+
+let p13 (x: ref int) = live x
+fn test13 ()
+{
+  let mut x = 42;
+  let mut y = x;
+  fold p13 (!y);
+  unfold p13 (!y);
+}
