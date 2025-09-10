@@ -470,10 +470,11 @@ let subst_proof_hint (ht:proof_hint_type) (ss:subst)
     | ASSERT { p; elaborated } -> ASSERT { p=subst_term p ss; elaborated }
     | UNFOLD { names; p } -> UNFOLD {names; p=subst_term p ss}
     | FOLD { names; p } -> FOLD { names; p=subst_term p ss }
-    | RENAME { pairs; goal; tac_opt } ->
+    | RENAME { pairs; goal; tac_opt; elaborated } ->
       RENAME { pairs=subst_term_pairs pairs ss;
                goal=subst_term_opt goal ss;
                tac_opt=subst_term_opt tac_opt ss;
+               elaborated;
              }
     | REWRITE { t1; t2; tac_opt; elaborated } ->
       REWRITE { t1=subst_term t1 ss;

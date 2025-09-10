@@ -121,3 +121,10 @@ fn test13 ()
   fold p13 (!y);
   unfold p13 (!y);
 }
+
+fn test14 ()
+{
+  let mut x = 42;
+  assert live x ** pure (!x == 42);
+  rewrite each !x as 42;
+}

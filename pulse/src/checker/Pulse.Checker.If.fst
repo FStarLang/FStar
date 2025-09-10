@@ -77,7 +77,7 @@ let check
       let t =
         mk_term (Tm_ProofHintWithBinders {
           binders = [];
-          hint_type = RENAME { pairs = [(b, eq_v)]; goal=None; tac_opt=None; };
+          hint_type = RENAME { pairs = [(b, eq_v)]; goal=None; tac_opt=None; elaborated=true };
           t = br;
         }) br.range
       in
