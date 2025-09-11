@@ -166,7 +166,7 @@ let log_issues                   = from_tac_1 "B.log_issues" B.log_issues
 
 (* The handlers need to "embed" their argument. *)
 let catch   (t: unit -> 'a __tac): ((exn, 'a) either) __tac = from_tac_1 "TM.catch" TM.catch   (to_tac_0 (t ()))
-let recover (t: unit -> 'a __tac): ((exn, 'a) either) __tac = from_tac_1 "TM.recover" TM.recover (to_tac_0 (t ()))
+let raise_core = from_tac_1 "TM.raise" TM.traise
 
 let ctrl_rewrite
     (d : direction)
