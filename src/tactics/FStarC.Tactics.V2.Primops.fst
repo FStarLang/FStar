@@ -85,6 +85,8 @@ let ops = [
   (* Tactic builtin steps *)
 
   unseal_step;
+  
+  mk_tac_step_1 0 "get" (fun () -> get) (fun () -> get);
 
   mk_tac_step_1 0 "fixup_range" fixup_range fixup_range;
 

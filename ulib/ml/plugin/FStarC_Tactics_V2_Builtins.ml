@@ -9,50 +9,30 @@ module B        = FStarC_Tactics_V2_Basic
 module TM       = FStarC_Tactics_Monad
 module CTRW     = FStarC_Tactics_CtrlRewrite
 
-type ('a,'wp) tac_repr = proofstate -> 'a __result
-type 'a __tac = ('a, unit) tac_repr
-
-let interpret_tac (s:string) (t: 'a TM.tac) (ps: proofstate): 'a __result =
-  FStarC_Errors.with_ctx
-    ("While running primitive " ^ s ^ " (called from within a plugin)")
-    (fun () -> TM.run t ps)
-
-let uninterpret_tac (t: 'a __tac) (ps: proofstate): 'a __result =
-  t ps
+type 'a __tac = 'a TM.tac
 
 let to_tac_0 (t: 'a __tac): 'a TM.tac =
-  (fun (ps: proofstate) ->
-    uninterpret_tac t ps) |> TM.mk_tac
+  t
 
-let to_tac_1 (t: 'b -> 'a __tac): 'b -> 'a TM.tac = fun x ->
-  (fun (ps: proofstate) ->
-    uninterpret_tac (t x) ps) |> TM.mk_tac
+let to_tac_1 (t: 'b -> 'a __tac): 'b -> 'a TM.tac =
+  t
 
 let from_tac_1 s (t: 'a -> 'r TM.tac): 'a  -> 'r __tac =
-  fun (xa: 'a) (ps : proofstate) ->
-    let m = t xa in
-    interpret_tac s m ps
+  t
 
 let from_tac_2 s (t: 'a -> 'b -> 'r TM.tac): 'a  -> 'b -> 'r __tac =
-  fun (xa: 'a) (xb: 'b) (ps : proofstate) ->
-    let m = t xa xb in
-    interpret_tac s m ps
+  t
 
 let from_tac_3 s (t: 'a -> 'b -> 'c -> 'r TM.tac): 'a  -> 'b -> 'c -> 'r __tac =
-  fun (xa: 'a) (xb: 'b) (xc: 'c) (ps : proofstate) ->
-    let m = t xa xb xc in
-    interpret_tac s m ps
+  t
 
 let from_tac_4 s (t: 'a -> 'b -> 'c -> 'd -> 'r TM.tac): 'a  -> 'b -> 'c -> 'd -> 'r __tac =
-  fun (xa: 'a) (xb: 'b) (xc: 'c) (xd: 'd)  (ps : proofstate) ->
-    let m = t xa xb xc xd in
-    interpret_tac s m ps
+  t
 
 let from_tac_5 s (t: 'a -> 'b -> 'c -> 'd -> 'e -> 'r TM.tac): 'a  -> 'b -> 'c -> 'd -> 'e -> 'r __tac =
-  fun (xa: 'a) (xb: 'b) (xc: 'c) (xd: 'd) (xe: 'e) (ps : proofstate) ->
-    let m = t xa xb xc xd xe in
-    interpret_tac s m ps
+  t
 
+let get () : proofstate __tac = TM.get
 
 (* Pointing to the internal primitives *)
 let fixup_range             = from_tac_1 "B.fixup_range" B.fixup_range

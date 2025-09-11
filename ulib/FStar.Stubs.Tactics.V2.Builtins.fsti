@@ -30,6 +30,9 @@ open FStar.Stubs.Tactics.Types
 open FStar.Stubs.Tactics.Types.Reflection
 include FStar.Stubs.Tactics.Unseal
 
+val get ()
+  : TAC proofstate (fun ps post -> post (FStar.Stubs.Tactics.Result.Success ps ps))
+
 val fixup_range : Range.range -> TacRO Range.range
 
 (** Resolve unification variable indirections at the top of the term. *)

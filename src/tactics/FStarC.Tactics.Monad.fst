@@ -101,30 +101,26 @@ let register_goal (g:goal) =
       Errors.log_issue uv.ctx_uvar_range Err.Warning_FailedToCheckInitialTacticGoal msg
   )
 
-(*
- * A record, so we can keep it somewhat encapsulated and
- * can more easily add things to it if need be.
- *)
-type tac (a:Type0) = {
-    tac_f : proofstate -> __result a;
-}
-
-let mk_tac (f : proofstate -> __result 'a) : tac 'a =
-    { tac_f = f }
+let mk_tac (f : proofstate -> __result 'a) : tac 'a = fun ps ->
+  let Success (x, ps') = f (!ps) in
+  ps := ps';
+  x
 
 let run (t:tac 'a) (ps:proofstate) : __result 'a =
-    t.tac_f ps
+  let ps = mk_ref ps in
+  let x = t ps in
+  Success (x, !ps)
 
 let run_safe t ps =
     run t ps
 
 let ret (x:'a) : tac 'a =
-    mk_tac (fun ps -> Success (x, ps))
+  fun _ -> x
 
 let bind (t1:tac 'a) (t2:'a -> tac 'b) : tac 'b =
-    mk_tac (fun ps ->
-            match run t1 ps with
-            | Success (a, q)  -> run (t2 a) q)
+  fun ps ->
+    let x = t1 ps in
+    t2 x ps
 
 instance monad_tac : monad tac = {
     return = ret;
@@ -133,30 +129,27 @@ instance monad_tac : monad tac = {
 
 (* Set the current proofstate *)
 let set (ps:proofstate) : tac unit =
-    mk_tac (fun _ -> Success ((), ps))
+  fun ps_ref -> ps_ref := ps
 
 (* Get the current proof state *)
 let get : tac proofstate =
-    mk_tac (fun ps -> Success (ps, ps))
+  fun ps -> !ps
 
 let traise e =
-    mk_tac (fun ps -> raise e)
+  fun _ -> raise e
 
 let do_log ps (f : unit -> unit) : unit =
   if ps.tac_verb_dbg then
     f ()
 
 let log (f : unit -> unit) : tac unit =
-  mk_tac (fun ps ->
-    do_log ps f;
-    Success ((), ps))
+  fun ps -> do_log (!ps) f
 
 let fail_doc (msg:error_message) =
-    mk_tac (fun ps ->
+  fun ps ->
         if !dbg_TacFail then
-          do_dump_proofstate ps ("TACTIC FAILING: " ^ renderdoc (hd msg));
+          do_dump_proofstate (!ps) ("TACTIC FAILING: " ^ renderdoc (hd msg));
         raise <| TacticFailure (msg, None)
-    )
 
 let fail msg = fail_doc [text msg]
 

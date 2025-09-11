@@ -21,12 +21,14 @@ open FStarC.Tactics.Result
 open FStarC.Tactics.Types
 open FStarC.Class.Monad
 open FStarC.Errors.Msg
+open FStarC.Effect
 
 module Range = FStarC.Range
 module O     = FStarC.Options
 
 (* Type of tactics *)
-val tac (a:Type0) : Type0
+type tac (a:Type0) : Type0 =
+  ref proofstate -> a
 
 instance val monad_tac : monad tac
 

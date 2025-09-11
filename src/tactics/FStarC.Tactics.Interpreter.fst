@@ -111,15 +111,15 @@ let rec t_head_of (t : term) : term =
     | Tm_meta {tm=t} -> t_head_of t
     | _ -> t
 
-let unembed_tactic_0 (eb:embedding 'b) (embedded_tac_b:term) (ncb:norm_cb) : tac 'b =
-    let! proof_state = get in
+let unembed_tactic_0 (eb:embedding 'b) (embedded_tac_b:term) (ncb:norm_cb) : tac 'b = fun ps ->
+    let ps0 = !ps in
     let rng = embedded_tac_b.pos in
 
     (* First, reify it from Tac a into __tac a *)
     let embedded_tac_b = U.mk_reify embedded_tac_b (Some PC.effect_TAC_lid) in
 
     let tm = S.mk_Tm_app embedded_tac_b
-                         [S.as_arg (embed rng proof_state ncb)]
+                         [S.as_arg (embed rng ps ncb)]
                           rng in
 
 
@@ -140,16 +140,15 @@ let unembed_tactic_0 (eb:embedding 'b) (embedded_tac_b:term) (ncb:norm_cb) : tac
     in
     (* if proof_state.tac_verb_dbg then *)
     (*     Format.print1 "Starting normalizer with %s\n" (show tm); *)
-    let result = norm_f (primitive_steps ()) steps proof_state.main_context tm in
+    let result = norm_f (primitive_steps ()) steps ps0.main_context tm in
     (* if proof_state.tac_verb_dbg then *)
     (*     Format.print1 "Reduced tactic: got %s\n" (show result); *)
 
     let res = unembed result ncb in
 
     match res with
-    | Some (Success (b, ps)) ->
-      set ps;!
-      return b
+    | Some b ->
+      b
 
     | None ->
         (* The tactic got stuck, try to provide a helpful error message. *)
@@ -168,27 +167,26 @@ let unembed_tactic_0 (eb:embedding 'b) (embedded_tac_b:term) (ncb:norm_cb) : tac
           then doc_of_string "The term contains an `admit`, which will not reduce. Did you mean `tadmit()`?"
           else empty
         in
-        Errors.raise_error proof_state.main_context Errors.Fatal_TacticGotStuck [
+        Errors.raise_error ps0.main_context Errors.Fatal_TacticGotStuck [
           doc_of_string "Tactic got stuck!";
           prefix 2 1 (doc_of_string "Reduction stopped at:") (pp h_result);
           maybe_admit_tip
         ]
 
-let unembed_tactic_nbe_0 (eb:NBET.embedding 'b) (cb:NBET.nbe_cbs) (embedded_tac_b:NBET.t) : tac 'b =
-    let! proof_state = get in
+let unembed_tactic_nbe_0 (eb:NBET.embedding 'b) (cb:NBET.nbe_cbs) (embedded_tac_b:NBET.t) : tac 'b = fun ps ->
+    let ps0 = !ps in
 
     (* Applying is normalizing!!! *)
-    let result = NBET.iapp_cb cb embedded_tac_b [NBET.as_arg (NBET.embed E.e_proofstate_nbe cb proof_state)] in
-    let res = NBET.unembed (E.e_result_nbe eb) cb result in
+    let result = NBET.iapp_cb cb embedded_tac_b [NBET.as_arg (NBET.embed E.e_ref_proofstate_nbe cb ps)] in
+    let res = NBET.unembed eb cb result in
 
     match res with
-    | Some (Success (b, ps)) ->
-      set ps;!
-      return b
+    | Some b ->
+      b
 
     | None ->
         let open FStarC.Pprint in
-        Errors.raise_error proof_state.main_context Errors.Fatal_TacticGotStuck [
+        Errors.raise_error ps0.main_context Errors.Fatal_TacticGotStuck [
           doc_of_string "Tactic got stuck (in NBE)!";
           Errors.Msg.text "Please file a bug report with a minimal reproduction of this issue.";
           doc_of_string "Result = " ^^ arbitrary_string (NBET.t_to_string result)
@@ -242,11 +240,11 @@ let unembed_tactic_1_alt (ea:embedding 'a) (er:embedding 'r) (f:term) (ncb:norm_
       let app = S.mk_Tm_app f [as_arg x_tm] rng in
       unembed_tactic_0 er app ncb)
 
-let e_tactic_1_alt (ea: embedding 'a) (er:embedding 'r): embedding ('a -> (proofstate -> __result 'r)) =
+let e_tactic_1_alt (ea: embedding 'a) (er:embedding 'r): embedding ('a -> tac 'r) =
     let em = (fun _ _ _ _ -> failwith "Impossible: embedding tactic (1)?") in
-    let un (t0: term) (n: norm_cb): option ('a -> (proofstate -> __result 'r)) =
+    let un (t0: term) (n: norm_cb): option ('a -> tac 'r) =
         match unembed_tactic_1_alt ea er t0 n with
-        | Some f -> Some (fun x -> run (f x))
+        | Some f -> Some (fun x -> (f x))
         | None -> None
     in
     mk_emb em un (FStarC.Syntax.Embeddings.term_as_fv t_unit)

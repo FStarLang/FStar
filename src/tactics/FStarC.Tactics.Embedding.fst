@@ -82,14 +82,15 @@ let fstar_tc_core_const s =
 
 
 let fstar_tactics_proofstate    = fstar_tactics_const ["Types"; "proofstate"]
+let fstar_tactics_ref_proofstate = fstar_tactics_const ["Types"; "ref_proofstate"]
 let fstar_tactics_goal          = fstar_tactics_const ["Types"; "goal"]
 
 let fstar_tactics_TacticFailure = fstar_tactics_data  ["Common"; "TacticFailure"]
 let fstar_tactics_SKIP          = fstar_tactics_data  ["Common"; "SKIP"]
 let fstar_tactics_Stop          = fstar_tactics_data  ["Common"; "Stop"]
 
-let fstar_tactics_result        = fstar_tactics_const ["Result"; "__result"]
-let fstar_tactics_Success       = fstar_tactics_data  ["Result"; "Success"]
+// let fstar_tactics_result        = fstar_tactics_const ["Result"; "__result"]
+// let fstar_tactics_Success       = fstar_tactics_data  ["Result"; "Success"]
 
 let fstar_tactics_direction     = fstar_tactics_const ["Types"; "direction"]
 let fstar_tactics_topdown       = fstar_tactics_data  ["Types"; "TopDown"]
@@ -127,15 +128,19 @@ let mk_emb (em: Range.t -> 'a -> term)
 let embed {|embedding 'a|} r (x:'a) = FStarC.Syntax.Embeddings.embed x r None id_norm_cb
 let unembed' {|embedding 'a|} x : option 'a = FStarC.Syntax.Embeddings.unembed x id_norm_cb
 
-let t_result_of t   = U.mk_app fstar_tactics_result.t [S.as_arg t] // TODO: uinst on t_result?
+// let t_result_of t   = U.mk_app fstar_tactics_result.t [S.as_arg t] // TODO: uinst on t_result?
 
 let hd'_and_args tm =
   let tm = U.unascribe tm in
   let hd, args = U.head_and_args tm in
   (U.un_uinst hd).n, args
 
+instance e_ref_proofstate : embedding ref_proofstate = e_lazy Lazy_ref_proofstate fstar_tactics_ref_proofstate.t
 instance e_proofstate : embedding proofstate = e_lazy Lazy_proofstate fstar_tactics_proofstate.t
 instance e_goal       : embedding goal       = e_lazy Lazy_goal fstar_tactics_goal.t
+
+let unfold_lazy_ref_proofstate (i : lazyinfo) : term =
+    U.exp_string "(((ref proofstate)))"
 
 let unfold_lazy_proofstate (i : lazyinfo) : term =
     U.exp_string "(((proofstate)))"
@@ -151,6 +156,34 @@ let unfold_lazy_goal (i : lazyinfo) : term =
 let mkFV fv us ts = NBETerm.mkFV fv (List.rev us) (List.rev ts)
 let mkConstruct fv us ts = NBETerm.mkConstruct fv (List.rev us) (List.rev ts)
 let fv_as_emb_typ fv = S.ET_app (show fv.fv_name, [])
+
+let e_ref_proofstate_nbe =
+    let embed_ref_proofstate _cb (ps:ref_proofstate) : NBETerm.t =
+        let li = { lkind = Lazy_ref_proofstate
+                 ; blob = FStarC.Dyn.mkdyn ps
+                 ; ltyp = fstar_tactics_ref_proofstate.t
+                 ; rng = Range.dummyRange }
+        in
+        let thunk = Thunk.mk (fun () -> NBETerm.mk_t <| NBETerm.Constant (NBETerm.String ("(((ref_proofstate.nbe)))", Range.dummyRange))) in
+        NBETerm.mk_t (NBETerm.Lazy (Inl li, thunk))
+    in
+    let unembed_ref_proofstate _cb (t:NBETerm.t) : option ref_proofstate =
+        match NBETerm.nbe_t_of_t t with
+        | NBETerm.Lazy (Inl {blob=b; lkind = Lazy_ref_proofstate}, _) ->
+            Some <| FStarC.Dyn.undyn b
+        | _ ->
+          if !Options.debug_embedding then
+            Err.log_issue0
+              Err.Warning_NotEmbedded
+              (Format.fmt1 "Not an embedded NBE ref_proofstate: %s\n"
+                 (NBETerm.t_to_string t));
+            None
+    in
+    { NBETerm.em = embed_ref_proofstate
+    ; NBETerm.un = unembed_ref_proofstate
+    ; NBETerm.typ = (fun () -> mkFV fstar_tactics_ref_proofstate.fv [] [])
+    ; NBETerm.e_typ = (fun () -> fv_as_emb_typ fstar_tactics_ref_proofstate.fv)
+     }
 
 let e_proofstate_nbe =
     let embed_proofstate _cb (ps:proofstate) : NBETerm.t =
@@ -290,57 +323,6 @@ let e_exn_nbe =
     ; NBETerm.un = unembed_exn
     ; NBETerm.typ = (fun () -> mkFV fv_exn [] [])
     ; NBETerm.e_typ = (fun () -> fv_as_emb_typ fv_exn) }
-
-let e_result (ea : embedding 'a) : Tot _ =
-    let embed_result (res:__result 'a) (rng:Range.t) (sh:shadow_term) (cbs:norm_cb) : term =
-        match res with
-        | Success (a, ps) ->
-          S.mk_Tm_app (S.mk_Tm_uinst fstar_tactics_Success.t [U_zero])
-                 [S.iarg (type_of ea);
-                  S.as_arg (embed rng a);
-                  S.as_arg (embed rng ps)]
-                 rng
-    in
-    let unembed_result (t:term) _ : option (__result 'a) =
-        match hd'_and_args t with
-        | Tm_fvar fv, [_t; (a, _); (ps, _)] when S.fv_eq_lid fv fstar_tactics_Success.lid ->
-            Option.bind (unembed' a) (fun a ->
-            Option.bind (unembed' ps) (fun ps ->
-            Some (Success (a, ps))))
-
-        | _ -> None
-    in
-    mk_emb_full #(__result 'a)
-        embed_result
-        unembed_result
-        (fun () -> t_result_of (type_of ea))
-        (fun _ -> "")
-        (fun () -> ET_app (show fstar_tactics_result.lid, [emb_typ_of 'a ()]))
-
-let e_result_nbe (ea : NBET.embedding 'a)  =
-    let embed_result cb (res:__result 'a) : NBET.t =
-        match res with
-        | Success (a, ps) ->
-            mkConstruct fstar_tactics_Success.fv
-              [U_zero]
-              [ NBETerm.as_iarg (NBETerm.type_of ea)
-              ; NBETerm.as_arg (NBETerm.embed ea cb a)
-              ; NBETerm.as_arg (NBETerm.embed e_proofstate_nbe cb ps) ]
-    in
-    let unembed_result cb (t:NBET.t) : option (__result 'a) =
-        match NBETerm.nbe_t_of_t t with
-        | NBETerm.Construct (fv, _, [(ps, _); (a, _); _t]) when S.fv_eq_lid fv fstar_tactics_Success.lid ->
-            Option.bind (NBETerm.unembed ea cb a) (fun a ->
-            Option.bind (NBETerm.unembed e_proofstate_nbe cb ps) (fun ps ->
-            Some (Success (a, ps))))
-
-        | _ ->
-            None
-    in
-    { NBETerm.em = embed_result
-    ; NBETerm.un = unembed_result
-    ; NBETerm.typ = (fun () -> mkFV fstar_tactics_result.fv [] [])
-    ; NBETerm.e_typ = (fun () -> fv_as_emb_typ fstar_tactics_result.fv) }
 
 let e_direction =
     let embed_direction (rng:Range.t) (d : direction) : term =
