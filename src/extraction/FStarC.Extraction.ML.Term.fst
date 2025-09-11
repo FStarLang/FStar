@@ -1661,6 +1661,14 @@ and term_as_mlexpr' (g:uenv) (top:term) : (mlexpr & e_tag & mlty) =
                    (Format.fmt1 "Cannot extract %s (reify effect is not set)" (show top))
               )
 
+            (* Push applications into let bodies *)
+            | Tm_let {lbs; body} ->
+              term_as_mlexpr g { head with n = Tm_let { lbs; body = { t with n = Tm_app { hd=body; args } } } }
+
+            (* Combine nested applications *)
+            | Tm_app {hd=hd; args=args0} ->
+              term_as_mlexpr g { t with n = Tm_app { hd=hd; args=args0@args } }
+
             | _ ->
 
               let rec extract_app is_data (mlhead, mlargs_f) (f(*:e_tag*), t (* the type of (mlhead mlargs) *)) restArgs =
