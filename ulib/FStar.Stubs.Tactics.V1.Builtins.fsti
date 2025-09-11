@@ -28,6 +28,9 @@ open FStar.Tactics.Effect
 open FStar.Stubs.Tactics.Types
 include FStar.Stubs.Tactics.Unseal
 
+val get ()
+  : TAC proofstate (fun ps post -> post (FStar.Stubs.Tactics.Result.Success ps ps))
+
 (** [top_env] returns the environment where the tactic started running.
  * This works even if no goals are present. *)
 val top_env : unit -> Tac env

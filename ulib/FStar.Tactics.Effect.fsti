@@ -35,7 +35,7 @@ let tac_wp_monotonic (#a:Type) (wp:tac_wp_t0 a) =
 type tac_wp_t (a:Type) = wp:tac_wp_t0 a{tac_wp_monotonic wp}
 
 let tac_repr (a:Type) (wp:tac_wp_t a) =
-  ps0:proofstate -> DIV (__result a) (as_pure_wp (wp ps0))
+  ref_proofstate -> Dv a
 
 unfold
 let tac_return_wp (#a:Type) (x:a) : tac_wp_t a =
@@ -43,7 +43,7 @@ let tac_return_wp (#a:Type) (x:a) : tac_wp_t a =
 
 (* monadic return *)
 let tac_return (a:Type) (x:a) : tac_repr a (tac_return_wp x) =
-  fun (s:proofstate) -> Success x s
+  fun _ -> x
 
 unfold
 let tac_bind_wp (#a #b:Type) (wp_f:tac_wp_t a) (wp_g:a -> tac_wp_t b) : tac_wp_t b =
@@ -85,8 +85,8 @@ let tac_bind (a:Type) (b:Type)
   (t1:tac_repr a wp_f)
   (t2:(x:a -> tac_repr b (wp_g x))) : tac_repr b (tac_wp_compact b (tac_bind_wp wp_f wp_g)) =
   fun ps ->
-  let Success a ps' = t1 ps in
-  t2 a ps'
+  let x = t1 ps in
+  t2 x ps
 #pop-options
 
 
@@ -164,17 +164,15 @@ let lift_div_tac_wp (#a:Type) (wp:pure_wp a) : tac_wp_t a =
   elim_pure_wp_monotonicity wp;  
   fun ps p -> wp (fun x -> p (Success x ps))
 
+val lift_div_tac_interleave_begin : unit
+#push-options "--admit_smt_queries true"
 let lift_div_tac (a:Type) (wp:pure_wp a) (f:unit -> DIV a wp)
   : tac_repr a (lift_div_tac_wp wp)
-  = elim_pure_wp_monotonicity wp;
-    fun ps -> Success (f ()) ps
+  = fun _ -> f ()
+#pop-options
+val lift_div_tac_interleave_end : unit
 
 sub_effect DIV ~> TAC = lift_div_tac
-
-let get ()
-  : TAC proofstate (fun ps post -> post (Success ps ps))
-  = TAC?.reflect (fun ps -> Success ps ps)
-
 
 /// assert p by t
 

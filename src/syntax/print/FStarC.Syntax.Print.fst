@@ -147,6 +147,7 @@ let lkind_to_string = function
   | Lazy_comp -> "Lazy_comp"
   | Lazy_env -> "Lazy_env"
   | Lazy_proofstate -> "Lazy_proofstate"
+  | Lazy_ref_proofstate -> "Lazy_ref_proofstate"
   | Lazy_goal -> "Lazy_goal"
   | Lazy_sigelt -> "Lazy_sigelt"
   | Lazy_uvar -> "Lazy_uvar"

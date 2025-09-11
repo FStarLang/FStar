@@ -48,6 +48,8 @@ let ops =
   List.map fix_module <|
 [
   (* Total steps defined in V2 *)
+  
+  mk_tac_step_1 0 "get" (fun () -> get) (fun () -> get);
 
   mk_tac_step_1 0 "set_goals" set_goals set_goals;
   mk_tac_step_1 0 "set_smt_goals" set_smt_goals set_smt_goals;
