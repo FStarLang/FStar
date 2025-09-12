@@ -1,7 +1,4 @@
 open Fstarcompiler
-open FStarC_Tactics_Result
-open FStarC_Tactics_Types
+open FStarC_Tactics_Monad
 
-let tac_return x = fun ps -> Success (x, ps)
-
-let unseal x = tac_return x
+let unseal (x: 'a) : 'a tac = fun _ -> x

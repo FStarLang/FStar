@@ -27,6 +27,11 @@ let tac_bind_interleave_begin = ()
 #pop-options
 let tac_bind_interleave_end = ()
 
+#push-options "--admit_smt_queries true"
+let lift_div_tac_interleave_begin = ()
+#pop-options
+let lift_div_tac_interleave_end = ()
+
 let with_tactic _ p = p
 
 let rewrite_with_tactic _ p = p

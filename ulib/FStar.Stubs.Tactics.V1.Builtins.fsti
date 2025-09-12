@@ -28,6 +28,9 @@ open FStar.Tactics.Effect
 open FStar.Stubs.Tactics.Types
 include FStar.Stubs.Tactics.Unseal
 
+val get ()
+  : TAC proofstate (fun ps post -> post (FStar.Stubs.Tactics.Result.Success ps ps))
+
 (** [top_env] returns the environment where the tactic started running.
  * This works even if no goals are present. *)
 val top_env : unit -> Tac env
@@ -63,12 +66,13 @@ val unquote : #a:Type -> term -> Tac a
 (** [catch t] will attempt to run [t] and allow to recover from a
 failure. If [t] succeeds with return value [a], [catch t] returns [Inr
 a]. On failure, it returns [Inl msg], where [msg] is the error [t]
-raised, and all unionfind effects are reverted. See also [recover] and
-[or_else]. *)
+raised, and all unionfind effects are reverted. See also [or_else]. *)
 val catch : #a:Type -> (unit -> Tac a) -> TacS (either exn a)
 
-(** Like [catch t], but will not discard unionfind effects on failure. *)
-val recover : #a:Type -> (unit -> Tac a) -> TacS (either exn a)
+val raise_core (e:exn) : TacH unit (requires fun _ -> True) (ensures fun _ _ -> False)
+inline_for_extraction
+let raise #a (e:exn) : TacH a (requires fun _ -> True) (ensures fun _ _ -> False) =
+    raise_core e; ()
 
 (** [norm steps] will call the normalizer on the current goal's
 type and witness, with its reduction behaviour parameterized
