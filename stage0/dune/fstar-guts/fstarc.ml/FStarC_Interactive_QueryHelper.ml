@@ -3,7 +3,7 @@ type position = (Prims.string * Prims.int * Prims.int)
 type sl_reponse =
   {
   slr_name: Prims.string ;
-  slr_def_range: FStarC_Range_Type.range FStar_Pervasives_Native.option ;
+  slr_def_range: FStarC_Range_Type.t FStar_Pervasives_Native.option ;
   slr_typ: Prims.string FStar_Pervasives_Native.option ;
   slr_doc: Prims.string FStar_Pervasives_Native.option ;
   slr_def: Prims.string FStar_Pervasives_Native.option }
@@ -12,7 +12,7 @@ let (__proj__Mksl_reponse__item__slr_name : sl_reponse -> Prims.string) =
     match projectee with
     | { slr_name; slr_def_range; slr_typ; slr_doc; slr_def;_} -> slr_name
 let (__proj__Mksl_reponse__item__slr_def_range :
-  sl_reponse -> FStarC_Range_Type.range FStar_Pervasives_Native.option) =
+  sl_reponse -> FStarC_Range_Type.t FStar_Pervasives_Native.option) =
   fun projectee ->
     match projectee with
     | { slr_name; slr_def_range; slr_typ; slr_doc; slr_def;_} ->
@@ -77,9 +77,9 @@ let (symlookup :
               let uu___ =
                 FStarC_Syntax_DsEnv.resolve_to_fully_qualified_name
                   tcenv.FStarC_TypeChecker_Env.dsenv lid in
-              FStarC_Util.dflt lid uu___ in
+              FStarC_Option.dflt lid uu___ in
             let uu___ = FStarC_TypeChecker_Env.try_lookup_lid tcenv lid1 in
-            FStarC_Util.map_option
+            FStarC_Option.map
               (fun uu___1 ->
                  match uu___1 with
                  | ((uu___2, typ), r) ->
@@ -87,7 +87,7 @@ let (symlookup :
           let docs_of_lid lid = FStar_Pervasives_Native.None in
           let def_of_lid lid =
             let uu___ = FStarC_TypeChecker_Env.lookup_qname tcenv lid in
-            FStarC_Util.bind_opt uu___
+            FStarC_Option.bind uu___
               (fun uu___1 ->
                  match uu___1 with
                  | (FStar_Pervasives.Inr (se, uu___2), uu___3) ->
@@ -95,7 +95,7 @@ let (symlookup :
                      FStar_Pervasives_Native.Some uu___4
                  | uu___2 -> FStar_Pervasives_Native.None) in
           let info_at_pos_opt =
-            FStarC_Util.bind_opt pos_opt
+            FStarC_Option.bind pos_opt
               (fun uu___ ->
                  match uu___ with
                  | (file, row, col) ->
@@ -235,8 +235,8 @@ let (hoverlookup :
             slr_def = FStar_Pervasives_Native.Some d;_}
           ->
           let hovertxt =
-            FStarC_Util.format2 "```fstar\n%s\n````\n---\n```fstar\n%s\n```"
-              t d in
+            FStarC_Format.fmt2 "```fstar\n%s\n````\n---\n```fstar\n%s\n```" t
+              d in
           FStarC_Interactive_JsonHelper.resultResponse
             (FStarC_Json.JsonAssoc
                [("contents",
@@ -268,13 +268,14 @@ let (complookup :
                  FStarC_List.nth (FStarC_Util.splitlines text)
                    (row - Prims.int_one) in
                let explode s =
-                 let rec exp i l =
-                   if i < Prims.int_zero
-                   then l
-                   else
-                     (let uu___4 =
-                        let uu___5 = FStarC_String.get s i in uu___5 :: l in
-                      exp (i - Prims.int_one) uu___4) in
+                 let rec exp i =
+                   fun l ->
+                     if i < Prims.int_zero
+                     then l
+                     else
+                       (let uu___4 =
+                          let uu___5 = FStarC_String.get s i in uu___5 :: l in
+                        exp (i - Prims.int_one) uu___4) in
                  exp ((FStarC_String.length s) - Prims.int_one) [] in
                let begin_col =
                  let uu___3 =

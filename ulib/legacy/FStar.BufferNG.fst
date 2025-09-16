@@ -181,7 +181,7 @@ val createL
      q #a len b
    ))
  
-#set-options "--initial_fuel 1 --max_fuel 1" //the normalize_term (length init) in the pre-condition will be unfolded
+#set-options "--fuel 1" //the normalize_term (length init) in the pre-condition will be unfolded
 	                                     //whereas the L.length init below will not
 
 let createL #a init =
@@ -190,7 +190,7 @@ let createL #a init =
   let content = P.screate (P.TArray len a) (Some s) in
   P.buffer_of_array_pointer content
 
-#reset-options "--initial_fuel 0 --max_fuel 0"
+#reset-options "--fuel 0"
 
 val rcreate
   (#a: typ)

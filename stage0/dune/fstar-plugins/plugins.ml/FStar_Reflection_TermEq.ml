@@ -29,15 +29,15 @@ let (uu___is_Unknown : _cmpres -> Prims.bool) =
   fun projectee -> match projectee with | Unknown -> true | uu___ -> false
 type ('t, 'c, 'x, 'y) valid = Obj.t
 type ('t, 'x, 'y) cmpres = _cmpres
-type 't comparator_for = 't -> 't -> ('t, unit, unit) cmpres
+type 't comparator_for = 't -> 't -> ('t, Obj.t, Obj.t) cmpres
 let op_Amp_Amp_Amp :
   's 't .
     's ->
       's ->
         't ->
           't ->
-            ('s, unit, unit) cmpres ->
-              ('t, unit, unit) cmpres -> (('s * 't), unit, unit) cmpres
+            ('s, Obj.t, Obj.t) cmpres ->
+              ('t, Obj.t, Obj.t) cmpres -> (('s * 't), Obj.t, Obj.t) cmpres
   =
   fun x ->
     fun y ->
@@ -129,9 +129,9 @@ let rec list_dec_cmp :
   'a 'uuuuu .
     'uuuuu ->
       'uuuuu ->
-        ('a -> 'a -> ('a, unit, unit) cmpres) ->
+        ('a -> 'a -> ('a, Obj.t, Obj.t) cmpres) ->
           'a Prims.list ->
-            'a Prims.list -> ('a Prims.list, unit, unit) cmpres
+            'a Prims.list -> ('a Prims.list, Obj.t, Obj.t) cmpres
   =
   fun top1 ->
     fun top2 ->
@@ -148,10 +148,10 @@ let opt_dec_cmp :
   'a 'b .
     'b ->
       'b ->
-        ('a -> 'a -> ('a, unit, unit) cmpres) ->
+        ('a -> 'a -> ('a, Obj.t, Obj.t) cmpres) ->
           'a FStar_Pervasives_Native.option ->
             'a FStar_Pervasives_Native.option ->
-              ('a FStar_Pervasives_Native.option, unit, unit) cmpres
+              ('a FStar_Pervasives_Native.option, Obj.t, Obj.t) cmpres
   =
   fun top1 ->
     fun top2 ->
@@ -168,12 +168,12 @@ let either_dec_cmp :
   'a 'b 'c .
     'c ->
       'c ->
-        ('a -> 'a -> ('a, unit, unit) cmpres) ->
-          ('b -> 'b -> ('b, unit, unit) cmpres) ->
+        ('a -> 'a -> ('a, Obj.t, Obj.t) cmpres) ->
+          ('b -> 'b -> ('b, Obj.t, Obj.t) cmpres) ->
             ('a, 'b) Fstarcompiler.FStar_Pervasives.either ->
               ('a, 'b) Fstarcompiler.FStar_Pervasives.either ->
-                (('a, 'b) Fstarcompiler.FStar_Pervasives.either, unit, 
-                  unit) cmpres
+                (('a, 'b) Fstarcompiler.FStar_Pervasives.either, Obj.t,
+                  Obj.t) cmpres
   =
   fun uu___5 ->
     fun uu___4 ->

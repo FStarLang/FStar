@@ -38,7 +38,7 @@ let should_unfold cfg should_reify fv qninfo : should_unfold_res =
     let comb_or l = List.fold_right (fun (a,b,c,d) (x,y,z,w) -> (a||x, b||y, c||z, d||w)) l (false, false, false, false) in
 
     let default_unfolding () =
-        log_unfolding cfg (fun () -> BU.print3 "should_unfold: Reached a %s with delta_depth = %s\n >> Our delta_level is %s\n"
+        log_unfolding cfg (fun () -> Format.print3 "should_unfold: Reached a %s with delta_depth = %s\n >> Our delta_level is %s\n"
                                                (show fv)
                                                (show (Env.delta_depth_of_fv cfg.tcenv fv))
                                                (show cfg.delta_level));
@@ -61,40 +61,40 @@ let should_unfold cfg should_reify fv qninfo : should_unfold_res =
     // We unfold dm4f actions if and only if we are reifying
     | _ when Env.qninfo_is_action qninfo ->
         let b = should_reify cfg in
-        log_unfolding cfg (fun () -> BU.print2 "should_unfold: For DM4F action %s, should_reify = %s\n"
+        log_unfolding cfg (fun () -> Format.print2 "should_unfold: For DM4F action %s, should_reify = %s\n"
                                                (show fv)
                                                (show b));
         if b then reif else no
 
     // If it is handled primitively, then don't unfold
-    | _ when Option.isSome (find_prim_step cfg fv) ->
-        log_unfolding cfg (fun () -> BU.print_string " >> It's a primop, not unfolding\n");
+    | _ when Some? (find_prim_step cfg fv) ->
+        log_unfolding cfg (fun () -> Format.print_string " >> It's a primop, not unfolding\n");
         no
 
     // Don't unfold HasMaskedEffect
     | Some (Inr ({sigquals=qs; sigel=Sig_let {lbs=(is_rec, _)}}, _), _), _ when
             List.contains HasMaskedEffect qs ->
-        log_unfolding cfg (fun () -> BU.print_string " >> HasMaskedEffect, not unfolding\n");
+        log_unfolding cfg (fun () -> Format.print_string " >> HasMaskedEffect, not unfolding\n");
         no
 
     // Unfoldonce. NB: this is before the zeta case, so we unfold even if zeta is off
     | _, true when Some? cfg.steps.unfold_once && BU.for_some (fv_eq_lid fv) (Some?.v cfg.steps.unfold_once) ->
-        log_unfolding cfg (fun () -> BU.print_string " >> UnfoldOnce\n");
+        log_unfolding cfg (fun () -> Format.print_string " >> UnfoldOnce\n");
         once
 
     | Some (Inr ({sigattrs=attrs}, _), _), _ when cfg.steps.for_extraction && Some? (BU.find_map attrs Parser.Const.ExtractAs.is_extract_as_attr) ->
-        log_unfolding cfg (fun () -> BU.print_string " >> Has extract_as attribute and we're extracting, unfold!");
+        log_unfolding cfg (fun () -> Format.print_string " >> Has extract_as attribute and we're extracting, unfold!");
         yes
 
     // Recursive lets may only be unfolded when Zeta is on
     | Some (Inr ({sigquals=qs; sigel=Sig_let {lbs=(is_rec, _)}}, _), _), _ when
             is_rec && not cfg.steps.zeta && not cfg.steps.zeta_full ->
-        log_unfolding cfg (fun () -> BU.print_string " >> It's a recursive definition but we're not doing Zeta, not unfolding\n");
+        log_unfolding cfg (fun () -> Format.print_string " >> It's a recursive definition but we're not doing Zeta, not unfolding\n");
         no
 
     // We're doing selectively unfolding, assume it to not unfold unless it meets the criteria
     | _, true ->
-        log_unfolding cfg (fun () -> BU.print1 "should_unfold: Reached a %s with selective unfolding\n"
+        log_unfolding cfg (fun () -> Format.print1 "should_unfold: Reached a %s with selective unfolding\n"
                                                (show fv));
         // How does the following code work?
         // We are doing selective unfolding so, by default, we assume everything
@@ -106,7 +106,7 @@ let should_unfold cfg should_reify fv qninfo : should_unfold_res =
         let meets_some_criterion =
             comb_or [
             (if cfg.steps.for_extraction
-             then yesno <| Option.isSome (Env.lookup_definition_qninfo [Eager_unfolding_only; InliningDelta] fv.fv_name.v qninfo)
+             then yesno <| Some? (Env.lookup_definition_qninfo [Eager_unfolding_only; InliningDelta] fv.fv_name qninfo)
              else no)
            ;(match cfg.steps.unfold_only with
              | None -> no
@@ -149,14 +149,14 @@ let should_unfold cfg should_reify fv qninfo : should_unfold_res =
     // control to the user if they *really* want to unfold one of these.
     | _ when Some? cfg.steps.dont_unfold_attr
       && List.existsb (fun fa -> U.has_attribute attrs fa) (Some?.v cfg.steps.dont_unfold_attr) ->
-        log_unfolding cfg (fun () -> BU.print_string " >> forbidden by attribute, not unfolding\n");
+        log_unfolding cfg (fun () -> Format.print_string " >> forbidden by attribute, not unfolding\n");
         no
 
     // Nothing special, just check the depth
     | _ ->
         default_unfolding()
     in
-    log_unfolding cfg (fun () -> BU.print3 "should_unfold: For %s (%s), unfolding res = %s\n"
+    log_unfolding cfg (fun () -> Format.print3 "should_unfold: For %s (%s), unfolding res = %s\n"
                     (show fv)
                     (show (S.range_of_fv fv))
                     (show res)
@@ -169,6 +169,6 @@ let should_unfold cfg should_reify fv qninfo : should_unfold_res =
       | true, true, false, false -> Should_unfold_fully
       | true, false, true, false -> Should_unfold_reify
       | _ ->
-        failwith <| BU.format1 "Unexpected unfolding result: %s" (show res)
+        failwith <| Format.fmt1 "Unexpected unfolding result: %s" (show res)
     in
     r

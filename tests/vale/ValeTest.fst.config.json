@@ -3,7 +3,6 @@
   "options": [
     "--cache_dir", ".cache",
     "--ext", "optimize_let_vc",
-    "--z3version", "4.13.3",
     "--z3smtopt", "(set-option :smt.qi.eager_threshold 100)",
     "--z3smtopt", "(set-option :smt.arith.nl false)",
     "--smtencoding.elim_box", "true",

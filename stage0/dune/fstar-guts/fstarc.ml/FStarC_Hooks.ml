@@ -47,28 +47,25 @@ let (lazy_chooser :
       | FStarC_Syntax_Syntax.Lazy_embedding (uu___, t) ->
           FStarC_Thunk.force t
       | FStarC_Syntax_Syntax.Lazy_extension s ->
-          let uu___ = FStarC_Util.format1 "((extension %s))" s in
+          let uu___ = FStarC_Format.fmt1 "((extension %s))" s in
           FStarC_Syntax_Util.exp_string uu___
-let (setup_hooks : unit -> unit) =
-  fun uu___ ->
-    FStarC_Effect.op_Colon_Equals
-      FStarC_Syntax_DsEnv.ugly_sigelt_to_string_hook
-      (FStarC_Class_Show.show FStarC_Syntax_Print.showable_sigelt);
-    FStarC_Errors.set_parse_warn_error FStarC_Parser_ParseIt.parse_warn_error;
-    FStarC_Effect.op_Colon_Equals FStarC_Syntax_Syntax.lazy_chooser
-      (FStar_Pervasives_Native.Some lazy_chooser);
-    FStarC_Effect.op_Colon_Equals FStarC_Syntax_Util.tts_f
-      (FStar_Pervasives_Native.Some
-         (FStarC_Class_Show.show FStarC_Syntax_Print.showable_term));
-    FStarC_Effect.op_Colon_Equals FStarC_Syntax_Util.ttd_f
-      (FStar_Pervasives_Native.Some
-         (FStarC_Class_PP.pp FStarC_Syntax_Print.pretty_term));
-    FStarC_Effect.op_Colon_Equals
-      FStarC_TypeChecker_Normalize.unembed_binder_knot
-      (FStar_Pervasives_Native.Some FStarC_Reflection_V2_Embeddings.e_binder);
-    FStarC_List.iter
-      FStarC_Tactics_Interpreter.register_tactic_primitive_step
-      FStarC_Tactics_V1_Primops.ops;
-    FStarC_List.iter
-      FStarC_Tactics_Interpreter.register_tactic_primitive_step
-      FStarC_Tactics_V2_Primops.ops
+let (uu___0 : unit) =
+  FStarC_Effect.op_Colon_Equals
+    FStarC_Syntax_DsEnv.ugly_sigelt_to_string_hook
+    (FStarC_Class_Show.show FStarC_Syntax_Print.showable_sigelt);
+  FStarC_Errors.set_parse_warn_error FStarC_Parser_ParseIt.parse_warn_error;
+  FStarC_Effect.op_Colon_Equals FStarC_Syntax_Syntax.lazy_chooser
+    (FStar_Pervasives_Native.Some lazy_chooser);
+  FStarC_Effect.op_Colon_Equals FStarC_Syntax_Util.tts_f
+    (FStar_Pervasives_Native.Some
+       (FStarC_Class_Show.show FStarC_Syntax_Print.showable_term));
+  FStarC_Effect.op_Colon_Equals FStarC_Syntax_Util.ttd_f
+    (FStar_Pervasives_Native.Some
+       (FStarC_Class_PP.pp FStarC_Syntax_Print.pretty_term));
+  FStarC_Effect.op_Colon_Equals
+    FStarC_TypeChecker_Normalize.unembed_binder_knot
+    (FStar_Pervasives_Native.Some FStarC_Reflection_V2_Embeddings.e_binder);
+  FStarC_List.iter FStarC_Tactics_Interpreter.register_tactic_primitive_step
+    FStarC_Tactics_V1_Primops.ops;
+  FStarC_List.iter FStarC_Tactics_Interpreter.register_tactic_primitive_step
+    FStarC_Tactics_V2_Primops.ops

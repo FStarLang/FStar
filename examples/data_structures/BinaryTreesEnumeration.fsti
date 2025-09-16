@@ -284,7 +284,7 @@ let unfold_tos (s: nat) :
 
 (*> The error message if I omit this isn't the best.
     Could the resource exhaustion be detected and reported? *)
-#set-options "--z3rlimit 40 --initial_fuel 1 --max_fuel 1"
+#set-options "--z3rlimit 40 --fuel 1"
 
 (*> I ran into a few problems while writing this proof:
     - I had trouble supplying the right arguments for each lemma: In Coq I can just

@@ -25,7 +25,7 @@ open ImmBuffer
 type lsize = n:int{n = 1 \/ n = 2 \/ n = 3}
 type csize = n:t{v n = 1 \/ v n = 2 \/ v n = 3}
 
-#reset-options "--initial_fuel 2 --max_fuel 2"
+#reset-options "--fuel 2"
 
 assume val aux_lemma_1: a:t -> b:t -> Lemma
   (requires (v a < pow2 8 /\ v b < pow2 8))
@@ -84,7 +84,7 @@ assume HasSizeVLBytes: forall (n:lsize).
 val vlb_length: n:csize -> b:vlbytes (v n) -> Tot UInt32.t
 let vlb_length n b = read_length (sub b 0ul n) n
 
-#reset-options "--initial_fuel 0 --max_fuel 0 --z3timeout 5"
+#reset-options "--fuel 0 --z3timeout 5"
 
 val read_length_lemma: #n:csize -> b:vlbytes (v n) -> j:UInt32.t{v j <= length b /\ v j >= v n} -> 
   Lemma (requires True)
@@ -101,7 +101,7 @@ let vlb_content (n:csize) (b:vlbytes (v n)) : Tot (buffer u8) =
 val vlserialize: n:csize -> Tot (lserializer (vlbytes (v n)))
 let vlserialize n = fun b -> (| read_length b n, b |)
 
-#reset-options "--initial_fuel 0 --max_fuel 0 --z3timeout 20"
+#reset-options "--fuel 0 --z3timeout 20"
 
 let vlparse n : lparser (vlserialize n) = 
   fun (b:lbytes) ->
@@ -117,7 +117,7 @@ let vlparse n : lparser (vlserialize n) =
       else Correct (sub bytes 0ul (n +^ l), n +^ l)
     )
 
-#reset-options "--initial_fuel 0 --max_fuel 0 --z3timeout 5"
+#reset-options "--fuel 0 --z3timeout 5"
 
 let rec valid_seq (#t:Type0) (ty:lserializable t) (b:lbytes) : Tot bool (decreases (v (lb_length b))) =  
   let len = lb_length b in
@@ -138,7 +138,7 @@ type vlbuffer (#t:Type0) (n:lsize) (ty:lserializable t) = b:buffer u8{
 val vlbuffer_serialize: #t:Type0 -> ty:lserializable t -> n:csize -> Tot (lserializer (vlbuffer (v n) ty))
 let vlbuffer_serialize #t ty n = fun b -> (| read_length b n, b |)
 
-#reset-options "--initial_fuel 0 --max_fuel 0 --z3timeout 20"
+#reset-options "--fuel 0 --z3timeout 20"
 
 let vlbuffer_parse (#t:Type0) (ty:lserializable t) (n:csize) : lparser (vlbuffer_serialize ty n) 
   = fun b ->
@@ -158,7 +158,7 @@ let vlbuffer_parse (#t:Type0) (ty:lserializable t) (n:csize) : lparser (vlbuffer
       )
     )
 
-#reset-options "--initial_fuel 0 --max_fuel 0 --z3timeout 5"
+#reset-options "--fuel 0 --z3timeout 5"
 
 noeq type key_share : Type0 = {
   ks_group_name: UInt16.t;
@@ -180,7 +180,7 @@ let vlserialize_key_share: lserializer key_share =
   fun ks -> (| 2ul +^ read_length ks.ks_public_key 2ul, 
     concat_buf #byte #u8 #byte #u8 (u16_to_buf ks.ks_group_name) (ks.ks_public_key) |)
 
-#reset-options "--initial_fuel 0 --max_fuel 0 --z3timeout 20"
+#reset-options "--fuel 0 --z3timeout 20"
 
 val vlparse_key_share: p:lparser (vlserialize_key_share){inverse vlserialize_key_share p}
 let vlparse_key_share

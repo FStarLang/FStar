@@ -15,7 +15,7 @@
 *)
 module FStar.StackArray
 
-//#set-options "--max_fuel 0 --initial_fuel 0 --initial_ifuel 0 --max_ifuel 0" ... NEED TO MAKE THIS as_ref, as_ref, as_rref, ... a bit simpler
+//#set-options "--fuel 0 --initial_fuel 0 --ifuel 0" ... NEED TO MAKE THIS as_ref, as_ref, as_rref, ... a bit simpler
 
 open FStar.Seq
 open FStar.HyperStack

@@ -21,7 +21,6 @@ module FStarC.TypeChecker.DeferredImplicits
 open FStarC
 open FStarC.List
 open FStarC.Effect
-open FStarC.Util
 open FStarC.Errors
 open FStarC.TypeChecker
 open FStarC.Syntax

@@ -350,7 +350,7 @@ let prf_mac_0 #i #rw aead_st k_0 x =
 (*+ prf_mac_enc:
       A wrapper for PRF.prf_mac, specialized for its use in AEAD.Encrypt.encrypt
 **)      
-#reset-options "--z3rlimit 100 --initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0"
+#reset-options "--z3rlimit 100 --fuel 0 --ifuel 0"
 val prf_mac_enc
   (#i:id)
   (#rw:rw)

@@ -15,6 +15,8 @@
 *)
 module FStarC.Util
 
+(* generic utils *)
+
 open FStarC.Effect
 open FStarC.Json
 open FStarC.BaseTypes
@@ -23,58 +25,6 @@ open FStarC.Array
 exception Impos
 
 val max_int: int
-val return_all: 'a -> ML 'a
-
-type time_of_day
-val get_time_of_day : unit -> time_of_day
-val get_time_of_day_ms : unit -> int
-val is_before: time_of_day -> time_of_day -> bool
-val get_file_last_modification_time: string -> time_of_day
-val string_of_time_of_day: time_of_day -> string
-
-(* generic utils *)
-
-(* pure version *)
-
-val format: string -> list string -> string
-val format1: string -> string -> string
-val format2: string -> string -> string -> string
-val format3: string -> string -> string -> string -> string
-val format4: string -> string -> string -> string -> string -> string
-val format5: string -> string -> string -> string -> string -> string -> string
-val format6: string -> string -> string -> string -> string -> string -> string -> string
-
-val print: string -> list string -> unit
-val print1: string -> string -> unit
-val print2: string -> string -> string -> unit
-val print3: string -> string -> string -> string -> unit
-val print4: string -> string -> string -> string -> string -> unit
-val print5: string -> string -> string -> string -> string -> string -> unit
-val print6: string -> string -> string -> string -> string -> string -> string -> unit
-
-val print_error: string -> unit
-val print1_error: string -> string -> unit
-val print2_error: string -> string -> string -> unit
-val print3_error: string -> string -> string -> string -> unit
-
-val print_warning: string -> unit
-val print1_warning: string -> string -> unit
-val print2_warning: string -> string -> string -> unit
-val print3_warning: string -> string -> string -> string -> unit
-
-val flush_stdout: unit -> unit
-
-val stdout_isatty: unit -> option bool
-
-// These functions have no effect
-val colorize: string -> (string & string) -> string
-val colorize_bold: string -> string
-val colorize_red: string -> string
-val colorize_yellow: string -> string
-val colorize_cyan: string -> string
-val colorize_green: string -> string
-val colorize_magenta : string -> string
-
 
 type out_channel
 
@@ -92,20 +42,6 @@ val fprint: out_channel -> string -> list string -> unit
 (* Adds a newline and flushes *)
 val append_to_file: out_channel -> string -> unit
 
-type printer = {
-  printer_prinfo: string -> unit;
-  printer_prwarning: string -> unit;
-  printer_prerror: string -> unit;
-  printer_prgeneric: string -> (unit -> string) -> (unit -> json) -> unit
-}
-
-val default_printer : printer
-val set_printer : printer -> unit
-
-val print_raw : string -> unit
-val print_string : string -> unit
-val print_generic: string -> ('a -> string) -> ('a -> json) -> 'a -> unit
-val print_any : 'a -> unit
 val strcat : string -> string -> string
 val concat_l : string -> list string -> string
 
@@ -129,12 +65,6 @@ val open_stdin : unit -> stream_reader
 val read_line: stream_reader -> option string
 val nread : stream_reader -> int -> option string
 val poll_stdin : float -> bool
-
-type string_builder
-val new_string_builder: unit -> string_builder
-val clear_string_builder: string_builder -> unit
-val string_of_string_builder: string_builder -> string
-val string_builder_append: string_builder -> string -> unit
 
 val message_of_exn: exn -> string
 val trace_of_exn: exn -> string
@@ -174,10 +104,8 @@ val float_of_int64: int64 -> Tot float
 val float_of_string: string -> Tot float
 val int_of_int32: int32 -> Tot int
 val int32_of_int:   int -> int32 //potentially failing int32 coercion
-val string_of_int:   int -> string
-val string_of_bool:   bool -> string
-val string_of_int64: int64 -> Tot string
-val string_of_int32: int32 -> Tot string
+val show64: int64 -> Tot string
+val show32: int32 -> Tot string
 val string_of_float: float -> Tot string
 val string_of_char:  char -> Tot string
 val hex_string_of_byte:  byte -> Tot string
@@ -200,10 +128,6 @@ val compare: string -> string -> Tot int
 val splitlines: string -> Tot (list string)
 val split: str:string -> sep:string -> Tot (list string)
 
-val is_left: either 'a 'b -> bool
-val is_right: either 'a 'b -> bool
-val left: either 'a 'b -> 'a
-val right: either 'a 'b -> 'b
 val find_dup: ('a -> 'a -> bool) -> list 'a -> option 'a
 val nodups: ('a -> 'a -> bool) -> list 'a -> bool
 val sort_with: ('a -> 'a -> int) -> list 'a -> list 'a
@@ -229,18 +153,6 @@ val take: ('a -> bool) -> list 'a -> list 'a & list 'a
 (* on top of the leftover input list *)
 val fold_flatten:('a -> 'b -> 'a & list 'b) -> 'a -> list 'b -> 'a
 
-val is_none: option 'a -> Tot bool
-val is_some: option 'a -> Tot bool
-val must: option 'a -> 'a
-val dflt: 'a -> option 'a -> Tot 'a
-val find_opt: ('a -> bool) -> list 'a -> option 'a
-(* FIXME: these functions have the wrong argument order when compared to
- List.map, List.iter, etc. *)
-val bind_opt: option 'a -> ('a -> option 'b) -> option 'b
-val catch_opt: option 'a -> (unit -> option 'a) -> option 'a
-val map_opt: option 'a -> ('a -> 'b) -> option 'b
-val iter_opt: option 'a -> ('a -> unit) -> unit
-
 val first_N: int -> list 'a -> (list 'a & list 'a)
 val nth_tail: int -> list 'a -> list 'a
 val prefix_until: ('a -> bool) -> list 'a -> option (list 'a & 'a & list 'a)
@@ -257,6 +169,7 @@ val for_range: int -> int -> (int -> unit) -> unit
 // val mk_ref: 'a -> ref 'a
 
 val exec_name : string
+val argv0     : string
 val get_exec_dir: unit -> string
 val get_cmd_args : unit -> list string
 val expand_environment_variable: string -> option string
@@ -313,8 +226,6 @@ val atomically: (unit -> 'a) -> 'a
 val spawn: (unit -> unit) -> unit
 val print_endline: string -> unit
 
-val map_option: ('a -> 'b) -> option 'a -> option 'b
-
 (* for a filepath, create the parent directory if it doesn't exist (and leading directories too) *)
 val maybe_create_parent : string -> unit
 val save_value_to_file: string -> 'a -> unit
@@ -340,8 +251,8 @@ val marshal: 'a -> string
 val unmarshal: string -> 'a
 
 val print_array (f: 'a -> string) (s:FStar.ImmutableArray.Base.t 'a) : string 
-val array_length (s:FStar.ImmutableArray.Base.t 'a) : FStarC.BigInt.t
-val array_index (s:FStar.ImmutableArray.Base.t 'a) (i:FStarC.BigInt.t) : 'a
+val array_length (s:FStar.ImmutableArray.Base.t 'a) : int
+val array_index (s:FStar.ImmutableArray.Base.t 'a) (i : int) : 'a
 
 (* From OCaml's Unix module (simplified).
 NOTE: execv and friends are evil on Windows, do not use them. *)

@@ -6,21 +6,21 @@ let (loaded_plugin_lib : Prims.bool FStarC_Effect.ref) =
 let (pout : Prims.string -> unit) =
   fun s ->
     let uu___ = FStarC_Debug.any () in
-    if uu___ then FStarC_Util.print_string s else ()
+    if uu___ then FStarC_Format.print_string s else ()
 let (pout1 : Prims.string -> Prims.string -> unit) =
   fun s ->
     fun x ->
       let uu___ = FStarC_Debug.any () in
-      if uu___ then FStarC_Util.print1 s x else ()
+      if uu___ then FStarC_Format.print1 s x else ()
 let (perr : Prims.string -> unit) =
   fun s ->
     let uu___ = FStarC_Debug.any () in
-    if uu___ then FStarC_Util.print_error s else ()
+    if uu___ then FStarC_Format.print_error s else ()
 let (perr1 : Prims.string -> Prims.string -> unit) =
   fun s ->
     fun x ->
       let uu___ = FStarC_Debug.any () in
-      if uu___ then FStarC_Util.print1_error s x else ()
+      if uu___ then FStarC_Format.print1_error s x else ()
 let (do_dynlink : Prims.string -> unit) =
   fun fname ->
     try
@@ -31,13 +31,13 @@ let (do_dynlink : Prims.string -> unit) =
         ((let uu___2 =
             let uu___3 =
               let uu___4 =
-                FStarC_Util.format1 "Failed to load plugin file %s" fname in
+                FStarC_Format.fmt1 "Failed to load plugin file %s" fname in
               FStarC_Errors_Msg.text uu___4 in
             let uu___4 =
               let uu___5 =
                 let uu___6 = FStarC_Errors_Msg.text "Reason:" in
                 let uu___7 = FStarC_Errors_Msg.text e in
-                FStarC_Pprint.prefix (Prims.of_int (2)) Prims.int_one uu___6
+                FStar_Pprint.prefix (Prims.of_int (2)) Prims.int_one uu___6
                   uu___7 in
               let uu___6 =
                 let uu___7 =
@@ -48,7 +48,7 @@ let (do_dynlink : Prims.string -> unit) =
                           FStarC_Errors_Codes.Error_PluginDynlink in
                       FStarC_Class_Show.show FStarC_Class_Show.showable_int
                         uu___10 in
-                    FStarC_Util.format1
+                    FStarC_Format.fmt1
                       "Remove the `--load` option or use `--warn_error -%s` to ignore and continue."
                       uu___9 in
                   FStarC_Errors_Msg.text uu___8 in
@@ -131,7 +131,7 @@ let (compile_modules : Prims.string -> Prims.string Prims.list -> unit) =
           | FStar_Pervasives_Native.None -> "" in
         let env_setter =
           let uu___ = FStarC_Find.locate_ocaml () in
-          FStarC_Util.format3 "env OCAMLPATH=\"%s%s%s\"" uu___
+          FStarC_Format.fmt3 "env OCAMLPATH=\"%s%s%s\"" uu___
             FStarC_Platform.ocamlpath_sep old_ocamlpath in
         let cmd =
           FStarC_String.concat " " (env_setter :: "ocamlfind" :: args) in
@@ -146,7 +146,7 @@ let (compile_modules : Prims.string -> Prims.string Prims.list -> unit) =
                 let uu___4 =
                   let uu___5 =
                     FStarC_Class_Show.show FStarC_Class_Show.showable_int rc in
-                  FStarC_Util.format2
+                  FStarC_Format.fmt2
                     "Command\n`%s`\nreturned with exit code %s" cmd uu___5 in
                 FStarC_Errors_Msg.text uu___4 in
               [uu___3] in
@@ -168,7 +168,7 @@ let (compile_modules : Prims.string -> Prims.string Prims.list -> unit) =
       | uu___ ->
           ((let uu___2 =
               let uu___3 = FStarC_Util.print_exn uu___ in
-              FStarC_Util.format1 "Failed to load native tactic: %s\n" uu___3 in
+              FStarC_Format.fmt1 "Failed to load native tactic: %s\n" uu___3 in
             perr uu___2);
            FStarC_Effect.raise uu___)
 let (autoload_plugin : Prims.string -> Prims.bool) =
@@ -180,7 +180,8 @@ let (autoload_plugin : Prims.string -> Prims.bool) =
       ((let uu___3 = FStarC_Debug.any () in
         if uu___3
         then
-          FStarC_Util.print1 "Trying to find a plugin for extension %s\n" ext
+          FStarC_Format.print1 "Trying to find a plugin for extension %s\n"
+            ext
         else ());
        (let uu___3 = FStarC_Find.find_file (Prims.strcat ext ".cmxs") in
         match uu___3 with
@@ -193,7 +194,7 @@ let (autoload_plugin : Prims.string -> Prims.bool) =
             else
               ((let uu___7 = FStarC_Debug.any () in
                 if uu___7
-                then FStarC_Util.print1 "Autoloading plugin %s ...\n" fn
+                then FStarC_Format.print1 "Autoloading plugin %s ...\n" fn
                 else ());
                load_plugin fn;
                true)

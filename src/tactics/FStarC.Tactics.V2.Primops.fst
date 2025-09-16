@@ -24,7 +24,6 @@ open FStarC
 open FStarC.Effect
 open FStarC.List
 open FStarC.Range
-open FStarC.Util
 open FStarC.Syntax.Syntax
 open FStarC.Syntax.Embeddings
 open FStarC.TypeChecker.Common
@@ -197,7 +196,6 @@ let ops = [
   mk_tac_step_1 0 "term_to_doc"  term_to_doc term_to_doc;
   mk_tac_step_1 0 "comp_to_doc" comp_to_doc comp_to_doc;
   mk_tac_step_1 0 "range_to_string" range_to_string range_to_string;
-  mk_tac_step_2 0 "term_eq_old" term_eq_old term_eq_old;
 
   mk_tac_step_3 1 "with_compat_pre_core"
     #e_any #e_int #(TI.e_tactic_thunk e_any) #e_any
@@ -273,4 +271,10 @@ let ops = [
 
   mk_tac_step_4 0 "call_subtac_tm"
     call_subtac_tm call_subtac_tm;
+
+  mk_tac_step_4 1 "stats_record"
+    #e_any      #e_any      #_ #(TI.e_tactic_thunk e_any)          #e_any
+    #NBET.e_any #NBET.e_any #_ #(TI.e_tactic_nbe_thunk NBET.e_any) #NBET.e_any
+    stats_record
+    stats_record;
 ]

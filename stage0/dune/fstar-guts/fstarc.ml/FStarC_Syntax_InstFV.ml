@@ -334,8 +334,7 @@ and (inst_lcomp_opt :
       | FStar_Pervasives_Native.Some rc ->
           let uu___ =
             let uu___1 =
-              FStarC_Util.map_opt rc.FStarC_Syntax_Syntax.residual_typ
-                (inst s) in
+              FStarC_Option.map (inst s) rc.FStarC_Syntax_Syntax.residual_typ in
             {
               FStarC_Syntax_Syntax.residual_effect =
                 (rc.FStarC_Syntax_Syntax.residual_effect);
@@ -366,7 +365,7 @@ and (inst_ascription :
                 let uu___1 = inst s t in FStar_Pervasives.Inl uu___1
             | FStar_Pervasives.Inr c ->
                 let uu___1 = inst_comp s c in FStar_Pervasives.Inr uu___1 in
-          let topt1 = FStarC_Util.map_opt topt (inst s) in
+          let topt1 = FStarC_Option.map (inst s) topt in
           (annot1, topt1, use_eq)
 let (instantiate :
   inst_t -> FStarC_Syntax_Syntax.term -> FStarC_Syntax_Syntax.term) =
@@ -375,17 +374,17 @@ let (instantiate :
       match i with
       | [] -> t
       | uu___ ->
-          let inst_fv t1 fv =
-            let uu___1 =
-              FStarC_Util.find_opt
-                (fun uu___2 ->
-                   match uu___2 with
-                   | (x, uu___3) ->
-                       FStarC_Ident.lid_equals x
-                         (fv.FStarC_Syntax_Syntax.fv_name).FStarC_Syntax_Syntax.v)
-                i in
-            match uu___1 with
-            | FStar_Pervasives_Native.None -> t1
-            | FStar_Pervasives_Native.Some (uu___2, us) ->
-                mk t1 (FStarC_Syntax_Syntax.Tm_uinst (t1, us)) in
+          let inst_fv t1 =
+            fun fv ->
+              let uu___1 =
+                FStarC_Option.find
+                  (fun uu___2 ->
+                     match uu___2 with
+                     | (x, uu___3) ->
+                         FStarC_Ident.lid_equals x
+                           fv.FStarC_Syntax_Syntax.fv_name) i in
+              match uu___1 with
+              | FStar_Pervasives_Native.None -> t1
+              | FStar_Pervasives_Native.Some (uu___2, us) ->
+                  mk t1 (FStarC_Syntax_Syntax.Tm_uinst (t1, us)) in
           inst inst_fv t

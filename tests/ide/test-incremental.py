@@ -255,7 +255,7 @@ def test_file(filepath):
     # print the request to the console for debugging
     # print(request)
     # Run fstar on the file with the request as stdin
-    p = subprocess.run([fstar, "--z3version", "4.13.3", "--admit_smt_queries", "true", "--ide", file], input=request, encoding="utf-8", stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    p = subprocess.run([fstar, "--admit_smt_queries", "true", "--ide", file], input=request, encoding="utf-8", stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     # Read the response from stdout
     response = p.stdout
     # Print the response to the console for debugging

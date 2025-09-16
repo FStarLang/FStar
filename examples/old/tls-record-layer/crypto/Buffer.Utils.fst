@@ -72,7 +72,7 @@ val lemma_euclidean_division: r:nat -> b:nat -> q:pos -> Lemma
   (ensures  (r + q * b < q * (b+1)))
 let lemma_euclidean_division r b q = ()
 
-#reset-options "--initial_fuel 0 --max_fuel 0"
+#reset-options "--fuel 0"
 
 let lemma_uint32_of_bytes (a:t) (b:t) (c:t) (d:t) : Lemma
   (requires (v a < pow2 8 /\ v b < pow2 8 /\ v c < pow2 8 /\ v d < pow2 8))

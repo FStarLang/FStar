@@ -1,6 +1,5 @@
 module FStarC.TypeChecker.Core
 open FStarC
-open FStarC.Util
 open FStarC.Syntax.Syntax
 open FStarC.TypeChecker.Common
 module Env = FStarC.TypeChecker.Env

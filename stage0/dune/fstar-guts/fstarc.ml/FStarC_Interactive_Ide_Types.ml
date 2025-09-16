@@ -113,12 +113,12 @@ type optmod_t = FStarC_Syntax_Syntax.modul FStar_Pervasives_Native.option
 type timed_fname =
   {
   tf_fname: Prims.string ;
-  tf_modtime: FStarC_Util.time_of_day }
+  tf_modtime: FStarC_Time.time_of_day }
 let (__proj__Mktimed_fname__item__tf_fname : timed_fname -> Prims.string) =
   fun projectee ->
     match projectee with | { tf_fname; tf_modtime;_} -> tf_fname
 let (__proj__Mktimed_fname__item__tf_modtime :
-  timed_fname -> FStarC_Util.time_of_day) =
+  timed_fname -> FStarC_Time.time_of_day) =
   fun projectee ->
     match projectee with | { tf_fname; tf_modtime;_} -> tf_modtime
 type repl_task =
@@ -403,7 +403,7 @@ let (__proj__Mkgrepl_state__item__grepl_stdin :
   grepl_state -> FStarC_Util.stream_reader) =
   fun projectee ->
     match projectee with | { grepl_repls; grepl_stdin;_} -> grepl_stdin
-let (t0 : FStarC_Util.time_of_day) = FStarC_Util.get_time_of_day ()
+let (t0 : FStarC_Time.time_of_day) = FStarC_Time.get_time_of_day ()
 let (dummy_tf_of_fname : Prims.string -> timed_fname) =
   fun fname -> { tf_fname = fname; tf_modtime = t0 }
 let (string_of_timed_fname : timed_fname -> Prims.string) =
@@ -411,39 +411,43 @@ let (string_of_timed_fname : timed_fname -> Prims.string) =
     match uu___ with
     | { tf_fname = fname; tf_modtime = modtime;_} ->
         if modtime = t0
-        then FStarC_Util.format1 "{ %s }" fname
+        then FStarC_Format.fmt1 "{ %s }" fname
         else
-          (let uu___2 = FStarC_Util.string_of_time_of_day modtime in
-           FStarC_Util.format2 "{ %s; %s }" fname uu___2)
+          (let uu___2 =
+             FStarC_Class_Show.show
+               { FStarC_Class_Show.show = FStarC_Time.string_of_time_of_day }
+               modtime in
+           FStarC_Format.fmt2 "{ %s; %s }" fname uu___2)
 let (string_of_repl_task : repl_task -> Prims.string) =
   fun uu___ ->
     match uu___ with
     | LDInterleaved (intf, impl) ->
         let uu___1 = string_of_timed_fname intf in
         let uu___2 = string_of_timed_fname impl in
-        FStarC_Util.format2 "LDInterleaved (%s, %s)" uu___1 uu___2
+        FStarC_Format.fmt2 "LDInterleaved (%s, %s)" uu___1 uu___2
     | LDSingle intf_or_impl ->
         let uu___1 = string_of_timed_fname intf_or_impl in
-        FStarC_Util.format1 "LDSingle %s" uu___1
+        FStarC_Format.fmt1 "LDSingle %s" uu___1
     | LDInterfaceOfCurrentFile intf ->
         let uu___1 = string_of_timed_fname intf in
-        FStarC_Util.format1 "LDInterfaceOfCurrentFile %s" uu___1
+        FStarC_Format.fmt1 "LDInterfaceOfCurrentFile %s" uu___1
     | PushFragment (FStar_Pervasives.Inl frag, uu___1, uu___2) ->
-        FStarC_Util.format1 "PushFragment { code = %s }"
+        FStarC_Format.fmt1 "PushFragment { code = %s }"
           frag.FStarC_Parser_ParseIt.frag_text
     | PushFragment (FStar_Pervasives.Inr d, uu___1, uu___2) ->
         let uu___3 = FStarC_Class_Show.show FStarC_Parser_AST.showable_decl d in
-        FStarC_Util.format1 "PushFragment { decl = %s }" uu___3
+        FStarC_Format.fmt1 "PushFragment { decl = %s }" uu___3
     | Noop -> "Noop {}"
 let (string_of_repl_stack_entry : repl_stack_entry_t -> Prims.string) =
   fun uu___ ->
     match uu___ with
     | ((depth, i), (task, state)) ->
         let uu___1 =
-          let uu___2 = FStarC_Util.string_of_int i in
+          let uu___2 =
+            FStarC_Class_Show.show FStarC_Class_Show.showable_int i in
           let uu___3 = let uu___4 = string_of_repl_task task in [uu___4] in
           uu___2 :: uu___3 in
-        FStarC_Util.format "{depth=%s; task=%s}" uu___1
+        FStarC_Format.fmt "{depth=%s; task=%s}" uu___1
 let (string_of_repl_stack : repl_stack_entry_t Prims.list -> Prims.string) =
   fun s ->
     let uu___ = FStarC_List.map string_of_repl_stack_entry s in
@@ -451,9 +455,11 @@ let (string_of_repl_stack : repl_stack_entry_t Prims.list -> Prims.string) =
 let (repl_state_to_string : repl_state -> Prims.string) =
   fun r ->
     let uu___ =
-      let uu___1 = FStarC_Util.string_of_int r.repl_line in
+      let uu___1 =
+        FStarC_Class_Show.show FStarC_Class_Show.showable_int r.repl_line in
       let uu___2 =
-        let uu___3 = FStarC_Util.string_of_int r.repl_column in
+        let uu___3 =
+          FStarC_Class_Show.show FStarC_Class_Show.showable_int r.repl_column in
         let uu___4 =
           let uu___5 =
             let uu___6 =
@@ -467,7 +473,7 @@ let (repl_state_to_string : repl_state -> Prims.string) =
           (r.repl_fname) :: uu___5 in
         uu___3 :: uu___4 in
       uu___1 :: uu___2 in
-    FStarC_Util.format
+    FStarC_Format.fmt
       "{\n\trepl_line=%s;\n\trepl_column=%s;\n\trepl_fname=%s;\n\trepl_cur_mod=%s;\n\t\\      \n      repl_deps_stack={%s}\n}"
       uu___
 let (push_query_to_string : push_query -> Prims.string) =
@@ -479,16 +485,21 @@ let (push_query_to_string : push_query -> Prims.string) =
     let uu___ =
       let uu___1 = FStarC_Class_Show.show showable_push_kind pq.push_kind in
       let uu___2 =
-        let uu___3 = FStarC_Util.string_of_int pq.push_line in
+        let uu___3 =
+          FStarC_Class_Show.show FStarC_Class_Show.showable_int pq.push_line in
         let uu___4 =
-          let uu___5 = FStarC_Util.string_of_int pq.push_column in
+          let uu___5 =
+            FStarC_Class_Show.show FStarC_Class_Show.showable_int
+              pq.push_column in
           let uu___6 =
-            let uu___7 = FStarC_Util.string_of_bool pq.push_peek_only in
+            let uu___7 =
+              FStarC_Class_Show.show FStarC_Class_Show.showable_bool
+                pq.push_peek_only in
             [uu___7; code_or_decl] in
           uu___5 :: uu___6 in
         uu___3 :: uu___4 in
       uu___1 :: uu___2 in
-    FStarC_Util.format
+    FStarC_Format.fmt
       "{ push_kind = %s; push_line = %s; push_column = %s; push_peek_only = %s; push_code_or_decl = %s }"
       uu___
 let (query_to_string : query -> Prims.string) =
@@ -512,10 +523,12 @@ let (query_to_string : query -> Prims.string) =
           match pos with
           | FStar_Pervasives_Native.None -> "None"
           | FStar_Pervasives_Native.Some (f, i, j) ->
-              let uu___1 = FStarC_Util.string_of_int i in
-              let uu___2 = FStarC_Util.string_of_int j in
-              FStarC_Util.format3 "(%s, %s, %s)" f uu___1 uu___2 in
-        FStarC_Util.format3 "(Lookup %s %s [%s])" s uu___
+              let uu___1 =
+                FStarC_Class_Show.show FStarC_Class_Show.showable_int i in
+              let uu___2 =
+                FStarC_Class_Show.show FStarC_Class_Show.showable_int j in
+              FStarC_Format.fmt3 "(%s, %s, %s)" f uu___1 uu___2 in
+        FStarC_Format.fmt3 "(Lookup %s %s [%s])" s uu___
           (FStarC_String.concat "; " features)
     | Compute uu___ -> "Compute"
     | Search uu___ -> "Search"
@@ -591,8 +604,8 @@ let (json_of_issue_level : FStarC_Errors.issue_level -> FStarC_Json.json) =
 let (json_of_issue : FStarC_Errors.issue -> FStarC_Json.json) =
   fun issue ->
     let r =
-      FStarC_Util.map_opt issue.FStarC_Errors.issue_range
-        FStarC_Range_Ops.refind_range in
+      FStarC_Option.map FStarC_Range_Ops.refind_range
+        issue.FStarC_Errors.issue_range in
     let uu___ =
       let uu___1 =
         let uu___2 =

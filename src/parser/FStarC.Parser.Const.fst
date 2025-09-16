@@ -17,7 +17,6 @@ module FStarC.Parser.Const
 
 open FStarC
 open FStarC.Effect
-open FStarC.Util
 open FStarC.Ident
 open FStarC.Range.Type
 open FStarC.Const
@@ -376,6 +375,7 @@ let no_auto_projectors_decls_attr = attr "no_auto_projectors_decls"
 let no_auto_projectors_attr = attr "no_auto_projectors"
 let no_subtping_attr_lid = attr "no_subtyping"
 let admit_termination_lid = attr "admit_termination"
+let admitted_lid = attr "admitted"
 let unrefine_binder_attr = pconst "unrefine"
 let do_not_unrefine_attr = pconst "do_not_unrefine"
 let desugar_of_variant_record_lid = attr "desugar_of_variant_record"
@@ -407,18 +407,18 @@ let const_to_string x = match x with
   | Const_unit -> "()"
   | Const_bool b -> if b then "true" else "false"
   | Const_real r -> r^"R"
-  | Const_string(s, _) -> U.format1 "\"%s\"" s
+  | Const_string(s, _) -> Format.fmt1 "\"%s\"" s
   | Const_int (x, _) -> x
   | Const_char c -> "'" ^ U.string_of_char c ^ "'"
   | Const_range r -> FStarC.Range.string_of_range r
   | Const_range_of -> "range_of"
   | Const_set_range_of -> "set_range_of"
   | Const_reify lopt ->
-    U.format1 "reify%s"
+    Format.fmt1 "reify%s"
       (match lopt with
        | None -> ""
-       | Some l -> U.format1 "<%s>" (string_of_lid l))    
-  | Const_reflect l -> U.format1 "[[%s.reflect]]" (sli l)
+       | Some l -> Format.fmt1 "<%s>" (string_of_lid l))    
+  | Const_reflect l -> Format.fmt1 "[[%s.reflect]]" (sli l)
 
 let is_name (lid:lident) =
   let c = U.char_at (string_of_id (ident_of_lid lid)) 0 in

@@ -218,7 +218,7 @@ let rec counterblocks i mac_rgn x l from_pos to_pos plain cipher =
 (*+ mac_is_set prf_table iv: 
         the mac entry in the prf_table, at location (iv, ctr_0 i)
 	is set to the suitable encoded ad + cipher, tag      **)
-#reset-options "--z3rlimit 100 --initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0"
+#reset-options "--z3rlimit 100 --fuel 0 --ifuel 0"
 let mac_is_set (#rgn:region) (#i:id)
 	       (prf_table:prf_table rgn i{mac_log}) //the entire prf table
 	       (iv:Cipher.iv (alg i))
@@ -496,7 +496,7 @@ let init_remaining_len_ok (#i:id) (x:PRF.domain i{PRF.ctr_0 i +^ 1ul = x.ctr}) (
     = ()
 
 (*+ Framing lemmas for clauses of the main invariant **)
-#reset-options "--initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0"
+#reset-options "--fuel 0 --ifuel 0"
 let frame_refines_one_entry (#i:id) (#mac_rgn:region) 
 			    (h:mem) (h':mem) 
 			    (blocks:prf_table mac_rgn i)
@@ -579,7 +579,7 @@ let weaken_all_above (#rgn:region) (#i:id) (s:Seq.seq (PRF.entry rgn i))
 (*+ counterblocks_emp:
 	proves that counterblocks on a zero range is the empty sequence
  **)
-#set-options "--initial_fuel 1 --max_fuel 1 --initial_ifuel 0 --max_ifuel 0"
+#set-options "--fuel 1 --ifuel 0"
 let counterblocks_emp   (i:id)
 			(rgn:region)
 			(x:PRF.domain i{ctr_0 i <^ PRF.(x.ctr) })
@@ -596,7 +596,7 @@ let find_append (#i:id) (#r:rid) (d:domain i) (s1:prf_table r i) (s2:prf_table r
            (ensures (find (Seq.append s1 s2) d == find s2 d))
    = Seq.find_append_none s1 s2 (is_entry_domain d)
 
-#set-options "--initial_ifuel 0 --max_ifuel 0 --initial_fuel 2 --max_fuel 2"
+#set-options "--ifuel 0 --fuel 2"
 let find_singleton (#rgn:region) (#i:id) (e:PRF.entry rgn i) (x:PRF.domain i) 
     : Lemma (if is_entry_domain x e then PRF.find (Seq.create 1 e) x == Some e.range
 	     else PRF.find (Seq.create 1 e) x == None)
@@ -752,7 +752,7 @@ let frame_unused_aead_iv_for_prf_append #mac_rgn #i table blocks h nonce =
         rewrite the indexed-based invocation of counterblocks into a 
 	and inductive form based on snoc.
         Each recursive invocation effectively snoc's a PRF block **)
-#reset-options "--z3rlimit 200 --initial_fuel 1 --max_fuel 1 --initial_ifuel 0 --max_ifuel 0"
+#reset-options "--z3rlimit 200 --fuel 1 --ifuel 0"
 val counterblocks_snoc: #i:id{safeId i} -> (rgn:region) -> (x:domain i{ctr_0 i <^ x.ctr}) -> (k:nat{v x.ctr <= k}) ->
 			 (len:nz_ok_len i) ->
 			 (next:nat{0 < next /\ next <= v (PRF.blocklen i)}) ->
@@ -771,7 +771,7 @@ val counterblocks_snoc: #i:id{safeId i} -> (rgn:region) -> (x:domain i{ctr_0 i <
 							   (PRF.Entry ({x with ctr=UInt32.uint_to_t k}) 
 							              (PRF.OTP (UInt32.uint_to_t next) plain_last cipher_last)))))
 	   (decreases (completed_len - v x.ctr))
-#reset-options "--z3rlimit 400 --initial_fuel 1 --max_fuel 1 --initial_ifuel 0 --max_ifuel 0"
+#reset-options "--z3rlimit 400 --fuel 1 --ifuel 0"
 let rec counterblocks_snoc #i rgn x k len next completed_len plain cipher =
    let open FStar.Mul in
    let from_pos = (v x.ctr - (v (otp_offset i))) * v (PRF.blocklen i) in
@@ -795,7 +795,7 @@ let rec counterblocks_snoc #i rgn x k len next completed_len plain cipher =
 	  assert (recursive_call == Seq.snoc middle last_entry);
           Seq.lemma_cons_snoc head middle last_entry //REVIEW: THIS PROOF TAKES A WHILE ...optimize
 
-#reset-options "--initial_fuel 1 --max_fuel 1 --initial_ifuel 0 --max_ifuel 0"
+#reset-options "--fuel 1 --ifuel 0"
 (*+ counterblocks_slice: 
 	counterblocks only depends on the fragment of plain and cipher
 	accessible to it between from_pos and to_pos **)
@@ -814,7 +814,7 @@ val counterblocks_slice: #i:id{safeId i} ->
 					       (Plain.slice plain from_pos to_pos) 
  					       (Seq.slice cipher from_pos to_pos))))
            (decreases (to_pos - from_pos))						 
-#reset-options "--z3rlimit 200 --initial_fuel 1 --max_fuel 1 --initial_ifuel 0 --max_ifuel 0"
+#reset-options "--z3rlimit 200 --fuel 1 --ifuel 0"
 let rec counterblocks_slice #i rgn x len from_pos to_pos plain cipher =
     (* The general proof idea:
        let from' = from + l
@@ -859,7 +859,7 @@ val counterblocks_len: #i:id ->
   (ensures Seq.length (counterblocks i rgn x len from_pos len plain cipher) =
            num_blocks_for_len i (len - from_pos))
   (decreases (len - from_pos))
-#reset-options "--z3rlimit 200 --initial_fuel 1 --max_fuel 1 --initial_ifuel 0 --max_ifuel 0"
+#reset-options "--z3rlimit 200 --fuel 1 --ifuel 0"
 let rec counterblocks_len #i rgn x len from_pos plain cipher =
   if from_pos = len
   then ()
@@ -979,7 +979,7 @@ let counterblocks_contains_all_otp_blocks
 	This restates prf_contains_all_otp_blocks inductively, 
 	as a property of the first block and inductively on the tail
  **)
-#reset-options "--z3rlimit 200 --initial_fuel 1 --max_fuel 1 --initial_ifuel 0 --max_ifuel 0"
+#reset-options "--z3rlimit 200 --fuel 1 --ifuel 0"
 val invert_prf_contains_all_otp_blocks
     (#i:id) (#r:rid)
     (x:PRF.domain i{PRF.ctr_0 i <^ x.ctr})
@@ -1085,7 +1085,7 @@ let lemma_prf_find_append_none_table
     (ensures  (PRF.find (Seq.append table blocks) x == PRF.find blocks x))
   = Seq.find_append_none table blocks (is_entry_domain x)
 
-#reset-options "--z3rlimit 200 --initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0"
+#reset-options "--z3rlimit 200 --fuel 0 --ifuel 0"
 let frame_prf_contains_all_otp_blocks_prefix
   (#i:id)
   (#mac_rgn:rid)
@@ -1144,10 +1144,10 @@ val lemma_mac_log_framing
 	     HS.(h1.h `Map.contains` CMA.(mac_st_2.region))          /\
              HS.modifies_ref (CMA.(mac_st_1.region)) (Set.singleton (Heap.addr_of (HS.as_ref (as_hsref (CMA.(ilog mac_st_1.log)))))) h0 h1))
   (ensures  (m_sel h0 (CMA.(ilog mac_st_2.log)) = m_sel h1 (CMA.(ilog mac_st_2.log))))
-#set-options "--initial_ifuel 1 --max_ifuel 1"
+#set-options "--ifuel 1"
 let lemma_mac_log_framing #i #nonce_1 #nonce_2 mac_st_1 h0 h1 mac_st_2 = ()
 
-#reset-options "--initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0"
+#reset-options "--fuel 0 --ifuel 0"
 let lemma_fresh_nonce_implies_all_entries_nonces_are_different
   (#i:id)
   (aead_entries:aead_entries i)

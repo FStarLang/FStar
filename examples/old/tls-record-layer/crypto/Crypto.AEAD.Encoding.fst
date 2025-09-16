@@ -215,7 +215,7 @@ val lemma_encode_final: b:Seq.seq UInt8.t{0 <> Seq.length b /\ Seq.length b < 16
 let lemma_encode_final b = ()
 
 
-#reset-options "--z3rlimit 140 --initial_fuel 0 --max_fuel 0"
+#reset-options "--z3rlimit 140 --fuel 0"
 
 let rec add_bytes #i st acc len txt =
   let h0 = ST.get() in 
@@ -286,7 +286,7 @@ let rec add_bytes #i st acc len txt =
   if not mac_log then
     Buffer.lemma_intro_modifies_1 (MAC.as_buffer (CMA.abuf acc)) h0 h6
 
-#reset-options "--initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0"
+#reset-options "--fuel 0 --ifuel 0"
 private let encode_lengths_poly1305 (aadlen:UInt32.t) (plainlen:UInt32.t) : b:lbytes 16
   { v aadlen = little_endian (Seq.slice b 0 4) /\
     v plainlen = little_endian (Seq.slice b 8 12) } = 
@@ -419,7 +419,7 @@ val accumulate:
 
 // 20170313 JP: this verifies on my OSX laptop but not on the CI machine. See
 // #893
-#reset-options "--initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0 --z3rlimit 2048 --admit_smt_queries true"
+#reset-options "--fuel 0 --ifuel 0 --z3rlimit 2048 --admit_smt_queries true"
 let accumulate #i st aadlen aad txtlen cipher  = 
   let h = ST.get() in 
   let acc = CMA.start st in

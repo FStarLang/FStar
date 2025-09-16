@@ -25,14 +25,7 @@ let (ops : FStarC_TypeChecker_Primops_Base.primitive_step Prims.list) =
           (FStarC_Syntax_Embeddings.e_option FStarC_Syntax_Embeddings.e_int)
           (FStarC_TypeChecker_NBETerm.e_option
              FStarC_TypeChecker_NBETerm.e_int)
-          (fun uu___6 ->
-             (fun i ->
-                Obj.magic
-                  (FStarC_Class_Monad.fmap FStarC_Class_Monad.monad_option ()
-                     ()
-                     (fun uu___6 ->
-                        (Obj.magic FStarC_BigInt.of_int_fs) uu___6)
-                     (Obj.magic i.FStarC_Errors.issue_number))) uu___6) in
+          (fun i -> i.FStarC_Errors.issue_number) in
       let uu___5 =
         let uu___6 =
           let uu___7 = mk_lid "range_of_issue" in
@@ -91,18 +84,11 @@ let (ops : FStarC_TypeChecker_Primops_Base.primitive_step Prims.list) =
                            fun context ->
                              let uu___14 =
                                FStarC_Errors.issue_level_of_string level in
-                             let uu___15 =
-                               Obj.magic
-                                 (FStarC_Class_Monad.fmap
-                                    FStarC_Class_Monad.monad_option () ()
-                                    (fun uu___16 ->
-                                       (Obj.magic FStarC_BigInt.to_int_fs)
-                                         uu___16) (Obj.magic number)) in
                              {
                                FStarC_Errors.issue_msg = msg;
                                FStarC_Errors.issue_level = uu___14;
                                FStarC_Errors.issue_range = range;
-                               FStarC_Errors.issue_number = uu___15;
+                               FStarC_Errors.issue_number = number;
                                FStarC_Errors.issue_ctx = context
                              }) in
               [uu___12] in

@@ -116,7 +116,7 @@ let (fstar_tactics_Force : tac_constant) =
   fstar_tactics_data ["Types"; "Force"]
 let mk_emb :
   'a .
-    (FStarC_Range_Type.range -> 'a -> FStarC_Syntax_Syntax.term) ->
+    (FStarC_Range_Type.t -> 'a -> FStarC_Syntax_Syntax.term) ->
       (FStarC_Syntax_Syntax.term -> 'a FStar_Pervasives_Native.option) ->
         FStarC_Syntax_Syntax.term ->
           'a FStarC_Syntax_Embeddings_Base.embedding
@@ -131,7 +131,7 @@ let mk_emb :
 let embed :
   'a .
     'a FStarC_Syntax_Embeddings_Base.embedding ->
-      FStarC_Range_Type.range -> 'a -> FStarC_Syntax_Syntax.term
+      FStarC_Range_Type.t -> 'a -> FStarC_Syntax_Syntax.term
   =
   fun uu___ ->
     fun r ->
@@ -207,55 +207,59 @@ let (fv_as_emb_typ : FStarC_Syntax_Syntax.fv -> FStarC_Syntax_Syntax.emb_typ)
     let uu___ =
       let uu___1 =
         FStarC_Class_Show.show FStarC_Ident.showable_lident
-          (fv.FStarC_Syntax_Syntax.fv_name).FStarC_Syntax_Syntax.v in
+          fv.FStarC_Syntax_Syntax.fv_name in
       (uu___1, []) in
     FStarC_Syntax_Syntax.ET_app uu___
 let (e_proofstate_nbe :
   FStarC_Tactics_Types.proofstate FStarC_TypeChecker_NBETerm.embedding) =
-  let embed_proofstate _cb ps =
-    let li =
-      let uu___ = FStarC_Dyn.mkdyn ps in
-      {
-        FStarC_Syntax_Syntax.blob = uu___;
-        FStarC_Syntax_Syntax.lkind = FStarC_Syntax_Syntax.Lazy_proofstate;
-        FStarC_Syntax_Syntax.ltyp = (fstar_tactics_proofstate.t);
-        FStarC_Syntax_Syntax.rng = FStarC_Range_Type.dummyRange
-      } in
-    let thunk =
-      FStarC_Thunk.mk
-        (fun uu___ ->
-           FStarC_TypeChecker_NBETerm.mk_t
-             (FStarC_TypeChecker_NBETerm.Constant
-                (FStarC_TypeChecker_NBETerm.String
-                   ("(((proofstate.nbe)))", FStarC_Range_Type.dummyRange)))) in
-    FStarC_TypeChecker_NBETerm.mk_t
-      (FStarC_TypeChecker_NBETerm.Lazy ((FStar_Pervasives.Inl li), thunk)) in
-  let unembed_proofstate _cb t =
-    let uu___ = FStarC_TypeChecker_NBETerm.nbe_t_of_t t in
-    match uu___ with
-    | FStarC_TypeChecker_NBETerm.Lazy
-        (FStar_Pervasives.Inl
-         { FStarC_Syntax_Syntax.blob = b;
-           FStarC_Syntax_Syntax.lkind = FStarC_Syntax_Syntax.Lazy_proofstate;
-           FStarC_Syntax_Syntax.ltyp = uu___1;
-           FStarC_Syntax_Syntax.rng = uu___2;_},
-         uu___3)
-        ->
-        let uu___4 = FStarC_Dyn.undyn b in
-        FStar_Pervasives_Native.Some uu___4
-    | uu___1 ->
-        ((let uu___3 = FStarC_Effect.op_Bang FStarC_Options.debug_embedding in
-          if uu___3
-          then
-            let uu___4 =
-              let uu___5 = FStarC_TypeChecker_NBETerm.t_to_string t in
-              FStarC_Util.format1 "Not an embedded NBE proofstate: %s\n"
-                uu___5 in
-            FStarC_Errors.log_issue0 FStarC_Errors_Codes.Warning_NotEmbedded
-              () (Obj.magic FStarC_Errors_Msg.is_error_message_string)
-              (Obj.magic uu___4)
-          else ());
-         FStar_Pervasives_Native.None) in
+  let embed_proofstate _cb =
+    fun ps ->
+      let li =
+        let uu___ = FStarC_Dyn.mkdyn ps in
+        {
+          FStarC_Syntax_Syntax.blob = uu___;
+          FStarC_Syntax_Syntax.lkind = FStarC_Syntax_Syntax.Lazy_proofstate;
+          FStarC_Syntax_Syntax.ltyp = (fstar_tactics_proofstate.t);
+          FStarC_Syntax_Syntax.rng = FStarC_Range_Type.dummyRange
+        } in
+      let thunk =
+        FStarC_Thunk.mk
+          (fun uu___ ->
+             FStarC_TypeChecker_NBETerm.mk_t
+               (FStarC_TypeChecker_NBETerm.Constant
+                  (FStarC_TypeChecker_NBETerm.String
+                     ("(((proofstate.nbe)))", FStarC_Range_Type.dummyRange)))) in
+      FStarC_TypeChecker_NBETerm.mk_t
+        (FStarC_TypeChecker_NBETerm.Lazy ((FStar_Pervasives.Inl li), thunk)) in
+  let unembed_proofstate _cb =
+    fun t ->
+      let uu___ = FStarC_TypeChecker_NBETerm.nbe_t_of_t t in
+      match uu___ with
+      | FStarC_TypeChecker_NBETerm.Lazy
+          (FStar_Pervasives.Inl
+           { FStarC_Syntax_Syntax.blob = b;
+             FStarC_Syntax_Syntax.lkind =
+               FStarC_Syntax_Syntax.Lazy_proofstate;
+             FStarC_Syntax_Syntax.ltyp = uu___1;
+             FStarC_Syntax_Syntax.rng = uu___2;_},
+           uu___3)
+          ->
+          let uu___4 = FStarC_Dyn.undyn b in
+          FStar_Pervasives_Native.Some uu___4
+      | uu___1 ->
+          ((let uu___3 = FStarC_Effect.op_Bang FStarC_Options.debug_embedding in
+            if uu___3
+            then
+              let uu___4 =
+                let uu___5 = FStarC_TypeChecker_NBETerm.t_to_string t in
+                FStarC_Format.fmt1 "Not an embedded NBE proofstate: %s\n"
+                  uu___5 in
+              FStarC_Errors.log_issue0
+                FStarC_Errors_Codes.Warning_NotEmbedded ()
+                (Obj.magic FStarC_Errors_Msg.is_error_message_string)
+                (Obj.magic uu___4)
+            else ());
+           FStar_Pervasives_Native.None) in
   {
     FStarC_TypeChecker_NBETerm.em = embed_proofstate;
     FStarC_TypeChecker_NBETerm.un = unembed_proofstate;
@@ -266,49 +270,52 @@ let (e_proofstate_nbe :
   }
 let (e_goal_nbe :
   FStarC_Tactics_Types.goal FStarC_TypeChecker_NBETerm.embedding) =
-  let embed_goal _cb ps =
-    let li =
-      let uu___ = FStarC_Dyn.mkdyn ps in
-      {
-        FStarC_Syntax_Syntax.blob = uu___;
-        FStarC_Syntax_Syntax.lkind = FStarC_Syntax_Syntax.Lazy_goal;
-        FStarC_Syntax_Syntax.ltyp = (fstar_tactics_goal.t);
-        FStarC_Syntax_Syntax.rng = FStarC_Range_Type.dummyRange
-      } in
-    let thunk =
-      FStarC_Thunk.mk
-        (fun uu___ ->
-           FStarC_TypeChecker_NBETerm.mk_t
-             (FStarC_TypeChecker_NBETerm.Constant
-                (FStarC_TypeChecker_NBETerm.String
-                   ("(((goal.nbe)))", FStarC_Range_Type.dummyRange)))) in
-    FStarC_TypeChecker_NBETerm.mk_t
-      (FStarC_TypeChecker_NBETerm.Lazy ((FStar_Pervasives.Inl li), thunk)) in
-  let unembed_goal _cb t =
-    let uu___ = FStarC_TypeChecker_NBETerm.nbe_t_of_t t in
-    match uu___ with
-    | FStarC_TypeChecker_NBETerm.Lazy
-        (FStar_Pervasives.Inl
-         { FStarC_Syntax_Syntax.blob = b;
-           FStarC_Syntax_Syntax.lkind = FStarC_Syntax_Syntax.Lazy_goal;
-           FStarC_Syntax_Syntax.ltyp = uu___1;
-           FStarC_Syntax_Syntax.rng = uu___2;_},
-         uu___3)
-        ->
-        let uu___4 = FStarC_Dyn.undyn b in
-        FStar_Pervasives_Native.Some uu___4
-    | uu___1 ->
-        ((let uu___3 = FStarC_Effect.op_Bang FStarC_Options.debug_embedding in
-          if uu___3
-          then
-            let uu___4 =
-              let uu___5 = FStarC_TypeChecker_NBETerm.t_to_string t in
-              FStarC_Util.format1 "Not an embedded NBE goal: %s" uu___5 in
-            FStarC_Errors.log_issue0 FStarC_Errors_Codes.Warning_NotEmbedded
-              () (Obj.magic FStarC_Errors_Msg.is_error_message_string)
-              (Obj.magic uu___4)
-          else ());
-         FStar_Pervasives_Native.None) in
+  let embed_goal _cb =
+    fun ps ->
+      let li =
+        let uu___ = FStarC_Dyn.mkdyn ps in
+        {
+          FStarC_Syntax_Syntax.blob = uu___;
+          FStarC_Syntax_Syntax.lkind = FStarC_Syntax_Syntax.Lazy_goal;
+          FStarC_Syntax_Syntax.ltyp = (fstar_tactics_goal.t);
+          FStarC_Syntax_Syntax.rng = FStarC_Range_Type.dummyRange
+        } in
+      let thunk =
+        FStarC_Thunk.mk
+          (fun uu___ ->
+             FStarC_TypeChecker_NBETerm.mk_t
+               (FStarC_TypeChecker_NBETerm.Constant
+                  (FStarC_TypeChecker_NBETerm.String
+                     ("(((goal.nbe)))", FStarC_Range_Type.dummyRange)))) in
+      FStarC_TypeChecker_NBETerm.mk_t
+        (FStarC_TypeChecker_NBETerm.Lazy ((FStar_Pervasives.Inl li), thunk)) in
+  let unembed_goal _cb =
+    fun t ->
+      let uu___ = FStarC_TypeChecker_NBETerm.nbe_t_of_t t in
+      match uu___ with
+      | FStarC_TypeChecker_NBETerm.Lazy
+          (FStar_Pervasives.Inl
+           { FStarC_Syntax_Syntax.blob = b;
+             FStarC_Syntax_Syntax.lkind = FStarC_Syntax_Syntax.Lazy_goal;
+             FStarC_Syntax_Syntax.ltyp = uu___1;
+             FStarC_Syntax_Syntax.rng = uu___2;_},
+           uu___3)
+          ->
+          let uu___4 = FStarC_Dyn.undyn b in
+          FStar_Pervasives_Native.Some uu___4
+      | uu___1 ->
+          ((let uu___3 = FStarC_Effect.op_Bang FStarC_Options.debug_embedding in
+            if uu___3
+            then
+              let uu___4 =
+                let uu___5 = FStarC_TypeChecker_NBETerm.t_to_string t in
+                FStarC_Format.fmt1 "Not an embedded NBE goal: %s" uu___5 in
+              FStarC_Errors.log_issue0
+                FStarC_Errors_Codes.Warning_NotEmbedded ()
+                (Obj.magic FStarC_Errors_Msg.is_error_message_string)
+                (Obj.magic uu___4)
+            else ());
+           FStar_Pervasives_Native.None) in
   {
     FStarC_TypeChecker_NBETerm.em = embed_goal;
     FStarC_TypeChecker_NBETerm.un = unembed_goal;
@@ -318,93 +325,115 @@ let (e_goal_nbe :
       (fun uu___ -> fv_as_emb_typ fstar_tactics_goal.fv)
   }
 let (e_exn : Prims.exn FStarC_Syntax_Embeddings_Base.embedding) =
-  let embed_exn e rng uu___ uu___1 =
-    match e with
-    | FStarC_Tactics_Common.TacticFailure s ->
-        let uu___2 =
+  let embed_exn e =
+    fun rng ->
+      fun uu___ ->
+        fun uu___1 ->
+          match e with
+          | FStarC_Tactics_Common.TacticFailure s ->
+              let uu___2 =
+                let uu___3 =
+                  let uu___4 =
+                    embed
+                      (FStarC_Syntax_Embeddings.e_tuple2
+                         (FStarC_Syntax_Embeddings.e_list
+                            FStarC_Syntax_Embeddings.e_document)
+                         (FStarC_Syntax_Embeddings.e_option
+                            FStarC_Syntax_Embeddings.e_range)) rng s in
+                  FStarC_Syntax_Syntax.as_arg uu___4 in
+                [uu___3] in
+              FStarC_Syntax_Syntax.mk_Tm_app fstar_tactics_TacticFailure.t
+                uu___2 rng
+          | FStarC_Tactics_Common.SKIP ->
+              let uu___2 = fstar_tactics_SKIP.t in
+              {
+                FStarC_Syntax_Syntax.n = (uu___2.FStarC_Syntax_Syntax.n);
+                FStarC_Syntax_Syntax.pos = rng;
+                FStarC_Syntax_Syntax.vars =
+                  (uu___2.FStarC_Syntax_Syntax.vars);
+                FStarC_Syntax_Syntax.hash_code =
+                  (uu___2.FStarC_Syntax_Syntax.hash_code)
+              }
+          | FStarC_Errors.Stop ->
+              let uu___2 = fstar_tactics_Stop.t in
+              {
+                FStarC_Syntax_Syntax.n = (uu___2.FStarC_Syntax_Syntax.n);
+                FStarC_Syntax_Syntax.pos = rng;
+                FStarC_Syntax_Syntax.vars =
+                  (uu___2.FStarC_Syntax_Syntax.vars);
+                FStarC_Syntax_Syntax.hash_code =
+                  (uu___2.FStarC_Syntax_Syntax.hash_code)
+              }
+          | FStarC_Tactics_Common.EExn t ->
+              {
+                FStarC_Syntax_Syntax.n = (t.FStarC_Syntax_Syntax.n);
+                FStarC_Syntax_Syntax.pos = rng;
+                FStarC_Syntax_Syntax.vars = (t.FStarC_Syntax_Syntax.vars);
+                FStarC_Syntax_Syntax.hash_code =
+                  (t.FStarC_Syntax_Syntax.hash_code)
+              }
+          | e1 ->
+              let uu___2 =
+                let uu___3 = FStarC_Errors.issue_of_exn e1 in
+                match uu___3 with
+                | FStar_Pervasives_Native.Some
+                    { FStarC_Errors.issue_msg = issue_msg;
+                      FStarC_Errors.issue_level = uu___4;
+                      FStarC_Errors.issue_range = issue_range;
+                      FStarC_Errors.issue_number = uu___5;
+                      FStarC_Errors.issue_ctx = uu___6;_}
+                    -> (issue_msg, issue_range)
+                | FStar_Pervasives_Native.None ->
+                    let uu___4 =
+                      let uu___5 =
+                        let uu___6 = FStarC_Util.message_of_exn e1 in
+                        FStar_Pprint.arbitrary_string uu___6 in
+                      [uu___5] in
+                    (uu___4, FStar_Pervasives_Native.None) in
+              (match uu___2 with
+               | (msg, range) ->
+                   let msg1 =
+                     let uu___3 = FStarC_Errors_Msg.text "Uncaught exception" in
+                     uu___3 :: msg in
+                   let uu___3 =
+                     let uu___4 =
+                       let uu___5 =
+                         embed
+                           (FStarC_Syntax_Embeddings.e_tuple2
+                              (FStarC_Syntax_Embeddings.e_list
+                                 FStarC_Syntax_Embeddings.e_document)
+                              (FStarC_Syntax_Embeddings.e_option
+                                 FStarC_Syntax_Embeddings.e_range)) rng
+                           (msg1, range) in
+                       FStarC_Syntax_Syntax.as_arg uu___5 in
+                     [uu___4] in
+                   FStarC_Syntax_Syntax.mk_Tm_app
+                     fstar_tactics_TacticFailure.t uu___3 rng) in
+  let unembed_exn t =
+    fun uu___ ->
+      let uu___1 = hd'_and_args t in
+      match uu___1 with
+      | (FStarC_Syntax_Syntax.Tm_fvar fv, (s, uu___2)::[]) when
+          FStarC_Syntax_Syntax.fv_eq_lid fv fstar_tactics_TacticFailure.lid
+          ->
           let uu___3 =
-            let uu___4 =
-              embed
-                (FStarC_Syntax_Embeddings.e_tuple2
-                   (FStarC_Syntax_Embeddings.e_list
-                      FStarC_Syntax_Embeddings.e_document)
-                   (FStarC_Syntax_Embeddings.e_option
-                      FStarC_Syntax_Embeddings.e_range)) rng s in
-            FStarC_Syntax_Syntax.as_arg uu___4 in
-          [uu___3] in
-        FStarC_Syntax_Syntax.mk_Tm_app fstar_tactics_TacticFailure.t uu___2
-          rng
-    | FStarC_Tactics_Common.SKIP ->
-        let uu___2 = fstar_tactics_SKIP.t in
-        {
-          FStarC_Syntax_Syntax.n = (uu___2.FStarC_Syntax_Syntax.n);
-          FStarC_Syntax_Syntax.pos = rng;
-          FStarC_Syntax_Syntax.vars = (uu___2.FStarC_Syntax_Syntax.vars);
-          FStarC_Syntax_Syntax.hash_code =
-            (uu___2.FStarC_Syntax_Syntax.hash_code)
-        }
-    | FStarC_Errors.Stop ->
-        let uu___2 = fstar_tactics_Stop.t in
-        {
-          FStarC_Syntax_Syntax.n = (uu___2.FStarC_Syntax_Syntax.n);
-          FStarC_Syntax_Syntax.pos = rng;
-          FStarC_Syntax_Syntax.vars = (uu___2.FStarC_Syntax_Syntax.vars);
-          FStarC_Syntax_Syntax.hash_code =
-            (uu___2.FStarC_Syntax_Syntax.hash_code)
-        }
-    | FStarC_Tactics_Common.EExn t ->
-        {
-          FStarC_Syntax_Syntax.n = (t.FStarC_Syntax_Syntax.n);
-          FStarC_Syntax_Syntax.pos = rng;
-          FStarC_Syntax_Syntax.vars = (t.FStarC_Syntax_Syntax.vars);
-          FStarC_Syntax_Syntax.hash_code = (t.FStarC_Syntax_Syntax.hash_code)
-        }
-    | e1 ->
-        let msg =
-          let uu___2 = FStarC_Errors_Msg.text "Uncaught exception" in
-          let uu___3 =
-            let uu___4 =
-              let uu___5 = FStarC_Util.message_of_exn e1 in
-              FStarC_Pprint.arbitrary_string uu___5 in
-            [uu___4] in
-          uu___2 :: uu___3 in
-        let uu___2 =
-          let uu___3 =
-            let uu___4 =
-              embed
-                (FStarC_Syntax_Embeddings.e_tuple2
-                   (FStarC_Syntax_Embeddings.e_list
-                      FStarC_Syntax_Embeddings.e_document)
-                   (FStarC_Syntax_Embeddings.e_option
-                      FStarC_Syntax_Embeddings.e_range)) rng
-                (msg, FStar_Pervasives_Native.None) in
-            FStarC_Syntax_Syntax.as_arg uu___4 in
-          [uu___3] in
-        FStarC_Syntax_Syntax.mk_Tm_app fstar_tactics_TacticFailure.t uu___2
-          rng in
-  let unembed_exn t uu___ =
-    let uu___1 = hd'_and_args t in
-    match uu___1 with
-    | (FStarC_Syntax_Syntax.Tm_fvar fv, (s, uu___2)::[]) when
-        FStarC_Syntax_Syntax.fv_eq_lid fv fstar_tactics_TacticFailure.lid ->
-        let uu___3 =
-          unembed'
-            (FStarC_Syntax_Embeddings.e_tuple2
-               (FStarC_Syntax_Embeddings.e_list
-                  FStarC_Syntax_Embeddings.e_document)
-               (FStarC_Syntax_Embeddings.e_option
-                  FStarC_Syntax_Embeddings.e_range)) s in
-        FStarC_Util.bind_opt uu___3
-          (fun s1 ->
-             FStar_Pervasives_Native.Some
-               (FStarC_Tactics_Common.TacticFailure s1))
-    | (FStarC_Syntax_Syntax.Tm_fvar fv, []) when
-        FStarC_Syntax_Syntax.fv_eq_lid fv fstar_tactics_SKIP.lid ->
-        FStar_Pervasives_Native.Some FStarC_Tactics_Common.SKIP
-    | (FStarC_Syntax_Syntax.Tm_fvar fv, []) when
-        FStarC_Syntax_Syntax.fv_eq_lid fv fstar_tactics_Stop.lid ->
-        FStar_Pervasives_Native.Some FStarC_Errors.Stop
-    | uu___2 -> FStar_Pervasives_Native.Some (FStarC_Tactics_Common.EExn t) in
+            unembed'
+              (FStarC_Syntax_Embeddings.e_tuple2
+                 (FStarC_Syntax_Embeddings.e_list
+                    FStarC_Syntax_Embeddings.e_document)
+                 (FStarC_Syntax_Embeddings.e_option
+                    FStarC_Syntax_Embeddings.e_range)) s in
+          FStarC_Option.bind uu___3
+            (fun s1 ->
+               FStar_Pervasives_Native.Some
+                 (FStarC_Tactics_Common.TacticFailure s1))
+      | (FStarC_Syntax_Syntax.Tm_fvar fv, []) when
+          FStarC_Syntax_Syntax.fv_eq_lid fv fstar_tactics_SKIP.lid ->
+          FStar_Pervasives_Native.Some FStarC_Tactics_Common.SKIP
+      | (FStarC_Syntax_Syntax.Tm_fvar fv, []) when
+          FStarC_Syntax_Syntax.fv_eq_lid fv fstar_tactics_Stop.lid ->
+          FStar_Pervasives_Native.Some FStarC_Errors.Stop
+      | uu___2 -> FStar_Pervasives_Native.Some (FStarC_Tactics_Common.EExn t) in
   FStarC_Syntax_Embeddings_Base.mk_emb_full embed_exn unembed_exn
     (fun uu___ -> FStarC_Syntax_Syntax.t_exn) (fun uu___ -> "(exn)")
     (fun uu___ ->
@@ -415,47 +444,51 @@ let (e_exn : Prims.exn FStarC_Syntax_Embeddings_Base.embedding) =
          (uu___2, []) in
        FStarC_Syntax_Syntax.ET_app uu___1)
 let (e_exn_nbe : Prims.exn FStarC_TypeChecker_NBETerm.embedding) =
-  let embed_exn cb e =
-    match e with
-    | FStarC_Tactics_Common.TacticFailure s ->
-        let uu___ =
+  let embed_exn cb =
+    fun e ->
+      match e with
+      | FStarC_Tactics_Common.TacticFailure s ->
+          let uu___ =
+            let uu___1 =
+              let uu___2 =
+                FStarC_TypeChecker_NBETerm.embed
+                  (FStarC_TypeChecker_NBETerm.e_tuple2
+                     (FStarC_TypeChecker_NBETerm.e_list
+                        FStarC_TypeChecker_NBETerm.e_document)
+                     (FStarC_TypeChecker_NBETerm.e_option
+                        FStarC_TypeChecker_NBETerm.e_range)) cb s in
+              FStarC_TypeChecker_NBETerm.as_arg uu___2 in
+            [uu___1] in
+          mkConstruct fstar_tactics_TacticFailure.fv [] uu___
+      | FStarC_Tactics_Common.SKIP -> mkConstruct fstar_tactics_SKIP.fv [] []
+      | uu___ ->
           let uu___1 =
-            let uu___2 =
-              FStarC_TypeChecker_NBETerm.embed
-                (FStarC_TypeChecker_NBETerm.e_tuple2
-                   (FStarC_TypeChecker_NBETerm.e_list
-                      FStarC_TypeChecker_NBETerm.e_document)
-                   (FStarC_TypeChecker_NBETerm.e_option
-                      FStarC_TypeChecker_NBETerm.e_range)) cb s in
-            FStarC_TypeChecker_NBETerm.as_arg uu___2 in
-          [uu___1] in
-        mkConstruct fstar_tactics_TacticFailure.fv [] uu___
-    | FStarC_Tactics_Common.SKIP -> mkConstruct fstar_tactics_SKIP.fv [] []
-    | uu___ ->
-        let uu___1 =
-          let uu___2 = FStarC_Util.message_of_exn e in
-          FStarC_Util.format1 "cannot embed exn (NBE) : %s" uu___2 in
-        failwith uu___1 in
-  let unembed_exn cb t =
-    let uu___ = FStarC_TypeChecker_NBETerm.nbe_t_of_t t in
-    match uu___ with
-    | FStarC_TypeChecker_NBETerm.Construct (fv, uu___1, (s, uu___2)::[]) when
-        FStarC_Syntax_Syntax.fv_eq_lid fv fstar_tactics_TacticFailure.lid ->
-        let uu___3 =
-          FStarC_TypeChecker_NBETerm.unembed
-            (FStarC_TypeChecker_NBETerm.e_tuple2
-               (FStarC_TypeChecker_NBETerm.e_list
-                  FStarC_TypeChecker_NBETerm.e_document)
-               (FStarC_TypeChecker_NBETerm.e_option
-                  FStarC_TypeChecker_NBETerm.e_range)) cb s in
-        FStarC_Util.bind_opt uu___3
-          (fun s1 ->
-             FStar_Pervasives_Native.Some
-               (FStarC_Tactics_Common.TacticFailure s1))
-    | FStarC_TypeChecker_NBETerm.Construct (fv, uu___1, []) when
-        FStarC_Syntax_Syntax.fv_eq_lid fv fstar_tactics_SKIP.lid ->
-        FStar_Pervasives_Native.Some FStarC_Tactics_Common.SKIP
-    | uu___1 -> FStar_Pervasives_Native.None in
+            let uu___2 = FStarC_Util.message_of_exn e in
+            FStarC_Format.fmt1 "cannot embed exn (NBE) : %s" uu___2 in
+          failwith uu___1 in
+  let unembed_exn cb =
+    fun t ->
+      let uu___ = FStarC_TypeChecker_NBETerm.nbe_t_of_t t in
+      match uu___ with
+      | FStarC_TypeChecker_NBETerm.Construct (fv, uu___1, (s, uu___2)::[])
+          when
+          FStarC_Syntax_Syntax.fv_eq_lid fv fstar_tactics_TacticFailure.lid
+          ->
+          let uu___3 =
+            FStarC_TypeChecker_NBETerm.unembed
+              (FStarC_TypeChecker_NBETerm.e_tuple2
+                 (FStarC_TypeChecker_NBETerm.e_list
+                    FStarC_TypeChecker_NBETerm.e_document)
+                 (FStarC_TypeChecker_NBETerm.e_option
+                    FStarC_TypeChecker_NBETerm.e_range)) cb s in
+          FStarC_Option.bind uu___3
+            (fun s1 ->
+               FStar_Pervasives_Native.Some
+                 (FStarC_Tactics_Common.TacticFailure s1))
+      | FStarC_TypeChecker_NBETerm.Construct (fv, uu___1, []) when
+          FStarC_Syntax_Syntax.fv_eq_lid fv fstar_tactics_SKIP.lid ->
+          FStar_Pervasives_Native.Some FStarC_Tactics_Common.SKIP
+      | uu___1 -> FStar_Pervasives_Native.None in
   let fv_exn = FStarC_Syntax_Syntax.fvconst FStarC_Parser_Const.exn_lid in
   {
     FStarC_TypeChecker_NBETerm.em = embed_exn;
@@ -470,72 +503,78 @@ let e_result :
         FStarC_Syntax_Embeddings_Base.embedding
   =
   fun ea ->
-    let embed_result res rng sh cbs =
-      match res with
-      | FStarC_Tactics_Result.Success (a1, ps) ->
-          let uu___ =
-            FStarC_Syntax_Syntax.mk_Tm_uinst fstar_tactics_Success.t
-              [FStarC_Syntax_Syntax.U_zero] in
-          let uu___1 =
-            let uu___2 =
-              let uu___3 = FStarC_Syntax_Embeddings_Base.type_of ea in
-              FStarC_Syntax_Syntax.iarg uu___3 in
-            let uu___3 =
-              let uu___4 =
-                let uu___5 = embed ea rng a1 in
-                FStarC_Syntax_Syntax.as_arg uu___5 in
-              let uu___5 =
-                let uu___6 =
-                  let uu___7 = embed e_proofstate rng ps in
-                  FStarC_Syntax_Syntax.as_arg uu___7 in
-                [uu___6] in
-              uu___4 :: uu___5 in
-            uu___2 :: uu___3 in
-          FStarC_Syntax_Syntax.mk_Tm_app uu___ uu___1 rng
-      | FStarC_Tactics_Result.Failed (e, ps) ->
-          let uu___ =
-            FStarC_Syntax_Syntax.mk_Tm_uinst fstar_tactics_Failed.t
-              [FStarC_Syntax_Syntax.U_zero] in
-          let uu___1 =
-            let uu___2 =
-              let uu___3 = FStarC_Syntax_Embeddings_Base.type_of ea in
-              FStarC_Syntax_Syntax.iarg uu___3 in
-            let uu___3 =
-              let uu___4 =
-                let uu___5 = embed e_exn rng e in
-                FStarC_Syntax_Syntax.as_arg uu___5 in
-              let uu___5 =
-                let uu___6 =
-                  let uu___7 = embed e_proofstate rng ps in
-                  FStarC_Syntax_Syntax.as_arg uu___7 in
-                [uu___6] in
-              uu___4 :: uu___5 in
-            uu___2 :: uu___3 in
-          FStarC_Syntax_Syntax.mk_Tm_app uu___ uu___1 rng in
-    let unembed_result t uu___ =
-      let uu___1 = hd'_and_args t in
-      match uu___1 with
-      | (FStarC_Syntax_Syntax.Tm_fvar fv, _t::(a1, uu___2)::(ps, uu___3)::[])
-          when FStarC_Syntax_Syntax.fv_eq_lid fv fstar_tactics_Success.lid ->
-          let uu___4 = unembed' ea a1 in
-          FStarC_Util.bind_opt uu___4
-            (fun a2 ->
-               let uu___5 = unembed' e_proofstate ps in
-               FStarC_Util.bind_opt uu___5
-                 (fun ps1 ->
-                    FStar_Pervasives_Native.Some
-                      (FStarC_Tactics_Result.Success (a2, ps1))))
-      | (FStarC_Syntax_Syntax.Tm_fvar fv, _t::(e, uu___2)::(ps, uu___3)::[])
-          when FStarC_Syntax_Syntax.fv_eq_lid fv fstar_tactics_Failed.lid ->
-          let uu___4 = unembed' e_exn e in
-          FStarC_Util.bind_opt uu___4
-            (fun e1 ->
-               let uu___5 = unembed' e_proofstate ps in
-               FStarC_Util.bind_opt uu___5
-                 (fun ps1 ->
-                    FStar_Pervasives_Native.Some
-                      (FStarC_Tactics_Result.Failed (e1, ps1))))
-      | uu___2 -> FStar_Pervasives_Native.None in
+    let embed_result res =
+      fun rng ->
+        fun sh ->
+          fun cbs ->
+            match res with
+            | FStarC_Tactics_Result.Success (a1, ps) ->
+                let uu___ =
+                  FStarC_Syntax_Syntax.mk_Tm_uinst fstar_tactics_Success.t
+                    [FStarC_Syntax_Syntax.U_zero] in
+                let uu___1 =
+                  let uu___2 =
+                    let uu___3 = FStarC_Syntax_Embeddings_Base.type_of ea in
+                    FStarC_Syntax_Syntax.iarg uu___3 in
+                  let uu___3 =
+                    let uu___4 =
+                      let uu___5 = embed ea rng a1 in
+                      FStarC_Syntax_Syntax.as_arg uu___5 in
+                    let uu___5 =
+                      let uu___6 =
+                        let uu___7 = embed e_proofstate rng ps in
+                        FStarC_Syntax_Syntax.as_arg uu___7 in
+                      [uu___6] in
+                    uu___4 :: uu___5 in
+                  uu___2 :: uu___3 in
+                FStarC_Syntax_Syntax.mk_Tm_app uu___ uu___1 rng
+            | FStarC_Tactics_Result.Failed (e, ps) ->
+                let uu___ =
+                  FStarC_Syntax_Syntax.mk_Tm_uinst fstar_tactics_Failed.t
+                    [FStarC_Syntax_Syntax.U_zero] in
+                let uu___1 =
+                  let uu___2 =
+                    let uu___3 = FStarC_Syntax_Embeddings_Base.type_of ea in
+                    FStarC_Syntax_Syntax.iarg uu___3 in
+                  let uu___3 =
+                    let uu___4 =
+                      let uu___5 = embed e_exn rng e in
+                      FStarC_Syntax_Syntax.as_arg uu___5 in
+                    let uu___5 =
+                      let uu___6 =
+                        let uu___7 = embed e_proofstate rng ps in
+                        FStarC_Syntax_Syntax.as_arg uu___7 in
+                      [uu___6] in
+                    uu___4 :: uu___5 in
+                  uu___2 :: uu___3 in
+                FStarC_Syntax_Syntax.mk_Tm_app uu___ uu___1 rng in
+    let unembed_result t =
+      fun uu___ ->
+        let uu___1 = hd'_and_args t in
+        match uu___1 with
+        | (FStarC_Syntax_Syntax.Tm_fvar fv,
+           _t::(a1, uu___2)::(ps, uu___3)::[]) when
+            FStarC_Syntax_Syntax.fv_eq_lid fv fstar_tactics_Success.lid ->
+            let uu___4 = unembed' ea a1 in
+            FStarC_Option.bind uu___4
+              (fun a2 ->
+                 let uu___5 = unembed' e_proofstate ps in
+                 FStarC_Option.bind uu___5
+                   (fun ps1 ->
+                      FStar_Pervasives_Native.Some
+                        (FStarC_Tactics_Result.Success (a2, ps1))))
+        | (FStarC_Syntax_Syntax.Tm_fvar fv,
+           _t::(e, uu___2)::(ps, uu___3)::[]) when
+            FStarC_Syntax_Syntax.fv_eq_lid fv fstar_tactics_Failed.lid ->
+            let uu___4 = unembed' e_exn e in
+            FStarC_Option.bind uu___4
+              (fun e1 ->
+                 let uu___5 = unembed' e_proofstate ps in
+                 FStarC_Option.bind uu___5
+                   (fun ps1 ->
+                      FStar_Pervasives_Native.Some
+                        (FStarC_Tactics_Result.Failed (e1, ps1))))
+        | uu___2 -> FStar_Pervasives_Native.None in
     FStarC_Syntax_Embeddings_Base.mk_emb_full embed_result unembed_result
       (fun uu___ ->
          let uu___1 = FStarC_Syntax_Embeddings_Base.type_of ea in
@@ -556,74 +595,77 @@ let e_result_nbe :
       'a FStarC_Tactics_Result.__result FStarC_TypeChecker_NBETerm.embedding
   =
   fun ea ->
-    let embed_result cb res =
-      match res with
-      | FStarC_Tactics_Result.Failed (e, ps) ->
-          let uu___ =
-            let uu___1 =
-              let uu___2 = FStarC_TypeChecker_NBETerm.type_of ea in
-              FStarC_TypeChecker_NBETerm.as_iarg uu___2 in
-            let uu___2 =
-              let uu___3 =
-                let uu___4 = FStarC_TypeChecker_NBETerm.embed e_exn_nbe cb e in
-                FStarC_TypeChecker_NBETerm.as_arg uu___4 in
-              let uu___4 =
-                let uu___5 =
-                  let uu___6 =
-                    FStarC_TypeChecker_NBETerm.embed e_proofstate_nbe cb ps in
-                  FStarC_TypeChecker_NBETerm.as_arg uu___6 in
-                [uu___5] in
-              uu___3 :: uu___4 in
-            uu___1 :: uu___2 in
-          mkConstruct fstar_tactics_Failed.fv [FStarC_Syntax_Syntax.U_zero]
-            uu___
-      | FStarC_Tactics_Result.Success (a1, ps) ->
-          let uu___ =
-            let uu___1 =
-              let uu___2 = FStarC_TypeChecker_NBETerm.type_of ea in
-              FStarC_TypeChecker_NBETerm.as_iarg uu___2 in
-            let uu___2 =
-              let uu___3 =
-                let uu___4 = FStarC_TypeChecker_NBETerm.embed ea cb a1 in
-                FStarC_TypeChecker_NBETerm.as_arg uu___4 in
-              let uu___4 =
-                let uu___5 =
-                  let uu___6 =
-                    FStarC_TypeChecker_NBETerm.embed e_proofstate_nbe cb ps in
-                  FStarC_TypeChecker_NBETerm.as_arg uu___6 in
-                [uu___5] in
-              uu___3 :: uu___4 in
-            uu___1 :: uu___2 in
-          mkConstruct fstar_tactics_Success.fv [FStarC_Syntax_Syntax.U_zero]
-            uu___ in
-    let unembed_result cb t =
-      let uu___ = FStarC_TypeChecker_NBETerm.nbe_t_of_t t in
-      match uu___ with
-      | FStarC_TypeChecker_NBETerm.Construct
-          (fv, uu___1, (ps, uu___2)::(a1, uu___3)::_t::[]) when
-          FStarC_Syntax_Syntax.fv_eq_lid fv fstar_tactics_Success.lid ->
-          let uu___4 = FStarC_TypeChecker_NBETerm.unembed ea cb a1 in
-          FStarC_Util.bind_opt uu___4
-            (fun a2 ->
-               let uu___5 =
-                 FStarC_TypeChecker_NBETerm.unembed e_proofstate_nbe cb ps in
-               FStarC_Util.bind_opt uu___5
-                 (fun ps1 ->
-                    FStar_Pervasives_Native.Some
-                      (FStarC_Tactics_Result.Success (a2, ps1))))
-      | FStarC_TypeChecker_NBETerm.Construct
-          (fv, uu___1, (ps, uu___2)::(e, uu___3)::_t::[]) when
-          FStarC_Syntax_Syntax.fv_eq_lid fv fstar_tactics_Failed.lid ->
-          let uu___4 = FStarC_TypeChecker_NBETerm.unembed e_exn_nbe cb e in
-          FStarC_Util.bind_opt uu___4
-            (fun e1 ->
-               let uu___5 =
-                 FStarC_TypeChecker_NBETerm.unembed e_proofstate_nbe cb ps in
-               FStarC_Util.bind_opt uu___5
-                 (fun ps1 ->
-                    FStar_Pervasives_Native.Some
-                      (FStarC_Tactics_Result.Failed (e1, ps1))))
-      | uu___1 -> FStar_Pervasives_Native.None in
+    let embed_result cb =
+      fun res ->
+        match res with
+        | FStarC_Tactics_Result.Failed (e, ps) ->
+            let uu___ =
+              let uu___1 =
+                let uu___2 = FStarC_TypeChecker_NBETerm.type_of ea in
+                FStarC_TypeChecker_NBETerm.as_iarg uu___2 in
+              let uu___2 =
+                let uu___3 =
+                  let uu___4 =
+                    FStarC_TypeChecker_NBETerm.embed e_exn_nbe cb e in
+                  FStarC_TypeChecker_NBETerm.as_arg uu___4 in
+                let uu___4 =
+                  let uu___5 =
+                    let uu___6 =
+                      FStarC_TypeChecker_NBETerm.embed e_proofstate_nbe cb ps in
+                    FStarC_TypeChecker_NBETerm.as_arg uu___6 in
+                  [uu___5] in
+                uu___3 :: uu___4 in
+              uu___1 :: uu___2 in
+            mkConstruct fstar_tactics_Failed.fv [FStarC_Syntax_Syntax.U_zero]
+              uu___
+        | FStarC_Tactics_Result.Success (a1, ps) ->
+            let uu___ =
+              let uu___1 =
+                let uu___2 = FStarC_TypeChecker_NBETerm.type_of ea in
+                FStarC_TypeChecker_NBETerm.as_iarg uu___2 in
+              let uu___2 =
+                let uu___3 =
+                  let uu___4 = FStarC_TypeChecker_NBETerm.embed ea cb a1 in
+                  FStarC_TypeChecker_NBETerm.as_arg uu___4 in
+                let uu___4 =
+                  let uu___5 =
+                    let uu___6 =
+                      FStarC_TypeChecker_NBETerm.embed e_proofstate_nbe cb ps in
+                    FStarC_TypeChecker_NBETerm.as_arg uu___6 in
+                  [uu___5] in
+                uu___3 :: uu___4 in
+              uu___1 :: uu___2 in
+            mkConstruct fstar_tactics_Success.fv
+              [FStarC_Syntax_Syntax.U_zero] uu___ in
+    let unembed_result cb =
+      fun t ->
+        let uu___ = FStarC_TypeChecker_NBETerm.nbe_t_of_t t in
+        match uu___ with
+        | FStarC_TypeChecker_NBETerm.Construct
+            (fv, uu___1, (ps, uu___2)::(a1, uu___3)::_t::[]) when
+            FStarC_Syntax_Syntax.fv_eq_lid fv fstar_tactics_Success.lid ->
+            let uu___4 = FStarC_TypeChecker_NBETerm.unembed ea cb a1 in
+            FStarC_Option.bind uu___4
+              (fun a2 ->
+                 let uu___5 =
+                   FStarC_TypeChecker_NBETerm.unembed e_proofstate_nbe cb ps in
+                 FStarC_Option.bind uu___5
+                   (fun ps1 ->
+                      FStar_Pervasives_Native.Some
+                        (FStarC_Tactics_Result.Success (a2, ps1))))
+        | FStarC_TypeChecker_NBETerm.Construct
+            (fv, uu___1, (ps, uu___2)::(e, uu___3)::_t::[]) when
+            FStarC_Syntax_Syntax.fv_eq_lid fv fstar_tactics_Failed.lid ->
+            let uu___4 = FStarC_TypeChecker_NBETerm.unembed e_exn_nbe cb e in
+            FStarC_Option.bind uu___4
+              (fun e1 ->
+                 let uu___5 =
+                   FStarC_TypeChecker_NBETerm.unembed e_proofstate_nbe cb ps in
+                 FStarC_Option.bind uu___5
+                   (fun ps1 ->
+                      FStar_Pervasives_Native.Some
+                        (FStarC_Tactics_Result.Failed (e1, ps1))))
+        | uu___1 -> FStar_Pervasives_Native.None in
     {
       FStarC_TypeChecker_NBETerm.em = embed_result;
       FStarC_TypeChecker_NBETerm.un = unembed_result;
@@ -634,10 +676,11 @@ let e_result_nbe :
     }
 let (e_direction :
   FStarC_Tactics_Types.direction FStarC_Syntax_Embeddings_Base.embedding) =
-  let embed_direction rng d =
-    match d with
-    | FStarC_Tactics_Types.TopDown -> fstar_tactics_topdown.t
-    | FStarC_Tactics_Types.BottomUp -> fstar_tactics_bottomup.t in
+  let embed_direction rng =
+    fun d ->
+      match d with
+      | FStarC_Tactics_Types.TopDown -> fstar_tactics_topdown.t
+      | FStarC_Tactics_Types.BottomUp -> fstar_tactics_bottomup.t in
   let unembed_direction t =
     let uu___ =
       let uu___1 = FStarC_Syntax_Subst.compress t in
@@ -653,33 +696,36 @@ let (e_direction :
   mk_emb embed_direction unembed_direction fstar_tactics_direction.t
 let (e_direction_nbe :
   FStarC_Tactics_Types.direction FStarC_TypeChecker_NBETerm.embedding) =
-  let embed_direction cb res =
-    match res with
-    | FStarC_Tactics_Types.TopDown ->
-        mkConstruct fstar_tactics_topdown.fv [] []
-    | FStarC_Tactics_Types.BottomUp ->
-        mkConstruct fstar_tactics_bottomup.fv [] [] in
-  let unembed_direction cb t =
-    let uu___ = FStarC_TypeChecker_NBETerm.nbe_t_of_t t in
-    match uu___ with
-    | FStarC_TypeChecker_NBETerm.Construct (fv, uu___1, []) when
-        FStarC_Syntax_Syntax.fv_eq_lid fv fstar_tactics_topdown.lid ->
-        FStar_Pervasives_Native.Some FStarC_Tactics_Types.TopDown
-    | FStarC_TypeChecker_NBETerm.Construct (fv, uu___1, []) when
-        FStarC_Syntax_Syntax.fv_eq_lid fv fstar_tactics_bottomup.lid ->
-        FStar_Pervasives_Native.Some FStarC_Tactics_Types.BottomUp
-    | uu___1 ->
-        ((let uu___3 = FStarC_Effect.op_Bang FStarC_Options.debug_embedding in
-          if uu___3
-          then
-            let uu___4 =
-              let uu___5 = FStarC_TypeChecker_NBETerm.t_to_string t in
-              FStarC_Util.format1 "Not an embedded direction: %s" uu___5 in
-            FStarC_Errors.log_issue0 FStarC_Errors_Codes.Warning_NotEmbedded
-              () (Obj.magic FStarC_Errors_Msg.is_error_message_string)
-              (Obj.magic uu___4)
-          else ());
-         FStar_Pervasives_Native.None) in
+  let embed_direction cb =
+    fun res ->
+      match res with
+      | FStarC_Tactics_Types.TopDown ->
+          mkConstruct fstar_tactics_topdown.fv [] []
+      | FStarC_Tactics_Types.BottomUp ->
+          mkConstruct fstar_tactics_bottomup.fv [] [] in
+  let unembed_direction cb =
+    fun t ->
+      let uu___ = FStarC_TypeChecker_NBETerm.nbe_t_of_t t in
+      match uu___ with
+      | FStarC_TypeChecker_NBETerm.Construct (fv, uu___1, []) when
+          FStarC_Syntax_Syntax.fv_eq_lid fv fstar_tactics_topdown.lid ->
+          FStar_Pervasives_Native.Some FStarC_Tactics_Types.TopDown
+      | FStarC_TypeChecker_NBETerm.Construct (fv, uu___1, []) when
+          FStarC_Syntax_Syntax.fv_eq_lid fv fstar_tactics_bottomup.lid ->
+          FStar_Pervasives_Native.Some FStarC_Tactics_Types.BottomUp
+      | uu___1 ->
+          ((let uu___3 = FStarC_Effect.op_Bang FStarC_Options.debug_embedding in
+            if uu___3
+            then
+              let uu___4 =
+                let uu___5 = FStarC_TypeChecker_NBETerm.t_to_string t in
+                FStarC_Format.fmt1 "Not an embedded direction: %s" uu___5 in
+              FStarC_Errors.log_issue0
+                FStarC_Errors_Codes.Warning_NotEmbedded ()
+                (Obj.magic FStarC_Errors_Msg.is_error_message_string)
+                (Obj.magic uu___4)
+            else ());
+           FStar_Pervasives_Native.None) in
   {
     FStarC_TypeChecker_NBETerm.em = embed_direction;
     FStarC_TypeChecker_NBETerm.un = unembed_direction;
@@ -690,11 +736,12 @@ let (e_direction_nbe :
   }
 let (e_ctrl_flag :
   FStarC_Tactics_Types.ctrl_flag FStarC_Syntax_Embeddings_Base.embedding) =
-  let embed_ctrl_flag rng d =
-    match d with
-    | FStarC_Tactics_Types.Continue -> fstar_tactics_Continue.t
-    | FStarC_Tactics_Types.Skip -> fstar_tactics_Skip.t
-    | FStarC_Tactics_Types.Abort -> fstar_tactics_Abort.t in
+  let embed_ctrl_flag rng =
+    fun d ->
+      match d with
+      | FStarC_Tactics_Types.Continue -> fstar_tactics_Continue.t
+      | FStarC_Tactics_Types.Skip -> fstar_tactics_Skip.t
+      | FStarC_Tactics_Types.Abort -> fstar_tactics_Abort.t in
   let unembed_ctrl_flag t =
     let uu___ =
       let uu___1 = FStarC_Syntax_Subst.compress t in
@@ -713,36 +760,40 @@ let (e_ctrl_flag :
   mk_emb embed_ctrl_flag unembed_ctrl_flag fstar_tactics_ctrl_flag.t
 let (e_ctrl_flag_nbe :
   FStarC_Tactics_Types.ctrl_flag FStarC_TypeChecker_NBETerm.embedding) =
-  let embed_ctrl_flag cb res =
-    match res with
-    | FStarC_Tactics_Types.Continue ->
-        mkConstruct fstar_tactics_Continue.fv [] []
-    | FStarC_Tactics_Types.Skip -> mkConstruct fstar_tactics_Skip.fv [] []
-    | FStarC_Tactics_Types.Abort -> mkConstruct fstar_tactics_Abort.fv [] [] in
-  let unembed_ctrl_flag cb t =
-    let uu___ = FStarC_TypeChecker_NBETerm.nbe_t_of_t t in
-    match uu___ with
-    | FStarC_TypeChecker_NBETerm.Construct (fv, uu___1, []) when
-        FStarC_Syntax_Syntax.fv_eq_lid fv fstar_tactics_Continue.lid ->
-        FStar_Pervasives_Native.Some FStarC_Tactics_Types.Continue
-    | FStarC_TypeChecker_NBETerm.Construct (fv, uu___1, []) when
-        FStarC_Syntax_Syntax.fv_eq_lid fv fstar_tactics_Skip.lid ->
-        FStar_Pervasives_Native.Some FStarC_Tactics_Types.Skip
-    | FStarC_TypeChecker_NBETerm.Construct (fv, uu___1, []) when
-        FStarC_Syntax_Syntax.fv_eq_lid fv fstar_tactics_Abort.lid ->
-        FStar_Pervasives_Native.Some FStarC_Tactics_Types.Abort
-    | uu___1 ->
-        ((let uu___3 = FStarC_Effect.op_Bang FStarC_Options.debug_embedding in
-          if uu___3
-          then
-            let uu___4 =
-              let uu___5 = FStarC_TypeChecker_NBETerm.t_to_string t in
-              FStarC_Util.format1 "Not an embedded ctrl_flag: %s" uu___5 in
-            FStarC_Errors.log_issue0 FStarC_Errors_Codes.Warning_NotEmbedded
-              () (Obj.magic FStarC_Errors_Msg.is_error_message_string)
-              (Obj.magic uu___4)
-          else ());
-         FStar_Pervasives_Native.None) in
+  let embed_ctrl_flag cb =
+    fun res ->
+      match res with
+      | FStarC_Tactics_Types.Continue ->
+          mkConstruct fstar_tactics_Continue.fv [] []
+      | FStarC_Tactics_Types.Skip -> mkConstruct fstar_tactics_Skip.fv [] []
+      | FStarC_Tactics_Types.Abort ->
+          mkConstruct fstar_tactics_Abort.fv [] [] in
+  let unembed_ctrl_flag cb =
+    fun t ->
+      let uu___ = FStarC_TypeChecker_NBETerm.nbe_t_of_t t in
+      match uu___ with
+      | FStarC_TypeChecker_NBETerm.Construct (fv, uu___1, []) when
+          FStarC_Syntax_Syntax.fv_eq_lid fv fstar_tactics_Continue.lid ->
+          FStar_Pervasives_Native.Some FStarC_Tactics_Types.Continue
+      | FStarC_TypeChecker_NBETerm.Construct (fv, uu___1, []) when
+          FStarC_Syntax_Syntax.fv_eq_lid fv fstar_tactics_Skip.lid ->
+          FStar_Pervasives_Native.Some FStarC_Tactics_Types.Skip
+      | FStarC_TypeChecker_NBETerm.Construct (fv, uu___1, []) when
+          FStarC_Syntax_Syntax.fv_eq_lid fv fstar_tactics_Abort.lid ->
+          FStar_Pervasives_Native.Some FStarC_Tactics_Types.Abort
+      | uu___1 ->
+          ((let uu___3 = FStarC_Effect.op_Bang FStarC_Options.debug_embedding in
+            if uu___3
+            then
+              let uu___4 =
+                let uu___5 = FStarC_TypeChecker_NBETerm.t_to_string t in
+                FStarC_Format.fmt1 "Not an embedded ctrl_flag: %s" uu___5 in
+              FStarC_Errors.log_issue0
+                FStarC_Errors_Codes.Warning_NotEmbedded ()
+                (Obj.magic FStarC_Errors_Msg.is_error_message_string)
+                (Obj.magic uu___4)
+            else ());
+           FStar_Pervasives_Native.None) in
   {
     FStarC_TypeChecker_NBETerm.em = embed_ctrl_flag;
     FStarC_TypeChecker_NBETerm.un = unembed_ctrl_flag;
@@ -753,12 +804,14 @@ let (e_ctrl_flag_nbe :
   }
 let (e_unfold_side :
   FStarC_TypeChecker_Core.side FStarC_Syntax_Embeddings_Base.embedding) =
-  let embed_unfold_side rng s =
-    match s with
-    | FStarC_TypeChecker_Core.Left -> fstar_tc_core_unfold_side_Left.t
-    | FStarC_TypeChecker_Core.Right -> fstar_tc_core_unfold_side_Right.t
-    | FStarC_TypeChecker_Core.Both -> fstar_tc_core_unfold_side_Both.t
-    | FStarC_TypeChecker_Core.Neither -> fstar_tc_core_unfold_side_Neither.t in
+  let embed_unfold_side rng =
+    fun s ->
+      match s with
+      | FStarC_TypeChecker_Core.Left -> fstar_tc_core_unfold_side_Left.t
+      | FStarC_TypeChecker_Core.Right -> fstar_tc_core_unfold_side_Right.t
+      | FStarC_TypeChecker_Core.Both -> fstar_tc_core_unfold_side_Both.t
+      | FStarC_TypeChecker_Core.Neither ->
+          fstar_tc_core_unfold_side_Neither.t in
   let unembed_unfold_side t =
     let uu___ =
       let uu___1 = FStarC_Syntax_Subst.compress t in
@@ -781,44 +834,50 @@ let (e_unfold_side :
   mk_emb embed_unfold_side unembed_unfold_side fstar_tc_core_unfold_side.t
 let (e_unfold_side_nbe :
   FStarC_TypeChecker_Core.side FStarC_TypeChecker_NBETerm.embedding) =
-  let embed_unfold_side cb res =
-    match res with
-    | FStarC_TypeChecker_Core.Left ->
-        mkConstruct fstar_tc_core_unfold_side_Left.fv [] []
-    | FStarC_TypeChecker_Core.Right ->
-        mkConstruct fstar_tc_core_unfold_side_Right.fv [] []
-    | FStarC_TypeChecker_Core.Both ->
-        mkConstruct fstar_tc_core_unfold_side_Both.fv [] []
-    | FStarC_TypeChecker_Core.Neither ->
-        mkConstruct fstar_tc_core_unfold_side_Neither.fv [] [] in
-  let unembed_unfold_side cb t =
-    let uu___ = FStarC_TypeChecker_NBETerm.nbe_t_of_t t in
-    match uu___ with
-    | FStarC_TypeChecker_NBETerm.Construct (fv, uu___1, []) when
-        FStarC_Syntax_Syntax.fv_eq_lid fv fstar_tc_core_unfold_side_Left.lid
-        -> FStar_Pervasives_Native.Some FStarC_TypeChecker_Core.Left
-    | FStarC_TypeChecker_NBETerm.Construct (fv, uu___1, []) when
-        FStarC_Syntax_Syntax.fv_eq_lid fv fstar_tc_core_unfold_side_Right.lid
-        -> FStar_Pervasives_Native.Some FStarC_TypeChecker_Core.Right
-    | FStarC_TypeChecker_NBETerm.Construct (fv, uu___1, []) when
-        FStarC_Syntax_Syntax.fv_eq_lid fv fstar_tc_core_unfold_side_Both.lid
-        -> FStar_Pervasives_Native.Some FStarC_TypeChecker_Core.Both
-    | FStarC_TypeChecker_NBETerm.Construct (fv, uu___1, []) when
-        FStarC_Syntax_Syntax.fv_eq_lid fv
-          fstar_tc_core_unfold_side_Neither.lid
-        -> FStar_Pervasives_Native.Some FStarC_TypeChecker_Core.Neither
-    | uu___1 ->
-        ((let uu___3 = FStarC_Effect.op_Bang FStarC_Options.debug_embedding in
-          if uu___3
-          then
-            let uu___4 =
-              let uu___5 = FStarC_TypeChecker_NBETerm.t_to_string t in
-              FStarC_Util.format1 "Not an embedded unfold_side: %s" uu___5 in
-            FStarC_Errors.log_issue0 FStarC_Errors_Codes.Warning_NotEmbedded
-              () (Obj.magic FStarC_Errors_Msg.is_error_message_string)
-              (Obj.magic uu___4)
-          else ());
-         FStar_Pervasives_Native.None) in
+  let embed_unfold_side cb =
+    fun res ->
+      match res with
+      | FStarC_TypeChecker_Core.Left ->
+          mkConstruct fstar_tc_core_unfold_side_Left.fv [] []
+      | FStarC_TypeChecker_Core.Right ->
+          mkConstruct fstar_tc_core_unfold_side_Right.fv [] []
+      | FStarC_TypeChecker_Core.Both ->
+          mkConstruct fstar_tc_core_unfold_side_Both.fv [] []
+      | FStarC_TypeChecker_Core.Neither ->
+          mkConstruct fstar_tc_core_unfold_side_Neither.fv [] [] in
+  let unembed_unfold_side cb =
+    fun t ->
+      let uu___ = FStarC_TypeChecker_NBETerm.nbe_t_of_t t in
+      match uu___ with
+      | FStarC_TypeChecker_NBETerm.Construct (fv, uu___1, []) when
+          FStarC_Syntax_Syntax.fv_eq_lid fv
+            fstar_tc_core_unfold_side_Left.lid
+          -> FStar_Pervasives_Native.Some FStarC_TypeChecker_Core.Left
+      | FStarC_TypeChecker_NBETerm.Construct (fv, uu___1, []) when
+          FStarC_Syntax_Syntax.fv_eq_lid fv
+            fstar_tc_core_unfold_side_Right.lid
+          -> FStar_Pervasives_Native.Some FStarC_TypeChecker_Core.Right
+      | FStarC_TypeChecker_NBETerm.Construct (fv, uu___1, []) when
+          FStarC_Syntax_Syntax.fv_eq_lid fv
+            fstar_tc_core_unfold_side_Both.lid
+          -> FStar_Pervasives_Native.Some FStarC_TypeChecker_Core.Both
+      | FStarC_TypeChecker_NBETerm.Construct (fv, uu___1, []) when
+          FStarC_Syntax_Syntax.fv_eq_lid fv
+            fstar_tc_core_unfold_side_Neither.lid
+          -> FStar_Pervasives_Native.Some FStarC_TypeChecker_Core.Neither
+      | uu___1 ->
+          ((let uu___3 = FStarC_Effect.op_Bang FStarC_Options.debug_embedding in
+            if uu___3
+            then
+              let uu___4 =
+                let uu___5 = FStarC_TypeChecker_NBETerm.t_to_string t in
+                FStarC_Format.fmt1 "Not an embedded unfold_side: %s" uu___5 in
+              FStarC_Errors.log_issue0
+                FStarC_Errors_Codes.Warning_NotEmbedded ()
+                (Obj.magic FStarC_Errors_Msg.is_error_message_string)
+                (Obj.magic uu___4)
+            else ());
+           FStar_Pervasives_Native.None) in
   {
     FStarC_TypeChecker_NBETerm.em = embed_unfold_side;
     FStarC_TypeChecker_NBETerm.un = unembed_unfold_side;
@@ -831,10 +890,13 @@ let (e_tot_or_ghost :
   FStarC_TypeChecker_Core.tot_or_ghost
     FStarC_Syntax_Embeddings_Base.embedding)
   =
-  let embed_tot_or_ghost rng s =
-    match s with
-    | FStarC_TypeChecker_Core.E_Total -> fstar_tc_core_tot_or_ghost_ETotal.t
-    | FStarC_TypeChecker_Core.E_Ghost -> fstar_tc_core_tot_or_ghost_EGhost.t in
+  let embed_tot_or_ghost rng =
+    fun s ->
+      match s with
+      | FStarC_TypeChecker_Core.E_Total ->
+          fstar_tc_core_tot_or_ghost_ETotal.t
+      | FStarC_TypeChecker_Core.E_Ghost ->
+          fstar_tc_core_tot_or_ghost_EGhost.t in
   let unembed_tot_or_ghost t =
     let uu___ =
       let uu___1 = FStarC_Syntax_Subst.compress t in
@@ -853,35 +915,38 @@ let (e_tot_or_ghost :
 let (e_tot_or_ghost_nbe :
   FStarC_TypeChecker_Core.tot_or_ghost FStarC_TypeChecker_NBETerm.embedding)
   =
-  let embed_tot_or_ghost cb res =
-    match res with
-    | FStarC_TypeChecker_Core.E_Total ->
-        mkConstruct fstar_tc_core_tot_or_ghost_ETotal.fv [] []
-    | FStarC_TypeChecker_Core.E_Ghost ->
-        mkConstruct fstar_tc_core_tot_or_ghost_EGhost.fv [] [] in
-  let unembed_tot_or_ghost cb t =
-    let uu___ = FStarC_TypeChecker_NBETerm.nbe_t_of_t t in
-    match uu___ with
-    | FStarC_TypeChecker_NBETerm.Construct (fv, uu___1, []) when
-        FStarC_Syntax_Syntax.fv_eq_lid fv
-          fstar_tc_core_tot_or_ghost_ETotal.lid
-        -> FStar_Pervasives_Native.Some FStarC_TypeChecker_Core.E_Total
-    | FStarC_TypeChecker_NBETerm.Construct (fv, uu___1, []) when
-        FStarC_Syntax_Syntax.fv_eq_lid fv
-          fstar_tc_core_tot_or_ghost_EGhost.lid
-        -> FStar_Pervasives_Native.Some FStarC_TypeChecker_Core.E_Ghost
-    | uu___1 ->
-        ((let uu___3 = FStarC_Effect.op_Bang FStarC_Options.debug_embedding in
-          if uu___3
-          then
-            let uu___4 =
-              let uu___5 = FStarC_TypeChecker_NBETerm.t_to_string t in
-              FStarC_Util.format1 "Not an embedded tot_or_ghost: %s" uu___5 in
-            FStarC_Errors.log_issue0 FStarC_Errors_Codes.Warning_NotEmbedded
-              () (Obj.magic FStarC_Errors_Msg.is_error_message_string)
-              (Obj.magic uu___4)
-          else ());
-         FStar_Pervasives_Native.None) in
+  let embed_tot_or_ghost cb =
+    fun res ->
+      match res with
+      | FStarC_TypeChecker_Core.E_Total ->
+          mkConstruct fstar_tc_core_tot_or_ghost_ETotal.fv [] []
+      | FStarC_TypeChecker_Core.E_Ghost ->
+          mkConstruct fstar_tc_core_tot_or_ghost_EGhost.fv [] [] in
+  let unembed_tot_or_ghost cb =
+    fun t ->
+      let uu___ = FStarC_TypeChecker_NBETerm.nbe_t_of_t t in
+      match uu___ with
+      | FStarC_TypeChecker_NBETerm.Construct (fv, uu___1, []) when
+          FStarC_Syntax_Syntax.fv_eq_lid fv
+            fstar_tc_core_tot_or_ghost_ETotal.lid
+          -> FStar_Pervasives_Native.Some FStarC_TypeChecker_Core.E_Total
+      | FStarC_TypeChecker_NBETerm.Construct (fv, uu___1, []) when
+          FStarC_Syntax_Syntax.fv_eq_lid fv
+            fstar_tc_core_tot_or_ghost_EGhost.lid
+          -> FStar_Pervasives_Native.Some FStarC_TypeChecker_Core.E_Ghost
+      | uu___1 ->
+          ((let uu___3 = FStarC_Effect.op_Bang FStarC_Options.debug_embedding in
+            if uu___3
+            then
+              let uu___4 =
+                let uu___5 = FStarC_TypeChecker_NBETerm.t_to_string t in
+                FStarC_Format.fmt1 "Not an embedded tot_or_ghost: %s" uu___5 in
+              FStarC_Errors.log_issue0
+                FStarC_Errors_Codes.Warning_NotEmbedded ()
+                (Obj.magic FStarC_Errors_Msg.is_error_message_string)
+                (Obj.magic uu___4)
+            else ());
+           FStar_Pervasives_Native.None) in
   {
     FStarC_TypeChecker_NBETerm.em = embed_tot_or_ghost;
     FStarC_TypeChecker_NBETerm.un = unembed_tot_or_ghost;
@@ -908,23 +973,28 @@ let e_tref :
       'a FStarC_Tactics_Types.tref FStarC_Syntax_Embeddings_Base.embedding
   =
   fun uu___ ->
-    let em r rng _shadow _norm =
-      FStarC_Syntax_Util.mk_lazy r t_tref FStarC_Syntax_Syntax.Lazy_tref
-        (FStar_Pervasives_Native.Some rng) in
-    let un t uu___1 =
-      let uu___2 =
-        let uu___3 = FStarC_Syntax_Subst.compress t in
-        uu___3.FStarC_Syntax_Syntax.n in
-      match uu___2 with
-      | FStarC_Syntax_Syntax.Tm_lazy
-          { FStarC_Syntax_Syntax.blob = blob;
-            FStarC_Syntax_Syntax.lkind = FStarC_Syntax_Syntax.Lazy_tref;
-            FStarC_Syntax_Syntax.ltyp = uu___3;
-            FStarC_Syntax_Syntax.rng = uu___4;_}
-          ->
-          let uu___5 = FStarC_Dyn.undyn blob in
-          FStar_Pervasives_Native.Some uu___5
-      | uu___3 -> FStar_Pervasives_Native.None in
+    let em r =
+      fun rng ->
+        fun _shadow ->
+          fun _norm ->
+            FStarC_Syntax_Util.mk_lazy r t_tref
+              FStarC_Syntax_Syntax.Lazy_tref
+              (FStar_Pervasives_Native.Some rng) in
+    let un t =
+      fun uu___1 ->
+        let uu___2 =
+          let uu___3 = FStarC_Syntax_Subst.compress t in
+          uu___3.FStarC_Syntax_Syntax.n in
+        match uu___2 with
+        | FStarC_Syntax_Syntax.Tm_lazy
+            { FStarC_Syntax_Syntax.blob = blob;
+              FStarC_Syntax_Syntax.lkind = FStarC_Syntax_Syntax.Lazy_tref;
+              FStarC_Syntax_Syntax.ltyp = uu___3;
+              FStarC_Syntax_Syntax.rng = uu___4;_}
+            ->
+            let uu___5 = FStarC_Dyn.undyn blob in
+            FStar_Pervasives_Native.Some uu___5
+        | uu___3 -> FStar_Pervasives_Native.None in
     FStarC_Syntax_Embeddings_Base.mk_emb_full em un (fun uu___1 -> t_tref)
       (fun i -> "tref")
       (fun uu___1 ->
@@ -938,50 +1008,53 @@ let e_tref_nbe :
     unit -> 'a FStarC_Tactics_Types.tref FStarC_TypeChecker_NBETerm.embedding
   =
   fun uu___ ->
-    let embed_tref _cb r =
-      let li =
-        let uu___1 = FStarC_Dyn.mkdyn r in
-        {
-          FStarC_Syntax_Syntax.blob = uu___1;
-          FStarC_Syntax_Syntax.lkind = FStarC_Syntax_Syntax.Lazy_tref;
-          FStarC_Syntax_Syntax.ltyp = t_tref;
-          FStarC_Syntax_Syntax.rng = FStarC_Range_Type.dummyRange
-        } in
-      let thunk =
-        FStarC_Thunk.mk
-          (fun uu___1 ->
-             FStarC_TypeChecker_NBETerm.mk_t
-               (FStarC_TypeChecker_NBETerm.Constant
-                  (FStarC_TypeChecker_NBETerm.String
-                     ("(((tref.nbe)))", FStarC_Range_Type.dummyRange)))) in
-      FStarC_TypeChecker_NBETerm.mk_t
-        (FStarC_TypeChecker_NBETerm.Lazy ((FStar_Pervasives.Inl li), thunk)) in
-    let unembed_tref _cb t =
-      let uu___1 = FStarC_TypeChecker_NBETerm.nbe_t_of_t t in
-      match uu___1 with
-      | FStarC_TypeChecker_NBETerm.Lazy
-          (FStar_Pervasives.Inl
-           { FStarC_Syntax_Syntax.blob = b;
-             FStarC_Syntax_Syntax.lkind = FStarC_Syntax_Syntax.Lazy_tref;
-             FStarC_Syntax_Syntax.ltyp = uu___2;
-             FStarC_Syntax_Syntax.rng = uu___3;_},
-           uu___4)
-          ->
-          let uu___5 = FStarC_Dyn.undyn b in
-          FStar_Pervasives_Native.Some uu___5
-      | uu___2 ->
-          ((let uu___4 = FStarC_Effect.op_Bang FStarC_Options.debug_embedding in
-            if uu___4
-            then
-              let uu___5 =
-                let uu___6 = FStarC_TypeChecker_NBETerm.t_to_string t in
-                FStarC_Util.format1 "Not an embedded NBE tref: %s\n" uu___6 in
-              FStarC_Errors.log_issue0
-                FStarC_Errors_Codes.Warning_NotEmbedded ()
-                (Obj.magic FStarC_Errors_Msg.is_error_message_string)
-                (Obj.magic uu___5)
-            else ());
-           FStar_Pervasives_Native.None) in
+    let embed_tref _cb =
+      fun r ->
+        let li =
+          let uu___1 = FStarC_Dyn.mkdyn r in
+          {
+            FStarC_Syntax_Syntax.blob = uu___1;
+            FStarC_Syntax_Syntax.lkind = FStarC_Syntax_Syntax.Lazy_tref;
+            FStarC_Syntax_Syntax.ltyp = t_tref;
+            FStarC_Syntax_Syntax.rng = FStarC_Range_Type.dummyRange
+          } in
+        let thunk =
+          FStarC_Thunk.mk
+            (fun uu___1 ->
+               FStarC_TypeChecker_NBETerm.mk_t
+                 (FStarC_TypeChecker_NBETerm.Constant
+                    (FStarC_TypeChecker_NBETerm.String
+                       ("(((tref.nbe)))", FStarC_Range_Type.dummyRange)))) in
+        FStarC_TypeChecker_NBETerm.mk_t
+          (FStarC_TypeChecker_NBETerm.Lazy ((FStar_Pervasives.Inl li), thunk)) in
+    let unembed_tref _cb =
+      fun t ->
+        let uu___1 = FStarC_TypeChecker_NBETerm.nbe_t_of_t t in
+        match uu___1 with
+        | FStarC_TypeChecker_NBETerm.Lazy
+            (FStar_Pervasives.Inl
+             { FStarC_Syntax_Syntax.blob = b;
+               FStarC_Syntax_Syntax.lkind = FStarC_Syntax_Syntax.Lazy_tref;
+               FStarC_Syntax_Syntax.ltyp = uu___2;
+               FStarC_Syntax_Syntax.rng = uu___3;_},
+             uu___4)
+            ->
+            let uu___5 = FStarC_Dyn.undyn b in
+            FStar_Pervasives_Native.Some uu___5
+        | uu___2 ->
+            ((let uu___4 =
+                FStarC_Effect.op_Bang FStarC_Options.debug_embedding in
+              if uu___4
+              then
+                let uu___5 =
+                  let uu___6 = FStarC_TypeChecker_NBETerm.t_to_string t in
+                  FStarC_Format.fmt1 "Not an embedded NBE tref: %s\n" uu___6 in
+                FStarC_Errors.log_issue0
+                  FStarC_Errors_Codes.Warning_NotEmbedded ()
+                  (Obj.magic FStarC_Errors_Msg.is_error_message_string)
+                  (Obj.magic uu___5)
+              else ());
+             FStar_Pervasives_Native.None) in
     {
       FStarC_TypeChecker_NBETerm.em = embed_tref;
       FStarC_TypeChecker_NBETerm.un = unembed_tref;
@@ -1011,13 +1084,14 @@ let e_tref_nbe :
 let (e_guard_policy :
   FStarC_Tactics_Types.guard_policy FStarC_Syntax_Embeddings_Base.embedding)
   =
-  let embed_guard_policy rng p =
-    match p with
-    | FStarC_Tactics_Types.SMT -> fstar_tactics_SMT.t
-    | FStarC_Tactics_Types.SMTSync -> fstar_tactics_SMTSync.t
-    | FStarC_Tactics_Types.Goal -> fstar_tactics_Goal.t
-    | FStarC_Tactics_Types.Force -> fstar_tactics_Force.t
-    | FStarC_Tactics_Types.Drop -> fstar_tactics_Drop.t in
+  let embed_guard_policy rng =
+    fun p ->
+      match p with
+      | FStarC_Tactics_Types.SMT -> fstar_tactics_SMT.t
+      | FStarC_Tactics_Types.SMTSync -> fstar_tactics_SMTSync.t
+      | FStarC_Tactics_Types.Goal -> fstar_tactics_Goal.t
+      | FStarC_Tactics_Types.Force -> fstar_tactics_Force.t
+      | FStarC_Tactics_Types.Drop -> fstar_tactics_Drop.t in
   let unembed_guard_policy t =
     let uu___ =
       let uu___1 = FStarC_Syntax_Subst.compress t in
@@ -1042,33 +1116,36 @@ let (e_guard_policy :
   mk_emb embed_guard_policy unembed_guard_policy fstar_tactics_guard_policy.t
 let (e_guard_policy_nbe :
   FStarC_Tactics_Types.guard_policy FStarC_TypeChecker_NBETerm.embedding) =
-  let embed_guard_policy cb p =
-    match p with
-    | FStarC_Tactics_Types.SMT -> mkConstruct fstar_tactics_SMT.fv [] []
-    | FStarC_Tactics_Types.SMTSync ->
-        mkConstruct fstar_tactics_SMTSync.fv [] []
-    | FStarC_Tactics_Types.Goal -> mkConstruct fstar_tactics_Goal.fv [] []
-    | FStarC_Tactics_Types.Force -> mkConstruct fstar_tactics_Force.fv [] []
-    | FStarC_Tactics_Types.Drop -> mkConstruct fstar_tactics_Drop.fv [] [] in
-  let unembed_guard_policy cb t =
-    let uu___ = FStarC_TypeChecker_NBETerm.nbe_t_of_t t in
-    match uu___ with
-    | FStarC_TypeChecker_NBETerm.Construct (fv, uu___1, []) when
-        FStarC_Syntax_Syntax.fv_eq_lid fv fstar_tactics_SMT.lid ->
-        FStar_Pervasives_Native.Some FStarC_Tactics_Types.SMT
-    | FStarC_TypeChecker_NBETerm.Construct (fv, uu___1, []) when
-        FStarC_Syntax_Syntax.fv_eq_lid fv fstar_tactics_SMTSync.lid ->
-        FStar_Pervasives_Native.Some FStarC_Tactics_Types.SMTSync
-    | FStarC_TypeChecker_NBETerm.Construct (fv, uu___1, []) when
-        FStarC_Syntax_Syntax.fv_eq_lid fv fstar_tactics_Goal.lid ->
-        FStar_Pervasives_Native.Some FStarC_Tactics_Types.Goal
-    | FStarC_TypeChecker_NBETerm.Construct (fv, uu___1, []) when
-        FStarC_Syntax_Syntax.fv_eq_lid fv fstar_tactics_Force.lid ->
-        FStar_Pervasives_Native.Some FStarC_Tactics_Types.Force
-    | FStarC_TypeChecker_NBETerm.Construct (fv, uu___1, []) when
-        FStarC_Syntax_Syntax.fv_eq_lid fv fstar_tactics_Drop.lid ->
-        FStar_Pervasives_Native.Some FStarC_Tactics_Types.Drop
-    | uu___1 -> FStar_Pervasives_Native.None in
+  let embed_guard_policy cb =
+    fun p ->
+      match p with
+      | FStarC_Tactics_Types.SMT -> mkConstruct fstar_tactics_SMT.fv [] []
+      | FStarC_Tactics_Types.SMTSync ->
+          mkConstruct fstar_tactics_SMTSync.fv [] []
+      | FStarC_Tactics_Types.Goal -> mkConstruct fstar_tactics_Goal.fv [] []
+      | FStarC_Tactics_Types.Force ->
+          mkConstruct fstar_tactics_Force.fv [] []
+      | FStarC_Tactics_Types.Drop -> mkConstruct fstar_tactics_Drop.fv [] [] in
+  let unembed_guard_policy cb =
+    fun t ->
+      let uu___ = FStarC_TypeChecker_NBETerm.nbe_t_of_t t in
+      match uu___ with
+      | FStarC_TypeChecker_NBETerm.Construct (fv, uu___1, []) when
+          FStarC_Syntax_Syntax.fv_eq_lid fv fstar_tactics_SMT.lid ->
+          FStar_Pervasives_Native.Some FStarC_Tactics_Types.SMT
+      | FStarC_TypeChecker_NBETerm.Construct (fv, uu___1, []) when
+          FStarC_Syntax_Syntax.fv_eq_lid fv fstar_tactics_SMTSync.lid ->
+          FStar_Pervasives_Native.Some FStarC_Tactics_Types.SMTSync
+      | FStarC_TypeChecker_NBETerm.Construct (fv, uu___1, []) when
+          FStarC_Syntax_Syntax.fv_eq_lid fv fstar_tactics_Goal.lid ->
+          FStar_Pervasives_Native.Some FStarC_Tactics_Types.Goal
+      | FStarC_TypeChecker_NBETerm.Construct (fv, uu___1, []) when
+          FStarC_Syntax_Syntax.fv_eq_lid fv fstar_tactics_Force.lid ->
+          FStar_Pervasives_Native.Some FStarC_Tactics_Types.Force
+      | FStarC_TypeChecker_NBETerm.Construct (fv, uu___1, []) when
+          FStarC_Syntax_Syntax.fv_eq_lid fv fstar_tactics_Drop.lid ->
+          FStar_Pervasives_Native.Some FStarC_Tactics_Types.Drop
+      | uu___1 -> FStar_Pervasives_Native.None in
   {
     FStarC_TypeChecker_NBETerm.em = embed_guard_policy;
     FStarC_TypeChecker_NBETerm.un = unembed_guard_policy;

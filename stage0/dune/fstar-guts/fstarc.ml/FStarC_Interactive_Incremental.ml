@@ -84,7 +84,8 @@ let (as_query :
              let uu___1 =
                let uu___2 =
                  let uu___3 =
-                   let uu___4 = FStarC_Util.string_of_int i in
+                   let uu___4 =
+                     FStarC_Class_Show.show FStarC_Class_Show.showable_int i in
                    Prims.strcat "." uu___4 in
                  Prims.strcat qid_prefix uu___3 in
                {
@@ -251,72 +252,83 @@ let (inspect_repl_stack :
                 let entries1 = first_push :: rest in
                 let repl_task1 uu___1 =
                   match uu___1 with | (uu___2, (p, uu___3)) -> p in
-                let rec matching_prefix accum lookups entries2 ds1 =
-                  match (entries2, ds1) with
-                  | ([], []) -> return (lookups, accum)
-                  | (e::entries3, d::ds2) ->
-                      (match repl_task1 e with
-                       | FStarC_Interactive_Ide_Types.Noop ->
-                           matching_prefix accum lookups entries3 (d :: ds2)
-                       | FStarC_Interactive_Ide_Types.PushFragment
-                           (FStar_Pervasives.Inl frag, uu___1, uu___2) ->
-                           let uu___3 = pop_entries (e :: entries3) in
-                           op_let_Bang uu___3
-                             (fun pops ->
-                                let uu___4 = push_decls1 (d :: ds2) in
-                                op_let_Bang uu___4
-                                  (fun pushes ->
-                                     return
-                                       ((FStarC_List.op_At lookups
-                                           (FStarC_List.op_At pops pushes)),
-                                         accum)))
-                       | FStarC_Interactive_Ide_Types.PushFragment
-                           (FStar_Pervasives.Inr d', pk, issues) ->
-                           let uu___1 =
-                             (FStarC_Parser_AST_Util.eq_decl
-                                (FStar_Pervasives_Native.fst d) d')
-                               && (push_kind_geq pk push_kind) in
-                           if uu___1
-                           then
-                             let uu___2 = d in
-                             (match uu___2 with
-                              | (d1, s1) ->
-                                  (write_full_buffer_fragment_progress
-                                     (FragmentSuccess (d1, s1, pk));
-                                   if with_symbols
-                                   then
-                                     (let uu___4 = dump_symbols d1 in
+                let rec matching_prefix accum =
+                  fun lookups ->
+                    fun entries2 ->
+                      fun ds1 ->
+                        match (entries2, ds1) with
+                        | ([], []) -> return (lookups, accum)
+                        | (e::entries3, d::ds2) ->
+                            (match repl_task1 e with
+                             | FStarC_Interactive_Ide_Types.Noop ->
+                                 matching_prefix accum lookups entries3 (d ::
+                                   ds2)
+                             | FStarC_Interactive_Ide_Types.PushFragment
+                                 (FStar_Pervasives.Inl frag, uu___1, uu___2)
+                                 ->
+                                 let uu___3 = pop_entries (e :: entries3) in
+                                 op_let_Bang uu___3
+                                   (fun pops ->
+                                      let uu___4 = push_decls1 (d :: ds2) in
                                       op_let_Bang uu___4
-                                        (fun lookups' ->
+                                        (fun pushes ->
+                                           return
+                                             ((FStarC_List.op_At lookups
+                                                 (FStarC_List.op_At pops
+                                                    pushes)), accum)))
+                             | FStarC_Interactive_Ide_Types.PushFragment
+                                 (FStar_Pervasives.Inr d', pk, issues) ->
+                                 let uu___1 =
+                                   (FStarC_Parser_AST_Diff.eq_decl
+                                      (FStar_Pervasives_Native.fst d) d')
+                                     && (push_kind_geq pk push_kind) in
+                                 if uu___1
+                                 then
+                                   let uu___2 = d in
+                                   (match uu___2 with
+                                    | (d1, s1) ->
+                                        (write_full_buffer_fragment_progress
+                                           (FragmentSuccess (d1, s1, pk));
+                                         if with_symbols
+                                         then
+                                           (let uu___4 = dump_symbols d1 in
+                                            op_let_Bang uu___4
+                                              (fun lookups' ->
+                                                 matching_prefix
+                                                   (FStarC_List.op_At issues
+                                                      accum)
+                                                   (FStarC_List.op_At
+                                                      lookups' lookups)
+                                                   entries3 ds2))
+                                         else
                                            matching_prefix
                                              (FStarC_List.op_At issues accum)
-                                             (FStarC_List.op_At lookups'
-                                                lookups) entries3 ds2))
-                                   else
-                                     matching_prefix
-                                       (FStarC_List.op_At issues accum)
-                                       lookups entries3 ds2))
-                           else
-                             (let uu___3 = pop_entries (e :: entries3) in
-                              op_let_Bang uu___3
-                                (fun pops ->
-                                   let uu___4 = push_decls1 (d :: ds2) in
-                                   op_let_Bang uu___4
-                                     (fun pushes ->
-                                        return
-                                          ((FStarC_List.op_At pops
-                                              (FStarC_List.op_At lookups
-                                                 pushes)), accum)))))
-                  | ([], ds2) ->
-                      let uu___1 = push_decls1 ds2 in
-                      op_let_Bang uu___1
-                        (fun pushes ->
-                           return ((FStarC_List.op_At lookups pushes), accum))
-                  | (es, []) ->
-                      let uu___1 = pop_entries es in
-                      op_let_Bang uu___1
-                        (fun pops ->
-                           return ((FStarC_List.op_At lookups pops), accum)) in
+                                             lookups entries3 ds2))
+                                 else
+                                   (let uu___3 = pop_entries (e :: entries3) in
+                                    op_let_Bang uu___3
+                                      (fun pops ->
+                                         let uu___4 = push_decls1 (d :: ds2) in
+                                         op_let_Bang uu___4
+                                           (fun pushes ->
+                                              return
+                                                ((FStarC_List.op_At pops
+                                                    (FStarC_List.op_At
+                                                       lookups pushes)),
+                                                  accum)))))
+                        | ([], ds2) ->
+                            let uu___1 = push_decls1 ds2 in
+                            op_let_Bang uu___1
+                              (fun pushes ->
+                                 return
+                                   ((FStarC_List.op_At lookups pushes),
+                                     accum))
+                        | (es, []) ->
+                            let uu___1 = pop_entries es in
+                            op_let_Bang uu___1
+                              (fun pops ->
+                                 return
+                                   ((FStarC_List.op_At lookups pops), accum)) in
                 matching_prefix [] [] entries1 ds
 let reload_deps :
   'uuuuu 'uuuuu1 .
@@ -372,7 +384,7 @@ let (parse_code :
       FStarC_Parser_ParseIt.parse lang uu___
 let (syntax_issue :
   (FStarC_Errors_Codes.error_code * FStarC_Errors_Msg.error_message *
-    FStarC_Range_Type.range) -> FStarC_Errors.issue)
+    FStarC_Range_Type.t) -> FStarC_Errors.issue)
   =
   fun uu___ ->
     match uu___ with
@@ -447,8 +459,9 @@ let (run_full_buffer :
                 | FStarC_Parser_ParseIt.IncrementalFragment
                     (decls, uu___, err_opt) ->
                     ((let uu___2 =
-                        FStarC_Util.string_of_int (FStarC_List.length decls) in
-                      FStarC_Util.print1 "Parsed %s declarations\n" uu___2);
+                        FStarC_Class_Show.show FStarC_Class_Show.showable_nat
+                          (FStarC_List.length decls) in
+                      FStarC_Format.print1 "Parsed %s declarations\n" uu___2);
                      (match (request_type, decls) with
                       | (FStarC_Interactive_Ide_Types.ReloadDeps, d::uu___2)
                           ->
@@ -507,7 +520,7 @@ let (run_full_buffer :
                                          FStarC_Interactive_Ide_Types.query_to_string
                                          queries in
                                      FStarC_String.concat "\n" uu___8 in
-                                   FStarC_Util.print1
+                                   FStarC_Format.print1
                                      "Generating queries\n%s\n" uu___7
                                  else ());
                                 if

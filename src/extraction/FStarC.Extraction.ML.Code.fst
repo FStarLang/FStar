@@ -66,7 +66,7 @@ let empty    = Doc ""
 let hardline = Doc "\n"
 
 let text (s : string) = Doc s
-let num (i : int) = Doc (string_of_int i)
+let num (i : int) = Doc (show i)
 
 let break1 = text " "
 
@@ -273,7 +273,7 @@ let string_of_mlconstant (sctt : mlconstant) =
   | MLC_Char c -> (* Unicode characters, in OCaml we use BatUChar (wraper for int) *)
     if Util.codegen_fsharp() then "'" ^ (string_of_char c) ^ "'" else
     let nc = FStar.Char.int_of_char c in 
-    (string_of_int nc) ^ (if nc >= 32 && nc  = 127 && nc < 34 then " (*" ^ (string_of_char c) ^"*)" else "")
+    (show nc) ^ (if nc >= 32 && nc  = 127 && nc < 34 then " (*" ^ (string_of_char c) ^"*)" else "")
   | MLC_Int (s, Some (Signed, Int32)) -> s ^"l"
   | MLC_Int (s, Some (Signed, Int64)) -> s ^"L"
   | MLC_Int (s, Some (_, Int8))
@@ -297,10 +297,6 @@ let string_of_mlconstant (sctt : mlconstant) =
     "(FStar_" ^ sign ^ ws ^ "." ^ u ^ "int_to_t (" ^ z ^ "))"
   | MLC_Int (s, None) -> "(Prims.parse_int \"" ^s^ "\")"
   | MLC_Float d -> string_of_float d
-
-  | MLC_Bytes bytes ->
-      (* A byte buffer. Not meant to be readable. *)
-      "\"" ^ FStarC.Bytes.f_encode escape_byte_hex bytes ^ "\""
 
   | MLC_String chars ->
       (* It was a string literal. Escape what was (likely) escaped originally.
@@ -400,7 +396,7 @@ let rec doc_of_expr (currentModule : mlsymbol) (outer : level) (e : mlexpr) : do
     | MLE_CTor (ctor, []) ->
        let name =
          if is_standard_constructor ctor then
-           snd (Option.get (as_standard_constructor ctor))
+           snd (Option.must (as_standard_constructor ctor))
          else
            ptctor currentModule  ctor in
         text name
@@ -408,7 +404,7 @@ let rec doc_of_expr (currentModule : mlsymbol) (outer : level) (e : mlexpr) : do
     | MLE_CTor (ctor, args) ->
        let name =
          if is_standard_constructor ctor then
-           snd (Option.get (as_standard_constructor ctor))
+           snd (Option.must (as_standard_constructor ctor))
          else
            ptctor currentModule  ctor in
         let args = List.map (doc_of_expr currentModule (min_op_prec, NonAssoc)) args in
@@ -540,14 +536,14 @@ let rec doc_of_expr (currentModule : mlsymbol) (outer : level) (e : mlexpr) : do
         // We just skip them here.
         doc_of_expr currentModule outer head
 and  doc_of_binop currentModule p e1 e2 : doc =
-        let (_, prio, txt) = Option.get (as_bin_op p) in
+        let (_, prio, txt) = Option.must (as_bin_op p) in
         let e1  = doc_of_expr  currentModule (prio, Left ) e1 in
         let e2  = doc_of_expr  currentModule (prio, Right) e2 in
         let doc = reduce1 [e1; text txt; e2] in
         parens doc
 
 and  doc_of_uniop currentModule p e1  : doc =
-        let (_, txt) = Option.get (as_uni_op p) in
+        let (_, txt) = Option.must (as_uni_op p) in
         let e1  = doc_of_expr  currentModule  (min_op_prec, NonAssoc ) e1 in
         let doc = reduce1 [text txt; parens e1] in
         parens doc
@@ -565,7 +561,7 @@ and doc_of_pattern (currentModule : mlsymbol) (pattern : mlpattern) : doc =
     | MLP_CTor (ctor, []) ->
        let name =
          if is_standard_constructor ctor then
-           snd (Option.get (as_standard_constructor ctor))
+           snd (Option.must (as_standard_constructor ctor))
          else
            ptctor currentModule  ctor in
         text name
@@ -573,7 +569,7 @@ and doc_of_pattern (currentModule : mlsymbol) (pattern : mlpattern) : doc =
     | MLP_CTor (ctor, pats) ->
        let name =
          if is_standard_constructor ctor then
-           snd (Option.get (as_standard_constructor ctor))
+           snd (Option.must (as_standard_constructor ctor))
          else
            ptctor currentModule  ctor in
        let doc =

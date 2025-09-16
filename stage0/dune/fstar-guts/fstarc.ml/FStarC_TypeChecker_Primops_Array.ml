@@ -16,8 +16,7 @@ let (as_primitive_step :
             (l, arity, u_arity, f,
               (fun cb -> fun univs -> fun args -> f_nbe univs args))
 let (arg_as_int :
-  FStarC_Syntax_Syntax.arg -> FStarC_BigInt.t FStar_Pervasives_Native.option)
-  =
+  FStarC_Syntax_Syntax.arg -> Prims.int FStar_Pervasives_Native.option) =
   fun a ->
     FStarC_TypeChecker_Primops_Base.try_unembed_simple
       FStarC_Syntax_Embeddings.e_int (FStar_Pervasives_Native.fst a)
@@ -35,8 +34,8 @@ let mixed_binary_op :
   'a 'b 'c .
     (FStarC_Syntax_Syntax.arg -> 'a FStar_Pervasives_Native.option) ->
       (FStarC_Syntax_Syntax.arg -> 'b FStar_Pervasives_Native.option) ->
-        (FStarC_Range_Type.range -> 'c -> FStarC_Syntax_Syntax.term) ->
-          (FStarC_Range_Type.range ->
+        (FStarC_Range_Type.t -> 'c -> FStarC_Syntax_Syntax.term) ->
+          (FStarC_Range_Type.t ->
              FStarC_Syntax_Syntax.universes ->
                'a -> 'b -> 'c FStar_Pervasives_Native.option)
             ->
@@ -80,8 +79,8 @@ let mixed_ternary_op :
     (FStarC_Syntax_Syntax.arg -> 'a FStar_Pervasives_Native.option) ->
       (FStarC_Syntax_Syntax.arg -> 'b FStar_Pervasives_Native.option) ->
         (FStarC_Syntax_Syntax.arg -> 'c FStar_Pervasives_Native.option) ->
-          (FStarC_Range_Type.range -> 'd -> FStarC_Syntax_Syntax.term) ->
-            (FStarC_Range_Type.range ->
+          (FStarC_Range_Type.t -> 'd -> FStarC_Syntax_Syntax.term) ->
+            (FStarC_Range_Type.t ->
                FStarC_Syntax_Syntax.universes ->
                  'a -> 'b -> 'c -> 'd FStar_Pervasives_Native.option)
               ->
@@ -140,17 +139,21 @@ let (ops : FStarC_TypeChecker_Primops_Base.primitive_step Prims.list) =
             FStarC_Parser_Const.immutable_array_t_lid in
         (uu___1, [t]) in
       FStarC_Syntax_Syntax.ET_app uu___ in
-    let un_lazy universes t l r =
-      let uu___ =
-        let uu___1 =
-          FStarC_Syntax_Util.fvar_const
-            FStarC_Parser_Const.immutable_array_of_list_lid in
-        FStarC_Syntax_Syntax.mk_Tm_uinst uu___1 universes in
-      let uu___1 =
-        let uu___2 = FStarC_Syntax_Syntax.iarg t in
-        let uu___3 = let uu___4 = FStarC_Syntax_Syntax.as_arg l in [uu___4] in
-        uu___2 :: uu___3 in
-      FStarC_Syntax_Syntax.mk_Tm_app uu___ uu___1 r in
+    let un_lazy universes =
+      fun t ->
+        fun l ->
+          fun r ->
+            let uu___ =
+              let uu___1 =
+                FStarC_Syntax_Util.fvar_const
+                  FStarC_Parser_Const.immutable_array_of_list_lid in
+              FStarC_Syntax_Syntax.mk_Tm_uinst uu___1 universes in
+            let uu___1 =
+              let uu___2 = FStarC_Syntax_Syntax.iarg t in
+              let uu___3 =
+                let uu___4 = FStarC_Syntax_Syntax.as_arg l in [uu___4] in
+              uu___2 :: uu___3 in
+            FStarC_Syntax_Syntax.mk_Tm_app uu___ uu___1 r in
     (FStarC_Parser_Const.immutable_array_of_list_lid, (Prims.of_int (2)),
       Prims.int_one,
       (mixed_binary_op
@@ -306,9 +309,10 @@ let (ops : FStarC_TypeChecker_Primops_Base.primitive_step Prims.list) =
         head = uu___2 -> FStar_Pervasives_Native.Some blob
     | uu___ -> FStar_Pervasives_Native.None in
   let length_op =
-    let embed_int r i =
-      FStarC_TypeChecker_Primops_Base.embed_simple
-        FStarC_Syntax_Embeddings.e_int r i in
+    let embed_int r =
+      fun i ->
+        FStarC_TypeChecker_Primops_Base.embed_simple
+          FStarC_Syntax_Embeddings.e_int r i in
     let run_op blob =
       let uu___ =
         let uu___1 = FStarC_Dyn.undyn blob in FStarC_Util.array_length uu___1 in

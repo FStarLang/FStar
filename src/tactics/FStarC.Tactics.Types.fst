@@ -109,4 +109,4 @@ let check_goal_solved' goal =
   | None   -> None
 
 let check_goal_solved goal =
-  Option.isSome (check_goal_solved' goal)
+  Some? (check_goal_solved' goal)

@@ -19,7 +19,6 @@ open FStarC
 
 open FStarC
 open FStarC.Effect
-open FStarC.Util
 open FStarC.Class.Show
 open FStarC.List
 open FStarC.Class.Ord
@@ -88,7 +87,6 @@ type term' =
   | Quant      of qop & list (list pat) & option int & list sort & term
   | Let        of list term & term
   | Labeled    of term & Errors.error_message & Range.t
-  | LblPos     of term & string // FIXME: this case is unused
 and pat  = term
 and term = {tm:term'; freevars:S.memo fvs; rng:Range.t}
 and fv = | FV of string & sort & bool (* bool iff variable must be forced/unthunked *)

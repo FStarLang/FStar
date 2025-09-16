@@ -61,16 +61,20 @@ let (showable_guard_policy : guard_policy FStarC_Class_Show.showable) =
          | ForceSMT -> "ForceSMT"
          | Drop -> "Drop")
   }
+let (pretty_guard_policy : guard_policy FStarC_Class_PP.pretty) =
+  FStarC_Class_PP.pretty_from_showable showable_guard_policy
 type proofstate =
   {
   main_context: FStarC_TypeChecker_Env.env ;
   all_implicits: FStarC_TypeChecker_Common.implicits ;
   goals: goal Prims.list ;
   smt_goals: goal Prims.list ;
+  splice_quals: FStarC_Syntax_Syntax.qualifier Prims.list ;
+  splice_attrs: FStarC_Syntax_Syntax.attribute Prims.list ;
   depth: Prims.int ;
   __dump: proofstate -> Prims.string -> unit ;
   psc: FStarC_TypeChecker_Primops_Base.psc ;
-  entry_range: FStarC_Range_Type.range ;
+  entry_range: FStarC_Range_Type.t ;
   guard_policy: guard_policy ;
   freshness: Prims.int ;
   tac_verb_dbg: Prims.bool ;
@@ -81,101 +85,126 @@ let (__proj__Mkproofstate__item__main_context :
   proofstate -> FStarC_TypeChecker_Env.env) =
   fun projectee ->
     match projectee with
-    | { main_context; all_implicits; goals; smt_goals; depth; __dump; 
-        psc; entry_range; guard_policy = guard_policy1; freshness;
-        tac_verb_dbg; local_state; urgency; dump_on_failure;_} ->
-        main_context
+    | { main_context; all_implicits; goals; smt_goals; splice_quals;
+        splice_attrs; depth; __dump; psc; entry_range;
+        guard_policy = guard_policy1; freshness; tac_verb_dbg; local_state;
+        urgency; dump_on_failure;_} -> main_context
 let (__proj__Mkproofstate__item__all_implicits :
   proofstate -> FStarC_TypeChecker_Common.implicits) =
   fun projectee ->
     match projectee with
-    | { main_context; all_implicits; goals; smt_goals; depth; __dump; 
-        psc; entry_range; guard_policy = guard_policy1; freshness;
-        tac_verb_dbg; local_state; urgency; dump_on_failure;_} ->
-        all_implicits
+    | { main_context; all_implicits; goals; smt_goals; splice_quals;
+        splice_attrs; depth; __dump; psc; entry_range;
+        guard_policy = guard_policy1; freshness; tac_verb_dbg; local_state;
+        urgency; dump_on_failure;_} -> all_implicits
 let (__proj__Mkproofstate__item__goals : proofstate -> goal Prims.list) =
   fun projectee ->
     match projectee with
-    | { main_context; all_implicits; goals; smt_goals; depth; __dump; 
-        psc; entry_range; guard_policy = guard_policy1; freshness;
-        tac_verb_dbg; local_state; urgency; dump_on_failure;_} -> goals
+    | { main_context; all_implicits; goals; smt_goals; splice_quals;
+        splice_attrs; depth; __dump; psc; entry_range;
+        guard_policy = guard_policy1; freshness; tac_verb_dbg; local_state;
+        urgency; dump_on_failure;_} -> goals
 let (__proj__Mkproofstate__item__smt_goals : proofstate -> goal Prims.list) =
   fun projectee ->
     match projectee with
-    | { main_context; all_implicits; goals; smt_goals; depth; __dump; 
-        psc; entry_range; guard_policy = guard_policy1; freshness;
-        tac_verb_dbg; local_state; urgency; dump_on_failure;_} -> smt_goals
+    | { main_context; all_implicits; goals; smt_goals; splice_quals;
+        splice_attrs; depth; __dump; psc; entry_range;
+        guard_policy = guard_policy1; freshness; tac_verb_dbg; local_state;
+        urgency; dump_on_failure;_} -> smt_goals
+let (__proj__Mkproofstate__item__splice_quals :
+  proofstate -> FStarC_Syntax_Syntax.qualifier Prims.list) =
+  fun projectee ->
+    match projectee with
+    | { main_context; all_implicits; goals; smt_goals; splice_quals;
+        splice_attrs; depth; __dump; psc; entry_range;
+        guard_policy = guard_policy1; freshness; tac_verb_dbg; local_state;
+        urgency; dump_on_failure;_} -> splice_quals
+let (__proj__Mkproofstate__item__splice_attrs :
+  proofstate -> FStarC_Syntax_Syntax.attribute Prims.list) =
+  fun projectee ->
+    match projectee with
+    | { main_context; all_implicits; goals; smt_goals; splice_quals;
+        splice_attrs; depth; __dump; psc; entry_range;
+        guard_policy = guard_policy1; freshness; tac_verb_dbg; local_state;
+        urgency; dump_on_failure;_} -> splice_attrs
 let (__proj__Mkproofstate__item__depth : proofstate -> Prims.int) =
   fun projectee ->
     match projectee with
-    | { main_context; all_implicits; goals; smt_goals; depth; __dump; 
-        psc; entry_range; guard_policy = guard_policy1; freshness;
-        tac_verb_dbg; local_state; urgency; dump_on_failure;_} -> depth
+    | { main_context; all_implicits; goals; smt_goals; splice_quals;
+        splice_attrs; depth; __dump; psc; entry_range;
+        guard_policy = guard_policy1; freshness; tac_verb_dbg; local_state;
+        urgency; dump_on_failure;_} -> depth
 let (__proj__Mkproofstate__item____dump :
   proofstate -> proofstate -> Prims.string -> unit) =
   fun projectee ->
     match projectee with
-    | { main_context; all_implicits; goals; smt_goals; depth; __dump; 
-        psc; entry_range; guard_policy = guard_policy1; freshness;
-        tac_verb_dbg; local_state; urgency; dump_on_failure;_} -> __dump
+    | { main_context; all_implicits; goals; smt_goals; splice_quals;
+        splice_attrs; depth; __dump; psc; entry_range;
+        guard_policy = guard_policy1; freshness; tac_verb_dbg; local_state;
+        urgency; dump_on_failure;_} -> __dump
 let (__proj__Mkproofstate__item__psc :
   proofstate -> FStarC_TypeChecker_Primops_Base.psc) =
   fun projectee ->
     match projectee with
-    | { main_context; all_implicits; goals; smt_goals; depth; __dump; 
-        psc; entry_range; guard_policy = guard_policy1; freshness;
-        tac_verb_dbg; local_state; urgency; dump_on_failure;_} -> psc
+    | { main_context; all_implicits; goals; smt_goals; splice_quals;
+        splice_attrs; depth; __dump; psc; entry_range;
+        guard_policy = guard_policy1; freshness; tac_verb_dbg; local_state;
+        urgency; dump_on_failure;_} -> psc
 let (__proj__Mkproofstate__item__entry_range :
-  proofstate -> FStarC_Range_Type.range) =
+  proofstate -> FStarC_Range_Type.t) =
   fun projectee ->
     match projectee with
-    | { main_context; all_implicits; goals; smt_goals; depth; __dump; 
-        psc; entry_range; guard_policy = guard_policy1; freshness;
-        tac_verb_dbg; local_state; urgency; dump_on_failure;_} -> entry_range
+    | { main_context; all_implicits; goals; smt_goals; splice_quals;
+        splice_attrs; depth; __dump; psc; entry_range;
+        guard_policy = guard_policy1; freshness; tac_verb_dbg; local_state;
+        urgency; dump_on_failure;_} -> entry_range
 let (__proj__Mkproofstate__item__guard_policy : proofstate -> guard_policy) =
   fun projectee ->
     match projectee with
-    | { main_context; all_implicits; goals; smt_goals; depth; __dump; 
-        psc; entry_range; guard_policy = guard_policy1; freshness;
-        tac_verb_dbg; local_state; urgency; dump_on_failure;_} ->
-        guard_policy1
+    | { main_context; all_implicits; goals; smt_goals; splice_quals;
+        splice_attrs; depth; __dump; psc; entry_range;
+        guard_policy = guard_policy1; freshness; tac_verb_dbg; local_state;
+        urgency; dump_on_failure;_} -> guard_policy1
 let (__proj__Mkproofstate__item__freshness : proofstate -> Prims.int) =
   fun projectee ->
     match projectee with
-    | { main_context; all_implicits; goals; smt_goals; depth; __dump; 
-        psc; entry_range; guard_policy = guard_policy1; freshness;
-        tac_verb_dbg; local_state; urgency; dump_on_failure;_} -> freshness
+    | { main_context; all_implicits; goals; smt_goals; splice_quals;
+        splice_attrs; depth; __dump; psc; entry_range;
+        guard_policy = guard_policy1; freshness; tac_verb_dbg; local_state;
+        urgency; dump_on_failure;_} -> freshness
 let (__proj__Mkproofstate__item__tac_verb_dbg : proofstate -> Prims.bool) =
   fun projectee ->
     match projectee with
-    | { main_context; all_implicits; goals; smt_goals; depth; __dump; 
-        psc; entry_range; guard_policy = guard_policy1; freshness;
-        tac_verb_dbg; local_state; urgency; dump_on_failure;_} ->
-        tac_verb_dbg
+    | { main_context; all_implicits; goals; smt_goals; splice_quals;
+        splice_attrs; depth; __dump; psc; entry_range;
+        guard_policy = guard_policy1; freshness; tac_verb_dbg; local_state;
+        urgency; dump_on_failure;_} -> tac_verb_dbg
 let (__proj__Mkproofstate__item__local_state :
   proofstate -> FStarC_Syntax_Syntax.term FStarC_PSMap.t) =
   fun projectee ->
     match projectee with
-    | { main_context; all_implicits; goals; smt_goals; depth; __dump; 
-        psc; entry_range; guard_policy = guard_policy1; freshness;
-        tac_verb_dbg; local_state; urgency; dump_on_failure;_} -> local_state
+    | { main_context; all_implicits; goals; smt_goals; splice_quals;
+        splice_attrs; depth; __dump; psc; entry_range;
+        guard_policy = guard_policy1; freshness; tac_verb_dbg; local_state;
+        urgency; dump_on_failure;_} -> local_state
 let (__proj__Mkproofstate__item__urgency : proofstate -> Prims.int) =
   fun projectee ->
     match projectee with
-    | { main_context; all_implicits; goals; smt_goals; depth; __dump; 
-        psc; entry_range; guard_policy = guard_policy1; freshness;
-        tac_verb_dbg; local_state; urgency; dump_on_failure;_} -> urgency
+    | { main_context; all_implicits; goals; smt_goals; splice_quals;
+        splice_attrs; depth; __dump; psc; entry_range;
+        guard_policy = guard_policy1; freshness; tac_verb_dbg; local_state;
+        urgency; dump_on_failure;_} -> urgency
 let (__proj__Mkproofstate__item__dump_on_failure : proofstate -> Prims.bool)
   =
   fun projectee ->
     match projectee with
-    | { main_context; all_implicits; goals; smt_goals; depth; __dump; 
-        psc; entry_range; guard_policy = guard_policy1; freshness;
-        tac_verb_dbg; local_state; urgency; dump_on_failure;_} ->
-        dump_on_failure
+    | { main_context; all_implicits; goals; smt_goals; splice_quals;
+        splice_attrs; depth; __dump; psc; entry_range;
+        guard_policy = guard_policy1; freshness; tac_verb_dbg; local_state;
+        urgency; dump_on_failure;_} -> dump_on_failure
 let (goal_env : goal -> FStarC_TypeChecker_Env.env) =
   fun g -> g.goal_main_env
-let (goal_range : goal -> FStarC_Range_Type.range) =
+let (goal_range : goal -> FStarC_Range_Type.t) =
   fun g -> (g.goal_main_env).FStarC_TypeChecker_Env.range
 let (goal_witness : goal -> FStarC_Syntax_Syntax.term) =
   fun g ->
@@ -296,8 +325,6 @@ let (goal_of_implicit :
           FStarC_TypeChecker_Env.is_iface =
             (env.FStarC_TypeChecker_Env.is_iface);
           FStarC_TypeChecker_Env.admit = (env.FStarC_TypeChecker_Env.admit);
-          FStarC_TypeChecker_Env.lax_universes =
-            (env.FStarC_TypeChecker_Env.lax_universes);
           FStarC_TypeChecker_Env.phase1 = (env.FStarC_TypeChecker_Env.phase1);
           FStarC_TypeChecker_Env.failhard =
             (env.FStarC_TypeChecker_Env.failhard);
@@ -367,6 +394,8 @@ let (decr_depth : proofstate -> proofstate) =
       all_implicits = (ps.all_implicits);
       goals = (ps.goals);
       smt_goals = (ps.smt_goals);
+      splice_quals = (ps.splice_quals);
+      splice_attrs = (ps.splice_attrs);
       depth = (ps.depth - Prims.int_one);
       __dump = (ps.__dump);
       psc = (ps.psc);
@@ -385,6 +414,8 @@ let (incr_depth : proofstate -> proofstate) =
       all_implicits = (ps.all_implicits);
       goals = (ps.goals);
       smt_goals = (ps.smt_goals);
+      splice_quals = (ps.splice_quals);
+      splice_attrs = (ps.splice_attrs);
       depth = (ps.depth + Prims.int_one);
       __dump = (ps.__dump);
       psc = (ps.psc);
@@ -405,6 +436,8 @@ let (set_ps_psc :
         all_implicits = (ps.all_implicits);
         goals = (ps.goals);
         smt_goals = (ps.smt_goals);
+        splice_quals = (ps.splice_quals);
+        splice_attrs = (ps.splice_attrs);
         depth = (ps.depth);
         __dump = (ps.__dump);
         psc;
@@ -435,8 +468,8 @@ let (tracepoint : proofstate -> Prims.bool) =
          (let uu___2 = FStarC_Options.tactic_trace_d () in ps.depth <= uu___2) in
      if uu___1 then ps.__dump ps "TRACE" else ());
     true
-let (set_proofstate_range :
-  proofstate -> FStarC_Range_Type.range -> proofstate) =
+let (set_proofstate_range : proofstate -> FStarC_Range_Type.t -> proofstate)
+  =
   fun ps ->
     fun r ->
       let uu___ =
@@ -447,6 +480,8 @@ let (set_proofstate_range :
         all_implicits = (ps.all_implicits);
         goals = (ps.goals);
         smt_goals = (ps.smt_goals);
+        splice_quals = (ps.splice_quals);
+        splice_attrs = (ps.splice_attrs);
         depth = (ps.depth);
         __dump = (ps.__dump);
         psc = (ps.psc);
@@ -500,5 +535,6 @@ let (check_goal_solved' :
     | FStar_Pervasives_Native.None -> FStar_Pervasives_Native.None
 let (check_goal_solved : goal -> Prims.bool) =
   fun goal1 ->
-    let uu___ = check_goal_solved' goal1 in FStarC_Option.isSome uu___
+    let uu___ = check_goal_solved' goal1 in
+    FStar_Pervasives_Native.uu___is_Some uu___
 type 'a tref = 'a FStarC_Effect.ref

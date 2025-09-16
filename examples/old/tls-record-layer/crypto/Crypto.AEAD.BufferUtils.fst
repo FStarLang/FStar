@@ -108,7 +108,7 @@ val chain_mods_enc: #a:Type ->
    		     let h_final = HS.pop h_ideal in
    		     HS.modifies_transitively (Set.as_set [prf_region; frameOf cipher]) h_init h_final /\
 		     Buffer.modifies_buf_1 (frameOf cipher) cipher h_init h_final)))
-#reset-options "--initial_fuel 0 --initial_ifuel 0 --max_fuel 0 --max_ifuel 0 --z3rlimit 200"
+#reset-options "--initial_fuel 0 --initial_ifuel 0 --fuel 0 --ifuel 0 --z3rlimit 200"
 let chain_mods_enc #a acc cond prf_region mac_region cipher h_init h_push h_prf h_enx h_acc h_mac h_ideal =
     FStar.Classical.move_requires (Buffer.lemma_reveal_modifies_2 acc cipher h_acc) h_mac;
     modifies_drop_tip h_init h_push h_ideal (Set.as_set [prf_region; frameOf cipher])

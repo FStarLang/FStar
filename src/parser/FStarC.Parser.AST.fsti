@@ -46,10 +46,11 @@ type term' =
   | Wild
   | Const     of sconst
   | Op        of ident & list term
-  | Tvar      of ident
   | Uvar      of ident                                (* universe variable *)
-  | Var       of lid // a qualified identifier that starts with a lowercase (Foo.Bar.baz)
-  | Name      of lid // a qualified identifier that starts with an uppercase (Foo.Bar.Baz)
+
+  | Var       of lid // a (possibly) qualified identifier that starts with a lowercase (Foo.Bar.baz)
+  | Name      of lid // a (possibly) qualified identifier that starts with an uppercase (Foo.Bar.Baz)
+
   | Projector of lid & ident (* a data constructor followed by one of
                                 its formal parameters, or an effect
                                 followed by one  of its actions or
@@ -80,11 +81,11 @@ type term' =
   | Refine    of binder & term
   | NamedTyp  of ident & term
   | Paren     of term
-  | Requires  of term & option string
-  | Ensures   of term & option string
+  | Requires  of term
+  | Ensures   of term
   | LexList   of list term  (* a decreases clause mentions either a lexicographically ordered list, *)
   | WFOrder   of term & term  (* or a well-founded relation or some type and an expression of the same type *)
-  | Decreases of term & option string
+  | Decreases of term
   | Labeled   of term & string & bool
   | Discrim   of lid   (* Some?  (formerly is_Some) *)
   | Attributes of list term   (* attributes decorating a term *)
@@ -122,9 +123,7 @@ and attributes_ = list term
 
 and binder' =
   | Variable of ident
-  | TVariable of ident
   | Annotated of ident & term
-  | TAnnotated of ident & term
   | NoName of term
 
 and binder = {b:binder'; brange:range; blevel:level; aqual:aqual; battributes:attributes_}
@@ -135,7 +134,6 @@ and pattern' =
   | PatApp      of pattern & list pattern
   | PatVar      of ident & aqual & attributes_
   | PatName     of lid
-  | PatTvar     of ident & aqual & attributes_
   | PatList     of list pattern
   | PatRest     (* For '..', which matches all extra args *)
   | PatTuple    of list pattern & bool (* dependent if flag is set *)
@@ -160,6 +158,8 @@ and imp =
     | HashBrace of term
     | Infix
     | Nothing
+
+instance val tagged_term : Class.Tagged.tagged term
 
 instance val hasRange_term    : hasRange term
 instance val hasRange_pattern : hasRange pattern
@@ -192,7 +192,6 @@ type qualifier =
   | Noeq
   | Unopteq
   | Assumption
-  | DefaultEffect
   | TotalEffect
   | Effect_qual
   | New
@@ -234,6 +233,7 @@ type pragma =
   | PopOptions
   | RestartSolver
   | PrintEffectsGraph
+  | Check of term
 
 type dep_scan_callbacks = {
    scan_term: term -> unit;
@@ -380,6 +380,10 @@ val idents_of_binders : list binder -> range -> list ident
 
 instance val showable_decl : showable decl
 instance val showable_term : showable term
+instance val showable_pattern : showable pattern
+instance val showable_binder : showable binder
+instance val showable_modul   : showable modul
+instance val showable_pragma : showable pragma
 
 val as_interface (m:modul) : modul
 

@@ -7,22 +7,24 @@ let (max : Prims.int -> Prims.int -> Prims.int) =
 let map_rev : 'a 'b . ('a -> 'b) -> 'a Prims.list -> 'b Prims.list =
   fun f ->
     fun l ->
-      let rec aux l1 acc =
-        match l1 with
-        | [] -> acc
-        | x::xs ->
-            let uu___ = let uu___1 = f x in uu___1 :: acc in aux xs uu___ in
+      let rec aux l1 =
+        fun acc ->
+          match l1 with
+          | [] -> acc
+          | x::xs ->
+              let uu___ = let uu___1 = f x in uu___1 :: acc in aux xs uu___ in
       aux l []
 let map_rev_append :
   'a 'b . ('a -> 'b) -> 'a Prims.list -> 'b Prims.list -> 'b Prims.list =
   fun f ->
     fun l1 ->
       fun l2 ->
-        let rec aux l acc =
-          match l with
-          | [] -> l2
-          | x::xs ->
-              let uu___ = let uu___1 = f x in uu___1 :: acc in aux xs uu___ in
+        let rec aux l =
+          fun acc ->
+            match l with
+            | [] -> l2
+            | x::xs ->
+                let uu___ = let uu___1 = f x in uu___1 :: acc in aux xs uu___ in
         aux l1 l2
 let rec map_append :
   'a 'b . ('a -> 'b) -> 'a Prims.list -> 'b Prims.list -> 'b Prims.list =
@@ -47,7 +49,7 @@ let fmap_opt :
   =
   fun f ->
     fun x ->
-      FStarC_Util.bind_opt x
+      FStarC_Option.bind x
         (fun x1 -> let uu___ = f x1 in FStar_Pervasives_Native.Some uu___)
 let drop_until : 'a . ('a -> Prims.bool) -> 'a Prims.list -> 'a Prims.list =
   fun f ->
@@ -79,7 +81,7 @@ let (let_rec_arity :
 let (debug_term : FStarC_Syntax_Syntax.term -> unit) =
   fun t ->
     let uu___ = FStarC_Class_Show.show FStarC_Syntax_Print.showable_term t in
-    FStarC_Util.print1 "%s\n" uu___
+    FStarC_Format.print1 "%s\n" uu___
 let (debug_sigmap : FStarC_Syntax_Syntax.sigelt FStarC_SMap.t -> unit) =
   fun m ->
     FStarC_SMap.fold m
@@ -87,7 +89,7 @@ let (debug_sigmap : FStarC_Syntax_Syntax.sigelt FStarC_SMap.t -> unit) =
          fun v ->
            fun u ->
              let uu___ = FStarC_Syntax_Print.sigelt_to_string_short v in
-             FStarC_Util.print2 "%s -> %%s\n" k uu___) ()
+             FStarC_Format.print2 "%s -> %%s\n" k uu___) ()
 type config =
   {
   core_cfg: FStarC_TypeChecker_Cfg.cfg ;
@@ -261,7 +263,7 @@ let (cache_add :
   fun cfg ->
     fun fv ->
       fun v ->
-        let lid = (fv.FStarC_Syntax_Syntax.fv_name).FStarC_Syntax_Syntax.v in
+        let lid = fv.FStarC_Syntax_Syntax.fv_name in
         let uu___ = FStarC_Ident.string_of_lid lid in
         FStarC_SMap.add cfg.fv_cache uu___ v
 let (try_in_cache :
@@ -271,7 +273,7 @@ let (try_in_cache :
   =
   fun cfg ->
     fun fv ->
-      let lid = (fv.FStarC_Syntax_Syntax.fv_name).FStarC_Syntax_Syntax.v in
+      let lid = fv.FStarC_Syntax_Syntax.fv_name in
       let uu___ = FStarC_Ident.string_of_lid lid in
       FStarC_SMap.try_find cfg.fv_cache uu___
 let (debug : config -> (unit -> unit) -> unit) =
@@ -301,124 +303,145 @@ let (pickBranch :
     fun scrut ->
       fun branches ->
         let all_branches = branches in
-        let rec pickBranch_aux scrut1 branches1 branches0 =
-          let rec matches_pat scrutinee0 p =
-            debug cfg
-              (fun uu___1 ->
-                 let uu___2 =
-                   FStarC_TypeChecker_NBETerm.t_to_string scrutinee0 in
-                 let uu___3 =
-                   FStarC_Class_Show.show FStarC_Syntax_Print.showable_pat p in
-                 FStarC_Util.print2 "matches_pat (%s, %s)\n" uu___2 uu___3);
-            (let scrutinee = unlazy_unmeta scrutinee0 in
-             let r =
-               match p.FStarC_Syntax_Syntax.v with
-               | FStarC_Syntax_Syntax.Pat_var bv ->
-                   FStar_Pervasives.Inl [scrutinee0]
-               | FStarC_Syntax_Syntax.Pat_dot_term uu___1 ->
-                   FStar_Pervasives.Inl []
-               | FStarC_Syntax_Syntax.Pat_constant s ->
-                   let matches_const c s1 =
-                     debug cfg
-                       (fun uu___2 ->
-                          let uu___3 =
-                            FStarC_TypeChecker_NBETerm.t_to_string c in
-                          let uu___4 =
-                            FStarC_Class_Show.show
-                              FStarC_Syntax_Print.showable_const s1 in
-                          FStarC_Util.print2
-                            "Testing term %s against pattern %s\n" uu___3
-                            uu___4);
-                     (match c.FStarC_TypeChecker_NBETerm.nbe_t with
-                      | FStarC_TypeChecker_NBETerm.Constant
-                          (FStarC_TypeChecker_NBETerm.Unit) ->
-                          s1 = FStarC_Const.Const_unit
-                      | FStarC_TypeChecker_NBETerm.Constant
-                          (FStarC_TypeChecker_NBETerm.Bool b) ->
-                          (match s1 with
-                           | FStarC_Const.Const_bool p1 -> b = p1
-                           | uu___2 -> false)
-                      | FStarC_TypeChecker_NBETerm.Constant
-                          (FStarC_TypeChecker_NBETerm.Int i) ->
-                          (match s1 with
-                           | FStarC_Const.Const_int
-                               (p1, FStar_Pervasives_Native.None) ->
-                               let uu___2 =
-                                 FStarC_BigInt.big_int_of_string p1 in
-                               i = uu___2
-                           | uu___2 -> false)
-                      | FStarC_TypeChecker_NBETerm.Constant
-                          (FStarC_TypeChecker_NBETerm.String (st, uu___2)) ->
-                          (match s1 with
-                           | FStarC_Const.Const_string (p1, uu___3) ->
-                               st = p1
-                           | uu___3 -> false)
-                      | FStarC_TypeChecker_NBETerm.Constant
-                          (FStarC_TypeChecker_NBETerm.Char c1) ->
-                          (match s1 with
-                           | FStarC_Const.Const_char p1 -> c1 = p1
-                           | uu___2 -> false)
-                      | uu___2 -> false) in
-                   let uu___1 = matches_const scrutinee s in
-                   if uu___1
-                   then FStar_Pervasives.Inl []
-                   else FStar_Pervasives.Inr false
-               | FStarC_Syntax_Syntax.Pat_cons (fv, _us_opt, arg_pats) ->
-                   let rec matches_args out a p1 =
-                     match (a, p1) with
-                     | ([], []) -> FStar_Pervasives.Inl out
-                     | ((t, uu___1)::rest_a, (p2, uu___2)::rest_p) ->
-                         let uu___3 = matches_pat t p2 in
-                         (match uu___3 with
-                          | FStar_Pervasives.Inl s ->
-                              matches_args (FStarC_List.op_At out s) rest_a
-                                rest_p
-                          | m -> m)
-                     | uu___1 -> FStar_Pervasives.Inr false in
-                   (match scrutinee.FStarC_TypeChecker_NBETerm.nbe_t with
-                    | FStarC_TypeChecker_NBETerm.Construct
-                        (fv', _us, args_rev) ->
-                        let uu___1 = FStarC_Syntax_Syntax.fv_eq fv fv' in
-                        if uu___1
-                        then
-                          matches_args [] (FStarC_List.rev args_rev) arg_pats
-                        else FStar_Pervasives.Inr false
-                    | uu___1 -> FStar_Pervasives.Inr true) in
-             let res_to_string uu___1 =
-               match uu___1 with
-               | FStar_Pervasives.Inr b ->
-                   let uu___2 = FStarC_Util.string_of_bool b in
-                   Prims.strcat "Inr " uu___2
-               | FStar_Pervasives.Inl bs ->
-                   let uu___2 =
-                     FStarC_Util.string_of_int (FStarC_List.length bs) in
-                   Prims.strcat "Inl " uu___2 in
-             debug cfg
-               (fun uu___2 ->
-                  let uu___3 =
-                    FStarC_TypeChecker_NBETerm.t_to_string scrutinee in
-                  let uu___4 =
-                    FStarC_Class_Show.show FStarC_Syntax_Print.showable_pat p in
-                  let uu___5 = res_to_string r in
-                  FStarC_Util.print3 "matches_pat (%s, %s) = %s\n" uu___3
-                    uu___4 uu___5);
-             r) in
-          match branches1 with
-          | [] -> FStar_Pervasives_Native.None
-          | (p, _wopt, e)::branches2 ->
-              let uu___ = matches_pat scrut1 p in
-              (match uu___ with
-               | FStar_Pervasives.Inl matches ->
-                   (debug cfg
-                      (fun uu___2 ->
-                         let uu___3 =
+        let rec pickBranch_aux scrut1 =
+          fun branches1 ->
+            fun branches0 ->
+              let rec matches_pat scrutinee0 =
+                fun p ->
+                  debug cfg
+                    (fun uu___1 ->
+                       let uu___2 =
+                         FStarC_TypeChecker_NBETerm.t_to_string scrutinee0 in
+                       let uu___3 =
+                         FStarC_Class_Show.show
+                           FStarC_Syntax_Print.showable_pat p in
+                       FStarC_Format.print2 "matches_pat (%s, %s)\n" uu___2
+                         uu___3);
+                  (let scrutinee = unlazy_unmeta scrutinee0 in
+                   let r =
+                     match p.FStarC_Syntax_Syntax.v with
+                     | FStarC_Syntax_Syntax.Pat_var bv ->
+                         FStar_Pervasives.Inl [scrutinee0]
+                     | FStarC_Syntax_Syntax.Pat_dot_term uu___1 ->
+                         FStar_Pervasives.Inl []
+                     | FStarC_Syntax_Syntax.Pat_constant s ->
+                         let matches_const c =
+                           fun s1 ->
+                             debug cfg
+                               (fun uu___2 ->
+                                  let uu___3 =
+                                    FStarC_TypeChecker_NBETerm.t_to_string c in
+                                  let uu___4 =
+                                    FStarC_Class_Show.show
+                                      FStarC_Syntax_Print.showable_const s1 in
+                                  FStarC_Format.print2
+                                    "Testing term %s against pattern %s\n"
+                                    uu___3 uu___4);
+                             (match c.FStarC_TypeChecker_NBETerm.nbe_t with
+                              | FStarC_TypeChecker_NBETerm.Constant
+                                  (FStarC_TypeChecker_NBETerm.Unit) ->
+                                  s1 = FStarC_Const.Const_unit
+                              | FStarC_TypeChecker_NBETerm.Constant
+                                  (FStarC_TypeChecker_NBETerm.Bool b) ->
+                                  (match s1 with
+                                   | FStarC_Const.Const_bool p1 -> b = p1
+                                   | uu___2 -> false)
+                              | FStarC_TypeChecker_NBETerm.Constant
+                                  (FStarC_TypeChecker_NBETerm.Int i) ->
+                                  (match s1 with
+                                   | FStarC_Const.Const_int
+                                       (p1, FStar_Pervasives_Native.None) ->
+                                       let uu___2 =
+                                         FStarC_Util.int_of_string p1 in
+                                       i = uu___2
+                                   | uu___2 -> false)
+                              | FStarC_TypeChecker_NBETerm.Constant
+                                  (FStarC_TypeChecker_NBETerm.String
+                                  (st, uu___2)) ->
+                                  (match s1 with
+                                   | FStarC_Const.Const_string (p1, uu___3)
+                                       -> st = p1
+                                   | uu___3 -> false)
+                              | FStarC_TypeChecker_NBETerm.Constant
+                                  (FStarC_TypeChecker_NBETerm.Char c1) ->
+                                  (match s1 with
+                                   | FStarC_Const.Const_char p1 -> c1 = p1
+                                   | uu___2 -> false)
+                              | uu___2 -> false) in
+                         let uu___1 = matches_const scrutinee s in
+                         if uu___1
+                         then FStar_Pervasives.Inl []
+                         else FStar_Pervasives.Inr false
+                     | FStarC_Syntax_Syntax.Pat_cons (fv, _us_opt, arg_pats)
+                         ->
+                         let rec matches_args out =
+                           fun a ->
+                             fun p1 ->
+                               match (a, p1) with
+                               | ([], []) -> FStar_Pervasives.Inl out
+                               | ((t, uu___1)::rest_a, (p2, uu___2)::rest_p)
+                                   ->
+                                   let uu___3 = matches_pat t p2 in
+                                   (match uu___3 with
+                                    | FStar_Pervasives.Inl s ->
+                                        matches_args
+                                          (FStarC_List.op_At out s) rest_a
+                                          rest_p
+                                    | m -> m)
+                               | uu___1 -> FStar_Pervasives.Inr false in
+                         (match scrutinee.FStarC_TypeChecker_NBETerm.nbe_t
+                          with
+                          | FStarC_TypeChecker_NBETerm.Construct
+                              (fv', _us, args_rev) ->
+                              let uu___1 = FStarC_Syntax_Syntax.fv_eq fv fv' in
+                              if uu___1
+                              then
+                                matches_args [] (FStarC_List.rev args_rev)
+                                  arg_pats
+                              else FStar_Pervasives.Inr false
+                          | uu___1 -> FStar_Pervasives.Inr true) in
+                   let res_to_string uu___1 =
+                     match uu___1 with
+                     | FStar_Pervasives.Inr b ->
+                         let uu___2 =
                            FStarC_Class_Show.show
-                             FStarC_Syntax_Print.showable_pat p in
-                         FStarC_Util.print1 "Pattern %s matches\n" uu___3);
-                    FStar_Pervasives_Native.Some (e, matches))
-               | FStar_Pervasives.Inr (false) ->
-                   pickBranch_aux scrut1 branches2 branches0
-               | FStar_Pervasives.Inr (true) -> FStar_Pervasives_Native.None) in
+                             FStarC_Class_Show.showable_bool b in
+                         Prims.strcat "Inr " uu___2
+                     | FStar_Pervasives.Inl bs ->
+                         let uu___2 =
+                           FStarC_Class_Show.show
+                             FStarC_Class_Show.showable_nat
+                             (FStarC_List.length bs) in
+                         Prims.strcat "Inl " uu___2 in
+                   debug cfg
+                     (fun uu___2 ->
+                        let uu___3 =
+                          FStarC_TypeChecker_NBETerm.t_to_string scrutinee in
+                        let uu___4 =
+                          FStarC_Class_Show.show
+                            FStarC_Syntax_Print.showable_pat p in
+                        let uu___5 = res_to_string r in
+                        FStarC_Format.print3 "matches_pat (%s, %s) = %s\n"
+                          uu___3 uu___4 uu___5);
+                   r) in
+              match branches1 with
+              | [] -> FStar_Pervasives_Native.None
+              | (p, _wopt, e)::branches2 ->
+                  let uu___ = matches_pat scrut1 p in
+                  (match uu___ with
+                   | FStar_Pervasives.Inl matches ->
+                       (debug cfg
+                          (fun uu___2 ->
+                             let uu___3 =
+                               FStarC_Class_Show.show
+                                 FStarC_Syntax_Print.showable_pat p in
+                             FStarC_Format.print1 "Pattern %s matches\n"
+                               uu___3);
+                        FStar_Pervasives_Native.Some (e, matches))
+                   | FStar_Pervasives.Inr (false) ->
+                       pickBranch_aux scrut1 branches2 branches0
+                   | FStar_Pervasives.Inr (true) ->
+                       FStar_Pervasives_Native.None) in
         pickBranch_aux scrut branches branches
 let (should_reduce_recursive_definition :
   FStarC_TypeChecker_NBETerm.args ->
@@ -428,18 +451,20 @@ let (should_reduce_recursive_definition :
   =
   fun arguments ->
     fun formals_in_decreases ->
-      let rec aux ts ar_list acc =
-        match (ts, ar_list) with
-        | (uu___, []) -> (true, acc, ts)
-        | ([], uu___::uu___1) -> (false, acc, [])
-        | (t::ts1, in_decreases_clause::bs) ->
-            let uu___ =
-              in_decreases_clause &&
-                (FStarC_TypeChecker_NBETerm.isAccu
-                   (FStar_Pervasives_Native.fst t)) in
-            if uu___
-            then (false, (FStarC_List.rev_append ts1 acc), [])
-            else aux ts1 bs (t :: acc) in
+      let rec aux ts =
+        fun ar_list ->
+          fun acc ->
+            match (ts, ar_list) with
+            | (uu___, []) -> (true, acc, ts)
+            | ([], uu___::uu___1) -> (false, acc, [])
+            | (t::ts1, in_decreases_clause::bs) ->
+                let uu___ =
+                  in_decreases_clause &&
+                    (FStarC_TypeChecker_NBETerm.isAccu
+                       (FStar_Pervasives_Native.fst t)) in
+                if uu___
+                then (false, (FStarC_List.rev_append ts1 acc), [])
+                else aux ts1 bs (t :: acc) in
       aux arguments formals_in_decreases []
 let (find_sigelt_in_gamma :
   config ->
@@ -464,12 +489,12 @@ let (find_sigelt_in_gamma :
                            FStarC_Class_Show.show
                              (FStarC_Class_Show.show_list
                                 FStarC_Syntax_Print.showable_univ) us in
-                         FStarC_Util.print1
+                         FStarC_Format.print1
                            "Universes in local declaration: %s\n" uu___3);
                     FStar_Pervasives_Native.Some elt)
                | uu___1 -> FStar_Pervasives_Native.None) in
         let uu___ = FStarC_TypeChecker_Env.lookup_qname env lid in
-        FStarC_Util.bind_opt uu___ mapper
+        FStarC_Option.bind uu___ mapper
 let (is_univ : FStarC_TypeChecker_NBETerm.t -> Prims.bool) =
   fun tm ->
     match tm.FStarC_TypeChecker_NBETerm.nbe_t with
@@ -553,7 +578,7 @@ let (find_let :
                then FStar_Pervasives_Native.Some lb
                else FStar_Pervasives_Native.None)
 let (mk_rt :
-  FStarC_Range_Type.range ->
+  FStarC_Range_Type.t ->
     FStarC_TypeChecker_NBETerm.t' -> FStarC_TypeChecker_NBETerm.t)
   =
   fun r ->
@@ -588,7 +613,7 @@ let rec (translate :
                let uu___4 = FStarC_Syntax_Subst.compress e in
                FStarC_Class_Show.show FStarC_Syntax_Print.showable_term
                  uu___4 in
-             FStarC_Util.print2 "Term: %s - %s\n" uu___2 uu___3);
+             FStarC_Format.print2 "Term: %s - %s\n" uu___2 uu___3);
         (let uu___1 =
            let uu___2 = FStarC_Syntax_Subst.compress e in
            uu___2.FStarC_Syntax_Syntax.n in
@@ -614,7 +639,7 @@ let rec (translate :
                          FStarC_List.map
                            FStarC_TypeChecker_NBETerm.t_to_string bs in
                        FStarC_String.concat "; " uu___6 in
-                     FStarC_Util.print2
+                     FStarC_Format.print2
                        "Resolved bvar to %s\n\tcontext is [%s]\n" uu___4
                        uu___5);
                 t)
@@ -631,8 +656,8 @@ let rec (translate :
                          (FStarC_Class_Show.show
                             FStarC_Syntax_Print.showable_univ) us in
                      FStarC_String.concat ", " uu___6 in
-                   FStarC_Util.print2 "Uinst term : %s\nUnivs : %s\n" uu___4
-                     uu___5);
+                   FStarC_Format.print2 "Uinst term : %s\nUnivs : %s\n"
+                     uu___4 uu___5);
               (let uu___3 = translate cfg bs t in
                let uu___4 =
                  FStarC_List.map
@@ -925,7 +950,7 @@ let rec (translate :
              ->
              (debug1
                 (fun uu___7 ->
-                   FStarC_Util.print_string "Eliminated assertion\n");
+                   FStarC_Format.print_string "Eliminated assertion\n");
               mk_t1
                 (FStarC_TypeChecker_NBETerm.Constant
                    FStarC_TypeChecker_NBETerm.Unit))
@@ -954,7 +979,7 @@ let rec (translate :
                               FStarC_Class_Show.show
                                 FStarC_Syntax_Print.showable_term
                                 (FStar_Pervasives_Native.fst x) in
-                            FStarC_Util.print1 "Erasing %s\n" uu___7);
+                            FStarC_Format.print1 "Erasing %s\n" uu___7);
                        ((mk_t1
                            (FStarC_TypeChecker_NBETerm.Constant
                               FStarC_TypeChecker_NBETerm.Unit)),
@@ -979,7 +1004,8 @@ let rec (translate :
                           (FStarC_Class_Show.show_tuple2
                              FStarC_Syntax_Print.showable_term
                              FStarC_Syntax_Print.showable_aqual)) args in
-                   FStarC_Util.print2 "Application: %s @ %s\n" uu___4 uu___5);
+                   FStarC_Format.print2 "Application: %s @ %s\n" uu___4
+                     uu___5);
               (let uu___3 = translate cfg bs head in
                let uu___4 =
                  FStarC_List.map
@@ -1047,67 +1073,70 @@ let rec (translate :
                    FStar_Pervasives_Native.Some uu___3 in
              let make_branches uu___2 =
                let cfg1 = zeta_false cfg in
-               let rec process_pattern bs1 p =
-                 let uu___3 =
-                   match p.FStarC_Syntax_Syntax.v with
-                   | FStarC_Syntax_Syntax.Pat_constant c ->
-                       (bs1, (FStarC_Syntax_Syntax.Pat_constant c))
-                   | FStarC_Syntax_Syntax.Pat_cons (fvar, us_opt, args) ->
-                       let uu___4 =
-                         FStarC_List.fold_left
-                           (fun uu___5 ->
-                              fun uu___6 ->
-                                match (uu___5, uu___6) with
-                                | ((bs2, args1), (arg, b)) ->
-                                    let uu___7 = process_pattern bs2 arg in
-                                    (match uu___7 with
-                                     | (bs', arg') ->
-                                         (bs', ((arg', b) :: args1))))
-                           (bs1, []) args in
-                       (match uu___4 with
-                        | (bs', args') ->
-                            let us_opt1 =
-                              match us_opt with
-                              | FStar_Pervasives_Native.None ->
-                                  FStar_Pervasives_Native.None
-                              | FStar_Pervasives_Native.Some us ->
-                                  let uu___5 =
-                                    FStarC_List.map (translate_univ cfg1 bs1)
-                                      us in
-                                  FStar_Pervasives_Native.Some uu___5 in
-                            (bs',
-                              (FStarC_Syntax_Syntax.Pat_cons
-                                 (fvar, us_opt1, (FStarC_List.rev args')))))
-                   | FStarC_Syntax_Syntax.Pat_var bvar ->
-                       let x =
+               let rec process_pattern bs1 =
+                 fun p ->
+                   let uu___3 =
+                     match p.FStarC_Syntax_Syntax.v with
+                     | FStarC_Syntax_Syntax.Pat_constant c ->
+                         (bs1, (FStarC_Syntax_Syntax.Pat_constant c))
+                     | FStarC_Syntax_Syntax.Pat_cons (fvar, us_opt, args) ->
+                         let uu___4 =
+                           FStarC_List.fold_left
+                             (fun uu___5 ->
+                                fun uu___6 ->
+                                  match (uu___5, uu___6) with
+                                  | ((bs2, args1), (arg, b)) ->
+                                      let uu___7 = process_pattern bs2 arg in
+                                      (match uu___7 with
+                                       | (bs', arg') ->
+                                           (bs', ((arg', b) :: args1))))
+                             (bs1, []) args in
+                         (match uu___4 with
+                          | (bs', args') ->
+                              let us_opt1 =
+                                match us_opt with
+                                | FStar_Pervasives_Native.None ->
+                                    FStar_Pervasives_Native.None
+                                | FStar_Pervasives_Native.Some us ->
+                                    let uu___5 =
+                                      FStarC_List.map
+                                        (translate_univ cfg1 bs1) us in
+                                    FStar_Pervasives_Native.Some uu___5 in
+                              (bs',
+                                (FStarC_Syntax_Syntax.Pat_cons
+                                   (fvar, us_opt1, (FStarC_List.rev args')))))
+                     | FStarC_Syntax_Syntax.Pat_var bvar ->
+                         let x =
+                           let uu___4 =
+                             let uu___5 =
+                               translate cfg1 bs1
+                                 bvar.FStarC_Syntax_Syntax.sort in
+                             readback cfg1 uu___5 in
+                           FStarC_Syntax_Syntax.gen_bv'
+                             bvar.FStarC_Syntax_Syntax.ppname
+                             FStar_Pervasives_Native.None uu___4 in
                          let uu___4 =
                            let uu___5 =
-                             translate cfg1 bs1
-                               bvar.FStarC_Syntax_Syntax.sort in
-                           readback cfg1 uu___5 in
-                         FStarC_Syntax_Syntax.gen_bv'
-                           bvar.FStarC_Syntax_Syntax.ppname
-                           FStar_Pervasives_Native.None uu___4 in
-                       let uu___4 =
-                         let uu___5 = FStarC_TypeChecker_NBETerm.mkAccuVar x in
-                         uu___5 :: bs1 in
-                       (uu___4, (FStarC_Syntax_Syntax.Pat_var x))
-                   | FStarC_Syntax_Syntax.Pat_dot_term eopt ->
-                       let uu___4 =
-                         let uu___5 =
-                           FStarC_Util.map_option
-                             (fun e1 ->
-                                let uu___6 = translate cfg1 bs1 e1 in
-                                readback cfg1 uu___6) eopt in
-                         FStarC_Syntax_Syntax.Pat_dot_term uu___5 in
-                       (bs1, uu___4) in
-                 match uu___3 with
-                 | (bs2, p_new) ->
-                     (bs2,
-                       {
-                         FStarC_Syntax_Syntax.v = p_new;
-                         FStarC_Syntax_Syntax.p = (p.FStarC_Syntax_Syntax.p)
-                       }) in
+                             FStarC_TypeChecker_NBETerm.mkAccuVar x in
+                           uu___5 :: bs1 in
+                         (uu___4, (FStarC_Syntax_Syntax.Pat_var x))
+                     | FStarC_Syntax_Syntax.Pat_dot_term eopt ->
+                         let uu___4 =
+                           let uu___5 =
+                             FStarC_Option.map
+                               (fun e1 ->
+                                  let uu___6 = translate cfg1 bs1 e1 in
+                                  readback cfg1 uu___6) eopt in
+                           FStarC_Syntax_Syntax.Pat_dot_term uu___5 in
+                         (bs1, uu___4) in
+                   match uu___3 with
+                   | (bs2, p_new) ->
+                       (bs2,
+                         {
+                           FStarC_Syntax_Syntax.v = p_new;
+                           FStarC_Syntax_Syntax.p =
+                             (p.FStarC_Syntax_Syntax.p)
+                         }) in
                FStarC_List.map
                  (fun uu___3 ->
                     match uu___3 with
@@ -1130,7 +1159,7 @@ let rec (translate :
                    let uu___5 =
                      FStarC_Class_Show.show FStarC_Syntax_Print.showable_term
                        e in
-                   FStarC_Util.print2 "%s: Translating match %s\n" uu___4
+                   FStarC_Format.print2 "%s: Translating match %s\n" uu___4
                      uu___5);
               (let scrut2 = unlazy_unmeta scrut1 in
                match scrut2.FStarC_TypeChecker_NBETerm.nbe_t with
@@ -1147,11 +1176,13 @@ let rec (translate :
                                         FStarC_TypeChecker_NBETerm.t_to_string
                                           x in
                                       Prims.strcat
-                                        (if FStarC_Util.is_some q
+                                        (if
+                                           FStar_Pervasives_Native.uu___is_Some
+                                             q
                                          then "#"
                                          else "") uu___8) args in
                            FStarC_String.concat "; " uu___6 in
-                         FStarC_Util.print1 "Match args: %s\n" uu___5);
+                         FStarC_Format.print1 "Match args: %s\n" uu___5);
                     (let uu___4 = pickBranch cfg scrut2 branches in
                      match uu___4 with
                      | FStar_Pervasives_Native.Some (branch, args1) ->
@@ -1167,7 +1198,7 @@ let rec (translate :
                       (fun uu___4 ->
                          let uu___5 =
                            FStarC_TypeChecker_NBETerm.t_to_string scrut2 in
-                         FStarC_Util.print1 "Match constant : %s\n" uu___5);
+                         FStarC_Format.print1 "Match constant : %s\n" uu___5);
                     (let uu___4 = pickBranch cfg scrut2 branches in
                      match uu___4 with
                      | FStar_Pervasives_Native.Some (branch, []) ->
@@ -1281,9 +1312,9 @@ let rec (translate :
                 let typ uu___4 =
                   translate cfg bs lb.FStarC_Syntax_Syntax.lbtyp in
                 let name =
-                  let uu___4 =
-                    FStarC_Util.left lb.FStarC_Syntax_Syntax.lbname in
-                  FStarC_Syntax_Syntax.freshen_bv uu___4 in
+                  FStarC_Syntax_Syntax.freshen_bv
+                    (FStar_Pervasives.__proj__Inl__item__v
+                       lb.FStarC_Syntax_Syntax.lbname) in
                 let bs1 =
                   let uu___4 =
                     let uu___5 = FStarC_Syntax_Syntax.range_of_bv name in
@@ -1317,9 +1348,9 @@ let rec (translate :
                let vars =
                  FStarC_List.map
                    (fun lb ->
-                      let uu___2 =
-                        FStarC_Util.left lb.FStarC_Syntax_Syntax.lbname in
-                      FStarC_Syntax_Syntax.freshen_bv uu___2) lbs in
+                      FStarC_Syntax_Syntax.freshen_bv
+                        (FStar_Pervasives.__proj__Inl__item__v
+                           lb.FStarC_Syntax_Syntax.lbname)) lbs in
                let typs =
                  FStarC_List.map
                    (fun lb -> translate cfg bs lb.FStarC_Syntax_Syntax.lbtyp)
@@ -1387,7 +1418,8 @@ let rec (translate :
                     let uu___5 =
                       FStarC_Class_Show.show
                         FStarC_Syntax_Print.showable_term t in
-                    FStarC_Util.print1 ">> Unfolding Tm_lazy to %s\n" uu___5);
+                    FStarC_Format.print1 ">> Unfolding Tm_lazy to %s\n"
+                      uu___5);
                translate cfg bs t in
              let uu___2 =
                let uu___3 =
@@ -1479,29 +1511,33 @@ and (iapp :
               (FStarC_TypeChecker_NBETerm.Accu
                  (a, (FStarC_List.rev_append args ts)))
         | FStarC_TypeChecker_NBETerm.Construct (i, us, ts) ->
-            let rec aux args1 us1 ts1 =
-              match args1 with
-              | ({
-                   FStarC_TypeChecker_NBETerm.nbe_t =
-                     FStarC_TypeChecker_NBETerm.Univ u;
-                   FStarC_TypeChecker_NBETerm.nbe_r = uu___1;_},
-                 uu___2)::args2 -> aux args2 (u :: us1) ts1
-              | a::args2 -> aux args2 us1 (a :: ts1)
-              | [] -> (us1, ts1) in
+            let rec aux args1 =
+              fun us1 ->
+                fun ts1 ->
+                  match args1 with
+                  | ({
+                       FStarC_TypeChecker_NBETerm.nbe_t =
+                         FStarC_TypeChecker_NBETerm.Univ u;
+                       FStarC_TypeChecker_NBETerm.nbe_r = uu___1;_},
+                     uu___2)::args2 -> aux args2 (u :: us1) ts1
+                  | a::args2 -> aux args2 us1 (a :: ts1)
+                  | [] -> (us1, ts1) in
             let uu___1 = aux args us ts in
             (match uu___1 with
              | (us', ts') ->
                  mk (FStarC_TypeChecker_NBETerm.Construct (i, us', ts')))
         | FStarC_TypeChecker_NBETerm.FV (i, us, ts) ->
-            let rec aux args1 us1 ts1 =
-              match args1 with
-              | ({
-                   FStarC_TypeChecker_NBETerm.nbe_t =
-                     FStarC_TypeChecker_NBETerm.Univ u;
-                   FStarC_TypeChecker_NBETerm.nbe_r = uu___1;_},
-                 uu___2)::args2 -> aux args2 (u :: us1) ts1
-              | a::args2 -> aux args2 us1 (a :: ts1)
-              | [] -> (us1, ts1) in
+            let rec aux args1 =
+              fun us1 ->
+                fun ts1 ->
+                  match args1 with
+                  | ({
+                       FStarC_TypeChecker_NBETerm.nbe_t =
+                         FStarC_TypeChecker_NBETerm.Univ u;
+                       FStarC_TypeChecker_NBETerm.nbe_r = uu___1;_},
+                     uu___2)::args2 -> aux args2 (u :: us1) ts1
+                  | a::args2 -> aux args2 us1 (a :: ts1)
+                  | [] -> (us1, ts1) in
             let uu___1 = aux args us ts in
             (match uu___1 with
              | (us', ts') -> mk (FStarC_TypeChecker_NBETerm.FV (i, us', ts')))
@@ -1515,7 +1551,7 @@ and (iapp :
                     FStarC_Class_Show.show
                       (FStarC_Class_Show.show_either
                          FStarC_Syntax_Print.showable_bv
-                         FStarC_Syntax_Print.showable_fv)
+                         FStarC_Syntax_Syntax.showable_fv)
                       lb.FStarC_Syntax_Syntax.lbname in
                   let uu___4 =
                     FStarC_Class_Show.show FStarC_Class_Show.showable_int
@@ -1523,7 +1559,7 @@ and (iapp :
                   let uu___5 =
                     FStarC_Class_Show.show FStarC_Class_Show.showable_nat
                       n_args_rev in
-                  FStarC_Util.print3
+                  FStarC_Format.print3
                     "Reached iapp for %s with arity %s and n_args = %s\n"
                     uu___3 uu___4 uu___5);
              if n_args_rev >= arity
@@ -1555,7 +1591,7 @@ and (iapp :
                                    FStarC_Class_Show.show
                                      (FStarC_Class_Show.show_either
                                         FStarC_Syntax_Print.showable_bv
-                                        FStarC_Syntax_Print.showable_fv)
+                                        FStarC_Syntax_Syntax.showable_fv)
                                      lb.FStarC_Syntax_Syntax.lbname in
                                  let uu___7 =
                                    FStarC_Class_Show.show
@@ -1564,7 +1600,7 @@ and (iapp :
                                    FStarC_Class_Show.show
                                      FStarC_TypeChecker_NBETerm.showable_args
                                      args_rev2 in
-                                 FStarC_Util.print3
+                                 FStarC_Format.print3
                                    "Reducing body of %s = %s,\n\twith args = %s\n"
                                    uu___6 uu___7 uu___8);
                             (let t =
@@ -1603,13 +1639,14 @@ and (iapp :
                    if Prims.op_Negation should_reduce
                    then
                      let fv =
-                       FStarC_Util.right lb.FStarC_Syntax_Syntax.lbname in
+                       FStar_Pervasives.__proj__Inr__item__v
+                         lb.FStarC_Syntax_Syntax.lbname in
                      (debug cfg
                         (fun uu___5 ->
                            let uu___6 =
                              FStarC_Class_Show.show
-                               FStarC_Syntax_Print.showable_fv fv in
-                           FStarC_Util.print1
+                               FStarC_Syntax_Syntax.showable_fv fv in
+                           FStarC_Format.print1
                              "Decided to not unfold recursive definition %s\n"
                              uu___6);
                       (let uu___5 =
@@ -1621,12 +1658,11 @@ and (iapp :
                      (debug cfg
                         (fun uu___6 ->
                            let uu___7 =
-                             let uu___8 =
-                               FStarC_Util.right
-                                 lb.FStarC_Syntax_Syntax.lbname in
                              FStarC_Class_Show.show
-                               FStarC_Syntax_Print.showable_fv uu___8 in
-                           FStarC_Util.print1
+                               FStarC_Syntax_Syntax.showable_fv
+                               (FStar_Pervasives.__proj__Inr__item__v
+                                  lb.FStarC_Syntax_Syntax.lbname) in
+                           FStarC_Format.print1
                              "Yes, Decided to unfold recursive definition %s\n"
                              uu___7);
                       (let uu___6 =
@@ -1690,7 +1726,7 @@ and (iapp :
                                      FStarC_TypeChecker_NBETerm.t_to_string
                                      env in
                                  FStarC_String.concat ",\n\t " uu___11 in
-                               FStarC_Util.print1
+                               FStarC_Format.print1
                                  "LocalLetRec Env = {\n\t%s\n}\n" uu___10);
                               (let uu___10 =
                                  let uu___11 =
@@ -1701,7 +1737,7 @@ and (iapp :
                                             FStarC_TypeChecker_NBETerm.t_to_string
                                               t) args1 in
                                  FStarC_String.concat ",\n\t " uu___11 in
-                               FStarC_Util.print1
+                               FStarC_Format.print1
                                  "LocalLetRec Args = {\n\t%s\n}\n" uu___10));
                          (let uu___8 =
                             translate cfg env lb.FStarC_Syntax_Syntax.lbdef in
@@ -1786,9 +1822,9 @@ and (translate_fv :
                (debug1
                   (fun uu___4 ->
                      let uu___5 =
-                       FStarC_Class_Show.show FStarC_Syntax_Print.showable_fv
-                         fvar in
-                     FStarC_Util.print1 "(1) Decided to not unfold %s\n"
+                       FStarC_Class_Show.show
+                         FStarC_Syntax_Syntax.showable_fv fvar in
+                     FStarC_Format.print1 "(1) Decided to not unfold %s\n"
                        uu___5);
                 (let uu___4 =
                    FStarC_TypeChecker_Cfg.find_prim_step cfg.core_cfg fvar in
@@ -1803,8 +1839,8 @@ and (translate_fv :
                         (fun uu___6 ->
                            let uu___7 =
                              FStarC_Class_Show.show
-                               FStarC_Syntax_Print.showable_fv fvar in
-                           FStarC_Util.print1 "Found a primop %s\n" uu___7);
+                               FStarC_Syntax_Syntax.showable_fv fvar in
+                           FStarC_Format.print1 "Found a primop %s\n" uu___7);
                       mk_t
                         (FStarC_TypeChecker_NBETerm.Lam
                            {
@@ -1824,7 +1860,7 @@ and (translate_fv :
                                          FStarC_Class_Show.show
                                            FStarC_TypeChecker_NBETerm.showable_args
                                            args' in
-                                       FStarC_Util.print1
+                                       FStarC_Format.print1
                                          "Caling primop with args = [%s]\n"
                                          uu___8);
                                   (let uu___7 =
@@ -1866,12 +1902,12 @@ and (translate_fv :
                                                (fun uu___10 ->
                                                   let uu___11 =
                                                     FStarC_Class_Show.show
-                                                      FStarC_Syntax_Print.showable_fv
+                                                      FStarC_Syntax_Syntax.showable_fv
                                                       fvar in
                                                   let uu___12 =
                                                     FStarC_TypeChecker_NBETerm.t_to_string
                                                       x in
-                                                  FStarC_Util.print2
+                                                  FStarC_Format.print2
                                                     "Primitive operator %s returned %s\n"
                                                     uu___11 uu___12);
                                              x)
@@ -1880,9 +1916,9 @@ and (translate_fv :
                                                (fun uu___10 ->
                                                   let uu___11 =
                                                     FStarC_Class_Show.show
-                                                      FStarC_Syntax_Print.showable_fv
+                                                      FStarC_Syntax_Syntax.showable_fv
                                                       fvar in
-                                                  FStarC_Util.print1
+                                                  FStarC_Format.print1
                                                     "Primitive operator %s failed\n"
                                                     uu___11);
                                              (let uu___10 =
@@ -1899,8 +1935,8 @@ and (translate_fv :
                         (fun uu___7 ->
                            let uu___8 =
                              FStarC_Class_Show.show
-                               FStarC_Syntax_Print.showable_fv fvar in
-                           FStarC_Util.print1
+                               FStarC_Syntax_Syntax.showable_fv fvar in
+                           FStarC_Format.print1
                              "(2) Decided to not unfold %s\n" uu___8);
                       FStarC_TypeChecker_NBETerm.mkFV fvar [] [])
                  | uu___5 ->
@@ -1908,8 +1944,8 @@ and (translate_fv :
                         (fun uu___7 ->
                            let uu___8 =
                              FStarC_Class_Show.show
-                               FStarC_Syntax_Print.showable_fv fvar in
-                           FStarC_Util.print1
+                               FStarC_Syntax_Syntax.showable_fv fvar in
+                           FStarC_Format.print1
                              "(3) Decided to not unfold %s\n" uu___8);
                       FStarC_TypeChecker_NBETerm.mkFV fvar [] [])))
            | FStarC_TypeChecker_Normalize_Unfolding.Should_unfold_reify ->
@@ -1918,9 +1954,8 @@ and (translate_fv :
                    let uu___3 =
                      FStarC_TypeChecker_Env.lookup_definition_qninfo
                        (cfg.core_cfg).FStarC_TypeChecker_Cfg.delta_level
-                       (fvar.FStarC_Syntax_Syntax.fv_name).FStarC_Syntax_Syntax.v
-                       qninfo in
-                   FStarC_Option.isSome uu___3 in
+                       fvar.FStarC_Syntax_Syntax.fv_name qninfo in
+                   FStar_Pervasives_Native.uu___is_Some uu___3 in
                  if is_qninfo_visible
                  then
                    match qninfo with
@@ -1944,9 +1979,9 @@ and (translate_fv :
                           (fun uu___10 ->
                              let uu___11 =
                                FStarC_Class_Show.show
-                                 FStarC_Syntax_Print.showable_fv fvar in
-                             FStarC_Util.print1 "(1) Decided to unfold %s\n"
-                               uu___11);
+                                 FStarC_Syntax_Syntax.showable_fv fvar in
+                             FStarC_Format.print1
+                               "(1) Decided to unfold %s\n" uu___11);
                         (let lbm = find_let lbs fvar in
                          match lbm with
                          | FStar_Pervasives_Native.Some lb ->
@@ -1970,8 +2005,8 @@ and (translate_fv :
                           (fun uu___5 ->
                              let uu___6 =
                                FStarC_Class_Show.show
-                                 FStarC_Syntax_Print.showable_fv fvar in
-                             FStarC_Util.print1
+                                 FStarC_Syntax_Syntax.showable_fv fvar in
+                             FStarC_Format.print1
                                "(1) qninfo is None for (%s)\n" uu___6);
                         FStarC_TypeChecker_NBETerm.mkFV fvar [] [])
                  else
@@ -1979,8 +2014,8 @@ and (translate_fv :
                       (fun uu___5 ->
                          let uu___6 =
                            FStarC_Class_Show.show
-                             FStarC_Syntax_Print.showable_fv fvar in
-                         FStarC_Util.print1
+                             FStarC_Syntax_Syntax.showable_fv fvar in
+                         FStarC_Format.print1
                            "(1) qninfo is not visible at this level (%s)\n"
                            uu___6);
                     FStarC_TypeChecker_NBETerm.mkFV fvar [] []) in
@@ -1991,9 +2026,8 @@ and (translate_fv :
                    let uu___3 =
                      FStarC_TypeChecker_Env.lookup_definition_qninfo
                        (cfg.core_cfg).FStarC_TypeChecker_Cfg.delta_level
-                       (fvar.FStarC_Syntax_Syntax.fv_name).FStarC_Syntax_Syntax.v
-                       qninfo in
-                   FStarC_Option.isSome uu___3 in
+                       fvar.FStarC_Syntax_Syntax.fv_name qninfo in
+                   FStar_Pervasives_Native.uu___is_Some uu___3 in
                  if is_qninfo_visible
                  then
                    match qninfo with
@@ -2017,9 +2051,9 @@ and (translate_fv :
                           (fun uu___10 ->
                              let uu___11 =
                                FStarC_Class_Show.show
-                                 FStarC_Syntax_Print.showable_fv fvar in
-                             FStarC_Util.print1 "(1) Decided to unfold %s\n"
-                               uu___11);
+                                 FStarC_Syntax_Syntax.showable_fv fvar in
+                             FStarC_Format.print1
+                               "(1) Decided to unfold %s\n" uu___11);
                         (let lbm = find_let lbs fvar in
                          match lbm with
                          | FStar_Pervasives_Native.Some lb ->
@@ -2043,8 +2077,8 @@ and (translate_fv :
                           (fun uu___5 ->
                              let uu___6 =
                                FStarC_Class_Show.show
-                                 FStarC_Syntax_Print.showable_fv fvar in
-                             FStarC_Util.print1
+                                 FStarC_Syntax_Syntax.showable_fv fvar in
+                             FStarC_Format.print1
                                "(1) qninfo is None for (%s)\n" uu___6);
                         FStarC_TypeChecker_NBETerm.mkFV fvar [] [])
                  else
@@ -2052,8 +2086,8 @@ and (translate_fv :
                       (fun uu___5 ->
                          let uu___6 =
                            FStarC_Class_Show.show
-                             FStarC_Syntax_Print.showable_fv fvar in
-                         FStarC_Util.print1
+                             FStarC_Syntax_Syntax.showable_fv fvar in
+                         FStarC_Format.print1
                            "(1) qninfo is not visible at this level (%s)\n"
                            uu___6);
                     FStarC_TypeChecker_NBETerm.mkFV fvar [] []) in
@@ -2077,30 +2111,28 @@ and (translate_letbinding :
             if arity = Prims.int_zero
             then translate cfg bs lb.FStarC_Syntax_Syntax.lbdef
             else
-              (let uu___3 =
-                 FStarC_Util.is_right lb.FStarC_Syntax_Syntax.lbname in
-               if uu___3
-               then
-                 (debug1
-                    (fun uu___5 ->
-                       let uu___6 =
-                         FStarC_Class_Show.show
-                           (FStarC_Class_Show.show_either
-                              FStarC_Syntax_Print.showable_bv
-                              FStarC_Syntax_Print.showable_fv)
-                           lb.FStarC_Syntax_Syntax.lbname in
-                       let uu___7 =
-                         FStarC_Class_Show.show
-                           FStarC_Class_Show.showable_int arity in
-                       FStarC_Util.print2
-                         "Making TopLevelLet for %s with arity %s\n" uu___6
-                         uu___7);
-                  (let uu___5 =
-                     FStarC_Syntax_Syntax.range_of_lbname
-                       lb.FStarC_Syntax_Syntax.lbname in
-                   mk_rt uu___5
-                     (FStarC_TypeChecker_NBETerm.TopLevelLet (lb, arity, []))))
-               else translate cfg bs lb.FStarC_Syntax_Syntax.lbdef)
+              if FStar_Pervasives.uu___is_Inr lb.FStarC_Syntax_Syntax.lbname
+              then
+                (debug1
+                   (fun uu___4 ->
+                      let uu___5 =
+                        FStarC_Class_Show.show
+                          (FStarC_Class_Show.show_either
+                             FStarC_Syntax_Print.showable_bv
+                             FStarC_Syntax_Syntax.showable_fv)
+                          lb.FStarC_Syntax_Syntax.lbname in
+                      let uu___6 =
+                        FStarC_Class_Show.show FStarC_Class_Show.showable_int
+                          arity in
+                      FStarC_Format.print2
+                        "Making TopLevelLet for %s with arity %s\n" uu___5
+                        uu___6);
+                 (let uu___4 =
+                    FStarC_Syntax_Syntax.range_of_lbname
+                      lb.FStarC_Syntax_Syntax.lbname in
+                  mk_rt uu___4
+                    (FStarC_TypeChecker_NBETerm.TopLevelLet (lb, arity, []))))
+              else translate cfg bs lb.FStarC_Syntax_Syntax.lbdef
 and (mkRec :
   Prims.int ->
     FStarC_Syntax_Syntax.letbinding ->
@@ -2136,7 +2168,7 @@ and (translate_constant :
     | FStarC_Const.Const_unit -> FStarC_TypeChecker_NBETerm.Unit
     | FStarC_Const.Const_bool b -> FStarC_TypeChecker_NBETerm.Bool b
     | FStarC_Const.Const_int (s, FStar_Pervasives_Native.None) ->
-        let uu___ = FStarC_BigInt.big_int_of_string s in
+        let uu___ = FStarC_Util.int_of_string s in
         FStarC_TypeChecker_NBETerm.Int uu___
     | FStarC_Const.Const_string (s, r) ->
         FStarC_TypeChecker_NBETerm.String (s, r)
@@ -2232,7 +2264,7 @@ and (translate_residual_comp :
               if
                 ((cfg.core_cfg).FStarC_TypeChecker_Cfg.steps).FStarC_TypeChecker_Cfg.for_extraction
               then FStar_Pervasives_Native.None
-              else FStarC_Util.map_opt residual_typ (translate cfg bs) in
+              else FStarC_Option.map (translate cfg bs) residual_typ in
             let uu___2 =
               FStarC_List.map (translate_flag cfg bs) residual_flags in
             {
@@ -2248,13 +2280,14 @@ and (readback_residual_comp :
   fun cfg ->
     fun c ->
       let uu___ =
-        FStarC_Util.map_opt c.FStarC_TypeChecker_NBETerm.residual_typ
+        FStarC_Option.map
           (fun x ->
              debug cfg
                (fun uu___2 ->
                   let uu___3 = FStarC_TypeChecker_NBETerm.t_to_string x in
-                  FStarC_Util.print1 "Reading back residualtype %s\n" uu___3);
-             readback cfg x) in
+                  FStarC_Format.print1 "Reading back residualtype %s\n"
+                    uu___3);
+             readback cfg x) c.FStarC_TypeChecker_NBETerm.residual_typ in
       let uu___1 =
         FStarC_List.map (readback_flag cfg)
           c.FStarC_TypeChecker_NBETerm.residual_flags in
@@ -2357,7 +2390,7 @@ and (translate_monadic :
                     | FStar_Pervasives_Native.None ->
                         let uu___2 =
                           let uu___3 = FStarC_Ident.string_of_lid m in
-                          FStarC_Util.format1
+                          FStarC_Format.fmt1
                             "Effect declaration not found: %s" uu___3 in
                         failwith uu___2
                     | FStar_Pervasives_Native.Some (ed, q) ->
@@ -2374,10 +2407,9 @@ and (translate_monadic :
                             let uu___3 =
                               let uu___4 =
                                 let uu___5 =
-                                  let uu___6 =
-                                    FStarC_Util.left
-                                      lb.FStarC_Syntax_Syntax.lbname in
-                                  FStarC_Syntax_Syntax.mk_binder uu___6 in
+                                  FStarC_Syntax_Syntax.mk_binder
+                                    (FStar_Pervasives.__proj__Inl__item__v
+                                       lb.FStarC_Syntax_Syntax.lbname) in
                                 [uu___5] in
                               {
                                 FStarC_Syntax_Syntax.bs = uu___4;
@@ -2427,7 +2459,8 @@ and (translate_monadic :
                                   let uu___6 =
                                     let uu___7 =
                                       FStarC_Syntax_Util.get_bind_repr ed in
-                                    FStarC_Util.must uu___7 in
+                                    FStar_Pervasives_Native.__proj__Some__item__v
+                                      uu___7 in
                                   FStar_Pervasives_Native.snd uu___6 in
                                 FStarC_Syntax_Util.un_uinst uu___5 in
                               translate cfg' [] uu___4 in
@@ -2482,7 +2515,7 @@ and (translate_monadic :
                            (fun uu___3 ->
                               let uu___4 =
                                 FStarC_TypeChecker_NBETerm.t_to_string t in
-                              FStarC_Util.print1 "translate_monadic: %s\n"
+                              FStarC_Format.print1 "translate_monadic: %s\n"
                                 uu___4);
                          t))
                | FStarC_Syntax_Syntax.Tm_app
@@ -2513,7 +2546,7 @@ and (translate_monadic :
                                 (FStarC_Class_Show.show_tuple2
                                    FStarC_Syntax_Print.showable_term
                                    FStarC_Syntax_Print.showable_aqual)) args in
-                         FStarC_Util.print2
+                         FStarC_Format.print2
                            "translate_monadic app (%s) @ (%s)\n" uu___3
                            uu___4);
                     (let fallback1 uu___2 = translate cfg bs e1 in
@@ -2550,9 +2583,8 @@ and (translate_monadic :
                               let uu___6 =
                                 FStarC_TypeChecker_Env.lookup_definition_qninfo
                                   (cfg.core_cfg).FStarC_TypeChecker_Cfg.delta_level
-                                  (fv.FStarC_Syntax_Syntax.fv_name).FStarC_Syntax_Syntax.v
-                                  qninfo in
-                              FStarC_Option.isNone uu___6 in
+                                  fv.FStarC_Syntax_Syntax.fv_name qninfo in
+                              FStar_Pervasives_Native.uu___is_None uu___6 in
                             if uu___5
                             then fallback2 ()
                             else
@@ -2606,7 +2638,7 @@ and (translate_monadic :
                      let uu___3 =
                        FStarC_Class_Tagged.tag_of
                          FStarC_Syntax_Syntax.tagged_term e1 in
-                     FStarC_Util.format1
+                     FStarC_Format.fmt1
                        "Unexpected case in translate_monadic: %s" uu___3 in
                    failwith uu___2)
 and (translate_monadic_lift :
@@ -2641,7 +2673,8 @@ and (translate_monadic_lift :
                       let uu___4 =
                         let uu___5 =
                           let uu___6 = FStarC_Syntax_Util.get_return_repr ed in
-                          FStarC_Util.must uu___6 in
+                          FStar_Pervasives_Native.__proj__Some__item__v
+                            uu___6 in
                         FStar_Pervasives_Native.snd uu___5 in
                       FStarC_Syntax_Subst.compress uu___4 in
                     uu___3.FStarC_Syntax_Syntax.n in
@@ -2676,7 +2709,7 @@ and (translate_monadic_lift :
                 (debug cfg
                    (fun uu___3 ->
                       let uu___4 = FStarC_TypeChecker_NBETerm.t_to_string t in
-                      FStarC_Util.print1 "translate_monadic_lift(1): %s\n"
+                      FStarC_Format.print1 "translate_monadic_lift(1): %s\n"
                         uu___4);
                  t)
               else
@@ -2688,7 +2721,7 @@ and (translate_monadic_lift :
                      let uu___4 =
                        let uu___5 = FStarC_Ident.string_of_lid msrc in
                        let uu___6 = FStarC_Ident.string_of_lid mtgt in
-                       FStarC_Util.format2
+                       FStarC_Format.fmt2
                          "Impossible : trying to reify a lift between unrelated effects (%s and %s)"
                          uu___5 uu___6 in
                      failwith uu___4
@@ -2704,7 +2737,7 @@ and (translate_monadic_lift :
                      let uu___8 =
                        let uu___9 = FStarC_Ident.string_of_lid msrc in
                        let uu___10 = FStarC_Ident.string_of_lid mtgt in
-                       FStarC_Util.format2
+                       FStarC_Format.fmt2
                          "Impossible : trying to reify a non-reifiable lift (from %s to %s)"
                          uu___9 uu___10 in
                      failwith uu___8
@@ -2743,7 +2776,7 @@ and (translate_monadic_lift :
                         (fun uu___9 ->
                            let uu___10 =
                              FStarC_TypeChecker_NBETerm.t_to_string t in
-                           FStarC_Util.print1
+                           FStarC_Format.print1
                              "translate_monadic_lift(2): %s\n" uu___10);
                       t))
 and (readback :
@@ -2751,11 +2784,13 @@ and (readback :
   fun cfg ->
     fun x ->
       let debug1 = debug cfg in
-      let readback_args cfg1 args =
-        map_rev
-          (fun uu___ ->
-             match uu___ with
-             | (x1, q) -> let uu___1 = readback cfg1 x1 in (uu___1, q)) args in
+      let readback_args cfg1 =
+        fun args ->
+          map_rev
+            (fun uu___ ->
+               match uu___ with
+               | (x1, q) -> let uu___1 = readback cfg1 x1 in (uu___1, q))
+            args in
       let with_range t =
         {
           FStarC_Syntax_Syntax.n = (t.FStarC_Syntax_Syntax.n);
@@ -2767,7 +2802,7 @@ and (readback :
       debug1
         (fun uu___1 ->
            let uu___2 = FStarC_TypeChecker_NBETerm.t_to_string x in
-           FStarC_Util.print1 "Readback: %s\n" uu___2);
+           FStarC_Format.print1 "Readback: %s\n" uu___2);
       (match x.FStarC_TypeChecker_NBETerm.nbe_t with
        | FStarC_TypeChecker_NBETerm.Univ u ->
            failwith "Readback of universes should not occur"
@@ -2784,7 +2819,8 @@ and (readback :
        | FStarC_TypeChecker_NBETerm.Constant (FStarC_TypeChecker_NBETerm.Int
            i) ->
            let uu___1 =
-             let uu___2 = FStarC_BigInt.string_of_big_int i in
+             let uu___2 =
+               FStarC_Class_Show.show FStarC_Class_Show.showable_int i in
              FStarC_Syntax_Util.exp_int uu___2 in
            with_range uu___1
        | FStarC_TypeChecker_NBETerm.Constant
@@ -3097,16 +3133,17 @@ and (readback :
                let uu___3 = FStarC_Thunk.force body in readback cfg uu___3 in
              FStarC_Syntax_Subst.close uu___1 uu___2 in
            let lbname =
-             let uu___1 =
-               let uu___2 = FStarC_Util.left lb.FStarC_Syntax_Syntax.lbname in
-               {
-                 FStarC_Syntax_Syntax.ppname =
-                   (uu___2.FStarC_Syntax_Syntax.ppname);
-                 FStarC_Syntax_Syntax.index =
-                   (uu___2.FStarC_Syntax_Syntax.index);
-                 FStarC_Syntax_Syntax.sort = typ1
-               } in
-             FStar_Pervasives.Inl uu___1 in
+             FStar_Pervasives.Inl
+               (let uu___1 =
+                  FStar_Pervasives.__proj__Inl__item__v
+                    lb.FStarC_Syntax_Syntax.lbname in
+                {
+                  FStarC_Syntax_Syntax.ppname =
+                    (uu___1.FStarC_Syntax_Syntax.ppname);
+                  FStarC_Syntax_Syntax.index =
+                    (uu___1.FStarC_Syntax_Syntax.index);
+                  FStarC_Syntax_Syntax.sort = typ1
+                }) in
            let lb1 =
              {
                FStarC_Syntax_Syntax.lbname = lbname;
@@ -3197,7 +3234,9 @@ and (readback :
                   iapp cfg uu___3 (FStarC_List.rev args_rev1) in
                 readback cfg uu___2)
        | FStarC_TypeChecker_NBETerm.TopLevelRec (lb, uu___1, uu___2, args) ->
-           let fv = FStarC_Util.right lb.FStarC_Syntax_Syntax.lbname in
+           let fv =
+             FStar_Pervasives.__proj__Inr__item__v
+               lb.FStarC_Syntax_Syntax.lbname in
            let head =
              FStarC_Syntax_Syntax.mk (FStarC_Syntax_Syntax.Tm_fvar fv)
                FStarC_Range_Type.dummyRange in
@@ -3215,11 +3254,9 @@ and (readback :
              FStarC_List.map
                (fun lb ->
                   let uu___2 =
-                    let uu___3 =
-                      let uu___4 =
-                        FStarC_Util.left lb.FStarC_Syntax_Syntax.lbname in
-                      uu___4.FStarC_Syntax_Syntax.ppname in
-                    FStarC_Ident.string_of_id uu___3 in
+                    FStarC_Ident.string_of_id
+                      (FStar_Pervasives.__proj__Inl__item__v
+                         lb.FStarC_Syntax_Syntax.lbname).FStarC_Syntax_Syntax.ppname in
                   FStarC_Syntax_Syntax.gen_bv uu___2
                     FStar_Pervasives_Native.None
                     lb.FStarC_Syntax_Syntax.lbtyp) lbs in
@@ -3401,7 +3438,7 @@ let (normalize :
            then
              let uu___2 =
                FStarC_Class_Show.show FStarC_Syntax_Print.showable_term e in
-             FStarC_Util.print1 "Calling NBE with (%s) {\n" uu___2
+             FStarC_Format.print1 "Calling NBE with (%s) {\n" uu___2
            else ());
           (let cfg2 = new_config cfg1 in
            let r = let uu___1 = translate cfg2 [] e in readback cfg2 uu___1 in
@@ -3412,7 +3449,7 @@ let (normalize :
             then
               let uu___3 =
                 FStarC_Class_Show.show FStarC_Syntax_Print.showable_term r in
-              FStarC_Util.print1 "}\nNBE returned (%s)\n" uu___3
+              FStarC_Format.print1 "}\nNBE returned (%s)\n" uu___3
             else ());
            r)
 let (normalize_for_unit_test :
@@ -3517,11 +3554,11 @@ let (normalize_for_unit_test :
           (fun uu___1 ->
              let uu___2 =
                FStarC_Class_Show.show FStarC_Syntax_Print.showable_term e in
-             FStarC_Util.print1 "Calling NBE with (%s) {\n" uu___2);
+             FStarC_Format.print1 "Calling NBE with (%s) {\n" uu___2);
         (let r = let uu___1 = translate cfg2 [] e in readback cfg2 uu___1 in
          debug cfg2
            (fun uu___2 ->
               let uu___3 =
                 FStarC_Class_Show.show FStarC_Syntax_Print.showable_term r in
-              FStarC_Util.print1 "}\nNBE returned (%s)\n" uu___3);
+              FStarC_Format.print1 "}\nNBE returned (%s)\n" uu___3);
          r)

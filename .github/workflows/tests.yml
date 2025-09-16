@@ -13,7 +13,7 @@ jobs:
   # This checks that the stage3 extracted fstarc matches exactly with
   # stage2. Also, we build the F# library (it is not packaged, so not
   # built by the job above)
-  check-stage3:
+  stage3:
     runs-on: ubuntu-latest
     container: mtzguido/dev-base
     steps:
@@ -46,7 +46,7 @@ jobs:
   # CI usage, and getting a nicer display of the workflow run. Ideally
   # there would be a toggle for calling this workflow to check the
   # stage1, but it's really clunky to tweak a matrix in Github actions.
-  test-local:
+  tests:
     # strategy:
     #   matrix:
     #     pak:
@@ -76,12 +76,47 @@ jobs:
       - name: Run tests, without forcing a build
         run: make -skj$(nproc) _test
 
+  # This runs the bare tests over the bare stage2 compiler.
+  # We start from the built repo.
+  bare:
+    runs-on: ubuntu-latest
+    container: mtzguido/dev-base
+    steps:
+      - name: Cleanup
+        run: sudo find . -delete
+      - run: echo "HOME=/home/user" >> $GITHUB_ENV
+      - uses: mtzguido/set-opam-env@master
+
+      - uses: mtzguido/gci-download@master
+        with:
+          name: fstar-repo
+
+      - run: make -skj$(nproc) test-2-bare
+        working-directory: FStar
+
+  # The internal tests (src/tests)
+  internal:
+    runs-on: ubuntu-latest
+    container: mtzguido/dev-base
+    steps:
+      - name: Cleanup
+        run: sudo find . -delete
+      - run: echo "HOME=/home/user" >> $GITHUB_ENV
+      - uses: mtzguido/set-opam-env@master
+
+      - uses: mtzguido/gci-download@master
+        with:
+          name: fstar-repo
+
+      - run: make -skj$(nproc) stage2-unit-tests
+        working-directory: FStar
+
   binary-smoke:
     runs-on: ubuntu-24.04
     steps:
       - uses: cda-tum/setup-z3@main
         with:
-          version: 4.8.5
+          version: 4.13.3
 
       - name: Get fstar package
         uses: actions/download-artifact@v4
@@ -108,10 +143,10 @@ jobs:
           - ubuntu-latest
     runs-on: ${{ matrix.os }}
     steps:
-      # TODO: Install both 4.8.5 and 4.13.1
+      # TODO: Install both 4.8.5 and 4.13.3
       - uses: cda-tum/setup-z3@main
         with:
-          version: 4.8.5
+          version: 4.13.3
 
       - name: Get fstar package
         uses: actions/download-artifact@v4
@@ -145,7 +180,7 @@ jobs:
 
       - uses: cda-tum/setup-z3@main
         with:
-          version: 4.8.5
+          version: 4.13.3
 
       - name: Get fstar package
         uses: actions/download-artifact@v4

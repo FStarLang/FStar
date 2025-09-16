@@ -74,17 +74,14 @@ let (or_op :
                | uu___1 -> FStar_Pervasives_Native.None)
           | uu___ -> failwith "Unexpected number of arguments"
 let (division_modulus_op :
-  (FStarC_BigInt.t -> FStarC_BigInt.t -> FStarC_BigInt.t) ->
-    FStarC_BigInt.t ->
-      FStarC_BigInt.t -> FStarC_BigInt.t FStar_Pervasives_Native.option)
+  (Prims.int -> Prims.int -> Prims.int) ->
+    Prims.int -> Prims.int -> Prims.int FStar_Pervasives_Native.option)
   =
   fun f ->
     fun x ->
       fun y ->
-        let uu___ =
-          let uu___1 = FStarC_BigInt.to_int_fs y in uu___1 <> Prims.int_zero in
-        if uu___
-        then let uu___1 = f x y in FStar_Pervasives_Native.Some uu___1
+        if y <> Prims.int_zero
+        then let uu___ = f x y in FStar_Pervasives_Native.Some uu___
         else FStar_Pervasives_Native.None
 let (simple_ops : FStarC_TypeChecker_Primops_Base.primitive_step Prims.list)
   =
@@ -93,8 +90,7 @@ let (simple_ops : FStarC_TypeChecker_Primops_Base.primitive_step Prims.list)
       FStarC_Parser_Const.string_of_int_lid FStarC_Syntax_Embeddings.e_int
       FStarC_TypeChecker_NBETerm.e_int FStarC_Syntax_Embeddings.e_string
       FStarC_TypeChecker_NBETerm.e_string
-      (fun z ->
-         let uu___1 = FStarC_BigInt.to_int_fs z in Prims.string_of_int uu___1) in
+      (fun z -> FStarC_Class_Show.show FStarC_Class_Show.showable_int z) in
   let uu___1 =
     let uu___2 =
       FStarC_TypeChecker_Primops_Base.mk1 Prims.int_zero
@@ -102,14 +98,7 @@ let (simple_ops : FStarC_TypeChecker_Primops_Base.primitive_step Prims.list)
         FStarC_Syntax_Embeddings.e_string FStarC_TypeChecker_NBETerm.e_string
         (FStarC_Syntax_Embeddings.e_option FStarC_Syntax_Embeddings.e_int)
         (FStarC_TypeChecker_NBETerm.e_option FStarC_TypeChecker_NBETerm.e_int)
-        (fun uu___3 ->
-           (fun s ->
-              let uu___3 = FStarC_Util.safe_int_of_string s in
-              Obj.magic
-                (FStarC_Class_Monad.fmap FStarC_Class_Monad.monad_option ()
-                   ()
-                   (fun uu___4 -> (Obj.magic FStarC_BigInt.of_int_fs) uu___4)
-                   (Obj.magic uu___3))) uu___3) in
+        (fun s -> FStarC_Util.safe_int_of_string s) in
     let uu___3 =
       let uu___4 =
         FStarC_TypeChecker_Primops_Base.mk1 Prims.int_zero
@@ -137,7 +126,7 @@ let (simple_ops : FStarC_TypeChecker_Primops_Base.primitive_step Prims.list)
             FStarC_TypeChecker_Primops_Base.mk1 Prims.int_zero
               FStarC_Parser_Const.op_Minus FStarC_Syntax_Embeddings.e_int
               FStarC_TypeChecker_NBETerm.e_int FStarC_Syntax_Embeddings.e_int
-              FStarC_TypeChecker_NBETerm.e_int FStarC_BigInt.minus_big_int in
+              FStarC_TypeChecker_NBETerm.e_int (fun x -> - x) in
           let uu___9 =
             let uu___10 =
               FStarC_TypeChecker_Primops_Base.mk2 Prims.int_zero
@@ -147,7 +136,7 @@ let (simple_ops : FStarC_TypeChecker_Primops_Base.primitive_step Prims.list)
                 FStarC_Syntax_Embeddings.e_int
                 FStarC_TypeChecker_NBETerm.e_int
                 FStarC_Syntax_Embeddings.e_int
-                FStarC_TypeChecker_NBETerm.e_int FStarC_BigInt.add_big_int in
+                FStarC_TypeChecker_NBETerm.e_int (+) in
             let uu___11 =
               let uu___12 =
                 FStarC_TypeChecker_Primops_Base.mk2 Prims.int_zero
@@ -157,7 +146,7 @@ let (simple_ops : FStarC_TypeChecker_Primops_Base.primitive_step Prims.list)
                   FStarC_Syntax_Embeddings.e_int
                   FStarC_TypeChecker_NBETerm.e_int
                   FStarC_Syntax_Embeddings.e_int
-                  FStarC_TypeChecker_NBETerm.e_int FStarC_BigInt.sub_big_int in
+                  FStarC_TypeChecker_NBETerm.e_int (-) in
               let uu___13 =
                 let uu___14 =
                   FStarC_TypeChecker_Primops_Base.mk2 Prims.int_zero
@@ -167,8 +156,7 @@ let (simple_ops : FStarC_TypeChecker_Primops_Base.primitive_step Prims.list)
                     FStarC_Syntax_Embeddings.e_int
                     FStarC_TypeChecker_NBETerm.e_int
                     FStarC_Syntax_Embeddings.e_int
-                    FStarC_TypeChecker_NBETerm.e_int
-                    FStarC_BigInt.mult_big_int in
+                    FStarC_TypeChecker_NBETerm.e_int ( * ) in
                 let uu___15 =
                   let uu___16 =
                     FStarC_TypeChecker_Primops_Base.mk2 Prims.int_zero
@@ -178,8 +166,7 @@ let (simple_ops : FStarC_TypeChecker_Primops_Base.primitive_step Prims.list)
                       FStarC_Syntax_Embeddings.e_int
                       FStarC_TypeChecker_NBETerm.e_int
                       FStarC_Syntax_Embeddings.e_bool
-                      FStarC_TypeChecker_NBETerm.e_bool
-                      FStarC_BigInt.lt_big_int in
+                      FStarC_TypeChecker_NBETerm.e_bool (<) in
                   let uu___17 =
                     let uu___18 =
                       FStarC_TypeChecker_Primops_Base.mk2 Prims.int_zero
@@ -189,8 +176,7 @@ let (simple_ops : FStarC_TypeChecker_Primops_Base.primitive_step Prims.list)
                         FStarC_Syntax_Embeddings.e_int
                         FStarC_TypeChecker_NBETerm.e_int
                         FStarC_Syntax_Embeddings.e_bool
-                        FStarC_TypeChecker_NBETerm.e_bool
-                        FStarC_BigInt.le_big_int in
+                        FStarC_TypeChecker_NBETerm.e_bool (<=) in
                     let uu___19 =
                       let uu___20 =
                         FStarC_TypeChecker_Primops_Base.mk2 Prims.int_zero
@@ -200,8 +186,7 @@ let (simple_ops : FStarC_TypeChecker_Primops_Base.primitive_step Prims.list)
                           FStarC_Syntax_Embeddings.e_int
                           FStarC_TypeChecker_NBETerm.e_int
                           FStarC_Syntax_Embeddings.e_bool
-                          FStarC_TypeChecker_NBETerm.e_bool
-                          FStarC_BigInt.gt_big_int in
+                          FStarC_TypeChecker_NBETerm.e_bool (>) in
                       let uu___21 =
                         let uu___22 =
                           FStarC_TypeChecker_Primops_Base.mk2 Prims.int_zero
@@ -211,8 +196,7 @@ let (simple_ops : FStarC_TypeChecker_Primops_Base.primitive_step Prims.list)
                             FStarC_Syntax_Embeddings.e_int
                             FStarC_TypeChecker_NBETerm.e_int
                             FStarC_Syntax_Embeddings.e_bool
-                            FStarC_TypeChecker_NBETerm.e_bool
-                            FStarC_BigInt.ge_big_int in
+                            FStarC_TypeChecker_NBETerm.e_bool (>=) in
                         let uu___23 =
                           let uu___24 =
                             FStarC_TypeChecker_Primops_Base.mk2'
@@ -223,8 +207,8 @@ let (simple_ops : FStarC_TypeChecker_Primops_Base.primitive_step Prims.list)
                               FStarC_TypeChecker_NBETerm.e_int
                               FStarC_Syntax_Embeddings.e_int
                               FStarC_TypeChecker_NBETerm.e_int
-                              (division_modulus_op FStarC_BigInt.div_big_int)
-                              (division_modulus_op FStarC_BigInt.div_big_int) in
+                              (division_modulus_op (/))
+                              (division_modulus_op (/)) in
                           let uu___25 =
                             let uu___26 =
                               FStarC_TypeChecker_Primops_Base.mk2'
@@ -235,10 +219,8 @@ let (simple_ops : FStarC_TypeChecker_Primops_Base.primitive_step Prims.list)
                                 FStarC_TypeChecker_NBETerm.e_int
                                 FStarC_Syntax_Embeddings.e_int
                                 FStarC_TypeChecker_NBETerm.e_int
-                                (division_modulus_op
-                                   FStarC_BigInt.mod_big_int)
-                                (division_modulus_op
-                                   FStarC_BigInt.mod_big_int) in
+                                (division_modulus_op (mod))
+                                (division_modulus_op (mod)) in
                             let uu___27 =
                               let uu___28 =
                                 FStarC_TypeChecker_Primops_Base.mk1
@@ -301,8 +283,7 @@ let (simple_ops : FStarC_TypeChecker_Primops_Base.primitive_step Prims.list)
                                           FStarC_TypeChecker_NBETerm.e_int
                                           (fun s1 ->
                                              fun s2 ->
-                                               FStarC_BigInt.of_int_fs
-                                                 (FStarC_String.compare s1 s2)) in
+                                               FStarC_String.compare s1 s2) in
                                       let uu___37 =
                                         let uu___38 =
                                           FStarC_TypeChecker_Primops_Base.mk1
@@ -328,11 +309,7 @@ let (simple_ops : FStarC_TypeChecker_Primops_Base.primitive_step Prims.list)
                                               FStarC_TypeChecker_NBETerm.e_string
                                               (fun x ->
                                                  fun y ->
-                                                   let uu___41 =
-                                                     FStarC_BigInt.to_int_fs
-                                                       x in
-                                                   FStarC_String.make uu___41
-                                                     y) in
+                                                   FStarC_String.make x y) in
                                           let uu___41 =
                                             let uu___42 =
                                               FStarC_TypeChecker_Primops_Base.mk1
@@ -405,17 +382,8 @@ let (simple_ops : FStarC_TypeChecker_Primops_Base.primitive_step Prims.list)
                                                           (fun s ->
                                                              fun o ->
                                                                fun l ->
-                                                                 let uu___53
-                                                                   =
-                                                                   FStarC_BigInt.to_int_fs
-                                                                    o in
-                                                                 let uu___54
-                                                                   =
-                                                                   FStarC_BigInt.to_int_fs
-                                                                    l in
                                                                  FStarC_String.substring
-                                                                   s uu___53
-                                                                   uu___54) in
+                                                                   s o l) in
                                                       [uu___52] in
                                                     uu___50 :: uu___51 in
                                                   uu___48 :: uu___49 in
@@ -476,4 +444,6 @@ let (simplification_ops_list :
   =
   fun env ->
     let uu___ = FStarC_TypeChecker_Primops_Eq.prop_eq_ops env in
-    FStarC_List.op_At uu___ FStarC_TypeChecker_Primops_Real.simplify_ops
+    FStarC_List.op_At uu___
+      (FStarC_List.op_At FStarC_TypeChecker_Primops_Real.simplify_ops
+         FStarC_TypeChecker_Primops_Erased.simplify_ops)

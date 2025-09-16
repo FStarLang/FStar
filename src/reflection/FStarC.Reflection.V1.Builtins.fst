@@ -37,7 +37,6 @@ module UF    = FStarC.Syntax.Unionfind
 module Ident = FStarC.Ident
 module Env   = FStarC.TypeChecker.Env
 module Err   = FStarC.Errors
-module Z     = FStarC.BigInt
 module DsEnv = FStarC.Syntax.DsEnv
 module RD    = FStarC.Reflection.V1.Data
 module EMB   = FStarC.Syntax.Embeddings
@@ -146,21 +145,21 @@ let rec init (l:list 'a) : list 'a =
 let inspect_const (c:sconst) : vconst =
     match c with
     | FStarC.Const.Const_unit -> C_Unit
-    | FStarC.Const.Const_int (s, _) -> C_Int (Z.big_int_of_string s)
+    | FStarC.Const.Const_int (s, _) -> C_Int (BU.int_of_string s)
     | FStarC.Const.Const_bool true  -> C_True
     | FStarC.Const.Const_bool false -> C_False
     | FStarC.Const.Const_string (s, _) -> C_String s
     | FStarC.Const.Const_range r -> C_Range r
     | FStarC.Const.Const_reify _ -> C_Reify
     | FStarC.Const.Const_reflect l -> C_Reflect (Ident.path_of_lid l)
-    | _ -> failwith (BU.format1 "unknown constant: %s" (show c))
+    | _ -> failwith (Format.fmt1 "unknown constant: %s" (show c))
 
 let inspect_universe u =
   match u with
   | U_zero -> Uv_Zero
   | U_succ u -> Uv_Succ u
   | U_max us -> Uv_Max us
-  | U_bvar n -> Uv_BVar (Z.of_int_fs n)
+  | U_bvar n -> Uv_BVar n
   | U_name i -> Uv_Name (Ident.string_of_id i, Ident.range_of_id i)
   | U_unif u -> Uv_Unif u
   | U_unknown -> Uv_Unk
@@ -170,7 +169,7 @@ let pack_universe uv =
   | Uv_Zero -> U_zero
   | Uv_Succ u -> U_succ u
   | Uv_Max us -> U_max us
-  | Uv_BVar n -> U_bvar (Z.to_int_fs n)
+  | Uv_BVar n -> U_bvar n
   | Uv_Name i -> U_name (Ident.mk_ident i)
   | Uv_Unif u -> U_unif u
   | Uv_Unk -> U_unknown
@@ -248,7 +247,7 @@ let rec inspect_ln (t:term) : term_view =
         //
         // Use the unique id of the uvar
         //
-        Tv_Uvar (Z.of_int_fs (UF.uvar_unique_id ctx_u.ctx_uvar_head),
+        Tv_Uvar (UF.uvar_unique_id ctx_u.ctx_uvar_head,
                 (ctx_u, s))
 
     | Tm_let {lbs=(false, [lb]); body=t2} ->
@@ -287,7 +286,7 @@ let rec inspect_ln (t:term) : term_view =
 
     | _ ->
         Err.log_issue t Err.Warning_CantInspect 
-          (BU.format2 "inspect_ln: outside of expected syntax (%s, %s)" (tag_of t) (show t));
+          (Format.fmt2 "inspect_ln: outside of expected syntax (%s, %s)" (tag_of t) (show t));
         Tv_Unsupp
 
 let inspect_comp (c : comp) : comp_view =
@@ -297,7 +296,7 @@ let inspect_comp (c : comp) : comp_view =
         | Some (DECREASES (Decreases_lex ts)) -> ts
         | Some (DECREASES (Decreases_wf _)) ->
           Err.log_issue c Err.Warning_CantInspect
-            (BU.format1 "inspect_comp: inspecting comp with wf decreases clause is not yet supported: %s \
+            (Format.fmt1 "inspect_comp: inspecting comp with wf decreases clause is not yet supported: %s \
               skipping the decreases clause"
               (show c));
           []
@@ -362,7 +361,7 @@ let pack_comp (cv : comp_view) : comp =
 let pack_const (c:vconst) : sconst =
     match c with
     | C_Unit         -> C.Const_unit
-    | C_Int i        -> C.Const_int (Z.string_of_big_int i, None)
+    | C_Int i        -> C.Const_int (show i, None)
     | C_True         -> C.Const_bool true
     | C_False        -> C.Const_bool false
     | C_String s     -> C.Const_string (s, Range.dummyRange)
@@ -646,11 +645,11 @@ let pack_sigelt (sv:sigelt_view) : sigelt =
         let lid = Ident.lid_of_path nm Range.dummyRange in
         let ty = U.arrow param_bs (S.mk_Total ty) in
         let ty = SS.subst s ty in (* close univs *)
-        mk_sigelt <| Sig_datacon {lid; us=us_names; t=ty; ty_lid=ind_lid; num_ty_params=nparam; mutuals=[]; injective_type_params }
+        mk_sigelt <| Sig_datacon {lid; us=us_names; t=ty; ty_lid=ind_lid; num_ty_params=nparam; mutuals=[]; injective_type_params; proj_disc_lids=[] } // hmmmm
       in
 
       let ctor_ses : list sigelt = List.map pack_ctor ctors in
-      let c_lids : list Ident.lid = List.map (fun se -> BU.must (U.lid_of_sigelt se)) ctor_ses in
+      let c_lids : list Ident.lid = List.map (fun se -> Some?.v (U.lid_of_sigelt se)) ctor_ses in
 
       let ind_se : sigelt =
         let param_bs = SS.close_binders param_bs in
@@ -705,26 +704,26 @@ let pack_lb (lbv:lb_view) : letbinding =
 let inspect_bv (bv:bv) : bv_view =
     if bv.index < 0 then (
         Err.log_issue0 Err.Warning_CantInspect
-          (BU.format3 "inspect_bv: index is negative (%s : %s), index = %s"
+          (Format.fmt3 "inspect_bv: index is negative (%s : %s), index = %s"
                (Ident.string_of_id bv.ppname)
                (show bv.sort)
                (show bv.index))
     );
     {
       bv_ppname = Sealed.seal <| Ident.string_of_id bv.ppname;
-      bv_index = Z.of_int_fs bv.index;
+      bv_index = bv.index;
     }
 
 let pack_bv (bvv:bv_view) : bv =
-    if Z.to_int_fs bvv.bv_index < 0 then (
+    if bvv.bv_index < 0 then (
         Err.log_issue0 Err.Warning_CantInspect
-          (BU.format2 "pack_bv: index is negative (%s), index = %s"
+          (Format.fmt2 "pack_bv: index is negative (%s), index = %s"
                (Sealed.unseal bvv.bv_ppname)
-               (show (Z.to_int_fs bvv.bv_index)))
+               (show bvv.bv_index))
     );
     {
       ppname = Ident.mk_ident (Sealed.unseal <| bvv.bv_ppname, Range.dummyRange);
-      index = Z.to_int_fs bvv.bv_index; // Guaranteed to be a nat
+      index = bvv.bv_index; // Guaranteed to be a nat
       sort = S.tun;
     }
 
@@ -959,7 +958,7 @@ and univs_eq (us1 : list universe) (us2 : list universe) : bool =
 
 let implode_qn ns = String.concat "." ns
 let explode_qn s = String.split ['.'] s
-let compare_string s1 s2 = Z.of_int_fs (String.compare s1 s2)
+let compare_string s1 s2 = String.compare s1 s2
 
 let push_binder e b = Env.push_binders e [b]
 

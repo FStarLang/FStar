@@ -1,14 +1,13 @@
->> Got issues: [
-* Error 19 at ArrowRanges.fst(4,30-4,39):
+* Info at ArrowRanges.fst(4,30-4,39):
+  - Expected failure:
   - Subtyping check failed
   - Expected type Prims.eqtype got type Type0
   - The SMT solver could not prove the query. Use --query_stats for more
     details.
   - See also Prims.fst(81,23-81,30)
 
->>]
->> Got issues: [
-* Error 19 at ArrowRanges.fst(8,10-8,28):
+* Info at ArrowRanges.fst(8,10-8,28):
+  - Expected failure:
   - Failed to prove that the type
     'ArrowRanges.ppof'
     supports decidable equality because of this argument.
@@ -17,4 +16,3 @@
     details.
   - See also ArrowRanges.fst(7,0-11,1)
 
->>]

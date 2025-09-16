@@ -18,7 +18,6 @@ module FStarC.Hooks
 open FStarC
 open FStarC.Effect
 open FStarC.List
-open FStarC.Util
 open FStarC.Ident
 open FStarC.Class.Show
 open FStarC.Syntax.Print {}
@@ -53,16 +52,15 @@ let lazy_chooser (k:Syntax.Syntax.lazy_kind) (i:Syntax.Syntax.lazyinfo) : Syntax
     | Syntax.Syntax.Lazy_tref             -> FStarC.Syntax.Util.exp_string "((tref))"
 
     | Syntax.Syntax.Lazy_embedding (_, t) -> Thunk.force t
-    | Syntax.Syntax.Lazy_extension s      -> FStarC.Syntax.Util.exp_string (format1 "((extension %s))" s)
+    | Syntax.Syntax.Lazy_extension s      -> FStarC.Syntax.Util.exp_string (Format.fmt1 "((extension %s))" s)
 
-// This is called directly by the Javascript port (it doesn't call Main)
-let setup_hooks () =
-    Syntax.DsEnv.ugly_sigelt_to_string_hook := show;
-    Errors.set_parse_warn_error Parser.ParseIt.parse_warn_error;
-    Syntax.Syntax.lazy_chooser := Some lazy_chooser;
-    Syntax.Util.tts_f := Some show;
-    Syntax.Util.ttd_f := Some Class.PP.pp;
-    TypeChecker.Normalize.unembed_binder_knot := Some RE.e_binder;
-    iter Tactics.Interpreter.register_tactic_primitive_step Tactics.V1.Primops.ops;
-    iter Tactics.Interpreter.register_tactic_primitive_step Tactics.V2.Primops.ops;
-    ()
+let () =
+  Syntax.DsEnv.ugly_sigelt_to_string_hook := show;
+  Errors.set_parse_warn_error Parser.ParseIt.parse_warn_error;
+  Syntax.Syntax.lazy_chooser := Some lazy_chooser;
+  Syntax.Util.tts_f := Some show;
+  Syntax.Util.ttd_f := Some Class.PP.pp;
+  TypeChecker.Normalize.unembed_binder_knot := Some RE.e_binder;
+  iter Tactics.Interpreter.register_tactic_primitive_step Tactics.V1.Primops.ops;
+  iter Tactics.Interpreter.register_tactic_primitive_step Tactics.V2.Primops.ops;
+  ()

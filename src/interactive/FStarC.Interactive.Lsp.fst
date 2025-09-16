@@ -23,6 +23,7 @@ open FStarC.Errors
 open FStarC.Universal
 open FStarC.Interactive.Ide.Types
 open FStarC.Interactive.JsonHelper
+open FStarC.Class.Show
 
 module U = FStarC.Util
 module QH = FStarC.Interactive.QueryHelper
@@ -34,7 +35,7 @@ module TcEnv = FStarC.TypeChecker.Env
 
 // nothrow
 let unpack_lsp_query (r : list (string & json)) : lsp_query =
-  let qid = try_assoc "id" r |> U.map_option js_str_int in // noexcept
+  let qid = try_assoc "id" r |> Option.map js_str_int in // noexcept
 
   // If we make it this far, exceptions will come with qid info.
   // Wrap in `try` because all `js_*` functions and `assoc` throw
@@ -87,7 +88,7 @@ let unpack_lsp_query (r : list (string & json)) : lsp_query =
           | "textDocument/rename" -> Rename
           | "textDocument/prepareRename" -> PrepareRename (js_txdoc_pos r)
           | "textDocument/foldingRange" -> FoldingRange
-          | m -> BadProtocolMsg (U.format1 "Unknown method '%s'" m) }
+          | m -> BadProtocolMsg (Format.fmt1 "Unknown method '%s'" m) }
   with
   | MissingKey msg -> { query_id = qid; q = BadProtocolMsg msg }
   | UnexpectedJsonType (expected, got) -> wrap_jsfail qid expected got
@@ -100,7 +101,7 @@ let deserialize_lsp_query js_query : lsp_query =
   | UnexpectedJsonType (expected, got) -> wrap_jsfail None expected got
 
 let parse_lsp_query query_str : lsp_query =
-  if false then U.print1_error ">>> %s\n" query_str;
+  if false then Format.print1_error ">>> %s\n" query_str;
   match json_of_string query_str with
   | None -> { query_id = None; q = BadProtocolMsg "Json parsing failed" }
   | Some request -> deserialize_lsp_query request
@@ -133,7 +134,7 @@ let invoke_full_lax (gst: grepl_state) (fname: string) (text: string) (force: bo
     let diag, st' = PH.full_lax text (repl_state_init fname) in
     let repls = PSMap.add gst.grepl_repls fname st' in
     // explicitly clear diags
-    let diag = if U.is_some diag then diag else Some (js_diag_clear fname) in
+    let diag = if Some? diag then diag else Some (js_diag_clear fname) in
     diag, Inl ({ gst with grepl_repls = repls }) in
  match PSMap.try_find gst.grepl_repls fname with
  | Some _ -> if force then aux () else None, Inl gst
@@ -214,10 +215,10 @@ let rec read_lsp_query (stream: stream_reader) : lsp_query =
     let n = parse_header_len stream 0 in
     match U.nread stream n with
     | Some s -> parse_lsp_query s
-    | None -> wrap_content_szerr (U.format1 "Could not read %s bytes" (U.string_of_int n))
+    | None -> wrap_content_szerr (Format.fmt1 "Could not read %s bytes" (show n))
   with
   // At no cost should the server go down
-  | MalformedHeader -> U.print_error "[E] Malformed Content Header\n"; read_lsp_query stream
+  | MalformedHeader -> Format.print_error "[E] Malformed Content Header\n"; read_lsp_query stream
   | InputExhausted -> read_lsp_query stream
 
 let rec go (gst: grepl_state) : int =
@@ -225,7 +226,7 @@ let rec go (gst: grepl_state) : int =
   let r, state_opt = run_query gst query.q in
   (match r with
    | Some response -> (let response' = json_of_response query.query_id response in
-                       if false then U.print1_error "<<< %s\n" (string_of_json response');
+                       if false then Format.print1_error "<<< %s\n" (string_of_json response');
                        write_jsonrpc response')
    | None -> ()); // Don't respond
   match state_opt with

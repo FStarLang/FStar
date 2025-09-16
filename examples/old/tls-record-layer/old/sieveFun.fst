@@ -54,7 +54,7 @@ let marked n f m = (f m)
 (*li is the counter for the inner loop; lo is for the outer one*)
 (*the inner loop invariant says that cells lo*2, lo*3, lo*4 ....lo*(li-1) (first li non-trivial multiples of lo) are marked.*)
 
-(*#set-options "--initial_fuel 100 --max_fuel 100 --initial_ifuel 100 --max_ifuel 100"*)
+(*#set-options "--fuel 100 --ifuel 100"*)
 
 val mark : n:nat -> ((k:nat{k<n}) -> Tot bool) -> index:nat{index<n} -> Tot ((k:nat{k<n}) -> Tot bool)
 let mark n f index =

@@ -83,8 +83,6 @@ let (set_check_kind :
         FStarC_TypeChecker_Env.is_iface =
           (env.FStarC_TypeChecker_Env.is_iface);
         FStarC_TypeChecker_Env.admit = uu___;
-        FStarC_TypeChecker_Env.lax_universes =
-          (env.FStarC_TypeChecker_Env.lax_universes);
         FStarC_TypeChecker_Env.phase1 = (env.FStarC_TypeChecker_Env.phase1);
         FStarC_TypeChecker_Env.failhard =
           (env.FStarC_TypeChecker_Env.failhard);
@@ -153,27 +151,28 @@ let (repl_ld_tasks_of_deps :
   fun deps ->
     fun final_tasks ->
       let wrap fname =
-        let uu___ = FStarC_Util.get_time_of_day () in
+        let uu___ = FStarC_Time.get_time_of_day () in
         {
           FStarC_Interactive_Ide_Types.tf_fname = fname;
           FStarC_Interactive_Ide_Types.tf_modtime = uu___
         } in
-      let rec aux deps1 final_tasks1 =
-        match deps1 with
-        | intf::impl::deps' when
-            FStarC_Universal.needs_interleaving intf impl ->
-            let uu___ =
-              let uu___1 =
-                let uu___2 = wrap intf in
-                let uu___3 = wrap impl in (uu___2, uu___3) in
-              FStarC_Interactive_Ide_Types.LDInterleaved uu___1 in
-            let uu___1 = aux deps' final_tasks1 in uu___ :: uu___1
-        | intf_or_impl::deps' ->
-            let uu___ =
-              let uu___1 = wrap intf_or_impl in
-              FStarC_Interactive_Ide_Types.LDSingle uu___1 in
-            let uu___1 = aux deps' final_tasks1 in uu___ :: uu___1
-        | [] -> final_tasks1 in
+      let rec aux deps1 =
+        fun final_tasks1 ->
+          match deps1 with
+          | intf::impl::deps' when
+              FStarC_Universal.needs_interleaving intf impl ->
+              let uu___ =
+                let uu___1 =
+                  let uu___2 = wrap intf in
+                  let uu___3 = wrap impl in (uu___2, uu___3) in
+                FStarC_Interactive_Ide_Types.LDInterleaved uu___1 in
+              let uu___1 = aux deps' final_tasks1 in uu___ :: uu___1
+          | intf_or_impl::deps' ->
+              let uu___ =
+                let uu___1 = wrap intf_or_impl in
+                FStarC_Interactive_Ide_Types.LDSingle uu___1 in
+              let uu___1 = aux deps' final_tasks1 in uu___ :: uu___1
+          | [] -> final_tasks1 in
       aux deps final_tasks
 let (deps_and_repl_ld_tasks_of_our_file :
   Prims.string ->
@@ -202,7 +201,7 @@ let (deps_and_repl_ld_tasks_of_our_file :
                      if uu___3
                      then
                        let uu___4 =
-                         FStarC_Util.format1 "Expecting an interface, got %s"
+                         FStarC_Format.fmt1 "Expecting an interface, got %s"
                            intf in
                        FStarC_Errors.raise_error0
                          FStarC_Errors_Codes.Fatal_MissingInterface ()
@@ -215,7 +214,7 @@ let (deps_and_repl_ld_tasks_of_our_file :
                      if uu___4
                      then
                        let uu___5 =
-                         FStarC_Util.format1
+                         FStarC_Format.fmt1
                            "Expecting an implementation, got %s" impl in
                        FStarC_Errors.raise_error0
                          FStarC_Errors_Codes.Fatal_MissingImplementation ()
@@ -224,7 +223,7 @@ let (deps_and_repl_ld_tasks_of_our_file :
                      else ());
                     (let uu___4 =
                        let uu___5 =
-                         let uu___6 = FStarC_Util.get_time_of_day () in
+                         let uu___6 = FStarC_Time.get_time_of_day () in
                          {
                            FStarC_Interactive_Ide_Types.tf_fname = intf;
                            FStarC_Interactive_Ide_Types.tf_modtime = uu___6
@@ -237,7 +236,7 @@ let (deps_and_repl_ld_tasks_of_our_file :
                    let mods_str = FStarC_String.concat " " same_name in
                    let message = "Too many or too few files matching %s: %s" in
                    ((let uu___4 =
-                       FStarC_Util.format message [our_mod_name; mods_str] in
+                       FStarC_Format.fmt message [our_mod_name; mods_str] in
                      FStarC_Errors.raise_error0
                        FStarC_Errors_Codes.Fatal_TooManyOrTooFewFileMatch ()
                        (Obj.magic FStarC_Errors_Msg.is_error_message_string)
@@ -573,14 +572,17 @@ let (track_name_changes :
          (FStarC_TypeChecker_Env.env_t * name_tracking_event Prims.list))))
   =
   fun env ->
-    let set_hooks dshooks tchooks env1 =
-      let uu___ =
-        FStarC_Universal.with_dsenv_of_tcenv env1
-          (fun dsenv ->
-             let uu___1 = FStarC_Syntax_DsEnv.set_ds_hooks dsenv dshooks in
-             ((), uu___1)) in
-      match uu___ with
-      | ((), tcenv') -> FStarC_TypeChecker_Env.set_tc_hooks tcenv' tchooks in
+    let set_hooks dshooks =
+      fun tchooks ->
+        fun env1 ->
+          let uu___ =
+            FStarC_Universal.with_dsenv_of_tcenv env1
+              (fun dsenv ->
+                 let uu___1 = FStarC_Syntax_DsEnv.set_ds_hooks dsenv dshooks in
+                 ((), uu___1)) in
+          match uu___ with
+          | ((), tcenv') ->
+              FStarC_TypeChecker_Env.set_tc_hooks tcenv' tchooks in
     let uu___ =
       let uu___1 =
         FStarC_Syntax_DsEnv.ds_hooks env.FStarC_TypeChecker_Env.dsenv in
@@ -666,7 +668,7 @@ let (repl_tx :
               FStar_Pervasives_Native.Some uu___2 in
             (uu___1, st)
         | FStarC_Util.SigInt ->
-            (FStarC_Util.print_error "[E] Interrupt";
+            (FStarC_Format.print_error "[E] Interrupt";
              (FStar_Pervasives_Native.None, st))
         | FStarC_Errors.Error (e, msg, r, _ctx) ->
             let uu___1 =
@@ -678,7 +680,7 @@ let (repl_tx :
               FStar_Pervasives_Native.Some uu___2 in
             (uu___1, st)
         | FStarC_Errors.Stop ->
-            (FStarC_Util.print_error "[E] Stop";
+            (FStarC_Format.print_error "[E] Stop";
              (FStar_Pervasives_Native.None, st))
 let (tf_of_fname : Prims.string -> FStarC_Interactive_Ide_Types.timed_fname)
   =
@@ -714,85 +716,90 @@ let (repl_ldtx :
   =
   fun st ->
     fun tasks ->
-      let rec revert_many st1 uu___ =
-        match uu___ with
-        | [] -> st1
-        | (_id, (task, _st'))::entries ->
-            let st' = pop_repl "repl_ldtx" st1 in
-            let dep_graph =
-              FStarC_TypeChecker_Env.dep_graph
-                st1.FStarC_Interactive_Ide_Types.repl_env in
-            let st'1 =
-              let uu___1 =
-                FStarC_TypeChecker_Env.set_dep_graph
-                  st'.FStarC_Interactive_Ide_Types.repl_env dep_graph in
-              {
-                FStarC_Interactive_Ide_Types.repl_line =
-                  (st'.FStarC_Interactive_Ide_Types.repl_line);
-                FStarC_Interactive_Ide_Types.repl_column =
-                  (st'.FStarC_Interactive_Ide_Types.repl_column);
-                FStarC_Interactive_Ide_Types.repl_fname =
-                  (st'.FStarC_Interactive_Ide_Types.repl_fname);
-                FStarC_Interactive_Ide_Types.repl_deps_stack =
-                  (st'.FStarC_Interactive_Ide_Types.repl_deps_stack);
-                FStarC_Interactive_Ide_Types.repl_curmod =
-                  (st'.FStarC_Interactive_Ide_Types.repl_curmod);
-                FStarC_Interactive_Ide_Types.repl_env = uu___1;
-                FStarC_Interactive_Ide_Types.repl_stdin =
-                  (st'.FStarC_Interactive_Ide_Types.repl_stdin);
-                FStarC_Interactive_Ide_Types.repl_names =
-                  (st'.FStarC_Interactive_Ide_Types.repl_names);
-                FStarC_Interactive_Ide_Types.repl_buffered_input_queries =
-                  (st'.FStarC_Interactive_Ide_Types.repl_buffered_input_queries);
-                FStarC_Interactive_Ide_Types.repl_lang =
-                  (st'.FStarC_Interactive_Ide_Types.repl_lang)
-              } in
-            revert_many st'1 entries in
-      let rec aux st1 tasks1 previous =
-        match (tasks1, previous) with
-        | ([], []) -> FStar_Pervasives.Inl st1
-        | (task::tasks2, []) ->
-            let timestamped_task = update_task_timestamps task in
-            let uu___ =
-              repl_tx st1 FStarC_Interactive_Ide_Types.LaxCheck
-                timestamped_task in
-            (match uu___ with
-             | (diag, st2) ->
-                 if Prims.op_Negation (FStarC_Util.is_some diag)
-                 then
-                   let uu___1 =
-                     let uu___2 = FStarC_Effect.op_Bang repl_stack in
-                     {
-                       FStarC_Interactive_Ide_Types.repl_line =
-                         (st2.FStarC_Interactive_Ide_Types.repl_line);
-                       FStarC_Interactive_Ide_Types.repl_column =
-                         (st2.FStarC_Interactive_Ide_Types.repl_column);
-                       FStarC_Interactive_Ide_Types.repl_fname =
-                         (st2.FStarC_Interactive_Ide_Types.repl_fname);
-                       FStarC_Interactive_Ide_Types.repl_deps_stack = uu___2;
-                       FStarC_Interactive_Ide_Types.repl_curmod =
-                         (st2.FStarC_Interactive_Ide_Types.repl_curmod);
-                       FStarC_Interactive_Ide_Types.repl_env =
-                         (st2.FStarC_Interactive_Ide_Types.repl_env);
-                       FStarC_Interactive_Ide_Types.repl_stdin =
-                         (st2.FStarC_Interactive_Ide_Types.repl_stdin);
-                       FStarC_Interactive_Ide_Types.repl_names =
-                         (st2.FStarC_Interactive_Ide_Types.repl_names);
-                       FStarC_Interactive_Ide_Types.repl_buffered_input_queries
-                         =
-                         (st2.FStarC_Interactive_Ide_Types.repl_buffered_input_queries);
-                       FStarC_Interactive_Ide_Types.repl_lang =
-                         (st2.FStarC_Interactive_Ide_Types.repl_lang)
-                     } in
-                   aux uu___1 tasks2 []
-                 else FStar_Pervasives.Inr st2)
-        | (task::tasks2, prev::previous1) when
-            let uu___ = update_task_timestamps task in
-            (FStar_Pervasives_Native.fst (FStar_Pervasives_Native.snd prev))
-              = uu___
-            -> aux st1 tasks2 previous1
-        | (tasks2, previous1) ->
-            let uu___ = revert_many st1 previous1 in aux uu___ tasks2 [] in
+      let rec revert_many st1 =
+        fun uu___ ->
+          match uu___ with
+          | [] -> st1
+          | (_id, (task, _st'))::entries ->
+              let st' = pop_repl "repl_ldtx" st1 in
+              let dep_graph =
+                FStarC_TypeChecker_Env.dep_graph
+                  st1.FStarC_Interactive_Ide_Types.repl_env in
+              let st'1 =
+                let uu___1 =
+                  FStarC_TypeChecker_Env.set_dep_graph
+                    st'.FStarC_Interactive_Ide_Types.repl_env dep_graph in
+                {
+                  FStarC_Interactive_Ide_Types.repl_line =
+                    (st'.FStarC_Interactive_Ide_Types.repl_line);
+                  FStarC_Interactive_Ide_Types.repl_column =
+                    (st'.FStarC_Interactive_Ide_Types.repl_column);
+                  FStarC_Interactive_Ide_Types.repl_fname =
+                    (st'.FStarC_Interactive_Ide_Types.repl_fname);
+                  FStarC_Interactive_Ide_Types.repl_deps_stack =
+                    (st'.FStarC_Interactive_Ide_Types.repl_deps_stack);
+                  FStarC_Interactive_Ide_Types.repl_curmod =
+                    (st'.FStarC_Interactive_Ide_Types.repl_curmod);
+                  FStarC_Interactive_Ide_Types.repl_env = uu___1;
+                  FStarC_Interactive_Ide_Types.repl_stdin =
+                    (st'.FStarC_Interactive_Ide_Types.repl_stdin);
+                  FStarC_Interactive_Ide_Types.repl_names =
+                    (st'.FStarC_Interactive_Ide_Types.repl_names);
+                  FStarC_Interactive_Ide_Types.repl_buffered_input_queries =
+                    (st'.FStarC_Interactive_Ide_Types.repl_buffered_input_queries);
+                  FStarC_Interactive_Ide_Types.repl_lang =
+                    (st'.FStarC_Interactive_Ide_Types.repl_lang)
+                } in
+              revert_many st'1 entries in
+      let rec aux st1 =
+        fun tasks1 ->
+          fun previous ->
+            match (tasks1, previous) with
+            | ([], []) -> FStar_Pervasives.Inl st1
+            | (task::tasks2, []) ->
+                let timestamped_task = update_task_timestamps task in
+                let uu___ =
+                  repl_tx st1 FStarC_Interactive_Ide_Types.LaxCheck
+                    timestamped_task in
+                (match uu___ with
+                 | (diag, st2) ->
+                     if FStar_Pervasives_Native.uu___is_None diag
+                     then
+                       let uu___1 =
+                         let uu___2 = FStarC_Effect.op_Bang repl_stack in
+                         {
+                           FStarC_Interactive_Ide_Types.repl_line =
+                             (st2.FStarC_Interactive_Ide_Types.repl_line);
+                           FStarC_Interactive_Ide_Types.repl_column =
+                             (st2.FStarC_Interactive_Ide_Types.repl_column);
+                           FStarC_Interactive_Ide_Types.repl_fname =
+                             (st2.FStarC_Interactive_Ide_Types.repl_fname);
+                           FStarC_Interactive_Ide_Types.repl_deps_stack =
+                             uu___2;
+                           FStarC_Interactive_Ide_Types.repl_curmod =
+                             (st2.FStarC_Interactive_Ide_Types.repl_curmod);
+                           FStarC_Interactive_Ide_Types.repl_env =
+                             (st2.FStarC_Interactive_Ide_Types.repl_env);
+                           FStarC_Interactive_Ide_Types.repl_stdin =
+                             (st2.FStarC_Interactive_Ide_Types.repl_stdin);
+                           FStarC_Interactive_Ide_Types.repl_names =
+                             (st2.FStarC_Interactive_Ide_Types.repl_names);
+                           FStarC_Interactive_Ide_Types.repl_buffered_input_queries
+                             =
+                             (st2.FStarC_Interactive_Ide_Types.repl_buffered_input_queries);
+                           FStarC_Interactive_Ide_Types.repl_lang =
+                             (st2.FStarC_Interactive_Ide_Types.repl_lang)
+                         } in
+                       aux uu___1 tasks2 []
+                     else FStar_Pervasives.Inr st2)
+            | (task::tasks2, prev::previous1) when
+                let uu___ = update_task_timestamps task in
+                (FStar_Pervasives_Native.fst
+                   (FStar_Pervasives_Native.snd prev))
+                  = uu___
+                -> aux st1 tasks2 previous1
+            | (tasks2, previous1) ->
+                let uu___ = revert_many st1 previous1 in aux uu___ tasks2 [] in
       aux st tasks
         (FStarC_List.rev st.FStarC_Interactive_Ide_Types.repl_deps_stack)
 let (ld_deps :
@@ -844,11 +851,11 @@ let (ld_deps :
     with
     | FStarC_Errors.Error (e, msg, _rng, ctx) ->
         ((let uu___2 = FStarC_Errors_Msg.rendermsg msg in
-          FStarC_Util.print1_error "[E] Failed to load deps. %s" uu___2);
+          FStarC_Format.print1_error "[E] Failed to load deps. %s" uu___2);
          FStar_Pervasives.Inr st)
     | exn ->
         ((let uu___2 = FStarC_Util.message_of_exn exn in
-          FStarC_Util.print1_error "[E] Failed to load deps. Message: %s"
+          FStarC_Format.print1_error "[E] Failed to load deps. Message: %s"
             uu___2);
          FStar_Pervasives.Inr st)
 let (add_module_completions :

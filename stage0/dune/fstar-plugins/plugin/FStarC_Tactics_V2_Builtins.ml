@@ -57,6 +57,7 @@ let from_tac_5 s (t: 'a -> 'b -> 'c -> 'd -> 'e -> 'r TM.tac): 'a  -> 'b -> 'c -
 (* Pointing to the internal primitives *)
 let fixup_range             = from_tac_1 "B.fixup_range" B.fixup_range
 let compress                = from_tac_1 "B.compress" B.compress
+let compress_univ           = from_tac_1 "B.compress_univ" B.compress_univ
 let set_goals               = from_tac_1 "TM.set_goals" TM.set_goals
 let set_smt_goals           = from_tac_1 "TM.set_smt_goals" TM.set_smt_goals
 let top_env                 = from_tac_1 "B.top_env" B.top_env
@@ -119,7 +120,6 @@ let comp_to_string          = from_tac_1 "B.comp_to_string" B.comp_to_string
 let term_to_doc             = from_tac_1 "B.term_to_doc" B.term_to_doc
 let comp_to_doc             = from_tac_1 "B.comp_to_doc" B.comp_to_doc
 let range_to_string         = from_tac_1 "B.range_to_string" B.range_to_string
-let term_eq_old             = from_tac_2 "B.term_eq_old" B.term_eq_old
 
 let with_compat_pre_core (n:Prims.int) (f: unit -> 'a __tac) : 'a __tac =
   from_tac_2 "B.with_compat_pre_core" B.with_compat_pre_core n (to_tac_0 (f ()))
@@ -136,6 +136,9 @@ let ext_getns               = from_tac_1 "B.ext_getns" B.ext_getns
 let alloc x                 = from_tac_1 "B.alloc" B.alloc x
 let read  r                 = from_tac_1 "B.read" B.read r
 let write r x               = from_tac_2 "B.write" B.write r x
+
+let splice_quals x         = from_tac_1 "B.splice_quals" B.splice_quals x
+let splice_attrs x         = from_tac_1 "B.splice_attrs" B.splice_attrs x
 
 type ('env, 't) prop_validity_token = unit
 type ('env, 'sc, 't, 'pats, 'bnds) match_complete_token = unit
@@ -177,3 +180,6 @@ let call_subtac g (t : unit -> unit __tac) u ty =
   from_tac_4 "B.call_subtac" B.call_subtac g t u ty
 
 let call_subtac_tm               = from_tac_4 "B.call_subtac_tm" B.call_subtac_tm
+
+let stats_record (s : string) (f : unit -> 'c __tac) : 'c __tac =
+  from_tac_2 "B.stats_record" (B.stats_record () ()) s (to_tac_0 (f ()))

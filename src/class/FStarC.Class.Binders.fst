@@ -3,7 +3,6 @@ module FStarC.Class.Binders
 open FStarC
 open FStarC.Effect
 open FStarC.Range
-open FStarC.Util
 open FStarC.FlatSet
 open FStarC.Syntax.Syntax
 module F = FStarC.Syntax.Free

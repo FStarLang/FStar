@@ -1,6 +1,5 @@
->> Got issues: [
-* Error 65 at WarnError.fst(4,0-4,29):
+* Info at WarnError.fst(4,0-4,29):
+  - Expected failure:
   - Failed to process pragma: Invalid --warn_error setting: Parsing of
     warn_error string failed
 
->>]

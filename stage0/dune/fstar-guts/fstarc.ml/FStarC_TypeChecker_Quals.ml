@@ -6,344 +6,359 @@ let pairwise_compat :
   =
   fun compat ->
     fun xs ->
-      let rec go prev next =
-        match next with
-        | [] -> FStar_Pervasives_Native.None
-        | x::xs1 ->
-            let rec go2 ys k =
-              match ys with
-              | [] -> k ()
-              | y::ys1 ->
-                  let uu___ =
-                    let uu___1 = compat x y in Prims.op_Negation uu___1 in
-                  if uu___
-                  then FStar_Pervasives_Native.Some (x, y)
-                  else go2 ys1 k in
-            go2 prev
-              (fun uu___ -> go2 xs1 (fun uu___1 -> go (x :: prev) xs1)) in
+      let rec go prev =
+        fun next ->
+          match next with
+          | [] -> FStar_Pervasives_Native.None
+          | x::xs1 ->
+              let rec go2 ys =
+                fun k ->
+                  match ys with
+                  | [] -> k ()
+                  | y::ys1 ->
+                      let uu___ =
+                        let uu___1 = compat x y in Prims.op_Negation uu___1 in
+                      if uu___
+                      then FStar_Pervasives_Native.Some (x, y)
+                      else go2 ys1 k in
+              go2 prev
+                (fun uu___ -> go2 xs1 (fun uu___1 -> go (x :: prev) xs1)) in
       go [] xs
 let (check_sigelt_quals_pre :
   FStarC_TypeChecker_Env.env -> FStarC_Syntax_Syntax.sigelt -> unit) =
   fun env ->
     fun se ->
-      let visibility uu___ =
-        match uu___ with
-        | FStarC_Syntax_Syntax.Private -> true
-        | uu___1 -> false in
-      let reducibility uu___ =
-        match uu___ with
-        | FStarC_Syntax_Syntax.Irreducible -> true
-        | FStarC_Syntax_Syntax.Unfold_for_unification_and_vcgen -> true
-        | FStarC_Syntax_Syntax.Visible_default -> true
-        | FStarC_Syntax_Syntax.Inline_for_extraction -> true
-        | uu___1 -> false in
-      let assumption uu___ =
-        match uu___ with
-        | FStarC_Syntax_Syntax.Assumption -> true
-        | FStarC_Syntax_Syntax.New -> true
-        | uu___1 -> false in
-      let reification uu___ =
-        match uu___ with
-        | FStarC_Syntax_Syntax.Reifiable -> true
-        | FStarC_Syntax_Syntax.Reflectable uu___1 -> true
-        | uu___1 -> false in
-      let inferred uu___ =
-        match uu___ with
-        | FStarC_Syntax_Syntax.Discriminator uu___1 -> true
-        | FStarC_Syntax_Syntax.Projector uu___1 -> true
-        | FStarC_Syntax_Syntax.RecordType uu___1 -> true
-        | FStarC_Syntax_Syntax.RecordConstructor uu___1 -> true
-        | FStarC_Syntax_Syntax.ExceptionConstructor -> true
-        | FStarC_Syntax_Syntax.HasMaskedEffect -> true
-        | FStarC_Syntax_Syntax.Effect -> true
-        | uu___1 -> false in
-      let has_eq uu___ =
-        match uu___ with
-        | FStarC_Syntax_Syntax.Noeq -> true
-        | FStarC_Syntax_Syntax.Unopteq -> true
-        | uu___1 -> false in
-      let qual_compat q1 q2 =
-        match q1 with
-        | FStarC_Syntax_Syntax.Assumption ->
-            (((((q2 = FStarC_Syntax_Syntax.Logic) || (inferred q2)) ||
-                 (visibility q2))
-                || (assumption q2))
-               ||
-               (env.FStarC_TypeChecker_Env.is_iface &&
-                  (q2 = FStarC_Syntax_Syntax.Inline_for_extraction)))
-              || (q2 = FStarC_Syntax_Syntax.NoExtract)
-        | FStarC_Syntax_Syntax.New ->
-            ((inferred q2) || (visibility q2)) || (assumption q2)
-        | FStarC_Syntax_Syntax.Inline_for_extraction ->
-            (((((((q2 = FStarC_Syntax_Syntax.Logic) || (visibility q2)) ||
-                   (reducibility q2))
-                  || (reification q2))
-                 || (inferred q2))
-                || (has_eq q2))
-               ||
-               (env.FStarC_TypeChecker_Env.is_iface &&
-                  (q2 = FStarC_Syntax_Syntax.Assumption)))
-              || (q2 = FStarC_Syntax_Syntax.NoExtract)
-        | FStarC_Syntax_Syntax.Unfold_for_unification_and_vcgen ->
-            ((((((q2 = FStarC_Syntax_Syntax.Logic) ||
-                   (q2 = FStarC_Syntax_Syntax.Inline_for_extraction))
-                  || (q2 = FStarC_Syntax_Syntax.NoExtract))
-                 || (has_eq q2))
-                || (inferred q2))
-               || (visibility q2))
-              || (reification q2)
-        | FStarC_Syntax_Syntax.Visible_default ->
-            ((((((q2 = FStarC_Syntax_Syntax.Logic) ||
-                   (q2 = FStarC_Syntax_Syntax.Inline_for_extraction))
-                  || (q2 = FStarC_Syntax_Syntax.NoExtract))
-                 || (has_eq q2))
-                || (inferred q2))
-               || (visibility q2))
-              || (reification q2)
-        | FStarC_Syntax_Syntax.Irreducible ->
-            ((((((q2 = FStarC_Syntax_Syntax.Logic) ||
-                   (q2 = FStarC_Syntax_Syntax.Inline_for_extraction))
-                  || (q2 = FStarC_Syntax_Syntax.NoExtract))
-                 || (has_eq q2))
-                || (inferred q2))
-               || (visibility q2))
-              || (reification q2)
-        | FStarC_Syntax_Syntax.Noeq ->
-            ((((((q2 = FStarC_Syntax_Syntax.Logic) ||
-                   (q2 = FStarC_Syntax_Syntax.Inline_for_extraction))
-                  || (q2 = FStarC_Syntax_Syntax.NoExtract))
-                 || (has_eq q2))
-                || (inferred q2))
-               || (visibility q2))
-              || (reification q2)
-        | FStarC_Syntax_Syntax.Unopteq ->
-            ((((((q2 = FStarC_Syntax_Syntax.Logic) ||
-                   (q2 = FStarC_Syntax_Syntax.Inline_for_extraction))
-                  || (q2 = FStarC_Syntax_Syntax.NoExtract))
-                 || (has_eq q2))
-                || (inferred q2))
-               || (visibility q2))
-              || (reification q2)
-        | FStarC_Syntax_Syntax.TotalEffect ->
-            ((inferred q2) || (visibility q2)) || (reification q2)
-        | FStarC_Syntax_Syntax.Logic ->
-            (((q2 = FStarC_Syntax_Syntax.Assumption) || (inferred q2)) ||
-               (visibility q2))
-              || (reducibility q2)
-        | FStarC_Syntax_Syntax.Reifiable ->
-            ((((reification q2) || (inferred q2)) || (visibility q2)) ||
-               (q2 = FStarC_Syntax_Syntax.TotalEffect))
-              || (q2 = FStarC_Syntax_Syntax.Visible_default)
-        | FStarC_Syntax_Syntax.Reflectable uu___ ->
-            ((((reification q2) || (inferred q2)) || (visibility q2)) ||
-               (q2 = FStarC_Syntax_Syntax.TotalEffect))
-              || (q2 = FStarC_Syntax_Syntax.Visible_default)
-        | FStarC_Syntax_Syntax.Private -> true
-        | uu___ -> true in
-      let check_no_subtyping_attribute se1 =
-        let uu___ =
-          (FStarC_Syntax_Util.has_attribute se1.FStarC_Syntax_Syntax.sigattrs
-             FStarC_Parser_Const.no_subtping_attr_lid)
-            &&
-            (match se1.FStarC_Syntax_Syntax.sigel with
-             | FStarC_Syntax_Syntax.Sig_let uu___1 -> false
-             | uu___1 -> true) in
-        if uu___
-        then
-          let uu___1 =
-            let uu___2 =
-              FStarC_Errors_Msg.text
-                "Illegal attribute: the `no_subtyping` attribute is allowed only on let-bindings." in
-            [uu___2] in
-          FStarC_Errors.raise_error FStarC_Syntax_Syntax.has_range_sigelt se1
-            FStarC_Errors_Codes.Fatal_InconsistentQualifierAnnotation ()
-            (Obj.magic FStarC_Errors_Msg.is_error_message_list_doc)
-            (Obj.magic uu___1)
-        else () in
-      check_no_subtyping_attribute se;
-      (let quals =
-         let uu___1 = FStarC_Syntax_Util.quals_of_sigelt se in
-         FStarC_List.filter
-           (fun x -> Prims.op_Negation (x = FStarC_Syntax_Syntax.Logic))
-           uu___1 in
-       let uu___1 =
-         let uu___2 =
-           FStarC_Util.for_some
-             (fun uu___3 ->
-                match uu___3 with
-                | FStarC_Syntax_Syntax.OnlyName -> true
-                | uu___4 -> false) quals in
-         Prims.op_Negation uu___2 in
-       if uu___1
-       then
-         let r = FStarC_Syntax_Util.range_of_sigelt se in
-         let no_dup_quals =
-           FStarC_Util.remove_dups (fun x -> fun y -> x = y) quals in
-         let err msg =
-           let uu___2 =
-             let uu___3 =
-               let uu___4 =
-                 let uu___5 =
-                   FStarC_Errors_Msg.text
-                     "Invalid qualifiers for declaration" in
-                 let uu___6 =
-                   let uu___7 =
-                     let uu___8 =
-                       FStarC_Syntax_Print.sigelt_to_string_short se in
-                     FStarC_Pprint.doc_of_string uu___8 in
-                   FStarC_Pprint.bquotes uu___7 in
-                 FStarC_Pprint.prefix (Prims.of_int (2)) Prims.int_one uu___5
-                   uu___6 in
-               [uu___4] in
-             FStar_List_Tot_Base.append uu___3 msg in
-           FStarC_Errors.raise_error FStarC_Class_HasRange.hasRange_range r
-             FStarC_Errors_Codes.Fatal_QulifierListNotPermitted ()
-             (Obj.magic FStarC_Errors_Msg.is_error_message_list_doc)
-             (Obj.magic uu___2) in
-         (if (FStarC_List.length quals) <> (FStarC_List.length no_dup_quals)
+      if
+        FStarC_Syntax_Syntax.uu___is_Sig_splice se.FStarC_Syntax_Syntax.sigel
+      then ()
+      else
+        (let visibility uu___1 =
+           match uu___1 with
+           | FStarC_Syntax_Syntax.Private -> true
+           | uu___2 -> false in
+         let reducibility uu___1 =
+           match uu___1 with
+           | FStarC_Syntax_Syntax.Irreducible -> true
+           | FStarC_Syntax_Syntax.Unfold_for_unification_and_vcgen -> true
+           | FStarC_Syntax_Syntax.Visible_default -> true
+           | FStarC_Syntax_Syntax.Inline_for_extraction -> true
+           | uu___2 -> false in
+         let assumption uu___1 =
+           match uu___1 with
+           | FStarC_Syntax_Syntax.Assumption -> true
+           | FStarC_Syntax_Syntax.New -> true
+           | uu___2 -> false in
+         let reification uu___1 =
+           match uu___1 with
+           | FStarC_Syntax_Syntax.Reifiable -> true
+           | FStarC_Syntax_Syntax.Reflectable uu___2 -> true
+           | uu___2 -> false in
+         let inferred uu___1 =
+           match uu___1 with
+           | FStarC_Syntax_Syntax.Discriminator uu___2 -> true
+           | FStarC_Syntax_Syntax.Projector uu___2 -> true
+           | FStarC_Syntax_Syntax.RecordType uu___2 -> true
+           | FStarC_Syntax_Syntax.RecordConstructor uu___2 -> true
+           | FStarC_Syntax_Syntax.ExceptionConstructor -> true
+           | FStarC_Syntax_Syntax.HasMaskedEffect -> true
+           | FStarC_Syntax_Syntax.Effect -> true
+           | uu___2 -> false in
+         let has_eq uu___1 =
+           match uu___1 with
+           | FStarC_Syntax_Syntax.Noeq -> true
+           | FStarC_Syntax_Syntax.Unopteq -> true
+           | uu___2 -> false in
+         let qual_compat q1 =
+           fun q2 ->
+             match q1 with
+             | FStarC_Syntax_Syntax.Assumption ->
+                 (((((q2 = FStarC_Syntax_Syntax.Logic) || (inferred q2)) ||
+                      (visibility q2))
+                     || (assumption q2))
+                    ||
+                    (env.FStarC_TypeChecker_Env.is_iface &&
+                       (q2 = FStarC_Syntax_Syntax.Inline_for_extraction)))
+                   || (q2 = FStarC_Syntax_Syntax.NoExtract)
+             | FStarC_Syntax_Syntax.New ->
+                 ((((inferred q2) || (visibility q2)) || (assumption q2)) ||
+                    (q2 = FStarC_Syntax_Syntax.Inline_for_extraction))
+                   || (q2 = FStarC_Syntax_Syntax.NoExtract)
+             | FStarC_Syntax_Syntax.Inline_for_extraction ->
+                 ((((((((q2 = FStarC_Syntax_Syntax.Logic) || (visibility q2))
+                         || (reducibility q2))
+                        || (reification q2))
+                       || (inferred q2))
+                      || (has_eq q2))
+                     ||
+                     (env.FStarC_TypeChecker_Env.is_iface &&
+                        (q2 = FStarC_Syntax_Syntax.Assumption)))
+                    || (q2 = FStarC_Syntax_Syntax.NoExtract))
+                   || (q2 = FStarC_Syntax_Syntax.New)
+             | FStarC_Syntax_Syntax.Unfold_for_unification_and_vcgen ->
+                 ((((((q2 = FStarC_Syntax_Syntax.Logic) ||
+                        (q2 = FStarC_Syntax_Syntax.Inline_for_extraction))
+                       || (q2 = FStarC_Syntax_Syntax.NoExtract))
+                      || (has_eq q2))
+                     || (inferred q2))
+                    || (visibility q2))
+                   || (reification q2)
+             | FStarC_Syntax_Syntax.Visible_default ->
+                 ((((((q2 = FStarC_Syntax_Syntax.Logic) ||
+                        (q2 = FStarC_Syntax_Syntax.Inline_for_extraction))
+                       || (q2 = FStarC_Syntax_Syntax.NoExtract))
+                      || (has_eq q2))
+                     || (inferred q2))
+                    || (visibility q2))
+                   || (reification q2)
+             | FStarC_Syntax_Syntax.Irreducible ->
+                 ((((((q2 = FStarC_Syntax_Syntax.Logic) ||
+                        (q2 = FStarC_Syntax_Syntax.Inline_for_extraction))
+                       || (q2 = FStarC_Syntax_Syntax.NoExtract))
+                      || (has_eq q2))
+                     || (inferred q2))
+                    || (visibility q2))
+                   || (reification q2)
+             | FStarC_Syntax_Syntax.Noeq ->
+                 ((((((q2 = FStarC_Syntax_Syntax.Logic) ||
+                        (q2 = FStarC_Syntax_Syntax.Inline_for_extraction))
+                       || (q2 = FStarC_Syntax_Syntax.NoExtract))
+                      || (has_eq q2))
+                     || (inferred q2))
+                    || (visibility q2))
+                   || (reification q2)
+             | FStarC_Syntax_Syntax.Unopteq ->
+                 ((((((q2 = FStarC_Syntax_Syntax.Logic) ||
+                        (q2 = FStarC_Syntax_Syntax.Inline_for_extraction))
+                       || (q2 = FStarC_Syntax_Syntax.NoExtract))
+                      || (has_eq q2))
+                     || (inferred q2))
+                    || (visibility q2))
+                   || (reification q2)
+             | FStarC_Syntax_Syntax.TotalEffect ->
+                 ((inferred q2) || (visibility q2)) || (reification q2)
+             | FStarC_Syntax_Syntax.Logic ->
+                 (((q2 = FStarC_Syntax_Syntax.Assumption) || (inferred q2))
+                    || (visibility q2))
+                   || (reducibility q2)
+             | FStarC_Syntax_Syntax.Reifiable ->
+                 ((((reification q2) || (inferred q2)) || (visibility q2)) ||
+                    (q2 = FStarC_Syntax_Syntax.TotalEffect))
+                   || (q2 = FStarC_Syntax_Syntax.Visible_default)
+             | FStarC_Syntax_Syntax.Reflectable uu___1 ->
+                 ((((reification q2) || (inferred q2)) || (visibility q2)) ||
+                    (q2 = FStarC_Syntax_Syntax.TotalEffect))
+                   || (q2 = FStarC_Syntax_Syntax.Visible_default)
+             | FStarC_Syntax_Syntax.Private -> true
+             | uu___1 -> true in
+         let check_no_subtyping_attribute se1 =
+           let uu___1 =
+             (FStarC_Syntax_Util.has_attribute
+                se1.FStarC_Syntax_Syntax.sigattrs
+                FStarC_Parser_Const.no_subtping_attr_lid)
+               &&
+               (match se1.FStarC_Syntax_Syntax.sigel with
+                | FStarC_Syntax_Syntax.Sig_let uu___2 -> false
+                | uu___2 -> true) in
+           if uu___1
+           then
+             let uu___2 =
+               let uu___3 =
+                 FStarC_Errors_Msg.text
+                   "Illegal attribute: the `no_subtyping` attribute is allowed only on let-bindings." in
+               [uu___3] in
+             FStarC_Errors.raise_error FStarC_Syntax_Syntax.has_range_sigelt
+               se1 FStarC_Errors_Codes.Fatal_InconsistentQualifierAnnotation
+               () (Obj.magic FStarC_Errors_Msg.is_error_message_list_doc)
+               (Obj.magic uu___2)
+           else () in
+         check_no_subtyping_attribute se;
+         (let quals =
+            let uu___2 = FStarC_Syntax_Util.quals_of_sigelt se in
+            FStarC_List.filter
+              (fun x -> Prims.op_Negation (x = FStarC_Syntax_Syntax.Logic))
+              uu___2 in
+          let uu___2 =
+            let uu___3 =
+              FStarC_Util.for_some
+                (fun uu___4 ->
+                   match uu___4 with
+                   | FStarC_Syntax_Syntax.OnlyName -> true
+                   | uu___5 -> false) quals in
+            Prims.op_Negation uu___3 in
+          if uu___2
           then
-            (let uu___3 =
-               let uu___4 = FStarC_Errors_Msg.text "Duplicate qualifiers." in
-               [uu___4] in
-             err uu___3)
-          else ();
-          (let uu___4 = pairwise_compat qual_compat quals in
-           match uu___4 with
-           | FStar_Pervasives_Native.Some (q, q') ->
-               let uu___5 =
-                 let uu___6 =
-                   let uu___7 = FStarC_Errors_Msg.text "Qualifiers" in
-                   let uu___8 =
-                     let uu___9 =
-                       let uu___10 =
-                         FStarC_Class_PP.pp
-                           FStarC_Syntax_Print.pretty_qualifier q in
-                       FStarC_Pprint.bquotes uu___10 in
-                     let uu___10 =
-                       let uu___11 = FStarC_Errors_Msg.text "and" in
-                       let uu___12 =
-                         let uu___13 =
-                           let uu___14 =
-                             FStarC_Class_PP.pp
-                               FStarC_Syntax_Print.pretty_qualifier q' in
-                           FStarC_Pprint.bquotes uu___14 in
-                         let uu___14 =
-                           FStarC_Errors_Msg.text "are not compatible." in
-                         FStarC_Pprint.op_Hat_Slash_Hat uu___13 uu___14 in
-                       FStarC_Pprint.op_Hat_Slash_Hat uu___11 uu___12 in
-                     FStarC_Pprint.op_Hat_Slash_Hat uu___9 uu___10 in
-                   FStarC_Pprint.op_Hat_Slash_Hat uu___7 uu___8 in
-                 [uu___6] in
-               err uu___5
-           | FStar_Pervasives_Native.None -> ());
-          (match se.FStarC_Syntax_Syntax.sigel with
-           | FStarC_Syntax_Syntax.Sig_let
-               { FStarC_Syntax_Syntax.lbs1 = (is_rec, uu___4);
-                 FStarC_Syntax_Syntax.lids1 = uu___5;_}
-               ->
-               (if
-                  is_rec &&
-                    (FStarC_List.contains
-                       FStarC_Syntax_Syntax.Unfold_for_unification_and_vcgen
-                       quals)
-                then
-                  (let uu___7 =
-                     let uu___8 =
-                       FStarC_Errors_Msg.text
-                         "Recursive definitions cannot be marked inline." in
-                     [uu___8] in
-                   err uu___7)
-                else ();
-                (let uu___8 =
-                   FStarC_Util.for_some (fun x -> assumption x) quals in
-                 if uu___8
-                 then
-                   let uu___9 =
-                     let uu___10 =
-                       FStarC_Errors_Msg.text
-                         "Definitions cannot be marked `assume`." in
-                     [uu___10] in
-                   err uu___9
-                 else ());
-                (let uu___9 = FStarC_Util.for_some (fun x -> has_eq x) quals in
-                 if uu___9
-                 then
-                   let uu___10 =
-                     let uu___11 =
-                       FStarC_Errors_Msg.text
-                         "Definitions cannot be marked with equality qualifiers." in
-                     [uu___11] in
-                   err uu___10
-                 else ()))
-           | FStarC_Syntax_Syntax.Sig_bundle uu___4 ->
-               ((let uu___6 =
-                   let uu___7 =
-                     FStarC_Util.for_all
-                       (fun x ->
-                          ((((x = FStarC_Syntax_Syntax.Inline_for_extraction)
-                               || (x = FStarC_Syntax_Syntax.NoExtract))
-                              || (inferred x))
-                             || (visibility x))
-                            || (has_eq x)) quals in
-                   Prims.op_Negation uu___7 in
-                 if uu___6 then err [] else ());
-                (let uu___6 =
-                   (FStarC_List.existsb
-                      (fun uu___7 ->
-                         match uu___7 with
-                         | FStarC_Syntax_Syntax.Unopteq -> true
-                         | uu___8 -> false) quals)
-                     &&
-                     (FStarC_Syntax_Util.has_attribute
-                        se.FStarC_Syntax_Syntax.sigattrs
-                        FStarC_Parser_Const.erasable_attr) in
-                 if uu___6
-                 then
-                   let uu___7 =
-                     let uu___8 =
-                       FStarC_Errors_Msg.text
-                         "The `unopteq` qualifier is not allowed on erasable inductives since they don't have decidable equality." in
-                     [uu___8] in
-                   err uu___7
-                 else ()))
-           | FStarC_Syntax_Syntax.Sig_declare_typ uu___4 ->
-               let uu___5 = FStarC_Util.for_some has_eq quals in
-               if uu___5 then err [] else ()
-           | FStarC_Syntax_Syntax.Sig_assume uu___4 ->
-               let uu___5 =
-                 let uu___6 =
-                   FStarC_Util.for_all
-                     (fun x ->
-                        ((visibility x) ||
-                           (x = FStarC_Syntax_Syntax.Assumption))
-                          || (x = FStarC_Syntax_Syntax.InternalAssumption))
-                     quals in
-                 Prims.op_Negation uu___6 in
-               if uu___5 then err [] else ()
-           | FStarC_Syntax_Syntax.Sig_new_effect uu___4 ->
-               let uu___5 =
-                 let uu___6 =
-                   FStarC_Util.for_all
-                     (fun x ->
-                        (((x = FStarC_Syntax_Syntax.TotalEffect) ||
-                            (inferred x))
-                           || (visibility x))
-                          || (reification x)) quals in
-                 Prims.op_Negation uu___6 in
-               if uu___5 then err [] else ()
-           | FStarC_Syntax_Syntax.Sig_effect_abbrev uu___4 ->
-               let uu___5 =
-                 let uu___6 =
-                   FStarC_Util.for_all
-                     (fun x -> (inferred x) || (visibility x)) quals in
-                 Prims.op_Negation uu___6 in
-               if uu___5 then err [] else ()
-           | uu___4 -> ()))
-       else ())
+            let r = FStarC_Syntax_Util.range_of_sigelt se in
+            let no_dup_quals =
+              FStarC_Util.remove_dups (fun x -> fun y -> x = y) quals in
+            let err msg =
+              let uu___3 =
+                let uu___4 =
+                  let uu___5 =
+                    let uu___6 =
+                      FStarC_Errors_Msg.text
+                        "Invalid qualifiers for declaration" in
+                    let uu___7 =
+                      let uu___8 =
+                        let uu___9 =
+                          FStarC_Syntax_Print.sigelt_to_string_short se in
+                        FStar_Pprint.doc_of_string uu___9 in
+                      FStar_Pprint.bquotes uu___8 in
+                    FStar_Pprint.prefix (Prims.of_int (2)) Prims.int_one
+                      uu___6 uu___7 in
+                  [uu___5] in
+                FStar_List_Tot_Base.op_At uu___4 msg in
+              FStarC_Errors.raise_error FStarC_Class_HasRange.hasRange_range
+                r FStarC_Errors_Codes.Fatal_QulifierListNotPermitted ()
+                (Obj.magic FStarC_Errors_Msg.is_error_message_list_doc)
+                (Obj.magic uu___3) in
+            (if
+               (FStarC_List.length quals) <>
+                 (FStarC_List.length no_dup_quals)
+             then
+               (let uu___4 =
+                  let uu___5 = FStarC_Errors_Msg.text "Duplicate qualifiers." in
+                  [uu___5] in
+                err uu___4)
+             else ();
+             (let uu___5 = pairwise_compat qual_compat quals in
+              match uu___5 with
+              | FStar_Pervasives_Native.Some (q, q') ->
+                  let uu___6 =
+                    let uu___7 =
+                      let uu___8 = FStarC_Errors_Msg.text "Qualifiers" in
+                      let uu___9 =
+                        let uu___10 =
+                          let uu___11 =
+                            FStarC_Class_PP.pp
+                              FStarC_Syntax_Print.pretty_qualifier q in
+                          FStar_Pprint.bquotes uu___11 in
+                        let uu___11 =
+                          let uu___12 = FStarC_Errors_Msg.text "and" in
+                          let uu___13 =
+                            let uu___14 =
+                              let uu___15 =
+                                FStarC_Class_PP.pp
+                                  FStarC_Syntax_Print.pretty_qualifier q' in
+                              FStar_Pprint.bquotes uu___15 in
+                            let uu___15 =
+                              FStarC_Errors_Msg.text "are not compatible." in
+                            FStar_Pprint.op_Hat_Slash_Hat uu___14 uu___15 in
+                          FStar_Pprint.op_Hat_Slash_Hat uu___12 uu___13 in
+                        FStar_Pprint.op_Hat_Slash_Hat uu___10 uu___11 in
+                      FStar_Pprint.op_Hat_Slash_Hat uu___8 uu___9 in
+                    [uu___7] in
+                  err uu___6
+              | FStar_Pervasives_Native.None -> ());
+             (match se.FStarC_Syntax_Syntax.sigel with
+              | FStarC_Syntax_Syntax.Sig_let
+                  { FStarC_Syntax_Syntax.lbs1 = (is_rec, uu___5);
+                    FStarC_Syntax_Syntax.lids1 = uu___6;_}
+                  ->
+                  (if
+                     is_rec &&
+                       (FStarC_List.contains
+                          FStarC_Syntax_Syntax.Unfold_for_unification_and_vcgen
+                          quals)
+                   then
+                     (let uu___8 =
+                        let uu___9 =
+                          FStarC_Errors_Msg.text
+                            "Recursive definitions cannot be marked inline." in
+                        [uu___9] in
+                      err uu___8)
+                   else ();
+                   (let uu___9 =
+                      FStarC_Util.for_some (fun x -> assumption x) quals in
+                    if uu___9
+                    then
+                      let uu___10 =
+                        let uu___11 =
+                          FStarC_Errors_Msg.text
+                            "Definitions cannot be marked `assume`." in
+                        [uu___11] in
+                      err uu___10
+                    else ());
+                   (let uu___10 =
+                      FStarC_Util.for_some (fun x -> has_eq x) quals in
+                    if uu___10
+                    then
+                      let uu___11 =
+                        let uu___12 =
+                          FStarC_Errors_Msg.text
+                            "Definitions cannot be marked with equality qualifiers." in
+                        [uu___12] in
+                      err uu___11
+                    else ()))
+              | FStarC_Syntax_Syntax.Sig_bundle uu___5 ->
+                  ((let uu___7 =
+                      let uu___8 =
+                        FStarC_Util.for_all
+                          (fun x ->
+                             ((((x =
+                                   FStarC_Syntax_Syntax.Inline_for_extraction)
+                                  || (x = FStarC_Syntax_Syntax.NoExtract))
+                                 || (inferred x))
+                                || (visibility x))
+                               || (has_eq x)) quals in
+                      Prims.op_Negation uu___8 in
+                    if uu___7 then err [] else ());
+                   (let uu___7 =
+                      (FStarC_List.existsb
+                         (fun uu___8 ->
+                            match uu___8 with
+                            | FStarC_Syntax_Syntax.Unopteq -> true
+                            | uu___9 -> false) quals)
+                        &&
+                        (FStarC_Syntax_Util.has_attribute
+                           se.FStarC_Syntax_Syntax.sigattrs
+                           FStarC_Parser_Const.erasable_attr) in
+                    if uu___7
+                    then
+                      let uu___8 =
+                        let uu___9 =
+                          FStarC_Errors_Msg.text
+                            "The `unopteq` qualifier is not allowed on erasable inductives since they don't have decidable equality." in
+                        [uu___9] in
+                      err uu___8
+                    else ()))
+              | FStarC_Syntax_Syntax.Sig_declare_typ uu___5 ->
+                  let uu___6 = FStarC_Util.for_some has_eq quals in
+                  if uu___6 then err [] else ()
+              | FStarC_Syntax_Syntax.Sig_assume uu___5 ->
+                  let uu___6 =
+                    let uu___7 =
+                      FStarC_Util.for_all
+                        (fun x ->
+                           ((visibility x) ||
+                              (x = FStarC_Syntax_Syntax.Assumption))
+                             || (x = FStarC_Syntax_Syntax.InternalAssumption))
+                        quals in
+                    Prims.op_Negation uu___7 in
+                  if uu___6 then err [] else ()
+              | FStarC_Syntax_Syntax.Sig_new_effect uu___5 ->
+                  let uu___6 =
+                    let uu___7 =
+                      FStarC_Util.for_all
+                        (fun x ->
+                           (((x = FStarC_Syntax_Syntax.TotalEffect) ||
+                               (inferred x))
+                              || (visibility x))
+                             || (reification x)) quals in
+                    Prims.op_Negation uu___7 in
+                  if uu___6 then err [] else ()
+              | FStarC_Syntax_Syntax.Sig_effect_abbrev uu___5 ->
+                  let uu___6 =
+                    let uu___7 =
+                      FStarC_Util.for_all
+                        (fun x -> (inferred x) || (visibility x)) quals in
+                    Prims.op_Negation uu___7 in
+                  if uu___6 then err [] else ()
+              | uu___5 -> ()))
+          else ()))
 let (check_erasable :
   FStarC_TypeChecker_Env.env ->
     FStarC_Syntax_Syntax.qualifier Prims.list ->
-      FStarC_Range_Type.range -> FStarC_Syntax_Syntax.sigelt -> unit)
+      FStarC_Range_Type.t -> FStarC_Syntax_Syntax.sigelt -> unit)
   =
   fun env ->
     fun quals ->
@@ -354,14 +369,14 @@ let (check_erasable :
             FStarC_Util.for_some
               (fun l ->
                  let uu___ = FStarC_TypeChecker_Env.try_lookup_val_decl env l in
-                 FStarC_Option.isSome uu___) lids in
+                 FStar_Pervasives_Native.uu___is_Some uu___) lids in
           let val_has_erasable_attr =
             FStarC_Util.for_some
               (fun l ->
                  let attrs_opt =
                    FStarC_TypeChecker_Env.lookup_attrs_of_lid env l in
-                 (FStarC_Option.isSome attrs_opt) &&
-                   (let uu___ = FStarC_Option.get attrs_opt in
+                 (FStar_Pervasives_Native.uu___is_Some attrs_opt) &&
+                   (let uu___ = FStarC_Option.must attrs_opt in
                     FStarC_Syntax_Util.has_attribute uu___
                       FStarC_Parser_Const.erasable_attr)) lids in
           let se_has_erasable_attr =
@@ -461,9 +476,8 @@ let (check_erasable :
                                 let uu___14 =
                                   FStarC_Errors_Msg.text
                                     "is considered informative." in
-                                FStarC_Pprint.op_Hat_Slash_Hat uu___13
-                                  uu___14 in
-                              FStarC_Pprint.op_Hat_Slash_Hat uu___11 uu___12 in
+                                FStar_Pprint.op_Hat_Slash_Hat uu___13 uu___14 in
+                              FStar_Pprint.op_Hat_Slash_Hat uu___11 uu___12 in
                             [uu___10] in
                           uu___8 :: uu___9 in
                         FStarC_Errors.raise_error
@@ -500,8 +514,8 @@ let (check_erasable :
                          let uu___15 =
                            FStarC_Errors_Msg.text
                              "is marked erasable but only total effects are allowed to be erasable." in
-                         FStarC_Pprint.op_Hat_Slash_Hat uu___14 uu___15 in
-                       FStarC_Pprint.op_Hat_Slash_Hat uu___12 uu___13 in
+                         FStar_Pprint.op_Hat_Slash_Hat uu___14 uu___15 in
+                       FStar_Pprint.op_Hat_Slash_Hat uu___12 uu___13 in
                      [uu___11] in
                    FStarC_Errors.raise_error
                      FStarC_Class_HasRange.hasRange_range r
@@ -544,12 +558,13 @@ let (check_must_erase_attribute :
                   FStarC_List.iter
                     (fun lb ->
                        let lbname =
-                         FStarC_Util.right lb.FStarC_Syntax_Syntax.lbname in
+                         FStar_Pervasives.__proj__Inr__item__v
+                           lb.FStarC_Syntax_Syntax.lbname in
                        let has_iface_val =
                          let uu___3 =
                            let uu___4 =
                              FStarC_Ident.ident_of_lid
-                               (lbname.FStarC_Syntax_Syntax.fv_name).FStarC_Syntax_Syntax.v in
+                               lbname.FStarC_Syntax_Syntax.fv_name in
                            FStarC_Parser_AST.decl_is_val uu___4 in
                          FStarC_Util.for_some uu___3 iface_decls in
                        if has_iface_val
@@ -567,8 +582,8 @@ let (check_must_erase_attribute :
                                 let uu___5 =
                                   let uu___6 =
                                     FStarC_Class_Show.show
-                                      FStarC_Syntax_Print.showable_fv lbname in
-                                  FStarC_Util.format1
+                                      FStarC_Syntax_Syntax.showable_fv lbname in
+                                  FStarC_Format.fmt1
                                     "Values of type `%s` will be erased during extraction, but its interface hides this fact."
                                     uu___6 in
                                 FStarC_Errors_Msg.text uu___5 in
@@ -577,9 +592,9 @@ let (check_must_erase_attribute :
                                   let uu___7 =
                                     let uu___8 =
                                       FStarC_Class_Show.show
-                                        FStarC_Syntax_Print.showable_fv
+                                        FStarC_Syntax_Syntax.showable_fv
                                         lbname in
-                                    FStarC_Util.format1
+                                    FStarC_Format.fmt1
                                       "Add the `must_erase_for_extraction` attribute to the `val %s` declaration for this symbol in the interface"
                                       uu___8 in
                                   FStarC_Errors_Msg.text uu___7 in
@@ -599,9 +614,9 @@ let (check_must_erase_attribute :
                                    let uu___6 =
                                      let uu___7 =
                                        FStarC_Class_Show.show
-                                         FStarC_Syntax_Print.showable_fv
+                                         FStarC_Syntax_Syntax.showable_fv
                                          lbname in
-                                     FStarC_Util.format1
+                                     FStarC_Format.fmt1
                                        "Values of type `%s` cannot be erased during extraction, but the `must_erase_for_extraction` attribute claims that it can."
                                        uu___7 in
                                    FStarC_Errors_Msg.text uu___6 in
@@ -623,7 +638,7 @@ let (check_must_erase_attribute :
          | uu___2 -> ())
 let (check_typeclass_instance_attribute :
   FStarC_TypeChecker_Env.env ->
-    FStarC_Range_Type.range -> FStarC_Syntax_Syntax.sigelt -> unit)
+    FStarC_Range_Type.t -> FStarC_Syntax_Syntax.sigelt -> unit)
   =
   fun env ->
     fun rng ->
@@ -641,8 +656,10 @@ let (check_typeclass_instance_attribute :
           match uu___ with
           | (uu___1, res) ->
               ((let uu___3 =
-                  let uu___4 = FStarC_Syntax_Util.is_total_comp res in
-                  Prims.op_Negation uu___4 in
+                  (let uu___4 = FStarC_Options.ml_ish () in
+                   Prims.op_Negation uu___4) &&
+                    (let uu___4 = FStarC_Syntax_Util.is_total_comp res in
+                     Prims.op_Negation uu___4) in
                 if uu___3
                 then
                   let uu___4 =
@@ -658,7 +675,7 @@ let (check_typeclass_instance_attribute :
                             FStarC_Syntax_Util.comp_effect_name res in
                           FStarC_Class_PP.pp FStarC_Ident.pretty_lident
                             uu___10 in
-                        FStarC_Pprint.op_Hat_Hat uu___8 uu___9 in
+                        FStar_Pprint.op_Hat_Slash_Hat uu___8 uu___9 in
                       [uu___7] in
                     uu___5 :: uu___6 in
                   FStarC_Errors.log_issue
@@ -685,8 +702,8 @@ let (check_typeclass_instance_attribute :
                                   FStarC_Syntax_Print.pretty_term t in
                               let uu___13 =
                                 FStarC_Errors_Msg.text "is not a class." in
-                              FStarC_Pprint.op_Hat_Slash_Hat uu___12 uu___13 in
-                            FStarC_Pprint.op_Hat_Slash_Hat uu___10 uu___11 in
+                              FStar_Pprint.op_Hat_Slash_Hat uu___12 uu___13 in
+                            FStar_Pprint.op_Hat_Slash_Hat uu___10 uu___11 in
                           [uu___9] in
                         uu___7 :: uu___8 in
                       FStarC_Errors.log_issue
@@ -743,9 +760,9 @@ let (check_typeclass_instance_attribute :
                       let uu___7 =
                         let uu___8 =
                           FStarC_Syntax_Print.sigelt_to_string_short se in
-                        FStarC_Pprint.arbitrary_string uu___8 in
-                      FStarC_Pprint.squotes uu___7 in
-                    FStarC_Pprint.op_Hat_Slash_Hat uu___5 uu___6 in
+                        FStar_Pprint.arbitrary_string uu___8 in
+                      FStar_Pprint.squotes uu___7 in
+                    FStar_Pprint.op_Hat_Slash_Hat uu___5 uu___6 in
                   [uu___4] in
                 uu___2 :: uu___3 in
               FStarC_Errors.log_issue FStarC_Class_HasRange.hasRange_range

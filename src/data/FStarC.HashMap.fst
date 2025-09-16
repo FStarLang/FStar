@@ -5,13 +5,12 @@ module FStarC.HashMap
 open FStarC
 open FStarC.Effect
 open FStarC.Class.Hashable
-module BU = FStarC.Util
 
 let hashmap (k v : Type) : Tot Type0 =
-  BU.pimap (k & v)
+  PIMap.t (k & v)
 
 let empty (#k #v : _) : hashmap k v
-  = BU.pimap_empty ()
+  = PIMap.empty ()
 
 let add (#k #v : _)
   {| deq k |}
@@ -20,7 +19,7 @@ let add (#k #v : _)
   (value : v)
   (m : hashmap k v)
   : hashmap k v
-  = BU.pimap_add m (Hash.to_int <| hash key) (key, value)
+  = PIMap.add m (Hash.to_int <| hash key) (key, value)
 
 let remove (#k #v : _)
   {| deq k |}
@@ -28,7 +27,7 @@ let remove (#k #v : _)
   (key : k)
   (m : hashmap k v)
   : hashmap k v
-  = BU.pimap_remove m (Hash.to_int <| hash key) // coarse
+  = PIMap.remove m (Hash.to_int <| hash key) // coarse
 
 let lookup (#k #v : _)
   {| deq k |}
@@ -36,7 +35,7 @@ let lookup (#k #v : _)
   (key : k)
   (m : hashmap k v)
   : option v
-  = match BU.pimap_try_find m (Hash.to_int <| hash key) with
+  = match PIMap.try_find m (Hash.to_int <| hash key) with
     | Some (key', v) when key =? key' -> Some v
     | _ -> None
 

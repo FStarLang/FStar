@@ -61,7 +61,7 @@ let rec big_endian (b:bytes) : Tot (n:nat) (decreases (length b)) =
   else
     UInt8.v (last b) + pow2 8 * big_endian (slice b 0 (length b - 1))
 
-#reset-options "--initial_fuel 1 --max_fuel 1"
+#reset-options "--fuel 1"
 
 val little_endian_null: len:nat{len < 16} -> Lemma (little_endian (Seq.create len 0uy) == 0)
 let rec little_endian_null len =
@@ -82,7 +82,7 @@ let little_endian_singleton n =
     little_endian (slice (create 1 n) 1 1))
 
 
-#reset-options "--initial_fuel 1 --max_fuel 1 --z3rlimit 50"
+#reset-options "--fuel 1 --z3rlimit 50"
 
 val little_endian_append: w1:bytes -> w2:bytes -> Lemma
   (requires True)
@@ -168,7 +168,7 @@ let rec lemma_big_endian_is_bounded b =
     end
 
 
-#reset-options "--initial_fuel 0 --max_fuel 0"
+#reset-options "--fuel 0"
 
 val lemma_little_endian_lt_2_128: b:bytes {Seq.length b <= 16} -> Lemma
   (requires True)
@@ -200,7 +200,7 @@ let rec little_bytes len n =
     assert(Seq.equal b' (tail b));
     b
 
-#reset-options "--initial_fuel 1 --max_fuel 1 --initial_ifuel 0 --max_ifuel 0"
+#reset-options "--fuel 1 --ifuel 0"
 
 
 (* injectivity proofs for byte encodings *) 

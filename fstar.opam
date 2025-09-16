@@ -1,6 +1,6 @@
 opam-version: "2.0"
-version: "2025.06.20~dev"
-maintainer: "taramana@microsoft.com"
+version: "2025.09.04~dev"
+maintainer: "guimartinez@microsoft.com"
 authors: "Nik Swamy <nswamy@microsoft.com>,Jonathan Protzenko <protz@microsoft.com>,Tahina Ramananandro <taramana@microsoft.com>"
 homepage: "http://fstar-lang.org"
 license: "Apache-2.0"

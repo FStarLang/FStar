@@ -85,7 +85,7 @@ let (print_pruning_state : pruning_state -> Prims.string) =
                      (FStarC_Class_Show.show_list
                         (FStarC_RBSet.showable_rbset
                            FStarC_Class_Show.showable_string)) v in
-                 FStarC_Util.format2 "[%s -> %s]" k uu___1 in
+                 FStarC_Format.fmt2 "[%s -> %s]" k uu___1 in
                uu___ :: acc) [] in
     let macros =
       FStarC_PSMap.fold p.macro_freenames
@@ -97,7 +97,7 @@ let (print_pruning_state : pruning_state -> Prims.string) =
                    FStarC_Class_Show.show
                      (FStarC_Class_Show.show_list
                         FStarC_Class_Show.showable_string) v in
-                 FStarC_Util.format2 "[%s -> %s]" k uu___1 in
+                 FStarC_Format.fmt2 "[%s -> %s]" k uu___1 in
                uu___ :: acc) [] in
     let uu___ =
       let uu___1 =
@@ -106,7 +106,7 @@ let (print_pruning_state : pruning_state -> Prims.string) =
              (FStarC_Class_Show.show_tuple2 FStarC_Class_Show.showable_string
                 FStarC_Class_Show.showable_int)) t_to_a1 in
       FStarC_String.concat "\n\t" uu___1 in
-    FStarC_Util.format3
+    FStarC_Format.fmt3
       "Pruning state:\n\tTriggers to assumptions:\n\t%s\nAssumptions to triggers:\n\t%s\nMacros:\n\t%s\n"
       uu___ (FStarC_String.concat "\n\t" a_to_t)
       (FStarC_String.concat "\n\t" macros)
@@ -714,7 +714,7 @@ let (st_monad : unit st FStarC_Class_Monad.monad) =
       (fun uu___1 ->
          fun uu___ ->
            (fun a -> fun x -> fun s -> Obj.magic (x, s)) uu___1 uu___);
-    FStarC_Class_Monad.op_let_Bang =
+    FStarC_Class_Monad.bind =
       (fun uu___3 ->
          fun uu___2 ->
            fun uu___1 ->

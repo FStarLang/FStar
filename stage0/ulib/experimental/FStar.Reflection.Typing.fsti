@@ -1770,26 +1770,31 @@ type fstar_top_env = g:fstar_env {
   forall x. None? (lookup_bvar g x )
 }
 
-//
-// No universe polymorphism yet
-//
+// Note: even though the sigelt_typing judgement takes a list of universe
+// parameters, there is no way to exhibit typing judgements of terms
+// containing universe variables yet (without invoking admit).
+// TODO: expose push_univ_names/lookup_univ operations on environments, require
+// them for universe names in typing judgements, and extend
+// sigelt_has_type/dsl_tac_t with universe parameters.
 noeq
 type sigelt_typing : env -> sigelt -> Type0 =
   | ST_Let :
     g : env ->
     fv : R.fv ->
+    us: list R.univ_name ->
     ty : R.typ ->
     tm : R.term ->
     squash (typing g tm (E_Total, ty)) ->
-    sigelt_typing g (pack_sigelt (Sg_Let false [pack_lb ({ lb_fv = fv; lb_us = []; lb_typ = ty; lb_def = tm })]))
+    sigelt_typing g (pack_sigelt (Sg_Let false [pack_lb ({ lb_fv = fv; lb_us = us; lb_typ = ty; lb_def = tm })]))
 
   | ST_Let_Opaque :
     g : env ->
     fv : R.fv ->
+    us: list R.univ_name ->
     ty : R.typ ->
     (* no tm: only a proof of existence *)
     squash (exists (tm:R.term). typing g tm (E_Total, ty)) ->
-    sigelt_typing g (pack_sigelt (Sg_Let false [pack_lb ({ lb_fv = fv; lb_us = []; lb_typ = ty; lb_def = (`_) })]))
+    sigelt_typing g (pack_sigelt (Sg_Let false [pack_lb ({ lb_fv = fv; lb_us = us; lb_typ = ty; lb_def = (`_) })]))
 
 (**
  * The type of the top-level tactic that would splice-in the definitions.
@@ -1888,7 +1893,7 @@ let mk_checked_let (g:R.env) (cur_module:name) (nm:string) (tm:R.term) (ty:R.typ
   let lb = R.pack_lb ({ lb_fv = fv; lb_us = []; lb_typ = ty; lb_def = tm }) in
   let se = R.pack_sigelt (R.Sg_Let false [lb]) in
   let pf : sigelt_typing g se =
-    ST_Let g fv ty tm ()
+    ST_Let g fv [] ty tm ()
   in
   ( true, se, None )
 

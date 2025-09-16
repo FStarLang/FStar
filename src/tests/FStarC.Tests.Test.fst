@@ -21,22 +21,43 @@ open FStarC.Errors
 module BU = FStarC.Util
 module O = FStarC.Options
 module G = FStarC.Getopt
+open FStarC.Format
+open FStarC.Class.Show
 
-let main argv =
-    BU.print_string "Initializing tests...\n";
+open FStarC.Hooks (* KEEP: we need this module for its top-level effect. *)
+
+let handle_error e =
+    if FStarC.Errors.handleable e then
+      FStarC.Errors.err_exn e
+    else begin
+      Format.print1_error "Unexpected error: %s\n" (BU.message_of_exn e);
+      if Options.trace_error() then
+        print1_error "Trace:\n%s\n" (BU.trace_of_exn e)
+      else
+        print_error "Please file a bug report, ideally with a minimized version of the source program that triggered the error.\n"
+    end;
+    FStarC.Errors.report_all () |> ignore;
+    ()
+
+let main () =
+    Format.print_string "Initializing tests...\n";
     try
         let res, fs = O.parse_cmd_line () in
         match res with
-        | G.Help ->
-          BU.print_string "F* unit tests. This binary can take the same options \
-                           as F*, but not all of them are meaningful.";
-          exit 0
         | G.Error (msg, _) ->
-          BU.print_error msg; exit 1
+          Format.print_error msg; exit 1
         | G.Empty
         | G.Success ->
-          FStarC.Hooks.setup_hooks();
-          Pars.init() |> ignore;
+          ignore (Options.set_options "--error_contexts true");
+          if Debug.any () then (
+            print3 "- F* version %s -- %s (on %s)\n"  !Options._version !Options._commit (Platform.kernel ());
+            print1 "- Executable: %s\n" (BU.exec_name);
+            print1 "- Library root: %s\n" (Option.dflt "<none>" (Find.lib_root ()));
+            print1 "- Full include path: %s\n" (show (Find.full_include_path ()));
+            print_string "\n";
+            ()
+          );
+          Pars.do_init ();
           Pars.parse_incremental_decls();
           Pars.parse_incremental_decls_use_lang ();
           Norm.run_all ();
@@ -45,15 +66,12 @@ let main argv =
 
           FStarC.Errors.report_all () |> ignore;
           let nerrs = FStarC.Errors.get_err_count() in
-          if nerrs > 0 then
-            exit 1;
+          if nerrs > 0 then (
+            ignore (Errors.report_all ());
+            exit 1
+          );
           exit 0
-    with 
-      | Error(err, msg, r, _ctx) when not <| O.trace_error() ->
-        if r = FStarC.Range.dummyRange
-        then BU.print_string (Errors.rendermsg msg)
-        else BU.print2 "%s: %s\n" (FStarC.Range.string_of_range r) (Errors.rendermsg msg);
-        exit 1
-      | e ->
-        BU.print2_error "Error\n%s\n%s\n" (BU.message_of_exn e) (BU.trace_of_exn e);
-        exit 1
+    with
+    | e ->
+      handle_error e;
+      exit 1

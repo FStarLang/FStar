@@ -104,6 +104,35 @@ jobs:
           name: steel
           hometag: STEEL
 
+  build-steel-proofs:
+    runs-on: ubuntu-latest
+    container: mtzguido/dev-base
+    needs:
+      - build-krml
+      - build-steel
+    steps:
+      - name: Cleanup
+        run: sudo find . -delete
+      - run: echo "HOME=/home/user" >> $GITHUB_ENV
+      - uses: mtzguido/set-opam-env@master
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: fstar.tar.gz
+      - run: tar -xzf fstar.tar.gz
+      - run: echo "FSTAR_EXE=$(pwd)/fstar/bin/fstar.exe" >> $GITHUB_ENV
+
+      - uses: mtzguido/gci-download@master
+        with:
+          name: karamel
+
+      - uses: mtzguido/gci-download@master
+        with:
+          name: steel
+
+      - name: Test
+        run: make -C steel -skj$(nproc) verify-proofs
+
   test-steel:
     runs-on: ubuntu-latest
     container: mtzguido/dev-base
@@ -225,9 +254,6 @@ jobs:
           path: hacl-star/
           repository: hacl-star/hacl-star
 
-      # Patch HACL* for new lib
-      - run: sed -i 's/^\(OCAMLSHARED.*\)fstar\.lib/\1fstar.pluginlib/' hacl-star/Makefile.common
-
       - run: echo "HACL_HOME=$(pwd)/hacl-star" >> $GITHUB_ENV
 
       - name: Get Vale
@@ -280,12 +306,17 @@ jobs:
     container: mtzguido/dev-base
     needs:
       - build-krml
+      - build-pulse
     steps:
       - name: Cleanup
         run: sudo find . -delete
       - run: echo "HOME=/home/user" >> $GITHUB_ENV
       - uses: mtzguido/set-opam-env@master
       - run: opam install -y hex re ctypes sha sexplib
+      - run: sudo apt-get update && sudo apt-get install -y libssl-dev
+
+      # Install rust toolchain
+      - uses: dtolnay/rust-toolchain@stable
 
       - uses: actions/download-artifact@v4
         with:
@@ -297,6 +328,14 @@ jobs:
         with:
           name: karamel
 
+      - uses: mtzguido/gci-download@master
+        with:
+          name: pulse
+
+      # everparse expects PULSE_HOME to be the root of the installation,
+      # not the root of the repo
+      - run: echo "PULSE_HOME=$PULSE_HOME/out" >> $GITHUB_ENV
+
       - name: Checkout everparse
         uses: actions/checkout@master
         with:
@@ -304,8 +343,7 @@ jobs:
           repository: project-everest/everparse
 
       - name: Build
-        run: |
-          make -C everparse -skj$(nproc)
+        run: make -C everparse -skj$(nproc) all
 
       - uses: mtzguido/gci-upload@master
         with:
@@ -323,6 +361,10 @@ jobs:
       - run: echo "HOME=/home/user" >> $GITHUB_ENV
       - uses: mtzguido/set-opam-env@master
       - run: opam install -y hex re ctypes sha sexplib
+      - run: sudo apt-get update && sudo apt-get install -y libssl-dev cmake python3-venv
+
+      # Install rust toolchain
+      - uses: dtolnay/rust-toolchain@stable
 
       - uses: actions/download-artifact@v4
         with:
@@ -336,10 +378,20 @@ jobs:
 
       - uses: mtzguido/gci-download@master
         with:
+          name: pulse
+      # everparse expects PULSE_HOME to be the root of the installation,
+      # not the root of the repo
+      - run: echo "PULSE_HOME=$PULSE_HOME/out" >> $GITHUB_ENV
+
+      - uses: mtzguido/gci-download@master
+        with:
           name: everparse
 
       - name: Test
-        run: make -C everparse -skj$(nproc) test
+        # NOTE: We do not check against the expected C/Rust
+        # outputs, they are too noisy (they have gensym'd names) and do
+        # not really indicate a failure.
+        run: make -C everparse -skj$(nproc) test EVERPARSE_NO_DIFF=1
 
   build-merkle-tree:
     runs-on: ubuntu-latest
@@ -571,7 +623,7 @@ jobs:
       - name: Test
         run: make -C everquic-crypto -skj$(nproc) test
 
-  build-starmalloc:
+  starmalloc:
     runs-on: ubuntu-latest
     container: mtzguido/dev-base
     needs:
@@ -606,3 +658,54 @@ jobs:
       # to verify, extract, and build.
       - name: Build
         run: make -C starmalloc all -skj$(nproc)
+
+  secrefstar:
+    runs-on: ubuntu-latest
+    container: mtzguido/dev-base
+    steps:
+      - name: Cleanup
+        run: sudo find . -delete
+      - run: echo "HOME=/home/user" >> $GITHUB_ENV
+      - uses: mtzguido/set-opam-env@master
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: fstar.tar.gz
+      - run: tar -xzf fstar.tar.gz
+      - run: echo "FSTAR_EXE=$(pwd)/fstar/bin/fstar.exe" >> $GITHUB_ENV
+
+      - uses: actions/checkout@master
+        with:
+          path: repo/
+          repository: andricicezar/fstar-io
+
+      - name: Build
+        run: make -C repo/secrefstar -skj$(nproc)
+      - name: Build and run examples
+        run: make -C repo/secrefstar -skj$(nproc) build-all
+
+  sciostar:
+    runs-on: ubuntu-latest
+    container: mtzguido/dev-base
+    steps:
+      - name: Cleanup
+        run: sudo find . -delete
+      - run: echo "HOME=/home/user" >> $GITHUB_ENV
+      - uses: mtzguido/set-opam-env@master
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: fstar.tar.gz
+      - run: tar -xzf fstar.tar.gz
+      - run: echo "FSTAR_EXE=$(pwd)/fstar/bin/fstar.exe" >> $GITHUB_ENV
+
+      - uses: actions/checkout@master
+        with:
+          path: repo/
+          repository: andricicezar/fstar-io
+
+      - name: Build
+        run: make -C repo/sciostar -skj$(nproc) verify
+
+      - name: Verify and build case study
+        run: make -C repo/sciostar/case-studies/webserver -skj$(nproc) build

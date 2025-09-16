@@ -17,8 +17,6 @@
 (** Propositional sets (on any types): membership is a predicate *)
 module FStar.TSet
 
-#set-options "--initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0"
-
 (*
  * AR: mark it must_erase_for_extraction temporarily until CMI comes in
  *)
@@ -120,7 +118,7 @@ val lemma_mem_map (#a:Type) (#b:Type) (f:(a -> Tot b)) (s:set a) (x:b)
   :Lemma ((exists (y:a). {:pattern (mem y s)} mem y s /\ x == f y) <==> mem x (map f s))
          [SMTPat (mem x (map f s))]
 
-#reset-options
+// #reset-options
 let rec as_set' (#a:Type) (l:list a) : Tot (set a) =
   match l with
   | [] -> empty

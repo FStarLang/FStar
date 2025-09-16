@@ -43,12 +43,6 @@ module Ext = FStarC.Options.Ext
 let debug_embedding = mk_ref false
 let eager_embedding = mk_ref false
 
-(* A FLAG TO INDICATE THAT WE'RE RUNNING UNIT TESTS *)
-let __unit_tests__ = mk_ref false
-let __unit_tests() = !__unit_tests__
-let __set_unit_tests () = __unit_tests__ := true
-let __clear_unit_tests () = __unit_tests__ := false
-
 let as_bool = function
   | Bool b -> b
   | _ -> failwith "Impos: expected Bool"
@@ -193,154 +187,152 @@ let set_option k v =
 let set_option' (k,v) =  set_option k v
 let set_admit_smt_queries (b:bool) = set_option "admit_smt_queries" (Bool b)
 
-let defaults =
-     [
-      ("abort_on"                     , Int 0);
-      ("admit_smt_queries"            , Bool false);
-      ("admit_except"                 , Unset);
-      ("disallow_unification_guards"  , Bool false);
-      ("already_cached"               , Unset);
-      ("cache_checked_modules"        , Bool false);
-      ("cache_off"                    , Bool false);
-      ("compat_pre_core"              , Unset);
-      ("compat_pre_typed_indexed_effects"
-                                      , Bool false);
-      ("print_cache_version"          , Bool false);
-      ("cmi"                          , Bool false);
-      ("codegen"                      , Unset);
-      ("codegen-lib"                  , List []);
-      ("defensive"                    , String "no");
-      ("debug"                        , List []);
-      ("debug_all"                    , Bool false);
-      ("debug_all_modules"            , Bool false);
-      ("dep"                          , Unset);
-      ("detail_errors"                , Bool false);
-      ("detail_hint_replay"           , Bool false);
-      ("dump_module"                  , List []);
-      ("eager_subtyping"              , Bool false);
-      ("error_contexts"               , Bool false);
-      ("expose_interfaces"            , Bool false);
-      ("message_format"               , String "auto");
-      ("ext"                          , Unset);
-      ("extract"                      , Unset);
-      ("extract_all"                  , Bool false);
-      ("extract_module"               , List []);
-      ("extract_namespace"            , List []);
-      ("full_context_dependency"      , Bool true);
-      ("hide_uvar_nums"               , Bool false);
-      ("hint_hook"                    , Unset);
-      ("hint_info"                    , Bool false);
-      ("hint_dir"                     , Unset);
-      ("hint_file"                    , Unset);
-      ("in"                           , Bool false);
-      ("ide"                          , Bool false);
-      ("ide_id_info_off"              , Bool false);
-      ("lsp"                          , Bool false);
-      ("print"                        , Bool false);
-      ("print_in_place"               , Bool false);
-      ("force"                        , Bool false);
-      ("fuel"                         , Unset);
-      ("ifuel"                        , Unset);
-      ("initial_fuel"                 , Int 2);
-      ("initial_ifuel"                , Int 1);
-      ("keep_query_captions"          , Bool true);
-      ("lax"                          , Bool false);
-      ("load"                         , List []);
-      ("load_cmxs"                    , List []);
-      ("log_queries"                  , Bool false);
-      ("log_failing_queries"          , Bool false);
-      ("log_types"                    , Bool false);
-      ("max_fuel"                     , Int 8);
-      ("max_ifuel"                    , Int 2);
-      ("MLish"                        , Bool false);
-      ("MLish_effect"                 , String "FStar.Effect");
-      ("no_extract"                   , List []);
-      ("no_location_info"             , Bool false);
-      ("no_smt"                       , Bool false);
-      ("no_plugins"                   , Bool false);
-      ("no_tactics"                   , Bool false);
-      ("normalize_pure_terms_for_extraction"
-                                      , Bool false);
-      ("output_to"                    , Unset);
-      ("krmloutput"                   , Unset);
-      ("output_deps_to"               , Unset);
-      ("prims"                        , Unset);
-      ("pretype"                      , Bool true);
-      ("prims_ref"                    , Unset);
-      ("print_bound_var_types"        , Bool false);
-      ("print_effect_args"            , Bool false);
-      ("print_expected_failures"      , Bool false);
-      ("print_full_names"             , Bool false);
-      ("print_implicits"              , Bool false);
-      ("print_universes"              , Bool false);
-      ("print_z3_statistics"          , Bool false);
-      ("prn"                          , Bool false);
-      ("proof_recovery"               , Bool false);
-      ("quake"                        , Int 0);
-      ("quake_lo"                     , Int 1);
-      ("quake_hi"                     , Int 1);
-      ("quake_keep"                   , Bool false);
-      ("query_cache"                  , Bool false);
-      ("query_stats"                  , Bool false);
-      ("read_checked_file"            , Unset);
-      ("list_plugins"                 , Bool false);
-      ("locate"                       , Bool false);
-      ("locate_lib"                   , Bool false);
-      ("locate_ocaml"                 , Bool false);
-      ("locate_file"                  , Unset);
-      ("locate_z3"                    , Unset);
-      ("read_krml_file"               , Unset);
-      ("record_hints"                 , Bool false);
-      ("record_options"               , Bool false);
-      ("report_assumes"               , Unset);
-      ("retry"                        , Bool false);
-      ("reuse_hint_for"               , Unset);
-      ("silent"                       , Bool false);
-      ("smt"                          , Unset);
-      ("smtencoding.elim_box"         , Bool false);
-      ("smtencoding.nl_arith_repr"    , String "boxwrap");
-      ("smtencoding.l_arith_repr"     , String "boxwrap");
-      ("smtencoding.valid_intro"      , Bool true);
-      ("smtencoding.valid_elim"       , Bool false);
-      ("split_queries"                , String "on_failure");
-      ("stats"                        , Bool false);
-      ("tactics_failhard"             , Bool false);
-      ("tactics_info"                 , Bool false);
-      ("tactic_raw_binders"           , Bool false);
-      ("tactic_trace"                 , Bool false);
-      ("tactic_trace_d"               , Int 0);
-
-      ("tcnorm"                       , Bool true);
-      ("timing"                       , Bool false);
-      ("trace_error"                  , Bool false);
-      ("ugly"                         , Bool false);
-      ("unthrottle_inductives"        , Bool false);
-      ("unsafe_tactic_exec"           , Bool false);
-      ("use_native_tactics"           , Unset);
-      ("use_eq_at_higher_order"       , Bool false);
-      ("use_hints"                    , Bool false);
-      ("use_hint_hashes"              , Bool false);
-      ("using_facts_from"             , Unset);
-      ("verify_module"                , List []);
-      ("warn_default_effects"         , Bool false);
-      ("z3refresh"                    , Bool false);
-      ("z3rlimit"                     , Int 5);
-      ("z3rlimit_factor"              , Int 1);
-      ("z3seed"                       , Int 0);
-      ("z3cliopt"                     , List []);
-      ("z3smtopt"                     , List []);
-      ("z3version"                    , String "4.8.5");
-      ("__no_positivity"              , Bool false);
-      ("__tactics_nbe"                , Bool false);
-      ("warn_error"                   , List []);
-      ("use_nbe"                      , Bool false);
-      ("use_nbe_for_extraction"       , Bool false);
-      ("trivial_pre_for_unannotated_effectful_fns"
-                                      , Bool true);
-      ("profile_group_by_decl"        , Bool false);
-      ("profile_component"            , Unset);
-      ("profile"                      , Unset);
-      ]
+let defaults = [
+  ("abort_on"                                  , Int 0);
+  ("admit_except"                              , Unset);
+  ("admit_smt_queries"                         , Bool false);
+  ("already_cached"                            , Unset);
+  ("cache_checked_modules"                     , Bool false);
+  ("cache_off"                                 , Bool false);
+  ("cmi"                                       , Bool false);
+  ("codegen-lib"                               , List []);
+  ("codegen"                                   , Unset);
+  ("compat_pre_core"                           , Unset);
+  ("compat_pre_typed_indexed_effects"          , Bool false);
+  ("debug_all"                                 , Bool false);
+  ("debug_all_modules"                         , Bool false);
+  ("debug"                                     , List []);
+  ("defensive"                                 , String "no");
+  ("dep"                                       , Unset);
+  ("detail_errors"                             , Bool false);
+  ("detail_hint_replay"                        , Bool false);
+  ("disallow_unification_guards"               , Bool false);
+  ("dump_module"                               , List []);
+  ("eager_subtyping"                           , Bool false);
+  ("error_contexts"                            , Bool false);
+  ("expand_include"                            , Unset);
+  ("expose_interfaces"                         , Bool false);
+  ("extract_all"                               , Bool false);
+  ("extract_module"                            , List []);
+  ("extract_namespace"                         , List []);
+  ("extract"                                   , Unset);
+  ("ext"                                       , Unset);
+  ("force"                                     , Bool false);
+  ("fuel"                                      , Unset);
+  ("help"                                      , Bool false);
+  ("hide_uvar_nums"                            , Bool false);
+  ("hint_dir"                                  , Unset);
+  ("hint_file"                                 , Unset);
+  ("hint_hook"                                 , Unset);
+  ("hint_info"                                 , Bool false);
+  ("ide"                                       , Bool false);
+  ("ide_id_info_off"                           , Bool false);
+  ("ifuel"                                     , Unset);
+  ("in"                                        , Bool false);
+  ("include"                                   , List []);
+  ("initial_fuel"                              , Int 2);
+  ("initial_ifuel"                             , Int 1);
+  ("keep_query_captions"                       , Bool true);
+  ("krmloutput"                                , Unset);
+  ("lax"                                       , Bool false);
+  ("list_plugins"                              , Bool false);
+  ("load_cmxs"                                 , List []);
+  ("load"                                      , List []);
+  ("locate"                                    , Bool false);
+  ("locate_file"                               , Unset);
+  ("locate_lib"                                , Bool false);
+  ("locate_ocaml"                              , Bool false);
+  ("locate_z3"                                 , Unset);
+  ("log_failing_queries"                       , Bool false);
+  ("log_queries"                               , Bool false);
+  ("log_types"                                 , Bool false);
+  ("lsp"                                       , Bool false);
+  ("max_fuel"                                  , Int 8);
+  ("max_ifuel"                                 , Int 2);
+  ("message_format"                            , String "auto");
+  ("MLish"                                     , Bool false);
+  ("MLish_effect"                              , String "FStar.Effect");
+  ("no_extract"                                , List []);
+  ("no_location_info"                          , Bool false);
+  ("no_plugins"                                , Bool false);
+  ("__no_positivity"                           , Bool false);
+  ("no_prelude"                                , Bool false);
+  ("normalize_pure_terms_for_extraction"       , Bool false);
+  ("no_smt"                                    , Bool false);
+  ("no_tactics"                                , Bool false);
+  ("output_deps_to"                            , Unset);
+  ("output_to"                                 , Unset);
+  ("pretype"                                   , Bool true);
+  ("prims_ref"                                 , Unset);
+  ("prims"                                     , Unset);
+  ("print"                                     , Bool false);
+  ("print_bound_var_types"                     , Bool false);
+  ("print_cache_version"                       , Bool false);
+  ("print_effect_args"                         , Bool false);
+  ("print_expected_failures"                   , Bool false);
+  ("print_full_names"                          , Bool false);
+  ("print_implicits"                           , Bool false);
+  ("print_in_place"                            , Bool false);
+  ("print_universes"                           , Bool false);
+  ("print_z3_statistics"                       , Bool false);
+  ("prn"                                       , Bool false);
+  ("profile_component"                         , Unset);
+  ("profile_group_by_decl"                     , Bool false);
+  ("profile"                                   , Unset);
+  ("proof_recovery"                            , Bool false);
+  ("quake_hi"                                  , Int 1);
+  ("quake"                                     , Int 0);
+  ("quake_keep"                                , Bool false);
+  ("quake_lo"                                  , Int 1);
+  ("query_cache"                               , Bool false);
+  ("query_stats"                               , Bool false);
+  ("read_checked_file"                         , Unset);
+  ("read_krml_file"                            , Unset);
+  ("record_hints"                              , Bool false);
+  ("record_options"                            , Bool false);
+  ("report_assumes"                            , Unset);
+  ("retry"                                     , Bool false);
+  ("reuse_hint_for"                            , Unset);
+  ("silent"                                    , Bool false);
+  ("smtencoding.elim_box"                      , Bool false);
+  ("smtencoding.l_arith_repr"                  , String "boxwrap");
+  ("smtencoding.nl_arith_repr"                 , String "boxwrap");
+  ("smtencoding.valid_elim"                    , Bool false);
+  ("smtencoding.valid_intro"                   , Bool true);
+  ("smt"                                       , Unset);
+  ("split_queries"                             , String "on_failure");
+  ("stats"                                     , Bool false);
+  ("tactic_raw_binders"                        , Bool false);
+  ("tactics_failhard"                          , Bool false);
+  ("tactics_info"                              , Bool false);
+  ("__tactics_nbe"                             , Bool false);
+  ("tactic_trace"                              , Bool false);
+  ("tactic_trace_d"                            , Int 0);
+  ("tcnorm"                                    , Bool true);
+  ("timing"                                    , Bool false);
+  ("trace_error"                               , Bool false);
+  ("trivial_pre_for_unannotated_effectful_fns" , Bool true);
+  ("ugly"                                      , Bool false);
+  ("unsafe_tactic_exec"                        , Bool false);
+  ("unthrottle_inductives"                     , Bool false);
+  ("use_eq_at_higher_order"                    , Bool false);
+  ("use_hint_hashes"                           , Bool false);
+  ("use_hints"                                 , Bool false);
+  ("use_native_tactics"                        , Unset);
+  ("use_nbe"                                   , Bool false);
+  ("use_nbe_for_extraction"                    , Bool false);
+  ("using_facts_from"                          , Unset);
+  ("verify_module"                             , List []);
+  ("warn_default_effects"                      , Bool false);
+  ("warn_error"                                , List []);
+  ("z3cliopt"                                  , List []);
+  ("z3refresh"                                 , Bool false);
+  ("z3rlimit_factor"                           , Int 1);
+  ("z3rlimit"                                  , Int 5);
+  ("z3seed"                                    , Int 0);
+  ("z3smtopt"                                  , List []);
+  ("z3version"                                 , String "4.13.3");
+]
 
 let init () =
   Debug.disable_all ();
@@ -405,7 +397,7 @@ let show_options () =
     let! k = Common.psmap_keys s in
     (* verify_module is only set internally. *)
     if k = "verify_module" then [] else
-    let v = must <| psmap_try_find s k in
+    let v = Some?.v <| psmap_try_find s k in
     let v0 = list_try_find k defaults in
     if v0 =? Some v then
       []
@@ -422,7 +414,7 @@ let show_options () =
     | Unset -> "<unset>"
   in
   let show1 (k, v) =
-    Util.format2 "--%s %s" k (show_optionval v)
+    Format.fmt2 "--%s %s" k (show_optionval v)
   in
   kvs |> List.map show1 |> String.concat "\n"
 
@@ -461,7 +453,7 @@ let set_verification_options o =
     "z3version";
     "trivial_pre_for_unannotated_effectful_fns";
   ] in
-  List.iter (fun k -> set_option k (psmap_try_find o k |> Util.must)) verifopts
+  List.iter (fun k -> set_option k (psmap_try_find o k |> Some?.v)) verifopts
 
 let lookup_opt s c =
   c (get_option s)
@@ -494,6 +486,7 @@ let get_extract                 ()      = lookup_opt "extract"                  
 let get_extract_module          ()      = lookup_opt "extract_module"           (as_list as_string)
 let get_extract_namespace       ()      = lookup_opt "extract_namespace"        (as_list as_string)
 let get_force                   ()      = lookup_opt "force"                    as_bool
+let get_help                    ()      = lookup_opt "help"                     as_bool
 let get_hide_uvar_nums          ()      = lookup_opt "hide_uvar_nums"           as_bool
 let get_hint_info               ()      = lookup_opt "hint_info"                as_bool
 let get_hint_dir                ()      = lookup_opt "hint_dir"                 (as_option as_string)
@@ -519,6 +512,7 @@ let get_MLish                   ()      = lookup_opt "MLish"                    
 let get_MLish_effect            ()      = lookup_opt "MLish_effect"             as_string
 let get_no_extract              ()      = lookup_opt "no_extract"               (as_list as_string)
 let get_no_location_info        ()      = lookup_opt "no_location_info"         as_bool
+let get_no_prelude              ()      = lookup_opt "no_prelude"               as_bool
 let get_no_plugins              ()      = lookup_opt "no_plugins"               as_bool
 let get_no_smt                  ()      = lookup_opt "no_smt"                   as_bool
 let get_normalize_pure_terms_for_extraction
@@ -549,6 +543,7 @@ let get_locate                  ()      = lookup_opt "locate"                   
 let get_locate_lib              ()      = lookup_opt "locate_lib"               as_bool
 let get_locate_ocaml            ()      = lookup_opt "locate_ocaml"             as_bool
 let get_locate_file             ()      = lookup_opt "locate_file"              (as_option as_string)
+let get_expand_include          ()      = lookup_opt "expand_include"           (as_option as_string)
 let get_locate_z3               ()      = lookup_opt "locate_z3"                (as_option as_string)
 let get_record_hints            ()      = lookup_opt "record_hints"             as_bool
 let get_record_options          ()      = lookup_opt "record_options"           as_bool
@@ -609,20 +604,20 @@ let _date = mk_ref " not set"
 let _commit = mk_ref ""
 
 let display_version () =
-  Util.print_string (Util.format5 "F* %s\nplatform=%s\ncompiler=%s\ndate=%s\ncommit=%s\n"
+  Format.print_string (Format.fmt5 "F* %s\nplatform=%s\ncompiler=%s\ndate=%s\ncommit=%s\n"
                                   !_version !_platform !_compiler !_date !_commit)
 
 let bold_doc (d:Pprint.document) : Pprint.document =
   let open FStarC.Pprint in
   (* very hacky, this would make no sense for documents going elsewhere
   other than stdout *)
-  if stdout_isatty () = Some true
+  if Format.stdout_isatty () = Some true
   then fancystring "\x1b[39;1m" 0 ^^ d ^^ fancystring "\x1b[0m" 0
   else d
 
 let display_debug_keys () =
   let keys = Debug.list_all_toggles () in
-  keys |> List.sortWith String.compare |> List.iter (fun s -> Util.print_string (s ^ "\n"))
+  keys |> List.sortWith String.compare |> List.iter (fun s -> Format.print_string (s ^ "\n"))
 
 let usage_for (o : opt & Pprint.document) : Pprint.document =
   let open FStarC.Pprint in
@@ -652,10 +647,10 @@ let display_usage_aux (specs : list (opt & Pprint.document)) : unit =
   let text (s:string) : document = flow (break_ 1) (words s) in
   let d : document =
     doc_of_string "fstar.exe [options] file[s] [@respfile...]" ^/^
-    doc_of_string (Util.format1 "  %srespfile: read command-line options from respfile\n" (Util.colorize_bold "@")) ^/^
+    doc_of_string (Format.fmt1 "  %srespfile: read command-line options from respfile\n" (Format.colorize_bold "@")) ^/^
     List.fold_right (fun o rest -> usage_for o ^^ rest) specs empty
   in
-  Util.print_string (pretty_string (float_of_string "1.0") 80 d)
+  Format.print_string (pretty_string (float_of_string "1.0") 80 d)
 
 let mk_spec (o : char & string & opt_variant option_val) : opt =
     let ns, name, arg = o in
@@ -671,11 +666,11 @@ let mk_spec (o : char & string & opt_variant option_val) : opt =
     ns, name, arg
 
 let accumulated_option name value =
-    let prev_values = Util.dflt [] (lookup_opt name (as_option as_list')) in
+    let prev_values = Option.dflt [] (lookup_opt name (as_option as_list')) in
     List (value :: prev_values)
 
 let reverse_accumulated_option name value =
-    let prev_values = Util.dflt [] (lookup_opt name (as_option as_list')) in
+    let prev_values = Option.dflt [] (lookup_opt name (as_option as_list')) in
     List (prev_values @ [value])
 
 let accumulate_string name post_processor value =
@@ -723,7 +718,7 @@ let rec parse_opt_val (opt_name: string) (typ: opt_type) (str_val: string) : opt
                                                 parse_opt_val opt_name elem_spec str_val
   with
   | InvalidArgument opt_name ->
-    failwith (Util.format1 "Invalid argument to --%s" opt_name)
+    failwith (Format.fmt1 "Invalid argument to --%s" opt_name)
 
 let rec desc_of_opt_type typ : option string =
   let desc_of_enum cases = Some (String.concat "|" cases) in
@@ -790,7 +785,7 @@ let set_option_warning_callback_aux,
     set, call
 let set_option_warning_callback f = set_option_warning_callback_aux f
 
-let rec specs_with_types warn_unsafe : list (char & string & opt_type & Pprint.document) =
+let specs_with_types warn_unsafe : list (char & string & opt_type & Pprint.document) =
   let open FStarC.Pprint in
   let open FStarC.Errors.Msg in
   let text (s:string) : document = flow (break_ 1) (words s) in
@@ -831,7 +826,7 @@ let rec specs_with_types warn_unsafe : list (char & string & opt_type & Pprint.d
 
   ( noshort,
     "already_cached",
-    Accumulated (SimpleStr "One or more space-separated occurrences of '[+|-]( * | namespace | module)'"),
+    ReverseAccumulated (SimpleStr "One or more space-separated occurrences of '[+|-]( * | namespace | module)'"),
     text "Expects all modules whose names or namespaces match the provided options \
           to already have valid .checked files in the include path");
 
@@ -1053,10 +1048,7 @@ let rec specs_with_types warn_unsafe : list (char & string & opt_type & Pprint.d
 
   ( noshort,
     "include",
-    PostProcessed ((fun (Path s) ->
-      !check_include_dir s;
-      Find.set_include_path (Find.get_include_path () @ [s]);
-      Unset), PathStr "dir"),
+    ReverseAccumulated (PathStr "dir"),
     text "A directory in which to search for files included on the command line");
 
   ( noshort,
@@ -1192,6 +1184,13 @@ let rec specs_with_types warn_unsafe : list (char & string & opt_type & Pprint.d
     "no_location_info",
     Const (Bool true),
     text "Suppress location information in the generated OCaml output (only relevant with --codegen OCaml)");
+
+  ( noshort,
+    "no_prelude",
+    Const (Bool true),
+    text "Do not include the prelude module (FStar.Prelude) when checking the files \
+          given in the command line. This is similar to attaching [@@\"no_prelude\"] to \
+          the module.");
 
   ( noshort,
     "no_smt",
@@ -1589,7 +1588,7 @@ let rec specs_with_types warn_unsafe : list (char & string & opt_type & Pprint.d
   ( noshort,
     "z3version",
     SimpleStr "version",
-    text "Set the version of Z3 that is to be used. Default: 4.8.5");
+    text "Set the version of Z3 that is to be used. Default: 4.13.3");
 
   ( noshort,
     "__no_positivity",
@@ -1661,9 +1660,7 @@ let rec specs_with_types warn_unsafe : list (char & string & opt_type & Pprint.d
           This option is a module or namespace selector, like many other options (e.g., `--extract`)");
 
   ( 'h',
-    "help",
-     WithSideEffect ((fun _ -> display_usage_aux (specs warn_unsafe); exit 0),
-                     (Const (Bool true))),
+    "help", Const (Bool true),
     text "Display this information");
 
   ( noshort,
@@ -1671,6 +1668,12 @@ let rec specs_with_types warn_unsafe : list (char & string & opt_type & Pprint.d
      WithSideEffect ((fun _ -> display_debug_keys(); exit 0),
                      (Const (Bool true))),
     text "List all debug keys and exit");
+
+  ( noshort,
+    "expand_include",
+    SimpleStr "directory",
+    text "Print all directories that would be transitively included (due to fstar.include files) \
+          by including the given directory.");
 
   (* FIXME: all of these should really be modes, not a boolean option *)
   ( noshort,
@@ -1702,29 +1705,29 @@ let rec specs_with_types warn_unsafe : list (char & string & opt_type & Pprint.d
           but the version check is not performed at this point.");
   ( noshort,
     "ocamlenv",
-    WithSideEffect ((fun _ -> print_error "--ocamlenv must be the first argument, see fstar.exe --help for details\n"; exit 1),
+    WithSideEffect ((fun _ -> Format.print_error "--ocamlenv must be the first argument, see fstar.exe --help for details\n"; exit 1),
                      (Const (Bool true))),
     text "With no arguments: print shell code to set up an environment with the OCaml libraries in scope (similar to 'opam env'). \
           With arguments: run a command in that environment. \
           NOTE: this must be the FIRST argument passed to F* and other options are NOT processed.");
   ( noshort,
     "ocamlc",
-    WithSideEffect ((fun _ -> print_error "--ocamlc must be the first argument, see fstar.exe --help for details\n"; exit 1),
+    WithSideEffect ((fun _ -> Format.print_error "--ocamlc must be the first argument, see fstar.exe --help for details\n"; exit 1),
                      (Const (Bool true))),
     text "A helper. This runs 'ocamlc' in the environment set up by --ocamlenv, for building an F* application bytecode executable.");
   ( noshort,
     "ocamlopt",
-    WithSideEffect ((fun _ -> print_error "--ocamlopt must be the first argument, see fstar.exe --help for details\n"; exit 1),
+    WithSideEffect ((fun _ -> Format.print_error "--ocamlopt must be the first argument, see fstar.exe --help for details\n"; exit 1),
                      (Const (Bool true))),
     text "A helper. This runs 'ocamlopt' in the environment set up by --ocamlenv, for building an F* application native executable.");
   ( noshort,
     "ocamlopt_plugin",
-    WithSideEffect ((fun _ -> print_error "--ocamlopt_plugin must be the first argument, see fstar.exe --help for details\n"; exit 1),
+    WithSideEffect ((fun _ -> Format.print_error "--ocamlopt_plugin must be the first argument, see fstar.exe --help for details\n"; exit 1),
                      (Const (Bool true))),
     text "A helper. This runs 'ocamlopt' in the environment set up by --ocamlenv, for building an F* plugin.");
   ]
 
-and specs (warn_unsafe:bool) : list (FStarC.Getopt.opt & Pprint.document) =
+let specs (warn_unsafe:bool) : list (FStarC.Getopt.opt & Pprint.document) =
   List.map (fun (short, long, typ, doc) ->
             mk_spec (short, long, arg_spec_of_opt_type long typ), doc)
            (specs_with_types warn_unsafe)
@@ -1909,6 +1912,15 @@ let parse_cmd_line () =
     then set_error_flags()
     else res
   in
+  (* Set the include path, and check that they exist. We do the existence check
+  here, and not in the handler for --include, to respect a --warn_error ignoring
+  this warning. *)
+  let () =
+    let paths = as_list as_string (get_option "include") in
+    paths |> List.iter (fun p -> !check_include_dir p);
+    Find.set_include_path (Find.get_include_path () @ paths);
+    ()
+  in
   parsed_args_state := Some (snapshot_all ());
   res, !file_list_
 
@@ -2039,8 +2051,8 @@ let print_codegen =
   | Extension -> "Extension"
 
 let codegen                      () =
-    Util.map_opt (get_codegen())
-                 (fun s -> parse_codegen s |> must)
+    Option.map (fun s -> parse_codegen s |> Some?.v)
+               (get_codegen())
 
 let codegen_libs                 () = get_codegen_lib () |> List.map (fun x -> Util.split x ".")
 
@@ -2073,7 +2085,7 @@ let message_format               () =
   | illegal -> failwith ("print_issue: option `message_format` was expected to be `human` or `json`, not `" ^ illegal ^ "`. This should be impossible: `message_format` was supposed to be validated.")
 
 let force                        () = get_force ()
-let full_context_dependency      () = true
+let help                         () = get_help                        ()
 let hide_uvar_nums               () = get_hide_uvar_nums              ()
 let hint_info                    () = get_hint_info                   ()
                                     || get_query_stats                ()
@@ -2089,7 +2101,7 @@ let hint_file_for_src src_filename =
             Util.concat_dir_filename dir (Filepath.basename src_filename)
           | _ -> src_filename
         in
-        Util.format1 "%s.hints" file_name
+        Format.fmt1 "%s.hints" file_name
 let ide                          () = get_ide                         ()
 let ide_id_info_off              () = get_ide_id_info_off             ()
 let ide_file_name_st =
@@ -2127,6 +2139,7 @@ let no_extract                   s  = get_no_extract() |> List.existsb (module_n
 let normalize_pure_terms_for_extraction
                                  () = get_normalize_pure_terms_for_extraction ()
 let no_location_info             () = get_no_location_info            ()
+let no_prelude                   () = get_no_prelude                  ()
 let no_plugins                   () = get_no_plugins                  ()
 let no_smt                       () = get_no_smt                      ()
 
@@ -2155,6 +2168,7 @@ let query_cache                  () = get_query_cache                 ()
 let query_stats                  () = get_query_stats                 ()
 let read_checked_file            () = get_read_checked_file           ()
 let list_plugins                 () = get_list_plugins                ()
+let expand_include               () = get_expand_include              ()
 let locate                       () = get_locate                      ()
 let locate_lib                   () = get_locate_lib                  ()
 let locate_ocaml                 () = get_locate_ocaml                ()
@@ -2184,7 +2198,7 @@ let parse_split_queries (s:string) : option split_queries_t =
   | "always" -> Some Always
   | _ -> None
 
-let split_queries                () = get_split_queries () |> parse_split_queries |> Util.must
+let split_queries                () = get_split_queries () |> parse_split_queries |> Some?.v 
 let stats                        () = get_stats ()
 let tactic_raw_binders           () = get_tactic_raw_binders          ()
 let tactics_failhard             () = get_tactics_failhard            ()
@@ -2271,10 +2285,10 @@ type parsed_extract_setting = {
 }
 
 let print_pes pes =
-  Util.format2 "{ target_specific_settings = %s;\n\t
+  Format.fmt2 "{ target_specific_settings = %s;\n\t
                default_settings = %s }"
             (List.map (fun (tgt, s) ->
-                         Util.format2 "(%s, %s)"
+                         Format.fmt2 "(%s, %s)"
                            (print_codegen tgt)
                            s)
                       pes.target_specific_settings
@@ -2318,7 +2332,7 @@ let extract_settings
       let result, set = !memo in
       let fail msg =
            display_usage();
-           failwith (Util.format1 "Could not parse '%s' passed to the --extract option" msg)
+           failwith (Format.fmt1 "Could not parse '%s' passed to the --extract option" msg)
       in
       if set then result
       else match get_extract () with
@@ -2346,7 +2360,7 @@ let extract_settings
                let fail_duplicate msg tgt =
                    display_usage();
                    failwith
-                     (Util.format2
+                     (Format.fmt2
                        "Could not parse '%s'; multiple setting for %s target"
                        msg tgt)
                in
@@ -2467,7 +2481,7 @@ let set_options s =
              then set_error_flags()
              else res
     with
-    | File_argument s -> Getopt.Error (Util.format1 "File %s is not a valid option" s, "")
+    | File_argument s -> Getopt.Error (Format.fmt1 "File %s is not a valid option" s, "")
 
 let with_options s f =
   with_saved_options (fun () ->

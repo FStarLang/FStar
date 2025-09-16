@@ -35,7 +35,6 @@ open FStarC.Syntax.Print {}
 module Setlike = FStarC.Class.Setlike
 module Listlike = FStarC.Class.Listlike
 
-module BU      = FStarC.Util
 module Err     = FStarC.Errors
 module Range   = FStarC.Range
 module U       = FStarC.Syntax.Util
@@ -74,19 +73,19 @@ let register_goal (g:goal) =
   if Allow_untyped? (U.ctx_uvar_should_check g.goal_ctx_uvar) then () else
   let env = {env with gamma = uv.ctx_uvar_gamma } in
   if !dbg_CoreEq
-  then BU.print1 "(%s) Registering goal\n" (show i);
+  then Format.print1 "(%s) Registering goal\n" (show i);
   let should_register = is_goal_safe_as_well_typed g in
   if not should_register
   then (
     if !dbg_Core || !dbg_RegisterGoal
-    then BU.print1 "(%s) Not registering goal since it has unresolved uvar deps\n"
+    then Format.print1 "(%s) Not registering goal since it has unresolved uvar deps\n"
                      (show i);
         
     ()
   )
   else (
     if !dbg_Core || !dbg_RegisterGoal
-    then BU.print2 "(%s) Registering goal for %s\n"
+    then Format.print2 "(%s) Registering goal for %s\n"
                      (show i)
                      (show uv);
     let goal_ty = U.ctx_uvar_typ uv in
@@ -95,7 +94,7 @@ let register_goal (g:goal) =
     | Inl _ -> ()  // ghost is ok
     | Inr err ->
       let msg = 
-          BU.format2 "Failed to check initial tactic goal %s because %s"
+          Format.fmt2 "Failed to check initial tactic goal %s because %s"
                      (show (U.ctx_uvar_typ uv))
                      (FStarC.TypeChecker.Core.print_error_short err)
       in
@@ -132,8 +131,8 @@ let bind (t1:tac 'a) (t2:'a -> tac 'b) : tac 'b =
             | Failed (msg, q) -> Failed (msg, q))
 
 instance monad_tac : monad tac = {
-    return   = ret;
-    ( let! ) = bind;
+    return = ret;
+    bind   = bind;
 }
 
 (* Set the current proofstate *)
@@ -197,7 +196,7 @@ let trytac_exn (t : tac 'a) : tac (option 'a) =
     mk_tac (fun ps ->
     try run (trytac t) ps
     with | Errors.Error (_, msg, _, _) ->
-           do_log ps (fun () -> BU.print1 "trytac_exn error: (%s)" (Errors.rendermsg msg));
+           do_log ps (fun () -> Format.print1 "trytac_exn error: (%s)" (Errors.rendermsg msg));
            Success (None, ps))
 
 let rec iter_tac f l =
@@ -238,7 +237,7 @@ let check_valid_goal g =
        if !nwarn < 5 then begin
          Err.log_issue (goal_type g)
            Errors.Warning_IllFormedGoal
-           (BU.format2 "The following goal is ill-formed (%s). Keeping calm and carrying on...\n<%s>\n\n" culprit (goal_to_string_verbose g));
+           (Format.fmt2 "The following goal is ill-formed (%s). Keeping calm and carrying on...\n<%s>\n\n" culprit (goal_to_string_verbose g));
          nwarn := !nwarn + 1
        end
   end
@@ -272,7 +271,7 @@ let cur_goal : tac goal =
     match check_goal_solved' hd with
     | None -> ret hd
     | Some t ->
-      BU.print2 "!!!!!!!!!!!! GOAL IS ALREADY SOLVED! %s\nsol is %s\n"
+      Format.print2 "!!!!!!!!!!!! GOAL IS ALREADY SOLVED! %s\nsol is %s\n"
               (goal_to_string_verbose hd)
               (show t);
       ret hd)
@@ -410,7 +409,7 @@ let compress_implicits : tac unit =
 
 module N = FStarC.TypeChecker.Normalize
 let get_phi (g:goal) : option term = U.un_squash (N.unfold_whnf (goal_env g) (goal_type g))
-let is_irrelevant (g:goal) : bool = Option.isSome (get_phi g)
+let is_irrelevant (g:goal) : bool = Some? (get_phi g)
 let goal_typedness_deps (g:goal) = U.ctx_uvar_typedness_deps g.goal_ctx_uvar
 
 let set_uvar_expected_typ (u:ctx_uvar) (t:typ)
@@ -437,12 +436,11 @@ let goal_with_type g t
     set_uvar_expected_typ u t;
     g
 
-module Z = FStarC.BigInt
 
-let divide (n:Z.t) (l : tac 'a) (r : tac 'b) : tac ('a & 'b) =
+let divide (n:int) (l : tac 'a) (r : tac 'b) : tac ('a & 'b) =
   let! p = get in
   let! lgs, rgs =
-    try return (List.splitAt (Z.to_int_fs n) p.goals) with
+    try return (List.splitAt n p.goals) with
     | _ -> fail "divide: not enough goals"
   in
   let lp = { p with goals = lgs; smt_goals = [] } in
@@ -463,5 +461,5 @@ let divide (n:Z.t) (l : tac 'a) (r : tac 'b) : tac ('a & 'b) =
 (* focus: runs f on the current goal only, and then restores all the goals *)
 (* There is a user defined version as well, we just use this one internally, but can't mark it as private *)
 let focus (f:tac 'a) : tac 'a =
-    let! (a, _) = divide FStarC.BigInt.one f (return ()) in
+    let! (a, _) = divide 1 f (return ()) in
     return a

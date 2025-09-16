@@ -11,7 +11,7 @@ let (debug_positivity :
         let uu___1 =
           let uu___2 = let uu___3 = msg () in Prims.strcat uu___3 "\n" in
           Prims.strcat "Positivity::" uu___2 in
-        FStarC_Util.print_string uu___1
+        FStarC_Format.print_string uu___1
       else ()
 let (string_of_lids : FStarC_Ident.lident Prims.list -> Prims.string) =
   fun lids ->
@@ -39,53 +39,55 @@ let (apply_constr_arrow :
   fun dlid ->
     fun dt ->
       fun all_params ->
-        let rec aux t args =
-          let uu___ =
-            let uu___1 =
-              let uu___2 = FStarC_Syntax_Subst.compress t in
-              uu___2.FStarC_Syntax_Syntax.n in
-            (uu___1, args) in
-          match uu___ with
-          | (uu___1, []) -> FStarC_Syntax_Util.canon_arrow t
-          | (FStarC_Syntax_Syntax.Tm_arrow
-             { FStarC_Syntax_Syntax.bs1 = b::bs;
-               FStarC_Syntax_Syntax.comp = c;_},
-             a::args1) ->
-              let tail =
-                match bs with
-                | [] -> FStarC_Syntax_Util.comp_result c
-                | uu___1 ->
-                    FStarC_Syntax_Syntax.mk
-                      (FStarC_Syntax_Syntax.Tm_arrow
-                         {
-                           FStarC_Syntax_Syntax.bs1 = bs;
-                           FStarC_Syntax_Syntax.comp = c
-                         }) t.FStarC_Syntax_Syntax.pos in
-              let uu___1 = FStarC_Syntax_Subst.open_term_1 b tail in
-              (match uu___1 with
-               | (b1, tail1) ->
-                   let tail2 =
-                     FStarC_Syntax_Subst.subst
-                       [FStarC_Syntax_Syntax.NT
-                          ((b1.FStarC_Syntax_Syntax.binder_bv),
-                            (FStar_Pervasives_Native.fst a))] tail1 in
-                   aux tail2 args1)
-          | uu___1 ->
-              let uu___2 = FStarC_Ident.range_of_lid dlid in
-              let uu___3 =
-                let uu___4 = FStarC_Syntax_Print.args_to_string all_params in
-                let uu___5 =
-                  FStarC_Class_Show.show FStarC_Ident.showable_lident dlid in
-                let uu___6 =
-                  FStarC_Class_Show.show FStarC_Syntax_Print.showable_term dt in
-                FStarC_Util.format3
-                  "Unexpected application of type parameters %s to a data constructor %s : %s"
-                  uu___4 uu___5 uu___6 in
-              FStarC_Errors.raise_error FStarC_Class_HasRange.hasRange_range
-                uu___2
-                FStarC_Errors_Codes.Error_InductiveTypeNotSatisfyPositivityCondition
-                () (Obj.magic FStarC_Errors_Msg.is_error_message_string)
-                (Obj.magic uu___3) in
+        let rec aux t =
+          fun args ->
+            let uu___ =
+              let uu___1 =
+                let uu___2 = FStarC_Syntax_Subst.compress t in
+                uu___2.FStarC_Syntax_Syntax.n in
+              (uu___1, args) in
+            match uu___ with
+            | (uu___1, []) -> FStarC_Syntax_Util.canon_arrow t
+            | (FStarC_Syntax_Syntax.Tm_arrow
+               { FStarC_Syntax_Syntax.bs1 = b::bs;
+                 FStarC_Syntax_Syntax.comp = c;_},
+               a::args1) ->
+                let tail =
+                  match bs with
+                  | [] -> FStarC_Syntax_Util.comp_result c
+                  | uu___1 ->
+                      FStarC_Syntax_Syntax.mk
+                        (FStarC_Syntax_Syntax.Tm_arrow
+                           {
+                             FStarC_Syntax_Syntax.bs1 = bs;
+                             FStarC_Syntax_Syntax.comp = c
+                           }) t.FStarC_Syntax_Syntax.pos in
+                let uu___1 = FStarC_Syntax_Subst.open_term_1 b tail in
+                (match uu___1 with
+                 | (b1, tail1) ->
+                     let tail2 =
+                       FStarC_Syntax_Subst.subst
+                         [FStarC_Syntax_Syntax.NT
+                            ((b1.FStarC_Syntax_Syntax.binder_bv),
+                              (FStar_Pervasives_Native.fst a))] tail1 in
+                     aux tail2 args1)
+            | uu___1 ->
+                let uu___2 = FStarC_Ident.range_of_lid dlid in
+                let uu___3 =
+                  let uu___4 = FStarC_Syntax_Print.args_to_string all_params in
+                  let uu___5 =
+                    FStarC_Class_Show.show FStarC_Ident.showable_lident dlid in
+                  let uu___6 =
+                    FStarC_Class_Show.show FStarC_Syntax_Print.showable_term
+                      dt in
+                  FStarC_Format.fmt3
+                    "Unexpected application of type parameters %s to a data constructor %s : %s"
+                    uu___4 uu___5 uu___6 in
+                FStarC_Errors.raise_error
+                  FStarC_Class_HasRange.hasRange_range uu___2
+                  FStarC_Errors_Codes.Error_InductiveTypeNotSatisfyPositivityCondition
+                  () (Obj.magic FStarC_Errors_Msg.is_error_message_string)
+                  (Obj.magic uu___3) in
         aux dt all_params
 let (ty_occurs_in :
   FStarC_Ident.lident -> FStarC_Syntax_Syntax.term -> Prims.bool) =
@@ -190,29 +192,35 @@ let (max_uniformly_recursive_parameters :
     fun mutuals ->
       fun params ->
         fun ty ->
-          let max_matching_prefix longer shorter f =
-            let rec aux n ls ms =
-              match (ls, ms) with
-              | (uu___, []) -> FStar_Pervasives_Native.Some n
-              | (l::ls1, m::ms1) ->
-                  let uu___ = f l m in
-                  if uu___
-                  then aux (n + Prims.int_one) ls1 ms1
-                  else FStar_Pervasives_Native.Some n
-              | uu___ -> FStar_Pervasives_Native.None in
-            aux Prims.int_zero longer shorter in
+          let max_matching_prefix longer =
+            fun shorter ->
+              fun f ->
+                let rec aux n =
+                  fun ls ->
+                    fun ms ->
+                      match (ls, ms) with
+                      | (uu___, []) -> FStar_Pervasives_Native.Some n
+                      | (l::ls1, m::ms1) ->
+                          let uu___ = f l m in
+                          if uu___
+                          then aux (n + Prims.int_one) ls1 ms1
+                          else FStar_Pervasives_Native.Some n
+                      | uu___ -> FStar_Pervasives_Native.None in
+                aux Prims.int_zero longer shorter in
           let ty1 = normalize env ty in
           let n_params = FStarC_List.length params in
-          let compare_name_bv x y =
-            let uu___ =
-              let uu___1 =
-                FStarC_Syntax_Subst.compress (FStar_Pervasives_Native.fst x) in
-              uu___1.FStarC_Syntax_Syntax.n in
-            match uu___ with
-            | FStarC_Syntax_Syntax.Tm_name x1 ->
-                FStarC_Syntax_Syntax.bv_eq x1 y
-            | uu___1 -> false in
-          let min_l1 f l = min_l n_params f l in
+          let compare_name_bv x =
+            fun y ->
+              let uu___ =
+                let uu___1 =
+                  FStarC_Syntax_Subst.compress
+                    (FStar_Pervasives_Native.fst x) in
+                uu___1.FStarC_Syntax_Syntax.n in
+              match uu___ with
+              | FStarC_Syntax_Syntax.Tm_name x1 ->
+                  FStarC_Syntax_Syntax.bv_eq x1 y
+              | uu___1 -> false in
+          let min_l1 f = fun l -> min_l n_params f l in
           let params_to_string uu___ =
             let uu___1 =
               FStarC_List.map
@@ -224,7 +232,7 @@ let (max_uniformly_recursive_parameters :
                let uu___2 = params_to_string () in
                let uu___3 =
                  FStarC_Class_Show.show FStarC_Syntax_Print.showable_term ty1 in
-               FStarC_Util.format2
+               FStarC_Format.fmt2
                  "max_uniformly_recursive_parameters? params=%s in %s" uu___2
                  uu___3);
           (let rec aux ty2 =
@@ -233,7 +241,7 @@ let (max_uniformly_recursive_parameters :
                   let uu___3 =
                     FStarC_Class_Show.show FStarC_Syntax_Print.showable_term
                       ty2 in
-                  FStarC_Util.format1
+                  FStarC_Format.fmt1
                     "max_uniformly_recursive_parameters.aux? %s" uu___3);
              (let uu___2 =
                 FStarC_List.for_all
@@ -286,7 +294,7 @@ let (max_uniformly_recursive_parameters :
                                        let uu___12 =
                                          FStarC_Syntax_Print.args_to_string
                                            args in
-                                       FStarC_Util.format2
+                                       FStarC_Format.fmt2
                                          "Searching for max matching prefix of params=%s in args=%s"
                                          uu___11 uu___12);
                                   (let uu___10 =
@@ -367,9 +375,11 @@ let (max_uniformly_recursive_parameters :
                 let uu___4 =
                   FStarC_Class_Show.show FStarC_Syntax_Print.showable_term
                     ty1 in
-                FStarC_Util.format3
+                let uu___5 =
+                  FStarC_Class_Show.show FStarC_Class_Show.showable_int res in
+                FStarC_Format.fmt3
                   "result: max_uniformly_recursive_parameters(params=%s in %s) = %s"
-                  uu___3 uu___4 (Prims.string_of_int res));
+                  uu___3 uu___4 uu___5);
            res)
 let (mark_uniform_type_parameters :
   FStarC_TypeChecker_Env.env ->
@@ -377,146 +387,151 @@ let (mark_uniform_type_parameters :
   =
   fun env ->
     fun sig1 ->
-      let mark_tycon_parameters tc datas =
-        let uu___ = tc.FStarC_Syntax_Syntax.sigel in
-        match uu___ with
-        | FStarC_Syntax_Syntax.Sig_inductive_typ
-            { FStarC_Syntax_Syntax.lid = tc_lid;
-              FStarC_Syntax_Syntax.us = us;
-              FStarC_Syntax_Syntax.params = ty_param_binders;
-              FStarC_Syntax_Syntax.num_uniform_params = uu___1;
-              FStarC_Syntax_Syntax.t = t;
-              FStarC_Syntax_Syntax.mutuals = mutuals;
-              FStarC_Syntax_Syntax.ds = data_lids;
-              FStarC_Syntax_Syntax.injective_type_params =
-                injective_type_params;_}
-            ->
-            let uu___2 = open_sig_inductive_typ env tc in
-            (match uu___2 with
-             | (env1, (tc_lid1, us1, ty_params)) ->
-                 let uu___3 = FStarC_Syntax_Util.args_of_binders ty_params in
-                 (match uu___3 with
-                  | (uu___4, ty_param_args) ->
-                      let datacon_fields =
-                        FStarC_List.filter_map
-                          (fun data ->
-                             match data.FStarC_Syntax_Syntax.sigel with
-                             | FStarC_Syntax_Syntax.Sig_datacon
-                                 { FStarC_Syntax_Syntax.lid1 = d_lid;
-                                   FStarC_Syntax_Syntax.us1 = d_us;
-                                   FStarC_Syntax_Syntax.t1 = dt;
-                                   FStarC_Syntax_Syntax.ty_lid = tc_lid';
-                                   FStarC_Syntax_Syntax.num_ty_params =
-                                     uu___5;
-                                   FStarC_Syntax_Syntax.mutuals1 = uu___6;
-                                   FStarC_Syntax_Syntax.injective_type_params1
-                                     = uu___7;_}
-                                 ->
-                                 let uu___8 =
-                                   FStarC_Ident.lid_equals tc_lid1 tc_lid' in
-                                 if uu___8
-                                 then
-                                   let dt1 =
-                                     let uu___9 =
-                                       let uu___10 =
-                                         FStarC_List.map
-                                           (fun uu___11 ->
-                                              FStarC_Syntax_Syntax.U_name
-                                                uu___11) us1 in
-                                       FStarC_TypeChecker_Env.mk_univ_subst
-                                         d_us uu___10 in
-                                     FStarC_Syntax_Subst.subst uu___9 dt in
+      let mark_tycon_parameters tc =
+        fun datas ->
+          let uu___ = tc.FStarC_Syntax_Syntax.sigel in
+          match uu___ with
+          | FStarC_Syntax_Syntax.Sig_inductive_typ
+              { FStarC_Syntax_Syntax.lid = tc_lid;
+                FStarC_Syntax_Syntax.us = us;
+                FStarC_Syntax_Syntax.params = ty_param_binders;
+                FStarC_Syntax_Syntax.num_uniform_params = uu___1;
+                FStarC_Syntax_Syntax.t = t;
+                FStarC_Syntax_Syntax.mutuals = mutuals;
+                FStarC_Syntax_Syntax.ds = data_lids;
+                FStarC_Syntax_Syntax.injective_type_params =
+                  injective_type_params;_}
+              ->
+              let uu___2 = open_sig_inductive_typ env tc in
+              (match uu___2 with
+               | (env1, (tc_lid1, us1, ty_params)) ->
+                   let uu___3 = FStarC_Syntax_Util.args_of_binders ty_params in
+                   (match uu___3 with
+                    | (uu___4, ty_param_args) ->
+                        let datacon_fields =
+                          FStarC_List.filter_map
+                            (fun data ->
+                               match data.FStarC_Syntax_Syntax.sigel with
+                               | FStarC_Syntax_Syntax.Sig_datacon
+                                   { FStarC_Syntax_Syntax.lid1 = d_lid;
+                                     FStarC_Syntax_Syntax.us1 = d_us;
+                                     FStarC_Syntax_Syntax.t1 = dt;
+                                     FStarC_Syntax_Syntax.ty_lid = tc_lid';
+                                     FStarC_Syntax_Syntax.num_ty_params =
+                                       uu___5;
+                                     FStarC_Syntax_Syntax.mutuals1 = uu___6;
+                                     FStarC_Syntax_Syntax.injective_type_params1
+                                       = uu___7;
+                                     FStarC_Syntax_Syntax.proj_disc_lids =
+                                       uu___8;_}
+                                   ->
                                    let uu___9 =
+                                     FStarC_Ident.lid_equals tc_lid1 tc_lid' in
+                                   if uu___9
+                                   then
+                                     let dt1 =
+                                       let uu___10 =
+                                         let uu___11 =
+                                           FStarC_List.map
+                                             (fun uu___12 ->
+                                                FStarC_Syntax_Syntax.U_name
+                                                  uu___12) us1 in
+                                         FStarC_TypeChecker_Env.mk_univ_subst
+                                           d_us uu___11 in
+                                       FStarC_Syntax_Subst.subst uu___10 dt in
                                      let uu___10 =
                                        let uu___11 =
-                                         apply_constr_arrow d_lid dt1
-                                           ty_param_args in
-                                       FStarC_Syntax_Util.arrow_formals
-                                         uu___11 in
-                                     FStar_Pervasives_Native.fst uu___10 in
-                                   FStar_Pervasives_Native.Some uu___9
-                                 else FStar_Pervasives_Native.None
-                             | uu___5 -> FStar_Pervasives_Native.None) datas in
-                      let ty_param_bvs =
-                        FStarC_List.map
-                          (fun b -> b.FStarC_Syntax_Syntax.binder_bv)
-                          ty_params in
-                      let n_params = FStarC_List.length ty_params in
-                      let min_l1 f l = min_l n_params f l in
-                      let max_uniform_prefix =
-                        min_l1 datacon_fields
-                          (fun fields_of_one_datacon ->
-                             min_l1 fields_of_one_datacon
-                               (fun field ->
-                                  max_uniformly_recursive_parameters env1
-                                    mutuals ty_param_bvs
-                                    (field.FStarC_Syntax_Syntax.binder_bv).FStarC_Syntax_Syntax.sort)) in
-                      (if max_uniform_prefix < n_params
-                       then
-                         (let uu___6 =
-                            FStarC_List.splitAt max_uniform_prefix
-                              ty_param_binders in
-                          match uu___6 with
-                          | (uu___7, non_uniform_params) ->
-                              FStarC_List.iter
-                                (fun param ->
-                                   if
-                                     param.FStarC_Syntax_Syntax.binder_positivity
-                                       =
-                                       (FStar_Pervasives_Native.Some
-                                          FStarC_Syntax_Syntax.BinderStrictlyPositive)
-                                   then
-                                     let uu___8 =
-                                       FStarC_Syntax_Syntax.range_of_bv
-                                         param.FStarC_Syntax_Syntax.binder_bv in
-                                     let uu___9 =
-                                       let uu___10 =
-                                         FStarC_Class_Show.show
-                                           FStarC_Syntax_Print.showable_binder
-                                           param in
-                                       FStarC_Util.format1
-                                         "Binder %s is marked strictly positive, but it is not uniformly recursive"
-                                         uu___10 in
-                                     FStarC_Errors.raise_error
-                                       FStarC_Class_HasRange.hasRange_range
-                                       uu___8
-                                       FStarC_Errors_Codes.Error_InductiveTypeNotSatisfyPositivityCondition
-                                       ()
-                                       (Obj.magic
-                                          FStarC_Errors_Msg.is_error_message_string)
-                                       (Obj.magic uu___9)
-                                   else ()) non_uniform_params)
-                       else ();
-                       (let sigel =
-                          FStarC_Syntax_Syntax.Sig_inductive_typ
-                            {
-                              FStarC_Syntax_Syntax.lid = tc_lid1;
-                              FStarC_Syntax_Syntax.us = us1;
-                              FStarC_Syntax_Syntax.params = ty_param_binders;
-                              FStarC_Syntax_Syntax.num_uniform_params =
-                                (FStar_Pervasives_Native.Some
-                                   max_uniform_prefix);
-                              FStarC_Syntax_Syntax.t = t;
-                              FStarC_Syntax_Syntax.mutuals = mutuals;
-                              FStarC_Syntax_Syntax.ds = data_lids;
-                              FStarC_Syntax_Syntax.injective_type_params =
-                                injective_type_params
-                            } in
-                        {
-                          FStarC_Syntax_Syntax.sigel = sigel;
-                          FStarC_Syntax_Syntax.sigrng =
-                            (tc.FStarC_Syntax_Syntax.sigrng);
-                          FStarC_Syntax_Syntax.sigquals =
-                            (tc.FStarC_Syntax_Syntax.sigquals);
-                          FStarC_Syntax_Syntax.sigmeta =
-                            (tc.FStarC_Syntax_Syntax.sigmeta);
-                          FStarC_Syntax_Syntax.sigattrs =
-                            (tc.FStarC_Syntax_Syntax.sigattrs);
-                          FStarC_Syntax_Syntax.sigopens_and_abbrevs =
-                            (tc.FStarC_Syntax_Syntax.sigopens_and_abbrevs);
-                          FStarC_Syntax_Syntax.sigopts =
-                            (tc.FStarC_Syntax_Syntax.sigopts)
-                        })))) in
+                                         let uu___12 =
+                                           apply_constr_arrow d_lid dt1
+                                             ty_param_args in
+                                         FStarC_Syntax_Util.arrow_formals
+                                           uu___12 in
+                                       FStar_Pervasives_Native.fst uu___11 in
+                                     FStar_Pervasives_Native.Some uu___10
+                                   else FStar_Pervasives_Native.None
+                               | uu___5 -> FStar_Pervasives_Native.None)
+                            datas in
+                        let ty_param_bvs =
+                          FStarC_List.map
+                            (fun b -> b.FStarC_Syntax_Syntax.binder_bv)
+                            ty_params in
+                        let n_params = FStarC_List.length ty_params in
+                        let min_l1 f = fun l -> min_l n_params f l in
+                        let max_uniform_prefix =
+                          min_l1 datacon_fields
+                            (fun fields_of_one_datacon ->
+                               min_l1 fields_of_one_datacon
+                                 (fun field ->
+                                    max_uniformly_recursive_parameters env1
+                                      mutuals ty_param_bvs
+                                      (field.FStarC_Syntax_Syntax.binder_bv).FStarC_Syntax_Syntax.sort)) in
+                        (if max_uniform_prefix < n_params
+                         then
+                           (let uu___6 =
+                              FStarC_List.splitAt max_uniform_prefix
+                                ty_param_binders in
+                            match uu___6 with
+                            | (uu___7, non_uniform_params) ->
+                                FStarC_List.iter
+                                  (fun param ->
+                                     if
+                                       param.FStarC_Syntax_Syntax.binder_positivity
+                                         =
+                                         (FStar_Pervasives_Native.Some
+                                            FStarC_Syntax_Syntax.BinderStrictlyPositive)
+                                     then
+                                       let uu___8 =
+                                         FStarC_Syntax_Syntax.range_of_bv
+                                           param.FStarC_Syntax_Syntax.binder_bv in
+                                       let uu___9 =
+                                         let uu___10 =
+                                           FStarC_Class_Show.show
+                                             FStarC_Syntax_Print.showable_binder
+                                             param in
+                                         FStarC_Format.fmt1
+                                           "Binder %s is marked strictly positive, but it is not uniformly recursive"
+                                           uu___10 in
+                                       FStarC_Errors.raise_error
+                                         FStarC_Class_HasRange.hasRange_range
+                                         uu___8
+                                         FStarC_Errors_Codes.Error_InductiveTypeNotSatisfyPositivityCondition
+                                         ()
+                                         (Obj.magic
+                                            FStarC_Errors_Msg.is_error_message_string)
+                                         (Obj.magic uu___9)
+                                     else ()) non_uniform_params)
+                         else ();
+                         (let sigel =
+                            FStarC_Syntax_Syntax.Sig_inductive_typ
+                              {
+                                FStarC_Syntax_Syntax.lid = tc_lid1;
+                                FStarC_Syntax_Syntax.us = us1;
+                                FStarC_Syntax_Syntax.params =
+                                  ty_param_binders;
+                                FStarC_Syntax_Syntax.num_uniform_params =
+                                  (FStar_Pervasives_Native.Some
+                                     max_uniform_prefix);
+                                FStarC_Syntax_Syntax.t = t;
+                                FStarC_Syntax_Syntax.mutuals = mutuals;
+                                FStarC_Syntax_Syntax.ds = data_lids;
+                                FStarC_Syntax_Syntax.injective_type_params =
+                                  injective_type_params
+                              } in
+                          {
+                            FStarC_Syntax_Syntax.sigel = sigel;
+                            FStarC_Syntax_Syntax.sigrng =
+                              (tc.FStarC_Syntax_Syntax.sigrng);
+                            FStarC_Syntax_Syntax.sigquals =
+                              (tc.FStarC_Syntax_Syntax.sigquals);
+                            FStarC_Syntax_Syntax.sigmeta =
+                              (tc.FStarC_Syntax_Syntax.sigmeta);
+                            FStarC_Syntax_Syntax.sigattrs =
+                              (tc.FStarC_Syntax_Syntax.sigattrs);
+                            FStarC_Syntax_Syntax.sigopens_and_abbrevs =
+                              (tc.FStarC_Syntax_Syntax.sigopens_and_abbrevs);
+                            FStarC_Syntax_Syntax.sigopts =
+                              (tc.FStarC_Syntax_Syntax.sigopts)
+                          })))) in
       match sig1.FStarC_Syntax_Syntax.sigel with
       | FStarC_Syntax_Syntax.Sig_bundle
           { FStarC_Syntax_Syntax.ses = ses;
@@ -580,7 +595,7 @@ let (may_be_an_arity :
                   | FStarC_Syntax_Syntax.Tm_fvar fv ->
                       let uu___4 =
                         FStarC_TypeChecker_Env.lookup_sigelt env
-                          (fv.FStarC_Syntax_Syntax.fv_name).FStarC_Syntax_Syntax.v in
+                          fv.FStarC_Syntax_Syntax.fv_name in
                       (match uu___4 with
                        | FStar_Pervasives_Native.None -> true
                        | FStar_Pervasives_Native.Some se ->
@@ -599,7 +614,7 @@ let (may_be_an_arity :
                   | FStarC_Syntax_Syntax.Tm_fvar fv ->
                       let uu___4 =
                         FStarC_TypeChecker_Env.lookup_sigelt env
-                          (fv.FStarC_Syntax_Syntax.fv_name).FStarC_Syntax_Syntax.v in
+                          fv.FStarC_Syntax_Syntax.fv_name in
                       (match uu___4 with
                        | FStar_Pervasives_Native.None -> true
                        | FStar_Pervasives_Native.Some se ->
@@ -618,7 +633,7 @@ let (may_be_an_arity :
                   | FStarC_Syntax_Syntax.Tm_fvar fv ->
                       let uu___4 =
                         FStarC_TypeChecker_Env.lookup_sigelt env
-                          (fv.FStarC_Syntax_Syntax.fv_name).FStarC_Syntax_Syntax.v in
+                          fv.FStarC_Syntax_Syntax.fv_name in
                       (match uu___4 with
                        | FStar_Pervasives_Native.None -> true
                        | FStar_Pervasives_Native.Some se ->
@@ -676,58 +691,63 @@ let (check_no_index_occurrences_in_arities :
              let uu___2 = string_of_lids mutuals in
              let uu___3 =
                FStarC_Class_Show.show FStarC_Syntax_Print.showable_term t in
-             FStarC_Util.format2
+             FStarC_Format.fmt2
                "check_no_index_occurrences of (mutuals %s) in arities of %s"
                uu___2 uu___3);
-        (let no_occurrence_in_index fv mutuals1 index =
-           let fext_on_domain_index_sub_term index1 =
-             let uu___1 = FStarC_Syntax_Util.head_and_args index1 in
-             match uu___1 with
-             | (head, args) ->
-                 let uu___2 =
-                   let uu___3 =
-                     let uu___4 = FStarC_Syntax_Util.un_uinst head in
-                     uu___4.FStarC_Syntax_Syntax.n in
-                   (uu___3, args) in
-                 (match uu___2 with
-                  | (FStarC_Syntax_Syntax.Tm_fvar fv1,
-                     _td::_tr::(f, uu___3)::[]) ->
-                      let uu___4 =
-                        (FStarC_Syntax_Syntax.fv_eq_lid fv1
-                           FStarC_Parser_Const.fext_on_domain_lid)
-                          ||
-                          (FStarC_Syntax_Syntax.fv_eq_lid fv1
-                             FStarC_Parser_Const.fext_on_domain_g_lid) in
-                      if uu___4 then f else index1
-                  | uu___3 -> index1) in
-           let uu___1 = index in
-           match uu___1 with
-           | (index1, uu___2) ->
-               FStarC_List.iter
-                 (fun mutual ->
-                    let uu___3 =
-                      let uu___4 = fext_on_domain_index_sub_term index1 in
-                      ty_occurs_in mutual uu___4 in
-                    if uu___3
-                    then
-                      let uu___4 =
-                        let uu___5 = FStarC_Ident.string_of_lid mutual in
-                        let uu___6 =
-                          FStarC_Class_Show.show
-                            FStarC_Syntax_Print.showable_term index1 in
-                        let uu___7 = FStarC_Ident.string_of_lid fv in
-                        FStarC_Util.format3
-                          "Type %s is not strictly positive since it instantiates a non-uniformly recursive parameter or index %s of %s"
-                          uu___5 uu___6 uu___7 in
-                      FStarC_Errors.raise_error
-                        (FStarC_Syntax_Syntax.has_range_syntax ()) index1
-                        FStarC_Errors_Codes.Error_InductiveTypeNotSatisfyPositivityCondition
-                        ()
-                        (Obj.magic FStarC_Errors_Msg.is_error_message_string)
-                        (Obj.magic uu___4)
-                    else ()) mutuals1 in
-         let no_occurrence_in_indexes fv mutuals1 indexes =
-           FStarC_List.iter (no_occurrence_in_index fv mutuals1) indexes in
+        (let no_occurrence_in_index fv =
+           fun mutuals1 ->
+             fun index ->
+               let fext_on_domain_index_sub_term index1 =
+                 let uu___1 = FStarC_Syntax_Util.head_and_args index1 in
+                 match uu___1 with
+                 | (head, args) ->
+                     let uu___2 =
+                       let uu___3 =
+                         let uu___4 = FStarC_Syntax_Util.un_uinst head in
+                         uu___4.FStarC_Syntax_Syntax.n in
+                       (uu___3, args) in
+                     (match uu___2 with
+                      | (FStarC_Syntax_Syntax.Tm_fvar fv1,
+                         _td::_tr::(f, uu___3)::[]) ->
+                          let uu___4 =
+                            (FStarC_Syntax_Syntax.fv_eq_lid fv1
+                               FStarC_Parser_Const.fext_on_domain_lid)
+                              ||
+                              (FStarC_Syntax_Syntax.fv_eq_lid fv1
+                                 FStarC_Parser_Const.fext_on_domain_g_lid) in
+                          if uu___4 then f else index1
+                      | uu___3 -> index1) in
+               let uu___1 = index in
+               match uu___1 with
+               | (index1, uu___2) ->
+                   FStarC_List.iter
+                     (fun mutual ->
+                        let uu___3 =
+                          let uu___4 = fext_on_domain_index_sub_term index1 in
+                          ty_occurs_in mutual uu___4 in
+                        if uu___3
+                        then
+                          let uu___4 =
+                            let uu___5 = FStarC_Ident.string_of_lid mutual in
+                            let uu___6 =
+                              FStarC_Class_Show.show
+                                FStarC_Syntax_Print.showable_term index1 in
+                            let uu___7 = FStarC_Ident.string_of_lid fv in
+                            FStarC_Format.fmt3
+                              "Type %s is not strictly positive since it instantiates a non-uniformly recursive parameter or index %s of %s"
+                              uu___5 uu___6 uu___7 in
+                          FStarC_Errors.raise_error
+                            (FStarC_Syntax_Syntax.has_range_syntax ()) index1
+                            FStarC_Errors_Codes.Error_InductiveTypeNotSatisfyPositivityCondition
+                            ()
+                            (Obj.magic
+                               FStarC_Errors_Msg.is_error_message_string)
+                            (Obj.magic uu___4)
+                        else ()) mutuals1 in
+         let no_occurrence_in_indexes fv =
+           fun mutuals1 ->
+             fun indexes ->
+               FStarC_List.iter (no_occurrence_in_index fv mutuals1) indexes in
          let uu___1 = FStarC_Syntax_Util.head_and_args t in
          match uu___1 with
          | (head, args) ->
@@ -738,8 +758,7 @@ let (check_no_index_occurrences_in_arities :
               | FStarC_Syntax_Syntax.Tm_fvar fv ->
                   let uu___3 =
                     FStarC_TypeChecker_Env.num_inductive_uniform_ty_params
-                      env
-                      (fv.FStarC_Syntax_Syntax.fv_name).FStarC_Syntax_Syntax.v in
+                      env fv.FStarC_Syntax_Syntax.fv_name in
                   (match uu___3 with
                    | FStar_Pervasives_Native.None -> ()
                    | FStar_Pervasives_Native.Some n ->
@@ -748,12 +767,11 @@ let (check_no_index_occurrences_in_arities :
                        else
                          (let uu___5 =
                             FStarC_TypeChecker_Env.try_lookup_lid env
-                              (fv.FStarC_Syntax_Syntax.fv_name).FStarC_Syntax_Syntax.v in
+                              fv.FStarC_Syntax_Syntax.fv_name in
                           match uu___5 with
                           | FStar_Pervasives_Native.None ->
                               no_occurrence_in_indexes
-                                (fv.FStarC_Syntax_Syntax.fv_name).FStarC_Syntax_Syntax.v
-                                mutuals args
+                                fv.FStarC_Syntax_Syntax.fv_name mutuals args
                           | FStar_Pervasives_Native.Some
                               ((_us, i_typ), uu___6) ->
                               (debug_positivity env
@@ -761,77 +779,86 @@ let (check_no_index_occurrences_in_arities :
                                     let uu___9 =
                                       FStarC_Class_Show.show
                                         FStarC_Syntax_Print.showable_term t in
-                                    FStarC_Util.format2
+                                    let uu___10 =
+                                      FStarC_Class_Show.show
+                                        FStarC_Class_Show.showable_int n in
+                                    FStarC_Format.fmt2
                                       "Checking arity indexes of %s (num uniform params = %s)"
-                                      uu___9 (Prims.string_of_int n));
+                                      uu___9 uu___10);
                                (let uu___8 = FStarC_List.splitAt n args in
                                 match uu___8 with
                                 | (params, indices) ->
                                     let inst_i_typ =
                                       apply_constr_arrow
-                                        (fv.FStarC_Syntax_Syntax.fv_name).FStarC_Syntax_Syntax.v
-                                        i_typ params in
+                                        fv.FStarC_Syntax_Syntax.fv_name i_typ
+                                        params in
                                     let uu___9 =
                                       FStarC_Syntax_Util.arrow_formals
                                         inst_i_typ in
                                     (match uu___9 with
                                      | (formals, _sort) ->
-                                         let rec aux subst formals1 indices1
-                                           =
-                                           match (formals1, indices1) with
-                                           | (uu___10, []) -> ()
-                                           | (f::formals2, i::indices2) ->
-                                               let f_t =
-                                                 FStarC_Syntax_Subst.subst
-                                                   subst
-                                                   (f.FStarC_Syntax_Syntax.binder_bv).FStarC_Syntax_Syntax.sort in
-                                               ((let uu___11 =
-                                                   may_be_an_arity env f_t in
-                                                 if uu___11
-                                                 then
-                                                   (debug_positivity env
-                                                      (fun uu___13 ->
-                                                         let uu___14 =
-                                                           FStarC_Class_Show.show
-                                                             FStarC_Syntax_Print.showable_term
-                                                             (FStar_Pervasives_Native.fst
-                                                                i) in
-                                                         let uu___15 =
-                                                           FStarC_Class_Show.show
-                                                             FStarC_Syntax_Print.showable_term
-                                                             f_t in
-                                                         FStarC_Util.format2
-                                                           "Checking %s : %s (arity)"
-                                                           uu___14 uu___15);
-                                                    no_occurrence_in_index
-                                                      (fv.FStarC_Syntax_Syntax.fv_name).FStarC_Syntax_Syntax.v
-                                                      mutuals i)
-                                                 else
-                                                   debug_positivity env
-                                                     (fun uu___13 ->
-                                                        let uu___14 =
-                                                          FStarC_Class_Show.show
-                                                            FStarC_Syntax_Print.showable_term
+                                         let rec aux subst =
+                                           fun formals1 ->
+                                             fun indices1 ->
+                                               match (formals1, indices1)
+                                               with
+                                               | (uu___10, []) -> ()
+                                               | (f::formals2, i::indices2)
+                                                   ->
+                                                   let f_t =
+                                                     FStarC_Syntax_Subst.subst
+                                                       subst
+                                                       (f.FStarC_Syntax_Syntax.binder_bv).FStarC_Syntax_Syntax.sort in
+                                                   ((let uu___11 =
+                                                       may_be_an_arity env
+                                                         f_t in
+                                                     if uu___11
+                                                     then
+                                                       (debug_positivity env
+                                                          (fun uu___13 ->
+                                                             let uu___14 =
+                                                               FStarC_Class_Show.show
+                                                                 FStarC_Syntax_Print.showable_term
+                                                                 (FStar_Pervasives_Native.fst
+                                                                    i) in
+                                                             let uu___15 =
+                                                               FStarC_Class_Show.show
+                                                                 FStarC_Syntax_Print.showable_term
+                                                                 f_t in
+                                                             FStarC_Format.fmt2
+                                                               "Checking %s : %s (arity)"
+                                                               uu___14
+                                                               uu___15);
+                                                        no_occurrence_in_index
+                                                          fv.FStarC_Syntax_Syntax.fv_name
+                                                          mutuals i)
+                                                     else
+                                                       debug_positivity env
+                                                         (fun uu___13 ->
+                                                            let uu___14 =
+                                                              FStarC_Class_Show.show
+                                                                FStarC_Syntax_Print.showable_term
+                                                                (FStar_Pervasives_Native.fst
+                                                                   i) in
+                                                            let uu___15 =
+                                                              FStarC_Class_Show.show
+                                                                FStarC_Syntax_Print.showable_term
+                                                                f_t in
+                                                            FStarC_Format.fmt2
+                                                              "Skipping %s : %s (non-arity)"
+                                                              uu___14 uu___15));
+                                                    (let subst1 =
+                                                       (FStarC_Syntax_Syntax.NT
+                                                          ((f.FStarC_Syntax_Syntax.binder_bv),
                                                             (FStar_Pervasives_Native.fst
-                                                               i) in
-                                                        let uu___15 =
-                                                          FStarC_Class_Show.show
-                                                            FStarC_Syntax_Print.showable_term
-                                                            f_t in
-                                                        FStarC_Util.format2
-                                                          "Skipping %s : %s (non-arity)"
-                                                          uu___14 uu___15));
-                                                (let subst1 =
-                                                   (FStarC_Syntax_Syntax.NT
-                                                      ((f.FStarC_Syntax_Syntax.binder_bv),
-                                                        (FStar_Pervasives_Native.fst
-                                                           i)))
-                                                   :: subst in
-                                                 aux subst1 formals2 indices2))
-                                           | ([], uu___10) ->
-                                               no_occurrence_in_indexes
-                                                 (fv.FStarC_Syntax_Syntax.fv_name).FStarC_Syntax_Syntax.v
-                                                 mutuals indices1 in
+                                                               i)))
+                                                       :: subst in
+                                                     aux subst1 formals2
+                                                       indices2))
+                                               | ([], uu___10) ->
+                                                   no_occurrence_in_indexes
+                                                     fv.FStarC_Syntax_Syntax.fv_name
+                                                     mutuals indices1 in
                                          aux [] formals indices)))))
               | uu___3 -> ()))
 let (mutuals_unused_in_type :
@@ -984,7 +1011,7 @@ let rec (ty_strictly_positive_in_type :
                let uu___3 =
                  FStarC_Class_Show.show FStarC_Syntax_Print.showable_term
                    in_type1 in
-               FStarC_Util.format2
+               FStarC_Format.fmt2
                  "Checking strict positivity of {%s} in type, after normalization %s "
                  uu___2 uu___3);
           (let uu___1 =
@@ -1038,7 +1065,7 @@ let rec (ty_strictly_positive_in_type :
                               let uu___8 =
                                 FStarC_Class_Show.show
                                   FStarC_Syntax_Print.showable_term t in
-                              FStarC_Util.format2
+                              FStarC_Format.fmt2
                                 "Failed to check positivity of %s in a term with head %s"
                                 uu___7 uu___8);
                          false)
@@ -1060,7 +1087,7 @@ let rec (ty_strictly_positive_in_type :
                                      FStarC_Class_Show.show
                                        FStarC_Syntax_Print.showable_term
                                        head_ty in
-                                   FStarC_Util.format3
+                                   FStarC_Format.fmt3
                                      "Tm_app, head bv, in_type=%s, head_bv=%s, head_ty=%s"
                                      uu___8 uu___9 uu___10);
                               ty_strictly_positive_in_args env mutuals
@@ -1070,16 +1097,15 @@ let rec (ty_strictly_positive_in_type :
                         let uu___5 =
                           FStarC_List.existsML
                             (FStarC_Ident.lid_equals
-                               (fv.FStarC_Syntax_Syntax.fv_name).FStarC_Syntax_Syntax.v)
-                            mutuals in
+                               fv.FStarC_Syntax_Syntax.fv_name) mutuals in
                         if uu___5
                         then
                           (debug_positivity env
                              (fun uu___7 ->
                                 let uu___8 =
                                   FStarC_Ident.string_of_lid
-                                    (fv.FStarC_Syntax_Syntax.fv_name).FStarC_Syntax_Syntax.v in
-                                FStarC_Util.format1
+                                    fv.FStarC_Syntax_Syntax.fv_name in
+                                FStarC_Format.fmt1
                                   "Checking strict positivity in the Tm_app node where head lid is %s itself, checking that ty does not occur in the arguments"
                                   uu___8);
                            FStarC_List.for_all
@@ -1091,12 +1117,11 @@ let rec (ty_strictly_positive_in_type :
                           (debug_positivity env
                              (fun uu___8 ->
                                 let uu___9 = string_of_lids mutuals in
-                                FStarC_Util.format1
+                                FStarC_Format.fmt1
                                   "Checking strict positivity in the Tm_app node, head lid is not in %s, so checking nested positivity"
                                   uu___9);
                            ty_strictly_positive_in_arguments_to_fvar env
-                             mutuals in_type1
-                             (fv.FStarC_Syntax_Syntax.fv_name).FStarC_Syntax_Syntax.v
+                             mutuals in_type1 fv.FStarC_Syntax_Syntax.fv_name
                              us args unfolded))
                | FStarC_Syntax_Syntax.Tm_arrow
                    { FStarC_Syntax_Syntax.bs1 = uu___5;
@@ -1245,23 +1270,24 @@ let rec (ty_strictly_positive_in_type :
                    let uu___6 = FStarC_Syntax_Util.abs_formals in_type1 in
                    (match uu___6 with
                     | (bs, body, uu___7) ->
-                        let rec aux env1 bs1 =
-                          match bs1 with
-                          | [] ->
-                              ty_strictly_positive_in_type env1 mutuals body
-                                unfolded
-                          | b::bs2 ->
-                              let uu___8 =
+                        let rec aux env1 =
+                          fun bs1 ->
+                            match bs1 with
+                            | [] ->
                                 ty_strictly_positive_in_type env1 mutuals
-                                  (b.FStarC_Syntax_Syntax.binder_bv).FStarC_Syntax_Syntax.sort
-                                  unfolded in
-                              if uu___8
-                              then
-                                let env2 =
-                                  FStarC_TypeChecker_Env.push_binders env1
-                                    [b] in
-                                aux env2 bs2
-                              else false in
+                                  body unfolded
+                            | b::bs2 ->
+                                let uu___8 =
+                                  ty_strictly_positive_in_type env1 mutuals
+                                    (b.FStarC_Syntax_Syntax.binder_bv).FStarC_Syntax_Syntax.sort
+                                    unfolded in
+                                if uu___8
+                                then
+                                  let env2 =
+                                    FStarC_TypeChecker_Env.push_binders env1
+                                      [b] in
+                                  aux env2 bs2
+                                else false in
                         aux env bs)
                | uu___5 ->
                    (debug_positivity env
@@ -1272,7 +1298,7 @@ let rec (ty_strictly_positive_in_type :
                          let uu___9 =
                            FStarC_Class_Show.show
                              FStarC_Syntax_Print.showable_term in_type1 in
-                         FStarC_Util.format2
+                         FStarC_Format.fmt2
                            "Checking strict positivity, unexpected tag: %s and term %s"
                            uu___8 uu___9);
                     false))))
@@ -1290,53 +1316,54 @@ and (ty_strictly_positive_in_args :
             let uu___ = FStarC_Syntax_Util.arrow_formals head_t in
             match uu___ with
             | (bs, uu___1) ->
-                let rec aux bs1 args1 =
-                  match (bs1, args1) with
-                  | (uu___2, []) -> true
-                  | ([], uu___2) ->
-                      FStarC_List.for_all
-                        (fun uu___3 ->
-                           match uu___3 with
-                           | (arg, uu___4) ->
-                               mutuals_unused_in_type mutuals arg) args1
-                  | (b::bs2, (arg, uu___2)::args2) ->
-                      (debug_positivity env
-                         (fun uu___4 ->
-                            let uu___5 = string_of_lids mutuals in
-                            let uu___6 =
-                              FStarC_Class_Show.show
-                                FStarC_Syntax_Print.showable_term arg in
-                            let uu___7 =
-                              FStarC_Class_Show.show
-                                FStarC_Syntax_Print.showable_binder b in
-                            FStarC_Util.format3
-                              "Checking positivity of %s in argument %s and binder %s"
-                              uu___5 uu___6 uu___7);
-                       (let this_occurrence_ok =
-                          ((mutuals_unused_in_type mutuals arg) ||
-                             (FStarC_Syntax_Util.is_binder_unused b))
-                            ||
-                            ((FStarC_Syntax_Util.is_binder_strictly_positive
-                                b)
-                               &&
-                               (ty_strictly_positive_in_type env mutuals arg
-                                  unfolded)) in
-                        if Prims.op_Negation this_occurrence_ok
-                        then
-                          (debug_positivity env
-                             (fun uu___5 ->
-                                let uu___6 = string_of_lids mutuals in
-                                let uu___7 =
-                                  FStarC_Class_Show.show
-                                    FStarC_Syntax_Print.showable_term arg in
-                                let uu___8 =
-                                  FStarC_Class_Show.show
-                                    FStarC_Syntax_Print.showable_binder b in
-                                FStarC_Util.format3
-                                  "Failed checking positivity of %s in argument %s and binder %s"
-                                  uu___6 uu___7 uu___8);
-                           false)
-                        else aux bs2 args2)) in
+                let rec aux bs1 =
+                  fun args1 ->
+                    match (bs1, args1) with
+                    | (uu___2, []) -> true
+                    | ([], uu___2) ->
+                        FStarC_List.for_all
+                          (fun uu___3 ->
+                             match uu___3 with
+                             | (arg, uu___4) ->
+                                 mutuals_unused_in_type mutuals arg) args1
+                    | (b::bs2, (arg, uu___2)::args2) ->
+                        (debug_positivity env
+                           (fun uu___4 ->
+                              let uu___5 = string_of_lids mutuals in
+                              let uu___6 =
+                                FStarC_Class_Show.show
+                                  FStarC_Syntax_Print.showable_term arg in
+                              let uu___7 =
+                                FStarC_Class_Show.show
+                                  FStarC_Syntax_Print.showable_binder b in
+                              FStarC_Format.fmt3
+                                "Checking positivity of %s in argument %s and binder %s"
+                                uu___5 uu___6 uu___7);
+                         (let this_occurrence_ok =
+                            ((mutuals_unused_in_type mutuals arg) ||
+                               (FStarC_Syntax_Util.is_binder_unused b))
+                              ||
+                              ((FStarC_Syntax_Util.is_binder_strictly_positive
+                                  b)
+                                 &&
+                                 (ty_strictly_positive_in_type env mutuals
+                                    arg unfolded)) in
+                          if Prims.op_Negation this_occurrence_ok
+                          then
+                            (debug_positivity env
+                               (fun uu___5 ->
+                                  let uu___6 = string_of_lids mutuals in
+                                  let uu___7 =
+                                    FStarC_Class_Show.show
+                                      FStarC_Syntax_Print.showable_term arg in
+                                  let uu___8 =
+                                    FStarC_Class_Show.show
+                                      FStarC_Syntax_Print.showable_binder b in
+                                  FStarC_Format.fmt3
+                                    "Failed checking positivity of %s in argument %s and binder %s"
+                                    uu___6 uu___7 uu___8);
+                             false)
+                          else aux bs2 args2)) in
                 aux bs args
 and (ty_strictly_positive_in_arguments_to_fvar :
   FStarC_TypeChecker_Env.env ->
@@ -1361,7 +1388,7 @@ and (ty_strictly_positive_in_arguments_to_fvar :
                      let uu___5 =
                        FStarC_Class_Show.show
                          FStarC_Syntax_Print.showable_term t in
-                     FStarC_Util.format4
+                     FStarC_Format.fmt4
                        "Checking positivity of %s in application of fv %s to %s (t=%s)"
                        uu___2 uu___3 uu___4 uu___5);
                 (let uu___1 = FStarC_TypeChecker_Env.is_datacon env fv in
@@ -1383,7 +1410,7 @@ and (ty_strictly_positive_in_arguments_to_fvar :
                       | uu___4 ->
                           let uu___5 =
                             let uu___6 = FStarC_Ident.string_of_lid fv in
-                            FStarC_Util.format1
+                            FStarC_Format.fmt1
                               "Type of %s not found when checking positivity"
                               uu___6 in
                           FStarC_Errors.raise_error
@@ -1429,15 +1456,17 @@ and (ty_strictly_positive_in_arguments_to_fvar :
                                   (debug_positivity env
                                      (fun uu___10 ->
                                         let uu___11 =
-                                          FStarC_Ident.string_of_lid ilid in
+                                          FStarC_Class_Show.show
+                                            FStarC_Class_Show.showable_int
+                                            num_uniform_params in
                                         let uu___12 =
+                                          FStarC_Ident.string_of_lid ilid in
+                                        let uu___13 =
                                           FStarC_Syntax_Print.args_to_string
                                             params in
-                                        FStarC_Util.format3
+                                        FStarC_Format.fmt3
                                           "Checking positivity in datacon, number of type parameters is %s, adding %s %s to the memo table"
-                                          (Prims.string_of_int
-                                             num_uniform_params) uu___11
-                                          uu___12);
+                                          uu___11 uu___12 uu___13);
                                    (let uu___11 =
                                       let uu___12 =
                                         FStarC_Effect.op_Bang unfolded in
@@ -1472,7 +1501,7 @@ and (ty_strictly_positive_in_datacon_of_applied_inductive :
                        let uu___2 = string_of_lids mutuals in
                        let uu___3 = FStarC_Ident.string_of_lid dlid in
                        let uu___4 = FStarC_Ident.string_of_lid ilid in
-                       FStarC_Util.format3
+                       FStarC_Format.fmt3
                          "Checking positivity of %s in data constructor %s : %s"
                          uu___2 uu___3 uu___4);
                   (let dt =
@@ -1485,7 +1514,7 @@ and (ty_strictly_positive_in_datacon_of_applied_inductive :
                          let uu___2 = FStarC_Ident.range_of_lid dlid in
                          let uu___3 =
                            let uu___4 = FStarC_Ident.string_of_lid dlid in
-                           FStarC_Util.format1
+                           FStarC_Format.fmt1
                              "Data constructor %s not found when checking positivity"
                              uu___4 in
                          FStarC_Errors.raise_error
@@ -1500,10 +1529,13 @@ and (ty_strictly_positive_in_datacon_of_applied_inductive :
                         let uu___3 =
                           FStarC_Class_Show.show
                             FStarC_Syntax_Print.showable_term dt in
-                        let uu___4 = FStarC_Syntax_Print.args_to_string args in
-                        FStarC_Util.format3
+                        let uu___4 =
+                          FStarC_Class_Show.show
+                            FStarC_Class_Show.showable_int num_ibs in
+                        let uu___5 = FStarC_Syntax_Print.args_to_string args in
+                        FStarC_Format.fmt3
                           "Checking positivity in the data constructor type: %s\n\tnum_ibs=%s, args=%s,"
-                          uu___3 (Prims.string_of_int num_ibs) uu___4);
+                          uu___3 uu___4 uu___5);
                    (let uu___2 = FStarC_List.splitAt num_ibs args in
                     match uu___2 with
                     | (args1, rest) ->
@@ -1517,7 +1549,7 @@ and (ty_strictly_positive_in_datacon_of_applied_inductive :
                                 FStarC_Class_Show.show
                                   FStarC_Syntax_Print.showable_term
                                   applied_dt in
-                              FStarC_Util.format3
+                              FStarC_Format.fmt3
                                 "Applied data constructor type: %s %s : %s"
                                 uu___5 uu___6 uu___7);
                          (let uu___4 =
@@ -1527,39 +1559,40 @@ and (ty_strictly_positive_in_datacon_of_applied_inductive :
                               (check_no_index_occurrences_in_arities env
                                  mutuals t;
                                (let rec strictly_positive_in_all_fields env1
-                                  fields1 =
-                                  match fields1 with
-                                  | [] -> true
-                                  | f::fields2 ->
-                                      (debug_positivity env1
-                                         (fun uu___7 ->
-                                            let uu___8 =
-                                              FStarC_Class_Show.show
-                                                FStarC_Syntax_Print.showable_bv
-                                                f.FStarC_Syntax_Syntax.binder_bv in
-                                            let uu___9 =
-                                              FStarC_Class_Show.show
-                                                FStarC_Syntax_Print.showable_term
-                                                (f.FStarC_Syntax_Syntax.binder_bv).FStarC_Syntax_Syntax.sort in
-                                            FStarC_Util.format2
-                                              "Checking field %s : %s for indexes and positivity"
-                                              uu___8 uu___9);
-                                       check_no_index_occurrences_in_arities
-                                         env1 mutuals
-                                         (f.FStarC_Syntax_Syntax.binder_bv).FStarC_Syntax_Syntax.sort;
-                                       (let uu___8 =
-                                          ty_strictly_positive_in_type env1
-                                            mutuals
-                                            (f.FStarC_Syntax_Syntax.binder_bv).FStarC_Syntax_Syntax.sort
-                                            unfolded in
-                                        if uu___8
-                                        then
-                                          let env2 =
-                                            FStarC_TypeChecker_Env.push_binders
-                                              env1 [f] in
-                                          strictly_positive_in_all_fields
-                                            env2 fields2
-                                        else false)) in
+                                  =
+                                  fun fields1 ->
+                                    match fields1 with
+                                    | [] -> true
+                                    | f::fields2 ->
+                                        (debug_positivity env1
+                                           (fun uu___7 ->
+                                              let uu___8 =
+                                                FStarC_Class_Show.show
+                                                  FStarC_Syntax_Print.showable_bv
+                                                  f.FStarC_Syntax_Syntax.binder_bv in
+                                              let uu___9 =
+                                                FStarC_Class_Show.show
+                                                  FStarC_Syntax_Print.showable_term
+                                                  (f.FStarC_Syntax_Syntax.binder_bv).FStarC_Syntax_Syntax.sort in
+                                              FStarC_Format.fmt2
+                                                "Checking field %s : %s for indexes and positivity"
+                                                uu___8 uu___9);
+                                         check_no_index_occurrences_in_arities
+                                           env1 mutuals
+                                           (f.FStarC_Syntax_Syntax.binder_bv).FStarC_Syntax_Syntax.sort;
+                                         (let uu___8 =
+                                            ty_strictly_positive_in_type env1
+                                              mutuals
+                                              (f.FStarC_Syntax_Syntax.binder_bv).FStarC_Syntax_Syntax.sort
+                                              unfolded in
+                                          if uu___8
+                                          then
+                                            let env2 =
+                                              FStarC_TypeChecker_Env.push_binders
+                                                env1 [f] in
+                                            strictly_positive_in_all_fields
+                                              env2 fields2
+                                          else false)) in
                                 strictly_positive_in_all_fields env fields))))))
 let (name_strictly_positive_in_type :
   FStarC_TypeChecker_Env.env ->
@@ -1608,7 +1641,7 @@ let (ty_strictly_positive_in_datacon_decl :
                 | FStar_Pervasives_Native.None ->
                     let uu___1 =
                       let uu___2 = FStarC_Ident.string_of_lid dlid in
-                      FStarC_Util.format1
+                      FStarC_Format.fmt1
                         "Error looking up data constructor %s when checking positivity"
                         uu___2 in
                     FStarC_Errors.raise_error FStarC_Ident.hasrange_lident
@@ -1667,7 +1700,7 @@ let (ty_strictly_positive_in_datacon_decl :
                                     if uu___7
                                     then "strictly_positive"
                                     else "unused" in
-                                  FStarC_Util.format2
+                                  FStarC_Format.fmt2
                                     "Binder %s is marked %s, but its use in the definition is not"
                                     uu___5 uu___6 in
                                 FStarC_Errors.raise_error
@@ -1677,26 +1710,27 @@ let (ty_strictly_positive_in_datacon_decl :
                                   (Obj.magic
                                      FStarC_Errors_Msg.is_error_message_string)
                                   (Obj.magic uu___4) in
-                          let rec check_all_fields env1 fields1 =
-                            match fields1 with
-                            | [] -> true
-                            | field::fields2 ->
-                                (check_annotated_binders_are_strictly_positive_in_field
-                                   field;
-                                 (let uu___5 =
-                                    let uu___6 =
-                                      ty_strictly_positive_in_type env1
-                                        mutuals
-                                        (field.FStarC_Syntax_Syntax.binder_bv).FStarC_Syntax_Syntax.sort
-                                        unfolded in
-                                    Prims.op_Negation uu___6 in
-                                  if uu___5
-                                  then false
-                                  else
-                                    (let env2 =
-                                       FStarC_TypeChecker_Env.push_binders
-                                         env1 [field] in
-                                     check_all_fields env2 fields2))) in
+                          let rec check_all_fields env1 =
+                            fun fields1 ->
+                              match fields1 with
+                              | [] -> true
+                              | field::fields2 ->
+                                  (check_annotated_binders_are_strictly_positive_in_field
+                                     field;
+                                   (let uu___5 =
+                                      let uu___6 =
+                                        ty_strictly_positive_in_type env1
+                                          mutuals
+                                          (field.FStarC_Syntax_Syntax.binder_bv).FStarC_Syntax_Syntax.sort
+                                          unfolded in
+                                      Prims.op_Negation uu___6 in
+                                    if uu___5
+                                    then false
+                                    else
+                                      (let env2 =
+                                         FStarC_TypeChecker_Env.push_binders
+                                           env1 [field] in
+                                       check_all_fields env2 fields2))) in
                           check_all_fields env fields))))
 let (check_strict_positivity :
   FStarC_TypeChecker_Env.env ->

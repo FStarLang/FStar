@@ -43,8 +43,6 @@ unfold let n = 16
 open FStar.UInt
 open FStar.Mul
 
-#set-options "--max_fuel 0 --max_ifuel 0"
-
 (** Abstract type of machine integers, with an underlying
     representation using a bounded mathematical integer *)
 new val t : eqtype
@@ -248,8 +246,6 @@ let minus (a:t) = add_mod (lognot a) (uint_to_t 1)
 inline_for_extraction
 let n_minus_one = UInt32.uint_to_t (n - 1)
 
-#set-options "--z3rlimit 80 --initial_fuel 1 --max_fuel 1"
-
 (** A constant-time way to compute the equality of
     two machine integers.
 
@@ -257,6 +253,7 @@ let n_minus_one = UInt32.uint_to_t (n - 1)
 
     Note, the branching on [a=b] is just for proof-purposes.
   *)
+#push-options "--z3rlimit 80 --fuel 1"
 [@ CNoInline ]
 let eq_mask (a:t) (b:t)
   : Pure t
@@ -315,31 +312,31 @@ let gte_mask (a:t) (b:t)
     lemma_msb_gte (v x) (v y);
     lemma_msb_gte (v y) (v x);
     c
-#reset-options
+#pop-options
 
 (*** Infix notations *)
-unfold let ( +^ )  = add
-unfold let ( +?^ ) = add_underspec
-unfold let ( +%^ ) = add_mod
-unfold let ( -^ )  = sub
-unfold let ( -?^ ) = sub_underspec
-unfold let ( -%^ ) = sub_mod
-unfold let ( *^ ) = mul
-unfold let ( *?^ )= mul_underspec
-unfold let ( *%^ )= mul_mod
-unfold let ( /^ )  = div
-unfold let ( %^ )  = rem
-unfold let ( ^^ )  = logxor
-unfold let ( &^ )  = logand
-unfold let ( |^ )  = logor
-unfold let ( <<^ ) = shift_left
-unfold let ( >>^ ) = shift_right
-unfold let ( =^ )  = eq
-unfold let ( <>^ ) = ne
-unfold let ( >^ )  = gt
-unfold let ( >=^ ) = gte
-unfold let ( <^ )  = lt
-unfold let ( <=^ ) = lte
+inline_for_extraction unfold let ( +^ )  = add
+inline_for_extraction unfold let ( +?^ ) = add_underspec
+inline_for_extraction unfold let ( +%^ ) = add_mod
+inline_for_extraction unfold let ( -^ )  = sub
+inline_for_extraction unfold let ( -?^ ) = sub_underspec
+inline_for_extraction unfold let ( -%^ ) = sub_mod
+inline_for_extraction unfold let ( *^ ) = mul
+inline_for_extraction unfold let ( *?^ )= mul_underspec
+inline_for_extraction unfold let ( *%^ )= mul_mod
+inline_for_extraction unfold let ( /^ )  = div
+inline_for_extraction unfold let ( %^ )  = rem
+inline_for_extraction unfold let ( ^^ )  = logxor
+inline_for_extraction unfold let ( &^ )  = logand
+inline_for_extraction unfold let ( |^ )  = logor
+inline_for_extraction unfold let ( <<^ ) = shift_left
+inline_for_extraction unfold let ( >>^ ) = shift_right
+inline_for_extraction unfold let ( =^ )  = eq
+inline_for_extraction unfold let ( <>^ ) = ne
+inline_for_extraction unfold let ( >^ )  = gt
+inline_for_extraction unfold let ( >=^ ) = gte
+inline_for_extraction unfold let ( <^ )  = lt
+inline_for_extraction unfold let ( <=^ ) = lte
 
 (**** To input / output constants *)
 (** In decimal representation *)
@@ -353,7 +350,6 @@ val to_string_hex_pad: t -> Tot string
 
 val of_string: string -> Tot t
 
-#set-options "--admit_smt_queries true"
 //This private primitive is used internally by the
 //compiler to translate bounded integer constants
 //with a desugaring-time check of the size of the number,
@@ -361,8 +357,8 @@ val of_string: string -> Tot t
 //Since it is marked private, client programs cannot call it directly
 //Since it is marked unfold, it eagerly reduces,
 //eliminating the verification overhead of the wrapper
+[@@admitted]
 private
 unfold
-let __uint_to_t (x:int) : Tot t
-    = uint_to_t x
-#reset-options
+let __uint_to_t (x:int) : t =
+  uint_to_t x

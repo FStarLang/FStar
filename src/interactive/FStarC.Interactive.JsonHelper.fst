@@ -21,16 +21,16 @@ module FStarC.Interactive.JsonHelper
 open FStarC.Effect
 open FStarC.List
 open FStarC
-open FStarC.Util
 open FStarC.Errors
 open FStarC.Range
 open FStarC.Json
 open FStarC.TypeChecker.Env
+open FStarC.Class.Show
 
 module U = FStarC.Util
 
 let try_assoc (key: string) (d: assoct) =
-  U.map_option snd (U.try_find (fun (k, _) -> k = key) d)
+  Option.map snd (U.try_find (fun (k, _) -> k = key) d)
 
 // All exceptions are guaranteed to be caught in the LSP server implementation
 exception MissingKey of string // Only in LSP
@@ -43,17 +43,17 @@ exception InputExhausted
 let assoc key a =
   match try_assoc key a with
   | Some v -> v
-  | None -> raise (MissingKey (U.format1 "Missing key [%s]" key))
+  | None -> raise (MissingKey (Format.fmt1 "Missing key [%s]" key))
 
 let write_json (js: json) =
-  U.print_raw (string_of_json js);
-  U.print_raw "\n"
+  Format.print_raw (string_of_json js);
+  Format.print_raw "\n"
 
 let write_jsonrpc (js: json) : unit =
   // TODO: utf-8 strings: byte buffers?
   let js_str = string_of_json js in
-  let len = U.string_of_int (String.length js_str) in
-  U.print_raw (U.format2 "Content-Length: %s\r\n\r\n%s" len js_str)
+  let len = show (String.length js_str) in
+  Format.print_raw (Format.fmt2 "Content-Length: %s\r\n\r\n%s" len js_str)
 
 // Only used in IDE
 let js_fail expected got =
@@ -88,17 +88,17 @@ let arg k r = assoc k (assoc "params" r |> js_assoc)
 // Windows paths: "file:///z%3A/foo corresponds to z:/foo
 //                 0123456789                      012
 let uri_to_path u = if U.substring u 9 3 = "%3A" then
-                    U.format2 "%s:%s" (U.substring u 8 1) (U.substring_from u 12)
+                    Format.fmt2 "%s:%s" (U.substring u 8 1) (U.substring_from u 12)
                     else U.substring_from u 7
 let path_to_uri u = if U.char_at u 1 = ':' then
                     let rest = U.replace_char (U.substring_from u 2) '\\' '/' in
-                    U.format2 "file:///%s%3A%s" (U.substring u 0 1) rest
-                    else U.format1 "file://%s" u
+                    Format.fmt2 "file:///%s%3A%s" (U.substring u 0 1) rest
+                    else Format.fmt1 "file://%s" u
 
 let js_compl_context : json -> completion_context = function
   | JsonAssoc a ->
   { trigger_kind = assoc "triggerKind" a |> js_int;
-    trigger_char = try_assoc "triggerChar" a |> U.map_option js_str; }
+    trigger_char = try_assoc "triggerChar" a |> Option.map js_str; }
   | other -> js_fail "dictionary" other
 
 // May throw
@@ -170,9 +170,9 @@ let errorcode_to_int : error_code -> int = function
 
 let json_debug = function
   | JsonNull -> "null"
-  | JsonBool b -> U.format1 "bool (%s)" (if b then "true" else "false")
-  | JsonInt i -> U.format1 "int (%s)" (U.string_of_int i)
-  | JsonStr s -> U.format1 "string (%s)" s
+  | JsonBool b -> Format.fmt1 "bool (%s)" (if b then "true" else "false")
+  | JsonInt i -> Format.fmt1 "int (%s)" (show i)
+  | JsonStr s -> Format.fmt1 "string (%s)" s
   | JsonList _ -> "list (...)"
   | JsonAssoc _ -> "dictionary (...)"
 
@@ -180,7 +180,7 @@ let json_debug = function
 // because types differ (query' versus lsp_query)
 let wrap_jsfail (qid : option int) expected got : lsp_query =
   { query_id = qid;
-    q = BadProtocolMsg (U.format2 "JSON decoding failed: expected %s, got %s"
+    q = BadProtocolMsg (Format.fmt2 "JSON decoding failed: expected %s, got %s"
                         expected (json_debug got)) }
 
 (* Helpers for constructing the response *)

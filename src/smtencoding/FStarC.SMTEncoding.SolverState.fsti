@@ -36,7 +36,6 @@ open FStarC.Effect
 open FStarC
 open FStarC.SMTEncoding.Term
 open FStarC.BaseTypes
-open FStarC.Util
 module U = FStarC.SMTEncoding.UnsatCore
 type using_facts_from_setting = list (list string & bool)
 

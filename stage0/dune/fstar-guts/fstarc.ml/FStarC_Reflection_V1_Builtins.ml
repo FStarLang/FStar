@@ -107,7 +107,7 @@ let (inspect_const :
     match c with
     | FStarC_Const.Const_unit -> FStarC_Reflection_V1_Data.C_Unit
     | FStarC_Const.Const_int (s, uu___) ->
-        let uu___1 = FStarC_BigInt.big_int_of_string s in
+        let uu___1 = FStarC_Util.int_of_string s in
         FStarC_Reflection_V1_Data.C_Int uu___1
     | FStarC_Const.Const_bool (true) -> FStarC_Reflection_V1_Data.C_True
     | FStarC_Const.Const_bool (false) -> FStarC_Reflection_V1_Data.C_False
@@ -122,7 +122,7 @@ let (inspect_const :
         let uu___1 =
           let uu___2 =
             FStarC_Class_Show.show FStarC_Syntax_Print.showable_const c in
-          FStarC_Util.format1 "unknown constant: %s" uu___2 in
+          FStarC_Format.fmt1 "unknown constant: %s" uu___2 in
         failwith uu___1
 let (inspect_universe :
   FStarC_Syntax_Syntax.universe -> FStarC_Reflection_V1_Data.universe_view) =
@@ -131,9 +131,7 @@ let (inspect_universe :
     | FStarC_Syntax_Syntax.U_zero -> FStarC_Reflection_V1_Data.Uv_Zero
     | FStarC_Syntax_Syntax.U_succ u1 -> FStarC_Reflection_V1_Data.Uv_Succ u1
     | FStarC_Syntax_Syntax.U_max us -> FStarC_Reflection_V1_Data.Uv_Max us
-    | FStarC_Syntax_Syntax.U_bvar n ->
-        let uu___ = FStarC_BigInt.of_int_fs n in
-        FStarC_Reflection_V1_Data.Uv_BVar uu___
+    | FStarC_Syntax_Syntax.U_bvar n -> FStarC_Reflection_V1_Data.Uv_BVar n
     | FStarC_Syntax_Syntax.U_name i ->
         let uu___ =
           let uu___1 = FStarC_Ident.string_of_id i in
@@ -148,9 +146,7 @@ let (pack_universe :
     | FStarC_Reflection_V1_Data.Uv_Zero -> FStarC_Syntax_Syntax.U_zero
     | FStarC_Reflection_V1_Data.Uv_Succ u -> FStarC_Syntax_Syntax.U_succ u
     | FStarC_Reflection_V1_Data.Uv_Max us -> FStarC_Syntax_Syntax.U_max us
-    | FStarC_Reflection_V1_Data.Uv_BVar n ->
-        let uu___ = FStarC_BigInt.to_int_fs n in
-        FStarC_Syntax_Syntax.U_bvar uu___
+    | FStarC_Reflection_V1_Data.Uv_BVar n -> FStarC_Syntax_Syntax.U_bvar n
     | FStarC_Reflection_V1_Data.Uv_Name i ->
         let uu___ = FStarC_Ident.mk_ident i in
         FStarC_Syntax_Syntax.U_name uu___
@@ -239,10 +235,8 @@ let rec (inspect_ln :
     | FStarC_Syntax_Syntax.Tm_uvar (ctx_u, s) ->
         let uu___ =
           let uu___1 =
-            let uu___2 =
-              FStarC_Syntax_Unionfind.uvar_unique_id
-                ctx_u.FStarC_Syntax_Syntax.ctx_uvar_head in
-            FStarC_BigInt.of_int_fs uu___2 in
+            FStarC_Syntax_Unionfind.uvar_unique_id
+              ctx_u.FStarC_Syntax_Syntax.ctx_uvar_head in
           (uu___1, (ctx_u, s)) in
         FStarC_Reflection_V1_Data.Tv_Uvar uu___
     | FStarC_Syntax_Syntax.Tm_let
@@ -317,7 +311,7 @@ let rec (inspect_ln :
               FStarC_Class_Tagged.tag_of FStarC_Syntax_Syntax.tagged_term t1 in
             let uu___4 =
               FStarC_Class_Show.show FStarC_Syntax_Print.showable_term t1 in
-            FStarC_Util.format2
+            FStarC_Format.fmt2
               "inspect_ln: outside of expected syntax (%s, %s)" uu___3 uu___4 in
           FStarC_Errors.log_issue (FStarC_Syntax_Syntax.has_range_syntax ())
             t1 FStarC_Errors_Codes.Warning_CantInspect ()
@@ -343,7 +337,7 @@ let (inspect_comp :
           ((let uu___3 =
               let uu___4 =
                 FStarC_Class_Show.show FStarC_Syntax_Print.showable_comp c in
-              FStarC_Util.format1
+              FStarC_Format.fmt1
                 "inspect_comp: inspecting comp with wf decreases clause is not yet supported: %s skipping the decreases clause"
                 uu___4 in
             FStarC_Errors.log_issue
@@ -448,7 +442,8 @@ let (pack_const :
     | FStarC_Reflection_V1_Data.C_Unit -> FStarC_Const.Const_unit
     | FStarC_Reflection_V1_Data.C_Int i ->
         let uu___ =
-          let uu___1 = FStarC_BigInt.string_of_big_int i in
+          let uu___1 =
+            FStarC_Class_Show.show FStarC_Class_Show.showable_int i in
           (uu___1, FStar_Pervasives_Native.None) in
         FStarC_Const.Const_int uu___
     | FStarC_Reflection_V1_Data.C_True -> FStarC_Const.Const_bool true
@@ -912,31 +907,32 @@ let (inspect_sigelt :
                               FStarC_Syntax_Syntax.num_ty_params = nparam;
                               FStarC_Syntax_Syntax.mutuals1 = uu___7;
                               FStarC_Syntax_Syntax.injective_type_params1 =
-                                uu___8;_};
-                          FStarC_Syntax_Syntax.sigrng = uu___9;
-                          FStarC_Syntax_Syntax.sigquals = uu___10;
-                          FStarC_Syntax_Syntax.sigmeta = uu___11;
-                          FStarC_Syntax_Syntax.sigattrs = uu___12;
-                          FStarC_Syntax_Syntax.sigopens_and_abbrevs = uu___13;
-                          FStarC_Syntax_Syntax.sigopts = uu___14;_}
+                                uu___8;
+                              FStarC_Syntax_Syntax.proj_disc_lids = uu___9;_};
+                          FStarC_Syntax_Syntax.sigrng = uu___10;
+                          FStarC_Syntax_Syntax.sigquals = uu___11;
+                          FStarC_Syntax_Syntax.sigmeta = uu___12;
+                          FStarC_Syntax_Syntax.sigattrs = uu___13;
+                          FStarC_Syntax_Syntax.sigopens_and_abbrevs = uu___14;
+                          FStarC_Syntax_Syntax.sigopts = uu___15;_}
                         ->
                         let cty1 = FStarC_Syntax_Subst.subst s cty in
-                        let uu___15 =
-                          let uu___16 = get_env () in
-                          FStarC_TypeChecker_Normalize.get_n_binders uu___16
+                        let uu___16 =
+                          let uu___17 = get_env () in
+                          FStarC_TypeChecker_Normalize.get_n_binders uu___17
                             nparam cty1 in
-                        (match uu___15 with
+                        (match uu___16 with
                          | (param_ctor_bs, c) ->
                              (if (FStarC_List.length param_ctor_bs) <> nparam
                               then
                                 failwith
                                   "impossible: inspect_sigelt: could not obtain sufficient ctor param binders"
                               else ();
-                              (let uu___18 =
-                                 let uu___19 =
+                              (let uu___19 =
+                                 let uu___20 =
                                    FStarC_Syntax_Util.is_total_comp c in
-                                 Prims.op_Negation uu___19 in
-                               if uu___18
+                                 Prims.op_Negation uu___20 in
+                               if uu___19
                                then
                                  failwith
                                    "impossible: inspect_sigelt: removed parameters and got an effectful comp"
@@ -946,19 +942,19 @@ let (inspect_sigelt :
                                  FStarC_List.map2
                                    (fun b1 ->
                                       fun b2 ->
-                                        let uu___18 =
-                                          let uu___19 =
+                                        let uu___19 =
+                                          let uu___20 =
                                             FStarC_Syntax_Syntax.bv_to_name
                                               b2.FStarC_Syntax_Syntax.binder_bv in
                                           ((b1.FStarC_Syntax_Syntax.binder_bv),
-                                            uu___19) in
-                                        FStarC_Syntax_Syntax.NT uu___18)
+                                            uu___20) in
+                                        FStarC_Syntax_Syntax.NT uu___19)
                                    param_ctor_bs param_bs2 in
                                let cty3 = FStarC_Syntax_Subst.subst s' cty2 in
                                let cty4 =
                                  FStarC_Syntax_Util.remove_inacc cty3 in
-                               let uu___18 = FStarC_Ident.path_of_lid lid1 in
-                               (uu___18, cty4))))
+                               let uu___19 = FStarC_Ident.path_of_lid lid1 in
+                               (uu___19, cty4))))
                     | uu___6 ->
                         failwith
                           "impossible: inspect_sigelt: did not find ctor" in
@@ -1063,14 +1059,16 @@ let (pack_sigelt :
                        FStarC_Syntax_Syntax.num_ty_params = nparam;
                        FStarC_Syntax_Syntax.mutuals1 = [];
                        FStarC_Syntax_Syntax.injective_type_params1 =
-                         injective_type_params
+                         injective_type_params;
+                       FStarC_Syntax_Syntax.proj_disc_lids = []
                      }) in
           let ctor_ses = FStarC_List.map pack_ctor ctors in
           let c_lids =
             FStarC_List.map
               (fun se ->
                  let uu___1 = FStarC_Syntax_Util.lid_of_sigelt se in
-                 FStarC_Util.must uu___1) ctor_ses in
+                 FStar_Pervasives_Native.__proj__Some__item__v uu___1)
+              ctor_ses in
           let ind_se =
             let param_bs1 = FStarC_Syntax_Subst.close_binders param_bs in
             let ty1 = FStarC_Syntax_Subst.close param_bs1 ty in
@@ -1178,7 +1176,7 @@ let (inspect_bv :
          let uu___4 =
            FStarC_Class_Show.show FStarC_Class_Show.showable_int
              bv.FStarC_Syntax_Syntax.index in
-         FStarC_Util.format3
+         FStarC_Format.fmt3
            "inspect_bv: index is negative (%s : %s), index = %s" uu___2
            uu___3 uu___4 in
        FStarC_Errors.log_issue0 FStarC_Errors_Codes.Warning_CantInspect ()
@@ -1188,41 +1186,33 @@ let (inspect_bv :
     (let uu___1 =
        let uu___2 = FStarC_Ident.string_of_id bv.FStarC_Syntax_Syntax.ppname in
        FStarC_Sealed.seal uu___2 in
-     let uu___2 = FStarC_BigInt.of_int_fs bv.FStarC_Syntax_Syntax.index in
      {
        FStarC_Reflection_V1_Data.bv_ppname = uu___1;
-       FStarC_Reflection_V1_Data.bv_index = uu___2
+       FStarC_Reflection_V1_Data.bv_index = (bv.FStarC_Syntax_Syntax.index)
      })
 let (pack_bv : FStarC_Reflection_V1_Data.bv_view -> FStarC_Syntax_Syntax.bv)
   =
   fun bvv ->
-    (let uu___1 =
-       let uu___2 =
-         FStarC_BigInt.to_int_fs bvv.FStarC_Reflection_V1_Data.bv_index in
-       uu___2 < Prims.int_zero in
-     if uu___1
-     then
-       let uu___2 =
-         let uu___3 =
-           let uu___4 =
-             FStarC_BigInt.to_int_fs bvv.FStarC_Reflection_V1_Data.bv_index in
-           FStarC_Class_Show.show FStarC_Class_Show.showable_int uu___4 in
-         FStarC_Util.format2 "pack_bv: index is negative (%s), index = %s"
+    if bvv.FStarC_Reflection_V1_Data.bv_index < Prims.int_zero
+    then
+      (let uu___1 =
+         let uu___2 =
+           FStarC_Class_Show.show FStarC_Class_Show.showable_int
+             bvv.FStarC_Reflection_V1_Data.bv_index in
+         FStarC_Format.fmt2 "pack_bv: index is negative (%s), index = %s"
            (FStarC_Sealed.unseal bvv.FStarC_Reflection_V1_Data.bv_ppname)
-           uu___3 in
+           uu___2 in
        FStarC_Errors.log_issue0 FStarC_Errors_Codes.Warning_CantInspect ()
          (Obj.magic FStarC_Errors_Msg.is_error_message_string)
-         (Obj.magic uu___2)
-     else ());
+         (Obj.magic uu___1))
+    else ();
     (let uu___1 =
        FStarC_Ident.mk_ident
          ((FStarC_Sealed.unseal bvv.FStarC_Reflection_V1_Data.bv_ppname),
            FStarC_Range_Type.dummyRange) in
-     let uu___2 =
-       FStarC_BigInt.to_int_fs bvv.FStarC_Reflection_V1_Data.bv_index in
      {
        FStarC_Syntax_Syntax.ppname = uu___1;
-       FStarC_Syntax_Syntax.index = uu___2;
+       FStarC_Syntax_Syntax.index = (bvv.FStarC_Reflection_V1_Data.bv_index);
        FStarC_Syntax_Syntax.sort = FStarC_Syntax_Syntax.tun
      })
 let (inspect_binder :
@@ -1499,8 +1489,8 @@ let (implode_qn : Prims.string Prims.list -> Prims.string) =
   fun ns -> FStarC_String.concat "." ns
 let (explode_qn : Prims.string -> Prims.string Prims.list) =
   fun s -> FStarC_String.split [46] s
-let (compare_string : Prims.string -> Prims.string -> FStarC_BigInt.t) =
-  fun s1 -> fun s2 -> FStarC_BigInt.of_int_fs (FStarC_String.compare s1 s2)
+let (compare_string : Prims.string -> Prims.string -> Prims.int) =
+  fun s1 -> fun s2 -> FStarC_String.compare s1 s2
 let (push_binder :
   FStarC_TypeChecker_Env.env ->
     FStarC_Syntax_Syntax.binder -> FStarC_TypeChecker_Env.env)
@@ -1517,8 +1507,7 @@ let (close_term :
   FStarC_Syntax_Syntax.binder ->
     FStarC_Syntax_Syntax.term -> FStarC_Syntax_Syntax.term)
   = fun b -> fun t -> FStarC_Syntax_Subst.close [b] t
-let (range_of_term : FStarC_Syntax_Syntax.term -> FStarC_Range_Type.range) =
+let (range_of_term : FStarC_Syntax_Syntax.term -> FStarC_Range_Type.t) =
   fun t -> t.FStarC_Syntax_Syntax.pos
-let (range_of_sigelt :
-  FStarC_Syntax_Syntax.sigelt -> FStarC_Range_Type.range) =
+let (range_of_sigelt : FStarC_Syntax_Syntax.sigelt -> FStarC_Range_Type.t) =
   fun s -> s.FStarC_Syntax_Syntax.sigrng

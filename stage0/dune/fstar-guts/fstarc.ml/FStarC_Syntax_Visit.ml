@@ -9,7 +9,7 @@ let (uu___0 : unit id FStarC_Class_Monad.monad) =
     FStarC_Class_Monad.return =
       (fun uu___1 ->
          fun uu___ -> (fun a -> fun a1 -> Obj.magic (I a1)) uu___1 uu___);
-    FStarC_Class_Monad.op_let_Bang =
+    FStarC_Class_Monad.bind =
       (fun uu___3 ->
          fun uu___2 ->
            fun uu___1 ->

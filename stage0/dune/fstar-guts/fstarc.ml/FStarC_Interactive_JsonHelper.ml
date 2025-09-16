@@ -8,7 +8,7 @@ let (try_assoc :
       let uu___ =
         FStarC_Util.try_find
           (fun uu___1 -> match uu___1 with | (k, uu___2) -> k = key) d in
-      FStarC_Util.map_option FStar_Pervasives_Native.snd uu___
+      FStarC_Option.map FStar_Pervasives_Native.snd uu___
 exception MissingKey of Prims.string 
 let (uu___is_MissingKey : Prims.exn -> Prims.bool) =
   fun projectee ->
@@ -44,20 +44,22 @@ let (assoc : Prims.string -> assoct -> FStarC_Json.json) =
       | FStar_Pervasives_Native.Some v -> v
       | FStar_Pervasives_Native.None ->
           let uu___1 =
-            let uu___2 = FStarC_Util.format1 "Missing key [%s]" key in
+            let uu___2 = FStarC_Format.fmt1 "Missing key [%s]" key in
             MissingKey uu___2 in
           FStarC_Effect.raise uu___1
 let (write_json : FStarC_Json.json -> unit) =
   fun js ->
     (let uu___1 = FStarC_Json.string_of_json js in
-     FStarC_Util.print_raw uu___1);
-    FStarC_Util.print_raw "\n"
+     FStarC_Format.print_raw uu___1);
+    FStarC_Format.print_raw "\n"
 let (write_jsonrpc : FStarC_Json.json -> unit) =
   fun js ->
     let js_str = FStarC_Json.string_of_json js in
-    let len = FStarC_Util.string_of_int (FStarC_String.length js_str) in
-    let uu___ = FStarC_Util.format2 "Content-Length: %s\r\n\r\n%s" len js_str in
-    FStarC_Util.print_raw uu___
+    let len =
+      FStarC_Class_Show.show FStarC_Class_Show.showable_nat
+        (FStarC_String.length js_str) in
+    let uu___ = FStarC_Format.fmt2 "Content-Length: %s\r\n\r\n%s" len js_str in
+    FStarC_Format.print_raw uu___
 let js_fail : 'a . Prims.string -> FStarC_Json.json -> 'a =
   fun expected ->
     fun got -> FStarC_Effect.raise (UnexpectedJsonType (expected, got))
@@ -109,7 +111,7 @@ let (uri_to_path : Prims.string -> Prims.string) =
     then
       let uu___1 = FStarC_Util.substring u (Prims.of_int (8)) Prims.int_one in
       let uu___2 = FStarC_Util.substring_from u (Prims.of_int (12)) in
-      FStarC_Util.format2 "%s:%s" uu___1 uu___2
+      FStarC_Format.fmt2 "%s:%s" uu___1 uu___2
     else FStarC_Util.substring_from u (Prims.of_int (7))
 type completion_context =
   {
@@ -133,8 +135,8 @@ let (path_to_uri : Prims.string -> Prims.string) =
         let uu___1 = FStarC_Util.substring_from u (Prims.of_int (2)) in
         FStarC_Util.replace_char uu___1 92 47 in
       let uu___1 = FStarC_Util.substring u Prims.int_zero Prims.int_one in
-      FStarC_Util.format2 "file:///%s%3A%s" uu___1 rest
-    else FStarC_Util.format1 "file://%s" u
+      FStarC_Format.fmt2 "file:///%s%3A%s" uu___1 rest
+    else FStarC_Format.fmt1 "file://%s" u
 let (js_compl_context : FStarC_Json.json -> completion_context) =
   fun uu___ ->
     match uu___ with
@@ -142,7 +144,7 @@ let (js_compl_context : FStarC_Json.json -> completion_context) =
         let uu___1 = let uu___2 = assoc "triggerKind" a in js_int uu___2 in
         let uu___2 =
           let uu___3 = try_assoc "triggerChar" a in
-          FStarC_Util.map_option js_str uu___3 in
+          FStarC_Option.map js_str uu___3 in
         { trigger_kind = uu___1; trigger_char = uu___2 }
     | other -> js_fail "dictionary" other
 type txdoc_item =
@@ -547,11 +549,11 @@ let (json_debug : FStarC_Json.json -> Prims.string) =
     match uu___ with
     | FStarC_Json.JsonNull -> "null"
     | FStarC_Json.JsonBool b ->
-        FStarC_Util.format1 "bool (%s)" (if b then "true" else "false")
+        FStarC_Format.fmt1 "bool (%s)" (if b then "true" else "false")
     | FStarC_Json.JsonInt i ->
-        let uu___1 = FStarC_Util.string_of_int i in
-        FStarC_Util.format1 "int (%s)" uu___1
-    | FStarC_Json.JsonStr s -> FStarC_Util.format1 "string (%s)" s
+        let uu___1 = FStarC_Class_Show.show FStarC_Class_Show.showable_int i in
+        FStarC_Format.fmt1 "int (%s)" uu___1
+    | FStarC_Json.JsonStr s -> FStarC_Format.fmt1 "string (%s)" s
     | FStarC_Json.JsonList uu___1 -> "list (...)"
     | FStarC_Json.JsonAssoc uu___1 -> "dictionary (...)"
 let (wrap_jsfail :
@@ -564,7 +566,7 @@ let (wrap_jsfail :
         let uu___ =
           let uu___1 =
             let uu___2 = json_debug got in
-            FStarC_Util.format2 "JSON decoding failed: expected %s, got %s"
+            FStarC_Format.fmt2 "JSON decoding failed: expected %s, got %s"
               expected uu___2 in
           BadProtocolMsg uu___1 in
         { query_id = qid; q = uu___ }
@@ -645,7 +647,7 @@ let (js_pos : FStarC_Range_Type.pos -> FStarC_Json.json) =
         [uu___3] in
       uu___1 :: uu___2 in
     FStarC_Json.JsonAssoc uu___
-let (js_range : FStarC_Range_Type.range -> FStarC_Json.json) =
+let (js_range : FStarC_Range_Type.t -> FStarC_Json.json) =
   fun r ->
     let uu___ =
       let uu___1 =
@@ -670,7 +672,7 @@ let (js_dummyrange : FStarC_Json.json) =
             (FStarC_Json.JsonAssoc
                [("line", (FStarC_Json.JsonInt Prims.int_zero));
                ("character", (FStarC_Json.JsonInt Prims.int_zero))]))]))]
-let (js_loclink : FStarC_Range_Type.range -> FStarC_Json.json) =
+let (js_loclink : FStarC_Range_Type.t -> FStarC_Json.json) =
   fun r ->
     let s = js_range r in
     let uu___ =
@@ -692,7 +694,7 @@ let (pos_munge : txdoc_pos -> (Prims.string * Prims.int * Prims.int)) =
 let (js_diag :
   Prims.string ->
     Prims.string ->
-      FStarC_Range_Type.range FStar_Pervasives_Native.option -> assoct)
+      FStarC_Range_Type.t FStar_Pervasives_Native.option -> assoct)
   =
   fun fname ->
     fun msg ->

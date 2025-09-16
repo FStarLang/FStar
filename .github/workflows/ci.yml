@@ -30,6 +30,11 @@ jobs:
     name: nix
     uses: ./.github/workflows/nix.yml
 
+  pulse-build-test:
+    name: pulse
+    needs: build
+    uses: ./.github/workflows/build-pulse.yml
+
   # Branch protection points here
   ciok:
     runs-on: ubuntu-latest

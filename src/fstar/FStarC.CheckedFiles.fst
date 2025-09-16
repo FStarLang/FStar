@@ -17,7 +17,6 @@
 module FStarC.CheckedFiles
 open FStarC
 open FStarC.Effect
-open FStarC.Util
 open FStarC.SMap
 
 open FStarC.Class.Show
@@ -35,7 +34,7 @@ let dbg = Debug.get_toggle "CheckedFiles"
  * detect when loading the cache that the version number is same
  * It needs to be kept in sync with Prims.fst
  *)
-let cache_version_number = 73
+let cache_version_number = 75
 
 (*
  * Abbreviation for what we store in the checked files (stages as described below)
@@ -122,13 +121,13 @@ let hash_dependences (deps:Dep.deps) (fn:string) :either string (list (string & 
   in
   let module_name = Dep.lowercase_module_name fn in
   let source_hash = BU.digest_of_file fn in
-  let has_interface = Option.isSome (Dep.interface_of deps module_name) in
+  let has_interface = Some? (Dep.interface_of deps module_name) in
   let interface_checked_file_name =
     if Dep.is_implementation fn
     && has_interface
     then module_name
       |> Dep.interface_of deps
-      |> must
+      |> Option.must
       |> Dep.cache_file_name
       |> Some
     else None
@@ -150,18 +149,18 @@ let hash_dependences (deps:Dep.deps) (fn:string) :either string (list (string & 
     | Some iface ->
        (match SMap.try_find mcache iface with
        | None ->
-         let msg = BU.format1
+         let msg = Format.fmt1
            "hash_dependences::the interface checked file %s does not exist\n"
            iface in
        
          if !dbg
-         then BU.print1 "%s\n" msg;
+         then Format.print1 "%s\n" msg;
          
          Inl msg
        | Some (Invalid msg, _) -> Inl msg
        | Some (Valid h, _) -> Inr (("source", source_hash)::("interface", h)::out)
        | Some (Unknown, _) ->
-         failwith (BU.format1
+         failwith (Format.fmt1
            "Impossible: unknown entry in the mcache for interface %s\n"
            iface))
   in
@@ -177,14 +176,14 @@ let hash_dependences (deps:Dep.deps) (fn:string) :either string (list (string & 
     let digest =
       match SMap.try_find mcache cache_fn with
       | None ->
-        let msg = BU.format2 "For dependency %s, cache file %s is not loaded" fn cache_fn in
+        let msg = Format.fmt2 "For dependency %s, cache file %s is not loaded" fn cache_fn in
         if !dbg
-        then BU.print1 "%s\n" msg;
+        then Format.print1 "%s\n" msg;
         Inl msg
       | Some (Invalid msg, _) -> Inl msg
       | Some (Valid dig, _)   -> Inr dig
       | Some (Unknown, _)     ->
-        failwith (BU.format2
+        failwith (Format.fmt2
                     "Impossible: unknown entry in the cache for dependence %s of module %s"
                     fn module_name)
     in
@@ -204,36 +203,36 @@ let hash_dependences (deps:Dep.deps) (fn:string) :either string (list (string & 
  *)
 let load_checked_file (fn:string) (checked_fn:string) :cache_t =
   if !dbg then
-    BU.print1 "Trying to load checked file result %s\n" checked_fn;
+    Format.print1 "Trying to load checked file result %s\n" checked_fn;
   let elt = checked_fn |> SMap.try_find mcache in
-  if elt |> is_some
+  if elt |> Some?
   then (
     //already loaded
     if !dbg then
-      BU.print1 "Already loaded checked file %s\n" checked_fn;
-    elt |> must
+      Format.print1 "Already loaded checked file %s\n" checked_fn;
+    elt |> Option.must
   ) else
     let add_and_return elt = SMap.add mcache checked_fn elt; elt in
     if not (Filepath.file_exists checked_fn)
-    then let msg = BU.format1 "checked file %s does not exist" checked_fn in
+    then let msg = Format.fmt1 "checked file %s does not exist" checked_fn in
          add_and_return (Invalid msg, Inl msg)
     else let entry :option checked_file_entry_stage1 = BU.load_value_from_file checked_fn in
          match entry with
          | None ->
-           let msg = BU.format1 "checked file %s is corrupt" checked_fn in
+           let msg = Format.fmt1 "checked file %s is corrupt" checked_fn in
            add_and_return (Invalid msg, Inl msg)
          | Some (x) ->
            if x.version <> cache_version_number
-           then let msg = BU.format1 "checked file %s has incorrect version" checked_fn in
+           then let msg = Format.fmt1 "checked file %s has incorrect version" checked_fn in
                 add_and_return (Invalid msg, Inl msg)
            else let current_digest = BU.digest_of_file fn in
                 if x.digest <> current_digest
                 then begin
                   if !dbg then
-                    BU.print4 "Checked file %s is stale since incorrect digest of %s, \
+                    Format.print4 "Checked file %s is stale since incorrect digest of %s, \
                       expected: %s, found: %s\n"
                       checked_fn fn current_digest x.digest;
-                  let msg = BU.format2 "checked file %s is stale (digest mismatch for %s)" checked_fn fn in
+                  let msg = Format.fmt2 "checked file %s is stale (digest mismatch for %s)" checked_fn fn in
                   add_and_return (Invalid msg, Inl msg)
                 end
                 else add_and_return (Unknown, Inr x.parsing_data)
@@ -258,7 +257,7 @@ let load_checked_file_with_tc_result
   : either string tc_result
 =
   if !dbg then
-    BU.print1 "Trying to load checked file with tc result %s\n" checked_fn;
+    Format.print1 "Trying to load checked file with tc result %s\n" checked_fn;
 
   let load_tc_result' (fn:string) :list (string & string) & tc_result =
     match load_tc_result fn with
@@ -326,7 +325,7 @@ let load_checked_file_with_tc_result
       else begin
         if !dbg
         then begin
-          BU.print4 "FAILING to load.\nHashes computed (%s):\n%s\n\nHashes read (%s):\n%s\n"
+          Format.print4 "FAILING to load.\nHashes computed (%s):\n%s\n\nHashes read (%s):\n%s\n"
             (show (List.length deps_dig'))
             (FStarC.Parser.Dep.print_digest deps_dig')
             (show (List.length deps_dig))
@@ -334,13 +333,13 @@ let load_checked_file_with_tc_result
           if List.length deps_dig = List.length deps_dig'
           then List.iter2 (fun (x,y) (x', y') ->
                  if x<>x' || y<>y'
-                 then BU.print2 "Differ at: Expected %s\n Got %s\n"
+                 then Format.print2 "Differ at: Expected %s\n Got %s\n"
                                 (FStarC.Parser.Dep.print_digest [(x,y)])
                                 (FStarC.Parser.Dep.print_digest [(x',y')])) deps_dig deps_dig'
         end;
         let msg =
-          BU.format1
-            "checked file %s is stale (dependence hash mismatch, use --debug yes for more details)"
+          Format.fmt1
+            "checked file %s is stale (dependence hash mismatch, use --debug CheckedFiles for more details)"
             checked_fn
         in
         let elt = (Invalid msg, Inl msg) in
@@ -406,7 +405,7 @@ let load_module_from_cache =
         if not suppress_warning then begin
           already_failed := true;
           FStarC.Errors.log_issue (Range.mk_range fn (Range.mk_pos 0 0) (Range.mk_pos 0 0))
-            Errors.Warning_CachedFile [Errors.text (BU.format3
+            Errors.Warning_CachedFile [Errors.text (Format.fmt3
                "Unable to load %s since %s; will recheck %s (suppressing this warning for further modules)"
                cache_file msg fn)
           ]
@@ -419,7 +418,7 @@ let load_module_from_cache =
       | Inl msg -> fail msg cache_file; None
       | Inr tc_result ->
         if !dbg then
-          BU.print1 "Successfully loaded module from checked file %s\n" cache_file;
+          Format.print1 "Successfully loaded module from checked file %s\n" cache_file;
         Some tc_result
       (* | _ -> failwith "load_checked_file_tc_result must have an Invalid or Valid entry" *)
     in
@@ -444,8 +443,8 @@ let load_module_from_cache =
       (Dep.lowercase_module_name fn) in
 
     if Dep.is_implementation fn
-    && (i_fn_opt |> is_some)
-    then let i_fn = i_fn_opt |> must in
+    && (i_fn_opt |> Some?)
+    then let i_fn = i_fn_opt |> Option.must in
          let i_tc = load_with_profiling i_fn in
          match i_tc with
          | None -> None
@@ -491,7 +490,7 @@ let store_module_to_cache env fn parsing_data tc_result =
       log_issue (FStarC.Range.mk_range fn (FStarC.Range.mk_pos 0 0)
                                  (FStarC.Range.mk_pos 0 0))
         Errors.Warning_FileNotWritten [
-          text <| BU.format1 "Checked file %s was not written." cache_file;
+          text <| Format.fmt1 "Checked file %s was not written." cache_file;
           prefix 2 1 (doc_of_string "Reason:") (text msg)
       ]
   end

@@ -42,7 +42,7 @@ open FStarC.Class.Tagged
 let dbg_Positivity = Debug.get_toggle "Positivity"
 let debug_positivity (env:env_t) (msg:unit -> string) : unit =
   if !dbg_Positivity
-  then BU.print_string ("Positivity::" ^ msg () ^ "\n")
+  then Format.print_string ("Positivity::" ^ msg () ^ "\n")
 
 (**
 
@@ -179,7 +179,7 @@ let apply_constr_arrow (dlid:lident) (dt:term) (all_params:list arg)
           raise_error 
              (Ident.range_of_lid dlid)
              Errors.Error_InductiveTypeNotSatisfyPositivityCondition
-             (BU.format3 "Unexpected application of type parameters %s to a data constructor %s : %s"
+             (Format.fmt3 "Unexpected application of type parameters %s to a data constructor %s : %s"
                          (Print.args_to_string all_params)
                          (show dlid)
                          (show dt))
@@ -284,12 +284,12 @@ let max_uniformly_recursive_parameters (env:env_t)
         (List.map show params |> String.concat ", ")
     in
     debug_positivity env (fun _ ->
-      BU.format2 "max_uniformly_recursive_parameters? params=%s in %s"
+      Format.fmt2 "max_uniformly_recursive_parameters? params=%s in %s"
                  (params_to_string())
                  (show ty));
     let rec aux ty =
         debug_positivity env (fun _ ->
-          BU.format1 "max_uniformly_recursive_parameters.aux? %s"
+          Format.fmt1 "max_uniformly_recursive_parameters.aux? %s"
                  (show ty));
         if List.for_all (fun mutual -> not (ty_occurs_in mutual ty)) mutuals
         then n_params
@@ -313,7 +313,7 @@ let max_uniformly_recursive_parameters (env:env_t)
             if L.existsML (fv_eq_lid fv) mutuals
             then (
               debug_positivity env (fun _ -> 
-                BU.format2 "Searching for max matching prefix of params=%s in args=%s"
+                Format.fmt2 "Searching for max matching prefix of params=%s in args=%s"
                            (params_to_string())
                            (Print.args_to_string args));
               match max_matching_prefix args params compare_name_bv with
@@ -349,10 +349,10 @@ let max_uniformly_recursive_parameters (env:env_t)
     in
     let res = aux ty in
     debug_positivity env (fun _ ->
-      BU.format3 "result: max_uniformly_recursive_parameters(params=%s in %s) = %s"
+      Format.fmt3 "result: max_uniformly_recursive_parameters(params=%s in %s) = %s"
                  (params_to_string())
                  (show ty)
-                 (string_of_int res));
+                 (show res));
     res
 
 (* The sig : sigelt is a Sig_bundle describing a mutually inductive nest of types
@@ -411,7 +411,7 @@ let mark_uniform_type_parameters (env:env_t)
                    raise_error 
                                (range_of_bv param.binder_bv)
                      Error_InductiveTypeNotSatisfyPositivityCondition
-                     (BU.format1 "Binder %s is marked strictly positive, \
+                     (Format.fmt1 "Binder %s is marked strictly positive, \
                                  but it is not uniformly recursive"
                                  (show param))
                  ))
@@ -457,7 +457,7 @@ let may_be_an_arity env (t:term)
         let head, args = U.head_and_args t in
         match (U.un_uinst head).n with
         | Tm_fvar fv ->
-          (match Env.lookup_sigelt env fv.fv_name.v with
+          (match Env.lookup_sigelt env fv.fv_name with
            | None ->
              //We couldn't find it; err conservatively ... this could be an arity
              true
@@ -511,7 +511,7 @@ let may_be_an_arity env (t:term)
  *)
 let check_no_index_occurrences_in_arities env mutuals (t:term) =
   debug_positivity env (fun _ ->
-    BU.format2 "check_no_index_occurrences of (mutuals %s) in arities of %s"
+    Format.fmt2 "check_no_index_occurrences of (mutuals %s) in arities of %s"
       (string_of_lids mutuals)
       (show t));
 
@@ -541,7 +541,7 @@ let check_no_index_occurrences_in_arities env mutuals (t:term) =
    L.iter (fun mutual -> 
              if ty_occurs_in mutual (fext_on_domain_index_sub_term index)
              then raise_error index Errors.Error_InductiveTypeNotSatisfyPositivityCondition
-                            (BU.format3 "Type %s is not strictly positive since it instantiates \
+                            (Format.fmt3 "Type %s is not strictly positive since it instantiates \
                                         a non-uniformly recursive parameter or index %s of %s"
                               (string_of_lid mutual)
                               (show index)
@@ -555,7 +555,7 @@ let check_no_index_occurrences_in_arities env mutuals (t:term) =
   match (U.un_uinst head).n with
   | Tm_fvar fv -> 
     begin
-    match Env.num_inductive_uniform_ty_params env fv.fv_name.v with
+    match Env.num_inductive_uniform_ty_params env fv.fv_name with
     | None -> 
       //the head is not (visibly) a inductive type; nothing to check
       ()
@@ -563,15 +563,15 @@ let check_no_index_occurrences_in_arities env mutuals (t:term) =
       if List.length args <= n
       then () //they are all uniform parameters, nothing to check
       else (
-        match Env.try_lookup_lid env fv.fv_name.v with
-        | None -> no_occurrence_in_indexes fv.fv_name.v mutuals args
+        match Env.try_lookup_lid env fv.fv_name with
+        | None -> no_occurrence_in_indexes fv.fv_name mutuals args
         | Some ((_us, i_typ), _) ->
           debug_positivity env (fun _ -> 
-            BU.format2 "Checking arity indexes of %s (num uniform params = %s)"
+            Format.fmt2 "Checking arity indexes of %s (num uniform params = %s)"
                      (show t)
-                     (string_of_int n));
+                     (show n));
           let params, indices = List.splitAt n args in
-          let inst_i_typ = apply_constr_arrow fv.fv_name.v i_typ params in
+          let inst_i_typ = apply_constr_arrow fv.fv_name i_typ params in
           let formals, _sort = U.arrow_formals inst_i_typ in
           let rec aux subst formals indices =
             match formals, indices with
@@ -581,21 +581,21 @@ let check_no_index_occurrences_in_arities env mutuals (t:term) =
               if may_be_an_arity env f_t
               then (
                 debug_positivity env (fun _ ->
-                  BU.format2 "Checking %s : %s (arity)"
+                  Format.fmt2 "Checking %s : %s (arity)"
                     (show (fst i))
                     (show f_t));
-                no_occurrence_in_index fv.fv_name.v mutuals i
+                no_occurrence_in_index fv.fv_name mutuals i
               )
               else (
                 debug_positivity env (fun _ ->
-                  BU.format2 "Skipping %s : %s (non-arity)"
+                  Format.fmt2 "Skipping %s : %s (non-arity)"
                     (show (fst i))
                     (show f_t))
               );
               let subst = NT(f.binder_bv, fst i)::subst in
               aux subst formals indices
             | [], _ ->
-              no_occurrence_in_indexes fv.fv_name.v mutuals indices
+              no_occurrence_in_indexes fv.fv_name mutuals indices
           in
           aux [] formals indices
         )
@@ -763,7 +763,7 @@ let rec ty_strictly_positive_in_type (env:env)
   = //normalize the type to unfold any type abbreviations
     let in_type = normalize env in_type in
     debug_positivity env (fun _ ->
-      BU.format2
+      Format.fmt2
         "Checking strict positivity of {%s} in type, after normalization %s "
           (string_of_lids mutuals)
           (show in_type));
@@ -790,7 +790,7 @@ let rec ty_strictly_positive_in_type (env:env)
         match fv_or_name_opt with
         | None ->
           debug_positivity env (fun _ -> 
-            BU.format2 "Failed to check positivity of %s in a term with head %s"
+            Format.fmt2 "Failed to check positivity of %s in a term with head %s"
                        (string_of_lids mutuals)
                        (show t));
           //The head is not a name or an fv
@@ -801,7 +801,7 @@ let rec ty_strictly_positive_in_type (env:env)
           begin
           let head_ty, _pos = Env.lookup_bv env x in
           debug_positivity env (fun _ ->
-            BU.format3 "Tm_app, head bv, in_type=%s, head_bv=%s, head_ty=%s"
+            Format.fmt3 "Tm_app, head bv, in_type=%s, head_bv=%s, head_ty=%s"
                        (show in_type)
                        (show x)
                        (show head_ty));
@@ -812,7 +812,7 @@ let rec ty_strictly_positive_in_type (env:env)
           
         | Some (Inl (fv, us)) ->
           begin
-          if FStarC.List.existsML (Ident.lid_equals fv.fv_name.v) mutuals
+          if FStarC.List.existsML (Ident.lid_equals fv.fv_name) mutuals
           then (
             //if the head is one of the mutually inductive types
             //then check that ty_lid does not occur in the arguments
@@ -821,10 +821,10 @@ let rec ty_strictly_positive_in_type (env:env)
             //            and `type t a = | T : s (t a) -> t a
             //                 and  s a = | S : t a -> s a`
             debug_positivity env (fun _ ->
-                BU.format1 
+                Format.fmt1 
                   "Checking strict positivity in the Tm_app node where head lid is %s itself, \
                    checking that ty does not occur in the arguments"
-                  (Ident.string_of_lid fv.fv_name.v));
+                  (Ident.string_of_lid fv.fv_name));
               List.for_all (fun (t, _) -> mutuals_unused_in_type mutuals t) args
           )
           else (
@@ -833,14 +833,14 @@ let rec ty_strictly_positive_in_type (env:env)
             //or is an fvar whose arguments are suitably decorated
             //with strictly_positive attributes
             debug_positivity env (fun _ -> 
-              BU.format1 "Checking strict positivity in the Tm_app node, \
+              Format.fmt1 "Checking strict positivity in the Tm_app node, \
                           head lid is not in %s, so checking nested positivity"
                           (string_of_lids mutuals));
             ty_strictly_positive_in_arguments_to_fvar 
               env
               mutuals
               in_type
-              fv.fv_name.v 
+              fv.fv_name 
               us
               args
               unfolded
@@ -948,7 +948,7 @@ let rec ty_strictly_positive_in_type (env:env)
      
    | _ ->
      debug_positivity env (fun _ ->
-       BU.format2
+       Format.fmt2
          "Checking strict positivity, unexpected tag: %s and term %s"
            (tag_of in_type)
            (show in_type));
@@ -986,7 +986,7 @@ and ty_strictly_positive_in_args (env:env)
           
         | b::bs, (arg, _)::args ->
           debug_positivity env (fun _ -> 
-            BU.format3 "Checking positivity of %s in argument %s and binder %s"
+            Format.fmt3 "Checking positivity of %s in argument %s and binder %s"
                        (string_of_lids mutuals)
                        (show arg)
                        (show b));
@@ -1012,7 +1012,7 @@ and ty_strictly_positive_in_args (env:env)
           if not this_occurrence_ok
           then ( 
             debug_positivity env (fun _ -> 
-              BU.format3 "Failed checking positivity of %s in argument %s and binder %s"
+              Format.fmt3 "Failed checking positivity of %s in argument %s and binder %s"
                               (string_of_lids mutuals)
                               (show arg)
                               (show b));
@@ -1058,7 +1058,7 @@ and ty_strictly_positive_in_arguments_to_fvar
                                     (unfolded:unfolded_memo_t)
   : bool
   = debug_positivity env (fun _ ->
-        BU.format4 "Checking positivity of %s in application of fv %s to %s (t=%s)"
+        Format.fmt4 "Checking positivity of %s in application of fv %s to %s (t=%s)"
                    (string_of_lids mutuals)
                    (string_of_lid fv)
                    (Print.args_to_string args)
@@ -1077,7 +1077,7 @@ and ty_strictly_positive_in_arguments_to_fvar
         | Some ((_, fv_ty), _) -> fv_ty
         | _ ->
           raise_error fv Errors.Error_InductiveTypeNotSatisfyPositivityCondition
-            (BU.format1 "Type of %s not found when checking positivity"
+            (Format.fmt1 "Type of %s not found when checking positivity"
                        (string_of_lid fv))
       in
       let b, idatas = datacons_of_typ env fv in
@@ -1110,9 +1110,9 @@ and ty_strictly_positive_in_arguments_to_fvar
         )
         else (
           debug_positivity env (fun _ -> 
-            BU.format3 "Checking positivity in datacon, number of type parameters is %s, \
+            Format.fmt3 "Checking positivity in datacon, number of type parameters is %s, \
                        adding %s %s to the memo table"          
-                       (string_of_int num_uniform_params)
+                       (show num_uniform_params)
                        (Ident.string_of_lid ilid)
                        (Print.args_to_string params));
           //update the memo table with the inductive name and the args,
@@ -1150,7 +1150,7 @@ and ty_strictly_positive_in_datacon_of_applied_inductive (env:env_t)
                                                          (unfolded:unfolded_memo_t)
   : bool
   = debug_positivity env (fun _ ->
-      BU.format3
+      Format.fmt3
         "Checking positivity of %s in data constructor %s : %s"
           (string_of_lids mutuals)
           (string_of_lid dlid)
@@ -1162,16 +1162,16 @@ and ty_strictly_positive_in_datacon_of_applied_inductive (env:env_t)
         raise_error 
           (range_of_lid dlid)
           Errors.Error_InductiveTypeNotSatisfyPositivityCondition
-          (BU.format1 "Data constructor %s not found when checking positivity"
+          (Format.fmt1 "Data constructor %s not found when checking positivity"
                       (string_of_lid dlid))
     in
 
     debug_positivity env (fun _ ->
-      BU.format3
+      Format.fmt3
         "Checking positivity in the data constructor type: %s\n\t\
          num_ibs=%s, args=%s,"
          (show dt)
-         (string_of_int num_ibs)
+         (show num_ibs)
          (Print.args_to_string args));
 
     //get the number of arguments that cover the type parameters num_ibs,
@@ -1179,7 +1179,7 @@ and ty_strictly_positive_in_datacon_of_applied_inductive (env:env_t)
     let args, rest = List.splitAt num_ibs args in
     let applied_dt = apply_constr_arrow dlid dt args in
     debug_positivity env (fun _ ->
-      BU.format3
+      Format.fmt3
         "Applied data constructor type: %s %s : %s"
          (string_of_lid dlid)
          (Print.args_to_string args)
@@ -1191,7 +1191,7 @@ and ty_strictly_positive_in_datacon_of_applied_inductive (env:env_t)
         | [] -> true
         | f::fields ->
           debug_positivity env (fun _ ->
-            BU.format2 "Checking field %s : %s for indexes and positivity"
+            Format.fmt2 "Checking field %s : %s for indexes and positivity"
               (show f.binder_bv)
               (show f.binder_bv.sort));
           check_no_index_occurrences_in_arities env mutuals f.binder_bv.sort;
@@ -1245,7 +1245,7 @@ let ty_strictly_positive_in_datacon_decl (env:env_t)
       | Some (t, _) -> t
       | None -> raise_error dlid
                             Errors.Error_InductiveTypeNotSatisfyPositivityCondition
-                            (BU.format1 "Error looking up data constructor %s when checking positivity"
+                            (Format.fmt1 "Error looking up data constructor %s when checking positivity"
                                        (string_of_lid dlid))
     in
     debug_positivity env (fun () -> "Checking data constructor type: " ^ (show dt));
@@ -1267,7 +1267,7 @@ let ty_strictly_positive_in_datacon_decl (env:env_t)
         | None -> ()
         | Some b ->
           raise_error b Error_InductiveTypeNotSatisfyPositivityCondition
-                      (BU.format2 "Binder %s is marked %s, \
+                      (Format.fmt2 "Binder %s is marked %s, \
                                    but its use in the definition is not"
                                   (show b)
                                   (if U.is_binder_strictly_positive b

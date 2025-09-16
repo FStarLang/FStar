@@ -62,10 +62,10 @@ let () =
   Hashtbl.add keywords "end"           END         ;
   Hashtbl.add keywords "ensures"       ENSURES     ;
   Hashtbl.add keywords "exception"     EXCEPTION   ;
-  Hashtbl.add keywords "exists"        (EXISTS false);
+  Hashtbl.add keywords "exists"        EXISTS      ;
   Hashtbl.add keywords "false"         FALSE       ;
   Hashtbl.add keywords "friend"        FRIEND      ;
-  Hashtbl.add keywords "forall"        (FORALL false);
+  Hashtbl.add keywords "forall"        FORALL      ;
   Hashtbl.add keywords "fun"           FUN         ;
   Hashtbl.add keywords "λ"             FUN         ;
   Hashtbl.add keywords "function"      FUNCTION    ;
@@ -77,7 +77,7 @@ let () =
   Hashtbl.add keywords "instance"      INSTANCE    ;
   Hashtbl.add keywords "introduce"     INTRO ;
   Hashtbl.add keywords "irreducible"   IRREDUCIBLE ;
-  Hashtbl.add keywords "let"           (LET false) ;
+  Hashtbl.add keywords "let"           LET         ;
   Hashtbl.add keywords "logic"         LOGIC       ;
   Hashtbl.add keywords "match"         MATCH       ;
   Hashtbl.add keywords "returns"       RETURNS     ;
@@ -114,27 +114,27 @@ let () =
   Hashtbl.add keywords "when"          WHEN        ;
   Hashtbl.add keywords "with"          WITH        ;
   Hashtbl.add keywords "_"             UNDERSCORE  ;
-  Hashtbl.add keywords "α"             (TVAR "a")  ;
-  Hashtbl.add keywords "β"             (TVAR "b")  ;
-  Hashtbl.add keywords "γ"             (TVAR "c")  ;
-  Hashtbl.add keywords "δ"             (TVAR "d")  ;
-  Hashtbl.add keywords "ε"             (TVAR "e")  ;
-  Hashtbl.add keywords "φ"             (TVAR "f")  ;
-  Hashtbl.add keywords "χ"             (TVAR "g")  ;
-  Hashtbl.add keywords "η"             (TVAR "h")  ;
-  Hashtbl.add keywords "ι"             (TVAR "i")  ;
-  Hashtbl.add keywords "κ"             (TVAR "k")  ;
-  Hashtbl.add keywords "μ"             (TVAR "m")  ;
-  Hashtbl.add keywords "ν"             (TVAR "n")  ;
-  Hashtbl.add keywords "π"             (TVAR "p")  ;
-  Hashtbl.add keywords "θ"             (TVAR "q")  ;
-  Hashtbl.add keywords "ρ"             (TVAR "r")  ;
-  Hashtbl.add keywords "σ"             (TVAR "s")  ;
-  Hashtbl.add keywords "τ"             (TVAR "t")  ;
-  Hashtbl.add keywords "ψ"             (TVAR "u")  ;
-  Hashtbl.add keywords "ω"             (TVAR "w")  ;
-  Hashtbl.add keywords "ξ"             (TVAR "x")  ;
-  Hashtbl.add keywords "ζ"             (TVAR "z")  ;
+  Hashtbl.add keywords "α"             (IDENT "'a")  ;
+  Hashtbl.add keywords "β"             (IDENT "'b")  ;
+  Hashtbl.add keywords "γ"             (IDENT "'c")  ;
+  Hashtbl.add keywords "δ"             (IDENT "'d")  ;
+  Hashtbl.add keywords "ε"             (IDENT "'e")  ;
+  Hashtbl.add keywords "φ"             (IDENT "'f")  ;
+  Hashtbl.add keywords "χ"             (IDENT "'g")  ;
+  Hashtbl.add keywords "η"             (IDENT "'h")  ;
+  Hashtbl.add keywords "ι"             (IDENT "'i")  ;
+  Hashtbl.add keywords "κ"             (IDENT "'k")  ;
+  Hashtbl.add keywords "μ"             (IDENT "'m")  ;
+  Hashtbl.add keywords "ν"             (IDENT "'n")  ;
+  Hashtbl.add keywords "π"             (IDENT "'p")  ;
+  Hashtbl.add keywords "θ"             (IDENT "'q")  ;
+  Hashtbl.add keywords "ρ"             (IDENT "'r")  ;
+  Hashtbl.add keywords "σ"             (IDENT "'s")  ;
+  Hashtbl.add keywords "τ"             (IDENT "'t")  ;
+  Hashtbl.add keywords "ψ"             (IDENT "'u")  ;
+  Hashtbl.add keywords "ω"             (IDENT "'w")  ;
+  Hashtbl.add keywords "ξ"             (IDENT "'x")  ;
+  Hashtbl.add keywords "ζ"             (IDENT "'z")  ;
   Hashtbl.add constructors "ℕ"         (IDENT "nat");
   Hashtbl.add constructors "ℤ"         (IDENT "int");
   Hashtbl.add constructors "𝔹"         (IDENT "bool");
@@ -193,8 +193,8 @@ let () =
    "}", RBRACE;
    "$", DOLLAR;
      (* New Unicode equivalents *)
-   "∀", (FORALL false);
-   "∃", (EXISTS false);
+   "∀", FORALL;
+   "∃", EXISTS;
    "⊤", NAME "True";
    "⊥", NAME "False";
    "⟹", IMPLIES;
@@ -415,13 +415,11 @@ let char        = [%sedlex.regexp? Compl '\\' | escape_char]
 
 (* -------------------------------------------------------------------- *)
 let constructor_start_char = [%sedlex.regexp? upper]
-let ident_start_char       = [%sedlex.regexp? lower  | '_']
+let ident_start_char       = [%sedlex.regexp? lower  | '_' | '\'' ]
 let ident_char             = [%sedlex.regexp? letter | digit | '\'' | '_']
-let tvar_char              = [%sedlex.regexp? letter | digit | '\'' | '_']
 
 let constructor = [%sedlex.regexp? constructor_start_char, Star ident_char]
 let ident       = [%sedlex.regexp? ident_start_char, Star ident_char]
-let tvar        = [%sedlex.regexp? '\'', (ident_start_char | constructor_start_char), Star tvar_char]
 
 (* [ensure_no_comment lexbuf next] takes a [lexbuf] and [next], a
    continuation. It is to be called after a regexp was matched, to
@@ -474,13 +472,13 @@ match%sedlex lexbuf with
  | "#restart-solver" -> PRAGMA_RESTART_SOLVER
  | "#print-effects-graph" -> PRAGMA_PRINT_EFFECTS_GRAPH
  | "__SOURCE_FILE__" -> STRING (Filepath.basename (L.source_file lexbuf))
- | "__LINE__" -> INT (string_of_int (L.current_line lexbuf), false)
+ | "__LINE__" -> INT (string_of_int (L.current_line lexbuf))
  | "__FILELINE__"   -> STRING (Filepath.basename (L.source_file lexbuf) ^ "(" ^ (string_of_int (L.current_line lexbuf)) ^ ")")
 
  | Plus anywhite -> token lexbuf
  | newline -> L.new_line lexbuf; token lexbuf
 
- (* Must appear before tvar to avoid 'a <-> 'a' conflict *)
+ (* Must appear before ident to avoid 'a <-> 'a' conflict *)
  | ('\'', char, '\'') -> CHAR (unescape (utrim_both lexbuf 1 1))
  | ('\'', char, '\'', 'B') -> CHAR (unescape (utrim_both lexbuf 1 2))
  | '`' -> BACKTICK
@@ -502,35 +500,35 @@ match%sedlex lexbuf with
  | "let", Plus op_char ->
     ensure_no_comment lexbuf (fun s ->
         match BatString.lchop ~n:3 s with
-        | "" -> LET false
+        | "" -> LET
         | s  -> LET_OP s
       )
 
  | "exists", Plus op_char ->
     ensure_no_comment lexbuf (fun s ->
         match BatString.lchop ~n:6 s with
-        | "" -> EXISTS false
+        | "" -> EXISTS
         | s  -> EXISTS_OP s
       )
 
  | Utf8 "∃", Plus op_char ->
     ensure_no_comment lexbuf (fun s ->
         match BatString.lchop ~n:1 s with
-        | "" -> EXISTS false
+        | "" -> EXISTS
         | s  -> EXISTS_OP s
       )
  
  | "forall", Plus op_char ->
     ensure_no_comment lexbuf (fun s ->
         match BatString.lchop ~n:6 s with
-        | "" -> FORALL false
+        | "" -> FORALL
         | s  -> FORALL_OP s
       )
 
  | Utf8 "∀", Plus op_char ->
     ensure_no_comment lexbuf (fun s ->
         match BatString.lchop ~n:1 s with
-        | "" -> FORALL false
+        | "" -> FORALL
         | s  -> FORALL_OP s
       )
     
@@ -555,25 +553,24 @@ match%sedlex lexbuf with
    then FStarC_Errors.raise_error_text (current_range lexbuf) Codes.Fatal_ReservedPrefix
                      (FStarC_Ident.reserved_prefix  ^ " is a reserved prefix for an identifier");
    Hashtbl.find_option keywords id |> Option.default (IDENT id)
+
  | constructor -> let id = L.lexeme lexbuf in
    Hashtbl.find_option constructors id |> Option.default (NAME id)
 
- | tvar -> TVAR (L.lexeme lexbuf)
- | (integer | xinteger) -> INT (clean_number (L.lexeme lexbuf), false)
+ | (integer | xinteger) -> INT (clean_number (L.lexeme lexbuf))
  | (uint8 | char8) ->
    let c = clean_number (L.lexeme lexbuf) in
    let cv = int_of_string c in
    if cv < 0 || cv > 255 then fail lexbuf (Codes.Fatal_SyntaxError, "Out-of-range character literal")
    else UINT8 (c)
- | int8 -> INT8 (clean_number (L.lexeme lexbuf), false)
+ | int8 -> INT8 (clean_number (L.lexeme lexbuf))
  | uint16 -> UINT16 (clean_number (L.lexeme lexbuf))
- | int16 -> INT16 (clean_number (L.lexeme lexbuf), false)
+ | int16 -> INT16 (clean_number (L.lexeme lexbuf))
  | uint32 -> UINT32 (clean_number (L.lexeme lexbuf))
- | int32 -> INT32 (clean_number (L.lexeme lexbuf), false)
+ | int32 -> INT32 (clean_number (L.lexeme lexbuf))
  | uint64 -> UINT64 (clean_number (L.lexeme lexbuf))
- | int64 -> INT64 (clean_number (L.lexeme lexbuf), false)
+ | int64 -> INT64 (clean_number (L.lexeme lexbuf))
  | sizet -> SIZET (clean_number (L.lexeme lexbuf))
- | range -> RANGE (L.lexeme lexbuf)
  | real -> REAL(trim_right lexbuf 1)
  | (integer | xinteger | ieee64 | xieee64), Plus ident_char ->
    fail lexbuf (Codes.Fatal_SyntaxError, "This is not a valid numeric literal: " ^ L.lexeme lexbuf)
@@ -596,6 +593,8 @@ match%sedlex lexbuf with
  (* Pipe operators have special treatment in the parser. *)
  | "<|" -> PIPE_LEFT
  | "|>" -> PIPE_RIGHT
+
+ | ".." -> DOT_DOT
 
  | op_token_1
  | op_token_2

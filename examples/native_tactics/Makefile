@@ -5,7 +5,7 @@
 # 'include test.mk'.
 
 FSTAR_HOME=../..
-OTHERFLAGS += --z3version 4.13.3 --ext optimize_let_vc
+OTHERFLAGS += --ext optimize_let_vc
 FSTAR_EXE ?= $(FSTAR_HOME)/out/bin/fstar.exe
 FSTAR=$(FSTAR_EXE) $(OTHERFLAGS)
 

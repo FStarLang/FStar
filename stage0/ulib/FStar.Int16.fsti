@@ -22,8 +22,6 @@ unfold let n = 16
 open FStar.Int
 open FStar.Mul
 
-#set-options "--max_fuel 0 --max_ifuel 0"
-
 (* NOTE: anything that you fix/update here should be reflected in [FStar.UIntN.fstp], which is mostly
  * a copy-paste of this module. *)
 
@@ -113,30 +111,33 @@ val shift_arithmetic_right (a:t) (s:UInt32.t) : Pure t
   (ensures (fun c -> FStar.Int.shift_arithmetic_right (v a) (UInt32.v s) = v c))
 
 (* Comparison operators *)
-let eq (a:t) (b:t) : Tot bool = eq #n (v a) (v b)
-let gt (a:t) (b:t) : Tot bool = gt #n (v a) (v b)
+let eq  (a:t) (b:t) : Tot bool = eq  #n (v a) (v b)
+let ne  (a:t) (b:t) : Tot bool = ne  #n (v a) (v b)
+let gt  (a:t) (b:t) : Tot bool = gt  #n (v a) (v b)
 let gte (a:t) (b:t) : Tot bool = gte #n (v a) (v b)
-let lt (a:t) (b:t) : Tot bool = lt #n (v a) (v b)
+let lt ( a:t) (b:t) : Tot bool = lt  #n (v a) (v b)
 let lte (a:t) (b:t) : Tot bool = lte #n (v a) (v b)
 
 (* Infix notations *)
-unfold let op_Plus_Hat = add
-unfold let op_Subtraction_Hat = sub
-unfold let op_Star_Hat = mul
-unfold let op_Slash_Hat = div
-unfold let op_Percent_Hat = rem
-unfold let op_Hat_Hat = logxor
-unfold let op_Amp_Hat = logand
-unfold let op_Bar_Hat = logor
-unfold let op_Less_Less_Hat = shift_left
-unfold let op_Greater_Greater_Hat = shift_right
-unfold let op_Greater_Greater_Greater_Hat = shift_arithmetic_right
-unfold let op_Equals_Hat = eq
-unfold let op_Greater_Hat = gt
-unfold let op_Greater_Equals_Hat = gte
-unfold let op_Less_Hat = lt
-unfold let op_Less_Equals_Hat = lte
+inline_for_extraction unfold let ( +^ )  = add
+inline_for_extraction unfold let ( -^ )  = sub
+inline_for_extraction unfold let ( *^ )  = mul
+inline_for_extraction unfold let ( /^ )  = div
+inline_for_extraction unfold let ( %^ )  = rem
+inline_for_extraction unfold let ( ^^ )  = logxor
+inline_for_extraction unfold let ( &^ )  = logand
+inline_for_extraction unfold let ( |^ )  = logor
+inline_for_extraction unfold let ( <<^ ) = shift_left
+inline_for_extraction unfold let ( >>^ ) = shift_right
+inline_for_extraction unfold let ( >>>^) = shift_arithmetic_right
+inline_for_extraction unfold let ( =^ )  = eq
+inline_for_extraction unfold let ( <>^ ) = ne
+inline_for_extraction unfold let ( >^ )  = gt
+inline_for_extraction unfold let ( >=^ ) = gte
+inline_for_extraction unfold let ( <^ )  = lt
+inline_for_extraction unfold let ( <=^ ) = lte
 
+#push-options "--fuel 0 --ifuel 0"
 inline_for_extraction
 let ct_abs (a:t{min_int n < v a}) : Tot (b:t{v b = abs (v a)}) =
   let mask = a >>>^ UInt32.uint_to_t (n - 1) in
@@ -155,6 +156,7 @@ let ct_abs (a:t{min_int n < v a}) : Tot (b:t{v b = abs (v a)}) =
     UInt.lemma_lognot_value #n (to_uint (v a))
     end;
   (a ^^ mask) -^ mask
+#pop-options
 
 (* To input / output constants *)
 (* .. in decimal representation *)
@@ -162,7 +164,6 @@ val to_string: t -> Tot string
 
 val of_string: string -> Tot t
 
-#set-options "--admit_smt_queries true"
 //This private primitive is used internally by the
 //compiler to translate bounded integer constants
 //with a desugaring-time check of the size of the number,
@@ -170,8 +171,8 @@ val of_string: string -> Tot t
 //Since it is marked private, client programs cannot call it directly
 //Since it is marked unfold, it eagerly reduces,
 //eliminating the verification overhead of the wrapper
+[@@admitted]
 private
 unfold
-let __int_to_t (x:int) : Tot t
-    = int_to_t x
-#reset-options
+let __int_to_t (x:int) : t =
+  int_to_t x

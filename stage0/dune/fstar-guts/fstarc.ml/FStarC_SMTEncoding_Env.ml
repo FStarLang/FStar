@@ -1,13 +1,12 @@
 open Prims
 let (dbg_PartialApp : Prims.bool FStarC_Effect.ref) =
   FStarC_Debug.get_toggle "PartialApp"
-exception Inner_let_rec of (Prims.string * FStarC_Range_Type.range)
-  Prims.list 
+exception Inner_let_rec of (Prims.string * FStarC_Range_Type.t) Prims.list 
 let (uu___is_Inner_let_rec : Prims.exn -> Prims.bool) =
   fun projectee ->
     match projectee with | Inner_let_rec uu___ -> true | uu___ -> false
 let (__proj__Inner_let_rec__item__uu___ :
-  Prims.exn -> (Prims.string * FStarC_Range_Type.range) Prims.list) =
+  Prims.exn -> (Prims.string * FStarC_Range_Type.t) Prims.list) =
   fun projectee -> match projectee with | Inner_let_rec uu___ -> uu___
 let add_fuel : 'uuuuu . 'uuuuu -> 'uuuuu Prims.list -> 'uuuuu Prims.list =
   fun x ->
@@ -38,7 +37,7 @@ let (mk_term_projector_name :
       let uu___ =
         let uu___1 = FStarC_Ident.string_of_lid lid in
         let uu___2 = FStarC_Ident.string_of_id a.FStarC_Syntax_Syntax.ppname in
-        FStarC_Util.format2 "%s_%s" uu___1 uu___2 in
+        FStarC_Format.fmt2 "%s_%s" uu___1 uu___2 in
       escape uu___
 let (primitive_projector_by_pos :
   FStarC_TypeChecker_Env.env ->
@@ -49,10 +48,11 @@ let (primitive_projector_by_pos :
       fun i ->
         let fail uu___ =
           let uu___1 =
-            let uu___2 = FStarC_Ident.string_of_lid lid in
-            FStarC_Util.format2
-              "Projector %s on data constructor %s not found"
-              (Prims.string_of_int i) uu___2 in
+            let uu___2 =
+              FStarC_Class_Show.show FStarC_Class_Show.showable_int i in
+            let uu___3 = FStarC_Ident.string_of_lid lid in
+            FStarC_Format.fmt2
+              "Projector %s on data constructor %s not found" uu___2 uu___3 in
           failwith uu___1 in
         let uu___ = FStarC_TypeChecker_Env.lookup_datacon env lid in
         match uu___ with
@@ -83,7 +83,8 @@ let (mk_term_projector_name_by_pos :
     fun i ->
       let uu___ =
         let uu___1 = FStarC_Ident.string_of_lid lid in
-        FStarC_Util.format2 "%s_%s" uu___1 (Prims.string_of_int i) in
+        let uu___2 = FStarC_Class_Show.show FStarC_Class_Show.showable_int i in
+        FStarC_Format.fmt2 "%s_%s" uu___1 uu___2 in
       escape uu___
 let (mk_term_projector :
   FStarC_Ident.lident ->
@@ -214,23 +215,31 @@ let (varops : varops_t) =
            (let uu___3 =
               let uu___4 =
                 let uu___5 = FStarC_Effect.op_Bang ctr in
-                Prims.string_of_int uu___5 in
+                FStarC_Class_Show.show FStarC_Class_Show.showable_int uu___5 in
               Prims.strcat "__" uu___4 in
             Prims.strcat y1 uu___3)) in
     let top_scope =
       let uu___ = FStarC_Effect.op_Bang scopes in FStarC_List.hd uu___ in
     FStarC_SMap.add top_scope y2 true; y2 in
-  let new_var pp rn =
-    let uu___ =
-      let uu___1 = FStarC_Ident.string_of_id pp in
-      Prims.strcat uu___1 (Prims.strcat "__" (Prims.string_of_int rn)) in
-    mk_unique uu___ in
+  let new_var pp =
+    fun rn ->
+      let uu___ =
+        let uu___1 = FStarC_Ident.string_of_id pp in
+        let uu___2 =
+          let uu___3 =
+            FStarC_Class_Show.show FStarC_Class_Show.showable_int rn in
+          Prims.strcat "__" uu___3 in
+        Prims.strcat uu___1 uu___2 in
+      mk_unique uu___ in
   let new_fvar lid =
     let uu___ = FStarC_Ident.string_of_lid lid in mk_unique uu___ in
   let next_id uu___ = FStarC_Util.incr ctr; FStarC_Effect.op_Bang ctr in
-  let fresh mname pfx =
-    let uu___ = let uu___1 = next_id () in Prims.string_of_int uu___1 in
-    FStarC_Util.format3 "%s_%s_%s" pfx mname uu___ in
+  let fresh mname =
+    fun pfx ->
+      let uu___ =
+        let uu___1 = next_id () in
+        FStarC_Class_Show.show FStarC_Class_Show.showable_int uu___1 in
+      FStarC_Format.fmt3 "%s_%s_%s" pfx mname uu___ in
   let reset_fresh uu___ = FStarC_Effect.op_Colon_Equals ctr initial_ctr in
   let push uu___ =
     let uu___1 =
@@ -315,34 +324,38 @@ let (fvb_to_string : fvar_binding -> Prims.string) =
       match uu___ with
       | FStar_Pervasives_Native.None -> "None"
       | FStar_Pervasives_Native.Some (s0, s1) ->
-          let uu___1 = FStarC_SMTEncoding_Term.print_smt_term s0 in
-          let uu___2 = FStarC_SMTEncoding_Term.print_smt_term s1 in
-          FStarC_Util.format2 "(%s, %s)" uu___1 uu___2 in
-    let uu___ = FStarC_Ident.string_of_lid fvb.fvar_lid in
-    let uu___1 = term_opt_to_string fvb.smt_token in
-    let uu___2 = term_pair_opt_to_string fvb.smt_fuel_partial_app in
-    let uu___3 = FStarC_Util.string_of_bool fvb.fvb_thunked in
-    FStarC_Util.format6
+          FStarC_Class_Show.show
+            (FStarC_Class_Show.show_tuple2
+               FStarC_SMTEncoding_Term.showable_smt_term
+               FStarC_SMTEncoding_Term.showable_smt_term) (s0, s1) in
+    let uu___ =
+      FStarC_Class_Show.show FStarC_Ident.showable_lident fvb.fvar_lid in
+    let uu___1 =
+      FStarC_Class_Show.show FStarC_Class_Show.showable_int fvb.smt_arity in
+    let uu___2 = term_opt_to_string fvb.smt_token in
+    let uu___3 = term_pair_opt_to_string fvb.smt_fuel_partial_app in
+    let uu___4 =
+      FStarC_Class_Show.show FStarC_Class_Show.showable_bool fvb.fvb_thunked in
+    FStarC_Format.fmt6
       "{ lid = %s;\n  smt_arity = %s;\n  smt_id = %s;\n  smt_token = %s;\n  smt_fuel_partial_app = %s;\n  fvb_thunked = %s }"
-      uu___ (Prims.string_of_int fvb.smt_arity) fvb.smt_id uu___1 uu___2
-      uu___3
+      uu___ uu___1 fvb.smt_id uu___2 uu___3 uu___4
 let (check_valid_fvb : fvar_binding -> unit) =
   fun fvb ->
     if
-      ((FStarC_Option.isSome fvb.smt_token) ||
-         (FStarC_Option.isSome fvb.smt_fuel_partial_app))
+      ((FStar_Pervasives_Native.uu___is_Some fvb.smt_token) ||
+         (FStar_Pervasives_Native.uu___is_Some fvb.smt_fuel_partial_app))
         && fvb.fvb_thunked
     then
       (let uu___1 =
          let uu___2 = FStarC_Ident.string_of_lid fvb.fvar_lid in
-         FStarC_Util.format1 "Unexpected thunked SMT symbol: %s" uu___2 in
+         FStarC_Format.fmt1 "Unexpected thunked SMT symbol: %s" uu___2 in
        failwith uu___1)
     else
       if fvb.fvb_thunked && (fvb.smt_arity <> Prims.int_zero)
       then
         (let uu___2 =
            let uu___3 = FStarC_Ident.string_of_lid fvb.fvar_lid in
-           FStarC_Util.format1 "Unexpected arity of thunked SMT symbol: %s"
+           FStarC_Format.fmt1 "Unexpected arity of thunked SMT symbol: %s"
              uu___3 in
          failwith uu___2)
       else ();
@@ -354,7 +367,7 @@ let (check_valid_fvb : fvar_binding -> unit) =
          ->
          let uu___4 =
            let uu___5 = fvb_to_string fvb in
-           FStarC_Util.format1 "bad fvb\n%s" uu___5 in
+           FStarC_Format.fmt1 "bad fvb\n%s" uu___5 in
          failwith uu___4
      | uu___1 -> ())
 let binder_of_eithervar :
@@ -515,7 +528,7 @@ let add_bvar_binding :
         (fun pimap_opt ->
            let uu___1 =
              let uu___2 = FStarC_PIMap.empty () in
-             FStarC_Util.dflt uu___2 pimap_opt in
+             FStarC_Option.dflt uu___2 pimap_opt in
            FStarC_PIMap.add uu___1
              (FStar_Pervasives_Native.fst bvb).FStarC_Syntax_Syntax.index bvb)
 let (add_fvar_binding :
@@ -552,7 +565,10 @@ let (gen_term_var :
   =
   fun env ->
     fun x ->
-      let ysym = Prims.strcat "@x" (Prims.string_of_int env.depth) in
+      let ysym =
+        let uu___ =
+          FStarC_Class_Show.show FStarC_Class_Show.showable_int env.depth in
+        Prims.strcat "@x" uu___ in
       let y =
         let uu___ =
           FStarC_SMTEncoding_Term.mk_fv
@@ -664,7 +680,7 @@ let (lookup_term_var :
             let uu___2 =
               FStarC_Class_Show.show FStarC_Syntax_Print.showable_bv a in
             let uu___3 = print_env env in
-            FStarC_Util.format2
+            FStarC_Format.fmt2
               "Bound term variable not found  %s in environment: %s" uu___2
               uu___3 in
           failwith uu___1
@@ -745,8 +761,9 @@ let (new_term_constant_and_tok_from_lid :
         let uu___ = new_term_constant_and_tok_from_lid_aux env x arity false in
         match uu___ with
         | (fname, ftok_name_opt, env1) ->
-            let uu___1 = FStarC_Option.get ftok_name_opt in
-            (fname, uu___1, env1)
+            (fname,
+              (FStar_Pervasives_Native.__proj__Some__item__v ftok_name_opt),
+              env1)
 let (new_term_constant_and_tok_from_lid_maybe_thunked :
   env_t ->
     FStarC_Ident.lident ->
@@ -768,36 +785,35 @@ let fail_fvar_lookup : 'uuuuu . env_t -> FStarC_Ident.lident -> 'uuuuu =
           let uu___ =
             let uu___1 =
               FStarC_Class_Show.show FStarC_Ident.showable_lident a in
-            FStarC_Util.format1
+            FStarC_Format.fmt1
               "Name %s not found in the smtencoding and typechecker env"
               uu___1 in
           failwith uu___
       | uu___ ->
           let quals = FStarC_TypeChecker_Env.quals_of_qninfo q in
-          let uu___1 =
-            (FStarC_Util.is_some quals) &&
-              (let uu___2 = FStarC_Util.must quals in
-               FStarC_List.contains
-                 FStarC_Syntax_Syntax.Unfold_for_unification_and_vcgen uu___2) in
-          if uu___1
+          if
+            (FStar_Pervasives_Native.uu___is_Some quals) &&
+              (FStarC_List.contains
+                 FStarC_Syntax_Syntax.Unfold_for_unification_and_vcgen
+                 (FStar_Pervasives_Native.__proj__Some__item__v quals))
           then
-            let uu___2 =
-              let uu___3 =
+            let uu___1 =
+              let uu___2 =
                 FStarC_Class_Show.show FStarC_Ident.showable_lident a in
-              FStarC_Util.format1
+              FStarC_Format.fmt1
                 "Name %s not found in the smtencoding env (the symbol is marked unfold, expected it to reduce)"
-                uu___3 in
+                uu___2 in
             FStarC_Errors.raise_error FStarC_Ident.hasrange_lident a
               FStarC_Errors_Codes.Fatal_IdentifierNotFound ()
               (Obj.magic FStarC_Errors_Msg.is_error_message_string)
-              (Obj.magic uu___2)
+              (Obj.magic uu___1)
           else
-            (let uu___3 =
-               let uu___4 =
+            (let uu___2 =
+               let uu___3 =
                  FStarC_Class_Show.show FStarC_Ident.showable_lident a in
-               FStarC_Util.format1 "Name %s not found in the smtencoding env"
-                 uu___4 in
-             failwith uu___3)
+               FStarC_Format.fmt1 "Name %s not found in the smtencoding env"
+                 uu___3 in
+             failwith uu___2)
 let (lookup_lid : env_t -> FStarC_Ident.lident -> fvar_binding) =
   fun env ->
     fun a ->
@@ -928,7 +944,7 @@ let (try_lookup_free_var :
             then
               let uu___3 = FStarC_Ident.string_of_lid l in
               let uu___4 = fvb_to_string fvb in
-              FStarC_Util.print2 "Looked up %s found\n%s\n" uu___3 uu___4
+              FStarC_Format.print2 "Looked up %s found\n%s\n" uu___3 uu___4
             else ());
            if fvb.fvb_thunked
            then
@@ -965,31 +981,25 @@ let (try_lookup_free_var :
                         | uu___4 -> FStar_Pervasives_Native.Some t)
                    | uu___4 -> FStar_Pervasives_Native.None)))
 let (lookup_free_var :
-  env_t ->
-    FStarC_Ident.lident FStarC_Syntax_Syntax.withinfo_t ->
-      FStarC_SMTEncoding_Term.term)
-  =
+  env_t -> FStarC_Ident.lident -> FStarC_SMTEncoding_Term.term) =
   fun env ->
     fun a ->
-      let uu___ = try_lookup_free_var env a.FStarC_Syntax_Syntax.v in
+      let uu___ = try_lookup_free_var env a in
       match uu___ with
       | FStar_Pervasives_Native.Some t -> t
-      | FStar_Pervasives_Native.None ->
-          fail_fvar_lookup env a.FStarC_Syntax_Syntax.v
-let (lookup_free_var_name :
-  env_t ->
-    FStarC_Ident.lident FStarC_Syntax_Syntax.withinfo_t -> fvar_binding)
-  = fun env -> fun a -> lookup_lid env a.FStarC_Syntax_Syntax.v
+      | FStar_Pervasives_Native.None -> fail_fvar_lookup env a
+let (lookup_free_var_name : env_t -> FStarC_Ident.lident -> fvar_binding) =
+  fun env -> fun a -> lookup_lid env a
 let (lookup_free_var_sym :
   env_t ->
-    FStarC_Ident.lident FStarC_Syntax_Syntax.withinfo_t ->
+    FStarC_Ident.lident ->
       ((FStarC_SMTEncoding_Term.op, FStarC_SMTEncoding_Term.term)
         FStar_Pervasives.either * FStarC_SMTEncoding_Term.term Prims.list *
         Prims.int))
   =
   fun env ->
     fun a ->
-      let fvb = lookup_lid env a.FStarC_Syntax_Syntax.v in
+      let fvb = lookup_lid env a in
       match fvb.smt_fuel_partial_app with
       | FStar_Pervasives_Native.Some
           ({

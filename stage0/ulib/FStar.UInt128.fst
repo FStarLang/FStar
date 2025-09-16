@@ -35,7 +35,7 @@ module T = FStar.Stubs.Tactics.V2.Builtins
 module TD = FStar.Tactics.V2.Derived
 module TM = FStar.Tactics.MApply
 
-#set-options "--max_fuel 0 --max_ifuel 0 --split_queries no"
+#set-options "--fuel 0 --ifuel 0 --split_queries no"
 #set-options "--using_facts_from '*,-FStar.Tactics,-FStar.Reflection'"
 
 (* TODO: explain why exactly this is needed? It leads to failures in
@@ -953,6 +953,7 @@ val u32_product_bound : a:nat{a < pow2 32} -> b:nat{b < pow2 32} ->
 let u32_product_bound a b =
   uint_product_bound #32 a b
 
+#push-options "--z3rlimit 15 --retry 5" // sporadically fails
 let mul32 x y =
   let x0 = u64_mod_32 x in
   let x1 = U64.shift_right x u32_32 in
@@ -979,6 +980,7 @@ let mul32 x y =
   mul32_digits (U64.v x) (U32.v y);
   assert (U64.v x * U32.v y == U64.v x1y' * pow2 32 + U64.v x0y);
   r
+#pop-options
 
 let l32 (x: UInt.uint_t 64) : UInt.uint_t 32 = x % pow2 32
 let h32 (x: UInt.uint_t 64) : UInt.uint_t 32 = x / pow2 32
@@ -1065,7 +1067,7 @@ let mul_wide_impl (x: U64.t) (y: U64.t) :
   assert (U64.v r1 == (phh x y + (phl x y + pll_h x y) / pow2 32 + (plh x y + (phl x y + pll_h x y) % pow2 32) / pow2 32) % pow2 64);
   let r = { low = r0; high = r1; } in
   r
-
+#restart-solver
 let product_sums (a b c d:nat) :
   Lemma ((a + b) * (c + d) == a * c + a * d + b * c + b * d) = ()
 

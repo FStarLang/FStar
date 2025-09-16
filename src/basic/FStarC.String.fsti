@@ -17,7 +17,6 @@ module FStarC.String
 
 open FStarC.Effect
 open FStar.Char
-open FStarC.BigInt
 
 (* The name of this file is misleading: most string functions are to be found in
    util.fsi *)
@@ -40,8 +39,8 @@ val string_of_char : char -> Tot string
 val substring: string -> start:int -> len:int -> string
 val get: string -> int -> char
 val collect: (char -> string) -> string -> string
-val index_of: string -> char -> bigint
-val index: string -> bigint -> char
+val index_of: string -> char -> int
+val index: string -> int -> char
 
 val list_of_string : string -> list char
 val string_of_list: list char -> string

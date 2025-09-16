@@ -17,7 +17,6 @@
 module FStarC.TypeChecker.PatternUtils
 open FStarC.Effect
 open FStarC
-open FStarC.Util
 open FStarC.Errors
 open FStarC.TypeChecker
 open FStarC.Syntax
@@ -57,13 +56,13 @@ let rec elaborate_pat env p = //Adds missing implicit patterns to constructor pa
 
     | Pat_cons(fv, us_opt, pats) ->
         let pats = List.map (fun (p, imp) -> elaborate_pat env p, imp) pats in
-        let _, t = Env.lookup_datacon env fv.fv_name.v in
+        let _, t = Env.lookup_datacon env fv.fv_name in
         let f, _ = U.arrow_formals t in
         let rec aux formals pats =
             match formals, pats with
             | [], [] -> []
             | [], _::_ ->
-                raise_error fv.fv_name.v Errors.Fatal_TooManyPatternArguments "Too many pattern arguments"
+                raise_error fv.fv_name Errors.Fatal_TooManyPatternArguments "Too many pattern arguments"
             | _::_, [] -> //fill the rest with dot patterns, if all the remaining formals are implicit
             formals |>
             List.map
@@ -72,12 +71,12 @@ let rec elaborate_pat env p = //Adds missing implicit patterns to constructor pa
                     match imp with
                     | Some (Implicit inaccessible) ->
                     let a = Syntax.new_bv (Some (Syntax.range_of_bv t)) tun in
-                    let r = range_of_lid fv.fv_name.v in
+                    let r = range_of_lid fv.fv_name in
                     maybe_dot inaccessible a r, true
 
                     | _ ->
-                    raise_error fv.fv_name.v Errors.Fatal_InsufficientPatternArguments
-                                (BU.format1 "Insufficient pattern arguments (%s)"
+                    raise_error fv.fv_name Errors.Fatal_InsufficientPatternArguments
+                                (Format.fmt1 "Insufficient pattern arguments (%s)"
                                             (show p)))
 
             | f::formals', (p, p_imp)::pats' ->
@@ -93,25 +92,31 @@ let rec elaborate_pat env p = //Adds missing implicit patterns to constructor pa
               // Only allow it if it won't be bound
               | Pat_var v when string_of_id (v.ppname) = Ident.reserved_prefix ->
                 let a = Syntax.new_bv (Some p.p) tun in
-                let p = maybe_dot inaccessible a (range_of_lid fv.fv_name.v) in
+                let p = maybe_dot inaccessible a (range_of_lid fv.fv_name) in
                 (p, true)::aux formals' pats'
 
               | _ ->
                 raise_error p.p Errors.Fatal_InsufficientPatternArguments
-                             (BU.format1 "This pattern (%s) binds an inaccesible argument; use a wildcard ('_') pattern"
+                             (Format.fmt1 "This pattern (%s) binds an inaccesible argument; use a wildcard ('_') pattern"
                                          (show p))
               end
 
-            | (_, Some (Implicit _)) when p_imp ->
+            | (_, Some (Implicit _))
+            | (_, Some (Meta _)) when p_imp ->
                 (p, true)::aux formals' pats'
 
             | (_, Some (Implicit inaccessible)) ->
                 let a = Syntax.new_bv (Some p.p) tun in
-                let p = maybe_dot inaccessible a (range_of_lid fv.fv_name.v) in
+                let p = maybe_dot inaccessible a (range_of_lid fv.fv_name) in
+                (p, true)::aux formals' pats
+
+            | (_, Some (Meta _)) ->
+                let a = Syntax.new_bv (Some p.p) tun in
+                let p = maybe_dot false a (range_of_lid fv.fv_name) in
                 (p, true)::aux formals' pats
 
             | (_, imp) ->
-                (p, S.is_bqual_implicit imp)::aux formals' pats'
+                (p, S.is_bqual_implicit_or_meta imp)::aux formals' pats'
             end
         in
         {p with v=Pat_cons(fv, us_opt, aux f pats)}
@@ -209,7 +214,7 @@ let pat_as_exp (introduce_bv_uvars:bool)
                 if !dbg_Patterns
                 then begin
                   if not env.phase1
-                  then BU.print1 "Found a non-instantiated dot pattern in phase2 (%s)\n"
+                  then Format.print1 "Found a non-instantiated dot pattern in phase2 (%s)\n"
                          (show p)
                 end;
                 let k, _ = U.type_u () in
@@ -263,7 +268,7 @@ let pat_as_exp (introduce_bv_uvars:bool)
         match b |> BU.find_dup bv_eq with
             | Some x ->
               let m = show x in
-              raise_error p.p Errors.Fatal_NonLinearPatternVars (format1 "The pattern variable \"%s\" was used more than once" m)
+              raise_error p.p Errors.Fatal_NonLinearPatternVars (Format.fmt1 "The pattern variable \"%s\" was used more than once" m)
             | _ -> b, a, w, arg, guard, p
     in
     let b, _, _, tm, guard, p = one_pat env p in

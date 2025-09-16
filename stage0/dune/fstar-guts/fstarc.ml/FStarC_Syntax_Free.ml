@@ -157,8 +157,7 @@ let (singleton_fvar : FStarC_Syntax_Syntax.fv -> free_vars_and_fvars) =
         (FStarC_Class_Setlike.add ()
            (Obj.magic
               (FStarC_RBSet.setlike_rbset FStarC_Syntax_Syntax.ord_fv))
-           (fv.FStarC_Syntax_Syntax.fv_name).FStarC_Syntax_Syntax.v
-           (Obj.magic uu___1)) in
+           fv.FStarC_Syntax_Syntax.fv_name (Obj.magic uu___1)) in
     ((FStar_Pervasives_Native.fst no_free_vars), uu___)
 let (singleton_bv :
   FStarC_Syntax_Syntax.bv ->
@@ -325,9 +324,10 @@ let rec (free_names_and_uvs' :
   FStarC_Syntax_Syntax.term -> use_cache_t -> free_vars_and_fvars) =
   fun tm ->
     fun use_cache ->
-      let aux_binders bs from_body =
-        let from_binders = free_names_and_uvars_binders bs use_cache in
-        op_Plus_Plus from_binders from_body in
+      let aux_binders bs =
+        fun from_body ->
+          let from_binders = free_names_and_uvars_binders bs use_cache in
+          op_Plus_Plus from_binders from_body in
       let t = FStarC_Syntax_Subst.compress tm in
       match t.FStarC_Syntax_Syntax.n with
       | FStarC_Syntax_Syntax.Tm_delayed uu___ -> failwith "Impossible"
@@ -674,6 +674,13 @@ let (names :
   fun t ->
     let uu___ =
       let uu___1 = free_names_and_uvars t Def in
+      FStar_Pervasives_Native.fst uu___1 in
+    uu___.FStarC_Syntax_Syntax.free_names
+let (names_comp :
+  FStarC_Syntax_Syntax.comp -> FStarC_Syntax_Syntax.bv FStarC_FlatSet.t) =
+  fun c ->
+    let uu___ =
+      let uu___1 = free_names_and_uvars_comp c Def in
       FStar_Pervasives_Native.fst uu___1 in
     uu___.FStarC_Syntax_Syntax.free_names
 let (uvars :

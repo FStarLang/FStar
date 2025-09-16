@@ -18,7 +18,6 @@ open FStarC.Effect
 open FStarC.List
 open FStarC
 open FStarC.TypeChecker.Env
-open FStarC.Util
 open FStarC.Const
 open FStarC.Ident
 open FStarC.Extraction
@@ -79,7 +78,7 @@ module Print = FStarC.Syntax.Print
 (********************************************************************************************)
 let err_ill_typed_application env (t : term) mlhead (args : args) (ty : mlty) =
     Errors.raise_error t Fatal_IllTyped
-       (BU.format4 "Ill-typed application: source application is %s \n translated prefix to %s at type %s\n remaining args are %s\n"
+       (Format.fmt4 "Ill-typed application: source application is %s \n translated prefix to %s at type %s\n remaining args are %s\n"
                 (show t)
                 (Code.string_of_mlexpr (current_module_of_uenv env) mlhead)
                 (Code.string_of_mlty (current_module_of_uenv env) ty)
@@ -87,12 +86,12 @@ let err_ill_typed_application env (t : term) mlhead (args : args) (ty : mlty) =
 
 let err_ill_typed_erasure env (pos:Range.t) (ty : mlty) =
     Errors.raise_error pos Fatal_IllTyped
-       (BU.format1 "Erased value found where a value of type %s was expected"
+       (Format.fmt1 "Erased value found where a value of type %s was expected"
                   (Code.string_of_mlty (current_module_of_uenv env) ty))
 
 let err_value_restriction (t:term) =
     Errors.raise_error t Fatal_ValueRestriction
-       (BU.format2 "Refusing to generalize because of the value restriction: (%s) %s"
+       (Format.fmt2 "Refusing to generalize because of the value restriction: (%s) %s"
                     (tag_of t) (show t))
 
 let err_unexpected_eff env (t:term) ty f0 f1 =
@@ -107,7 +106,7 @@ let err_unexpected_eff env (t:term) ty f0 f1 =
 let err_cannot_extract_effect (l:lident) (r:Range.t) (reason:string) (ctxt:string) =
   Errors.raise_error r Errors.Fatal_UnexpectedEffect [
     Errors.text <|
-     BU.format3 "Cannot extract effect %s because %s (when extracting %s)"
+     Format.fmt3 "Cannot extract effect %s because %s (when extracting %s)"
        (string_of_lid l) reason ctxt
   ]
 
@@ -166,7 +165,7 @@ let rec is_arity_aux tcenv t =
     | Tm_unknown
     | Tm_delayed _
     | Tm_ascribed _
-    | Tm_meta _ -> failwith (BU.format1 "Impossible: is_arity (%s)" (tag_of t))
+    | Tm_meta _ -> failwith (Format.fmt1 "Impossible: is_arity (%s)" (tag_of t))
     | Tm_lazy i -> is_arity_aux tcenv (U.unfold_lazy i)
     | Tm_uvar _
     | Tm_constant _
@@ -181,7 +180,7 @@ let rec is_arity_aux tcenv t =
         FStarC.TypeChecker.Env.lookup_definition
           [Env.Unfold delta_constant]
           tcenv
-          fv.fv_name.v
+          fv.fv_name
       in
       begin
       match topt with
@@ -219,7 +218,7 @@ let rec is_type_aux env t =
     match t.n with
     | Tm_delayed _
     | Tm_unknown ->
-        failwith (BU.format1 "Impossible: %s" (tag_of t))
+        failwith (Format.fmt1 "Impossible: %s" (tag_of t))
 
     | Tm_lazy i -> is_type_aux env (U.unfold_lazy i)
 
@@ -250,7 +249,7 @@ let rec is_type_aux env t =
       | Some (t, _) ->
         is_arity env t
       | _ -> (
-        failwith (BU.format1 "Extraction: variable not found: %s" (show x))
+        failwith (Format.fmt1 "Extraction: variable not found: %s" (show x))
       )
     )
 
@@ -266,14 +265,14 @@ let rec is_type_aux env t =
       is_type_aux env body
 
     | Tm_let {lbs=(false, [lb]); body} ->
-      let x = BU.left lb.lbname in
+      let x = Inl?.v lb.lbname in
       let bs, body = SS.open_term [S.mk_binder x] body in
       let env = push_tcenv_binders env bs in
       is_type_aux env body
 
     | Tm_let {lbs=(_, lbs); body} ->
       let lbs, body = SS.open_let_rec lbs body in
-      let env = push_tcenv_binders env (List.map (fun lb -> S.mk_binder (BU.left lb.lbname)) lbs) in
+      let env = push_tcenv_binders env (List.map (fun lb -> S.mk_binder (Inl?.v lb.lbname)) lbs) in
       is_type_aux env body
 
     | Tm_match {brs=branches} ->
@@ -299,13 +298,13 @@ let rec is_type_aux env t =
       is_type_aux env head
 
 let is_type env t =
-    debug env (fun () -> BU.print2 "checking is_type (%s) %s\n"
+    debug env (fun () -> Format.print2 "checking is_type (%s) %s\n"
                                 (tag_of t)
                                 (show t)
                                 );
     let b = is_type_aux env t in
     debug env (fun _ ->
-        BU.print3 "is_type(%s) (tag %s) = %s\n" (show t) (tag_of (SS.compress t)) (show b));
+        Format.print3 "is_type(%s) (tag %s) = %s\n" (show t) (tag_of (SS.compress t)) (show b));
     b
 
 let is_type_binder env x = is_arity env x.binder_bv.sort
@@ -525,7 +524,7 @@ let apply_coercion (pos:Range.t) (g:uenv) (e:mlexpr) (ty:mlty) (expect:mlty) : m
     if Util.codegen_fsharp()
     then //magics are not always sound in F#; warn
       FStarC.Errors.log_issue pos Errors.Warning_NoMagicInFSharp [
-         text <| BU.format2 "Inserted an unsafe type coercion in generated code from %s to %s."
+         text <| Format.fmt2 "Inserted an unsafe type coercion in generated code from %s to %s."
              (Code.string_of_mlty (current_module_of_uenv g) ty)
              (Code.string_of_mlty (current_module_of_uenv g) expect);
          text "This may be unsound in F#.";
@@ -580,7 +579,7 @@ let apply_coercion (pos:Range.t) (g:uenv) (e:mlexpr) (ty:mlty) (expect:mlty) : m
           with_ty expect <| MLE_Match(s, List.map coerce_branch branches)
 
         | MLE_If(s, b1, b2_opt), _, _ ->
-          with_ty expect <| MLE_If(s, aux b1 ty expect, BU.map_opt b2_opt (fun b2 -> aux b2 ty expect))
+          with_ty expect <| MLE_If(s, aux b1 ty expect, Option.map (fun b2 -> aux b2 ty expect) b2_opt)
 
         | MLE_Seq es, _, _ ->
           let prefix, last = BU.prefix es in
@@ -608,12 +607,12 @@ let maybe_coerce pos (g:uenv) e ty (expect:mlty) : mlexpr =
         | _ ->
           if type_leq g (erase_effect_annotations ty) (erase_effect_annotations expect)
           then let _ = debug g (fun () ->
-                BU.print2 "\n Effect mismatch on type of %s : %s\n"
+                Format.print2 "\n Effect mismatch on type of %s : %s\n"
                             (Code.string_of_mlexpr (current_module_of_uenv g) e)
                             (Code.string_of_mlty (current_module_of_uenv g) ty)) in
                e //types differ but only on effect labels, which ML/KaRaMeL don't care about; so no coercion needed
           else let _ = debug g (fun () ->
-                BU.print3 "\n (*needed to coerce expression \n %s \n of type \n %s \n to type \n %s *) \n"
+                Format.print3 "\n (*needed to coerce expression \n %s \n of type \n %s \n to type \n %s *) \n"
                             (Code.string_of_mlexpr (current_module_of_uenv g) e)
                             (Code.string_of_mlty (current_module_of_uenv g) ty)
                             (Code.string_of_mlty (current_module_of_uenv g) expect)) in
@@ -733,7 +732,7 @@ let rec translate_term_to_mlty' (g:uenv) (t0:term) : mlty =
                  translate_term_to_mlty g a
             else (
               let formals, _ =
-                let (_, fvty), _ = FStarC.TypeChecker.Env.lookup_lid (tcenv_of_uenv g) fv.fv_name.v in
+                let (_, fvty), _ = FStarC.TypeChecker.Env.lookup_lid (tcenv_of_uenv g) fv.fv_name in
                 let fvty = N.normalize [Env.UnfoldUntil delta_constant; Env.ForExtraction] (tcenv_of_uenv g) fvty in
                 U.arrow_formals fvty in
               let mlargs = List.map (arg_as_mlty g) args in
@@ -743,7 +742,7 @@ let rec translate_term_to_mlty' (g:uenv) (t0:term) : mlty =
                 then let _, rest = BU.first_N n_args formals in
                      mlargs @ (List.map (fun _ -> MLTY_Erased) rest)
                 else mlargs in
-              let nm = UEnv.mlpath_of_lident g fv.fv_name.v in
+              let nm = UEnv.mlpath_of_lident g fv.fv_name in
               MLTY_Named (mlargs, nm)
             )
         )
@@ -755,7 +754,7 @@ let rec translate_term_to_mlty' (g:uenv) (t0:term) : mlty =
 
           | Tm_bvar _
           | Tm_delayed _
-          | Tm_unknown -> failwith (BU.format1 "Impossible: Unexpected term %s" (show t))
+          | Tm_unknown -> failwith (Format.fmt1 "Impossible: Unexpected term %s" (show t))
 
           | Tm_lazy i -> translate_term_to_mlty env (U.unfold_lazy i)
 
@@ -948,7 +947,7 @@ let rec extract_one_pat (imp : bool)
         false
       | _ ->
         let ok = type_leq g t expected_ty in
-        if not ok then debug g (fun _ -> BU.print2 "Expected pattern type %s; got pattern type %s\n"
+        if not ok then debug g (fun _ -> Format.print2 "Expected pattern type %s; got pattern type %s\n"
                                                 (Code.string_of_mlty (current_module_of_uenv g) expected_ty)
                                                 (Code.string_of_mlty (current_module_of_uenv g) t));
         ok
@@ -1017,8 +1016,8 @@ let rec extract_one_pat (imp : bool)
           | Some ({exp_b_expr={expr=MLE_Name n}; exp_b_tscheme=ttys}) -> n, ttys
           | Some _ -> failwith "Expected a constructor"
           | None ->
-            Errors.raise_error f.fv_name.p  Errors.Error_ErasedCtor
-              (BU.format1 "Cannot extract this pattern, the %s constructor was erased" (show f))
+            Errors.raise_error f Errors.Error_ErasedCtor
+              (Format.fmt1 "Cannot extract this pattern, the %s constructor was erased" (show f))
         in
         // The prefix of the pattern are dot patterns matching the type parameters
         let nTyVars = List.length (fst tys) in
@@ -1049,7 +1048,7 @@ let rec extract_one_pat (imp : bool)
             //collect the arguments and result ([t1;...;tn], T)
             Util.uncurry_mlty_fun f_ty
         in
-        debug g (fun () -> BU.print2 "@@@Expected type of pattern with head = %s is %s\n"
+        debug g (fun () -> Format.print2 "@@@Expected type of pattern with head = %s is %s\n"
                           (show f)
                           (let args, t = f_ty in
                            let args =
@@ -1059,7 +1058,7 @@ let rec extract_one_pat (imp : bool)
                                |> String.concat " -> "
                            in
                            let res = Code.string_of_mlty (current_module_of_uenv g) t in
-                           BU.format2 "%s -> %s" args res));
+                           Format.fmt2 "%s -> %s" args res));
         // Now extract all the type patterns
         // These should all come out as None, if they are dot patterns
         // Their expected type does not matter
@@ -1144,7 +1143,7 @@ let maybe_eta_data_and_project_record (g:uenv) (qual : option fv_qual) (residual
         let g, x = UEnv.new_mlident g in
         eta_args g (((x, t0), with_ty t0 <| MLE_Var x)::more_args) t1
       | MLTY_Named (_, _) -> List.rev more_args, t
-      | _ -> failwith (BU.format2 "Impossible: Head type is not an arrow: (%s : %s)"
+      | _ -> failwith (Format.fmt2 "Impossible: Head type is not an arrow: (%s : %s)"
                                 (Code.string_of_mlexpr (current_module_of_uenv g) mlAppExpr)
                                 (Code.string_of_mlty (current_module_of_uenv g) t))
     in
@@ -1232,15 +1231,15 @@ let rec extract_lb_sig (g:uenv) (lbs:letbindings) : list lb_sig =
               // begin match lbattrs with
               // | [] -> ()
               // | _ ->
-              //   // BU.print1 "Testing whether term has any rename_let %s..." "";
+              //   // Format.print1 "Testing whether term has any rename_let %s..." "";
               //   begin match U.get_attribute PC.rename_let_attr lbattrs with
               //   | Some ((arg, _) :: _) ->
               //     begin match arg.n with
               //     | Tm_constant (Const_string (arg, _)) ->
-              //       BU.print1 "Term has rename_let %s\n" arg
-              //     | _ -> BU.print1 "Term has some rename_let %s\n" ""
+              //       Format.print1 "Term has rename_let %s\n" arg
+              //     | _ -> Format.print1 "Term has some rename_let %s\n" ""
               //     end
-              //   | _ -> BU.print1 "no rename_let found %s\n" ""
+              //   | _ -> Format.print1 "no rename_let found %s\n" ""
               //   end
               // end;
               let f_e = effect_as_etag g lbeff in
@@ -1349,18 +1348,18 @@ and extract_lb_iface (g:uenv) (lbs:letbindings)
     let is_top = FStarC.Syntax.Syntax.is_top_level (snd lbs) in
     let is_rec = not is_top && fst lbs in
     let lbs = extract_lb_sig g lbs in
-    BU.fold_map (fun env
+    BU.fold_map #_ #(Syntax.Syntax.lbname & _ & _ & _ & _ & _) (fun env
                      (lbname, _e_tag, (typ, (_binders, mltyscheme)), add_unit, _has_c_inline, _body) ->
                   let env, _, exp_binding =
                       UEnv.extend_lb env lbname typ mltyscheme add_unit in
-                  env, (BU.right lbname, exp_binding))
+                  env, (Inr?.v lbname, exp_binding))
                 g
                 lbs
 
 //The main extraction function
 and check_term_as_mlexpr (g:uenv) (e:term) (f:e_tag) (ty:mlty) :  (mlexpr & mlty) =
     debug g
-      (fun () -> BU.print3 "Checking %s at type %s and eff %s\n"
+      (fun () -> Format.print3 "Checking %s at type %s and eff %s\n"
                         (show e)
                         (Code.string_of_mlty (current_module_of_uenv g) ty)
                         (Util.eff_to_string f));
@@ -1370,7 +1369,7 @@ and check_term_as_mlexpr (g:uenv) (e:term) (f:e_tag) (ty:mlty) :  (mlexpr & mlty
     | _ ->
       let ml_e, tag, t = term_as_mlexpr g e in
       debug g (fun _ ->
-        BU.print4 "Extracted %s to %s at eff %s and type %s\n"
+        Format.print4 "Extracted %s to %s at eff %s and type %s\n"
           (show e)
           (Code.string_of_mlexpr (current_module_of_uenv g) ml_e)
           (Util.eff_to_string tag)
@@ -1392,7 +1391,7 @@ and term_as_mlexpr (g:uenv) (e:term) : (mlexpr & e_tag & mlty) =
 
 and term_as_mlexpr' (g:uenv) (top:term) : (mlexpr & e_tag & mlty) =
     let top = SS.compress top in
-    (debug g (fun u -> BU.print_string (BU.format3 "%s: term_as_mlexpr' (%s) :  %s \n"
+    (debug g (fun u -> Format.print_string (Format.fmt3 "%s: term_as_mlexpr' (%s) :  %s \n"
         (Range.string_of_range top.pos)
         (tag_of top)
         (show top))));
@@ -1435,7 +1434,7 @@ and term_as_mlexpr' (g:uenv) (top:term) : (mlexpr & e_tag & mlty) =
         | Tm_unknown
         | Tm_delayed _
         | Tm_uvar _
-        | Tm_bvar _ -> failwith (BU.format1 "Impossible: Unexpected term: %s" (tag_of t))
+        | Tm_bvar _ -> failwith (Format.fmt1 "Impossible: Unexpected term: %s" (tag_of t))
 
         | Tm_lazy i -> term_as_mlexpr g (U.unfold_lazy i)
 
@@ -1479,14 +1478,14 @@ and term_as_mlexpr' (g:uenv) (top:term) : (mlexpr & e_tag & mlty) =
           //
           let t = SS.compress t in
           begin match t.n with
-            | Tm_let {lbs=(false, [lb]); body} when (BU.is_left lb.lbname) ->
+            | Tm_let {lbs=(false, [lb]); body} when Inl? lb.lbname ->
               let tcenv = tcenv_of_uenv g in
-              let ed, qualifiers = must (TypeChecker.Env.effect_decl_opt tcenv m) in
+              let ed, qualifiers = Option.must (TypeChecker.Env.effect_decl_opt tcenv m) in
               if TcUtil.effect_extraction_mode tcenv ed.mname = S.Extract_primitive
               then term_as_mlexpr g t
               else
                 failwith
-                  (BU.format1
+                  (Format.fmt1
                      "This should not happen (should have been handled at Tm_abs level for effect %s)"
                      (string_of_lid ed.mname))
             | _ -> term_as_mlexpr g t
@@ -1568,12 +1567,12 @@ and term_as_mlexpr' (g:uenv) (top:term) : (mlexpr & e_tag & mlty) =
                match try_lookup_fv t.pos g fv with
                | None -> //it's been erased
                  // Errors.log_issue t (Errors.Error_CallToErased,
-                 //                         BU.format1 "Attempting to extract a call into erased function %s" (show fv));
+                 //                         Format.fmt1 "Attempting to extract a call into erased function %s" (show fv));
                  ml_unit, E_PURE, MLTY_Erased
 
                | Some {exp_b_expr=x; exp_b_tscheme=mltys} ->
                  let _ = debug g (fun () ->
-                          BU.print3 "looked up %s: got %s at %s \n"
+                          Format.print3 "looked up %s: got %s at %s \n"
                               (show fv)
                               (show x)
                               (show (snd mltys))) in
@@ -1596,7 +1595,7 @@ and term_as_mlexpr' (g:uenv) (top:term) : (mlexpr & e_tag & mlty) =
             match rcopt with
             | Some rc ->
               maybe_reify_term (tcenv_of_uenv env) body rc.residual_effect
-            | None -> debug g (fun () -> BU.print1 "No computation type for: %s\n" (show body)); body in
+            | None -> debug g (fun () -> Format.print1 "No computation type for: %s\n" (show body)); body in
           let ml_body, f, t = term_as_mlexpr env body in
           let f, tfun = List.fold_right
             (fun {mlbinder_ty=targ} (f, t) -> E_PURE, MLTY_Fun (targ, f, t))
@@ -1649,7 +1648,7 @@ and term_as_mlexpr' (g:uenv) (top:term) : (mlexpr & e_tag & mlty) =
                  term_as_mlexpr g tm
                | None ->
                  raise_error top Errors.Fatal_ExtractionUnsupported
-                   (BU.format1 "Cannot extract %s (reify effect is not set)" (show top))
+                   (Format.fmt1 "Cannot extract %s (reify effect is not set)" (show top))
               )
 
             | _ ->
@@ -1659,7 +1658,7 @@ and term_as_mlexpr' (g:uenv) (top:term) : (mlexpr & e_tag & mlty) =
                     let mlargs = List.rev mlargs_f |> List.map fst in
                     with_ty t <| MLE_App(mlhead, mlargs)
                 in
-                debug g (fun () -> BU.print3 "extract_app ml_head=%s type of head = %s, next arg = %s\n"
+                debug g (fun () -> Format.print3 "extract_app ml_head=%s type of head = %s, next arg = %s\n"
                                 (Code.string_of_mlexpr (current_module_of_uenv g) (mk_head()))
                                 (Code.string_of_mlty (current_module_of_uenv g) t)
                                 (match restArgs with [] -> "none" | (hd, _)::_ -> show hd));
@@ -1743,7 +1742,7 @@ and term_as_mlexpr' (g:uenv) (top:term) : (mlexpr & e_tag & mlty) =
                         match lookup_term g head with
                         | Inr exp_b, q ->
                           debug g (fun () ->
-                              BU.print4 "@@@looked up %s: got %s at %s with eff <%s>\n"
+                              Format.print4 "@@@looked up %s: got %s at %s with eff <%s>\n"
                                   (show head)
                                   (show exp_b.exp_b_expr)
                                   (show (snd exp_b.exp_b_tscheme))
@@ -1823,7 +1822,7 @@ and term_as_mlexpr' (g:uenv) (top:term) : (mlexpr & e_tag & mlty) =
                       | None -> //erased head
                         // Errors.log_issue t
                         //   (Errors.Error_CallToErased,
-                        //    BU.format1 "Attempting to extract a call into erased function %s" (show fv));
+                        //    Format.fmt1 "Attempting to extract a call into erased function %s" (show fv));
                         ml_unit, E_PURE, MLTY_Erased
                       | _ ->
                         extract_app_with_instantiations ())
@@ -1844,10 +1843,10 @@ and term_as_mlexpr' (g:uenv) (top:term) : (mlexpr & e_tag & mlty) =
 
         | Tm_let {lbs=(false, [lb]); body=e'}
           when not (is_top_level [lb])
-          && BU.is_some (U.get_attribute FStarC.Parser.Const.rename_let_attr lb.lbattrs) ->
-          let b = S.mk_binder (BU.left lb.lbname) in
+          && Some? (U.get_attribute FStarC.Parser.Const.rename_let_attr lb.lbattrs) ->
+          let b = S.mk_binder (Inl?.v lb.lbname) in
           let ({binder_bv=x}), body = SS.open_term_1 b e' in
-          // BU.print_string "Reached let with rename_let attribute\n";
+          // Format.print_string "Reached let with rename_let attribute\n";
           let suggested_name =
               let attr = U.get_attribute FStarC.Parser.Const.rename_let_attr lb.lbattrs in
               match attr with
@@ -1856,7 +1855,7 @@ and term_as_mlexpr' (g:uenv) (top:term) : (mlexpr & e_tag & mlty) =
                 match (SS.compress str).n with
                 | Tm_constant (Const_string (s, _))
                   when s <> "" ->
-                  // BU.print1 "Found suggested name %s\n" s;
+                  // Format.print1 "Found suggested name %s\n" s;
                   let id = Ident.mk_ident (s, range_of_bv x) in
                   let bv = { ppname = id; index = 0; sort = x.sort } in
                   let bv = freshen_bv bv in
@@ -1878,7 +1877,7 @@ and term_as_mlexpr' (g:uenv) (top:term) : (mlexpr & e_tag & mlty) =
           let remove_attr attrs =
             let _, other_attrs =
               List.partition
-                (fun attr -> BU.is_some (U.get_attribute PC.rename_let_attr [attr]))
+                (fun attr -> Some? (U.get_attribute PC.rename_let_attr [attr]))
                 lb.lbattrs
             in
             other_attrs
@@ -1907,7 +1906,7 @@ and term_as_mlexpr' (g:uenv) (top:term) : (mlexpr & e_tag & mlty) =
             else if is_top_level lbs
                  then lbs, e'
                  else let lb = List.hd lbs in
-                      let x = S.freshen_bv (left lb.lbname) in
+                      let x = S.freshen_bv (Inl?.v lb.lbname) in
                       let lb = {lb with lbname=Inl x} in
                       let e' = SS.subst [DB(0, x)] e' in
                       [lb], e' in
@@ -1920,7 +1919,7 @@ and term_as_mlexpr' (g:uenv) (top:term) : (mlexpr & e_tag & mlty) =
                     // let tcenv = TcEnv.set_current_module (tcenv_of_uenv g)
                     //             (Ident.lid_of_path ((fst (current_module_of_uenv g)) @ [snd (current_module_of_uenv g)]) Range.dummyRange) in
                     // debug g (fun () ->
-                    //            BU.print1 "!!!!!!!About to normalize: %s\n" (show lb.lbdef);
+                    //            Format.print1 "!!!!!!!About to normalize: %s\n" (show lb.lbdef);
                     //            Options.set_option "debug" (Options.List [Options.String "Norm"; Options.String "Extraction"]));
                     let lbdef =
                         let norm_call () =
@@ -1931,12 +1930,12 @@ and term_as_mlexpr' (g:uenv) (top:term) : (mlexpr & e_tag & mlty) =
                               "FStarC.Extraction.ML.Term.normalize_lb_def"
                         in
                         if !dbg_Extraction || !dbg_ExtractionNorm
-                        then let _ = BU.print2 "Starting to normalize top-level let %s = %s\n"
+                        then let _ = Format.print2 "Starting to normalize top-level let %s = %s\n"
                                        (show lb.lbname)
                                        (show lb.lbdef)
                              in
                              let a = norm_call() in
-                             BU.print1 "Normalized to %s\n" (show a);
+                             Format.print1 "Normalized to %s\n" (show a);
                              a
                         else norm_call ()
                     in
@@ -2033,7 +2032,7 @@ and term_as_mlexpr' (g:uenv) (top:term) : (mlexpr & e_tag & mlty) =
              //    insert a magic around the scrutinee
              let e = if pat_t_compat
                      then e
-                     else (debug g (fun _ -> BU.print2 "Coercing scrutinee %s from type %s because pattern type is incompatible\n"
+                     else (debug g (fun _ -> Format.print2 "Coercing scrutinee %s from type %s because pattern type is incompatible\n"
                                                 (Code.string_of_mlexpr (current_module_of_uenv g) e)
                                                 (Code.string_of_mlty (current_module_of_uenv g) t_e));
                            with_ty t_e <| MLE_Coerce (e, t_e, MLTY_Top)) in

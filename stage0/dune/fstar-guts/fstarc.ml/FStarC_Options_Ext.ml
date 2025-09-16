@@ -56,16 +56,18 @@ let (is_prefix : Prims.string -> Prims.string -> Prims.bool) =
          uu___ = s1)
 let (getns : Prims.string -> (key * value) Prims.list) =
   fun ns ->
-    let f k v acc =
-      let uu___ = is_prefix (Prims.strcat ns ":") k in
-      if uu___ then (k, v) :: acc else acc in
+    let f k =
+      fun v ->
+        fun acc ->
+          let uu___ = is_prefix (Prims.strcat ns ":") k in
+          if uu___ then (k, v) :: acc else acc in
     let uu___ =
       let uu___1 = FStarC_Effect.op_Bang cur_state in
       __proj__E__item__map uu___1 in
     FStarC_PSMap.fold uu___ f []
 let (all : unit -> (key * value) Prims.list) =
   fun uu___ ->
-    let f k v acc = (k, v) :: acc in
+    let f k = fun v -> fun acc -> (k, v) :: acc in
     let uu___1 =
       let uu___2 = FStarC_Effect.op_Bang cur_state in
       __proj__E__item__map uu___2 in

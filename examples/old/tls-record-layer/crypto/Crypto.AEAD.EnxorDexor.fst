@@ -105,7 +105,7 @@ let modifies_table_above_x_and_buffer (#i:id) (#l:nat) (t:PRF.state i)
      HS.modifies_one rid h0 h1 /\ 
      Buffer.modifies_buf_1 rid b h0 h1))
 
-#reset-options "--initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0 --z3rlimit 100"
+#reset-options "--fuel 0 --ifuel 0 --z3rlimit 100"
 let weaken_modifies (#i:id) (#l:nat) (t:PRF.state i)
 		    (x:PRF.domain i) (b:lbuffer l)
 		    (h0:HS.mem) (h1:HS.mem)
@@ -187,7 +187,7 @@ val prf_enxor_leaves_none_strictly_above_x:
 		     modifies_x_buffer_1 t x c h_0 h_1 /\ 
 		     Buffer.frameOf c <> t.rgn)
            (ensures none_above_prf_st (PRF.incr i x) t h_1)
-#reset-options "--initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0"
+#reset-options "--fuel 0 --ifuel 0"
 let prf_enxor_leaves_none_strictly_above_x #i t x len remaining_len c h_0 h_1
     = if prf i then
 	let r = itable i t in
@@ -211,7 +211,7 @@ let prf_enxor_leaves_none_strictly_above_x #i t x len remaining_len c h_0 h_1
 
 (*+ Working towards a main auxiliary lemma:  extending_counter_blocks **)
 
-#set-options "--initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0 --z3rlimit 100"
+#set-options "--fuel 0 --ifuel 0 --z3rlimit 100"
 (*+ frame_counterblocks_snoc:
 	 modifying a single entry in the prf table and the cipher
 	 carries counterblocks forward by snoc'ing a single OTP block **)
@@ -270,7 +270,7 @@ let frame_counterblocks_snoc i t x k len completed_len plain cipher h0 h1 =
   counterblocks_slice #i t.mac_rgn initial_x len 0 completed_len p c;
   counterblocks_slice #i t.mac_rgn initial_x len 0 completed_len p0 c0
 
-#set-options "--initial_ifuel 1 --max_ifuel 1 --initial_fuel 2 --max_fuel 2"
+#set-options "--ifuel 1 --fuel 2"
 let invert_contains_plain_and_cipher_block   (#i:id) (#r:rid) (#l:u32{l <=^ PRF.blocklen i})
 					     (x:domain i{safeId i /\ ctr_0 i <^ x.ctr})
 					     (plain:plain i (v l))
@@ -281,7 +281,7 @@ let invert_contains_plain_and_cipher_block   (#i:id) (#r:rid) (#l:u32{l <=^ PRF.
             (ensures (b == PRF.Entry #r #i x (PRF.OTP l plain cipher)))
     = ()
 
-#reset-options "--initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0 --z3rlimit 400"
+#reset-options "--fuel 0 --ifuel 0 --z3rlimit 400"
 (*+ extending_counter_blocks: 
 	 A main auxiliary lemma
 	 Shows that each iteration of counter_enxor extends the counterblocks
@@ -438,7 +438,7 @@ val counter_enxor:
     // in all cases, we extend the table only at x and its successors.
     modifies_table_above_x_and_buffer t x cipher h0 h1 /\
     enxor_invariant t x len 0ul plain cipher h_init h1))
-#set-options "--z3rlimit 200 --initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0"
+#set-options "--z3rlimit 200 --fuel 0 --ifuel 0"
 let rec counter_enxor #i t x len remaining_len plain cipher h_init =
   let completed_len = len -^ remaining_len in
   let h0 = get () in
@@ -538,7 +538,7 @@ let dexor_modifies (#i:id) (#len:u32) (t:PRF.state i) (x:PRF.domain i)
    then Buffer.modifies_1 (as_buffer pb) h0 h1
    else modifies_table_above_x_and_buffer t x (as_buffer pb) h0 h1
 
-#reset-options "--z3rlimit 100 --initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0"
+#reset-options "--z3rlimit 100 --fuel 0 --ifuel 0"
 let dexor_of_prf_dexor_modifies (#i:id) (#len:u32) (t:PRF.state i) 
 				(x:PRF.domain i{ctr_0 i <^ x.ctr}) 
 				(pb:plainBuffer i (v len)) (h0:mem) (h1:mem)
@@ -666,7 +666,7 @@ let frame_prf_contains_all_otp_blocks_st (#i:id)
 	Contexts that use 0 fuel must invoke this lemma to reason
 	about prf_contains_all_otp_blocks
  **)
-#reset-options "--z3rlimit 200 --initial_fuel 1 --max_fuel 1 --initial_ifuel 0 --max_ifuel 0"
+#reset-options "--z3rlimit 200 --fuel 1 --ifuel 0"
 val invert_prf_contains_all_otp_blocks_st 
     (i:id) 
     (x:PRF.domain i{PRF.ctr_0 i <^ x.ctr})
@@ -727,7 +727,7 @@ val extend_decrypted_up_to: #i:id -> (t:PRF.state i) -> (x:PRF.domain i) ->
 		      Plain.live h1 pb /\
 		      (safeId i ==> 
 			   decrypted_up_to (starting_pos +^ l) pb p h1)))
-#reset-options "--z3rlimit 100 --initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0"
+#reset-options "--z3rlimit 100 --fuel 0 --ifuel 0"
 let extend_decrypted_up_to #i t x #len remaining_len pb p cipher h0 h1 = 
   let starting_pos = len -^ remaining_len in
   let l = min remaining_len (PRF.blocklen i) in
@@ -788,7 +788,7 @@ val counter_dexor:
   p:maybe_plain i (v len) ->
   ST unit (requires (fun h -> dexor_requires t x remaining_len plain cipher p h))
  	  (ensures (fun h0 _ h1 -> dexor_ensures t x plain cipher p h0 h1))
-#reset-options "--z3rlimit 200 --initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0"
+#reset-options "--z3rlimit 200 --fuel 0 --ifuel 0"
 let rec counter_dexor i t x len remaining_len plain cipher p =
   let completed_len = len -^ remaining_len in
   let h0 = get () in
@@ -899,7 +899,7 @@ val dexor:
 	    dexor_modifies st.prf x_1 plain h0 h1 /\
 	    inv st h1 /\
 	    decrypt_ok iv st aad plain cipher_tagged h1))
-#reset-options "--z3rlimit 200 --initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0"
+#reset-options "--z3rlimit 200 --fuel 0 --ifuel 0"
 open Crypto.AEAD.Encoding 
 let dexor #i st iv #aadlen aad #len plain cipher_tagged p =
   let x_1 = {iv=iv; ctr=otp_offset i} in

@@ -26,7 +26,6 @@ open FStarC.VConfig
 open FStar.Char
 
 module S = FStarC.Syntax.Syntax
-module Z = FStarC.BigInt
 module TEQ = FStarC.TypeChecker.TermEqAndSimplify
 open FStarC.Class.Show
 
@@ -55,7 +54,7 @@ type sort = int
 type constant =
   | Unit
   | Bool of bool
-  | Int of Z.t
+  | Int of int
   | String of string & Range.t
   | Char of FStar.Char.char
   | Range of Range.t
@@ -237,6 +236,10 @@ class embedding (a:Type0) = {
   e_typ : unit -> emb_typ;
 }
 
+(* Syntatic equality. *)
+val term_eq : t -> t -> bool
+
+(* Implementation for decidable equality, aka (=). *)
 val eq_t : Env.env_t -> t -> t -> TEQ.eq_result
 
 // Printing functions
@@ -276,7 +279,7 @@ type abstract_nbe_term = | AbstractNBE : t:t -> abstract_nbe_term
 instance val e_bool   : embedding bool
 instance val e_string : embedding string
 instance val e_char   : embedding char
-instance val e_int    : embedding Z.t
+instance val e_int    : embedding int
 instance val e_real   : embedding Real.real
 instance val e_unit   : embedding unit
 val e_any    : embedding t
@@ -332,7 +335,7 @@ val arrow_as_prim_step_3:  embedding 'a
 
 // Interface for NBE interpretations
 
-val arg_as_int : arg -> option Z.t
+val arg_as_int : arg -> option int
 val arg_as_list : embedding 'a -> arg -> option (list 'a)
 
 val mixed_binary_op : (arg -> option 'a) -> (arg -> option 'b) -> ('c -> t) ->

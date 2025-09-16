@@ -60,7 +60,7 @@ let (definition_lids :
         (match ext_parser with
          | FStar_Pervasives_Native.None ->
              let uu___1 =
-               FStarC_Util.format1 "Unknown syntax extension %s"
+               FStarC_Format.fmt1 "Unknown syntax extension %s"
                  extension_name in
              FStarC_Errors.raise_error FStarC_Parser_AST.hasRange_decl d
                FStarC_Errors_Codes.Fatal_SyntaxError ()
@@ -160,9 +160,9 @@ let rec (prefix_with_iface_decls :
                                FStarC_Class_PP.pp
                                  (FStarC_Class_PP.pp_list
                                     FStarC_Ident.pretty_lident) def_ids in
-                             FStarC_Pprint.op_Hat_Slash_Hat uu___10 uu___11 in
-                           FStarC_Pprint.op_Hat_Slash_Hat uu___8 uu___9 in
-                         FStarC_Pprint.op_Hat_Slash_Hat uu___6 uu___7 in
+                             FStar_Pprint.op_Hat_Slash_Hat uu___10 uu___11 in
+                           FStar_Pprint.op_Hat_Slash_Hat uu___8 uu___9 in
+                         FStar_Pprint.op_Hat_Slash_Hat uu___6 uu___7 in
                        [uu___5] in
                      FStarC_Errors.raise_error
                        FStarC_Parser_AST.hasRange_decl impl
@@ -179,43 +179,44 @@ let rec (prefix_with_iface_decls :
                       (fun y ->
                          let uu___3 = id_eq_lid x y in
                          Prims.op_Negation uu___3) def_ids in
-                  let rec aux mutuals iface1 =
-                    match (mutuals, iface1) with
-                    | ([], uu___3) -> ([], iface1)
-                    | (uu___3::uu___4, []) -> ([], [])
-                    | (y::ys, iface_hd1::iface_tl1) when
-                        let uu___3 = FStarC_Ident.ident_of_lid y in
-                        is_val uu___3 iface_hd1 ->
-                        let uu___3 = aux ys iface_tl1 in
-                        (match uu___3 with
-                         | (val_ys, iface2) ->
-                             ((iface_hd1 :: val_ys), iface2))
-                    | (y::ys, iface_hd1::iface_tl1) when
-                        let uu___3 =
-                          let uu___4 =
-                            let uu___5 = FStarC_Ident.ident_of_lid y in
-                            is_val uu___5 in
-                          FStarC_List.tryFind uu___4 iface_tl1 in
-                        FStarC_Option.isSome uu___3 ->
-                        let uu___3 =
-                          let uu___4 =
-                            let uu___5 =
-                              let uu___6 =
-                                FStarC_Class_Show.show
-                                  FStarC_Parser_AST.showable_decl iface_hd1 in
-                              let uu___7 = FStarC_Ident.string_of_lid y in
-                              FStarC_Util.format2
-                                "%s is out of order with the definition of %s"
-                                uu___6 uu___7 in
-                            FStarC_Errors_Msg.text uu___5 in
-                          [uu___4] in
-                        FStarC_Errors.raise_error
-                          FStarC_Parser_AST.hasRange_decl iface_hd1
-                          FStarC_Errors_Codes.Fatal_WrongDefinitionOrder ()
-                          (Obj.magic
-                             FStarC_Errors_Msg.is_error_message_list_doc)
-                          (Obj.magic uu___3)
-                    | (y::ys, iface_hd1::iface_tl1) -> aux ys iface1 in
+                  let rec aux mutuals =
+                    fun iface1 ->
+                      match (mutuals, iface1) with
+                      | ([], uu___3) -> ([], iface1)
+                      | (uu___3::uu___4, []) -> ([], [])
+                      | (y::ys, iface_hd1::iface_tl1) when
+                          let uu___3 = FStarC_Ident.ident_of_lid y in
+                          is_val uu___3 iface_hd1 ->
+                          let uu___3 = aux ys iface_tl1 in
+                          (match uu___3 with
+                           | (val_ys, iface2) ->
+                               ((iface_hd1 :: val_ys), iface2))
+                      | (y::ys, iface_hd1::iface_tl1) when
+                          let uu___3 =
+                            let uu___4 =
+                              let uu___5 = FStarC_Ident.ident_of_lid y in
+                              is_val uu___5 in
+                            FStarC_List.tryFind uu___4 iface_tl1 in
+                          FStar_Pervasives_Native.uu___is_Some uu___3 ->
+                          let uu___3 =
+                            let uu___4 =
+                              let uu___5 =
+                                let uu___6 =
+                                  FStarC_Class_Show.show
+                                    FStarC_Parser_AST.showable_decl iface_hd1 in
+                                let uu___7 = FStarC_Ident.string_of_lid y in
+                                FStarC_Format.fmt2
+                                  "%s is out of order with the definition of %s"
+                                  uu___6 uu___7 in
+                              FStarC_Errors_Msg.text uu___5 in
+                            [uu___4] in
+                          FStarC_Errors.raise_error
+                            FStarC_Parser_AST.hasRange_decl iface_hd1
+                            FStarC_Errors_Codes.Fatal_WrongDefinitionOrder ()
+                            (Obj.magic
+                               FStarC_Errors_Msg.is_error_message_list_doc)
+                            (Obj.magic uu___3)
+                      | (y::ys, iface_hd1::iface_tl1) -> aux ys iface1 in
                   let uu___3 = aux mutually_defined_with_x iface_tl in
                   match uu___3 with
                   | (take_iface, rest_iface) ->
@@ -249,9 +250,9 @@ let rec (prefix_with_iface_decls :
                                FStarC_Class_PP.pp
                                  (FStarC_Class_PP.pp_list
                                     FStarC_Ident.pretty_lident) def_ids in
-                             FStarC_Pprint.op_Hat_Slash_Hat uu___9 uu___10 in
-                           FStarC_Pprint.op_Hat_Slash_Hat uu___7 uu___8 in
-                         FStarC_Pprint.op_Hat_Slash_Hat uu___5 uu___6 in
+                             FStar_Pprint.op_Hat_Slash_Hat uu___9 uu___10 in
+                           FStar_Pprint.op_Hat_Slash_Hat uu___7 uu___8 in
+                         FStar_Pprint.op_Hat_Slash_Hat uu___5 uu___6 in
                        [uu___4] in
                      FStarC_Errors.raise_error
                        FStarC_Parser_AST.hasRange_decl impl
@@ -268,43 +269,44 @@ let rec (prefix_with_iface_decls :
                       (fun y ->
                          let uu___2 = id_eq_lid x y in
                          Prims.op_Negation uu___2) def_ids in
-                  let rec aux mutuals iface1 =
-                    match (mutuals, iface1) with
-                    | ([], uu___2) -> ([], iface1)
-                    | (uu___2::uu___3, []) -> ([], [])
-                    | (y::ys, iface_hd1::iface_tl1) when
-                        let uu___2 = FStarC_Ident.ident_of_lid y in
-                        is_val uu___2 iface_hd1 ->
-                        let uu___2 = aux ys iface_tl1 in
-                        (match uu___2 with
-                         | (val_ys, iface2) ->
-                             ((iface_hd1 :: val_ys), iface2))
-                    | (y::ys, iface_hd1::iface_tl1) when
-                        let uu___2 =
-                          let uu___3 =
-                            let uu___4 = FStarC_Ident.ident_of_lid y in
-                            is_val uu___4 in
-                          FStarC_List.tryFind uu___3 iface_tl1 in
-                        FStarC_Option.isSome uu___2 ->
-                        let uu___2 =
-                          let uu___3 =
-                            let uu___4 =
-                              let uu___5 =
-                                FStarC_Class_Show.show
-                                  FStarC_Parser_AST.showable_decl iface_hd1 in
-                              let uu___6 = FStarC_Ident.string_of_lid y in
-                              FStarC_Util.format2
-                                "%s is out of order with the definition of %s"
-                                uu___5 uu___6 in
-                            FStarC_Errors_Msg.text uu___4 in
-                          [uu___3] in
-                        FStarC_Errors.raise_error
-                          FStarC_Parser_AST.hasRange_decl iface_hd1
-                          FStarC_Errors_Codes.Fatal_WrongDefinitionOrder ()
-                          (Obj.magic
-                             FStarC_Errors_Msg.is_error_message_list_doc)
-                          (Obj.magic uu___2)
-                    | (y::ys, iface_hd1::iface_tl1) -> aux ys iface1 in
+                  let rec aux mutuals =
+                    fun iface1 ->
+                      match (mutuals, iface1) with
+                      | ([], uu___2) -> ([], iface1)
+                      | (uu___2::uu___3, []) -> ([], [])
+                      | (y::ys, iface_hd1::iface_tl1) when
+                          let uu___2 = FStarC_Ident.ident_of_lid y in
+                          is_val uu___2 iface_hd1 ->
+                          let uu___2 = aux ys iface_tl1 in
+                          (match uu___2 with
+                           | (val_ys, iface2) ->
+                               ((iface_hd1 :: val_ys), iface2))
+                      | (y::ys, iface_hd1::iface_tl1) when
+                          let uu___2 =
+                            let uu___3 =
+                              let uu___4 = FStarC_Ident.ident_of_lid y in
+                              is_val uu___4 in
+                            FStarC_List.tryFind uu___3 iface_tl1 in
+                          FStar_Pervasives_Native.uu___is_Some uu___2 ->
+                          let uu___2 =
+                            let uu___3 =
+                              let uu___4 =
+                                let uu___5 =
+                                  FStarC_Class_Show.show
+                                    FStarC_Parser_AST.showable_decl iface_hd1 in
+                                let uu___6 = FStarC_Ident.string_of_lid y in
+                                FStarC_Format.fmt2
+                                  "%s is out of order with the definition of %s"
+                                  uu___5 uu___6 in
+                              FStarC_Errors_Msg.text uu___4 in
+                            [uu___3] in
+                          FStarC_Errors.raise_error
+                            FStarC_Parser_AST.hasRange_decl iface_hd1
+                            FStarC_Errors_Codes.Fatal_WrongDefinitionOrder ()
+                            (Obj.magic
+                               FStarC_Errors_Msg.is_error_message_list_doc)
+                            (Obj.magic uu___2)
+                      | (y::ys, iface_hd1::iface_tl1) -> aux ys iface1 in
                   let uu___2 = aux mutually_defined_with_x iface_tl in
                   match uu___2 with
                   | (take_iface, rest_iface) ->
@@ -343,7 +345,7 @@ let (check_initial_interface :
                  let uu___1 =
                    let uu___2 = FStarC_Ident.string_of_id x in
                    let uu___3 = FStarC_Ident.string_of_id x in
-                   FStarC_Util.format2
+                   FStarC_Format.fmt2
                      "'val %s' and 'let %s' cannot both be provided in an interface"
                      uu___2 uu___3 in
                  FStarC_Errors.raise_error FStarC_Parser_AST.hasRange_decl hd
@@ -475,13 +477,14 @@ let (ml_mode_prefix_with_iface_decls :
                  | uu___2 -> false) iface in
           (match uu___1 with
            | (iface_prefix_tycons, iface1) ->
-               let maybe_get_iface_vals lids iface2 =
-                 FStarC_List.partition
-                   (fun d ->
-                      FStarC_Util.for_some
-                        (fun x ->
-                           let uu___2 = FStarC_Ident.ident_of_lid x in
-                           is_val uu___2 d) lids) iface2 in
+               let maybe_get_iface_vals lids =
+                 fun iface2 ->
+                   FStarC_List.partition
+                     (fun d ->
+                        FStarC_Util.for_some
+                          (fun x ->
+                             let uu___2 = FStarC_Ident.ident_of_lid x in
+                             is_val uu___2 d) lids) iface2 in
                (match impl.FStarC_Parser_AST.d with
                 | FStarC_Parser_AST.TopLevelLet uu___2 ->
                     let xs = definition_lids impl in
@@ -564,7 +567,7 @@ let (initialize_interface :
             let uu___2 =
               let uu___3 =
                 FStarC_Class_Show.show FStarC_Ident.showable_lident mname in
-              FStarC_Util.format1 "Interface %s has already been processed"
+              FStarC_Format.fmt1 "Interface %s has already been processed"
                 uu___3 in
             FStarC_Errors.raise_error FStarC_Ident.hasrange_lident mname
               FStarC_Errors_Codes.Fatal_InterfaceAlreadyProcessed ()
@@ -621,7 +624,7 @@ let (prefix_with_interface_decls :
                   FStarC_Class_Show.show
                     (FStarC_Class_Show.show_list
                        FStarC_Parser_AST.showable_decl) decls in
-                FStarC_Util.print1 "Interleaved decls:\n%s\n" uu___3
+                FStarC_Format.print1 "Interleaved decls:\n%s\n" uu___3
               else ());
              (decls, env1))
 let (interleave_module :
@@ -708,7 +711,7 @@ let (interleave_module :
                                           let uu___10 =
                                             FStarC_Class_Show.show
                                               FStarC_Ident.showable_lident l in
-                                          FStarC_Util.format1
+                                          FStarC_Format.fmt1
                                             "Some interface elements were not implemented by module %s:"
                                             uu___10 in
                                         FStarC_Errors_Msg.text uu___9 in
@@ -720,12 +723,12 @@ let (interleave_module :
                                                  FStarC_Class_Show.show
                                                    FStarC_Parser_AST.showable_decl
                                                    d in
-                                               FStarC_Pprint.doc_of_string
+                                               FStar_Pprint.doc_of_string
                                                  uu___11)
                                             remaining_iface_vals in
                                         FStarC_Errors_Msg.sublist
-                                          FStarC_Pprint.empty uu___10 in
-                                      FStarC_Pprint.op_Hat_Hat uu___8 uu___9 in
+                                          FStar_Pprint.empty uu___10 in
+                                      FStar_Pprint.op_Hat_Hat uu___8 uu___9 in
                                     [uu___7] in
                                   FStarC_Errors.log_issue
                                     FStarC_Ident.hasrange_lident l
@@ -743,7 +746,7 @@ let (interleave_module :
                                   then
                                     let uu___6 =
                                       FStarC_Parser_AST.modul_to_string a1 in
-                                    FStarC_Util.print1
+                                    FStarC_Format.print1
                                       "Interleaved module is:\n%s\n" uu___6
                                   else ());
                                  (a1, env1))))))

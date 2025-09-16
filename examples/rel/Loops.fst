@@ -18,7 +18,7 @@ module Loops
 open FStar.List.Tot
 open FStar.DM4F.Heap
 open FStar.DM4F.Heap.ST
-#reset-options "--initial_fuel 1 --max_fuel 1 --initial_ifuel 0 --max_ifuel 0 --z3rlimit 100"
+#reset-options "--fuel 1 --ifuel 0 --z3rlimit 100"
 
 let v (r:ref int) (res: (unit & heap)) : GTot int = sel (snd res) r
 
@@ -74,7 +74,7 @@ let rec sum_up_commute (r:ref int)
                   = v r (reify (sum_up r from to) h4))
         end
 
-#reset-options "--initial_fuel 1 --max_fuel 1 --initial_ifuel 0 --max_ifuel 0 --z3rlimit 100"
+#reset-options "--fuel 1 --ifuel 0 --z3rlimit 100"
 
 let rec sum_dn (r:ref int) (from:int) (to:int{from <= to})
     : ST unit (requires (fun h -> h `contains_a_well_typed` r))

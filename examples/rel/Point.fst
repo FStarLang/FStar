@@ -165,7 +165,7 @@ let lemma (h:heap) =
 (*       This is a relation between n invocations of incr  *)
 (*                         and a single invocation of get *)
 (*  *\) *)
-(* #set-options "--initial_fuel 1 --max_fuel 1 --initial_ifuel 0 --max_ifuel 0 --z3rlimit 20" *)
+(* #set-options "--fuel 1 --ifuel 0 --z3rlimit 20" *)
 (* let rec counts_even_numbers (c_0:counter_0) (h:heap{live c_0 h}) (m:nat) *)
 (*   :Lemma (requires True) *)
 (* 	 (ensures  (let n, h' = reify (increment_m m c_0) h in *)

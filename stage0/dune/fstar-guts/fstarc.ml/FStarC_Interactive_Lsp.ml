@@ -6,7 +6,7 @@ let (unpack_lsp_query :
   fun r ->
     let qid =
       let uu___ = FStarC_Interactive_JsonHelper.try_assoc "id" r in
-      FStarC_Util.map_option FStarC_Interactive_JsonHelper.js_str_int uu___ in
+      FStarC_Option.map FStarC_Interactive_JsonHelper.js_str_int uu___ in
     try
       (fun uu___ ->
          match () with
@@ -154,7 +154,7 @@ let (unpack_lsp_query :
                | "textDocument/foldingRange" ->
                    FStarC_Interactive_JsonHelper.FoldingRange
                | m ->
-                   let uu___2 = FStarC_Util.format1 "Unknown method '%s'" m in
+                   let uu___2 = FStarC_Format.fmt1 "Unknown method '%s'" m in
                    FStarC_Interactive_JsonHelper.BadProtocolMsg uu___2 in
              {
                FStarC_Interactive_JsonHelper.query_id = qid;
@@ -244,7 +244,7 @@ let (invoke_full_lax :
                    FStarC_PSMap.add
                      gst.FStarC_Interactive_Ide_Types.grepl_repls fname st' in
                  let diag1 =
-                   if FStarC_Util.is_some diag
+                   if FStar_Pervasives_Native.uu___is_Some diag
                    then diag
                    else
                      (let uu___4 =
@@ -473,13 +473,14 @@ let rec (read_lsp_query :
               | FStar_Pervasives_Native.Some s -> parse_lsp_query s
               | FStar_Pervasives_Native.None ->
                   let uu___2 =
-                    let uu___3 = FStarC_Util.string_of_int n in
-                    FStarC_Util.format1 "Could not read %s bytes" uu___3 in
+                    let uu___3 =
+                      FStarC_Class_Show.show FStarC_Class_Show.showable_int n in
+                    FStarC_Format.fmt1 "Could not read %s bytes" uu___3 in
                   FStarC_Interactive_JsonHelper.wrap_content_szerr uu___2))
         ()
     with
     | FStarC_Interactive_JsonHelper.MalformedHeader ->
-        (FStarC_Util.print_error "[E] Malformed Content Header\n";
+        (FStarC_Format.print_error "[E] Malformed Content Header\n";
          read_lsp_query stream)
     | FStarC_Interactive_JsonHelper.InputExhausted -> read_lsp_query stream
 let rec (go : FStarC_Interactive_Ide_Types.grepl_state -> Prims.int) =

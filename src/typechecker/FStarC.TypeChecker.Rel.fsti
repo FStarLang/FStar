@@ -18,7 +18,6 @@ module FStarC.TypeChecker.Rel
 open FStarC.Effect
 
 open FStarC
-open FStarC.Util
 open FStarC.TypeChecker
 open FStarC.Syntax
 open FStarC.TypeChecker.Env

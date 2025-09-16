@@ -1,0 +1,2 @@
+{"query-id":"1","query":"vfs-add","args":{"filename":"/Missing.fst","contents":"module Missing let _ = Seq.seq int"}}
+{"query-id":"2","query":"push","args":{"kind":"full","code":"module Missing let _ = Seq.seq int","line":1,"column":0}}

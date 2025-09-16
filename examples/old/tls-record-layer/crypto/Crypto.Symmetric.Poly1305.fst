@@ -52,7 +52,7 @@ namespace, so we need to make the following abbrevs explicit *)
 module Spec = Crypto.Symmetric.Poly1305.Spec
 module Parameters = Crypto.Symmetric.Poly1305.Parameters
 
-#set-options "--initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0 --z3rlimit 20"
+#set-options "--fuel 0 --ifuel 0 --z3rlimit 20"
 
 // we may separate field operations, so that we don't
 // need to open the bignum modules elsewhere
@@ -118,7 +118,7 @@ let sel_int h b = eval h b norm_length
 (* *          Encoding-related lemmas            *)
 (* * *********************************************)
 
-#set-options "--initial_fuel 1 --max_fuel 1"
+#set-options "--fuel 1"
 
 (* TODO: Move to Crypto.Symmetric.Poly1305.Bignum *)
 val lemma_bitweight_templ_values: n:nat -> Lemma (bitweight templ n == 26 * n)
@@ -148,7 +148,7 @@ let rec lemma_eval_norm_is_bounded ha a len =
     Math.Lemmas.pow2_plus (26 * (len-1)) 26
     end
 
-#set-options "--initial_fuel 0 --max_fuel 0"
+#set-options "--fuel 0"
 
 val lemma_elemB_equality: ha:mem -> hb:mem -> a:elemB -> b:elemB 
   -> len:pos{len <= norm_length} -> Lemma
@@ -303,7 +303,7 @@ let mk_mask nbits =
   Math.Lemmas.pow2_lt_compat 64 (FStar.UInt32.v nbits);
   U64.((1uL <<^ nbits) -^ 1uL)
 
-#set-options "--z3rlimit 5 --initial_fuel 0 --max_fuel 0"
+#set-options "--z3rlimit 5 --fuel 0"
 
 let lemma_toField_1 (b:elemB) (s:wordB_16{disjoint b s}) h n0 n1 n2 n3 : Lemma
   (requires (let open FStar.UInt8 in
@@ -315,7 +315,7 @@ let lemma_toField_1 (b:elemB) (s:wordB_16{disjoint b s}) h n0 n1 n2 n3 : Lemma
   (ensures  (live h b /\ live h s /\ v n0 + pow2 32 * v n1 + pow2 64 * v n2 + pow2 96 * v n3 == little_endian (sel_word h s)))
   = Crypto.Symmetric.Poly1305.Lemmas.lemma_toField_1 s h n0 n1 n2 n3
 
-#set-options "--z3rlimit 50 --initial_fuel 0 --max_fuel 0"
+#set-options "--z3rlimit 50 --fuel 0"
 
 val upd_elemB: b:elemB{length b == norm_length} -> n0:U64.t -> n1:U64.t -> n2:U64.t -> n3:U64.t -> n4:U64.t -> Stack unit
   (requires (fun h -> live h b
@@ -346,7 +346,7 @@ let upd_elemB b n0 n1 n2 n3 n4 =
   pow2_lt_compat 26 24
 
 
-#set-options "--z3rlimit 5 --initial_fuel 0 --max_fuel 0"
+#set-options "--z3rlimit 5 --fuel 0"
 
 let lemma_toField_2 n0 n1 n2 n3 n0' n1' n2' n3' n4': Lemma
   (requires (let mask_26 = mk_mask 26ul in
@@ -380,7 +380,7 @@ let sel_int_sel_elem h a w =
   lemma_little_endian_is_bounded w;
   modulo_lemma (little_endian w) p_1305
 
-#set-options "--z3rlimit 20 --initial_fuel 0 --max_fuel 0"
+#set-options "--z3rlimit 20 --fuel 0"
 
 (* Formats a wordB into an elemB *)
 val toField: a:elemB{length a == norm_length} -> b:wordB_16{disjoint a b} -> Stack unit
@@ -424,7 +424,7 @@ let toField b s =
   upd_elemB b n0' n1' n2' n3' n4'
 
 
-#set-options "--z3rlimit 20 --initial_fuel 1 --max_fuel 1"
+#set-options "--z3rlimit 20 --fuel 1"
 
 val lemma_toField_plus_2_128_0: ha:mem -> a:elemB{live ha a} -> Lemma
   (requires True)
@@ -445,7 +445,7 @@ let lemma_toField_plus_2_128_0 ha a =
   eval_def ha a 0;
   assert_norm (pow2 0 = 1)
 
-#set-options "--initial_fuel 0 --max_fuel 0"
+#set-options "--fuel 0"
 
 val lemma_toField_plus_2_128_1: unit -> Lemma (v (1uL <<^ 24ul) == pow2 24)
 let lemma_toField_plus_2_128_1 () =
@@ -502,7 +502,7 @@ val toField_plus:
     modifies_1 a h0 h1 /\ // Only a was modified
     sel_int h1 a == pow2 (8 * w len) + little_endian (sel_word h0 b) ))
 
-#set-options "--z3rlimit 100 --initial_fuel 0 --max_fuel 0"
+#set-options "--z3rlimit 100 --fuel 0"
 
 let toField_plus len a b =
   let h0 = ST.get() in
@@ -570,7 +570,7 @@ let upd_wordB_16 s s0 s1 s2 s3 s4 s5 s6 s7 s8 s9 s10 s11 s12 s13 s14 s15 =
   s.(15ul) <- s15
 
 
-#set-options "--z3rlimit 100 --initial_fuel 0 --max_fuel 0"
+#set-options "--z3rlimit 100 --fuel 0"
 
 val trunc1305: a:elemB -> b:wordB_16{disjoint a b} -> Stack unit
   (requires (fun h -> norm h a /\ live h b /\ disjoint a b))
@@ -756,7 +756,7 @@ let log_t = if mac_log then text else unit
 val ilog: l:log_t{mac_log} -> Tot text
 let ilog l = l
 
-#set-options "--initial_fuel 1 --max_fuel 1"
+#set-options "--fuel 1"
 
 val poly_cons: x:word -> xs:text -> r:elem ->
   Lemma (poly (Seq.cons x xs) r == (encode x +@ poly xs r) *@ r)
@@ -874,7 +874,7 @@ let rec encode_bytes txt =
     Seq.snoc (encode_bytes txt) w // snoc, not cons!
 (***)
 
-#set-options "--initial_fuel 1 --max_fuel 1"
+#set-options "--fuel 1"
 
 (** Auxiliary lemmas *)
 
@@ -900,7 +900,7 @@ let snoc_cons #a s x y = ()
 val append_assoc: #a:Type -> s1:Seq.seq a -> s2:Seq.seq a -> s3:Seq.seq a -> Lemma
   (FStar.Seq.(equal (append s1 (append s2 s3)) (append (append s1 s2) s3)))
 let append_assoc #a s1 s2 s3 = ()
-#set-options "--z3rlimit 40 --initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0"
+#set-options "--z3rlimit 40 --fuel 0 --ifuel 0"
 
 (* 2016-11-23: n shadowed by U32.n by local open, so rename into n' *)
 val append_as_seq_sub: h:mem -> n':UInt32.t -> m:UInt32.t -> msg:bytes{live h msg /\ w m <= w n' /\ w n' <= length msg} -> Lemma
@@ -961,7 +961,7 @@ let rec encode_bytes_append len s w =
     end
 
 
-#set-options "--z3rlimit 60 --initial_fuel 0 --max_fuel 0"
+#set-options "--z3rlimit 60 --fuel 0"
 
 (* Loop over Poly1305_update; could go below MAC *)
 val poly1305_loop: log:log_t -> msg:bytes -> acc:elemB{disjoint msg acc} ->
@@ -979,7 +979,7 @@ val poly1305_loop: log:log_t -> msg:bytes -> acc:elemB{disjoint msg acc} ->
         /\ sel_elem h1 acc == poly (ilog updated_log) (sel_elem h0 r)) ))
     (decreases (w ctr))
 
-#set-options "--z3rlimit 300 --initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0"
+#set-options "--z3rlimit 300 --fuel 0 --ifuel 0"
 
 let rec poly1305_loop log msg acc r ctr =
   let h0 = ST.get () in
@@ -1025,7 +1025,7 @@ val div_aux: a:UInt32.t -> b:UInt32.t{w b <> 0} -> Lemma
   [SMTPat (FStar.UInt32.(UInt.size (v a / v b) n))]
 let div_aux a b = ()
 
-#reset-options "--z3rlimit 1000 --initial_fuel 1 --max_fuel 10"
+#reset-options "--z3rlimit 1000 --fuel 10"
 
 val poly1305_process:
     msg:bytes
@@ -1094,7 +1094,7 @@ private let modifies_mac (#a1:Type) (#a2:Type) (#a3:Type) (#a4:Type)
     lemma_reveal_modifies_2 b4 b3 h4 h5;
     lemma_intro_modifies_1 b4 h0 h6
 
-#reset-options "--z3rlimit 200 --initial_fuel 0 --max_fuel 0"
+#reset-options "--z3rlimit 200 --fuel 0"
 (** Computes the Poly1305 MAC on a buffer *)
 val poly1305_mac:
   tag:wordB{length tag == 16} ->

@@ -54,18 +54,18 @@ let double_fold_transpose_lemma #c #eq
   let n = interval_size (ifrom_ito n0 nk) in 
   let gen : matrix_generator c m n = fun i j -> offset_gen (m0+i) (n0+j) in
   let trans #c #a #b (f: matrix_generator c a b) = transposed_matrix_gen f in
-  let trans_ofs #c (#a1 #a2 #b1 #b2:int) (f: ifrom_ito a1 a2 -> ifrom_ito b1 b2 -> c) 
+  let unfold trans_ofs #c (#a1 #a2 #b1 #b2:int) (f: ifrom_ito a1 a2 -> ifrom_ito b1 b2 -> c) 
     = transpose_generator f in
   // Here, F* agrees that (n-1) == (nk-n0).
   // But, replace (n-1) with (nk-n0) below, and the proof will fail :)
   let subfold_lhs_base0 (i: under m) = CF.fold cm 0 (n-1) (gen i) in
   let subfold_rhs_base0 (j: under n) = CF.fold cm 0 (m-1) (trans gen j) in
-  let subfold_lhs_precise (i: ifrom_ito m0 mk) 
+  let unfold subfold_lhs_precise (i: ifrom_ito m0 mk) 
     = CF.fold cm n0 nk (offset_gen i) in  
-  let subfold_rhs_precise (j: ifrom_ito n0 nk) 
+  let unfold subfold_rhs_precise (j: ifrom_ito n0 nk) 
     = CF.fold cm m0 mk (trans_ofs offset_gen j) in
-  let lhs = CF.fold cm m0 mk subfold_lhs_precise in
-  let rhs = CF.fold cm n0 nk subfold_rhs_precise in 
+  let unfold lhs = CF.fold cm m0 mk subfold_lhs_precise in
+  let unfold rhs = CF.fold cm n0 nk subfold_rhs_precise in 
   let aux_lhs (i: under m) : Lemma 
     (CF.fold cm n0 nk (offset_gen (m0+i)) == CF.fold cm 0 (n-1) (gen i)) = 
       CF.fold_offset_irrelevance_lemma cm n0 nk (offset_gen (m0+i)) 0 (n-1) (gen i) in
@@ -90,4 +90,3 @@ let double_fold_transpose_lemma #c #eq
   matrix_fold_equals_func_double_fold cm (transposed_matrix_gen gen); 
   assert_norm (double_fold cm (transpose_generator offset_gen) == rhs);
   eq.transitivity (FStar.Seq.Permutation.foldm_snoc cm matrix_mn) lhs rhs
- 

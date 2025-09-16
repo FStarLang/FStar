@@ -17,22 +17,35 @@ module FStarC.Option
 
 open FStarC.Effect
 
-let isNone = function
-  | None -> true
-  | Some _ -> false
-
-let isSome = function
-  | Some _ -> true
-  | None -> false
-
 let map f = function
   | Some x -> Some (f x)
   | None -> None
 
-let mapTot f = function
-  | Some x -> Some (f x)
+let must =
+  function
+  | Some x -> x
+  | None -> failwith "FStarC.Option.must: called on None"
+
+let dflt d = function
+  | Some x -> x
+  | None -> d
+
+let rec find f xs =
+  match xs with
+  | [] -> None
+  | x::xs -> if f x then Some x else find f xs
+
+let bind o f =
+  match o with
+  | Some x -> f x
   | None -> None
 
-let get = function
-  | Some x -> x
-  | None -> failwith "empty option"
+let catch o f =
+  match o with
+  | Some x -> Some x
+  | None -> f ()
+
+let iter f =
+  function
+  | Some x -> f x
+  | None -> ()

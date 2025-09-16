@@ -23,12 +23,12 @@ let eq_instance_of_eqtype (#a:eqtype) : deq a = {
   eq = (fun x y -> x = y)
 }
 
-// FIXME: It would be easier to have a single eqtype instance,
-// but resolution will sometimes use for any type, even though
-// it should not.
-instance int_has_eq : deq int = eq_instance_of_eqtype
-instance unit_has_eq : deq unit = eq_instance_of_eqtype
-instance bool_has_eq : deq bool = eq_instance_of_eqtype
+// It would be nice to declare a single instance for every eqtype,
+// but typeclass resolution does not look at refinements to decide
+// what to apply.
+instance int_has_eq    : deq int    = eq_instance_of_eqtype
+instance unit_has_eq   : deq unit   = eq_instance_of_eqtype
+instance bool_has_eq   : deq bool   = eq_instance_of_eqtype
 instance string_has_eq : deq string = eq_instance_of_eqtype
 
 let rec eqList #a (eq : a -> a -> bool) (xs ys : list a) : Tot bool =

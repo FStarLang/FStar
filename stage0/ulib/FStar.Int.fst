@@ -64,7 +64,7 @@ let to_vec_lemma_1 #n a b = ()
 let to_vec_lemma_2 #n a b = 
   UInt.to_vec_lemma_2 #n (to_uint a) (to_uint b)
 
-#push-options "--initial_fuel 1 --max_fuel 1"
+#push-options "--fuel 1"
 let rec inverse_aux #n vec i =
   if i = n - 1 then 
     assert((from_vec vec) % 2 = (if index vec (n - 1) then 1 else 0)) 

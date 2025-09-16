@@ -1,5 +1,4 @@
->> Got issues: [
-* Error 189 at IfThen.fst(5,2-6,6):
+* Info at IfThen.fst(5,2-6,6):
+  - Expected failure:
   - Expected expression of type Prims.int got expression () of type Prims.unit
 
->>]

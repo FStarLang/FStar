@@ -22,8 +22,6 @@ unfold let n = 32
 open FStar.Int
 open FStar.Mul
 
-#set-options "--max_fuel 0 --max_ifuel 0"
-
 (* NOTE: anything that you fix/update here should be reflected in [FStar.UIntN.fstp], which is mostly
  * a copy-paste of this module. *)
 
@@ -121,24 +119,25 @@ let lt ( a:t) (b:t) : Tot bool = lt  #n (v a) (v b)
 let lte (a:t) (b:t) : Tot bool = lte #n (v a) (v b)
 
 (* Infix notations *)
-unfold let ( +^ )  = add
-unfold let ( -^ )  = sub
-unfold let ( *^ )  = mul
-unfold let ( /^ )  = div
-unfold let ( %^ )  = rem
-unfold let ( ^^ )  = logxor
-unfold let ( &^ )  = logand
-unfold let ( |^ )  = logor
-unfold let ( <<^ ) = shift_left
-unfold let ( >>^ ) = shift_right
-unfold let ( >>>^) = shift_arithmetic_right
-unfold let ( =^ )  = eq
-unfold let ( <>^ ) = ne
-unfold let ( >^ )  = gt
-unfold let ( >=^ ) = gte
-unfold let ( <^ )  = lt
-unfold let ( <=^ ) = lte
+inline_for_extraction unfold let ( +^ )  = add
+inline_for_extraction unfold let ( -^ )  = sub
+inline_for_extraction unfold let ( *^ )  = mul
+inline_for_extraction unfold let ( /^ )  = div
+inline_for_extraction unfold let ( %^ )  = rem
+inline_for_extraction unfold let ( ^^ )  = logxor
+inline_for_extraction unfold let ( &^ )  = logand
+inline_for_extraction unfold let ( |^ )  = logor
+inline_for_extraction unfold let ( <<^ ) = shift_left
+inline_for_extraction unfold let ( >>^ ) = shift_right
+inline_for_extraction unfold let ( >>>^) = shift_arithmetic_right
+inline_for_extraction unfold let ( =^ )  = eq
+inline_for_extraction unfold let ( <>^ ) = ne
+inline_for_extraction unfold let ( >^ )  = gt
+inline_for_extraction unfold let ( >=^ ) = gte
+inline_for_extraction unfold let ( <^ )  = lt
+inline_for_extraction unfold let ( <=^ ) = lte
 
+#push-options "--fuel 0 --ifuel 0"
 inline_for_extraction
 let ct_abs (a:t{min_int n < v a}) : Tot (b:t{v b = abs (v a)}) =
   let mask = a >>>^ UInt32.uint_to_t (n - 1) in
@@ -157,6 +156,7 @@ let ct_abs (a:t{min_int n < v a}) : Tot (b:t{v b = abs (v a)}) =
     UInt.lemma_lognot_value #n (to_uint (v a))
     end;
   (a ^^ mask) -^ mask
+#pop-options
 
 (* To input / output constants *)
 (* .. in decimal representation *)
@@ -164,7 +164,6 @@ val to_string: t -> Tot string
 
 val of_string: string -> Tot t
 
-#set-options "--admit_smt_queries true"
 //This private primitive is used internally by the
 //compiler to translate bounded integer constants
 //with a desugaring-time check of the size of the number,
@@ -172,8 +171,8 @@ val of_string: string -> Tot t
 //Since it is marked private, client programs cannot call it directly
 //Since it is marked unfold, it eagerly reduces,
 //eliminating the verification overhead of the wrapper
+[@@admitted]
 private
 unfold
-let __int_to_t (x:int) : Tot t
-    = int_to_t x
-#reset-options
+let __int_to_t (x:int) : t =
+  int_to_t x

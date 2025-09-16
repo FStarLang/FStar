@@ -1,8 +1,8 @@
 module FStarC.Syntax.VisitM
 
+open FStarC
 open FStarC.Effect
 open FStarC.List
-open FStarC.Util
 
 open FStarC.Class.Monad
 
@@ -112,7 +112,7 @@ let rec compress (tm:term) : term =
   match tm.n with
   (* unfold and retry *)
   | Tm_lazy li ->
-    let tm' = must !lazy_chooser li.lkind li in
+    let tm' = Option.must !lazy_chooser li.lkind li in
     compress tm'
 
   | _ -> tm
@@ -393,9 +393,9 @@ let rec on_sub_sigelt' #m {|d : lvm m |} (se : sigelt') : m sigelt' =
     let! ses = ses |> mapM on_sub_sigelt in
     return <| Sig_bundle {ses; lids}
 
-  | Sig_datacon {lid; us; t; ty_lid; num_ty_params; mutuals; injective_type_params } ->
+  | Sig_datacon {lid; us; t; ty_lid; num_ty_params; mutuals; injective_type_params; proj_disc_lids} ->
     let! t = t |> f_term in
-    return <| Sig_datacon {lid; us; t; ty_lid; num_ty_params; mutuals; injective_type_params }
+    return <| Sig_datacon {lid; us; t; ty_lid; num_ty_params; mutuals; injective_type_params; proj_disc_lids }
 
   | Sig_declare_typ {lid; us; t} ->
     let! t = t |> f_term in
@@ -437,7 +437,10 @@ let rec on_sub_sigelt' #m {|d : lvm m |} (se : sigelt') : m sigelt' =
     // ^ review: residual flags should not have terms
     return <| Sig_effect_abbrev {lid; us; bs; comp; cflags}
 
-  (* No content *)
+  (* No content, except for Check. *)
+  | Sig_pragma (Check t) ->
+    let! t = f_term t in
+    return <| Sig_pragma (Check t)
   | Sig_pragma _ -> return se
 
   | Sig_polymonadic_bind {m_lid; n_lid; p_lid; tm; typ; kind} ->
@@ -535,6 +538,6 @@ let m = VisitM.visitM_sigelt
                      (fun #a b c -> c) se
 in
 let lids, _ = Writer.run_writer m in
-BU.print1 "Lids = %s\n" (show lids);
+Format.print1 "Lids = %s\n" (show lids);
 
 *)

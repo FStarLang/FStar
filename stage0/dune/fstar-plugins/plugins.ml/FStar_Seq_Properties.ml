@@ -191,7 +191,7 @@ let sortWith :
       FStar_Seq_Base.seq_of_list
         (FStar_List_Tot_Base.sortWith f (FStar_Seq_Base.seq_to_list s))
 let sort_lseq :
-  'a . Prims.nat -> 'a tot_ord -> ('a, unit) lseq -> ('a, unit) lseq =
+  'a . Prims.nat -> 'a tot_ord -> ('a, Obj.t) lseq -> ('a, Obj.t) lseq =
   fun n ->
     fun f ->
       fun s ->

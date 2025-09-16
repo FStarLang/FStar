@@ -1102,7 +1102,7 @@ let rec tss_tequiv #s #t h =
     | TssSym h1 -> EqSymm (tss_tequiv h1)
     | TssTran h1 h2 -> EqTran (tss_tequiv h1) (tss_tequiv h2)
 
-#set-options "--initial_ifuel 2 --max_ifuel 2"
+#set-options "--ifuel 2"
 irreducible val tred_tarr_preserved : #s1:typ -> #s2:typ -> #t:typ ->
       h:(tred_star (TArr s1 s2) t) ->
       Tot (cexists (fun t1 -> (cexists (fun t2 ->

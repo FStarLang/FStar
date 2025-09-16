@@ -20,7 +20,6 @@ open FStarC
 open FStarC.Effect
 open FStarC.Syntax.Syntax
 open FStarC.Ident
-open FStarC.Util
 open FStarC.Errors
 open FStarC.Syntax.InstFV
 
@@ -77,7 +76,7 @@ let disentangle_abbrevs_from_bundle
    | _ ->
 
     let type_abbrevs = type_abbrev_sigelts |> List.map begin fun x -> match x.sigel with
-        | Sig_let {lbs=(_, [ { lbname = Inr fv } ] )} -> fv.fv_name.v
+        | Sig_let {lbs=(_, [ { lbname = Inr fv } ] )} -> fv.fv_name
         | _ -> failwith "mutrecty: disentangle_abbrevs_from_bundle: type_abbrevs: impossible"
     end
     in
@@ -104,7 +103,7 @@ let disentangle_abbrevs_from_bundle
         let remove_not_unfolded lid =
             not_unfolded_yet := !not_unfolded_yet |> List.filter begin fun x -> match x.sigel with
                 | Sig_let {lbs=(_, [ { lbname = Inr fv } ] )} ->
-                  not (lid_equals lid fv.fv_name.v)
+                  not (lid_equals lid fv.fv_name)
                 | _ -> true
             end
         in
@@ -114,7 +113,7 @@ let disentangle_abbrevs_from_bundle
         let rec unfold_abbrev_fv (t: term) (fv : S.fv) : term =
             let replacee (x: sigelt) = match x.sigel with
                 | Sig_let {lbs=(_, [ { lbname = Inr fv' } ] )}
-                  when lid_equals fv'.fv_name.v fv.fv_name.v ->
+                  when lid_equals fv'.fv_name fv.fv_name ->
                   Some x
                 | _ -> None
             in
@@ -127,9 +126,9 @@ let disentangle_abbrevs_from_bundle
                 | None ->
                   begin match U.find_map type_abbrev_sigelts replacee with
                       | Some se ->
-                          if FStarC.List.existsb (fun x -> lid_equals x fv.fv_name.v) !in_progress
-                          then let msg = U.format1 "Cycle on %s in mutually recursive type abbreviations" (string_of_lid fv.fv_name.v) in
-                               raise_error fv.fv_name.v Errors.Fatal_CycleInRecTypeAbbreviation msg
+                          if FStarC.List.existsb (fun x -> lid_equals x fv.fv_name) !in_progress
+                          then let msg = Format.fmt1 "Cycle on %s in mutually recursive type abbreviations" (string_of_lid fv.fv_name) in
+                               raise_error fv.fv_name Errors.Fatal_CycleInRecTypeAbbreviation msg
                           else unfold_abbrev se
                       | _ -> t
                   end
@@ -143,7 +142,7 @@ let disentangle_abbrevs_from_bundle
                 | _ -> true
                 end in
                 let lid = match lb.lbname with
-                    | Inr fv -> fv.fv_name.v
+                    | Inr fv -> fv.fv_name
                     | _ -> failwith "mutrecty: disentangle_abbrevs_from_bundle: rename_abbrev: lid: impossible"
                 in
                 let () = in_progress := lid :: !in_progress in  (* push *)
@@ -176,7 +175,7 @@ let disentangle_abbrevs_from_bundle
       let inductives_with_abbrevs_unfolded =
 
           let find_in_unfolded fv = U.find_map unfolded_type_abbrevs begin fun x -> match x.sigel with
-              | Sig_let {lbs=(_, [ { lbname = Inr fv' ; lbdef = tm } ] )} when (lid_equals fv'.fv_name.v fv.fv_name.v) ->
+              | Sig_let {lbs=(_, [ { lbname = Inr fv' ; lbdef = tm } ] )} when (lid_equals fv'.fv_name fv.fv_name) ->
                 Some tm
               | _ -> None
           end
@@ -206,7 +205,7 @@ let disentangle_abbrevs_from_bundle
 
               | Sig_datacon {lid; us=univs; t=ty; ty_lid=res;
                              num_ty_params=npars; mutuals=mut;
-                             injective_type_params } ->
+                             injective_type_params; proj_disc_lids } ->
                 let ty' = inst unfold_fv ty in
                 let mut' = filter_out_type_abbrevs mut in
                 [{ x with sigel = Sig_datacon {lid;
@@ -215,7 +214,8 @@ let disentangle_abbrevs_from_bundle
                                                ty_lid=res;
                                                num_ty_params=npars;
                                                mutuals=mut';
-                                               injective_type_params } }]
+                                               injective_type_params;
+                                               proj_disc_lids } }]
 
               | Sig_let _ ->
                 []

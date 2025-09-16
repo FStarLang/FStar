@@ -128,35 +128,36 @@ let rec find_eq #a (eq:equivalence_relation a) (s: S.seq a)
 let rec pigeonhole_eq (#a:Type) (eq: equivalence_relation a) 
                       (holes: S.seq a{S.length holes > 0}) 
                       (pigeons: S.seq (items_of eq holes)) =   
-  if S.length holes = 1 
-  then begin 
-    reveal_opaque (`%contains_eq) (contains_eq eq);  
-    trans_lemma eq (S.index pigeons 0) (S.index holes 0) (S.index pigeons 1); 
+  if S.length holes = 1
+  then begin
+    reveal_opaque (`%contains_eq) (contains_eq eq);
+    trans_lemma eq (S.index pigeons 0) (S.index holes 0) (S.index pigeons 1);
     (0,1)
   end
-  else let first_pigeon = S.index pigeons 0 in 
-    match find pigeons (fun k -> eq k first_pigeon) 1 with
-    | Some i -> (symm_lemma eq (S.index pigeons 0) (S.index pigeons i); (0,i))
+  else let first_pigeon = S.index pigeons 0 in
+    match find pigeons (eq first_pigeon) 1 with
+    | Some i -> 
+      (0,i)
     | None ->
       let index_of_first_pigeon = find_eq eq holes first_pigeon in //we carefully carve first_pigeon from (holes)
-      let holes_except_first_pigeon = S.append (S.slice holes 0 (index_of_first_pigeon)) 
-                                             (S.slice holes (index_of_first_pigeon+1) (S.length holes)) in 
-      let all_but_first_pigeon_remain_in_reduced (x: items_of eq holes { not (eq x first_pigeon) }) 
-        : Lemma (contains_eq eq holes_except_first_pigeon x) 
-        = let index_of_x_in_holes = find_eq eq holes x in 
-          reveal_opaque (`%contains_eq) (contains_eq eq);  
-          if index_of_x_in_holes < index_of_first_pigeon 
+      let holes_except_first_pigeon = S.append (S.slice holes 0 (index_of_first_pigeon))
+                                             (S.slice holes (index_of_first_pigeon+1) (S.length holes)) in
+      let all_but_first_pigeon_remain_in_reduced (x: items_of eq holes { not (eq first_pigeon x) })
+        : Lemma (contains_eq eq holes_except_first_pigeon x)
+        = let index_of_x_in_holes = find_eq eq holes x in
+          reveal_opaque (`%contains_eq) (contains_eq eq);
+          if index_of_x_in_holes < index_of_first_pigeon
           then assert (S.index holes index_of_x_in_holes == S.index holes_except_first_pigeon index_of_x_in_holes)
-          else begin     
+          else begin
             // this serves to prove index_of_x_in_holes > index_of_first_pigeon (no equality!)
-            Classical.move_requires (trans_lemma eq x (S.index holes index_of_x_in_holes)) first_pigeon; 
+            Classical.move_requires (trans_lemma eq x (S.index holes index_of_x_in_holes)) first_pigeon;
             // append/slice smtpat hint
             assert (S.index holes index_of_x_in_holes == S.index holes_except_first_pigeon (index_of_x_in_holes-1))
-          end 
-      in Classical.forall_intro all_but_first_pigeon_remain_in_reduced; 
-      let i1, i2 = pigeonhole_eq (eq) (holes_except_first_pigeon)  
+          end
+      in Classical.forall_intro all_but_first_pigeon_remain_in_reduced;
+      let i1, i2 = pigeonhole_eq (eq) (holes_except_first_pigeon)
                                       (S.init #(items_of eq holes_except_first_pigeon)
-                                              (S.length pigeons - 1) 
+                                              (S.length pigeons - 1)
                                               (fun i -> S.index pigeons (i+1)))
-      in (i1+1, i2+1)
-  
+      in
+      (i1+1, i2+1)

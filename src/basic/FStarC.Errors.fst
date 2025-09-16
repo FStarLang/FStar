@@ -87,18 +87,18 @@ let update_flags (l:list (error_flag & (int & int)))
       | (CWarning, CAlwaysError)
       | (CError, CAlwaysError) ->
         raise (Invalid_warn_error_setting
-                 (BU.format1 "cannot turn error %s into warning"
-                             (BU.string_of_int i)))
+                 (Format.fmt1 "cannot turn error %s into warning"
+                             (show i)))
       | (CSilent, CAlwaysError) ->
         raise (Invalid_warn_error_setting
-                 (BU.format1 "cannot silence error %s"
-                             (BU.string_of_int i)))
+                 (Format.fmt1 "cannot silence error %s"
+                             (show i)))
       | (CSilent, CFatal)
       | (CWarning, CFatal)
       | (CError, CFatal) ->
         raise (Invalid_warn_error_setting
-                 (BU.format1 "cannot change the error level of fatal error %s"
-                             (BU.string_of_int i)))
+                 (Format.fmt1 "cannot change the error level of fatal error %s"
+                             (show i)))
       | (CAlwaysError, CFatal) ->
         CFatal
       | _ -> flag
@@ -114,7 +114,6 @@ let update_flags (l:list (error_flag & (int & int)))
   @ default_settings
 
 exception Error   of error
-exception Warning of error
 exception Stop
 exception Empty_frag
 
@@ -129,11 +128,10 @@ let json_of_issue issue =
     JsonAssoc [
         "msg",    json_of_error_message issue.issue_msg;
         "level",  json_of_issue_level issue.issue_level;
-        "range",  dflt JsonNull (json_of_range <$> map_opt issue.issue_range Range.refind_range);
-        "number", dflt JsonNull (JsonInt <$> issue.issue_number);
+        "range",  Option.dflt JsonNull (json_of_range <$> Option.map Range.refind_range issue.issue_range);
+        "number", Option.dflt JsonNull (JsonInt <$> issue.issue_number);
         "ctx",    JsonList (JsonStr <$> issue.issue_ctx);
     ]
-
 
 let ctx_doc (ctx : list string) : PP.document =
   let open FStarC.Pprint in
@@ -170,13 +168,13 @@ let optional_def (f : 'a -> PP.document) (def : PP.document) (o : option 'a) : P
 
 let issue_to_doc' (print_hdr:bool) (issue:issue) : PP.document =
   let open FStarC.Pprint in
-  let r = BU.map_opt issue.issue_range Range.refind_range in
+  let r = Option.map Range.refind_range issue.issue_range in
   let hdr : document =
     if print_hdr then (
       let level_header = doc_of_string (string_of_issue_level issue.issue_level) in
       let num_opt =
         if issue.issue_level = EError || issue.issue_level = EWarning
-        then blank 1 ^^ optional_def (fun n -> doc_of_string (string_of_int n)) (doc_of_string "<unknown>") issue.issue_number
+        then blank 1 ^^ optional_def (fun n -> doc_of_string (show n)) (doc_of_string "<unknown>") issue.issue_number
         else empty
       in
       let atrng : document =
@@ -222,7 +220,7 @@ let format_issue' (print_hdr:bool) (issue:issue) : string =
 let format_issue issue : string = format_issue' true issue
 
 let print_issue_json issue =
-    json_of_issue issue |> string_of_json |> BU.print1_error "%s\n"
+    json_of_issue issue |> string_of_json |> Format.print1_error "%s\n"
 
 (*
   Printing for nicer display in github actions runs. See
@@ -239,16 +237,16 @@ let print_issue_github issue =
   | EError
   | EWarning ->
     let level = if EError? issue.issue_level then "error" else "warning" in
-    let rng = dflt dummyRange issue.issue_range in
+    let rng = Option.dflt dummyRange issue.issue_range in
     let msg = format_issue' true issue in
     let msg = msg |> BU.splitlines |> String.concat "%0A" in
     let num =
       match issue.issue_number with
       | None -> ""
-      | Some n -> BU.format1 "(%s) " (show n)
+      | Some n -> Format.fmt1 "(%s) " (show n)
     in
-    BU.print_warning <|
-      BU.format6 "::%s file=%s,line=%s,endLine=%s::%s%s\n"
+    Format.print_warning <|
+      Format.fmt6 "::%s file=%s,line=%s,endLine=%s::%s%s\n"
         level
         (Range.file_of_range rng)
         (show (rng |> Range.start_of_range |> Range.line_of_pos))
@@ -259,10 +257,10 @@ let print_issue_github issue =
 let print_issue_rendered issue =
     let printer =
         match issue.issue_level with
-        | EInfo -> (fun s -> BU.print_string (colorize_cyan s))
-        | EWarning -> BU.print_warning
-        | EError -> BU.print_error
-        | ENotImplemented -> BU.print_error in
+        | EInfo -> (fun s -> Format.print_string (Format.colorize_cyan s))
+        | EWarning -> Format.print_warning
+        | EError -> Format.print_error
+        | ENotImplemented -> Format.print_error in
     printer (format_issue issue ^ "\n")
 
 let print_issue issue =
@@ -308,7 +306,7 @@ let fixup_issue_range (rng:option Range.t) : option Range.t =
       in
       Some (set_use_range range use_rng')
   in
-  map_opt rng maybe_bound_range
+  Option.map maybe_bound_range rng
 
 (* This handler prints to the error output immediately. *)
 let mk_default_handler () =
@@ -744,3 +742,11 @@ let _ = Options.check_include_dir := (fun s ->
                 (Pprint.doc_of_string s)
             ]
 )
+
+let print_expected_failures (issues : list issue) : unit =
+  (* Add them as diagnostics so we see them in the IDE. *)
+  let issues = issues |> List.map (fun i -> { i with
+    issue_level = EInfo;
+    issue_msg   = (text "Expected failure:") :: i.issue_msg;
+  }) in
+  add_issues issues

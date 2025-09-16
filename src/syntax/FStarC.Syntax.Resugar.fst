@@ -54,7 +54,7 @@ let bv_as_unique_ident (x:S.bv) : I.ident =
   let unique_name =
     if starts_with reserved_prefix (string_of_id x.ppname)
     ||  Options.print_real_names () then
-      (string_of_id x.ppname) ^ (string_of_int x.index)
+      (string_of_id x.ppname) ^ (show x.index)
     else
       (string_of_id x.ppname)
   in
@@ -118,10 +118,10 @@ let rec resugar_universe (u:S.universe) r: A.term =
       let (n, u) = universe_to_int 0 u in
       begin match u with
       | U_zero ->
-        mk (A.Const(Const_int(string_of_int n, None))) r
+        mk (A.Const(Const_int(show n, None))) r
 
       | _ ->
-        let e1 = mk (A.Const(Const_int(string_of_int n, None))) r in
+        let e1 = mk (A.Const(Const_int(show n, None))) r in
         let e2 = resugar_universe u r in
         mk (A.Op(Ident.id_of_text "+", [e1; e2])) r
       end
@@ -138,7 +138,7 @@ let rec resugar_universe (u:S.universe) r: A.term =
     | U_unif _ -> mk A.Wild r
     | U_bvar x ->
       (* This case can happen when trying to print a subterm of a term that is not opened.*)
-      let id = I.mk_ident (strcat "uu__univ_bvar_" (string_of_int x), r) in
+      let id = I.mk_ident (strcat "uu__univ_bvar_" (show x), r) in
       mk (A.Uvar(id)) r
 
     | U_unknown -> mk A.Wild r (* not sure what to resugar to since it is not created by desugar *)
@@ -186,27 +186,27 @@ let rec resugar_term_as_op (t:S.term) : option (string&expected_arity) =
     (C.calc_finish_lid, "calc_finish");
   ] in
   let fallback fv =
-    match infix_prim_ops |> BU.find_opt (fun d -> fv_eq_lid fv (fst d)) with
+    match infix_prim_ops |> Option.find (fun d -> fv_eq_lid fv (fst d)) with
     | Some op ->
       Some (snd op, None)
     | _ ->
       (* Check that it is of the shape dtuple int, and return that arity *)
-      match C.get_dtuple_tycon_arity (string_of_lid fv.fv_name.v) with
+      match C.get_dtuple_tycon_arity (string_of_lid fv.fv_name) with
       | Some n -> Some ("dtuple", Some n)
       | None ->
-        match C.get_tuple_tycon_arity (string_of_lid fv.fv_name.v) with
+        match C.get_tuple_tycon_arity (string_of_lid fv.fv_name) with
         | Some n -> Some ("tuple", Some n)
         | None ->
-          let str = string_of_id (Ident.ident_of_lid fv.fv_name.v) in
+          let str = string_of_id (Ident.ident_of_lid fv.fv_name) in
           if BU.starts_with str "try_with" then Some ("try_with", None)
-          else if fv_eq_lid fv C.sread_lid then Some (string_of_lid fv.fv_name.v, None)
+          else if fv_eq_lid fv C.sread_lid then Some (string_of_lid fv.fv_name, None)
           else None
   in
   match (SS.compress t).n with
     | Tm_fvar fv ->
-      let length = String.length (nsstr fv.fv_name.v) in
-      let s = if length=0 then string_of_lid fv.fv_name.v
-              else BU.substring_from (string_of_lid fv.fv_name.v) (length+1) in
+      let length = String.length (nsstr fv.fv_name) in
+      let s = if length=0 then string_of_lid fv.fv_name
+              else BU.substring_from (string_of_lid fv.fv_name) (length+1) in
       begin match string_to_op s with
         | Some t -> Some t
         | _ -> fallback fv
@@ -235,7 +235,7 @@ let maybe_shorten_lid env lid : lident =
   if may_shorten lid then DsEnv.shorten_lid env lid else lid
 
 let maybe_shorten_fv env fv : lident =
-  let lid = fv.fv_name.v in
+  let lid = fv.fv_name in
   maybe_shorten_lid env lid
 
 (* Sizet handled below *)
@@ -249,8 +249,8 @@ let serialize_machine_integer_desc (s,w) : list string =
     | Int64 -> "64"
   in
   let su = match s with | Unsigned -> "u" | Signed -> "" in
-  [ BU.format3 "FStar.%sInt%s.__%sint_to_t" sU sW su;
-    BU.format3 "FStar.%sInt%s.%sint_to_t" sU sW su ]
+  [ Format.fmt3 "FStar.%sInt%s.__%sint_to_t" sU sW su;
+    Format.fmt3 "FStar.%sInt%s.%sint_to_t" sU sW su ]
 
 let parse_machine_integer_desc =
   let signs = [Unsigned; Signed] in
@@ -266,7 +266,7 @@ let parse_machine_integer_desc =
     List.tryFind (fun (_, d) -> d = Ident.string_of_lid (lid_of_fv fv)) descs
 
 let can_resugar_machine_integer_fv fv =
-  Option.isSome (parse_machine_integer_desc fv)
+  Some? (parse_machine_integer_desc fv)
 
 let resugar_machine_integer fv (i:string) pos =
   match parse_machine_integer_desc fv with
@@ -337,8 +337,8 @@ let rec resugar_term' (env: DsEnv.env) (t : S.term) : A.term =
     | Tm_fvar fv -> //a top-level identifier, may be lowercase or upper case
       //should be A.Var if lowercase
       //and A.Name if uppercase
-      let a = fv.fv_name.v in
-      let length = String.length (nsstr fv.fv_name.v) in
+      let a = fv.fv_name in
+      let length = String.length (nsstr fv.fv_name) in
       let s = if length=0 then string_of_lid a
           else BU.substring_from (string_of_lid a) (length+1) in
       let is_prefix = I.reserved_prefix ^ "is_" in
@@ -357,9 +357,9 @@ let rec resugar_term' (env: DsEnv.env) (t : S.term) : A.term =
             failwith "wrong projector format"
         end
        else if (lid_equals a C.smtpat_lid) then
-         mk (A.Tvar (I.mk_ident ("SMTPat", I.range_of_lid a)))
+         mk (A.Var (I.id_as_lid <| I.mk_ident ("SMTPat", I.range_of_lid a)))
        else if (lid_equals a C.smtpatOr_lid) then
-         mk (A.Tvar (I.mk_ident ("SMTPatOr", I.range_of_lid a)))
+         mk (A.Var (I.id_as_lid <| I.mk_ident ("SMTPatOr", I.range_of_lid a)))
        else if (lid_equals a C.assert_lid || lid_equals a C.assume_lid
                 || FStar.Char.uppercase (String.get s 0) <> String.get s 0) then
          mk (A.Var (maybe_shorten_fv env fv))
@@ -493,8 +493,8 @@ let rec resugar_term' (env: DsEnv.env) (t : S.term) : A.term =
         (* Detect projectors and resugar them as t.x instead of Mkt?.x t *)
         match (U.un_uinst (SS.compress t)).n with
         | Tm_fvar fv ->
-          let a = fv.fv_name.v in
-          let length = String.length (nsstr fv.fv_name.v) in
+          let a = fv.fv_name in
+          let length = String.length (nsstr fv.fv_name) in
           let s = if length=0 then string_of_lid a
               else BU.substring_from (string_of_lid a) (length+1) in
           if BU.starts_with s U.field_projector_prefix then
@@ -624,8 +624,8 @@ let rec resugar_term' (env: DsEnv.env) (t : S.term) : A.term =
         | Some (ref_read, _) when (ref_read = string_of_lid C.sread_lid) ->
           let (t, _) = List.hd args in
           begin match (SS.compress t).n with
-            | Tm_fvar fv when (U.field_projector_contains_constructor (string_of_lid fv.fv_name.v)) ->
-              let f = lid_of_path [string_of_lid fv.fv_name.v] t.pos in
+            | Tm_fvar fv when (U.field_projector_contains_constructor (string_of_lid fv.fv_name)) ->
+              let f = lid_of_path [string_of_lid fv.fv_name] t.pos in
               mk (A.Project(resugar_term' env t, f))
             | _ -> resugar_term' env t
           end
@@ -859,7 +859,7 @@ let rec resugar_term' (env: DsEnv.env) (t : S.term) : A.term =
           | _ -> [], def, false
         in
         let pat, term = match bnd.lbname with
-          | Inr fv -> mk_pat (A.PatName fv.fv_name.v), term
+          | Inr fv -> mk_pat (A.PatName fv.fv_name), term
           | Inl bv ->
             mk_pat (A.PatVar (bv_as_unique_ident bv, None, [])), term
         in
@@ -922,7 +922,7 @@ let rec resugar_term' (env: DsEnv.env) (t : S.term) : A.term =
       mk (A.Let(qual, bnds, body))
 
     | Tm_uvar (u, _) ->
-      let s = "?u" ^ (UF.uvar_id u.ctx_uvar_head |> string_of_int) in
+      let s = "?u" ^ (UF.uvar_id u.ctx_uvar_head |> show) in
       (* TODO : should we put a pretty_non_parseable option for these cases ? *)
       label s (mk A.Wild)
 
@@ -977,7 +977,7 @@ and resugar_ascription env (asc, tac_opt, b) =
      resugar_term' env n
    | Inr n -> (* comp *)
      resugar_comp' env n),
-  BU.map_opt tac_opt (resugar_term' env),
+  Option.map (resugar_term' env) tac_opt,
   b
 
 (* This entire function is of course very tied to the the desugaring
@@ -1072,7 +1072,7 @@ and resugar_calc (env:DsEnv.env) (t0:S.term) : option A.term =
   let rec resugar_all_steps (pack:S.term) : option (list (S.term & S.term & S.term) & S.term) =
     match resugar_step pack with
     | Some (t, r, j, k) ->
-        BU.bind_opt (resugar_all_steps k) (fun (steps, k) ->
+        Option.bind (resugar_all_steps k) (fun (steps, k) ->
         Some ((t, r, j)::steps, k))
     | None ->
         Some ([], pack)
@@ -1119,7 +1119,7 @@ and resugar_match_returns env scrutinee r asc_opt =
              None, SS.subst_ascription [NT (b.binder_bv, S.bv_to_name sbv)] asc
            | _ -> None, asc
       else Some b, asc in
-    let bopt = BU.map_option (fun b ->
+    let bopt = Option.map (fun b ->
       resugar_binder' env b r
       |> A.ident_of_binder r) bopt in
     let asc, use_eq =
@@ -1163,7 +1163,7 @@ and resugar_comp' (env: DsEnv.env) (c:S.comp) : A.term =
                 mk (LexList (ts |> List.map (resugar_term' env)))
               | Decreases_wf (rel, e) ->
                 mk (WFOrder (resugar_term' env rel, resugar_term' env e)) in
-            let e = mk (Decreases (d, None)) in
+            let e = mk (Decreases d) in
             aux (e::l) tl
           | _ -> aux l tl
       in
@@ -1181,8 +1181,8 @@ and resugar_comp' (env: DsEnv.env) (c:S.comp) : A.term =
       let post = U.unthunk_lemma_post post in
       let pats = if U.is_fvar C.nil_lid (U.head_of pats) then [] else [pats] in
 
-      let pre = List.map (fun t -> mk (Requires (resugar_term' env t, None))) pre in
-      let post = mk (Ensures (resugar_term' env post, None)) in
+      let pre = List.map (fun t -> mk (Requires (resugar_term' env t))) pre in
+      let post = mk (Ensures (resugar_term' env post)) in
       let pats = List.map (resugar_term' env) pats in
       let decrease = mk_decreases c.flags in
 
@@ -1233,7 +1233,7 @@ and resugar_pat' env (p:S.pat) (branch_bv: FlatSet.t bv) : A.pattern =
   (* We lose information when desugar PatAscribed to able to resugar it back *)
   let mk a = A.mk_pattern a p.p in
   let to_arg_qual bopt = // FIXME do (Some false) and None mean the same thing?
-    BU.bind_opt bopt (fun b -> if b then Some A.Implicit else None) in
+    Option.bind bopt (fun b -> if b then Some A.Implicit else None) in
   let must_print args =
     args |> List.existsML (fun (pattern, is_implicit) ->
       match pattern.v with
@@ -1241,7 +1241,7 @@ and resugar_pat' env (p:S.pat) (branch_bv: FlatSet.t bv) : A.pattern =
       | _ -> false)
   in
   let resugar_plain_pat_cons' fv args =
-    mk (A.PatApp (mk (A.PatName fv.fv_name.v), args)) in
+    mk (A.PatApp (mk (A.PatName fv.fv_name), args)) in
   let rec resugar_plain_pat_cons fv args =
     let args =
       (* Special check here: if any of the args binds a variable used in
@@ -1258,14 +1258,14 @@ and resugar_pat' env (p:S.pat) (branch_bv: FlatSet.t bv) : A.pattern =
 
     (* List patterns. *)
     | Pat_cons(fv, _, args)
-      when lid_equals fv.fv_name.v C.nil_lid -> (
+      when lid_equals fv.fv_name C.nil_lid -> (
       match filter_pattern_imp args with
       | [] -> mk (A.PatList [])
       | _ -> resugar_plain_pat_cons fv args
     )
 
     | Pat_cons(fv, _, args)
-      when lid_equals fv.fv_name.v C.cons_lid -> (
+      when lid_equals fv.fv_name C.cons_lid -> (
       match filter_pattern_imp args with
        | [(hd, false); (tl, false)] ->
          let hd' = aux hd (Some false) in
@@ -1277,16 +1277,16 @@ and resugar_pat' env (p:S.pat) (branch_bv: FlatSet.t bv) : A.pattern =
     )
 
     | Pat_cons (fv, _, []) ->
-      mk (A.PatName fv.fv_name.v)
+      mk (A.PatName fv.fv_name)
 
 
-    | Pat_cons(fv, _, args) when (is_tuple_constructor_lid fv.fv_name.v
+    | Pat_cons(fv, _, args) when (is_tuple_constructor_lid fv.fv_name
                                && not (must_print args)) ->
       let args =
         args |>
         List.filter_map (fun (p, is_implicit) ->
             if is_implicit then None else Some (aux p (Some false))) in
-      let is_dependent_tuple = C.is_dtuple_datacon_lid fv.fv_name.v in
+      let is_dependent_tuple = C.is_dtuple_datacon_lid fv.fv_name in
       mk (A.PatTuple (args, is_dependent_tuple))
 
     | Pat_cons({fv_qual=Some (Record_ctor(name, fields))}, _, args) ->
@@ -1367,7 +1367,7 @@ let resugar_qualifier : S.qualifier -> option A.qualifier = function
   | S.OnlyName -> None
 
 
-let resugar_pragma = function
+let resugar_pragma env = function
   | S.ShowOptions -> A.ShowOptions
   | S.SetOptions s -> A.SetOptions s
   | S.ResetOptions s -> A.ResetOptions s
@@ -1375,6 +1375,7 @@ let resugar_pragma = function
   | S.PopOptions -> A.PopOptions
   | S.RestartSolver -> A.RestartSolver
   | S.PrintEffectsGraph -> A.PrintEffectsGraph
+  | S.Check t -> A.Check (resugar_term' env t)
 
 (* drop the first n binders (implicit or explicit) from an arrow type *)
 let drop_n_bs (n:int) (t:S.term) : S.term =
@@ -1563,7 +1564,7 @@ let resugar_sigelt' env se : option A.decl =
        * ident without a path, so it gets printed correctly. *)
       let nopath_lbs ((is_rec, lbs) : letbindings) : letbindings =
         let nopath fv = lid_as_fv (lid_of_ids [ident_of_lid (lid_of_fv fv)]) None in
-        let lbs = List.map (fun lb ->  { lb with lbname = Inr (nopath <| right lb.lbname)} ) lbs in
+        let lbs = List.map (fun lb ->  { lb with lbname = Inr (nopath <| Inr?.v lb.lbname)} ) lbs in
         (is_rec, lbs)
       in
       let lbs = nopath_lbs lbs in
@@ -1611,7 +1612,7 @@ let resugar_sigelt' env se : option A.decl =
     Some (decl'_to_decl se (A.Tycon(false, false, [A.TyconAbbrev(ident_of_lid lid, bs, None, resugar_comp' env c)])))
 
   | Sig_pragma p ->
-    Some (decl'_to_decl se (A.Pragma (resugar_pragma p)))
+    Some (decl'_to_decl se (A.Pragma (resugar_pragma env p)))
 
   | Sig_declare_typ {lid; us=uvs; t} ->
     if (se.sigquals |> BU.for_some (function S.Projector(_,_) | S.Discriminator _ -> true | _ -> false)) then

@@ -63,9 +63,13 @@ let (empty : FStarC_Syntax_Syntax.version -> uf) =
     { term_graph = uu___; univ_graph = uu___1; version = v; ro = false }
 let (version_to_string : FStarC_Syntax_Syntax.version -> Prims.string) =
   fun v ->
-    let uu___ = FStarC_Util.string_of_int v.FStarC_Syntax_Syntax.major in
-    let uu___1 = FStarC_Util.string_of_int v.FStarC_Syntax_Syntax.minor in
-    FStarC_Util.format2 "%s.%s" uu___ uu___1
+    let uu___ =
+      FStarC_Class_Show.show FStarC_Class_Show.showable_int
+        v.FStarC_Syntax_Syntax.major in
+    let uu___1 =
+      FStarC_Class_Show.show FStarC_Class_Show.showable_int
+        v.FStarC_Syntax_Syntax.minor in
+    FStarC_Format.fmt2 "%s.%s" uu___ uu___1
 let (state : uf FStarC_Effect.ref) =
   let uu___ = let uu___1 = vops.next_major () in empty uu___1 in
   FStarC_Effect.mk_ref uu___
@@ -179,7 +183,7 @@ let (chk_v_t :
         let uvar_to_string u1 =
           let uu___1 =
             let uu___2 = FStarC_Unionfind.puf_unique_id u1 in
-            FStarC_Util.string_of_int uu___2 in
+            FStarC_Class_Show.show FStarC_Class_Show.showable_int uu___2 in
           Prims.strcat "?" uu___1 in
         let expected = get_version () in
         if
@@ -196,22 +200,22 @@ let (chk_v_t :
                    "Internal error: incompatible version for term unification variable" in
                let uu___5 =
                  let uu___6 = uvar_to_string u in
-                 FStarC_Pprint.doc_of_string uu___6 in
-               FStarC_Pprint.op_Hat_Slash_Hat uu___4 uu___5 in
+                 FStar_Pprint.doc_of_string uu___6 in
+               FStar_Pprint.op_Hat_Slash_Hat uu___4 uu___5 in
              let uu___4 =
                let uu___5 =
                  let uu___6 = FStarC_Errors_Msg.text "Current version: " in
                  let uu___7 =
                    let uu___8 = version_to_string expected in
-                   FStarC_Pprint.doc_of_string uu___8 in
-                 FStarC_Pprint.op_Hat_Slash_Hat uu___6 uu___7 in
+                   FStar_Pprint.doc_of_string uu___8 in
+                 FStar_Pprint.op_Hat_Slash_Hat uu___6 uu___7 in
                let uu___6 =
                  let uu___7 =
                    let uu___8 = FStarC_Errors_Msg.text "Got version: " in
                    let uu___9 =
                      let uu___10 = version_to_string v in
-                     FStarC_Pprint.doc_of_string uu___10 in
-                   FStarC_Pprint.op_Hat_Slash_Hat uu___8 uu___9 in
+                     FStar_Pprint.doc_of_string uu___10 in
+                   FStar_Pprint.op_Hat_Slash_Hat uu___8 uu___9 in
                  [uu___7] in
                uu___5 :: uu___6 in
              uu___3 :: uu___4 in
@@ -227,7 +231,7 @@ let (uvar_unique_id : FStarC_Syntax_Syntax.uvar -> Prims.int) =
   fun u -> let uu___ = chk_v_t u in FStarC_Unionfind.puf_unique_id uu___
 let (fresh :
   FStarC_Syntax_Syntax.uvar_decoration ->
-    FStarC_Range_Type.range -> FStarC_Syntax_Syntax.uvar)
+    FStarC_Range_Type.t -> FStarC_Syntax_Syntax.uvar)
   =
   fun decoration ->
     fun rng ->
@@ -301,7 +305,7 @@ let (get_univ_graph : unit -> ugraph) =
 let chk_v_u :
   'uuuuu .
     ('uuuuu FStarC_Unionfind.p_uvar * FStarC_Syntax_Syntax.version *
-      FStarC_Range_Type.range) -> 'uuuuu FStarC_Unionfind.p_uvar
+      FStarC_Range_Type.t) -> 'uuuuu FStarC_Unionfind.p_uvar
   =
   fun uu___ ->
     match uu___ with
@@ -309,7 +313,7 @@ let chk_v_u :
         let uvar_to_string u1 =
           let uu___1 =
             let uu___2 = FStarC_Unionfind.puf_unique_id u1 in
-            FStarC_Util.string_of_int uu___2 in
+            FStarC_Class_Show.show FStarC_Class_Show.showable_int uu___2 in
           Prims.strcat "?" uu___1 in
         let expected = get_version () in
         if
@@ -326,22 +330,22 @@ let chk_v_u :
                    "Internal error: incompatible version for universe unification variable" in
                let uu___5 =
                  let uu___6 = uvar_to_string u in
-                 FStarC_Pprint.doc_of_string uu___6 in
-               FStarC_Pprint.op_Hat_Slash_Hat uu___4 uu___5 in
+                 FStar_Pprint.doc_of_string uu___6 in
+               FStar_Pprint.op_Hat_Slash_Hat uu___4 uu___5 in
              let uu___4 =
                let uu___5 =
                  let uu___6 = FStarC_Errors_Msg.text "Current version: " in
                  let uu___7 =
                    let uu___8 = version_to_string expected in
-                   FStarC_Pprint.doc_of_string uu___8 in
-                 FStarC_Pprint.op_Hat_Slash_Hat uu___6 uu___7 in
+                   FStar_Pprint.doc_of_string uu___8 in
+                 FStar_Pprint.op_Hat_Slash_Hat uu___6 uu___7 in
                let uu___6 =
                  let uu___7 =
                    let uu___8 = FStarC_Errors_Msg.text "Got version: " in
                    let uu___9 =
                      let uu___10 = version_to_string v in
-                     FStarC_Pprint.doc_of_string uu___10 in
-                   FStarC_Pprint.op_Hat_Slash_Hat uu___8 uu___9 in
+                     FStar_Pprint.doc_of_string uu___10 in
+                   FStar_Pprint.op_Hat_Slash_Hat uu___8 uu___9 in
                  [uu___7] in
                uu___5 :: uu___6 in
              uu___3 :: uu___4 in
@@ -364,8 +368,8 @@ let (univ_uvar_id : FStarC_Syntax_Syntax.universe_uvar -> Prims.int) =
   fun u ->
     let uu___ = get_univ_graph () in
     let uu___1 = chk_v_u u in FStarC_Unionfind.puf_id uu___ uu___1
-let (univ_fresh :
-  FStarC_Range_Type.range -> FStarC_Syntax_Syntax.universe_uvar) =
+let (univ_fresh : FStarC_Range_Type.t -> FStarC_Syntax_Syntax.universe_uvar)
+  =
   fun rng ->
     fail_if_ro ();
     (let uu___1 =

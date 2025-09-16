@@ -28,7 +28,7 @@ module P = FStar.Preorder
 ///
 /// See the `copy_aux` function below for some limitations of the polymonadic bind
 
-#set-options "--max_fuel 0 --max_ifuel 0"
+#set-options "--fuel 0 --ifuel 0"
 
 type pre_t = heap -> Type0
 type post_t (a:Type) = heap -> a -> heap -> Type0

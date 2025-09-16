@@ -17,12 +17,10 @@ module FStarC.Syntax.InstFV
 open FStarC.Effect
 open FStarC.Syntax.Syntax
 open FStarC.Ident
-open FStarC.Util
 open FStarC
 
 module S = FStarC.Syntax.Syntax
 module SS = FStarC.Syntax.Subst
-module U = FStarC.Util
 
 let mk t s = S.mk s t.pos
 
@@ -124,7 +122,7 @@ and inst_decreases_order s = function
 
 and inst_lcomp_opt s l = match l with
     | None -> None
-    | Some rc -> Some ({rc with residual_typ = FStarC.Util.map_opt rc.residual_typ (inst s)})
+    | Some rc -> Some ({rc with residual_typ = Option.map (inst s) rc.residual_typ })
 
 and inst_ascription s (asc:ascription) =
   let annot, topt, use_eq = asc in
@@ -132,14 +130,14 @@ and inst_ascription s (asc:ascription) =
     match annot with
     | Inl t -> Inl (inst s t)
     | Inr c -> Inr (inst_comp s c) in
-  let topt = FStarC.Util.map_opt topt (inst s) in
+  let topt = topt |> Option.map (inst s) in
   annot, topt, use_eq
 
 let instantiate i t = match i with
     | [] -> t
     | _ ->
       let inst_fv (t: term) (fv: S.fv) : term =
-        begin match U.find_opt (fun (x, _) -> lid_equals x fv.fv_name.v) i with
+        begin match Option.find (fun (x, _) -> lid_equals x fv.fv_name) i with
             | None -> t
             | Some (_, us) -> mk t (Tm_uinst(t, us))
         end

@@ -47,7 +47,7 @@ let update : 'a . atom -> 'a -> 'a amap -> 'a amap =
 let rec mdenote :
   'a .
     'a FStar_Algebra_CommMonoid_Equiv.equiv ->
-      ('a, unit) FStar_Algebra_CommMonoid_Equiv.cm -> 'a amap -> exp -> 'a
+      ('a, Obj.t) FStar_Algebra_CommMonoid_Equiv.cm -> 'a amap -> exp -> 'a
   =
   fun eq ->
     fun m ->
@@ -63,7 +63,7 @@ let rec mdenote :
 let rec xsdenote :
   'a .
     'a FStar_Algebra_CommMonoid_Equiv.equiv ->
-      ('a, unit) FStar_Algebra_CommMonoid_Equiv.cm ->
+      ('a, Obj.t) FStar_Algebra_CommMonoid_Equiv.cm ->
         'a amap -> atom Prims.list -> 'a
   =
   fun eq ->

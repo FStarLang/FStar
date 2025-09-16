@@ -15,12 +15,14 @@
 *)
 module FStarC.Reflection.V2.Embeddings
 
+open FStarC
 open FStarC.Effect
 open FStarC.Reflection.V2.Data
 open FStarC.Syntax.Syntax
 open FStarC.Syntax.Embeddings
 open FStar.Order
 open FStarC.Errors
+open FStarC.Class.Show
 
 module BU      = FStarC.Util
 module EMB     = FStarC.Syntax.Embeddings
@@ -31,7 +33,6 @@ module RD      = FStarC.Reflection.V2.Data
 module S       = FStarC.Syntax.Syntax // TODO: remove, it's open
 module SS      = FStarC.Syntax.Subst
 module U       = FStarC.Syntax.Util
-module Z       = FStarC.BigInt
 
 open FStarC.Reflection.V2.Builtins //needed for inspect_fv, but that feels wrong
 open FStarC.Dyn
@@ -85,8 +86,8 @@ let rec mapM_opt (f : ('a -> option 'b)) (l : list 'a) : option (list 'b) =
     match l with
     | [] -> Some []
     | x::xs ->
-        BU.bind_opt (f x) (fun x ->
-        BU.bind_opt (mapM_opt f xs) (fun xs ->
+        Option.bind (f x) (fun x ->
+        Option.bind (mapM_opt f xs) (fun xs ->
         Some (x :: xs)))
 
 let e_term_aq aq =
@@ -99,7 +100,7 @@ let e_term_aq aq =
             let shift, aqs = aq in
             let aqs = List.rev aqs in
             // Try to unembed all antiquotations
-            BU.bind_opt (mapM_opt unembed_term aqs) (fun aq_ts ->
+            Option.bind (mapM_opt unembed_term aqs) (fun aq_ts ->
             // Create a substitution of the DB indices of t for the antiquotations
             (* let n = List.length aq_ts - 1 in *)
             let subst_open, subst =
@@ -207,7 +208,7 @@ let e_vconst =
         | C_False   -> ref_C_False.t
 
         | C_Int i ->
-            S.mk_Tm_app ref_C_Int.t [S.as_arg (U.exp_int (Z.string_of_big_int i))]
+            S.mk_Tm_app ref_C_Int.t [S.as_arg (U.exp_int (show i))]
                         Range.dummyRange
         | C_String s ->
             S.mk_Tm_app ref_C_String.t [S.as_arg (embed rng s)]
@@ -227,6 +228,10 @@ let e_vconst =
             S.mk_Tm_app ref_C_Real.t [S.as_arg (embed rng s)]
                         Range.dummyRange
 
+        | C_Char s ->
+            S.mk_Tm_app ref_C_Char.t [S.as_arg (embed rng s)]
+                        Range.dummyRange
+
         in { r with pos = rng }
     in
     let unembed_const (t:term) : option vconst =
@@ -241,6 +246,7 @@ let e_vconst =
       | _ when S.fv_eq_lid fv ref_C_Reify.lid -> run args (pure C_Reify)
       | _ when S.fv_eq_lid fv ref_C_Reflect.lid -> run args (C_Reflect <$$> e_string_list)
       | _ when S.fv_eq_lid fv ref_C_Real.lid -> run args (C_Real <$$> e_string)
+      | _ when S.fv_eq_lid fv ref_C_Char.lid -> run args (C_Char <$$> e_char)
       | _ -> None
     in
     mk_emb embed_const unembed_const fstar_refl_vconst
@@ -599,17 +605,17 @@ let e_subst_elt =
         let? fv, args = head_fv_and_args t in
         match () with
         | _ when S.fv_eq_lid fv ref_DB.lid ->
-            run args (curry DB <$$> e_fsint <**> e_namedv)
+            run args (curry DB <$$> e_int <**> e_namedv)
         | _ when S.fv_eq_lid fv ref_DT.lid ->
-            run args (curry DT <$$> e_fsint <**> e_term)
+            run args (curry DT <$$> e_int <**> e_term)
         | _ when S.fv_eq_lid fv ref_NM.lid ->
-            run args (curry NM <$$> e_namedv <**> e_fsint)
+            run args (curry NM <$$> e_namedv <**> e_int)
         | _ when S.fv_eq_lid fv ref_NT.lid ->
             run args (curry NT <$$> e_namedv <**> e_term)
         | _ when S.fv_eq_lid fv ref_UN.lid ->
-            run args (curry UN <$$> e_fsint <**> e_universe)
+            run args (curry UN <$$> e_int <**> e_universe)
         | _ when S.fv_eq_lid fv ref_UD.lid ->
-            run args (curry UD <$$> e_ident <**> e_fsint)
+            run args (curry UD <$$> e_ident <**> e_int)
         | _ -> None
     in
     mk_emb ee uu fstar_refl_subst_elt

@@ -323,13 +323,14 @@ let (insert_col_info :
   fun col ->
     fun info ->
       fun col_infos ->
-        let rec __insert aux rest =
-          match rest with
-          | [] -> (aux, [(col, info)])
-          | (c, i)::rest' ->
-              if col < c
-              then (aux, ((col, info) :: rest))
-              else __insert ((c, i) :: aux) rest' in
+        let rec __insert aux =
+          fun rest ->
+            match rest with
+            | [] -> (aux, [(col, info)])
+            | (c, i)::rest' ->
+                if col < c
+                then (aux, ((col, info) :: rest))
+                else __insert ((c, i) :: aux) rest' in
         let uu___ = __insert [] col_infos in
         match uu___ with | (l, r) -> FStarC_List.op_At (FStarC_List.rev l) r
 let (find_nearest_preceding_col_info :
@@ -339,13 +340,14 @@ let (find_nearest_preceding_col_info :
   =
   fun col ->
     fun col_infos ->
-      let rec aux out uu___ =
-        match uu___ with
-        | [] -> out
-        | (c, i)::rest ->
-            if c > col
-            then out
-            else aux (FStar_Pervasives_Native.Some i) rest in
+      let rec aux out =
+        fun uu___ ->
+          match uu___ with
+          | [] -> out
+          | (c, i)::rest ->
+              if c > col
+              then out
+              else aux (FStar_Pervasives_Native.Some i) rest in
       aux FStar_Pervasives_Native.None col_infos
 let (id_info_table_empty : id_info_table) =
   let uu___ = FStarC_PSMap.empty () in
@@ -358,11 +360,11 @@ let (print_identifier_info : identifier_info -> Prims.string) =
       | FStar_Pervasives.Inl x ->
           FStarC_Class_Show.show FStarC_Syntax_Print.showable_bv x
       | FStar_Pervasives.Inr fv ->
-          FStarC_Class_Show.show FStarC_Syntax_Print.showable_fv fv in
+          FStarC_Class_Show.show FStarC_Syntax_Syntax.showable_fv fv in
     let uu___2 =
       FStarC_Class_Show.show FStarC_Syntax_Print.showable_term
         info.identifier_ty in
-    FStarC_Util.format3 "id info { %s, %s : %s}" uu___ uu___1 uu___2
+    FStarC_Format.fmt3 "id info { %s, %s : %s}" uu___ uu___1 uu___2
 let (id_info__insert :
   (FStarC_Syntax_Syntax.typ ->
      FStarC_Syntax_Syntax.typ FStar_Pervasives_Native.option)
@@ -520,7 +522,7 @@ let (check_uvar_ctx_invariant :
                   FStarC_Class_Show.show
                     (FStarC_Class_Show.show_list
                        FStarC_Syntax_Print.showable_binder) bs in
-                FStarC_Util.format5
+                FStarC_Format.fmt5
                   "Invariant violation: gamma and binders are out of sync\n\treason=%s, range=%s, should_check=%s\n\t\n                               gamma=%s\n\tbinders=%s\n"
                   reason uu___2 (if should_check then "true" else "false")
                   uu___3 uu___4 in
@@ -853,7 +855,7 @@ let (lcomp_to_string : lcomp -> Prims.string) =
          FStarC_Class_Show.show FStarC_Ident.showable_lident lc.eff_name in
        let uu___3 =
          FStarC_Class_Show.show FStarC_Syntax_Print.showable_term lc.res_typ in
-       FStarC_Util.format2 "%s %s" uu___2 uu___3)
+       FStarC_Format.fmt2 "%s %s" uu___2 uu___3)
 let (lcomp_set_flags :
   lcomp -> FStarC_Syntax_Syntax.cflag Prims.list -> lcomp) =
   fun lc ->

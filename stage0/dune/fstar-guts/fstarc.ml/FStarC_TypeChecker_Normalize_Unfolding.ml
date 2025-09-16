@@ -1,6 +1,4 @@
 open Prims
-let (plugin_unfold_warn_ctr : Prims.int FStarC_Effect.ref) =
-  FStarC_Effect.mk_ref Prims.int_zero
 type should_unfold_res =
   | Should_unfold_no 
   | Should_unfold_yes 
@@ -61,7 +59,7 @@ let (should_unfold :
             FStarC_TypeChecker_Cfg.log_unfolding cfg
               (fun uu___2 ->
                  let uu___3 =
-                   FStarC_Class_Show.show FStarC_Syntax_Print.showable_fv fv in
+                   FStarC_Class_Show.show FStarC_Syntax_Syntax.showable_fv fv in
                  let uu___4 =
                    let uu___5 =
                      FStarC_TypeChecker_Env.delta_depth_of_fv
@@ -73,7 +71,7 @@ let (should_unfold :
                      (FStarC_Class_Show.show_list
                         FStarC_TypeChecker_Env.showable_delta_level)
                      cfg.FStarC_TypeChecker_Cfg.delta_level in
-                 FStarC_Util.print3
+                 FStarC_Format.print3
                    "should_unfold: Reached a %s with delta_depth = %s\n >> Our delta_level is %s\n"
                    uu___3 uu___4 uu___5);
             (let uu___2 =
@@ -115,23 +113,23 @@ let (should_unfold :
               (FStarC_TypeChecker_Cfg.log_unfolding cfg
                  (fun uu___1 ->
                     let uu___2 =
-                      FStarC_Class_Show.show FStarC_Syntax_Print.showable_fv
+                      FStarC_Class_Show.show FStarC_Syntax_Syntax.showable_fv
                         fv in
                     let uu___3 =
                       FStarC_Class_Show.show FStarC_Class_Show.showable_bool
                         b in
-                    FStarC_Util.print2
+                    FStarC_Format.print2
                       "should_unfold: For DM4F action %s, should_reify = %s\n"
                       uu___2 uu___3);
                if b then reif else no)
             else
               if
                 (let uu___ = FStarC_TypeChecker_Cfg.find_prim_step cfg fv in
-                 FStarC_Option.isSome uu___)
+                 FStar_Pervasives_Native.uu___is_Some uu___)
               then
                 (FStarC_TypeChecker_Cfg.log_unfolding cfg
                    (fun uu___1 ->
-                      FStarC_Util.print_string
+                      FStarC_Format.print_string
                         " >> It's a primop, not unfolding\n");
                  no)
               else
@@ -157,7 +155,7 @@ let (should_unfold :
                      ->
                      (FStarC_TypeChecker_Cfg.log_unfolding cfg
                         (fun uu___11 ->
-                           FStarC_Util.print_string
+                           FStarC_Format.print_string
                              " >> HasMaskedEffect, not unfolding\n");
                       no)
                  | (uu___, true) when
@@ -171,7 +169,7 @@ let (should_unfold :
                      ->
                      (FStarC_TypeChecker_Cfg.log_unfolding cfg
                         (fun uu___2 ->
-                           FStarC_Util.print_string " >> UnfoldOnce\n");
+                           FStarC_Format.print_string " >> UnfoldOnce\n");
                       once)
                  | (FStar_Pervasives_Native.Some
                     (FStar_Pervasives.Inr
@@ -194,7 +192,7 @@ let (should_unfold :
                      ->
                      (FStarC_TypeChecker_Cfg.log_unfolding cfg
                         (fun uu___10 ->
-                           FStarC_Util.print_string
+                           FStarC_Format.print_string
                              " >> Has extract_as attribute and we're extracting, unfold!");
                       yes)
                  | (FStar_Pervasives_Native.Some
@@ -222,7 +220,7 @@ let (should_unfold :
                      ->
                      (FStarC_TypeChecker_Cfg.log_unfolding cfg
                         (fun uu___11 ->
-                           FStarC_Util.print_string
+                           FStarC_Format.print_string
                              " >> It's a recursive definition but we're not doing Zeta, not unfolding\n");
                       no)
                  | (uu___, true) ->
@@ -230,8 +228,8 @@ let (should_unfold :
                         (fun uu___2 ->
                            let uu___3 =
                              FStarC_Class_Show.show
-                               FStarC_Syntax_Print.showable_fv fv in
-                           FStarC_Util.print1
+                               FStarC_Syntax_Syntax.showable_fv fv in
+                           FStarC_Format.print1
                              "should_unfold: Reached a %s with selective unfolding\n"
                              uu___3);
                       (let meets_some_criterion =
@@ -245,9 +243,8 @@ let (should_unfold :
                                    FStarC_TypeChecker_Env.lookup_definition_qninfo
                                      [FStarC_TypeChecker_Env.Eager_unfolding_only;
                                      FStarC_TypeChecker_Env.InliningDelta]
-                                     (fv.FStarC_Syntax_Syntax.fv_name).FStarC_Syntax_Syntax.v
-                                     qninfo in
-                                 FStarC_Option.isSome uu___5 in
+                                     fv.FStarC_Syntax_Syntax.fv_name qninfo in
+                                 FStar_Pervasives_Native.uu___is_Some uu___5 in
                                yesno uu___4
                              else no in
                            let uu___4 =
@@ -341,14 +338,14 @@ let (should_unfold :
                      ->
                      (FStarC_TypeChecker_Cfg.log_unfolding cfg
                         (fun uu___2 ->
-                           FStarC_Util.print_string
+                           FStarC_Format.print_string
                              " >> forbidden by attribute, not unfolding\n");
                       no)
                  | uu___ -> default_unfolding ()) in
           FStarC_TypeChecker_Cfg.log_unfolding cfg
             (fun uu___1 ->
                let uu___2 =
-                 FStarC_Class_Show.show FStarC_Syntax_Print.showable_fv fv in
+                 FStarC_Class_Show.show FStarC_Syntax_Syntax.showable_fv fv in
                let uu___3 =
                  let uu___4 = FStarC_Syntax_Syntax.range_of_fv fv in
                  FStarC_Class_Show.show FStarC_Range_Ops.showable_range
@@ -360,7 +357,7 @@ let (should_unfold :
                       FStarC_Class_Show.showable_bool
                       FStarC_Class_Show.showable_bool
                       FStarC_Class_Show.showable_bool) res in
-               FStarC_Util.print3
+               FStarC_Format.print3
                  "should_unfold: For %s (%s), unfolding res = %s\n" uu___2
                  uu___3 uu___4);
           (let r =
@@ -379,38 +376,7 @@ let (should_unfold :
                           FStarC_Class_Show.showable_bool
                           FStarC_Class_Show.showable_bool
                           FStarC_Class_Show.showable_bool) res in
-                   FStarC_Util.format1 "Unexpected unfolding result: %s"
+                   FStarC_Format.fmt1 "Unexpected unfolding result: %s"
                      uu___3 in
                  failwith uu___2 in
-           (let uu___2 =
-              ((((FStar_Pervasives_Native.uu___is_Some
-                    (cfg.FStarC_TypeChecker_Cfg.steps).FStarC_TypeChecker_Cfg.dont_unfold_attr)
-                   &&
-                   (let uu___3 = FStarC_Options.no_plugins () in
-                    Prims.op_Negation uu___3))
-                  && (r <> Should_unfold_no))
-                 &&
-                 (FStarC_Util.for_some
-                    (FStarC_Syntax_Util.is_fvar
-                       FStarC_Parser_Const.plugin_attr) attrs))
-                &&
-                (let uu___3 = FStarC_Effect.op_Bang plugin_unfold_warn_ctr in
-                 uu___3 > Prims.int_zero) in
-            if uu___2
-            then
-              let msg =
-                let uu___3 =
-                  FStarC_Class_Show.show FStarC_Syntax_Print.showable_fv fv in
-                FStarC_Util.format1
-                  "Unfolding name which is marked as a plugin: %s" uu___3 in
-              (FStarC_Errors.log_issue FStarC_Class_HasRange.hasRange_range
-                 (fv.FStarC_Syntax_Syntax.fv_name).FStarC_Syntax_Syntax.p
-                 FStarC_Errors_Codes.Warning_UnfoldPlugin ()
-                 (Obj.magic FStarC_Errors_Msg.is_error_message_string)
-                 (Obj.magic msg);
-               (let uu___4 =
-                  let uu___5 = FStarC_Effect.op_Bang plugin_unfold_warn_ctr in
-                  uu___5 - Prims.int_one in
-                FStarC_Effect.op_Colon_Equals plugin_unfold_warn_ctr uu___4))
-            else ());
            r)

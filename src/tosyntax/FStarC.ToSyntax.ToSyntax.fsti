@@ -17,7 +17,6 @@ module FStarC.ToSyntax.ToSyntax
 open FStarC.Effect
 
 open FStarC
-open FStarC.Util
 open FStarC.Syntax
 open FStarC.Syntax.Syntax
 open FStarC.Syntax.Util
@@ -37,8 +36,6 @@ val desugar_term:            env -> term -> S.term
 val desugar_machine_integer: env -> repr:string
                            -> (FStarC.Const.signedness & FStarC.Const.width)
                            -> Range.t -> Syntax.term
-val free_vars (tvars_only:bool) (e:env) (t:term) : list ident
-val close:                   env -> term -> term
 
 val ast_modul_to_modul:          AST.modul -> withenv Syntax.modul
 val decls_to_sigelts:            list AST.decl -> withenv sigelts

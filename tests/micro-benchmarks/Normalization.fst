@@ -14,7 +14,7 @@
    limitations under the License.
 *)
 module Normalization
-#set-options "--initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0"
+#set-options "--fuel 0 --ifuel 0"
 
 val test : unit -> Lemma (FStar.List.Tot.length [1;2;3;1;2;3;1;2;3;1;2;3;1;2;3;1;2;3] == 18)
 let test _ = assert_norm (FStar.List.Tot.length [1;2;3;1;2;3;1;2;3;1;2;3;1;2;3;1;2;3] == 18)

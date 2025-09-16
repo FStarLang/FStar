@@ -446,13 +446,14 @@ let (__proj__Mkfsteps__item__tactics : fsteps -> Prims.bool) =
         tactics
 let (steps_to_string : fsteps -> Prims.string) =
   fun f ->
-    let format_opt f1 o =
-      match o with
-      | FStar_Pervasives_Native.None -> "None"
-      | FStar_Pervasives_Native.Some x ->
-          let uu___ = let uu___1 = f1 x in FStarC_String.op_Hat uu___1 ")" in
-          FStarC_String.op_Hat "Some (" uu___ in
-    let b = FStarC_Util.string_of_bool in
+    let format_opt f1 =
+      fun o ->
+        match o with
+        | FStar_Pervasives_Native.None -> "None"
+        | FStar_Pervasives_Native.Some x ->
+            let uu___ = let uu___1 = f1 x in FStarC_String.op_Hat uu___1 ")" in
+            FStarC_String.op_Hat "Some (" uu___ in
+    let b = Prims.string_of_bool in
     let uu___ =
       let uu___1 =
         FStarC_Class_Show.show FStarC_Class_Show.showable_bool f.beta in
@@ -660,7 +661,7 @@ let (steps_to_string : fsteps -> Prims.string) =
           uu___5 :: uu___6 in
         uu___3 :: uu___4 in
       uu___1 :: uu___2 in
-    FStarC_Util.format
+    FStarC_Format.fmt
       "{\nbeta = %s;\niota = %s;\nzeta = %s;\nzeta_full = %s;\nweak = %s;\nhnf  = %s;\nprimops = %s;\ndo_not_unfold_pure_lets = %s;\nunfold_until = %s;\nunfold_only = %s;\nunfold_once = %s;\nunfold_fully = %s;\nunfold_attr = %s;\nunfold_qual = %s;\nunfold_namespace = %s;\ndont_unfold_attr = %s;\npure_subterms_within_computations = %s;\nsimplify = %s;\nerase_universes = %s;\nallow_unbound_universes = %s;\nreify_ = %s;\ncompress_uvars = %s;\nno_full_norm = %s;\ncheck_no_uvars = %s;\nunmeta = %s;\nunascribe = %s;\nin_full_norm_request = %s;\nweakly_reduce_scrutinee = %s;\nfor_extraction = %s;\nunrefine = %s;\ndefault_univs_to_zero = %s;\ntactics = %s;\n}"
       uu___
 let (deq_fsteps : fsteps FStarC_Class_Deq.deq) =
@@ -2410,7 +2411,7 @@ let (showable_cfg : cfg FStarC_Class_Show.showable) =
            let uu___1 =
              let uu___2 =
                let uu___3 = steps_to_string cfg1.steps in
-               FStarC_Util.format1 "  steps = %s;" uu___3 in
+               FStarC_Format.fmt1 "  steps = %s;" uu___3 in
              let uu___3 =
                let uu___4 =
                  let uu___5 =
@@ -2418,7 +2419,7 @@ let (showable_cfg : cfg FStarC_Class_Show.showable) =
                      (FStarC_Class_Show.show_list
                         FStarC_TypeChecker_Env.showable_delta_level)
                      cfg1.delta_level in
-                 FStarC_Util.format1 "  delta_level = %s;" uu___5 in
+                 FStarC_Format.fmt1 "  delta_level = %s;" uu___5 in
                [uu___4; "}"] in
              uu___2 :: uu___3 in
            "{" :: uu___1 in
@@ -2433,19 +2434,16 @@ let (find_prim_step :
   =
   fun cfg1 ->
     fun fv ->
-      let uu___ =
-        FStarC_Ident.string_of_lid
-          (fv.FStarC_Syntax_Syntax.fv_name).FStarC_Syntax_Syntax.v in
+      let uu___ = FStarC_Ident.string_of_lid fv.FStarC_Syntax_Syntax.fv_name in
       FStarC_PSMap.try_find cfg1.primitive_steps uu___
 let (is_prim_step : cfg -> FStarC_Syntax_Syntax.fv -> Prims.bool) =
   fun cfg1 ->
     fun fv ->
       let uu___ =
         let uu___1 =
-          FStarC_Ident.string_of_lid
-            (fv.FStarC_Syntax_Syntax.fv_name).FStarC_Syntax_Syntax.v in
+          FStarC_Ident.string_of_lid fv.FStarC_Syntax_Syntax.fv_name in
         FStarC_PSMap.try_find cfg1.primitive_steps uu___1 in
-      FStarC_Util.is_some uu___
+      FStar_Pervasives_Native.uu___is_Some uu___
 let (log : cfg -> (unit -> unit) -> unit) =
   fun cfg1 -> fun f -> if (cfg1.debug).gen then f () else ()
 let (log_top : cfg -> (unit -> unit) -> unit) =
@@ -2502,10 +2500,10 @@ let (primop_time_report : unit -> Prims.string) =
                let uu___2 =
                  let uu___3 =
                    let uu___4 =
-                     FStarC_Util.string_of_int
+                     FStarC_Class_Show.show FStarC_Class_Show.showable_int
                        (ns / (Prims.parse_int "1000000")) in
                    fixto (Prims.of_int (10)) uu___4 in
-                 FStarC_Util.format2 "%sms --- %s\n" uu___3 nm in
+                 FStarC_Format.fmt2 "%sms --- %s\n" uu___3 nm in
                FStarC_String.op_Hat uu___2 rest) pairs1 ""
 let (extendable_primops_dirty : Prims.bool FStarC_Effect.ref) =
   FStarC_Effect.mk_ref true
@@ -2733,21 +2731,28 @@ let (should_reduce_local_let :
          if uu___1
          then true
          else
-           (let n =
-              FStarC_TypeChecker_Env.norm_eff_name cfg1.tcenv
-                lb.FStarC_Syntax_Syntax.lbeff in
-            let uu___3 =
-              (FStarC_Syntax_Util.is_pure_effect n) &&
-                (cfg1.normalize_pure_lets ||
-                   (FStarC_Syntax_Util.has_attribute
-                      lb.FStarC_Syntax_Syntax.lbattrs
-                      FStarC_Parser_Const.inline_let_attr)) in
+           (let uu___3 =
+              FStarC_Syntax_Util.has_attribute
+                lb.FStarC_Syntax_Syntax.lbattrs
+                FStarC_Parser_Const.no_inline_let_attr in
             if uu___3
-            then true
+            then false
             else
-              (FStarC_Syntax_Util.is_ghost_effect n) &&
-                (Prims.op_Negation
-                   (cfg1.steps).pure_subterms_within_computations)))
+              (let n =
+                 FStarC_TypeChecker_Env.norm_eff_name cfg1.tcenv
+                   lb.FStarC_Syntax_Syntax.lbeff in
+               let uu___5 =
+                 (FStarC_Syntax_Util.is_pure_effect n) &&
+                   (cfg1.normalize_pure_lets ||
+                      (FStarC_Syntax_Util.has_attribute
+                         lb.FStarC_Syntax_Syntax.lbattrs
+                         FStarC_Parser_Const.inline_let_attr)) in
+               if uu___5
+               then true
+               else
+                 (FStarC_Syntax_Util.is_ghost_effect n) &&
+                   (Prims.op_Negation
+                      (cfg1.steps).pure_subterms_within_computations))))
 let (translate_norm_step :
   FStarC_NormSteps.norm_step -> FStarC_TypeChecker_Env.step Prims.list) =
   fun uu___ ->
@@ -2817,12 +2822,13 @@ let (translate_norm_steps :
   =
   fun s ->
     let s1 = FStarC_List.concatMap translate_norm_step s in
-    let add_exclude s2 z =
-      let uu___ =
-        FStarC_Util.for_some
-          (FStarC_Class_Deq.op_Equals_Question
-             FStarC_TypeChecker_Env.deq_step z) s2 in
-      if uu___ then s2 else (FStarC_TypeChecker_Env.Exclude z) :: s2 in
+    let add_exclude s2 =
+      fun z ->
+        let uu___ =
+          FStarC_Util.for_some
+            (FStarC_Class_Deq.op_Equals_Question
+               FStarC_TypeChecker_Env.deq_step z) s2 in
+        if uu___ then s2 else (FStarC_TypeChecker_Env.Exclude z) :: s2 in
     let s2 = FStarC_TypeChecker_Env.Beta :: s1 in
     let s3 = add_exclude s2 FStarC_TypeChecker_Env.Zeta in
     let s4 = add_exclude s3 FStarC_TypeChecker_Env.Iota in s4

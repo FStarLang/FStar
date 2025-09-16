@@ -88,7 +88,7 @@ let head_normal env t =
     | Tm_abs _
     | Tm_constant _ -> true
     | Tm_fvar fv
-    | Tm_app {hd={n=Tm_fvar fv}} -> Env.lookup_definition [Env.Eager_unfolding_only] env.tcenv fv.fv_name.v |> Option.isNone
+    | Tm_app {hd={n=Tm_fvar fv}} -> Env.lookup_definition [Env.Eager_unfolding_only] env.tcenv fv.fv_name |> None?
     | _ -> false
 
 let head_redex env t =
@@ -100,7 +100,7 @@ let head_redex env t =
 
     | Tm_uinst({n=Tm_fvar fv}, _)
     | Tm_fvar fv ->
-      Env.lookup_definition [Env.Eager_unfolding_only] env.tcenv fv.fv_name.v |> Option.isSome
+      Env.lookup_definition [Env.Eager_unfolding_only] env.tcenv fv.fv_name |> Some?
 
     | _ -> false
 
@@ -154,7 +154,7 @@ let mk_Apply e (vars:fvs) =
 let mk_Apply_args e args = args |> List.fold_left mk_ApplyTT e
 let raise_arity_mismatch head arity n_args rng =
     Errors.raise_error rng Errors.Fatal_SMTEncodingArityMismatch
-      (BU.format3 "Head symbol %s expects at least %s arguments; got only %s"
+      (Format.fmt3 "Head symbol %s expects at least %s arguments; got only %s"
               head
               (show arity)
               (show n_args))
@@ -228,12 +228,12 @@ let check_pattern_vars env vars pats =
     | [] -> ()
     | hd::tl ->
         let pat_vars = List.fold_left (fun out x -> union out (Free.names x)) (Free.names hd) tl in
-        match vars |> BU.find_opt (fun ({binder_bv=b}) -> not (mem b pat_vars)) with
+        match vars |> Option.find (fun ({binder_bv=b}) -> not (mem b pat_vars)) with
         | None -> ()
         | Some ({binder_bv=x}) ->
         let pos = List.fold_left (fun out t -> Range.union_ranges out t.pos) hd.pos tl in
         Errors.log_issue pos Errors.Warning_SMTPatternIllFormed
-          (BU.format1 "SMT pattern misses at least one bound variable: %s" (show x))
+          (Format.fmt1 "SMT pattern misses at least one bound variable: %s" (show x))
 
 (*  </Utilities> *)
 
@@ -274,7 +274,7 @@ let as_function_typ env t0 =
             | Tm_refine _ -> aux true (U.unrefine t)
             | _ -> if norm
                    then aux false (whnf env t)
-                   else failwith (BU.format2 "(%s) Expected a function typ; got %s" (Range.string_of_range t0.pos) (show t0))
+                   else failwith (Format.fmt2 "(%s) Expected a function typ; got %s" (Range.string_of_range t0.pos) (show t0))
     in aux true t0
 
 let rec curried_arrow_formals_comp k =
@@ -389,7 +389,7 @@ let rec encode_const c env =
     | Const_range _ -> mk_Range_const (), []
     | Const_effect -> mk_Term_type mk_U_zero, []
     | Const_real r -> boxReal (mkReal r), []
-    | c -> failwith (BU.format1 "Unhandled constant: %s" (show c))
+    | c -> failwith (Format.fmt1 "Unhandled constant: %s" (show c))
   )
 and encode_binders (fuel_opt:option term) (bs:Syntax.binders) (env:env_t) :
                             (list fv                       (* translated bound variables *)
@@ -398,7 +398,7 @@ and encode_binders (fuel_opt:option term) (bs:Syntax.binders) (env:env_t) :
                             & decls_t                       (* top-level decls to be emitted *)
                             & list bv)                     (* names *) =
 
-    if Debug.medium () then BU.print1 "Encoding binders %s\n" (show bs);
+    if Debug.medium () then Format.print1 "Encoding binders %s\n" (show bs);
 
     let vars, guards, env, decls, names =
       bs |> List.fold_left
@@ -485,7 +485,7 @@ and encode_arith_term env head args_e =
     in
     let _, op =
         List.tryFind (fun (l, _) -> S.fv_eq_lid head_fv l) ops |>
-        BU.must
+        Some?.v
     in
     op arg_tms, decls
 
@@ -494,7 +494,7 @@ and encode_arith_term env head args_e =
       we do not want to encode this*)
     let (tm_sz, _) : arg = List.hd args_e in
     let sz = getInteger tm_sz.n in
-    let sz_key = FStarC.Util.format1 "BitVector_%s" (string_of_int sz) in
+    let sz_key = FStarC.Format.fmt1 "BitVector_%s" (show sz) in
     let sz_decls =
       let t_decls, constr_name, discriminator_name = mkBvConstructor sz in
       //Typing inversion for bv_t n
@@ -526,7 +526,7 @@ and encode_arith_term env head args_e =
         | Tm_fvar fv, [_;(sz_arg, _);_] when
             (S.fv_eq_lid fv Const.bv_uext_lid) ->
             (*fail if extension size is not a constant*)
-            failwith (FStarC.Util.format1 "Not a constant bitvector extend size: %s"
+            failwith (FStarC.Format.fmt1 "Not a constant bitvector extend size: %s"
                             (show sz_arg))
         | _  -> (List.tail args_e, None)
     in
@@ -602,7 +602,7 @@ and encode_arith_term env head args_e =
     in
     let _, op =
         List.tryFind (fun (l, _) -> S.fv_eq_lid head_fv l) ops |>
-        BU.must
+        Some?.v
     in
     op arg_tms, sz_decls @ decls
 
@@ -645,11 +645,11 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
     let t = SS.compress t in
     let t0 = t in
     if !dbg_SMTEncoding
-    then BU.print2 "(%s)   %s\n" (tag_of t) (show t);
+    then Format.print2 "(%s)   %s\n" (tag_of t) (show t);
     match t.n with
       | Tm_delayed  _
       | Tm_unknown    ->
-        failwith (BU.format3 "(%s) Impossible: %s\n%s\n"
+        failwith (Format.fmt3 "(%s) Impossible: %s\n%s\n"
                              (Range.string_of_range <| t.pos)
                              (tag_of t)
                              (show t))
@@ -657,12 +657,12 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
       | Tm_lazy i ->
         let e = U.unfold_lazy i in
         if !dbg_SMTEncoding then
-            BU.print2 ">> Unfolded (%s) ~> (%s)\n" (show t)
+            Format.print2 ">> Unfolded (%s) ~> (%s)\n" (show t)
                                                    (show e);
         encode_term e env
 
       | Tm_bvar x ->
-        failwith (BU.format1 "Impossible: locally nameless; got %s" (show x))
+        failwith (Format.fmt1 "Impossible: locally nameless; got %s" (show x))
 
       | Tm_ascribed {tm=t; asc=(k,_,_)} ->
         if (match k with Inl t -> U.is_unit t | _ -> false)
@@ -677,7 +677,7 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
         // Actual encoding: `q ~> pack qv where qv is the view of q
         let tv = EMB.embed (R.inspect_ln qt) t.pos None EMB.id_norm_cb in
         if !dbg_SMTEncoding then
-            BU.print2 ">> Inspected (%s) ~> (%s)\n" (show t0)
+            Format.print2 ">> Inspected (%s) ~> (%s)\n" (show t0)
                                                     (show tv);
         let t = U.mk_app (RC.refl_constant_term RC.fstar_refl_pack_ln) [S.as_arg tv] in
         encode_term t env
@@ -742,7 +742,7 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
             | App(Var "ApplyTF", [{tm=App(Var tok, [])}; fuel]), us -> // when Some? fvb.needs_universe_instantiations -> 
               true, mkApp("ApplyTF", [mkApp (tok, us); fuel])
             | App(op, _::_), _::_ ->
-              failwith (BU.format1 "Impossible: Universe applications cannot be curried: head is %s" (show tok))
+              failwith (Format.fmt1 "Impossible: Universe applications cannot be curried: head is %s" (show tok))
             | FreeV _, [] -> 
               true, tok
             | App(op, []), us ->
@@ -1043,7 +1043,7 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
         let tkey_hash = Term.hash_of_term tkey in
 
         if !dbg_SMTEncoding
-        then BU.print3 "Encoding Tm_refine %s with tkey_hash %s and digest %s\n"
+        then Format.print3 "Encoding Tm_refine %s with tkey_hash %s and digest %s\n"
                (show f) tkey_hash (BU.digest_of_string tkey_hash)
         else ();
 
@@ -1091,8 +1091,8 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
             Util.mkAssume(t_has_k,
                           Some "Uvar typing",
                           varops.mk_unique
-                            (BU.format1 "uvar_typing_%s"
-                                        (BU.string_of_int
+                            (Format.fmt1 "uvar_typing_%s"
+                                        (show
                                             (Unionfind.uvar_id uv.ctx_uvar_head))))
         in
         ttm, decls@([d] |> mk_decls_trivial)
@@ -1119,7 +1119,7 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
             when
              (S.fv_eq_lid fv Const.squash_lid
               || S.fv_eq_lid fv Const.auto_squash_lid)
-              && Option.isSome (Syntax.Formula.destruct_typ_as_formula arg) ->
+              && Some? (Syntax.Formula.destruct_typ_as_formula arg) ->
           let dummy = S.new_bv None t_unit in
           let t = U.refine dummy arg in (* so that `squash f`, when f is a formula, benefits from shallow embedding *)
           encode_term t env
@@ -1162,7 +1162,7 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
             let e0 = TcUtil.norm_reify env.tcenv []
               (U.mk_reify (args_e |> List.hd |> fst) lopt) in
             if !dbg_SMTEncodingReify
-            then BU.print1 "Result of normalization %s\n" (show e0);
+            then Format.print1 "Result of normalization %s\n" (show e0);
             let e = S.mk_Tm_app (TcUtil.remove_reify e0) (List.tl args_e) t0.pos in
             encode_term e env)
 
@@ -1189,7 +1189,7 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
                 | _ when 1=1 -> app_tm, decls@decls' //NS: Intentionally using a default case here to disable the axiom below
                 | Some (head_type, formals, c) ->
                     if !dbg_PartialApp
-                    then BU.print5 "Encoding partial application:\n\thead=%s\n\thead_type=%s\n\tformals=%s\n\tcomp=%s\n\tactual args=%s\n"
+                    then Format.print5 "Encoding partial application:\n\thead=%s\n\thead_type=%s\n\tformals=%s\n\tcomp=%s\n\tactual args=%s\n"
                              (show head)
                              (show head_type)
                              (show formals)
@@ -1199,7 +1199,7 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
                     let subst = List.map2 (fun ({binder_bv=bv}) (a, _) -> Syntax.NT(bv, a)) formals args_e in
                     let ty = U.arrow rest c |> SS.subst subst in
                     if !dbg_PartialApp
-                    then BU.print1 "Encoding partial application, after subst:\n\tty=%s\n"
+                    then Format.print1 "Encoding partial application, after subst:\n\tty=%s\n"
                             (show ty);
                     let vars, pattern, has_type, decls'' =
                       let t_hyps, decls =
@@ -1207,7 +1207,7 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
                           let t = SS.subst subst bv.sort in
                           let t_hyp, decls' = encode_term_pred None t env e in
                           if !dbg_PartialApp
-                          then BU.print2 "Encoded typing hypothesis for %s ... got %s\n"
+                          then Format.print2 "Encoded typing hypothesis for %s ... got %s\n"
                                          (show t)
                                          (Term.print_smt_term t_hyp);
                           t_hyp::t_hyps, decls@decls')
@@ -1236,7 +1236,7 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
                         then [has_type_conclusion], cvars
                         else begin
                           Errors.log_issue t0 Errors.Warning_SMTPatternIllFormed
-                             (BU.format1 "No SMT pattern for partial application %s" (show t0));
+                             (Format.fmt1 "No SMT pattern for partial application %s" (show t0));
                           [], cvars //no pattern!
                         end
                       in
@@ -1246,7 +1246,7 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
                       decls@decls'@decls''
                     in
                     if !dbg_PartialApp
-                    then BU.print1 "Encoding partial application, after SMT encoded predicate:\n\t=%s\n"
+                    then Format.print1 "Encoding partial application, after SMT encoded predicate:\n\t=%s\n"
                             (Term.print_smt_term has_type);
                     let tkey_hash = Term.hash_of_term app_tm in
                     let e_typing = Util.mkAssume(mkForall t0.pos ([pattern], vars, has_type),
@@ -1278,7 +1278,7 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
                 | Tm_uinst({n=Tm_name x}, _)
                 | Tm_name x -> Some x.sort
                 | Tm_uinst({n=Tm_fvar fv}, _)
-                | Tm_fvar fv -> Some (Env.lookup_lid env.tcenv fv.fv_name.v |> fst |> snd)
+                | Tm_fvar fv -> Some (Env.lookup_lid env.tcenv fv.fv_name |> fst |> snd)
                 | Tm_ascribed {asc=(Inl t, _, _)} -> Some t
                 | Tm_ascribed {asc=(Inr c, _, _)} -> Some (U.comp_result c)
                 | _ -> None
@@ -1303,7 +1303,7 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
                   else head_type, formals, c
                 in
                 if !dbg_PartialApp
-                then BU.print3 "Encoding partial application, head_type = %s, formals = %s, args = %s\n"
+                then Format.print3 "Encoding partial application, head_type = %s, formals = %s, args = %s\n"
                             (show head_type)
                             (show formals)
                             (show args_e);
@@ -1428,7 +1428,7 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
                 let tkey = mkForall t0.pos ([], cvars, key_body) in
                 let tkey_hash = Term.hash_of_term tkey in
                 if !dbg_PartialApp
-                then BU.print2 "Checking eta expansion of\n\tvars={%s}\n\tbody=%s\n"
+                then Format.print2 "Checking eta expansion of\n\tvars={%s}\n\tbody=%s\n"
                        (List.map fv_name vars |> String.concat ", ")
                        (print_smt_term body);
                 let cvar_sorts = List.map fv_sort cvars in
@@ -1474,7 +1474,7 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
       | Tm_let {lbs=(_, lbs)} ->
         let names = lbs |> List.map (fun lb ->
                                         let {lbname = lbname} = lb in
-                                        let x = BU.left lbname in (* has to be Inl *)
+                                        let x = Inl?.v lbname in (* has to be Inl *)
                                         (Ident.string_of_id x.ppname, S.range_of_bv x)) in
         raise (Inner_let_rec names)
 
@@ -1521,7 +1521,7 @@ and encode_match (e:S.term) (pats:list S.branch) (default_case:term) (env:env_t)
     mkLet' ([mk_fv (scrsym,Term_sort), scr], match_tm) Range.dummyRange, decls
 
 and encode_pat (env:env_t) (pat:S.pat) : (env_t & pattern) =
-    if Debug.medium () then BU.print1 "Encoding pattern %s\n" (show pat);
+    if Debug.medium () then Format.print1 "Encoding pattern %s\n" (show pat);
     let vars, pat_term = FStarC.TypeChecker.Util.decorated_pattern_as_term pat in
 
     let env, vars = vars |> List.fold_left (fun (env, vars) v ->
@@ -1538,13 +1538,13 @@ and encode_pat (env:env_t) (pat:S.pat) : (env_t & pattern) =
             mkEq(scrutinee, tm)
         | Pat_cons(f, _, args) ->
             let is_f =
-                let tc_name = Env.typ_of_datacon env.tcenv f.fv_name.v in
+                let tc_name = Env.typ_of_datacon env.tcenv f.fv_name in
                 match Env.datacons_of_typ env.tcenv tc_name with
                 | _, [_] -> mkTrue //single constructor type; no need for a test
-                | _ -> mk_data_tester env f.fv_name.v scrutinee
+                | _ -> mk_data_tester env f.fv_name scrutinee
             in
             let sub_term_guards = args |> List.mapi (fun i (arg, _) ->
-                let proj = primitive_projector_by_pos env.tcenv f.fv_name.v i in
+                let proj = primitive_projector_by_pos env.tcenv f.fv_name i in
                 mk_guard arg (mkApp(proj, [scrutinee]))) in //arity ok, primitive projector (#1383)
             mk_and_l (is_f::sub_term_guards)
     in
@@ -1559,7 +1559,7 @@ and encode_pat (env:env_t) (pat:S.pat) : (env_t & pattern) =
         | Pat_cons(f, _, args) ->
             args
             |> List.mapi (fun i (arg, _) ->
-                let proj = primitive_projector_by_pos env.tcenv f.fv_name.v i in
+                let proj = primitive_projector_by_pos env.tcenv f.fv_name i in
                 mk_projections arg (mkApp(proj, [scrutinee]))) //arity ok, primitive projector (#1383)
             |> List.flatten
     in
@@ -1606,7 +1606,7 @@ and encode_smt_patterns (pats_l:list (list S.arg)) env : list (list term) & decl
                       t::pats, d@decls
                     | Some illegal_subterm ->
                       Errors.log_issue p Errors.Warning_SMTPatternIllFormed
-                        (BU.format2 "Pattern %s contains illegal sub-term (%s); dropping it"
+                        (Format.fmt2 "Pattern %s contains illegal sub-term (%s); dropping it"
                                         (show p)
                                         (show illegal_subterm));
                          pats, d@decls)
@@ -1618,7 +1618,7 @@ and encode_smt_patterns (pats_l:list (list S.arg)) env : list (list term) & decl
 and encode_formula (phi:typ) (env:env_t) : (term & decls_t)  = (* expects phi to be normalized; the existential variables are all labels *)
     let debug phi =
        if !dbg_SMTEncoding
-       then BU.print2 "Formula (%s)  %s\n"
+       then Format.print2 "Formula (%s)  %s\n"
                      (tag_of phi)
                      (show phi) in
     let enc (f:list term -> term) : Range.t -> args -> (term & decls_t) = fun r l ->
@@ -1645,7 +1645,7 @@ and encode_formula (phi:typ) (env:env_t) : (term & decls_t)  = (* expects phi to
     let eq_op r args : (term & decls_t) =
         let rf = List.filter (fun (a,q) -> match q with | Some ({ aqual_implicit = true }) -> false | _ -> true) args in
         if List.length rf <> 2
-        then failwith (BU.format1 "eq_op: got %s non-implicit arguments instead of 2?" (string_of_int (List.length rf)))
+        then failwith (Format.fmt1 "eq_op: got %s non-implicit arguments instead of 2?" (show (List.length rf)))
         else enc (bin_op mkEq) r rf
     in
 

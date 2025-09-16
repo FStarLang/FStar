@@ -277,7 +277,7 @@ let shiftRows state =
   state.(i+^ 8ul) <- state.(i+^ 4ul);
   state.(i+^ 4ul) <- tmp
 
-#reset-options "--z3rlimit 50 --initial_fuel 0 --max_fuel 0"
+#reset-options "--z3rlimit 50 --fuel 0"
 
 val mixColumns_: state:block -> c:UInt32.t{v c < 4} -> STL unit
   (requires (fun h -> live h state))
@@ -293,7 +293,7 @@ let mixColumns_ state c =
   s.(2ul) <- H8.(multiply 0x2uy s2 ^^ multiply 0x3uy s3 ^^ s0 ^^ s1);
   s.(3ul) <- H8.(multiply 0x2uy s3 ^^ multiply 0x3uy s0 ^^ s1 ^^ s2)
 
-#reset-options "--initial_fuel 0 --max_fuel 0"
+#reset-options "--fuel 0"
 
 val mixColumns: state:block -> STL unit
   (requires (fun h -> live h state))
@@ -304,7 +304,7 @@ let mixColumns state =
   mixColumns_ state 2ul;
   mixColumns_ state 3ul
 
-#reset-options "--z3rlimit 10 --initial_fuel 0 --max_fuel 0"
+#reset-options "--z3rlimit 10 --fuel 0"
 
 val addRoundKey_: state:block -> w:xkey{disjoint state w} -> rnd -> c:UInt32.t{v c < 4} -> STL unit
   (requires (fun h -> live h state /\ live h w))
@@ -342,7 +342,7 @@ let rec cipher_loop state w sbox round =
     cipher_loop   state w sbox (round+^1ul)
   end
 
-#reset-options "--initial_fuel 0 --max_fuel 0 --z3rlimit 20"
+#reset-options "--fuel 0 --z3rlimit 20"
 
 val cipher: out:block -> input:block -> w:xkey -> sb:sbox -> STL unit
   (requires (fun h -> live h out /\ live h input /\ live h w /\ live h sb /\
@@ -395,7 +395,7 @@ let rec rcon i tmp =
     rcon (U32.(i-^1ul)) tmp
   end
 
-#reset-options "--z3rlimit 100 --initial_fuel 0 --max_fuel 0"
+#reset-options "--z3rlimit 100 --fuel 0"
 
 val keyExpansion_aux_0:w:xkey -> temp:lbytes 4 -> sbox:sbox -> i:UInt32.t{v i < (v xkeylen / 4) /\ v i >= v nk} -> STL unit
   (requires (fun h -> live h w /\ live h temp /\ live h sbox /\
@@ -416,7 +416,7 @@ let keyExpansion_aux_0 w temp sbox j =
     subWord temp sbox
 
 
-#reset-options "--z3rlimit 50 --initial_fuel 0 --max_fuel 0"
+#reset-options "--z3rlimit 50 --fuel 0"
 
 val keyExpansion_aux_1: w:xkey -> temp:lbytes 4 -> sbox:sbox -> i:UInt32.t{v i < (v xkeylen / 4) /\ v i >= v nk} -> STL unit
   (requires (fun h -> live h w /\ live h temp /\ live h sbox
@@ -511,7 +511,7 @@ let invShiftRows state =
   state.(i+^8ul)  <- state.(i+^4ul);
   state.(i+^4ul)  <- tmp
 
-#reset-options "--z3rlimit 100 --initial_fuel 0 --max_fuel 0"
+#reset-options "--z3rlimit 100 --fuel 0"
 
 val invMixColumns_: state:block -> c:UInt32.t{v c < 4} -> STL unit
   (requires (fun h -> live h state))
@@ -528,7 +528,7 @@ let invMixColumns_ state c =
   s.(2ul) <- mix s2 s3 s0 s1;
   s.(3ul) <- mix s3 s0 s1 s2
 
-#reset-options "--initial_fuel 0 --max_fuel 0"
+#reset-options "--fuel 0"
 
 val invMixColumns: state:block -> STL unit
   (requires (fun h -> live h state))
@@ -553,7 +553,7 @@ let rec inv_cipher_loop state w sbox round =
     inv_cipher_loop state w sbox (round -^ 1ul)
   end
 
-#reset-options "--initial_fuel 0 --max_fuel 0 --z3rlimit 100"
+#reset-options "--fuel 0 --z3rlimit 100"
 
 val inv_cipher: out:block -> input:block -> w:xkey -> sb:sbox -> STL unit
   (requires (fun h -> live h out /\ live h input /\ live h w /\ live h sb /\

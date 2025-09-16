@@ -52,29 +52,6 @@ let lte (a:uint8) (b:uint8) : bool =  a <= b
 let gte_mask (a:uint8) (b:uint8) : uint8 = if a >= b then 255 else 0
 let eq_mask (a:uint8) (b:uint8) : uint8 = if a = b then 255 else 0
                                              
-(* Infix notations *)
-let op_Plus_Hat = add
-let op_Plus_Question_Hat = add_underspec
-let op_Plus_Percent_Hat = add_mod
-let op_Subtraction_Hat = sub
-let op_Subtraction_Question_Hat = sub_underspec
-let op_Subtraction_Percent_Hat = sub_mod
-let op_Star_Hat = mul
-let op_Star_Question_Hat = mul_underspec
-let op_Star_Percent_Hat = mul_mod
-let op_Slash_Hat = div
-let op_Percent_Hat = rem
-let op_Hat_Hat = logxor  
-let op_Amp_Hat = logand
-let op_Bar_Hat = logor
-let op_Less_Less_Hat = shift_left
-let op_Greater_Greater_Hat = shift_right
-let op_Equals_Hat = eq
-let op_Greater_Hat = gt
-let op_Greater_Equals_Hat = gte
-let op_Less_Hat = lt
-let op_Less_Equals_Hat = lte
-
 let of_string s = int_of_string s
 let to_string s = string_of_int s
 let to_string_hex s = Printf.sprintf "0x%x" s

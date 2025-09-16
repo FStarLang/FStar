@@ -36,7 +36,13 @@ let (gen' : Prims.string -> FStarC_Range_Type.range -> ident) =
   fun s ->
     fun r ->
       let i = FStarC_GenSym.next_id () in
-      mk_ident ((Prims.strcat s (Prims.string_of_int i)), r)
+      let uu___ =
+        let uu___1 =
+          let uu___2 =
+            FStarC_Class_Show.show FStarC_Class_Show.showable_int i in
+          Prims.strcat s uu___2 in
+        (uu___1, r) in
+      mk_ident uu___
 let (gen : FStarC_Range_Type.range -> ident) =
   fun r -> gen' reserved_prefix r
 let (ident_of_lid : lident -> ident) = fun l -> l.ident
@@ -69,6 +75,7 @@ let (lid_of_ns_and_id : ipath -> ident -> lident) =
            then id.idText
            else Prims.strcat nsstr (Prims.strcat "." id.idText))
       }
+let (id_as_lid : ident -> lident) = fun id -> lid_of_ns_and_id [] id
 let (lid_of_ids : ipath -> lident) =
   fun ids ->
     let uu___ = FStarC_Util.prefix ids in

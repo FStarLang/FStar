@@ -34,7 +34,7 @@ open Crypto.Symmetric.Poly1305.Bignum.Lemmas.Part2
 
 
 
-#reset-options "--z3rlimit 5 --initial_fuel 0 --max_fuel 0"
+#reset-options "--z3rlimit 5 --fuel 0"
 
 val lemma_div_def: a:nat -> b:pos -> Lemma (a = b * (a / b) + a % b)
 let lemma_div_def a b = ()
@@ -50,14 +50,14 @@ let lemma_modulo_add a b p =
   lemma_mod_plus_distr_l a b p
 
 
-#reset-options "--initial_fuel 0 --max_fuel 0 --z3rlimit 20"
+#reset-options "--fuel 0 --z3rlimit 20"
 
 val lemma_2_130_modulo_prime: unit -> Lemma (pow2 130 % (pow2 130 - 5) = 5)
 let lemma_2_130_modulo_prime () =
   assert_norm(pow2 130 > 5);
   assert_norm(pow2 130 % (pow2 130 - 5) = 5)
 
-#reset-options "--z3rlimit 5 --initial_fuel 0 --max_fuel 0"
+#reset-options "--z3rlimit 5 --fuel 0"
 
 let isDegreeReduced (h0:mem) (h1:mem) (b:bigint) =
   live h0 b /\ live h1 b /\ length b >= 2*norm_length-1
@@ -91,7 +91,7 @@ let bound63 (h:heap) (b:bigint) : GTot Type0 =
   /\ v (get h b 3) < pow2 63 /\ v (get h b 4) < pow2 63
 
 
-#reset-options "--z3rlimit 5 --initial_fuel 0 --max_fuel 0"
+#reset-options "--z3rlimit 5 --fuel 0"
 
 val lemma_freduce_degree1:
   h0:mem -> h1:mem ->
@@ -148,7 +148,7 @@ let lemma_2_26_p (a:nat) : Lemma (requires (a < pow2 26)) (ensures  (a < reveal 
     lemma_modulo_00 a (reveal prime)
 
 
-#reset-options "--z3rlimit 2000 --initial_fuel 0 --max_fuel 0"
+#reset-options "--z3rlimit 2000 --fuel 0"
 
 private val lemma_freduce_degree2_0:
   a:nat -> b:nat -> n:nat{n >= 130} ->
@@ -179,7 +179,7 @@ private val lemma_freduce_degree2_2:
 private let lemma_freduce_degree2_2 a b n =
   lemma_freduce_degree2_0 a b n; lemma_freduce_degree2_1 a b n
 
-#reset-options "--z3rlimit 100 --initial_fuel 0 --max_fuel 0"
+#reset-options "--z3rlimit 100 --fuel 0"
 
 val lemma_freduce_degree2_3:
   b0:nat -> b1:nat -> b2:nat -> b3:nat -> b4:nat -> b5:nat -> b6:nat -> b7:nat -> b8:nat ->
@@ -203,7 +203,7 @@ val lemma_freduce_degree2_4_no_prime:
   Lemma ((b0 + 5 * b5 + pow2 26 * (b1 + 5 * b6) + pow2 52 * (b2 + 5 * b7) + pow2 78 * (b3 + 5 * b8) + pow2 104 * b4) =
       (b0 + pow2 26 * b1 + pow2 52 * b2 + pow2 78 * b3 + pow2 104 * b4
       + 5 * b5 + 5 * pow2 26 * b6 + 5 * pow2 52 * b7 + 5 * pow2 78 * b8))
-#reset-options "--z3rlimit 100 --initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0"
+#reset-options "--z3rlimit 100 --fuel 0 --ifuel 0"
 let lemma_freduce_degree2_4_no_prime b0 b1 b2 b3 b4 b5 b6 b7 b8 =
   distributivity_add_right (pow2 26) b1 (5*b6);
   distributivity_add_right (pow2 52) b2 (5*b7);
@@ -233,7 +233,7 @@ let lemma_freduce_degree2 h0 h1 b =
   lemma_freduce_degree2_3 b0 b1 b2 b3 b4 b5 b6 b7 b8;
   lemma_freduce_degree2_4_no_prime b0 b1 b2 b3 b4 b5 b6 b7 b8
 
-#reset-options "--z3rlimit 20 --initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0"
+#reset-options "--z3rlimit 20 --fuel 0 --ifuel 0"
 val lemma_freduce_degree:
   h0:mem ->
   h1:mem ->

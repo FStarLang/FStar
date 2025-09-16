@@ -86,7 +86,7 @@ let lookup_arity_lid table target_lid args =
 let destruct_base_conn t =
     let hd, args = U.head_and_args t in
     match (U.un_uinst hd).n with
-    | Tm_fvar fv -> lookup_arity_lid destruct_base_table fv.fv_name.v args
+    | Tm_fvar fv -> lookup_arity_lid destruct_base_table fv.fv_name args
     | _ -> None
 
 let destruct_sq_base_conn t =
@@ -94,7 +94,7 @@ let destruct_sq_base_conn t =
     let t = U.unmeta t in
     let hd, args = U.head_and_args_full t in
     match (U.un_uinst hd).n with
-    | Tm_fvar fv -> lookup_arity_lid destruct_sq_base_table fv.fv_name.v args
+    | Tm_fvar fv -> lookup_arity_lid destruct_sq_base_table fv.fv_name args
     | _ -> None
 
 let patterns t =
@@ -106,8 +106,8 @@ let patterns t =
 let destruct_q_conn t =
     let is_q (fa:bool) (fv:fv) : bool =
         if fa
-        then U.is_forall fv.fv_name.v
-        else U.is_exists fv.fv_name.v
+        then U.is_forall fv.fv_name
+        else U.is_exists fv.fv_name
     in
     let flat t =
         let t, args = U.head_and_args t in
@@ -121,8 +121,8 @@ let destruct_q_conn t =
 
         | None, ({n=Tm_fvar tc}, [({n=Tm_abs {bs=[b]; body=t2}}, _)])
         | None, ({n=Tm_fvar tc}, [_; ({n=Tm_abs {bs=[b]; body=t2}}, _)])
-            when (U.is_qlid tc.fv_name.v) ->
-          aux (Some (U.is_forall tc.fv_name.v)) (b::out) t2
+            when (U.is_qlid tc.fv_name) ->
+          aux (Some (U.is_forall tc.fv_name)) (b::out) t2
 
         | Some b, _ ->
           let bs = List.rev out in
@@ -190,11 +190,11 @@ let destruct_typ_as_formula f : option connective =
   let phi = unmeta_monadic f in
   let r = 
     // Try all possibilities, stopping at the first
-    BU.catch_opt (destruct_base_conn phi) (fun () ->
-    BU.catch_opt (destruct_q_conn phi) (fun () ->
-    BU.catch_opt (destruct_sq_base_conn phi) (fun () ->
-    BU.catch_opt (destruct_sq_forall phi) (fun () ->
-    BU.catch_opt (destruct_sq_exists phi) (fun () ->
+    Option.catch (destruct_base_conn phi) (fun () ->
+    Option.catch (destruct_q_conn phi) (fun () ->
+    Option.catch (destruct_sq_base_conn phi) (fun () ->
+    Option.catch (destruct_sq_forall phi) (fun () ->
+    Option.catch (destruct_sq_exists phi) (fun () ->
               None)))))
   in
   r

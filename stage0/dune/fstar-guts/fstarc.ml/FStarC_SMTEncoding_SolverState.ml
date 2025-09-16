@@ -128,7 +128,7 @@ let (solver_state_to_string : solver_state -> Prims.string) =
            let uu___2 =
              FStarC_Class_Show.show FStarC_Class_Show.showable_nat
                (FStarC_List.length level.to_flush_rev) in
-           FStarC_Util.format3
+           FStarC_Format.fmt3
              "Level { all_decls=%s; given_decls=%s; to_flush=%s }" uu___
              uu___1 uu___2) s.levels in
     let uu___ =
@@ -138,8 +138,8 @@ let (solver_state_to_string : solver_state -> Prims.string) =
     let uu___1 =
       FStarC_Class_Show.show FStarC_Class_Show.showable_nat
         (FStarC_List.length s.pending_flushes_rev) in
-    FStarC_Util.format2 "Solver state { levels=%s; pending_flushes=%s }"
-      uu___ uu___1
+    FStarC_Format.fmt2 "Solver state { levels=%s; pending_flushes=%s }" uu___
+      uu___1
 let (showable_solver_state : solver_state FStarC_Class_Show.showable) =
   { FStarC_Class_Show.show = solver_state_to_string }
 let (debug : Prims.string -> solver_state -> solver_state -> unit) =
@@ -151,8 +151,8 @@ let (debug : Prims.string -> solver_state -> solver_state -> unit) =
         then
           let uu___1 = solver_state_to_string s0 in
           let uu___2 = solver_state_to_string s1 in
-          FStarC_Util.print3 "Debug (%s):{\n\t before=%s\n\t after=%s\n}" msg
-            uu___1 uu___2
+          FStarC_Format.print3 "Debug (%s):{\n\t before=%s\n\t after=%s\n}"
+            msg uu___1 uu___2
         else ()
 let (peek : solver_state -> (decls_at_level * decls_at_level Prims.list)) =
   fun s ->
@@ -315,7 +315,7 @@ let (filter_using_facts_from :
                          FStarC_Class_Show.show
                            (FStarC_Class_Show.show_list
                               FStarC_Class_Show.showable_string) uu___6 in
-                       FStarC_Util.print4
+                       FStarC_Format.print4
                          "Pruned using facts from:\n\tOriginal (%s): [%s];\n\tPruned (%s): [%s]\n"
                          uu___2 uu___3 uu___4 uu___5
                      else ())
@@ -528,62 +528,66 @@ let (reset :
           using_facts_from;
           retain_assumptions = (s.retain_assumptions)
         } in
-      let set_pruning_roots level s1 =
-        let uu___ = peek s1 in
-        match uu___ with
-        | (hd, tl) ->
-            let hd1 =
-              {
-                pruning_state = (hd.pruning_state);
-                given_decl_names = (hd.given_decl_names);
-                all_decls_at_level_rev = (hd.all_decls_at_level_rev);
-                given_some_decls = (hd.given_some_decls);
-                to_flush_rev = (hd.to_flush_rev);
-                named_assumptions = (hd.named_assumptions);
-                pruning_roots = (level.pruning_roots)
-              } in
-            {
-              levels = (hd1 :: tl);
-              pending_flushes_rev = (s1.pending_flushes_rev);
-              using_facts_from = (s1.using_facts_from);
-              retain_assumptions = (s1.retain_assumptions)
-            } in
-      let rebuild_level now level s_new2 =
-        let uu___ = peek s_new2 in
-        match uu___ with
-        | (hd, tl) ->
-            let hd1 =
-              {
-                pruning_state = (level.pruning_state);
-                given_decl_names = (hd.given_decl_names);
-                all_decls_at_level_rev = (hd.all_decls_at_level_rev);
-                given_some_decls = (hd.given_some_decls);
-                to_flush_rev = (hd.to_flush_rev);
-                named_assumptions = (level.named_assumptions);
-                pruning_roots = (hd.pruning_roots)
-              } in
-            let s_new3 =
+      let set_pruning_roots level =
+        fun s1 ->
+          let uu___ = peek s1 in
+          match uu___ with
+          | (hd, tl) ->
+              let hd1 =
+                {
+                  pruning_state = (hd.pruning_state);
+                  given_decl_names = (hd.given_decl_names);
+                  all_decls_at_level_rev = (hd.all_decls_at_level_rev);
+                  given_some_decls = (hd.given_some_decls);
+                  to_flush_rev = (hd.to_flush_rev);
+                  named_assumptions = (hd.named_assumptions);
+                  pruning_roots = (level.pruning_roots)
+                } in
               {
                 levels = (hd1 :: tl);
-                pending_flushes_rev = (s_new2.pending_flushes_rev);
-                using_facts_from = (s_new2.using_facts_from);
-                retain_assumptions = (s_new2.retain_assumptions)
+                pending_flushes_rev = (s1.pending_flushes_rev);
+                using_facts_from = (s1.using_facts_from);
+                retain_assumptions = (s1.retain_assumptions)
               } in
-            let s1 =
-              FStarC_List.fold_right
-                (if now then give_now true else give_aux true)
-                level.all_decls_at_level_rev s_new3 in
-            let uu___1 = set_pruning_roots level s1 in
-            (uu___1,
-              (FStar_Pervasives_Native.uu___is_Some level.pruning_roots)) in
-      let rec rebuild levels s_new2 =
-        match levels with
-        | last::[] -> rebuild_level false last s_new2
-        | level::levels1 ->
-            let uu___ = rebuild levels1 s_new2 in
-            (match uu___ with
-             | (s_new3, now) ->
-                 let s_new4 = push s_new3 in rebuild_level now level s_new4) in
+      let rebuild_level now =
+        fun level ->
+          fun s_new2 ->
+            let uu___ = peek s_new2 in
+            match uu___ with
+            | (hd, tl) ->
+                let hd1 =
+                  {
+                    pruning_state = (level.pruning_state);
+                    given_decl_names = (hd.given_decl_names);
+                    all_decls_at_level_rev = (hd.all_decls_at_level_rev);
+                    given_some_decls = (hd.given_some_decls);
+                    to_flush_rev = (hd.to_flush_rev);
+                    named_assumptions = (level.named_assumptions);
+                    pruning_roots = (hd.pruning_roots)
+                  } in
+                let s_new3 =
+                  {
+                    levels = (hd1 :: tl);
+                    pending_flushes_rev = (s_new2.pending_flushes_rev);
+                    using_facts_from = (s_new2.using_facts_from);
+                    retain_assumptions = (s_new2.retain_assumptions)
+                  } in
+                let s1 =
+                  FStarC_List.fold_right
+                    (if now then give_now true else give_aux true)
+                    level.all_decls_at_level_rev s_new3 in
+                let uu___1 = set_pruning_roots level s1 in
+                (uu___1,
+                  (FStar_Pervasives_Native.uu___is_Some level.pruning_roots)) in
+      let rec rebuild levels =
+        fun s_new2 ->
+          match levels with
+          | last::[] -> rebuild_level false last s_new2
+          | level::levels1 ->
+              let uu___ = rebuild levels1 s_new2 in
+              (match uu___ with
+               | (s_new3, now) ->
+                   let s_new4 = push s_new3 in rebuild_level now level s_new4) in
       let uu___ = rebuild s.levels s_new1 in
       FStar_Pervasives_Native.fst uu___
 let (name_of_assumption : FStarC_SMTEncoding_Term.decl -> Prims.string) =

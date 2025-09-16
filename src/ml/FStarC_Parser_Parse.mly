@@ -22,7 +22,6 @@ open Prims
 open FStar_Pervasives
 open FStarC_Errors
 open FStarC_List
-open FStarC_Util
 open FStarC_Range
 
 (* TODO : these files should be deprecated and removed *)
@@ -73,7 +72,6 @@ type tc_constraint = {
 %token <string> STRING
 %token <string> IDENT
 %token <string> NAME
-%token <string> TVAR
 %token <string> TILDE
 
 %token <string> INT
@@ -114,10 +112,10 @@ type tc_constraint = {
 %token IRREDUCIBLE UNFOLDABLE INLINE OPAQUE UNFOLD INLINE_FOR_EXTRACTION
 %token NOEXTRACT
 %token NOEQUALITY UNOPTEQUALITY
-%token PRAGMA_SHOW_OPTIONS PRAGMA_SET_OPTIONS PRAGMA_RESET_OPTIONS PRAGMA_PUSH_OPTIONS PRAGMA_POP_OPTIONS PRAGMA_RESTART_SOLVER PRAGMA_PRINT_EFFECTS_GRAPH
+%token PRAGMA_SHOW_OPTIONS PRAGMA_SET_OPTIONS PRAGMA_RESET_OPTIONS PRAGMA_PUSH_OPTIONS PRAGMA_POP_OPTIONS PRAGMA_RESTART_SOLVER PRAGMA_PRINT_EFFECTS_GRAPH PRAGMA_CHECK
 %token TYP_APP_LESS TYP_APP_GREATER SUBTYPE EQUALTYPE SUBKIND BY
 %token AND ASSERT SYNTH BEGIN ELSE END
-%token EXCEPTION FALSE FUN FUNCTION IF IN MODULE DEFAULT
+%token EXCEPTION FALSE FUN FUNCTION IF IN MODULE
 %token MATCH OF
 %token FRIEND OPEN REC THEN TRUE TRY TYPE CALC CLASS INSTANCE EFFECT VAL
 %token INTRO ELIM
@@ -140,7 +138,7 @@ type tc_constraint = {
 %token BACKTICK UNIV_HASH
 %token BACKTICK_PERC
 
-%token<string>  OPPREFIX OPINFIX0a OPINFIX0b OPINFIX0c OPINFIX0d OPINFIX1 OPINFIX2 OPINFIX3 OPINFIX4
+%token<string>  OPPREFIX OPINFIX0a OPINFIX0b OPINFIX0c OPINFIX0d OPINFIX1 OPINFIX2 OPINFIX3L OPINFIX3R OPINFIX4
 %token<string>  OP_MIXFIX_ASSIGNMENT OP_MIXFIX_ACCESS
 %token<string * string * Lexing.position * FStarC_Sedlexing.snap>  BLOB
 %token<string * string * Lexing.position * FStarC_Sedlexing.snap>  USE_LANG_BLOB
@@ -168,7 +166,8 @@ type tc_constraint = {
 %right    PIPE_LEFT
 %right    OPINFIX1
 %left     OPINFIX2 MINUS QUOTE
-%left     OPINFIX3
+%left     OPINFIX3L
+%right    OPINFIX3R
 %left     BACKTICK
 %right    OPINFIX4
 
@@ -226,18 +225,13 @@ startOfNextDeclToken:
  
 pragmaStartToken:
  | PRAGMA_SHOW_OPTIONS
-     { () }
  | PRAGMA_SET_OPTIONS
-     { () }
  | PRAGMA_RESET_OPTIONS
-     { () }
  | PRAGMA_PUSH_OPTIONS
-     { () }
  | PRAGMA_POP_OPTIONS
-     { () }
  | PRAGMA_RESTART_SOLVER
-     { () }
  | PRAGMA_PRINT_EFFECTS_GRAPH
+ | PRAGMA_CHECK
      { () }
 
 /******************************************************************************/
@@ -259,6 +253,8 @@ pragma:
       { RestartSolver }
   | PRAGMA_PRINT_EFFECTS_GRAPH
       { PrintEffectsGraph }
+  | PRAGMA_CHECK t=term
+      { Check t }
 
 attribute:
   | LBRACK_AT x = list(atomicTerm) RBRACK
@@ -405,8 +401,8 @@ rawDecl:
       {
         let r = rr $loc in
         let lbs = focusLetBindings lbs r in
-        if q <> Rec && List.length lbs <> 1
-        then raise_error_text r Fatal_MultipleLetBinding "Unexpected multiple let-binding (Did you forget some rec qualifier ?)";
+        if q <> Rec && FStarC_List.length lbs > Prims.parse_int "1"
+        then raise_error_text (fst (nth lbs (Prims.parse_int "1"))).prange Fatal_MultipleLetBinding "Unexpected multiple let-binding (Did you forget some rec qualifier ?)";
         TopLevelLet(q, lbs)
       }
   | VAL c=constant
@@ -461,8 +457,8 @@ typars:
   | x=binders                { x }
 
 tvarinsts:
-  | TYP_APP_LESS tvs=separated_nonempty_list(COMMA, tvar) TYP_APP_GREATER
-      { map (fun tv -> mk_binder (TVariable(tv)) (range_of_id tv) Kind None) tvs }
+  | TYP_APP_LESS tvs=separated_nonempty_list(COMMA, ident) TYP_APP_GREATER
+      { map (fun tv -> mk_binder (Variable(tv)) (range_of_id tv) Kind None) tvs }
 
 %inline recordDefinition:
   | LBRACE record_field_decls=right_flexible_nonempty_list(SEMICOLON, recordFieldDecl) RBRACE
@@ -644,7 +640,6 @@ qualifier:
   }
   | IRREDUCIBLE   { Irreducible }
   | NOEXTRACT     { NoExtract }
-  | DEFAULT       { DefaultEffect }
   | TOTAL         { TotalEffect }
   | PRIVATE       { Private }
 
@@ -719,7 +714,6 @@ atomicPattern:
   | LENS_PAREN_LEFT pat0=constructorPattern COMMA pats=separated_nonempty_list(COMMA, constructorPattern) LENS_PAREN_RIGHT
       { mk_pattern (PatTuple(pat0::pats, true)) (rr $loc) }
   | LPAREN pat=tuplePattern RPAREN   { pat }
-  | tv=tvar                   { mk_pattern (PatTvar (tv, None, [])) (rr $loc(tv)) }
   | LPAREN op=operator RPAREN
       { mk_pattern (PatOp op) (rr $loc) }
   | UNDERSCORE
@@ -806,9 +800,6 @@ binder:
        let (q, attrs), lid = aqualifiedWithAttrs_lid in
        mk_binder_with_attrs (Variable lid) (rr $loc(aqualifiedWithAttrs_lid)) Type_level q attrs
      }
-
-  | tv=tvar { mk_binder (TVariable tv) (rr $loc) Kind None  }
-       (* small regression here : fun (=x : t) ... is not accepted anymore *)
 
 %public
 multiBinder:
@@ -904,9 +895,6 @@ lident:
 uident:
   | id=NAME { mk_ident(id, rr $loc(id)) }
 
-tvar:
-  | tv=TVAR { mk_ident(tv, rr $loc(tv)) }
-
 
 /******************************************************************************/
 /*                            Types and terms                                 */
@@ -989,11 +977,11 @@ noSeqTerm:
         mk_term (Op(opid, [ e1; e2; e3 ])) (rr2 $loc(e1) $loc(e3)) Expr
       }
   | REQUIRES t=typ
-      { mk_term (Requires(t, None)) (rr2 $loc($1) $loc(t)) Type_level }
+      { mk_term (Requires t) (rr2 $loc($1) $loc(t)) Type_level }
   | ENSURES t=typ
-      { mk_term (Ensures(t, None)) (rr2 $loc($1) $loc(t)) Type_level }
+      { mk_term (Ensures t) (rr2 $loc($1) $loc(t)) Type_level }
   | DECREASES t=typ
-      { mk_term (Decreases (t, None)) (rr2 $loc($1) $loc(t)) Type_level }
+      { mk_term (Decreases t) (rr2 $loc($1) $loc(t)) Type_level }
   | DECREASES LBRACE_COLON_WELL_FOUNDED t=noSeqTerm RBRACE
       (*
        * decreases clause with relation is written as e1 e2,
@@ -1004,7 +992,7 @@ noSeqTerm:
       { match t.tm with
         | App (t1, t2, _) ->
           let ot = mk_term (WFOrder (t1, t2)) (rr2 $loc(t) $loc(t)) Type_level in
-          mk_term (Decreases (ot, None)) (rr2 $loc($1) $loc($4)) Type_level
+          mk_term (Decreases ot) (rr2 $loc($1) $loc($4)) Type_level
         | _ ->
           raise_error_text (rr $loc(t)) Fatal_SyntaxError
             "Syntax error: To use well-founded relations, write e1 e2"
@@ -1358,12 +1346,14 @@ tmNoEqNoRecordWith(X):
             in
             mk_term (Sum(dom, res)) (rr2 $loc(e1) $loc(e2)) Type_level
       }
-  | e1=tmNoEqWith(X) op=OPINFIX3 e2=tmNoEqWith(X)
+
+  | e1=tmNoEqWith(X) op=OPINFIX3L e2=tmNoEqWith(X)
+  | e1=tmNoEqWith(X) op=OPINFIX3R e2=tmNoEqWith(X)
+  | e1=tmNoEqWith(X) op=OPINFIX4  e2=tmNoEqWith(X)
       { mk_term (Op(mk_ident(op, rr $loc(op)), [e1; e2])) (rr $loc) Un}
+
   | e1=tmNoEqWith(X) BACKTICK op=tmNoEqWith(X) BACKTICK e2=tmNoEqWith(X)
       { mkApp op [ e1, Infix; e2, Nothing ] (rr $loc) }
- | e1=tmNoEqWith(X) op=OPINFIX4 e2=tmNoEqWith(X)
-      { mk_term (Op(mk_ident(op, rr $loc(op)), [e1; e2])) (rr $loc) Un}
   | BACKTICK_PERC e=atomicTerm
       { mk_term (VQuote e) (rr $loc) Un }
   | op=TILDE e=atomicTerm
@@ -1382,7 +1372,8 @@ binop_name:
   | o=OPINFIX0d              { mk_ident (o, rr $loc) }
   | o=OPINFIX1               { mk_ident (o, rr $loc) }
   | o=OPINFIX2               { mk_ident (o, rr $loc) }
-  | o=OPINFIX3               { mk_ident (o, rr $loc) }
+  | o=OPINFIX3L              { mk_ident (o, rr $loc) }
+  | o=OPINFIX3R              { mk_ident (o, rr $loc) }
   | o=OPINFIX4               { mk_ident (o, rr $loc) }
   | o=IMPLIES                { mk_ident ("==>", rr $loc) }
   | o=CONJUNCTION            { mk_ident ("/\\", rr $loc) }
@@ -1511,7 +1502,6 @@ atomicTermQUident:
 
 atomicTermNotQUident:
   | UNDERSCORE { mk_term Wild (rr $loc) Un }
-  | tv=tvar     { mk_term (Tvar tv) (rr $loc) Type_level }
   | c=constant { mk_term (Const c) (rr $loc) Expr }
   | x=opPrefixTerm(atomicTermNotQUident)
     { x }

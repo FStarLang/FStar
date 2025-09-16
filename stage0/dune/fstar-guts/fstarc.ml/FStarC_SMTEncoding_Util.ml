@@ -19,7 +19,7 @@ let (mkAssume :
         FStarC_SMTEncoding_Term.Assume uu___1
 let norng :
   'a .
-    ('a -> FStarC_Range_Type.range -> FStarC_SMTEncoding_Term.term) ->
+    ('a -> FStarC_Range_Type.t -> FStarC_SMTEncoding_Term.term) ->
       'a -> FStarC_SMTEncoding_Term.term
   = fun f -> fun x -> f x FStarC_Range_Type.dummyRange
 let (mkTrue : FStarC_SMTEncoding_Term.term) =
@@ -200,20 +200,18 @@ let (mkCases :
   norng FStarC_SMTEncoding_Term.mkCases
 let norng2 :
   'a 'b .
-    ('a -> 'b -> FStarC_Range_Type.range -> FStarC_SMTEncoding_Term.term) ->
+    ('a -> 'b -> FStarC_Range_Type.t -> FStarC_SMTEncoding_Term.term) ->
       'a -> 'b -> FStarC_SMTEncoding_Term.term
   = fun f -> fun x -> fun y -> f x y FStarC_Range_Type.dummyRange
 let norng3 :
   'a 'b 'c .
-    ('a ->
-       'b -> 'c -> FStarC_Range_Type.range -> FStarC_SMTEncoding_Term.term)
+    ('a -> 'b -> 'c -> FStarC_Range_Type.t -> FStarC_SMTEncoding_Term.term)
       -> 'a -> 'b -> 'c -> FStarC_SMTEncoding_Term.term
   = fun f -> fun x -> fun y -> fun z -> f x y z FStarC_Range_Type.dummyRange
 let norng4 :
   'a 'b 'c 'd .
     ('a ->
-       'b ->
-         'c -> 'd -> FStarC_Range_Type.range -> FStarC_SMTEncoding_Term.term)
+       'b -> 'c -> 'd -> FStarC_Range_Type.t -> FStarC_SMTEncoding_Term.term)
       -> 'a -> 'b -> 'c -> 'd -> FStarC_SMTEncoding_Term.term
   =
   fun f ->

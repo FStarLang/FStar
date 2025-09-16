@@ -9,7 +9,7 @@ include mk/common.mk
 FSTAR_DEFAULT_GOAL ?= build
 .DEFAULT_GOAL := $(FSTAR_DEFAULT_GOAL)
 
-all: stage1 stage2 stage3-bare lib-fsharp
+all: stage1 stage2 1.tests 2.tests stage3-bare lib-fsharp
 all-packages: package-1 package-2 package-src-1 package-src-2
 
 ### STAGES
@@ -38,12 +38,14 @@ FSTAR0_EXE ?= stage0/out/bin/fstar.exe
 # stage 1 libraries for the stage 2, which does not need them at all (currently?).
 #
 # I'd love a better alternative.
-FSTAR1_BARE_EXE := stage1/dune/_build/default/fstarc-bare/fstarc1_bare.exe
-FSTAR1_FULL_EXE := stage1/dune/_build/default/fstarc-full/fstarc1_full.exe
+FSTAR1_BARE_EXE           := stage1/dune/_build/default/fstarc-bare/fstarc1_bare.exe
+FSTAR1_FULL_EXE           := stage1/dune/_build/default/fstarc-full/fstarc1_full.exe
 INSTALLED_FSTAR1_FULL_EXE := stage1/out/bin/fstar.exe
-FSTAR2_BARE_EXE := stage2/dune/_build/default/fstarc-bare/fstarc2_bare.exe
-FSTAR2_FULL_EXE := stage2/dune/_build/default/fstarc-full/fstarc2_full.exe
+FSTAR2_BARE_EXE           := stage2/dune/_build/default/fstarc-bare/fstarc2_bare.exe
+FSTAR2_FULL_EXE           := stage2/dune/_build/default/fstarc-full/fstarc2_full.exe
 INSTALLED_FSTAR2_FULL_EXE := stage2/out/bin/fstar.exe
+TESTS1_EXE                := stage1/dune/_build/default/tests/fstarc1_tests.exe
+TESTS2_EXE                := stage2/dune/_build/default/tests/fstarc2_tests.exe
 
 .PHONY: .force
 .force:
@@ -59,10 +61,12 @@ endif
 build: 2
 
 0: $(FSTAR0_EXE)
-1.bare: $(FSTAR1_BARE_EXE)
-1.full: $(FSTAR1_FULL_EXE)
-2.bare: $(FSTAR2_BARE_EXE)
-2.full: $(FSTAR2_FULL_EXE)
+1.bare:  $(FSTAR1_BARE_EXE)
+1.tests: $(TESTS1_EXE)
+1.full:  $(FSTAR1_FULL_EXE)
+2.bare:  $(FSTAR2_BARE_EXE)
+2.tests: $(TESTS2_EXE)
+2.full:  $(FSTAR2_FULL_EXE)
 
 # This file's timestamp is updated whenever anything in stage0/
 # (excluding some build directories)
@@ -77,8 +81,8 @@ build: 2
 	# the timestamp of directories, and we would keep triggering
 	# rebuilds.
 	find stage0/ \
-	  -path stage0/dune/_build -prune -exec false -o \
-	  -path stage0/out -prune -exec false -o \
+	  \( -path stage0/dune/_build -prune -exec false \; \) -o \
+	  \( -path stage0/out -prune -exec false \; \) -o \
 	  -type f -newer $@ -exec touch $@ \; -quit
 
 stage0/out/bin/fstar.exe: .stage0.touch
@@ -92,12 +96,26 @@ stage0/out/bin/fstar.exe: .stage0.touch
 	env \
 	  SRC=src/ \
 	  FSTAR_EXE=$(FSTAR0_EXE) \
+	  FSTAR_LIB=$(abspath ulib) \
 	  CACHE_DIR=stage1/fstarc.checked/ \
 	  OUTPUT_DIR=stage1/fstarc.ml/ \
 	  CODEGEN=OCaml \
 	  TAG=fstarc \
 	  TOUCH=$@ \
 	  $(MAKE) -f mk/fstar-01.mk ocaml
+
+.tests1.src.touch: .bare1.src.touch $(FSTAR0_EXE) .force
+	$(call bold_msg, "EXTRACT", "STAGE 1 TESTS")
+	env \
+	  SRC=src/ \
+	  FSTAR_EXE=$(FSTAR0_EXE) \
+	  FSTAR_LIB=$(abspath ulib) \
+	  CACHE_DIR=stage1/tests.checked/ \
+	  OUTPUT_DIR=stage1/tests.ml/ \
+	  CODEGEN=PluginNoLib \
+	  TAG=fstarc \
+	  TOUCH=$@ \
+	  $(MAKE) -f mk/tests-1.mk ocaml
 
 # These files are regenerated as soon as *any* ml file reachable from
 # stage*/dune changes. This makes sure we trigger dune rebuilds when we
@@ -111,6 +129,14 @@ $(FSTAR1_BARE_EXE): .bare1.src.touch .src.ml.touch $(MAYBEFORCE)
 	$(MAKE) -C stage1 fstarc-bare
 	touch -c $@
 
+$(TESTS1_EXE): .tests1.src.touch .src.ml.touch $(MAYBEFORCE)
+	$(call bold_msg, "BUILD", "STAGE 1 TESTS")
+	$(MAKE) -C stage1 tests
+	touch -c $@
+
+stage1-unit-tests: $(TESTS1_EXE)
+	FSTAR_LIB=$(CURDIR)/ulib $(TESTS1_EXE)
+
 .full1.src.touch: $(FSTAR1_BARE_EXE) .force
 	$(call bold_msg, "EXTRACT", "STAGE 1 PLUGINS")
 	env \
@@ -119,7 +145,6 @@ $(FSTAR1_BARE_EXE): .bare1.src.touch .src.ml.touch $(MAYBEFORCE)
 	  CACHE_DIR=stage1/plugins.checked/ \
 	  OUTPUT_DIR=stage1/plugins.ml/ \
 	  CODEGEN=PluginNoLib \
-	  OTHERFLAGS="--ext __guts $(OTHERFLAGS)" \
 	  TAG=plugins \
 	  TOUCH=$@ \
 	  $(MAKE) -f mk/plugins.mk ocaml
@@ -158,9 +183,12 @@ $(FSTAR1_FULL_EXE): .bare1.src.touch .full1.src.touch .src.ml.touch $(MAYBEFORCE
 	  OUTPUT_DIR=stage1/ulib.pluginml/ \
 	  CODEGEN=PluginNoLib \
 	  TAG=pluginlib \
-	  DEPFLAGS='--extract +FStar.Tactics,+FStar.Reflection,+FStar.Sealed' \
+	  DEPFLAGS='--extract +FStar.Tactics,+FStar.Reflection,+FStar.Sealed,-FStar.SizeT,-FStar.PtrDiffT' \
 	  TOUCH=$@ \
 	  $(MAKE) -f mk/lib.mk ocaml
+	  # NOTE: not extracting SizeT/PtrDiff in stage 1 as that is currently broken but
+	  # to requiring some staging (it uses FStar.UInt64.ne, which is not there
+	  # in the parent compiler). Remove after bumping stage0.
 
 .plib1.touch: .plib1.src.touch .src.ml.touch $(MAYBEFORCE)
 	$(call bold_msg, "BUILD", "STAGE 1 PLUGLIB")
@@ -181,6 +209,19 @@ $(FSTAR1_FULL_EXE): .bare1.src.touch .full1.src.touch .src.ml.touch $(MAYBEFORCE
 	  TOUCH=$@ \
 	  $(MAKE) -f mk/fstar-12.mk ocaml
 
+.tests2.src.touch: .bare2.src.touch $(FSTAR1_FULL_EXE) .force
+	$(call bold_msg, "EXTRACT", "STAGE 2 TESTS")
+	env \
+	  SRC=src/ \
+	  FSTAR_EXE=$(FSTAR1_FULL_EXE) \
+	  FSTAR_LIB=$(abspath ulib) \
+	  CACHE_DIR=stage2/tests.checked/ \
+	  OUTPUT_DIR=stage2/tests.ml/ \
+	  CODEGEN=PluginNoLib \
+	  TAG=fstarc \
+	  TOUCH=$@ \
+	  $(MAKE) -f mk/tests-2.mk ocaml
+
 $(FSTAR2_BARE_EXE): .bare2.src.touch .src.ml.touch $(MAYBEFORCE)
 	$(call bold_msg, "BUILD", "STAGE 2 FSTARC-BARE")
 	$(MAKE) -C stage2 fstarc-bare FSTAR_DUNE_RELEASE=1
@@ -188,6 +229,14 @@ $(FSTAR2_BARE_EXE): .bare2.src.touch .src.ml.touch $(MAYBEFORCE)
 	# ^ Note, even if we don't release fstar-bare itself,
 	# it is still part of the build of the full fstar, so
 	# we set the release flag to have a more incremental build.
+
+$(TESTS2_EXE): .tests2.src.touch .src.ml.touch $(MAYBEFORCE)
+	$(call bold_msg, "BUILD", "STAGE 2 TESTS")
+	$(MAKE) -C stage2 tests
+	touch -c $@
+
+stage2-unit-tests: $(TESTS2_EXE)
+	FSTAR_LIB=$(CURDIR)/ulib $(TESTS2_EXE)
 
 .full2.src.touch: $(FSTAR2_BARE_EXE) .force
 	$(call bold_msg, "EXTRACT", "STAGE 2 PLUGINS")
@@ -197,7 +246,6 @@ $(FSTAR2_BARE_EXE): .bare2.src.touch .src.ml.touch $(MAYBEFORCE)
 	  CACHE_DIR=stage2/plugins.checked/ \
 	  OUTPUT_DIR=stage2/plugins.ml/ \
 	  CODEGEN=PluginNoLib \
-	  OTHERFLAGS="--ext __guts $(OTHERFLAGS)" \
 	  TAG=plugins \
 	  TOUCH=$@ \
 	  $(MAKE) -f mk/plugins.mk ocaml
@@ -302,14 +350,14 @@ endif
 	touch $@
 
 .install-stage1.touch: export FSTAR_LINK_LIBDIRS=$(LINK_OK)
-.install-stage1.touch: .stage1.src.touch
+.install-stage1.touch: .stage1.src.touch $(MAYBEFORCE)
 	$(call bold_msg, "INSTALL", "STAGE 1")
 	$(MAKE) -C stage1 install PREFIX=$(CURDIR)/stage1/out
 	@# ^ pass PREFIX to make sure we don't get it from env
 	touch $@
 
 .install-stage2.touch: export FSTAR_LINK_LIBDIRS=$(LINK_OK)
-.install-stage2.touch: .stage2.src.touch
+.install-stage2.touch: .stage2.src.touch $(MAYBEFORCE)
 	$(call bold_msg, "INSTALL", "STAGE 2")
 	$(MAKE) -C stage2 install PREFIX=$(CURDIR)/stage2/out FSTAR_DUNE_RELEASE=1
 	@# ^ pass PREFIX to make sure we don't get it from env
@@ -384,14 +432,14 @@ package-2: .stage2.src.touch .force
 	  INSTALL_RULE=__do-install-stage2 \
 	  $(MAKE) __do-archive
 
-package-src-1: .stage1.src.touch .force
+package-src-1: .stage1.src.touch .tests1.src.touch .force
 	env \
 	  PKGTMP=_srcpak1 \
 	  BROOT=stage1/ \
 	  ARCHIVE=fstar$(FSTAR_TAG)-stage1-src \
 	  $(MAKE) __do-src-archive
 
-package-src-2: .stage2.src.touch .force
+package-src-2: .stage2.src.touch .tests2.src.touch .force
 	env \
 	  PKGTMP=_srcpak2 \
 	  BROOT=stage2/ \
@@ -400,6 +448,16 @@ package-src-2: .stage2.src.touch .force
 
 package: package-2
 package-src: package-src-2
+
+test-1-bare: override FSTAR_EXE := $(abspath $(FSTAR1_BARE_EXE))
+test-1-bare: override FSTAR_LIB := $(abspath ulib)
+test-1-bare: $(FSTAR1_BARE_EXE)
+	$(MAKE) -C bare-tests
+
+test-2-bare: override FSTAR_EXE := $(abspath $(FSTAR2_BARE_EXE))
+test-2-bare: override FSTAR_LIB := $(abspath ulib)
+test-2-bare: $(FSTAR2_BARE_EXE)
+	$(MAKE) -C bare-tests
 
 test: test-2
 
@@ -444,7 +502,7 @@ _examples: need_fstar_exe .force
 
 ci: .force
 	+$(MAKE) 2
-	+$(MAKE) test lib-fsharp stage3-diff
+	+$(MAKE) test lib-fsharp stage3-diff test-2-bare stage2-unit-tests
 
 save: stage0_new
 
@@ -470,8 +528,10 @@ bump-stage0: stage0_new
 	# Now that stage0 supports all features, we can return to a clean state
 	# where the 01 makefile is equal to the 12 makefile. Same for stage1
 	# support and config code, we just take it from the stage2.
-	rm -f mk/fstar-01.mk
-	ln -s fstar-12.mk mk/fstar-01.mk
+	rm -f mk/generic-0.mk
+	ln -sf generic-1.mk mk/generic-0.mk
+	cp mk/fstar-12.mk mk/fstar-01.mk
+	sed -i 's,include mk/generic-1.mk,include mk/generic-0.mk,' mk/fstar-01.mk
 	rm -rf stage1
 	cp -r stage2 stage1
 	rm -f stage1/dune/fstar-guts/app

@@ -19,7 +19,6 @@ open FStarC.Effect
 
 open FStarC
 open FStarC.Syntax
-open FStarC.Util
 open FStarC.Syntax.Syntax
 open FStarC.Syntax.Subst
 open FStarC.Ident
@@ -39,22 +38,22 @@ let sli (l:lident) : string =
     if Options.print_real_names()
     then string_of_lid l
     else string_of_id (ident_of_lid l)
-//    Util.format3 "%s@{def=%s;use=%s}" s
+//    Format.fmt3 "%s@{def=%s;use=%s}" s
 //        (Range.string_of_range (Ident.range_of_lid l))
 //        (Range.string_of_use_range (Ident.range_of_lid l))
 
 let lid_to_string (l:lid) = sli l
 
-// let fv_to_string fv = Printf.sprintf "%s@%A" (lid_to_string fv.fv_name.v) fv.fv_delta
-let fv_to_string fv = lid_to_string fv.fv_name.v //^ "(@@" ^ showfv.fv_delta ^ ")"
-let bv_to_string bv = (string_of_id bv.ppname) ^ "#" ^ (string_of_int bv.index)
+// let fv_to_string fv = Printf.sprintf "%s@%A" (lid_to_string fv.fv_name) fv.fv_delta
+let fv_to_string fv = lid_to_string fv.fv_name //^ "(@@" ^ showfv.fv_delta ^ ")"
+let bv_to_string bv = (string_of_id bv.ppname) ^ "#" ^ (show bv.index)
 
 let nm_to_string bv =
     if Options.print_real_names()
     then bv_to_string bv
     else (string_of_id bv.ppname)
 
-let db_to_string bv = (string_of_id bv.ppname) ^ "@" ^ string_of_int bv.index
+let db_to_string bv = (string_of_id bv.ppname) ^ "@" ^ show bv.index
 
 let filter_imp aq =
    (* keep typeclass args *)
@@ -72,14 +71,14 @@ let const_to_string = C.const_to_string
 
 let lbname_to_string = function
   | Inl l -> bv_to_string l
-  | Inr l -> lid_to_string l.fv_name.v
+  | Inr l -> lid_to_string l.fv_name
 
-let uvar_to_string u = if (Options.hide_uvar_nums()) then "?" else "?" ^ (Unionfind.uvar_id u |> string_of_int)
-let version_to_string v = U.format2 "%s.%s" (U.string_of_int v.major) (U.string_of_int v.minor)
+let uvar_to_string u = if (Options.hide_uvar_nums()) then "?" else "?" ^ (Unionfind.uvar_id u |> show)
+let version_to_string v = Format.fmt2 "%s.%s" (show v.major) (show v.minor)
 let univ_uvar_to_string u =
     if (Options.hide_uvar_nums())
     then "?"
-    else "?" ^ (Unionfind.univ_uvar_id u |> string_of_int)
+    else "?" ^ (Unionfind.univ_uvar_id u |> show)
             ^ ":" ^ (u |> (fun (_, u, _) -> version_to_string u))
 
 let rec int_of_univ n u = match Subst.compress_univ u with
@@ -92,14 +91,14 @@ Errors.with_ctx "While printing universe" (fun () ->
   match Subst.compress_univ u with
     | U_unif u -> "U_unif "^univ_uvar_to_string u
     | U_name x -> "U_name "^(string_of_id x)
-    | U_bvar x -> "@"^string_of_int x
+    | U_bvar x -> "@"^show x
     | U_zero   -> "0"
     | U_succ u ->
         begin match int_of_univ 1 u with
-            | n, None -> string_of_int n
-            | n, Some u -> U.format2 "(%s + %s)" (univ_to_string u) (string_of_int n)
+            | n, None -> show n
+            | n, Some u -> Format.fmt2 "(%s + %s)" (univ_to_string u) (show n)
         end
-    | U_max us -> U.format1 "(max %s)" (List.map univ_to_string us |> String.concat ", ")
+    | U_max us -> Format.fmt1 "(max %s)" (List.map univ_to_string us |> String.concat ", ")
     | U_unknown -> "unknown"
 )
 
@@ -121,16 +120,16 @@ let qual_to_string = function
   | Unopteq               -> "unopteq"
   | Logic                 -> "logic"
   | TotalEffect           -> "total"
-  | Discriminator l       -> U.format1 "(Discriminator %s)" (lid_to_string l)
-  | Projector (l, x)      -> U.format2 "(Projector %s %s)" (lid_to_string l) (string_of_id x)
-  | RecordType (ns, fns)  -> U.format2 "(RecordType %s %s)" (text_of_path (path_of_ns ns)) (fns |> List.map string_of_id |> String.concat ", ")
-  | RecordConstructor (ns, fns) -> U.format2 "(RecordConstructor %s %s)" (text_of_path (path_of_ns ns))  (fns |> List.map string_of_id |> String.concat ", ")
-  | Action eff_lid        -> U.format1 "(Action %s)" (lid_to_string eff_lid)
+  | Discriminator l       -> Format.fmt1 "(Discriminator %s)" (lid_to_string l)
+  | Projector (l, x)      -> Format.fmt2 "(Projector %s %s)" (lid_to_string l) (string_of_id x)
+  | RecordType (ns, fns)  -> Format.fmt2 "(RecordType %s %s)" (text_of_path (path_of_ns ns)) (fns |> List.map string_of_id |> String.concat ", ")
+  | RecordConstructor (ns, fns) -> Format.fmt2 "(RecordConstructor %s %s)" (text_of_path (path_of_ns ns))  (fns |> List.map string_of_id |> String.concat ", ")
+  | Action eff_lid        -> Format.fmt1 "(Action %s)" (lid_to_string eff_lid)
   | ExceptionConstructor  -> "ExceptionConstructor"
   | HasMaskedEffect       -> "HasMaskedEffect"
   | Effect                -> "Effect"
   | Reifiable             -> "reify"
-  | Reflectable l         -> U.format1 "(reflect %s)" (string_of_lid l)
+  | Reflectable l         -> Format.fmt1 "(reflect %s)" (string_of_lid l)
   | OnlyName              -> "OnlyName"
 
 let quals_to_string quals =
@@ -159,34 +158,34 @@ let rec term_to_string x =
         term_to_string (Thunk.force thunk) ^ "]"
       | Tm_lazy i ->
         "[lazy:" ^
-        term_to_string (must !lazy_chooser i.lkind i) // can't call into Syntax.Util here..
+        term_to_string (Option.must !lazy_chooser i.lkind i) // can't call into Syntax.Util here..
         ^"]"
 
       | Tm_quoted (tm, qi) ->
         begin match qi.qkind with
         | Quote_static ->
-            U.format2 "`(%s)%s" (term_to_string tm)
+            Format.fmt2 "`(%s)%s" (term_to_string tm)
                                 (FStarC.Common.string_of_list term_to_string (snd qi.antiquotations))
         | Quote_dynamic ->
-            U.format1 "quote (%s)" (term_to_string tm)
+            Format.fmt1 "quote (%s)" (term_to_string tm)
         end
 
       | Tm_meta {tm=t; meta=Meta_pattern (_, ps)} ->
         let pats = ps |> List.map (fun args -> args |> List.map (fun (t, _) -> term_to_string t) |> String.concat "; ") |> String.concat "\/" in
-        U.format2 "{:pattern %s} %s" pats (term_to_string t)
+        Format.fmt2 "{:pattern %s} %s" pats (term_to_string t)
 
-      | Tm_meta {tm=t; meta=Meta_monadic (m, t')} -> U.format4 ("(MetaMonadic-{%s %s} (%s) %s)") (sli m) (term_to_string t') (tag_of t) (term_to_string t)
+      | Tm_meta {tm=t; meta=Meta_monadic (m, t')} -> Format.fmt4 ("(MetaMonadic-{%s %s} (%s) %s)") (sli m) (term_to_string t') (tag_of t) (term_to_string t)
 
-      | Tm_meta {tm=t; meta=Meta_monadic_lift(m0, m1, t')} -> U.format4 ("(MetaMonadicLift-{%s : %s -> %s} %s)") (term_to_string t') (sli m0) (sli m1) (term_to_string t)
+      | Tm_meta {tm=t; meta=Meta_monadic_lift(m0, m1, t')} -> Format.fmt4 ("(MetaMonadicLift-{%s : %s -> %s} %s)") (term_to_string t') (sli m0) (sli m1) (term_to_string t)
 
       | Tm_meta {tm=t; meta=Meta_labeled(l,r,b)} ->
-        U.format3 "Meta_labeled(%s, %s){%s}" (Errors.Msg.rendermsg l) (Range.string_of_range r) (term_to_string t)
+        Format.fmt3 "Meta_labeled(%s, %s){%s}" (Errors.Msg.rendermsg l) (Range.string_of_range r) (term_to_string t)
 
       | Tm_meta {tm=t; meta=Meta_named(l)} ->
-        U.format3 "Meta_named(%s, %s){%s}" (lid_to_string l) (Range.string_of_range t.pos) (term_to_string t)
+        Format.fmt3 "Meta_named(%s, %s){%s}" (lid_to_string l) (Range.string_of_range t.pos) (term_to_string t)
 
       | Tm_meta {tm=t; meta=Meta_desugared _} ->
-        U.format1 "Meta_desugared{%s}"  (term_to_string t)
+        Format.fmt1 "Meta_desugared{%s}"  (term_to_string t)
 
       | Tm_bvar x ->        db_to_string x ^ ":(" ^ (tag_of x.sort) ^  ")"
       | Tm_name x ->        nm_to_string x // ^ "@@(" ^ term_to_string x.sort ^ ")"
@@ -204,52 +203,52 @@ let rec term_to_string x =
         if Options.print_bound_var_types()
         && Options.print_effect_args()
         then ctx_uvar_to_string_aux true u
-        else "?" ^ (string_of_int <| Unionfind.uvar_id u.ctx_uvar_head)
+        else "?" ^ (show <| Unionfind.uvar_id u.ctx_uvar_head)
       | Tm_uvar (u, s) ->
         if Options.print_bound_var_types()
         && Options.print_effect_args()
-        then U.format2 "(%s @ %s)" (ctx_uvar_to_string_aux true u) (List.map subst_to_string (fst s) |> String.concat "; ")
-        else "?" ^ (string_of_int <| Unionfind.uvar_id u.ctx_uvar_head)
+        then Format.fmt2 "(%s @ %s)" (ctx_uvar_to_string_aux true u) (List.map subst_to_string (fst s) |> String.concat "; ")
+        else "?" ^ (show <| Unionfind.uvar_id u.ctx_uvar_head)
       | Tm_constant c ->    const_to_string c
-      | Tm_type u ->        if (Options.print_universes()) then U.format1 "Type u#(%s)" (univ_to_string u) else "Type"
-      | Tm_arrow {bs; comp=c} ->  U.format2 "(%s -> %s)"  (binders_to_string " -> " bs) (comp_to_string c)
+      | Tm_type u ->        if (Options.print_universes()) then Format.fmt1 "Type u#(%s)" (univ_to_string u) else "Type"
+      | Tm_arrow {bs; comp=c} ->  Format.fmt2 "(%s -> %s)"  (binders_to_string " -> " bs) (comp_to_string c)
       | Tm_abs {bs; body=t2; rc_opt=lc} ->
         begin match lc with
             | Some rc when (Options.print_implicits()) ->
-              U.format4 "(fun %s -> (%s $$ (residual) %s %s))"
+              Format.fmt4 "(fun %s -> (%s $$ (residual) %s %s))"
                             (binders_to_string " " bs)
                             (term_to_string t2)
                             (string_of_lid rc.residual_effect)
-                            (if Option.isNone rc.residual_typ then "None" else term_to_string (Option.get rc.residual_typ))
+                            (if None? rc.residual_typ then "None" else term_to_string (Option.must rc.residual_typ))
             | _ ->
-              U.format2 "(fun %s -> %s)" (binders_to_string " " bs) (term_to_string t2)
+              Format.fmt2 "(fun %s -> %s)" (binders_to_string " " bs) (term_to_string t2)
         end
-      | Tm_refine {b=xt; phi=f} -> U.format3 "(%s:%s{%s})" (bv_to_string xt) (xt.sort |> term_to_string) (f |> formula_to_string)
-      | Tm_app {hd=t; args} ->  U.format2 "(%s %s)" (term_to_string t) (args_to_string args)
-      | Tm_let {lbs; body=e} ->   U.format2 "%s\nin\n%s" (lbs_to_string [] lbs) (term_to_string e)
+      | Tm_refine {b=xt; phi=f} -> Format.fmt3 "(%s:%s{%s})" (bv_to_string xt) (xt.sort |> term_to_string) (f |> formula_to_string)
+      | Tm_app {hd=t; args} ->  Format.fmt2 "(%s %s)" (term_to_string t) (args_to_string args)
+      | Tm_let {lbs; body=e} ->   Format.fmt2 "%s\nin\n%s" (lbs_to_string [] lbs) (term_to_string e)
       | Tm_ascribed {tm=e;asc=(annot, topt, b);eff_opt=eff_name} ->
         let annot = match annot with
-            | Inl t -> U.format2 "[%s] %s" (map_opt eff_name Ident.string_of_lid |> dflt "default") (term_to_string t)
+            | Inl t -> Format.fmt2 "[%s] %s" (Option.map Ident.string_of_lid eff_name |> Option.dflt "default") (term_to_string t)
             | Inr c -> comp_to_string c in
         let topt = match topt with
             | None -> ""
-            | Some t -> U.format1 "by %s" (term_to_string t) in
+            | Some t -> Format.fmt1 "by %s" (term_to_string t) in
         let s = if b then "ascribed_eq" else "ascribed" in
-        U.format4 "(%s <%s: %s %s)" (term_to_string e) s annot topt
+        Format.fmt4 "(%s <%s: %s %s)" (term_to_string e) s annot topt
       | Tm_match {scrutinee=head; ret_opt=asc_opt; brs=branches; rc_opt=lc} ->
         let lc_str =
           match lc with
           | Some lc when (Options.print_implicits ()) ->
-            U.format1 " (residual_comp:%s)"
-              (if Option.isNone lc.residual_typ then "None" else term_to_string (Option.get lc.residual_typ))
+            Format.fmt1 " (residual_comp:%s)"
+              (if None? lc.residual_typ then "None" else term_to_string (Option.must lc.residual_typ))
           | _ -> "" in
-        U.format4 "(match %s %swith\n\t| %s%s)"
+        Format.fmt4 "(match %s %swith\n\t| %s%s)"
           (term_to_string head)
           (match asc_opt with
            | None -> ""
            | Some (b, (asc, tacopt, use_eq)) ->
              let s = if use_eq then "returns$" else "returns" in
-             U.format4 "as %s %s %s%s "
+             Format.fmt4 "as %s %s %s%s "
                (binder_to_string b)
                s
                (match asc with
@@ -257,30 +256,30 @@ let rec term_to_string x =
                 | Inr c -> comp_to_string c)
                (match tacopt with
                 | None -> ""
-                | Some tac -> U.format1 " by %s" (term_to_string tac)))
+                | Some tac -> Format.fmt1 " by %s" (term_to_string tac)))
           (U.concat_l "\n\t|" (branches |> List.map branch_to_string))
           lc_str
       | Tm_uinst(t, us) ->
         if (Options.print_universes())
-        then U.format2 "%s<%s>" (term_to_string t) (univs_to_string us)
+        then Format.fmt2 "%s<%s>" (term_to_string t) (univs_to_string us)
         else term_to_string t
 
       | Tm_unknown -> "_"
     )
 
 and branch_to_string (p, wopt, e) : string =
-    U.format3 "%s %s -> %s"
+    Format.fmt3 "%s %s -> %s"
                 (p |> pat_to_string)
-                (match wopt with | None -> "" | Some w -> U.format1 "when %s" (w |> term_to_string))
+                (match wopt with | None -> "" | Some w -> Format.fmt1 "when %s" (w |> term_to_string))
                 (e |> term_to_string)
 and ctx_uvar_to_string_aux print_reason ctx_uvar =
     let reason_string =
       if print_reason
-      then U.format1 "(* %s *)\n" ctx_uvar.ctx_uvar_reason
-      else U.format2 "(%s-%s) "
+      then Format.fmt1 "(* %s *)\n" ctx_uvar.ctx_uvar_reason
+      else Format.fmt2 "(%s-%s) "
              (Range.string_of_pos (Range.start_of_range ctx_uvar.ctx_uvar_range))
              (Range.string_of_pos (Range.end_of_range ctx_uvar.ctx_uvar_range)) in
-    format5 "%s(%s |- %s : %s) %s"
+    Format.fmt5 "%s(%s |- %s : %s) %s"
             reason_string
             (binders_to_string ", " ctx_uvar.ctx_uvar_binders)
             (uvar_to_string ctx_uvar.ctx_uvar_head)
@@ -294,19 +293,19 @@ and ctx_uvar_to_string_aux print_reason ctx_uvar =
 
 
 and subst_elt_to_string = function
-   | DB(i, x) -> U.format2 "DB (%s, %s)" (string_of_int i) (bv_to_string x)
-   | DT(i, t) -> U.format2 "DT (%s, %s)" (string_of_int i) (term_to_string t)
-   | NM(x, i) -> U.format2 "NM (%s, %s)" (bv_to_string x) (string_of_int i)
-   | NT(x, t) -> U.format2 "NT (%s, %s)" (bv_to_string x) (term_to_string t)
-   | UN(i, u) -> U.format2 "UN (%s, %s)" (string_of_int i) (univ_to_string u)
-   | UD(u, i) -> U.format2 "UD (%s, %s)" (string_of_id u) (string_of_int i)
+   | DB(i, x) -> Format.fmt2 "DB (%s, %s)" (show i) (bv_to_string x)
+   | DT(i, t) -> Format.fmt2 "DT (%s, %s)" (show i) (term_to_string t)
+   | NM(x, i) -> Format.fmt2 "NM (%s, %s)" (bv_to_string x) (show i)
+   | NT(x, t) -> Format.fmt2 "NT (%s, %s)" (bv_to_string x) (term_to_string t)
+   | UN(i, u) -> Format.fmt2 "UN (%s, %s)" (show i) (univ_to_string u)
+   | UD(u, i) -> Format.fmt2 "UD (%s, %s)" (string_of_id u) (show i)
 
 and subst_to_string s = s |> List.map subst_elt_to_string |> String.concat "; "
 
 and pat_to_string x =
   match x.v with
     | Pat_cons(l, us_opt, pats) ->
-      U.format3 "(%s%s%s)" 
+      Format.fmt3 "(%s%s%s)" 
                 (fv_to_string l)
                 (if not (Options.print_universes())
                  then " "
@@ -314,15 +313,15 @@ and pat_to_string x =
                    match us_opt with
                    | None -> " "
                    | Some us ->
-                     U.format1 " %s " (List.map univ_to_string us |> String.concat " "))
+                     Format.fmt1 " %s " (List.map univ_to_string us |> String.concat " "))
                 (List.map (fun (x, b) -> let p = pat_to_string x in if b then "#"^p else p) pats |> String.concat " ")
     | Pat_dot_term topt ->
       if Options.print_bound_var_types()
-      then U.format1 ".%s" (if topt = None then "_" else topt |> U.must |> term_to_string)
+      then Format.fmt1 ".%s" (if topt = None then "_" else topt |> Option.must |> term_to_string)
       else "._"
     | Pat_var x ->
       if Options.print_bound_var_types()
-      then U.format2 "%s:%s" (bv_to_string x) (term_to_string x.sort)
+      then Format.fmt2 "%s:%s" (bv_to_string x) (term_to_string x.sort)
       else bv_to_string x
     | Pat_constant c -> const_to_string c
 
@@ -336,11 +335,11 @@ and lbs_to_string quals lbs =
 //                                            | _ -> failwith "Impossibe" in
 //                                        {lb with lbunivs=us; lbtyp=t; lbdef=d}))
 //        else lbs in
-    U.format3 "%slet %s %s"
+    Format.fmt3 "%slet %s %s"
     (quals_to_string' quals)
     (if fst lbs then "rec" else "")
     (U.concat_l "\n and " (snd lbs |> List.map (fun lb ->
-                                                    U.format5 "%s%s %s : %s = %s"
+                                                    Format.fmt5 "%s%s %s : %s = %s"
                                                             (attrs_to_string lb.lbattrs)
                                                             (lbname_to_string lb.lbname)
                                                             (if (Options.print_universes())
@@ -350,7 +349,7 @@ and lbs_to_string quals lbs =
                                                             (lb.lbdef |> term_to_string))))
 and attrs_to_string = function
     | [] -> ""
-    | tms -> U.format1 "[@ %s]" (List.map (fun t -> paren (term_to_string t)) tms |> String.concat "; ")
+    | tms -> Format.fmt1 "[@ %s]" (List.map (fun t -> paren (term_to_string t)) tms |> String.concat "; ")
 
 and binder_attrs_to_string = function
     | _ when Options.any_dump_module () -> ""
@@ -358,7 +357,7 @@ and binder_attrs_to_string = function
     Just don't print them. *)
 
     | [] -> ""
-    | tms -> U.format1 "[@@@ %s]" (List.map (fun t -> paren (term_to_string t)) tms |> String.concat "; ")
+    | tms -> Format.fmt1 "[@@@ %s]" (List.map (fun t -> paren (term_to_string t)) tms |> String.concat "; ")
 
 and bqual_to_string' s = function
   | Some (Implicit false) -> "#" ^ s
@@ -409,17 +408,17 @@ and comp_to_string c =
     | Total t ->
       begin match (compress t).n with
         | Tm_type _ when not (Options.print_implicits() || Options.print_universes()) -> term_to_string t
-        | _ -> U.format1 "Tot %s" (term_to_string t)
+        | _ -> Format.fmt1 "Tot %s" (term_to_string t)
       end
     | GTotal t ->
       begin match (compress t).n with
         | Tm_type _ when not (Options.print_implicits() || Options.print_universes()) -> term_to_string t
-        | _ -> U.format1 "GTot %s" (term_to_string t)
+        | _ -> Format.fmt1 "GTot %s" (term_to_string t)
       end
     | Comp c ->
         let basic =
           if (Options.print_effect_args())
-          then U.format5 "%s<%s> (%s) %s (attributes %s)"
+          then Format.fmt5 "%s<%s> (%s) %s (attributes %s)"
                             (sli c.effect_name)
                             (c.comp_univs |> List.map univ_to_string |> String.concat ", ")
                             (term_to_string c.result_typ)
@@ -427,31 +426,31 @@ and comp_to_string c =
                             (cflags_to_string c.flags)
           else if c.flags |> U.for_some (function TOTAL -> true | _ -> false)
           && not (Options.print_effect_args())
-          then U.format1 "Tot %s" (term_to_string c.result_typ)
+          then Format.fmt1 "Tot %s" (term_to_string c.result_typ)
           else if not (Options.print_effect_args())
                   && not (Options.print_implicits())
                   && lid_equals c.effect_name (C.effect_ML_lid())
           then term_to_string c.result_typ
           else if not (Options.print_effect_args())
                && c.flags |> U.for_some (function MLEFFECT -> true | _ -> false)
-          then U.format1 "ALL %s" (term_to_string c.result_typ)
-          else U.format2 "%s (%s)" (sli c.effect_name) (term_to_string c.result_typ) in
+          then Format.fmt1 "ALL %s" (term_to_string c.result_typ)
+          else Format.fmt2 "%s (%s)" (sli c.effect_name) (term_to_string c.result_typ) in
       let dec = c.flags
         |> List.collect (function DECREASES dec_order ->
             (match dec_order with
              | Decreases_lex l ->
-               [U.format1 " (decreases [%s])"
+               [Format.fmt1 " (decreases [%s])"
                   (match l with
                    | [] -> ""
                    | hd::tl ->
                      tl |> List.fold_left (fun s t ->
                        s ^ ";" ^ term_to_string t) (term_to_string hd))]
              | Decreases_wf (rel, e) ->
-               [U.format2 "(decreases {:well-founded %s %s})" (term_to_string rel) (term_to_string e)])
+               [Format.fmt2 "(decreases {:well-founded %s %s})" (term_to_string rel) (term_to_string e)])
              | _ -> [])
             
         |> String.concat " " in
-      U.format2 "%s%s" basic dec
+      Format.fmt2 "%s%s" basic dec
     )
 
 (* NB: this is reduced version of the one in Print *)
@@ -484,13 +483,13 @@ let term_to_string' env x = term_to_string x
 
 
 //let subst_to_string subst =
-//   U.format1 "{%s}" <|
+//   Format.fmt1 "{%s}" <|
 //    (List.map (function
-//        | Inl (a, t) -> U.format2 "(%s -> %s)" (strBvd a) (typ_to_string t)
-//        | Inr (x, e) -> U.format2 "(%s -> %s)" (strBvd x) (exp_to_string e)) subst |> String.concat ", ")
+//        | Inl (a, t) -> Format.fmt2 "(%s -> %s)" (strBvd a) (typ_to_string t)
+//        | Inr (x, e) -> Format.fmt2 "(%s -> %s)" (strBvd x) (exp_to_string e)) subst |> String.concat ", ")
 //let freevars_to_string (fvs:freevars) =
 //    let f (l:set (bvar 'a 'b)) = l |> U.set_elements |> List.map (fun t -> strBvd t.v) |> String.concat ", " in
-//    U.format2 "ftvs={%s}, fxvs={%s}" (f fvs.ftvs) (f fvs.fxvs)
+//    Format.fmt2 "ftvs={%s}, fxvs={%s}" (f fvs.ftvs) (f fvs.fxvs)
 
 
 let enclose_universes s =
@@ -500,10 +499,10 @@ let enclose_universes s =
 
 let tscheme_to_string s =
     let (us, t) = s in
-    U.format2 "%s%s" (enclose_universes <| univ_names_to_string us) (term_to_string t)
+    Format.fmt2 "%s%s" (enclose_universes <| univ_names_to_string us) (term_to_string t)
 
 let action_to_string a =
-    U.format5 "%s%s %s : %s = %s"
+    Format.fmt5 "%s%s %s : %s = %s"
         (sli a.action_name)
         (binders_to_string " " a.action_params)
         (enclose_universes <| univ_names_to_string a.action_univs)
@@ -515,7 +514,7 @@ let wp_eff_combinators_to_string combs =
     | Some ts -> tscheme_to_string ts
     | None -> "None" in
 
-  U.format "{\n\
+  Format.fmt "{\n\
     ret_wp       = %s\n\
   ; bind_wp      = %s\n\
   ; stronger     = %s\n\
@@ -540,23 +539,23 @@ let wp_eff_combinators_to_string combs =
 
 let sub_eff_to_string se =
   let tsopt_to_string ts_opt =
-    if is_some ts_opt then ts_opt |> must |> tscheme_to_string
+    if Some? ts_opt then ts_opt |> Option.must |> tscheme_to_string
     else "<None>" in
-  U.format4 "sub_effect %s ~> %s : lift = %s ;; lift_wp = %s"
+  Format.fmt4 "sub_effect %s ~> %s : lift = %s ;; lift_wp = %s"
     (lid_to_string se.source) (lid_to_string se.target)
     (tsopt_to_string se.lift) (tsopt_to_string se.lift_wp)
 
 let layered_eff_combinators_to_string combs =
   let to_str (ts_t, ts_ty, kopt) =
-    U.format3 "(%s) : (%s)<%s>"
+    Format.fmt3 "(%s) : (%s)<%s>"
       (tscheme_to_string ts_t) (tscheme_to_string ts_ty)
       (show kopt) in
 
   let to_str2 (ts_t, ts_ty) =
-    U.format2 "(%s) : (%s)"
+    Format.fmt2 "(%s) : (%s)"
       (tscheme_to_string ts_t) (tscheme_to_string ts_ty) in
 
-  U.format "{\n\
+  Format.fmt "{\n\
   ; l_repr = %s\n\
   ; l_return = %s\n\
   ; l_bind = %s\n\
@@ -571,7 +570,7 @@ let layered_eff_combinators_to_string combs =
       to_str  combs.l_if_then_else;
 
       (if None? combs.l_close then ""
-       else U.format1 "; l_close = %s\n" (combs.l_close |> must |> to_str2));
+       else Format.fmt1 "; l_close = %s\n" (combs.l_close |> Option.must |> to_str2));
     ]
 
 let eff_combinators_to_string = function
@@ -580,7 +579,7 @@ let eff_combinators_to_string = function
   | Layered_eff combs -> layered_eff_combinators_to_string combs
 
 let eff_extraction_mode_to_string = function
-  | Extract_none s -> U.format1 "none (%s)" s
+  | Extract_none s -> Format.fmt1 "none (%s)" s
   | Extract_reify -> "reify"
   | Extract_primitive -> "primitive"
 
@@ -590,7 +589,7 @@ let eff_decl_to_string ed =
         List.map action_to_string |>
         String.concat ",\n\t" in
     let eff_name = if SU.is_layered ed then "layered_effect" else "new_effect" in
-    U.format "%s%s { \
+    Format.fmt "%s%s { \
       %s%s %s : %s \n  \
         %s\n\
       and effect_actions\n\t%s\n}\n"
@@ -612,23 +611,23 @@ let rec sigelt_to_string (x: sigelt) =
         let quals_str = quals_to_string' x.sigquals in
         let binders_str = binders_to_string " " tps in
         let term_str = term_to_string k in
-        if Options.print_universes () then U.format5 "%stype %s<%s> %s : %s" quals_str (string_of_lid lid) (univ_names_to_string univs) binders_str term_str
-        else U.format4 "%stype %s %s : %s" quals_str (string_of_lid lid) binders_str term_str
+        if Options.print_universes () then Format.fmt5 "%stype %s<%s> %s : %s" quals_str (string_of_lid lid) (univ_names_to_string univs) binders_str term_str
+        else Format.fmt4 "%stype %s %s : %s" quals_str (string_of_lid lid) binders_str term_str
       | Sig_datacon {lid; us=univs; t} ->
         if (Options.print_universes())
         then //let univs, t = Subst.open_univ_vars univs t in (* AR: don't open the universes, else it's a bit confusing *)
-             U.format3 "datacon<%s> %s : %s" (univ_names_to_string univs) (string_of_lid lid) (term_to_string t)
-        else U.format2 "datacon %s : %s" (string_of_lid lid) (term_to_string t)
+             Format.fmt3 "datacon<%s> %s : %s" (univ_names_to_string univs) (string_of_lid lid) (term_to_string t)
+        else Format.fmt2 "datacon %s : %s" (string_of_lid lid) (term_to_string t)
       | Sig_declare_typ {lid; us=univs; t} ->
         //let univs, t = Subst.open_univ_vars univs t in
-        U.format4 "%sval %s %s : %s" (quals_to_string' x.sigquals) (string_of_lid lid)
+        Format.fmt4 "%sval %s %s : %s" (quals_to_string' x.sigquals) (string_of_lid lid)
             (if (Options.print_universes())
-             then U.format1 "<%s>" (univ_names_to_string univs)
+             then Format.fmt1 "<%s>" (univ_names_to_string univs)
              else "")
             (term_to_string t)
       | Sig_assume {lid; us; phi=f} ->
-        if Options.print_universes () then U.format3 "assume %s<%s> : %s" (string_of_lid lid) (univ_names_to_string us) (term_to_string f)
-        else U.format2 "assume %s : %s" (string_of_lid lid) (term_to_string f)
+        if Options.print_universes () then Format.fmt3 "assume %s<%s> : %s" (string_of_lid lid) (univ_names_to_string us) (term_to_string f)
+        else Format.fmt2 "assume %s : %s" (string_of_lid lid) (term_to_string f)
       | Sig_let {lbs} ->
         (* FIXME: do not print the propagated qualifiers on top-level letbindings,
         vale fails when parsing them. *)
@@ -636,9 +635,9 @@ let rec sigelt_to_string (x: sigelt) =
         lbs_to_string x.sigquals lbs
       | Sig_bundle {ses} -> "(* Sig_bundle *)" ^ (List.map sigelt_to_string ses |> String.concat "\n")
       | Sig_fail {errs; fail_in_lax=lax; ses} ->
-        U.format3 "(* Sig_fail %s %s *)\n%s\n(* / Sig_fail*)\n"
-            (string_of_bool lax)
-            (FStarC.Common.string_of_list string_of_int errs)
+        Format.fmt3 "(* Sig_fail %s %s *)\n%s\n(* / Sig_fail*)\n"
+            (show lax)
+            (show errs)
             (List.map sigelt_to_string ses |> String.concat "\n")
 
       | Sig_new_effect(ed) ->
@@ -653,10 +652,10 @@ let rec sigelt_to_string (x: sigelt) =
              let tps, c = match (Subst.compress t).n with
                 | Tm_arrow {bs; comp=c} -> bs, c
                 | _ -> failwith "impossible" in
-             U.format4 "effect %s<%s> %s = %s" (sli l) (univ_names_to_string univs) (binders_to_string " " tps) (comp_to_string c)
-        else U.format3 "effect %s %s = %s" (sli l) (binders_to_string " " tps) (comp_to_string c)
+             Format.fmt4 "effect %s<%s> %s = %s" (sli l) (univ_names_to_string univs) (binders_to_string " " tps) (comp_to_string c)
+        else Format.fmt3 "effect %s %s = %s" (sli l) (binders_to_string " " tps) (comp_to_string c)
       | Sig_splice {is_typed; lids; tac=t} ->
-        U.format3 "splice%s[%s] (%s)"
+        Format.fmt3 "splice%s[%s] (%s)"
           (if is_typed then "_t" else "")
           (String.concat "; " <| List.map show lids)
           (term_to_string t)
@@ -666,7 +665,7 @@ let rec sigelt_to_string (x: sigelt) =
                               tm=t;
                               typ=ty;
                               kind=k} ->
-        U.format6 "polymonadic_bind (%s, %s) |> %s = (%s, %s)<%s>"
+        Format.fmt6 "polymonadic_bind (%s, %s) |> %s = (%s, %s)<%s>"
           (show m)
           (show n)
           (show p)
@@ -678,7 +677,7 @@ let rec sigelt_to_string (x: sigelt) =
                                  tm=t;
                                  typ=ty;
                                  kind=k} ->
-        U.format5 "polymonadic_subcomp %s <: %s = (%s, %s)<%s>"
+        Format.fmt5 "polymonadic_subcomp %s <: %s = (%s, %s)<%s>"
           (show m)
           (show n)
           (tscheme_to_string t)

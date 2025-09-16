@@ -213,7 +213,7 @@ val map_append: f:('a -> Tot 'b) -> s1:seq 'a -> s2:seq 'a -> Lemma
   (requires True)
   (ensures (map f (s1@s2) == (map f s1 @ map f s2)))
   (decreases (Seq.length s2))
-#reset-options "--z3rlimit 10 --initial_fuel 1 --max_fuel 1 --initial_ifuel 1 --max_ifuel 1"
+#reset-options "--z3rlimit 10 --fuel 1 --ifuel 1"
 let rec map_append f s_1 s_2 =
   if Seq.length s_2 = 0
   then (cut (Seq.equal (s_1@s_2) s_1);
@@ -307,7 +307,7 @@ let collect_snoc f s a =
   let prefix, last = un_snoc (Seq.snoc s a) in
   cut (Seq.equal prefix s)
 
-#reset-options "--z3rlimit 20 --initial_fuel 1 --max_fuel 1 --initial_ifuel 1 --max_ifuel 1"
+#reset-options "--z3rlimit 20 --fuel 1 --ifuel 1"
 
 let collect_grows (f:'a -> Tot (seq 'b))
 		  (s1:seq 'a) (s2:seq 'a)

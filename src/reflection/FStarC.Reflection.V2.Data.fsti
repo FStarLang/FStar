@@ -24,7 +24,6 @@ each other. *)
 open FStarC.List
 open FStarC.Syntax.Syntax
 module Range = FStarC.Range
-module Z     = FStarC.BigInt
 open FStarC.Ident
 open FStarC.Sealed
 
@@ -46,7 +45,7 @@ type namedv = bv
 
 type vconst =
     | C_Unit
-    | C_Int of Z.t
+    | C_Int of int
     | C_True
     | C_False
     | C_String of string
@@ -54,6 +53,7 @@ type vconst =
     | C_Reify
     | C_Reflect of name
     | C_Real of string (* Real literals are represented as a string e.g. "1.2" *)
+    | C_Char of FStar.Char.char
 
 type universes = list universe
 
@@ -97,13 +97,13 @@ type aqualv =
 type argv = term & aqualv
 
 type namedv_view = {
-  uniq   : Z.t;
+  uniq   : int;
   sort   : sealed typ;
   ppname : ppname_t;
 }
 
 type bv_view = {
-  index  : Z.t;
+  index  : int;
   sort   : sealed typ;
   ppname : ppname_t;
 }
@@ -116,7 +116,7 @@ type binder_view = {
 }
 
 type binding = {
-  uniq   : Z.t;
+  uniq   : int;
   sort   : typ;
   ppname : ppname_t;
 }
@@ -126,7 +126,7 @@ type universe_view =
   | Uv_Zero : universe_view
   | Uv_Succ : universe -> universe_view
   | Uv_Max  : universes -> universe_view
-  | Uv_BVar : Z.t -> universe_view
+  | Uv_BVar : int -> universe_view
   | Uv_Name : univ_name -> universe_view
   | Uv_Unif : universe_uvar -> universe_view
   | Uv_Unk  : universe_view
@@ -142,7 +142,7 @@ type term_view =
     | Tv_Type      of universe
     | Tv_Refine    of binder & term
     | Tv_Const     of vconst
-    | Tv_Uvar      of Z.t & ctx_uvar_and_subst
+    | Tv_Uvar      of int & ctx_uvar_and_subst
     | Tv_Let       of bool & list term & binder & term & term
     | Tv_Match     of term & option match_returns_ascription & list branch
     | Tv_AscribedT of term & term & option term & bool  //if the boolean flag is true, the ascription is an equality ascription
@@ -206,7 +206,7 @@ type qualifier =
 
 type qualifiers = list qualifier
 
-type var = Z.t
+type var = int
 
 type exp =
     | Unit

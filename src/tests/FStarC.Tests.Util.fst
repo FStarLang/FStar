@@ -19,9 +19,9 @@ open FStarC
 open FStarC
 open FStarC.Effect
 open FStarC.Errors
-open FStarC.Util
 open FStarC.Syntax
 open FStarC.Syntax.Syntax
+
 module S = FStarC.Syntax.Syntax
 module U = FStarC.Syntax.Util
 module SS = FStarC.Syntax.Subst
@@ -35,11 +35,12 @@ open FStarC.Range
 open FStarC.Class.Tagged
 open FStarC.Class.Show
 open FStarC.Syntax.Print {}
+open FStarC.Class.Show
 
-let always id b =
+let always (id : int) b =
     if b
     then ()
-    else raise_error0 Errors.Fatal_AssertionFailure (BU.format1 "Assertion failed: test %s" (BU.string_of_int id))
+    else raise_error0 Errors.Fatal_AssertionFailure (Format.fmt1 "Assertion failed: test %s" (show id))
 
 let x = gen_bv "x" None S.tun
 let y = gen_bv "y" None S.tun
@@ -68,8 +69,8 @@ let rec term_eq' t1 t2 =
               && args_eq ct1.effect_args ct2.effect_args
             | _ -> false in
     match t1.n, t2.n with
-      | Tm_lazy l, _ -> term_eq' (must !lazy_chooser l.lkind l) t2
-      | _, Tm_lazy l -> term_eq' t1 (must !lazy_chooser l.lkind l)
+      | Tm_lazy l, _ -> term_eq' (Option.must !lazy_chooser l.lkind l) t2
+      | _, Tm_lazy l -> term_eq' t1 (Option.must !lazy_chooser l.lkind l)
       | Tm_bvar x, Tm_bvar y -> x.index = y.index
       | Tm_name x, Tm_name y -> S.bv_eq x y
       | Tm_fvar f, Tm_fvar g -> S.fv_eq f g
@@ -114,15 +115,15 @@ let rec term_eq' t1 t2 =
 
       | Tm_delayed _, _
       | _, Tm_delayed _ ->
-        failwith (BU.format2 "Impossible: %s and %s" (tag_of t1) (tag_of t2))
+        failwith (Format.fmt2 "Impossible: %s and %s" (tag_of t1) (tag_of t2))
 
       | Tm_unknown, Tm_unknown -> true
       | _ -> false
 
 let term_eq t1 t2 =
-//    BU.print2 "Comparing %s and\n\t%s\n" (show t1) (show t2);
+//    Format.print2 "Comparing %s and\n\t%s\n" (show t1) (show t2);
     let b = term_eq' t1 t2 in
     if not b then (
-      BU.print2 ">>>>>>>>>>>Term %s is not equal to %s\n" (show t1) (show t2)
+      Format.print2 ">>>>>>>>>>>Term %s is not equal to %s\n" (show t1) (show t2)
     );
     b

@@ -110,7 +110,7 @@ let (report_json : Prims.string -> counter -> unit) =
         FStarC_Json.string_of_json
           (FStarC_Json.JsonAssoc
              [("tag", (FStarC_Json.JsonStr tag)); ("counter", counter1)]) in
-      FStarC_Util.print1_error "%s\n" uu___
+      FStarC_Format.print1_error "%s\n" uu___
 let (report_human : Prims.string -> counter -> unit) =
   fun tag ->
     fun c ->
@@ -128,8 +128,9 @@ let (report_human : Prims.string -> counter -> unit) =
         let uu___1 =
           let uu___2 = FStarC_Effect.op_Bang c.total_time in
           uu___2 / (Prims.parse_int "1000000") in
-        FStarC_Util.string_of_int uu___1 in
-      FStarC_Util.print4 "%s, profiled %s:\t %s ms%s\n" tag c.cid uu___ warn
+        FStarC_Class_Show.show FStarC_Class_Show.showable_int uu___1 in
+      FStarC_Format.print4 "%s, profiled %s:\t %s ms%s\n" tag c.cid uu___
+        warn
 let (report : Prims.string -> counter -> unit) =
   fun tag ->
     fun c ->

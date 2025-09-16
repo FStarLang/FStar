@@ -84,13 +84,13 @@ let rec __knot_e_comparison _ =
     (fun tm_0 ->
        match tm_0 with
        | ("FStar.Reflection.V2.Formula.Eq", _0_2::[]) ->
-           Fstarcompiler.FStarC_Util.bind_opt
+           Fstarcompiler.FStarC_Option.bind
              (Fstarcompiler.FStarC_Syntax_Embeddings_Base.extracted_unembed
                 (Fstarcompiler.FStarC_Syntax_Embeddings.e_option
                    Fstarcompiler.FStarC_Reflection_V2_Embeddings.e_term) _0_2)
              (fun _0_2 -> FStar_Pervasives_Native.Some (Eq _0_2))
        | ("FStar.Reflection.V2.Formula.BoolEq", _0_4::[]) ->
-           Fstarcompiler.FStarC_Util.bind_opt
+           Fstarcompiler.FStarC_Option.bind
              (Fstarcompiler.FStarC_Syntax_Embeddings_Base.extracted_unembed
                 (Fstarcompiler.FStarC_Syntax_Embeddings.e_option
                    Fstarcompiler.FStarC_Reflection_V2_Embeddings.e_term) _0_4)
@@ -192,16 +192,16 @@ let rec __knot_e_formula _ =
        | ("FStar.Reflection.V2.Formula.False_", []) ->
            FStar_Pervasives_Native.Some False_
        | ("FStar.Reflection.V2.Formula.Comp", _0_22::_1_23::_2_24::[]) ->
-           Fstarcompiler.FStarC_Util.bind_opt
+           Fstarcompiler.FStarC_Option.bind
              (Fstarcompiler.FStarC_Syntax_Embeddings_Base.extracted_unembed
                 e_comparison _0_22)
              (fun _0_22 ->
-                Fstarcompiler.FStarC_Util.bind_opt
+                Fstarcompiler.FStarC_Option.bind
                   (Fstarcompiler.FStarC_Syntax_Embeddings_Base.extracted_unembed
                      Fstarcompiler.FStarC_Reflection_V2_Embeddings.e_term
                      _1_23)
                   (fun _1_23 ->
-                     Fstarcompiler.FStarC_Util.bind_opt
+                     Fstarcompiler.FStarC_Option.bind
                        (Fstarcompiler.FStarC_Syntax_Embeddings_Base.extracted_unembed
                           Fstarcompiler.FStarC_Reflection_V2_Embeddings.e_term
                           _2_24)
@@ -209,65 +209,65 @@ let rec __knot_e_formula _ =
                           FStar_Pervasives_Native.Some
                             (Comp (_0_22, _1_23, _2_24)))))
        | ("FStar.Reflection.V2.Formula.And", _0_26::_1_27::[]) ->
-           Fstarcompiler.FStarC_Util.bind_opt
+           Fstarcompiler.FStarC_Option.bind
              (Fstarcompiler.FStarC_Syntax_Embeddings_Base.extracted_unembed
                 Fstarcompiler.FStarC_Reflection_V2_Embeddings.e_term _0_26)
              (fun _0_26 ->
-                Fstarcompiler.FStarC_Util.bind_opt
+                Fstarcompiler.FStarC_Option.bind
                   (Fstarcompiler.FStarC_Syntax_Embeddings_Base.extracted_unembed
                      Fstarcompiler.FStarC_Reflection_V2_Embeddings.e_term
                      _1_27)
                   (fun _1_27 ->
                      FStar_Pervasives_Native.Some (And (_0_26, _1_27))))
        | ("FStar.Reflection.V2.Formula.Or", _0_29::_1_30::[]) ->
-           Fstarcompiler.FStarC_Util.bind_opt
+           Fstarcompiler.FStarC_Option.bind
              (Fstarcompiler.FStarC_Syntax_Embeddings_Base.extracted_unembed
                 Fstarcompiler.FStarC_Reflection_V2_Embeddings.e_term _0_29)
              (fun _0_29 ->
-                Fstarcompiler.FStarC_Util.bind_opt
+                Fstarcompiler.FStarC_Option.bind
                   (Fstarcompiler.FStarC_Syntax_Embeddings_Base.extracted_unembed
                      Fstarcompiler.FStarC_Reflection_V2_Embeddings.e_term
                      _1_30)
                   (fun _1_30 ->
                      FStar_Pervasives_Native.Some (Or (_0_29, _1_30))))
        | ("FStar.Reflection.V2.Formula.Not", _0_32::[]) ->
-           Fstarcompiler.FStarC_Util.bind_opt
+           Fstarcompiler.FStarC_Option.bind
              (Fstarcompiler.FStarC_Syntax_Embeddings_Base.extracted_unembed
                 Fstarcompiler.FStarC_Reflection_V2_Embeddings.e_term _0_32)
              (fun _0_32 -> FStar_Pervasives_Native.Some (Not _0_32))
        | ("FStar.Reflection.V2.Formula.Implies", _0_34::_1_35::[]) ->
-           Fstarcompiler.FStarC_Util.bind_opt
+           Fstarcompiler.FStarC_Option.bind
              (Fstarcompiler.FStarC_Syntax_Embeddings_Base.extracted_unembed
                 Fstarcompiler.FStarC_Reflection_V2_Embeddings.e_term _0_34)
              (fun _0_34 ->
-                Fstarcompiler.FStarC_Util.bind_opt
+                Fstarcompiler.FStarC_Option.bind
                   (Fstarcompiler.FStarC_Syntax_Embeddings_Base.extracted_unembed
                      Fstarcompiler.FStarC_Reflection_V2_Embeddings.e_term
                      _1_35)
                   (fun _1_35 ->
                      FStar_Pervasives_Native.Some (Implies (_0_34, _1_35))))
        | ("FStar.Reflection.V2.Formula.Iff", _0_37::_1_38::[]) ->
-           Fstarcompiler.FStarC_Util.bind_opt
+           Fstarcompiler.FStarC_Option.bind
              (Fstarcompiler.FStarC_Syntax_Embeddings_Base.extracted_unembed
                 Fstarcompiler.FStarC_Reflection_V2_Embeddings.e_term _0_37)
              (fun _0_37 ->
-                Fstarcompiler.FStarC_Util.bind_opt
+                Fstarcompiler.FStarC_Option.bind
                   (Fstarcompiler.FStarC_Syntax_Embeddings_Base.extracted_unembed
                      Fstarcompiler.FStarC_Reflection_V2_Embeddings.e_term
                      _1_38)
                   (fun _1_38 ->
                      FStar_Pervasives_Native.Some (Iff (_0_37, _1_38))))
        | ("FStar.Reflection.V2.Formula.Forall", _0_40::_1_41::_2_42::[]) ->
-           Fstarcompiler.FStarC_Util.bind_opt
+           Fstarcompiler.FStarC_Option.bind
              (Fstarcompiler.FStarC_Syntax_Embeddings_Base.extracted_unembed
                 Fstarcompiler.FStarC_Reflection_V2_Embeddings.e_bv_view _0_40)
              (fun _0_40 ->
-                Fstarcompiler.FStarC_Util.bind_opt
+                Fstarcompiler.FStarC_Option.bind
                   (Fstarcompiler.FStarC_Syntax_Embeddings_Base.extracted_unembed
                      Fstarcompiler.FStarC_Reflection_V2_Embeddings.e_term
                      _1_41)
                   (fun _1_41 ->
-                     Fstarcompiler.FStarC_Util.bind_opt
+                     Fstarcompiler.FStarC_Option.bind
                        (Fstarcompiler.FStarC_Syntax_Embeddings_Base.extracted_unembed
                           Fstarcompiler.FStarC_Reflection_V2_Embeddings.e_term
                           _2_42)
@@ -275,16 +275,16 @@ let rec __knot_e_formula _ =
                           FStar_Pervasives_Native.Some
                             (Forall (_0_40, _1_41, _2_42)))))
        | ("FStar.Reflection.V2.Formula.Exists", _0_44::_1_45::_2_46::[]) ->
-           Fstarcompiler.FStarC_Util.bind_opt
+           Fstarcompiler.FStarC_Option.bind
              (Fstarcompiler.FStarC_Syntax_Embeddings_Base.extracted_unembed
                 Fstarcompiler.FStarC_Reflection_V2_Embeddings.e_bv_view _0_44)
              (fun _0_44 ->
-                Fstarcompiler.FStarC_Util.bind_opt
+                Fstarcompiler.FStarC_Option.bind
                   (Fstarcompiler.FStarC_Syntax_Embeddings_Base.extracted_unembed
                      Fstarcompiler.FStarC_Reflection_V2_Embeddings.e_term
                      _1_45)
                   (fun _1_45 ->
-                     Fstarcompiler.FStarC_Util.bind_opt
+                     Fstarcompiler.FStarC_Option.bind
                        (Fstarcompiler.FStarC_Syntax_Embeddings_Base.extracted_unembed
                           Fstarcompiler.FStarC_Reflection_V2_Embeddings.e_term
                           _2_46)
@@ -292,29 +292,29 @@ let rec __knot_e_formula _ =
                           FStar_Pervasives_Native.Some
                             (Exists (_0_44, _1_45, _2_46)))))
        | ("FStar.Reflection.V2.Formula.App", _0_48::_1_49::[]) ->
-           Fstarcompiler.FStarC_Util.bind_opt
+           Fstarcompiler.FStarC_Option.bind
              (Fstarcompiler.FStarC_Syntax_Embeddings_Base.extracted_unembed
                 Fstarcompiler.FStarC_Reflection_V2_Embeddings.e_term _0_48)
              (fun _0_48 ->
-                Fstarcompiler.FStarC_Util.bind_opt
+                Fstarcompiler.FStarC_Option.bind
                   (Fstarcompiler.FStarC_Syntax_Embeddings_Base.extracted_unembed
                      Fstarcompiler.FStarC_Reflection_V2_Embeddings.e_term
                      _1_49)
                   (fun _1_49 ->
                      FStar_Pervasives_Native.Some (App (_0_48, _1_49))))
        | ("FStar.Reflection.V2.Formula.Name", _0_51::[]) ->
-           Fstarcompiler.FStarC_Util.bind_opt
+           Fstarcompiler.FStarC_Option.bind
              (Fstarcompiler.FStarC_Syntax_Embeddings_Base.extracted_unembed
                 Fstarcompiler.FStarC_Reflection_V2_Embeddings.e_namedv_view
                 _0_51)
              (fun _0_51 -> FStar_Pervasives_Native.Some (Name _0_51))
        | ("FStar.Reflection.V2.Formula.FV", _0_53::[]) ->
-           Fstarcompiler.FStarC_Util.bind_opt
+           Fstarcompiler.FStarC_Option.bind
              (Fstarcompiler.FStarC_Syntax_Embeddings_Base.extracted_unembed
                 Fstarcompiler.FStarC_Reflection_V2_Embeddings.e_fv _0_53)
              (fun _0_53 -> FStar_Pervasives_Native.Some (FV _0_53))
        | ("FStar.Reflection.V2.Formula.IntLit", _0_55::[]) ->
-           Fstarcompiler.FStarC_Util.bind_opt
+           Fstarcompiler.FStarC_Option.bind
              (Fstarcompiler.FStarC_Syntax_Embeddings_Base.extracted_unembed
                 Fstarcompiler.FStarC_Syntax_Embeddings.e_int _0_55)
              (fun _0_55 -> FStar_Pervasives_Native.Some (IntLit _0_55))
@@ -1070,12 +1070,13 @@ let (term_as_formula_total :
     term_as_formula' (FStar_Reflection_V2_Derived.maybe_unsquash_term t)
 let (formula_as_term_view : formula -> FStar_Tactics_NamedView.term_view) =
   fun f ->
-    let mk_app' tv args =
-      FStar_List_Tot_Base.fold_left
-        (fun tv1 ->
-           fun a ->
-             FStar_Tactics_NamedView.Tv_App
-               ((FStar_Tactics_NamedView.pack tv1), a)) tv args in
+    let mk_app' tv =
+      fun args ->
+        FStar_List_Tot_Base.fold_left
+          (fun tv1 ->
+             fun a ->
+               FStar_Tactics_NamedView.Tv_App
+                 ((FStar_Tactics_NamedView.pack tv1), a)) tv args in
     let e = FStarC_Reflection_V2_Data.Q_Explicit in
     let i = FStarC_Reflection_V2_Data.Q_Implicit in
     match f with

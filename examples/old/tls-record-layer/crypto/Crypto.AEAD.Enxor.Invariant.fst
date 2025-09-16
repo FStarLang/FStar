@@ -54,7 +54,7 @@ private val frame_aead_entries_enxor
   (requires (enxor_h0_h1 aead_st nonce aad plain ct h0 h1))
   (ensures  (HS.sel #(aead_entries i) h0 (st_ilog aead_st) ==              
              HS.sel #(aead_entries i) h1 (st_ilog aead_st)))
-#reset-options "--z3rlimit 64 --initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0"
+#reset-options "--z3rlimit 64 --fuel 0 --ifuel 0"
 let frame_aead_entries_enxor #i #rw #aadlen #plainlan aead_st nonce aad plain ct h0 h1 = ()
 
 (*
@@ -97,7 +97,7 @@ private val frame_unused_mac_exists_enxor
              (let table = HS.sel h1 (itable i aead_st.prf) in
 	      let dom_0 = {iv=nonce; ctr=PRF.ctr_0 i} in
 	      unused_mac_exists table dom_0 h1)))
-#reset-options "--z3rlimit 100 --initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0"
+#reset-options "--z3rlimit 100 --fuel 0 --ifuel 0"
 let frame_unused_mac_exists_enxor #i #rw #aadlen #plainlen aead_st nonce aad plain ct h0 h1 =
   let cipher = cbuf ct in
   if safeMac i then begin
@@ -132,7 +132,7 @@ private val intro_fresh_nonces_are_unused_except_enxor
 	      let entries_1   = HS.sel #(aead_entries i) h1 (st_ilog aead_st) in
 	      let table_1     = HS.sel h1 (itable i aead_st.prf) in
 	      fresh_nonces_are_unused_except nonce table_1 entries_1 h1)))
-#reset-options "--z3rlimit 200 --initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0"
+#reset-options "--z3rlimit 200 --fuel 0 --ifuel 0"
 let intro_fresh_nonces_are_unused_except_enxor
   (#i:id)
   (#rw:rw)

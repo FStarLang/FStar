@@ -151,7 +151,7 @@ let rec lemma_find_find_opt_equivalence (#n:nat) (uf:uf_forest n) (i:id n) (h:he
 #reset-options
 
 (* condensing the behavior of merge and merge_opt *)
-#set-options "--initial_fuel 0 --max_fuel 0 --initial_ifuel 1 --max_ifuel 1 --z3rlimit 40"
+#set-options "--fuel 0 --ifuel 1 --z3rlimit 40"
 let lemma_merge_helper (#n:nat) (uf:uf_forest n) (i_1:id n) (i_2:id n) (h:heap{live uf h /\ well_formed uf h})
   :Lemma (requires True)
          (ensures  (let r_1, _ = reify (find uf i_1 h) h in
@@ -169,7 +169,7 @@ let lemma_merge_helper (#n:nat) (uf:uf_forest n) (i_1:id n) (i_2:id n) (h:heap{l
     ()
 #reset-options
 
-#set-options "--initial_fuel 0 --max_fuel 0 --initial_ifuel 4 --max_ifuel 4 --z3rlimit 80"
+#set-options "--fuel 0 --ifuel 4 --z3rlimit 80"
 let lemma_merge_opt_helper (#n:nat) (uf:uf_forest n) (i_1:id n) (i_2:id n) (h:heap{live uf h /\ well_formed uf h})
   :Lemma (requires True)
          (ensures  (let r_1, _ = reify (find uf i_1 h) h in
