@@ -23,7 +23,6 @@ open FStarC.Syntax.Syntax
 open FStarC.TypeChecker.Common
 open FStarC.TypeChecker.Env
 open FStarC.Tactics.Types
-open FStarC.Tactics.Result
 open FStarC.Tactics.Printing
 open FStarC.Tactics.Common
 open FStarC.Errors.Msg

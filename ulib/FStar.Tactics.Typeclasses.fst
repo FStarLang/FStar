@@ -104,7 +104,7 @@ for them and report proper errors. *)
 exception Next
 
 let skip #a (st:st_t) (s : string)
-  : TacH a (fun _ -> True) (fun ps post -> False)
+  : TacH a True (fun _ -> False)
   = if st.dbg then
       print ("skip: " ^ s);
     raise Next

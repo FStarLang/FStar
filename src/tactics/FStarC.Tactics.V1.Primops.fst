@@ -8,7 +8,6 @@ open FStarC.Syntax.Syntax
 open FStarC.Syntax.Embeddings
 open FStarC.TypeChecker.Common
 open FStarC.TypeChecker.Env
-open FStarC.Tactics.Result
 open FStarC.Tactics.Types
 open FStarC.Tactics.Printing
 open FStarC.Tactics.Monad

@@ -4,7 +4,7 @@
   - Tactic got stuck!
   - Reduction stopped at: Prims.admit ()
   - The term contains an `admit`, which will not reduce. Did you mean `tadmit()`?
-  - See also FStar.Tactics.Effect.fsti(198,48-198,58)
+  - See also FStar.Tactics.Effect.fsti(167,48-167,58)
 
 * Info at Bug2899.fst(10,12-10,18):
   - Expected failure:
@@ -12,7 +12,7 @@
   - Tactic got stuck!
   - Reduction stopped at: Prims.admit ()
   - The term contains an `admit`, which will not reduce. Did you mean `tadmit()`?
-  - See also FStar.Tactics.Effect.fsti(198,48-198,58)
+  - See also FStar.Tactics.Effect.fsti(167,48-167,58)
 
 * Info at Bug2899.fst(13,12-13,18):
   - Expected failure:
@@ -22,12 +22,12 @@
       FStar.Stubs.Tactics.V2.Builtins.dump (Prims.admit ())
         "(((ref proofstate)))"
   - The term contains an `admit`, which will not reduce. Did you mean `tadmit()`?
-  - See also FStar.Tactics.Effect.fsti(198,48-198,58)
+  - See also FStar.Tactics.Effect.fsti(167,48-167,58)
 
 * Info at Bug2899.fst(17,50-17,66):
   - Expected failure:
   - Tactic failed
   - Tactic got stuck!
   - Reduction stopped at: reify (tac ()) "(((ref proofstate)))"
-  - See also FStar.Tactics.Effect.fsti(198,48-198,58)
+  - See also FStar.Tactics.Effect.fsti(167,48-167,58)
 
