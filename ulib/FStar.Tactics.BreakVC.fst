@@ -14,21 +14,21 @@ let squash_p_impl_p (p:pure_post unit) : squash (squash (p ()) ==> p ()) = ()
 
 let (==>>) = (==>) // Working around #3173 and #3175
 
-let aux (ps:proofstate) (p : __result unit -> Type0)
-: Lemma (break_wp ps p ==> tac_return_wp () ps p)
+let aux (p : unit -> Type0)
+: Lemma (break_wp p ==> tac_return_wp () p)
 = calc (==>>) {
-    break_wp ps p;
+    break_wp p;
     == {}
-    spinoff (squash (p (Success () ps)));
-    <==> { spinoff_equiv (squash (p (Success () ps))) }
-    squash (p (Success () ps));
+    spinoff (squash (p ()));
+    <==> { spinoff_equiv (squash (p ())) }
+    squash (p ());
     ==>> { squash_p_impl_p _ }
-    p (Success () ps);
+    p ();
     ==> { () }
-    tac_return_wp () ps p;
+    tac_return_wp () p;
   }
 
 let break_vc () : TAC unit break_wp =
-  Classical.forall_intro_2 aux;
+  Classical.forall_intro aux;
   ()
 #pop-options

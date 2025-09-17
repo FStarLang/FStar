@@ -31,7 +31,7 @@ open FStar.Stubs.Tactics.Types.Reflection
 include FStar.Stubs.Tactics.Unseal
 
 val get ()
-  : TAC proofstate (fun ps post -> post (FStar.Stubs.Tactics.Result.Success ps ps))
+  : Tac proofstate
 
 val fixup_range : Range.range -> TacRO Range.range
 
@@ -80,9 +80,9 @@ a]. On failure, it returns [Inl msg], where [msg] is the error [t]
 raised, and all unionfind effects are reverted. See also [or_else]. *)
 val catch : #a:Type -> (unit -> Tac a) -> TacS (either exn a)
 
-val raise_core (e:exn) : TacH unit (requires fun _ -> True) (ensures fun _ _ -> False)
+val raise_core (e:exn) : TacH unit (requires True) (ensures fun _ -> False)
 inline_for_extraction
-let raise #a (e:exn) : TacH a (requires fun _ -> True) (ensures fun _ _ -> False) =
+let raise #a (e:exn) : TacH a (requires True) (ensures fun _ -> False) =
     raise_core e; ()
 
 (** [norm steps] will call the normalizer on the current goal's

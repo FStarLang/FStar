@@ -25,7 +25,6 @@ open FStarC.Class.Show
 
 open FStarC.Tactics.Common
 open FStarC.Tactics.Types
-open FStarC.Tactics.Result
 
 module BU      = FStarC.Util
 module Err     = FStarC.Errors
@@ -88,9 +87,6 @@ let fstar_tactics_goal          = fstar_tactics_const ["Types"; "goal"]
 let fstar_tactics_TacticFailure = fstar_tactics_data  ["Common"; "TacticFailure"]
 let fstar_tactics_SKIP          = fstar_tactics_data  ["Common"; "SKIP"]
 let fstar_tactics_Stop          = fstar_tactics_data  ["Common"; "Stop"]
-
-// let fstar_tactics_result        = fstar_tactics_const ["Result"; "__result"]
-// let fstar_tactics_Success       = fstar_tactics_data  ["Result"; "Success"]
 
 let fstar_tactics_direction     = fstar_tactics_const ["Types"; "direction"]
 let fstar_tactics_topdown       = fstar_tactics_data  ["Types"; "TopDown"]

@@ -25,7 +25,6 @@ open FStarC.Syntax.Syntax
 open FStarC.Range
 
 open FStarC.Tactics.Types
-open FStarC.Tactics.Result
 open FStarC.Syntax.Embeddings
 open FStarC.Tactics.Native
 open FStarC.Tactics.Monad

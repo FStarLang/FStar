@@ -145,10 +145,10 @@ let gen env (is_rec:bool) (lecs:list (lbname & term & comp)) : option (list (lbn
         then ()
         else let lb1, _, _ = lec_hd in
              let lb2, _, _ = lec2 in
-             let msg = Format.fmt2 "Generalizing the types of these mutually recursive definitions \
-                                   requires an incompatible set of universes for %s and %s"
-                            (show lb1)
-                            (show lb2) in
+             let msg = Format.fmt4 "Generalizing the types of these mutually recursive definitions \
+                                   requires an incompatible set of universes for %s %s and %s %s"
+                            (show lb1) (show u1)
+                            (show lb2) (show u2) in
              raise_error env Errors.Fatal_IncompatibleSetOfUniverse msg
      in
      let force_uvars_eq lec2 (u1:list ctx_uvar) (u2:list ctx_uvar) =

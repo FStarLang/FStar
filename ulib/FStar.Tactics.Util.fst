@@ -114,8 +114,8 @@ let rec tryFind (#a:Type) (f:a -> Tac bool) (l:list a) : Tac bool =
 
 let rec fold_left2 (#a #b #c:Type) (f:a -> b -> c -> Tac a) (x:a) (l1:list b) (l2:list c)
   : TacH a
-      (requires fun _ -> length l1 == length l2)
-      (ensures fun _ _ -> True) =
+      (requires length l1 == length l2)
+      (ensures fun _ -> True) =
   match l1, l2 with
   | [], [] -> x
   | hd1::tl1, hd2::tl2 ->

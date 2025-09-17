@@ -1,10 +1,9 @@
 module FStar.Tactics.BreakVC
 
 open FStar.Tactics
-open FStar.Stubs.Tactics.Result
 
 let break_wp' : tac_wp_t0 unit =
-  fun ps p -> spinoff (squash (p (Success () ps)))
+  fun p -> spinoff (squash (p ()))
 
 val mono_lem () : Lemma (tac_wp_monotonic #unit break_wp')
 

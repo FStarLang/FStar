@@ -22,7 +22,6 @@ open FStarC.List
 open FStarC
 open FStarC.Reflection.V2.Data
 open FStarC.Reflection.V2.Builtins
-open FStarC.Tactics.Result
 open FStarC.TypeChecker.Common
 open FStarC.TypeChecker.Env
 open FStarC.Tactics.Types

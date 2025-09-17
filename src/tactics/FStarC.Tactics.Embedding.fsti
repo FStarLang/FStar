@@ -20,7 +20,6 @@ open FStarC.Ident
 open FStarC.Syntax.Syntax
 open FStarC.Syntax.Embeddings
 open FStarC.Tactics.Types
-open FStarC.Tactics.Result
 
 module Core = FStarC.TypeChecker.Core
 
