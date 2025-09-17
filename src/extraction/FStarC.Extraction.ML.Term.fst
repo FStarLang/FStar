@@ -1627,12 +1627,14 @@ and term_as_mlexpr' (g:uenv) (top:term) : (mlexpr & e_tag & mlty) =
         (* HACK HACK HACK HACK HACK
            Ideally we'd put inline_for_extraction on tac_bind and lift_div_tac_lid,
            but that causes norm_reify to blow up spectacularly (with unbound variables).
-           Therefore we unfold them here manually, this blows up more rarely. *)
+           Therefore we unfold them manually here. *)
         | Tm_app {hd={n=Tm_uinst({n=Tm_fvar fv},_)}; args}
         | Tm_app {hd={n=Tm_fvar fv}; args}
             when S.fv_eq_lid fv PC.tac_bind_lid || S.fv_eq_lid fv PC.lift_div_tac_lid ->
-          let t = N.normalize [Env.UnfoldOnly [PC.tac_bind_lid; PC.lift_div_tac_lid]; Env.HNF; Env.Beta; Env.EraseUniverses; Env.AllowUnboundUniverses] (tcenv_of_uenv g) t in
-          term_as_mlexpr g t
+          let lid = S.lid_of_fv fv in
+          (match Env.lookup_definition [Env.Unfold delta_constant] (tcenv_of_uenv g) (S.lid_of_fv fv) with
+          | Some (us, defn) -> term_as_mlexpr g { t with n = Tm_app {hd=defn; args} }
+          | None -> failwith ("cannot lookup definition of" ^ show fv))
 
         (* A regular application. *)
         | Tm_app {hd=head; args} ->
