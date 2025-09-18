@@ -338,6 +338,8 @@ jobs:
 
       # everparse expects more environment variables to opt out of
       # in-tree dependencies
+      - run: echo "EVERPARSE_USE_OPAMROOT=1" >> $GITHUB_ENV
+      - run: echo "EVERPARSE_USE_FSTAR_EXE=1" >> $GITHUB_ENV
       - run: echo "EVERPARSE_USE_KRML_HOME=1" >> $GITHUB_ENV
       - run: echo "EVERPARSE_USE_PULSE_HOME=1" >> $GITHUB_ENV
 
@@ -394,6 +396,8 @@ jobs:
 
       # everparse expects more environment variables to opt out of
       # in-tree dependencies
+      - run: echo "EVERPARSE_USE_OPAMROOT=1" >> $GITHUB_ENV
+      - run: echo "EVERPARSE_USE_FSTAR_EXE=1" >> $GITHUB_ENV
       - run: echo "EVERPARSE_USE_KRML_HOME=1" >> $GITHUB_ENV
       - run: echo "EVERPARSE_USE_PULSE_HOME=1" >> $GITHUB_ENV
 
