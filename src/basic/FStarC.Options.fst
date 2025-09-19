@@ -2181,7 +2181,7 @@ let retry                        () = get_retry                       ()
 let reuse_hint_for               () = get_reuse_hint_for              ()
 let report_assumes               () = get_report_assumes              ()
 let silent                       () = get_silent                      ()
-let smt                          () = get_smt                         ()
+let smt                          () = if Ext.enabled "cvc" then Some "cvc5" else get_smt ()
 let smtencoding_elim_box         () = get_smtencoding_elim_box        ()
 let smtencoding_nl_arith_native  () = get_smtencoding_nl_arith_repr () = "native"
 let smtencoding_nl_arith_wrapped () = get_smtencoding_nl_arith_repr () = "wrapped"
