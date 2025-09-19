@@ -166,7 +166,7 @@ let maybe_add_ambient (a:assumption) (p:pruning_state)
   in
   let ambient_refinement_payload ty =
     match ty.tm with
-    | App(Var "Prims.squash", [t]) -> t
+    | App(Var "Prims.squash", [_;t]) -> t
     | _ -> ty
   in
   begin

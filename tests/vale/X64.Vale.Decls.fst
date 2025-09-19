@@ -25,6 +25,7 @@ module P = X64.Print_s
 #reset-options "--z3smtopt '(set-option :smt.arith.nl true)' --using_facts_from Prims --using_facts_from FStar.Math"
 let lemma_mul_nat (x:nat) (y:nat) : Lemma (ensures 0 <= (x `op_Multiply` y)) = ()
 #reset-options "--fuel 2 --initial_ifuel 1 --z3rlimit_factor 10 --retry 5 --query_stats"
+#set-options "--z3smtopt '(set-option :smt.qi.eager_threshold 20)'"
 let cf = Lemmas_i.cf
 let ins = S.ins
 type ocmp = S.ocmp

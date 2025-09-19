@@ -2827,7 +2827,7 @@ let pure_or_ghost_pre_and_post env comp =
     let mk_post_type res_t ens =
         let x = S.new_bv None res_t in
         U.refine x (S.mk_Tm_app ens [S.as_arg (S.bv_to_name x)] res_t.pos) in
-    let norm t = Normalize.normalize [Env.Beta;Env.Eager_unfolding;Env.EraseUniverses] env t in
+    let norm t = Normalize.normalize [Env.Beta;Env.Eager_unfolding] env t in
     if U.is_tot_or_gtot_comp comp
     then None, U.comp_result comp
     else begin match comp.n with
@@ -2865,7 +2865,7 @@ let pure_or_ghost_pre_and_post env comp =
 let norm_reify (env:Env.env) (steps:Env.steps) (t:S.term) : S.term =
     def_check_scoped t.pos "norm_reify" env t;
     let t' = N.normalize
-      ([Env.Beta; Env.Reify; Env.Eager_unfolding; Env.EraseUniverses; Env.AllowUnboundUniverses; Env.Exclude Env.Zeta]@steps)
+      ([Env.Beta; Env.Reify; Env.Eager_unfolding; Env.AllowUnboundUniverses; Env.Exclude Env.Zeta]@steps)
       env t in
     if !dbg_SMTEncodingReify
     then Format.print2 "Reified body %s \nto %s\n"

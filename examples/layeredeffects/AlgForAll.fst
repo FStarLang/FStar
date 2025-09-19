@@ -90,6 +90,7 @@ let elim_str #a (w1 w2 : st_wp a) (p : (a & state -> Type0)) (s0:state)
   = ()
 
 (* Takes a while *)
+#push-options "--z3rlimit_factor 2"
 let rec interp_morph #a #b (c : rwtree a) (f : a -> rwtree b) (p:_) (s0:_)
   : Lemma (interp_as_wp c s0 (fun (y, s1) -> interp_as_wp (f y) s1 p) == interp_as_wp (tbind c f) s0 p)
   = match c with
@@ -109,6 +110,7 @@ let rec interp_morph #a #b (c : rwtree a) (f : a -> rwtree b) (p:_) (s0:_)
       Classical.forall_intro aux
 
     | _ -> ()  // this branch is unreachable
+#pop-options
 
 val interp_bind (#a #b:Type)
   (c : rwtree a) (f : a -> rwtree b)
