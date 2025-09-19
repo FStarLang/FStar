@@ -3598,7 +3598,9 @@ and desugar_decl_core env (d_attrs:list S.term) (d:decl) : (env_t & sigelts) =
                    else false)
               formals
           in
-          let meths = List.filter (fun x -> not (has_no_method_attr x)) meths in
+          (* If the name begins with _, or if it has the no_method attribute, then
+           * it will not be defined. So we filter it out of the names declared by the splice. *)
+          let meths = List.filter (fun x -> not (String.index (string_of_id (ident_of_lid x)) 0 = '_') && not (has_no_method_attr x)) meths in
           let is_typed = false in
           [{ sigel = Sig_splice {is_typed; lids=meths; tac=mkclass lid};
              sigquals = [];
