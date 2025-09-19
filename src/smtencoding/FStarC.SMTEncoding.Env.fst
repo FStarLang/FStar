@@ -33,8 +33,6 @@ open FStarC.Class.Show
 
 let dbg_PartialApp = Debug.get_toggle "PartialApp"
 
-exception Inner_let_rec of list (string & Range.t) //name of the inner let-rec(s) and their locations
-
 let add_fuel x tl = if (Options.unthrottle_inductives()) then tl else x::tl
 let withenv c (a, b) = (a,b,c)
 let vargs args = List.filter (function (Inl _, _) -> false | _ -> true) args
