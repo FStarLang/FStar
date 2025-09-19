@@ -15,10 +15,6 @@
 *)
 module Inlining
 
-// inlining into stateful functions doesn't work in master;
-// see https://github.com/FStarLang/FStar/issues/1190
-// (fixed in guido_fix)
-
 open FStar.Tactics.V2
 
 open FStar.HyperStack
