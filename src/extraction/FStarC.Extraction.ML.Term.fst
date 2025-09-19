@@ -1624,6 +1624,18 @@ and term_as_mlexpr' (g:uenv) (top:term) : (mlexpr & e_tag & mlty) =
                args |> should_apply_to_match_branches ->
           args |> apply_to_match_branches head |> term_as_mlexpr g
 
+        (* HACK HACK HACK HACK HACK
+           Ideally we'd put inline_for_extraction on tac_bind and lift_div_tac_lid,
+           but that causes norm_reify to blow up spectacularly (with unbound variables).
+           Therefore we unfold them manually here. *)
+        | Tm_app {hd={n=Tm_uinst({n=Tm_fvar fv},_)}; args}
+        | Tm_app {hd={n=Tm_fvar fv}; args}
+            when S.fv_eq_lid fv PC.tac_bind_lid || S.fv_eq_lid fv PC.lift_div_tac_lid ->
+          let lid = S.lid_of_fv fv in
+          (match Env.lookup_definition [Env.Unfold delta_constant] (tcenv_of_uenv g) (S.lid_of_fv fv) with
+          | Some (us, defn) -> term_as_mlexpr g { t with n = Tm_app {hd=defn; args} }
+          | None -> failwith ("cannot lookup definition of" ^ show fv))
+
         (* A regular application. *)
         | Tm_app {hd=head; args} ->
           let is_total rc =
@@ -1650,6 +1662,14 @@ and term_as_mlexpr' (g:uenv) (top:term) : (mlexpr & e_tag & mlty) =
                  raise_error top Errors.Fatal_ExtractionUnsupported
                    (Format.fmt1 "Cannot extract %s (reify effect is not set)" (show top))
               )
+
+            (* Push applications into let bodies *)
+            | Tm_let {lbs; body} ->
+              term_as_mlexpr g { head with n = Tm_let { lbs; body = { t with n = Tm_app { hd=body; args } } } }
+
+            (* Combine nested applications *)
+            | Tm_app {hd=hd; args=args0} ->
+              term_as_mlexpr g { t with n = Tm_app { hd=hd; args=args0@args } }
 
             | _ ->
 

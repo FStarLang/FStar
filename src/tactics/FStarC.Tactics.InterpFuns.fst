@@ -25,7 +25,6 @@ open FStarC.Syntax.Syntax
 open FStarC.Range
 
 open FStarC.Tactics.Types
-open FStarC.Tactics.Result
 open FStarC.Syntax.Embeddings
 open FStarC.Tactics.Native
 open FStarC.Tactics.Monad
@@ -43,8 +42,8 @@ let unembed (e:embedding 'a) t n : option 'a = FStarC.Syntax.Embeddings.unembed 
 
 let interp_ctx s f = Errors.with_ctx ("While running primitive " ^ s) f
 
-let run_wrap (label : string) (t : tac 'a) ps : __result 'a =
-  interp_ctx label (fun () -> run_safe t ps)
+let run_wrap (label : string) (t : tac 'a) ps : 'a =
+  interp_ctx label (fun () -> t ps)
 
 let builtin_lid nm = PC.fstar_stubs_tactics_lid' ["V2"; "Builtins"; nm]
 let types_lid   nm = PC.fstar_stubs_tactics_lid' ["Types"; nm]
@@ -126,10 +125,10 @@ let mk_tactic_interpretation_1
   match args with
   | [(a1, _); (a2, _)] ->
     Option.bind (unembed e1 a1 ncb) (fun a1 ->
-    Option.bind (unembed E.e_proofstate a2 ncb) (fun ps ->
-    let ps = set_ps_psc psc ps in
-    let r = interp_ctx name (fun () -> run_safe (t a1) ps) in
-    Some (embed (E.e_result er) (PO.psc_range psc) r ncb)))
+    Option.bind (unembed E.e_ref_proofstate a2 ncb) (fun ps ->
+    ps := set_ps_psc psc (!ps);
+    let r = interp_ctx name (fun () -> (t a1) ps) in
+    Some (embed er (PO.psc_range psc) r ncb)))
   | _ ->
     None
 
@@ -149,10 +148,10 @@ let mk_tactic_interpretation_2
   | [(a1, _); (a2, _); (a3, _)] ->
     Option.bind (unembed e1 a1 ncb) (fun a1 ->
     Option.bind (unembed e2 a2 ncb) (fun a2 ->
-    Option.bind (unembed E.e_proofstate a3 ncb) (fun ps ->
-    let ps = set_ps_psc psc ps in
-    let r = interp_ctx name (fun () -> run_safe (t a1 a2) ps) in
-    Some (embed (E.e_result er) (PO.psc_range psc) r ncb))))
+    Option.bind (unembed E.e_ref_proofstate a3 ncb) (fun ps ->
+    ps := set_ps_psc psc (!ps);
+    let r = interp_ctx name (fun () -> (t a1 a2) ps) in
+    Some (embed er (PO.psc_range psc) r ncb))))
   | _ ->
     None
 
@@ -174,10 +173,10 @@ let mk_tactic_interpretation_3
     Option.bind (unembed e1 a1 ncb) (fun a1 ->
     Option.bind (unembed e2 a2 ncb) (fun a2 ->
     Option.bind (unembed e3 a3 ncb) (fun a3 ->
-    Option.bind (unembed E.e_proofstate a4 ncb) (fun ps ->
-    let ps = set_ps_psc psc ps in
-    let r = interp_ctx name (fun () -> run_safe (t a1 a2 a3) ps) in
-    Some (embed (E.e_result er) (PO.psc_range psc) r ncb)))))
+    Option.bind (unembed E.e_ref_proofstate a4 ncb) (fun ps ->
+    ps := set_ps_psc psc (!ps);
+    let r = interp_ctx name (fun () -> (t a1 a2 a3) ps) in
+    Some (embed er (PO.psc_range psc) r ncb)))))
   | _ ->
     None
 
@@ -201,10 +200,10 @@ let mk_tactic_interpretation_4
     Option.bind (unembed e2 a2 ncb) (fun a2 ->
     Option.bind (unembed e3 a3 ncb) (fun a3 ->
     Option.bind (unembed e4 a4 ncb) (fun a4 ->
-    Option.bind (unembed E.e_proofstate a5 ncb) (fun ps ->
-    let ps = set_ps_psc psc ps in
-    let r = interp_ctx name (fun () -> run_safe (t a1 a2 a3 a4) ps) in
-    Some (embed (E.e_result er) (PO.psc_range psc) r ncb))))))
+    Option.bind (unembed E.e_ref_proofstate a5 ncb) (fun ps ->
+    ps := set_ps_psc psc (!ps);
+    let r = interp_ctx name (fun () -> (t a1 a2 a3 a4) ps) in
+    Some (embed er (PO.psc_range psc) r ncb))))))
   | _ ->
     None
 
@@ -230,10 +229,10 @@ let mk_tactic_interpretation_5
     Option.bind (unembed e3 a3 ncb) (fun a3 ->
     Option.bind (unembed e4 a4 ncb) (fun a4 ->
     Option.bind (unembed e5 a5 ncb) (fun a5 ->
-    Option.bind (unembed E.e_proofstate a6 ncb) (fun ps ->
-    let ps = set_ps_psc psc ps in
-    let r = interp_ctx name (fun () -> run_safe (t a1 a2 a3 a4 a5) ps) in
-    Some (embed (E.e_result er) (PO.psc_range psc) r ncb)))))))
+    Option.bind (unembed E.e_ref_proofstate a6 ncb) (fun ps ->
+    ps := set_ps_psc psc (!ps);
+    let r = interp_ctx name (fun () -> (t a1 a2 a3 a4 a5) ps) in
+    Some (embed er (PO.psc_range psc) r ncb)))))))
   | _ ->
     None
 
@@ -261,10 +260,10 @@ let mk_tactic_interpretation_6
     Option.bind (unembed e4 a4 ncb) (fun a4 ->
     Option.bind (unembed e5 a5 ncb) (fun a5 ->
     Option.bind (unembed e6 a6 ncb) (fun a6 ->
-    Option.bind (unembed E.e_proofstate a7 ncb) (fun ps ->
-    let ps = set_ps_psc psc ps in
-    let r = interp_ctx name (fun () -> run_safe (t a1 a2 a3 a4 a5 a6) ps) in
-    Some (embed (E.e_result er) (PO.psc_range psc) r ncb))))))))
+    Option.bind (unembed E.e_ref_proofstate a7 ncb) (fun ps ->
+    ps := set_ps_psc psc (!ps);
+    let r = interp_ctx name (fun () -> (t a1 a2 a3 a4 a5 a6) ps) in
+    Some (embed er (PO.psc_range psc) r ncb))))))))
   | _ ->
     None
 
@@ -294,10 +293,10 @@ let mk_tactic_interpretation_7
     Option.bind (unembed e5 a5 ncb) (fun a5 ->
     Option.bind (unembed e6 a6 ncb) (fun a6 ->
     Option.bind (unembed e7 a7 ncb) (fun a7 ->
-    Option.bind (unembed E.e_proofstate a8 ncb) (fun ps ->
-    let ps = set_ps_psc psc ps in
-    let r = interp_ctx name (fun () -> run_safe (t a1 a2 a3 a4 a5 a6 a7) ps) in
-    Some (embed (E.e_result er) (PO.psc_range psc) r ncb)))))))))
+    Option.bind (unembed E.e_ref_proofstate a8 ncb) (fun ps ->
+    ps := set_ps_psc psc (!ps);
+    let r = interp_ctx name (fun () -> (t a1 a2 a3 a4 a5 a6 a7) ps) in
+    Some (embed er (PO.psc_range psc) r ncb)))))))))
   | _ ->
     None
 
@@ -329,10 +328,10 @@ let mk_tactic_interpretation_8
     Option.bind (unembed e6 a6 ncb) (fun a6 ->
     Option.bind (unembed e7 a7 ncb) (fun a7 ->
     Option.bind (unembed e8 a8 ncb) (fun a8 ->
-    Option.bind (unembed E.e_proofstate a9 ncb) (fun ps ->
-    let ps = set_ps_psc psc ps in
-    let r = interp_ctx name (fun () -> run_safe (t a1 a2 a3 a4 a5 a6 a7 a8) ps) in
-    Some (embed (E.e_result er) (PO.psc_range psc) r ncb))))))))))
+    Option.bind (unembed E.e_ref_proofstate a9 ncb) (fun ps ->
+    ps := set_ps_psc psc (!ps);
+    let r = interp_ctx name (fun () -> (t a1 a2 a3 a4 a5 a6 a7 a8) ps) in
+    Some (embed er (PO.psc_range psc) r ncb))))))))))
   | _ ->
     None
 
@@ -366,10 +365,10 @@ let mk_tactic_interpretation_9
     Option.bind (unembed e7 a7 ncb) (fun a7 ->
     Option.bind (unembed e8 a8 ncb) (fun a8 ->
     Option.bind (unembed e9 a9 ncb) (fun a9 ->
-    Option.bind (unembed E.e_proofstate a10 ncb) (fun ps ->
-    let ps = set_ps_psc psc ps in
-    let r = interp_ctx name (fun () -> run_safe (t a1 a2 a3 a4 a5 a6 a7 a8 a9) ps) in
-    Some (embed (E.e_result er) (PO.psc_range psc) r ncb)))))))))))
+    Option.bind (unembed E.e_ref_proofstate a10 ncb) (fun ps ->
+    ps := set_ps_psc psc (!ps);
+    let r = interp_ctx name (fun () -> (t a1 a2 a3 a4 a5 a6 a7 a8 a9) ps) in
+    Some (embed er (PO.psc_range psc) r ncb)))))))))))
   | _ ->
     None
 
@@ -405,10 +404,10 @@ let mk_tactic_interpretation_10
     Option.bind (unembed e8 a8 ncb) (fun a8 ->
     Option.bind (unembed e9 a9 ncb) (fun a9 ->
     Option.bind (unembed e10 a10 ncb) (fun a10 ->
-    Option.bind (unembed E.e_proofstate a11 ncb) (fun ps ->
-    let ps = set_ps_psc psc ps in
-    let r = interp_ctx name (fun () -> run_safe (t a1 a2 a3 a4 a5 a6 a7 a8 a9 a10) ps) in
-    Some (embed (E.e_result er) (PO.psc_range psc) r ncb))))))))))))
+    Option.bind (unembed E.e_ref_proofstate a11 ncb) (fun ps ->
+    ps := set_ps_psc psc (!ps);
+    let r = interp_ctx name (fun () -> (t a1 a2 a3 a4 a5 a6 a7 a8 a9 a10) ps) in
+    Some (embed er (PO.psc_range psc) r ncb))))))))))))
   | _ ->
     None
 
@@ -446,10 +445,10 @@ let mk_tactic_interpretation_11
     Option.bind (unembed e9 a9 ncb) (fun a9 ->
     Option.bind (unembed e10 a10 ncb) (fun a10 ->
     Option.bind (unembed e11 a11 ncb) (fun a11 ->
-    Option.bind (unembed E.e_proofstate a12 ncb) (fun ps ->
-    let ps = set_ps_psc psc ps in
-    let r = interp_ctx name (fun () -> run_safe (t a1 a2 a3 a4 a5 a6 a7 a8 a9 a10 a11) ps) in
-    Some (embed (E.e_result er) (PO.psc_range psc) r ncb)))))))))))))
+    Option.bind (unembed E.e_ref_proofstate a12 ncb) (fun ps ->
+    ps := set_ps_psc psc (!ps);
+    let r = interp_ctx name (fun () -> (t a1 a2 a3 a4 a5 a6 a7 a8 a9 a10 a11) ps) in
+    Some (embed er (PO.psc_range psc) r ncb)))))))))))))
   | _ ->
     None
 
@@ -489,10 +488,10 @@ let mk_tactic_interpretation_12
     Option.bind (unembed e10 a10 ncb) (fun a10 ->
     Option.bind (unembed e11 a11 ncb) (fun a11 ->
     Option.bind (unembed e12 a12 ncb) (fun a12 ->
-    Option.bind (unembed E.e_proofstate a13 ncb) (fun ps ->
-    let ps = set_ps_psc psc ps in
-    let r = interp_ctx name (fun () -> run_safe (t a1 a2 a3 a4 a5 a6 a7 a8 a9 a10 a11 a12) ps) in
-    Some (embed (E.e_result er) (PO.psc_range psc) r ncb))))))))))))))
+    Option.bind (unembed E.e_ref_proofstate a13 ncb) (fun ps ->
+    ps := set_ps_psc psc (!ps);
+    let r = interp_ctx name (fun () -> (t a1 a2 a3 a4 a5 a6 a7 a8 a9 a10 a11 a12) ps) in
+    Some (embed er (PO.psc_range psc) r ncb))))))))))))))
   | _ ->
     None
 
@@ -534,10 +533,10 @@ let mk_tactic_interpretation_13
     Option.bind (unembed e11 a11 ncb) (fun a11 ->
     Option.bind (unembed e12 a12 ncb) (fun a12 ->
     Option.bind (unembed e13 a13 ncb) (fun a13 ->
-    Option.bind (unembed E.e_proofstate a14 ncb) (fun ps ->
-    let ps = set_ps_psc psc ps in
-    let r = interp_ctx name (fun () -> run_safe (t a1 a2 a3 a4 a5 a6 a7 a8 a9 a10 a11 a12 a13) ps) in
-    Some (embed (E.e_result er) (PO.psc_range psc) r ncb)))))))))))))))
+    Option.bind (unembed E.e_ref_proofstate a14 ncb) (fun ps ->
+    ps := set_ps_psc psc (!ps);
+    let r = interp_ctx name (fun () -> (t a1 a2 a3 a4 a5 a6 a7 a8 a9 a10 a11 a12 a13) ps) in
+    Some (embed er (PO.psc_range psc) r ncb)))))))))))))))
   | _ ->
     None
 
@@ -581,10 +580,10 @@ let mk_tactic_interpretation_14
     Option.bind (unembed e12 a12 ncb) (fun a12 ->
     Option.bind (unembed e13 a13 ncb) (fun a13 ->
     Option.bind (unembed e14 a14 ncb) (fun a14 ->
-    Option.bind (unembed E.e_proofstate a15 ncb) (fun ps ->
-    let ps = set_ps_psc psc ps in
-    let r = interp_ctx name (fun () -> run_safe (t a1 a2 a3 a4 a5 a6 a7 a8 a9 a10 a11 a12 a13 a14) ps) in
-    Some (embed (E.e_result er) (PO.psc_range psc) r ncb))))))))))))))))
+    Option.bind (unembed E.e_ref_proofstate a15 ncb) (fun ps ->
+    ps := set_ps_psc psc (!ps);
+    let r = interp_ctx name (fun () -> (t a1 a2 a3 a4 a5 a6 a7 a8 a9 a10 a11 a12 a13 a14) ps) in
+    Some (embed er (PO.psc_range psc) r ncb))))))))))))))))
   | _ ->
     None
 
@@ -630,10 +629,10 @@ let mk_tactic_interpretation_15
     Option.bind (unembed e13 a13 ncb) (fun a13 ->
     Option.bind (unembed e14 a14 ncb) (fun a14 ->
     Option.bind (unembed e15 a15 ncb) (fun a15 ->
-    Option.bind (unembed E.e_proofstate a16 ncb) (fun ps ->
-    let ps = set_ps_psc psc ps in
-    let r = interp_ctx name (fun () -> run_safe (t a1 a2 a3 a4 a5 a6 a7 a8 a9 a10 a11 a12 a13 a14 a15) ps) in
-    Some (embed (E.e_result er) (PO.psc_range psc) r ncb)))))))))))))))))
+    Option.bind (unembed E.e_ref_proofstate a16 ncb) (fun ps ->
+    ps := set_ps_psc psc (!ps);
+    let r = interp_ctx name (fun () -> (t a1 a2 a3 a4 a5 a6 a7 a8 a9 a10 a11 a12 a13 a14 a15) ps) in
+    Some (embed er (PO.psc_range psc) r ncb)))))))))))))))))
   | _ ->
     None
 
@@ -681,10 +680,10 @@ let mk_tactic_interpretation_16
     Option.bind (unembed e14 a14 ncb) (fun a14 ->
     Option.bind (unembed e15 a15 ncb) (fun a15 ->
     Option.bind (unembed e16 a16 ncb) (fun a16 ->
-    Option.bind (unembed E.e_proofstate a17 ncb) (fun ps ->
-    let ps = set_ps_psc psc ps in
-    let r = interp_ctx name (fun () -> run_safe (t a1 a2 a3 a4 a5 a6 a7 a8 a9 a10 a11 a12 a13 a14 a15 a16) ps) in
-    Some (embed (E.e_result er) (PO.psc_range psc) r ncb))))))))))))))))))
+    Option.bind (unembed E.e_ref_proofstate a17 ncb) (fun ps ->
+    ps := set_ps_psc psc (!ps);
+    let r = interp_ctx name (fun () -> (t a1 a2 a3 a4 a5 a6 a7 a8 a9 a10 a11 a12 a13 a14 a15 a16) ps) in
+    Some (embed er (PO.psc_range psc) r ncb))))))))))))))))))
   | _ ->
     None
 
@@ -734,10 +733,10 @@ let mk_tactic_interpretation_17
     Option.bind (unembed e15 a15 ncb) (fun a15 ->
     Option.bind (unembed e16 a16 ncb) (fun a16 ->
     Option.bind (unembed e17 a17 ncb) (fun a17 ->
-    Option.bind (unembed E.e_proofstate a18 ncb) (fun ps ->
-    let ps = set_ps_psc psc ps in
-    let r = interp_ctx name (fun () -> run_safe (t a1 a2 a3 a4 a5 a6 a7 a8 a9 a10 a11 a12 a13 a14 a15 a16 a17) ps) in
-    Some (embed (E.e_result er) (PO.psc_range psc) r ncb)))))))))))))))))))
+    Option.bind (unembed E.e_ref_proofstate a18 ncb) (fun ps ->
+    ps := set_ps_psc psc (!ps);
+    let r = interp_ctx name (fun () -> (t a1 a2 a3 a4 a5 a6 a7 a8 a9 a10 a11 a12 a13 a14 a15 a16 a17) ps) in
+    Some (embed er (PO.psc_range psc) r ncb)))))))))))))))))))
   | _ ->
     None
 
@@ -789,10 +788,10 @@ let mk_tactic_interpretation_18
     Option.bind (unembed e16 a16 ncb) (fun a16 ->
     Option.bind (unembed e17 a17 ncb) (fun a17 ->
     Option.bind (unembed e18 a18 ncb) (fun a18 ->
-    Option.bind (unembed E.e_proofstate a19 ncb) (fun ps ->
-    let ps = set_ps_psc psc ps in
-    let r = interp_ctx name (fun () -> run_safe (t a1 a2 a3 a4 a5 a6 a7 a8 a9 a10 a11 a12 a13 a14 a15 a16 a17 a18) ps) in
-    Some (embed (E.e_result er) (PO.psc_range psc) r ncb))))))))))))))))))))
+    Option.bind (unembed E.e_ref_proofstate a19 ncb) (fun ps ->
+    ps := set_ps_psc psc (!ps);
+    let r = interp_ctx name (fun () -> (t a1 a2 a3 a4 a5 a6 a7 a8 a9 a10 a11 a12 a13 a14 a15 a16 a17 a18) ps) in
+    Some (embed er (PO.psc_range psc) r ncb))))))))))))))))))))
   | _ ->
     None
 
@@ -846,10 +845,10 @@ let mk_tactic_interpretation_19
     Option.bind (unembed e17 a17 ncb) (fun a17 ->
     Option.bind (unembed e18 a18 ncb) (fun a18 ->
     Option.bind (unembed e19 a19 ncb) (fun a19 ->
-    Option.bind (unembed E.e_proofstate a20 ncb) (fun ps ->
-    let ps = set_ps_psc psc ps in
-    let r = interp_ctx name (fun () -> run_safe (t a1 a2 a3 a4 a5 a6 a7 a8 a9 a10 a11 a12 a13 a14 a15 a16 a17 a18 a19) ps) in
-    Some (embed (E.e_result er) (PO.psc_range psc) r ncb)))))))))))))))))))))
+    Option.bind (unembed E.e_ref_proofstate a20 ncb) (fun ps ->
+    ps := set_ps_psc psc (!ps);
+    let r = interp_ctx name (fun () -> (t a1 a2 a3 a4 a5 a6 a7 a8 a9 a10 a11 a12 a13 a14 a15 a16 a17 a18 a19) ps) in
+    Some (embed er (PO.psc_range psc) r ncb)))))))))))))))))))))
   | _ ->
     None
 
@@ -905,10 +904,10 @@ let mk_tactic_interpretation_20
     Option.bind (unembed e18 a18 ncb) (fun a18 ->
     Option.bind (unembed e19 a19 ncb) (fun a19 ->
     Option.bind (unembed e20 a20 ncb) (fun a20 ->
-    Option.bind (unembed E.e_proofstate a21 ncb) (fun ps ->
-    let ps = set_ps_psc psc ps in
-    let r = interp_ctx name (fun () -> run_safe (t a1 a2 a3 a4 a5 a6 a7 a8 a9 a10 a11 a12 a13 a14 a15 a16 a17 a18 a19 a20) ps) in
-    Some (embed (E.e_result er) (PO.psc_range psc) r ncb))))))))))))))))))))))
+    Option.bind (unembed E.e_ref_proofstate a21 ncb) (fun ps ->
+    ps := set_ps_psc psc (!ps);
+    let r = interp_ctx name (fun () -> (t a1 a2 a3 a4 a5 a6 a7 a8 a9 a10 a11 a12 a13 a14 a15 a16 a17 a18 a19 a20) ps) in
+    Some (embed er (PO.psc_range psc) r ncb))))))))))))))))))))))
   | _ ->
     None
 
@@ -925,9 +924,9 @@ let mk_tactic_nbe_interpretation_1
   match args with
   | [(a1, _); (a2, _)] ->
     Option.bind (NBET.unembed e1 cb a1) (fun a1 ->
-    Option.bind (NBET.unembed E.e_proofstate_nbe cb a2) (fun ps ->
-    let r = interp_ctx name (fun () -> run_safe (t a1) ps) in
-    Some (NBET.embed (E.e_result_nbe er) cb r)))
+    Option.bind (NBET.unembed E.e_ref_proofstate_nbe cb a2) (fun ps ->
+    let r = interp_ctx name (fun () -> (t a1) ps) in
+    Some (NBET.embed er cb r)))
   | _ ->
     None
 
@@ -946,9 +945,9 @@ let mk_tactic_nbe_interpretation_2
   | [(a1, _); (a2, _); (a3, _)] ->
     Option.bind (NBET.unembed e1 cb a1) (fun a1 ->
     Option.bind (NBET.unembed e2 cb a2) (fun a2 ->
-    Option.bind (NBET.unembed E.e_proofstate_nbe cb a3) (fun ps ->
-    let r = interp_ctx name (fun () -> run_safe (t a1 a2) ps) in
-    Some (NBET.embed (E.e_result_nbe er) cb r))))
+    Option.bind (NBET.unembed E.e_ref_proofstate_nbe cb a3) (fun ps ->
+    let r = interp_ctx name (fun () -> (t a1 a2) ps) in
+    Some (NBET.embed er cb r))))
   | _ ->
     None
 
@@ -969,9 +968,9 @@ let mk_tactic_nbe_interpretation_3
     Option.bind (NBET.unembed e1 cb a1) (fun a1 ->
     Option.bind (NBET.unembed e2 cb a2) (fun a2 ->
     Option.bind (NBET.unembed e3 cb a3) (fun a3 ->
-    Option.bind (NBET.unembed E.e_proofstate_nbe cb a4) (fun ps ->
-    let r = interp_ctx name (fun () -> run_safe (t a1 a2 a3) ps) in
-    Some (NBET.embed (E.e_result_nbe er) cb r)))))
+    Option.bind (NBET.unembed E.e_ref_proofstate_nbe cb a4) (fun ps ->
+    let r = interp_ctx name (fun () -> (t a1 a2 a3) ps) in
+    Some (NBET.embed er cb r)))))
   | _ ->
     None
 
@@ -994,9 +993,9 @@ let mk_tactic_nbe_interpretation_4
     Option.bind (NBET.unembed e2 cb a2) (fun a2 ->
     Option.bind (NBET.unembed e3 cb a3) (fun a3 ->
     Option.bind (NBET.unembed e4 cb a4) (fun a4 ->
-    Option.bind (NBET.unembed E.e_proofstate_nbe cb a5) (fun ps ->
-    let r = interp_ctx name (fun () -> run_safe (t a1 a2 a3 a4) ps) in
-    Some (NBET.embed (E.e_result_nbe er) cb r))))))
+    Option.bind (NBET.unembed E.e_ref_proofstate_nbe cb a5) (fun ps ->
+    let r = interp_ctx name (fun () -> (t a1 a2 a3 a4) ps) in
+    Some (NBET.embed er cb r))))))
   | _ ->
     None
 
@@ -1021,9 +1020,9 @@ let mk_tactic_nbe_interpretation_5
     Option.bind (NBET.unembed e3 cb a3) (fun a3 ->
     Option.bind (NBET.unembed e4 cb a4) (fun a4 ->
     Option.bind (NBET.unembed e5 cb a5) (fun a5 ->
-    Option.bind (NBET.unembed E.e_proofstate_nbe cb a6) (fun ps ->
-    let r = interp_ctx name (fun () -> run_safe (t a1 a2 a3 a4 a5) ps) in
-    Some (NBET.embed (E.e_result_nbe er) cb r)))))))
+    Option.bind (NBET.unembed E.e_ref_proofstate_nbe cb a6) (fun ps ->
+    let r = interp_ctx name (fun () -> (t a1 a2 a3 a4 a5) ps) in
+    Some (NBET.embed er cb r)))))))
   | _ ->
     None
 
@@ -1050,9 +1049,9 @@ let mk_tactic_nbe_interpretation_6
     Option.bind (NBET.unembed e4 cb a4) (fun a4 ->
     Option.bind (NBET.unembed e5 cb a5) (fun a5 ->
     Option.bind (NBET.unembed e6 cb a6) (fun a6 ->
-    Option.bind (NBET.unembed E.e_proofstate_nbe cb a7) (fun ps ->
-    let r = interp_ctx name (fun () -> run_safe (t a1 a2 a3 a4 a5 a6) ps) in
-    Some (NBET.embed (E.e_result_nbe er) cb r))))))))
+    Option.bind (NBET.unembed E.e_ref_proofstate_nbe cb a7) (fun ps ->
+    let r = interp_ctx name (fun () -> (t a1 a2 a3 a4 a5 a6) ps) in
+    Some (NBET.embed er cb r))))))))
   | _ ->
     None
 
@@ -1081,9 +1080,9 @@ let mk_tactic_nbe_interpretation_7
     Option.bind (NBET.unembed e5 cb a5) (fun a5 ->
     Option.bind (NBET.unembed e6 cb a6) (fun a6 ->
     Option.bind (NBET.unembed e7 cb a7) (fun a7 ->
-    Option.bind (NBET.unembed E.e_proofstate_nbe cb a8) (fun ps ->
-    let r = interp_ctx name (fun () -> run_safe (t a1 a2 a3 a4 a5 a6 a7) ps) in
-    Some (NBET.embed (E.e_result_nbe er) cb r)))))))))
+    Option.bind (NBET.unembed E.e_ref_proofstate_nbe cb a8) (fun ps ->
+    let r = interp_ctx name (fun () -> (t a1 a2 a3 a4 a5 a6 a7) ps) in
+    Some (NBET.embed er cb r)))))))))
   | _ ->
     None
 
@@ -1114,9 +1113,9 @@ let mk_tactic_nbe_interpretation_8
     Option.bind (NBET.unembed e6 cb a6) (fun a6 ->
     Option.bind (NBET.unembed e7 cb a7) (fun a7 ->
     Option.bind (NBET.unembed e8 cb a8) (fun a8 ->
-    Option.bind (NBET.unembed E.e_proofstate_nbe cb a9) (fun ps ->
-    let r = interp_ctx name (fun () -> run_safe (t a1 a2 a3 a4 a5 a6 a7 a8) ps) in
-    Some (NBET.embed (E.e_result_nbe er) cb r))))))))))
+    Option.bind (NBET.unembed E.e_ref_proofstate_nbe cb a9) (fun ps ->
+    let r = interp_ctx name (fun () -> (t a1 a2 a3 a4 a5 a6 a7 a8) ps) in
+    Some (NBET.embed er cb r))))))))))
   | _ ->
     None
 
@@ -1149,9 +1148,9 @@ let mk_tactic_nbe_interpretation_9
     Option.bind (NBET.unembed e7 cb a7) (fun a7 ->
     Option.bind (NBET.unembed e8 cb a8) (fun a8 ->
     Option.bind (NBET.unembed e9 cb a9) (fun a9 ->
-    Option.bind (NBET.unembed E.e_proofstate_nbe cb a10) (fun ps ->
-    let r = interp_ctx name (fun () -> run_safe (t a1 a2 a3 a4 a5 a6 a7 a8 a9) ps) in
-    Some (NBET.embed (E.e_result_nbe er) cb r)))))))))))
+    Option.bind (NBET.unembed E.e_ref_proofstate_nbe cb a10) (fun ps ->
+    let r = interp_ctx name (fun () -> (t a1 a2 a3 a4 a5 a6 a7 a8 a9) ps) in
+    Some (NBET.embed er cb r)))))))))))
   | _ ->
     None
 
@@ -1186,9 +1185,9 @@ let mk_tactic_nbe_interpretation_10
     Option.bind (NBET.unembed e8 cb a8) (fun a8 ->
     Option.bind (NBET.unembed e9 cb a9) (fun a9 ->
     Option.bind (NBET.unembed e10 cb a10) (fun a10 ->
-    Option.bind (NBET.unembed E.e_proofstate_nbe cb a11) (fun ps ->
-    let r = interp_ctx name (fun () -> run_safe (t a1 a2 a3 a4 a5 a6 a7 a8 a9 a10) ps) in
-    Some (NBET.embed (E.e_result_nbe er) cb r))))))))))))
+    Option.bind (NBET.unembed E.e_ref_proofstate_nbe cb a11) (fun ps ->
+    let r = interp_ctx name (fun () -> (t a1 a2 a3 a4 a5 a6 a7 a8 a9 a10) ps) in
+    Some (NBET.embed er cb r))))))))))))
   | _ ->
     None
 
@@ -1225,9 +1224,9 @@ let mk_tactic_nbe_interpretation_11
     Option.bind (NBET.unembed e9 cb a9) (fun a9 ->
     Option.bind (NBET.unembed e10 cb a10) (fun a10 ->
     Option.bind (NBET.unembed e11 cb a11) (fun a11 ->
-    Option.bind (NBET.unembed E.e_proofstate_nbe cb a12) (fun ps ->
-    let r = interp_ctx name (fun () -> run_safe (t a1 a2 a3 a4 a5 a6 a7 a8 a9 a10 a11) ps) in
-    Some (NBET.embed (E.e_result_nbe er) cb r)))))))))))))
+    Option.bind (NBET.unembed E.e_ref_proofstate_nbe cb a12) (fun ps ->
+    let r = interp_ctx name (fun () -> (t a1 a2 a3 a4 a5 a6 a7 a8 a9 a10 a11) ps) in
+    Some (NBET.embed er cb r)))))))))))))
   | _ ->
     None
 
@@ -1266,9 +1265,9 @@ let mk_tactic_nbe_interpretation_12
     Option.bind (NBET.unembed e10 cb a10) (fun a10 ->
     Option.bind (NBET.unembed e11 cb a11) (fun a11 ->
     Option.bind (NBET.unembed e12 cb a12) (fun a12 ->
-    Option.bind (NBET.unembed E.e_proofstate_nbe cb a13) (fun ps ->
-    let r = interp_ctx name (fun () -> run_safe (t a1 a2 a3 a4 a5 a6 a7 a8 a9 a10 a11 a12) ps) in
-    Some (NBET.embed (E.e_result_nbe er) cb r))))))))))))))
+    Option.bind (NBET.unembed E.e_ref_proofstate_nbe cb a13) (fun ps ->
+    let r = interp_ctx name (fun () -> (t a1 a2 a3 a4 a5 a6 a7 a8 a9 a10 a11 a12) ps) in
+    Some (NBET.embed er cb r))))))))))))))
   | _ ->
     None
 
@@ -1309,9 +1308,9 @@ let mk_tactic_nbe_interpretation_13
     Option.bind (NBET.unembed e11 cb a11) (fun a11 ->
     Option.bind (NBET.unembed e12 cb a12) (fun a12 ->
     Option.bind (NBET.unembed e13 cb a13) (fun a13 ->
-    Option.bind (NBET.unembed E.e_proofstate_nbe cb a14) (fun ps ->
-    let r = interp_ctx name (fun () -> run_safe (t a1 a2 a3 a4 a5 a6 a7 a8 a9 a10 a11 a12 a13) ps) in
-    Some (NBET.embed (E.e_result_nbe er) cb r)))))))))))))))
+    Option.bind (NBET.unembed E.e_ref_proofstate_nbe cb a14) (fun ps ->
+    let r = interp_ctx name (fun () -> (t a1 a2 a3 a4 a5 a6 a7 a8 a9 a10 a11 a12 a13) ps) in
+    Some (NBET.embed er cb r)))))))))))))))
   | _ ->
     None
 
@@ -1354,9 +1353,9 @@ let mk_tactic_nbe_interpretation_14
     Option.bind (NBET.unembed e12 cb a12) (fun a12 ->
     Option.bind (NBET.unembed e13 cb a13) (fun a13 ->
     Option.bind (NBET.unembed e14 cb a14) (fun a14 ->
-    Option.bind (NBET.unembed E.e_proofstate_nbe cb a15) (fun ps ->
-    let r = interp_ctx name (fun () -> run_safe (t a1 a2 a3 a4 a5 a6 a7 a8 a9 a10 a11 a12 a13 a14) ps) in
-    Some (NBET.embed (E.e_result_nbe er) cb r))))))))))))))))
+    Option.bind (NBET.unembed E.e_ref_proofstate_nbe cb a15) (fun ps ->
+    let r = interp_ctx name (fun () -> (t a1 a2 a3 a4 a5 a6 a7 a8 a9 a10 a11 a12 a13 a14) ps) in
+    Some (NBET.embed er cb r))))))))))))))))
   | _ ->
     None
 
@@ -1401,9 +1400,9 @@ let mk_tactic_nbe_interpretation_15
     Option.bind (NBET.unembed e13 cb a13) (fun a13 ->
     Option.bind (NBET.unembed e14 cb a14) (fun a14 ->
     Option.bind (NBET.unembed e15 cb a15) (fun a15 ->
-    Option.bind (NBET.unembed E.e_proofstate_nbe cb a16) (fun ps ->
-    let r = interp_ctx name (fun () -> run_safe (t a1 a2 a3 a4 a5 a6 a7 a8 a9 a10 a11 a12 a13 a14 a15) ps) in
-    Some (NBET.embed (E.e_result_nbe er) cb r)))))))))))))))))
+    Option.bind (NBET.unembed E.e_ref_proofstate_nbe cb a16) (fun ps ->
+    let r = interp_ctx name (fun () -> (t a1 a2 a3 a4 a5 a6 a7 a8 a9 a10 a11 a12 a13 a14 a15) ps) in
+    Some (NBET.embed er cb r)))))))))))))))))
   | _ ->
     None
 
@@ -1450,9 +1449,9 @@ let mk_tactic_nbe_interpretation_16
     Option.bind (NBET.unembed e14 cb a14) (fun a14 ->
     Option.bind (NBET.unembed e15 cb a15) (fun a15 ->
     Option.bind (NBET.unembed e16 cb a16) (fun a16 ->
-    Option.bind (NBET.unembed E.e_proofstate_nbe cb a17) (fun ps ->
-    let r = interp_ctx name (fun () -> run_safe (t a1 a2 a3 a4 a5 a6 a7 a8 a9 a10 a11 a12 a13 a14 a15 a16) ps) in
-    Some (NBET.embed (E.e_result_nbe er) cb r))))))))))))))))))
+    Option.bind (NBET.unembed E.e_ref_proofstate_nbe cb a17) (fun ps ->
+    let r = interp_ctx name (fun () -> (t a1 a2 a3 a4 a5 a6 a7 a8 a9 a10 a11 a12 a13 a14 a15 a16) ps) in
+    Some (NBET.embed er cb r))))))))))))))))))
   | _ ->
     None
 
@@ -1501,9 +1500,9 @@ let mk_tactic_nbe_interpretation_17
     Option.bind (NBET.unembed e15 cb a15) (fun a15 ->
     Option.bind (NBET.unembed e16 cb a16) (fun a16 ->
     Option.bind (NBET.unembed e17 cb a17) (fun a17 ->
-    Option.bind (NBET.unembed E.e_proofstate_nbe cb a18) (fun ps ->
-    let r = interp_ctx name (fun () -> run_safe (t a1 a2 a3 a4 a5 a6 a7 a8 a9 a10 a11 a12 a13 a14 a15 a16 a17) ps) in
-    Some (NBET.embed (E.e_result_nbe er) cb r)))))))))))))))))))
+    Option.bind (NBET.unembed E.e_ref_proofstate_nbe cb a18) (fun ps ->
+    let r = interp_ctx name (fun () -> (t a1 a2 a3 a4 a5 a6 a7 a8 a9 a10 a11 a12 a13 a14 a15 a16 a17) ps) in
+    Some (NBET.embed er cb r)))))))))))))))))))
   | _ ->
     None
 
@@ -1554,9 +1553,9 @@ let mk_tactic_nbe_interpretation_18
     Option.bind (NBET.unembed e16 cb a16) (fun a16 ->
     Option.bind (NBET.unembed e17 cb a17) (fun a17 ->
     Option.bind (NBET.unembed e18 cb a18) (fun a18 ->
-    Option.bind (NBET.unembed E.e_proofstate_nbe cb a19) (fun ps ->
-    let r = interp_ctx name (fun () -> run_safe (t a1 a2 a3 a4 a5 a6 a7 a8 a9 a10 a11 a12 a13 a14 a15 a16 a17 a18) ps) in
-    Some (NBET.embed (E.e_result_nbe er) cb r))))))))))))))))))))
+    Option.bind (NBET.unembed E.e_ref_proofstate_nbe cb a19) (fun ps ->
+    let r = interp_ctx name (fun () -> (t a1 a2 a3 a4 a5 a6 a7 a8 a9 a10 a11 a12 a13 a14 a15 a16 a17 a18) ps) in
+    Some (NBET.embed er cb r))))))))))))))))))))
   | _ ->
     None
 
@@ -1609,9 +1608,9 @@ let mk_tactic_nbe_interpretation_19
     Option.bind (NBET.unembed e17 cb a17) (fun a17 ->
     Option.bind (NBET.unembed e18 cb a18) (fun a18 ->
     Option.bind (NBET.unembed e19 cb a19) (fun a19 ->
-    Option.bind (NBET.unembed E.e_proofstate_nbe cb a20) (fun ps ->
-    let r = interp_ctx name (fun () -> run_safe (t a1 a2 a3 a4 a5 a6 a7 a8 a9 a10 a11 a12 a13 a14 a15 a16 a17 a18 a19) ps) in
-    Some (NBET.embed (E.e_result_nbe er) cb r)))))))))))))))))))))
+    Option.bind (NBET.unembed E.e_ref_proofstate_nbe cb a20) (fun ps ->
+    let r = interp_ctx name (fun () -> (t a1 a2 a3 a4 a5 a6 a7 a8 a9 a10 a11 a12 a13 a14 a15 a16 a17 a18 a19) ps) in
+    Some (NBET.embed er cb r)))))))))))))))))))))
   | _ ->
     None
 
@@ -1666,9 +1665,9 @@ let mk_tactic_nbe_interpretation_20
     Option.bind (NBET.unembed e18 cb a18) (fun a18 ->
     Option.bind (NBET.unembed e19 cb a19) (fun a19 ->
     Option.bind (NBET.unembed e20 cb a20) (fun a20 ->
-    Option.bind (NBET.unembed E.e_proofstate_nbe cb a21) (fun ps ->
-    let r = interp_ctx name (fun () -> run_safe (t a1 a2 a3 a4 a5 a6 a7 a8 a9 a10 a11 a12 a13 a14 a15 a16 a17 a18 a19 a20) ps) in
-    Some (NBET.embed (E.e_result_nbe er) cb r))))))))))))))))))))))
+    Option.bind (NBET.unembed E.e_ref_proofstate_nbe cb a21) (fun ps ->
+    let r = interp_ctx name (fun () -> (t a1 a2 a3 a4 a5 a6 a7 a8 a9 a10 a11 a12 a13 a14 a15 a16 a17 a18 a19 a20) ps) in
+    Some (NBET.embed er cb r))))))))))))))))))))))
   | _ ->
     None
 
@@ -3171,3 +3170,4 @@ let mk_total_nbe_interpretation_20
     Some (NBET.embed er cb r)))))))))))))))))))))
   | _ ->
     None
+

@@ -30,6 +30,9 @@ open FStar.Stubs.Tactics.Types
 open FStar.Stubs.Tactics.Types.Reflection
 include FStar.Stubs.Tactics.Unseal
 
+val get ()
+  : Tac proofstate
+
 val fixup_range : Range.range -> TacRO Range.range
 
 (** Resolve unification variable indirections at the top of the term. *)
@@ -74,12 +77,13 @@ val unquote : #a:Type -> term -> Tac a
 (** [catch t] will attempt to run [t] and allow to recover from a
 failure. If [t] succeeds with return value [a], [catch t] returns [Inr
 a]. On failure, it returns [Inl msg], where [msg] is the error [t]
-raised, and all unionfind effects are reverted. See also [recover] and
-[or_else]. *)
+raised, and all unionfind effects are reverted. See also [or_else]. *)
 val catch : #a:Type -> (unit -> Tac a) -> TacS (either exn a)
 
-(** Like [catch t], but will not discard unionfind effects on failure. *)
-val recover : #a:Type -> (unit -> Tac a) -> TacS (either exn a)
+val raise_core (e:exn) : TacH unit (requires True) (ensures fun _ -> False)
+inline_for_extraction
+let raise #a (e:exn) : TacH a (requires True) (ensures fun _ -> False) =
+    raise_core e; ()
 
 (** [norm steps] will call the normalizer on the current goal's
 type and witness, with its reduction behaviour parameterized

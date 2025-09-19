@@ -635,6 +635,7 @@ instance showable_lazy_kind = {
           | Lazy_comp -> "Lazy_comp"
           | Lazy_env -> "Lazy_env"
           | Lazy_proofstate -> "Lazy_proofstate"
+          | Lazy_ref_proofstate -> "Lazy_ref_proofstate"
           | Lazy_goal -> "Lazy_goal"
           | Lazy_sigelt -> "Lazy_sigelt"
           | Lazy_letbinding -> "Lazy_letbinding"
@@ -687,6 +688,7 @@ instance deq_lazy_kind : deq lazy_kind = {
           | Lazy_comp, Lazy_comp
           | Lazy_env, Lazy_env
           | Lazy_proofstate, Lazy_proofstate
+          | Lazy_ref_proofstate, Lazy_ref_proofstate
           | Lazy_goal, Lazy_goal
           | Lazy_sigelt, Lazy_sigelt
           | Lazy_letbinding, Lazy_letbinding

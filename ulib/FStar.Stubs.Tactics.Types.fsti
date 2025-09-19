@@ -21,6 +21,8 @@ include FStar.Stubs.Tactics.Common
 assume new type goal
 assume new type proofstate
 
+val ref_proofstate : Type0
+
 (* Returns the active goals *)
 val goals_of     : proofstate -> list goal
 (* Returns the goals marked for SMT *)

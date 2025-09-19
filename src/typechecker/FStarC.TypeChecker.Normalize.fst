@@ -1724,10 +1724,16 @@ and do_reify_monadic fallback cfg env stack (top : term) (m : monad_name) (t : t
                *
                * We don't introduce the let-binding in the first case,
                *   since in some examples, it blocks reductions
+               *
+               * We also skip the let-binding for the tactic effect, because
+               * reify f is total even though we don't recognize it as a total
+               * effect.  (And the generated code with the extra let is
+               * terrible.)
                *)
               let reified =
                 let is_total_effect = Env.is_total_effect cfg.tcenv eff_name in
                 if is_total_effect
+                  || Ident.lid_equals eff_name PC.effect_TAC_lid
                 then S.mk (Tm_app {hd=bind_inst; args=bind_inst_args head}) rng
                 else
                   let lb_head, head_bv, head =

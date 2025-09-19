@@ -90,6 +90,8 @@ type proofstate = {
     dump_on_failure : bool;      // Whether to dump the proofstate to the user when a failure occurs.
 }
 
+type ref_proofstate = ref proofstate
+
 val decr_depth : proofstate -> proofstate
 val incr_depth : proofstate -> proofstate
 val tracepoint_with_psc : PO.psc -> proofstate -> bool

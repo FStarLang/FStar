@@ -36,11 +36,11 @@ function make_tactic_interp_def () {
     for i in $(seq 1 $n); do
     echo "    Option.bind (unembed e$i a$i ncb) (fun a$i ->"
     done
-    echo "    Option.bind (unembed E.e_proofstate a$((n+1)) ncb) (fun ps ->"
-    echo "    let ps = set_ps_psc psc ps in"
-    echo -n "    let r = interp_ctx name (fun () -> run_safe (t"
+    echo "    Option.bind (unembed E.e_ref_proofstate a$((n+1)) ncb) (fun ps ->"
+    echo "    ps := set_ps_psc psc (!ps);"
+    echo -n "    let r = interp_ctx name (fun () -> (t"
     for i in $(seq 1 $n); do echo -n " a$i"; done; echo ") ps) in"
-    echo -n "    Some (embed (E.e_result er) (PO.psc_range psc) r ncb)"
+    echo -n "    Some (embed er (PO.psc_range psc) r ncb)"
     for i in $(seq 1 $((n+1))); do echo -n ")"; done
     echo
     echo "  | _ ->"
@@ -72,10 +72,10 @@ function make_tactic_nbe_interp_def () {
     for i in $(seq 1 $n); do
     echo "    Option.bind (NBET.unembed e$i cb a$i) (fun a$i ->"
     done
-    echo "    Option.bind (NBET.unembed E.e_proofstate_nbe cb a$((n+1))) (fun ps ->"
-    echo -n "    let r = interp_ctx name (fun () -> run_safe (t"
+    echo "    Option.bind (NBET.unembed E.e_ref_proofstate_nbe cb a$((n+1))) (fun ps ->"
+    echo -n "    let r = interp_ctx name (fun () -> (t"
     for i in $(seq 1 $n); do echo -n " a$i"; done; echo ") ps) in"
-    echo -n "    Some (NBET.embed (E.e_result_nbe er) cb r)"
+    echo -n "    Some (NBET.embed er cb r)"
     for i in $(seq 1 $((n+1))); do echo -n ")"; done
     echo
     echo "  | _ ->"
@@ -278,13 +278,13 @@ function mk_defs () {
         make_total_nbe_interp_def $i
     done
 
-    for i in $(seq 1 $max); do
-        make_tac_step_def $i
-    done
+    # for i in $(seq 1 $max); do
+    #     make_tac_step_def $i
+    # done
 
-    for i in $(seq 1 $max); do
-        make_total_step_def $i
-    done
+    # for i in $(seq 1 $max); do
+    #     make_total_step_def $i
+    # done
 }
 
 function mk_decls () {
