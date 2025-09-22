@@ -266,6 +266,7 @@ let op_to_string = function
   | BvUlt -> "bvult"
   | BvToNat -> "bv2int"
   | BvUext n -> Format.fmt1 "(_ zero_extend %s)" (show n)
+  | BvNot -> "bvnot"
   | NatToBv n -> Format.fmt1 "(_ int2bv %s)" (show n)
   | Var s -> s
 
@@ -367,6 +368,7 @@ let mk_bin_op op (t1,t2) r = mkApp'(op, [t1;t2]) r
 let mkMinus t r = mkApp'(Minus, [t]) r
 let mkNatToBv sz t r = mkApp'(NatToBv sz, [t]) r
 let mkBvUext sz t r = mkApp'(BvUext sz, [t]) r
+let mkBvNot  t r = mkApp'(BvNot, [t]) r
 let mkBvToNat t r = mkApp'(BvToNat, [t]) r
 let mkBvAnd = mk_bin_op BvAnd
 let mkBvXor = mk_bin_op BvXor
@@ -461,6 +463,7 @@ let check_pattern_ok (t:term) : option term =
                 | BvMul
                 | BvUlt
                 | BvUext _
+                | BvNot
                 | NatToBv _
                 | BvToNat
                 | ITE -> false

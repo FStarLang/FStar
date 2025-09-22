@@ -47,3 +47,10 @@ let lemma_test_bvmod_unsafe (bv: BV.bv_t 64) (num: UInt.uint_t 8 { num <> 0 }): 
 
 let lemma_test_bvmul' (bv: BV.bv_t 64) (num: UInt.uint_t 64): unit =
   assert (BV.bvmul' #64 bv (BV.int2bv #64 num) == BV.bvmul #64 bv num)
+
+(** Tests for bvnot *)
+let lemma_bvnot_test (bv: BV.bv_t 64) : unit =
+  let not1 = BV.bvnot #64 bv in
+  let not2 = BV.bvnot #64 (BV.bvnot #64 bv) in
+  assert (not2 == bv);
+  assert (not1 <> bv)
