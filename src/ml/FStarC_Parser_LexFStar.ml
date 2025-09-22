@@ -54,7 +54,6 @@ let () =
   Hashtbl.add keywords "by"            BY          ;
   Hashtbl.add keywords "calc"          CALC        ;
   Hashtbl.add keywords "class"         CLASS       ;
-  Hashtbl.add keywords "default"       DEFAULT     ;
   Hashtbl.add keywords "decreases"     DECREASES   ;
   Hashtbl.add keywords "effect"        EFFECT      ;
   Hashtbl.add keywords "eliminate"     ELIM;
@@ -209,10 +208,10 @@ let () =
    "¬", TILDE "~";
    "⸬", COLON_COLON;
    "▹", PIPE_RIGHT;
-   "÷", OPINFIX3 "÷";
+   "÷", OPINFIX3L "÷";
    "‖", OPINFIX0a "||";
    "×", IDENT "op_Multiply";
-   "∗", OPINFIX3 "*";
+   "∗", OPINFIX3L "*";
    "⇒", OPINFIX0c "=>";
    "≥", OPINFIX0c ">=";
    "≤", OPINFIX0c "<=";
@@ -471,6 +470,7 @@ match%sedlex lexbuf with
  | "#pop-options" -> PRAGMA_POP_OPTIONS
  | "#restart-solver" -> PRAGMA_RESTART_SOLVER
  | "#print-effects-graph" -> PRAGMA_PRINT_EFFECTS_GRAPH
+ | "#check" -> PRAGMA_CHECK
  | "__SOURCE_FILE__" -> STRING (Filepath.basename (L.source_file lexbuf))
  | "__LINE__" -> INT (string_of_int (L.current_line lexbuf))
  | "__FILELINE__"   -> STRING (Filepath.basename (L.source_file lexbuf) ^ "(" ^ (string_of_int (L.current_line lexbuf)) ^ ")")
@@ -610,6 +610,8 @@ match%sedlex lexbuf with
                | _ -> assert false end
 
  (* Operators. *)
+ | "**"     ,  Star symbolchar -> ensure_no_comment lexbuf (fun s -> OPINFIX3R  s)
+ | "|->"    ,  Star symbolchar -> ensure_no_comment lexbuf (fun s -> OPINFIX4  s)
  | op_prefix,  Star symbolchar -> ensure_no_comment lexbuf (fun s -> OPPREFIX  s)
  | op_infix0a, Star symbolchar -> ensure_no_comment lexbuf (fun s -> OPINFIX0a s)
  | op_infix0b, Star symbolchar -> ensure_no_comment lexbuf (fun s -> OPINFIX0b s)
@@ -619,9 +621,8 @@ match%sedlex lexbuf with
  | op_infix2,  Star symbolchar -> ensure_no_comment lexbuf (fun s -> OPINFIX2  s)
  | op_infix3,  Star symbolchar -> ensure_no_comment lexbuf (function
                                       | "" -> one_line_comment "" lexbuf
-                                      | s  -> OPINFIX3 s
+                                      | s  -> OPINFIX3L s
                                     )
- | "**"     ,  Star symbolchar -> ensure_no_comment lexbuf (fun s -> OPINFIX4  s)
 
  (* Unicode Operators *)
  | uoperator -> let id = L.lexeme lexbuf in

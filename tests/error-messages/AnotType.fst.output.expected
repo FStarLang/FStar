@@ -1,11 +1,9 @@
->> Got issues: [
-* Error 309 at AnotType.fst(19,5-19,7):
+* Info at AnotType.fst(19,5-19,7):
+  - Expected failure:
   - Type annotation Prims.int for inductive AnotType.tc is not Type or eqtype,
     or it is eqtype but contains noeq/unopteq qualifiers
 
->>]
->> Got issues: [
-* Error 189 at AnotType.fst(27,14-27,16):
+* Info at AnotType.fst(27,14-27,16):
+  - Expected failure:
   - Expected expression of type Type0 got expression tb of type Type
 
->>]

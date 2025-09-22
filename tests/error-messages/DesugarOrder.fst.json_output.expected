@@ -1,3 +1,1 @@
->> Got issues: [
-{"msg":["Identifier not found: a",""],"level":"Error","range":{"def":{"file_name":"DesugarOrder.fst","start_pos":{"line":7,"col":12},"end_pos":{"line":7,"col":13}},"use":{"file_name":"DesugarOrder.fst","start_pos":{"line":7,"col":12},"end_pos":{"line":7,"col":13}}},"number":72,"ctx":["While desugaring module DesugarOrder"]}
->>]
+{"msg":["Expected failure:","Identifier not found: a",""],"level":"Info","range":{"def":{"file_name":"DesugarOrder.fst","start_pos":{"line":7,"col":12},"end_pos":{"line":7,"col":13}},"use":{"file_name":"DesugarOrder.fst","start_pos":{"line":7,"col":12},"end_pos":{"line":7,"col":13}}},"number":72,"ctx":["While desugaring module DesugarOrder"]}

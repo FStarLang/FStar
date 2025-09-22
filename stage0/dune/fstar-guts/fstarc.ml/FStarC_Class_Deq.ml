@@ -156,3 +156,10 @@ let deq_tuple6 :
                               && (op_Equals_Question d5 x5 y5))
                              && (op_Equals_Question d6 x6 y6))
               }
+let rec mem : 'a . 'a deq -> 'a -> 'a Prims.list -> Prims.bool =
+  fun uu___ ->
+    fun x ->
+      fun xs ->
+        match xs with
+        | [] -> false
+        | y::ys -> (op_Equals_Question uu___ x y) || (mem uu___ x ys)

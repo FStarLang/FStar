@@ -455,6 +455,7 @@ let eq_pragma (t1 t2: pragma) =
   | PopOptions, PopOptions -> true
   | RestartSolver, RestartSolver -> true
   | PrintEffectsGraph, PrintEffectsGraph -> true
+  | Check t1, Check t2 -> eq_term t1 t2
   | _ -> false
 
 
@@ -464,7 +465,6 @@ let eq_qualifier (t1 t2: qualifier) =
   | Noeq, Noeq -> true
   | Unopteq, Unopteq -> true
   | Assumption, Assumption -> true
-  | DefaultEffect, DefaultEffect -> true
   | TotalEffect, TotalEffect -> true
   | Effect_qual, Effect_qual -> true
   | New, New -> true

@@ -189,7 +189,7 @@ let set_lcomp_result lc t =
 let memo_tk (e:term) (t:typ) = e
 
 let maybe_warn_on_use env fv : unit =
-    match Env.lookup_attrs_of_lid env fv.fv_name.v with
+    match Env.lookup_attrs_of_lid env fv.fv_name with
     | None -> ()
     | Some attrs ->
       attrs |>
@@ -205,23 +205,23 @@ let maybe_warn_on_use env fv : unit =
           in
           match head.n with
           | Tm_fvar attr_fv
-              when lid_equals attr_fv.fv_name.v Const.warn_on_use_attr ->
+              when lid_equals attr_fv.fv_name Const.warn_on_use_attr ->
             let m =
               Errors.text <|
               Format.fmt1 "Every use of %s triggers a warning"
-                         (Ident.string_of_lid fv.fv_name.v)
+                         (Ident.string_of_lid fv.fv_name)
             in
-            log_issue fv.fv_name.v Warning_WarnOnUse (msg_arg [m])
+            log_issue fv.fv_name Warning_WarnOnUse (msg_arg [m])
 
           | Tm_fvar attr_fv
-              when lid_equals attr_fv.fv_name.v Const.deprecated_attr ->
+              when lid_equals attr_fv.fv_name Const.deprecated_attr ->
             let m =
               Errors.text <|
               Format.fmt1
                 "%s is deprecated"
-                (Ident.string_of_lid fv.fv_name.v)
+                (Ident.string_of_lid fv.fv_name)
             in
-            log_issue fv.fv_name.v Warning_DeprecatedDefinition (msg_arg [m])
+            log_issue fv.fv_name Warning_DeprecatedDefinition (msg_arg [m])
 
           | _ -> ())
 
@@ -1204,7 +1204,7 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
     let term = S.mk_Tm_app constructor args top.pos in
     tc_term env term
 
-  | Tm_app {hd={n=Tm_fvar {fv_name={v=field_name}; fv_qual=Some (Unresolved_projector candidate)}};
+  | Tm_app {hd={n=Tm_fvar {fv_name=field_name; fv_qual=Some (Unresolved_projector candidate)}};
             args=(e, None)::rest} ->
     (* ToSyntax left an unresolved projector, we have to use type info to disambiguate *)
     let proceed_with choice =
@@ -1235,7 +1235,7 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
     );
     match (SS.compress (U.un_uinst thead)).n with
     | Tm_fvar type_name -> (
-      match TcUtil.try_lookup_record_type env type_name.fv_name.v with
+      match TcUtil.try_lookup_record_type env type_name.fv_name with
       | None -> proceed_with candidate
       | Some rdc ->
         let i =
@@ -1407,7 +1407,7 @@ and tc_match (env : Env.env) (top : term) : term & lcomp & guard_t =
         begin match p.v with
         | Pat_cons (fv, _, _) ->
           (* Wrapped in a try/catch, we may be looking up unresolved constructors. *)
-          let r = try Some (Env.lookup_datacon env fv.fv_name.v) with | _ -> None in
+          let r = try Some (Env.lookup_datacon env fv.fv_name) with | _ -> None in
           begin match r with
           | Some (us, t) ->
             let bs, c = U.arrow_formals_comp t in
@@ -1661,7 +1661,7 @@ and tc_synth head env args rng =
     let tau, _, g2 = tc_tactic t_unit t_unit env tau in
     Rel.force_trivial_guard env g2;
 
-    let t = env.synth_hook env typ ({ tau with pos = rng }) in
+    let t = env.synth_hook env typ ({ tau with pos = rng }) typ.pos in
     if !dbg_Tac then
         Format.print1 "Got %s\n" (show t);
 
@@ -1682,9 +1682,9 @@ and check_instantiated_fvar (env:Env.env) (v:S.var) (q:option S.fv_qual) (e:term
       | Some (Record_ctor _) -> true
       | _ -> false
   in
-  if is_data_ctor q && not (Env.is_datacon env v.v) then
+  if is_data_ctor q && not (Env.is_datacon env v) then
     raise_error env Errors.Fatal_MissingDataConstructor
-                (Format.fmt1 "Expected a data constructor; got %s" (string_of_lid v.v));
+                (Format.fmt1 "Expected a data constructor; got %s" (show v));
 
   (* remove inaccesible pattern implicits, make them regular implicits *)
   let t = U.remove_inacc t0 in
@@ -1765,7 +1765,7 @@ and tc_value env (e:term) : term
 
   | Tm_uinst({n=Tm_fvar fv}, us) ->
     let us = List.map (tc_universe env) us in
-    let (us', t), range = Env.lookup_lid env fv.fv_name.v in
+    let (us', t), range = Env.lookup_lid env fv.fv_name in
     let fv = S.set_range_of_fv fv range in
     maybe_warn_on_use env fv;
     if List.length us <> List.length us' then
@@ -1806,11 +1806,11 @@ and tc_value env (e:term) : term
       (* The Data_ctor qualifier is mostly set by desugaring, but
          may be missing in tactic-generated terms. In general,
          we should try to not rely on desugaring. *)
-      if None? fv.fv_qual && Env.is_datacon env fv.fv_name.v
+      if None? fv.fv_qual && Env.is_datacon env fv.fv_name
       then { fv with fv_qual = Some Data_ctor }
       else fv
     in
-    let (us, t), range = Env.lookup_lid env fv.fv_name.v in
+    let (us, t), range = Env.lookup_lid env fv.fv_name in
     let fv = S.set_range_of_fv fv range in
     let fv = maybe_set_fv_qual env fv in
     maybe_warn_on_use env fv;
@@ -2019,10 +2019,9 @@ and tc_universe env u : universe =
           if Env.lookup_univ env x
           then u
           else failwith ("Universe variable " ^ (show u) ^ " not found")
-   in if env.lax_universes then U_zero
-      else (match u with
-            | U_unknown -> U.type_u () |> snd
-            | _ -> aux u)
+   in (match u with
+       | U_unknown -> U.type_u () |> snd
+       | _ -> aux u)
 
 (* Several complex cases from the main type-checker are factored in to separate functions below *)
 
@@ -2978,9 +2977,9 @@ and tc_pat env (pat_t:typ) (p0:pat) :
               if norm then t
               else aux true (N.normalize [Env.HNF; Env.Unmeta; Env.Unascribe; Env.UnfoldUntil delta_constant] env t)
         and unfold_once t f us args =
-            if Env.is_type_constructor env f.fv_name.v
+            if Env.is_type_constructor env f.fv_name
             then t
-            else match Env.lookup_definition [Env.Unfold delta_constant] env f.fv_name.v with
+            else match Env.lookup_definition [Env.Unfold delta_constant] env f.fv_name with
                  | None -> t
                  | Some head_def_ts ->
                    let _, head_def = Env.inst_tscheme_with head_def_ts us in
@@ -3069,21 +3068,21 @@ and tc_pat env (pat_t:typ) (p0:pat) :
             match head.n with
             | Tm_uinst (head, us) ->
               let Tm_fvar f = head.n in
-              let res = Env.try_lookup_and_inst_lid env us f.fv_name.v in
+              let res = Env.try_lookup_and_inst_lid env us f.fv_name in
               begin
               match res with
               | Some (t, _)
-                when Env.is_datacon env f.fv_name.v ->
+                when Env.is_datacon env f.fv_name ->
                 head, (us, t)
                 
               | _ ->
                 fail (Format.fmt1 "Could not find constructor: %s" 
-                                 (Ident.string_of_lid f.fv_name.v))
+                                 (Ident.string_of_lid f.fv_name))
               end
 
             | Tm_fvar f ->
               head,
-              Env.lookup_datacon env f.fv_name.v
+              Env.lookup_datacon env f.fv_name
           in
           let formals, t = U.arrow_formals t_f in
           //Data constructors are marked with the "erasable" attribute
@@ -3558,11 +3557,11 @@ and tc_eqn (scrutinee:bv) (env:Env.env) (ret_opt : option match_returns_ascripti
       else (* 5 (a) *)
           let rec build_branch_guard (scrutinee_tm:option term) (pattern:pat) pat_exp : list typ =
             let discriminate scrutinee_tm f =
-                let is_induc, datacons = Env.datacons_of_typ env (Env.typ_of_datacon env f.v) in
+                let is_induc, datacons = Env.datacons_of_typ env (Env.typ_of_datacon env f) in
                 (* Why the `not is_induc`? We may be checking an exception pattern. See issue #1535. *)
                 if not is_induc || List.length datacons > 1
                 then
-                    let discriminator = U.mk_discriminator f.v in
+                    let discriminator = U.mk_discriminator f in
                     match Env.try_lookup_lid env discriminator with
                         | None -> []  // We don't use the discriminator if we are typechecking it
                         | _ ->
@@ -3613,28 +3612,28 @@ and tc_eqn (scrutinee:bv) (env:Env.env) (ret_opt : option match_returns_ascripti
             | Pat_cons (_, _, []), Tm_fvar _ ->
                 //nullary pattern
                 let f = head_constructor pat_exp in
-                if not (Env.is_datacon env f.v)
+                if not (Env.is_datacon env f)
                 then failwith "Impossible: nullary patterns must be data constructors"
                 else discriminate (force_scrutinee ()) (head_constructor pat_exp)
 
             | Pat_cons (_, _, pat_args), Tm_app {hd=head; args} ->
                 //application pattern
                 let f = head_constructor head in
-                if not (Env.is_datacon env f.v)
+                if not (Env.is_datacon env f)
                 || List.length pat_args <> List.length args
                 then failwith "Impossible: application patterns must be fully-applied data constructors"
                 else let sub_term_guards =
                         List.zip pat_args args |>
                         List.mapi (fun i ((pi, _), (ei, _)) ->
-                            let projector = Env.lookup_projector env f.v i in
+                            let projector = Env.lookup_projector env f i in
                             //NS: TODO ... should this be a marked as a record projector? But it doesn't matter for extraction
                             let scrutinee_tm =
                                 match Env.try_lookup_lid env projector with
                                 | None ->
                                   None //no projector, e.g., because we are actually typechecking the projector itself
                                 | _ ->
-                                  let proj = S.fvar (Ident.set_lid_range projector f.p) None in
-                                  Some (mk_Tm_app proj [as_arg (force_scrutinee())] f.p)
+                                  let proj = S.fvar (Ident.set_lid_range projector (pos f)) None in
+                                  Some (mk_Tm_app proj [as_arg (force_scrutinee())] (pos f))
                             in
                             build_branch_guard scrutinee_tm pi ei) |>
                         List.flatten
@@ -4630,7 +4629,7 @@ let rec universe_of_aux env e : term =
      let (t, _rng) = Env.lookup_bv env n in
      t
    | Tm_fvar fv ->
-     let (_, t), _ = Env.lookup_lid env fv.fv_name.v in
+     let (_, t), _ = Env.lookup_lid env fv.fv_name in
      t
    | Tm_lazy i -> universe_of_aux env (U.unfold_lazy i)
    | Tm_ascribed {asc=(Inl t, _, _)} -> t
@@ -4641,7 +4640,7 @@ let rec universe_of_aux env e : term =
    | Tm_constant sc -> tc_constant env e.pos sc
    //slightly subtle, since fv is a type-scheme; instantiate it with us
    | Tm_uinst({n=Tm_fvar fv}, us) ->
-     let (us', t), _ = Env.lookup_lid env fv.fv_name.v in
+     let (us', t), _ = Env.lookup_lid env fv.fv_name in
      if List.length us <> List.length us' then
        raise_error env Errors.Fatal_UnexpectedNumberOfUniverse
           "Unexpected number of universe instantiations";

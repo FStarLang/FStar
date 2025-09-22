@@ -53,6 +53,7 @@ type vconst =
     | C_Reify
     | C_Reflect of name
     | C_Real of string (* Real literals are represented as a string e.g. "1.2" *)
+    | C_Char of FStar.Char.char
 
 type universes = list universe
 

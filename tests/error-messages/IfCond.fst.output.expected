@@ -1,5 +1,4 @@
->> Got issues: [
-* Error 189 at IfCond.fst(4,17-4,18):
+* Info at IfCond.fst(4,17-4,18):
+  - Expected failure:
   - Expected expression of type Prims.bool got expression 2 of type Prims.int
 
->>]

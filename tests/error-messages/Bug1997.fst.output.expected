@@ -160,206 +160,181 @@ let _ = FStar.Pervasives.assert_norm (Bug1997.n0 == Bug1997.n1)
 
 ]
 
->> Got issues: [
-* Error 19 at Bug1997.fst(13,27-13,38):
+* Info at Bug1997.fst(13,27-13,38):
+  - Expected failure:
   - Assertion failed
   - The SMT solver could not prove the query. Use --query_stats for more
     details.
   - See also Bug1997.fst(13,39-13,55)
 
->>]
->> Got issues: [
-* Error 19 at Bug1997.fst(21,27-21,38):
+* Info at Bug1997.fst(21,27-21,38):
+  - Expected failure:
   - Assertion failed
   - The SMT solver could not prove the query. Use --query_stats for more
     details.
   - See also Bug1997.fst(21,39-21,67)
 
->>]
->> Got issues: [
-* Error 19 at Bug1997.fst(29,27-29,38):
+* Info at Bug1997.fst(29,27-29,38):
+  - Expected failure:
   - Assertion failed
   - The SMT solver could not prove the query. Use --query_stats for more
     details.
   - See also Bug1997.fst(29,39-29,63)
 
->>]
->> Got issues: [
-* Error 19 at Bug1997.fst(38,27-38,38):
+* Info at Bug1997.fst(38,27-38,38):
+  - Expected failure:
   - Assertion failed
   - The SMT solver could not prove the query. Use --query_stats for more
     details.
   - See also Bug1997.fst(38,39-38,65)
 
->>]
->> Got issues: [
-* Error 19 at Bug1997.fst(39,27-39,38):
+* Info at Bug1997.fst(39,27-39,38):
+  - Expected failure:
   - Assertion failed
   - The SMT solver could not prove the query. Use --query_stats for more
     details.
   - See also Bug1997.fst(39,39-39,65)
 
->>]
->> Got issues: [
-* Error 19 at Bug1997.fst(40,27-40,38):
+* Info at Bug1997.fst(40,27-40,38):
+  - Expected failure:
   - Assertion failed
   - The SMT solver could not prove the query. Use --query_stats for more
     details.
   - See also Bug1997.fst(40,39-40,65)
 
->>]
->> Got issues: [
-* Error 19 at Bug1997.fst(41,27-41,38):
+* Info at Bug1997.fst(41,27-41,38):
+  - Expected failure:
   - Assertion failed
   - The SMT solver could not prove the query. Use --query_stats for more
     details.
   - See also Bug1997.fst(41,39-41,65)
 
->>]
->> Got issues: [
-* Error 19 at Bug1997.fst(42,27-42,38):
+* Info at Bug1997.fst(42,27-42,38):
+  - Expected failure:
   - Assertion failed
   - The SMT solver could not prove the query. Use --query_stats for more
     details.
   - See also Bug1997.fst(42,39-42,65)
 
->>]
->> Got issues: [
-* Error 19 at Bug1997.fst(51,27-51,38):
+* Info at Bug1997.fst(51,27-51,38):
+  - Expected failure:
   - Assertion failed
   - The SMT solver could not prove the query. Use --query_stats for more
     details.
   - See also Bug1997.fst(51,39-51,59)
 
->>]
->> Got issues: [
-* Error 19 at Bug1997.fst(52,27-52,38):
+* Info at Bug1997.fst(52,27-52,38):
+  - Expected failure:
   - Assertion failed
   - The SMT solver could not prove the query. Use --query_stats for more
     details.
   - See also Bug1997.fst(52,39-52,59)
 
->>]
->> Got issues: [
-* Error 19 at Bug1997.fst(53,27-53,38):
+* Info at Bug1997.fst(53,27-53,38):
+  - Expected failure:
   - Assertion failed
   - The SMT solver could not prove the query. Use --query_stats for more
     details.
   - See also Bug1997.fst(53,39-53,59)
 
->>]
->> Got issues: [
-* Error 19 at Bug1997.fst(54,27-54,38):
+* Info at Bug1997.fst(54,27-54,38):
+  - Expected failure:
   - Assertion failed
   - The SMT solver could not prove the query. Use --query_stats for more
     details.
   - See also Bug1997.fst(54,39-54,59)
 
->>]
->> Got issues: [
-* Error 19 at Bug1997.fst(55,27-55,38):
+* Info at Bug1997.fst(55,27-55,38):
+  - Expected failure:
   - Assertion failed
   - The SMT solver could not prove the query. Use --query_stats for more
     details.
   - See also Bug1997.fst(55,39-55,59)
 
->>]
->> Got issues: [
-* Error 19 at Bug1997.fst(63,27-63,38):
+* Info at Bug1997.fst(63,27-63,38):
+  - Expected failure:
   - Assertion failed
   - The SMT solver could not prove the query. Use --query_stats for more
     details.
   - See also Bug1997.fst(63,39-63,51)
 
->>]
->> Got issues: [
-* Error 19 at Bug1997.fst(64,27-64,38):
+* Info at Bug1997.fst(64,27-64,38):
+  - Expected failure:
   - Assertion failed
   - The SMT solver could not prove the query. Use --query_stats for more
     details.
   - See also Bug1997.fst(64,39-64,51)
 
->>]
->> Got issues: [
-* Error 19 at Bug1997.fst(75,27-75,38):
+* Info at Bug1997.fst(75,27-75,38):
+  - Expected failure:
   - Assertion failed
   - The SMT solver could not prove the query. Use --query_stats for more
     details.
   - See also Bug1997.fst(75,39-75,49)
 
->>]
->> Got issues: [
-* Error 19 at Bug1997.fst(76,27-76,38):
+* Info at Bug1997.fst(76,27-76,38):
+  - Expected failure:
   - Assertion failed
   - The SMT solver could not prove the query. Use --query_stats for more
     details.
   - See also Bug1997.fst(76,39-76,49)
 
->>]
->> Got issues: [
-* Error 19 at Bug1997.fst(77,27-77,38):
+* Info at Bug1997.fst(77,27-77,38):
+  - Expected failure:
   - Assertion failed
   - The SMT solver could not prove the query. Use --query_stats for more
     details.
   - See also Bug1997.fst(77,39-77,49)
 
->>]
->> Got issues: [
-* Error 19 at Bug1997.fst(78,27-78,38):
+* Info at Bug1997.fst(78,27-78,38):
+  - Expected failure:
   - Assertion failed
   - The SMT solver could not prove the query. Use --query_stats for more
     details.
   - See also Bug1997.fst(78,39-78,49)
 
->>]
->> Got issues: [
-* Error 19 at Bug1997.fst(87,27-87,38):
+* Info at Bug1997.fst(87,27-87,38):
+  - Expected failure:
   - Assertion failed
   - The SMT solver could not prove the query. Use --query_stats for more
     details.
   - See also Bug1997.fst(87,39-87,49)
 
->>]
->> Got issues: [
-* Error 19 at Bug1997.fst(88,27-88,38):
+* Info at Bug1997.fst(88,27-88,38):
+  - Expected failure:
   - Assertion failed
   - The SMT solver could not prove the query. Use --query_stats for more
     details.
   - See also Bug1997.fst(88,39-88,49)
 
->>]
->> Got issues: [
-* Error 19 at Bug1997.fst(89,27-89,38):
+* Info at Bug1997.fst(89,27-89,38):
+  - Expected failure:
   - Assertion failed
   - The SMT solver could not prove the query. Use --query_stats for more
     details.
   - See also Bug1997.fst(89,39-89,49)
 
->>]
->> Got issues: [
-* Error 19 at Bug1997.fst(90,27-90,38):
+* Info at Bug1997.fst(90,27-90,38):
+  - Expected failure:
   - Assertion failed
   - The SMT solver could not prove the query. Use --query_stats for more
     details.
   - See also Bug1997.fst(90,39-90,49)
 
->>]
->> Got issues: [
-* Error 19 at Bug1997.fst(91,27-91,38):
+* Info at Bug1997.fst(91,27-91,38):
+  - Expected failure:
   - Assertion failed
   - The SMT solver could not prove the query. Use --query_stats for more
     details.
   - See also Bug1997.fst(91,39-91,49)
 
->>]
->> Got issues: [
-* Error 19 at Bug1997.fst(92,27-92,38):
+* Info at Bug1997.fst(92,27-92,38):
+  - Expected failure:
   - Assertion failed
   - The SMT solver could not prove the query. Use --query_stats for more
     details.
   - See also Bug1997.fst(92,39-92,49)
 
->>]
 Module after type checking:
 module Bug1997
 Declarations: [

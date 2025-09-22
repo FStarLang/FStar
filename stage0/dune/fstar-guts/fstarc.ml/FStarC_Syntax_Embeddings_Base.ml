@@ -219,7 +219,7 @@ let unembed :
                let uu___4 =
                  let uu___5 = type_of e in
                  FStarC_Class_PP.pp FStarC_Syntax_Print.pretty_term uu___5 in
-               FStarC_Pprint.op_Hat_Slash_Hat uu___3 uu___4 in
+               FStar_Pprint.op_Hat_Slash_Hat uu___3 uu___4 in
              let uu___3 =
                let uu___4 =
                  let uu___5 = FStarC_Errors_Msg.text "emb_typ = " in
@@ -228,14 +228,14 @@ let unembed :
                      let uu___8 = emb_typ_of e () in
                      FStarC_Class_Show.show
                        FStarC_Syntax_Syntax.showable_emb_typ uu___8 in
-                   FStarC_Pprint.doc_of_string uu___7 in
-                 FStarC_Pprint.op_Hat_Slash_Hat uu___5 uu___6 in
+                   FStar_Pprint.doc_of_string uu___7 in
+                 FStar_Pprint.op_Hat_Slash_Hat uu___5 uu___6 in
                let uu___5 =
                  let uu___6 =
                    let uu___7 = FStarC_Errors_Msg.text "Term =" in
                    let uu___8 =
                      FStarC_Class_PP.pp FStarC_Syntax_Print.pretty_term t in
-                   FStarC_Pprint.op_Hat_Slash_Hat uu___7 uu___8 in
+                   FStar_Pprint.op_Hat_Slash_Hat uu___7 uu___8 in
                  [uu___6] in
                uu___4 :: uu___5 in
              uu___2 :: uu___3 in
@@ -483,7 +483,7 @@ let mk_extracted_embedding :
                   match uu___2 with
                   | FStarC_Syntax_Syntax.Tm_fvar fv ->
                       FStar_Pervasives_Native.Some
-                        ((fv.FStarC_Syntax_Syntax.fv_name).FStarC_Syntax_Syntax.v)
+                        (fv.FStarC_Syntax_Syntax.fv_name)
                   | uu___3 -> FStar_Pervasives_Native.None in
                 op_let_Question uu___1
                   (fun hd_lid ->

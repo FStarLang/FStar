@@ -981,31 +981,25 @@ let (try_lookup_free_var :
                         | uu___4 -> FStar_Pervasives_Native.Some t)
                    | uu___4 -> FStar_Pervasives_Native.None)))
 let (lookup_free_var :
-  env_t ->
-    FStarC_Ident.lident FStarC_Syntax_Syntax.withinfo_t ->
-      FStarC_SMTEncoding_Term.term)
-  =
+  env_t -> FStarC_Ident.lident -> FStarC_SMTEncoding_Term.term) =
   fun env ->
     fun a ->
-      let uu___ = try_lookup_free_var env a.FStarC_Syntax_Syntax.v in
+      let uu___ = try_lookup_free_var env a in
       match uu___ with
       | FStar_Pervasives_Native.Some t -> t
-      | FStar_Pervasives_Native.None ->
-          fail_fvar_lookup env a.FStarC_Syntax_Syntax.v
-let (lookup_free_var_name :
-  env_t ->
-    FStarC_Ident.lident FStarC_Syntax_Syntax.withinfo_t -> fvar_binding)
-  = fun env -> fun a -> lookup_lid env a.FStarC_Syntax_Syntax.v
+      | FStar_Pervasives_Native.None -> fail_fvar_lookup env a
+let (lookup_free_var_name : env_t -> FStarC_Ident.lident -> fvar_binding) =
+  fun env -> fun a -> lookup_lid env a
 let (lookup_free_var_sym :
   env_t ->
-    FStarC_Ident.lident FStarC_Syntax_Syntax.withinfo_t ->
+    FStarC_Ident.lident ->
       ((FStarC_SMTEncoding_Term.op, FStarC_SMTEncoding_Term.term)
         FStar_Pervasives.either * FStarC_SMTEncoding_Term.term Prims.list *
         Prims.int))
   =
   fun env ->
     fun a ->
-      let fvb = lookup_lid env a.FStarC_Syntax_Syntax.v in
+      let fvb = lookup_lid env a in
       match fvb.smt_fuel_partial_app with
       | FStar_Pervasives_Native.Some
           ({

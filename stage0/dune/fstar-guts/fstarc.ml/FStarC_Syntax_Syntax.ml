@@ -7,7 +7,7 @@ let __proj__Mkwithinfo_t__item__v : 'a . 'a withinfo_t -> 'a =
 let __proj__Mkwithinfo_t__item__p :
   'a . 'a withinfo_t -> FStarC_Range_Type.range =
   fun projectee -> match projectee with | { v; p;_} -> p
-type var = FStarC_Ident.lident withinfo_t[@@deriving yojson,show]
+type var = FStarC_Ident.lident[@@deriving yojson,show]
 type sconst = FStarC_Const.sconst[@@deriving yojson,show]
 type pragma =
   | ShowOptions 
@@ -357,7 +357,7 @@ and metadata =
   | Meta_pattern of (term' syntax Prims.list * (term' syntax * arg_qualifier
   FStar_Pervasives_Native.option) Prims.list Prims.list) 
   | Meta_named of FStarC_Ident.lident 
-  | Meta_labeled of (FStarC_Pprint.document Prims.list *
+  | Meta_labeled of (FStar_Pprint.document Prims.list *
   FStarC_Range_Type.range * Prims.bool) 
   | Meta_desugared of meta_source_info 
   | Meta_monadic of (monad_name * term' syntax) 
@@ -877,8 +877,7 @@ let (uu___is_Meta_labeled : metadata -> Prims.bool) =
     match projectee with | Meta_labeled _0 -> true | uu___ -> false
 let (__proj__Meta_labeled__item___0 :
   metadata ->
-    (FStarC_Pprint.document Prims.list * FStarC_Range_Type.range *
-      Prims.bool))
+    (FStar_Pprint.document Prims.list * FStarC_Range_Type.range * Prims.bool))
   = fun projectee -> match projectee with | Meta_labeled _0 -> _0
 let (uu___is_Meta_desugared : metadata -> Prims.bool) =
   fun projectee ->
@@ -2001,7 +2000,8 @@ and sigelt'__Sig_datacon__payload =
   ty_lid: FStarC_Ident.lident ;
   num_ty_params: Prims.int ;
   mutuals1: FStarC_Ident.lident Prims.list ;
-  injective_type_params1: Prims.bool }
+  injective_type_params1: Prims.bool ;
+  proj_disc_lids: FStarC_Ident.lident Prims.list }
 and sigelt'__Sig_declare_typ__payload =
   {
   lid2: FStarC_Ident.lident ;
@@ -2138,50 +2138,57 @@ let (__proj__Mksigelt'__Sig_datacon__payload__item__lid :
   fun projectee ->
     match projectee with
     | { lid1 = lid; us1 = us; t1 = t; ty_lid; num_ty_params;
-        mutuals1 = mutuals; injective_type_params1 = injective_type_params;_}
-        -> lid
+        mutuals1 = mutuals; injective_type_params1 = injective_type_params;
+        proj_disc_lids;_} -> lid
 let (__proj__Mksigelt'__Sig_datacon__payload__item__us :
   sigelt'__Sig_datacon__payload -> univ_names) =
   fun projectee ->
     match projectee with
     | { lid1 = lid; us1 = us; t1 = t; ty_lid; num_ty_params;
-        mutuals1 = mutuals; injective_type_params1 = injective_type_params;_}
-        -> us
+        mutuals1 = mutuals; injective_type_params1 = injective_type_params;
+        proj_disc_lids;_} -> us
 let (__proj__Mksigelt'__Sig_datacon__payload__item__t :
   sigelt'__Sig_datacon__payload -> typ) =
   fun projectee ->
     match projectee with
     | { lid1 = lid; us1 = us; t1 = t; ty_lid; num_ty_params;
-        mutuals1 = mutuals; injective_type_params1 = injective_type_params;_}
-        -> t
+        mutuals1 = mutuals; injective_type_params1 = injective_type_params;
+        proj_disc_lids;_} -> t
 let (__proj__Mksigelt'__Sig_datacon__payload__item__ty_lid :
   sigelt'__Sig_datacon__payload -> FStarC_Ident.lident) =
   fun projectee ->
     match projectee with
     | { lid1 = lid; us1 = us; t1 = t; ty_lid; num_ty_params;
-        mutuals1 = mutuals; injective_type_params1 = injective_type_params;_}
-        -> ty_lid
+        mutuals1 = mutuals; injective_type_params1 = injective_type_params;
+        proj_disc_lids;_} -> ty_lid
 let (__proj__Mksigelt'__Sig_datacon__payload__item__num_ty_params :
   sigelt'__Sig_datacon__payload -> Prims.int) =
   fun projectee ->
     match projectee with
     | { lid1 = lid; us1 = us; t1 = t; ty_lid; num_ty_params;
-        mutuals1 = mutuals; injective_type_params1 = injective_type_params;_}
-        -> num_ty_params
+        mutuals1 = mutuals; injective_type_params1 = injective_type_params;
+        proj_disc_lids;_} -> num_ty_params
 let (__proj__Mksigelt'__Sig_datacon__payload__item__mutuals :
   sigelt'__Sig_datacon__payload -> FStarC_Ident.lident Prims.list) =
   fun projectee ->
     match projectee with
     | { lid1 = lid; us1 = us; t1 = t; ty_lid; num_ty_params;
-        mutuals1 = mutuals; injective_type_params1 = injective_type_params;_}
-        -> mutuals
+        mutuals1 = mutuals; injective_type_params1 = injective_type_params;
+        proj_disc_lids;_} -> mutuals
 let (__proj__Mksigelt'__Sig_datacon__payload__item__injective_type_params :
   sigelt'__Sig_datacon__payload -> Prims.bool) =
   fun projectee ->
     match projectee with
     | { lid1 = lid; us1 = us; t1 = t; ty_lid; num_ty_params;
-        mutuals1 = mutuals; injective_type_params1 = injective_type_params;_}
-        -> injective_type_params
+        mutuals1 = mutuals; injective_type_params1 = injective_type_params;
+        proj_disc_lids;_} -> injective_type_params
+let (__proj__Mksigelt'__Sig_datacon__payload__item__proj_disc_lids :
+  sigelt'__Sig_datacon__payload -> FStarC_Ident.lident Prims.list) =
+  fun projectee ->
+    match projectee with
+    | { lid1 = lid; us1 = us; t1 = t; ty_lid; num_ty_params;
+        mutuals1 = mutuals; injective_type_params1 = injective_type_params;
+        proj_disc_lids;_} -> proj_disc_lids
 let (__proj__Mksigelt'__Sig_declare_typ__payload__item__lid :
   sigelt'__Sig_declare_typ__payload -> FStarC_Ident.lident) =
   fun projectee ->
@@ -2469,15 +2476,8 @@ let (__proj__Mkmodul__item__is_interface : modul -> Prims.bool) =
     match projectee with
     | { name; declarations; is_interface;_} -> is_interface
 let (mod_name : modul -> FStarC_Ident.lident) = fun m -> m.name
-let (contains_reflectable : qualifier Prims.list -> Prims.bool) =
-  fun l ->
-    FStarC_Util.for_some
-      (fun uu___ ->
-         match uu___ with | Reflectable uu___1 -> true | uu___1 -> false) l
 let withinfo : 'a . 'a -> FStarC_Range_Type.range -> 'a withinfo_t =
   fun v -> fun r -> { v; p = r }
-let withsort : 'a . 'a -> 'a withinfo_t =
-  fun v -> withinfo v FStarC_Range_Type.dummyRange
 let (order_bv : bv -> bv -> Prims.int) = fun x -> fun y -> x.index - y.index
 let (bv_eq : bv -> bv -> Prims.bool) =
   fun x -> fun y -> let uu___ = order_bv x y in uu___ = Prims.int_zero
@@ -2497,7 +2497,7 @@ let (range_of_lbname : lbname -> FStarC_Range_Type.range) =
   fun l ->
     match l with
     | FStar_Pervasives.Inl x -> FStarC_Ident.range_of_id x.ppname
-    | FStar_Pervasives.Inr fv1 -> FStarC_Ident.range_of_lid (fv1.fv_name).v
+    | FStar_Pervasives.Inr fv1 -> FStarC_Ident.range_of_lid fv1.fv_name
 let (range_of_bv : bv -> FStarC_Range_Type.range) =
   fun x -> FStarC_Ident.range_of_id x.ppname
 let (set_range_of_bv : bv -> FStarC_Range_Type.range -> bv) =
@@ -2585,20 +2585,6 @@ let (ord_fv : FStarC_Ident.lident FStarC_Class_Ord.ord) =
   ord_instance_from_cmp
     (fun x ->
        fun y -> let uu___ = order_fv x y in FStarC_Order.order_from_int uu___)
-let syn :
-  'uuuuu 'uuuuu1 'uuuuu2 .
-    'uuuuu -> 'uuuuu1 -> ('uuuuu1 -> 'uuuuu -> 'uuuuu2) -> 'uuuuu2
-  = fun p -> fun k -> fun f -> f k p
-let mk_fvs :
-  'uuuuu . unit -> 'uuuuu FStar_Pervasives_Native.option FStarC_Effect.ref =
-  fun uu___ -> FStarC_Effect.mk_ref FStar_Pervasives_Native.None
-let mk_uvs :
-  'uuuuu . unit -> 'uuuuu FStar_Pervasives_Native.option FStarC_Effect.ref =
-  fun uu___ -> FStarC_Effect.mk_ref FStar_Pervasives_Native.None
-let (list_of_freenames : freenames -> bv Prims.list) =
-  fun fvs ->
-    FStarC_Class_Setlike.elems ()
-      (Obj.magic (FStarC_FlatSet.setlike_flat_set ord_bv)) (Obj.magic fvs)
 let mk : 'a . 'a -> FStarC_Range_Type.range -> 'a syntax =
   fun t ->
     fun r ->
@@ -2892,10 +2878,9 @@ let (lbname_eq :
           FStarC_Ident.lid_equals l m
       | uu___ -> false
 let (fv_eq : fv -> fv -> Prims.bool) =
-  fun fv1 ->
-    fun fv2 -> FStarC_Ident.lid_equals (fv1.fv_name).v (fv2.fv_name).v
+  fun fv1 -> fun fv2 -> FStarC_Ident.lid_equals fv1.fv_name fv2.fv_name
 let (fv_eq_lid : fv -> FStarC_Ident.lident -> Prims.bool) =
-  fun fv1 -> fun lid -> FStarC_Ident.lid_equals (fv1.fv_name).v lid
+  fun fv1 -> fun lid -> FStarC_Ident.lid_equals fv1.fv_name lid
 let (set_bv_range : bv -> FStarC_Range_Type.range -> bv) =
   fun bv1 ->
     fun r ->
@@ -2903,21 +2888,13 @@ let (set_bv_range : bv -> FStarC_Range_Type.range -> bv) =
       { ppname = uu___; index = (bv1.index); sort = (bv1.sort) }
 let (lid_and_dd_as_fv :
   FStarC_Ident.lident -> fv_qual FStar_Pervasives_Native.option -> fv) =
-  fun l ->
-    fun dq ->
-      let uu___ =
-        let uu___1 = FStarC_Ident.range_of_lid l in withinfo l uu___1 in
-      { fv_name = uu___; fv_qual = dq }
+  fun l -> fun dq -> { fv_name = l; fv_qual = dq }
 let (lid_as_fv :
   FStarC_Ident.lident -> fv_qual FStar_Pervasives_Native.option -> fv) =
-  fun l ->
-    fun dq ->
-      let uu___ =
-        let uu___1 = FStarC_Ident.range_of_lid l in withinfo l uu___1 in
-      { fv_name = uu___; fv_qual = dq }
+  fun l -> fun dq -> { fv_name = l; fv_qual = dq }
 let (fv_to_tm : fv -> term) =
   fun fv1 ->
-    let uu___ = FStarC_Ident.range_of_lid (fv1.fv_name).v in
+    let uu___ = FStarC_Ident.range_of_lid fv1.fv_name in
     mk (Tm_fvar fv1) uu___
 let (fvar_with_dd :
   FStarC_Ident.lident -> fv_qual FStar_Pervasives_Native.option -> term) =
@@ -2925,17 +2902,13 @@ let (fvar_with_dd :
 let (fvar :
   FStarC_Ident.lident -> fv_qual FStar_Pervasives_Native.option -> term) =
   fun l -> fun dq -> let uu___ = lid_as_fv l dq in fv_to_tm uu___
-let (lid_of_fv : fv -> FStarC_Ident.lid) = fun fv1 -> (fv1.fv_name).v
+let (lid_of_fv : fv -> FStarC_Ident.lid) = fun fv1 -> fv1.fv_name
 let (range_of_fv : fv -> FStarC_Range_Type.range) =
   fun fv1 -> let uu___ = lid_of_fv fv1 in FStarC_Ident.range_of_lid uu___
 let (set_range_of_fv : fv -> FStarC_Range_Type.range -> fv) =
   fun fv1 ->
     fun r ->
-      let uu___ =
-        let uu___1 = fv1.fv_name in
-        let uu___2 =
-          let uu___3 = lid_of_fv fv1 in FStarC_Ident.set_lid_range uu___3 r in
-        { v = uu___2; p = (uu___1.p) } in
+      let uu___ = FStarC_Ident.set_lid_range fv1.fv_name r in
       { fv_name = uu___; fv_qual = (fv1.fv_qual) }
 let (has_simple_attribute : term Prims.list -> Prims.string -> Prims.bool) =
   fun l ->
@@ -3293,7 +3266,7 @@ let (sli : FStarC_Ident.lident -> Prims.string) =
       (let uu___2 = FStarC_Ident.ident_of_lid l in
        FStarC_Ident.string_of_id uu___2)
 let (showable_fv : fv FStarC_Class_Show.showable) =
-  { FStarC_Class_Show.show = (fun fv1 -> sli (fv1.fv_name).v) }
+  { FStarC_Class_Show.show = (fun fv1 -> sli fv1.fv_name) }
 let (showable_lazy_kind : lazy_kind FStarC_Class_Show.showable) =
   {
     FStarC_Class_Show.show =
@@ -3487,7 +3460,7 @@ let (tagged_sigelt : sigelt FStarC_Class_Tagged.tagged) =
          | Sig_datacon
              { lid1 = uu___; us1 = uu___1; t1 = uu___2; ty_lid = uu___3;
                num_ty_params = uu___4; mutuals1 = uu___5;
-               injective_type_params1 = uu___6;_}
+               injective_type_params1 = uu___6; proj_disc_lids = uu___7;_}
              -> "Sig_datacon"
          | Sig_declare_typ { lid2 = uu___; us2 = uu___1; t2 = uu___2;_} ->
              "Sig_declare_typ"

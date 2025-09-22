@@ -137,7 +137,7 @@ let instantiate i t = match i with
     | [] -> t
     | _ ->
       let inst_fv (t: term) (fv: S.fv) : term =
-        begin match Option.find (fun (x, _) -> lid_equals x fv.fv_name.v) i with
+        begin match Option.find (fun (x, _) -> lid_equals x fv.fv_name) i with
             | None -> t
             | Some (_, us) -> mk t (Tm_uinst(t, us))
         end

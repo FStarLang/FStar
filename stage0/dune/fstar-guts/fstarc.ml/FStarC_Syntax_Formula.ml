@@ -147,7 +147,7 @@ let (destruct_base_conn :
         (match uu___1 with
          | FStarC_Syntax_Syntax.Tm_fvar fv ->
              lookup_arity_lid destruct_base_table
-               (fv.FStarC_Syntax_Syntax.fv_name).FStarC_Syntax_Syntax.v args
+               fv.FStarC_Syntax_Syntax.fv_name args
          | uu___2 -> FStar_Pervasives_Native.None)
 let (destruct_sq_base_conn :
   FStarC_Syntax_Syntax.term -> connective FStar_Pervasives_Native.option) =
@@ -171,8 +171,7 @@ let (destruct_sq_base_conn :
                        | FStarC_Syntax_Syntax.Tm_fvar fv ->
                            Obj.magic
                              (lookup_arity_lid destruct_sq_base_table
-                                (fv.FStarC_Syntax_Syntax.fv_name).FStarC_Syntax_Syntax.v
-                                args)
+                                fv.FStarC_Syntax_Syntax.fv_name args)
                        | uu___3 -> Obj.magic FStar_Pervasives_Native.None))
                  uu___1))) uu___
 let (patterns :
@@ -196,12 +195,8 @@ let (destruct_q_conn :
     let is_q fa =
       fun fv ->
         if fa
-        then
-          FStarC_Syntax_Util.is_forall
-            (fv.FStarC_Syntax_Syntax.fv_name).FStarC_Syntax_Syntax.v
-        else
-          FStarC_Syntax_Util.is_exists
-            (fv.FStarC_Syntax_Syntax.fv_name).FStarC_Syntax_Syntax.v in
+        then FStarC_Syntax_Util.is_forall fv.FStarC_Syntax_Syntax.fv_name
+        else FStarC_Syntax_Util.is_exists fv.FStarC_Syntax_Syntax.fv_name in
     let flat t1 =
       let uu___ = FStarC_Syntax_Util.head_and_args t1 in
       match uu___ with
@@ -264,14 +259,12 @@ let (destruct_q_conn :
                  FStarC_Syntax_Syntax.vars = uu___6;
                  FStarC_Syntax_Syntax.hash_code = uu___7;_},
                uu___8)::[]))
-              when
-              FStarC_Syntax_Util.is_qlid
-                (tc.FStarC_Syntax_Syntax.fv_name).FStarC_Syntax_Syntax.v
+              when FStarC_Syntax_Util.is_qlid tc.FStarC_Syntax_Syntax.fv_name
               ->
               let uu___9 =
                 let uu___10 =
                   FStarC_Syntax_Util.is_forall
-                    (tc.FStarC_Syntax_Syntax.fv_name).FStarC_Syntax_Syntax.v in
+                    tc.FStarC_Syntax_Syntax.fv_name in
                 FStar_Pervasives_Native.Some uu___10 in
               aux uu___9 (b :: out) t2
           | (FStar_Pervasives_Native.None,
@@ -288,14 +281,12 @@ let (destruct_q_conn :
                          FStarC_Syntax_Syntax.vars = uu___7;
                          FStarC_Syntax_Syntax.hash_code = uu___8;_},
                        uu___9)::[]))
-              when
-              FStarC_Syntax_Util.is_qlid
-                (tc.FStarC_Syntax_Syntax.fv_name).FStarC_Syntax_Syntax.v
+              when FStarC_Syntax_Util.is_qlid tc.FStarC_Syntax_Syntax.fv_name
               ->
               let uu___10 =
                 let uu___11 =
                   FStarC_Syntax_Util.is_forall
-                    (tc.FStarC_Syntax_Syntax.fv_name).FStarC_Syntax_Syntax.v in
+                    tc.FStarC_Syntax_Syntax.fv_name in
                 FStar_Pervasives_Native.Some uu___11 in
               aux uu___10 (b :: out) t2
           | (FStar_Pervasives_Native.Some b, uu___1) ->

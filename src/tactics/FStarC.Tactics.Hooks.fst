@@ -690,21 +690,22 @@ let spinoff_strictly_positive_goals (env:Env.env) (goal:term)
               Some (env, t))
       in
 
-      FStarC.Errors.diag (Env.get_range env)
-              (Format.fmt1 "Split query into %s sub-goals" (show (List.length gs)));
+      if !dbg_Tac then
+        FStarC.Errors.diag (Env.get_range env)
+                (Format.fmt1 "Split query into %s sub-goals" (show (List.length gs)));
 
       main_goal@gs
   )
 
 
-let synthesize (env:Env.env) (typ:typ) (tau:term) : term =
+let synthesize (env:Env.env) (typ:typ) (tau:term) rng : term =
   Errors.with_ctx "While synthesizing term with a tactic" (fun () ->
     // Don't run the tactic (and end with a magic) when flychecking is set, cf. issue #73 in fstar-mode.el
     if env.flychecking
     then mk_Tm_app (TcUtil.fvar_env env PC.magic_lid) [S.as_arg U.exp_unit] typ.pos
     else begin
 
-    let gs, w = run_tactic_on_typ tau.pos typ.pos tau env typ in
+    let gs, w = run_tactic_on_typ tau.pos rng tau env typ in
     // Check that all goals left are irrelevant and provable
     // TODO: It would be nicer to combine all of these into a guard and return
     // that to TcTerm, but the varying environments make it awkward.
@@ -929,7 +930,7 @@ let splice
         let r =
           (* If this name was provided in the definition list of the splice,
           prefer that range. Otherwise set range to the full splice. *)
-          match tryFind (fun i -> Ident.lid_equals i fv.fv_name.v) lids with
+          match tryFind (fun i -> Ident.lid_equals i fv.fv_name) lids with
           | Some i -> pos i
           | _ -> rng
         in

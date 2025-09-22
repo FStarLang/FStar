@@ -44,6 +44,7 @@ let pragma_to_string (p:pragma) : string =
   | RestartSolver         -> "#restart-solver"
   | PrintEffectsGraph     -> "#print-effects-graph"
   | PopOptions            -> "#pop-options"
+  | Check t               -> "check _" // can't print a term here... move this to Syntax.Print?
 
 instance showable_pragma = {
   show = pragma_to_string;
@@ -215,14 +216,10 @@ instance tagged_eff_extraction_mode : tagged eff_extraction_mode = {
 
 let mod_name (m: modul) = m.name
 
-let contains_reflectable (l: list qualifier): bool =
-    Util.for_some (function Reflectable _ -> true | _ -> false) l
-
 (*********************************************************************************)
 (* Identifiers to/from strings *)
 (*********************************************************************************)
 let withinfo v r = {v=v; p=r}
-let withsort v = withinfo v dummyRange
 
 let order_bv (x y : bv) : int  = x.index - y.index
 let bv_eq    (x y : bv) : bool = order_bv x y = 0
@@ -232,7 +229,7 @@ let order_fv x y = String.compare (string_of_lid x) (string_of_lid y)
 
 let range_of_lbname (l:lbname) = match l with
     | Inl x -> range_of_id x.ppname
-    | Inr fv -> range_of_lid fv.fv_name.v
+    | Inr fv -> range_of_lid fv.fv_name
 let range_of_bv x = range_of_id x.ppname
 
 let set_range_of_bv x r = {x with ppname = set_id_range r x.ppname }
@@ -283,14 +280,6 @@ instance ord_ident : ord ident =
   ord_instance_from_cmp (fun x y -> Order.order_from_int (order_ident x y))
 instance ord_fv : ord lident =
   ord_instance_from_cmp (fun x y -> Order.order_from_int (order_fv x y))
-
-let syn p k f = f k p
-let mk_fvs () = mk_ref None
-let mk_uvs () = mk_ref None
-
-//let memo_no_uvs = mk_ref (Some no_uvs)
-//let memo_no_names = mk_ref (Some no_names)
-let list_of_freenames (fvs:freenames) = elems fvs
 
 (* Constructors for each term form; NO HASH CONSING; just makes all the auxiliary data at each node *)
 let mk (t:'a) r = {
@@ -442,26 +431,26 @@ let lbname_eq l1 l2 = match l1, l2 with
   | Inl x, Inl y -> bv_eq x y
   | Inr l, Inr m -> lid_equals l m
   | _ -> false
-let fv_eq fv1 fv2 = lid_equals fv1.fv_name.v fv2.fv_name.v
-let fv_eq_lid fv lid = lid_equals fv.fv_name.v lid
+let fv_eq fv1 fv2 = lid_equals fv1.fv_name fv2.fv_name
+let fv_eq_lid fv lid = lid_equals fv.fv_name lid
 
 let set_bv_range bv r = {bv with ppname = set_id_range r bv.ppname}
 
 let lid_and_dd_as_fv l dq : fv = {
-    fv_name=withinfo l (range_of_lid l);
-    fv_qual =dq;
+    fv_name = l;
+    fv_qual = dq;
 }
 let lid_as_fv l dq : fv = {
-    fv_name=withinfo l (range_of_lid l);
-    fv_qual =dq;
+    fv_name = l;
+    fv_qual = dq;
 }
-let fv_to_tm (fv:fv) : term = mk (Tm_fvar fv) (range_of_lid fv.fv_name.v)
+let fv_to_tm (fv:fv) : term = mk (Tm_fvar fv) (range_of_lid fv.fv_name)
 let fvar_with_dd l dq =  fv_to_tm (lid_and_dd_as_fv l dq)
 let fvar l dq = fv_to_tm (lid_as_fv l dq)
-let lid_of_fv (fv:fv) = fv.fv_name.v
+let lid_of_fv (fv:fv) = fv.fv_name
 let range_of_fv (fv:fv) = range_of_lid (lid_of_fv fv)
 let set_range_of_fv (fv:fv) (r:Range.t) =
-    {fv with fv_name={fv.fv_name with v=Ident.set_lid_range (lid_of_fv fv) r}}
+    {fv with fv_name = Ident.set_lid_range fv.fv_name r}
 let has_simple_attribute (l: list term) s =
   List.existsb (function
     | { n = Tm_constant (Const_string (data, _)) } when data = s ->
@@ -632,7 +621,7 @@ let sli (l:lident) : string =
     else string_of_id (ident_of_lid l)
 
 instance showable_fv : showable fv = {
-  show = (fun fv -> sli fv.fv_name.v);
+  show = (fun fv -> sli fv.fv_name);
 }
 
 instance showable_lazy_kind = {

@@ -331,8 +331,8 @@ let (go_normal : unit -> unit) =
                            let uu___9 =
                              FStarC_Errors_Msg.text
                                "Could not read checked file:" in
-                           let uu___10 = FStarC_Pprint.doc_of_string path in
-                           FStarC_Pprint.op_Hat_Slash_Hat uu___9 uu___10 in
+                           FStar_Pprint.op_Hat_Slash_Hat uu___9
+                             (FStar_Pprint.doc_of_string path) in
                          [uu___8] in
                        FStarC_Errors.raise_error0
                          FStarC_Errors_Codes.Fatal_ModuleOrFileNotFound ()
@@ -366,8 +366,8 @@ let (go_normal : unit -> unit) =
                            let uu___10 =
                              FStarC_Errors_Msg.text
                                "Could not read krml file:" in
-                           let uu___11 = FStarC_Pprint.doc_of_string path in
-                           FStarC_Pprint.op_Hat_Slash_Hat uu___10 uu___11 in
+                           FStar_Pprint.op_Hat_Slash_Hat uu___10
+                             (FStar_Pprint.doc_of_string path) in
                          [uu___9] in
                        FStarC_Errors.raise_error0
                          FStarC_Errors_Codes.Fatal_ModuleOrFileNotFound ()
@@ -639,25 +639,24 @@ let main : 'uuuuu . unit -> 'uuuuu =
       (fun uu___1 ->
          match () with
          | () ->
-             (FStarC_Hooks.setup_hooks ();
-              (let uu___3 = FStarC_Timing.record_ms go in
-               match uu___3 with
-               | (uu___4, time) ->
-                   ((let uu___6 = FStarC_Options.query_stats () in
-                     if uu___6
-                     then
-                       let uu___7 =
-                         FStarC_Class_Show.show
-                           FStarC_Class_Show.showable_int time in
-                       let uu___8 =
-                         let uu___9 = FStarC_Getopt.cmdline () in
-                         FStarC_String.concat " " uu___9 in
-                       FStarC_Format.print2_error "TOTAL TIME %s ms: %s\n"
-                         uu___7 uu___8
-                     else ());
-                    print_stats ();
-                    cleanup ();
-                    FStarC_Effect.exit Prims.int_zero)))) ()
+             let uu___2 = FStarC_Timing.record_ms go in
+             (match uu___2 with
+              | (uu___3, time) ->
+                  ((let uu___5 = FStarC_Options.query_stats () in
+                    if uu___5
+                    then
+                      let uu___6 =
+                        FStarC_Class_Show.show FStarC_Class_Show.showable_int
+                          time in
+                      let uu___7 =
+                        let uu___8 = FStarC_Getopt.cmdline () in
+                        FStarC_String.concat " " uu___8 in
+                      FStarC_Format.print2_error "TOTAL TIME %s ms: %s\n"
+                        uu___6 uu___7
+                    else ());
+                   print_stats ();
+                   cleanup ();
+                   FStarC_Effect.exit Prims.int_zero))) ()
     with
     | uu___1 ->
         (handle_error uu___1;

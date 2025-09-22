@@ -56,13 +56,13 @@ let rec elaborate_pat env p = //Adds missing implicit patterns to constructor pa
 
     | Pat_cons(fv, us_opt, pats) ->
         let pats = List.map (fun (p, imp) -> elaborate_pat env p, imp) pats in
-        let _, t = Env.lookup_datacon env fv.fv_name.v in
+        let _, t = Env.lookup_datacon env fv.fv_name in
         let f, _ = U.arrow_formals t in
         let rec aux formals pats =
             match formals, pats with
             | [], [] -> []
             | [], _::_ ->
-                raise_error fv.fv_name.v Errors.Fatal_TooManyPatternArguments "Too many pattern arguments"
+                raise_error fv.fv_name Errors.Fatal_TooManyPatternArguments "Too many pattern arguments"
             | _::_, [] -> //fill the rest with dot patterns, if all the remaining formals are implicit
             formals |>
             List.map
@@ -71,11 +71,11 @@ let rec elaborate_pat env p = //Adds missing implicit patterns to constructor pa
                     match imp with
                     | Some (Implicit inaccessible) ->
                     let a = Syntax.new_bv (Some (Syntax.range_of_bv t)) tun in
-                    let r = range_of_lid fv.fv_name.v in
+                    let r = range_of_lid fv.fv_name in
                     maybe_dot inaccessible a r, true
 
                     | _ ->
-                    raise_error fv.fv_name.v Errors.Fatal_InsufficientPatternArguments
+                    raise_error fv.fv_name Errors.Fatal_InsufficientPatternArguments
                                 (Format.fmt1 "Insufficient pattern arguments (%s)"
                                             (show p)))
 
@@ -92,7 +92,7 @@ let rec elaborate_pat env p = //Adds missing implicit patterns to constructor pa
               // Only allow it if it won't be bound
               | Pat_var v when string_of_id (v.ppname) = Ident.reserved_prefix ->
                 let a = Syntax.new_bv (Some p.p) tun in
-                let p = maybe_dot inaccessible a (range_of_lid fv.fv_name.v) in
+                let p = maybe_dot inaccessible a (range_of_lid fv.fv_name) in
                 (p, true)::aux formals' pats'
 
               | _ ->
@@ -107,12 +107,12 @@ let rec elaborate_pat env p = //Adds missing implicit patterns to constructor pa
 
             | (_, Some (Implicit inaccessible)) ->
                 let a = Syntax.new_bv (Some p.p) tun in
-                let p = maybe_dot inaccessible a (range_of_lid fv.fv_name.v) in
+                let p = maybe_dot inaccessible a (range_of_lid fv.fv_name) in
                 (p, true)::aux formals' pats
 
             | (_, Some (Meta _)) ->
                 let a = Syntax.new_bv (Some p.p) tun in
-                let p = maybe_dot false a (range_of_lid fv.fv_name.v) in
+                let p = maybe_dot false a (range_of_lid fv.fv_name) in
                 (p, true)::aux formals' pats
 
             | (_, imp) ->

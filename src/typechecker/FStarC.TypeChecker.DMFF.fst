@@ -633,7 +633,7 @@ and star_type' env t =
         ) ->
             true
         | Tm_fvar fv ->
-             let (_, ty), _ = Env.lookup_lid env.tcenv fv.fv_name.v in
+             let (_, ty), _ = Env.lookup_lid env.tcenv fv.fv_name in
              if is_non_dependent_arrow ty (List.length args)
              then
                // We need to check that the result of the application is a datatype
@@ -978,7 +978,7 @@ and infer (env: env) (e: term): nm & term & term =
 
       N t, s_term, u_term
 
-  | Tm_fvar { fv_name = { v = lid } } ->
+  | Tm_fvar { fv_name = lid } ->
       let _, t = fst <| Env.lookup_lid env.tcenv lid in
       // Need to erase universes here! This is an F* type that is fully annotated.
       N (normalize t), e, e

@@ -1,5 +1,4 @@
->> Got issues: [
-* Error 180 at UnboundOp.fst(4,10-4,13):
+* Info at UnboundOp.fst(4,10-4,13):
+  - Expected failure:
   - Unexpected or unbound operator: ^%^
 
->>]

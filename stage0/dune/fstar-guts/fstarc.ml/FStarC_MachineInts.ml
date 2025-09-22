@@ -316,13 +316,11 @@ let (nbe_machint :
                       when
                       (let uu___2 = int_to_t_lid_for k in
                        FStarC_Ident.lid_equals
-                         (fv1.FStarC_Syntax_Syntax.fv_name).FStarC_Syntax_Syntax.v
-                         uu___2)
+                         fv1.FStarC_Syntax_Syntax.fv_name uu___2)
                         ||
                         (let uu___2 = __int_to_t_lid_for k in
                          FStarC_Ident.lid_equals
-                           (fv1.FStarC_Syntax_Syntax.fv_name).FStarC_Syntax_Syntax.v
-                           uu___2)
+                           fv1.FStarC_Syntax_Syntax.fv_name uu___2)
                       ->
                       Obj.magic
                         (Obj.repr

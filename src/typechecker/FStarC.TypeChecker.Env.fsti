@@ -184,7 +184,6 @@ and env = {
                                                 (* i.e. using type equality instead of subtyping *)
   is_iface       :bool;                         (* is the module we're currently checking an interface? *)
   admit          :bool;                         (* admit VCs in the current module *)
-  lax_universes  :bool;                         (* don't check universe constraints *)
   phase1         :bool;                         (* running in phase 1, phase 2 to come after *)
   failhard       :bool;                         (* don't try to carry on after a typechecking error *)
   flychecking    :bool;                         (* currently flychecking in IDE, used to for example not run synth tactics *)
@@ -204,7 +203,7 @@ and env = {
   normalized_eff_names:SMap.t lident;           (* cache for normalized effect name, used to be captured in the function norm_eff_name, which made it harder to roll back etc. *)
   fv_delta_depths:SMap.t delta_depth;           (* cache for fv delta depths, its preferable to use Env.delta_depth_of_fv, soon fv.delta_depth should be removed *)
   proof_ns       :proof_namespace;                (* the current names that will be encoded to SMT (a.k.a. hint db) *)
-  synth_hook          :env -> typ -> term -> term;     (* hook for synthesizing terms via tactics, third arg is tactic term *)
+  synth_hook          :env -> typ -> term -> Range.t -> term;     (* hook for synthesizing terms via tactics, third arg is tactic term *)
   try_solve_implicits_hook :env -> term -> implicits -> unit;     (* *)
   splice : splice_t;   (* hook for synthesizing top-level sigelts via tactics *)
   mpreprocess    :env -> term -> term -> term;    (* hook for preprocessing typechecked terms via metaprograms *)
@@ -578,3 +577,5 @@ instance val pretty_guard     : FStarC.Class.PP.pretty guard_t
 
 val fv_delta_depth : env -> fv -> delta_depth
 val delta_depth_of_term : env -> term -> delta_depth
+
+instance val hashable_env : Class.Hashable.hashable env

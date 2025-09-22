@@ -403,8 +403,8 @@ rawDecl:
       {
         let r = rr $loc in
         let lbs = focusLetBindings lbs r in
-        if q <> Rec && List.length lbs <> 1
-        then raise_error_text r Fatal_MultipleLetBinding "Unexpected multiple let-binding (Did you forget some rec qualifier ?)";
+        if q <> Rec && FStarC_List.length lbs > Prims.parse_int "1"
+        then raise_error_text (fst (nth lbs (Prims.parse_int "1"))).prange Fatal_MultipleLetBinding "Unexpected multiple let-binding (Did you forget some rec qualifier ?)";
         TopLevelLet(q, lbs)
       }
   | VAL c=constant
@@ -980,11 +980,11 @@ noSeqTerm:
         mk_term (Op(opid, [ e1; e2; e3 ])) (rr2 $loc(e1) $loc(e3)) Expr
       }
   | REQUIRES t=typ
-      { mk_term (Requires(t, None)) (rr2 $loc($1) $loc(t)) Type_level }
+      { mk_term (Requires t) (rr2 $loc($1) $loc(t)) Type_level }
   | ENSURES t=typ
-      { mk_term (Ensures(t, None)) (rr2 $loc($1) $loc(t)) Type_level }
+      { mk_term (Ensures t) (rr2 $loc($1) $loc(t)) Type_level }
   | DECREASES t=typ
-      { mk_term (Decreases (t, None)) (rr2 $loc($1) $loc(t)) Type_level }
+      { mk_term (Decreases t) (rr2 $loc($1) $loc(t)) Type_level }
   | DECREASES LBRACE_COLON_WELL_FOUNDED t=noSeqTerm RBRACE
       (*
        * decreases clause with relation is written as e1 e2,
@@ -995,7 +995,7 @@ noSeqTerm:
       { match t.tm with
         | App (t1, t2, _) ->
           let ot = mk_term (WFOrder (t1, t2)) (rr2 $loc(t) $loc(t)) Type_level in
-          mk_term (Decreases (ot, None)) (rr2 $loc($1) $loc($4)) Type_level
+          mk_term (Decreases ot) (rr2 $loc($1) $loc($4)) Type_level
         | _ ->
           raise_error_text (rr $loc(t)) Fatal_SyntaxError
             "Syntax error: To use well-founded relations, write e1 e2"

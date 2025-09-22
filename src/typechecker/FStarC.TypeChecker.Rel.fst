@@ -1110,14 +1110,18 @@ let solve_prob' resolve_ok prob logical_guard uvis wl =
               [])
     in
     let wl =
-        let g = whnf (p_guard_env wl prob) (p_guard prob) in
-        if not (is_flex g)
-        then if resolve_ok
-             then wl
-             else (fail(); wl)
-        else let (Flex (_, uv, args), wl)  = destruct_flex_t g wl in
+      let rec aux retry env g =
+        if is_flex g
+        then let Flex (_, uv, args), wl  = destruct_flex_t g wl in
              assign_solution (args_as_binders args) uv phi;
              wl
+        else if retry
+        then aux false env (whnf env g)
+        else if resolve_ok
+        then wl
+        else (fail(); wl)
+      in
+      aux true (p_env wl prob) (p_guard prob)
     in
     commit wl.tcenv uvis;
     {wl with ctr=wl.ctr + 1}
@@ -1379,7 +1383,7 @@ let head_matches_delta env (logical:bool) smt_ok t1 t2 : (match_result & option 
                     [Env.Unfold delta_constant;
                      Env.Eager_unfolding_only]
                     env
-                    fv.fv_name.v
+                    fv.fv_name
           with
           | None ->
             if !dbg_RelDelta then
@@ -1656,7 +1660,7 @@ let ufailed_thunk (s: unit -> string) : univ_eq_sol =
   UFailed (mklstr s)
 
 
-let rec really_solve_universe_eq pid_orig wl u1 u2 =
+let rec solve_universe_eq pid_orig wl u1 u2 =
     let u1 = N.normalize_universe wl.tcenv u1 in
     let u2 = N.normalize_universe wl.tcenv u2 in
     let rec occurs_univ v1 u = match u with
@@ -1688,7 +1692,7 @@ let rec really_solve_universe_eq pid_orig wl u1 u2 =
               if List.length us1 = List.length us2 //go for a structural match
               then let rec aux wl us1 us2 = match us1, us2 with
                         | u1::us1, u2::us2 ->
-                          begin match really_solve_universe_eq pid_orig wl u1 u2 with
+                          begin match solve_universe_eq pid_orig wl u1 u2 with
                             | USolved wl ->
                                 aux wl us1 us2
                             | failed -> failed
@@ -1705,7 +1709,7 @@ let rec really_solve_universe_eq pid_orig wl u1 u2 =
                 let rec aux wl us = match us with
                 | [] -> USolved wl
                 | u::us ->
-                    begin match really_solve_universe_eq pid_orig wl u u' with
+                    begin match solve_universe_eq pid_orig wl u u' with
                     | USolved wl ->
                       aux wl us
                     | failed -> failed
@@ -1735,7 +1739,7 @@ let rec really_solve_universe_eq pid_orig wl u1 u2 =
           USolved wl
 
         | U_succ u1, U_succ u2 ->
-          really_solve_universe_eq pid_orig wl u1 u2
+          solve_universe_eq pid_orig wl u1 u2
 
         | U_unif v1, U_unif v2 ->
           if UF.univ_equiv v1 v2
@@ -1768,11 +1772,6 @@ let rec really_solve_universe_eq pid_orig wl u1 u2 =
         | U_name _, U_succ _
         | U_name _, U_zero ->
           ufailed_simple "Incompatible universes"
-
-let solve_universe_eq orig wl u1 u2 =
-    if wl.tcenv.lax_universes
-    then USolved wl
-    else really_solve_universe_eq orig wl u1 u2
 
 (* This balances two lists.  Given (xs, f) (ys, g), it will
  * take a maximal same-length prefix from each list, getting
@@ -1898,7 +1897,7 @@ let run_meta_arg_tac (env:env_t) (ctx_u:ctx_uvar) : term =
     if !dbg_Tac then
       Format.print1 "Running tactic for meta-arg %s\n" (show ctx_u);
     Errors.with_ctx "Running tactic for meta-arg"
-      (fun () -> env.synth_hook env (U.ctx_uvar_typ ctx_u) tau)
+      (fun () -> env.synth_hook env (U.ctx_uvar_typ ctx_u) tau (pos ctx_u))
   | _ ->
     failwith "run_meta_arg_tac must have been called with a uvar that has a meta tac"
 
@@ -2302,25 +2301,33 @@ and solve_maybe_uinsts (orig:prob) (t1:term) (t2:term) (wl:worklist) : univ_eq_s
             | failed_or_deferred -> failed_or_deferred
           end
 
-        | _ -> ufailed_simple "Unequal number of universes" in
+        | _ -> ufailed_simple "Unequal number of universes"
+    in
 
     let env = p_env wl orig in
     def_check_scoped t1.pos "solve_maybe_uinsts.whnf1" env t1;
     def_check_scoped t2.pos "solve_maybe_uinsts.whnf2" env t2;
-    let t1 = whnf env t1 in
-    let t2 = whnf env t2 in
-    match t1.n, t2.n with
-        | Tm_uinst({n=Tm_fvar f}, us1), Tm_uinst({n=Tm_fvar g}, us2) ->
-            let b = S.fv_eq f g in
-            assert b;
-            aux wl us1 us2
+    let rec inspect retry t1 t2 = 
+      match t1.n, t2.n with
+      | Tm_uinst({n=Tm_fvar f}, us1), Tm_uinst({n=Tm_fvar g}, us2) ->
+          let b = S.fv_eq f g in
+          assert b;
+          aux wl us1 us2
 
-        | Tm_uinst _, _
-        | _, Tm_uinst _ ->
-            failwith "Impossible: expect head symbols to match"
+      | Tm_fvar _, Tm_fvar _ ->
+        USolved wl
 
-        | _ ->
-            USolved wl
+      | _ when retry -> 
+        inspect false (whnf env t1) (whnf env t2)
+
+      | Tm_uinst _, _
+      | _, Tm_uinst _ ->
+          failwith "Impossible: expect head symbols to match"
+
+      | _ ->
+          USolved wl
+    in
+    inspect true t1 t2
 
 and giveup_or_defer (orig:prob) (wl:worklist) (reason:deferred_reason) (msg:lstring) : solution =
     if wl.defer_ok = DeferAny
@@ -5762,9 +5769,9 @@ let force_trivial_guard env g =
                     (guard_to_string env g);
     let g = solve_deferred_constraints env g in
     let g = resolve_implicits env g in
-    match Listlike.to_list g.implicits with
-    | [] -> ignore <| discharge_guard env g
-    | imp::_ ->
+    match Listlike.view g.implicits with
+    | VNil -> ignore <| discharge_guard env g
+    | VCons imp _ ->
       let open FStarC.Pprint in
       raise_error imp.imp_range Errors.Fatal_FailToResolveImplicitArgument [
         prefix 4 1 (text "Failed to resolve implicit argument")

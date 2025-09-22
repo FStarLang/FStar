@@ -191,22 +191,22 @@ let rec resugar_term_as_op (t:S.term) : option (string&expected_arity) =
       Some (snd op, None)
     | _ ->
       (* Check that it is of the shape dtuple int, and return that arity *)
-      match C.get_dtuple_tycon_arity (string_of_lid fv.fv_name.v) with
+      match C.get_dtuple_tycon_arity (string_of_lid fv.fv_name) with
       | Some n -> Some ("dtuple", Some n)
       | None ->
-        match C.get_tuple_tycon_arity (string_of_lid fv.fv_name.v) with
+        match C.get_tuple_tycon_arity (string_of_lid fv.fv_name) with
         | Some n -> Some ("tuple", Some n)
         | None ->
-          let str = string_of_id (Ident.ident_of_lid fv.fv_name.v) in
+          let str = string_of_id (Ident.ident_of_lid fv.fv_name) in
           if BU.starts_with str "try_with" then Some ("try_with", None)
-          else if fv_eq_lid fv C.sread_lid then Some (string_of_lid fv.fv_name.v, None)
+          else if fv_eq_lid fv C.sread_lid then Some (string_of_lid fv.fv_name, None)
           else None
   in
   match (SS.compress t).n with
     | Tm_fvar fv ->
-      let length = String.length (nsstr fv.fv_name.v) in
-      let s = if length=0 then string_of_lid fv.fv_name.v
-              else BU.substring_from (string_of_lid fv.fv_name.v) (length+1) in
+      let length = String.length (nsstr fv.fv_name) in
+      let s = if length=0 then string_of_lid fv.fv_name
+              else BU.substring_from (string_of_lid fv.fv_name) (length+1) in
       begin match string_to_op s with
         | Some t -> Some t
         | _ -> fallback fv
@@ -235,7 +235,7 @@ let maybe_shorten_lid env lid : lident =
   if may_shorten lid then DsEnv.shorten_lid env lid else lid
 
 let maybe_shorten_fv env fv : lident =
-  let lid = fv.fv_name.v in
+  let lid = fv.fv_name in
   maybe_shorten_lid env lid
 
 (* Sizet handled below *)
@@ -337,8 +337,8 @@ let rec resugar_term' (env: DsEnv.env) (t : S.term) : A.term =
     | Tm_fvar fv -> //a top-level identifier, may be lowercase or upper case
       //should be A.Var if lowercase
       //and A.Name if uppercase
-      let a = fv.fv_name.v in
-      let length = String.length (nsstr fv.fv_name.v) in
+      let a = fv.fv_name in
+      let length = String.length (nsstr fv.fv_name) in
       let s = if length=0 then string_of_lid a
           else BU.substring_from (string_of_lid a) (length+1) in
       let is_prefix = I.reserved_prefix ^ "is_" in
@@ -493,8 +493,8 @@ let rec resugar_term' (env: DsEnv.env) (t : S.term) : A.term =
         (* Detect projectors and resugar them as t.x instead of Mkt?.x t *)
         match (U.un_uinst (SS.compress t)).n with
         | Tm_fvar fv ->
-          let a = fv.fv_name.v in
-          let length = String.length (nsstr fv.fv_name.v) in
+          let a = fv.fv_name in
+          let length = String.length (nsstr fv.fv_name) in
           let s = if length=0 then string_of_lid a
               else BU.substring_from (string_of_lid a) (length+1) in
           if BU.starts_with s U.field_projector_prefix then
@@ -624,8 +624,8 @@ let rec resugar_term' (env: DsEnv.env) (t : S.term) : A.term =
         | Some (ref_read, _) when (ref_read = string_of_lid C.sread_lid) ->
           let (t, _) = List.hd args in
           begin match (SS.compress t).n with
-            | Tm_fvar fv when (U.field_projector_contains_constructor (string_of_lid fv.fv_name.v)) ->
-              let f = lid_of_path [string_of_lid fv.fv_name.v] t.pos in
+            | Tm_fvar fv when (U.field_projector_contains_constructor (string_of_lid fv.fv_name)) ->
+              let f = lid_of_path [string_of_lid fv.fv_name] t.pos in
               mk (A.Project(resugar_term' env t, f))
             | _ -> resugar_term' env t
           end
@@ -859,7 +859,7 @@ let rec resugar_term' (env: DsEnv.env) (t : S.term) : A.term =
           | _ -> [], def, false
         in
         let pat, term = match bnd.lbname with
-          | Inr fv -> mk_pat (A.PatName fv.fv_name.v), term
+          | Inr fv -> mk_pat (A.PatName fv.fv_name), term
           | Inl bv ->
             mk_pat (A.PatVar (bv_as_unique_ident bv, None, [])), term
         in
@@ -1241,7 +1241,7 @@ and resugar_pat' env (p:S.pat) (branch_bv: FlatSet.t bv) : A.pattern =
       | _ -> false)
   in
   let resugar_plain_pat_cons' fv args =
-    mk (A.PatApp (mk (A.PatName fv.fv_name.v), args)) in
+    mk (A.PatApp (mk (A.PatName fv.fv_name), args)) in
   let rec resugar_plain_pat_cons fv args =
     let args =
       (* Special check here: if any of the args binds a variable used in
@@ -1258,14 +1258,14 @@ and resugar_pat' env (p:S.pat) (branch_bv: FlatSet.t bv) : A.pattern =
 
     (* List patterns. *)
     | Pat_cons(fv, _, args)
-      when lid_equals fv.fv_name.v C.nil_lid -> (
+      when lid_equals fv.fv_name C.nil_lid -> (
       match filter_pattern_imp args with
       | [] -> mk (A.PatList [])
       | _ -> resugar_plain_pat_cons fv args
     )
 
     | Pat_cons(fv, _, args)
-      when lid_equals fv.fv_name.v C.cons_lid -> (
+      when lid_equals fv.fv_name C.cons_lid -> (
       match filter_pattern_imp args with
        | [(hd, false); (tl, false)] ->
          let hd' = aux hd (Some false) in
@@ -1277,16 +1277,16 @@ and resugar_pat' env (p:S.pat) (branch_bv: FlatSet.t bv) : A.pattern =
     )
 
     | Pat_cons (fv, _, []) ->
-      mk (A.PatName fv.fv_name.v)
+      mk (A.PatName fv.fv_name)
 
 
-    | Pat_cons(fv, _, args) when (is_tuple_constructor_lid fv.fv_name.v
+    | Pat_cons(fv, _, args) when (is_tuple_constructor_lid fv.fv_name
                                && not (must_print args)) ->
       let args =
         args |>
         List.filter_map (fun (p, is_implicit) ->
             if is_implicit then None else Some (aux p (Some false))) in
-      let is_dependent_tuple = C.is_dtuple_datacon_lid fv.fv_name.v in
+      let is_dependent_tuple = C.is_dtuple_datacon_lid fv.fv_name in
       mk (A.PatTuple (args, is_dependent_tuple))
 
     | Pat_cons({fv_qual=Some (Record_ctor(name, fields))}, _, args) ->
@@ -1367,7 +1367,7 @@ let resugar_qualifier : S.qualifier -> option A.qualifier = function
   | S.OnlyName -> None
 
 
-let resugar_pragma = function
+let resugar_pragma env = function
   | S.ShowOptions -> A.ShowOptions
   | S.SetOptions s -> A.SetOptions s
   | S.ResetOptions s -> A.ResetOptions s
@@ -1375,6 +1375,7 @@ let resugar_pragma = function
   | S.PopOptions -> A.PopOptions
   | S.RestartSolver -> A.RestartSolver
   | S.PrintEffectsGraph -> A.PrintEffectsGraph
+  | S.Check t -> A.Check (resugar_term' env t)
 
 (* drop the first n binders (implicit or explicit) from an arrow type *)
 let drop_n_bs (n:int) (t:S.term) : S.term =
@@ -1611,7 +1612,7 @@ let resugar_sigelt' env se : option A.decl =
     Some (decl'_to_decl se (A.Tycon(false, false, [A.TyconAbbrev(ident_of_lid lid, bs, None, resugar_comp' env c)])))
 
   | Sig_pragma p ->
-    Some (decl'_to_decl se (A.Pragma (resugar_pragma p)))
+    Some (decl'_to_decl se (A.Pragma (resugar_pragma env p)))
 
   | Sig_declare_typ {lid; us=uvs; t} ->
     if (se.sigquals |> BU.for_some (function S.Projector(_,_) | S.Discriminator _ -> true | _ -> false)) then

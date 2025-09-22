@@ -1,24 +1,20 @@
->> Got issues: [
-* Error 72 at Typos.fst(6,8-6,13):
+* Info at Typos.fst(6,8-6,13):
+  - Expected failure:
   - Module name Proms could not be resolved.
   - Hint: Did you mean Prims?
 
->>]
->> Got issues: [
-* Error 72 at Typos.fst(9,14-9,20):
+* Info at Typos.fst(9,14-9,20):
+  - Expected failure:
   - Identifier strong not found in module Prims
   - Hint: Did you mean string?
 
->>]
->> Got issues: [
-* Error 72 at Typos.fst(16,8-16,9):
+* Info at Typos.fst(16,8-16,9):
+  - Expected failure:
   - Identifier not found: d
   - Hint: Did you mean a, b or c?
 
->>]
->> Got issues: [
-* Error 72 at Typos.fst(22,8-22,14):
+* Info at Typos.fst(22,8-22,14):
+  - Expected failure:
   - Module name Foooo3 could not be resolved.
   - Hint: Did you mean Foooo1 or Foooo2?
 
->>]

@@ -61,15 +61,15 @@ let (generate : printing_mode -> Prims.string Prims.list -> unit) =
                           FStarC_Parser_ToDocument.comments_to_document
                             leftover_comments in
                         [uu___4] in
-                      FStarC_Pprint.hardline :: uu___3 in
-                    FStarC_Pprint.hardline :: uu___2 in
-                  FStarC_Pprint.concat uu___1
+                      FStar_Pprint.hardline :: uu___3 in
+                    FStar_Pprint.hardline :: uu___2 in
+                  FStar_Pprint.concat uu___1
                 else
                   if m1 = FromTempToStdout
                   then
-                    FStarC_Pprint.concat
-                      [FStarC_Pprint.hardline; FStarC_Pprint.hardline]
-                  else FStarC_Pprint.empty in
+                    FStar_Pprint.concat
+                      [FStar_Pprint.hardline; FStar_Pprint.hardline]
+                  else FStar_Pprint.empty in
               (match outf with
                | FStar_Pervasives_Native.None ->
                    FStarC_Pprint.pretty_out_channel

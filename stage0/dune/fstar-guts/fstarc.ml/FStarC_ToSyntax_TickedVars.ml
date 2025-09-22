@@ -77,9 +77,9 @@ let rec (go_term :
       | FStarC_Parser_AST.Name uu___ ->
           FStarC_Class_Monad.return (FStarC_Writer.monad_writer uu___0) ()
             (Obj.repr ())
-      | FStarC_Parser_AST.Requires (t1, uu___) -> go_term env t1
-      | FStarC_Parser_AST.Ensures (t1, uu___) -> go_term env t1
-      | FStarC_Parser_AST.Decreases (t1, uu___) -> go_term env t1
+      | FStarC_Parser_AST.Requires t1 -> go_term env t1
+      | FStarC_Parser_AST.Ensures t1 -> go_term env t1
+      | FStarC_Parser_AST.Decreases t1 -> go_term env t1
       | FStarC_Parser_AST.NamedTyp (uu___, t1) -> go_term env t1
       | FStarC_Parser_AST.LexList l ->
           FStarC_Class_Monad.iterM (FStarC_Writer.monad_writer uu___0) ()

@@ -1944,7 +1944,7 @@ let (e_issue : FStarC_Errors.issue embedding) =
     (fun uu___ -> lid_as_typ FStarC_Parser_Const.issue_lid [] [])
     (FStarC_Syntax_Embeddings_Base.emb_typ_of
        FStarC_Syntax_Embeddings.e_issue)
-let (e_document : FStarC_Pprint.document embedding) =
+let (e_document : FStar_Pprint.document embedding) =
   let t_document =
     FStarC_Syntax_Embeddings_Base.type_of FStarC_Syntax_Embeddings.e_document in
   let li blob =
@@ -2642,9 +2642,7 @@ let (e_order : FStarC_Order.order embedding) =
       | uu___ -> FStar_Pervasives_Native.None in
   let fv_as_emb_typ fv =
     let uu___ =
-      let uu___1 =
-        FStarC_Ident.string_of_lid
-          (fv.FStarC_Syntax_Syntax.fv_name).FStarC_Syntax_Syntax.v in
+      let uu___1 = FStarC_Ident.string_of_lid fv.FStarC_Syntax_Syntax.fv_name in
       (uu___1, []) in
     FStarC_Syntax_Syntax.ET_app uu___ in
   let fv =

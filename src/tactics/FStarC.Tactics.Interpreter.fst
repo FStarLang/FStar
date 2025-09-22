@@ -446,7 +446,5 @@ let run_tactic_on_ps
           (tactic:term)
           (tactic_already_typed:bool)
           (ps:proofstate) =
-    Profiling.profile
+    Stats.record "run_tactic_on_ps" <|
       (fun () -> run_tactic_on_ps' rng_call rng_goal background e_arg arg e_res tactic tactic_already_typed ps)
-      (Some (Ident.string_of_lid (Env.current_module ps.main_context)))
-      "FStarC.Tactics.Interpreter.run_tactic_on_ps"

@@ -21,6 +21,7 @@ open FStarC.Effect
 open FStarC.Errors
 open FStarC.Syntax
 open FStarC.Syntax.Syntax
+
 module S = FStarC.Syntax.Syntax
 module U = FStarC.Syntax.Util
 module SS = FStarC.Syntax.Subst
@@ -34,8 +35,9 @@ open FStarC.Range
 open FStarC.Class.Tagged
 open FStarC.Class.Show
 open FStarC.Syntax.Print {}
+open FStarC.Class.Show
 
-let always id b =
+let always (id : int) b =
     if b
     then ()
     else raise_error0 Errors.Fatal_AssertionFailure (Format.fmt1 "Assertion failed: test %s" (show id))
@@ -67,8 +69,8 @@ let rec term_eq' t1 t2 =
               && args_eq ct1.effect_args ct2.effect_args
             | _ -> false in
     match t1.n, t2.n with
-      | Tm_lazy l, _ -> term_eq' (must !lazy_chooser l.lkind l) t2
-      | _, Tm_lazy l -> term_eq' t1 (must !lazy_chooser l.lkind l)
+      | Tm_lazy l, _ -> term_eq' (Option.must !lazy_chooser l.lkind l) t2
+      | _, Tm_lazy l -> term_eq' t1 (Option.must !lazy_chooser l.lkind l)
       | Tm_bvar x, Tm_bvar y -> x.index = y.index
       | Tm_name x, Tm_name y -> S.bv_eq x y
       | Tm_fvar f, Tm_fvar g -> S.fv_eq f g

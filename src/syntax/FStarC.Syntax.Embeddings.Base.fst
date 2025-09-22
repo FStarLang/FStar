@@ -283,7 +283,7 @@ let mk_extracted_embedding (name: string) (u: string & list term -> option 'a) (
     let hd, args = U.head_and_args t in
     let? hd_lid =
       match (SS.compress (U.un_uinst hd)).n with
-      | Tm_fvar fv -> Some fv.fv_name.v
+      | Tm_fvar fv -> Some fv.fv_name
       | _ -> None
     in
     u (Ident.string_of_lid hd_lid, List.map fst args)

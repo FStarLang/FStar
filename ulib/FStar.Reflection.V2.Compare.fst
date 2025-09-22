@@ -42,6 +42,8 @@ let compare_const (c1 c2 : vconst) : order =
     | C_Reify, C_Reify -> Eq
     | C_Reflect l1, C_Reflect l2 -> compare_name l1 l2
     | C_Real r1, C_Real r2 -> order_from_int (compare_string r1 r2)
+    | C_Char c1, C_Char c2 -> order_from_int (Char.int_of_char c1 - Char.int_of_char c2)
+    (* Different constructors *)
     | C_Unit,  _ -> Lt       | _, C_Unit  -> Gt
     | C_Int _, _ -> Lt       | _, C_Int _ -> Gt
     | C_True,  _ -> Lt       | _, C_True  -> Gt
@@ -51,6 +53,7 @@ let compare_const (c1 c2 : vconst) : order =
     | C_Reify, _ -> Lt       | _, C_Reify -> Gt
     | C_Reflect _, _ -> Lt   | _, C_Reflect _ -> Gt
     | C_Real _, _ -> Lt      | _ , C_Real _ -> Gt
+    | C_Char _, _ -> Lt      | _ , C_Char _ -> Gt
 
 let compare_ident (i1 i2:ident) : order =
   let nm1, _ = inspect_ident i1 in

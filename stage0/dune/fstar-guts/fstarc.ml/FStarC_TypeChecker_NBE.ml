@@ -263,7 +263,7 @@ let (cache_add :
   fun cfg ->
     fun fv ->
       fun v ->
-        let lid = (fv.FStarC_Syntax_Syntax.fv_name).FStarC_Syntax_Syntax.v in
+        let lid = fv.FStarC_Syntax_Syntax.fv_name in
         let uu___ = FStarC_Ident.string_of_lid lid in
         FStarC_SMap.add cfg.fv_cache uu___ v
 let (try_in_cache :
@@ -273,7 +273,7 @@ let (try_in_cache :
   =
   fun cfg ->
     fun fv ->
-      let lid = (fv.FStarC_Syntax_Syntax.fv_name).FStarC_Syntax_Syntax.v in
+      let lid = fv.FStarC_Syntax_Syntax.fv_name in
       let uu___ = FStarC_Ident.string_of_lid lid in
       FStarC_SMap.try_find cfg.fv_cache uu___
 let (debug : config -> (unit -> unit) -> unit) =
@@ -1954,8 +1954,7 @@ and (translate_fv :
                    let uu___3 =
                      FStarC_TypeChecker_Env.lookup_definition_qninfo
                        (cfg.core_cfg).FStarC_TypeChecker_Cfg.delta_level
-                       (fvar.FStarC_Syntax_Syntax.fv_name).FStarC_Syntax_Syntax.v
-                       qninfo in
+                       fvar.FStarC_Syntax_Syntax.fv_name qninfo in
                    FStar_Pervasives_Native.uu___is_Some uu___3 in
                  if is_qninfo_visible
                  then
@@ -2027,8 +2026,7 @@ and (translate_fv :
                    let uu___3 =
                      FStarC_TypeChecker_Env.lookup_definition_qninfo
                        (cfg.core_cfg).FStarC_TypeChecker_Cfg.delta_level
-                       (fvar.FStarC_Syntax_Syntax.fv_name).FStarC_Syntax_Syntax.v
-                       qninfo in
+                       fvar.FStarC_Syntax_Syntax.fv_name qninfo in
                    FStar_Pervasives_Native.uu___is_Some uu___3 in
                  if is_qninfo_visible
                  then
@@ -2585,8 +2583,7 @@ and (translate_monadic :
                               let uu___6 =
                                 FStarC_TypeChecker_Env.lookup_definition_qninfo
                                   (cfg.core_cfg).FStarC_TypeChecker_Cfg.delta_level
-                                  (fv.FStarC_Syntax_Syntax.fv_name).FStarC_Syntax_Syntax.v
-                                  qninfo in
+                                  fv.FStarC_Syntax_Syntax.fv_name qninfo in
                               FStar_Pervasives_Native.uu___is_None uu___6 in
                             if uu___5
                             then fallback2 ()

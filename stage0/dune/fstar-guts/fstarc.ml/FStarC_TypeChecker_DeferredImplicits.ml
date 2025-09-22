@@ -213,8 +213,8 @@ let (find_user_tac_for_uvar :
                      let uu___4 =
                        FStarC_Errors_Msg.text
                          "Multiple resolve_implicits hooks are eligible for attribute" in
-                     let uu___5 = FStarC_Pprint.doc_of_string attr in
-                     FStarC_Pprint.op_Hat_Slash_Hat uu___4 uu___5 in
+                     FStar_Pprint.op_Hat_Slash_Hat uu___4
+                       (FStar_Pprint.doc_of_string attr) in
                    let uu___4 =
                      let uu___5 =
                        let uu___6 =
@@ -224,7 +224,7 @@ let (find_user_tac_for_uvar :
                          FStarC_Class_PP.pp
                            (FStarC_Class_PP.pp_list
                               FStarC_Ident.pretty_lident) candidates3 in
-                       FStarC_Pprint.op_Hat_Slash_Hat uu___6 uu___7 in
+                       FStar_Pprint.op_Hat_Slash_Hat uu___6 uu___7 in
                      [uu___5] in
                    uu___3 :: uu___4 in
                  FStarC_Errors.raise_error
@@ -319,8 +319,6 @@ let solve_goals_with_tac :
                      (env.FStarC_TypeChecker_Env.is_iface);
                    FStarC_TypeChecker_Env.admit =
                      (env.FStarC_TypeChecker_Env.admit);
-                   FStarC_TypeChecker_Env.lax_universes =
-                     (env.FStarC_TypeChecker_Env.lax_universes);
                    FStarC_TypeChecker_Env.phase1 =
                      (env.FStarC_TypeChecker_Env.phase1);
                    FStarC_TypeChecker_Env.failhard =
@@ -451,8 +449,6 @@ let (solve_deferred_to_tactic_goals :
                                (env1.FStarC_TypeChecker_Env.is_iface);
                              FStarC_TypeChecker_Env.admit =
                                (env1.FStarC_TypeChecker_Env.admit);
-                             FStarC_TypeChecker_Env.lax_universes =
-                               (env1.FStarC_TypeChecker_Env.lax_universes);
                              FStarC_TypeChecker_Env.phase1 =
                                (env1.FStarC_TypeChecker_Env.phase1);
                              FStarC_TypeChecker_Env.failhard =
@@ -559,8 +555,6 @@ let (solve_deferred_to_tactic_goals :
                              FStarC_TypeChecker_Env.is_iface =
                                (env2.FStarC_TypeChecker_Env.is_iface);
                              FStarC_TypeChecker_Env.admit = true;
-                             FStarC_TypeChecker_Env.lax_universes =
-                               (env2.FStarC_TypeChecker_Env.lax_universes);
                              FStarC_TypeChecker_Env.phase1 =
                                (env2.FStarC_TypeChecker_Env.phase1);
                              FStarC_TypeChecker_Env.failhard =

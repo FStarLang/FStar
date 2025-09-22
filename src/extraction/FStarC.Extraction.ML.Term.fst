@@ -180,7 +180,7 @@ let rec is_arity_aux tcenv t =
         FStarC.TypeChecker.Env.lookup_definition
           [Env.Unfold delta_constant]
           tcenv
-          fv.fv_name.v
+          fv.fv_name
       in
       begin
       match topt with
@@ -732,7 +732,7 @@ let rec translate_term_to_mlty' (g:uenv) (t0:term) : mlty =
                  translate_term_to_mlty g a
             else (
               let formals, _ =
-                let (_, fvty), _ = FStarC.TypeChecker.Env.lookup_lid (tcenv_of_uenv g) fv.fv_name.v in
+                let (_, fvty), _ = FStarC.TypeChecker.Env.lookup_lid (tcenv_of_uenv g) fv.fv_name in
                 let fvty = N.normalize [Env.UnfoldUntil delta_constant; Env.ForExtraction] (tcenv_of_uenv g) fvty in
                 U.arrow_formals fvty in
               let mlargs = List.map (arg_as_mlty g) args in
@@ -742,7 +742,7 @@ let rec translate_term_to_mlty' (g:uenv) (t0:term) : mlty =
                 then let _, rest = BU.first_N n_args formals in
                      mlargs @ (List.map (fun _ -> MLTY_Erased) rest)
                 else mlargs in
-              let nm = UEnv.mlpath_of_lident g fv.fv_name.v in
+              let nm = UEnv.mlpath_of_lident g fv.fv_name in
               MLTY_Named (mlargs, nm)
             )
         )
@@ -1016,7 +1016,7 @@ let rec extract_one_pat (imp : bool)
           | Some ({exp_b_expr={expr=MLE_Name n}; exp_b_tscheme=ttys}) -> n, ttys
           | Some _ -> failwith "Expected a constructor"
           | None ->
-            Errors.raise_error f.fv_name.p  Errors.Error_ErasedCtor
+            Errors.raise_error f Errors.Error_ErasedCtor
               (Format.fmt1 "Cannot extract this pattern, the %s constructor was erased" (show f))
         in
         // The prefix of the pattern are dot patterns matching the type parameters

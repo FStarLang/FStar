@@ -2,21 +2,18 @@ open Prims
 type 'm monad =
   {
   return: unit -> Obj.t -> 'm ;
-  op_let_Bang: unit -> unit -> 'm -> (Obj.t -> 'm) -> 'm }
+  bind: unit -> unit -> 'm -> (Obj.t -> 'm) -> 'm }
 let __proj__Mkmonad__item__return : 'm . 'm monad -> unit -> Obj.t -> 'm =
-  fun projectee -> match projectee with | { return; op_let_Bang;_} -> return
-let __proj__Mkmonad__item__op_let_Bang :
+  fun projectee -> match projectee with | { return; bind;_} -> return
+let __proj__Mkmonad__item__bind :
   'm . 'm monad -> unit -> unit -> 'm -> (Obj.t -> 'm) -> 'm =
-  fun projectee ->
-    match projectee with | { return; op_let_Bang;_} -> op_let_Bang
+  fun projectee -> match projectee with | { return; bind;_} -> bind
 let return : 'm . 'm monad -> unit -> Obj.t -> 'm =
   fun projectee ->
-    match projectee with | { return = return1; op_let_Bang;_} -> return1
-let op_let_Bang : 'm . 'm monad -> unit -> unit -> 'm -> (Obj.t -> 'm) -> 'm
-  =
+    match projectee with | { return = return1; bind;_} -> return1
+let bind : 'm . 'm monad -> unit -> unit -> 'm -> (Obj.t -> 'm) -> 'm =
   fun projectee ->
-    match projectee with
-    | { return = return1; op_let_Bang = op_let_Bang1;_} -> op_let_Bang1
+    match projectee with | { return = return1; bind = bind1;_} -> bind1
 let (monad_option : unit FStar_Pervasives_Native.option monad) =
   {
     return =
@@ -24,7 +21,7 @@ let (monad_option : unit FStar_Pervasives_Native.option monad) =
          fun uu___ ->
            (fun a -> fun x -> Obj.magic (FStar_Pervasives_Native.Some x))
              uu___1 uu___);
-    op_let_Bang =
+    bind =
       (fun uu___3 ->
          fun uu___2 ->
            fun uu___1 ->
@@ -32,12 +29,16 @@ let (monad_option : unit FStar_Pervasives_Native.option monad) =
                (fun uu___1 -> fun uu___ -> Obj.magic FStarC_Option.bind)
                  uu___3 uu___2 uu___1 uu___)
   }
+let op_let_Bang : 'm . 'm monad -> unit -> unit -> 'm -> (Obj.t -> 'm) -> 'm
+  = bind
+let op_Greater_Greater_Equals :
+  'm . 'm monad -> unit -> unit -> 'm -> (Obj.t -> 'm) -> 'm = bind
 let (monad_list : unit Prims.list monad) =
   {
     return =
       (fun uu___1 ->
          fun uu___ -> (fun a -> fun x -> Obj.magic [x]) uu___1 uu___);
-    op_let_Bang =
+    bind =
       (fun uu___3 ->
          fun uu___2 ->
            fun uu___1 ->

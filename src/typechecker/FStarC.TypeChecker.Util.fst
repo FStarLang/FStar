@@ -412,14 +412,14 @@ let extract_let_rec_annotation env {lbname=lbname; lbunivs=univ_vars; lbtyp=t; l
 
 //            | Pat_cons(fv, []), Tm_fvar fv' ->
 //              if not (Syntax.fv_eq fv fv')
-//              then failwith (Format.fmt2 "Expected pattern constructor %s; got %s" (string_of_lid fv.fv_name.v) (string_of_lid fv'.fv_name.v));
+//              then failwith (Format.fmt2 "Expected pattern constructor %s; got %s" (string_of_lid fv.fv_name) (string_of_lid fv'.fv_name));
 //              pkg (Pat_cons(fv', []))
 
 //            | Pat_cons(fv, argpats), Tm_app({n=Tm_fvar(fv')}, args)
 //            | Pat_cons(fv, argpats), Tm_app({n=Tm_uinst({n=Tm_fvar(fv')}, _)}, args) ->
 
 //              if fv_eq fv fv' |> not
-//              then failwith (Format.fmt2 "Expected pattern constructor %s; got %s" (string_of_lid fv.fv_name.v) (string_of_lid fv'.fv_name.v));
+//              then failwith (Format.fmt2 "Expected pattern constructor %s; got %s" (string_of_lid fv.fv_name) (string_of_lid fv'.fv_name));
 
 //              let fv = fv' in
 //              let rec match_args matched_pats args argpats = match args, argpats with
@@ -2493,13 +2493,16 @@ let find_coercion (env:Env.env) (checked: lcomp) (exp_t: typ) (e:term)
 // or None if no coercion applied
 =
  Errors.with_ctx "find_coercion" (fun () ->
-  let is_type t =
-      let t = N.unfold_whnf env t in
-      let t = U.unrefine t in (* mostly to catch `prop` too *)
+  let rec is_type retry t =
       match (SS.compress t).n with
       | Tm_type _ -> true
+      | _ when retry ->
+        let t = N.unfold_whnf env t in
+        let t = U.unrefine t in (* mostly to catch `prop` too *)
+        is_type false t
       | _ -> false
   in
+  let is_type = is_type true in
   let rec head_of (t : term) : term =
       match (compress t).n with
       | Tm_app {hd=t}
@@ -2605,9 +2608,15 @@ let find_coercion (env:Env.env) (checked: lcomp) (exp_t: typ) (e:term)
 )
 
 let maybe_coerce_lc env (e:term) (lc:lcomp) (exp_t:term) : term & lcomp & guard_t =
+  let head_types_equal t0 t1 =
+    match (U.un_uinst (U.unrefine t0)).n, (U.un_uinst (U.unrefine t1)).n with
+    | Tm_fvar fv0, Tm_fvar fv1 -> S.fv_eq fv0 fv1
+    | _ -> false
+  in
   let should_coerce =
-      (env.phase1
-    || Options.lax ()) && not env.nocoerce
+      (env.phase1 || Options.lax ()) &&
+      not env.nocoerce &&
+      not (head_types_equal lc.res_typ exp_t)
   in
   if not should_coerce then (
     if !dbg_Coercions then
@@ -2977,9 +2986,9 @@ let maybe_instantiate (env:Env.env) (e:term) (t:typ) : term & typ & guard_t =
                 | Some i -> Some (i - 1)
         in
         let t = N.unfold_whnf env t in
-        begin match t.n with
-            | Tm_arrow {bs; comp=c} ->
-              let bs, c = SS.open_comp bs c in
+        begin let bs,c = U.arrow_formals_comp t in
+              match bs with
+              | _::_ ->
               //instantiate at most inst_n implicit binders, when inst_n = Some n
               //otherwise, instantate all implicits
               //See issue #807 for why this is important
@@ -3185,7 +3194,7 @@ let short_circuit (head:term) (seen_args:args) : guard_formula =
 
      match head.n with
         | Tm_fvar fv ->
-          let lid = fv.fv_name.v in
+          let lid = fv.fv_name in
           begin match BU.find_map table (fun (x, mk) -> if lid_equals x lid then Some (mk seen_args) else None) with
             | None ->   Trivial
             | Some g -> g
@@ -3698,7 +3707,7 @@ let find_record_or_dc_from_typ env (t:option typ) (uc:unresolved_constructor) rn
         match (SS.compress (U.un_uinst thead)).n with
         | Tm_fvar type_name ->
           begin
-          match try_lookup_record_type env type_name.fv_name.v with
+          match try_lookup_record_type env type_name.fv_name with
           | None -> default_rdc ()
           | Some r -> r
           end

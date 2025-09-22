@@ -166,19 +166,9 @@ let trans_qual (r:Range.t) maybe_effect_id = function
   | AST.Reifiable ->     S.Reifiable
   | AST.Noeq ->          S.Noeq
   | AST.Unopteq ->       S.Unopteq
-  | AST.DefaultEffect -> raise_error r Errors.Fatal_DefaultQualifierNotAllowedOnEffects "The 'default' qualifier on effects is no longer supported"
   | AST.Inline
   | AST.Visible ->
     raise_error r Errors.Fatal_UnsupportedQualifier "Unsupported qualifier"
-
-let trans_pragma = function
-  | AST.ShowOptions -> S.ShowOptions
-  | AST.SetOptions s -> S.SetOptions s
-  | AST.ResetOptions sopt -> S.ResetOptions sopt
-  | AST.PushOptions sopt -> S.PushOptions sopt
-  | AST.PopOptions -> S.PopOptions
-  | AST.RestartSolver -> S.RestartSolver
-  | AST.PrintEffectsGraph -> S.PrintEffectsGraph
 
 let as_imp = function
     | Hash -> S.as_aqual_implicit true
@@ -1391,7 +1381,7 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term & an
         | Var l -> l
         | _ ->
           raise_error rty Errors.Error_BadLetOpenRecord
-            (Format.fmt1 "This type must be a (possibly applied) record name" (term_to_string rty))
+            (Format.fmt1 "This type must be a (possibly applied) record name: %s" (term_to_string rty))
       in
       let record =
         match Env.try_lookup_record_type env tycon_name with
@@ -2676,7 +2666,7 @@ let rec desugar_tycon env (d: AST.decl) (d_attrs_initial:list S.term) quals tcs 
                   let payload_typ = mkApp record_id_t (List.map (fun bd -> binder_to_term bd, Nothing) bds) (range_of_id record_id) in
                   let desugar_marker = 
                     let range = range_of_id record_id in
-                    let desugar_attr_fv = {fv_name = {v = FStarC.Parser.Const.desugar_of_variant_record_lid; p = range}; fv_qual = None} in
+                    let desugar_attr_fv = {fv_name = setPos range FStarC.Parser.Const.desugar_of_variant_record_lid; fv_qual = None} in
                     let desugar_attr = S.mk (Tm_fvar desugar_attr_fv) range in
                     let cid_as_constant = EMB.embed (string_of_lid (qualify env cid)) range None EMB.id_norm_cb in
                     S.mk_Tm_app desugar_attr [(cid_as_constant, None)] range
@@ -3054,6 +3044,19 @@ let lookup_effect_lid env (l:lident) (r:Range.t) : S.eff_decl =
       ("Effect name " ^ show l ^ " not found")
   | Some l -> l
 
+let trans_pragma env = function
+  | AST.ShowOptions -> S.ShowOptions
+  | AST.SetOptions s -> S.SetOptions s
+  | AST.ResetOptions sopt -> S.ResetOptions sopt
+  | AST.PushOptions sopt -> S.PushOptions sopt
+  | AST.PopOptions -> S.PopOptions
+  | AST.RestartSolver -> S.RestartSolver
+  | AST.PrintEffectsGraph -> S.PrintEffectsGraph
+  | AST.Check t ->
+    let t, aq = desugar_term_maybe_top true env t in
+    check_no_aq aq;
+    S.Check t
+
 let rec desugar_effect env d (d_attrs:list S.term) (quals: qualifiers) (is_layered:bool) eff_name eff_binders eff_typ eff_decls =
     let env0 = env in
     // qualified with effect name
@@ -3408,12 +3411,8 @@ and desugar_decl_maybe_fail_attr env (d: decl) (attrs : list S.term) : (env_t & 
 
       | errs, ropt -> (* failed! check that it failed as expected *)
         let errnos = List.concatMap (fun i -> FStarC.Common.list_of_option i.issue_number) errs in
-        if Options.print_expected_failures () then (
-          (* Print errors if asked for *)
-          Format.print_string ">> Got issues: [\n";
-          List.iter Errors.print_issue errs;
-          Format.print_string ">>]\n"
-        );
+        if Options.print_expected_failures () then
+          Errors.print_expected_failures errs;
         if expected_errs = [] then
           env0, []
         else begin
@@ -3456,7 +3455,7 @@ and desugar_decl_core env (d_attrs:list S.term) (d:decl) : (env_t & sigelts) =
   let trans_qual = trans_qual d.drange in
   match d.d with
   | Pragma p ->
-    let p = trans_pragma p in
+    let p = trans_pragma env p in
     U.process_pragma p d.drange;
     let se = { sigel = Sig_pragma p;
                sigquals = [];
@@ -3670,7 +3669,7 @@ and desugar_decl_core env (d_attrs:list S.term) (d:decl) : (env_t & sigelts) =
           let fvs = snd lbs |> List.map (fun lb -> Inr?.v lb.lbname) in
           let val_quals, val_attrs =
             List.fold_right (fun fv (qs, ats) ->
-                let qs', ats' = Env.lookup_letbinding_quals_and_attrs env fv.fv_name.v in
+                let qs', ats' = Env.lookup_letbinding_quals_and_attrs env fv.fv_name in
                 (List.rev_append qs' qs, List.rev_append ats' ats))
                 fvs
                 ([], [])
@@ -3697,7 +3696,7 @@ and desugar_decl_core env (d_attrs:list S.term) (d:decl) : (env_t & sigelts) =
             then S.Logic::quals
             else quals
           in
-          let names = fvs |> List.map (fun fv -> fv.fv_name.v) in
+          let names = fvs |> List.map (fun fv -> fv.fv_name) in
           let s = { sigel = Sig_let {lbs; lids=names};
                     sigquals = quals;
                     sigrng = d.drange;

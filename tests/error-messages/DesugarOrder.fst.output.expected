@@ -1,5 +1,4 @@
->> Got issues: [
-* Error 72 at DesugarOrder.fst(7,12-7,13):
+* Info at DesugarOrder.fst(7,12-7,13):
+  - Expected failure:
   - Identifier not found: a
 
->>]

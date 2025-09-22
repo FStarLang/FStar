@@ -98,7 +98,7 @@ let rec eq_tm (env:env_t) (t1:term) (t2:term) : eq_result =
                   (fun acc (a1, q1) (a2, q2) ->
                         //if q1 <> q2
                         //then failwith (Format.fmt1 "Arguments of %s mismatch on implicit qualifier\n"
-                        //                (Ident.string_of_lid f1.fv_name.v));
+                        //                (Ident.string_of_lid f1.fv_name));
                         //NS: 05/06/2018 ...this does not always hold
                         //    it's been succeeding because the assert is disabled in the non-debug builds
                         //assert (q1 = q2);

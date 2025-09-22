@@ -34,7 +34,7 @@ let dbg = Debug.get_toggle "CheckedFiles"
  * detect when loading the cache that the version number is same
  * It needs to be kept in sync with Prims.fst
  *)
-let cache_version_number = 74
+let cache_version_number = 75
 
 (*
  * Abbreviation for what we store in the checked files (stages as described below)
@@ -339,7 +339,7 @@ let load_checked_file_with_tc_result
         end;
         let msg =
           Format.fmt1
-            "checked file %s is stale (dependence hash mismatch, use --debug yes for more details)"
+            "checked file %s is stale (dependence hash mismatch, use --debug CheckedFiles for more details)"
             checked_fn
         in
         let elt = (Invalid msg, Inl msg) in

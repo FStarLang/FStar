@@ -1,5 +1,4 @@
->> Got issues: [
-* Error 236 at Bug2953.fst(14,21-14,31):
+* Info at Bug2953.fst(14,21-14,31):
+  - Expected failure:
   - When clauses are not yet supported in --verify mode; they will be some day
 
->>]

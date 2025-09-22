@@ -1,7 +1,7 @@
 open Prims
 let (dbg : Prims.bool FStarC_Effect.ref) =
   FStarC_Debug.get_toggle "CheckedFiles"
-let (cache_version_number : Prims.int) = (Prims.of_int (73))
+let (cache_version_number : Prims.int) = (Prims.of_int (75))
 type tc_result =
   {
   checked_module: FStarC_Syntax_Syntax.modul ;
@@ -595,10 +595,9 @@ let (store_module_to_cache :
                     FStarC_Errors_Msg.text uu___4 in
                   let uu___4 =
                     let uu___5 =
-                      let uu___6 = FStarC_Pprint.doc_of_string "Reason:" in
-                      let uu___7 = FStarC_Errors_Msg.text msg in
-                      FStarC_Pprint.prefix (Prims.of_int (2)) Prims.int_one
-                        uu___6 uu___7 in
+                      let uu___6 = FStarC_Errors_Msg.text msg in
+                      FStar_Pprint.prefix (Prims.of_int (2)) Prims.int_one
+                        (FStar_Pprint.doc_of_string "Reason:") uu___6 in
                     [uu___5] in
                   uu___3 :: uu___4 in
                 FStarC_Errors.log_issue FStarC_Class_HasRange.hasRange_range

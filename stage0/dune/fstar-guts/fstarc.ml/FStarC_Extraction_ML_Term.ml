@@ -124,8 +124,8 @@ let (err_unexpected_eff :
                   let uu___3 = FStarC_Errors_Msg.text "For expression" in
                   let uu___4 =
                     FStarC_Class_PP.pp FStarC_Syntax_Print.pretty_term t in
-                  FStarC_Pprint.prefix (Prims.of_int (4)) Prims.int_one
-                    uu___3 uu___4 in
+                  FStar_Pprint.prefix (Prims.of_int (4)) Prims.int_one uu___3
+                    uu___4 in
                 let uu___3 =
                   let uu___4 = FStarC_Errors_Msg.text "of type" in
                   let uu___5 =
@@ -133,27 +133,27 @@ let (err_unexpected_eff :
                       let uu___7 =
                         FStarC_Extraction_ML_UEnv.current_module_of_uenv env in
                       FStarC_Extraction_ML_Code.string_of_mlty uu___7 ty in
-                    FStarC_Pprint.arbitrary_string uu___6 in
-                  FStarC_Pprint.prefix (Prims.of_int (4)) Prims.int_one
-                    uu___4 uu___5 in
-                FStarC_Pprint.op_Hat_Slash_Hat uu___2 uu___3 in
+                    FStar_Pprint.arbitrary_string uu___6 in
+                  FStar_Pprint.prefix (Prims.of_int (4)) Prims.int_one uu___4
+                    uu___5 in
+                FStar_Pprint.op_Hat_Slash_Hat uu___2 uu___3 in
               let uu___2 =
                 let uu___3 =
                   let uu___4 =
                     let uu___5 = FStarC_Errors_Msg.text "Expected effect" in
                     let uu___6 =
                       let uu___7 = FStarC_Extraction_ML_Util.eff_to_string f0 in
-                      FStarC_Pprint.arbitrary_string uu___7 in
-                    FStarC_Pprint.prefix (Prims.of_int (4)) Prims.int_one
+                      FStar_Pprint.arbitrary_string uu___7 in
+                    FStar_Pprint.prefix (Prims.of_int (4)) Prims.int_one
                       uu___5 uu___6 in
                   let uu___5 =
                     let uu___6 = FStarC_Errors_Msg.text "got effect" in
                     let uu___7 =
                       let uu___8 = FStarC_Extraction_ML_Util.eff_to_string f1 in
-                      FStarC_Pprint.arbitrary_string uu___8 in
-                    FStarC_Pprint.prefix (Prims.of_int (4)) Prims.int_one
+                      FStar_Pprint.arbitrary_string uu___8 in
+                    FStar_Pprint.prefix (Prims.of_int (4)) Prims.int_one
                       uu___6 uu___7 in
-                  FStarC_Pprint.op_Hat_Slash_Hat uu___4 uu___5 in
+                  FStar_Pprint.op_Hat_Slash_Hat uu___4 uu___5 in
                 [uu___3] in
               uu___1 :: uu___2 in
             FStarC_Errors.log_issue
@@ -308,7 +308,7 @@ let rec (is_arity_aux :
             FStarC_TypeChecker_Env.lookup_definition
               [FStarC_TypeChecker_Env.Unfold
                  FStarC_Syntax_Syntax.delta_constant] tcenv
-              (fv.FStarC_Syntax_Syntax.fv_name).FStarC_Syntax_Syntax.v in
+              fv.FStarC_Syntax_Syntax.fv_name in
           (match topt with
            | FStar_Pervasives_Native.None -> false
            | FStar_Pervasives_Native.Some (uu___1, t2) ->
@@ -1273,7 +1273,7 @@ let rec (translate_term_to_mlty' :
                     let uu___5 =
                       let uu___6 = FStarC_Extraction_ML_UEnv.tcenv_of_uenv g1 in
                       FStarC_TypeChecker_Env.lookup_lid uu___6
-                        (fv.FStarC_Syntax_Syntax.fv_name).FStarC_Syntax_Syntax.v in
+                        fv.FStarC_Syntax_Syntax.fv_name in
                     match uu___5 with
                     | ((uu___6, fvty), uu___7) ->
                         let fvty1 =
@@ -1303,7 +1303,7 @@ let rec (translate_term_to_mlty' :
                         else mlargs in
                       let nm =
                         FStarC_Extraction_ML_UEnv.mlpath_of_lident g1
-                          (fv.FStarC_Syntax_Syntax.fv_name).FStarC_Syntax_Syntax.v in
+                          fv.FStarC_Syntax_Syntax.fv_name in
                       FStarC_Extraction_ML_Syntax.MLTY_Named (mlargs1, nm))) in
       let aux env =
         fun t ->
@@ -1770,8 +1770,7 @@ let rec (extract_one_pat :
                           "Cannot extract this pattern, the %s constructor was erased"
                           uu___4 in
                       FStarC_Errors.raise_error
-                        FStarC_Class_HasRange.hasRange_range
-                        (f.FStarC_Syntax_Syntax.fv_name).FStarC_Syntax_Syntax.p
+                        FStarC_Syntax_Syntax.hasRange_fv f
                         FStarC_Errors_Codes.Error_ErasedCtor ()
                         (Obj.magic FStarC_Errors_Msg.is_error_message_string)
                         (Obj.magic uu___3) in

@@ -201,9 +201,9 @@ let (check_sigelt_quals_pre :
                       let uu___8 =
                         let uu___9 =
                           FStarC_Syntax_Print.sigelt_to_string_short se in
-                        FStarC_Pprint.doc_of_string uu___9 in
-                      FStarC_Pprint.bquotes uu___8 in
-                    FStarC_Pprint.prefix (Prims.of_int (2)) Prims.int_one
+                        FStar_Pprint.doc_of_string uu___9 in
+                      FStar_Pprint.bquotes uu___8 in
+                    FStar_Pprint.prefix (Prims.of_int (2)) Prims.int_one
                       uu___6 uu___7 in
                   [uu___5] in
                 FStar_List_Tot_Base.op_At uu___4 msg in
@@ -231,7 +231,7 @@ let (check_sigelt_quals_pre :
                           let uu___11 =
                             FStarC_Class_PP.pp
                               FStarC_Syntax_Print.pretty_qualifier q in
-                          FStarC_Pprint.bquotes uu___11 in
+                          FStar_Pprint.bquotes uu___11 in
                         let uu___11 =
                           let uu___12 = FStarC_Errors_Msg.text "and" in
                           let uu___13 =
@@ -239,13 +239,13 @@ let (check_sigelt_quals_pre :
                               let uu___15 =
                                 FStarC_Class_PP.pp
                                   FStarC_Syntax_Print.pretty_qualifier q' in
-                              FStarC_Pprint.bquotes uu___15 in
+                              FStar_Pprint.bquotes uu___15 in
                             let uu___15 =
                               FStarC_Errors_Msg.text "are not compatible." in
-                            FStarC_Pprint.op_Hat_Slash_Hat uu___14 uu___15 in
-                          FStarC_Pprint.op_Hat_Slash_Hat uu___12 uu___13 in
-                        FStarC_Pprint.op_Hat_Slash_Hat uu___10 uu___11 in
-                      FStarC_Pprint.op_Hat_Slash_Hat uu___8 uu___9 in
+                            FStar_Pprint.op_Hat_Slash_Hat uu___14 uu___15 in
+                          FStar_Pprint.op_Hat_Slash_Hat uu___12 uu___13 in
+                        FStar_Pprint.op_Hat_Slash_Hat uu___10 uu___11 in
+                      FStar_Pprint.op_Hat_Slash_Hat uu___8 uu___9 in
                     [uu___7] in
                   err uu___6
               | FStar_Pervasives_Native.None -> ());
@@ -476,9 +476,8 @@ let (check_erasable :
                                 let uu___14 =
                                   FStarC_Errors_Msg.text
                                     "is considered informative." in
-                                FStarC_Pprint.op_Hat_Slash_Hat uu___13
-                                  uu___14 in
-                              FStarC_Pprint.op_Hat_Slash_Hat uu___11 uu___12 in
+                                FStar_Pprint.op_Hat_Slash_Hat uu___13 uu___14 in
+                              FStar_Pprint.op_Hat_Slash_Hat uu___11 uu___12 in
                             [uu___10] in
                           uu___8 :: uu___9 in
                         FStarC_Errors.raise_error
@@ -515,8 +514,8 @@ let (check_erasable :
                          let uu___15 =
                            FStarC_Errors_Msg.text
                              "is marked erasable but only total effects are allowed to be erasable." in
-                         FStarC_Pprint.op_Hat_Slash_Hat uu___14 uu___15 in
-                       FStarC_Pprint.op_Hat_Slash_Hat uu___12 uu___13 in
+                         FStar_Pprint.op_Hat_Slash_Hat uu___14 uu___15 in
+                       FStar_Pprint.op_Hat_Slash_Hat uu___12 uu___13 in
                      [uu___11] in
                    FStarC_Errors.raise_error
                      FStarC_Class_HasRange.hasRange_range r
@@ -565,7 +564,7 @@ let (check_must_erase_attribute :
                          let uu___3 =
                            let uu___4 =
                              FStarC_Ident.ident_of_lid
-                               (lbname.FStarC_Syntax_Syntax.fv_name).FStarC_Syntax_Syntax.v in
+                               lbname.FStarC_Syntax_Syntax.fv_name in
                            FStarC_Parser_AST.decl_is_val uu___4 in
                          FStarC_Util.for_some uu___3 iface_decls in
                        if has_iface_val
@@ -676,7 +675,7 @@ let (check_typeclass_instance_attribute :
                             FStarC_Syntax_Util.comp_effect_name res in
                           FStarC_Class_PP.pp FStarC_Ident.pretty_lident
                             uu___10 in
-                        FStarC_Pprint.op_Hat_Slash_Hat uu___8 uu___9 in
+                        FStar_Pprint.op_Hat_Slash_Hat uu___8 uu___9 in
                       [uu___7] in
                     uu___5 :: uu___6 in
                   FStarC_Errors.log_issue
@@ -703,8 +702,8 @@ let (check_typeclass_instance_attribute :
                                   FStarC_Syntax_Print.pretty_term t in
                               let uu___13 =
                                 FStarC_Errors_Msg.text "is not a class." in
-                              FStarC_Pprint.op_Hat_Slash_Hat uu___12 uu___13 in
-                            FStarC_Pprint.op_Hat_Slash_Hat uu___10 uu___11 in
+                              FStar_Pprint.op_Hat_Slash_Hat uu___12 uu___13 in
+                            FStar_Pprint.op_Hat_Slash_Hat uu___10 uu___11 in
                           [uu___9] in
                         uu___7 :: uu___8 in
                       FStarC_Errors.log_issue
@@ -761,9 +760,9 @@ let (check_typeclass_instance_attribute :
                       let uu___7 =
                         let uu___8 =
                           FStarC_Syntax_Print.sigelt_to_string_short se in
-                        FStarC_Pprint.arbitrary_string uu___8 in
-                      FStarC_Pprint.squotes uu___7 in
-                    FStarC_Pprint.op_Hat_Slash_Hat uu___5 uu___6 in
+                        FStar_Pprint.arbitrary_string uu___8 in
+                      FStar_Pprint.squotes uu___7 in
+                    FStar_Pprint.op_Hat_Slash_Hat uu___5 uu___6 in
                   [uu___4] in
                 uu___2 :: uu___3 in
               FStarC_Errors.log_issue FStarC_Class_HasRange.hasRange_range
