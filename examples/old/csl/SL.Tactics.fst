@@ -23,7 +23,7 @@ open FStar.Tactics.V2
  * Separation logic tactics for manipulating wps of the deeply embedded languages of Lang
  *)
 
-#reset-options "--using_facts_from '* -FStar.Tactics +FStar.Tactics.Result +FStar.Tactics.Types'"
+#reset-options "--using_facts_from '* -FStar.Tactics +FStar.Tactics.Types'"
 
 let lemma_read_write (phi:heap -> heap -> prop) (r:addr) (h:heap{contains h r})
   :Lemma (requires phi (restrict h r) (minus h r))

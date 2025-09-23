@@ -8,7 +8,6 @@ open FStarC.Syntax.Syntax
 open FStarC.Syntax.Embeddings
 open FStarC.TypeChecker.Common
 open FStarC.TypeChecker.Env
-open FStarC.Tactics.Result
 open FStarC.Tactics.Types
 open FStarC.Tactics.Printing
 open FStarC.Tactics.Monad
@@ -48,6 +47,8 @@ let ops =
   List.map fix_module <|
 [
   (* Total steps defined in V2 *)
+  
+  mk_tac_step_1 0 "get" (fun () -> get) (fun () -> get);
 
   mk_tac_step_1 0 "set_goals" set_goals set_goals;
   mk_tac_step_1 0 "set_smt_goals" set_smt_goals set_smt_goals;
@@ -58,11 +59,7 @@ let ops =
     (fun _ -> catch)
     (fun _ -> catch);
 
-  mk_tac_step_2 1 "recover"
-    #e_any #(TI.e_tactic_thunk e_any) #(e_either E.e_exn e_any)
-    #NBET.e_any #(TI.e_tactic_nbe_thunk NBET.e_any) #(NBET.e_either E.e_exn_nbe NBET.e_any)
-    (fun _ -> recover)
-    (fun _ -> recover);
+  mk_tac_step_1 0 "raise_core" (traise <: exn -> tac unit) (traise <: exn -> tac unit) ;
 
   mk_tac_step_1 0 "intro" intro intro ;
   mk_tac_step_1 0 "intro_rec" intro_rec intro_rec ;
