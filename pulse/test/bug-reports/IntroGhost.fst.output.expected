@@ -1,5 +1,6 @@
 * Info at IntroGhost.fst(44,18-44,20):
   - Expected failure:
+  - Tactic failed
   - Cannot prove:
       Pulse.Lib.Reference.pts_to r __
   - In the context:
@@ -7,6 +8,7 @@
 
 * Info at IntroGhost.fst(71,2-71,4):
   - Expected failure:
+  - Tactic failed
   - Cannot prove:
       Pulse.Lib.Reference.pts_to r 0
   - In the context:
