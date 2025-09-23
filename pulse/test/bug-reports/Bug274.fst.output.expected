@@ -1,5 +1,6 @@
 * Info at Bug274.fst(29,4-29,15):
   - Expected failure:
+  - Tactic failed
   - Cannot prove any of:
       Pulse.Lib.Trade.trade _ _ ** Pulse.Lib.Trade.trade _ _
   - In the context:
@@ -36,6 +37,7 @@
 
 * Info at Bug274.fst(41,4-41,15):
   - Expected failure:
+  - Tactic failed
   - Cannot prove any of:
       Pulse.Lib.Trade.trade _ _ ** Pulse.Lib.Trade.trade _ _
   - In the context:
@@ -72,6 +74,7 @@
 
 * Info at Bug274.fst(73,4-73,12):
   - Expected failure:
+  - Tactic failed
   - Cannot prove any of:
       _ ** Pulse.Lib.Trade.trade _ _
   - In the context:

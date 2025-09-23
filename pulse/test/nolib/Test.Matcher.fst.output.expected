@@ -1,5 +1,6 @@
 * Info at Test.Matcher.fst(69,2-69,4):
   - Expected failure:
+  - Tactic failed
   - Cannot prove:
       Test.Matcher.fpts_to #Prims.int
         r

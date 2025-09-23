@@ -12,5 +12,5 @@
   - Reduction stopped at:
       reify (let _ = FStar.Stubs.Tactics.V2.Builtins.dump "a" in
           Test.RewriteBy.tac ())
-        "(((proofstate)))"
+        "(((ref proofstate)))"
 

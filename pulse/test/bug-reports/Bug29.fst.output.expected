@@ -1,5 +1,6 @@
 * Info at Bug29.fst(57,4-57,45):
   - Expected failure:
+  - Tactic failed
   - Cannot prove:
       Pulse.Lib.Reference.pts_to r v
   - In the context:

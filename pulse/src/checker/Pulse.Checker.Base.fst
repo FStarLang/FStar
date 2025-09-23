@@ -1179,8 +1179,8 @@ let infer_post #g #ctxt (r:checker_result_t g ctxt NoHint)
   let bs0 = bindings g in
   let dom_g = dom g in
   let fvs_t = freevars t in
-  let fail_fv_typ #a (x:string) 
-  : T.Tac a =
+  let fail_fv_typ (x:string) 
+  : T.Tac unit =
     fail_doc g (Some (T.range_of_term t))
         [Pulse.PP.text "Could not infer a type for this block; the return type `";
           Pulse.PP.text (T.term_to_string t); 

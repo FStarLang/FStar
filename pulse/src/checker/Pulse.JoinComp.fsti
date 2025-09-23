@@ -19,12 +19,6 @@ module Pulse.JoinComp
 open Pulse.Syntax
 open Pulse.Typing
 module T = FStar.Tactics.V2
-effect TacS (a:Type) (pre : Type0) (post : (_:a{pre}) -> Type0) =
-  Tactics.TacH a (requires (fun _ -> pre))
-                 (ensures (fun _ r -> pre /\ (
-                                      match r with
-                                      | Tactics.Result.Success r _ -> post r
-                                      | _ -> True))) // does not guarantee anything on failure
 
 val join_post #g #hyp #b
     (p1:post_hint_for_env (g_with_eq g hyp b tm_true))
@@ -41,7 +35,7 @@ val join_comps
   (c_else:comp_st)
   (e_else_typing:st_typing g_else e_else c_else)
   (post:post_hint_t)
-: TacS (c:comp_st &
+: T.TacH (c:comp_st &
         st_typing g_then e_then c &
         st_typing g_else e_else c)
     (requires

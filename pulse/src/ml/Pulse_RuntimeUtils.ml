@@ -3,8 +3,7 @@ type context = ((string * FStarC_Range.range option) list) (* FStar_Sealed.seale
 let extend_context (s:string) (r:FStarC_Range.range option) (c:context) = (s,r)::c
 module TR = FStarC_Tactics_Result
 
-type ('a,'wp) tac_repr = FStarC_Tactics_Types.proofstate -> 'a TR.__result
-type 'a utac = ('a, unit) tac_repr 
+type 'a utac = 'a FStarC_Tactics_Monad.tac
 
 let ctxt_elt_as_string (s, r) =
     match r with
@@ -13,10 +12,7 @@ let ctxt_elt_as_string (s, r) =
       "@" ^ FStarC_Range.string_of_range r ^ ": " ^ s
 let rec print_context (c:context) : string utac =
   fun ps ->
-    TR.Success (
-      String.concat "\n>" (List.map ctxt_elt_as_string c),
-      ps
-    )
+    String.concat "\n>" (List.map ctxt_elt_as_string c)
 let rec with_context (c:context) (f: unit -> 'a utac) : 'a utac =
   fun ps ->
     match c with
@@ -206,14 +202,6 @@ let whnf_lax (g:TcEnv.env) (t:S.term) : S.term =
 let hnf_lax (g:TcEnv.env) (t:S.term) : S.term =
   FStarC_TypeChecker_Normalize.normalize [TcEnv.Unascribe; TcEnv.Primops; TcEnv.HNF; TcEnv.UnfoldUntil S.delta_constant; TcEnv.Beta] g t
 
-let norm_well_typed_term_aux
-      (g:TcEnv.env)
-      (t:S.term)
-      (steps:FStarC_NormSteps.norm_step list)
-  = let steps = FStarC_TypeChecker_Cfg.translate_norm_steps steps in
-    let t' = FStarC_TypeChecker_Normalize.normalize (TcEnv.Unascribe::steps) g t in
-    FStar_Pervasives.Mkdtuple3 (t', (), ())
-
 let norm_well_typed_term      
       (g:TcEnv.env)
       (t:S.term)
@@ -221,16 +209,18 @@ let norm_well_typed_term
       (k:_)
       (typing:_)
       (steps:FStarC_NormSteps.norm_step list)
-      (ps:_)
-  = let t' = norm_well_typed_term_aux g t steps in
-    FStarC_Tactics_Result.Success (t', ps)
+  : ((S.term, unit, unit) Fstar_pluginlib.FStar_Pervasives.dtuple3) utac
+  = fun ps ->
+    let steps = FStarC_TypeChecker_Cfg.translate_norm_steps steps in
+    let t' = FStarC_TypeChecker_Normalize.normalize (TcEnv.Unascribe::steps) g t in
+    Fstar_pluginlib.FStar_Pervasives.Mkdtuple3 (t', (), ())
 
 let add_attribute (s:S.sigelt) (x:S.attribute) =
   { s with sigattrs = x::s.sigattrs }
 let add_noextract_qual (s:S.sigelt) =
   { s with sigquals = S.NoExtract::s.sigquals }
-let get_attributes (s:S.sigelt) (ps:_) =
-  FStarC_Tactics_Result.Success (s.sigattrs, ps)
+let get_attributes (s:S.sigelt) : _ utac = fun ps ->
+  s.sigattrs
 
 let must_erase_for_extraction (g:FStarC_Reflection_Types.env) (ty:FStarC_Syntax_Syntax.term) =
   FStarC_TypeChecker_Util.must_erase_for_extraction g ty

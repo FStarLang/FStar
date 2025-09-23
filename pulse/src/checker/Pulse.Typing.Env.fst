@@ -459,7 +459,6 @@ let info (g:env) (r:option range) (msg:string) =
 let fail_doc_with_subissues #a (g:env) (ro : option range)
   (sub : list Issue.issue)
   (msg : list document)
-  : T.TacH a (requires fun _ -> True) (ensures fun _ r -> FStar.Tactics.Result.Failed? r)
 =
   (* If for whatever reason `sub` is empty, F* will handle it well
   and a generic error message will be displayed *)

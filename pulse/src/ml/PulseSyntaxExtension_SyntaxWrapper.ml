@@ -238,9 +238,7 @@ let tac_to_string (env:Env.env) f =
                 []
                 []
     in
-    match f ps with
-    | FStarC_Tactics_Result.Success (x, _) -> x
-    | FStarC_Tactics_Result.Failed (exn, _) -> failwith (print_exn exn)
+    f (ref ps)
 
 let binder_to_string (env:Env.env) (b:binder)
   : string
