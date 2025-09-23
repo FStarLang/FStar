@@ -513,6 +513,7 @@ stage0_new: .stage2.src.touch
 	rm -rf "$(TO)/ulib.pluginml"  # we won't build plugins against stage0
 	rm -rf "$(TO)/dune/libplugin" # idem
 	rm -rf "$(TO)/dune/libapp"    # we won't even build apps
+	rm -rf "$(TO)/dune/tests"     # we won't build tests
 
 bump-stage0: stage0_new
 	$(call bold_msg, "BUMP!")

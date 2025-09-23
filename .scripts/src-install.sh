@@ -13,6 +13,10 @@ PREFIX="$2"
 mkdir -p "$PREFIX"
 PREFIX="$(realpath "$PREFIX")"
 
+# The tests.ml directory may not exist after a build, and rsync
+# in src-install will complain if so. Create it just in case.
+mkdir -p "${BROOT}/tests.ml"
+
 # Note: we must exclude everything in the Dune build directories, since
 # if some files "vanish" during this copy, rsync will fail (even if
 # ignored). We could also copy everything over and then remove the
