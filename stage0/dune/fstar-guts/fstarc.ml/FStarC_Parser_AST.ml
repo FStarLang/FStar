@@ -747,7 +747,6 @@ type qualifier =
   | Noeq 
   | Unopteq 
   | Assumption 
-  | DefaultEffect 
   | TotalEffect 
   | Effect_qual 
   | New 
@@ -769,9 +768,6 @@ let (uu___is_Unopteq : qualifier -> Prims.bool) =
   fun projectee -> match projectee with | Unopteq -> true | uu___ -> false
 let (uu___is_Assumption : qualifier -> Prims.bool) =
   fun projectee -> match projectee with | Assumption -> true | uu___ -> false
-let (uu___is_DefaultEffect : qualifier -> Prims.bool) =
-  fun projectee ->
-    match projectee with | DefaultEffect -> true | uu___ -> false
 let (uu___is_TotalEffect : qualifier -> Prims.bool) =
   fun projectee ->
     match projectee with | TotalEffect -> true | uu___ -> false
@@ -869,6 +865,7 @@ type pragma =
   | PopOptions 
   | RestartSolver 
   | PrintEffectsGraph 
+  | Check of term 
 let (uu___is_ShowOptions : pragma -> Prims.bool) =
   fun projectee ->
     match projectee with | ShowOptions -> true | uu___ -> false
@@ -897,6 +894,10 @@ let (uu___is_RestartSolver : pragma -> Prims.bool) =
 let (uu___is_PrintEffectsGraph : pragma -> Prims.bool) =
   fun projectee ->
     match projectee with | PrintEffectsGraph -> true | uu___ -> false
+let (uu___is_Check : pragma -> Prims.bool) =
+  fun projectee -> match projectee with | Check _0 -> true | uu___ -> false
+let (__proj__Check__item___0 : pragma -> term) =
+  fun projectee -> match projectee with | Check _0 -> _0
 type dep_scan_callbacks =
   {
   scan_term: term -> unit ;
@@ -2627,6 +2628,8 @@ let (string_of_pragma : pragma -> Prims.string) =
     | PopOptions -> "pop-options"
     | RestartSolver -> "restart-solver"
     | PrintEffectsGraph -> "print-effects-graph"
+    | Check t ->
+        let uu___1 = term_to_string t in Prims.strcat "check " uu___1
 let (restriction_to_string :
   FStarC_Syntax_Syntax.restriction -> Prims.string) =
   fun uu___ ->

@@ -30,6 +30,8 @@ let (lazy_chooser :
           FStarC_Reflection_V2_Embeddings.unfold_lazy_universe i
       | FStarC_Syntax_Syntax.Lazy_proofstate ->
           FStarC_Tactics_Embedding.unfold_lazy_proofstate i
+      | FStarC_Syntax_Syntax.Lazy_ref_proofstate ->
+          FStarC_Tactics_Embedding.unfold_lazy_ref_proofstate i
       | FStarC_Syntax_Syntax.Lazy_goal ->
           FStarC_Tactics_Embedding.unfold_lazy_goal i
       | FStarC_Syntax_Syntax.Lazy_doc ->

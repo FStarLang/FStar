@@ -62,8 +62,12 @@ install_lib_src:
 
 install_lib: check_lib install_lib_src
 	$(call msg, "INSTALL LIB")
-	@# Install library checked files
-	cp -T -H -p -r ulib.checked out/lib/fstar/ulib.checked
+	@# Install library checked files. NOTE: We use /. at the end of the
+	@# src so that, if the target already exists as a directory, we copy
+	@# the *contents* of ulib.checked into it, instead of creating another
+	@# ulib.checked under it. In Linux, this can be avoided with the -T
+	@# flag, but MacOS does not have it.
+	cp -H -p -r ulib.checked/. out/lib/fstar/ulib.checked
 
 check_fstarc: install_bin
 	$(call msg, "CHECK FSTARC")
@@ -83,8 +87,9 @@ install_fstarc: check_fstarc
 	$(call msg, "INSTALL FSTARC")
 	@# Install checked files for FStarC
 	mkdir -p out/lib/fstar/fstarc/
-	cp -T -H -p -r src               out/lib/fstar/fstarc/src
-	cp -T -H -p -r fstarc.checked    out/lib/fstar/fstarc/src.checked
+	@# See note about /. above
+	cp -H -p -r src/.               out/lib/fstar/fstarc/src
+	cp -H -p -r fstarc.checked/.    out/lib/fstar/fstarc/src.checked
 	echo 'src'          > out/lib/fstar/fstarc/fstar.include
 	echo 'src.checked' >> out/lib/fstar/fstarc/fstar.include
 
@@ -118,5 +123,5 @@ package:
 	.scripts/bin-install.sh pkgtmp/fstar
 	.scripts/mk-package.sh pkgtmp fstar$(FSTAR_TAG)
 ## LINES BELOW ADDED BY src-install.sh
-export FSTAR_COMMITDATE=2025-08-16 14:44:30 -0700
-export FSTAR_COMMIT=9280e3f71d25d9bff0104011267bc3e94dc30813
+export FSTAR_COMMITDATE=2025-09-23 16:13:55 -0700
+export FSTAR_COMMIT=7c0b15def3d33af7d2134a18624d73cedf910425

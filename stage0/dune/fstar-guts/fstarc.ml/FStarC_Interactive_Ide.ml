@@ -642,7 +642,7 @@ let (buffer_input_queries :
 let (read_interactive_query :
   FStarC_Interactive_Ide_Types.repl_state ->
     (FStarC_Interactive_Ide_Types.query *
-      FStarC_Interactive_Ide_Types.repl_state))
+      FStarC_Interactive_Ide_Types.repl_state) FStar_Pervasives_Native.option)
   =
   fun st ->
     match st.FStarC_Interactive_Ide_Types.repl_buffered_input_queries with
@@ -651,32 +651,35 @@ let (read_interactive_query :
           FStarC_Util.read_line st.FStarC_Interactive_Ide_Types.repl_stdin in
         (match uu___ with
          | FStar_Pervasives_Native.None ->
-             (FStarC_Util.kill_all (); FStarC_Effect.exit Prims.int_zero)
+             (FStarC_Util.kill_all (); FStar_Pervasives_Native.None)
          | FStar_Pervasives_Native.Some line ->
-             let uu___1 = parse_interactive_query line in (uu___1, st))
+             let uu___1 =
+               let uu___2 = parse_interactive_query line in (uu___2, st) in
+             FStar_Pervasives_Native.Some uu___1)
     | q::qs ->
-        (q,
-          {
-            FStarC_Interactive_Ide_Types.repl_line =
-              (st.FStarC_Interactive_Ide_Types.repl_line);
-            FStarC_Interactive_Ide_Types.repl_column =
-              (st.FStarC_Interactive_Ide_Types.repl_column);
-            FStarC_Interactive_Ide_Types.repl_fname =
-              (st.FStarC_Interactive_Ide_Types.repl_fname);
-            FStarC_Interactive_Ide_Types.repl_deps_stack =
-              (st.FStarC_Interactive_Ide_Types.repl_deps_stack);
-            FStarC_Interactive_Ide_Types.repl_curmod =
-              (st.FStarC_Interactive_Ide_Types.repl_curmod);
-            FStarC_Interactive_Ide_Types.repl_env =
-              (st.FStarC_Interactive_Ide_Types.repl_env);
-            FStarC_Interactive_Ide_Types.repl_stdin =
-              (st.FStarC_Interactive_Ide_Types.repl_stdin);
-            FStarC_Interactive_Ide_Types.repl_names =
-              (st.FStarC_Interactive_Ide_Types.repl_names);
-            FStarC_Interactive_Ide_Types.repl_buffered_input_queries = qs;
-            FStarC_Interactive_Ide_Types.repl_lang =
-              (st.FStarC_Interactive_Ide_Types.repl_lang)
-          })
+        FStar_Pervasives_Native.Some
+          (q,
+            {
+              FStarC_Interactive_Ide_Types.repl_line =
+                (st.FStarC_Interactive_Ide_Types.repl_line);
+              FStarC_Interactive_Ide_Types.repl_column =
+                (st.FStarC_Interactive_Ide_Types.repl_column);
+              FStarC_Interactive_Ide_Types.repl_fname =
+                (st.FStarC_Interactive_Ide_Types.repl_fname);
+              FStarC_Interactive_Ide_Types.repl_deps_stack =
+                (st.FStarC_Interactive_Ide_Types.repl_deps_stack);
+              FStarC_Interactive_Ide_Types.repl_curmod =
+                (st.FStarC_Interactive_Ide_Types.repl_curmod);
+              FStarC_Interactive_Ide_Types.repl_env =
+                (st.FStarC_Interactive_Ide_Types.repl_env);
+              FStarC_Interactive_Ide_Types.repl_stdin =
+                (st.FStarC_Interactive_Ide_Types.repl_stdin);
+              FStarC_Interactive_Ide_Types.repl_names =
+                (st.FStarC_Interactive_Ide_Types.repl_names);
+              FStarC_Interactive_Ide_Types.repl_buffered_input_queries = qs;
+              FStarC_Interactive_Ide_Types.repl_lang =
+                (st.FStarC_Interactive_Ide_Types.repl_lang)
+            })
 let json_of_opt :
   'uuuuu .
     ('uuuuu -> FStarC_Json.json) ->
@@ -2999,7 +3002,8 @@ let rec (go : FStarC_Interactive_Ide_Types.repl_state -> Prims.int) =
   fun st ->
     let uu___ = read_interactive_query st in
     match uu___ with
-    | (query, st1) ->
+    | FStar_Pervasives_Native.None -> Prims.int_zero
+    | FStar_Pervasives_Native.Some (query, st1) ->
         let uu___1 = validate_and_run_query st1 query in
         (match uu___1 with
          | ((status, responses), state_opt) ->
@@ -3054,15 +3058,14 @@ let (build_initial_repl_state :
        FStarC_Interactive_Ide_Types.repl_buffered_input_queries = [];
        FStarC_Interactive_Ide_Types.repl_lang = []
      })
-let interactive_mode' :
-  'uuuuu . FStarC_Interactive_Ide_Types.repl_state -> 'uuuuu =
+let (interactive_mode' : FStarC_Interactive_Ide_Types.repl_state -> unit) =
   fun init_st ->
     write_hello ();
     (let exit_code =
        let fn =
          let uu___1 = FStarC_Options.file_list () in FStarC_List.hd uu___1 in
        FStarC_SMTEncoding_Solver.with_hints_db fn (fun uu___1 -> go init_st) in
-     FStarC_Effect.exit exit_code)
+     if exit_code <> Prims.int_zero then FStarC_Effect.exit exit_code else ())
 let (interactive_mode : Prims.string -> unit) =
   fun filename ->
     install_ide_mode_hooks FStarC_Interactive_JsonHelper.write_json;

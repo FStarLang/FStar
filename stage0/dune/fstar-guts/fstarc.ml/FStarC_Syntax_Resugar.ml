@@ -2907,17 +2907,23 @@ let (resugar_qualifier :
         FStar_Pervasives_Native.Some FStarC_Parser_AST.Effect_qual
     | FStarC_Syntax_Syntax.OnlyName -> FStar_Pervasives_Native.None
 let (resugar_pragma :
-  FStarC_Syntax_Syntax.pragma -> FStarC_Parser_AST.pragma) =
-  fun uu___ ->
-    match uu___ with
-    | FStarC_Syntax_Syntax.ShowOptions -> FStarC_Parser_AST.ShowOptions
-    | FStarC_Syntax_Syntax.SetOptions s -> FStarC_Parser_AST.SetOptions s
-    | FStarC_Syntax_Syntax.ResetOptions s -> FStarC_Parser_AST.ResetOptions s
-    | FStarC_Syntax_Syntax.PushOptions s -> FStarC_Parser_AST.PushOptions s
-    | FStarC_Syntax_Syntax.PopOptions -> FStarC_Parser_AST.PopOptions
-    | FStarC_Syntax_Syntax.RestartSolver -> FStarC_Parser_AST.RestartSolver
-    | FStarC_Syntax_Syntax.PrintEffectsGraph ->
-        FStarC_Parser_AST.PrintEffectsGraph
+  FStarC_Syntax_DsEnv.env ->
+    FStarC_Syntax_Syntax.pragma -> FStarC_Parser_AST.pragma)
+  =
+  fun env ->
+    fun uu___ ->
+      match uu___ with
+      | FStarC_Syntax_Syntax.ShowOptions -> FStarC_Parser_AST.ShowOptions
+      | FStarC_Syntax_Syntax.SetOptions s -> FStarC_Parser_AST.SetOptions s
+      | FStarC_Syntax_Syntax.ResetOptions s ->
+          FStarC_Parser_AST.ResetOptions s
+      | FStarC_Syntax_Syntax.PushOptions s -> FStarC_Parser_AST.PushOptions s
+      | FStarC_Syntax_Syntax.PopOptions -> FStarC_Parser_AST.PopOptions
+      | FStarC_Syntax_Syntax.RestartSolver -> FStarC_Parser_AST.RestartSolver
+      | FStarC_Syntax_Syntax.PrintEffectsGraph ->
+          FStarC_Parser_AST.PrintEffectsGraph
+      | FStarC_Syntax_Syntax.Check t ->
+          let uu___1 = resugar_term' env t in FStarC_Parser_AST.Check uu___1
 let (drop_n_bs :
   Prims.int -> FStarC_Syntax_Syntax.term -> FStarC_Syntax_Syntax.term) =
   fun n ->
@@ -3572,7 +3578,10 @@ let (resugar_sigelt' :
                  FStar_Pervasives_Native.Some uu___1)
         | FStarC_Syntax_Syntax.Sig_pragma p ->
             let uu___ =
-              decl'_to_decl se (FStarC_Parser_AST.Pragma (resugar_pragma p)) in
+              let uu___1 =
+                let uu___2 = resugar_pragma env p in
+                FStarC_Parser_AST.Pragma uu___2 in
+              decl'_to_decl se uu___1 in
             FStar_Pervasives_Native.Some uu___
         | FStarC_Syntax_Syntax.Sig_declare_typ
             { FStarC_Syntax_Syntax.lid2 = lid;

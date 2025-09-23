@@ -106,6 +106,7 @@ let (inspect_const :
         let uu___ = FStarC_Ident.path_of_lid l in
         FStarC_Reflection_V2_Data.C_Reflect uu___
     | FStarC_Const.Const_real s -> FStarC_Reflection_V2_Data.C_Real s
+    | FStarC_Const.Const_char c1 -> FStarC_Reflection_V2_Data.C_Char c1
     | uu___ ->
         let uu___1 =
           let uu___2 =
@@ -429,6 +430,7 @@ let (pack_const :
         let uu___ = FStarC_Ident.lid_of_path ns FStarC_Range_Type.dummyRange in
         FStarC_Const.Const_reflect uu___
     | FStarC_Reflection_V2_Data.C_Real r -> FStarC_Const.Const_real r
+    | FStarC_Reflection_V2_Data.C_Char c1 -> FStarC_Const.Const_char c1
 let rec (pack_pat :
   FStarC_Reflection_V2_Data.pattern -> FStarC_Syntax_Syntax.pat) =
   fun p ->
