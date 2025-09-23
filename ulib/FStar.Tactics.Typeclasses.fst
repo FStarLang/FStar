@@ -104,7 +104,7 @@ for them and report proper errors. *)
 exception Next
 
 let skip #a (st:st_t) (s : string)
-  : TAC a (fun ps post -> post (FStar.Stubs.Tactics.Result.Failed Next ps))
+  : TacH a True (fun _ -> False)
   = if st.dbg then
       print ("skip: " ^ s);
     raise Next

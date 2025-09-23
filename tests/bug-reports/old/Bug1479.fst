@@ -16,13 +16,10 @@
 module Bug1479
 
 open FStar.Tactics.V2
-open FStar.Tactics.Result
 
-assume val fail : #a:Type -> m:string -> TAC a (fun ps post -> post (Failed m ps))
+assume val fail : #a:Type -> m:string -> TAC a (fun post -> True)
 
-let guard b : TAC unit (fun ps post -> if b
-                                       then post (Success () ps)
-                                       else forall m. post (Failed m ps)) =
+let guard b : TAC unit (fun post -> if b then post () else True) =
    if b
    then ()
    else fail "guard failed"
