@@ -265,19 +265,8 @@ let (z3_cmd_and_args : unit -> (Prims.string * Prims.string Prims.list)) =
             (Obj.magic FStarC_Errors_Msg.is_error_message_list_doc)
             (Obj.magic uu___2) in
     let cmd_args =
-      let uu___1 =
-        let uu___2 =
-          let uu___3 =
-            let uu___4 =
-              let uu___5 =
-                let uu___6 = FStarC_Options.z3_seed () in
-                FStarC_Class_Show.show FStarC_Class_Show.showable_int uu___6 in
-              FStarC_Format.fmt1 "smt.random_seed=%s" uu___5 in
-            [uu___4] in
-          "-in" :: uu___3 in
-        "-smt2" :: uu___2 in
-      let uu___2 = FStarC_Options.z3_cliopt () in
-      FStarC_List.append uu___1 uu___2 in
+      let uu___1 = FStarC_Options.z3_cliopt () in
+      FStarC_List.append ["-smt2"; "-in"] uu___1 in
     (cmd, cmd_args)
 let (warn_handler : FStarC_Errors_Msg.error_message -> Prims.string -> unit)
   =
@@ -1130,10 +1119,17 @@ let (mk_input :
       let options1 =
         let uu___ =
           let uu___1 =
+            let uu___2 = FStarC_Options.z3_seed () in
+            FStarC_Class_Show.show FStarC_Class_Show.showable_int uu___2 in
+          FStarC_Format.fmt1 "(set-option :random-seed %s)\n" uu___1 in
+        Prims.strcat options uu___ in
+      let options2 =
+        let uu___ =
+          let uu___1 =
             let uu___2 = FStarC_Options.z3_smtopt () in
             FStarC_String.concat "\n" uu___2 in
           Prims.strcat uu___1 "\n\n" in
-        Prims.strcat options uu___ in
+        Prims.strcat options1 uu___ in
       (let uu___1 = FStarC_Options.print_z3_statistics () in
        if uu___1 then context_profile theory1 else ());
       (let uu___1 =
@@ -1154,7 +1150,7 @@ let (mk_input :
            match uu___3 with
            | (prefix, check_sat, suffix) ->
                let pp =
-                 FStarC_List.map (FStarC_SMTEncoding_Term.declToSmt options1) in
+                 FStarC_List.map (FStarC_SMTEncoding_Term.declToSmt options2) in
                let suffix1 = check_sat :: suffix in
                let ps_lines = pp prefix in
                let ss_lines = pp suffix1 in
@@ -1166,7 +1162,7 @@ let (mk_input :
                  then
                    let uu___5 =
                      FStarC_List.map
-                       (FStarC_SMTEncoding_Term.declToSmt_no_caps options1)
+                       (FStarC_SMTEncoding_Term.declToSmt_no_caps options2)
                        prefix in
                    FStarC_String.concat "\n" uu___5
                  else ps in
@@ -1194,7 +1190,7 @@ let (mk_input :
          else
            (let uu___4 =
               let uu___5 =
-                FStarC_List.map (FStarC_SMTEncoding_Term.declToSmt options1)
+                FStarC_List.map (FStarC_SMTEncoding_Term.declToSmt options2)
                   theory1 in
               FStarC_String.concat "\n" uu___5 in
             (uu___4, FStar_Pervasives_Native.None)) in

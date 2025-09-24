@@ -217,7 +217,6 @@ let (triggers_of_term : FStarC_SMTEncoding_Term.term -> triggers_set) =
                                 (Obj.magic out) (Obj.magic uu___4))) uu___5
                         uu___4) uu___3 disjunct) triggers1
       | FStarC_SMTEncoding_Term.Labeled (t2, uu___, uu___1) -> aux t2
-      | FStarC_SMTEncoding_Term.LblPos (t2, uu___) -> aux t2
       | uu___ -> [] in
     aux t
 let (maybe_add_ambient :

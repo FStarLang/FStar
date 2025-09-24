@@ -190,76 +190,27 @@ let return : 'a . 'a -> 'a tm =
   fun uu___ ->
     (fun x ->
        fun i ->
-         Obj.magic
-           (FStar_Tactics_Effect.lift_div_tac
-              (fun uu___ -> Fstarcompiler.FStar_Pervasives.Inr (x, i))))
+         Obj.magic (fun uu___ -> Fstarcompiler.FStar_Pervasives.Inr (x, i)))
       uu___
 let op_let_Bang : 'a 'b . 'a tm -> ('a -> 'b tm) -> 'b tm =
   fun m ->
     fun f ->
       fun i ->
-        let uu___ = m i in
-        FStar_Tactics_Effect.tac_bind
-          (FStar_Sealed.seal
-             (Obj.magic
-                (FStar_Range.mk_range "FStar.Reflection.V2.Arith.fst"
-                   (Prims.of_int (77)) (Prims.of_int (19))
-                   (Prims.of_int (77)) (Prims.of_int (22)))))
-          (FStar_Sealed.seal
-             (Obj.magic
-                (FStar_Range.mk_range "FStar.Reflection.V2.Arith.fst"
-                   (Prims.of_int (77)) (Prims.of_int (13))
-                   (Prims.of_int (79)) (Prims.of_int (34)))))
-          (Obj.magic uu___)
-          (fun uu___1 ->
-             (fun uu___1 ->
-                match uu___1 with
-                | Fstarcompiler.FStar_Pervasives.Inr (x, j) ->
-                    Obj.magic (Obj.repr (f x j))
-                | s ->
-                    Obj.magic
-                      (Obj.repr
-                         (FStar_Tactics_Effect.lift_div_tac
-                            (fun uu___2 ->
-                               Fstarcompiler.FStar_Pervasives.Inl
-                                 (FStar_Pervasives.__proj__Inl__item__v s)))))
-               uu___1)
+        fun ps ->
+          let x = m i ps in
+          match x with
+          | Fstarcompiler.FStar_Pervasives.Inr (x1, j) -> f x1 j ps
+          | s ->
+              Fstarcompiler.FStar_Pervasives.Inl
+                (FStar_Pervasives.__proj__Inl__item__v s)
 let lift :
   'a 'b . ('a -> ('b, unit) FStar_Tactics_Effect.tac_repr) -> 'a -> 'b tm =
   fun f ->
     fun x ->
       fun st1 ->
-        let uu___ =
-          let uu___1 = f x in
-          FStar_Tactics_Effect.tac_bind
-            (FStar_Sealed.seal
-               (Obj.magic
-                  (FStar_Range.mk_range "FStar.Reflection.V2.Arith.fst"
-                     (Prims.of_int (83)) (Prims.of_int (9))
-                     (Prims.of_int (83)) (Prims.of_int (12)))))
-            (FStar_Sealed.seal
-               (Obj.magic
-                  (FStar_Range.mk_range "FStar.Reflection.V2.Arith.fst"
-                     (Prims.of_int (83)) (Prims.of_int (8))
-                     (Prims.of_int (83)) (Prims.of_int (17)))))
-            (Obj.magic uu___1)
-            (fun uu___2 ->
-               FStar_Tactics_Effect.lift_div_tac
-                 (fun uu___3 -> (uu___2, st1))) in
-        FStar_Tactics_Effect.tac_bind
-          (FStar_Sealed.seal
-             (Obj.magic
-                (FStar_Range.mk_range "FStar.Reflection.V2.Arith.fst"
-                   (Prims.of_int (83)) (Prims.of_int (8)) (Prims.of_int (83))
-                   (Prims.of_int (17)))))
-          (FStar_Sealed.seal
-             (Obj.magic
-                (FStar_Range.mk_range "FStar.Reflection.V2.Arith.fst"
-                   (Prims.of_int (83)) (Prims.of_int (4)) (Prims.of_int (83))
-                   (Prims.of_int (17))))) (Obj.magic uu___)
-          (fun uu___1 ->
-             FStar_Tactics_Effect.lift_div_tac
-               (fun uu___2 -> Fstarcompiler.FStar_Pervasives.Inr uu___1))
+        fun ps ->
+          let x1 = let x2 = f x ps in (x2, st1) in
+          Fstarcompiler.FStar_Pervasives.Inr x1
 let liftM : 'a 'b . ('a -> 'b) -> 'a tm -> 'b tm =
   fun f -> fun x -> op_let_Bang x (fun xx -> return (f xx))
 let liftM2 : 'a 'b 'c . ('a -> 'b -> 'c) -> 'a tm -> 'b tm -> 'c tm =
@@ -291,120 +242,48 @@ let rec find_idx :
            match l with
            | [] ->
                Obj.magic
-                 (Obj.repr
-                    (FStar_Tactics_Effect.lift_div_tac
-                       (fun uu___ -> FStar_Pervasives_Native.None)))
+                 (Obj.repr (fun uu___ -> FStar_Pervasives_Native.None))
            | x::xs ->
                Obj.magic
                  (Obj.repr
-                    (let uu___ = f x in
-                     FStar_Tactics_Effect.tac_bind
-                       (FStar_Sealed.seal
-                          (Obj.magic
-                             (FStar_Range.mk_range
-                                "FStar.Reflection.V2.Arith.fst"
-                                (Prims.of_int (108)) (Prims.of_int (11))
-                                (Prims.of_int (108)) (Prims.of_int (14)))))
-                       (FStar_Sealed.seal
-                          (Obj.magic
-                             (FStar_Range.mk_range
-                                "FStar.Reflection.V2.Arith.fst"
-                                (Prims.of_int (108)) (Prims.of_int (8))
-                                (Prims.of_int (113)) (Prims.of_int (16)))))
-                       (Obj.magic uu___)
-                       (fun uu___1 ->
-                          (fun uu___1 ->
-                             if uu___1
-                             then
-                               Obj.magic
-                                 (Obj.repr
-                                    (FStar_Tactics_Effect.lift_div_tac
-                                       (fun uu___2 ->
-                                          FStar_Pervasives_Native.Some
-                                            (Prims.int_zero, x))))
-                             else
-                               Obj.magic
-                                 (Obj.repr
-                                    (let uu___3 = find_idx f xs in
-                                     FStar_Tactics_Effect.tac_bind
-                                       (FStar_Sealed.seal
-                                          (Obj.magic
-                                             (FStar_Range.mk_range
-                                                "FStar.Reflection.V2.Arith.fst"
-                                                (Prims.of_int (110))
-                                                (Prims.of_int (25))
-                                                (Prims.of_int (110))
-                                                (Prims.of_int (38)))))
-                                       (FStar_Sealed.seal
-                                          (Obj.magic
-                                             (FStar_Range.mk_range
-                                                "FStar.Reflection.V2.Arith.fst"
-                                                (Prims.of_int (110))
-                                                (Prims.of_int (19))
-                                                (Prims.of_int (112))
-                                                (Prims.of_int (43)))))
-                                       (Obj.magic uu___3)
-                                       (fun uu___4 ->
-                                          match uu___4 with
-                                          | FStar_Pervasives_Native.None ->
-                                              FStar_Tactics_Effect.lift_div_tac
-                                                (fun uu___5 ->
-                                                   FStar_Pervasives_Native.None)
-                                          | FStar_Pervasives_Native.Some
-                                              (i, x1) ->
-                                              FStar_Tactics_Effect.lift_div_tac
-                                                (fun uu___5 ->
-                                                   FStar_Pervasives_Native.Some
-                                                     ((i + Prims.int_one),
-                                                       x1)))))) uu___1))))
-        uu___1 uu___
+                    (fun ps ->
+                       let x1 = f x ps in
+                       if x1
+                       then FStar_Pervasives_Native.Some (Prims.int_zero, x)
+                       else
+                         (let x2 = find_idx f xs ps in
+                          match x2 with
+                          | FStar_Pervasives_Native.None ->
+                              FStar_Pervasives_Native.None
+                          | FStar_Pervasives_Native.Some (i, x3) ->
+                              FStar_Pervasives_Native.Some
+                                ((i + Prims.int_one), x3))))) uu___1 uu___
 let (atom : FStarC_Reflection_Types.term -> expr tm) =
   fun t ->
     fun uu___ ->
       match uu___ with
       | (n, atoms) ->
-          let uu___1 =
-            find_idx
-              (fun uu___2 ->
-                 (fun a ->
-                    Obj.magic
-                      (FStar_Tactics_Effect.lift_div_tac
-                         (fun uu___2 ->
-                            FStar_Reflection_TermEq_Simple.term_eq t a)))
-                   uu___2) atoms in
-          FStar_Tactics_Effect.tac_bind
-            (FStar_Sealed.seal
-               (Obj.magic
-                  (FStar_Range.mk_range "FStar.Reflection.V2.Arith.fst"
-                     (Prims.of_int (116)) (Prims.of_int (10))
-                     (Prims.of_int (116)) (Prims.of_int (47)))))
-            (FStar_Sealed.seal
-               (Obj.magic
-                  (FStar_Range.mk_range "FStar.Reflection.V2.Arith.fst"
-                     (Prims.of_int (116)) (Prims.of_int (4))
-                     (Prims.of_int (118)) (Prims.of_int (57)))))
-            (Obj.magic uu___1)
-            (fun uu___2 ->
-               match uu___2 with
-               | FStar_Pervasives_Native.None ->
-                   FStar_Tactics_Effect.lift_div_tac
-                     (fun uu___3 ->
-                        Fstarcompiler.FStar_Pervasives.Inr
-                          ((Atom (n, t)),
-                            ((n + Prims.int_one), (t :: atoms))))
-               | FStar_Pervasives_Native.Some (i, t1) ->
-                   FStar_Tactics_Effect.lift_div_tac
-                     (fun uu___3 ->
-                        Fstarcompiler.FStar_Pervasives.Inr
-                          ((Atom (((n - Prims.int_one) - i), t1)),
-                            (n, atoms))))
+          (fun ps ->
+             let x =
+               find_idx
+                 (fun uu___1 ->
+                    (fun a ->
+                       Obj.magic
+                         (fun uu___1 ->
+                            FStar_Reflection_TermEq_Simple.term_eq t a))
+                      uu___1) atoms ps in
+             match x with
+             | FStar_Pervasives_Native.None ->
+                 Fstarcompiler.FStar_Pervasives.Inr
+                   ((Atom (n, t)), ((n + Prims.int_one), (t :: atoms)))
+             | FStar_Pervasives_Native.Some (i, t1) ->
+                 Fstarcompiler.FStar_Pervasives.Inr
+                   ((Atom (((n - Prims.int_one) - i), t1)), (n, atoms)))
 let fail : 'a . Prims.string -> 'a tm =
   fun uu___ ->
     (fun s ->
-       fun i ->
-         Obj.magic
-           (FStar_Tactics_Effect.lift_div_tac
-              (fun uu___ -> Fstarcompiler.FStar_Pervasives.Inl s))) uu___
+       fun i -> Obj.magic (fun uu___ -> Fstarcompiler.FStar_Pervasives.Inl s))
+      uu___
 let rec (as_arith_expr : FStarC_Reflection_Types.term -> expr tm) =
   fun t ->
     let uu___ = FStar_Reflection_V2_Collect.collect_app_ln t in
@@ -594,28 +473,14 @@ let run_tm :
         FStar_Tactics_Effect.tac_repr
   =
   fun m ->
-    let uu___ = m (Prims.int_zero, []) in
-    FStar_Tactics_Effect.tac_bind
-      (FStar_Sealed.seal
-         (Obj.magic
-            (FStar_Range.mk_range "FStar.Reflection.V2.Arith.fst"
-               (Prims.of_int (212)) (Prims.of_int (10)) (Prims.of_int (212))
-               (Prims.of_int (19)))))
-      (FStar_Sealed.seal
-         (Obj.magic
-            (FStar_Range.mk_range "FStar.Reflection.V2.Arith.fst"
-               (Prims.of_int (212)) (Prims.of_int (4)) (Prims.of_int (214))
-               (Prims.of_int (25))))) (Obj.magic uu___)
-      (fun uu___1 ->
-         match uu___1 with
-         | Fstarcompiler.FStar_Pervasives.Inr (x, uu___2) ->
-             FStar_Tactics_Effect.lift_div_tac
-               (fun uu___3 -> Fstarcompiler.FStar_Pervasives.Inr x)
-         | s ->
-             FStar_Tactics_Effect.lift_div_tac
-               (fun uu___2 ->
-                  Fstarcompiler.FStar_Pervasives.Inl
-                    (FStar_Pervasives.__proj__Inl__item__v s)))
+    fun ps ->
+      let x = m (Prims.int_zero, []) ps in
+      match x with
+      | Fstarcompiler.FStar_Pervasives.Inr (x1, uu___) ->
+          Fstarcompiler.FStar_Pervasives.Inr x1
+      | s ->
+          Fstarcompiler.FStar_Pervasives.Inl
+            (FStar_Pervasives.__proj__Inl__item__v s)
 let rec (expr_to_string : expr -> Prims.string) =
   fun e ->
     match e with

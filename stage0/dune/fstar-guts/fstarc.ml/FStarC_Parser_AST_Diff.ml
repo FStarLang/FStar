@@ -521,6 +521,8 @@ let (eq_pragma :
           true
       | (FStarC_Parser_AST.PrintEffectsGraph,
          FStarC_Parser_AST.PrintEffectsGraph) -> true
+      | (FStarC_Parser_AST.Check t11, FStarC_Parser_AST.Check t21) ->
+          eq_term t11 t21
       | uu___ -> false
 let (eq_qualifier :
   FStarC_Parser_AST.qualifier -> FStarC_Parser_AST.qualifier -> Prims.bool) =
@@ -531,8 +533,6 @@ let (eq_qualifier :
       | (FStarC_Parser_AST.Noeq, FStarC_Parser_AST.Noeq) -> true
       | (FStarC_Parser_AST.Unopteq, FStarC_Parser_AST.Unopteq) -> true
       | (FStarC_Parser_AST.Assumption, FStarC_Parser_AST.Assumption) -> true
-      | (FStarC_Parser_AST.DefaultEffect, FStarC_Parser_AST.DefaultEffect) ->
-          true
       | (FStarC_Parser_AST.TotalEffect, FStarC_Parser_AST.TotalEffect) ->
           true
       | (FStarC_Parser_AST.Effect_qual, FStarC_Parser_AST.Effect_qual) ->

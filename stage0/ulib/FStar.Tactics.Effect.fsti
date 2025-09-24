@@ -19,98 +19,59 @@ open FStar.Monotonic.Pure
 
 open FStar.Stubs.Reflection.Types
 open FStar.Stubs.Tactics.Types
-open FStar.Stubs.Tactics.Result
 
 (* This module is extracted, don't add any `assume val`s or extraction
  * will break. (`synth_by_tactic` is fine) *)
 
 type tac_wp_t0 (a:Type) =
-  proofstate -> (__result a -> Type0) -> Type0
+  (a -> Type0) -> Type0
 
 unfold
 let tac_wp_monotonic (#a:Type) (wp:tac_wp_t0 a) =
-  forall (ps:proofstate) (p q:__result a -> Type0).
-    (forall x. p x ==> q x) ==> (wp ps p ==> wp ps q)
+  forall (p q:a -> Type0).
+    (forall x. p x ==> q x) ==> (wp p ==> wp q)
 
 type tac_wp_t (a:Type) = wp:tac_wp_t0 a{tac_wp_monotonic wp}
 
 let tac_repr (a:Type) (wp:tac_wp_t a) =
-  ps0:proofstate -> DIV (__result a) (as_pure_wp (wp ps0))
+  ref_proofstate -> Dv a
 
 unfold
 let tac_return_wp (#a:Type) (x:a) : tac_wp_t a =
-  fun ps post -> post (Success x ps)
+  fun post -> post x
 
 (* monadic return *)
 let tac_return (a:Type) (x:a) : tac_repr a (tac_return_wp x) =
-  fun (s:proofstate) -> Success x s
+  fun _ -> x
 
 unfold
 let tac_bind_wp (#a #b:Type) (wp_f:tac_wp_t a) (wp_g:a -> tac_wp_t b) : tac_wp_t b =
-  fun ps post ->
-  wp_f ps (fun r ->
-           match r with
-           | Success x ps -> wp_g x ps post
-           | Failed ex ps -> post (Failed ex ps))
+  fun post -> wp_f (fun r -> wp_g r post)
 
 /// An optimization to name the continuation
 
 unfold
 let tac_wp_compact (a:Type) (wp:tac_wp_t a) : tac_wp_t a =
-  fun ps post ->
-  forall (k:__result a -> Type0). (forall (r:__result a).{:pattern (guard_free (k r))} post r ==> k r) ==> wp ps k
+  fun post ->
+  forall (k:a -> Type0). (forall (r:a).{:pattern (guard_free (k r))} post r ==> k r) ==> wp k
 
-
-/// tac_bind_interleave_begin is an ugly hack to get interface interleaving
-/// work with admit_smt_queries true for the bind combinator
-
-val tac_bind_interleave_begin : unit
-
-
-/// We cannot verify the bind combinator, since the body of bind
-///   does some operations on the proof state, with which we cannot prove
-///   that the proofstate is sequenced. Two ways to fix it:
-///
-/// 1. We separate the "meta" proofstate s.t. range, depth, etc. from the main
-///    proofstate, and then sequencing only applies to the main proofstate
-///
-/// 2. The pre and post of the TAC effect are just exception pre and post,
-///    since we can't prove much about the proofstate anyway, as it is
-///    mostly abstract
 
 (* monadic bind *)
-#push-options "--admit_smt_queries true"
 let tac_bind (a:Type) (b:Type)
   (wp_f:tac_wp_t a)
   (wp_g:a -> tac_wp_t b)
-  (r1 r2:range)
   (t1:tac_repr a wp_f)
   (t2:(x:a -> tac_repr b (wp_g x))) : tac_repr b (tac_wp_compact b (tac_bind_wp wp_f wp_g)) =
   fun ps ->
-  let ps = set_proofstate_range ps r1 in
-  let ps = incr_depth ps in
-  let r = t1 ps in
-  match r with
-  | Success a ps' ->
-    let ps' = set_proofstate_range ps' r2 in
-    // Force evaluation of __tracepoint q even on the interpreter
-    begin match tracepoint ps' with
-          | true -> t2 a (decr_depth ps')
-    end
-  | Failed e ps' -> Failed e ps'
-#pop-options
+  let x = t1 ps in
+  t2 x ps
 
-
-/// tac_bind_interleave_end is an ugly hack to get interface interleaving
-/// work with admit_smt_queries true for the bind combinator
-
-val tac_bind_interleave_end : unit
 
 unfold
 let tac_if_then_else_wp (#a:Type) (wp_then:tac_wp_t a) (wp_else:tac_wp_t a) (b:bool)
   : tac_wp_t a
-  = fun ps post -> (b ==> wp_then ps post) /\
-                ((~ b) ==> wp_else ps post)
+  = fun post -> (b ==> wp_then post) /\
+                ((~ b) ==> wp_else post)
 
 let tac_if_then_else (a:Type)
   (wp_then:tac_wp_t a)
@@ -126,7 +87,7 @@ let tac_subcomp (a:Type)
   (wp_g:tac_wp_t a)
   (f:tac_repr a wp_f)
   : Pure (tac_repr a wp_g)
-         (requires forall ps p. wp_g ps p ==> wp_f ps p)
+         (requires forall p. wp_g p ==> wp_f p)
          (ensures fun _ -> True)
   = f
 
@@ -134,15 +95,12 @@ let tac_close (a b:Type)
   (wp_f:b -> tac_wp_t a)
   (f:(x:b -> tac_repr a (wp_f x))) =
 
-  tac_repr a (fun ps post -> forall (x:b). wp_f x ps post)
+  tac_repr a (fun post -> forall (x:b). wp_f x post)
 
 /// default effect is Tac : meaning, unannotated TAC functions will be
 ///                         typed as Tac a
-///
-/// And the bind combinator has range arguments
-///   that will be provided when the effect is reified
 
-[@@ default_effect "FStar.Tactics.Effect.Tac"; bind_has_range_args]
+[@@ default_effect "FStar.Tactics.Effect.Tac"]
 reflectable
 effect {
   TAC (a:Type) (wp:tac_wp_t a)
@@ -155,41 +113,35 @@ effect {
 }
 
 (* Hoare variant *)
-effect TacH (a:Type) (pre : proofstate -> Tot Type0) (post : proofstate -> __result a -> Tot Type0) =
-    TAC a (fun ps post' -> pre ps /\ (forall r. post ps r ==> post' r))
+effect TacH (a:Type) (pre : Type0) (post : a -> Tot Type0) =
+    TAC a (fun post' -> pre /\ (forall r. post r ==> post' r))
 
 (* "Total" variant *)
-effect Tac (a:Type) = TacH a (requires (fun _ -> True)) (ensures (fun _ _ -> True))
+effect Tac (a:Type) = TacH a (requires True) (ensures fun _ -> True)
 
 (* Metaprograms that succeed *)
-effect TacS (a:Type) = TacH a (requires (fun _ -> True)) (ensures (fun _ps r -> Success? r))
+effect TacS (a:Type) = Tac a
 
 (* Always succeed, no effect *)
-effect TacRO (a:Type) = TAC a (fun ps post -> forall r. post (Success r ps))
+effect TacRO (a:Type) = Tac a
 
 (* A variant that doesn't prove totality (nor type safety!) *)
-effect TacF (a:Type) = TacH a (requires (fun _ -> False)) (ensures (fun _ _ -> True))
+effect TacF (a:Type) = TacH a (requires False) (ensures fun _ -> True)
 
 unfold
 let lift_div_tac_wp (#a:Type) (wp:pure_wp a) : tac_wp_t a =
   elim_pure_wp_monotonicity wp;  
-  fun ps p -> wp (fun x -> p (Success x ps))
+  fun p -> wp (fun x -> p x)
 
+val lift_div_tac_interleave_begin : unit
+#push-options "--admit_smt_queries true"
 let lift_div_tac (a:Type) (wp:pure_wp a) (f:unit -> DIV a wp)
   : tac_repr a (lift_div_tac_wp wp)
-  = elim_pure_wp_monotonicity wp;
-    fun ps -> Success (f ()) ps
+  = fun _ -> f ()
+#pop-options
+val lift_div_tac_interleave_end : unit
 
 sub_effect DIV ~> TAC = lift_div_tac
-
-let get ()
-  : TAC proofstate (fun ps post -> post (Success ps ps))
-  = TAC?.reflect (fun ps -> Success ps ps)
-
-let raise (#a:Type) (e:exn)
-  : TAC a (fun ps post -> post (Failed e ps))
-  = TAC?.reflect (fun ps -> Failed #a e ps)
-
 
 /// assert p by t
 

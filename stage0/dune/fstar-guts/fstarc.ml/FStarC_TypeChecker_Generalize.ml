@@ -334,13 +334,23 @@ let (gen :
                                        lb1 in
                                    let uu___12 =
                                      FStarC_Class_Show.show
+                                       (FStarC_FlatSet.showable_set
+                                          FStarC_Syntax_Free.ord_univ_uvar
+                                          showable_univ_var) u1 in
+                                   let uu___13 =
+                                     FStarC_Class_Show.show
                                        (FStarC_Class_Show.show_either
                                           FStarC_Syntax_Print.showable_bv
                                           FStarC_Syntax_Syntax.showable_fv)
                                        lb2 in
-                                   FStarC_Format.fmt2
-                                     "Generalizing the types of these mutually recursive definitions requires an incompatible set of universes for %s and %s"
-                                     uu___11 uu___12 in
+                                   let uu___14 =
+                                     FStarC_Class_Show.show
+                                       (FStarC_FlatSet.showable_set
+                                          FStarC_Syntax_Free.ord_univ_uvar
+                                          showable_univ_var) u2 in
+                                   FStarC_Format.fmt4
+                                     "Generalizing the types of these mutually recursive definitions requires an incompatible set of universes for %s %s and %s %s"
+                                     uu___11 uu___12 uu___13 uu___14 in
                                  FStarC_Errors.raise_error
                                    FStarC_TypeChecker_Env.hasRange_env env
                                    FStarC_Errors_Codes.Fatal_IncompatibleSetOfUniverse
