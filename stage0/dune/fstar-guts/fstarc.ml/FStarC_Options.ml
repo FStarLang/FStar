@@ -144,14 +144,6 @@ let (debug_embedding : Prims.bool FStarC_Effect.ref) =
   FStarC_Effect.mk_ref false
 let (eager_embedding : Prims.bool FStarC_Effect.ref) =
   FStarC_Effect.mk_ref false
-let (__unit_tests__ : Prims.bool FStarC_Effect.ref) =
-  FStarC_Effect.mk_ref false
-let (__unit_tests : unit -> Prims.bool) =
-  fun uu___ -> FStarC_Effect.op_Bang __unit_tests__
-let (__set_unit_tests : unit -> unit) =
-  fun uu___ -> FStarC_Effect.op_Colon_Equals __unit_tests__ true
-let (__clear_unit_tests : unit -> unit) =
-  fun uu___ -> FStarC_Effect.op_Colon_Equals __unit_tests__ false
 let (as_bool : option_val -> Prims.bool) =
   fun uu___ ->
     match uu___ with
@@ -288,99 +280,104 @@ let (set_admit_smt_queries : Prims.bool -> unit) =
   fun b -> set_option "admit_smt_queries" (Bool b)
 let (defaults : (Prims.string * option_val) Prims.list) =
   [("abort_on", (Int Prims.int_zero));
-  ("admit_smt_queries", (Bool false));
   ("admit_except", Unset);
-  ("disallow_unification_guards", (Bool false));
+  ("admit_smt_queries", (Bool false));
   ("already_cached", Unset);
   ("cache_checked_modules", (Bool false));
   ("cache_off", (Bool false));
+  ("cmi", (Bool false));
+  ("codegen-lib", (List []));
+  ("codegen", Unset);
   ("compat_pre_core", Unset);
   ("compat_pre_typed_indexed_effects", (Bool false));
-  ("print_cache_version", (Bool false));
-  ("cmi", (Bool false));
-  ("codegen", Unset);
-  ("codegen-lib", (List []));
-  ("defensive", (String "no"));
-  ("debug", (List []));
   ("debug_all", (Bool false));
   ("debug_all_modules", (Bool false));
+  ("debug", (List []));
+  ("defensive", (String "no"));
   ("dep", Unset);
   ("detail_errors", (Bool false));
   ("detail_hint_replay", (Bool false));
+  ("disallow_unification_guards", (Bool false));
   ("dump_module", (List []));
   ("eager_subtyping", (Bool false));
   ("error_contexts", (Bool false));
+  ("expand_include", Unset);
   ("expose_interfaces", (Bool false));
-  ("message_format", (String "auto"));
-  ("ext", Unset);
-  ("extract", Unset);
   ("extract_all", (Bool false));
   ("extract_module", (List []));
   ("extract_namespace", (List []));
-  ("expand_include", Unset);
-  ("help", (Bool false));
-  ("hide_uvar_nums", (Bool false));
-  ("hint_hook", Unset);
-  ("hint_info", (Bool false));
-  ("hint_dir", Unset);
-  ("hint_file", Unset);
-  ("in", (Bool false));
-  ("ide", (Bool false));
-  ("ide_id_info_off", (Bool false));
-  ("lsp", (Bool false));
-  ("print", (Bool false));
-  ("print_in_place", (Bool false));
+  ("extract", Unset);
+  ("ext", Unset);
   ("force", (Bool false));
   ("fuel", Unset);
+  ("help", (Bool false));
+  ("hide_uvar_nums", (Bool false));
+  ("hint_dir", Unset);
+  ("hint_file", Unset);
+  ("hint_hook", Unset);
+  ("hint_info", (Bool false));
+  ("ide", (Bool false));
+  ("ide_id_info_off", (Bool false));
   ("ifuel", Unset);
+  ("in", (Bool false));
+  ("include", (List []));
   ("initial_fuel", (Int (Prims.of_int (2))));
   ("initial_ifuel", (Int Prims.int_one));
   ("keep_query_captions", (Bool true));
+  ("krmloutput", Unset);
   ("lax", (Bool false));
-  ("load", (List []));
+  ("list_plugins", (Bool false));
   ("load_cmxs", (List []));
-  ("log_queries", (Bool false));
+  ("load", (List []));
+  ("locate", (Bool false));
+  ("locate_file", Unset);
+  ("locate_lib", (Bool false));
+  ("locate_ocaml", (Bool false));
+  ("locate_z3", Unset);
   ("log_failing_queries", (Bool false));
+  ("log_queries", (Bool false));
   ("log_types", (Bool false));
+  ("lsp", (Bool false));
   ("max_fuel", (Int (Prims.of_int (8))));
   ("max_ifuel", (Int (Prims.of_int (2))));
+  ("message_format", (String "auto"));
   ("MLish", (Bool false));
   ("MLish_effect", (String "FStar.Effect"));
   ("no_extract", (List []));
   ("no_location_info", (Bool false));
-  ("no_prelude", (Bool false));
-  ("no_smt", (Bool false));
   ("no_plugins", (Bool false));
-  ("no_tactics", (Bool false));
+  ("__no_positivity", (Bool false));
+  ("no_prelude", (Bool false));
   ("normalize_pure_terms_for_extraction", (Bool false));
-  ("output_to", Unset);
-  ("krmloutput", Unset);
+  ("no_smt", (Bool false));
+  ("no_tactics", (Bool false));
   ("output_deps_to", Unset);
-  ("prims", Unset);
+  ("output_to", Unset);
   ("pretype", (Bool true));
   ("prims_ref", Unset);
+  ("prims", Unset);
+  ("print", (Bool false));
   ("print_bound_var_types", (Bool false));
+  ("print_cache_version", (Bool false));
   ("print_effect_args", (Bool false));
   ("print_expected_failures", (Bool false));
   ("print_full_names", (Bool false));
   ("print_implicits", (Bool false));
+  ("print_in_place", (Bool false));
   ("print_universes", (Bool false));
   ("print_z3_statistics", (Bool false));
   ("prn", (Bool false));
+  ("profile_component", Unset);
+  ("profile_group_by_decl", (Bool false));
+  ("profile", Unset);
   ("proof_recovery", (Bool false));
-  ("quake", (Int Prims.int_zero));
-  ("quake_lo", (Int Prims.int_one));
   ("quake_hi", (Int Prims.int_one));
+  ("quake", (Int Prims.int_zero));
   ("quake_keep", (Bool false));
+  ("quake_lo", (Int Prims.int_one));
   ("query_cache", (Bool false));
   ("query_stats", (Bool false));
   ("read_checked_file", Unset);
-  ("list_plugins", (Bool false));
-  ("locate", (Bool false));
-  ("locate_lib", (Bool false));
-  ("locate_ocaml", (Bool false));
-  ("locate_file", Unset);
-  ("locate_z3", Unset);
   ("read_krml_file", Unset);
   ("record_hints", (Bool false));
   ("record_options", (Bool false));
@@ -388,48 +385,44 @@ let (defaults : (Prims.string * option_val) Prims.list) =
   ("retry", (Bool false));
   ("reuse_hint_for", Unset);
   ("silent", (Bool false));
-  ("smt", Unset);
   ("smtencoding.elim_box", (Bool false));
-  ("smtencoding.nl_arith_repr", (String "boxwrap"));
   ("smtencoding.l_arith_repr", (String "boxwrap"));
-  ("smtencoding.valid_intro", (Bool true));
+  ("smtencoding.nl_arith_repr", (String "boxwrap"));
   ("smtencoding.valid_elim", (Bool false));
+  ("smtencoding.valid_intro", (Bool true));
+  ("smt", Unset);
   ("split_queries", (String "on_failure"));
   ("stats", (Bool false));
+  ("tactic_raw_binders", (Bool false));
   ("tactics_failhard", (Bool false));
   ("tactics_info", (Bool false));
-  ("tactic_raw_binders", (Bool false));
+  ("__tactics_nbe", (Bool false));
   ("tactic_trace", (Bool false));
   ("tactic_trace_d", (Int Prims.int_zero));
   ("tcnorm", (Bool true));
   ("timing", (Bool false));
   ("trace_error", (Bool false));
+  ("trivial_pre_for_unannotated_effectful_fns", (Bool true));
   ("ugly", (Bool false));
-  ("unthrottle_inductives", (Bool false));
   ("unsafe_tactic_exec", (Bool false));
-  ("use_native_tactics", Unset);
+  ("unthrottle_inductives", (Bool false));
   ("use_eq_at_higher_order", (Bool false));
-  ("use_hints", (Bool false));
   ("use_hint_hashes", (Bool false));
+  ("use_hints", (Bool false));
+  ("use_native_tactics", Unset);
+  ("use_nbe", (Bool false));
+  ("use_nbe_for_extraction", (Bool false));
   ("using_facts_from", Unset);
   ("verify_module", (List []));
   ("warn_default_effects", (Bool false));
-  ("z3refresh", (Bool false));
-  ("z3rlimit", (Int (Prims.of_int (5))));
-  ("z3rlimit_factor", (Int Prims.int_one));
-  ("z3seed", (Int Prims.int_zero));
-  ("z3cliopt", (List []));
-  ("z3smtopt", (List []));
-  ("z3version", (String "4.13.3"));
-  ("__no_positivity", (Bool false));
-  ("__tactics_nbe", (Bool false));
   ("warn_error", (List []));
-  ("use_nbe", (Bool false));
-  ("use_nbe_for_extraction", (Bool false));
-  ("trivial_pre_for_unannotated_effectful_fns", (Bool true));
-  ("profile_group_by_decl", (Bool false));
-  ("profile_component", Unset);
-  ("profile", Unset)]
+  ("z3cliopt", (List []));
+  ("z3refresh", (Bool false));
+  ("z3rlimit_factor", (Int Prims.int_one));
+  ("z3rlimit", (Int (Prims.of_int (5))));
+  ("z3seed", (Int Prims.int_zero));
+  ("z3smtopt", (List []));
+  ("z3version", (String "4.13.3"))]
 let (init : unit -> unit) =
   fun uu___ ->
     FStarC_Debug.disable_all ();
@@ -1703,34 +1696,9 @@ let (specs_with_types :
                                                                     "A directory in which to search for files included on the command line" in
                                                                     (FStarC_Getopt.noshort,
                                                                     "include",
-                                                                    (PostProcessed
-                                                                    ((fun
-                                                                    uu___81
-                                                                    ->
-                                                                    match uu___81
-                                                                    with
-                                                                    | 
-                                                                    Path s ->
-                                                                    ((
-                                                                    let uu___83
-                                                                    =
-                                                                    FStarC_Effect.op_Bang
-                                                                    check_include_dir in
-                                                                    uu___83 s);
-                                                                    (let uu___84
-                                                                    =
-                                                                    let uu___85
-                                                                    =
-                                                                    FStarC_Find.get_include_path
-                                                                    () in
-                                                                    FStarC_List.op_At
-                                                                    uu___85
-                                                                    [s] in
-                                                                    FStarC_Find.set_include_path
-                                                                    uu___84);
-                                                                    Unset)),
+                                                                    (ReverseAccumulated
                                                                     (PathStr
-                                                                    "dir"))),
+                                                                    "dir")),
                                                                     uu___80) in
                                                                     let uu___80
                                                                     =
@@ -4345,10 +4313,23 @@ let (parse_cmd_line :
         (parse_filename_arg all_specs_getopt true) in
     let res1 =
       if res = FStarC_Getopt.Success then set_error_flags () else res in
-    (let uu___4 =
-       let uu___5 = snapshot_all () in FStar_Pervasives_Native.Some uu___5 in
-     FStarC_Effect.op_Colon_Equals parsed_args_state uu___4);
-    (let uu___4 = FStarC_Effect.op_Bang file_list_ in (res1, uu___4))
+    (let paths =
+       let uu___4 = get_option "include" in as_list as_string uu___4 in
+     FStarC_List.iter
+       (fun p ->
+          let uu___5 = FStarC_Effect.op_Bang check_include_dir in uu___5 p)
+       paths;
+     (let uu___6 =
+        let uu___7 = FStarC_Find.get_include_path () in
+        FStarC_List.op_At uu___7 paths in
+      FStarC_Find.set_include_path uu___6));
+    (match () with
+     | () ->
+         ((let uu___5 =
+             let uu___6 = snapshot_all () in
+             FStar_Pervasives_Native.Some uu___6 in
+           FStarC_Effect.op_Colon_Equals parsed_args_state uu___5);
+          (let uu___5 = FStarC_Effect.op_Bang file_list_ in (res1, uu___5))))
 let (file_list : unit -> Prims.string Prims.list) =
   fun uu___ -> FStarC_Effect.op_Bang file_list_
 let (restore_cmd_line_options :

@@ -28,12 +28,8 @@ let run_wrap :
   'a .
     Prims.string ->
       'a FStarC_Tactics_Monad.tac ->
-        FStarC_Tactics_Types.proofstate -> 'a FStarC_Tactics_Result.__result
-  =
-  fun label ->
-    fun t ->
-      fun ps ->
-        interp_ctx label (fun uu___ -> FStarC_Tactics_Monad.run_safe t ps)
+        FStarC_Tactics_Types.proofstate FStarC_Effect.ref -> 'a
+  = fun label -> fun t -> fun ps -> interp_ctx label (fun uu___ -> t ps)
 let (builtin_lid : Prims.string -> FStarC_Ident.lid) =
   fun nm ->
     FStarC_Parser_Const.fstar_stubs_tactics_lid' ["V2"; "Builtins"; nm]
@@ -184,10 +180,9 @@ let mk_tac_step_1 :
                   let lid = builtin_lid nm in
                   let uu___4 =
                     FStarC_TypeChecker_Primops_Base.mk2' univ_arity lid uu___
-                      uu___2 FStarC_Tactics_Embedding.e_proofstate
-                      FStarC_Tactics_Embedding.e_proofstate_nbe
-                      (FStarC_Tactics_Embedding.e_result uu___1)
-                      (FStarC_Tactics_Embedding.e_result_nbe uu___3)
+                      uu___2 FStarC_Tactics_Embedding.e_ref_proofstate
+                      FStarC_Tactics_Embedding.e_ref_proofstate_nbe uu___1
+                      uu___3
                       (fun a ->
                          fun ps ->
                            let uu___5 =
@@ -227,10 +222,9 @@ let mk_tac_step_2 :
                       let uu___6 =
                         FStarC_TypeChecker_Primops_Base.mk3' univ_arity lid
                           uu___ uu___3 uu___1 uu___4
-                          FStarC_Tactics_Embedding.e_proofstate
-                          FStarC_Tactics_Embedding.e_proofstate_nbe
-                          (FStarC_Tactics_Embedding.e_result uu___2)
-                          (FStarC_Tactics_Embedding.e_result_nbe uu___5)
+                          FStarC_Tactics_Embedding.e_ref_proofstate
+                          FStarC_Tactics_Embedding.e_ref_proofstate_nbe
+                          uu___2 uu___5
                           (fun a ->
                              fun b ->
                                fun ps ->
@@ -280,10 +274,9 @@ let mk_tac_step_3 :
                           let uu___8 =
                             FStarC_TypeChecker_Primops_Base.mk4' univ_arity
                               lid uu___ uu___4 uu___1 uu___5 uu___2 uu___6
-                              FStarC_Tactics_Embedding.e_proofstate
-                              FStarC_Tactics_Embedding.e_proofstate_nbe
-                              (FStarC_Tactics_Embedding.e_result uu___3)
-                              (FStarC_Tactics_Embedding.e_result_nbe uu___7)
+                              FStarC_Tactics_Embedding.e_ref_proofstate
+                              FStarC_Tactics_Embedding.e_ref_proofstate_nbe
+                              uu___3 uu___7
                               (fun a ->
                                  fun b ->
                                    fun c ->
@@ -345,11 +338,9 @@ let mk_tac_step_4 :
                                 FStarC_TypeChecker_Primops_Base.mk5'
                                   univ_arity lid uu___ uu___5 uu___1 uu___6
                                   uu___2 uu___7 uu___3 uu___8
-                                  FStarC_Tactics_Embedding.e_proofstate
-                                  FStarC_Tactics_Embedding.e_proofstate_nbe
-                                  (FStarC_Tactics_Embedding.e_result uu___4)
-                                  (FStarC_Tactics_Embedding.e_result_nbe
-                                     uu___9)
+                                  FStarC_Tactics_Embedding.e_ref_proofstate
+                                  FStarC_Tactics_Embedding.e_ref_proofstate_nbe
+                                  uu___4 uu___9
                                   (fun a ->
                                      fun b ->
                                        fun c ->
@@ -424,12 +415,9 @@ let mk_tac_step_5 :
                                       univ_arity lid uu___ uu___6 uu___1
                                       uu___7 uu___2 uu___8 uu___3 uu___9
                                       uu___4 uu___10
-                                      FStarC_Tactics_Embedding.e_proofstate
-                                      FStarC_Tactics_Embedding.e_proofstate_nbe
-                                      (FStarC_Tactics_Embedding.e_result
-                                         uu___5)
-                                      (FStarC_Tactics_Embedding.e_result_nbe
-                                         uu___11)
+                                      FStarC_Tactics_Embedding.e_ref_proofstate
+                                      FStarC_Tactics_Embedding.e_ref_proofstate_nbe
+                                      uu___5 uu___11
                                       (fun a ->
                                          fun b ->
                                            fun c ->
@@ -482,26 +470,25 @@ let mk_tactic_interpretation_1 :
                       FStarC_Option.bind uu___2
                         (fun a11 ->
                            let uu___3 =
-                             unembed FStarC_Tactics_Embedding.e_proofstate a2
+                             unembed
+                               FStarC_Tactics_Embedding.e_ref_proofstate a2
                                ncb in
                            FStarC_Option.bind uu___3
                              (fun ps ->
-                                let ps1 =
-                                  FStarC_Tactics_Types.set_ps_psc psc ps in
-                                let r1 =
-                                  interp_ctx name
-                                    (fun uu___4 ->
-                                       let uu___5 = t a11 in
-                                       FStarC_Tactics_Monad.run_safe uu___5
-                                         ps1) in
-                                let uu___4 =
-                                  let uu___5 =
-                                    FStarC_TypeChecker_Primops_Base.psc_range
-                                      psc in
-                                  embed
-                                    (FStarC_Tactics_Embedding.e_result er)
-                                    uu___5 r1 ncb in
-                                FStar_Pervasives_Native.Some uu___4))
+                                (let uu___5 =
+                                   let uu___6 = FStarC_Effect.op_Bang ps in
+                                   FStarC_Tactics_Types.set_ps_psc psc uu___6 in
+                                 FStarC_Effect.op_Colon_Equals ps uu___5);
+                                (let r1 =
+                                   interp_ctx name
+                                     (fun uu___5 ->
+                                        let uu___6 = t a11 in uu___6 ps) in
+                                 let uu___5 =
+                                   let uu___6 =
+                                     FStarC_TypeChecker_Primops_Base.psc_range
+                                       psc in
+                                   embed er uu___6 r1 ncb in
+                                 FStar_Pervasives_Native.Some uu___5)))
                   | uu___ -> FStar_Pervasives_Native.None
 let mk_tactic_interpretation_2 :
   'r 't1 't2 .
@@ -536,27 +523,28 @@ let mk_tactic_interpretation_2 :
                                (fun a21 ->
                                   let uu___5 =
                                     unembed
-                                      FStarC_Tactics_Embedding.e_proofstate
+                                      FStarC_Tactics_Embedding.e_ref_proofstate
                                       a3 ncb in
                                   FStarC_Option.bind uu___5
                                     (fun ps ->
-                                       let ps1 =
-                                         FStarC_Tactics_Types.set_ps_psc psc
-                                           ps in
-                                       let r1 =
-                                         interp_ctx name
-                                           (fun uu___6 ->
-                                              let uu___7 = t a11 a21 in
-                                              FStarC_Tactics_Monad.run_safe
-                                                uu___7 ps1) in
-                                       let uu___6 =
-                                         let uu___7 =
-                                           FStarC_TypeChecker_Primops_Base.psc_range
-                                             psc in
-                                         embed
-                                           (FStarC_Tactics_Embedding.e_result
-                                              er) uu___7 r1 ncb in
-                                       FStar_Pervasives_Native.Some uu___6)))
+                                       (let uu___7 =
+                                          let uu___8 =
+                                            FStarC_Effect.op_Bang ps in
+                                          FStarC_Tactics_Types.set_ps_psc psc
+                                            uu___8 in
+                                        FStarC_Effect.op_Colon_Equals ps
+                                          uu___7);
+                                       (let r1 =
+                                          interp_ctx name
+                                            (fun uu___7 ->
+                                               let uu___8 = t a11 a21 in
+                                               uu___8 ps) in
+                                        let uu___7 =
+                                          let uu___8 =
+                                            FStarC_TypeChecker_Primops_Base.psc_range
+                                              psc in
+                                          embed er uu___8 r1 ncb in
+                                        FStar_Pervasives_Native.Some uu___7))))
                     | uu___ -> FStar_Pervasives_Native.None
 let mk_tactic_interpretation_3 :
   'r 't1 't2 't3 .
@@ -597,29 +585,30 @@ let mk_tactic_interpretation_3 :
                                       (fun a31 ->
                                          let uu___7 =
                                            unembed
-                                             FStarC_Tactics_Embedding.e_proofstate
+                                             FStarC_Tactics_Embedding.e_ref_proofstate
                                              a4 ncb in
                                          FStarC_Option.bind uu___7
                                            (fun ps ->
-                                              let ps1 =
-                                                FStarC_Tactics_Types.set_ps_psc
-                                                  psc ps in
-                                              let r1 =
-                                                interp_ctx name
-                                                  (fun uu___8 ->
-                                                     let uu___9 =
-                                                       t a11 a21 a31 in
-                                                     FStarC_Tactics_Monad.run_safe
-                                                       uu___9 ps1) in
-                                              let uu___8 =
-                                                let uu___9 =
-                                                  FStarC_TypeChecker_Primops_Base.psc_range
-                                                    psc in
-                                                embed
-                                                  (FStarC_Tactics_Embedding.e_result
-                                                     er) uu___9 r1 ncb in
-                                              FStar_Pervasives_Native.Some
-                                                uu___8))))
+                                              (let uu___9 =
+                                                 let uu___10 =
+                                                   FStarC_Effect.op_Bang ps in
+                                                 FStarC_Tactics_Types.set_ps_psc
+                                                   psc uu___10 in
+                                               FStarC_Effect.op_Colon_Equals
+                                                 ps uu___9);
+                                              (let r1 =
+                                                 interp_ctx name
+                                                   (fun uu___9 ->
+                                                      let uu___10 =
+                                                        t a11 a21 a31 in
+                                                      uu___10 ps) in
+                                               let uu___9 =
+                                                 let uu___10 =
+                                                   FStarC_TypeChecker_Primops_Base.psc_range
+                                                     psc in
+                                                 embed er uu___10 r1 ncb in
+                                               FStar_Pervasives_Native.Some
+                                                 uu___9)))))
                       | uu___ -> FStar_Pervasives_Native.None
 let mk_tactic_interpretation_4 :
   'r 't1 't2 't3 't4 .
@@ -666,31 +655,33 @@ let mk_tactic_interpretation_4 :
                                              (fun a41 ->
                                                 let uu___9 =
                                                   unembed
-                                                    FStarC_Tactics_Embedding.e_proofstate
+                                                    FStarC_Tactics_Embedding.e_ref_proofstate
                                                     a5 ncb in
                                                 FStarC_Option.bind uu___9
                                                   (fun ps ->
-                                                     let ps1 =
-                                                       FStarC_Tactics_Types.set_ps_psc
-                                                         psc ps in
-                                                     let r1 =
-                                                       interp_ctx name
-                                                         (fun uu___10 ->
-                                                            let uu___11 =
-                                                              t a11 a21 a31
-                                                                a41 in
-                                                            FStarC_Tactics_Monad.run_safe
-                                                              uu___11 ps1) in
-                                                     let uu___10 =
-                                                       let uu___11 =
-                                                         FStarC_TypeChecker_Primops_Base.psc_range
-                                                           psc in
-                                                       embed
-                                                         (FStarC_Tactics_Embedding.e_result
-                                                            er) uu___11 r1
-                                                         ncb in
-                                                     FStar_Pervasives_Native.Some
-                                                       uu___10)))))
+                                                     (let uu___11 =
+                                                        let uu___12 =
+                                                          FStarC_Effect.op_Bang
+                                                            ps in
+                                                        FStarC_Tactics_Types.set_ps_psc
+                                                          psc uu___12 in
+                                                      FStarC_Effect.op_Colon_Equals
+                                                        ps uu___11);
+                                                     (let r1 =
+                                                        interp_ctx name
+                                                          (fun uu___11 ->
+                                                             let uu___12 =
+                                                               t a11 a21 a31
+                                                                 a41 in
+                                                             uu___12 ps) in
+                                                      let uu___11 =
+                                                        let uu___12 =
+                                                          FStarC_TypeChecker_Primops_Base.psc_range
+                                                            psc in
+                                                        embed er uu___12 r1
+                                                          ncb in
+                                                      FStar_Pervasives_Native.Some
+                                                        uu___11))))))
                         | uu___ -> FStar_Pervasives_Native.None
 let mk_tactic_interpretation_5 :
   'r 't1 't2 't3 't4 't5 .
@@ -742,37 +733,40 @@ let mk_tactic_interpretation_5 :
                                                     (fun a51 ->
                                                        let uu___11 =
                                                          unembed
-                                                           FStarC_Tactics_Embedding.e_proofstate
+                                                           FStarC_Tactics_Embedding.e_ref_proofstate
                                                            a6 ncb in
                                                        FStarC_Option.bind
                                                          uu___11
                                                          (fun ps ->
-                                                            let ps1 =
-                                                              FStarC_Tactics_Types.set_ps_psc
-                                                                psc ps in
-                                                            let r1 =
-                                                              interp_ctx name
-                                                                (fun uu___12
-                                                                   ->
-                                                                   let uu___13
+                                                            (let uu___13 =
+                                                               let uu___14 =
+                                                                 FStarC_Effect.op_Bang
+                                                                   ps in
+                                                               FStarC_Tactics_Types.set_ps_psc
+                                                                 psc uu___14 in
+                                                             FStarC_Effect.op_Colon_Equals
+                                                               ps uu___13);
+                                                            (let r1 =
+                                                               interp_ctx
+                                                                 name
+                                                                 (fun uu___13
+                                                                    ->
+                                                                    let uu___14
                                                                     =
                                                                     t a11 a21
                                                                     a31 a41
                                                                     a51 in
-                                                                   FStarC_Tactics_Monad.run_safe
-                                                                    uu___13
-                                                                    ps1) in
-                                                            let uu___12 =
-                                                              let uu___13 =
-                                                                FStarC_TypeChecker_Primops_Base.psc_range
-                                                                  psc in
-                                                              embed
-                                                                (FStarC_Tactics_Embedding.e_result
-                                                                   er)
-                                                                uu___13 r1
-                                                                ncb in
-                                                            FStar_Pervasives_Native.Some
-                                                              uu___12))))))
+                                                                    uu___14
+                                                                    ps) in
+                                                             let uu___13 =
+                                                               let uu___14 =
+                                                                 FStarC_TypeChecker_Primops_Base.psc_range
+                                                                   psc in
+                                                               embed er
+                                                                 uu___14 r1
+                                                                 ncb in
+                                                             FStar_Pervasives_Native.Some
+                                                               uu___13)))))))
                           | uu___ -> FStar_Pervasives_Native.None
 let mk_tactic_interpretation_6 :
   'r 't1 't2 't3 't4 't5 't6 .
@@ -835,41 +829,47 @@ let mk_tactic_interpretation_6 :
                                                            (fun a61 ->
                                                               let uu___13 =
                                                                 unembed
-                                                                  FStarC_Tactics_Embedding.e_proofstate
+                                                                  FStarC_Tactics_Embedding.e_ref_proofstate
                                                                   a7 ncb in
                                                               FStarC_Option.bind
                                                                 uu___13
                                                                 (fun ps ->
-                                                                   let ps1 =
+                                                                   (let uu___15
+                                                                    =
+                                                                    let uu___16
+                                                                    =
+                                                                    FStarC_Effect.op_Bang
+                                                                    ps in
                                                                     FStarC_Tactics_Types.set_ps_psc
-                                                                    psc ps in
-                                                                   let r1 =
+                                                                    psc
+                                                                    uu___16 in
+                                                                    FStarC_Effect.op_Colon_Equals
+                                                                    ps
+                                                                    uu___15);
+                                                                   (let r1 =
                                                                     interp_ctx
                                                                     name
                                                                     (fun
-                                                                    uu___14
+                                                                    uu___15
                                                                     ->
-                                                                    let uu___15
+                                                                    let uu___16
                                                                     =
                                                                     t a11 a21
                                                                     a31 a41
                                                                     a51 a61 in
-                                                                    FStarC_Tactics_Monad.run_safe
-                                                                    uu___15
-                                                                    ps1) in
-                                                                   let uu___14
-                                                                    =
+                                                                    uu___16
+                                                                    ps) in
                                                                     let uu___15
+                                                                    =
+                                                                    let uu___16
                                                                     =
                                                                     FStarC_TypeChecker_Primops_Base.psc_range
                                                                     psc in
-                                                                    embed
-                                                                    (FStarC_Tactics_Embedding.e_result
-                                                                    er)
-                                                                    uu___15
+                                                                    embed er
+                                                                    uu___16
                                                                     r1 ncb in
-                                                                   FStar_Pervasives_Native.Some
-                                                                    uu___14)))))))
+                                                                    FStar_Pervasives_Native.Some
+                                                                    uu___15))))))))
                             | uu___ -> FStar_Pervasives_Native.None
 let mk_tactic_interpretation_7 :
   'r 't1 't2 't3 't4 't5 't6 't7 .
@@ -944,43 +944,51 @@ let mk_tactic_interpretation_7 :
                                                                     let uu___15
                                                                     =
                                                                     unembed
-                                                                    FStarC_Tactics_Embedding.e_proofstate
+                                                                    FStarC_Tactics_Embedding.e_ref_proofstate
                                                                     a8 ncb in
                                                                     FStarC_Option.bind
                                                                     uu___15
                                                                     (fun ps
                                                                     ->
-                                                                    let ps1 =
+                                                                    (
+                                                                    let uu___17
+                                                                    =
+                                                                    let uu___18
+                                                                    =
+                                                                    FStarC_Effect.op_Bang
+                                                                    ps in
                                                                     FStarC_Tactics_Types.set_ps_psc
-                                                                    psc ps in
+                                                                    psc
+                                                                    uu___18 in
+                                                                    FStarC_Effect.op_Colon_Equals
+                                                                    ps
+                                                                    uu___17);
+                                                                    (
                                                                     let r1 =
                                                                     interp_ctx
                                                                     name
                                                                     (fun
-                                                                    uu___16
+                                                                    uu___17
                                                                     ->
-                                                                    let uu___17
+                                                                    let uu___18
                                                                     =
                                                                     t a11 a21
                                                                     a31 a41
                                                                     a51 a61
                                                                     a71 in
-                                                                    FStarC_Tactics_Monad.run_safe
-                                                                    uu___17
-                                                                    ps1) in
-                                                                    let uu___16
-                                                                    =
+                                                                    uu___18
+                                                                    ps) in
                                                                     let uu___17
+                                                                    =
+                                                                    let uu___18
                                                                     =
                                                                     FStarC_TypeChecker_Primops_Base.psc_range
                                                                     psc in
-                                                                    embed
-                                                                    (FStarC_Tactics_Embedding.e_result
-                                                                    er)
-                                                                    uu___17
+                                                                    embed er
+                                                                    uu___18
                                                                     r1 ncb in
                                                                     FStar_Pervasives_Native.Some
-                                                                    uu___16))))))))
+                                                                    uu___17)))))))))
                               | uu___ -> FStar_Pervasives_Native.None
 let mk_tactic_interpretation_8 :
   'r 't1 't2 't3 't4 't5 't6 't7 't8 .
@@ -1070,43 +1078,51 @@ let mk_tactic_interpretation_8 :
                                                                     let uu___17
                                                                     =
                                                                     unembed
-                                                                    FStarC_Tactics_Embedding.e_proofstate
+                                                                    FStarC_Tactics_Embedding.e_ref_proofstate
                                                                     a9 ncb in
                                                                     FStarC_Option.bind
                                                                     uu___17
                                                                     (fun ps
                                                                     ->
-                                                                    let ps1 =
+                                                                    (
+                                                                    let uu___19
+                                                                    =
+                                                                    let uu___20
+                                                                    =
+                                                                    FStarC_Effect.op_Bang
+                                                                    ps in
                                                                     FStarC_Tactics_Types.set_ps_psc
-                                                                    psc ps in
+                                                                    psc
+                                                                    uu___20 in
+                                                                    FStarC_Effect.op_Colon_Equals
+                                                                    ps
+                                                                    uu___19);
+                                                                    (
                                                                     let r1 =
                                                                     interp_ctx
                                                                     name
                                                                     (fun
-                                                                    uu___18
+                                                                    uu___19
                                                                     ->
-                                                                    let uu___19
+                                                                    let uu___20
                                                                     =
                                                                     t a11 a21
                                                                     a31 a41
                                                                     a51 a61
                                                                     a71 a81 in
-                                                                    FStarC_Tactics_Monad.run_safe
-                                                                    uu___19
-                                                                    ps1) in
-                                                                    let uu___18
-                                                                    =
+                                                                    uu___20
+                                                                    ps) in
                                                                     let uu___19
+                                                                    =
+                                                                    let uu___20
                                                                     =
                                                                     FStarC_TypeChecker_Primops_Base.psc_range
                                                                     psc in
-                                                                    embed
-                                                                    (FStarC_Tactics_Embedding.e_result
-                                                                    er)
-                                                                    uu___19
+                                                                    embed er
+                                                                    uu___20
                                                                     r1 ncb in
                                                                     FStar_Pervasives_Native.Some
-                                                                    uu___18)))))))))
+                                                                    uu___19))))))))))
                                 | uu___ -> FStar_Pervasives_Native.None
 let mk_tactic_interpretation_9 :
   'r 't1 't2 't3 't4 't5 't6 't7 't8 't9 .
@@ -1210,44 +1226,52 @@ let mk_tactic_interpretation_9 :
                                                                     let uu___19
                                                                     =
                                                                     unembed
-                                                                    FStarC_Tactics_Embedding.e_proofstate
+                                                                    FStarC_Tactics_Embedding.e_ref_proofstate
                                                                     a10 ncb in
                                                                     FStarC_Option.bind
                                                                     uu___19
                                                                     (fun ps
                                                                     ->
-                                                                    let ps1 =
+                                                                    (
+                                                                    let uu___21
+                                                                    =
+                                                                    let uu___22
+                                                                    =
+                                                                    FStarC_Effect.op_Bang
+                                                                    ps in
                                                                     FStarC_Tactics_Types.set_ps_psc
-                                                                    psc ps in
+                                                                    psc
+                                                                    uu___22 in
+                                                                    FStarC_Effect.op_Colon_Equals
+                                                                    ps
+                                                                    uu___21);
+                                                                    (
                                                                     let r1 =
                                                                     interp_ctx
                                                                     name
                                                                     (fun
-                                                                    uu___20
+                                                                    uu___21
                                                                     ->
-                                                                    let uu___21
+                                                                    let uu___22
                                                                     =
                                                                     t a11 a21
                                                                     a31 a41
                                                                     a51 a61
                                                                     a71 a81
                                                                     a91 in
-                                                                    FStarC_Tactics_Monad.run_safe
-                                                                    uu___21
-                                                                    ps1) in
-                                                                    let uu___20
-                                                                    =
+                                                                    uu___22
+                                                                    ps) in
                                                                     let uu___21
+                                                                    =
+                                                                    let uu___22
                                                                     =
                                                                     FStarC_TypeChecker_Primops_Base.psc_range
                                                                     psc in
-                                                                    embed
-                                                                    (FStarC_Tactics_Embedding.e_result
-                                                                    er)
-                                                                    uu___21
+                                                                    embed er
+                                                                    uu___22
                                                                     r1 ncb in
                                                                     FStar_Pervasives_Native.Some
-                                                                    uu___20))))))))))
+                                                                    uu___21)))))))))))
                                   | uu___ -> FStar_Pervasives_Native.None
 let mk_tactic_interpretation_10 :
   'r 't1 't10 't2 't3 't4 't5 't6 't7 't8 't9 .
@@ -1367,44 +1391,52 @@ let mk_tactic_interpretation_10 :
                                                                     let uu___21
                                                                     =
                                                                     unembed
-                                                                    FStarC_Tactics_Embedding.e_proofstate
+                                                                    FStarC_Tactics_Embedding.e_ref_proofstate
                                                                     a11 ncb in
                                                                     FStarC_Option.bind
                                                                     uu___21
                                                                     (fun ps
                                                                     ->
-                                                                    let ps1 =
+                                                                    (
+                                                                    let uu___23
+                                                                    =
+                                                                    let uu___24
+                                                                    =
+                                                                    FStarC_Effect.op_Bang
+                                                                    ps in
                                                                     FStarC_Tactics_Types.set_ps_psc
-                                                                    psc ps in
+                                                                    psc
+                                                                    uu___24 in
+                                                                    FStarC_Effect.op_Colon_Equals
+                                                                    ps
+                                                                    uu___23);
+                                                                    (
                                                                     let r1 =
                                                                     interp_ctx
                                                                     name
                                                                     (fun
-                                                                    uu___22
+                                                                    uu___23
                                                                     ->
-                                                                    let uu___23
+                                                                    let uu___24
                                                                     =
                                                                     t a12 a21
                                                                     a31 a41
                                                                     a51 a61
                                                                     a71 a81
                                                                     a91 a101 in
-                                                                    FStarC_Tactics_Monad.run_safe
-                                                                    uu___23
-                                                                    ps1) in
-                                                                    let uu___22
-                                                                    =
+                                                                    uu___24
+                                                                    ps) in
                                                                     let uu___23
+                                                                    =
+                                                                    let uu___24
                                                                     =
                                                                     FStarC_TypeChecker_Primops_Base.psc_range
                                                                     psc in
-                                                                    embed
-                                                                    (FStarC_Tactics_Embedding.e_result
-                                                                    er)
-                                                                    uu___23
+                                                                    embed er
+                                                                    uu___24
                                                                     r1 ncb in
                                                                     FStar_Pervasives_Native.Some
-                                                                    uu___22)))))))))))
+                                                                    uu___23))))))))))))
                                     | uu___ -> FStar_Pervasives_Native.None
 let mk_tactic_interpretation_11 :
   'r 't1 't10 't11 't2 't3 't4 't5 't6 't7 't8 't9 .
@@ -1540,22 +1572,33 @@ let mk_tactic_interpretation_11 :
                                                                     let uu___23
                                                                     =
                                                                     unembed
-                                                                    FStarC_Tactics_Embedding.e_proofstate
+                                                                    FStarC_Tactics_Embedding.e_ref_proofstate
                                                                     a12 ncb in
                                                                     FStarC_Option.bind
                                                                     uu___23
                                                                     (fun ps
                                                                     ->
-                                                                    let ps1 =
+                                                                    (
+                                                                    let uu___25
+                                                                    =
+                                                                    let uu___26
+                                                                    =
+                                                                    FStarC_Effect.op_Bang
+                                                                    ps in
                                                                     FStarC_Tactics_Types.set_ps_psc
-                                                                    psc ps in
+                                                                    psc
+                                                                    uu___26 in
+                                                                    FStarC_Effect.op_Colon_Equals
+                                                                    ps
+                                                                    uu___25);
+                                                                    (
                                                                     let r1 =
                                                                     interp_ctx
                                                                     name
                                                                     (fun
-                                                                    uu___24
+                                                                    uu___25
                                                                     ->
-                                                                    let uu___25
+                                                                    let uu___26
                                                                     =
                                                                     t a13 a21
                                                                     a31 a41
@@ -1563,22 +1606,19 @@ let mk_tactic_interpretation_11 :
                                                                     a71 a81
                                                                     a91 a101
                                                                     a111 in
-                                                                    FStarC_Tactics_Monad.run_safe
-                                                                    uu___25
-                                                                    ps1) in
-                                                                    let uu___24
-                                                                    =
+                                                                    uu___26
+                                                                    ps) in
                                                                     let uu___25
+                                                                    =
+                                                                    let uu___26
                                                                     =
                                                                     FStarC_TypeChecker_Primops_Base.psc_range
                                                                     psc in
-                                                                    embed
-                                                                    (FStarC_Tactics_Embedding.e_result
-                                                                    er)
-                                                                    uu___25
+                                                                    embed er
+                                                                    uu___26
                                                                     r1 ncb in
                                                                     FStar_Pervasives_Native.Some
-                                                                    uu___24))))))))))))
+                                                                    uu___25)))))))))))))
                                       | uu___ -> FStar_Pervasives_Native.None
 let mk_tactic_interpretation_12 :
   'r 't1 't10 't11 't12 't2 't3 't4 't5 't6 't7 't8 't9 .
@@ -1727,22 +1767,33 @@ let mk_tactic_interpretation_12 :
                                                                     let uu___25
                                                                     =
                                                                     unembed
-                                                                    FStarC_Tactics_Embedding.e_proofstate
+                                                                    FStarC_Tactics_Embedding.e_ref_proofstate
                                                                     a13 ncb in
                                                                     FStarC_Option.bind
                                                                     uu___25
                                                                     (fun ps
                                                                     ->
-                                                                    let ps1 =
+                                                                    (
+                                                                    let uu___27
+                                                                    =
+                                                                    let uu___28
+                                                                    =
+                                                                    FStarC_Effect.op_Bang
+                                                                    ps in
                                                                     FStarC_Tactics_Types.set_ps_psc
-                                                                    psc ps in
+                                                                    psc
+                                                                    uu___28 in
+                                                                    FStarC_Effect.op_Colon_Equals
+                                                                    ps
+                                                                    uu___27);
+                                                                    (
                                                                     let r1 =
                                                                     interp_ctx
                                                                     name
                                                                     (fun
-                                                                    uu___26
+                                                                    uu___27
                                                                     ->
-                                                                    let uu___27
+                                                                    let uu___28
                                                                     =
                                                                     t a14 a21
                                                                     a31 a41
@@ -1750,22 +1801,19 @@ let mk_tactic_interpretation_12 :
                                                                     a71 a81
                                                                     a91 a101
                                                                     a111 a121 in
-                                                                    FStarC_Tactics_Monad.run_safe
-                                                                    uu___27
-                                                                    ps1) in
-                                                                    let uu___26
-                                                                    =
+                                                                    uu___28
+                                                                    ps) in
                                                                     let uu___27
+                                                                    =
+                                                                    let uu___28
                                                                     =
                                                                     FStarC_TypeChecker_Primops_Base.psc_range
                                                                     psc in
-                                                                    embed
-                                                                    (FStarC_Tactics_Embedding.e_result
-                                                                    er)
-                                                                    uu___27
+                                                                    embed er
+                                                                    uu___28
                                                                     r1 ncb in
                                                                     FStar_Pervasives_Native.Some
-                                                                    uu___26)))))))))))))
+                                                                    uu___27))))))))))))))
                                         | uu___ ->
                                             FStar_Pervasives_Native.None
 let mk_tactic_interpretation_13 :
@@ -1935,22 +1983,33 @@ let mk_tactic_interpretation_13 :
                                                                     let uu___27
                                                                     =
                                                                     unembed
-                                                                    FStarC_Tactics_Embedding.e_proofstate
+                                                                    FStarC_Tactics_Embedding.e_ref_proofstate
                                                                     a14 ncb in
                                                                     FStarC_Option.bind
                                                                     uu___27
                                                                     (fun ps
                                                                     ->
-                                                                    let ps1 =
+                                                                    (
+                                                                    let uu___29
+                                                                    =
+                                                                    let uu___30
+                                                                    =
+                                                                    FStarC_Effect.op_Bang
+                                                                    ps in
                                                                     FStarC_Tactics_Types.set_ps_psc
-                                                                    psc ps in
+                                                                    psc
+                                                                    uu___30 in
+                                                                    FStarC_Effect.op_Colon_Equals
+                                                                    ps
+                                                                    uu___29);
+                                                                    (
                                                                     let r1 =
                                                                     interp_ctx
                                                                     name
                                                                     (fun
-                                                                    uu___28
+                                                                    uu___29
                                                                     ->
-                                                                    let uu___29
+                                                                    let uu___30
                                                                     =
                                                                     t a15 a21
                                                                     a31 a41
@@ -1959,22 +2018,19 @@ let mk_tactic_interpretation_13 :
                                                                     a91 a101
                                                                     a111 a121
                                                                     a131 in
-                                                                    FStarC_Tactics_Monad.run_safe
-                                                                    uu___29
-                                                                    ps1) in
-                                                                    let uu___28
-                                                                    =
+                                                                    uu___30
+                                                                    ps) in
                                                                     let uu___29
+                                                                    =
+                                                                    let uu___30
                                                                     =
                                                                     FStarC_TypeChecker_Primops_Base.psc_range
                                                                     psc in
-                                                                    embed
-                                                                    (FStarC_Tactics_Embedding.e_result
-                                                                    er)
-                                                                    uu___29
+                                                                    embed er
+                                                                    uu___30
                                                                     r1 ncb in
                                                                     FStar_Pervasives_Native.Some
-                                                                    uu___28))))))))))))))
+                                                                    uu___29)))))))))))))))
                                           | uu___ ->
                                               FStar_Pervasives_Native.None
 let mk_tactic_interpretation_14 :
@@ -2162,22 +2218,33 @@ let mk_tactic_interpretation_14 :
                                                                     let uu___29
                                                                     =
                                                                     unembed
-                                                                    FStarC_Tactics_Embedding.e_proofstate
+                                                                    FStarC_Tactics_Embedding.e_ref_proofstate
                                                                     a15 ncb in
                                                                     FStarC_Option.bind
                                                                     uu___29
                                                                     (fun ps
                                                                     ->
-                                                                    let ps1 =
+                                                                    (
+                                                                    let uu___31
+                                                                    =
+                                                                    let uu___32
+                                                                    =
+                                                                    FStarC_Effect.op_Bang
+                                                                    ps in
                                                                     FStarC_Tactics_Types.set_ps_psc
-                                                                    psc ps in
+                                                                    psc
+                                                                    uu___32 in
+                                                                    FStarC_Effect.op_Colon_Equals
+                                                                    ps
+                                                                    uu___31);
+                                                                    (
                                                                     let r1 =
                                                                     interp_ctx
                                                                     name
                                                                     (fun
-                                                                    uu___30
+                                                                    uu___31
                                                                     ->
-                                                                    let uu___31
+                                                                    let uu___32
                                                                     =
                                                                     t a16 a21
                                                                     a31 a41
@@ -2186,22 +2253,19 @@ let mk_tactic_interpretation_14 :
                                                                     a91 a101
                                                                     a111 a121
                                                                     a131 a141 in
-                                                                    FStarC_Tactics_Monad.run_safe
-                                                                    uu___31
-                                                                    ps1) in
-                                                                    let uu___30
-                                                                    =
+                                                                    uu___32
+                                                                    ps) in
                                                                     let uu___31
+                                                                    =
+                                                                    let uu___32
                                                                     =
                                                                     FStarC_TypeChecker_Primops_Base.psc_range
                                                                     psc in
-                                                                    embed
-                                                                    (FStarC_Tactics_Embedding.e_result
-                                                                    er)
-                                                                    uu___31
+                                                                    embed er
+                                                                    uu___32
                                                                     r1 ncb in
                                                                     FStar_Pervasives_Native.Some
-                                                                    uu___30)))))))))))))))
+                                                                    uu___31))))))))))))))))
                                             | uu___ ->
                                                 FStar_Pervasives_Native.None
 let mk_tactic_interpretation_15 :
@@ -2409,22 +2473,33 @@ let mk_tactic_interpretation_15 :
                                                                     let uu___31
                                                                     =
                                                                     unembed
-                                                                    FStarC_Tactics_Embedding.e_proofstate
+                                                                    FStarC_Tactics_Embedding.e_ref_proofstate
                                                                     a16 ncb in
                                                                     FStarC_Option.bind
                                                                     uu___31
                                                                     (fun ps
                                                                     ->
-                                                                    let ps1 =
+                                                                    (
+                                                                    let uu___33
+                                                                    =
+                                                                    let uu___34
+                                                                    =
+                                                                    FStarC_Effect.op_Bang
+                                                                    ps in
                                                                     FStarC_Tactics_Types.set_ps_psc
-                                                                    psc ps in
+                                                                    psc
+                                                                    uu___34 in
+                                                                    FStarC_Effect.op_Colon_Equals
+                                                                    ps
+                                                                    uu___33);
+                                                                    (
                                                                     let r1 =
                                                                     interp_ctx
                                                                     name
                                                                     (fun
-                                                                    uu___32
+                                                                    uu___33
                                                                     ->
-                                                                    let uu___33
+                                                                    let uu___34
                                                                     =
                                                                     t a17 a21
                                                                     a31 a41
@@ -2434,22 +2509,19 @@ let mk_tactic_interpretation_15 :
                                                                     a111 a121
                                                                     a131 a141
                                                                     a151 in
-                                                                    FStarC_Tactics_Monad.run_safe
-                                                                    uu___33
-                                                                    ps1) in
-                                                                    let uu___32
-                                                                    =
+                                                                    uu___34
+                                                                    ps) in
                                                                     let uu___33
+                                                                    =
+                                                                    let uu___34
                                                                     =
                                                                     FStarC_TypeChecker_Primops_Base.psc_range
                                                                     psc in
-                                                                    embed
-                                                                    (FStarC_Tactics_Embedding.e_result
-                                                                    er)
-                                                                    uu___33
+                                                                    embed er
+                                                                    uu___34
                                                                     r1 ncb in
                                                                     FStar_Pervasives_Native.Some
-                                                                    uu___32))))))))))))))))
+                                                                    uu___33)))))))))))))))))
                                               | uu___ ->
                                                   FStar_Pervasives_Native.None
 let mk_tactic_interpretation_16 :
@@ -2678,22 +2750,33 @@ let mk_tactic_interpretation_16 :
                                                                     let uu___33
                                                                     =
                                                                     unembed
-                                                                    FStarC_Tactics_Embedding.e_proofstate
+                                                                    FStarC_Tactics_Embedding.e_ref_proofstate
                                                                     a17 ncb in
                                                                     FStarC_Option.bind
                                                                     uu___33
                                                                     (fun ps
                                                                     ->
-                                                                    let ps1 =
+                                                                    (
+                                                                    let uu___35
+                                                                    =
+                                                                    let uu___36
+                                                                    =
+                                                                    FStarC_Effect.op_Bang
+                                                                    ps in
                                                                     FStarC_Tactics_Types.set_ps_psc
-                                                                    psc ps in
+                                                                    psc
+                                                                    uu___36 in
+                                                                    FStarC_Effect.op_Colon_Equals
+                                                                    ps
+                                                                    uu___35);
+                                                                    (
                                                                     let r1 =
                                                                     interp_ctx
                                                                     name
                                                                     (fun
-                                                                    uu___34
+                                                                    uu___35
                                                                     ->
-                                                                    let uu___35
+                                                                    let uu___36
                                                                     =
                                                                     t a18 a21
                                                                     a31 a41
@@ -2703,22 +2786,19 @@ let mk_tactic_interpretation_16 :
                                                                     a111 a121
                                                                     a131 a141
                                                                     a151 a161 in
-                                                                    FStarC_Tactics_Monad.run_safe
-                                                                    uu___35
-                                                                    ps1) in
-                                                                    let uu___34
-                                                                    =
+                                                                    uu___36
+                                                                    ps) in
                                                                     let uu___35
+                                                                    =
+                                                                    let uu___36
                                                                     =
                                                                     FStarC_TypeChecker_Primops_Base.psc_range
                                                                     psc in
-                                                                    embed
-                                                                    (FStarC_Tactics_Embedding.e_result
-                                                                    er)
-                                                                    uu___35
+                                                                    embed er
+                                                                    uu___36
                                                                     r1 ncb in
                                                                     FStar_Pervasives_Native.Some
-                                                                    uu___34)))))))))))))))))
+                                                                    uu___35))))))))))))))))))
                                                 | uu___ ->
                                                     FStar_Pervasives_Native.None
 let mk_tactic_interpretation_17 :
@@ -2965,22 +3045,33 @@ let mk_tactic_interpretation_17 :
                                                                     let uu___35
                                                                     =
                                                                     unembed
-                                                                    FStarC_Tactics_Embedding.e_proofstate
+                                                                    FStarC_Tactics_Embedding.e_ref_proofstate
                                                                     a18 ncb in
                                                                     FStarC_Option.bind
                                                                     uu___35
                                                                     (fun ps
                                                                     ->
-                                                                    let ps1 =
+                                                                    (
+                                                                    let uu___37
+                                                                    =
+                                                                    let uu___38
+                                                                    =
+                                                                    FStarC_Effect.op_Bang
+                                                                    ps in
                                                                     FStarC_Tactics_Types.set_ps_psc
-                                                                    psc ps in
+                                                                    psc
+                                                                    uu___38 in
+                                                                    FStarC_Effect.op_Colon_Equals
+                                                                    ps
+                                                                    uu___37);
+                                                                    (
                                                                     let r1 =
                                                                     interp_ctx
                                                                     name
                                                                     (fun
-                                                                    uu___36
+                                                                    uu___37
                                                                     ->
-                                                                    let uu___37
+                                                                    let uu___38
                                                                     =
                                                                     t a19 a21
                                                                     a31 a41
@@ -2991,22 +3082,19 @@ let mk_tactic_interpretation_17 :
                                                                     a131 a141
                                                                     a151 a161
                                                                     a171 in
-                                                                    FStarC_Tactics_Monad.run_safe
-                                                                    uu___37
-                                                                    ps1) in
-                                                                    let uu___36
-                                                                    =
+                                                                    uu___38
+                                                                    ps) in
                                                                     let uu___37
+                                                                    =
+                                                                    let uu___38
                                                                     =
                                                                     FStarC_TypeChecker_Primops_Base.psc_range
                                                                     psc in
-                                                                    embed
-                                                                    (FStarC_Tactics_Embedding.e_result
-                                                                    er)
-                                                                    uu___37
+                                                                    embed er
+                                                                    uu___38
                                                                     r1 ncb in
                                                                     FStar_Pervasives_Native.Some
-                                                                    uu___36))))))))))))))))))
+                                                                    uu___37)))))))))))))))))))
                                                   | uu___ ->
                                                       FStar_Pervasives_Native.None
 let mk_tactic_interpretation_18 :
@@ -3272,22 +3360,33 @@ let mk_tactic_interpretation_18 :
                                                                     let uu___37
                                                                     =
                                                                     unembed
-                                                                    FStarC_Tactics_Embedding.e_proofstate
+                                                                    FStarC_Tactics_Embedding.e_ref_proofstate
                                                                     a19 ncb in
                                                                     FStarC_Option.bind
                                                                     uu___37
                                                                     (fun ps
                                                                     ->
-                                                                    let ps1 =
+                                                                    (
+                                                                    let uu___39
+                                                                    =
+                                                                    let uu___40
+                                                                    =
+                                                                    FStarC_Effect.op_Bang
+                                                                    ps in
                                                                     FStarC_Tactics_Types.set_ps_psc
-                                                                    psc ps in
+                                                                    psc
+                                                                    uu___40 in
+                                                                    FStarC_Effect.op_Colon_Equals
+                                                                    ps
+                                                                    uu___39);
+                                                                    (
                                                                     let r1 =
                                                                     interp_ctx
                                                                     name
                                                                     (fun
-                                                                    uu___38
+                                                                    uu___39
                                                                     ->
-                                                                    let uu___39
+                                                                    let uu___40
                                                                     =
                                                                     t a110
                                                                     a21 a31
@@ -3299,22 +3398,19 @@ let mk_tactic_interpretation_18 :
                                                                     a141 a151
                                                                     a161 a171
                                                                     a181 in
-                                                                    FStarC_Tactics_Monad.run_safe
-                                                                    uu___39
-                                                                    ps1) in
-                                                                    let uu___38
-                                                                    =
+                                                                    uu___40
+                                                                    ps) in
                                                                     let uu___39
+                                                                    =
+                                                                    let uu___40
                                                                     =
                                                                     FStarC_TypeChecker_Primops_Base.psc_range
                                                                     psc in
-                                                                    embed
-                                                                    (FStarC_Tactics_Embedding.e_result
-                                                                    er)
-                                                                    uu___39
+                                                                    embed er
+                                                                    uu___40
                                                                     r1 ncb in
                                                                     FStar_Pervasives_Native.Some
-                                                                    uu___38)))))))))))))))))))
+                                                                    uu___39))))))))))))))))))))
                                                     | uu___ ->
                                                         FStar_Pervasives_Native.None
 let mk_tactic_interpretation_19 :
@@ -3596,22 +3692,33 @@ let mk_tactic_interpretation_19 :
                                                                     let uu___39
                                                                     =
                                                                     unembed
-                                                                    FStarC_Tactics_Embedding.e_proofstate
+                                                                    FStarC_Tactics_Embedding.e_ref_proofstate
                                                                     a20 ncb in
                                                                     FStarC_Option.bind
                                                                     uu___39
                                                                     (fun ps
                                                                     ->
-                                                                    let ps1 =
+                                                                    (
+                                                                    let uu___41
+                                                                    =
+                                                                    let uu___42
+                                                                    =
+                                                                    FStarC_Effect.op_Bang
+                                                                    ps in
                                                                     FStarC_Tactics_Types.set_ps_psc
-                                                                    psc ps in
+                                                                    psc
+                                                                    uu___42 in
+                                                                    FStarC_Effect.op_Colon_Equals
+                                                                    ps
+                                                                    uu___41);
+                                                                    (
                                                                     let r1 =
                                                                     interp_ctx
                                                                     name
                                                                     (fun
-                                                                    uu___40
+                                                                    uu___41
                                                                     ->
-                                                                    let uu___41
+                                                                    let uu___42
                                                                     =
                                                                     t a110
                                                                     a21 a31
@@ -3623,22 +3730,19 @@ let mk_tactic_interpretation_19 :
                                                                     a141 a151
                                                                     a161 a171
                                                                     a181 a191 in
-                                                                    FStarC_Tactics_Monad.run_safe
-                                                                    uu___41
-                                                                    ps1) in
-                                                                    let uu___40
-                                                                    =
+                                                                    uu___42
+                                                                    ps) in
                                                                     let uu___41
+                                                                    =
+                                                                    let uu___42
                                                                     =
                                                                     FStarC_TypeChecker_Primops_Base.psc_range
                                                                     psc in
-                                                                    embed
-                                                                    (FStarC_Tactics_Embedding.e_result
-                                                                    er)
-                                                                    uu___41
+                                                                    embed er
+                                                                    uu___42
                                                                     r1 ncb in
                                                                     FStar_Pervasives_Native.Some
-                                                                    uu___40))))))))))))))))))))
+                                                                    uu___41)))))))))))))))))))))
                                                       | uu___ ->
                                                           FStar_Pervasives_Native.None
 let mk_tactic_interpretation_20 :
@@ -3938,22 +4042,33 @@ let mk_tactic_interpretation_20 :
                                                                     let uu___41
                                                                     =
                                                                     unembed
-                                                                    FStarC_Tactics_Embedding.e_proofstate
+                                                                    FStarC_Tactics_Embedding.e_ref_proofstate
                                                                     a21 ncb in
                                                                     FStarC_Option.bind
                                                                     uu___41
                                                                     (fun ps
                                                                     ->
-                                                                    let ps1 =
+                                                                    (
+                                                                    let uu___43
+                                                                    =
+                                                                    let uu___44
+                                                                    =
+                                                                    FStarC_Effect.op_Bang
+                                                                    ps in
                                                                     FStarC_Tactics_Types.set_ps_psc
-                                                                    psc ps in
+                                                                    psc
+                                                                    uu___44 in
+                                                                    FStarC_Effect.op_Colon_Equals
+                                                                    ps
+                                                                    uu___43);
+                                                                    (
                                                                     let r1 =
                                                                     interp_ctx
                                                                     name
                                                                     (fun
-                                                                    uu___42
+                                                                    uu___43
                                                                     ->
-                                                                    let uu___43
+                                                                    let uu___44
                                                                     =
                                                                     t a110
                                                                     a22 a31
@@ -3966,22 +4081,19 @@ let mk_tactic_interpretation_20 :
                                                                     a161 a171
                                                                     a181 a191
                                                                     a201 in
-                                                                    FStarC_Tactics_Monad.run_safe
-                                                                    uu___43
-                                                                    ps1) in
-                                                                    let uu___42
-                                                                    =
+                                                                    uu___44
+                                                                    ps) in
                                                                     let uu___43
+                                                                    =
+                                                                    let uu___44
                                                                     =
                                                                     FStarC_TypeChecker_Primops_Base.psc_range
                                                                     psc in
-                                                                    embed
-                                                                    (FStarC_Tactics_Embedding.e_result
-                                                                    er)
-                                                                    uu___43
+                                                                    embed er
+                                                                    uu___44
                                                                     r1 ncb in
                                                                     FStar_Pervasives_Native.Some
-                                                                    uu___42)))))))))))))))))))))
+                                                                    uu___43))))))))))))))))))))))
                                                         | uu___ ->
                                                             FStar_Pervasives_Native.None
 let mk_tactic_nbe_interpretation_1 :
@@ -4009,18 +4121,16 @@ let mk_tactic_nbe_interpretation_1 :
                       (fun a11 ->
                          let uu___3 =
                            FStarC_TypeChecker_NBETerm.unembed
-                             FStarC_Tactics_Embedding.e_proofstate_nbe cb a2 in
+                             FStarC_Tactics_Embedding.e_ref_proofstate_nbe cb
+                             a2 in
                          FStarC_Option.bind uu___3
                            (fun ps ->
                               let r1 =
                                 interp_ctx name
                                   (fun uu___4 ->
-                                     let uu___5 = t a11 in
-                                     FStarC_Tactics_Monad.run_safe uu___5 ps) in
+                                     let uu___5 = t a11 in uu___5 ps) in
                               let uu___4 =
-                                FStarC_TypeChecker_NBETerm.embed
-                                  (FStarC_Tactics_Embedding.e_result_nbe er)
-                                  cb r1 in
+                                FStarC_TypeChecker_NBETerm.embed er cb r1 in
                               FStar_Pervasives_Native.Some uu___4))
                 | uu___ -> FStar_Pervasives_Native.None
 let mk_tactic_nbe_interpretation_2 :
@@ -4056,7 +4166,7 @@ let mk_tactic_nbe_interpretation_2 :
                              (fun a21 ->
                                 let uu___5 =
                                   FStarC_TypeChecker_NBETerm.unembed
-                                    FStarC_Tactics_Embedding.e_proofstate_nbe
+                                    FStarC_Tactics_Embedding.e_ref_proofstate_nbe
                                     cb a3 in
                                 FStarC_Option.bind uu___5
                                   (fun ps ->
@@ -4064,12 +4174,10 @@ let mk_tactic_nbe_interpretation_2 :
                                        interp_ctx name
                                          (fun uu___6 ->
                                             let uu___7 = t a11 a21 in
-                                            FStarC_Tactics_Monad.run_safe
-                                              uu___7 ps) in
+                                            uu___7 ps) in
                                      let uu___6 =
-                                       FStarC_TypeChecker_NBETerm.embed
-                                         (FStarC_Tactics_Embedding.e_result_nbe
-                                            er) cb r1 in
+                                       FStarC_TypeChecker_NBETerm.embed er cb
+                                         r1 in
                                      FStar_Pervasives_Native.Some uu___6)))
                   | uu___ -> FStar_Pervasives_Native.None
 let mk_tactic_nbe_interpretation_3 :
@@ -4113,7 +4221,7 @@ let mk_tactic_nbe_interpretation_3 :
                                     (fun a31 ->
                                        let uu___7 =
                                          FStarC_TypeChecker_NBETerm.unembed
-                                           FStarC_Tactics_Embedding.e_proofstate_nbe
+                                           FStarC_Tactics_Embedding.e_ref_proofstate_nbe
                                            cb a4 in
                                        FStarC_Option.bind uu___7
                                          (fun ps ->
@@ -4121,12 +4229,10 @@ let mk_tactic_nbe_interpretation_3 :
                                               interp_ctx name
                                                 (fun uu___8 ->
                                                    let uu___9 = t a11 a21 a31 in
-                                                   FStarC_Tactics_Monad.run_safe
-                                                     uu___9 ps) in
+                                                   uu___9 ps) in
                                             let uu___8 =
                                               FStarC_TypeChecker_NBETerm.embed
-                                                (FStarC_Tactics_Embedding.e_result_nbe
-                                                   er) cb r1 in
+                                                er cb r1 in
                                             FStar_Pervasives_Native.Some
                                               uu___8))))
                     | uu___ -> FStar_Pervasives_Native.None
@@ -4178,7 +4284,7 @@ let mk_tactic_nbe_interpretation_4 :
                                            (fun a41 ->
                                               let uu___9 =
                                                 FStarC_TypeChecker_NBETerm.unembed
-                                                  FStarC_Tactics_Embedding.e_proofstate_nbe
+                                                  FStarC_Tactics_Embedding.e_ref_proofstate_nbe
                                                   cb a5 in
                                               FStarC_Option.bind uu___9
                                                 (fun ps ->
@@ -4187,12 +4293,10 @@ let mk_tactic_nbe_interpretation_4 :
                                                        (fun uu___10 ->
                                                           let uu___11 =
                                                             t a11 a21 a31 a41 in
-                                                          FStarC_Tactics_Monad.run_safe
-                                                            uu___11 ps) in
+                                                          uu___11 ps) in
                                                    let uu___10 =
                                                      FStarC_TypeChecker_NBETerm.embed
-                                                       (FStarC_Tactics_Embedding.e_result_nbe
-                                                          er) cb r1 in
+                                                       er cb r1 in
                                                    FStar_Pervasives_Native.Some
                                                      uu___10)))))
                       | uu___ -> FStar_Pervasives_Native.None
@@ -4253,7 +4357,7 @@ let mk_tactic_nbe_interpretation_5 :
                                                   (fun a51 ->
                                                      let uu___11 =
                                                        FStarC_TypeChecker_NBETerm.unembed
-                                                         FStarC_Tactics_Embedding.e_proofstate_nbe
+                                                         FStarC_Tactics_Embedding.e_ref_proofstate_nbe
                                                          cb a6 in
                                                      FStarC_Option.bind
                                                        uu___11
@@ -4266,12 +4370,10 @@ let mk_tactic_nbe_interpretation_5 :
                                                                    t a11 a21
                                                                     a31 a41
                                                                     a51 in
-                                                                 FStarC_Tactics_Monad.run_safe
-                                                                   uu___13 ps) in
+                                                                 uu___13 ps) in
                                                           let uu___12 =
                                                             FStarC_TypeChecker_NBETerm.embed
-                                                              (FStarC_Tactics_Embedding.e_result_nbe
-                                                                 er) cb r1 in
+                                                              er cb r1 in
                                                           FStar_Pervasives_Native.Some
                                                             uu___12))))))
                         | uu___ -> FStar_Pervasives_Native.None
@@ -4342,7 +4444,7 @@ let mk_tactic_nbe_interpretation_6 :
                                                          (fun a61 ->
                                                             let uu___13 =
                                                               FStarC_TypeChecker_NBETerm.unembed
-                                                                FStarC_Tactics_Embedding.e_proofstate_nbe
+                                                                FStarC_Tactics_Embedding.e_ref_proofstate_nbe
                                                                 cb a7 in
                                                             FStarC_Option.bind
                                                               uu___13
@@ -4358,14 +4460,12 @@ let mk_tactic_nbe_interpretation_6 :
                                                                     t a11 a21
                                                                     a31 a41
                                                                     a51 a61 in
-                                                                    FStarC_Tactics_Monad.run_safe
                                                                     uu___15
                                                                     ps) in
                                                                  let uu___14
                                                                    =
                                                                    FStarC_TypeChecker_NBETerm.embed
-                                                                    (FStarC_Tactics_Embedding.e_result_nbe
-                                                                    er) cb r1 in
+                                                                    er cb r1 in
                                                                  FStar_Pervasives_Native.Some
                                                                    uu___14)))))))
                           | uu___ -> FStar_Pervasives_Native.None
@@ -4447,7 +4547,7 @@ let mk_tactic_nbe_interpretation_7 :
                                                                    let uu___15
                                                                     =
                                                                     FStarC_TypeChecker_NBETerm.unembed
-                                                                    FStarC_Tactics_Embedding.e_proofstate_nbe
+                                                                    FStarC_Tactics_Embedding.e_ref_proofstate_nbe
                                                                     cb a8 in
                                                                    FStarC_Option.bind
                                                                     uu___15
@@ -4465,14 +4565,12 @@ let mk_tactic_nbe_interpretation_7 :
                                                                     a31 a41
                                                                     a51 a61
                                                                     a71 in
-                                                                    FStarC_Tactics_Monad.run_safe
                                                                     uu___17
                                                                     ps) in
                                                                     let uu___16
                                                                     =
                                                                     FStarC_TypeChecker_NBETerm.embed
-                                                                    (FStarC_Tactics_Embedding.e_result_nbe
-                                                                    er) cb r1 in
+                                                                    er cb r1 in
                                                                     FStar_Pervasives_Native.Some
                                                                     uu___16))))))))
                             | uu___ -> FStar_Pervasives_Native.None
@@ -4567,7 +4665,7 @@ let mk_tactic_nbe_interpretation_8 :
                                                                     let uu___17
                                                                     =
                                                                     FStarC_TypeChecker_NBETerm.unembed
-                                                                    FStarC_Tactics_Embedding.e_proofstate_nbe
+                                                                    FStarC_Tactics_Embedding.e_ref_proofstate_nbe
                                                                     cb a9 in
                                                                     FStarC_Option.bind
                                                                     uu___17
@@ -4585,14 +4683,12 @@ let mk_tactic_nbe_interpretation_8 :
                                                                     a31 a41
                                                                     a51 a61
                                                                     a71 a81 in
-                                                                    FStarC_Tactics_Monad.run_safe
                                                                     uu___19
                                                                     ps) in
                                                                     let uu___18
                                                                     =
                                                                     FStarC_TypeChecker_NBETerm.embed
-                                                                    (FStarC_Tactics_Embedding.e_result_nbe
-                                                                    er) cb r1 in
+                                                                    er cb r1 in
                                                                     FStar_Pervasives_Native.Some
                                                                     uu___18)))))))))
                               | uu___ -> FStar_Pervasives_Native.None
@@ -4702,7 +4798,7 @@ let mk_tactic_nbe_interpretation_9 :
                                                                     let uu___19
                                                                     =
                                                                     FStarC_TypeChecker_NBETerm.unembed
-                                                                    FStarC_Tactics_Embedding.e_proofstate_nbe
+                                                                    FStarC_Tactics_Embedding.e_ref_proofstate_nbe
                                                                     cb a10 in
                                                                     FStarC_Option.bind
                                                                     uu___19
@@ -4721,14 +4817,12 @@ let mk_tactic_nbe_interpretation_9 :
                                                                     a51 a61
                                                                     a71 a81
                                                                     a91 in
-                                                                    FStarC_Tactics_Monad.run_safe
                                                                     uu___21
                                                                     ps) in
                                                                     let uu___20
                                                                     =
                                                                     FStarC_TypeChecker_NBETerm.embed
-                                                                    (FStarC_Tactics_Embedding.e_result_nbe
-                                                                    er) cb r1 in
+                                                                    er cb r1 in
                                                                     FStar_Pervasives_Native.Some
                                                                     uu___20))))))))))
                                 | uu___ -> FStar_Pervasives_Native.None
@@ -4852,7 +4946,7 @@ let mk_tactic_nbe_interpretation_10 :
                                                                     let uu___21
                                                                     =
                                                                     FStarC_TypeChecker_NBETerm.unembed
-                                                                    FStarC_Tactics_Embedding.e_proofstate_nbe
+                                                                    FStarC_Tactics_Embedding.e_ref_proofstate_nbe
                                                                     cb a11 in
                                                                     FStarC_Option.bind
                                                                     uu___21
@@ -4871,14 +4965,12 @@ let mk_tactic_nbe_interpretation_10 :
                                                                     a51 a61
                                                                     a71 a81
                                                                     a91 a101 in
-                                                                    FStarC_Tactics_Monad.run_safe
                                                                     uu___23
                                                                     ps) in
                                                                     let uu___22
                                                                     =
                                                                     FStarC_TypeChecker_NBETerm.embed
-                                                                    (FStarC_Tactics_Embedding.e_result_nbe
-                                                                    er) cb r1 in
+                                                                    er cb r1 in
                                                                     FStar_Pervasives_Native.Some
                                                                     uu___22)))))))))))
                                   | uu___ -> FStar_Pervasives_Native.None
@@ -5018,7 +5110,7 @@ let mk_tactic_nbe_interpretation_11 :
                                                                     let uu___23
                                                                     =
                                                                     FStarC_TypeChecker_NBETerm.unembed
-                                                                    FStarC_Tactics_Embedding.e_proofstate_nbe
+                                                                    FStarC_Tactics_Embedding.e_ref_proofstate_nbe
                                                                     cb a12 in
                                                                     FStarC_Option.bind
                                                                     uu___23
@@ -5038,14 +5130,12 @@ let mk_tactic_nbe_interpretation_11 :
                                                                     a71 a81
                                                                     a91 a101
                                                                     a111 in
-                                                                    FStarC_Tactics_Monad.run_safe
                                                                     uu___25
                                                                     ps) in
                                                                     let uu___24
                                                                     =
                                                                     FStarC_TypeChecker_NBETerm.embed
-                                                                    (FStarC_Tactics_Embedding.e_result_nbe
-                                                                    er) cb r1 in
+                                                                    er cb r1 in
                                                                     FStar_Pervasives_Native.Some
                                                                     uu___24))))))))))))
                                     | uu___ -> FStar_Pervasives_Native.None
@@ -5200,7 +5290,7 @@ let mk_tactic_nbe_interpretation_12 :
                                                                     let uu___25
                                                                     =
                                                                     FStarC_TypeChecker_NBETerm.unembed
-                                                                    FStarC_Tactics_Embedding.e_proofstate_nbe
+                                                                    FStarC_Tactics_Embedding.e_ref_proofstate_nbe
                                                                     cb a13 in
                                                                     FStarC_Option.bind
                                                                     uu___25
@@ -5220,14 +5310,12 @@ let mk_tactic_nbe_interpretation_12 :
                                                                     a71 a81
                                                                     a91 a101
                                                                     a111 a121 in
-                                                                    FStarC_Tactics_Monad.run_safe
                                                                     uu___27
                                                                     ps) in
                                                                     let uu___26
                                                                     =
                                                                     FStarC_TypeChecker_NBETerm.embed
-                                                                    (FStarC_Tactics_Embedding.e_result_nbe
-                                                                    er) cb r1 in
+                                                                    er cb r1 in
                                                                     FStar_Pervasives_Native.Some
                                                                     uu___26)))))))))))))
                                       | uu___ -> FStar_Pervasives_Native.None
@@ -5396,7 +5484,7 @@ let mk_tactic_nbe_interpretation_13 :
                                                                     let uu___27
                                                                     =
                                                                     FStarC_TypeChecker_NBETerm.unembed
-                                                                    FStarC_Tactics_Embedding.e_proofstate_nbe
+                                                                    FStarC_Tactics_Embedding.e_ref_proofstate_nbe
                                                                     cb a14 in
                                                                     FStarC_Option.bind
                                                                     uu___27
@@ -5417,14 +5505,12 @@ let mk_tactic_nbe_interpretation_13 :
                                                                     a91 a101
                                                                     a111 a121
                                                                     a131 in
-                                                                    FStarC_Tactics_Monad.run_safe
                                                                     uu___29
                                                                     ps) in
                                                                     let uu___28
                                                                     =
                                                                     FStarC_TypeChecker_NBETerm.embed
-                                                                    (FStarC_Tactics_Embedding.e_result_nbe
-                                                                    er) cb r1 in
+                                                                    er cb r1 in
                                                                     FStar_Pervasives_Native.Some
                                                                     uu___28))))))))))))))
                                         | uu___ ->
@@ -5610,7 +5696,7 @@ let mk_tactic_nbe_interpretation_14 :
                                                                     let uu___29
                                                                     =
                                                                     FStarC_TypeChecker_NBETerm.unembed
-                                                                    FStarC_Tactics_Embedding.e_proofstate_nbe
+                                                                    FStarC_Tactics_Embedding.e_ref_proofstate_nbe
                                                                     cb a15 in
                                                                     FStarC_Option.bind
                                                                     uu___29
@@ -5631,14 +5717,12 @@ let mk_tactic_nbe_interpretation_14 :
                                                                     a91 a101
                                                                     a111 a121
                                                                     a131 a141 in
-                                                                    FStarC_Tactics_Monad.run_safe
                                                                     uu___31
                                                                     ps) in
                                                                     let uu___30
                                                                     =
                                                                     FStarC_TypeChecker_NBETerm.embed
-                                                                    (FStarC_Tactics_Embedding.e_result_nbe
-                                                                    er) cb r1 in
+                                                                    er cb r1 in
                                                                     FStar_Pervasives_Native.Some
                                                                     uu___30)))))))))))))))
                                           | uu___ ->
@@ -5845,7 +5929,7 @@ let mk_tactic_nbe_interpretation_15 :
                                                                     let uu___31
                                                                     =
                                                                     FStarC_TypeChecker_NBETerm.unembed
-                                                                    FStarC_Tactics_Embedding.e_proofstate_nbe
+                                                                    FStarC_Tactics_Embedding.e_ref_proofstate_nbe
                                                                     cb a16 in
                                                                     FStarC_Option.bind
                                                                     uu___31
@@ -5867,14 +5951,12 @@ let mk_tactic_nbe_interpretation_15 :
                                                                     a111 a121
                                                                     a131 a141
                                                                     a151 in
-                                                                    FStarC_Tactics_Monad.run_safe
                                                                     uu___33
                                                                     ps) in
                                                                     let uu___32
                                                                     =
                                                                     FStarC_TypeChecker_NBETerm.embed
-                                                                    (FStarC_Tactics_Embedding.e_result_nbe
-                                                                    er) cb r1 in
+                                                                    er cb r1 in
                                                                     FStar_Pervasives_Native.Some
                                                                     uu___32))))))))))))))))
                                             | uu___ ->
@@ -6097,7 +6179,7 @@ let mk_tactic_nbe_interpretation_16 :
                                                                     let uu___33
                                                                     =
                                                                     FStarC_TypeChecker_NBETerm.unembed
-                                                                    FStarC_Tactics_Embedding.e_proofstate_nbe
+                                                                    FStarC_Tactics_Embedding.e_ref_proofstate_nbe
                                                                     cb a17 in
                                                                     FStarC_Option.bind
                                                                     uu___33
@@ -6119,14 +6201,12 @@ let mk_tactic_nbe_interpretation_16 :
                                                                     a111 a121
                                                                     a131 a141
                                                                     a151 a161 in
-                                                                    FStarC_Tactics_Monad.run_safe
                                                                     uu___35
                                                                     ps) in
                                                                     let uu___34
                                                                     =
                                                                     FStarC_TypeChecker_NBETerm.embed
-                                                                    (FStarC_Tactics_Embedding.e_result_nbe
-                                                                    er) cb r1 in
+                                                                    er cb r1 in
                                                                     FStar_Pervasives_Native.Some
                                                                     uu___34)))))))))))))))))
                                               | uu___ ->
@@ -6372,7 +6452,7 @@ let mk_tactic_nbe_interpretation_17 :
                                                                     let uu___35
                                                                     =
                                                                     FStarC_TypeChecker_NBETerm.unembed
-                                                                    FStarC_Tactics_Embedding.e_proofstate_nbe
+                                                                    FStarC_Tactics_Embedding.e_ref_proofstate_nbe
                                                                     cb a18 in
                                                                     FStarC_Option.bind
                                                                     uu___35
@@ -6395,14 +6475,12 @@ let mk_tactic_nbe_interpretation_17 :
                                                                     a131 a141
                                                                     a151 a161
                                                                     a171 in
-                                                                    FStarC_Tactics_Monad.run_safe
                                                                     uu___37
                                                                     ps) in
                                                                     let uu___36
                                                                     =
                                                                     FStarC_TypeChecker_NBETerm.embed
-                                                                    (FStarC_Tactics_Embedding.e_result_nbe
-                                                                    er) cb r1 in
+                                                                    er cb r1 in
                                                                     FStar_Pervasives_Native.Some
                                                                     uu___36))))))))))))))))))
                                                 | uu___ ->
@@ -6663,7 +6741,7 @@ let mk_tactic_nbe_interpretation_18 :
                                                                     let uu___37
                                                                     =
                                                                     FStarC_TypeChecker_NBETerm.unembed
-                                                                    FStarC_Tactics_Embedding.e_proofstate_nbe
+                                                                    FStarC_Tactics_Embedding.e_ref_proofstate_nbe
                                                                     cb a19 in
                                                                     FStarC_Option.bind
                                                                     uu___37
@@ -6687,14 +6765,12 @@ let mk_tactic_nbe_interpretation_18 :
                                                                     a141 a151
                                                                     a161 a171
                                                                     a181 in
-                                                                    FStarC_Tactics_Monad.run_safe
                                                                     uu___39
                                                                     ps) in
                                                                     let uu___38
                                                                     =
                                                                     FStarC_TypeChecker_NBETerm.embed
-                                                                    (FStarC_Tactics_Embedding.e_result_nbe
-                                                                    er) cb r1 in
+                                                                    er cb r1 in
                                                                     FStar_Pervasives_Native.Some
                                                                     uu___38)))))))))))))))))))
                                                   | uu___ ->
@@ -6974,7 +7050,7 @@ let mk_tactic_nbe_interpretation_19 :
                                                                     let uu___39
                                                                     =
                                                                     FStarC_TypeChecker_NBETerm.unembed
-                                                                    FStarC_Tactics_Embedding.e_proofstate_nbe
+                                                                    FStarC_Tactics_Embedding.e_ref_proofstate_nbe
                                                                     cb a20 in
                                                                     FStarC_Option.bind
                                                                     uu___39
@@ -6998,14 +7074,12 @@ let mk_tactic_nbe_interpretation_19 :
                                                                     a141 a151
                                                                     a161 a171
                                                                     a181 a191 in
-                                                                    FStarC_Tactics_Monad.run_safe
                                                                     uu___41
                                                                     ps) in
                                                                     let uu___40
                                                                     =
                                                                     FStarC_TypeChecker_NBETerm.embed
-                                                                    (FStarC_Tactics_Embedding.e_result_nbe
-                                                                    er) cb r1 in
+                                                                    er cb r1 in
                                                                     FStar_Pervasives_Native.Some
                                                                     uu___40))))))))))))))))))))
                                                     | uu___ ->
@@ -7300,7 +7374,7 @@ let mk_tactic_nbe_interpretation_20 :
                                                                     let uu___41
                                                                     =
                                                                     FStarC_TypeChecker_NBETerm.unembed
-                                                                    FStarC_Tactics_Embedding.e_proofstate_nbe
+                                                                    FStarC_Tactics_Embedding.e_ref_proofstate_nbe
                                                                     cb a21 in
                                                                     FStarC_Option.bind
                                                                     uu___41
@@ -7325,14 +7399,12 @@ let mk_tactic_nbe_interpretation_20 :
                                                                     a161 a171
                                                                     a181 a191
                                                                     a201 in
-                                                                    FStarC_Tactics_Monad.run_safe
                                                                     uu___43
                                                                     ps) in
                                                                     let uu___42
                                                                     =
                                                                     FStarC_TypeChecker_NBETerm.embed
-                                                                    (FStarC_Tactics_Embedding.e_result_nbe
-                                                                    er) cb r1 in
+                                                                    er cb r1 in
                                                                     FStar_Pervasives_Native.Some
                                                                     uu___42)))))))))))))))))))))
                                                       | uu___ ->

@@ -419,7 +419,7 @@ let (load_checked_file_with_tc_result :
                            else ());
                           (let msg =
                              FStarC_Format.fmt1
-                               "checked file %s is stale (dependence hash mismatch, use --debug yes for more details)"
+                               "checked file %s is stale (dependence hash mismatch, use --debug CheckedFiles for more details)"
                                checked_fn in
                            let elt1 =
                              ((Invalid msg), (FStar_Pervasives.Inl msg)) in

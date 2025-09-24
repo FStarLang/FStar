@@ -1,4 +1,5 @@
 open Prims
+type 'a tac = FStarC_Tactics_Types.proofstate FStarC_Effect.ref -> 'a
 let (dbg_Core : Prims.bool FStarC_Effect.ref) =
   FStarC_Debug.get_toggle "Core"
 let (dbg_CoreEq : Prims.bool FStarC_Effect.ref) =
@@ -222,50 +223,36 @@ let (register_goal : FStarC_Tactics_Types.goal -> unit) =
                         ()
                         (Obj.magic FStarC_Errors_Msg.is_error_message_string)
                         (Obj.magic msg)))))))
-type 'a tac =
-  {
-  tac_f: FStarC_Tactics_Types.proofstate -> 'a FStarC_Tactics_Result.__result }
-let __proj__Mktac__item__tac_f :
-  'a .
-    'a tac ->
-      FStarC_Tactics_Types.proofstate -> 'a FStarC_Tactics_Result.__result
-  = fun projectee -> match projectee with | { tac_f;_} -> tac_f
 let mk_tac :
   'a .
     (FStarC_Tactics_Types.proofstate -> 'a FStarC_Tactics_Result.__result) ->
       'a tac
-  = fun f -> { tac_f = f }
+  =
+  fun f ->
+    fun ps ->
+      let uu___ = let uu___1 = FStarC_Effect.op_Bang ps in f uu___1 in
+      match uu___ with
+      | FStarC_Tactics_Result.Success (x, ps') ->
+          (FStarC_Effect.op_Colon_Equals ps ps'; x)
 let run :
-  'a .
-    'a tac ->
-      FStarC_Tactics_Types.proofstate -> 'a FStarC_Tactics_Result.__result
-  = fun t -> fun ps -> t.tac_f ps
-let run_safe :
   'a .
     'a tac ->
       FStarC_Tactics_Types.proofstate -> 'a FStarC_Tactics_Result.__result
   =
   fun t ->
     fun ps ->
-      let uu___ = FStarC_Options.tactics_failhard () in
-      if uu___
-      then run t ps
-      else
-        (try (fun uu___2 -> match () with | () -> run t ps) ()
-         with | uu___2 -> FStarC_Tactics_Result.Failed (uu___2, ps))
-let ret : 'a . 'a -> 'a tac =
-  fun x -> mk_tac (fun ps -> FStarC_Tactics_Result.Success (x, ps))
+      let ps1 = FStarC_Effect.mk_ref ps in
+      let x = t ps1 in
+      let uu___ = let uu___1 = FStarC_Effect.op_Bang ps1 in (x, uu___1) in
+      FStarC_Tactics_Result.Success uu___
+let run_safe :
+  'a .
+    'a tac ->
+      FStarC_Tactics_Types.proofstate -> 'a FStarC_Tactics_Result.__result
+  = fun t -> fun ps -> run t ps
+let ret : 'a . 'a -> 'a tac = fun x -> fun uu___ -> x
 let bind : 'a 'b . 'a tac -> ('a -> 'b tac) -> 'b tac =
-  fun t1 ->
-    fun t2 ->
-      mk_tac
-        (fun ps ->
-           let uu___ = run t1 ps in
-           match uu___ with
-           | FStarC_Tactics_Result.Success (a1, q) ->
-               let uu___1 = t2 a1 in run uu___1 q
-           | FStarC_Tactics_Result.Failed (msg, q) ->
-               FStarC_Tactics_Result.Failed (msg, q))
+  fun t1 -> fun t2 -> fun ps -> let x = t1 ps in let uu___ = t2 x in uu___ ps
 let (monad_tac : unit tac FStarC_Class_Monad.monad) =
   {
     FStarC_Class_Monad.return =
@@ -279,34 +266,33 @@ let (monad_tac : unit tac FStarC_Class_Monad.monad) =
                  uu___1 uu___)
   }
 let (set : FStarC_Tactics_Types.proofstate -> unit tac) =
-  fun ps -> mk_tac (fun uu___ -> FStarC_Tactics_Result.Success ((), ps))
+  fun ps -> fun ps_ref -> FStarC_Effect.op_Colon_Equals ps_ref ps
 let (get : FStarC_Tactics_Types.proofstate tac) =
-  mk_tac (fun ps -> FStarC_Tactics_Result.Success (ps, ps))
+  fun ps -> FStarC_Effect.op_Bang ps
 let traise : 'a . Prims.exn -> 'a tac =
-  fun e -> mk_tac (fun ps -> FStarC_Tactics_Result.Failed (e, ps))
+  fun e -> fun uu___ -> FStarC_Effect.raise e
 let (do_log : FStarC_Tactics_Types.proofstate -> (unit -> unit) -> unit) =
   fun ps ->
     fun f -> if ps.FStarC_Tactics_Types.tac_verb_dbg then f () else ()
 let (log : (unit -> unit) -> unit tac) =
-  fun f ->
-    mk_tac (fun ps -> do_log ps f; FStarC_Tactics_Result.Success ((), ps))
+  fun f -> fun ps -> let uu___ = FStarC_Effect.op_Bang ps in do_log uu___ f
 let fail_doc : 'a . FStarC_Errors_Msg.error_message -> 'a tac =
   fun msg ->
-    mk_tac
-      (fun ps ->
-         (let uu___1 = FStarC_Effect.op_Bang dbg_TacFail in
-          if uu___1
-          then
-            let uu___2 =
-              let uu___3 =
-                let uu___4 = FStarC_List.hd msg in
-                FStarC_Errors_Msg.renderdoc uu___4 in
-              Prims.strcat "TACTIC FAILING: " uu___3 in
-            FStarC_Tactics_Printing.do_dump_proofstate ps uu___2
-          else ());
-         FStarC_Tactics_Result.Failed
-           ((FStarC_Tactics_Common.TacticFailure
-               (msg, FStar_Pervasives_Native.None)), ps))
+    fun ps ->
+      (let uu___1 = FStarC_Effect.op_Bang dbg_TacFail in
+       if uu___1
+       then
+         let uu___2 = FStarC_Effect.op_Bang ps in
+         let uu___3 =
+           let uu___4 =
+             let uu___5 = FStarC_List.hd msg in
+             FStarC_Errors_Msg.renderdoc uu___5 in
+           Prims.strcat "TACTIC FAILING: " uu___4 in
+         FStarC_Tactics_Printing.do_dump_proofstate uu___2 uu___3
+       else ());
+      FStarC_Effect.raise
+        (FStarC_Tactics_Common.TacticFailure
+           (msg, FStar_Pervasives_Native.None))
 let fail : 'a . Prims.string -> 'a tac =
   fun msg ->
     let uu___ = let uu___1 = FStarC_Errors_Msg.text msg in [uu___1] in
@@ -319,61 +305,24 @@ let catch : 'a . 'a tac -> (Prims.exn, 'a) FStar_Pervasives.either tac =
            FStarC_Effect.op_Bang
              (ps.FStarC_Tactics_Types.main_context).FStarC_TypeChecker_Env.identifier_info in
          let tx = FStarC_Syntax_Unionfind.new_transaction () in
-         let uu___ = run t ps in
-         match uu___ with
-         | FStarC_Tactics_Result.Success (a1, q) ->
-             (FStarC_Syntax_Unionfind.commit tx;
-              FStarC_Tactics_Result.Success ((FStar_Pervasives.Inr a1), q))
-         | FStarC_Tactics_Result.Failed (m, q) ->
+         try
+           (fun uu___ ->
+              match () with
+              | () ->
+                  let uu___1 = run t ps in
+                  (match uu___1 with
+                   | FStarC_Tactics_Result.Success (a1, q) ->
+                       (FStarC_Syntax_Unionfind.commit tx;
+                        FStarC_Tactics_Result.Success
+                          ((FStar_Pervasives.Inr a1), q)))) ()
+         with
+         | uu___ ->
              (FStarC_Syntax_Unionfind.rollback tx;
               FStarC_Effect.op_Colon_Equals
                 (ps.FStarC_Tactics_Types.main_context).FStarC_TypeChecker_Env.identifier_info
                 idtable;
-              (let ps1 =
-                 {
-                   FStarC_Tactics_Types.main_context =
-                     (ps.FStarC_Tactics_Types.main_context);
-                   FStarC_Tactics_Types.all_implicits =
-                     (ps.FStarC_Tactics_Types.all_implicits);
-                   FStarC_Tactics_Types.goals =
-                     (ps.FStarC_Tactics_Types.goals);
-                   FStarC_Tactics_Types.smt_goals =
-                     (ps.FStarC_Tactics_Types.smt_goals);
-                   FStarC_Tactics_Types.splice_quals =
-                     (ps.FStarC_Tactics_Types.splice_quals);
-                   FStarC_Tactics_Types.splice_attrs =
-                     (ps.FStarC_Tactics_Types.splice_attrs);
-                   FStarC_Tactics_Types.depth =
-                     (ps.FStarC_Tactics_Types.depth);
-                   FStarC_Tactics_Types.__dump =
-                     (ps.FStarC_Tactics_Types.__dump);
-                   FStarC_Tactics_Types.psc = (ps.FStarC_Tactics_Types.psc);
-                   FStarC_Tactics_Types.entry_range =
-                     (ps.FStarC_Tactics_Types.entry_range);
-                   FStarC_Tactics_Types.guard_policy =
-                     (ps.FStarC_Tactics_Types.guard_policy);
-                   FStarC_Tactics_Types.freshness =
-                     (q.FStarC_Tactics_Types.freshness);
-                   FStarC_Tactics_Types.tac_verb_dbg =
-                     (ps.FStarC_Tactics_Types.tac_verb_dbg);
-                   FStarC_Tactics_Types.local_state =
-                     (ps.FStarC_Tactics_Types.local_state);
-                   FStarC_Tactics_Types.urgency =
-                     (ps.FStarC_Tactics_Types.urgency);
-                   FStarC_Tactics_Types.dump_on_failure =
-                     (ps.FStarC_Tactics_Types.dump_on_failure)
-                 } in
-               FStarC_Tactics_Result.Success ((FStar_Pervasives.Inl m), ps1))))
-let recover : 'a . 'a tac -> (Prims.exn, 'a) FStar_Pervasives.either tac =
-  fun t ->
-    mk_tac
-      (fun ps ->
-         let uu___ = run t ps in
-         match uu___ with
-         | FStarC_Tactics_Result.Success (a1, q) ->
-             FStarC_Tactics_Result.Success ((FStar_Pervasives.Inr a1), q)
-         | FStarC_Tactics_Result.Failed (m, q) ->
-             FStarC_Tactics_Result.Success ((FStar_Pervasives.Inl m), q))
+              FStarC_Tactics_Result.Success
+                ((FStar_Pervasives.Inl uu___), ps)))
 let trytac : 'a . 'a tac -> 'a FStar_Pervasives_Native.option tac =
   fun t ->
     let uu___ = catch t in
@@ -1008,17 +957,13 @@ let wrap_err_doc : 'a . FStarC_Errors_Msg.error_message -> 'a tac -> 'a tac =
     fun t ->
       mk_tac
         (fun ps ->
-           let uu___ = run t ps in
-           match uu___ with
-           | FStarC_Tactics_Result.Success (a1, q) ->
-               FStarC_Tactics_Result.Success (a1, q)
-           | FStarC_Tactics_Result.Failed
-               (FStarC_Tactics_Common.TacticFailure (msg, r), q) ->
-               FStarC_Tactics_Result.Failed
-                 ((FStarC_Tactics_Common.TacticFailure
-                     ((FStarC_List.op_At pref msg), r)), q)
-           | FStarC_Tactics_Result.Failed (e, q) ->
-               FStarC_Tactics_Result.Failed (e, q))
+           try (fun uu___ -> match () with | () -> run t ps) ()
+           with
+           | FStarC_Tactics_Common.TacticFailure (msg, r) ->
+               FStarC_Effect.raise
+                 (FStarC_Tactics_Common.TacticFailure
+                    ((FStarC_List.op_At pref msg), r))
+           | e -> FStarC_Effect.raise e)
 let wrap_err : 'a . Prims.string -> 'a tac -> 'a tac =
   fun pref ->
     fun t ->

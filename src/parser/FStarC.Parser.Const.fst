@@ -430,6 +430,8 @@ let fstar_tactics_lid' s : lid = FStarC.Ident.lid_of_path (["FStar"; "Tactics"]@
 let fstar_stubs_tactics_lid' s : lid = FStarC.Ident.lid_of_path (["FStar"; "Stubs"; "Tactics"]@s) FStarC.Range.dummyRange
 let fstar_tactics_lid  s = fstar_tactics_lid' [s]
 let tac_lid = fstar_tactics_lid' ["Effect"; "tac"]
+let tac_bind_lid = fstar_tactics_lid' ["Effect"; "tac_bind"]
+let lift_div_tac_lid = fstar_tactics_lid' ["Effect"; "lift_div_tac"]
 let tactic_lid = fstar_tactics_lid' ["Effect"; "tactic"]
 
 let tac_opaque_attr = pconst "tac_opaque"

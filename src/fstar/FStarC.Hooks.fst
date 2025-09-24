@@ -41,6 +41,7 @@ let lazy_chooser (k:Syntax.Syntax.lazy_kind) (i:Syntax.Syntax.lazyinfo) : Syntax
     | Syntax.Syntax.Lazy_universe         -> RE.unfold_lazy_universe    i
 
     | Syntax.Syntax.Lazy_proofstate       -> Tactics.Embedding.unfold_lazy_proofstate i
+    | Syntax.Syntax.Lazy_ref_proofstate   -> Tactics.Embedding.unfold_lazy_ref_proofstate i
     | Syntax.Syntax.Lazy_goal             -> Tactics.Embedding.unfold_lazy_goal i
 
     | Syntax.Syntax.Lazy_doc              -> RE.unfold_lazy_doc i

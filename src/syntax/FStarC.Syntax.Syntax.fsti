@@ -405,6 +405,7 @@ and lazy_kind =
   | Lazy_comp
   | Lazy_env
   | Lazy_proofstate
+  | Lazy_ref_proofstate
   | Lazy_goal
   | Lazy_sigelt
   | Lazy_uvar

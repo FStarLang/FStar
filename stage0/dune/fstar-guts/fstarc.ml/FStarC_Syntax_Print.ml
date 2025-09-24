@@ -242,6 +242,7 @@ let (lkind_to_string : FStarC_Syntax_Syntax.lazy_kind -> Prims.string) =
     | FStarC_Syntax_Syntax.Lazy_comp -> "Lazy_comp"
     | FStarC_Syntax_Syntax.Lazy_env -> "Lazy_env"
     | FStarC_Syntax_Syntax.Lazy_proofstate -> "Lazy_proofstate"
+    | FStarC_Syntax_Syntax.Lazy_ref_proofstate -> "Lazy_ref_proofstate"
     | FStarC_Syntax_Syntax.Lazy_goal -> "Lazy_goal"
     | FStarC_Syntax_Syntax.Lazy_sigelt -> "Lazy_sigelt"
     | FStarC_Syntax_Syntax.Lazy_uvar -> "Lazy_uvar"

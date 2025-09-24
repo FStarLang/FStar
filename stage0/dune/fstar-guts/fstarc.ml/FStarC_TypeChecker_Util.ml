@@ -5513,15 +5513,20 @@ let (find_coercion :
         fun e ->
           FStarC_Errors.with_ctx "find_coercion"
             (fun uu___ ->
-               let is_type t =
-                 let t1 = FStarC_TypeChecker_Normalize.unfold_whnf env t in
-                 let t2 = FStarC_Syntax_Util.unrefine t1 in
-                 let uu___1 =
-                   let uu___2 = FStarC_Syntax_Subst.compress t2 in
-                   uu___2.FStarC_Syntax_Syntax.n in
-                 match uu___1 with
-                 | FStarC_Syntax_Syntax.Tm_type uu___2 -> true
-                 | uu___2 -> false in
+               let rec is_type retry =
+                 fun t ->
+                   let uu___1 =
+                     let uu___2 = FStarC_Syntax_Subst.compress t in
+                     uu___2.FStarC_Syntax_Syntax.n in
+                   match uu___1 with
+                   | FStarC_Syntax_Syntax.Tm_type uu___2 -> true
+                   | uu___2 when retry ->
+                       let t1 =
+                         FStarC_TypeChecker_Normalize.unfold_whnf env t in
+                       let t2 = FStarC_Syntax_Util.unrefine t1 in
+                       is_type false t2
+                   | uu___2 -> false in
+               let is_type1 = is_type true in
                let rec head_of t =
                  let uu___1 =
                    let uu___2 = FStarC_Syntax_Subst.compress t in
@@ -5597,7 +5602,7 @@ let (find_coercion :
                          | (FStarC_Syntax_Syntax.Tm_fvar fv, []) when
                              (FStarC_Syntax_Syntax.fv_eq_lid fv
                                 FStarC_Parser_Const.bool_lid)
-                               && (is_type exp_t1)
+                               && (is_type1 exp_t1)
                              ->
                              let lc2 =
                                let uu___5 =
@@ -5987,9 +5992,32 @@ let (maybe_coerce_lc :
     fun e ->
       fun lc ->
         fun exp_t ->
+          let head_types_equal t0 =
+            fun t1 ->
+              let uu___ =
+                let uu___1 =
+                  let uu___2 =
+                    let uu___3 = FStarC_Syntax_Util.unrefine t0 in
+                    FStarC_Syntax_Util.un_uinst uu___3 in
+                  uu___2.FStarC_Syntax_Syntax.n in
+                let uu___2 =
+                  let uu___3 =
+                    let uu___4 = FStarC_Syntax_Util.unrefine t1 in
+                    FStarC_Syntax_Util.un_uinst uu___4 in
+                  uu___3.FStarC_Syntax_Syntax.n in
+                (uu___1, uu___2) in
+              match uu___ with
+              | (FStarC_Syntax_Syntax.Tm_fvar fv0,
+                 FStarC_Syntax_Syntax.Tm_fvar fv1) ->
+                  FStarC_Syntax_Syntax.fv_eq fv0 fv1
+              | uu___1 -> false in
           let should_coerce =
-            (env.FStarC_TypeChecker_Env.phase1 || (FStarC_Options.lax ())) &&
-              (Prims.op_Negation env.FStarC_TypeChecker_Env.nocoerce) in
+            ((env.FStarC_TypeChecker_Env.phase1 || (FStarC_Options.lax ()))
+               && (Prims.op_Negation env.FStarC_TypeChecker_Env.nocoerce))
+              &&
+              (let uu___ =
+                 head_types_equal lc.FStarC_TypeChecker_Common.res_typ exp_t in
+               Prims.op_Negation uu___) in
           if Prims.op_Negation should_coerce
           then
             ((let uu___1 = FStarC_Effect.op_Bang dbg_Coercions in
@@ -6978,113 +7006,110 @@ let (maybe_instantiate :
               | FStar_Pervasives_Native.Some i ->
                   FStar_Pervasives_Native.Some (i - Prims.int_one) in
             let t1 = FStarC_TypeChecker_Normalize.unfold_whnf env t in
-            match t1.FStarC_Syntax_Syntax.n with
-            | FStarC_Syntax_Syntax.Tm_arrow
-                { FStarC_Syntax_Syntax.bs1 = bs;
-                  FStarC_Syntax_Syntax.comp = c;_}
-                ->
-                let uu___2 = FStarC_Syntax_Subst.open_comp bs c in
-                (match uu___2 with
-                 | (bs1, c1) ->
+            let uu___2 = FStarC_Syntax_Util.arrow_formals_comp t1 in
+            match uu___2 with
+            | (bs, c) ->
+                (match bs with
+                 | uu___3::uu___4 ->
                      let rec aux subst =
                        fun inst_n ->
-                         fun bs2 ->
-                           match (inst_n, bs2) with
-                           | (FStar_Pervasives_Native.Some uu___3, uu___4)
-                               when uu___3 = Prims.int_zero ->
-                               ([], bs2, subst,
+                         fun bs1 ->
+                           match (inst_n, bs1) with
+                           | (FStar_Pervasives_Native.Some uu___5, uu___6)
+                               when uu___5 = Prims.int_zero ->
+                               ([], bs1, subst,
                                  FStarC_TypeChecker_Env.trivial_guard)
-                           | (uu___3,
-                              { FStarC_Syntax_Syntax.binder_bv = uu___4;
+                           | (uu___5,
+                              { FStarC_Syntax_Syntax.binder_bv = uu___6;
                                 FStarC_Syntax_Syntax.binder_qual =
                                   FStar_Pervasives_Native.Some
-                                  (FStarC_Syntax_Syntax.Implicit uu___5);
+                                  (FStarC_Syntax_Syntax.Implicit uu___7);
                                 FStarC_Syntax_Syntax.binder_positivity =
-                                  uu___6;
-                                FStarC_Syntax_Syntax.binder_attrs = uu___7;_}::rest)
+                                  uu___8;
+                                FStarC_Syntax_Syntax.binder_attrs = uu___9;_}::rest)
                                ->
-                               let b = FStarC_List.hd bs2 in
+                               let b = FStarC_List.hd bs1 in
                                let b1 =
                                  FStarC_Syntax_Subst.subst_binder subst b in
-                               let uu___8 =
+                               let uu___10 =
                                  instantiate_one_binder env
                                    e.FStarC_Syntax_Syntax.pos b1 in
-                               (match uu___8 with
+                               (match uu___10 with
                                 | (tm, ty, aq, g) ->
                                     let subst1 =
                                       (FStarC_Syntax_Syntax.NT
                                          ((b1.FStarC_Syntax_Syntax.binder_bv),
                                            tm))
                                       :: subst in
-                                    let uu___9 =
+                                    let uu___11 =
                                       aux subst1 (decr_inst inst_n) rest in
-                                    (match uu___9 with
-                                     | (args, bs3, subst2, g') ->
-                                         let uu___10 =
+                                    (match uu___11 with
+                                     | (args, bs2, subst2, g') ->
+                                         let uu___12 =
                                            FStarC_Class_Monoid.op_Plus_Plus
                                              FStarC_TypeChecker_Common.monoid_guard_t
                                              g g' in
-                                         (((tm, aq) :: args), bs3, subst2,
-                                           uu___10)))
-                           | (uu___3,
-                              { FStarC_Syntax_Syntax.binder_bv = uu___4;
+                                         (((tm, aq) :: args), bs2, subst2,
+                                           uu___12)))
+                           | (uu___5,
+                              { FStarC_Syntax_Syntax.binder_bv = uu___6;
                                 FStarC_Syntax_Syntax.binder_qual =
                                   FStar_Pervasives_Native.Some
-                                  (FStarC_Syntax_Syntax.Meta uu___5);
+                                  (FStarC_Syntax_Syntax.Meta uu___7);
                                 FStarC_Syntax_Syntax.binder_positivity =
-                                  uu___6;
-                                FStarC_Syntax_Syntax.binder_attrs = uu___7;_}::rest)
+                                  uu___8;
+                                FStarC_Syntax_Syntax.binder_attrs = uu___9;_}::rest)
                                ->
-                               let b = FStarC_List.hd bs2 in
+                               let b = FStarC_List.hd bs1 in
                                let b1 =
                                  FStarC_Syntax_Subst.subst_binder subst b in
-                               let uu___8 =
+                               let uu___10 =
                                  instantiate_one_binder env
                                    e.FStarC_Syntax_Syntax.pos b1 in
-                               (match uu___8 with
+                               (match uu___10 with
                                 | (tm, ty, aq, g) ->
                                     let subst1 =
                                       (FStarC_Syntax_Syntax.NT
                                          ((b1.FStarC_Syntax_Syntax.binder_bv),
                                            tm))
                                       :: subst in
-                                    let uu___9 =
+                                    let uu___11 =
                                       aux subst1 (decr_inst inst_n) rest in
-                                    (match uu___9 with
-                                     | (args, bs3, subst2, g') ->
-                                         let uu___10 =
+                                    (match uu___11 with
+                                     | (args, bs2, subst2, g') ->
+                                         let uu___12 =
                                            FStarC_Class_Monoid.op_Plus_Plus
                                              FStarC_TypeChecker_Common.monoid_guard_t
                                              g g' in
-                                         (((tm, aq) :: args), bs3, subst2,
-                                           uu___10)))
-                           | (uu___3, bs3) ->
-                               ([], bs3, subst,
+                                         (((tm, aq) :: args), bs2, subst2,
+                                           uu___12)))
+                           | (uu___5, bs2) ->
+                               ([], bs2, subst,
                                  (FStarC_Class_Monoid.mzero
                                     FStarC_TypeChecker_Common.monoid_guard_t)) in
-                     let uu___3 =
-                       let uu___4 = inst_n_binders t1 in aux [] uu___4 bs1 in
-                     (match uu___3 with
-                      | (args, bs2, subst, guard) ->
-                          (match (args, bs2) with
-                           | ([], uu___4) -> (e, torig, guard)
-                           | (uu___4, []) when
-                               let uu___5 =
-                                 FStarC_Syntax_Util.is_total_comp c1 in
-                               Prims.op_Negation uu___5 ->
+                     let uu___5 =
+                       let uu___6 = inst_n_binders t1 in aux [] uu___6 bs in
+                     (match uu___5 with
+                      | (args, bs1, subst, guard) ->
+                          (match (args, bs1) with
+                           | ([], uu___6) -> (e, torig, guard)
+                           | (uu___6, []) when
+                               let uu___7 =
+                                 FStarC_Syntax_Util.is_total_comp c in
+                               Prims.op_Negation uu___7 ->
                                (e, torig,
                                  FStarC_TypeChecker_Env.trivial_guard)
-                           | uu___4 ->
+                           | uu___6 ->
                                let t2 =
-                                 match bs2 with
-                                 | [] -> FStarC_Syntax_Util.comp_result c1
-                                 | uu___5 -> FStarC_Syntax_Util.arrow bs2 c1 in
+                                 match bs1 with
+                                 | [] -> FStarC_Syntax_Util.comp_result c
+                                 | uu___7 -> FStarC_Syntax_Util.arrow bs1 c in
                                let t3 = FStarC_Syntax_Subst.subst subst t2 in
                                let e1 =
                                  FStarC_Syntax_Syntax.mk_Tm_app e args
                                    e.FStarC_Syntax_Syntax.pos in
-                               (e1, t3, guard))))
-            | uu___2 -> (e, torig, FStarC_TypeChecker_Env.trivial_guard)))
+                               (e1, t3, guard)))
+                 | uu___3 -> (e, torig, FStarC_TypeChecker_Env.trivial_guard))))
 let (check_has_type :
   FStarC_TypeChecker_Env.env ->
     FStarC_Syntax_Syntax.term ->

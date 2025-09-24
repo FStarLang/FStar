@@ -536,9 +536,11 @@ let matches_level :
       | (assoc_levels, tokens) ->
           let uu___1 = FStarC_List.tryFind (matches_token s) tokens in
           uu___1 <> FStar_Pervasives_Native.None
-let (opinfix4 : associativity_level) = (Right, [Exact "**"; UnicodeOperator])
-let (opinfix3 : associativity_level) =
+let (opinfix4 : associativity_level) =
+  (Right, [Exact "|->"; UnicodeOperator])
+let (opinfix3l : associativity_level) =
   (Left, [StartsWith 42; StartsWith 47; StartsWith 37])
+let (opinfix3r : associativity_level) = (Right, [Exact "**"])
 let (opinfix2 : associativity_level) = (Left, [StartsWith 43; StartsWith 45])
 let (minus_lvl : associativity_level) = (Left, [Exact "-"])
 let (opinfix1 : associativity_level) =
@@ -555,7 +557,8 @@ let (amp : associativity_level) = (Right, [Exact "&"])
 let (colon_colon : associativity_level) = (Right, [Exact "::"])
 let (level_associativity_spec : associativity_level Prims.list) =
   [opinfix4;
-  opinfix3;
+  opinfix3r;
+  opinfix3l;
   opinfix2;
   opinfix1;
   pipe_right;
@@ -632,7 +635,7 @@ let (is_operatorInfix0ad12 : FStarC_Ident.ident -> Prims.bool) =
       FStarC_List.tryFind uu___1 operatorInfix0ad12 in
     uu___ <> FStar_Pervasives_Native.None
 let (is_operatorInfix34 : FStarC_Ident.ident -> Prims.bool) =
-  let opinfix34 = [opinfix3; opinfix4] in
+  let opinfix34 = [opinfix3l; opinfix3r; opinfix4] in
   fun op ->
     let uu___ =
       let uu___1 =
@@ -1407,6 +1410,9 @@ and (p_pragma : FStarC_Parser_AST.pragma -> FStar_Pprint.document) =
     | FStarC_Parser_AST.PopOptions -> str "#pop-options"
     | FStarC_Parser_AST.RestartSolver -> str "#restart-solver"
     | FStarC_Parser_AST.PrintEffectsGraph -> str "#print-effects-graph"
+    | FStarC_Parser_AST.Check t ->
+        let uu___1 = p_term false false t in
+        FStar_Pprint.op_Hat_Slash_Hat (str "#check") uu___1
 and (p_typars : FStarC_Parser_AST.binder Prims.list -> FStar_Pprint.document)
   = fun bs -> p_binders true bs
 and (p_typeDeclWithKw :
@@ -1871,7 +1877,6 @@ and (p_qualifier : FStarC_Parser_AST.qualifier -> FStar_Pprint.document) =
     | FStarC_Parser_AST.Noeq -> str "noeq"
     | FStarC_Parser_AST.Unopteq -> str "unopteq"
     | FStarC_Parser_AST.Assumption -> str "assume"
-    | FStarC_Parser_AST.DefaultEffect -> str "default"
     | FStarC_Parser_AST.TotalEffect -> str "total"
     | FStarC_Parser_AST.Effect_qual -> FStar_Pprint.empty
     | FStarC_Parser_AST.New -> str "new"
@@ -4016,7 +4021,7 @@ and (p_tmNoEqWith :
   =
   fun p_X ->
     fun e ->
-      let n = max_level [colon_colon; amp; opinfix3; opinfix4] in
+      let n = max_level [colon_colon; amp; opinfix3l; opinfix3r; opinfix4] in
       p_tmNoEqWith' false p_X n e
 and (p_tmNoEqWith' :
   Prims.bool ->

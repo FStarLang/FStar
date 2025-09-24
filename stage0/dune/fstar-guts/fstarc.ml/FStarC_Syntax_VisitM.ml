@@ -2018,6 +2018,17 @@ let rec on_sub_sigelt' : 'm . 'm lvm -> FStarC_Syntax_Syntax.sigelt' -> 'm =
                                                        = cflags1
                                                    })))) uu___3))) uu___2)))
                  uu___1)
+      | FStarC_Syntax_Syntax.Sig_pragma (FStarC_Syntax_Syntax.Check t) ->
+          let uu___ = f_term d t in
+          FStarC_Class_Monad.op_let_Bang (_lvm_monad d) () () uu___
+            (fun uu___1 ->
+               (fun t1 ->
+                  let t1 = Obj.magic t1 in
+                  Obj.magic
+                    (FStarC_Class_Monad.return (_lvm_monad d) ()
+                       (Obj.magic
+                          (FStarC_Syntax_Syntax.Sig_pragma
+                             (FStarC_Syntax_Syntax.Check t1))))) uu___1)
       | FStarC_Syntax_Syntax.Sig_pragma uu___ ->
           FStarC_Class_Monad.return (_lvm_monad d) () (Obj.magic se)
       | FStarC_Syntax_Syntax.Sig_polymonadic_bind

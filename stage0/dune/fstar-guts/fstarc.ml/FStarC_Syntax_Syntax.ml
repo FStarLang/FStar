@@ -9,58 +9,6 @@ let __proj__Mkwithinfo_t__item__p :
   fun projectee -> match projectee with | { v; p;_} -> p
 type var = FStarC_Ident.lident[@@deriving yojson,show]
 type sconst = FStarC_Const.sconst[@@deriving yojson,show]
-type pragma =
-  | ShowOptions 
-  | SetOptions of Prims.string 
-  | ResetOptions of Prims.string FStar_Pervasives_Native.option 
-  | PushOptions of Prims.string FStar_Pervasives_Native.option 
-  | PopOptions 
-  | RestartSolver 
-  | PrintEffectsGraph [@@deriving yojson,show]
-let (uu___is_ShowOptions : pragma -> Prims.bool) =
-  fun projectee ->
-    match projectee with | ShowOptions -> true | uu___ -> false
-let (uu___is_SetOptions : pragma -> Prims.bool) =
-  fun projectee ->
-    match projectee with | SetOptions _0 -> true | uu___ -> false
-let (__proj__SetOptions__item___0 : pragma -> Prims.string) =
-  fun projectee -> match projectee with | SetOptions _0 -> _0
-let (uu___is_ResetOptions : pragma -> Prims.bool) =
-  fun projectee ->
-    match projectee with | ResetOptions _0 -> true | uu___ -> false
-let (__proj__ResetOptions__item___0 :
-  pragma -> Prims.string FStar_Pervasives_Native.option) =
-  fun projectee -> match projectee with | ResetOptions _0 -> _0
-let (uu___is_PushOptions : pragma -> Prims.bool) =
-  fun projectee ->
-    match projectee with | PushOptions _0 -> true | uu___ -> false
-let (__proj__PushOptions__item___0 :
-  pragma -> Prims.string FStar_Pervasives_Native.option) =
-  fun projectee -> match projectee with | PushOptions _0 -> _0
-let (uu___is_PopOptions : pragma -> Prims.bool) =
-  fun projectee -> match projectee with | PopOptions -> true | uu___ -> false
-let (uu___is_RestartSolver : pragma -> Prims.bool) =
-  fun projectee ->
-    match projectee with | RestartSolver -> true | uu___ -> false
-let (uu___is_PrintEffectsGraph : pragma -> Prims.bool) =
-  fun projectee ->
-    match projectee with | PrintEffectsGraph -> true | uu___ -> false
-let (pragma_to_string : pragma -> Prims.string) =
-  fun p ->
-    match p with
-    | ShowOptions -> "#show-options"
-    | ResetOptions (FStar_Pervasives_Native.None) -> "#reset-options"
-    | ResetOptions (FStar_Pervasives_Native.Some s) ->
-        FStarC_Format.fmt1 "#reset-options \"%s\"" s
-    | SetOptions s -> FStarC_Format.fmt1 "#set-options \"%s\"" s
-    | PushOptions (FStar_Pervasives_Native.None) -> "#push-options"
-    | PushOptions (FStar_Pervasives_Native.Some s) ->
-        FStarC_Format.fmt1 "#push-options \"%s\"" s
-    | RestartSolver -> "#restart-solver"
-    | PrintEffectsGraph -> "#print-effects-graph"
-    | PopOptions -> "#pop-options"
-let (showable_pragma : pragma FStarC_Class_Show.showable) =
-  { FStarC_Class_Show.show = pragma_to_string }
 type 'a memo =
   (('a FStar_Pervasives_Native.option FStarC_Effect.ref)[@printer
                                                           fun fmt ->
@@ -426,6 +374,7 @@ and lazy_kind =
   | Lazy_comp 
   | Lazy_env 
   | Lazy_proofstate 
+  | Lazy_ref_proofstate 
   | Lazy_goal 
   | Lazy_sigelt 
   | Lazy_uvar 
@@ -1070,6 +1019,9 @@ let (uu___is_Lazy_env : lazy_kind -> Prims.bool) =
 let (uu___is_Lazy_proofstate : lazy_kind -> Prims.bool) =
   fun projectee ->
     match projectee with | Lazy_proofstate -> true | uu___ -> false
+let (uu___is_Lazy_ref_proofstate : lazy_kind -> Prims.bool) =
+  fun projectee ->
+    match projectee with | Lazy_ref_proofstate -> true | uu___ -> false
 let (uu___is_Lazy_goal : lazy_kind -> Prims.bool) =
   fun projectee -> match projectee with | Lazy_goal -> true | uu___ -> false
 let (uu___is_Lazy_sigelt : lazy_kind -> Prims.bool) =
@@ -1175,6 +1127,64 @@ type attribute = term' syntax
 type tscheme = (univ_name Prims.list * term' syntax)
 type gamma = binding Prims.list
 type bqual = binder_qualifier FStar_Pervasives_Native.option
+type pragma =
+  | ShowOptions 
+  | SetOptions of Prims.string 
+  | ResetOptions of Prims.string FStar_Pervasives_Native.option 
+  | PushOptions of Prims.string FStar_Pervasives_Native.option 
+  | PopOptions 
+  | RestartSolver 
+  | PrintEffectsGraph 
+  | Check of term 
+let (uu___is_ShowOptions : pragma -> Prims.bool) =
+  fun projectee ->
+    match projectee with | ShowOptions -> true | uu___ -> false
+let (uu___is_SetOptions : pragma -> Prims.bool) =
+  fun projectee ->
+    match projectee with | SetOptions _0 -> true | uu___ -> false
+let (__proj__SetOptions__item___0 : pragma -> Prims.string) =
+  fun projectee -> match projectee with | SetOptions _0 -> _0
+let (uu___is_ResetOptions : pragma -> Prims.bool) =
+  fun projectee ->
+    match projectee with | ResetOptions _0 -> true | uu___ -> false
+let (__proj__ResetOptions__item___0 :
+  pragma -> Prims.string FStar_Pervasives_Native.option) =
+  fun projectee -> match projectee with | ResetOptions _0 -> _0
+let (uu___is_PushOptions : pragma -> Prims.bool) =
+  fun projectee ->
+    match projectee with | PushOptions _0 -> true | uu___ -> false
+let (__proj__PushOptions__item___0 :
+  pragma -> Prims.string FStar_Pervasives_Native.option) =
+  fun projectee -> match projectee with | PushOptions _0 -> _0
+let (uu___is_PopOptions : pragma -> Prims.bool) =
+  fun projectee -> match projectee with | PopOptions -> true | uu___ -> false
+let (uu___is_RestartSolver : pragma -> Prims.bool) =
+  fun projectee ->
+    match projectee with | RestartSolver -> true | uu___ -> false
+let (uu___is_PrintEffectsGraph : pragma -> Prims.bool) =
+  fun projectee ->
+    match projectee with | PrintEffectsGraph -> true | uu___ -> false
+let (uu___is_Check : pragma -> Prims.bool) =
+  fun projectee -> match projectee with | Check _0 -> true | uu___ -> false
+let (__proj__Check__item___0 : pragma -> term) =
+  fun projectee -> match projectee with | Check _0 -> _0
+let (pragma_to_string : pragma -> Prims.string) =
+  fun p ->
+    match p with
+    | ShowOptions -> "#show-options"
+    | ResetOptions (FStar_Pervasives_Native.None) -> "#reset-options"
+    | ResetOptions (FStar_Pervasives_Native.Some s) ->
+        FStarC_Format.fmt1 "#reset-options \"%s\"" s
+    | SetOptions s -> FStarC_Format.fmt1 "#set-options \"%s\"" s
+    | PushOptions (FStar_Pervasives_Native.None) -> "#push-options"
+    | PushOptions (FStar_Pervasives_Native.Some s) ->
+        FStarC_Format.fmt1 "#push-options \"%s\"" s
+    | RestartSolver -> "#restart-solver"
+    | PrintEffectsGraph -> "#print-effects-graph"
+    | PopOptions -> "#pop-options"
+    | Check t -> "check _"
+let (showable_pragma : pragma FStarC_Class_Show.showable) =
+  { FStarC_Class_Show.show = pragma_to_string }
 type freenames_l = bv Prims.list
 type formula = typ
 type formulae = typ Prims.list
@@ -3281,6 +3291,7 @@ let (showable_lazy_kind : lazy_kind FStarC_Class_Show.showable) =
          | Lazy_comp -> "Lazy_comp"
          | Lazy_env -> "Lazy_env"
          | Lazy_proofstate -> "Lazy_proofstate"
+         | Lazy_ref_proofstate -> "Lazy_ref_proofstate"
          | Lazy_goal -> "Lazy_goal"
          | Lazy_sigelt -> "Lazy_sigelt"
          | Lazy_letbinding -> "Lazy_letbinding"
@@ -3393,6 +3404,7 @@ let (deq_lazy_kind : lazy_kind FStarC_Class_Deq.deq) =
            | (Lazy_comp, Lazy_comp) -> true
            | (Lazy_env, Lazy_env) -> true
            | (Lazy_proofstate, Lazy_proofstate) -> true
+           | (Lazy_ref_proofstate, Lazy_ref_proofstate) -> true
            | (Lazy_goal, Lazy_goal) -> true
            | (Lazy_sigelt, Lazy_sigelt) -> true
            | (Lazy_letbinding, Lazy_letbinding) -> true

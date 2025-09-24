@@ -10,140 +10,29 @@ let (name_appears_in :
   =
   fun nm ->
     fun t ->
-      let uu___ =
-        Obj.magic
-          (FStar_Tactics_Effect.lift_div_tac
-             (fun uu___1 ->
-                fun t1 ->
-                  let uu___2 = FStar_Tactics_NamedView.inspect t1 in
-                  FStar_Tactics_Effect.tac_bind
-                    (FStar_Sealed.seal
-                       (Obj.magic
-                          (FStar_Range.mk_range "FStar.Tactics.Names.fst"
-                             (Prims.of_int (15)) (Prims.of_int (10))
-                             (Prims.of_int (15)) (Prims.of_int (19)))))
-                    (FStar_Sealed.seal
-                       (Obj.magic
-                          (FStar_Range.mk_range "FStar.Tactics.Names.fst"
-                             (Prims.of_int (15)) (Prims.of_int (4))
-                             (Prims.of_int (20)) (Prims.of_int (12)))))
-                    (Obj.magic uu___2)
-                    (fun uu___3 ->
-                       (fun uu___3 ->
-                          match uu___3 with
-                          | FStar_Tactics_NamedView.Tv_FVar fv ->
-                              Obj.magic
-                                (Obj.repr
-                                   (let uu___4 =
-                                      if
-                                        (FStarC_Reflection_V2_Builtins.inspect_fv
-                                           fv)
-                                          = nm
-                                      then
-                                        Obj.magic
-                                          (FStar_Tactics_Effect.raise Appears)
-                                      else
-                                        Obj.magic
-                                          (FStar_Tactics_Effect.lift_div_tac
-                                             (fun uu___6 -> ())) in
-                                    FStar_Tactics_Effect.tac_bind
-                                      (FStar_Sealed.seal
-                                         (Obj.magic
-                                            (FStar_Range.mk_range
-                                               "FStar.Tactics.Names.fst"
-                                               (Prims.of_int (17))
-                                               (Prims.of_int (6))
-                                               (Prims.of_int (18))
-                                               (Prims.of_int (21)))))
-                                      (FStar_Sealed.seal
-                                         (Obj.magic
-                                            (FStar_Range.mk_range
-                                               "FStar.Tactics.Names.fst"
-                                               (Prims.of_int (14))
-                                               (Prims.of_int (10))
-                                               (Prims.of_int (14))
-                                               (Prims.of_int (11)))))
-                                      (Obj.magic uu___4)
-                                      (fun uu___5 ->
-                                         FStar_Tactics_Effect.lift_div_tac
-                                           (fun uu___6 -> t1))))
-                          | uu___4 ->
-                              Obj.magic
-                                (Obj.repr
-                                   (FStar_Tactics_Effect.lift_div_tac
-                                      (fun uu___5 -> t1)))) uu___3))) in
-      FStar_Tactics_Effect.tac_bind
-        (FStar_Sealed.seal
-           (Obj.magic
-              (FStar_Range.mk_range "FStar.Tactics.Names.fst"
-                 (Prims.of_int (15)) (Prims.of_int (4)) (Prims.of_int (20))
-                 (Prims.of_int (12)))))
-        (FStar_Sealed.seal
-           (Obj.magic
-              (FStar_Range.mk_range "FStar.Tactics.Names.fst"
-                 (Prims.of_int (22)) (Prims.of_int (2)) (Prims.of_int (25))
-                 (Prims.of_int (20))))) (Obj.magic uu___)
-        (fun uu___1 ->
-           (fun ff ->
-              let uu___1 =
-                FStarC_Tactics_V2_Builtins.catch
-                  (fun uu___2 ->
-                     let uu___3 =
-                       let uu___4 = FStar_Tactics_Visit.visit_tm ff t in
-                       FStar_Tactics_Effect.tac_bind
-                         (FStar_Sealed.seal
-                            (Obj.magic
-                               (FStar_Range.mk_range
-                                  "FStar.Tactics.Names.fst"
-                                  (Prims.of_int (22)) (Prims.of_int (32))
-                                  (Prims.of_int (22)) (Prims.of_int (49)))))
-                         (FStar_Sealed.seal
-                            (Obj.magic
-                               (FStar_Range.mk_range
-                                  "FStar.Tactics.Names.fst"
-                                  (Prims.of_int (22)) (Prims.of_int (25))
-                                  (Prims.of_int (22)) (Prims.of_int (49)))))
-                         (Obj.magic uu___4)
-                         (fun uu___5 ->
-                            FStar_Tactics_Effect.lift_div_tac
-                              (fun uu___6 -> ())) in
-                     FStar_Tactics_Effect.tac_bind
-                       (FStar_Sealed.seal
-                          (Obj.magic
-                             (FStar_Range.mk_range "FStar.Tactics.Names.fst"
-                                (Prims.of_int (22)) (Prims.of_int (25))
-                                (Prims.of_int (22)) (Prims.of_int (49)))))
-                       (FStar_Sealed.seal
-                          (Obj.magic
-                             (FStar_Range.mk_range "FStar.Tactics.Names.fst"
-                                (Prims.of_int (22)) (Prims.of_int (51))
-                                (Prims.of_int (22)) (Prims.of_int (56)))))
-                       (Obj.magic uu___3)
-                       (fun uu___4 ->
-                          FStar_Tactics_Effect.lift_div_tac
-                            (fun uu___5 -> false))) in
-              Obj.magic
-                (FStar_Tactics_Effect.tac_bind
-                   (FStar_Sealed.seal
-                      (Obj.magic
-                         (FStar_Range.mk_range "FStar.Tactics.Names.fst"
-                            (Prims.of_int (22)) (Prims.of_int (8))
-                            (Prims.of_int (22)) (Prims.of_int (57)))))
-                   (FStar_Sealed.seal
-                      (Obj.magic
-                         (FStar_Range.mk_range "FStar.Tactics.Names.fst"
-                            (Prims.of_int (22)) (Prims.of_int (2))
-                            (Prims.of_int (25)) (Prims.of_int (20)))))
-                   (Obj.magic uu___1)
-                   (fun uu___2 ->
-                      match uu___2 with
-                      | Fstarcompiler.FStar_Pervasives.Inr x ->
-                          FStar_Tactics_Effect.lift_div_tac (fun uu___3 -> x)
-                      | Fstarcompiler.FStar_Pervasives.Inl (Appears) ->
-                          FStar_Tactics_Effect.lift_div_tac
-                            (fun uu___3 -> true)
-                      | Fstarcompiler.FStar_Pervasives.Inl e ->
-                          FStar_Tactics_Effect.raise e))) uu___1)
+      fun ps ->
+        let x t1 =
+          fun ps1 ->
+            let x1 = FStar_Tactics_NamedView.inspect t1 ps1 in
+            match x1 with
+            | FStar_Tactics_NamedView.Tv_FVar fv ->
+                (if (FStarC_Reflection_V2_Builtins.inspect_fv fv) = nm
+                 then FStarC_Tactics_V2_Builtins.raise_core Appears ps1
+                 else ();
+                 t1)
+            | uu___ -> t1 in
+        let x1 =
+          FStarC_Tactics_V2_Builtins.catch
+            (fun uu___ ->
+               fun ps1 ->
+                 (let x3 = FStar_Tactics_Visit.visit_tm x t ps1 in ()); false)
+            ps in
+        match x1 with
+        | Fstarcompiler.FStar_Pervasives.Inr x2 -> Obj.magic (Obj.repr x2)
+        | Fstarcompiler.FStar_Pervasives.Inl (Appears) ->
+            Obj.magic (Obj.repr true)
+        | Fstarcompiler.FStar_Pervasives.Inl e ->
+            Obj.magic (Obj.repr (FStarC_Tactics_V2_Builtins.raise_core e ps))
 let _ =
   Fstarcompiler.FStarC_Tactics_Native.register_tactic
     "FStar.Tactics.Names.name_appears_in" (Prims.of_int (3))

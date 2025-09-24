@@ -206,12 +206,6 @@ let (trans_qual :
         | FStarC_Parser_AST.Reifiable -> FStarC_Syntax_Syntax.Reifiable
         | FStarC_Parser_AST.Noeq -> FStarC_Syntax_Syntax.Noeq
         | FStarC_Parser_AST.Unopteq -> FStarC_Syntax_Syntax.Unopteq
-        | FStarC_Parser_AST.DefaultEffect ->
-            FStarC_Errors.raise_error FStarC_Class_HasRange.hasRange_range r
-              FStarC_Errors_Codes.Fatal_DefaultQualifierNotAllowedOnEffects
-              () (Obj.magic FStarC_Errors_Msg.is_error_message_string)
-              (Obj.magic
-                 "The 'default' qualifier on effects is no longer supported")
         | FStarC_Parser_AST.Inline ->
             FStarC_Errors.raise_error FStarC_Class_HasRange.hasRange_range r
               FStarC_Errors_Codes.Fatal_UnsupportedQualifier ()
@@ -222,20 +216,6 @@ let (trans_qual :
               FStarC_Errors_Codes.Fatal_UnsupportedQualifier ()
               (Obj.magic FStarC_Errors_Msg.is_error_message_string)
               (Obj.magic "Unsupported qualifier")
-let (trans_pragma : FStarC_Parser_AST.pragma -> FStarC_Syntax_Syntax.pragma)
-  =
-  fun uu___ ->
-    match uu___ with
-    | FStarC_Parser_AST.ShowOptions -> FStarC_Syntax_Syntax.ShowOptions
-    | FStarC_Parser_AST.SetOptions s -> FStarC_Syntax_Syntax.SetOptions s
-    | FStarC_Parser_AST.ResetOptions sopt ->
-        FStarC_Syntax_Syntax.ResetOptions sopt
-    | FStarC_Parser_AST.PushOptions sopt ->
-        FStarC_Syntax_Syntax.PushOptions sopt
-    | FStarC_Parser_AST.PopOptions -> FStarC_Syntax_Syntax.PopOptions
-    | FStarC_Parser_AST.RestartSolver -> FStarC_Syntax_Syntax.RestartSolver
-    | FStarC_Parser_AST.PrintEffectsGraph ->
-        FStarC_Syntax_Syntax.PrintEffectsGraph
 let (as_imp :
   FStarC_Parser_AST.imp ->
     FStarC_Syntax_Syntax.arg_qualifier FStar_Pervasives_Native.option)
@@ -3430,7 +3410,7 @@ and (desugar_term_maybe_top :
                    let uu___3 =
                      let uu___4 = FStarC_Parser_AST.term_to_string rty in
                      FStarC_Format.fmt1
-                       "This type must be a (possibly applied) record name"
+                       "This type must be a (possibly applied) record name: %s"
                        uu___4 in
                    FStarC_Errors.raise_error FStarC_Parser_AST.hasRange_term
                      rty FStarC_Errors_Codes.Error_BadLetOpenRecord ()
@@ -7841,6 +7821,25 @@ let (lookup_effect_lid :
               (Obj.magic FStarC_Errors_Msg.is_error_message_string)
               (Obj.magic uu___1)
         | FStar_Pervasives_Native.Some l1 -> l1
+let (trans_pragma :
+  env_t -> FStarC_Parser_AST.pragma -> FStarC_Syntax_Syntax.pragma) =
+  fun env ->
+    fun uu___ ->
+      match uu___ with
+      | FStarC_Parser_AST.ShowOptions -> FStarC_Syntax_Syntax.ShowOptions
+      | FStarC_Parser_AST.SetOptions s -> FStarC_Syntax_Syntax.SetOptions s
+      | FStarC_Parser_AST.ResetOptions sopt ->
+          FStarC_Syntax_Syntax.ResetOptions sopt
+      | FStarC_Parser_AST.PushOptions sopt ->
+          FStarC_Syntax_Syntax.PushOptions sopt
+      | FStarC_Parser_AST.PopOptions -> FStarC_Syntax_Syntax.PopOptions
+      | FStarC_Parser_AST.RestartSolver -> FStarC_Syntax_Syntax.RestartSolver
+      | FStarC_Parser_AST.PrintEffectsGraph ->
+          FStarC_Syntax_Syntax.PrintEffectsGraph
+      | FStarC_Parser_AST.Check t ->
+          let uu___1 = desugar_term_maybe_top true env t in
+          (match uu___1 with
+           | (t1, aq) -> (check_no_aq aq; FStarC_Syntax_Syntax.Check t1))
 let rec (desugar_effect :
   FStarC_Syntax_DsEnv.env ->
     FStarC_Parser_AST.decl ->
@@ -8997,7 +8996,7 @@ and (desugar_decl_core :
         let trans_qual1 = trans_qual d.FStarC_Parser_AST.drange in
         match d.FStarC_Parser_AST.d with
         | FStarC_Parser_AST.Pragma p ->
-            let p1 = trans_pragma p in
+            let p1 = trans_pragma env p in
             (FStarC_Syntax_Util.process_pragma p1 d.FStarC_Parser_AST.drange;
              (let se =
                 let uu___1 = FStarC_Syntax_DsEnv.opens_and_abbrevs env in

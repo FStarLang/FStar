@@ -17,6 +17,7 @@ type vconst =
   | C_Reify 
   | C_Reflect of name 
   | C_Real of Prims.string 
+  | C_Char of FStar_Char.char 
 let (uu___is_C_Unit : vconst -> Prims.bool) =
   fun projectee -> match projectee with | C_Unit -> true | uu___ -> false
 let (uu___is_C_Int : vconst -> Prims.bool) =
@@ -47,6 +48,10 @@ let (uu___is_C_Real : vconst -> Prims.bool) =
   fun projectee -> match projectee with | C_Real _0 -> true | uu___ -> false
 let (__proj__C_Real__item___0 : vconst -> Prims.string) =
   fun projectee -> match projectee with | C_Real _0 -> _0
+let (uu___is_C_Char : vconst -> Prims.bool) =
+  fun projectee -> match projectee with | C_Char _0 -> true | uu___ -> false
+let (__proj__C_Char__item___0 : vconst -> FStar_Char.char) =
+  fun projectee -> match projectee with | C_Char _0 -> _0
 type universes = FStarC_Syntax_Syntax.universe Prims.list
 type pattern =
   | Pat_Constant of vconst 

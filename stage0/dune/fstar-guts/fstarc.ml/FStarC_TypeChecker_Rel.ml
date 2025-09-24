@@ -2678,18 +2678,23 @@ let (solve_prob' :
                                        [uu___5]))
                          | uu___3 -> (fail (); []))) args in
              let wl1 =
-               let g = whnf (p_guard_env wl prob) (p_guard prob) in
-               let uu___1 =
-                 let uu___2 = is_flex g in Prims.op_Negation uu___2 in
-               if uu___1
-               then (if resolve_ok then wl else (fail (); wl))
-               else
-                 (let uu___3 = destruct_flex_t g wl in
-                  match uu___3 with
-                  | (Flex (uu___4, uv1, args), wl2) ->
-                      ((let uu___6 = args_as_binders args in
-                        assign_solution uu___6 uv1 phi);
-                       wl2)) in
+               let rec aux retry =
+                 fun env ->
+                   fun g ->
+                     let uu___1 = is_flex g in
+                     if uu___1
+                     then
+                       let uu___2 = destruct_flex_t g wl in
+                       match uu___2 with
+                       | (Flex (uu___3, uv1, args), wl2) ->
+                           ((let uu___5 = args_as_binders args in
+                             assign_solution uu___5 uv1 phi);
+                            wl2)
+                     else
+                       if retry
+                       then (let uu___3 = whnf env g in aux false env uu___3)
+                       else if resolve_ok then wl else (fail (); wl) in
+               aux true (p_env wl prob) (p_guard prob) in
              commit wl1.tcenv uvis;
              {
                attempting = (wl1.attempting);
@@ -5744,28 +5749,40 @@ and (solve_maybe_uinsts :
             FStarC_Class_Binders.hasNames_term
             FStarC_Syntax_Print.pretty_term t2.FStarC_Syntax_Syntax.pos
             "solve_maybe_uinsts.whnf2" env t2;
-          (let t11 = whnf env t1 in
-           let t21 = whnf env t2 in
-           match ((t11.FStarC_Syntax_Syntax.n), (t21.FStarC_Syntax_Syntax.n))
-           with
-           | (FStarC_Syntax_Syntax.Tm_uinst
-              ({ FStarC_Syntax_Syntax.n = FStarC_Syntax_Syntax.Tm_fvar f;
-                 FStarC_Syntax_Syntax.pos = uu___2;
-                 FStarC_Syntax_Syntax.vars = uu___3;
-                 FStarC_Syntax_Syntax.hash_code = uu___4;_},
-               us1),
-              FStarC_Syntax_Syntax.Tm_uinst
-              ({ FStarC_Syntax_Syntax.n = FStarC_Syntax_Syntax.Tm_fvar g;
-                 FStarC_Syntax_Syntax.pos = uu___5;
-                 FStarC_Syntax_Syntax.vars = uu___6;
-                 FStarC_Syntax_Syntax.hash_code = uu___7;_},
-               us2)) ->
-               let b = FStarC_Syntax_Syntax.fv_eq f g in aux wl us1 us2
-           | (FStarC_Syntax_Syntax.Tm_uinst uu___2, uu___3) ->
-               failwith "Impossible: expect head symbols to match"
-           | (uu___2, FStarC_Syntax_Syntax.Tm_uinst uu___3) ->
-               failwith "Impossible: expect head symbols to match"
-           | uu___2 -> USolved wl)
+          (let rec inspect retry =
+             fun t11 ->
+               fun t21 ->
+                 match ((t11.FStarC_Syntax_Syntax.n),
+                         (t21.FStarC_Syntax_Syntax.n))
+                 with
+                 | (FStarC_Syntax_Syntax.Tm_uinst
+                    ({
+                       FStarC_Syntax_Syntax.n = FStarC_Syntax_Syntax.Tm_fvar
+                         f;
+                       FStarC_Syntax_Syntax.pos = uu___2;
+                       FStarC_Syntax_Syntax.vars = uu___3;
+                       FStarC_Syntax_Syntax.hash_code = uu___4;_},
+                     us1),
+                    FStarC_Syntax_Syntax.Tm_uinst
+                    ({
+                       FStarC_Syntax_Syntax.n = FStarC_Syntax_Syntax.Tm_fvar
+                         g;
+                       FStarC_Syntax_Syntax.pos = uu___5;
+                       FStarC_Syntax_Syntax.vars = uu___6;
+                       FStarC_Syntax_Syntax.hash_code = uu___7;_},
+                     us2)) ->
+                     let b = FStarC_Syntax_Syntax.fv_eq f g in aux wl us1 us2
+                 | (FStarC_Syntax_Syntax.Tm_fvar uu___2,
+                    FStarC_Syntax_Syntax.Tm_fvar uu___3) -> USolved wl
+                 | uu___2 when retry ->
+                     let uu___3 = whnf env t11 in
+                     let uu___4 = whnf env t21 in inspect false uu___3 uu___4
+                 | (FStarC_Syntax_Syntax.Tm_uinst uu___2, uu___3) ->
+                     failwith "Impossible: expect head symbols to match"
+                 | (uu___2, FStarC_Syntax_Syntax.Tm_uinst uu___3) ->
+                     failwith "Impossible: expect head symbols to match"
+                 | uu___2 -> USolved wl in
+           inspect true t1 t2)
 and (giveup_or_defer :
   FStarC_TypeChecker_Common.prob ->
     worklist ->

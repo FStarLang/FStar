@@ -23,7 +23,7 @@ open FStar.Tactics.V2
  * Separation logic tactics for manipulating wps of the deeply embedded languages of Lang
  *)
 
-#reset-options "--using_facts_from '* -FStar.Tactics +FStar.Tactics.Result +FStar.Tactics.Types'"
+#reset-options "--using_facts_from '* -FStar.Tactics +FStar.Tactics.Types'"
 
 (*
  * If we have (p /\ q) ==> r, this tactic will push p and q, separately, into the context

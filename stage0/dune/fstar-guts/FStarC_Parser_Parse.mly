@@ -112,10 +112,10 @@ type tc_constraint = {
 %token IRREDUCIBLE UNFOLDABLE INLINE OPAQUE UNFOLD INLINE_FOR_EXTRACTION
 %token NOEXTRACT
 %token NOEQUALITY UNOPTEQUALITY
-%token PRAGMA_SHOW_OPTIONS PRAGMA_SET_OPTIONS PRAGMA_RESET_OPTIONS PRAGMA_PUSH_OPTIONS PRAGMA_POP_OPTIONS PRAGMA_RESTART_SOLVER PRAGMA_PRINT_EFFECTS_GRAPH
+%token PRAGMA_SHOW_OPTIONS PRAGMA_SET_OPTIONS PRAGMA_RESET_OPTIONS PRAGMA_PUSH_OPTIONS PRAGMA_POP_OPTIONS PRAGMA_RESTART_SOLVER PRAGMA_PRINT_EFFECTS_GRAPH PRAGMA_CHECK
 %token TYP_APP_LESS TYP_APP_GREATER SUBTYPE EQUALTYPE SUBKIND BY
 %token AND ASSERT SYNTH BEGIN ELSE END
-%token EXCEPTION FALSE FUN FUNCTION IF IN MODULE DEFAULT
+%token EXCEPTION FALSE FUN FUNCTION IF IN MODULE
 %token MATCH OF
 %token FRIEND OPEN REC THEN TRUE TRY TYPE CALC CLASS INSTANCE EFFECT VAL
 %token INTRO ELIM
@@ -138,7 +138,7 @@ type tc_constraint = {
 %token BACKTICK UNIV_HASH
 %token BACKTICK_PERC
 
-%token<string>  OPPREFIX OPINFIX0a OPINFIX0b OPINFIX0c OPINFIX0d OPINFIX1 OPINFIX2 OPINFIX3 OPINFIX4
+%token<string>  OPPREFIX OPINFIX0a OPINFIX0b OPINFIX0c OPINFIX0d OPINFIX1 OPINFIX2 OPINFIX3L OPINFIX3R OPINFIX4
 %token<string>  OP_MIXFIX_ASSIGNMENT OP_MIXFIX_ACCESS
 %token<string * string * Lexing.position * FStarC_Sedlexing.snap>  BLOB
 %token<string * string * Lexing.position * FStarC_Sedlexing.snap>  USE_LANG_BLOB
@@ -166,7 +166,8 @@ type tc_constraint = {
 %right    PIPE_LEFT
 %right    OPINFIX1
 %left     OPINFIX2 MINUS QUOTE
-%left     OPINFIX3
+%left     OPINFIX3L
+%right    OPINFIX3R
 %left     BACKTICK
 %right    OPINFIX4
 
@@ -224,18 +225,13 @@ startOfNextDeclToken:
  
 pragmaStartToken:
  | PRAGMA_SHOW_OPTIONS
-     { () }
  | PRAGMA_SET_OPTIONS
-     { () }
  | PRAGMA_RESET_OPTIONS
-     { () }
  | PRAGMA_PUSH_OPTIONS
-     { () }
  | PRAGMA_POP_OPTIONS
-     { () }
  | PRAGMA_RESTART_SOLVER
-     { () }
  | PRAGMA_PRINT_EFFECTS_GRAPH
+ | PRAGMA_CHECK
      { () }
 
 /******************************************************************************/
@@ -257,6 +253,8 @@ pragma:
       { RestartSolver }
   | PRAGMA_PRINT_EFFECTS_GRAPH
       { PrintEffectsGraph }
+  | PRAGMA_CHECK t=term
+      { Check t }
 
 attribute:
   | LBRACK_AT x = list(atomicTerm) RBRACK
@@ -642,7 +640,6 @@ qualifier:
   }
   | IRREDUCIBLE   { Irreducible }
   | NOEXTRACT     { NoExtract }
-  | DEFAULT       { DefaultEffect }
   | TOTAL         { TotalEffect }
   | PRIVATE       { Private }
 
@@ -1349,12 +1346,14 @@ tmNoEqNoRecordWith(X):
             in
             mk_term (Sum(dom, res)) (rr2 $loc(e1) $loc(e2)) Type_level
       }
-  | e1=tmNoEqWith(X) op=OPINFIX3 e2=tmNoEqWith(X)
+
+  | e1=tmNoEqWith(X) op=OPINFIX3L e2=tmNoEqWith(X)
+  | e1=tmNoEqWith(X) op=OPINFIX3R e2=tmNoEqWith(X)
+  | e1=tmNoEqWith(X) op=OPINFIX4  e2=tmNoEqWith(X)
       { mk_term (Op(mk_ident(op, rr $loc(op)), [e1; e2])) (rr $loc) Un}
+
   | e1=tmNoEqWith(X) BACKTICK op=tmNoEqWith(X) BACKTICK e2=tmNoEqWith(X)
       { mkApp op [ e1, Infix; e2, Nothing ] (rr $loc) }
- | e1=tmNoEqWith(X) op=OPINFIX4 e2=tmNoEqWith(X)
-      { mk_term (Op(mk_ident(op, rr $loc(op)), [e1; e2])) (rr $loc) Un}
   | BACKTICK_PERC e=atomicTerm
       { mk_term (VQuote e) (rr $loc) Un }
   | op=TILDE e=atomicTerm
@@ -1373,7 +1372,8 @@ binop_name:
   | o=OPINFIX0d              { mk_ident (o, rr $loc) }
   | o=OPINFIX1               { mk_ident (o, rr $loc) }
   | o=OPINFIX2               { mk_ident (o, rr $loc) }
-  | o=OPINFIX3               { mk_ident (o, rr $loc) }
+  | o=OPINFIX3L              { mk_ident (o, rr $loc) }
+  | o=OPINFIX3R              { mk_ident (o, rr $loc) }
   | o=OPINFIX4               { mk_ident (o, rr $loc) }
   | o=IMPLIES                { mk_ident ("==>", rr $loc) }
   | o=CONJUNCTION            { mk_ident ("/\\", rr $loc) }

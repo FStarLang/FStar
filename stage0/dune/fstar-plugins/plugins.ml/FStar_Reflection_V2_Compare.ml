@@ -111,6 +111,10 @@ let (compare_const :
          FStarC_Reflection_V2_Data.C_Real r2) ->
           FStar_Order.order_from_int
             (FStarC_Reflection_V2_Builtins.compare_string r1 r2)
+      | (FStarC_Reflection_V2_Data.C_Char c11,
+         FStarC_Reflection_V2_Data.C_Char c21) ->
+          FStar_Order.order_from_int
+            ((FStar_Char.int_of_char c11) - (FStar_Char.int_of_char c21))
       | (FStarC_Reflection_V2_Data.C_Unit, uu___) -> FStar_Order.Lt
       | (uu___, FStarC_Reflection_V2_Data.C_Unit) -> FStar_Order.Gt
       | (FStarC_Reflection_V2_Data.C_Int uu___, uu___1) -> FStar_Order.Lt
@@ -129,6 +133,8 @@ let (compare_const :
       | (uu___, FStarC_Reflection_V2_Data.C_Reflect uu___1) -> FStar_Order.Gt
       | (FStarC_Reflection_V2_Data.C_Real uu___, uu___1) -> FStar_Order.Lt
       | (uu___, FStarC_Reflection_V2_Data.C_Real uu___1) -> FStar_Order.Gt
+      | (FStarC_Reflection_V2_Data.C_Char uu___, uu___1) -> FStar_Order.Lt
+      | (uu___, FStarC_Reflection_V2_Data.C_Char uu___1) -> FStar_Order.Gt
 let _ =
   Fstarcompiler.FStarC_Tactics_Native.register_plugin
     "FStar.Reflection.V2.Compare.compare_const" (Prims.of_int (2))

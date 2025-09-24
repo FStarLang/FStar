@@ -96,7 +96,6 @@ stage0/out/bin/fstar.exe: .stage0.touch
 	env \
 	  SRC=src/ \
 	  FSTAR_EXE=$(FSTAR0_EXE) \
-	  FSTAR_LIB=$(abspath ulib) \
 	  CACHE_DIR=stage1/fstarc.checked/ \
 	  OUTPUT_DIR=stage1/fstarc.ml/ \
 	  CODEGEN=OCaml \
@@ -109,7 +108,6 @@ stage0/out/bin/fstar.exe: .stage0.touch
 	env \
 	  SRC=src/ \
 	  FSTAR_EXE=$(FSTAR0_EXE) \
-	  FSTAR_LIB=$(abspath ulib) \
 	  CACHE_DIR=stage1/tests.checked/ \
 	  OUTPUT_DIR=stage1/tests.ml/ \
 	  CODEGEN=PluginNoLib \
@@ -513,6 +511,7 @@ stage0_new: .stage2.src.touch
 	rm -rf "$(TO)/ulib.pluginml"  # we won't build plugins against stage0
 	rm -rf "$(TO)/dune/libplugin" # idem
 	rm -rf "$(TO)/dune/libapp"    # we won't even build apps
+	rm -rf "$(TO)/dune/tests"     # we won't build tests
 
 bump-stage0: stage0_new
 	$(call bold_msg, "BUMP!")

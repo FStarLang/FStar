@@ -17,15 +17,14 @@ module FStar.Tactics.Effect
 
 open FStar.Stubs.Reflection.Types
 open FStar.Stubs.Tactics.Types
-open FStar.Stubs.Tactics.Result
 
 /// This admit is to typecheck the bind implementation when the
 ///   interface is interleaved
 
 #push-options "--admit_smt_queries true"
-let tac_bind_interleave_begin = ()
+let lift_div_tac_interleave_begin = ()
 #pop-options
-let tac_bind_interleave_end = ()
+let lift_div_tac_interleave_end = ()
 
 let with_tactic _ p = p
 

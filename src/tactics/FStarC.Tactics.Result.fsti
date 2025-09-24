@@ -31,5 +31,3 @@ open FStarC.Tactics.Types
 
 type __result 'a =
     | Success of 'a & proofstate
-    | Failed  of exn       //error
-              & proofstate //the proofstate at time of failure
