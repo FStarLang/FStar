@@ -68,6 +68,7 @@ type op =
   | BvMul
   | BvUlt
   | BvUext of int
+  | BvNot
   | NatToBv of int
   | BvToNat
   | ITE
@@ -250,6 +251,7 @@ val mkBvAdd   : ((term & term) -> Range.t -> term)
 val mkBvSub   : ((term & term) -> Range.t -> term)
 val mkBvUlt   : ((term & term) -> Range.t -> term)
 val mkBvUext  : (int -> term -> Range.t -> term)
+val mkBvNot   : (term -> Range.t -> term)
 val mkBvShl   : (int -> (term & term) -> Range.t -> term)
 val mkBvShr   : (int -> (term & term) -> Range.t -> term)
 val mkBvUdiv  : (int -> (term & term) -> Range.t -> term)

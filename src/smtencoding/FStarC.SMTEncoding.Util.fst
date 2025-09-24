@@ -81,6 +81,7 @@ let mkBvModUnsafe  sz = norng (mkBvModUnsafe sz)
 let mkBvMul' sz = norng (mkBvMul' sz)
 let mkBvUlt = norng mkBvUlt
 let mkBvUext sz = norng (mkBvUext sz)
+let mkBvNot = norng mkBvNot
 let mkBvToNat = norng mkBvToNat
 let mkITE = norng mkITE
 let mkCases = norng mkCases
