@@ -177,7 +177,7 @@ let maybe_setting_error_bound (t:st_term) (f : unit -> T.Tac 'a) : T.Tac 'a =
 
 #push-options "--z3rlimit_factor 4 --fuel 0 --ifuel 1"
 
-let rec maybe_elaborate_stateful_head (g:env) (t:st_term)
+let maybe_elaborate_stateful_head (g:env) (t:st_term)
 : T.Tac (option st_term)
 = match t.term with
   | Tm_ST .. ->
@@ -229,7 +229,10 @@ let rec maybe_elaborate_stateful_head (g:env) (t:st_term)
   )
 
   | _ -> None
+#pop-options
+#restart-solver
 
+#push-options "--fuel 0 --ifuel 1 --query_stats --z3rlimit 200"
 let rec check
   (g0:env)
   (pre0:term)
@@ -261,7 +264,7 @@ let rec check
     );
 
     match maybe_elaborate_stateful_head g0 t with
-    | Some t -> 
+    | Some t ->
       check g0 pre0 pre0_typing post_hint res_ppname t
     | None -> 
       let (| g, pre, pre_typing, k_elim_pure |) = 
@@ -274,12 +277,6 @@ let rec check
           Return.check g pre pre_typing post_hint res_ppname t check
         
         | Tm_Abs _ ->
-          // let (| t, c, typing |) = Pulse.Checker.Abs.check_abs g t check in
-          // Pulse.Checker.Prover.prove_post_hint (
-          //   Pulse.Checker.Prover.try_frame_pre
-          //     pre_typing
-              
-          // )
           T.fail "Tm_Abs check should not have been called in the checker"
 
         | Tm_ST _ ->
@@ -289,8 +286,7 @@ let rec check
         | Tm_ElimExists _ ->
           Exists.check_elim_exists g pre pre_typing post_hint res_ppname t
 
-        | Tm_IntroExists _ ->
-          (
+        | Tm_IntroExists _ -> (
           (* First of all, elaborate *)
           let prep (t:st_term{Tm_IntroExists? t.term}) : T.Tac (t:st_term{Tm_IntroExists? t.term}) =
             let Tm_IntroExists { p; witnesses } = t.term in
@@ -311,7 +307,9 @@ let rec check
               Exists.check_intro_exists g pre pre_typing post_hint res_ppname t None 
             | _ ->
               let t = transform_to_unary_intro_exists g p witnesses in
-              check g pre pre_typing post_hint res_ppname t)
+              check g pre pre_typing post_hint res_ppname t
+        )
+
         | Tm_Bind _ ->
           Bind.check_bind g pre pre_typing post_hint res_ppname t check
 

@@ -9,6 +9,7 @@ ROOTS += lib/common/Pulse.Lib.Tactics.fsti
 
 FSTAR_OPTIONS += --already_cached 'Prims,FStar'
 FSTAR_OPTIONS += --include lib/common
+FSTAR_OPTIONS += --proof_recovery # temporary, until universe branch lands
 EXTRACT += --extract '-*,+Pulse,+PulseSyntaxExtension'
 DEPFLAGS += --already_cached 'Prims,FStar,FStarC'
 
