@@ -83,6 +83,11 @@ val inverse_num_lemma (#n: pos) (num: uint_t n)
       (ensures num = bv2int #n (int2bv #n num))
       [SMTPat (bv2int #n (int2bv #n num))]
 
+val int2bv_bv_uext (#n #i: pos)
+  (a: uint_t n)
+  : Lemma
+    (ensures (bv_uext #n #i (int2bv #n a) == int2bv #(i + n) (zero_extends #n i a)))
+
 (**** Relating lists to bitvectors *)
 
 (** Mapping a list of booleans to a bitvector *)

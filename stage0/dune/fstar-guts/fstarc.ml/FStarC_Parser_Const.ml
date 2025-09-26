@@ -421,6 +421,10 @@ let (fstar_stubs_tactics_lid' : Prims.string Prims.list -> FStarC_Ident.lid)
 let (fstar_tactics_lid : Prims.string -> FStarC_Ident.lid) =
   fun s -> fstar_tactics_lid' [s]
 let (tac_lid : FStarC_Ident.lid) = fstar_tactics_lid' ["Effect"; "tac"]
+let (tac_bind_lid : FStarC_Ident.lid) =
+  fstar_tactics_lid' ["Effect"; "tac_bind"]
+let (lift_div_tac_lid : FStarC_Ident.lid) =
+  fstar_tactics_lid' ["Effect"; "lift_div_tac"]
 let (tactic_lid : FStarC_Ident.lid) = fstar_tactics_lid' ["Effect"; "tactic"]
 let (tac_opaque_attr : FStarC_Ident.lident) = pconst "tac_opaque"
 let (meta_projectors_attr : FStarC_Ident.lid) =

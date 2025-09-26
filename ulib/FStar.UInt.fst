@@ -462,6 +462,17 @@ let lemma_zero_extend #n a =
   from_vec_propriety #(n+1) eav 1;
   assert (r = a)
 
+let lemma_zero_extends #n m a =
+  let hd0 = zero_vec #m in
+  let av = to_vec a in
+  let eav = Seq.append hd0 av in
+  let r = zero_extends m a in
+  append_lemma #m #n hd0 av;
+  assert (r = from_vec eav);
+  from_vec_propriety #(n+m) eav 1;
+  assert (from_vec #m hd0 = 0);
+  assert (r = a)
+
 #push-options "--z3rlimit 40"
 let lemma_one_extend #n a =
   let hd1 = Seq.create 1 true in

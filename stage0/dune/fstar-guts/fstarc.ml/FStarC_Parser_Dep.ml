@@ -12,6 +12,9 @@ type module_name = Prims.string
 let (dbg : Prims.bool FStarC_Effect.ref) = FStarC_Debug.get_toggle "Dep"
 let (dbg_CheckedFiles : Prims.bool FStarC_Effect.ref) =
   FStarC_Debug.get_toggle "CheckedFiles"
+let (debug_print : (unit -> unit) -> unit) =
+  fun f ->
+    let uu___ = FStarC_Effect.op_Bang dbg in if uu___ then f () else ()
 let profile : 'uuuuu . (unit -> 'uuuuu) -> Prims.string -> 'uuuuu =
   fun f -> fun c -> FStarC_Profiling.profile f FStar_Pervasives_Native.None c
 let with_file_outchannel :
@@ -1067,6 +1070,12 @@ let (prelude : (open_kind * FStarC_Ident.lid) Prims.list) =
       (Open_module, uu___2) in
     [uu___1] in
   (Open_namespace, FStarC_Parser_Const.fstar_ns_lid) :: uu___
+let (peek_past_interfaces : unit -> Prims.bool) =
+  fun uu___ ->
+    let uu___1 = FStarC_Options_Ext.enabled "dep_minimal" in
+    if uu___1
+    then false
+    else (let uu___3 = FStarC_Options.ide () in Prims.op_Negation uu___3)
 let (collect_one :
   files_for_module_name ->
     Prims.string ->
@@ -1085,8 +1094,9 @@ let (collect_one :
               let mname = lowercase_module_name filename1 in
               let mo_roots =
                 let uu___ =
-                  (is_interface filename1) &&
-                    (has_implementation original_map1 mname) in
+                  ((is_interface filename1) &&
+                     (has_implementation original_map1 mname))
+                    && (peek_past_interfaces ()) in
                 if uu___ then [UseImplementation mname] else [] in
               let auto_open =
                 if pd.no_prelude
@@ -2235,32 +2245,49 @@ let (collect :
                match uu___2 with
                | (parsing_data1, (deps1, mo_roots, needs_interface_inlining))
                    ->
-                   (if needs_interface_inlining
+                   (debug_print
+                      (fun uu___4 ->
+                         let uu___5 =
+                           FStarC_Class_Show.show
+                             (FStarC_Class_Show.show_list showable_dependence)
+                             deps1 in
+                         let uu___6 =
+                           FStarC_Class_Show.show
+                             (FStarC_Class_Show.show_list showable_dependence)
+                             mo_roots in
+                         FStarC_Format.print3
+                           "collect_one (%s) : deps=%s; mo_roots=%s\n"
+                           file_name1 uu___5 uu___6);
+                    if needs_interface_inlining
                     then add_interface_for_inlining file_name1
                     else ();
                     FStarC_SMap.add parse_results file_name1 parsing_data1;
                     (let deps2 =
                        let module_name1 = lowercase_module_name file_name1 in
-                       let uu___5 =
+                       let uu___6 =
                          (is_implementation file_name1) &&
                            (has_interface file_system_map module_name1) in
-                       if uu___5
+                       if uu___6
                        then
                          FStarC_List.op_At deps1 [UseInterface module_name1]
                        else deps1 in
                      let dep_node1 =
-                       let uu___5 = FStarC_List.unique deps2 in
-                       { edges = uu___5; color = White } in
+                       let uu___6 = FStarC_List.unique deps2 in
+                       { edges = uu___6; color = White } in
                      deps_add_dep dep_graph file_name1 dep_node1;
-                     (let uu___6 =
+                     (let uu___7 =
                         FStarC_List.map
                           (file_of_dep file_system_map all_cmd_line_files2)
                           (FStarC_List.op_At deps2 mo_roots) in
-                      FStarC_List.iter discover_one uu___6)))
+                      FStarC_List.iter discover_one uu___7)))
              else () in
            profile
              (fun uu___2 -> FStarC_List.iter discover_one all_cmd_line_files2)
              "FStarC.Parser.Dep.discover";
+           debug_print
+             (fun uu___3 ->
+                print_graph FStarC_Util.stdout "stdout" dep_graph
+                  file_system_map all_cmd_line_files2);
            (let cycle_detected dep_graph1 =
               fun cycle ->
                 fun filename ->
@@ -2274,22 +2301,22 @@ let (collect :
                         print_graph outc fn dep_graph1 file_system_map
                           all_cmd_line_files2);
                    FStarC_Format.print_string "\n";
-                   (let uu___5 =
-                      let uu___6 =
-                        let uu___7 =
-                          FStarC_Format.fmt1
-                            "Recursive dependency on module %s." filename in
-                        FStarC_Errors_Msg.text uu___7 in
+                   (let uu___6 =
                       let uu___7 =
                         let uu___8 =
+                          FStarC_Format.fmt1
+                            "Recursive dependency on module %s." filename in
+                        FStarC_Errors_Msg.text uu___8 in
+                      let uu___8 =
+                        let uu___9 =
                           FStarC_Errors_Msg.text
                             "A full dependency graph was written to dep.graph." in
-                        [uu___8] in
-                      uu___6 :: uu___7 in
+                        [uu___9] in
+                      uu___7 :: uu___8 in
                     FStarC_Errors.raise_error0
                       FStarC_Errors_Codes.Fatal_CyclicDependence ()
                       (Obj.magic FStarC_Errors_Msg.is_error_message_list_doc)
-                      (Obj.magic uu___5))) in
+                      (Obj.magic uu___6))) in
             let full_cycle_detection all_command_line_files =
               fun file_system_map1 ->
                 let dep_graph1 = dep_graph_copy dep_graph in
@@ -2297,58 +2324,68 @@ let (collect :
                 let rec aux cycle =
                   fun filename ->
                     let node =
-                      let uu___2 = deps_try_find dep_graph1 filename in
-                      match uu___2 with
+                      let uu___3 = deps_try_find dep_graph1 filename in
+                      match uu___3 with
                       | FStar_Pervasives_Native.Some node1 -> node1
                       | FStar_Pervasives_Native.None ->
-                          let uu___3 =
+                          let uu___4 =
                             FStarC_Format.fmt1
                               "Impossible: Failed to find dependencies of %s"
                               filename in
-                          failwith uu___3 in
+                          failwith uu___4 in
                     let direct_deps =
                       FStarC_List.collect
                         (fun x ->
                            match x with
                            | UseInterface f ->
-                               let uu___2 =
+                               let uu___3 =
                                  implementation_of_internal file_system_map1
                                    f in
-                               (match uu___2 with
+                               (match uu___3 with
                                 | FStar_Pervasives_Native.None -> [x]
                                 | FStar_Pervasives_Native.Some fn when
                                     fn = filename -> [x]
-                                | uu___3 -> [x; UseImplementation f])
+                                | uu___4 ->
+                                    let uu___5 = peek_past_interfaces () in
+                                    if uu___5
+                                    then [x; UseImplementation f]
+                                    else [x])
                            | PreferInterface f ->
-                               let uu___2 =
+                               let uu___3 =
                                  implementation_of_internal file_system_map1
                                    f in
-                               (match uu___2 with
+                               (match uu___3 with
                                 | FStar_Pervasives_Native.None -> [x]
                                 | FStar_Pervasives_Native.Some fn when
                                     fn = filename -> [x]
-                                | uu___3 -> [x; UseImplementation f])
-                           | uu___2 -> [x]) node.edges in
+                                | uu___4 ->
+                                    let uu___5 = peek_past_interfaces () in
+                                    if uu___5
+                                    then [x; UseImplementation f]
+                                    else [x])
+                           | uu___3 -> [x]) node.edges in
                     match node.color with
                     | Gray -> cycle_detected dep_graph1 cycle filename
                     | Black -> ()
                     | White ->
                         (deps_add_dep dep_graph1 filename
                            { edges = direct_deps; color = Gray };
-                         (let uu___4 =
+                         (let uu___5 =
                             dependences_of file_system_map1 dep_graph1
                               all_command_line_files filename in
                           FStarC_List.iter (fun k -> aux (k :: cycle) k)
-                            uu___4);
+                            uu___5);
                          deps_add_dep dep_graph1 filename
                            { edges = direct_deps; color = Black };
-                         (let uu___5 = is_interface filename in
-                          if uu___5
+                         (let uu___6 =
+                            (is_interface filename) &&
+                              (peek_past_interfaces ()) in
+                          if uu___6
                           then
-                            let uu___6 =
-                              let uu___7 = lowercase_module_name filename in
+                            let uu___7 =
+                              let uu___8 = lowercase_module_name filename in
                               implementation_of_internal file_system_map1
-                                uu___7 in
+                                uu___8 in
                             FStarC_Option.iter
                               (fun impl ->
                                  if
@@ -2356,17 +2393,17 @@ let (collect :
                                      (FStarC_List.contains impl
                                         all_command_line_files)
                                  then
-                                   let uu___7 =
-                                     let uu___8 =
+                                   let uu___8 =
+                                     let uu___9 =
                                        FStarC_Effect.op_Bang mo_files in
-                                     impl :: uu___8 in
+                                     impl :: uu___9 in
                                    FStarC_Effect.op_Colon_Equals mo_files
-                                     uu___7
-                                 else ()) uu___6
+                                     uu___8
+                                 else ()) uu___7
                           else ())) in
                 FStarC_List.iter (aux []) all_command_line_files;
-                (let uu___3 = FStarC_Effect.op_Bang mo_files in
-                 FStarC_List.iter (aux []) uu___3) in
+                (let uu___4 = FStarC_Effect.op_Bang mo_files in
+                 FStarC_List.iter (aux []) uu___4) in
             full_cycle_detection all_cmd_line_files2 file_system_map;
             FStarC_List.iter
               (fun f ->
@@ -2374,19 +2411,19 @@ let (collect :
                  FStarC_Options.add_verify_module m) all_cmd_line_files2;
             (let inlining_ifaces =
                FStarC_Effect.op_Bang interfaces_needing_inlining in
-             let uu___4 =
+             let uu___5 =
                profile
-                 (fun uu___5 ->
-                    let uu___6 =
-                      let uu___7 = FStarC_Options.codegen () in
-                      uu___7 <> FStar_Pervasives_Native.None in
+                 (fun uu___6 ->
+                    let uu___7 =
+                      let uu___8 = FStarC_Options.codegen () in
+                      uu___8 <> FStar_Pervasives_Native.None in
                     topological_dependences_of file_system_map dep_graph
-                      inlining_ifaces all_cmd_line_files2 uu___6)
+                      inlining_ifaces all_cmd_line_files2 uu___7)
                  "FStarC.Parser.Dep.topological_dependences_of" in
-             match uu___4 with
-             | (all_files, uu___5) ->
-                 ((let uu___7 = FStarC_Effect.op_Bang dbg in
-                   if uu___7
+             match uu___5 with
+             | (all_files, uu___6) ->
+                 ((let uu___8 = FStarC_Effect.op_Bang dbg in
+                   if uu___8
                    then
                      FStarC_Format.print1 "Interfaces needing inlining: %s\n"
                        (FStarC_String.concat ", " inlining_ifaces)

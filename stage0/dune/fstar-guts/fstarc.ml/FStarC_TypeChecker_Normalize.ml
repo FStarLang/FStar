@@ -4665,37 +4665,42 @@ and (do_reify_monadic :
                                                  FStarC_TypeChecker_Env.is_total_effect
                                                    cfg.FStarC_TypeChecker_Cfg.tcenv
                                                    eff_name in
-                                               if is_total_effect
+                                               let uu___10 =
+                                                 is_total_effect ||
+                                                   (FStarC_Ident.lid_equals
+                                                      eff_name
+                                                      FStarC_Parser_Const.effect_TAC_lid) in
+                                               if uu___10
                                                then
-                                                 let uu___10 =
-                                                   let uu___11 =
-                                                     let uu___12 =
+                                                 let uu___11 =
+                                                   let uu___12 =
+                                                     let uu___13 =
                                                        bind_inst_args head in
                                                      {
                                                        FStarC_Syntax_Syntax.hd
                                                          = bind_inst;
                                                        FStarC_Syntax_Syntax.args
-                                                         = uu___12
+                                                         = uu___13
                                                      } in
                                                    FStarC_Syntax_Syntax.Tm_app
-                                                     uu___11 in
+                                                     uu___12 in
                                                  FStarC_Syntax_Syntax.mk
-                                                   uu___10 rng
+                                                   uu___11 rng
                                                else
-                                                 (let uu___11 =
+                                                 (let uu___12 =
                                                     let bv =
                                                       FStarC_Syntax_Syntax.new_bv
                                                         FStar_Pervasives_Native.None
                                                         x.FStarC_Syntax_Syntax.sort in
                                                     let lb1 =
-                                                      let uu___12 =
-                                                        let uu___13 =
-                                                          let uu___14 =
+                                                      let uu___13 =
+                                                        let uu___14 =
+                                                          let uu___15 =
                                                             FStarC_Syntax_Syntax.as_arg
                                                               x.FStarC_Syntax_Syntax.sort in
-                                                          [uu___14] in
+                                                          [uu___15] in
                                                         FStarC_Syntax_Util.mk_app
-                                                          repr uu___13 in
+                                                          repr uu___14 in
                                                       {
                                                         FStarC_Syntax_Syntax.lbname
                                                           =
@@ -4704,7 +4709,7 @@ and (do_reify_monadic :
                                                         FStarC_Syntax_Syntax.lbunivs
                                                           = [];
                                                         FStarC_Syntax_Syntax.lbtyp
-                                                          = uu___12;
+                                                          = uu___13;
                                                         FStarC_Syntax_Syntax.lbeff
                                                           =
                                                           (if is_total_effect
@@ -4720,25 +4725,25 @@ and (do_reify_monadic :
                                                           =
                                                           (head.FStarC_Syntax_Syntax.pos)
                                                       } in
-                                                    let uu___12 =
+                                                    let uu___13 =
                                                       FStarC_Syntax_Syntax.bv_to_name
                                                         bv in
-                                                    (lb1, bv, uu___12) in
-                                                  match uu___11 with
+                                                    (lb1, bv, uu___13) in
+                                                  match uu___12 with
                                                   | (lb_head, head_bv, head1)
                                                       ->
-                                                      let uu___12 =
-                                                        let uu___13 =
-                                                          let uu___14 =
-                                                            let uu___15 =
-                                                              let uu___16 =
-                                                                FStarC_Syntax_Syntax.mk_binder
-                                                                  head_bv in
-                                                              [uu___16] in
+                                                      let uu___13 =
+                                                        let uu___14 =
+                                                          let uu___15 =
                                                             let uu___16 =
                                                               let uu___17 =
-                                                                let uu___18 =
-                                                                  let uu___19
+                                                                FStarC_Syntax_Syntax.mk_binder
+                                                                  head_bv in
+                                                              [uu___17] in
+                                                            let uu___17 =
+                                                              let uu___18 =
+                                                                let uu___19 =
+                                                                  let uu___20
                                                                     =
                                                                     bind_inst_args
                                                                     head1 in
@@ -4747,26 +4752,26 @@ and (do_reify_monadic :
                                                                     =
                                                                     bind_inst;
                                                                     FStarC_Syntax_Syntax.args
-                                                                    = uu___19
+                                                                    = uu___20
                                                                   } in
                                                                 FStarC_Syntax_Syntax.Tm_app
-                                                                  uu___18 in
+                                                                  uu___19 in
                                                               FStarC_Syntax_Syntax.mk
-                                                                uu___17 rng in
+                                                                uu___18 rng in
                                                             FStarC_Syntax_Subst.close
-                                                              uu___15 uu___16 in
+                                                              uu___16 uu___17 in
                                                           {
                                                             FStarC_Syntax_Syntax.lbs
                                                               =
                                                               (false,
                                                                 [lb_head]);
                                                             FStarC_Syntax_Syntax.body1
-                                                              = uu___14
+                                                              = uu___15
                                                           } in
                                                         FStarC_Syntax_Syntax.Tm_let
-                                                          uu___13 in
+                                                          uu___14 in
                                                       FStarC_Syntax_Syntax.mk
-                                                        uu___12 rng) in
+                                                        uu___13 rng) in
                                              FStarC_TypeChecker_Cfg.log cfg
                                                (fun uu___11 ->
                                                   let uu___12 =

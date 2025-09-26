@@ -1398,7 +1398,13 @@ let (hashable_pragma :
                (Prims.of_int (6))
          | FStarC_Syntax_Syntax.PrintEffectsGraph ->
              FStarC_Class_Hashable.hash FStarC_Class_Hashable.hashable_int
-               (Prims.of_int (7)))
+               (Prims.of_int (7))
+         | FStarC_Syntax_Syntax.Check t ->
+             let uu___1 =
+               FStarC_Class_Hashable.hash FStarC_Class_Hashable.hashable_int
+                 (Prims.of_int (8)) in
+             let uu___2 = FStarC_Class_Hashable.hash hashable_term t in
+             FStarC_Hash.mix uu___1 uu___2)
   }
 let rec (hash_sigelt : FStarC_Syntax_Syntax.sigelt -> FStarC_Hash.hash_code)
   = fun se -> hash_sigelt' se.FStarC_Syntax_Syntax.sigel

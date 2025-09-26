@@ -358,7 +358,6 @@ let string_of_token =
   | IF -> "IF"
   | IN -> "IN"
   | MODULE -> "MODULE"
-  | DEFAULT -> "DEFAULT"
   | MATCH -> "MATCH"
   | OF -> "OF"
   | FRIEND -> "FRIEND"
@@ -461,7 +460,8 @@ let string_of_token =
   | OPINFIX0d s -> "OPINFIX0d " ^ s
   | OPINFIX1 s -> "OPINFIX1 " ^ s
   | OPINFIX2 s -> "OPINFIX2 " ^ s
-  | OPINFIX3 s -> "OPINFIX3 " ^ s
+  | OPINFIX3L s -> "OPINFIX3L " ^ s
+  | OPINFIX3R s -> "OPINFIX3R " ^ s
   | OPINFIX4 s -> "OPINFIX4 " ^ s
   | OP_MIXFIX_ASSIGNMENT s -> "OP_MIXFIX_ASSIGNMENT " ^ s
   | OP_MIXFIX_ACCESS s -> "OP_MIXFIX_ACCESS " ^ s

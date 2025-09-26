@@ -3332,6 +3332,102 @@ and (term_as_mlexpr' :
            let uu___1 = apply_to_match_branches head args in
            term_as_mlexpr g uu___1
        | FStarC_Syntax_Syntax.Tm_app
+           {
+             FStarC_Syntax_Syntax.hd =
+               {
+                 FStarC_Syntax_Syntax.n = FStarC_Syntax_Syntax.Tm_uinst
+                   ({
+                      FStarC_Syntax_Syntax.n = FStarC_Syntax_Syntax.Tm_fvar
+                        fv;
+                      FStarC_Syntax_Syntax.pos = uu___1;
+                      FStarC_Syntax_Syntax.vars = uu___2;
+                      FStarC_Syntax_Syntax.hash_code = uu___3;_},
+                    uu___4);
+                 FStarC_Syntax_Syntax.pos = uu___5;
+                 FStarC_Syntax_Syntax.vars = uu___6;
+                 FStarC_Syntax_Syntax.hash_code = uu___7;_};
+             FStarC_Syntax_Syntax.args = args;_}
+           when
+           (FStarC_Syntax_Syntax.fv_eq_lid fv
+              FStarC_Parser_Const.tac_bind_lid)
+             ||
+             (FStarC_Syntax_Syntax.fv_eq_lid fv
+                FStarC_Parser_Const.lift_div_tac_lid)
+           ->
+           let lid = FStarC_Syntax_Syntax.lid_of_fv fv in
+           let uu___8 =
+             let uu___9 = FStarC_Extraction_ML_UEnv.tcenv_of_uenv g in
+             let uu___10 = FStarC_Syntax_Syntax.lid_of_fv fv in
+             FStarC_TypeChecker_Env.lookup_definition
+               [FStarC_TypeChecker_Env.Unfold
+                  FStarC_Syntax_Syntax.delta_constant] uu___9 uu___10 in
+           (match uu___8 with
+            | FStar_Pervasives_Native.Some (us, defn) ->
+                term_as_mlexpr g
+                  {
+                    FStarC_Syntax_Syntax.n =
+                      (FStarC_Syntax_Syntax.Tm_app
+                         {
+                           FStarC_Syntax_Syntax.hd = defn;
+                           FStarC_Syntax_Syntax.args = args
+                         });
+                    FStarC_Syntax_Syntax.pos = (t.FStarC_Syntax_Syntax.pos);
+                    FStarC_Syntax_Syntax.vars = (t.FStarC_Syntax_Syntax.vars);
+                    FStarC_Syntax_Syntax.hash_code =
+                      (t.FStarC_Syntax_Syntax.hash_code)
+                  }
+            | FStar_Pervasives_Native.None ->
+                let uu___9 =
+                  let uu___10 =
+                    FStarC_Class_Show.show FStarC_Syntax_Syntax.showable_fv
+                      fv in
+                  Prims.strcat "cannot lookup definition of" uu___10 in
+                failwith uu___9)
+       | FStarC_Syntax_Syntax.Tm_app
+           {
+             FStarC_Syntax_Syntax.hd =
+               { FStarC_Syntax_Syntax.n = FStarC_Syntax_Syntax.Tm_fvar fv;
+                 FStarC_Syntax_Syntax.pos = uu___1;
+                 FStarC_Syntax_Syntax.vars = uu___2;
+                 FStarC_Syntax_Syntax.hash_code = uu___3;_};
+             FStarC_Syntax_Syntax.args = args;_}
+           when
+           (FStarC_Syntax_Syntax.fv_eq_lid fv
+              FStarC_Parser_Const.tac_bind_lid)
+             ||
+             (FStarC_Syntax_Syntax.fv_eq_lid fv
+                FStarC_Parser_Const.lift_div_tac_lid)
+           ->
+           let lid = FStarC_Syntax_Syntax.lid_of_fv fv in
+           let uu___4 =
+             let uu___5 = FStarC_Extraction_ML_UEnv.tcenv_of_uenv g in
+             let uu___6 = FStarC_Syntax_Syntax.lid_of_fv fv in
+             FStarC_TypeChecker_Env.lookup_definition
+               [FStarC_TypeChecker_Env.Unfold
+                  FStarC_Syntax_Syntax.delta_constant] uu___5 uu___6 in
+           (match uu___4 with
+            | FStar_Pervasives_Native.Some (us, defn) ->
+                term_as_mlexpr g
+                  {
+                    FStarC_Syntax_Syntax.n =
+                      (FStarC_Syntax_Syntax.Tm_app
+                         {
+                           FStarC_Syntax_Syntax.hd = defn;
+                           FStarC_Syntax_Syntax.args = args
+                         });
+                    FStarC_Syntax_Syntax.pos = (t.FStarC_Syntax_Syntax.pos);
+                    FStarC_Syntax_Syntax.vars = (t.FStarC_Syntax_Syntax.vars);
+                    FStarC_Syntax_Syntax.hash_code =
+                      (t.FStarC_Syntax_Syntax.hash_code)
+                  }
+            | FStar_Pervasives_Native.None ->
+                let uu___5 =
+                  let uu___6 =
+                    FStarC_Class_Show.show FStarC_Syntax_Syntax.showable_fv
+                      fv in
+                  Prims.strcat "cannot lookup definition of" uu___6 in
+                failwith uu___5)
+       | FStarC_Syntax_Syntax.Tm_app
            { FStarC_Syntax_Syntax.hd = head;
              FStarC_Syntax_Syntax.args = args;_}
            ->
@@ -3394,6 +3490,57 @@ and (term_as_mlexpr' :
                        FStarC_Errors_Codes.Fatal_ExtractionUnsupported ()
                        (Obj.magic FStarC_Errors_Msg.is_error_message_string)
                        (Obj.magic uu___2))
+            | FStarC_Syntax_Syntax.Tm_let
+                { FStarC_Syntax_Syntax.lbs = lbs;
+                  FStarC_Syntax_Syntax.body1 = body;_}
+                ->
+                term_as_mlexpr g
+                  {
+                    FStarC_Syntax_Syntax.n =
+                      (FStarC_Syntax_Syntax.Tm_let
+                         {
+                           FStarC_Syntax_Syntax.lbs = lbs;
+                           FStarC_Syntax_Syntax.body1 =
+                             {
+                               FStarC_Syntax_Syntax.n =
+                                 (FStarC_Syntax_Syntax.Tm_app
+                                    {
+                                      FStarC_Syntax_Syntax.hd = body;
+                                      FStarC_Syntax_Syntax.args = args
+                                    });
+                               FStarC_Syntax_Syntax.pos =
+                                 (t.FStarC_Syntax_Syntax.pos);
+                               FStarC_Syntax_Syntax.vars =
+                                 (t.FStarC_Syntax_Syntax.vars);
+                               FStarC_Syntax_Syntax.hash_code =
+                                 (t.FStarC_Syntax_Syntax.hash_code)
+                             }
+                         });
+                    FStarC_Syntax_Syntax.pos =
+                      (head.FStarC_Syntax_Syntax.pos);
+                    FStarC_Syntax_Syntax.vars =
+                      (head.FStarC_Syntax_Syntax.vars);
+                    FStarC_Syntax_Syntax.hash_code =
+                      (head.FStarC_Syntax_Syntax.hash_code)
+                  }
+            | FStarC_Syntax_Syntax.Tm_app
+                { FStarC_Syntax_Syntax.hd = hd;
+                  FStarC_Syntax_Syntax.args = args0;_}
+                ->
+                term_as_mlexpr g
+                  {
+                    FStarC_Syntax_Syntax.n =
+                      (FStarC_Syntax_Syntax.Tm_app
+                         {
+                           FStarC_Syntax_Syntax.hd = hd;
+                           FStarC_Syntax_Syntax.args =
+                             (FStarC_List.op_At args0 args)
+                         });
+                    FStarC_Syntax_Syntax.pos = (t.FStarC_Syntax_Syntax.pos);
+                    FStarC_Syntax_Syntax.vars = (t.FStarC_Syntax_Syntax.vars);
+                    FStarC_Syntax_Syntax.hash_code =
+                      (t.FStarC_Syntax_Syntax.hash_code)
+                  }
             | uu___2 ->
                 let rec extract_app is_data =
                   fun uu___3 ->

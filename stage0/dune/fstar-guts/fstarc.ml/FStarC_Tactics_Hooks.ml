@@ -1548,18 +1548,23 @@ let (spinoff_strictly_positive_goals :
                                       else ());
                                      FStar_Pervasives_Native.Some (env1, t2))))
                         gs2 in
-                    ((let uu___6 = FStarC_TypeChecker_Env.get_range env in
-                      let uu___7 =
+                    ((let uu___6 = FStarC_Effect.op_Bang dbg_Tac in
+                      if uu___6
+                      then
+                        let uu___7 = FStarC_TypeChecker_Env.get_range env in
                         let uu___8 =
-                          FStarC_Class_Show.show
-                            FStarC_Class_Show.showable_nat
-                            (FStarC_List.length gs3) in
-                        FStarC_Format.fmt1 "Split query into %s sub-goals"
-                          uu___8 in
-                      FStarC_Errors.diag FStarC_Class_HasRange.hasRange_range
-                        uu___6 ()
-                        (Obj.magic FStarC_Errors_Msg.is_error_message_string)
-                        (Obj.magic uu___7));
+                          let uu___9 =
+                            FStarC_Class_Show.show
+                              FStarC_Class_Show.showable_nat
+                              (FStarC_List.length gs3) in
+                          FStarC_Format.fmt1 "Split query into %s sub-goals"
+                            uu___9 in
+                        FStarC_Errors.diag
+                          FStarC_Class_HasRange.hasRange_range uu___7 ()
+                          (Obj.magic
+                             FStarC_Errors_Msg.is_error_message_string)
+                          (Obj.magic uu___8)
+                      else ());
                      FStarC_List.op_At main_goal gs3)))
 let (synthesize :
   FStarC_TypeChecker_Env.env ->

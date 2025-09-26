@@ -259,6 +259,9 @@ let (const_cmp : FStarC_Reflection_V2_Data.vconst comparator_for) =
       | (FStarC_Reflection_V2_Data.C_Real s1,
          FStarC_Reflection_V2_Data.C_Real s2) ->
           Obj.magic (Obj.repr (eq_cmp s1 s2))
+      | (FStarC_Reflection_V2_Data.C_Char c11,
+         FStarC_Reflection_V2_Data.C_Char c21) ->
+          Obj.magic (Obj.repr (eq_cmp c11 c21))
       | uu___ -> Obj.magic (Obj.repr Neq)
 let (ctxu_cmp : FStarC_Reflection_Types.ctx_uvar_and_subst comparator_for) =
   fun uu___ -> fun uu___1 -> Unknown

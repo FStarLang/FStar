@@ -202,6 +202,7 @@ let (__proj__Mkproofstate__item__dump_on_failure : proofstate -> Prims.bool)
         splice_attrs; depth; __dump; psc; entry_range;
         guard_policy = guard_policy1; freshness; tac_verb_dbg; local_state;
         urgency; dump_on_failure;_} -> dump_on_failure
+type ref_proofstate = proofstate FStarC_Effect.ref
 let (goal_env : goal -> FStarC_TypeChecker_Env.env) =
   fun g -> g.goal_main_env
 let (goal_range : goal -> FStarC_Range_Type.t) =

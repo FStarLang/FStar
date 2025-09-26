@@ -166,9 +166,7 @@ type term' =
   | Quant of (qop * term Prims.list Prims.list * Prims.int
   FStar_Pervasives_Native.option * sort Prims.list * term) 
   | Let of (term Prims.list * term) 
-  | Labeled of (term * FStarC_Errors_Msg.error_message * FStarC_Range_Type.t)
-  
-  | LblPos of (term * Prims.string) 
+  | Labeled of (term * FStarC_Errors_Msg.error_message * FStarC_Range_Type.t) 
 and term =
   {
   tm: term' ;
@@ -216,10 +214,6 @@ let (uu___is_Labeled : term' -> Prims.bool) =
 let (__proj__Labeled__item___0 :
   term' -> (term * FStarC_Errors_Msg.error_message * FStarC_Range_Type.t)) =
   fun projectee -> match projectee with | Labeled _0 -> _0
-let (uu___is_LblPos : term' -> Prims.bool) =
-  fun projectee -> match projectee with | LblPos _0 -> true | uu___ -> false
-let (__proj__LblPos__item___0 : term' -> (term * Prims.string)) =
-  fun projectee -> match projectee with | LblPos _0 -> _0
 let (__proj__Mkterm__item__tm : term -> term') =
   fun projectee -> match projectee with | { tm; freevars; rng;_} -> tm
 let (__proj__Mkterm__item__freevars :
@@ -684,7 +678,6 @@ let rec (freevars : term -> fv Prims.list) =
     | App (uu___, tms) -> FStarC_List.collect freevars tms
     | Quant (uu___, uu___1, uu___2, uu___3, t1) -> freevars t1
     | Labeled (t1, uu___, uu___1) -> freevars t1
-    | LblPos (t1, uu___) -> freevars t1
     | Let (es, body) -> FStarC_List.collect freevars (body :: es)
 let (free_variables : term -> fvs) =
   fun t ->
@@ -744,8 +737,6 @@ let (free_top_level_names : term -> Prims.string FStarC_RBSet.t) =
                          FStarC_List.fold_left free_top_level_names1 acc tms in
                        free_top_level_names1 acc1 t2))
              | Labeled (t2, uu___, uu___1) ->
-                 Obj.magic (Obj.repr (free_top_level_names1 acc t2))
-             | LblPos (t2, uu___) ->
                  Obj.magic (Obj.repr (free_top_level_names1 acc t2))
              | uu___ -> Obj.magic (Obj.repr acc)) uu___1 uu___ in
     let uu___ =
@@ -852,11 +843,6 @@ let rec (hash_of_term' : term' -> Prims.string) =
           Prims.strcat uu___1 uu___2 in
         Prims.strcat "(" uu___
     | Labeled (t1, uu___, uu___1) -> hash_of_term t1
-    | LblPos (t1, r) ->
-        let uu___ =
-          let uu___1 = hash_of_term t1 in
-          Prims.strcat uu___1 (Prims.strcat " :lblpos " (Prims.strcat r ")")) in
-        Prims.strcat "(! " uu___
     | Quant (qop1, pats, wopt, sorts, body) ->
         let uu___ =
           let uu___1 =
@@ -1218,7 +1204,6 @@ let (check_pattern_ok : term -> term FStar_Pervasives_Native.option) =
           else aux_l terms
       | Labeled (t2, uu___, uu___1) -> aux t2
       | Quant uu___ -> FStar_Pervasives_Native.Some t1
-      | LblPos uu___ -> FStar_Pervasives_Native.Some t1
     and aux_l ts =
       match ts with
       | [] -> FStar_Pervasives_Native.None
@@ -1248,9 +1233,6 @@ let rec (print_smt_term : term -> Prims.string) =
         let uu___ = FStarC_Errors_Msg.rendermsg r1 in
         let uu___1 = print_smt_term t1 in
         FStarC_Format.fmt2 "(Labeled '%s' %s)" uu___ uu___1
-    | LblPos (t1, s) ->
-        let uu___ = print_smt_term t1 in
-        FStarC_Format.fmt2 "(LblPos %s %s)" s uu___
     | Quant (qop1, l, uu___, uu___1, t1) ->
         let uu___2 = print_smt_term_list_list l in
         let uu___3 = print_smt_term t1 in
@@ -1363,11 +1345,6 @@ let (abstr : fv Prims.list -> term -> term) =
                      let uu___3 = let uu___4 = aux ix t2 in (uu___4, r1, r2) in
                      Labeled uu___3 in
                    mk uu___2 t2.rng
-               | LblPos (t2, r) ->
-                   let uu___2 =
-                     let uu___3 = let uu___4 = aux ix t2 in (uu___4, r) in
-                     LblPos uu___3 in
-                   mk uu___2 t2.rng
                | Quant (qop1, pats, wopt, vars, body) ->
                    let n = FStarC_List.length vars in
                    let uu___2 =
@@ -1418,11 +1395,6 @@ let (inst : term Prims.list -> term -> term) =
               let uu___ =
                 let uu___1 = let uu___2 = aux shift t2 in (uu___2, r1, r2) in
                 Labeled uu___1 in
-              mk uu___ t2.rng
-          | LblPos (t2, r) ->
-              let uu___ =
-                let uu___1 = let uu___2 = aux shift t2 in (uu___2, r) in
-                LblPos uu___1 in
               mk uu___ t2.rng
           | Quant (qop1, pats, wopt, vars, body) ->
               let m = FStarC_List.length vars in
@@ -1976,10 +1948,6 @@ let (termToSmt : Prims.bool -> Prims.string -> term -> FStar_Pprint.document)
                     let uu___1 = FStarC_List.map (aux1 n names) tms in
                     form uu___ uu___1
                 | Labeled (t2, uu___, uu___1) -> aux1 n names t2
-                | LblPos (t2, s) ->
-                    let uu___ = aux1 n names t2 in
-                    let uu___1 = let uu___2 = mk_lblpos s in [uu___2] in
-                    mk_tag uu___ uu___1
                 | Quant (qop1, pats, wopt, sorts, body) ->
                     let qid = next_qid () in
                     let uu___ =

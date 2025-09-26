@@ -161,8 +161,6 @@ let (label_goals :
                       | FStarC_SMTEncoding_Term.String uu___1 ->
                           (labels1, q1)
                       | FStarC_SMTEncoding_Term.Real uu___1 -> (labels1, q1)
-                      | FStarC_SMTEncoding_Term.LblPos uu___1 ->
-                          failwith "Impossible"
                       | FStarC_SMTEncoding_Term.Labeled
                           (arg, d::[], label_range) when
                           let uu___1 = FStarC_Errors_Msg.renderdoc d in
