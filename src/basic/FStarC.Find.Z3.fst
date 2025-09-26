@@ -25,7 +25,7 @@ open FStarC.Class.Show
 
 let z3url = "https://github.com/Z3Prover/z3/releases"
 
-let packaged_z3_versions = ["4.8.5"; "4.13.3"]
+let packaged_z3_versions = ["4.8.5"; "4.13.3"; "4.15.3"]
 
 let z3_install_suggestion (v : string) : list Pprint.document =
   let open FStarC.Errors.Msg in
@@ -58,12 +58,12 @@ let z3_inpath (path:string) : bool =
 
 - If the user provided the --smt option, use that binary unconditionally.
 - We then look in $LIB/z3-VER/z3, where LIB is the F* library root, for example
-  /usr/local/lib/fstar/z3-4.8.5/bin/z3, for an installed package. We ship Z3 4.8.5
-  and 4.13.3 in the binary package in these paths, so F* automatically find them
-  without relying on PATH or adding more stuff to the user's /usr/local/bin.
-  Each $PREFIX/lib/fstar/z3-VER directory roughly contains an extracted Z3
-  binary package, but with many files removed (currently we just keep LICENSE
-  and the executable).
+  /usr/local/lib/fstar/z3-4.8.5/bin/z3, for an installed package. We ship a few Z3
+  versions in the binary package in these paths, so F* can automatically find them
+  without relying on PATH or adding more stuff to the user's /usr/local/bin.  Each
+  $PREFIX/lib/fstar/z3-VER directory roughly contains an extracted Z3 binary
+  package, but with many files removed (currently we just keep LICENSE and the
+  executable).
 
 - Else we check the PATH:
   - If z3-VER (or z3-VER.exe) exists in the PATH use it.
