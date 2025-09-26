@@ -17,13 +17,13 @@
   - Expected failure:
   - Expected type Prims.l_True \/ Prims.l_True
     but Prims.Right Prims.T
-    has type Prims.sum Prims.l_True (*?u6*) _
+    has type Prims.sum Prims.l_True (*?u6*)_
 
 * Info at NegativeTests.False.fst(30,18-30,41):
   - Expected failure:
   - Expected type Prims.l_True \/ Prims.l_True
     but Prims.Left Prims.T
-    has type Prims.sum (*?u1*) _ Prims.l_True
+    has type Prims.sum (*?u1*)_ Prims.l_True
 
 * Warning 240 at NegativeTests.False.fst(30,0-30,66):
   - Missing definitions in module NegativeTests.False:
