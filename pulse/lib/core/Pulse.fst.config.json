@@ -3,9 +3,7 @@
 	"options": [
 		"--query_cache",
 		"--ext",
-		"optimize_let_vc",
-		"--z3version",
-		"4.13.3"
+		"optimize_let_vc"
 	],
 	"include_dirs": [
 		"../../build/lib.common.checked",
