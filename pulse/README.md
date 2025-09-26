@@ -4,13 +4,11 @@ For documentation on how to use Pulse, see https://fstar-lang.org/tutorial/book/
 
 ## Prerequisites
 
-* Z3 4.13.3 (exactly this version)
-* OCaml 4.10 or higher
+* F\* from git master
+* Z3 (required for F\*)
+* OCaml 5 or higher
 * GNU Make
 * A GCC-compatible compiler
-* F* 2023.04.15 or higher (installed via opam or via its source. A
-  binary package is unlikely to work, since Pulse needs to dynamically
-  load a plugin.)
 * Karamel, but only if you are interested in extracting to C. If you
   are only interested in verifying Pulse code, or extracting to OCaml,
   then Karamel is not needed.
