@@ -4,7 +4,7 @@ open FStar.Mul
 
 #set-options "--fuel 0 --max_ifuel 1 --z3rlimit 20"
 
-// Other instances frollow from `FStar.UInt.pow2_values` which is in
+// Other instances frollow from `FStar.Math.Lemmas.pow2_values` which is in
 // scope of every module depending on Lib.IntTypes
 val pow2_2: n:nat -> Lemma (pow2 2 = 4)  [SMTPat (pow2 n)]
 val pow2_3: n:nat -> Lemma (pow2 3 = 8)  [SMTPat (pow2 n)]
