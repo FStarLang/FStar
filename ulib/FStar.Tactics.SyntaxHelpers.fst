@@ -16,4 +16,4 @@
 module FStar.Tactics.SyntaxHelpers
 
 (* This module is a temporary for Meta-F* migration *)
-include FStar.Tactics.V1.SyntaxHelpers
+include FStar.Tactics.V2.SyntaxHelpers
