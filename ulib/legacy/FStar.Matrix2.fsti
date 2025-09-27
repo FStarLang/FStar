@@ -17,7 +17,7 @@ module FStar.Matrix2
 
 #set-options "--fuel 0 --ifuel 0"
 
-assume new type matrix2 : nat -> nat -> Type -> Type
+assume new type matrix2 : nat -> nat -> Type u#a -> Type u#a
 open FStar.Seq
 
 (* Destructors *)

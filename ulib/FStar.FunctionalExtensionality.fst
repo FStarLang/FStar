@@ -63,7 +63,7 @@ let extensionality_1 (a:Type)
             t_trefl false)
 
 let extensionality a b f g
-  = let fwd a b (f g:arrow a b)
+  = let fwd (f g:arrow a b)
      : Lemma (requires feq #a #b f g)
              (ensures on_domain a f == on_domain a g)
              [SMTPat (feq #a #b f g)]
@@ -94,7 +94,7 @@ let extensionality_1_g (a:Type)
             t_trefl false)
 
 let extensionality_g a b f g
-  = let fwd a b (f g:arrow_g a b)
+  = let fwd (f g:arrow_g a b)
      : Lemma (requires feq_g #a #b f g)
              (ensures on_domain_g a f == on_domain_g a g)
              [SMTPat (feq_g #a #b f g)]

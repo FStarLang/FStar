@@ -172,7 +172,7 @@ let empty_or_domain_occupied_lemma ()
       introduce m == emptymap \/ (exists k. mem k m)
       with Left (
         assert (cardinality m = 0);
-        cardinality_zero_iff_empty_lemma ()
+        cardinality_zero_iff_empty_lemma u#b ()
       )
     else
       introduce m == emptymap \/ (exists k. mem k m)

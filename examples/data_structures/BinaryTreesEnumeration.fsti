@@ -235,16 +235,17 @@ let memP_concatMap_intro #a #b (x: a) (y: b) (f:a -> list b) (l: list a) :
       can I get rid of them without cluttering the rest of the proof with many
       copies of the same function?  Can I infer them by unifying with the
       current “goal”? *)
-let product_complete (#a #b: Type) (l1: list a) (l2: list b) x1 x2 :
+module T = FStar.Tactics
+let product_complete (#a:Type u#a) (#b: Type u#b) (l1: list a) (l2: list b) x1 x2 :
   Lemma (List.memP x1 l1 ==>
          List.memP x2 l2 ==>
          List.memP (x1, x2) (product #a l1 l2)) =
     let x = (x1, x2) in
     let unfold f2 x1 = fun x2 -> (x1, x2) in
-    let f1 = fun x1 -> List.Tot.map (f2 x1) l2 in
+    let unfold f1 = fun x1 -> List.Tot.map (f2 x1) l2 in
     let l = f1 x1 in
     let ls = List.Tot.map f1 l1 in
-    assert (product l1 l2 == List.Tot.concatMap f1 l1);
+    assert (product l1 l2 == List.Tot.concatMap f1 l1) by (T.trefl());
 
     memP_map_intro (f2 x1) x2 l2
       <: Lemma (List.memP x2 l2 ==> List.memP x l);

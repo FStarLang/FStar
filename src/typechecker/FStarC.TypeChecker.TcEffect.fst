@@ -62,8 +62,9 @@ let check_and_gen env (eff_name:string) (comb:string) (n:int) (us, t) : (univ_na
   Errors.with_ctx ("While checking combinator " ^ comb ^ " = " ^ show (us, t)) (fun () ->
   let us, t = SS.open_univ_vars us t in
   let t, ty =
-    let t, lc, g = tc_tot_or_gtot_term (Env.push_univ_vars env us) t in
-    Rel.force_trivial_guard env g;
+    let env1 = Env.push_univ_vars env us in
+    let t, lc, g = tc_tot_or_gtot_term env1 t in
+    Rel.force_trivial_guard env1 g;
     t, lc.res_typ in
   let g_us, t = Gen.generalize_universes env t in
   let ty = SS.close_univ_vars g_us ty in
@@ -1731,6 +1732,7 @@ Errors.with_ctx (Format.fmt1 "While checking layered effect definition `%s`" (st
         then raise_error r Errors.Fatal_UnexpectedEffect "close combinator is only allowed for effects with substitutive subcomp"
       in
       let us, close_tm = SS.open_univ_vars us close_tm in
+      let env0 = Env.push_univ_vars env0 us in
       let close_bs, close_body, _ = U.abs_formals close_tm in
       let a_b::b_b::close_bs = close_bs in
       let is_bs, _ = List.splitAt (List.length close_bs - 1) close_bs in

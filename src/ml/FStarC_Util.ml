@@ -432,9 +432,14 @@ let nodups f l = match find_dup f l with | None -> true | _ -> false
 
 let remove_dups f l =
   let rec aux out = function
-    | hd::tl -> let _, tl' = BatList.partition (f hd) tl in aux (hd::out) tl'
-    | _ -> out in
-  aux [] l
+    | hd::tl ->
+      if BatList.exists (f hd) out then
+        aux out tl
+      else
+        aux (hd::out) tl
+    | _ ->
+      List.rev out
+  in aux [] l
 
 (* JP: why so many duplicates? :'( *)
 let sort_with = FStar_List.sortWith
