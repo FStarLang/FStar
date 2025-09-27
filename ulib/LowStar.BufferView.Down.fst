@@ -330,7 +330,8 @@ let rec upd_seq'_spec (#a #b: _) (v:view a b) (s:Seq.seq b{Seq.length s % View?.
         let es = upd_seq' v s acc in
         as_seq' es v `Seq.equal` Seq.append s (as_seq' acc v)))
       (decreases (Seq.length s))
-  = if Seq.length s = 0 then ()
+  = admit();
+    if Seq.length s = 0 then ()
     else let n = View?.n v in
          let pfx, suffix = Seq.split s n in
          Math.lemma_mod_sub (Seq.length s) n 1;

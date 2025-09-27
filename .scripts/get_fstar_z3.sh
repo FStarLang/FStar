@@ -22,6 +22,11 @@ release_url=(
   "Darwin-x86_64-4.13.3":"https://github.com/Z3Prover/z3/releases/download/z3-4.13.3/z3-4.13.3-x64-osx-13.7.zip"
   "Darwin-aarch64-4.13.3":"https://github.com/Z3Prover/z3/releases/download/z3-4.13.3/z3-4.13.3-arm64-osx-13.7.zip"
   "Windows-x86_64-4.13.3":"https://github.com/Z3Prover/z3/releases/download/z3-4.13.3/z3-4.13.3-x64-win.zip"
+  "Linux-x86_64-4.15.3":"https://github.com/Z3Prover/z3/releases/download/z3-4.15.3/z3-4.15.3-x64-glibc-2.39.zip"
+  "Linux-aarch64-4.15.3":"https://github.com/Z3Prover/z3/releases/download/z3-4.15.3/z3-4.15.3-arm64-glibc-2.34.zip"
+  "Darwin-x86_64-4.15.3":"https://github.com/Z3Prover/z3/releases/download/z3-4.15.3/z3-4.15.3-x64-osx-13.7.6.zip"
+  "Darwin-aarch64-4.15.3":"https://github.com/Z3Prover/z3/releases/download/z3-4.15.3/z3-4.15.3-arm64-osx-13.7.6.zip"
+  "Windows-x86_64-4.15.3":"https://github.com/Z3Prover/z3/releases/download/z3-4.15.3/z3-4.15.3-x64-win.zip"
 )
 
 get_url() {
@@ -113,7 +118,7 @@ dest_dir="$1"
 
 mkdir -p "$dest_dir"
 
-for z3_ver in 4.8.5 4.13.3; do
+for z3_ver in 4.8.5 4.13.3 4.15.3; do
   destination_file_name="$dest_dir/z3-$z3_ver"
   if [ "$kernel" = Windows ]; then destination_file_name="$destination_file_name.exe"; fi
 

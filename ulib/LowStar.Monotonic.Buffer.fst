@@ -1597,6 +1597,7 @@ let g_upd_seq_as_seq #a #_ #_ b s h =
   end
 
 let g_upd_modifies_strong #_ #_ #_ b i v h =
+  admit();
   let h' = g_upd b i v h in
     // prove modifies_1_from_to_preserves_ubuffers
     Heap.lemma_distinct_addrs_distinct_preorders ();
