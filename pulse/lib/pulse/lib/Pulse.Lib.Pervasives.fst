@@ -214,3 +214,10 @@ fn dup_star (p q:slprop) {| duplicable p |} {| duplicable q |} : duplicable_f (p
 instance duplicable_star (p q : slprop)  {| duplicable p |}  {| duplicable q|} : duplicable (p ** q) = {
   dup_f = (fun _ -> dup_star p q)
 }
+
+instance duplicable_slprop_ref_pts_to x y : duplicable (slprop_ref_pts_to x y) = {
+  dup_f = (fun _ -> slprop_ref_share x #y)
+}
+
+ghost fn dup_emp () : duplicable_f emp = { }
+instance duplicable_emp : duplicable emp = { dup_f = dup_emp }
