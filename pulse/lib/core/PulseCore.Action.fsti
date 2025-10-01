@@ -683,6 +683,8 @@ val equiv_elim (a b:slprop)
 [@@erasable]
 val slprop_ref : Type0
 
+val null_slprop_ref : slprop_ref
+
 val slprop_ref_pts_to (x: slprop_ref) (y: slprop) : slprop
 
 val slprop_ref_alloc (y: slprop)

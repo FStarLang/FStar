@@ -774,6 +774,7 @@ let equiv_elim (a b:slprop) =
   lift_pre_act0_act fun #ictx -> ITA.equiv_elim #ictx a b
 
 let slprop_ref = Sep.slprop_ref
+let null_slprop_ref = Sep.null_slprop_ref
 let slprop_ref_pts_to = Sep.slprop_ref_pts_to
 let slprop_ref_alloc y = lift_pre_act0_act fun #ictx -> ITA.slprop_ref_alloc #ictx y
 let slprop_ref_share x y = lift_pre_act0_act fun #ictx -> ITA.slprop_ref_share #ictx x y

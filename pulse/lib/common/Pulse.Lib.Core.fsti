@@ -498,6 +498,8 @@ val later_equiv (p q: slprop) : squash (later (equiv p q) == equiv (later p) (la
 [@@erasable]
 val slprop_ref : Type0
 
+val null_slprop_ref : slprop_ref
+
 val slprop_ref_pts_to ([@@@mkey]x: slprop_ref) (y: slprop) : slprop
 
 val slprop_ref_alloc (y: slprop)

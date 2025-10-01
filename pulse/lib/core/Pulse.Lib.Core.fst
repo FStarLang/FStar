@@ -239,6 +239,7 @@ let later_equiv = Sep.later_equiv
 
 // TODO: these are write-once for now, though it's possible to construct fractional permission variables out of this
 let slprop_ref = PulseCore.Action.slprop_ref
+let null_slprop_ref = PulseCore.Action.null_slprop_ref
 let slprop_ref_pts_to x y = PulseCore.Action.slprop_ref_pts_to x y
 let slprop_ref_alloc x = A.slprop_ref_alloc x
 let slprop_ref_share x #y = A.slprop_ref_share x y
