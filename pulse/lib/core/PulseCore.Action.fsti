@@ -465,6 +465,7 @@ val drop (p:slprop)
 ////////////////////////////////////////////////////////////////////////
 [@@erasable]
 val core_ghost_ref : Type u#0
+val core_ghost_ref_null : core_ghost_ref
 let ghost_ref (#a:Type u#a) (p:pcm a) : Type u#0 = core_ghost_ref
 val ghost_pts_to (#a:Type u#1) (#p:pcm a) (r:ghost_ref p) (v:a) : slprop
 
@@ -474,6 +475,13 @@ val timeless_ghost_pts_to
     (r:ghost_ref p)
     (v:a)
 : Lemma (timeless (ghost_pts_to r v))
+
+val ghost_pts_to_not_null (#a:Type u#1) (#p:FStar.PCM.pcm a) (r:ghost_ref p) (v:a)
+: act (squash (r =!= core_ghost_ref_null))
+    Ghost
+    emp_inames 
+    (ghost_pts_to r v)
+    (fun _ -> ghost_pts_to r v)
 
 val ghost_alloc
     (#a:Type u#1)
@@ -674,6 +682,8 @@ val equiv_elim (a b:slprop)
 /// slprop_refs
 [@@erasable]
 val slprop_ref : Type0
+
+val null_slprop_ref : slprop_ref
 
 val slprop_ref_pts_to (x: slprop_ref) (y: slprop) : slprop
 
