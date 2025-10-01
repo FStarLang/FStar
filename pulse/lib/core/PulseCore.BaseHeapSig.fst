@@ -230,6 +230,9 @@ let ghost_share #a #p r x y =
 let ghost_gather #a #p r x y =
   lift_heap_action (H2.ghost_gather #a #p r x y)
     #(fun _ -> ghost_pts_to r (op p x y))
+let ghost_pts_to_not_null_action #a #p r x =
+  lift_heap_action (H2.ghost_pts_to_not_null_action #a #p r x)
+    #(fun _ -> ghost_pts_to #a #p r x)
 
 let extend #a #pcm x = fun frame m0 ->
   let (| y, m1 |) = H2.apply_action (H2.extend #a #pcm x) frame m0 in
@@ -266,6 +269,9 @@ let ghost_share' #a #p r x y =
 
 let ghost_gather' #a #p r x y =
   ghost_gather #_ #(R.raise p) r (U.raise_val (reveal x)) (U.raise_val (reveal y))
+
+let ghost_pts_to_not_null_action' #a #p r v =
+  ghost_pts_to_not_null_action #_ #(R.raise p) r (U.raise_val (reveal v))
 
 let pts_to' #a #p r x =
   H2.pts_to #(U.raise_t a) #(R.raise p) r (U.raise_val x)

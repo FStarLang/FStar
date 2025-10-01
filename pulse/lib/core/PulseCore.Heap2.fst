@@ -471,6 +471,7 @@ let lift_erased
   refined_pre_action_as_action g
 
 let core_ghost_ref = erased H.core_ref
+let core_ghost_ref_null = H.core_ref_null
 let core_ghost_ref_eq x y = H.core_ref_eq (reveal x) (reveal y)
 let ghost_pts_to #a #p r v = llift GHOST (H.pts_to #a #p r v)
 
@@ -652,3 +653,6 @@ let ghost_gather
     (Ghost.hide <|
       lift_action_ghost ni_squash (H.gather_action #a #pcm r v0 v1))
 #pop-options
+
+let ghost_pts_to_not_null_action #a #p r v =
+  lift_action_ghost ni_squash (H.pts_to_not_null_action #a #p r v)

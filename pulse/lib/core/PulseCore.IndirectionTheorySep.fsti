@@ -436,6 +436,8 @@ val invariant_name_identifies_invariant (i: iref) (p q: slprop) :
 [@@erasable]
 val slprop_ref : Type0
 
+val null_slprop_ref : slprop_ref
+
 val slprop_ref_pts_to (x: slprop_ref) (y: slprop) : slprop
 
 val fresh_slprop_ref

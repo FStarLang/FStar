@@ -630,6 +630,7 @@ val lift_erased
 
 [@@erasable]
 val core_ghost_ref : Type0
+val core_ghost_ref_null : core_ghost_ref
 val core_ghost_ref_eq (x y:core_ghost_ref) : GTot (b:bool{b <==> (x==y)})
 let ghost_ref (#[@@@unused] a:Type u#a) ([@@@unused]p:pcm a) : Type0 = core_ghost_ref
 val ghost_pts_to (#a:Type u#a) (#p:pcm a) (r:ghost_ref p) (v:a) : slprop u#a
@@ -728,3 +729,13 @@ val ghost_gather
     (ghost_pts_to r v0 `star` ghost_pts_to r v1)
     (squash (composable pcm v0 v1))
     (fun _ -> ghost_pts_to r (op pcm v0 v1))
+
+val ghost_pts_to_not_null_action 
+      (#a:Type u#a)
+      (#pcm:pcm a)
+      (r:ghost_ref pcm)
+      (v:Ghost.erased a)
+: action #IMMUTABLE
+    (ghost_pts_to r v)
+    (squash (r =!= core_ghost_ref_null))
+    (fun _ -> ghost_pts_to r v)

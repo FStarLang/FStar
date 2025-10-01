@@ -213,6 +213,7 @@ val pts_to_not_null_action
 (* Ghost references to "small" types *)
 [@@erasable]
 val core_ghost_ref : Type0
+val core_ghost_ref_null : core_ghost_ref
 let ghost_ref (#a:Type u#a) (p:pcm a) : Type0 = core_ghost_ref
 val ghost_pts_to (#a:Type u#(a+1)) (#p:pcm a) (r:ghost_ref p) (v:a) : slprop u#a
 
@@ -268,6 +269,14 @@ val ghost_gather
     (squash (composable pcm v0 v1))
     (ghost_pts_to r v0 `star` ghost_pts_to r v1)
     (fun _ -> ghost_pts_to r (op pcm v0 v1))
+
+val ghost_pts_to_not_null_action 
+      (#a:Type u#(a + 1)) (#pcm:pcm a)
+      (r:ghost_ref pcm)
+      (v:Ghost.erased a)
+: pst_ghost_action_except (squash (r =!= core_ghost_ref_null))
+    (ghost_pts_to r v)
+    (fun _ -> ghost_pts_to r v)
 
 (* Concrete references to "big" types *)
 val big_pts_to (#a:Type u#(a + 2)) (#pcm:_) (r:ref a pcm) (v:a) : slprop u#a
