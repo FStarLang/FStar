@@ -122,12 +122,14 @@ let pts_to_not_null_action = B.pts_to_not_null_action' u#(a+1) u#(a+3)
 (* Ghost references to "small" types *)
 [@@erasable]
 let core_ghost_ref : Type0 = B.core_ghost_ref
+let core_ghost_ref_null = PulseCore.Heap2.core_ghost_ref_null
 let ghost_pts_to = B.ghost_pts_to' u#(a+1) u#(a+3)
 let ghost_alloc = B.ghost_extend' u#(a+1) u#(a+3)
 let ghost_read = B.ghost_read' u#(a+1) u#(a+3)
 let ghost_write = B.ghost_write' u#(a+1) u#(a+3)
 let ghost_share = B.ghost_share' u#(a+1) u#(a+3)
 let ghost_gather = B.ghost_gather' u#(a+1) u#(a+3)
+let ghost_pts_to_not_null_action #a #pcm = B.ghost_pts_to_not_null_action' u#(a+1) u#(a+3) #a #pcm
 
 (* Concrete references to "big" types *)
 let big_pts_to = B.pts_to' u#(a+2) u#(a+3)

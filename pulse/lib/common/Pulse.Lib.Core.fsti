@@ -765,6 +765,8 @@ val gather
 [@@erasable]
 val core_ghost_pcm_ref : Type0
 
+val null_core_ghost_pcm_ref : core_ghost_pcm_ref
+
 let ghost_pcm_ref
     (#a:Type u#a)
     (p:FStar.PCM.pcm a)
@@ -789,6 +791,16 @@ val timeless_ghost_pcm_pts_to
     (v:a)
 : Lemma (timeless (ghost_pcm_pts_to r v))
         [SMTPat (timeless (ghost_pcm_pts_to r v))]
+
+val ghost_pts_to_not_null
+    (#a:Type)
+    (#p:pcm a)
+    (r:ghost_pcm_ref p)
+    (v:a)
+: stt_ghost (squash (r =!= null_core_ghost_pcm_ref))
+            emp_inames
+            (ghost_pcm_pts_to r v)
+            (fun _ -> ghost_pcm_pts_to r v)
 
 val ghost_alloc
     (#a:Type u#1)

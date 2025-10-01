@@ -296,6 +296,7 @@ let write r x y f = A.write r x y f
 let share #a #pcm r v0 v1 = lift_neutral_ghost (A.share r v0 v1)
 let gather #a #pcm r v0 v1 = lift_neutral_ghost (A.gather r v0 v1)
 
+let ghost_pts_to_not_null #a #p r v = lift_neutral_ghost (A.ghost_pts_to_not_null #a #p r v)
 let ghost_alloc #a #pcm x = lift_neutral_ghost <| A.ghost_alloc #a #pcm x
 let ghost_read
     (#a:Type)

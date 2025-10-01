@@ -726,8 +726,12 @@ let elim_exists (#a:Type u#a) (p:a -> slprop)
 let drop p = lift_pre_act0_act fun #ictx -> ITA.drop #ictx p
 
 let core_ghost_ref = Mem.core_ghost_ref
+let core_ghost_ref_null = Mem.core_ghost_ref_null
 let ghost_pts_to #a #pcm r x = Sep.lift (Mem.ghost_pts_to #a #pcm r x)
 let timeless_ghost_pts_to #a #p r x = Sep.timeless_lift (Mem.ghost_pts_to #a #p r x)
+let ghost_pts_to_not_null #a #p r v =
+  lift_pre_act0_act fun #ictx ->
+  ITA.lift_mem_action (Mem.ghost_pts_to_not_null_action #a #p r v)
 let ghost_alloc #a #pcm x = let open Mem in lift_eqs (); lift_pre_act0_act fun #ictx -> ITA.lift_mem_action <| ghost_alloc #a #pcm x
 let ghost_read #a #p r x f = let open Mem in lift_eqs(); lift_pre_act1_act fun #ictx -> ITA.lift_mem_action <| ghost_read #a #p r x f
 let ghost_write #a #p r x y f = let open Mem in lift_eqs(); lift_pre_act0_act fun #ictx -> ITA.lift_mem_action <| ghost_write #a #p r x y f

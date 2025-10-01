@@ -358,12 +358,15 @@ let gather = A.gather
 ////////////////////////////////////////////////////////
 let core_ghost_pcm_ref = PulseCore.Action.core_ghost_ref
 
+let null_core_ghost_pcm_ref = PulseCore.Action.core_ghost_ref_null
+
 instance non_informative_ghost_pcm_ref a p = {
   reveal = (fun r -> Ghost.reveal r) <: NonInformative.revealer (ghost_pcm_ref p);
 }
 
 let ghost_pcm_pts_to #a #p r v = PulseCore.Action.ghost_pts_to #a #p r v
 let timeless_ghost_pcm_pts_to #a #p r v = PulseCore.Action.timeless_ghost_pts_to #a #p r v
+let ghost_pts_to_not_null #a #p r v = A.ghost_pts_to_not_null #a #p r v
 let ghost_alloc = A.ghost_alloc
 let ghost_read = A.ghost_read
 let ghost_write = A.ghost_write
