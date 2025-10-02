@@ -1347,15 +1347,15 @@ let rec term_eq_dbg (dbg : bool) t1 t2 =
   let t2 = canon_app (unmeta_safe t2) in
   let check = check dbg in
   let fail = fail dbg in
-  match (compress (un_uinst t1)).n, (compress (un_uinst t2)).n with
-  | Tm_uinst _, _
-  | _, Tm_uinst _
-        (* -> eqlist eq_univs us1 us2 && term_eq_dbg dbg t1 t2 *)
+  match (compress t1).n, (compress t2).n with
   | Tm_delayed _, _
   | _, Tm_delayed _
   | Tm_ascribed _, _
   | _, Tm_ascribed _ ->
     failwith "term_eq: impossible, should have been removed"
+
+  | Tm_uinst(t1, us1), Tm_uinst(t2, us2) ->
+    eqlist eq_univs us1 us2 && term_eq_dbg dbg t1 t2
 
   | Tm_bvar x      , Tm_bvar y      -> check "bvar"  (x.index = y.index)
   | Tm_name x      , Tm_name y      -> check "name"  (x.index = y.index)
