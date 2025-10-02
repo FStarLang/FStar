@@ -232,11 +232,11 @@ let lemma_equal_instances_implies_equal_types (a b:Type u#a) (s1:Seq.seq a) (s2:
   = Seq.lemma_equal_instances_implies_equal_types u#a ()
 
 let s_lemma_equal_instances_implies_equal_types (_:unit)
-  : Lemma (forall (a:Type) (b:Type) (s1:Seq.seq a) (s2:Seq.seq b).
+  : Lemma (forall (a:Type u#a) (b:Type u#a) (s1:Seq.seq a) (s2:Seq.seq b).
           {:pattern (has_type s1 (Seq.seq a));
                     (has_type s2 (Seq.seq b)) }
           s1 === s2 ==> a == b)
-  = Seq.lemma_equal_instances_implies_equal_types()
+  = Seq.lemma_equal_instances_implies_equal_types u#a ()
   
 let live_same_addresses_equal_types_and_preorders'
   (#a1 #a2: Type0)
