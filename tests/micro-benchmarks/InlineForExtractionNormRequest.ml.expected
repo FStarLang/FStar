@@ -1,12 +1,10 @@
 open Prims
-let (test : Prims.int -> Prims.int) = fun x -> Prims.int_one
-let (f2 : Prims.bool -> Prims.bool) = fun b -> Prims.op_Negation b
-let (f3 : Prims.bool -> Prims.bool) = fun b -> Prims.op_Negation b
-let (f4 : Prims.bool -> Prims.bool) =
-  fun b ->
-    Prims.op_Negation
-      ((Prims.op_Negation b) || (Prims.op_Negation (Prims.op_Negation b)))
-let (f5 : Prims.bool -> Prims.bool) =
-  fun b ->
-    Prims.op_Negation
-      ((Prims.op_Negation b) || (Prims.op_Negation (Prims.op_Negation b)))
+let test (x : Prims.int) : Prims.int= Prims.int_one
+let f2 (b : Prims.bool) : Prims.bool= Prims.op_Negation b
+let f3 (b : Prims.bool) : Prims.bool= Prims.op_Negation b
+let f4 (b : Prims.bool) : Prims.bool=
+  Prims.op_Negation
+    ((Prims.op_Negation b) || (Prims.op_Negation (Prims.op_Negation b)))
+let f5 (b : Prims.bool) : Prims.bool=
+  Prims.op_Negation
+    ((Prims.op_Negation b) || (Prims.op_Negation (Prims.op_Negation b)))

@@ -1,4 +1,4 @@
 open Prims
 type t = Prims.int
-let (foo1 : t) = (Prims.of_int (123))
-let (foo2 : Prims.int) = (Prims.of_int (123))
+let foo1 : t= (Prims.of_int (123))
+let foo2 : Prims.int= (Prims.of_int (123))

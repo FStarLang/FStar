@@ -1,14 +1,13 @@
 open Prims
 type 'a repr = Prims.int -> 'a
-let return : 'a . 'a -> 'a repr = fun x -> fun uu___ -> x
-let bind : 'a 'b . 'a repr -> ('a -> 'b repr) -> 'b repr =
-  fun x ->
-    fun f -> fun uu___ -> let v = x Prims.int_zero in f v Prims.int_zero
+let return (x : 'a) : 'a repr= fun uu___ -> x
+let bind (x : 'a repr) (f : 'a -> 'b repr) : 'b repr=
+  fun uu___ -> let v = x Prims.int_zero in f v Prims.int_zero
 let __proj__EE__item__return = return
 let __proj__EE__item__bind = bind
-let lift : 'a 'w . (unit -> 'a) -> 'a repr = fun f -> fun uu___ -> f ()
-let (test : unit -> Prims.bool) = fun uu___ -> true
-let (test2 : unit -> Prims.bool) =
-  fun uu___ -> let b1 = test () in let b2 = test () in b1 && b2
-let (top : Prims.int) =
+let lift (f : unit -> 'a) : 'a repr= fun uu___ -> f ()
+let test (uu___ : unit) : Prims.bool= true
+let test2 (uu___ : unit) : Prims.bool=
+  let b1 = test () in let b2 = test () in b1 && b2
+let top : Prims.int=
   let uu___ = test2 () in if uu___ then Prims.int_one else Prims.int_zero

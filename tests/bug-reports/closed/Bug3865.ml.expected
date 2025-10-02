@@ -3,14 +3,14 @@ type 't myty = 't -> 't
 type pak = {
   t: unit ;
   f: Obj.t myty }
-let (__proj__Mkpak__item__f : pak -> Obj.t myty) =
-  fun projectee -> match projectee with | { t; f;_} -> f
-let (intpak : pak) =
+let __proj__Mkpak__item__f (projectee : pak) : Obj.t myty=
+  match projectee with | { t; f;_} -> f
+let intpak : pak=
   {
     t = ();
     f = (fun x -> let x = Obj.magic x in Obj.magic (x + Prims.int_one))
   }
-let (use : unit) =
+let use : unit=
   let x = intpak.f (Obj.magic (Prims.of_int (123))) in
   FStar_IO.print_string
     (Prims.strcat (Prims.string_of_int (Obj.magic x)) "\n")

@@ -1,8 +1,6 @@
 open Prims
-let (test_no_inline : Prims.int -> Prims.int) =
-  fun f ->
-    let x = f + Prims.int_one in let y = x + (Prims.of_int (2)) in y + y
-let (test_postprocess : Prims.int -> Prims.int) =
-  fun f ->
-    let x = f + Prims.int_one in
-    (x + (Prims.of_int (2))) + (x + (Prims.of_int (2)))
+let test_no_inline (f : Prims.int) : Prims.int=
+  let x = f + Prims.int_one in let y = x + (Prims.of_int (2)) in y + y
+let test_postprocess (f : Prims.int) : Prims.int=
+  let x = f + Prims.int_one in
+  (x + (Prims.of_int (2))) + (x + (Prims.of_int (2)))
