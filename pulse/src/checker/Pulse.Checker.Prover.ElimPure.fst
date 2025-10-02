@@ -15,7 +15,7 @@
 *)
 
 module Pulse.Checker.Prover.ElimPure
-
+#set-options "--z3rlimit 10" //base rlimit x 2
 module RT = FStar.Reflection.Typing
 module R = FStar.Reflection.V2
 module T = FStar.Tactics.V2

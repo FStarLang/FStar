@@ -116,7 +116,9 @@ type comp =
 val range_of_st_comp (st:st_comp) : R.range
 val range_of_comp (c:comp) : R.range
 
-let comp_st = c:comp {not (C_Tot? c) }
+
+let stateful_comp (c:comp) = not (C_Tot? c)
+let comp_st = c:comp { stateful_comp c }
 
 noeq
 type pattern =
@@ -403,22 +405,19 @@ let comp_res (c:comp) : term =
   | C_STAtomic _ _ s
   | C_STGhost _ s -> s.res
 
-let stateful_comp (c:comp) =
-  C_ST? c || C_STAtomic? c || C_STGhost? c
-
-let st_comp_of_comp (c:comp{stateful_comp c}) : st_comp =
+let st_comp_of_comp (c:comp_st) : st_comp =
   match c with
   | C_ST s
   | C_STAtomic _ _ s
   | C_STGhost _ s -> s
 
-let with_st_comp (c:comp{stateful_comp c}) (s:st_comp) : comp =
+let with_st_comp (c:comp_st) (s:st_comp) : comp =
   match c with
   | C_ST _ -> C_ST s
   | C_STAtomic inames obs _ -> C_STAtomic inames obs s
   | C_STGhost inames _ -> C_STGhost inames s
 
-let comp_u (c:comp { stateful_comp c }) = (st_comp_of_comp c).u
+let comp_u (c:comp_st) = (st_comp_of_comp c).u
 
 let universe_of_comp (c:comp_st) =
   match c with

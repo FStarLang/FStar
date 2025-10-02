@@ -176,6 +176,7 @@ let post_hint_from_comp_typing #g #c ct =
   in
   p
 
+#push-options "--z3rlimit_factor 4"
 let comp_typing_from_post_hint
     (#g: env)
     (c: comp_st)
@@ -297,7 +298,7 @@ let comp_with_pre (c:comp_st) (pre:term) =
   | C_STGhost i st -> C_STGhost i { st with pre }
   | C_STAtomic i obs st -> C_STAtomic i obs {st with pre}
 
-
+#push-options "--fuel 0 --ifuel 0"
 let st_equiv_pre (#g:env) (#t:st_term) (#c:comp_st) (d:st_typing g t c)
                  (pre:term)
                  (veq: slprop_equiv g (comp_pre c) pre)
@@ -312,8 +313,6 @@ let st_equiv_pre (#g:env) (#t:st_term) (#c:comp_st) (d:st_typing g t c)
       in
       t_equiv d st_equiv
 
-
-#push-options "--z3rlimit_factor 4 --ifuel 2 --fuel 0"
 let k_elab_equiv_continuation (#g1:env) (#g2:env { g2 `env_extends` g1 }) (#ctxt #ctxt1 #ctxt2:term)
   (k:continuation_elaborator g1 ctxt g2 ctxt1)
   (d:slprop_equiv g2 ctxt1 ctxt2)
@@ -324,7 +323,6 @@ let k_elab_equiv_continuation (#g1:env) (#g2:env { g2 `env_extends` g1 }) (#ctxt
     assert (comp_pre c == ctxt2);
     let st_d' : st_typing g2 st (comp_with_pre c ctxt1) = st_equiv_pre st_d _ (VE_Sym _ _ _ d) in
     k post_hint (| st, _, st_d' |)
-#pop-options
 
 let slprop_equiv_typing_fwd (#g:env) (#ctxt:_) (ctxt_typing:tot_typing g ctxt tm_slprop)
                            (#p:_) (d:slprop_equiv g ctxt p)
@@ -332,7 +330,6 @@ let slprop_equiv_typing_fwd (#g:env) (#ctxt:_) (ctxt_typing:tot_typing g ctxt tm
   = let fwd, _ = slprop_equiv_typing d in
     fwd ctxt_typing
 
-#push-options "--z3rlimit_factor 4 --ifuel 1 --fuel 0"
 let k_elab_equiv_prefix
   (#g1:env) (#g2:env { g2 `env_extends` g1 }) (#ctxt1 #ctxt2 #ctxt:term)
   (k:continuation_elaborator g1 ctxt1 g2 ctxt)
@@ -347,7 +344,6 @@ let k_elab_equiv_prefix
   let (| st, c, st_d |) = res in
   assert (comp_pre c == ctxt1);
   (| _, _, st_equiv_pre st_d _ d |)
- #pop-options
 
 let k_elab_equiv
   (#g1:env) (#g2:env { g2 `env_extends` g1 }) (#ctxt1 #ctxt1' #ctxt2 #ctxt2':term)                 
@@ -362,7 +358,7 @@ let k_elab_equiv
     k_elab_equiv_prefix k d1 in
   k
 
-#push-options "--fuel 3 --ifuel 2 --split_queries no --z3rlimit_factor 20"
+#push-options "--fuel 3 --ifuel 1 --split_queries no --z3rlimit_factor 20"
 open Pulse.PP
 let continuation_elaborator_with_bind' (#g:env) (ctxt:term)
   (#c1:comp{stateful_comp c1})
@@ -571,6 +567,7 @@ let emp_inames_included (g:env) (i:term) (_:tot_typing g i tm_inames)
 : prop_validity g (tm_inames_subset tm_emp_inames i)
 = RU.magic()
 
+#push-options "--ifuel 1"
 let return_in_ctxt (g:env) (y:var) (y_ppname:ppname) (u:universe) (ty:term) (ctxt:slprop)
   (ty_typing:universe_of g ty u)
   (post_hint0:post_hint_opt g { PostHint? post_hint0 /\ checker_res_matches_post_hint g post_hint0 y ty ctxt})
@@ -614,8 +611,9 @@ let return_in_ctxt (g:env) (y:var) (y_ppname:ppname) (u:universe) (ty:term) (ctx
   | _ -> 
     (| _, _, d |)
 
-#push-options "--z3rlimit_factor 2"
+#push-options "--z3rlimit_factor 4 --ifuel 1 --split_queries always"
 #restart-solver
+#show-options
 let match_comp_res_with_post_hint (#g:env) (#t:st_term) (#c:comp_st)
   (d:st_typing g t c)
   (post_hint:post_hint_opt g)
@@ -651,6 +649,7 @@ let match_comp_res_with_post_hint (#g:env) (#t:st_term) (#c:comp_st)
 
            (| t, c', Pulse.Typing.Combinators.t_equiv d d_stequiv |)
 #pop-options
+#pop-options
 
 let apply_checker_result_k (#g:env) (#ctxt:slprop) (#post_hint:post_hint_for_env g)
   (r:checker_result_t g ctxt (PostHint post_hint))
@@ -667,7 +666,7 @@ let apply_checker_result_k (#g:env) (#ctxt:slprop) (#post_hint:post_hint_for_env
 
   k (PostHint post_hint) d
 
-#push-options "--z3rlimit_factor 4 --fuel 0 --ifuel 1"
+#push-options "--z3rlimit_factor 4 --fuel 0 --ifuel 0"
 //TODO: refactor and merge with continuation_elaborator_with_bind
 let checker_result_for_st_typing (#g:env) (#ctxt:slprop) (#post_hint:post_hint_opt g)
   (d:st_typing_in_ctxt g ctxt post_hint)
@@ -723,6 +722,7 @@ let readback_comp_res_as_comp (c:T.comp) : option comp =
   )
   | _ -> None
 
+#push-options "--ifuel 1"
 let rec is_stateful_arrow (g:env) (c:option comp) (args:list T.argv) (out:list T.argv)
   : T.Tac (option (list T.argv & T.argv))
   = let open R in
@@ -779,6 +779,7 @@ let rec is_stateful_arrow (g:env) (c:option comp) (args:list T.argv) (out:list T
         )
         else None
     )
+#pop-options
 
 let checker_result_t_equiv_ctxt (g:env) (ctxt ctxt' : slprop)
   (post_hint:post_hint_opt g)
@@ -796,14 +797,17 @@ let is_stateful_application (g:env) (e:term)
 : T.Tac (option st_term) = 
   RU.record_stats "Pulse.is_stateful_application" fun _ -> 
   let head, args = T.collect_app_ln e in
-  if Nil? args then None else
-  match RU.tc_term_phase1 (elab_env g) head false with
-  | None, _ -> None
-  | Some (_, ht, _), _ -> 
-    let head_t = wr ht (T.range_of_term ht) in
-    match is_stateful_arrow g (Some (C_Tot head_t)) args [] with 
-    | None -> None
-    | Some _ -> Some (as_stateful_application e head args)
+  match args with
+  | _ :: _ -> (
+    match RU.tc_term_phase1 (elab_env g) head false with
+    | None, _ -> None
+    | Some (_, ht, _), _ -> 
+      let head_t = wr ht (T.range_of_term ht) in
+      match is_stateful_arrow g (Some (C_Tot head_t)) args [] with 
+      | None -> None
+      | Some _ -> Some (as_stateful_application e head args)
+  )
+  | _ -> None
 
 let apply_conversion
       (#g:env) (#e:term) (#eff:_) (#t0:term)
@@ -888,6 +892,7 @@ let norm_st_typing_inverse
 
 open FStar.List.Tot    
 module RT = FStar.Reflection.Typing
+#push-options "--ifuel 1"
 let decompose_app (g:env) (tt:either term st_term)
 : T.Tac (option (term & list T.argv & (args:list T.argv{ Cons? args } -> T.Tac (res:either term st_term { Inr? tt ==> Inr? res }))))
 = let decompose_st_app (t:st_term)
@@ -919,6 +924,7 @@ let decompose_app (g:env) (tt:either term st_term)
       Some (head, args, rebuild)
   )
   | Inr st -> decompose_st_app st
+#pop-options
 
 let anf_binder name = T.pack (T.Tv_FVar (T.pack_fv (Pulse.Reflection.Util.mk_pulse_lib_core_lid (Printf.sprintf "__%s_binder__" name))))
 
@@ -958,11 +964,14 @@ let rec maybe_hoist (g:env) (arg:T.argv)
   )
   | Some _ -> (
     let g, binders, args = maybe_hoist_args g args in
-    if Nil? args then T.fail "Impossible";
-    let st_app = as_stateful_application t head args  in
-    let g, b, x, t = bind_st_term g st_app in
-    let arg = t, q in
-    g, binders@[b, x, st_app], arg
+    if Cons? args 
+    then (
+      let st_app = as_stateful_application t head args  in
+      let g, b, x, t = bind_st_term g st_app in
+      let arg = t, q in
+      g, binders@[b, x, st_app], arg
+    )
+    else T.fail "Impossible: is_stateful_application returned true but no args to hoist"
   )
 
 and maybe_hoist_args (g:env) (args:list T.argv)
@@ -975,6 +984,7 @@ and maybe_hoist_args (g:env) (args:list T.argv)
     args
     (g, [], [])
 
+#push-options "--ifuel 1"
 let maybe_hoist_top 
   (hoist_top_level:bool)
   (g:env)

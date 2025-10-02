@@ -15,7 +15,7 @@
 *)
 
 module Pulse.Checker.Prover.ElimExists
-
+#set-options "--z3rlimit 10" //base rlimit x 2
 open Pulse.Syntax
 open Pulse.Typing
 open Pulse.Typing.Combinators
