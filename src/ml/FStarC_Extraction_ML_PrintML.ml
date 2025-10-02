@@ -6,6 +6,7 @@ open Location
 open Pprintast
 open Ast_helper
 open Ast
+open Ppxlib.Ast_builder.Default
 open Longident
 
 open FStarC_Extraction_ML_Syntax
@@ -384,8 +385,8 @@ and build_constructor_expr ((path, sym), exp): expression =
 
 and build_fun l e =
   let mk_binder {mlbinder_name=id; mlbinder_ty=ty} =
-    { pparam_loc = Location.none; pparam_desc = Pparam_val (Nolabel, None, build_binding_pattern id) } in
-  Exp.mk (Pexp_function (List.map mk_binder l, None, Pfunction_body (build_expr e)))
+    pparam_val ?loc:Location.none Nolabel None (build_binding_pattern id) in
+  pexp_function ?loc:Location.none (List.map mk_binder l) None (Pfunction_body (build_expr e))
 
 and build_case ((lhs, guard, rhs): mlbranch): case =
   {pc_lhs = (build_pattern lhs);
@@ -395,19 +396,19 @@ and build_case ((lhs, guard, rhs): mlbranch): case =
 (* Takes an expression [fun x y -> t] and a type [a -> b -> c] and pushes the
 type annotation into the function as far as possible:
   [fun (x: a) (y: b) : c -> t] *)
-and build_expr_with_type (e: mlexpr) (t: mlty) args_rev : expression =
+and build_expr_with_type (e: mlexpr) (t: mlty) : expression =
   match e.expr, t with
-  | MLE_Fun ([], e), _ -> build_expr_with_type e t args_rev
+  | MLE_Fun ([], e), _ -> build_expr_with_type e t
   | MLE_Fun ({mlbinder_name; mlbinder_ty}::ls, body), MLTY_Fun (ty1, _tag, ty2) ->
     (* this breaks the typing information, but build_expr only looks at e.expr *)
     let e = { e with expr = MLE_Fun (ls, body) } in
     let argpat = build_binding_pattern ?ty:(Some (build_core_type mlbinder_ty)) mlbinder_name in
-    let arg = { pparam_loc = Location.none; pparam_desc = Pparam_val (Nolabel, None, argpat) } in
-    build_expr_with_type e ty2 (arg :: args_rev)
+    pexp_fun ?loc:Location.none Nolabel None argpat (build_expr_with_type e ty2)
   | _ ->
     let e = build_expr e in
     let ty = build_core_type t in
-    Exp.mk (Pexp_function (List.rev args_rev, Some (Pconstraint ty), Pfunction_body e))
+    (* Functions with no arguments are still printed as type ascriptions. *)
+    pexp_function ?loc:Location.none [] (Some (Pconstraint ty)) (Pfunction_body e)
 
 and build_binding (toplevel: bool) is_rec (lb: mllb): value_binding =
   let e, ty =
@@ -419,7 +420,7 @@ and build_binding (toplevel: bool) is_rec (lb: mllb): value_binding =
       build_expr lb.mllb_def, Some (build_core_type ~annots:vars ty)
    | Some (_vars, ty) when toplevel ->
       (* add type annotation to parameters and return type for top-level bindings *)
-      build_expr_with_type lb.mllb_def ty [], None
+      build_expr_with_type lb.mllb_def ty, None
     | _ ->
       build_expr lb.mllb_def, None in
   Vb.mk (build_binding_pattern ?ty:ty lb.mllb_name) e
