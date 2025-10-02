@@ -497,10 +497,10 @@ let close_guard_with_definition (x:binder) (u:universe) (t:term) (g:precondition
   : precondition
   = match g with
     | None -> None
-    | Some t ->
+    | Some t' ->
       Some (
-       let t = U.mk_imp (U.mk_eq2 u x.binder_bv.sort (S.bv_to_name x.binder_bv) t) t in
-       U.mk_forall u x.binder_bv t
+       let t' = U.mk_imp (U.mk_eq2 u x.binder_bv.sort (S.bv_to_name x.binder_bv) t) t' in
+       U.mk_forall u x.binder_bv t'
       )
 
 let with_binders (#a:Type) (xs:binders) (us:universes) (f:result a)
