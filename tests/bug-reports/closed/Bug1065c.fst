@@ -17,13 +17,13 @@ module Bug1065c
 
 assume val t : Type
 
-assume val proof : squash t
+assume val proof : squash (t u#a)
 
 #set-options "--no_smt"
 
-val ref : _:unit{t}
-let ref  = proof
+val ref : _:unit{t u#a}
+let ref  = proof u#a
 
-let id1 (x : (_:unit{t})) : squash t = x
+let id1 (x : (_:unit{t u#a})) : squash (t u#a) = x
 
-let id2 (x : squash t) : (_:unit{t}) = x
+let id2 (x : squash (t u#a)) : (_:unit{t u#a}) = x
