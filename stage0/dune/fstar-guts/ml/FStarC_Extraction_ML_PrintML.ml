@@ -1,11 +1,11 @@
 open List
 open Lexing
 open Ppxlib_ast
-open Astlib.Ast_502.Parsetree
+open Parsetree
 open Location
 open Pprintast
 open Ast_helper
-open Astlib.Ast_502.Asttypes
+open Ast
 open Longident
 
 open FStarC_Extraction_ML_Syntax
