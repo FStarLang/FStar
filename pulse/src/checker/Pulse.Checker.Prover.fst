@@ -139,6 +139,7 @@ let normalize_slprop_context
       goals_inv = RU.magic ();
   }
 
+#push-options "--z3rlimit_factor 4"
 let rec __intro_any_exists (n:nat)
   (#preamble:_)
   (pst:prover_state preamble)
@@ -172,6 +173,7 @@ let rec __intro_any_exists (n:nat)
         } in
         __intro_any_exists (n-1) pst prover
   )
+#pop-options
 
 let unsolved_equiv_pst (#preamble:_) (pst:prover_state preamble) (unsolved':list slprop)
   (d:slprop_equiv (push_env pst.pg pst.uvs) (list_as_slprop pst.unsolved) (list_as_slprop unsolved'))
@@ -205,6 +207,7 @@ let rec collect_pures (g:env) (l:list slprop)
     | Tm_Pure _ -> (| hd::pures, rest, RU.magic #(slprop_equiv _ _ _) () |)
     | _ -> (| pures, hd::rest, RU.magic #(slprop_equiv _ _ _) () |)
 #push-options "--fuel 0"
+#push-options "--z3rlimit_factor 4"
 let rec prove_pures #preamble (pst:prover_state preamble)
   : T.Tac (pst':prover_state preamble { pst' `pst_extends` pst /\
                                         is_terminal pst' }) =
@@ -231,6 +234,7 @@ let rec prove_pures #preamble (pst:prover_state preamble)
       fail pst.pg None
         (Printf.sprintf "Impossible! prover.prove_pures: %s is not a pure, please file a bug-report"
            (P.term_to_string (L.hd pst.unsolved)))
+#pop-options
 
 let intro_any_exists 
   (#preamble:_)
@@ -327,7 +331,8 @@ let prover_iteration
     P "match_full"        Match.match_full;
   ]
 
-#push-options "--z3rlimit_factor 6 --ifuel 2"
+#push-options "--z3rlimit_factor 40 --ifuel 2"
+#restart-solver
 let rec prover
   (#preamble:_)
   (pst0:prover_state preamble)
@@ -587,7 +592,7 @@ let typing_canon #g #t (#c:comp_st) (d:st_typing g t c) : st_typing g t (canon_p
   assume false;
   d
 
-#push-options "--z3rlimit_factor 8 --fuel 0 --ifuel 2 --split_queries no"
+#push-options "--z3rlimit_factor 10 --fuel 0 --ifuel 2 --split_queries no"
 #restart-solver
 let try_frame_pre_uvs
   (allow_ambiguous : bool)
@@ -690,6 +695,8 @@ let try_frame_pre
   assert (equal g (push_env g uvs));
   try_frame_pre_uvs allow_ambiguous ctxt_typing uvs d res_ppname
 
+#push-options "--z3rlimit_factor 4"
+#restart-solver
 let prove_post_hint (#g:env) (#ctxt:slprop)
   (r:checker_result_t g ctxt NoHint)
   (post_hint:post_hint_opt g)
@@ -762,3 +769,4 @@ let elim_exists_and_pure (#g:env) (#ctxt:slprop)
 
   let (| g', _nts, _labels, ctxt', k |) = prove false #g #ctxt ctxt_typing (mk_env (fstar_env g)) emp_typing in
   (| g', ctxt', E (RU.magic ()), k_elab_equiv k (VE_Refl _ _) (VE_Unit _ _) |)
+#pop-options
