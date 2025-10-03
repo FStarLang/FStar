@@ -50,14 +50,15 @@ let open_term_ln' (e:term)
     (decreases e)
   = open_term_ln_host' e x i
 
-#push-options "--z3refresh"
+#push-options "--fuel 2 --ifuel 1 --z3rlimit_factor 4"
 let open_comp_ln' (c:comp)
                   (x:term)
                   (i:index)
   : Lemma 
     (requires ln_c' (open_comp' c x i) (i - 1))
     (ensures ln_c' c i)
-  = match c with
+  = allow_invert c;
+    match c with
     | C_Tot t ->
       open_term_ln' t x i
     | C_ST s ->
@@ -139,9 +140,11 @@ let open_pattern_args' (ps:list (pattern & bool)) (v:term) (i:index) =
 let close_pattern_args' (ps:list (pattern & bool)) (x:var) (i:index) =
   subst_pat_args ps [RT.ND x i]
 
+#push-options "--ifuel 2"
 let rec pattern_shift_subst_invariant (p:pattern) (s:subst)
   : Lemma
     (ensures pattern_shift_n p == pattern_shift_n (subst_pat p s))
+    (decreases p)
     [SMTPat (pattern_shift_n (subst_pat p s))]
   = match p with
     | Pat_Cons _ subpats -> admit()
@@ -149,7 +152,9 @@ let rec pattern_shift_subst_invariant (p:pattern) (s:subst)
 and pattern_args_shift_subst_invariant (ps:list (pattern & bool)) (s:subst)
   : Lemma
     (ensures pattern_args_shift_n ps == pattern_args_shift_n (subst_pat_args ps s))
-  = match ps with
+    (decreases ps)
+  = allow_invert ps;
+    match ps with
     | [] -> ()
     | (hd, _)::tl ->
       pattern_shift_subst_invariant hd s;
@@ -833,7 +838,7 @@ let close_proof_hint_ln (ht:proof_hint_type) (v:var) (i:index)
     | WILD
     | SHOW_PROOF_STATE _ -> ()
 
-#push-options "--fuel 2 --ifuel 2 --z3rlimit_factor 8 --split_queries no"
+#push-options "--fuel 2 --ifuel 2 --z3rlimit_factor 10 --split_queries no"
 let rec close_st_term_ln' (t:st_term) (x:var) (i:index)
   : Lemma
     (requires ln_st' t (i - 1))
@@ -982,7 +987,7 @@ let tot_typing_ln
   : Lemma 
     (ensures ln e /\ ln t)
   = tot_or_ghost_typing_ln d
-
+#push-options "--fuel 4 --ifuel 4"
 let rec slprop_equiv_ln (#g:_) (#t0 #t1:_) (v:slprop_equiv g t0 t1)
   : Lemma (ensures ln t0 <==> ln t1)
           (decreases v)
@@ -1018,7 +1023,7 @@ let rec slprop_equiv_ln (#g:_) (#t0 #t1:_) (v:slprop_equiv g t0 t1)
         open_term_ln t1' x;
         open_term_ln t0' x
       )
-      
+#pop-options      
 
 let st_equiv_ln #g #c1 #c2 (d:st_equiv g c1 c2)
   : Lemma 
@@ -1121,6 +1126,7 @@ let par_post_ln (uL uR aL aR postL postR x : _)
 =
   admit ()
 
+#push-options "--fuel 4 --ifuel 4"
 let comp_par_ln (cL : comp{C_ST? cL}) (cR : comp{C_ST? cR}) (x : var)
   : Lemma
       (requires ln_c cL /\ ln_c cR)
@@ -1137,7 +1143,9 @@ let comp_par_ln (cL : comp{C_ST? cL}) (cR : comp{C_ST? cR}) (x : var)
   assert (ln' post 0);
   assert (ln_c (comp_par cL cR x));
   ()
+#pop-options
 
+#push-options "--fuel 1 --ifuel 1 --z3rlimit_factor 10 --split_queries no --z3cliopt 'smt.qi.eager_threshold=100'"
 let st_typing_ln_par
   (#g:_) (#t:_) (#c:_)
   (d:st_typing g t c{T_Par? d})

@@ -114,13 +114,13 @@ let rec recover_bs (g: env) (qbs: list (option qualifier & binder & bv)) (ty: te
   | [], _ ->
     [], ty
 
+#push-options "--fuel 2 --ifuel 0 --z3rlimit_factor 2"
 let add_knot (g : env) (rng : R.range)
              (d : decl{FnDefn? d.d})
 : Tac (d : decl{FnDefn? d.d})
-=
-  let FnDefn { id; isrec; us; bs; comp; meas; body } = d.d in
-  if List.length bs < 2 then
-    fail g (Some d.range) "main: FnDefn does not have binders";
+= let FnDefn { id; isrec; us; bs; comp; meas; body } = d.d in
+  allow_invert bs;
+  if List.length bs < 2 then fail g (Some d.range) "main: FnDefn does not have binders";
   (* NB: bs, comp, body are open *)
   debug_main g
     (fun _ -> Printf.sprintf "add_knot: bs = %s\n"
@@ -240,7 +240,8 @@ let add_knot (g : env) (rng : R.range)
   { d with d =
     FnDefn { id=id'; isrec=false; us; bs=bs'; comp = C_Tot comp; meas=None; body }
   }
-
+#pop-options
+#push-options "--fuel 0 --ifuel 0"
 let tie_knot (g : env)
              (rng : R.range)
              (nm_orig nm_aux : string)
@@ -251,9 +252,9 @@ let tie_knot (g : env)
     (* Remove the last arguments from r_typ, as that is the recursive knot.
     After doing that, we now have the needed type for elaboration. *)
     let bs, c = collect_arr_bs r_typ in
-    if Nil? bs then fail g (Some rng) "tie_knot: impossible (1)";
+    if not (Cons? bs) then fail g (Some rng) "tie_knot: impossible (1)";
     let bs = init bs in
-    if Nil? bs then fail g (Some rng) "tie_knot: impossible (2)";
+    if not (Cons? bs) then fail g (Some rng) "tie_knot: impossible (2)";
     mk_arr bs c
   in
   (* This is a temporary implementation. It will just create
@@ -262,3 +263,4 @@ let tie_knot (g : env)
   let nm = string_as_term nm_aux in 
   let sig = RU.add_attribute sig (`("pulse.recursive.knot", `#(nm))) in
   flag, sig, Some blob
+#pop-options

@@ -236,7 +236,7 @@ let withinv_post (#g:env) (#p:term) (#i:term) (#post:term)
   let (| post, _, post_typing |) = Prover.normalize_slprop_welltyped g post post_typing in
   __withinv_post #g #p #i #post p_typing i_typing post_typing
 
-#push-options "--z3rlimit_factor 40 --split_queries no --fuel 0 --ifuel 1 --z3cliopt 'smt.qi.eager_threshold=100'"
+#push-options "--fuel 0 --ifuel 0 --query_stats" 
 #restart-solver
 let mk_post_hint g returns_inv i p (ph:post_hint_opt g) rng
 : T.Tac (q:post_hint_for_env g { PostHint? ph ==> q == PostHint?.v ph })
@@ -295,6 +295,8 @@ let mk_post_hint g returns_inv i p (ph:post_hint_opt g) rng
   in
   post_hint
 
+#push-options "--z3rlimit_factor 25 --split_queries no"
+#restart-solver
 let check0
   (g:env)
   (pre:term)
@@ -366,7 +368,7 @@ let check0
             (show i) (show p) (show p'));
   assert (p == p');
   let post_body = tm_star (tm_later p) post_frame in
-  
+  allow_invert post_hint.effect_annot; 
   let (| opens, opens_typing |) 
     : t:term & tot_typing g t tm_inames 
     = match post_hint.effect_annot with

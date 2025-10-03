@@ -62,7 +62,7 @@ let instantiate_term_implicits_uvs (g:env) (t:term)
   add_implicits uvs t ty
 
 open Pulse.PP
-
+#push-options "--fuel 0 --ifuel 1 --z3rlimit_factor 2"
 let check
   (g0:env)
   (ctxt:slprop)

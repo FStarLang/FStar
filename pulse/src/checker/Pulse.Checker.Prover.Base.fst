@@ -78,7 +78,7 @@ let canon_right (#g:env) (#ctxt:term) (#frame:term)
       = VE_Ctxt _ _ _ _ _ veq (VE_Refl _ _) in
     (| _, VP.slprop_equiv_typing_fwd ctxt_frame_typing veq, k_elab_equiv (k_elab_unit _ _) (VE_Refl _ _) veq |)
 
-
+#push-options "--fuel 0 --ifuel 0"
 let elim_one (#g:env)
   (ctxt:term) (frame:slprop) (p:slprop)
   (ctxt_frame_p_typing:tot_typing g (tm_star (tm_star ctxt frame) p) tm_slprop)
@@ -185,3 +185,4 @@ let rec add_elims (#g:env) (#ctxt:term) (#frame:term)
       let (| g'', ctxt'', ctxt''_typing, k' |) = add_elims f mk ctxt'_typing uvs in
       (| g'', ctxt'', ctxt''_typing, k_elab_trans k k' |)
      )
+#pop-options

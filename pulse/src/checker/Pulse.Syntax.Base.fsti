@@ -20,6 +20,8 @@ module R = FStar.Reflection.V2
 module T = FStar.Tactics.V2
 open FStar.List.Tot
 
+let allow_invert (#a:Type) (x:a) : Lemma (inversion a) = allow_inversion a
+
 type constant = R.vconst
 
 let var = nat
@@ -37,7 +39,7 @@ let range_singleton (r:FStar.Range.range)
   = FStar.Sealed.sealed_singl r FStar.Range.range_0
 
 noeq
-type ppname = {
+type ppname0 = {
   name : RT.pp_name_t;
   range : range
 }
@@ -48,6 +50,13 @@ let ppname_default =  {
     range = FStar.Range.range_0
 }
 
+let ppname_singleton_trigger (r:ppname0) = True
+let ppname_singleton (x:ppname0)
+  : Lemma 
+    (ensures x == ppname_default)
+    [SMTPat (ppname_singleton_trigger x)]
+  = FStar.Sealed.sealed_singl x.name ppname_default.name
+let ppname = p:ppname0 { ppname_singleton_trigger p }
 let mk_ppname (name:RT.pp_name_t) (range:FStar.Range.range) : ppname = {
     name = name;
     range = range
@@ -441,3 +450,4 @@ let ppname_for_uvar (p : ppname) : T.Tac ppname =
   {
     p with name = T.seal ("?" ^ T.unseal p.name);
   }
+
