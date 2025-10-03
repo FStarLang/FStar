@@ -1,9 +1,8 @@
-{ stdenv, callPackage, z3, python310 }:
+{ stdenv, callPackage }:
 
 let
-  z3_python310 = z3.override { python = python310; };
   z3_4_8_5 = callPackage (import ./z3_4_8_5.nix) { };
-  z3_4_13_3 = callPackage (import ./z3_4_13_3.nix) { z3 = z3_python310; };
+  z3_4_13_3 = callPackage (import ./z3_4_13_3.nix) { };
 in
 stdenv.mkDerivation {
   pname = "fstar-z3";
