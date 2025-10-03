@@ -50,6 +50,7 @@ let open_term_ln' (e:term)
     (decreases e)
   = open_term_ln_host' e x i
 
+#push-options "--z3refresh"
 let open_comp_ln' (c:comp)
                   (x:term)
                   (i:index)
