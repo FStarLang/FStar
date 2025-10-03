@@ -451,25 +451,22 @@ ensures pts_to x ('i + 2)
 
 open FStar.PCM
 
-module U = Pulse.Lib.Raise
 module G = FStar.Ghost
 module Prod = Pulse.Lib.PCM.Product
 module Frac = Pulse.Lib.PCM.Fraction
 
-type int1 : Type u#1 = U.raise_t int
-
-type ghost_st : Type u#1 = Frac.fractional int1 & Frac.fractional int1
+type ghost_st : Type0 = Frac.fractional int & Frac.fractional int
 
 let pcm : pcm ghost_st = Prod.pcm_prod Frac.pcm_frac Frac.pcm_frac
 
-let with_p (n:int1) (p:perm) : Frac.fractional int1 = Some (n, p)
-let full (n:int1) : Frac.fractional int1 = Some (n, 1.0R)
-let half (n:int1) : Frac.fractional int1 = Some (n, 0.5R)
+let with_p (n:int) (p:perm) : Frac.fractional int = Some (n, p)
+let full (n:int) : Frac.fractional int = Some (n, 1.0R)
+let half (n:int) : Frac.fractional int = Some (n, 0.5R)
 
 let fp_upd_t1
-  (t1_old:G.erased int1) 
-  (t1_new:int1)
-  (t2:int1)
+  (t1_old:G.erased int) 
+  (t1_new:int)
+  (t2:int)
   (p2:perm)
   
   : frame_preserving_upd pcm (full t1_old, with_p t2 p2) (full t1_new, with_p t2 p2) =
@@ -485,10 +482,10 @@ let fp_upd_t1
     (Frac.mk_frame_preserving_upd t1_old t1_new)
 
 let fp_upd_t2
-  (t1:int1)
+  (t1:int)
   (p1:perm)
-  (t2_old:G.erased int1) 
-  (t2_new:int1)
+  (t2_old:G.erased int) 
+  (t2_new:int)
   
   : frame_preserving_upd pcm (with_p t1 p1, full t2_old) (with_p t1 p1, full t2_new) =
   
@@ -502,62 +499,63 @@ let fp_upd_t2
     _
     (Frac.mk_frame_preserving_upd t2_old t2_new)
 
+module GPR = Pulse.Lib.GhostPCMReference
 
 ghost
-fn share (r:ghost_pcm_ref pcm) (#n1 #n2:int1)
-  requires ghost_pcm_pts_to r (full n1, full n2)
-  ensures ghost_pcm_pts_to r (half n1, None) **
-          ghost_pcm_pts_to r (None, half n2) **
-          ghost_pcm_pts_to r (half n1, half n2)
+fn share (r:GPR.gref pcm) (#n1 #n2:int)
+  requires GPR.pts_to r (full n1, full n2)
+  ensures GPR.pts_to r (half n1, None) **
+          GPR.pts_to r (None, half n2) **
+          GPR.pts_to r (half n1, half n2)
 {
-  rewrite (ghost_pcm_pts_to r (full n1, full n2)) as
-          (ghost_pcm_pts_to r ((half n1, None) `op pcm` (half n1, full n2)));
-  ghost_share r (half n1, None) (half n1, full n2);
-  rewrite (ghost_pcm_pts_to r (half n1, full n2)) as
-          (ghost_pcm_pts_to r ((None, half n2) `op pcm` (half n1, half n2)));
-  ghost_share r (None, half n2) (half n1, half n2)
+  rewrite (GPR.pts_to r (full n1, full n2)) as
+          (GPR.pts_to r ((half n1, None) `op pcm` (half n1, full n2)));
+  GPR.share r (half n1, None) (half n1, full n2);
+  rewrite (GPR.pts_to r (half n1, full n2)) as
+          (GPR.pts_to r ((None, half n2) `op pcm` (half n1, half n2)));
+  GPR.share r (None, half n2) (half n1, half n2)
 }
 
 
 
 ghost
-fn gather (r:ghost_pcm_ref pcm) (#n1 #n2:int1) (#v1 #v2:int1)
-  requires ghost_pcm_pts_to r (half n1, None) **
-           ghost_pcm_pts_to r (None, half n2) **
-           ghost_pcm_pts_to r (half v1, half v2)
+fn gather (r:GPR.gref pcm) (#n1 #n2:int) (#v1 #v2:int)
+  requires GPR.pts_to r (half n1, None) **
+           GPR.pts_to r (None, half n2) **
+           GPR.pts_to r (half v1, half v2)
   returns _:squash (v1 == n1 /\ v2 == n2)
-  ensures ghost_pcm_pts_to r (full n1, full n2)
+  ensures GPR.pts_to r (full n1, full n2)
 
 {
-  ghost_gather r (None, half n2) (half v1, half v2);
-  rewrite (ghost_pcm_pts_to r ((None, half n2) `op pcm` (half v1, half v2))) as
-          (ghost_pcm_pts_to r (half v1, full n2));
-  ghost_gather r (half n1, None) (half v1, full n2);
-  rewrite (ghost_pcm_pts_to r ((half n1, None) `op pcm` (half v1, full n2))) as
-          (ghost_pcm_pts_to r (full n1, full n2))
+  GPR.gather r (None, half n2) (half v1, half v2);
+  rewrite (GPR.pts_to r ((None, half n2) `op pcm` (half v1, half v2))) as
+          (GPR.pts_to r (half v1, full n2));
+  GPR.gather r (half n1, None) (half v1, full n2);
+  rewrite (GPR.pts_to r ((half n1, None) `op pcm` (half v1, full n2))) as
+          (GPR.pts_to r (full n1, full n2))
 }
 
 
-let lock_inv_ghost (ghost_r:ghost_pcm_ref pcm) (n:int) : timeless_slprop =
-  exists* n1 n2. ghost_pcm_pts_to ghost_r (half n1, half n2) **
-                 pure (n == U.downgrade_val n1 + U.downgrade_val n2)
+let lock_inv_ghost (ghost_r:GPR.gref pcm) (n:int) : timeless_slprop =
+  exists* n1 n2. GPR.pts_to ghost_r (half n1, half n2) **
+                 pure (n == n1 + n2)
 
-let lock_inv_pcm (r:ref int) (ghost_r:ghost_pcm_ref pcm) : timeless_slprop =
+let lock_inv_pcm (r:ref int) (ghost_r:GPR.gref pcm) : timeless_slprop =
   exists* n. pts_to r n ** lock_inv_ghost ghost_r n
 
-let t1_perm (ghost_r:ghost_pcm_ref pcm) (n:int1) (t1:bool) =
+let t1_perm (ghost_r:GPR.gref pcm) (n:int) (t1:bool) =
   if t1
-  then ghost_pcm_pts_to ghost_r (half n, None)
-  else ghost_pcm_pts_to ghost_r (None, half n)
+  then GPR.pts_to ghost_r (half n, None)
+  else GPR.pts_to ghost_r (None, half n)
 
-let add_one (n:int1) : int1 = U.raise_val (U.downgrade_val n + 1)
+let add_one (n:int) : int = n + 1
 
 //
 // Lock, increment the reference, and
 //  update the ghost state's first component if t1 = true, else the second
 // 
 
-fn incr_pcm_t (r:ref int) (ghost_r:ghost_pcm_ref pcm) (l:L.lock) (t1:bool) (#n:int1)
+fn incr_pcm_t (r:ref int) (ghost_r:GPR.gref pcm) (l:L.lock) (t1:bool) (#n:int)
   requires L.lock_alive l #0.5R (lock_inv_pcm r ghost_r) **
            t1_perm ghost_r n t1
   ensures L.lock_alive l #0.5R (lock_inv_pcm r ghost_r) **
@@ -570,36 +568,36 @@ fn incr_pcm_t (r:ref int) (ghost_r:ghost_pcm_ref pcm) (l:L.lock) (t1:bool) (#n:i
   r := v + 1;
   if t1 {
     rewrite (t1_perm ghost_r n t1) as
-            (ghost_pcm_pts_to ghost_r (half n, None));
-    with n1 n2. assert (ghost_pcm_pts_to ghost_r (half n1, half n2));
-    ghost_gather ghost_r (half n, None) (half n1, half n2);
-    rewrite (ghost_pcm_pts_to ghost_r ((half n, None) `op pcm` (half n1, half n2))) as
-            (ghost_pcm_pts_to ghost_r (full n1, half n2));
-    ghost_write ghost_r
+            (GPR.pts_to ghost_r (half n, None));
+    with n1 n2. assert (GPR.pts_to ghost_r (half n1, half n2));
+    GPR.gather ghost_r (half n, None) (half n1, half n2);
+    rewrite (GPR.pts_to ghost_r ((half n, None) `op pcm` (half n1, half n2))) as
+            (GPR.pts_to ghost_r (full n1, half n2));
+    GPR.write ghost_r
       (full n1, half n2)
       (full (add_one n1), half n2)
       (fp_upd_t1 n1 (add_one n1) n2 0.5R);
-    rewrite (ghost_pcm_pts_to ghost_r (full (add_one n1), half n2)) as
-            (ghost_pcm_pts_to ghost_r ((half (add_one n1), half n2) `op pcm` (half (add_one n1), None)));
-    ghost_share ghost_r (half (add_one n1), half n2) (half (add_one n1), None);
+    rewrite (GPR.pts_to ghost_r (full (add_one n1), half n2)) as
+            (GPR.pts_to ghost_r ((half (add_one n1), half n2) `op pcm` (half (add_one n1), None)));
+    GPR.share ghost_r (half (add_one n1), half n2) (half (add_one n1), None);
     fold lock_inv_ghost;
     fold lock_inv_pcm;
     L.release l;
     fold (t1_perm ghost_r (add_one n) true);
   } else {
     rewrite (t1_perm ghost_r n t1) as
-            (ghost_pcm_pts_to ghost_r (None, half n));
-    with n1 n2. assert (ghost_pcm_pts_to ghost_r (half n1, half n2));
-    ghost_gather ghost_r (None, half n) (half n1, half n2);
-    rewrite (ghost_pcm_pts_to ghost_r ((None, half n2) `op pcm` (half n1, half n2))) as
-            (ghost_pcm_pts_to ghost_r (half n1, full n2));
-    ghost_write ghost_r
+            (GPR.pts_to ghost_r (None, half n));
+    with n1 n2. assert (GPR.pts_to ghost_r (half n1, half n2));
+    GPR.gather ghost_r (None, half n) (half n1, half n2);
+    rewrite (GPR.pts_to ghost_r ((None, half n2) `op pcm` (half n1, half n2))) as
+            (GPR.pts_to ghost_r (half n1, full n2));
+    GPR.write ghost_r
       (half n1, full n2)
       (half n1, full (add_one n2))
       (fp_upd_t2 n1 0.5R n2 (add_one n2));
-    rewrite (ghost_pcm_pts_to ghost_r (half n1, full (add_one n2))) as
-            (ghost_pcm_pts_to ghost_r ((half n1, half (add_one n2)) `op pcm` (None, half (add_one n2))));
-    ghost_share ghost_r (half n1, half (add_one n2)) (None, half (add_one n2));
+    rewrite (GPR.pts_to ghost_r (half n1, full (add_one n2))) as
+            (GPR.pts_to ghost_r ((half n1, half (add_one n2)) `op pcm` (None, half (add_one n2))));
+    GPR.share ghost_r (half n1, half (add_one n2)) (None, half (add_one n2));
     fold lock_inv_ghost;
     fold lock_inv_pcm;
     L.release l;
@@ -608,24 +606,21 @@ fn incr_pcm_t (r:ref int) (ghost_r:ghost_pcm_ref pcm) (l:L.lock) (t1:bool) (#n:i
 }
 
 
-let zero1 : int1 = U.raise_val 0
-
-
 fn incr_pcm (r:ref int) (#n:erased int)
   requires pts_to r 0
   ensures pts_to r 2
 {
-  let ghost_r = ghost_alloc #_ #pcm (G.hide (full zero1, full zero1));
-  with _v. rewrite (ghost_pcm_pts_to ghost_r (G.reveal (G.hide _v))) as
-                   (ghost_pcm_pts_to ghost_r _v);
+  let ghost_r = GPR.alloc #_ #pcm (G.hide (full 0, full 0));
+  with _v. rewrite (GPR.pts_to ghost_r (G.reveal (G.hide _v))) as
+                   (GPR.pts_to ghost_r _v);
   share ghost_r;
   fold lock_inv_ghost;
   fold lock_inv_pcm;
 
-  rewrite (ghost_pcm_pts_to ghost_r (half zero1, None)) as
-          (t1_perm ghost_r zero1 true);
-  rewrite (ghost_pcm_pts_to ghost_r (None, half zero1)) as
-          (t1_perm ghost_r zero1 false);
+  rewrite (GPR.pts_to ghost_r (half 0, None)) as
+          (t1_perm ghost_r 0 true);
+  rewrite (GPR.pts_to ghost_r (None, half 0)) as
+          (t1_perm ghost_r 0 false);
 
   let l = L.new_lock (lock_inv_pcm r ghost_r);
   
@@ -633,13 +628,13 @@ fn incr_pcm (r:ref int) (#n:erased int)
 
   parallel
     requires L.lock_alive l #0.5R (lock_inv_pcm r ghost_r) **
-             t1_perm ghost_r zero1 true and
+             t1_perm ghost_r 0 true and
              L.lock_alive l #0.5R (lock_inv_pcm r ghost_r) **
-             t1_perm ghost_r zero1 false
+             t1_perm ghost_r 0 false
     ensures L.lock_alive l #0.5R (lock_inv_pcm r ghost_r) **
-            t1_perm ghost_r (add_one zero1) true and
+            t1_perm ghost_r (add_one 0) true and
             L.lock_alive l #0.5R (lock_inv_pcm r ghost_r) **
-            t1_perm ghost_r (add_one zero1) false
+            t1_perm ghost_r (add_one 0) false
     { incr_pcm_t r ghost_r l true }
     { incr_pcm_t r ghost_r l false };
 
@@ -647,11 +642,11 @@ fn incr_pcm (r:ref int) (#n:erased int)
   L.acquire l;
   unfold lock_inv_pcm;
   unfold lock_inv_ghost;
-  unfold (t1_perm ghost_r (add_one zero1) true);
-  unfold (t1_perm ghost_r (add_one zero1) false);
+  unfold (t1_perm ghost_r (add_one 0) true);
+  unfold (t1_perm ghost_r (add_one 0) false);
   gather ghost_r;
   L.free l;
-  drop_ (ghost_pcm_pts_to ghost_r _)
+  drop_ (GPR.pts_to ghost_r _)
 }
 
 
@@ -688,50 +683,50 @@ fn incr_pcm_abstract (r:ref int)
   requires pts_to r 0
   ensures pts_to r 2
 {
-  let ghost_r = ghost_alloc #_ #pcm (G.hide (full zero1, full zero1));
+  let ghost_r = GPR.alloc #_ #pcm (G.hide (full 0, full 0));
 
   ghost
   fn t1 (v:int)
-    requires ghost_pcm_pts_to ghost_r (half zero1, None) ** lock_inv_ghost ghost_r v
-    ensures ghost_pcm_pts_to ghost_r (half (add_one  zero1), None) ** lock_inv_ghost ghost_r (v + 1)
+    requires GPR.pts_to ghost_r (half 0, None) ** lock_inv_ghost ghost_r v
+    ensures GPR.pts_to ghost_r (half (add_one  0), None) ** lock_inv_ghost ghost_r (v + 1)
   {
     unfold lock_inv_ghost;
-    with n1 n2. assert (ghost_pcm_pts_to ghost_r (half n1, half n2));
-    ghost_gather ghost_r (half zero1, None) (half n1, half n2);
-    rewrite (ghost_pcm_pts_to ghost_r ((half zero1, None) `op pcm` (half n1, half n2))) as
-            (ghost_pcm_pts_to ghost_r (full n1, half n2));
-    ghost_write ghost_r
+    with n1 n2. assert (GPR.pts_to ghost_r (half n1, half n2));
+    GPR.gather ghost_r (half 0, None) (half n1, half n2);
+    rewrite (GPR.pts_to ghost_r ((half 0, None) `op pcm` (half n1, half n2))) as
+            (GPR.pts_to ghost_r (full n1, half n2));
+    GPR.write ghost_r
       (full n1, half n2)
       (full (add_one n1), half n2)
       (fp_upd_t1 n1 (add_one n1) n2 0.5R);
-    rewrite (ghost_pcm_pts_to ghost_r (full (add_one n1), half n2)) as
-            (ghost_pcm_pts_to ghost_r ((half (add_one n1), half n2) `op pcm` (half (add_one n1), None)));
-    ghost_share ghost_r (half (add_one n1), half n2) (half (add_one n1), None);
+    rewrite (GPR.pts_to ghost_r (full (add_one n1), half n2)) as
+            (GPR.pts_to ghost_r ((half (add_one n1), half n2) `op pcm` (half (add_one n1), None)));
+    GPR.share ghost_r (half (add_one n1), half n2) (half (add_one n1), None);
     fold ((lock_inv_ghost ghost_r) (v + 1))
   };
 
   ghost
   fn t2 (v:int)
-    requires ghost_pcm_pts_to ghost_r (None, half zero1) ** lock_inv_ghost ghost_r v
-    ensures ghost_pcm_pts_to ghost_r (None, half (add_one  zero1)) ** lock_inv_ghost ghost_r (v +1)
+    requires GPR.pts_to ghost_r (None, half 0) ** lock_inv_ghost ghost_r v
+    ensures GPR.pts_to ghost_r (None, half (add_one  0)) ** lock_inv_ghost ghost_r (v +1)
   {
     unfold lock_inv_ghost;
-    with n1 n2. assert (ghost_pcm_pts_to ghost_r (half n1, half n2));
-    ghost_gather ghost_r (None, half zero1) (half n1, half n2);
-    rewrite (ghost_pcm_pts_to ghost_r ((None, half n2) `op pcm` (half n1, half n2))) as
-            (ghost_pcm_pts_to ghost_r (half n1, full n2));
-    ghost_write ghost_r
+    with n1 n2. assert (GPR.pts_to ghost_r (half n1, half n2));
+    GPR.gather ghost_r (None, half 0) (half n1, half n2);
+    rewrite (GPR.pts_to ghost_r ((None, half n2) `op pcm` (half n1, half n2))) as
+            (GPR.pts_to ghost_r (half n1, full n2));
+    GPR.write ghost_r
       (half n1, full n2)
       (half n1, full (add_one n2))
       (fp_upd_t2 n1 0.5R n2 (add_one n2));
-    rewrite (ghost_pcm_pts_to ghost_r (half n1, full (add_one n2))) as
-            (ghost_pcm_pts_to ghost_r ((half n1, half (add_one n2)) `op pcm` (None, half (add_one n2))));
-    ghost_share ghost_r (half n1, half (add_one n2)) (None, half (add_one n2));
+    rewrite (GPR.pts_to ghost_r (half n1, full (add_one n2))) as
+            (GPR.pts_to ghost_r ((half n1, half (add_one n2)) `op pcm` (None, half (add_one n2))));
+    GPR.share ghost_r (half n1, half (add_one n2)) (None, half (add_one n2));
     fold ((lock_inv_ghost ghost_r) (v + 1))
   };
 
-  with _v. rewrite (ghost_pcm_pts_to ghost_r (G.reveal (G.hide _v))) as
-                   (ghost_pcm_pts_to ghost_r _v);
+  with _v. rewrite (GPR.pts_to ghost_r (G.reveal (G.hide _v))) as
+                   (GPR.pts_to ghost_r _v);
   share ghost_r;
   fold lock_inv_ghost;
   let l = L.new_lock (exists* v. pts_to r v ** lock_inv_ghost ghost_r v);
@@ -739,14 +734,14 @@ fn incr_pcm_abstract (r:ref int)
 
   parallel
     requires L.lock_alive l #0.5R (exists* v. pts_to r v ** lock_inv_ghost ghost_r v) **
-             ghost_pcm_pts_to ghost_r (half zero1, None) and
+             GPR.pts_to ghost_r (half 0, None) and
              L.lock_alive l #0.5R (exists* v. pts_to r v ** lock_inv_ghost ghost_r v) **
-             ghost_pcm_pts_to ghost_r (None, half zero1)
+             GPR.pts_to ghost_r (None, half 0)
     
     ensures L.lock_alive l #0.5R (exists* v. pts_to r v ** lock_inv_ghost ghost_r v) **
-            ghost_pcm_pts_to ghost_r (half (add_one zero1), None) and
+            GPR.pts_to ghost_r (half (add_one 0), None) and
             L.lock_alive l #0.5R (exists* v. pts_to r v ** lock_inv_ghost ghost_r v) **
-            ghost_pcm_pts_to ghost_r (None, half (add_one zero1))
+            GPR.pts_to ghost_r (None, half (add_one 0))
 
     { incr_pcm_t_abstract r l t1 }
     { incr_pcm_t_abstract r l t2 };
@@ -756,5 +751,5 @@ fn incr_pcm_abstract (r:ref int)
   unfold lock_inv_ghost;
   gather ghost_r;
   L.free l;
-  drop_ (ghost_pcm_pts_to ghost_r _)
+  drop_ (GPR.pts_to ghost_r _)
 }

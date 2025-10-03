@@ -14,7 +14,7 @@
    limitations under the License.
 *)
 
-module Pulse.Lib.HigherArray.PtsTo
+module Pulse.Lib.Array.PtsTo
 #lang-pulse
 open Pulse.Main
 open FStar.Tactics.V2
@@ -193,4 +193,21 @@ fn pts_to_perm_bound u#a (#a: Type u#a) (#p:_) (arr: array a) (#s:Seq.seq a)
   unfold pts_to arr #p s;
   pts_to_mask_perm_bound arr;
   fold pts_to arr #p s;
+}
+
+fn with_local u#a (#a:Type0) (init:a) (len:SZ.t) (#pre:slprop) (ret_t:Type u#a)
+    (#post:ret_t -> slprop)
+    (body:(arr:array a) -> stt ret_t (pre **
+                                      (pts_to arr (Seq.create (SZ.v len) init) **
+                                      (pure (is_full_array arr) **
+                                        pure (length arr == SZ.v len))))
+                                    (fun r -> post r ** (exists* v. pts_to arr v)))
+  requires pre
+  returns r: ret_t
+  ensures post r
+{
+  let arr = alloc init len;
+  let r = body arr;
+  free arr;
+  r
 }

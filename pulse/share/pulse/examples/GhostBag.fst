@@ -19,7 +19,6 @@ module GhostBag
 
 //
 // This module implements the ghost bag data structure from
-#lang-pulse
 //   Expressive modular fine-grained concurrency specification, POPL 2011 (Sec. 6)
 //
 //
@@ -49,7 +48,7 @@ type map (a:eqtype) = m:Map.t a (option perm) { forall (x:a). Map.contains m x }
 //   so if x and y are in the set, F will map x and y to non-zero permissions
 //
 noeq
-type gbag_pcm_carrier (a:eqtype) : Type u#1 =
+type gbag_pcm_carrier (a:eqtype) =
   | P : map a -> gbag_pcm_carrier a
   | F : map a -> gbag_pcm_carrier a
 
@@ -235,26 +234,28 @@ let fp_upd_rem #a
   v_new
 #pop-options
 
-let gbag #a (r:ghost_pcm_ref (gbag_pcm a)) (s:Set.set a) : slprop =
+module GR = Pulse.Lib.GhostPCMReference
+
+let gbag #a (r:GR.gref (gbag_pcm a)) (s:Set.set a) : slprop =
   exists* (m:map a).
-          ghost_pcm_pts_to r (F m) **
+          GR.pts_to r (F m) **
           (pure (forall (x:a). (~ (Set.mem x s)) ==> Map.sel m x == None)) **
           (pure (forall (x:a). Set.mem x s ==> Map.sel m x == Some 0.5R))
 
-let gbagh #a (r:ghost_pcm_ref (gbag_pcm a)) (x:a) : slprop =
-  ghost_pcm_pts_to r (P (Map.upd (Map.const None) x (Some 0.5R)))
+let gbagh #a (r:GR.gref (gbag_pcm a)) (x:a) : slprop =
+  GR.pts_to r (P (Map.upd (Map.const None) x (Some 0.5R)))
 
 
 
 ghost
 fn gbag_create (a:eqtype)
   requires emp
-  returns r:ghost_pcm_ref (gbag_pcm a)
+  returns r:GR.gref (gbag_pcm a)
   ensures gbag r Set.empty
 {
-  let r = ghost_alloc #_ #(gbag_pcm a) (F (Map.const None));
-  with _m. rewrite (ghost_pcm_pts_to r (Ghost.reveal (Ghost.hide _m))) as
-                   (ghost_pcm_pts_to r _m);
+  let r = GR.alloc #_ #(gbag_pcm a) (F (Map.const None));
+  with _m. rewrite (GR.pts_to r (Ghost.reveal (Ghost.hide _m))) as
+                   (GR.pts_to r _m);
   fold (gbag r Set.empty);
   r
 }
@@ -262,48 +263,48 @@ fn gbag_create (a:eqtype)
 
 
 ghost
-fn gbag_add #a (r:ghost_pcm_ref (gbag_pcm a)) (s:Set.set a) (x:a)
+fn gbag_add #a (r:GR.gref (gbag_pcm a)) (s:Set.set a) (x:a)
   requires gbag r s **
            pure (~ (Set.mem x s))
   ensures gbag r (Set.add x s) **
           gbagh r x
 {
   unfold gbag;
-  with mf. assert (ghost_pcm_pts_to r (F mf));
-  ghost_write r (F mf) (F (Map.upd mf x (Some 1.0R))) (fp_upd_add mf x);
+  with mf. assert (GR.pts_to r (F mf));
+  GR.write r (F mf) (F (Map.upd mf x (Some 1.0R))) (fp_upd_add mf x);
   assert (pure (Map.equal (Map.upd mf x (Some 1.0R))
                           (op_maps (Map.upd mf x (Some 0.5R))
                                    (Map.upd (Map.const None) x (Some 0.5R)))));
-  rewrite (ghost_pcm_pts_to r (F (Map.upd mf x (Some 1.0R)))) as
-          (ghost_pcm_pts_to r (op (gbag_pcm a)
+  rewrite (GR.pts_to r (F (Map.upd mf x (Some 1.0R)))) as
+          (GR.pts_to r (op (gbag_pcm a)
                               (F (Map.upd mf x (Some 0.5R)))
                               (P (Map.upd (Map.const None) x (Some 0.5R)))));
-  ghost_share r (F (Map.upd mf x (Some 0.5R)))
+  GR.share r (F (Map.upd mf x (Some 0.5R)))
                 (P (Map.upd (Map.const None) x (Some 0.5R)));
   fold (gbag r (Set.add x s));
-  with _v. rewrite (ghost_pcm_pts_to r (Ghost.reveal (Ghost.hide _v))) as
+  with _v. rewrite (GR.pts_to r (Ghost.reveal (Ghost.hide _v))) as
                    (gbagh r x)
 }
 
 
 
 ghost
-fn gbag_remove #a (r:ghost_pcm_ref (gbag_pcm a)) (s:Set.set a) (x:a)
+fn gbag_remove #a (r:GR.gref (gbag_pcm a)) (s:Set.set a) (x:a)
   requires gbag r s **
            gbagh r x
   ensures gbag r (Set.remove x s) **
           pure (x `Set.mem` s)
 {
   unfold gbag;
-  with mf. assert (ghost_pcm_pts_to r (F mf));
+  with mf. assert (GR.pts_to r (F mf));
   unfold gbagh;
   let mp = Map.upd (Map.const #_ #(option perm) None) x (Some 0.5R);
-  with _m. rewrite (ghost_pcm_pts_to r (P _m)) as
-                   (ghost_pcm_pts_to r (P mp));
-  ghost_gather r (F mf) (P mp);
+  with _m. rewrite (GR.pts_to r (P _m)) as
+                   (GR.pts_to r (P mp));
+  GR.gather r (F mf) (P mp);
   assert (pure (x `Set.mem` s));
   let mop = op_maps mf mp;
-  ghost_write r (F mop) (F (Map.upd mop x None)) (fp_upd_rem mop x);
+  GR.write r (F mop) (F (Map.upd mop x None)) (fp_upd_rem mop x);
   fold (gbag r (Set.remove x s))
 }
 

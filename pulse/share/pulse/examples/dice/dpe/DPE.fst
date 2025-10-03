@@ -80,9 +80,9 @@ fn initialize_global_state ()
   returns x:(gref & mutex (option st))
   ensures gvar_p x
 {
-  let r = ghost_alloc #_ #pcm all_sids_unused;
-  with _v. rewrite (ghost_pcm_pts_to r (G.reveal (G.hide _v))) as
-                   (ghost_pcm_pts_to r _v);
+  let r = GR.alloc #_ #pcm all_sids_unused;
+  with _v. rewrite (GR.pts_to r (G.reveal (G.hide _v))) as
+                   (GR.pts_to r _v);
   fold (dpe_inv r None);
   let m = new_mutex (dpe_inv r) None;
   fold (gvar_p (r, m));
@@ -99,9 +99,9 @@ let trace_ref = fst (Global.read_gvar_ghost gst)
 //
 
 //
-// A wrapper over ghost_gather
+// A wrapper over GR.gather
 //
-// ghost_gather takes erased arguments,
+// GR.gather takes erased arguments,
 //   sometimes that leads to unnecessary reveals and hides
 //
 // This version works much better
@@ -110,14 +110,14 @@ let trace_ref = fst (Global.read_gvar_ghost gst)
 ghost
 fn gather_ (r:gref)
   (v0 v1:pcm_t)
-  requires ghost_pcm_pts_to r v0 **
-           ghost_pcm_pts_to r v1
+  requires GR.pts_to r v0 **
+           GR.pts_to r v1
   returns _:squash (PCM.composable pcm v0 v1)
-  ensures ghost_pcm_pts_to r (PCM.op pcm v0 v1)
+  ensures GR.pts_to r (PCM.op pcm v0 v1)
 {
-  ghost_gather r v0 v1;
-  with _v. rewrite (ghost_pcm_pts_to r _v) as
-                   (ghost_pcm_pts_to r (PCM.op pcm v0 v1))
+  GR.gather r v0 v1;
+  with _v. rewrite (GR.pts_to r _v) as
+                   (GR.pts_to r (PCM.op pcm v0 v1))
 }
 
 
@@ -132,15 +132,15 @@ fn gather_ (r:gref)
 ghost
 fn gather_v (r:gref)
   (v0 v1 v:pcm_t)
-  requires ghost_pcm_pts_to r v0 **
-           ghost_pcm_pts_to r v1 **
+  requires GR.pts_to r v0 **
+           GR.pts_to r v1 **
            pure (PCM.composable pcm v0 v1 ==> Map.equal (PCM.op pcm v0 v1) v)
-  ensures ghost_pcm_pts_to r v **
+  ensures GR.pts_to r v **
           pure (PCM.composable pcm v0 v1)
 {
-  ghost_gather r v0 v1;
-  with _v. rewrite (ghost_pcm_pts_to r _v) as
-                   (ghost_pcm_pts_to r v)
+  GR.gather r v0 v1;
+  with _v. rewrite (GR.pts_to r _v) as
+                   (GR.pts_to r v)
 }
 
 
@@ -150,15 +150,15 @@ fn gather_v (r:gref)
 ghost
 fn share_ (r:gref)
   (v v0 v1:pcm_t)
-  requires ghost_pcm_pts_to r v **
+  requires GR.pts_to r v **
            pure (PCM.composable pcm v0 v1 /\
                  Map.equal (PCM.op pcm v0 v1) v)
-  ensures ghost_pcm_pts_to r v0 **
-          ghost_pcm_pts_to r v1
+  ensures GR.pts_to r v0 **
+          GR.pts_to r v1
 {
-  rewrite (ghost_pcm_pts_to r v) as
-          (ghost_pcm_pts_to r (PCM.op pcm v0 v1));
-  ghost_share r v0 v1;
+  rewrite (GR.pts_to r v) as
+          (GR.pts_to r (PCM.op pcm v0 v1));
+  GR.share r v0 v1;
 }
 
 
@@ -203,7 +203,7 @@ fn upd_sid_pts_to
       fp
       (singleton sid 1.0R t0) sid;
 
-  ghost_write r
+  GR.write r
     (singleton sid 1.0R t0)
     (singleton sid 1.0R (next_trace t0 s))
     fp;
@@ -297,7 +297,7 @@ fn __open_session (s:st)
 
   with pht. assert (models tbl pht);
   assert (on_range (session_perm trace_ref pht) 0 (U16.v ctr));
-  assert (ghost_pcm_pts_to trace_ref (sids_above_unused ctr));
+  assert (GR.pts_to trace_ref (sids_above_unused ctr));
 
   let copt = safe_incr ctr;
 
@@ -379,8 +379,8 @@ fn maybe_mk_session_tbl (sopt:option st)
 
       unfold dpe_inv;
       assert (pure (Map.equal all_sids_unused (sids_above_unused s.st_ctr)));
-      rewrite (ghost_pcm_pts_to trace_ref all_sids_unused) as
-              (ghost_pcm_pts_to trace_ref (sids_above_unused s.st_ctr));
+      rewrite (GR.pts_to trace_ref all_sids_unused) as
+              (GR.pts_to trace_ref (sids_above_unused s.st_ctr));
 
       with pht. assert (models s.st_tbl pht);
       on_range_empty (session_perm trace_ref pht) 0;
@@ -427,23 +427,23 @@ ghost
 fn gather_sid_pts_to (sid:sid_t) (#t0 #t1:trace)
   requires sid_pts_to trace_ref sid t0 **
            sid_pts_to trace_ref sid t1
-  ensures ghost_pcm_pts_to trace_ref (singleton sid 1.0R t0) **
+  ensures GR.pts_to trace_ref (singleton sid 1.0R t0) **
           pure (t0 == t1)
 {
   unfold (sid_pts_to trace_ref sid t0);
   unfold (sid_pts_to trace_ref sid t1);
   gather_ trace_ref (singleton sid 0.5R t0) (singleton sid 0.5R t1);
-  with v. assert (ghost_pcm_pts_to trace_ref v);
+  with v. assert (GR.pts_to trace_ref v);
   assert (pure (Map.equal v (singleton sid 1.0R t0)));
-  rewrite (ghost_pcm_pts_to trace_ref v) as
-          (ghost_pcm_pts_to trace_ref (singleton sid 1.0R t0))
+  rewrite (GR.pts_to trace_ref v) as
+          (GR.pts_to trace_ref (singleton sid 1.0R t0))
 }
 
 
 
 ghost
 fn share_sid_pts_to (sid:sid_t) (#t:trace)
-  requires ghost_pcm_pts_to trace_ref (singleton sid 1.0R t)
+  requires GR.pts_to trace_ref (singleton sid 1.0R t)
   ensures sid_pts_to trace_ref sid t **
           sid_pts_to trace_ref sid t
 {
@@ -461,8 +461,8 @@ fn upd_singleton
   (sid:sid_t)
   (#t:trace)
   (s:g_session_state { valid_transition t s })
-  requires ghost_pcm_pts_to trace_ref (singleton sid 1.0R t)
-  ensures ghost_pcm_pts_to trace_ref (singleton sid 1.0R (next_trace t s))
+  requires GR.pts_to trace_ref (singleton sid 1.0R t)
+  ensures GR.pts_to trace_ref (singleton sid 1.0R (next_trace t s))
 {
   let fp : PCM.frame_preserving_upd trace_pcm (full t) (full (next_trace t s)) =
     mk_frame_preserving_upd t s;
@@ -477,7 +477,7 @@ fn upd_singleton
       fp
       (singleton sid 1.0R t) sid;
 
-  ghost_write trace_ref
+  GR.write trace_ref
     (singleton sid 1.0R t)
     (singleton sid 1.0R (next_trace t s))
     fp;
@@ -530,7 +530,7 @@ fn replace_session
                 (session_state_perm trace_ref pht0 sid);
         unfold session_state_perm;
         gather_sid_pts_to sid;
-        with t1. assert (ghost_pcm_pts_to trace_ref (singleton sid 1.0R t1));
+        with t1. assert (GR.pts_to trace_ref (singleton sid 1.0R t1));
         assert (pure (t1 == t));
         let ret = HT.lookup tbl sid;
         let tbl = fst ret;

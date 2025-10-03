@@ -13,10 +13,9 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 *)
-module Pulse.Lib.SmallType.PCM
-open Pulse.Lib.SmallType
+module Pulse.Lib.PCMReference
 open Pulse.Lib.Core
-module C = Pulse.Lib.Core
+module C = Pulse.Lib.Core.Refs
 module U = Pulse.Lib.Raise
 open Pulse.Main
 open FStar.PCM
@@ -25,16 +24,20 @@ open Pulse.Lib.PCM.Raise
 open Pulse.Lib.WithPure
 #lang-pulse
 
+let core_pcm_ref = C.core_pcm_ref
+let null_core_pcm_ref = C.null_core_pcm_ref
+let is_null_core_pcm_ref = C.is_null_core_pcm_ref
+
 let small_token (inst: small_type u#a) = emp
 
 [@@pulse_unfold]
 let pcm_pts_to (#a:Type u#a) (#p:pcm a) ([@@@mkey] r:pcm_ref p) (v:a) : slprop =
-  exists* (inst: small_type u#a). big_pcm_pts_to #_ #(raise p) r (U.raise_val v) ** small_token inst
+  exists* (inst: small_type u#a). C.pcm_pts_to #_ #(raise p) r (U.raise_val v) ** small_token inst
 
 let timeless_pcm_pts_to #a #p r v =
   assert_norm (pcm_pts_to r v ==
     op_exists_Star fun (inst: small_type u#a) ->
-      big_pcm_pts_to #_ #(raise p) r (U.raise_val v) ** small_token inst)
+      C.pcm_pts_to #_ #(raise p) r (U.raise_val v) ** small_token inst)
 
 ghost fn pts_to_small u#a (#a:Type u#a) (#p:FStar.PCM.pcm a) (r:pcm_ref p) (v:a)
   preserves pcm_pts_to r v
@@ -48,16 +51,16 @@ ghost fn pts_to_not_null u#a (#a:Type u#a) (#p:FStar.PCM.pcm a) (r:pcm_ref p) (v
   preserves pcm_pts_to r v
   ensures pure (not (is_pcm_ref_null r))
 {
-  big_pts_to_not_null _ _;
+  C.pts_to_not_null _ _;
   ()
 }
 
-fn alloc u#a (#a:Type u#a) {| inst: small_type u#a |} (#pcm:pcm a) (x:a{pcm.refine x})
+fn alloc u#a (#a:Type u#a) (#pcm:pcm a) {| inst: small_type u#a |} (x:a{pcm.refine x})
   returns r: pcm_ref pcm
   ensures pcm_pts_to r x
 {
   fold small_token u#a inst;
-  big_alloc #(U.raise_t a) #(raise pcm) (U.raise_val x);
+  C.alloc #(U.raise_t a) #(raise pcm) (U.raise_val x);
 }
 
 fn read u#a (#a:Type u#a) (#p:pcm a) (r:pcm_ref p) (x:erased a)
@@ -67,7 +70,7 @@ fn read u#a (#a:Type u#a) (#p:pcm a) (r:pcm_ref p) (x:erased a)
   ensures pcm_pts_to r (f v)
 {
   let inst = pts_to_small r _;
-  U.downgrade_val (big_read #(U.raise_t a) #(raise p) r (hide (U.raise_val (reveal x))) (raise_refine p x f));
+  U.downgrade_val (C.read #(U.raise_t a) #(raise p) r (hide (U.raise_val (reveal x))) (raise_refine p x f));
 }
 
 fn write u#a (#a:Type u#a) (#p:pcm a) (r:pcm_ref p) (x y:erased a)
@@ -76,7 +79,7 @@ fn write u#a (#a:Type u#a) (#p:pcm a) (r:pcm_ref p) (x y:erased a)
   ensures pcm_pts_to r y
 {
   let inst = pts_to_small r _;
-  big_write #(U.raise_t a) #(raise p) r (hide (U.raise_val (reveal x))) (hide (U.raise_val (reveal y)))
+  C.write #(U.raise_t a) #(raise p) r (hide (U.raise_val (reveal x))) (hide (U.raise_val (reveal y)))
     (raise_upd f)
 }
 
@@ -88,7 +91,7 @@ ghost fn share u#a (#a:Type u#a) (#pcm:pcm a) (r:pcm_ref pcm)
 {
   let inst = pts_to_small r _;
   fold small_token inst;
-  big_share #(U.raise_t a) #(raise pcm) r (U.raise_val v0) (U.raise_val v1);
+  C.share #(U.raise_t a) #(raise pcm) r (U.raise_val v0) (U.raise_val v1);
 }
 
 [@@allow_ambiguous]
@@ -106,7 +109,7 @@ ghost fn gather u#a (#a:Type u#a) (#pcm:pcm a) (r:pcm_ref pcm) (v0:a) (v1:a)
   ensures pcm_pts_to r (op pcm v0 v1)
 {
   let inst = pts_to_small r v0;
-  with inst'. assert big_pcm_pts_to #_ #(raise #a #inst' pcm) r (U.raise_val #a #inst' v1);
+  with inst'. assert C.pcm_pts_to #_ #(raise #a #inst' pcm) r (U.raise_val #a #inst' v1);
   drop_amb (small_token u#a inst');
-  big_gather #(U.raise_t #inst a) #(raise #a #inst pcm) r (U.raise_val #a #inst v0) (U.raise_val #a #inst v1);
+  C.gather #(U.raise_t #inst a) #(raise #a #inst pcm) r (U.raise_val #a #inst v0) (U.raise_val #a #inst v1);
 }

@@ -18,7 +18,7 @@ module Pulse.Lib.Array
 #lang-pulse
 open Pulse.Lib.Core
 open Pulse.Lib.Reference
-open Pulse.Lib.Array.Core
+open Pulse.Lib.Array.Basic
 open Pulse.Class.PtsTo
 open FStar.Ghost
 module US = FStar.SizeT

@@ -7,8 +7,8 @@ module Seq = FStar.Seq
 open Pulse.Lib.TotalOrder
 open Pulse.Lib.BoundedIntegers
 
-fn binary_search
-      (#t:Type)
+fn binary_search u#a
+      (#t:Type u#a)
       {| total_order t |}
       (a:A.array t)
       (key:t)

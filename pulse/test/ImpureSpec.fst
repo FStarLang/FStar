@@ -26,7 +26,7 @@ fn test3 (r: ref int)
   assert (exists* v'. r |-> v') ** pure (!r > 17); // refers to v' from the exists!
 }
 
-ghost fn array_val #t (r: array t) #p (#v: Seq.seq t)
+ghost fn array_val u#a (#t: Type u#a) (r: array t) #p (#v: Seq.seq t)
   preserves r |-> Frac p v
   returns x: Seq.seq t
   ensures rewrites_to x v

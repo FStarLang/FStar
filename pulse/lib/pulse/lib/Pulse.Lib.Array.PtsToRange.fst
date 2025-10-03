@@ -14,7 +14,7 @@
    limitations under the License.
 *)
 
-module Pulse.Lib.HigherArray.PtsToRange
+module Pulse.Lib.Array.PtsToRange
 #lang-pulse
 open Pulse.Main
 open FStar.Tactics.V2

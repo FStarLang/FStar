@@ -247,53 +247,6 @@ let gather #a #p r x y =
     #(fun _ -> pts_to r (op p x y))
 let pts_to_not_null_action #a #p r x = lift_heap_action (H2.pts_to_not_null_action #a #p r x)
 
-module U = Pulse.Lib.Raise
-module R = Pulse.Lib.PCM.Raise
-
-let ghost_pts_to' #a #p r x =
-  H2.ghost_pts_to #(U.raise_t a) #(R.raise p) r (U.raise_val x)
-
-let ghost_extend' #a #p x = fun frame m0 ->
-  ghost_extend #_ #(R.raise p) (U.raise_val (reveal x)) frame m0
-
-let ghost_read' #a #p r x f = fun frame m0 ->
-  let y, m0 = ghost_read #_ #(R.raise p) r (U.raise_val (reveal x)) (R.raise_refine p x f) frame m0 in
-  hide (U.downgrade_val y), m0
-
-let ghost_write' #a #p r x y f = 
-  ghost_write #_ #(R.raise p) r (U.raise_val (reveal x)) (U.raise_val (reveal y)) (R.raise_upd f)
-
-let ghost_share' #a #p r x y =
-  ghost_share #_ #(R.raise p) r (U.raise_val (reveal x)) (U.raise_val (reveal y))
-
-let ghost_gather' #a #p r x y =
-  ghost_gather #_ #(R.raise p) r (U.raise_val (reveal x)) (U.raise_val (reveal y))
-
-let ghost_pts_to_not_null_action' #a #p r v =
-  ghost_pts_to_not_null_action #_ #(R.raise p) r (U.raise_val (reveal v))
-
-let pts_to' #a #p r x =
-  H2.pts_to #(U.raise_t a) #(R.raise p) r (U.raise_val x)
-
-let extend' #a #p x = fun frame m0 ->
-  extend #_ #(R.raise p) (U.raise_val x) frame m0
-
-let read' #a #p r x f = fun frame m0 ->
-  let y, m0 = read #_ #(R.raise p) r (U.raise_val (reveal x)) (R.raise_refine p x f) frame m0 in
-  U.downgrade_val y, m0
-
-let write' #a #p r x y f = 
-  write #_ #(R.raise p) r (U.raise_val (reveal x)) (U.raise_val (reveal y)) (R.raise_upd f)
-
-let share' #a #p r x y =
-  share #_ #(R.raise p) r (U.raise_val (reveal x)) (U.raise_val (reveal y))
-
-let gather' #a #p r x y =
-  gather #_ #(R.raise p) r (U.raise_val (reveal x)) (U.raise_val (reveal y))
-
-let pts_to_not_null_action' #a #p r v =
-  pts_to_not_null_action #_ #(R.raise p) r (U.raise_val (reveal v))
-
 let lift_ghost
       (#a:Type u#a)
       (#p:slprop u#b)

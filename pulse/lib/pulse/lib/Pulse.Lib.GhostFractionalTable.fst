@@ -77,7 +77,7 @@ ensures
 }
 
 ghost
-fn take_i #a (r:GPR.gref (a_map a)) (n:nat)
+fn take_i (#a:Type0) (r:GPR.gref (a_map a)) (n:nat)
 requires 
   GPR.pts_to r (full_table_above n)
 ensures

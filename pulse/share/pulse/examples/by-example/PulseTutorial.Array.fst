@@ -24,7 +24,7 @@ module SZ = FStar.SizeT
 
 //readi$
 fn read_i
-  (#[@@@ Rust_generics_bounds ["Copy"]] t:Type)
+  (#[@@@ Rust_generics_bounds ["Copy"]] t:Type0)
   (arr:array t)
   (#p:perm)
   (#s:erased (Seq.seq t))
@@ -38,7 +38,7 @@ fn read_i
 //end readi$
 
 //writei$
-fn write_i (#t:Type) (arr:array t) (#s:erased (Seq.seq t)) (x:t) (i:SZ.t { SZ.v i < Seq.length s })
+fn write_i (#t:Type0) (arr:array t) (#s:erased (Seq.seq t)) (x:t) (i:SZ.t { SZ.v i < Seq.length s })
   requires pts_to arr s
   ensures pts_to arr (Seq.upd s (SZ.v i) x)
 {

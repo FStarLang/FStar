@@ -184,7 +184,7 @@ decreases l
 module GR = Pulse.Lib.GhostReference
 //new_ghost_ref$
 ghost
-fn new_ghost_ref #a (x:a)
+fn new_ghost_ref (#a: Type0) (x:a)
 requires emp
 returns r:GR.ref a
 ensures GR.pts_to r x
@@ -219,11 +219,11 @@ ensures exists* v1. correlated x y v1
 //end use_temp_sig$
 //use_temp_body$
 {
-  unfold correlated;
+  unfold correlated u#0;
   let v = !x;
   x := 17; //temporarily mutate x, give to to another function to use with full perm
   x := v; //but, we're forced to set it back to its original value
-  fold correlated;
+  fold correlated u#0;
 }
 //end use_temp_body$
 
@@ -237,9 +237,9 @@ ensures emp
   let mut x = 17;
   let g = GR.alloc 17;
   GR.share g;
-  fold correlated;  // GR.pts_to g #0.5R 17 ** correlated x g 17
+  fold correlated u#0;  // GR.pts_to g #0.5R 17 ** correlated x g 17
   use_temp x g;     // GR.pts_to g #0.5R 17 ** correlated x g ?v1
-  unfold correlated; // GR.pts_to g #0.5R 17 ** GR.pts_to g #0.5R ?v1 ** pts_to x ?v1
+  unfold correlated u#0; // GR.pts_to g #0.5R 17 ** GR.pts_to g #0.5R ?v1 ** pts_to x ?v1
   GR.gather g;       //this is the crucial step
                      // GT.pts_to g 17 ** pure (?v1 == 17) ** pts_to x ?v1
   assert (pts_to x 17);
