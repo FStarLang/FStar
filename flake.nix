@@ -12,7 +12,7 @@
         pkgs = import nixpkgs {
           inherit system;
         };
-        ocamlPackages = pkgs.ocaml-ng.ocamlPackages_4_14;
+        ocamlPackages = pkgs.ocaml-ng.ocamlPackages_5_3;
 
         z3 = pkgs.callPackage (import ./.nix/z3.nix) { };
         version = self.rev or "dirty";
