@@ -59,6 +59,7 @@ let is_elim_with_pure (vp:term) : T.Tac bool =
   | Tm_WithPure .. -> true
   | _ -> false
 
+#push-options "--fuel 0 --ifuel 0"
 let mk (#g:env) (#v:slprop) (v_typing:tot_typing g v tm_slprop)
   : T.Tac (option (x:ppname &
                    t:st_term &
@@ -84,6 +85,7 @@ let elim_with_pure_frame (#g:env) (#ctxt:term) (#frame:term)
 
 // a lot of this is copy-pasted from elim_exists_pst,
 //   can add a common function to Prover.Common
+#push-options "--z3rlimit_factor 4 --ifuel 1"
 let elim_with_pure_pst (#preamble:_) (pst:prover_state preamble)
   : T.Tac (pst':prover_state preamble { pst' `pst_extends` pst /\
                                         pst'.unsolved == pst.unsolved }) =
@@ -133,3 +135,5 @@ let elim_with_pure_pst (#preamble:_) (pst:prover_state preamble)
     goals_inv = RU.magic ();  // weakening of pst.goals_inv
     solved_inv = ();
   }
+#pop-options
+#pop-options

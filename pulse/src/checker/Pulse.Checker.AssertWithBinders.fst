@@ -410,6 +410,7 @@ let rec add_rem_uvs (g:env) (t:typ) (uvs:env { Env.disjoint g uvs }) (v:slprop)
     let v = tm_pureapp v qopt (tm_var {nm_index = x; nm_ppname = ppname}) in
     add_rem_uvs g (comp_res ct) uvs v
 
+#push-options "--fuel 0 --ifuel 0"
 let check
   (g:env)
   (pre:term)
@@ -424,7 +425,7 @@ let check
   let g = push_context g "check_assert" st.range in
 
   let Tm_ProofHintWithBinders { hint_type; binders=bs; t=body } = st.term in
-
+  allow_invert hint_type;
   match hint_type with
   | WILD ->
     let st = check_wild g pre st in
@@ -543,3 +544,4 @@ let check
         { t with effect_tag = st.effect_tag }
     in
     check g pre pre_typing post_hint res_ppname st
+#pop-options

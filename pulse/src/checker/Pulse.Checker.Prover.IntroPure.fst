@@ -32,7 +32,7 @@ module P = Pulse.Syntax.Printer
 module PS = Pulse.Checker.Prover.Substs
 
 let coerce_eq (#a #b:Type) (x:a) (_:squash (a == b)) : y:b{y == x} = x
-
+#push-options "--z3rlimit_factor 4"
 let k_intro_pure (g:env) (p:term)
   (d:tot_typing g p tm_prop)
   (token:prop_validity g p) (frame:slprop)
@@ -74,7 +74,7 @@ let k_intro_pure (g:env) (p:term)
       (push_binding g x ppname_default tm_unit) in
 
   k post_hint (| t1, c1, d1 |)
-
+#pop-options
 module R = FStar.Reflection.V2
 
 // let is_eq2 (t:R.term) : option (R.term & R.term) =
@@ -210,6 +210,7 @@ let rec try_collect_substs (uvs:env) (t:term)
 
   | _ -> PS.empty
 
+#push-options "--z3rlimit_factor 4"
 let intro_pure (#preamble:_) (pst:prover_state preamble)
   (t:term)
   (unsolved':list slprop)
@@ -358,3 +359,4 @@ let intro_pure (#preamble:_) (pst:prover_state preamble)
                                                    solved_inv = () } in
 
   Some pst_new
+#pop-options

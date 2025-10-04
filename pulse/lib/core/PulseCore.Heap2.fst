@@ -161,9 +161,9 @@ let lift_star (l:tag) (p q:H.slprop)
   );
   slprop_extensionality (llift l (p `H.star` q)) (llift l p `star` llift l q)
 #pop-options
-let lift_emp : squash (lift H.emp == emp) = 
-  FStar.Classical.forall_intro H.intro_emp;
-  slprop_extensionality (lift H.emp) emp
+let lift_emp : squash (lift H.emp == emp u#a) = 
+  FStar.Classical.forall_intro (H.intro_emp u#a);
+  slprop_extensionality (lift u#a H.emp) (emp u#a)
 
 let pts_to_compatible #a #pcm (x:ref a pcm) (v0 v1:a) h = 
   H.pts_to_compatible #a #pcm x v0 v1 h.concrete;
@@ -571,9 +571,9 @@ let lift_action_ghost
 let ni_erased a : non_informative (erased a) = fun x -> reveal x
 let ni_unit : non_informative unit = fun x -> reveal x
 
-let lift_ghost_emp : squash (llift GHOST H.emp == emp) = 
-  FStar.Classical.forall_intro H.intro_emp;
-  slprop_extensionality (llift GHOST H.emp) emp
+let lift_ghost_emp : squash (llift GHOST H.emp == emp u#a) = 
+  FStar.Classical.forall_intro (H.intro_emp u#a);
+  slprop_extensionality (llift GHOST H.emp) (emp u#a)
 
 let core_ghost_ref_as_addr i = H.core_ref_as_addr i
 let core_ghost_ref_is_null c = H.core_ref_is_null c

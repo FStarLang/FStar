@@ -139,6 +139,8 @@ let lemma_map_opt_dec_index (top:'z) (f : (x:'a{x << top}) -> option 'b) (xs : l
           (ensures forall i. f (xs `L.index` i) == Some (ys `L.index` i))
   = Classical.forall_intro (Classical.move_requires (__lemma_map_opt_dec_index top f xs ys))
 
+#push-options "--fuel 2 --ifuel 2 --z3rlimit_factor 2 --query_stats"
+#restart-solver
 let rec elab_readback_pat_x (rp : R.pattern) (p : pattern)
   : Lemma (requires readback_pat rp == Some p)
           (ensures elab_pat p == rp)
@@ -195,6 +197,7 @@ and elab_readback_subpat (pb : R.pattern & bool)
           (ensures elab_sub_pat (Some?.v (readback_sub_pat pb)) == pb)
   = let (p, b) = pb in
     elab_readback_pat_x p (Some?.v (readback_pat p))
+#pop-options
 
 val tot_typing_weakening_n
    (#g:env) (#t:term) (#ty:term)
@@ -236,8 +239,8 @@ let rec bindings_to_string (bs : list binding) : T.Tac string =
   | b::bs ->
     (string_of_int (fst b) ^ ":" ^ Pulse.Syntax.Printer.term_to_string (snd b) ^ " ") ^ bindings_to_string bs
 
-#push-options "--z3rlimit 20"
-
+#push-options "--z3rlimit 40 --fuel 0 --ifuel 1"
+#restart-solver
 let check_branch
         (norw:bool)
         (g:env)
@@ -437,7 +440,7 @@ let rec least_tag (#g #pre #post_hint #sc_u #sc_ty #sc:_)
     | C_STAtomic i _ _ -> STT_Atomic
 
 
-#push-options "--z3rlimit_factor 4 --fuel 0 --ifuel 1"
+#push-options "--z3rlimit_factor 4 --fuel 0 --ifuel 0"
 #restart-solver
 let weaken_branch_tag_to 
       (#g #pre #post_hint #sc_u #sc_ty #sc:_) 
@@ -448,6 +451,7 @@ let weaken_branch_tag_to
   if ctag_of_comp_st c = ct then br
   else
     let r = pe.e.range in
+    allow_invert ct; allow_invert c;
     match ct, c with
     | STT_Ghost, C_STAtomic _ _ _
     | STT_Ghost, C_ST _ -> T.fail "Unexpected least effect"
@@ -464,6 +468,7 @@ let weaken_branch_tag_to
       let d = TBRV g sc_u sc_ty sc _ p e bs pf1 pf2 pf3 h d in
       (| pe, _, d |)
     )
+    
 
 
 let weaken_branch_tags
@@ -473,7 +478,9 @@ let weaken_branch_tags
 = let ct = least_tag checked_brs in
   let brs = T.map (weaken_branch_tag_to ct) checked_brs in
   (| ct, brs |)
+#pop-options
 
+#push-options "--z3rlimit_factor 4 --fuel 0 --ifuel 1"
 let maybe_weaken_branch_tags
       (#g #pre #post_hint #sc_u #sc_ty #sc:_) 
       (checked_brs : list (check_branches_aux_t #g pre post_hint sc_u sc_ty sc))
@@ -531,7 +538,7 @@ let check_branches
   let brs = List.Tot.map dfst checked_brs in
   let d : brs_typing g sc_u sc_ty sc brs c0 = check_branches_aux2 g sc_u sc_ty sc c0 checked_brs in
   (| brs, c0, d |)
-
+#push-options "--fuel 0 --ifuel 1 --z3rlimit_factor 4 --query_stats"
 let check
         (g:env)
         (pre:term)
@@ -598,3 +605,4 @@ let check
   let c_typing = comp_typing_from_post_hint c pre_typing post_hint in
   let d = T_Match g sc_u sc_ty sc sc_ty_typing sc_typing c (E c_typing) brs brs_d complete_d in
   checker_result_for_st_typing (| _, _, d |) res_ppname
+#pop-options

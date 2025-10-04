@@ -9,6 +9,8 @@ ROOTS += lib/common/Pulse.Lib.Tactics.fsti
 
 FSTAR_OPTIONS += --already_cached 'Prims,FStar'
 FSTAR_OPTIONS += --include lib/common
+FSTAR_OPTIONS += --smtencoding.elim_box true
+FSTAR_OPTIONS += --z3smtopt '(set-option :smt.arith.nl false)'
 EXTRACT += --extract '-*,+Pulse,+PulseSyntaxExtension'
 DEPFLAGS += --already_cached 'Prims,FStar,FStarC'
 

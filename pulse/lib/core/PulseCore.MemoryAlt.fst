@@ -60,8 +60,10 @@ let emp_unit (p:slprop)
 : Lemma (p `equiv` (p `star` emp))
 = B.emp_unit p
 
+#push-options "--print_implicits --print_universes"
+
 let pure_equiv (p q:prop)
-: Lemma ((p <==> q) ==> (pure p `equiv` pure q))
+: Lemma ((p <==> q) ==> (pure u#a p `equiv` pure u#a q))
 = FStar.PropositionalExtensionality.apply p q
 
 let pure_true_emp (_:unit)

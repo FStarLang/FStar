@@ -89,10 +89,9 @@ let emp_unit (p:slprop) : Lemma (p == (p `star` emp)) =
     star_equiv p emp h
   );
   slprop_extensionality p (p `star` emp)
-
-let pure_true_emp () : Lemma (pure True == emp) =
-  introduce forall h. interp (pure True) h <==> interp emp h with H2.intro_emp h;
-  slprop_extensionality (pure True) emp
+let pure_true_emp () : Lemma (pure u#a True == emp) =
+  introduce forall h. interp (pure u#a True) h <==> interp emp h with H2.intro_emp h;
+  slprop_extensionality (pure u#a True) emp
 let intro_emp (h:mem) : Lemma (interp emp h) = H2.intro_emp h
 let pure_interp (p:prop) (c:mem) : Lemma (interp (pure p) c == p) =
   H2.pure_interp p c; PropositionalExtensionality.apply (interp (pure p) c) p

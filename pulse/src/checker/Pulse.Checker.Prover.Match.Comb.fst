@@ -102,6 +102,8 @@ let frame_match_from_context
     proof      = mm.proof;
 }
 
+#push-options "--z3rlimit_factor 4"
+(* The result of a match pass, trying to match all of ctxt to all of unsolved. *)
 (* Returns all successful matches of q in ps. *)
 let rec get_all_matches_aux
   (label : string)
@@ -152,6 +154,7 @@ let rec get_all_matches_aux
       get_all_matches_aux label matcher pst q (p::ps0) ps'
     in
     thisone @ rest
+#pop-options 
 
 let get_all_matches
   (label : string)

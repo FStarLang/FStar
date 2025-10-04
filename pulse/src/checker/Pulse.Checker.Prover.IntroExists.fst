@@ -15,7 +15,7 @@
 *)
 
 module Pulse.Checker.Prover.IntroExists
-
+#set-options "--z3rlimit 20" //base rlimit x 4
 open Pulse.Syntax
 open Pulse.Typing
 open Pulse.Typing.Combinators
