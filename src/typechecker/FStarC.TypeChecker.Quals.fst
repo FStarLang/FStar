@@ -107,7 +107,8 @@ let check_sigelt_quals_pre (env:FStarC.TypeChecker.Env.env) se : ML unit =
       | Irreducible
       | Noeq
       | Unopteq ->
-        q2=Logic || q2=Inline_for_extraction || q2=NoExtract || has_eq q2 || inferred q2 || visibility q2 || reification q2
+        q2=Logic || q2=Inline_for_extraction || q2=NoExtract || has_eq q2 || inferred q2 || visibility q2 || reification q2 ||
+        q2=Unfold_for_unification_and_vcgen || q2=Noeq
 
       | TotalEffect ->
         inferred q2 || visibility q2 || reification q2
@@ -178,7 +179,7 @@ let check_sigelt_quals_pre (env:FStarC.TypeChecker.Env.env) se : ML unit =
               || x=NoExtract
               || inferred x
               || visibility x
-              || has_eq x))
+              || has_eq x || x=Unfold_for_unification_and_vcgen))
         then err [];
         if quals |> List.existsb (function Unopteq -> true | _ -> false) &&
            U.has_attribute se.sigattrs FStarC.Parser.Const.erasable_attr
