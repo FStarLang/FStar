@@ -8,6 +8,7 @@ will fail to typecheck. *)
 open FStar.Ghost
 open FStar.Tactics
 open FStar.Reflection.Typing
+module R = FStar.Reflection
 
 [@@erasable]
 noeq
@@ -16,10 +17,10 @@ type my_erased (a:Type) = | E of a
 let test (r_env goal : _) : Tac unit =
   let u0 = pack_universe Uv_Zero in
   let goal_typing :
-    my_erased (typing_token r_env goal (E_Total, pack_ln (Tv_Type u0)))
+    my_erased (typing_token r_env goal (E_Total, pack_ln (R.Tv_Type u0)))
     = magic()
   in
-  let goal_typing_tok : squash (typing_token r_env goal (E_Total, pack_ln (Tv_Type u0))) =
+  let goal_typing_tok : squash (typing_token r_env goal (E_Total, pack_ln (R.Tv_Type u0))) =
     match goal_typing with E x -> ()
   in
   ()
@@ -27,10 +28,10 @@ let test (r_env goal : _) : Tac unit =
 (* This should always work regardless of the comment above. *)
 let test2 (r_env goal u0 : _) : Tac unit =
   let goal_typing :
-    my_erased (typing_token r_env goal (E_Total, pack_ln (Tv_Type u0)))
+    my_erased (typing_token r_env goal (E_Total, pack_ln (R.Tv_Type u0)))
     = magic()
   in
-  let goal_typing_tok : squash (typing_token r_env goal (E_Total, pack_ln (Tv_Type u0))) =
+  let goal_typing_tok : squash (typing_token r_env goal (E_Total, pack_ln (R.Tv_Type u0))) =
     match goal_typing with E x -> ()
   in
   ()
