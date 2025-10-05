@@ -309,6 +309,15 @@ let find_in_record ns id record cont =
  else
       Cont_ignore
 
+let find_in_record_many ids record cont =
+  let found = BU.multiset_equiv
+      (fun (fn,_) id -> string_of_id id = string_of_id fn)
+      record.fields ids
+  in
+  if found
+  then cont record
+  else Cont_ignore
+
 let get_exported_id_set (e: env) (mname: string) : option (exported_id_kind -> ref string_set) =
     SMap.try_find e.exported_ids mname
 
@@ -997,10 +1006,47 @@ let try_lookup_record_or_dc_by_field_name env (fieldname:lident) =
     (fun fn -> cont_of_option Cont_ignore (find_in_cache fn))
     (fun k _ -> k)
 
+let try_lookup_record_or_dc_by_field_name_many env (fieldnames:list lident) =
+  match fieldnames with
+  | [] -> None
+  | fn :: _ ->
+    let all_ids = List.map ident_of_lid fieldnames in
+    let find_in_cache fieldname =
+      let ns, id = ns_of_lid fieldname, ident_of_lid fieldname in
+      BU.find_map
+        (peek_record_cache())
+        (fun record ->
+          option_of_cont (fun _ -> None)
+            (* find_in_record will check namespace matches; on success find_in_record_many checks the fields *)
+            (find_in_record ns id record (fun r ->
+              find_in_record_many all_ids record (fun r -> Cont_ok r))))
+    in
+    resolve_in_open_namespaces''
+      env
+      fn
+      Exported_id_field
+      (fun _ -> Cont_ignore)
+      (fun _ -> Cont_ignore)
+      (fun r -> find_in_record_many all_ids r (fun r -> Cont_ok r))
+      (fun fn -> cont_of_option Cont_ignore (find_in_cache fn))
+      (fun k _ -> k)
+
+
 let try_lookup_record_by_field_name env (fieldname:lident) =
     match try_lookup_record_or_dc_by_field_name env fieldname with
         | Some r when r.is_record -> Some r
         | _ -> None
+
+let try_lookup_record_by_field_name_many env (fieldnames:list lident) =
+    (* try to find a record type with all of the given field names.
+      if this fails, find the most recently declared record type that includes the first field name. *)
+    match try_lookup_record_or_dc_by_field_name_many env fieldnames with
+        | Some r when r.is_record -> Some r
+        | _ -> begin
+          match fieldnames with
+          | [] -> None
+          | fn :: _ -> try_lookup_record_by_field_name env fn
+          end
 
 let try_lookup_record_type env (typename:lident) : option record_or_dc =
   let find_in_cache (name:lident) : option record_or_dc =
