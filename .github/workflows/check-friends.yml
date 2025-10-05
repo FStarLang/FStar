@@ -22,7 +22,7 @@ jobs:
         with:
           name: fstar.tar.gz
       - run: tar -xzf fstar.tar.gz
-      - run: echo "FSTAR_EXE=$(pwd)/fstar/bin/fstar.exe" >> $GITHUB_ENV
+      - run: echo "FSTAR_EXE=$(pwd)/fstar/bin/fstar.exe --proof_recovery" >> $GITHUB_ENV
 
       - name: Checkout karamel
         uses: actions/checkout@master
@@ -60,7 +60,7 @@ jobs:
         with:
           name: fstar.tar.gz
       - run: tar -xzf fstar.tar.gz
-      - run: echo "FSTAR_EXE=$(pwd)/fstar/bin/fstar.exe" >> $GITHUB_ENV
+      - run: echo "FSTAR_EXE=$(pwd)/fstar/bin/fstar.exe --proof_recovery" >> $GITHUB_ENV
 
       # krml test needs node
       - uses: actions/setup-node@v4
@@ -88,7 +88,7 @@ jobs:
         with:
           name: fstar.tar.gz
       - run: tar -xzf fstar.tar.gz
-      - run: echo "FSTAR_EXE=$(pwd)/fstar/bin/fstar.exe" >> $GITHUB_ENV
+      - run: echo "FSTAR_EXE=$(pwd)/fstar/bin/fstar.exe --proof_recovery" >> $GITHUB_ENV
 
       - name: Checkout steel
         uses: actions/checkout@master
@@ -120,7 +120,7 @@ jobs:
         with:
           name: fstar.tar.gz
       - run: tar -xzf fstar.tar.gz
-      - run: echo "FSTAR_EXE=$(pwd)/fstar/bin/fstar.exe" >> $GITHUB_ENV
+      - run: echo "FSTAR_EXE=$(pwd)/fstar/bin/fstar.exe --proof_recovery" >> $GITHUB_ENV
 
       - uses: mtzguido/gci-download@master
         with:
@@ -149,7 +149,7 @@ jobs:
         with:
           name: fstar.tar.gz
       - run: tar -xzf fstar.tar.gz
-      - run: echo "FSTAR_EXE=$(pwd)/fstar/bin/fstar.exe" >> $GITHUB_ENV
+      - run: echo "FSTAR_EXE=$(pwd)/fstar/bin/fstar.exe --proof_recovery" >> $GITHUB_ENV
 
       - uses: mtzguido/gci-download@master
         with:
@@ -181,7 +181,7 @@ jobs:
         with:
           name: fstar.tar.gz
       - run: tar -xzf fstar.tar.gz
-      - run: echo "FSTAR_EXE=$(pwd)/fstar/bin/fstar.exe" >> $GITHUB_ENV
+      - run: echo "FSTAR_EXE=$(pwd)/fstar/bin/fstar.exe --proof_recovery" >> $GITHUB_ENV
 
       - name: Build (after setting up cargo env)
         run: . $HOME/.cargo/env && make -C pulse -skj$(nproc)
@@ -207,7 +207,7 @@ jobs:
         with:
           name: fstar.tar.gz
       - run: tar -xzf fstar.tar.gz
-      - run: echo "FSTAR_EXE=$(pwd)/fstar/bin/fstar.exe" >> $GITHUB_ENV
+      - run: echo "FSTAR_EXE=$(pwd)/fstar/bin/fstar.exe --proof_recovery" >> $GITHUB_ENV
 
       - uses: mtzguido/gci-download@master
         with:
@@ -242,7 +242,7 @@ jobs:
         with:
           name: fstar.tar.gz
       - run: tar -xzf fstar.tar.gz
-      - run: echo "FSTAR_EXE=$(pwd)/fstar/bin/fstar.exe" >> $GITHUB_ENV
+      - run: echo "FSTAR_EXE=$(pwd)/fstar/bin/fstar.exe --proof_recovery" >> $GITHUB_ENV
 
       - uses: mtzguido/gci-download@master
         with:
@@ -283,7 +283,7 @@ jobs:
         with:
           name: fstar.tar.gz
       - run: tar -xzf fstar.tar.gz
-      - run: echo "FSTAR_EXE=$(pwd)/fstar/bin/fstar.exe" >> $GITHUB_ENV
+      - run: echo "FSTAR_EXE=$(pwd)/fstar/bin/fstar.exe --proof_recovery" >> $GITHUB_ENV
 
       - uses: mtzguido/gci-download@master
         with:
@@ -322,7 +322,7 @@ jobs:
         with:
           name: fstar.tar.gz
       - run: tar -xzf fstar.tar.gz
-      - run: echo "FSTAR_EXE=$(pwd)/fstar/bin/fstar.exe" >> $GITHUB_ENV
+      - run: echo "FSTAR_EXE=$(pwd)/fstar/bin/fstar.exe --proof_recovery" >> $GITHUB_ENV
 
       - uses: mtzguido/gci-download@master
         with:
@@ -344,7 +344,7 @@ jobs:
       - run: echo "EVERPARSE_USE_PULSE_HOME=1" >> $GITHUB_ENV
 
       - name: Checkout everparse
-        uses: actions/checkout@master
+        uses: actions/checkout@_nik_smt_univs_2025
         with:
           path: everparse/
           repository: project-everest/everparse
@@ -377,7 +377,7 @@ jobs:
         with:
           name: fstar.tar.gz
       - run: tar -xzf fstar.tar.gz
-      - run: echo "FSTAR_EXE=$(pwd)/fstar/bin/fstar.exe" >> $GITHUB_ENV
+      - run: echo "FSTAR_EXE=$(pwd)/fstar/bin/fstar.exe --proof_recovery" >> $GITHUB_ENV
 
       - uses: mtzguido/gci-download@master
         with:
@@ -423,7 +423,7 @@ jobs:
         with:
           name: fstar.tar.gz
       - run: tar -xzf fstar.tar.gz
-      - run: echo "FSTAR_EXE=$(pwd)/fstar/bin/fstar.exe" >> $GITHUB_ENV
+      - run: echo "FSTAR_EXE=$(pwd)/fstar/bin/fstar.exe --proof_recovery" >> $GITHUB_ENV
 
       - uses: mtzguido/gci-download@master
         with:
@@ -462,7 +462,7 @@ jobs:
         with:
           name: fstar.tar.gz
       - run: tar -xzf fstar.tar.gz
-      - run: echo "FSTAR_EXE=$(pwd)/fstar/bin/fstar.exe" >> $GITHUB_ENV
+      - run: echo "FSTAR_EXE=$(pwd)/fstar/bin/fstar.exe --proof_recovery" >> $GITHUB_ENV
 
       - uses: mtzguido/gci-download@master
         with:
@@ -496,7 +496,7 @@ jobs:
         with:
           name: fstar.tar.gz
       - run: tar -xzf fstar.tar.gz
-      - run: echo "FSTAR_EXE=$(pwd)/fstar/bin/fstar.exe" >> $GITHUB_ENV
+      - run: echo "FSTAR_EXE=$(pwd)/fstar/bin/fstar.exe --proof_recovery" >> $GITHUB_ENV
 
       - uses: mtzguido/gci-download@master
         with:
@@ -539,7 +539,7 @@ jobs:
         with:
           name: fstar.tar.gz
       - run: tar -xzf fstar.tar.gz
-      - run: echo "FSTAR_EXE=$(pwd)/fstar/bin/fstar.exe" >> $GITHUB_ENV
+      - run: echo "FSTAR_EXE=$(pwd)/fstar/bin/fstar.exe --proof_recovery" >> $GITHUB_ENV
 
       - uses: mtzguido/gci-download@master
         with:
@@ -577,7 +577,7 @@ jobs:
         with:
           name: fstar.tar.gz
       - run: tar -xzf fstar.tar.gz
-      - run: echo "FSTAR_EXE=$(pwd)/fstar/bin/fstar.exe" >> $GITHUB_ENV
+      - run: echo "FSTAR_EXE=$(pwd)/fstar/bin/fstar.exe --proof_recovery" >> $GITHUB_ENV
 
       - uses: mtzguido/gci-download@master
         with:
@@ -620,7 +620,7 @@ jobs:
         with:
           name: fstar.tar.gz
       - run: tar -xzf fstar.tar.gz
-      - run: echo "FSTAR_EXE=$(pwd)/fstar/bin/fstar.exe" >> $GITHUB_ENV
+      - run: echo "FSTAR_EXE=$(pwd)/fstar/bin/fstar.exe --proof_recovery" >> $GITHUB_ENV
 
       - uses: mtzguido/gci-download@master
         with:
@@ -653,7 +653,7 @@ jobs:
         with:
           name: fstar.tar.gz
       - run: tar -xzf fstar.tar.gz
-      - run: echo "FSTAR_EXE=$(pwd)/fstar/bin/fstar.exe" >> $GITHUB_ENV
+      - run: echo "FSTAR_EXE=$(pwd)/fstar/bin/fstar.exe --proof_recovery" >> $GITHUB_ENV
 
       - name: Checkout steel
         uses: actions/checkout@master
@@ -686,7 +686,7 @@ jobs:
         with:
           name: fstar.tar.gz
       - run: tar -xzf fstar.tar.gz
-      - run: echo "FSTAR_EXE=$(pwd)/fstar/bin/fstar.exe" >> $GITHUB_ENV
+      - run: echo "FSTAR_EXE=$(pwd)/fstar/bin/fstar.exe --proof_recovery" >> $GITHUB_ENV
 
       - uses: actions/checkout@master
         with:
@@ -711,7 +711,7 @@ jobs:
         with:
           name: fstar.tar.gz
       - run: tar -xzf fstar.tar.gz
-      - run: echo "FSTAR_EXE=$(pwd)/fstar/bin/fstar.exe" >> $GITHUB_ENV
+      - run: echo "FSTAR_EXE=$(pwd)/fstar/bin/fstar.exe --proof_recovery" >> $GITHUB_ENV
 
       - uses: actions/checkout@master
         with:
