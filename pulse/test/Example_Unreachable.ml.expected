@@ -1,6 +1,5 @@
 open Prims
-let rec (test : Prims.bool FStar_Pervasives_Native.option -> Prims.bool) =
-  fun x ->
-    match x with
-    | FStar_Pervasives_Native.Some b -> b
-    | FStar_Pervasives_Native.None -> Pulse_Lib_Dv.unreachable ()
+let rec test (x : Prims.bool FStar_Pervasives_Native.option) : Prims.bool=
+  match x with
+  | FStar_Pervasives_Native.Some b -> b
+  | FStar_Pervasives_Native.None -> Pulse_Lib_Dv.unreachable ()
