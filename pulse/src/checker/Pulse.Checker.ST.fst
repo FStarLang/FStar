@@ -33,7 +33,7 @@ let should_allow_ambiguous (t:term) : T.Tac bool =
   Pulse.Reflection.Util.head_has_attr_string "Pulse.Lib.Core.allow_ambiguous" t
 
 open Pulse.PP
-
+#push-options "--fuel 0 --ifuel 1 --z3rlimit_factor 2"
 let check
   (g:env)
   (ctxt:slprop)

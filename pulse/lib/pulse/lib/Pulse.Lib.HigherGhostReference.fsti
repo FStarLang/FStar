@@ -25,6 +25,8 @@ open Pulse.Class.PtsTo
 
 [@@erasable]
 val ref ([@@@unused] a:Type u#1) : Type u#0
+
+val null #a : ref a
       
 instance val non_informative_gref (a:Type u#1)
   : NonInformative.non_informative (ref a)
@@ -103,3 +105,8 @@ ghost
 fn pts_to_perm_bound (#a:_) (#p:_) (r:ref a) (#v:a)
   requires r |-> Frac p v
   ensures  (r |-> Frac p v) ** pure (p <=. 1.0R)
+
+ghost
+fn pts_to_not_null #a (#p:_) (r:ref a) (#v:a)
+  preserves r |-> Frac p v
+  ensures  pure (r =!= null)

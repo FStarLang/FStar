@@ -23,6 +23,8 @@ open Pulse.Lib.PCM.Fraction
 module T = FStar.Tactics
 let ref (a:Type u#1) = ghost_pcm_ref #_ (pcm_frac #a)
 
+let null #a = null_core_ghost_pcm_ref
+
 instance non_informative_gref (a:Type u#1) : NonInformative.non_informative (ref a) = {
   reveal = (fun x -> Ghost.reveal x) <: NonInformative.revealer (ref a);
 }
@@ -163,3 +165,13 @@ fn pts_to_perm_bound (#a:_) (#p:_) (r:ref a) (#v:a)
   fold pts_to r #p v;
 }
 
+
+ghost
+fn pts_to_not_null #a (#p:_) (r:ref a) (#v:a)
+  preserves r |-> Frac p v
+  ensures  pure (r =!= null)
+{
+  unfold pts_to r #p v;
+  ghost_pts_to_not_null r _;
+  fold pts_to r #p v;
+}

@@ -38,7 +38,7 @@ let while_body_comp_typing (#g:env) (u:universe) (x:ppname) (ty:term) (inv_body:
   : Dv (comp_typing_u g (comp_while_body x inv_body))
   = Metatheory.admit_comp_typing g (comp_while_body x inv_body)
 
-#push-options "--fuel 0 --ifuel 1 --z3rlimit_factor 8"
+#push-options "--fuel 0 --ifuel 0 --z3rlimit_factor 8 --query_stats"
 #restart-solver
 let check
   (g:env)
@@ -155,7 +155,7 @@ let inv_as_post_hint (#g:env) (#inv:slprop) (inv_typing:tot_typing g inv tm_slpr
     x; post_typing_src; post_typing=RU.magic() }
 
 
-#push-options "--fuel 0 --ifuel 1 --z3rlimit_factor 8"
+#push-options "--fuel 0 --ifuel 0 --z3rlimit_factor 8"
 
 let check_nuwhile
   (g:env)

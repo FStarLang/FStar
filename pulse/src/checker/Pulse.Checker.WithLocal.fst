@@ -46,7 +46,8 @@ let with_local_pre_typing (#g:env) (#pre:term) (pre_typing:tot_typing g pre tm_s
                tm_slprop
   = admit()
 
-#push-options "--z3rlimit_factor 10 --fuel 0 --ifuel 1 --split_queries no"
+#push-options "--z3rlimit_factor 10 --fuel 0 --ifuel 0 --query_stats"
+
 let head_range (t:st_term {Tm_WithLocal? t.term}) : range =
   let Tm_WithLocal { initializer } = t.term in
   (RU.range_of_term initializer)
@@ -60,7 +61,8 @@ let check
   (t:st_term { Tm_WithLocal? t.term })
   (check:check_t)
 : T.Tac (checker_result_t g pre post_hint)
-= match post_hint with
+= allow_invert post_hint;
+  match post_hint with
   | NoHint | TypeHint _ ->
     fail g (Some <| head_range t)
       "Allocating a mutable local variable expects an annotated post-condition"
@@ -108,11 +110,10 @@ let check
         let post : post_hint_for_env g = post in
         assume not (x `Set.mem` freevars post.post);
           let open Pulse.Typing.Combinators in
-          let body_post = extend_post_hint_for_local g post init_t x in
-          let (| opened_body, c_body, body_typing |) =
-            let r =
-              check g_extended body_pre body_pre_typing (PostHint body_post) binder.binder_ppname (open_st_term_nv body px) in
-            apply_checker_result_k r binder.binder_ppname in
+          let body_post : post_hint_for_env g_extended = extend_post_hint_for_local g post init_t x in
+          let r = check g_extended body_pre body_pre_typing (PostHint body_post) binder.binder_ppname (open_st_term_nv body px) in
+          let r: checker_result_t g_extended body_pre (PostHint body_post) = r in
+          let (| opened_body, c_body, body_typing |) = apply_checker_result_k #g_extended #body_pre #body_post r binder.binder_ppname in
           let body = close_st_term opened_body x in
           assume (open_st_term (close_st_term opened_body x) x == opened_body);
           let c = C_ST {u=comp_u c_body;res=comp_res c_body;pre;post=post.post} in

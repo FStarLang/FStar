@@ -1164,6 +1164,8 @@ let invariant_name_identifies_invariant i p q =
 
 let slprop_ref = address
 
+let null_slprop_ref = 0
+
 let slprop_ref_pts_to x y =
   reveal_mem_le ();
   mk_slprop fun m ->

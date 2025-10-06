@@ -31,7 +31,7 @@ module Metatheory = Pulse.Typing.Metatheory
 module Abs = Pulse.Checker.Abs
 module RU = Pulse.Reflection.Util
 
-#push-options "--z3rlimit_factor 4 --split_queries no"
+#push-options "--z3rlimit_factor 8 --split_queries no --query_stats --fuel 0 --ifuel 1"
 let check_bind_fn
   (g:env)
   (ctxt:slprop)
@@ -62,7 +62,6 @@ let check_bind_fn
     checker_result_for_st_typing d res_ppname
   )
   | _ -> fail g (Some t.range) "check_bind_fn: head is not an abstraction"
-#pop-options
 
 let check_if_seq_lhs
   (g:env) (ctxt : slprop) (post_hint : post_hint_opt g)
@@ -229,3 +228,4 @@ let check_tot_bind
       (show t)
       (show t'));
     check g pre pre_typing post_hint res_ppname t'
+#pop-options

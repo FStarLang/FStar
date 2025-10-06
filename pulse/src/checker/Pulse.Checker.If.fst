@@ -42,7 +42,7 @@ let retype_checker_result (#g:env) (#ctxt:slprop) (#ph:post_hint_opt g) (ph':pos
 = let (| x, g1, t, ctxt, k |) = r in
   (| x, g1, t, ctxt, k |)
 
-#push-options "--fuel 0 --ifuel 1 --z3rlimit_factor 2"
+#push-options "--fuel 0 --ifuel 0 --z3rlimit_factor 2"
 #restart-solver
 let check
   (g:env)

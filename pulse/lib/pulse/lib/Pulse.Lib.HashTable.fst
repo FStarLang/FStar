@@ -505,6 +505,7 @@ fn insert_if_not_full
   }
 }
 
+#restart-solver
 #push-options "--z3rlimit_factor 6"
 fn delete
   (#[@@@ Rust_generics_bounds ["Copy"; "PartialEq"; "Clone"]] kt:eqtype)

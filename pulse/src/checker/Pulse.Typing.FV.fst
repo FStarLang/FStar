@@ -539,7 +539,8 @@ fun d cb ->
       x 0;
     freevars_open_term post e 0
 #pop-options
-
+#restart-solver
+#push-options "--z3rlimit_factor 4 --fuel 1 --ifuel 1 --split_queries always"
 let st_typing_freevars_bind : st_typing_freevars_case T_Bind? =
 fun d cb ->
   match d with
@@ -578,8 +579,9 @@ fun #g #t #c d cb ->
       vars_of_env g;
     };
     comp_typing_freevars ct
-
-#push-options "--z3rlimit 40"
+#pop-options
+#restart-solver
+#push-options "--z3rlimit_factor 8"
 let st_typing_freevars_frame : st_typing_freevars_case T_Frame? =
 fun d cb ->
   match d with
@@ -588,6 +590,8 @@ fun d cb ->
     cb dc
 #pop-options
 
+#restart-solver
+#push-options "--z3rlimit_factor 4 --fuel 2 --ifuel 1 --query_stats"
 let st_typing_freevars_elimexists : st_typing_freevars_case T_ElimExists? =
 fun #g #t #c d cb ->
   match d with

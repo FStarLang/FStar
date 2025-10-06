@@ -197,7 +197,7 @@ let bind_t (case_c1 case_c2:comp_st -> bool) =
               open_term (comp_post c1) x == comp_pre c2 /\
               (~ (x `Set.mem` freevars (comp_post c2)))))
            (ensures fun _ -> True)
-
+#push-options "--fuel 0 --ifuel 0"
 let mk_bind_st_st
   : bind_t C_ST? C_ST?
   = fun g pre e1 e2 c1 c2 px d_e1 d_c1res d_e2 res_typing post_typing _ ->
@@ -205,7 +205,7 @@ let mk_bind_st_st
       let b = nvar_as_binder px (comp_res c1) in
       let bc = Bind_comp g x c1 c2 res_typing x post_typing in
       (| _, _, T_Bind _ e1 e2 _ _ b _ _ d_e1 d_c1res d_e2 bc |)
-
+#pop-options
 let inames_of (c:comp_st) : term =
   match c with
   | C_ST _ -> tm_emp_inames
@@ -264,7 +264,8 @@ let lift_ghost_atomic (#g:env) (#e:st_term) (#c:comp_st { C_STGhost? c }) (d:st_
   | Some d ->
     d
 
-#push-options "--z3rlimit_factor 8 --ifuel 1 --fuel 2"
+#push-options "--z3rlimit_factor 2 --ifuel 0 --fuel 0 --query_stats --split_queries no"
+#restart-solver
 let mk_bind_ghost_ghost : bind_t C_STGhost? C_STGhost? =
   fun g pre e1 e2 c1 c2 px d_e1 d_c1res d_e2 res_typing post_typing post_hint ->
   let _, x = px in
@@ -335,7 +336,7 @@ let mk_bind_atomic_atomic
       )
 #pop-options
 
-#push-options "--z3rlimit_factor 20 --fuel 0 --ifuel 1 --z3cliopt 'smt.qi.eager_threshold=100'"
+#push-options "--z3rlimit_factor 20 --fuel 0 --ifuel 0 --z3cliopt 'smt.qi.eager_threshold=100'"
 #restart-solver
 let rec mk_bind (g:env) 
                 (pre:term)
@@ -454,6 +455,7 @@ let rec mk_bind (g:env)
       let (| t, c, d |) = mk_bind g pre e1 e2 _ _ px d_e1 d_c1res d_e2 res_typing post_typing post_hint in
       (| t, c, d |)
     )
+  | _ -> T.fail "Impossible: unexpected combination of effects"
 #pop-options
 
 let bind_res_and_post_typing g c2 x post_hint 
@@ -488,6 +490,7 @@ let add_frame (#g:env) (#t:st_term) (#c:comp_st) (t_typing:st_typing g t c)
 
   (| t, add_frame c frame, T_Frame _ _ _ _ frame_typing t_typing |)
 
+#push-options "--fuel 0 --ifuel 0"
 let apply_frame (#g:env)
                 (#t:st_term)
                 (#ctxt:term)
@@ -519,6 +522,7 @@ let apply_frame (#g:env)
     let t_typing = t_equiv t_typing st_equiv in
     (| c'', t_typing |)
 
+#push-options "--query_stats --z3rlimit_factor 2"
 let comp_for_post_hint #g (#pre:slprop) (pre_typing:tot_typing g pre tm_slprop)
   (post:post_hint_t { g `env_extends` post.g })
   (x:var { lookup g x == None })
@@ -549,3 +553,5 @@ let comp_for_post_hint #g (#pre:slprop) (pre_typing:tot_typing g pre tm_slprop)
     assert (g `env_extends` post.g);
     let d_opens : tot_typing g opens tm_inames = RU.magic () in  // weakening
     (| _, CT_STAtomic _ opens Neutral _ d_opens d_s |)
+  | _ -> T.fail "Impossible"
+#pop-options

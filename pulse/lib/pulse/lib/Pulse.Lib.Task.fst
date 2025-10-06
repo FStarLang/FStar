@@ -409,10 +409,6 @@ fn elim_state_pred
   hide v_state
 }
 
-instance duplicable_slprop_ref_pts_to x y : duplicable (slprop_ref_pts_to x y) = {
-  dup_f = (fun _ -> slprop_ref_share x #y)
-}
-
 ghost fn shift_up (x: slprop_ref) (y: slprop)
   requires slprop_ref_pts_to x y
   ensures shift (up x ** later_credit 1) y

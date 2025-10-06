@@ -382,6 +382,16 @@ val gather
 ////////////////////////////////////////////////////////////////////////
 // Ghost References
 ////////////////////////////////////////////////////////////////////////
+val ghost_pts_to_not_null
+    (#a:Type u#1)
+    (#p:FStar.PCM.pcm a)
+    (r:ghost_ref p)
+    (v:a)
+: stt_ghost (squash (r =!= core_ghost_ref_null))
+    emp_inames
+    (ghost_pts_to r v)
+    (fun _ -> ghost_pts_to r v)
+
 val ghost_alloc
     (#a:Type u#1)
     (#pcm:pcm a)

@@ -365,6 +365,7 @@ let rec add_rem_uvs (g:env) (t:typ) (v:term)
     let v = tm_pureapp v qopt u in
     add_rem_uvs g (comp_res ct) v
 
+#push-options "--fuel 0 --ifuel 0"
 let check
   (g:env)
   (pre:term)
@@ -379,7 +380,7 @@ let check
   let g = push_context g "check_assert" st.range in
 
   let Tm_ProofHintWithBinders { hint_type; binders=bs; t=body } = st.term in
-
+  allow_invert hint_type;
   match hint_type with
   | WILD ->
     let st = check_wild g pre st in

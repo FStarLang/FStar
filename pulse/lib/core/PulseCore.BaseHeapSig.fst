@@ -89,10 +89,9 @@ let emp_unit (p:slprop) : Lemma (p == (p `star` emp)) =
     star_equiv p emp h
   );
   slprop_extensionality p (p `star` emp)
-
-let pure_true_emp () : Lemma (pure True == emp) =
-  introduce forall h. interp (pure True) h <==> interp emp h with H2.intro_emp h;
-  slprop_extensionality (pure True) emp
+let pure_true_emp () : Lemma (pure u#a True == emp) =
+  introduce forall h. interp (pure u#a True) h <==> interp emp h with H2.intro_emp h;
+  slprop_extensionality (pure u#a True) emp
 let intro_emp (h:mem) : Lemma (interp emp h) = H2.intro_emp h
 let pure_interp (p:prop) (c:mem) : Lemma (interp (pure p) c == p) =
   H2.pure_interp p c; PropositionalExtensionality.apply (interp (pure p) c) p
@@ -230,6 +229,9 @@ let ghost_share #a #p r x y =
 let ghost_gather #a #p r x y =
   lift_heap_action (H2.ghost_gather #a #p r x y)
     #(fun _ -> ghost_pts_to r (op p x y))
+let ghost_pts_to_not_null_action #a #p r x =
+  lift_heap_action (H2.ghost_pts_to_not_null_action #a #p r x)
+    #(fun _ -> ghost_pts_to #a #p r x)
 
 let extend #a #pcm x = fun frame m0 ->
   let (| y, m1 |) = H2.apply_action (H2.extend #a #pcm x) frame m0 in
@@ -266,6 +268,9 @@ let ghost_share' #a #p r x y =
 
 let ghost_gather' #a #p r x y =
   ghost_gather #_ #(R.raise p) r (U.raise_val (reveal x)) (U.raise_val (reveal y))
+
+let ghost_pts_to_not_null_action' #a #p r v =
+  ghost_pts_to_not_null_action #_ #(R.raise p) r (U.raise_val (reveal v))
 
 let pts_to' #a #p r x =
   H2.pts_to #(U.raise_t a) #(R.raise p) r (U.raise_val x)

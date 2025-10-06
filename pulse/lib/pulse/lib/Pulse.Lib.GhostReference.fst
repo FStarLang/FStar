@@ -22,6 +22,8 @@ module H = Pulse.Lib.HigherGhostReference
 module U = Pulse.Lib.Raise
 let ref a = H.ref (U.raise_t a)
 
+let null #a = H.null
+
 instance non_informative_gref (a:Type0) : NonInformative.non_informative (ref a) = {
   reveal = (fun x -> Ghost.reveal x) <: NonInformative.revealer (ref a);
 }
@@ -156,3 +158,12 @@ fn pts_to_perm_bound (#a:_) (#p:_) (r:ref a) (#v:a)
   fold pts_to r #p v;
 }
 
+ghost
+fn pts_to_not_null #a (#p:_) (r:ref a) (#v:a)
+  preserves r |-> Frac p v
+  ensures  pure (r =!= null)
+{
+  unfold pts_to r #p v;
+  H.pts_to_not_null r;
+  fold pts_to r #p v;
+}

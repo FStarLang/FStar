@@ -22,6 +22,7 @@ let is_null : core_ref -> GTot bool = H2.core_ref_is_null
 let ref (a:Type u#a) (p:pcm a) = core_ref
 
 let core_ghost_ref : Type u#0 = H2.core_ghost_ref
+let core_ghost_ref_null = H2.core_ghost_ref_null
 let ghost_ref (a:Type u#a) (p:pcm a) = core_ghost_ref
 let add (#a:Type) (f:Set.decide_eq a) (x:a) (y:Set.set a) = Set.union (Set.singleton f x) y
 
@@ -181,6 +182,15 @@ val ghost_gather
     (ghost_pts_to r v0 `star` ghost_pts_to r v1)
     (fun _ -> ghost_pts_to r (op pcm v0 v1))
 
+val ghost_pts_to_not_null_action
+      (#a:Type)
+      (#pcm:pcm a)
+      (r:ghost_ref a pcm)
+      (v:Ghost.erased a)
+: ghost_action_except (squash (r =!= core_ghost_ref_null))
+    (ghost_pts_to r v)
+    (fun _ -> ghost_pts_to r v)
+
 val extend
     (#a:Type)
     (#pcm:pcm a)
@@ -287,6 +297,15 @@ val ghost_gather'
 : ghost_action_except (squash (composable pcm v0 v1))
     (ghost_pts_to' u#a u#b r v0 `star` ghost_pts_to' u#a u#b r v1)
     (fun _ -> ghost_pts_to' u#a u#b r (op pcm v0 v1))
+
+val ghost_pts_to_not_null_action'
+      (#a:Type u#a)
+      (#pcm:pcm a)
+      (r:ghost_ref a pcm)
+      (v:Ghost.erased a)
+: ghost_action_except (squash (r =!= core_ghost_ref_null))
+    (ghost_pts_to' u#a u#b r v)
+    (fun _ -> ghost_pts_to' u#a u#b r v)
 
 val pts_to' (#a:Type u#a) (#p:pcm a) (r:ref a p) (x:a) : slprop u#(max a b)
 
