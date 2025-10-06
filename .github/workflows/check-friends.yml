@@ -356,9 +356,10 @@ jobs:
       - run: echo "EVERPARSE_USE_PULSE_HOME=1" >> $GITHUB_ENV
 
       - name: Checkout everparse
-        uses: actions/checkout@_nik_smt_univs_2025
+        uses: actions/checkout@master
         with:
           path: everparse/
+          ref: _nik_smt_univs_2025
           repository: project-everest/everparse
 
       - name: Build
