@@ -1,4 +1,4 @@
 open Prims
 let rec uhoh : 't . unit -> 't = fun uu___ -> uhoh ()
-let (foo : Prims.nat FStar_Pervasives_Native.option -> Prims.string) =
-  fun x -> uhoh (); "foo"
+let foo (x : Prims.nat FStar_Pervasives_Native.option) : Prims.string=
+  uhoh (); "foo"

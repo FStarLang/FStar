@@ -1,2 +1,2 @@
 open Prims
-let (outside : unit -> Prims.bool) = fun uu___ -> M.f true
+let outside (uu___ : unit) : Prims.bool= M.f true
