@@ -1,12 +1,10 @@
 open Prims
-let (x : Prims.int Pulse_Lib_HigherReference.ref) =
+let x : Prims.int Pulse_Lib_HigherReference.ref=
   Pulse_Lib_HigherReference.null ()
-let (y : unit -> Prims.int Pulse_Lib_Box.box) =
-  fun uu___ -> Pulse_Lib_Box.null ()
-let rec (foo : unit -> Prims.int Pulse_Lib_Box.box) =
-  fun uu___ -> Pulse_Lib_Box.null ()
-let rec (test : Prims.int Pulse_Lib_HigherReference.ref -> Prims.int) =
-  fun x1 ->
-    if Pulse_Lib_HigherReference.is_null x1
-    then Prims.int_zero
-    else Pulse_Lib_HigherReference.read x1 () ()
+let y (uu___ : unit) : Prims.int Pulse_Lib_Box.box= Pulse_Lib_Box.null ()
+let rec foo (uu___ : unit) : Prims.int Pulse_Lib_Box.box=
+  Pulse_Lib_Box.null ()
+let rec test (x1 : Prims.int Pulse_Lib_HigherReference.ref) : Prims.int=
+  if Pulse_Lib_HigherReference.is_null x1
+  then Prims.int_zero
+  else Pulse_Lib_HigherReference.read x1 () ()
