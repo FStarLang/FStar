@@ -137,9 +137,12 @@ let z3_cmd_and_args () =
         @ Find.Z3.z3_install_suggestion ver)
   in
   let cmd_args =
-    List.append ["-smt2";
-                 "-in"]
-                (Options.z3_cliopt ()) in
+    if Options.Ext.enabled "cvc" then
+     [ "-" ]
+    else
+     ["-smt2"; "-in"]
+  in
+  let cmd_args = cmd_args @ Options.z3_cliopt () in
   (cmd, cmd_args)
 
 let warn_handler (suf:Errors.error_message) (s:string) : unit =
@@ -199,7 +202,7 @@ let check_z3version (p:proc) : unit =
 let new_z3proc (id:string) (cmd_and_args : string & list string) : BU.proc =
     let proc =
       try
-        BU.start_process id (fst cmd_and_args) (snd cmd_and_args) (fun s -> s = "Done!")
+        BU.start_process id (fst cmd_and_args) (snd cmd_and_args) (fun s -> s = "Done!" || s = "\"Done!\"")
       with
       | e ->
         let open FStarC.Pprint in
@@ -212,7 +215,8 @@ let new_z3proc (id:string) (cmd_and_args : string & list string) : BU.proc =
             (Util.print_exn e |> arbitrary_string);
         ]
     in
-    check_z3version proc;
+    if not (Options.Ext.enabled "cvc") then
+      check_z3version proc;
     proc
 
 let new_z3proc_with_id =
@@ -330,7 +334,7 @@ let smt_output_sections (log_file:option string) (r:Range.t) (lines:list string)
         match lines with
         | [] -> None
         | l::lines ->
-          if tag = l then Some ([], lines)
+          if tag = l || "\"" ^ tag ^ "\"" = l then Some ([], lines)
           else until tag lines |> Option.map (fun (until_tag, rest) ->
                           (l::until_tag, rest))
     in
@@ -521,9 +525,9 @@ let doZ3Exe (log_file:_) (r:Range.t) (fresh:bool) (input:string) (label_messages
           core |> List.filter (fun name ->
             not (BU.for_some (fun wl -> BU.contains name wl) whitelist) &&
             not (BU.starts_with name "binder_") &&
-            not (BU.starts_with name "@query") &&
-            not (BU.starts_with name "@MaxFuel") &&
-            not (BU.starts_with name "@MaxIFuel") &&
+            not (BU.starts_with name "_query") &&
+            not (BU.starts_with name "_MaxFuel") &&
+            not (BU.starts_with name "_MaxIFuel") &&
             not (BU.for_some (fun name' -> name=name') names))
         in
         // Format.print2 "Query %s: Pruned theory would keep %s\n" queryid (String.concat ", " names);
@@ -621,7 +625,16 @@ let mk_input (fresh : bool) (theory : list decl) : string & option string & opti
                         (!Options._version) (!Options._commit) ver
       ) :: EmptyLine :: theory
     in
-    let options = z3_options ver in
+    let options =
+      if Options.Ext.enabled "cvc"
+      then Format.fmt1
+           "(set-logic ALL)\n\
+            (set-option :incremental true)\n\
+            (set-option :produce-unsat-cores true)\n\
+            (set-option :rlimit-per %s)\n" (show (Options.z3_rlimit () `op_Multiply` 500000))
+            // ^ NB: For CVC5, we restart after every rlimit change.
+      else z3_options ver
+    in
     let options =
       options ^
       Format.fmt1 "(set-option :smt.random-seed %s)\n" (show (Options.z3_seed ()))

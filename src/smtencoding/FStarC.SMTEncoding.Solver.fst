@@ -256,12 +256,16 @@ let with_fuel_and_diagnostics settings label_assumptions =
         Term.Caption (Format.fmt2 "<fuel='%s' ifuel='%s'>"
                         (show n)
                         (show i));
-        Util.mkAssume(mkEq(mkApp("MaxFuel", []), n_fuel n), None, "@MaxFuel_assumption");
-        Util.mkAssume(mkEq(mkApp("MaxIFuel", []), n_fuel i), None, "@MaxIFuel_assumption");
+        Util.mkAssume(mkEq(mkApp("MaxFuel", []), n_fuel n), None, "_MaxFuel_assumption");
+        Util.mkAssume(mkEq(mkApp("MaxIFuel", []), n_fuel i), None, "_MaxIFuel_assumption");
         settings.query_decl        //the query itself
     ]
     @label_assumptions         //the sub-goals that are currently disabled
-    @[  Term.SetOption ("rlimit", show rlimit); //the rlimit setting for the check-sat
+    @
+     (if Options.Ext.enabled "cvc"
+      then []
+      else [  Term.SetOption ("rlimit", show rlimit); ]) //the rlimit setting for the check-sat
+    @[
 
         // Print stats just before the query, so we know the initial rlimit.
         Term.Echo "<initial_stats>";
@@ -269,7 +273,12 @@ let with_fuel_and_diagnostics settings label_assumptions =
         Term.Echo "</initial_stats>";
 
         Term.CheckSat; //go Z3!
-        Term.SetOption ("rlimit", "0"); //back to using infinite rlimit
+    ]
+    @ (if Options.Ext.enabled "cvc"
+      then []
+      else [
+        Term.SetOption ("rlimit", "0");]) //back to using infinite rlimit
+    @[
         Term.GetReasonUnknown; //explain why it failed
     ]@
     (if settings.query_record_hints
@@ -1331,6 +1340,11 @@ type solver_cfg = {
   z3version        : string;
   context_pruning  : bool;
   record_hints     : bool;
+  cvc_rlimit       : int;
+  (* ^ The rlimit, but only for CVC5. Z3 can change the rlimit
+  without restarting, so we just set it to zero here for Z3
+  and essentially ignore it. For CVC5, changing the rlimit will trigger
+  a restart. *)
 }
 
 let _last_cfg : ref (option solver_cfg) = mk_ref None
@@ -1345,6 +1359,10 @@ let get_cfg env : solver_cfg =
     ; z3version        = Options.z3_version ()
     ; context_pruning  = Options.Ext.enabled "context_pruning"
     ; record_hints     = Options.record_hints ()
+    ; cvc_rlimit       =
+      if Options.Ext.enabled "cvc"
+      then Options.z3_rlimit ()
+      else 0
     }
 
 let save_cfg env =

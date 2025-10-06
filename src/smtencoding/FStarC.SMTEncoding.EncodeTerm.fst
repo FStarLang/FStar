@@ -685,7 +685,7 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
                    match tok.tm with
                    | FreeV _
                    | App(_, []) ->
-                     let sym_name = "@kick_partial_app_" ^ (BU.digest_of_string tkey_hash) in  //the '@' retains this for hints
+                     let sym_name = "_kick_partial_app_" ^ (BU.digest_of_string tkey_hash) in  //the '@' retains this for hints
                      [Util.mkAssume(kick_partial_app tok,
                                     Some "kick_partial_app",
                                     sym_name)], sym_name
