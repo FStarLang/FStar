@@ -39,5 +39,8 @@ module FStar.Sequence.Ambient
 
 open FStar.Sequence.Base
 
-let all_seq_facts_ambient : (squash all_seq_facts) =
-  all_seq_facts_lemma ()
+let all_seq_facts_ambient (a:Type u#a)
+: Lemma
+  (ensures all_seq_facts u#a)
+  [SMTPat (FStar.Sequence.Base.seq u#a a)]
+= all_seq_facts_lemma u#a ()

@@ -30,8 +30,6 @@ module Z3EncodingIssue
 ///
 /// (But all is not lost, there exists an alternative style which comes with all the goodies
 ///    of the layered effects in this setting, see MSeqExn.fst for the alternative style)
-
-
 module Seq = FStar.Seq
 
 open FStar.Integers
@@ -89,7 +87,8 @@ let subcomp (a:Type)
   (wp_f:wp_t a) (wp_g:wp_t a)
   (f:repr a wp_f)
 : Pure (repr a wp_g)
-  (requires forall p s. wp_g p s ==> wp_f p s)
+  (requires 
+    (forall p s. wp_g p s ==> wp_f p s))
   (ensures fun _ -> True)
 = f
 

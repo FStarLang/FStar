@@ -78,7 +78,7 @@
     got type FStar.Pervasives.result Prims.int
   - The SMT solver could not prove the query. Use --query_stats for more
     details.
-  - See also FStar.Pervasives.fsti(371,4-371,5)
+  - See also FStar.Pervasives.fsti(374,4-374,5)
 
 * Info at NegativeTests.Neg.fst(55,25-55,26):
   - Expected failure:

@@ -11,7 +11,7 @@ let repr (a : Type u#aa) (wp : pure_wp a) : Type u#aa =
 let return (a : Type) (x : a) : repr a (pure_return a x) =
   fun () -> x
 
-let bind (a b : Type)
+let bind (a : Type u#a) (b : Type u#b)
   (wp_v : pure_wp a) (wp_f: a -> pure_wp b)
   (v : repr a wp_v)
   (f : (x:a -> repr b (wp_f x)))
@@ -19,7 +19,8 @@ let bind (a b : Type)
    // Fun fact: using () instead of _ below makes us
    // lose the refinement and then this proof fails.
    // Keep that in mind all ye who enter here.
-  = elim_pure_wp_monotonicity_forall ();
+  = elim_pure_wp_monotonicity_forall u#a ();
+    elim_pure_wp_monotonicity_forall u#b ();
     fun _ -> f (v ()) ()
 
 let subcomp (a:Type)
@@ -31,8 +32,8 @@ let subcomp (a:Type)
   = f
 
 unfold
-let if_then_else_wp (#a:Type) (wp1 wp2:pure_wp a) (p:bool) : pure_wp a =
-  elim_pure_wp_monotonicity_forall ();
+let if_then_else_wp (#a:Type u#a) (wp1 wp2:pure_wp a) (p:bool) : pure_wp a =
+  elim_pure_wp_monotonicity_forall u#a ();
   as_pure_wp (fun post -> (p ==> wp1 post) /\ ((~p) ==> wp2 post))
 
 let if_then_else (a : Type)

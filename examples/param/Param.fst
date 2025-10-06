@@ -169,9 +169,9 @@ let rec list_rec_of_function_is_map_2 #a #b (f : a -> b) (l1 : list a) (l2 : lis
      Cons_param h1 h2 () _ _ (list_rec_of_function_is_map_2 f t1 t2)
 
 let reverse_commutes_with_map
-    (rev : (#a:Type -> list a -> list a)) // doesn't really have to be "reverse"...
+    (rev : (#a:Type u#a -> list a -> list a)) // doesn't really have to be "reverse"...
     (rev_is_param : rev_param rev rev)
-    : Lemma (forall a b (f : a -> b) l. rev (List.Tot.map f l) == List.Tot.map f (rev l))
+    : Lemma (forall (a:Type u#a) (b:Type u#a) (f : a -> b) l. rev (List.Tot.map f l) == List.Tot.map f (rev l))
     =
   let aux a b f l : Lemma (rev (List.Tot.map f l) == List.Tot.map f (rev l)) =
     let rel_f : a -> b -> Type = rel_of_fun f in
@@ -223,8 +223,8 @@ let rec reverse_rel (#a0:Type) (#a1:Type) (#aR: a0 -> a1 -> Type)
 (* ^ stale comment, using inductive proofs right now *)
 
 let real_reverse_commutes_with_map ()
-  : Lemma (forall a b (f : a -> b) l. reverse (List.Tot.map f l) == List.Tot.map f (reverse l))
-  = reverse_commutes_with_map reverse reverse_rel
+  : Lemma (forall (a b:Type u#a) (f : a -> b) l. reverse (List.Tot.map f l) == List.Tot.map f (reverse l))
+  = reverse_commutes_with_map u#a reverse reverse_rel
 
 (* 2020/07/23: This doesn't work from outside this module... why? *)
 

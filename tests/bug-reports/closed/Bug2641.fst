@@ -31,8 +31,8 @@ let hist_return (x:'a) : hist 'a =
 let hist_bind (#a #b:Type) (w : hist a) (kw : a -> hist b) : hist b =
   fun p -> w (fun r -> kw r p)
 
-let wp_lift_pure_hist (w : pure_wp 'a) : hist 'a =
-  FStar.Monotonic.Pure.elim_pure_wp_monotonicity_forall ();
+let wp_lift_pure_hist (#a:Type u#a) (w : pure_wp a) : hist a =
+  FStar.Monotonic.Pure.elim_pure_wp_monotonicity_forall u#a ();
   w
 
 let partial_call_wp (pre:pure_pre) : hist (squash pre) = 

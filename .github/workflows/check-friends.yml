@@ -23,6 +23,7 @@ jobs:
           name: fstar.tar.gz
       - run: tar -xzf fstar.tar.gz
       - run: echo "FSTAR_EXE=$(pwd)/fstar/bin/fstar.exe" >> $GITHUB_ENV
+      - run: echo "OTHERFLAGS=--proof_recovery" >> $GITHUB_ENV
 
       - name: Checkout karamel
         uses: actions/checkout@master
@@ -61,6 +62,8 @@ jobs:
           name: fstar.tar.gz
       - run: tar -xzf fstar.tar.gz
       - run: echo "FSTAR_EXE=$(pwd)/fstar/bin/fstar.exe" >> $GITHUB_ENV
+      - run: echo "OTHERFLAGS=--proof_recovery" >> $GITHUB_ENV
+
 
       # krml test needs node
       - uses: actions/setup-node@v4
@@ -89,6 +92,7 @@ jobs:
           name: fstar.tar.gz
       - run: tar -xzf fstar.tar.gz
       - run: echo "FSTAR_EXE=$(pwd)/fstar/bin/fstar.exe" >> $GITHUB_ENV
+      - run: echo "OTHERFLAGS=--proof_recovery" >> $GITHUB_ENV
 
       - name: Checkout steel
         uses: actions/checkout@master
@@ -121,6 +125,8 @@ jobs:
           name: fstar.tar.gz
       - run: tar -xzf fstar.tar.gz
       - run: echo "FSTAR_EXE=$(pwd)/fstar/bin/fstar.exe" >> $GITHUB_ENV
+      - run: echo "OTHERFLAGS=--proof_recovery" >> $GITHUB_ENV
+
 
       - uses: mtzguido/gci-download@master
         with:
@@ -150,6 +156,7 @@ jobs:
           name: fstar.tar.gz
       - run: tar -xzf fstar.tar.gz
       - run: echo "FSTAR_EXE=$(pwd)/fstar/bin/fstar.exe" >> $GITHUB_ENV
+      - run: echo "OTHERFLAGS=--proof_recovery" >> $GITHUB_ENV
 
       - uses: mtzguido/gci-download@master
         with:
@@ -182,6 +189,7 @@ jobs:
           name: fstar.tar.gz
       - run: tar -xzf fstar.tar.gz
       - run: echo "FSTAR_EXE=$(pwd)/fstar/bin/fstar.exe" >> $GITHUB_ENV
+      - run: echo "OTHERFLAGS=--proof_recovery" >> $GITHUB_ENV
 
       - name: Build (after setting up cargo env)
         run: . $HOME/.cargo/env && make -C pulse -skj$(nproc)
@@ -208,6 +216,7 @@ jobs:
           name: fstar.tar.gz
       - run: tar -xzf fstar.tar.gz
       - run: echo "FSTAR_EXE=$(pwd)/fstar/bin/fstar.exe" >> $GITHUB_ENV
+      - run: echo "OTHERFLAGS=--proof_recovery" >> $GITHUB_ENV
 
       - uses: mtzguido/gci-download@master
         with:
@@ -243,6 +252,7 @@ jobs:
           name: fstar.tar.gz
       - run: tar -xzf fstar.tar.gz
       - run: echo "FSTAR_EXE=$(pwd)/fstar/bin/fstar.exe" >> $GITHUB_ENV
+      - run: echo "OTHERFLAGS=--proof_recovery" >> $GITHUB_ENV
 
       - uses: mtzguido/gci-download@master
         with:
@@ -284,6 +294,7 @@ jobs:
           name: fstar.tar.gz
       - run: tar -xzf fstar.tar.gz
       - run: echo "FSTAR_EXE=$(pwd)/fstar/bin/fstar.exe" >> $GITHUB_ENV
+      - run: echo "OTHERFLAGS=--proof_recovery" >> $GITHUB_ENV
 
       - uses: mtzguido/gci-download@master
         with:
@@ -323,6 +334,7 @@ jobs:
           name: fstar.tar.gz
       - run: tar -xzf fstar.tar.gz
       - run: echo "FSTAR_EXE=$(pwd)/fstar/bin/fstar.exe" >> $GITHUB_ENV
+      - run: echo "OTHERFLAGS=--proof_recovery" >> $GITHUB_ENV
 
       - uses: mtzguido/gci-download@master
         with:
@@ -347,6 +359,7 @@ jobs:
         uses: actions/checkout@master
         with:
           path: everparse/
+          ref: _nik_smt_univs_2025
           repository: project-everest/everparse
 
       - name: Build
@@ -378,6 +391,7 @@ jobs:
           name: fstar.tar.gz
       - run: tar -xzf fstar.tar.gz
       - run: echo "FSTAR_EXE=$(pwd)/fstar/bin/fstar.exe" >> $GITHUB_ENV
+      - run: echo "OTHERFLAGS=--proof_recovery" >> $GITHUB_ENV
 
       - uses: mtzguido/gci-download@master
         with:
@@ -424,6 +438,7 @@ jobs:
           name: fstar.tar.gz
       - run: tar -xzf fstar.tar.gz
       - run: echo "FSTAR_EXE=$(pwd)/fstar/bin/fstar.exe" >> $GITHUB_ENV
+      - run: echo "OTHERFLAGS=--proof_recovery" >> $GITHUB_ENV
 
       - uses: mtzguido/gci-download@master
         with:
@@ -463,6 +478,7 @@ jobs:
           name: fstar.tar.gz
       - run: tar -xzf fstar.tar.gz
       - run: echo "FSTAR_EXE=$(pwd)/fstar/bin/fstar.exe" >> $GITHUB_ENV
+      - run: echo "OTHERFLAGS=--proof_recovery" >> $GITHUB_ENV
 
       - uses: mtzguido/gci-download@master
         with:
@@ -497,6 +513,7 @@ jobs:
           name: fstar.tar.gz
       - run: tar -xzf fstar.tar.gz
       - run: echo "FSTAR_EXE=$(pwd)/fstar/bin/fstar.exe" >> $GITHUB_ENV
+      - run: echo "OTHERFLAGS=--proof_recovery" >> $GITHUB_ENV
 
       - uses: mtzguido/gci-download@master
         with:
@@ -540,6 +557,7 @@ jobs:
           name: fstar.tar.gz
       - run: tar -xzf fstar.tar.gz
       - run: echo "FSTAR_EXE=$(pwd)/fstar/bin/fstar.exe" >> $GITHUB_ENV
+      - run: echo "OTHERFLAGS=--proof_recovery" >> $GITHUB_ENV
 
       - uses: mtzguido/gci-download@master
         with:
@@ -578,6 +596,7 @@ jobs:
           name: fstar.tar.gz
       - run: tar -xzf fstar.tar.gz
       - run: echo "FSTAR_EXE=$(pwd)/fstar/bin/fstar.exe" >> $GITHUB_ENV
+      - run: echo "OTHERFLAGS=--proof_recovery" >> $GITHUB_ENV
 
       - uses: mtzguido/gci-download@master
         with:
@@ -621,6 +640,7 @@ jobs:
           name: fstar.tar.gz
       - run: tar -xzf fstar.tar.gz
       - run: echo "FSTAR_EXE=$(pwd)/fstar/bin/fstar.exe" >> $GITHUB_ENV
+      - run: echo "OTHERFLAGS=--proof_recovery" >> $GITHUB_ENV
 
       - uses: mtzguido/gci-download@master
         with:
@@ -654,6 +674,7 @@ jobs:
           name: fstar.tar.gz
       - run: tar -xzf fstar.tar.gz
       - run: echo "FSTAR_EXE=$(pwd)/fstar/bin/fstar.exe" >> $GITHUB_ENV
+      - run: echo "OTHERFLAGS=--proof_recovery" >> $GITHUB_ENV
 
       - name: Checkout steel
         uses: actions/checkout@master
@@ -687,6 +708,7 @@ jobs:
           name: fstar.tar.gz
       - run: tar -xzf fstar.tar.gz
       - run: echo "FSTAR_EXE=$(pwd)/fstar/bin/fstar.exe" >> $GITHUB_ENV
+      - run: echo "OTHERFLAGS=--proof_recovery" >> $GITHUB_ENV
 
       - uses: actions/checkout@master
         with:
@@ -712,6 +734,7 @@ jobs:
           name: fstar.tar.gz
       - run: tar -xzf fstar.tar.gz
       - run: echo "FSTAR_EXE=$(pwd)/fstar/bin/fstar.exe" >> $GITHUB_ENV
+      - run: echo "OTHERFLAGS=--proof_recovery" >> $GITHUB_ENV
 
       - uses: actions/checkout@master
         with:

@@ -16,20 +16,18 @@
 module Bug077
 
 assume type a
-assume type p : a -> Type
+assume type p : a -> Type u#0
 
 val ok : x:a{p x} -> r:a{p r}
 let ok x = x
-
 val ok2 : x:a{p x} -> r:(option a){Some? r ==> p (Some?.v r)}
 let ok2 x = Some x
-
 val ok3 : x:a{p x} -> option (r:a{p r})
 let ok3 x = Some x
 
 
 assume type b
-assume type q : a -> b -> Type
+assume type q : a -> b -> Type u#0
 
 val ok4 : x:a -> y:b{q x y} -> r:(a & b){q (fst r) (snd r)}
 let ok4 x y = (x, y)

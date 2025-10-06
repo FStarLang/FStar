@@ -44,7 +44,7 @@ let sha1verify k txt tag = eq (sha1 k txt) tag
    used as a pre-condition for MACing and
    a postcondition of MAC verification *)
 
-assume type key_prop : key -> text -> Type
+assume type key_prop : key -> text -> Type0
 type pkey (p:(text -> Type)) = k:key{key_prop k == p}
 
 assume val leak: k:key { forall t. key_prop k t } -> ML bytes

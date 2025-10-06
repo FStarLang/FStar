@@ -165,13 +165,13 @@ layered_effect {
 let pure a wp = unit -> PURE a wp
 
 unfold
-let lift_wp (#a:Type) (#st:Type0) (w:pure_wp a) : wp st a =
-  elim_pure_wp_monotonicity_forall ();
+let lift_wp (#a:Type u#a) (#st:Type0) (w:pure_wp a) : wp st a =
+  elim_pure_wp_monotonicity_forall u#a ();
   fun s0 p -> w (fun x -> p (x, s0))
 
 let lift_pure_st a st wp (f : pure a wp)
   : repr a st (lift_wp wp)
-  = elim_pure_wp_monotonicity_forall ();
+  = elim_pure_wp_monotonicity wp;
     fun s0 -> (f (), s0)
 
 sub_effect PURE ~> ST = lift_pure_st

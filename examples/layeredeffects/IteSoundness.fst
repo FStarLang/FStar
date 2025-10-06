@@ -45,14 +45,16 @@ let return_wp (#a:Type) (x:a) : pure_wp a = as_pure_wp (fun p -> p x)
 let return (a:Type) (x:a) : repr a (return_wp x) = fun () -> x
 
 unfold
-let bind_wp (#a #b:Type) (wp1:pure_wp a) (wp2:a -> pure_wp b) : pure_wp b =
-  elim_pure_wp_monotonicity_forall ();
+let bind_wp (#a:Type u#a) (#b:Type u#b) (wp1:pure_wp a) (wp2:a -> pure_wp b) : pure_wp b =
+  elim_pure_wp_monotonicity_forall u#a ();
+  elim_pure_wp_monotonicity_forall u#b ();
   as_pure_wp (fun p -> wp1 (fun x -> wp2 x p))
-let bind (a b:Type) (wp1:pure_wp a) (wp2:a -> pure_wp b)
+let bind (a:Type u#a) (b:Type u#b) (wp1:pure_wp a) (wp2:a -> pure_wp b)
   (f:repr a wp1)
   (g:(x:a -> repr b (wp2 x)))
   : repr b (bind_wp wp1 wp2)
-  = FStar.Monotonic.Pure.elim_pure_wp_monotonicity_forall ();
+  = FStar.Monotonic.Pure.elim_pure_wp_monotonicity_forall u#a ();
+    FStar.Monotonic.Pure.elim_pure_wp_monotonicity_forall u#b ();
     fun () ->
     let x = f () in
     g x ()
@@ -64,8 +66,8 @@ let subcomp (a:Type) (wp1 wp2:pure_wp a) (f:repr a wp1)
   = f
 
 unfold
-let ite_wp (#a:Type) (wp_then wp_else:pure_wp a) (b:bool) : pure_wp a =
-  elim_pure_wp_monotonicity_forall ();
+let ite_wp (#a:Type u#a) (wp_then wp_else:pure_wp a) (b:bool) : pure_wp a =
+  elim_pure_wp_monotonicity_forall u#a ();
   as_pure_wp (fun p -> (b ==> wp_then p) /\ ((~ b) ==> wp_else p))
 let if_then_else (a:Type) (wp_then wp_else:pure_wp a)
   (f:repr a wp_then) (g:repr a wp_else)

@@ -590,7 +590,16 @@ let mkForall' r (pats, wopt, vars, body) =
     mkQuant' r (Forall, pats, wopt, vars, body)
 let mkExists r (pats, vars, body) =
     mkQuant' r (Exists, pats, None, vars, body)
-
+let mkForallFlat (vars, body) =
+    match body.tm with
+    | Quant(Forall, pats, wopt, sorts, body') ->
+      let closing = vars @ List.map (fun s -> FV ("ignore", s, true)) sorts in
+      mkQuant body.rng true (Forall,
+                             pats |> List.map (List.map (abstr closing)),
+                             wopt,
+                             List.map fv_sort vars@sorts,
+                             abstr closing body')
+    | _ -> mkForall body.rng ([], vars, body)
 let mkLet' (bindings, body) r =
   let vars, es = List.split bindings in
   mkLet (es, abstr vars body) r
@@ -598,11 +607,17 @@ let mkLet' (bindings, body) r =
 let norng = Range.dummyRange
 let mkDefineFun (nm, vars, s, tm, c) = DefineFun(nm, List.map fv_sort vars, s, abstr vars tm, c)
 let constr_id_of_sort sort = Format.fmt1 "%s_constr_id" (strSort sort)
-let fresh_token (tok_name, sort) id =
+let fresh_token (tok, univ_fvs, sort) id =
+    let tok_name =
+      match tok.tm with
+      | App(Var name, _) -> name
+      | _ -> failwith "Unexpected fresh token"
+    in
     let a_name = "fresh_token_" ^tok_name in
     let tm = mkEq(mkInteger' id norng,
                                   mkApp(constr_id_of_sort sort,
-                                        [mkApp (tok_name,[]) norng]) norng) norng in
+                                        [mkApp (tok_name, List.map (fun f -> mkFreeV f norng) univ_fvs) norng]) norng) norng in
+    let tm = mkForall norng ([[tok]], univ_fvs, tm) in
     let a = {assumption_name=escape a_name;
              assumption_caption=Some "fresh token";
              assumption_term=tm;
@@ -701,11 +716,11 @@ let constructor_to_decl rng constr =
         let arg_sorts =
           constr.constr_fields 
           |> List.filter (fun f -> f.field_projectible)
-          |> List.map (fun _ -> Term_sort)
+          |> List.map (fun f -> f.field_sort)
         in
         let base_name = constr.constr_name ^ "@base" in
         let decl = DeclFun(base_name, arg_sorts, Term_sort, Some "Constructor base") in
-        let formals = List.mapi (fun i _ -> mk_fv ("x" ^ show i, Term_sort)) constr.constr_fields in
+        let formals = List.mapi (fun i f -> mk_fv ("x" ^ show i, f.field_sort)) constr.constr_fields in
         let constructed_term = mkApp(constr.constr_name, List.map (fun fv -> mkFreeV fv norng) formals) norng in
         let inj_formals = List.flatten <| List.map2 (fun f fld -> if fld.field_projectible then [f] else []) formals constr.constr_fields in
         let base_term = mkApp(base_name, List.map (fun fv -> mkFreeV fv norng) inj_formals) norng in
@@ -924,6 +939,23 @@ and mkPrelude z3options =
                 (declare-fun FString_constr_id (FString) Int)\n\
                 \n\
                 (declare-sort Term)\n\
+                (declare-datatypes () ((Universe \n\
+                                        (Univ (ulevel Int)))))\n\
+                (define-fun imax ((i Int) (j Int)) Int \n\
+                  (ite (<= i 0) j \n\
+                    (ite (<= j 0) i \n\
+                      (ite (<= i j) j i)))) \n\
+                (define-fun U_zero () Universe (Univ 0))\n\
+                (define-fun U_succ ((u Universe)) Universe\n\
+                  (Univ (+ (ulevel u) 1)))\n\
+                (declare-fun U_max (Universe Universe) Universe) \n\
+                (assert (forall ((u1 Universe) (u2 Universe)) \n\
+                                (! (= (U_max u1 u2)\n\
+                                      (Univ (imax (ulevel u1) (ulevel u2))))\n\
+                                 :pattern ((U_max u1 u2)))))\n\
+                (assert (forall ((u Universe)) (>= (ulevel u) 0)))\n\
+                (declare-fun U_unif (Int) Universe)\n\
+                (declare-fun U_unknown () Universe)\n\
                 (declare-fun Term_constr_id (Term) Int)\n\
                 (declare-sort Dummy_sort)\n\
                 (declare-fun Dummy_value () Dummy_sort)\n\
@@ -966,7 +998,7 @@ and mkPrelude z3options =
                 (declare-fun ConsFuel (Fuel Term) Term)\n\
                 (declare-fun Tm_uvar (Int) Term)\n\
                 (define-fun Reify ((x Term)) Term x)\n\
-                (declare-fun Prims.precedes (Term Term Term Term) Term)\n\
+                (declare-fun Prims.precedes (Universe Universe Term Term Term Term) Term)\n\
                 (declare-fun Range_const (Int) Term)\n\
                 (declare-fun _mul (Int Int) Int)\n\
                 (declare-fun _div (Int Int) Int)\n\
@@ -992,33 +1024,43 @@ and mkPrelude z3options =
    let constrs : constructors = 
      List.map as_constr
        [("FString_const", ["FString_const_proj_0", Int_sort, true], String_sort, 0, true);
-        ("Tm_type",  [], Term_sort, 2, true);
+        ("Tm_type",  ["Tm_type_0", Sort "Universe", true], Term_sort, 2, true);
         ("Tm_arrow", [("Tm_arrow_id", Int_sort, true)],  Term_sort, 3, false);
         ("Tm_unit",  [], Term_sort, 6, true);
         (fst boxIntFun,     [snd boxIntFun,  Int_sort, true],   Term_sort, 7, true);
         (fst boxBoolFun,    [snd boxBoolFun, Bool_sort, true],  Term_sort, 8, true);
         (fst boxStringFun,  [snd boxStringFun, String_sort, true], Term_sort, 9, true);
-        (fst boxRealFun,    [snd boxRealFun, Sort "Real", true], Term_sort, 10, true)] in
+        (fst boxRealFun,    [snd boxRealFun, Sort "Real", true], Term_sort, 10, true);
+        ("LexCons",    [("LexCons_0", Term_sort, true); ("LexCons_1", Term_sort, true); ("LexCons_2", Term_sort, true)], Term_sort, 11, true);
+      ] in
    let bcons = constrs |> List.collect (constructor_to_decl norng)
                        |> List.map (declToSmt z3options) |> String.concat "\n" in
 
    let precedes_partial_app = "\n\
-     (declare-fun Prims.precedes@tok () Term)\n\
+     (declare-fun Prims.precedes@tok (Universe Universe) Term)\n\
      (assert\n\
-      (forall ((@x0 Term) (@x1 Term) (@x2 Term) (@x3 Term))\n\
-       (! (= (ApplyTT (ApplyTT (ApplyTT (ApplyTT Prims.precedes@tok @x0) @x1) @x2) @x3)
-        (Prims.precedes @x0 @x1 @x2 @x3))\n\
-       :pattern ((ApplyTT (ApplyTT (ApplyTT (ApplyTT Prims.precedes@tok @x0) @x1) @x2) @x3)))))\n" in
+     (forall ((u0 Universe) (u1 Universe) (@x0 Term) (@x1 Term) (@x2 Term) (@x3 Term))\n\
+      (! (= (ApplyTT (ApplyTT (ApplyTT (ApplyTT (Prims.precedes@tok u0 u1) @x0) @x1) @x2) @x3)\n\
+       (Prims.precedes u0 u1 @x0 @x1 @x2 @x3))\n\
+     :pattern ((ApplyTT (ApplyTT (ApplyTT (ApplyTT (Prims.precedes@tok u0 u1) @x0) @x1) @x2) @x3)))))\n" in
 
-   let lex_ordering = "\n(declare-fun Prims.lex_t () Term)\n\
-                      (assert (forall ((t1 Term) (t2 Term) (e1 Term) (e2 Term))\n\
-                                                          (! (iff (Valid (Prims.precedes t1 t2 e1 e2))\n\
-                                                                  (Valid (Prims.precedes Prims.lex_t Prims.lex_t e1 e2)))\n\
-                                                          :pattern (Prims.precedes t1 t2 e1 e2))))\n\
-                      (assert (forall ((t1 Term) (t2 Term))\n\
-                                      (! (iff (Valid (Prims.precedes Prims.lex_t Prims.lex_t t1 t2)) \n\
+   let lex_ordering = "\n(define-fun is-Prims.LexCons ((t Term)) Bool \n\
+                                   (is-LexCons t))\n\
+                       (declare-fun Prims.lex_t () Term)\n\
+                       (declare-fun LexTop () Term)\n\
+                       (assert (forall ((u0 Universe) (u1 Universe) (t1 Term) (t2 Term) (x1 Term) (x2 Term) (y1 Term) (y2 Term))\n\
+                                    (iff (Valid (Prims.precedes u0 u1 Prims.lex_t Prims.lex_t (LexCons t1 x1 x2) (LexCons t2 y1 y2)))\n\
+                                         (or (Valid (Prims.precedes u0 u1 t1 t2 x1 y1))\n\
+                                             (and (= x1 y1)\n\
+                                                  (Valid (Prims.precedes u0 u1 Prims.lex_t Prims.lex_t x2 y2)))))))\n\
+                      (assert (forall ((u0 Universe) (u1 Universe) (t1 Term) (t2 Term) (e1 Term) (e2 Term))\n\
+                                                          (! (iff (Valid (Prims.precedes u0 u1 t1 t2 e1 e2))\n\
+                                                                  (Valid (Prims.precedes U_zero U_zero Prims.lex_t Prims.lex_t e1 e2)))\n\
+                                                          :pattern (Prims.precedes u0 u1 t1 t2 e1 e2))))\n\
+                      (assert (forall ((u0 Universe) (u1 Universe) (t1 Term) (t2 Term))\n\
+                                      (! (iff (Valid (Prims.precedes u0 u1 Prims.lex_t Prims.lex_t t1 t2)) \n\
                                               (Prec t1 t2))\n\
-                                      :pattern ((Prims.precedes Prims.lex_t Prims.lex_t t1 t2)))))\n" in
+                                      :pattern ((Prims.precedes u0 u1 Prims.lex_t Prims.lex_t t1 t2)))))\n" in
 
    let valid_intro =
      "(assert (forall ((e Term) (t Term))\n\
@@ -1035,6 +1077,11 @@ and mkPrelude z3options =
                        :pattern ((Valid t))\n\
                        :qid __prelude_valid_elim)))\n"
    in
+   let tm_type_typing =
+     "(assert (forall ((u Universe) (t Term))\n\
+                (! (iff (HasType (Tm_type u) t)\n\
+                        (= t (Tm_type (U_succ u))))\n\
+                   :pattern ((HasType (Tm_type u) t)))))\n"   in
    basic
    ^ bcons
    ^ precedes_partial_app
@@ -1045,6 +1092,7 @@ and mkPrelude z3options =
    ^ (if FStarC.Options.smtencoding_valid_elim()
       then valid_elim
       else "")
+   ^ tm_type_typing
 
 let declsToSmt        z3options decls = List.map (declToSmt z3options) decls |> String.concat "\n"
 let declToSmt_no_caps z3options decl = render <| declToSmt' false z3options decl
@@ -1071,7 +1119,14 @@ let mk_Range_const () =
     __range_c := !__range_c + 1;
     mkApp("Range_const", [mkInteger' i norng]) norng
 
-let mk_Term_type        = mkApp("Tm_type", []) norng
+let univ_sort           = Sort "Universe"
+let mk_U_zero           = mkApp("U_zero", []) norng
+let mk_U_succ u         = mkApp("U_succ", [u]) norng
+let mk_U_max t0 t1      = mkApp("U_max", [t0;t1]) norng
+let mk_U_name s         = mkFreeV (mk_fv (s, univ_sort)) norng
+let mk_U_unif i         = mkApp("U_unif", [i]) norng
+let mk_U_unknown        = mkApp("U_unknown", []) norng
+let mk_Term_type u      = mkApp("Tm_type", [u]) norng
 let mk_Term_app t1 t2 r = mkApp("Tm_app", [t1;t2]) r
 let mk_Term_uvar i    r = mkApp("Tm_uvar", [mkInteger' i norng]) r
 let mk_Term_unit        = mkApp("Tm_unit", []) norng
@@ -1139,7 +1194,7 @@ let mk_Valid t        = match t.tm with
     | _ ->
         mkApp("Valid",  [t]) t.rng
 let mk_unit_type = mkApp("Prims.unit", []) norng
-let mk_subtype_of_unit v = mkApp("Prims.subtype_of", [v;mk_unit_type]) v.rng
+let mk_subtype_of_unit v = mkApp("Prims.subtype_of", [mk_U_zero;mk_U_zero;v;mk_unit_type]) v.rng
 let mk_HasType v t    = mkApp("HasType", [v;t]) t.rng
 let mk_HasTypeZ v t   = mkApp("HasTypeZ", [v;t]) t.rng
 let mk_IsTotFun t     = mkApp("IsTotFun", [t]) t.rng
@@ -1154,9 +1209,12 @@ let mk_NoHoist dummy b = mkApp("NoHoist", [dummy;b]) b.rng
 let mk_tester n t     = mkApp("is-"^n,   [t]) t.rng
 let mk_ApplyTF t t'   = mkApp("ApplyTF", [t;t']) t.rng
 let mk_ApplyTT t t'  r  = mkApp("ApplyTT", [t;t']) r
-let kick_partial_app t  = mk_ApplyTT (mkApp("__uu__PartialApp", []) t.rng) t t.rng |> mk_Valid
 let mk_String_const s r = mkApp ("FString_const", [mk (String s) r]) r
-let mk_Precedes x1 x2 x3 x4 r = mkApp("Prims.precedes", [x1;x2;x3;x4])  r|> mk_Valid
+let mk_Precedes_term u0 u1 x1 x2 x3 x4 r = mkApp("Prims.precedes", [u0;u1;x1;x2;x3;x4]) r
+let mk_Precedes u0 u1 x1 x2 x3 x4 r = mk_Valid (mk_Precedes_term u0 u1 x1 x2 x3 x4 r)
+let mk_lex_t r = mkApp("Prims.lex_t", []) r
+let mk_LexCons x1 x2 x3 r  = mkApp("LexCons", [x1;x2;x3]) r
+let mk_LexTop r  = mkApp("LexTop", []) r
 let rec n_fuel n =
     if n = 0 then mkApp("ZFuel", []) norng
     else mkApp("SFuel", [n_fuel (n - 1)]) norng
@@ -1165,8 +1223,16 @@ let mk_and_l l r = List.fold_right (fun p1 p2 -> mkAnd(p1, p2) r) l (mkTrue r)
 
 let mk_or_l l r = List.fold_right (fun p1 p2 -> mkOr(p1,p2) r) l (mkFalse r)
 
-let mk_haseq t = mk_Valid (mkApp ("Prims.hasEq", [t]) t.rng)
+let mk_haseq u t = mk_Valid (mkApp ("Prims.hasEq", [u; t]) t.rng)
 let dummy_sort = Sort "Dummy_sort"
+
+instance showable_sort : showable sort = {
+  show = strSort
+}
+
+instance showable_fv : showable fv = {
+  show = fun (FV (n, _, _)) -> n
+}
 
 instance showable_smt_term = {
   show = print_smt_term;
@@ -1174,6 +1240,10 @@ instance showable_smt_term = {
 
 instance showable_decl = {
   show = declToSmt_no_caps "";
+}
+
+instance showable_decls_elt = {
+  show = fun d -> show d.decls
 }
 
 let rec names_of_decl d =

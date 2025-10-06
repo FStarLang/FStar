@@ -1221,7 +1221,7 @@ let lemma_dll_links_contained (#t:Type) (h0:heap) (d:dll t) (i:nat) :
     lemma_unsnoc_is_last nl
 
 #set-options "--z3rlimit 10 --initial_ifuel 2"
-
+#restart-solver
 let lemma_dll_links_disjoint (#t:Type) (h0:heap) (d:dll t) (i:nat) :
   Lemma
     (requires (
@@ -1964,8 +1964,8 @@ let dll_append (#t:Type) (d1 d2:dll t) :
 
 #reset-options
 
-#set-options "--z3rlimit 60 --max_fuel 2 --max_ifuel 1"
-
+#set-options "--z3rlimit 200 --max_fuel 2 --max_ifuel 1 --query_stats --split_queries no --z3smtopt '(set-option :smt.qi.eager_threshold 5)'"
+#restart-solver
 let dll_split_using (#t:Type) (d:dll t) (e:pointer (node t)) :
   StackInline (dll t * dll t)
     (requires (fun h0 ->
