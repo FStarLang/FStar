@@ -41,21 +41,17 @@ let guard_handler_t = Env.env -> typ -> bool
 type env = {
    tcenv : Env.env;
    allow_universe_instantiation : bool;
-   max_binder_index : int;
    guard_handler : option guard_handler_t;
    should_read_cache: bool
 }
 
-let push_binder g b =
-  if b.binder_bv.index <= g.max_binder_index
-  then failwith "Assertion failed: unexpected shadowing in the core environment"
-  else { g with tcenv = Env.push_binders g.tcenv [b]; max_binder_index = b.binder_bv.index }
+let push_binder g b = { g with tcenv = Env.push_binders g.tcenv [b] }
 
 let push_binders = List.fold_left push_binder
 
 let fresh_binder (g:env) (old:binder)
   : env & binder
-  = let ctr = g.max_binder_index + 1 in
+  = let ctr = FStarC.GenSym.next_id() in
     let bv = { old.binder_bv with index = ctr } in
     let b = S.mk_binder_with_attrs bv old.binder_qual old.binder_positivity old.binder_attrs in
     push_binder g b, b
@@ -1863,20 +1859,8 @@ and pattern_branch_condition (g:env)
       | guards -> return (Some (U.mk_and_l guards))
 
 let initial_env g gh =
-  let max_index =
-      List.fold_left
-        (fun index b ->
-          match b with
-          | Binding_var x ->
-            if x.index > index
-            then x.index
-            else index
-          | _ -> index)
-        0 g.Env.gamma
-  in
   { tcenv = g;
     allow_universe_instantiation = false;
-    max_binder_index = max_index;
     guard_handler = gh;
     should_read_cache = true }
 
