@@ -927,6 +927,7 @@ and desugar_decl (env:env_t)
                  (d:Sugar.decl)
 : err SW.decl
 = match d with
+  // A normal definition with a statament body, recursive or not
   | Sugar.FnDefn { id; is_rec; us; binders; ascription=Inl ascription; measure; body=Inl body; range } ->
     let! env, bs, bvs = desugar_binders env binders in
     let! pannots = parse_annots ascription.range ascription.annots in
@@ -951,6 +952,7 @@ and desugar_decl (env:env_t)
     let! qbs = map2 faux bs bvs in
     return (SW.fn_defn range id is_rec us qbs comp meas body)
 
+  // A (non-recursive) definition where the body is a lambda.
   | Sugar.FnDefn { id; is_rec=false; us; binders; ascription=Inr ascription; measure=None; body=Inr body; range } ->
     let! env, bs, bvs = desugar_binders env binders in
     let! comp = 
@@ -962,6 +964,11 @@ and desugar_decl (env:env_t)
     let! qbs = map2 faux bs bvs in
     return (SW.fn_defn range id false us qbs comp None body)
 
+  // A recursive definition where the body is a lambda, not supported yet.
+  | Sugar.FnDefn { id; is_rec=true; us; binders; ascription=Inr ascription; measure=None; body=Inr body; range } ->
+    fail "Recursive Pulse functions cannot be defined as lambdas (yet)" range
+
+  // Just a val declaration, with a computation type
   | Sugar.FnDecl { id; us; binders; ascription=Inl ascription; range } ->
     let! env, bs, bvs = desugar_binders env binders in
 
@@ -976,6 +983,14 @@ and desugar_decl (env:env_t)
     let! qbs = map2 faux bs bvs in
     let comp = close_comp_bvs comp (List.Tot.map (fun (_,_,bv) -> bv) qbs) in
     return (SW.fn_decl range id us qbs comp)
+
+  // A val declaration with an F* type. Currently the parser forbids them,
+  // but make sure to raise a nice error if we ever get one.
+  | Sugar.FnDecl { id; us; binders; ascription=Inr ascription; range } ->
+    fail "Unexpected FnDecl with F* type" range
+
+  | _ ->
+    fail "Unexpected Pulse declaration" (Sugar.range_of_decl d)
 
 and as_qual (env:env_t) (q:A.aqual) rng : err qual =
   match q with
