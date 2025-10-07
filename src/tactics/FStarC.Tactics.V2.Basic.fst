@@ -1219,40 +1219,30 @@ let split_env (bvar : bv) (e : env) : option (env & bv & list bv) =
     in
     Option.map (fun (e', bv, bvs) -> (e', bv, List.rev bvs)) (aux e)
 
-let subst_goal (b1 : bv) (b2 : bv) (g:goal) : tac (option (bv & goal)) =
+let subst_goal (b1 : bv) (b2 : bv) (g:goal) : tac (option goal) =
     match split_env b1 (goal_env g) with
     | Some (e0, b1, bvs) ->
-        let bs = List.map S.mk_binder (b1::bvs) in
+        let bs = List.map S.mk_binder bvs in
 
         let t = goal_type g in
 
-        (* Close the binders and t *)
-        let bs', t' = SS.close_binders bs, SS.close bs t in
+        let subst = [S.NT (b1, S.bv_to_name b2)] in
+        let bs' = SS.subst_binders subst bs in
+        let t' = SS.subst subst t in
 
-        (* Replace b1 (the head) by b2 *)
-        let bs' = S.mk_binder b2 :: List.tail bs' in
+        let new_env = Env.push_binders e0 (S.mk_binder b2 :: bs') in
 
-        (* Re-open, all done for renaming *)
-        let new_env, bs'', t'' = Core.open_binders_in_term e0 bs' t' in
-
-        // (* b2 has been freshened *)
-        let b2 = (List.hd bs'').binder_bv in
-
-        // (* Make a new goal in the new env (with new binders) *)
-        let! uvt, uv = new_uvar "subst_goal" new_env t''
+        (* Make a new goal in the new env (with new binders) *)
+        let! uvt, uv = new_uvar "subst_goal" new_env t'
                                (Some (should_check_goal_uvar g))
                                (goal_typedness_deps g)
                                (rangeof g) in
 
         let goal' = mk_goal new_env uv g.opts g.is_guard g.label in
 
-        (* Solve the old goal with an application of the new witness *)
-        let sol = U.mk_app (U.abs bs'' uvt None)
-                           (List.map (fun ({binder_bv=bv;binder_qual=q}) -> S.as_arg (S.bv_to_name bv)) bs) in
+        set_solution g uvt ;!
 
-        set_solution g sol ;!
-
-        return (Some (b2, goal'))
+        return (Some goal')
 
     | None ->
         return None
@@ -1263,7 +1253,8 @@ let rewrite (hh:RD.binding) : tac unit = wrap_err "rewrite" <| (
     let bv = h.binder_bv in
     if_verbose (fun _ -> Format.print2 "+++Rewrite %s : %s\n" (show bv) (show bv.sort)) ;!
     match split_env bv (goal_env goal) with
-    | None -> fail "binder not found in environment"
+    | None -> 
+      fail "binder not found in environment"
     | Some (e0, bv, bvs) ->
       begin
       match destruct_eq e0 bv.sort with
@@ -1277,23 +1268,20 @@ let rewrite (hh:RD.binding) : tac unit = wrap_err "rewrite" <| (
           let t = goal_type goal in
           let bs = List.map S.mk_binder bvs in
 
-          let bs', t' = SS.close_binders bs, SS.close bs t in
-          let bs', t' = SS.subst_binders s bs', SS.subst s t' in
+          let bs', t' = SS.subst_binders s bs, SS.subst s t in
           let e0 = Env.push_bvs e0 [bv] in
-          let new_env, bs'', t'' = Core.open_binders_in_term e0 bs' t' in
+          let new_env = Env.push_binders e0 bs' in
 
           let! uvt, uv =
-               new_uvar "rewrite" new_env t''
+               new_uvar "rewrite" new_env t'
                            (Some (should_check_goal_uvar goal))
                            (goal_typedness_deps goal)
                            (rangeof goal)
           in
           let goal' = mk_goal new_env uv goal.opts goal.is_guard goal.label in
-          let sol = U.mk_app (U.abs bs'' uvt None)
-                             (List.map (fun ({binder_bv=bv}) -> S.as_arg (S.bv_to_name bv)) bs) in
 
           (* See comment in subst_goal *)
-          set_solution goal sol ;!
+          set_solution goal uvt ;!
           replace_cur goal'
 
         | _ ->
@@ -1350,10 +1338,9 @@ let rename_to (b : RD.binding) (s : string) : tac RD.binding = wrap_err "rename_
     let bv' = freshen_bv ({ bv with ppname = mk_ident (s, (range_of_id bv.ppname)) }) in
     match! subst_goal bv bv' goal with
     | None -> fail "binder not found in environment"
-    | Some (bv', goal) ->
+    | Some goal ->
       replace_cur goal ;!
-      let uniq = bv'.index in
-      return {b with uniq=uniq; ppname = Sealed.seal s}
+      return { b with RD.ppname = Sealed.seal s}
     )
 
 let var_retype (b : RD.binding) : tac unit = wrap_err "binder_retype" <| (
