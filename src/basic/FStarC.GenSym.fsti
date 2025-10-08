@@ -31,6 +31,3 @@ val reset_gensym        : unit -> unit
 (** Do something without affecting the gensym. Useful e.g. for printing,
 to make sure there's no side effect. *)
 val with_frozen_gensym  : (unit -> 'a) -> 'a
-
-(** Set the gensym to i, do something without affecting the gensym. *)
-val with_frozen_gensym_from  : int -> (unit -> 'a) -> 'a

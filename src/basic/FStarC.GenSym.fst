@@ -20,13 +20,3 @@ let with_frozen_gensym f =
   in
   gensym_st := v;
   r
-
-let with_frozen_gensym_from i f =
-  let v = !gensym_st in
-  gensym_st := i;
-  let r =
-    try f () with
-    | e -> (gensym_st := v; raise e)
-  in
-  gensym_st := v;
-  r

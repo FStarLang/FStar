@@ -44,6 +44,7 @@ type env = {
    allow_universe_instantiation : bool;
    guard_handler : option guard_handler_t;
    should_read_cache: bool;
+   max_binder_index: int
 }
 
 
@@ -52,16 +53,26 @@ let debug g f =
   then f ()
 
 let max a b = if a > b then a else b
-let push_binder g b = { g with tcenv = Env.push_binders g.tcenv [b] }
+let push_binder g b = { g with max_binder_index=max g.max_binder_index b.binder_bv.index; 
+                               tcenv = Env.push_binders g.tcenv [b] }
 
 let push_binders = List.fold_left push_binder
 
 let fresh_binder (g:env) (old:binder)
   : env & binder
-  = let ctr = FStarC.GenSym.next_id() in
+  = let ctr = g.max_binder_index + 1 in
     let bv = { old.binder_bv with index = ctr } in
     let b = S.mk_binder_with_attrs bv old.binder_qual old.binder_positivity old.binder_attrs in
     push_binder g b, b
+
+let wild_bv (t:typ) (r:Range.t) : bv =
+  { ppname=Ident.mk_ident (Ident.reserved_prefix, r); index=0; sort=t }
+
+let new_binder (g:env) (t:typ) (r:Range.t)
+: env & binder
+= let bv = wild_bv t r in
+  let b = S.mk_binder bv in
+  fresh_binder g b
 
 let open_binders (g:env) (bs:binders)
   = let g, bs_rev, subst =
@@ -407,12 +418,9 @@ let rec is_arrow (g:env) (t:term)
               let (pre, _)::(post, _)::_ = U.comp_effect_args c in
               let arg_typ = U.refine x.binder_bv pre in
               let res_typ =
-                (* We don't need to open the comp here, because
-                   the binder x is already in scope in post,
-                   having been opened in arrow_formals_comp above *)
-                let r = S.new_bv None (U.comp_result c) in
-                let post = S.mk_Tm_app post [(S.bv_to_name r, None)] post.pos in
-                U.refine r post
+                let g, r = new_binder g (U.comp_result c) (U.comp_result c).pos in
+                let post = S.mk_Tm_app post [(S.bv_to_name r.binder_bv, None)] post.pos in
+                U.refine r.binder_bv post
               in
               let xbv = { x.binder_bv with sort = arg_typ } in
               let x = { x with binder_bv = xbv } in
@@ -548,9 +556,8 @@ let guard (t:typ)
   : result unit
   = fun _ -> Success ((), Some t)
 
-let abs (a:typ) (f: binder -> term) : term =
-  let x = S.new_bv None a in
-  let xb = S.mk_binder x in
+let abs (g:env) (a:typ) (f: binder -> term) : term =
+  let g, xb = new_binder g a a.pos in
   U.abs [xb] (f xb) None
 
 let weaken_subtyping_guard (p:term)
@@ -575,9 +582,8 @@ let weaken_with_guard_formula (p:FStarC.TypeChecker.Common.guard_formula) (g:res
     | Common.NonTrivial p -> weaken p g
 
 let push_hypothesis (g:env) (h:term) =
-    let bv = S.new_bv (Some h.pos) h in
-    let b = S.mk_binder bv in
-    fst (fresh_binder g b)
+    let g, h = new_binder g h h.pos in
+    g
 
 let strengthen (p:term) (g:result 'a)
   = fun ctx ->
@@ -1443,12 +1449,6 @@ and do_check (g:env) (e:term)
   | Tm_app _ -> (
     let rec check_app_arg (eff_hd, t_hd) (arg, arg_qual) =
       let! x, eff_arr, t' = is_arrow g t_hd in
-      debug g (fun _ -> 
-        Format.print4 "Checking app arg %s as argument to arrow of type %s -> %s (%s)\n" 
-          (show arg)
-          (show x.binder_bv.sort)
-          (show eff_arr) 
-          (show t'));
       let! eff_arg, t_arg = check "app arg" g arg in
       with_context "app subtyping" (Some (CtxTerm arg)) (fun _ -> check_subtype g (Some arg) t_arg x.binder_bv.sort) ;!
       with_context "app arg qual" None (fun _ -> check_arg_qual arg_qual x.binder_qual) ;!
@@ -1519,9 +1519,7 @@ and do_check (g:env) (e:term)
     )
 
   | Tm_match {scrutinee=sc; ret_opt=None; brs=branches; rc_opt} ->
-    debug g (fun _ -> Format.print1 "Checking match scrutinee %s\n" (show sc));
     let! eff_sc, t_sc = check "scrutinee" g sc in
-    debug g (fun _ -> Format.print2 "Checked match scrutinee %s at type %s\n" (show sc) (show t_sc));
     let! u_sc = with_context "universe_of" (Some (CtxTerm t_sc)) (fun _ -> universe_of g t_sc) in
     let rec check_branches path_condition
                            branch_typ_opt
@@ -1868,16 +1866,16 @@ and pattern_branch_condition (g:env)
       return (Some (U.mk_decidable_eq t_const scrutinee const_exp))
 
     | Pat_cons(fv, us_opt, sub_pats) ->
-      let wild_pat pos = S.withinfo (Pat_var (S.new_bv None S.tun)) pos in
+      let wild_pat pos = S.withinfo (Pat_var (wild_bv S.tun pos)) pos in
       let mk_head_discriminator () =
         let pat = S.withinfo (Pat_cons(fv, us_opt, List.map (fun (s, b) -> wild_pat s.p, b) sub_pats)) pat.p in
         let branch1 = (pat, None, U.exp_true_bool) in
-        let branch2 = (S.withinfo (Pat_var (S.new_bv None S.tun)) pat.p, None, U.exp_false_bool) in
+        let branch2 = (S.withinfo (Pat_var (wild_bv S.tun pat.p)) pat.p, None, U.exp_false_bool) in
         S.mk (Tm_match {scrutinee; ret_opt=None; brs=[branch1; branch2]; rc_opt=None}) scrutinee.pos
       in
       let mk_ith_projector i =
         let ith_pat_var, ith_pat =
-            let bv = S.new_bv None S.tun in
+            let bv = wild_bv S.tun scrutinee.pos in
             bv, S.withinfo (Pat_var bv) scrutinee.pos
         in
         let sub_pats = List.mapi (fun j (s,b) -> if i <> j then wild_pat s.p,b else ith_pat,b) sub_pats in
@@ -1928,7 +1926,9 @@ let initial_env g gh =
   { tcenv = g;
     allow_universe_instantiation = false;
     guard_handler = gh;
-    should_read_cache = true }, max_index
+    should_read_cache = true;
+    max_binder_index = max_index
+  }
 
 //
 // In case the expected type and effect are set,
@@ -1936,36 +1936,31 @@ let initial_env g gh =
 //
 let check_term_top g e topt (must_tot:bool) (gh:option guard_handler_t)
   : result (tot_or_ghost & typ)
-  = let g, max_binder_index = initial_env g gh in
-    fun ctx -> 
-    FStarC.GenSym.with_frozen_gensym_from max_binder_index (fun _ ->
-      let k () =
-        let! eff_te = check "top" g e in
-        match topt with
-        | None ->
-          // check expected effect
-          if must_tot
-          then let eff, t = eff_te in 
-              if eff = E_Ghost &&
-                  not (non_informative g t)
-              then fail_str "expected total effect, found ghost"
-              else return (E_Total, t)
-          else return eff_te
-        | Some t ->
-          let target_comp, eff =
-            if must_tot || fst eff_te = E_Total
-            then S.mk_Total t, E_Total
-            else S.mk_GTotal t, E_Ghost
-          in
-          with_context "top-level subtyping" None (fun _ ->
-            check_relation_comp
-              ({ g with allow_universe_instantiation = true})
-              (SUBTYPING (Some e))
-              (as_comp g eff_te)
-              target_comp) ;!
-          return (eff, t)
+  = let g = initial_env g gh in
+    let! eff_te = check "top" g e in
+    match topt with
+    | None ->
+      // check expected effect
+      if must_tot
+      then let eff, t = eff_te in 
+          if eff = E_Ghost &&
+              not (non_informative g t)
+          then fail_str "expected total effect, found ghost"
+          else return (E_Total, t)
+      else return eff_te
+    | Some t ->
+      let target_comp, eff =
+        if must_tot || fst eff_te = E_Total
+        then S.mk_Total t, E_Total
+        else S.mk_GTotal t, E_Ghost
       in
-      k () ctx)
+      with_context "top-level subtyping" None (fun _ ->
+        check_relation_comp
+          ({ g with allow_universe_instantiation = true})
+          (SUBTYPING (Some e))
+          (as_comp g eff_te)
+          target_comp) ;!
+      return (eff, t)
 
 let simplify_steps =
     [Env.Beta;
@@ -2069,17 +2064,17 @@ let compute_term_type_handle_guards g e gh =
   | Error err -> Inr err
 
 let open_binders_in_term (env:Env.env) (bs:binders) (t:term) =
-  let g, _ = initial_env env None in
+  let g = initial_env env None in
   let g', bs, t = open_term_binders g bs t in
   g'.tcenv, bs, t
 
 let open_binders_in_comp (env:Env.env) (bs:binders) (c:comp) =
-  let g, _ = initial_env env None in
+  let g = initial_env env None in
   let g', bs, c = open_comp_binders g bs c in
   g'.tcenv, bs, c
 
 let check_term_equality guard_ok unfolding_ok g t0 t1
-  = let g, _ = initial_env g None in
+  = let g = initial_env g None in
     if !dbg_Top then
        Format.print4 "Entering check_term_equality with %s and %s (guard_ok=%s; unfolding_ok=%s) {\n"
          (show t0) (show t1) (show guard_ok) (show unfolding_ok);
@@ -2095,7 +2090,7 @@ let check_term_equality guard_ok unfolding_ok g t0 t1
     r
 
 let check_term_subtyping guard_ok unfolding_ok g t0 t1
-  = let g, _ = initial_env g None in
+  = let g = initial_env g None in
     let ctx = { unfolding_ok = unfolding_ok; no_guard = not guard_ok; error_context = [("Subtyping", None)] } in
     match check_relation g (SUBTYPING None) t0 t1 ctx with
     | Success (_, g) -> Inl g
