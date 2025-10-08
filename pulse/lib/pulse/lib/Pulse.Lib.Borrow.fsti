@@ -23,6 +23,10 @@ open Pulse.Lib.Shift
 [@@erasable]
 val lifetime : Type0
 
+inline_for_extraction noextract
+instance noninformative_lifetime : NonInformative.non_informative lifetime =
+  { reveal = ((fun a -> a) <: NonInformative.revealer lifetime) }
+
 [@@coercion]
 val lifetime_alive : lifetime -> slprop
 
@@ -66,6 +70,16 @@ ghost fn share_borrow #a (p q1 q2: timeless_slprop)
   ensures a >:> q1
   ensures a >:> q2
 
+ghost fn weaken_opened' #a (p q: slprop) #qs
+  requires lifetime_opened a (p::qs)
+  requires trade (later q) (later p)
+  ensures lifetime_opened a (q::qs)
+
+ghost fn weaken_opened #a (p q: timeless_slprop) #qs
+  requires lifetime_opened a (Cons #slprop p qs)
+  requires trade q p
+  ensures lifetime_opened a (Cons #slprop q qs)
+
 ghost fn sub_borrow' (#a: lifetime) (p q: slprop)
   requires trade (later p) (later q ** trade (later q) (later p))
   preserves a
@@ -81,6 +95,10 @@ ghost fn sub_borrow (#a: lifetime) (p q: timeless_slprop)
 ghost fn open_lifetime (a: lifetime)
   requires a
   ensures lifetime_opened a []
+
+ghost fn close_lifetime (a: lifetime)
+  requires lifetime_opened a []
+  ensures a
 
 ghost fn use_borrow' (a: lifetime) (p: slprop) #q
   requires lifetime_opened a q
@@ -106,12 +124,12 @@ ghost fn end_use_borrow (a: lifetime) (p: slprop) (#qs: list slprop)
   ensures lifetime_opened a qs
   ensures a >:> p
 
-ghost fn end_borrow' (a: lifetime) #p
+ghost fn end_borrow' (a: lifetime) p
   preserves lifetime_dead a
   requires borrowed a p
   ensures later p
 
-ghost fn end_borrow (a: lifetime) (#p: timeless_slprop)
+ghost fn end_borrow (a: lifetime) (p: timeless_slprop)
   preserves lifetime_dead a
   requires borrowed a p
   ensures p

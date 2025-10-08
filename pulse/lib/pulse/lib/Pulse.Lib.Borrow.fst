@@ -628,6 +628,36 @@ ghost fn rt_stored_mono a n y z
   }
 }
 
+ghost fn weaken_opened' #a (p q: slprop) #qs
+  requires lifetime_opened a (p::qs)
+  requires trade (later q) (later p)
+  ensures lifetime_opened a (q::qs)
+{
+  unfold lifetime_opened a (p::qs); with y n. _;
+  intro (trade (trade (star_later_slprops (p :: qs)) y)
+      (trade (star_later_slprops (q :: qs)) y)) #(trade (later q) (later p)) fn _ {
+    unfold star_later_slprops (q :: qs);
+    elim_trade (later q) (later p);
+    fold star_later_slprops (p :: qs);
+    elim_trade _ _;
+  };
+  rt_stored_mono a n (trade (star_later_slprops (p::qs)) y) (trade (star_later_slprops (q::qs)) y);
+  fold lifetime_opened a (q::qs);
+}
+
+ghost fn weaken_opened #a (p q: timeless_slprop) #qs
+  requires lifetime_opened a (Cons #slprop p qs)
+  requires trade q p
+  ensures lifetime_opened a (Cons #slprop q qs)
+{
+  intro (trade (later q) (later p)) #(trade q p) fn _ {
+    later_elim_timeless q;
+    elim_trade q p;
+    later_intro p;
+  };
+  weaken_opened' p q;
+}
+
 ghost fn open_lifetime (a: lifetime)
   requires a
   ensures lifetime_opened a []
@@ -636,6 +666,19 @@ ghost fn open_lifetime (a: lifetime)
   intro (trade y (trade (star_later_slprops []) y)) fn _ { unfold star_later_slprops [] };
   rt_stored_mono a n y (trade (star_later_slprops []) y);
   fold lifetime_opened a [];
+}
+
+ghost fn close_lifetime (a: lifetime)
+  requires lifetime_opened a []
+  ensures a
+{
+  unfold lifetime_opened a []; with y n. _;
+  intro (trade (trade (star_later_slprops []) y) y) fn _ {
+    fold star_later_slprops [];
+    elim_trade (star_later_slprops []) y
+  };
+  rt_stored_mono a n (trade (star_later_slprops []) y) y;
+  fold lifetime_alive a;
 }
 
 ghost fn fpts_to_of_root_idx' x j r
@@ -893,50 +936,6 @@ ghost fn push_new_root_internal (a: lifetime) (q: slprop) (#n: unat) (#y #z: slp
   )
 }
 
-ghost fn sub_borrow' (#a: lifetime) (p q: slprop)
-  requires trade (later p) (later q ** trade (later q) (later p))
-  preserves a
-  requires a >:> p
-  ensures a >:> q
-{
-  unfold lifetime_alive a; with y n. _;
-  unfold (a >:> p); with j is r l. _;
-  rt_stored_take a n y j is p;
-  elim_trade (later p) _;
-  push_new_root_internal a q;
-  intro (trade (later q ** trade (later p) y) (emp ** y))
-      #(trade (later q) (later p)) fn _ {
-    elim_trade (later q) (later p);
-    elim_trade (later p) y;
-  };
-  rt_stored_mono a (Succ n) (later q ** trade (later p) y) (emp ** y);
-  fold lifetime_alive a;
-}
-
-ghost fn sub_borrow (#a: lifetime) (p q: timeless_slprop)
-  requires trade p (q ** trade q p)
-  preserves a
-  requires a >:> p
-  ensures a >:> q
-{
-  unfold lifetime_alive a; with y n. _;
-  unfold (a >:> p); with j is r l. _;
-  rt_stored_take a n y j is p;
-  later_elim_timeless p;
-  elim_trade p _;
-  later_intro q;
-  push_new_root_internal a q;
-  intro (trade (later q ** trade (later p) y) (emp ** y))
-      #(trade q p) fn _ {
-    later_elim_timeless q;
-    elim_trade q p;
-    later_intro p;
-    elim_trade (later p) y;
-  };
-  rt_stored_mono a (Succ n) (later q ** trade (later p) y) (emp ** y);
-  fold lifetime_alive a;
-}
-
 ghost fn use_borrow' (a: lifetime) (p: slprop) (#qs: list slprop)
   requires lifetime_opened a qs
   requires a >:> p
@@ -970,6 +969,40 @@ ghost fn end_use_borrow' (a: lifetime) (p: slprop) (#qs: list slprop)
   };
   rt_stored_mono a (Succ n) _ _;
   fold lifetime_opened a qs;
+}
+
+ghost fn sub_borrow' (#a: lifetime) (p q: slprop)
+  requires trade (later p) (later q ** trade (later q) (later p))
+  preserves a
+  requires a >:> p
+  ensures a >:> q
+{
+  open_lifetime a;
+  use_borrow' a p;
+  elim_trade (later p) (later q ** trade (later q) (later p));
+  weaken_opened' p q;
+  end_use_borrow' a q;
+  close_lifetime a;
+}
+
+ghost fn sub_borrow (#a: lifetime) (p q: timeless_slprop)
+  requires trade p (q ** trade q p)
+  preserves a
+  requires a >:> p
+  ensures a >:> q
+{
+  intro (trade (later p) (later q ** trade (later q) (later p)))
+      #(trade p (q ** trade q p)) fn _ {
+    later_elim_timeless p;
+    elim_trade p (q ** trade q p);
+    later_intro q;
+    intro (trade (later q) (later p)) #(trade q p) fn _ {
+      later_elim_timeless q;
+      elim_trade q p;
+      later_intro p;
+    };
+  };
+  sub_borrow' p q;
 }
 
 ghost fn use_borrow (a: lifetime) (p: timeless_slprop) (#q: list slprop)
@@ -1045,7 +1078,7 @@ ghost fn rec rt_borrowed_take x (n: unat) j #r #p
   }
 }
 
-ghost fn end_borrow' (a: lifetime) #p
+ghost fn end_borrow' (a: lifetime) p
   preserves lifetime_dead a
   requires borrowed a p
   ensures later p
@@ -1056,11 +1089,11 @@ ghost fn end_borrow' (a: lifetime) #p
   fold lifetime_dead a;
 }
 
-ghost fn end_borrow (a: lifetime) (#p: timeless_slprop)
+ghost fn end_borrow (a: lifetime) (p: timeless_slprop)
   preserves lifetime_dead a
   requires borrowed a p
   ensures p
 {
-  end_borrow' a;
+  end_borrow' a p;
   later_elim_timeless p;
 }
