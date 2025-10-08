@@ -14,7 +14,7 @@
    limitations under the License.
 *)
 
-module Pulse.Lib.HigherArray
-include Pulse.Lib.HigherArray.Core
-include Pulse.Lib.HigherArray.PtsTo
-include Pulse.Lib.HigherArray.PtsToRange
+module Pulse.Lib.Array.Basic
+include Pulse.Lib.Array.Core
+include Pulse.Lib.Array.PtsTo
+include Pulse.Lib.Array.PtsToRange

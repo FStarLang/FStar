@@ -31,6 +31,7 @@ module U16 = FStar.UInt16
 module U32 = FStar.UInt32
 module PM = Pulse.Lib.PCM.Map
 module FP = Pulse.Lib.PCM.FractionalPreorder
+module GR = Pulse.Lib.GhostPCMReference
 module A = Pulse.Lib.Array
 module PHT = Pulse.Lib.HashTable.Spec
 
@@ -78,7 +79,7 @@ type st = { st_ctr:sid_t; st_tbl:ht_t; }
 //
 [@@ erasable]
 noeq
-type g_session_state : Type u#1 =
+type g_session_state : Type0 =
   | G_UnInitialized : g_session_state
   | G_SessionStart : g_session_state
   | G_Available : repr:context_repr_t -> g_session_state
@@ -163,7 +164,7 @@ let rec well_formed_trace (l:list g_session_state) : prop =
   | _ -> False
 
 noextract
-type trace_elt : Type u#1 = l:list g_session_state { well_formed_trace l }
+type trace_elt : Type = l:list g_session_state { well_formed_trace l }
 
 noextract
 let trace_extension (t0 t1:trace_elt) : prop =
@@ -177,7 +178,7 @@ noextract
 type trace = hist trace_preorder
 
 noextract
-type trace_pcm_t : Type u#1 = FP.pcm_carrier trace_preorder
+type trace_pcm_t : Type = FP.pcm_carrier trace_preorder
 
 //
 // Trace PCM is fractional preorder PCM,
@@ -268,7 +269,7 @@ let full_perm_empty_history_compatible ()
   : Lemma (FStar.PCM.compatible trace_pcm (Some 1.0R, []) (Some 1.0R, [])) = ()
 
 noextract
-type pcm_t : Type u#1 = PM.map sid_t trace_pcm_t
+type pcm_t : Type = PM.map sid_t trace_pcm_t
 
 //
 // The PCM for the DPE state is a map pcm with sid_t keys
@@ -278,7 +279,7 @@ let pcm : PCM.pcm pcm_t = PM.pointwise sid_t trace_pcm
 
 [@@ erasable]
 noextract
-type gref = ghost_pcm_ref pcm
+type gref = GR.gref pcm
 
 noextract
 let emp_trace : trace = []
@@ -293,7 +294,7 @@ let singleton (sid:sid_t) (p:perm) (t:trace) : GTot pcm_t =
 //
 noextract
 let sid_pts_to (r:gref) (sid:sid_t) (t:trace) : slprop =
-  ghost_pcm_pts_to r (singleton sid 0.5R t)
+  GR.pts_to r (singleton sid 0.5R t)
 
 noextract
 type pht_t = PHT.pht_t sid_t session_state
@@ -351,7 +352,7 @@ let dpe_inv (r:gref) (s:option st) : slprop =
   // Global state is not initialized,
   //   all the sessions are unused
   //
-  | None -> ghost_pcm_pts_to r all_sids_unused
+  | None -> GR.pts_to r all_sids_unused
   
   //
   // Global state has been initialized
@@ -360,7 +361,7 @@ let dpe_inv (r:gref) (s:option st) : slprop =
     //
     // sids above counter are unused
     //
-    ghost_pcm_pts_to r (sids_above_unused s.st_ctr) **
+    GR.pts_to r (sids_above_unused s.st_ctr) **
     
     //
     // For sids below counter, we have the session state perm

@@ -1,21 +1,54 @@
+(*
+   Copyright 2025 Microsoft Research
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*)
 module Pulse.Lib.GhostPCMReference
 #lang-pulse
-open Pulse.Lib.Pervasives
+open Pulse.Lib.SmallType
+open Pulse.Lib.Core
+open Pulse.Main
 open FStar.PCM
 
-let gref (#a:Type0) (p:pcm a)
+[@@erasable]
+val core_ghost_pcm_ref : Type0
+
+val null_core_ghost_pcm_ref : core_ghost_pcm_ref
+
+[@@erasable]
+let ghost_pcm_ref (#a: Type u#a) (p: pcm a) : Type0 = core_ghost_pcm_ref
+
+let ghost_pcm_ref_null #a (p:pcm a) : ghost_pcm_ref p = null_core_ghost_pcm_ref
+
+inline_for_extraction
+instance non_informative_ghost_pcm_ref (a: Type u#a) (p:pcm a)
+  : NonInformative.non_informative (ghost_pcm_ref p) =
+  { reveal = ((fun x -> x) <: NonInformative.revealer (ghost_pcm_ref p)) }
+
+[@@erasable]
+let gref (#a:Type) (p:pcm a)
 : Type0
 = ghost_pcm_ref #a p
 
 val pts_to
-    (#a:Type u#0)
+    (#a:Type)
     (#p:pcm a)
     ([@@@mkey]r:gref p)
     (v:a)
 : slprop
 
 val pts_to_is_timeless
-    (#a:Type u#0)
+    (#a:Type)
     (#p:pcm a)
     (r:gref p)
     (v:a)
@@ -23,17 +56,17 @@ val pts_to_is_timeless
         [SMTPat (timeless (pts_to r v))]
         
 ghost 
-fn alloc
-    (#a:Type u#0)
+fn alloc u#a (#a:Type u#a)
     (#pcm:pcm a)
+    {| inst: small_type u#a |}
     (x:a{pcm.refine x})
   requires emp
   returns  r : gref pcm
   ensures  pts_to r x
 
 ghost 
-fn read
-    (#a:Type)
+fn read u#a
+    (#a:Type u#a)
     (#p:pcm a)
     (r:gref p)
     (x:a)
@@ -46,8 +79,8 @@ fn read
   ensures  pts_to r (f v)
 
 ghost
-fn read_simple
-    (#a:Type)
+fn read_simple u#a
+    (#a:Type u#a)
     (#p:pcm a)
     (r:gref p)
     (#x:a)
@@ -56,8 +89,8 @@ fn read_simple
   ensures  pts_to r x
 
 ghost
-fn write
-    (#a:Type)
+fn write u#a
+    (#a:Type u#a)
     (#p:pcm a)
     (r:gref p)
     (x y:a)
@@ -66,8 +99,8 @@ fn write
   ensures  pts_to r y
 
 ghost
-fn share
-    (#a:Type)
+fn share u#a
+    (#a:Type u#a)
     (#pcm:pcm a)
     (r:gref pcm)
     (v0:a)
@@ -77,8 +110,8 @@ fn share
 
 [@@allow_ambiguous]
 ghost
-fn gather
-    (#a:Type)
+fn gather u#a
+    (#a:Type u#a)
     (#pcm:pcm a)
     (r:gref pcm)
     (v0:a)
@@ -86,3 +119,8 @@ fn gather
   requires pts_to r v0 ** pts_to r v1
   returns  squash (composable pcm v0 v1)
   ensures  pts_to r (op pcm v0 v1)
+
+ghost fn pts_to_not_null u#a (#a:Type u#a)
+    (#p:pcm a) (r:gref p) (v:a)
+  preserves pts_to r v
+  ensures pure (r =!= ghost_pcm_ref_null p)

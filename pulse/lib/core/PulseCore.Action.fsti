@@ -188,17 +188,17 @@ val core_ref : Type u#0
 val core_ref_null : core_ref
 val is_core_ref_null (r:core_ref) : b:bool { b <==> r == core_ref_null }
 
-let ref (a:Type u#a) (p:pcm a) : Type u#0 = core_ref
-let ref_null (#a:Type u#a) (p:pcm a) : ref a p = core_ref_null
+let ref (a:Type u#3) (p:pcm a) : Type u#0 = core_ref
+let ref_null #a (p:pcm a) : ref a p = core_ref_null
 
 let is_ref_null (#a:Type) (#p:FStar.PCM.pcm a) (r:ref a p)
 : b:bool { b <==> r == ref_null p }
 = is_core_ref_null r
 
-val pts_to (#a:Type u#1) (#p:pcm a) (r:ref a p) (v:a) : slprop
+val pts_to (#a:Type) (#p:pcm a) (r:ref a p) (v:a) : slprop
 
 val timeless_pts_to
-    (#a:Type u#1)
+    (#a:Type)
     (#p:pcm a)
     (r:ref a p)
     (v:a)
@@ -212,7 +212,7 @@ val pts_to_not_null (#a:Type) (#p:FStar.PCM.pcm a) (r:ref a p) (v:a)
     (fun _ -> pts_to r v)
 
 val alloc
-    (#a:Type u#1)
+    (#a:Type)
     (#pcm:pcm a)
     (x:a{pcm.refine x})
 : act (ref a pcm)
@@ -272,168 +272,6 @@ val gather
     (fun _ -> pts_to r (op pcm v0 v1))
 
 ///////////////////////////////////////////////////////////////////
-// Big references
-///////////////////////////////////////////////////////////////////
-
-val big_pts_to (#a:Type u#2) (#p:pcm a) (r:ref a p) (v:a) : slprop
-
-
-val timeless_big_pts_to
-    (#a:Type u#2)
-    (#p:pcm a)
-    (r:ref a p)
-    (v:a)
-: Lemma (timeless (big_pts_to r v))
-
-val big_pts_to_not_null (#a:Type) (#p:FStar.PCM.pcm a) (r:ref a p) (v:a)
-: act (squash (not (is_ref_null r)))
-    Ghost
-    emp_inames 
-    (big_pts_to r v)
-    (fun _ -> big_pts_to r v)
-
-val big_alloc
-    (#a:Type)
-    (#pcm:pcm a)
-    (x:a{pcm.refine x})
-: act (ref a pcm)
-      Atomic
-      emp_inames
-      emp
-      (fun r -> big_pts_to r x)
-
-val big_read
-    (#a:Type)
-    (#p:pcm a)
-    (r:ref a p)
-    (x:erased a)
-    (f:(v:a{compatible p x v}
-        -> GTot (y:a{compatible p y v /\
-                     FStar.PCM.frame_compatible p x v y})))
-: act (v:a{compatible p x v /\ p.refine v})
-      Atomic
-      emp_inames
-      (big_pts_to r x)
-      (fun v -> big_pts_to r (f v))
-
-val big_write
-    (#a:Type)
-    (#p:pcm a)
-    (r:ref a p)
-    (x y:Ghost.erased a)
-    (f:FStar.PCM.frame_preserving_upd p x y)
-: act unit
-    Atomic
-    emp_inames
-    (big_pts_to r x)
-    (fun _ -> big_pts_to r y)
-
-val big_share
-    (#a:Type)
-    (#pcm:pcm a)
-    (r:ref a pcm)
-    (v0:FStar.Ghost.erased a)
-    (v1:FStar.Ghost.erased a{composable pcm v0 v1})
-: act unit
-    Ghost
-    emp_inames
-    (big_pts_to r (v0 `op pcm` v1))
-    (fun _ -> big_pts_to r v0 ** big_pts_to r v1)
-
-val big_gather
-    (#a:Type)
-    (#pcm:pcm a)
-    (r:ref a pcm)
-    (v0:FStar.Ghost.erased a)
-    (v1:FStar.Ghost.erased a)
-: act (squash (composable pcm v0 v1))
-    Ghost
-    emp_inames
-    (big_pts_to r v0 ** big_pts_to r v1)
-    (fun _ -> big_pts_to r (op pcm v0 v1))
-
-///////////////////////////////////////////////////////////////////
-// Non-boxable references
-///////////////////////////////////////////////////////////////////
-
-val nb_pts_to (#a:Type u#3) (#p:pcm a) (r:ref a p) (v:a) : slprop
-
-
-val timeless_nb_pts_to
-    (#a:Type u#3)
-    (#p:pcm a)
-    (r:ref a p)
-    (v:a)
-: Lemma (timeless (nb_pts_to r v))
-
-val nb_pts_to_not_null (#a:Type) (#p:FStar.PCM.pcm a) (r:ref a p) (v:a)
-: act (squash (not (is_ref_null r)))
-    Ghost
-    emp_inames 
-    (nb_pts_to r v)
-    (fun _ -> nb_pts_to r v)
-
-val nb_alloc
-    (#a:Type)
-    (#pcm:pcm a)
-    (x:a{pcm.refine x})
-: act (ref a pcm)
-      Atomic
-      emp_inames
-      emp
-      (fun r -> nb_pts_to r x)
-
-val nb_read
-    (#a:Type)
-    (#p:pcm a)
-    (r:ref a p)
-    (x:erased a)
-    (f:(v:a{compatible p x v}
-        -> GTot (y:a{compatible p y v /\
-                     FStar.PCM.frame_compatible p x v y})))
-: act (v:a{compatible p x v /\ p.refine v})
-      Atomic
-      emp_inames
-      (nb_pts_to r x)
-      (fun v -> nb_pts_to r (f v))
-
-val nb_write
-    (#a:Type)
-    (#p:pcm a)
-    (r:ref a p)
-    (x y:Ghost.erased a)
-    (f:FStar.PCM.frame_preserving_upd p x y)
-: act unit
-    Atomic
-    emp_inames
-    (nb_pts_to r x)
-    (fun _ -> nb_pts_to r y)
-
-val nb_share
-    (#a:Type)
-    (#pcm:pcm a)
-    (r:ref a pcm)
-    (v0:FStar.Ghost.erased a)
-    (v1:FStar.Ghost.erased a{composable pcm v0 v1})
-: act unit
-    Ghost
-    emp_inames
-    (nb_pts_to r (v0 `op pcm` v1))
-    (fun _ -> nb_pts_to r v0 ** nb_pts_to r v1)
-
-val nb_gather
-    (#a:Type)
-    (#pcm:pcm a)
-    (r:ref a pcm)
-    (v0:FStar.Ghost.erased a)
-    (v1:FStar.Ghost.erased a)
-: act (squash (composable pcm v0 v1))
-    Ghost
-    emp_inames
-    (nb_pts_to r v0 ** nb_pts_to r v1)
-    (fun _ -> nb_pts_to r (op pcm v0 v1))
-
-///////////////////////////////////////////////////////////////////
 // pure
 ///////////////////////////////////////////////////////////////////
 val pure_true ()
@@ -466,17 +304,17 @@ val drop (p:slprop)
 [@@erasable]
 val core_ghost_ref : Type u#0
 val core_ghost_ref_null : core_ghost_ref
-let ghost_ref (#a:Type u#a) (p:pcm a) : Type u#0 = core_ghost_ref
-val ghost_pts_to (#a:Type u#1) (#p:pcm a) (r:ghost_ref p) (v:a) : slprop
+let ghost_ref (#a:Type u#3) (p:pcm a) : Type u#0 = core_ghost_ref
+val ghost_pts_to (#a:Type) (#p:pcm a) (r:ghost_ref p) (v:a) : slprop
 
 val timeless_ghost_pts_to
-    (#a:Type u#1)
+    (#a:Type)
     (#p:pcm a)
     (r:ghost_ref p)
     (v:a)
 : Lemma (timeless (ghost_pts_to r v))
 
-val ghost_pts_to_not_null (#a:Type u#1) (#p:FStar.PCM.pcm a) (r:ghost_ref p) (v:a)
+val ghost_pts_to_not_null (#a:Type) (#p:FStar.PCM.pcm a) (r:ghost_ref p) (v:a)
 : act (squash (r =!= core_ghost_ref_null))
     Ghost
     emp_inames 
@@ -484,7 +322,7 @@ val ghost_pts_to_not_null (#a:Type u#1) (#p:FStar.PCM.pcm a) (r:ghost_ref p) (v:
     (fun _ -> ghost_pts_to r v)
 
 val ghost_alloc
-    (#a:Type u#1)
+    (#a:Type)
     (#pcm:pcm a)
     (x:erased a{pcm.refine x})
 : act (ghost_ref pcm) Ghost emp_inames
@@ -532,127 +370,6 @@ val ghost_gather
 : act (squash (composable pcm v0 v1)) Ghost emp_inames
     (ghost_pts_to r v0 ** ghost_pts_to r v1)
     (fun _ -> ghost_pts_to r (op pcm v0 v1))
-
-val big_ghost_pts_to (#a:Type u#2) (#p:pcm a) (r:ghost_ref p) (v:a) : slprop
-
-
-val timeless_big_ghost_pts_to
-    (#a:Type u#2)
-    (#p:pcm a)
-    (r:ghost_ref p)
-    (v:a)
-: Lemma (timeless (big_ghost_pts_to r v))
-
-val big_ghost_alloc
-    (#a:Type)
-    (#pcm:pcm a)
-    (x:erased a{pcm.refine x})
-: act (ghost_ref pcm) Ghost emp_inames
-    emp 
-    (fun r -> big_ghost_pts_to r x)
-
-val big_ghost_read
-    (#a:Type)
-    (#p:pcm a)
-    (r:ghost_ref p)
-    (x:erased a)
-    (f:(v:a{compatible p x v}
-        -> GTot (y:a{compatible p y v /\
-                     FStar.PCM.frame_compatible p x v y})))
-: act (erased (v:a{compatible p x v /\ p.refine v})) Ghost emp_inames
-    (big_ghost_pts_to r x)
-    (fun v -> big_ghost_pts_to r (f v))
-
-val big_ghost_write
-    (#a:Type)
-    (#p:pcm a)
-    (r:ghost_ref p)
-    (x y:Ghost.erased a)
-    (f:FStar.PCM.frame_preserving_upd p x y)
-: act unit Ghost emp_inames 
-    (big_ghost_pts_to r x)
-    (fun _ -> big_ghost_pts_to r y)
-
-val big_ghost_share
-    (#a:Type)
-    (#pcm:pcm a)
-    (r:ghost_ref pcm)
-    (v0:FStar.Ghost.erased a)
-    (v1:FStar.Ghost.erased a{composable pcm v0 v1})
-: act unit Ghost emp_inames
-    (big_ghost_pts_to r (v0 `op pcm` v1))
-    (fun _ -> big_ghost_pts_to r v0 ** big_ghost_pts_to r v1)
-
-val big_ghost_gather
-    (#a:Type)
-    (#pcm:pcm a)
-    (r:ghost_ref pcm)
-    (v0:FStar.Ghost.erased a)
-    (v1:FStar.Ghost.erased a)
-: act (squash (composable pcm v0 v1)) Ghost emp_inames
-    (big_ghost_pts_to r v0 ** big_ghost_pts_to r v1)
-    (fun _ -> big_ghost_pts_to r (op pcm v0 v1))
-
-// Non-boxable ghost references
-val nb_ghost_pts_to (#a:Type u#3) (#p:pcm a) (r:ghost_ref p) (v:a) : slprop
-
-
-val timeless_nb_ghost_pts_to
-    (#a:Type u#3)
-    (#p:pcm a)
-    (r:ghost_ref p)
-    (v:a)
-: Lemma (timeless (nb_ghost_pts_to r v))
-
-val nb_ghost_alloc
-    (#a:Type)
-    (#pcm:pcm a)
-    (x:erased a{pcm.refine x})
-: act (ghost_ref pcm) Ghost emp_inames
-    emp 
-    (fun r -> nb_ghost_pts_to r x)
-
-val nb_ghost_read
-    (#a:Type)
-    (#p:pcm a)
-    (r:ghost_ref p)
-    (x:erased a)
-    (f:(v:a{compatible p x v}
-        -> GTot (y:a{compatible p y v /\
-                     FStar.PCM.frame_compatible p x v y})))
-: act (erased (v:a{compatible p x v /\ p.refine v})) Ghost emp_inames
-    (nb_ghost_pts_to r x)
-    (fun v -> nb_ghost_pts_to r (f v))
-
-val nb_ghost_write
-    (#a:Type)
-    (#p:pcm a)
-    (r:ghost_ref p)
-    (x y:Ghost.erased a)
-    (f:FStar.PCM.frame_preserving_upd p x y)
-: act unit Ghost emp_inames 
-    (nb_ghost_pts_to r x)
-    (fun _ -> nb_ghost_pts_to r y)
-
-val nb_ghost_share
-    (#a:Type)
-    (#pcm:pcm a)
-    (r:ghost_ref pcm)
-    (v0:FStar.Ghost.erased a)
-    (v1:FStar.Ghost.erased a{composable pcm v0 v1})
-: act unit Ghost emp_inames
-    (nb_ghost_pts_to r (v0 `op pcm` v1))
-    (fun _ -> nb_ghost_pts_to r v0 ** nb_ghost_pts_to r v1)
-
-val nb_ghost_gather
-    (#a:Type)
-    (#pcm:pcm a)
-    (r:ghost_ref pcm)
-    (v0:FStar.Ghost.erased a)
-    (v1:FStar.Ghost.erased a)
-: act (squash (composable pcm v0 v1)) Ghost emp_inames
-    (nb_ghost_pts_to r v0 ** nb_ghost_pts_to r v1)
-    (fun _ -> nb_ghost_pts_to r (op pcm v0 v1))
 
 
 ////////////////////////////////////////////////////////////////////////

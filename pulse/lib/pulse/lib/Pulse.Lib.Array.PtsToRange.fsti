@@ -14,7 +14,7 @@
    limitations under the License.
 *)
 
-module Pulse.Lib.HigherArray.PtsToRange
+module Pulse.Lib.Array.PtsToRange
 #lang-pulse
 open FStar.Tactics.V2
 open Pulse.Lib.Core
@@ -24,14 +24,14 @@ open PulseCore.FractionalPermission
 open FStar.Ghost
 module SZ = FStar.SizeT
 module Seq = FStar.Seq
-open Pulse.Lib.HigherArray.Core
-open Pulse.Lib.HigherArray.PtsTo
-open Pulse.Lib.SmallType
+open Pulse.Lib.Array.Core
+open Pulse.Lib.Array.PtsTo
 
 val pts_to_range
   (#a:Type u#a)
   ([@@@mkey]x:array a)
-  ([@@@mkey] i [@@@mkey] j : nat)
+  ([@@@mkey]i: nat)
+  (j: nat)
   (#[exact (`1.0R)] p:perm)
   (s : Seq.seq a) : slprop
 

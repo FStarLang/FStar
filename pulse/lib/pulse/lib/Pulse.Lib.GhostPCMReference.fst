@@ -1,46 +1,70 @@
+(*
+   Copyright 2025 Microsoft Research
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*)
 module Pulse.Lib.GhostPCMReference
 #lang-pulse
-open Pulse.Lib.Pervasives
 open FStar.PCM
 module PR = Pulse.Lib.PCM.Raise
 module U = Pulse.Lib.Raise
+module C = Pulse.Lib.Core.Refs
+open Pulse.Lib.PCM.Raise
+open FStar.Ghost
 
-let pts_to
-    (#a:Type u#0)
-    (#p:pcm a)
-    (r:gref p)
-    (v:a)
-: slprop
-= ghost_pcm_pts_to #_ #(PR.raise p) r (U.raise_val v)
+let core_ghost_pcm_ref = C.core_ghost_pcm_ref
+let null_core_ghost_pcm_ref = C.null_core_ghost_pcm_ref
 
-let pts_to_is_timeless #a #p r v = ()
 
-let alloc #a #p x = ghost_alloc #_ #(PR.raise p) (U.raise_val x)
+let small_token (inst: small_type u#a) = emp
+
+[@@pulse_unfold]
+let pts_to (#a:Type u#a) (#p:pcm a) ([@@@mkey] r:ghost_pcm_ref p) (v:a) : slprop =
+  exists* (inst: small_type u#a). C.ghost_pcm_pts_to #_ #(raise p) r (U.raise_val v) ** small_token inst
+
+let pts_to_is_timeless #a #p r v =
+  assert_norm (pts_to r v ==
+    op_exists_Star fun (inst: small_type u#a) ->
+      C.ghost_pcm_pts_to #_ #(raise p) r (U.raise_val v) ** small_token inst)
+
+ghost 
+fn alloc u#a (#a:Type u#a)
+    (#pcm:pcm a)
+    {| inst: small_type u#a |}
+    (x:a{pcm.refine x})
+  requires emp
+  returns  r : gref pcm
+  ensures  pts_to r x
+{
+  fold small_token u#a inst;
+  C.ghost_alloc #(U.raise_t a) #(raise pcm) (U.raise_val x);
+}
   
 ghost
-fn read
-    (#a:Type u#0)
+fn read u#a
+    (#a:Type u#a)
     (#p:pcm a)
     (r:gref p)
     (x:a)
-    (f: (v:a{FStar.PCM.compatible #a p (reveal x) v}
+    (f: (v:a{FStar.PCM.compatible #a p x v}
           -> GTot (y:a{compatible p y v /\
                         FStar.PCM.frame_compatible p x v y})))
   requires pts_to r x
   returns v:(v:a { compatible p x v /\ p.refine v })
   ensures pts_to r (f v)
 {
-  unfold pts_to;
-  rewrite ghost_pcm_pts_to #_ #(PR.raise p) r (U.raise_val u#0 u#1 x)
-      as ghost_pcm_pts_to #_ #(PR.raise p) r (reveal (hide (U.raise_val x)));
-  let v0 = ghost_read #_ #(PR.raise u#0 u#1 p) r (U.raise_val x) (PR.raise_refine u#0 u#1 p x f);
-  let v = U.downgrade_val u#0 u#1 (Ghost.reveal v0);
-  let vv = (PR.raise_refine u#0 u#1 #_ p x f (reveal v0));
-  rewrite
-    ghost_pcm_pts_to #(U.raise_t u#0 u#1 a) #(PR.raise u#0 u#1 p) r vv
-    as ghost_pcm_pts_to #(U.raise_t u#0 u#1 a) #(PR.raise u#0 u#1 p) r (U.raise_val u#0 u#1 (f v));
-  fold (pts_to r (f v));
-  v
+  with inst. assert small_token u#a inst; let inst = inst;
+  U.downgrade_val (C.ghost_read #(U.raise_t a) #(raise p) r (hide (U.raise_val (reveal x))) (raise_refine p x f));
 }
 
 
@@ -58,38 +82,67 @@ let read_simple
     (#x:a)
 = read #a #p r x (identity_frame_compatible p x)
 
-let write
-    (#a:Type)
+ghost
+fn write u#a
+    (#a:Type u#a)
     (#p:pcm a)
     (r:gref p)
     (x y:a)
     (f:FStar.PCM.frame_preserving_upd p x y)
-: stt_ghost unit
-    emp_inames
-    (pts_to r x)
-    (fun _ -> pts_to r y)
-= ghost_write #_ #(PR.raise p) r (U.raise_val x) (U.raise_val y)
-                 (PR.raise_upd f)
+  requires pts_to r x
+  ensures  pts_to r y
+{
+  with inst. assert small_token u#a inst; let inst = inst;
+  C.ghost_write #(U.raise_t a) #(raise p) r (hide (U.raise_val (reveal x))) (hide (U.raise_val (reveal y)))
+    (raise_upd f)
+}
 
-let share
-    (#a:Type)
+ghost
+fn share u#a
+    (#a:Type u#a)
     (#pcm:pcm a)
     (r:gref pcm)
     (v0:a)
     (v1:a{composable pcm v0 v1})
-: stt_ghost unit
-    emp_inames
-    (pts_to r (v0 `op pcm` v1))
-    (fun _ -> pts_to r v0 ** pts_to r v1)
-= ghost_share #_ #(PR.raise pcm) r (U.raise_val v0) (U.raise_val v1)
+  requires pts_to r (v0 `op pcm` v1)
+  ensures  pts_to r v0 ** pts_to r v1
+{
+  with inst. assert small_token u#a inst; let inst = inst;
+  fold small_token u#a inst;
+  C.ghost_share #_ #(PR.raise pcm) r (U.raise_val v0) (U.raise_val v1)
+}
 
-let gather
-    (#a:Type)
+[@@allow_ambiguous]
+ghost fn drop_amb (p: slprop)
+  requires p
+{
+  drop_ p
+}
+
+[@@allow_ambiguous]
+ghost
+fn gather u#a
+    (#a:Type u#a)
     (#pcm:pcm a)
     (r:gref pcm)
-    (v0 v1:a)
-: stt_ghost (squash (composable pcm v0 v1))
-    emp_inames
-    (pts_to r v0 ** pts_to r v1)
-    (fun _ -> pts_to r (op pcm v0 v1))
-= ghost_gather #_ #(PR.raise pcm) r (U.raise_val v0) (U.raise_val v1)
+    (v0:a)
+    (v1:a)
+  requires pts_to r v0 ** pts_to r v1
+  returns  squash (composable pcm v0 v1)
+  ensures  pts_to r (op pcm v0 v1)
+{
+  with inst. assert C.ghost_pcm_pts_to #_ #(raise #a #inst pcm) r (U.raise_val v1);
+  with inst'. assert C.ghost_pcm_pts_to #_ #(raise #a #inst' pcm) r (U.raise_val v1);
+  drop_amb (small_token u#a inst');
+  let inst = inst;
+  C.ghost_gather #_ #(PR.raise pcm) r (U.raise_val v0) (U.raise_val v1)
+}
+
+ghost fn pts_to_not_null u#a (#a:Type u#a)
+    (#p:pcm a) (r:gref p) (v:a)
+  preserves pts_to r v
+  ensures pure (r =!= ghost_pcm_ref_null p)
+{
+  C.ghost_pts_to_not_null r _;
+  ()
+}

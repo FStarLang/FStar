@@ -316,34 +316,6 @@ let ghost_write r x y f = lift_neutral_ghost (A.ghost_write r x y f)
 let ghost_share r v0 v1 = lift_neutral_ghost (A.ghost_share r v0 v1)
 let ghost_gather r v0 v1 = lift_neutral_ghost (A.ghost_gather r v0 v1) 
 
-let big_pts_to_not_null #a #p r v = lift_neutral_ghost (A.big_pts_to_not_null #a #p r v)
-let big_alloc #a #pcm x = A.big_alloc x
-let big_read r x f = A.big_read r x f
-let big_write r x y f = A.big_write r x y f
-let big_share #a #pcm r v0 v1 = lift_neutral_ghost (A.big_share r v0 v1)
-let big_gather #a #pcm r v0 v1 = lift_neutral_ghost (A.big_gather r v0 v1)
-
-
-let big_ghost_alloc #a #pcm x = lift_neutral_ghost <| A.big_ghost_alloc #a #pcm x
-let big_ghost_read #a #p r x f = lift_neutral_ghost <| A.big_ghost_read r x f
-let big_ghost_write r x y f = lift_neutral_ghost (A.big_ghost_write r x y f)
-let big_ghost_share r v0 v1 = lift_neutral_ghost (A.big_ghost_share r v0 v1)
-let big_ghost_gather r v0 v1 = lift_neutral_ghost (A.big_ghost_gather r v0 v1) 
-
-let nb_pts_to_not_null #a #p r v = lift_neutral_ghost (A.nb_pts_to_not_null #a #p r v)
-let nb_alloc #a #pcm x = A.nb_alloc x
-let nb_read r x f = A.nb_read r x f
-let nb_write r x y f = A.nb_write r x y f
-let nb_share #a #pcm r v0 v1 = lift_neutral_ghost (A.nb_share r v0 v1)
-let nb_gather #a #pcm r v0 v1 = lift_neutral_ghost (A.nb_gather r v0 v1)
-
-
-let nb_ghost_alloc #a #pcm x = lift_neutral_ghost <| A.nb_ghost_alloc #a #pcm x
-let nb_ghost_read #a #p r x f = lift_neutral_ghost <| A.nb_ghost_read r x f
-let nb_ghost_write r x y f = lift_neutral_ghost (A.nb_ghost_write r x y f)
-let nb_ghost_share r v0 v1 = lift_neutral_ghost (A.nb_ghost_share r v0 v1)
-let nb_ghost_gather r v0 v1 = lift_neutral_ghost (A.nb_ghost_gather r v0 v1) 
-
 let drop p = lift_neutral_ghost (A.drop p)
 
 let equiv_refl a = lift_neutral_ghost (A.equiv_refl a)

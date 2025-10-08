@@ -87,10 +87,10 @@ let mk_sq_rewrites_to_p u t x y =
   mk_squash u_zero (R.mk_app hd args)
 
 
-let mk_ref (t:term) : term = tm_pureapp (tm_fvar (as_fv ref_lid)) None t
+let mk_ref (t:term) : term = tm_pureapp (tm_uinst (as_fv ref_lid) [u0]) None t
 
 let mk_pts_to (ty:term) (r:term) (v:term) : term =
-  let t = tm_fvar (as_fv pts_to_lid) in
+  let t = tm_uinst (as_fv pts_to_lid) [u0] in
   let t = tm_pureapp t (Some Implicit) ty in
   let t = tm_pureapp t None r in
   let t = tm_pureapp t (Some Implicit) tm_full_perm in
@@ -472,22 +472,22 @@ let comp_withlocal_body (r:var) (init_t:term) (init:term) (c:comp{C_ST? c}) : co
   }
 
 let mk_array (a:term) : term =
-  tm_pureapp (tm_fvar (as_fv array_lid)) None a
+  tm_pureapp (tm_uinst (as_fv array_lid) [u0]) None a
 
 let mk_array_length (a:term) (arr:term) : term =
-  let t = tm_fvar (as_fv array_length_lid) in
+  let t = tm_uinst (as_fv array_length_lid) [u0] in
   let t = tm_pureapp t (Some Implicit) a in
   tm_pureapp t None arr
 
 let mk_array_pts_to (a:term) (arr:term) (v:term) : term =
-  let t = tm_fvar (as_fv array_pts_to_lid) in
+  let t = tm_uinst (as_fv array_pts_to_lid) [u0] in
   let t = tm_pureapp t (Some Implicit) a in
   let t = tm_pureapp t None arr in
   let t = tm_pureapp t (Some Implicit) tm_full_perm in
   tm_pureapp t None v
 
 // let mk_array_is_full (a:term) (arr:term) : term =
-//   let t = tm_fvar (as_fv array_is_full_lid) in
+//   let t = tm_uinst (as_fv array_is_full_lid) [u0] in
 //   let t = tm_pureapp t (Some Implicit) a in
 //   tm_pureapp t None arr
 

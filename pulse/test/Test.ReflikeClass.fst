@@ -14,7 +14,7 @@ class reflike (vt:Type) (rt:Type) = {
 }
 
 #push-options "--warn_error -288"
-fn weakened_ref_alloc #a (x: a)
+fn weakened_ref_alloc u#a (#a:Type u#a) {| small_type u#a |} (x: a)
   returns r: Pulse.Lib.Reference.ref a
   ensures Pulse.Lib.Reference.pts_to r x
 {
@@ -22,7 +22,7 @@ fn weakened_ref_alloc #a (x: a)
 }
 
 (* Prevent warning about using alloc... this is just a test. *)
-instance reflike_ref (a:Type) : reflike a (ref a) = {
+instance reflike_ref (a:Type u#a) {| small_type u#a |} : reflike a (ref a) = {
   ( |-> ) = (fun r v -> Pulse.Lib.Reference.pts_to r v);
   alloc   = weakened_ref_alloc;
   ( ! )   = (fun r #v0 -> Pulse.Lib.Reference.op_Bang r #v0 #1.0R);

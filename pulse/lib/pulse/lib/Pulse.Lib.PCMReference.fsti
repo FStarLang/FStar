@@ -13,13 +13,25 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 *)
-module Pulse.Lib.SmallType.PCM
+module Pulse.Lib.PCMReference
 open Pulse.Lib.SmallType
 open Pulse.Lib.Core
 open Pulse.Main
 open FStar.PCM
 open FStar.Ghost
 #lang-pulse
+
+val core_pcm_ref : Type0
+val null_core_pcm_ref : core_pcm_ref
+val is_null_core_pcm_ref (r: core_pcm_ref) :
+  b:bool { b <==> r == null_core_pcm_ref }
+
+let pcm_ref (#a: Type u#a) (p: pcm a) : Type0 = core_pcm_ref
+
+let pcm_ref_null #a (p:pcm a) : pcm_ref p = null_core_pcm_ref
+let is_pcm_ref_null #a (#p: pcm a) (r: pcm_ref p) :
+    b:bool { b <==> r == pcm_ref_null p } =
+  is_null_core_pcm_ref r
 
 val pcm_pts_to (#a:Type u#a) (#p:pcm a) ([@@@mkey] r:pcm_ref p) (v:a) : slprop
 
@@ -34,7 +46,7 @@ ghost fn pts_to_not_null u#a (#a:Type u#a) (#p:FStar.PCM.pcm a) (r:pcm_ref p) (v
   preserves pcm_pts_to r v
   ensures pure (not (is_pcm_ref_null r))
 
-fn alloc u#a (#a:Type u#a) {| small_type u#a |} (#pcm:pcm a) (x:a{pcm.refine x})
+fn alloc u#a (#a:Type u#a) (#pcm:pcm a) {| small_type u#a |} (x:a{pcm.refine x})
   returns r: pcm_ref pcm
   ensures pcm_pts_to r x
 

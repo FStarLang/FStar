@@ -25,6 +25,7 @@ include Pulse.Lib.Primitives // TODO: what if we want to support several archite
 include Pulse.Class.PtsTo
 include Pulse.Class.Duplicable
 include Pulse.Class.Introducable { intro }
+include Pulse.Lib.SmallType { small_type }
 include PulseCore.FractionalPermission
 include PulseCore.Observability
 include FStar.Ghost
@@ -68,7 +69,7 @@ let inames_join_self (is1 : inames)
 // Native extraction in the Rust backend
 //
 
-fn ref_apply (#a #b:Type) (r:ref (a -> b)) (x:a) (#f:erased (a -> b))
+fn ref_apply u#a u#b (#a: Type u#a) (#b:Type u#b) (r:ref (a -> b)) (x:a) (#f:erased (a -> b))
   requires pts_to r f
   returns y:b
   ensures pts_to r f ** pure (y == (reveal f) x)

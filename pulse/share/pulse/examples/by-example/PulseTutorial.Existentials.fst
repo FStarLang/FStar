@@ -20,7 +20,7 @@ open Pulse.Lib.Pervasives
 open FStar.Mul
 
 //assign$
-fn assign #a (x:ref a) (v:a)
+fn assign (#a: Type0) (x:ref a) (v:a)
 requires
   exists* w. pts_to x w
 ensures
