@@ -807,7 +807,7 @@ let rec desugar_data_pat
           match fields with
           | [] -> None, field_names
           | (f, _)::_ ->
-            match try_lookup_record_by_field_name env f with
+            match try_lookup_record_by_field_name_many env field_names with
             | None -> None, field_names
             | Some r -> Some r.typename, qualify_field_names r.typename field_names
         in
@@ -1677,8 +1677,8 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term & an
     | Record(eopt, fields) ->
       (* Record literals have to wait for type information to be fully resolved *)
       let record_opt =
-        let (f, _) = List.hd fields in
-        try_lookup_record_by_field_name env f
+        let fns = List.map fst fields in
+        try_lookup_record_by_field_name_many env fns
       in
       let fields, aqs =
           List.map
