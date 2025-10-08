@@ -599,12 +599,7 @@ let no_guard (g:result 'a)
       | Success (x, Some g) -> fail_str (Format.fmt1 "Unexpected guard: %s" (show g)) ctx
       | err -> err
 
-//Unlike in Rel, where we only emit guards for equalit of terms that
-//based on Rel.may_relate_with_logical_guard (in order to quickly catch basic type errors),
-//here in the core checker we always permit emitting guards for equality of terms
-//since obvious type errors should be caught earlier by the front end
-let equatable g t =
-  t |> U.leftmost_head |> Rel.may_relate_with_logical_guard g.tcenv true
+let equatable g t = t |> U.leftmost_head |> Rel.may_relate_with_logical_guard g.tcenv true
 
 let apply_predicate x p = fun e -> Subst.subst [NT(x.binder_bv, e)] p
 
