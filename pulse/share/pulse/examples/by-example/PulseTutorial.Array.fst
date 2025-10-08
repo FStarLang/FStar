@@ -63,7 +63,6 @@ module A = Pulse.Lib.Array
 module R = Pulse.Lib.Reference
 open FStar.SizeT
 
-#push-options "--debug prover,pulse.checker"
 fn incr (y:ref int)
 requires R.pts_to y 'v
 ensures R.pts_to y ('v + 2)

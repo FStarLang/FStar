@@ -73,6 +73,7 @@ let slprop_equiv_unfold_tm (s:string) =
   let t = R.pack_ln (R.Tv_App head (s, R.Q_Explicit)) in
   t
 let match_rewrite_tac_tm = R.pack_ln (R.Tv_FVar (R.pack_fv (mk_pulse_lib_core_lid "match_rewrite_tac")))
+let match_rename_tac_tm = R.pack_ln (R.Tv_FVar (R.pack_fv (mk_pulse_lib_core_lid "match_rename_tac")))
 
 (* The "plicities" *)
 let ex t : R.argv = (t, R.Q_Explicit)

@@ -229,24 +229,55 @@ let rewrite_all (is_source:bool) (g:env) (p: list (term & term)) (t:term) pre el
     rhs, p
 
 open Pulse.PP
-let check_pair (g:env) rng (lhs rhs:term) : T.Tac unit =
+let check_equiv_with_tac (g:env) (rng:Range.range) (lhs rhs ty:term) (tac_tm:term)
+: T.Tac (option T.issues)
+= let g_env = elab_env g in
+  match Pulse.Typing.Util.universe_of_now g_env ty with
+  | None, issues ->
+    fail_doc_with_subissues g (Some rng) issues [
+      text "rewrite: could not determine the universe of";
+      pp ty;
+    ]
+  | Some u, _ ->
+    let goal = mk_squash u0 (RT.eq2 u ty lhs rhs) in
+    let goal_typing 
+      : my_erased (T.typing_token (elab_env g) goal (RT.E_Total, R.pack_ln (R.Tv_Type u0)))
+      = magic()
+    in
+    let goal_typing_tok : squash (T.typing_token (elab_env g) goal (RT.E_Total, R.pack_ln (R.Tv_Type u0))) =
+      match goal_typing with | E x -> ()
+    in
+    let res, issues = T.call_subtac_tm g_env tac_tm u0 goal in
+    if None? res then Some issues else None
+
+let check_equiv_maybe_tac (g:env) (rng:Range.range) (lhs rhs ty:term) (tac_opt:option term)
+: T.Tac (option T.issues)
+= match tac_opt with
+  | None -> 
+    let res, issues = 
+      Pulse.Typing.Util.check_equiv_now (elab_env g) lhs rhs in
+    if None? res then Some issues else None
+  | Some tac_tm -> 
+    check_equiv_with_tac g rng lhs rhs ty tac_tm
+
+let check_pair (g:env) rng (lhs rhs:term) (tac_opt:option term) : T.Tac unit =
   let (| _, ty, _ |) = PC.core_compute_term_type g lhs in
   let (| _, _ |) = PC.core_check_term_at_type g rhs ty in
-  let res, issues = Pulse.Typing.Util.check_equiv_now (elab_env g) lhs rhs in
-  match res with
-  | None -> 
+  let issues = check_equiv_maybe_tac g rng lhs rhs ty tac_opt in
+  match issues with
+  | Some issues -> 
     fail_doc_with_subissues g (Some rng) issues [
       text "rename: could not prove equality of";
       pp lhs;
       pp rhs;
     ]
-  | Some token ->
+  | _ ->
     ()
 
-let rec check_pairs (g:env) rng (ps: list (term & term)) : T.Tac unit =
+let rec check_pairs (g:env) rng (ps: list (term & term)) (tac_opt:option term) : T.Tac unit =
   match ps with
   | [] -> ()
-  | (lhs,rhs)::ps -> check_pair g rng lhs rhs; check_pairs g rng ps
+  | (lhs,rhs)::ps -> check_pair g rng lhs rhs tac_opt; check_pairs g rng ps tac_opt
 
 let check_renaming 
     (g:env)
@@ -284,7 +315,7 @@ let check_renaming
   | [], None ->
     // if there is no goal, take the goal to be the full current pre
     let rhs, pairs = rewrite_all (T.unseal st.source) g pairs pre pre elaborated tac_opt in
-    check_pairs g st.range pairs;
+    check_pairs g st.range pairs tac_opt;
     let h2: slprop_equiv g rhs pre = RU.magic () in
     let h1: tot_typing g rhs tm_slprop = RU.magic () in
     let (| x, g', ty, ctxt', k |) = check g rhs h1 post_hint res_ppname body in

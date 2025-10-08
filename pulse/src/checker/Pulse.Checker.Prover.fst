@@ -65,6 +65,8 @@ let slprop_eqv_trans (p q r: slprop) : Lemma (requires slprop_eqv p q /\ slprop_
 let slprop_eqv_star p1 q1 p2 q2 : Lemma (requires slprop_eqv p1 p2 /\ slprop_eqv q1 q2) (ensures slprop_eqv (tm_star p1 q1) (tm_star p2 q2)) = admit ()
 let elab_slprops_append ps qs : squash (elab_slprops (ps@qs) `slprop_eqv` (elab_slprops ps `tm_star` elab_slprops qs)) = admit ()
 
+#push-options "--fuel 1 --ifuel 1 --z3rlimit_factor 4"
+#restart-solver
 let rec inspect_slprop (g: env) (p: slprop) : T.Tac (v:list slprop_view { elab_slprops v `slprop_eqv` p }) =
   slprop_eqv_refl p;
   match inspect_term p with
@@ -103,6 +105,7 @@ let rec inspect_slprop (g: env) (p: slprop) : T.Tac (v:list slprop_view { elab_s
             [Unknown p]
         | _ ->
           [Unknown p]
+#pop-options
 
 let cont_elab g ps g' ps' =
   frame: list slprop_view -> continuation_elaborator g (elab_slprops (frame @ ps)) g' (elab_slprops (frame @ ps'))

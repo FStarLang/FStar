@@ -377,10 +377,11 @@ let rec st_term_to_string' (level:string) (t:st_term)
         (st_term_to_string' level body2)
         (term_to_string post2)
 
-    | Tm_Rewrite { t1; t2 } ->
-       sprintf "rewrite %s as %s"
+    | Tm_Rewrite { t1; t2; tac_opt } ->
+       sprintf "rewrite %s as %s (with %s)"
         (term_to_string t1)
         (term_to_string t2)
+        (match tac_opt with | None -> "no tactic" | Some tac -> term_to_string tac)
 
     | Tm_WithLocal { binder; initializer; body } ->
       sprintf "let mut %s = %s;\n%s%s"
@@ -426,12 +427,13 @@ let rec st_term_to_string' (level:string) (t:st_term)
         | ASSERT { p } -> "assert", term_to_string p
         | UNFOLD { names; p } -> sprintf "unfold%s" (names_to_string names), term_to_string p
         | FOLD { names; p } -> sprintf "fold%s" (names_to_string names), term_to_string p
-        | RENAME { pairs; goal } ->
-          sprintf "rewrite each %s"
+        | RENAME { pairs; goal; tac_opt } ->
+          sprintf "rewrite each %s (with %s)"
             (String.concat ", "
               (T.map
                 (fun (x, y) -> sprintf "%s as %s" (term_to_string x) (term_to_string y))
-              pairs)),
+              pairs))
+            (match tac_opt with | None -> "no tactic" | Some tac -> term_to_string tac),
             (match goal with
             | None -> ""
             | Some t -> sprintf " in %s" (term_to_string t))

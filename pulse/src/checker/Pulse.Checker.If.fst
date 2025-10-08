@@ -76,7 +76,7 @@ let check
       let t =
         mk_term (Tm_ProofHintWithBinders {
           binders = [];
-          hint_type = RENAME { pairs = [(b, eq_v)]; goal=None; tac_opt=None; elaborated=true };
+          hint_type = RENAME { pairs = [(b, eq_v)]; goal=None; tac_opt = Some Pulse.Reflection.Util.match_rename_tac_tm; elaborated=true };
           t = br;
         }) br.range
       in
