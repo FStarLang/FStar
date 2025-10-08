@@ -1219,34 +1219,6 @@ let split_env (bvar : bv) (e : env) : option (env & bv & list bv) =
     in
     Option.map (fun (e', bv, bvs) -> (e', bv, List.rev bvs)) (aux e)
 
-let subst_goal (b1 : bv) (b2 : bv) (g:goal) : tac (option goal) =
-    match split_env b1 (goal_env g) with
-    | Some (e0, b1, bvs) ->
-        let bs = List.map S.mk_binder bvs in
-
-        let t = goal_type g in
-
-        let subst = [S.NT (b1, S.bv_to_name b2)] in
-        let bs' = SS.subst_binders subst bs in
-        let t' = SS.subst subst t in
-
-        let new_env = Env.push_binders e0 (S.mk_binder b2 :: bs') in
-
-        (* Make a new goal in the new env (with new binders) *)
-        let! uvt, uv = new_uvar "subst_goal" new_env t'
-                               (Some (should_check_goal_uvar g))
-                               (goal_typedness_deps g)
-                               (rangeof g) in
-
-        let goal' = mk_goal new_env uv g.opts g.is_guard g.label in
-
-        set_solution g uvt ;!
-
-        return (Some goal')
-
-    | None ->
-        return None
-
 let rewrite (hh:RD.binding) : tac unit = wrap_err "rewrite" <| (
     let! goal = cur_goal in
     let h = binding_to_binder hh in
@@ -1264,7 +1236,6 @@ let rewrite (hh:RD.binding) : tac unit = wrap_err "rewrite" <| (
         | Tm_name x ->
           let s = [NT(x, e)] in
 
-          (* See subst_goal for an explanation *)
           let t = goal_type goal in
           let bs = List.map S.mk_binder bvs in
 
@@ -1279,8 +1250,6 @@ let rewrite (hh:RD.binding) : tac unit = wrap_err "rewrite" <| (
                            (rangeof goal)
           in
           let goal' = mk_goal new_env uv goal.opts goal.is_guard goal.label in
-
-          (* See comment in subst_goal *)
           set_solution goal uvt ;!
           replace_cur goal'
 
@@ -1332,10 +1301,39 @@ let grewrite (t1 t2 : term) : tac unit = wrap_err "grewrite" <| (focus (
     return ()
 ))
 
-let rename_to (b : RD.binding) (s : string) : tac RD.binding = wrap_err "rename_to" <| (
+let rename_to (b : RD.binding) (s : string) : tac RD.binding = 
+  let subst_goal (b1 : bv) (b2 : bv) (g:goal) : tac (option goal) =
+      match split_env b1 (goal_env g) with
+      | Some (e0, b1, bvs) ->
+          let bs = List.map S.mk_binder bvs in
+
+          let t = goal_type g in
+
+          let subst = [S.NT (b1, S.bv_to_name b2)] in
+          let bs' = SS.subst_binders subst bs in
+          let t' = SS.subst subst t in
+
+          let new_env = Env.push_binders e0 (S.mk_binder b2 :: bs') in
+
+          (* Make a new goal in the new env (with new binders) *)
+          let! uvt, uv = new_uvar "subst_goal" new_env t'
+                                (Some (should_check_goal_uvar g))
+                                (goal_typedness_deps g)
+                                (rangeof g) in
+
+          let goal' = mk_goal new_env uv g.opts g.is_guard g.label in
+
+          set_solution g uvt ;!
+
+          return (Some goal')
+
+      | None ->
+          return None
+  in
+  wrap_err "rename_to" <| (
     let! goal = cur_goal in
     let bv = binding_to_bv b in
-    let bv' = freshen_bv ({ bv with ppname = mk_ident (s, (range_of_id bv.ppname)) }) in
+    let bv' = ({ bv with ppname = mk_ident (s, (range_of_id bv.ppname)) }) in
     match! subst_goal bv bv' goal with
     | None -> fail "binder not found in environment"
     | Some goal ->

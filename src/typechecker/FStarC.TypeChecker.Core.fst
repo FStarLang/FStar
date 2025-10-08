@@ -31,6 +31,7 @@ let dbg       = Debug.get_toggle "Core"
 let dbg_Eq    = Debug.get_toggle "CoreEq"
 let dbg_Top   = Debug.get_toggle "CoreTop"
 let dbg_Exit  = Debug.get_toggle "CoreExit"
+let dbg_DisableCoreCache = Debug.get_toggle "DisableCoreCache"
 
 let goal_ctr = mk_ref 0
 let get_goal_ctr () = !goal_ctr
@@ -42,9 +43,15 @@ type env = {
    tcenv : Env.env;
    allow_universe_instantiation : bool;
    guard_handler : option guard_handler_t;
-   should_read_cache: bool
+   should_read_cache: bool;
 }
 
+
+let debug g f =
+  if !dbg
+  then f ()
+
+let max a b = if a > b then a else b
 let push_binder g b = { g with tcenv = Env.push_binders g.tcenv [b] }
 
 let push_binders = List.fold_left push_binder
@@ -186,6 +193,15 @@ instance showable_context : showable context = {
                                     (show (List.map fst context.error_context)));
 }
 
+let print_ctx_head (ctx:context) =
+    match ctx.error_context with
+    | [] -> "{Context: <empty>}\n"
+    | (msg, ctx_term)::_ ->
+      Format.fmt2 "{Context: %s (%s)}\n"
+        msg
+        (match ctx_term with None -> "" | Some ctx_term -> context_term_to_string ctx_term)
+
+
 let print_context (ctx:context)
   : string =
   let rec aux (depth:string) (ctx:_) =
@@ -257,6 +273,11 @@ let insert (g:env) (e:term) (res:success (tot_or_ghost & typ)) =
        he_res = res
     }
     in
+    debug g (fun _ ->
+      Format.print3 "Inserting into cache\n %s : %s\nwith\n\tenv %s\n"
+        (show e)
+        (show (snd (fst res)))
+        (show g.tcenv.gamma));
     THT.insert e entry table
 
 inline_for_extraction
@@ -337,6 +358,7 @@ let is_type (g:env) (t:term)
         (aux t)
         (fun _ -> aux (U.unrefine (N.unfold_whnf g.tcenv t))))
 
+
 let rec is_arrow (g:env) (t:term)
   : result (binder & tot_or_ghost & typ)
   = let rec aux t =
@@ -352,8 +374,8 @@ let rec is_arrow (g:env) (t:term)
             in
             return (x, eff, U.comp_result c)
           else (
+            let Comp ct = c.n in
             let e_tag =
-              let Comp ct = c.n in
               if Ident.lid_equals ct.effect_name PC.effect_Pure_lid  ||
                  Ident.lid_equals ct.effect_name PC.effect_Lemma_lid
               then Some E_Total
@@ -376,9 +398,18 @@ let rec is_arrow (g:env) (t:term)
               ]
             | Some e_tag ->
               let g, [x], c = arrow_formals_comp g t in
+              debug g (fun _ -> 
+                Format.print4 "is_arrow (%s): arg (%s:%s) and comp %s\n"
+                  (show t) 
+                  (show x)
+                  (show x.binder_bv.sort)
+                  (show c));
               let (pre, _)::(post, _)::_ = U.comp_effect_args c in
               let arg_typ = U.refine x.binder_bv pre in
               let res_typ =
+                (* We don't need to open the comp here, because
+                   the binder x is already in scope in post,
+                   having been opened in arrow_formals_comp above *)
                 let r = S.new_bv None (U.comp_result c) in
                 let post = S.mk_Tm_app post [(S.bv_to_name r, None)] post.pos in
                 U.refine r post
@@ -562,6 +593,10 @@ let no_guard (g:result 'a)
       | Success (x, Some g) -> fail_str (Format.fmt1 "Unexpected guard: %s" (show g)) ctx
       | err -> err
 
+//Unlike in Rel, where we only emit guards for equalit of terms that
+//based on Rel.may_relate_with_logical_guard (in order to quickly catch basic type errors),
+//here in the core checker we always permit emitting guards for equality of terms
+//since obvious type errors should be caught earlier by the front end
 let equatable g t =
   t |> U.leftmost_head |> Rel.may_relate_with_logical_guard g.tcenv true
 
@@ -619,13 +654,14 @@ let lookup (g:env) (e:term) : result (tot_or_ghost & typ) =
      fail_str "not in cache"
    | Some he ->
      if he.he_gamma `context_included` g.tcenv.gamma
+     && not !dbg_DisableCoreCache
      then (
        record_cache_hit();
        if !dbg then
-         Format.print4 "cache hit\n %s |- %s : %s\nmatching env %s\n"
-           (show g.tcenv.gamma)
+         Format.print4 "cache hit\n %s : %s\nmatching\n\tenv0 %s\n\tenv1 %s\n"
            (show e)
            (show (snd (fst he.he_res)))
+           (show g.tcenv.gamma)
            (show he.he_gamma);
        let res = he.he_res in
        let res =
@@ -739,9 +775,7 @@ let unfolding_ok
   : result bool
   = fun ctx -> Success (ctx.unfolding_ok, None)
 
-let debug g f =
-  if !dbg
-  then f ()
+
 
 instance showable_tot_or_ghost = {
     show = (function
@@ -1266,26 +1300,42 @@ and memo_check (g:env) (e:term)
       | _ -> r
     in
     fun ctx ->
-      if not g.should_read_cache
-      then check_then_memo g e ctx
-      else (
-        match lookup g e ctx with
-        | Error _ -> //cache miss; check and insert
-          check_then_memo g e ctx
+      debug g (fun _ -> Format.print2 "%s Checking %s\n"
+                        (print_ctx_head ctx)
+                        (show e));
+      let result =
+        if not g.should_read_cache
+        then check_then_memo g e ctx
+        else (
+          match lookup g e ctx with
+          | Error _ -> //cache miss; check and insert
+            check_then_memo g e ctx
 
-        | Success (et, None) -> //cache hit with no guard; great, just return
-          Success (et, None)
+          | Success (et, None) -> //cache hit with no guard; great, just return
+            Success (et, None)
 
-        | Success (et, Some pre) -> //cache hit with a guard
-          match g.guard_handler with
-          | None -> Success (et, Some pre) //if there's no guard handler, then just return
-          | Some _ ->
-            //otherwise check then memo, since this can
-            //repopulate the cache with a "better" entry that has no guard
-            //But, don't read the cache again, since many subsequent lookups
-            //are likely to be hits with a guard again
-            check_then_memo { g with should_read_cache = false } e ctx
-      )
+          | Success (et, Some pre) -> //cache hit with a guard
+            match g.guard_handler with
+            | None -> Success (et, Some pre) //if there's no guard handler, then just return
+            | Some _ ->
+              //otherwise check then memo, since this can
+              //repopulate the cache with a "better" entry that has no guard
+              //But, don't read the cache again, since many subsequent lookups
+              //are likely to be hits with a guard again
+              check_then_memo { g with should_read_cache = false } e ctx
+        )
+      in
+      debug g (fun _ -> 
+        match result with
+        | Success ((eff, t), g) ->
+          Format.print5 "%s Checked %s: (%s, %s) with guard %s\n"
+            (print_ctx_head ctx)
+            (show e)
+            (show eff)
+            (show t)
+            (show g)
+        | _ -> ());
+      result
 
 and check (msg:string) (g:env) (e:term)
   : result (tot_or_ghost & typ)
@@ -1393,8 +1443,14 @@ and do_check (g:env) (e:term)
   | Tm_app _ -> (
     let rec check_app_arg (eff_hd, t_hd) (arg, arg_qual) =
       let! x, eff_arr, t' = is_arrow g t_hd in
+      debug g (fun _ -> 
+        Format.print4 "Checking app arg %s as argument to arrow of type %s -> %s (%s)\n" 
+          (show arg)
+          (show x.binder_bv.sort)
+          (show eff_arr) 
+          (show t'));
       let! eff_arg, t_arg = check "app arg" g arg in
-      with_context "app subtyping" None (fun _ -> check_subtype g (Some arg) t_arg x.binder_bv.sort) ;!
+      with_context "app subtyping" (Some (CtxTerm arg)) (fun _ -> check_subtype g (Some arg) t_arg x.binder_bv.sort) ;!
       with_context "app arg qual" None (fun _ -> check_arg_qual arg_qual x.binder_qual) ;!
       return (join_eff eff_hd (join_eff eff_arr eff_arg), Subst.subst [NT(x.binder_bv, arg)] t')
     in
@@ -1463,7 +1519,9 @@ and do_check (g:env) (e:term)
     )
 
   | Tm_match {scrutinee=sc; ret_opt=None; brs=branches; rc_opt} ->
+    debug g (fun _ -> Format.print1 "Checking match scrutinee %s\n" (show sc));
     let! eff_sc, t_sc = check "scrutinee" g sc in
+    debug g (fun _ -> Format.print2 "Checked match scrutinee %s at type %s\n" (show sc) (show t_sc));
     let! u_sc = with_context "universe_of" (Some (CtxTerm t_sc)) (fun _ -> universe_of g t_sc) in
     let rec check_branches path_condition
                            branch_typ_opt
@@ -1859,10 +1917,18 @@ and pattern_branch_condition (g:env)
       | guards -> return (Some (U.mk_and_l guards))
 
 let initial_env g gh =
+  let max_index =
+      List.fold_left
+         (fun index b ->
+           match b with
+           | Binding_var x -> max x.index index
+           | _ -> index)
+         0 g.Env.gamma
+  in
   { tcenv = g;
     allow_universe_instantiation = false;
     guard_handler = gh;
-    should_read_cache = true }
+    should_read_cache = true }, max_index
 
 //
 // In case the expected type and effect are set,
@@ -1870,31 +1936,36 @@ let initial_env g gh =
 //
 let check_term_top g e topt (must_tot:bool) (gh:option guard_handler_t)
   : result (tot_or_ghost & typ)
-  = let g = initial_env g gh in
-    let! eff_te = check "top" g e in
-    match topt with
-    | None ->
-      // check expected effect
-      if must_tot
-      then let eff, t = eff_te in 
-           if eff = E_Ghost &&
-              not (non_informative g t)
-           then fail_str "expected total effect, found ghost"
-           else return (E_Total, t)
-      else return eff_te
-    | Some t ->
-      let target_comp, eff =
-        if must_tot || fst eff_te = E_Total
-        then S.mk_Total t, E_Total
-        else S.mk_GTotal t, E_Ghost
+  = let g, max_binder_index = initial_env g gh in
+    fun ctx -> 
+    FStarC.GenSym.with_frozen_gensym_from max_binder_index (fun _ ->
+      let k () =
+        let! eff_te = check "top" g e in
+        match topt with
+        | None ->
+          // check expected effect
+          if must_tot
+          then let eff, t = eff_te in 
+              if eff = E_Ghost &&
+                  not (non_informative g t)
+              then fail_str "expected total effect, found ghost"
+              else return (E_Total, t)
+          else return eff_te
+        | Some t ->
+          let target_comp, eff =
+            if must_tot || fst eff_te = E_Total
+            then S.mk_Total t, E_Total
+            else S.mk_GTotal t, E_Ghost
+          in
+          with_context "top-level subtyping" None (fun _ ->
+            check_relation_comp
+              ({ g with allow_universe_instantiation = true})
+              (SUBTYPING (Some e))
+              (as_comp g eff_te)
+              target_comp) ;!
+          return (eff, t)
       in
-      with_context "top-level subtyping" None (fun _ ->
-        check_relation_comp
-          ({ g with allow_universe_instantiation = true})
-          (SUBTYPING (Some e))
-          (as_comp g eff_te)
-          target_comp) ;!
-      return (eff, t)
+      k () ctx)
 
 let simplify_steps =
     [Env.Beta;
@@ -1913,8 +1984,11 @@ let check_term_top_gh g e topt (must_tot:bool) (gh:option guard_handler_t)
                    (show (get_goal_ctr()));
 
     if !dbg || !dbg_Top
-    then Format.print3 "(%s) Entering core with %s <: %s\n"
-                   (show (get_goal_ctr())) (show e) (show topt);
+    then (Format.print5 "%s\n(%s) Entering core (with guard handler? %s) with %s <: %s\n"
+                  (FStarC.Util.stack_dump())
+                   (show (get_goal_ctr()))
+                   (show (Some? gh))
+                  (show e) (show topt));
     THT.reset_counters table;
     reset_cache_stats();
     let ctx = { unfolding_ok = true; no_guard = false; error_context = [("Top", None)] } in
@@ -1995,17 +2069,17 @@ let compute_term_type_handle_guards g e gh =
   | Error err -> Inr err
 
 let open_binders_in_term (env:Env.env) (bs:binders) (t:term) =
-  let g = initial_env env None in
+  let g, _ = initial_env env None in
   let g', bs, t = open_term_binders g bs t in
   g'.tcenv, bs, t
 
 let open_binders_in_comp (env:Env.env) (bs:binders) (c:comp) =
-  let g = initial_env env None in
+  let g, _ = initial_env env None in
   let g', bs, c = open_comp_binders g bs c in
   g'.tcenv, bs, c
 
 let check_term_equality guard_ok unfolding_ok g t0 t1
-  = let g = initial_env g None in
+  = let g, _ = initial_env g None in
     if !dbg_Top then
        Format.print4 "Entering check_term_equality with %s and %s (guard_ok=%s; unfolding_ok=%s) {\n"
          (show t0) (show t1) (show guard_ok) (show unfolding_ok);
@@ -2021,7 +2095,7 @@ let check_term_equality guard_ok unfolding_ok g t0 t1
     r
 
 let check_term_subtyping guard_ok unfolding_ok g t0 t1
-  = let g = initial_env g None in
+  = let g, _ = initial_env g None in
     let ctx = { unfolding_ok = unfolding_ok; no_guard = not guard_ok; error_context = [("Subtyping", None)] } in
     match check_relation g (SUBTYPING None) t0 t1 ctx with
     | Success (_, g) -> Inl g
