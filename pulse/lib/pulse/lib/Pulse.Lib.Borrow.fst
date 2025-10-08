@@ -43,7 +43,7 @@ type lifetime : Type0 =
 
 let fpts_to #t (r: ref t) (x: t) = exists* p. pts_to r #p x
 
-ghost fn dup_fpts_to t r x () : duplicable_f (fpts_to #t r x) = {
+ghost fn dup_fpts_to u#t (t: Type u#t) r x () : duplicable_f (fpts_to #t r x) = {
   unfold fpts_to r x;
   share r;
   fold fpts_to r x;
@@ -391,7 +391,7 @@ ghost fn rec set_end (a: lifetime) (n: unat) (y: blockchain_root)
   }
 }
 
-ghost fn fpts_to_gather #t (x: ref t) y y'
+ghost fn fpts_to_gather u#t (#t: Type u#t) (x: ref t) y y'
   preserves fpts_to x y
   requires fpts_to x y'
   ensures pure (y == y')
@@ -697,7 +697,7 @@ ghost fn fpts_to_of_root_idx' x j r
 }
 
 [@@allow_ambiguous]
-ghost fn too_much_perm #t (x: ref t) #y1 #y2 #p1 #p2
+ghost fn too_much_perm u#t (#t: Type u#t) (x: ref t) #y1 #y2 #p1 #p2
   requires pts_to x #p1 y1
   requires pts_to x #p2 y2
   requires pure (p1 +. p2 >. 1.0R)

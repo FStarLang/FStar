@@ -12,7 +12,7 @@ open Pulse.Lib.WithPure
 let array_bpts_to #t (a: lifetime) (x: array t) (y: seq t) : slprop =
   exists* p. a >:> x |-> Frac p y
 
-fn dup_array_bpts_to #t a x y () : duplicable_f (array_bpts_to #t a x y) = {
+fn dup_array_bpts_to u#t (#t: Type u#t) a x y () : duplicable_f (array_bpts_to #t a x y) = {
   unfold array_bpts_to a x y; with p. _;
   intro (shift (pts_to x #p y) ((pts_to x #(p/.2.0R) y) ** (pts_to x #(p/.2.0R) y) **
         trade ((pts_to x #(p/.2.0R) y) ** (pts_to x #(p/.2.0R) y)) (pts_to x #p y))) fn _ {
@@ -28,7 +28,7 @@ fn dup_array_bpts_to #t a x y () : duplicable_f (array_bpts_to #t a x y) = {
 instance duplicable_array_bpts_to #t a x y : duplicable (array_bpts_to #t a x y) = { dup_f = dup_array_bpts_to #t a x y }
 
 inline_for_extraction noextract
-unobservable fn array_slice #t #a (x: array t) (#y: erased (seq t)) i j
+unobservable fn array_slice u#t (#t: Type u#t) #a (x: array t) (#y: erased (seq t)) i j
   preserves lifetime_alive a
   requires array_bpts_to a x y
   requires with_pure (SizeT.v i <= SizeT.v j /\ SizeT.v j < Seq.length y)
@@ -57,7 +57,7 @@ unobservable fn array_slice #t #a (x: array t) (#y: erased (seq t)) i j
 }
 
 inline_for_extraction noextract
-fn op_Array_Access #t #a (x: array t) (#y: erased (seq t)) (i: SizeT.t)
+fn op_Array_Access u#t (#t: Type u#t) #a (x: array t) (#y: erased (seq t)) (i: SizeT.t)
   preserves lifetime_alive a
   preserves array_bpts_to a x y
   requires with_pure (SizeT.v i < Seq.length y)
