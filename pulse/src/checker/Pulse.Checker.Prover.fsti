@@ -19,7 +19,13 @@ open Pulse.Checker.Base
 open Pulse.Typing
 open Pulse.Syntax.Base
 open Pulse.Syntax.Pure
+open Pulse.Syntax.Naming
 module T = FStar.Tactics.V2
+
+val elim_exists (g: env) (frame: slprop) u b body (x: nvar { ~(Set.mem (snd x) (dom g)) })
+    (g': env { g' == push_binding g (snd x) (fst x) (mk_erased u b.binder_ty) }) :
+  continuation_elaborator g (frame `tm_star` tm_exists_sl u b body)
+    g' (frame `tm_star` open_term' body (mk_reveal u b.binder_ty (term_of_nvar x)) 0)
 
 val prove (rng: range) (g: env) (ctxt goals: slprop) (allow_amb: bool) :
   T.Tac (g':env { env_extends g' g } & ctxt': slprop &

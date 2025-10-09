@@ -333,11 +333,47 @@ let check_renaming
   )
 #restart-solver
 #push-options "--z3rlimit_factor 2 --fuel 0 --ifuel 1"
+let rec peel_binders k (ex: slprop) pre r
+    (g:env) frame (bs: list binder) (t:term) (t_typ: tot_typing g t tm_slprop) :
+    T.Tac (g':env {env_extends g' g} & t': slprop & xs: list (universe & typ & nvar) &
+      continuation_elaborator
+        g (frame `tm_star` t)
+        g' (frame `tm_star` t')) =
+  match bs with
+  | [] -> (|g, t, [], k_elab_unit _ _|)
+  | with_b::bs ->
+    match inspect_term t with
+    | Tm_ExistsSL u b body ->
+      let x = with_b.binder_ppname, fresh g in
+      let ty = mk_erased u b.binder_ty in
+      let g' = push_binding g (snd x) (fst x) ty in
+      let t' = open_term' body (mk_reveal u b.binder_ty (term_of_nvar x)) 0 in
+      let t'_typ : tot_typing g' t' tm_slprop = RU.magic () in
+      let (|g'', t'', bs', k'|) = peel_binders k ex pre r g' frame bs t' t'_typ in
+      (| g'', t'', (u,b.binder_ty,x)::bs', k_elab_trans (Pulse.Checker.Prover.elim_exists g frame u b body x g') k' |)
+    | _ -> 
+      fail_doc g (Some r) [
+        text <| (Printf.sprintf "Expected an existential quantifier with at least %d binders; but only found %s with %d binders"
+            k (show ex) (k - List.Tot.length bs));
+        text "The context was:" ^^
+          indent (pp <| canon_slprop_print pre)
+      ]
+let open_st_term_with_reveals (t: st_term) (xs: list (universe & typ & nvar)) : Dv st_term =
+  // FIXME: this probably does something very wrong when the variables depend on each other...
+  let rec mk_subst xs (i: nat) : subst =
+    match xs with
+    | [] -> []
+    | (u,t,x)::xs -> RT.DT i (mk_reveal u t (term_of_nvar x)) :: mk_subst xs (i+1) in
+  subst_st_term t (mk_subst (List.Tot.rev xs) 0)
 let check_wild
       (g:env)
       (pre:term)
+      (pre_typing:tot_typing g pre tm_slprop)
+      (post_hint:post_hint_opt g)
+      (res_ppname:ppname)
       (st:st_term { head_wild st })
-: T.Tac st_term
+      (check:check_t)
+: T.Tac (checker_result_t g pre post_hint)
 = let Tm_ProofHintWithBinders ht = st.term in
   let open Pulse.PP in
   let { binders=bs; t=body } = ht in
@@ -361,25 +397,15 @@ let check_wild
 
     | [ex] ->
       let k = List.Tot.length bs in
-      let rec peel_binders (n:nat) (t:term) : T.Tac st_term =
-        if n = 0
-        then (
-          let ex_body = t in
-          { st with term = Tm_ProofHintWithBinders { ht with hint_type = ASSERT { p = ex_body; elaborated = true } }}
-        )
-        else (
-          match inspect_term t with
-          | Tm_ExistsSL u b body -> peel_binders (n-1) body
-          | _ -> 
-            fail_doc g (Some st.range) [
-              text <| (Printf.sprintf "Expected an existential quantifier with at least %d binders; but only found %s with %d binders"
-                  k (show ex) (k - n));
-              text "The context was:" ^^
-                indent (pp <| canon_slprop_print pre)
-            ]
-        )
-      in
-      peel_binders k ex
+      let frame = list_as_slprop rest in
+      let ex_typ : tot_typing g ex tm_slprop = RU.magic () in
+      let (|g', ex', bs, k|) = peel_binders k ex pre st.range g frame bs ex ex_typ in
+      let body = open_st_term_with_reveals body bs in
+      let pre_typ : tot_typing g' (tm_star frame ex') tm_slprop = RU.magic () in
+      let (| x'', g'', t'', ctxt'', k' |) =
+        check g' (frame `tm_star` ex') pre_typ post_hint res_ppname body in
+      assume pre == (frame `tm_star` ex);
+      (| x'', g'', t'', ctxt'', k_elab_trans k k' |)
 #pop-options
 
 //
@@ -414,8 +440,7 @@ let check
   allow_invert hint_type;
   match hint_type with
   | WILD ->
-    let st = check_wild g pre st in
-    check g pre pre_typing post_hint res_ppname st
+    check_wild g pre pre_typing post_hint res_ppname st check
 
   | SHOW_PROOF_STATE r ->
     let open FStar.Pprint in
