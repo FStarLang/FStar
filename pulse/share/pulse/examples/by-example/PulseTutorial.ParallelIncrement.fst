@@ -564,15 +564,13 @@ fn incr_pcm_t (r:ref int) (ghost_r:GPR.gref pcm) (l:L.lock) (t1:bool) (#n:int)
           t1_perm ghost_r (add_one n) t1
 {
   L.acquire l;
-  unfold lock_inv_pcm;
-  unfold lock_inv_ghost;
-  with n1 n2. assert (ghost_pcm_pts_to ghost_r (half n1, half n2));
+  unfold lock_inv_pcm; with n'. _;
+  unfold lock_inv_ghost; with n1 n2. _;
   let v = !r;
   r := v + 1;
   if t1 {
     rewrite (t1_perm ghost_r n t1) as
             (GPR.pts_to ghost_r (half n, None));
-    with n1 n2. assert (GPR.pts_to ghost_r (half n1, half n2));
     GPR.gather ghost_r (half n, None) (half n1, half n2);
     rewrite (GPR.pts_to ghost_r ((half n, None) `op pcm` (half n1, half n2))) as
             (GPR.pts_to ghost_r (full n1, half n2));
@@ -583,14 +581,13 @@ fn incr_pcm_t (r:ref int) (ghost_r:GPR.gref pcm) (l:L.lock) (t1:bool) (#n:int)
     rewrite (GPR.pts_to ghost_r (full (add_one n1), half n2)) as
             (GPR.pts_to ghost_r ((half (add_one n1), half n2) `op pcm` (half (add_one n1), None)));
     GPR.share ghost_r (half (add_one n1), half n2) (half (add_one n1), None);
-    fold lock_inv_ghost;
+    fold lock_inv_ghost ghost_r (!r);
     fold lock_inv_pcm r;
     L.release l;
     fold (t1_perm ghost_r (add_one n) true);
   } else {
     rewrite (t1_perm ghost_r n t1) as
             (GPR.pts_to ghost_r (None, half n));
-    with n1 n2. assert (GPR.pts_to ghost_r (half n1, half n2));
     GPR.gather ghost_r (None, half n) (half n1, half n2);
     rewrite (GPR.pts_to ghost_r ((None, half n2) `op pcm` (half n1, half n2))) as
             (GPR.pts_to ghost_r (half n1, full n2));
@@ -601,7 +598,7 @@ fn incr_pcm_t (r:ref int) (ghost_r:GPR.gref pcm) (l:L.lock) (t1:bool) (#n:int)
     rewrite (GPR.pts_to ghost_r (half n1, full (add_one n2))) as
             (GPR.pts_to ghost_r ((half n1, half (add_one n2)) `op pcm` (None, half (add_one n2))));
     GPR.share ghost_r (half n1, half (add_one n2)) (None, half (add_one n2));
-    fold lock_inv_ghost;
+    fold lock_inv_ghost ghost_r (!r);
     fold lock_inv_pcm;
     L.release l;
     fold (t1_perm ghost_r (add_one n) false)
