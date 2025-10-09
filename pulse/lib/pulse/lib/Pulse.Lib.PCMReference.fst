@@ -101,13 +101,6 @@ ghost fn share u#a (#a:Type u#a) (#pcm:pcm a) (r:pcm_ref pcm)
 }
 
 [@@allow_ambiguous]
-ghost fn drop_amb (p: slprop)
-  requires p
-{
-  drop_ p
-}
-
-[@@allow_ambiguous]
 ghost fn gather u#a (#a:Type u#a) (#pcm:pcm a) (r:pcm_ref pcm) (v0:a) (v1:a)
   requires pcm_pts_to r v0
   requires pcm_pts_to r v1
@@ -116,7 +109,7 @@ ghost fn gather u#a (#a:Type u#a) (#pcm:pcm a) (r:pcm_ref pcm) (v0:a) (v1:a)
 {
   let inst = pts_to_small r v0;
   with inst'. assert C.pcm_pts_to #_ #(raise #a #inst' pcm) r (U.raise_val #a #inst' v1);
-  drop_amb (small_token u#a inst');
+  rewrite each inst' as inst;
+  drop_ (small_token u#a inst');
   C.gather #(U.raise_t #inst a) #(raise #a #inst pcm) r (U.raise_val #a #inst v0) (U.raise_val #a #inst v1);
-  admit()
 }
