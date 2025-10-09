@@ -14,7 +14,7 @@
    limitations under the License.
 *)
 
-module Pulse.Lib.HigherArray.PtsTo
+module Pulse.Lib.Array.PtsTo
 #lang-pulse
 open FStar.Tactics.V2
 open Pulse.Lib.Core
@@ -24,7 +24,7 @@ open PulseCore.FractionalPermission
 open FStar.Ghost
 module SZ = FStar.SizeT
 module Seq = FStar.Seq
-open Pulse.Lib.HigherArray.Core
+open Pulse.Lib.Array.Core
 open Pulse.Lib.SmallType
 
 val pts_to (#a:Type u#a) ([@@@mkey]x:array a) (#[exact (`1.0R)] p:perm) (s: Seq.seq a) : slprop
@@ -138,3 +138,19 @@ fn pts_to_perm_bound u#a (#a: Type u#a) (#p:_) (arr: array a) (#s:Seq.seq a)
   preserves pts_to arr #p s
   requires pure (Seq.length s > 0)
   ensures pure (p <=. 1.0R)
+
+fn with_local u#a
+  (#a:Type0)
+  (init:a)
+  (len:SZ.t)
+  (#pre:slprop)
+  (ret_t:Type u#a)
+  (#post:ret_t -> slprop)
+  (body:(arr:array a) -> stt ret_t (pre **
+                                    (pts_to arr (Seq.create (SZ.v len) init) **
+                                     (pure (is_full_array arr) **
+                                      pure (length arr == SZ.v len))))
+                                   (fun r -> post r ** (exists* v. pts_to arr v)))
+  requires pre
+  returns r: ret_t
+  ensures post r

@@ -84,7 +84,7 @@ fn test_inner_lambda (#a:Type0)
 requires pts_to x 'vx ** pts_to y 'vy
 ensures  pts_to x 'vy ** pts_to y 'vy
 {
-  fn write_helper (#a:Type) (x:ref a) (n:a) (#vx:erased a)
+  fn write_helper (#a:Type0) (x:ref a) (n:a) (#vx:erased a)
     requires pts_to x vx
     ensures  pts_to x n
   {

@@ -13,7 +13,7 @@ fn test ()
 
 fn test2 ()
 {
-  let mut p : ref int = null;
+  let mut p : ref u#0 int = null;
   ();
 }
 

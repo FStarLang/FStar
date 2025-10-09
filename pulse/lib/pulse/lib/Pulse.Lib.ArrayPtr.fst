@@ -19,7 +19,7 @@ module Pulse.Lib.ArrayPtr
 
 noeq
 type ptr t = {
-    base: A.array t;
+    base: A.array u#0 t;
     offset: (offset: SZ.t { SZ.v offset <= A.length base})
 }
 
@@ -162,7 +162,7 @@ fn split (#t: Type) (s: ptr t) (#p: perm) (i: SZ.t)
     with s1. assert A.pts_to_range s.base (SZ.v s.offset) (SZ.v s'.offset) #p s1;
     rewrite
         (A.pts_to_range s.base (SZ.v s.offset) (SZ.v s'.offset) #p s1)
-        as (A.pts_to_range s.base (SZ.v s.offset) (SZ.v s.offset + SZ.v i) #p s1);
+        as (A.pts_to_range s.base (SZ.v s.offset) (SZ.v s.offset + Seq.length s1) #p s1);
     fold pts_to s #p s1;
     with s2. assert A.pts_to_range s.base (SZ.v s'.offset) (SZ.v s.offset + Seq.length v) #p s2;
     rewrite
@@ -191,7 +191,7 @@ ghost fn ghost_split (#t: Type) (s: ptr t) (#p: perm) (i: SZ.t)
     with s1. assert A.pts_to_range s.base (SZ.v s.offset) (SZ.v s'.offset) #p s1;
     rewrite
         (A.pts_to_range s.base (SZ.v s.offset) (SZ.v s'.offset) #p s1)
-        as (A.pts_to_range s.base (SZ.v s.offset) (SZ.v s.offset + SZ.v i) #p s1);
+        as (A.pts_to_range s.base (SZ.v s.offset) (SZ.v s.offset + Seq.length s1) #p s1);
     fold pts_to s #p s1;
     with s2. assert A.pts_to_range s.base (SZ.v s'.offset) (SZ.v s.offset + Seq.length v) #p s2;
     rewrite
@@ -210,8 +210,8 @@ fn join (#t: Type) (s1: ptr t) (#p: perm) (#v1: Seq.seq t) (s2: ptr t) (#v2: Seq
     unfold pts_to s1 #p v1;
     unfold pts_to s2 #p v2;
     rewrite (A.pts_to_range s2.base (SZ.v s2.offset) (SZ.v s2.offset + Seq.length v2) #p v2)
-        as (A.pts_to_range s1.base (SZ.v s1.offset + Seq.length v1) (SZ.v s1.offset + Seq.length v1 + Seq.length v2) #p v2);
-    A.pts_to_range_join s1.base (SZ.v s1.offset) (SZ.v s1.offset + Seq.length v1) (SZ.v s1.offset + Seq.length v1 + Seq.length v2);
+        as (A.pts_to_range s1.base (SZ.v s1.offset + Seq.length v1) (SZ.v s1.offset + Seq.length (Seq.append v1 v2)) #p v2);
+    A.pts_to_range_join s1.base (SZ.v s1.offset) (SZ.v s1.offset + Seq.length v1) (SZ.v s1.offset + Seq.length (Seq.append v1 v2));
     fold pts_to s1 #p (Seq.append v1 v2)
 }
 

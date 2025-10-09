@@ -172,14 +172,14 @@ let rec extract_mlty (g:env) (t:S.mlty) : typ =
          S.string_of_mlpath p = "Prims.dtuple2" ->
     mk_tuple_typ (List.map (extract_mlty g) l)
   | S.MLTY_Named ([arg], p)
-    when S.string_of_mlpath p = "Pulse.Lib.HigherReference.ref" ->
+    when S.string_of_mlpath p = "Pulse.Lib.Reference.ref" ->
     let is_mut = true in
     arg |> extract_mlty g |> mk_ref_typ is_mut
   | S.MLTY_Named ([arg], p)
     when S.string_of_mlpath p = "Pulse.Lib.Box.box" ->
     arg |> extract_mlty g |> mk_box_typ
   | S.MLTY_Named ([arg], p)
-    when S.string_of_mlpath p = "Pulse.Lib.HigherArray.Core.array" ->
+    when S.string_of_mlpath p = "Pulse.Lib.Array.Core.array" ->
     let is_mut = true in
     mk_slice is_mut arg
   | S.MLTY_Named ([arg], p)
@@ -449,8 +449,8 @@ let rec lb_init_and_def (g:env) (lb:S.mllb)
     match lb.mllb_def.expr, lb.mllb_tysc with
     | S.MLE_App ({expr=S.MLE_TApp ({expr=S.MLE_Name pe}, _)}, [_; init]),
       Some ([], S.MLTY_Named ([ty], pt))
-      when S.string_of_mlpath pe = "Pulse.Lib.HigherReference.alloc" &&
-           S.string_of_mlpath pt = "Pulse.Lib.HigherReference.ref" ->
+      when S.string_of_mlpath pe = "Pulse.Lib.Reference.alloc" &&
+           S.string_of_mlpath pt = "Pulse.Lib.Reference.ref" ->
       let is_mut = true in
       is_mut,
       extract_mlty g ty,
@@ -458,8 +458,8 @@ let rec lb_init_and_def (g:env) (lb:S.mllb)
 
     | S.MLE_App ({expr=S.MLE_TApp ({expr=S.MLE_Name pe}, _)}, [_; init; len]),
       Some ([], S.MLTY_Named ([ty], pt))
-      when S.string_of_mlpath pe = "Pulse.Lib.HigherArray.Core.mask_alloc" &&
-           S.string_of_mlpath pt = "Pulse.Lib.HigherArray.Core.array" ->
+      when S.string_of_mlpath pe = "Pulse.Lib.Array.Core.mask_alloc" &&
+           S.string_of_mlpath pt = "Pulse.Lib.Array.Core.array" ->
       let init = extract_mlexpr g init in
       let len = extract_mlexpr g len in
       let is_mut = false in
@@ -557,7 +557,7 @@ and extract_mlexpr (g:env) (e:S.mlexpr) : expr =
     mk_expr_field_unnamed e 2
 
   | S.MLE_App ({expr=S.MLE_TApp ({expr=S.MLE_Name p}, [_])}, [e1; e2; _])
-    when S.string_of_mlpath p = "Pulse.Lib.HigherReference.write" ||
+    when S.string_of_mlpath p = "Pulse.Lib.Reference.write" ||
          S.string_of_mlpath p = "Pulse.Lib.Box.op_Colon_Equals" ||
          S.string_of_mlpath p = "Pulse.Lib.Mutex.op_Colon_Equals" ->
     let e1 = extract_mlexpr g e1 in
@@ -569,7 +569,7 @@ and extract_mlexpr (g:env) (e:S.mlexpr) : expr =
     then mk_ref_assign e1 e2
     else mk_assign e1 e2
   | S.MLE_App ({expr=S.MLE_TApp ({expr=S.MLE_Name p}, [_])}, [e; _; _])
-    when S.string_of_mlpath p = "Pulse.Lib.HigherReference.read" ||
+    when S.string_of_mlpath p = "Pulse.Lib.Reference.read" ||
          S.string_of_mlpath p = "Pulse.Lib.Box.op_Bang" ||
          S.string_of_mlpath p = "Pulse.Lib.Mutex.op_Bang" ->
     let e = extract_mlexpr g e in
@@ -604,7 +604,7 @@ and extract_mlexpr (g:env) (e:S.mlexpr) : expr =
 
 
   | S.MLE_App ({expr=S.MLE_TApp ({expr=S.MLE_Name p}, [_])}, e::i::_)
-    when S.string_of_mlpath p = "Pulse.Lib.HigherArray.Core.mask_read" ||
+    when S.string_of_mlpath p = "Pulse.Lib.Array.Core.mask_read" ||
          S.string_of_mlpath p = "Pulse.Lib.Slice.op_Array_Access" ||
          S.string_of_mlpath p = "Pulse.Lib.Vec.op_Array_Access" ||
          S.string_of_mlpath p = "Pulse.Lib.Vec.read_ref" ->
@@ -612,7 +612,7 @@ and extract_mlexpr (g:env) (e:S.mlexpr) : expr =
     mk_expr_index (extract_mlexpr g e) (extract_mlexpr g i)
 
   | S.MLE_App ({expr=S.MLE_TApp ({expr=S.MLE_Name p}, [_])}, e1::e2::e3::_)
-    when S.string_of_mlpath p = "Pulse.Lib.HigherArray.Core.mask_write" ||
+    when S.string_of_mlpath p = "Pulse.Lib.Array.Core.mask_write" ||
          S.string_of_mlpath p = "Pulse.Lib.Slice.op_Array_Assignment" ||
          S.string_of_mlpath p = "Pulse.Lib.Vec.op_Array_Assignment" ||
          S.string_of_mlpath p = "Pulse.Lib.Vec.write_ref" ->
@@ -676,7 +676,7 @@ and extract_mlexpr (g:env) (e:S.mlexpr) : expr =
     mk_call (mk_expr_path_singl vec_new_fn) [e1; e2]
 
   | S.MLE_App ({expr=S.MLE_TApp ({expr=S.MLE_Name p}, [_])}, [_; e1; e2])
-    when S.string_of_mlpath p = "Pulse.Lib.HigherArray.Core.mask_alloc" ->
+    when S.string_of_mlpath p = "Pulse.Lib.Array.Core.mask_alloc" ->
 
     fail_nyi (Format.fmt1 "mlexpr %s" (S.mlexpr_to_string e))
 
@@ -710,7 +710,7 @@ and extract_mlexpr (g:env) (e:S.mlexpr) : expr =
 
 
   | S.MLE_App ({expr=S.MLE_TApp ({expr=S.MLE_Name p}, [_])}, [e1; e2; _])
-    when S.string_of_mlpath p = "Pulse.Lib.HigherArray.Core.mask_free" ->
+    when S.string_of_mlpath p = "Pulse.Lib.Array.Core.mask_free" ->
 
     fail_nyi (Format.fmt1 "mlexpr %s" (S.mlexpr_to_string e))
 

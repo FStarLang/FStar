@@ -630,7 +630,7 @@ let mk_rewrite (p q:R.term) =
 
 let mk_withlocal (ret_u:R.universe) (a init pre ret_t post body:R.term) =
   let open R in
-  let lid = mk_pulse_lib_reference_lid "with_local" in
+  let lid = mk_pulse_lib_reference_lid "with_local0" in
   let t = pack_ln (Tv_UInst (R.pack_fv lid) [ret_u]) in
   let t = pack_ln (Tv_App t (a, Q_Implicit)) in
   let t = pack_ln (Tv_App t (init, Q_Explicit)) in
@@ -674,39 +674,41 @@ let pts_to_lid = mk_pulse_lib_reference_lid "pts_to"
 
 let mk_ref (a:R.term) : R.term =
   let open R in
-  let t = pack_ln (Tv_FVar (pack_fv ref_lid)) in
+  let t = pack_ln (Tv_UInst (pack_fv ref_lid) [uzero]) in
   pack_ln (Tv_App t (a, Q_Explicit))
 
 let mk_pts_to (a:R.term) (r:R.term) (perm:R.term) (v:R.term) : R.term =
   let open R in
-  let t = pack_ln (Tv_FVar (pack_fv pts_to_lid)) in
+  let t = pack_ln (Tv_UInst (pack_fv pts_to_lid) [uzero]) in
   let t = pack_ln (Tv_App t (a, Q_Implicit)) in
   let t = pack_ln (Tv_App t (r, Q_Explicit)) in
   let t = pack_ln (Tv_App t (perm, Q_Implicit)) in
   pack_ln (Tv_App t (v, Q_Explicit))
 
 let pulse_lib_array_core = ["Pulse"; "Lib"; "Array"; "Core"]
+let pulse_lib_array_ptsto = ["Pulse"; "Lib"; "Array"; "PtsTo"]
 let mk_pulse_lib_array_core_lid s = pulse_lib_array_core @ [s]
 
 let array_lid = mk_pulse_lib_array_core_lid "array"
-let array_pts_to_lid = mk_pulse_lib_array_core_lid "pts_to"
+let array_pts_to_lid = pulse_lib_array_ptsto @ ["pts_to"]
 let array_length_lid = mk_pulse_lib_array_core_lid "length"
 let array_is_full_lid = mk_pulse_lib_array_core_lid "is_full_array"
+let array_with_local_lid = pulse_lib_array_ptsto @ ["with_local"]
 
 let mk_array (a:R.term) : R.term =
   let open R in
-  let t = pack_ln (Tv_FVar (pack_fv array_lid)) in
+  let t = pack_ln (Tv_UInst (pack_fv array_lid) [uzero]) in
   pack_ln (Tv_App t (a, Q_Explicit))
 
 let mk_array_length (a:R.term) (arr:R.term) : R.term =
   let open R in
-  let t = pack_ln (Tv_FVar (pack_fv array_length_lid)) in
+  let t = pack_ln (Tv_UInst (pack_fv array_length_lid) [uzero]) in
   let t = pack_ln (Tv_App t (a, Q_Implicit)) in
   pack_ln (Tv_App t (arr, Q_Explicit))
 
 let mk_array_pts_to (a:R.term) (arr:R.term) (perm:R.term) (v:R.term) : R.term =
   let open R in
-  let t = pack_ln (Tv_FVar (pack_fv array_pts_to_lid)) in
+  let t = pack_ln (Tv_UInst (pack_fv array_pts_to_lid) [uzero]) in
   let t = pack_ln (Tv_App t (a, Q_Implicit)) in
   let t = pack_ln (Tv_App t (arr, Q_Explicit)) in
   let t = pack_ln (Tv_App t (perm, Q_Implicit)) in
@@ -714,7 +716,7 @@ let mk_array_pts_to (a:R.term) (arr:R.term) (perm:R.term) (v:R.term) : R.term =
 
 // let mk_array_is_full (a:R.term) (arr:R.term) : R.term =
 //   let open R in
-//   let t = pack_ln (Tv_FVar (pack_fv array_is_full_lid)) in
+//   let t = pack_ln (Tv_UInst (pack_fv array_is_full_lid) [uzero]) in
 //   let t = pack_ln (Tv_App t (a, Q_Implicit)) in
 //   pack_ln (Tv_App t (arr, Q_Explicit))
 
@@ -732,7 +734,7 @@ let mk_seq_create (u:R.universe) (a:R.term) (len:R.term) (v:R.term) : R.term =
 
 let mk_withlocalarray (ret_u:R.universe) (a init len pre ret_t post body:R.term) =
   let open R in
-  let lid = mk_pulse_lib_array_core_lid "with_local" in
+  let lid = array_with_local_lid in
   let t = pack_ln (Tv_UInst (R.pack_fv lid) [ret_u]) in
   let t = pack_ln (Tv_App t (a, Q_Implicit)) in
   let t = pack_ln (Tv_App t (init, Q_Explicit)) in

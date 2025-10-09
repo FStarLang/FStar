@@ -18,14 +18,15 @@ module U = Pulse.Lib.Raise
 
 // Type class of types that can be stored in a reference
 [@@Tactics.Typeclasses.tcclass; erasable]
-let small_type = U.raisable u#a u#2
+let small_type = U.raisable u#a u#3
 
 inline_for_extraction noextract
 instance small_type_non_info : Pulse.Lib.NonInformative.non_informative (small_type u#a) =
   U.raisable_non_info
 
 instance small_type0 : small_type u#0 = U.raisable_inst
-instance small_type1 : small_type u#1 = U.raisable_inst u#1 u#2
-instance small_type2 : small_type u#2 = U.raisable_inst u#2 u#2
+instance small_type1 : small_type u#1 = U.raisable_inst u#1 u#3
+instance small_type2 : small_type u#2 = U.raisable_inst u#2 u#3
+instance small_type3 : small_type u#3 = U.raisable_inst u#3 u#3
 
-instance of_small_type {| inst : small_type u#a |} : U.raisable u#a u#2 = inst
+instance of_small_type {| inst : small_type u#a |} : U.raisable u#a u#3 = inst

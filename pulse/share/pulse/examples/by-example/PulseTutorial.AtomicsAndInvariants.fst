@@ -95,7 +95,7 @@ opens [i]
 
 
 ghost
-fn pts_to_dup_impossible #a (x:ref a)
+fn pts_to_dup_impossible u#a (#a: Type u#a) (x:ref a)
 requires pts_to x 'v ** pts_to x 'u
 ensures  pts_to x 'v ** pts_to x 'u ** pure False
 {

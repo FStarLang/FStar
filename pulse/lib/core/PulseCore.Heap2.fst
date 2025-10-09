@@ -401,9 +401,6 @@ let change_slprop (p q:slprop)
     in
     refined_pre_action_as_action g
 
-
-module U = Pulse.Lib.Raise    
-
 let elim_pure (p:prop)
   : action (pure p) (u:unit{p}) (fun _ -> emp)
   = let f

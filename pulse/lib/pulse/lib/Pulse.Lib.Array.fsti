@@ -17,10 +17,9 @@
 module Pulse.Lib.Array
 #lang-pulse
 open Pulse.Lib.Core
-include Pulse.Lib.Array.Core
+include Pulse.Lib.Array.Basic
 open PulseCore.FractionalPermission
 open FStar.Ghost
-include Pulse.Lib.Array.Core
 module SZ = FStar.SizeT
 module Seq = FStar.Seq
 module U8 = FStar.UInt8

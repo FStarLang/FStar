@@ -26,7 +26,7 @@ module Seq = FStar.Seq
 module T = FStar.Tactics.V2
 
 module R = Pulse.Lib.Reference
-module A = Pulse.Lib.Array.Core
+module A = Pulse.Lib.Array.Basic
 
 val vec ([@@@strictly_positive] a:Type0) : Type u#0
 

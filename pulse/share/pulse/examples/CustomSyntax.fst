@@ -405,18 +405,18 @@ fn incr (x:nat)
 
 
 open Pulse.Lib.PCM.Fraction
+module GR = Pulse.Lib.GhostPCMReference
 
 //
 // The example checks that ghost_pcm_ref is considered non-informative
 //
 
-
-fn test_ghost_ref_non_informative (#a:Type u#1) (y:a)
+fn test_ghost_ref_non_informative u#a (#a:Type u#a) {|small_type u#a|} (y:a)
   requires emp
   ensures emp
 {
   full_values_compatible y;
-  let r = ghost_alloc #_ #(pcm_frac #a) (hide (Some (y, 1.0R)));
-  drop_ (ghost_pcm_pts_to r _);
+  let r = GR.alloc #_ #(pcm_frac #a) (hide (Some (y, 1.0R)));
+  drop_ (GR.pts_to r _);
 }
 

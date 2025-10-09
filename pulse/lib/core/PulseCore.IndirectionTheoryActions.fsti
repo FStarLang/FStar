@@ -101,7 +101,6 @@ val frame (#a:Type)
 : _act_except a ak opened_invariants (pre `star` frame) (fun x -> post x `star` frame)
 
 open FStar.Ghost
-module U = Pulse.Lib.Raise
 val witness_exists (#opened_invariants:_) (#a:_) (p:a -> slprop)
 : ghost_act (erased a) opened_invariants
            (op_exists_Star p)
@@ -111,11 +110,6 @@ val intro_exists (#opened_invariants:_) (#a:_) (p:a -> slprop) (x:erased a)
 : ghost_act unit opened_invariants
   (p x)
   (fun _ -> op_exists_Star p)
-
-val raise_exists (#opened_invariants:_) (#a:Type u#a) {| U.raisable u#a u#b |} (p:a -> slprop)
-: ghost_act unit opened_invariants
-    (op_exists_Star p)
-    (fun _a -> op_exists_Star #(U.raise_t u#a u#b a) (U.lift_dom p))
 
 val elim_pure (#opened_invariants:_) (p:prop)
 : ghost_act (u:unit{p}) opened_invariants (pure p) (fun _ -> emp)

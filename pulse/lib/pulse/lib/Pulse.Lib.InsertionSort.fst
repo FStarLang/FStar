@@ -57,8 +57,8 @@ let sorted_concat
   (ensures sorted (Seq.append s0 s1))
 = () 
 
-fn op_Array_Assignment
-        (#t: Type)
+fn op_Array_Assignment u#a
+        (#t: Type u#a)
         (a: array t)
         (i: SZ.t)
         (v: t)
@@ -135,8 +135,8 @@ let step_outer_invariant
 
 
 #push-options "--z3rlimit_factor 2"
-fn insertion_sort
-      (#t:Type)
+fn insertion_sort u#a
+      (#t:Type u#a)
       {| total_order t |}
       (a:A.array t)
       (len:SZ.t)
