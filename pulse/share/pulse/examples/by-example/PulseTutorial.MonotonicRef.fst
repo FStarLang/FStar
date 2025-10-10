@@ -85,5 +85,5 @@ ensures pts_to r #1.0R v
   unfold pts_to u#a;
   with f h. assert (GR.pts_to r (f, h));
   GR.write r _ _ (FP.mk_frame_preserving_upd p h v);
-  fold pts_to u#a;
+  fold pts_to r v;
 }
