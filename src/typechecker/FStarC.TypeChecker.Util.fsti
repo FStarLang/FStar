@@ -181,7 +181,8 @@ val update_env_polymonadic_bind :
   env -> lident -> lident -> lident -> tscheme -> indexed_effect_combinator_kind -> env
 
 val try_lookup_record_type : env -> lident -> option DsEnv.record_or_dc
-val find_record_or_dc_from_typ : env -> option typ -> unresolved_constructor -> Range.t -> DsEnv.record_or_dc & lident & fv
+val head_fv_of_typ (_:env) (t:typ) : option fv
+val find_record_or_dc_from_head_fv : env -> option fv -> unresolved_constructor -> Range.t -> DsEnv.record_or_dc & lident & fv
 val field_name_matches : lident -> DsEnv.record_or_dc -> ident -> bool
 val make_record_fields_in_order : env -> unresolved_constructor -> option (either typ typ) ->
                                 DsEnv.record_or_dc ->
