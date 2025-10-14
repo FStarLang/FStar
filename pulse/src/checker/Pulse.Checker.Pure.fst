@@ -520,6 +520,23 @@ let non_informative_class_typing
 let non_info_tac_tm : term =
   pack_ln (Tv_FVar (pack_fv (explode_qn "Pulse.Lib.Core.non_info_tac")))
 
+let non_info_unit : term =
+  pack_ln (Tv_FVar (pack_fv (explode_qn "Pulse.Lib.NonInformative.non_informative_unit")))
+
+let non_info_prop : term =
+  pack_ln (Tv_FVar (pack_fv (explode_qn "Pulse.Lib.NonInformative.non_informative_prop")))
+
+let non_info_erased_tm (u:universe) (t:term) : term =
+  let head = pack_fv (explode_qn "Pulse.Lib.NonInformative.non_informative_erased") in
+  let head = pack_ln (Tv_UInst head [u]) in
+  mk_e_app head [t]
+
+let non_info_squash_tm (u:universe) (t:term) : term =
+  let head = pack_fv (explode_qn "Pulse.Lib.NonInformative.non_informative_squash") in
+  let head = pack_ln (Tv_UInst head [u]) in
+  mk_e_app head [t]
+
+
 (* This function attempts to construct a dictionary for `NonInformative.non_informative ty`.
 To do so, we simply create that constraint (and prove it's well-typed), and then
 call the tcresolve typeclass resolution tactic on it to obtain a dictionary and
@@ -532,7 +549,34 @@ let try_get_non_informative_witness_aux (g:env) (u:universe) (ty:term) (ty_typin
     let goal_typing_tok : squash (typing_token r_env goal (E_Total, R.pack_ln (R.Tv_Type u))) =
       match constraint_typing with | E tok -> Squash.return_squash tok
     in
-    let r = T.call_subtac_tm r_env non_info_tac_tm u goal in
+    let mk_ret_t (r:term) : RTB.ret_t (w:term { typing_token r_env w (E_Total, goal) }) =
+      assume (typing_token r_env r (E_Total, goal));
+      Some r, []
+    in
+    let fallback () : T.Tac (RTB.ret_t (w:term { typing_token r_env w (E_Total, goal) })) =
+      T.call_subtac_tm r_env non_info_tac_tm u goal
+    in
+    let r : RTB.ret_t (w:term { typing_token r_env w (E_Total, goal) }) = 
+      match T.hua ty with
+      | Some (fv, [], []) ->
+        let nm = implode_qn (inspect_fv fv) in
+        if nm = `%Prims.unit
+        then mk_ret_t non_info_unit
+        else if nm = `%Prims.prop
+        then mk_ret_t non_info_prop
+        else fallback()
+      
+      | Some (fv, [u], [(arg, _)]) ->
+        let nm = implode_qn (inspect_fv fv) in
+        if nm = `%Prims.squash
+        then mk_ret_t (non_info_squash_tm u arg)
+        else if nm = `%FStar.Ghost.erased
+        then mk_ret_t (non_info_erased_tm u arg)
+        else fallback ()
+
+      | _ ->
+        fallback()
+    in
     match r with
     | None, issues ->
       None, issues
