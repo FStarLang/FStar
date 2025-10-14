@@ -3675,7 +3675,14 @@ let try_lookup_record_type env (typename:lident)
     - t is None, the uc is used
     - otherwise t overrides uc
  *)
-let find_record_or_dc_from_typ env (t:option typ) (uc:unresolved_constructor) rng =
+
+let head_fv_of_typ env (t:typ) : option fv =
+    let t, _ = U.head_and_args (N.unfold_whnf' [Unascribe; Unmeta; Unrefine] env t) in
+    match (SS.compress (U.un_uinst t)).n with
+    | Tm_fvar fv -> Some fv
+    | _ -> None
+
+let find_record_or_dc_from_head_fv env (head_fv:option fv) (uc:unresolved_constructor) rng =
     let default_rdc () =
       let open FStarC.Errors.Msg in
       match uc.uc_typename, uc.uc_fields with
@@ -3698,20 +3705,13 @@ let find_record_or_dc_from_typ env (t:option typ) (uc:unresolved_constructor) rn
             (Format.fmt1 "Record name %s not found." (string_of_lid tn))
     in
     let rdc : DsEnv.record_or_dc =
-      match t with
+      match head_fv with
       | None -> default_rdc()
-      | Some t ->
-        let thead, _ = 
-          U.head_and_args (N.unfold_whnf' [Unascribe; Unmeta; Unrefine] env t)
-        in
-        match (SS.compress (U.un_uinst thead)).n with
-        | Tm_fvar type_name ->
-          begin
-          match try_lookup_record_type env type_name.fv_name with
-          | None -> default_rdc ()
-          | Some r -> r
-          end
-        | _ -> default_rdc()
+      | Some type_name -> (
+        match try_lookup_record_type env type_name.fv_name with
+        | None -> default_rdc ()
+        | Some r -> r
+      )
     in
     let constrname =
           let name = lid_of_ids (ns_of_lid rdc.typename @ [rdc.constrname]) in

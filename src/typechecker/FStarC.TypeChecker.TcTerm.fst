@@ -1165,22 +1165,29 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
       )
     in
     let (rdc, constrname, constructor), topt =
-      match Env.expected_typ env with
-      | Some (t, _) ->
-        //first, prefer the expected type from the context, if any
-        TcUtil.find_record_or_dc_from_typ env (Some t) uc top.pos, Some (Inl t)
-
-      | None ->
+      let fallback env =
         match base_term with
         | Some e ->
           //Otherwise, if we have an {e with ...}, compute the type of e and use it
           //(there's no expected type anyway from the context, so no need to clear it check e)
           let _, lc, _ = tc_term env e in
-          TcUtil.find_record_or_dc_from_typ env (Some lc.res_typ) uc top.pos, Some (Inr lc.res_typ)
+          TcUtil.find_record_or_dc_from_head_fv env (TcUtil.head_fv_of_typ env lc.res_typ) uc top.pos, Some (Inr lc.res_typ)
 
         | None ->
           //Otherwise, no type info here, use what ToSyntax decided
-          TcUtil.find_record_or_dc_from_typ env None uc top.pos, None
+          TcUtil.find_record_or_dc_from_head_fv env None uc top.pos, None
+      in
+      match Env.expected_typ env with
+      | Some (t, _) -> (
+        match TcUtil.head_fv_of_typ env t with
+        | None ->
+          fallback (Env.clear_expected_typ env |> fst) //no head fv, fallback
+        | hfv ->
+          //first, prefer the expected type from the context, if any
+          TcUtil.find_record_or_dc_from_head_fv env hfv uc top.pos, Some (Inl t)
+      )
+
+      | None -> fallback env
     in
     let rdc : DsEnv.record_or_dc = rdc in //for type-based disambiguation of rdc projectors below
     let constructor = S.fv_to_tm constructor in
@@ -3261,7 +3268,7 @@ and tc_pat env (pat_t:typ) (p0:pat) :
           false
 
         | Pat_cons({fv_qual = Some (Unresolved_constructor uc)}, us_opt, sub_pats) ->
-          let rdc, _, constructor_fv = TcUtil.find_record_or_dc_from_typ env (Some t) uc p.p in
+          let rdc, _, constructor_fv = TcUtil.find_record_or_dc_from_head_fv env (TcUtil.head_fv_of_typ env t) uc p.p in
           let f_sub_pats = List.zip uc.uc_fields sub_pats in
           let sub_pats =
             TcUtil.make_record_fields_in_order env uc (Some (Inl t)) rdc f_sub_pats
