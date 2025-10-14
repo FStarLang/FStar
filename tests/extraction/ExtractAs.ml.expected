@@ -1,11 +1,11 @@
 open Prims
-let (fail_unless : Prims.bool -> Prims.string) =
-  fun b -> if b then "ok" else Prims.magic ()
-let rec (frob : Prims.int -> Prims.int) = fun x -> x + (Prims.of_int (10))
-let (uu___0 : Prims.string) =
+let fail_unless (b : Prims.bool) : Prims.string=
+  if b then "ok" else Prims.magic ()
+let rec frob (x : Prims.nat) : Prims.int= x + (Prims.of_int (10))
+let uu___0 : Prims.string=
   fail_unless ((frob Prims.int_one) = (Prims.of_int (11)))
-let (bar : Prims.int -> Prims.int) = fun z -> z + (Prims.of_int (10))
-let (uu___1 : Prims.string) =
+let bar (z : Prims.int) : Prims.int= z + (Prims.of_int (10))
+let uu___1 : Prims.string=
   fail_unless ((bar Prims.int_one) = (Prims.of_int (11)))
-let rec (loopid : Prims.nat -> Prims.nat) = fun x -> x
-let (two : Prims.nat) = loopid (Prims.of_int (2))
+let rec loopid (x : Prims.nat) : Prims.nat= x
+let two : Prims.nat= loopid (Prims.of_int (2))

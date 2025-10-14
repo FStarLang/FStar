@@ -294,7 +294,7 @@ let elim_tup2_inv
        (bl1:LB.buffer_lens b1 f1)
        (bl2:LB.buffer_lens b2 f2{composable (LB.lens_of bl1) (LB.lens_of bl2)})
    : Lemma (let t = mk_tup2 bl1 bl2 in
-            reveal_inv();
+            reveal_inv u#0 u#0 ();
             (forall h. {:pattern inv (lens_of t) h}
               inv (lens_of t) h ==>
               (LB.lens_of bl1).invariant b1 h /\

@@ -45,7 +45,7 @@ let term_to_string (e:Env.env) (t:term) : string =
 
 let unshadow (bs : binders) (t : term) : binders & term =
     (* string name of a bv *)
-    let sset bv s = S.gen_bv s (Some (range_of_id bv.ppname)) bv.sort in
+    let sset bv s = { bv with ppname = Ident.mk_ident (s, pos bv) } in //S.gen_bv s (Some (range_of_id bv.ppname)) bv.sort in
     let fresh_until b f =
         let rec aux i =
             let t = b ^ "'" ^ show i in

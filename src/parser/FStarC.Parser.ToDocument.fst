@@ -2146,10 +2146,14 @@ and p_projectionLHS e = match e.tm with
     let es = extract_from_ref_set e in
     surround 2 0 (bang ^^ lbrace) (separate_map_or_flow (comma ^^ break1) p_appTerm es) rbrace
 
+  // Print uvars without the space.
+  | Labeled ({tm=Wild}, s, _) ->
+    str ("(*" ^ s ^ "*)_")
+
   (* KM : I still think that it is wrong to print a term that's not parseable... *)
   (* VD: Not parsable, but it can be called with a Labeled term via term_to_string *)
   | Labeled (e, s, b) ->
-      str ("(*" ^ s ^ "*)") ^/^ p_term false false e
+      group <| str ("(*" ^ s ^ "*)") ^/^ p_term false false e
 
   (* Failure cases : these cases are not handled in the printing grammar since *)
   (* they are considered as invalid AST. We try to fail as soon as possible in order *)

@@ -33,20 +33,23 @@ let is_monotonic (#a:Type) (wp:pure_wp' a) =
    *)
   forall (p q:pure_post a). (forall (x:a). p x ==> q x) ==> (wp p ==> wp q)  
 
-let elim_pure_wp_monotonicity (#a:Type) (wp:pure_wp a)
-  : Lemma (is_monotonic wp)
-  = reveal_opaque (`%pure_wp_monotonic) pure_wp_monotonic
+let elim_pure_wp_monotonicity (#a:Type u#a) (wp:pure_wp a)
+  : Lemma (is_monotonic u#a wp)
+  = reveal_opaque (`%pure_wp_monotonic) (pure_wp_monotonic u#a)
 
 let elim_pure_wp_monotonicity_forall (_:unit)
   : Lemma
-    (forall (a:Type) (wp:pure_wp a). is_monotonic wp)
-  = reveal_opaque (`%pure_wp_monotonic) pure_wp_monotonic
+    (forall (a:Type u#a) (wp:pure_wp a). is_monotonic u#a wp)
+  = introduce forall (a:Type u#a) (wp:pure_wp a). is_monotonic u#a wp
+    with (
+      reveal_opaque (`%pure_wp_monotonic) (pure_wp_monotonic u#a)
+    )
 
-let intro_pure_wp_monotonicity (#a:Type) (wp:pure_wp' a)
+let intro_pure_wp_monotonicity (#a:Type u#a) (wp:pure_wp' a)
   : Lemma
-      (requires is_monotonic wp)
-      (ensures pure_wp_monotonic a wp)
-  = reveal_opaque (`%pure_wp_monotonic) pure_wp_monotonic
+      (requires is_monotonic u#a wp)
+      (ensures pure_wp_monotonic u#a a wp)
+  = reveal_opaque (`%pure_wp_monotonic) (pure_wp_monotonic u#a)
 
 unfold
 let as_pure_wp (#a:Type) (wp:pure_wp' a)

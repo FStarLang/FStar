@@ -3866,7 +3866,7 @@ and check_top_level_let env e =
          (* Check that it doesn't have a top-level effect; warn if it does.
             Do not warn in phase1 to avoid double errors.*)
          let e2, c1 =
-           let ok, c1 = TcUtil.check_top_level env g1 c1 in //check that it has no effect and a trivial pre-condition
+           let ok, c1 = TcUtil.check_top_level (Env.push_univ_vars env univ_vars) g1 c1 in //check that it has no effect and a trivial pre-condition
            if ok
            then e2, c1
            else (
@@ -4053,7 +4053,7 @@ and check_top_level_let_rec env top =
 
            let all_lb_names = lbs |> List.map (fun lb -> Inr?.v lb.lbname) |> Some in
 
-           let lbs, g_lbs =
+           let univ_vars, lbs, g_lbs =
               if not env.generalize
               then
                 let lbs =
@@ -4064,7 +4064,7 @@ and check_top_level_let_rec env top =
                     then lb
                     else U.close_univs_and_mk_letbinding all_lb_names lb.lbname lb.lbunivs lb.lbtyp lb.lbeff lbdef lb.lbattrs lb.lbpos)
                 in
-                lbs, g_lbs (* g_lbs untouched *)
+                (List.hd lbs).lbunivs, lbs, g_lbs (* g_lbs untouched *)
               else
                 let ecs = Gen.generalize env true (lbs |> List.map (fun lb ->
                                 lb.lbname,
@@ -4086,13 +4086,13 @@ and check_top_level_let_rec env top =
                 in
                 (* discharge generalization uvars *)
                 let g_lbs = Rel.resolve_generalization_implicits env g_lbs in
-                lbs, g_lbs
+                (List.hd lbs).lbunivs, lbs, g_lbs
            in
 
           let cres = TcComm.lcomp_of_comp <| S.mk_Total t_unit in
 
 (*close*) let lbs, e2 = SS.close_let_rec lbs e2 in
-          Rel.discharge_guard env g_lbs |> Rel.force_trivial_guard env;
+          Rel.discharge_guard (Env.push_univ_vars env univ_vars) g_lbs |> Rel.force_trivial_guard env;
           mk (Tm_let {lbs=(true, lbs); body=e2}) top.pos,
           cres,
           mzero
@@ -4239,9 +4239,21 @@ and build_let_rec_env _top_level env lbs : list letbinding & env_t & guard_t =
        let t, _, g = tc_check_tot_or_gtot_term ({env0 with check_uvars=true}) t (fst <| U.type_u()) None in
        env0, g |> Rel.resolve_implicits env |> Rel.discharge_guard env0, t
    in
-   let lbs, env, g = List.fold_left (fun (lbs, env, g_acc) lb ->
+   let _, lbs, env, g = List.fold_left (fun (univ_vars_acc, lbs, env, g_acc) lb ->
         let univ_vars, lbtyp, lbdef, check_t = TcUtil.extract_let_rec_annotation env lb in
-        let env = Env.push_univ_vars env univ_vars in //no polymorphic recursion on universes
+        let univ_vars_acc, env =
+          match univ_vars_acc with
+          | None -> Some univ_vars, Env.push_univ_vars env univ_vars //no polymorphic recursion on universes
+          | Some uvs ->
+            if List.length uvs <> List.length univ_vars
+            || not (List.forall2 (fun u1 u2 -> Ident.ident_equals u1 u2) uvs univ_vars)
+            then
+              raise_error lbtyp Errors.Fatal_IncompatibleSetOfUniverse [
+                text "Mutually recursive functions must all have the same universe variables in their type annotation"
+              ]
+            else
+              univ_vars_acc, env
+        in
         let g, lbtyp =
             if not check_t
             then g_acc, lbtyp
@@ -4270,8 +4282,8 @@ and build_let_rec_env _top_level env lbs : list letbinding & env_t & guard_t =
               let lb = {lb with lbtyp=lbtyp; lbunivs=univ_vars; lbdef=lbdef} in
               lb, Env.push_let_binding env lb.lbname (univ_vars, lbtyp)
         in
-        lb::lbs,  env, g)
-    ([], env, mzero)
+        univ_vars_acc, lb::lbs,  env, g)
+    (None, [], env, mzero)
     lbs  in
   List.rev lbs, env, g
 

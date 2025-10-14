@@ -10,5 +10,5 @@
 
 * Info at Bug1988.fst(21,32-21,38):
   - Expected failure:
-  - Prims.string is not a subtype of the expected type _: (*?u21*) _ -> (*?u22*) _
+  - Prims.string is not a subtype of the expected type _: (*?u21*)_ -> (*?u22*)_
 

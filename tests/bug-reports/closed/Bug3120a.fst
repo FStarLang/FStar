@@ -90,7 +90,7 @@ unfold
 let _w_return #a (x : a) : wp a =
   fun post hist -> post [] x
 
-let w_return #a (x : a) : wp a =
+let w_return (#a:Type u#a) (x : a) : wp a =
   _w_return x
 
 unfold
@@ -144,26 +144,26 @@ let w_if_then_else #a (w1 w2 : wp a) (b : bool) : wp a =
 let if_then_else #ac #ad (a : Type) (w1 w2 : wp a) (f : dm #ac #ad a w1) (g : dm #ac #ad a w2) (b : bool) : Type =
   dm #ac #ad a (w_if_then_else w1 w2 b)
 
-let elim_pure #a #w (f : unit -> PURE a w) :
+let elim_pure (#a:Type u#a) #w (f : unit -> PURE a w) :
   Pure
     a
     (requires w (fun _ -> True))
     (ensures fun r -> forall post. w post ==> post r)
-= elim_pure_wp_monotonicity_forall () ;
+= elim_pure_wp_monotonicity_forall u#a () ;
   f ()
 
 unfold
 let wlift #a (w : pure_wp a) : wp a =
   fun post hist -> w (post [])
 
-let as_requires_wlift #a (w : pure_wp a) :
+let as_requires_wlift (#a:Type u#a) (w : pure_wp a) :
   Lemma (forall post hist. wlift w post hist ==> as_requires w)
 = assert (forall post (x : a). post x ==> True) ;
   elim_pure_wp_monotonicity w ;
   assert (forall post. w post ==> w (fun _ -> True)) ;
   assert (forall post. (True ==> w post) ==> w (fun _ -> True))
-
-let lift_pure (a : Type) (w : pure_wp a) (f:(unit -> PURE a w)) : dm a (wlift w) =
+let lift_pure (a : Type u#0) (w : pure_wp a) (f:(eqtype_as_type unit -> PURE a w)) : dm a (wlift w) =
+  elim_pure_wp_monotonicity w ;
   as_requires_wlift w ;
   d_bind #_ #_ #_ #_ #_ #_ #_ #(fun _ -> w_return (elim_pure #a #w f)) (d_req (as_requires w)) (fun _ ->
     let r = elim_pure #a #w f in

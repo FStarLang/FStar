@@ -44,7 +44,6 @@ buildDunePackage {
   prePatch = ''
     patchShebangs .scripts/*.sh
     patchShebangs ulib/ml/app/ints/mk_int_file.sh
-    sed -i 's/Ast_502/Ast_500/' stage0/dune/fstar-guts/ml/FStarC_Extraction_ML_PrintML.ml src/ml/FStarC_Extraction_ML_PrintML.ml
   '';
 
   src = lib.sourceByRegex ./.. [

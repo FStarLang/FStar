@@ -36,9 +36,9 @@ layered_effect {
 new_effect M2 = M1
 new_effect M3 = M1
 
-let lift_pure_m (a:Type) (wp:_) (f:unit -> PURE a wp)
+let lift_pure_m (a:Type u#a) (wp:_) (f:unit -> PURE a wp)
   : Pure (repr a ()) (requires wp (fun _ -> True)) (ensures fun _ -> True)
-  = FStar.Monotonic.Pure.elim_pure_wp_monotonicity_forall ();
+  = FStar.Monotonic.Pure.elim_pure_wp_monotonicity_forall u#a ();
     f ()
 sub_effect PURE ~> M1 = lift_pure_m
 

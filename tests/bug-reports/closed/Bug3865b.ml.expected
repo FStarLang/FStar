@@ -1,5 +1,5 @@
 open Prims
 type 'dummyV0 ast0_wf_typ =
   | WfTRewrite of Prims.int * Prims.int * Obj.t ast0_wf_typ [@@deriving show]
-let uu___is_WfTRewrite uu___ =
-  fun uu___1 -> match uu___1 with | WfTRewrite _ -> true | _ -> false
+let uu___is_WfTRewrite uu___ uu___1 =
+  match uu___1 with | WfTRewrite _ -> true | _ -> false

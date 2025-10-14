@@ -70,7 +70,9 @@ let _ = assert (xtx (1,1) == 1)
 
 let xtx_unfolded = F.on (knat 2 & knat 2) (fun (i,j) -> vec_prod (row xt i) (col x j))
 
+#push-options "--fuel 4" // GE: bumped this for the universe branch
 let _ = assert (xtx_unfolded (0,0) == 1)
 let _ = assert (xtx_unfolded (0,1) == 0)
 let _ = assert (xtx_unfolded (1,0) == 0)
 let _ = assert (xtx_unfolded (1,1) == 1)
+#pop-options

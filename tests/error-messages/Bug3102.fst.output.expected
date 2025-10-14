@@ -5,11 +5,11 @@
 
 * Info at Bug3102.fst(23,4-23,27):
   - Expected failure:
-  - (*?u23*) _ g t1 t2 is not equal to the expected type e2
+  - (*?u23*)_ g t1 t2 is not equal to the expected type e2
 
 * Info at Bug3102.fst(29,4-29,27):
   - Expected failure:
-  - (*?u20*) _ is not equal to the expected type e2
+  - (*?u20*)_ is not equal to the expected type e2
 
 * Info at Bug3102.fst(33,29-35,27):
   - Expected failure:

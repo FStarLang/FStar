@@ -31,6 +31,7 @@ let dbg       = Debug.get_toggle "Core"
 let dbg_Eq    = Debug.get_toggle "CoreEq"
 let dbg_Top   = Debug.get_toggle "CoreTop"
 let dbg_Exit  = Debug.get_toggle "CoreExit"
+let dbg_DisableCoreCache = Debug.get_toggle "DisableCoreCache"
 
 let goal_ctr = mk_ref 0
 let get_goal_ctr () = !goal_ctr
@@ -41,15 +42,19 @@ let guard_handler_t = Env.env -> typ -> bool
 type env = {
    tcenv : Env.env;
    allow_universe_instantiation : bool;
-   max_binder_index : int;
    guard_handler : option guard_handler_t;
-   should_read_cache: bool
+   should_read_cache: bool;
+   max_binder_index: int
 }
 
-let push_binder g b =
-  if b.binder_bv.index <= g.max_binder_index
-  then failwith "Assertion failed: unexpected shadowing in the core environment"
-  else { g with tcenv = Env.push_binders g.tcenv [b]; max_binder_index = b.binder_bv.index }
+
+let debug g f =
+  if !dbg
+  then f ()
+
+let max a b = if a > b then a else b
+let push_binder g b = { g with max_binder_index=max g.max_binder_index b.binder_bv.index; 
+                               tcenv = Env.push_binders g.tcenv [b] }
 
 let push_binders = List.fold_left push_binder
 
@@ -59,6 +64,15 @@ let fresh_binder (g:env) (old:binder)
     let bv = { old.binder_bv with index = ctr } in
     let b = S.mk_binder_with_attrs bv old.binder_qual old.binder_positivity old.binder_attrs in
     push_binder g b, b
+
+let wild_bv (t:typ) (r:Range.t) : bv =
+  { ppname=Ident.mk_ident (Ident.reserved_prefix, r); index=0; sort=t }
+
+let new_binder (g:env) (t:typ) (r:Range.t)
+: env & binder
+= let bv = wild_bv t r in
+  let b = S.mk_binder bv in
+  fresh_binder g b
 
 let open_binders (g:env) (bs:binders)
   = let g, bs_rev, subst =
@@ -190,6 +204,15 @@ instance showable_context : showable context = {
                                     (show (List.map fst context.error_context)));
 }
 
+let print_ctx_head (ctx:context) =
+    match ctx.error_context with
+    | [] -> "{Context: <empty>}\n"
+    | (msg, ctx_term)::_ ->
+      Format.fmt2 "{Context: %s (%s)}\n"
+        msg
+        (match ctx_term with None -> "" | Some ctx_term -> context_term_to_string ctx_term)
+
+
 let print_context (ctx:context)
   : string =
   let rec aux (depth:string) (ctx:_) =
@@ -261,6 +284,11 @@ let insert (g:env) (e:term) (res:success (tot_or_ghost & typ)) =
        he_res = res
     }
     in
+    debug g (fun _ ->
+      Format.print3 "Inserting into cache\n %s : %s\nwith\n\tenv %s\n"
+        (show e)
+        (show (snd (fst res)))
+        (show g.tcenv.gamma));
     THT.insert e entry table
 
 inline_for_extraction
@@ -341,6 +369,7 @@ let is_type (g:env) (t:term)
         (aux t)
         (fun _ -> aux (U.unrefine (N.unfold_whnf g.tcenv t))))
 
+
 let rec is_arrow (g:env) (t:term)
   : result (binder & tot_or_ghost & typ)
   = let rec aux t =
@@ -356,8 +385,8 @@ let rec is_arrow (g:env) (t:term)
             in
             return (x, eff, U.comp_result c)
           else (
+            let Comp ct = c.n in
             let e_tag =
-              let Comp ct = c.n in
               if Ident.lid_equals ct.effect_name PC.effect_Pure_lid  ||
                  Ident.lid_equals ct.effect_name PC.effect_Lemma_lid
               then Some E_Total
@@ -380,12 +409,18 @@ let rec is_arrow (g:env) (t:term)
               ]
             | Some e_tag ->
               let g, [x], c = arrow_formals_comp g t in
+              debug g (fun _ -> 
+                Format.print4 "is_arrow (%s): arg (%s:%s) and comp %s\n"
+                  (show t) 
+                  (show x)
+                  (show x.binder_bv.sort)
+                  (show c));
               let (pre, _)::(post, _)::_ = U.comp_effect_args c in
               let arg_typ = U.refine x.binder_bv pre in
               let res_typ =
-                let r = S.new_bv None (U.comp_result c) in
-                let post = S.mk_Tm_app post [(S.bv_to_name r, None)] post.pos in
-                U.refine r post
+                let g, r = new_binder g (U.comp_result c) (U.comp_result c).pos in
+                let post = S.mk_Tm_app post [(S.bv_to_name r.binder_bv, None)] post.pos in
+                U.refine r.binder_bv post
               in
               let xbv = { x.binder_bv with sort = arg_typ } in
               let x = { x with binder_bv = xbv } in
@@ -497,10 +532,10 @@ let close_guard_with_definition (x:binder) (u:universe) (t:term) (g:precondition
   : precondition
   = match g with
     | None -> None
-    | Some t ->
+    | Some t' ->
       Some (
-       let t = U.mk_imp (U.mk_eq2 u x.binder_bv.sort (S.bv_to_name x.binder_bv) t) t in
-       U.mk_forall u x.binder_bv t
+       let t' = U.mk_imp (U.mk_eq2 u x.binder_bv.sort (S.bv_to_name x.binder_bv) t) t' in
+       U.mk_forall u x.binder_bv t'
       )
 
 let with_binders (#a:Type) (xs:binders) (us:universes) (f:result a)
@@ -521,9 +556,8 @@ let guard (t:typ)
   : result unit
   = fun _ -> Success ((), Some t)
 
-let abs (a:typ) (f: binder -> term) : term =
-  let x = S.new_bv None a in
-  let xb = S.mk_binder x in
+let abs (g:env) (a:typ) (f: binder -> term) : term =
+  let g, xb = new_binder g a a.pos in
   U.abs [xb] (f xb) None
 
 let weaken_subtyping_guard (p:term)
@@ -548,9 +582,8 @@ let weaken_with_guard_formula (p:FStarC.TypeChecker.Common.guard_formula) (g:res
     | Common.NonTrivial p -> weaken p g
 
 let push_hypothesis (g:env) (h:term) =
-    let bv = S.new_bv (Some h.pos) h in
-    let b = S.mk_binder bv in
-    fst (fresh_binder g b)
+    let g, h = new_binder g h h.pos in
+    g
 
 let strengthen (p:term) (g:result 'a)
   = fun ctx ->
@@ -566,8 +599,7 @@ let no_guard (g:result 'a)
       | Success (x, Some g) -> fail_str (Format.fmt1 "Unexpected guard: %s" (show g)) ctx
       | err -> err
 
-let equatable g t =
-  t |> U.leftmost_head |> Rel.may_relate_with_logical_guard g.tcenv true
+let equatable g t = t |> U.leftmost_head |> Rel.may_relate_with_logical_guard g.tcenv true
 
 let apply_predicate x p = fun e -> Subst.subst [NT(x.binder_bv, e)] p
 
@@ -623,13 +655,14 @@ let lookup (g:env) (e:term) : result (tot_or_ghost & typ) =
      fail_str "not in cache"
    | Some he ->
      if he.he_gamma `context_included` g.tcenv.gamma
+     && not !dbg_DisableCoreCache
      then (
        record_cache_hit();
        if !dbg then
-         Format.print4 "cache hit\n %s |- %s : %s\nmatching env %s\n"
-           (show g.tcenv.gamma)
+         Format.print4 "cache hit\n %s : %s\nmatching\n\tenv0 %s\n\tenv1 %s\n"
            (show e)
            (show (snd (fst he.he_res)))
+           (show g.tcenv.gamma)
            (show he.he_gamma);
        let res = he.he_res in
        let res =
@@ -743,9 +776,7 @@ let unfolding_ok
   : result bool
   = fun ctx -> Success (ctx.unfolding_ok, None)
 
-let debug g f =
-  if !dbg
-  then f ()
+
 
 instance showable_tot_or_ghost = {
     show = (function
@@ -1270,26 +1301,42 @@ and memo_check (g:env) (e:term)
       | _ -> r
     in
     fun ctx ->
-      if not g.should_read_cache
-      then check_then_memo g e ctx
-      else (
-        match lookup g e ctx with
-        | Error _ -> //cache miss; check and insert
-          check_then_memo g e ctx
+      debug g (fun _ -> Format.print2 "%s Checking %s\n"
+                        (print_ctx_head ctx)
+                        (show e));
+      let result =
+        if not g.should_read_cache
+        then check_then_memo g e ctx
+        else (
+          match lookup g e ctx with
+          | Error _ -> //cache miss; check and insert
+            check_then_memo g e ctx
 
-        | Success (et, None) -> //cache hit with no guard; great, just return
-          Success (et, None)
+          | Success (et, None) -> //cache hit with no guard; great, just return
+            Success (et, None)
 
-        | Success (et, Some pre) -> //cache hit with a guard
-          match g.guard_handler with
-          | None -> Success (et, Some pre) //if there's no guard handler, then just return
-          | Some _ ->
-            //otherwise check then memo, since this can
-            //repopulate the cache with a "better" entry that has no guard
-            //But, don't read the cache again, since many subsequent lookups
-            //are likely to be hits with a guard again
-            check_then_memo { g with should_read_cache = false } e ctx
-      )
+          | Success (et, Some pre) -> //cache hit with a guard
+            match g.guard_handler with
+            | None -> Success (et, Some pre) //if there's no guard handler, then just return
+            | Some _ ->
+              //otherwise check then memo, since this can
+              //repopulate the cache with a "better" entry that has no guard
+              //But, don't read the cache again, since many subsequent lookups
+              //are likely to be hits with a guard again
+              check_then_memo { g with should_read_cache = false } e ctx
+        )
+      in
+      debug g (fun _ -> 
+        match result with
+        | Success ((eff, t), g) ->
+          Format.print5 "%s Checked %s: (%s, %s) with guard %s\n"
+            (print_ctx_head ctx)
+            (show e)
+            (show eff)
+            (show t)
+            (show g)
+        | _ -> ());
+      result
 
 and check (msg:string) (g:env) (e:term)
   : result (tot_or_ghost & typ)
@@ -1398,7 +1445,7 @@ and do_check (g:env) (e:term)
     let rec check_app_arg (eff_hd, t_hd) (arg, arg_qual) =
       let! x, eff_arr, t' = is_arrow g t_hd in
       let! eff_arg, t_arg = check "app arg" g arg in
-      with_context "app subtyping" None (fun _ -> check_subtype g (Some arg) t_arg x.binder_bv.sort) ;!
+      with_context "app subtyping" (Some (CtxTerm arg)) (fun _ -> check_subtype g (Some arg) t_arg x.binder_bv.sort) ;!
       with_context "app arg qual" None (fun _ -> check_arg_qual arg_qual x.binder_qual) ;!
       return (join_eff eff_hd (join_eff eff_arr eff_arg), Subst.subst [NT(x.binder_bv, arg)] t')
     in
@@ -1814,16 +1861,16 @@ and pattern_branch_condition (g:env)
       return (Some (U.mk_decidable_eq t_const scrutinee const_exp))
 
     | Pat_cons(fv, us_opt, sub_pats) ->
-      let wild_pat pos = S.withinfo (Pat_var (S.new_bv None S.tun)) pos in
+      let wild_pat pos = S.withinfo (Pat_var (wild_bv S.tun pos)) pos in
       let mk_head_discriminator () =
         let pat = S.withinfo (Pat_cons(fv, us_opt, List.map (fun (s, b) -> wild_pat s.p, b) sub_pats)) pat.p in
         let branch1 = (pat, None, U.exp_true_bool) in
-        let branch2 = (S.withinfo (Pat_var (S.new_bv None S.tun)) pat.p, None, U.exp_false_bool) in
+        let branch2 = (S.withinfo (Pat_var (wild_bv S.tun pat.p)) pat.p, None, U.exp_false_bool) in
         S.mk (Tm_match {scrutinee; ret_opt=None; brs=[branch1; branch2]; rc_opt=None}) scrutinee.pos
       in
       let mk_ith_projector i =
         let ith_pat_var, ith_pat =
-            let bv = S.new_bv None S.tun in
+            let bv = wild_bv S.tun scrutinee.pos in
             bv, S.withinfo (Pat_var bv) scrutinee.pos
         in
         let sub_pats = List.mapi (fun j (s,b) -> if i <> j then wild_pat s.p,b else ith_pat,b) sub_pats in
@@ -1865,20 +1912,18 @@ and pattern_branch_condition (g:env)
 let initial_env g gh =
   let max_index =
       List.fold_left
-        (fun index b ->
-          match b with
-          | Binding_var x ->
-            if x.index > index
-            then x.index
-            else index
-          | _ -> index)
-        0 g.Env.gamma
+         (fun index b ->
+           match b with
+           | Binding_var x -> max x.index index
+           | _ -> index)
+         0 g.Env.gamma
   in
   { tcenv = g;
     allow_universe_instantiation = false;
-    max_binder_index = max_index;
     guard_handler = gh;
-    should_read_cache = true }
+    should_read_cache = true;
+    max_binder_index = max_index
+  }
 
 //
 // In case the expected type and effect are set,
@@ -1893,10 +1938,10 @@ let check_term_top g e topt (must_tot:bool) (gh:option guard_handler_t)
       // check expected effect
       if must_tot
       then let eff, t = eff_te in 
-           if eff = E_Ghost &&
+          if eff = E_Ghost &&
               not (non_informative g t)
-           then fail_str "expected total effect, found ghost"
-           else return (E_Total, t)
+          then fail_str "expected total effect, found ghost"
+          else return (E_Total, t)
       else return eff_te
     | Some t ->
       let target_comp, eff =
@@ -1929,8 +1974,11 @@ let check_term_top_gh g e topt (must_tot:bool) (gh:option guard_handler_t)
                    (show (get_goal_ctr()));
 
     if !dbg || !dbg_Top
-    then Format.print3 "(%s) Entering core with %s <: %s\n"
-                   (show (get_goal_ctr())) (show e) (show topt);
+    then (Format.print5 "%s\n(%s) Entering core (with guard handler? %s) with %s <: %s\n"
+                  (FStarC.Util.stack_dump())
+                   (show (get_goal_ctr()))
+                   (show (Some? gh))
+                  (show e) (show topt));
     THT.reset_counters table;
     reset_cache_stats();
     let ctx = { unfolding_ok = true; no_guard = false; error_context = [("Top", None)] } in

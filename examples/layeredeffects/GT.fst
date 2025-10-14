@@ -20,22 +20,22 @@ let m (a:Type u#aa) (i:idx) : Type u#aa =
 let t_return #a (x:a) : m a T = (fun () -> x)
 let g_return #a (x:a) : m a G = (fun () -> x)
 let d_return #a (x:a) : m a D = raise_val (fun () -> x)
-
+#push-options "--print_universes --log_queries --query_stats"
+#restart-solver
 let return (a:Type) (x:a) (i:idx) : m a i =
-  match i with
+  match i returns m a i with
   | T -> t_return x
   | G -> g_return x
   | D -> d_return x
-
 let t_bind #a #b (c : m a T) (f : a -> m b T) : m b T = fun () -> f (c ()) ()
 let g_bind #a #b (c : m a G) (f : a -> m b G) : m b G = fun () -> f (c ()) ()
 let d_bind #a #b (c : m a D) (f : a -> m b D) : m b D =
   raise_val (fun () -> downgrade_val (f (downgrade_val c ())) ())
 
 let bind (a b : Type) (i:idx) (c : m a i) (f : a -> m b i) : m b i =
-  match i with
+  match i returns m b i with
   | T -> t_bind #a #b c f
-  | D -> coerce (d_bind #a #b c f) // GM: wow... still needs a coerce, how can that be?
+  | D -> d_bind #a #b (coerce c) f // GM: wow... still needs a coerce, how can that be?
   | G -> g_bind #a #b c f
 
 // Already somewhat usable
@@ -77,10 +77,10 @@ let lift_pure_gtd (a:Type) (wp : pure_wp a) (i : idx)
  //     case analyze [i].
  // GM: ok not anymore
  FStar.Monotonic.Pure.elim_pure_wp_monotonicity wp;
- match i with
+ match i returns m a i with
  | T -> f
  | G -> f
- | D -> coerce (raise_val (fun () -> f () <: Dv a))
+ | D -> raise_val (fun () -> f () <: Dv a)
 
 sub_effect PURE ~> GTD = lift_pure_gtd
 
