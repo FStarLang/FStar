@@ -52,6 +52,9 @@ let clear (x:'a hashtable) =
   HT.clear x;
   reset_counters x
 
+let iter (f: S.term -> 'a -> unit) (ht: 'a hashtable) : unit =
+  HT.iter f ht
+
 let print_stats (x:'a hashtable) : unit =
   let stats = HT.stats x in
   let string_of_ctr ctr = let n, t = !ctr in FStarC_Format.fmt2 "%s in %s ms" (string_of_int n) (string_of_int t) in
