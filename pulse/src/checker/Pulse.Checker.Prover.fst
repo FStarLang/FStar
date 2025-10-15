@@ -303,8 +303,8 @@ let intro_exists (g: env) (frame: slprop) (u: universe) (b: binder) (body: slpro
   let frame_typ : tot_typing g frame tm_slprop = RU.magic () in // implied by t2_typing
   let binder_ty_typ : tot_typing g b.binder_ty (tm_type u) = RU.magic() in // implied by t2_typing
   let tm_ex_typ : tot_typing g (tm_exists_sl u b body) tm_slprop = RU.magic() in // implied by t2_typing
-  // TODO: improve error message below. this will e.g. fail if we cannot solve e using unification
-  let e_typ = core_check_term g e T.E_Ghost b.binder_ty in
+  let e_typ = core_check_term' g e T.E_Ghost b.binder_ty (fun _ -> let open Pulse.PP in
+    [text "Cannot find witness for" ^/^ pp (tm_exists_sl u b body)]) in
   let h1: tot_typing g (tm_star frame (comp_pre (comp_intro_exists u b body e))) tm_slprop = RU.magic () in
   let h2: slprop_equiv g (tm_star frame (comp_pre (comp_intro_exists u b body e))) (tm_star frame (open_term' body e 0)) = RU.magic () in
   let h3: slprop_equiv g (tm_star (comp_post (comp_intro_exists u b body e)) frame) (tm_star frame (tm_exists_sl u b body)) = RU.magic () in
