@@ -254,3 +254,12 @@ let push_options () : unit = FStarC_Options.push ()
 let pop_options () : unit = FStarC_Options.pop ()
 let set_options (opts: string) : unit =
   ignore (FStarC_Options.set_options opts)
+
+let universe_of_well_typed_term g t 
+= fun ps ->
+    try
+      let u = FStarC_TypeChecker_TcTerm.universe_of g t in
+      Some u
+    with
+    | _ ->
+      None

@@ -111,3 +111,4 @@ val stack_dump : unit -> Dv string
 val push_options () : Dv unit
 val pop_options () : Dv unit
 val set_options (opts: string) : Dv unit
+val universe_of_well_typed_term (g:T.env) (t:T.term) : Tac (option (u:T.universe{T.typing_token g t (T.E_Total, T.pack_ln (FStar.Stubs.Reflection.V2.Data.Tv_Type u))}))

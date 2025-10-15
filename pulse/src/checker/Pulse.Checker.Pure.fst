@@ -67,14 +67,22 @@ let rtb_tc_term g f e =
   let res = RU.with_context (get_context g) (fun _ -> RTB.tc_term f e) in
   res
 
-let rtb_universe_of g f e =
-  check_ln g "rtb_universe_of" e;
+let rtb_universe_of (g:env) (f:T.env) (e: T.term)
+: T.Tac (option (u:T.universe{typing_token f e (E_Total, T.pack_ln (Tv_Type u))}) & issues)
+= check_ln g "rtb_universe_of" e;
   debug g (fun _ ->
     Printf.sprintf "(%s) Calling universe_of on %s"
       (T.range_to_string (RU.range_of_term e))
       (T.term_to_string e));
   let res = RU.with_context (get_context g) (fun _ -> RTB.universe_of f e) in
   res
+
+let universe_of_well_typed_term  (g:env) (f:T.env) (e: T.term)
+: T.Tac (option (u:T.universe{typing_token f e (E_Total, pack_ln (Tv_Type u))}) & issues)
+= match RU.universe_of_well_typed_term f e with
+  | None -> rtb_universe_of g f e
+  | u -> u, []
+  
 
 let rtb_check_subtyping g (t1 t2:term) : Tac (ret_t (subtyping_token g t1 t2)) =
   check_ln g "rtb_check_subtyping.t1" t1;
@@ -288,11 +296,11 @@ let instantiate_term_implicits_uvs (g:env) (t0:term) (inst_extra:bool) =
   RU.record_stats "instantiate_term_implicits"
     (fun _ -> instantiate_term_implicits_uvs' g t0 inst_extra)
 
-let check_universe (g:env) (t:term)
+let check_universe_aux (g:env) (t:term) (t_well_typed:bool)
   : T.Tac (u:universe & universe_of g t u)
   = let aux () : T.Tac (u:universe & universe_of g t u) =
       let f = elab_env g in
-      let ru_opt, issues = catch_all (fun _ -> rtb_universe_of g f t) in
+      let ru_opt, issues = catch_all (fun _ -> if t_well_typed then universe_of_well_typed_term g f t else rtb_universe_of g f t) in
       match ru_opt with
       | None -> 
         fail_doc_with_subissues g (Some <| RU.range_of_term t) issues (ill_typed_term t (Some (tm_type u_unknown)) None)
@@ -305,6 +313,9 @@ let check_universe (g:env) (t:term)
         (| ru, E proof |)
     in
     RU.record_stats "check_universe" aux
+
+
+let check_universe (g:env) (t:term) = check_universe_aux g t false
 
 let tc_meta_callback g (f:R.env) (e:R.term) 
   : T.Tac (option (e:R.term & eff:T.tot_or_ghost & t:R.term & RT.typing f e (eff, t)) & issues)
@@ -350,7 +361,7 @@ let compute_term_type_and_u (g:env) (t:term)
       | None ->
         fail_doc_with_subissues g (Some <| RU.range_of_term t) issues (ill_typed_term t None None)
       | Some (| rt, eff, ty', tok |) ->
-        let (| u, uty |) = check_universe g ty' in
+        let (| u, uty |) = check_universe_aux g ty' true in //ty' is well-typed; we just need to find its universe
         (| rt, eff, ty', (| u, uty |), E tok |)
     in
     RU.record_stats "Pulse.compute_term_type_and_u" aux
@@ -510,6 +521,23 @@ let non_informative_class_typing
 let non_info_tac_tm : term =
   pack_ln (Tv_FVar (pack_fv (explode_qn "Pulse.Lib.Core.non_info_tac")))
 
+let non_info_unit : term =
+  pack_ln (Tv_FVar (pack_fv (explode_qn "Pulse.Lib.NonInformative.non_informative_unit")))
+
+let non_info_prop : term =
+  pack_ln (Tv_FVar (pack_fv (explode_qn "Pulse.Lib.NonInformative.non_informative_prop")))
+
+let non_info_erased_tm (u:universe) (t:term) : term =
+  let head = pack_fv (explode_qn "Pulse.Lib.NonInformative.non_informative_erased") in
+  let head = pack_ln (Tv_UInst head [u]) in
+  mk_e_app head [t]
+
+let non_info_squash_tm (u:universe) (t:term) : term =
+  let head = pack_fv (explode_qn "Pulse.Lib.NonInformative.non_informative_squash") in
+  let head = pack_ln (Tv_UInst head [u]) in
+  mk_e_app head [t]
+
+
 (* This function attempts to construct a dictionary for `NonInformative.non_informative ty`.
 To do so, we simply create that constraint (and prove it's well-typed), and then
 call the tcresolve typeclass resolution tactic on it to obtain a dictionary and
@@ -522,7 +550,34 @@ let try_get_non_informative_witness_aux (g:env) (u:universe) (ty:term) (ty_typin
     let goal_typing_tok : squash (typing_token r_env goal (E_Total, R.pack_ln (R.Tv_Type u))) =
       match constraint_typing with | E tok -> Squash.return_squash tok
     in
-    let r = T.call_subtac_tm r_env non_info_tac_tm u goal in
+    let mk_ret_t (r:term) : RTB.ret_t (w:term { typing_token r_env w (E_Total, goal) }) =
+      assume (typing_token r_env r (E_Total, goal));
+      Some r, []
+    in
+    let fallback () : T.Tac (RTB.ret_t (w:term { typing_token r_env w (E_Total, goal) })) =
+      T.call_subtac_tm r_env non_info_tac_tm u goal
+    in
+    let r : RTB.ret_t (w:term { typing_token r_env w (E_Total, goal) }) = 
+      match T.hua ty with
+      | Some (fv, [], []) ->
+        let nm = implode_qn (inspect_fv fv) in
+        if nm = `%Prims.unit
+        then mk_ret_t non_info_unit
+        else if nm = `%Prims.prop
+        then mk_ret_t non_info_prop
+        else fallback()
+      
+      | Some (fv, [u], [(arg, _)]) ->
+        let nm = implode_qn (inspect_fv fv) in
+        if nm = `%Prims.squash
+        then mk_ret_t (non_info_squash_tm u arg)
+        else if nm = `%FStar.Ghost.erased
+        then mk_ret_t (non_info_erased_tm u arg)
+        else fallback ()
+
+      | _ ->
+        fallback()
+    in
     match r with
     | None, issues ->
       None, issues
