@@ -1,7 +1,6 @@
 * Info at ErrCantFindWitness.fst(8,1-8,1):
   - Expected failure:
-  - Cannot find witness for exists*:
-  - (exists* (x:Prims.nat). emp)
+  - Cannot find witness for (exists* (x:Prims.nat). emp)
   - Ill-typed term: (*?u56*)_
   - Expected a term of type Prims.nat
   - Fstarcompiler.FStarC_Tactics_Common.TacticFailure(_)
