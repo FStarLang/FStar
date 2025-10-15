@@ -222,36 +222,6 @@ let next_trace (t:trace) (s:g_session_state { valid_transition t s }) : trace =
     | l -> (s::l)::t
 
 //
-// A frame preserving update in the trace PCM,
-//   given a valid transition
-//
-noextract
-let mk_frame_preserving_upd
-  (t:hist trace_preorder)
-  (s:g_session_state { valid_transition t s })
-  : FStar.PCM.frame_preserving_upd trace_pcm (Some 1.0R, t) (Some 1.0R, next_trace t s) =
-  fun v -> 
-    assert (trace_pcm.refine v);
-    assert (FStar.PCM.compatible trace_pcm (Some 1.0R, t) v);
-    let v_new = Some 1.0R, next_trace t s in
-    assert (trace_pcm.refine v_new);
-    FStar.PCM.compatible_refl trace_pcm v_new;
-    assert (FStar.PCM.compatible trace_pcm (Some 1.0R, next_trace t s) v_new);
-    let x = Some 1.0R, t in
-    let y = Some 1.0R, next_trace t s in
-    let p = trace_pcm in
-    let open FStar.PCM in
-    introduce 
-      forall (frame:_{composable p x frame}).
-       composable p y frame /\
-       (op p x frame == v ==> op p y frame == v_new)
-    with (
-      assert (composable p x frame);
-      assert (fst frame == None)
-    );
-    v_new
-
-//
 // A snapshot of the trace PCM is the trace with no permission
 //
 noextract
@@ -293,7 +263,7 @@ let singleton (sid:sid_t) (p:perm) (t:trace) : GTot pcm_t =
 //   to capture the session history for a sid
 //
 noextract
-let sid_pts_to (r:gref) (sid:sid_t) (t:trace) : slprop =
+let sid_pts_to ([@@@mkey] r:gref) (sid:sid_t) (t:trace) : slprop =
   GR.pts_to r (singleton sid 0.5R t)
 
 noextract

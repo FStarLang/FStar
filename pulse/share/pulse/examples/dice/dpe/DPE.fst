@@ -161,6 +161,35 @@ fn share_ (r:gref)
   GR.share r v0 v1;
 }
 
+//
+// A frame preserving update in the trace PCM,
+//   given a valid transition
+//
+noextract
+let mk_frame_preserving_upd
+  (t:hist trace_preorder)
+  (s:g_session_state { valid_transition t s })
+  : FStar.PCM.frame_preserving_upd trace_pcm (Some 1.0R, t) (Some 1.0R, next_trace t s) =
+  fun v -> 
+    assert (trace_pcm.refine v);
+    assert (FStar.PCM.compatible trace_pcm (Some 1.0R, t) v);
+    let v_new = Some 1.0R, next_trace t s in
+    assert (trace_pcm.refine v_new);
+    FStar.PCM.compatible_refl trace_pcm v_new;
+    assert (FStar.PCM.compatible trace_pcm (Some 1.0R, next_trace t s) v_new);
+    let x = Some 1.0R, t in
+    let y = Some 1.0R, next_trace t s in
+    let p = trace_pcm in
+    let open FStar.PCM in
+    introduce 
+      forall (frame:_{composable p x frame}).
+       composable p y frame /\
+       (op p x frame == v ==> op p y frame == v_new)
+    with (
+      assert (composable p x frame);
+      assert (fst frame == None)
+    );
+    v_new
 
 noextract
 let full (t0:trace) = Some #perm 1.0R, t0
@@ -533,27 +562,22 @@ fn replace_session
         on_range_get (U16.v sid) #(session_perm trace_ref pht0) #0 #(U16.v ctr);
         rewrite (session_perm trace_ref pht0 (U16.v sid)) as
                 (session_state_perm trace_ref pht0 sid);
-        unfold session_state_perm;
-        gather_sid_pts_to sid;
-        with t1. assert (GR.pts_to trace_ref (singleton sid 1.0R t1));
-        assert (pure (t1 == t));
-        let ret = HT.lookup tbl sid;
-        let tbl = fst ret;
-        let idx = snd ret;
-        rewrite each
-          fst ret as tbl,
-          snd ret as idx;
+        unfold session_state_perm trace_ref pht0 sid;
+        with st' t1. assert pht_contains pht0 sid st' ** session_state_related st' (current_state t1);
+        unfold pht_contains pht0 sid st';
+        gather_sid_pts_to sid #t #t1;
+        rewrite each t1 as t;
+        let tbl, idx = HT.lookup tbl sid;
         with pht. assert (models tbl pht);
         match idx {
           Some idx -> {
             let tbl, st = HT.replace #_ #_ #pht0 tbl idx sid sst ();
-            rewrite each sst' as st;
-            assert session_state_related st (current_state t1);
+            rewrite each st' as st;
             with pht. assert (models tbl pht);
-            upd_singleton sid #t1 gsst;
-            share_sid_pts_to sid #(next_trace t1 gsst);
+            upd_singleton sid #t gsst;
+            share_sid_pts_to sid #(next_trace t gsst);
             rewrite (session_state_related sst gsst) as
-                    (session_state_related sst (current_state (next_trace t1 gsst)));
+                    (session_state_related sst (current_state (next_trace t gsst)));
             fold pht_contains pht sid sst;
             fold (session_state_perm trace_ref pht sid);
             rewrite (session_state_perm trace_ref pht sid) as
