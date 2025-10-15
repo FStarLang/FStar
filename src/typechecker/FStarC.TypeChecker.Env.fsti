@@ -248,7 +248,7 @@ and tcenv_hooks =
   { tc_push_in_gamma_hook : (env -> either binding sig_binding -> unit) }
 
 and core_check_t =
-  env -> term -> typ -> bool -> either (option typ) (bool -> string)
+  env -> term -> typ -> bool -> either (option (typ & (unit -> unit))) (bool -> string)
 and splice_t =
   env ->
   list S.qualifier ->       (* qualifiers in splice call *)

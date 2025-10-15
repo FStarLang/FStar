@@ -5439,7 +5439,8 @@ let check_implicit_solution_and_discharge_guard env
     |> Env.clear_expected_typ
     |> fst in
 
-  let g =
+  let empty_cb () : ML unit = () in
+  let g, cb =
     Errors.with_ctx
       "While checking implicit solution"
       (fun () ->
@@ -5455,7 +5456,7 @@ let check_implicit_solution_and_discharge_guard env
 
        if skip_core
        then if is_tac
-            then Env.trivial_guard
+            then Env.trivial_guard, empty_cb
             else begin  // following is ad-hoc code for constraining some univs
                         // ideally we should get rid of it, and just return trivial_guard
               (*
@@ -5479,14 +5480,14 @@ let check_implicit_solution_and_discharge_guard env
                   imp_tm must_tot in
 
               match get_subtyping_predicate env k' uvar_ty with
-              | None -> Err.expected_expression_of_type env imp_tm.pos uvar_ty imp_tm k'
+              | None -> Err.expected_expression_of_type env imp_tm.pos uvar_ty imp_tm k', empty_cb
               | Some f ->
-                {Env.conj_guard (Env.apply_guard f imp_tm) g with guard_f=Trivial}
+                {Env.conj_guard (Env.apply_guard f imp_tm) g with guard_f=Trivial}, empty_cb
             end
        else begin
          match env.core_check env imp_tm uvar_ty must_tot with
-         | Inl None -> trivial_guard
-         | Inl (Some g) -> { trivial_guard with guard_f = NonTrivial g }
+         | Inl None -> trivial_guard, (fun _ -> ())
+         | Inl (Some (g, cb)) -> { trivial_guard with guard_f = NonTrivial g }, cb
          | Inr print_err ->
            raise_error imp_range Errors.Fatal_FailToResolveImplicitArgument
              (Format.fmt5 "Core checking failed for implicit %s (is_tac: %s) (reason: %s) (%s <: %s)"
@@ -5502,7 +5503,7 @@ let check_implicit_solution_and_discharge_guard env
                         Format.fmt4 "%s (Introduced at %s for %s resolved at %s)"
                           (show imp_tm) (show imp_range) imp_reason (show imp_tm.pos)))
                    env g true with
-         | Some g -> g
+         | Some g -> cb(); g
          | None -> failwith "Impossible, with use_smt = true, discharge_guard' must return Some" in
        g'.implicits |> Some
 

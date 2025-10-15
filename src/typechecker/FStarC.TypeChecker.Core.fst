@@ -37,12 +37,12 @@ let goal_ctr = mk_ref 0
 let get_goal_ctr () = !goal_ctr
 let incr_goal_ctr () = let v = !goal_ctr in goal_ctr := v + 1; v + 1
 
-let guard_handler_t = Env.env -> typ -> bool
+let guard_handler_poly_t 'a = Env.env -> 'a -> bool
 
-type env = {
+type env_poly_t 'a = {
    tcenv : Env.env;
    allow_universe_instantiation : bool;
-   guard_handler : option guard_handler_t;
+   guard_handler : option (guard_handler_poly_t 'a);
    should_read_cache: bool;
    max_binder_index: int
 }
@@ -58,8 +58,8 @@ let push_binder g b = { g with max_binder_index=max g.max_binder_index b.binder_
 
 let push_binders = List.fold_left push_binder
 
-let fresh_binder (g:env) (old:binder)
-  : env & binder
+let fresh_binder (g:env_poly_t 'a) (old:binder)
+  : env_poly_t 'a & binder
   = let ctr = g.max_binder_index + 1 in
     let bv = { old.binder_bv with index = ctr } in
     let b = S.mk_binder_with_attrs bv old.binder_qual old.binder_positivity old.binder_attrs in
@@ -68,13 +68,13 @@ let fresh_binder (g:env) (old:binder)
 let wild_bv (t:typ) (r:Range.t) : bv =
   { ppname=Ident.mk_ident (Ident.reserved_prefix, r); index=0; sort=t }
 
-let new_binder (g:env) (t:typ) (r:Range.t)
-: env & binder
+let new_binder (g:env_poly_t 'a) (t:typ) (r:Range.t)
+: env_poly_t 'a & binder
 = let bv = wild_bv t r in
   let b = S.mk_binder bv in
   fresh_binder g b
 
-let open_binders (g:env) (bs:binders)
+let open_binders (g:env_poly_t 'a) (bs:binders)
   = let g, bs_rev, subst =
         List.fold_left
           (fun (g, bs, subst) b ->
@@ -90,8 +90,8 @@ let open_binders (g:env) (bs:binders)
     in
     g, List.rev bs_rev, subst
 
-let open_pat (g:env) (p:pat)
-  : env & pat & subst_t
+let open_pat (g:env_poly_t 'a) (p:pat)
+  : env_poly_t 'a & pat & subst_t
   = let rec open_pat_aux g p sub =
         match p.v with
         | Pat_constant _ -> g, p, sub
@@ -120,25 +120,25 @@ let open_pat (g:env) (p:pat)
     open_pat_aux g p []
 
 
-let open_term (g:env) (b:binder) (t:term)
-  : env & binder & term
+let open_term (g:env_poly_t 'a) (b:binder) (t:term)
+  : env_poly_t 'a & binder & term
   = let g, b' = fresh_binder g b in
     let t = FStarC.Syntax.Subst.subst [DB(0, b'.binder_bv)] t in
     g, b', t
 
-let open_term_binders (g:env) (bs:binders) (t:term)
-  : env & binders & term
+let open_term_binders (g:env_poly_t 'a) (bs:binders) (t:term)
+  : env_poly_t 'a & binders & term
   = let g, bs, subst = open_binders g bs in
     g, bs, Subst.subst subst t
 
-let open_comp (g:env) (b:binder) (c:comp)
-  : env & binder & comp
+let open_comp (g:env_poly_t 'a) (b:binder) (c:comp)
+  : env_poly_t 'a & binder & comp
   = let g, bx = fresh_binder g b in
     let c = FStarC.Syntax.Subst.subst_comp [DB(0, bx.binder_bv)] c in
     g, bx, c
 
-let open_comp_binders (g:env) (bs:binders) (c:comp)
-  : env & binders & comp
+let open_comp_binders (g:env_poly_t 'a) (bs:binders) (c:comp)
+  : env_poly_t 'a & binders & comp
   = let g, bs, s = open_binders g bs in
     let c = FStarC.Syntax.Subst.subst_comp s c in
     g, bs, c
@@ -148,24 +148,20 @@ let arrow_formals_comp g c =
     let g, bs, subst = open_binders g bs in
     g, bs, Subst.subst_comp subst c
 
-let open_branch (g:env) (br:S.branch)
-  : env & branch
+let open_branch (g:env_poly_t 'a) (br:S.branch)
+  : env_poly_t 'a & branch
   = let (p, wopt, e) = br in
     let g, p, s = open_pat g p in
     g, (p, Option.map (Subst.subst s) wopt, Subst.subst s e)
 
 //br0 and br1 are expected to have equal patterns
-let open_branches_eq_pat (g:env) (br0 br1:S.branch)
+let open_branches_eq_pat (g:env_poly_t 'a) (br0 br1:S.branch)
   = let (p0, wopt0, e0) = br0 in
     let (_,  wopt1, e1) = br1 in
     let g, p0, s = open_pat g p0 in
     g,
     (p0, Option.map (Subst.subst s) wopt0, Subst.subst s e0),
     (p0, Option.map (Subst.subst s) wopt1, Subst.subst s e1)
-
-let precondition = option typ
-
-let success a = a & precondition
 
 type relation =
   | EQUALITY
@@ -241,30 +237,48 @@ let print_error_short (err:error) =
   let _, msg = err in
   Errors.Msg.rendermsg msg
 
-type __result a =
-  | Success of a
-  | Error of error
+let precondition = option typ
 
-instance showable_result #a (_ : showable a) : Tot (showable (__result a)) = {
-  show = (function
-          | Success a -> "Success " ^ show a
-          | Error e ->   "Error " ^ print_error_short e);
-}
-
-let result a = context -> __result (success a)
+let success a = a & precondition
 
 type hash_entry = {
    he_term:term;
    he_gamma:list binding;
-   he_res:success (tot_or_ghost & typ);
+   he_eff: tot_or_ghost;
+   he_typ: typ
 }
+
+type cache_t = {
+  term_map : FStarC.Syntax.Hash.term_map hash_entry
+}
+
+type __result a =
+  | Success of a & cache_t
+  | Error of error
+
 module THT = FStarC.Syntax.TermHashTable
-type tc_table = THT.hashtable hash_entry
+type tc_table = {
+  table:THT.hashtable hash_entry;
+  counter:ref int //version counter
+}
+
+instance showable_result #a (_ : showable a) : Tot (showable (__result a)) = {
+  show = (function
+          | Success (a, _) -> "Success " ^ show a
+          | Error e ->   "Error " ^ print_error_short e);
+}
+
+
+let result a = context -> cache_t -> __result (success a)
+
 let equal_term_for_hash t1 t2 =
   FStarC.Profiling.profile (fun _ -> Hash.equal_term t1 t2) None "FStarC.TypeChecker.Core.equal_term_for_hash"
 let equal_term t1 t2 =
   FStarC.Profiling.profile (fun _ -> Hash.equal_term t1 t2) None "FStarC.TypeChecker.Core.equal_term"
-let table : tc_table = THT.create 1048576 //2^20
+let table : tc_table = {
+  table = THT.create 1048576; //2^20
+  counter = mk_ref 0
+} 
 type cache_stats_t = { hits : int; misses : int }
 let cache_stats = mk_ref { hits = 0; misses = 0 }
 let record_cache_hit () =
@@ -276,23 +290,49 @@ let record_cache_miss () =
 let reset_cache_stats () =
     cache_stats := { hits = 0; misses = 0 }
 let report_cache_stats () = !cache_stats
-let clear_memo_table () = THT.clear table
-let insert (g:env) (e:term) (res:success (tot_or_ghost & typ)) =
-    let entry = {
-       he_term = e;
-       he_gamma = g.tcenv.gamma;
-       he_res = res
-    }
-    in
-    debug g (fun _ ->
-      Format.print3 "Inserting into cache\n %s : %s\nwith\n\tenv %s\n"
-        (show e)
-        (show (snd (fst res)))
-        (show g.tcenv.gamma));
-    THT.insert e entry table
+let clear_memo_table () = THT.clear table.table; table.counter := !table.counter + 1
+
+type guard_commit_token_core = {
+  guard_cache: ref (option cache_t);
+  guard_counter: int
+}
+
+let guard_commit_token = option guard_commit_token_core
+// type guard_commit_token_cb = unit -> unit
+let my_guard_and_tok_t = typ & (unit -> unit)
+let empty_token () = ()
+let mk_token (cache:cache_t) : guard_commit_token =
+  Some { guard_cache = mk_ref (Some cache); guard_counter = !table.counter }
+
+let commit_guard_core (g:guard_commit_token) : unit =
+  match g with
+  | None -> ()
+  | Some g ->
+    if g.guard_counter <> !table.counter
+    then (//table has been cleared since the token was issued; drop the cache
+        ()
+    ) //no need to update the cache, nothing has been evicted
+    else (
+      let cache = !g.guard_cache in
+      match cache with
+      | None -> () //cache was already used
+      | Some cache ->
+        g.guard_cache := None; //invalidate the cache in the token
+        FStarC.Syntax.Hash.term_map_fold
+          (fun term hash_entry _ -> THT.insert term hash_entry table.table)
+          cache.term_map
+          ()
+    )
+let commit_cache_cb cache = fun _ -> commit_guard_core (mk_token cache)
+let commit_guard (cb:unit->unit) = cb()
+let guard_handler_t = guard_handler_poly_t my_guard_and_tok_t
+type env = env_poly_t my_guard_and_tok_t
 
 inline_for_extraction
-let return (#a:Type) (x:a) : result a = fun _ -> Success (x, None)
+let return (#a:Type) (x:a) : result a = fun _ cache -> Success ((x, None), cache)
+
+inline_for_extraction
+let return_with_guard (#a:Type) (x:a) (g:precondition) : result a = fun _ cache -> Success ((x, g), cache)
 
 let and_pre (p1 p2:precondition) =
   match p1, p2 with
@@ -304,11 +344,11 @@ let and_pre (p1 p2:precondition) =
 inline_for_extraction
 let (let!) (#a:Type) (#b:Type) (x:result a) (y:a -> result b)
   : result b
-  = fun ctx0 ->
-      match x ctx0 with
-      | Success (x, g1) ->
-        (match y x ctx0 with
-         | Success (y, g2) -> Success (y, and_pre g1 g2)
+  = fun ctx0 cache0 ->
+      match x ctx0 cache0 with
+      | Success ((x, g1), cache1) ->
+        (match y x ctx0 cache1 with
+         | Success ((y, g2), cache2) -> Success ((y, g2), cache2)
          | err -> err)
       | Error err -> Error err
 
@@ -319,36 +359,46 @@ let (and!) (#a:Type) (#b:Type) (x:result a) (y:result b)
     let! u = y in
     return (v, u)
 
+inline_for_extraction
+let with_guard (#a #b:Type) (x:result a) (f: either (success a) error -> result b)
+: result b
+= fun ctx cache ->
+    match x ctx cache with
+    | Success (r, cache') -> f (Inl r) ctx cache'
+    | Error err -> f (Inr err) ctx cache
+
 let (let?) (#a:Type) (#b:Type) (x:option a) (f: a -> option b)
   : option b
   = match x with
     | None -> None
     | Some x -> f x
 
-let fail_str #a msg : result a = fun ctx -> Error (ctx, Errors.mkmsg msg)
+let fail_str #a msg : result a = fun ctx cache -> Error (ctx, Errors.mkmsg msg)
 
-let fail #a msg : result a = fun ctx -> Error (ctx, msg)
+let fail #a msg : result a = fun ctx cache -> Error (ctx, msg)
+
+let fail_propagate #a (err:error) : result a = fun _ cache -> Error err
 
 let dump_context
   : result unit
-  = fun ctx ->
+  = fun ctx cache ->
       Format.print_string (print_context ctx);
-      return () ctx
+      return () ctx cache
 
 inline_for_extraction
 let handle_with (#a:Type) (x:result a) (h: unit -> result a)
   : result a
-  = fun ctx ->
-      match x ctx with
-      | Error _ -> h () ctx
+  = fun ctx cache ->
+      match x ctx cache with
+      | Error _ -> h () ctx cache
       | res -> res
 
 inline_for_extraction
 let with_context (#a:Type) (msg:string) (t:option context_term) (x:unit -> result a)
   : result a
-  = fun ctx ->
+  = fun ctx cache ->
      let ctx = { ctx with error_context=((msg,t)::ctx.error_context) } in
-     x () ctx
+     x () ctx cache
 
 let mk_type (u:universe) = S.mk (Tm_type u) R.dummyRange
 
@@ -540,21 +590,21 @@ let close_guard_with_definition (x:binder) (u:universe) (t:term) (g:precondition
 
 let with_binders (#a:Type) (xs:binders) (us:universes) (f:result a)
   : result a
-  = fun ctx ->
-      match f ctx with
-      | Success (t, g) -> Success (t, close_guard xs us g)
+  = fun ctx cache ->
+      match f ctx cache with
+      | Success ((t, g), cache) -> Success ((t, close_guard xs us g), cache)
       | err -> err
 
 let with_definition (#a:Type) (x:binder) (u:universe) (t:term) (f:result a)
   : result a
-  = fun ctx ->
-      match f ctx with
-      | Success (a, g) -> Success (a, close_guard_with_definition x u t g)
+  = fun ctx cache ->
+      match f ctx cache with
+      | Success ((a, g), cache) -> Success ((a, close_guard_with_definition x u t g), cache)
       | err -> err
 
 let guard (t:typ)
   : result unit
-  = fun _ -> Success ((), Some t)
+  = fun _ cache -> Success (((), Some t), cache)
 
 let abs (g:env) (a:typ) (f: binder -> term) : term =
   let g, xb = new_binder g a a.pos in
@@ -565,15 +615,10 @@ let weaken_subtyping_guard (p:term)
   : precondition
   = Option.map (fun q -> U.mk_imp p q) g
 
-let strengthen_subtyping_guard (p:term)
-                               (g:precondition)
-  : precondition
-  = Some (Option.dflt p (Option.map (fun q -> U.mk_conj p q) g))
-
 let weaken (p:term) (g:result 'a)
-  = fun ctx ->
-      match g ctx with
-      | Success (x, q) -> Success (x, weaken_subtyping_guard p q)
+  = fun ctx cache ->
+      match g ctx cache with
+      | Success ((x, q), cache) -> Success ((x, weaken_subtyping_guard p q), cache)
       | err -> err
 
 let weaken_with_guard_formula (p:FStarC.TypeChecker.Common.guard_formula) (g:result 'a)
@@ -585,18 +630,12 @@ let push_hypothesis (g:env) (h:term) =
     let g, h = new_binder g h h.pos in
     g
 
-let strengthen (p:term) (g:result 'a)
-  = fun ctx ->
-      match g ctx with
-      | Success (x, q) -> Success (x, strengthen_subtyping_guard p q)
-      | err -> err
-
 let no_guard (g:result 'a)
   : result 'a
-  = fun ctx ->
-      match g ({ ctx with no_guard = true}) with
-      | Success (x, None) -> Success (x, None)
-      | Success (x, Some g) -> fail_str (Format.fmt1 "Unexpected guard: %s" (show g)) ctx
+  = fun ctx cache ->
+      match g ({ ctx with no_guard = true}) cache with
+      | Success ((x, None), cache) -> Success ((x, None), cache)
+      | Success ((x, Some g), cache) -> fail_str (Format.fmt1 "Unexpected guard: %s" (show g)) ctx cache
       | err -> err
 
 let equatable g t = t |> U.leftmost_head |> Rel.may_relate_with_logical_guard g.tcenv true
@@ -648,12 +687,42 @@ let replace_all_use_ranges (r:Range.t) (t:term) : term =
   t |> Syntax.Visit.visit_term false (fun t ->
     { t with pos = Range.set_use_range t.pos ur })
 
+let get_cache () : result cache_t = fun _ cache -> Success ((cache,None), cache)
+let put_cache (cache:cache_t) : result unit = fun _ _ -> Success (((), None), cache)
+
+let raw_lookup (e:term) : result (option hash_entry) =
+  let! cache = get_cache() in
+  match FStarC.Syntax.Hash.term_map_lookup e cache.term_map with
+  | Some he ->
+    return (Some he)
+  | None ->
+    return (THT.lookup e table.table)
+
+let insert (g:env) (e:term) (res:success (tot_or_ghost & typ))
+: result unit
+= let! cache = get_cache() in
+  let (eff, typ), _ = res in
+  let entry = {
+      he_term = e;
+      he_gamma = g.tcenv.gamma;
+      he_eff = eff;
+      he_typ = typ
+  }
+  in
+  debug g (fun _ ->
+    Format.print3 "Inserting into cache\n %s : %s\nwith\n\tenv %s\n"
+      (show e)
+      (show (snd (fst res)))
+      (show g.tcenv.gamma));
+  let new_cache = { term_map = FStarC.Syntax.Hash.term_map_add e entry cache.term_map } in
+  put_cache new_cache
+
 let lookup (g:env) (e:term) : result (tot_or_ghost & typ) =
-   match THT.lookup e table with
-   | None ->
-     record_cache_miss ();
-     fail_str "not in cache"
-   | Some he ->
+  match! raw_lookup e with
+  | None ->
+    record_cache_miss ();
+    fail_str "not in cache"
+  | Some he ->
      if he.he_gamma `context_included` g.tcenv.gamma
      && not !dbg_DisableCoreCache
      then (
@@ -661,20 +730,16 @@ let lookup (g:env) (e:term) : result (tot_or_ghost & typ) =
        if !dbg then
          Format.print4 "cache hit\n %s : %s\nmatching\n\tenv0 %s\n\tenv1 %s\n"
            (show e)
-           (show (snd (fst he.he_res)))
+           (show he.he_typ)
            (show g.tcenv.gamma)
            (show he.he_gamma);
-       let res = he.he_res in
-       let res =
-         (* Important: replace all the use ranges in the cached type for the
-         use range of the term being looked up. Otherwise, the cached ranges will
-         refer to the original term we cached, and could be completely unrelated
-         to [e] here. See https://github.com/FStarLang/pulse/issues/416. *)
-         let ((lbl, ty), prec) = res in
-         let ty = replace_all_use_ranges (pos e) ty in
-         ((lbl, ty), prec)
-       in
-       fun _ -> Success res
+      
+      (* Important: replace all the use ranges in the cached type for the
+        use range of the term being looked up. Otherwise, the cached ranges will
+        refer to the original term we cached, and could be completely unrelated
+        to [e] here. See https://github.com/FStarLang/pulse/issues/416. *)
+       let ty = replace_all_use_ranges (pos e) he.he_typ in
+       return (he.he_eff, ty)
      )
      else (
        // record_cache_miss();
@@ -770,11 +835,11 @@ let join_eff_l es = List.Tot.fold_right join_eff es E_Total
 
 let guard_not_allowed
   : result bool
-  = fun ctx -> Success (ctx.no_guard, None)
+  = fun ctx cache -> Success ((ctx.no_guard, None), cache)
 
 let unfolding_ok
   : result bool
-  = fun ctx -> Success (ctx.unfolding_ok, None)
+  = fun ctx cache -> Success ((ctx.unfolding_ok, None), cache)
 
 
 
@@ -791,6 +856,8 @@ instance showable_side = {
             | Both -> "Both"
             | Neither -> "Neither");
 }
+
+
 
 let boolean_negation_simp b =
   if Hash.equal_term b U.exp_false_bool
@@ -1269,74 +1336,60 @@ and check_relation_comp (g:env) rel (c0 c1:comp)
 
 
 and check_subtype (g:env) (e:option term) (t0 t1:typ)
-  = fun ctx ->
+: result _
+  = fun ctx cache ->
     Profiling.profile
       (fun () ->
         let rel = SUBTYPING e in
         with_context (if ctx.no_guard then "check_subtype(no_guard)" else "check_subtype")
                      (Some (CtxRel t0 rel t1))
           (fun _ -> check_relation g rel t0 t1)
-          ctx)
+          ctx cache)
       None
       "FStarC.TypeChecker.Core.check_subtype"
 
 and memo_check (g:env) (e:term)
   : result (tot_or_ghost & typ)
-  = let check_then_memo g e ctx =
-      let r = do_check_and_promote g e ctx in
-      match r with
-      | Success (res, None) ->
-        insert g e (res, None);
-        r
+  = let check_then_memo g e =
+      with_guard (do_check_and_promote g e)
+      (function
+      | Inl (res, None) ->
+        insert g e (res, None);!
+        return res
 
-      | Success (res, Some guard) ->
-        (match g.guard_handler with
-         | None -> insert g e (res, Some guard); r
-         | Some gh ->
-           if gh g.tcenv guard
-           then let r = (res, None) in
-                insert g e r; Success r
-           else fail_str "guard handler failed" ctx)
+      | Inl (res, Some guard) -> (
+        match g.guard_handler with
+        | None -> 
+          insert g e (res, Some guard);! 
+          return_with_guard res (Some guard)
+        | Some gh ->
+          let! c = get_cache() in
+          if gh g.tcenv (guard, commit_cache_cb c)
+          then (
+            insert g e (res, None);!
+            return res
+          )
+          else (
+            fail_str "guard handler failed"
+          )
+      )
 
-      | _ -> r
+      | Inr err ->
+        fail_propagate err)
     in
-    fun ctx ->
-      debug g (fun _ -> Format.print2 "%s Checking %s\n"
-                        (print_ctx_head ctx)
-                        (show e));
-      let result =
-        if not g.should_read_cache
-        then check_then_memo g e ctx
-        else (
-          match lookup g e ctx with
-          | Error _ -> //cache miss; check and insert
-            check_then_memo g e ctx
-
-          | Success (et, None) -> //cache hit with no guard; great, just return
-            Success (et, None)
-
-          | Success (et, Some pre) -> //cache hit with a guard
-            match g.guard_handler with
-            | None -> Success (et, Some pre) //if there's no guard handler, then just return
-            | Some _ ->
-              //otherwise check then memo, since this can
-              //repopulate the cache with a "better" entry that has no guard
-              //But, don't read the cache again, since many subsequent lookups
-              //are likely to be hits with a guard again
-              check_then_memo { g with should_read_cache = false } e ctx
-        )
-      in
-      debug g (fun _ -> 
-        match result with
-        | Success ((eff, t), g) ->
-          Format.print5 "%s Checked %s: (%s, %s) with guard %s\n"
-            (print_ctx_head ctx)
-            (show e)
-            (show eff)
-            (show t)
-            (show g)
-        | _ -> ());
-      result
+    if not g.should_read_cache
+    then check_then_memo g e
+    else (
+      with_guard (lookup g e)
+      (function
+      | Inr _ ->
+        check_then_memo g e
+      | Inl (et, None) -> //cache hit; great, just return
+        return et
+      | Inl (et, pre) -> ( //cache hit with a guard
+        failwith "Impossible"
+      )
+    ))
 
 and check (msg:string) (g:env) (e:term)
   : result (tot_or_ghost & typ)
@@ -1909,7 +1962,7 @@ and pattern_branch_condition (g:env)
       | [] -> return None
       | guards -> return (Some (U.mk_and_l guards))
 
-let initial_env g gh =
+let initial_env g (gh:option guard_handler_t) : env_poly_t my_guard_and_tok_t =
   let max_index =
       List.fold_left
          (fun index b ->
@@ -1966,6 +2019,7 @@ let simplify_steps =
      Env.Primops;
      Env.NoFullNorm]
 
+let initial_cache : cache_t = { term_map = FStarC.Syntax.Hash.term_map_empty #hash_entry }
 
 let check_term_top_gh g e topt (must_tot:bool) (gh:option guard_handler_t)
   : __result ((tot_or_ghost & S.typ) & precondition)
@@ -1979,22 +2033,19 @@ let check_term_top_gh g e topt (must_tot:bool) (gh:option guard_handler_t)
                    (show (get_goal_ctr()))
                    (show (Some? gh))
                   (show e) (show topt));
-    THT.reset_counters table;
+    THT.reset_counters table.table;
     reset_cache_stats();
     let ctx = { unfolding_ok = true; no_guard = false; error_context = [("Top", None)] } in
     let res =
       Profiling.profile
-        (fun () ->
-          match check_term_top g e topt must_tot gh ctx with
-          | Success (et, g) -> Success (et, g)
-          | Error err -> Error err)
+        (fun () -> check_term_top g e topt must_tot gh ctx initial_cache)
         None
         "FStarC.TypeChecker.Core.check_term_top"
     in
     (
     let res =
       match res with
-      | Success (et, Some guard0) ->
+      | Success ((et, Some guard0), cache) ->
         // Options.push();
         // Options.set_option "debug" (Options.List [Options.String "Unfolding"]);
         let guard = N.normalize simplify_steps g guard0 in
@@ -2014,7 +2065,7 @@ let check_term_top_gh g e topt (must_tot:bool) (gh:option guard_handler_t)
             Format.print1 "WARNING: %s is free in the core generated guard\n" (show (S.bv_to_name bv))
           | _ -> ()
         end;
-        Success (et, Some guard)
+        Success ((et, Some guard), cache)
 
       | Success _ ->
         if !dbg || !dbg_Top
@@ -2030,7 +2081,7 @@ let check_term_top_gh g e topt (must_tot:bool) (gh:option guard_handler_t)
     in
     if !dbg_Eq
     then (
-      THT.print_stats table;
+      THT.print_stats table.table;
       let cs = report_cache_stats() in
       Format.print2 "Cache_stats { hits = %s; misses = %s }\n"
                      (show cs.hits)
@@ -2039,23 +2090,32 @@ let check_term_top_gh g e topt (must_tot:bool) (gh:option guard_handler_t)
     res
     )
 
+let return_my_guard_and_tok_t (g:precondition) (cache:cache_t) : option (typ & (unit -> unit)) =
+    let tok = mk_token cache in
+    match g with
+    | None -> 
+      commit_guard_core tok;
+      None
+    | Some guard ->
+      Some (guard, (fun _ -> commit_guard_core tok))
+
 let check_term g e t must_tot =
   match check_term_top_gh g e (Some t) must_tot None with
-  | Success (_, g) -> Inl g
+  | Success ((_, g), cache) -> Inl <| return_my_guard_and_tok_t g cache
   | Error err -> Inr err
 
 let check_term_at_type g e t =
   let must_tot = false in
   match check_term_top_gh g e (Some t) must_tot None with
-  | Success ((eff, _), g) -> Inl (eff, g)
+  | Success (((eff, _), g), cache) -> Inl (eff, return_my_guard_and_tok_t g cache)
   | Error err -> Inr err
 
 let compute_term_type_handle_guards g e gh =
   let e = FStarC.Syntax.Compress.deep_compress true true e in
   let must_tot = false in
   match check_term_top_gh g e None must_tot (Some gh) with
-  | Success (r, None) -> Inl r
-  | Success (_, Some _) -> failwith "Impossible: All guards should have been handled already"
+  | Success ((r, None), cache) -> commit_guard_core (mk_token cache); Inl r
+  | Success ((_, Some _), _) -> failwith "Impossible: All guards should have been handled already"
   | Error err -> Inr err
 
 let open_binders_in_term (env:Env.env) (bs:binders) (t:term) =
@@ -2074,12 +2134,12 @@ let check_term_equality guard_ok unfolding_ok g t0 t1
        Format.print4 "Entering check_term_equality with %s and %s (guard_ok=%s; unfolding_ok=%s) {\n"
          (show t0) (show t1) (show guard_ok) (show unfolding_ok);
     let ctx = { unfolding_ok = unfolding_ok; no_guard = not guard_ok; error_context = [("Eq", None)] } in
-    let r = check_relation g EQUALITY t0 t1 ctx in
+    let r = check_relation g EQUALITY t0 t1 ctx initial_cache in
     if !dbg_Top then
        Format.print3 "} Exiting check_term_equality (%s, %s). Result = %s.\n" (show t0) (show t1) (show r);
     let r =
       match r with
-      | Success (_, g) -> Inl g
+      | Success ((_, g), cache) -> Inl (return_my_guard_and_tok_t g cache)
       | Error err -> Inr err
     in
     r
@@ -2087,6 +2147,6 @@ let check_term_equality guard_ok unfolding_ok g t0 t1
 let check_term_subtyping guard_ok unfolding_ok g t0 t1
   = let g = initial_env g None in
     let ctx = { unfolding_ok = unfolding_ok; no_guard = not guard_ok; error_context = [("Subtyping", None)] } in
-    match check_relation g (SUBTYPING None) t0 t1 ctx with
-    | Success (_, g) -> Inl g
+    match check_relation g (SUBTYPING None) t0 t1 ctx initial_cache with
+    | Success ((_, g), cache) -> Inl (return_my_guard_and_tok_t g cache)
     | Error err -> Inr err

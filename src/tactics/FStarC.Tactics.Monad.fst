@@ -88,7 +88,7 @@ let register_goal (g:goal) =
                      (show i)
                      (show uv);
     let goal_ty = U.ctx_uvar_typ uv in
-    match FStarC.TypeChecker.Core.compute_term_type_handle_guards env goal_ty (fun _ _ -> true) 
+    match FStarC.TypeChecker.Core.(compute_term_type_handle_guards env goal_ty (fun _ (g, cb) -> commit_guard cb; true))
     with
     | Inl _ -> ()  // ghost is ok
     | Inr err ->

@@ -718,3 +718,16 @@ and hash_sigelt' (se:sigelt') : hash_code =
 instance hashable_sigelt : hashable sigelt = {
   hash = hash_sigelt;
 }
+
+open FStarC.Class.Deq
+instance deq_term : deq term = {
+  (=?) = equal_term;
+}
+
+module H = FStarC.HashMap
+let term_map (a:Type) = H.hashmap term a
+let term_map_empty (#a:Type) : term_map a = H.empty #term #a
+let term_map_add (#a:Type) (t:term) (v:a) (m:term_map a) : term_map a = H.add t v m
+let term_map_lookup (#a:Type) (t:term) (m:term_map a) : option a = H.lookup t m
+let term_map_mem (#a:Type) (t:term) (m:term_map a) : bool = H.mem t m
+let term_map_fold #a #b (f:term -> a -> b -> b) (m:term_map a) (i:b) : b = H.fold f m i

@@ -56,6 +56,16 @@ let mem (#k #v : _)
   : bool
   = Some? (lookup key m)
 
+
+let fold (#k #v : _)
+  {| deq k |}
+  {| hashable k |}
+  (f : k -> v -> 'a -> 'a)
+  (m : hashmap k v)
+  (init:'a)
+: 'a
+= PIMap.fold m (fun _ (k,v) a -> f k v a) init
+
 let cached_fun (#a #b : Type) {| hashable a |} {| deq a |} (f : a -> b) =
   let cache = mk_ref (empty #a #b) in
   let f_cached =
@@ -68,4 +78,3 @@ let cached_fun (#a #b : Type) {| hashable a |} {| deq a |} (f : a -> b) =
         y
   in
   f_cached, (fun () -> cache := empty #a #b)
-

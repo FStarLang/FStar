@@ -23,18 +23,22 @@ type side =
 
 instance val showable_side : Class.Show.showable side
 
+type guard_commit_token_cb = unit -> unit
+type guard_and_tok_t = typ & (unit -> unit)
+val empty_token : (unit -> unit)
+val commit_guard (tok:(unit -> unit)) : unit
 val maybe_relate_after_unfolding (g:Env.env) (t0 t1:term) : side
 
 val is_non_informative (g:Env.env) (t:typ) : bool
 
 val check_term (g:Env.env) (e:term) (t:typ) (must_tot:bool)
-  : either (option typ) error
+  : either (option (typ & (unit -> unit))) error
 
 val check_term_at_type (g:Env.env) (e:term) (t:typ)
-  : either (tot_or_ghost & option typ) error
+  : either (tot_or_ghost & option (typ & (unit -> unit))) error
 
 val compute_term_type_handle_guards (g:Env.env) (e:term)
-                                    (discharge_guard: Env.env -> typ -> bool)
+                                    (discharge_guard: Env.env -> (typ & (unit -> unit)) -> bool)
   : either (tot_or_ghost & typ) error
 
 val open_binders_in_term (g:Env.env) (bs:binders) (t:term)
@@ -45,10 +49,10 @@ val open_binders_in_comp (g:Env.env) (bs:binders) (c:comp)
 
 (* For unit testing, and exposed to tactics *)
 val check_term_equality (guard_ok:bool) (unfolding_ok:bool) (g:Env.env) (t0 t1:typ)
-  : either (option typ) error
+  : either (option (typ & (unit -> unit))) error
 
 val check_term_subtyping (guard_ok:bool) (unfolding_ok:bool) (g:Env.env) (t0 t1:typ)
-  : either (option typ) error
+  : either (option (typ & (unit -> unit))) error
 
 val print_error (err:error)
   : string
