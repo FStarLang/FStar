@@ -115,7 +115,9 @@ and hash_term' (t:term)
                                                                 (hash_option hash_rc rcopt)))
     | Tm_arrow {bs; comp=c} -> mix (of_int 23) (mix (hash_list hash_binder bs) (hash_comp c))
     | Tm_refine {b; phi=t} -> mix (of_int 29) (mix (hash_bv b) (hash_term t))
-    | Tm_app {hd=t; args} -> mix (of_int 31) (mix (hash_term t) (hash_list hash_arg args))
+    | Tm_app _ ->
+      let hd, args = FStarC.Syntax.Util.head_and_args_full t in
+      mix (hash_term hd) (hash_list hash_arg args)
     | Tm_match {scrutinee=t; ret_opt=asc_opt; brs=branches; rc_opt=rcopt} ->
       mix (of_int 37)
             (mix (hash_option hash_match_returns asc_opt)
@@ -379,9 +381,11 @@ let rec equal_term (t1 t2:term)
     | Tm_refine {b=b1; phi=t1}, Tm_refine {b=b2; phi=t2} ->
       equal_bv b1 b2 &&
       equal_term t1 t2
-    | Tm_app {hd=t1; args=as1}, Tm_app {hd=t2; args=as2} ->
-      equal_term t1 t2 &&
-      equal_list equal_arg as1 as2
+    | Tm_app _, Tm_app _ ->
+      let hd1, args1 = FStarC.Syntax.Util.head_and_args_full t1 in
+      let hd2, args2 = FStarC.Syntax.Util.head_and_args_full t2 in
+      equal_term hd1 hd2 &&
+      equal_list equal_arg args1 args2
     | Tm_match {scrutinee=t1; ret_opt=asc_opt1; brs=bs1; rc_opt=ropt1},
       Tm_match {scrutinee=t2; ret_opt=asc_opt2; brs=bs2; rc_opt=ropt2} ->
       equal_term t1 t2 &&

@@ -16,3 +16,5 @@ val clear (ht:hashtable 'a) : unit
 val reset_counters (x:hashtable 'a) : unit
 
 val print_stats (x:hashtable 'a) : unit
+
+val iter (f: term -> 'a -> unit) (ht: hashtable 'a) : unit
