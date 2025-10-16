@@ -88,9 +88,12 @@ let register_goal (g:goal) =
                      (show i)
                      (show uv);
     let goal_ty = U.ctx_uvar_typ uv in
-    match FStarC.TypeChecker.Core.(compute_term_type_handle_guards env goal_ty (fun _ (g, cb) -> commit_guard cb; true))
+    match FStarC.TypeChecker.Core.compute_term_type env goal_ty
     with
-    | Inl _ -> ()  // ghost is ok
+    | Inl (_, _, None) -> ()  // ghost is ok
+    | Inl (_, _, Some (g, tok)) ->
+      //register goal intentionally admits the guard; the goal is assumed to already be well-typed
+      FStarC.TypeChecker.Core.commit_guard tok
     | Inr err ->
       let msg = 
           Format.fmt2 "Failed to check initial tactic goal %s because %s"

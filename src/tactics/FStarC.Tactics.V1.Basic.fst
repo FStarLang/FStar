@@ -1418,10 +1418,10 @@ let _t_trefl (allow_guards:bool) (l : term) (r : term) : tac unit =
           // Note, from well-typedness of the goal, we already know ?u.ty <: ty
           let check_uvar_subtype u t =
             let env = { goal_env g with gamma = g.goal_ctx_uvar.ctx_uvar_gamma } in
-            match Core.compute_term_type_handle_guards env t (fun _ _ -> true)
-            with
+            match Core.compute_term_type env t with
             | Inr _ -> false
-            | Inl (_, t_ty) -> (  // ignoring the effect, ghost is ok
+            | Inl (_, t_ty, guard) -> (  // ignoring the effect, ghost is ok
+              FStarC.TypeChecker.Core.commit_guard_and_tok_opt guard; //intentionally admit guard; goal is well-typed
               match Core.check_term_subtyping true true env ty t_ty with
               | Inl None -> //unconditional subtype
                 mark_uvar_as_already_checked u;

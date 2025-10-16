@@ -1532,10 +1532,10 @@ let _t_trefl (allow_guards:bool) (l : term) (r : term) : tac unit =
           // Note, from well-typedness of the goal, we already know ?u.ty <: ty
           let check_uvar_subtype u t =
             let env = { goal_env g with gamma = g.goal_ctx_uvar.ctx_uvar_gamma } in
-            match Core.compute_term_type_handle_guards env t (fun _ _ -> true)
-            with
+            match Core.compute_term_type env t with
             | Inr _ -> false
-            | Inl (_, t_ty) -> (  // ignoring effect, ghost is ok
+            | Inl (_, t_ty, guard) -> (  // ignoring effect, ghost is ok
+              FStarC.TypeChecker.Core.commit_guard_and_tok_opt guard; //intentionally admit guard; goal is well-typed
               match Core.check_term_subtyping true true env ty t_ty with
               | Inl None -> //unconditional subtype
                 mark_uvar_as_already_checked u;
@@ -2485,21 +2485,19 @@ let refl_core_compute_term_type (g:env) (e:term) : tac (option (Core.tot_or_ghos
          let g = Env.set_range g e.pos in
          dbg_refl g (fun _ ->
            Format.fmt1 "refl_core_compute_term_type: %s\n" (show e));
-         let guards : ref (list refl_guard_and_tok_t) = mk_ref [] in
-         let gh = fun g guard ->
-           (* FIXME: this is kinda ugly, we store all the guards
-           in a local ref and fetch them at the end. *)
-           guards := (g, guard) :: !guards;
-           true
-         in
-         match Core.compute_term_type_handle_guards g e gh with
-         | Inl (eff, t) ->
+         match Core.compute_term_type g e with
+         | Inl (eff, t, guard) ->
            let t = refl_norm_type g t in
            dbg_refl g (fun _ ->
              Format.fmt2 "refl_core_compute_term_type for %s computed type %s\n"
                (show e)
                (show t));
-           ((eff, t), !guards)
+            let guards =
+              match guard with
+              | None -> []
+              | Some guard -> [g, guard]
+            in
+           ((eff, t), guards)
          | Inr err ->
            dbg_refl g (fun _ -> Format.fmt1 "refl_core_compute_term_type: %s\n" (Core.print_error err));
            Errors.raise_error g Errors.Fatal_IllTyped 
@@ -2604,28 +2602,20 @@ let refl_tc_term (g:env) (e:term) : tac (option (term & (Core.tot_or_ghost & typ
       dbg_refl g (fun _ ->
         Format.fmt1 "} finished tc with e = %s\n"
           (show e));
-      let guards : ref (list refl_guard_and_tok_t) = mk_ref [] in
-      let gh = fun g guard ->
-        (* collect guards and return them *)
-        dbg_refl g (fun _ -> 
-          let guard, _ = guard in 
-          Format.fmt3 "Got guard in Env@%s |- %s@%s\n"
-            (Env.get_range g |> show)
-            (show guard)
-            (show guard.pos)
-            );
-        guards := (g, guard) :: !guards;
-        true
-      in
-      match Core.compute_term_type_handle_guards g e gh with
-      | Inl (eff, t) ->
+      match Core.compute_term_type g e with
+      | Inl (eff, t, guard) ->
           let t = refl_norm_type g t in
           dbg_refl g (fun _ ->
             Format.fmt3 "refl_tc_term@%s for %s computed type %s\n"
               (show e.pos)
               (show e)
               (show t));
-          ((e, (eff, t)), !guards)
+          let guards =
+            match guard with
+            | None -> []
+            | Some guard -> [g, guard]
+          in
+          ((e, (eff, t)), guards)
       | Inr err ->
         dbg_refl g (fun _ -> Format.fmt1 "refl_tc_term failed: %s\n" (Core.print_error err));
         Errors.raise_error e Errors.Fatal_IllTyped ("tc_term callback failed: " ^ Core.print_error err)
