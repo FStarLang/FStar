@@ -102,7 +102,7 @@ let check_core (i : int) subtyping guard_ok x y =
     match res with
     | Inl None ->
       Format.print1 "%s core check ok\n" (show i)
-    | Inl (Some g) ->
+    | Inl (Some (g, cb)) ->
       Format.print2 "%s core check computed guard %s ok\n" (show i) (show g);
       if not guard_ok
       then success := false

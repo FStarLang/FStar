@@ -348,7 +348,7 @@ let (let!) (#a:Type) (#b:Type) (x:result a) (y:a -> result b)
       match x ctx0 cache0 with
       | Success ((x, g1), cache1) ->
         (match y x ctx0 cache1 with
-         | Success ((y, g2), cache2) -> Success ((y, g2), cache2)
+         | Success ((y, g2), cache2) -> Success ((y, and_pre g1 g2), cache2)
          | err -> err)
       | Error err -> Error err
 
@@ -898,13 +898,20 @@ let maybe_relate_after_unfolding (g:Env.env) t0 t1 : side =
   else
     Right
 
+instance showable_rel : showable relation = {
+    show = fun rel ->
+      match rel with
+      | EQUALITY -> "=?="
+      | SUBTYPING _ -> "<:?"
+}
+
 (*
      G |- e : t0 <: t1 | p
 
 or   G |- t0 <: t1 | p
 
  *)
-let rec check_relation (g:env) (rel:relation) (t0 t1:typ)
+let rec check_relation' (g:env) (rel:relation) (t0 t1:typ)
   : result unit
   = let err (lbl:string) =
         match rel with
@@ -923,18 +930,7 @@ let rec check_relation (g:env) (rel:relation) (t0 t1:typ)
             ^/^ pp t1
           ]
     in
-    let rel_to_string rel =
-      match rel with
-      | EQUALITY -> "=?="
-      | SUBTYPING _ -> "<:?"
-    in
-    if !dbg
-    then Format.print5 "check_relation (%s) %s %s (%s) %s\n"
-                   (tag_of t0)
-                   (show t0)
-                   (rel_to_string rel)
-                   (tag_of t1)
-                   (show t1);
+
     let! guard_not_ok = guard_not_allowed in
     let guard_ok = not guard_not_ok in
     let head_matches t0 t1
@@ -1279,6 +1275,30 @@ let rec check_relation (g:env) (rel:relation) (t0 t1:typ)
 
       | _ -> fallback t0 t1
 
+and check_relation (g:env) (rel:relation) (t0 t1:typ)
+  : result unit
+  = if !dbg
+    then (
+      fun ctx cache ->
+        Format.print3 "check_relation %s %s %s\n"
+                    (show t0)
+                    (show rel)
+                    (show t1);
+        let res = check_relation' g rel t0 t1 ctx cache in
+        match res with
+        | Error err -> Error err
+        | Success ((_, g), cache) ->
+          Format.print4 "check_relation  %s %s %s succeeded with guard %s\n"
+              (show t0)
+              (show rel)
+              (show t1)
+              (show g);
+          res
+    )
+    else (
+      check_relation' g rel t0 t1
+    )
+
 and check_relation_args (g:env) rel (a0 a1:args)
   : result unit
   = if List.length a0 = List.length a1
@@ -1391,9 +1411,27 @@ and memo_check (g:env) (e:term)
       )
     ))
 
-and check (msg:string) (g:env) (e:term)
+and check' (msg:string) (g:env) (e:term)
   : result (tot_or_ghost & typ)
   = with_context msg (Some (CtxTerm e)) (fun _ -> memo_check g e)
+
+and check (msg:string) (g:env) (e:term)
+  : result (tot_or_ghost & typ)
+  = if !dbg
+    then (
+      fun ctx cache -> 
+        Format.print1 "{About to check %s\n" (show e);
+        let res = check' msg g e ctx cache in
+        match res with
+        | Error err -> Error err
+        | Success (((eff, typ), guard), cache) ->
+          Format.print3 "Checked %s at type %s with guard %s}\n"
+            (show e)
+            (show typ)
+            (show guard);
+          res
+    )
+    else check' msg g e
 
 and do_check_and_promote (g:env) (e:term)
   : result (tot_or_ghost & typ)
@@ -2028,8 +2066,7 @@ let check_term_top_gh g e topt (must_tot:bool) (gh:option guard_handler_t)
                    (show (get_goal_ctr()));
 
     if !dbg || !dbg_Top
-    then (Format.print5 "%s\n(%s) Entering core (with guard handler? %s) with %s <: %s\n"
-                  (FStarC.Util.stack_dump())
+    then (Format.print4 "(%s) Entering core (with guard handler? %s) with %s <: %s\n"
                    (show (get_goal_ctr()))
                    (show (Some? gh))
                   (show e) (show topt));
