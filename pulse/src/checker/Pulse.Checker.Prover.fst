@@ -540,12 +540,13 @@ let teq_nosmt_force_args (g: R.env) (x y: term) (fail_fast: bool) : Dv bool =
   let yh, ya = R.collect_app_ln y in
   go ((xh, R.Q_Explicit) :: xa) ((yh, R.Q_Explicit) :: ya)
 
-module TermEq  = FStar.Reflection.TermEq
-
-let is_unamb (cands: list (int & slprop_view)) : bool =
+let is_unamb g (cands: list (int & slprop_view)) : T.Tac bool =
   match cands with
   | [] | [_] -> true
-  | (_, x)::cands -> List.Tot.for_all (fun (_, y) -> TermEq.term_eq (elab_slprop x) (elab_slprop y)) cands
+  | (_, x)::cands ->
+    let unifies x y = with_uf_transaction fun _ ->
+      teq_nosmt_force_args (elab_env g) x y true in
+    forallb (fun (_, y) -> unifies (elab_slprop x) (elab_slprop y)) cands
 
 // this matches atoms when they're the only unifiable pair
 // necessary for various gather like functions where you don't specify all arguments
@@ -566,7 +567,7 @@ let prove_atom_unamb (g: env) (ctxt: list slprop_view) (goal: slprop_view) :
     let ictxt = List.Tot.mapi (fun i ctxt -> i, ctxt) ctxt in
     let cands = T.filter (fun (i, ctxt) -> matches_mkeys ctxt) ictxt in
     if Nil? cands then None else
-    if not (is_unamb cands) then None else
+    if not (is_unamb g cands) then None else
     let (i, cand) :: _ = cands in
     debug_prover g (fun _ -> Printf.sprintf "prove_atom_unamb: commiting to unify %s and %s\n" (show (elab_slprop cand)) (show goal));
     ignore (teq_nosmt_force_args (elab_env g) (elab_slprop cand) goal false);
@@ -599,7 +600,7 @@ let prove_atom (g: env) (ctxt: list slprop_view) (allow_amb: bool) (goal: slprop
     let ictxt = List.Tot.mapi (fun i ctxt -> i, ctxt) ctxt in
     let cands = T.filter (fun (i, ctxt) -> matches_mkeys ctxt) ictxt in
     if Nil? cands then None else
-    if (if allow_amb then false else not (is_unamb cands)) then None else
+    if (if allow_amb then false else not (is_unamb g cands)) then None else
     let (i, cand)::_ = cands in
     debug_prover g (fun _ -> Printf.sprintf "commiting to unify %s and %s\n" (show (elab_slprop cand)) (show goal));
     ignore (teq_nosmt_force_args (elab_env g) (elab_slprop cand) goal false);
