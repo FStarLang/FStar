@@ -1,4 +1,85 @@
+(*
+   Copyright Microsoft Research
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*)
 module FStarC.TypeChecker.Core
+(*
+
+This module implements a core typechecker for pure and ghost F* terms.
+
+It expects terms to be elaborated with all implicit arguments and annotated
+bound variables, though it also accepts typechecking terms that contain unsolved
+unification variables at their introduced types.
+
+Abstractly, the main `check g e` computes
+  
+     g |- e : t | p
+
+where a term `e` is typed at `t` in environment `g`,
+provided the  guard `p` is provable in `g` (i.e., g |= p). 
+
+We write `g |- e : t` for `g |- e : t | True`
+
+A main nuance is in its use of caches, of two kinds:
+
+1. A term typing cache
+
+Each sub-call to check memoizes the result `g |- e : t` and returns the guard
+`p` to be proven.
+
+Subsequent calls to `check g' e'` looks up `e'` in the cache, and if it findds
+`g |- e : t`, checks that `g'` is an extension of `g`, and if so, records a
+cache hit and returns `g' |- e : t`.
+
+
+2. A guard cache
+
+When issuing a guard (e.g,. as the result of checking a subtyping relation 
+`g |- t <: t' | p`), we also cache `g |= p`.
+
+If a guard is issued later for `g' |= p`, we check if `g |= p` is cached and if
+`g'` extensions `g`, we record a cache hit and do not emit the guard.
+
+Guards are not proven immediately; instead they are accumulated and returned to
+the caller to be proven later. To accomodate this API, we have two levels of
+caches:
+
+- A functional cache: cache_t.term_map and cache_t.guard_map
+   
+   These caches are initialized to empty at each call into the public API of the
+   checker, e.g, check_term.
+
+   The call to check_term populates the caches as it checks a term and returns
+   guard to the caller. 
+
+   The main invariant is the the provability of the returned guard implies the
+   provability of all cached guards in the guard_map; and, consequently, the
+   typing of all terms in the term_map.
+
+   Once the returned guard is discharged by the caller (e.g, by calling SMT), a
+   callback into this Core checker notifies it that the returned guard has been
+   proven, and which point, the term_map and guard_map are promoted to the
+   second level imperative cache, described next.
+
+- The second level cache accumulates entries across multiple calls to this
+  Core checker. Every entry in this cache contains guards that have already been
+  proven, and contains terms whose typing has already been established.
+
+  The second level cache is explicit cleared by called clear_memo_table, which 
+  FStarC.TypeChecker.Tc does at each top-level declaration.
+
+*)
 open FStarC
 open FStar.List.Tot
 open FStarC
@@ -299,41 +380,37 @@ let clear_memo_table () =
   THT.clear table.guard_table;
   table.counter := !table.counter + 1
 
-type guard_commit_token_core = {
+type guard_commit_token = {
   guard_cache: ref (option cache_t);
   guard_counter: int
 }
 
-let guard_commit_token = option guard_commit_token_core
-// type guard_commit_token_cb = unit -> unit
 let my_guard_and_tok_t = typ & (unit -> unit)
 let empty_token () = ()
 let mk_token (cache:cache_t) : guard_commit_token =
-  Some { guard_cache = mk_ref (Some cache); guard_counter = !table.counter }
+  { guard_cache = mk_ref (Some cache);
+    guard_counter = !table.counter }
 
 let commit_guard_core (g:guard_commit_token) : unit =
-  match g with
-  | None -> ()
-  | Some g ->
-    if g.guard_counter <> !table.counter
-    then (//table has been cleared since the token was issued; drop the cache
+  if g.guard_counter <> !table.counter
+  then (//table has been cleared since the token was issued; drop the cache
+      ()
+  ) //no need to update the cache, nothing has been evicted
+  else (
+    let cache = !g.guard_cache in
+    match cache with
+    | None -> () //cache was already used
+    | Some cache ->
+      g.guard_cache := None; //invalidate the cache in the token
+      FStarC.Syntax.Hash.term_map_fold
+        (fun term hash_entry _ -> THT.insert term hash_entry table.table)
+        cache.term_map
+        ();
+      FStarC.Syntax.Hash.term_map_fold
+        (fun term guard_entry _ -> THT.insert term guard_entry table.guard_table)
+        cache.guard_map
         ()
-    ) //no need to update the cache, nothing has been evicted
-    else (
-      let cache = !g.guard_cache in
-      match cache with
-      | None -> () //cache was already used
-      | Some cache ->
-        g.guard_cache := None; //invalidate the cache in the token
-        FStarC.Syntax.Hash.term_map_fold
-          (fun term hash_entry _ -> THT.insert term hash_entry table.table)
-          cache.term_map
-          ();
-        FStarC.Syntax.Hash.term_map_fold
-          (fun term guard_entry _ -> THT.insert term guard_entry table.guard_table)
-          cache.guard_map
-          ()
-    )
+  )
 let commit_cache_cb cache = fun _ -> commit_guard_core (mk_token cache)
 let commit_guard (cb:unit->unit) = cb()
 let commit_guard_and_tok_opt (t:option guard_and_tok_t) =
@@ -614,8 +691,8 @@ let weaken_subtyping (p:term) (g:term)
 = U.mk_imp p g
 
 let push_hypothesis (g:env) (h:term) =
-    let g, h = new_binder g h h.pos in
-    g
+  let g, h = new_binder g h h.pos in
+  g
 
 let no_guard (g:result 'a)
   : result 'a
