@@ -51,5 +51,13 @@ val mem (#k #v : _)
   (m : hashmap k v)
   : bool
 
+val fold (#k #v : _)
+  {| deq k |}
+  {| hashable k |}
+  (f : k -> v -> 'a -> 'a)
+  (m : hashmap k v)
+  (init:'a)
+: 'a
+
 val cached_fun (#a #b : Type) {| hashable a |} {| deq a |} (f : a -> b)
   : (a -> b) & (unit -> unit) // along with a reset fun
