@@ -245,8 +245,13 @@ type hash_entry = {
    he_typ: typ
 }
 
+type guard_entry = {
+  ge_gamma: list binding
+}
+
 type cache_t = {
-  term_map : FStarC.Syntax.Hash.term_map hash_entry
+  term_map : FStarC.Syntax.Hash.term_map hash_entry;
+  guard_map : FStarC.Syntax.Hash.term_map guard_entry;
 }
 
 type __result a =
@@ -256,6 +261,7 @@ type __result a =
 module THT = FStarC.Syntax.TermHashTable
 type tc_table = {
   table:THT.hashtable hash_entry;
+  guard_table:THT.hashtable guard_entry;
   counter:ref int //version counter
 }
 
@@ -274,6 +280,7 @@ let equal_term t1 t2 =
   FStarC.Profiling.profile (fun _ -> Hash.equal_term t1 t2) None "FStarC.TypeChecker.Core.equal_term"
 let table : tc_table = {
   table = THT.create 1048576; //2^20
+  guard_table = THT.create 1048576; //2^20
   counter = mk_ref 0
 } 
 type cache_stats_t = { hits : int; misses : int }
@@ -318,6 +325,10 @@ let commit_guard_core (g:guard_commit_token) : unit =
         FStarC.Syntax.Hash.term_map_fold
           (fun term hash_entry _ -> THT.insert term hash_entry table.table)
           cache.term_map
+          ();
+        FStarC.Syntax.Hash.term_map_fold
+          (fun term guard_entry _ -> THT.insert term guard_entry table.guard_table)
+          cache.guard_map
           ()
     )
 let commit_cache_cb cache = fun _ -> commit_guard_core (mk_token cache)
@@ -576,6 +587,11 @@ let close_guard (xs:binders) (us:universes) (g:precondition)
     | None -> None
     | Some t -> Some (mk_forall_l us xs t)
 
+let close_with_definition (x:binder) (u:universe) (t:term) (g:typ)
+: typ
+= let g' = U.mk_imp (U.mk_eq2 u x.binder_bv.sort (S.bv_to_name x.binder_bv) t) g in
+  U.mk_forall u x.binder_bv g'
+
 let close_guard_with_definition (x:binder) (u:universe) (t:term) (g:precondition)
   : precondition
   = match g with
@@ -586,43 +602,13 @@ let close_guard_with_definition (x:binder) (u:universe) (t:term) (g:precondition
        U.mk_forall u x.binder_bv t'
       )
 
-let with_binders (#a:Type) (xs:binders) (us:universes) (f:result a)
-  : result a
-  = fun ctx cache ->
-      match f ctx cache with
-      | Success ((t, g), cache) -> Success ((t, close_guard xs us g), cache)
-      | err -> err
-
-let with_definition (#a:Type) (x:binder) (u:universe) (t:term) (f:result a)
-  : result a
-  = fun ctx cache ->
-      match f ctx cache with
-      | Success ((a, g), cache) -> Success ((a, close_guard_with_definition x u t g), cache)
-      | err -> err
-
-let guard (t:typ)
-  : result unit
-  = fun _ cache -> Success (((), Some t), cache)
-
 let abs (g:env) (a:typ) (f: binder -> term) : term =
   let g, xb = new_binder g a a.pos in
   U.abs [xb] (f xb) None
 
-let weaken_subtyping_guard (p:term)
-                           (g:precondition)
-  : precondition
-  = Option.map (fun q -> U.mk_imp p q) g
-
-let weaken (p:term) (g:result 'a)
-  = fun ctx cache ->
-      match g ctx cache with
-      | Success ((x, q), cache) -> Success ((x, weaken_subtyping_guard p q), cache)
-      | err -> err
-
-let weaken_with_guard_formula (p:FStarC.TypeChecker.Common.guard_formula) (g:result 'a)
-  = match p with
-    | Common.Trivial -> g
-    | Common.NonTrivial p -> weaken p g
+let weaken_subtyping (p:term) (g:term)
+: term
+= U.mk_imp p g
 
 let push_hypothesis (g:env) (h:term) =
     let g, h = new_binder g h h.pos in
@@ -696,6 +682,72 @@ let raw_lookup (e:term) : result (option hash_entry) =
   | None ->
     return (THT.lookup e table.table)
 
+let raw_lookup_guard (e:term) : result (option guard_entry) =
+  let! cache = get_cache() in
+  match FStarC.Syntax.Hash.term_map_lookup e cache.guard_map with
+  | Some he ->
+    return (Some he)
+  | None ->
+    return (THT.lookup e table.guard_table)
+
+let insert_guard (g:env) (guard:typ)
+  : result unit
+  = let! cache = get_cache () in
+    put_cache {cache with guard_map = FStarC.Syntax.Hash.term_map_add guard { ge_gamma = g.tcenv.gamma } cache.guard_map }
+
+let guard (g:env) (guard:typ)
+  : result unit
+  = match! raw_lookup_guard guard with
+    | Some ge ->
+      if ge.ge_gamma `context_included` g.tcenv.gamma
+      then return () //cache hit 
+      else (
+        insert_guard g guard ;!
+        return_with_guard () (Some guard)
+      )
+    | _ ->
+      insert_guard g guard ;!
+      return_with_guard () (Some guard)
+
+
+let with_binders (#a:Type) (initial_env:env) (xs:binders) (us:universes) (f:result a)
+  : result a
+  = with_guard f
+    (function
+      | Inr err -> fail_propagate err
+      | Inl (res, None) -> return res
+      | Inl (res, Some form) ->
+        let form = mk_forall_l us xs form in
+        guard initial_env form ;!
+        return res)
+  
+let with_definition (#a:Type) (initial_env:env) (x:binder) (u:universe) (t:term) (f:result a)
+  : result a
+  = with_guard f
+    (function
+      | Inr err -> fail_propagate err
+      | Inl (res, None) -> return res
+      | Inl (res, Some form) ->
+        let form = close_with_definition x u t form in
+        guard initial_env form ;!
+        return res)
+
+let weaken #a (initial_env:env) (p:term) (f:result a)
+: result a
+= with_guard f
+  (function
+    | Inr err -> fail_propagate err
+    | Inl (res, None) -> return res
+    | Inl (res, Some form) ->
+      let form = weaken_subtyping p form in
+      guard initial_env form ;!
+      return res)
+
+let weaken_with_guard_formula env (p:FStarC.TypeChecker.Common.guard_formula) (g:result 'a)
+  = match p with
+    | Common.Trivial -> g
+    | Common.NonTrivial p -> weaken env p g
+
 let insert (g:env) (e:term) (res:success (tot_or_ghost & typ))
 : result unit
 = let! cache = get_cache() in
@@ -712,7 +764,7 @@ let insert (g:env) (e:term) (res:success (tot_or_ghost & typ))
       (show e)
       (show (snd (fst res)))
       (show g.tcenv.gamma));
-  let new_cache = { term_map = FStarC.Syntax.Hash.term_map_add e entry cache.term_map } in
+  let new_cache = { cache with term_map = FStarC.Syntax.Hash.term_map_add e entry cache.term_map } in
   put_cache new_cache
 
 let lookup (g:env) (e:term) : result (tot_or_ghost & typ) =
@@ -982,7 +1034,7 @@ let rec check_relation' (g:env) (rel:relation) (t0 t1:typ)
     let emit_guard t0 t1 =
        let! _, t_typ = with_context "checking lhs while emitting guard" None (fun _ -> do_check g t0) in
        let! u = universe_of g t_typ in
-       guard (U.mk_eq2 u t_typ t0 t1)
+       guard g (U.mk_eq2 u t_typ t0 t1)
     in
     let fallback t0 t1 =
       if guard_ok
@@ -1065,26 +1117,27 @@ let rec check_relation' (g:env) (rel:relation) (t0 t1:typ)
         then (
           check_relation g EQUALITY x0.sort x1.sort ;!
           let! u = universe_of g x0.sort in
+          let g0 = g in
           let g, b, f0 = open_term g (S.mk_binder x0) f0 in
           let f1 = Subst.subst [DB(0, b.binder_bv)] f1 in
             (match! guard_not_allowed with
              | true ->
-               with_binders [b] [u]
+               with_binders g0 [b] [u]
                  (check_relation g EQUALITY f0 f1)
 
              | _ ->
                match rel with
                | EQUALITY ->
-                 with_binders [b] [u]
+                 with_binders g0 [b] [u]
                    (handle_with
                       (check_relation g EQUALITY f0 f1)
-                      (fun _ -> guard (U.mk_iff f0 f1)))
+                      (fun _ -> guard g (U.mk_iff f0 f1)))
 
                | SUBTYPING (Some tm) ->
-                 guard (Subst.subst [NT(b.binder_bv, tm)] (U.mk_imp f0 f1))
+                 guard g0 (Subst.subst [NT(b.binder_bv, tm)] (U.mk_imp f0 f1))
 
                | SUBTYPING None ->
-                 guard (U.mk_forall u b.binder_bv (U.mk_imp f0 f1)))
+                 guard g0 (U.mk_forall u b.binder_bv (U.mk_imp f0 f1)))
         )
         else (
           match! maybe_unfold x0.sort x1.sort with
@@ -1105,15 +1158,16 @@ let rec check_relation' (g:env) (rel:relation) (t0 t1:typ)
           we must show that the refinement on the LHS is constantly true. *)
           if rel = EQUALITY then (
             let! u0 = universe_of g x0.sort in
+            let g0 = g in
             let g, b0, f0 = open_term g (S.mk_binder x0) f0 in
             if! guard_not_allowed then
-              with_binders [b0] [u0]
+              with_binders g0 [b0] [u0]
                 (check_relation g EQUALITY U.t_true f0)
             else (
-              with_binders [b0] [u0]
+              with_binders g0 [b0] [u0]
                 (handle_with
                     (check_relation g EQUALITY U.t_true f0)
-                    (fun _ -> guard f0))
+                    (fun _ -> guard g f0))
             )
           ) else return ();!
           check_relation g rel x0.sort t1
@@ -1131,23 +1185,24 @@ let rec check_relation' (g:env) (rel:relation) (t0 t1:typ)
         then (
           let! u1 = universe_of g x1.sort in
           check_relation g EQUALITY t0 x1.sort ;!
+          let g0 = g in
           let g, b1, f1 = open_term g (S.mk_binder x1) f1 in
           if! guard_not_allowed then
-            with_binders [b1] [u1]
+            with_binders g0 [b1] [u1]
               (check_relation g EQUALITY U.t_true f1)
           else (
             match rel with
             | EQUALITY ->
-              with_binders [b1] [u1]
+              with_binders g0 [b1] [u1]
                 (handle_with
                     (check_relation g EQUALITY U.t_true f1)
-                    (fun _ -> guard f1))
+                    (fun _ -> guard g f1))
 
             | SUBTYPING (Some tm) ->
-                 guard (Subst.subst [NT(b1.binder_bv, tm)] f1)
+                 guard g0 (Subst.subst [NT(b1.binder_bv, tm)] f1)
 
             | SUBTYPING None ->
-                 guard (U.mk_forall u1 b1.binder_bv f1)
+                 guard g0 (U.mk_forall u1 b1.binder_bv f1)
           )
         )
         else (
@@ -1207,9 +1262,10 @@ let rec check_relation' (g:env) (rel:relation) (t0 t1:typ)
         check_bqual b0.binder_qual b1.binder_qual;!
         check_positivity_qual EQUALITY b0.binder_positivity b1.binder_positivity;!
         let! u = universe_of g b0.binder_bv.sort in
+        let g0 = g in
         let g, b0, body0 = open_term g b0 body0 in
         let body1 = Subst.subst [DB(0, b0.binder_bv)] body1 in
-        with_binders [b0] [u]
+        with_binders g0 [b0] [u]
           (check_relation g EQUALITY body0 body1)
 
       | Tm_arrow {bs=x0::x1::xs; comp=c0}, _ ->
@@ -1225,7 +1281,7 @@ let rec check_relation' (g:env) (rel:relation) (t0 t1:typ)
           let! u1 = universe_of g x1.binder_bv.sort in
           let g_x1, x1, c1 = open_comp g x1 c1 in
           let c0 = Subst.subst_comp [DB(0, x1.binder_bv)] c0 in
-          with_binders [x1] [u1] (
+          with_binders g [x1] [u1] (
             let rel_arg =
               match rel with
               | EQUALITY -> EQUALITY
@@ -1261,7 +1317,7 @@ let rec check_relation' (g:env) (rel:relation) (t0 t1:typ)
                   let bs0 = List.map S.mk_binder bvs0 in
                   // We need universes for the binders
                   let! us = check_binders g bs0 in
-                  with_context "relate_branch" None (fun _ -> with_binders bs0 us (check_relation g' rel body0 body1))
+                  with_context "relate_branch" None (fun _ -> with_binders g bs0 us (check_relation g' rel body0 body1))
              | _ -> fail_str "raw_pat_as_exp failed in check_equality match rule"
              end
             | _ -> fail_str "Core does not support branches with when"
@@ -1491,7 +1547,7 @@ and do_check (g:env) (e:term)
     let! _, t = check "refinement head" g x.sort in
     let! u = is_type g t in
     let g', x, phi = open_term g (S.mk_binder x) phi in
-    with_binders [x] [u] (
+    with_binders g [x] [u] (
       let! _, t' = check "refinement formula" g' phi in
       is_type g' t';!
       return (E_Total, t)
@@ -1500,7 +1556,7 @@ and do_check (g:env) (e:term)
   | Tm_abs {bs=xs; body} ->
     let g', xs, body = open_term_binders g xs body in
     let! us = with_context "abs binders" None (fun _ -> check_binders g xs) in
-    with_binders xs us (
+    with_binders g xs us (
       let! t = check "abs body" g' body in
       return (E_Total, U.arrow xs (as_comp g t))
     )
@@ -1508,7 +1564,7 @@ and do_check (g:env) (e:term)
   | Tm_arrow {bs=xs; comp=c} ->
     let g', xs, c = open_comp_binders g xs c in
     let! us = with_context "arrow binders" None (fun _ -> check_binders g xs) in
-    with_binders xs us (
+    with_binders g xs us (
       let! u = with_context "arrow comp" None (fun _ -> check_comp g' c) in
       return (E_Total, mk_type (S.U_max (u::us)))
     )
@@ -1540,7 +1596,7 @@ and do_check (g:env) (e:term)
         | Common.Trivial -> g
         | Common.NonTrivial gf -> push_hypothesis g gf
       in
-      let! eff_arg2, t_t2 = weaken_with_guard_formula guard_formula (check "app arg" g' t2) in
+      let! eff_arg2, t_t2 = weaken_with_guard_formula g guard_formula (check "app arg" g' t2) in
       with_context "operator arg2" None (fun _ -> check_subtype g' (Some t2) t_t2 y.binder_bv.sort) ;!
       return (join_eff_l [eff_hd; eff_arr1; eff_arr2; eff_arg1; eff_arg2],
              Subst.subst [NT(y.binder_bv, t2)] s2)
@@ -1575,7 +1631,7 @@ and do_check (g:env) (e:term)
       let! _, ttyp = check "let type" g lb.lbtyp in
       let! u = is_type g ttyp in
       with_context "let subtyping" None (fun _ -> check_subtype g (Some lb.lbdef) tdef lb.lbtyp) ;!
-      with_definition x u lb.lbdef (
+      with_definition g x u lb.lbdef (
         let! eff_body, t = check "let body" g' body in
         check_no_escape [x] t;!
         return (join_eff eff_def eff_body, t)
@@ -1603,8 +1659,8 @@ and do_check (g:env) (e:term)
              | None ->
                return et
 
-             | Some g ->
-               guard (U.b2t g) ;!
+             | Some neg_path ->
+               guard g (U.b2t neg_path) ;!
                return et)
 
         | (p, None, b) :: rest ->
@@ -1617,11 +1673,11 @@ and do_check (g:env) (e:term)
           let this_path_condition, next_path_condition =
               combine_path_and_branch_condition path_condition branch_condition pat_sc_eq
           in
-          let g' = push_binders g bs in
-          let g' = push_hypothesis g' this_path_condition in
+          let g'0 = push_binders g bs in
+          let g' = push_hypothesis g'0 this_path_condition in
           let! eff_br, tbr =
-            with_binders bs us
-              (weaken
+            with_binders g bs us
+              (weaken g'0
                  this_path_condition
                  (let! eff_br, tbr = with_context "branch" (Some (CtxTerm b)) (fun _ -> check "branch" g' b) in
                   match branch_typ_opt with
@@ -1670,7 +1726,7 @@ and do_check (g:env) (e:term)
     let as_x = {as_x with binder_bv = { as_x.binder_bv with sort = t_sc } } in
     let g_as_x, as_x, returns_ty = open_term g as_x returns_ty in
     let! _eff_t, returns_ty_t =
-      with_binders [as_x] [u_sc] (check "return type" g_as_x returns_ty) in
+      with_binders g [as_x] [u_sc] (check "return type" g_as_x returns_ty) in
     let! _u_ty = is_type g_as_x returns_ty_t in
     let rec check_branches (path_condition: S.term)
                            (branches: list S.branch)
@@ -1682,8 +1738,8 @@ and do_check (g:env) (e:term)
            | None ->
              return acc_eff
 
-           | Some g ->
-             guard (U.b2t g) ;!
+           | Some neg_path ->
+             guard g (U.b2t neg_path) ;!
              return acc_eff)
 
         | (p, None, b) :: rest ->
@@ -1696,11 +1752,11 @@ and do_check (g:env) (e:term)
           let this_path_condition, next_path_condition =
               combine_path_and_branch_condition path_condition branch_condition pat_sc_eq
           in
-          let g' = push_binders g bs in
-          let g' = push_hypothesis g' this_path_condition in
+          let g'0 = push_binders g bs in
+          let g' = push_hypothesis g'0 this_path_condition in
           let! eff_br, tbr =
-            with_binders bs us
-              (weaken
+            with_binders g bs us
+              (weaken g'0
                  this_path_condition
                  (let! eff_br, tbr = check "branch" g' b in
                   let expect_tbr = Subst.subst [NT(as_x.binder_bv, sc)] returns_ty in
@@ -1741,7 +1797,7 @@ and check_binders (g_initial:env) (xs:binders)
       | x ::xs ->
         let! _, t = check "binder sort" g x.binder_bv.sort in
         let! u = is_type g t in
-        with_binders [x] [u] (
+        with_binders g [x] [u] (
           let! us = aux (push_binder g x) xs in
           return (u::us)
         )
@@ -1848,7 +1904,7 @@ and check_pat (g:env) (p:pat) (t_sc:typ) : result (binders & universes) =
 
     let! _, ss, bs, us = fold2 (fun (g, ss, bs, us) {binder_bv=f} p ->
       let expected_t = Subst.subst ss f.sort in
-      let! (bs_p, us_p) = with_binders bs us (check_pat g p expected_t) in
+      let! (bs_p, us_p) = with_binders g bs us (check_pat g p expected_t) in
       let p_e = PatternUtils.raw_pat_as_exp g.tcenv p |> Option.must |> fst in
       return (push_binders g bs_p,
               ss@[NT (f, p_e)],
@@ -2037,7 +2093,10 @@ let simplify_steps =
      Env.Primops;
      Env.NoFullNorm]
 
-let initial_cache : cache_t = { term_map = FStarC.Syntax.Hash.term_map_empty #hash_entry }
+let initial_cache : cache_t = { 
+  term_map = FStarC.Syntax.Hash.term_map_empty #hash_entry;
+  guard_map = FStarC.Syntax.Hash.term_map_empty #guard_entry 
+}
 
 let check_term_top g e topt (must_tot:bool)
   : __result ((tot_or_ghost & S.typ) & precondition)
