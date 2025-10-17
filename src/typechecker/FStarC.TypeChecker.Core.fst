@@ -294,7 +294,10 @@ let record_cache_miss () =
 let reset_cache_stats () =
     cache_stats := { hits = 0; misses = 0 }
 let report_cache_stats () = !cache_stats
-let clear_memo_table () = THT.clear table.table; table.counter := !table.counter + 1
+let clear_memo_table () = 
+  THT.clear table.table;
+  THT.clear table.guard_table;
+  table.counter := !table.counter + 1
 
 type guard_commit_token_core = {
   guard_cache: ref (option cache_t);
