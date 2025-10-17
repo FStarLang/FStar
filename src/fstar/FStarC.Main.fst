@@ -231,6 +231,7 @@ let go_normal () =
     (* --dep: Just compute and print the transitive dependency graph;
               don't verify anything *)
     | Success when Options.dep () <> None ->
+      load_native_tactics ();
       let _, deps = Parser.Dep.collect filenames FStarC.CheckedFiles.load_parsing_data_from_cache in
       Parser.Dep.print deps;
       report_errors []
@@ -281,6 +282,7 @@ let go_normal () =
 
     (* --list_plugins: emit a list of plugins and exit *)
     | Success when Options.list_plugins () ->
+      load_native_tactics ();
       let ps = TypeChecker.Cfg.list_plugins () in
       let ts = Tactics.Interpreter.native_tactics_steps () in
       print1 "Registered plugins:\n%s\n" (String.concat "\n" (List.map (fun p -> "  " ^ show p.TypeChecker.Primops.Base.name) ps));
