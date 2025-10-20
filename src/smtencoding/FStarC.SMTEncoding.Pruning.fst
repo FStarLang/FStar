@@ -253,8 +253,24 @@ let maybe_add_ambient (a:assumption) (p:pruning_state)
       let t0 = free_top_level_names t0 in
       add_assumption_with_triggers [t0]
 
-    // Other equations and bi-implications are bidirectional
-    | App (Iff, [t0; t1])
+    | App (Iff, [t0; t1]) -> (
+      match t0.tm, t1.tm with
+      | App(Var "Valid", [{tm=App(Var "Prims.hasEq", [_u; lhs])}]),
+        App(Var "Valid", [{tm=App(Var "Prims.hasEq", [_v; rhs])}]) ->
+        //hasEq t0 <==> hasEq t1
+        //We have many of these for every refinement type; triggers from left-to-right
+        //perhaps these are better written hasEq t1 ==> hasEq t0, and trigger in a goal-directed way
+        let triggers = free_top_level_names lhs in
+        add_assumption_with_triggers [triggers]
+
+      | _ ->
+        //Other bi-implications are bidirectional
+        let t0 = free_top_level_names t0 in
+        let t1 = free_top_level_names t1 in
+        add_assumption_with_triggers [t0; t1]
+    )
+
+    // Other equations are bidirectional
     | App (Eq, [t0; t1]) ->
       let t0 = free_top_level_names t0 in
       let t1 = free_top_level_names t1 in
