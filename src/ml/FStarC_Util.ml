@@ -345,6 +345,8 @@ let poll_stdin (f:float) =
 
 let message_of_exn (e:exn) = Printexc.to_string e
 let trace_of_exn (e:exn) = Printexc.get_backtrace ()
+let finally (h:unit->unit) (f:unit->'a) : 'a = BatPervasives.finally h f ()
+
 let pr  = Printf.printf
 let spr = Printf.sprintf
 let fpr = Printf.fprintf

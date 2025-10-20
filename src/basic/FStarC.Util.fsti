@@ -70,6 +70,9 @@ val message_of_exn: exn -> string
 val trace_of_exn: exn -> string
 val stack_dump : unit -> string
 
+(* Always run finally(), even if work() raises an exception. *)
+val finally (finally: unit->unit) (work: unit->'a) : 'a
+
 exception SigInt
 type sigint_handler
 val sigint_handler_f : (int -> unit) -> sigint_handler
