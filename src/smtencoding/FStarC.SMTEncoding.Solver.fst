@@ -1361,13 +1361,6 @@ let maybe_refresh_solver env =
           Z3.refresh (Some env.proof_ns)
         )
 
-let finally (h : unit -> unit) (f : unit -> 'a) : 'a =
-  let r =
-    try f () with
-    | e -> h(); raise e
-  in
-  h (); r
-
 (* The query_settings list is non-empty unless the query was trivial. *)
 let encode_and_ask (can_split:bool) (is_retry:bool) use_env_msg tcenv q : (list query_settings & answer) =
   let do () : list query_settings & answer =
