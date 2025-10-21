@@ -8,5 +8,5 @@
   - Assertion failed
   - The SMT solver could not prove the query. Use --query_stats for more
     details.
-  - See also Bug206.fst(18,2-18,8)
+  - See also Bug206.fst(6,20-6,20)
 

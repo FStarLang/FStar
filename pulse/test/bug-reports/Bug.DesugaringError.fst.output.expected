@@ -10,7 +10,6 @@
 * Info at Bug.DesugaringError.fst(31,9-31,10):
   - Expected failure:
   - Expected expression of type Prims.nat got expression y of type Prims.bool
-  - See also Bug.DesugaringError.fst(31,4-31,10)
 
 * Info at Bug.DesugaringError.fst(46,4-46,8):
   - Expected failure:

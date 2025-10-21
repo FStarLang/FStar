@@ -11,7 +11,7 @@
   - The SMT solver could not prove the query. Use --query_stats for more
     details.
   - Also see: Prims.fst(161,28-183,79)
-  - See also Bug267.fst(61,4-61,8)
+  - See also Bug267.fst(43,18-43,21)
 
 * Info at Bug267.fst(65,53-66,17):
   - Expected failure:

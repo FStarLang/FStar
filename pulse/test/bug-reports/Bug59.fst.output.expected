@@ -1,4 +1,4 @@
-* Info at Bug59.fst(12,11-12,24):
+* Info at Bug59.fst(11,30-11,37):
   - Expected failure:
   - Ill-typed term: pure (x == y)
   - Expected a term of type slprop

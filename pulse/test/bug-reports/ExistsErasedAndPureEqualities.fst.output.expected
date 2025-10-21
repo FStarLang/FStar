@@ -3,13 +3,13 @@
   - Current context:
       ExistsErasedAndPureEqualities.some_pred x v
   - In typing environment:
-      __#545 : Prims.squash (_v_4 == v),
-      _v_4#544 : FStar.Ghost.erased Prims.int,
+      __#543 : Prims.squash (_v_4 == v),
+      _v_4#542 : FStar.Ghost.erased Prims.int,
       __#410 : Prims.squash (v == v),
       v#267 : FStar.Ghost.erased Prims.int,
       x#262 : Pulse.Lib.Reference.ref Prims.int
 
-* Info at ExistsErasedAndPureEqualities.fst(71,4-73,12):
+* Info at ExistsErasedAndPureEqualities.fst(67,0-76,1):
   - Expected failure:
   - Ill-typed term: pure (v == (*?u106*)_)
   - Expected a term of type slprop

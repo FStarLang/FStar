@@ -1,4 +1,4 @@
-* Info at MatchBasic.fst(154,2-156,3):
+* Info at MatchBasic.fst(149,0-157,1):
   - Expected failure:
   - Could not verify that this match is exhaustive.
   - Patterns are incomplete
