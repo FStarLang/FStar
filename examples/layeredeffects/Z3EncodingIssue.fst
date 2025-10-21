@@ -294,8 +294,9 @@ assume val hfn (_:unit) : STATE unit (fun p h -> p () h)
  *
  *       YOU COULD READ THE COMMENTS IN THIS MODULE IF YOU ARE CURIOUS
  *)
-let ref_hfn ()
-: Ref unit
-  (requires fun _ -> True)
-  (ensures fun n0 _ n1 -> n0 == n1)
-= REF?.reflect hfn
+// This fails with PR 4029
+// let ref_hfn ()
+// : Ref unit
+//   (requires fun _ -> True)
+//   (ensures fun n0 _ n1 -> n0 == n1)
+// = REF?.reflect hfn

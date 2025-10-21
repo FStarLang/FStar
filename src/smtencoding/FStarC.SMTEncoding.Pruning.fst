@@ -25,6 +25,10 @@ module BU = FStarC.Util
 type triggers = list (list string)
 type triggers_set = list (RBSet.t string)
 
+instance showable_psmap (_:showable 'a) : Tot (showable (PSMap.t 'a)) = {
+  show = fun s -> show (PSMap.fold s (fun key value out -> Format.fmt2 "(%s -> %s)" key (show value) :: out) [])
+}
+
 let triggers_as_triggers_set (ts:triggers) : triggers_set = List.map from_list ts
 type assumption_name = string
 
@@ -107,10 +111,18 @@ let print_pruning_state (p:pruning_state)
 
 instance show_pruning_state: showable pruning_state = { show = print_pruning_state }
 
+let init_macro_freenames = 
+  PSMap.of_list [
+    ("is-BoxBool", ["BoxBool"]);
+    ("is-BoxInt", ["BoxInt"]);
+    ("is-BoxString", ["BoxString"]);
+    ("is-BoxReal", ["BoxReal"]);
+  ]
+
 (* Initial state: everything is empty *)
 let init
 : pruning_state 
-= { macro_freenames = PSMap.empty ();
+= { macro_freenames = init_macro_freenames;
     trigger_to_assumption = PSMap.empty ();
     assumption_to_triggers = PSMap.empty ();
     assumption_name_map = PSMap.empty ();

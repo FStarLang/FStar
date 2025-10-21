@@ -799,6 +799,8 @@ let interp_full #a (#labs:list baseop)
 
 type sem0 (a:Type) : Type = state -> Tot (either exn a & state)
 
+#restart-solver
+
 let abides' (f : sem0 'a) (labs:list baseop) : prop =
     (Read  `memP` labs \/ (forall s0 s1. fst (f s0) == fst (f s1)))
   /\ (Write `memP` labs \/ (forall s0. snd (f s0) == s0))
