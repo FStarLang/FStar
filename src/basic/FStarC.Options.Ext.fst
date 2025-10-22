@@ -26,6 +26,7 @@ type ext_state =
 (* Default extension options *)
 let defaults = [
   ("context_pruning", "true");
+  ("prune_decls", "true")
 ]
 
 let init : ext_state =
