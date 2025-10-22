@@ -392,6 +392,15 @@ let name_of_decl (d:decl) =
   | DefineFun(a, _, _, _, _) -> a
   | _ -> failwith "Expected an assumption"
 
+let compare_decls (d0 d1:decl) : int =
+  match d0, d1 with
+  | DeclFun(a0, _, _, _), DeclFun(a1, _, _, _)
+  | DefineFun(a0, _, _, _, _), DefineFun(a1, _, _, _, _)
+  | Assume {assumption_name=a0}, Assume{assumption_name=a1} -> BU.compare a0 a1
+  | DeclFun _, _ -> -1
+  | DefineFun _, _ -> -1
+  | _ -> failwith "Unexpected decl in compare decls"
+
 (* Prune the context with respect to a set of roots *)
 let prune_level (roots:list decl) (hd:decls_at_level) (s:solver_state)
 : decls_at_level
@@ -422,6 +431,7 @@ let prune_level (roots:list decl) (hd:decls_at_level) (s:solver_state)
       (already_given_decl s)
       can_give
   in
+  let can_give = List.sortWith compare_decls can_give in
   let hd = { hd with given_decl_names;
                      to_flush_rev = can_give::hd.to_flush_rev } in
   hd
