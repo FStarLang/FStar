@@ -254,6 +254,14 @@ let give_delay_assumptions (resetting:bool) (ds:list decl) (s:solver_state)
 : solver_state
 = let decls = List.collect flatten ds in
   let assumptions, rest = List.partition Assume? decls in
+  let decls_and_defs, rest = 
+    if Options.Ext.enabled "prune_decls"
+    then 
+      let decls_and_defs, rest = List.partition (fun d -> DeclFun? d || DefineFun? d) rest in
+      decls_and_defs, List.filter (fun d -> not (Caption? d || EmptyLine? d || RetainAssumptions? d)) rest
+    else [], rest
+  in
+
   let hd, tl = peek s in
   let hd = { hd with all_decls_at_level_rev = ds::hd.all_decls_at_level_rev;
                      to_flush_rev = rest :: hd.to_flush_rev } in
@@ -377,9 +385,11 @@ let reset (using_facts_from:option using_facts_from_setting) (s:solver_state)
   fst <| rebuild s.levels s_new
       
 
-let name_of_assumption (d:decl) =
+let name_of_decl (d:decl) =
   match d with
   | Assume a -> a.assumption_name
+  | DeclFun(a, _, _, _) -> a
+  | DefineFun(a, _, _, _, _) -> a
   | _ -> failwith "Expected an assumption"
 
 (* Prune the context with respect to a set of roots *)
@@ -392,7 +402,7 @@ let prune_level (roots:list decl) (hd:decls_at_level) (s:solver_state)
   let given_decl_names, can_give = 
     List.fold_left 
       (fun (decl_name_set, can_give) to_give ->
-        let name = name_of_assumption to_give in
+        let name = name_of_decl to_give in
         if not (decl_names_contains name decl_name_set)
         then (
           add_name name decl_name_set,
@@ -430,7 +440,7 @@ let prune_sim (roots:list decl) (s:solver_state)
       (already_given_decl s)
       to_give
   in
-  List.map name_of_assumption (List.filter Assume? roots@can_give)
+  List.map name_of_decl (List.filter Assume? roots@can_give)
 
 (* Start a query context, registering and pushing the roots *)
 let start_query (msg:string) (roots_to_push:list decl) (qry:decl) (s:solver_state)
