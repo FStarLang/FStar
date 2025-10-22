@@ -133,10 +133,13 @@ let zero_from_vec_lemma #n = to_vec_lemma_2 (from_vec (zero_vec #n)) (zero n)
 let one_to_vec_lemma #n i =
   if i = n - 1 then () else zero_to_vec_lemma #n i
 
+#push-options "--z3rlimit_factor 8"
+#restart-solver
 let rec pow2_to_vec_lemma #n p i =
   if i = n - 1 then ()
   else if p = 0 then one_to_vec_lemma #n i
   else pow2_to_vec_lemma #(n - 1) (p - 1) i
+#pop-options
 
 let pow2_from_vec_lemma #n p =
   to_vec_lemma_2 (from_vec (elem_vec #n p)) (pow2_n #n (n - p - 1))

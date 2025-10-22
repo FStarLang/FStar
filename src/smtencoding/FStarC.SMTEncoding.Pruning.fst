@@ -50,6 +50,8 @@ let mk_remaining_triggers ts = {
 let no_ambients () = Options.Ext.enabled "context_pruning_no_ambients"
 
 type pruning_state = {
+  defs_and_decls: list decl;
+  defs_and_decls_map: PSMap.t decl;
   //A macro is a (define-fun f ... (body)); Maps macro name 'f' to the free names of its body
   macro_freenames: PSMap.t (list string); 
   // Maps trigger symbols to assumptions that have triggers that mention that symbol
@@ -110,7 +112,9 @@ instance show_pruning_state: showable pruning_state = { show = print_pruning_sta
 (* Initial state: everything is empty *)
 let init
 : pruning_state 
-= { macro_freenames = PSMap.empty ();
+= { defs_and_decls = [];
+    defs_and_decls_map = PSMap.empty();
+    macro_freenames = PSMap.empty ();
     trigger_to_assumption = PSMap.empty ();
     assumption_to_triggers = PSMap.empty ();
     assumption_name_map = PSMap.empty ();
@@ -370,8 +374,12 @@ let rec add_decl (d:decl) (p:pruning_state)
   | Module (_, ds) -> List.fold_left (fun p d -> add_decl d p) p ds
   | DefineFun(macro, _, _, body, _) ->
     let free_names = elems (free_top_level_names body) in
-    let p = { p with macro_freenames = PSMap.add p.macro_freenames macro free_names } in
-    p
+    { p with defs_and_decls=d::p.defs_and_decls; 
+             defs_and_decls_map = PSMap.add p.defs_and_decls_map macro d;
+             macro_freenames = PSMap.add p.macro_freenames macro free_names } 
+  | DeclFun(name, _, _, _) ->
+    { p with defs_and_decls = d::p.defs_and_decls;
+             defs_and_decls_map = PSMap.add p.defs_and_decls_map name d }
   | _ -> p
     
 let add_decls (ds:list decl) (p:pruning_state)
@@ -502,10 +510,17 @@ let print_reached_names_and_reasons (ctxt:ctxt) names =
   in
   String.concat "\n\t" (List.map print_one names)
 
-let prune (p:pruning_state) (roots:list decl)
+let name_of_decl (d:decl) =
+  match d with
+  | Assume a -> a.assumption_name
+  | DeclFun(a, _, _, _) -> a
+  | DefineFun(a, _, _, _, _) -> a
+  | _ -> "<none>"
+
+let prune (p:pruning_state) (roots0:list decl)
 : list decl
 = // Collect all assumptions from the roots
-  let roots = List.collect assumptions_of_decl roots in
+  let roots = List.collect assumptions_of_decl roots0 in
   let init = { p; reached = empty () } in
   // Scan to find all reachable assumptions
   let roots = 
@@ -542,4 +557,45 @@ let prune (p:pruning_state) (roots:list decl)
         (show (List.length reached_assumptions))
         (print_reached_names_and_reasons ctxt (reached_names@p.ambients))
   );
-  reached_assumptions
+  let decls_and_defs =
+    if not (Options.Ext.enabled "prune_decls")
+    then []
+    else (
+      let _, defs_and_decls = 
+        List.fold_left #(RBSet.t string & list decl)
+          (fun (included_decl_names, defs_and_decls) a ->
+            match a with
+            | Assume a -> 
+              let free_names = assumption_free_names a in
+              List.fold_left
+                (fun (included_decl_names, defs_and_decls) name ->
+                  if RBSet.mem name included_decl_names
+                  then included_decl_names, defs_and_decls
+                  else (
+                    match PSMap.try_find p.defs_and_decls_map name with
+                    | None -> 
+                      included_decl_names, defs_and_decls
+                    | Some d -> 
+                      RBSet.add name included_decl_names, d::defs_and_decls
+                  ))
+                (included_decl_names, defs_and_decls)
+                (elems free_names)
+
+            | _ -> included_decl_names, defs_and_decls)
+        (RBSet.empty(), [])
+        (reached_assumptions@roots0)
+      in
+      let decls, defs = List.partition DeclFun? defs_and_decls in
+      defs@decls
+    )
+  in
+  let print_assumption (a:assumption) =
+    Format.fmt2 "{name=%s; freevars={%s}}"
+      (show a.assumption_name)
+      (show (assumption_free_names a))
+  in
+  debug (fun _ ->
+    Format.print2 "Debug context pruning: roots %s, retained decls and defs %s\n"
+      (show (List.map print_assumption roots))
+      (show (List.map name_of_decl decls_and_defs)));
+  reached_assumptions@decls_and_defs
