@@ -38,6 +38,7 @@ let error_range_bound : ref (option range) = mk_ref None
 
 let with_error_bound (r:range) (f : unit -> 'a) : 'a =
   let old = !error_range_bound in
+  error_range_bound := Some r;
   finally (fun () -> error_range_bound := old) f
 
 let maybe_bound_range (r : Range.t) : Range.t =

@@ -1797,7 +1797,8 @@ let addrs_of_loc_union_loc_of_loc
 let union_loc_of_loc_none #al c b =
   assert (loc_equal #_ #(cls_union c) (union_loc_of_loc c b (loc_none #_ #(c b)))  (loc_none #_ #(cls_union c)))
 
-#push-options "--z3rlimit 15"
+#push-options "--z3rlimit 35 --z3seed 1" //4.13 crashes with seed 0
+#restart-solver
 let union_loc_of_loc_union #al c b l1 l2 =
   assert (loc_equal #_ #(cls_union c) (union_loc_of_loc c b (loc_union #_ #(c b) l1 l2)) (loc_union #_ #(cls_union c) (union_loc_of_loc c b l1) (union_loc_of_loc c b l2)))
 #pop-options

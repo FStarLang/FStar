@@ -161,7 +161,7 @@ val smt_theory_symbol:attribute
 let l_True:logical = squash trivial
 
 (** [l_False] has a special bit of syntactic sugar. It is written just
-    as "False" and rendered in the ide as [Falsee]. It is a squashed version
+    as "False" and rendered in the ide as [False]. It is a squashed version
     of constructive falsehood, the empty type. *)
 [@@ tac_opaque; smt_theory_symbol]
 let l_False:logical = squash empty
