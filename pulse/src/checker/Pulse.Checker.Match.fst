@@ -139,7 +139,7 @@ let lemma_map_opt_dec_index (top:'z) (f : (x:'a{x << top}) -> option 'b) (xs : l
           (ensures forall i. f (xs `L.index` i) == Some (ys `L.index` i))
   = Classical.forall_intro (Classical.move_requires (__lemma_map_opt_dec_index top f xs ys))
 
-#push-options "--fuel 2 --ifuel 2 --z3rlimit_factor 2 --query_stats"
+#push-options "--fuel 2 --ifuel 2 --z3rlimit_factor 2"
 #restart-solver
 let rec elab_readback_pat_x (rp : R.pattern) (p : pattern)
   : Lemma (requires readback_pat rp == Some p)
@@ -538,7 +538,7 @@ let check_branches
   let brs = List.Tot.map dfst checked_brs in
   let d : brs_typing g sc_u sc_ty sc brs c0 = check_branches_aux2 g sc_u sc_ty sc c0 checked_brs in
   (| brs, c0, d |)
-#push-options "--fuel 0 --ifuel 1 --z3rlimit_factor 4 --query_stats"
+#push-options "--fuel 0 --ifuel 1 --z3rlimit_factor 4"
 let check
         (g:env)
         (pre:term)

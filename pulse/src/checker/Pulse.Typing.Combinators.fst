@@ -264,7 +264,7 @@ let lift_ghost_atomic (#g:env) (#e:st_term) (#c:comp_st { C_STGhost? c }) (d:st_
   | Some d ->
     d
 
-#push-options "--z3rlimit_factor 2 --ifuel 0 --fuel 0 --query_stats --split_queries no"
+#push-options "--z3rlimit_factor 2 --ifuel 0 --fuel 0 --split_queries no"
 #restart-solver
 let mk_bind_ghost_ghost : bind_t C_STGhost? C_STGhost? =
   fun g pre e1 e2 c1 c2 px d_e1 d_c1res d_e2 res_typing post_typing post_hint ->
@@ -522,7 +522,7 @@ let apply_frame (#g:env)
     let t_typing = t_equiv t_typing st_equiv in
     (| c'', t_typing |)
 
-#push-options "--query_stats --z3rlimit_factor 2"
+#push-options "--z3rlimit_factor 2"
 let comp_for_post_hint #g (#pre:slprop) (pre_typing:tot_typing g pre tm_slprop)
   (post:post_hint_t { g `env_extends` post.g })
   (x:var { lookup g x == None })
