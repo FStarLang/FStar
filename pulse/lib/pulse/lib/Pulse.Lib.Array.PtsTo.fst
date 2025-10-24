@@ -28,6 +28,8 @@ open Pulse.Lib.WithPure
 let pts_to (#elt: Type u#a) (a: array elt) (#p: perm) (s: Seq.seq elt) : Tot slprop =
   pts_to_mask a #p s fun i -> True
 
+let is_send_pts_to _ _ = Tactics.Typeclasses.solve
+
 ghost fn to_mask u#a (#t: Type u#a) (arr: array t) #f (#v: erased _)
   requires arr |-> Frac f v
   ensures pts_to_mask arr #f v (fun _ -> True)

@@ -1,6 +1,7 @@
 module PulseTutorial.MonotonicCounterShareable
 #lang-pulse
 open Pulse.Lib.Pervasives
+open Pulse.Lib.Par
 open FStar.Preorder
 module MR = Pulse.Lib.MonotonicGhostRef
 module B = Pulse.Lib.Box
@@ -19,9 +20,13 @@ inline_for_extraction let dup_f (inv: int -> slprop) =
 noeq
 type ctr = {
     inv:  int -> slprop;
+    is_send_inv: (i:int -> is_send (inv i));
     next: next_f inv;
     dup: dup_f inv;
 }
+
+instance is_send_ctr_inv (c: ctr) i : is_send (c.inv i) =
+    c.is_send_inv i
 
 let next c #i = c.next i
 let dup c #i = c.dup i
@@ -44,10 +49,10 @@ ensures c.inv 0
     fold (inv_core x mr);
     let ii = new_invariant (inv_core x mr);
     with inv. assert pure (inv == (fun (i: int) ->
-        Pulse.Lib.Core.inv ii (inv_core x mr) ** MR.snapshot mr i));
+        Pulse.Lib.Inv.inv ii (inv_core x mr) ** MR.snapshot mr i));
     fn next (#_:unit) : next_f inv = i {
-        with_invariants ii {
-            later_elim_timeless _;
+        with_invariants int emp_inames ii (inv_core x mr) (MR.snapshot mr i)
+            (fun j -> MR.snapshot mr j ** pure (i < j)) fn _ {
             unfold inv_core;
             let res = incr_atomic_box x;
             MR.recall_snapshot mr;
@@ -55,7 +60,6 @@ ensures c.inv 0
             drop_ (MR.snapshot mr i);
             MR.take_snapshot mr #1.0R res;
             fold (inv_core);
-            later_intro (inv_core x mr);
             res
         }
     };
@@ -64,7 +68,7 @@ ensures c.inv 0
         MR.dup_snapshot mr;
         dup_inv ii _;
     };
-    let c = { inv; next; dup };
+    let c = { inv; next; dup; is_send_inv = (fun i -> Tactics.Typeclasses.solve) };
     rewrite inv 0 as (c.inv 0);
     c
 }

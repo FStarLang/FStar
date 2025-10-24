@@ -15,6 +15,8 @@
 *)
 module PulseCore.InstantiatedSemantics
 open PulseCore.IndirectionTheorySep
+open Pulse.Lib.Loc
+include PulseCore.IndirectionTheorySep { on, loc, somewhere }
 [@@erasable]
 let slprop : Type u#4 = slprop
 val timeless (p:slprop) : prop

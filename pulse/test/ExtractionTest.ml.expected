@@ -1,6 +1,7 @@
 open Prims
 let zero (uu___ : unit) : FStar_UInt32.t= Stdint.Uint32.zero
-let rec test_invariants_and_later (uu___ : unit) : unit= ()
+let rec test_invariants_and_later (uu___ : unit) : unit=
+  let k uu___1 uu___2 = () in let f uu___3 uu___4 = k () () in f () ()
 let rec test_read_write (x : FStar_UInt32.t Pulse_Lib_Reference.ref)
   (_'n : unit) : unit=
   let n = Pulse_Lib_Reference.read x () () in

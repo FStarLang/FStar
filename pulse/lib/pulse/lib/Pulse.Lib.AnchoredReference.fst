@@ -58,6 +58,8 @@ let pts_to_full
 : p:slprop { timeless p }
 = core_pts_to r #q n true
 
+let placeless_pts_to_full r n = Tactics.Typeclasses.solve
+
 let pts_to
   (#a:Type) (#p:preorder a) (#anc:anchor_rel p)
   (r:ref a p anc)
@@ -65,6 +67,8 @@ let pts_to
   (n:a)
 : p:slprop { timeless p }
 = core_pts_to r #q n false
+
+let placeless_pts_to r n = Tactics.Typeclasses.solve
 
 let anchored
   (#a:Type)
@@ -77,11 +81,15 @@ let anchored
     GPR.pts_to r k **
     pure (owns_only_anchor n k)
 
+let placeless_anchored r n = Tactics.Typeclasses.solve
+
 let snapshot (#a:Type) (#p:_) (#anc:_) (r : ref a p anc) (n:a)
 : p:slprop { timeless p }
 = exists* (k:FRAP.knowledge anc) .
     GPR.pts_to r k **
     pure (snapshot_pred n k)
+
+let placeless_snapshot r n = Tactics.Typeclasses.solve
 
 let init_val (#a:Type) (#p:_) (anc:anchor_rel p) (x:a { anc x x })
 : v:FRAP.knowledge anc { fractional_ownership_maybe_with_anchor 1.0R x true true v }

@@ -129,13 +129,6 @@ let rec freevars_st (t:st_term)
       freevars invariant ++
       freevars_st condition ++
       freevars_st body
-    | Tm_Par { pre1; body1; post1; pre2; body2; post2 } ->
-      (freevars pre1 ++ 
-       freevars_st body1 ++
-       freevars post1) ++
-      (freevars pre2 ++
-       freevars_st body2 ++
-       freevars post2)
 
     | Tm_WithLocal { binder; initializer; body } ->
       freevars binder.binder_ty ++
@@ -165,16 +158,6 @@ let rec freevars_st (t:st_term)
       freevars_proof_hint hint_type ++
       freevars_st t
 
-    | Tm_WithInv { name; body; returns_inv } ->
-      freevars name ++
-      freevars_st body ++
-      freevars_opt
-        (fun (b, r, is) ->
-          freevars b.binder_ty ++
-          freevars r ++
-          freevars is)
-        returns_inv
-    
     | Tm_PragmaWithOptions { body } ->
       freevars_st body
 
@@ -332,14 +315,6 @@ let rec ln_st' (t:st_term) (i:int)
       ln_st' condition i &&
       ln_st' body i
 
-    | Tm_Par { pre1; body1; post1; pre2; body2; post2 } ->
-      ln' pre1 i &&
-      ln_st' body1 i &&
-      ln' post1 (i + 1) &&
-      ln' pre2 i &&
-      ln_st' body2 i &&
-      ln' post2 (i + 1)
-
     | Tm_WithLocal { binder; initializer; body } ->
       ln' binder.binder_ty i &&
       ln' initializer i &&
@@ -367,16 +342,6 @@ let rec ln_st' (t:st_term) (i:int)
       ln_proof_hint' hint_type (i + n) &&
       ln_st' t (i + n)
 
-    | Tm_WithInv { name; body; returns_inv } ->
-      ln' name i &&
-      ln_st' body i &&
-      ln_opt'
-        (fun (b, r, is) i ->
-          ln' b.binder_ty i &&
-          ln' r (i + 1) &&
-          ln' is i)
-        returns_inv i
-    
     | Tm_PragmaWithOptions { body } ->
       ln_st' body i
 
@@ -596,14 +561,6 @@ let rec subst_st_term (t:st_term) (ss:subst)
                     condition = subst_st_term condition ss;
                     body = subst_st_term body ss }
 
-    | Tm_Par { pre1; body1; post1; pre2; body2; post2 } ->
-      Tm_Par { pre1=subst_term pre1 ss;
-               body1=subst_st_term body1 ss;
-               post1=subst_term post1 (shift_subst ss);
-               pre2=subst_term pre2 ss;
-               body2=subst_st_term body2 ss;
-               post2=subst_term post2 (shift_subst ss) }
-
     | Tm_WithLocal { binder; initializer; body } ->
       Tm_WithLocal { binder = subst_binder binder ss;
                      initializer = subst_term initializer ss;
@@ -636,19 +593,6 @@ let rec subst_st_term (t:st_term) (ss:subst)
                                 hint_type=subst_proof_hint hint_type ss; 
                                 t = subst_st_term t ss }
 
-    | Tm_WithInv { name; body; returns_inv } ->
-      let name = subst_term name ss in
-      let body = subst_st_term body ss in
-      let returns_inv =
-        match returns_inv with
-        | None -> None
-        | Some (b, r, is) ->
-          Some (subst_binder b ss, 
-                subst_term r (shift_subst ss),
-                subst_term is ss)
-      in
-      Tm_WithInv { name; body; returns_inv }
-    
     | Tm_PragmaWithOptions { options; body } ->
       Tm_PragmaWithOptions { options; body=subst_st_term body ss }
 

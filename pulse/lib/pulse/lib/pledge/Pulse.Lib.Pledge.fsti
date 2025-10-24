@@ -25,8 +25,10 @@ module T = FStar.Tactics
 
 val pledge (is:inames) (f:slprop) (v:slprop) : slprop
 
+instance val is_send_pledge is f v : is_send (pledge is f v)
+
 instance val introducable_pledge (t: Type u#a) is (is': fin_inames)
-    f v extra {| introducable is' (extra ** f) (f ** v) t |} :
+    f v extra {| is_send extra |} {| introducable is' (extra ** f) (f ** v) t |} :
     introducable is extra (pledge is' f v) t
 
 ghost
@@ -44,7 +46,7 @@ fn pledge_sub_inv (is1:inames) (is2:fin_inames { inames_subset is1 is2 }) (f v:s
 
 (* Anything that holds now holds in the future too. *)
 ghost
-fn return_pledge (f v:slprop)
+fn return_pledge (f v:slprop) {| is_send v |}
   requires v
   ensures pledge emp_inames f v
 
@@ -53,7 +55,7 @@ let pledge_f (#[T.exact (`emp_inames)] is: inames) (f: slprop) (#[T.exact (`emp)
   stt_ghost unit is (f ** extra) (fun _ -> f ** v)
 
 ghost
-fn make_pledge (is:fin_inames) (f:slprop) (v:slprop) (extra:slprop)
+fn make_pledge (is:fin_inames) (f:slprop) (v:slprop) (extra:slprop) {| is_send extra |}
   (k: unit -> pledge_f #is f #extra v)
   requires extra
   ensures pledge is f v
@@ -79,7 +81,7 @@ let bind_pledge_f (#[T.exact (`emp_inames)] is) (#[T.exact (`emp_inames)] is_k: 
 // Unclear how useful/convenient this is
 ghost
 fn bind_pledge (#is:inames) (#f:slprop) (#v1:slprop) (#v2:slprop)
-        (extra : slprop)
+        (extra : slprop) {| is_send extra |}
         (#is_k:inames { inames_subset is_k is })
         (k:unit -> bind_pledge_f #is #is_k f #extra v1 v2)
   requires pledge is f v1 ** extra
@@ -95,7 +97,7 @@ let bind_pledge_f' (#[T.exact (`emp_inames)] is) (#[T.exact (`emp_inames)] is_k:
 
 ghost
 fn bind_pledge' (#is:inames) (#f:slprop) (#v1:slprop) (#v2:slprop)
-        (extra : slprop)
+        (extra : slprop) {| is_send extra |}
         (#is_k:inames { inames_subset is_k is })
         (k:unit -> bind_pledge_f' #is #is_k f #extra v1 v2)
   requires pledge is f v1 ** extra
@@ -143,13 +145,13 @@ fn squash_pledge'
   ensures pledge is f v1
 
 ghost
-fn ghost_split_pledge (#is:inames) (#f:slprop) (v1:slprop) (v2:slprop)
+fn ghost_split_pledge (#is:inames) (#f:slprop) (v1:slprop) (v2:slprop) {| is_send v1, is_send v2 |}
   requires pledge is f (v1 ** v2) ** later_credit 2
   returns i : iname
   ensures pledge (add_inv is i) f v1 ** pledge (add_inv is i) f v2 ** pure (not (mem_inv is i))
 
 // This is not ghost as it buys the later credits.
-fn split_pledge (#is:inames) (#f:slprop) (v1:slprop) (v2:slprop)
+fn split_pledge (#is:inames) (#f:slprop) (v1:slprop) (v2:slprop) {| is_send v1, is_send v2 |}
   requires pledge is f (v1 ** v2)
   returns i : iname
   ensures pledge (add_inv is i) f v1 ** pledge (add_inv is i) f v2 ** pure (not (mem_inv is i))

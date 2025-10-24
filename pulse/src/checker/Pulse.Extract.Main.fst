@@ -216,18 +216,12 @@ let rec simplify_st_term (g:env) (e:st_term) : T.Tac st_term =
     let body = simplify_st_term g body in
     { e with term = Tm_NuWhile { invariant; condition; body } }
 
-  | Tm_Par { pre1; body1; post1; pre2; body2; post2 } ->
-    let body1 = simplify_st_term g body1 in
-    let body2 = simplify_st_term g body2 in
-    { e with term = Tm_Par { pre1; body1; post1; pre2; body2; post2 } }
-
   | Tm_WithLocal { binder; initializer; body } ->
     ret (Tm_WithLocal { binder; initializer; body = with_open binder body })
   
   | Tm_WithLocalArray { binder; initializer; length; body } ->
     ret (Tm_WithLocalArray { binder; initializer; length; body = with_open binder body })
     
-  | Tm_WithInv {body}
   | Tm_PragmaWithOptions { body } ->
     simplify_st_term g body
 
@@ -311,11 +305,6 @@ let rec erase_ghost_subterms (g:env) (p:st_term) : T.Tac st_term =
       let body = erase_ghost_subterms g body in
       ret (Tm_NuWhile { invariant; condition; body })
 
-    | Tm_Par { pre1; body1; post1; pre2; body2; post2 } ->
-      let body1 = erase_ghost_subterms g body1 in
-      let body2 = erase_ghost_subterms g body2 in
-      ret (Tm_Par { pre1; body1; post1; pre2; body2; post2 })
-
     | Tm_WithLocal { binder; initializer; body } ->
       let body = open_erase_close g binder body in
       ret (Tm_WithLocal { binder; initializer; body })
@@ -330,9 +319,6 @@ let rec erase_ghost_subterms (g:env) (p:st_term) : T.Tac st_term =
 
     | Tm_ProofHintWithBinders _ ->
       T.fail "erase_ghost_subterms: Unexpected constructor: ProofHintWithBinders should have been desugared away"
-
-    | Tm_WithInv { name; body; returns_inv } ->
-      ret (Tm_WithInv { name; body = erase_ghost_subterms g body; returns_inv })
 
     | Tm_PragmaWithOptions { options; body } ->
       ret (Tm_PragmaWithOptions { options; body=erase_ghost_subterms g body })
@@ -478,14 +464,6 @@ let rec extract_dv g (p:st_term) : T.Tac R.term =
           [mk_abs (unit_binder "while_cond") condition, R.Q_Explicit;
            mk_abs (unit_binder "while_body") body, R.Q_Explicit])
 
-    | Tm_Par { body1; body2 } ->
-      let body1 = extract_dv g body1 in
-      let body2 = extract_dv g body2 in
-      ECL.mk_meta_monadic
-        (R.mk_app (R.pack_ln (R.Tv_FVar (R.pack_fv ["Pulse"; "Lib"; "Dv"; "par"])))
-          [mk_abs (unit_binder "par_b1") body1, R.Q_Explicit;
-           mk_abs (unit_binder "par_b2") body2, R.Q_Explicit])
-
     | Tm_WithLocal { binder; initializer; body } ->
       let b' = extract_dv_binder binder None in
       let allocator = R.mk_app (R.pack_ln (R.Tv_UInst (R.pack_fv ["Pulse"; "Lib"; "Reference"; "alloc"]) [u0]))
@@ -516,7 +494,6 @@ let rec extract_dv g (p:st_term) : T.Tac R.term =
       ECL.mk_meta_monadic (R.mk_app (R.pack_ln (R.Tv_FVar (R.pack_fv ["Pulse"; "Lib"; "Dv"; "unreachable"])))
         [comp_res c, R.Q_Explicit; unit_tm, R.Q_Explicit])
 
-    | Tm_WithInv { body }
     | Tm_PragmaWithOptions { body } -> extract_dv g body
 
   end

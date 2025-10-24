@@ -494,3 +494,44 @@ fn rec on_range_unzip (p q:nat -> slprop) (i j:nat)
   }
 }
 
+ghost fn rec on_range_move p (i j: nat) (l1 l2: loc_id)
+    (f: (k:nat -> stt_ghost unit emp_inames (on l1 (p k)) (fun _ -> on l2 (p k))))
+  requires on l1 (on_range p i j)
+  ensures on l2 (on_range p i j)
+  decreases j
+{
+  ghost_impersonate l1 (on l1 (on_range p i j)) (on l2 (on_range p i j)) fn _ {
+    on_elim _;
+    if (i > j) {
+      on_range_eq_false p i j;
+      rewrite on_range p i j as pure False;
+      unreachable ()
+    } else if (i = j) {
+      on_range_empty_elim p i;
+      ghost_impersonate l2 emp (on l2 (on_range p i j)) fn _ {
+        on_range_empty p i;
+        on_intro (on_range p i j);
+      }
+    } else {
+      on_range_unsnoc () #p #i #j;
+      on_intro (p (j-1)); f (j-1);
+      on_intro (on_range p i (j-1)); on_range_move p i (j-1) l1 l2 f;
+      ghost_impersonate l2
+          (on l2 (p (j - 1)) ** on l2 (on_range p i (j - 1)))
+          (on l2 (on_range p i j)) fn _ {
+        on_elim (p (j - 1));
+        on_elim (on_range p i (j - 1));
+        on_range_snoc ();
+        on_intro (on_range p i j);
+      }
+    }
+  }
+}
+
+ghost fn placeless_on_range p i j {| inst : (k:nat -> placeless (p k)) |} : placeless (on_range p i j) = l1 l2 {
+  on_range_move p i j l1 l2 fn k { inst k l1 l2 }
+}
+
+ghost fn is_send_on_range p i j {| (k:nat -> is_send (p k)) |} : is_send (on_range p i j) = l1 l2 {
+  on_range_move p i j l1 l2 fn k { is_send_elim (p k) l2 }
+}

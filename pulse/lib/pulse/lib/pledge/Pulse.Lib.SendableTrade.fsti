@@ -1,5 +1,5 @@
 (*
-   Copyright 2023 Microsoft Research
+   Copyright 2025 Microsoft Research
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -14,7 +14,7 @@
    limitations under the License.
 *)
 
-module Pulse.Lib.Trade
+module Pulse.Lib.SendableTrade
 #lang-pulse
 
 open Pulse.Lib.Pervasives
@@ -32,14 +32,6 @@ val trade
   ([@@@mkey] concl:slprop)
   : slprop
 
-unfold
-let ( ==>* ) :
-  (#[T.exact (`emp_inames)] is:inames) ->
-  (hyp:slprop) ->
-  (concl:slprop) ->
-  slprop
-  = fun #is -> trade #is
-
 (* Specialized to no inames *)
 unfold
 let ( @==> ) :
@@ -48,20 +40,23 @@ let ( @==> ) :
   slprop
   = trade #emp_inames
 
+instance val is_send_trade #is (p1 p2: slprop) : is_send (trade #is p1 p2)
+instance is_send_trade' (p1 p2: slprop) : is_send (p1 @==> p2) = is_send_trade p1 p2
+
 ghost
 fn intro_trade
   (#[T.exact (`emp_inames)]is:inames)
-  (hyp concl extra:slprop)
+  (hyp concl extra:slprop) {| is_send extra |}
   (f_elim: unit -> trade_f #is hyp #extra concl)
   requires extra
   ensures trade #is hyp concl
 
 instance val introducable_trade (t: Type u#a) is is'
-    hyp extra concl {| introducable is' (extra ** hyp) concl t |} :
+    hyp extra concl {| is_send extra |} {| introducable is' (extra ** hyp) concl t |} :
     introducable is extra (trade #is' hyp concl) t
 
 instance val introducable_trade' (t: Type u#a) is
-    hyp extra concl {| introducable emp_inames (extra ** hyp) concl t |} :
+    hyp extra concl {| is_send extra |} {| introducable emp_inames (extra ** hyp) concl t |} :
     introducable is extra (hyp @==> concl) t
 
 val elim_trade
@@ -99,10 +94,3 @@ fn rewrite_with_trade
   (p1 p2 : slprop)
   requires p1 ** pure (p1 == p2)
   ensures  p2 ** (p2 @==> p1)
-
-instance val is_send_across_trade #b #g #is (p1 p2: slprop) {| is_send_across #b g p1, is_send_across g p2 |} : is_send_across g (trade #is p1 p2)
-
-instance placeless_trade #is (p1 p2: slprop) {| i1: placeless p1, i2: placeless p2 |} : placeless (trade #is p1 p2) = is_send_across_trade p1 p2 #i1 #i2
-instance placeless_trade' (p1 p2: slprop) {| placeless p1, placeless p2 |} : placeless (p1 @==> p2) = placeless_trade p1 p2
-instance is_send_trade #is (p1 p2: slprop) {| i1: is_send p1, i2: is_send p2 |} : is_send (trade #is p1 p2) = is_send_across_trade p1 p2 #i1 #i2
-instance is_send_trade' (p1 p2: slprop) {| is_send p1, is_send p2 |} : is_send (p1 @==> p2) = is_send_trade p1 p2

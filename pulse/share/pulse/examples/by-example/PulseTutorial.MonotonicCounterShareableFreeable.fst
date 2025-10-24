@@ -2,6 +2,7 @@ module PulseTutorial.MonotonicCounterShareableFreeable
 #lang-pulse
 open Pulse.Lib.Pervasives
 open FStar.Preorder
+open Pulse.Lib.Par
 module MR = Pulse.Lib.MonotonicGhostRef
 module B = Pulse.Lib.Box
 module CI = Pulse.Lib.CancellableInvariant
@@ -24,11 +25,15 @@ let destroy_f (inv: perm -> int -> slprop) = i:erased int -> stt unit (inv 1.0R 
 noeq
 type ctr = {
     inv:     perm -> int -> slprop;
+    is_send_inv: (p:perm -> i:int -> is_send (inv p i));
     next:    next_f inv;
     share:   share_f inv;
     gather:  gather_f inv;
     destroy: destroy_f inv;
 }
+
+instance is_send_ctr_inv (c: ctr) p i : is_send (c.inv p i) =
+    c.is_send_inv p i
 
 let next c #p #i = c.next p i
 let share c #p #i = c.share p i
@@ -64,12 +69,13 @@ ensures c.inv 1.0R 0
     let ii = CI.new_cancellable_invariant (inv_core x mr);
     
     with inv. assert pure (inv == (fun p (i:int) ->
-        Pulse.Lib.Core.inv (iname_of ii) (cinv_vp ii (inv_core x mr)) ** CI.active ii p ** MR.snapshot mr i));
+        Pulse.Lib.Inv.inv (iname_of ii) (cinv_vp ii (inv_core x mr)) ** CI.active ii p ** MR.snapshot mr i));
 
     fn next (#_: unit) : next_f inv = p i {
-        later_credit_buy 1;
-        with_invariants (iname_of ii) {
-            later_elim _;
+        with_invariants int emp_inames (iname_of ii) (cinv_vp ii (inv_core x mr))
+            (CI.active ii p ** MR.snapshot mr i)
+            (fun j -> CI.active ii p ** MR.snapshot mr j ** pure (i < j))
+        fn _ {
             unpack_cinv_vp ii;
             unfold inv_core;
             let res = incr_atomic_box x;
@@ -79,7 +85,6 @@ ensures c.inv 1.0R 0
             MR.take_snapshot mr #1.0R res;
             fold (inv_core);
             pack_cinv_vp ii;
-            later_intro (cinv_vp ii (inv_core x mr));
             res
         }
     };
@@ -95,7 +100,7 @@ ensures c.inv 1.0R 0
     fn gather (#_: unit) : gather_f inv = p q i j {
         CI.gather #p #q ii;
         drop_ (MR.snapshot mr j);
-        drop_ (Pulse.Lib.Core.inv (iname_of ii) (cinv_vp ii (inv_core x mr)));
+        drop_ (Pulse.Lib.Inv.inv (iname_of ii) (cinv_vp ii (inv_core x mr)));
     };
 
     fn destroy (#_: unit) : destroy_f inv = i {
@@ -107,7 +112,7 @@ ensures c.inv 1.0R 0
         drop_ (MR.snapshot mr _);
     };
 
-    let c = { inv; next; share; gather; destroy };
+    let c = { inv; next; share; gather; destroy; is_send_inv = Tactics.Typeclasses.solve };
             
     rewrite inv 1.0R 0 as (c.inv 1.0R 0);
     c
@@ -128,7 +133,7 @@ ensures emp
 {
     let c = new_counter ();
     share c;
-    par (do_something c #_ #_) (do_something c #_ #_);
+    par (do_something c #(1.0R/.2.0R) #0) (do_something c #(1.0R/.2.0R) #0);
     gather c;
     rewrite each (1.0R /. 2.0R +. 1.0R /. 2.0R) as 1.0R;
     destroy c

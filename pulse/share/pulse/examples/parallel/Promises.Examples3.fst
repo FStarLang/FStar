@@ -35,6 +35,11 @@ let inv_p : timeless_slprop =
     ** pure (v_claimed ==> v_done)
     ** pure (v_done ==> Some? v_res)
 
+instance is_send_if a b c {| ib: is_send b, ic: is_send c |} : is_send (if a then b else c) =
+  if a then ib else ic
+
+instance is_send_inv_p : is_send inv_p = Tactics.Typeclasses.solve
+
 (* Explicit introduction for inv_p, sometimes needed to disambiguate. *)
 
 ghost
@@ -61,15 +66,18 @@ let goal : slprop =
 
 
 
-atomic
+ghost
 fn proof
    (i : iname) (_:unit)
    requires inv i inv_p ** pts_to done #0.5R true ** pts_to claimed #0.5R false
+   requires later_credit 1
    ensures inv i inv_p ** pts_to done #0.5R true ** goal
    opens [i]
 {
-  with_invariants i {
-    later_elim_timeless _;
+  with_invariants_g unit emp_inames i inv_p 
+    (pts_to done #0.5R true ** pts_to claimed #0.5R false)
+    (fun _ -> pts_to done #0.5R true ** goal)
+    fn _ {
     unfold inv_p;
     with (v_done : bool) v_res (v_claimed : bool).
       assert (pts_to done #0.5R v_done
@@ -116,8 +124,6 @@ fn proof
     
     drop_ (pts_to claimed #0.5R true);
 
-    later_intro inv_p;
-
     ()
   }
 }
@@ -146,24 +152,25 @@ fn setup (_:unit)
   fold inv_p;
   
   let i = new_invariant inv_p;
+  later_credit_buy 1;
   intro (pledge (add_inv emp_inames i) (pts_to done #0.5R true) goal)
-      #(inv i inv_p ** pts_to claimed #0.5R false) fn _ {
-    //cheating: (proof i) is atomic, not ghost
-    admit()
+      #(inv i inv_p ** pts_to claimed #0.5R false ** later_credit 1)
+  fn _ {
+    proof i ();
+    drop_ (inv i inv_p);
   };
 
   i
 }
 
-
-[@@expect_failure] // block is not atomic/ghost
+let pretend_atomic pre post (k: unit -> stt unit pre (fun _ -> post)) =
+  as_atomic pre _ (k ())
 
 fn worker (i : iname) (_:unit)
    requires inv i inv_p ** pts_to done #0.5R false
    ensures  inv i inv_p ** pts_to done #0.5R true
 {
-  with_invariants i {
-    later_elim_storable _;
+  with_invariants unit emp_inames i inv_p (pts_to done #0.5R false) (fun _ -> pts_to done #0.5R true) fn _ {
     unfold inv_p;
     with v_done v_res v_claimed.
       assert (pts_to done #0.5R v_done
@@ -194,8 +201,10 @@ fn worker (i : iname) (_:unit)
         to not have a lock for this. It would be two with_invariant
         steps.
     *)
-    res := Some 42;
-    done := true;
+    pretend_atomic (live res ** live done) (res |-> Some 42 ** done |-> true) fn _ {
+      res := Some 42;
+      done := true;
+    };
     
     share #_ res;
 

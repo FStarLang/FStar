@@ -96,17 +96,12 @@ ensures
   (ra |-> Frac 0.5R true) **  //a is true
   (ga |-> Frac 0.5R b)        //g is set to the return value
 ensures
-  (if b then p else emp)      //and if this returns true then we have the resource p 
+  (cond b p emp)      //and if this returns true then we have the resource p 
 {
-  later_credit_buy 1;
-  with_invariants i
-  returns _:unit
-  ensures
-    later (dekker_inv ra rb ga gb p) **
-    (ra |-> Frac 0.5R true) **
-    (ga |-> Frac 0.5R false)
-  {
-    later_elim _;
+  with_invariants unit emp_inames i (dekker_inv ra rb ga gb p)
+    (ra |-> Frac 0.5R false ** live ga #0.5R)
+    (fun _ -> ra |-> Frac 0.5R true ** ga |-> Frac 0.5R false)
+  fn _ {
     unfold dekker_inv;
     R.gather ra;
     write_atomic ra true;   // x := true
@@ -114,18 +109,18 @@ ensures
     GR.gather ga;
     GR.share ga;
     fold (dekker_inv ra rb ga gb p);
-    later_intro (dekker_inv ra rb ga gb p);
   };
-  later_credit_buy 1;
-  with_invariants i
-  {
-    later_elim _;
+  with_invariants bool emp_inames i (dekker_inv ra rb ga gb p)
+    (ra |-> Frac 0.5R true ** ga |-> Frac 0.5R false)
+    (fun b -> (ra |-> Frac 0.5R true) ** (ga |-> Frac 0.5R b) **
+      (cond b p emp))
+  fn _ {
     unfold dekker_inv;
     R.gather ra; R.share ra;
     if (read_atomic rb)
     { 
       fold (dekker_inv ra rb ga gb);
-      later_intro (dekker_inv _ _ _ _ _);
+      fold cond false p emp;
       false
     }
     else
@@ -136,7 +131,8 @@ ensures
       GR.share ga;
       intro_cond_true emp p;
       fold (dekker_inv ra rb ga gb p);
-      later_intro (dekker_inv _ _ _ _ _);
+      // later_intro (dekker_inv _ _ _ _ _);
+      fold cond true p emp;
       true
     }
   };

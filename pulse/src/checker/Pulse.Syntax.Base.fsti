@@ -272,14 +272,6 @@ type st_term' =
       condition:st_term;
       body:st_term;
     }
-  | Tm_Par {
-      pre1:term;
-      body1:st_term;
-      post1:term;
-      pre2:term;
-      body2:st_term;
-      post2:term;
-    }  
   | Tm_WithLocal {
       binder:binder;
       initializer:term;
@@ -311,11 +303,6 @@ type st_term' =
       binders:list binder;
       t:st_term
   }
-  | Tm_WithInv {
-      name : term; // invariant name is an F* term that is an Tm_fvar or Tm_name
-      body : st_term;
-      returns_inv : option (binder & slprop & term);  // returns _:t ensures p opens is
-    }
   | Tm_PragmaWithOptions {
       options: string;
       body: st_term

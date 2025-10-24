@@ -169,26 +169,11 @@ type stmt' =
       s2:stmt;
     }
 
-  | Parallel {
-      p1:slprop;
-      p2:slprop;
-      q1:slprop;
-      q2:slprop;
-      b1:stmt;
-      b2:stmt;
-    }
-
   | ProofHintWithBinders {
       hint_type:hint_type;
       binders:binders;
     }
 
-  | WithInvariants {
-      names : list A.term;
-      body  : stmt;
-      returns_ : option ensures_slprop;
-    }
-  
   | PragmaSetOptions {
       options:string;
       body:stmt
@@ -256,9 +241,7 @@ let tag_of_stmt (s:stmt) : string =
   | While {} -> "While"
   | Introduce {} -> "Introduce"
   | Sequence {} -> "Sequence"
-  | Parallel {} -> "Parallel"
   | ProofHintWithBinders {} -> "ProofHintWithBinders"
-  | WithInvariants {} -> "WithInvariants"
 
 instance tagged_stmt : Class.Tagged.tagged stmt = {
   tag_of = tag_of_stmt
@@ -334,25 +317,10 @@ let rec stmt_to_string (s:stmt) : string =
       "s1", stmt_to_string s1;
       "s2", stmt_to_string s2;
     ]
-  | Parallel { p1; p2; q1; q2; b1; b2 } ->
-    "Parallel " ^ record_string [
-      "p1", show p1;
-      "p2", show p2;
-      "q1", show q1;
-      "q2", show q2;
-      "b1", stmt_to_string b1;
-      "b2", stmt_to_string b2;
-    ]
   | ProofHintWithBinders { hint_type; binders } ->
     "ProofHintWithBinders " ^ record_string [
       "hint_type", show hint_type;
       "binders", show binders;
-    ]
-  | WithInvariants { names; body; returns_ } ->
-    "WithInvariants " ^ record_string [
-      "names", FStarC.Common.string_of_list show names;
-      "body", stmt_to_string body;
-      "returns_", FStarC.Common.string_of_option show returns_;
     ]
 
 and branch_to_string (b:bool & A.pattern & stmt) : string =
@@ -461,20 +429,9 @@ and eq_stmt' (s1 s2:stmt') =
     forall2 AD.eq_term w1 w2
   | Sequence { s1=s1; s2=s2 }, Sequence { s1=s1'; s2=s2' } ->
     eq_stmt s1 s1' && eq_stmt s2 s2'
-  | Parallel { p1=p1; p2=p2; q1=q1; q2=q2; b1=b1; b2=b2 }, Parallel { p1=p1'; p2=p2'; q1=q1'; q2=q2'; b1=b1'; b2=b2' } ->
-    eq_slprop p1 p1' &&
-    eq_slprop p2 p2' &&
-    eq_slprop q1 q1' &&
-    eq_slprop q2 q2' &&
-    eq_stmt b1 b1' &&
-    eq_stmt b2 b2'
   | ProofHintWithBinders { hint_type=ht1; binders=bs1 }, ProofHintWithBinders { hint_type=ht2; binders=bs2 } ->
     eq_hint_type ht1 ht2 &&
     forall2 AD.eq_binder bs1 bs2
-  | WithInvariants { names=n1; body=b1; returns_=r1 }, WithInvariants { names=n2; body=b2; returns_=r2 } ->
-    forall2 AD.eq_term n1 n2 &&
-    eq_stmt b1 b2 &&
-    eq_opt eq_ensures_slprop r1 r2
   | PragmaSetOptions { options=o1; body=b1 }, PragmaSetOptions { options=o2; body=b2 } ->
     o1=o2 &&
     eq_stmt b1 b2
@@ -599,20 +556,9 @@ and scan_stmt (cbs:A.dep_scan_callbacks) (s:stmt) =
     scan_slprop cbs s;
     iter cbs.scan_term w
   | Sequence { s1=s1; s2=s2 } -> scan_stmt cbs s1; scan_stmt cbs s2
-  | Parallel { p1=p1; p2=p2; q1=q1; q2=q2; b1=b1; b2=b2 } ->
-    scan_slprop cbs p1;
-    scan_slprop cbs p2;
-    scan_slprop cbs q1;
-    scan_slprop cbs q2;
-    scan_stmt cbs b1;
-    scan_stmt cbs b2
   | ProofHintWithBinders { hint_type=ht; binders=bs } ->
     scan_hint_type cbs ht;
     iter (scan_binder cbs) bs
-  | WithInvariants { names=n; body=b; returns_=r } ->
-    iter cbs.scan_term n;
-    scan_stmt cbs b;
-    iopt (scan_ensures_slprop cbs) r
   | PragmaSetOptions { body } ->
     scan_stmt cbs body
 and scan_let_init (cbs:A.dep_scan_callbacks) (i:let_init) =
@@ -673,8 +619,6 @@ let mk_fn_decl id us binders ascription decorations range
 : fn_decl
 = { id; us; binders; ascription; decorations; range }
 let mk_open lid = Open lid
-let mk_par p1 p2 q1 q2 b1 b2 = Parallel { p1; p2; q1; q2; b1; b2 }
 let mk_proof_hint_with_binders ht bs =  ProofHintWithBinders { hint_type=ht; binders=bs }
 let mk_lambda bs ascription body range : lambda = { binders=bs; ascription; body; range }
-let mk_with_invs names body returns_ = WithInvariants { names; body; returns_ }
 let mk_pragma_set_options options body = PragmaSetOptions { options; body }

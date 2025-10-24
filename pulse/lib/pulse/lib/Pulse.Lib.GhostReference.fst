@@ -29,6 +29,7 @@ let null #a = GR.null_core_ghost_pcm_ref
 let pts_to (#a:Type) (r:ref a) (#[T.exact (`1.0R)] p:perm) (n:a)
 = GR.pts_to r (Some (n, p)) ** pure (perm_ok p)
 
+let pts_to_placeless r p n = Tactics.Typeclasses.solve
 let pts_to_timeless _ _ _ = ()
 
 

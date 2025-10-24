@@ -259,14 +259,6 @@ let rec open_st_term_ln' (e:st_term)
       open_st_term_ln' condition x i;
       open_st_term_ln' body x i
 
-    | Tm_Par { pre1; body1; post1; pre2; body2; post2 } ->
-      open_term_ln' pre1 x i;
-      open_st_term_ln' body1 x i;
-      open_term_ln' post1 x (i + 1);
-      open_term_ln' pre2 x i;
-      open_st_term_ln' body2 x i;
-      open_term_ln' post2 x (i + 1)
-
     | Tm_Rewrite { t1; t2 } ->
       open_term_ln' t1 x i;
       open_term_ln' t2 x i
@@ -295,17 +287,6 @@ let rec open_st_term_ln' (e:st_term)
       let n = L.length binders in
       open_proof_hint_ln hint_type x (i + n);
       open_st_term_ln' t x (i + n)
-
-    | Tm_WithInv { name; body; returns_inv } -> (
-      open_term_ln' name x i;
-      open_st_term_ln' body x i;
-      match returns_inv with
-      | None -> ()
-      | Some (b, r, is) ->
-        open_term_ln' b.binder_ty x i;
-        open_term_ln' r x (i + 1);
-        open_term_ln' is x i
-    )
 
     | Tm_PragmaWithOptions { body } ->
       open_st_term_ln' body x i
@@ -492,14 +473,6 @@ let rec ln_weakening_st (t:st_term) (i j:int)
       map_opt_lemma_2 ln_weakening_comp c.elaborated (i + 1) (j + 1);
       ln_weakening_st body (i + 1) (j + 1)
 
-    | Tm_Par { pre1; body1; post1; pre2; body2; post2 } ->
-      ln_weakening pre1 i j;
-      ln_weakening_st body1 i j;
-      ln_weakening post1 (i + 1) (j + 1);
-      ln_weakening pre2 i j;
-      ln_weakening_st body2 i j;
-      ln_weakening post2 (i + 1) (j + 1)
-
     | Tm_Rewrite { t1; t2 } ->
       ln_weakening t1 i j;
       ln_weakening t2 i j
@@ -524,17 +497,6 @@ let rec ln_weakening_st (t:st_term) (i j:int)
       let n = L.length binders in
       ln_weakening_proof_hint hint_type (i + n) (j + n);
       ln_weakening_st t (i + n) (j + n)
-
-    | Tm_WithInv { name; body; returns_inv } -> (
-      ln_weakening name i j;
-      ln_weakening_st body i j;
-      match returns_inv with
-      | None -> ()
-      | Some (b, r, is) ->
-        ln_weakening b.binder_ty i j;
-        ln_weakening r (i + 1) (j + 1);
-        ln_weakening is i j
-    )
 
     | Tm_PragmaWithOptions { body } ->
       ln_weakening_st body i j
@@ -702,15 +664,6 @@ let rec open_term_ln_inv_st' (t:st_term)
       map_opt_lemma_2 open_comp_ln_inv' c.elaborated x (i + 1);
       open_term_ln_inv_st' body x (i + 1)
 
-    | Tm_Par { pre1; body1; post1; pre2; body2; post2 } ->
-      FStar.Pure.BreakVC.break_vc();
-      open_term_ln_inv' pre1 x i;
-      open_term_ln_inv_st' body1 x i;
-      open_term_ln_inv' post1 x (i + 1);
-      open_term_ln_inv' pre2 x i;
-      open_term_ln_inv_st' body2 x i;
-      open_term_ln_inv' post2 x (i + 1)
-
     | Tm_Rewrite { t1; t2 } ->
       FStar.Pure.BreakVC.break_vc();
       open_term_ln_inv' t1 x i;
@@ -743,18 +696,6 @@ let rec open_term_ln_inv_st' (t:st_term)
       let n = L.length binders in
       open_proof_hint_ln_inv hint_type x (i + n);
       open_term_ln_inv_st' t x (i + n)
-
-    | Tm_WithInv { name; body; returns_inv } -> (
-      FStar.Pure.BreakVC.break_vc();
-      open_term_ln_inv' name x i;
-      open_term_ln_inv_st' body x i;
-      match returns_inv with
-      | None -> ()
-      | Some (b, r, is) ->
-        open_term_ln_inv' b.binder_ty x i;
-        open_term_ln_inv' r x (i + 1);
-        open_term_ln_inv' is x i
-    )
 
     | Tm_PragmaWithOptions { body } ->
       open_term_ln_inv_st' body x i
@@ -918,15 +859,6 @@ let rec close_st_term_ln' (t:st_term) (x:var) (i:index)
       map_opt_lemma_2 close_comp_ln' c.elaborated x (i + 1);
       close_st_term_ln' body x (i + 1)
 
-    | Tm_Par { pre1; body1; post1; pre2; body2; post2 } ->
-      FStar.Pure.BreakVC.break_vc();
-      close_term_ln' pre1 x i;
-      close_st_term_ln' body1 x i;
-      close_term_ln' post1 x (i + 1);
-      close_term_ln' pre2 x i;
-      close_st_term_ln' body2 x i;
-      close_term_ln' post2 x (i + 1)
-
     | Tm_Rewrite { t1; t2 } ->
       FStar.Pure.BreakVC.break_vc();
       close_term_ln' t1 x i;
@@ -959,18 +891,6 @@ let rec close_st_term_ln' (t:st_term) (x:var) (i:index)
       let n = L.length binders in
       close_proof_hint_ln hint_type x (i + n);
       close_st_term_ln' t x (i + n)
-      
-    | Tm_WithInv { name; body; returns_inv } -> (
-      FStar.Pure.BreakVC.break_vc();
-      close_term_ln' name x i;
-      close_st_term_ln' body x i;
-      match returns_inv with
-      | None -> ()
-      | Some (ret_ty, returns_post, ret_is) ->
-        close_term_ln' ret_ty.binder_ty x i;
-        close_term_ln' returns_post x (i + 1);
-        close_term_ln' ret_is x i
-    )
 
     | Tm_PragmaWithOptions { body } ->
       close_st_term_ln' body x i
@@ -1161,35 +1081,6 @@ let comp_par_ln (cL : comp{C_ST? cL}) (cR : comp{C_ST? cR}) (x : var)
   ()
 #pop-options
 
-#push-options "--fuel 1 --ifuel 1 --z3rlimit_factor 10 --split_queries no --z3cliopt 'smt.qi.eager_threshold=100'"
-let st_typing_ln_par
-  (#g:_) (#t:_) (#c:_)
-  (d:st_typing g t c{T_Par? d})
-  (cb : (#g:_ -> #t:_ -> #c:_ -> d':st_typing g t c{d' << d} -> Lemma (ensures ln_st t /\ ln_c c)))
-  : Lemma 
-    (ensures ln_st t /\ ln_c c)
-    (decreases d)
-=
-  let T_Par _ _ cL _ cR x _ _ eL_typing eR_typing = d in
-  let x_tm = term_of_no_name_var x in
-  let u = comp_u cL in
-  let aL = comp_res cL in
-  let aR = comp_res cR in
-  cb eL_typing;
-  cb eR_typing;
-  ln_mk_fst u aL aR x_tm (-1);
-  ln_mk_snd u aL aR x_tm (-1);
-  open_term_ln_inv' (comp_post cL) (Pulse.Typing.mk_fst u u aL aR x_tm) 0;
-  close_term_ln' (open_term' (comp_post cL) (Pulse.Typing.mk_fst u u aL aR x_tm) 0) x 0;
-  open_term_ln_inv' (comp_post cR) (Pulse.Typing.mk_snd u u aL aR x_tm) 0;
-  close_term_ln' (open_term' (comp_post cR) (Pulse.Typing.mk_snd u u aL aR x_tm) 0) x 0;
-  assert (ln_st t);
-  assert (ln_c cL);
-  assert (ln_c cR);
-  comp_par_ln cL cR x;
-  assert (ln_c c);
-  ()
-
 // Note the use of break_vc in every case below.
 
 #push-options "--z3rlimit_factor 15 --fuel 4 --ifuel 1 --split_queries no --z3cliopt 'smt.qi.eager_threshold=100'"
@@ -1312,9 +1203,6 @@ let rec st_typing_ln (#g:_) (#t:_) (#c:_)
       st_typing_ln body_typing;
       open_term_ln_inv' post tm_false 0
 
-    | T_Par _ _ cL _ cR x _ _ eL_typing eR_typing ->
-      st_typing_ln_par d st_typing_ln
-
     | T_Rewrite _ _ _ p_typing equiv_p_q ->
       FStar.Pure.BreakVC.break_vc ();
       tot_or_ghost_typing_ln p_typing;
@@ -1355,6 +1243,4 @@ let rec st_typing_ln (#g:_) (#t:_) (#c:_)
       st_typing_ln d;
       st_sub_ln d_sub
 
-    | T_WithInv .. ->
-      admit() // IOU
 #pop-options

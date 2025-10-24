@@ -18,6 +18,8 @@ module Pulse.Lib.Pervasives
 #lang-pulse
 include Pulse.Main
 include Pulse.Lib.Core
+include Pulse.Lib.Inv
+include Pulse.Lib.Send
 include Pulse.Lib.Forall
 include Pulse.Lib.Array
 include Pulse.Lib.Reference
@@ -147,55 +149,6 @@ fn intro_cond_false (p q:slprop)
 {
   fold (cond false p q);
 }
-
-
-
-fn par (#pf #pg #qf #qg:_)
-       (f: unit -> stt unit pf (fun _ -> qf))
-       (g: unit -> stt unit pg (fun _ -> qg))
-  requires pf ** pg
-  ensures qf ** qg
-{
-  parallel 
-  requires pf and pg
-  ensures qf and qg
-  { f () }
-  { g () };
-  ()
-}
-
-
-
-fn par_atomic (#is #js #pf #pg #qf #qg:_)
-       (f: unit -> stt_atomic unit #Observable is pf (fun _ -> qf))
-       (g: unit -> stt_atomic unit js pg (fun _ -> qg))
-  requires pf ** pg
-  ensures qf ** qg
-{
-  parallel 
-  requires pf and pg
-  ensures qf and qg
-  { f () }
-  { g () };
-  ()
-}
-
-
-
-fn par_atomic_l (#is #pf #pg #qf #qg:_)
-       (f: unit -> stt_atomic unit #Observable is pf (fun _ -> qf))
-       (g: unit -> stt unit pg (fun _ -> qg))
-  requires pf ** pg
-  ensures qf ** qg
-{
-  parallel 
-  requires pf and pg
-  ensures qf and qg
-  { f () }
-  { g () };
-  ()
-}
-
 
 type rust_extraction_attr =
   | Rust_const_fn

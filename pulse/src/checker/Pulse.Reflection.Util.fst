@@ -603,19 +603,6 @@ let mk_sub_stt_ghost (u:R.universe) (a pre1 pre2 post1 post2 e:R.term)  =
   let t = pack_ln (R.Tv_App t (`(), Q_Explicit)) in
   pack_ln (R.Tv_App t (e, Q_Explicit))
 
-let mk_par (u:R.universe) (aL aR preL postL preR postR eL eR:R.term) =
-  let open R in
-  let lid = ["Pulse"; "Lib"; "Par"; "par_stt"] in
-  let t = pack_ln (Tv_UInst (R.pack_fv lid) [u]) in
-  let t = pack_ln (Tv_App t (aL, Q_Implicit)) in
-  let t = pack_ln (Tv_App t (aR, Q_Implicit)) in
-  let t = pack_ln (Tv_App t (preL, Q_Implicit)) in
-  let t = pack_ln (Tv_App t (postL, Q_Implicit)) in
-  let t = pack_ln (Tv_App t (preR, Q_Implicit)) in
-  let t = pack_ln (Tv_App t (postR, Q_Implicit)) in
-  let t = pack_ln (Tv_App t (eL, Q_Explicit)) in
-  pack_ln (Tv_App t (eR, Q_Explicit))
-
 let tm_rewrite_tactic_t =
   let open R in
   let fv = R.pack_fv (mk_pulse_lib_core_lid "rewrite_tactic_t") in

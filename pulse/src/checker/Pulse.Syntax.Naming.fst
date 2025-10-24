@@ -198,14 +198,6 @@ let rec close_open_inverse_st'  (t:st_term)
       admit(); // need map dec fusion
       ()
 
-    | Tm_Par { pre1; body1; post1; pre2; body2; post2 } ->
-      close_open_inverse' pre1 x i;
-      close_open_inverse_st' body1 x i;
-      close_open_inverse' post1 x (i + 1);
-      close_open_inverse' pre2 x i;
-      close_open_inverse_st' body2 x i;
-      close_open_inverse' post2 x (i + 1)
-
     | Tm_WithLocal { binder; initializer; body } ->
       close_open_inverse' binder.binder_ty x i; 
       close_open_inverse' initializer x i;
@@ -234,17 +226,6 @@ let rec close_open_inverse_st'  (t:st_term)
       close_open_inverse_proof_hint_type' hint_type x (i + n);
       close_open_inverse_st' t x (i + n)
       
-    | Tm_WithInv { name; body; returns_inv } -> (
-      close_open_inverse' name x i;
-      close_open_inverse_st' body x i;
-      match returns_inv with
-      | None -> ()
-      | Some (b, r, is) ->
-        close_open_inverse' b.binder_ty x i;
-        close_open_inverse' r x (i + 1);
-        close_open_inverse' is x i
-    )
-
     | Tm_PragmaWithOptions { body } ->
       close_open_inverse_st' body x i
 #pop-options

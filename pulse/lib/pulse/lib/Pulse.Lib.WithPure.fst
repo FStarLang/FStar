@@ -8,7 +8,7 @@ let with_pure
   (p : prop)
   (v : squash p -> slprop)
 : slprop
-= op_exists_Star v
+= exists* h. v h
 // Alternative definition:
 // = exists* v'. tag v' ** pure (p /\ v' == v ())
 // much easier to work with, but proving the size wasn't obvious.
@@ -19,56 +19,34 @@ let with_pure_timeless
 : Lemma (requires forall s. timeless (v s))
         (ensures  timeless (with_pure p v))
         [SMTPat (timeless (with_pure p v))]
-= ()
+= assert_norm (with_pure p v == (exists* h. v h))
 
-let eta_exists_aux 
-  (#a : Type0)
-  (p : a -> slprop)
-: slprop_equiv (op_exists_Star p) (op_exists_Star (fun (x:a) -> p x))
-= let aux (x:a) : Lemma (slprop_equiv (p x) (p x)) =
-    Squash.return_squash (slprop_equiv_refl (p x))
-  in
-  Classical.forall_intro aux;
-  slprop_equiv_exists p (fun x -> p x) ()
-
-let uneta_exists_aux 
-  (#a : Type0)
-  (p : a -> slprop)
-: slprop_equiv (op_exists_Star (fun (x:a) -> p x)) (op_exists_Star p)
-= let aux (x:a) : Lemma (slprop_equiv (p x) (p x)) =
-    Squash.return_squash (slprop_equiv_refl (p x))
-  in
-  Classical.forall_intro aux;
-  slprop_equiv_exists (fun x -> p x) p ()
-
-
-ghost
-fn eta_exists
-  (a : Type0)
-  (p : a -> slprop)
-  requires op_exists_Star p
-  ensures  op_exists_Star (fun (x:a) -> p x)
+ghost fn on_with_pure_elim l (p: prop) (v: squash p -> slprop)
+  requires on l (with_pure p v)
+  ensures with_pure p (fun _ -> on l (v ()))
 {
-  rewrite op_exists_Star p
-       as op_exists_Star (fun (x:a) -> p x)
-       by apply (`eta_exists_aux);
+  ghost_impersonate l (on l (with_pure p v)) (with_pure p (fun _ -> on l (v ()))) fn _ {
+    on_elim (with_pure p v);
+    unfold with_pure p v;
+    with h. assert v h;
+    let h' = h;
+    rewrite v h as v ();
+    on_intro (v ());
+  }
 }
 
-
-
-ghost
-fn uneta_exists
-  (a : Type0)
-  (p : a -> slprop)
-  requires op_exists_Star (fun (x:a) -> p x)
-  ensures  op_exists_Star p
+ghost fn on_with_pure_intro l (p: prop) (v: squash p -> slprop)
+  requires with_pure p (fun _ -> on l (v ()))
+  ensures on l (with_pure p v)
 {
-  rewrite op_exists_Star (fun (x:a) -> p x)
-       as op_exists_Star p
-       by apply (`uneta_exists_aux);
+  ghost_impersonate l (with_pure p (fun _ -> on l (v ()))) (on l (with_pure p v)) fn _ {
+    on_elim _;
+    fold with_pure p v;
+    on_intro (with_pure p v);
+  }
 }
 
-
+let is_send_across_with_pure p v #_ = Tactics.Typeclasses.solve
 
 ghost
 fn intro_with_pure
@@ -79,8 +57,6 @@ fn intro_with_pure
   ensures  with_pure p v
 {
   assert (v ());
-  assert (exists* s. v s);
-  uneta_exists _ v;
   fold (with_pure p v);
 }
 
@@ -109,7 +85,6 @@ fn elim_with_pure
   ensures  v ()
 {
   unfold (with_pure p v);
-  eta_exists _ v;
   with s. assert (v s);
   squash_single_coerce p v s;
   ()

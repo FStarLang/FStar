@@ -37,14 +37,14 @@ requires MR.snapshot mr v0     //and the value pf m,r
 ensures inv i (inv_core x mr)  //x and mr are still related
 ensures exists* v1. MR.snapshot mr v1 ** pure (v1 >= v0 + 1) //and value of mr is at least one more than it was before
 {
-    with_invariants i { //open the invariant i, so we can use it 
-        later_elim_timeless _; //a technicality opening invariants of this type
+    with_invariants unit emp_inames i (inv_core x mr) (MR.snapshot mr v0)
+        (fun _ -> exists* v1. MR.snapshot mr v1 ** pure (v1 >= v0 + 1))
+    fn _ { //open the invariant i, so we can use it 
         MR.recall_snapshot mr; //Ghost step: this tells us that v0 <= current value of x
         drop_ (MR.snapshot mr v0); //we don't need the snapshot of v0 anymore
         let res = incr_atomic x; //to the actual increment
         MR.update mr res; //Ghost step: update the ghost reference to the new value
         MR.take_snapshot mr #1.0R res; //Take a new snapshot of the ghost reference at the current value
-        later_intro (inv_core x mr); //a technicality to reintroduce the invariant
     }
 }
 

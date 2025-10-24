@@ -231,3 +231,6 @@ val on_range_unzip (p q:nat -> slprop) (i j:nat)
   : stt_ghost unit emp_inames
       (on_range (fun k -> p k ** q k) i j)
       (fun _ -> on_range p i j ** on_range q i j)
+
+instance val placeless_on_range p i j {| (k:nat -> placeless (p k)) |} : placeless (on_range p i j)
+instance val is_send_on_range p i j {| (k:nat -> is_send (p k)) |} : is_send (on_range p i j)

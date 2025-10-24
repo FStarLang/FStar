@@ -27,12 +27,8 @@ fn test_invariants_and_later ()
   ensures emp
 {
   let i = new_invariant emp;
-  later_credit_buy 1;
-  with_invariants i
-    returns _: unit
-    ensures later emp {
-    later_elim emp;
-    later_intro emp;
+  with_invariants unit emp_inames i emp emp (fun _ -> emp) fn _ {
+    ()
   };
   drop_ (inv i emp);
 }

@@ -994,22 +994,6 @@ type st_typing : env -> st_term -> comp -> Type =
                                                body }))
                   (comp_nuwhile inv post_cond)
 
-  | T_Par:
-      g:env ->
-      eL:st_term ->
-      cL:comp { C_ST? cL } ->
-      eR:st_term ->
-      cR:comp { C_ST? cR /\ comp_u cL == comp_u cR } ->
-      x:var { None? (lookup g x) } ->
-      // TODO: can comp_typing come from inversion of eL : cL and eR : cR?
-      comp_typing_u g cL ->
-      comp_typing_u g cR ->
-      st_typing g eL cL ->
-      st_typing g eR cR ->
-      st_typing g (wrst cL (Tm_Par { pre1=tm_unknown; body1=eL; post1=tm_unknown;
-                                     pre2=tm_unknown; body2=eR; post2=tm_unknown }))
-                  (comp_par cL cR x)
-
   | T_WithLocal:
       g:env ->
       binder_ppname:ppname ->
@@ -1076,19 +1060,6 @@ type st_typing : env -> st_term -> comp -> Type =
       comp_typing g c (universe_of_comp c) ->
       prop_validity g (S.wr (`False) FStar.Range.range_0) -> 
       st_typing g (wtag (Some (ctag_of_comp_st c)) (Tm_Unreachable {c})) c
-
-  | T_WithInv:
-      g:env ->
-      i:term ->
-      p:term ->
-      body:st_term ->
-      c:comp_st { C_STAtomic? c || C_STGhost? c } ->
-      tot_typing g i tm_iname ->
-      tot_typing g p tm_slprop ->
-      body_typing : st_typing g body (add_frame_later_l c p) ->
-      inv_disjointness_token:prop_validity g (inv_disjointness (comp_inames c) i) ->
-      st_typing g (wtag (Some (ctag_of_comp_st c)) (Tm_WithInv {name=i; body; returns_inv=None}))
-                  (comp_with_inv c i p)
 
 and pats_complete : env -> term -> typ -> list R.pattern -> Type0 =
   // just check the elaborated term with the core tc

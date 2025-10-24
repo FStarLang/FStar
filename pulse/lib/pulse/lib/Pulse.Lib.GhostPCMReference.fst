@@ -32,6 +32,15 @@ let small_token (inst: small_type u#a) = emp
 let pts_to (#a:Type u#a) (#p:pcm a) ([@@@mkey] r:ghost_pcm_ref p) (v:a) : slprop =
   exists* (inst: small_type u#a). C.ghost_pcm_pts_to #_ #(raise p) r (U.raise_val v) ** small_token inst
 
+ghost fn placeless_ghost_pcm_pts_to' #a #p r v : placeless (C.ghost_pcm_pts_to #a #p r v) = l1 l2 {
+  C.on_ghost_pcm_pts_to_eq l1 r v;
+  C.on_ghost_pcm_pts_to_eq l2 r v;
+  rewrite on l1 (C.ghost_pcm_pts_to r v) as on l2 (C.ghost_pcm_pts_to r v)
+}
+instance placeless_ghost_pcm_pts_to #a #p = placeless_ghost_pcm_pts_to' #a #p
+
+instance pts_to_placeless #a #p r v = Tactics.Typeclasses.solve
+
 let pts_to_is_timeless #a #p r v =
   assert_norm (pts_to r v ==
     op_exists_Star fun (inst: small_type u#a) ->

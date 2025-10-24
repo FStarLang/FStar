@@ -13,11 +13,15 @@ let is_table (t:table) (max:nat)
 : slprop
 = GT.is_table t max
 
+let placeless_is_table t max = Tactics.Typeclasses.solve
+
 let pts_to ([@@@mkey]t:table) ([@@@mkey]i:nat) (#f:perm) (p:slprop)
 : slprop
 = exists* r.
     slprop_ref_pts_to r p **
     GT.pts_to t i #f r
+
+let placeless_pts_to t i #f p = Tactics.Typeclasses.solve
 
 ghost
 fn create ()

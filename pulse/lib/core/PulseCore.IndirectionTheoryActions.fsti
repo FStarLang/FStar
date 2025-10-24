@@ -2,6 +2,7 @@ module PulseCore.IndirectionTheoryActions
 module PM = PulseCore.MemoryAlt
 module HST = PulseCore.HoareStateMonad
 open PulseCore.IndirectionTheorySep
+open Pulse.Lib.Loc
 
 type action_kind =
 | GHOST
@@ -80,8 +81,8 @@ val with_invariant (#a:Type)
                    (i:iref{not (mem_inv opened_invariants i)})
                    (f:_act_except a ak
                         (add_inv opened_invariants i) 
-                        (later p `star` fp)
-                        (fun x -> later p `star` fp' x))
+                        (somewhere (later p) `star` fp)
+                        (fun x -> somewhere (later p) `star` fp' x))
 : _act_except a ak opened_invariants 
       (inv i p `star` fp)
       (fun x -> inv i p `star` fp' x)

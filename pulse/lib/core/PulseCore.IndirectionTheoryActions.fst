@@ -314,37 +314,50 @@ let intro_read_inv (i:iref) (p frame:slprop) (m:mem)
     iname_ok i m /\
     level m > 0 /\
     interp (inv i p `star` later p `star` frame) m)
-  (ensures interp (inv i p `star` later (read_inv i m) `star` frame) m)
+  (ensures interp (inv i p `star` read_inv i m `star` frame) m)
 = sep_laws();
   dup_inv_equiv i p;
   let sl, sr = split_mem (later p `star` inv i p) (inv i p `star` frame) m in
   disjoint_join_levels sl sr;
-  destruct_star (later p) (inv i p) sl;
-  inames_ok_single i p sl;
-  read_inv_equiv i sl p;
-  assert (interp (later (read_inv i sl)) sl);
+  read_inv_intro i sl p;
+  assert (interp (read_inv i sl) sl);
   read_inv_disjoint i sl sr;
-  intro_star (later (read_inv i m)) (inv i p `star` frame) sl sr
+  intro_star (read_inv i m) (inv i p `star` frame) sl sr
+
+let intro_read_inv' (i:iref) (p frame:slprop) (m:mem)
+: Lemma
+  (requires 
+    iname_ok i m /\
+    level m > 0 /\
+    interp (inv i p `star` somewhere (later p) `star` frame) m)
+  (ensures interp (inv i p `star` read_inv i m `star` frame) m)
+= sep_laws();
+  dup_inv_equiv i p;
+  let sl, sr = split_mem (somewhere (later p) `star` inv i p) (inv i p `star` frame) m in
+  disjoint_join_levels sl sr;
+  read_inv_intro' i sl p;
+  assert (interp (read_inv i sl) sl);
+  read_inv_disjoint i sl sr;
+  intro_star (read_inv i m) (inv i p `star` frame) sl sr
 
 let elim_read_inv (i:iref) (p frame:slprop) (m:mem)
 : Lemma
   (requires 
     iname_ok i m /\
     level m > 0 /\
-    interp (inv i p `star` later (read_inv i m) `star` frame) m)
-  (ensures interp (inv i p `star` later p `star` frame) m)
+    interp (inv i p `star` read_inv i m `star` frame) m)
+  (ensures interp (inv i p `star` somewhere (later p) `star` frame) m)
 = sep_laws();
   dup_inv_equiv i p;
-  let sl, sr = split_mem (later (read_inv i m) `star` inv i p) (inv i p `star` frame) m in
-  disjoint_join_levels sl sr;
-  destruct_star (later (read_inv i m)) (inv i p) sl;
+  let sl, sr = split_mem (read_inv i m `star` inv i p) (inv i p `star` frame) m in
+  destruct_star (read_inv i m) (inv i p) sl;
   inames_ok_single i p sl;
   read_inv_disjoint i sl sr;
-  assert (interp (later (read_inv i sl) `star` inv i p) sl);
-  destruct_star (later (read_inv i m)) (inv i p) sl;
-  read_inv_equiv i sl p;
-  assert (interp (later p) sl);
-  intro_star (later p) (inv i p `star` frame) sl sr
+  assert (interp (read_inv i sl `star` inv i p) sl);
+  let l = read_inv_elim i sl p in
+  assert (interp (somewhere (later p)) sl);
+  intro_star (somewhere (later p)) (inv i p `star` frame) sl sr;
+  l
 
 let intro_read_inv_later (i:iref) (p frame:slprop) (m:mem)
 : Lemma
@@ -352,7 +365,7 @@ let intro_read_inv_later (i:iref) (p frame:slprop) (m:mem)
     iname_ok i m /\
     level m > 0 /\
     interp (inv i p `star` p `star` frame) m)
-  (ensures interp (inv i p `star` later (read_inv i m) `star` frame) m)
+  (ensures interp (inv i p `star` read_inv i m `star` frame) m)
 = sep_laws();
   let s1, s2, s3 = split_mem3 (inv i p) p frame m in
   intro_later p s2;
@@ -390,7 +403,7 @@ let fresh_invariant (e:inames) (p:slprop) (ctx:inames { Pulse.Lib.GhostSet.is_fi
     assert (interp (inv i p `star`
                     frame `star`
                     (mem_invariant (add_inv e i) s1 `star`
-                    later (read_inv i s1))) s1);
+                    read_inv i s1)) s1);
     mem_invariant_equiv e s1 i;
     assert (interp (inv i p `star` frame `star` mem_invariant e s1) s1);    
     assert (is_ghost_action s0 s1);
@@ -436,8 +449,8 @@ let with_invariant (#a:Type)
                    (i:iref{not (mem_inv opened_invariants i)})
                    (f:_act_except a ak
                         (add_inv opened_invariants i) 
-                        (later p `star` fp)
-                        (fun x -> later p `star` fp' x))
+                        (somewhere (later p) `star` fp)
+                        (fun x -> somewhere (later p) `star` fp' x))
 : _act_except a ak opened_invariants 
       (inv i p `star` fp)
       (fun x -> inv i p `star` fp' x)
@@ -448,11 +461,11 @@ let with_invariant (#a:Type)
     assert (inames_ok (single i) s0);
     mem_invariant_equiv opened_invariants s0 i;
     assert (interp (inv i p `star` fp `star` frame `star` 
-              (mem_invariant (add_inv opened_invariants i) s0 `star` later (read_inv i s0))) s0);
-    elim_read_inv i p (fp `star` frame `star` mem_invariant (add_inv opened_invariants i) s0) s0;
+              (mem_invariant (add_inv opened_invariants i) s0 `star` read_inv i s0)) s0);
+    let l = elim_read_inv i p (fp `star` frame `star` mem_invariant (add_inv opened_invariants i) s0) s0 in
     inames_ok_union (single i) opened_invariants s0;
     assert (inames_ok (add_inv opened_invariants i) s0);
-    assert (interp ((later p `star` fp) 
+    assert (interp ((somewhere (later p) `star` fp) 
                     `star` (frame `star` inv i p)
                     `star` mem_invariant (add_inv opened_invariants i) s0)
                     s0);
@@ -460,10 +473,10 @@ let with_invariant (#a:Type)
     inames_ok_union (single i) opened_invariants s1;
     assert (inames_ok (single i) s1);
     assert (iname_ok i s1);
-    intro_read_inv i p (fp' x `star` frame `star` mem_invariant (add_inv opened_invariants i) s1) s1;
+    intro_read_inv' i p (fp' x `star` frame `star` mem_invariant (add_inv opened_invariants i) s1) s1;
     assert (interp ((inv i p `star` fp' x) 
                     `star` frame
-                    `star` (mem_invariant (add_inv opened_invariants i) s1 `star` later (read_inv i s1)))
+                    `star` (mem_invariant (add_inv opened_invariants i) s1 `star` read_inv i s1))
                     s1);
     mem_invariant_equiv opened_invariants s1 i;
     assert (interp ((inv i p `star` fp' x) 

@@ -18,6 +18,7 @@ module Pulse.Lib.GhostReference
 #lang-pulse
 open FStar.Tactics
 open Pulse.Lib.Core
+open Pulse.Lib.Send
 open Pulse.Main
 open PulseCore.FractionalPermission
 open FStar.Ghost
@@ -45,6 +46,9 @@ val pts_to
 instance has_pts_to_ref (a:Type u#a) : has_pts_to (ref a) a = {
   pts_to = (fun r #f v -> pts_to r #f v);
 }
+
+instance val pts_to_placeless (#a:Type u#a) (r:ref a) (p:perm) (n:a) :
+  placeless (pts_to r #p n)
 
 val pts_to_timeless (#a:Type u#a) (r:ref a) (p:perm) (n:a)
   : Lemma (timeless (pts_to r #p n)) [SMTPat (timeless (pts_to r #p n))]

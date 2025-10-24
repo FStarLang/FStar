@@ -30,5 +30,3 @@ class duplicable (p : slprop) = {
 
 let dup (p : slprop) {| d : duplicable p |} ()
   : stt_ghost unit emp_inames p (fun _ -> p ** p) = d.dup_f ()
-
-instance val duplicable_inv (i : iname) (p : slprop) : duplicable (inv i p)

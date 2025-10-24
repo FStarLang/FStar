@@ -53,10 +53,10 @@ fn rec t_quicksort
 
     T.share_alive p f;
 
-    T.spawn_ p #(f /. 2.0R) (fun () -> t_quicksort p #(f /. 2.0R) a lo p31 #lb #pivot);
+    T.spawn_ p #(f /. 2.0R) (fun () -> t_quicksort p #(f /. 2.0R) a lo p31 #lb #pivot #s1);
     t_quicksort p #(f /. 2.0R) a p32 hi #pivot #rb;
 
-    return_pledge (T.pool_done p) (A.pts_to_range a p31 p32 s2);
+    return_pledge (T.pool_done p) (A.pts_to_range a p31 p32 s2) #_;
     squash_pledge _ _ _;
     (* disambiguating makes this pretty inconvenient now, but it is robust at least... *)
     join_pledge (T.pool_alive #(f /. 2.0R) p ** quicksort_post a lo p31 s1 lb pivot) (A.pts_to_range a p31 p32 s2);
@@ -91,7 +91,7 @@ fn rec t_quicksort
     return_pledge (T.pool_done p) (
       T.pool_alive #f p **
       quicksort_post a lo hi s0 lb rb
-    );
+    ) #_;
   }
 }
 

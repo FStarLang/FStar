@@ -33,6 +33,8 @@ let is_null #a (r : box a)
 
 let pts_to b #p v = R.pts_to b.r #p v ** pure (R.is_full_ref b.r)
 
+let is_send_pts_to _ _ = Tactics.Typeclasses.solve
+
 let pts_to_timeless _ _ _ = ()
 
 (* This function is extracted primitively. The implementation

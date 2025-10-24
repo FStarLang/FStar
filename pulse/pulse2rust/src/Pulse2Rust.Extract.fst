@@ -456,9 +456,9 @@ let rec lb_init_and_def (g:env) (lb:S.mllb)
       extract_mlty g ty,
       extract_mlexpr g init
 
-    | S.MLE_App ({expr=S.MLE_TApp ({expr=S.MLE_Name pe}, _)}, [_; init; len]),
+    | S.MLE_App ({expr=S.MLE_TApp ({expr=S.MLE_Name pe}, _)}, [_; init; len; _; _]),
       Some ([], S.MLTY_Named ([ty], pt))
-      when S.string_of_mlpath pe = "Pulse.Lib.Array.Core.mask_alloc" &&
+      when S.string_of_mlpath pe = "Pulse.Lib.Array.Core.mask_alloc_with_vis" &&
            S.string_of_mlpath pt = "Pulse.Lib.Array.Core.array" ->
       let init = extract_mlexpr g init in
       let len = extract_mlexpr g len in
@@ -675,8 +675,8 @@ and extract_mlexpr (g:env) (e:S.mlexpr) : expr =
     let e2 = extract_mlexpr g e2 in
     mk_call (mk_expr_path_singl vec_new_fn) [e1; e2]
 
-  | S.MLE_App ({expr=S.MLE_TApp ({expr=S.MLE_Name p}, [_])}, [_; e1; e2])
-    when S.string_of_mlpath p = "Pulse.Lib.Array.Core.mask_alloc" ->
+  | S.MLE_App ({expr=S.MLE_TApp ({expr=S.MLE_Name p}, [_])}, [_; e1; e2; _; _])
+    when S.string_of_mlpath p = "Pulse.Lib.Array.Core.mask_alloc_with_vis" ->
 
     fail_nyi (Format.fmt1 "mlexpr %s" (S.mlexpr_to_string e))
 

@@ -5,6 +5,7 @@ module MS = Pulse.Lib.PCM.MonoidShares
 module GPR = Pulse.Lib.GhostPCMReference
 module CI = Pulse.Lib.CancellableInvariant
 module R = Pulse.Lib.Reference
+open Pulse.Lib.Par
 
 // For this example: we assume we have an atomic operation
 // to increment a ref nat
@@ -360,17 +361,41 @@ ensures
         (CI.cinv_vp i (contributions n initial gs r))
 opens [CI.iname_of i] //we used the invariant
 { 
-  with_invariants (CI.iname_of i)
-  {
-    later_elim _;
+  with_invariants_a unit emp_inames (CI.iname_of i) (CI.cinv_vp i (contributions n initial gs r))
+    (can_give gs 1 ** CI.active i p)
+    (fun _ -> has_given gs 1 ** CI.active i p)
+  fn _ {
     CI.unpack_cinv_vp i;
     incr_core gs r;
     CI.pack_cinv_vp i;
-    later_intro (CI.cinv_vp i (contributions n initial gs r));
   }
 }
 
+fn par_atomic (#is #js #pf #pg #qf #qg:_)
+      //  {| is_send pf, is_send pg, is_send qf, is_send qg |}
+       (f: unit -> stt_atomic unit #Observable is pf (fun _ -> qf))
+       (g: unit -> stt_atomic unit js pg (fun _ -> qg))
+  requires pf ** pg
+  ensures qf ** qg
+{
+  admit (); // is_send
+  par #pf #qf #pg #qg
+    fn _ { f () }
+    fn _ { g () }
+}
 
+fn par_atomic_l (#is #pf #pg #qf #qg:_)
+      //  {| is_send pf, is_send pg, is_send qf, is_send qg |}
+       (f: unit -> stt_atomic unit #Observable is pf (fun _ -> qf))
+       (g: unit -> stt unit pg (fun _ -> qg))
+  requires pf ** pg
+  ensures qf ** qg
+{
+  admit (); // is_send
+  par #pf #qf #pg #qg
+    fn _ { f () }
+    fn _ { g () }
+}
 
 // First, a simple variant to increment a reference in parallel in two threads,
 // the classic Owicki-Gries example
@@ -434,9 +459,9 @@ ensures
        (CI.cinv_vp ci (contributions capacity initial gs r))
 opens [CI.iname_of ci]
 {
-  with_invariants (CI.iname_of ci)
-  {
-    later_elim _;
+  with_invariants_g unit emp_inames (CI.iname_of ci) (CI.cinv_vp ci (contributions capacity initial gs r))
+    (CI.active ci p) (fun _ -> has_given gs 0 ** CI.active ci p)
+  fn _ {
     CI.unpack_cinv_vp ci;
     unfold contributions;
     with u. assert (owns_tank_units gs.to_give u);
@@ -444,7 +469,6 @@ opens [CI.iname_of ci]
     fold (has_given gs 0);
     fold (contributions capacity initial gs r);
     CI.pack_cinv_vp #(contributions capacity initial gs r) ci;
-    later_intro (CI.cinv_vp ci (contributions capacity initial gs r));
   }
 }
 

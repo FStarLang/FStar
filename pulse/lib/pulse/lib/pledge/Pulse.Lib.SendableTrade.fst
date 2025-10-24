@@ -1,5 +1,5 @@
 (*
-   Copyright 2023 Microsoft Research
+   Copyright 2025 Microsoft Research
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -14,37 +14,48 @@
    limitations under the License.
 *)
 
-module Pulse.Lib.Trade
+module Pulse.Lib.SendableTrade
 #lang-pulse
 
 open Pulse.Lib.Pervasives
 
 
-let trade_elim_t is hyp extra concl : Type u#5 =
-  unit -> trade_f #is hyp #extra concl
-
-let trade_elim_exists (is:inames) (hyp extra concl:slprop) : slprop =
-  pure (squash (trade_elim_t is hyp extra concl))
+let trade_elim_exists (is:inames) (hyp extra concl:slprop) (inst: is_send extra) (f: unit -> trade_f #is hyp #extra concl) : slprop =
+  emp
 
 let trade (#is:inames) (hyp concl:slprop) =
-  exists* extra. extra ** trade_elim_exists is hyp extra concl
+  exists* extra inst f. extra ** trade_elim_exists is hyp extra concl inst f
 
+ghost fn is_send_trade #is (p1 p2: slprop) : is_send (trade #is p1 p2) = l l' {
+  ghost_impersonate l (on l (trade #is p1 p2)) (on l' (trade #is p1 p2)) fn _ {
+    on_elim (trade #is p1 p2);
+    unfold trade #is p1 p2; with extra inst f. _;
+    on_intro extra;
+    is_send_elim extra #inst l';
+    ghost_impersonate l' (on l' extra ** trade_elim_exists is p1 extra p2 inst f)
+        (on l' (trade #is p1 p2)) fn _ {
+      on_elim extra;
+      fold trade #is p1 p2;
+      on_intro (trade #is p1 p2);
+    }
+  }
+}
 
 ghost
 fn intro_trade
   (#[T.exact (`emp_inames)]is:inames)
-  (hyp concl extra:slprop)
+  (hyp concl extra:slprop) {| inst: is_send extra |}
   (f_elim: unit -> trade_f #is hyp #extra concl)
   requires extra
   ensures trade #is hyp concl
 {
-  fold (trade_elim_exists is hyp extra concl);
-  assert (extra ** trade_elim_exists is hyp extra concl);
+  fold (trade_elim_exists is hyp extra concl inst f_elim);
+  assert (extra ** trade_elim_exists is hyp extra concl inst f_elim);
   fold (trade #is hyp concl)
 }
 
 fn introducable_trade_aux u#a (t: Type u#a) is is'
-    hyp extra concl {| introducable is' (extra ** hyp) concl t |} (k: t) :
+    hyp extra concl {| is_send extra |} {| introducable is' (extra ** hyp) concl t |} (k: t) :
     stt_ghost unit is extra (fun _ -> trade #is' hyp concl) = {
   intro_trade #is' hyp concl extra fn _ {
     intro #is' concl #(extra ** hyp) (fun _ -> k);
@@ -52,12 +63,12 @@ fn introducable_trade_aux u#a (t: Type u#a) is is'
 }
 
 instance introducable_trade (t: Type u#a) is is'
-    hyp extra concl {| introducable is' (extra ** hyp) concl t |} :
+    hyp extra concl {| is_send extra |} {| introducable is' (extra ** hyp) concl t |} :
     introducable is extra (trade #is' hyp concl) t =
   { intro_aux = introducable_trade_aux t is is' hyp extra concl }
 
 instance introducable_trade' (t: Type u#a) is
-    hyp extra concl {| introducable emp_inames (extra ** hyp) concl t |} :
+    hyp extra concl {| is_send extra |} {| introducable emp_inames (extra ** hyp) concl t |} :
     introducable is extra (hyp @==> concl) t =
   { intro_aux = introducable_trade_aux t is emp_inames hyp extra concl }
 
@@ -81,25 +92,27 @@ fn pextract (a:Type u#5) (_:squash a)
 
 
 
-ghost
-fn deconstruct_trade (is:inames) (hyp concl: slprop)
-  requires trade #is hyp concl
-  returns res:(extra:erased slprop & trade_elim_t is hyp (reveal extra) concl)
-  ensures reveal (dfst res)
-{
-  unfold (trade #is hyp concl);
-  with extra. assert (extra ** trade_elim_exists is hyp extra concl);
-  unfold (trade_elim_exists is hyp (reveal extra) concl);
-  let pf : squash (psquash (trade_elim_t is hyp (reveal extra) concl)) =
-    elim_pure_explicit (psquash (trade_elim_t is hyp (reveal extra) concl));
-  let pf : squash (trade_elim_t is hyp (reveal extra) concl) =
-    FStar.Squash.join_squash pf;
-  let f = pextract (trade_elim_t is hyp (reveal extra) concl) pf;
-  let res =
-    (| (extra <: erased slprop), f |) <: (p:erased slprop & trade_elim_t is hyp (reveal p) concl);
-  rewrite (reveal extra) as (reveal (dfst res));
-  res
-}
+// ghost
+// fn deconstruct_trade (is:inames) (hyp concl: slprop)
+//   requires trade #is hyp concl
+//   returns res:(extra:slprop & is_send extra & trade_elim_t is hyp (reveal extra) concl)
+//   ensures (let (| extra, inst, _ |) = res in extra)
+// {
+//   unfold (trade #is hyp concl);
+//   with extra inst. assert (extra ** trade_elim_exists is hyp extra concl inst);
+//   unfold (trade_elim_exists is hyp (reveal extra) concl);
+//   let pf : squash (psquash (trade_elim_t is hyp (reveal extra) concl)) =
+//     elim_pure_explicit (psquash (trade_elim_t is hyp (reveal extra) concl));
+//   let pf : squash (trade_elim_t is hyp (reveal extra) concl) =
+//     FStar.Squash.join_squash pf;
+//   let f: trade_elim_t is hyp extra concl = pextract (trade_elim_t is hyp (reveal extra) concl) pf;
+//   ((| extra, inst, f |) <:
+//     (extra:slprop & is_send extra & trade_elim_t is hyp (reveal extra) concl))
+//   // let res =
+//   //   (| (extra <: erased slprop), f |) <: (p:erased slprop & trade_elim_t is hyp (reveal p) concl);
+//   // rewrite (reveal extra) as (reveal (dfst res));
+//   // res
+// }
 
 let call #t #is #req #ens (h: unit -> stt_ghost is t req (fun x -> ens x)) = h
 
@@ -111,9 +124,10 @@ fn elim_trade
   ensures concl
   opens is
 {
-  let res = deconstruct_trade is hyp concl;
-  let f = dsnd res;
-  rewrite dfst res as res._1;
+  unfold trade #is hyp concl;
+  with extra inst f. assert trade_elim_exists is hyp extra concl inst f;
+  unfold trade_elim_exists is hyp extra concl inst f;
+  let f = f;
   call f ()
 }
 
@@ -125,12 +139,8 @@ fn trade_sub_inv
   requires trade #is1 hyp concl
   ensures trade #is2 hyp concl
 {
-  let res = deconstruct_trade is1 hyp concl;
-
-  intro (trade #is2 hyp concl) #(dfst res) fn _ {
-    let f = dsnd res;
-    rewrite dfst res as res._1;
-    call f ()
+  intro (trade #is2 hyp concl) #(trade #is1 hyp concl) fn _ {
+    elim_trade #is1 hyp concl
   };
 }
 
@@ -183,27 +193,4 @@ fn rewrite_with_trade
   eq_as_trade p1 p2;
   rewrite p1 as p2;
   ();
-}
-
-ghost
-fn is_send_across_trade #b #g #is
-  (p1 p2: slprop) {| i1: is_send_across #b g p1, i2: is_send_across g p2 |}
-  : is_send_across g (trade #is p1 p2) = l1 l2 {
-  ghost_impersonate l2 (on l1 (trade #is p1 p2)) (on l2 (trade #is p1 p2)) fn _ {
-    loc_dup l2;
-    intro (trade #is p1 p2) #(on l1 (trade #is p1 p2) ** loc l2) fn _ {
-      on_intro p1;
-      i1 l2 l1;
-      ghost_impersonate #is l1 (on l1 p1 ** on l1 (trade #is p1 p2)) (on l1 p2) fn _ {
-        on_elim p1;
-        on_elim (trade #is p1 p2);
-        elim_trade #is _ _;
-        on_intro p2
-      };
-      i2 l1 l2;
-      on_elim p2;
-      drop_ (loc l2);
-    };
-    on_intro (trade #is p1 p2);
-  };
 }

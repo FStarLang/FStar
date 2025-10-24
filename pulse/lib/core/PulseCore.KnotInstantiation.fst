@@ -30,6 +30,7 @@ let map_hogvs #a #b (f:a -> b) : (hogvs a ^-> hogvs b) =
 noeq type premem_ (x: Type u#4) : Type u#4 = {
   hogs: hogvs x;
   saved_credits: erased nat;
+  current_loc: loc_id;
   timeless_heap: PM.mem u#0;
 }
 
@@ -70,6 +71,9 @@ let read (m: premem) (a: address) : hogs_val = (unpack m).hogs a
 let level_ (w: premem) : GTot nat = IT.level w
 
 let credits_ (m: premem) : GTot nat = (unpack m).saved_credits
+
+let current_loc_ m = (unpack m).current_loc
+
 let timeless_heap_of (m: premem) = (unpack m).timeless_heap
 
 let approx (n: erased nat) : (mem_pred ^-> mem_pred) = approx #_ #functor_heap n
@@ -77,9 +81,9 @@ let approx_def n p w =
   assert_norm (approx n p w == (if IT.level w >= n then False else p w))
 
 let premem_of2 (x: premem2) : premem_ mem_pred =
-  { hogs = F.on _ x.hogs; saved_credits = x.saved_credits; timeless_heap = x.timeless_heap }
+  { hogs = F.on _ x.hogs; saved_credits = x.saved_credits; current_loc = x.current_loc; timeless_heap = x.timeless_heap }
 let premem2of_ (x: premem_ mem_pred) : premem2 =
-  { hogs = x.hogs; saved_credits = x.saved_credits; timeless_heap = x.timeless_heap }
+  { hogs = x.hogs; saved_credits = x.saved_credits; current_loc = x.current_loc; timeless_heap = x.timeless_heap }
 
 let pack (n: erased nat) (x: premem2) : premem = pack n (premem_of2 x)
 let unpack (x: premem) : premem2 = premem2of_ (unpack x)
@@ -96,10 +100,14 @@ let credits_pack n x =
   let x': premem_ (IT.predicate functor_heap) = premem_of2 x in
   IT.unpack_pack n x';
   assert_norm ((map_premem (IT.approx #_ #functor_heap n) x').saved_credits == x'.saved_credits)
+let current_loc_pack n x =
+  let x': premem_ (IT.predicate functor_heap) = premem_of2 x in
+  IT.unpack_pack n x';
+  assert_norm ((map_premem (IT.approx #_ #functor_heap n) x').current_loc == x'.current_loc)
 let level_pack n x =
   unpack_pack n (premem_of2 x)
 
-let mem_ext (w1: premem) (w2: premem { level_ w1 == level_ w2 /\ credits_ w1 == credits_ w2 /\ timeless_heap_of w1 == timeless_heap_of w2 })
+let mem_ext (w1: premem) w2
     (h: (a: address -> squash (read w1 a == read w2 a))) : squash (w1 == w2) =
   pack_unpack w1;
   pack_unpack w2;

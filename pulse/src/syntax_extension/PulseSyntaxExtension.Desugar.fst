@@ -601,51 +601,8 @@ let rec desugar_stmt' (env:env_t) (s:Sugar.stmt)
       return (SW.tm_intro_exists vp witnesses s.range)
     )
 
-    | Parallel { p1; p2; q1; q2; b1; b2 } ->
-      let! p1 = desugar_slprop env p1 in
-      let! p2 = desugar_slprop env p2 in
-      let! q1 = desugar_slprop env q1 in
-      let! q2 = desugar_slprop env q2 in      
-      let! b1 = desugar_stmt env b1 in
-      let! b2 = desugar_stmt env b2 in
-      return (SW.tm_par p1 p2 q1 q2 b1 b2 s.range)
-
     | LetBinding _ -> 
       fail "Terminal let binding" s.range
-
-    | WithInvariants { names=n1::names; body; returns_ } ->
-      let! n1 = tosyntax env n1 in
-      let! names = names |> mapM (tosyntax env) in
-      let! body = desugar_stmt env body in
-      let! returns_ =
-        let opens_tm opens_opt : err SW.term =
-          match opens_opt with
-          | Some opens -> desugar_term env opens
-          | None ->
-            let all_names = n1::names in
-            let opens_tm = L.fold_left (fun names n ->
-              SW.tm_add_inv names (tm_expr n s.range) s.range) SW.tm_emp_inames all_names in
-            return opens_tm in
-        match returns_ with
-        | None -> return None
-        | Some (None, v, opens_opt) -> 
-          let! v = desugar_slprop env v in
-          let b = SW.mk_binder (Ident.id_of_text "_") (SW.tm_unknown s.range) in
-          let! opens = opens_tm opens_opt in
-          return (Some (b, v, opens))
-        | Some (Some (x, t), v, opens_opt) ->
-          let! t = desugar_term env t in
-          let env, bv = push_bv env x in
-          let! v = desugar_slprop env v in
-          let v = SW.close_term v bv.index in
-          let b = SW.mk_binder x t in
-          let! opens = opens_tm opens_opt in
-          return (Some (b, v, opens))
-      in
-      (* the returns_ goes only to the outermost with_inv *)
-      let tt = L.fold_right (fun nm body -> let nm : term = tm_expr nm s.range in SW.tm_with_inv nm body None s.range) names body in
-      let n1 : term = tm_expr n1 s.range in
-      return (SW.tm_with_inv n1 tt returns_ s.range)
 
     | PragmaSetOptions { options; body } ->
       FStarC.Syntax.Util.process_pragma (S.PushOptions <| Some options) s.range;

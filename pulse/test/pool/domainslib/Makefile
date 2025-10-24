@@ -35,6 +35,9 @@ dune: all_ml
 .PHONY: test
 test: run
 
+.PHONY: accept
+accept:
+
 .PHONY: run
 run: dune
 	./dune/_build/default/driver.exe

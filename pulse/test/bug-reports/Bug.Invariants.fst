@@ -101,7 +101,7 @@ requires inv i p
 returns x:bool
 ensures inv i p
 {
-    with_invariants i { 
+    with_invariants bool emp_inames i p emp (fun _ -> emp) fn _ {
       atomic_step_res();
     }
 }
@@ -115,11 +115,8 @@ requires inv i (pts_to x 1ul)
 returns _:U32.t
 ensures inv i (pts_to x 1ul)
 {
-    with_invariants i {
-        later_elim_timeless _;
-        let r = read_atomic x;
-        later_intro (pts_to x 1ul);
-        r
+    with_invariants U32.t emp_inames i (pts_to x 1ul) emp (fun _ -> emp) fn _ {
+        read_atomic x
     }
 }
 
@@ -130,14 +127,10 @@ requires inv i (pts_to x 0ul) ** pts_to y 'w
 ensures inv i (pts_to x 0ul) ** pts_to y 0ul
 {
     let n = 
-        with_invariants i
-        returns r:U32.t
-        ensures later (pts_to x 0ul) ** pure (r == 0ul) ** pts_to y 'w
-        opens [i] {
-            later_elim_timeless _;
-            let r = read_atomic x;
-            later_intro (pts_to x 0ul);
-            r
+        with_invariants U32.t emp_inames i (pts_to x 0ul)
+            (pts_to y 'w)
+            (fun r -> pure (r == 0ul) ** pts_to y 'w) fn _ {
+            read_atomic x
         };
     y := n;
 }

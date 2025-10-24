@@ -35,6 +35,8 @@ val mutex_live
   (#[T.exact (`1.0R)] p:perm)
   (v:a -> slprop)  : slprop
 
+instance val is_send_mutex_live #a m #p v {| (x:a -> is_send (v x)) |} : is_send (mutex_live #a m #p v)
+
 //
 // mutex_guard is a ref-like type
 //

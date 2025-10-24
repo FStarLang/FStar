@@ -35,6 +35,7 @@ let is_null_core_pcm_ref r = PulseCore.Action.is_core_ref_null r
 let pcm_pts_to #a (#p:pcm a) (r:pcm_ref p) (v:a) =
   PulseCore.Action.pts_to #a #p r v
 let timeless_pcm_pts_to #a #p r v = PulseCore.Action.timeless_pts_to #a #p r v
+let on_pcm_pts_to_eq = PulseCore.Action.on_pcm_pts_to_eq
 let pts_to_not_null #a #p r v = A.pts_to_not_null #a #p r v
 
 let alloc
@@ -82,6 +83,7 @@ let null_core_ghost_pcm_ref = PulseCore.Action.core_ghost_ref_null
 
 let ghost_pcm_pts_to #a #p r v = PulseCore.Action.ghost_pts_to #a #p r v
 let timeless_ghost_pcm_pts_to #a #p r v = PulseCore.Action.timeless_ghost_pts_to #a #p r v
+let on_ghost_pcm_pts_to_eq = PulseCore.Action.on_ghost_pcm_pts_to_eq
 let ghost_pts_to_not_null #a #p r v = A.ghost_pts_to_not_null #a #p r v
 let ghost_alloc = A.ghost_alloc
 let ghost_read = A.ghost_read

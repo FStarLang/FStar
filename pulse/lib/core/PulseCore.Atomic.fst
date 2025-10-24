@@ -258,6 +258,7 @@ let ghost_reveal (a:Type) (x:erased a)
   pure_trivial (reveal x == reveal x) ();
   m
 
+let loc_get () = lift_neutral_ghost (A.loc_get ())
 
 let dup_inv (i:iref) (p:slprop) = lift_neutral_ghost (A.dup_inv i p)
 
@@ -273,7 +274,7 @@ let with_invariant #a #fp #fp' #f_opens #p i $f =
   A.with_invariant i f
 
 let with_invariant_g #a #fp #fp' #f_opens #p i $f =
-  let f: act (erased a) Ghost f_opens (later p ** fp) (fun x -> later p ** fp' x) = f () in
+  let f: act (erased a) Ghost f_opens (somewhere (later p) ** fp) (fun x -> somewhere (later p) ** fp' x) = f () in
   A.with_invariant #(erased a) #Ghost #fp #(as_ghost_post fp') #f_opens #p i (fun _ -> f)
 
 let slprop_post_equiv_intro #t (#p #q: t->slprop) (h: (x:t -> squash (p x == q x))) : slprop_post_equiv p q =
@@ -326,3 +327,11 @@ let equiv_elim (a b:slprop) = lift_neutral_ghost (A.equiv_elim a b)
 let slprop_ref_alloc y = lift_neutral_ghost (A.slprop_ref_alloc y)
 let slprop_ref_share x y = lift_neutral_ghost (A.slprop_ref_share x y)
 let slprop_ref_gather x y1 y2 = lift_neutral_ghost (A.slprop_ref_gather x y1 y2)
+
+let impersonate_atomic #a #obs #opens #pre #post l (k: stt_atomic a #obs opens pre post) :
+    stt_atomic a #obs opens (Sep.on l pre) (fun x -> Sep.on l (post x)) =
+  A.impersonate l k
+
+let impersonate_ghost #a #opens #pre #post l (k: stt_ghost a opens pre post) :
+    stt_ghost a opens (Sep.on l pre) (fun x -> Sep.on l (post x)) =
+  A.impersonate l k

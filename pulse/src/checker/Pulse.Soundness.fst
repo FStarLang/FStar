@@ -32,7 +32,6 @@ module Return = Pulse.Soundness.Return
 module Exists = Pulse.Soundness.Exists
 module While = Pulse.Soundness.While
 module Admit = Pulse.Soundness.Admit
-module Par = Pulse.Soundness.Par
 module WithLocal = Pulse.Soundness.WithLocal
 module WithLocalArray = Pulse.Soundness.WithLocalArray
 module Rewrite = Pulse.Soundness.Rewrite
@@ -289,9 +288,6 @@ let rec soundness (g:stt_env)
       While.while_soundness d soundness
     | T_NuWhile .. ->
       admit()
-      
-    | T_Par .. ->
-      Par.par_soundness d soundness
 
     | T_WithLocal .. ->
       WithLocal.withlocal_soundness d soundness
@@ -307,8 +303,6 @@ let rec soundness (g:stt_env)
     | T_Unreachable .. -> RU.magic()
 
     | T_Sub .. -> Sub.sub_soundness d soundness
-
-    | T_WithInv .. -> RU.magic() // IOU
 #pop-options
 
 let soundness_lemma

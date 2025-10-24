@@ -20,6 +20,9 @@ val pts_to (#t:Type)
            (v:t)
 : slprop
 
+instance val placeless_pts_to (#t:Type) (#p:preorder t) (r:mref p) (#f:perm) (v:t)
+: placeless (pts_to r #f v)
+
 val pts_to_is_timeless (#t:Type) (#p:preorder t) (r:mref p) (#f:perm) (v:t)
 : Lemma (timeless (pts_to r #f v))
         [SMTPat (timeless (pts_to r #f v))]
@@ -29,6 +32,9 @@ val snapshot (#t:Type)
              (r:mref p)
              (v:t)
 : slprop
+
+instance val placeless_snapshot (#t:Type) (#p:preorder t) (r:mref p) (v:t)
+: placeless (snapshot r v)
 
 val snapshot_is_timeless (#t:Type) (#p:preorder t) (r:mref p) (v:t)
 : Lemma (timeless (snapshot r v))

@@ -17,6 +17,7 @@ module Pulse.Lib.GhostPCMReference
 #lang-pulse
 open Pulse.Lib.SmallType
 open Pulse.Lib.Core
+open Pulse.Lib.Send
 open Pulse.Main
 open FStar.PCM
 
@@ -46,6 +47,13 @@ val pts_to
     ([@@@mkey]r:gref p)
     (v:a)
 : slprop
+
+instance val pts_to_placeless
+    (#a:Type)
+    (#p:pcm a)
+    (r:gref p)
+    (v:a)
+: placeless (pts_to r v)
 
 val pts_to_is_timeless
     (#a:Type)

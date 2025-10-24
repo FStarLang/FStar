@@ -21,6 +21,7 @@ open FStar.Ghost
 open PulseCore.InstantiatedSemantics
 open PulseCore.Action
 open PulseCore.Observability
+open Pulse.Lib.Loc
 module Sep = PulseCore.IndirectionTheorySep
 (* stt_unobservable a opens pre post: The type of a pulse computation
    that when run in a state satisfying `pre`
@@ -229,6 +230,9 @@ val elim_exists (#a:Type u#a) (p:a -> slprop)
 val ghost_reveal (a:Type) (x:erased a)
   : stt_ghost a emp_inames emp (fun y -> pure (reveal x == y))
 
+val loc_get ()
+  : stt_ghost loc_id emp_inames emp (fun l -> Sep.loc l)
+
 //////////////////////////////////////////////////////////////////
 
 val dup_inv (i:iref) (p:slprop)
@@ -255,8 +259,8 @@ val with_invariant
     (#p:slprop)
     (i:iref { not (mem_inv f_opens i) })
     ($f:unit -> stt_atomic a #obs f_opens
-                           (later p ** fp)
-                           (fun x -> later p ** fp' x))
+                           (somewhere (later p) ** fp)
+                           (fun x -> somewhere (later p) ** fp' x))
 : stt_atomic a #obs (add_inv f_opens i) ((inv i p) ** fp) (fun x -> (inv i p) ** fp' x)
 
 val with_invariant_g
@@ -267,8 +271,8 @@ val with_invariant_g
     (#p:slprop)
     (i:iref { not (mem_inv f_opens i) })
     ($f:unit -> stt_ghost a f_opens
-                            (later p ** fp)
-                            (fun x -> later p ** fp' x))
+                            (somewhere (later p) ** fp)
+                            (fun x -> somewhere (later p) ** fp' x))
 : stt_ghost a (add_inv f_opens i) ((inv i p) ** fp) (fun x -> (inv i p) ** fp' x)
 
 // val distinct_invariants_have_distinct_names
@@ -471,3 +475,9 @@ val slprop_ref_share (x:slprop_ref) (y:slprop)
 
 val slprop_ref_gather (x:slprop_ref) (y1 y2: slprop)
 : stt_ghost unit emp_inames (slprop_ref_pts_to x y1 ** slprop_ref_pts_to x y2) fun _ -> slprop_ref_pts_to x y1 ** later (I.equiv y1 y2)
+
+val impersonate_atomic #a #obs #opens #pre #post l (k: stt_atomic a #obs opens pre post) :
+    stt_atomic a #obs opens (Sep.on l pre) (fun x -> Sep.on l (post x))
+
+val impersonate_ghost #a #opens #pre #post l (k: stt_ghost a opens pre post) :
+    stt_ghost a opens (Sep.on l pre) (fun x -> Sep.on l (post x))

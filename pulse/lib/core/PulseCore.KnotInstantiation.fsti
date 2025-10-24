@@ -15,6 +15,7 @@
 *)
 module PulseCore.KnotInstantiation
 open FStar.FunctionalExtensionality
+open Pulse.Lib.Loc
 module F = FStar.FunctionalExtensionality
 module PM = PulseCore.MemoryAlt
 open FStar.Ghost {erased, hide, reveal}
@@ -52,6 +53,7 @@ let hogs_val = hogs_val_ mem_pred
 val read (m: premem) (a: address) : hogs_val
 val level_ (w: premem) : GTot nat
 val credits_ (m: premem) : GTot nat
+val current_loc_ (m: premem) : loc_id
 val timeless_heap_of (m: premem) : PM.mem u#0
 
 val approx (n: erased nat) : (mem_pred ^-> mem_pred)
@@ -62,6 +64,7 @@ val approx_def (n: erased nat) (p: mem_pred) w :
 noeq type premem2 : Type u#4 = {
   hogs: address -> hogs_val;
   saved_credits: erased nat;
+  current_loc: loc_id;
   timeless_heap: PM.mem u#0;
 }
 
@@ -76,11 +79,14 @@ val timeless_heap_of_pack n x :
 val credits_pack n x :
     Lemma (credits_ (pack n x) == reveal x.saved_credits)
       [SMTPat (credits_ (pack n x))]
+val current_loc_pack n x :
+    Lemma (current_loc_ (pack n x) == reveal x.current_loc)
+      [SMTPat (current_loc_ (pack n x))]
 val level_pack n x :
     Lemma (level_ (pack n x) == reveal n)
       [SMTPat (level_ (pack n x))]
 
-val mem_ext (w1: premem) (w2: premem { level_ w1 == level_ w2 /\ credits_ w1 == credits_ w2 /\ timeless_heap_of w1 == timeless_heap_of w2 })
+val mem_ext (w1: premem) (w2: premem { level_ w1 == level_ w2 /\ credits_ w1 == credits_ w2 /\ current_loc_ w1 == current_loc_ w2 /\ timeless_heap_of w1 == timeless_heap_of w2 })
     (h: (a: address -> squash (read w1 a == read w2 a))) : squash (w1 == w2)
 
 val mem_pred_ext (f g: mem_pred) (h: (w:premem -> squash (f w <==> g w))) : squash (f == g)
@@ -90,7 +96,7 @@ val approx_read (m: premem) a :
     [SMTPat (read m a)]
 
 val age_to_ (m: premem) (i: erased nat) :
-    n:premem { credits_ n == credits_ m /\ timeless_heap_of n == timeless_heap_of m /\ level_ n == reveal i }
+    n:premem { credits_ n == credits_ m /\ current_loc_ n == current_loc_ m /\ timeless_heap_of n == timeless_heap_of m /\ level_ n == reveal i }
 
 val read_age_to_ (m: premem) (n: erased nat) a :
     Lemma (read (age_to_ m n) a == (map_hogs_val (approx n) (read m a)))

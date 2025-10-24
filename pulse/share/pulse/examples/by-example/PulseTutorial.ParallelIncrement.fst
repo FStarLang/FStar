@@ -17,22 +17,19 @@
 module PulseTutorial.ParallelIncrement
 #lang-pulse
 open Pulse.Lib.Pervasives
+open Pulse.Lib.Par
 module L = Pulse.Lib.SpinLock
 module GR = Pulse.Lib.GhostReference
 
 //par$
 fn par (#pf #pg #qf #qg:_)
+       {| is_send pf, is_send pg, is_send qf, is_send qg |}
        (f: unit -> stt unit pf (fun _ -> qf))
        (g: unit -> stt unit pg (fun _ -> qg))
 requires pf ** pg
 ensures qf ** qg
 {
-  parallel 
-  requires pf and pg
-  ensures qf and qg
-  { f () }
-  { g () };
-  ()
+  par f g
 }
 //end par$
 
@@ -48,7 +45,7 @@ ensures pts_to x ('i + 1) ** pts_to y ('j + 1)
     let v = !x;
     x := v + 1;
   };
-  par (fun _ -> incr x) (fun _ -> incr y);
+  par (fun _ -> incr x #'i) (fun _ -> incr y #'j);
 }
 
 
@@ -74,7 +71,7 @@ fn attempt (x:ref int)
 requires pts_to x 'i
 ensures exists* v. pts_to x v
 {
-  let l = L.new_lock (exists* v. pts_to x v);
+  let l = L.new_lock (exists* (v: int). pts_to x v);
   fn incr ()
   requires L.lock_alive l #0.5R (exists* v. pts_to x v)
   ensures L.lock_alive l #0.5R (exists* v. pts_to x v)
@@ -166,8 +163,8 @@ ensures  pts_to x ('i + 2)
   fold (lock_inv x 'i left right);
   let lock = L.new_lock (lock_inv x 'i left right);
   L.share lock;
-  par (fun _ -> incr_left x lock)
-      (fun _ -> incr_right x lock);
+  par (fun _ -> incr_left x #0.5R #left #right #'i lock #0)
+      (fun _ -> incr_right x #0.5R #left #right #'i lock #0);
   L.gather lock;
   L.acquire lock;
   L.free lock;
@@ -255,8 +252,8 @@ ensures pts_to x ('i + 2)
       }
     };
     L.share lock;
-    par (fun _ -> incr x lock (step left true))
-        (fun _ -> incr x lock (step right false));
+    par (fun _ -> incr x #0.5R lock (step left true) #0)
+        (fun _ -> incr x #0.5R lock (step right false) #0);
     L.gather lock;
     L.acquire lock;
     L.free lock;
@@ -318,13 +315,15 @@ ensures inv (C.iname_of c) (C.cinv_vp c (exists* v. pts_to x v ** refine v)) ** 
   returns v:int
   ensures inv (C.iname_of c) (C.cinv_vp c (exists* v. pts_to x v ** refine v)) ** C.active c p
   {
-    with_invariants (C.iname_of c)
-    {
-        later_elim _;
+    with_invariants_a int emp_inames (C.iname_of c) (C.cinv_vp c (exists* v. pts_to x v ** refine v))
+      (C.active c p) (fun _ -> C.active c p) fn _ {
+    // with_invariants (C.iname_of c) (C)
+    // {
+    //     later_elim _;
         C.unpack_cinv_vp #p c;
         let v = atomic_read x;
         C.pack_cinv_vp #(exists* v. pts_to x v ** refine v) c;
-        later_intro (C.cinv_vp c (exists* v. pts_to x v ** refine v));
+        // later_intro (C.cinv_vp c (exists* v. pts_to x v ** refine v));
         v
     }
   };
@@ -342,16 +341,15 @@ ensures inv (C.iname_of c) (C.cinv_vp c (exists* v. pts_to x v ** refine v)) ** 
     rewrite each (!continue) as true; // FIXME: rewrites_to goes in the wrong direction
     later_credit_buy 1;
     let v = read ();
-    later_credit_buy 1;
-    let next = 
-      with_invariants (C.iname_of c)
-      returns b1:bool
-      ensures later (C.cinv_vp c (exists* v. pts_to x v ** refine v))
-          ** cond b1 (aspec 'i) (aspec ('i + 1))
+    let next =
+      with_invariants bool emp_inames
+        (C.iname_of c) (C.cinv_vp c (exists* v. pts_to x v ** refine v))
+        (C.active c p ** pts_to continue true **
+          cond (!continue) (aspec 'i) (aspec ('i + 1)))
+        (fun b1 -> cond b1 (aspec 'i) (aspec ('i + 1))
           ** pts_to continue true
-          ** C.active c p
-      {
-        later_elim _;
+          ** C.active c p)
+      fn _ {
         C.unpack_cinv_vp c;
         unfold cond;
         with vv. assert x |-> vv;
@@ -362,7 +360,6 @@ ensures inv (C.iname_of c) (C.cinv_vp c (exists* v. pts_to x v ** refine v)) ** 
           f vv 'i;
           C.pack_cinv_vp #(exists* v. pts_to x v ** refine v) c;
           fold (cond false (aspec 'i) (aspec ('i + 1)));
-          later_intro (C.cinv_vp c (exists* v. pts_to x v ** refine v));
           false
         }
         else
@@ -370,7 +367,6 @@ ensures inv (C.iname_of c) (C.cinv_vp c (exists* v. pts_to x v ** refine v)) ** 
           unfold cond;
           C.pack_cinv_vp #(exists* v. pts_to x v ** refine v) c;
           fold (cond true (aspec 'i) (aspec ('i + 1)));
-          later_intro (C.cinv_vp c (exists* v. pts_to x v ** refine v));
           true
         }
       };
@@ -430,8 +426,8 @@ ensures pts_to x ('i + 2)
     C.share c;
     with pred. assert (inv (C.iname_of c) (C.cinv_vp c (exists* v. pts_to x v ** pred v)));
     dup_inv (C.iname_of c) (C.cinv_vp c (exists* v. pts_to x v ** pred v));
-    par (fun _ -> incr_atomic x c (step left true))
-        (fun _ -> incr_atomic x c (step right false));
+    par (fun _ -> incr_atomic x #0.5R c (step left true) #0)
+        (fun _ -> incr_atomic x #0.5R c (step right false) #0);
     
     C.gather c;
     later_credit_buy 1;
@@ -626,17 +622,16 @@ fn incr_pcm (r:ref int) (#n:erased int)
   
   L.share l;
 
-  parallel
-    requires L.lock_alive l #0.5R (lock_inv_pcm r ghost_r) **
-             t1_perm ghost_r 0 true and
-             L.lock_alive l #0.5R (lock_inv_pcm r ghost_r) **
-             t1_perm ghost_r 0 false
-    ensures L.lock_alive l #0.5R (lock_inv_pcm r ghost_r) **
-            t1_perm ghost_r (add_one 0) true and
-            L.lock_alive l #0.5R (lock_inv_pcm r ghost_r) **
-            t1_perm ghost_r (add_one 0) false
-    { incr_pcm_t r ghost_r l true }
-    { incr_pcm_t r ghost_r l false };
+  par #(requires L.lock_alive l #0.5R (lock_inv_pcm r ghost_r) **
+             t1_perm ghost_r 0 true)
+      #(requires L.lock_alive l #0.5R (lock_inv_pcm r ghost_r) **
+             t1_perm ghost_r 0 false)
+      #(ensures L.lock_alive l #0.5R (lock_inv_pcm r ghost_r) **
+            t1_perm ghost_r (add_one 0) true)
+      #(ensures L.lock_alive l #0.5R (lock_inv_pcm r ghost_r) **
+            t1_perm ghost_r (add_one 0) false)
+    fn _ { incr_pcm_t r ghost_r l true }
+    fn _ { incr_pcm_t r ghost_r l false };
 
   L.gather l;
   L.acquire l;
@@ -731,19 +726,17 @@ fn incr_pcm_abstract (r:ref int)
   let l = L.new_lock (exists* v. pts_to r v ** lock_inv_ghost ghost_r v);
   L.share l;
 
-  parallel
-    requires L.lock_alive l #0.5R (exists* v. pts_to r v ** lock_inv_ghost ghost_r v) **
-             GPR.pts_to ghost_r (half 0, None) and
-             L.lock_alive l #0.5R (exists* v. pts_to r v ** lock_inv_ghost ghost_r v) **
-             GPR.pts_to ghost_r (None, half 0)
-    
-    ensures L.lock_alive l #0.5R (exists* v. pts_to r v ** lock_inv_ghost ghost_r v) **
-            GPR.pts_to ghost_r (half (add_one 0), None) and
-            L.lock_alive l #0.5R (exists* v. pts_to r v ** lock_inv_ghost ghost_r v) **
-            GPR.pts_to ghost_r (None, half (add_one 0))
-
-    { incr_pcm_t_abstract r l t1 }
-    { incr_pcm_t_abstract r l t2 };
+  par
+    #(requires L.lock_alive l #0.5R (exists* v. pts_to r v ** lock_inv_ghost ghost_r v) **
+             GPR.pts_to ghost_r (half 0, None))
+    #(requires L.lock_alive l #0.5R (exists* v. pts_to r v ** lock_inv_ghost ghost_r v) **
+             GPR.pts_to ghost_r (None, half 0))
+    #(ensures L.lock_alive l #0.5R (exists* v. pts_to r v ** lock_inv_ghost ghost_r v) **
+            GPR.pts_to ghost_r (half (add_one 0), None))
+    #(ensures L.lock_alive l #0.5R (exists* v. pts_to r v ** lock_inv_ghost ghost_r v) **
+            GPR.pts_to ghost_r (None, half (add_one 0)))
+    fn _ { incr_pcm_t_abstract r l t1 }
+    fn _ { incr_pcm_t_abstract r l t2 };
 
   L.gather l;
   L.acquire l;

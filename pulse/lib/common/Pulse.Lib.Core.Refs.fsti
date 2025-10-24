@@ -56,6 +56,8 @@ val timeless_pcm_pts_to
 : Lemma (timeless (pcm_pts_to r v))
         [SMTPat (timeless (pcm_pts_to r v))]
 
+val on_pcm_pts_to_eq l #a #p r v : squash (on l (pcm_pts_to #a #p r v) == pcm_pts_to r v)
+
 let pcm_ref_null
     (#a:Type)
     (p:FStar.PCM.pcm a)
@@ -158,6 +160,8 @@ val timeless_ghost_pcm_pts_to
     (v:a)
 : Lemma (timeless (ghost_pcm_pts_to r v))
         [SMTPat (timeless (ghost_pcm_pts_to r v))]
+
+val on_ghost_pcm_pts_to_eq l #a #p r v : squash (on l (ghost_pcm_pts_to #a #p r v) == ghost_pcm_pts_to r v)
 
 val ghost_pts_to_not_null
     (#a:Type)

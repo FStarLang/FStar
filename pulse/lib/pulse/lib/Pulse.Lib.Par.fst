@@ -19,19 +19,18 @@ open Pulse.Lib.ConditionVar
 
 #lang-pulse
 
-fn par_stt' #preL #postL #preR #postR
+fn par (#preL: slprop) #postL #preR #postR
+  {| is_send preL, is_send postL, is_send preR, is_send postR |}
   (f:unit -> stt unit preL (fun _ -> postL))
   (g:unit -> stt unit preR (fun _ -> postR))
   requires preL ** preR
   ensures postL ** postR
 {
-  let c = create postL;
-  fork #(preL ** send c postL) fn _ {
+  let c = create postL #_;
+  fork' (preL ** send c postL) fn _ {
     f ();
     signal c #postL;
   };
   g ();
   wait c #postL;
 }
-
-let par_stt f g = par_stt' (fun _ -> f) (fun _ -> g)

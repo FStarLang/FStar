@@ -16,7 +16,6 @@
 
 module Pulse.Lib.Array.Core
 #lang-pulse
-open FStar.Tactics.V2
 open Pulse.Lib.Core
 open Pulse.Main
 open Pulse.Class.PtsTo
@@ -24,6 +23,10 @@ open PulseCore.FractionalPermission
 open FStar.Ghost
 module SZ = FStar.SizeT
 open Pulse.Lib.SmallType
+open Pulse.Lib.Send
+
+let visibility = 
+  vis:(loc_id -> loc_id) { forall l. vis (process_of l) == vis l }
 
 [@@erasable] val base_t : Type0
 
@@ -44,6 +47,18 @@ val null #a : array a
 val is_null #a (r: array a) : b:bool {b <==> r == null #a}
 
 val pts_to_mask (#t: Type u#a) ([@@@mkey] a: array t) (#[full_default()] f: perm) (v: erased (Seq.seq t)) (mask: nat -> prop) : slprop
+
+val loc_id_of_array #a (x:array a) : loc_id
+
+val visibility_of_array #a (x:array a) : visibility
+
+let array_visible_at #a (x:array a) (l:loc_id) =
+  visibility_of_array x l ==
+  visibility_of_array x (loc_id_of_array x)
+
+val is_send_across_pts_to_mask #a x f s mask : is_send_across (visibility_of_array x) (pts_to_mask #a x #f s mask)
+
+instance val is_send_pts_to_mask #a r #p n m : is_send (pts_to_mask #a r #p n m)
 
 val pts_to_mask_timeless (#a:Type u#a) (x:array a) (p:perm) (s:Seq.seq a) mask
   : Lemma (timeless (pts_to_mask x #p s mask))
@@ -83,11 +98,27 @@ ghost fn mask_ext u#a (#t: Type u#a) (arr: array t) #f #v #mask v' (mask': nat -
     (forall (i: nat). mask i /\ i < Seq.length v ==> Seq.index v i == Seq.index v' i))
   ensures pts_to_mask arr #f v' mask'
 
+[@@deprecated "Array.mask_alloc_with_vis is unsound; only use for model implementations"]
+fn mask_alloc_with_vis u#a (#elt: Type u#a) {| small_type u#a |} 
+      (x: elt) (n: SZ.t) (#l:loc_id)
+      (vis:visibility)
+  preserves loc l
+  returns a: array elt
+  ensures pts_to_mask a (Seq.create (SZ.v n) x) (fun _ -> True)
+  ensures pure (
+    length a == SZ.v n /\
+    is_full_array a /\
+    visibility_of_array a == vis /\
+    loc_id_of_array a == l)
+
+[@@deprecated "Array.mask_alloc is unsound; only use for model implementations"]
+noextract inline_for_extraction
 fn mask_alloc u#a (#elt: Type u#a) {| small_type u#a |} (x: elt) (n: SZ.t)
   returns a: array elt
   ensures pts_to_mask a (Seq.create (SZ.v n) x) (fun _ -> True)
-  ensures pure (length a == SZ.v n /\ is_full_array a)
+  ensures pure (length a == SZ.v n /\ is_full_array a /\ visibility_of_array a == process_of)
 
+[@@deprecated "Array.mask_free is unsound; only use for model implementations"]
 fn mask_free u#a (#elt: Type u#a) (a: array elt) (#s: Ghost.erased (Seq.seq elt)) #mask
   requires pts_to_mask a s mask
   requires pure (forall i. mask i)
