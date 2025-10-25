@@ -591,7 +591,7 @@ fun d cb ->
 #pop-options
 
 #restart-solver
-#push-options "--z3rlimit_factor 4 --fuel 2 --ifuel 1 --query_stats"
+#push-options "--z3rlimit_factor 4 --fuel 2 --ifuel 1"
 let st_typing_freevars_elimexists : st_typing_freevars_case T_ElimExists? =
 fun #g #t #c d cb ->
   match d with

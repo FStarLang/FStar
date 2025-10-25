@@ -46,7 +46,7 @@ let with_local_pre_typing (#g:env) (#pre:term) (pre_typing:tot_typing g pre tm_s
                tm_slprop
   = admit()
 
-#push-options "--z3rlimit_factor 10 --fuel 0 --ifuel 0 --query_stats"
+#push-options "--z3rlimit_factor 10 --fuel 0 --ifuel 0"
 
 let head_range (t:st_term {Tm_WithLocal? t.term}) : range =
   let Tm_WithLocal { initializer } = t.term in
