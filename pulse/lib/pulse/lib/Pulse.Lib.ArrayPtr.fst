@@ -17,6 +17,7 @@
 module Pulse.Lib.ArrayPtr
 #lang-pulse
 
+let base_t a = A.array a
 noeq
 type ptr t = {
     base: A.array t;
