@@ -31,7 +31,7 @@ module Metatheory = Pulse.Typing.Metatheory
 module Abs = Pulse.Checker.Abs
 module RU = Pulse.Reflection.Util
 
-#push-options "--z3rlimit_factor 8 --split_queries no --query_stats --fuel 0 --ifuel 1"
+#push-options "--z3rlimit_factor 8 --split_queries no --fuel 0 --ifuel 1"
 let check_bind_fn
   (g:env)
   (ctxt:slprop)

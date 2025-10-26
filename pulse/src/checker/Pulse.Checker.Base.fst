@@ -613,7 +613,6 @@ let return_in_ctxt (g:env) (y:var) (y_ppname:ppname) (u:universe) (ty:term) (ctx
 
 #push-options "--z3rlimit_factor 4 --ifuel 1 --split_queries always"
 #restart-solver
-#show-options
 let match_comp_res_with_post_hint (#g:env) (#t:st_term) (#c:comp_st)
   (d:st_typing g t c)
   (post_hint:post_hint_opt g)

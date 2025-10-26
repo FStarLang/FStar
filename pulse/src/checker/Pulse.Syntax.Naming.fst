@@ -133,7 +133,8 @@ let close_open_inverse_ascription' (t:comp_ascription)
      | None -> ()
      | Some c -> close_open_inverse_comp' c x i)
 
-#push-options "--z3rlimit_factor 12 --fuel 2 --ifuel 2 --split_queries no"
+#push-options "--z3rlimit_factor 16 --fuel 2 --ifuel 2 --split_queries no"
+#restart-solver
 let rec close_open_inverse_st'  (t:st_term) 
                                 (x:var { ~(x `Set.mem` freevars_st t) } )
                                 (i:index)

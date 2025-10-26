@@ -236,7 +236,7 @@ let withinv_post (#g:env) (#p:term) (#i:term) (#post:term)
   let (| post, _, post_typing |) = normalize_slprop_welltyped g post post_typing in
   __withinv_post #g #p #i #post p_typing i_typing post_typing
 
-#push-options "--fuel 0 --ifuel 0 --query_stats" 
+#push-options "--fuel 0 --ifuel 0" 
 #restart-solver
 let mk_post_hint g returns_inv i p (ph:post_hint_opt g) rng
 : T.Tac (q:post_hint_for_env g { PostHint? ph ==> q == PostHint?.v ph })
