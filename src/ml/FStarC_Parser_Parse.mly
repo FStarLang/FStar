@@ -1418,7 +1418,7 @@ recordExp:
 
 simpleDef:
   | e=separated_pair(qlidentOrOperator, EQUALS, noSeqTerm) { e }
-  | lid=qlidentOrOperator { lid, mk_term (Name (lid_of_ids [ ident_of_lid lid ])) (rr $loc(lid)) Un }
+  | lid=qlidentOrOperator { lid, mk_term (Var (lid_of_ids [ ident_of_lid lid ])) (rr $loc(lid)) Un }
 
 appTermArgs:
   | h=maybeHash a=onlyTrailingTerm { [h, a] }
