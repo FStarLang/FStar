@@ -1,4 +1,4 @@
-* Info at Bug45.fst(54,0-68,1):
+* Info at Bug45.fst(61,10-66,5):
   - Expected failure:
   - Tactic failed
   - Internal error: unexpected unresolved (universe) uvar in deep_compress: 75

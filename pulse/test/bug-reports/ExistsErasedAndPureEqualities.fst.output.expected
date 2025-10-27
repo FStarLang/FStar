@@ -9,7 +9,7 @@
       v#267 : FStar.Ghost.erased Prims.int,
       x#262 : Pulse.Lib.Reference.ref Prims.int
 
-* Info at ExistsErasedAndPureEqualities.fst(67,0-76,1):
+* Info at ExistsErasedAndPureEqualities.fst(71,4-73,12):
   - Expected failure:
   - Ill-typed term: pure (v == (*?u106*)_)
   - Expected a term of type slprop

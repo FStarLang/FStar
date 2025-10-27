@@ -1,4 +1,4 @@
-* Info at Bug.SpinLock.fst(39,0-46,1):
+* Info at Bug.SpinLock.fst(45,2-45,4):
   - Expected failure:
   - Tactic failed
   - Cannot prove:

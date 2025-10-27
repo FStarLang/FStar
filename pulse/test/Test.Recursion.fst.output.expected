@@ -1,4 +1,4 @@
-* Info at Test.Recursion.fst(92,12-92,14):
+* Info at Test.Recursion.fst(94,2-94,20):
   - Expected failure:
   - Ill-typed term: test_ghost_loop ()
   - Expected a term of type
@@ -10,7 +10,7 @@
   - The SMT solver could not prove the query. Use --query_stats for more
     details.
 
-* Info at Test.Recursion.fst(138,12-138,13):
+* Info at Test.Recursion.fst(141,4-141,22):
   - Expected failure:
   - Ill-typed term: test5' (z - 1) (y - 1)
   - Expected a term of type

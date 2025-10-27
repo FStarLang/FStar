@@ -1,4 +1,4 @@
-* Info at ErrCantFindWitness.fst(6,0-8,2):
+* Info at ErrCantFindWitness.fst(8,1-8,1):
   - Expected failure:
   - Cannot find witness for (exists* (x:Prims.nat). emp)
   - Ill-typed term: (*?u56*)_

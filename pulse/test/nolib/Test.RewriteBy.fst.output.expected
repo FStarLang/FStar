@@ -1,4 +1,4 @@
-* Info at Test.RewriteBy.fst(28,0-38,1):
+* Info at Test.RewriteBy.fst(31,1-37,8):
   - Expected failure:
   - rewrite: could not prove equality of
   - Test.RewriteBy.p

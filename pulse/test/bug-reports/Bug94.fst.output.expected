@@ -10,12 +10,12 @@
 * Info at Bug94.fst(20,16-20,17):
   - Expected failure:
   - Expected expression of type Prims.nat got expression y of type Prims.string
+  - See also Bug94.fst(19,1-21,4)
 
-* Info at Bug94.fst(34,18-34,24):
+* Info at Bug94.fst(36,18-36,27):
   - Expected failure:
   - Ill-typed term: hundred 0
   - Assertion failed
   - The SMT solver could not prove the query. Use --query_stats for more
     details.
-  - See also Bug94.fst(26,19-26,32)
 
