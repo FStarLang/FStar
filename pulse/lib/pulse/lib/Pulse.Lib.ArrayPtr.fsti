@@ -20,6 +20,7 @@ open FStar.Tactics.V2
 open Pulse.Lib.Pervasives
 module SZ = FStar.SizeT
 module A = Pulse.Lib.Array
+module R = Pulse.Lib.Reference
 
 (*
 The `ArrayPtr.ptr t` type in this module cannot be extracted to Rust
@@ -94,6 +95,19 @@ val from_array (#t: Type) (a: A.array t) (#p: perm) (#v: Ghost.erased (Seq.seq t
 val to_array (#t: Type) (s: ptr t) (a: array t) (#p: perm) (#v: Seq.seq t) : stt_ghost unit emp_inames
     (pts_to s #p v ** is_from_array s (Seq.length v) a)
     (fun _ -> A.pts_to a #p v)
+
+val is_from_ref (#t: Type) ([@@@mkey]s: ptr t) (a: ref t) : slprop
+
+val from_ref (#t: Type) (a: ref t) (#p: perm) (#v: Ghost.erased (t)) : stt (ptr t)
+    (R.pts_to a #p v)
+    (fun s -> pts_to s #p (Seq.create 1 (Ghost.reveal v)) ** is_from_ref s a)
+
+inline_for_extraction noextract [@@noextract_to "krml"]
+let to_ref_t (t: Type) = (s: ptr t) -> (a: ref t) -> (#p: perm) -> (#v: Seq.seq t) -> stt_ghost unit emp_inames
+    (pts_to s #p v ** is_from_ref s a ** pure (Seq.length v == 1))
+    (fun _ -> exists* v' . R.pts_to a #p v' ** pure (Seq.length v == 1 /\ v' == Seq.index v 0))
+
+val to_ref (#t: Type) : to_ref_t t
 
 (* Written x.(i) *)
 fn op_Array_Access
