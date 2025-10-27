@@ -31,11 +31,17 @@ without modifying the pointer.
 Use `Pulse.Lib.Slice.slice` instead when possible.
 *)
 
-val base_t (t: Type0) : Tot Type0
+val base_t ([@@@strictly_positive] t: Type0) : Tot Type0
 val ptr ([@@@strictly_positive] elt: Type0) : Type0
 
 val base #t (p: ptr t) : GTot (base_t t)
 val offset #t (p: ptr t) : GTot nat
+
+val null #t : ptr t
+
+val g_is_null #t (p: ptr t) : Ghost bool
+  (requires True)
+  (ensures fun res -> res == true <==> p == null)
 
 val pts_to
   (#t:Type)
@@ -43,6 +49,32 @@ val pts_to
   (#[exact (`1.0R)] p:perm)
   (v : Seq.seq t)
   : slprop
+
+val pts_to_not_null
+  (#t:Type)
+  (s:ptr t)
+  (#p:perm)
+  (#v : Seq.seq t)
+: stt_ghost unit emp_inames
+  (pts_to s #p v)
+  (fun _ -> pts_to s #p v ** pure (not (g_is_null s)))
+
+let pts_to_or_null
+  (#t: Type)
+  ([@@@mkey]s:ptr t)
+  (#[exact (`1.0R)] p:perm)
+  (v : Seq.seq t)
+: slprop
+= if g_is_null s then emp else pts_to s #p v
+
+val is_null
+  (#t:Type)
+  (s:ptr t)
+  (#p:perm)
+  (#v : Ghost.erased (Seq.seq t))
+: stt bool
+  (pts_to_or_null s #p v)
+  (fun res -> pts_to_or_null s #p v ** pure (res == g_is_null s))
 
 [@@pulse_unfold]
 instance has_pts_to_array_ptr (t: Type) : has_pts_to (ptr t) (Seq.seq t) = {

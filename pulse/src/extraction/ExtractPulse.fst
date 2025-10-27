@@ -73,7 +73,9 @@ let pulse_translate_expr : translate_expr_t = fun env e ->
 
   | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, [ ty ] )}, [ _ ])
   | MLE_TApp({ expr = MLE_Name p }, [ ty ] )
-    when string_of_mlpath p = "Pulse.Lib.HigherReference.null" ->
+    when
+      string_of_mlpath p = "Pulse.Lib.ArrayPtr.null" ||
+      string_of_mlpath p = "Pulse.Lib.HigherReference.null" ->
     EBufNull (translate_type_without_decay env ty)
 
   | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, [ty]) } , [ r ])
@@ -92,6 +94,10 @@ let pulse_translate_expr : translate_expr_t = fun env e ->
 
   | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, [ty]) } , [ r ])
     when string_of_mlpath p = "Pulse.Lib.Box.is_null" ->
+    generate_is_null (translate_type_without_decay env ty) (cb r)
+
+  | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, [ty]) } , [ r; _p; _v; ])
+    when string_of_mlpath p = "Pulse.Lib.ArrayPtr.is_null" ->
     generate_is_null (translate_type_without_decay env ty) (cb r)
 
   | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ x; _w ])
