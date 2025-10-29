@@ -87,7 +87,7 @@ ensures
     let Array a = s.base;
     rewrite pts_to s #p v
       as A.pts_to_range a (SZ.v s.offset) (SZ.v s.offset + Seq.length v) #p v;
-    A.pts_to_range_prop _;
+    A.pts_to_range_prop a;
     rewrite A.pts_to_range a (SZ.v s.offset) (SZ.v s.offset + Seq.length v) #p v
       as pts_to s #p v;
   } else if (s.offset = 0sz && Seq.length v = 1) {
