@@ -625,7 +625,7 @@ let prove_atom (g: env) (ctxt: list slprop_view) (allow_amb: bool) (goal: slprop
         with_uf_transaction (fun _ ->
           match mkeys, mkeys' with
           | Some mkeys, Some mkeys' ->
-            T.zip mkeys mkeys' |> forallb (fun (a, b) -> RU.teq_nosmt_force (elab_env g) a b)
+            T.zip mkeys mkeys' |> forallb (fun (a, b) -> RU.teq_nosmt_force_phase1 (elab_env g) a b)
           | _, _ ->
             teq_nosmt_force_args (elab_env g) ctxt goal true
         )
