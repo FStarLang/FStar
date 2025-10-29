@@ -1,5 +1,5 @@
 (*
-   Copyright 2023 Microsoft Research
+   Copyright 2025 Microsoft Research
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -19,93 +19,97 @@ module Pulse.Lib.GhostReference
 open FStar.Tactics
 open Pulse.Lib.Core
 open Pulse.Main
-open Pulse.Class.PtsTo
 open PulseCore.FractionalPermission
 open FStar.Ghost
+open Pulse.Class.PtsTo
+open Pulse.Lib.SmallType
 
 [@@erasable]
-val ref ([@@@unused] a:Type u#0) : Type u#0
+val ref ([@@@unused] a:Type u#a) : Type u#0
 
 val null #a : ref a
+      
+inline_for_extraction
+instance non_informative_gref (a:Type u#a)
+  : NonInformative.non_informative (ref a) =
+  { reveal = ((fun x -> x) <: NonInformative.revealer (ref a)) }
 
-instance val non_informative_gref (a:Type0)
-  : NonInformative.non_informative (ref a)
-
-val pts_to (#a:Type)
-           ([@@@mkey] r:ref a)
-           (#[exact (`1.0R)] p:perm)
-           (n:a)
+val pts_to
+  (#a:Type u#a)
+  ([@@@mkey] r:ref a)
+  (#[exact (`1.0R)] p:perm)
+  (n:a)
 : slprop
 
 [@@pulse_unfold]
-instance has_pts_to_ref (a:Type) : has_pts_to (ref a) a = {
+instance has_pts_to_ref (a:Type u#a) : has_pts_to (ref a) a = {
   pts_to = (fun r #f v -> pts_to r #f v);
 }
 
-val pts_to_timeless (#a:Type) (r:ref a) (p:perm) (x:a)
-  : Lemma (timeless (pts_to r #p x))
-          [SMTPat (timeless (pts_to r #p x))]
+val pts_to_timeless (#a:Type u#a) (r:ref a) (p:perm) (n:a)
+  : Lemma (timeless (pts_to r #p n)) [SMTPat (timeless (pts_to r #p n))]
 
 ghost
-fn alloc (#a:Type) (x:a)
+fn alloc u#a (#a:Type u#a) {| small_type u#a |} (x:a)
   returns  r : ref a
   ensures  r |-> x
   
 ghost
-fn read (#a:Type) (r:ref a) (#n:erased a) (#p:perm)
+fn read u#a (#a:Type u#a) (r:ref a) (#n:erased a) (#p:perm)
   preserves r |-> Frac p n
   returns  x : erased a
   ensures  rewrites_to x n
 
-(* alias for  read *)
+(* alias for read *)
 ghost
-fn ( ! ) (#a:Type) (r:ref a) (#n:erased a) (#p:perm)
-  preserves r |-> Frac p n
+fn ( ! ) u#a (#a:Type u#a) (r:ref a) (#n:erased a) (#p:perm)
+  preserves pts_to r #p n
   returns  x : erased a
   ensures  rewrites_to x n
 
 ghost
-fn write (#a:Type) (r:ref a) (x:erased a) (#n:erased a)
+fn write u#a (#a:Type u#a) (r:ref a) (x:erased a) (#n:erased a)
   requires r |-> n
   ensures  r |-> x
 
 (* alias for write *)
 ghost
-fn ( := ) (#a:Type) (r:ref a) (x:erased a) (#n:erased a)
+fn ( := ) u#a (#a:Type u#a) (r:ref a) (x:erased a) (#n:erased a)
   requires r |-> n
   ensures  r |-> x
 
 ghost
-fn free (#a:Type) (r:ref a) (#n:erased a)
-  requires r |-> n
+fn free u#a (#a:Type u#a) (r:ref a) (#n:erased a)
+  requires pts_to r n
   ensures  emp
 
 ghost
-fn share (#a:Type) (r:ref a) (#v:erased a) (#p:perm)
+fn share u#a (#a:Type u#a) (r:ref a) (#v:erased a) (#p:perm)
   requires r |-> Frac p v
-  ensures (r |-> Frac (p /. 2.0R) v) ** (r |-> Frac (p /. 2.0R) v)
+  ensures  (r |-> Frac (p /. 2.0R) v) **
+           (r |-> Frac (p /. 2.0R) v)
 
 [@@allow_ambiguous]
 ghost
-fn gather (#a:Type) (r:ref a) (#x0 #x1:erased a) (#p0 #p1:perm)
+fn gather u#a (#a:Type u#a) (r:ref a) (#x0 #x1:erased a) (#p0 #p1:perm)
   requires (r |-> Frac p0 x0) ** (r |-> Frac p1 x1)
   ensures  (r |-> Frac (p0 +. p1) x0) ** pure (x0 == x1)
 
 [@@allow_ambiguous]
 ghost
-fn pts_to_injective_eq (#a:_)
+fn pts_to_injective_eq  u#a (#a:Type u#a)
                         (#p #q:_)
                         (#v0 #v1:a)
                         (r:ref a)
-  preserves (r |-> Frac p v0) ** (r |-> Frac q v1)
-  ensures  pure (v0 == v1)
+  requires (r |-> Frac p v0) ** (r |-> Frac q v1)
+  ensures  (r |-> Frac p v0) ** (r |-> Frac q v1) ** pure (v0 == v1)
 
 ghost
-fn pts_to_perm_bound (#a:_) (#p:_) (r:ref a) (#v:a)
-  preserves r |-> Frac p v
-  ensures   pure (p <=. 1.0R)
+fn pts_to_perm_bound u#a (#a:Type u#a) (#p:_) (r:ref a) (#v:a)
+  requires r |-> Frac p v
+  ensures  (r |-> Frac p v) ** pure (p <=. 1.0R)
 
 ghost
-fn pts_to_not_null #a (#p:_) (r:ref a) (#v:a)
+fn pts_to_not_null u#a (#a:Type u#a) (#p:_) (r:ref a) (#v:a)
   preserves r |-> Frac p v
   ensures  pure (r =!= null)

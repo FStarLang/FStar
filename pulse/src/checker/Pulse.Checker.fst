@@ -232,7 +232,7 @@ let maybe_elaborate_stateful_head (g:env) (t:st_term)
 #pop-options
 #restart-solver
 
-#push-options "--fuel 0 --ifuel 1 --query_stats --z3rlimit 200"
+#push-options "--fuel 0 --ifuel 1 --z3rlimit 200"
 let rec check
   (g0:env)
   (pre0:term)

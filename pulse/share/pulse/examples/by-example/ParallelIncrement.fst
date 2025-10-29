@@ -179,7 +179,7 @@ val atomic_increment (r:ref int) (#i:erased int)
      
 
 let test (l:iname) = assert (not (mem_inv emp_inames l))
-let pts_to_refine #a (x:ref a) (p:a -> slprop) = exists* v. pts_to x v ** p v 
+let pts_to_refine (#a: Type0) (x:ref a) (p:a -> slprop) = exists* v. pts_to x v ** p v 
 
 fn atomic_increment_f2
         (x: ref int)

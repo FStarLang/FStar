@@ -93,7 +93,7 @@ ensures pts_to x #p 'vx ** pts_to y #q 'vy
 
 
 //nullable_ref$
-let nullable_ref a = option (ref a)
+let nullable_ref (a: Type0) = option (ref a)
 
 let pts_to_or_null #a
         (x:nullable_ref a) 

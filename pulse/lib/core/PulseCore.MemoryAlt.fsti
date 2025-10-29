@@ -18,7 +18,6 @@ module PulseCore.MemoryAlt
 open FStar.Ghost
 open FStar.PCM
 module PST = PulseCore.HoareStateMonad
-module U = Pulse.Lib.Raise
 module CM = FStar.Algebra.CommMonoid
 module B = PulseCore.BaseHeapSig
 
@@ -61,7 +60,7 @@ val slprop_equiv_refl (p:slprop)
 (** A memory maps a [ref]erence to its associated value *)
 val core_ref : Type u#0
 
-let ref (a:Type u#a) (pcm:pcm a) : Type u#0 = core_ref
+let ref (a:Type u#(a+3)) (pcm:pcm a) : Type u#0 = core_ref
 
 (** [null] is a specific reference, that is not associated to any value
 *)
@@ -69,13 +68,13 @@ val core_ref_null : core_ref
 
 (** [null] is a specific reference, that is not associated to any value
 *)
-let null (#a:Type u#a) (#pcm:pcm a) : ref a pcm = core_ref_null
+let null (#a:Type) (#pcm:pcm a) : ref a pcm = core_ref_null
 
 val core_ref_is_null (r:core_ref) : b:bool { b <==> r == core_ref_null }
 
 (** Checking whether [r] is the null pointer is decidable through [is_null]
 *)
-let is_null (#a:Type u#a) (#pcm:pcm a) (r:ref a pcm) : (b:bool{b <==> r == null}) = core_ref_is_null r
+let is_null (#a:Type) (#pcm:pcm a) (r:ref a pcm) : (b:bool{b <==> r == null}) = core_ref_is_null r
 
 (** All the standard connectives of separation logic, based on [Steel.Heap] *)
 let emp : slprop u#a = B.emp
@@ -157,11 +156,11 @@ val lift_ghost
   : pst_ghost_action_except a p q
 
 (* Concrete references to "small" types *)
-val pts_to (#a:Type u#(a+1)) (#pcm:_) (r:ref a pcm) (v:a) : slprop u#a
+val pts_to (#a:Type u#(a+3)) (#pcm:_) (r:ref a pcm) (v:a) : slprop u#a
 
 (** Splitting a permission on a composite resource into two separate permissions *)
 val split_action
-  (#a:Type u#(a + 1))
+  (#a:Type)
   (#pcm:pcm a)
   (r:ref a pcm)
   (v0:FStar.Ghost.erased a)
@@ -172,7 +171,7 @@ val split_action
 
 (** Combining separate permissions into a single composite permission *)
 val gather_action
-  (#a:Type u#(a + 1))
+  (#a:Type)
   (#pcm:pcm a)
   (r:ref a pcm)
   (v0:FStar.Ghost.erased a)
@@ -181,12 +180,12 @@ val gather_action
     (pts_to r v0 `star` pts_to r v1)
     (fun _ -> pts_to r (op pcm v0 v1))
 
-val alloc_action (#a:Type u#(a + 1)) (#pcm:pcm a) (x:a{pcm.refine x})
+val alloc_action (#a:Type) (#pcm:pcm a) (x:a{pcm.refine x})
 : pst_action_except (ref a pcm)
     emp
     (fun r -> pts_to r x)
 
-val select_refine (#a:Type u#(a + 1)) (#p:pcm a)
+val select_refine (#a:Type) (#p:pcm a)
                   (r:ref a p)
                   (x:erased a)
                   (f:(v:a{compatible p x v}
@@ -196,14 +195,14 @@ val select_refine (#a:Type u#(a + 1)) (#p:pcm a)
     (pts_to r x)
     (fun v -> pts_to r (f v))
 
-val upd_gen (#a:Type u#(a + 1)) (#p:pcm a) (r:ref a p) (x y:Ghost.erased a)
+val upd_gen (#a:Type) (#p:pcm a) (r:ref a p) (x y:Ghost.erased a)
             (f:FStar.PCM.frame_preserving_upd p x y)
 : pst_action_except unit
     (pts_to r x)
     (fun _ -> pts_to r y)
 
 val pts_to_not_null_action 
-      (#a:Type u#(a + 1)) (#pcm:pcm a)
+      (#a:Type) (#pcm:pcm a)
       (r:erased (ref a pcm))
       (v:Ghost.erased a)
 : pst_ghost_action_except (squash (not (is_null r)))
@@ -214,11 +213,11 @@ val pts_to_not_null_action
 [@@erasable]
 val core_ghost_ref : Type0
 val core_ghost_ref_null : core_ghost_ref
-let ghost_ref (#a:Type u#a) (p:pcm a) : Type0 = core_ghost_ref
-val ghost_pts_to (#a:Type u#(a+1)) (#p:pcm a) (r:ghost_ref p) (v:a) : slprop u#a
+let ghost_ref (#a:Type u#(a+3)) (p:pcm a) : Type0 = core_ghost_ref
+val ghost_pts_to (#a:Type u#(a+3)) (#p:pcm a) (r:ghost_ref p) (v:a) : slprop u#a
 
 val ghost_alloc
-    (#a:Type u#(a + 1))
+    (#a:Type)
     (#pcm:pcm a)
     (x:erased a{pcm.refine x})
 : pst_ghost_action_except
@@ -227,7 +226,7 @@ val ghost_alloc
     (fun r -> ghost_pts_to r x)
 
 val ghost_read
-    (#a:Type u#(a + 1))
+    (#a:Type)
     (#p:pcm a)
     (r:ghost_ref p)
     (x:erased a)
@@ -271,248 +270,9 @@ val ghost_gather
     (fun _ -> ghost_pts_to r (op pcm v0 v1))
 
 val ghost_pts_to_not_null_action 
-      (#a:Type u#(a + 1)) (#pcm:pcm a)
+      (#a:Type) (#pcm:pcm a)
       (r:ghost_ref pcm)
       (v:Ghost.erased a)
 : pst_ghost_action_except (squash (r =!= core_ghost_ref_null))
     (ghost_pts_to r v)
     (fun _ -> ghost_pts_to r v)
-
-(* Concrete references to "big" types *)
-val big_pts_to (#a:Type u#(a + 2)) (#pcm:_) (r:ref a pcm) (v:a) : slprop u#a
-
-(** Splitting a permission on a composite resource into two separate permissions *)
-val big_split_action
-      (#a:Type u#(a + 2))
-      (#pcm:pcm a)
-      (r:ref a pcm)
-      (v0:FStar.Ghost.erased a)
-      (v1:FStar.Ghost.erased a{composable pcm v0 v1})
-: pst_ghost_action_except unit
-    (big_pts_to r (v0 `op pcm` v1))
-    (fun _ -> big_pts_to r v0 `star` big_pts_to r v1)
-
-(** Combining separate permissions into a single composite permission *)
-val big_gather_action
-      (#a:Type u#(a + 2))
-      (#pcm:pcm a)
-      (r:ref a pcm)
-      (v0:FStar.Ghost.erased a)
-      (v1:FStar.Ghost.erased a)
-: pst_ghost_action_except (squash (composable pcm v0 v1))
-    (big_pts_to r v0 `star` big_pts_to r v1)
-    (fun _ -> big_pts_to r (op pcm v0 v1))
-
-val big_alloc_action
-      (#a:Type u#(a + 2))
-      (#pcm:pcm a)
-      (x:a{pcm.refine x})
-: pst_action_except (ref a pcm)
-    emp
-    (fun r -> big_pts_to r x)
-
-val big_select_refine
-      (#a:Type u#(a + 2))
-      (#p:pcm a)
-      (r:ref a p)
-      (x:erased a)
-      (f:(v:a{compatible p x v}
-          -> GTot (y:a{compatible p y v /\
-                      FStar.PCM.frame_compatible p x v y})))
-: pst_action_except (v:a{compatible p x v /\ p.refine v})
-    (big_pts_to r x)
-    (fun v -> big_pts_to r (f v))
-
-val big_upd_gen
-    (#a:Type u#(a + 2))
-    (#p:pcm a)
-    (r:ref a p)
-    (x y:Ghost.erased a)
-    (f:FStar.PCM.frame_preserving_upd p x y)
-: pst_action_except unit
-    (big_pts_to r x)
-    (fun _ -> big_pts_to r y)
-
-val big_pts_to_not_null_action 
-      (#a:Type u#(a + 2))
-      (#pcm:pcm a)
-      (r:erased (ref a pcm))
-      (v:Ghost.erased a)
-: pst_ghost_action_except (squash (not (is_null r)))
-    (big_pts_to r v)
-    (fun _ -> big_pts_to r v)
-
-val big_ghost_pts_to (#a:Type u#(a + 2)) (#p:pcm a) (r:ghost_ref p) (v:a) : slprop u#a
-
-val big_ghost_alloc
-    (#a:Type u#(a + 2))
-    (#pcm:pcm a)
-    (x:erased a{pcm.refine x})
-: pst_ghost_action_except
-    (ghost_ref pcm)
-    emp 
-    (fun r -> big_ghost_pts_to r x)
-
-val big_ghost_read
-    (#a:Type u#(a + 2))
-    (#p:pcm a)
-    (r:ghost_ref p)
-    (x:erased a)
-    (f:(v:a{compatible p x v}
-        -> GTot (y:a{compatible p y v /\
-                     FStar.PCM.frame_compatible p x v y})))
-: pst_ghost_action_except
-    (erased (v:a{compatible p x v /\ p.refine v}))
-    (big_ghost_pts_to r x)
-    (fun v -> big_ghost_pts_to r (f v))
-
-val big_ghost_write
-    (#a:Type u#(a + 2))
-    (#p:pcm a)
-    (r:ghost_ref p)
-    (x y:Ghost.erased a)
-    (f:FStar.PCM.frame_preserving_upd p x y)
-: pst_ghost_action_except unit
-    (big_ghost_pts_to r x)
-    (fun _ -> big_ghost_pts_to r y)
-
-val big_ghost_share
-    (#a:Type u#(a + 2))
-    (#pcm:pcm a)
-    (r:ghost_ref pcm)
-    (v0:FStar.Ghost.erased a)
-    (v1:FStar.Ghost.erased a{composable pcm v0 v1})
-: pst_ghost_action_except unit
-    (big_ghost_pts_to r (v0 `op pcm` v1))
-    (fun _ -> big_ghost_pts_to r v0 `star` big_ghost_pts_to r v1)
-
-val big_ghost_gather
-    (#a:Type u#(a + 2))
-    (#pcm:pcm a)
-    (r:ghost_ref pcm)
-    (v0:FStar.Ghost.erased a)
-    (v1:FStar.Ghost.erased a)
-: pst_ghost_action_except
-    (squash (composable pcm v0 v1))
-    (big_ghost_pts_to r v0 `star` big_ghost_pts_to r v1)
-    (fun _ -> big_ghost_pts_to r (op pcm v0 v1))
-
-(* References for objects in universes a+2, "non-boxable" pts_to *)
-val nb_pts_to (#a:Type u#(a + 3)) (#pcm:_) (r:ref a pcm) (v:a) : slprop u#a
-
-(** Splitting a permission on a composite resource into two separate permissions *)
-val nb_split_action
-      (#a:Type u#(a + 3))
-      (#pcm:pcm a)
-      (r:ref a pcm)
-      (v0:FStar.Ghost.erased a)
-      (v1:FStar.Ghost.erased a{composable pcm v0 v1})
-: pst_ghost_action_except unit
-    (nb_pts_to r (v0 `op pcm` v1))
-    (fun _ -> nb_pts_to r v0 `star` nb_pts_to r v1)
-
-(** Combining separate permissions into a single composite permission *)
-val nb_gather_action
-      (#a:Type u#(a + 3))
-      (#pcm:pcm a)
-      (r:ref a pcm)
-      (v0:FStar.Ghost.erased a)
-      (v1:FStar.Ghost.erased a)
-: pst_ghost_action_except (squash (composable pcm v0 v1))
-    (nb_pts_to r v0 `star` nb_pts_to r v1)
-    (fun _ -> nb_pts_to r (op pcm v0 v1))
-
-val nb_alloc_action
-      (#a:Type u#(a + 3))
-      (#pcm:pcm a)
-      (x:a{pcm.refine x})
-: pst_action_except (ref a pcm)
-    emp
-    (fun r -> nb_pts_to r x)
-
-val nb_select_refine
-      (#a:Type u#(a + 3))
-      (#p:pcm a)
-      (r:ref a p)
-      (x:erased a)
-      (f:(v:a{compatible p x v}
-          -> GTot (y:a{compatible p y v /\
-                      FStar.PCM.frame_compatible p x v y})))
-: pst_action_except (v:a{compatible p x v /\ p.refine v})
-    (nb_pts_to r x)
-    (fun v -> nb_pts_to r (f v))
-
-val nb_upd_gen
-    (#a:Type u#(a + 3))
-    (#p:pcm a)
-    (r:ref a p)
-    (x y:Ghost.erased a)
-    (f:FStar.PCM.frame_preserving_upd p x y)
-: pst_action_except unit
-    (nb_pts_to r x)
-    (fun _ -> nb_pts_to r y)
-
-val nb_pts_to_not_null_action 
-      (#a:Type u#(a + 3))
-      (#pcm:pcm a)
-      (r:erased (ref a pcm))
-      (v:Ghost.erased a)
-: pst_ghost_action_except (squash (not (is_null r)))
-    (nb_pts_to r v)
-    (fun _ -> nb_pts_to r v)
-
-val nb_ghost_pts_to (#a:Type u#(a + 3)) (#p:pcm a) (r:ghost_ref p) (v:a) : slprop u#a
-
-val nb_ghost_alloc
-    (#a:Type u#(a + 3))
-    (#pcm:pcm a)
-    (x:erased a{pcm.refine x})
-: pst_ghost_action_except
-    (ghost_ref pcm)
-    emp 
-    (fun r -> nb_ghost_pts_to r x)
-
-val nb_ghost_read
-    (#a:Type u#(a + 3))
-    (#p:pcm a)
-    (r:ghost_ref p)
-    (x:erased a)
-    (f:(v:a{compatible p x v}
-        -> GTot (y:a{compatible p y v /\
-                     FStar.PCM.frame_compatible p x v y})))
-: pst_ghost_action_except
-    (erased (v:a{compatible p x v /\ p.refine v}))
-    (nb_ghost_pts_to r x)
-    (fun v -> nb_ghost_pts_to r (f v))
-
-val nb_ghost_write
-    (#a:Type u#(a + 3))
-    (#p:pcm a)
-    (r:ghost_ref p)
-    (x y:Ghost.erased a)
-    (f:FStar.PCM.frame_preserving_upd p x y)
-: pst_ghost_action_except unit
-    (nb_ghost_pts_to r x)
-    (fun _ -> nb_ghost_pts_to r y)
-
-val nb_ghost_share
-    (#a:Type u#(a + 3))
-    (#pcm:pcm a)
-    (r:ghost_ref pcm)
-    (v0:FStar.Ghost.erased a)
-    (v1:FStar.Ghost.erased a{composable pcm v0 v1})
-: pst_ghost_action_except unit
-    (nb_ghost_pts_to r (v0 `op pcm` v1))
-    (fun _ -> nb_ghost_pts_to r v0 `star` nb_ghost_pts_to r v1)
-
-val nb_ghost_gather
-    (#a:Type u#(a + 3))
-    (#pcm:pcm a)
-    (r:ghost_ref pcm)
-    (v0:FStar.Ghost.erased a)
-    (v1:FStar.Ghost.erased a)
-: pst_ghost_action_except
-    (squash (composable pcm v0 v1))
-    (nb_ghost_pts_to r v0 `star` nb_ghost_pts_to r v1)
-    (fun _ -> nb_ghost_pts_to r (op pcm v0 v1))
-

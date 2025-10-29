@@ -26,8 +26,8 @@ let sorted
 = forall (i j:nat).{:pattern (Seq.index s i); (Seq.index s j)}
   i <= j /\ j < Seq.length s ==> Seq.index s i <=? Seq.index s j
 
-fn insertion_sort
-      (#t:Type)
+fn insertion_sort u#a
+      (#t:Type u#a)
       {| total_order t |}
       (a:A.array t)
       (len:SZ.t)

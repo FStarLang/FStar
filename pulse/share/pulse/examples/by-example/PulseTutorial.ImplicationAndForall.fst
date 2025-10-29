@@ -24,7 +24,7 @@ module GR = Pulse.Lib.GhostReference
 open GR
 
 //regain_half$
-let regain_half #a (x:GR.ref a) (v:a) =
+let regain_half (#a: Type0) (x:GR.ref a) (v:a) =
   pts_to x #0.5R v @==> pts_to x v
 //end regain_half$
 
@@ -57,7 +57,7 @@ ensures pts_to x 'v
 
 
 //regain_half_q$
-let regain_half_q #a (x:GR.ref a) =
+let regain_half_q (#a: Type0) (x:GR.ref a) =
   forall* u. pts_to x #0.5R u @==> pts_to x u 
 //end regain_half_q$
 

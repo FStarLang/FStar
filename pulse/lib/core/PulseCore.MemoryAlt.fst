@@ -17,7 +17,6 @@
 module PulseCore.MemoryAlt
 open FStar.Ghost
 open FStar.PCM
-module U = Pulse.Lib.Raise
 module CM = FStar.Algebra.CommMonoid
 module B = PulseCore.BaseHeapSig
 
@@ -111,57 +110,23 @@ let lift_ghost
 = B.lift_ghost #_ #(p) #(fun x -> q x) ni_a
     (coerce_action_back _ _ () f)
 
-(* Concrete references to "small" types *)
-let pts_to = B.pts_to' u#(a+1) u#(a+3)
+(* Concrete references *)
+let pts_to = B.pts_to u#(a+3)
+let split_action = B.share u#(a+3)
+let gather_action = B.gather u#(a+3)
+let alloc_action = B.extend u#(a+3)
+let select_refine = B.read u#(a+3)
+let upd_gen = B.write u#(a+3)
+let pts_to_not_null_action = B.pts_to_not_null_action u#(a+3)
 
-let split_action = B.share' u#(a+1) u#(a+3)
-let gather_action = B.gather' u#(a+1) u#(a+3)
-let alloc_action = B.extend' u#(a+1) u#(a+3)
-let select_refine = B.read' u#(a+1) u#(a+3)
-let upd_gen = B.write' u#(a+1) u#(a+3)
-let pts_to_not_null_action = B.pts_to_not_null_action' u#(a+1) u#(a+3)
-
-(* Ghost references to "small" types *)
+(* Ghost references *)
 [@@erasable]
 let core_ghost_ref : Type0 = B.core_ghost_ref
 let core_ghost_ref_null = PulseCore.Heap2.core_ghost_ref_null
-let ghost_pts_to = B.ghost_pts_to' u#(a+1) u#(a+3)
-let ghost_alloc = B.ghost_extend' u#(a+1) u#(a+3)
-let ghost_read = B.ghost_read' u#(a+1) u#(a+3)
-let ghost_write = B.ghost_write' u#(a+1) u#(a+3)
-let ghost_share = B.ghost_share' u#(a+1) u#(a+3)
-let ghost_gather = B.ghost_gather' u#(a+1) u#(a+3)
-let ghost_pts_to_not_null_action #a #pcm = B.ghost_pts_to_not_null_action' u#(a+1) u#(a+3) #a #pcm
-
-(* Concrete references to "big" types *)
-let big_pts_to = B.pts_to' u#(a+2) u#(a+3)
-let big_split_action = B.share' u#(a+2) u#(a+3)
-let big_gather_action = B.gather' u#(a+2) u#(a+3)
-let big_alloc_action = B.extend' u#(a+2) u#(a+3)
-let big_select_refine = B.read' u#(a+2) u#(a+3)
-let big_upd_gen = B.write' u#(a+2) u#(a+3)
-let big_pts_to_not_null_action = B.pts_to_not_null_action' u#(a+2) u#(a+3)
-
-(* Ghost references to "big" types *)
-let big_ghost_pts_to = B.ghost_pts_to' u#(a+2) u#(a+3)
-let big_ghost_alloc = B.ghost_extend' u#(a+2) u#(a+3)
-let big_ghost_read = B.ghost_read' u#(a+2) u#(a+3)
-let big_ghost_write = B.ghost_write' u#(a+2) u#(a+3)
-let big_ghost_share = B.ghost_share' u#(a+2) u#(a+3)
-let big_ghost_gather = B.ghost_gather' u#(a+2) u#(a+3)
-
-  (* References for objects in universes a+3, "non-boxable" pts_to *)
-let nb_pts_to = B.pts_to u#(a+3)
-let nb_split_action = B.share u#(a+3)
-let nb_gather_action = B.gather u#(a+3)
-let nb_alloc_action = B.extend u#(a+3)
-let nb_select_refine = B.read u#(a+3)
-let nb_upd_gen = B.write u#(a+3)
-let nb_pts_to_not_null_action = B.pts_to_not_null_action u#(a+3)
-
-let nb_ghost_pts_to = B.ghost_pts_to u#(a+3)
-let nb_ghost_alloc = B.ghost_extend u#(a+3)
-let nb_ghost_read = B.ghost_read u#(a+3)
-let nb_ghost_write = B.ghost_write u#(a+3)
-let nb_ghost_share = B.ghost_share u#(a+3)
-let nb_ghost_gather = B.ghost_gather u#(a+3)
+let ghost_pts_to = B.ghost_pts_to u#(a+3)
+let ghost_alloc = B.ghost_extend u#(a+3)
+let ghost_read = B.ghost_read u#(a+3)
+let ghost_write = B.ghost_write u#(a+3)
+let ghost_share = B.ghost_share u#(a+3)
+let ghost_gather = B.ghost_gather u#(a+3)
+let ghost_pts_to_not_null_action #a #pcm = B.ghost_pts_to_not_null_action u#(a+3) #a #pcm

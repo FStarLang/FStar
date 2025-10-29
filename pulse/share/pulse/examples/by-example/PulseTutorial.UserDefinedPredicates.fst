@@ -20,7 +20,7 @@ open Pulse.Lib.Pervasives
 open FStar.Mul
 //pts_to_diag$
 let pts_to_diag 
-        #a 
+        (#a: Type0)
         (r:ref (a & a))
         (v:a)
 : slprop

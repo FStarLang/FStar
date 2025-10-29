@@ -30,7 +30,7 @@ ensures pts_to r ('v + 1)
 //end incr$
 
 //swap$
-fn swap #a (r0 r1:ref a)
+fn swap u#a (#a: Type u#a) (r0 r1:ref a)
 requires pts_to r0 'v0 ** pts_to r1 'v1
 ensures pts_to r0 'v1 ** pts_to r1 'v0
 {
@@ -43,7 +43,7 @@ ensures pts_to r0 'v1 ** pts_to r1 'v0
 
 
  //value_of$
-fn value_of (#a:Type) (r:ref a)
+fn value_of u#a (#a:Type u#a) (r:ref a)
 requires pts_to r 'v
 returns v:a
 ensures pts_to r 'v ** pure (v == 'v)
@@ -55,7 +55,7 @@ ensures pts_to r 'v ** pure (v == 'v)
 
 
  //value_of_explicit$
-fn value_of_explicit (#a:Type) (r:ref a) (#w:erased a)
+fn value_of_explicit u#a (#a:Type u#a) (r:ref a) (#w:erased a)
 requires pts_to r w
 returns v:a
 ensures pts_to r w ** pure (v == reveal w)
@@ -65,9 +65,9 @@ ensures pts_to r w ** pure (v == reveal w)
 //end value_of_explicit$
 
 
-[@@expect_failure]
+[@@expect_failure [228]]
  //value_of_explicit_fail$
-fn value_of_explicit_fail (#a:Type) (r:ref a) (#w:erased a)
+fn value_of_explicit_fail u#a (#a:Type u#a) (r:ref a) (#w:erased a)
 requires pts_to r w
 returns v:a
 ensures pts_to r w ** pure (v == reveal w)
@@ -78,7 +78,7 @@ ensures pts_to r w ** pure (v == reveal w)
 
 
  //value_of_explicit_alt$
-fn value_of_explicit_alt (#a:Type) (r:ref a) (#w:erased a)
+fn value_of_explicit_alt u#a (#a:Type u#a) (r:ref a) (#w:erased a)
 requires pts_to r w
 returns v:(x:a { x == reveal w } )
 ensures pts_to r w
@@ -90,7 +90,7 @@ ensures pts_to r w
 
 
  //assign$
-fn assign (#a:Type) (r:ref a) (v:a)
+fn assign u#a (#a:Type u#a) (r:ref a) (v:a)
 requires pts_to r 'v
 ensures pts_to r v
 {
@@ -157,7 +157,7 @@ ensures pts_to r (4 * 'v)
 
 
  //assign_1.0R$
-fn assign_full_perm (#a:Type) (r:ref a) (v:a)
+fn assign_full_perm u#a (#a:Type u#a) (r:ref a) (v:a)
 requires pts_to r #1.0R 'v
 ensures pts_to r #1.0R v
 {
@@ -167,7 +167,7 @@ ensures pts_to r #1.0R v
 
 
  //value_of_perm$
-fn value_of_perm #a #p (r:ref a)
+fn value_of_perm u#a (#a: Type u#a) #p (r:ref a)
 requires pts_to r #p 'v
 returns v:a
 ensures pts_to r #p 'v ** pure (v == 'v)
@@ -178,9 +178,9 @@ ensures pts_to r #p 'v ** pure (v == 'v)
 
 
 //assign_perm FAIL$
-[@@expect_failure]
+[@@expect_failure [19]]
 
-fn assign_perm #a #p (r:ref a) (v:a) (#w:erased a)
+fn assign_perm u#a (#a: Type u#a) #p (r:ref a) (v:a) (#w:erased a)
 requires pts_to r #p w
 ensures pts_to r #p w
 {
@@ -190,7 +190,7 @@ ensures pts_to r #p w
 
 
  //share_ref$
-fn share_ref #a #p (r:ref a)
+fn share_ref u#a (#a: Type u#a) #p (r:ref a)
 requires pts_to r #p 'v
 ensures pts_to r #(p /. 2.0R) 'v ** pts_to r #(p /. 2.0R) 'v
 {
@@ -200,7 +200,7 @@ ensures pts_to r #(p /. 2.0R) 'v ** pts_to r #(p /. 2.0R) 'v
 
 
  //gather_ref$
-fn gather_ref #a (#p:perm) (r:ref a)
+fn gather_ref u#a (#a: Type u#a) (#p:perm) (r:ref a)
 requires
     pts_to r #(p /. 2.0R) 'v0 **
     pts_to r #(p /. 2.0R) 'v1
@@ -214,7 +214,7 @@ ensures
 
 
 
-fn max_perm #a (r:ref a) #p anything
+fn max_perm u#a (#a: Type u#a) (r:ref a) #p anything
 requires pts_to r #p 'v ** pure (~ (p <=. 1.0R))
 returns _:squash False
 ensures anything
@@ -225,7 +225,7 @@ ensures anything
 
 
  //alias_ref$
-fn alias_ref #a #p (r:ref a)
+fn alias_ref u#a (#a: Type u#a) #p (r:ref a)
 requires pts_to r #p 'v
 returns s:ref a
 ensures
@@ -255,7 +255,7 @@ ensures pure (v == 1)
 //end one
 
 
-[@@expect_failure]
+[@@expect_failure [228]]
  //refs_as_scoped FAIL
 fn refs_are_scoped ()
 requires emp

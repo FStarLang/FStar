@@ -23,7 +23,7 @@ module R = Pulse.Lib.Reference
 #lang-pulse
 
 noeq
-type box a = | B : r:R.ref a -> box a
+type box a = | B : r:R.ref u#0 a -> box a
 
 let null (#a:Type u#0) : box a = B R.null
 

@@ -335,7 +335,7 @@ let rec list_sorted_append_chunk_elim
     end
   | _ :: l1' -> list_sorted_append_chunk_elim order l1' l2 l3
 
-#push-options "--query_stats --fuel 2 --ifuel 1 --z3rlimit_factor 4 --split_queries no"
+#push-options "--fuel 2 --ifuel 1 --z3rlimit_factor 4 --split_queries no"
 #restart-solver
 let rec map_sort_merge_correct
   (#t1 #t2: Type)
@@ -465,7 +465,7 @@ let list_memP_map_forall
 = Classical.forall_intro (fun y -> List.Tot.memP_map_elim f y l);
   Classical.forall_intro (fun x -> List.Tot.memP_map_intro f x l)
 
-#push-options "--z3rlimit_factor 6 --split_queries no --query_stats"
+#push-options "--z3rlimit_factor 6 --split_queries no"
 
 #restart-solver
 let rec map_sort_correct

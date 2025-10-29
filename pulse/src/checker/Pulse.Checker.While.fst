@@ -38,7 +38,7 @@ let while_body_comp_typing (#g:env) (u:universe) (x:ppname) (ty:term) (inv_body:
   : Dv (comp_typing_u g (comp_while_body x inv_body))
   = Metatheory.admit_comp_typing g (comp_while_body x inv_body)
 
-#push-options "--fuel 0 --ifuel 0 --z3rlimit_factor 8 --query_stats"
+#push-options "--fuel 0 --ifuel 0 --z3rlimit_factor 8"
 #restart-solver
 let check
   (g:env)

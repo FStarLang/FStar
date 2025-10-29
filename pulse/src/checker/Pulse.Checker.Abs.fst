@@ -435,7 +435,7 @@ let close_ascription (c:comp_ascription) (nv:nvar) : comp_ascription =
   subst_ascription c [RT.ND (snd nv) 0]
 
 module R = FStar.Reflection.V2
-#push-options "--z3rlimit_factor 20 --fuel 0 --ifuel 1 --split_queries no --query_stats"
+#push-options "--z3rlimit_factor 20 --fuel 0 --ifuel 1 --split_queries no"
 #restart-solver
 let rec check_abs_core
   (g:env)

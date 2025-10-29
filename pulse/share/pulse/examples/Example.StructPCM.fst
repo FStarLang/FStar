@@ -18,8 +18,8 @@ module Example.StructPCM
 #lang-pulse
 
 open FStar.PCM
-open Pulse.Lib.Core
-open Pulse.Main
+open Pulse
+open Pulse.Lib.PCMReference
 
 module G = FStar.Ghost
 module PCM = FStar.PCM
@@ -28,7 +28,7 @@ module PCM = FStar.PCM
 // This example sketches a PCM for updating fields of a pair in parallel
 //
 
-type carrier (a:Type u#1) (b:Type u#1) : Type u#1 =
+type carrier (a:Type0) (b:Type0) =
   | Unit
   | X : a -> carrier a b
   | Y : b -> carrier a b
@@ -86,7 +86,7 @@ fn alloc #a #b (x:a) (y:b)
   returns r:ref a b
   ensures pcm_pts_to r (XY x y)
 {
-  Pulse.Lib.Core.alloc #_ #(spcm a b) (XY x y)
+  alloc #_ #(spcm a b) (XY x y)
 }
 
 
@@ -98,7 +98,7 @@ fn share #a #b (r:ref a b) (#x:a) (#y:b)
 {
   rewrite pcm_pts_to r (XY x y) as
           pcm_pts_to r (X x `FStar.PCM.op (spcm a b)` Y y);
-  Pulse.Lib.Core.share r (G.hide (X x)) (G.hide (Y y));
+  share r (G.hide (X x)) (G.hide (Y y));
 }
 
 
@@ -107,7 +107,7 @@ fn upd_x #a #b (r:ref a b) (x1 x2:a)
   requires pcm_pts_to r (X x1)
   ensures pcm_pts_to r (X x2)
 {
-  Pulse.Lib.Core.write r _ _ (pcm_upd_x x1 x2)
+  write r _ _ (pcm_upd_x x1 x2)
 }
 
 
@@ -116,7 +116,7 @@ fn upd_y #a #b (r:ref a b) (y1 y2:b)
   requires pcm_pts_to r (Y y1)
   ensures pcm_pts_to r (Y y2)
 {
-  Pulse.Lib.Core.write r _ _ (pcm_upd_y y1 y2)
+  write r _ _ (pcm_upd_y y1 y2)
 }
 
 
@@ -125,7 +125,7 @@ fn upd #a #b (r:ref a b) (x1 x2:a) (y1 y2:b)
   requires pcm_pts_to r (XY x1 y1)
   ensures pcm_pts_to r (XY x2 y2)
 {
-  Pulse.Lib.Core.write r _ _ (pcm_upd_xy x1 x2 y1 y2)
+  write r _ _ (pcm_upd_xy x1 x2 y1 y2)
 }
 
 
@@ -135,7 +135,7 @@ fn gather #a #b (r:ref a b) (#x:a) (#y:b)
            pcm_pts_to r (Y y)
   ensures pcm_pts_to r (XY x y)
 {
-  Pulse.Lib.Core.gather r (G.hide (X x)) (G.hide (Y y));
+  gather r (G.hide (X x)) (G.hide (Y y));
     rewrite pcm_pts_to r (X x `FStar.PCM.op (spcm a b)` Y y) as
             pcm_pts_to r (XY x y)
 

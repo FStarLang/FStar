@@ -15,8 +15,8 @@ let rec is_list_suffix
 
 
 ghost
-fn intro_is_list_singleton
-  (#t:Type)
+fn intro_is_list_singleton u#a
+  (#t:Type u#a)
   (x : ref t) (n : t)
   requires
     exists* (v:t).

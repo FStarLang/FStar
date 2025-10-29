@@ -86,10 +86,11 @@ pub fn maybe_mk_session_tbl(
     match sopt {
         None => {
             let tbl = super::pulse_lib_hashtable::alloc(super::dpe::sid_hash, 256);
-            super::dpe::st {
+            let s = super::dpe::st {
                 st_ctr: 0,
                 st_tbl: tbl,
-            }
+            };
+            s
         }
         Some(mut s) => s,
     }
@@ -458,6 +459,8 @@ pub fn certify_key(
     crt_len: u32,
     crt: &mut [u8],
     t: (),
+    pub_key_repr: (),
+    crt_repr: (),
 ) -> u32 {
     let s = super::dpe::replace_session(sid, (), super::dpe::session_state::InUse, ());
     match s {
@@ -511,6 +514,8 @@ pub fn sign(
     msg_len: usize,
     msg: &mut [u8],
     t: (),
+    signature_repr: (),
+    msg_repr: (),
 ) -> () {
     let s = super::dpe::replace_session(sid, (), super::dpe::session_state::InUse, ());
     match s {
