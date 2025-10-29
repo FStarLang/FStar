@@ -59,22 +59,6 @@ let dekker_inv (ra rb:R.ref bool) (ga gb:GR.ref bool) (p:slprop)
     )
 
 ghost
-fn intro_dekker_inv_init
-    (ra rb:R.ref bool) (ga gb:GR.ref bool) (p:slprop)
-requires
-    (ra |-> Frac 0.5R false) **
-    (rb |-> Frac 0.5R false) **
-    (ga |-> Frac 0.5R false) **
-    (gb |-> Frac 0.5R false) **
-    p
-ensures
-  dekker_inv ra rb ga gb p
-{
-  intro_cond_false emp p;
-  fold (dekker_inv ra rb ga gb p)
-}
-
-ghost
 fn init_dekker_inv 
       (ra rb:R.ref bool)
       (ga gb:GR.ref bool)
@@ -96,30 +80,10 @@ ensures
 {
   R.share ra; R.share rb;
   GR.share ga; GR.share gb;
-  intro_dekker_inv_init ra rb ga gb p;
-  let i = new_invariant (dekker_inv ra rb ga gb p);
-  i
+  intro_cond_false emp p;
+  fold (dekker_inv ra rb ga gb p);
+  new_invariant (dekker_inv ra rb ga gb p);
 }
-
-ghost
-fn intro_dekker_inv_a
-    (ra rb:R.ref bool) (ga gb:GR.ref bool) (p:slprop)
-requires
-  exists* (vb ub:bool).
-    (ra |-> Frac 0.5R true) **
-    (rb |-> Frac 0.5R vb) **
-    (ga |-> Frac 0.5R true) **
-    (gb |-> Frac 0.5R ub) **
-    pure (
-      (vb=false ==> ub=false)
-    )
-ensures
-  dekker_inv ra rb ga gb p
-{
-  intro_cond_true emp p;
-  fold (dekker_inv ra rb ga gb p)
-}
-
 
 fn procA (i:iname) (ra rb:R.ref bool) (ga gb:GR.ref bool) (p:slprop)
 preserves 
@@ -170,7 +134,8 @@ ensures
       elim_cond_false _ _ _;
       GR.write ga true;
       GR.share ga;
-      intro_dekker_inv_a ra rb ga gb p;
+      intro_cond_true emp p;
+      fold (dekker_inv ra rb ga gb p);
       later_intro (dekker_inv _ _ _ _ _);
       true
     }
