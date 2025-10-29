@@ -35,12 +35,28 @@ type head_id =
   | VarHead of nat
   | MatchHead
 
+instance show_head_id : tac_showable head_id = {
+  show = (function 
+    | FVarHead x -> Printf.sprintf "(FVar %s)" (show x)
+    | VarHead i -> Printf.sprintf "(Var %d)" i
+    | MatchHead -> "<match>")
+}
 noeq type slprop_view =
   | Pure : term -> slprop_view
   | WithPure : term -> ppname -> body: term -> slprop_view // body is opened with ()
   | Exists : u: universe -> b: binder -> body: term -> slprop_view
   | Atom : head: head_id -> mkeys: option (list term) -> t: slprop -> slprop_view
   | Unknown : slprop -> slprop_view
+
+instance showable_slprop_view : tac_showable slprop_view = {
+  show = (function
+  | Pure p -> Printf.sprintf "(Pure %s)" (show p)
+  | WithPure t x b -> Printf.sprintf "(WithPure %s %s %s)" (show t) (show (T.unseal x.name)) (show b)
+  | Exists u x b -> Printf.sprintf "(exists* (%s). %s)" (Pulse.Syntax.Printer.binder_to_string x) (show b)
+  | Atom head keys t -> Printf.sprintf "(Atom {head=%s; keys=%s} %s)" (show head) (show keys) (show t)
+  | Unknown p -> Printf.sprintf "(Unknown %s)" (show p)
+  );
+}
 
 let elab_slprop (p: slprop_view) : slprop =
   match p with
@@ -251,7 +267,10 @@ let prove_pure (g: env) (ctxt: list slprop_view) (skip_eq_uvar: bool) (goal: slp
     T.Tac (option (prover_result g ctxt [goal])) =
   match goal with
   | Pure p ->
-    if pure_eq_unif g p skip_eq_uvar then None else
+    debug_prover g (fun _ -> Printf.sprintf "prove_pure p=%s (skip? %b)" (show p) skip_eq_uvar);
+
+    if pure_eq_unif g p skip_eq_uvar then None else begin
+    debug_prover g (fun _ -> Printf.sprintf "prove_pure p=%s success" (show p));
 
     Some (| g, ctxt, [], [], fun g'' ->
       cont_elab_refl g ctxt ([] @ ctxt) (VE_Refl _ _),
@@ -260,6 +279,7 @@ let prove_pure (g: env) (ctxt: list slprop_view) (skip_eq_uvar: bool) (goal: slp
         let h2: slprop_equiv g'' (tm_star (elab_slprops frame) (tm_pure p)) (elab_slprops (frame @ [goal])) = RU.magic () in
         k_elab_equiv (intro_pure g'' (elab_slprops frame) p) h1 h2)
       <: T.Tac _ |)
+    end
   | _ -> None
 
 // let foo = u2
@@ -529,7 +549,7 @@ let teq_nosmt_force_args (g: R.env) (x y: term) (fail_fast: bool) : Dv bool =
     match xs, ys with
     | [], [] -> true
     | (x,_)::xs, (y,_)::ys ->
-      if RU.teq_nosmt_force g x y then
+      if RU.teq_nosmt_force_phase1 g x y then
         go xs ys
       else (
         if not fail_fast then ignore (go xs ys);
@@ -559,15 +579,28 @@ let prove_atom_unamb (g: env) (ctxt: list slprop_view) (goal: slprop_view) :
     let matches_mkeys (ctxt: slprop_view) : T.Tac bool =
       match ctxt with
       | Atom hd' _ ctxt ->
-        if hd <> hd' then false else
-        with_uf_transaction (fun _ ->
-          teq_nosmt_force_args (elab_env g) ctxt goal true
+        if hd <> hd' then false else (
+          let r = 
+            with_uf_transaction (fun _ ->
+              teq_nosmt_force_args (elab_env g) ctxt goal true
+            )
+          in
+          debug_prover g (fun _ -> Printf.sprintf "Tried matching ctxt %s against goal %s, result %b" (show ctxt) (show goal) r);
+          r
         )
       | _ -> false in
     let ictxt = List.Tot.mapi (fun i ctxt -> i, ctxt) ctxt in
     let cands = T.filter (fun (i, ctxt) -> matches_mkeys ctxt) ictxt in
-    if Nil? cands then None else
-    if not (is_unamb g cands) then None else
+    if Nil? cands then (
+      debug_prover g (fun _ -> Printf.sprintf "prove_atom_unamb: no matches for %s in context %s\n"  (show goal) (show ctxt));
+      None
+    )
+    else if not (is_unamb g cands) 
+    then (
+      debug_prover g (fun _ -> Printf.sprintf "prove_atom_unamb: no unambiguous matches for %s in context %s\n"  (show goal) (show ctxt));
+      None
+    )
+    else
     let (i, cand) :: _ = cands in
     debug_prover g (fun _ -> Printf.sprintf "prove_atom_unamb: commiting to unify %s and %s\n" (show (elab_slprop cand)) (show goal));
     ignore (teq_nosmt_force_args (elab_env g) (elab_slprop cand) goal false);

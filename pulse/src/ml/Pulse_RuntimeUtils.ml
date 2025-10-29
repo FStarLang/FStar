@@ -198,6 +198,9 @@ let teq_nosmt_force (g:TcEnv.env) (ty1:S.term) (ty2:S.term) =
     ok) in
   match res with Some true -> true | _ -> false
 
+let teq_nosmt_force_phase1 (g:TcEnv.env) (ty1:S.term) (ty2:S.term) =
+  teq_nosmt_force {g with phase1=true; admit=true } ty1 ty2
+
 let whnf_lax (g:TcEnv.env) (t:S.term) : S.term = 
   FStarC_TypeChecker_Normalize.unfold_whnf' [TcEnv.Unascribe] g t
 
