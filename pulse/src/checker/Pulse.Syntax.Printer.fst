@@ -457,6 +457,10 @@ let rec st_term_to_string' (level:string) (t:st_term)
             (term_to_string t)
             (term_to_string is))
 
+    | Tm_PragmaWithOptions { options; body } ->
+      sprintf "#set-options \"%s\" {\n%s\n%s}"
+        options (st_term_to_string' (indent level) body) level
+
 and branches_to_string brs : T.Tac _ =
   match brs with
   | [] -> ""
@@ -525,6 +529,7 @@ let tag_of_st_term (t:st_term) =
   | Tm_Unreachable _ -> "Tm_Unreachable"
   | Tm_ProofHintWithBinders _ -> "Tm_ProofHintWithBinders"
   | Tm_WithInv _ -> "Tm_WithInv"
+  | Tm_PragmaWithOptions _ -> "Tm_PragmaWithOptions"
 
 let tag_of_comp (c:comp) : T.Tac string =
   match c with
@@ -558,6 +563,8 @@ let rec print_st_head (t:st_term)
   | Tm_ElimExists _ -> "ElimExists"  
   | Tm_ProofHintWithBinders _ -> "AssertWithBinders"
   | Tm_WithInv _ -> "WithInv"
+  | Tm_PragmaWithOptions _ -> "PragmaWithOptions"
+
 and print_head (t:term) =
   match t with
   // | Tm_FVar fv
@@ -588,6 +595,7 @@ let rec print_skel (t:st_term) =
   | Tm_ElimExists _ -> "ElimExists"
   | Tm_ProofHintWithBinders _ -> "AssertWithBinders"
   | Tm_WithInv _ -> "WithInv"
+  | Tm_PragmaWithOptions _ -> "PragmaWithOptions"
 
 let decl_to_string (d:decl) : T.Tac string =
   match d.d with

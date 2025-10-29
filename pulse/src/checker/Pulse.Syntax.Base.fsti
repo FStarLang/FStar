@@ -316,7 +316,10 @@ type st_term' =
       body : st_term;
       returns_inv : option (binder & slprop & term);  // returns _:t ensures p opens is
     }
-
+  | Tm_PragmaWithOptions {
+      options: string;
+      body: st_term
+    }
 and st_term = {
     term : st_term';
     range : range;

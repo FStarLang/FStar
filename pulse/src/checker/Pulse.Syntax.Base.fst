@@ -294,6 +294,10 @@ let rec eq_st_term (t1 t2:st_term)
              &&
       eq_st_term body1 body2
 
+    | Tm_PragmaWithOptions { options=o1; body=b1 }, 
+      Tm_PragmaWithOptions { options=o2; body=b2 } ->
+      o1 = o2 && eq_st_term b1 b2
+      
     | _ -> false
 
 and eq_branch (b1 b2 : branch)

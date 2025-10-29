@@ -193,6 +193,11 @@ type stmt' =
       body  : stmt;
       returns_ : option ensures_slprop;
     }
+  
+  | PragmaSetOptions {
+      options:string;
+      body:stmt
+    }
 
 and stmt = {
   s:stmt';
@@ -483,6 +488,9 @@ and eq_stmt' (s1 s2:stmt') =
     forall2 AD.eq_term n1 n2 &&
     eq_stmt b1 b2 &&
     eq_opt eq_ensures_slprop r1 r2
+  | PragmaSetOptions { options=o1; body=b1 }, PragmaSetOptions { options=o2; body=b2 } ->
+    o1=o2 &&
+    eq_stmt b1 b2
   | _ -> false
 and eq_let_init (i1 i2:let_init) =
   match i1, i2 with
@@ -619,6 +627,8 @@ and scan_stmt (cbs:A.dep_scan_callbacks) (s:stmt) =
     iter cbs.scan_term n;
     scan_stmt cbs b;
     iopt (scan_ensures_slprop cbs) r
+  | PragmaSetOptions { body } ->
+    scan_stmt cbs body
 and scan_let_init (cbs:A.dep_scan_callbacks) (i:let_init) =
   match i with
   | Array_initializer a -> cbs.scan_term a.init; cbs.scan_term a.len
@@ -682,3 +692,4 @@ let mk_par p1 p2 q1 q2 b1 b2 = Parallel { p1; p2; q1; q2; b1; b2 }
 let mk_proof_hint_with_binders ht bs =  ProofHintWithBinders { hint_type=ht; binders=bs }
 let mk_lambda bs ascription body range : lambda = { binders=bs; ascription; body; range }
 let mk_with_invs names body returns_ = WithInvariants { names; body; returns_ }
+let mk_pragma_set_options options body = PragmaSetOptions { options; body }

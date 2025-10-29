@@ -158,6 +158,9 @@ let tm_match (sc:term) (returns_:slprop option) (brs:branch list) r : st_term =
 let tm_intro_exists (p:slprop) (witnesses:term list) r : st_term =
   PSB.(with_range (tm_intro_exists p witnesses) r)
 
+let tm_with_options (options:string) (body:st_term) r : st_term =
+  PSB.(with_range (tm_pragma_with_options options body) r)
+
 let is_tm_intro_exists (s:st_term) : bool =
   match s.term1 with
   | Tm_IntroExists _ -> true

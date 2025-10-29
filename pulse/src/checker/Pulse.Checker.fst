@@ -400,6 +400,13 @@ let rec check
 
         | Tm_WithInv _ ->
           WithInv.check g pre pre_typing post_hint res_ppname t check
+
+        | Tm_PragmaWithOptions { options; body } ->
+          RU.push_options();
+          RU.set_options options;
+          let r = check g pre pre_typing post_hint res_ppname body in
+          RU.pop_options ();
+          r
       in
 
       let (| x, g1, t, pre', k |) = r in
