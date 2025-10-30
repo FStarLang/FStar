@@ -100,11 +100,12 @@ fn __await
   let r = fst h;
   let th = snd h;
   unfold async_joinable;
+  rewrite each fst h as r;
+  rewrite each snd h as th;
   assert (joinable th);
   join th; (* join the thread *)
   assert (done th);
-  rewrite (done th) as (done (snd h));
-  redeem_pledge emp_inames (done (snd h)) (box_solves_post r post);
+  redeem_pledge emp_inames (done th) (box_solves_post r post);
   assert (box_solves_post r post);
   unfold box_solves_post;
   with vv. assert (Box.pts_to r (Some vv));

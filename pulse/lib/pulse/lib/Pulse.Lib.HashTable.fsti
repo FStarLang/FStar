@@ -44,13 +44,13 @@ let related #kt #vt (ht:ht_t kt vt) (pht:pht_t kt vt) : prop =
   SZ.v ht.sz == pht.repr.sz /\
   pht.repr.hashf == lift_hash_fun ht.hashf
 
-let models #kt #vt (ht:ht_t kt vt) (pht:pht_t kt vt) : slprop =
+let models #kt #vt ([@@@mkey]ht: ht_t kt vt) (pht:pht_t kt vt) : slprop =
   V.pts_to ht.contents pht.repr.seq **
   pure (related ht pht /\
         V.is_full_vec ht.contents /\
         SZ.fits (2 `op_Multiply` SZ.v ht.sz))
 
-val models_timeless #kt #vt (ht:ht_t kt vt) (pht:pht_t kt vt)
+val models_timeless #kt #vt ([@@@mkey] ht:ht_t kt vt) (pht:pht_t kt vt)
 : Lemma (timeless (models ht pht))
         [SMTPat (timeless (models ht pht))]
 

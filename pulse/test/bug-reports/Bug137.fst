@@ -19,25 +19,12 @@ module Bug137
 
 open Pulse.Lib.Pervasives
 
+let tag p : slprop = p
 
 fn test_elim_pure (x:option bool)
-requires exists* q. q ** pure (Some? x)
-ensures exists* q. q ** pure (Some? x)
+requires exists* q. tag q ** pure (Some? x)
+ensures exists* q. tag q ** pure (Some? x)
 {
     let v = Some?.v x;
     ()
 }
-
-
-// This previously had an exists for p,q in the pre and post,
-// but then that's very ambiguous. I think this captures the idea
-// of the test anyway.
-
-fn test_elim_pure2 (x:option bool) (p q : slprop)
-requires p ** (exists* r. r ** pure (Some? x)) ** q
-ensures  p ** q ** (exists* r. r ** pure (Some? x))
-{
-    let v = Some?.v x;
-    ()
-}
-

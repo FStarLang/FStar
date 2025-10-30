@@ -174,6 +174,9 @@ let rec freevars_st (t:st_term)
           freevars r ++
           freevars is)
         returns_inv
+    
+    | Tm_PragmaWithOptions { body } ->
+      freevars_st body
 
 and freevars_branches (t:list branch) : Set.set var =
   match t with
@@ -373,6 +376,9 @@ let rec ln_st' (t:st_term) (i:int)
           ln' r (i + 1) &&
           ln' is i)
         returns_inv i
+    
+    | Tm_PragmaWithOptions { body } ->
+      ln_st' body i
 
 and ln_branch' (b : branch) (i:int) : Tot bool (decreases b) =
   ln_pattern' b.pat i &&
@@ -642,6 +648,9 @@ let rec subst_st_term (t:st_term) (ss:subst)
                 subst_term is ss)
       in
       Tm_WithInv { name; body; returns_inv }
+    
+    | Tm_PragmaWithOptions { options; body } ->
+      Tm_PragmaWithOptions { options; body=subst_st_term body ss }
 
     in
     { t with term = t' }

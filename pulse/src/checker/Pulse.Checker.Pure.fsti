@@ -65,6 +65,10 @@ val core_compute_term_type (g:env) (t:term)
            ty:term &
            typing g t eff ty)
 
+val core_check_term' (g:env) (e:term) (eff:T.tot_or_ghost) (t:term)
+    (extra_msg: unit -> T.Tac (list Pprint.document))
+  : T.Tac (typing g e eff t)
+
 val core_check_term (g:env) (e:term) (eff:T.tot_or_ghost) (t:term)
   : T.Tac (typing g e eff t)
 

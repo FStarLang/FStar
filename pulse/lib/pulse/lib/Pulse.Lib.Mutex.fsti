@@ -31,7 +31,7 @@ val mutex_guard (a:Type0) : Type0
 
 val mutex_live
   (#a:Type0)
-  (m:mutex a)
+  ([@@@mkey] m:mutex a)
   (#[T.exact (`1.0R)] p:perm)
   (v:a -> slprop)  : slprop
 

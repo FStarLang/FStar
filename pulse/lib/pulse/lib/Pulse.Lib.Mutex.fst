@@ -94,7 +94,7 @@ fn unlock (#a:Type0) (#v:a -> slprop) (#p:perm) (m:mutex a) (mg:mutex_guard a)
   unfold (mg `belongs_to` m);
   with x. rewrite (pts_to mg x) as (R.pts_to (B.box_to_ref m.r) x);
   B.to_box_pts_to m.r;
-  fold lock_inv;
+  fold lock_inv m.r v;
   release m.l;
   fold (mutex_live m #p v)
 }

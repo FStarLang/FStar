@@ -1,29 +1,17 @@
-* Info at ExistsErasedAndPureEqualities.fst(32,4-33,21):
-  - Expected failure:
-  - Tactic failed
-  - Could not resolve all free variables in the proposition: v == v_
-  - See also ExistsErasedAndPureEqualities.fst(32,4-34,12)
-
-* Info at ExistsErasedAndPureEqualities.fst(50,4-51,21):
-  - Expected failure:
-  - Tactic failed
-  - Could not resolve all free variables in the proposition: v == v_
-  - See also ExistsErasedAndPureEqualities.fst(50,4-52,12)
-
-* Info at ExistsErasedAndPureEqualities.fst(68,4-68,11):
+* Info at ExistsErasedAndPureEqualities.fst(60,4-60,11):
   - Admitting continuation.
   - Current context:
       ExistsErasedAndPureEqualities.some_pred x v
   - In typing environment:
-      __#586 : Prims.squash (v_ == v),
-      v_#585 : FStar.Ghost.erased Prims.int,
-      __#451 : Prims.squash (v == v),
+      __#543 : Prims.squash (_v_4 == v),
+      _v_4#542 : FStar.Ghost.erased Prims.int,
+      __#410 : Prims.squash (v == v),
       v#267 : FStar.Ghost.erased Prims.int,
       x#262 : Pulse.Lib.Reference.ref Prims.int
 
-* Info at ExistsErasedAndPureEqualities.fst(79,4-80,21):
+* Info at ExistsErasedAndPureEqualities.fst(71,4-73,12):
   - Expected failure:
-  - Tactic failed
-  - Could not resolve all free variables in the proposition: v == v_
-  - See also ExistsErasedAndPureEqualities.fst(79,4-81,12)
+  - Ill-typed term: pure (v == (*?u106*)_)
+  - Expected a term of type slprop
+  - Fstarcompiler.FStarC_Tactics_Common.TacticFailure(_)
 

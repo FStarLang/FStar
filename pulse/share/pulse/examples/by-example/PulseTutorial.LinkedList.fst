@@ -35,7 +35,7 @@ and llist (t:Type0) = option (node_ptr t)
 //end llist$
 
 //is_list$
-let rec is_list #t (x:llist t) (l:list t)
+let rec is_list #t ([@@@mkey] x:llist t) (l:list t)
 : Tot slprop (decreases l)
 = match l with
   | [] -> pure (x == None)
@@ -149,6 +149,7 @@ ensures is_list x l ** pure (l == [])
   rewrite each x as (None #(ref (node t)));
   unfold (is_list_cases None l);
   fold (is_list x []);
+  rewrite is_list x [] as is_list x l;
 }
 //end is_list_case_none$
 
@@ -178,11 +179,11 @@ returns n:nat
 ensures is_list x 'l ** pure (n == List.Tot.length 'l)
 {
   match x {
-    None -> {
+    norewrite None -> {
       is_list_case_none x;
       0
     }
-    Some vl -> {
+    norewrite Some vl -> {
       is_list_case_some x vl;
       let node = !vl;
       let n = length node.tail;
@@ -202,11 +203,11 @@ returns n:nat
 ensures is_list x 'l ** pure (n == k + List.Tot.length 'l)
 {
   match x {
-    None -> {
+    norewrite None -> {
       is_list_case_none x;
       k
     }
-    Some vl -> {
+    norewrite Some vl -> {
       is_list_case_some x vl;
       with _node _tl. _;
       let n = !vl;
@@ -222,21 +223,6 @@ ensures is_list x 'l ** pure (n == k + List.Tot.length 'l)
 module I = Pulse.Lib.Trade.Util
 open I
 
-//tail_for_cons$
-ghost
-fn tail_for_cons (#t:Type) (v:node_ptr t) (#n:node t) (tl:erased (list t))
-requires 
-  pts_to v n
-ensures 
-  (is_list n.tail tl @==> is_list (Some v) (n.head::tl))
-{
-  intro (is_list n.tail tl @==> is_list (Some v) (n.head::tl)) #(pts_to v n) fn _
-  {
-    intro_is_list_cons (Some v) v
-  };
-}
-//end tail_for_cons$
-
 //tail$
 fn tail (#t:Type) (x:llist t)
 requires is_list x 'l ** pure (Some? x)
@@ -248,9 +234,11 @@ ensures exists* tl.
 { 
     let np = Some?.v x;
     is_list_case_some x np;
-    with node tl. _;
     let nd = !np;
-    tail_for_cons np tl;
+    with tl. assert is_list nd.tail tl;
+    intro (is_list nd.tail tl @==> is_list x 'l) #(np |-> nd) fn _ {
+      intro_is_list_cons x np;
+    };
     nd.tail
 }
 //end tail$
@@ -316,13 +304,16 @@ ensures is_list x ('l1 @ 'l2)
 //end append$
 
 //tail_alt$
+let is_cons #t ([@@@mkey] x: list t) (hd: t) (tl: list t) : slprop =
+  pure (x == hd :: tl)
+
 fn tail_alt (#t:Type) (x:llist t)
 requires is_list x 'l ** pure (Some? x)
 returns y:llist t
 ensures exists* hd tl.
   is_list y tl **
   (forall* tl'. is_list y tl' @==> is_list x (hd::tl')) **
-  pure ('l == hd::tl)
+  is_cons 'l hd tl
 { 
   let np = Some?.v x;
   is_list_case_some x np;
@@ -332,6 +323,7 @@ ensures exists* hd tl.
       #(pts_to np node) fn _ tl' {
     intro_is_list_cons x np;
   };
+  fold is_cons 'l node.head _tl;
   node.tail
 }
 //end tail_alt$
@@ -425,7 +417,7 @@ ensures is_list x ('l1 @ 'l2)
     with ll pfx sfx. _;
     let l = !cur;
     let next = tail_alt l;
-    with hd tl. _;
+    with hd tl. unfold is_cons sfx hd tl;
     (* this is the key induction step *)
     FA.trans_compose
         (is_list next) (is_list l) (is_list x)

@@ -120,6 +120,7 @@ fn cases_of_is_tree #t (x:tree_t t) (ft:T.tree t)
     T.Leaf -> {
       unfold (is_tree x T.Leaf);
       fold (is_tree_cases None ft);
+      rewrite is_tree_cases None ft as is_tree_cases x ft;
     }
     T.Node data ltree rtree -> {
       unfold (is_tree x (T.Node data ltree rtree));
@@ -127,7 +128,8 @@ fn cases_of_is_tree #t (x:tree_t t) (ft:T.tree t)
       with n. assert p |-> n;
       with l'. rewrite is_tree lct l' as is_tree n.left l';
       with r'. rewrite is_tree rct r' as is_tree n.right r';
-      fold (is_tree_cases (Some p) (T.Node data ltree rtree))
+      fold (is_tree_cases (Some p) ft);
+      rewrite (is_tree_cases (Some p) ft) as is_tree_cases x ft;
     }
   }
 }
@@ -240,8 +242,6 @@ fn node_cons (#t:Type0) (v:t) (ltree:tree_t t) (rtree:tree_t t) (#l:(T.tree t)) 
   ensures is_tree y (T.Node v l r) ** (pure (Some? y))
 {
   let y = Box.alloc { data=v; left =ltree; right = rtree };
-  rewrite each ltree as ({data = v; left = ltree; right = rtree}).left in (is_tree ltree l);
-  rewrite each rtree as ({data = v; left = ltree; right = rtree}).right in (is_tree rtree r);
   intro_is_tree_node (Some y) y;
   Some y
 }
@@ -293,17 +293,11 @@ fn rec append_left (#t:Type0) (x:tree_t t) (v:t) (#ft:G.erased (T.tree t))
 
       is_tree_case_some (Some vl) vl;
 
-      with _node _ltree _rtree._;
-
       let node = !vl;
 
       let left_new = append_left node.left v;
 
       vl := {node with left = left_new};
-
-      rewrite each left_new as ({ node with left = left_new }).left in (is_tree left_new ((T.append_left (reveal _ltree) v)));
-      
-      rewrite each node.right as ({ node with left = left_new }).right in (is_tree node.right _rtree);
 
       intro_is_tree_node x vl;
 
@@ -344,17 +338,11 @@ fn rec append_right (#t:Type0) (x:tree_t t) (v:t) (#ft:G.erased (T.tree t))
     Some np -> {
       is_tree_case_some (Some np) np;
 
-      with _node _ltree _rtree._;
-      
       let node = !np;
 
       let right_new = append_right node.right v;
       
       np := {node with right = right_new};
-      
-      rewrite each right_new as ({ node with right = right_new }).right in (is_tree right_new ((T.append_right (reveal _rtree) v)));
-      
-      rewrite each node.left as ({node with right = right_new}).left in (is_tree node.left _ltree);
       
       intro_is_tree_node x np;
       

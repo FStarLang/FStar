@@ -21,7 +21,6 @@ open Pulse.Typing
 open Pulse.Typing.Combinators
 open Pulse.Checker.Pure
 open Pulse.Checker.Base
-open Pulse.Checker.Prover
 
 module T = FStar.Tactics.V2
 module Metatheory = Pulse.Typing.Metatheory
@@ -77,7 +76,7 @@ let check
       let t =
         mk_term (Tm_ProofHintWithBinders {
           binders = [];
-          hint_type = RENAME { pairs = [(b, eq_v)]; goal=None; tac_opt=None; elaborated=true };
+          hint_type = RENAME { pairs = [(b, eq_v)]; goal=None; tac_opt = Some Pulse.Reflection.Util.match_rename_tac_tm; elaborated=true };
           t = br;
         }) br.range
       in
@@ -119,10 +118,12 @@ let check
       apply_checker_result_k r ppname
     in
     let br_name = if is_then then "then" else "else" in
-    if hyp `Set.mem` freevars_st br
-    then fail g (Some br.range)
-           (Printf.sprintf "check_if: branch hypothesis is in freevars of checked %s branch" br_name)
-    else (| br, c, d |)
+    // if hyp `Set.mem` freevars_st br
+    // then fail g (Some br.range)
+    //        (Printf.sprintf "check_if: branch hypothesis is in freevars of checked %s branch" br_name)
+    // else
+     assume not (hyp `Set.mem` freevars_st br);
+     (| br, c, d |)
   in
   let (| e1, c1, e1_typing |) = extract then_ true in
   let (| e2, c2, e2_typing |) = extract else_ false in

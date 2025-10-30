@@ -290,6 +290,9 @@ fn move_next (#t:Type) (x:llist t)
     let node = !np;
     intro_yields_cons np;
     rewrite each (Some np) as x;
+    with tl. assert is_list node.tail tl;
+    rewrite trade (is_list node.tail tl) (is_list x (node.head :: tl))
+         as trade (is_list node.tail tl) (is_list x 'l);
     node.tail
 }
 
@@ -408,13 +411,15 @@ fn non_empty_list (#t:Type0) (x:llist t)
     intro_is_list_cons x v #n #tl;
 }
 
+let is_cons #t ([@@@mkey] x: list t) hd tl = pure (x == hd :: tl)
+
 fn move_next_forall (#t:Type) (x:llist t)
     requires is_list x 'l ** pure (Some? x)
     returns y:llist t
     ensures exists* hd tl.
         is_list y tl **
         (forall* tl'. is_list y tl' @==> is_list x (hd::tl')) **
-        pure ('l == hd::tl)
+        is_cons 'l hd tl
 { 
     let np = Some?.v x;
     is_list_cases_some x np;
@@ -422,6 +427,8 @@ fn move_next_forall (#t:Type) (x:llist t)
     intro (forall* tl'. is_list node.tail tl' @==> is_list x (node.head::tl')) #(np |-> node) fn _ tl' {
       intro_is_list_cons x np;
     };
+    with tl. assert is_list node.tail tl;
+    fold is_cons 'l node.head tl;
     node.tail
 }
 
@@ -458,14 +465,14 @@ fn append_iter (#t:Type) (x y:llist t)
     with ll pfx sfx. _;
     some_iff_cons ll;
     let next = move_next_forall Pulse.Lib.Reference.(!cur);
-    with hd tl. _;
+    with hd tl. unfold is_cons sfx hd tl;
     (* this is the key induction step *)
     FA.trans_compose
         (is_list next) (is_list ll) (is_list x)
-        (fun tl -> hd :: tl)
+        (fun tl -> reveal hd :: tl)
         (fun tl -> pfx @ tl);
-    rewrite (forall* tl. is_list next tl @==> is_list x (pfx@(hd::tl)))
-          as (forall* tl. is_list next tl @==> is_list x ((pfx@[hd])@tl));
+    rewrite (forall* tl. is_list next tl @==> is_list x (pfx@(reveal hd::tl)))
+          as (forall* tl. is_list next tl @==> is_list x ((pfx@[reveal hd])@tl));
     Pulse.Lib.Reference.(cur := next);
   };
   with ll pfx sfx. _;
@@ -526,7 +533,7 @@ fn split (#t:Type0) (x:llist t) (n:U32.t) (#xl:erased (list t))
   {
     with i ll pfx sfx. _;
     let next = move_next_forall Pulse.Lib.Reference.(!cur);
-    with hd tl. _;
+    with hd tl. unfold is_cons sfx hd tl;
     (* this is the key induction step *)
     FA.trans_compose
         (is_list next) (is_list ll) (is_list x)

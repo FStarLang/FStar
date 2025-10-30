@@ -195,9 +195,8 @@ type check_t =
 val match_comp_res_with_post_hint (#g:env) (#t:st_term) (#c:comp_st)
   (d:st_typing g t c)
   (post_hint:post_hint_opt g)
-  : T.Tac (t':st_term &
-           c':comp_st &
-           st_typing g t' c')
+  : T.Tac (c':comp_st { comp_pre c' == comp_pre c } &
+           st_typing g t c')
 
 val apply_checker_result_k (#g:env) (#ctxt:slprop) (#post_hint:post_hint_for_env g)
   (r:checker_result_t g ctxt (PostHint post_hint))

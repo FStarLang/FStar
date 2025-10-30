@@ -36,8 +36,6 @@ fn test2 ()
 }
 
 
-[@@expect_failure] // should work
-
 fn test3 ()
   requires foo 1 2
   ensures emp
@@ -46,8 +44,6 @@ fn test3 ()
   ()
 }
 
-
-[@@expect_failure] // should work
 
 fn test4 ()
   requires foo 1 2

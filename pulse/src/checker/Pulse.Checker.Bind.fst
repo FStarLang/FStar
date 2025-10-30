@@ -21,7 +21,7 @@ open Pulse.Typing
 open Pulse.Typing.Combinators
 open Pulse.Checker.Base
 open Pulse.Checker.Pure
-open Pulse.Checker.Prover
+open Pulse.Checker.Prover.Util
 open Pulse.Show
 open Pulse.Checker.Util
 
@@ -107,6 +107,8 @@ let check_binder_typ
     //   let x : t = x0 in
     //   rename x0 x; ...
     // to leverage the pure case
+    let ty = Pulse.RuntimeUtils.deep_compress_safe ty in
+    let t = Pulse.RuntimeUtils.deep_compress_safe t in
     if not (eq_tm ty t) then
       let open Pulse.PP in
       fail_doc g (Some e1.range) [

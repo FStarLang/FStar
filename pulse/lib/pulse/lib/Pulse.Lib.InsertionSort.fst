@@ -134,8 +134,7 @@ let step_outer_invariant
 #pop-options
 
 
-#push-options "--fuel 0 --ifuel 1 --split_queries no --z3rlimit_factor 2"
-#restart-solver
+#push-options "--z3rlimit_factor 2"
 fn insertion_sort u#a
       (#t:Type u#a)
       {| total_order t |}

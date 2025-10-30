@@ -207,6 +207,7 @@ fn rec redeem_range
   ensures f ** on_range p 0 n
 {
   if (n = 0) {
+    rewrite each n as 0;
     on_range_empty_elim (fun i -> pledge emp_inames f (p i)) 0;
     on_range_empty p 0;
   } else {

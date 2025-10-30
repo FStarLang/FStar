@@ -418,6 +418,7 @@ let tc_term_phase1 g (t:term) : T.Tac (term & term & T.tot_or_ghost)
   = let fg = elab_env g in
     let t = RU.deep_transform_to_unary_applications t in
     let instantiate_imps = true in
+    debug g (fun _ -> "tc_term_phase1: " ^ show t);
     let res, issues = catch_all fun _ ->
       RU.with_context (RU.extend_context "tc_term_phase1" (Some (range_of_term t)) (get_context g)) fun _ ->
       RU.tc_term_phase1 fg t instantiate_imps in
@@ -465,7 +466,7 @@ let core_compute_term_type (g:env) (t:term)
   in
   RU.record_stats "Pulse.core_compute_term_type" aux
 
-let core_check_term g e eff t
+let core_check_term' g e eff t extra_msg
 = let aux () : T.Tac (typing g e eff t) 
   = let fg = elab_env g in
     let topt, issues =
@@ -475,10 +476,14 @@ let core_check_term g e eff t
         fg e eff t) in
     match topt with   
     | None ->
-      fail_doc_with_subissues g (Some <| RU.range_of_term e) issues (ill_typed_term e (Some t) None)
+      fail_doc_with_subissues g (Some <| RU.range_of_term e) issues (extra_msg () @ ill_typed_term e (Some t) None)
     | Some tok -> E (RT.T_Token _ _ _ (FStar.Squash.return_squash tok))
   in
   RU.record_stats "Pulse.core_check_term" aux
+
+
+let core_check_term g e eff t
+= core_check_term' g e eff t fun _ -> []
 
 let core_check_term_at_type g e t
 = let aux () : T.Tac (eff:T.tot_or_ghost & typing g e eff t) 

@@ -3,7 +3,7 @@
   - Tactic failed
   - Expected a total term, but this term has Ghost effect
 
-* Info at Bug267.fst(62,4-62,5):
+* Info at Bug267.fst(61,5-61,8):
   - Expected failure:
   - Could not prove equality between computed type Prims.int
     and expected type Prims.nat
@@ -11,9 +11,13 @@
   - The SMT solver could not prove the query. Use --query_stats for more
     details.
   - Also see: Prims.fst(161,28-183,79)
-  - See also Bug267.fst(62,4-62,8)
+  - See also Bug267.fst(61,4-61,8)
 
-* Info at Bug267.fst(67,13-67,14):
+* Info at Bug267.fst(65,53-66,17):
   - Expected failure:
-  - Expected type Pulse.Lib.Core.slprop but n >= 1 has type Prims.bool
+  - Tactic failed
+  - Cannot prove:
+      n >= 1
+  - In the context:
+
 

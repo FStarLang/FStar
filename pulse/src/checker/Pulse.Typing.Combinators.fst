@@ -467,7 +467,7 @@ let bind_res_and_post_typing g c2 x post_hint
       let (| u, res_typing |) = check_universe g s2.res in 
       if not (eq_univ u s2.u)
       then fail g None "Unexpected universe for result type"
-      else if x `Set.mem` freevars s2.post
+      else if x `Set.mem` freevars (RU.deep_compress_safe s2.post)
       then fail g None (Printf.sprintf "Bound variable %d escapes scope in postcondition %s" x (P.term_to_string s2.post))
       else (
         let y = x in //fresh g in

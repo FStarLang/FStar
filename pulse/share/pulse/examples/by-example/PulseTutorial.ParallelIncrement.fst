@@ -124,7 +124,7 @@ ensures L.lock_alive lock #p (lock_inv x i left right) ** GR.pts_to left #0.5R (
   GR.write left ('vl + 1);
   GR.share left;
   fold (contributions left right i (v + 1));
-  fold lock_inv;
+  fold lock_inv x i left right;
   L.release lock
 }
 //end incr_left$
@@ -333,12 +333,13 @@ ensures inv (C.iname_of c) (C.cinv_vp c (exists* v. pts_to x v ** refine v)) ** 
   let mut continue = true;
   fold (cond true (aspec 'i) (aspec ('i + 1)));
   while (!continue)
-  invariant b.
+  invariant exists* b.
     inv (C.iname_of c) (C.cinv_vp c (exists* v. pts_to x v ** refine v)) **
     pts_to continue b **
     C.active c p **
     cond b (aspec 'i) (aspec ('i + 1))
   {
+    rewrite each (!continue) as true; // FIXME: rewrites_to goes in the wrong direction
     later_credit_buy 1;
     let v = read ();
     later_credit_buy 1;
@@ -353,12 +354,12 @@ ensures inv (C.iname_of c) (C.cinv_vp c (exists* v. pts_to x v ** refine v)) ** 
         later_elim _;
         C.unpack_cinv_vp c;
         unfold cond;
+        with vv. assert x |-> vv;
         let b = cas x v (v + 1);
         if b
         { 
           unfold cond;
-          with vv. assert (refine vv);
-          f vv _;
+          f vv 'i;
           C.pack_cinv_vp #(exists* v. pts_to x v ** refine v) c;
           fold (cond false (aspec 'i) (aspec ('i + 1)));
           later_intro (C.cinv_vp c (exists* v. pts_to x v ** refine v));
@@ -376,6 +377,7 @@ ensures inv (C.iname_of c) (C.cinv_vp c (exists* v. pts_to x v ** refine v)) ** 
     continue := next
   };
   //end incr_atomic_body_loop$
+  rewrite each (!continue) as false; // FIXME: rewrites_to goes in the wrong direction
   unfold cond;
 }
 //end incr_atomic_body$
@@ -562,14 +564,13 @@ fn incr_pcm_t (r:ref int) (ghost_r:GPR.gref pcm) (l:L.lock) (t1:bool) (#n:int)
           t1_perm ghost_r (add_one n) t1
 {
   L.acquire l;
-  unfold lock_inv_pcm;
-  unfold lock_inv_ghost;
+  unfold lock_inv_pcm; with n'. _;
+  unfold lock_inv_ghost; with n1 n2. _;
   let v = !r;
   r := v + 1;
   if t1 {
     rewrite (t1_perm ghost_r n t1) as
             (GPR.pts_to ghost_r (half n, None));
-    with n1 n2. assert (GPR.pts_to ghost_r (half n1, half n2));
     GPR.gather ghost_r (half n, None) (half n1, half n2);
     rewrite (GPR.pts_to ghost_r ((half n, None) `op pcm` (half n1, half n2))) as
             (GPR.pts_to ghost_r (full n1, half n2));
@@ -580,14 +581,13 @@ fn incr_pcm_t (r:ref int) (ghost_r:GPR.gref pcm) (l:L.lock) (t1:bool) (#n:int)
     rewrite (GPR.pts_to ghost_r (full (add_one n1), half n2)) as
             (GPR.pts_to ghost_r ((half (add_one n1), half n2) `op pcm` (half (add_one n1), None)));
     GPR.share ghost_r (half (add_one n1), half n2) (half (add_one n1), None);
-    fold lock_inv_ghost;
-    fold lock_inv_pcm;
+    fold lock_inv_ghost ghost_r (!r);
+    fold lock_inv_pcm r;
     L.release l;
     fold (t1_perm ghost_r (add_one n) true);
   } else {
     rewrite (t1_perm ghost_r n t1) as
             (GPR.pts_to ghost_r (None, half n));
-    with n1 n2. assert (GPR.pts_to ghost_r (half n1, half n2));
     GPR.gather ghost_r (None, half n) (half n1, half n2);
     rewrite (GPR.pts_to ghost_r ((None, half n2) `op pcm` (half n1, half n2))) as
             (GPR.pts_to ghost_r (half n1, full n2));
@@ -598,7 +598,7 @@ fn incr_pcm_t (r:ref int) (ghost_r:GPR.gref pcm) (l:L.lock) (t1:bool) (#n:int)
     rewrite (GPR.pts_to ghost_r (half n1, full (add_one n2))) as
             (GPR.pts_to ghost_r ((half n1, half (add_one n2)) `op pcm` (None, half (add_one n2))));
     GPR.share ghost_r (half n1, half (add_one n2)) (None, half (add_one n2));
-    fold lock_inv_ghost;
+    fold lock_inv_ghost ghost_r (!r);
     fold lock_inv_pcm;
     L.release l;
     fold (t1_perm ghost_r (add_one n) false)
@@ -672,7 +672,6 @@ fn incr_pcm_t_abstract (r:ref int) (l:L.lock)
   L.acquire l;
   let v = !r;
   r := v + 1;
-  with _v. rewrite (ghost_inv _v) as (ghost_inv v);
   ghost_steps v;
   L.release #(exists* v. pts_to r v ** ghost_inv v) l
 }

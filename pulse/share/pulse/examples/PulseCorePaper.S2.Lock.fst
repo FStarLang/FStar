@@ -65,7 +65,8 @@ ensures protects l p
   with_invariants l.i
   { 
     later_elim _;
-    drop_ (maybe _ _);
+    with v. assert l.r |-> v;
+    drop_ (maybe (v = 0ul) _);
     Pulse.Lib.Primitives.write_atomic_box l.r 0ul;
     later_intro (lock_inv l.r p);
   }

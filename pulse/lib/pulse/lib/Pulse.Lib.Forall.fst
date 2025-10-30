@@ -47,7 +47,7 @@ fn elim_forall u#a
 {
   unfold (forall* x. p x);
   unfold uquant (F.on_dom a (fun x -> p x));
-  with v. assert token v; unfold token v;
+  with v. unfold token v;
   extract_q v (F.on_domain a (fun x -> p x)) () x;
 }
 

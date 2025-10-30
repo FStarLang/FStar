@@ -6,8 +6,6 @@ open Pulse.Nolib
 assume
 val foo (x y z w : int) : slprop
 
-(* Would be nice if this worked. *)
-[@@expect_failure]
 fn test () (#x:int)
   requires foo x 'y 'z 'w
   ensures  foo x 'y 'z 'w

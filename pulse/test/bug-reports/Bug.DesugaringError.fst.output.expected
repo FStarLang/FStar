@@ -14,5 +14,6 @@
 
 * Info at Bug.DesugaringError.fst(46,4-46,8):
   - Expected failure:
+  - Ill-typed term: Bug.DesugaringError.f true
   - Expected expression of type Prims.nat got expression true of type Prims.bool
 

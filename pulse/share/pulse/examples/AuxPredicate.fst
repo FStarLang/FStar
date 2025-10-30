@@ -98,10 +98,8 @@ fn invar_introduces_ghost_alt (r:R.ref int)
   r := 0;
 
   while (let vr = !r; (vr = 0))
-  invariant b. 
-    exists* v.
-      pts_to r v **
-      pure ( (v==0 \/ v == 1) /\ b == (v = 0) )
+    invariant live r
+    invariant pure (!r == 0 \/ !r == 1)
   {
     r := 1;
   }

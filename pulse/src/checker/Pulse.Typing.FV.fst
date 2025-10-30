@@ -220,7 +220,7 @@ let rec freevars_close_st_term' (t:st_term) (x:var) (i:index)
       freevars_close_proof_hint' hint_type x (i + n);
       freevars_close_st_term' t x (i + n)
 
-    | Tm_WithInv { name; body; returns_inv } ->
+    | Tm_WithInv { name; body; returns_inv } -> (
       freevars_close_term' name x i;
       freevars_close_st_term' body x i;
       match returns_inv with
@@ -229,6 +229,10 @@ let rec freevars_close_st_term' (t:st_term) (x:var) (i:index)
         freevars_close_term' b.binder_ty x i;
         freevars_close_term' r x (i + 1);
         freevars_close_term' is x i
+    )
+
+    | Tm_PragmaWithOptions { body } ->
+      freevars_close_st_term' body x i
 #pop-options
 
 let freevars_close_term (e:term) (x:var) (i:index)

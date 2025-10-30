@@ -305,6 +305,7 @@ fn impl_array_group3_item
     } else {
         let c = cbor_array_iterator_next pi #p #l #gi; // FIXME: WHY WHY WHY those explicit arguments?
         with gc i' l' . assert (
+            pi |-> i' **
             raw_data_item_match p c gc **
             cbor_array_iterator_match p i' l' **
             ((raw_data_item_match p c gc ** cbor_array_iterator_match p i' l') @==> cbor_array_iterator_match p gi l)
@@ -734,6 +735,7 @@ ensures
     let res = cbor_map_get key map;
     if (Found? res) {
         let fres = Found?._0 res;
+        assert rewrites_to res (Found fres);
         manurewrite (cbor_map_get_post pmap vkey vmap map res) (cbor_map_get_post_found pmap vkey vmap map fres);
         unfold (cbor_map_get_post_found pmap vkey vmap map fres);
         let test = ft fres;
@@ -746,6 +748,7 @@ ensures
             NotFound
         }
     } else {
+        assert rewrites_to res NotFound;
         rewrite (cbor_map_get_post pmap vkey vmap map res) as (cbor_map_get_post_not_found pmap vkey vmap map);
         unfold (cbor_map_get_post_not_found pmap vkey vmap map);
         fold (cbor_map_get_with_typ_post t pmap vkey vmap map NotFound);
