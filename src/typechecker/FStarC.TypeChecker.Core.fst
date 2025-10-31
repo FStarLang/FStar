@@ -1113,7 +1113,7 @@ let rec check_relation' (g:env) (rel:relation) (t0 t1:typ)
     in
     let emit_guard t0 t1 =
        let! _, t_typ = with_context "checking lhs while emitting guard" None (fun _ -> do_check g t0) in
-       let! u = universe_of g t_typ in
+       let! u = universe_of_well_typed_term g t_typ in
        guard g (U.mk_eq2 u t_typ t0 t1)
     in
     let fallback t0 t1 =
@@ -1196,7 +1196,7 @@ let rec check_relation' (g:env) (rel:relation) (t0 t1:typ)
         if head_matches x0.sort x1.sort
         then (
           check_relation g EQUALITY x0.sort x1.sort ;!
-          let! u = universe_of g x0.sort in
+          let! u = universe_of_well_typed_term g x0.sort in
           let g0 = g in
           let g, b, f0 = open_term g (S.mk_binder x0) f0 in
           let f1 = Subst.subst [DB(0, b.binder_bv)] f1 in
@@ -1237,7 +1237,7 @@ let rec check_relation' (g:env) (rel:relation) (t0 t1:typ)
           (* For subtyping, we just check that x0.sort <: t1. But for equality,
           we must show that the refinement on the LHS is constantly true. *)
           if rel = EQUALITY then (
-            let! u0 = universe_of g x0.sort in
+            let! u0 = universe_of_well_typed_term g x0.sort in
             let g0 = g in
             let g, b0, f0 = open_term g (S.mk_binder x0) f0 in
             if! guard_not_allowed then
@@ -1263,7 +1263,7 @@ let rec check_relation' (g:env) (rel:relation) (t0 t1:typ)
       | _, Tm_refine {b=x1; phi=f1} ->
         if head_matches t0 x1.sort
         then (
-          let! u1 = universe_of g x1.sort in
+          let! u1 = universe_of_well_typed_term g x1.sort in
           check_relation g EQUALITY t0 x1.sort ;!
           let g0 = g in
           let g, b1, f1 = open_term g (S.mk_binder x1) f1 in
@@ -1341,7 +1341,7 @@ let rec check_relation' (g:env) (rel:relation) (t0 t1:typ)
         check_relation g EQUALITY b0.binder_bv.sort b1.binder_bv.sort;!
         check_bqual b0.binder_qual b1.binder_qual;!
         check_positivity_qual EQUALITY b0.binder_positivity b1.binder_positivity;!
-        let! u = universe_of g b0.binder_bv.sort in
+        let! u = universe_of_well_typed_term g b0.binder_bv.sort in
         let g0 = g in
         let g, b0, body0 = open_term g b0 body0 in
         let body1 = Subst.subst [DB(0, b0.binder_bv)] body1 in
@@ -1358,7 +1358,7 @@ let rec check_relation' (g:env) (rel:relation) (t0 t1:typ)
         with_context "subtype arrow" None (fun _ ->
           let! _ = check_bqual x0.binder_qual x1.binder_qual in
           check_positivity_qual rel x0.binder_positivity x1.binder_positivity;!
-          let! u1 = universe_of g x1.binder_bv.sort in
+          let! u1 = universe_of_well_typed_term g x1.binder_bv.sort in
           let g_x1, x1, c1 = open_comp g x1 c1 in
           let c0 = Subst.subst_comp [DB(0, x1.binder_bv)] c0 in
           with_binders g [x1] [u1] (
@@ -1723,7 +1723,7 @@ and do_check (g:env) (e:term)
 
   | Tm_match {scrutinee=sc; ret_opt=None; brs=branches; rc_opt} ->
     let! eff_sc, t_sc = check "scrutinee" g sc in
-    let! u_sc = with_context "universe_of" (Some (CtxTerm t_sc)) (fun _ -> universe_of g t_sc) in
+    let! u_sc = universe_of_well_typed_term g t_sc in
     let rec check_branches path_condition
                            branch_typ_opt
                            branches
@@ -1783,7 +1783,7 @@ and do_check (g:env) (e:term)
     let! branch_typ_opt =
         match rc_opt with
         | Some ({ residual_typ = Some t }) ->
-          with_context "residual type" (Some (CtxTerm t)) (fun _ -> universe_of g t) ;!
+          universe_of g t ;!
           return (Some (E_Total, t))
 
         | _ ->
@@ -1802,7 +1802,7 @@ and do_check (g:env) (e:term)
 
   | Tm_match {scrutinee=sc; ret_opt=Some (as_x, (Inl returns_ty, None, eq)); brs=branches; rc_opt} ->
     let! eff_sc, t_sc = check "scrutinee" g sc in
-    let! u_sc = with_context "universe_of" (Some (CtxTerm t_sc)) (fun _ -> universe_of g t_sc) in
+    let! u_sc = universe_of_well_typed_term g t_sc in
     let as_x = {as_x with binder_bv = { as_x.binder_bv with sort = t_sc } } in
     let g_as_x, as_x, returns_ty = open_term g as_x returns_ty in
     let! _eff_t, returns_ty_t =
@@ -1929,6 +1929,14 @@ and universe_of (g:env) (t:typ)
   : result universe
   = let! _, t = check "universe of" g t in
     is_type g t
+
+and universe_of_well_typed_term (g:env) (t:typ)
+  : result universe
+  = try
+      let u = FStarC.TypeChecker.TcTerm.universe_of g.tcenv t in
+      return u
+    with
+    | _ -> universe_of g t
 
 and check_pat (g:env) (p:pat) (t_sc:typ) : result (binders & universes) =
   let unrefine_tsc t_sc =

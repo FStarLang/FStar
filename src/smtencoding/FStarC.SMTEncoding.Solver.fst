@@ -1404,9 +1404,13 @@ let encode_and_ask (can_split:bool) (is_retry:bool) use_env_msg tcenv q : (list 
       | _ -> failwith "Impossible"
     )
   in
-  if Solver.Cache.try_find_query_cache tcenv q then (
+  if Options.admit_smt_queries () then (
+    ([], ans_ok)
+  )
+  else if Solver.Cache.try_find_query_cache tcenv q then (
     ([], { ans_ok with cache_hit = true })
-  ) else (
+  ) 
+  else (
     let (cfgs, ans) = FStarC.Stats.record "Solver.encode_and_ask" do in
     if ans.ok then
       Solver.Cache.query_cache_add tcenv q;
