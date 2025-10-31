@@ -81,7 +81,7 @@ let prove_this (g: env) (goal: slprop) (ctxt: list slprop) : T.Tac (option (list
       match ctxt with
       | [] -> false
       | c::ctxt ->
-        if RU.teq_nosmt_force (elab_env g) goal c then
+        if RU.teq_nosmt_force_phase1 (elab_env g) goal c then
           true
         else
           try_match ctxt
