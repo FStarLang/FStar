@@ -2653,22 +2653,22 @@ let refl_check_prop_validity (g:env) (e:term) : tac (option unit & issues) =
      no_uvars_in_term e
   then refl_typing_builtin_wrapper "refl_check_prop_validity" (fun _ ->
          let g = Env.set_range g e.pos in
-         dbg_refl g (fun _ ->
-           Format.fmt1 "refl_check_prop_validity: %s\n" (show e));
-         let must_tot = false in
-         let _ =
-           match Core.check_term g e (U.fvar_const PC.prop_lid) must_tot with
-           | Inl None -> ()
-           | Inl (Some (guard, tok)) ->
-             Rel.force_trivial_guard g
-               {Env.trivial_guard with guard_f=NonTrivial guard};
-             Core.commit_guard tok
-           | Inr err ->
-             let msg = Format.fmt1 "refl_check_prop_validity failed (not a prop): %s\n"
-                                  (Core.print_error err) in
-             dbg_refl g (fun _ -> msg);
-             Errors.raise_error g Errors.Fatal_IllTyped msg
-         in
+        //  dbg_refl g (fun _ ->
+        //    Format.fmt1 "refl_check_prop_validity: %s\n" (show e));
+        //  let must_tot = false in
+        //  let _ =
+        //    match Core.check_term g e (U.fvar_const PC.prop_lid) must_tot with
+        //    | Inl None -> ()
+        //    | Inl (Some (guard, tok)) ->
+        //      Rel.force_trivial_guard g
+        //        {Env.trivial_guard with guard_f=NonTrivial guard};
+        //      Core.commit_guard tok
+        //    | Inr err ->
+        //      let msg = Format.fmt1 "refl_check_prop_validity failed (not a prop): %s\n"
+        //                           (Core.print_error err) in
+        //      dbg_refl g (fun _ -> msg);
+        //      Errors.raise_error g Errors.Fatal_IllTyped msg
+        //  in
          ((), [(g, (e, Core.empty_token))])
        )
   else return (None, [unexpected_uvars_issue (Env.get_range g)])
