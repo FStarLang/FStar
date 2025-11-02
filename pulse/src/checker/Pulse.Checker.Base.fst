@@ -657,7 +657,7 @@ let apply_checker_result_k (#g:env) (#ctxt:slprop) (#post_hint:post_hint_for_env
   // TODO: FIXME add to checker result type?
   let (| y, g1, (| u_ty, ty_y, d_ty_y |), (| pre', _ |), k |) = r in
 
-  let (| u_ty_y, d_ty_y |) = Pulse.Checker.Pure.check_universe g1 ty_y in
+  let (| u_ty_y, d_ty_y |) = Pulse.Checker.Pure.universe_of_well_typed_term g1 ty_y in
 
   let d : st_typing_in_ctxt g1 pre' (PostHint post_hint) =
     return_in_ctxt g1 y res_ppname u_ty_y ty_y pre' d_ty_y (PostHint post_hint) in
@@ -1128,7 +1128,7 @@ let rec close_post x_ret dom_g g1 (bs1:list (ppname & var & typ)) (post:slprop)
     if not (y `Set.mem` freevars post) then post
     else (
       let b = {binder_ty=ty; binder_ppname=n; binder_attrs=Sealed.seal []} in
-      let (| u, _ |) = Pulse.Checker.Pure.check_universe g1 ty in
+      let (| u, _ |) = Pulse.Checker.Pure.universe_of_well_typed_term g1 ty in
       tm_exists_sl u b (close_term post y)
     )
   in

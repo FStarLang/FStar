@@ -77,7 +77,7 @@ let rtb_universe_of (g:env) (f:T.env) (e: T.term)
   let res = RU.with_context (get_context g) (fun _ -> RTB.universe_of f e) in
   res
 
-let universe_of_well_typed_term  (g:env) (f:T.env) (e: T.term)
+let universe_of_well_typed_term_internal  (g:env) (f:T.env) (e: T.term)
 : T.Tac (option (u:T.universe{typing_token f e (E_Total, pack_ln (Tv_Type u))}) & issues)
 = match RU.universe_of_well_typed_term f e with
   | None -> rtb_universe_of g f e
@@ -299,11 +299,11 @@ let instantiate_term_implicits_uvs (g:env) (t0:term) (inst_extra:bool) =
 let check_universe_aux (g:env) (t:term) (t_well_typed:bool)
   : T.Tac (u:universe & universe_of g t u)
   = let aux () : T.Tac (u:universe & universe_of g t u) =
-      let f = elab_env g in
-      let ru_opt, issues = catch_all (fun _ -> if t_well_typed then universe_of_well_typed_term g f t else rtb_universe_of g f t) in
+      let rng, f = elab_env_with_term_range g t in
+      let ru_opt, issues = catch_all (fun _ -> if t_well_typed then universe_of_well_typed_term_internal g f t else rtb_universe_of g f t) in
       match ru_opt with
       | None -> 
-        fail_doc_with_subissues g (Some <| RU.range_of_term t) issues (ill_typed_term t (Some (tm_type u_unknown)) None)
+        fail_doc_with_subissues g (Some rng) issues (ill_typed_term t (Some (tm_type u_unknown)) None)
 
       | Some ru ->
         let proof : squash (T.typing_token f t (E_Total, R.pack_ln (R.Tv_Type ru))) =
@@ -314,6 +314,8 @@ let check_universe_aux (g:env) (t:term) (t_well_typed:bool)
     in
     RU.record_stats "check_universe" aux
 
+
+let universe_of_well_typed_term (g:env) (t:term) = check_universe_aux g t true
 
 let check_universe (g:env) (t:term) = check_universe_aux g t false
 
