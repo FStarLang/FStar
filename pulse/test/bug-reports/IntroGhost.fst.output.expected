@@ -2,7 +2,7 @@
   - Expected failure:
   - Tactic failed
   - Cannot prove:
-      Pulse.Lib.Reference.pts_to r (*?u258*)_
+      Pulse.Lib.Reference.pts_to r (*?u257*)_
   - In the context:
       IntroGhost.my_inv _b2 r
 
