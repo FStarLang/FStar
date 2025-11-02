@@ -734,6 +734,8 @@ let prove rng (g: env) (ctxt goals: slprop) allow_amb :
     let h: slprop_equiv g' (elab_slprops (ctxt' @ [Unknown goals])) (tm_star goals (elab_slprops ctxt')) = RU.magic () in
     (| g', RU.deep_compress_safe (elab_slprops ctxt'), k_elab_equiv k (VE_Refl _ _) h |)
 
+#restart-solver
+#push-options "--z3rlimit_factor 2"
 let prove_post_hint (#g:env) (#ctxt:slprop) (r:checker_result_t g ctxt NoHint) (post_hint:post_hint_opt g) (rng:range)
   : T.Tac (checker_result_t g ctxt post_hint) =
 
@@ -778,6 +780,7 @@ let prove_post_hint (#g:env) (#ctxt:slprop) (r:checker_result_t g ctxt NoHint) (
         let h2: tot_typing g3 post_hint_opened tm_slprop = RU.magic () in
         (| x, g3, (| u_ty, ty, h1 |), (| post_hint_opened, h2 |),
           k_elab_trans k (k_elab_equiv k_post (VE_Refl _ _) h3) |)
+#pop-options
 
 let try_frame_pre (allow_ambiguous : bool) (#g:env)
     (#ctxt:slprop) (ctxt_typing:tot_typing g ctxt tm_slprop)
