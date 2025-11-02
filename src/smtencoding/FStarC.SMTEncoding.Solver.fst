@@ -686,6 +686,12 @@ let query_info settings z3result =
           with
           | _ -> "unknown"
         in
+        if Options.Ext.enabled "query_stats_trace"
+        then (
+          Format.print "At %s\nQuery term is %s\n"
+                [BU.stack_dump();
+                 show settings.query_term]
+        );
         Format.print "%s\tQuery-stats (%s, %s)\t%s%s in %s milliseconds with fuel %s and ifuel %s and rlimit %s (used rlimit %s)\n"
              [  range;
                 settings.query_name;
@@ -697,7 +703,6 @@ let query_info settings z3result =
                 show settings.query_ifuel;
                 show settings.query_rlimit;
                 used_rlimit_str;
-                // stats ()
              ];
         if Options.print_z3_statistics () then process_unsat_core core;
         errs |> List.iter (fun (_, msg, range) ->
@@ -1404,9 +1409,13 @@ let encode_and_ask (can_split:bool) (is_retry:bool) use_env_msg tcenv q : (list 
       | _ -> failwith "Impossible"
     )
   in
-  if Solver.Cache.try_find_query_cache tcenv q then (
+  if Options.admit_smt_queries () then (
+    ([], ans_ok)
+  )
+  else if Solver.Cache.try_find_query_cache tcenv q then (
     ([], { ans_ok with cache_hit = true })
-  ) else (
+  ) 
+  else (
     let (cfgs, ans) = FStarC.Stats.record "Solver.encode_and_ask" do in
     if ans.ok then
       Solver.Cache.query_cache_add tcenv q;

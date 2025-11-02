@@ -940,8 +940,13 @@ let tc_decl env se: list sigelt & list sigelt & Env.env =
   let env0 = env in
   let env = set_hint_correlator env se in
   let env =
-    (* This is the SINGLE point where we read admit_smt_queries
-    and pass it through into the .admit field. *)
+    (* This is one point where we read admit_smt_queries
+    and pass it through into the .admit field.
+    This makes it so that if `--admit_smt_queries true` is
+    set at the top-level, then it cannot be overridden in a local scope.
+    Meanwhile, in Pulse it's useful to write #set-options "--admit_smt_queries true" { }
+    for a particular scope. So, there is a second point where we
+    read admit_smt_queries: in SMTEncoding.Solver.fst *)
     if Options.admit_smt_queries ()
     then { env with admit = true }
     else env
