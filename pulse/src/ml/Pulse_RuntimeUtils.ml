@@ -55,6 +55,8 @@ let error_code_uninstantiated_variable () = FStarC_Errors.errno FStarC_Errors_Co
 let is_range_zero (r:FStarC_Range.range) = r = FStarC_Range.dummyRange
 let union_ranges (r0:FStarC_Range.range) (r1:FStarC_Range.range) = FStarC_Range.union_ranges r0 r1
 let range_of_term (t:FStarC_Syntax_Syntax.term) = t.FStarC_Syntax_Syntax.pos
+let env_get_range (e:FStarC_Reflection_Types.env) =
+  FStarC_TypeChecker_Env.get_range e
 let env_set_range (e:FStarC_Reflection_Types.env) (r:FStarC_Range.range) =
    FStarC_TypeChecker_Env.set_range e r
 
