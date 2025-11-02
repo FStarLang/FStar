@@ -1964,7 +1964,7 @@ let dll_append (#t:Type) (d1 d2:dll t) :
 
 #reset-options
 
-#set-options "--z3rlimit 200 --max_fuel 2 --max_ifuel 1 --query_stats --split_queries no --z3smtopt '(set-option :smt.qi.eager_threshold 5)'"
+#set-options "--z3rlimit 200 --max_fuel 2 --max_ifuel 1 --split_queries no --z3smtopt '(set-option :smt.qi.eager_threshold 5)'"
 #restart-solver
 let dll_split_using (#t:Type) (d:dll t) (e:pointer (node t)) :
   StackInline (dll t * dll t)
