@@ -283,8 +283,6 @@ let prove_pure (g: env) (ctxt: list slprop_view) (skip_eq_uvar: bool) (goal: slp
     end
   | _ -> None
 
-// let foo = u2
-
 let intro_with_pure (g: env) (frame: slprop) (p: term) (n: ppname) (v: term) :
     continuation_elaborator g (frame `tm_star` v) g (frame `tm_star` tm_with_pure p n v) =
   fun post t ->

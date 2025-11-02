@@ -54,15 +54,16 @@ let elab_env_with_term_range (g:env) (t:term) : T.Tac (range & f:_ { f == elab_e
   rng, elab_env_with_range g (Some rng)
 
 let check_ln (g:env) (label:string) (t:R.term) : Tac unit =
+  //This rejects terms with uvars in them!
   if not (CheckLN.check_ln t) then
     fail_doc g (Some (RU.range_of_term t)) [
       text "Failure: not locally nameless!";
       text "Aborting before calling" ^/^ pp label;
       text "term" ^/^ equals ^/^ pp t;
+      text (RU.stack_dump ())
     ]
 
 let rtb_core_compute_term_type g f e =
-  check_ln g "rtb_compute_term_type" e;
   debug g (fun _ ->
     Printf.sprintf "(%s) Calling core_compute_term_type on %s"
           (T.range_to_string (RU.range_of_term e))
@@ -72,7 +73,6 @@ let rtb_core_compute_term_type g f e =
 
 let rtb_tc_term g f e =
   (* WARN: unary dependence, see comment in RU *)
-  check_ln g "rtb_tc_term" e;
   let e = RU.deep_transform_to_unary_applications e in
   debug g (fun _ ->
     Printf.sprintf "(%s) Calling tc_term on %s"
@@ -83,8 +83,7 @@ let rtb_tc_term g f e =
 
 let rtb_universe_of (g:env) (f:T.env) (e: T.term)
 : T.Tac (option (u:T.universe{typing_token f e (E_Total, T.pack_ln (Tv_Type u))}) & issues)
-= check_ln g "rtb_universe_of" e;
-  debug g (fun _ ->
+= debug g (fun _ ->
     Printf.sprintf "(%s) Calling universe_of on %s"
       (T.range_to_string (RU.range_of_term e))
       (T.term_to_string e));
@@ -99,8 +98,6 @@ let universe_of_well_typed_term_internal  (g:env) (f:T.env) (e: T.term)
   
 
 let rtb_check_subtyping g (t1 t2:term) : Tac (ret_t (subtyping_token g t1 t2)) =
-  check_ln g "rtb_check_subtyping.t1" t1;
-  check_ln g "rtb_check_subtyping.t2" t2;
   debug g (fun _ ->
     Printf.sprintf "(%s, %s) Calling check_subtyping on %s <: %s"
         (T.range_to_string (RU.range_of_term t1))
@@ -112,7 +109,6 @@ let rtb_check_subtyping g (t1 t2:term) : Tac (ret_t (subtyping_token g t1 t2)) =
   res
 
 let rtb_instantiate_implicits g f t expected inst_extra =
-  check_ln g "rtb_instantiate_implicits" t;
   debug g (fun _ -> Printf.sprintf "Calling instantiate_implicits on %s"
                                        (T.term_to_string t));
   (* WARN: unary dependence, see comment in RU *)
@@ -127,8 +123,6 @@ let rtb_instantiate_implicits g f t expected inst_extra =
   res, iss
 
 let rtb_core_check_term g f e eff t =
-  check_ln g "rtb_core_check_term.e" e;
-  check_ln g "rtb_core_check_term.t" t;
   debug g (fun _ ->
     Printf.sprintf "(%s) Calling core_check_term on %s and %s. Range of t = %s\n"
                 (show (RU.range_of_term e)) (show e) (show t)
@@ -155,7 +149,6 @@ let rtb_check_prop_validity (g:env) (sync:bool) (f:_{f == elab_env g }) (p:_) (p
   let _ : squash (typing_token f p (E_Total, tm_prop)) =
     let E pf = pf in FStar.Squash.return_squash (coerce_eq () <| RT.typing_to_token pf)
   in
-  check_ln g "rtb_check_prop_validity" p;
   debug g (fun _ -> 
     Printf.sprintf "(%s) Calling check_prop_validity on %s"
           (T.range_to_string (RU.range_of_term p))

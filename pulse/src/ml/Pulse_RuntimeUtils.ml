@@ -32,7 +32,11 @@ let with_extv (k:string) (v:string) (f: unit -> 'a utac) : 'a utac =
     FStarC_Options_Ext.restore x;
     res
 let env_set_context (g:FStarC_Reflection_Types.env) (c:context) = g
-let print_exn (e:exn) = Printexc.to_string e
+let print_exn (e:exn) =
+  match e with 
+  | FStarC_Tactics_Common.TacticFailure (s, _) ->
+    "TacticFailure " ^ FStarC_Errors_Msg.rendermsg s
+  | _ -> Printexc.to_string e
 let debug_at_level_no_module (s:string) =
   let r = FStarC_Debug.get_toggle s in
   !r
