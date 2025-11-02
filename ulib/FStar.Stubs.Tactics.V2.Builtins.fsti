@@ -558,7 +558,7 @@ type prop_validity_token (g:env) (t:term) =
            typing_token g e (E_Total, t)}
   )
 
-val check_prop_validity (g:env) (t:term)
+val check_prop_validity (g:env) (t:term { typing_token g t (E_Total, (`prop)) })
   : Tac (ret_t (prop_validity_token g t))
 
 // Can't immediately move to FStar.Tactics.Types since pattern is not in scope there
