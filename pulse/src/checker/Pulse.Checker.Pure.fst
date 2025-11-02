@@ -151,13 +151,17 @@ let squash_prop_validity_token f p (t:prop_validity_token f (mk_squash0 p))
   : prop_validity_token f p
   = admit(); t
 
-let rtb_check_prop_validity (g:env) (sync:bool) (f:_) (p:_) = 
+let rtb_check_prop_validity (g:env) (sync:bool) (f:_{f == elab_env g }) (p:_) (pf:tot_typing g p tm_prop) =
+  let _ : squash (typing_token f p (E_Total, tm_prop)) =
+    let E pf = pf in FStar.Squash.return_squash (coerce_eq () <| RT.typing_to_token pf)
+  in
   check_ln g "rtb_check_prop_validity" p;
   debug g (fun _ -> 
     Printf.sprintf "(%s) Calling check_prop_validity on %s"
           (T.range_to_string (RU.range_of_term p))
           (T.term_to_string p));
   let sp = mk_squash0 p in
+  let _ : squash (typing_token f sp (E_Total, (`prop))) = magic () in //squash typing
   let res, issues = 
     RU.with_context (get_context g) 
     (fun _ -> 
@@ -626,16 +630,18 @@ let get_non_informative_witness g u t t_typing
     | Some e, issues ->
       e
 
-let try_check_prop_validity (g:env) (p:term) (_:tot_typing g p tm_prop)
+let try_check_prop_validity (g:env) (p:term) (pf:tot_typing g p tm_prop)
   : T.Tac (option (Pulse.Typing.prop_validity g p))
-  = RU.record_stats "Pulse.try_check_prop_validity" fun _ -> 
-    let t_opt, issues = rtb_check_prop_validity g true (elab_env g) p in
+  = let _, f = elab_env_with_term_range g p in
+    RU.record_stats "Pulse.try_check_prop_validity" fun _ -> 
+    let t_opt, issues = rtb_check_prop_validity g true f p pf in
     t_opt
 
-let check_prop_validity (g:env) (p:term) (_:tot_typing g p tm_prop)
+let check_prop_validity (g:env) (p:term) (pf:tot_typing g p tm_prop)
   : T.Tac (Pulse.Typing.prop_validity g p)
-  = RU.record_stats "Pulse.check_prop_validity" fun _ -> 
-    let t_opt, issues = rtb_check_prop_validity g false (elab_env g) p in
+  = let _, f = elab_env_with_term_range g p in
+    RU.record_stats "Pulse.check_prop_validity" fun _ -> 
+    let t_opt, issues = rtb_check_prop_validity g true f p pf in
     match t_opt with
     | None -> 
       let open Pulse.PP in

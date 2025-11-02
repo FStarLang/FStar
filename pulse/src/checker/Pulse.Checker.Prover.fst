@@ -225,12 +225,11 @@ let continuation_elaborator_with_bind_nondep (#g:env) (ctxt:term)
 
 let tot_typing_tm_unit (g: env) : tot_typing g tm_unit (tm_type u0) = RU.magic ()
 
-let intro_pure (g: env) (frame: slprop) (p: term) :
+let intro_pure (g: env) (frame: slprop) (p: term) 
+    (p_typing:tot_typing g p tm_prop)
+    (pv:prop_validity g p):
     continuation_elaborator g frame g (frame `tm_star` tm_pure p) =
   fun post t ->
-  let g = push_context g "check_intro_pure" (RU.range_of_term p) in
-  let p_typing: tot_typing g p tm_prop = RU.magic() in // implied by t2_typing
-  let pv = check_prop_validity g p p_typing in
   let frame_typ : tot_typing g frame tm_slprop = RU.magic () in // implied by t2_typing
   let h: tot_typing g (tm_star frame (comp_pre (comp_intro_pure p))) tm_slprop = RU.magic () in
   debug_prover g (fun _ -> Printf.sprintf "intro_pure p=%s\nframe=%s\n" (show p) (show frame));
@@ -273,11 +272,13 @@ let prove_pure (g: env) (ctxt: list slprop_view) (skip_eq_uvar: bool) (goal: slp
     debug_prover g (fun _ -> Printf.sprintf "prove_pure p=%s success" (show p));
 
     Some (| g, ctxt, [], [], fun g'' ->
+      let p_typing: tot_typing g'' p tm_prop = RU.magic() in // implied by t2_typing
+      let pv = check_prop_validity g'' p p_typing in
       cont_elab_refl g ctxt ([] @ ctxt) (VE_Refl _ _),
       (fun frame ->
         let h1: slprop_equiv g'' (elab_slprops frame) (elab_slprops (frame @ [] @ [])) = RU.magic () in
         let h2: slprop_equiv g'' (tm_star (elab_slprops frame) (tm_pure p)) (elab_slprops (frame @ [goal])) = RU.magic () in
-        k_elab_equiv (intro_pure g'' (elab_slprops frame) p) h1 h2)
+        k_elab_equiv (intro_pure g'' (elab_slprops frame) p p_typing pv) h1 h2)
       <: T.Tac _ |)
     end
   | _ -> None
