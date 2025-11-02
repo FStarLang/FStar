@@ -233,6 +233,10 @@ let maybe_elaborate_stateful_head (g:env) (t:st_term)
 #restart-solver
 
 #push-options "--fuel 0 --ifuel 1 --z3rlimit 200"
+let seq_with_unit (t:st_term) = 
+  let body = mk_term (Tm_Return { expected_type=RT.unit_ty; insert_eq=false; term=`() }) t.range in
+  mk_term (Tm_Bind { binder=null_binder RT.unit_ty; head=t; body }) t.range
+
 let rec check
   (g0:env)
   (pre0:term)
@@ -344,8 +348,11 @@ let rec check
         | Tm_While _ ->
           While.check g pre pre_typing post_hint res_ppname t check
 
-        | Tm_NuWhile .. ->
-          While.check_nuwhile g pre pre_typing post_hint res_ppname t check
+        | Tm_NuWhile .. -> (
+          match post_hint with
+          | PostHint _ -> Bind.check_bind g pre pre_typing post_hint res_ppname (seq_with_unit t) check
+          | _ -> While.check_nuwhile g pre pre_typing post_hint res_ppname t check
+        )
 
         | Tm_Match {sc;returns_=post_match;brs} ->
           // TODO : dedup

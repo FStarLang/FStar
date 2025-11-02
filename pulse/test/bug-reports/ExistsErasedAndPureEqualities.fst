@@ -63,7 +63,6 @@ fn test3 (x:R.ref int) (#v:Ghost.erased int)
 
 //but fails if the variable is on the right
 [@@expect_failure]
-
 fn test4 (x:R.ref int) (#v:Ghost.erased int)
   requires some_pred x v
   ensures emp

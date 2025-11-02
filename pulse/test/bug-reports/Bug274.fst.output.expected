@@ -2,8 +2,8 @@
   - Expected failure:
   - Tactic failed
   - Cannot prove any of:
-      Pulse.Lib.Trade.trade (*?u99*)_ (*?u100*)_
-      Pulse.Lib.Trade.trade (*?u100*)_ (*?u101*)_
+      Pulse.Lib.Trade.trade (*?u96*)_ (*?u97*)_
+      Pulse.Lib.Trade.trade (*?u97*)_ (*?u98*)_
   - In the context:
       Pulse.Lib.Trade.trade p q
       Pulse.Lib.Trade.trade q r
@@ -12,8 +12,8 @@
   - Expected failure:
   - Tactic failed
   - Cannot prove any of:
-      Pulse.Lib.Trade.trade (*?u99*)_ (*?u100*)_
-      Pulse.Lib.Trade.trade (*?u100*)_ (*?u101*)_
+      Pulse.Lib.Trade.trade (*?u96*)_ (*?u97*)_
+      Pulse.Lib.Trade.trade (*?u97*)_ (*?u98*)_
   - In the context:
       Pulse.Lib.Trade.trade p q
       Pulse.Lib.Trade.trade q r
@@ -22,8 +22,8 @@
   - Expected failure:
   - Tactic failed
   - Cannot prove any of:
-      Pulse.Lib.Trade.trade (*?u119*)_ (*?u120*)_
-      (*?u119*)_
+      Pulse.Lib.Trade.trade (*?u116*)_ (*?u117*)_
+      (*?u116*)_
   - In the context:
       p
       Pulse.Lib.Trade.trade p q

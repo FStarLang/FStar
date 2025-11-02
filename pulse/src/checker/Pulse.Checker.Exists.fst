@@ -85,7 +85,7 @@ let check_elim_exists
 
   let Tm_ExistsSL u { binder_ty=ty } p = tv in
 
-  let (| u', ty_typing |) = check_universe g ty in
+  let (| u', ty_typing |) = universe_of_well_typed_term g ty in
   if eq_univ u u'
   then let x = fresh g in
        let d = T_ElimExists g u ty p x ty_typing t_typing in

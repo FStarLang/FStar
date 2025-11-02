@@ -449,7 +449,7 @@ let rec check_abs_core
     let qual = T.map_opt (check_qual g) qual in
     (*  (fun (x:t) -> {pre_hint} body : t { post_hint } *)
     let (| t, _, _ |) = compute_tot_term_type g t in //elaborate it first
-    let (| u, t_typing |) = check_universe g t in //then check that its universe ... We could collapse the two calls
+    let (| u, t_typing |) = universe_of_well_typed_term g t in //then check that its universe ... We could collapse the two calls
     let x = fresh g in
     let px = ppname, x in
     let var = tm_var {nm_ppname=ppname;nm_index=x} in

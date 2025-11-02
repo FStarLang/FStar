@@ -31,10 +31,11 @@ module PC = Pulse.Checker.Pure
 module P = Pulse.Syntax.Printer
 module PS = Pulse.Checker.Prover.Substs
 module Prover = Pulse.Checker.Prover
-open Pulse.Checker.Prover.Normalize
 module Env = Pulse.Typing.Env
-open Pulse.Show
 module RU = Pulse.RuntimeUtils
+open Pulse.Checker.Prover.Normalize
+open Pulse.Show
+open Pulse.PP
 
 let is_host_term (t:R.term) = not (R.Tv_Unknown? (R.inspect_ln t))
 
@@ -161,15 +162,15 @@ let visit_and_rewrite (p: (R.term & R.term)) (t:term) : T.Tac term =
 let visit_and_rewrite_conjuncts (p: (R.term & R.term)) (tms:list term) : T.Tac (list term) =
   T.map (visit_and_rewrite p) tms
 
-let visit_and_rewrite_conjuncts_all (g:env) (p: list (R.term & R.term)) (goal:term) : T.Tac term =
+let visit_and_rewrite_conjuncts_all (g:env) (p: list (R.term & R.term & 'a)) (goal:term) : T.Tac term =
   let tms = slprop_as_list goal in
-  let tms' = T.fold_left (fun tms p -> visit_and_rewrite_conjuncts p tms) tms p in
+  let tms' = T.fold_left (fun tms (e0, e1, _) -> visit_and_rewrite_conjuncts (e0, e1) tms) tms p in
   list_as_slprop tms'
 
 let disjoint (dom:list var) (cod:Set.set var) =
   L.for_all (fun d -> not (Set.mem d cod)) dom
 
-let rec as_subst (p : list (term & term)) 
+let rec as_subst (p : list (term & term & 'a)) 
                  (out:list subst_elt)
                  (domain:list var)
                  (codomain:Set.set var)
@@ -179,7 +180,7 @@ let rec as_subst (p : list (term & term))
     if disjoint domain codomain
     then Some out
     else None
-  | (e1, e2)::p -> (
+  | (e1, e2, _)::p -> (
     match R.inspect_ln e1 with
     | R.Tv_Var n -> (
       let nv = R.inspect_namedv n in
@@ -191,9 +192,25 @@ let rec as_subst (p : list (term & term))
     | _ -> None
   )
 
+let try_find_equality (g:env) (x:R.term)
+: T.Tac (option R.term)
+= T.tryPick
+    (fun (_, ty) ->
+      match is_squash ty with
+      | None -> None
+      | Some maybe_eq ->
+        match is_eq2 maybe_eq with
+        | None -> None
+        | Some (_, lhs, rhs) ->
+          if eq_tm x lhs then Some rhs
+          else if eq_tm x rhs then Some lhs
+          else None)
+    (Env.bindings g)
 
 
-let rewrite_all (is_source:bool) (g:env) (p: list (term & term)) (t:term) pre elaborated tac_opt : T.Tac (term & list (term & term)) =
+let rewrite_all rng (is_source:bool) (g:env) (p: list (term & term)) (t:term) pre elaborated tac_opt (norm_t:bool)
+: T.Tac (term & list (term & term))
+=
   (* We only use the rewrites_to substitution if there is no tactic attached to the
   rewrite. Otherwise, tactics may become brittle as the goal is changed unexpectedly
   by other things in the context. See tests/Match.fst. *)
@@ -205,30 +222,46 @@ let rewrite_all (is_source:bool) (g:env) (p: list (term & term)) (t:term) pre el
     t
   in
   let maybe_purify t = if elaborated then t else purify_term g {ctxt_now=pre;ctxt_old=None} t in
-  let elab_pair (lhs rhs : R.term) : T.Tac (R.term & R.term) =
-    let lhs = maybe_purify lhs in
-    let rhs = maybe_purify rhs in
-    let lhs, lhs_typ = Pulse.Checker.Pure.instantiate_term_implicits g lhs None true in
-    let rhs, rhs_typ = Pulse.Checker.Pure.instantiate_term_implicits g rhs (Some lhs_typ) true in
-    let lhs = norm lhs in
-    let rhs = norm rhs in
-    lhs, rhs
+  let find_equality g (x:R.term) : T.Tac R.term =
+    match try_find_equality g x with
+    | None -> 
+      fail_doc g (Some rng) [
+        text (Printf.sprintf "Could not find an equality for %s in the context for rewriting" (show x))
+      ]
+    | Some y -> y  
   in
-  let p : list (R.term & R.term) = T.map (fun (e1, e2) -> elab_pair e1 e2) p in
+  let elab_pair (lhs rhs : R.term) : T.Tac (R.term & R.term & bool) =
+    let lhs_ln = R.inspect_ln lhs in
+    let rhs_ln = R.inspect_ln rhs in
+    match lhs_ln, rhs_ln with
+      (* rewrite each _ as x   _or_  rewrite each x as _ *)
+    | R.Tv_Unknown, R.Tv_Var _ -> find_equality g rhs, rhs, false
+    | R.Tv_Var x, R.Tv_Unknown -> lhs, find_equality g lhs, false
+
+    | _ ->
+      let lhs = maybe_purify lhs in
+      let rhs = maybe_purify rhs in
+      let lhs, lhs_typ = Pulse.Checker.Pure.instantiate_term_implicits g lhs None true in
+      let rhs, rhs_typ = Pulse.Checker.Pure.instantiate_term_implicits g rhs (Some lhs_typ) true in
+      let lhs = norm lhs in
+      let rhs = norm rhs in
+      lhs, rhs, true //to be checked
+  in
+  let p : list (R.term & R.term & bool) = T.map (fun (e1, e2) -> elab_pair e1 e2) p in
+  let q = T.concatMap (fun (e1, e2, b) -> if b then [(e1, e2)] else []) p in
   match as_subst p [] [] Set.empty with
   | Some s ->
     let t' = subst_term t s in
     if is_source && eq_tm t t' then
       warn_nop g t;
-    t', p
+    t', q
   | _ ->
     let rhs = visit_and_rewrite_conjuncts_all g p t in
     if is_source && eq_tm t rhs then
       warn_nop g t;
     debug_log g (fun _ -> Printf.sprintf "Rewrote %s to %s" (P.term_to_string t) (P.term_to_string rhs));
-    rhs, p
+    rhs, q
 
-open Pulse.PP
 let check_equiv_with_tac (g:env) (rng:Range.range) (lhs rhs ty:term) (tac_tm:term)
 : T.Tac (option T.issues)
 = let g_env = elab_env g in
@@ -314,7 +347,7 @@ let check_renaming
 
   | [], None ->
     // if there is no goal, take the goal to be the full current pre
-    let rhs, pairs = rewrite_all (T.unseal st.source) g pairs pre pre elaborated tac_opt in
+    let rhs, pairs = rewrite_all st.range (T.unseal st.source) g pairs pre pre elaborated tac_opt false in
     check_pairs g st.range pairs tac_opt;
     let h2: slprop_equiv g rhs pre = RU.magic () in
     let h1: tot_typing g rhs tm_slprop = RU.magic () in
@@ -322,8 +355,7 @@ let check_renaming
     (| x, g', ty, ctxt', k_elab_equiv k h2 (VE_Refl _ _) |)
 
   | [], Some goal -> (
-      let goal, _ = PC.instantiate_term_implicits g goal None false in
-      let rhs, _ = rewrite_all (T.unseal st.source) g pairs goal pre elaborated tac_opt in
+      let rhs, _ = rewrite_all st.range (T.unseal st.source) g pairs goal pre elaborated tac_opt true in
       let t = { st with term = Tm_Rewrite { t1 = goal; t2 = rhs; tac_opt; elaborated = true };
                         source = Sealed.seal false; } in
       check g pre pre_typing post_hint res_ppname
@@ -478,6 +510,9 @@ let check
         ImpureSpec.purify_spec g ctxt v in
     let (| g1, pre', k_frame |) = Prover.prove st.range g pre v false in
     let v = RU.deep_compress_safe v in
+    let v' = RU.beta_lax (elab_env g1) v in //normalize term to reduce spurious betas before checking it
+    assume (v == v'); //sorry---ideally, we would retype everything proving that it is stable after normalization
+    let v = v' in
     let body = body in // TODO compress
     let h: tot_typing g1 v tm_slprop = PC.core_check_term _ _ _ _ in
     let h: tot_typing g1 (tm_star v pre') tm_slprop = RU.magic () in // TODO: propagate through prover

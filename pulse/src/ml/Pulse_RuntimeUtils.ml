@@ -32,7 +32,11 @@ let with_extv (k:string) (v:string) (f: unit -> 'a utac) : 'a utac =
     FStarC_Options_Ext.restore x;
     res
 let env_set_context (g:FStarC_Reflection_Types.env) (c:context) = g
-let print_exn (e:exn) = Printexc.to_string e
+let print_exn (e:exn) =
+  match e with 
+  | FStarC_Tactics_Common.TacticFailure (s, _) ->
+    "TacticFailure " ^ FStarC_Errors_Msg.rendermsg s
+  | _ -> Printexc.to_string e
 let debug_at_level_no_module (s:string) =
   let r = FStarC_Debug.get_toggle s in
   !r
@@ -55,6 +59,8 @@ let error_code_uninstantiated_variable () = FStarC_Errors.errno FStarC_Errors_Co
 let is_range_zero (r:FStarC_Range.range) = r = FStarC_Range.dummyRange
 let union_ranges (r0:FStarC_Range.range) (r1:FStarC_Range.range) = FStarC_Range.union_ranges r0 r1
 let range_of_term (t:FStarC_Syntax_Syntax.term) = t.FStarC_Syntax_Syntax.pos
+let env_get_range (e:FStarC_Reflection_Types.env) =
+  FStarC_TypeChecker_Env.get_range e
 let env_set_range (e:FStarC_Reflection_Types.env) (r:FStarC_Range.range) =
    FStarC_TypeChecker_Env.set_range e r
 

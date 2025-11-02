@@ -156,12 +156,12 @@ let inv_as_post_hint (#g:env) (#inv:slprop) (inv_typing:tot_typing g inv tm_slpr
 
 
 #push-options "--fuel 0 --ifuel 0 --z3rlimit_factor 8"
-
+module RT = FStar.Reflection.Typing
 let check_nuwhile
   (g:env)
   (pre:term)
   (pre_typing:tot_typing g pre tm_slprop)
-  (post_hint:post_hint_opt g)
+  (post_hint:post_hint_opt g {~ (PostHint? post_hint) })
   (res_ppname:ppname)
   (t:st_term{Tm_NuWhile? t.term})
   (check:check_t)
@@ -204,7 +204,26 @@ let check_nuwhile
   assert (comp_cond == (comp_nuwhile_cond inv body_pre_open));
   assert (comp_body == comp_nuwhile_body inv body_pre_open);
   let d = T_NuWhile g1 inv body_pre_open cond body inv_typing (body_typing_ex body_open_pre_typing) cond_typing body_typing in
-  let d_st : Pulse.Typing.Combinators.st_typing_in_ctxt g1 inv _ =  (| _, _, d |) in
-  let d_st : Pulse.Typing.Combinators.st_typing_in_ctxt g pre _ = k _ d_st in
-  prove_post_hint (checker_result_for_st_typing d_st ppname_default) post_hint t.range
+  let C_ST cst = comp_nuwhile inv body_pre_open in
+  assume (fresh_wrt x g (freevars cst.post));
+  let post_hint_for_while : post_hint_for_env g = {
+      g=g;
+      effect_annot=EffectAnnotSTT;
+      effect_annot_typing=();
+      ret_ty=RT.unit_ty;
+      u=u_zero;
+      ty_typing=RU.magic(); //unit typing
+      post=cst.post;
+      x;
+      post_typing_src=RU.magic(); //from inv typing and body_open_pre_typing
+      post_typing=RU.magic()
+    }
+  in
+  let ph = PostHint post_hint_for_while in
+  let d_st : Pulse.Typing.Combinators.st_typing_in_ctxt g1 inv ph =  (| _, _, d |) in
+  let d_st : Pulse.Typing.Combinators.st_typing_in_ctxt g pre ph = k ph d_st in
+  let res = checker_result_for_st_typing d_st ppname_default in
+  let res = retype_checker_result #_ #_ #ph post_hint res in
+  res
+
 #pop-options
