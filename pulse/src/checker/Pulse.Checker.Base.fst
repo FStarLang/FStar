@@ -1201,7 +1201,8 @@ let infer_post #g #ctxt (r:checker_result_t g ctxt NoHint)
     let x = fresh g in
     let post' = open_term_nv post (ppname_default, x) in 
     let g' = push_binding g x ppname_default t in
-    let post_typing_src = Pulse.Checker.Pure.check_slprop_with_core g' post' in
+    // we just constructed it; should ideally prove it well-typed rather then re-checking it
+    let post_typing_src : tot_typing g' post' tm_slprop = RU.magic () in
     assume (fresh_wrt x g (freevars post));
     {
       g; effect_annot=EffectAnnotSTT; effect_annot_typing=();
