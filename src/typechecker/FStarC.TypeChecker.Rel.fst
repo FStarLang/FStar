@@ -1902,6 +1902,7 @@ let run_meta_arg_tac (env:env_t) (ctx_u:ctx_uvar) : term =
     failwith "run_meta_arg_tac must have been called with a uvar that has a meta tac"
 
 let simplify_vc full_norm_allowed env t =
+  if env.phase1 then Util.t_true else
   Stats.record "simplify_vc" fun () ->
   if !dbg_Simplification then
     Format.print1 "Simplifying guard %s\n" (show t);
