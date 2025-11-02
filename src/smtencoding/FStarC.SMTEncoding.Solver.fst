@@ -686,7 +686,13 @@ let query_info settings z3result =
           with
           | _ -> "unknown"
         in
-        Format.print "%s\tQuery-stats (%s, %s)\t%s%s in %s milliseconds with fuel %s and ifuel %s and rlimit %s (used rlimit %s)\n"
+        if Options.Ext.enabled "query_stats_trace"
+        then (
+          Format.print "At %s\nQuery term is %s\n"
+                [BU.stack_dump();
+                 show settings.query_term]
+        );
+        Format.print "%s\n%s\tQuery-stats (%s, %s)\t%s%s in %s milliseconds with fuel %s and ifuel %s and rlimit %s (used rlimit %s)\nQuery %s\n"
              [  range;
                 settings.query_name;
                 show settings.query_index;
@@ -697,7 +703,7 @@ let query_info settings z3result =
                 show settings.query_ifuel;
                 show settings.query_rlimit;
                 used_rlimit_str;
-                // stats ()
+                show settings.query_term
              ];
         if Options.print_z3_statistics () then process_unsat_core core;
         errs |> List.iter (fun (_, msg, range) ->
