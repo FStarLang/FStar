@@ -1902,6 +1902,7 @@ let run_meta_arg_tac (env:env_t) (ctx_u:ctx_uvar) : term =
     failwith "run_meta_arg_tac must have been called with a uvar that has a meta tac"
 
 let simplify_vc full_norm_allowed env t =
+  if env.phase1 then Util.t_true else
   Stats.record "simplify_vc" fun () ->
   if !dbg_Simplification then
     Format.print1 "Simplifying guard %s\n" (show t);
@@ -4919,24 +4920,6 @@ let teq env t1 t2 : guard_t =
           Format.print3 "teq of %s and %s succeeded with guard %s\n"
                         (show t1) (show t2) (guard_to_string env g);
         g
-
-(*
- * AR: It would be nice to unify it with teq, the way we do it for subtyping
- *     i.e. write a common function that uses a bound variable,
- *          and if the caller requires a prop, close over it, else abstract it
- *     But that may change the existing VCs shape a bit
- *)
-let get_teq_predicate env t1 t2 =
-    if !dbg_Rel || !dbg_RelTop then
-       Format.print2 "get_teq_predicate of %s and %s {\n" (show t1) (show t2);
-     let prob, x, wl = new_t_prob (empty_worklist env) env t1 EQ t2 in
-     let g = with_guard env prob <| solve_and_commit (singleton wl prob true) (fun _ -> None) in
-    if !dbg_Rel || !dbg_RelTop then
-       Format.print1 "} res teq predicate = %s\n" (FStarC.Common.string_of_option (guard_to_string env) g);
-
-    match g with
-    | None -> None
-    | Some g -> Some (abstract_guard (S.mk_binder x) g)
 
 let subtype_fail env e t1 t2 : unit =
   Err.basic_type_error env (Env.get_range env) (Some e) t2 t1
