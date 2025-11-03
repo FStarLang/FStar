@@ -4472,7 +4472,14 @@ and tc_tot_or_gtot_term_maybe_solve_deferred (env:env) (e:term) (msg:option stri
 : term & lcomp & guard_t
 = let e, c, g = tc_maybe_toplevel_term env e in
   if TcComm.is_tot_or_gtot_lcomp c
-  then e, c, g
+  then (
+    let g =
+      if solve_deferred
+      then Rel.solve_deferred_constraints env g
+      else g
+    in
+    e, c, g
+  )
   else let g =
          if solve_deferred
          then Rel.solve_deferred_constraints env g
