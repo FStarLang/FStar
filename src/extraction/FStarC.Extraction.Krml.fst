@@ -402,11 +402,9 @@ and pp_branch (b:branch) : ML document =
 instance pretty_decl : pretty decl = { pp = decl_to_doc; }
 instance showable_decl : showable decl = showable_from_pretty
 
-(* Utilities *****************************************************************)
-
-let fst3 (x, _, _) = x
-let snd3 (_, x, _) = x
-let thd3 (_, _, x) = x
+(* This is a Kuiper modification to interpret F*'s SizeT as UInt32.
+It should eventually be removed. *)
+let fake_SizeT = UInt32
 
 let mk_width = function
   | "UInt8" -> Some UInt8
@@ -417,7 +415,7 @@ let mk_width = function
   | "Int16" -> Some Int16
   | "Int32" -> Some Int32
   | "Int64" -> Some Int64
-  | "SizeT" -> Some SizeT
+  | "SizeT" -> Some fake_SizeT // This is a Kuiper-specific change: sizet is extracted to uint32_t
   | "PtrdiffT" -> Some PtrdiffT
   | _ -> None
 
@@ -1148,7 +1146,7 @@ and translate_expr' env e: ML expr =
          string_of_mlpath p = "FStar.SizeT.uint32_to_sizet" ||
          string_of_mlpath p = "FStar.SizeT.uint64_to_sizet" ||
          string_of_mlpath p = "FStar.PtrdiffT.ptrdifft_to_sizet" ->
-      ECast (translate_expr env arg, TInt SizeT)
+      ECast (translate_expr env arg, TInt fake_SizeT)
 
   | MLE_App ({ expr = MLE_Name p }, [ arg ])
     when string_of_mlpath p = "FStar.SizeT.sizet_to_uint32" ->
@@ -1240,7 +1238,7 @@ and translate_width (w:option (FC.signedness & FC.width)) : ML width =
   | Some (FC.Unsigned, FC.Int16) -> UInt16
   | Some (FC.Unsigned, FC.Int32) -> UInt32
   | Some (FC.Unsigned, FC.Int64) -> UInt64
-  | Some (FC.Unsigned, FC.Sizet) -> SizeT
+  | Some (FC.Unsigned, FC.Sizet) -> fake_SizeT
 
 and translate_pat env p : ML env_and_pat =
   match p with
