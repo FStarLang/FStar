@@ -1376,7 +1376,7 @@ let rec check_relation' (g:env) (rel:relation) (t0 t1:typ)
                    then let? e in Some (S.mk_Tm_app e (snd (U.args_of_binders [x1])) R.dummyRange)
                    else None)
             in
-            check_relation g rel x1.binder_bv.sort x0.binder_bv.sort ;!
+            check_relation g rel_arg x1.binder_bv.sort x0.binder_bv.sort ;!
             with_context "check_subcomp" None (fun _ ->
               check_relation_comp g_x1 rel_comp c0 c1
             )
