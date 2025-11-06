@@ -52,6 +52,7 @@ fn pts_to_range_prop
   (#s: Seq.seq elt)
   requires pts_to_range a i j #p s
   ensures  pts_to_range a i j #p s ** pure (
+   (~ (is_null a)) /\
    (i <= j /\ j <= length a /\ eq2 #nat (Seq.length s) (j - i))
   )
 

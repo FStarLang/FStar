@@ -17,17 +17,55 @@
 module Pulse.Lib.ArrayPtr
 #lang-pulse
 
+type base_t t = A.array t
+
 noeq
 type ptr t = {
     base: A.array u#0 t;
-    offset: (offset: SZ.t { SZ.v offset <= A.length base})
+    offset: (offset: SZ.t { SZ.v offset <= (if A.is_null base then 0 else A.length base)})
 }
 
 let base a = a.base
 let offset a = SZ.v a.offset
 
+let null #_ = {
+  base = A.null;
+  offset = 0sz;
+}
+
+let g_is_null a = A.is_null a.base
+
 let pts_to s #p v =
   A.pts_to_range s.base (SZ.v s.offset) (SZ.v s.offset + Seq.length v) #p v
+
+ghost fn pts_to_not_null
+  (#t:Type)
+  (s:ptr t)
+  (#p:perm)
+  (#v : Seq.seq t)
+requires
+  (pts_to s #p v)
+ensures
+  (pts_to s #p v ** pure (not (g_is_null s)))
+{
+  unfold (pts_to s #p v);
+  A.pts_to_range_prop s.base;
+  fold (pts_to s #p v);
+}
+
+fn is_null
+  (#t:Type)
+  (s:ptr t)
+  (#p:perm)
+  (#v : Ghost.erased (Seq.seq t))
+requires
+  (pts_to_or_null s #p v)
+returns res: bool
+ensures
+  (pts_to_or_null s #p v ** pure (res == g_is_null s))
+{
+  A.is_null s.base
+}
 
 let pts_to_timeless x p s = ()
 
@@ -63,6 +101,50 @@ fn to_array (#t: Type) (s: ptr t) (a: array t) (#p: perm) (#v: Seq.seq t)
     rewrite (A.pts_to_range s.base (SZ.v s.offset) (SZ.v s.offset + Seq.length v) #p v)
         as (A.pts_to_range a 0 (A.length a) #p v);
     A.pts_to_range_elim a _ _;
+}
+
+let is_from_ref #t s a = rewrites_to s.base (to_array_ghost a) ** pure (s.offset == 0sz /\ A.length (to_array_ghost a) == 1)
+
+fn from_ref (#t: Type) (a: ref t) (#p: perm) (#v: Ghost.erased (t))
+requires
+    (R.pts_to a #p v)
+returns s: ptr t
+ensures
+    (pts_to s #p (Seq.create 1 (Ghost.reveal v)) ** is_from_ref s a)
+{
+  let arr = R.to_array a;
+  A.pts_to_range_intro arr _ _;
+  let res = {
+    base = arr;
+    offset = 0sz;
+  };
+  assert (pure (Seq.equal (Seq.cons (Ghost.reveal v) Seq.empty) (Seq.Base.create 1 (Ghost.reveal v))));
+  with from to len va . rewrite A.pts_to_range from
+      to
+      len
+      #p
+      va
+  as A.pts_to_range res.base
+      (SZ.v res.offset)
+      (SZ.v res.offset + Seq.Base.length (Seq.Base.create 1 v))
+      #p
+      (Seq.Base.create 1 (Ghost.reveal v));
+  fold pts_to res #p (Seq.create 1 (Ghost.reveal v));
+  fold (is_from_ref res a);
+  res
+}
+
+ghost fn to_ref (#t: Type) : to_ref_t t =
+  (s: _) (a: _) (#p: _) (#v: _)
+{
+  unfold is_from_ref s a;
+  unfold pts_to s #p v;
+  A.pts_to_range_prop _;
+  rewrite A.pts_to_range s.base (SZ.v s.offset) (SZ.v s.offset + Seq.Base.length v) #p v
+    as A.pts_to_range (R.to_array_ghost a) 0 (A.length s.base) #p v;
+  A.pts_to_range_elim _ _ _;
+  R.return_to_array a;
+  ()
 }
 
 fn op_Array_Access

@@ -159,6 +159,9 @@ fn mask_write u#a (#t: Type u#a) (a: array t) (i: SZ.t) (v: t) (#s: erased (Seq.
 
 val gsub #t (arr: array t) (i: nat) (j: nat { i <= j /\ j <= length arr }) : GTot (array t)
 
+val gsub_null #t (arr: array t) (i: nat) (j: nat { i <= j /\ j <= length arr}) : Lemma
+  (arr == null ==> gsub arr i j == null)
+
 val length_gsub #t arr i j : Lemma (length (gsub #t arr i j) == j - i) [SMTPat (length (gsub arr i j))]
 val offset_of_gsub #t arr i j : Lemma (offset_of (gsub #t arr i j) == offset_of arr + i) [SMTPat (offset_of (gsub arr i j))]
 val base_of_gsub #t arr i j : Lemma (base_of (gsub #t arr i j) == base_of arr) [SMTPat (base_of (gsub arr i j))]

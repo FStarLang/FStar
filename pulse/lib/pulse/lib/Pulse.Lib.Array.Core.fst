@@ -446,6 +446,8 @@ let sub_impl #t (arr: array t) (i: nat) (j: erased nat { i <= j /\ j <= length a
 let gsub #t (arr: array t) (i: nat) (j: nat { i <= j /\ j <= length arr }) : GTot (array t) =
   sub_impl arr i j
 
+let gsub_null arr i j = ()
+
 let length_gsub #t arr i j = ()
 let offset_of_gsub #t arr i j = ()
 let base_of_gsub #t arr i j = ()
