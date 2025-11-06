@@ -18,11 +18,8 @@ module Pulse.Checker.Prover.Match.MKeys
 
 open FStar.Tactics.V2
 open Pulse.Syntax
-open Pulse.Typing
+open Pulse.Typing.Env
 
-(* remove!*)
-val same_head (t0 t1 : term): Tac bool
+val get_mkeys (g:env) (p: slprop) : Tac (option (list term))
 
 val eligible_for_smt_equality (g:env) (t0 t1 : term) : Tac bool
-
-val mkey_mismatch (g:env) (t0 t1 : term) : Tac bool

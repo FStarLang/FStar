@@ -26,66 +26,33 @@ module RT = FStar.Reflection.Typing
 module R = FStar.Reflection.V2
 module RU = Pulse.RuntimeUtils
 module P = Pulse.Syntax.Printer
-module Prover = Pulse.Checker.Prover
+open Pulse.Checker.Prover
 open Pulse.Show
 
 let should_allow_ambiguous (t:term) : T.Tac bool =
   Pulse.Reflection.Util.head_has_attr_string "Pulse.Lib.Core.allow_ambiguous" t
 
-// HACK: Instantiates implicits at the end with uvs
-// If we let instantiate_term_implicits_uvs instantiate these implicits,
-// then it will instantiate squash arguments with ().
-// The () will usually only type-check after running the prover,
-// however the prover requires a type-correct term.
-// Therefore we manually instantiate these implicits...
-let instantiate_term_implicits_uvs (g:env) (t:term)
-  : T.Tac (uvs:env { disjoint g uvs } & term & term) =
-  let (| uvs, t, ty |) = Pulse.Checker.Pure.instantiate_term_implicits_uvs g t false in
-  let rec add_implicits (uvs: env { disjoint g uvs }) (t ty:term)
-    : T.Tac (uvs:env { disjoint g uvs } & term & term) =
-    match inspect_ln_unascribe ty with
-    | R.Tv_Arrow b c ->
-      (match R.inspect_comp c with
-      | C_Total ty ->
-        let b = R.inspect_binder b in
-        if Q_Implicit? b.qual then
-          let x = fresh uvs in
-          let px = ppname_default, x in
-          let uvs = push_binding uvs x (fst px) b.sort in
-          assume disjoint g uvs;
-          let ty = open_term_nv ty px in
-          add_implicits uvs (pack_ln (R.Tv_App t (term_of_nvar px, b.qual))) ty
-        else
-          (| uvs, t, ty |)
-      | _ -> (| uvs, t, ty |))
-    | _ -> (| uvs, t, ty |) in
-  add_implicits uvs t ty
-
 open Pulse.PP
 #push-options "--fuel 0 --ifuel 1 --z3rlimit_factor 2"
 let check
-  (g0:env)
+  (g:env)
   (ctxt:slprop)
-  (ctxt_typing:tot_typing g0 ctxt tm_slprop)
-  (post_hint:post_hint_opt g0)
+  (ctxt_typing:tot_typing g ctxt tm_slprop)
+  (post_hint:post_hint_opt g)
   (res_ppname:ppname)
   (t:st_term { Tm_ST? t.term })
-  : T.Tac (checker_result_t g0 ctxt post_hint) =
+  : T.Tac (checker_result_t g ctxt post_hint) =
 
-  let g = push_context "st" t.range g0 in
+  let g = push_context "st" t.range g in
   let post_hint: post_hint_opt g = post_hint in
   let range = t.range in
   let Tm_ST { t=e; args } = t.term in
   if Cons? args then
-    fail_doc g0 (Some t.range) [
+    fail_doc g (Some t.range) [
       text "Internal error: trailing combinator arguments not lifted in Tm_ST";
       pp t
     ];
-  let (| uvs, e, _ |) = instantiate_term_implicits_uvs g e in
-  let g' : env = push_env g uvs in
-  assert (g' `env_extends` g);
-  let post_hint: post_hint_opt g' = post_hint in
-  let (| e, eff, ty, typing |) = Pulse.Checker.Pure.compute_term_type g' e in
+  let e, ty, eff = tc_term_phase1 g e in
   match Pulse.Readback.readback_comp ty with
   | None -> fail g (Some range) (Printf.sprintf "readback of %s failed" (show ty))
   | Some (C_Tot _) ->
@@ -100,36 +67,45 @@ let check
        text "is a total term";
        text "Maybe it is not fully applied?"]
 
-  | Some c -> (
+  | Some c0 -> (
     let allow_ambiguous = should_allow_ambiguous e in
+    let (| g', ctxt', k |) = prove (RU.range_of_term e) g ctxt (comp_pre c0) allow_ambiguous in
+
+    // remove spurious beta-redexes
+    let e = e |> RU.beta_lax (elab_env g) |> RU.deep_compress in
+    let ty = ty |> RU.beta_lax (elab_env g) |> RU.deep_compress in
+    assume elab_comp c0 == ty;
+    let Some c = Pulse.Readback.readback_comp ty in
+
+    let (| eff, typing |) = core_check_term_at_type g' e ty in
     let t = { t with term = Tm_ST { t=e; args=[] }  } in
-    let d : ( st_typing g' t c ) =
-    if eff = T.E_Total
-    then T_ST g' e c typing
-    else (
-      match c with
-      | C_ST _ | C_STAtomic .. ->
-        let open Pulse.PP in
-        fail_doc g0 (Some range)
-          [text "Application of a stateful or atomic computation cannot have a ghost effect";
-           pp t;
-           text "has computation type";
-           pp c]
-      | C_STGhost .. ->
-        let d_non_info : non_informative g' c =
-          let token = is_non_informative g' c in
-          match token with
-          | None ->
-            fail g (Some range)
-              (Printf.sprintf "Unexpected informative result for %s" (P.comp_to_string c))
-          | Some token ->
-              E <| RT.Non_informative_token _ _ (FStar.Squash.return_squash token) 
-        in
-        T_STGhost g' e c typing d_non_info
-    )
-    in
-    let (| st', c', st_typing' |) = match_comp_res_with_post_hint d post_hint in
-    let framed = 
-      RU.record_stats "try_frame_pre_uvs" fun _ -> Prover.try_frame_pre_uvs allow_ambiguous ctxt_typing uvs (| st', c', st_typing' |) res_ppname in
-    RU.record_stats "prove_post_hint" fun _ -> Prover.prove_post_hint framed post_hint range
+    let d : st_typing g' t c =
+      if eff = T.E_Total
+      then T_ST g' e c typing
+      else (
+        match c with
+        | C_ST _ | C_STAtomic .. ->
+          let open Pulse.PP in
+          fail_doc g (Some range)
+            [text "Application of a stateful or atomic computation cannot have a ghost effect";
+            pp t;
+            text "has computation type";
+            pp c]
+        | C_STGhost .. ->
+          let d_non_info : non_informative g' c =
+            let token = is_non_informative g' c in
+            match token with
+            | None ->
+              fail g' (Some range)
+                (Printf.sprintf "Unexpected informative result for %s" (P.comp_to_string c))
+            | Some token ->
+                E <| RT.Non_informative_token _ _ (FStar.Squash.return_squash token) 
+          in
+          T_STGhost g' e c typing d_non_info
+      )
+      in
+      let (| c, d |) = match_comp_res_with_post_hint d post_hint in
+      let h: tot_typing g' ctxt' tm_slprop = RU.magic () in // TODO: thread through prover
+      let framed = checker_result_for_st_typing (k _ (| t, add_frame c ctxt', T_Frame _ _ _ ctxt' h d |)) res_ppname in
+      RU.record_stats "prove_post_hint" fun _ -> prove_post_hint framed post_hint range
   )

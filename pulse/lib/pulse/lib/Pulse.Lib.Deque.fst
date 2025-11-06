@@ -21,15 +21,6 @@ type deque (t:Type0) = {
   tail: option (node_ptr t);
 }
 
-(* Note: since within this module there is usually a *single* linked list
-around, we mark the list predicated with no_mkeys so the matcher can be
-more liberal. Crucially, this attribute is only set behind the interface,
-and clients will just use the mkey in is_deque.
-
-This is a bit of a hack, the fact that F* allows the attributes to differ
-between fst/fsti is probably wrong. Maybe we should have a typeclass? *)
-
-[@@no_mkeys]
 let rec is_deque_suffix
   (#t:Type0)
   ([@@@mkey] p:node_ptr t)
@@ -82,7 +73,6 @@ fn fold_is_deque_suffix_cons
 
 
 
-[@@no_mkeys]
 let is_deque #t ([@@@mkey] x:deque t) (l:list t)
   : Tot slprop (decreases l)
   = match l with
@@ -120,7 +110,7 @@ fn push_front_empty (#t:Type) (l : deque t) (x : t)
   };
   let node = Box.alloc vnode;
 
-  fold (is_deque_suffix node [x] None node);
+  fold (is_deque_suffix node [x] None node None);
 
   let l' = {
     head = Some node;
@@ -287,10 +277,8 @@ let is_deque_suffix_factored
 : Tot slprop
   = exists* (v:node t).
       pts_to x v **
-      pure (
-        v.value == List.Tot.hd l /\
-        v.dprev == prev
-      ) **
+      pure (v.value == List.Tot.hd l) **
+      pure (v.dprev == prev) **
       is_deque_suffix_factored_next x l tail last v.dnext
 
 
@@ -655,7 +643,7 @@ fn pop_front (#t:Type) (l : deque t)
 {
   let b = is_singleton l;
   if b {
-    pop_front_nil l;
+    pop_front_nil l #x;
   } else {
     pop_front_cons l;
   }

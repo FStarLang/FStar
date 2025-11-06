@@ -1,4 +1,5 @@
-* Info at Bug45.fst(64,13-64,18):
+* Info at Bug45.fst(61,10-66,5):
   - Expected failure:
-  - Elaborated term has unresolved univ uvars: Bug45.spawn (Bug45.pth n)
+  - Tactic failed
+  - Internal error: unexpected unresolved (universe) uvar in deep_compress: 74
 

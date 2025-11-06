@@ -4,20 +4,18 @@
 
 * Info at LoopInvariants.fst(77,9-77,10):
   - Expected failure:
-  - Failed to discharge match guard for goal:
-      Pulse.Lib.Reference.pts_to s 2
-    with resource from context:
-      Pulse.Lib.Reference.pts_to s 3
+  - rewrite: could not prove equality of
+  - Pulse.Lib.Reference.pts_to s 3
+  - Pulse.Lib.Reference.pts_to s 2
   - Assertion failed
   - The SMT solver could not prove the query. Use --query_stats for more
     details.
 
 * Info at LoopInvariants.fst(88,9-88,10):
   - Expected failure:
-  - Failed to discharge match guard for goal:
-      Pulse.Lib.Reference.pts_to s 2
-    with resource from context:
-      Pulse.Lib.Reference.pts_to s 3
+  - rewrite: could not prove equality of
+  - Pulse.Lib.Reference.pts_to s 3
+  - Pulse.Lib.Reference.pts_to s 2
   - Assertion failed
   - The SMT solver could not prove the query. Use --query_stats for more
     details.

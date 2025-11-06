@@ -346,7 +346,7 @@ fn rec extract_state_pred
         take_one_h11 t ts';
 
         intro (state_pred t.pre t.post t.h @==> all_state_pred ts)
-            #(task_thunk_typing t' ** all_state_pred ts') fn _
+            #(task_thunk_typing t ** all_state_pred ts') fn _
         {
           add_one_state_pred t ts';
         };
@@ -415,9 +415,8 @@ ghost fn shift_up (x: slprop_ref) (y: slprop)
 {
   intro (shift (up x ** later_credit 1) y) #(slprop_ref_pts_to x y) fn _ {
     unfold up x;
-    slprop_ref_gather _;
+    slprop_ref_gather _ #_ #y;
     later_elim _;
-    equiv_comm _ _;
     equiv_elim _ _;
     drop_ (slprop_ref_pts_to _ _);
   };
@@ -1273,6 +1272,7 @@ fn try_await_pool
 
     (* We have permission on the queues + all_tasks_done. Obtain pool_done
     temporarilly to redeem. *)
+    with v. assert AR.pts_to_full p.g_runnable v;
     AR.drop_anchor p.g_runnable;
     AR.share p.g_runnable;
     fold (pool_done p);
@@ -1280,7 +1280,7 @@ fn try_await_pool
     (*!*) assert q;
     unfold (pool_done p);
     AR.gather p.g_runnable;
-    AR.lift_anchor p.g_runnable _;
+    AR.lift_anchor p.g_runnable v;
 
     fold (ite true q (pledge is (pool_done p) q));
     fold (lock_inv p.runnable p.g_runnable);
@@ -1342,13 +1342,14 @@ fn rec teardown_pool
   let b = check_if_all_done runnable;
   unfold ite;
   if b {
+    with v. assert AR.pts_to_full p.g_runnable v;
     AR.drop_anchor p.g_runnable;
     AR.share p.g_runnable;
     fold (pool_done p);
 
     (* Drop the other ghost half + anchor. *)
     drop_ (AR.pts_to p.g_runnable #0.5R runnable);
-    drop_ (AR.anchored p.g_runnable _);
+    drop_ (AR.anchored p.g_runnable v);
 
     (* TODO: actually teardown. *)
     drop_ (pts_to p.runnable runnable);

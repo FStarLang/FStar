@@ -654,6 +654,12 @@ let rec desugar_stmt' (env:env_t) (s:Sugar.stmt)
       let n1 : term = tm_expr n1 s.range in
       return (SW.tm_with_inv n1 tt returns_ s.range)
 
+    | PragmaSetOptions { options; body } ->
+      FStarC.Syntax.Util.process_pragma (S.PushOptions <| Some options) s.range;
+      let! body = desugar_stmt env body in
+      FStarC.Syntax.Util.process_pragma S.PopOptions s.range;
+      return (SW.tm_with_options options body s.range)
+
 and desugar_st_args (env:env_t) (args:list Sugar.lambda) : err (list SW.st_term) =
   match args with
   | arg::args ->

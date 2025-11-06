@@ -88,15 +88,15 @@ ensures lock_alive l p ** p
       opens [l.i] {
       later_elim _;
       unfold lock_inv;
+      with vv. assert l.r |-> vv;
       let b = cas_box l.r 0ul 1ul;
       if b
       { 
         elim_cond_true _ _ _;
-        with _b. rewrite (maybe _b p) as p;
+        rewrite each vv as 0ul;
         fold (maybe false p);
         rewrite (maybe false p) as (maybe (1ul = 0ul) p);
         fold (lock_inv l.r p);
-        fold (maybe true p);
         later_intro (lock_inv l.r p);
         true
       }

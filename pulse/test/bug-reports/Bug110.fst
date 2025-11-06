@@ -3,7 +3,7 @@ module Bug110
 #lang-pulse
 open Pulse
 
-assume val foo : int -> slprop
+[@@no_mkeys] assume val foo : int -> slprop
 
 (* OK *)
 fn test1 (i j : int)
@@ -14,6 +14,7 @@ fn test1 (i j : int)
 }
 
 (* Should fail, we cannot prove i == j *)
+[@@expect_failure [19]]
 fn test2 (i j : int)
   requires foo i ** pure (foo i == foo j)
   ensures  foo j

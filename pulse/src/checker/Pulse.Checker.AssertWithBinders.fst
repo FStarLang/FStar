@@ -32,88 +32,30 @@ module P = Pulse.Syntax.Printer
 module PS = Pulse.Checker.Prover.Substs
 module Prover = Pulse.Checker.Prover
 module Env = Pulse.Typing.Env
-open Pulse.Show
 module RU = Pulse.RuntimeUtils
+open Pulse.Checker.Prover.Normalize
+open Pulse.Show
+open Pulse.PP
 
 let is_host_term (t:R.term) = not (R.Tv_Unknown? (R.inspect_ln t))
 
 let debug_log = Pulse.Typing.debug_log "with_binders"
 
-let option_must (f:option 'a) (msg:string) : T.Tac 'a =
-  match f with
-  | Some x -> x
-  | None -> T.fail msg
-
-let rec refl_abs_binders (t:R.term) (acc:list binder) : T.Tac (list binder) =
-  let open R in
-  match inspect_ln t with
-  | Tv_Abs b body ->
-    let {sort; ppname} = R.inspect_binder b in
-    refl_abs_binders body
-     ((mk_binder_ppname sort (mk_ppname ppname (RU.range_of_term t)))::acc)
-  | _ -> L.rev acc  
-
-let infer_binder_types (g:env) (bs:list binder) (v:slprop)
-  : T.Tac (list binder) =
-  match bs with
-  | [] -> []
-  | _ ->
-    let v_rng = Pulse.RuntimeUtils.range_of_term v in
-    let g = push_context g "infer_binder_types" v_rng in
-    let as_binder (b:binder) : R.binder =
-      let open R in
-      let bv : binder_view = 
-        { sort = b.binder_ty;
-          ppname = b.binder_ppname.name;
-          qual = Q_Explicit;
-          attrs = [] } in
-      pack_binder bv
-    in
-    let abstraction = 
-      L.fold_right 
-        (fun b (tv:term) -> 
-         let b = as_binder b in
-         R.pack_ln (R.Tv_Abs b tv))
-        bs
-        v
-    in
-    let inst_abstraction, _ = PC.instantiate_term_implicits g (wr abstraction v_rng) None true in
-    refl_abs_binders inst_abstraction []
-
-let rec open_binders (g:env) (bs:list binder) (uvs:env { disjoint uvs g }) (v:term) (body:st_term)
-  : T.Tac (uvs:env { disjoint uvs g } & term & st_term) =
+let rec open_binders_with_uvars (g:env) (bs:list binder) (v:term) (body:st_term) (us: list term)
+  : T.Tac (uvs: list term & term & st_term) =
 
   match bs with
-  | [] -> (| uvs, v, body |)
-  | b::bs ->
-    // these binders are only lax checked so far
-    let _ = PC.check_universe (push_env g uvs) b.binder_ty in
-    let x = fresh (push_env g uvs) in
-    let ss = [ RT.DT 0 (tm_var {nm_index=x;nm_ppname=b.binder_ppname}) ] in
+  | [] -> (| List.rev us, v, body |)
+  | {binder_ty}::bs ->
+    let binder_ty, _ = PC.tc_type_phase1 g binder_ty in
+    let u, _ = PC.tc_term_phase1_with_type g tm_unknown binder_ty in
+    let ss = [ RT.DT 0 u ] in
     let bs = L.mapi (fun i b ->
       assume (i >= 0);
       subst_binder b (shift_subst_n i ss)) bs in
     let v = subst_term v (shift_subst_n (L.length bs) ss) in
     let body = subst_st_term body (shift_subst_n (L.length bs) ss) in
-    open_binders g bs (push_binding uvs x b.binder_ppname b.binder_ty) v body
-
-let closing (bs:list (ppname & var & typ)) : subst =
-  L.fold_right (fun (_, x, _) (n, ss) ->
-    n+1,
-    (RT.ND x n)::ss
-  ) bs (0, []) |> snd
-
-let rec close_binders (bs:list (ppname & var & typ))
-  : Tot (list binder) (decreases L.length bs) =
-  match bs with
-  | [] -> []
-  | (name, x, t)::bs ->
-    let bss = L.mapi (fun n (n1, x1, t1) ->
-      assume (n >= 0);
-      n1, x1, subst_term t1 [RT.ND x n]) bs in
-    let b = mk_binder_ppname t name in
-    assume (L.length bss == L.length bs);
-    b::(close_binders bss)
+    open_binders_with_uvars g bs v body (u::us)
 
 let unfold_all (g : env) (names : list string) (t:term)
   : T.Tac term
@@ -220,27 +162,15 @@ let visit_and_rewrite (p: (R.term & R.term)) (t:term) : T.Tac term =
 let visit_and_rewrite_conjuncts (p: (R.term & R.term)) (tms:list term) : T.Tac (list term) =
   T.map (visit_and_rewrite p) tms
 
-(* is_source: was this rewrite written in the source by the user? *)
-let visit_and_rewrite_conjuncts_all (is_source:bool) (g:env) (p: list (R.term & R.term)) (goal:term) : T.Tac (term & term) =
+let visit_and_rewrite_conjuncts_all (g:env) (p: list (R.term & R.term & 'a)) (goal:term) : T.Tac term =
   let tms = slprop_as_list goal in
-  let tms' = T.fold_left (fun tms p -> visit_and_rewrite_conjuncts p tms) tms p in
-  assume (L.length tms' == L.length tms);
-  let lhs, rhs =
-    T.fold_left2 
-      (fun (lhs, rhs) t t' ->  
-        if eq_tm t t' then lhs, rhs
-        else (t::lhs, t'::rhs))
-      ([], [])
-      tms tms'
-  in
-  if is_source && Nil? lhs then
-    warn_nop g goal;
-  list_as_slprop lhs, list_as_slprop rhs
+  let tms' = T.fold_left (fun tms (e0, e1, _) -> visit_and_rewrite_conjuncts (e0, e1) tms) tms p in
+  list_as_slprop tms'
 
 let disjoint (dom:list var) (cod:Set.set var) =
   L.for_all (fun d -> not (Set.mem d cod)) dom
 
-let rec as_subst (p : list (term & term)) 
+let rec as_subst (p : list (term & term & 'a)) 
                  (out:list subst_elt)
                  (domain:list var)
                  (codomain:Set.set var)
@@ -250,7 +180,7 @@ let rec as_subst (p : list (term & term))
     if disjoint domain codomain
     then Some out
     else None
-  | (e1, e2)::p -> (
+  | (e1, e2, _)::p -> (
     match R.inspect_ln e1 with
     | R.Tv_Var n -> (
       let nv = R.inspect_namedv n in
@@ -262,50 +192,139 @@ let rec as_subst (p : list (term & term))
     | _ -> None
   )
 
+let try_find_equality (g:env) (x:R.term)
+: T.Tac (option R.term)
+= T.tryPick
+    (fun (_, ty) ->
+      match is_squash ty with
+      | None -> None
+      | Some maybe_eq ->
+        match is_eq2 maybe_eq with
+        | None -> None
+        | Some (_, lhs, rhs) ->
+          if eq_tm x lhs then Some rhs
+          else if eq_tm x rhs then Some lhs
+          else None)
+    (Env.bindings g)
 
 
-let rewrite_all (is_source:bool) (g:env) (p: list (term & term)) (t:term) pre elaborated tac_opt : T.Tac (term & term) =
+let rewrite_all rng (is_source:bool) (g:env) (p: list (term & term)) (t:term) pre elaborated tac_opt (norm_t:bool)
+: T.Tac (term & list (term & term))
+=
   (* We only use the rewrites_to substitution if there is no tactic attached to the
   rewrite. Otherwise, tactics may become brittle as the goal is changed unexpectedly
   by other things in the context. See tests/Match.fst. *)
   let use_rwr = None? tac_opt in
-  let norm (t:term) : T.Tac term = dfst <| Pulse.Checker.Prover.normalize_slprop g t use_rwr in
+  let norm (t:term) : T.Tac term = dfst <| normalize_slprop g t use_rwr in
   let t =
     let t, _ = Pulse.Checker.Pure.instantiate_term_implicits g t None true in
-    let t = dfst <| Pulse.Checker.Prover.normalize_slprop g t use_rwr in
+    let t = dfst <| normalize_slprop g t use_rwr in
     t
   in
   let maybe_purify t = if elaborated then t else purify_term g {ctxt_now=pre;ctxt_old=None} t in
-  let elab_pair (lhs rhs : R.term) : T.Tac (R.term & R.term) =
-    let lhs = maybe_purify lhs in
-    let rhs = maybe_purify rhs in
-    let lhs, lhs_typ = Pulse.Checker.Pure.instantiate_term_implicits g lhs None true in
-    let rhs, rhs_typ = Pulse.Checker.Pure.instantiate_term_implicits g rhs (Some lhs_typ) true in
-    let lhs = norm lhs in
-    let rhs = norm rhs in
-    lhs, rhs
+  let find_equality g (x:R.term) : T.Tac R.term =
+    match try_find_equality g x with
+    | None -> 
+      fail_doc g (Some rng) [
+        text (Printf.sprintf "Could not find an equality for %s in the context for rewriting" (show x))
+      ]
+    | Some y -> y  
   in
-  let p : list (R.term & R.term) = T.map (fun (e1, e2) -> elab_pair e1 e2) p in
+  let elab_pair (lhs rhs : R.term) : T.Tac (R.term & R.term & bool) =
+    let lhs_ln = R.inspect_ln lhs in
+    let rhs_ln = R.inspect_ln rhs in
+    match lhs_ln, rhs_ln with
+      (* rewrite each _ as x   _or_  rewrite each x as _ *)
+    | R.Tv_Unknown, R.Tv_Var _ -> find_equality g rhs, rhs, false
+    | R.Tv_Var x, R.Tv_Unknown -> lhs, find_equality g lhs, false
+
+    | _ ->
+      let lhs = maybe_purify lhs in
+      let rhs = maybe_purify rhs in
+      let lhs, lhs_typ = Pulse.Checker.Pure.instantiate_term_implicits g lhs None true in
+      let rhs, rhs_typ = Pulse.Checker.Pure.instantiate_term_implicits g rhs (Some lhs_typ) true in
+      let lhs = norm lhs in
+      let rhs = norm rhs in
+      lhs, rhs, true //to be checked
+  in
+  let p : list (R.term & R.term & bool) = T.map (fun (e1, e2) -> elab_pair e1 e2) p in
+  let q = T.concatMap (fun (e1, e2, b) -> if b then [(e1, e2)] else []) p in
   match as_subst p [] [] Set.empty with
   | Some s ->
     let t' = subst_term t s in
     if is_source && eq_tm t t' then
       warn_nop g t;
-    t, t'
+    t', q
   | _ ->
-    let lhs, rhs = visit_and_rewrite_conjuncts_all is_source g p t in
-    debug_log g (fun _ -> Printf.sprintf "Rewrote %s to %s" (P.term_to_string lhs) (P.term_to_string rhs));
-    lhs, rhs
+    let rhs = visit_and_rewrite_conjuncts_all g p t in
+    if is_source && eq_tm t rhs then
+      warn_nop g t;
+    debug_log g (fun _ -> Printf.sprintf "Rewrote %s to %s" (P.term_to_string t) (P.term_to_string rhs));
+    rhs, q
+
+let check_equiv_with_tac (g:env) (rng:Range.range) (lhs rhs ty:term) (tac_tm:term)
+: T.Tac (option T.issues)
+= let g_env = elab_env g in
+  match Pulse.Typing.Util.universe_of_now g_env ty with
+  | None, issues ->
+    fail_doc_with_subissues g (Some rng) issues [
+      text "rewrite: could not determine the universe of";
+      pp ty;
+    ]
+  | Some u, _ ->
+    let goal = mk_squash u0 (RT.eq2 u ty lhs rhs) in
+    let goal_typing 
+      : my_erased (T.typing_token (elab_env g) goal (RT.E_Total, R.pack_ln (R.Tv_Type u0)))
+      = magic()
+    in
+    let goal_typing_tok : squash (T.typing_token (elab_env g) goal (RT.E_Total, R.pack_ln (R.Tv_Type u0))) =
+      match goal_typing with | E x -> ()
+    in
+    let res, issues = T.call_subtac_tm g_env tac_tm u0 goal in
+    if None? res then Some issues else None
+
+let check_equiv_maybe_tac (g:env) (rng:Range.range) (lhs rhs ty:term) (tac_opt:option term)
+: T.Tac (option T.issues)
+= match tac_opt with
+  | None -> 
+    let res, issues = 
+      Pulse.Typing.Util.check_equiv_now (elab_env g) lhs rhs in
+    if None? res then Some issues else None
+  | Some tac_tm -> 
+    check_equiv_with_tac g rng lhs rhs ty tac_tm
+
+let check_pair (g:env) rng (lhs rhs:term) (tac_opt:option term) : T.Tac unit =
+  let (| _, ty, _ |) = PC.core_compute_term_type g lhs in
+  let (| _, _ |) = PC.core_check_term_at_type g rhs ty in
+  let issues = check_equiv_maybe_tac g rng lhs rhs ty tac_opt in
+  match issues with
+  | Some issues -> 
+    fail_doc_with_subissues g (Some rng) issues [
+      text "rename: could not prove equality of";
+      pp lhs;
+      pp rhs;
+    ]
+  | _ ->
+    ()
+
+let rec check_pairs (g:env) rng (ps: list (term & term)) (tac_opt:option term) : T.Tac unit =
+  match ps with
+  | [] -> ()
+  | (lhs,rhs)::ps -> check_pair g rng lhs rhs tac_opt; check_pairs g rng ps tac_opt
 
 let check_renaming 
     (g:env)
     (pre:term)
+    (pre_typing:tot_typing g pre tm_slprop)
+    (post_hint:post_hint_opt g)
+    (res_ppname:ppname)
     (st:st_term { 
         match st.term with
         | Tm_ProofHintWithBinders { hint_type = RENAME _ } -> true
         | _ -> false
     })
-: T.Tac st_term
+  (check:check_t)
+: T.Tac (checker_result_t g pre post_hint)
 = let Tm_ProofHintWithBinders ht = st.term in
   let { hint_type=RENAME { pairs; goal; tac_opt; elaborated }; binders=bs; t=body } = ht in
   match bs, goal with
@@ -320,6 +339,7 @@ let check_renaming
    // ...
    let body = {st with term = Tm_ProofHintWithBinders { ht with binders = [] };
                        source = Sealed.seal false; } in
+   check g pre pre_typing post_hint res_ppname
    { st with
        term = Tm_ProofHintWithBinders { hint_type=ASSERT { p = goal; elaborated = true }; binders=bs; t=body };
        source = Sealed.seal false;
@@ -327,30 +347,65 @@ let check_renaming
 
   | [], None ->
     // if there is no goal, take the goal to be the full current pre
-    let lhs, rhs = rewrite_all (T.unseal st.source) g pairs pre pre elaborated tac_opt in
-    let t = { st with term = Tm_Rewrite { t1 = lhs; t2 = rhs; tac_opt; elaborated = true };
-                      source = Sealed.seal false; } in
-    { st with
-        term = Tm_Bind { binder = as_binder tm_unit; head = t; body };
-        source = Sealed.seal false;
-    }
+    let rhs, pairs = rewrite_all st.range (T.unseal st.source) g pairs pre pre elaborated tac_opt false in
+    check_pairs g st.range pairs tac_opt;
+    let h2: slprop_equiv g rhs pre = RU.magic () in
+    let h1: tot_typing g rhs tm_slprop = RU.magic () in
+    let (| x, g', ty, ctxt', k |) = check g rhs h1 post_hint res_ppname body in
+    (| x, g', ty, ctxt', k_elab_equiv k h2 (VE_Refl _ _) |)
 
   | [], Some goal -> (
-      let goal, _ = PC.instantiate_term_implicits g goal None false in
-      let lhs, rhs = rewrite_all (T.unseal st.source) g pairs goal pre elaborated tac_opt in
-      let t = { st with term = Tm_Rewrite { t1 = lhs; t2 = rhs; tac_opt; elaborated = true };
+      let rhs, _ = rewrite_all st.range (T.unseal st.source) g pairs goal pre elaborated tac_opt true in
+      let t = { st with term = Tm_Rewrite { t1 = goal; t2 = rhs; tac_opt; elaborated = true };
                         source = Sealed.seal false; } in
+      check g pre pre_typing post_hint res_ppname
       { st with term = Tm_Bind { binder = as_binder tm_unit; head = t; body };
                 source = Sealed.seal false;
       }
   )
 #restart-solver
 #push-options "--z3rlimit_factor 2 --fuel 0 --ifuel 1"
+let rec peel_binders k (ex: slprop) pre r
+    (g:env) frame (bs: list binder) (t:term) (t_typ: tot_typing g t tm_slprop) :
+    T.Tac (g':env {env_extends g' g} & t': slprop & xs: list (universe & typ & nvar) &
+      continuation_elaborator
+        g (frame `tm_star` t)
+        g' (frame `tm_star` t')) =
+  match bs with
+  | [] -> (|g, t, [], k_elab_unit _ _|)
+  | with_b::bs ->
+    match inspect_term t with
+    | Tm_ExistsSL u b body ->
+      let x = with_b.binder_ppname, fresh g in
+      let ty = mk_erased u b.binder_ty in
+      let g' = push_binding g (snd x) (fst x) ty in
+      let t' = open_term' body (mk_reveal u b.binder_ty (term_of_nvar x)) 0 in
+      let t'_typ : tot_typing g' t' tm_slprop = RU.magic () in
+      let (|g'', t'', bs', k'|) = peel_binders k ex pre r g' frame bs t' t'_typ in
+      (| g'', t'', (u,b.binder_ty,x)::bs', k_elab_trans (Pulse.Checker.Prover.elim_exists g frame u b body x g') k' |)
+    | _ -> 
+      fail_doc g (Some r) [
+        text <| (Printf.sprintf "Expected an existential quantifier with at least %d binders; but only found %s with %d binders"
+            k (show ex) (k - List.Tot.length bs));
+        text "The context was:" ^^
+          indent (pp <| canon_slprop_print pre)
+      ]
+let open_st_term_with_reveals (t: st_term) (xs: list (universe & typ & nvar)) : Dv st_term =
+  // FIXME: this probably does something very wrong when the variables depend on each other...
+  let rec mk_subst xs (i: nat) : subst =
+    match xs with
+    | [] -> []
+    | (u,t,x)::xs -> RT.DT i (mk_reveal u t (term_of_nvar x)) :: mk_subst xs (i+1) in
+  subst_st_term t (mk_subst (List.Tot.rev xs) 0)
 let check_wild
       (g:env)
       (pre:term)
+      (pre_typing:tot_typing g pre tm_slprop)
+      (post_hint:post_hint_opt g)
+      (res_ppname:ppname)
       (st:st_term { head_wild st })
-: T.Tac st_term
+      (check:check_t)
+: T.Tac (checker_result_t g pre post_hint)
 = let Tm_ProofHintWithBinders ht = st.term in
   let open Pulse.PP in
   let { binders=bs; t=body } = ht in
@@ -374,41 +429,30 @@ let check_wild
 
     | [ex] ->
       let k = List.Tot.length bs in
-      let rec peel_binders (n:nat) (t:term) : T.Tac st_term =
-        if n = 0
-        then (
-          let ex_body = t in
-          { st with term = Tm_ProofHintWithBinders { ht with hint_type = ASSERT { p = ex_body; elaborated = true } }}
-        )
-        else (
-          match inspect_term t with
-          | Tm_ExistsSL u b body -> peel_binders (n-1) body
-          | _ -> 
-            fail_doc g (Some st.range) [
-              text <| (Printf.sprintf "Expected an existential quantifier with at least %d binders; but only found %s with %d binders"
-                  k (show ex) (k - n));
-              text "The context was:" ^^
-                indent (pp <| canon_slprop_print pre)
-            ]
-        )
-      in
-      peel_binders k ex
+      let frame = list_as_slprop rest in
+      let ex_typ : tot_typing g ex tm_slprop = RU.magic () in
+      let (|g', ex', bs, k|) = peel_binders k ex pre st.range g frame bs ex ex_typ in
+      let body = open_st_term_with_reveals body bs in
+      let pre_typ : tot_typing g' (tm_star frame ex') tm_slprop = RU.magic () in
+      let (| x'', g'', t'', ctxt'', k' |) =
+        check g' (frame `tm_star` ex') pre_typ post_hint res_ppname body in
+      assume pre == (frame `tm_star` ex);
+      (| x'', g'', t'', ctxt'', k_elab_trans k k' |)
 #pop-options
+
 //
 // v is a partially applied slprop with type t
 // add uvars for the remaining arguments
 //
-let rec add_rem_uvs (g:env) (t:typ) (uvs:env { Env.disjoint g uvs }) (v:slprop)
-  : T.Tac (uvs:env { Env.disjoint g uvs } & slprop) =
+let rec add_rem_uvs (g:env) (t:typ) (v:term)
+  : T.Tac slprop =
   match is_arrow t with
-  | None -> (| uvs, v |)
+  | None -> v
   | Some (b, qopt, c) ->
-    let x = fresh (push_env g uvs) in
-    let ppname = ppname_for_uvar b.binder_ppname in
-    let ct = open_comp_nv c (ppname, x) in
-    let uvs = Env.push_binding uvs x ppname b.binder_ty in
-    let v = tm_pureapp v qopt (tm_var {nm_index = x; nm_ppname = ppname}) in
-    add_rem_uvs g (comp_res ct) uvs v
+    let u, _ = PC.tc_term_phase1_with_type g tm_unknown b.binder_ty in
+    let ct = open_comp' c u 0 in
+    let v = tm_pureapp v qopt u in
+    add_rem_uvs g (comp_res ct) v
 
 #push-options "--fuel 0 --ifuel 0"
 let check
@@ -428,8 +472,7 @@ let check
   allow_invert hint_type;
   match hint_type with
   | WILD ->
-    let st = check_wild g pre st in
-    check g pre pre_typing post_hint res_ppname st
+    check_wild g pre pre_typing post_hint res_ppname st check
 
   | SHOW_PROOF_STATE r ->
     let open FStar.Pprint in
@@ -441,8 +484,7 @@ let check
     fail_doc_env true g (Some r) msg
 
   | RENAME {} ->
-    let st = check_renaming g pre st in
-    check g pre pre_typing post_hint res_ppname st
+    check_renaming g pre pre_typing post_hint res_ppname st check
 
   | REWRITE { t1; t2; tac_opt; elaborated } -> (
     match bs with
@@ -459,89 +501,59 @@ let check
   
   | ASSERT { p = v; elaborated } ->
     FStar.Tactics.BreakVC.break_vc(); // Some stabilization
-    let bs = infer_binder_types g bs v in
-    let (| uvs, v_opened, body_opened |) = open_binders g bs (mk_env (fstar_env g)) v body in
-    let v, body = v_opened, body_opened in
+    let (| uvs, v, body |) = open_binders_with_uvars g bs v body [] in
     let ctxt = Pulse.Checker.ImpureSpec.({ctxt_now = pre; ctxt_old = None}) in
-    let (| v, d |) =
+    let v =
       if elaborated then
-        PC.check_slprop (push_env g uvs) v
+        fst (PC.tc_term_phase1_with_type g v tm_slprop)
       else
-        ImpureSpec.purify_and_check_spec (push_env g uvs) ctxt v in
-    let (| g1, nts, _, pre', k_frame |) = Prover.prove false pre_typing uvs d in
-    //
-    // No need to check effect labels for the uvs solution here,
-    //   since we are checking the substituted body anyway,
-    //   if some of them are ghost when they shouldn't be,
-    //   it will get caught
-    //
+        ImpureSpec.purify_spec g ctxt v in
+    let (| g1, pre', k_frame |) = Prover.prove st.range g pre v false in
+    let v = RU.deep_compress_safe v in
+    let v' = RU.beta_lax (elab_env g1) v in //normalize term to reduce spurious betas before checking it
+    assume (v == v'); //sorry---ideally, we would retype everything proving that it is stable after normalization
+    let v = v' in
+    let body = body in // TODO compress
+    let h: tot_typing g1 v tm_slprop = PC.core_check_term _ _ _ _ in
+    let h: tot_typing g1 (tm_star v pre') tm_slprop = RU.magic () in // TODO: propagate through prover
     let (| x, x_ty, pre'', g2, k |) =
-      check g1 (tm_star (PS.nt_subst_term v nts) pre')
-              (RU.magic ()) 
-              post_hint res_ppname (PS.nt_subst_st_term body nts) in
+      check g1 (tm_star v pre') h post_hint res_ppname body in
     (| x, x_ty, pre'', g2, k_elab_trans k_frame k |)
 
 
   | UNFOLD { p=v }
   | FOLD { p=v } ->
-
-    let (| uvs, v_opened, body_opened |) =
-      let bs = infer_binder_types g bs v in
-      open_binders g bs (mk_env (fstar_env g)) v body in
+    let (| uvs, v, body |) = open_binders_with_uvars g bs v body [] in
 
     check_unfoldable g v;
 
-    let v_opened = purify_term g { ctxt_now = pre; ctxt_old = None } v_opened in
-    let v_opened, t_rem = PC.instantiate_term_implicits (push_env g uvs) v_opened None false in
+    let v = purify_term g { ctxt_now = pre; ctxt_old = None } v in
+    let v =
+      let v, t, _ = PC.tc_term_phase1 g v in
+      add_rem_uvs g t v in
 
-    let uvs, v_opened =
-      let (| uvs_rem, v_opened |) =
-        add_rem_uvs (push_env g uvs) t_rem (mk_env (fstar_env g)) v_opened in
-      push_env uvs uvs_rem, v_opened in
-
-    let lhs, rhs, tac =
+    let lhs, rhs =
       match hint_type with      
       | UNFOLD _ ->
-        let rhs, head_sym = unfold_defs (push_env g uvs) None v_opened in
-        v_opened, rhs, Pulse.Reflection.Util.slprop_equiv_unfold_tm head_sym
+        let rhs, head_sym = unfold_defs g None v in
+        v, rhs
       | FOLD { names=ns } -> 
-        let lhs, head_sym = unfold_defs (push_env g uvs) ns v_opened in
-        lhs, v_opened, Pulse.Reflection.Util.slprop_equiv_fold_tm head_sym
+        let lhs, head_sym = unfold_defs g ns v in
+        lhs, v
     in
 
-    let uvs_bs = uvs |> bindings_with_ppname |> L.rev in
-    let uvs_closing = uvs_bs |> closing in
-    let lhs = subst_term lhs uvs_closing in
-    let rhs = subst_term rhs uvs_closing in
-    let body = subst_st_term body_opened uvs_closing in
-    let bs = close_binders uvs_bs in
-    (* Since this rewrite is easy enough to show by unification, we always
-    mark them with the slprop_equiv_norm tactic. *)
-    FStar.Tactics.BreakVC.break_vc ();
-    if RU.debug_at_level (fstar_env g) "fold" then begin
-      (* If we're running interactively, print out the context
-      and environment. *)
-      let open FStar.Pprint in
-      let open Pulse.PP in
-      let msg = [
-        text "Elaborated fold/unfold to rewrite";
-        prefix 2 1 (text "lhs:") (pp lhs);
-        prefix 2 1 (text "rhs:") (pp rhs);
-      ] in
-      info_doc_env g (Some st.range) msg
-    end;
-    let rw = mk_term (Tm_Rewrite { t1 = lhs; t2 = rhs; tac_opt = Some tac; elaborated = true }) st.range in
-    let rw = { rw with effect_tag = as_effect_hint STT_Ghost } in
+    let (| g', pre_remaining, k |) = Prover.prove st.range g pre lhs false in
 
-    let st = mk_term (Tm_Bind { binder = as_binder (wr (`unit) st.range); head = rw; body }) st.range in
-    let st = { st with effect_tag = body.effect_tag } in
+    let norm t = T.norm_term_env (elab_env g') [primops; iota] (RU.deep_compress_safe t) in
+    // Clean up beta-redexes introduced by unification
+    let rhs' = norm rhs in
+    let v' = norm v in
 
-    let st =
-      match bs with
-      | [] -> st
-      | _ ->
-        let t = mk_term (Tm_ProofHintWithBinders { hint_type = ASSERT { p = lhs; elaborated = true }; binders = bs; t = st }) st.range in
-        { t with effect_tag = st.effect_tag }
-    in
-    check g pre pre_typing post_hint res_ppname st
-#pop-options
+    let _: tot_typing g v' tm_slprop = PC.check_slprop_with_core g v' in
+
+    let h1: tot_typing g' (tm_star pre_remaining rhs') tm_slprop = RU.magic () in
+    let h2: slprop_equiv g' (tm_star pre_remaining rhs') (tm_star lhs pre_remaining) = RU.magic () in
+
+    let (| x, g'', ty, ctxt', k' |) =
+      check g' (tm_star pre_remaining rhs') h1 post_hint res_ppname body in
+    (| x, g'', ty, ctxt', k_elab_trans k (k_elab_equiv k' h2 (VE_Refl _ _)) |)

@@ -255,6 +255,7 @@ requires
     SM.seq_list_match_append_intro_trade vmatch c accu (c1' `Seq.append` c2') (l1' `List.Tot.append` l2');
     List.Tot.append_length accu (List.Tot.append l1' l2');
     Trade.trans _ _ (SM.seq_list_match c1 l1_0 vmatch ** SM.seq_list_match c2 l2_0 vmatch);
+    with va. assert pts_to a va; rewrite each Seq.Base.append c (Seq.Base.append c1' c2') as va;
     !pres
 }
 

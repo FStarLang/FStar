@@ -34,23 +34,11 @@ fn test2 (m:mutex int)
 
 
 
-[@@allow_ambiguous]
-
-fn flip (#p #q : slprop) (_:unit)
-  requires p ** q
-  ensures  q ** p
-{
-  ()
-}
-
-
-
 fn test3 (m:mutex int)
   requires mutex_live m p
   ensures  mutex_live m p
 {
   let r = lock m;
-  flip ();
   unlock m r;
   ()
 }

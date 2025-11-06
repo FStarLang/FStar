@@ -63,7 +63,6 @@ module A = Pulse.Lib.Array
 module R = Pulse.Lib.Reference
 open FStar.SizeT
 
-#push-options "--debug prover,pulse.checker"
 fn incr (y:ref int)
 requires R.pts_to y 'v
 ensures R.pts_to y ('v + 2)
@@ -101,11 +100,12 @@ fn compare
     }
   )
   invariant
-  exists* (vi:_{SZ.v vi <= SZ.v l}). ( 
+  exists* (vi:SZ.t{SZ.v vi <= SZ.v l}). ( 
     R.pts_to i vi **
     A.pts_to a1 #p1 's1 **
     A.pts_to a2 #p2 's2 **
     pure (
+      SZ.v vi <= SZ.v l /\
       (forall (i:nat). i < SZ.v vi ==> Seq.index 's1 i == Seq.index 's2 i)
     )
   )

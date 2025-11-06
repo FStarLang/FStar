@@ -41,7 +41,7 @@ noeq type blockchain_root = {
 type lifetime : Type0 =
   ref blockchain_root
 
-let fpts_to #t (r: ref t) (x: t) = exists* p. pts_to r #p x
+let fpts_to #t ([@@@mkey] r: ref t) (x: t) = exists* p. pts_to r #p x
 
 ghost fn dup_fpts_to u#t (t: Type u#t) r x () : duplicable_f (fpts_to #t r x) = {
   unfold fpts_to r x;
@@ -189,7 +189,7 @@ type stored_shape =
   | Stored
   | StoredBoth : stored_shape -> stored_shape -> stored_shape
 
-let rec bc_stored ([@@@mkey] x: blockchain_edge) ([@@@mkey] d: stored_shape) (y: slprop) : Tot slprop (decreases d) =
+let rec bc_stored ([@@@mkey] x: blockchain_edge) (d: stored_shape) (y: slprop) : Tot slprop (decreases d) =
   match d with
   | Stored -> exists* z. slprop_ref_pts_to x.be_prop z ** later z ** trade (later z) y
   | StoredCheckedOut -> live x.be_ref ** y
@@ -199,7 +199,7 @@ let rec bc_stored ([@@@mkey] x: blockchain_edge) ([@@@mkey] d: stored_shape) (y:
     bc_stored b db yb **
     trade (ya ** yb) y
 
-let rec rt_stored ([@@@mkey] x: ref blockchain_root) ([@@@mkey] n: unat) (b: slprop) : Tot slprop (decreases n) =
+let rec rt_stored ([@@@mkey] x: ref blockchain_root) (n: unat) (b: slprop) : Tot slprop (decreases n) =
   match n with
   | Zero -> trade emp b
   | Succ n -> exists* r (b1 b2: slprop). fpts_to x r **
@@ -207,7 +207,7 @@ let rec rt_stored ([@@@mkey] x: ref blockchain_root) ([@@@mkey] n: unat) (b: slp
     rt_stored r.rt_next n b2 **
     trade (b1 ** b2) b
 
-let owns_end ([@@@mkey] x: ref blockchain_root) ([@@@mkey] n: unat) =
+let owns_end ([@@@mkey] x: ref blockchain_root) (n: unat) =
   exists* y. root_idx x n y ** live y
 
 ghost fn elim_owns_end_zero x
@@ -574,7 +574,7 @@ ghost fn share_borrow' #a (p q1 q2: slprop)
   dup (slprop_ref_pts_to eb.be_prop q2) ();
   fold valid_split l.be_prop ea.be_prop eb.be_prop;
   dup (bc_idx r.rt_tree is l) ();
-  dup (valid_split l.be_prop ra rb) ();
+  dup (valid_split l.be_prop ea.be_prop eb.be_prop) ();
   push_bc_idx r.rt_tree is false l; 
   push_bc_idx r.rt_tree is true l; 
   dup (root_idx' a n r) ();

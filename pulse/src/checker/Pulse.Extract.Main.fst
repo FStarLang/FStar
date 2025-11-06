@@ -227,7 +227,8 @@ let rec simplify_st_term (g:env) (e:st_term) : T.Tac st_term =
   | Tm_WithLocalArray { binder; initializer; length; body } ->
     ret (Tm_WithLocalArray { binder; initializer; length; body = with_open binder body })
     
-  | Tm_WithInv {body} ->
+  | Tm_WithInv {body}
+  | Tm_PragmaWithOptions { body } ->
     simplify_st_term g body
 
   | Tm_Unreachable _ -> e
@@ -332,6 +333,9 @@ let rec erase_ghost_subterms (g:env) (p:st_term) : T.Tac st_term =
 
     | Tm_WithInv { name; body; returns_inv } ->
       ret (Tm_WithInv { name; body = erase_ghost_subterms g body; returns_inv })
+
+    | Tm_PragmaWithOptions { options; body } ->
+      ret (Tm_PragmaWithOptions { options; body=erase_ghost_subterms g body })
       
   end
 
@@ -512,7 +516,8 @@ let rec extract_dv g (p:st_term) : T.Tac R.term =
       ECL.mk_meta_monadic (R.mk_app (R.pack_ln (R.Tv_FVar (R.pack_fv ["Pulse"; "Lib"; "Dv"; "unreachable"])))
         [comp_res c, R.Q_Explicit; unit_tm, R.Q_Explicit])
 
-    | Tm_WithInv { body } -> extract_dv g body
+    | Tm_WithInv { body }
+    | Tm_PragmaWithOptions { body } -> extract_dv g body
 
   end
 

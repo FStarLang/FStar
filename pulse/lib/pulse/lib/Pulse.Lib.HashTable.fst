@@ -556,7 +556,6 @@ fn delete
     if (voff = ht.sz)
     {
       cont := false;
-      rewrite each vcont as false; // also relying on #110
     }
     else
     {
@@ -584,7 +583,6 @@ fn delete
         {
           cont := false;
           assert (pure (pht.repr == (PHT.delete pht k).repr));
-          rewrite each vcont as false; // also relying on #110
         }
         Zombie ->
         {

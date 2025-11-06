@@ -73,7 +73,7 @@ fn slice_swap_aux(#t: Type0) (a: S.slice t) (mb: (mb: SZ.t {0 < SZ.v mb /\ SZ.v 
         S.op_Array_Assignment a idx x;
         pj := j';
         pidx := idx';
-        ()
+        #set-options "--z3refresh" { () } //restart the solver to prove the invariant at the end in a clean state
       };
       ();
       with s . assert (pts_to a s);

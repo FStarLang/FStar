@@ -1,9 +1,9 @@
-* Info at Bug174.fst(15,1-17,10):
+* Info at Bug174.fst(15,1-16,42):
   - Expected failure:
-  - Ill-typed term: !r
+  - rewrite: could not prove equality of
+  - Pulse.Lib.Reference.pts_to r v
+  - Pulse.Lib.Reference.pts_to r v
   - Assertion failed
   - The SMT solver could not prove the query. Use --query_stats for more
     details.
-  - Also see: Bug174.fst(16,30-16,42)
-  - Other related locations: Bug174.fst(16,39-16,40)
 

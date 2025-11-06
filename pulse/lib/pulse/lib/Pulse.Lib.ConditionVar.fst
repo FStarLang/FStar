@@ -167,7 +167,7 @@ ensures
      later_intro (cvar_inv b.core p);
      drop_ (Box.pts_to b.core.r #0.5R _)
   };
-  drop_ _
+  drop_ (inv _ _)
 }
 
 fn signal (c:cvar_t) (#p:slprop)

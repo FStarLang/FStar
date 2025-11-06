@@ -240,20 +240,16 @@ fn partition (a: A.array int) (lo: nat) (hi:(hi:nat{lo < hi}))
   let mut j = lo;
   let mut k = lo;
   while (let vk = !k; (vk < hi - 1))
-    invariant b . exists* s (vi vj vk : nat). (
+    invariant exists* s. (
       A.pts_to_range a lo hi s **
-      R.pts_to i vi **
-      R.pts_to j vj **
-      R.pts_to k vk **
+      live i ** live j ** live k **
       pure (
-        b == (vk < hi - 1) /\
-        //eq2_prop #bool b (vk < hi - 1) /\
-        lo <= vk /\ vk <= hi - 1 /\
-        lo <= vi /\ vi <= vj /\ vj <= vk /\
+        lo <= !k /\ !k <= hi - 1 /\
+        lo <= !i /\ !i <= !j /\ !j <= !k /\
         lb <= pivot /\ pivot <= rb /\
         Seq.length s = hi - lo /\
         Seq.index s (hi - 1 - lo) = pivot
-        /\ partition_pred s lo vk (vi, vj, pivot)
+        /\ partition_pred s lo (!k) (!i, !j, pivot)
         /\ permutation s0 s
         /\ between_bounds s lb rb
       ))

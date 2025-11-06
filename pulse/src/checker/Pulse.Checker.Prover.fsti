@@ -1,5 +1,5 @@
 (*
-   Copyright 2023 Microsoft Research
+   Copyright 2025 Microsoft Research
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -15,67 +15,34 @@
 *)
 
 module Pulse.Checker.Prover
-
+open Pulse.Checker.Base
+open Pulse.Typing
+open Pulse.Syntax.Base
+open Pulse.Syntax.Pure
+open Pulse.Syntax.Naming
 module T = FStar.Tactics.V2
 
-open Pulse.Syntax
-open Pulse.Typing
-open Pulse.Checker.Base
+val elim_exists (g: env) (frame: slprop) u b body (x: nvar { ~(Set.mem (snd x) (dom g)) })
+    (g': env { g' == push_binding g (snd x) (fst x) (mk_erased u b.binder_ty) }) :
+  continuation_elaborator g (frame `tm_star` tm_exists_sl u b body)
+    g' (frame `tm_star` open_term' body (mk_reveal u b.binder_ty (term_of_nvar x)) 0)
 
-module PS = Pulse.Checker.Prover.Substs
+val prove (rng: range) (g: env) (ctxt goals: slprop) (allow_amb: bool) :
+  T.Tac (g':env { env_extends g' g } & ctxt': slprop &
+    continuation_elaborator g ctxt g' (goals `tm_star` ctxt'))
 
-include Pulse.Checker.Prover.Base
-include Pulse.Checker.Prover.Util
+val prove_post_hint (#g:env) (#ctxt:slprop) (r:checker_result_t g ctxt NoHint) (post_hint:post_hint_opt g) (rng:range) :
+  T.Tac (checker_result_t g ctxt post_hint)
 
-val normalize_slprop
-  (g:env)
-  (v:slprop)
-  (use_rewrites_to : bool)
-  : T.Tac (v':slprop & slprop_equiv g v v')
-
-val normalize_slprop_welltyped
-  (g:env)
-  (v:slprop)
-  (v_typing:tot_typing g v tm_slprop)
-  : T.Tac (v':slprop & slprop_equiv g v v' & tot_typing g v' tm_slprop)
-
-val prove
-  (allow_ambiguous : bool)
-  (#g:env) (#ctxt:slprop) (ctxt_typing:tot_typing g ctxt tm_slprop)
-  (uvs:env { disjoint g uvs })
-  (#goals:slprop) (goals_typing:tot_typing (push_env g uvs) goals tm_slprop)
-
-  : T.Tac (g1 : env { g1 `env_extends` g /\ disjoint g1 uvs } &
-           nts : PS.nt_substs &
-           effect_labels:list T.tot_or_ghost { PS.well_typed_nt_substs g1 uvs nts effect_labels } &
-           remaining_ctxt : slprop &
-           continuation_elaborator g ctxt g1 ((PS.nt_subst_term goals nts) * remaining_ctxt))
-
-val try_frame_pre_uvs
-  (allow_ambiguous : bool)
-  (#g:env) (#ctxt:slprop) (ctxt_typing:tot_typing g ctxt tm_slprop)
-  (uvs:env { disjoint g uvs })
-  (d:(t:st_term & c:comp_st & st_typing (push_env g uvs) t c))
-  (res_ppname:ppname)
-  : T.Tac (checker_result_t g ctxt NoHint)
-
-val try_frame_pre
-  (allow_ambiguous : bool)
-  (#g:env) (#ctxt:slprop) (ctxt_typing:tot_typing g ctxt tm_slprop)
-  (d:(t:st_term & c:comp_st & st_typing g t c))
-  (res_ppname:ppname)
-  : T.Tac (checker_result_t g ctxt NoHint)
-
-val prove_post_hint (#g:env) (#ctxt:slprop)
-  (r:checker_result_t g ctxt NoHint)
-  (post_hint:post_hint_opt g)
-  (rng:range)
-  
-  : T.Tac (checker_result_t g ctxt post_hint)
+val try_frame_pre (allow_ambiguous : bool) (#g:env)
+    (#ctxt:slprop) (ctxt_typing:tot_typing g ctxt tm_slprop)
+    (d:(t:st_term & c:comp_st & st_typing g t c))
+    (res_ppname:ppname) :
+  T.Tac (checker_result_t g ctxt NoHint)
 
 val elim_exists_and_pure (#g:env) (#ctxt:slprop)
-  (ctxt_typing:tot_typing g ctxt tm_slprop)
-  : T.Tac (g':env { env_extends g' g } &
-           ctxt':term &
-           tot_typing g' ctxt' tm_slprop &
-           continuation_elaborator g ctxt g' ctxt')
+    (ctxt_typing:tot_typing g ctxt tm_slprop)
+    : T.Tac (g':env { env_extends g' g } &
+            ctxt':term &
+            tot_typing g' ctxt' tm_slprop &
+            continuation_elaborator g ctxt g' ctxt')

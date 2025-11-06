@@ -75,6 +75,7 @@ fn proof
       assert (pts_to done #0.5R v_done
               ** pts_to done #0.5R true
               ** pts_to res #0.5R v_res
+              ** pts_to claimed #0.5R false
               ** pts_to claimed #0.5R v_claimed
               ** (if not v_claimed then R.pts_to res #0.5R v_res else emp)
               ** pure (v_claimed ==> v_done)

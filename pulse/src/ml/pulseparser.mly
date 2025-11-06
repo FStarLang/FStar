@@ -290,6 +290,8 @@ pulseStmtNoSeq:
   | LBRACE s=pulseStmt RBRACE
     { PulseSyntaxExtension_Sugar.mk_block s }
   | p=matchStmt { p }
+  | PRAGMA_SET_OPTIONS options=STRING LBRACE s=pulseStmt RBRACE
+    { PulseSyntaxExtension_Sugar.mk_pragma_set_options options s }
   
 matchStmt:
   | MATCH tm=appTermNoRecordExp c=option(ensuresSLProp) LBRACE brs=list(pulseMatchBranch) RBRACE

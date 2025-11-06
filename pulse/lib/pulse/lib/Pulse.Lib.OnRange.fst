@@ -481,6 +481,7 @@ fn rec on_range_unzip (p q:nat -> slprop) (i j:nat)
     rewrite (on_range (fun k -> p k ** q k) i j) as pure False;
     unreachable ();
   } else if (j = i) {
+    rewrite each j as i;
     on_range_empty_elim (fun k -> p k ** q k) i;
     on_range_empty p i;
     on_range_empty q i;

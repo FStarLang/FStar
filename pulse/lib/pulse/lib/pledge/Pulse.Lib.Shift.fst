@@ -204,9 +204,9 @@ ghost
 fn shift_dup #is p q : duplicable_f (shift #is p q) =
 {
   unfold (shift #is p q);
+  let d = extract_duplicator _;
   dup_extra_duplicable _;
   dup_shift_elim_exists _ _;
-  let d = extract_duplicator _;
   Pulse.Class.Duplicable.dup _ #d ();
   fold (shift #is p q);
   fold (shift #is p q)

@@ -36,7 +36,7 @@ val check_nuwhile
   (g:env)
   (pre:term)
   (pre_typing:tot_typing g pre tm_slprop)
-  (post_hint:post_hint_opt g)
+  (post_hint:post_hint_opt g { ~ (PostHint? post_hint) })
   (res_ppname:ppname)
   (t:st_term{Tm_NuWhile? t.term})
   (check:check_t)

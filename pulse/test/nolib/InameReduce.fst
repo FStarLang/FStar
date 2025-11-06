@@ -3,6 +3,7 @@ module InameReduce
 #lang-pulse
 open Pulse.Nolib
 
+[@@no_mkeys]
 assume val foo : inames -> slprop
 
 #push-options "--no_smt"

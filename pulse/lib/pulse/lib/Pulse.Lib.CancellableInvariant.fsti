@@ -25,9 +25,9 @@ val cinv : Type0
 instance val non_informative_cinv
   : NonInformative.non_informative cinv
 
-val cinv_vp (c:cinv) (v:slprop) : slprop
+val cinv_vp ([@@@mkey] c:cinv) (v:slprop) : slprop
 
-val active (c:cinv) (p:perm) : slprop
+val active ([@@@mkey] c:cinv) (p:perm) : slprop
 
 val active_timeless (c:cinv) (p:perm)
   : Lemma (timeless (active c p))

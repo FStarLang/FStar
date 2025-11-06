@@ -410,8 +410,8 @@ let continuation_elaborator_with_bind' (#g:env) (ctxt:term)
     assert (open_term (comp_post c1) x == comp_pre c2);
     // we closed e2 with x
     assume (~ (x `Set.mem` freevars_st e2_closed));
-    if x `Set.mem` freevars (comp_post c2)
-    then fail g' None "Impossible: freevar clash when constructing continuation elaborator for bind, please file a bug-report"
+    if x `Set.mem` freevars (RU.deep_compress_safe (comp_post c2))
+    then fail g' None ("Impossible: freevar clash when constructing continuation elaborator for bind, please file a bug-report" ^ show (comp_post c2))
     else (
       let t_typing, post_typing =
         RU.record_stats "bind_res_and_post_typing" fun _ ->
@@ -616,17 +616,16 @@ let return_in_ctxt (g:env) (y:var) (y_ppname:ppname) (u:universe) (ty:term) (ctx
 let match_comp_res_with_post_hint (#g:env) (#t:st_term) (#c:comp_st)
   (d:st_typing g t c)
   (post_hint:post_hint_opt g)
-  : T.Tac (t':st_term &
-           c':comp_st &
-           st_typing g t' c') =
+  : T.Tac (c':comp_st { comp_pre c' == comp_pre c } &
+           st_typing g t c') =
 
   match post_hint with
-  | NoHint -> (| t, c, d |)
+  | NoHint -> (| c, d |)
   | TypeHint ret_ty
   | PostHint { ret_ty } ->
     let cres = comp_res c in
     if eq_tm cres ret_ty
-    then (| t, c, d |)
+    then (| c, d |)
     else match Pulse.Typing.Util.check_equiv_now (elab_env g) cres ret_ty with
          | None, issues ->
            let open Pulse.PP in
@@ -646,7 +645,7 @@ let match_comp_res_with_post_hint (#g:env) (#t:st_term) (#c:comp_st)
              ST_SLPropEquiv _ c c' _ cpre_typing cres_typing cpost_typing d_equiv (VE_Refl _ _) (VE_Refl _ _)
            in
 
-           (| t, c', Pulse.Typing.Combinators.t_equiv d d_stequiv |)
+           (| c', Pulse.Typing.Combinators.t_equiv d d_stequiv |)
 #pop-options
 #pop-options
 
@@ -658,7 +657,7 @@ let apply_checker_result_k (#g:env) (#ctxt:slprop) (#post_hint:post_hint_for_env
   // TODO: FIXME add to checker result type?
   let (| y, g1, (| u_ty, ty_y, d_ty_y |), (| pre', _ |), k |) = r in
 
-  let (| u_ty_y, d_ty_y |) = Pulse.Checker.Pure.check_universe g1 ty_y in
+  let (| u_ty_y, d_ty_y |) = Pulse.Checker.Pure.universe_of_well_typed_term g1 ty_y in
 
   let d : st_typing_in_ctxt g1 pre' (PostHint post_hint) =
     return_in_ctxt g1 y res_ppname u_ty_y ty_y pre' d_ty_y (PostHint post_hint) in
@@ -1129,7 +1128,7 @@ let rec close_post x_ret dom_g g1 (bs1:list (ppname & var & typ)) (post:slprop)
     if not (y `Set.mem` freevars post) then post
     else (
       let b = {binder_ty=ty; binder_ppname=n; binder_attrs=Sealed.seal []} in
-      let (| u, _ |) = Pulse.Checker.Pure.check_universe g1 ty in
+      let (| u, _ |) = Pulse.Checker.Pure.universe_of_well_typed_term g1 ty in
       tm_exists_sl u b (close_term post y)
     )
   in
@@ -1202,7 +1201,8 @@ let infer_post #g #ctxt (r:checker_result_t g ctxt NoHint)
     let x = fresh g in
     let post' = open_term_nv post (ppname_default, x) in 
     let g' = push_binding g x ppname_default t in
-    let post_typing_src = Pulse.Checker.Pure.check_slprop_with_core g' post' in
+    // we just constructed it; should ideally prove it well-typed rather then re-checking it
+    let post_typing_src : tot_typing g' post' tm_slprop = RU.magic () in
     assume (fresh_wrt x g (freevars post));
     {
       g; effect_annot=EffectAnnotSTT; effect_annot_typing=();
@@ -1210,6 +1210,8 @@ let infer_post #g #ctxt (r:checker_result_t g ctxt NoHint)
       post; x; post_typing_src; post_typing=RU.magic()
     }
   in
+  let post = RU.beta_lax (elab_env g) post in // clean up spurious dependencies on variables
+  let post = RU.deep_compress post in
   let close_post = close_post x dom_g g1 (bindings_with_ppname g1) post in
   Pulse.Checker.Util.debug g "pulse.infer_post" (fun _ ->
     Printf.sprintf "Original postcondition: %s |= %s\nInferred postcondition: %s |= %s\n" 

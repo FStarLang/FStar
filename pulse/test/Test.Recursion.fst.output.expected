@@ -1,6 +1,11 @@
 * Info at Test.Recursion.fst(94,2-94,20):
   - Expected failure:
   - Ill-typed term: test_ghost_loop ()
+  - Expected a term of type
+      Pulse.Lib.Core.stt_ghost Prims.unit
+        Pulse.Lib.Core.emp_inames
+        Pulse.Lib.Core.emp
+        (fun _ -> Pulse.Lib.Core.emp)
   - Could not prove termination
   - The SMT solver could not prove the query. Use --query_stats for more
     details.
@@ -8,6 +13,11 @@
 * Info at Test.Recursion.fst(141,4-141,22):
   - Expected failure:
   - Ill-typed term: test5' (z - 1) (y - 1)
+  - Expected a term of type
+      Pulse.Lib.Core.stt_ghost Prims.unit
+        Pulse.Lib.Core.emp_inames
+        Pulse.Lib.Core.emp
+        (fun _ -> Pulse.Lib.Core.emp)
   - Could not prove termination
   - The SMT solver could not prove the query. Use --query_stats for more
     details.

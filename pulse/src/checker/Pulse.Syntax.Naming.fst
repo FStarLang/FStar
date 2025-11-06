@@ -234,7 +234,7 @@ let rec close_open_inverse_st'  (t:st_term)
       close_open_inverse_proof_hint_type' hint_type x (i + n);
       close_open_inverse_st' t x (i + n)
       
-    | Tm_WithInv { name; body; returns_inv } ->
+    | Tm_WithInv { name; body; returns_inv } -> (
       close_open_inverse' name x i;
       close_open_inverse_st' body x i;
       match returns_inv with
@@ -243,6 +243,10 @@ let rec close_open_inverse_st'  (t:st_term)
         close_open_inverse' b.binder_ty x i;
         close_open_inverse' r x (i + 1);
         close_open_inverse' is x i
+    )
+
+    | Tm_PragmaWithOptions { body } ->
+      close_open_inverse_st' body x i
 #pop-options
 
 let close_open_inverse (t:term) (x:var { ~(x `Set.mem` freevars t) } )

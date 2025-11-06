@@ -71,7 +71,7 @@ fn drop_mutex_live (#a:Type0) (m:mutex a) (#p:perm) (v:a -> slprop)
 requires mutex_live m #p v
 ensures emp
 {
-  drop_ _;
+  drop_ (mutex_live m #p v);
 }
 
 [@@ Rust_const_fn]
@@ -161,6 +161,35 @@ fn share_ (r:gref)
   GR.share r v0 v1;
 }
 
+//
+// A frame preserving update in the trace PCM,
+//   given a valid transition
+//
+noextract
+let mk_frame_preserving_upd
+  (t:hist trace_preorder)
+  (s:g_session_state { valid_transition t s })
+  : FStar.PCM.frame_preserving_upd trace_pcm (Some 1.0R, t) (Some 1.0R, next_trace t s) =
+  fun v -> 
+    assert (trace_pcm.refine v);
+    assert (FStar.PCM.compatible trace_pcm (Some 1.0R, t) v);
+    let v_new = Some 1.0R, next_trace t s in
+    assert (trace_pcm.refine v_new);
+    FStar.PCM.compatible_refl trace_pcm v_new;
+    assert (FStar.PCM.compatible trace_pcm (Some 1.0R, next_trace t s) v_new);
+    let x = Some 1.0R, t in
+    let y = Some 1.0R, next_trace t s in
+    let p = trace_pcm in
+    let open FStar.PCM in
+    introduce 
+      forall (frame:_{composable p x frame}).
+       composable p y frame /\
+       (op p x frame == v ==> op p y frame == v_new)
+    with (
+      assert (composable p x frame);
+      assert (fst frame == None)
+    );
+    v_new
 
 noextract
 let full (t0:trace) = Some #perm 1.0R, t0
@@ -248,6 +277,8 @@ fn frame_session_perm_at_sid
     rewrite (session_perm r pht0 sid) as
             (session_state_perm r pht0 sid16);
     unfold session_state_perm;
+    with s. unfold pht_contains pht0 sid16 s;
+    fold pht_contains pht1 sid16 s;
     fold (session_state_perm r pht1 sid16);
     rewrite (session_state_perm r pht1 sid16) as
             (session_perm r pht1 sid)
@@ -331,6 +362,7 @@ fn __open_session (s:st)
         emp_to_start_valid ();
         upd_sid_pts_to trace_ref ctr #emp_trace #emp_trace G_SessionStart;
         rewrite emp as (session_state_related SessionStart G_SessionStart);
+        fold pht_contains pht1 ctr SessionStart;
         fold (session_state_perm trace_ref pht1 ctr);
         rewrite (session_state_perm trace_ref pht1 ctr) as
                 (session_perm trace_ref pht1 (U16.v ctr));
@@ -343,6 +375,7 @@ fn __open_session (s:st)
           tbl1 as (fst ret).st_tbl;
         fold (dpe_inv trace_ref (Some (fst ret)));
         fold (open_session_client_perm (Some ctr));
+        rewrite each Some ctr as snd ret;
         ret
       } else {
         let s = { st_ctr = ctr; st_tbl = tbl1 };
@@ -416,7 +449,7 @@ fn open_session ()
   mg := Some s;
 
   M.unlock (snd r) mg;
-  drop_mutex_live _ (dpe_inv (fst r));
+  drop_mutex_live (snd r) _;
 
   sid_opt
 }
@@ -505,13 +538,14 @@ fn replace_session
 {
   let r = Global.read_gvar gst;
   unfold (gvar_p r);
+  rewrite each fst r as trace_ref;
   let mg = M.lock (snd r);
 
   let sopt = M.replace mg None;
   match sopt {
     None -> {
       unfold (dpe_inv trace_ref None);
-      unfold sid_pts_to;
+      unfold sid_pts_to trace_ref;
       gather_ trace_ref all_sids_unused (singleton sid 0.5R t);
       unreachable ()
     }
@@ -528,37 +562,23 @@ fn replace_session
         on_range_get (U16.v sid) #(session_perm trace_ref pht0) #0 #(U16.v ctr);
         rewrite (session_perm trace_ref pht0 (U16.v sid)) as
                 (session_state_perm trace_ref pht0 sid);
-        unfold session_state_perm;
-        gather_sid_pts_to sid;
-        with t1. assert (GR.pts_to trace_ref (singleton sid 1.0R t1));
-        assert (pure (t1 == t));
-        let ret = HT.lookup tbl sid;
-        let tbl = fst ret;
-        let idx = snd ret;
-        rewrite each
-          fst ret as tbl,
-          snd ret as idx;
+        unfold session_state_perm trace_ref pht0 sid;
+        with st' t1. assert pht_contains pht0 sid st' ** session_state_related st' (current_state t1);
+        unfold pht_contains pht0 sid st';
+        gather_sid_pts_to sid #t #t1;
+        rewrite each t1 as t;
+        let tbl, idx = HT.lookup tbl sid;
         with pht. assert (models tbl pht);
         match idx {
           Some idx -> {
-            let ret = HT.replace #_ #_ #pht tbl idx sid sst ();
-            let tbl = fst ret;
-            let st = snd ret;
-            rewrite each
-              fst ret as tbl,
-              snd ret as st;
-            assert (session_state_related sst gsst);
-            with sst' gsst'. assert (
-              session_state_related sst' gsst' **
-              session_state_related sst gsst
-            );
-            rewrite (session_state_related sst' gsst')
-                 as (session_state_related st (current_state t1));
+            let tbl, st = HT.replace #_ #_ #pht0 tbl idx sid sst ();
+            rewrite each st' as st;
             with pht. assert (models tbl pht);
-            upd_singleton sid #t1 gsst;
-            share_sid_pts_to sid;
+            upd_singleton sid #t gsst;
+            share_sid_pts_to sid #(next_trace t gsst);
             rewrite (session_state_related sst gsst) as
-                    (session_state_related sst (current_state (next_trace t1 gsst)));
+                    (session_state_related sst (current_state (next_trace t gsst)));
+            fold pht_contains pht sid sst;
             fold (session_state_perm trace_ref pht sid);
             rewrite (session_state_perm trace_ref pht sid) as
                     (session_perm trace_ref pht (U16.v sid));
@@ -649,6 +669,19 @@ fn intro_session_state_tag_related (s:session_state) (gs:g_session_state)
   }
 }
 
+ghost fn unrelated_session_state #x #y ()
+  requires session_state_related x y
+  requires pure (match x, y with
+    | SessionStart, G_SessionStart
+    | InUse, G_InUse _
+    | SessionClosed, G_SessionClosed _
+    | SessionError, G_SessionError _
+    | Available .., G_Available .. -> False
+    | _ -> True)
+  ensures pure False
+{
+  rewrite session_state_related x y as pure False;
+}
 
 #push-options "--fuel 2 --ifuel 2 --split_queries no"
 
@@ -669,7 +702,7 @@ fn initialize_context (sid:sid_t)
 
   match s {
     SessionStart -> {
-      rewrite (session_state_related s (current_state t)) as emp;
+      rewrite (session_state_related SessionStart (current_state t)) as emp;
       let context = init_engine_ctxt uds;
       let s = Available { context };
       rewrite (context_perm context (Engine_context_repr uds_bytes)) as
@@ -680,23 +713,19 @@ fn initialize_context (sid:sid_t)
       fold (initialize_context_client_perm sid uds_bytes)
     }
     InUse -> {
-      rewrite (session_state_related s (current_state t)) as
-              (pure False);
+      unrelated_session_state ();
       unreachable ()
     }
     SessionClosed -> {
-      rewrite (session_state_related s (current_state t)) as
-              (pure False);
+      unrelated_session_state ();
       unreachable ()
     }
     SessionError -> {
-      rewrite (session_state_related s (current_state t)) as
-              (pure False);
+      unrelated_session_state ();
       unreachable ()
     }
     Available _ -> {
-      rewrite (session_state_related s (current_state t)) as
-              (pure False);
+      unrelated_session_state ();
       unreachable ()
     }
   }
@@ -1121,12 +1150,12 @@ fn derive_child (sid:sid_t)
     Available hc -> {
       match hc.context {
         L1_context _ -> {
-          rewrite (session_state_related s (current_state t)) as
+          rewrite (session_state_related (Available hc) (current_state t)) as
                   (pure False);
           unreachable ()
         }
         Engine_context _ -> {
-          let repr = rewrite_session_state_related_available hc.context s t;
+          let repr = rewrite_session_state_related_available hc.context (Available hc) t;
           intro_context_and_repr_tag_related hc.context repr;
           let ret = derive_child_from_context hc.context record #rrepr #repr ();
 
@@ -1146,7 +1175,7 @@ fn derive_child (sid:sid_t)
             }
             None -> {
               let s = SessionError;
-              rewrite (maybe_context_perm repr rrepr ret) as emp;
+              rewrite (maybe_context_perm repr rrepr None) as emp;
               rewrite emp as (session_state_related s (G_SessionError (current_state t1)));
               let s = replace_session sid t1 s (G_SessionError (current_state t1));
               intro_session_state_tag_related s (current_state t1);
@@ -1157,7 +1186,7 @@ fn derive_child (sid:sid_t)
           }
         }
         L0_context _ -> {
-          let repr = rewrite_session_state_related_available hc.context s t;
+          let repr = rewrite_session_state_related_available hc.context (Available hc) t;
           intro_context_and_repr_tag_related hc.context repr;
           let ret = derive_child_from_context hc.context record #rrepr #repr ();
 
@@ -1177,7 +1206,7 @@ fn derive_child (sid:sid_t)
             }
             None -> {
               let s = SessionError;
-              rewrite (maybe_context_perm repr rrepr ret) as emp;
+              rewrite (maybe_context_perm repr rrepr None) as emp;
               rewrite emp as (session_state_related s (G_SessionError (current_state t1)));
               let s = replace_session sid t1 s (G_SessionError (current_state t1));
               intro_session_state_tag_related s (current_state t1);
@@ -1191,23 +1220,19 @@ fn derive_child (sid:sid_t)
       }
     }
     SessionStart -> {
-      rewrite (session_state_related s (current_state t)) as
-              (pure False);
+      unrelated_session_state ();
       unreachable ()
     }
     InUse -> {
-      rewrite (session_state_related s (current_state t)) as
-              (pure False);
+      unrelated_session_state ();
       unreachable ()
     }
     SessionClosed -> {
-      rewrite (session_state_related s (current_state t)) as
-              (pure False);
+      unrelated_session_state ();
       unreachable ()
     }
     SessionError -> {
-      rewrite (session_state_related s (current_state t)) as
-              (pure False);
+      unrelated_session_state ();
       unreachable ()
     }
   }
@@ -1222,7 +1247,7 @@ fn destroy_session_state (s:session_state) (t:G.erased trace)
   intro_session_state_tag_related s (current_state t);
   match s {
     Available hc -> {
-      rewrite_session_state_related_available hc.context s t;
+      rewrite_session_state_related_available hc.context (Available hc) t;
       destroy_ctxt hc.context
     }
     SessionStart -> {
@@ -1288,7 +1313,7 @@ ensures
   with t1. assert (sid_pts_to trace_ref sid t1);
 
   match s {
-    Available hc -> {
+    norewrite Available hc -> {
       match hc.context {
         L1_context c -> {
           let c_crt_len = c.aliasKeyCRT_len;
@@ -1344,23 +1369,19 @@ ensures
       }
     }
     SessionStart -> {
-      rewrite (session_state_related s (current_state t)) as
-              (pure False);
+      unrelated_session_state ();
       unreachable ()
     }
     InUse -> {
-      rewrite (session_state_related s (current_state t)) as
-              (pure False);
+      unrelated_session_state ();
       unreachable ()
     }
     SessionClosed -> {
-      rewrite (session_state_related s (current_state t)) as
-              (pure False);
+      unrelated_session_state ();
       unreachable ()
     }
     SessionError -> {
-      rewrite (session_state_related s (current_state t)) as
-              (pure False);
+      unrelated_session_state ();
       unreachable ()
     }
   }
@@ -1391,7 +1412,7 @@ ensures
   with t1. assert (sid_pts_to trace_ref sid t1);
 
   match s {
-    Available hc -> {
+    norewrite Available hc -> {
       match hc.context {
         L1_context c -> {
           let r = rewrite_session_state_related_available (L1_context c) s t;
@@ -1428,23 +1449,19 @@ ensures
       }
     }
     SessionStart -> {
-      rewrite (session_state_related s (current_state t)) as
-              (pure False);
+      unrelated_session_state ();
       unreachable ()
     }
     InUse -> {
-      rewrite (session_state_related s (current_state t)) as
-              (pure False);
+      unrelated_session_state ();
       unreachable ()
     }
     SessionClosed -> {
-      rewrite (session_state_related s (current_state t)) as
-              (pure False);
+      unrelated_session_state ();
       unreachable ()
     }
     SessionError -> {
-      rewrite (session_state_related s (current_state t)) as
-              (pure False);
+      unrelated_session_state ();
       unreachable ()
     }
 

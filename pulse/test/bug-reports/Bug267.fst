@@ -45,14 +45,13 @@ fn multiply_by_repeated_addition (x y:nat)
         let c = !ctr;
         (c < x)
     )
-    invariant b.
+    invariant
     exists* (c a : int).
         pts_to ctr c **
         Pulse.Lib.Reference.pts_to acc a **
         pure (//0 <= c /\
               c <= x /\
-              a == (c * y) /\
-              b == (c < x))
+              a == (c * y))
     {
         let a = !acc;
         acc := a + y;
@@ -62,8 +61,8 @@ fn multiply_by_repeated_addition (x y:nat)
     !acc
 }
 
-[@@expect_failure [12]]
+[@@expect_failure [228]]
 fn foo (n: nat) requires pure (n >= 42) ensures emp {
-  assert (n >= 1);
+  assert (n >= 1); //misses a pure
 }
 

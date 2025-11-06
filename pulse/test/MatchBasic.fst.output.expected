@@ -5,5 +5,4 @@
   - The SMT solver could not prove the query. Use --query_stats for more
     details.
   - Also see: MatchBasic.fst(154,8-154,10)
-  - Other related locations: dummy(0,0-0,0)
 

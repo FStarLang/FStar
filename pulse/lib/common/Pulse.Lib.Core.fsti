@@ -613,6 +613,16 @@ let match_rewrite_tac (_:unit) : T.Tac unit =
     T.mapply (`slprop_equiv_ext');
     T.trefl ()
 
+let match_rename_tac (_:unit) : T.Tac unit =
+    let open T in
+    let b = T.nth_var (-1) in
+    T.norm []; // Needed, or otherwise the `tcut` in grewrite_eq can fail, unsure why.
+    try (
+      T.grewrite_eq b;
+      T.trefl ()
+    )
+    with _ -> T.smt()
+
 [@@deprecated "Use (rewrite .. as .. by ..) syntax instead!"]
 val rewrite_by (p:slprop) (q:slprop)
                (t:unit -> T.Tac unit)

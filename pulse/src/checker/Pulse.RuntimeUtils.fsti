@@ -38,6 +38,7 @@ val set_use_range (t:T.term) (r:range) : t':T.term{t == t'}
 val error_code_uninstantiated_variable (_:unit) : int
 val is_range_zero (r:range) : Dv bool
 val union_ranges (r0 r1:range) : range
+val env_get_range (g:env) : range
 val env_set_range (g:env) (r:range) : g':env{g==g'}
 val env_set_context (g:env) (ctx:context) : g':env{g==g'}
 val embed_st_term_for_extraction (d:'a) (r:option range): T.term
@@ -47,6 +48,8 @@ module R = FStar.Reflection.V2
 val push_univ_vars (g: env) (us: list R.univ_name) : g':env { g' == g }
 val debug_subst (s:list R.subst_elt) (t:T.term) (r1 r2:T.term): y:T.term{ y == r1 }
 val deep_compress (t:T.term) : r:T.term { t == r }
+val deep_compress_safe (t:T.term) : r:T.term { t == r } // does not bail on uvars
+val no_uvars_in_term (t:T.term) : Dv bool
 (* ***WARNING*** *)
 (* This function is natively implemented against the F* compiler libraries
    to transform terms to use unary applications.
@@ -67,9 +70,11 @@ val float_one : FStar.Float.float
 val lax_check_term_with_unknown_universes (g:env) (t:T.term) : Dv (option T.term)
 module T = FStar.Tactics.V2
 val tc_term_phase1 (g:env) (t:T.term) (instantiate_imps:bool) : Dv (option (T.term & T.term & T.tot_or_ghost) & T.issues)
-val teq_nosmt_force (g:env) (ty1 ty2:T.term) : bool
+val teq_nosmt_force (g:env) (ty1 ty2:T.term) : Dv bool
+val teq_nosmt_force_phase1 (g:env) (ty1 ty2:T.term) : Dv bool
 val whnf_lax (g:env) (t:T.term) : T.term
 val hnf_lax (g:env) (t:T.term) : T.term
+val beta_lax (g:env) (t:T.term) : T.term
 module RT = FStar.Reflection.Typing
 val norm_well_typed_term
       (#g:T.env)

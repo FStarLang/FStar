@@ -116,7 +116,8 @@ let check
     if eq_comp body_comp (comp_while_body nm inv)
     then
       let d = T_While g inv cond body inv_typing cond_typing body_typing in
-      prove_post_hint (try_frame_pre false pre_typing (match_comp_res_with_post_hint d post_hint) res_ppname) post_hint t.range
+      let (| c,d |) = match_comp_res_with_post_hint d post_hint in
+      prove_post_hint (try_frame_pre false pre_typing (|_,c,d|) res_ppname) post_hint t.range
     else fail g None
           (Printf.sprintf "Could not prove the inferred type of the while body matches the annotation\n\
                            Inferred type = %s\n\
@@ -155,12 +156,12 @@ let inv_as_post_hint (#g:env) (#inv:slprop) (inv_typing:tot_typing g inv tm_slpr
 
 
 #push-options "--fuel 0 --ifuel 0 --z3rlimit_factor 8"
-
+module RT = FStar.Reflection.Typing
 let check_nuwhile
   (g:env)
   (pre:term)
   (pre_typing:tot_typing g pre tm_slprop)
-  (post_hint:post_hint_opt g)
+  (post_hint:post_hint_opt g {~ (PostHint? post_hint) })
   (res_ppname:ppname)
   (t:st_term{Tm_NuWhile? t.term})
   (check:check_t)
@@ -173,8 +174,8 @@ let check_nuwhile
       { ctxt_now = pre; ctxt_old = Some pre }
       inv
   in
-  let (| g1, nts, labs, remaining, k |) = Pulse.Checker.Prover.prove false pre_typing (empty_env g) inv_typing in
-  let inv = tm_star (Pulse.Checker.Prover.Substs.nt_subst_term inv nts) remaining in
+  let (| g1, remaining, k |) = Pulse.Checker.Prover.prove t.range g pre inv false in
+  let inv = tm_star (RU.deep_compress_safe inv) remaining in
   let inv_typing : tot_typing g1 inv tm_slprop = RU.magic () in
   let (| post_cond, r_cond |) : (ph:post_hint_for_env g1 & checker_result_t g1 inv (PostHint ph)) =
     let r_cond = check (push_context "check_while_condition" cond.range g1) inv inv_typing (TypeHint tm_bool) ppname_default cond in
@@ -203,7 +204,26 @@ let check_nuwhile
   assert (comp_cond == (comp_nuwhile_cond inv body_pre_open));
   assert (comp_body == comp_nuwhile_body inv body_pre_open);
   let d = T_NuWhile g1 inv body_pre_open cond body inv_typing (body_typing_ex body_open_pre_typing) cond_typing body_typing in
-  let d_st : Pulse.Typing.Combinators.st_typing_in_ctxt g1 inv _ =  (| _, _, d |) in
-  let d_st : Pulse.Typing.Combinators.st_typing_in_ctxt g pre _ = k _ d_st in
-  prove_post_hint (checker_result_for_st_typing d_st ppname_default) post_hint t.range
+  let C_ST cst = comp_nuwhile inv body_pre_open in
+  assume (fresh_wrt x g (freevars cst.post));
+  let post_hint_for_while : post_hint_for_env g = {
+      g=g;
+      effect_annot=EffectAnnotSTT;
+      effect_annot_typing=();
+      ret_ty=RT.unit_ty;
+      u=u_zero;
+      ty_typing=RU.magic(); //unit typing
+      post=cst.post;
+      x;
+      post_typing_src=RU.magic(); //from inv typing and body_open_pre_typing
+      post_typing=RU.magic()
+    }
+  in
+  let ph = PostHint post_hint_for_while in
+  let d_st : Pulse.Typing.Combinators.st_typing_in_ctxt g1 inv ph =  (| _, _, d |) in
+  let d_st : Pulse.Typing.Combinators.st_typing_in_ctxt g pre ph = k ph d_st in
+  let res = checker_result_for_st_typing d_st ppname_default in
+  let res = retype_checker_result #_ #_ #ph post_hint res in
+  res
+
 #pop-options

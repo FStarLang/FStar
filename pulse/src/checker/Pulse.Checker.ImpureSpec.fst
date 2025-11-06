@@ -18,11 +18,11 @@ module Pulse.Checker.ImpureSpec
 module R = FStar.Reflection.V2
 module T = FStar.Tactics.V2
 module RU = Pulse.RuntimeUtils
-module PS = Pulse.Checker.Prover.Substs
 open FStar.List.Tot
 open Pulse.Syntax.Base
 open Pulse.Syntax.Pure
 open Pulse.Checker.Prover.RewritesTo
+open Pulse.Checker.Prover.Normalize
 open Pulse.Checker.Pure
 open Pulse.Typing.Env
 open Pulse.Checker.Base
@@ -77,11 +77,11 @@ let prove_this (g: env) (goal: slprop) (ctxt: list slprop) : T.Tac (option (list
   | Tm_Star a b ->
     Some [a; b]
   | _ ->
-    let rec try_match (ctxt: list slprop) : bool =
+    let rec try_match (ctxt: list slprop) : Dv bool =
       match ctxt with
       | [] -> false
       | c::ctxt ->
-        if RU.teq_nosmt_force (elab_env g) goal c then
+        if RU.teq_nosmt_force_phase1 (elab_env g) goal c then
           true
         else
           try_match ctxt
@@ -108,9 +108,9 @@ let rec prove_loop (g: env) (goals: list slprop) (ctxt: list slprop) : T.Tac (li
   | None -> goals
 
 let prove (g: env) (goal: slprop) (ctxt: slprop) (r: range) : T.Tac unit =
-  let (| goal, _ |) = Pulse.Checker.Prover.normalize_slprop g goal true in
+  let (| goal, _ |) = normalize_slprop g goal true in
   let goal = slprop_as_list goal in
-  let (| ctxt, _ |) = Pulse.Checker.Prover.normalize_slprop g ctxt true in
+  let (| ctxt, _ |) = normalize_slprop g ctxt true in
   let ctxt = slprop_as_list ctxt in
   match prove_loop g goal ctxt with
   | [] -> ()
@@ -134,7 +134,7 @@ let symb_eval_stateful_app (g: env) (ctxt: slprop) (t: term) : T.Tac R.term =
     let x_ppn = mk_ppname_no_range "result" in
     let g' = push_binding g x (mk_ppname_no_range "result") ty in
     let post = open_term_nv post (x_ppn, x) in
-    let (| post, _ |) = Pulse.Checker.Prover.normalize_slprop g' post true in 
+    let (| post, _ |) = normalize_slprop g' post true in 
     match get_rewrites_to_from_post g x post with
     | None ->
       let head, _ = T.collect_app_ln t in
@@ -263,7 +263,7 @@ let rec run_elim_core (g: env) (ctxt: list slprop) : T.Tac (env & list nvar & li
       g', xs, c::ctxt'
 
 let run_elim (g: env) (ctxt: slprop) : T.Tac (env & list nvar & slprop) =
-  let (| ctxt, _ |) = Pulse.Checker.Prover.normalize_slprop g ctxt true in
+  let (| ctxt, _ |) = normalize_slprop g ctxt true in
   let g', xs, ctxt = run_elim_core g (slprop_as_list ctxt) in
   g', xs, list_as_slprop ctxt
 

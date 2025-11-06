@@ -289,7 +289,7 @@ let check_branch
                    binders = [];
                    hint_type = RENAME { pairs = [(sc, elab_p_tm)];
                                         goal = None;
-                                        tac_opt = Some Pulse.Reflection.Util.match_rewrite_tac_tm;
+                                        tac_opt = Some Pulse.Reflection.Util.match_rename_tac_tm;
                                         elaborated = true };
                    t = e; })
                 e.range

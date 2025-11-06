@@ -1,6 +1,10 @@
 * Info at Bug206.fst(18,2-18,6):
   - Expected failure:
   - Ill-typed term: Bug206.test x
+  - Expected a term of type
+      Pulse.Lib.Core.stt Prims.unit
+        Pulse.Lib.Core.emp
+        (fun _ -> Pulse.Lib.Core.emp)
   - Assertion failed
   - The SMT solver could not prove the query. Use --query_stats for more
     details.

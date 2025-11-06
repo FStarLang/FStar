@@ -34,6 +34,9 @@ val instantiate_term_implicits_uvs (g:env) (t:term)
     (inst_extra : bool) (* Should this instantiate implicits at the end of t? *)
   : T.Tac (uvs:env { disjoint g uvs } & term & term)  // uvs
 
+val universe_of_well_typed_term (g:env) (t:term)
+  : T.Tac (u:universe & universe_of g t u)
+
 val check_universe (g:env) (t:term)
   : T.Tac (u:universe & universe_of g t u)
 
@@ -64,6 +67,10 @@ val core_compute_term_type (g:env) (t:term)
   : T.Tac (eff:T.tot_or_ghost &
            ty:term &
            typing g t eff ty)
+
+val core_check_term' (g:env) (e:term) (eff:T.tot_or_ghost) (t:term)
+    (extra_msg: unit -> T.Tac (list Pprint.document))
+  : T.Tac (typing g e eff t)
 
 val core_check_term (g:env) (e:term) (eff:T.tot_or_ghost) (t:term)
   : T.Tac (typing g e eff t)

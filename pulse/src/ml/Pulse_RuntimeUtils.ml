@@ -32,7 +32,11 @@ let with_extv (k:string) (v:string) (f: unit -> 'a utac) : 'a utac =
     FStarC_Options_Ext.restore x;
     res
 let env_set_context (g:FStarC_Reflection_Types.env) (c:context) = g
-let print_exn (e:exn) = Printexc.to_string e
+let print_exn (e:exn) =
+  match e with 
+  | FStarC_Tactics_Common.TacticFailure (s, _) ->
+    "TacticFailure " ^ FStarC_Errors_Msg.rendermsg s
+  | _ -> Printexc.to_string e
 let debug_at_level_no_module (s:string) =
   let r = FStarC_Debug.get_toggle s in
   !r
@@ -55,6 +59,8 @@ let error_code_uninstantiated_variable () = FStarC_Errors.errno FStarC_Errors_Co
 let is_range_zero (r:FStarC_Range.range) = r = FStarC_Range.dummyRange
 let union_ranges (r0:FStarC_Range.range) (r1:FStarC_Range.range) = FStarC_Range.union_ranges r0 r1
 let range_of_term (t:FStarC_Syntax_Syntax.term) = t.FStarC_Syntax_Syntax.pos
+let env_get_range (e:FStarC_Reflection_Types.env) =
+  FStarC_TypeChecker_Env.get_range e
 let env_set_range (e:FStarC_Reflection_Types.env) (r:FStarC_Range.range) =
    FStarC_TypeChecker_Env.set_range e r
 
@@ -132,6 +138,8 @@ let deep_transform_to_unary_applications (t:S.term) =
     t
 
 let deep_compress (t:S.term) = FStarC_Syntax_Compress.deep_compress_uvars t
+let deep_compress_safe (t:S.term) = FStarC_Syntax_Compress.deep_compress true true t
+let no_uvars_in_term = FStarC_Tactics_V2_Basic.no_uvars_in_term
 let map_seal (t:'a) (f:'a -> 'b) : 'b = f t
 let float_one = FStarC_Util.float_of_string "1.0"
 module TcEnv = FStarC_TypeChecker_Env
@@ -196,11 +204,17 @@ let teq_nosmt_force (g:TcEnv.env) (ty1:S.term) (ty2:S.term) =
     ok) in
   match res with Some true -> true | _ -> false
 
+let teq_nosmt_force_phase1 (g:TcEnv.env) (ty1:S.term) (ty2:S.term) =
+  teq_nosmt_force {g with phase1=true; admit=true } ty1 ty2
+
 let whnf_lax (g:TcEnv.env) (t:S.term) : S.term = 
   FStarC_TypeChecker_Normalize.unfold_whnf' [TcEnv.Unascribe] g t
 
 let hnf_lax (g:TcEnv.env) (t:S.term) : S.term =
   FStarC_TypeChecker_Normalize.normalize [TcEnv.Unascribe; TcEnv.Primops; TcEnv.HNF; TcEnv.UnfoldUntil S.delta_constant; TcEnv.Beta] g t
+
+let beta_lax (g:TcEnv.env) (t:S.term) : S.term =
+  FStarC_TypeChecker_Normalize.normalize [TcEnv.Unascribe; TcEnv.Beta] g t
 
 let norm_well_typed_term      
       (g:TcEnv.env)

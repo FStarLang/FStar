@@ -15,7 +15,6 @@ fn test1 (x : t2)
   match x {
     norewrite C y z -> {
       let foo = z;
-      rewrite each x as C y z;
       ();
     }
   }
@@ -27,7 +26,7 @@ fn test11 (x : t2)
 {
   match x {
     y -> {
-      ();
+      rewrite each y as x;
     }
   }
 }
@@ -38,7 +37,7 @@ fn test2 (x : t2)
 {
   match x {
     C y z -> {
-      ();
+      rewrite each C y z as x;
     }
   }
 }
@@ -56,5 +55,5 @@ fn test4 (x : t2)
   ensures  foo x
 {
   let C y z = x;
-  ();
+  rewrite each C y z as x;
 }

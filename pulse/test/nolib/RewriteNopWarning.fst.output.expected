@@ -1,9 +1,9 @@
-* Warning <unknown> at RewriteNopWarning.fst(11,1-12,21):
+* Warning <unknown> at RewriteNopWarning.fst(12,1-13,21):
   - No rewrites performed.
   - Rewriting in:
       RewriteNopWarning.foo 1
 
-* Warning <unknown> at RewriteNopWarning.fst(18,1-19,22):
+* Warning <unknown> at RewriteNopWarning.fst(20,1-21,22):
   - No rewrites performed.
   - Rewriting in:
       RewriteNopWarning.foo y ** RewriteNopWarning.foo 1
