@@ -483,12 +483,16 @@ let rec last (l : list 'a) : Tac 'a =
 
 private
 let filter_no_method_binders (bs:binders)
-  : binders
+  : Tac binders
   = let open FStar.Reflection.TermEq.Simple in
     let has_no_method_attr (b:binder) : bool =
       L.existsb (term_eq (`no_method)) b.attrs
     in
-    bs |> L.filter (fun b -> not (has_no_method_attr b))
+    bs |> Tactics.Util.filter (fun b ->
+      let nm = unseal b.ppname in
+      assume (String.length nm > 0); (* should be provided by F*? *)
+      if FStar.String.index nm 0 = '_' then false
+      else not (has_no_method_attr b))
 
 private
 let binder_set_meta (b : binder) (t : term) : binder =
