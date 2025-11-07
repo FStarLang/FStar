@@ -35,6 +35,18 @@ val pts_to_range
   (#[exact (`1.0R)] p:perm)
   (s : Seq.seq a) : slprop
 
+(* Exposing these is necessary to convert an array cell with pts_to_range to a ref *)
+ghost fn fold_pts_to_range u#a (#a: Type u#a) (x: array a) (i: nat) (j: nat { i <= j /\ j <= length x }) #p #s0 s #mask
+  requires pts_to_mask (gsub x i j) #p s0 mask
+  requires pure (Seq.equal s s0)
+  requires pure (forall (k: nat). k < j - i ==> mask k)
+  ensures pts_to_range x i j #p s
+
+ghost fn unfold_pts_to_range u#a (#a: Type u#a) (x: array a) (i j: nat) #p s
+  requires pts_to_range x i j #p s
+  returns _: squash (i <= j /\ j <= length x)
+  ensures pts_to_mask (gsub x i j) #p s (fun _ -> True)
+
 val pts_to_range_timeless (#a: Type u#a) (x:array a) (i j : nat) (p:perm) (s:Seq.seq a)
   : Lemma (timeless (pts_to_range x i j #p s))
           [SMTPat (timeless (pts_to_range x i j #p s))]
@@ -52,6 +64,7 @@ fn pts_to_range_prop
   (#s: Seq.seq elt)
   requires pts_to_range a i j #p s
   ensures  pts_to_range a i j #p s ** pure (
+   (~ (is_null a)) /\
    (i <= j /\ j <= length a /\ eq2 #nat (Seq.length s) (j - i))
   )
 

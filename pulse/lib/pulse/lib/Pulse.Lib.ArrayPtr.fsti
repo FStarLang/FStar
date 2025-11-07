@@ -20,6 +20,7 @@ open FStar.Tactics.V2
 open Pulse.Lib.Pervasives
 module SZ = FStar.SizeT
 module A = Pulse.Lib.Array
+module R = Pulse.Lib.Reference
 
 (*
 The `ArrayPtr.ptr t` type in this module cannot be extracted to Rust
@@ -31,10 +32,17 @@ without modifying the pointer.
 Use `Pulse.Lib.Slice.slice` instead when possible.
 *)
 
+val base_t ([@@@strictly_positive] t: Type0) : Tot Type0
 val ptr ([@@@strictly_positive] elt: Type0) : Type0
 
-val base #t (p: ptr t) : GTot (A.array t)
+val base #t (p: ptr t) : GTot (base_t t)
 val offset #t (p: ptr t) : GTot nat
+
+val null #t : ptr t
+
+val g_is_null #t (p: ptr t) : Ghost bool
+  (requires True)
+  (ensures fun res -> res == true <==> p == null)
 
 val pts_to
   (#t:Type)
@@ -42,6 +50,32 @@ val pts_to
   (#[exact (`1.0R)] p:perm)
   (v : Seq.seq t)
   : slprop
+
+val pts_to_not_null
+  (#t:Type)
+  (s:ptr t)
+  (#p:perm)
+  (#v : Seq.seq t)
+: stt_ghost unit emp_inames
+  (pts_to s #p v)
+  (fun _ -> pts_to s #p v ** pure (not (g_is_null s)))
+
+let pts_to_or_null
+  (#t: Type)
+  ([@@@mkey]s:ptr t)
+  (#[exact (`1.0R)] p:perm)
+  (v : Seq.seq t)
+: slprop
+= if g_is_null s then emp else pts_to s #p v
+
+val is_null
+  (#t:Type)
+  (s:ptr t)
+  (#p:perm)
+  (#v : Ghost.erased (Seq.seq t))
+: stt bool
+  (pts_to_or_null s #p v)
+  (fun res -> pts_to_or_null s #p v ** pure (res == g_is_null s))
 
 [@@pulse_unfold]
 instance has_pts_to_array_ptr (t: Type) : has_pts_to (ptr t) (Seq.seq t) = {
@@ -61,6 +95,32 @@ val from_array (#t: Type) (a: A.array t) (#p: perm) (#v: Ghost.erased (Seq.seq t
 val to_array (#t: Type) (s: ptr t) (a: array t) (#p: perm) (#v: Seq.seq t) : stt_ghost unit emp_inames
     (pts_to s #p v ** is_from_array s (Seq.length v) a)
     (fun _ -> A.pts_to a #p v)
+
+val is_from_ref (#t: Type) ([@@@mkey]s: ptr t) (a: ref t) : slprop
+
+val from_ref (#t: Type) (a: ref t) (#p: perm) (#v: Ghost.erased (t)) : stt (ptr t)
+    (R.pts_to a #p v)
+    (fun s -> pts_to s #p (Seq.create 1 (Ghost.reveal v)) ** is_from_ref s a)
+
+inline_for_extraction noextract [@@noextract_to "krml"]
+let to_ref_t (t: Type) = (s: ptr t) -> (a: ref t) -> (#p: perm) -> (#v: Seq.seq t) -> stt_ghost unit emp_inames
+    (pts_to s #p v ** is_from_ref s a ** pure (Seq.length v == 1))
+    (fun _ -> exists* v' . R.pts_to a #p v' ** pure (Seq.length v == 1 /\ v' == Seq.index v 0))
+
+val to_ref (#t: Type) : to_ref_t t
+
+val is_as_ref (#t: Type) ([@@@mkey]s: ptr t) (p: perm) (a: ref t) : slprop
+
+inline_for_extraction noextract [@@noextract_to "krml"]
+let as_ref_t (t: Type) = (s: ptr t) -> (#p: perm) -> (#v: Seq.seq t) -> stt (R.ref t)
+    (pts_to s #p v ** pure (Seq.length v == 1))
+    (fun a -> exists* v' . R.pts_to a #p v' ** is_as_ref s p a ** pure (Seq.length v == 1 /\ v' == Seq.index v 0))
+
+val as_ref (#t: Type) : as_ref_t t
+
+val return_as_ref (#t: Type) (a: ref t) (#p: perm) (#v:t) (#s: ptr t) : stt_ghost unit emp_inames
+    (R.pts_to a #p v ** is_as_ref s p a)
+    (fun _ -> pts_to s #p (Seq.create 1 (Ghost.reveal v)))
 
 (* Written x.(i) *)
 fn op_Array_Access
