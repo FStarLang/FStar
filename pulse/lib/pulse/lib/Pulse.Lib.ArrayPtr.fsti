@@ -109,6 +109,19 @@ let to_ref_t (t: Type) = (s: ptr t) -> (a: ref t) -> (#p: perm) -> (#v: Seq.seq 
 
 val to_ref (#t: Type) : to_ref_t t
 
+val is_as_ref (#t: Type) ([@@@mkey]s: ptr t) (p: perm) (a: ref t) : slprop
+
+inline_for_extraction noextract [@@noextract_to "krml"]
+let as_ref_t (t: Type) = (s: ptr t) -> (#p: perm) -> (#v: Seq.seq t) -> stt (R.ref t)
+    (pts_to s #p v ** pure (Seq.length v == 1))
+    (fun a -> exists* v' . R.pts_to a #p v' ** is_as_ref s p a ** pure (Seq.length v == 1 /\ v' == Seq.index v 0))
+
+val as_ref (#t: Type) : as_ref_t t
+
+val return_as_ref (#t: Type) (a: ref t) (#p: perm) (#v:t) (#s: ptr t) : stt_ghost unit emp_inames
+    (R.pts_to a #p v ** is_as_ref s p a)
+    (fun _ -> pts_to s #p (Seq.create 1 (Ghost.reveal v)))
+
 (* Written x.(i) *)
 fn op_Array_Access
         (#t: Type)

@@ -19,10 +19,12 @@ module Pulse.Lib.ArrayPtr
 
 type base_t t = A.array t
 
+let base_len (#t: Type) (base: base_t t) : GTot nat = if A.is_null base then 0 else A.length base
+
 noeq
 type ptr t = {
     base: A.array u#0 t;
-    offset: (offset: SZ.t { SZ.v offset <= (if A.is_null base then 0 else A.length base)})
+    offset: (offset: SZ.t { SZ.v offset <= base_len base})
 }
 
 let base a = a.base
@@ -145,6 +147,41 @@ ghost fn to_ref (#t: Type) : to_ref_t t =
   A.pts_to_range_elim _ _ _;
   R.return_to_array a;
   ()
+}
+
+let with_pure (#p: prop) (x: squash p) : slprop = pure p
+
+let is_as_ref #t s p a = exists* (x: squash (SZ.v s.offset < base_len s.base)) (w: Seq.seq t) . with_pure x **
+  rewrites_to a (array_at_ghost s.base (SizeT.v s.offset)) **
+  pts_to_mask s.base #p w (fun _ -> False)
+
+fn as_ref (#t: Type) : as_ref_t t =
+  (s: _) (#p: _) (#v: _)
+{
+  unfold (pts_to s #p v);
+  A.pts_to_range_prop _;
+  unfold_pts_to_range _ _ _ _;
+  gsub_elim _ _ _;
+  let res = R.array_at s.base s.offset;
+  mask_mext _ (fun _ -> False);
+  fold (with_pure #(SZ.v s.offset < base_len s.base)) ();
+  fold (is_as_ref s p res);
+  res
+}
+
+ghost fn return_as_ref (#t: Type) (a: ref t) (#p: perm) (#v:t) (#s: ptr t)
+requires
+    (R.pts_to a #p v ** is_as_ref s p a)
+ensures
+    (pts_to s #p (Seq.create 1 (Ghost.reveal v)))
+{
+  unfold (is_as_ref s p a);
+  with sq . unfold (with_pure #(SZ.v s.offset < base_len s.base) sq);
+  A.pts_to_mask_len _;
+  R.return_array_at s.base (SZ.v s.offset);
+  A.gsub_intro s.base (SZ.v s.offset) (SZ.v s.offset + 1);
+  A.fold_pts_to_range s.base (SZ.v s.offset) (SZ.v s.offset + 1) (Seq.create 1 v);
+  fold (pts_to s #p (Seq.create 1 (Ghost.reveal v)));
 }
 
 fn op_Array_Access

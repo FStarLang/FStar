@@ -166,6 +166,7 @@ let pulse_translate_expr : translate_expr_t = fun env e ->
 
   | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ x; _p; _w ])
     when
+      string_of_mlpath p = "Pulse.Lib.ArrayPtr.as_ref" ||
       string_of_mlpath p = "Pulse.Lib.ArrayPtr.from_ref" ||
       string_of_mlpath p = "Pulse.Lib.ArrayPtr.from_array" ->
     translate_expr env x
