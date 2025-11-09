@@ -169,7 +169,7 @@ fn op_Array_Assignment
         requires
             pts_to a s
         ensures
-            pts_to a (Seq.upd s (SZ.v i) v)
+            exists* s'. pts_to a s' ** pure (s' ==Seq.upd s (SZ.v i) v)
 {
     unfold pts_to a s;
     AP.op_Array_Assignment a.elt i v;
