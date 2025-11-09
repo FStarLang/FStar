@@ -234,6 +234,7 @@ let defaults = [
   ("initial_ifuel"                             , Int 1);
   ("keep_query_captions"                       , Bool true);
   ("krmloutput"                                , Unset);
+  ("lang_extensions"                           , List []);
   ("lax"                                       , Bool false);
   ("list_plugins"                              , Bool false);
   ("load_cmxs"                                 , List []);
@@ -500,6 +501,7 @@ let get_print_in_place          ()      = lookup_opt "print_in_place"           
 let get_initial_fuel            ()      = lookup_opt "initial_fuel"             as_int
 let get_initial_ifuel           ()      = lookup_opt "initial_ifuel"            as_int
 let get_keep_query_captions     ()      = lookup_opt "keep_query_captions"      as_bool
+let get_lang_extensions         ()      = lookup_opt "lang_extensions"                     (as_list as_string)
 let get_lax                     ()      = lookup_opt "lax"                      as_bool
 let get_load                    ()      = lookup_opt "load"                     (as_list as_string)
 let get_load_cmxs               ()      = lookup_opt "load_cmxs"                (as_list as_string)
@@ -1116,6 +1118,11 @@ let specs_with_types warn_unsafe : list (char & string & opt_type & Pprint.docum
     "keep_query_captions",
     BoolStr,
     text "Retain comments in the logged SMT queries (requires --log_queries or --log_failing_queries; default true)");
+
+  ( noshort,
+   "lang_extensions",
+    Accumulated (SimpleStr "extension"),
+    text "Automatically enable the given language extensions based on the file extension; the language extension's .cmxs must be on the include path or loaded with --load_cmxs");
 
   ( noshort,
     "lax",
@@ -1762,6 +1769,7 @@ let settable = function
     | "initial_ifuel"
     | "ide_id_info_off"
     | "keep_query_captions"
+    | "lang_extensions"
     | "load"
     | "load_cmxs"
     | "log_queries"
@@ -2118,6 +2126,7 @@ let print                        () = get_print                       ()
 let print_in_place               () = get_print_in_place              ()
 let initial_fuel                 () = min (get_initial_fuel ()) (get_max_fuel ())
 let initial_ifuel                () = min (get_initial_ifuel ()) (get_max_ifuel ())
+let lang_extensions              () = get_lang_extensions             ()
 let lax                          () = get_lax                         ()
 let load                         () = get_load                        ()
 let load_cmxs                    () = get_load_cmxs                   ()
