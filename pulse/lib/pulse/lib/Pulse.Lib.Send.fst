@@ -174,6 +174,30 @@ ghost fn on_pure_elim l p
   placeless_on_elim (pure p) l;
 }
 
+ghost fn on_star_elim #l (p q: slprop)
+  requires on l (p ** q)
+  ensures on l p
+  ensures on l q
+{
+  ghost_impersonate l (on l (p ** q)) (on l p ** on l q) fn _ {
+    on_elim (p ** q);
+    on_intro p;
+    on_intro q;
+  }
+}
+
+ghost fn on_star_intro #l (p q: slprop)
+  requires on l p
+  requires on l q
+  ensures on l (p ** q)
+{
+  ghost_impersonate l (on l p ** on l q) (on l (p ** q)) fn _ {
+    on_elim p;
+    on_elim q;
+    on_intro (p ** q);
+  }
+}
+
 ghost fn placeless_later_credit amt : placeless (later_credit amt) = l1 l2 {
   on_later_credit_eq l1 amt;
   on_later_credit_eq l2 amt;
@@ -203,6 +227,16 @@ ghost fn placeless_exists' u#a (#a: Type u#a) (p: a -> slprop) {| ((x:a) -> plac
 }
 let placeless_exists = placeless_exists'
 
+ghost fn on_exists_elim u#a #l (#a: Type u#a) (p: a -> slprop)
+  requires on l (exists* x. p x)
+  ensures exists* x. on l (p x)
+{
+  ghost_impersonate l (on l (exists* x. p x)) (exists* x. on l (p x)) fn _ {
+    on_elim (exists* x. p x);
+    on_intro (p _);
+  }
+}
+
 let timeless_in_same_process p =
   assert_norm (in_same_process p == (exists* l. loc l ** pure (process_of l == process_of p)))
 
@@ -215,40 +249,6 @@ ghost fn dup_in_same_process p () : duplicable_f (in_same_process p) = {
 
 instance duplicable_in_same_process p : duplicable (in_same_process p) =
   { dup_f = dup_in_same_process p }
-
-ghost fn on_star_elim #l (p q: slprop)
-  requires on l (p ** q)
-  ensures on l p
-  ensures on l q
-{
-  ghost_impersonate l (on l (p ** q)) (on l p ** on l q) fn _ {
-    on_elim (p ** q);
-    on_intro p;
-    on_intro q;
-  }
-}
-
-ghost fn on_star_intro #l (p q: slprop)
-  requires on l p
-  requires on l q
-  ensures on l (p ** q)
-{
-  ghost_impersonate l (on l p ** on l q) (on l (p ** q)) fn _ {
-    on_elim p;
-    on_elim q;
-    on_intro (p ** q);
-  }
-}
-
-ghost fn on_exists_elim u#a #l (#a: Type u#a) (p: a -> slprop)
-  requires on l (exists* x. p x)
-  ensures exists* x. on l (p x)
-{
-  ghost_impersonate l (on l (exists* x. p x)) (exists* x. on l (p x)) fn _ {
-    on_elim (exists* x. p x);
-    on_intro (p _);
-  }
-}
 
 ghost fn is_send_across_elim #b (g: loc_id -> b) p {| inst: is_send_across g p |} #l l'
   requires on l p

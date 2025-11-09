@@ -89,6 +89,20 @@ ghost fn placeless_on_elim (p: slprop) {| placeless p |} l
   requires on l p
   ensures p
 
+ghost fn on_pure_elim l p
+  requires on l (pure p)
+  ensures pure p
+
+ghost fn on_star_elim #l (p q: slprop)
+  requires on l (p ** q)
+  ensures on l p
+  ensures on l q
+
+ghost fn on_star_intro #l (p q: slprop)
+  requires on l p
+  requires on l q
+  ensures on l (p ** q)
+
 instance val placeless_on (l: loc_id) (p: slprop) : placeless (on l p)
 instance val placeless_emp : placeless emp
 instance val placeless_star (a b: slprop) {| placeless a, placeless b |} : placeless (a ** b)
@@ -98,6 +112,10 @@ instance val placeless_equiv a b : placeless (equiv a b)
 instance val placeless_slprop_ref_pts_to x y : placeless (slprop_ref_pts_to x y)
 instance val placeless_exists #a (p: a -> slprop) {| ((x:a) -> placeless (p x)) |} :
   placeless (exists* x. p x)
+
+ghost fn on_exists_elim u#a #l (#a: Type u#a) (p: a -> slprop)
+  requires on l (exists* x. p x)
+  ensures exists* x. on l (p x)
 
 let in_same_process p = exists* l. loc l ** pure (process_of l == process_of p)
 val timeless_in_same_process p : Lemma (timeless (in_same_process p)) [SMTPat (timeless (in_same_process p))]
