@@ -112,7 +112,7 @@ fn write
     (v: t)
     (#s: Ghost.erased (Seq.seq t) {SZ.v i < Seq.length s})
   requires pts_to a s
-  ensures pts_to a (Seq.upd s (SZ.v i) v)
+  ensures exists* s'. pts_to a s' ** pure (s' == Seq.upd s (SZ.v i) v)
 {
   unfold pts_to a #1.0R s;
   mask_write a i v;

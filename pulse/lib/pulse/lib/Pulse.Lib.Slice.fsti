@@ -125,7 +125,7 @@ val op_Array_Assignment
         (requires
             pts_to a s)
         (ensures fun res ->
-            pts_to a (Seq.upd s (SZ.v i) v))
+            exists* s'. pts_to a s' ** pure (s' == Seq.upd s (SZ.v i) v))
 
 val share
   (#a:Type)

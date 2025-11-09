@@ -87,7 +87,7 @@ fn op_Array_Assignment
   (x:a)
   (#s:Ghost.erased (Seq.seq a) { SZ.v i < Seq.length s })
   requires pts_to v s
-  ensures  pts_to v (Seq.upd s (SZ.v i) x)
+  ensures  exists* s'. pts_to v s' ** pure (s' == Seq.upd s (SZ.v i) x)
 
 fn free
   (#a:Type0)
