@@ -60,6 +60,7 @@ ghost fn move i p l1 l2
         ensures on l' p
       {
         bwd ();
+        rewrite on l1 p as on l_ p;
         let f = f; f ()
       };
       ghost fn g' ()
@@ -67,6 +68,7 @@ ghost fn move i p l1 l2
         ensures on l2 p
       {
         let g = g; g ();
+        rewrite on l_ p as on l1 p;
         fwd ();
       };
       fold move_tag l2 l' p f' g';
