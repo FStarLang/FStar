@@ -1,0 +1,3 @@
+{
+    "options": [ "--load", "TinyPlugin", "--lang_extensions", "tiny", "--odir", "out", "-o", "out/o" ]
+}
