@@ -78,7 +78,7 @@ let check
     let Some c = Pulse.Readback.readback_comp ty in
 
     let (| eff, typing |) = core_check_term_at_type g' e ty in
-    let t = { t with term = Tm_ST { t=e; args=[] }  } in
+    let t = { t with term = Tm_ST { t=e; args=[] }; effect_tag = T.seal (Some (ctag_of_comp_st c)) } in
     let d : st_typing g' t c =
       if eff = T.E_Total
       then T_ST g' e c typing
