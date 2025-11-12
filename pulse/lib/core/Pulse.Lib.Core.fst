@@ -202,6 +202,8 @@ let on_star_eq = Sep.on_star_eq
 let on_on_eq = Sep.on_on_eq
 let on_loc_eq = Sep.on_loc_eq
 
+let impersonate_core l pre post f = PulseCore.Action.impersonate_stt l (f ())
+let atomic_impersonate_core l pre post f = A.impersonate_atomic l (f ())
 let ghost_impersonate_core l pre post f = A.impersonate_ghost l (f ())
 
 //////////////////////////////////////////////////////////////////////////

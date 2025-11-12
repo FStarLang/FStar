@@ -17,6 +17,7 @@
 module Pulse.Lib.Send
 open Pulse.Lib.Core
 open Pulse.Class.Duplicable
+open PulseCore.Observability
 open Pulse.Main
 module T = FStar.Tactics.V2
 #lang-pulse
@@ -30,6 +31,43 @@ irreducible let anywhere (l: loc_id) = ()
 [@@Tactics.Typeclasses.tcclass; erasable]
 type placeless (p: slprop) =
   is_send_across anywhere p
+
+[@@deprecated "impersonate is unsound; only use for model implementations"]
+noextract inline_for_extraction
+fn impersonate
+    u#a (a: Type u#a)
+    (l: loc_id) (pre: slprop) (post: a -> slprop)
+    {| placeless pre, ((x:a) -> placeless (post x)) |}
+    (f: unit -> stt a (loc l ** pre) (fun x -> loc l ** post x))
+  requires pre
+  returns x: a
+  ensures post x
+
+[@@deprecated "atomic_impersonate is unsound; only use for model implementations"]
+noextract inline_for_extraction
+atomic fn atomic_impersonate
+    u#a (a: Type u#a)
+    (#[T.exact (`emp_inames)] is: inames)
+    (l: loc_id) (pre: slprop) (post: a -> slprop)
+    {| placeless pre, ((x:a) -> placeless (post x)) |}
+    (f: unit -> stt_atomic a is (loc l ** pre) (fun x -> loc l ** post x))
+  opens is
+  requires pre
+  returns x: a
+  ensures post x
+
+[@@deprecated "unobservable_impersonate is unsound; only use for model implementations"]
+noextract inline_for_extraction
+unobservable fn unobservable_impersonate
+    u#a (a: Type u#a)
+    (#[T.exact (`emp_inames)] is: inames)
+    (l: loc_id) (pre: slprop) (post: a -> slprop)
+    {| placeless pre, ((x:a) -> placeless (post x)) |}
+    (f: unit -> stt_atomic a #Neutral is (loc l ** pre) (fun x -> loc l ** post x))
+  opens is
+  requires pre
+  returns x: a
+  ensures post x
 
 ghost fn ghost_impersonate
     (#[T.exact (`emp_inames)] is: inames)

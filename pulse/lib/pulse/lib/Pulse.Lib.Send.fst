@@ -52,6 +52,79 @@ ghost fn placeless_on (l: loc_id) (p: slprop) : placeless (on l p) = l1 l2 {
   on_on_eq l2 l p; rewrite on l p as on l2 (on l p);
 }
 
+[@@deprecated "impersonate is unsound; only use for model implementations"]
+noextract inline_for_extraction
+fn impersonate
+    u#a (a: Type u#a)
+    (l: loc_id) (pre: slprop) (post: a -> slprop)
+    {| placeless pre, ((x:a) -> placeless (post x)) |}
+    (f: unit -> stt a (loc l ** pre) (fun x -> loc l ** post x))
+  requires pre
+  returns x: a
+  ensures post x
+{
+  on_loc_eq l l; rewrite pure (l == l) as on l (loc l);
+  placeless_on_intro pre l;
+  on_star_eq l (loc l) pre; rewrite on l (loc l) ** on l pre as on l (loc l ** pre);
+  let x = impersonate_core l (loc l ** pre) post fn _ {
+    let x = f ();
+    drop_ (loc l);
+    x
+  };
+  placeless_on_elim (post x) l;
+  x
+}
+
+[@@deprecated "atomic_impersonate is unsound; only use for model implementations"]
+noextract inline_for_extraction
+atomic fn atomic_impersonate
+    u#a (a: Type u#a)
+    (#[T.exact (`emp_inames)] is: inames)
+    (l: loc_id) (pre: slprop) (post: a -> slprop)
+    {| placeless pre, ((x:a) -> placeless (post x)) |}
+    (f: unit -> stt_atomic a is (loc l ** pre) (fun x -> loc l ** post x))
+  opens is
+  requires pre
+  returns x: a
+  ensures post x
+{
+  on_loc_eq l l; rewrite pure (l == l) as on l (loc l);
+  placeless_on_intro pre l;
+  on_star_eq l (loc l) pre; rewrite on l (loc l) ** on l pre as on l (loc l ** pre);
+  let x = atomic_impersonate_core #a #is #Observable l (loc l ** pre) post fn _ {
+    let x = f ();
+    drop_ (loc l);
+    x
+  };
+  placeless_on_elim (post x) l;
+  x
+}
+
+[@@deprecated "unobservable_impersonate is unsound; only use for model implementations"]
+noextract inline_for_extraction
+unobservable fn unobservable_impersonate
+    u#a (a: Type u#a)
+    (#[T.exact (`emp_inames)] is: inames)
+    (l: loc_id) (pre: slprop) (post: a -> slprop)
+    {| placeless pre, ((x:a) -> placeless (post x)) |}
+    (f: unit -> stt_atomic a #Neutral is (loc l ** pre) (fun x -> loc l ** post x))
+  opens is
+  requires pre
+  returns x: a
+  ensures post x
+{
+  on_loc_eq l l; rewrite pure (l == l) as on l (loc l);
+  placeless_on_intro pre l;
+  on_star_eq l (loc l) pre; rewrite on l (loc l) ** on l pre as on l (loc l ** pre);
+  let x = atomic_impersonate_core #a #is #Neutral l (loc l ** pre) post fn _ {
+    let x = f ();
+    drop_ (loc l);
+    x
+  };
+  placeless_on_elim (post x) l;
+  x
+}
+
 ghost fn ghost_impersonate
     (#[T.exact (`emp_inames)] is: inames)
     (l: loc_id) (pre post: slprop) {| placeless pre, placeless post |}

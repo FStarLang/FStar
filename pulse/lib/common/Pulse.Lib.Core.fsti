@@ -459,6 +459,23 @@ val on_star_eq l a b : squash (on l (a ** b) == on l a ** on l b)
 val on_on_eq l1 l2 a : squash (on l1 (on l2 a) == on l2 a)
 val on_loc_eq l1 l2 : squash (on l1 (loc l2) == pure (l1 == l2))
 
+inline_for_extraction
+[@@deprecated "impersonate_core is unsound; only use for model implementations";
+  extract_as (`(fun (#a:Type0) () () () (f: unit -> Dv a) -> f ()))]
+val impersonate_core #a
+  (l: loc_id) (pre: slprop) (post: a -> slprop)
+  (f: unit -> stt a pre (fun x -> post x))
+  : stt a (on l pre) (fun x -> on l (post x))
+
+inline_for_extraction
+[@@deprecated "atomic impersonate_core is unsound; only use for model implementations";
+  extract_as (`(fun (#a:Type0) () () () () () (f: unit -> Dv a) -> f ()))]
+val atomic_impersonate_core #a
+  (#[T.exact (`emp_inames)] is: inames) #obs
+  (l: loc_id) (pre: slprop) (post: a -> slprop)
+  (f: unit -> stt_atomic a #obs is pre (fun x -> post x))
+  : stt_atomic a #obs is (on l pre) (fun x -> on l (post x))
+
 val ghost_impersonate_core
   (#[T.exact (`emp_inames)] is: inames)
   (l: loc_id) (pre post: slprop)
