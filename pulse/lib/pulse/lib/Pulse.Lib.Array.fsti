@@ -41,7 +41,7 @@ fn compare
      pure (res <==> Seq.equal s1 s2)
 
 fn memcpy_l
-        (#t:eqtype)
+        (#t:Type0)
         (l:SZ.t)
         (src dst:(a:array t { SZ.v l <= length a }))
         (#p:perm)
@@ -54,7 +54,7 @@ fn memcpy_l
                                    (Seq.slice dst0 (SZ.v l) (length dst)))
 
 fn memcpy
-        (#t:eqtype)
+        (#t:Type0)
         (l:SZ.t)
         (src dst:larray t (SZ.v l))
         (#p:perm)

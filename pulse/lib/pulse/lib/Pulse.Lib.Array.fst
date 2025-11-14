@@ -53,7 +53,7 @@ fn compare (#t:eqtype) (l:US.t) (a1 a2:larray t (US.v l)) (#p1 #p2:perm)
   (!i = l)
 }
 
-fn memcpy_l (#t:eqtype) (l:US.t) (src dst:(a:array t { US.v l <= A.length a }))
+fn memcpy_l (#t:Type0) (l:US.t) (src dst:(a:array t { US.v l <= A.length a }))
            (#p:perm) (#src0 #dst0:Ghost.erased (Seq.seq t))
   requires pts_to src #p src0 **
            pts_to dst dst0
@@ -89,7 +89,7 @@ fn memcpy_l (#t:eqtype) (l:US.t) (src dst:(a:array t { US.v l <= A.length a }))
 
 
 fn memcpy
-  (#t:eqtype)
+  (#t:Type0)
   (l:SZ.t)
   (src dst:larray t (SZ.v l))
   (#p:perm)
