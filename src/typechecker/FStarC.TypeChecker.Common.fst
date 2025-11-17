@@ -204,12 +204,8 @@ let check_uvar_ctx_invariant (reason:string) (r:range) (should_check:bool) (g:ga
      | _ -> fail()
 
 instance showable_implicit : showable implicit = {
-  show = (fun i -> show i.imp_uvar.ctx_uvar_head);
+  show = (fun i -> show (i.imp_uvar.ctx_uvar_head, i.imp_uvar.ctx_uvar_reason));
 }
-
-let implicits_to_string imps =
-    let imp_to_string i = show i.imp_uvar.ctx_uvar_head in
-    FStarC.Common.string_of_list imp_to_string imps
 
 let trivial_guard =
   let open FStarC.Class.Listlike in
