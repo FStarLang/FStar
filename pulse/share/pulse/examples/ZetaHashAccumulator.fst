@@ -337,7 +337,7 @@ fn aggregate_raw_hashes (#s1 #s2:e_raw_hash_value_t)
     open Pulse.Lib.Reference;
     let mut i = 0sz;
     assert (pure (s1 `Seq.equal` xor_bytes_pfx s1 s2 0));
-    while ((!i < 32sz))
+    while (!i < 32sz)
     invariant
         exists* (wi:SizeT.t).
             pts_to i wi **

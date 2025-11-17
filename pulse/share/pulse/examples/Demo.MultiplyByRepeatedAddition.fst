@@ -33,7 +33,7 @@ fn mult (x y:nat)
 {
     let mut ctr : nat = 0;
     let mut acc : nat = 0;
-    while ((!ctr < x))
+    while (!ctr < x)
     invariant
     exists* (c a:nat).
         pts_to ctr c **
@@ -56,7 +56,7 @@ fn mult32 (x y:U32.t)
 {  
     let mut ctr = 0ul;
     let mut acc = 0ul;
-    while ((!ctr < x))
+    while (!ctr < x)
     invariant
     exists* c (a : UInt32.t). // FIXME: this type should have been instantiate by fundeps?
         pts_to ctr c **
@@ -80,7 +80,7 @@ fn mult32' (x y:U32.t)
 {  
     let mut ctr = 0ul;
     let mut acc = 0ul;
-    while ((!ctr <^ x))
+    while (!ctr <^ x)
     invariant
     exists* c a.
         pts_to ctr c **

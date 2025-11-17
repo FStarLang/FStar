@@ -106,7 +106,7 @@ fn lookup
   let mut ret = None #SZ.t;
   unfold (models ht pht);
 
-  while ((!off <=^ ht.sz && !cont))
+  while (!off <=^ ht.sz && !cont)
   invariant exists* (voff:SZ.t) (vcont :bool) vcontents. (
     pts_to contents vcontents **
     V.pts_to vcontents pht.repr.seq **
@@ -264,7 +264,7 @@ fn insert
   let mut cont = true;
   let mut idx = 0sz;
 
-  while ((!cont))
+  while (!cont)
   invariant exists* (voff:SZ.t) (vcont :bool) (vcontents:V.vec _) vidx s. (
     pts_to off voff **
     pts_to cont vcont **

@@ -80,7 +80,7 @@ fn write10 (x:ref U32.t)
   ensures pts_to x 0ul
 {
   let mut ctr = 10ul;
-  while ((!ctr >^ 0ul))
+  while (!ctr >^ 0ul)
   invariant
     exists* n i.
       pts_to x n **

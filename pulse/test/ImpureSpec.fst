@@ -51,7 +51,7 @@ fn test5 (r: ref int)
 fn test6 () {
   let mut x = 10;
   let mut y = 20;
-  while ((!y > !x))
+  while (!y > !x)
     invariant (live y) ** pure (!y >= !x /\ !y <= old (!y))
     // elaborates to: exists* vy. (y |-> vy) ** pure (vy >= 10 /\ vy <= 20)
   {
