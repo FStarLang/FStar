@@ -150,13 +150,7 @@ let class_of_typ (t:term) : Tac (option fv) =
     if is_class_name fv then
       Some fv
     else
-      (* If the head of the result type of this instance
-      does not look like a class, try normalizing. It may
-      be an alias to a class. *)
-      let t' =
-        try norm_term (hnf :: tc_norm_steps) t with | _ -> t
-      in
-      head_of (res_typ t')
+      None
 
 let type_matches_class (cfv:fv) (t:term) : Tac bool =
   match class_of_typ t with
