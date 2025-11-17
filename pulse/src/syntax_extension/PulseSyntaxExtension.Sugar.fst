@@ -121,11 +121,6 @@ type stmt' =
       args : list lambda;
     }
 
-  | Assignment {
-      lhs:A.term;
-      value:A.term;
-    }
-
   | ArrayAssignment {
       arr:A.term;
       index:A.term;
@@ -253,7 +248,6 @@ let tag_of_stmt (s:stmt) : string =
   match s.s with
   | Open _ -> "Open"
   | Expr {} -> "Expr"
-  | Assignment {} -> "Assignment"
   | ArrayAssignment {} -> "ArrayAssignment"
   | LetBinding {} -> "LetBinding"
   | Block {} -> "Block"
@@ -296,11 +290,6 @@ let rec stmt_to_string (s:stmt) : string =
   match s.s with
   | Open l -> "Open " ^ show l
   | Expr {e} -> "Expr " ^ show e
-  | Assignment { lhs; value } ->
-    "Assignment " ^ record_string [
-      "lhs", show lhs;
-      "value", show value;
-    ]
   | ArrayAssignment { arr; index; value } ->
     "ArrayAssignment " ^ record_string [
       "arr", show arr;
@@ -445,8 +434,6 @@ and eq_stmt' (s1 s2:stmt') =
   match s1, s2 with
   | Open l1, Open l2 -> eq_lident l1 l2
   | Expr e1, Expr e2 -> AD.eq_term e1.e e2.e && forall2 eq_lambda e1.args e2.args
-  | Assignment { lhs=l1; value=v1 }, Assignment { lhs=l2; value=v2 } ->
-    AD.eq_term l1 l2 && AD.eq_term v1 v2
   | ArrayAssignment { arr=a1; index=i1; value=v1 }, ArrayAssignment { arr=a2; index=i2; value=v2 } ->
     AD.eq_term a1 a2 && AD.eq_term i1 i2 && AD.eq_term v1 v2
   | LetBinding { norw=norw1; qualifier=q1; pat=pat1; typ=t1; init=init1 }, LetBinding { norw=norw2; qualifier=q2; pat=pat2; typ=t2; init=init2 } ->
@@ -589,7 +576,6 @@ and scan_stmt (cbs:A.dep_scan_callbacks) (s:stmt) =
   match s.s with
   | Open l -> cbs.add_open l
   | Expr e -> cbs.scan_term e.e; iter (scan_lambda cbs) e.args
-  | Assignment { lhs=l; value=v } -> cbs.scan_term l; cbs.scan_term v
   | ArrayAssignment { arr=a; index=i; value=v } -> cbs.scan_term a; cbs.scan_term i; cbs.scan_term v
   | LetBinding { qualifier=q; pat=p; typ=t; init=init } ->
     iopt (scan_let_init cbs) init;
@@ -671,7 +657,6 @@ let add_decorations d ds =
 // let mk_slprop_exists binders body = SLPropExists { binders; body }
 let mk_expr e args = Expr { e; args }
 let mk_unit rng = Expr { e = A.mk_term (A.Const FStarC.Const.Const_unit) rng A.Expr; args = [] }
-let mk_assignment id value = Assignment { lhs=id; value }
 let mk_array_assignment arr index value = ArrayAssignment { arr; index; value }
 let mk_let_binding norw qualifier pat typ init = LetBinding { norw; qualifier; pat; typ; init }
 let mk_block stmt = Block { stmt }

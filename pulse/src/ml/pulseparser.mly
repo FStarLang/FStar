@@ -248,10 +248,8 @@ pulseStmtNoSeq:
       | _ ->
         raise_error_text (rr $loc) Fatal_SyntaxError "Expected an array assignment of the form x.(i) <- v"
     }
-  | tm=appTerm args=list(termPulseLambda)
+  | tm=tmEq args=list(termPulseLambda)
     { PulseSyntaxExtension_Sugar.mk_expr tm args }
-  | lhs=appTermNoRecordExp COLON_EQUALS a=noSeqTerm
-    { PulseSyntaxExtension_Sugar.mk_assignment lhs a }
   | norw=optional_norewrite LET q=option(mutOrRefQualifier) p=pulsePattern typOpt=option(preceded(COLON, appTerm)) EQUALS init=bindableTerm
     { PulseSyntaxExtension_Sugar.mk_let_binding norw q p typOpt (Some init) }
   | s=pulseBindableTerm
