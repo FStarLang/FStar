@@ -248,9 +248,6 @@ let focusAttrLetBindings lbs r =
             else (attr, (fst lb, mkAdmitMagic r))) lbs
     else lbs |> List.map (fun (attr, (_, lb)) -> (attr, lb))
 
-let mkFsTypApp t args r =
-  mkApp t (List.map (fun a -> (a, FsTypApp)) args) r
-
   (* TODO : is this valid or should it use Construct ? *)
 let mkTuple args r =
   let cons = C.mk_tuple_data_lid (List.length args) r in

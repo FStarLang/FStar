@@ -2039,10 +2039,6 @@ and p_appTerm e = match e.tm with
 
 and p_argTerm arg_imp = match arg_imp with
   | (u, UnivApp) -> p_universe u
-  | (e, FsTypApp) ->
-      (* This case should not happen since it might lead to badly formed type applications (e.g t a b)*)
-      Errors.log_issue e Errors.Warning_UnexpectedFsTypApp "Unexpected FsTypApp, output might not be formatted correctly.";
-      surround 2 1 langle (p_indexingTerm e) rangle
   | (e, Hash) -> str "#" ^^ p_indexingTerm e
   | (e, HashBrace t) -> str "#[" ^^ p_indexingTerm t ^^ str "]" ^^ p_indexingTerm e
   | (e, Infix)

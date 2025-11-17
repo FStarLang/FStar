@@ -407,7 +407,6 @@ let on_sub_imp
   (x : imp) : m imp
 =
   match x with
-  | FsTypApp
   | Hash
   | UnivApp
   | Infix
