@@ -152,7 +152,6 @@ and arg_qualifier =
     | TypeClassArg
 and aqual = option arg_qualifier
 and imp =
-    | FsTypApp
     | Hash
     | UnivApp
     | HashBrace of term
@@ -339,7 +338,6 @@ val mkRefSet : range -> list term -> term
 val focusLetBindings : list (bool & (pattern & term)) -> range -> list (pattern & term)
 val focusAttrLetBindings : list (option attributes_ & (bool & (pattern & term))) -> range -> list (option attributes_ & (pattern & term))
 
-val mkFsTypApp : term -> list term -> range -> term
 val mkTuple : list term -> range -> term
 val mkDTuple : list term -> range -> term
 val mkRefinedBinder : ident -> term -> bool -> option term -> range -> aqual -> list term -> binder

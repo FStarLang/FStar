@@ -71,7 +71,6 @@ and eq_arg (t1 t2 : (term & imp))
 
 and eq_imp (i1 i2: imp)
   = match i1, i2 with
-    | FsTypApp, FsTypApp
     | Hash, Hash
     | UnivApp, UnivApp
     | Infix, Infix
