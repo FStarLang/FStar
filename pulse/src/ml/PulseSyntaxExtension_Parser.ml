@@ -190,8 +190,6 @@ let rewrite_token (tok:FP.token)
     | TRUE -> PP.TRUE 
     | TRY -> PP.TRY 
     | TYPE -> PP.TYPE 
-    | TYP_APP_GREATER -> PP.TYP_APP_GREATER 
-    | TYP_APP_LESS -> PP.TYP_APP_LESS 
     | UINT16 s -> PP.UINT16 s 
     | UINT32 s -> PP.UINT32 s 
     | UINT64 s -> PP.UINT64 s 

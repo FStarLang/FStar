@@ -129,7 +129,7 @@ type tc_constraint = {
 %token NOEXTRACT
 %token NOEQUALITY UNOPTEQUALITY
 %token PRAGMA_SHOW_OPTIONS PRAGMA_SET_OPTIONS PRAGMA_RESET_OPTIONS PRAGMA_PUSH_OPTIONS PRAGMA_POP_OPTIONS PRAGMA_RESTART_SOLVER PRAGMA_PRINT_EFFECTS_GRAPH PRAGMA_CHECK
-%token TYP_APP_LESS TYP_APP_GREATER SUBTYPE EQUALTYPE SUBKIND BY
+%token SUBTYPE EQUALTYPE SUBKIND BY
 %token AND ASSERT SYNTH BEGIN ELSE END
 %token EXCEPTION FALSE FUN FUNCTION IF IN MODULE
 %token MATCH OF
@@ -469,12 +469,7 @@ typeDecl:
       { tcdef lid tparams ascr_opt }
 
 typars:
-  | x=tvarinsts              { x }
   | x=binders                { x }
-
-tvarinsts:
-  | TYP_APP_LESS tvs=separated_nonempty_list(COMMA, ident) TYP_APP_GREATER
-      { map (fun tv -> mk_binder (Variable(tv)) (range_of_id tv) Kind None) tvs }
 
 %inline recordDefinition:
   | LBRACE record_field_decls=right_flexible_nonempty_list(SEMICOLON, recordFieldDecl) RBRACE
@@ -1434,7 +1429,7 @@ recordExp:
 
 simpleDef:
   | e=separated_pair(qlidentOrOperator, EQUALS, noSeqTerm) { e }
-  | lid=qlidentOrOperator { lid, mk_term (Name (lid_of_ids [ ident_of_lid lid ])) (rr $loc(lid)) Un }
+  | lid=qlidentOrOperator { lid, mk_term (Var (lid_of_ids [ ident_of_lid lid ])) (rr $loc(lid)) Un }
 
 appTermArgs:
   | h=maybeHash a=onlyTrailingTerm { [h, a] }
@@ -1537,10 +1532,12 @@ opPrefixTerm(Tm):
 
 
 projectionLHS:
-  | e=qidentWithTypeArgs(qlident, option(fsTypeArgs))
-      { e }
-  | e=qidentWithTypeArgs(quident, some(fsTypeArgs))
-      { e }
+  | id=qlident
+      {
+        let t = if is_name id then Name id else Var id in
+         mk_term t (rr $loc(id)) Un
+      }
+
   | LPAREN e=term sort_opt=option(pair(hasSort, simpleTerm)) RPAREN
       {
         (* Note: we have to keep the parentheses here. Consider t * u * v. This
@@ -1567,22 +1564,6 @@ projectionLHS:
       { mk_term (Projector (ns, id)) (rr2 $loc(ns) $loc(id)) Expr }
   | lid=quident QMARK
       { mk_term (Discrim lid) (rr2 $loc(lid) $loc($2)) Un }
-
-fsTypeArgs:
-  | TYP_APP_LESS targs=separated_nonempty_list(COMMA, atomicTerm) TYP_APP_GREATER
-    {targs}
-
-(* Qid : quident or qlident.
-   TypeArgs : option(fsTypeArgs) or someFsTypeArgs. *)
-qidentWithTypeArgs(Qid,TypeArgs):
-  | id=Qid targs_opt=TypeArgs
-      {
-        let t = if is_name id then Name id else Var id in
-        let e = mk_term t (rr $loc(id)) Un in
-        match targs_opt with
-        | None -> e
-        | Some targs -> mkFsTypApp e targs (rr2 $loc(id) $loc(targs_opt))
-      }
 
 hasSort:
   (* | SUBTYPE { Expr } *)
