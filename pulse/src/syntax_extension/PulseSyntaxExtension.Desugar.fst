@@ -446,13 +446,6 @@ let rec desugar_stmt' (env:env_t) (s:Sugar.stmt)
         return (SW.tm_st tm args s.range)
       )
 
-    | Assignment { lhs; value } ->
-      let! lhs = tosyntax env lhs in
-      let! rhs = tosyntax env value in
-      let! assignment_lid = resolve_lid env (op_colon_equals_lid s.range) in
-      let tm = (app_lid assignment_lid [lhs; rhs] s.range) in
-      return (st_term_of_admit_or_return (admit_or_return env (app_lid assignment_lid [lhs; rhs] s.range)))
-
     | ArrayAssignment { arr; index; value } ->
       let! arr = tosyntax env arr in
       let! index = tosyntax env index in

@@ -20,7 +20,7 @@ fn gcd (n0: SZ.t) (l0: SZ.t)
 {
   let mut pn = n0;
   let mut pl = l0;
-  while ((!pl `SZ.gt` 0sz))
+  while (!pl `SZ.gt` 0sz)
   invariant exists* n l . (
     pts_to pn n **
     pts_to pl l **

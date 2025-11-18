@@ -40,7 +40,7 @@ fn slice_swap_aux(#t: Type0) (a: S.slice t) (mb: (mb: SZ.t {0 < SZ.v mb /\ SZ.v 
 {   
     S.pts_to_len a;
     let mut pi = 0sz;
-    while ((!pi `SZ.lt` d))
+    while (!pi `SZ.lt` d)
     invariant exists* s i . (
       pts_to a s **
       pts_to pi i **
@@ -53,7 +53,7 @@ fn slice_swap_aux(#t: Type0) (a: S.slice t) (mb: (mb: SZ.t {0 < SZ.v mb /\ SZ.v 
       let save = S.op_Array_Access a i;
       let mut pj = 0sz;
       let mut pidx = i;
-      while ((SZ.lt !pj (SZ.sub q 1sz)))
+      while (SZ.lt !pj (SZ.sub q 1sz))
       invariant exists* s j idx . (
         pts_to a s **
         pts_to pi i **

@@ -518,7 +518,7 @@ fn split (#t:Type0) (x:llist t) (n:U32.t) (#xl:erased (list t))
   let mut ctr = 0ul;
   (* the base case, set up the initial invariant *)
   intro (forall* l. is_list x l @==> is_list x ([]@l)) fn _ _{};
-  while ((Pulse.Lib.Reference.(!ctr) <> (n - 1ul)))
+  while (Pulse.Lib.Reference.(!ctr) <> (n - 1ul))
     invariant exists* i ll pfx sfx.
       pts_to ctr i **
       pts_to cur ll **

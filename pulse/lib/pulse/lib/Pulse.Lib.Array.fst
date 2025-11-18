@@ -65,7 +65,7 @@ fn memcpy_l (#t:eqtype) (l:US.t) (src dst:(a:array t { US.v l <= A.length a }))
   pts_to_len src #p #src0;
   pts_to_len dst #1.0R #dst0;
   let mut i = 0sz;
-  while ((!i < l))
+  while (!i < l)
   invariant exists* (vi:US.t) (s:Seq.seq t). ( 
     pts_to i vi **
     pts_to src #p src0 **
@@ -115,7 +115,7 @@ fn fill (#t:Type0) (l:US.t) (a:larray t (US.v l)) (v:t)
 {
   pts_to_len a #1.0R #'s;
   let mut i = 0sz;
-  while ((!i < l))
+  while (!i < l)
   invariant exists* (vi:US.t) (s:Seq.seq t). ( 
     pts_to i vi **
     pts_to a s **

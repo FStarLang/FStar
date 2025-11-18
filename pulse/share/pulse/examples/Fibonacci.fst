@@ -41,7 +41,7 @@ fn fibonacci (k:pos)
   let mut i = 1;
   let mut j = 1;
   let mut ctr = 1;
-  while ((!ctr < k))
+  while (!ctr < k)
   invariant
     exists* (vi vj vctr : int).
     pts_to i vi **
@@ -69,7 +69,7 @@ fn fibonacci32 (k:U32.t)
   let mut i = 1ul;
   let mut j = 1ul;
   let mut ctr = 1ul;
-  while ((!ctr < k))
+  while (!ctr < k)
   invariant
     exists* (vi vj vctr : U32.t).
      pts_to i vi **
@@ -100,7 +100,7 @@ fn fibo (n:pos)
   let mut i = 1;
   let mut j = 1;
   let mut ctr = 1;
-  while ((!ctr < n))
+  while (!ctr < n)
   invariant
     exists* (vi vj vctr : int). (
      pts_to i vi **
@@ -129,7 +129,7 @@ fn fibo2 (n:pos)
   let mut i : nat = 1;
   let mut j : nat = 1;
   let mut ctr : nat = 1;
-  while ((!ctr < n))
+  while (!ctr < n)
   invariant exists* (vi vj vctr : nat). (
      pts_to i vi **
      pts_to j vj **
@@ -156,7 +156,7 @@ fn fibo3 (n:pos)
   let mut i : nat = 1;
   let mut j : nat = 1;
   let mut ctr : nat = 1;
-  while ((!ctr < n))
+  while (!ctr < n)
   invariant exists* (vi vj vctr : nat). (
      pts_to i vi **
      pts_to j vj **

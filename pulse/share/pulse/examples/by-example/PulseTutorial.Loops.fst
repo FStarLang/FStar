@@ -238,7 +238,7 @@ fn fib_loop (k:pos)
   let mut i : nat = 1;
   let mut j : nat = 1;
   let mut ctr : nat = 1;
-  while ((!ctr < k))
+  while (!ctr < k)
   invariant
     exists* (vi vj vctr : nat).
         R.pts_to i vi **
@@ -282,7 +282,7 @@ fn fibonacci32 (k:U32.t)
   let mut i = 1ul;
   let mut j = 1ul;
   let mut ctr = 1ul;
-  while ((!ctr < k))
+  while (!ctr < k)
   invariant
     exists* vi vj vctr. 
      R.pts_to i vi **

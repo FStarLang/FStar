@@ -166,7 +166,7 @@ fn max (n:SZ.t) (a:larray nat (v n))
 {
   let mut i : SZ.t = 0sz;
   let mut max : nat = 0;
-  while ((!i < n))
+  while (!i < n)
   invariant exists* (vi:SZ.t) (vmax:nat).
     A.pts_to a #'p 's **
     R.pts_to i vi **
@@ -196,7 +196,7 @@ fn max_alt (n:SZ.t) (a:larray nat (v n))
 {
   let mut i = 0sz;
   let mut max : nat = 0;
-  while ((!i < n))
+  while (!i < n)
   invariant exists* (vi:SZ.t) (vmax:nat).
     A.pts_to a #'p 's **
     R.pts_to i vi **
