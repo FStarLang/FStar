@@ -187,18 +187,19 @@ let parse_incremental_decls
   in
   parse []
 
-let contents_at contents =
+let contents_at (contents : string) : Range.t -> code_fragment =
     let lines = U.splitlines contents in
     let split_line_at_col line col =
-        if col > 0
+        (* NB: columns are 1-based *)
+        if col > 1
         then (
             (* Don't index directly into the string, since this is a UTF-8 string.
                 Convert first to a list of characters, index into that, and then convert
                 back to a string *)
             let chars = FStar_String.list_of_string line in
-            if col <= List.length chars
+            if col <= List.length chars + 1
             then (
-              let prefix, suffix = FStarC_Util.first_N (Z.of_int col) chars in
+              let prefix, suffix = FStarC_Util.first_N (Z.of_int (col - 1)) chars in
               Some (FStar_String.string_of_list prefix, 
                     FStar_String.string_of_list suffix)
             )
