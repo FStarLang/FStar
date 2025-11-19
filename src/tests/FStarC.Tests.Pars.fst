@@ -224,11 +224,11 @@ let parse_incremental_decls () =
   let input0 = Incremental { frag_fname = "Demo.fst";
                              frag_text = source0;
                              frag_line = 1;
-                             frag_col = 0 } in
+                             frag_col = 1 } in
   let input1 = Incremental { frag_fname = "Demo.fst";
                              frag_text = source1;
                              frag_line = 1;
-                             frag_col = 0 } in
+                             frag_col = 1 } in
   let open FStarC.Range in
   match parse None input0, parse None input1 with
   | IncrementalFragment (decls0, _, parse_err0),
@@ -250,8 +250,8 @@ let parse_incremental_decls () =
         | _, None ->
           failwith "Incremental parsing failed: Expected syntax error at (9, 6), got no error"
         | Some (_, _, rng0), Some (_, _, rng1)  ->
-          check_range rng0 11 6;
-          check_range rng1 12 6
+          check_range rng0 11 7;
+          check_range rng1 12 7
       in
       match decls0, decls1 with
       | [d0;d1;d2;d3;d4;d5],
