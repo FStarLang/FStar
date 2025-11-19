@@ -1,47 +1,47 @@
-* Warning 240 at Erasable.fst(56,4-56,11):
+* Warning 240 at Erasable.fst:56.5-56.12:
   - Erasable.e_nat_3 is declared but no definition was found
   - Add an 'assume' if this is intentional
 
-* Warning 240 at Erasable.fst(49,4-49,11):
+* Warning 240 at Erasable.fst:49.5-49.12:
   - Erasable.e_nat_2 is declared but no definition was found
   - Add an 'assume' if this is intentional
 
-* Info at Erasable.fst(6,0-8,17):
+* Info at Erasable.fst:6.1-8.18:
   - Expected failure:
   - Incompatible attributes and qualifiers: erasable types do not support
     decidable equality and must be marked `noeq`.
 
-* Info at Erasable.fst(18,2-20,15):
+* Info at Erasable.fst:18.3-20.16:
   - Expected failure:
   - Computed type Prims.int
     and effect Prims.GHOST
     is not compatible with the annotated type Prims.int
     and effect Tot
 
-* Info at Erasable.fst(28,42-28,52):
+* Info at Erasable.fst:28.43-28.53:
   - Expected failure:
   - Computed type Prims.int
     and effect GTot
     is not compatible with the annotated type Prims.int
     and effect Tot
 
-* Info at Erasable.fst(41,12-41,15):
+* Info at Erasable.fst:41.13-41.16:
   - Expected failure:
   - Illegal attribute: the `erasable` attribute is only permitted on inductive
     type definitions and abbreviations for non-informative types.
   - The term Prims.nat is considered informative.
 
-* Info at Erasable.fst(52,0-52,17):
+* Info at Erasable.fst:52.1-52.18:
   - Expected failure:
   - Mismatch of attributes between declaration and definition.
   - Declaration is marked `erasable` but the definition is not.
 
-* Info at Erasable.fst(59,0-59,29):
+* Info at Erasable.fst:59.1-59.30:
   - Expected failure:
   - Mismatch of attributes between declaration and definition.
   - Declaration is marked `erasable` but the definition is not.
 
-* Warning 240 at Erasable.fst(73,0-73,19):
+* Warning 240 at Erasable.fst:73.1-73.20:
   - Missing definitions in module Erasable:
       e_nat_2
       e_nat_3

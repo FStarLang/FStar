@@ -1,18 +1,18 @@
-* Warning 290 at DecreasesTypeWarning.fst(5,7-5,9):
+* Warning 290 at DecreasesTypeWarning.fst:5.8-5.10:
   - In the decreases clause for this function, the SMT solver may not be able to
     prove that the types of
-      xs (bound in DecreasesTypeWarning.fst(5,7-5,9))
-    and x (bound in DecreasesTypeWarning.fst(3,11-3,12))
+      xs (bound in DecreasesTypeWarning.fst:5.8-5.10)
+    and x (bound in DecreasesTypeWarning.fst:3.12-3.13)
     are equal.
   - The type of the first term is: Prims.list Prims.nat
   - The type of the second term is: Prims.nat
   - If the proof fails, try annotating these with the same type.
 
-* Warning 290 at DecreasesTypeWarning.fst(3,11-3,12):
+* Warning 290 at DecreasesTypeWarning.fst:3.12-3.13:
   - In the decreases clause for this function, the SMT solver may not be able to
     prove that the types of
-      x (bound in DecreasesTypeWarning.fst(3,11-3,12))
-    and xs (bound in DecreasesTypeWarning.fst(5,7-5,9))
+      x (bound in DecreasesTypeWarning.fst:3.12-3.13)
+    and xs (bound in DecreasesTypeWarning.fst:5.8-5.10)
     are equal.
   - The type of the first term is: Prims.nat
   - The type of the second term is: Prims.list Prims.nat

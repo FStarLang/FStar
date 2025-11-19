@@ -1,4 +1,4 @@
-* Info at WarnError.fst(4,0-4,29):
+* Info at WarnError.fst:4.1-4.30:
   - Expected failure:
   - Failed to process pragma: Invalid --warn_error setting: Parsing of
     warn_error string failed

@@ -1,116 +1,116 @@
-* Warning 240 at NegativeTests.Termination.fst(91,4-91,7):
+* Warning 240 at NegativeTests.Termination.fst:91.5-91.8:
   - NegativeTests.Termination.xxx is declared but no definition was found
   - Add an 'assume' if this is intentional
 
-* Warning 240 at NegativeTests.Termination.fst(84,4-84,9):
+* Warning 240 at NegativeTests.Termination.fst:84.5-84.10:
   - NegativeTests.Termination.minus is declared but no definition was found
   - Add an 'assume' if this is intentional
 
-* Warning 240 at NegativeTests.Termination.fst(77,4-77,9):
+* Warning 240 at NegativeTests.Termination.fst:77.5-77.10:
   - NegativeTests.Termination.plus' is declared but no definition was found
   - Add an 'assume' if this is intentional
 
-* Warning 240 at NegativeTests.Termination.fst(69,4-69,8):
+* Warning 240 at NegativeTests.Termination.fst:69.5-69.9:
   - NegativeTests.Termination.plus is declared but no definition was found
   - Add an 'assume' if this is intentional
 
-* Warning 240 at NegativeTests.Termination.fst(61,4-61,6):
+* Warning 240 at NegativeTests.Termination.fst:61.5-61.7:
   - NegativeTests.Termination.t1 is declared but no definition was found
   - Add an 'assume' if this is intentional
 
-* Warning 240 at NegativeTests.Termination.fst(50,4-50,18):
+* Warning 240 at NegativeTests.Termination.fst:50.5-50.19:
   - NegativeTests.Termination.strangeZeroBad
     is declared but no definition was found
   - Add an 'assume' if this is intentional
 
-* Warning 240 at NegativeTests.Termination.fst(38,4-38,14):
+* Warning 240 at NegativeTests.Termination.fst:38.5-38.15:
   - NegativeTests.Termination.length_bad is declared but no definition was found
   - Add an 'assume' if this is intentional
 
-* Warning 240 at NegativeTests.Termination.fst(31,4-31,17):
+* Warning 240 at NegativeTests.Termination.fst:31.5-31.18:
   - NegativeTests.Termination.ackermann_bad
     is declared but no definition was found
   - Add an 'assume' if this is intentional
 
-* Warning 240 at NegativeTests.Termination.fst(23,4-23,18):
+* Warning 240 at NegativeTests.Termination.fst:23.5-23.19:
   - NegativeTests.Termination.repeat_diverge
     is declared but no definition was found
   - Add an 'assume' if this is intentional
 
-* Warning 240 at NegativeTests.Termination.fst(18,4-18,9):
+* Warning 240 at NegativeTests.Termination.fst:18.5-18.10:
   - NegativeTests.Termination.bug15 is declared but no definition was found
   - Add an 'assume' if this is intentional
 
-* Info at NegativeTests.Termination.fst(21,28-21,29):
+* Info at NegativeTests.Termination.fst:21.29-21.30:
   - Expected failure:
   - Could not prove termination of this recursive call
   - The SMT solver could not prove the query. Use --query_stats for more
     details.
-  - See also NegativeTests.Termination.fst(18,12-21,29)
+  - See also NegativeTests.Termination.fst:18.13-21.30
 
-* Info at NegativeTests.Termination.fst(28,26-28,35):
+* Info at NegativeTests.Termination.fst:28.27-28.36:
   - Expected failure:
   - Could not prove termination of this recursive call
   - The SMT solver could not prove the query. Use --query_stats for more
     details.
-  - See also NegativeTests.Termination.fst(25,23-28,35)
+  - See also NegativeTests.Termination.fst:25.24-28.36
 
-* Info at NegativeTests.Termination.fst(35,43-35,44):
+* Info at NegativeTests.Termination.fst:35.44-35.45:
   - Expected failure:
   - Could not prove termination of this recursive call
   - The SMT solver could not prove the query. Use --query_stats for more
     details.
-  - See also NegativeTests.Termination.fst(31,19-36,54)
+  - See also NegativeTests.Termination.fst:31.20-36.55
 
-* Info at NegativeTests.Termination.fst(42,28-42,29):
+* Info at NegativeTests.Termination.fst:42.29-42.30:
   - Expected failure:
   - Could not prove termination of this recursive call
   - The SMT solver could not prove the query. Use --query_stats for more
     details.
-  - See also NegativeTests.Termination.fst(40,23-42,29)
+  - See also NegativeTests.Termination.fst:40.24-42.30
 
-* Info at NegativeTests.Termination.fst(55,15-55,29):
+* Info at NegativeTests.Termination.fst:55.16-55.30:
   - Expected failure:
   - Could not prove termination of this recursive call
   - The SMT solver could not prove the query. Use --query_stats for more
     details.
-  - See also NegativeTests.Termination.fst(53,2-55,29)
+  - See also NegativeTests.Termination.fst:53.3-55.30
 
-* Info at NegativeTests.Termination.fst(67,19-67,29):
+* Info at NegativeTests.Termination.fst:67.20-67.30:
   - Expected failure:
   - Could not prove termination of this recursive call
   - The SMT solver could not prove the query. Use --query_stats for more
     details.
-  - See also NegativeTests.Termination.fst(64,2-67,29)
+  - See also NegativeTests.Termination.fst:64.3-67.30
 
-* Info at NegativeTests.Termination.fst(75,34-75,35):
+* Info at NegativeTests.Termination.fst:75.35-75.36:
   - Expected failure:
   - Could not prove termination of this recursive call
   - The SMT solver could not prove the query. Use --query_stats for more
     details.
-  - See also NegativeTests.Termination.fst(71,13-75,35)
+  - See also NegativeTests.Termination.fst:71.14-75.36
 
-* Info at NegativeTests.Termination.fst(80,2-82,14):
+* Info at NegativeTests.Termination.fst:80.3-82.15:
   - Expected failure:
   - Patterns are incomplete
   - The SMT solver could not prove the query. Use --query_stats for more
     details.
 
-* Info at NegativeTests.Termination.fst(89,29-89,31):
+* Info at NegativeTests.Termination.fst:89.30-89.32:
   - Expected failure:
   - Could not prove termination of this recursive call
   - The SMT solver could not prove the query. Use --query_stats for more
     details.
-  - See also NegativeTests.Termination.fst(86,15-89,31)
+  - See also NegativeTests.Termination.fst:86.16-89.32
 
-* Info at NegativeTests.Termination.fst(96,20-96,26):
+* Info at NegativeTests.Termination.fst:96.21-96.27:
   - Expected failure:
   - Could not prove termination of this recursive call
   - The SMT solver could not prove the query. Use --query_stats for more
     details.
-  - See also NegativeTests.Termination.fst(94,2-96,26)
+  - See also NegativeTests.Termination.fst:94.3-96.27
 
-* Warning 240 at NegativeTests.Termination.fst(93,0-96,26):
+* Warning 240 at NegativeTests.Termination.fst:93.1-96.27:
   - Missing definitions in module NegativeTests.Termination:
       ackermann_bad
       bug15

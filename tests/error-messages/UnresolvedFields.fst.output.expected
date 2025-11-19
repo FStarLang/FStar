@@ -1,12 +1,12 @@
-* Info at UnresolvedFields.fst(10,4-10,5):
+* Info at UnresolvedFields.fst:10.5-10.6:
   - Expected failure:
   - Field name c could not be resolved.
 
-* Info at UnresolvedFields.fst(17,4-17,5):
+* Info at UnresolvedFields.fst:17.5-17.6:
   - Expected failure:
   - No field 'c' in record type 'UnresolvedFields.t'.
 
-* Info at UnresolvedFields.fst(26,4-26,5):
+* Info at UnresolvedFields.fst:26.5-26.6:
   - Expected failure:
   - No field 'c' in record type 'UnresolvedFields.t'.
 

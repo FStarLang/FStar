@@ -1,4 +1,4 @@
-* Info at IfCond.fst(4,17-4,18):
+* Info at IfCond.fst:4.18-4.19:
   - Expected failure:
   - Expected expression of type Prims.bool got expression 2 of type Prims.int
 

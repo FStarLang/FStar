@@ -1,9 +1,9 @@
-* Info at AnotType.fst(19,5-19,7):
+* Info at AnotType.fst:19.6-19.8:
   - Expected failure:
   - Type annotation Prims.int for inductive AnotType.tc is not Type or eqtype,
     or it is eqtype but contains noeq/unopteq qualifiers
 
-* Info at AnotType.fst(27,14-27,16):
+* Info at AnotType.fst:27.15-27.17:
   - Expected failure:
   - Expected expression of type Type0 got expression tb of type Type
 

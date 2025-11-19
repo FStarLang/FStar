@@ -1,4 +1,4 @@
-* Info at NonLinear.fst(6,9-6,10):
+* Info at NonLinear.fst:6.10-6.11:
   - Expected failure:
   - Non-linear patterns are not permitted: `x` appears more than once in this pattern.
 

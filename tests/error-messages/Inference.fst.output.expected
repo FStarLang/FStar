@@ -1,16 +1,16 @@
-* Info at Inference.fst(20,14-20,15):
+* Info at Inference.fst:20.15-20.16:
   - Expected failure:
   - Subtyping check failed
   - Expected type Prims.eqtype got type Type0
   - The SMT solver could not prove the query. Use --query_stats for more
     details.
-  - See also Prims.fst(81,23-81,30)
+  - See also Prims.fst:81.24-81.31
 
-* Info at Inference.fst(20,14-20,15):
+* Info at Inference.fst:20.15-20.16:
   - Expected failure:
   - Subtyping check failed
   - Expected type Prims.eqtype got type Type0
   - The SMT solver could not prove the query. Use --query_stats for more
     details.
-  - See also Prims.fst(81,23-81,30)
+  - See also Prims.fst:81.24-81.31
 

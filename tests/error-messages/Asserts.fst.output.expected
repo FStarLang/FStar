@@ -1,21 +1,21 @@
-* Info at Asserts.fst(6,2-6,8):
+* Info at Asserts.fst:6.3-6.9:
   - Expected failure:
   - Assertion failed
   - The SMT solver could not prove the query. Use --query_stats for more
     details.
-  - See also Asserts.fst(6,9-6,17)
+  - See also Asserts.fst:6.10-6.18
 
-* Info at Asserts.fst(11,2-11,8):
+* Info at Asserts.fst:11.3-11.9:
   - Expected failure:
   - Assertion failed
   - The SMT solver could not prove the query. Use --query_stats for more
     details.
-  - See also Asserts.fst(11,9-11,17)
+  - See also Asserts.fst:11.10-11.18
 
-* Info at Asserts.fst(16,2-16,8):
+* Info at Asserts.fst:16.3-16.9:
   - Expected failure:
   - Assertion failed
   - The SMT solver could not prove the query. Use --query_stats for more
     details.
-  - See also Asserts.fst(16,9-16,14)
+  - See also Asserts.fst:16.10-16.15
 

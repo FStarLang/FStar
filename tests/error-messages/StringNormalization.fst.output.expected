@@ -1,7 +1,7 @@
-* Info at StringNormalization.fst(83,2-83,8):
+* Info at StringNormalization.fst:83.3-83.9:
   - Expected failure:
   - Assertion failed
   - The SMT solver could not prove the query. Use --query_stats for more
     details.
-  - See also StringNormalization.fst(83,9-83,58)
+  - See also StringNormalization.fst:83.10-83.59
 

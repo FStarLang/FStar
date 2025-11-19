@@ -1,18 +1,18 @@
-* Info at Bug3757.fst(8,4-8,13):
+* Info at Bug3757.fst:8.5-8.14:
   - Expected failure:
   - Expected a pattern of type Prims.int & Prims.int
   - Type FStar.Pervasives.Native.tuple2 is not a record type.
 
-* Info at Bug3757.fst(12,28-12,31):
+* Info at Bug3757.fst:12.29-12.32:
   - Expected failure:
   - Expected an expression of type Prims.int & Prims.bool
   - Type FStar.Pervasives.Native.tuple2 is not a record type.
 
-* Info at Bug3757.fst(15,15-15,17):
+* Info at Bug3757.fst:15.16-15.18:
   - Expected failure:
   - Field name _1 could not be resolved.
 
-* Info at Bug3757.fst(21,9-21,11):
+* Info at Bug3757.fst:21.10-21.12:
   - Expected failure:
   - Field name f1 could not be resolved.
 

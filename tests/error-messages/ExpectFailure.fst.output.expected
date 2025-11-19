@@ -1,42 +1,42 @@
-* Info at ExpectFailure.fst(20,12-20,15):
+* Info at ExpectFailure.fst:20.13-20.16:
   - Expected failure:
   - Expected expression of type Prims.int
     got expression 'a'
     of type FStar.Char.char
 
-* Info at ExpectFailure.fst(24,12-24,15):
+* Info at ExpectFailure.fst:24.13-24.16:
   - Expected failure:
   - Expected expression of type Prims.int
     got expression 'a'
     of type FStar.Char.char
 
-* Info at ExpectFailure.fst(28,8-28,14):
+* Info at ExpectFailure.fst:28.9-28.15:
   - Expected failure:
   - Assertion failed
   - The SMT solver could not prove the query. Use --query_stats for more
     details.
-  - See also ExpectFailure.fst(28,15-28,20)
+  - See also ExpectFailure.fst:28.16-28.21
 
-* Info at ExpectFailure.fst(30,8-30,14):
+* Info at ExpectFailure.fst:30.9-30.15:
   - Expected failure:
   - Assertion failed
   - The SMT solver could not prove the query. Use --query_stats for more
     details.
-  - See also ExpectFailure.fst(30,15-30,20)
+  - See also ExpectFailure.fst:30.16-30.21
 
-* Info at ExpectFailure.fst(43,12-43,15):
+* Info at ExpectFailure.fst:43.13-43.16:
   - Expected failure:
   - Expected expression of type Prims.int
     got expression 'a'
     of type FStar.Char.char
 
-* Info at ExpectFailure.fst(50,12-50,15):
+* Info at ExpectFailure.fst:50.13-50.16:
   - Expected failure:
   - Expected expression of type Prims.int
     got expression 'a'
     of type FStar.Char.char
 
-* Info at ExpectFailure.fst(61,12-61,15):
+* Info at ExpectFailure.fst:61.13-61.16:
   - Expected failure:
   - Expected expression of type Prims.int
     got expression 'a'
