@@ -15,8 +15,10 @@
 *)
 
 module Pulse.RuntimeUtils
-open FStar.Tactics
-module T = FStar.Tactics
+open FStar.Tactics.V2
+module T = FStar.Tactics.V2
+module R = FStar.Reflection.V2
+
 type context = FStar.Sealed.Inhabited.sealed #(list (string & option range)) []
 val extend_context (tag:string) (r:option range) (ctx:context) : context
 val with_context (c:context) (f:unit -> T.Tac 'a) : T.Tac 'a
@@ -29,8 +31,8 @@ val print_exn (e:exn) : string
 val next_id () : Dv nat
 val bv_set_range (x:bv) (r:range) : b:bv{b==x}
 val bv_range (x:bv) : range
-val binder_set_range (x:binder) (r:range) : b:binder{b==x}
-val binder_range (x:binder) : range
+val binder_set_range (x:R.binder) (r:range) : b:R.binder{b==x}
+val binder_range (x:R.binder) : range
 val range_of_term (t:T.term) : range
 val start_of_range (r:range) : range
 val set_range (t:T.term) (r:range) : t':T.term{t == t'}

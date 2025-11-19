@@ -17,7 +17,7 @@
 module Pulse.Common
 
 module L = FStar.List.Tot
-open FStar.Tactics
+open FStar.Tactics.V2
 
 let (let?) (f:option 'a) (g:'a -> option 'b) : option 'b =
   match f with

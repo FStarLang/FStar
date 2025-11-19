@@ -18,7 +18,8 @@ module Pulse.PP
 
 include FStar.Pprint
 
-open FStar.Tactics
+open FStar.Tactics.V2
+module R = FStar.Reflection.V2
 open FStar.Tactics.Typeclasses
 open FStar.Pprint
 open Pulse.Typing
@@ -81,7 +82,7 @@ instance printable_binder   : printable binder  = { pp = binder_to_doc; }
 instance printable_st_term  : printable st_term = from_show
 instance printable_universe : printable universe = from_show
 instance printable_comp     : printable comp = from_show
-instance printable_namedv   : printable namedv = from_show
+instance printable_namedv   : printable R.namedv = from_show
 
 instance printable_env : printable env = {
   pp = Pulse.Typing.Env.env_to_doc;
