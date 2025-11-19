@@ -40,3 +40,6 @@ test: run
 .PHONY: run
 run: dune
 	./dune/_build/default/driver.exe
+
+# Here so `make accept` works from the parent dir
+accept:
