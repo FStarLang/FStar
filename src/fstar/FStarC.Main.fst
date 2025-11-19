@@ -345,6 +345,15 @@ let go_normal () =
         exit 0
     )
 
+    (* --dump_ast *)
+    | Success when Options.dump_ast () -> (
+      filenames |> List.iter (fun fn ->
+        let ast, _ = Parser.Driver.parse_file fn in
+        print2 "Parsed %s:\n%s\n\n" fn (Pprint.render (Class.PP.pp ast))
+      );
+      exit 0
+    )
+
     (* either batch or interactive mode *)
     | Success ->
       fstar_files := Some filenames;

@@ -216,11 +216,6 @@ instance pretty_width = { pp = function
   | PtrdiffT -> doc_of_string "PtrdiffT"
 }
 
-let record_string (fs : list (string & string)) : string =
-  "{" ^
-  (String.concat "; " <| List.map (fun (f, s) -> f ^ " = " ^ s) fs) ^
-  "}"
-
 let ctor (n: string) (args: list document) =
   nest 2 (group (parens (flow (break_ 1) (doc_of_string n :: args))))
 // let ctor (n: string) (arg: document) : document =
