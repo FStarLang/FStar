@@ -22,6 +22,7 @@ open FStarC.Range
 open FStarC.Const
 open FStarC.Errors
 open FStarC.Ident
+open FStarC.Pprint
 open FStarC.Class.Show
 open FStarC.Class.Tagged
 
@@ -484,7 +485,14 @@ let string_of_local_let_qualifier = function
   | LocalNoLetQualifier -> ""
   | LocalRec -> "rec"
   | LocalUnfold -> "unfold"
-  
+
+instance showable_string_of_let_qualifier : showable let_qualifier = {
+  show = string_of_let_qualifier
+}
+instance showable_string_of_local_let_qualifier : showable local_let_qualifier = {
+  show = string_of_local_let_qualifier
+}
+
 let to_string_l sep f l =
   String.concat sep (List.map f l)
 let imp_to_string = function
@@ -923,12 +931,13 @@ let ident_of_binder r b =
 
 let idents_of_binders bs r = bs |> List.map (ident_of_binder r)
 
-instance showable_decl : showable decl = { show = decl_to_string; }
-instance showable_term : showable term = { show = term_to_string; }
+instance showable_decl    : showable decl    = { show = decl_to_string; }
+instance showable_term    : showable term    = { show = term_to_string; }
 instance showable_pattern : showable pattern = { show = pat_to_string; }
-instance showable_binder : showable binder = { show = binder_to_string; }
-instance showable_modul : showable modul = { show = modul_to_string; }
-instance showable_pragma : showable pragma = { show = string_of_pragma; }
+instance showable_binder  : showable binder  = { show = binder_to_string; }
+instance showable_modul   : showable modul   = { show = modul_to_string; }
+instance showable_pragma  : showable pragma  = { show = string_of_pragma; }
+instance showable_imp     : showable imp     = { show = imp_to_string; }
 
 let add_decorations d decorations =
   let decorations = 
@@ -972,3 +981,316 @@ let inline_let_attribute
 let inline_let_vc_attribute 
 : term
 = mk_term (Var FStarC.Parser.Const.inline_let_vc_attr) Range.dummyRange Expr
+
+instance showable_quote_kind : showable quote_kind = {
+  show = function
+    | Static -> "Static"
+    | Dynamic -> "Dynamic"
+}
+
+instance pretty_quote_kind : pretty quote_kind = {
+  pp = function
+    | Static -> doc_of_string "Static"
+    | Dynamic -> doc_of_string "Dynamic"
+}
+
+let ctor (n: string) (args: list document) =
+  nest 2 (group (parens (flow (break_ 1) (doc_of_string n :: args))))
+
+let pp_list' (#a:Type) (f: a -> document) (xs: list a) : document =
+  (pp_list a { pp = f }).pp xs // hack
+
+instance showable_arg_qualifier : showable arg_qualifier = {
+  show = function
+    | Implicit -> "Implicit"
+    | Equality -> "Equality"
+    | Meta i -> "Meta"
+    | TypeClassArg -> "TypeClassArg"
+}
+
+instance pretty_imp           : pretty imp      = pretty_from_showable
+instance pretty_arg_qualifier : pretty arg_qualifier    = pretty_from_showable
+
+let rec pp_term (t:term) : document =
+  match t.tm with
+  | Wild -> ctor "Wild" []
+  | Const c -> ctor "Const" [doc_of_string (C.const_to_string c)]
+  | Op (i, args) -> ctor "Op" [pp i; pp_list' pp_term args]
+  | Uvar id -> ctor "Uvar" [pp id]
+  | Var l -> ctor "Var" [pp l]
+  | Name l -> ctor "Name" [pp l]
+  | Projector (rec_lid, field_id) ->
+      ctor "Projector" [pp rec_lid; pp field_id]
+  | Construct (l, args) ->
+      ctor "Construct" [pp l; pp_list' (fun (a,imp) -> ctor "Arg" [pp_term a; pp imp]) args]
+  | Function (branches, r) ->
+      let pp_branch (p, w, e) =
+        let when_doc =
+          match w with
+          | None -> empty
+          | Some w -> doc_of_string "when" ^/^ pp_term w in
+        ctor "Branch" [pp_pattern p; when_doc; pp_term e]
+      in
+      ctor "Function" [pp_list' pp_branch branches; pp r]
+  | Abs (pats, t) ->
+      ctor "Abs" [pp_list' pp_pattern pats; pp_term t]
+  | App (t1, t2, imp) ->
+      ctor "App" [pp_term t1; pp_term t2; pp imp]
+  | Let (q, lbs, body) ->
+      let pp_letbinding (_attrs, (p, b)) =
+        ctor "LetBinding" [pp_pattern p; pp_term b]
+      in
+      ctor "Let" [doc_of_string (show q); pp_list' pp_letbinding lbs; pp_term body]
+  | LetOperator (lbs, body) ->
+      let pp_letopbinding (i, p, b) =
+        ctor "LetOpBinding" [pp i; pp_pattern p; pp_term b]
+      in
+      ctor "LetOperator" [pp_list' pp_letopbinding lbs; pp_term body]
+  | LetOpen (lid, t) ->
+      ctor "LetOpen" [pp lid; pp_term t]
+  | LetOpenRecord (t1, t2, t3) ->
+      ctor "LetOpenRecord" [pp_term t1; pp_term t2; pp_term t3]
+  | Seq (t1, t2) ->
+      ctor "Seq" [pp_term t1; pp_term t2]
+  | Bind (i, t1, t2) ->
+      ctor "Bind" [pp i; pp_term t1; pp_term t2]
+  | If (t1, i_opt, mra_opt, t2, t3) ->
+      let pp_opt_ident = function None -> doc_of_string "None" | Some i -> pp i in
+      let pp_opt_mra = function None -> doc_of_string "None" | Some (i_opt, t, b) ->
+        ctor "MatchReturns" [pp_opt_ident i_opt; pp_term t; doc_of_string (show b)] in
+      ctor "If" [pp_term t1; pp_opt_ident i_opt; pp_opt_mra mra_opt; pp_term t2; pp_term t3]
+  | Match (t, i_opt, mra_opt, branches) ->
+      let pp_opt_ident = function None -> doc_of_string "None" | Some i -> pp i in
+      let pp_opt_mra = function None -> doc_of_string "None" | Some (i_opt, t, b) ->
+        ctor "MatchReturns" [pp_opt_ident i_opt; pp_term t; doc_of_string (show b)] in
+      let pp_branch (p, w, e) =
+        let when_doc = match w with None -> empty | Some w -> doc_of_string "when" ^/^ pp_term w in
+        ctor "Branch" [pp_pattern p; when_doc; pp_term e] in
+      ctor "Match" [pp_term t; pp_opt_ident i_opt; pp_opt_mra mra_opt; pp_list' pp_branch branches]
+  | TryWith (t, branches) ->
+      let pp_branch (p, w, e) =
+        let when_doc = match w with None -> empty | Some w -> doc_of_string "when" ^/^ pp_term w in
+        ctor "Branch" [pp_pattern p; when_doc; pp_term e] in
+      ctor "TryWith" [pp_term t; pp_list' pp_branch branches]
+  | Ascribed (t1, t2, t3_opt, b) ->
+      let pp_opt_term = function None -> doc_of_string "None" | Some t -> pp_term t in
+      ctor "Ascribed" [pp_term t1; pp_term t2; pp_opt_term t3_opt; doc_of_string (show b)]
+  | Record (t_opt, fields) ->
+      let pp_opt_term = function None -> doc_of_string "None" | Some t -> pp_term t in
+      let pp_field (l, t) = ctor "Field" [pp l; pp_term t] in
+      ctor "Record" [pp_opt_term t_opt; pp_list' pp_field fields]
+  | Project (t, l) ->
+      ctor "Project" [pp_term t; pp l]
+  | Product (binders, t) ->
+      ctor "Product" [pp_list' pp_binder binders; pp_term t]
+  | Sum (binders_or_terms, t) ->
+      let pp_either = function
+        | Inl b -> ctor "Inl" [pp_binder b]
+        | Inr t -> ctor "Inr" [pp_term t] in
+      ctor "Sum" [pp_list' pp_either binders_or_terms; pp_term t]
+  | QForall (binders, pats, t) ->
+      let pp_patterns (idents, patterns_list) =
+        ctor "Patterns" [pp_list' pp idents; pp_list' (pp_list' pp_term) patterns_list] in
+      ctor "QForall" [pp_list' pp_binder binders; pp_patterns pats; pp_term t]
+  | QExists (binders, pats, t) ->
+      let pp_patterns (idents, patterns_list) =
+        ctor "Patterns" [pp_list' pp idents; pp_list' (pp_list' pp_term) patterns_list] in
+      ctor "QExists" [pp_list' pp_binder binders; pp_patterns pats; pp_term t]
+  | QuantOp (i, binders, pats, t) ->
+      let pp_patterns (idents, patterns_list) =
+        ctor "Patterns" [pp_list' pp idents; pp_list' (pp_list' pp_term) patterns_list] in
+      ctor "QuantOp" [pp i; pp_list' pp_binder binders; pp_patterns pats; pp_term t]
+  | Refine (b, t) ->
+      ctor "Refine" [pp_binder b; pp_term t]
+  | NamedTyp (i, t) ->
+      ctor "NamedTyp" [pp i; pp_term t]
+  | Paren t ->
+      ctor "Paren" [pp_term t]
+  | Requires t ->
+      ctor "Requires" [pp_term t]
+  | Ensures t ->
+      ctor "Ensures" [pp_term t]
+  | LexList ts ->
+      ctor "LexList" [pp_list' pp_term ts]
+  | WFOrder (t1, t2) ->
+      ctor "WFOrder" [pp_term t1; pp_term t2]
+  | Decreases t ->
+      ctor "Decreases" [pp_term t]
+  | Labeled (t, s, b) ->
+      ctor "Labeled" [pp_term t; doc_of_string s; doc_of_string (show b)]
+  | Discrim l ->
+      ctor "Discrim" [pp l]
+  | Attributes ts ->
+      ctor "Attributes" [pp_list' pp_term ts]
+  | Antiquote t ->
+      ctor "Antiquote" [pp_term t]
+  | Quote (t, qk) ->
+      ctor "Quote" [pp_term t; doc_of_string (show qk)]
+  | VQuote t ->
+      ctor "VQuote" [pp_term t]
+  | CalcProof (rel, init, steps) ->
+      ctor "CalcProof" [pp_term rel; pp_term init; pp_list' pp_calc_step steps]
+  | IntroForall (binders, t1, t2) ->
+      ctor "IntroForall" [pp_list' pp_binder binders; pp_term t1; pp_term t2]
+  | IntroExists (binders, t1, ts, t2) ->
+      ctor "IntroExists" [pp_list' pp_binder binders; pp_term t1; pp_list' pp_term ts; pp_term t2]
+  | IntroImplies (t1, t2, b, t3) ->
+      ctor "IntroImplies" [pp_term t1; pp_term t2; pp_binder b; pp_term t3]
+  | IntroOr (is_left, t1, t2, t3) ->
+      ctor "IntroOr" [doc_of_string (show is_left); pp_term t1; pp_term t2; pp_term t3]
+  | IntroAnd (t1, t2, t3, t4) ->
+      ctor "IntroAnd" [pp_term t1; pp_term t2; pp_term t3; pp_term t4]
+  | ElimForall (binders, t, ts) ->
+      ctor "ElimForall" [pp_list' pp_binder binders; pp_term t; pp_list' pp_term ts]
+  | ElimExists (binders, t1, t2, b, t3) ->
+      ctor "ElimExists" [pp_list' pp_binder binders; pp_term t1; pp_term t2; pp_binder b; pp_term t3]
+  | ElimImplies (t1, t2, t3) ->
+      ctor "ElimImplies" [pp_term t1; pp_term t2; pp_term t3]
+  | ElimOr (t1, t2, t3, b1, t4, b2, t5) ->
+      ctor "ElimOr" [pp_term t1; pp_term t2; pp_term t3; pp_binder b1; pp_term t4; pp_binder b2; pp_term t5]
+  | ElimAnd (t1, t2, t3, b1, b2, t4) ->
+      ctor "ElimAnd" [pp_term t1; pp_term t2; pp_term t3; pp_binder b1; pp_binder b2; pp_term t4]
+  | ListLiteral ts ->
+      ctor "ListLiteral" [pp_list' pp_term ts]
+  | SeqLiteral ts ->
+      ctor "SeqLiteral" [pp_list' pp_term ts]
+
+and pp_binder (b:binder) : document =
+  match b.b with
+  | Variable i ->
+      ctor "Variable" [pp i]
+  | Annotated(i, t) ->
+      ctor "Annotated" [pp i; pp_term t]
+  | NoName t ->
+      ctor "NoName" [pp_term t]
+and pp_calc_step (CalcStep (rel, just, next)) : document =
+  ctor "CalcStep" [pp_term rel; pp_term just; pp_term next]
+
+and pp_pattern (p:pattern) : document =
+  match p.pat with
+  | PatWild (i_opt, attrs) ->
+      let pp_opt_id = function None -> doc_of_string "None" | Some i -> pp i in
+      let pp_attrs = pp_list' pp_term attrs in
+      ctor "PatWild" [pp_opt_id i_opt; pp_attrs]
+  | PatConst c ->
+      ctor "PatConst" [doc_of_string (C.const_to_string c)]
+  | PatVQuote t ->
+      ctor "PatVQuote" [pp_term t]
+  | PatApp (p, ps) ->
+      ctor "PatApp" [pp_pattern p; pp_list' pp_pattern ps]
+  | PatVar (i, aq, attrs) ->
+      let pp_attrs = pp_list' pp_term attrs in
+      ctor "PatVar" [pp i; doc_of_string (show aq); pp_attrs]
+  | PatName l ->
+      ctor "PatName" [pp l]
+  | PatList ps ->
+      ctor "PatList" [pp_list' pp_pattern ps]
+  | PatTuple (ps, b) ->
+      ctor "PatTuple" [pp_list' pp_pattern ps; doc_of_string (show b)]
+  | PatRecord fields ->
+      let pp_field (l, p) = ctor "Field" [pp l; pp_pattern p] in
+      ctor "PatRecord" [pp_list' pp_field fields]
+  | PatOr ps ->
+      ctor "PatOr" [pp_list' pp_pattern ps]
+  | PatOp op ->
+      ctor "PatOp" [pp op]
+  | PatAscribed (p, (t, tac_opt)) ->
+      let pp_opt_term = function None -> doc_of_string "None" | Some t -> pp_term t in
+      ctor "PatAscribed" [pp_pattern p; pp_term t; pp_opt_term tac_opt]
+  | PatRest ->
+      ctor "PatRest" []
+
+instance pretty_term    : pretty term     = { pp = pp_term; }
+instance pretty_binder  : pretty binder   = { pp = pp_binder; }
+instance pretty_pattern : pretty pattern   = { pp = pp_pattern; }
+
+instance pretty_pragma  : pretty pragma   = pretty_from_showable
+
+let pp_constructor_payload (cp:constructor_payload) : document =
+  match cp with
+  | VpOfNotation t ->
+      ctor "VpOfNotation" [pp_term t]
+  | VpArbitrary t ->
+      ctor "VpArbitrary" [pp_term t]
+  | VpRecord (fields, tyopt) ->
+      let pp_field (id, q, attrs, tm) =
+        ctor "Field" [pp id; pp q; pp attrs; pp_term tm] in
+      ctor "VpRecord" [pp_list' pp_field fields; pp tyopt]
+
+instance pretty_constructor_payload : pretty constructor_payload = { pp = pp_constructor_payload; }
+
+let pp_tycon (tc : tycon) : document =
+  match tc with
+  | TyconAbstract (i, bs, knd) ->
+    ctor "TyconAbstract" [pp i; pp bs; pp knd]
+  | TyconAbbrev (i, bs, knd, t) ->
+    ctor "TyconAbbrev" [pp i; pp bs; pp knd; doc_of_string "_"]
+  | TyconRecord (i, bs, knd, attrs, fields) ->
+    let pp_field (id, q, attrs, tm) =
+      ctor "Field" [pp id; pp q; pp attrs; pp_term tm] in
+    ctor "TyconRecord" [pp i; pp bs; pp knd; pp attrs; pp_list' pp_field fields]
+  | TyconVariant (i, bs, knd, ctors) ->
+    let pp_ctor (id, payload, attrs) =
+      ctor "Constructor" [pp id; pp payload; pp attrs] in
+    ctor "TyconVariant" [pp i; pp bs; pp knd; pp_list' pp_ctor ctors]
+instance pretty_tycon   : pretty tycon    = { pp = pp_tycon; }
+
+let pp_decl (d:decl) : document =
+  match d.d with
+  | TopLevelModule l ->
+      ctor "TopLevelModule" [pp l]
+  | Open (l, r) ->
+      ctor "Open" [pp l; doc_of_string (show r)]
+  | Friend l ->
+      ctor "Friend" [pp l]
+  | Include (l, r) ->
+      ctor "Include" [pp l; doc_of_string (show r)]
+  | ModuleAbbrev (i, l) ->
+      ctor "ModuleAbbrev" [pp i; pp l]
+  | TopLevelLet (q, pats) ->
+      let pp_pat_term (p, t) =
+        ctor "PatTerm" [pp p; pp t] in
+      ctor "TopLevelLet" [doc_of_string (show q); pp_list' pp_pat_term pats]
+  | Assume (i, t_opt) ->
+      let pp_opt_term = function None -> doc_of_string "None" | Some t -> pp_term t in
+      ctor "Assume" [pp i; pp_term t_opt]
+  | Tycon (r, tps, tys) ->
+      ctor "Tycon" [pp r; pp tps; pp tys]
+  | Val (i, t) ->
+      ctor "Val" [pp i; pp_term t]
+  | Exception (i, t_opt) ->
+      let pp_opt_term = function None -> doc_of_string "None" | Some t -> pp_term t in
+      ctor "Exception" [pp i; pp_opt_term t_opt]
+  | NewEffect eff_def ->
+      ctor "NewEffect" []
+  | LayeredEffect eff_def ->
+      ctor "LayeredEffect" []
+  | Polymonadic_bind (l1, l2, l3, t) ->
+      ctor "Polymonadic_bind" [pp l1; pp l2; pp l3; pp_term t]
+  | Polymonadic_subcomp (l1, l2, t) ->
+      ctor "Polymonadic_subcomp" [pp l1; pp l2; pp_term t]
+  | Splice (is_typed, ids, t) ->
+      ctor "Splice" [doc_of_string (show is_typed); pp_list' pp ids; pp_term t]
+  | SubEffect se ->
+      ctor "SubEffect" []
+  | Pragma p ->
+      ctor "Pragma" [pp p]
+  | DeclSyntaxExtension (id, content, _, _) ->
+      ctor "DeclSyntaxExtension" [doc_of_string id; doc_of_string content]
+  | DeclToBeDesugared tbs ->
+      ctor "DeclToBeDesugared" [doc_of_string ("(to_be_desugared: " ^ tbs.to_string tbs.blob ^ ")")]
+  | UseLangDecls str ->
+      ctor "UseLangDecls" [doc_of_string str]
+  | Unparseable ->
+      ctor "Unparseable" []
+
+instance pretty_decl    : pretty decl     = { pp = pp_decl; }
+
+let pp_modul (m:modul) : document =
+  match m with
+  | Module {decls} ->
+    ctor "Module" [pp decls]
+  | Interface {decls} ->
+    ctor "Interface" [pp decls]
+
+instance pretty_modul   : pretty modul    = { pp = pp_modul; }
