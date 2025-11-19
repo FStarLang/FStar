@@ -1,4 +1,4 @@
-* Info at Bug2245.fst(6,23-6,24):
+* Info at Bug2245.fst:6.24-6.25:
   - Expected failure:
   - Expected expression of type (Prims.int & Prims.int) & Prims.int
     got expression a

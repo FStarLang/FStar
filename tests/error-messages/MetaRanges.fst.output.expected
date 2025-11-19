@@ -1,33 +1,33 @@
-* Info at MetaRanges.fst(9,15-9,16):
+* Info at MetaRanges.fst:9.16-9.17:
   - Expected failure:
   - Tactic failed
-  - See also MetaRanges.fst(9,8-9,13)
+  - See also MetaRanges.fst:9.9-9.14
 
-* Info at MetaRanges.fst(16,10-16,12):
+* Info at MetaRanges.fst:16.11-16.13:
   - Expected failure:
   - Tactic failed
   - Could not solve typeclass constraint `MetaRanges.deq Prims.int`
 
-* Info at MetaRanges.fst(19,9-19,11):
+* Info at MetaRanges.fst:19.10-19.12:
   - Expected failure:
   - Tactic failed
   - Could not solve typeclass constraint `MetaRanges.deq Prims.int`
 
-* Info at MetaRanges.fst(23,9-23,15):
+* Info at MetaRanges.fst:23.10-23.16:
   - Expected failure:
   - Tactic failed
   - Could not solve typeclass constraint `MetaRanges.deq Prims.int`
-  - See also MetaRanges.fst(23,9-23,11)
+  - See also MetaRanges.fst:23.10-23.12
 
-* Info at MetaRanges.fst(27,17-27,18):
+* Info at MetaRanges.fst:27.18-27.19:
   - Expected failure:
   - Tactic failed
   - Could not solve typeclass constraint `MetaRanges.deq Prims.int`
-  - See also MetaRanges.fst(27,9-27,11)
+  - See also MetaRanges.fst:27.10-27.12
 
-* Info at MetaRanges.fst(31,17-31,22):
+* Info at MetaRanges.fst:31.18-31.23:
   - Expected failure:
   - Tactic failed
   - Could not solve typeclass constraint `MetaRanges.deq Prims.int`
-  - See also MetaRanges.fst(3,33-3,38)
+  - See also MetaRanges.fst:3.34-3.39
 

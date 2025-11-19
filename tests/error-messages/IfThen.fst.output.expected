@@ -1,4 +1,4 @@
-* Info at IfThen.fst(5,2-6,6):
+* Info at IfThen.fst:5.3-6.7:
   - Expected failure:
   - Expected expression of type Prims.int got expression () of type Prims.unit
 

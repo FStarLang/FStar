@@ -1,4 +1,4 @@
-* Info at UnboundOp.fst(4,10-4,13):
+* Info at UnboundOp.fst:4.11-4.14:
   - Expected failure:
   - Unexpected or unbound operator: ^%^
 

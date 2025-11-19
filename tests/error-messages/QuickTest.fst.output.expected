@@ -1,7 +1,7 @@
-* Info at QuickTest.fst(131,2-134,34):
+* Info at QuickTest.fst:131.3-134.35:
   - Expected failure:
   - The SMT solver could not prove the query. Use --query_stats for more
     details.
-  - Also see: QuickTest(1,2-3,4)
-  - Other related locations: QuickTest.fst(116,12-116,20)
+  - Also see: QuickTest:1.2-3.4
+  - Other related locations: QuickTest.fst:116.13-116.21
 

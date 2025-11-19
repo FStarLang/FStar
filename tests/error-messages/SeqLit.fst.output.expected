@@ -1,4 +1,4 @@
-* Warning 337 at SeqLit.fst(8,17-8,18):
+* Warning 337 at SeqLit.fst:8.18-8.19:
   - The operator '@' has been resolved to FStar.List.Tot.append even though
     FStar.List.Tot is not in scope. Please add an 'open FStar.List.Tot' to stop
     relying on this deprecated, special treatment of '@'.

@@ -1,7 +1,7 @@
-* Info at QuickTestNBE.fst(131,2-134,34):
+* Info at QuickTestNBE.fst:131.3-134.35:
   - Expected failure:
   - The SMT solver could not prove the query. Use --query_stats for more
     details.
-  - Also see: QuickTestNBE(1,2-3,4)
-  - Other related locations: QuickTestNBE.fst(116,16-116,18)
+  - Also see: QuickTestNBE:1.2-3.4
+  - Other related locations: QuickTestNBE.fst:116.17-116.19
 

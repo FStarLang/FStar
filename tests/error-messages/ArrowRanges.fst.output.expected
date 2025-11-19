@@ -1,12 +1,12 @@
-* Info at ArrowRanges.fst(4,30-4,39):
+* Info at ArrowRanges.fst:4.31-4.40:
   - Expected failure:
   - Subtyping check failed
   - Expected type Prims.eqtype got type Type0
   - The SMT solver could not prove the query. Use --query_stats for more
     details.
-  - See also Prims.fst(81,23-81,30)
+  - See also Prims.fst:81.24-81.31
 
-* Info at ArrowRanges.fst(8,10-8,28):
+* Info at ArrowRanges.fst:8.11-8.29:
   - Expected failure:
   - Failed to prove that the type
     'ArrowRanges.ppof'
@@ -14,5 +14,5 @@
   - Add either the 'noeq' or 'unopteq' qualifier
   - The SMT solver could not prove the query. Use --query_stats for more
     details.
-  - See also ArrowRanges.fst(7,0-11,1)
+  - See also ArrowRanges.fst:7.1-11.2
 

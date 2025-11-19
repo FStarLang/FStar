@@ -1,13 +1,13 @@
-* Warning 240 at Bug3232c.fst(4,4-4,5):
+* Warning 240 at Bug3232c.fst:4.5-4.6:
   - Bug3232c.f is declared but no definition was found
   - Add an 'assume' if this is intentional
 
-* Info at Bug3232c.fst(8,0-8,12):
+* Info at Bug3232c.fst:8.1-8.13:
   - Expected failure:
   - Inconsistent qualifier annotations on Bug3232c.f
   - Expected '[inline_for_extraction, noextract]' got '[noextract]'
   - Only in declaration: '[inline_for_extraction]'
 
-* Warning 240 at Bug3232c.fst(8,0-8,12):
+* Warning 240 at Bug3232c.fst:8.1-8.13:
   - Missing definitions in module Bug3232c: f
 

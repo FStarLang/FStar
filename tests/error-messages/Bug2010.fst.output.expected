@@ -1,6 +1,6 @@
-* Info at Bug2010.fst(6,66-6,67):
+* Info at Bug2010.fst:6.67-6.68:
   - Expected failure:
   - Failed to resolve implicit argument ?12
     of type Prims.nat
-    introduced for user-provided implicit term at Bug2010.fst(6,66-6,67)
+    introduced for user-provided implicit term at Bug2010.fst:6.67-6.68
 

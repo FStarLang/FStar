@@ -1,4 +1,4 @@
-* Info at NegativeTests.BST.fst(37,38-37,42):
+* Info at NegativeTests.BST.fst:37.39-37.43:
   - Expected failure:
   - Subtyping check failed
   - Expected type
@@ -9,9 +9,9 @@
     got type FStar.Pervasives.Native.option (tree 2)
   - The SMT solver could not prove the query. Use --query_stats for more
     details.
-  - See also NegativeTests.BST.fst(27,36-27,58)
+  - See also NegativeTests.BST.fst:27.37-27.59
 
-* Info at NegativeTests.BST.fst(40,61-40,65):
+* Info at NegativeTests.BST.fst:40.62-40.66:
   - Expected failure:
   - Subtyping check failed
   - Expected type
@@ -22,9 +22,9 @@
     got type FStar.Pervasives.Native.option (tree (l + 1))
   - The SMT solver could not prove the query. Use --query_stats for more
     details.
-  - See also NegativeTests.BST.fst(27,36-27,58)
+  - See also NegativeTests.BST.fst:27.37-27.59
 
-* Info at NegativeTests.BST.fst(43,78-43,87):
+* Info at NegativeTests.BST.fst:43.79-43.88:
   - Expected failure:
   - Subtyping check failed
   - Expected type
@@ -35,5 +35,5 @@
     got type FStar.Pervasives.Native.option (tree (l + 1))
   - The SMT solver could not prove the query. Use --query_stats for more
     details.
-  - See also NegativeTests.BST.fst(27,36-27,58)
+  - See also NegativeTests.BST.fst:27.37-27.59
 

@@ -1,4 +1,4 @@
-* Info at Bug2980.fst(5,4-5,5):
+* Info at Bug2980.fst:5.5-5.6:
   - Expected failure:
   - Expected expression of type Type0
     got expression Bug2980.t

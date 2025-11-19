@@ -1,4 +1,4 @@
-* Info at Bug2981.fst(10,10-10,27):
+* Info at Bug2981.fst:10.11-10.28:
   - Expected failure:
   - Bound variable
     'g'

@@ -1,26 +1,26 @@
-* Info at NegativeTests.Positivity.fst(22,10-22,12):
+* Info at NegativeTests.Positivity.fst:22.11-22.13:
   - Expected failure:
   - Inductive type NegativeTests.Positivity.t1 does not satisfy the strict positivity condition
 
-* Info at NegativeTests.Positivity.fst(37,10-37,12):
+* Info at NegativeTests.Positivity.fst:37.11-37.13:
   - Expected failure:
   - Inductive type NegativeTests.Positivity.t5 does not satisfy the strict positivity condition
 
-* Info at NegativeTests.Positivity.fst(49,4-49,7):
+* Info at NegativeTests.Positivity.fst:49.5-49.8:
   - Expected failure:
   - Type NegativeTests.Positivity.t7 is not strictly positive since it instantiates a non-uniformly recursive parameter or index NegativeTests.Positivity.t7 of NegativeTests.Positivity.t6
-  - See also NegativeTests.Positivity.fst(49,12-49,14)
+  - See also NegativeTests.Positivity.fst:49.13-49.15
 
-* Info at NegativeTests.Positivity.fst(54,4-54,7):
+* Info at NegativeTests.Positivity.fst:54.5-54.8:
   - Expected failure:
   - Type NegativeTests.Positivity.t8 is not strictly positive since it instantiates a non-uniformly recursive parameter or index NegativeTests.Positivity.t8 of NegativeTests.Positivity.t6
-  - See also NegativeTests.Positivity.fst(54,16-54,18)
+  - See also NegativeTests.Positivity.fst:54.17-54.19
 
-* Info at NegativeTests.Positivity.fst(61,10-61,13):
+* Info at NegativeTests.Positivity.fst:61.11-61.14:
   - Expected failure:
   - Inductive type NegativeTests.Positivity.t10 does not satisfy the strict positivity condition
 
-* Info at NegativeTests.Positivity.fst(66,10-66,13):
+* Info at NegativeTests.Positivity.fst:66.11-66.14:
   - Expected failure:
   - Inductive type NegativeTests.Positivity.t11 does not satisfy the strict positivity condition
 
