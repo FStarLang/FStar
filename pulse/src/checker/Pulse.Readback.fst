@@ -19,7 +19,7 @@ module R = FStar.Reflection.V2
 open Pulse.Syntax.Base
 open Pulse.Reflection.Util
 module RU = Pulse.RuntimeUtils
-module T = FStar.Tactics
+module T = FStar.Tactics.V2
 let debug_log (f: unit -> T.Tac unit) : T.Tac unit = if RU.debug_at_level_no_module "readback" then f()
 
 let (let?) (f:option 'a) (g:'a -> option 'b) : option 'b =
