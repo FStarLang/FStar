@@ -1,9 +1,9 @@
-* Info at Check.fst(5,0-5,8):
+* Info at Check.fst:5.1-5.9:
   - Term 1 has type Prims.int
 
-* Info at Check.fst(6,0-6,10):
+* Info at Check.fst:6.1-6.11:
   - Term 1 + 1 has type Prims.int
 
-* Info at Check.fst(11,0-11,10):
+* Info at Check.fst:11.1-11.11:
   - Term Check.foo has type Prims.Tot (#_: Type -> x: _ -> Prims.Tot _)
 

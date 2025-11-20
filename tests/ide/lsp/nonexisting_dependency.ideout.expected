@@ -1,10 +1,10 @@
-* Warning 285 at FStar.Const.fst(17,20-17,26):
+* Warning 285 at FStar.Const.fst:17.21-17.27:
   - No modules in namespace FStar.Compiler.Effect and no file with that name either
 
-* Warning 285 at FStar.Const.fst(17,56-17,60):
+* Warning 285 at FStar.Const.fst:17.57-17.61:
   - module not found in search path: fstar.compiler.list
 
-* Warning 285 at FStar.Const.fst(66,11-66,17):
+* Warning 285 at FStar.Const.fst:66.12-66.18:
   - No modules in namespace FStar.BigInt and no file with that name either
 
 Content-Length: 250

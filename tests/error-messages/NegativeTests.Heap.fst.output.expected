@@ -1,4 +1,4 @@
-* Info at NegativeTests.Heap.fst(26,21-26,54):
+* Info at NegativeTests.Heap.fst:26.22-26.55:
   - Expected failure:
   - Assertion failed
   - The SMT solver could not prove the query. Use --query_stats for more

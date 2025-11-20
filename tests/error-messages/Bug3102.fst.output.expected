@@ -1,27 +1,27 @@
-* Info at Bug3102.fst(8,17-10,9):
+* Info at Bug3102.fst:8.18-10.10:
   - Expected failure:
   - Bound variable 'e1' would escape in the type of this letbinding
   - Add a type annotation that does not mention it
 
-* Info at Bug3102.fst(23,4-23,27):
+* Info at Bug3102.fst:23.5-23.28:
   - Expected failure:
   - (*?u23*)_ g t1 t2 is not equal to the expected type e2
 
-* Info at Bug3102.fst(29,4-29,27):
+* Info at Bug3102.fst:29.5-29.28:
   - Expected failure:
   - (*?u20*)_ is not equal to the expected type e2
 
-* Info at Bug3102.fst(33,29-35,27):
+* Info at Bug3102.fst:33.30-35.28:
   - Expected failure:
   - Bound variable 'e2' would escape in the type of this letbinding
   - Add a type annotation that does not mention it
 
-* Info at Bug3102.fst(41,16-43,8):
+* Info at Bug3102.fst:41.17-43.9:
   - Expected failure:
   - Bound variable 'z' would escape in the type of this letbinding
   - Add a type annotation that does not mention it
 
-* Info at Bug3102.fst(49,16-51,7):
+* Info at Bug3102.fst:49.17-51.8:
   - Expected failure:
   - Bound variable 'z' would escape in the type of this letbinding
   - Add a type annotation that does not mention it

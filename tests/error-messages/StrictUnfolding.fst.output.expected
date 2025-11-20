@@ -1,7 +1,7 @@
-* Info at StrictUnfolding.fst(50,2-50,8):
+* Info at StrictUnfolding.fst:50.3-50.9:
   - Expected failure:
   - Could not prove goal #1
   - The SMT solver could not prove the query. Use --query_stats for more
     details.
-  - See also StrictUnfolding.fst(50,48-50,72)
+  - See also StrictUnfolding.fst:50.49-50.73
 

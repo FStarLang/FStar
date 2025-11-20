@@ -1,12 +1,12 @@
-* Info at PatternMatch.fst(15,27-15,34):
+* Info at PatternMatch.fst:15.28-15.35:
   - Expected failure:
   - Type ascriptions within patterns are only allowed on variables
 
-* Info at PatternMatch.fst(18,29-18,48):
+* Info at PatternMatch.fst:18.30-18.49:
   - Expected failure:
   - Type ascriptions within patterns are only allowed on variables
 
-* Info at PatternMatch.fst(41,3-41,24):
+* Info at PatternMatch.fst:41.4-41.25:
   - Expected failure:
   - Type ascriptions within patterns are only allowed on variables
 
@@ -15,27 +15,27 @@
   - Patterns are incomplete
   - The SMT solver could not prove the query. Use --query_stats for more
     details.
-  - Also see: PatternMatch.fst(21,4-21,8)
+  - Also see: PatternMatch.fst:21.5-21.9
 
 * Info:
   - Expected failure:
   - Patterns are incomplete
   - The SMT solver could not prove the query. Use --query_stats for more
     details.
-  - Also see: PatternMatch.fst(24,4-24,11)
+  - Also see: PatternMatch.fst:24.5-24.12
 
 * Info:
   - Expected failure:
   - Patterns are incomplete
   - The SMT solver could not prove the query. Use --query_stats for more
     details.
-  - Also see: PatternMatch.fst(29,4-29,8)
+  - Also see: PatternMatch.fst:29.5-29.9
 
-* Info at PatternMatch.fst(32,4-32,9):
+* Info at PatternMatch.fst:32.5-32.10:
   - Expected failure:
   - Type of pattern (Prims.bool) does not match type of scrutinee (Prims.int)
 
-* Info at PatternMatch.fst(35,4-35,5):
+* Info at PatternMatch.fst:35.5-35.6:
   - Expected failure:
   - Type of pattern PatternMatch.ab does not match type of scrutinee Prims.int
   - Head mismatch PatternMatch.ab vs Prims.int
@@ -45,13 +45,13 @@
   - Patterns are incomplete
   - The SMT solver could not prove the query. Use --query_stats for more
     details.
-  - Also see: PatternMatch.fst(38,4-38,5)
+  - Also see: PatternMatch.fst:38.5-38.6
 
-* Info at PatternMatch.fst(55,4-55,8):
+* Info at PatternMatch.fst:55.5-55.9:
   - Expected failure:
   - Type of pattern (Prims.bool) does not match type of scrutinee (Prims.int)
 
-* Info at PatternMatch.fst(58,4-58,16):
+* Info at PatternMatch.fst:58.5-58.17:
   - Expected failure:
   - Type of pattern (Prims.bool) does not match type of scrutinee (Prims.int)
 
@@ -60,16 +60,16 @@
   - Patterns are incomplete
   - The SMT solver could not prove the query. Use --query_stats for more
     details.
-  - Also see: PatternMatch.fst(61,5-61,12)
+  - Also see: PatternMatch.fst:61.6-61.13
 
 * Info:
   - Expected failure:
   - Patterns are incomplete
   - The SMT solver could not prove the query. Use --query_stats for more
     details.
-  - Also see: PatternMatch.fst(64,5-64,20)
+  - Also see: PatternMatch.fst:64.6-64.21
 
-* Info at PatternMatch.fst(69,5-69,15):
+* Info at PatternMatch.fst:69.6-69.16:
   - Expected failure:
   - Type of pattern (Prims.bool) does not match type of scrutinee (Prims.int)
 

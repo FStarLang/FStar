@@ -1,31 +1,31 @@
-* Info at Test.FunctionalExtensionality.fst(36,49-36,50):
+* Info at Test.FunctionalExtensionality.fst:36.50-36.51:
   - Expected failure:
   - Subtyping check failed
   - Expected type Prims.nat ^-> Prims.int got type Prims.int ^-> Prims.int
   - The SMT solver could not prove the query. Use --query_stats for more
     details.
-  - See also FStar.FunctionalExtensionality.fsti(102,60-102,77)
+  - See also FStar.FunctionalExtensionality.fsti:102.61-102.78
 
-* Info at Test.FunctionalExtensionality.fst(80,2-80,8):
+* Info at Test.FunctionalExtensionality.fst:80.3-80.9:
   - Expected failure:
   - Assertion failed
   - The SMT solver could not prove the query. Use --query_stats for more
     details.
-  - See also Test.FunctionalExtensionality.fst(80,9-80,43)
+  - See also Test.FunctionalExtensionality.fst:80.10-80.44
 
-* Info at Test.FunctionalExtensionality.fst(92,36-92,47):
+* Info at Test.FunctionalExtensionality.fst:92.37-92.48:
   - Expected failure:
   - Subtyping check failed
   - Expected type _: Prims.int -> Prims.int got type Prims.nat ^-> Prims.int
   - The SMT solver could not prove the query. Use --query_stats for more
     details.
-  - See also Prims.fst(682,18-682,24)
+  - See also Prims.fst:682.19-682.25
 
-* Info at Test.FunctionalExtensionality.fst(142,57-142,58):
+* Info at Test.FunctionalExtensionality.fst:142.58-142.59:
   - Expected failure:
   - Subtyping check failed
   - Expected type Prims.int ^-> Prims.int got type Prims.int ^-> Prims.nat
   - The SMT solver could not prove the query. Use --query_stats for more
     details.
-  - See also FStar.FunctionalExtensionality.fsti(102,60-102,77)
+  - See also FStar.FunctionalExtensionality.fsti:102.61-102.78
 

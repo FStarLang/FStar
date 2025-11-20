@@ -1,4 +1,4 @@
-* Info at BadEmptyRecord.fst(9,6-9,8):
+* Info at BadEmptyRecord.fst:9.7-9.9:
   - Expected failure:
   - Could not resolve the type for this record.
 

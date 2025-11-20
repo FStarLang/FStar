@@ -1,31 +1,31 @@
-* Warning 240 at NegativeTests.False.fst(28,4-28,10):
+* Warning 240 at NegativeTests.False.fst:28.5-28.11:
   - NegativeTests.False.absurd is declared but no definition was found
   - Add an 'assume' if this is intentional
 
-* Warning 240 at NegativeTests.False.fst(21,4-21,7):
+* Warning 240 at NegativeTests.False.fst:21.5-21.8:
   - NegativeTests.False.bar is declared but no definition was found
   - Add an 'assume' if this is intentional
 
-* Info at NegativeTests.False.fst(23,13-23,33):
+* Info at NegativeTests.False.fst:23.14-23.34:
   - Expected failure:
   - Assertion failed
   - The SMT solver could not prove the query. Use --query_stats for more
     details.
-  - See also Prims.fst(467,77-467,89)
+  - See also Prims.fst:467.78-467.90
 
-* Info at NegativeTests.False.fst(30,42-30,66):
+* Info at NegativeTests.False.fst:30.43-30.67:
   - Expected failure:
   - Expected type Prims.l_True \/ Prims.l_True
     but Prims.Right Prims.T
     has type Prims.sum Prims.l_True (*?u6*)_
 
-* Info at NegativeTests.False.fst(30,18-30,41):
+* Info at NegativeTests.False.fst:30.19-30.42:
   - Expected failure:
   - Expected type Prims.l_True \/ Prims.l_True
     but Prims.Left Prims.T
     has type Prims.sum (*?u1*)_ Prims.l_True
 
-* Warning 240 at NegativeTests.False.fst(30,0-30,66):
+* Warning 240 at NegativeTests.False.fst:30.1-30.67:
   - Missing definitions in module NegativeTests.False:
       absurd
       bar

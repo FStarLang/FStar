@@ -533,7 +533,7 @@ let run_segment (st: repl_state) (code: string) =
   // Unfortunately, frag_fname is a special case in the interactive mode,
   // while in LSP, it is the only mode. To cope with this difference,
   // pass a frag_fname that is expected by the Interactive mode.
-  let frag = { frag_fname = "<input>"; frag_text = code; frag_line = 1; frag_col = 0 } in
+  let frag = { frag_fname = "<input>"; frag_text = code; frag_line = 1; frag_col = 1 } in
 
   let collect_decls () =
     match Parser.Driver.parse_fragment None frag with

@@ -1,4 +1,4 @@
 {"kind": "protocol-info", "rest": "[...]"}
 {"kind": "response", "query-id": "1", "response": [], "status": "success"}
-{"kind": "response", "query-id": "2", "response": [{"level": "error", "message": "- Could not prove post-condition\n- The SMT solver could not prove the query. Use --query_stats for more details.\n- See also <input>(1,25-1,32)\n", "number": 19, "ranges": [{"beg": [1, 35], "end": [1, 37], "fname": "<input>"}, {"beg": [1, 25], "end": [1, 32], "fname": "<input>"}]}], "status": "failure"}
+{"kind": "response", "query-id": "2", "response": [{"level": "error", "message": "- Could not prove post-condition\n- The SMT solver could not prove the query. Use --query_stats for more details.\n- See also <input>:1.26-1.33\n", "number": 19, "ranges": [{"beg": [1, 35], "end": [1, 37], "fname": "<input>"}, {"beg": [1, 25], "end": [1, 32], "fname": "<input>"}]}], "status": "failure"}
 {"kind": "response", "query-id": "3", "response": [{"level": "error", "message": "- Module name Harness resolved to Harness which is not in scope.\n", "number": 72, "ranges": [{"beg": [1, 35], "end": [1, 42], "fname": "<input>"}]}], "status": "failure"}

@@ -48,11 +48,11 @@ let rng_included r1 r2 =
     r2.end_pos >=? r1.end_pos
 
 let string_of_pos pos =
-    Format.fmt2 "%s,%s" (show pos.line) (show pos.col)
+    Format.fmt2 "%s.%s" (show pos.line) (show pos.col)
 let file_of_range r = r.def_range.file_name
 let set_file_of_range r (f:string) = {r with def_range = {r.def_range with file_name = Filepath.basename f}}
 let string_of_rng r =
-    Format.fmt3 "%s(%s-%s)" r.file_name (string_of_pos r.start_pos) (string_of_pos r.end_pos)
+    Format.fmt3 "%s:%s-%s" r.file_name (string_of_pos r.start_pos) (string_of_pos r.end_pos)
 let string_of_def_range r = string_of_rng r.def_range
 let string_of_use_range r = string_of_rng r.use_range
 let string_of_range r     = string_of_def_range r
@@ -90,7 +90,11 @@ let extend_to_end_of_line r = mk_range (file_of_range r)
                                        (end_of_line (end_of_range r))
 
 let json_of_pos pos =
-  JsonList [JsonInt (line_of_pos pos); JsonInt (col_of_pos pos)]
+  (* This -1 below is here since the IDE expects 0-based column numbers,
+     while we internally keep 1-based column numbers. In fact, the VS Code
+     extension does a +1 to adjust the number into 1-based numbering, so
+     that +1 and this -1 should both be removed. *)
+  JsonList [JsonInt (line_of_pos pos); JsonInt (col_of_pos pos - 1)]
 
 let json_of_range_fields file b e =
   JsonAssoc [("fname", JsonStr file);

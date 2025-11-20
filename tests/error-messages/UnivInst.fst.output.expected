@@ -1,27 +1,27 @@
-* Info at UnivInst.fst(8,8-8,10):
+* Info at UnivInst.fst:8.9-8.11:
   - Expected failure:
   - Unexpected number of universe instantiations for "id" (2 vs 1)
-  - See also UnivInst.fst(5,4-5,6)
+  - See also UnivInst.fst:5.5-5.7
 
-* Info at UnivInst.fst(13,16-13,19):
+* Info at UnivInst.fst:13.17-13.20:
   - Expected failure:
   - Expected expression of type Type
     got expression Prims.int
     of type Prims.eqtype
 
-* Info at UnivInst.fst(18,8-18,11):
+* Info at UnivInst.fst:18.9-18.12:
   - Expected failure:
   - Unexpected number of universe instantiations for "foo" (1 vs 2)
-  - See also UnivInst.fst(15,4-15,7)
+  - See also UnivInst.fst:15.5-15.8
 
-* Info at UnivInst.fst(23,22-23,26):
+* Info at UnivInst.fst:23.23-23.27:
   - Expected failure:
   - Expected expression of type Type
     got expression Prims.bool
     of type Prims.eqtype
 
-* Info at UnivInst.fst(26,8-26,11):
+* Info at UnivInst.fst:26.9-26.12:
   - Expected failure:
   - Unexpected number of universe instantiations for "foo" (3 vs 2)
-  - See also UnivInst.fst(15,4-15,7)
+  - See also UnivInst.fst:15.5-15.8
 

@@ -160,180 +160,180 @@ let _ = FStar.Pervasives.assert_norm (Bug1997.n0 == Bug1997.n1)
 
 ]
 
-* Info at Bug1997.fst(13,27-13,38):
+* Info at Bug1997.fst:13.28-13.39:
   - Expected failure:
   - Assertion failed
   - The SMT solver could not prove the query. Use --query_stats for more
     details.
-  - See also Bug1997.fst(13,39-13,55)
+  - See also Bug1997.fst:13.40-13.56
 
-* Info at Bug1997.fst(21,27-21,38):
+* Info at Bug1997.fst:21.28-21.39:
   - Expected failure:
   - Assertion failed
   - The SMT solver could not prove the query. Use --query_stats for more
     details.
-  - See also Bug1997.fst(21,39-21,67)
+  - See also Bug1997.fst:21.40-21.68
 
-* Info at Bug1997.fst(29,27-29,38):
+* Info at Bug1997.fst:29.28-29.39:
   - Expected failure:
   - Assertion failed
   - The SMT solver could not prove the query. Use --query_stats for more
     details.
-  - See also Bug1997.fst(29,39-29,63)
+  - See also Bug1997.fst:29.40-29.64
 
-* Info at Bug1997.fst(38,27-38,38):
+* Info at Bug1997.fst:38.28-38.39:
   - Expected failure:
   - Assertion failed
   - The SMT solver could not prove the query. Use --query_stats for more
     details.
-  - See also Bug1997.fst(38,39-38,65)
+  - See also Bug1997.fst:38.40-38.66
 
-* Info at Bug1997.fst(39,27-39,38):
+* Info at Bug1997.fst:39.28-39.39:
   - Expected failure:
   - Assertion failed
   - The SMT solver could not prove the query. Use --query_stats for more
     details.
-  - See also Bug1997.fst(39,39-39,65)
+  - See also Bug1997.fst:39.40-39.66
 
-* Info at Bug1997.fst(40,27-40,38):
+* Info at Bug1997.fst:40.28-40.39:
   - Expected failure:
   - Assertion failed
   - The SMT solver could not prove the query. Use --query_stats for more
     details.
-  - See also Bug1997.fst(40,39-40,65)
+  - See also Bug1997.fst:40.40-40.66
 
-* Info at Bug1997.fst(41,27-41,38):
+* Info at Bug1997.fst:41.28-41.39:
   - Expected failure:
   - Assertion failed
   - The SMT solver could not prove the query. Use --query_stats for more
     details.
-  - See also Bug1997.fst(41,39-41,65)
+  - See also Bug1997.fst:41.40-41.66
 
-* Info at Bug1997.fst(42,27-42,38):
+* Info at Bug1997.fst:42.28-42.39:
   - Expected failure:
   - Assertion failed
   - The SMT solver could not prove the query. Use --query_stats for more
     details.
-  - See also Bug1997.fst(42,39-42,65)
+  - See also Bug1997.fst:42.40-42.66
 
-* Info at Bug1997.fst(51,27-51,38):
+* Info at Bug1997.fst:51.28-51.39:
   - Expected failure:
   - Assertion failed
   - The SMT solver could not prove the query. Use --query_stats for more
     details.
-  - See also Bug1997.fst(51,39-51,59)
+  - See also Bug1997.fst:51.40-51.60
 
-* Info at Bug1997.fst(52,27-52,38):
+* Info at Bug1997.fst:52.28-52.39:
   - Expected failure:
   - Assertion failed
   - The SMT solver could not prove the query. Use --query_stats for more
     details.
-  - See also Bug1997.fst(52,39-52,59)
+  - See also Bug1997.fst:52.40-52.60
 
-* Info at Bug1997.fst(53,27-53,38):
+* Info at Bug1997.fst:53.28-53.39:
   - Expected failure:
   - Assertion failed
   - The SMT solver could not prove the query. Use --query_stats for more
     details.
-  - See also Bug1997.fst(53,39-53,59)
+  - See also Bug1997.fst:53.40-53.60
 
-* Info at Bug1997.fst(54,27-54,38):
+* Info at Bug1997.fst:54.28-54.39:
   - Expected failure:
   - Assertion failed
   - The SMT solver could not prove the query. Use --query_stats for more
     details.
-  - See also Bug1997.fst(54,39-54,59)
+  - See also Bug1997.fst:54.40-54.60
 
-* Info at Bug1997.fst(55,27-55,38):
+* Info at Bug1997.fst:55.28-55.39:
   - Expected failure:
   - Assertion failed
   - The SMT solver could not prove the query. Use --query_stats for more
     details.
-  - See also Bug1997.fst(55,39-55,59)
+  - See also Bug1997.fst:55.40-55.60
 
-* Info at Bug1997.fst(63,27-63,38):
+* Info at Bug1997.fst:63.28-63.39:
   - Expected failure:
   - Assertion failed
   - The SMT solver could not prove the query. Use --query_stats for more
     details.
-  - See also Bug1997.fst(63,39-63,51)
+  - See also Bug1997.fst:63.40-63.52
 
-* Info at Bug1997.fst(64,27-64,38):
+* Info at Bug1997.fst:64.28-64.39:
   - Expected failure:
   - Assertion failed
   - The SMT solver could not prove the query. Use --query_stats for more
     details.
-  - See also Bug1997.fst(64,39-64,51)
+  - See also Bug1997.fst:64.40-64.52
 
-* Info at Bug1997.fst(75,27-75,38):
+* Info at Bug1997.fst:75.28-75.39:
   - Expected failure:
   - Assertion failed
   - The SMT solver could not prove the query. Use --query_stats for more
     details.
-  - See also Bug1997.fst(75,39-75,49)
+  - See also Bug1997.fst:75.40-75.50
 
-* Info at Bug1997.fst(76,27-76,38):
+* Info at Bug1997.fst:76.28-76.39:
   - Expected failure:
   - Assertion failed
   - The SMT solver could not prove the query. Use --query_stats for more
     details.
-  - See also Bug1997.fst(76,39-76,49)
+  - See also Bug1997.fst:76.40-76.50
 
-* Info at Bug1997.fst(77,27-77,38):
+* Info at Bug1997.fst:77.28-77.39:
   - Expected failure:
   - Assertion failed
   - The SMT solver could not prove the query. Use --query_stats for more
     details.
-  - See also Bug1997.fst(77,39-77,49)
+  - See also Bug1997.fst:77.40-77.50
 
-* Info at Bug1997.fst(78,27-78,38):
+* Info at Bug1997.fst:78.28-78.39:
   - Expected failure:
   - Assertion failed
   - The SMT solver could not prove the query. Use --query_stats for more
     details.
-  - See also Bug1997.fst(78,39-78,49)
+  - See also Bug1997.fst:78.40-78.50
 
-* Info at Bug1997.fst(87,27-87,38):
+* Info at Bug1997.fst:87.28-87.39:
   - Expected failure:
   - Assertion failed
   - The SMT solver could not prove the query. Use --query_stats for more
     details.
-  - See also Bug1997.fst(87,39-87,49)
+  - See also Bug1997.fst:87.40-87.50
 
-* Info at Bug1997.fst(88,27-88,38):
+* Info at Bug1997.fst:88.28-88.39:
   - Expected failure:
   - Assertion failed
   - The SMT solver could not prove the query. Use --query_stats for more
     details.
-  - See also Bug1997.fst(88,39-88,49)
+  - See also Bug1997.fst:88.40-88.50
 
-* Info at Bug1997.fst(89,27-89,38):
+* Info at Bug1997.fst:89.28-89.39:
   - Expected failure:
   - Assertion failed
   - The SMT solver could not prove the query. Use --query_stats for more
     details.
-  - See also Bug1997.fst(89,39-89,49)
+  - See also Bug1997.fst:89.40-89.50
 
-* Info at Bug1997.fst(90,27-90,38):
+* Info at Bug1997.fst:90.28-90.39:
   - Expected failure:
   - Assertion failed
   - The SMT solver could not prove the query. Use --query_stats for more
     details.
-  - See also Bug1997.fst(90,39-90,49)
+  - See also Bug1997.fst:90.40-90.50
 
-* Info at Bug1997.fst(91,27-91,38):
+* Info at Bug1997.fst:91.28-91.39:
   - Expected failure:
   - Assertion failed
   - The SMT solver could not prove the query. Use --query_stats for more
     details.
-  - See also Bug1997.fst(91,39-91,49)
+  - See also Bug1997.fst:91.40-91.50
 
-* Info at Bug1997.fst(92,27-92,38):
+* Info at Bug1997.fst:92.28-92.39:
   - Expected failure:
   - Assertion failed
   - The SMT solver could not prove the query. Use --query_stats for more
     details.
-  - See also Bug1997.fst(92,39-92,49)
+  - See also Bug1997.fst:92.40-92.50
 
 Module after type checking:
 module Bug1997

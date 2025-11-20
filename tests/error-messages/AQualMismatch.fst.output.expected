@@ -1,13 +1,13 @@
-* Warning 240 at AQualMismatch.fst(3,4-3,5):
+* Warning 240 at AQualMismatch.fst:3.5-3.6:
   - AQualMismatch.f is declared but no definition was found
   - Add an 'assume' if this is intentional
 
-* Info at AQualMismatch.fst(6,7-6,8):
+* Info at AQualMismatch.fst:6.8-6.9:
   - Expected failure:
   - Inconsistent implicit argument annotation on argument x
   - Got: '#'
   - Expected: ''
 
-* Warning 240 at AQualMismatch.fst(6,0-6,12):
+* Warning 240 at AQualMismatch.fst:6.1-6.13:
   - Missing definitions in module AQualMismatch: f
 

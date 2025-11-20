@@ -1,3 +1,3 @@
 {"kind": "protocol-info", "rest": "[...]"}
 {"kind": "response", "query-id": "1", "response": [], "status": "success"}
-{"contents": "* Error 147 at <input>(1,0-1,0):\n  - Effect template FStar.Pervasives.STATE_h should be applied to arguments for its binders ((heap: Type)) before it can be used at an effect position\n\n", "kind": "message", "level": "error", "query-id": "2"}
+{"contents": "* Error 147 at <input>:1.0-1.0:\n  - Effect template FStar.Pervasives.STATE_h should be applied to arguments for its binders ((heap: Type)) before it can be used at an effect position\n\n", "kind": "message", "level": "error", "query-id": "2"}
