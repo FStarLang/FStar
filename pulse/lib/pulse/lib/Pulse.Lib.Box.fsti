@@ -22,6 +22,7 @@ open PulseCore.FractionalPermission
 
 open Pulse.Lib.Core
 open Pulse.Class.PtsTo
+open Pulse.Lib.Send
 
 module T = FStar.Tactics.V2
 module R = Pulse.Lib.Reference
@@ -37,6 +38,8 @@ val pts_to (#a:Type0)
            ([@@@mkey] b:box a)
            (#[T.exact (`1.0R)] p:perm)
            (v:a) : slprop
+
+instance val is_send_pts_to #a b #p v : is_send (pts_to #a b #p v)
 
 [@@pulse_unfold]
 instance has_pts_to_box (a:Type u#0) : has_pts_to (box a) a = {

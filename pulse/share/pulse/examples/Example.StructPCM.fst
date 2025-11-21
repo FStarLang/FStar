@@ -20,6 +20,7 @@ module Example.StructPCM
 open FStar.PCM
 open Pulse
 open Pulse.Lib.PCMReference
+open Pulse.Lib.Par
 
 module G = FStar.Ghost
 module PCM = FStar.PCM
@@ -148,13 +149,9 @@ fn upd_par #a #b (r:ref a b) (x1 x2:a) (y1 y2:b)
   ensures  pcm_pts_to r (XY x2 y2)
 {
   share r;
-  parallel
-    requires pcm_pts_to r (X x1) and
-             pcm_pts_to r (Y y1)
-    ensures pcm_pts_to r (X x2) and
-            pcm_pts_to r (Y y2)
-    { upd_x r x1 x2 }
-    { upd_y r y1 y2 };
+  par 
+    (fun _ -> upd_x r x1 x2)
+    (fun _ -> upd_y r y1 y2);
   
   gather r
 }

@@ -401,6 +401,26 @@ let rec frame (#st:state u#s)
        let k' = frame fr k in
        Par m0 k'
 
+let rec apply_hom (#st:state u#s)
+              (hom: st.pred->st.pred
+                { hom st.emp == st.emp /\ (forall x y. hom (x `st.star` y) == hom x `st.star` hom y) })
+              (hom_act: (#b:Type u#act -> act:action st b -> act':action st b
+                { act'.pre == hom act.pre /\ (forall x. act'.post x == hom (act.post x)) }))
+              (#a:Type u#a)
+              (#p:st.pred)
+              (#q:post st a)
+              (f:m a p q)
+   : Dv (m u#s u#a u#act a (hom p) (F.on_dom a (fun x -> hom (q x))))
+   = match f with
+     | Ret x -> Ret x
+     | Act f k ->
+       Act (hom_act f) (fun x -> apply_hom hom hom_act (k x))
+     | Par #_ #pre0 m0 #_ #prek #postk k ->
+       let m0' = apply_hom hom hom_act m0 in
+       let k' = apply_hom hom hom_act k in
+       assert as_post #st #(U.raise_t unit) st.emp == as_post (hom st.emp);
+       Par m0' k'
+
 (**
  * [fork]: Parallel execution using fork
  * Works by just using the `Par` node and `Ret` as its continuation

@@ -23,6 +23,7 @@ open FStar.Ghost
 open Pulse.Class.PtsTo
 open Pulse.Lib.Array.Basic
 open Pulse.Lib.SmallType
+open Pulse.Lib.Send
 module T = FStar.Tactics
 val ref ([@@@unused]a:Type) : Type0
 
@@ -31,6 +32,8 @@ val null #a : ref a
 val is_null #a (r : ref a) : b:bool{b <==> r == null #a}
 
 val pts_to (#a:Type u#a) ([@@@mkey]r:ref a) (#[T.exact (`1.0R)] p:perm) (n:a) : slprop
+
+instance val is_send_pts_to #a r #p n : is_send (pts_to #a r #p n)
 
 [@@pulse_unfold]
 instance has_pts_to_ref (a:Type u#a) : has_pts_to (ref a) a = {

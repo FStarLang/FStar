@@ -16,6 +16,7 @@
 module Pulse.Lib.PCMReference
 open Pulse.Lib.SmallType
 open Pulse.Lib.Core
+open Pulse.Lib.Send
 open Pulse.Main
 open FStar.PCM
 open FStar.Ghost
@@ -37,6 +38,8 @@ val pcm_pts_to (#a:Type u#a) (#p:pcm a) ([@@@mkey] r:pcm_ref p) (v:a) : slprop
 
 val timeless_pcm_pts_to (#a:Type u#a) (#p:pcm a) (r:pcm_ref p) (v:a)
 : Lemma (timeless (pcm_pts_to r v)) [SMTPat (timeless (pcm_pts_to r v))]
+
+instance val placeless_pcm_pts_to #a #p r v : placeless (pcm_pts_to #a #p r v)
 
 ghost fn pts_to_small u#a (#a: Type u#a) (#p:FStar.PCM.pcm a) (r:pcm_ref p) (v:a)
   preserves pcm_pts_to r v

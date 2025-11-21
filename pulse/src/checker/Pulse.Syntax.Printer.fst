@@ -368,15 +368,6 @@ let rec st_term_to_string' (level:string) (t:st_term)
         (st_term_to_string' (indent level) body)
         level
 
-    | Tm_Par { pre1; body1; post1; pre2; body2; post2 } ->
-      sprintf "par (<%s> (%s) <%s) (<%s> (%s) <%s)"
-        (term_to_string pre1)
-        (st_term_to_string' level body1)
-        (term_to_string post1)
-        (term_to_string pre2)
-        (st_term_to_string' level body2)
-        (term_to_string post2)
-
     | Tm_Rewrite { t1; t2; tac_opt } ->
        sprintf "rewrite %s as %s (with %s)"
         (term_to_string t1)
@@ -444,19 +435,6 @@ let rec st_term_to_string' (level:string) (t:st_term)
       in
       sprintf "%s %s %s; %s" with_prefix ht p
         (st_term_to_string' level t)
-        
-    | Tm_WithInv { name; body; returns_inv } ->
-      sprintf "with_inv %s %s %s"
-        (term_to_string name)
-        (st_term_to_string' level body)
-        (match returns_inv with
-         | None -> ""
-         | Some (b, t, is) ->
-          sprintf "\nreturns %s\nensures %s\nopens %s"
-            (binder_to_string b)
-            (term_to_string t)
-            (term_to_string is))
-
     | Tm_PragmaWithOptions { options; body } ->
       sprintf "#set-options \"%s\" {\n%s\n%s}"
         options (st_term_to_string' (indent level) body) level
@@ -521,14 +499,12 @@ let tag_of_st_term (t:st_term) =
   | Tm_IntroExists _ -> "Tm_IntroExists"
   | Tm_While _ -> "Tm_While"
   | Tm_NuWhile _ -> "Tm_NuWhile"
-  | Tm_Par _ -> "Tm_Par"
   | Tm_WithLocal _ -> "Tm_WithLocal"
   | Tm_WithLocalArray _ -> "Tm_WithLocalArray"
   | Tm_Rewrite _ -> "Tm_Rewrite"
   | Tm_Admit _ -> "Tm_Admit"
   | Tm_Unreachable _ -> "Tm_Unreachable"
   | Tm_ProofHintWithBinders _ -> "Tm_ProofHintWithBinders"
-  | Tm_WithInv _ -> "Tm_WithInv"
   | Tm_PragmaWithOptions _ -> "Tm_PragmaWithOptions"
 
 let tag_of_comp (c:comp) : T.Tac string =
@@ -553,7 +529,6 @@ let rec print_st_head (t:st_term)
   | Tm_NuWhile _ -> "NuWhile"
   | Tm_Admit _ -> "Admit"
   | Tm_Unreachable _ -> "Unreachable"
-  | Tm_Par _ -> "Par"
   | Tm_Rewrite _ -> "Rewrite"
   | Tm_WithLocal _ -> "WithLocal"
   | Tm_WithLocalArray _ -> "WithLocalArray"
@@ -562,7 +537,6 @@ let rec print_st_head (t:st_term)
   | Tm_IntroExists _ -> "IntroExists"
   | Tm_ElimExists _ -> "ElimExists"  
   | Tm_ProofHintWithBinders _ -> "AssertWithBinders"
-  | Tm_WithInv _ -> "WithInv"
   | Tm_PragmaWithOptions _ -> "PragmaWithOptions"
 
 and print_head (t:term) =
@@ -585,7 +559,6 @@ let rec print_skel (t:st_term) =
   | Tm_NuWhile _ -> "NuWhile"
   | Tm_Admit _ -> "Admit"
   | Tm_Unreachable _ -> "Unreachable"
-  | Tm_Par _ -> "Par"
   | Tm_Rewrite _ -> "Rewrite"
   | Tm_WithLocal _ -> "WithLocal"
   | Tm_WithLocalArray _ -> "WithLocalArray"
@@ -594,7 +567,6 @@ let rec print_skel (t:st_term) =
   | Tm_IntroExists _ -> "IntroExists"
   | Tm_ElimExists _ -> "ElimExists"
   | Tm_ProofHintWithBinders _ -> "AssertWithBinders"
-  | Tm_WithInv _ -> "WithInv"
   | Tm_PragmaWithOptions _ -> "PragmaWithOptions"
 
 let decl_to_string (d:decl) : T.Tac string =

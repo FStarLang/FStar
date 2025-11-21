@@ -80,13 +80,9 @@ ensures lock_alive l p ** p
 //acquire_body$
 {
   unfold lock_alive;
-  later_credit_buy 1;
   let b = 
-    with_invariants l.i
-      returns b:bool
-      ensures later (lock_inv l.r p) ** maybe b p
-      opens [l.i] {
-      later_elim _;
+    with_invariants bool emp_inames l.i (lock_inv l.r p)
+      emp (fun b -> maybe b p) fn _ {
       unfold lock_inv;
       with vv. assert l.r |-> vv;
       let b = cas_box l.r 0ul 1ul;
@@ -97,7 +93,6 @@ ensures lock_alive l p ** p
         fold (maybe false p);
         rewrite (maybe false p) as (maybe (1ul = 0ul) p);
         fold (lock_inv l.r p);
-        later_intro (lock_inv l.r p);
         true
       }
       else
@@ -105,7 +100,6 @@ ensures lock_alive l p ** p
         elim_cond_false _ _ _;
         fold (lock_inv l.r p);
         fold (maybe false p);
-        later_intro (lock_inv l.r p);
         false
       }
     };
@@ -121,18 +115,12 @@ requires lock_alive l p ** p
 ensures lock_alive l p
 {
   unfold lock_alive;
-  later_credit_buy 1;
-  with_invariants l.i
-    returns _:unit
-    ensures later (lock_inv l.r p)
-    opens [l.i] {
-    later_elim _;
+  with_invariants unit emp_inames l.i (lock_inv l.r p) p (fun _ -> emp) fn _ {
     unfold lock_inv;
     write_atomic_box l.r 0ul;
     drop_ (maybe _ _); //maybe release without acquire
     fold (maybe (0ul = 0ul) p);
     fold (lock_inv l.r p);
-    later_intro (lock_inv l.r p);
   };
   fold lock_alive
 }

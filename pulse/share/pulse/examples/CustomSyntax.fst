@@ -17,6 +17,7 @@
 module CustomSyntax
 #lang-pulse
 open Pulse.Lib.Pervasives
+open Pulse.Lib.Par
 module U32 = FStar.UInt32
 
 assume val p : slprop
@@ -220,18 +221,10 @@ fn test_par (r1 r2:ref U32.t)
      pts_to r1 1ul  **
      pts_to r2 1ul
 {
-  parallel
-  requires (pts_to r1 'n1)
-       and (pts_to r2 'n2)
-  ensures  (pts_to r1 1ul)    
-       and (pts_to r2 1ul)
-  {
-     r1 := 1ul
-  }
-  {
-     r2 := 1ul
-  };
-  ()
+  par #(requires r1 |-> 'n1) #(ensures r1 |-> 1ul)
+      #(requires r2 |-> 'n2) #(ensures r2 |-> 1ul)
+    fn _ { r1 := 1ul }
+    fn _ { r2 := 1ul };
 }
 
 

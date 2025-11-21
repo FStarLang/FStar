@@ -43,7 +43,7 @@ let on  #p (fi : finv p) : slprop =
   pts_to fi.r #0.5R true ** inv fi.i (finv_p p fi.r)
 
 
-fn mk_finv (p:slprop)
+ghost fn mk_finv (p:slprop)
    requires emp
    returns f:(finv p)
    ensures off f
@@ -68,7 +68,7 @@ fn mk_finv (p:slprop)
 let iname_of #p (f : finv p) : iname = f.i
 
 
-atomic
+ghost
 fn flip_on (#p:slprop) (fi:finv p)
    requires off fi ** p ** later_credit 1
    ensures on fi
@@ -76,27 +76,22 @@ fn flip_on (#p:slprop) (fi:finv p)
 {
   open Pulse.Lib.GhostReference;
   unfold off;
-  with_invariants fi.i
-    returns _:unit
-    ensures later (finv_p p fi.r) **
-            pts_to fi.r #0.5R true
-    opens [fi.i]
+  with_invariants_g unit emp_inames fi.i (finv_p p fi.r)
+    (p ** pts_to fi.r #0.5R false) (fun _ -> pts_to fi.r #0.5R true) fn _
   {
-    later_elim _;
     unfold finv_p;
     with b.
       assert (pts_to fi.r #0.5R b ** pts_to fi.r #0.5R false);
-    GR.gather fi.r;
+    GR.gather fi.r #false #_;
     rewrite each b as false;
     fi.r := true;
     GR.share fi.r;
     fold_finv_p p fi.r;
-    later_intro (finv_p p fi.r);
   };
   fold on fi;
 }
 
-atomic
+ghost
 fn flip_off (#p:slprop) (fi : finv p)
    requires on fi ** later_credit 1
    ensures off fi ** p
@@ -104,13 +99,9 @@ fn flip_off (#p:slprop) (fi : finv p)
 {
   open Pulse.Lib.GhostReference;
   unfold on;
-  with_invariants fi.i
-    returns _:unit
-    ensures later (finv_p p fi.r) **
-            pts_to fi.r #0.5R false ** p
-    opens [fi.i]
+  with_invariants_g unit emp_inames fi.i (finv_p p fi.r)
+    (pts_to fi.r #0.5R true) (fun _ -> p ** pts_to fi.r #0.5R false) fn _
   {
-    later_elim _;
     unfold finv_p;
     with b.
       assert (pts_to fi.r #0.5R b ** pts_to fi.r #0.5R true);
@@ -119,7 +110,6 @@ fn flip_off (#p:slprop) (fi : finv p)
     fi.r := false;
     GR.share fi.r;
     fold_finv_p p fi.r;
-    later_intro (finv_p p fi.r);
   };
   fold off fi;
 }

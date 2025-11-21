@@ -1,5 +1,5 @@
 (*
-   Copyright 2023 Microsoft Research
+   Copyright 2025 Microsoft Research
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -14,22 +14,15 @@
    limitations under the License.
 *)
 
-module Pulse.Soundness.Par
+module Pulse.Lib.Loc
 
-open Pulse.Syntax
-open Pulse.Typing
-open Pulse.Elaborate.Pure
-open Pulse.Elaborate.Core
-open Pulse.Soundness.Common
+[@@erased]
+noeq type loc_id = {
+  process: nat;
+  thread: nat;
+}
 
-module RT = FStar.Reflection.Typing
+let process_of l = { l with thread = 0 }
+let process_of_idem l = ()
 
-val par_soundness
-  (#g:stt_env)
-  (#t:st_term)
-  (#c:comp)
-  (d:st_typing g t c{T_Par? d})
-  (soundness:soundness_t d)
-  : GTot (RT.tot_typing (elab_env g)
-                        (elab_st_typing d)
-                        (elab_comp c))
+let dummy_loc = { process = 0; thread = 0 }

@@ -8,7 +8,11 @@ val table (a:Type0) : Type0
 instance val non_informative_table (a:Type): NonInformative.non_informative (table a)
 val is_table #a ([@@@mkey] t:table a) (max:nat) : slprop
 
+instance val placeless_is_table #a t max : placeless (is_table #a t max)
+
 val pts_to #a ([@@@mkey] t:table a) (i:nat) (#f:perm) (p:a) : slprop
+
+instance val placeless_pts_to #a t i #f p : placeless (pts_to #a t i #f p)
 
 ghost
 fn create (#a:Type)

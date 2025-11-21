@@ -145,8 +145,8 @@ let tr_expr (g:uenv) (t:term) : mlexpr & e_tag & mlty =
     let e = with_ty mlty <| MLE_App (bang, [(cb g r)._1; (cb g x)._1]) in
     e, E_PURE, mlty
 
-  | _, _, [(t, _); _; (x, None); (sz, None)]
-      when S.fv_eq_lid fv (Ident.lid_of_str "Pulse.Lib.Array.Core.mask_alloc") ->
+  | _, _, [(t, _); _; (x, None); (sz, None); _; _]
+      when S.fv_eq_lid fv (Ident.lid_of_str "Pulse.Lib.Array.Core.mask_alloc_with_vis") ->
     let mlty = term_as_mlty g t in
     let bang = with_ty ml_unit_ty <| MLE_Var "Array.make" in
     let e = with_ty mlty <| MLE_App (bang, [(cb g sz)._1; (cb g x)._1]) in

@@ -22,6 +22,7 @@ open FStar.PCM
 module T = FStar.Tactics.V2
 open Pulse.Lib.Dv {}
 open FStar.ExtractAs
+include Pulse.Lib.Loc
 
 (* Arguments of slprops can be marked as a matching key to
    1- Make sure we do no try to use the SMT to match resources with
@@ -175,8 +176,6 @@ let inames_subset (is1 is2 : inames) : Type0 =
 let (/!) (is1 is2 : inames) : Type0 =
   GhostSet.disjoint is1 is2
 
-val inv (i:iname) (p:slprop) : slprop
-
 let mem_iname (e:inames) (i:iname) : erased bool = elift2 (fun e i -> GhostSet.mem i e) e i
 let mem_inv (e:inames) (i:iname) : GTot bool = mem_iname e i
 
@@ -225,11 +224,6 @@ val frame_stt
   (frame:slprop)
   (e:stt a pre post)
 : stt a (pre ** frame) (fun x -> post x ** frame)
-
-val fork
-  (#pre:slprop)
-  (f:unit -> stt unit pre (fun _ -> emp))
-: stt unit pre (fun _ -> emp)
 
 val sub_stt (#a:Type u#a)
             (#pre1:slprop)
@@ -441,11 +435,60 @@ val sub_invs_ghost
     (_ : squash (inames_subset opens1 opens2))
 : stt_ghost a opens2 pre post
 
+////////////////////////////////////////////////////////////////////
+// Locations
+////////////////////////////////////////////////////////////////////
+
+val loc : loc_id -> timeless_slprop
+
+val loc_get () : stt_ghost loc_id emp_inames emp (fun l -> loc l)
+val loc_dup l : stt_ghost unit emp_inames (loc l) (fun _ -> loc l ** loc l)
+val loc_gather l #l' : stt_ghost unit emp_inames (loc l ** loc l') (fun _ -> loc l ** pure (l == l'))
+
+val on (l:loc_id) ([@@@mkey] p:slprop) : slprop
+val on_intro #l p : stt_ghost unit emp_inames (loc l ** p) (fun _ -> loc l ** on l p)
+val on_elim #l p : stt_ghost unit emp_inames (loc l ** on l p) (fun _ -> loc l ** p)
+
+val timeless_on (l:loc_id) (p : slprop)
+: Lemma
+    (requires timeless p)
+    (ensures timeless (on l p))
+    [SMTPat (timeless (on l p))]
+
+val on_star_eq l a b : squash (on l (a ** b) == on l a ** on l b)
+val on_on_eq l1 l2 a : squash (on l1 (on l2 a) == on l2 a)
+val on_loc_eq l1 l2 : squash (on l1 (loc l2) == pure (l1 == l2))
+
+inline_for_extraction
+[@@deprecated "impersonate_core is unsound; only use for model implementations";
+  extract_as (`(fun (#a:Type0) () () () (f: unit -> Dv a) -> f ()))]
+val impersonate_core #a
+  (l: loc_id) (pre: slprop) (post: a -> slprop)
+  (f: unit -> stt a pre (fun x -> post x))
+  : stt a (on l pre) (fun x -> on l (post x))
+
+inline_for_extraction
+[@@deprecated "atomic impersonate_core is unsound; only use for model implementations";
+  extract_as (`(fun (#a:Type0) () () () () () (f: unit -> Dv a) -> f ()))]
+val atomic_impersonate_core #a
+  (#[T.exact (`emp_inames)] is: inames) #obs
+  (l: loc_id) (pre: slprop) (post: a -> slprop)
+  (f: unit -> stt_atomic a #obs is pre (fun x -> post x))
+  : stt_atomic a #obs is (on l pre) (fun x -> on l (post x))
+
+val ghost_impersonate_core
+  (#[T.exact (`emp_inames)] is: inames)
+  (l: loc_id) (pre post: slprop)
+  (f: unit -> stt_ghost unit is pre (fun _ -> post))
+  : stt_ghost unit is (on l pre) (fun _ -> on l post)
+
 //////////////////////////////////////////////////////////////////////////
 // Later
 //////////////////////////////////////////////////////////////////////////
 
 val later_credit (amt: nat) : slprop
+
+val on_later_credit_eq l n : squash (on l (later_credit n) == later_credit n)
 
 val timeless_later_credit (amt: nat)
 : Lemma (timeless (later_credit amt))
@@ -471,12 +514,16 @@ val later_star p q : squash (later (p ** q) == later p ** later q)
 val later_exists (#t: Type) (f:t->slprop) : stt_ghost unit emp_inames (later (exists* x. f x)) (fun _ -> exists* x. later (f x))
 val exists_later (#t: Type) (f:t->slprop) : stt_ghost unit emp_inames (exists* x. later (f x)) (fun _ -> later (exists* x. f x))
 
+val on_later_eq l p : squash (on l (later p) == later (on l p))
+
 //////////////////////////////////////////////////////////////////////////
 // Equivalence
 //////////////////////////////////////////////////////////////////////////
 
 (* Two slprops are equal when approximated to the current heap level. *)
 val equiv (a b: slprop) : slprop
+
+val on_equiv_eq l a b : squash (on l (equiv a b) == equiv a b)
 
 val equiv_dup a b : stt_ghost unit emp_inames (equiv a b) fun _ -> equiv a b ** equiv a b
 val equiv_refl a : stt_ghost unit emp_inames emp fun _ -> equiv a a
@@ -502,6 +549,8 @@ val null_slprop_ref : slprop_ref
 
 val slprop_ref_pts_to ([@@@mkey]x: slprop_ref) (y: slprop) : slprop
 
+val on_slprop_ref_pts_to_eq l x y : squash (on l (slprop_ref_pts_to x y) == slprop_ref_pts_to x y)
+
 val slprop_ref_alloc (y: slprop)
 : stt_ghost slprop_ref emp_inames emp fun x -> slprop_ref_pts_to x y
 
@@ -511,57 +560,6 @@ val slprop_ref_share (x: slprop_ref) (#y: slprop)
 [@@allow_ambiguous]
 val slprop_ref_gather (x: slprop_ref) (#y1 #y2: slprop)
 : stt_ghost unit emp_inames (slprop_ref_pts_to x y1 ** slprop_ref_pts_to x y2) fun _ -> slprop_ref_pts_to x y1 ** later (equiv y1 y2)
-
-//////////////////////////////////////////////////////////////////////////
-// Invariants
-//////////////////////////////////////////////////////////////////////////
-
-val dup_inv (i:iname) (p:slprop)
-  : stt_ghost unit emp_inames (inv i p) (fun _ -> inv i p ** inv i p)
-
-val new_invariant (p:slprop)
-: stt_ghost iname emp_inames p (fun i -> inv i p)
-
-val fresh_invariant
-    (ctx:inames { Pulse.Lib.GhostSet.is_finite ctx })
-    (p:slprop)
-: stt_ghost (i:iname { ~(i `GhostSet.mem` ctx) }) emp_inames p (fun i -> inv i p)
-
-val with_invariant
-    (#a:Type)
-    (#obs:_)
-    (#fp:slprop)
-    (#fp':a -> slprop)
-    (#f_opens:inames)
-    (#p:slprop)
-    (i:iname { not (mem_inv f_opens i) })
-    ($f:unit -> stt_atomic a #obs f_opens
-                           (later p ** fp)
-                           (fun x -> later p ** fp' x))
-: stt_atomic a #obs (add_inv f_opens i) (inv i p ** fp) (fun x -> inv i p ** fp' x)
-
-val with_invariant_g
-    (#a:Type)
-    (#fp:slprop)
-    (#fp':a -> slprop)
-    (#f_opens:inames)
-    (#p:slprop)
-    (i:iname { not (mem_inv f_opens i) })
-    ($f:unit -> stt_ghost a f_opens
-                            (later p ** fp)
-                            (fun x -> later p ** fp' x))
-: stt_ghost a (add_inv f_opens i) (inv i p ** fp) (fun x -> inv i p ** fp' x)
-
-[@@allow_ambiguous]
-val invariant_name_identifies_invariant
-      (#p #q:slprop)
-      (i:iname)
-      (j:iname { i == j } )
-: stt_ghost
-    unit
-    emp_inames
-    (inv i p ** inv j q)
-    (fun _ -> inv i p ** inv j q ** later (equiv p q))
 
 (***** end computation types and combinators *****)
 
@@ -574,6 +572,11 @@ let non_info_tac () : T.Tac unit =
 //////////////////////////////////////////////////////////////////////////
 // Some basic actions and ghost operations
 //////////////////////////////////////////////////////////////////////////
+
+val fork_core
+  (pre:slprop) #l
+  (f: (l':loc_id { process_of l' == process_of l } -> stt unit (loc l' ** on l pre) (fun _ -> emp)))
+: stt unit (loc l ** pre) (fun _ -> emp)
 
 val rewrite (p:slprop) (q:slprop) (_:slprop_equiv p q)
 : stt_ghost unit emp_inames p (fun _ -> q)
@@ -670,7 +673,8 @@ val elim_false (a:Type) (p:a -> slprop)
 
 // Finally, a big escape hatch for introducing architecture/backend-specific
 // atomic operations from proven stt specifications
-[@@warn_on_use "as_atomic is a an assumption"]
+[@@warn_on_use "as_atomic is a an assumption";
+  extract_as (`(fun (#a: Type0) (pre post: unit) (f: a) -> f))]
 val as_atomic (#a:Type u#0) (pre:slprop) (post:a -> slprop)
               (pf:stt a pre post)
 : stt_atomic a emp_inames pre post

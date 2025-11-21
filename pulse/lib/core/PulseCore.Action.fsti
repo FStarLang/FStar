@@ -20,6 +20,7 @@ module I = PulseCore.InstantiatedSemantics
 module Sep = PulseCore.IndirectionTheorySep
 open FStar.PCM
 open FStar.Ghost
+open Pulse.Lib.Loc
 
 open PulseCore.InstantiatedSemantics
 
@@ -132,7 +133,7 @@ val lift (#a:Type u#a) #r #opens (#pre:slprop) (#post:a -> slprop)
 let add_inv (e:inames) (i:iref) : inames = GhostSet.union (singleton i) e
 let mem_inv (e:inames) (i:iref) : GTot bool = GhostSet.mem i e
 
-val inv (i:iref) (p:slprop) : slprop
+let inv : iref -> slprop -> slprop = Sep.inv
 
 val dup_inv (i:iref) (p:slprop)
   : act unit Ghost emp_inames (inv i p) (fun _ -> (inv i p) ** (inv i p))
@@ -154,7 +155,7 @@ val with_invariant
     (#f_opens:inames)
     (#p:slprop)
     (i:iref { not (mem_inv f_opens i) })
-    (f:unit -> act a r f_opens (later p ** fp) (fun x -> later p ** fp' x))
+    (f:unit -> act a r f_opens (somewhere (later p) ** fp) (fun x -> somewhere (later p) ** fp' x))
 : act a r (add_inv f_opens i) ((inv i p) ** fp) (fun x -> (inv i p) ** fp' x)
 
 val invariant_name_identifies_invariant
@@ -203,6 +204,8 @@ val timeless_pts_to
     (r:ref a p)
     (v:a)
 : Lemma (timeless (pts_to r v))
+
+val on_pcm_pts_to_eq l #a #p r v : squash (Sep.on l (pts_to #a #p r v) == pts_to r v)
 
 val pts_to_not_null (#a:Type) (#p:FStar.PCM.pcm a) (r:ref a p) (v:a)
 : act (squash (not (is_ref_null r)))
@@ -298,6 +301,9 @@ val elim_exists (#a:Type u#a) (p:a -> slprop)
 val drop (p:slprop)
 : act unit Ghost emp_inames p (fun _ -> emp)
 
+val loc_get ()
+: act loc_id Ghost emp_inames emp (fun l -> Sep.loc l)
+
 ////////////////////////////////////////////////////////////////////////
 // Ghost References
 ////////////////////////////////////////////////////////////////////////
@@ -313,6 +319,8 @@ val timeless_ghost_pts_to
     (r:ghost_ref p)
     (v:a)
 : Lemma (timeless (ghost_pts_to r v))
+
+val on_ghost_pcm_pts_to_eq l #a #p r v : squash (Sep.on l (ghost_pts_to #a #p r v) == ghost_pts_to r v)
 
 val ghost_pts_to_not_null (#a:Type) (#p:FStar.PCM.pcm a) (r:ghost_ref p) (v:a)
 : act (squash (r =!= core_ghost_ref_null))
@@ -398,11 +406,11 @@ val equiv_elim (a b:slprop)
 
 /// slprop_refs
 [@@erasable]
-val slprop_ref : Type0
+let slprop_ref : Type0 = Sep.slprop_ref
 
 val null_slprop_ref : slprop_ref
 
-val slprop_ref_pts_to (x: slprop_ref) (y: slprop) : slprop
+let slprop_ref_pts_to (x: slprop_ref) (y: slprop) : slprop = Sep.slprop_ref_pts_to x y
 
 val slprop_ref_alloc (y: slprop)
 : act slprop_ref Ghost emp_inames emp fun x -> slprop_ref_pts_to x y
@@ -412,3 +420,12 @@ val slprop_ref_share (x:slprop_ref) (y:slprop)
 
 val slprop_ref_gather (x:slprop_ref) (y1 y2: slprop)
 : act unit Ghost emp_inames (slprop_ref_pts_to x y1 ** slprop_ref_pts_to x y2) fun _ -> slprop_ref_pts_to x y1 ** later (I.equiv y1 y2)
+
+val impersonate #a #r #is #pre #post l (k: act a r is pre post) :
+    act a r is (Sep.on l pre) (fun r -> Sep.on l (post r))
+
+val impersonate_stt #a #pre #post (l: loc_id) (k: stt a pre post) :
+    stt a (Sep.on l pre) (fun x -> Sep.on l (post x))
+
+val fork #p0 (l l': loc_id) (f0:stt unit (loc l' ** on l p0) (fun _ -> emp)) :
+    stt unit (loc l ** p0) (fun _ -> emp)

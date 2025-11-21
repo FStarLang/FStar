@@ -32,6 +32,12 @@ let lock_inv_aux (r:B.box U32.t) (gr:GR.ref U32.t) (v:slprop) : slprop  =
                pure ((i == 0ul ==> p == 1.0R) /\
                      (i =!= 0ul ==> p == 0.5R)) 
 
+instance is_send_if (i: U32.t) (v: slprop) {| inst: is_send v |} : is_send (if i = 0ul then v else emp) =
+  if i = 0ul then inst else is_send_placeless emp
+
+instance is_send_lock_inv_aux r gr v {| is_send v |} : is_send (lock_inv_aux r gr v) =
+  Tactics.Typeclasses.solve
+
 let lock_inv (r:B.box U32.t) (gr:GR.ref U32.t) (v:slprop) : slprop =
   lock_inv_aux r gr v
 
@@ -43,8 +49,12 @@ type lock = {
   i : cinv;
 }
 
+let is_send_tag v (inst: is_send v) = emp
+
 let lock_alive l #p v =
   inv (iname_of l.i) (cinv_vp l.i (lock_inv l.r l.gr v)) ** active l.i p
+
+instance is_send_lock_alive = Tactics.Typeclasses.solve
 
 let lock_acquired l = pts_to l.gr #0.5R 1ul
 
@@ -54,9 +64,9 @@ fn new_lock (v:slprop)
   returns l:lock
   ensures lock_alive l v
 {
-  let r = B.alloc 0ul;
   let gr = GR.alloc 0ul;
   rewrite v as (if 0ul = 0ul then v else emp);
+  let r = B.alloc 0ul;
   fold (lock_inv_aux r gr v);
   fold (lock_inv r gr v);
   let i = new_cancellable_invariant (lock_inv r gr v);
@@ -68,21 +78,18 @@ fn new_lock (v:slprop)
   l
 }
 
-
-
 fn rec acquire (#v:slprop) (#p:perm) (l:lock)
   preserves lock_alive l #p v
   ensures v ** lock_acquired l
 {
   unfold (lock_alive l #p v);
-  later_credit_buy 1;
   let b =
-    with_invariants (CInv.iname_of l.i)
-      returns b:bool
-      ensures later (cinv_vp l.i (lock_inv l.r l.gr v)) **
-              active l.i p **
-              (if b then v ** pts_to l.gr #0.5R 1ul else emp) {
-      later_elim _;
+    with_invariants bool emp_inames (CInv.iname_of l.i) (cinv_vp l.i (lock_inv l.r l.gr v))
+        (active l.i p)
+        (fun b ->
+          active l.i p **
+          (cond b (v ** pts_to l.gr #0.5R 1ul) emp))
+        fn _ {
       unpack_cinv_vp l.i;
       unfold lock_inv;
       unfold lock_inv_aux;
@@ -102,8 +109,7 @@ fn rec acquire (#v:slprop) (#p:perm) (l:lock)
                 v);
         let b = true;
         rewrite (v ** pts_to l.gr #0.5R 1ul)
-             as (if b then v ** pts_to l.gr #0.5R 1ul else emp);
-        later_intro (CInv.cinv_vp l.i (lock_inv l.r l.gr v));
+             as (cond b (v ** pts_to l.gr #0.5R 1ul) emp);
         b
       } else {
         elim_cond_false _ _ _;
@@ -114,16 +120,17 @@ fn rec acquire (#v:slprop) (#p:perm) (l:lock)
                 active l.i p);
         let b = false;
         rewrite emp as
-                (if b then v ** pts_to l.gr #0.5R 1ul else emp);
-        later_intro (CInv.cinv_vp l.i (lock_inv l.r l.gr v));
+                (cond b (v ** pts_to l.gr #0.5R 1ul) emp);
         b
       }
     };
 
   if b {
+    elim_cond_true b _ _;
     fold (lock_alive l #p v);
     fold (lock_acquired l)
   } else {
+    elim_cond_false b _ _;
     fold (lock_alive l #p v);
     acquire l
   }
@@ -136,27 +143,24 @@ fn release (#v:slprop) (#p:perm) (l:lock)
   requires lock_acquired l ** v
 {
   unfold (lock_alive l #p v);
-  unfold (lock_acquired l);
 
-  later_credit_buy 1;
-  with_invariants (CInv.iname_of l.i)
-    returns _:unit
-    ensures later (cinv_vp l.i (lock_inv l.r l.gr v)) **
-            active l.i p {
-    later_elim _;
+  with_invariants unit emp_inames (CInv.iname_of l.i) (cinv_vp l.i (lock_inv l.r l.gr v))
+    (lock_acquired l ** v ** active l.i p)
+    (fun _ -> active l.i p)
+  fn _ {
+    unfold (lock_acquired l);
     unpack_cinv_vp l.i;
     unfold (lock_inv l.r l.gr v);
     unfold (lock_inv_aux l.r l.gr v);
     GR.pts_to_injective_eq l.gr;
     GR.gather l.gr #_ #1ul;
     with i. assert (pts_to l.gr i);
-    rewrite (if (i = 0ul) then v else emp) as emp;
-    write_atomic_box l.r 0ul;
+    rewrite each i as 1ul;
     GR.(l.gr := 0ul);
+    write_atomic_box l.r 0ul;
     fold (lock_inv_aux l.r l.gr v);
     fold (lock_inv l.r l.gr v);
     pack_cinv_vp l.i;
-    later_intro (cinv_vp l.i (lock_inv l.r l.gr v));
   };
 
   fold (lock_alive l #p v)
@@ -184,10 +188,10 @@ fn gather (#v:slprop) (#p1 #p2 :perm) (l:lock)
   ensures lock_alive l #(p1 +. p2) v
 {
   unfold (lock_alive l #p1 v);
+  drop_ (inv (iname_of l.i) _);
   unfold (lock_alive l #p2 v);
   CInv.gather #p1 #p2 l.i;
   fold (lock_alive l #(p1 +. p2) v);
-  drop_ (inv _ _)
 } 
 
 
@@ -200,11 +204,12 @@ fn free (#v:slprop) (l:lock)
   later_credit_buy 1;
   cancel l.i;
   unfold (lock_inv l.r l.gr v);
-  unfold (lock_inv_aux l.r l.gr v);
+  unfold (lock_inv_aux l.r l.gr v); with i. _;
   B.free l.r;
   GR.gather l.gr #_ #1ul;
   with v. assert l.gr |-> v; rewrite each v as 1ul; // awkward
   GR.free l.gr;
+  ()
 }
 
 
@@ -215,76 +220,12 @@ fn lock_alive_inj
   requires lock_alive l #p1 v1 ** lock_alive l #p2 v2
   ensures  lock_alive l #p1 v1 ** lock_alive l #p2 v1
 {
-  unfold (lock_alive l #p1 v1);
   unfold (lock_alive l #p2 v2);
+  drop_ (inv _ _);
+  unfold (lock_alive l #p1 v1);
   dup_inv (CInv.iname_of l.i) (CInv.cinv_vp l.i (lock_inv l.r l.gr v1));
   fold (lock_alive l #p1 v1);
   fold (lock_alive l #p2 v1);
-  drop_ (inv _ _);
   // TODO: we could also prove from, but that requires a significant amount of congruence lemmas about equiv
   // invariant_name_identifies_invariant (CInv.iname_of l.i) (CInv.iname_of l.i);
 }
-
-
-let iname_of l = CInv.iname_of l.i
-let iname_v_of l v = cinv_vp l.i (lock_inv l.r l.gr v)
-let lock_active #p l = active l.i p
-
-
-ghost
-fn share_lock_active (#p:perm) (l:lock)
-  requires lock_active #p l
-  ensures lock_active #(p /. 2.0R) l ** lock_active #(p /. 2.0R) l
-{
-  unfold (lock_active #p l);
-  CInv.share l.i;
-  fold (lock_active #(p /. 2.0R) l);
-  fold (lock_active #(p /. 2.0R) l)
-}
-
-
-
-ghost
-fn gather_lock_active (#p1 #p2:perm) (l:lock)
-  requires lock_active #p1 l ** lock_active #p2 l
-  ensures lock_active #(p1 +. p2) l
-{
-  unfold (lock_active #p1 l);
-  unfold (lock_active #p2 l);
-  CInv.gather #p1 #p2 l.i;
-  fold (lock_active #(p1 +. p2) l)
-}
-
-
-
-ghost
-fn elim_inv_and_active_into_alive (l:lock) (v:slprop) (#p:perm)
-  ensures (inv (iname_of l) (iname_v_of l v) ** lock_active #p l) @==> lock_alive l #p v
-{
-  intro (inv (iname_of l) (iname_v_of l v) ** lock_active #p l @==> lock_alive l #p v) fn _
-  {
-    rewrite each
-      iname_of l as CInv.iname_of l.i,
-      iname_v_of l v as cinv_vp l.i (lock_inv l.r l.gr v);
-    unfold (lock_active #p l);
-    fold (lock_alive l #p v)
-  };
-}
-
-
-
-ghost
-fn elim_alive_into_inv_and_active (l:lock) (v:slprop) (#p:perm)
-  requires emp
-  ensures lock_alive l #p v @==> (inv (iname_of l) (iname_v_of l v) ** lock_active #p l)
-{
-  intro (lock_alive l #p v @==> inv (iname_of l) (iname_v_of l v) ** lock_active #p l) fn _
-  {
-    unfold (lock_alive l #p v);
-    fold (lock_active #p l);
-    rewrite each
-      CInv.iname_of l.i as iname_of l,
-      cinv_vp l.i (lock_inv l.r l.gr v) as iname_v_of l v
-  };
-}
-

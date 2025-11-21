@@ -227,8 +227,8 @@ fn rec redeem_range
 
 fn
 parallel_for
-  (pre : (nat -> slprop))
-  (post : (nat -> slprop))
+  (pre : (nat -> slprop)) {| (x:nat -> is_send (pre x)) |}
+  (post : (nat -> slprop)) {| (x:nat -> is_send (post x)) |}
   (f : (i:nat -> stt unit (pre i) (fun () -> (post i))))
   (n : pos)
   requires on_range pre 0 n
@@ -280,8 +280,8 @@ spawning sequentially. *)
 
 fn
 parallel_for_alt
-  (pre : (nat -> slprop))
-  (post : (nat -> slprop))
+  (pre : (nat -> slprop)) {| (x:nat -> is_send (pre x)) |}
+  (post : (nat -> slprop)) {| (x:nat -> is_send (post x)) |}
   (f : (i:nat -> stt unit (pre i) (fun () -> (post i))))
   (n : pos)
   requires on_range pre 0 n
@@ -378,8 +378,8 @@ fn rec funfold
 
 fn
 parallel_for_wsr
-  (pre : (nat -> slprop))
-  (post : (nat -> slprop))
+  (pre : (nat -> slprop)) {| (x:nat -> is_send (pre x)) |}
+  (post : (nat -> slprop)) {| (x:nat -> is_send (post x)) |}
   (full_pre : (nat -> slprop))
   (full_post : (nat -> slprop))
   (f : (i:nat -> stt unit (pre i) (fun () -> post i)))
@@ -407,8 +407,8 @@ val frame_stt_left
 fn rec h_for_task
   (p:pool)
   (e:perm)
-  (pre : (nat -> slprop))
-  (post : (nat -> slprop))
+  (pre : (nat -> slprop)) {| (x:nat -> is_send (pre x)) |}
+  (post : (nat -> slprop)) {| (x:nat -> is_send (post x)) |}
   (f : (i:nat -> stt unit (pre i) (fun () -> post i)))
   (lo hi : nat)
   (_:unit)
@@ -421,7 +421,7 @@ fn rec h_for_task
     for_loop pre post emp
              (fun i -> frame_stt_left emp (f i)) lo hi;
 
-    return_pledge (pool_done p) (on_range post lo hi)
+    return_pledge (pool_done p) (on_range post lo hi) #_
   } else {
     let mid = (hi+lo)/2;
     assert (pure (lo <= mid /\ mid <= hi));
@@ -482,8 +482,8 @@ val wait_pool
 
 fn
 parallel_for_hier
-  (pre : (nat -> slprop))
-  (post : (nat -> slprop))
+  (pre : (nat -> slprop)) {| (x:nat -> is_send (pre x)) |}
+  (post : (nat -> slprop)) {| (x:nat -> is_send (post x)) |}
   (f : (i:nat -> stt unit (pre i) (fun () -> (post i))))
   (n : pos)
   requires on_range pre 0 n

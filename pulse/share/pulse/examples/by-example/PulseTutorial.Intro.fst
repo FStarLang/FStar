@@ -17,22 +17,21 @@
 module PulseTutorial.Intro
 #lang-pulse
 open Pulse.Lib.Pervasives
+open Pulse.Lib.Par
 
 
 
 
 fn par (#p #q #r #s:_)
+        {| is_send p, is_send q, is_send r, is_send s |}
        (f: (unit -> stt unit p (fun _ -> q)))
        (g: (unit -> stt unit r (fun _ -> s)))
 requires p ** r
 ensures q ** s
 {
-    parallel
-    requires p and r
-    ensures  q and s
-        { f () }
-        { g () };
-    ()
+    par #p #q #r #s
+        fn _ { f () }
+        fn _ { g () }
 }
 
 
@@ -63,8 +62,8 @@ fn par_incr (x y:ref int)
 requires pts_to x 'i ** pts_to y 'j
 ensures pts_to x ('i + 1) ** pts_to y ('j + 1)
 {
-   par (fun _ -> incr x)
-       (fun _ -> incr y)
+   par (fun _ -> incr x #'i)
+       (fun _ -> incr y #'j)
 }
 //end par_incr$
 

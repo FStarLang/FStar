@@ -28,7 +28,7 @@ fn pledge_return_now (f:slprop) (r : ref int)
   requires pts_to r 123
   ensures pledge emp_inames f (pts_to r 123)
 {
-  return_pledge f (pts_to r 123); // ideally automated
+  return_pledge f (pts_to r 123) #_; // ideally automated
 }
 
 

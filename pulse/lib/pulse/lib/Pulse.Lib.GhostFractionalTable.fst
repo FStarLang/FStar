@@ -35,10 +35,14 @@ let is_table #a ([@@@mkey]t:table a) (max:nat)
 : slprop
 = GPR.pts_to t (full_table_above max)
 
+let placeless_is_table #a t max = Tactics.Typeclasses.solve
+
 let pts_to #a (t:table a) (i:nat) (#f:perm) (p:a)
 : slprop
 = GPR.pts_to t (singleton i f (Some p)) **
   pure (PF.perm_ok f)
+
+let placeless_pts_to #a t i #f p = Tactics.Typeclasses.solve
 
 ghost
 fn create (#a:Type)

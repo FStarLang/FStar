@@ -29,6 +29,8 @@ val lock_alive
       (v:slprop)
   : slprop
 
+instance val is_send_lock_alive l p v {| is_send v |} : is_send (lock_alive l #p v)
+
 val lock_acquired (l:lock) : slprop
 
 fn new_lock (v:slprop)
@@ -66,26 +68,3 @@ fn lock_alive_inj
   (l:lock) (#p1 #p2 :perm) (#v1 #v2 :slprop)
   requires lock_alive l #p1 v1 ** lock_alive l #p2 v2
   ensures  lock_alive l #p1 v1 ** lock_alive l #p2 v1
-
-val iname_of (l:lock) : iname
-val iname_v_of (l:lock) (v:slprop) : slprop
-val lock_active (#[T.exact (`1.0R)] p:perm) (l:lock) : v:slprop { timeless v }
-
-ghost
-fn share_lock_active (#p:perm) (l:lock)
-  requires lock_active #p l
-  ensures lock_active #(p /. 2.0R) l ** lock_active #(p /. 2.0R) l
-
-ghost
-fn gather_lock_active (#p1 #p2:perm) (l:lock)
-  requires lock_active #p1 l ** lock_active #p2 l
-  ensures lock_active #(p1 +. p2) l
-
-ghost
-fn elim_inv_and_active_into_alive (l:lock) (v:slprop) (#p:perm)
-  ensures (inv (iname_of l) (iname_v_of l v) ** lock_active #p l) @==> lock_alive l #p v
-
-ghost
-fn elim_alive_into_inv_and_active (l:lock) (v:slprop) (#p:perm)
-  requires emp
-  ensures lock_alive l #p v @==> (inv (iname_of l) (iname_v_of l v) ** lock_active #p l)

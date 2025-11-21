@@ -6,6 +6,7 @@ module S = FStar.Seq
 module SZ = FStar.SizeT
 open MSort.SeqLemmas
 open MSort.Base
+open Pulse.Lib.Par
 
 
 fn
@@ -30,13 +31,12 @@ msort
     with s1. assert (pts_to_range a (SZ.v lo) (SZ.v mid) s1);
     with s2. assert (pts_to_range a (SZ.v mid) (SZ.v hi) s2);
 
-    parallel
-      requires pts_to_range a (SZ.v lo) (SZ.v mid) (reveal s1)
-           and pts_to_range a (SZ.v mid) (SZ.v hi) (reveal s2)
-      ensures  pts_to_range a (SZ.v lo) (SZ.v mid) (sort (reveal s1))
-          and  pts_to_range a (SZ.v mid) (SZ.v hi) (sort (reveal s2))
-    { msort a lo mid s1; }
-    { msort a mid hi s2; };
+    par #(requires pts_to_range a (SZ.v lo) (SZ.v mid) (reveal s1))
+        #(ensures pts_to_range a (SZ.v lo) (SZ.v mid) (sort (reveal s1)))
+        #(requires pts_to_range a (SZ.v mid) (SZ.v hi) (reveal s2))
+        #(ensures pts_to_range a (SZ.v mid) (SZ.v hi) (sort (reveal s2)))
+        fn _ { msort a lo mid s1; }
+        fn _ { msort a mid hi s2; };
 
     merge_impl a lo mid hi () (sort s1) (sort s2);
   }

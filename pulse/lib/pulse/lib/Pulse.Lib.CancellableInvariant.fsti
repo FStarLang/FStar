@@ -27,7 +27,13 @@ instance val non_informative_cinv
 
 val cinv_vp ([@@@mkey] c:cinv) (v:slprop) : slprop
 
+instance val is_send_across_cinv_vp_aux #b #g c v {| is_send_across #b g v |} : is_send_across g (cinv_vp c v)
+instance placeless_cinv_vp_aux c v {| i: placeless v |} : placeless (cinv_vp c v) = is_send_across_cinv_vp_aux c v #i
+instance is_send_cinv_vp_aux c v {| i: is_send v |} : is_send (cinv_vp c v) = is_send_across_cinv_vp_aux c v #i
+
 val active ([@@@mkey] c:cinv) (p:perm) : slprop
+
+instance val placeless_active c p : placeless (active c p)
 
 val active_timeless (c:cinv) (p:perm)
   : Lemma (timeless (active c p))

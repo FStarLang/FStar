@@ -26,6 +26,7 @@ module SZ = FStar.SizeT
 module Seq = FStar.Seq
 open Pulse.Lib.Array.Core
 open Pulse.Lib.SmallType
+open Pulse.Lib.Send
 
 val pts_to (#a:Type u#a) ([@@@mkey]x:array a) (#[exact (`1.0R)] p:perm) (s: Seq.seq a) : slprop
 
@@ -37,6 +38,8 @@ instance has_pts_to_array (a:Type u#a) : has_pts_to (array a) (Seq.seq a) = {
 instance has_pts_to_larray (a:Type u#a) (n : nat) : has_pts_to (larray a n) (Seq.seq a) = {
   pts_to = pts_to;
 }
+
+instance val is_send_pts_to #a r #p n : is_send (pts_to #a r #p n)
 
 ghost fn to_mask u#a (#t: Type u#a) (arr: array t) #f (#v: erased _)
   requires arr |-> Frac f v

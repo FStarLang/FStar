@@ -238,15 +238,6 @@ let rec eq_st_term (t1 t2:st_term)
       eq_st_term cond1 cond2 &&
       eq_st_term body1 body2
 
-    | Tm_Par {pre1=preL1; body1=eL1; post1=postL1; pre2=preR1; body2=eR1; post2=postR1 },
-      Tm_Par {pre1=preL2; body1=eL2; post1=postL2; pre2=preR2; body2=eR2; post2=postR2 } ->
-      eq_tm preL1 preL2 &&
-      eq_st_term eL1 eL2 &&
-      eq_tm postL1 postL2 &&
-      eq_tm preR1 preR2 &&
-      eq_st_term eR1 eR2 &&
-      eq_tm postR1 postR2
-
     | Tm_WithLocal { binder=x1; initializer=e1; body=b1 },
       Tm_WithLocal { binder=x2; initializer=e2; body=b2 } ->
       eq_tm x1.binder_ty x2.binder_ty &&
@@ -283,16 +274,6 @@ let rec eq_st_term (t1 t2:st_term)
       eq_hint_type ht1 ht2 &&
       eq_list eq_binder bs1 bs2 &&
       eq_st_term t1 t2
-
-    | Tm_WithInv {name=name1; returns_inv=r1; body=body1},
-      Tm_WithInv {name=name2; returns_inv=r2; body=body2} ->
-      eq_tm name1 name2 &&
-      eq_opt (fun (b1, r1, is1) (b2, r2, is2) ->
-              eq_tm b1.binder_ty b2.binder_ty &&
-              eq_tm r1 r2 &&
-              eq_tm is1 is2) r1 r2
-             &&
-      eq_st_term body1 body2
 
     | Tm_PragmaWithOptions { options=o1; body=b1 }, 
       Tm_PragmaWithOptions { options=o2; body=b2 } ->

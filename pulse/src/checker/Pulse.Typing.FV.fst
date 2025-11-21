@@ -184,14 +184,6 @@ let rec freevars_close_st_term' (t:st_term) (x:var) (i:index)
       freevars_close_st_term' condition x i;
       freevars_close_st_term' body x i
 
-    | Tm_Par { pre1; body1; post1; pre2; body2; post2 } ->
-      freevars_close_term' pre1 x i;
-      freevars_close_st_term' body1 x i;
-      freevars_close_term' post1 x (i + 1);
-      freevars_close_term' pre2 x i;
-      freevars_close_st_term' body2 x i;
-      freevars_close_term' post2 x (i + 1)
-
     | Tm_Rewrite { t1; t2; tac_opt } ->
       freevars_close_term' t1 x i;
       freevars_close_term' t2 x i;
@@ -219,17 +211,6 @@ let rec freevars_close_st_term' (t:st_term) (x:var) (i:index)
       let n = L.length binders in
       freevars_close_proof_hint' hint_type x (i + n);
       freevars_close_st_term' t x (i + n)
-
-    | Tm_WithInv { name; body; returns_inv } -> (
-      freevars_close_term' name x i;
-      freevars_close_st_term' body x i;
-      match returns_inv with
-      | None -> ()
-      | Some (b, r, is) ->
-        freevars_close_term' b.binder_ty x i;
-        freevars_close_term' r x (i + 1);
-        freevars_close_term' is x i
-    )
 
     | Tm_PragmaWithOptions { body } ->
       freevars_close_st_term' body x i
@@ -673,28 +654,6 @@ fun d cb ->
     assert (freevars (open_term' inv tm_false 0) `Set.subset` freevars inv)
 #pop-options
 
-#push-options "--z3rlimit 40 --fuel 3 --ifuel 2"
-#restart-solver // avoiding z3 crash on 4.13.3
-let st_typing_freevars_par : st_typing_freevars_case T_Par? =
-fun d cb ->
-  match d with
-  | T_Par _ _ cL _ cR x _ _ eL_typing eR_typing ->
-    let x_tm = term_of_no_name_var x in
-    let uL = comp_u cL in
-    let uR = comp_u cR in
-    let aL = comp_res cL in
-    let aR = comp_res cR in
-    cb eL_typing;
-    cb eR_typing;
-    freevars_mk_fst uL uR aL aR x_tm;
-    freevars_mk_snd uL uR aL aR x_tm;
-    freevars_open_term (comp_post cL) (Pulse.Typing.mk_fst uL uR aL aR x_tm) 0;
-    freevars_open_term (comp_post cR) (Pulse.Typing.mk_snd uL uR aL aR x_tm) 0;
-    freevars_close_term (tm_star (open_term' (comp_post cL) (Pulse.Typing.mk_fst uL uR aL aR x_tm) 0)
-                                (open_term' (comp_post cR) (Pulse.Typing.mk_snd uL uR aL aR x_tm) 0)) x 0;
-    freevars_mk_tuple2 uL uR aL aR
-#pop-options
-
 let st_typing_freevars_rewrite : st_typing_freevars_case T_Rewrite? =
 fun d cb ->
   match d with
@@ -786,8 +745,6 @@ let rec st_typing_freevars
     st_typing_freevars_while d st_typing_freevars
   | T_NuWhile .. ->
     st_typing_freevars_nuwhile d st_typing_freevars
-  | T_Par .. ->
-    st_typing_freevars_par d st_typing_freevars
   | T_Rewrite .. ->
     st_typing_freevars_rewrite d st_typing_freevars
   | T_WithLocal .. ->
@@ -798,8 +755,6 @@ let rec st_typing_freevars
     st_typing_freevars_admit d st_typing_freevars
   | T_Unreachable _ c c_typing _ ->
     st_typing_freevars_unreachable d st_typing_freevars
-  | T_WithInv .. ->
-    admit () // IOU
   | T_Sub _ _ _ _ d_t d_sub ->
     st_typing_freevars d_t;
     st_sub_freevars d_sub

@@ -184,3 +184,26 @@ fn rewrite_with_trade
   rewrite p1 as p2;
   ();
 }
+
+ghost
+fn is_send_across_trade #b #g #is
+  (p1 p2: slprop) {| i1: is_send_across #b g p1, i2: is_send_across g p2 |}
+  : is_send_across g (trade #is p1 p2) = l1 l2 {
+  ghost_impersonate l2 (on l1 (trade #is p1 p2)) (on l2 (trade #is p1 p2)) fn _ {
+    loc_dup l2;
+    intro (trade #is p1 p2) #(on l1 (trade #is p1 p2) ** loc l2) fn _ {
+      on_intro p1;
+      i1 l2 l1;
+      ghost_impersonate #is l1 (on l1 p1 ** on l1 (trade #is p1 p2)) (on l1 p2) fn _ {
+        on_elim p1;
+        on_elim (trade #is p1 p2);
+        elim_trade #is _ _;
+        on_intro p2
+      };
+      i2 l1 l2;
+      on_elim p2;
+      drop_ (loc l2);
+    };
+    on_intro (trade #is p1 p2);
+  };
+}

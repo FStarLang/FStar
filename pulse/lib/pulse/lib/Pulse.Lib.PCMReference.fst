@@ -39,6 +39,16 @@ let timeless_pcm_pts_to #a #p r v =
     op_exists_Star fun (inst: small_type u#a) ->
       C.pcm_pts_to #_ #(raise p) r (U.raise_val v) ** small_token inst)
 
+ghost fn placeless_pcm_pts_to'' #a #p r v : placeless (C.pcm_pts_to #a #p r v) = l1 l2 {
+  C.on_pcm_pts_to_eq l1 r v;
+  C.on_pcm_pts_to_eq l2 r v;
+  rewrite on l1 (C.pcm_pts_to r v) as on l2 (C.pcm_pts_to r v)
+}
+instance placeless_pcm_pts_to' #a #p = placeless_pcm_pts_to'' #a #p
+
+let placeless_pcm_pts_to #a #p r v =
+  Tactics.Typeclasses.solve
+
 ghost fn pts_to_small u#a (#a:Type u#a) (#p:FStar.PCM.pcm a) (r:pcm_ref p) (v:a)
   preserves pcm_pts_to r v
   returns inst: small_type u#a

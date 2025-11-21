@@ -21,6 +21,7 @@ open Pulse.Lib.Pervasives
 module L = Pulse.Lib.SpinLock
 module GR = Pulse.Lib.GhostReference
 module R = Pulse.Lib.Reference
+open Pulse.Lib.Par
 
 
 fn increment (#p:perm)
@@ -142,17 +143,17 @@ ensures pts_to x ('i + 2)
 
     with pred. assert (L.lock_alive lock #1.0R (exists* v. pts_to x v ** pred v));
     L.share lock;
-    parallel
-    requires pts_to left #0.5R 0 **
-             L.lock_alive lock #0.5R (exists* v. pts_to x v ** pred v)
-         and pts_to right #0.5R 0 **
-             L.lock_alive lock #0.5R (exists* v. pts_to x v ** pred v)
-    ensures  pts_to left #0.5R 1 **
-             L.lock_alive lock #0.5R (exists* v. pts_to x v ** pred v)
-         and pts_to right #0.5R 1 **
-             L.lock_alive lock #0.5R (exists* v. pts_to x v ** pred v)
-    { increment_f2 x lock (step left true) }
-    { increment_f2 x lock (step right false) };
+    par
+      #(requires pts_to left #0.5R 0 **
+             L.lock_alive lock #0.5R (exists* v. pts_to x v ** pred v))
+      #(ensures  pts_to left #0.5R 1 **
+             L.lock_alive lock #0.5R (exists* v. pts_to x v ** pred v))
+      #(requires pts_to right #0.5R 0 **
+             L.lock_alive lock #0.5R (exists* v. pts_to x v ** pred v))
+      #(ensures pts_to right #0.5R 1 **
+             L.lock_alive lock #0.5R (exists* v. pts_to x v ** pred v))
+      fn _ { increment_f2 x lock (step left true) }
+      fn _ { increment_f2 x lock (step right false) };
 
     L.gather lock;
     L.acquire lock;
@@ -186,15 +187,13 @@ fn atomic_increment_f2
 requires inv l (pts_to_refine x pred) ** qpred 'i
 ensures inv l (pts_to_refine x pred) ** qpred ('i + 1)
 {
-  later_credit_buy 1;
-  with_invariants l {
-    later_elim _;
+  with_invariants unit emp_inames l (pts_to_refine x pred) (qpred 'i) (fun _ -> qpred ('i + 1))
+  fn _ {
     unfold pts_to_refine;
     with v. _;
     atomic_increment x;
     f v 'i;
     fold pts_to_refine x pred;
-    later_intro (pts_to_refine x pred);
   }
 }
 
@@ -215,9 +214,12 @@ requires
      (pred (v + 1) ** qpred (vq + 1) ** pts_to x (v + 1)))
 ensures inv l (pts_to_refine x pred) ** qpred ('i + 1)
 {
-  later_credit_buy 1;
-  with_invariants l {
-    later_elim _;
+  with_invariants unit emp_inames l (pts_to_refine x pred)
+    (qpred 'i ** (forall* v vq.
+      (pred v ** qpred vq ** pts_to x (v + 1)) @==>
+      (pred (v + 1) ** qpred (vq + 1) ** pts_to x (v + 1))))
+    (fun _ -> qpred ('i + 1))
+  fn _ {
     unfold pts_to_refine;
     with v. _;
     atomic_increment x;
@@ -228,7 +230,6 @@ ensures inv l (pts_to_refine x pred) ** qpred ('i + 1)
                            (pred (v + 1) ** qpred (vq + 1) ** pts_to x (v + 1))) 'i;
     I.elim _ _;
     fold pts_to_refine x pred;
-    later_intro (pts_to_refine x pred);
   }
 }
 
@@ -250,14 +251,16 @@ requires
   ((exists* v. pts_to x v ** pred v) @==> invp)
 ensures inv l invp ** qpred ('i + 1)
 {
-  later_credit_buy 1;
-  with_invariants l {
-    later_elim _;
+  with_invariants unit emp_inames l invp
+    (qpred 'i **
+      (invp @==> (exists* v. pts_to x v ** pred v)) ** 
+      ((exists* v. pts_to x v ** pred v) @==> invp))
+    (fun _ -> qpred ('i + 1))
+  fn _ {
     I.elim invp _;
     atomic_increment x;
     f _ 'i;
     I.elim (exists* v. pts_to x v ** pred v) invp;
-    later_intro invp;
   }
 }
 
@@ -304,15 +307,12 @@ ensures inv l invp ** qpred ('i + 1)
   returns v:int
   ensures inv l invp
   {
-    later_credit_buy 1;
-    with_invariants l {
-        later_elim _;
+    with_invariants int emp_inames l invp emp (fun _ -> emp) fn _ {
         elim_inv ();
         with i. _;
         let v = atomic_read x;
         rewrite (pts_to x v) as (pts_to x i);
         intro_inv ();
-        later_intro invp;
         v
     }
   };
@@ -328,15 +328,11 @@ ensures inv l invp ** qpred ('i + 1)
     rewrite each (!continue) as true; // FIXME: rewrites_to goes the wrong direction?
     elim_cond_true _ _ _;
     let v = read ();
-    later_credit_buy 1;
     let next = 
-      with_invariants l
-      returns b1:bool
-      ensures later invp 
-          ** cond b1 (qpred 'i) (qpred ('i + 1))
-          ** pts_to continue true
-      {
-        later_elim _;
+      with_invariants bool emp_inames l invp
+        (qpred 'i)
+        (fun b1 -> cond b1 (qpred 'i) (qpred ('i + 1)))
+      fn _ {
         elim_inv ();
         with vv. assert pure (vv == !x);
         let b = cas x v (v + 1);
@@ -346,7 +342,6 @@ ensures inv l invp ** qpred ('i + 1)
           f vv 'i;
           intro_inv ();
           fold (cond false (qpred 'i) (qpred ('i + 1)));
-          later_intro invp;
           false
         }
         else
@@ -354,7 +349,6 @@ ensures inv l invp ** qpred ('i + 1)
           unfold cond;
           intro_inv ();
           fold (cond true (qpred 'i) (qpred ('i + 1)));
-          later_intro invp;
           true
         }
       };
@@ -383,14 +377,14 @@ fn atomic_increment_f6
 requires inv (C.iname_of c) (C.cinv_vp c (exists* v. pts_to x v ** pred v)) ** qpred 'i ** C.active c p
 ensures inv (C.iname_of c) (C.cinv_vp c (exists* v. pts_to x v ** pred v)) ** qpred ('i + 1) ** C.active c p
 {
-  later_credit_buy 1;
-  with_invariants (C.iname_of c) {
-    later_elim _;
+  with_invariants unit emp_inames (C.iname_of c) (C.cinv_vp c (exists* v. pts_to x v ** pred v))
+    (qpred 'i ** C.active c p)
+    (fun _ -> qpred ('i + 1) ** C.active c p)
+  fn _ {
     C.unpack_cinv_vp c;
     atomic_increment x;
     f _ 'i;
     C.pack_cinv_vp #(exists* v. pts_to x v ** pred v) c;
-    later_intro (C.cinv_vp c (exists* v. pts_to x v ** pred v));
   }
 }
 
@@ -451,21 +445,21 @@ ensures pts_to x ('i + 2)
     with pred. assert (inv (C.iname_of c) (C.cinv_vp c (exists* v. pts_to x v ** pred v)));
     dup_inv (C.iname_of c) (C.cinv_vp c (exists* v. pts_to x v ** pred v));
 
-    parallel
-    requires pts_to left #0.5R 0 **
-             C.active c 0.5R **
-             inv (C.iname_of c) (C.cinv_vp c (exists* v. pts_to x v ** pred v))
-         and pts_to right #0.5R 0 **
-             C.active c 0.5R **
-             inv (C.iname_of c) (C.cinv_vp c (exists* v. pts_to x v ** pred v))
-    ensures  pts_to left #0.5R 1 **
-             C.active c 0.5R **
-             inv (C.iname_of c) (C.cinv_vp c (exists* v. pts_to x v ** pred v))
-         and pts_to right #0.5R 1 **
-             C.active c 0.5R **
-             inv (C.iname_of c) (C.cinv_vp c (exists* v. pts_to x v ** pred v))
-    { atomic_increment_f6 x c (step left true) }
-    { atomic_increment_f6 x c (step right false) };
+    par
+      #(requires pts_to left #0.5R 0 **
+            C.active c 0.5R **
+            inv (C.iname_of c) (C.cinv_vp c (exists* v. pts_to x v ** pred v)))
+      #(ensures  pts_to left #0.5R 1 **
+            C.active c 0.5R **
+            inv (C.iname_of c) (C.cinv_vp c (exists* v. pts_to x v ** pred v)))
+      #(requires pts_to right #0.5R 0 **
+            C.active c 0.5R **
+            inv (C.iname_of c) (C.cinv_vp c (exists* v. pts_to x v ** pred v)))
+      #(ensures pts_to right #0.5R 1 **
+            C.active c 0.5R **
+            inv (C.iname_of c) (C.cinv_vp c (exists* v. pts_to x v ** pred v)))
+      fn _ { atomic_increment_f6 x c (step left true) }
+      fn _ { atomic_increment_f6 x c (step right false) };
 
     C.gather c;
     drop_ (inv (C.iname_of c) (C.cinv_vp c (exists* v. pts_to x v ** pred v)));

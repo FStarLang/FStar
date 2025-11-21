@@ -40,11 +40,9 @@ module WithLocal = Pulse.Checker.WithLocal
 module WithLocalArray = Pulse.Checker.WithLocalArray
 module While = Pulse.Checker.While
 module Exists = Pulse.Checker.Exists
-module Par = Pulse.Checker.Par
 module Admit = Pulse.Checker.Admit
 module Return = Pulse.Checker.Return
 module Rewrite = Pulse.Checker.Rewrite
-module WithInv = Pulse.Checker.WithInv
 module PCP = Pulse.Checker.Pure
 
 let terms_to_string (t:list term)
@@ -390,9 +388,6 @@ let rec check
         | Tm_WithLocalArray _ ->
           WithLocalArray.check g pre pre_typing post_hint res_ppname t check
 
-        | Tm_Par _ ->
-          Par.check g pre pre_typing post_hint res_ppname t check
-
         | Tm_IntroPure _ -> 
           Pulse.Checker.IntroPure.check g pre pre_typing post_hint res_ppname t
 
@@ -404,9 +399,6 @@ let rec check
 
         | Tm_Rewrite _ ->
           Rewrite.check g pre pre_typing post_hint res_ppname t
-
-        | Tm_WithInv _ ->
-          WithInv.check g pre pre_typing post_hint res_ppname t check
 
         | Tm_PragmaWithOptions { options; body } ->
           RU.push_options();

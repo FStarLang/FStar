@@ -117,9 +117,8 @@ let pulse_translate_expr : translate_expr_t = fun env e ->
     EBufWrite (cb e1, zero_for_deref, cb e2)
 
   (* Pulse arrays *)
-  | MLE_App ({ expr = MLE_Name p }, [ x; n])
-  | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [_; x; n])
-    when string_of_mlpath p = "Pulse.Lib.Array.Core.mask_alloc" ->
+  | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [_; x; n; _; _])
+    when string_of_mlpath p = "Pulse.Lib.Array.Core.mask_alloc_with_vis" ->
     EBufCreate (Stack, cb x, cb n)
 
   | MLE_App ({ expr = MLE_Name p }, [ x; n])

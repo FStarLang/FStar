@@ -37,12 +37,18 @@ val pts_to_full
   (n:a)
 : p:slprop { timeless p }
 
+instance val placeless_pts_to_full #a #p #anc r #pr n :
+  placeless (pts_to_full #a #p #anc r #pr n)
+
 val pts_to
   (#a:Type) (#p:_) (#anc:_)
   ([@@@mkey]r:ref a p anc)
   (#[T.exact (`1.0R)] p:perm)
   (n:a)
 : p:slprop { timeless p }
+
+instance val placeless_pts_to #a #p #anc r #pr n :
+  placeless (pts_to #a #p #anc r #pr n)
 
 val anchored
   (#a:Type)
@@ -52,9 +58,14 @@ val anchored
   (n:a)
 : p:slprop{ timeless p }
 
+instance val placeless_anchored #a #p #anc r n :
+  placeless (anchored #a #p #anc r n)
+
 val snapshot (#a:Type) (#p:_) (#anc:_) (r : ref a p anc) (v:a)
 : p:slprop { timeless p }
 
+instance val placeless_snapshot #a #p #anc r n :
+  placeless (snapshot #a #p #anc r n)
 
 ghost
 fn alloc (#a:Type) (x:a) (#p:_) (#anc:anchor_rel p)

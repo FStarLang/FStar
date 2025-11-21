@@ -61,14 +61,12 @@ fn release (#p:slprop) (l:lock)
 requires protects l p ** p
 ensures protects l p
 {
-  later_credit_buy 1;
-  with_invariants l.i
-  { 
-    later_elim _;
+  with_invariants unit emp_inames l.i (lock_inv l.r p)
+    p (fun _ -> emp)
+  fn _ {
     with v. assert l.r |-> v;
     drop_ (maybe (v = 0ul) _);
     Pulse.Lib.Primitives.write_atomic_box l.r 0ul;
-    later_intro (lock_inv l.r p);
   }
 }
 
@@ -77,27 +75,22 @@ fn rec acquire #p (l:lock)
 requires protects l p
 ensures protects l p ** p
 {
-  later_credit_buy 1;
-  let retry = with_invariants l.i
-    returns retry:bool 
-    ensures later (lock_inv l.r p) ** (if retry then emp else p)
-  {
-    later_elim _;
+  let retry =
+    with_invariants bool emp_inames l.i (lock_inv l.r p)
+      emp (fun retry -> cond retry emp p)
+  fn _ {
     with v. assert (pts_to l.r v);
     let b = cas_box_alt l.r 0ul 1ul;
     if b {
-      assert (pure True);
-      // ^ Should not be needed! Looks like we're not eliminating
-      // pure slprops into the ctx before a rewrite.
       rewrite each v as 0ul;
-      assert p;
-      later_intro (lock_inv l.r p);
+      rewrite p as cond false emp p;
       false
     } else {
-      later_intro (lock_inv l.r p);
+      rewrite emp as cond true emp p;
       true
     }
   };
+  unfold cond;
   if retry { acquire l }
 }
 

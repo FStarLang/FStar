@@ -23,7 +23,6 @@ open FStar.Tactics
 open FStar.Preorder
 open Pulse.Lib.Pledge
 open Pulse.Lib.Trade
-open Pulse.Lib.Shift
 open Pulse.Class.Duplicable
 open Pulse.Class.Introducable
 
@@ -82,14 +81,24 @@ let state_res
   | Done -> post
   | Claimed -> AR.anchored g_state Claimed
 
+instance is_send_state_res pre post g_state st {| is_send pre, is_send post |} :
+    is_send (state_res pre post g_state st) =
+  match st with
+  | Ready -> Tactics.Typeclasses.solve #(is_send pre)
+  | Running -> Tactics.Typeclasses.solve #(is_send emp)
+  | Done -> Tactics.Typeclasses.solve #(is_send post)
+  | Claimed -> Tactics.Typeclasses.solve #(is_send (AR.anchored g_state Claimed))
+
 noeq
 type handle : Type0 = {
   state   : box task_state;
   g_state : AR.ref task_state p_st anchor_rel; (* these two refs are kept in sync *)
 }
 
+let is_send_tag v (inst: is_send v) = emp
+
 let up (x: slprop_ref) : slprop =
-  exists* v. slprop_ref_pts_to x v ** v
+  exists* v inst. slprop_ref_pts_to x v ** is_send_tag v inst ** v
 
 noeq
 type task_t : Type0 = {
@@ -119,25 +128,27 @@ let state_pred
 let task_type (pre post : slprop) : Type0 =
   unit -> task_f pre post
 
-let task_thunk_typing_core (t : task_t) (pre post: slprop) : slprop =
+let task_thunk_typing_core (t : task_t) (pre post: slprop) inst : slprop =
   slprop_ref_pts_to t.pre pre **
   slprop_ref_pts_to t.post post **
+  is_send_tag post inst **
   pure (Dyn.dyn_has_ty t.thunk (task_type pre post))
 
 let task_thunk_typing (t : task_t) : slprop =
-  exists* pre post. task_thunk_typing_core t pre post
+  exists* pre post inst. task_thunk_typing_core t pre post inst
 
 ghost fn task_thunk_typing_dup t
   requires task_thunk_typing t
   ensures task_thunk_typing t ** task_thunk_typing t
 {
   unfold task_thunk_typing t;
-  with pre post. assert task_thunk_typing_core t pre post;
+  with pre post inst. assert task_thunk_typing_core t pre post inst;
   unfold task_thunk_typing_core t pre post;
   slprop_ref_share t.pre;
   slprop_ref_share t.post;
-  fold task_thunk_typing_core t pre post;
-  fold task_thunk_typing_core t pre post;
+  fold is_send_tag post inst;
+  fold task_thunk_typing_core t pre post inst;
+  fold task_thunk_typing_core t pre post inst;
   fold task_thunk_typing t;
   fold task_thunk_typing t;
 }
@@ -154,6 +165,16 @@ let rec all_state_pred
     task_thunk_typing t **
     state_pred t.pre t.post t.h **
     all_state_pred ts
+
+instance is_send_all_state_pred v_runnable : is_send (all_state_pred v_runnable) =
+  let rec is_send_all_state_pred v_runnable : is_send (all_state_pred v_runnable) =
+    match v_runnable with
+    | [] -> is_send_placeless emp
+    | t::ts ->
+      let _: is_send (all_state_pred ts) = is_send_all_state_pred ts in
+      is_send_star (task_thunk_typing t) (state_pred t.pre t.post t.h ** all_state_pred ts) #_
+        #(is_send_star _ _ #_ #_) in
+  is_send_all_state_pred v_runnable
 
 ghost
 fn add_one_state_pred
@@ -232,6 +253,8 @@ type pool : Type0 = pool_st
 let pool_alive (#[exact (`1.0R)] f : perm) (p:pool) : slprop =
   lock_alive p.lk #(f /. 2.0R) (lock_inv p.runnable p.g_runnable)
 
+let is_send_pool_alive p = Tactics.Typeclasses.solve
+
 let state_res' (post : slprop) ( st : task_state) =
   match st with
   | Done -> post
@@ -246,6 +269,65 @@ let task_spotted
     AR.snapshot p.g_runnable v_runnable **
     pure (List.memP t v_runnable)
 
+let shift_tag p q extra (inst1: placeless extra) (inst2: duplicable extra)
+    (f: unit -> stt_ghost unit emp_inames (extra ** p) (fun _ -> q)) =
+  emp
+let shift p q = exists* extra inst1 inst2 f. shift_tag p q extra inst1 inst2 f ** extra
+
+fn introducable_shift_aux u#a (t: Type u#a) is
+    hyp extra concl {| inst1 : placeless extra |} {| inst2: duplicable extra |} {| introducable emp_inames (extra ** hyp) concl t |} (k: t) :
+    stt_ghost unit is extra (fun _ -> shift hyp concl) = {
+  ghost fn f () norewrite requires extra ** hyp ensures concl {
+    intro concl #(extra ** hyp) (fun _ -> k);
+  };
+  fold shift_tag hyp concl extra inst1 inst2 f;
+  fold shift hyp concl;
+}
+
+instance introducable_shift (t: Type u#a) is
+    hyp extra concl {| placeless extra, duplicable extra |} {| introducable emp_inames (extra ** hyp) concl t |} :
+    introducable is extra (shift hyp concl) t =
+  { intro_aux = introducable_shift_aux t is hyp extra concl }
+
+ghost fn dup_shift p q () : duplicable_f (shift p q) = {
+  unfold shift p q;
+  with e i1 i2 f. assert shift_tag p q e i1 i2 f;
+  fold shift_tag p q e i1 i2 f;
+  let i2=i2; dup e ();
+  fold shift p q;
+  fold shift p q;
+}
+instance duplicable_shift p q : duplicable (shift p q) =
+  { dup_f = dup_shift p q }
+
+ghost fn elim_shift p q
+  requires p
+  requires shift p q
+  ensures q
+{
+  unfold shift p q;
+  with e i1 i2 f. assert shift_tag p q e i1 i2 f;
+  unfold shift_tag p q e i1 i2 f;
+  let f = f;
+  f ()
+}
+
+ghost fn placeless_shift' p q : placeless (shift p q) = l1 l2 {
+  ghost_impersonate l1 (on l1 (shift p q)) (on l2 (shift p q)) fn _ {
+    on_elim (shift p q);
+    unfold shift p q;
+    with e i1 i2 f. assert shift_tag p q e i1 i2 f;
+    on_intro e;
+    { let i1=i1; i1 l1 l2; };
+    ghost_impersonate l2 (on l2 e ** shift_tag p q e i1 i2 f) (on l2 (shift p q)) fn _ {
+      on_elim e;
+      fold shift p q;
+      on_intro (shift p q);
+    };
+  }
+}
+instance placeless_shift p q : placeless (shift p q) = placeless_shift' p q
+
 let handle_spotted
   (p : pool)
   (post : slprop)
@@ -255,6 +337,9 @@ let handle_spotted
       task_spotted p t **
       shift (up t.post ** later_credit 1) post **
       pure (t.h == h)
+
+instance is_send_handle_spotted p post h : is_send (handle_spotted p post h) =
+  Tactics.Typeclasses.solve
 
 ghost
 fn intro_task_spotted
@@ -414,11 +499,12 @@ ghost fn shift_up (x: slprop_ref) (y: slprop)
   ensures shift (up x ** later_credit 1) y
 {
   intro (shift (up x ** later_credit 1) y) #(slprop_ref_pts_to x y) fn _ {
-    unfold up x;
+    unfold up x; with v inst. _;
     slprop_ref_gather _ #_ #y;
     later_elim _;
     equiv_elim _ _;
     drop_ (slprop_ref_pts_to _ _);
+    drop_ (is_send_tag v inst);
   };
 }
 
@@ -430,6 +516,7 @@ fn spawn (p:pool)
     (#pf:perm)
     (#pre : slprop)
     (#post : slprop)
+    {| pre_inst: is_send pre, post_inst: is_send post |}
     (f : unit -> task_f pre post)
     requires pool_alive #pf p ** pre
     returns  h : handle
@@ -458,6 +545,7 @@ fn spawn (p:pool)
   rewrite each post_ref as task.post;
   dup (slprop_ref_pts_to task.pre pre) ();
   dup (slprop_ref_pts_to task.post post) ();
+  fold is_send_tag post post_inst;
   fold task_thunk_typing_core task pre post;
   fold task_thunk_typing task;
   
@@ -490,6 +578,7 @@ fn spawn (p:pool)
   assert (pts_to r_task_st Ready);
 
   rewrite each r_task_st as handle.state;
+  fold is_send_tag pre pre_inst;
   fold up task.pre;
   rewrite (up task.pre)
        as (state_res (up task.pre) (up task.post) gr_task_st Ready);
@@ -806,6 +895,7 @@ fn spawn_ (p:pool)
     (#pf:perm)
     (#pre : slprop)
     (#post : slprop)
+    {| is_send pre, is_send post |}
     (f : unit -> stt unit (pre) (fun _ -> post))
     requires pool_alive #pf p ** pre
     ensures  pool_alive #pf p ** pledge [] (pool_done p) (post)
@@ -1079,9 +1169,9 @@ fn perf_work (t : task_t)
   ensures  up t.post
 {
   unfold task_thunk_typing t;
-  with pre post. assert task_thunk_typing_core t pre post;
+  with pre post inst. assert task_thunk_typing_core t pre post inst;
   unfold task_thunk_typing_core;
-  unfold up;
+  unfold up t.pre;
   slprop_ref_gather t.pre #_ #pre;
   later_credit_buy 1; later_elim _;
   equiv_elim _ _;
@@ -1089,7 +1179,8 @@ fn perf_work (t : task_t)
   undyn pre post t.thunk;
 
   fold up t.post; // ????
-  drop_ (slprop_ref_pts_to _ _);
+  with v vinst. assert is_send_tag v vinst;
+  drop_ (slprop_ref_pts_to _ _ ** is_send_tag v _);
 }
 fn put_back_result (p:pool) #f (t : task_t)
   requires pool_alive #f p **
@@ -1404,7 +1495,7 @@ fn spawn_worker
   requires pool_alive #f p
   ensures  emp
 {
-  fork (fun () -> worker_thread #f p)
+  fork' (pool_alive #f p) (fun () -> worker_thread #f p)
 }
 
 fn rec spawn_workers

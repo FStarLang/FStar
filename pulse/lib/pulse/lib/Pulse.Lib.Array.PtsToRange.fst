@@ -39,6 +39,8 @@ let pts_to_range
 : slprop
 = with_pure (i <= j /\ j <= length x) fun _ -> pts_to (gsub x i j) #p s
 
+let is_send_pts_to_range x i j p s = Tactics.Typeclasses.solve
+
 ghost fn fold_pts_to_range u#a (#a: Type u#a) (x: array a) (i: nat) (j: nat { i <= j /\ j <= length x }) #p #s0 s #mask
   requires pts_to_mask (gsub x i j) #p s0 mask
   requires pure (Seq.equal s s0)

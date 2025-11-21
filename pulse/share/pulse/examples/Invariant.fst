@@ -34,17 +34,11 @@ fn g (i:iname)
   ensures  r ** inv i p
   opens [i]
 {
-  with_invariants i {
-    later_elim _;
+  with_invariants_a unit emp_inames i p q (fun _ -> r) fn _ {
     f ();
-    later_intro p;
   }
 }
 
-
-#push-options "--fuel 0"
-(* Does it work without fuel? Requires the iname_list coercion
-to normalize away. *)
 
 atomic
 fn g2 (i:iname)
@@ -52,14 +46,10 @@ fn g2 (i:iname)
   ensures  r ** inv i p
   opens [i]
 {
-  with_invariants i {
-    later_elim _;
+  with_invariants_a unit emp_inames i p q (fun _ -> r) fn _ {
     f ();
-    later_intro p;
   }
 }
-
-#pop-options
 
 assume val f_ghost () : stt_ghost unit emp_inames (p ** q) (fun _ -> p ** r)
 
@@ -70,10 +60,8 @@ fn g_ghost (i:iname)
   ensures (r ** inv i p)
   opens [i]
 {
-  with_invariants i {
-    later_elim _;
+  with_invariants_g unit emp_inames i p q (fun _ -> r) fn _ {
     f_ghost ();
-    later_intro p;
   }
 }
 
@@ -116,33 +104,24 @@ fn test2 ()
 {
   let r = Box.alloc #int 0;
   let i = new_invariant (exists* v. Box.pts_to r v);
-  with_invariants i
-    returns _:unit
-    ensures later (exists* v. pts_to r v)
-    opens [i] {
-      later_elim_timeless _;
-      atomic_write_int r 1;
-      later_intro (exists* v. pts_to r v);
+  with_invariants unit emp_inames i (exists* v. Box.pts_to r v) emp (fun _ -> emp) fn _ {
+    atomic_write_int r 1;
   };
   drop_ (inv i _)
 }
 
 
 // Fails as the with_invariants block is not atomic/ghost
-[@@expect_failure]
 
+[@@expect_failure [228]]
 fn test3 ()
   requires emp
   ensures emp
 {
-  let r = alloc #int 0;
+  let r = Box.alloc 0;
   let i = new_invariant (exists* v. pts_to r v);
-  with_invariants i
-    returns _:unit
-    ensures later (exists* v. pts_to r v) {
-      later_elim_storable _;
-      r := 1;
-      later_intro (exists* v. pts_to r v);
+  with_invariants unit emp_inames i (exists* v. pts_to r v) emp (fun _ -> emp) fn _ {
+    r := 1;
   };
   drop_ (inv i _)
 }
@@ -166,10 +145,11 @@ fn test3 ()
 atomic
 fn t0 () (i:iname)
   requires inv i emp
+  requires later_credit 1
   ensures inv i emp
   opens [i]
 {
-  with_invariants i {
+  with_invariants_a unit emp_inames i emp emp (fun _ -> emp) fn _ {
     ()
   }
 }
@@ -190,15 +170,16 @@ fn basic_ghost ()
 
 
 (* Using invariants while claiming not to. *)
-[@@expect_failure]
+[@@expect_failure [19]]
 
 atomic
 fn t1 ()
+  requires later_credit 1
   requires inv i emp
   ensures inv i emp
   opens []
 {
-  with_invariants i {
+  with_invariants_a unit emp_inames i emp emp (fun _ -> emp) fn _ {
     ()
   }
 }
@@ -208,11 +189,12 @@ fn t1 ()
 
 atomic
 fn t3 ()
+  requires later_credit 1
   requires inv i emp
   ensures inv i emp
   opens [i; i2]
 {
-  with_invariants i {
+  with_invariants_a unit emp_inames i emp emp (fun _ -> emp) fn _ {
     ()
   }
 }
@@ -226,9 +208,7 @@ fn t2 ()
   ensures emp
 {
   let j = new_invariant emp;
-  with_invariants j 
-    returns _:unit
-    ensures later emp {
+  with_invariants unit emp_inames j emp emp (fun _ -> emp) fn _ {
     ()
   };
   drop_ (inv j _);
@@ -249,16 +229,11 @@ fn test_returns0 (i:iname) (b:bool)
   opens [i]
 {
   unfold folded_inv i;
-  with_invariants i
-    returns _:unit
-    ensures later p ** q {
-    later_elim _;
+  with_invariants_a unit emp_inames i p emp (fun _ -> q) fn _ {
     if b {
       p_to_q ();
-      later_intro p;
     } else {
       ghost_p_to_q ();
-      later_intro p;
     }
   };
   fold folded_inv i
@@ -273,12 +248,8 @@ fn test_returns1 (i:iname)
   opens [i]
 {
   unfold folded_inv i;
-  with_invariants i
-    returns _:unit
-    ensures later p ** q {
-    later_elim _;
+  with_invariants_g unit emp_inames i p emp (fun _ -> q) fn _ {
     ghost_p_to_q ();
-    later_intro p;
   };
   fold folded_inv i
 }
@@ -298,12 +269,8 @@ fn test_returns2 (i:iname)
   opens [i]
 {
   unfold folded_inv i;
-  with_invariants i
-    returns _:unit
-    ensures later pp ** q {
-    later_elim _;
+  with_invariants_g unit emp_inames i p emp (fun _ -> q) fn _ {
     ghost_p_to_q ();
-    later_intro pp;
   };
   fold folded_inv i
 }

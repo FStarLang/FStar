@@ -74,6 +74,6 @@ let teardown_pool p =
     wait_for_empty p;
     T.teardown_pool p.p
 
-let spawn_ p () () () f =
+let spawn_ p () () () () () f =
     let _ = async p f in
     ()

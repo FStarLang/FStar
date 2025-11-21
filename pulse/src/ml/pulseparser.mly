@@ -68,9 +68,9 @@ let add_decorations decors ds =
 %}
 
 /* pulse specific tokens; rest are inherited from F* */
-%token MUT FN INVARIANT WHILE REF PARALLEL REWRITE FOLD EACH NOREWRITE
+%token MUT FN INVARIANT WHILE REF REWRITE FOLD EACH NOREWRITE
 %token GHOST ATOMIC UNOBSERVABLE
-%token WITH_INVS OPENS  SHOW_PROOF_STATE
+%token OPENS  SHOW_PROOF_STATE
 %token PRESERVES
 
 %start pulseDeclEOF
@@ -258,11 +258,6 @@ pulseStmtNoSeq:
     { PulseSyntaxExtension_Sugar.mk_while tm inv body }
   | INTRO p=pulseSLProp WITH ws=nonempty_list(indexingTerm)
     { PulseSyntaxExtension_Sugar.mk_intro p ws }
-  | PARALLEL REQUIRES p1=pulseSLProp AND p2=pulseSLProp
-             ENSURES q1=pulseSLProp AND q2=pulseSLProp
-             LBRACE b1=pulseStmt RBRACE
-             LBRACE b2=pulseStmt RBRACE
-    { PulseSyntaxExtension_Sugar.mk_par p1 p2 q1 q2 b1 b2 }
   | bs=withBindersOpt REWRITE body=rewriteBody
     {
         PulseSyntaxExtension_Sugar.mk_proof_hint_with_binders body bs
@@ -301,8 +296,6 @@ bindableTerm:
   | LBRACK_BAR v=noSeqTerm SEMICOLON n=noSeqTerm BAR_RBRACK { Array_initializer { init=v; len=n } }
  
 pulseBindableTerm:
-  | WITH_INVS names=nonempty_list(atomicTerm) r=option(ensuresSLProp) LBRACE body=pulseStmt RBRACE
-    { PulseSyntaxExtension_Sugar.mk_with_invs names body r }
   | p=ifStmt { p }
  
 pulseLambda:

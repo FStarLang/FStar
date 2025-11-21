@@ -381,7 +381,6 @@ let lift (#a:Type u#a) #r #opens #pre #post
 ///////////////////////////////////////////////////////
 // invariants
 ///////////////////////////////////////////////////////
-let inv i p = inv i p
 let dup_inv (i:iref) (p:slprop) =
   lift_pre_act0_act fun #ictx -> ITA.dup_inv ictx i p
 let new_invariant p = lift_pre_act0_act fun #ictx -> ITA.new_invariant ictx p
@@ -434,6 +433,7 @@ let core_ref_null = Mem.core_ref_null
 let is_core_ref_null = Mem.core_ref_is_null
 let pts_to #a #p r x = Sep.lift (Mem.pts_to #a #p r x)
 let timeless_pts_to #a #p r x = Sep.timeless_lift (Mem.pts_to #a #p r x)
+let on_pcm_pts_to_eq l #a #p r v = Sep.on_lift_eq l (Mem.pts_to #a #p r v)
 let pts_to_not_null #a #p r v =
   lift_pre_act0_act fun #ictx ->
   ITA.lift_mem_action (Mem.pts_to_not_null_action #a #p r v)
@@ -579,10 +579,20 @@ let elim_exists (#a:Type u#a) (p:a -> slprop)
 
 let drop p = lift_pre_act0_act fun #ictx -> ITA.drop #ictx p
 
+let loc_get () =
+  lift_pre_act0_act #loc_id #Ghost #emp_inames #emp #loc fun #ictx frame m ->
+    let m1, m2 = split_mem emp (frame `Sep.star` mem_invariant ictx m) m in 
+    assert FStar.Preorder.reflexive is_ghost_action;
+    let l = current_loc m1 in
+    interp_loc l m1;
+    intro_star (loc l) (frame `Sep.star` mem_invariant ictx m) m1 m2;
+    l, m
+
 let core_ghost_ref = Mem.core_ghost_ref
 let core_ghost_ref_null = Mem.core_ghost_ref_null
 let ghost_pts_to #a #pcm r x = Sep.lift (Mem.ghost_pts_to #a #pcm r x)
 let timeless_ghost_pts_to #a #p r x = Sep.timeless_lift (Mem.ghost_pts_to #a #p r x)
+let on_ghost_pcm_pts_to_eq l #a #p r v = Sep.on_lift_eq l (Mem.ghost_pts_to #a #p r v)
 let ghost_pts_to_not_null #a #p r v =
   lift_pre_act0_act fun #ictx ->
   ITA.lift_mem_action (Mem.ghost_pts_to_not_null_action #a #p r v)
@@ -611,9 +621,121 @@ let equiv_trans (a b c:slprop) =
 let equiv_elim (a b:slprop) =
   lift_pre_act0_act fun #ictx -> ITA.equiv_elim #ictx a b
 
-let slprop_ref = Sep.slprop_ref
 let null_slprop_ref = Sep.null_slprop_ref
-let slprop_ref_pts_to = Sep.slprop_ref_pts_to
 let slprop_ref_alloc y = lift_pre_act0_act fun #ictx -> ITA.slprop_ref_alloc #ictx y
 let slprop_ref_share x y = lift_pre_act0_act fun #ictx -> ITA.slprop_ref_share #ictx x y
 let slprop_ref_gather x y1 y2 = lift_pre_act0_act fun #ictx -> ITA.slprop_ref_gather #ictx x y1 y2
+
+let impersonate_lem1 l m0 pre ictx frame :
+    Lemma
+      (requires interp (on l pre `star` frame `star` mem_invariant ictx m0) m0)
+      (ensures
+        (let m1 = set_loc m0 l in
+        (inames_ok ictx m0 <==> inames_ok ictx m1) /\
+        interp (pre `star` loc l `star` on (current_loc m0) frame `star` mem_invariant ictx m1) m1)) =
+  let l0 = current_loc m0 in
+  assert interp (on l pre `star` (frame `star` mem_invariant ictx m0)) m0;
+  let m0z, m0abc = split_mem emp (on l pre `star` frame `star` mem_invariant ictx m0) m0 in
+  let m0a, m0bc = split_mem (on l pre) (frame `star` mem_invariant ictx m0) m0abc in 
+  let m0b, m0c = split_mem frame (mem_invariant ictx m0) m0bc in 
+  let m1z = set_loc m0z l in
+  interp_loc l m1z; assert interp (loc l) m1z;
+  let m1a = set_loc m0a l in
+  interp_on l pre m0a; assert interp pre m1a;
+  let m1b = set_loc m0b l in
+  set_loc_set_loc' m0b l l0; set_loc_current_loc' m0b;
+  interp_on l0 frame m1b; assert interp (on l0 frame) m1b;
+  let m1c = set_loc m0c l in
+  on_mem_invariant l ictx m0; interp_on l (mem_invariant ictx m0) m0c; assert interp (mem_invariant ictx m0) m1c;
+  let m1 = set_loc m0 l in
+  mem_invariant_set_loc ictx m0 l; assert mem_invariant ictx m1 == mem_invariant ictx m0;
+  join_set_loc m0b m0c l; assert (disjoint m1b m1c /\ join m1b m1c == set_loc m0bc l);
+  intro_star (on l0 frame) (mem_invariant ictx m1) m1b m1c;
+  let m1bc = set_loc m0bc l in
+  join_set_loc m0a m0bc l; assert (disjoint m1a m1bc /\ join m1a m1bc == set_loc (join m0a m0bc) l);
+  intro_star pre (on l0 frame `star` mem_invariant ictx m1) m1a m1bc;
+  let m1abc = set_loc m0abc l in
+  join_set_loc m0z m0abc l; assert disjoint m1z m1abc;
+  intro_star (loc l) (pre `star` on l0 frame `star` mem_invariant ictx m1) m1z m1abc;
+  inames_ok_set_loc ictx m0 l
+
+let impersonate_lem2 l l0 m0 post ictx frame :
+    Lemma
+      (requires interp (post `star` loc l `star` on l0 frame `star` mem_invariant ictx m0) m0)
+      (ensures
+        (let m1 = set_loc m0 l0 in
+        (inames_ok ictx m0 <==> inames_ok ictx m1) /\
+        interp (on l post `star` frame `star` mem_invariant ictx m1) m1)) =
+  destruct_star (post `star` on l0 frame `star` mem_invariant ictx m0) (loc l) m0;
+  interp_loc l m0; assert current_loc m0 == l;
+  impersonate_lem1 l0 m0 frame ictx post;
+  let m1 = set_loc m0 l0 in
+  destruct_star (on l post `star` frame `star` mem_invariant ictx m1) (loc l0) m1
+
+let impersonate_pre_act #a #r #ictx #pre #post l (k: pre_act a r ictx pre post) :
+    pre_act a r ictx (on l pre) (fun r -> on l (post r)) =
+  fun frame m0 ->
+  assert interp (on l pre `star` frame `star` mem_invariant ictx m0) m0;
+  let l0 = current_loc m0 in
+  let m1 = set_loc m0 l in
+  impersonate_lem1 l m0 pre ictx frame;
+  assert interp (pre `star` (loc l `star` on l0 frame) `star` mem_invariant ictx m1) m1;
+  let x, m2 = k (loc l `star` on l0 frame) m1 in
+  assert interp (post x `star` (loc l `star` on l0 frame) `star` mem_invariant ictx m2) m2;
+  let m3 = set_loc m2 l0 in
+  impersonate_lem2 l l0 m2 (post x) ictx frame;
+  introduce Ghost? r ==> is_ghost_action m0 m3 with _. (
+    assert FStar.Preorder.transitive is_ghost_action
+  );
+  x, m3
+
+let impersonate #a #r #is #pre #post l k = fun #ictx ->
+  let (| am, fm, f |) = k #ictx in
+  (| am, fm, impersonate_pre_act l f |)
+
+let impersonate_sem_act #a (l: loc_id) (k: Sem.action state a) :
+    k': Sem.action state a { k'.pre == on l k.pre /\ (forall x. k'.post x == on l (k.post x)) } =
+  {
+    pre = on l k.pre;
+    post = F.on_domain a #(fun _ -> state.pred) (fun x -> on l (k.post x));
+    step = fun frame m0 ->
+      let ictx = GhostSet.empty in
+      assert interp (on l k.pre `star` frame `star` mem_invariant ictx m0) m0;
+      let l0 = current_loc m0 in
+      let m1 = set_loc m0 l in
+      impersonate_lem1 l m0 k.pre ictx frame;
+      assert interp (k.pre `star` (loc l `star` on l0 frame) `star` mem_invariant ictx m1) m1;
+      let x, m2 = k.step (loc l `star` on l0 frame) m1 in
+      assert interp (k.post x `star` (loc l `star` on l0 frame) `star` mem_invariant ictx m2) m2;
+      let m3 = set_loc m2 l0 in
+      impersonate_lem2 l l0 m2 (k.post x) ictx frame;
+      x, m3
+  }
+
+#push-options "--split_queries always"
+let impersonate_stt #a #pre #post (l: loc_id) (k: stt a pre post) : stt a (on l pre) (fun x -> on l (post x)) =
+  introduce forall x y. on l (x `state.star` y) == on l x `state.star` on l y with on_star_eq l x y;
+  on_emp l;
+  fun _ -> Sem.apply_hom (on l) (fun act -> impersonate_sem_act l act) (k ())
+#pop-options
+
+let fork #p0 (l l': loc_id) (f0:stt unit (loc l' ** on l p0) (fun _ -> emp)) :
+    stt unit (loc l ** p0) (fun _ -> emp) =
+  let f0 = impersonate_stt l' f0 in
+  let f0: stt unit (on l' (loc l' ** on l p0)) (fun _ -> emp) =
+    on_emp l';
+    assert F.feq (F.on_domain unit fun x -> emp) (F.on_domain unit fun x -> on l' emp);
+    f0 in
+  let f0: stt unit (on l p0) (fun _ -> emp) =
+    on_star_eq l' (loc l') (on l p0);
+    on_loc_same_eq l';
+    sep_laws ();
+    on_on_eq l' l p0;
+    coerce_eq () f0 in
+  let f: stt unit (on l p0) (fun _ -> emp) = I.fork f0 in
+  let f: stt unit (on l p0 ** loc l) (fun _ -> loc l) = I.frame (loc l) f in
+  let f: stt unit (loc l ** p0) (fun _ -> loc l) =
+    loc_on_eq l p0;
+    sep_laws ();
+    coerce_eq () f in
+  I.bind f (fun _ -> stt_of_action0 (ITA.drop #GhostSet.empty (loc l)))

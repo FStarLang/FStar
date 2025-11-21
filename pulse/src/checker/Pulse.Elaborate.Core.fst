@@ -258,25 +258,6 @@ let rec elab_st_typing (#g:env)
       let body = elab_st_typing body_typing in
       mk_nu_while inv (mk_abs bool_tm R.Q_Explicit post) cond body
 
-    | T_Par _ eL cL eR cR _ _ _ eL_typing eR_typing ->
-      let ru = comp_u cL in
-      let raL = comp_res cL in
-      let raR = comp_res cR in
-      let rpreL = comp_pre cL in
-      let rpostL = comp_post cL in
-      let rpreR = comp_pre cR in
-      let rpostR = comp_post cR in
-      let reL = elab_st_typing eL_typing in
-      let reR = elab_st_typing eR_typing in
-      mk_par ru
-        raL
-        raR
-        rpreL
-        (mk_abs raL R.Q_Explicit rpostL)
-        rpreR
-        (mk_abs raR R.Q_Explicit rpostR)
-        reL reR
-
 		| T_Rewrite _ p q _ _ ->
 		  mk_rewrite p q
 
@@ -310,9 +291,6 @@ let rec elab_st_typing (#g:env)
 
     | T_Unreachable .. ->
       `("IOU: elab_st_typing of T_Unreachable")
-
-    | T_WithInv .. ->
-      `("IOU: elab_st_typing of T_WithInv")
 
 and elab_br (#g:env)
             (#c:comp_st)

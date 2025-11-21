@@ -40,6 +40,8 @@ let lock_inv (#a:Type0) (r:B.box a) (v:a -> slprop) : slprop =
 
 let mutex_live #a m #p v = lock_alive m.l #p (lock_inv m.r v)
 
+let is_send_mutex_live #a m #p v #_ = Tactics.Typeclasses.solve
+
 let pts_to mg #p x = pts_to mg #p x
 
 let op_Bang #a mg #x #p = R.op_Bang #a mg #x #p

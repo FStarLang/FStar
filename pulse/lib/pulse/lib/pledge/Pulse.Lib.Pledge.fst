@@ -18,21 +18,23 @@ module Pulse.Lib.Pledge
 #lang-pulse
 
 open Pulse.Lib.Pervasives
-open Pulse.Lib.Trade
+open Pulse.Lib.SendableTrade
 
 module GR = Pulse.Lib.GhostReference
 
 let pledge is f v = pure (is_finite is) ** trade #is f (f ** v)
 
+let is_send_pledge is f v = Tactics.Typeclasses.solve
+
 fn introducable_pledge_aux u#a (t: Type u#a) (is: inames) (is': fin_inames)
-    (f v extra: slprop) {| inst: introducable is' (extra ** f) (f ** v) t |} (x:t) :
+    (f v extra: slprop) {| is_send extra |} {| inst: introducable is' (extra ** f) (f ** v) t |} (x:t) :
     stt_ghost unit is extra (fun _ -> pledge is' f v) = {
   intro #is (trade #is' f (f ** v)) #extra (fun _ -> x);
   fold pledge is' f v;
 }
 
 instance introducable_pledge (t: Type u#a) is (is': fin_inames)
-    f v extra {| introducable is' (extra ** f) (f ** v) t |} :
+    f v extra {| is_send extra |} {| introducable is' (extra ** f) (f ** v) t |} :
     introducable is extra (pledge is' f v) t =
   { intro_aux = introducable_pledge_aux t is is' f v extra }
 
@@ -56,7 +58,7 @@ fn pledge_sub_inv (is1:inames) (is2:fin_inames { inames_subset is1 is2 })(f:slpr
 } 
 
 ghost
-fn return_pledge (f v : slprop)
+fn return_pledge (f v : slprop) {| is_send v |}
   requires v
   ensures pledge emp_inames f v
 {
@@ -67,7 +69,7 @@ fn return_pledge (f v : slprop)
 let call #t #is #req #ens (h: unit -> stt_ghost is t req (fun x -> ens x)) = h
 
 ghost
-fn make_pledge (is:fin_inames) (f:slprop) (v:slprop) (extra:slprop)
+fn make_pledge (is:fin_inames) (f:slprop) (v:slprop) (extra:slprop) {| is_send extra |}
   (k: unit -> pledge_f #is f #extra v)
   requires extra
   ensures pledge is f v
@@ -107,7 +109,7 @@ fn squash_pledge (is:inames) (f:slprop) (v1:slprop)
 
 ghost
 fn bind_pledge (#is:inames) (#f:slprop) (#v1:slprop) (#v2:slprop)
-        (extra : slprop)
+        (extra : slprop) {| is_send extra |}
         (#is_k:inames { inames_subset is_k is })
         (k:unit -> bind_pledge_f #is #is_k f #extra v1 v2)
   requires pledge is f v1 ** extra
@@ -125,13 +127,13 @@ fn bind_pledge (#is:inames) (#f:slprop) (#v1:slprop) (#v2:slprop)
 
 ghost
 fn bind_pledge' (#is:inames) (#f:slprop) (#v1:slprop) (#v2:slprop)
-        (extra : slprop)
+        (extra : slprop) {| is_send extra |}
         (#is_k:inames { inames_subset is_k is })
         (k:unit -> bind_pledge_f' #is #is_k f #extra v1 v2)
   requires pledge is f v1 ** extra
   ensures pledge is f v2
 {
-  bind_pledge #is #f #v1 #v2 extra #is_k fn _ {
+  bind_pledge #is #f #v1 #v2 extra #_ #is_k fn _ {
     call k ()
   };
 }
@@ -204,19 +206,22 @@ fn squash_pledge'
 }
 
 
-//
-// This proof below requires inv_p to be big ...
-//
-
 (* A big chunk follows for split_pledge *)
 
 [@@no_mkeys]
 let split_switch (is : inames) (b1 b2 : bool) (f v1 v2 : slprop) : slprop =
   match b1, b2 with
-  | false, false -> pledge is f (v1 ** v2)
-  | false, true -> v1
-  | true, false -> v2
+  | false, false -> pledge is f (sendable v1 ** sendable v2)
+  | false, true -> sendable v1
+  | true, false -> sendable v2
   | true, true -> emp
+
+instance is_send_split_switch is b1 b2 f v1 v2 : is_send (split_switch is b1 b2 f v1 v2) =
+  match b1, b2 with
+  | false, false -> Tactics.Typeclasses.solve #(is_send (pledge is f (sendable v1 ** sendable v2)))
+  | false, true -> Tactics.Typeclasses.solve #(is_send (sendable v1))
+  | true, false -> Tactics.Typeclasses.solve #(is_send (sendable v2))
+  | true, true -> Tactics.Typeclasses.solve #(is_send emp)
 
 let inv_p' (is:inames) (f v1 v2 : slprop) (r1 r2 : GR.ref bool) (b1 b2 : bool) =
      (r1 |-> Frac 0.5R b1)
@@ -252,7 +257,8 @@ fn do_elim_body_l
     assert (r1 |-> false);
     r1 := true;
     rewrite emp ** split_switch is false true f v1 v2
-        as  split_switch is true true f v1 v2 ** v1;
+        as  split_switch is true true f v1 v2 ** sendable v1;
+    sendable_elim v1;
 
     (* This should just disappear when we start normalizing
     the context. *)
@@ -274,9 +280,9 @@ fn do_elim_body_l
     assert (r1 |-> false);
 
     rewrite split_switch is false false f v1 v2
-        as  pledge is f (v1 ** v2);
+        as  pledge is f (sendable v1 ** sendable v2);
 
-    redeem_pledge is f (v1 ** v2);
+    redeem_pledge is f (sendable v1 ** sendable v2);
 
     r1 := true;
     fold (split_switch is true false f v1 v2);
@@ -285,7 +291,8 @@ fn do_elim_body_l
 
     fold (inv_p' is f v1 v2 r1 r2 true false);
     fold inv_p;
-    assert (f ** v1 ** inv_p is f v1 v2 r1 r2);
+    assert (f ** sendable v1 ** inv_p is f v1 v2 r1 r2);
+    sendable_elim v1;
     drop_ (r1 |-> Frac 0.5R true);
   }
 }
@@ -300,12 +307,13 @@ fn elim_body_l1
 {
   open Pulse.Lib.GhostReference;
   assert (pure (not (mem_inv is i)));
-  with_invariants i
-  {
-    later_elim _;
-    do_elim_body_l #is #f v1 v2 r1 r2 ();
-    later_intro (inv_p is f v1 v2 r1 r2);
-  };
+  with_invariants_g unit is
+    i (inv_p is f v1 v2 r1 r2)
+    (f ** (r1 |-> Frac 0.5R false))
+    (fun _ -> f ** v1)
+    fn _ {
+      do_elim_body_l #is #f v1 v2 r1 r2 ();
+    };
 }
 
 ghost
@@ -321,8 +329,7 @@ fn flip_invp
   unfold inv_p';
 
   (* This is now true with PulseCore. *)
-  let _ = elim_slprop_equiv (slprop_equiv_comm v1 v2);
-  assert (pure (v1 ** v2 == v2 ** v1));
+  let _ = elim_slprop_equiv (slprop_equiv_comm (sendable v1) (sendable v2));
 
   rewrite split_switch is b1 b2 f v1 v2
        as split_switch is b2 b1 f v2 v1;
@@ -342,18 +349,20 @@ fn elim_body_r1
 {
   open Pulse.Lib.GhostReference;
   assert (pure (not (mem_inv is i)));
-  with_invariants i
-  {
-    later_elim _;
+  with_invariants_g unit is
+    i (inv_p is f v1 v2 r1 r2)
+    (f ** (r2 |-> Frac 0.5R false))
+    (fun _ -> f ** v2)
+  fn _ {
     flip_invp is f v1 v2 r1 r2;
     do_elim_body_l #is #f v2 v1 r2 r1 ();
     flip_invp is f v2 v1 r2 r1;
-    later_intro (inv_p is f v1 v2 r1 r2);
   };
 }
 
 ghost
 fn ghost_split_pledge (#is:inames) (#f:slprop) (v1:slprop) (v2:slprop)
+    {| is_send v1, is_send v2 |}
   // requires pledge is f (v1 ** v2)
   // returns r : (e : inames_elem { not (mem_inv (inames_names is) (snd e)) })
   // ensures pledge (add_one r is) f v1 ** pledge (add_one r is) f v2
@@ -367,6 +376,11 @@ fn ghost_split_pledge (#is:inames) (#f:slprop) (v1:slprop) (v2:slprop)
   let r2 = GR.alloc false;
   GR.share r1;
   GR.share r2;
+  intro (pledge is f (sendable v1 ** sendable v2)) #(pledge is f (v1 ** v2)) fn _ {
+    redeem_pledge _ _ _;
+    sendable_intro v1 #_;
+    sendable_intro v2 #_;
+  };
   fold split_switch is false false f v1 v2;
   fold (inv_p' is f v1 v2 r1 r2 false false);
   fold inv_p;
@@ -401,12 +415,13 @@ fn ghost_split_pledge (#is:inames) (#f:slprop) (v1:slprop) (v2:slprop)
 }
 
 fn split_pledge (#is:inames) (#f:slprop) (v1:slprop) (v2:slprop)
+    {| is_send v1, is_send v2 |}
   requires pledge is f (v1 ** v2)
   returns i : iname
   ensures pledge (add_inv is i) f v1 ** pledge (add_inv is i) f v2 ** pure (not (mem_inv is i))
 {
   later_credit_buy 2;
-  let i = ghost_split_pledge #is #f v1 v2;
+  let i = ghost_split_pledge #is #f v1 v2 #_ #_;
   i
 }
 

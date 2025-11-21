@@ -18,6 +18,7 @@ module PulseCore.IndirectionTheorySep
 module F = FStar.FunctionalExtensionality
 module PM = PulseCore.MemoryAlt
 module B = PulseCore.BaseHeapSig
+open Pulse.Lib.Loc
 open FStar.Ghost 
 
 let timeless_mem : Type u#4 = PM.mem u#0
@@ -26,9 +27,12 @@ val mem: Type u#4
 val timeless_mem_of: mem -> timeless_mem
 val level (k:mem) : GTot nat
 val credits (k:mem) : GTot nat
+val current_loc (k:mem) : loc_id
 let budget (m: mem) : GTot int = level m - credits m - 1
 val update_timeless_mem (m: mem) (p: timeless_mem) :
-  n:mem { timeless_mem_of n == p /\ level m == level n /\ credits m == credits n }
+  n:mem { timeless_mem_of n == p /\ level m == level n /\ credits m == credits n /\ current_loc m == current_loc n }
+val update_loc (m:mem) (l:loc_id) :
+  n:mem { timeless_mem_of n == timeless_mem_of m /\ level m == level n /\ credits m == credits n /\ current_loc n == l }
 
 [@@erasable] val slprop : Type u#4
 
@@ -70,6 +74,7 @@ val sep_laws (_:unit) : squash (
 
 val disjoint (m0 m1:mem) : p:prop { p ==>
     B.disjoint_mem (timeless_mem_of m0) (timeless_mem_of m1) /\
+    current_loc m0 == current_loc m1 /\
     level m0 == level m1 }
 val join (m0:mem) (m1:mem { disjoint m0 m1 }) :
   n:mem { timeless_mem_of n == B.join_mem (timeless_mem_of m0) (timeless_mem_of m1) }
@@ -121,6 +126,7 @@ val split_mem (p:slprop) (q:slprop) (m:erased mem { interp (p `star` q) m })
     disjoint l r /\
     reveal m == join l r /\
     level l == level m /\ level r == level m /\
+    current_loc l == current_loc m /\ current_loc r == current_loc m /\
     interp p l /\
     interp q r
 }
@@ -218,6 +224,39 @@ val equiv_star_congr (p q r: slprop) : squash (equiv q r == equiv q r `star` equ
 val intro_later (p:slprop) (m:mem)
 : Lemma (interp p m ==> interp (later p) m)
 
+val set_loc (m: mem) (l: loc_id) : (m':mem {
+  budget m' == budget m /\
+  (is_full m' <==> is_full m) /\
+  current_loc m' == l /\
+  is_ghost_action m m' /\
+  timeless_mem_of m' == timeless_mem_of m
+})
+
+val set_loc_set_loc' m l1 l2 : squash (set_loc (set_loc m l1) l2 == set_loc m l2)
+val set_loc_current_loc' m : squash (set_loc m (current_loc m) == m)
+
+val join_set_loc a b l : Lemma (requires disjoint a b)
+  (ensures disjoint (set_loc a l) (set_loc b l) /\ join (set_loc a l) (set_loc b l) == set_loc (join a b) l)
+
+val loc (l:loc_id) : (p:slprop { timeless p })
+val interp_loc l m : squash (interp (loc l) m <==> l == current_loc m)
+val loc_dup_eq l : squash (star (loc l) (loc l) == loc l)
+val loc_gather_eq l1 l2 : squash (star (loc l1) (loc l2) == star (loc l1) (pure (l1 == l2)))
+
+val on (l:loc_id) (p:slprop) : slprop
+val interp_on l p m : squash (interp (on l p) m <==> interp p (set_loc m l))
+val loc_on_eq l p : squash (star (loc l) p == star (loc l) (on l p))
+val timeless_on l (p: slprop { timeless p }) : squash (timeless (on l p))
+val on_emp l : squash (on l emp == emp)
+val on_star_eq l a b : squash (on l (star a b) == star (on l a) (on l b))
+val on_on_eq l1 l2 a : squash (on l1 (on l2 a) == on l2 a)
+val on_loc_eq l1 l2 : squash (on l1 (loc l2) == pure (l1 == l2))
+val on_loc_same_eq l : squash (on l (loc l) == emp)
+val on_later_credit_eq l n : squash (on l (later_credit n) == later_credit n)
+val on_later_eq l p : squash (on l (later p) == later (on l p))
+val on_equiv_eq l a b : squash (on l (equiv a b) == equiv a b)
+val on_lift_eq l p : squash (on l (lift p) == lift p)
+
 (**** Memory invariants *)
 [@@erasable]
 val iref : Type0
@@ -232,6 +271,8 @@ val hogs_inames_ok (e:inames) (m:mem) : prop
 let inames_ok (e:inames) (m:mem) : prop
 = hogs_inames_ok e m
 
+val inames_ok_set_loc ictx m l : squash (inames_ok ictx (set_loc m l) <==> inames_ok ictx m)
+
 (** The empty set of invariants is always empty *)
 val inames_ok_empty (m:mem)
   : Lemma (ensures inames_ok GhostSet.empty m)
@@ -240,6 +281,11 @@ val inames_ok_union (i j:inames) (m:mem)
   (inames_ok (FStar.GhostSet.union i j) m <==>
    inames_ok i m /\
    inames_ok j m)
+
+let somewhere (p: slprop) = exists* l. on l p
+
+val iname_ok (i: iref) (m: mem) : prop
+val read_inv (i: iref) (m: mem { iname_ok i m }) : slprop
 
 val hogs_invariant (ex:inames) (i:mem) : slprop
 
@@ -313,7 +359,6 @@ let mem_inv (e:inames) (i:iref)
 : GTot bool
 = GhostSet.mem i e
 
-val iname_ok (i: iref) (m: mem) : prop
 val inames_ok_single (i: iref) (p:slprop) (m:mem)
 : Lemma
   (requires interp (inv i p) m)
@@ -323,15 +368,18 @@ val iname_ok_inames_ok (i:iref) (m:mem)
 : Lemma (inames_ok (single i) m <==> iname_ok i m)
         [SMTPat (inames_ok (single i) m)]
 
-val read_inv (i: iref) (m: mem { iname_ok i m }) : slprop
-val read_inv_equiv (i:iref) (m:mem { iname_ok i m /\ level m > 0 }) p 
-: Lemma
-  (requires 
-    interp (inv i p) m)
-  (ensures
-    interp (later (read_inv i m)) m
-    <==>
-    interp (later p) m)
+val read_inv_intro (i:iref) (m:mem) p :
+  Lemma (requires interp (later p `star` inv i p) m)
+    (ensures iname_ok i m /\ interp (read_inv i m) m)
+
+val read_inv_intro' (i:iref) (m:mem) p :
+  Lemma (requires interp (somewhere (later p) `star` inv i p) m)
+    (ensures iname_ok i m /\ interp (read_inv i m) m)
+
+val read_inv_elim (i:iref) (m:mem { iname_ok i m }) p :
+  Lemma
+    (requires interp (read_inv i m `star` inv i p) m)
+    (ensures interp (somewhere (later p)) m)
 
 val read_inv_disjoint (i:iref) (m0 m1:mem)
 : Lemma 
@@ -351,8 +399,11 @@ val mem_invariant_equiv :
           ~(mem_inv e i))
         (ensures
           (mem_invariant e m ==
-           mem_invariant (add_inv e i) m `star` later (read_inv i m)))
+           mem_invariant (add_inv e i) m `star` read_inv i m))
 
+val on_mem_invariant l ictx m : squash (on l (mem_invariant ictx m) == mem_invariant ictx m)
+
+val mem_invariant_set_loc ictx m l : squash (mem_invariant ictx (set_loc m l) == mem_invariant ictx m)
 
 val inames_ok_hogs_dom (e:inames) (m:mem)
 : Lemma (inames_ok e m ==> FStar.GhostSet.subset e (hogs_dom m))
@@ -432,6 +483,8 @@ val dup_inv_equiv :
 val invariant_name_identifies_invariant (i: iref) (p q: slprop) :
   squash (star (inv i p) (inv i q) `implies` later (equiv p q))
 
+val on_inv_eq l i p : squash (on l (inv i p) == inv i p)
+
 (**** References to predicates *)
 [@@erasable]
 val slprop_ref : Type0
@@ -460,3 +513,5 @@ val slprop_ref_pts_to_share (x: slprop_ref) (y: slprop)
 val slprop_ref_pts_to_gather (x: slprop_ref) (y1 y2: slprop) 
 : squash ((slprop_ref_pts_to x y1 `star` slprop_ref_pts_to x y2) `implies`
           (slprop_ref_pts_to x y1 `star` later (equiv y1 y2)))
+
+val on_slprop_ref_pts_to_eq l x y : squash (on l (slprop_ref_pts_to x y) == slprop_ref_pts_to x y)

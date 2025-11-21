@@ -16,14 +16,12 @@
 module Pulse.Lib.Par
 #lang-pulse
 open Pulse.Lib.Core
+open Pulse.Lib.Send
+open PulseCore.Observability
 
-val par_stt
-  (#preL:slprop)
-  (#postL:slprop)
-  (#preR:slprop)
-  (#postR:slprop)
-  (f:stt unit preL (fun _ -> postL))
-  (g:stt unit preR (fun _ -> postR))
-: stt unit
-      (preL ** preR)
-      (fun _ -> postL ** postR)
+fn par (#preL: slprop) #postL #preR #postR
+  {| is_send preL, is_send postL, is_send preR, is_send postR |}
+  (f:unit -> stt unit preL (fun _ -> postL))
+  (g:unit -> stt unit preR (fun _ -> postR))
+  requires preL ** preR
+  ensures postL ** postR
