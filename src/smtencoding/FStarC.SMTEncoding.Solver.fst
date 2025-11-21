@@ -1504,8 +1504,9 @@ let do_solve_maybe_split use_env_msg tcenv q : unit =
       end
     | Options.Always ->
       (* Set retrying=false so queries go through the full config list, etc. *)
-      Format.print1 "(%s)\tQuery-stats splitting query because --split_queries is always\n"
-                    (show (Env.get_range tcenv));
+      if Debug.any () || Options.query_stats () then
+        Format.print1 "(%s)\tQuery-stats splitting query because --split_queries is always\n"
+                      (show (Env.get_range tcenv));
       split_and_solve false use_env_msg tcenv q
   end
 
