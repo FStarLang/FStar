@@ -2206,6 +2206,10 @@ let check_term_top g e topt (must_tot:bool)
         None
         "FStarC.TypeChecker.Core.check_term_top"
     in
+    if !dbg || !dbg_Top
+    then Format.print2 "(%s) Core result = %s\n"
+                   (show (get_goal_ctr()))
+                   (show res);
     (
     let res =
       match res with
