@@ -70,6 +70,7 @@ val deep_transform_to_unary_applications (t:T.term) : r:T.term { t == r }
 val map_seal (s:FStar.Sealed.sealed 't) (f: 't -> 'u) : FStar.Sealed.sealed 'u
 val float_one : FStar.Float.float
 val lax_check_term_with_unknown_universes (g:env) (t:T.term) : Dv (option T.term)
+val new_implicit_var : reason:string -> range -> env -> typ -> unrefine:bool -> Dv term
 module T = FStar.Tactics.V2
 val tc_term_phase1 (g:env) (t:T.term) (instantiate_imps:bool) : Dv (option (T.term & T.term & T.tot_or_ghost) & T.issues)
 val teq_nosmt_force (g:env) (ty1 ty2:T.term) : Dv bool

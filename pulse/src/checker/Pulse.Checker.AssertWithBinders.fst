@@ -46,9 +46,10 @@ let rec open_binders_with_uvars (g:env) (bs:list binder) (v:term) (body:st_term)
 
   match bs with
   | [] -> (| List.rev us, v, body |)
-  | {binder_ty}::bs ->
+  | {binder_ty; binder_ppname}::bs ->
     let binder_ty, _ = PC.tc_type_phase1 g binder_ty in
-    let u, _ = PC.tc_term_phase1_with_type g tm_unknown binder_ty in
+    let u = RU.new_implicit_var ("value for with-variable " ^ show binder_ppname)
+      binder_ppname.range (elab_env g) binder_ty false in
     let ss = [ RT.DT 0 u ] in
     let bs = L.mapi (fun i b ->
       assume (i >= 0);
@@ -449,7 +450,8 @@ let rec add_rem_uvs (g:env) (t:typ) (v:term)
   match is_arrow t with
   | None -> v
   | Some (b, qopt, c) ->
-    let u, _ = PC.tc_term_phase1_with_type g tm_unknown b.binder_ty in
+    let u = RU.new_implicit_var "value for omitted argument in (un)fold"
+      b.binder_ppname.range (elab_env g) b.binder_ty false in
     let ct = open_comp' c u 0 in
     let v = tm_pureapp v qopt u in
     add_rem_uvs g (comp_res ct) v

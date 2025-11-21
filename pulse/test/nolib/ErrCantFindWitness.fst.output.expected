@@ -1,7 +1,7 @@
 * Info at ErrCantFindWitness.fst(8,1-8,1):
   - Expected failure:
   - Cannot find witness for (exists* (x:Prims.nat). emp)
-  - Ill-typed term: (*?u55*)_
+  - Ill-typed term: (*?u54*)_
   - Expected a term of type Prims.nat
   - Cannot check relation with uvars.
 

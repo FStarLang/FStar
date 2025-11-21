@@ -60,17 +60,13 @@ let rec get_rewrites_to_from_post (g: env) xres (post: slprop) : T.Tac (option R
       | _ -> None)
   | _ -> None
 
-let mk_uvar (g: env) (ty: term) : T.Tac term =
-  // FIXME
-  fst (tc_term_phase1_with_type g tm_unknown ty)
-
 let prove_this (g: env) (goal: slprop) (ctxt: list slprop) : T.Tac (option (list slprop)) =
   match inspect_term goal with
   | Tm_Pure p ->
     // TODO: pure (x == ?u)
     Some []
   | Tm_ExistsSL u b body ->
-    let uv = mk_uvar g b.binder_ty in
+    let uv = RU.new_implicit_var "witness for exists*" (RU.range_of_term goal) (elab_env g) b.binder_ty false in
     Some (slprop_as_list (open_term' body uv 0))
   | Tm_WithPure p _ body ->
     Some (tm_pure p :: slprop_as_list (open_term' body unit_const 0))

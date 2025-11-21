@@ -51,7 +51,7 @@ noeq type slprop_view =
 instance showable_slprop_view : tac_showable slprop_view = {
   show = (function
   | Pure p -> Printf.sprintf "(Pure %s)" (show p)
-  | WithPure t x b -> Printf.sprintf "(WithPure %s %s %s)" (show t) (show (T.unseal x.name)) (show b)
+  | WithPure t x b -> Printf.sprintf "(WithPure %s %s %s)" (show t) (show x) (show b)
   | Exists u x b -> Printf.sprintf "(exists* (%s). %s)" (Pulse.Syntax.Printer.binder_to_string x) (show b)
   | Atom head keys t -> Printf.sprintf "(Atom {head=%s; keys=%s} %s)" (show head) (show keys) (show t)
   | Unknown p -> Printf.sprintf "(Unknown %s)" (show p)
@@ -331,15 +331,12 @@ let intro_exists (g: env) (frame: slprop) (u: universe) (b: binder) (body: slpro
   k_elab_equiv (continuation_elaborator_with_bind_nondep frame (T_IntroExists g u b body e binder_ty_typ tm_ex_typ e_typ) h1) h2 h3
     post t
 
-let mk_uvar (g: env) (ty: term) : T.Tac term =
-  // TODO
-  fst (tc_term_phase1_with_type g tm_unknown ty)
-
 let prove_exists (g: env) (ctxt: list slprop_view) (goal: slprop_view) :
     T.Tac (option (prover_result g ctxt [goal])) =
   match goal with
   | Exists u b body ->
-    let e = mk_uvar g b.binder_ty in // unnecessarily restrictive environment for uvar
+    // unnecessarily restrictive environment for uvar
+    let e = RU.new_implicit_var "witness for exists*" (RU.range_of_term body) (elab_env g) b.binder_ty false in
     Some (| g, ctxt, [Unknown (open_term' body e 0)], [], fun g'' ->
       cont_elab_refl g ctxt ([] @ ctxt) (VE_Refl _ _),
       (fun frame ->
