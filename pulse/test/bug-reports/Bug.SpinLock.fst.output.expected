@@ -2,7 +2,7 @@
   - Expected failure:
   - Tactic failed
   - Cannot prove:
-      Pulse.Lib.Reference.pts_to __ (*?u84*)_
+      Pulse.Lib.Reference.pts_to __ (*?u80*)_
   - In the context:
       Pulse.Lib.SpinLock.lock_alive my_lock
         (exists* (v: Prims.int). Pulse.Lib.Reference.pts_to r v)

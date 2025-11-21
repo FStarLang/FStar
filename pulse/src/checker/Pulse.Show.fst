@@ -51,6 +51,14 @@ instance tac_showable_either (a b:Type) (sa : tac_showable a) (sb : tac_showable
   show = function | Inl x -> Printf.sprintf "Inl %s" (show x)  | Inr x -> Printf.sprintf "Inr %s" (show x)
 }
 
+instance tac_showable_pp_name_t : tac_showable FStar.Reflection.Typing.pp_name_t = {
+  show = fun n -> show (unseal n)
+}
+
+instance tac_showable_ppname : tac_showable ppname = {
+  show = fun (n: ppname) -> show n.name
+}
+
 instance tac_showable_ctag : tac_showable ctag = {
   show = (fun t -> ctag_to_string t);
 }

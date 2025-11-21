@@ -3,14 +3,15 @@
   - Current context:
       ExistsErasedAndPureEqualities.some_pred x v
   - In typing environment:
-      __#539 : Prims.squash (_v_4 == v),
-      _v_4#538 : FStar.Ghost.erased Prims.int,
-      __#408 : Prims.squash (v == v),
+      __#536 : Prims.squash (_v_4 == v),
+      _v_4#535 : FStar.Ghost.erased Prims.int,
+      __#405 : Prims.squash (v == v),
       v#269 : FStar.Ghost.erased Prims.int,
       x#263 : Pulse.Lib.Reference.ref Prims.int
 
-* Info at ExistsErasedAndPureEqualities.fst(70,4-72,12):
+* Info at ExistsErasedAndPureEqualities.fst(70,4-71,21):
   - Expected failure:
-  - Failed to prove pure property: v == (*?u104*)_
+  - Failed to prove pure property: v == (*?u102*)_
   - Cannot check relation with uvars.
+  - See also ExistsErasedAndPureEqualities.fst(70,23-71,15)
 

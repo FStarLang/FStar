@@ -256,7 +256,7 @@ let rec check
                 (RU.print_context (get_context g0))
                 (show g0)
                 (show pre0)
-                (show (T.unseal res_ppname.name))
+                (show res_ppname)
                 (show t)
                 (show (T.unseal t.source)))
     );

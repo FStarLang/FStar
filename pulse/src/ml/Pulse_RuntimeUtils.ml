@@ -146,6 +146,11 @@ module TcEnv = FStarC_TypeChecker_Env
 module Free = FStarC_Syntax_Free
 module FlatSet = FStarC_FlatSet
 
+let new_implicit_var (reason: string) (r:FStarC_Range.range) (g:TcEnv.env) (e:S.typ) (unrefine:bool) : S.term =
+  let g = {g with phase1=true; admit=true} in
+  let uvar, _, _ = FStarC_TypeChecker_Util.new_implicit_var reason r g e unrefine in
+  uvar
+
 let lax_check_term_with_unknown_universes (g:TcEnv.env) (e:S.term)
   : S.term option
   = let open FStarC_Tactics_V2_Basic in
