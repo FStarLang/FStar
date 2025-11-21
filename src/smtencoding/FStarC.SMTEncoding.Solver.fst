@@ -1452,11 +1452,9 @@ let do_solve (can_split:bool) (is_retry:bool) use_env_msg tcenv q : unit =
   | None -> () (* already logged an error *)
 
 let split_and_solve (retrying:bool) use_env_msg tcenv q : unit =
-  if Debug.any () || Options.query_stats () then begin
-    let range = "(" ^ (Range.string_of_range (Env.get_range tcenv)) ^ ")" in
-    Format.print2 "%s\tQuery-stats splitting query because %s\n"
-                range
-                (if retrying then "retrying failed query" else "--split_queries is always")
+  if retrying && (Debug.any () || Options.query_stats ()) then begin
+    Format.print1 "(%s)\tQuery-stats splitting query because retrying failed query\n"
+                   (show (Env.get_range tcenv))
   end;
   let goals =
     match Env.split_smt_query tcenv q with
@@ -1506,6 +1504,8 @@ let do_solve_maybe_split use_env_msg tcenv q : unit =
       end
     | Options.Always ->
       (* Set retrying=false so queries go through the full config list, etc. *)
+      Format.print1 "(%s)\tQuery-stats splitting query because --split_queries is always\n"
+                    (show (Env.get_range tcenv));
       split_and_solve false use_env_msg tcenv q
   end
 

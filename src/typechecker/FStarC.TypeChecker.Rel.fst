@@ -5170,19 +5170,6 @@ let do_discharge_vc use_env_range_msg env vc : unit =
     )
   in
 
-  (* Splitting queries. FIXME: isn't this redundant given the
-  code in SMTEncoding.Solver? *)
-  let vcs =
-    if Options.split_queries () = Options.Always
-    then vcs |>
-          List.collect
-            (fun (env, goal, opts) ->
-                match Env.split_smt_query env goal with
-                | None -> [env,goal,opts]
-                | Some goals -> goals |> List.map (fun (env, goal) -> env,goal,opts))
-    else vcs
-  in
-
   (* Solve one by one. If anything fails the SMT module will log errors. *)
   vcs |> List.iter (fun (env, goal, opts) ->
     Options.with_saved_options (fun () ->
