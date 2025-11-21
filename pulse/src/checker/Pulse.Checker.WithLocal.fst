@@ -48,6 +48,13 @@ let with_local_pre_typing (#g:env) (#pre:term) (pre_typing:tot_typing g pre tm_s
 
 #push-options "--z3rlimit_factor 10 --fuel 0 --ifuel 0"
 
+let rec unrefine t : T.Tac term =
+  match t with
+  | T.Tv_Refine b t -> unrefine b.sort
+  | T.Tv_AscribedT e _ _ _ -> unrefine e
+  | T.Tv_AscribedC e _ _ _ -> unrefine e
+  | _ -> t
+
 let head_range (t:st_term {Tm_WithLocal? t.term}) : range =
   let Tm_WithLocal { initializer } = t.term in
   (RU.range_of_term initializer)
@@ -76,19 +83,29 @@ let check
   | PostHint post ->
     let g = push_context "check_withlocal" t.range g in
     let Tm_WithLocal {binder; initializer=init; body} = t.term in
-    let (| init, init_u, init_t, init_t_typing, init_typing |) =
+    let (| init, init_u, init_t, init_t_typing, init_typing |) :
+          (t:term & u:universe & ty:term & universe_of g ty u & tot_typing g t ty)
+    =
       (* Check against annotation if any *)
       let ty = binder.binder_ty in
       match inspect_term ty with
-      | Tm_Unknown -> compute_tot_term_type_and_u g init
+      | Tm_Unknown ->
+        let (| init, init_u, init_t, init_t_typing, init_typing |) =
+          compute_tot_term_type_and_u g init
+        in
+        // Remove any refinements from this inferred type. The Core typechecker
+        // will turn postconditions into refinements, and we don't want these
+        // going into the type of the local variable. See issue #512.
+        let init_t = unrefine init_t in
+        // The proofs of typing should follow from the ones above + inversion lemmas.
+        (| init, init_u, init_t, magic(), magic()|)
+
       | _ ->
         let (| u, ty_typing |) = check_universe g ty in
         let (| init, init_typing |) = check_term g init T.E_Total ty in
         let ty_typing : universe_of g ty u = ty_typing in
         let init_typing : typing g init T.E_Total ty = init_typing in
         (| init, u, ty, ty_typing, init_typing |)
-          <: (t:term & u:universe & ty:term & universe_of g ty u & tot_typing g t ty)
-          (* ^ Need this annotation *)
       in
     if not (eq_univ init_u u0)
     then (
