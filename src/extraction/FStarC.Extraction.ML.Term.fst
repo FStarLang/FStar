@@ -659,9 +659,6 @@ let extraction_norm_steps =
   then extraction_norm_steps_nbe
   else extraction_norm_steps_core
 
-let normalize_for_extraction (env:uenv) (e:S.term) =
-  N.normalize extraction_norm_steps (tcenv_of_uenv env) e
-
 let maybe_reify_comp g (env:TcEnv.env) (c:S.comp) : S.term =
   match c |> U.comp_effect_name
           |> TcUtil.effect_extraction_mode env with
