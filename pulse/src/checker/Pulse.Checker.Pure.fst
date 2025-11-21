@@ -66,8 +66,8 @@ let check_ln (g:env) (label:string) (t:R.term) : Tac unit =
 let rtb_core_compute_term_type g f e =
   debug g (fun _ ->
     Printf.sprintf "(%s) Calling core_compute_term_type on %s"
-          (T.range_to_string (RU.range_of_term e))
-          (T.term_to_string e));
+          (show (RU.range_of_term e))
+          (show e));
   let res = RU.with_context (get_context g) (fun _ -> RTB.core_compute_term_type f e) in
   res
 
@@ -76,8 +76,8 @@ let rtb_tc_term g f e =
   let e = RU.deep_transform_to_unary_applications e in
   debug g (fun _ ->
     Printf.sprintf "(%s) Calling tc_term on %s"
-      (T.range_to_string (RU.range_of_term e))
-      (T.term_to_string e));
+      (show (RU.range_of_term e))
+      (show e));
   let res = RU.with_context (get_context g) (fun _ -> RTB.tc_term f e) in
   res
 
@@ -85,8 +85,8 @@ let rtb_universe_of (g:env) (f:T.env) (e: T.term)
 : T.Tac (option (u:T.universe{typing_token f e (E_Total, T.pack_ln (Tv_Type u))}) & issues)
 = debug g (fun _ ->
     Printf.sprintf "(%s) Calling universe_of on %s"
-      (T.range_to_string (RU.range_of_term e))
-      (T.term_to_string e));
+      (show (RU.range_of_term e))
+      (show e));
   let res = RU.with_context (get_context g) (fun _ -> RTB.universe_of f e) in
   res
 
@@ -100,17 +100,17 @@ let universe_of_well_typed_term_internal  (g:env) (f:T.env) (e: T.term)
 let rtb_check_subtyping g (t1 t2:term) : Tac (ret_t (subtyping_token g t1 t2)) =
   debug g (fun _ ->
     Printf.sprintf "(%s, %s) Calling check_subtyping on %s <: %s"
-        (T.range_to_string (RU.range_of_term t1))
-        (T.range_to_string (RU.range_of_term t2))
-        (P.term_to_string t1)
-        (P.term_to_string t2));
+        (show (RU.range_of_term t1))
+        (show (RU.range_of_term t2))
+        (show t1)
+        (show t2));
   let f = elab_env_with_range g None in
   let res = RU.with_context (get_context g) (fun _ -> RTB.check_subtyping f t1 t2) in
   res
 
 let rtb_instantiate_implicits g f t expected inst_extra =
   debug g (fun _ -> Printf.sprintf "Calling instantiate_implicits on %s"
-                                       (T.term_to_string t));
+                                       (show t));
   (* WARN: unary dependence, see comment in RU *)
   let t = RU.deep_transform_to_unary_applications t in
   let res, iss = RU.with_context (get_context g) (fun _ -> RTB.instantiate_implicits f t expected inst_extra) in
@@ -151,8 +151,8 @@ let rtb_check_prop_validity (g:env) (sync:bool) (f:_{f == elab_env g }) (p:_) (p
   in
   debug g (fun _ -> 
     Printf.sprintf "(%s) Calling check_prop_validity on %s"
-          (T.range_to_string (RU.range_of_term p))
-          (T.term_to_string p));
+          (show (RU.range_of_term p))
+          (show p));
   let sp = mk_squash0 p in
   let _ : squash (typing_token f sp (E_Total, (`prop))) = magic () in //squash typing
   let res, issues = 
@@ -178,7 +178,7 @@ let catch_all (f:unit -> Tac (option 'a & issues))
 
 let readback_failure (s:R.term) =
   Printf.sprintf "Internal error: failed to readback F* term %s"
-                 (T.term_to_string s)
+                 (show s)
 
 (* Set got_typ = None if we don't have a good type for `t`.
 Note that calling this with None for expected_typ, but Some _ for got_typ
@@ -347,8 +347,8 @@ let compute_term_type (g:env) (t:term)
     = let rng, fg = elab_env_with_term_range g t in
       debug g (fun _ ->
               Printf.sprintf "check_tot : called on %s elaborated to %s"
-                        (P.term_to_string t)
-                        (T.term_to_string t));
+                        (show t)
+                        (show t));
       let res, issues = tc_meta_callback g fg t in
       match res with
       | None -> 
@@ -595,7 +595,7 @@ let try_get_non_informative_witness_aux (g:env) (u:universe) (ty:term) (ty_typin
     | None, issues ->
       None, issues
     | Some r_dict, issues -> (
-      // T.print (Printf.sprintf "Resolved to %s" (T.term_to_string r_dict));
+      // T.print (Printf.sprintf "Resolved to %s" (show r_dict));
       assert (typing_token r_env r_dict (E_Total, goal));
       assume (~(Tv_Unknown? (inspect_ln r_dict)));
       let dict = wr r_dict (RU.range_of_term ty) in
