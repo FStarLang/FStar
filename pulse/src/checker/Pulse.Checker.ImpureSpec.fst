@@ -60,63 +60,10 @@ let rec get_rewrites_to_from_post (g: env) xres (post: slprop) : T.Tac (option R
       | _ -> None)
   | _ -> None
 
-let prove_this (g: env) (goal: slprop) (ctxt: list slprop) : T.Tac (option (list slprop)) =
-  match inspect_term goal with
-  | Tm_Pure p ->
-    // TODO: pure (x == ?u)
-    Some []
-  | Tm_ExistsSL u b body ->
-    let uv = RU.new_implicit_var "witness for exists*" (RU.range_of_term goal) (elab_env g) b.binder_ty false in
-    Some (slprop_as_list (open_term' body uv 0))
-  | Tm_WithPure p _ body ->
-    Some (tm_pure p :: slprop_as_list (open_term' body unit_const 0))
-  | Tm_Star a b ->
-    Some [a; b]
-  | _ ->
-    let rec try_match (ctxt: list slprop) : Dv bool =
-      match ctxt with
-      | [] -> false
-      | c::ctxt ->
-        if RU.teq_nosmt_force_phase1 (elab_env g) goal c then
-          true
-        else
-          try_match ctxt
-      in
-    if try_match ctxt then
-      Some []
-    else
-      None
-
-let rec prove_step (g: env) (goals: list slprop) (ctxt: list slprop) : T.Tac (option (list slprop)) =
-  match goals with
-  | [] -> None
-  | goal::goals ->
-    match prove_this g goal ctxt with
-    | Some new_goals -> Some (new_goals @ goals)
-    | None ->
-      match prove_step g goals ctxt with
-      | Some stepped -> Some (goal :: stepped)
-      | None -> None
-
-let rec prove_loop (g: env) (goals: list slprop) (ctxt: list slprop) : T.Tac (list slprop) =
-  match prove_step g goals ctxt with
-  | Some new_goals -> prove_loop g new_goals ctxt
-  | None -> goals
-
 let prove (g: env) (goal: slprop) (ctxt: slprop) (r: range) : T.Tac unit =
-  let (| goal, _ |) = normalize_slprop g goal true in
-  let goal = slprop_as_list goal in
-  let (| ctxt, _ |) = normalize_slprop g ctxt true in
-  let ctxt = slprop_as_list ctxt in
-  match prove_loop g goal ctxt with
-  | [] -> ()
-  | unsolved_goals ->
-    T.fail_doc_at [
-      text "Cannot prove remaining precondition:";
-      separate hardline (T.map pp unsolved_goals);
-      text "from context:";
-      separate hardline (T.map pp ctxt);
-    ] (Some r)
+  let allow_amb = true in
+  let (| g', ctxt', _ |) = Pulse.Checker.Prover.prove r g ctxt goal allow_amb in
+  ()
 
 let symb_eval_stateful_app (g: env) (ctxt: slprop) (t: term) : T.Tac R.term =
   let t, ty, _ = tc_term_phase1 g t in
