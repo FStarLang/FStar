@@ -86,11 +86,10 @@ pub fn maybe_mk_session_tbl(
     match sopt {
         None => {
             let tbl = super::pulse_lib_hashtable::alloc(super::dpe::sid_hash, 256);
-            let s = super::dpe::st {
+            super::dpe::st {
                 st_ctr: 0,
                 st_tbl: tbl,
-            };
-            s
+            }
         }
         Some(mut s) => s,
     }
@@ -122,30 +121,34 @@ pub fn replace_session(
             let ctr = s.st_ctr;
             let tbl = s.st_tbl;
             if sid < ctr {
-                let ret = super::pulse_lib_hashtable::lookup((), tbl, sid);
-                let tbl1 = ret.0;
-                let idx = ret.1;
-                match idx {
-                    Some(mut idx1) => {
-                        let ret1 = super::pulse_lib_hashtable::replace(
-                            (),
-                            tbl1,
-                            idx1,
-                            sid,
-                            sst,
-                            (),
-                        );
-                        let tbl2 = ret1.0;
-                        let st1 = ret1.1;
-                        let s1 = super::dpe::st {
-                            st_ctr: ctr,
-                            st_tbl: tbl2,
-                        };
-                        *mg = Some(s1);
-                        std::mem::drop(mg);
-                        st1
+                let _letpattern = super::pulse_lib_hashtable::lookup((), tbl, sid);
+                match _letpattern {
+                    (mut tbl1, mut idx) => {
+                        match idx {
+                            Some(mut idx1) => {
+                                let _letpattern1 = super::pulse_lib_hashtable::replace(
+                                    (),
+                                    tbl1,
+                                    idx1,
+                                    sid,
+                                    sst,
+                                    (),
+                                );
+                                match _letpattern1 {
+                                    (mut tbl2, mut st1) => {
+                                        let s1 = super::dpe::st {
+                                            st_ctr: ctr,
+                                            st_tbl: tbl2,
+                                        };
+                                        *mg = Some(s1);
+                                        std::mem::drop(mg);
+                                        st1
+                                    }
+                                }
+                            }
+                            None => panic!(),
+                        }
                     }
-                    None => panic!(),
                 }
             } else {
                 panic!()
