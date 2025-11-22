@@ -17,6 +17,7 @@
 module PulseByExample
 
 open Pulse.Lib.Core
+open Pulse.Class.PtsTo
 
 (* 
   Things to note:
@@ -64,11 +65,11 @@ module R = Pulse.Lib.Reference
 *)
 fn ref_swap (r1 r2:ref int)
   requires
-    R.pts_to r1 'n1 **
-    R.pts_to r2 'n2
+    r1 |-> 'n1 **
+    r2 |-> 'n2
   ensures
-    R.pts_to r1 'n2 **
-    R.pts_to r2 'n1
+    r1 |-> 'n2 **
+    r2 |-> 'n1
 
 {
   let v1 = !r1;
@@ -78,26 +79,26 @@ fn ref_swap (r1 r2:ref int)
 
 fn ref_non_zero (r1:ref int) (n1:Ghost.erased int)
 requires
-  R.pts_to r1 n1
+  r1 |-> n1
 returns b:bool
-ensures R.pts_to r1 n1 ** pure (b == (Ghost.reveal n1 <> 0))
+ensures r1 |-> n1 ** pure (b == (Ghost.reveal n1 <> 0))
 {
   (0 <> !r1);
 }
 
 fn id (r:ref int)
   requires
-    R.pts_to r 'n
+    r |-> 'n
   returns r':ref int
   ensures
-    R.pts_to r' 'n ** pure (r == r')
+    r' |-> 'n ** pure (r == r')
 {
   r;
 }
 
 fn set (r:ref int) (x:int)
-requires R.pts_to r 'n
-ensures R.pts_to r x
+requires r |-> 'n
+ensures r |-> x
 {
   r := x;
 }
@@ -109,9 +110,9 @@ fn go () () ()
 
 fn test (r:ref int)
   requires 
-    R.pts_to r 'n
+    r |-> 'n
   ensures
-    R.pts_to r 2
+    r |-> 2
 {
   go (set r 1) (set r 4) (set r 2);
 }
@@ -131,11 +132,11 @@ open Pulse.Lib.BoundedIntegers
 
 fn arr_swap (#t:Type0) (n i j:SZ.t) (a:larray t (v n))
   requires
-    A.pts_to a 's0 **
+    a |-> 's0 **
     pure (Seq.length 's0 == v n /\ i < n /\ j < n)
   ensures
     exists* s. 
-    A.pts_to a s **
+    a |-> s **
     pure (Seq.length 's0 == v n /\ Seq.length s == v n /\ i < n /\ j < n
        /\ (forall (k:nat). k < v n /\ k <> v i /\ k <> v j ==> Seq.index 's0 k == Seq.index s k)
        /\ Seq.index 's0 (v i) == Seq.index s (v j)
@@ -156,11 +157,11 @@ fn arr_swap (#t:Type0) (n i j:SZ.t) (a:larray t (v n))
 
 fn max (n:SZ.t) (a:larray nat (v n))
   requires
-    A.pts_to a #'p 's **
+    a |-> Frac 'p 's **
     pure (Seq.length 's == v n)
   returns r:nat
   ensures
-    A.pts_to a #'p 's **
+    a |-> Frac 'p 's **
     pure (Seq.length 's == v n /\
           (forall (i:nat). i < v n ==> Seq.index 's i <= r))
 {
@@ -168,9 +169,9 @@ fn max (n:SZ.t) (a:larray nat (v n))
   let mut max : nat = 0;
   while (!i < n)
   invariant exists* (vi:SZ.t) (vmax:nat).
-    A.pts_to a #'p 's **
-    R.pts_to i vi **
-    R.pts_to max vmax **
+    a |-> Frac 'p 's **
+    i |-> vi **
+    max |-> vmax **
     pure (vi <= n
        /\ (forall (j:nat). j < v vi ==> Seq.index 's j <= vmax))
   {
@@ -186,11 +187,11 @@ fn max (n:SZ.t) (a:larray nat (v n))
 
 fn max_alt (n:SZ.t) (a:larray nat (v n))
   requires
-    A.pts_to a #'p 's **
+    a |-> Frac 'p 's **
     pure (Seq.length 's == v n)
   returns r:nat
   ensures
-    A.pts_to a #'p 's **
+    a |-> Frac 'p 's **
     pure (Seq.length 's == v n /\
           (forall (i:nat). i < v n ==> Seq.index 's i <= r))
 {
@@ -198,9 +199,9 @@ fn max_alt (n:SZ.t) (a:larray nat (v n))
   let mut max : nat = 0;
   while (!i < n)
   invariant exists* (vi:SZ.t) (vmax:nat).
-    A.pts_to a #'p 's **
-    R.pts_to i vi **
-    R.pts_to max vmax **
+    a |-> Frac 'p 's **
+    i |-> vi **
+    max |-> vmax **
     pure (vi <= n
        /\ (forall (j:nat). j < v vi ==> Seq.index 's j <= vmax))
   {
