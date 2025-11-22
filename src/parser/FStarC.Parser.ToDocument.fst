@@ -2149,7 +2149,8 @@ and p_projectionLHS e = match e.tm with
   (* KM : I still think that it is wrong to print a term that's not parseable... *)
   (* VD: Not parsable, but it can be called with a Labeled term via term_to_string *)
   | Labeled (e, s, b) ->
-      group <| str ("(*" ^ s ^ "*)") ^/^ p_term false false e
+      let s = BU.trim_string s in
+      group <| str ("(* " ^ s ^ " *)") ^/^ p_term false false e
 
   (* Failure cases : these cases are not handled in the printing grammar since *)
   (* they are considered as invalid AST. We try to fail as soon as possible in order *)
