@@ -1901,8 +1901,9 @@ let run_meta_arg_tac (env:env_t) (ctx_u:ctx_uvar) : term =
   | _ ->
     failwith "run_meta_arg_tac must have been called with a uvar that has a meta tac"
 
+(* This function is also called by tactics during phase1, and should not drop
+the guards if so (like simplify_guard does). *)
 let simplify_vc full_norm_allowed env t =
-  if env.phase1 then Util.t_true else
   Stats.record "simplify_vc" fun () ->
   if !dbg_Simplification then
     Format.print1 "Simplifying guard %s\n" (show t);
@@ -1919,24 +1920,15 @@ let simplify_vc full_norm_allowed env t =
 
 let __simplify_guard full_norm_allowed env g = match g.guard_f with
   | Trivial -> g
+  | _ when env.phase1 ->
+    { g with guard_f = Trivial }
   | NonTrivial f ->
     let f = simplify_vc full_norm_allowed env f in
     let f = check_trivial f in
     { g with guard_f = f}
 
-let simplify_guard env g = match g.guard_f with
-  | Trivial -> g
-  | NonTrivial f ->
-    let f = simplify_vc false env f in
-    let f = check_trivial f in
-    { g with guard_f = f}
-
-let simplify_guard_full_norm env g = match g.guard_f with
-  | Trivial -> g
-  | NonTrivial f ->
-    let f = simplify_vc true env f in
-    let f = check_trivial f in
-    { g with guard_f = f}
+let simplify_guard           = __simplify_guard false
+let simplify_guard_full_norm = __simplify_guard true
 
 //
 // Apply substitutive indexed effects subcomp for an effect M
@@ -5168,19 +5160,6 @@ let do_discharge_vc use_env_range_msg env vc : unit =
     end
     else [env, vc, FStarC.Options.peek ()]
     )
-  in
-
-  (* Splitting queries. FIXME: isn't this redundant given the
-  code in SMTEncoding.Solver? *)
-  let vcs =
-    if Options.split_queries () = Options.Always
-    then vcs |>
-          List.collect
-            (fun (env, goal, opts) ->
-                match Env.split_smt_query env goal with
-                | None -> [env,goal,opts]
-                | Some goals -> goals |> List.map (fun (env, goal) -> env,goal,opts))
-    else vcs
   in
 
   (* Solve one by one. If anything fails the SMT module will log errors. *)

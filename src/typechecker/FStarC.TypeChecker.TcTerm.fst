@@ -727,28 +727,24 @@ let effect_has_primitive_extraction (env:Env.env) (eff: lident) : bool =
 (************************************************************************************************************)
 let rec tc_term env e =
     def_check_scoped e.pos "tc_term.entry" env e;
-    if Debug.medium () then
-        Format.print5 "(%s) Starting tc_term (phase1=%s) of %s (%s), %s {\n"
-          (Range.string_of_range <| Env.get_range env)
-          (show env.phase1)
-          (show e)
-          (tag_of (SS.compress e))
-          (print_expected_ty_str env);
+    let do () =
+      tc_maybe_toplevel_term ({env with top_level=false}) e
+    in
+    if not (Debug.medium ()) then
+      do ()
+    else begin
+      Format.print5 "(%s) Starting tc_term (phase1=%s) of %s (%s), %s {\n"
+        (show <| Env.get_range env) (show env.phase1) (show e)
+        (tag_of (SS.compress e)) (print_expected_ty_str env);
 
-    let r, ms = Timing.record_ms (fun () ->
-                    tc_maybe_toplevel_term ({env with top_level=false}) e) in
-    if Debug.medium () then begin
-        Format.print4 "(%s) } tc_term of %s (%s) took %sms\n" (Range.string_of_range <| Env.get_range env)
-                                                        (show e)
-                                                        (tag_of (SS.compress e))
-                                                        (show ms);
-        let e, lc , _ = r in
-        Format.print4 "(%s) Result is: (%s:%s) (%s)\n" (Range.string_of_range <| Env.get_range env)
-                                                   (show e)
-                                                   (TcComm.lcomp_to_string lc)
-                                                   (tag_of (SS.compress e))
-    end;
-    r
+      let r, ms = Timing.record_ms do in
+      Format.print4 "(%s) } tc_term of %s (%s) took %sms\n"
+        (show <| Env.get_range env) (show e) (tag_of (SS.compress e)) (show ms);
+      let e, lc , _ = r in
+      Format.print4 "(%s) Result is: (%s:%s) (%s)\n"
+        (show <| Env.get_range env) (show e) (TcComm.lcomp_to_string lc) (tag_of (SS.compress e));
+      r
+    end
 
 and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked and elaborated version of e            *)
                                         & lcomp                 (* computation type where the WPs are lazily evaluated *)

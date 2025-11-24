@@ -149,7 +149,6 @@ instance val showable_implicit : showable implicit
 
 (* Bad naming here *)
 type implicits = list implicit
-val implicits_to_string : implicits -> string
 type implicits_t = CList.t implicit
 
 type guard_t = {

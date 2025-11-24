@@ -9,14 +9,19 @@ module U64 = FStar.UInt64
 new
 val t : eqtype
 
-val fits (x: nat) : Tot prop
+val fits (x : int) : Tot prop
+
+val fits_nonneg (x:int)
+  : Lemma (requires fits x)
+          (ensures x >= 0)
+          [SMTPat (fits x)]
 
 /// According to the C standard, "the bit width of t is not less than 16 since c99"
 /// (https://en.cppreference.com/w/c/types/size_t)
 
 val fits_at_least_16 (x:nat)
   : Lemma
-    (requires x < pow2 16)
+    (requires 0 <= x /\ x < pow2 16)
     (ensures fits x)
     [SMTPat (fits x)]
 
@@ -31,7 +36,7 @@ val v (x: t) : Pure nat
 /// or `fits_u64` predicates. These predicates can only be introduced through a
 /// stateful function (currently in Steel.ST.HigherArray), which will be extracted
 /// to a static_assert by krml
-val uint_to_t (x: nat) : Pure t
+val uint_to_t (x: int) : Pure t
   (requires (fits x))
   (ensures (fun y -> v y == x))
 
@@ -41,7 +46,7 @@ val size_v_inj (x: t)
     (ensures uint_to_t (v x) == x)
     [SMTPat (v x)]
 
-val size_uint_to_t_inj (x: nat)
+val size_uint_to_t_inj (x: int)
   : Lemma
     (requires fits x)
     (ensures v (uint_to_t x) == x)
@@ -55,14 +60,14 @@ val fits_u64_implies_fits_32 (_:unit)
     (requires fits_u64)
     (ensures fits_u32)
 
-val fits_u32_implies_fits (x:nat)
+val fits_u32_implies_fits (x:int)
   : Lemma
-    (requires fits_u32 /\ x < pow2 32)
+    (requires fits_u32 /\ 0 <= x /\ x < pow2 32)
     (ensures fits x)
 
-val fits_u64_implies_fits (x:nat)
+val fits_u64_implies_fits (x:int)
   : Lemma
-    (requires fits_u64 /\ x < pow2 64)
+    (requires fits_u64 /\ 0 <= x /\ x < pow2 64)
     (ensures fits x)
 
 /// Creates a size_t when given a uint32 literal. Note, this will not
@@ -127,7 +132,7 @@ val div (a:t) (b:t{v b <> 0}) : Pure t
 
 (** Modulo specification, similar to FStar.UInt.mod *)
 
-let mod_spec (a:nat{fits a}) (b:nat{fits b /\ b <> 0}) : GTot (n:nat{fits n}) =
+let mod_spec (a:int{fits a}) (b:int{fits b /\ b <> 0}) : GTot (n:nat{fits n}) =
   let open FStar.Mul in
   let res = a - ((a/b) * b) in
   fits_lte res a;

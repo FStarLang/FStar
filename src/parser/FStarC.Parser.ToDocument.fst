@@ -2039,10 +2039,6 @@ and p_appTerm e = match e.tm with
 
 and p_argTerm arg_imp = match arg_imp with
   | (u, UnivApp) -> p_universe u
-  | (e, FsTypApp) ->
-      (* This case should not happen since it might lead to badly formed type applications (e.g t a b)*)
-      Errors.log_issue e Errors.Warning_UnexpectedFsTypApp "Unexpected FsTypApp, output might not be formatted correctly.";
-      surround 2 1 langle (p_indexingTerm e) rangle
   | (e, Hash) -> str "#" ^^ p_indexingTerm e
   | (e, HashBrace t) -> str "#[" ^^ p_indexingTerm t ^^ str "]" ^^ p_indexingTerm e
   | (e, Infix)
@@ -2153,7 +2149,8 @@ and p_projectionLHS e = match e.tm with
   (* KM : I still think that it is wrong to print a term that's not parseable... *)
   (* VD: Not parsable, but it can be called with a Labeled term via term_to_string *)
   | Labeled (e, s, b) ->
-      group <| str ("(*" ^ s ^ "*)") ^/^ p_term false false e
+      let s = BU.trim_string s in
+      group <| str ("(* " ^ s ^ " *)") ^/^ p_term false false e
 
   (* Failure cases : these cases are not handled in the printing grammar since *)
   (* they are considered as invalid AST. We try to fail as soon as possible in order *)

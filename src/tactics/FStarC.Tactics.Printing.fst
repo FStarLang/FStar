@@ -138,7 +138,7 @@ let ps_to_doc (msg, ps) : document =
   separate hardline (
     (List.mapi (fun i g -> goal_to_doc "Goal"     (Some (1 + i, n))            ps g) ps.goals) @
     (List.mapi (fun i g -> goal_to_doc "SMT Goal" (Some (1 + n_active + i, n)) ps g) ps.smt_goals)
-  )
+  ) ^^ hardline
 
 let ps_to_string (msg, ps) =
   Pprint.render (ps_to_doc (msg, ps)) ^ "\n"

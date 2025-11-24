@@ -21,6 +21,7 @@ open FStarC.Range
 open FStarC.Const
 open FStarC.Ident
 open FStarC.Class.Show
+open FStarC.Class.PP
 open FStarC.Class.HasRange
 
 (* AST produced by the parser, before desugaring
@@ -152,7 +153,6 @@ and arg_qualifier =
     | TypeClassArg
 and aqual = option arg_qualifier
 and imp =
-    | FsTypApp
     | Hash
     | UnivApp
     | HashBrace of term
@@ -339,7 +339,6 @@ val mkRefSet : range -> list term -> term
 val focusLetBindings : list (bool & (pattern & term)) -> range -> list (pattern & term)
 val focusAttrLetBindings : list (option attributes_ & (bool & (pattern & term))) -> range -> list (option attributes_ & (pattern & term))
 
-val mkFsTypApp : term -> list term -> range -> term
 val mkTuple : list term -> range -> term
 val mkDTuple : list term -> range -> term
 val mkRefinedBinder : ident -> term -> bool -> option term -> range -> aqual -> list term -> binder
@@ -378,14 +377,23 @@ val check_id : ident -> unit
 val ident_of_binder : range -> binder -> ident
 val idents_of_binders : list binder -> range -> list ident
 
-instance val showable_decl : showable decl
-instance val showable_term : showable term
-instance val showable_pattern : showable pattern
-instance val showable_binder : showable binder
-instance val showable_modul   : showable modul
-instance val showable_pragma : showable pragma
-
 val as_interface (m:modul) : modul
 
 val inline_let_attribute : term
 val inline_let_vc_attribute : term
+
+instance val showable_quote_kind : showable quote_kind
+instance val showable_decl    : showable decl
+instance val showable_term    : showable term
+instance val showable_pattern : showable pattern
+instance val showable_binder  : showable binder
+instance val showable_modul   : showable modul
+instance val showable_pragma  : showable pragma
+
+instance val pretty_quote_kind   : pretty quote_kind
+instance val pretty_decl    : pretty decl
+instance val pretty_term    : pretty term
+instance val pretty_pattern : pretty pattern
+instance val pretty_binder  : pretty binder
+instance val pretty_modul   : pretty modul
+instance val pretty_pragma  : pretty pragma

@@ -2131,6 +2131,7 @@ let recover_caching_and_update_env (env:env_t) (decls:decls_t) :decls_t =
   )
 
 let encode_sig tcenv se =
+   Stats.record "encode_sig" fun () ->
    let caption decls =
     if Options.log_queries()
     then Term.Caption ("encoding sigelt " ^ Print.sigelt_to_string_short se)::decls

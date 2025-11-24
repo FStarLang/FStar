@@ -13,7 +13,7 @@
     pprint
     process
     sedlex
-    mtime.clock.os
+    mtime.clock
  )
  (modes native)
  (preprocess (pps ppx_deriving.show ppx_deriving_yojson sedlex.ppx))

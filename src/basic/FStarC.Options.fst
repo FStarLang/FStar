@@ -207,6 +207,7 @@ let defaults = [
   ("detail_errors"                             , Bool false);
   ("detail_hint_replay"                        , Bool false);
   ("disallow_unification_guards"               , Bool false);
+  ("dump_ast"                                  , Bool false);
   ("dump_module"                               , List []);
   ("eager_subtyping"                           , Bool false);
   ("error_contexts"                            , Bool false);
@@ -478,6 +479,7 @@ let get_defensive               ()      = lookup_opt "defensive"                
 let get_dep                     ()      = lookup_opt "dep"                      (as_option as_string)
 let get_detail_errors           ()      = lookup_opt "detail_errors"            as_bool
 let get_detail_hint_replay      ()      = lookup_opt "detail_hint_replay"       as_bool
+let get_dump_ast                ()      = lookup_opt "dump_ast"                 as_bool
 let get_dump_module             ()      = lookup_opt "dump_module"              (as_list as_string)
 let get_eager_subtyping         ()      = lookup_opt "eager_subtyping"          as_bool
 let get_error_contexts          ()      = lookup_opt "error_contexts"           as_bool
@@ -937,6 +939,11 @@ let specs_with_types warn_unsafe : list (char & string & opt_type & Pprint.docum
    "detail_hint_replay",
     Const (Bool true),
     text "Emit a detailed report for proof whose unsat core fails to replay");
+
+  ( noshort,
+    "dump_ast",
+    Const (Bool true),
+    text "Dump the surface AST of the given file.");
 
   ( noshort,
     "dump_module",
@@ -2072,6 +2079,7 @@ let dep                          () = get_dep                         ()
 let detail_errors                () = get_detail_errors               ()
 let detail_hint_replay           () = get_detail_hint_replay          ()
 let any_dump_module              () = Cons? (get_dump_module())
+let dump_ast                     () = get_dump_ast()
 let dump_module                  s  = get_dump_module() |> List.existsb (module_name_eq s)
 let eager_subtyping              () = get_eager_subtyping()
 let error_contexts               () = get_error_contexts              ()
