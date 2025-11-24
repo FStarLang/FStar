@@ -129,7 +129,7 @@ $(FSTAR1_BARE_EXE): .bare1.src.touch .src.ml.touch $(MAYBEFORCE)
 
 $(TESTS1_EXE): .tests1.src.touch .src.ml.touch $(MAYBEFORCE)
 	$(call bold_msg, "BUILD", "STAGE 1 TESTS")
-	$(MAKE) -C stage1 tests
+	$(MAKE) -C stage1 tests BUILD_FSTAR_OCAML_TESTS=true
 	touch -c $@
 
 stage1-unit-tests: $(TESTS1_EXE)
@@ -230,7 +230,7 @@ $(FSTAR2_BARE_EXE): .bare2.src.touch .src.ml.touch $(MAYBEFORCE)
 
 $(TESTS2_EXE): .tests2.src.touch .src.ml.touch $(MAYBEFORCE)
 	$(call bold_msg, "BUILD", "STAGE 2 TESTS")
-	$(MAKE) -C stage2 tests
+	$(MAKE) -C stage2 tests BUILD_FSTAR_OCAML_TESTS=true
 	touch -c $@
 
 stage2-unit-tests: $(TESTS2_EXE)
