@@ -1138,7 +1138,7 @@ let mk_auto_squash u p =
     mk_app (mk_Tm_uinst sq [u]) [as_arg p]
 
 let un_squash t =
-    let head, args = head_and_args t in
+    let head, args = head_and_args_full t in
     let head = unascribe head in
     let head = un_uinst head in
     match (compress head).n, args with
