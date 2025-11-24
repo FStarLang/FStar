@@ -1480,19 +1480,13 @@ let _t_trefl (allow_guards:bool) (l : term) (r : term) : tac unit =
       fail2 "cannot unify (%s) and (%s)" ls rs
 
 let t_trefl (allow_guards:bool) : tac unit = wrap_err "t_trefl" <| (
-  match!
-    catch (//restore UF graph, including any Already_checked markers, if anything fails
-      let! g = cur_goal in
-      match destruct_eq (goal_env g) (goal_type g) with
-      | Some (l, r) ->
-             _t_trefl allow_guards l r
-      | None ->
-             fail1 "not an equality (%s)" (tts (goal_env g) (goal_type g))
-    )
-  with
-  | Inr v -> ret v
-  | Inl exn -> traise exn
-  )
+  let! g = cur_goal in
+  match destruct_eq (goal_env g) (goal_type g) with
+  | Some (l, r) ->
+    _t_trefl allow_guards l r
+  | None ->
+    fail1 "not an equality (%s)" (tts (goal_env g) (goal_type g))
+)
 
 let dup () : tac unit =
   let! g = cur_goal in
