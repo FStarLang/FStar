@@ -1213,7 +1213,7 @@ let t_apply_lemma (noinst:bool) (noinst_lhs:bool)
         let sub_goals = filter' (fun g goals -> not (checkone (goal_witness g) goals)) sub_goals in
         proc_guard "apply_lemma guard" env guard None (Some goal_sc) (rangeof goal) ;!
         let pre_u = env.universe_of env pre in
-        (match (Rel.simplify_guard env (Env.guard_of_guard_formula (NonTrivial pre))).guard_f with
+        (match Env.check_trivial (Rel.simplify_vc false env pre) with
          | Trivial -> return ()
          | NonTrivial _ -> add_irrelevant_goal goal "apply_lemma precondition" env pre (Some goal_sc)) ;!//AR: should we use the normalized pre instead?
         add_goals sub_goals
