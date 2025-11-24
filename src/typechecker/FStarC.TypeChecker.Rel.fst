@@ -1924,19 +1924,8 @@ let __simplify_guard full_norm_allowed env g = match g.guard_f with
     let f = check_trivial f in
     { g with guard_f = f}
 
-let simplify_guard env g = match g.guard_f with
-  | Trivial -> g
-  | NonTrivial f ->
-    let f = simplify_vc false env f in
-    let f = check_trivial f in
-    { g with guard_f = f}
-
-let simplify_guard_full_norm env g = match g.guard_f with
-  | Trivial -> g
-  | NonTrivial f ->
-    let f = simplify_vc true env f in
-    let f = check_trivial f in
-    { g with guard_f = f}
+let simplify_guard           = __simplify_guard false
+let simplify_guard_full_norm = __simplify_guard true
 
 //
 // Apply substitutive indexed effects subcomp for an effect M
