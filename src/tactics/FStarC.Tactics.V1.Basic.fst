@@ -196,6 +196,11 @@ let fail4 msg x y z w = fail (Format.fmt4 msg x y z w)
 
 let destruct_eq' (typ : typ) : option (term & term) =
     let open FStarC.Syntax.Formula in
+    (* destruct_typ_as_formula will do a very conservative unmeta, removing
+    Meta_monadic and Meta_monadic_lift nodes, but not Meta_labeled, since that
+    leads to bad error messages elsewhere. We don't care about that here, so do
+    an aggressive unmeta before calling it. *)
+    let typ = U.unmeta typ in
     match destruct_typ_as_formula typ with
     | Some (BaseConn(l, [_; (e1, None); (e2, None)]))
       when Ident.lid_equals l PC.eq2_lid
@@ -1480,19 +1485,13 @@ let _t_trefl (allow_guards:bool) (l : term) (r : term) : tac unit =
       fail2 "cannot unify (%s) and (%s)" ls rs
 
 let t_trefl (allow_guards:bool) : tac unit = wrap_err "t_trefl" <| (
-  match!
-    catch (//restore UF graph, including any Already_checked markers, if anything fails
-      let! g = cur_goal in
-      match destruct_eq (goal_env g) (goal_type g) with
-      | Some (l, r) ->
-             _t_trefl allow_guards l r
-      | None ->
-             fail1 "not an equality (%s)" (tts (goal_env g) (goal_type g))
-    )
-  with
-  | Inr v -> ret v
-  | Inl exn -> traise exn
-  )
+  let! g = cur_goal in
+  match destruct_eq (goal_env g) (goal_type g) with
+  | Some (l, r) ->
+    _t_trefl allow_guards l r
+  | None ->
+    fail1 "not an equality (%s)" (tts (goal_env g) (goal_type g))
+)
 
 let dup () : tac unit =
   let! g = cur_goal in
