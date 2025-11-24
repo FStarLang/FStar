@@ -84,7 +84,7 @@ let lookup_arity_lid table target_lid args =
     BU.find_map table aux
 
 let destruct_base_conn t =
-    let hd, args = U.head_and_args t in
+    let hd, args = U.head_and_args_full t in
     match (U.un_uinst hd).n with
     | Tm_fvar fv -> lookup_arity_lid destruct_base_table fv.fv_name args
     | _ -> None
@@ -110,7 +110,7 @@ let destruct_q_conn t =
         else U.is_exists fv.fv_name
     in
     let flat t =
-        let t, args = U.head_and_args t in
+        let t, args = U.head_and_args_full t in
         U.un_uinst t, args |> List.map (fun (t, imp) -> U.unascribe t, imp)
     in
     let rec aux qopt out t = match qopt, flat t with

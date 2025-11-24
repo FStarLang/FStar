@@ -196,6 +196,11 @@ let fail4 msg x y z w = fail (Format.fmt4 msg x y z w)
 
 let destruct_eq' (typ : typ) : option (term & term) =
     let open FStarC.Syntax.Formula in
+    (* destruct_typ_as_formula will do a very conservative unmeta, removing
+    Meta_monadic and Meta_monadic_lift nodes, but not Meta_labeled, since that
+    leads to bad error messages elsewhere. We don't care about that here, so do
+    an aggressive unmeta before calling it. *)
+    let typ = U.unmeta typ in
     match destruct_typ_as_formula typ with
     | Some (BaseConn(l, [_; (e1, None); (e2, None)]))
       when Ident.lid_equals l PC.eq2_lid
