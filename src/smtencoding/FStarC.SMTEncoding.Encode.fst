@@ -849,6 +849,7 @@ let encode_top_level_let :
         let toks_fvbs = List.rev toks in
         let decls = List.rev decls |> List.flatten in
         (*
+         * GM: Not accurate any more.
          * AR: decls are the declarations for the top-level lets
          *     if one of the let body contains a let rec (inner let rec), we simply return decls at that point, inner let recs are not encoded to the solver yet (see Inner_let_rec below)
          *     the way it is implemented currently is that, the call to encode the let body throws an exception Inner_let_rec which is caught below in this function
@@ -1154,30 +1155,12 @@ let encode_top_level_let :
                                                   is_smt_reifiable_function env.tcenv t))
         then decls, env_decls
         else
-          try
-            if not is_rec
-            then
-              (* Encoding non-recursive definitions *)
-              encode_non_rec_lbdef bindings typs toks_fvbs env
-            else
-              encode_rec_lbdefs bindings typs toks_fvbs env
-          with
-            | Inner_let_rec names ->
-              let plural = List.length names > 1 in
-              let r = List.hd names |> snd in
-              FStarC.TypeChecker.Err.add_errors
-                env.tcenv
-                [(Errors.Warning_DefinitionNotTranslated,
-                  // FIXME
-                  [Errors.text <| Format.fmt3
-                    "Definitions of inner let-rec%s %s and %s enclosing top-level letbinding are not encoded to the solver, you will only be able to reason with their types"
-                    (if plural then "s" else "")
-                    (List.map fst names |> String.concat ",")
-                    (if plural then "their" else "its")],
-                  r,
-                  Errors.get_ctx () // TODO: fix this, leaking abstraction
-                  )];
-              decls, env_decls  //decls are type declarations for the lets, if there is an inner let rec, only those are encoded to the solver
+          if not is_rec
+          then
+            (* Encoding non-recursive definitions *)
+            encode_non_rec_lbdef bindings typs toks_fvbs env
+          else
+            encode_rec_lbdefs bindings typs toks_fvbs env
 
     with Let_rec_unencodeable ->
       let msg = bindings |> List.map (fun lb -> show lb.lbname) |> String.concat " and " in

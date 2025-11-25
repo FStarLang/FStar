@@ -16,4 +16,4 @@
 module FStar.Tactics.Builtins
 
 (* This module is a temporary for Meta-F* migration *)
-include FStar.Stubs.Tactics.V1.Builtins
+include FStar.Stubs.Tactics.V2.Builtins

@@ -269,7 +269,12 @@ let run_full_buffer (st:repl_state)
                     (with_symbols:bool)
                     (write_full_buffer_fragment_progress: fragment_progress -> unit)
   : list query & list json
-  = let parse_result = parse_code None code in
+  = // updating the vfs entry allows dependence scanning on the file to
+    // to use the latest snapshot of the file, rather than what was present
+    // in the buffer when the IDE was started. This is especially useful when
+    // creating a new file and launching F* on it
+    FStarC.Parser.ParseIt.add_vfs_entry st.repl_fname code;
+    let parse_result = parse_code None code in
     let log_syntax_issues err =
       match err with
       | None -> ()

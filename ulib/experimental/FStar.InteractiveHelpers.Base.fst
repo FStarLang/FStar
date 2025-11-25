@@ -1,7 +1,7 @@
 module FStar.InteractiveHelpers.Base
 
 open FStar.List.Tot
-open FStar.Tactics
+open FStar.Tactics.V1
 open FStar.Mul
 
 #set-options "--z3rlimit 15 --fuel 0 --ifuel 1"
