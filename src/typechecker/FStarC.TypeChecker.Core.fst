@@ -2086,7 +2086,11 @@ and pattern_branch_condition (g:env)
       in
       let mk_ith_projector i =
         let ith_pat_var, ith_pat =
-            let bv = wild_bv S.tun scrutinee.pos in
+            // NOTE: This variable must have an ID distinct from all the other
+            // wildcards below (constantly 0). Otherwise, the close_branch call
+            // below will wrongly turn this bv in the branch expression to @0,
+            // the 0th DB index.
+            let bv = { wild_bv S.tun scrutinee.pos with index = 1 } in
             bv, S.withinfo (Pat_var bv) scrutinee.pos
         in
         let sub_pats = List.mapi (fun j (s,b) -> if i <> j then wild_pat s.p,b else ith_pat,b) sub_pats in
@@ -2117,7 +2121,7 @@ and pattern_branch_condition (g:env)
               return None
             | _ ->
               let scrutinee_sub_term = mk_ith_projector i in
-              pattern_branch_condition g (mk_ith_projector i) pi)
+              pattern_branch_condition g scrutinee_sub_term pi)
           sub_pats
       in
       let guards = List.collect (function None -> [] | Some t -> [t]) (discrimination :: sub_term_guards) in
