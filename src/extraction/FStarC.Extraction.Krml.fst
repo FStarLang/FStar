@@ -142,7 +142,7 @@ and expr =
   | EBufNull of typ
   | EBufDiff of expr & expr
   | ESizeof of typ
-  | EGFor of expr & expr & expr & expr
+  | EGFor of expr & expr & expr & expr // C-style for loops: init, cond, incr, body
 
 and op =
   | Add | AddW | Sub | SubW | Div | DivW | Mult | MultW | Mod
