@@ -525,17 +525,6 @@ let _ = FStarC_Parser_AST_Util.register_extension_lang_parser "fstar" parse_fsta
 
 type lang_opts = string option
 
-let rec insert_use_lang lang decls =
-  match decls with
-  | [] -> []
-  | { FStarC_Parser_AST.d = FStarC_Parser_AST.TopLevelModule _ } as d ::ds ->
-    let use_lang =
-      { d with FStarC_Parser_AST.d = FStarC_Parser_AST.UseLangDecls lang; }
-    in
-    d :: use_lang :: ds
-  | d::ds ->
-  d :: insert_use_lang lang ds
-
 let parse_lang lang fn =
   let frag =
     match fn with
@@ -557,7 +546,6 @@ let parse_lang lang fn =
     let rng = FStarC_Range.mk_range frag.frag_fname frag_pos frag_pos in
     let contents_at = contents_at frag.frag_text in
     let decls = FStarC_Parser_AST_Util.parse_extension_lang lang frag.frag_text rng in
-    let decls = insert_use_lang lang decls in
     let comments = FStarC_Parser_Util.flush_comments () in
     match fn with
       | Filename _ | Toplevel _ ->
@@ -654,7 +642,7 @@ let parse (lang_opt:lang_opts) fn =
     in
     let filename =
       (* If in IDE mode, the IDE filename takes precedence as frag_fname might be "<input>" *)
-      if FStarC_Options.ide ()
+      if FStarC_Options.ide () && filename = "<input>"
       then Option.value ~default:filename (FStarC_Options.ide_filename ())
       else filename
     in
