@@ -2,23 +2,23 @@
   - Expected failure:
   - When using multiple invariants, they must all be in the "new" style without a binder.
 
-* Info at LoopInvariants.fst(77,4-77,8):
+* Info at LoopInvariants.fst(76,20-77,8):
   - Expected failure:
-  - rewrite: could not prove equality of
+  - Could not prove equality of:
   - Pulse.Lib.Reference.pts_to s 3
   - Pulse.Lib.Reference.pts_to s 2
   - Assertion failed
   - The SMT solver could not prove the query. Use --query_stats for more
     details.
-  - See also LoopInvariants.fst(77,4-77,10)
+  - See also LoopInvariants.fst(76,20-77,10)
 
-* Info at LoopInvariants.fst(88,4-88,8):
+* Info at LoopInvariants.fst(86,2-88,8):
   - Expected failure:
-  - rewrite: could not prove equality of
+  - Could not prove equality of:
   - Pulse.Lib.Reference.pts_to s 3
   - Pulse.Lib.Reference.pts_to s 2
   - Assertion failed
   - The SMT solver could not prove the query. Use --query_stats for more
     details.
-  - See also LoopInvariants.fst(88,4-88,10)
+  - See also LoopInvariants.fst(86,2-88,10)
 

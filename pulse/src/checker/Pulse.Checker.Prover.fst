@@ -535,7 +535,7 @@ let check_slprop_equiv_ext r (g:env) (p q:slprop)
   match res with
   | None -> 
     fail_doc_with_subissues g (Some r) issues [
-      text "rewrite: could not prove equality of";
+      text "Could not prove equality of:";
       pp p;
       pp q;
     ]
@@ -1097,11 +1097,12 @@ let prove rng (g: env) (ctxt goals: slprop) allow_amb :
       ] else []))
     (Some rng)
   else
-    let before, after = k g' in
-    let h: slprop_equiv g' (elab_slprops (solved' @ ctxt')) (elab_slprops (ctxt' @ solved' @ goals')) = RU.magic () in
-    let k = cont_elab_trans before (cont_elab_frame after ctxt') h [] in
-    let h: slprop_equiv g' (elab_slprops (ctxt' @ [Unknown goals])) (tm_star goals (elab_slprops ctxt')) = RU.magic () in
-    (| g', RU.deep_compress_safe (elab_slprops ctxt'), k_elab_equiv k (VE_Refl _ _) h |)
+    (| g', RU.deep_compress_safe (elab_slprops ctxt'), fun post_hint post_hint_typ ->
+      let before, after = k g' in
+      let h: slprop_equiv g' (elab_slprops (solved' @ ctxt')) (elab_slprops (ctxt' @ solved' @ goals')) = RU.magic () in
+      let k = cont_elab_trans before (cont_elab_frame after ctxt') h [] in
+      let h: slprop_equiv g' (elab_slprops (ctxt' @ [Unknown goals])) (tm_star goals (elab_slprops ctxt')) = RU.magic () in
+      k_elab_equiv k (VE_Refl _ _) h post_hint post_hint_typ |)
 
 #restart-solver
 #push-options "--z3rlimit_factor 2"
@@ -1195,10 +1196,10 @@ let elim_exists_and_pure (#g:env) (#ctxt:slprop)
   let ctxt' = Pulse.Checker.Prover.Substs.ss_term ctxt ss in
   let (| g', ctxt'', goals'', solved, k |) = try_elim_core g [Unknown ctxt'] in
   let h: tot_typing g' (elab_slprops ctxt'') tm_slprop = RU.magic () in // TODO thread through prover
-  let h1: slprop_equiv g (elab_slprops ([] @ [Unknown ctxt'])) ctxt = (RU.magic() <: slprop_equiv g ctxt' ctxt) in
-  let h2: slprop_equiv g' (elab_slprops (ctxt'' @ solved @ goals'')) (elab_slprops ([] @ solved @ ctxt'')) = RU.magic () in
-  let h3: slprop_equiv g' (elab_slprops (ctxt'' @ [])) (elab_slprops ctxt'') = RU.magic () in
-  let before, after = k g' in
-  (| g', elab_slprops ctxt'', h,
+  (| g', elab_slprops ctxt'', h, fun post_hint post_hint_typ ->
+    let h1: slprop_equiv g (elab_slprops ([] @ [Unknown ctxt'])) ctxt = (RU.magic() <: slprop_equiv g ctxt' ctxt) in
+    let h2: slprop_equiv g' (elab_slprops (ctxt'' @ solved @ goals'')) (elab_slprops ([] @ solved @ ctxt'')) = RU.magic () in
+    let h3: slprop_equiv g' (elab_slprops (ctxt'' @ [])) (elab_slprops ctxt'') = RU.magic () in
+    let before, after = k g' in
     k_elab_trans (k_elab_equiv (before []) h1 (VE_Refl _ _))
-      (k_elab_equiv (after ctxt'') h2 h3) |)
+      (k_elab_equiv (after ctxt'') h2 h3) post_hint post_hint_typ |)
