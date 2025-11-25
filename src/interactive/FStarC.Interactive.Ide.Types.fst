@@ -34,8 +34,8 @@ open FStarC.Json
 
 module SS = FStarC.Syntax.Syntax
 
-let initial_range =
-  Range.mk_range "<input>" (Range.mk_pos 1 0) (Range.mk_pos 1 0)
+let initial_range filename =
+  Range.mk_range filename (Range.mk_pos 1 0) (Range.mk_pos 1 0)
 
 instance showable_push_kind : showable push_kind = {
   show = (function

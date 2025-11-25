@@ -39,16 +39,16 @@ open FStarC.Parser.AST.Diff { eq_decl }
 open FStarC.Class.Show
 
 let qid = string & int
-let qst a = qid -> a & qid
-let return (x:'a) : qst 'a = fun q -> x, q
+let qst a = qid & repl_state -> a & qid
+let return (x:'a) : qst 'a = fun (q, _) -> x, q
 let (let!) (f:qst 'a) (g: 'a -> qst 'b)
   : qst 'b
-  = fun q -> let x, q' = f q in
-          g x q'
+  = fun (q,s) -> let x, q' = f (q,s) in
+          g x (q',s)
 
-let run_qst (f:qst 'a) (q:string)
+let run_qst (f:qst 'a) (q:string) (st:repl_state)
   : 'a
-  = fst (f (q, 0))
+  = fst (f ((q, 0), st))
 
 
 let rec map (f:'a -> qst 'b) (l:list 'a)
@@ -62,14 +62,16 @@ let rec map (f:'a -> qst 'b) (l:list 'a)
   
 let shift_qid (q:qid) (i:int) = fst q, snd q + i
 
+let get_filename : qst string = fun (q, s) -> s.repl_fname, q
+
 let next_qid
   : qst qid
-  = fun q -> let q = shift_qid q 1 in
+  = fun (q,_) -> let q = shift_qid q 1 in
           q, q
 
 let get_qid
   : qst qid
-  = fun q -> q, q
+  = fun (q,_) -> q, q
 
 let as_query (q:query') 
   : qst query
@@ -90,12 +92,13 @@ let dump_symbols_for_lid (l:lident)
   let start_col = Range.col_of_pos start_pos in
   let end_line = Range.line_of_pos end_pos in
   let end_col = Range.col_of_pos end_pos in
-  let position = "<input>", start_line, start_col in
+  let! filename = get_filename in
+  let position = filename, start_line, start_col in
   as_query (Lookup(Ident.string_of_lid l,
                     LKCode,
                     Some position,
                     ["type"; "documentation"; "defined-at"],
-                    Some (JsonAssoc [("fname", JsonStr "<input>");
+                    Some (JsonAssoc [("fname", JsonStr filename);
                                     ("beg", JsonList [JsonInt start_line; JsonInt start_col]);
                                     ("end", JsonList [JsonInt end_line; JsonInt end_col])])))
 
@@ -305,7 +308,7 @@ let run_full_buffer (st:repl_state)
           run_qst (let! queries = reload_deps (!repl_stack) in
                    let! push_mod = push_decl FullCheck with_symbols write_full_buffer_fragment_progress d in
                    return (queries @ push_mod, []))
-                  qid
+                  qid st
 
         | _ ->
           let decls = filter_decls decls in
@@ -316,7 +319,7 @@ let run_full_buffer (st:repl_state)
             | _ -> FullCheck
           in
           let queries, issues = 
-              run_qst (inspect_repl_stack (!repl_stack) decls push_kind with_symbols write_full_buffer_fragment_progress) qid
+              run_qst (inspect_repl_stack (!repl_stack) decls push_kind with_symbols write_full_buffer_fragment_progress) qid st
           in
           if request_type <> Cache then log_syntax_issues err_opt;
           if Debug.any()

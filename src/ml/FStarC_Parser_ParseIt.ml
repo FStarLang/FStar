@@ -128,10 +128,6 @@ let err_of_parse_error filename lexbuf tag =
     Msg.mkmsg tag,
     range_of_positions filename pos pos
 
-let string_of_lexpos lp = 
-    let r = range_of_positions "<input>" lp lp in
-    FStarC_Range.string_of_range r
-
 let parse_incremental_decls
     filename
     (contents:string)

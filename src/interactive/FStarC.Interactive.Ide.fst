@@ -194,7 +194,7 @@ let wrap_js_failure qid expected got =
     qq = ProtocolViolation (Format.fmt2 "JSON decoding failed: expected %s, got %s"
                             expected (json_debug got)) }
 
-let unpack_interactive_query json =
+let unpack_interactive_query st json =
   let assoc errloc key a =
     match try_assoc key a with
     | Some v -> v
@@ -220,7 +220,7 @@ let unpack_interactive_query json =
     in
     let read_to_position () =
       let to_pos = arg "to-position" |> js_assoc in
-      "<input>",
+      st.repl_fname,
       assoc  "to-position.line" "line" to_pos  |> js_int, 
       assoc "to-position.column" "column"  to_pos |> js_int
     in
@@ -267,23 +267,23 @@ let unpack_interactive_query json =
                                  arg "contents" |> js_str)
            | "format" -> Format (arg "code" |> js_str)
            | "restart-solver" -> RestartSolver
-           | "cancel" -> Cancel (Some("<input>", arg "cancel-line" |> js_int, arg "cancel-column" |> js_int))
+           | "cancel" -> Cancel (Some(st.repl_fname, arg "cancel-line" |> js_int, arg "cancel-column" |> js_int))
            | _ -> ProtocolViolation (Format.fmt1 "Unknown query '%s'" query) }
   with
   | InvalidQuery msg -> { qid = qid; qq = ProtocolViolation msg }
   | UnexpectedJsonType (expected, got) -> wrap_js_failure qid expected got
 
-let deserialize_interactive_query js_query =
+let deserialize_interactive_query st js_query =
   try
-    unpack_interactive_query js_query
+    unpack_interactive_query st js_query
   with
   | InvalidQuery msg -> { qid = "?"; qq = ProtocolViolation msg }
   | UnexpectedJsonType (expected, got) -> wrap_js_failure "?" expected got
 
-let parse_interactive_query query_str : query =
+let parse_interactive_query st query_str : query =
   match json_of_string query_str with
   | None -> { qid = "?"; qq = ProtocolViolation "Json parsing failed." }
-  | Some request -> deserialize_interactive_query request
+  | Some request -> deserialize_interactive_query st request
 
 let buffer_input_queries (st:repl_state) : repl_state =
   let rec aux qs (st:repl_state) : repl_state =
@@ -299,7 +299,7 @@ let buffer_input_queries (st:repl_state) : repl_state =
         done qs st
 
       | Some line -> 
-        let q = parse_interactive_query line in
+        let q = parse_interactive_query st line in
         match q.qq with
         | Cancel _ -> 
           //Cancel drains all buffered queries
@@ -314,7 +314,7 @@ let read_interactive_query (st:repl_state) : option (query & repl_state) =
     | [] -> (
       match Util.read_line st.repl_stdin with
       | None -> Util.kill_all(); None
-      | Some line -> Some (parse_interactive_query line, st)
+      | Some line -> Some (parse_interactive_query st line, st)
     )
     | q :: qs ->
       Some (q, { st with repl_buffered_input_queries = qs })
@@ -533,7 +533,7 @@ let run_segment (st: repl_state) (code: string) =
   // Unfortunately, frag_fname is a special case in the interactive mode,
   // while in LSP, it is the only mode. To cope with this difference,
   // pass a frag_fname that is expected by the Interactive mode.
-  let frag = { frag_fname = "<input>"; frag_text = code; frag_line = 1; frag_col = 0 } in
+  let frag = { frag_fname = st.repl_fname; frag_text = code; frag_line = 1; frag_col = 0 } in
 
   let collect_decls () =
     match Parser.Driver.parse_fragment None frag with
@@ -709,7 +709,7 @@ let run_push_without_deps st query
   let frag =
     match code_or_decl with
     | Inl text ->
-      Inl { frag_fname = "<input>"; frag_text = text; frag_line = line; frag_col = column }
+      Inl { frag_fname = st.repl_fname; frag_text = text; frag_line = line; frag_col = column }
     | Inr (decl, _code) -> 
       Inr decl
     in
