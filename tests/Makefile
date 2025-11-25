@@ -24,6 +24,8 @@ SUBDIRS_ALL += dune_hello
 SUBDIRS_CLEAN += dune_hello
 SUBDIRS_ALL += incl
 SUBDIRS_CLEAN += incl
+SUBDIRS_ALL += extension-lang
+SUBDIRS_CLEAN += extension-lang
 
 FSTAR_ROOT ?= ..
 include $(FSTAR_ROOT)/mk/test.mk

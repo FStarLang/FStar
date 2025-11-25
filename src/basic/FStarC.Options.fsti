@@ -162,6 +162,7 @@ val initial_fuel                : unit    -> int
 val initial_ifuel               : unit    -> int
 val interactive                 : unit    -> bool
 val keep_query_captions         : unit    -> bool
+val lang_extensions             : unit    -> list string
 val lax                         : unit    -> bool
 val load                        : unit    -> list string
 val load_cmxs                   : unit    -> list string
