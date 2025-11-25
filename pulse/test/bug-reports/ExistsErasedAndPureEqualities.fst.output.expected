@@ -9,9 +9,9 @@
       v#269 : FStar.Ghost.erased Prims.int,
       x#263 : Pulse.Lib.Reference.ref Prims.int
 
-* Info at ExistsErasedAndPureEqualities.fst(70,4-71,21):
+* Info at ExistsErasedAndPureEqualities.fst(70,32-72,5):
   - Expected failure:
-  - Failed to prove pure property: v == (*?u102*)_
+  - Ill-typed term: pure (v == (*?u102*)_)
+  - Expected a term of type slprop
   - Cannot check relation with uvars.
-  - See also ExistsErasedAndPureEqualities.fst(70,23-71,15)
 

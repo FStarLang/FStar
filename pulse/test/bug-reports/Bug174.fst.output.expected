@@ -1,9 +1,14 @@
-* Info at Bug174.fst(15,1-16,42):
+* Info at Bug174.fst(16,30-16,42):
   - Expected failure:
-  - rewrite: could not prove equality of
-  - Pulse.Lib.Reference.pts_to r v
-  - Pulse.Lib.Reference.pts_to r v
+  - Ill-typed term: !r
+  - Expected a term of type
+      Pulse.Lib.Core.stt FStar.SizeT.t
+        (r |-> Pulse.Class.PtsTo.Frac 1.0R v)
+        (fun x ->
+            r |-> Pulse.Class.PtsTo.Frac 1.0R v **
+            Pulse.Lib.Core.rewrites_to x v)
   - Assertion failed
   - The SMT solver could not prove the query. Use --query_stats for more
     details.
+  - See also Bug174.fst(15,1-16,40)
 
