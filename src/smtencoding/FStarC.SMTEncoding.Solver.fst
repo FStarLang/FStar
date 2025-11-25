@@ -1424,32 +1424,16 @@ let encode_and_ask (can_split:bool) (is_retry:bool) use_env_msg tcenv q : (list 
 
 (* Asks the solver and reports errors. Does quake if needed. *)
 let do_solve (can_split:bool) (is_retry:bool) use_env_msg tcenv q : unit =
-  let ans_opt =
-    try Some (encode_and_ask can_split is_retry use_env_msg tcenv q) with
-    (* Each (potentially splitted) query can fail with this error, raise by encode_query.
-     * Note, even though this is a log_issue, the error cannot be turned into a warning
-     * nor ignored. *)
-    | FStarC.SMTEncoding.Env.Inner_let_rec names ->
-      FStarC.TypeChecker.Err.log_issue
-        tcenv tcenv.range
-        (Errors.Error_NonTopRecFunctionNotFullyEncoded, [
-          Errors.text <|
-         Format.fmt1
-           "Could not encode the query since F* does not support precise smtencoding of inner let-recs yet (in this case %s)"
-           (String.concat "," (List.map fst names))]);
-       None
-  in
+  let ans_opt = encode_and_ask can_split is_retry use_env_msg tcenv q in
   match ans_opt with
-  | Some (default_settings::_, ans) when not ans.ok ->
+  | default_settings::_, ans when not ans.ok ->
     report tcenv default_settings ans
 
-  | Some (_, ans) when ans.ok ->
+  | _, ans when ans.ok ->
     () (* trivial or succeeded *)
 
-  | Some ([], ans) when not ans.ok ->
+  | [], ans when not ans.ok ->
     failwith "impossible: bad answer from encode_and_ask"
-
-  | None -> () (* already logged an error *)
 
 let split_and_solve (retrying:bool) use_env_msg tcenv q : unit =
   if retrying && (Debug.any () || Options.query_stats ()) then begin
