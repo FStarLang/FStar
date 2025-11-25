@@ -87,8 +87,12 @@ let files_for_module_name_to_string (m:files_for_module_name) =
 
 type color = | White | Gray | Black
 
+let all_file_suffixes () =
+  let lang_exts = List.map (fun ext -> "." ^ ext) (FStarC.Options.lang_extensions ()) in
+  let base = ".fst" :: lang_exts in
+  base @ List.map (fun ext -> ext ^ "i") base
+
 let check_and_strip_suffix (f: string): option string =
-  let suffixes = [ ".fsti"; ".fst" ] in
   let matches = List.map (fun ext ->
     let lext = String.length ext in
     let l = String.length f in
@@ -96,7 +100,7 @@ let check_and_strip_suffix (f: string): option string =
       Some (String.substring f 0 (l - lext))
     else
       None
-  ) suffixes in
+  ) (all_file_suffixes ()) in
   match List.filter Some? matches with
   | Some m :: _ ->
       Some m
@@ -1442,7 +1446,7 @@ let all_files_in_include_paths () =
   List.collect
     (fun path -> 
       let files = safe_readdir_for_include path in
-      let files = List.filter (fun f -> Util.ends_with f ".fst" || Util.ends_with f ".fsti") files in
+      let files = List.filter (fun f -> List.existsb (fun ext -> Util.ends_with f ext) (all_file_suffixes ())) files in
       List.map (fun file -> Filepath.join_paths path file) files)
     paths
 

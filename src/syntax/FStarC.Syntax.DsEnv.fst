@@ -1614,7 +1614,6 @@ let inclusion_info env (l:lident) =
 
 let prepare_module_or_interface intf admitted env mname (mii:module_inclusion_info) = (* AR: open the pervasives namespace *)
   let prep env =
-    let filename = BU.strcat (string_of_lid mname) ".fst" in
     let auto_open = if mii.mii_no_prelude then [] else FStarC.Parser.Dep.prelude in
     let auto_open =
       let convert_kind = function
