@@ -244,12 +244,13 @@ let reload_deps repl_stack =
   pop_until_deps repl_stack
 
 (* A utility to parse a chunk, used both in full_buffer and formatting *)
-let parse_code lang (code:string) =
+let parse_code st lang (code:string) =
+    let rng = initial_range st.repl_fname in
     P.parse lang (Incremental { 
-                         frag_fname = Range.file_of_range initial_range;
+                         frag_fname = Range.file_of_range rng;
                          frag_text = code;
-                         frag_line = Range.line_of_pos (Range.start_of_range initial_range);
-                         frag_col = Range.col_of_pos (Range.start_of_range initial_range);
+                         frag_line = Range.line_of_pos (Range.start_of_range rng);
+                         frag_col = Range.col_of_pos (Range.start_of_range rng);
                 })
     
 (* Format FStarC.Errors.error into a JSON error message *)
@@ -277,7 +278,7 @@ let run_full_buffer (st:repl_state)
     // in the buffer when the IDE was started. This is especially useful when
     // creating a new file and launching F* on it
     FStarC.Parser.ParseIt.add_vfs_entry st.repl_fname code;
-    let parse_result = parse_code None code in
+    let parse_result = parse_code st None code in
     let log_syntax_issues err =
       match err with
       | None -> ()
@@ -346,7 +347,7 @@ let format_code (st:repl_state) (code:string)
       | [] -> None
       | {d=FStarC.Parser.AST.UseLangDecls l}::_ -> Some l
     in
-    let parse_result = parse_code maybe_lang code in
+    let parse_result = parse_code st maybe_lang code in
     match parse_result with
     | IncrementalFragment (decls, comments, None) ->
       let doc_to_string doc =

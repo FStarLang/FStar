@@ -1183,11 +1183,11 @@ let js_repl_eval st query =
   js_responses, st_opt
 
 let js_repl_eval_js st query_js =
-  js_repl_eval st (deserialize_interactive_query query_js)
+  js_repl_eval st (deserialize_interactive_query st query_js)
 
 let js_repl_eval_str st query_str =
   let js_response, st_opt =
-    js_repl_eval st (parse_interactive_query query_str) in
+    js_repl_eval st (parse_interactive_query st query_str) in
   (List.map string_of_json js_response), st_opt
 
 (** This too is called from FStar.js **)
@@ -1231,7 +1231,7 @@ let install_ide_mode_hooks printer =
 
 let build_initial_repl_state (filename: string) =
   let env = init_env FStarC.Parser.Dep.empty_deps in
-  let env = FStarC.TypeChecker.Env.set_range env initial_range in
+  let env = FStarC.TypeChecker.Env.set_range env (initial_range filename) in
   FStarC.Options.set_ide_filename filename;
   { repl_line = 1;
     repl_column = 0;

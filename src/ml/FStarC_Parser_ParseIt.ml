@@ -567,7 +567,7 @@ let parse_no_lang fn =
     | Incremental s
     | Toplevel s
     | Fragment s ->
-      create s.frag_text s.frag_fname (Z.to_int s.frag_line) (Z.to_int s.frag_col), "<input>", s.frag_text
+      create s.frag_text s.frag_fname (Z.to_int s.frag_line) (Z.to_int s.frag_col), s.frag_fname, s.frag_text
   in
 
   let lexer () =
@@ -635,12 +635,6 @@ let parse (lang_opt:lang_opts) fn =
         | Toplevel frag -> frag.frag_fname
         | Incremental frag -> frag.frag_fname
         | Fragment frag -> frag.frag_fname
-    in
-    let filename =
-      (* If in IDE mode, the IDE filename takes precedence as frag_fname might be "<input>" *)
-      if FStarC_Options.ide () && filename = "<input>"
-      then Option.value ~default:filename (FStarC_Options.ide_filename ())
-      else filename
     in
     match take_lang_extension filename with
     | Some lang -> parse_lang lang fn
