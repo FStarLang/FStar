@@ -152,7 +152,7 @@ let query_needs_current_module = function
   | FullBuffer _ | Callback _ | Format _ | RestartSolver | Cancel _ -> false
   | Push _ | AutoComplete _ | Lookup _ | Compute _ | Search _ -> true
 
-let interactive_protocol_vernum = 2
+let interactive_protocol_vernum = 3
 
 let interactive_protocol_features =
   ["autocomplete"; "autocomplete/context";
