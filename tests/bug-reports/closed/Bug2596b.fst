@@ -6,7 +6,7 @@ assume val p: int -> int -> prop
 
 /// Generates a lemma with signature `val lem (x y:int) : Lemma (p x y) [SMTPat (p x y)]`
 let gen_lemma () : Tac decls =
-  let lemma_name = List.Tot.snoc (moduleof (top_env ()), "lem") in
+  let lemma_name = List.Tot.snoc (moduleof (top_env ()), "lemGGGGGGGGGG") in
   let x_binder = fresh_binder_named "x" (`int) in
   let x_term = binder_to_term x_binder in
   let y_binder = fresh_binder_named "y" (`int) in
@@ -30,6 +30,6 @@ let gen_lemma () : Tac decls =
   }) in
   [pack_sigelt (Sg_Let {isrec=false; lbs=[lemma_letbinding]})]
 
-%splice [lem] (gen_lemma ())
+%splice [] (gen_lemma ())
 
 let f (x y:int) : Lemma (p x y) = ()
