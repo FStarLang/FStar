@@ -1,10 +1,10 @@
 module Bug3991
 
-noeq
-type mytc (#a:Type0) (s:a) = | X
+open FStar.Tactics
+open FStar.Tactics.Typeclasses
 
-let mytc_let_rec : mytc (let rec f x = x in ()) = X
+class mytc (#a:Type0) (s:a) = {  e : unit; }
 
-let rec foo (x:int) : int = x
+#set-options "--warn_error -328" // imprecise inner let rec
 
-let _ = assert (forall x. 1 + x > x)
+instance mytc_let_rec () : mytc (let rec f x = x in ()) = { e = () }
