@@ -11,10 +11,8 @@
   ],
   "include_dirs": [
     "../../../out/lib/pulse",
-    "bug-reports",
     "by-example",
     "parallel",
-    "parix",
     "c",
     "dice",
     "dice/cbor",
