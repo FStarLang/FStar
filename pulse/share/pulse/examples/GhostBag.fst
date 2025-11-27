@@ -52,6 +52,16 @@ type gbag_pcm_carrier (a:eqtype) =
   | P : map a -> gbag_pcm_carrier a
   | F : map a -> gbag_pcm_carrier a
 
+let gbag_equal #a (m1 m2 : gbag_pcm_carrier a) : Tot prop =
+  match m1, m2 with
+  | P m1', P m2' -> Map.equal m1' m2'
+  | F m1', F m2' -> Map.equal m1' m2'
+  | _, _ -> False
+
+let lemma_elim_gbag_equal #a (m1 m2 : gbag_pcm_carrier a)
+  : Lemma (requires gbag_equal m1 m2) (ensures m1 == m2) [SMTPat (gbag_equal m1 m2)]
+  = ()
+
 let gbag_pcm_composable #a : symrel (gbag_pcm_carrier a) =
   fun x y ->
   match x, y with
@@ -96,51 +106,44 @@ let gbag_pcm' a : pcm' (gbag_pcm_carrier a) =
     one = gbag_pcm_one;
   }
 
-#push-options "--warn_error -271"
-let op_maps_comm a
-  : m1:map a -> m2:map a -> Lemma (op_maps m1 m2 == op_maps m2 m1) [SMTPat ()] =
-  fun m1 m2 ->
-  assert (Map.equal (op_maps m1 m2) (op_maps m2 m1))
-
-let op_maps_assoc_l a
-  : m1:map a -> m2:map a -> m3:map a ->
-    Lemma (op_maps m1 (op_maps m2 m3) == op_maps (op_maps m1 m2) m3) [SMTPat ()] =
-  fun m1 m2 m3 ->
-  assert (Map.equal (op_maps m1 (op_maps m2 m3)) (op_maps (op_maps m1 m2) m3))
-
-let op_maps_assoc_r a
-  : m1:map a -> m2:map a -> m3:map a ->
-    Lemma (op_maps m1 (op_maps m2 m3) == op_maps (op_maps m1 m2) m3) [SMTPat ()] =
-  fun m1 m2 m3 ->
-  assert (Map.equal (op_maps m1 (op_maps m2 m3)) (op_maps (op_maps m1 m2) m3))
-
 let gbag_pcm_commutative a : lem_commutative (gbag_pcm' a) =
-  let _ = op_maps_comm a in
-  fun _ _ -> ()
+  fun m1 m2 ->
+    assert (gbag_equal (gbag_pcm_op m1 m2) (gbag_pcm_op m2 m1))
 
-#restart-solver
-#push-options "--z3rlimit_factor 20 --fuel 0 --ifuel 1 --split_queries no"
+#push-options "--split_queries always --z3rlimit 20"
 let gbag_pcm_assoc_l a : lem_assoc_l (gbag_pcm' a) =
-  let _ = op_maps_comm a in
-  let _ = op_maps_assoc_l a in
-  let _ = op_maps_assoc_r a in
-  fun _ _ _ -> ()
+  fun x y z ->
+    match x, y, z with
+    | P m1, P m2, P m3
+    | F m1, P m2, P m3
+    | P m1, F m2, P m3
+    | P m1, P m2, F m3 ->
+      assert (gbag_pcm_composable x y);
+      assert (gbag_pcm_composable (gbag_pcm_op x y) z);
+      assert (gbag_pcm_op x (gbag_pcm_op y z) `gbag_equal` gbag_pcm_op (gbag_pcm_op x y) z);
+      ()
+    | _ -> assert False
 
 let gbag_pcm_assoc_r a : lem_assoc_r (gbag_pcm' a) =
-  let _ = op_maps_comm a in
-  let _ = op_maps_assoc_l a in
-  let _ = op_maps_assoc_r a in
-  fun _ _ _ -> ()
+  fun x y z ->
+    match x, y, z with
+    | P m1, P m2, P m3
+    | F m1, P m2, P m3
+    | P m1, F m2, P m3
+    | P m1, P m2, F m3 ->
+      assert (gbag_pcm_composable y z);
+      assert (gbag_pcm_composable x (gbag_pcm_op y z));
+      assert (gbag_pcm_op x (gbag_pcm_op y z) `gbag_equal` gbag_pcm_op (gbag_pcm_op x y) z);
+      ()
+    | _ -> assert False
+#pop-options
 
 let gbag_pcm_is_unit a : lem_is_unit (gbag_pcm' a) =
   let p = gbag_pcm' a in
   fun x ->
   assert (p.composable x p.one);
-  match x with
-  | P m ->
-    assert (Map.equal (op_maps m (Map.const None)) m)
-  | F m ->
-    assert (Map.equal (op_maps m (Map.const None)) m)
+  assert (p.op x p.one `gbag_equal` x);
+  ()
 
 let gbag_pcm a : pcm (gbag_pcm_carrier a) = {
   p = gbag_pcm' a;
@@ -150,8 +153,6 @@ let gbag_pcm a : pcm (gbag_pcm_carrier a) = {
   is_unit = gbag_pcm_is_unit a;
   refine = (fun _ -> True)
 }
-#pop-options
-#pop-options
 
 #restart-solver
 #push-options "--z3rlimit_factor 4 --fuel 0 --ifuel 1 --split_queries no --warn_error -271"
