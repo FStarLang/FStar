@@ -1424,6 +1424,11 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term & an
       )
     | Let(qual, lbs, body) ->
       let is_rec = qual = LocalRec in
+      if not is_rec && List.length lbs > 1 then (
+        let lb = List.nth lbs 1 in
+        raise_error lb._2._1 Errors.Fatal_MultipleLetBinding
+          "Multiple 'let' bindings are only allowed in 'let rec'"
+      );
       let extra_attrs =
         if qual = LocalUnfold
         then [inline_let_attribute; inline_let_vc_attribute]
@@ -3427,7 +3432,7 @@ and desugar_decl_maybe_fail_attr env (d: decl) (attrs : list S.term) : (env_t & 
                   (text "This top-level definition was expected to raise error codes")
                   (pp (Class.Ord.sort expected_errs)) ^/^
                 prefix 2 1 (text "but it raised")
-                  (pp (Class.Ord.sort errnos)) ^^ text "(at desugaring time)" ^^ dot;
+                  (pp (Class.Ord.sort errnos)) ^/^ text "(at desugaring time)" ^^ dot;
                 text (Format.fmt3 "Error #%s was raised %s times, instead of %s."
                                       (show e) (show n2) (show n1));
               ];
