@@ -385,6 +385,9 @@ let file_of_dep_aux
                 (all_cmd_line_files:list file_name)
                 (d:dependence)
     : file_name =
+    // NB: calling this function can be very expensive. It'd be better to
+    // precompute an RBSet of the lowercased implementations and just query it
+    // here.
     let cmd_line_has_impl key =
         all_cmd_line_files
         |> BU.for_some (fun fn ->
@@ -406,8 +409,8 @@ let file_of_dep_aux
 
     | PreferInterface key //key for module 'a'
         when has_interface file_system_map key ->  //so long as 'a.fsti' exists
-      if cmd_line_has_impl key //unless the cmd line contains 'a.fst'
-      && None? (Options.dep()) //and we're not just doing a dependency scan using `--dep _`
+      if None? (Options.dep()) // unless we're not just doing a dependency scan using `--dep _`
+      && cmd_line_has_impl key // and the cmd line contains 'a.fst'
       then if Options.expose_interfaces()
            then maybe_use_cache_of (Option.must (implementation_of_internal file_system_map key))
            else raise_error0 Errors.Fatal_MissingExposeInterfacesOption [
