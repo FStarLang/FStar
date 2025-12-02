@@ -274,9 +274,6 @@ let compare_issues i1 i2 =
     | Some _, None -> 1
     | Some r1, Some r2 -> FStarC.Range.compare_use_range r1 r2
 
-let dummy_ide_rng : Range.rng =
-  mk_rng "<input>" (mk_pos 1 0) (mk_pos 1 0)
-
 (* Attempts to set a decent range (no dummy, no dummy ide) relying
 on the fallback_range reference. *)
 let fixup_issue_range (rng:option Range.t) : option Range.t =
@@ -292,7 +289,7 @@ let fixup_issue_range (rng:option Range.t) : option Range.t =
     | Some range ->
       let use_rng = use_range range in
       let use_rng' =
-        if use_rng <> dummy_rng && use_rng <> dummy_ide_rng then
+        if use_rng <> dummy_rng then
           (* Looks good, use it *)
           use_rng
         else if Some? (!fallback_range) then

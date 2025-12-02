@@ -34,8 +34,8 @@ open FStarC.Json
 
 module SS = FStarC.Syntax.Syntax
 
-let initial_range =
-  Range.mk_range "<input>" (Range.mk_pos 1 0) (Range.mk_pos 1 0)
+let initial_range filename =
+  Range.mk_range filename (Range.mk_pos 1 0) (Range.mk_pos 1 0)
 
 instance showable_push_kind : showable push_kind = {
   show = (function
@@ -152,7 +152,7 @@ let query_needs_current_module = function
   | FullBuffer _ | Callback _ | Format _ | RestartSolver | Cancel _ -> false
   | Push _ | AutoComplete _ | Lookup _ | Compute _ | Search _ -> true
 
-let interactive_protocol_vernum = 2
+let interactive_protocol_vernum = 3
 
 let interactive_protocol_features =
   ["autocomplete"; "autocomplete/context";
