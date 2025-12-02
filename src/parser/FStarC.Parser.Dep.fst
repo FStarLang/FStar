@@ -23,17 +23,29 @@
 module FStarC.Parser.Dep
 
 open FStarC
-open FStarC.Effect   //for ref, failwith etc
 open FStarC.List
 open FStarC.Parser.AST
 open FStarC.Const
 open FStarC.Errors
 open FStarC.Class.Show
+open FStarC.Class.Ord
+open FStarC.RBSet
 open FStarC.Util
 
 module Const = FStarC.Parser.Const
 module BU = FStarC.Util
 module F = FStarC.Format
+
+(* This is faster than the quadratic BU.remove_dups, since we can use
+the total order. *)
+let remove_dups_fast (#a:Type) {| ord a |} (xs : list a) : list a =
+  let (acc, _) =
+    List.fold_left (fun (acc, acc_set) x ->
+      if mem x acc_set
+      then (acc, acc_set)
+      else (x::acc, add x acc_set)) ([], empty #a #(RBSet.t a) ()) xs
+  in
+  List.rev acc
 
 let dbg              = Debug.get_toggle "Dep"
 let dbg_CheckedFiles = Debug.get_toggle "CheckedFiles"
@@ -373,6 +385,9 @@ let file_of_dep_aux
                 (all_cmd_line_files:list file_name)
                 (d:dependence)
     : file_name =
+    // NB: calling this function can be very expensive. It'd be better to
+    // precompute an RBSet of the lowercased implementations and just query it
+    // here.
     let cmd_line_has_impl key =
         all_cmd_line_files
         |> BU.for_some (fun fn ->
@@ -394,8 +409,8 @@ let file_of_dep_aux
 
     | PreferInterface key //key for module 'a'
         when has_interface file_system_map key ->  //so long as 'a.fsti' exists
-      if cmd_line_has_impl key //unless the cmd line contains 'a.fst'
-      && None? (Options.dep()) //and we're not just doing a dependency scan using `--dep _`
+      if None? (Options.dep()) // unless we're not just doing a dependency scan using `--dep _`
+      && cmd_line_has_impl key // and the cmd line contains 'a.fst'
       then if Options.expose_interfaces()
            then maybe_use_cache_of (Option.must (implementation_of_internal file_system_map key))
            else raise_error0 Errors.Fatal_MissingExposeInterfacesOption [
@@ -1400,7 +1415,7 @@ let topological_dependences_of'
                        all_friends=%s\n\t\
                        interfaces_with_inlining=%s\n"
                    (String.concat ", " all_files_0)
-                   (String.concat ", " (remove_dups (fun x y -> x=y) friends))
+                   (String.concat ", " (remove_dups_fast friends))
                    (String.concat ", " (interfaces_needing_inlining));
     let widened, dep_graph =
         widen_deps friends dep_graph file_system_map widened
@@ -1678,7 +1693,7 @@ let deps_of_modul deps (m:module_name) : list module_name =
   m |> String.lowercase
     |> SMap.try_find deps.file_system_map
     |> Option.map (fun (intf_opt, impl_opt) ->
-                      BU.remove_dups (fun x y -> x = y) (aux intf_opt @ aux impl_opt))
+                      remove_dups_fast (aux intf_opt @ aux impl_opt))
     |> Option.dflt []
 
 (* In public interface *)
@@ -1851,7 +1866,7 @@ let print_full (outc : out_channel) (deps:deps) : unit =
                   let iface_files =
                       List.map (file_of_dep_aux true deps.file_system_map deps.cmd_line_files) iface_deps
                   in
-                  BU.remove_dups (fun x y -> x = y) (files @ iface_files)
+                  remove_dups_fast (files @ iface_files)
             in
 
             (*
@@ -1902,7 +1917,7 @@ let print_full (outc : out_channel) (deps:deps) : unit =
                         | None -> []
                         | Some iface_deps -> maybe_widen_deps iface_deps
                    in
-                   BU.remove_dups (fun x y -> x = y) (fst_files @ fst_files_from_iface),
+                   remove_dups_fast (fst_files @ fst_files_from_iface),
                    false
           in
           let all_checked_fst_dep_files = all_fst_files_dep |> List.map cache_file in

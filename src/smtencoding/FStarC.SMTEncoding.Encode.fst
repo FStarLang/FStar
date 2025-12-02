@@ -441,6 +441,7 @@ let forall_univs rng univ_fvs body =
 
 let encode_smt_lemma env fv t =
     let lid = fv.fv_name in
+    let t = U.canon_arrow t in // Make sure we flatten to catch SMTPats, see #2596
     let form, decls = encode_function_type_as_formula t env in
     let form = forall_univs (range_of_fv fv) (Free.univnames t |> FlatSet.elems) form in
     decls@([Util.mkAssume(form, Some ("Lemma: " ^ (string_of_lid lid)), ("lemma_"^(string_of_lid lid)))]

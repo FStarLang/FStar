@@ -333,16 +333,6 @@ let is_pure_or_ghost_function t = match (compress t).n with
     | Tm_arrow {comp=c} -> is_pure_or_ghost_comp c
     | _ -> true
 
-let is_lemma_comp c =
-    match c.n with
-    | Comp ct -> lid_equals ct.effect_name PC.effect_Lemma_lid
-    | _ -> false
-
-let is_lemma t =
-    match (compress t).n with
-    | Tm_arrow {comp=c} -> is_lemma_comp c
-    | _ -> false
-
 let rec head_of (t : term) : term =
     match (compress t).n with
     | Tm_app {hd=t}
@@ -1758,24 +1748,31 @@ let extract_attr (attr_lid:lid) (se:sigelt) : option (sigelt & args) =
     | None -> None
     | Some (attrs', t) -> Some ({ se with sigattrs = attrs' }, t)
 
+let is_lemma_comp c =
+    match c.n with
+    | Comp ct -> lid_equals ct.effect_name PC.effect_Lemma_lid
+    | _ -> false
+
+let is_lemma t =
+  let _, c = arrow_formals_comp t in
+  is_lemma_comp c
+
 (* Utilities for working with Lemma's decorated with SMTPat *)
-let is_smt_lemma t = match (compress t).n with
-    | Tm_arrow {comp=c} ->
-      begin match c.n with
-        | Comp ct when lid_equals ct.effect_name PC.effect_Lemma_lid ->
-            begin match ct.effect_args with
-                | _req::_ens::(pats, _)::_ ->
-                  let pats' = unmeta pats in
-                  let head, _ = head_and_args pats' in
-                  begin match (un_uinst head).n with
-                    | Tm_fvar fv -> fv_eq_lid fv PC.cons_lid
-                    | _ -> false
-                  end
-                | _ -> false
-            end
+let is_smt_lemma t =
+  let _, c = arrow_formals_comp t in
+  match c.n with
+  | Comp ct when lid_equals ct.effect_name PC.effect_Lemma_lid ->
+    begin match ct.effect_args with
+    | _req::_ens::(pats, _)::_ ->
+      let pats' = unmeta pats in
+      let head, _ = head_and_args_full pats' in
+      begin match (un_uinst head).n with
+        | Tm_fvar fv -> fv_eq_lid fv PC.cons_lid
         | _ -> false
       end
     | _ -> false
+    end
+  | _ -> false
 
 let rec list_elements (e:term) : option (list term) =
   let head, args = head_and_args (unmeta e) in
@@ -1835,16 +1832,12 @@ let destruct_lemma_with_smt_patterns (t:term)
     )
     | _ -> [elts |> List.map one_pat]
   in
-  match (Subst.compress t).n with
-  | Tm_arrow {bs=binders; comp=c} ->
-    let binders, c = Subst.open_comp binders c in
-    begin match c.n with
-    | Comp ({effect_args=[(pre, _); (post, _); (pats, _)]}) ->
-      Some (binders, pre, post, lemma_pats pats)
-    | _ -> failwith "impos"
-    end
-
-  | _ -> None
+  let bs, c = arrow_formals_comp t in
+  match c.n with
+  | Comp ({effect_args=[(pre, _); (post, _); (pats, _)]}) ->
+    Some (bs, pre, post, lemma_pats pats)
+  | _ ->
+    None
 
 let triggers_of_smt_lemma (t:term)
 :  list (list lident) //for each disjunctive pattern
