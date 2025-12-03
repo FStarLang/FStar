@@ -1,15 +1,15 @@
-* Warning 240 at NegativeTests.Bug260.fst(23,4-23,7):
+* Warning 240 at NegativeTests.Bug260.fst:23.5-23.8:
   - NegativeTests.Bug260.bad is declared but no definition was found
   - Add an 'assume' if this is intentional
 
-* Info at NegativeTests.Bug260.fst(26,12-26,19):
+* Info at NegativeTests.Bug260.fst:26.13-26.20:
   - Expected failure:
   - Subtyping check failed
   - Expected type validity (S (S t)) got type validity (S t)
   - The SMT solver could not prove the query. Use --query_stats for more
     details.
-  - See also NegativeTests.Bug260.fst(23,37-26,9)
+  - See also NegativeTests.Bug260.fst:23.38-26.10
 
-* Warning 240 at NegativeTests.Bug260.fst(36,0-36,34):
+* Warning 240 at NegativeTests.Bug260.fst:36.1-36.35:
   - Missing definitions in module NegativeTests.Bug260: bad
 

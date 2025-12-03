@@ -1,7 +1,7 @@
-* Info at WPExtensionality.fst(61,3-61,34):
+* Info at WPExtensionality.fst:61.4-61.35:
   - Expected failure:
   - Assertion failed
   - The SMT solver could not prove the query. Use --query_stats for more
     details.
-  - See also Prims.fst(459,90-459,102)
+  - See also Prims.fst:459.91-459.103
 

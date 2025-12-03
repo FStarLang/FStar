@@ -1,66 +1,66 @@
-* Info at ArgsMismatch.fst(7,33-7,34):
+* Info at ArgsMismatch.fst:7.34-7.35:
   - Expected failure:
   - Too many arguments to function of type y: Prims.int -> Prims.int
   - Got 2 arguments
   - Remaining type is Prims.int
 
-* Info at ArgsMismatch.fst(8,35-8,36):
+* Info at ArgsMismatch.fst:8.36-8.37:
   - Expected failure:
   - Inconsistent argument qualifiers.
   - Expected an implicit argument, got an explicit one.
 
-* Info at ArgsMismatch.fst(10,34-10,35):
+* Info at ArgsMismatch.fst:10.35-10.36:
   - Expected failure:
   - Too many arguments to function of type y: Prims.int -> Prims.int
   - Got 2 arguments
   - Remaining type is Prims.int
 
-* Info at ArgsMismatch.fst(14,33-14,34):
+* Info at ArgsMismatch.fst:14.34-14.35:
   - Expected failure:
   - Too many arguments to function of type y: Prims.int -> Prims.int
   - Got 2 arguments
   - Remaining type is Prims.int
 
-* Info at ArgsMismatch.fst(15,35-15,36):
+* Info at ArgsMismatch.fst:15.36-15.37:
   - Expected failure:
   - Inconsistent argument qualifiers.
   - Expected an implicit argument, got an explicit one.
 
-* Info at ArgsMismatch.fst(17,34-17,35):
+* Info at ArgsMismatch.fst:17.35-17.36:
   - Expected failure:
   - Too many arguments to function of type y: Prims.int -> Prims.int
   - Got 2 arguments
   - Remaining type is Prims.int
 
-* Info at ArgsMismatch.fst(21,33-21,34):
+* Info at ArgsMismatch.fst:21.34-21.35:
   - Expected failure:
   - Too many arguments to function of type [@@@ 2]y: Prims.int -> Prims.int
   - Got 2 arguments
   - Remaining type is Prims.int
 
-* Info at ArgsMismatch.fst(22,35-22,36):
+* Info at ArgsMismatch.fst:22.36-22.37:
   - Expected failure:
   - Inconsistent argument qualifiers.
   - Expected an implicit argument, got an explicit one.
 
-* Info at ArgsMismatch.fst(24,34-24,35):
+* Info at ArgsMismatch.fst:24.35-24.36:
   - Expected failure:
   - Too many arguments to function of type [@@@ 2]y: Prims.int -> Prims.int
   - Got 2 arguments
   - Remaining type is Prims.int
 
-* Info at ArgsMismatch.fst(28,33-28,34):
+* Info at ArgsMismatch.fst:28.34-28.35:
   - Expected failure:
   - Too many arguments to function of type [@@@ 2]y: Prims.int -> Prims.int
   - Got 2 arguments
   - Remaining type is Prims.int
 
-* Info at ArgsMismatch.fst(29,35-29,36):
+* Info at ArgsMismatch.fst:29.36-29.37:
   - Expected failure:
   - Inconsistent argument qualifiers.
   - Expected an implicit argument, got an explicit one.
 
-* Info at ArgsMismatch.fst(31,34-31,35):
+* Info at ArgsMismatch.fst:31.35-31.36:
   - Expected failure:
   - Too many arguments to function of type [@@@ 2]y: Prims.int -> Prims.int
   - Got 2 arguments

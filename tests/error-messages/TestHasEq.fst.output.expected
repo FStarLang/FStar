@@ -1,4 +1,4 @@
-* Info at TestHasEq.fst(58,10-58,11):
+* Info at TestHasEq.fst:58.11-58.12:
   - Expected failure:
   - Failed to prove that the type
     'TestHasEq.t3'
@@ -6,17 +6,17 @@
   - Add either the 'noeq' or 'unopteq' qualifier
   - The SMT solver could not prove the query. Use --query_stats for more
     details.
-  - See also TestHasEq.fst(57,0-58,19)
+  - See also TestHasEq.fst:57.1-58.20
 
-* Info at TestHasEq.fst(84,10-84,70):
+* Info at TestHasEq.fst:84.11-84.71:
   - Expected failure:
   - Subtyping check failed
   - Expected type Prims.eqtype got type Type0
   - The SMT solver could not prove the query. Use --query_stats for more
     details.
-  - See also TestHasEq.fst(84,12-84,22)
+  - See also TestHasEq.fst:84.13-84.23
 
-* Info at TestHasEq.fst(88,8-89,30):
+* Info at TestHasEq.fst:88.9-89.31:
   - Expected failure:
   - Invalid qualifiers for declaration `type TestHasEq.erasable_t2`
   - The `unopteq` qualifier is not allowed on erasable inductives since they

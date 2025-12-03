@@ -1,105 +1,105 @@
-* Warning 240 at NegativeTests.Neg.fst(44,4-44,17):
+* Warning 240 at NegativeTests.Neg.fst:44.5-44.18:
   - NegativeTests.Neg.bad_projector is declared but no definition was found
   - Add an 'assume' if this is intentional
 
-* Warning 240 at NegativeTests.Neg.fst(40,4-40,28):
+* Warning 240 at NegativeTests.Neg.fst:40.5-40.29:
   - NegativeTests.Neg.test_postcondition_label
     is declared but no definition was found
   - Add an 'assume' if this is intentional
 
-* Warning 240 at NegativeTests.Neg.fst(36,4-36,27):
+* Warning 240 at NegativeTests.Neg.fst:36.5-36.28:
   - NegativeTests.Neg.test_precondition_label
     is declared but no definition was found
   - Add an 'assume' if this is intentional
 
-* Warning 240 at NegativeTests.Neg.fst(22,4-22,5):
+* Warning 240 at NegativeTests.Neg.fst:22.5-22.6:
   - NegativeTests.Neg.y is declared but no definition was found
   - Add an 'assume' if this is intentional
 
-* Warning 240 at NegativeTests.Neg.fst(18,4-18,5):
+* Warning 240 at NegativeTests.Neg.fst:18.5-18.6:
   - NegativeTests.Neg.x is declared but no definition was found
   - Add an 'assume' if this is intentional
 
-* Info at NegativeTests.Neg.fst(20,8-20,10):
+* Info at NegativeTests.Neg.fst:20.9-20.11:
   - Expected failure:
   - Subtyping check failed
   - Expected type Prims.nat got type Prims.int
   - The SMT solver could not prove the query. Use --query_stats for more
     details.
-  - See also Prims.fst(682,18-682,24)
+  - See also Prims.fst:682.19-682.25
 
-* Info at NegativeTests.Neg.fst(24,8-24,10):
+* Info at NegativeTests.Neg.fst:24.9-24.11:
   - Expected failure:
   - Subtyping check failed
   - Expected type Prims.nat got type Prims.int
   - The SMT solver could not prove the query. Use --query_stats for more
     details.
-  - See also Prims.fst(682,18-682,24)
+  - See also Prims.fst:682.19-682.25
 
-* Info at NegativeTests.Neg.fst(27,30-27,35):
+* Info at NegativeTests.Neg.fst:27.31-27.36:
   - Expected failure:
   - Assertion failed
   - The SMT solver could not prove the query. Use --query_stats for more
     details.
 
-* Info at NegativeTests.Neg.fst(30,28-31,15):
+* Info at NegativeTests.Neg.fst:30.29-31.16:
   - Expected failure:
   - Patterns are incomplete
   - The SMT solver could not prove the query. Use --query_stats for more
     details.
 
-* Info at NegativeTests.Neg.fst(38,32-38,42):
+* Info at NegativeTests.Neg.fst:38.33-38.43:
   - Expected failure:
   - Assertion failed
   - The SMT solver could not prove the query. Use --query_stats for more
     details.
-  - See also NegativeTests.Neg.fst(33,44-33,57)
+  - See also NegativeTests.Neg.fst:33.45-33.58
 
-* Info at NegativeTests.Neg.fst(42,33-42,34):
+* Info at NegativeTests.Neg.fst:42.34-42.35:
   - Expected failure:
   - Could not prove post-condition
   - The SMT solver could not prove the query. Use --query_stats for more
     details.
-  - See also NegativeTests.Neg.fst(40,83-40,88)
+  - See also NegativeTests.Neg.fst:40.84-40.89
 
-* Info at NegativeTests.Neg.fst(46,30-46,31):
+* Info at NegativeTests.Neg.fst:46.31-46.32:
   - Expected failure:
   - Subtyping check failed
   - Expected type _: FStar.Pervasives.Native.option 'a {Some? _}
     got type FStar.Pervasives.Native.option 'a
   - The SMT solver could not prove the query. Use --query_stats for more
     details.
-  - See also FStar.Pervasives.Native.fst(33,4-33,8)
+  - See also FStar.Pervasives.Native.fst:33.5-33.9
 
-* Info at NegativeTests.Neg.fst(50,45-50,47):
+* Info at NegativeTests.Neg.fst:50.46-50.48:
   - Expected failure:
   - Subtyping check failed
   - Expected type _: FStar.Pervasives.result Prims.int {V? _}
     got type FStar.Pervasives.result Prims.int
   - The SMT solver could not prove the query. Use --query_stats for more
     details.
-  - See also FStar.Pervasives.fsti(374,4-374,5)
+  - See also FStar.Pervasives.fsti:374.5-374.6
 
-* Info at NegativeTests.Neg.fst(55,25-55,26):
+* Info at NegativeTests.Neg.fst:55.26-55.27:
   - Expected failure:
   - Subtyping check failed
   - Expected type Prims.nat got type Prims.int
   - The SMT solver could not prove the query. Use --query_stats for more
     details.
-  - See also Prims.fst(682,18-682,24)
+  - See also Prims.fst:682.19-682.25
 
-* Info at NegativeTests.Neg.fst(59,5-59,6):
+* Info at NegativeTests.Neg.fst:59.6-59.7:
   - Expected failure:
   - Type annotation _: Type0{NegativeTests.Neg.phi_1510} for inductive
     NegativeTests.Neg.t is not Type or eqtype, or it is eqtype but contains
     noeq/unopteq qualifiers
 
-* Info at NegativeTests.Neg.fst(63,5-63,7):
+* Info at NegativeTests.Neg.fst:63.6-63.8:
   - Expected failure:
   - Type annotation _: Type{Prims.l_False} for inductive NegativeTests.Neg.t2 is
     not Type or eqtype, or it is eqtype but contains noeq/unopteq qualifiers
 
-* Warning 240 at NegativeTests.Neg.fst(63,0-63,32):
+* Warning 240 at NegativeTests.Neg.fst:63.1-63.33:
   - Missing definitions in module NegativeTests.Neg:
       bad_projector
       test_postcondition_label

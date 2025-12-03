@@ -1,81 +1,81 @@
-* Info at Basic.fst(4,13-4,17):
+* Info at Basic.fst:4.14-4.18:
   - Expected failure:
   - Expected expression of type Prims.int got expression true of type Prims.bool
 
-* Info at Basic.fst(6,38-6,44):
+* Info at Basic.fst:6.39-6.45:
   - Expected failure:
   - Assertion failed
   - The SMT solver could not prove the query. Use --query_stats for more
     details.
-  - See also Basic.fst(6,45-6,50)
+  - See also Basic.fst:6.46-6.51
 
-* Info at Basic.fst(7,38-7,44):
+* Info at Basic.fst:7.39-7.45:
   - Expected failure:
   - Assertion failed
   - The SMT solver could not prove the query. Use --query_stats for more
     details.
-  - See also Basic.fst(7,45-7,50)
+  - See also Basic.fst:7.46-7.51
 
-* Info at Basic.fst(8,38-8,44):
+* Info at Basic.fst:8.39-8.45:
   - Expected failure:
   - Assertion failed
   - The SMT solver could not prove the query. Use --query_stats for more
     details.
-  - See also Basic.fst(8,45-8,50)
+  - See also Basic.fst:8.46-8.51
 
-* Info at Basic.fst(9,38-9,44):
+* Info at Basic.fst:9.39-9.45:
   - Expected failure:
   - Assertion failed
   - The SMT solver could not prove the query. Use --query_stats for more
     details.
-  - See also Basic.fst(9,45-9,50)
+  - See also Basic.fst:9.46-9.51
 
-* Info at Basic.fst(11,38-11,49):
+* Info at Basic.fst:11.39-11.50:
   - Expected failure:
   - Assertion failed
   - The SMT solver could not prove the query. Use --query_stats for more
     details.
-  - See also Basic.fst(11,50-11,55)
+  - See also Basic.fst:11.51-11.56
 
-* Info at Basic.fst(12,38-12,49):
+* Info at Basic.fst:12.39-12.50:
   - Expected failure:
   - Assertion failed
   - The SMT solver could not prove the query. Use --query_stats for more
     details.
-  - See also Basic.fst(12,50-12,55)
+  - See also Basic.fst:12.51-12.56
 
-* Info at Basic.fst(13,38-13,49):
+* Info at Basic.fst:13.39-13.50:
   - Expected failure:
   - Assertion failed
   - The SMT solver could not prove the query. Use --query_stats for more
     details.
-  - See also Basic.fst(13,50-13,55)
+  - See also Basic.fst:13.51-13.56
 
-* Info at Basic.fst(14,38-14,49):
+* Info at Basic.fst:14.39-14.50:
   - Expected failure:
   - Assertion failed
   - The SMT solver could not prove the query. Use --query_stats for more
     details.
-  - See also Basic.fst(14,50-14,55)
+  - See also Basic.fst:14.51-14.56
 
-* Info at Basic.fst(17,29-17,31):
+* Info at Basic.fst:17.30-17.32:
   - Expected failure:
   - Assertion failed
   - The SMT solver could not prove the query. Use --query_stats for more
     details.
-  - See also Prims.fst(459,90-459,102)
+  - See also Prims.fst:459.91-459.103
 
-* Info at Basic.fst(20,29-20,31):
+* Info at Basic.fst:20.30-20.32:
   - Expected failure:
   - Assertion failed
   - The SMT solver could not prove the query. Use --query_stats for more
     details.
-  - See also Prims.fst(459,90-459,102)
+  - See also Prims.fst:459.91-459.103
 
-* Info at Basic.fst(23,46-23,48):
+* Info at Basic.fst:23.47-23.49:
   - Expected failure:
   - Assertion failed
   - The SMT solver could not prove the query. Use --query_stats for more
     details.
-  - See also Prims.fst(459,90-459,102)
+  - See also Prims.fst:459.91-459.103
 

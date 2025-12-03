@@ -1,4 +1,4 @@
-* Info at DesugarOrder.fst(7,12-7,13):
+* Info at DesugarOrder.fst:7.13-7.14:
   - Expected failure:
   - Identifier not found: a
 

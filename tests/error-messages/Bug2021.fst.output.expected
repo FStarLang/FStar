@@ -1,39 +1,39 @@
-* Info at Bug2021.fst(5,15-5,16):
+* Info at Bug2021.fst:5.16-5.17:
   - Expected failure:
   - Failed to resolve implicit argument ?2
     of type Type
-    introduced for user-provided implicit term at Bug2021.fst(5,15-5,16)
+    introduced for user-provided implicit term at Bug2021.fst:5.16-5.17
 
-* Info at Bug2021.fst(10,8-10,9):
+* Info at Bug2021.fst:10.9-10.10:
   - Expected failure:
   - Failed to resolve implicit argument ?2
     of type Type
-    introduced for user-provided implicit term at Bug2021.fst(10,8-10,9)
+    introduced for user-provided implicit term at Bug2021.fst:10.9-10.10
 
-* Info at Bug2021.fst(16,12-16,13):
+* Info at Bug2021.fst:16.13-16.14:
   - Expected failure:
   - Failed to resolve implicit argument ?5
     of type Type
-    introduced for user-provided implicit term at Bug2021.fst(16,12-16,13)
+    introduced for user-provided implicit term at Bug2021.fst:16.13-16.14
 
-* Info at Bug2021.fst(24,13-24,14):
+* Info at Bug2021.fst:24.14-24.15:
   - Expected failure:
   - Failed to resolve implicit argument ?9
     of type Prims.int
     introduced for Instantiating implicit argument 'x'
-  - See also Bug2021.fst(23,11-23,12)
+  - See also Bug2021.fst:23.12-23.13
 
-* Info at Bug2021.fst(30,13-30,17):
+* Info at Bug2021.fst:30.14-30.18:
   - Expected failure:
   - Failed to resolve implicit argument ?10
     of type Prims.int
     introduced for Instantiating implicit argument 'x'
-  - See also Bug2021.fst(29,11-30,17)
+  - See also Bug2021.fst:29.12-30.18
 
-* Info at Bug2021.fst(36,13-36,17):
+* Info at Bug2021.fst:36.14-36.18:
   - Expected failure:
   - Failed to resolve implicit argument ?13
     of type Prims.int
     introduced for Instantiating implicit argument 'x'
-  - See also Bug2021.fst(35,11-36,17)
+  - See also Bug2021.fst:35.12-36.18
 

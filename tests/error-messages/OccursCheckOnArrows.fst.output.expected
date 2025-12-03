@@ -1,5 +1,5 @@
-* Info at OccursCheckOnArrows.fst(18,15-18,16):
+* Info at OccursCheckOnArrows.fst:18.16-18.17:
   - Expected failure:
   - _: (*?u5*)_ -> (*?u4*)_ is not a subtype of the expected type (*?u5*)_
-  - See also OccursCheckOnArrows.fst(18,9-18,10)
+  - See also OccursCheckOnArrows.fst:18.10-18.11
 

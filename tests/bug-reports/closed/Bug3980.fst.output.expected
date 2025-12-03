@@ -1,26 +1,26 @@
-* Info at Bug3980.fst(16,0-16,24):
+* Info at Bug3980.fst:16.1-16.25:
   - Term Bug3980.p 1 ** Bug3980.p 2 ** Bug3980.p 3 has type Bug3980.slprop
 
-* Info at Bug3980.fst(17,0-17,26):
+* Info at Bug3980.fst:17.1-17.27:
   - Term (Bug3980.p 1 ** Bug3980.p 2) ** Bug3980.p 3 has type Bug3980.slprop
 
-* Info at Bug3980.fst(18,0-18,26):
+* Info at Bug3980.fst:18.1-18.27:
   - Term Bug3980.p 1 ** Bug3980.p 2 ** Bug3980.p 3 has type Bug3980.slprop
 
-* Info at Bug3980.fst(23,8-23,14):
+* Info at Bug3980.fst:23.9-23.15:
   - Expected failure:
   - Assertion failed
   - The SMT solver could not prove the query. Use --query_stats for more
     details.
-  - See also Bug3980.fst(23,15-23,23)
+  - See also Bug3980.fst:23.16-23.24
 
-* Info at Bug3980.fst(25,8-25,14):
+* Info at Bug3980.fst:25.9-25.15:
   - Expected failure:
   - Assertion failed
   - The SMT solver could not prove the query. Use --query_stats for more
     details.
-  - See also Bug3980.fst(25,15-25,23)
+  - See also Bug3980.fst:25.16-25.24
 
-* Info at Bug3980.fst(33,0-33,29):
+* Info at Bug3980.fst:33.1-33.30:
   - Term "a" |-> 1 ** "b" |-> 2 has type Bug3980.slprop
 

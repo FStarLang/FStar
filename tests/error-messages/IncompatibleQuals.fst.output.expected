@@ -1,20 +1,20 @@
-* Info at IncompatibleQuals.fst(7,0-7,11):
+* Info at IncompatibleQuals.fst:7.1-7.12:
   - Expected failure:
   - Invalid qualifiers for declaration `val IncompatibleQuals.x`
   - Qualifiers `assume` and `inline_for_extraction` are not compatible.
 
-* Info at IncompatibleQuals.fst(13,1-13,2):
+* Info at IncompatibleQuals.fst:13.2-13.3:
   - Expected failure:
   - Invalid qualifiers for declaration
       `val IncompatibleQuals.__proj__Mkr1__item__x`
   - Qualifiers `assume` and `inline_for_extraction` are not compatible.
 
-* Info at IncompatibleQuals.fst(33,3-33,5):
+* Info at IncompatibleQuals.fst:33.4-33.6:
   - Expected failure:
   - Invalid qualifiers for declaration `val IncompatibleQuals.uu___is_A1`
   - Qualifiers `assume` and `inline_for_extraction` are not compatible.
 
-* Info at IncompatibleQuals.fst(47,5-47,6):
+* Info at IncompatibleQuals.fst:47.6-47.7:
   - Expected failure:
   - Invalid qualifiers for declaration `let t`
   - Definitions cannot be marked `assume`.

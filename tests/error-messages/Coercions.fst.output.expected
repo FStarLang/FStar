@@ -1,54 +1,54 @@
-* Info at Coercions.fst(6,38-6,39):
+* Info at Coercions.fst:6.39-6.40:
   - Expected failure:
   - Computed type Prims.int
     and effect GTot
     is not compatible with the annotated type Prims.int
     and effect Tot
 
-* Info at Coercions.fst(19,37-19,38):
+* Info at Coercions.fst:19.38-19.39:
   - Expected failure:
   - Computed type 'a
     and effect GTot
     is not compatible with the annotated type 'a
     and effect Tot
 
-* Info at Coercions.fst(71,4-71,8):
+* Info at Coercions.fst:71.5-71.9:
   - Expected failure:
   - Subtyping check failed
   - Expected type Prims.nat got type Prims.int
   - The SMT solver could not prove the query. Use --query_stats for more
     details.
-  - See also Prims.fst(682,18-682,24)
+  - See also Prims.fst:682.19-682.25
 
-* Info at Coercions.fst(74,49-74,57):
+* Info at Coercions.fst:74.50-74.58:
   - Expected failure:
   - Subtyping check failed
   - Expected type Prims.nat got type Prims.int
   - The SMT solver could not prove the query. Use --query_stats for more
     details.
-  - See also Prims.fst(682,18-682,24)
+  - See also Prims.fst:682.19-682.25
 
-* Info at Coercions.fst(76,55-76,56):
+* Info at Coercions.fst:76.56-76.57:
   - Expected failure:
   - Subtyping check failed
   - Expected type Prims.nat got type Prims.int
   - The SMT solver could not prove the query. Use --query_stats for more
     details.
-  - See also Prims.fst(682,18-682,24)
+  - See also Prims.fst:682.19-682.25
 
-* Info at Coercions.fst(78,50-78,51):
+* Info at Coercions.fst:78.51-78.52:
   - Expected failure:
   - Subtyping check failed
   - Expected type Prims.nat got type Prims.int
   - The SMT solver could not prove the query. Use --query_stats for more
     details.
-  - See also Prims.fst(682,18-682,24)
+  - See also Prims.fst:682.19-682.25
 
-* Info at Coercions.fst(80,51-80,52):
+* Info at Coercions.fst:80.52-80.53:
   - Expected failure:
   - Subtyping check failed
   - Expected type Prims.nat got type Prims.int
   - The SMT solver could not prove the query. Use --query_stats for more
     details.
-  - See also Prims.fst(682,18-682,24)
+  - See also Prims.fst:682.19-682.25
 

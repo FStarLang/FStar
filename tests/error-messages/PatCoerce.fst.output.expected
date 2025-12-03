@@ -1,11 +1,11 @@
-* Warning 240 at PatCoerce.fst(20,4-20,7):
+* Warning 240 at PatCoerce.fst:20.5-20.8:
   - PatCoerce.bla is declared but no definition was found
   - Add an 'assume' if this is intentional
 
-* Info at PatCoerce.fst(25,4-25,8):
+* Info at PatCoerce.fst:25.5-25.9:
   - Expected failure:
   - Type of pattern (Prims.bool) does not match type of scrutinee (Type0)
 
-* Warning 240 at PatCoerce.fst(23,0-26,14):
+* Warning 240 at PatCoerce.fst:23.1-26.15:
   - Missing definitions in module PatCoerce: bla
 

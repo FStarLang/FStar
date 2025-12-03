@@ -1,4 +1,4 @@
-* Info at MatchRest.fst(19,4-19,6):
+* Info at MatchRest.fst:19.5-19.7:
   - Expected failure:
   - Unexpected pattern.
   - Using `..` is only allowed as argument to a data constructor, e.g. `C ..`.
