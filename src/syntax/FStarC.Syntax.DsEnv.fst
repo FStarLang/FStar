@@ -99,11 +99,12 @@ type scope_mod =
 
 instance _ : showable scope_mod = {
   show = function
-    | Local_bindings lbs -> "Local_bindings"
+    | Local_bindings lbs -> 
+      Format.fmt1 "(Local_bindings %s)" (show <| PSMap.keys lbs)
     | Rec_binding (id, lid, _) -> "Rec_binding " ^ (string_of_id id) ^ " " ^ (string_of_lid lid)
     | Module_abbrev (id, lid) -> "Module_abbrev " ^ (string_of_id id) ^ " " ^ (string_of_lid lid)
     | Open_module_or_namespace (lid, _, _) -> "Open_module_or_namespace " ^ (string_of_lid lid)
-    | Top_level_defs lbs -> "Top_level_defs"
+    | Top_level_defs lbs -> Format.fmt1 "(Top_level_defs %s)" (show <| PSMap.keys lbs)
     | Record_or_dc r -> "Record_or_dc " ^ (string_of_lid r.typename)
 }
 
@@ -154,6 +155,10 @@ and dsenv_hooks =
     ds_push_include_hook : env -> lident -> unit;
     ds_push_module_abbrev_hook : env -> ident -> lident -> unit }
 
+let with_restored_scope (e:env) (f: env -> 'a & env) : 'a & env =
+  let res, e1 = f e in
+  res, {e1 with scope_mods=e.scope_mods; curmodule=e.curmodule; curmonad=e.curmonad; sigaccum=e.sigaccum}
+
 (* For typo suggestions *)
 let all_local_names (env:env) : list string =
   List.fold_right (fun scope acc ->
@@ -177,6 +182,11 @@ let all_mod_names (env:env) : list string =
     | Top_level_defs lbs -> acc
     | Record_or_dc r -> acc
   ) env.scope_mods []
+
+instance showable_env : showable env = {
+  show = fun env -> 
+  Format.fmt2 "All mods: %s\nScope mods: %s\n" (show (List.map fst env.modules)) (show env.scope_mods)
+}
 
 let mk_dsenv_hooks open_hook include_hook module_abbrev_hook =
   { ds_push_open_hook = open_hook;
@@ -1670,11 +1680,13 @@ let fail_or env lookup lid =
     (* We couldn't find it. Try to report a nice error. *)
     let opened_modules = List.map (fun (lid, _) -> string_of_lid lid) env.modules in
     let open FStarC.Class.PP in
-    if List.length (ns_of_lid lid) = 0 then
+    if List.length (ns_of_lid lid) = 0 then begin
+      Format.print1 "Dump env:\n%s\n" (show env);
       raise_error lid Errors.Fatal_IdentifierNotFound [
         Pprint.prefix 2 1 (text "Identifier not found:") (pp lid);
         typo_msg (Ident.string_of_lid lid) (all_local_names env);
       ]
+    end
     else
       let all_ids_in_module (m : lident) : list string =
         let m = string_of_lid m in

@@ -55,6 +55,15 @@ let dummy_tf_of_fname fname =
   { tf_fname = fname;
     tf_modtime = t0 }
 
+
+let mk_ld_interleaved (iface impl:string) : repl_task =
+  let tod = Time.get_time_of_day () in
+  LDInterleaved ({tf_fname=iface; tf_modtime=tod}, {tf_fname=impl; tf_modtime=tod})
+
+let mk_ld_single (filename:string) : repl_task =
+  let tod = Time.get_time_of_day () in
+  LDSingle {tf_fname=filename; tf_modtime=tod}
+  
 let string_of_timed_fname { tf_fname = fname; tf_modtime = modtime } =
   if modtime = t0 then Format.fmt1 "{ %s }" fname
   else Format.fmt2 "{ %s; %s }" fname (show modtime)
@@ -66,9 +75,9 @@ let string_of_repl_task = function
     Format.fmt1 "LDSingle %s" (string_of_timed_fname intf_or_impl)
   | LDInterfaceOfCurrentFile intf ->
     Format.fmt1 "LDInterfaceOfCurrentFile %s" (string_of_timed_fname intf)
-  | PushFragment (Inl frag, _, _) ->
-    Format.fmt1 "PushFragment { code = %s }" frag.frag_text
-  | PushFragment (Inr d, _, _) ->
+  | PushFragment (Inl frag, _, _, deps) ->
+    Format.fmt2 "PushFragment { code = %s; deps=%s }" frag.frag_text (show deps)
+  | PushFragment (Inr d, _, _, _) ->
     Format.fmt1 "PushFragment { decl = %s }" (show d)
   | Noop -> "Noop {}"
 
@@ -94,6 +103,7 @@ let repl_state_to_string (r:repl_state)
       repl_fname=%s;\n\t\
       repl_cur_mod=%s;\n\t\      
       repl_deps_stack={%s}\n\
+      repl_buffered_queries={%s}\n
      }"
      [show r.repl_line;
       show r.repl_column;
@@ -101,7 +111,15 @@ let repl_state_to_string (r:repl_state)
       (match r.repl_curmod with
        | None -> "None"
        | Some m -> Ident.string_of_lid m.name);
-      string_of_repl_stack r.repl_deps_stack]
+      string_of_repl_stack r.repl_deps_stack;
+      (show (r.repl_buffered_input_queries |> List.map (fun q -> q.qid)))]
+
+instance repl_stack_entry_t_showable : showable repl_stack_entry_t = {
+  show = string_of_repl_stack_entry
+}
+instance repl_state_showable : showable repl_state = {
+  show = repl_state_to_string
+}
 
 let push_query_to_string pq =
   let code_or_decl =
@@ -161,7 +179,7 @@ let interactive_protocol_features =
    "lookup"; "lookup/context"; "lookup/documentation"; "lookup/definition";
    "peek"; "pop"; "push"; "push-partial-checked-file"; "search"; "segment";
    "vfs-add"; "tactic-ranges"; "interrupt"; "progress";
-   "full-buffer"; "format"; "restart-solver"; "cancel"]
+   "full-buffer"; "format"; "restart-solver"; "cancel"; "fly-deps"]
 
 let json_of_issue_level i =
   JsonStr (match i with
@@ -239,4 +257,3 @@ let js_optional_lookup_context k =
     | _ ->
       js_fail "lookup context (symbol-only, code, set-options, reset-options, \
 open, let-open, include, module-alias)" k
-

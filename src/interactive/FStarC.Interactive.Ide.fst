@@ -689,6 +689,28 @@ let run_load_partial_file st decl_name: (query_status & json) & either repl_stat
       let st = pop_repl "load partial file" st in
       (QueryNOK, json_errors), Inl st
 
+let scan_fragment_deps st (d:FStarC.Parser.AST.decl) =
+  let deps = FStarC.Syntax.DsEnv.dep_graph st.repl_env.dsenv in
+  let deps = FStarC.Parser.Dep.copy_deps deps in
+  let env = { st.repl_env with dsenv=FStarC.Syntax.DsEnv.set_dep_graph st.repl_env.dsenv deps } in
+  let filenames_to_load =
+    FStarC.Parser.Dep.collect_deps_of_decl
+      deps
+      st.repl_fname
+      [d]
+      FStarC.CheckedFiles.load_parsing_data_from_cache
+  in
+
+  Format.print1 "Initial files loaded: %s\n" (show <| FStarC.Parser.Dep.all_files deps);
+  Format.print1 "Decls scanned: %s\n" (show d);
+  Format.print1 "Additional files to load: %s\n" (show filenames_to_load);
+  List.rev filenames_to_load, {st with repl_env=env}
+
+let json_errors () = 
+  let errors = List.map rephrase_dependency_error (collect_errors ()) in
+  let js_errors = errors |> List.map json_of_issue in
+  js_errors 
+
 let run_push_without_deps st query
   : (query_status & json) & either repl_state int =
   let set_flychecking_flag st flag =
@@ -706,15 +728,17 @@ let run_push_without_deps st query
     then TcEnv.toggle_id_info st.repl_env false
     else TcEnv.toggle_id_info st.repl_env true
   in
-  let frag =
+  let filenames_to_load, st, frag =
     match code_or_decl with
     | Inl text ->
-      Inl { frag_fname = "<input>"; frag_text = text; frag_line = line; frag_col = column }
+      [], st, Inl { frag_fname = "<input>"; frag_text = text; frag_line = line; frag_col = column }
     | Inr (decl, _code) -> 
-      Inr decl
-    in
+      let loads, st = scan_fragment_deps st decl in
+      loads, st, Inr decl
+  in
+  // let st = run_load_tasks st tasks in
   let st = set_flychecking_flag st peek_only in
-  let success, st = run_repl_transaction st (Some push_kind) peek_only (PushFragment (frag, push_kind, [])) in
+  let success, st = run_repl_transaction st (Some push_kind) peek_only (PushFragment (frag, push_kind, [], filenames_to_load)) in
   let st = set_flychecking_flag st false in
 
   let status = if success || peek_only then QueryOK else QueryNOK in
@@ -743,6 +767,7 @@ let run_push_without_deps st query
   in
   let st = if success then { st with repl_line = line; repl_column = column } else st in
   ((status, json_errors), Inl st)
+
 
 let run_push_with_deps st query =
   if !dbg then
@@ -1141,16 +1166,36 @@ let rec run_query st (q: query) : (query_status & list json) & either repl_state
   | Push pquery -> as_json_list (run_push st pquery)
   | PushPartialCheckedFile decl_name -> as_json_list (run_load_partial_file st decl_name)
   | Pop -> as_json_list (run_pop st)
-  | FullBuffer (code, full_kind, with_symbols) ->
+  | FullBuffer (code, full_kind, with_symbols) -> (
     let open FStarC.Interactive.Incremental in
     write_full_buffer_fragment_progress FullBufferStarted;
-    let queries, issues = 
+    let queries, issues, st = 
       run_full_buffer st q.qid code full_kind with_symbols write_full_buffer_fragment_progress
     in
     List.iter (write_response q.qid QueryOK) issues;
-    let res = fold_query validate_and_run_query queries st in
-    write_full_buffer_fragment_progress FullBufferFinished;
-    res
+    // let run_load_task st task =
+    //   let LDSingle tf = task in
+    //   let _, env = TcEnv.with_restored_scope st.repl_env (fun env ->
+    //     (), PushHelper.tc_one env None tf.tf_fname)
+    //   in
+    //   let st = {st with repl_env=env} in
+    //   Some st
+    // in
+    // let rec run_load_tasks st tasks = match tasks with
+    //   | [] -> Inl st
+    //   | t::ts -> 
+    //     match run_load_task st t with
+    //     | None -> Inr st
+    //     | Some st -> run_load_tasks st ts
+    // in
+    // match run_load_tasks st tasks with
+    // | Inr st_err ->
+    //   (QueryNOK, json_errors()), Inl st_err
+    // | Inl st ->
+      let res = fold_query validate_and_run_query queries st in
+      write_full_buffer_fragment_progress FullBufferFinished;
+      res
+  )
   | AutoComplete (search_term, context) ->
     as_json_list (run_autocomplete st search_term context)
   | Lookup (symbol, context, pos_opt, rq_info, symrange) ->

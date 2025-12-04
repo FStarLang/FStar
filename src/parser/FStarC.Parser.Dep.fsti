@@ -39,7 +39,7 @@ val str_of_parsing_data (p:parsing_data) : string
 val empty_parsing_data: parsing_data  //for legacy ide
 val friends (p:parsing_data) : list lident
 val deps : Type0
-
+val copy_deps (d:deps) : deps
 val empty_deps : deps
 val interface_of : deps -> module_name:string -> option string  //return value is the file name
 val implementation_of : deps -> module_name:string -> option string  //return value is the file name
@@ -56,3 +56,4 @@ val print_digest: list (string & string) -> string
 val module_has_interface: deps -> module_name:Ident.lident -> bool
 val deps_has_implementation: deps -> module_name:Ident.lident -> bool
 val print_raw: out_channel -> deps -> unit
+val all_files: deps -> list string

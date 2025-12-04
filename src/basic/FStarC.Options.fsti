@@ -82,7 +82,7 @@ val defaults                    : list (string & option_val)
 val init                        : unit    -> unit  //sets the current options to their defaults
 val clear                       : unit    -> unit  //wipes the stack of options, and then inits
 val restore_cmd_line_options    : bool -> parse_cmdline_res //inits or clears (if the flag is set) the current options and then sets it to the cmd line
-
+val with_restored_cmd_line_options : (unit -> 'a) -> 'a
 (* Control the option stack *)
 (* Briefly, push/pop are used by the interactive mode and internal_*
  * by #push-options/#pop-options. Read the comment in the .fs for more

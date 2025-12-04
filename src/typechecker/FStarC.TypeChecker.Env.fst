@@ -175,6 +175,22 @@ let set_tc_hooks env hooks = { env with tc_hooks = hooks }
 let set_dep_graph e g = {e with dsenv=DsEnv.set_dep_graph e.dsenv g}
 let dep_graph e = DsEnv.dep_graph e.dsenv
 
+let with_restored_scope (e:env) (f: env -> 'a & env) : 'a & env = 
+  let env = { e with gamma=[]; gamma_sig=[]; proof_ns=[] } in
+  env.solver.refresh None;
+  let res, env =
+    FStarC.Options.with_restored_cmd_line_options (fun _ -> 
+      let (res, env), dsenv =
+        DsEnv.with_restored_scope env.dsenv (fun dsenv -> 
+          let res, env = f env in
+          (res, env), env.dsenv)
+      in
+      res, {env with dsenv; curmodule=e.curmodule; gamma=e.gamma; gamma_sig=e.gamma_sig; proof_ns=e.proof_ns}
+    )
+  in
+  env.solver.refresh (Some env.proof_ns);
+  res,env
+
 let record_val_for (e:env) (l:lident) : env =
   { e with missing_decl = add l e.missing_decl }
 

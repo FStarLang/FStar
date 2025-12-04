@@ -20,6 +20,7 @@
 module FStarC.Interactive.PushHelper
 open FStarC
 open FStarC.Effect
+open FStarC.Class.Show
 open FStarC.List
 open FStarC.Ident
 open FStarC.Errors
@@ -103,7 +104,7 @@ let snapshot_env env msg : repl_depth_t & env_t =
 
 let push_repl msg push_kind_opt task st =
   let depth, env = snapshot_env st.repl_env msg in
-  repl_stack := (depth, (task, st)) :: !repl_stack;
+  repl_stack := (depth, (task, { st with repl_buffered_input_queries=[] })) :: !repl_stack;
   match push_kind_opt with
   | None -> st
   | Some push_kind ->
@@ -112,8 +113,8 @@ let push_repl msg push_kind_opt task st =
 (* Record the issues that were raised by the last push *)
 let add_issues_to_push_fragment (issues: list json) =
   match !repl_stack with
-  | (depth, (PushFragment(frag, push_kind, i), st))::rest -> (
-    let pf = PushFragment(frag, push_kind, issues @ i) in
+  | (depth, (PushFragment(frag, push_kind, i, deps), st))::rest -> (
+    let pf = PushFragment(frag, push_kind, issues @ i, deps) in
     repl_stack := (depth, (pf, st)) :: rest
   )
   | _ -> ()
@@ -145,10 +146,16 @@ let rollback_env solver msg (ctx_depth, opt_depth) =
   Options.rollback (Some opt_depth);
   env
 
+let should_reset (task:repl_task) =
+  match task with
+  | PushFragment (_, _, _, deps) -> Cons? deps
+  | _ -> false
+
 let pop_repl msg st =
   match !repl_stack with
-  | [] -> failwith "Too many pops"
-  | (depth, (_, st')) :: stack_tl ->
+  | [] -> failwith "(pop_repl) Too many pops"
+  | (depth, (p, st')) :: stack_tl ->
+    // Format.print1 "(pop_repl) popping %s\n" (string_of_repl_task p);
     let env = rollback_env st.repl_env.solver msg depth in
     repl_stack := stack_tl;
     // Because of the way ``snapshot`` is implemented, the `st'` and `env`
@@ -156,15 +163,28 @@ let pop_repl msg st =
     FStarC.Common.runtime_assert
       (U.physical_equality env st'.repl_env)
       "Inconsistent stack state";
-    st'
+    if should_reset p then st'.repl_env.solver.refresh None;
+    { st' with repl_buffered_input_queries=st.repl_buffered_input_queries }
 
 (** Like ``tc_one_file``, but only return the new environment **)
 let tc_one (env:env_t) intf_opt modf =
   let parse_data = modf |> FStarC.Parser.Dep.parsing_data_of (TcEnv.dep_graph env) in
   let _, env = tc_one_file_for_ide env intf_opt modf parse_data in
+  Format.print1 "tc_one: Loaded %s\n" modf;
   env
 
 open FStarC.Class.Show
+let load_fly_deps (env:env_t) filenames =
+  let rec run_load_tasks env filenames =
+    match filenames with
+    | [] -> env
+    | filename::filenames ->
+      let env = tc_one env None filename in
+      run_load_tasks env filenames
+  in
+  let _, env = TcEnv.with_restored_scope env (fun env -> (), run_load_tasks env filenames) in
+  env
+  
 (** Load the file or files described by `task` **)
 let run_repl_task (curmod: optmod_t) (env: env_t) (task: repl_task) lds : optmod_t & env_t & lang_decls_t =
   match task with
@@ -174,12 +194,13 @@ let run_repl_task (curmod: optmod_t) (env: env_t) (task: repl_task) lds : optmod
     curmod, tc_one env None intf_or_impl.tf_fname, []
   | LDInterfaceOfCurrentFile intf ->
     curmod, Universal.load_interface_decls env intf.tf_fname, []
-  | PushFragment (frag, _, _) ->
+  | PushFragment (frag, _, _, filenames_to_load) ->
     let frag =
       match frag with
       | Inl frag -> Inl (frag, lds)
       | Inr decl -> Inr decl
     in
+    let env = load_fly_deps env filenames_to_load in
     let o, e, langs = tc_one_fragment curmod env frag in
     o, e, langs
   | Noop ->
@@ -386,5 +407,5 @@ let full_lax text st =
   match ld_deps st with
   | Inl (st, deps) ->
       let names = add_module_completions st.repl_fname deps st.repl_names in
-      repl_tx ({ st with repl_names = names }) LaxCheck (PushFragment (Inl frag, LaxCheck, []))
+      repl_tx ({ st with repl_names = names }) LaxCheck (PushFragment (Inl frag, LaxCheck, [], []))
   | Inr st -> None, st

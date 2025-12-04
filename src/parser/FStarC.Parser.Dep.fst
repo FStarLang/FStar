@@ -173,7 +173,8 @@ type dep_node = {
 }
 type dependence_graph = //maps file names to the modules it depends on
      | Deps of SMap.t dep_node //(dependences * color)>
-
+let copy_dep_graph (d:dependence_graph) =
+  let Deps m = d in Deps (SMap.copy m)
 (*
  * AR: Parsing data for a file (also cached in the checked files)
  *     It is a summary of opens, includes, A.<id>, etc. in a module
@@ -255,6 +256,7 @@ type deps = {
     parse_results:SMap.t parsing_data             //map from filenames to parsing_data
                                                 //callers (Universal.fs) use this to get the parsing data for caching purposes
 }
+let copy_deps (d:deps) : deps = { d with dep_graph = copy_dep_graph d.dep_graph }
 let deps_try_find (Deps m) k = SMap.try_find m k
 let deps_add_dep (Deps m) k v =
   SMap.add m k v
@@ -1409,18 +1411,19 @@ let topological_dependences_of'
                    (String.concat ", " all_files_0)
                    (String.concat ", " (remove_dups (fun x y -> x=y) friends))
                    (String.concat ", " (interfaces_needing_inlining));
-    let widened, dep_graph =
-        widen_deps friends dep_graph file_system_map widened
-    in
-    let _, all_files =
+    match friends with
+    | [] -> all_files_0, false
+    | _ -> 
+      let widened, dep_graph = widen_deps friends dep_graph file_system_map widened in
+      let _, all_files =
         if !dbg
         then Format.print_string "==============Phase2==================\n";
         all_friend_deps dep_graph [] ([], []) root_files
-    in
-    if !dbg
-    then Format.print1 "Phase2 complete: all_files = %s\n" (String.concat ", " all_files);
-    all_files,
-    widened
+      in
+      if !dbg
+      then Format.print1 "Phase2 complete: all_files = %s\n" (String.concat ", " all_files);
+      all_files,
+      widened
 
 let phase1
         file_system_map
@@ -1519,6 +1522,7 @@ let collect_deps_of_decl (deps:deps) (filename:string) (ds:list decl)
 : list file_name
 = let pd = collect_module_or_decls filename (Inr ds) in
   let direct_deps, _has_inline_for_extraction, _additional_roots = deps_from_parsing_data pd deps.file_system_map filename in
+  debug_print (fun _ -> Format.print2 "direct deps of %s is %s\n" (show ds) (show direct_deps)); 
   let files = List.map (file_of_dep deps.file_system_map []) direct_deps in
   let inline_ifaces = build_dep_graph_for_files files deps.file_system_map deps.dep_graph deps.parse_results get_parsing_data_from_cache in
   let filenames, _ = topological_dependences_of deps.file_system_map deps.dep_graph inline_ifaces files false in
@@ -2120,3 +2124,5 @@ let deps_has_implementation deps module_name =
     deps.all_files |> BU.for_some (fun f ->
         is_implementation f
         && String.lowercase (module_name_of_file f) = m)
+
+let all_files deps = deps.all_files

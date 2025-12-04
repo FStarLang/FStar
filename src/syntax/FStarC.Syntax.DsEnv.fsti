@@ -21,7 +21,7 @@ open FStarC.Effect
 open FStarC.Syntax
 open FStarC.Syntax.Syntax
 open FStarC.Ident
-
+open FStarC.Class.Show
 module S = FStarC.Syntax.Syntax
 
 val ugly_sigelt_to_string_hook : ref (sigelt -> string)
@@ -40,7 +40,9 @@ type record_or_dc = {
 
 val env : Type0
 val dsenv_hooks : Type0
+val with_restored_scope (e:env) (f: env -> 'a & env) : 'a & env
 
+instance val showable_env : showable env
 val mk_dsenv_hooks
   (open_hook:env -> open_module_or_namespace -> unit)
   (include_hook:env -> lident -> unit)
