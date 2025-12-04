@@ -54,7 +54,7 @@ jobs:
       - run: |
           # git config --unset-all http.https://github.com/.extraheader
           # ^ https://stackoverflow.com/questions/64374179/how-to-push-to-another-repository-in-github-actions
-          for key in $(git config -l | grep ^includeif | cut -f= -d1); do git config unset --all $key; done
+          for key in $(git config -l | grep ^includeif | cut -d= -f1); do git config unset --all $key; done
 
       - name: Create tag
         run: |
