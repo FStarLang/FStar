@@ -493,8 +493,7 @@ let build_inclusion_candidates_list (): list (string & string) =
     all normalized to lowercase. The first component of the pair is the
     interface (if any). The second component of the pair is the implementation
     (if any). *)
-let build_map (filenames: list string): files_for_module_name =
-  let map = SMap.create 41 in
+let build_map map (filenames: list string): unit =
   let add_entry key full_path =
     match SMap.try_find map key with
     | Some (intf, impl) ->
@@ -516,8 +515,7 @@ let build_map (filenames: list string): files_for_module_name =
   (* All the files we've been given on the command-line must be valid FStar files. *)
   List.iter (fun f ->
     add_entry (lowercase_module_name f) f
-  ) filenames;
-  map
+  ) filenames
 
 let string_of_lid (l: lident) (last: bool) =
   let suffix = if last then [ (string_of_id (ident_of_lid l)) ] else [ ] in
@@ -1082,8 +1080,10 @@ let deps_from_parsing_data (pd:parsing_data) (original_map:files_for_module_name
   in
 
   let add_dep deps d =
-    if not (List.existsML (dep_subsumed_by d) !deps) then
+    if not (List.existsML (dep_subsumed_by d) !deps) then (
+      Format.print1 "Adding dep %s\n" (show d);
       deps := d :: !deps
+    )
   in
 
   let dep_edge module_name is_friend =
@@ -1098,6 +1098,7 @@ let deps_from_parsing_data (pd:parsing_data) (original_map:files_for_module_name
       add_dep deps (dep_edge module_name is_friend);
       true
     | _ ->
+      Format.print1 "Could not resolve modeule name %s\n" key;
       false
   in
 
@@ -1132,6 +1133,7 @@ let deps_from_parsing_data (pd:parsing_data) (original_map:files_for_module_name
   in
 
   let record_open let_open lid =
+    Format.print1 "Recording open %s\n" (show lid);
     if record_open_module let_open lid
     then ()
     else if not let_open //syntactically, this cannot be a namespace if let_open is true; so don't retry
@@ -1520,9 +1522,19 @@ let build_dep_graph_for_files
 let collect_deps_of_decl (deps:deps) (filename:string) (ds:list decl)
   (get_parsing_data_from_cache:string -> option parsing_data)
 : list file_name
-= let pd = collect_module_or_decls filename (Inr ds) in
+= let roots =
+   match ds with
+   | [{d=TopLevelModule l; attrs}] -> 
+      Inl <| Module { no_prelude=false; mname=l; decls=ds }
+   | _ -> Inr ds
+  in
+  if Nil? (SMap.keys deps.file_system_map)
+  then build_map deps.file_system_map [filename];
+  let pd = collect_module_or_decls filename roots in //(Inr ds) in
+  Format.print1 "Collect deps of decl: %s\n" (show pd);
   let direct_deps, _has_inline_for_extraction, _additional_roots = deps_from_parsing_data pd deps.file_system_map filename in
-  debug_print (fun _ -> Format.print2 "direct deps of %s is %s\n" (show ds) (show direct_deps)); 
+  debug_print (fun _ -> Format.print3 "direct deps of %s is %s, mo_roots=%s\n" 
+      (show ds) (show direct_deps) (show _additional_roots)); 
   let files = List.map (file_of_dep deps.file_system_map []) direct_deps in
   let inline_ifaces = build_dep_graph_for_files files deps.file_system_map deps.dep_graph deps.parse_results get_parsing_data_from_cache in
   let filenames, _ = topological_dependences_of deps.file_system_map deps.dep_graph inline_ifaces files false in
@@ -1564,7 +1576,8 @@ let collect (all_cmd_line_files: list file_name)
   // A map from lowercase module names (e.g. [a.b.c]) to the corresponding
   // filenames (e.g. [/where/to/find/A.B.C.fst]). Consider this map
   // immutable from there on.
-  let file_system_map = build_map all_cmd_line_files in
+  let file_system_map = SMap.create 41 in
+  build_map file_system_map all_cmd_line_files;
   let inlining_ifaces =
     build_dep_graph_for_files all_cmd_line_files file_system_map dep_graph parse_results get_parsing_data_from_cache
   in

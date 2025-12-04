@@ -108,7 +108,7 @@ let run_repl_transaction st push_kind must_rollback task =
   // Run the task (and capture errors)
   let curmod, env, success, lds =
     match with_captured_errors env Util.sigint_raise
-              (fun env -> Some <| run_repl_task st.repl_curmod env task st.repl_lang) with
+              (fun env -> Some <| run_repl_task st.repl_fname st.repl_curmod env task st.repl_lang) with
     | Some (curmod, env, lds) when check_success () -> curmod, env, true, lds
     | _ -> st.repl_curmod, env, false, [] in
 
@@ -689,23 +689,6 @@ let run_load_partial_file st decl_name: (query_status & json) & either repl_stat
       let st = pop_repl "load partial file" st in
       (QueryNOK, json_errors), Inl st
 
-let scan_fragment_deps st (d:FStarC.Parser.AST.decl) =
-  let deps = FStarC.Syntax.DsEnv.dep_graph st.repl_env.dsenv in
-  let deps = FStarC.Parser.Dep.copy_deps deps in
-  let env = { st.repl_env with dsenv=FStarC.Syntax.DsEnv.set_dep_graph st.repl_env.dsenv deps } in
-  let filenames_to_load =
-    FStarC.Parser.Dep.collect_deps_of_decl
-      deps
-      st.repl_fname
-      [d]
-      FStarC.CheckedFiles.load_parsing_data_from_cache
-  in
-
-  Format.print1 "Initial files loaded: %s\n" (show <| FStarC.Parser.Dep.all_files deps);
-  Format.print1 "Decls scanned: %s\n" (show d);
-  Format.print1 "Additional files to load: %s\n" (show filenames_to_load);
-  List.rev filenames_to_load, {st with repl_env=env}
-
 let json_errors () = 
   let errors = List.map rephrase_dependency_error (collect_errors ()) in
   let js_errors = errors |> List.map json_of_issue in
@@ -728,17 +711,16 @@ let run_push_without_deps st query
     then TcEnv.toggle_id_info st.repl_env false
     else TcEnv.toggle_id_info st.repl_env true
   in
-  let filenames_to_load, st, frag =
+  let frag =
     match code_or_decl with
     | Inl text ->
-      [], st, Inl { frag_fname = "<input>"; frag_text = text; frag_line = line; frag_col = column }
+      Inl { frag_fname = "<input>"; frag_text = text; frag_line = line; frag_col = column }
     | Inr (decl, _code) -> 
-      let loads, st = scan_fragment_deps st decl in
-      loads, st, Inr decl
+      Inr decl
   in
   // let st = run_load_tasks st tasks in
   let st = set_flychecking_flag st peek_only in
-  let success, st = run_repl_transaction st (Some push_kind) peek_only (PushFragment (frag, push_kind, [], filenames_to_load)) in
+  let success, st = run_repl_transaction st (Some push_kind) peek_only (PushFragment (frag, push_kind, [], [])) in
   let st = set_flychecking_flag st false in
 
   let status = if success || peek_only then QueryOK else QueryNOK in
@@ -784,7 +766,12 @@ let run_push_with_deps st query =
     run_push_without_deps ({ st with repl_names = names }) query
 
 let run_push st query =
-  if nothing_left_to_pop st then
+  let is_legacy_push =
+    match query.push_code_or_decl with
+    | Inl text -> true //emacs sends text chunks
+    | Inr decl -> false //vs code sends full buffers that get parsed into decls
+  in
+  if is_legacy_push && nothing_left_to_pop st then
     run_push_with_deps st query
   else
     run_push_without_deps st query

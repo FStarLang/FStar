@@ -75,10 +75,10 @@ let string_of_repl_task = function
     Format.fmt1 "LDSingle %s" (string_of_timed_fname intf_or_impl)
   | LDInterfaceOfCurrentFile intf ->
     Format.fmt1 "LDInterfaceOfCurrentFile %s" (string_of_timed_fname intf)
-  | PushFragment (Inl frag, _, _, deps) ->
-    Format.fmt2 "PushFragment { code = %s; deps=%s }" frag.frag_text (show deps)
-  | PushFragment (Inr d, _, _, _) ->
-    Format.fmt1 "PushFragment { decl = %s }" (show d)
+  | PushFragment (Inl frag, _, _, _) ->
+    Format.fmt1 "PushFragment { code = %s }" frag.frag_text
+  | PushFragment (Inr d, _, _, deps) ->
+    Format.fmt2 "PushFragment { decl = %s; deps=%s }" (show d) (show deps)
   | Noop -> "Noop {}"
 
 

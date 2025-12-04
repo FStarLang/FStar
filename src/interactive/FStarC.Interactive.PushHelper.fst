@@ -111,13 +111,29 @@ let push_repl msg push_kind_opt task st =
     { st with repl_env = set_check_kind env push_kind } // repl_env is the only mutable part of st
 
 (* Record the issues that were raised by the last push *)
-let add_issues_to_push_fragment (issues: list json) =
+let adjust_topmost_push_frag (f:repl_task -> repl_task) =
   match !repl_stack with
-  | (depth, (PushFragment(frag, push_kind, i, deps), st))::rest -> (
-    let pf = PushFragment(frag, push_kind, issues @ i, deps) in
+  | (depth, (PushFragment x, st))::rest -> (
+    let pf = f (PushFragment x) in
     repl_stack := (depth, (pf, st)) :: rest
   )
   | _ -> ()
+
+
+let add_issues_to_push_fragment (issues: list json) =
+  let adjust = function
+    | PushFragment(frag, push_kind, i, deps) ->
+      PushFragment(frag, push_kind, issues @ i, deps)
+  in
+  adjust_topmost_push_frag adjust
+
+(* Record dependences that were loaded on the fly to the last push *)
+let add_filenames_to_push_fragment (deps: list string) =
+  let adjust = function
+    | PushFragment(frag, push_kind, i, deps') ->
+      PushFragment(frag, push_kind, i, deps@deps')
+  in
+  adjust_topmost_push_frag adjust
 
 (** Revert to a previous checkpoint.
 
@@ -174,19 +190,45 @@ let tc_one (env:env_t) intf_opt modf =
   env
 
 open FStarC.Class.Show
-let load_fly_deps (env:env_t) filenames =
-  let rec run_load_tasks env filenames =
-    match filenames with
-    | [] -> env
-    | filename::filenames ->
-      let env = tc_one env None filename in
-      run_load_tasks env filenames
-  in
-  let _, env = TcEnv.with_restored_scope env (fun env -> (), run_load_tasks env filenames) in
-  env
-  
+let scan_and_load_fly_deps repl_fname (env:env_t) (frag:_) : env_t =
+  match frag with
+  | Inl text -> env
+  | Inr decl ->  
+    let load_fly_deps (env:env_t) filenames =
+      let rec run_load_tasks env filenames =
+        match filenames with
+        | [] -> env
+        | filename::filenames ->
+          let env = tc_one env None filename in
+          run_load_tasks env filenames
+      in
+      let _, env = TcEnv.with_restored_scope env (fun env -> (), run_load_tasks env filenames) in
+      env
+    in
+    let scan_fragment_deps env (d:FStarC.Parser.AST.decl) =
+      let deps = FStarC.Syntax.DsEnv.dep_graph env.dsenv in
+      let deps = FStarC.Parser.Dep.copy_deps deps in
+      let env = { env with dsenv=FStarC.Syntax.DsEnv.set_dep_graph env.dsenv deps } in
+      let filenames_to_load =
+        FStarC.Parser.Dep.collect_deps_of_decl
+          deps
+          repl_fname
+          [d]
+          FStarC.CheckedFiles.load_parsing_data_from_cache
+      in
+      Format.print1 "Initial files loaded: %s\n" (show <| FStarC.Parser.Dep.all_files deps);
+      Format.print1 "Decls scanned: %s\n" (show d);
+      Format.print1 "Additional files to load: %s\n" (show filenames_to_load);
+      List.rev filenames_to_load, env
+    in
+    let filenames, env = scan_fragment_deps env decl in
+    let env = load_fly_deps env filenames in
+    add_filenames_to_push_fragment filenames;
+    env
+
+
 (** Load the file or files described by `task` **)
-let run_repl_task (curmod: optmod_t) (env: env_t) (task: repl_task) lds : optmod_t & env_t & lang_decls_t =
+let run_repl_task (repl_fname:string) (curmod: optmod_t) (env: env_t) (task: repl_task) lds : optmod_t & env_t & lang_decls_t =
   match task with
   | LDInterleaved (intf, impl) ->
     curmod, tc_one env (Some intf.tf_fname) impl.tf_fname, []
@@ -200,7 +242,7 @@ let run_repl_task (curmod: optmod_t) (env: env_t) (task: repl_task) lds : optmod
       | Inl frag -> Inl (frag, lds)
       | Inr decl -> Inr decl
     in
-    let env = load_fly_deps env filenames_to_load in
+    let env = scan_and_load_fly_deps repl_fname env frag in
     let o, e, langs = tc_one_fragment curmod env frag in
     o, e, langs
   | Noop ->
@@ -288,7 +330,7 @@ let repl_tx st push_kind task =
   try
     let st = push_repl "repl_tx" (Some push_kind) task st in
     let env, finish_name_tracking = track_name_changes st.repl_env in // begin name tracking
-    let curmod, env, lds = run_repl_task st.repl_curmod env task st.repl_lang in
+    let curmod, env, lds = run_repl_task st.repl_fname st.repl_curmod env task st.repl_lang in
     let st = { st with repl_curmod = curmod; repl_env = env; repl_lang=List.rev lds @ st.repl_lang } in
     let env, name_events = finish_name_tracking env in // end name tracking
     None, commit_name_tracking st name_events
