@@ -97,6 +97,7 @@ instance tagged_term : tagged term = {
   | ElimAnd        _ -> "ElimAnd"
   | ListLiteral    _ -> "ListLiteral"
   | SeqLiteral     _ -> "SeqLiteral"
+  | LitDoc         _ -> "LitDoc"
   );
 }
 
@@ -757,6 +758,10 @@ let rec term_to_string (x:term) = match x.tm with
 
   | SeqLiteral ts ->
     Format.fmt1 "seq![%s]" (to_string_l "; " term_to_string ts)
+
+  | LitDoc d ->
+    Format.fmt1 "litdoc(%s)" (render d)
+
   | _ -> failwith ("AST.term_to_string missing case: " ^ tag_of x)
 
 and binders_to_string sep bs =
@@ -1155,6 +1160,8 @@ let rec pp_term (t:term) : document =
       ctor "ListLiteral" [pp_list' pp_term ts]
   | SeqLiteral ts ->
       ctor "SeqLiteral" [pp_list' pp_term ts]
+  | LitDoc d ->
+      ctor "LitDoc" [d]
 
 and pp_binder (b:binder) : document =
   match b.b with
