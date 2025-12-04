@@ -9,8 +9,8 @@
   - Tactic failed
   - This function is partially applied. Remaining type:
       y: t
-        -> Pulse.Lib.Core.stt Prims.unit
-            Pulse.Lib.Core.emp
-            (fun _ -> Pulse.Lib.Core.emp)
+        -> fn
+             requires Pulse.Lib.Core.emp
+             ensures Pulse.Lib.Core.emp
   - Did you forget to apply some arguments?
 

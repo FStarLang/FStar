@@ -2,9 +2,9 @@
   - Expected failure:
   - Ill-typed term: Bug206.test x
   - Expected a term of type
-      Pulse.Lib.Core.stt Prims.unit
-        Pulse.Lib.Core.emp
-        (fun _ -> Pulse.Lib.Core.emp)
+      fn
+        requires Pulse.Lib.Core.emp
+        ensures Pulse.Lib.Core.emp
   - Assertion failed
   - The SMT solver could not prove the query. Use --query_stats for more
     details.
