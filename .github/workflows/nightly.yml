@@ -26,10 +26,17 @@ jobs:
         with:
           fetch-depth: 0 # full clone, so we can push objects
 
-      - name: Set up git
+      - name: Set up git and some variables
         run: |
           git config --global user.name "Dzomo, the Everest Yak"
           git config --global user.email "24394600+dzomo@users.noreply.github.com"
+
+          # We push nightly builds to a different repo (same org)
+          REPO="${{github.repository}}-nightly"
+          TAG=nightly-$(date -I)
+
+          echo "REPO=$REPO" >>$GITHUB_ENV
+          echo "TAG=$TAG" >>$GITHUB_ENV
 
       - uses: actions/download-artifact@v4
         with:
@@ -38,27 +45,38 @@ jobs:
           # ^ Download all artifacts into the same dir.
           # Each of them is a single file, so no clashes happen.
 
-      - name: Publish artifacts in nightly tag
-        run: |
-          git config --unset-all http.https://github.com/.extraheader
+      # For debugging.
+      - run: |
+          echo LOCAL
+          git config --local -l
+          echo GLOBAL
+          git config --global -l
+
+      - run: |
+          # git config --unset-all http.https://github.com/.extraheader
           # ^ https://stackoverflow.com/questions/64374179/how-to-push-to-another-repository-in-github-actions
+          # The above does not work anymore, GitHub switched to using includeif
+          # directives in the config. Remove them.
+          for key in $(git config -l | grep ^includeif | cut -d= -f1); do git config unset --all $key; done
 
-          # We push nightly builds to a different repo (same org)
-          REPO="${{github.repository}}-nightly"
-          TAG=nightly-$(date -I)
-
-          # Create tag
+      - name: Create tag
+        run: |
           git tag $TAG ${{github.sha}}
 
-          # Add new remote and push tag
+      - name: Push tag to nightly repo
+        run: |
           git remote add nightly-repo https://${{secrets.DZOMO_GITHUB_TOKEN}}@github.com/$REPO
+          echo "Nightly remote added"
           git push nightly-repo $TAG
+          echo "Pushed to nightly repo"
 
-          # Create release
+      - name: Create release, with artifacts
+        run: |
           gh release create -R "$REPO" \
             --generate-notes \
             --target ${{ github.sha }} \
             $TAG artifacts/*
+          echo "Done!"
 
         env:
           GH_TOKEN: ${{ secrets.DZOMO_GITHUB_TOKEN }}
