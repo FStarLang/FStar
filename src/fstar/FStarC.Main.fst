@@ -402,7 +402,15 @@ let go_normal () =
         if Nil? filenames then
           Errors.raise_error0 Errors.Error_MissingFileName "No file provided";
 
-        let filenames, dep_graph = Dependencies.find_deps_if_needed filenames CheckedFiles.load_parsing_data_from_cache in
+        let filenames, dep_graph = 
+          if FStarC.Options.Ext.enabled "fly_deps"
+          then (
+            filenames |> List.iter (fun f ->
+              let m = FStarC.Parser.Dep.lowercase_module_name f in
+              Options.add_verify_module m);
+            filenames, FStarC.Parser.Dep.empty_deps
+          )
+          else Dependencies.find_deps_if_needed filenames CheckedFiles.load_parsing_data_from_cache in
         let tcrs, env, cleanup = Universal.batch_mode_tc filenames dep_graph in
         ignore (cleanup env);
         let module_names =

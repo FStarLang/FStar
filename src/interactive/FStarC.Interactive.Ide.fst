@@ -1262,6 +1262,7 @@ let install_ide_mode_hooks printer =
 
 
 let build_initial_repl_state (filename: string) =
+  Options.add_verify_module (FStarC.Parser.Dep.lowercase_module_name filename);
   let env = init_env FStarC.Parser.Dep.empty_deps in
   let env = FStarC.TypeChecker.Env.set_range env initial_range in
   FStarC.Options.set_ide_filename filename;

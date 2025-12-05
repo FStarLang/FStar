@@ -367,8 +367,6 @@ let cache_file_name =
     in
     memo checked_file_and_exists_flag
 
-let parsing_data_of deps fn = SMap.try_find deps.parse_results fn |> Option.must
-
 let file_of_dep_aux
                 (use_checked_file:bool)
                 (file_system_map:files_for_module_name)
@@ -606,7 +604,8 @@ let prelude : list (open_kind & lid) = [
 //For --ide mode, we stop dependence analysis at interface boundaries
 //and do not check for dependence cycles across interface boundaries
 let peek_past_interfaces () =
-  if Options.Ext.enabled "dep_minimal" then false else not (Options.ide ())
+  if Options.Ext.enabled "dep_minimal" || Options.Ext.enabled "fly_deps" then false
+  else not (Options.ide ())
 
 let collect_module_or_decls (filename:string) (m:either modul (list decl)) : parsing_data =
   //parse the file and traverse the AST to collect parsing data
@@ -1733,6 +1732,19 @@ let deps_of_modul deps (m:module_name) : list module_name =
     |> Option.dflt []
 
 (* In public interface *)
+let parsing_data_of deps fn =
+  match SMap.try_find deps.parse_results fn with
+  | None -> 
+    failwith (Format.fmt1 "Parsing data not found for %s" fn)
+  | Some pd -> pd
+
+let populate_parsing_data fn ast_modul deps =
+  match SMap.try_find deps.parse_results fn with
+  | None -> 
+    let pd = collect_module_or_decls fn (Inl ast_modul) in
+    SMap.add deps.parse_results fn pd
+  | Some _ -> ()
+
 let print_digest (dig:list (string & string)) : string =
     dig
     |> List.map (fun (m, d) -> Format.fmt2 "%s:%s" m (BU.base64_encode d))

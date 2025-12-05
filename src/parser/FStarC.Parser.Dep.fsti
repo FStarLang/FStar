@@ -44,13 +44,14 @@ val empty_deps : deps
 val interface_of : deps -> module_name:string -> option string  //return value is the file name
 val implementation_of : deps -> module_name:string -> option string  //return value is the file name
 val cache_file_name: (string -> string)
-val parsing_data_of: deps -> string -> parsing_data
 val collect_deps_of_decl (deps:deps) (filename:string) (ds:list FStarC.Parser.AST.decl)
                           (get_parsing_data_from_cache:string -> option parsing_data)
 : list string //filenames
 val collect: list string -> (string -> option parsing_data) -> list string & deps
 val deps_of : deps -> string -> list string
 val deps_of_modul : deps -> module_name -> list module_name  // list of modules that this module depends on
+val parsing_data_of: deps -> string -> parsing_data
+val populate_parsing_data: filename:string -> FStarC.Parser.AST.modul -> dep_graph:deps -> unit
 val print : deps -> unit
 val print_digest: list (string & string) -> string
 val module_has_interface: deps -> module_name:Ident.lident -> bool

@@ -196,6 +196,7 @@ let scan_and_load_fly_deps repl_fname (env:env_t) (frag:_) : env_t =
           run_load_tasks env filenames
       in
       let _, env = TcEnv.with_restored_scope env (fun env -> (), run_load_tasks env filenames) in
+      Format.print1 "After fly load deps: %s\n" (show env.dsenv);
       env
     in
     let scan_fragment_deps env (d:FStarC.Parser.AST.decl) =
@@ -236,6 +237,7 @@ let run_repl_task (repl_fname:string) (curmod: optmod_t) (env: env_t) (task: rep
       | Inr decl -> Inr decl
     in
     let env = scan_and_load_fly_deps repl_fname env frag in
+    Format.print1 "After scan_and_load env is %s\n" (show env.dsenv);
     let o, e, langs = tc_one_fragment curmod env frag in
     o, e, langs
   | Noop ->

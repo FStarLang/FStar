@@ -4,5 +4,6 @@
     "--ext", "optimize_let_vc"
   ],
   "include_dirs": [
+    "ide/emacs"
   ]
 }
