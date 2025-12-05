@@ -226,15 +226,7 @@ and env = {
   only when a definition for it is checked. At the of checking a module,
   if anything remains here, we fail. *)
   missing_decl : RBSet.t lident;
-
-  (* load a file as a dependence (fly-deps) *)
-  load_file : load_file_t;
 }
-and load_file_t =
-  env ->
-  (interface_fn:option string) ->
-  (filename:string) ->
-  env   
 and solver_depth_t = int & int & int
 and solver_t = {
     init            :env -> unit;
@@ -295,8 +287,7 @@ val initial_env : FStarC.Parser.Dep.deps ->
                   (env -> term -> term -> bool) ->
                   solver_t -> lident ->
                   (list step -> env -> term -> term) ->
-                  core_check_t ->
-                  load_file_t -> env
+                  core_check_t -> env
 
 (* Some utilities *)
 val should_verify   : env -> bool

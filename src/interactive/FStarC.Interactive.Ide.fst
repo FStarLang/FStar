@@ -718,7 +718,6 @@ let run_push_without_deps st query
     | Inr (decl, _code) -> 
       Inr decl
   in
-  // let st = run_load_tasks st tasks in
   let st = set_flychecking_flag st peek_only in
   let success, st = run_repl_transaction st (Some push_kind) peek_only (PushFragment (frag, push_kind, [], [])) in
   let st = set_flychecking_flag st false in
@@ -1156,32 +1155,13 @@ let rec run_query st (q: query) : (query_status & list json) & either repl_state
   | FullBuffer (code, full_kind, with_symbols) -> (
     let open FStarC.Interactive.Incremental in
     write_full_buffer_fragment_progress FullBufferStarted;
-    let queries, issues, st = 
+    let queries, issues =
       run_full_buffer st q.qid code full_kind with_symbols write_full_buffer_fragment_progress
     in
     List.iter (write_response q.qid QueryOK) issues;
-    // let run_load_task st task =
-    //   let LDSingle tf = task in
-    //   let _, env = TcEnv.with_restored_scope st.repl_env (fun env ->
-    //     (), PushHelper.tc_one env None tf.tf_fname)
-    //   in
-    //   let st = {st with repl_env=env} in
-    //   Some st
-    // in
-    // let rec run_load_tasks st tasks = match tasks with
-    //   | [] -> Inl st
-    //   | t::ts -> 
-    //     match run_load_task st t with
-    //     | None -> Inr st
-    //     | Some st -> run_load_tasks st ts
-    // in
-    // match run_load_tasks st tasks with
-    // | Inr st_err ->
-    //   (QueryNOK, json_errors()), Inl st_err
-    // | Inl st ->
-      let res = fold_query validate_and_run_query queries st in
-      write_full_buffer_fragment_progress FullBufferFinished;
-      res
+    let res = fold_query validate_and_run_query queries st in
+    write_full_buffer_fragment_progress FullBufferFinished;
+    res
   )
   | AutoComplete (search_term, context) ->
     as_json_list (run_autocomplete st search_term context)

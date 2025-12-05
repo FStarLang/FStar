@@ -227,7 +227,7 @@ let initial_env deps
   teq_nosmt_force
   subtype_nosmt_force
   solver module_lid nbe
-  core_check load_file : env =
+  core_check : env =
   { solver=solver;
     range=dummyRange;
     curmodule=module_lid;
@@ -286,7 +286,6 @@ let initial_env deps
     erase_erasable_args=false;
 
     core_check;
-    load_file;
 
     missing_decl = empty();
   }

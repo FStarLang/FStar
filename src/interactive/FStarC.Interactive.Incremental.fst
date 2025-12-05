@@ -152,8 +152,6 @@ let repl_task_of_entry (_, (p, _)) = p
 let pop_entries (e:list repl_stack_entry_t)
   : qst (list query)
   = map (fun _ -> as_query Pop) e
-  
-// let repl_task (_, (p, _)) = p
 
 let push_kind_geq pk1 pk2 =
   pk1=pk2 || (
@@ -162,45 +160,17 @@ let push_kind_geq pk1 pk2 =
   | LaxCheck, SyntaxCheck -> true
   | _ -> false
   )
-
-
-let scan_query_deps st (queries:list query) =
-  let to_scan =
-    List.filter_map
-      (fun q ->
-        match q.qq with
-        | Push { push_code_or_decl = Inr (d, _) } -> Some d
-        | _ -> None)
-      queries
-  in            
-  let deps = FStarC.Syntax.DsEnv.dep_graph st.repl_env.dsenv in
-  let deps = FStarC.Parser.Dep.copy_deps deps in
-  let env = { st.repl_env with dsenv=FStarC.Syntax.DsEnv.set_dep_graph st.repl_env.dsenv deps } in
-  let filenames_to_load =
-    FStarC.Parser.Dep.collect_deps_of_decl
-      deps
-      st.repl_fname
-      to_scan
-      FStarC.CheckedFiles.load_parsing_data_from_cache
-  in
-
-  let tasks = List.rev <| List.map mk_ld_single filenames_to_load in
-  Format.print1 "Initial files loaded: %s\n" (show <| FStarC.Parser.Dep.all_files deps);
-  Format.print1 "Decls scanned: %s\n" (show to_scan);
-  Format.print1 "Additional files to load: %s\n" (show filenames_to_load);
-  tasks, {st with repl_env=env}
       
 (* Find a prefix of the repl stack that matche a prefix of the decls ds, 
    pop the rest of the stack
    and push the remaining suffix of decls
 *)
-let inspect_repl_stack (s:repl_stack_t) (st:repl_state)
+let inspect_repl_stack (s:repl_stack_t)
                        (ds:list (decl & code_fragment))
                        (push_kind : push_kind)
-                       (scan_deps:bool)
                        (with_symbols:bool)
                        (write_full_buffer_fragment_progress: fragment_progress -> unit)                       
-  : qst (list query & list json & repl_state)
+  : qst (list query & list json)
   = let entries = List.rev s in
     let push_decls = push_decls push_kind with_symbols write_full_buffer_fragment_progress in
     match BU.prefix_until 
@@ -209,7 +179,7 @@ let inspect_repl_stack (s:repl_stack_t) (st:repl_state)
     with
     | None ->
       let! ds = push_decls ds in
-      return (ds, [], st)
+      return (ds, [])
     
     | Some (_prefix, first_push, rest) ->
       let entries = first_push :: rest in
@@ -242,9 +212,8 @@ let inspect_repl_stack (s:repl_stack_t) (st:repl_state)
                    let! pushes = push_decls (d::ds) in
                    return (pops @ lookups @ pushes, accum)
             )
-            // | LDSingle _ -> 
-
-            )
+            | _ -> failwith "Impossible: non-push fragment in repl stack during incremental check"
+          )
 
          | [], ds ->
            let! pushes = push_decls ds in
@@ -255,7 +224,7 @@ let inspect_repl_stack (s:repl_stack_t) (st:repl_state)
            return (lookups@pops, accum)
       in
       let! queries, json = matching_prefix [] [] entries ds in
-      return (queries, json, st)
+      return (queries, json)
 
 (* A reload_deps request just pops away the entire stack of PushFragments.
    We also push on just the `module A` declaration after popping. That's done below. *)
@@ -303,7 +272,7 @@ let run_full_buffer (st:repl_state)
                     (request_type:full_buffer_request_kind)
                     (with_symbols:bool)
                     (write_full_buffer_fragment_progress: fragment_progress -> unit)
-  : list query & list json & repl_state
+  : list query & list json
   = // updating the vfs entry allows dependence scanning on the file to
     // to use the latest snapshot of the file, rather than what was present
     // in the buffer when the IDE was started. This is especially useful when
@@ -345,7 +314,7 @@ let run_full_buffer (st:repl_state)
         | ReloadDeps, d::_ ->
           run_qst (let! queries = reload_deps (!repl_stack) in
                    let! push_mod = push_decl FullCheck with_symbols write_full_buffer_fragment_progress d in
-                   return (queries @ push_mod, [], st))
+                   return (queries @ push_mod, []))
                   qid
 
         | _ ->
@@ -356,9 +325,9 @@ let run_full_buffer (st:repl_state)
             | Lax -> LaxCheck
             | _ -> FullCheck
           in
-          let queries, issues, st = 
+          let queries, issues = 
               run_qst (inspect_repl_stack
-                          (!repl_stack) st decls push_kind (request_type<>Cache)
+                          (!repl_stack) decls push_kind
                           with_symbols write_full_buffer_fragment_progress) qid
           in
           if request_type <> Cache then log_syntax_issues err_opt;
@@ -367,13 +336,13 @@ let run_full_buffer (st:repl_state)
             Format.print1 "Generating queries\n%s\n" 
                       (String.concat "\n" (List.map query_to_string queries))
           );
-          if request_type <> Cache then (queries, issues, st) else ([] , issues, st)
+          if request_type <> Cache then (queries, issues) else ([] , issues)
 
       )
         
       | ParseError err ->
         if request_type = Full then log_syntax_issues (Some err);
-        [], [], st
+        [], []
       | _ -> 
         failwith "Unexpected parse result"
     in

@@ -677,7 +677,6 @@ let init_env deps : TcEnv.env =
         (NBE.normalize
           (FStarC.Tactics.Interpreter.primitive_steps ()))
         core_check
-        load_file
   in
   (* Set up some tactics callbacks *)
   let env = { env with synth_hook       = FStarC.Tactics.Hooks.synthesize } in
