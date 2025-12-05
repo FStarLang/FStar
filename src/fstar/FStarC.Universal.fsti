@@ -34,10 +34,6 @@ val module_or_interface_name : Syntax.modul -> bool & lid
 (* Uses the dsenv inside the TcEnv.env to run the computation. *)
 val with_dsenv_of_tcenv : TcEnv.env -> DsEnv.withenv 'a -> 'a & TcEnv.env
 
-(* Initialize a clean environment, built from a dependency graph. The
-graph is used to populate the internal dsenv of the tcenv. *)
-val init_env : Dep.deps -> TcEnv.env
-
 val core_check: TcEnv.core_check_t
 
 type lang_decls_t = list FStarC.Parser.AST.decl
@@ -65,12 +61,15 @@ val tc_one_file :
 
 (* A thin wrapper for tc_one_file, called by the interactive mode.
 Basically discards any information about extraction. *)
-val tc_one_file_for_ide :
+val load_file :
     TcEnv.env_t ->
     option string ->
     string ->
-    FStarC.Parser.Dep.parsing_data ->
-    tc_result & TcEnv.env_t
+    TcEnv.env_t
+
+(* Initialize a clean environment, built from a dependency graph. The
+graph is used to populate the internal dsenv of the tcenv. *)
+val init_env : Dep.deps -> TcEnv.env
 
 (* [needs_interleaving s1 s2] is when s1 and s2 are (resp.) the filenames
 for the interface and implementation of a (single) module. *)

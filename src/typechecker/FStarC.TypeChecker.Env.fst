@@ -227,7 +227,7 @@ let initial_env deps
   teq_nosmt_force
   subtype_nosmt_force
   solver module_lid nbe
-  core_check : env =
+  core_check load_file : env =
   { solver=solver;
     range=dummyRange;
     curmodule=module_lid;
@@ -277,7 +277,7 @@ let initial_env deps
     postprocess = (fun e tau typ tm -> failwith "no postprocessor available");
     identifier_info=mk_ref FStarC.TypeChecker.Common.id_info_table_empty;
     tc_hooks = default_tc_hooks;
-    dsenv = FStarC.Syntax.DsEnv.empty_env deps;
+    dsenv = FStarC.Syntax.DsEnv.(empty_env deps); //FStarC.Syntax.DsEnv.(set_current_module (empty_env deps) module_lid);
     nbe = nbe;
     strict_args_tab = SMap.create 20;
     erasable_types_tab = SMap.create 20;
@@ -286,6 +286,7 @@ let initial_env deps
     erase_erasable_args=false;
 
     core_check;
+    load_file;
 
     missing_decl = empty();
   }
@@ -410,7 +411,9 @@ let promote_id_info env ty_map =
 ////////////////////////////////////////////////////////////
 let modules env = env.modules
 let current_module env = env.curmodule
-let set_current_module env lid = {env with curmodule=lid}
+let set_current_module env lid = 
+  let env = {env with curmodule=lid} in env
+  // {env with dsenv=DsEnv.set_current_module env.dsenv lid}
 let has_interface env l = env.modules |> BU.for_some (fun m -> m.is_interface && lid_equals m.name l)
 let find_in_sigtab env lid = SMap.try_find (sigtab env) (string_of_lid lid)
 

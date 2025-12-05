@@ -50,6 +50,7 @@ module Dep      = FStarC.Parser.Dep
 module NBE      = FStarC.TypeChecker.NBE
 module Ch       = FStarC.CheckedFiles
 module MLSyntax = FStarC.Extraction.ML.Syntax
+module Ast      = FStarC.Parser.AST
 
 let module_or_interface_name m = m.is_interface, m.name
 
@@ -83,17 +84,18 @@ let env_of_tcenv (env:TcEnv.env) =
     FStarC.Extraction.ML.UEnv.new_uenv env
 
 (***********************************************************************)
-(* Parse and desugar a file                                            *)
+(* Parse and maybe interleave & desugar a file with its interface      *)
 (***********************************************************************)
-let parse (env:uenv) (pre_fn: option string) (fn:string)
-  : Syntax.modul
+let parse (env:uenv) (interface_fn: option string) (fn:string)
+  : lident
+  & either FStarC.Parser.AST.modul FStarC.Syntax.Syntax.modul
   & uenv =
   let ast, _ = Parser.Driver.parse_file fn in
-  let ast, env = match pre_fn with
+  let ast, env = match interface_fn with
     | None ->
         ast, env
-    | Some pre_fn ->
-        let pre_ast, _ = Parser.Driver.parse_file pre_fn in
+    | Some interface_fn ->
+        let pre_ast, _ = Parser.Driver.parse_file interface_fn in
         match pre_ast, ast with
         | Parser.AST.Interface {mname=lid1; decls=decls1}, Parser.AST.Module {mname=lid2; decls=decls2}
           when Ident.lid_equals lid1 lid2 ->
@@ -113,11 +115,12 @@ let parse (env:uenv) (pre_fn: option string) (fn:string)
             Errors.Fatal_PreModuleMismatch
             "Module name in implementation does not match that of interface."
   in
-  with_dsenv_of_env env (Desugar.ast_modul_to_modul ast)
+  if FStarC.Options.Ext.enabled "fly_deps"
+  then Ast.lid_of_modul ast, Inl ast, env
+  else let mod, env = with_dsenv_of_env env (Desugar.ast_modul_to_modul ast) in
+       Ast.lid_of_modul ast, Inr mod, env
 
-(***********************************************************************)
-(* Initialize a clean environment                                      *)
-(***********************************************************************)
+
 let core_check : TcEnv.core_check_t =
   fun env tm t must_tot ->
     let open FStarC.TypeChecker.Core in
@@ -132,52 +135,22 @@ let core_check : TcEnv.core_check_t =
          | Inr err ->
            Inr (fun b -> if b then print_error_short err else print_error err)
     
-let init_env deps : TcEnv.env =
-  let solver =
-    if Options.lax()
-    then SMT.dummy
-    else {SMT.solver with
-      preprocess=FStarC.Tactics.Hooks.preprocess;
-      spinoff_strictly_positive_goals=Some FStarC.Tactics.Hooks.spinoff_strictly_positive_goals;
-      handle_smt_goal=FStarC.Tactics.Hooks.handle_smt_goal
-    } in
-  let env =
-      TcEnv.initial_env
-        deps
-        TcTerm.tc_term
-        TcTerm.typeof_tot_or_gtot_term
-        TcTerm.typeof_tot_or_gtot_term_fastpath
-        TcTerm.universe_of
-        Rel.teq_nosmt_force
-        Rel.subtype_nosmt_force
-        solver
-        Const.prims_lid
-        (NBE.normalize
-          (FStarC.Tactics.Interpreter.primitive_steps ()))
-        core_check
-  in
-  (* Set up some tactics callbacks *)
-  let env = { env with synth_hook       = FStarC.Tactics.Hooks.synthesize } in
-  let env = { env with try_solve_implicits_hook = FStarC.Tactics.Hooks.solve_implicits } in
-  let env = { env with splice           = FStarC.Tactics.Hooks.splice} in
-  let env = { env with mpreprocess      = FStarC.Tactics.Hooks.mpreprocess} in
-  let env = { env with postprocess      = FStarC.Tactics.Hooks.postprocess} in
-  env.solver.init env;
-  env
 
 (***********************************************************************)
 (* Interactive mode: checking a fragment of a code                     *)
 (***********************************************************************)
+module Ast = FStarC.Parser.AST
 let tc_one_fragment curmod (env:TcEnv.env_t) frag =
+  failwith "die";
     let open FStarC.Parser.AST in
   // We use file_of_range instead of `Options.file_list ()` because no file
   // is passed as a command-line argument in LSP mode.
   let fname env = if Options.lsp_server () then Range.file_of_range (TcEnv.get_range env)
                   else List.hd (Options.file_list ()) in
-  let acceptable_mod_name modul =
+  let acceptable_mod_name ast_modul =
     (* Interface is sent as the first chunk, so we must allow repeating the same module. *)
     Parser.Dep.lowercase_module_name (fname env) =
-    String.lowercase (string_of_lid modul.name) in
+    String.lowercase (string_of_lid (Ast.lid_of_modul ast_modul)) in
 
   let range_of_first_mod_decl modul =
     match modul with
@@ -200,9 +173,7 @@ let tc_one_fragment curmod (env:TcEnv.env_t) frag =
          first chunk. *)
       let ast_modul, env =
         with_dsenv_of_tcenv env <| FStarC.ToSyntax.Interleave.interleave_module ast_modul false in
-      let modul, env =
-        with_dsenv_of_tcenv env <| Desugar.partial_ast_modul_to_modul curmod ast_modul in
-      if not (acceptable_mod_name modul) then
+      if not (acceptable_mod_name ast_modul) then
       begin
         let msg : string =
             Format.fmt1 "Interactive mode only supports a single module at the top-level. Expected module %s"
@@ -211,8 +182,15 @@ let tc_one_fragment curmod (env:TcEnv.env_t) frag =
         Errors.raise_error (range_of_first_mod_decl ast_modul) Errors.Fatal_NonSingletonTopLevelModule msg
       end;
       let modul, env =
-          if DsEnv.syntax_only env.dsenv then modul, env
-          else Tc.tc_partial_modul env modul
+          if DsEnv.syntax_only env.dsenv 
+          then with_dsenv_of_tcenv env <| Desugar.partial_ast_modul_to_modul curmod ast_modul
+          else if FStarC.Options.Ext.enabled "fly_deps"
+          then Tc.tc_partial_modul env (Inl ast_modul)
+          else (
+            let m, env = with_dsenv_of_tcenv env <| Desugar.partial_ast_modul_to_modul curmod ast_modul in
+            Tc.tc_partial_modul env (Inr m)
+          )
+
       in
       let lang_decls =
         let open FStarC.Parser.AST in
@@ -242,9 +220,18 @@ let tc_one_fragment curmod (env:TcEnv.env_t) frag =
                 env, decls)
             env
             ast_decls in
-      let sigelts, env = with_dsenv_of_tcenv env <| Desugar.decls_to_sigelts (List.flatten ast_decls_l) in
-      let modul, _, env  = if DsEnv.syntax_only env.dsenv then (modul, [], env)
-                        else Tc.tc_more_partial_modul env modul sigelts in
+      let modul, _, env  = 
+        if DsEnv.syntax_only env.dsenv 
+        then let _, env = with_dsenv_of_tcenv env <| Desugar.decls_to_sigelts (List.flatten ast_decls_l) in
+             (modul, [], env)
+        else if FStarC.Options.Ext.enabled "fly_deps"
+        then Tc.tc_more_partial_modul env modul (List.map Inl <| List.flatten ast_decls_l)
+        else (
+          let ses, env = with_dsenv_of_tcenv env <| Desugar.decls_to_sigelts (List.flatten ast_decls_l) in
+          Tc.tc_more_partial_modul env modul (List.map Inr ses)
+        ) 
+      in
+
       Some modul, env, List.filter filter_lang_decls ast_decls
   in
   match frag with
@@ -397,7 +384,7 @@ let emit dep_graph (mllib : list (uenv & MLSyntax.mlmodule)) =
 
 let tc_one_file
         (env:uenv)
-        (pre_fn:option string) //interface file name
+        (interface_fn:option string) //interface file name
         (fn:string) //file name
         (parsing_data:FStarC.Parser.Dep.parsing_data)  //passed by the caller, ONLY for caching purposes at this point
     : tc_result
@@ -435,12 +422,12 @@ let tc_one_file
           )
   in
   let tc_source_file () =
-      let fmod, env = 
-        Profiling.profile (fun () -> parse env pre_fn fn)
+      let mname, fmod, env = 
+        Profiling.profile (fun () -> parse env interface_fn fn)
                           (Some (Parser.Dep.module_name_of_file fn))
                           "FStarC.Universal.tc_source_file.parse"  
       in
-      let mii = FStarC.Syntax.DsEnv.inclusion_info (tcenv_of_uenv env).dsenv fmod.name in
+      let mii = FStarC.Syntax.DsEnv.inclusion_info (tcenv_of_uenv env).dsenv mname in
       let check_mod () =
           let check env =
               if not (Options.lax()) then FStarC.SMTEncoding.Z3.refresh None;
@@ -449,7 +436,7 @@ let tc_one_file
                          | [] -> ()
                          | _ -> failwith "Impossible: gamma contains leaked names"
                  in
-                 let modul, env = Tc.check_module tcenv fmod (Some? pre_fn) in
+                 let modul, env = Tc.check_module tcenv fmod (Some? interface_fn) in
                  //AR: encode the module to to smt
                  restore_opts ();
                  let smt_decls =
@@ -462,7 +449,7 @@ let tc_one_file
 
           let ((tcmod, smt_decls), env) =
             Profiling.profile (fun () -> check env)
-                              (Some (string_of_lid fmod.name))
+                              (Some (string_of_lid mname))
                               "FStarC.Universal.tc_source_file.check"
           in
 
@@ -582,17 +569,52 @@ let tc_one_file
   else let tc_result, mllib, env = tc_source_file () in
        tc_result, mllib, env
 
-let tc_one_file_for_ide
+let load_file
         (env:TcEnv.env_t)
-        (pre_fn:option string) //interface file name
+        (interface_fn:option string) //interface file name
         (fn:string) //file name
-        (parsing_data:FStarC.Parser.Dep.parsing_data)  //threaded along, ONLY for caching purposes at this point
-    : tc_result
-    & TcEnv.env_t
-    =
-    let env = env_of_tcenv env in
-    let tc_result, _, env = tc_one_file env pre_fn fn parsing_data in
-    tc_result, (tcenv_of_uenv env)
+: TcEnv.env_t
+= let parse_data = fn |> FStarC.Parser.Dep.parsing_data_of (TcEnv.dep_graph env) in
+  let env = env_of_tcenv env in
+  let tc_result, _, env = tc_one_file env interface_fn fn parse_data in
+  tcenv_of_uenv env
+
+(***********************************************************************)
+(* Initialize a clean environment                                      *)
+(***********************************************************************)
+let init_env deps : TcEnv.env =
+  let solver =
+    if Options.lax()
+    then SMT.dummy
+    else {SMT.solver with
+      preprocess=FStarC.Tactics.Hooks.preprocess;
+      spinoff_strictly_positive_goals=Some FStarC.Tactics.Hooks.spinoff_strictly_positive_goals;
+      handle_smt_goal=FStarC.Tactics.Hooks.handle_smt_goal
+    } in
+  let env =
+      TcEnv.initial_env
+        deps
+        TcTerm.tc_term
+        TcTerm.typeof_tot_or_gtot_term
+        TcTerm.typeof_tot_or_gtot_term_fastpath
+        TcTerm.universe_of
+        Rel.teq_nosmt_force
+        Rel.subtype_nosmt_force
+        solver
+        Const.prims_lid
+        (NBE.normalize
+          (FStarC.Tactics.Interpreter.primitive_steps ()))
+        core_check
+        load_file
+  in
+  (* Set up some tactics callbacks *)
+  let env = { env with synth_hook       = FStarC.Tactics.Hooks.synthesize } in
+  let env = { env with try_solve_implicits_hook = FStarC.Tactics.Hooks.solve_implicits } in
+  let env = { env with splice           = FStarC.Tactics.Hooks.splice} in
+  let env = { env with mpreprocess      = FStarC.Tactics.Hooks.mpreprocess} in
+  let env = { env with postprocess      = FStarC.Tactics.Hooks.postprocess} in
+  env.solver.init env;
+  env
 
 (***********************************************************************)
 (* Batch mode: composing many files in the presence of pre-modules     *)

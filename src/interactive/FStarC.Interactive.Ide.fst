@@ -923,7 +923,7 @@ let run_with_parsed_and_tc_term st term line column continuation =
     fst (FStarC.ToSyntax.ToSyntax.decls_to_sigelts decls env.dsenv) in
 
   let typecheck tcenv decls =
-    let ses, _ = FStarC.TypeChecker.Tc.tc_decls tcenv decls in
+    let ses, _ = FStarC.TypeChecker.Tc.tc_decls tcenv (List.map Inl decls) in
     ses in
 
   run_and_rewind st (QueryNOK, JsonStr "Computation interrupted") (fun st ->
@@ -933,7 +933,7 @@ let run_with_parsed_and_tc_term st term line column continuation =
     | None -> (QueryNOK, JsonStr "Could not parse this term")
     | Some decls ->
       let aux () =
-        let decls = desugar tcenv decls in
+        // let decls = desugar tcenv decls in
         let ses = typecheck tcenv decls in
         match find_let_body ses with
         | None -> (QueryNOK, JsonStr "Typechecking yielded an unexpected term")

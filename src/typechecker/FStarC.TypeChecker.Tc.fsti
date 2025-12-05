@@ -26,7 +26,7 @@ val run_postprocess
   (se : sigelt)
   : sigelt
 
-val check_module: env -> modul -> bool -> modul & env
+val check_module: env -> either FStarC.Parser.AST.modul modul -> bool -> modul & env
 val load_checked_module: env -> modul -> env
 val load_partial_checked_module: env -> modul -> env
 
@@ -36,6 +36,6 @@ val snapshot_context: env -> string -> ((int & int & solver_depth_t & int) & env
 val rollback_context: solver_t -> string -> option (int & int & solver_depth_t & int) -> env
 
 val compress_and_norm: env -> typ -> option typ
-val tc_decls: env -> list sigelt -> list sigelt & env
-val tc_partial_modul: env -> modul -> modul & env
-val tc_more_partial_modul: env -> modul -> list sigelt -> modul & list sigelt & env
+val tc_decls: env -> list (either FStarC.Parser.AST.decl sigelt) -> list sigelt & env
+val tc_partial_modul: env -> either FStarC.Parser.AST.modul modul -> modul & env
+val tc_more_partial_modul: env -> modul -> list (either FStarC.Parser.AST.decl sigelt) -> modul & list sigelt & env

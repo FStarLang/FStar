@@ -182,13 +182,6 @@ let pop_repl msg st =
     if should_reset p then st'.repl_env.solver.refresh None;
     { st' with repl_buffered_input_queries=st.repl_buffered_input_queries }
 
-(** Like ``tc_one_file``, but only return the new environment **)
-let tc_one (env:env_t) intf_opt modf =
-  let parse_data = modf |> FStarC.Parser.Dep.parsing_data_of (TcEnv.dep_graph env) in
-  let _, env = tc_one_file_for_ide env intf_opt modf parse_data in
-  Format.print1 "tc_one: Loaded %s\n" modf;
-  env
-
 open FStarC.Class.Show
 let scan_and_load_fly_deps repl_fname (env:env_t) (frag:_) : env_t =
   match frag with
@@ -199,7 +192,7 @@ let scan_and_load_fly_deps repl_fname (env:env_t) (frag:_) : env_t =
         match filenames with
         | [] -> env
         | filename::filenames ->
-          let env = tc_one env None filename in
+          let env = load_file env None filename in
           run_load_tasks env filenames
       in
       let _, env = TcEnv.with_restored_scope env (fun env -> (), run_load_tasks env filenames) in
@@ -231,9 +224,9 @@ let scan_and_load_fly_deps repl_fname (env:env_t) (frag:_) : env_t =
 let run_repl_task (repl_fname:string) (curmod: optmod_t) (env: env_t) (task: repl_task) lds : optmod_t & env_t & lang_decls_t =
   match task with
   | LDInterleaved (intf, impl) ->
-    curmod, tc_one env (Some intf.tf_fname) impl.tf_fname, []
+    curmod, load_file env (Some intf.tf_fname) impl.tf_fname, []
   | LDSingle intf_or_impl ->
-    curmod, tc_one env None intf_or_impl.tf_fname, []
+    curmod, load_file env None intf_or_impl.tf_fname, []
   | LDInterfaceOfCurrentFile intf ->
     curmod, Universal.load_interface_decls env intf.tf_fname, []
   | PushFragment (frag, _, _, filenames_to_load) ->

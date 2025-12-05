@@ -1081,7 +1081,6 @@ let deps_from_parsing_data (pd:parsing_data) (original_map:files_for_module_name
 
   let add_dep deps d =
     if not (List.existsML (dep_subsumed_by d) !deps) then (
-      Format.print1 "Adding dep %s\n" (show d);
       deps := d :: !deps
     )
   in
@@ -1098,7 +1097,6 @@ let deps_from_parsing_data (pd:parsing_data) (original_map:files_for_module_name
       add_dep deps (dep_edge module_name is_friend);
       true
     | _ ->
-      Format.print1 "Could not resolve modeule name %s\n" key;
       false
   in
 
@@ -1133,7 +1131,6 @@ let deps_from_parsing_data (pd:parsing_data) (original_map:files_for_module_name
   in
 
   let record_open let_open lid =
-    Format.print1 "Recording open %s\n" (show lid);
     if record_open_module let_open lid
     then ()
     else if not let_open //syntactically, this cannot be a namespace if let_open is true; so don't retry
@@ -1523,15 +1520,21 @@ let collect_deps_of_decl (deps:deps) (filename:string) (ds:list decl)
   (get_parsing_data_from_cache:string -> option parsing_data)
 : list file_name
 = let roots =
-   match ds with
-   | [{d=TopLevelModule l; attrs}] -> 
-      Inl <| Module { no_prelude=false; mname=l; decls=ds }
+    match ds with
+    | [{d=TopLevelModule l; attrs}] -> 
+      let no_prelude =
+        Options.no_prelude () || (* only affects current module *)
+        attrs |> List.existsb (function t ->
+          match t.tm with
+          | Const (FStarC.Const.Const_string ("no_prelude", _)) -> true
+          | _ -> false)
+      in
+      Inl <| Parser.AST.Module { mname = l; decls = ds; no_prelude }
    | _ -> Inr ds
   in
   if Nil? (SMap.keys deps.file_system_map)
   then build_map deps.file_system_map [filename];
   let pd = collect_module_or_decls filename roots in //(Inr ds) in
-  Format.print1 "Collect deps of decl: %s\n" (show pd);
   let direct_deps, _has_inline_for_extraction, _additional_roots = deps_from_parsing_data pd deps.file_system_map filename in
   debug_print (fun _ -> Format.print3 "direct deps of %s is %s, mo_roots=%s\n" 
       (show ds) (show direct_deps) (show _additional_roots)); 
