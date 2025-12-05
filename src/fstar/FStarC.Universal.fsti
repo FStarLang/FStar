@@ -66,6 +66,12 @@ val load_file :
     string ->
     TcEnv.env_t
 
+val scan_and_load_fly_deps : 
+    filename:string ->
+    env:TcEnv.env_t ->
+    decl:FStarC.Parser.AST.decl ->
+    TcEnv.env_t
+
 (* Initialize a clean environment, built from a dependency graph. The
 graph is used to populate the internal dsenv of the tcenv. *)
 val init_env : Dep.deps -> TcEnv.env

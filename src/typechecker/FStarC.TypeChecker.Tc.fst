@@ -49,7 +49,6 @@ module TcInductive = FStarC.TypeChecker.TcInductive
 module TcEff = FStarC.TypeChecker.TcEffect
 module PC = FStarC.Parser.Const
 module EMB = FStarC.Syntax.Embeddings
-module Ast = FStarC.Parser.AST
 
 let dbg_TwoPhases = Debug.get_toggle "TwoPhases"
 let dbg_IdInfoOn  = Debug.get_toggle "IdInfoOn"
@@ -253,7 +252,7 @@ let store_sigopts (se:sigelt) : sigelt =
   { se with sigopts = Some (Options.get_vconfig ()) }
 
 (* Alternative to making a huge let rec... knot is set below in this file *)
-let tc_decls_knot : ref (option (Env.env -> list (either Ast.decl sigelt) -> list sigelt & Env.env)) =
+let tc_decls_knot : ref (option (Env.env -> list sigelt -> list sigelt & Env.env)) =
   mk_ref None
 
 let do_two_phases env : bool = not (Options.lax ())
@@ -624,7 +623,7 @@ let tc_decl' env0 se: list sigelt & list sigelt & Env.env =
 
     let errs, _ = Errors.catch_errors (fun () ->
                     Options.with_saved_options (fun () ->
-                      Some?.v (!tc_decls_knot) env' (List.map Inr ses))) in
+                      Some?.v (!tc_decls_knot) env' ses)) in
 
     if Options.print_expected_failures () || Debug.low () then
       Errors.print_expected_failures errs;
@@ -1077,109 +1076,30 @@ let compress_and_norm env t =
               t
       )
 
-let scan_and_load_fly_deps current_filename (env:env_t) (decl:FStarC.Parser.AST.decl) : env_t =
-  let load_fly_deps (env:env_t) filenames =
-    let rec run_load_tasks env filenames =
-      match filenames with
-      | [] -> env
-      | filename::filenames ->
-        let env = env.load_file env None filename in
-        run_load_tasks env filenames
-    in
-    let _, env = Env.with_restored_scope env (fun env -> (), run_load_tasks env filenames) in
-    env
-  in
-  let scan_fragment_deps env (d:FStarC.Parser.AST.decl) =
-    let deps = FStarC.Syntax.DsEnv.dep_graph env.dsenv in
-    let deps = FStarC.Parser.Dep.copy_deps deps in
-    let env = { env with dsenv=FStarC.Syntax.DsEnv.set_dep_graph env.dsenv deps } in
-    let filenames_to_load =
-      FStarC.Parser.Dep.collect_deps_of_decl
-        deps
-        current_filename
-        [d]
-        FStarC.CheckedFiles.load_parsing_data_from_cache
-    in
-    if Debug.any() then (
-      Format.print1 "Initial files loaded: %s\n" (show <| FStarC.Parser.Dep.all_files deps);
-      Format.print1 "Decls scanned: %s\n" (show d);
-      Format.print1 "Additional files to load: %s\n" (show filenames_to_load)
-    );
-    List.rev filenames_to_load, env
-  in
-  let filenames, env = scan_fragment_deps env decl in
-  let env = load_fly_deps env filenames in
-  env
-
-let with_dsenv_of_tcenv (tcenv:Env.env) (f:DsEnv.withenv 'a) : 'a & Env.env =
-    let a, dsenv = f tcenv.dsenv in
-    a, ({tcenv with dsenv = dsenv})
-
-let tc_decls env (decls:list (either Ast.decl sigelt)) =
-  let tc_decls_aux env (sigelts:list sigelt)
-    : list sigelt & list sigelt & env_t
-    = let checked, elaborated, env =
-        List.fold_left 
-          (fun (checked, elaborated, env) se ->
-            let checked', elaborated', env = 
-              Errors.with_ctx (Format.fmt2 "While typechecking the %stop-level declaration `%s`"
-                                  (if se.sigmeta.sigmeta_spliced then "(spliced) " else "")
-                                  (Print.sigelt_to_string_short se))
-                    (fun () -> tc_decl env se)
-            in
-            List.rev_append checked' checked,
-            List.rev_append elaborated' elaborated,
-            env)
-          ([],[],env)
-          sigelts
-      in
-      List.rev checked,
-      List.rev elaborated,
-      env
-  in
-  let rec process_one_decl (ses, env) (decl:either Ast.decl sigelt)
-    : list sigelt & (list sigelt & env_t) & list (either Ast.decl sigelt) =
-    // let open FStarC.Parser.AST in
-    let rng = 
-      match decl with
-      | Inl ast -> ast.drange
-      | Inr se -> range_of_sigelt se
-    in
-    Errors.fallback_range := Some rng;
+let tc_decls env ses =
+  let rec process_one_decl (ses, env) se =
+    Errors.fallback_range := Some se.sigrng;
 
     (* If emacs is peeking, and debugging is on, don't do anything,
      * otherwise the user will see a bunch of output from typechecking
      * definitions that were not yet advanced over. *)
     if env.flychecking && Debug.any ()
-    then [], (ses, env), []
+    then (ses, env), []
     else begin
+    if Debug.low ()
+    then Format.print2 ">>>>>>>>>>>>>>Checking top-level %s decl %s\n"
+                        (tag_of se)
+                        (Print.sigelt_to_string_short se);
 
     if Options.ide_id_info_off() then Env.toggle_id_info env false;
     if !dbg_IdInfoOn then Env.toggle_id_info env true;
 
-    let desugared_ses, ses', ses_elaborated, env =
-      match decl with
-      | Inr se -> (
-        let ses', ses_elaborated, env =
-          Errors.with_ctx (Format.fmt2 "While typechecking the %stop-level declaration `%s`"
+    let ses', ses_elaborated, env =
+            Errors.with_ctx (Format.fmt2 "While typechecking the %stop-level declaration `%s`"
                                   (if se.sigmeta.sigmeta_spliced then "(spliced) " else "")
                                   (Print.sigelt_to_string_short se))
                     (fun () -> tc_decl env se)
-        in
-        [se], ses', ses_elaborated, env
-      )
-      
-      | Inl decl -> 
-        let env = scan_and_load_fly_deps (Range.file_of_range decl.drange) env decl in
-        let ses_desugared, env = with_dsenv_of_tcenv env <| FStarC.ToSyntax.ToSyntax.decls_to_sigelts [decl] in
-        let ses', ses_elaborated, env = tc_decls_aux env ses_desugared in
-        ses_desugared, ses', ses_elaborated, env
     in
-    // if Debug.low ()
-    // then Format.print2 ">>>>>>>>>>>>>>Checking top-level %s decl %s\n"
-    //                     (tag_of se)
-    //                     (Print.sigelt_to_string_short se);
-
 
     let ses' = ses' |> List.map (fun se ->
         if !dbg_UF
@@ -1237,17 +1157,16 @@ let tc_decls env (decls:list (either Ast.decl sigelt)) =
     if Options.interactive () then
       SMTEncoding.Solver.flush_hints ();
 
-    desugared_ses, (List.rev_append ses' ses, env), List.map Inr ses_elaborated
+    (List.rev_append ses' ses, env), ses_elaborated
     end
   in
   // A wrapper to (maybe) print the time taken for each sigelt
-  let process_one_decl_timed acc (decl:either Ast.decl sigelt) 
-  : (list sigelt & env_t) & list (either Ast.decl sigelt) =
+  let process_one_decl_timed acc se =
     FStarC.TypeChecker.Core.clear_memo_table();
     let (_, env) = acc in
-    let raw_ses, (ses, env), ses_elaborated =
+    let r =
       Profiling.profile
-                 (fun () -> process_one_decl acc decl)
+                 (fun () -> process_one_decl acc se)
                  (Some (Ident.string_of_lid (Env.current_module env)))
                  "FStarC.TypeChecker.Tc.process_one_decl"
       // ^ See a special case for this phase in FStarC.Options. --timing
@@ -1255,9 +1174,7 @@ let tc_decls env (decls:list (either Ast.decl sigelt)) =
     in
     if Options.profile_group_by_decl()
     || Options.timing () // --timing implies --profile_group_by_decl
-    && Cons? raw_ses
     then begin
-         let se::_ = raw_ses in
          let tag =
           match lids_of_sigelt se with
           | hd::_ -> Ident.string_of_lid hd
@@ -1265,49 +1182,38 @@ let tc_decls env (decls:list (either Ast.decl sigelt)) =
          in
          Profiling.report_and_clear tag
     end;
-    (ses, env), ses_elaborated
+    r
   in
   let ses, env =
     UF.with_uf_enabled (fun () ->
-      BU.fold_flatten process_one_decl_timed ([], env) decls) in
+      BU.fold_flatten process_one_decl_timed ([], env) ses) in
   List.rev_append ses [], env
 
 let _ =
     tc_decls_knot := Some tc_decls
 
-let destruct_either_module (modul:either FStarC.Parser.AST.modul Syntax.modul)
-  : FStarC.Ident.lid & bool & list (either FStarC.Parser.AST.decl sigelt) =
-    match modul with
-    | Inl ast_modul ->
-      Ast.lid_of_modul ast_modul, Ast.Interface? ast_modul, List.map Inl (Ast.decls_of_modul ast_modul)
-    | Inr m -> m.name, m.is_interface, List.map Inr m.declarations
-
-let tc_partial_modul env (modul:either FStarC.Parser.AST.modul Syntax.modul) =
-  let mname, is_interface, decls = destruct_either_module modul in
-  let verify = Options.should_verify (string_of_lid mname) in
+let tc_partial_modul env modul =
+  let verify = Options.should_verify (string_of_lid modul.name) in
   let action = if verify then "verifying" else "lax-checking" in
-  let label = if is_interface then "interface" else "module" in
+  let label = if modul.is_interface then "interface" else "implementation" in
   if Debug.any () then
-    Format.print3 "Now %s %s of %s\n" action label (show mname);
+    Format.print3 "Now %s %s of %s\n" action label (string_of_lid modul.name);
 
   let dsnap = Debug.snapshot () in
-  if not (Options.should_check (string_of_lid mname)) && not (Options.debug_all_modules ())
+  if not (Options.should_check (string_of_lid modul.name)) && not (Options.debug_all_modules ())
   then Debug.disable_all ();
 
-  // let name = Format.fmt2 "%s %s" label (string_of_lid modul.name) in
-  let env = {env with Env.is_iface=is_interface; admit=not verify} in
-  let env = Env.set_current_module env mname in
+  let name = Format.fmt2 "%s %s" (if modul.is_interface then "interface" else "module") (string_of_lid modul.name) in
+  let env = {env with Env.is_iface=modul.is_interface; admit=not verify} in
+  let env = Env.set_current_module env modul.name in
   (* Only set a context for dependencies *)
-  Errors.with_ctx_if (not (Options.should_check (string_of_lid mname)))
+  Errors.with_ctx_if (not (Options.should_check (string_of_lid modul.name)))
                      (Format.fmt2 "While loading dependency %s%s"
-                                    (string_of_lid mname)
-                                    (if is_interface then " (interface)" else "")) (fun () ->
-    let ses, env = tc_decls env decls in
+                                    (string_of_lid modul.name)
+                                    (if modul.is_interface then " (interface)" else "")) (fun () ->
+    let ses, env = tc_decls env modul.declarations in
     Debug.restore dsnap;
-    { name = mname;
-      declarations = ses;
-      is_interface = is_interface},
-    env
+    {modul with declarations=ses}, env
   )
 
 let tc_more_partial_modul env modul decls =
@@ -1347,9 +1253,8 @@ let finish_partial_modul (loading_from_cache:bool) (iface_exists:bool) (en:env) 
 let deep_compress_modul (m:modul) : modul =
   { m with declarations = List.map (Compress.deep_compress_se false false) m.declarations }
 
-let tc_modul (env0:env) (m:either Ast.modul modul) (iface_exists:bool) :(modul & env) =
-  let mname, _, _ = destruct_either_module m in
-  let msg = "Internals for " ^ string_of_lid mname in
+let tc_modul (env0:env) (m:modul) (iface_exists:bool) :(modul & env) =
+  let msg = "Internals for " ^ string_of_lid m.name in
   //AR: push env, this will also push solver, and then finish_partial_modul will do the pop
   let env0 = push_context env0 msg in
   let modul, env = tc_partial_modul env0 m in
@@ -1396,14 +1301,12 @@ let load_partial_checked_module (en:env) (m:modul) : env =
   load_checked_module_sigelts en m
 
 let check_module env0 m b =
-  let open FStarC.Parser.AST in
-  let mname, is_interface, _decls = destruct_either_module m in
   if Debug.any()
-  then Format.print2 "Checking %s: %s\n" (if is_interface then "i'face" else "module") (show mname);
-  if Options.dump_module (string_of_lid mname)
+  then Format.print2 "Checking %s: %s\n" (if m.is_interface then "i'face" else "module") (show m.name);
+  if Options.dump_module (string_of_lid m.name)
   then Format.print1 "Module before type checking:\n%s\n" (show m);
 
-  let env = {env0 with admit = not (Options.should_verify (string_of_lid mname))} in
+  let env = {env0 with admit = not (Options.should_verify (string_of_lid m.name))} in
   let m, env = tc_modul env m b in
   (* restore admit *)
   let env = { env with admit = env0.admit } in

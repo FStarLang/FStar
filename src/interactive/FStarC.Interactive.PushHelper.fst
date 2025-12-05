@@ -182,44 +182,6 @@ let pop_repl msg st =
     if should_reset p then st'.repl_env.solver.refresh None;
     { st' with repl_buffered_input_queries=st.repl_buffered_input_queries }
 
-open FStarC.Class.Show
-let scan_and_load_fly_deps repl_fname (env:env_t) (frag:_) : env_t =
-  match frag with
-  | Inl text -> env
-  | Inr decl ->  
-    let load_fly_deps (env:env_t) filenames =
-      let rec run_load_tasks env filenames =
-        match filenames with
-        | [] -> env
-        | filename::filenames ->
-          let env = load_file env None filename in
-          run_load_tasks env filenames
-      in
-      let _, env = TcEnv.with_restored_scope env (fun env -> (), run_load_tasks env filenames) in
-      Format.print1 "After fly load deps: %s\n" (show env.dsenv);
-      env
-    in
-    let scan_fragment_deps env (d:FStarC.Parser.AST.decl) =
-      let deps = FStarC.Syntax.DsEnv.dep_graph env.dsenv in
-      let deps = FStarC.Parser.Dep.copy_deps deps in
-      let env = { env with dsenv=FStarC.Syntax.DsEnv.set_dep_graph env.dsenv deps } in
-      let filenames_to_load =
-        FStarC.Parser.Dep.collect_deps_of_decl
-          deps
-          repl_fname
-          [d]
-          FStarC.CheckedFiles.load_parsing_data_from_cache
-      in
-      Format.print1 "Initial files loaded: %s\n" (show <| FStarC.Parser.Dep.all_files deps);
-      Format.print1 "Decls scanned: %s\n" (show d);
-      Format.print1 "Additional files to load: %s\n" (show filenames_to_load);
-      List.rev filenames_to_load, env
-    in
-    let filenames, env = scan_fragment_deps env decl in
-    let env = load_fly_deps env filenames in
-    add_filenames_to_push_fragment filenames;
-    env
-
 
 (** Load the file or files described by `task` **)
 let run_repl_task (repl_fname:string) (curmod: optmod_t) (env: env_t) (task: repl_task) lds : optmod_t & env_t & lang_decls_t =
@@ -231,13 +193,13 @@ let run_repl_task (repl_fname:string) (curmod: optmod_t) (env: env_t) (task: rep
   | LDInterfaceOfCurrentFile intf ->
     curmod, Universal.load_interface_decls env intf.tf_fname, []
   | PushFragment (frag, _, _, filenames_to_load) ->
-    let frag =
+    let frag, env =
       match frag with
-      | Inl frag -> Inl (frag, lds)
-      | Inr decl -> Inr decl
+      | Inl frag -> Inl (frag, lds), env
+      | Inr decl -> 
+        let env = Universal.scan_and_load_fly_deps repl_fname env decl in
+        Inr decl, env
     in
-    let env = scan_and_load_fly_deps repl_fname env frag in
-    Format.print1 "After scan_and_load env is %s\n" (show env.dsenv);
     let o, e, langs = tc_one_fragment curmod env frag in
     o, e, langs
   | Noop ->
