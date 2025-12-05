@@ -143,16 +143,6 @@ jobs:
           name: package-win
           path: fstar/fstar-*.zip
 
-      - name: Prepare smoke test
-        run: |
-          echo -e "module A\nopen FStar.Mul\nlet _ = assert (forall x. 1 + x*x > 0)" > A.fst
-
-      - name: Upload smoke test
-        uses: actions/upload-artifact@v4
-        with:
-          name: smoke-test
-          path: A.fst
-
   test:
     needs: build
     runs-on: windows-latest
@@ -174,13 +164,11 @@ jobs:
           cd fstar-*
           .\fstar\bin\fstar.exe --version
 
-      - name: Extract smoke test
-        uses: actions/download-artifact@v4
-        with:
-          name: smoke-test
-
       - name: Smoke test
-        shell: cmd
+        shell: powershell
         run: |
           cd fstar-*
-          .\fstar\bin\fstar.exe --already_cached *,-A ..\A.fst
+          .\fstar\bin\fstar.exe fstar\lib\fstar\ulib\Prims.fst -f
+          $PSDefaultParameterValues['Out-File:Encoding'] = 'utf8' # Make sure we write UTF-8 files
+          echo "module A`nopen FStar.Mul`nlet _ = assert (forall x. 1 + x*x > 0)" > A.fst
+          .\fstar\bin\fstar.exe --already_cached *,-A A.fst
