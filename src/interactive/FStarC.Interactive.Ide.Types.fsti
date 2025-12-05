@@ -33,7 +33,7 @@ include FStarC.Json
 (***********************)
 (* Global state setup *)
 (***********************)
-val initial_range : range
+val initial_range (filename:string) : range
 
 type push_kind = | SyntaxCheck | LaxCheck | FullCheck
 

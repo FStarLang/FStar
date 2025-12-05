@@ -29,6 +29,12 @@ jobs:
     runs-on: windows-latest
     steps:
       - uses: cygwin/cygwin-install-action@master
+        with:
+          packages: mingw64-i686-gmp, mingw64-i686-libffi, mingw64-x86_64-gmp, mingw64-x86_64-libffi
+
+      # Not sure if this is useful. It prevents the PATH in the Cygwin shell
+      # from containing Windows directories, and makes it Cygwin only.
+      - run: echo "CYGWIN_NOWINPATH=1" >>$GITHUB_ENV
 
       # Print out some debug info
       - name: dbg
@@ -106,13 +112,17 @@ jobs:
           make ADMIT=1 -skj$(nproc)
         working-directory: fstar
 
-      - name: Smoke test
-        continue-on-error: true
+      # F* was built in this cygwin environment, and can run. There is
+      # somewhere a libgmp DLL that is being used, and that we must ship in
+      # order for systems without this DLL to able to run F*. Using `which
+      # libgmp-10.dll` returns a hit, but it seems to be (sometimes?) wrong and
+      # point to a 32-bit version of the library that does not work. Here, we
+      # use (Cygwin's) `ldd` to find out which dll we are using exactly, and
+      # ship that.
+      - name: Find the right libgmp DLL
         run: |
-          ./out/bin/fstar.exe out/lib/fstar/ulib/Prims.fst -f
-          echo -e "module A\nopen FStar.Mul\nlet _ = assert (forall x. 1 + x*x > 0)" > A.fst
-          ./out/bin/fstar.exe A.fst
-        working-directory: fstar
+          LIBGMP=$(ldd fstar/out/bin/fstar.exe | sed -n 's/^[[:space:]]libgmp-10.dll => *\([^ ]*\) .*$/\1/p')
+          echo "LIBGMP=$LIBGMP" >>$GITHUB_ENV
 
       - name: Make binary package
         run: |
@@ -132,3 +142,45 @@ jobs:
         with:
           name: package-win
           path: fstar/fstar-*.zip
+
+      - name: Prepare smoke test
+        run: |
+          echo -e "module A\nopen FStar.Mul\nlet _ = assert (forall x. 1 + x*x > 0)" > A.fst
+
+      - name: Upload smoke test
+        uses: actions/upload-artifact@v4
+        with:
+          name: smoke-test
+          path: A.fst
+
+  test:
+    needs: build
+    runs-on: windows-latest
+    steps:
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: package-win
+
+      - name: Extract package
+        shell: powershell
+        run: |
+          Expand-Archive -Path fstar-*.zip
+
+      - name: Test fstar.exe
+        shell: cmd
+        run: |
+          dir
+          cd fstar-*
+          .\fstar\bin\fstar.exe --version
+
+      - name: Extract smoke test
+        uses: actions/download-artifact@v4
+        with:
+          name: smoke-test
+
+      - name: Smoke test
+        shell: cmd
+        run: |
+          cd fstar-*
+          .\fstar\bin\fstar.exe --already_cached *,-A ..\A.fst

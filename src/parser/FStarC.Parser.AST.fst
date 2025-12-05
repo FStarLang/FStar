@@ -557,7 +557,8 @@ let rec term_to_string (x:term) = match x.tm with
         (tm|> term_to_string)
         (body|> term_to_string)
   | Let (_, _, _) ->
-    raise_error x Fatal_EmptySurfaceLet "Internal error: found an invalid surface Let"
+    "invalid_surface_let?"
+    // raise_error x Fatal_EmptySurfaceLet "Internal error: found an invalid surface Let"
 
   | LetOperator ((i,p,b)::lbs, body) ->
     Format.fmt4 "let%s rec %s%s in %s"
