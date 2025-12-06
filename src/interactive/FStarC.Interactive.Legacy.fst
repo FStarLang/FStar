@@ -39,10 +39,10 @@ let tc_one_file (remaining:list string) (env:TcEnv.env) = //:((string option * s
   let (intf, impl), env, remaining =
     match remaining with
         | intf :: impl :: remaining when needs_interleaving intf impl ->
-          let _, env = tc_one_file_for_ide env (Some intf) impl Dep.empty_parsing_data in
+          let env = load_file env (Some intf) impl in
           (Some intf, impl), env, remaining
         | intf_or_impl :: remaining ->
-          let _, env = tc_one_file_for_ide env None intf_or_impl Dep.empty_parsing_data in
+          let env = load_file env None intf_or_impl in
           (None, intf_or_impl), env, remaining
         | [] -> failwith "Impossible"
   in

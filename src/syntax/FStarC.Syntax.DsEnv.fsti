@@ -21,7 +21,7 @@ open FStarC.Effect
 open FStarC.Syntax
 open FStarC.Syntax.Syntax
 open FStarC.Ident
-
+open FStarC.Class.Show
 module S = FStarC.Syntax.Syntax
 
 val ugly_sigelt_to_string_hook : ref (sigelt -> string)
@@ -40,7 +40,10 @@ type record_or_dc = {
 
 val env : Type0
 val dsenv_hooks : Type0
+val parsing_data_for_scope (e:env) : list FStarC.Parser.Dep.parsing_data_elt
+val with_restored_scope (e:env) (f: env -> 'a & env) : 'a & env
 
+instance val showable_env : showable env
 val mk_dsenv_hooks
   (open_hook:env -> open_module_or_namespace -> unit)
   (include_hook:env -> lident -> unit)
@@ -133,7 +136,7 @@ val transitive_exported_ids: env -> lident -> list string
 val module_inclusion_info : Type0
 val default_mii : module_inclusion_info
 val inclusion_info: env -> lident -> module_inclusion_info
-val prepare_module_or_interface: bool -> bool -> env -> lident -> module_inclusion_info -> env & bool //pop the context when done desugaring
+val prepare_module_or_interface: is_interface:bool -> is_admitted:bool -> env -> lident -> module_inclusion_info -> env & bool //pop the context when done desugaring
 
 (* private *) val try_lookup_lid': bool -> bool -> env -> lident -> option (term & list attribute)
 (* private *) val unique:  bool -> bool -> env -> lident -> bool

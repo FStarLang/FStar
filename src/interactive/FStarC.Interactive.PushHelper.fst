@@ -20,6 +20,7 @@
 module FStarC.Interactive.PushHelper
 open FStarC
 open FStarC.Effect
+open FStarC.Class.Show
 open FStarC.List
 open FStarC.Ident
 open FStarC.Errors
@@ -103,20 +104,36 @@ let snapshot_env env msg : repl_depth_t & env_t =
 
 let push_repl msg push_kind_opt task st =
   let depth, env = snapshot_env st.repl_env msg in
-  repl_stack := (depth, (task, st)) :: !repl_stack;
+  repl_stack := (depth, (task, { st with repl_buffered_input_queries=[] })) :: !repl_stack;
   match push_kind_opt with
   | None -> st
   | Some push_kind ->
     { st with repl_env = set_check_kind env push_kind } // repl_env is the only mutable part of st
 
 (* Record the issues that were raised by the last push *)
-let add_issues_to_push_fragment (issues: list json) =
+let adjust_topmost_push_frag (f:repl_task -> repl_task) =
   match !repl_stack with
-  | (depth, (PushFragment(frag, push_kind, i), st))::rest -> (
-    let pf = PushFragment(frag, push_kind, issues @ i) in
+  | (depth, (PushFragment x, st))::rest -> (
+    let pf = f (PushFragment x) in
     repl_stack := (depth, (pf, st)) :: rest
   )
   | _ -> ()
+
+
+let add_issues_to_push_fragment (issues: list json) =
+  let adjust = function
+    | PushFragment(frag, push_kind, i, deps) ->
+      PushFragment(frag, push_kind, issues @ i, deps)
+  in
+  adjust_topmost_push_frag adjust
+
+(* Record dependences that were loaded on the fly to the last push *)
+let add_filenames_to_push_fragment (deps: list string) =
+  let adjust = function
+    | PushFragment(frag, push_kind, i, deps') ->
+      PushFragment(frag, push_kind, i, deps@deps')
+  in
+  adjust_topmost_push_frag adjust
 
 (** Revert to a previous checkpoint.
 
@@ -145,10 +162,16 @@ let rollback_env solver msg (ctx_depth, opt_depth) =
   Options.rollback (Some opt_depth);
   env
 
+let should_reset (task:repl_task) =
+  match task with
+  | PushFragment (_, _, _, deps) -> Cons? deps
+  | _ -> false
+
 let pop_repl msg st =
   match !repl_stack with
-  | [] -> failwith "Too many pops"
-  | (depth, (_, st')) :: stack_tl ->
+  | [] -> failwith "(pop_repl) Too many pops"
+  | (depth, (p, st')) :: stack_tl ->
+    // Format.print1 "(pop_repl) popping %s\n" (string_of_repl_task p);
     let env = rollback_env st.repl_env.solver msg depth in
     repl_stack := stack_tl;
     // Because of the way ``snapshot`` is implemented, the `st'` and `env`
@@ -156,29 +179,32 @@ let pop_repl msg st =
     FStarC.Common.runtime_assert
       (U.physical_equality env st'.repl_env)
       "Inconsistent stack state";
-    st'
+    if should_reset p then st'.repl_env.solver.refresh None;
+    { st' with repl_buffered_input_queries=st.repl_buffered_input_queries }
 
-(** Like ``tc_one_file``, but only return the new environment **)
-let tc_one (env:env_t) intf_opt modf =
-  let parse_data = modf |> FStarC.Parser.Dep.parsing_data_of (TcEnv.dep_graph env) in
-  let _, env = tc_one_file_for_ide env intf_opt modf parse_data in
-  env
 
-open FStarC.Class.Show
 (** Load the file or files described by `task` **)
-let run_repl_task (curmod: optmod_t) (env: env_t) (task: repl_task) lds : optmod_t & env_t & lang_decls_t =
+let run_repl_task (repl_fname:string) (curmod: optmod_t) (env: env_t) (task: repl_task) lds : optmod_t & env_t & lang_decls_t =
   match task with
   | LDInterleaved (intf, impl) ->
-    curmod, tc_one env (Some intf.tf_fname) impl.tf_fname, []
+    curmod, load_file env (Some intf.tf_fname) impl.tf_fname, []
   | LDSingle intf_or_impl ->
-    curmod, tc_one env None intf_or_impl.tf_fname, []
+    curmod, load_file env None intf_or_impl.tf_fname, []
   | LDInterfaceOfCurrentFile intf ->
     curmod, Universal.load_interface_decls env intf.tf_fname, []
-  | PushFragment (frag, _, _) ->
-    let frag =
+  | PushFragment (frag, _, _, filenames_to_load) ->
+    let frag, env =
       match frag with
-      | Inl frag -> Inl (frag, lds)
-      | Inr decl -> Inr decl
+      | Inl frag -> Inl (frag, lds), env
+      | Inr decl -> 
+        let env = 
+          if FStarC.Parser.Dep.fly_deps_enabled()
+          then let env, filenames = Universal.scan_and_load_fly_deps repl_fname env decl in
+               add_filenames_to_push_fragment filenames;
+               env
+          else env
+        in
+        Inr decl, env
     in
     let o, e, langs = tc_one_fragment curmod env frag in
     o, e, langs
@@ -267,7 +293,7 @@ let repl_tx st push_kind task =
   try
     let st = push_repl "repl_tx" (Some push_kind) task st in
     let env, finish_name_tracking = track_name_changes st.repl_env in // begin name tracking
-    let curmod, env, lds = run_repl_task st.repl_curmod env task st.repl_lang in
+    let curmod, env, lds = run_repl_task st.repl_fname st.repl_curmod env task st.repl_lang in
     let st = { st with repl_curmod = curmod; repl_env = env; repl_lang=List.rev lds @ st.repl_lang } in
     let env, name_events = finish_name_tracking env in // end name tracking
     None, commit_name_tracking st name_events
@@ -386,5 +412,5 @@ let full_lax text st =
   match ld_deps st with
   | Inl (st, deps) ->
       let names = add_module_completions st.repl_fname deps st.repl_names in
-      repl_tx ({ st with repl_names = names }) LaxCheck (PushFragment (Inl frag, LaxCheck, []))
+      repl_tx ({ st with repl_names = names }) LaxCheck (PushFragment (Inl frag, LaxCheck, [], []))
   | Inr st -> None, st

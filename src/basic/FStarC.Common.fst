@@ -33,7 +33,7 @@ let snapshot (push: 'a -> 'b) (stackref: ref (list 'c)) (arg: 'a) : (int & 'b) =
 
 let rollback (pop: unit -> 'a) (stackref: ref (list 'c)) (depth: option int) =
   let rec aux n : 'a =
-    if n <= 0 then failwith "Too many pops"
+    if n <= 0 then failwith "(rollback) Too many pops"
     else if n = 1 then pop ()
     else (ignore (pop ()); aux (n - 1)) in
   let curdepth = List.length !stackref in

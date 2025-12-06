@@ -1955,6 +1955,12 @@ let restore_cmd_line_options should_clear =
     set_option' ("verify_module", List (List.map String old_verify_module));
     Success
 
+let with_restored_cmd_line_options (f:unit -> 'a) : 'a =
+  let snap = snapshot_all () in
+  let h = !history in
+  let _ = restore_cmd_line_options true in
+  finally (fun _ -> history := h; restore_all snap) f
+
 let module_name_of_file_name f =
     let f = Filepath.basename f in
     let f = String.substring f 0 (String.length f - String.length (Filepath.get_file_extension f) - 1) in

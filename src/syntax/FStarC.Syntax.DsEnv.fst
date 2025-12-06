@@ -97,13 +97,30 @@ type scope_mod =
      as curmodule.x. *)
 | Record_or_dc             of record_or_dc    (* to honor interleavings of "open" and record definitions *)
 
+let namespace_scope_of_module mname =
+  if List.length (ns_of_lid mname) > 0
+  then [ (lid_of_ids (ns_of_lid mname), Open_namespace, Unrestricted) ]
+  else []
+
+let scope_mod_as_parsing_data (s:scope_mod)
+: list FStarC.Parser.Dep.parsing_data_elt
+= let open FStarC.Parser.Dep in
+  match s with
+  | Local_bindings _ -> []
+  | Rec_binding _ -> []
+  | Module_abbrev ma -> [ P_alias ma ]
+  | Open_module_or_namespace (l, _k, _restrict) -> [P_open (false, l)]
+  | Top_level_defs _ -> []
+  | Record_or_dc _ -> []
+
 instance _ : showable scope_mod = {
   show = function
-    | Local_bindings lbs -> "Local_bindings"
+    | Local_bindings lbs -> 
+      Format.fmt1 "(Local_bindings %s)" (show <| PSMap.keys lbs)
     | Rec_binding (id, lid, _) -> "Rec_binding " ^ (string_of_id id) ^ " " ^ (string_of_lid lid)
     | Module_abbrev (id, lid) -> "Module_abbrev " ^ (string_of_id id) ^ " " ^ (string_of_lid lid)
     | Open_module_or_namespace (lid, _, _) -> "Open_module_or_namespace " ^ (string_of_lid lid)
-    | Top_level_defs lbs -> "Top_level_defs"
+    | Top_level_defs lbs -> Format.fmt1 "(Top_level_defs %s)" (show <| PSMap.keys lbs)
     | Record_or_dc r -> "Record_or_dc " ^ (string_of_lid r.typename)
 }
 
@@ -154,6 +171,28 @@ and dsenv_hooks =
     ds_push_include_hook : env -> lident -> unit;
     ds_push_module_abbrev_hook : env -> ident -> lident -> unit }
 
+let parsing_data_for_scope (e:env) : list FStarC.Parser.Dep.parsing_data_elt =
+  let curmod_scope =
+    match e.curmodule with
+    | None -> []
+    | Some m -> namespace_scope_of_module m
+  in
+  let scope_mods =
+    match curmod_scope with
+    | [] -> e.scope_mods
+    | [(lid, _, _)] ->
+      List.filter (function 
+        | Open_module_or_namespace (lid', _, _) ->
+          not (Ident.lid_equals lid lid')
+        | _ -> true)
+        e.scope_mods
+  in
+  List.collect scope_mod_as_parsing_data scope_mods
+
+let with_restored_scope (e:env) (f: env -> 'a & env) : 'a & env =
+  let res, e1 = f e in
+  res, {e1 with scope_mods=e.scope_mods; curmodule=e.curmodule; curmonad=e.curmonad; sigaccum=e.sigaccum}
+
 (* For typo suggestions *)
 let all_local_names (env:env) : list string =
   List.fold_right (fun scope acc ->
@@ -177,6 +216,11 @@ let all_mod_names (env:env) : list string =
     | Top_level_defs lbs -> acc
     | Record_or_dc r -> acc
   ) env.scope_mods []
+
+instance showable_env : showable env = {
+  show = fun env -> 
+  Format.fmt2 "All mods: %s\nScope mods: %s\n" (show (List.map fst env.modules)) (show env.scope_mods)
+}
 
 let mk_dsenv_hooks open_hook include_hook module_abbrev_hook =
   { ds_push_open_hook = open_hook;
@@ -1622,13 +1666,8 @@ let prepare_module_or_interface intf admitted env mname (mii:module_inclusion_in
       in
       auto_open |> List.map (fun (kind, lid) -> (lid, convert_kind kind, Unrestricted))
     in
-    let namespace_of_module =
-      if List.length (ns_of_lid mname) > 0
-      then [ (lid_of_ids (ns_of_lid mname), Open_namespace, Unrestricted) ]
-      else []
-    in
     (* [scope_mods] is a stack, so reverse the order *)
-    let auto_open = namespace_of_module @ List.rev auto_open in
+    let auto_open = namespace_scope_of_module mname @ List.rev auto_open in
 
     (* Create new empty set of exported identifiers for the current module, for 'include' *)
     let () = SMap.add env.exported_ids (string_of_lid mname) (as_exported_id_set mii.mii_exported_ids) in
@@ -1670,11 +1709,12 @@ let fail_or env lookup lid =
     (* We couldn't find it. Try to report a nice error. *)
     let opened_modules = List.map (fun (lid, _) -> string_of_lid lid) env.modules in
     let open FStarC.Class.PP in
-    if List.length (ns_of_lid lid) = 0 then
+    if List.length (ns_of_lid lid) = 0 then begin
       raise_error lid Errors.Fatal_IdentifierNotFound [
         Pprint.prefix 2 1 (text "Identifier not found:") (pp lid);
         typo_msg (Ident.string_of_lid lid) (all_local_names env);
       ]
+    end
     else
       let all_ids_in_module (m : lident) : list string =
         let m = string_of_lid m in

@@ -52,7 +52,7 @@ val deps_and_repl_ld_tasks_of_our_file : string -> list string & list repl_task 
 
 // Core functionality, directly copied over from IDE
 val run_repl_task 
-: optmod_t -> env_t -> repl_task -> FStarC.Universal.lang_decls_t ->
+: repl_fname:string -> optmod_t -> env_t -> repl_task -> FStarC.Universal.lang_decls_t ->
   optmod_t & env_t & FStarC.Universal.lang_decls_t
 
 // Factored out from IDE for use by LSP as well

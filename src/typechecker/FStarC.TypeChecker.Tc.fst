@@ -1241,9 +1241,10 @@ let finish_partial_modul (loading_from_cache:bool) (iface_exists:bool) (en:env) 
 
   pop_context env ("Ending modul " ^ string_of_lid m.name) |> ignore;
 
-  if Options.depth () > 0 then
+  if Options.depth () > 0 then (
     Errors.log_issue env Error_MissingPopOptions
-      ("Some #push-options have not been popped. Current depth is " ^ show (Options.depth()) ^ ".");
+      ("Some #push-options have not been popped. Current depth is " ^ show (Options.depth()) ^ ".")
+  );
 
   //moved the code for encoding the module to smt to Universal
 
