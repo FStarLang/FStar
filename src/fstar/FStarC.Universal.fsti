@@ -40,6 +40,7 @@ type lang_decls_t = list FStarC.Parser.AST.decl
 
 (* Interactive mode: checking a fragment of code. *)
 val tc_one_fragment :
+    is_interface:bool ->
     option Syntax.modul ->
     TcEnv.env_t ->
     either (FStarC.Parser.ParseIt.input_frag & lang_decls_t) FStarC.Parser.AST.decl ->

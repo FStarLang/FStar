@@ -24,4 +24,4 @@ module DsEnv = FStarC.Syntax.DsEnv
 
 val initialize_interface:        lident -> list decl -> DsEnv.withenv unit
 val prefix_with_interface_decls: lident -> decl -> DsEnv.withenv (list decl)
-val interleave_module:           modul -> bool -> DsEnv.withenv modul
+val interleave_module:           modul -> expect_complete_modul:bool -> DsEnv.withenv modul

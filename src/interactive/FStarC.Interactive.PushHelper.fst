@@ -206,7 +206,8 @@ let run_repl_task (repl_fname:string) (curmod: optmod_t) (env: env_t) (task: rep
         in
         Inr decl, env
     in
-    let o, e, langs = tc_one_fragment curmod env frag in
+    let is_interface = FStarC.Parser.Dep.is_interface repl_fname in
+    let o, e, langs = tc_one_fragment is_interface curmod env frag in
     o, e, langs
   | Noop ->
     curmod, env, []

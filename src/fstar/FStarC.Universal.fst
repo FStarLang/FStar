@@ -140,7 +140,7 @@ let core_check : TcEnv.core_check_t =
 (* Interactive mode: checking a fragment of a code                     *)
 (***********************************************************************)
 module Ast = FStarC.Parser.AST
-let tc_one_fragment curmod (env:TcEnv.env_t) frag =
+let tc_one_fragment is_interface curmod (env:TcEnv.env_t) frag =
   let open FStarC.Parser.AST in
   // We use file_of_range instead of `Options.file_list ()` because no file
   // is passed as a command-line argument in LSP mode.
@@ -171,7 +171,10 @@ let tc_one_fragment curmod (env:TcEnv.env_t) frag =
          Actually, this is an abuse, and just means that we're type-checking the
          first chunk. *)
       let ast_modul, env =
-        with_dsenv_of_tcenv env <| FStarC.ToSyntax.Interleave.interleave_module ast_modul false in
+        if not <| Options.interactive()
+        then ast_modul, env
+        else with_dsenv_of_tcenv env <| FStarC.ToSyntax.Interleave.interleave_module ast_modul false
+      in
       if not (acceptable_mod_name ast_modul) then
       begin
         let msg : string =
@@ -247,6 +250,7 @@ let tc_one_fragment curmod (env:TcEnv.env_t) frag =
           | _ -> false)
       in
       let modul = Parser.AST.Module { mname = lid; decls = [d]; no_prelude } in
+      let modul = if is_interface then Ast.as_interface modul else modul in
       check_module_name_declaration modul
     | _ -> 
       check_decls [d]
@@ -597,11 +601,16 @@ and fly_deps_check (filename:string) (tcenv:Env.env_t) (ast_mod:Ast.modul) =
     | {d=Ast.TopLevelModule lid} :: rest -> decls
     | _ -> failwith "Impossible: first decl is not a module"
   in
+  let is_interface = FStarC.Parser.Dep.is_interface filename in
   let mod, tcenv =
     List.fold_left 
       (fun (mod, env) decl ->
+        if Debug.any() 
+        then Format.print1 "fly_deps_check next decl: %s\n" 
+          (FStarC.Pprint.render <| FStarC.Class.PP.pp decl);
+        
         let env, _ = scan_and_load_fly_deps filename env decl in
-        let mod, env, _ = tc_one_fragment mod env (Inr decl) in
+        let mod, env, _ = tc_one_fragment is_interface mod env (Inr decl) in
         mod, env)
       (None, tcenv)
       decls 

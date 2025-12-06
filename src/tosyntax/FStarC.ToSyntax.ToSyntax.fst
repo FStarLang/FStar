@@ -4083,12 +4083,12 @@ let desugar_modul_common (curmod: option S.modul) env (m:AST.modul) : env_t & Sy
   env, modul, pop_when_done
 
 let desugar_partial_modul curmod (env:env_t) (m:AST.modul) : env_t & Syntax.modul =
-  let m =
-    if Options.interactive () &&
-      List.mem (Filepath.get_file_extension (List.hd (Options.file_list ()))) ["fsti"; "fsi"]
-    then as_interface m
-    else m
-  in
+  // let m =
+  //   if Options.interactive () &&
+  //     List.mem (Filepath.get_file_extension (List.hd (Options.file_list ()))) ["fsti"; "fsi"]
+  //   then as_interface m
+  //   else m
+  // in
   let env, modul, pop_when_done = desugar_modul_common curmod env m in
   if pop_when_done then Env.pop (), modul
   else env, modul

@@ -74,7 +74,7 @@ let push_with_kind env lax restore_cmd_line_options msg =
 
 let check_frag (env:TcEnv.env) curmod frag =
     try
-        let m, env, _ = tc_one_fragment curmod env (Inl frag) in
+        let m, env, _ = tc_one_fragment false curmod env (Inl frag) in
         Some (m, env, FStarC.Errors.get_err_count())
     with
         | FStarC.Errors.Error(e, msg, r, ctx) when not ((Options.trace_error())) ->
