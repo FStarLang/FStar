@@ -20,7 +20,28 @@ open FStarC.Effect
 open FStarC.Ident
 open FStarC.Util { out_channel }
 
+(*
+ * AR: Parsing data for a file (also cached in the checked files)
+ *     It is a summary of opens, includes, A.<id>, etc. in a module
+ *     Earlier we used to store the dependences in the checked file,
+ *       however that is an image of the file system, and so, when the checked
+ *       files were used in a slightly different file system, there were strange errors
+ *       see e.g. #1657 for a couple of cases
+ *     Now we store the following summary and construct the dependences from the current
+ *       file system
+ *)
+
 type open_kind = | Open_module | Open_namespace
+
+type parsing_data_elt =
+  | P_begin_module of lident  //begin_module
+  | P_open of (*let open*)bool & lident  //record_open
+  | P_implicit_open_module_or_namespace of (open_kind & lid)  //record_open_module_or_namespace
+  | P_dep of bool & lident  //add_dep_on_module, bool=true iff it's a friend dependency
+  | P_alias of ident & lident  //record_module_alias
+  | P_lid of lident  //record_lid
+  | P_inline_for_extraction
+
 type module_name = string
 
 val maybe_module_name_of_file : string -> option string
@@ -33,19 +54,20 @@ val prelude : list (open_kind & lid)
 
 val is_interface: string -> bool
 val is_implementation: string -> bool
-
 val parsing_data : Type0  //cached in the checked files
 val str_of_parsing_data (p:parsing_data) : string
 val empty_parsing_data: parsing_data  //for legacy ide
 val friends (p:parsing_data) : list lident
 val deps : Type0
 val copy_deps (d:deps) : deps
-val empty_deps : deps
+val empty_deps (cmd_line_files:list string): deps
 val interface_of : deps -> module_name:string -> option string  //return value is the file name
 val implementation_of : deps -> module_name:string -> option string  //return value is the file name
 val cache_file_name: (string -> string)
-val collect_deps_of_decl (deps:deps) (filename:string) (ds:list FStarC.Parser.AST.decl)
-                          (get_parsing_data_from_cache:string -> option parsing_data)
+val collect_deps_of_decl 
+    (deps:deps) (filename:string) (ds:list FStarC.Parser.AST.decl)
+    (scope_parsing_data:list parsing_data_elt)
+    (get_parsing_data_from_cache:string -> option parsing_data)
 : list string //filenames
 val collect: list string -> (string -> option parsing_data) -> list string & deps
 val deps_of : deps -> string -> list string

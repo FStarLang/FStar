@@ -127,6 +127,11 @@ let is_interface (f: string): bool =
 let is_implementation f =
   not (is_interface f)
 
+type parsing_data = {
+    elts : list parsing_data_elt;
+    no_prelude : bool;
+}
+
 
 let list_of_option = function Some x -> [x] | None -> []
 
@@ -187,29 +192,6 @@ type dependence_graph = //maps file names to the modules it depends on
      | Deps of SMap.t dep_node //(dependences * color)>
 let copy_dep_graph (d:dependence_graph) =
   let Deps m = d in Deps (SMap.copy m)
-(*
- * AR: Parsing data for a file (also cached in the checked files)
- *     It is a summary of opens, includes, A.<id>, etc. in a module
- *     Earlier we used to store the dependences in the checked file,
- *       however that is an image of the file system, and so, when the checked
- *       files were used in a slightly different file system, there were strange errors
- *       see e.g. #1657 for a couple of cases
- *     Now we store the following summary and construct the dependences from the current
- *       file system
- *)
-type parsing_data_elt =
-  | P_begin_module of lident  //begin_module
-  | P_open of bool & lident  //record_open
-  | P_implicit_open_module_or_namespace of (open_kind & lid)  //record_open_module_or_namespace
-  | P_dep of bool & lident  //add_dep_on_module, bool=true iff it's a friend dependency
-  | P_alias of ident & lident  //record_module_alias
-  | P_lid of lident  //record_lid
-  | P_inline_for_extraction
-
-type parsing_data = {
-    elts : list parsing_data_elt;
-    no_prelude : bool;
-}
 
 let str_of_parsing_data_elt elt =
   let str_of_open_kind = function
@@ -283,7 +265,7 @@ let mk_deps dg fs c a i pr = {
     parse_results=pr;
 }
 (* In public interface *)
-let empty_deps = mk_deps (deps_empty ()) (SMap.create 0) [] [] [] (SMap.create 0)
+let empty_deps clf = mk_deps (deps_empty ()) (SMap.create 0) clf [] [] (SMap.create 0)
 let module_name_of_dep = function
     | UseInterface m
     | PreferInterface m
@@ -298,19 +280,16 @@ let resolve_module_name (file_system_map:files_for_module_name) (key:module_name
       | _ -> None
 
 let interface_of_internal (file_system_map:files_for_module_name) (key:module_name)
-    : option file_name =
-    match SMap.try_find file_system_map key with
-    | Some (Some iface, _) -> Some iface
-    | _ -> None
+: option file_name 
+= match SMap.try_find file_system_map key with
+  | Some (Some iface, _) -> Some iface
+  | _ -> None
 
 let implementation_of_internal (file_system_map:files_for_module_name) (key:module_name)
-    : option file_name =
-    match SMap.try_find file_system_map key with
-    | Some (_, Some impl) -> Some impl
-    | _ -> None
-
-let interface_of deps key = interface_of_internal deps.file_system_map key
-let implementation_of deps key = implementation_of_internal deps.file_system_map key
+: option file_name 
+= match SMap.try_find file_system_map key with
+  | Some (_, Some impl) -> Some impl
+  | _ -> None
 
 let has_interface (file_system_map:files_for_module_name) (key:module_name)
     : bool =
@@ -378,6 +357,7 @@ let cache_file_name =
         res
     in
     memo checked_file_and_exists_flag
+
 
 let file_of_dep_aux
                 (use_checked_file:bool)
@@ -529,6 +509,16 @@ let build_map map (filenames: list string): unit =
   List.iter (fun f ->
     add_entry (lowercase_module_name f) f
   ) filenames
+
+
+let interface_of deps key = 
+  if Nil? (SMap.keys deps.file_system_map)
+  then build_map deps.file_system_map deps.cmd_line_files;
+  interface_of_internal deps.file_system_map key
+let implementation_of deps key =
+  if Nil? (SMap.keys deps.file_system_map)
+  then build_map deps.file_system_map deps.cmd_line_files;
+  implementation_of_internal deps.file_system_map key
 
 let string_of_lid (l: lident) (last: bool) =
   let suffix = if last then [ (string_of_id (ident_of_lid l)) ] else [ ] in
@@ -1531,6 +1521,7 @@ let build_dep_graph_for_files
 
 
 let collect_deps_of_decl (deps:deps) (filename:string) (ds:list decl)
+  (scope_pds: list parsing_data_elt)
   (get_parsing_data_from_cache:string -> option parsing_data)
 : list file_name
 = let roots =
@@ -1548,7 +1539,8 @@ let collect_deps_of_decl (deps:deps) (filename:string) (ds:list decl)
   in
   if Nil? (SMap.keys deps.file_system_map)
   then build_map deps.file_system_map [filename];
-  let pd = collect_module_or_decls filename roots in //(Inr ds) in
+  let pd = collect_module_or_decls filename roots in
+  let pd = { pd with elts = scope_pds@pd.elts } in
   let direct_deps, _has_inline_for_extraction, _additional_roots = deps_from_parsing_data pd deps.file_system_map filename in
   debug_print (fun _ -> Format.print3 "direct deps of %s is %s, mo_roots=%s\n" 
       (show ds) (show direct_deps) (show _additional_roots)); 

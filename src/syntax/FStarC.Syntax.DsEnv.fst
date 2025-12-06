@@ -97,6 +97,17 @@ type scope_mod =
      as curmodule.x. *)
 | Record_or_dc             of record_or_dc    (* to honor interleavings of "open" and record definitions *)
 
+let scope_mod_as_parsing_data (s:scope_mod)
+: list FStarC.Parser.Dep.parsing_data_elt
+= let open FStarC.Parser.Dep in
+  match s with
+  | Local_bindings _ -> []
+  | Rec_binding _ -> []
+  | Module_abbrev ma -> [ P_alias ma ]
+  | Open_module_or_namespace (l, _k, _restrict) -> [P_open (false, l)]
+  | Top_level_defs _ -> []
+  | Record_or_dc _ -> []
+
 instance _ : showable scope_mod = {
   show = function
     | Local_bindings lbs -> 
@@ -155,6 +166,9 @@ and dsenv_hooks =
     ds_push_include_hook : env -> lident -> unit;
     ds_push_module_abbrev_hook : env -> ident -> lident -> unit }
 
+let parsing_data_for_scope (e:env) : list FStarC.Parser.Dep.parsing_data_elt =
+  List.collect scope_mod_as_parsing_data e.scope_mods
+  
 let with_restored_scope (e:env) (f: env -> 'a & env) : 'a & env =
   let res, e1 = f e in
   res, {e1 with scope_mods=e.scope_mods; curmodule=e.curmodule; curmonad=e.curmonad; sigaccum=e.sigaccum}

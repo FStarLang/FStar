@@ -197,7 +197,13 @@ let run_repl_task (repl_fname:string) (curmod: optmod_t) (env: env_t) (task: rep
       match frag with
       | Inl frag -> Inl (frag, lds), env
       | Inr decl -> 
-        let env = Universal.scan_and_load_fly_deps repl_fname env decl in
+        let env = 
+          if FStarC.Options.Ext.enabled "fly_deps"
+          then let env, filenames = Universal.scan_and_load_fly_deps repl_fname env decl in
+               add_filenames_to_push_fragment filenames;
+               env
+          else env
+        in
         Inr decl, env
     in
     let o, e, langs = tc_one_fragment curmod env frag in

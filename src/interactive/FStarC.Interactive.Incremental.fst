@@ -38,7 +38,7 @@ open FStarC.Parser.AST
 open FStarC.Parser.AST.Util
 open FStarC.Parser.AST.Diff { eq_decl }
 open FStarC.Class.Show
-
+let dbg = Debug.get_toggle "IDE"
 let qid = string & int
 let qst a = qid & repl_state -> a & qid
 let return (x:'a) : qst 'a = fun (q, _) -> x, q
@@ -281,7 +281,7 @@ let run_full_buffer (st:repl_state)
     // to use the latest snapshot of the file, rather than what was present
     // in the buffer when the IDE was started. This is especially useful when
     // creating a new file and launching F* on it
-    if Debug.any() then (
+    if !dbg then (
       Format.print1 "run_full_buffer: repl_state=%s\n"
           (show st);
       Format.print1 "run_full_buffer: repl_stack=%s\n"

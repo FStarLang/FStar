@@ -1646,7 +1646,7 @@ let resugar_sigelt' env se : option A.decl =
 
 (* Old interface: no envs *)
 
-let empty_env = DsEnv.empty_env FStarC.Parser.Dep.empty_deps //dep graph not needed for resugaring
+let empty_env = DsEnv.empty_env (FStarC.Parser.Dep.empty_deps []) //dep graph not needed for resugaring
 
 let noenv (f: DsEnv.env -> 'a) : 'a =
   f empty_env

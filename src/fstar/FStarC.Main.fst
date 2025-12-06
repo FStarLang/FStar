@@ -248,7 +248,7 @@ let go_normal () =
     (* --read_checked: read and print a checked file *)
     | Success when Some? (Options.read_checked_file ()) -> (
       let path = Some?.v <| Options.read_checked_file () in
-      let env = Universal.init_env Parser.Dep.empty_deps in
+      let env = Universal.init_env (Parser.Dep.empty_deps filenames) in
       let res = CheckedFiles.load_tc_result path in
       match res with
       | None ->
@@ -405,10 +405,20 @@ let go_normal () =
         let filenames, dep_graph = 
           if FStarC.Options.Ext.enabled "fly_deps"
           then (
-            filenames |> List.iter (fun f ->
-              let m = FStarC.Parser.Dep.lowercase_module_name f in
-              Options.add_verify_module m);
-            filenames, FStarC.Parser.Dep.empty_deps
+            match filenames with
+            | [fn] ->
+              let m = FStarC.Parser.Dep.lowercase_module_name fn in
+              Options.add_verify_module m;
+              let deps = FStarC.Parser.Dep.empty_deps [fn] in
+              let filenames =
+                match FStarC.Parser.Dep.interface_of deps m with
+                | None -> [fn]
+                | Some iface -> [iface; fn]
+              in
+              filenames, deps
+            | _ ->
+              Errors.raise_error0 Errors.Error_TooManyFiles
+                "When using --fly-deps, only one file can be provided."
           )
           else Dependencies.find_deps_if_needed filenames CheckedFiles.load_parsing_data_from_cache in
         let tcrs, env, cleanup = Universal.batch_mode_tc filenames dep_graph in

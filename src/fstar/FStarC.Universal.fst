@@ -235,6 +235,7 @@ let tc_one_fragment curmod (env:TcEnv.env_t) frag =
   in
   match frag with
   | Inr d -> (
+    if Debug.any() then Format.print1 "tc_one_fragment: %s\n" (show d);
     //We already have a parsed decl, usually from FStarC.Interactive.Incremental
     match d.d with
     | FStarC.Parser.AST.TopLevelModule lid ->
@@ -585,11 +586,12 @@ and load_file
 : TcEnv.env_t
 = let env = env_of_tcenv env in
   let tc_result, _, env = tc_one_file_internal false env interface_fn fn in
-  Format.print1 "After load_file: %s\n" (show (tcenv_of_uenv env).dsenv);
+  // Format.print1 "After load_file: %s\n" (show (tcenv_of_uenv env).dsenv);
   tcenv_of_uenv env
 
 and fly_deps_check (filename:string) (tcenv:Env.env_t) (ast_mod:Ast.modul) =
   let decls = Ast.decls_of_modul ast_mod in
+  if Debug.any() then Format.print1 "Before fly load deps: %s\n" (FStarC.Pprint.render <| FStarC.Class.PP.pp decls);
   FStarC.Parser.Dep.populate_parsing_data filename ast_mod (DsEnv.dep_graph tcenv.dsenv);
   let _ = match decls with
     | {d=Ast.TopLevelModule lid} :: rest -> decls
@@ -598,7 +600,7 @@ and fly_deps_check (filename:string) (tcenv:Env.env_t) (ast_mod:Ast.modul) =
   let mod, tcenv =
     List.fold_left 
       (fun (mod, env) decl ->
-        let env = scan_and_load_fly_deps filename env decl in
+        let env, _ = scan_and_load_fly_deps filename env decl in
         let mod, env, _ = tc_one_fragment mod env (Inr decl) in
         mod, env)
       (None, tcenv)
@@ -607,7 +609,7 @@ and fly_deps_check (filename:string) (tcenv:Env.env_t) (ast_mod:Ast.modul) =
   if None? mod then failwith "Impossible";
   Some?.v mod, tcenv
 
-and scan_and_load_fly_deps filename env decl: env_t =
+and scan_and_load_fly_deps filename env decl: env_t & list string =
   let load_fly_deps (env:env_t) filenames =
     let rec run_load_tasks env filenames =
       match filenames with
@@ -617,7 +619,7 @@ and scan_and_load_fly_deps filename env decl: env_t =
         run_load_tasks env filenames
     in
     let _, env = TcEnv.with_restored_scope env (fun env -> (), run_load_tasks env filenames) in
-    Format.print1 "After fly load deps: %s\n" (show env.dsenv);
+    if Debug.any() then Format.print1 "After fly load deps: %s\n" (show env.dsenv);
     env
   in
   let scan_fragment_deps env (d:FStarC.Parser.AST.decl) =
@@ -629,16 +631,19 @@ and scan_and_load_fly_deps filename env decl: env_t =
         deps
         filename
         [d]
+        (DsEnv.parsing_data_for_scope env.dsenv)
         FStarC.CheckedFiles.load_parsing_data_from_cache
     in
+    if Debug.any() then (
     Format.print1 "Initial files loaded: %s\n" (show <| FStarC.Parser.Dep.all_files deps);
     Format.print1 "Decls scanned: %s\n" (show d);
-    Format.print1 "Additional files to load: %s\n" (show filenames_to_load);
+    Format.print1 "Additional files to load: %s\n" (show filenames_to_load)
+    );
     List.rev filenames_to_load, env
   in
   let filenames, env = scan_fragment_deps env decl in
   let env = load_fly_deps env filenames in
-  env
+  env, filenames
 
 let tc_one_file 
         (env:uenv)

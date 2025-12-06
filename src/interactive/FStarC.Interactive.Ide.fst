@@ -765,12 +765,7 @@ let run_push_with_deps st query =
     run_push_without_deps ({ st with repl_names = names }) query
 
 let run_push st query =
-  let is_legacy_push =
-    match query.push_code_or_decl with
-    | Inl text -> true //emacs sends text chunks
-    | Inr decl -> false //vs code sends full buffers that get parsed into decls
-  in
-  if is_legacy_push && nothing_left_to_pop st then
+  if not (FStarC.Options.Ext.enabled "fly_deps") && nothing_left_to_pop st then
     run_push_with_deps st query
   else
     run_push_without_deps st query
@@ -1243,7 +1238,7 @@ let install_ide_mode_hooks printer =
 
 let build_initial_repl_state (filename: string) =
   Options.add_verify_module (FStarC.Parser.Dep.lowercase_module_name filename);
-  let env = init_env FStarC.Parser.Dep.empty_deps in
+  let env = init_env (FStarC.Parser.Dep.empty_deps [filename])in
   let env = FStarC.TypeChecker.Env.set_range env (initial_range filename) in
   FStarC.Options.set_ide_filename filename;
   { repl_line = 1;

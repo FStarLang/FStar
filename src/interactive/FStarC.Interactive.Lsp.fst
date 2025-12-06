@@ -110,7 +110,7 @@ let parse_lsp_query query_str : lsp_query =
 
 let repl_state_init (fname: string) : repl_state =
   let intial_range = Range.mk_range fname (Range.mk_pos 1 0) (Range.mk_pos 1 0) in
-  let env = init_env FStarC.Parser.Dep.empty_deps in
+  let env = init_env (FStarC.Parser.Dep.empty_deps [fname]) in
   let env = TcEnv.set_range env intial_range in
   { repl_line = 1;
     repl_column = 0;
