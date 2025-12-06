@@ -652,7 +652,7 @@ let tc_one_file
     : tc_result
     & option MLSyntax.mlmodule
     & uenv
-= let fly_deps = FStarC.Options.Ext.enabled "fly_deps" in 
+= let fly_deps = FStarC.Parser.Dep.fly_deps_enabled() in
   tc_one_file_internal fly_deps env interface_fn fn
 
 

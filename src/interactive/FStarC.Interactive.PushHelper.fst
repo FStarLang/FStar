@@ -198,7 +198,7 @@ let run_repl_task (repl_fname:string) (curmod: optmod_t) (env: env_t) (task: rep
       | Inl frag -> Inl (frag, lds), env
       | Inr decl -> 
         let env = 
-          if FStarC.Options.Ext.enabled "fly_deps"
+          if FStarC.Parser.Dep.fly_deps_enabled()
           then let env, filenames = Universal.scan_and_load_fly_deps repl_fname env decl in
                add_filenames_to_push_fragment filenames;
                env

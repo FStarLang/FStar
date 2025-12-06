@@ -401,9 +401,8 @@ let go_normal () =
       else begin
         if Nil? filenames then
           Errors.raise_error0 Errors.Error_MissingFileName "No file provided";
-
         let filenames, dep_graph = 
-          if FStarC.Options.Ext.enabled "fly_deps"
+          if FStarC.Parser.Dep.fly_deps_enabled()
           then (
             match filenames with
             | [fn] ->
@@ -411,14 +410,18 @@ let go_normal () =
               Options.add_verify_module m;
               let deps = FStarC.Parser.Dep.empty_deps [fn] in
               let filenames =
-                match FStarC.Parser.Dep.interface_of deps m with
-                | None -> [fn]
-                | Some iface -> [iface; fn]
+                if FStarC.Parser.Dep.is_implementation fn
+                then (
+                  match FStarC.Parser.Dep.interface_of deps m with
+                  | None -> [fn]
+                  | Some iface -> [iface; fn]
+                )
+                else [fn]
               in
               filenames, deps
             | _ ->
               Errors.raise_error0 Errors.Error_TooManyFiles
-                "When using --fly-deps, only one file can be provided."
+                "When using --ext fly_deps, only one file can be provided."
           )
           else Dependencies.find_deps_if_needed filenames CheckedFiles.load_parsing_data_from_cache in
         let tcrs, env, cleanup = Universal.batch_mode_tc filenames dep_graph in

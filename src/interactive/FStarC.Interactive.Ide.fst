@@ -765,7 +765,7 @@ let run_push_with_deps st query =
     run_push_without_deps ({ st with repl_names = names }) query
 
 let run_push st query =
-  if not (FStarC.Options.Ext.enabled "fly_deps") && nothing_left_to_pop st then
+  if not (FStarC.Parser.Dep.fly_deps_enabled()) && nothing_left_to_pop st then
     run_push_with_deps st query
   else
     run_push_without_deps st query

@@ -36,6 +36,38 @@ module Const = FStarC.Parser.Const
 module BU = FStarC.Util
 module F = FStarC.Format
 
+let fly_deps_enabled = 
+  let enabled = mk_ref None in
+  fun () ->
+    match !enabled with
+    | Some b -> b
+    | None -> 
+      let res = 
+        if Options.Ext.enabled "fly_deps"
+        then (
+          if Some? <| Options.codegen() || Some? <| Options.dep()
+          then (
+            if Debug.any() 
+            then (
+              Format.print_string "Ignoring fly_deps because codegen or dep is on\n"
+            );
+            false
+          )
+          else (
+            if Debug.any() then Format.print_string "fly_deps is on!\n";
+            true
+          )
+        )
+        else (
+          if Debug.any() then Format.print_string "fly_deps is off!\n";
+          false
+        )
+      in
+      Format.flush_stdout();
+      enabled := Some res;
+      res
+
+
 (* This is faster than the quadratic BU.remove_dups, since we can use
 the total order. *)
 let remove_dups_fast (#a:Type) {| ord a |} (xs : list a) : list a =
@@ -609,7 +641,8 @@ let prelude : list (open_kind & lid) = [
 //For --ide mode, we stop dependence analysis at interface boundaries
 //and do not check for dependence cycles across interface boundaries
 let peek_past_interfaces () =
-  if Options.Ext.enabled "dep_minimal" || Options.Ext.enabled "fly_deps" then false
+  if Options.Ext.enabled "dep_minimal"|| fly_deps_enabled()
+  then false
   else not (Options.ide ())
 
 let collect_module_or_decls (filename:string) (m:either modul (list decl)) : parsing_data =
@@ -1540,6 +1573,8 @@ let collect_deps_of_decl (deps:deps) (filename:string) (ds:list decl)
   if Nil? (SMap.keys deps.file_system_map)
   then build_map deps.file_system_map [filename];
   let pd = collect_module_or_decls filename roots in
+  let _ =
+    if !dbg then Format.print2 "Got pds=%s and scope_pds=%s\n" (show pd.elts) (show scope_pds) in
   let pd = { pd with elts = scope_pds@pd.elts } in
   let direct_deps, _has_inline_for_extraction, _additional_roots = deps_from_parsing_data pd deps.file_system_map filename in
   debug_print (fun _ -> Format.print3 "direct deps of %s is %s, mo_roots=%s\n" 

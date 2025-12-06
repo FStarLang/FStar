@@ -97,6 +97,11 @@ type scope_mod =
      as curmodule.x. *)
 | Record_or_dc             of record_or_dc    (* to honor interleavings of "open" and record definitions *)
 
+let namespace_scope_of_module mname =
+  if List.length (ns_of_lid mname) > 0
+  then [ (lid_of_ids (ns_of_lid mname), Open_namespace, Unrestricted) ]
+  else []
+
 let scope_mod_as_parsing_data (s:scope_mod)
 : list FStarC.Parser.Dep.parsing_data_elt
 = let open FStarC.Parser.Dep in
@@ -167,8 +172,23 @@ and dsenv_hooks =
     ds_push_module_abbrev_hook : env -> ident -> lident -> unit }
 
 let parsing_data_for_scope (e:env) : list FStarC.Parser.Dep.parsing_data_elt =
-  List.collect scope_mod_as_parsing_data e.scope_mods
-  
+  let curmod_scope =
+    match e.curmodule with
+    | None -> []
+    | Some m -> namespace_scope_of_module m
+  in
+  let scope_mods =
+    match curmod_scope with
+    | [] -> e.scope_mods
+    | [(lid, _, _)] ->
+      List.filter (function 
+        | Open_module_or_namespace (lid', _, _) ->
+          not (Ident.lid_equals lid lid')
+        | _ -> true)
+        e.scope_mods
+  in
+  List.collect scope_mod_as_parsing_data scope_mods
+
 let with_restored_scope (e:env) (f: env -> 'a & env) : 'a & env =
   let res, e1 = f e in
   res, {e1 with scope_mods=e.scope_mods; curmodule=e.curmodule; curmonad=e.curmonad; sigaccum=e.sigaccum}
@@ -1646,13 +1666,8 @@ let prepare_module_or_interface intf admitted env mname (mii:module_inclusion_in
       in
       auto_open |> List.map (fun (kind, lid) -> (lid, convert_kind kind, Unrestricted))
     in
-    let namespace_of_module =
-      if List.length (ns_of_lid mname) > 0
-      then [ (lid_of_ids (ns_of_lid mname), Open_namespace, Unrestricted) ]
-      else []
-    in
     (* [scope_mods] is a stack, so reverse the order *)
-    let auto_open = namespace_of_module @ List.rev auto_open in
+    let auto_open = namespace_scope_of_module mname @ List.rev auto_open in
 
     (* Create new empty set of exported identifiers for the current module, for 'include' *)
     let () = SMap.add env.exported_ids (string_of_lid mname) (as_exported_id_set mii.mii_exported_ids) in
@@ -1695,7 +1710,6 @@ let fail_or env lookup lid =
     let opened_modules = List.map (fun (lid, _) -> string_of_lid lid) env.modules in
     let open FStarC.Class.PP in
     if List.length (ns_of_lid lid) = 0 then begin
-      Format.print1 "Dump env:\n%s\n" (show env);
       raise_error lid Errors.Fatal_IdentifierNotFound [
         Pprint.prefix 2 1 (text "Identifier not found:") (pp lid);
         typo_msg (Ident.string_of_lid lid) (all_local_names env);

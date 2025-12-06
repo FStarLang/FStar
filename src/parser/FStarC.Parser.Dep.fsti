@@ -20,6 +20,8 @@ open FStarC.Effect
 open FStarC.Ident
 open FStarC.Util { out_channel }
 
+val fly_deps_enabled () : bool
+
 (*
  * AR: Parsing data for a file (also cached in the checked files)
  *     It is a summary of opens, includes, A.<id>, etc. in a module
@@ -47,7 +49,6 @@ type module_name = string
 val maybe_module_name_of_file : string -> option string
 val module_name_of_file : string -> string
 val lowercase_module_name : string -> string
-
 val build_inclusion_candidates_list : unit -> list (string & string)
 
 val prelude : list (open_kind & lid)
