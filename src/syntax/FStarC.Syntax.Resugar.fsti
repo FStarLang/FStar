@@ -27,6 +27,13 @@ module S  = FStarC.Syntax.Syntax
 module A  = FStarC.Parser.AST
 module DsEnv = FStarC.Syntax.DsEnv
 
+exception SkipResugar
+
+(* May raise SkipResugar exn *)
+type resugar_pass_t = env:DsEnv.env -> S.term -> A.term
+
+val register_pass (_ : resugar_pass_t) : unit
+
 val resugar_term: S.term -> A.term
 val resugar_sigelt: S.sigelt -> option A.decl
 val resugar_comp: S.comp -> A.term

@@ -1589,6 +1589,9 @@ and p_noSeqTerm' ps pb e = match e.tm with
     str "eliminate" ^^ space ^^ p ^^ space ^^ str "/\\" ^^ space ^^ q ^^ hardline ^^
     str "returns" ^^ space ^^ r ^^ hardline ^^
     str "with" ^^ space ^^ xy ^^ space ^^ str "." ^^ space ^^ e
+
+  | LitDoc d ->
+    d
     
   | _ -> p_typ ps pb e
 
@@ -2160,6 +2163,8 @@ and p_projectionLHS e = match e.tm with
               " arguments couldn't be handled by the pretty printer")
   | Uvar id ->
     failwith "Unexpected universe variable out of universe context"
+
+  | LitDoc d -> d
 
   (* All the cases are explicitly listed below so that a modification of the ast doesn't lead to a loop *)
   (* We must also make sure that all the constructors listed below are handled somewhere *)
