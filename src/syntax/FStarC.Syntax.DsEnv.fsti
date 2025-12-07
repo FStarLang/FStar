@@ -76,6 +76,7 @@ val set_expect_typ: env -> bool -> env
 val empty_env: FStarC.Parser.Dep.deps -> env
 val current_module: env -> lident
 val set_current_module: env -> lident -> env
+val clear_scope_mods: env -> env
 val open_modules: env -> list (lident & modul)
 val open_modules_and_namespaces: env -> list lident
 val module_abbrevs: env -> list (ident & lident)

@@ -185,7 +185,14 @@ let with_restored_scope (e:env) (f: env -> 'a & env) : 'a & env =
           let res, env = f env in
           (res, env), env.dsenv)
       in
-      res, {env with dsenv; curmodule=e.curmodule; gamma=e.gamma; gamma_sig=e.gamma_sig; proof_ns=e.proof_ns}
+      res, 
+      {env with dsenv; 
+                curmodule=e.curmodule;
+                is_iface=e.is_iface;
+                admit=e.admit;
+                gamma=e.gamma;
+                gamma_sig=e.gamma_sig;
+                proof_ns=e.proof_ns}
     )
   in
   env.solver.refresh (Some env.proof_ns);

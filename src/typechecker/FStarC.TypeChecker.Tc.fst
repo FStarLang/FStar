@@ -1221,7 +1221,7 @@ let tc_more_partial_modul env modul decls =
   let modul = {modul with declarations=modul.declarations@ses} in
   modul, ses, env
 
-let finish_partial_modul (loading_from_cache:bool) (iface_exists:bool) (en:env) (m:modul) : (modul & env) =
+let finish_partial_modul should_pop (loading_from_cache:bool) (iface_exists:bool) (en:env) (m:modul) : (modul & env) =
   //AR: do we ever call finish_partial_modul for current buffer in the interactive mode?
   let env = Env.finish_module en m in
 
@@ -1239,7 +1239,7 @@ let finish_partial_modul (loading_from_cache:bool) (iface_exists:bool) (en:env) 
 
   //pop BUT ignore the old env
 
-  pop_context env ("Ending modul " ^ string_of_lid m.name) |> ignore;
+  if should_pop then pop_context env ("Ending modul " ^ string_of_lid m.name) |> ignore;
 
   if Options.depth () > 0 then (
     Errors.log_issue env Error_MissingPopOptions
@@ -1260,7 +1260,7 @@ let tc_modul (env0:env) (m:modul) (iface_exists:bool) :(modul & env) =
   let modul, env = tc_partial_modul env0 m in
   // Note: all sigelts returned by tc_partial_modul must already be compressed
   // by Syntax.compress.deep_compress, so they are safe to output.
-  finish_partial_modul false iface_exists env modul
+  finish_partial_modul true false iface_exists env modul
 
 let load_checked_module_sigelts (en:env) (m:modul) : env =
   //This function tries to very carefully mimic the effect of the environment
@@ -1293,7 +1293,7 @@ let load_checked_module (en:env) (m:modul) :env =
   //And then call finish_partial_modul, which is the normal workflow of tc_modul below
   //except with the flag `must_check_exports` set to false, since this is already a checked module
   //the second true flag is for iface_exists, used to determine whether should extract interface or not
-  let _, env = finish_partial_modul true true env m in
+  let _, env = finish_partial_modul true true true env m in
   Debug.restore dsnap;
   env
 

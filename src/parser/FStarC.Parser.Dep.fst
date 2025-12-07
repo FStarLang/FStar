@@ -45,7 +45,9 @@ let fly_deps_enabled =
       let res = 
         if Options.Ext.enabled "fly_deps"
         then (
-          if Some? <| Options.codegen() || Some? <| Options.dep()
+          if Some? <| Options.codegen() 
+          || Some? <| Options.dep()
+          || Options.any_dump_module()
           then (
             if Debug.any() 
             then (
@@ -308,7 +310,8 @@ let resolve_module_name (file_system_map:files_for_module_name) (key:module_name
     : option module_name
     = match SMap.try_find file_system_map key with
       | Some (Some fn, _)
-      | Some (_, Some fn) -> Some (lowercase_module_name fn)
+      | Some (_, Some fn) ->
+        Some (lowercase_module_name fn)
       | _ -> None
 
 let interface_of_internal (file_system_map:files_for_module_name) (key:module_name)
@@ -600,7 +603,8 @@ let enter_namespace
     match mopt with
     | None -> false
     | Some (intf, impl) -> Some? intf || Some? impl in
-  SMap.iter original_map (fun k _ ->
+  SMap.iter original_map (fun k _fn ->
+    // if !dbg then Format.print2 "enter_namespace considering %s -> %s\n" k (show _fn);
     if Util.starts_with k sprefix then
       let suffix =
         String.substring k (String.length sprefix) (String.length k - String.length sprefix)
@@ -628,6 +632,7 @@ let enter_namespace
       end;
 
       let filename = Option.must (SMap.try_find original_map k) in
+      if !dbg then Format.print2 "Adding %s -> %s to working_map\n" suffix (show filename);
       SMap.add working_map suffix filename;
       found := true
   );
@@ -1099,14 +1104,16 @@ let deps_from_parsing_data (pd:parsing_data) (original_map:files_for_module_name
   in
 
   let auto_open =
-    if pd.no_prelude
-    then []
-    else
-      (prelude |> List.map (fun (k, l) -> P_open (false, l)))
-      @
+    let open_module_ns =
       (match namespace_of_module mname with
         | None -> []
         | Some ns -> [ P_implicit_open_module_or_namespace (Open_namespace, ns) ])
+    in
+    if pd.no_prelude
+    then open_module_ns
+    else
+      (prelude |> List.map (fun (k, l) -> P_open (false, l)))
+      @open_module_ns
   in
 
   let working_map = SMap.copy original_map in
@@ -1129,6 +1136,7 @@ let deps_from_parsing_data (pd:parsing_data) (original_map:files_for_module_name
 
   let add_dependence_edge original_or_working_map lid is_friend =
     let key = lowercase_join_longident lid true in
+    if !dbg then Format.print1 "Resolving %s ..\n" key;
     match resolve_module_name original_or_working_map key with
     | Some module_name ->
       add_dep deps (dep_edge module_name is_friend);
@@ -1196,6 +1204,8 @@ let deps_from_parsing_data (pd:parsing_data) (original_map:files_for_module_name
   in
 
   let add_dep_on_module (module_name : lid) (is_friend : bool) =
+    if !dbg then
+      Format.print1 "Adding dep on module %s ..\n" (show module_name);
     if add_dependence_edge working_map module_name is_friend
     then ()
     else if !dbg then
@@ -1215,8 +1225,10 @@ let deps_from_parsing_data (pd:parsing_data) (original_map:files_for_module_name
   in
 
   let begin_module lid =
-    if List.length (ns_of_lid lid) > 0 then
-    ignore (enter_namespace original_map working_map (namespace_of_lid lid))
+    if List.length (ns_of_lid lid) > 0 then (
+      if !dbg then Format.print1 "Begin module %s ..\n" (show lid);
+      ignore (enter_namespace original_map working_map (String.lowercase (namespace_of_lid lid)))
+    )
   in
 
   (*
@@ -1227,7 +1239,9 @@ let deps_from_parsing_data (pd:parsing_data) (original_map:files_for_module_name
       match elt with
       | P_begin_module lid -> begin_module lid
       | P_open (b, lid) -> record_open b lid
-      | P_implicit_open_module_or_namespace (k, lid) -> record_implicit_open_module_or_namespace (lid, k)
+      | P_implicit_open_module_or_namespace (k, lid) -> 
+        if !dbg then Format.print1 "Implicitly opening %s ..\n" (show lid);
+        record_implicit_open_module_or_namespace (lid, k)
       | P_dep (b, lid) -> add_dep_on_module lid b
       | P_alias (id, lid) -> ignore (record_module_alias id lid)
       | P_lid lid -> record_lid lid
@@ -1275,8 +1289,9 @@ let collect_one
       let ast, _ = Driver.parse_file filename in
       let pd = collect_module_or_decls filename (Inl ast) in
       let pd = { pd with elts = List.rev pd.elts } in
+      if !dbg then Format.print2 "Parsing data of %s: %s\n" filename (show pd);
       let deps, has_inline_for_extraction, mo_roots = deps_from_parsing_data pd original_map filename in
-      (* Util.print2 "Deps for %s: %s\n" filename (String.concat " " (!deps)); *)
+      if !dbg then Format.print2 "Deps for %s: %s\n" filename (show deps);
       pd, deps, has_inline_for_extraction, mo_roots
     end
 
@@ -1517,7 +1532,11 @@ let build_dep_graph_for_files
     begin
       let parsing_data, (deps, mo_roots, needs_interface_inlining) =
         match SMap.try_find !collect_one_cache file_name with
-        | Some cached -> empty_parsing_data, cached
+        | Some cached ->
+          debug_print (fun _ -> 
+            Format.print1 "Using cached parsing data for %s\n" file_name
+          );
+          empty_parsing_data, cached
         | None ->
           let parsing_data, deps, needs_interface_inlining, additional_roots =
             collect_one file_system_map file_name get_parsing_data_from_cache
@@ -1575,7 +1594,7 @@ let collect_deps_of_decl (deps:deps) (filename:string) (ds:list decl)
   let pd = collect_module_or_decls filename roots in
   let _ =
     if !dbg then Format.print2 "Got pds=%s and scope_pds=%s\n" (show pd.elts) (show scope_pds) in
-  let pd = { pd with elts = scope_pds@pd.elts } in
+  let pd = { pd with elts = scope_pds@List.rev pd.elts } in
   let direct_deps, _has_inline_for_extraction, _additional_roots = deps_from_parsing_data pd deps.file_system_map filename in
   debug_print (fun _ -> Format.print3 "direct deps of %s is %s, mo_roots=%s\n" 
       (show ds) (show direct_deps) (show _additional_roots)); 

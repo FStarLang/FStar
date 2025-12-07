@@ -172,10 +172,12 @@ and dsenv_hooks =
     ds_push_module_abbrev_hook : env -> ident -> lident -> unit }
 
 let parsing_data_for_scope (e:env) : list FStarC.Parser.Dep.parsing_data_elt =
-  let curmod_scope =
+  let begin_module, curmod_scope =
     match e.curmodule with
-    | None -> []
-    | Some m -> namespace_scope_of_module m
+    | None -> [], []
+    | Some m ->
+      [Dep.P_begin_module m],
+      namespace_scope_of_module m
   in
   let scope_mods =
     match curmod_scope with
@@ -187,11 +189,22 @@ let parsing_data_for_scope (e:env) : list FStarC.Parser.Dep.parsing_data_elt =
         | _ -> true)
         e.scope_mods
   in
+  begin_module @
   List.collect scope_mod_as_parsing_data scope_mods
 
 let with_restored_scope (e:env) (f: env -> 'a & env) : 'a & env =
   let res, e1 = f e in
-  res, {e1 with scope_mods=e.scope_mods; curmodule=e.curmodule; curmonad=e.curmonad; sigaccum=e.sigaccum}
+  res, 
+  {e1 with 
+      scope_mods=e.scope_mods;
+      curmodule=e.curmodule;
+      curmonad=e.curmonad;
+      sigaccum=e.sigaccum;
+      iface=e.iface;
+      admitted_iface=e.admitted_iface;
+      expect_typ=e.expect_typ;
+      remaining_iface_decls=e.remaining_iface_decls;
+      no_prelude=e.no_prelude}
 
 (* For typo suggestions *)
 let all_local_names (env:env) : list string =
@@ -219,7 +232,7 @@ let all_mod_names (env:env) : list string =
 
 instance showable_env : showable env = {
   show = fun env -> 
-  Format.fmt2 "All mods: %s\nScope mods: %s\n" (show (List.map fst env.modules)) (show env.scope_mods)
+  Format.fmt3 "DsEnv { curmod=%s; All mods: %s\nScope mods: %s\n }" (show env.curmodule) (show (List.map fst env.modules)) (show env.scope_mods)
 }
 
 let mk_dsenv_hooks open_hook include_hook module_abbrev_hook =
@@ -264,6 +277,7 @@ let module_abbrevs env : list (ident & lident)=
                    | _ -> None)
     env.scope_mods
 let set_current_module e l = {e with curmodule=Some l}
+let clear_scope_mods e = {e with scope_mods=[]}
 let current_module env = match env.curmodule with
     | None -> failwith "Unset current module"
     | Some m -> m
@@ -1710,6 +1724,8 @@ let fail_or env lookup lid =
     let opened_modules = List.map (fun (lid, _) -> string_of_lid lid) env.modules in
     let open FStarC.Class.PP in
     if List.length (ns_of_lid lid) = 0 then begin
+      if Debug.any()
+      then Format.print2 "Dump env (is iface=%s):\n%s\n" (show env.iface) (show env);
       raise_error lid Errors.Fatal_IdentifierNotFound [
         Pprint.prefix 2 1 (text "Identifier not found:") (pp lid);
         typo_msg (Ident.string_of_lid lid) (all_local_names env);
