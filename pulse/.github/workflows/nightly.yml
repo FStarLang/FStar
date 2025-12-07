@@ -82,11 +82,15 @@ jobs:
           # ^ Download all artifacts into the same dir.
           # Each of them is a single file, so no clashes happen.
 
+      - run: |
+          # git config --unset-all http.https://github.com/.extraheader
+          # ^ https://stackoverflow.com/questions/64374179/how-to-push-to-another-repository-in-github-actions
+          # The above does not work anymore, GitHub switched to using includeif
+          # directives in the config. Remove them.
+          for key in $(git config -l | grep ^includeif | cut -d= -f1); do git config unset --all $key; done
+
       - name: Publish artifacts in nightly tag
         run: |
-          git config --unset-all http.https://github.com/.extraheader
-          # ^ https://stackoverflow.com/questions/64374179/how-to-push-to-another-repository-in-github-actions
-
           # We push nightly builds to a different repo (same org)
           REPO="${{github.repository}}-nightly"
           TAG=nightly-$(date -I)
