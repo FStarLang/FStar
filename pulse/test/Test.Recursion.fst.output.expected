@@ -1,11 +1,15 @@
+* Warning 274:
+  - Implicitly opening namespace 'fstar.tactics.' shadows module 'print' in file
+    "Print.fst".
+  - Rename "Print.fst" to avoid conflicts.
+
 * Info at Test.Recursion.fst(94,2-94,20):
   - Expected failure:
   - Ill-typed term: test_ghost_loop ()
   - Expected a term of type
-      Pulse.Lib.Core.stt_ghost Prims.unit
-        Pulse.Lib.Core.emp_inames
-        Pulse.Lib.Core.emp
-        (fun _ -> Pulse.Lib.Core.emp)
+      ghost fn
+        requires Pulse.Lib.Core.emp
+        ensures Pulse.Lib.Core.emp
   - Could not prove termination
   - The SMT solver could not prove the query. Use --query_stats for more
     details.
@@ -14,10 +18,9 @@
   - Expected failure:
   - Ill-typed term: test5' (z - 1) (y - 1)
   - Expected a term of type
-      Pulse.Lib.Core.stt_ghost Prims.unit
-        Pulse.Lib.Core.emp_inames
-        Pulse.Lib.Core.emp
-        (fun _ -> Pulse.Lib.Core.emp)
+      ghost fn
+        requires Pulse.Lib.Core.emp
+        ensures Pulse.Lib.Core.emp
   - Could not prove termination
   - The SMT solver could not prove the query. Use --query_stats for more
     details.

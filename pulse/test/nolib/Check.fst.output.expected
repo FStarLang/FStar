@@ -3,8 +3,8 @@
     Check.test
     has type
     x: Prims.int
-      -> Pulse.Lib.Core.stt_ghost Prims.int
-          Pulse.Lib.Core.emp_inames
-          (Pulse.Lib.Core.pure (x == 'y))
-          (fun x -> Pulse.Lib.Core.pure (x == x))
+      -> ghost fn
+           requires Pulse.Lib.Core.pure (x == 'y)
+           returns x : Prims.int
+           ensures Pulse.Lib.Core.pure (x == x)
 
