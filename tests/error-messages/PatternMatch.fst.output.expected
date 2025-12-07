@@ -6,10 +6,6 @@
   - Expected failure:
   - Type ascriptions within patterns are only allowed on variables
 
-* Info at PatternMatch.fst(41,3-41,24):
-  - Expected failure:
-  - Type ascriptions within patterns are only allowed on variables
-
 * Info:
   - Expected failure:
   - Patterns are incomplete
@@ -46,6 +42,10 @@
   - The SMT solver could not prove the query. Use --query_stats for more
     details.
   - Also see: PatternMatch.fst(38,4-38,5)
+
+* Info at PatternMatch.fst(41,3-41,24):
+  - Expected failure:
+  - Type ascriptions within patterns are only allowed on variables
 
 * Info at PatternMatch.fst(55,4-55,8):
   - Expected failure:
