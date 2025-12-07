@@ -1,5 +1,5 @@
 * Info at Bug1918.fst(11,13-11,14):
   - Expected failure:
   - Tactic failed
-  - Could not solve typeclass constraint `Bug1918.mon`
+  - Could not solve typeclass constraint `mon`
 
