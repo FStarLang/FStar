@@ -82,6 +82,7 @@ val open_modules_and_namespaces: env -> list lident
 val module_abbrevs: env -> list (ident & lident)
 val iface_decls : env -> lident -> option (list Parser.AST.decl)
 val set_iface_decls: env -> lident -> list Parser.AST.decl -> env
+val iface_interleaving_init: env -> bool
 val try_lookup_id: env -> ident -> option term
 val shorten_module_path: env -> list ident -> bool -> (list ident & list ident)
 val shorten_lid: env -> lid -> lid

@@ -70,7 +70,7 @@ val load_file :
 val scan_and_load_fly_deps : 
     filename:string ->
     env:TcEnv.env_t ->
-    decl:FStarC.Parser.AST.decl ->
+    either (FStarC.Parser.ParseIt.input_frag & lang_decls_t) FStarC.Parser.AST.decl ->
     TcEnv.env_t & list string //filenames that were loaded
 
 (* Initialize a clean environment, built from a dependency graph. The

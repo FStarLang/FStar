@@ -2916,7 +2916,8 @@ let term_to_doc env t =
       t
   in
    //clearing scope mods: important to ensure uniform printing of identifiers with & without fly_deps
-  let env' = DsEnv.clear_scope_mods (DsEnv.set_current_module env.dsenv env.curmodule) in
+  let env' = DsEnv.set_current_module env.dsenv env.curmodule in
+  let env' = if Options.interactive() then env' else DsEnv.clear_scope_mods env' in
   FStarC.Syntax.Print.term_to_doc' env' t
 
 let term_to_string env t = GenSym.with_frozen_gensym (fun () ->

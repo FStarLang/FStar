@@ -161,6 +161,7 @@ type env = {
   admitted_iface:       bool;                             (* is it an admitted interface; different scoping rules apply *)
   expect_typ:           bool;                             (* syntactically, expect a type at this position in the term *)
   remaining_iface_decls:list (lident&list Parser.AST.decl);  (* A map from interface names to their stil-to-be-processed top-level decls *)
+  iface_interleaving_init:bool;
   syntax_only:          bool;                             (* Whether next push should skip type-checking *)
   ds_hooks:             dsenv_hooks;                       (* hooks that the interactive more relies onto for symbol tracking *)
   dep_graph:            FStarC.Parser.Dep.deps;
@@ -176,7 +177,7 @@ let parsing_data_for_scope (e:env) : list FStarC.Parser.Dep.parsing_data_elt =
     match e.curmodule with
     | None -> [], []
     | Some m ->
-      [Dep.P_begin_module m],
+      [],
       namespace_scope_of_module m
   in
   let scope_mods =
@@ -204,7 +205,8 @@ let with_restored_scope (e:env) (f: env -> 'a & env) : 'a & env =
       admitted_iface=e.admitted_iface;
       expect_typ=e.expect_typ;
       remaining_iface_decls=e.remaining_iface_decls;
-      no_prelude=e.no_prelude}
+      no_prelude=e.no_prelude;
+      iface_interleaving_init=e.iface_interleaving_init}
 
 (* For typo suggestions *)
 let all_local_names (env:env) : list string =
@@ -291,7 +293,8 @@ let set_iface_decls env l ds =
         FStarC.List.partition
             (fun (m, _) -> Ident.lid_equals l m)
             env.remaining_iface_decls in
-    {env with remaining_iface_decls=(l, ds)::rest}
+    {env with remaining_iface_decls=(l, ds)::rest; iface_interleaving_init=true}
+let iface_interleaving_init e = e.iface_interleaving_init
 let qual = qual_id
 let qualify env id =
     match env.curmonad with
@@ -319,6 +322,7 @@ let empty_env deps = {curmodule=None;
                     ds_hooks=default_ds_hooks;
                     dep_graph=deps;
                     no_prelude=false;
+                    iface_interleaving_init=false;
                     }
 let dep_graph env = env.dep_graph
 let set_dep_graph env ds = {env with dep_graph=ds}

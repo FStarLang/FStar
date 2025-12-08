@@ -632,7 +632,6 @@ let enter_namespace
       end;
 
       let filename = Option.must (SMap.try_find original_map k) in
-      if !dbg then Format.print2 "Adding %s -> %s to working_map\n" suffix (show filename);
       SMap.add working_map suffix filename;
       found := true
   );
@@ -1578,7 +1577,7 @@ let collect_deps_of_decl (deps:deps) (filename:string) (ds:list decl)
 : list file_name
 = let roots =
     match ds with
-    | [{d=TopLevelModule l; attrs}] -> 
+    | {d=TopLevelModule l; attrs}::_ -> 
       let no_prelude =
         Options.no_prelude () || (* only affects current module *)
         attrs |> List.existsb (function t ->

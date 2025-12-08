@@ -140,6 +140,17 @@ let core_check : TcEnv.core_check_t =
 (* Interactive mode: checking a fragment of a code                     *)
 (***********************************************************************)
 module Ast = FStarC.Parser.AST
+let parse_frag frag lang_decls =
+  let open FStarC.Parser.AST in
+  let use_lang_decl (ds:lang_decls_t) =
+    List.tryFind (fun d -> UseLangDecls? d.d) ds
+  in
+  match use_lang_decl lang_decls with
+  | None -> Parser.Driver.parse_fragment None frag
+  | Some {d=UseLangDecls lang} ->
+    Parser.Driver.parse_fragment (Some lang) frag
+
+    
 let tc_one_fragment is_interface curmod (env:TcEnv.env_t) frag =
   let open FStarC.Parser.AST in
   let debug i env = 
@@ -171,9 +182,6 @@ let tc_one_fragment is_interface curmod (env:TcEnv.env_t) frag =
     match d.d with
     | UseLangDecls _ -> true
     | _ -> false
-  in
-  let use_lang_decl (ds:lang_decls_t) =
-    List.tryFind (fun d -> UseLangDecls? d.d) ds
   in
   let check_module_name_declaration ast_modul = 
       (* It may seem surprising that this function, whose name indicates that
@@ -272,13 +280,7 @@ let tc_one_fragment is_interface curmod (env:TcEnv.env_t) frag =
   )
 
   | Inl (frag, lang_decls) -> (
-    let parse_frag frag =
-      match use_lang_decl lang_decls with
-      | None -> Parser.Driver.parse_fragment None frag
-      | Some {d=UseLangDecls lang} ->
-        Parser.Driver.parse_fragment (Some lang) frag
-    in
-    match parse_frag frag with
+    match parse_frag frag lang_decls with
     | Parser.Driver.Empty
     | Parser.Driver.Decls [] ->
       curmod, env, []
@@ -626,7 +628,7 @@ and fly_deps_check (filename:string) (tcenv:Env.env_t) (ast_mod:Ast.modul) (ifac
         then Format.print1 "fly_deps_check next decl: %s\n" 
           (FStarC.Pprint.render <| FStarC.Class.PP.pp decl);
         
-        let env, _ = scan_and_load_fly_deps filename env decl in
+        let env, _ = scan_and_load_fly_deps filename env (Inr decl) in
         let mod, env, _ = tc_one_fragment is_interface mod env (Inr decl) in
         mod, env)
       (None, tcenv)
@@ -639,7 +641,7 @@ and fly_deps_check (filename:string) (tcenv:Env.env_t) (ast_mod:Ast.modul) (ifac
   let mod, tcenv = Tc.finish_partial_modul false false iface_exists tcenv mod in
   mod, tcenv
 
-and scan_and_load_fly_deps filename env decl: env_t & list string =
+and scan_and_load_fly_deps filename env frag_or_decl: env_t & list string =
   let load_fly_deps (env:env_t) filenames =
     let rec run_load_tasks env filenames =
       match filenames with
@@ -652,27 +654,60 @@ and scan_and_load_fly_deps filename env decl: env_t & list string =
     if Debug.any() then Format.print1 "After fly load deps: %s\n" (show env.dsenv);
     env
   in
-  let scan_fragment_deps env (d:FStarC.Parser.AST.decl) =
+  let scan_fragment_deps env frag_or_decl =
     let deps = FStarC.Syntax.DsEnv.dep_graph env.dsenv in
     let deps = FStarC.Parser.Dep.copy_deps deps in
     let env = { env with dsenv=FStarC.Syntax.DsEnv.set_dep_graph env.dsenv deps } in
+    let decls = 
+      match frag_or_decl with
+      | Inl (frag, lang_decls) -> (
+        let dfrag = parse_frag frag lang_decls in
+        match dfrag with
+        | Parser.Driver.Empty
+        | Parser.Driver.Decls [] -> []
+
+        | Parser.Driver.Modul ast_modul ->
+          Ast.decls_of_modul ast_modul
+        
+        | Parser.Driver.Decls decls -> decls
+      )
+      | Inr d -> [d]
+    in
     let filenames_to_load =
       FStarC.Parser.Dep.collect_deps_of_decl
         deps
         filename
-        [d]
+        decls
         (DsEnv.parsing_data_for_scope env.dsenv)
         FStarC.CheckedFiles.load_parsing_data_from_cache
     in
     if Debug.any() then (
     Format.print1 "Initial files loaded: %s\n" (show <| FStarC.Parser.Dep.all_files deps);
-    Format.print1 "Decls scanned: %s\n" (show d);
+    Format.print1 "Decls scanned: %s\n" (show decls);
     Format.print1 "Additional files to load: %s\n" (show filenames_to_load);
     Format.flush_stdout()
     );
     List.filter (fun fn -> fn <> filename) <| List.rev filenames_to_load, env
+  in  
+  let env =
+    if Options.interactive()
+    && not (iface_interleaving_init env.dsenv)
+    && FStarC.Parser.Dep.is_implementation filename
+    then (
+      let deps = FStarC.Syntax.DsEnv.dep_graph env.dsenv in
+      let m = FStarC.Parser.Dep.lowercase_module_name filename in
+      match FStarC.Parser.Dep.interface_of deps m with
+      | None -> 
+        env
+      | Some fn ->
+        load_interface_decls env fn
+    )
+    else (
+     
+      env
+    )
   in
-  let filenames, env = scan_fragment_deps env decl in
+  let filenames, env = scan_fragment_deps env frag_or_decl in
   let env = load_fly_deps env filenames in
   env, filenames
 
