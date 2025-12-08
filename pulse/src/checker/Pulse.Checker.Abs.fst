@@ -393,39 +393,54 @@ let check_effect_annotation g r (asc:comp_ascription) (c_computed:comp) : T.Tac 
 
 
 #push-options "--z3rlimit_factor 2 --fuel 0 --ifuel 1"
+(* Rewrite the comp c into the annotated one, if any,
+preserving the st_typing derivation d *)
 let maybe_rewrite_body_typing
       (#g:_) (#e:st_term) (#c:comp)
       (d:st_typing g e c)
       (asc:comp_ascription)
   : T.Tac (c':comp & st_typing g e c')
-  = match asc.annotated with
-    | None ->  (| c, d |)
-    | Some (C_Tot t) -> (
-      match c with
-      | C_Tot t' -> (
+  = let open Pulse.PP in
+    match asc.annotated, c with
+    | None, _ -> (| c, d |)
+    | Some (C_Tot t), C_Tot t' -> (
         let t, _ = Pulse.Checker.Pure.instantiate_term_implicits g t None false in
         let (| u, t_typing |) = Pulse.Checker.Pure.check_universe g t in
-        match Pulse.Checker.Base.norm_st_typing_inverse
-                 #_ #_ #t' d t t_typing [hnf;delta]
-        with
-        | None -> 
-          Env.fail g (Some e.range)
-            (Printf.sprintf "Inferred type is incompatible with annotation.\nInferred: %s\nAnnotated: %s"
-              (P.term_to_string t')
-              (P.term_to_string t))
-        | Some d -> 
-          debug_abs g 
-            (fun _ -> Printf.sprintf "maybe_rewrite_body_typing:{\nfrom %s\nto %s}\n" 
-              (P.comp_to_string c)
-              (P.comp_to_string (C_Tot t)));
-          (| C_Tot t, d |)
-      )
-      | _ -> 
-      Env.fail g (Some e.range) "Inferred type is incompatible with annotation"
+        match T.t_check_equiv true true (elab_env g) t t' with
+        | None, _ ->
+          Env.fail_doc g (Some e.range) [
+            text "Inferred type is incompatible with annotation.";
+            text "Inferred:" ^/^ pp t';
+            text "Annotated:" ^/^ pp t;
+          ]
+        | Some tok, _ ->
+          debug_abs g
+            (fun _ -> Printf.sprintf "maybe_rewrite_body_typing:{\nfrom %s\nto %s}\n"
+              (show c)
+              (show (C_Tot t)));
+          let sq : squash (RT.equiv_token (elab_env g) t t') = () in
+          let t'_typing : universe_of g t' u =
+            (* t is equiv to t', and t has universe t. *)
+            magic ()
+          in
+          let tok' : st_equiv g (C_Tot t') (C_Tot t) =
+            ST_TotEquiv _ t' t u t'_typing
+              (RT.Rel_sym _ _ _ (RT.Rel_eq_token _ _ _ sq))
+          in
+          (| C_Tot t, T_Equiv _ _ _ _ d tok' |)
     )
-    | Some c -> 
-      let st = st_comp_of_comp c in
-      Env.fail g (Some (RU.range_of_term st.pre)) "Unexpected annotation on a function body"
+
+    (* c is not a C_Tot *)
+    | Some (C_Tot _), _ ->
+      Env.fail_doc g (Some e.range) [
+        text "Inferred type is incompatible with annotation.";
+      ]
+
+    (* The annotation is not a C_Tot *)
+    | Some c, _ ->
+      Env.fail_doc g (Some (range_of_comp c)) [
+        Pulse.PP.text "Unexpected annotation on a function body."
+      ]
 #pop-options
 
 let open_ascription (c:comp_ascription) (nv:nvar) : comp_ascription =
