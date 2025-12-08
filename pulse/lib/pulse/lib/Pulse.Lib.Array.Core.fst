@@ -379,18 +379,27 @@ ghost fn pcm_gather u#a (#t: Type u#a) #l
 }
 
 ghost
-fn mask_share u#a (#a: Type u#a) (arr:array a) (#s: Seq.seq a) #p #mask
-  requires pts_to_mask arr #p s mask
-  ensures pts_to_mask arr #(p /. 2.0R) s mask
-  ensures pts_to_mask arr #(p /. 2.0R) s mask
+fn mask_share_gen u#a (#a: Type u#a) (arr:array a) (#s: Seq.seq a) #p (p1: perm) (p2: perm) #mask
+  requires pts_to_mask arr #p s mask ** pure ((p <: real) == p1 +. p2)
+  ensures pts_to_mask arr #p1 s mask
+  ensures pts_to_mask arr #p2 s mask
 {
   loc_get ();
   pts_to_mask_props arr;
   pcm_share
     arr p s mask
-    arr (p /. 2.0R) s mask
-    arr (p /. 2.0R) s mask;
+    arr p1 s mask
+    arr p2 s mask;
   drop_ (loc _);
+}
+
+ghost
+fn mask_share u#a (#a: Type u#a) (arr:array a) (#s: Seq.seq a) #p #mask
+  requires pts_to_mask arr #p s mask
+  ensures pts_to_mask arr #(p /. 2.0R) s mask
+  ensures pts_to_mask arr #(p /. 2.0R) s mask
+{
+  mask_share_gen arr #s #p (p /. 2.0R) (p /. 2.0R) #mask
 }
 
 [@@allow_ambiguous]
