@@ -1499,20 +1499,30 @@ automatically retry increasing fuel as needed, and perform quake testing
 (repeating the query to make sure it is robust). This function will
 _log_ (not raise) an error if the VC could not be proven. *)
 let solve use_env_msg tcenv q : unit =
-    if Options.no_smt () then
-        let open FStarC.Errors.Msg in
-        let open FStarC.Pprint in
-        let open FStarC.Class.PP in
-        FStarC.TypeChecker.Err.log_issue
-          tcenv tcenv.range
-            (Errors.Error_NoSMTButNeeded,
-             [text "A query could not be solved internally, and --no_smt was given.";
-              text "Query = " ^/^ pp q])
-    else
+  let open FStarC.Errors.Msg in
+  let open FStarC.Pprint in
+  let open FStarC.Class.PP in
+  if Options.no_smt () then
+    FStarC.TypeChecker.Err.log_issue
+      tcenv tcenv.range
+        (Errors.Error_NoSMTButNeeded,
+         [text "A query could not be solved internally, and --no_smt was given.";
+          text "Query = " ^/^ pp q])
+  else (
+    if !dbg_SMTQuery then
+      Errors.diag tcenv [
+        text "Before calling solver.";
+        prefix 2 1 (text "Env =")
+          (all_binders tcenv |> Pprint.flow_map (break_ 1) fun (b:Syntax.binder) ->
+            group <| parens <|
+              pp b.binder_bv.ppname ^/^ colon ^/^ pp b.binder_bv.sort);
+        prefix 2 1 (text "VC =") (pp q);
+      ];
     Profiling.profile
       (fun () -> do_solve_maybe_split use_env_msg tcenv q)
       (Some (Ident.string_of_lid (Env.current_module tcenv)))
       "FStarC.SMTEncoding.solve_top_level"
+  )
 
 (* This asks the SMT to solve a query, and returns the answer without
 logging any kind of error. Mostly useful for the smt_sync tactic
