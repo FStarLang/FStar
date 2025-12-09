@@ -73,6 +73,7 @@ type varops_t = {
     reset_fresh:unit -> unit;
     next_id: unit -> int;
     mk_unique:string -> string;
+    reset_scope: unit -> unit
 }
 let varops =
     let initial_ctr = 100 in
@@ -107,7 +108,8 @@ let varops =
      fresh=fresh;
      reset_fresh=reset_fresh;
      next_id=next_id;
-     mk_unique=mk_unique}
+     mk_unique=mk_unique;
+     reset_scope=fun () -> scopes := [new_scope ()]}
 
 (* ---------------------------------------------------- *)
 (* <Environment> *)
@@ -177,6 +179,11 @@ let fvb_to_string fvb =
     (term_pair_opt_to_string fvb.smt_fuel_partial_app)
     (show fvb.fvb_thunked)
 
+instance showable_fvar_binding : showable fvar_binding =
+  {
+    show = fvb_to_string
+  }
+
 let check_valid_fvb fvb =
     if (Some? fvb.smt_token
      || Some? fvb.smt_fuel_partial_app)
@@ -204,7 +211,7 @@ type env_t = {
     encode_non_total_function_typ:bool;
     current_module_name:string;
     encoding_quantifier:bool;
-    global_cache:SMap.t decls_elt;  //cache for hashconsing -- see Encode.fs where it is used and updated
+    global_cache:SMap.t (decls_elt & lident);  //cache for hashconsing, 2nd arg is the module name of the decl -- see Encode.fs where it is used and updated
 }
 
 let print_env (e:env_t) : string =
@@ -218,7 +225,7 @@ let print_env (e:env_t) : string =
       | [] -> ""
       | l::_ -> "...," ^ show l
     in
-    String.concat ", " (last_fvar :: bvars)
+    Format.fmt2 "{allvars=%s; bvars=%s }" (show allvars) (show bvars)
 
 let lookup_bvar_binding env bv =
     match PSMap.try_find env.bvar_bindings (string_of_id bv.ppname) with

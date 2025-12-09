@@ -69,6 +69,9 @@ let fly_deps_enabled =
       enabled := Some res;
       res
 
+let debug_fly_deps =
+  let dbg = FStarC.Debug.get_toggle "fly_deps" in
+  fun () -> !dbg
 
 (* This is faster than the quadratic BU.remove_dups, since we can use
 the total order. *)
@@ -454,6 +457,15 @@ let file_of_dep_aux
 
 let file_of_dep = file_of_dep_aux false
 
+let files_of_dependences 
+      (fn:file_name)
+      (file_system_map:files_for_module_name)
+      (all_cmd_line_files:list file_name)
+      (deps:list dependence)
+: list file_name
+= List.map (file_of_dep file_system_map all_cmd_line_files) deps
+      |> List.filter (fun k -> k <> fn) (* skip current module, cf #451 *)
+
 let dependences_of (file_system_map:files_for_module_name)
                    (deps:dependence_graph)
                    (all_cmd_line_files:list file_name)
@@ -461,9 +473,7 @@ let dependences_of (file_system_map:files_for_module_name)
     : list file_name =
     match deps_try_find deps fn with
     | None -> empty_dependences
-    | Some ({edges=deps}) ->
-      List.map (file_of_dep file_system_map all_cmd_line_files) deps
-      |> List.filter (fun k -> k <> fn) (* skip current module, cf #451 *)
+    | Some ({edges=deps}) -> files_of_dependences fn file_system_map all_cmd_line_files deps
 
 let print_graph (outc : out_channel) (fn : string) (graph:dependence_graph)
   (file_system_map:files_for_module_name)
@@ -1253,6 +1263,11 @@ let deps_from_parsing_data (pd:parsing_data) (original_map:files_for_module_name
   !has_inline_for_extraction,
   mo_roots
 
+let parsing_data_of_modul deps filename modul =
+  let pd = collect_module_or_decls filename (Inl modul) in
+  let direct_deps, _, _ = deps_from_parsing_data pd deps.file_system_map filename in
+  pd, files_of_dependences filename deps.file_system_map deps.cmd_line_files direct_deps
+
 (*
  * Get parsing data for a file
  * First see if the data in the checked file is good (using the provided callback)
@@ -1805,10 +1820,10 @@ let populate_parsing_data fn ast_modul deps =
     SMap.add deps.parse_results fn pd
   | Some _ -> ()
 
-let print_digest (dig:list (string & string)) : string =
-    dig
-    |> List.map (fun (m, d) -> Format.fmt2 "%s:%s" m (BU.base64_encode d))
-    |> String.concat "\n"
+let print_digest (dig:list (string & string)) : string = show dig
+    // dig
+    // |> List.map (fun (m, d) -> Format.fmt2 "%s:%s" m (BU.base64_encode d))
+    // |> String.concat "\n"
 
 (** Print the dependencies as returned by [collect] in a Makefile-compatible
     format.

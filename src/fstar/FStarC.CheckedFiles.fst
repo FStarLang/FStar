@@ -112,7 +112,7 @@ let mcache : smap cache_t = SMap.create 50
  * Either the reason because of which dependences are stale/invalid
  *   or the list of dep string, as defined in the checked_file_entry above
  *)
-let hash_dependences (deps:Dep.deps) (fn:string) :either string (list (string & string)) =
+let hash_dependences (deps:Dep.deps) (fn:string) (deps_of_fn:list string):either string (list (string & string)) =
   Stats.record "hash_dependences" fun () ->
   let fn =
     match Find.find_file fn with
@@ -132,7 +132,7 @@ let hash_dependences (deps:Dep.deps) (fn:string) :either string (list (string & 
       |> Some
     else None
   in
-  let binary_deps = Dep.deps_of deps fn
+  let binary_deps = deps_of_fn
     |> List.filter (fun fn ->
          not (Dep.is_interface fn &&
               Dep.lowercase_module_name fn = module_name)) in
@@ -270,7 +270,7 @@ let load_checked_file_with_tc_result
   | Invalid msg, _ -> Inl msg
   | Valid _, _ -> checked_fn |> load_tc_result' |> snd |> Inr
   | Unknown, parsing_data ->
-    match hash_dependences deps fn with
+    match hash_dependences deps fn (Dep.deps_of deps fn) with
     | Inl msg ->
       let elt = (Invalid msg, parsing_data) in
       SMap.add mcache checked_fn elt;
@@ -464,7 +464,7 @@ let store_values_to_cache
   Errors.with_ctx ("While writing checked file " ^ cache_file) (fun () ->
     BU.save_2values_to_file cache_file stage1 stage2)
 
-let store_module_to_cache env fn parsing_data tc_result =
+let store_module_to_cache env fn parsing_data_and_direct_deps tc_result =
   if Options.cache_checked_modules()
   && not (Options.cache_off())
   then begin
@@ -475,7 +475,9 @@ let store_module_to_cache env fn parsing_data tc_result =
          we would clobber previously-written checked files. *)
       | None -> FStarC.Parser.Dep.cache_file_name fn
     in
-    let digest = hash_dependences (TcEnv.dep_graph env) fn in
+    let parsing_data, deps_of_fn = parsing_data_and_direct_deps in
+
+    let digest = hash_dependences (TcEnv.dep_graph env) fn deps_of_fn in
     match digest with
     | Inr hashes ->
       let tc_result = { tc_result with tc_time=0; extraction_time=0 } in

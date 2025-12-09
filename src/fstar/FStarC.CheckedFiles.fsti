@@ -62,7 +62,7 @@ val load_parsing_data_from_cache: file_name:string -> option Parser.Dep.parsing_
 
 val load_module_from_cache: TcEnv.env -> string -> option tc_result
 
-val store_module_to_cache: TcEnv.env -> file_name:string -> Dep.parsing_data -> tc_result -> unit
+val store_module_to_cache: TcEnv.env -> file_name:string -> (Dep.parsing_data & list string) -> tc_result -> unit
 
 val unsafe_raw_load_checked_file (checked_file_name:string)
   : option (FStarC.Parser.Dep.parsing_data & list string & tc_result)

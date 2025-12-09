@@ -21,7 +21,7 @@ open FStarC.Ident
 open FStarC.Util { out_channel }
 
 val fly_deps_enabled () : bool
-
+val debug_fly_deps () : bool
 (*
  * AR: Parsing data for a file (also cached in the checked files)
  *     It is a summary of opens, includes, A.<id>, etc. in a module
@@ -74,6 +74,7 @@ val collect: list string -> (string -> option parsing_data) -> list string & dep
 val deps_of : deps -> string -> list string
 val deps_of_modul : deps -> module_name -> list module_name  // list of modules that this module depends on
 val parsing_data_of: deps -> string -> parsing_data
+val parsing_data_of_modul: deps -> filename:string -> AST.modul -> parsing_data & list string
 val populate_parsing_data: filename:string -> FStarC.Parser.AST.modul -> dep_graph:deps -> unit
 val print : deps -> unit
 val print_digest: list (string & string) -> string

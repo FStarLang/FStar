@@ -154,7 +154,7 @@ let parse_frag frag lang_decls =
 let tc_one_fragment is_interface curmod (env:TcEnv.env_t) frag =
   let open FStarC.Parser.AST in
   let debug i env = 
-    if Debug.any() then Format.print5 
+    if Debug.extreme() then Format.print5 
       "tc_one_fragment %s: (is_interface=%s, env.curmod=%s, env.is_iface=%s, dsenv.is_iface=%s)\n" 
       (show i)
       (show is_interface)
@@ -261,7 +261,7 @@ let tc_one_fragment is_interface curmod (env:TcEnv.env_t) frag =
   in
   match frag with
   | Inr d -> (
-    if Debug.any() then Format.print1 "tc_one_fragment: %s\n" (show d);
+    if Options.Ext.enabled "debug_tc_one_fragment" then Format.print1 "tc_one_fragment: %s\n" (show d);
     //We already have a parsed decl, usually from FStarC.Interactive.Incremental
     match d.d with
     | FStarC.Parser.AST.TopLevelModule lid ->
@@ -483,6 +483,25 @@ let rec tc_one_file_internal
           let tc_time = 0 in
           let extracted_defs, extract_time = maybe_extract_mldefs tcmod env in
           let env, iface_extraction_time = maybe_extract_ml_iface tcmod env in
+          let pd =
+            let deps = TcEnv.dep_graph (tcenv_of_uenv env) in
+            match fmod with
+            | Inl ast_mod ->
+              Dep.parsing_data_of_modul deps fn ast_mod
+            | Inr mod ->
+              let pd = Dep.parsing_data_of deps fn in
+              pd, Dep.deps_of deps fn 
+
+          in
+          if FStarC.Options.Ext.enabled "debug_deps"
+          then 
+            Format.print4
+              "Dependences for {%s: \n%s\n%s}\nsmt_decls=%s\n"
+              fn
+              (Dep.str_of_parsing_data <| fst pd)
+              (show (snd pd))
+              (show <| fst smt_decls);
+          pd,
           {
             checked_module=tcmod;
             tc_time=tc_time;
@@ -534,8 +553,13 @@ let rec tc_one_file_internal
                  text <| Format.fmt1 "Module %s was not checked." fn;
                ];
 
-        let tc_result, mllib, env = tc_source_file () in
+        let parsing_data, tc_result, mllib, env = tc_source_file () in
 
+        if Options.Ext.enabled "debug_tc_one_fragment"
+        then (
+          Format.print1 "After tc_source_file: %s\n"
+            (show tc_result.checked_module)
+        );
         if FStarC.Errors.get_err_count() = 0
         && (Options.lax()  //we'll write out a .checked.lax file
             || Options.should_verify (string_of_lid tc_result.checked_module.name)) //we'll write out a .checked file
@@ -543,7 +567,6 @@ let rec tc_one_file_internal
         //of some file that should be checked
         //(i.e. we DO write .checked.lax files for dependencies even if not provided as an argument)
         then begin
-          let parsing_data = fn |> FStarC.Parser.Dep.parsing_data_of (TcEnv.dep_graph (tcenv_of_uenv env)) in
           Ch.store_module_to_cache (tcenv_of_uenv env) fn parsing_data tc_result
         end;
         tc_result, mllib, env
@@ -597,7 +620,7 @@ let rec tc_one_file_internal
         mllib,
         env
 
-  else let tc_result, mllib, env = tc_source_file () in
+  else let _, tc_result, mllib, env = tc_source_file () in
        tc_result, mllib, env
 
 and load_file
@@ -616,15 +639,15 @@ and fly_deps_check (filename:string) (tcenv:Env.env_t) (ast_mod:Ast.modul) (ifac
     | {d=Ast.TopLevelModule lid} :: rest -> lid
     | _ -> failwith "Impossible: first decl is not a module"
   in
-  if Debug.any() then Format.print1 "Before fly load deps: %s\n" (FStarC.Pprint.render <| FStarC.Class.PP.pp decls);
+  if Dep.debug_fly_deps() then Format.print1 "Before fly load deps: %s\n" (FStarC.Pprint.render <| FStarC.Class.PP.pp decls);
   // let msg = "Internals for " ^ string_of_lid mname in
   // let tcenv = Tc.push_context tcenv msg in
-  FStarC.Parser.Dep.populate_parsing_data filename ast_mod (DsEnv.dep_graph tcenv.dsenv);
+  Dep.populate_parsing_data filename ast_mod (DsEnv.dep_graph tcenv.dsenv);
   let is_interface = FStarC.Parser.Dep.is_interface filename in
   let mod, tcenv =
     List.fold_left 
       (fun (mod, env) decl ->
-        if Debug.any() 
+        if Dep.debug_fly_deps() 
         then Format.print1 "fly_deps_check next decl: %s\n" 
           (FStarC.Pprint.render <| FStarC.Class.PP.pp decl);
         
@@ -651,7 +674,7 @@ and scan_and_load_fly_deps filename env frag_or_decl: env_t & list string =
         run_load_tasks env filenames
     in
     let _, env = TcEnv.with_restored_scope env (fun env -> (), run_load_tasks env filenames) in
-    if Debug.any() then Format.print1 "After fly load deps: %s\n" (show env.dsenv);
+    if Dep.debug_fly_deps() then Format.print1 "After fly load deps: %s\n" (show env.dsenv);
     env
   in
   let scan_fragment_deps env frag_or_decl =
@@ -681,11 +704,10 @@ and scan_and_load_fly_deps filename env frag_or_decl: env_t & list string =
         (DsEnv.parsing_data_for_scope env.dsenv)
         FStarC.CheckedFiles.load_parsing_data_from_cache
     in
-    if Debug.any() then (
-    Format.print1 "Initial files loaded: %s\n" (show <| FStarC.Parser.Dep.all_files deps);
-    Format.print1 "Decls scanned: %s\n" (show decls);
-    Format.print1 "Additional files to load: %s\n" (show filenames_to_load);
-    Format.flush_stdout()
+    if Dep.debug_fly_deps() then (
+      Format.print1 "Initial files loaded: %s\n" (show <| FStarC.Parser.Dep.all_files deps);
+      Format.print1 "Decls scanned: %s\n" (show decls);
+      Format.print1 "Additional files to load: %s\n" (show filenames_to_load)
     );
     List.filter (fun fn -> fn <> filename) <| List.rev filenames_to_load, env
   in  
