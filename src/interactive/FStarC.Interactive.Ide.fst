@@ -49,7 +49,7 @@ module QH = FStarC.Interactive.QueryHelper
 // NOTE! This is not FStarC.Errors.json_of_issue
 let json_of_issue = FStarC.Interactive.Ide.Types.json_of_issue
 
-let with_captured_errors' env sigint_handler f =
+let with_captured_errors' (env : env_t) sigint_handler f =
   try
     Util.with_sigint_handler sigint_handler (fun _ -> f env)
   with
@@ -66,8 +66,8 @@ let with_captured_errors' env sigint_handler f =
   | Util.SigInt ->
     Format.print_string "Interrupted"; None
 
-  | Error (e, msg, r, ctx) ->
-    TcErr.add_errors env [(e, msg, r, ctx)];
+  | Error e ->
+    Errors.add_errors [e];
     None
 
   | Stop ->

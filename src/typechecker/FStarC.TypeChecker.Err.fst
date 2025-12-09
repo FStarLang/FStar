@@ -132,8 +132,7 @@ let errors_smt_detail env
                 let msg = msg @ smt_detail in
                 if r = dummyRange
                 then e, msg, Env.get_range env, ctx
-                else let r = Range.refind_range r in
-                     let r' = Range.set_def_range r (Range.use_range r) in
+                else let r' = Range.set_def_range r (Range.use_range r) in
                      if Range.file_of_range r' <> Range.file_of_range (Env.get_range env) //r points to another file
                      then
                        let msg =
