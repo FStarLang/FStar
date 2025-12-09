@@ -8,7 +8,7 @@
     details.
   - See also TestHasEq.fst(57,0-58,19)
 
-* Info at TestHasEq.fst(84,10-84,70):
+* Info at TestHasEq.fst(85,7-85,8):
   - Expected failure:
   - Subtyping check failed
   - Expected type Prims.eqtype got type Type0
