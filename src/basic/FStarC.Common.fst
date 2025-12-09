@@ -29,9 +29,11 @@ module SB = FStarC.StringBuffer
 let snapshot (push: 'a -> 'b) (stackref: ref (list 'c)) (arg: 'a) : (int & 'b) = BU.atomically (fun () ->
   let len : int = List.length !stackref in
   let arg' = push arg in
+  if FStarC.Debug.any () then Format.print1 "snapshot %s\n" (string_of_int len);
   (len, arg'))
 
 let rollback (pop: unit -> 'a) (stackref: ref (list 'c)) (depth: option int) =
+  if FStarC.Debug.any () then Format.print1 "rollback %s\n" (match depth with None -> "None" | Some len ->string_of_int len);
   let rec aux n : 'a =
     if n <= 0 then failwith "(rollback) Too many pops"
     else if n = 1 then pop ()
