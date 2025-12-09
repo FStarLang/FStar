@@ -2046,8 +2046,8 @@ let push_env () = match !last_env with
 let pop_env () = match !last_env with
     | [] -> failwith "Popping an empty stack"
     | _::tl -> last_env := tl
-let snapshot_env () = FStarC.Common.snapshot push_env last_env ()
-let rollback_env depth = FStarC.Common.rollback pop_env last_env depth
+let snapshot_env () = FStarC.Common.snapshot "SMTEncoding.Encode.env" push_env last_env ()
+let rollback_env depth = FStarC.Common.rollback "SMTEncoding.Encode.env" pop_env last_env depth
 (* TOP-LEVEL API *)
 
 let init tcenv =
@@ -2172,7 +2172,7 @@ let encode_modul tcenv modul =
             else PSMap.add fvb key v)
           (PSMap.empty())
       in
-      varops.reset_scope();
+      if not (Options.interactive()) then varops.reset_scope();
       { env with fvar_bindings=(fvb, [])}
     in
     let env = 

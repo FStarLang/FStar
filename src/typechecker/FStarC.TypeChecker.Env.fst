@@ -313,8 +313,8 @@ let pop_query_indices () = match !query_indices with // already signal-atmoic
   | [] -> failwith "Empty query indices!"
   | hd::tl -> query_indices := tl
 
-let snapshot_query_indices () = Common.snapshot push_query_indices query_indices ()
-let rollback_query_indices depth = Common.rollback pop_query_indices query_indices depth
+let snapshot_query_indices () = Common.snapshot "TcEnv.query_indices" push_query_indices query_indices ()
+let rollback_query_indices depth = Common.rollback "TcEnv.query_indices" pop_query_indices query_indices depth
 
 let add_query_index (l, n) = match !query_indices with
   | hd::tl -> query_indices := ((l,n)::hd)::tl
@@ -342,8 +342,8 @@ let pop_stack () =
       env
     | _ -> failwith "Impossible: Too many pops"
 
-let snapshot_stack env = Common.snapshot push_stack stack env
-let rollback_stack depth = Common.rollback pop_stack stack depth
+let snapshot_stack env = Common.snapshot "TcEnv.stack" push_stack stack env
+let rollback_stack depth = Common.rollback "TcEnv.stack" pop_stack stack depth
 
 let snapshot env msg = BU.atomically (fun () ->
     let stack_depth, env = snapshot_stack env in

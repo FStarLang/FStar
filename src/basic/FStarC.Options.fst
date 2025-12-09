@@ -171,8 +171,8 @@ let depth () =
   let lev::_ = !history in
   List.length lev
 
-let snapshot ()    = Common.snapshot push history ()
-let rollback depth = Common.rollback pop  history depth
+let snapshot ()    = Common.snapshot "Options" push history ()
+let rollback depth = Common.rollback "Options" pop  history depth
 
 let set_option k v =
   let map : optionstate = peek() in

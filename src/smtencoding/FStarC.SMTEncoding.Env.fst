@@ -95,10 +95,14 @@ let varops =
     let fresh mname pfx = Format.fmt3 "%s_%s_%s" pfx mname (show <| next_id()) in
     //the fresh counter is reset after every module
     let reset_fresh () = ctr := initial_ctr in
-    let push () = scopes := new_scope() :: !scopes in // already signal-atomic
-    let pop () = scopes := List.tl !scopes in // already signal-atomic
-    let snapshot () = FStarC.Common.snapshot push scopes () in
-    let rollback depth = FStarC.Common.rollback pop scopes depth in
+    let push () =
+      if Debug.any() then Format.print_string "SMTEncoding.scopes.push";
+      scopes := new_scope() :: !scopes in // already signal-atomic
+    let pop () = 
+      if Debug.any() then Format.print_string "SMTEncoding.scopes.pop";
+      scopes := List.tl !scopes in // already signal-atomic
+    let snapshot () = FStarC.Common.snapshot "SMTEncoding.scopes" push scopes () in
+    let rollback depth = FStarC.Common.rollback "SMTEncoding.scopes" pop scopes depth in
     {push=push;
      pop=pop;
      snapshot=snapshot;
@@ -109,7 +113,9 @@ let varops =
      reset_fresh=reset_fresh;
      next_id=next_id;
      mk_unique=mk_unique;
-     reset_scope=fun () -> scopes := [new_scope ()]}
+     reset_scope=fun () -> 
+      if Debug.any() then Format.print_string "reset_scope!\n";
+      scopes := [new_scope ()]}
 
 (* ---------------------------------------------------- *)
 (* <Environment> *)

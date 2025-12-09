@@ -958,8 +958,8 @@ let record_cache_aux_with_filter =
         record_cache := List.hd !record_cache::!record_cache in
     let pop () =
         record_cache := List.tl !record_cache in
-    let snapshot () = Common.snapshot push record_cache () in
-    let rollback depth = Common.rollback pop record_cache depth in
+    let snapshot () = Common.snapshot "DsEnv.record_cache" push record_cache () in
+    let rollback depth = Common.rollback "DsEnv.record_cache" pop record_cache depth in
     let peek () = List.hd !record_cache in
     let insert r = record_cache := (r::peek())::List.tl (!record_cache) in
     (* remove private/abstract records *)
@@ -1591,8 +1591,8 @@ let pop () = BU.atomically (fun () ->
     env
   | _ -> failwith "Impossible: Too many pops")
 
-let snapshot env = Common.snapshot push stack env
-let rollback depth = Common.rollback pop stack depth
+let snapshot env = Common.snapshot "DsEnv" push stack env
+let rollback depth = Common.rollback "DsEnv" pop stack depth
 
 let export_interface (m:lident) env =
 //    printfn "Exporting interface %s" (string_of_lid m);
