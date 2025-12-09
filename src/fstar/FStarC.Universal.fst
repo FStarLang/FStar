@@ -487,7 +487,7 @@ let rec tc_one_file_internal
             let deps = TcEnv.dep_graph (tcenv_of_uenv env) in
             match fmod with
             | Inl ast_mod ->
-              Dep.parsing_data_of_modul deps fn ast_mod
+              Dep.parsing_data_of_modul deps fn (Some ast_mod)
             | Inr mod ->
               let pd = Dep.parsing_data_of deps fn in
               pd, Dep.deps_of deps fn 
@@ -517,7 +517,11 @@ let rec tc_one_file_internal
         check_mod
   in
   if not (Options.cache_off()) then
-      let r = Ch.load_module_from_cache (tcenv_of_uenv env) fn in
+      let r = 
+        if Dep.fly_deps_enabled() && Options.should_check_file fn
+        then None //fly_deps_enabled implies force
+        else Ch.load_module_from_cache (tcenv_of_uenv env) fn 
+      in
       let r =
         (* If --force and this file was given in the command line,
          * forget about the cache we just loaded and recheck the file.
@@ -790,6 +794,8 @@ let needs_interleaving intf impl =
   List.mem (Filepath.get_file_extension intf) ["fsti"; "fsi"] &&
   List.mem (Filepath.get_file_extension impl) ["fst"; "fs"]
 
+let dbg_dep = Debug.get_toggle "Dep"
+
 let tc_one_file_from_remaining (remaining:list string) (env:uenv)
                                (deps:FStarC.Parser.Dep.deps)  //used to query parsing data
   : list string & tc_result & option MLSyntax.mlmodule & uenv
@@ -797,6 +803,7 @@ let tc_one_file_from_remaining (remaining:list string) (env:uenv)
   let remaining, (nmods, mllib, env) =
     match remaining with
         | intf :: impl :: remaining when needs_interleaving intf impl ->
+          if !dbg_dep then Format.print2 "Needs interleaving %s and %s\n" intf impl;
           let m, mllib, env = tc_one_file env (Some intf) impl in
           remaining, (m, mllib, env)
         | intf_or_impl :: remaining ->
@@ -828,7 +835,6 @@ let rec tc_fold_interleave (deps:FStarC.Parser.Dep.deps)  //used to query parsin
 (***********************************************************************)
 (* Batch mode: checking many files                                     *)
 (***********************************************************************)
-let dbg_dep = Debug.get_toggle "Dep"
 let batch_mode_tc filenames dep_graph =
   if !dbg_dep then begin
     Format.print_string "Auto-deps kicked in; here's some info.\n";

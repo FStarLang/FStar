@@ -16,9 +16,12 @@
 *)
 
 (** This module provides an ocamldep-like tool for F*, invoked with [fstar --dep].
-    Unlike ocamldep, it outputs the transitive closure of the dependency graph
-    of a given file. The dependencies that are output are *compilation units*
-    (not module names).
+    It also supports scanning individual AST declarations for dependences.
+    It is used in many parts of the compiler, including
+     * to output a .depend for use with Makefiles, using fstar --dep
+     * to check for the dependences of a checked file, used to write out their hashes
+     * to scan dependences of a declarations on the fly, for use with fly_deps
+    etc.
 *)
 module FStarC.Parser.Dep
 
@@ -159,7 +162,10 @@ let check_and_strip_suffix (f: string): option string =
 (* In public interface *)
 let is_interface (f: string): bool =
   String.get f (String.length f - 1) = 'i'
-
+let implementation_of_file f =
+  if is_interface f then 
+    String.substring f 0 (String.length f - 1)
+  else f
 (* In public interface *)
 let is_implementation f =
   not (is_interface f)
@@ -1089,6 +1095,12 @@ let collect_module_or_decls (filename:string) (m:either modul (list decl)) : par
   go m;
   !pd
 
+let maybe_use_interface file_system_map file_name =
+   let module_name = lowercase_module_name file_name in
+    if is_implementation file_name
+    && has_interface file_system_map module_name
+    then [UseInterface module_name]
+    else []
 
 (*
   * Construct dependences from the parsing data
@@ -1132,7 +1144,7 @@ let deps_from_parsing_data (pd:parsing_data) (original_map:files_for_module_name
     then has_inline_for_extraction := true
   in
 
-  let add_dep deps d =
+  let add_dep d =
     if not (List.existsML (dep_subsumed_by d) !deps) then (
       deps := d :: !deps
     )
@@ -1148,7 +1160,7 @@ let deps_from_parsing_data (pd:parsing_data) (original_map:files_for_module_name
     if !dbg then Format.print1 "Resolving %s ..\n" key;
     match resolve_module_name original_or_working_map key with
     | Some module_name ->
-      add_dep deps (dep_edge module_name is_friend);
+      add_dep (dep_edge module_name is_friend);
       true
     | _ ->
       false
@@ -1204,7 +1216,7 @@ let deps_from_parsing_data (pd:parsing_data) (original_map:files_for_module_name
     match SMap.try_find original_map alias with
     | Some deps_of_aliased_module ->
       SMap.add working_map key deps_of_aliased_module;
-      add_dep deps (dep_edge (lowercase_join_longident lid true) false);
+      add_dep (dep_edge (lowercase_join_longident lid true) false);
       true
     | None ->
       log_issue lid Errors.Warning_ModuleOrFileNotFoundWarning
@@ -1263,10 +1275,6 @@ let deps_from_parsing_data (pd:parsing_data) (original_map:files_for_module_name
   !has_inline_for_extraction,
   mo_roots
 
-let parsing_data_of_modul deps filename modul =
-  let pd = collect_module_or_decls filename (Inl modul) in
-  let direct_deps, _, _ = deps_from_parsing_data pd deps.file_system_map filename in
-  pd, files_of_dependences filename deps.file_system_map deps.cmd_line_files direct_deps
 
 (*
  * Get parsing data for a file
@@ -1564,13 +1572,7 @@ let build_dep_graph_for_files
       if needs_interface_inlining
       then add_interface_for_inlining file_name;
       SMap.add parse_results file_name parsing_data;
-      let deps =
-          let module_name = lowercase_module_name file_name in
-          if is_implementation file_name
-          && has_interface file_system_map module_name
-          then deps @ [UseInterface module_name]
-          else deps
-      in
+      let deps = deps @ maybe_use_interface file_system_map file_name in
       let dep_node : dep_node = {
         edges = List.unique deps;
         color = White;
@@ -1791,9 +1793,44 @@ let collect (all_cmd_line_files: list file_name)
   mk_deps dep_graph file_system_map all_cmd_line_files all_files inlining_ifaces parse_results
 
 (* In public interface *)
-let deps_of deps (f:file_name)
-    : list file_name =
-    dependences_of deps.file_system_map deps.dep_graph deps.cmd_line_files f
+let parsing_data_of_modul deps filename modul_opt =
+  let modul =
+    match modul_opt with
+    | None -> 
+      let ast, _ = Driver.parse_file filename in
+      ast
+    | Some m -> m
+  in
+  let pd = collect_module_or_decls filename (Inl modul) in
+  let direct_deps, _, _ = deps_from_parsing_data pd deps.file_system_map filename in
+  pd, files_of_dependences filename deps.file_system_map deps.cmd_line_files direct_deps
+
+let deps_of =
+  let cache = SMap.create 40 in
+  fun deps (f:file_name) ->
+    match SMap.try_find cache f with
+    | Some deps -> deps
+    | None ->
+      let res =
+        if fly_deps_enabled()
+          then (
+            let on_cli f =
+              let bf = Filepath.basename f in
+              List.existsb (fun cli -> Filepath.basename cli = bf) deps.cmd_line_files
+            in
+            if on_cli f
+            || (is_interface f && implementation_of_file f |> on_cli)
+            then (
+              snd (parsing_data_of_modul deps f None)
+            )
+            else (
+              dependences_of deps.file_system_map deps.dep_graph deps.cmd_line_files f
+            )
+          )
+      else dependences_of deps.file_system_map deps.dep_graph deps.cmd_line_files f
+    in
+    SMap.add cache f res;
+    res
 
 let deps_of_modul deps (m:module_name) : list module_name =
   let aux (fopt:option string) =
