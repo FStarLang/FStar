@@ -288,12 +288,12 @@ type deps = {
     dep_graph:dependence_graph;                 //dependences of the entire project, not just those reachable from the command line
     file_system_map:files_for_module_name;      //an abstraction of the file system, keys are lowercase module names
     cmd_line_files:list file_name;              //all command-line files
-    all_files:list file_name;                   //all files
+    all_files:ref (RBSet.t file_name);                   //all files
     interfaces_with_inlining:list module_name;  //interfaces that use `inline_for_extraction` require inlining
     parse_results:SMap.t parsing_data             //map from filenames to parsing_data
                                                 //callers (Universal.fs) use this to get the parsing data for caching purposes
 }
-let copy_deps (d:deps) : deps = { d with dep_graph = copy_dep_graph d.dep_graph }
+let copy_deps (d:deps) : deps = { d with dep_graph = copy_dep_graph d.dep_graph; all_files=mk_ref (!d.all_files) }
 let deps_try_find (Deps m) k = SMap.try_find m k
 let deps_add_dep (Deps m) k v =
   SMap.add m k v
@@ -303,12 +303,12 @@ let mk_deps dg fs c a i pr = {
     dep_graph=dg;
     file_system_map=fs;
     cmd_line_files=c;
-    all_files=a;
+    all_files=mk_ref a;
     interfaces_with_inlining=i;
     parse_results=pr;
 }
 (* In public interface *)
-let empty_deps clf = mk_deps (deps_empty ()) (SMap.create 0) clf [] [] (SMap.create 0)
+let empty_deps clf = mk_deps (deps_empty ()) (SMap.create 0) clf (RBSet.empty()) [] (SMap.create 0)
 let module_name_of_dep = function
     | UseInterface m
     | PreferInterface m
@@ -1633,6 +1633,7 @@ let collect_deps_of_decl (deps:deps) (filename:string) (ds:list decl)
   let files = List.map (file_of_dep deps.file_system_map []) direct_deps in
   let inline_ifaces = build_dep_graph_for_files files deps.file_system_map deps.dep_graph deps.parse_results get_parsing_data_from_cache in
   let filenames, _ = topological_dependences_of deps.file_system_map deps.dep_graph inline_ifaces files false in
+  deps.all_files := RBSet.union (!deps.all_files) (RBSet.from_list filenames);
   filenames
 
 (** Collect the dependencies for a list of given files.
@@ -1806,7 +1807,7 @@ let collect (all_cmd_line_files: list file_name)
   if !dbg
   then Format.print1 "Interfaces needing inlining: %s\n" (String.concat ", " inlining_ifaces);
   all_files,
-  mk_deps dep_graph file_system_map all_cmd_line_files all_files inlining_ifaces parse_results
+  mk_deps dep_graph file_system_map all_cmd_line_files (RBSet.from_list all_files) inlining_ifaces parse_results
 
 (* In public interface *)
 let parsing_data_of_modul deps filename modul_opt =
@@ -2277,8 +2278,8 @@ let module_has_interface deps module_name =
 (* In public interface *)
 let deps_has_implementation deps module_name =
     let m = String.lowercase (Ident.string_of_lid module_name) in
-    deps.all_files |> BU.for_some (fun f ->
+    RBSet.elems !deps.all_files |> BU.for_some (fun f ->
         is_implementation f
         && String.lowercase (module_name_of_file f) = m)
 
-let all_files deps = deps.all_files
+let all_files deps = RBSet.elems !deps.all_files

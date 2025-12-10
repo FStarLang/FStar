@@ -52,6 +52,8 @@ module Ch       = FStarC.CheckedFiles
 module MLSyntax = FStarC.Extraction.ML.Syntax
 module Ast      = FStarC.Parser.AST
 
+let dbg_dep = Debug.get_toggle "Dep"
+
 let module_or_interface_name m = m.is_interface, m.name
 
 let with_dsenv_of_tcenv (tcenv:TcEnv.env) (f:DsEnv.withenv 'a) : 'a & TcEnv.env =
@@ -403,6 +405,13 @@ let emit dep_graph (mllib : list (uenv & MLSyntax.mlmodule)) =
 
     | _ -> fail ()
 
+let needs_interleaving intf impl =
+  let m1 = Parser.Dep.lowercase_module_name intf in
+  let m2 = Parser.Dep.lowercase_module_name impl in
+  m1 = m2 &&
+  List.mem (Filepath.get_file_extension intf) ["fsti"; "fsi"] &&
+  List.mem (Filepath.get_file_extension impl) ["fst"; "fs"]
+
 let rec tc_one_file_internal
         (fly_deps:bool)
         (env:uenv)
@@ -670,12 +679,9 @@ and fly_deps_check (filename:string) (tcenv:Env.env_t) (ast_mod:Ast.modul) (ifac
 
 and scan_and_load_fly_deps filename env frag_or_decl: env_t & list string =
   let load_fly_deps (env:env_t) filenames =
-    let rec run_load_tasks env filenames =
-      match filenames with
-      | [] -> env
-      | filename::filenames ->
-        let env = load_file env None filename in
-        run_load_tasks env filenames
+    let run_load_tasks env filenames =
+      let _, _, env = tc_fold_interleave false ([], [], env_of_tcenv env) filenames in
+      tcenv_of_uenv env
     in
     let _, env = TcEnv.with_restored_scope env (fun env -> (), run_load_tasks env filenames) in
     if Dep.debug_fly_deps() then Format.print1 "After fly load deps: %s\n" (show env.dsenv);
@@ -713,7 +719,17 @@ and scan_and_load_fly_deps filename env frag_or_decl: env_t & list string =
       Format.print1 "Decls scanned: %s\n" (show decls);
       Format.print1 "Additional files to load: %s\n" (show filenames_to_load)
     );
-    List.filter (fun fn -> fn <> filename) <| List.rev filenames_to_load, env
+    let filenames = List.filter (fun fn -> fn <> filename) <| List.rev filenames_to_load in
+    filenames |> List.iter
+      (fun fn ->
+        if env.modules |> List.existsb (fun m -> Dep.module_name_of_file fn = Ident.string_of_lid m.name)
+        then begin
+          raise_error (Env.get_range env) Errors.Fatal_CyclicDependence [
+            text "Friend dependences must be declared as the first dependence on a module.";
+            text (Format.fmt1 "A non-friend dependence was already found on module %s." (Dep.module_name_of_file fn))
+          ]
+        end);
+    filenames, env
   in  
   let env =
     if Options.interactive()
@@ -736,6 +752,44 @@ and scan_and_load_fly_deps filename env frag_or_decl: env_t & list string =
   let filenames, env = scan_fragment_deps env frag_or_decl in
   let env = load_fly_deps env filenames in
   env, filenames
+
+and tc_one_file_from_remaining (fly_deps:bool)
+                               (remaining:list string) (env:uenv)
+                              //  (deps:FStarC.Parser.Dep.deps)  //used to query parsing data
+  : list string & tc_result & option MLSyntax.mlmodule & uenv
+  =
+  let remaining, (nmods, mllib, env) =
+    match remaining with
+        | intf :: impl :: remaining when needs_interleaving intf impl ->
+          if !dbg_dep then Format.print2 "Needs interleaving %s and %s\n" intf impl;
+          let m, mllib, env = tc_one_file_internal fly_deps env (Some intf) impl in
+          remaining, (m, mllib, env)
+        | intf_or_impl :: remaining ->
+          let m, mllib, env = tc_one_file_internal fly_deps env None intf_or_impl in
+          remaining, (m, mllib, env)
+        | [] -> failwith "Impossible: Empty remaining modules"
+  in
+  remaining, nmods, mllib, env
+
+and tc_fold_interleave (fly_deps:bool) 
+                      //  (deps:FStarC.Parser.Dep.deps)  //used to query parsing data
+                       (acc:list tc_result &
+                            list (uenv & MLSyntax.mlmodule) &  // initial env in which this module is extracted
+                            uenv)
+                      (remaining:list string) =
+  let as_list env mllib =
+    match mllib with
+    | None -> []
+    | Some mllib -> [env, mllib] in
+
+  match remaining with
+    | [] -> acc
+    | _  ->
+      let mods, mllibs, env_before = acc in
+      let remaining, nmod, mllib, env = tc_one_file_from_remaining fly_deps remaining env_before in
+      if not (Options.profile_group_by_decl())
+      then Profiling.report_and_clear (Ident.string_of_lid nmod.checked_module.name);
+      tc_fold_interleave fly_deps (mods@[nmod], mllibs@(as_list env mllib), env) remaining
 
 let tc_one_file 
         (env:uenv)
@@ -784,53 +838,6 @@ let init_env deps : TcEnv.env =
   env.solver.init env;
   env
 
-(***********************************************************************)
-(* Batch mode: composing many files in the presence of pre-modules     *)
-(***********************************************************************)
-let needs_interleaving intf impl =
-  let m1 = Parser.Dep.lowercase_module_name intf in
-  let m2 = Parser.Dep.lowercase_module_name impl in
-  m1 = m2 &&
-  List.mem (Filepath.get_file_extension intf) ["fsti"; "fsi"] &&
-  List.mem (Filepath.get_file_extension impl) ["fst"; "fs"]
-
-let dbg_dep = Debug.get_toggle "Dep"
-
-let tc_one_file_from_remaining (remaining:list string) (env:uenv)
-                               (deps:FStarC.Parser.Dep.deps)  //used to query parsing data
-  : list string & tc_result & option MLSyntax.mlmodule & uenv
-  =
-  let remaining, (nmods, mllib, env) =
-    match remaining with
-        | intf :: impl :: remaining when needs_interleaving intf impl ->
-          if !dbg_dep then Format.print2 "Needs interleaving %s and %s\n" intf impl;
-          let m, mllib, env = tc_one_file env (Some intf) impl in
-          remaining, (m, mllib, env)
-        | intf_or_impl :: remaining ->
-          let m, mllib, env = tc_one_file env None intf_or_impl in
-          remaining, (m, mllib, env)
-        | [] -> failwith "Impossible: Empty remaining modules"
-  in
-  remaining, nmods, mllib, env
-
-let rec tc_fold_interleave (deps:FStarC.Parser.Dep.deps)  //used to query parsing data
-                           (acc:list tc_result &
-                                list (uenv & MLSyntax.mlmodule) &  // initial env in which this module is extracted
-                                uenv)
-                           (remaining:list string) =
-  let as_list env mllib =
-    match mllib with
-    | None -> []
-    | Some mllib -> [env, mllib] in
-
-  match remaining with
-    | [] -> acc
-    | _  ->
-      let mods, mllibs, env_before = acc in
-      let remaining, nmod, mllib, env = tc_one_file_from_remaining remaining env_before deps in
-      if not (Options.profile_group_by_decl())
-      then Profiling.report_and_clear (Ident.string_of_lid nmod.checked_module.name);
-      tc_fold_interleave deps (mods@[nmod], mllibs@(as_list env mllib), env) remaining
 
 (***********************************************************************)
 (* Batch mode: checking many files                                     *)
@@ -844,7 +851,8 @@ let batch_mode_tc filenames dep_graph =
       (String.concat " " (filenames |> List.filter Options.should_verify_file))
   end;
   let env = FStarC.Extraction.ML.UEnv.new_uenv (init_env dep_graph) in
-  let all_mods, mllibs, env = tc_fold_interleave dep_graph ([], [], env) filenames in
+  let fly_deps = FStarC.Parser.Dep.fly_deps_enabled() in
+  let all_mods, mllibs, env = tc_fold_interleave fly_deps ([], [], env) filenames in
   if FStarC.Errors.get_err_count() = 0 then
     emit dep_graph mllibs;
   let solver_refresh env =
