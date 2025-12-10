@@ -1625,6 +1625,14 @@ type exported_ids = {
     exported_id_terms : string_set;
     exported_id_fields: string_set;
 }
+instance showable_exported_ids : showable exported_ids = {
+  show = fun e -> 
+    Format.fmt2 
+      "{exported_id_terms=%s\n\
+        exported_id_fields=%s}"
+      (show e.exported_id_terms)
+      (show e.exported_id_fields)
+}
 let as_exported_ids (e:exported_id_set) =
     let terms  = (!(e Exported_id_term_type)) in
     let fields = (!(e Exported_id_field)) in
@@ -1651,6 +1659,18 @@ type module_inclusion_info = {
     mii_no_prelude:bool;
 }
 
+instance showable_mii : showable module_inclusion_info = {
+  show = (fun mii -> 
+    Format.fmt4 
+      "{exported_ids=%s\n\
+        trans_exported_ids=%s\n\
+        includes:%s\n\
+        no_prelude:%s}"
+    (show mii.mii_exported_ids)
+    (show mii.mii_trans_exported_ids)
+    (show mii.mii_includes)
+    (show mii.mii_no_prelude))
+}
 let default_mii = {
     mii_exported_ids=None;
     mii_trans_exported_ids=None;

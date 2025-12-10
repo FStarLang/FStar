@@ -454,7 +454,6 @@ let rec tc_one_file_internal
                           (Some (Parser.Dep.module_name_of_file fn))
                           "FStarC.Universal.tc_source_file.parse"  
       in
-      let mii = FStarC.Syntax.DsEnv.inclusion_info (tcenv_of_uenv env).dsenv mname in
       let check_mod () =
           let check env =
             if not (Options.lax()) then FStarC.SMTEncoding.Z3.refresh None;
@@ -507,6 +506,7 @@ let rec tc_one_file_internal
               (Dep.str_of_parsing_data <| fst pd)
               (show (snd pd))
               (show <| fst smt_decls);
+          let mii = FStarC.Syntax.DsEnv.inclusion_info (tcenv_of_uenv env).dsenv mname in
           pd,
           {
             checked_module=tcmod;

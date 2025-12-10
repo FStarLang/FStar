@@ -259,9 +259,10 @@ let go_normal () =
 
       | Some (deps, tcr) ->
         print1 "Deps: %s\n" (show deps);
-        print1 "%s\n" (show tcr.checked_module);
-        print1 "%s\n" (show <| fst tcr.smt_decls);
-        print1 "%s\n" (show <| snd tcr.smt_decls)
+        print1 "Inclusion info: %s\n" (show tcr.mii);
+        print1 "Checked module: %s\n" (show tcr.checked_module);
+        print1 "SMT decls: %s\n" (show <| fst tcr.smt_decls);
+        print1 "SMT fvars: %s\n" (show <| snd tcr.smt_decls)
     )
 
     (* --read_krml_file: read and print a krml file *)
