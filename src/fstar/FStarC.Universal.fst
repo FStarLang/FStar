@@ -165,10 +165,7 @@ let tc_one_fragment is_interface curmod (env:TcEnv.env_t) frag =
       (show (DsEnv.iface env.dsenv))
   in
   debug 0 env;
-  // We use file_of_range instead of `Options.file_list ()` because no file
-  // is passed as a command-line argument in LSP mode.
-  let fname env = if Options.lsp_server () then Range.file_of_range (TcEnv.get_range env)
-                  else List.hd (Options.file_list ()) in
+  let fname env = List.hd (Options.file_list ()) in
   let acceptable_mod_name ast_modul =
     (* Interface is sent as the first chunk, so we must allow repeating the same module. *)
     Parser.Dep.lowercase_module_name (fname env) =

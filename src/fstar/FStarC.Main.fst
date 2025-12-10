@@ -377,11 +377,8 @@ let go_normal () =
       (* Try to load the plugins that are specified in the command line *)
       load_native_tactics ();
 
-      (* --lsp: interactive mode for Language Server Protocol *)
-      if Options.lsp_server () then
-        Interactive.Lsp.start_server ()
-      (* --ide, --in: Interactive mode *)
-      else if Options.interactive () then begin
+      (* --ide: Interactive mode *)
+      if Options.interactive () then begin
         UF.set_rw ();
         match filenames with
         | [] -> (* input validation: move to process args? *)
@@ -393,10 +390,7 @@ let go_normal () =
             "--ide: Too many files in command line invocation\n";
           exit 1
         | [filename] ->
-          if Options.legacy_interactive () then
-            Interactive.Legacy.interactive_mode filename
-          else
-            Interactive.Ide.interactive_mode filename
+          Interactive.Ide.interactive_mode filename
         end
 
       (* Normal, batch mode compiler *)

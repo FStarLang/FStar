@@ -23,7 +23,6 @@ open FStarC.Range
 open FStarC.Getopt
 open FStarC.Ident
 open FStarC.Errors
-open FStarC.Interactive.JsonHelper
 open FStarC.Interactive.QueryHelper
 open FStarC.Interactive.PushHelper
 open FStarC.Universal

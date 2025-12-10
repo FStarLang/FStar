@@ -22,8 +22,15 @@ open FStarC.Range
 open FStarC.Getopt
 open FStarC.Ident
 open FStarC.Errors
-open FStarC.Interactive.JsonHelper
-
+open FStarC.Interactive.JsonHelper {
+  js_bool,
+  js_int, 
+  js_str, 
+  js_list,
+  js_assoc,
+  try_assoc,
+  js_fail
+}
 open FStarC.Universal
 open FStarC.TypeChecker.Env
 open FStarC.TypeChecker.Common

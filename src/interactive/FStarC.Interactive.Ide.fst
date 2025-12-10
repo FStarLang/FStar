@@ -23,7 +23,11 @@ open FStarC.Format
 open FStarC.Getopt
 open FStarC.Ident
 open FStarC.Errors
-open FStarC.Interactive.JsonHelper
+open FStarC.Interactive.JsonHelper { 
+  js_bool, js_int, js_str, js_list, js_assoc, try_assoc,
+  write_json, json_debug,
+  UnexpectedJsonType, InvalidQuery,
+}
 open FStarC.Interactive.QueryHelper
 open FStarC.Interactive.PushHelper
 open FStarC.Interactive.Ide.Types

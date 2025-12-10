@@ -166,8 +166,6 @@ val lang_extensions             : unit    -> list string
 val lax                         : unit    -> bool
 val load                        : unit    -> list string
 val load_cmxs                   : unit    -> list string
-val legacy_interactive          : unit    -> bool
-val lsp_server                  : unit    -> bool
 val log_queries                 : unit    -> bool
 val log_failing_queries         : unit    -> bool
 val log_types                   : unit    -> bool
