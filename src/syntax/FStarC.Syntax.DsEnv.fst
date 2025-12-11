@@ -1810,8 +1810,6 @@ let fail_or env lookup lid =
               Pprint.parens (Pprint.prefix 2 1 (text "resolved to") (pp modul'))
             else
               empty);
-            text "curent env is";
-            text <| show env
           ];
           typo_msg (Ident.string_of_id (ident_of_lid lid)) (all_ids_in_module modul');
         ]
