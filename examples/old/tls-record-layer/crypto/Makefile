@@ -2,7 +2,7 @@ FSTAR_HOME=../../..
 
 FSTAR?=$(FSTAR_HOME)/bin/fstar.exe
 
-OPTIONS=--fstar_home $(FSTAR_HOME) --max_fuel 4 --initial_fuel 0 --max_ifuel 2 --initial_ifuel 0 --z3rlimit 20 --ext optimize_let_vc $(OTHERFLAGS)
+OPTIONS=--fstar_home $(FSTAR_HOME) --max_fuel 4 --initial_fuel 0 --max_ifuel 2 --initial_ifuel 0 --z3rlimit 20 --ext optimize_let_vc --ext fly_deps $(OTHERFLAGS)
 
 FSTAR_INCLUDE_PATHS=--include $(FSTAR_HOME)/ulib/hyperstack --include hacl
 

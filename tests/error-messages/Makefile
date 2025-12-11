@@ -12,7 +12,6 @@ OTHERFLAGS+=--warn_error -241-247-333-274+240
 OTHERFLAGS := $(filter-out --query_stats, $(OTHERFLAGS))
 OTHERFLAGS := $(filter-out --hint_info, $(OTHERFLAGS))
 OTHERFLAGS += --ext fstar:no_absolute_paths
-OTHERFLAGS += --ext fly_deps
 
 # For these tests, we check that the resugared output
 # matches the expected file. We have to repeat the lines for

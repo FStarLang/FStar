@@ -17,10 +17,9 @@
    Operations over the FStarC.Range.Type.range type.
 *)
 module FStarC.Range.Ops
-
-open FStarC
 friend FStarC.Range.Type
 
+open FStarC
 open FStarC.Json
 open FStarC.Effect 
 open FStarC.Class.Ord

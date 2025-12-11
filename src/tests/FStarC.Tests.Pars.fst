@@ -44,7 +44,7 @@ let parse_mod mod_name dsenv =
     match parse None (Filename mod_name) with
     | ASTFragment (Inl m, _) ->
         let m, env'= ToSyntax.ast_modul_to_modul m dsenv in
-        let env' , _ = DsEnv.prepare_module_or_interface false false env' (FStarC.Ident.lid_of_path ["Test"] (FStarC.Range.dummyRange)) DsEnv.default_mii in
+        let env' , _ = DsEnv.prepare_module_or_interface false false false env' (FStarC.Ident.lid_of_path ["Test"] (FStarC.Range.dummyRange)) DsEnv.default_mii in
         env', m
     | ParseError (err, msg, r) ->
         raise (Error(err, msg, r, []))
@@ -64,7 +64,7 @@ let add_mods mod_names dsenv env =
 let do_init () =
   let solver = SMT.dummy in
   let env = TcEnv.initial_env
-                FStarC.Parser.Dep.empty_deps
+                (FStarC.Parser.Dep.empty_deps [])
                 TcTerm.tc_term
                 TcTerm.typeof_tot_or_gtot_term
                 TcTerm.typeof_tot_or_gtot_term_fastpath
@@ -83,7 +83,7 @@ let do_init () =
     | None -> failwith "Could not find Prims.fst: is FSTAR_LIB set?"
   in
   let dsenv, prims_mod =
-    parse_mod prelude_file (DsEnv.empty_env Parser.Dep.empty_deps)
+    parse_mod prelude_file (DsEnv.empty_env (Parser.Dep.empty_deps []))
   in
   let env = {env with dsenv=dsenv} in
   let _prims_mod, env = Tc.check_module env prims_mod false in
@@ -166,7 +166,7 @@ let pars_and_tc_fragment (s:string) =
   Errors.with_ctx ("pars_and_tc_fragment " ^ s) fun () ->
   let tcenv = init() in
   let frag = frag_of_text s in
-  let test_mod', tcenv', _ = FStarC.Universal.tc_one_fragment !test_mod_ref tcenv (Inl (frag, [])) in
+  let test_mod', tcenv', _ = FStarC.Universal.tc_one_fragment false !test_mod_ref tcenv (Inl (frag, [])) in
   test_mod_ref := test_mod';
   tcenv_ref := Some tcenv'
 

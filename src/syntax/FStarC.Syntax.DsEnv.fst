@@ -90,7 +90,7 @@ type scope_mod =
 | Local_bindings           of PSMap.t local_binding (* a map local bindings in a scope; a map to avoid a linear scan *) 
 | Rec_binding              of rec_binding
 | Module_abbrev            of module_abbrev
-| Open_module_or_namespace of open_module_or_namespace
+| Open_module_or_namespace of open_module_or_namespace & bool // bool is true if the open is implicit
 | Top_level_defs           of PSMap.t unit
   (* ^ A map (to avoid a linear scan) recording that a top-level definition
      for an unqualified identifier x is in scope and should be resolved
@@ -109,7 +109,7 @@ let scope_mod_as_parsing_data (s:scope_mod)
   | Local_bindings _ -> []
   | Rec_binding _ -> []
   | Module_abbrev ma -> [ P_alias ma ]
-  | Open_module_or_namespace (l, _k, _restrict) -> [P_open (false, l)]
+  | Open_module_or_namespace ((l, _k, _restrict), _) -> [P_open (false, l)]
   | Top_level_defs _ -> []
   | Record_or_dc _ -> []
 
@@ -119,7 +119,8 @@ instance _ : showable scope_mod = {
       Format.fmt1 "(Local_bindings %s)" (show <| PSMap.keys lbs)
     | Rec_binding (id, lid, _) -> "Rec_binding " ^ (string_of_id id) ^ " " ^ (string_of_lid lid)
     | Module_abbrev (id, lid) -> "Module_abbrev " ^ (string_of_id id) ^ " " ^ (string_of_lid lid)
-    | Open_module_or_namespace (lid, _, _) -> "Open_module_or_namespace " ^ (string_of_lid lid)
+    | Open_module_or_namespace ((lid, _, _), implicit) -> 
+      Format.fmt2 "Open_module_or_namespace(implicit=%s) %s" (show implicit) (show lid)
     | Top_level_defs lbs -> Format.fmt1 "(Top_level_defs %s)" (show <| PSMap.keys lbs)
     | Record_or_dc r -> "Record_or_dc " ^ (string_of_lid r.typename)
 }
@@ -173,24 +174,23 @@ and dsenv_hooks =
     ds_push_module_abbrev_hook : env -> ident -> lident -> unit }
 
 let parsing_data_for_scope (e:env) : list FStarC.Parser.Dep.parsing_data_elt =
-  let begin_module, curmod_scope =
+  let curmod_scope =
     match e.curmodule with
-    | None -> [], []
-    | Some m ->
-      [],
-      namespace_scope_of_module m
+    | None -> []
+    | Some m -> namespace_scope_of_module m
   in
   let scope_mods =
     match curmod_scope with
     | [] -> e.scope_mods
-    | [(lid, _, _)] ->
+    | [lid, _, _] -> 
+      //filter out _implicit_ namespace of current module
+      //this is handled by the auto opens in Dep
       List.filter (function 
-        | Open_module_or_namespace (lid', _, _) ->
+        | Open_module_or_namespace ((lid', _, _), true) -> //true-->implicit open
           not (Ident.lid_equals lid lid')
         | _ -> true)
         e.scope_mods
   in
-  begin_module @
   List.collect scope_mod_as_parsing_data scope_mods
 
 let with_restored_scope (e:env) (f: env -> 'a & env) : 'a & env =
@@ -227,7 +227,7 @@ let all_mod_names (env:env) : list string =
     | Local_bindings lbs -> acc
     | Rec_binding (x, _, _) -> acc
     | Module_abbrev (x, _) -> string_of_id x :: acc
-    | Open_module_or_namespace (m, _, _) -> Ident.string_of_lid m :: acc
+    | Open_module_or_namespace ((m, _, _),_) -> Ident.string_of_lid m :: acc
     | Top_level_defs lbs -> acc
     | Record_or_dc r -> acc
   ) env.scope_mods []
@@ -262,7 +262,7 @@ let transitive_exported_ids env lid =
 let opens_and_abbrevs env : list (either open_module_or_namespace module_abbrev) =
     List.collect
        (function
-        | Open_module_or_namespace payload -> [Inl payload]
+        | Open_module_or_namespace (payload,_) -> [Inl payload]
         | Module_abbrev (id, lid) -> [Inr (id, lid)]
         | _ -> [])
     env.scope_mods
@@ -270,7 +270,7 @@ let opens_and_abbrevs env : list (either open_module_or_namespace module_abbrev)
 let open_modules e = e.modules
 let open_modules_and_namespaces env =
   List.filter_map (function
-                   | Open_module_or_namespace (lid, _info, _restriction) -> Some lid
+                   | Open_module_or_namespace ((lid, _info, _restriction),_) -> Some lid
                    | _ -> None)
     env.scope_mods
 let module_abbrevs env : list (ident & lident)=
@@ -469,7 +469,7 @@ let try_lookup_id''
         used_marker := true;
         k_rec_binding r
 
-      | Open_module_or_namespace (ns, Open_module, restriction) ->
+      | Open_module_or_namespace ((ns, Open_module, restriction),_) ->
         ( match is_ident_allowed_by_restriction id restriction with
         | None -> Cont_ignore
         | Some id -> find_in_module_with_includes eikind find_in_module Cont_ignore env ns id)
@@ -563,7 +563,7 @@ let resolve_module_name env lid (honor_ns: bool) : option lident =
           then Some lid
           else None
 
-        | Open_module_or_namespace (ns, Open_namespace, restriction) :: q
+        | Open_module_or_namespace ((ns, Open_namespace, restriction),_) :: q
           when honor_ns ->
           let new_lid = lid_of_path (path_of_lid ns @ path_of_lid lid) (range_of_lid lid)
           in
@@ -584,7 +584,7 @@ let resolve_module_name env lid (honor_ns: bool) : option lident =
 
 let is_open env lid open_kind =
   List.existsb (function
-                | Open_module_or_namespace (ns, k, Unrestricted) -> k = open_kind && lid_equals lid ns
+                | Open_module_or_namespace ((ns, k, Unrestricted),_) -> k = open_kind && lid_equals lid ns
                 | _ -> false) env.scope_mods
 
 let namespace_is_open env lid =
@@ -1437,7 +1437,7 @@ let push_namespace' env ns restriction =
       (ns', Open_module)
   in
      env.ds_hooks.ds_push_open_hook env (ns', kd, restriction);
-     push_scope_mod env (Open_module_or_namespace (ns', kd, restriction))
+     push_scope_mod env (Open_module_or_namespace ((ns', kd, restriction), false))
 
 let push_include' env ns restriction =
     (* similarly to push_namespace in the case of modules, we allow
@@ -1447,7 +1447,7 @@ let push_include' env ns restriction =
     | Some ns ->
       env.ds_hooks.ds_push_include_hook env ns;
       (* from within the current module, include is equivalent to open *)
-      let env = push_scope_mod env (Open_module_or_namespace (ns, Open_module, restriction)) in
+      let env = push_scope_mod env (Open_module_or_namespace ((ns, Open_module, restriction),false)) in
       (* update the list of includes *)
       let curmod = string_of_lid (current_module env) in
       let () = match SMap.try_find env.includes curmod with
@@ -1716,7 +1716,7 @@ let prepare_module_or_interface no_prelude intf admitted env mname (mii:module_i
     let env' = {
       env with curmodule=Some mname;
       sigmap=env.sigmap;
-      scope_mods = List.map (fun x -> Open_module_or_namespace x) auto_open;
+      scope_mods = List.map (fun x -> Open_module_or_namespace (x,true)) auto_open;
       iface=intf;
       admitted_iface=admitted } in
     List.iter (fun op -> env.ds_hooks.ds_push_open_hook env' op) (List.rev auto_open);
@@ -1810,6 +1810,8 @@ let fail_or env lookup lid =
               Pprint.parens (Pprint.prefix 2 1 (text "resolved to") (pp modul'))
             else
               empty);
+            text "curent env is";
+            text <| show env
           ];
           typo_msg (Ident.string_of_id (ident_of_lid lid)) (all_ids_in_module modul');
         ]

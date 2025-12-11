@@ -52,7 +52,7 @@ let fly_deps_enabled =
           || Some? <| Options.dep()
           || Options.any_dump_module()
           || Options.ml_ish()
-          || Options.lax()
+          // || Options.lax()
           then (
             if Debug.any() 
             then (
@@ -657,9 +657,10 @@ let enter_namespace
   );
   !found
 
+let prelude_lid = Ident.lid_of_str "FStar.Prelude"
 let prelude : list (open_kind & lid) = [
    (Open_namespace, Const.fstar_ns_lid);
-   (Open_module,    Ident.lid_of_str "FStar.Prelude");
+   (Open_module,    prelude_lid);
 ]
 
 //For --ide mode, we stop dependence analysis at interface boundaries
@@ -1275,8 +1276,21 @@ let deps_from_parsing_data (pd:parsing_data) (original_map:files_for_module_name
   (*
   * Iterate over the parsing data elements
   *)
+  let elts =
+    if fly_deps_enabled ()
+    && pd.no_prelude
+    then
+      match pd.elts with
+      | P_open (false, fstar_lid)::P_open(false, prelude_lid')::rest 
+        when
+          Ident.lid_equals Const.fstar_ns_lid fstar_lid &&
+          Ident.lid_equals prelude_lid prelude_lid' ->
+        P_open (false, fstar_lid)::P_open(false, prelude_lid)::auto_open@rest
+      | _ -> auto_open@pd.elts
+    else auto_open @ pd.elts
+  in
   begin
-    (auto_open @ pd.elts) |> List.iter (fun elt ->
+    elts |> List.iter (fun elt ->
       match elt with
       | P_begin_module lid -> begin_module lid
       | P_open (b, lid) -> record_open b lid
