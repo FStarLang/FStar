@@ -160,6 +160,8 @@ let rec prefix_with_iface_decls
        in
        {impl with attrs=karamel_private::impl.attrs}
    in
+   //friend always takes precedence
+   if Friend? impl.d then iface, [impl] else
    match iface with
    | [] -> [], [qualify_karamel_private impl]
    | iface_hd::iface_tl -> begin

@@ -479,6 +479,10 @@ let store_module_to_cache env fn parsing_data_and_direct_deps tc_result =
   if Options.cache_checked_modules()
   && not (Options.cache_off())
   then begin
+    debug (fun () -> 
+      Format.print2 "Storing checked file for %s with %s dependences\n"
+        fn (show parsing_data_and_direct_deps)
+    );
     if Dep.fly_deps_enabled () then (
       //populate the cache with the interface file, if it exists
       //otherwise dependence hashing will fail
@@ -487,11 +491,13 @@ let store_module_to_cache env fn parsing_data_and_direct_deps tc_result =
           (Dep.lowercase_module_name fn) in
       match i_fn_opt with
       | None -> ()
-      | Some iface -> ignore <| load_module_from_cache_internal true env iface
-    );
-    debug (fun () -> 
-      Format.print2 "Storing checked file for %s with %s dependences\n"
-        fn (show parsing_data_and_direct_deps)
+      | Some iface ->
+        debug (fun () -> 
+          Format.print1 "Tryng to load interface %s from cache before storing\n"
+            iface
+        );
+
+        ignore <| load_module_from_cache_internal true env iface
     );
     let cache_file =
       match Options.output_to () with

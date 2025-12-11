@@ -1694,9 +1694,9 @@ let inclusion_info env (l:lident) =
       mii_no_prelude = env.no_prelude;
    }
 
-let prepare_module_or_interface intf admitted env mname (mii:module_inclusion_info) = (* AR: open the pervasives namespace *)
+let prepare_module_or_interface no_prelude intf admitted env mname (mii:module_inclusion_info) = (* AR: open the pervasives namespace *)
   let prep env =
-    let auto_open = if mii.mii_no_prelude then [] else FStarC.Parser.Dep.prelude in
+    let auto_open = if mii.mii_no_prelude || no_prelude then [] else FStarC.Parser.Dep.prelude in
     let auto_open =
       let convert_kind = function
       | FStarC.Parser.Dep.Open_namespace -> Open_namespace

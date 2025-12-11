@@ -51,6 +51,8 @@ let fly_deps_enabled =
           if Some? <| Options.codegen() 
           || Some? <| Options.dep()
           || Options.any_dump_module()
+          || Options.ml_ish()
+          || Options.lax()
           then (
             if Debug.any() 
             then (
@@ -438,12 +440,14 @@ let file_of_dep_aux
       then if Options.expose_interfaces()
            then maybe_use_cache_of (Option.must (implementation_of_internal file_system_map key))
            else raise_error0 Errors.Fatal_MissingExposeInterfacesOption [
-                    text <| Format.fmt3 "You may have a cyclic dependence on module %s: use --dep full to confirm. \
+                    text <| Format.fmt4 "You may have a cyclic dependence on module %s: use --dep full to confirm. \
                                 Alternatively, invoking fstar with %s on the command line breaks \
-                                the abstraction imposed by its interface %s."
+                                the abstraction imposed by its interface %s.\n
+                                all_cmd_line_files=%s\n"
                                 key
                                 (Option.must (implementation_of_internal file_system_map key))
-                                (Option.must (interface_of_internal file_system_map key));
+                                (Option.must (interface_of_internal file_system_map key))
+                                (show all_cmd_line_files);
                     text "If you really want this behavior add the option '--expose_interfaces'.";
                   ]
       else maybe_use_cache_of (Option.must (interface_of_internal file_system_map key))   //we prefer to use 'a.fsti'
@@ -1611,6 +1615,10 @@ let collect_deps_of_decl (deps:deps) (filename:string) (ds:list decl)
 = let roots =
     match ds with
     | {d=TopLevelModule l; attrs}::_ -> 
+      if !dbg then 
+        Format.print2 "Top-level module %s with attrs=%s\n"
+            (show l)
+            (show attrs);
       let no_prelude =
         Options.no_prelude () || (* only affects current module *)
         attrs |> List.existsb (function t ->
@@ -1626,7 +1634,7 @@ let collect_deps_of_decl (deps:deps) (filename:string) (ds:list decl)
   let pd = collect_module_or_decls filename roots in
   let _ =
     if !dbg then Format.print2 "Got pds=%s and scope_pds=%s\n" (show pd.elts) (show scope_pds) in
-  let pd = { pd with elts = scope_pds@List.rev pd.elts } in
+  let pd = { pd with elts = List.rev scope_pds@List.rev pd.elts } in
   let direct_deps, _has_inline_for_extraction, _additional_roots = deps_from_parsing_data pd deps.file_system_map filename in
   debug_print (fun _ -> Format.print3 "direct deps of %s is %s, mo_roots=%s\n" 
       (show ds) (show direct_deps) (show _additional_roots)); 
@@ -1819,6 +1827,7 @@ let parsing_data_of_modul deps filename modul_opt =
     | Some m -> m
   in
   let pd = collect_module_or_decls filename (Inl modul) in
+  let pd = { pd with elts = List.rev pd.elts } in
   let direct_deps, _, _ = deps_from_parsing_data pd deps.file_system_map filename in
   pd, files_of_dependences filename deps.file_system_map deps.cmd_line_files direct_deps
 

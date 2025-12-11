@@ -138,7 +138,7 @@ val transitive_exported_ids: env -> lident -> list string
 val module_inclusion_info : Type0
 val default_mii : module_inclusion_info
 val inclusion_info: env -> lident -> module_inclusion_info
-val prepare_module_or_interface: is_interface:bool -> is_admitted:bool -> env -> lident -> module_inclusion_info -> env & bool //pop the context when done desugaring
+val prepare_module_or_interface: no_prelude:bool -> is_interface:bool -> is_admitted:bool -> env -> lident -> module_inclusion_info -> env & bool //pop the context when done desugaring
 instance val showable_mii: showable module_inclusion_info
 (* private *) val try_lookup_lid': bool -> bool -> env -> lident -> option (term & list attribute)
 (* private *) val unique:  bool -> bool -> env -> lident -> bool
