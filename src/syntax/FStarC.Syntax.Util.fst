@@ -31,6 +31,7 @@ module PC = FStarC.Parser.Const
 open FStarC.Class.Show
 open FStarC.Class.Monad
 open FStarC.Class.Setlike
+open FStarC.Class.Tagged
 
 (********************************************************************************)
 (**************************Utilities for identifiers ****************************)
@@ -1337,7 +1338,9 @@ let rec term_eq_dbg (dbg : bool) t1 t2 =
   let t2 = canon_app (unmeta_safe t2) in
   let check = check dbg in
   let fail = fail dbg in
-  match (compress t1).n, (compress t2).n with
+  let t1 = compress t1 in
+  let t2 = compress t2 in
+  match t1.n, t2.n with
   | Tm_delayed _, _
   | _, Tm_delayed _
   | Tm_ascribed _, _
@@ -1370,8 +1373,9 @@ let rec term_eq_dbg (dbg : bool) t1 t2 =
     (check "app head"  (term_eq_dbg dbg f1 f2)) &&
     (check "app args"  (eqlist (arg_eq_dbg dbg) a1 a2))
 
-  | Tm_match {scrutinee=t1;ret_opt=None;brs=bs1},
-    Tm_match {scrutinee=t2;ret_opt=None;brs=bs2} ->  //AR: note: no return annotations
+  | Tm_match {scrutinee=t1;brs=bs1},
+    Tm_match {scrutinee=t2;brs=bs2} ->
+    (* NB: ignoring ret_opt *)
     (check "match head"     (term_eq_dbg dbg t1 t2)) &&
     (check "match branches" (eqlist (branch_eq_dbg dbg) bs1 bs2))
 
@@ -1435,7 +1439,7 @@ let rec term_eq_dbg (dbg : bool) t1 t2 =
   | _, Tm_match _
   | _, Tm_let _
   | _, Tm_uvar _
-  | _, Tm_meta _     -> fail "bottom"
+  | _, Tm_meta _     -> fail ("bottom: " ^ tag_of t1 ^ " vs " ^ tag_of t2)
 
 and arg_eq_dbg (dbg : bool) a1 a2 =
     eqprod (fun t1 t2 -> check dbg "arg tm" (term_eq_dbg dbg t1 t2))
