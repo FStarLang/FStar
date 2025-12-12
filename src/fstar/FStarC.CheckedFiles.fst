@@ -458,7 +458,8 @@ let load_module_from_cache_internal =
     else load_with_profiling fn
   )
 
-let scan_deps_and_check_cache_validity env fn =
+let scan_deps_and_check_cache_validity fn =
+  Dep.with_fly_deps_disabled fun _ -> 
   let checked_fn = Dep.cache_file_name fn in
   match Find.find_file checked_fn with
   | None -> None //checked files does not exists

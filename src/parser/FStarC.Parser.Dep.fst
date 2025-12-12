@@ -48,13 +48,12 @@ let fly_deps_enabled () =
       let res = 
         if Options.Ext.enabled "fly_deps"
         then (
-          if Some? <| Options.codegen() 
-          || Some? <| Options.dep()
+          if Some? <| Options.dep()
           || Options.any_dump_module()
           then (
             if Debug.any() 
             then (
-              Format.print_string "Ignoring fly_deps because codegen or dep is on\n"
+              Format.print_string "Ignoring fly_deps because dep or dump_module is on\n"
             );
             false
           )

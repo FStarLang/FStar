@@ -405,11 +405,11 @@ let go_normal () =
             | [fn] ->
               let m = FStarC.Parser.Dep.lowercase_module_name fn in
               Options.add_verify_module m;
-              let deps = FStarC.Parser.Dep.empty_deps [fn] in
-              // match CheckedFiles.scan_deps_and_check_cache_validity deps fn with
-              // | Some (files, deps) ->
-              //   files, deps, false //we have all the checked files; no need to fly deps
-              // | None -> 
+              match CheckedFiles.scan_deps_and_check_cache_validity fn with
+              | Some (files, deps) ->
+                files, deps, false //we have all the checked files; no need to fly deps
+              | None -> 
+                let deps = FStarC.Parser.Dep.empty_deps [fn] in
                 let filenames =
                   if FStarC.Parser.Dep.is_implementation fn
                   then (
