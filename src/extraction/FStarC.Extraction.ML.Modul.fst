@@ -46,6 +46,7 @@ module TcUtil = FStarC.TypeChecker.Util
 module EMB    = FStarC.Syntax.Embeddings
 module Cfg    = FStarC.TypeChecker.Cfg
 module PO     = FStarC.TypeChecker.Primops
+module Print  = FStarC.Syntax.Print
 
 let dbg_ExtractionReify = Debug.get_toggle "ExtractionReify"
 

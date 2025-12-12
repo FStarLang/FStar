@@ -1411,27 +1411,37 @@ let push_namespace' env ns restriction =
   (* namespace resolution disabled, but module abbrevs enabled *)
   (* GM: What's the rationale for this? *)
   let (ns', kd) =
-    match resolve_module_name env ns false with
-    | None -> (
+    match resolve_module_name env ns false with //try to resolve it as a module first
+    | None -> ( //if that fails try resolving it as a namspace
       let module_names = List.map fst env.modules in
       let module_names =
         match env.curmodule with
         | None -> module_names
         | Some l -> l::module_names
       in
-      if module_names |>
-         BU.for_some
-           (fun m ->
-             BU.starts_with (Ident.string_of_lid m ^ ".")
-                            (Ident.string_of_lid ns ^ "."))
-      then (ns, Open_namespace)
-      else
+      let fail () =
         let open FStarC.Pprint in
         let open FStarC.Class.PP in
         raise_error ns Errors.Fatal_NameSpaceNotFound [
           text <| Format.fmt1 "Namespace '%s' cannot be found." (Ident.string_of_lid ns);
           typo_msg (Ident.string_of_lid ns) (List.map Ident.string_of_lid module_names);
         ]
+      in
+      if Dep.fly_deps_enabled ()
+      then (
+        if Dep.is_valid_namespace env.dep_graph ns
+        then (ns, Open_namespace)
+        else fail()
+      )
+      else (
+        if module_names |>
+          BU.for_some
+            (fun m ->
+              BU.starts_with (Ident.string_of_lid m ^ ".")
+                              (Ident.string_of_lid ns ^ "."))
+        then (ns, Open_namespace)
+        else fail()
+      )
     )
     | Some ns' ->
       (ns', Open_module)

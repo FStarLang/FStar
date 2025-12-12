@@ -49,6 +49,7 @@ module TcInductive = FStarC.TypeChecker.TcInductive
 module TcEff = FStarC.TypeChecker.TcEffect
 module PC = FStarC.Parser.Const
 module EMB = FStarC.Syntax.Embeddings
+module Print = FStarC.Syntax.Print
 
 let dbg_TwoPhases = Debug.get_toggle "TwoPhases"
 let dbg_IdInfoOn  = Debug.get_toggle "IdInfoOn"

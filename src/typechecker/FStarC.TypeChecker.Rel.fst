@@ -58,6 +58,7 @@ module FC = FStarC.Const
 module TcComm = FStarC.TypeChecker.Common
 module TEQ = FStarC.TypeChecker.TermEqAndSimplify
 module CList = FStarC.CList
+module Free = FStarC.Syntax.Free
 
 let dbg_Discharge            = Debug.get_toggle "Discharge"
 let dbg_EQ                   = Debug.get_toggle "EQ"
@@ -422,7 +423,7 @@ let empty_worklist env = {
     umax_heuristic_ok=true;
     wl_implicits=empty;
     repr_subcomp_allowed=false;
-    typeclass_variables = Setlike.empty();
+    typeclass_variables = Setlike.empty ();
 }
 
 let giveup wl (reason : lstring) prob =

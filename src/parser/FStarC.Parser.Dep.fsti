@@ -60,8 +60,9 @@ val str_of_parsing_data (p:parsing_data) : string
 val empty_parsing_data: parsing_data  //for legacy ide
 val friends (p:parsing_data) : list lident
 val deps : Type0
-val copy_deps (d:deps) : deps
+val copy_deps (d:deps) : deps 
 val empty_deps (cmd_line_files:list string): deps
+val is_valid_namespace (d:deps) (ns:lident) : bool
 val interface_of : deps -> module_name:string -> option string  //return value is the file name
 val implementation_of : deps -> module_name:string -> option string  //return value is the file name
 val cache_file_name: (string -> string)

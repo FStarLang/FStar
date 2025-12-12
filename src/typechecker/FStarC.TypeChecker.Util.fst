@@ -47,6 +47,7 @@ module TcComm = FStarC.TypeChecker.Common
 module C = FStarC.Parser.Const
 module UF = FStarC.Syntax.Unionfind
 module TEQ = FStarC.TypeChecker.TermEqAndSimplify
+module Print = FStarC.Syntax.Print
 
 open FStarC.Class.Setlike
 

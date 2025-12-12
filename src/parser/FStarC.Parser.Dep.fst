@@ -51,8 +51,6 @@ let fly_deps_enabled =
           if Some? <| Options.codegen() 
           || Some? <| Options.dep()
           || Options.any_dump_module()
-          || Options.ml_ish()
-          // || Options.lax()
           then (
             if Debug.any() 
             then (
@@ -289,6 +287,7 @@ let empty_parsing_data = { elts = []; no_prelude = false }
 type deps = {
     dep_graph:dependence_graph;                 //dependences of the entire project, not just those reachable from the command line
     file_system_map:files_for_module_name;      //an abstraction of the file system, keys are lowercase module names
+    valid_namespaces: SMap.t (list string);     //all namespaces, mapped to the modules in that namespace
     cmd_line_files:list file_name;              //all command-line files
     all_files:ref (RBSet.t file_name);                   //all files
     interfaces_with_inlining:list module_name;  //interfaces that use `inline_for_extraction` require inlining
@@ -301,16 +300,17 @@ let deps_add_dep (Deps m) k v =
   SMap.add m k v
 let deps_keys (Deps m) = SMap.keys m
 let deps_empty () = Deps (SMap.create 41)
-let mk_deps dg fs c a i pr = {
+let mk_deps dg fs ns c a i pr = {
     dep_graph=dg;
     file_system_map=fs;
+    valid_namespaces=ns;
     cmd_line_files=c;
     all_files=mk_ref a;
     interfaces_with_inlining=i;
     parse_results=pr;
 }
 (* In public interface *)
-let empty_deps clf = mk_deps (deps_empty ()) (SMap.create 0) clf (RBSet.empty()) [] (SMap.create 0)
+let empty_deps clf = mk_deps (deps_empty ()) (SMap.create 0) (SMap.create 0) clf (RBSet.empty()) [] (SMap.create 0)
 let module_name_of_dep = function
     | UseInterface m
     | PreferInterface m
@@ -541,21 +541,33 @@ let build_inclusion_candidates_list (): list (string & string) =
     all normalized to lowercase. The first component of the pair is the
     interface (if any). The second component of the pair is the implementation
     (if any). *)
-let build_map map (filenames: list string): unit =
-  let add_entry key full_path =
-    match SMap.try_find map key with
+let build_map fs_map valid_ns_map (filenames: list string): unit =
+  let add_fs_entry key full_path =
+    match SMap.try_find fs_map key with
     | Some (intf, impl) ->
         if is_interface full_path then
-          SMap.add map key (Some full_path, impl)
+          SMap.add fs_map key (Some full_path, impl)
         else
-          SMap.add map key (intf, Some full_path)
+          SMap.add fs_map key (intf, Some full_path)
     | None ->
         if is_interface full_path then
-          SMap.add map key (Some full_path, None)
+          SMap.add fs_map key (Some full_path, None)
         else
-          SMap.add map key (None, Some full_path)
+          SMap.add fs_map key (None, Some full_path)
   in
-
+  let add_ns_entry key full_path =
+    match namespace_of_module key with
+    | None -> ()
+    | Some ns ->
+      let ns = Ident.string_of_lid ns in
+      match SMap.try_find valid_ns_map ns  with
+      | None -> SMap.add valid_ns_map ns [key]
+      | Some keys -> SMap.add valid_ns_map ns (key::keys)
+  in
+  let add_entry key full_path =
+    add_fs_entry key full_path;
+    add_ns_entry key full_path
+  in
   (* Add files from all include directories *)
   List.iter (fun (longname, full_path) ->
     add_entry (String.lowercase longname) full_path
@@ -565,14 +577,20 @@ let build_map map (filenames: list string): unit =
     add_entry (lowercase_module_name f) f
   ) filenames
 
+let is_valid_namespace deps ns =
+  let res = Some? (SMap.try_find deps.valid_namespaces (String.lowercase (Ident.string_of_lid ns))) in
+  if not res
+  then Format.print2 "Could not resolve namespace %s\n valid namespaces are %s\n"
+      (show ns) (show <| SMap.keys deps.valid_namespaces);
+  res
 
 let interface_of deps key = 
   if Nil? (SMap.keys deps.file_system_map)
-  then build_map deps.file_system_map deps.cmd_line_files;
+  then build_map deps.file_system_map deps.valid_namespaces deps.cmd_line_files;
   interface_of_internal deps.file_system_map key
 let implementation_of deps key =
   if Nil? (SMap.keys deps.file_system_map)
-  then build_map deps.file_system_map deps.cmd_line_files;
+  then build_map deps.file_system_map deps.valid_namespaces deps.cmd_line_files;
   implementation_of_internal deps.file_system_map key
 
 let string_of_lid (l: lident) (last: bool) =
@@ -1644,7 +1662,7 @@ let collect_deps_of_decl (deps:deps) (filename:string) (ds:list decl)
    | _ -> Inr ds
   in
   if Nil? (SMap.keys deps.file_system_map)
-  then build_map deps.file_system_map [filename];
+  then build_map deps.file_system_map deps.valid_namespaces [filename];
   let pd = collect_module_or_decls filename roots in
   let _ =
     if !dbg then Format.print2 "Got pds=%s and scope_pds=%s\n" (show pd.elts) (show scope_pds) in
@@ -1695,7 +1713,8 @@ let collect (all_cmd_line_files: list file_name)
   // filenames (e.g. [/where/to/find/A.B.C.fst]). Consider this map
   // immutable from there on.
   let file_system_map = SMap.create 41 in
-  build_map file_system_map all_cmd_line_files;
+  let valid_namespaces = SMap.create 41 in
+  build_map file_system_map valid_namespaces all_cmd_line_files;
   let inlining_ifaces =
     build_dep_graph_for_files all_cmd_line_files file_system_map dep_graph parse_results get_parsing_data_from_cache
   in
@@ -1829,7 +1848,7 @@ let collect (all_cmd_line_files: list file_name)
   if !dbg
   then Format.print1 "Interfaces needing inlining: %s\n" (String.concat ", " inlining_ifaces);
   all_files,
-  mk_deps dep_graph file_system_map all_cmd_line_files (RBSet.from_list all_files) inlining_ifaces parse_results
+  mk_deps dep_graph file_system_map valid_namespaces all_cmd_line_files (RBSet.from_list all_files) inlining_ifaces parse_results
 
 (* In public interface *)
 let parsing_data_of_modul deps filename modul_opt =

@@ -458,7 +458,12 @@ let load_module_from_cache_internal =
     else load_with_profiling fn
   )
 
-let load_module_from_cache = load_module_from_cache_internal false
+let scan_deps_and_load_from_cache env fn = None 
+
+let load_module_from_cache env fn =
+  if Dep.fly_deps_enabled() && Options.should_check_file fn
+  then scan_deps_and_load_from_cache env fn
+  else load_module_from_cache_internal false env fn
 (*
  * Just to make sure data has the right type
  *)
