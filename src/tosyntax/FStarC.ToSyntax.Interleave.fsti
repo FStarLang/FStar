@@ -14,14 +14,23 @@
   limitations under the License.
 *)
 module FStarC.ToSyntax.Interleave
-open FStarC.Effect
+
 open FStarC.Effect
 open FStarC.Ident
 open FStarC.Parser.AST
 module DsEnv = FStarC.Syntax.DsEnv
 
-(* GM: If I don't use the full name, I cannot bootstrap *)
+val initialize_interface
+  (mname : lident)
+  (l : list decl)
+  : DsEnv.withenv unit
 
-val initialize_interface:        lident -> list decl -> DsEnv.withenv unit
-val prefix_with_interface_decls: lident -> decl -> DsEnv.withenv (list decl)
-val interleave_module:           modul -> bool -> DsEnv.withenv modul
+val prefix_with_interface_decls
+  (mname: lident)
+  (impl: decl)
+  : DsEnv.withenv (list decl)
+
+val interleave_module
+  (a : modul)
+  (expect_complete_modul : bool)
+  : DsEnv.withenv modul
