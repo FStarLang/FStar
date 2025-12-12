@@ -304,7 +304,27 @@ let can_resugar_machine_integer (hd : S.term) (args : S.args) : option (fv & str
   )
   | _ -> None
 
-let rec resugar_term' (env: DsEnv.env) (t : S.term) : A.term =
+let passes : ref (list resugar_pass_t) = mk_ref []
+
+exception SkipResugar (* must be redeclared *)
+
+(* It's important the first pass registered is resugar_term_base',
+which is complete. *)
+let register_pass p = passes := p :: !passes
+
+let resugar_term' (env: DsEnv.env) (t:S.term) : A.term =
+  let rec aux passes env t =
+    match passes with
+    | [] -> failwith "no resugar?"
+    | hd::tl ->
+      try
+        hd env t
+      with
+      | SkipResugar -> aux tl env t
+  in
+  aux !passes env t
+
+let rec resugar_term_base' (env: DsEnv.env) (t : S.term) : A.term =
     (* Cannot resugar term back to NamedTyp or Paren *)
     let mk (a:A.term') : A.term =
         //augment `a` with its source position
@@ -1337,6 +1357,8 @@ and resugar_aqual env (q:S.aqual) : A.imp =
   match q with
   | None -> A.Nothing
   | Some a -> if a.aqual_implicit then A.Hash else A.Nothing
+
+let _ = register_pass resugar_term_base'
 
 let resugar_qualifier : S.qualifier -> option A.qualifier = function
   | S.Assumption -> Some A.Assumption

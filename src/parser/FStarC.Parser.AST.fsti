@@ -106,11 +106,9 @@ type term' =
   | ElimAnd of term & term & term & binder & binder & term        (* elim_and P Q to R with x y. e *)
   | ListLiteral of list term
   | SeqLiteral of list term
-
+  | LitDoc of Pprint.document (* Never parsed, used for resugaring extensions. *)
 
 and term = {tm:term'; range:range; level:level}
-
-
 
 (* (as y)? returns t *)
 and match_returns_annotation = option ident & term & bool

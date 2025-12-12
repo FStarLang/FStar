@@ -1589,6 +1589,9 @@ and p_noSeqTerm' ps pb e = match e.tm with
     str "eliminate" ^^ space ^^ p ^^ space ^^ str "/\\" ^^ space ^^ q ^^ hardline ^^
     str "returns" ^^ space ^^ r ^^ hardline ^^
     str "with" ^^ space ^^ xy ^^ space ^^ str "." ^^ space ^^ e
+
+  | LitDoc d ->
+    d
     
   | _ -> p_typ ps pb e
 
@@ -2144,13 +2147,14 @@ and p_projectionLHS e = match e.tm with
 
   // Print uvars without the space.
   | Labeled ({tm=Wild}, s, _) ->
+    let s = BU.replace_chars (BU.trim_string s) '\n' "\\n" in
     str ("(*" ^ s ^ "*)_")
 
   (* KM : I still think that it is wrong to print a term that's not parseable... *)
   (* VD: Not parsable, but it can be called with a Labeled term via term_to_string *)
   | Labeled (e, s, b) ->
-      let s = BU.trim_string s in
-      group <| str ("(* " ^ s ^ " *)") ^/^ p_term false false e
+    let s = BU.replace_chars (BU.trim_string s) '\n' "\\n" in
+    group <| str ("(* " ^ s ^ " *)") ^/^ p_term false false e
 
   (* Failure cases : these cases are not handled in the printing grammar since *)
   (* they are considered as invalid AST. We try to fail as soon as possible in order *)
@@ -2160,6 +2164,8 @@ and p_projectionLHS e = match e.tm with
               " arguments couldn't be handled by the pretty printer")
   | Uvar id ->
     failwith "Unexpected universe variable out of universe context"
+
+  | LitDoc d -> d
 
   (* All the cases are explicitly listed below so that a modification of the ast doesn't lead to a loop *)
   (* We must also make sure that all the constructors listed below are handled somewhere *)

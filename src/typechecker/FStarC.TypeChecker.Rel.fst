@@ -5117,8 +5117,6 @@ let do_discharge_vc use_env_range_msg env vc : unit =
   let open FStarC.Class.PP in
   let debug : bool = !dbg_Rel || !dbg_SMTQuery || !dbg_Discharge in
   let diag = Errors.diag (Env.get_range env) #(list document) in // FIXME: without the implicit, batch mode fails during generalization
-  if debug then
-    diag [text "Checking VC:" ^/^ pp vc];
 
   (* Tactic preprocessing *)
   let vcs : list (env_t & typ & Options.optionstate) = (
@@ -5167,10 +5165,6 @@ let do_discharge_vc use_env_range_msg env vc : unit =
   vcs |> List.iter (fun (env, goal, opts) ->
     Options.with_saved_options (fun () ->
       FStarC.Options.set opts;
-      (* diag (Format.fmt2 "Trying to solve:\n> %s\nWith proof_ns:\n %s\n" *)
-      (*                   (show goal) (Env.string_of_proof_ns env)); *)
-      if debug then
-        diag [text "Before calling solver, VC =" ^/^ pp goal];
       env.solver.solve use_env_range_msg env goal
     )
   )
