@@ -311,6 +311,8 @@ let print_error (err:error) =
   let ctx, msg = err in
   Format.fmt2 "%s%s" (print_context ctx) (Errors.Msg.rendermsg msg)
 
+instance showable_error : showable error = { show = print_error }
+
 let print_error_short (err:error) =
   let _, msg = err in
   Errors.Msg.rendermsg msg
