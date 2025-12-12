@@ -229,6 +229,7 @@ let lemma_mod_plus (a:int) (k:int) (n:pos) =
   lt_multiple_is_equal ((a+k*n)%n) (a%n) (k + a/n - (a+k*n)/n) n;
   ()
 
+#restart-solver // avoid https://github.com/Z3Prover/z3/issues/7948
 let lemma_div_plus (a:int) (k:int) (n:pos) =
   calc (==) {
     n * ((a+k*n)/n - a/n);
