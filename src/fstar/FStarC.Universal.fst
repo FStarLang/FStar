@@ -524,8 +524,8 @@ let rec tc_one_file_internal
   in
   if not (Options.cache_off()) then
       let r = 
-        if Dep.fly_deps_enabled() && Options.should_check_file fn
-        then None //fly_deps_enabled implies force
+        if fly_deps && Options.should_check_file fn
+        then None //if we reach here with fly_deps, then checked files are invalid
         else Ch.load_module_from_cache (tcenv_of_uenv env) fn 
       in
       let r =
@@ -839,7 +839,7 @@ let init_env deps : TcEnv.env =
 (***********************************************************************)
 (* Batch mode: checking many files                                     *)
 (***********************************************************************)
-let batch_mode_tc filenames dep_graph =
+let batch_mode_tc fly_deps filenames dep_graph =
   if !dbg_dep then begin
     Format.print_string "Auto-deps kicked in; here's some info.\n";
     Format.print1 "Here's the list of filenames we will process: %s\n"
@@ -848,7 +848,6 @@ let batch_mode_tc filenames dep_graph =
       (String.concat " " (filenames |> List.filter Options.should_verify_file))
   end;
   let env = FStarC.Extraction.ML.UEnv.new_uenv (init_env dep_graph) in
-  let fly_deps = FStarC.Parser.Dep.fly_deps_enabled() in
   let all_mods, mllibs, env = tc_fold_interleave fly_deps ([], [], env) filenames in
   if FStarC.Errors.get_err_count() = 0 then
     emit dep_graph mllibs;

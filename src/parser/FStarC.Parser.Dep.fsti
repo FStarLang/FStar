@@ -21,6 +21,7 @@ open FStarC.Ident
 open FStarC.Util { out_channel }
 
 val fly_deps_enabled () : bool
+val with_fly_deps_disabled (f:unit -> 'a) : 'a
 val debug_fly_deps () : bool
 (*
  * AR: Parsing data for a file (also cached in the checked files)

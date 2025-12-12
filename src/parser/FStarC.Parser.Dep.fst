@@ -39,10 +39,10 @@ module Const = FStarC.Parser.Const
 module BU = FStarC.Util
 module F = FStarC.Format
 
-let fly_deps_enabled = 
-  let enabled = mk_ref None in
-  fun () ->
-    match !enabled with
+let fd_enabled = mk_ref (None #bool)
+
+let fly_deps_enabled () =
+    match !fd_enabled with
     | Some b -> b
     | None -> 
       let res = 
@@ -69,8 +69,13 @@ let fly_deps_enabled =
         )
       in
       Format.flush_stdout();
-      enabled := Some res;
+      fd_enabled := Some res;
       res
+
+let with_fly_deps_disabled (f: unit -> 'a) : 'a =
+  let v = !fd_enabled in
+  fd_enabled := Some false;
+  FStarC.Util.finally (fun _ -> fd_enabled := v) f
 
 let debug_fly_deps =
   let dbg = FStarC.Debug.get_toggle "fly_deps" in

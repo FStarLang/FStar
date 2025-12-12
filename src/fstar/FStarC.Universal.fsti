@@ -86,6 +86,7 @@ val needs_interleaving :
 
 (* Batch mode: check multiple files. *)
 val batch_mode_tc :
+    fly_deps:bool ->
     list string ->
     FStarC.Parser.Dep.deps ->
     list tc_result & uenv & (uenv -> uenv)

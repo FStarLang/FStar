@@ -398,7 +398,7 @@ let go_normal () =
       else begin
         if Nil? filenames then
           Errors.raise_error0 Errors.Error_MissingFileName "No file provided";
-        let filenames, dep_graph = 
+        let filenames, dep_graph, fly_deps = 
           if FStarC.Parser.Dep.fly_deps_enabled()
           then (
             match filenames with
@@ -406,22 +406,34 @@ let go_normal () =
               let m = FStarC.Parser.Dep.lowercase_module_name fn in
               Options.add_verify_module m;
               let deps = FStarC.Parser.Dep.empty_deps [fn] in
-              let filenames =
-                if FStarC.Parser.Dep.is_implementation fn
-                then (
-                  match FStarC.Parser.Dep.interface_of deps m with
-                  | None -> [fn]
-                  | Some iface -> [iface; fn]
-                )
-                else [fn]
-              in
-              filenames, deps
+              // match CheckedFiles.scan_deps_and_check_cache_validity deps fn with
+              // | Some (files, deps) ->
+              //   files, deps, false //we have all the checked files; no need to fly deps
+              // | None -> 
+                let filenames =
+                  if FStarC.Parser.Dep.is_implementation fn
+                  then (
+                    match FStarC.Parser.Dep.interface_of deps m with
+                    | None -> [fn]
+                    | Some iface -> [iface; fn]
+                  )
+                  else [fn]
+                in
+                filenames, deps, true
             | _ ->
               Errors.raise_error0 Errors.Error_TooManyFiles
                 "When using --ext fly_deps, only one file can be provided."
           )
-          else Dependencies.find_deps_if_needed filenames CheckedFiles.load_parsing_data_from_cache in
-        let tcrs, env, cleanup = Universal.batch_mode_tc filenames dep_graph in
+          else (
+            let files, deps = 
+              Dependencies.find_deps_if_needed
+                filenames 
+                CheckedFiles.load_parsing_data_from_cache
+            in
+            files, deps, false
+          )
+        in
+        let tcrs, env, cleanup = Universal.batch_mode_tc fly_deps filenames dep_graph in
         ignore (cleanup env);
         let module_names =
           tcrs

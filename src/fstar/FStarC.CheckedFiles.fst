@@ -400,7 +400,7 @@ let load_parsing_data_from_cache file_name =
 let load_module_from_cache_internal =
   //this is only used for supressing more than one cache invalid warnings
   let already_failed = mk_ref false in
-  fun (try_load:bool) env fn -> Errors.with_ctx ("While loading module from file " ^ fn) (fun () ->
+  fun (try_load:bool) deps fn -> Errors.with_ctx ("While loading module from file " ^ fn) (fun () ->
     let load_it fn () =
       let cache_file = Dep.cache_file_name fn in
       let fail msg cache_file =
@@ -417,7 +417,7 @@ let load_module_from_cache_internal =
         end
       in
       match load_checked_file_with_tc_result
-              (TcEnv.dep_graph env)
+              deps
               fn
               cache_file with
       | Inl msg -> fail msg cache_file; None
@@ -444,7 +444,7 @@ let load_module_from_cache_internal =
       "FStarC.CheckedFiles" in
 
     let i_fn_opt = Dep.interface_of
-      (TcEnv.dep_graph env)
+      deps
       (Dep.lowercase_module_name fn) in
 
     if Dep.is_implementation fn
@@ -458,12 +458,29 @@ let load_module_from_cache_internal =
     else load_with_profiling fn
   )
 
-let scan_deps_and_load_from_cache env fn = None 
-
+let scan_deps_and_check_cache_validity env fn =
+  let checked_fn = Dep.cache_file_name fn in
+  match Find.find_file checked_fn with
+  | None -> None //checked files does not exists
+  | Some checked_fn ->
+    let filenames, dep_graph = 
+      FStarC.Parser.Dep.with_fly_deps_disabled
+        (fun _ ->
+          FStarC.Dependencies.find_deps_if_needed [fn] load_parsing_data_from_cache)
+    in
+    let rec try_load_all fns =
+      match fns with
+      | [] ->
+        Some (filenames, dep_graph)
+      | fn::rest ->
+        match load_module_from_cache_internal false dep_graph fn with
+        | None -> None
+        | Some tcres -> try_load_all rest
+    in
+    try_load_all filenames
+ 
 let load_module_from_cache env fn =
-  if Dep.fly_deps_enabled() && Options.should_check_file fn
-  then scan_deps_and_load_from_cache env fn
-  else load_module_from_cache_internal false env fn
+  load_module_from_cache_internal false (TcEnv.dep_graph env) fn
 (*
  * Just to make sure data has the right type
  *)
@@ -502,7 +519,7 @@ let store_module_to_cache env fn parsing_data_and_direct_deps tc_result =
             iface
         );
 
-        ignore <| load_module_from_cache_internal true env iface
+        ignore <| load_module_from_cache_internal true (TcEnv.dep_graph env) iface
     );
     let cache_file =
       match Options.output_to () with
