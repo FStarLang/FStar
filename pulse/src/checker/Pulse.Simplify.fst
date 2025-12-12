@@ -213,6 +213,18 @@ let is_size_t_v (t:thua_t) : T.Tac (option term) =
     None
   | _ -> None
 
+let is_size_t_uint_to_t (t:thua_t) : T.Tac (option term) =
+  match hua t with
+  | Some (h, us, args) ->
+    if implode_qn (T.inspect_fv h) = `%FStar.SizeT.uint_to_t
+    then
+      match args with
+      | [(t, Q_Explicit)] -> Some t
+      | _ -> None
+    else
+    None
+  | _ -> None
+
 type op =
   | Add
   | Sub
@@ -260,7 +272,11 @@ let rec simpl_size_t (t:thua_t) : T.Tac thua_t =
       let r' = `(FStar.SizeT.v (`#r)) in
       let res = T.mk_app (T.Tv_UInst f []) [(l', Q_Explicit); (r', Q_Explicit)] in
       thua res
-    | None -> t
+    | None ->
+      match is_size_t_uint_to_t (thua e) with
+      | Some x ->
+        simpl_size_t (thua x)
+      | None -> t
     )
   | None -> t
 
