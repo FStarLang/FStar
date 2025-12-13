@@ -1323,6 +1323,7 @@ let extract' (g:uenv) (m:modul) : uenv & option mlmodule =
 
 let extract (g:uenv) (m:modul) =
   ignore <| Options.restore_cmd_line_options true;
+  debug g (fun _ -> Format.print1 "Starting extraction, uenv=%s\n" (show g));
   let tgt = 
     match Options.codegen() with
     | None -> failwith "Impossible: We're in extract, codegen must be set!"

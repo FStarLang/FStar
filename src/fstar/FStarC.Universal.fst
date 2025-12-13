@@ -457,26 +457,21 @@ let rec tc_one_file_internal
       let check_mod () =
           let check env =
             if not (Options.lax()) then FStarC.SMTEncoding.Z3.refresh None;
-            with_tcenv_of_env env (fun tcenv ->
-              let _ = match tcenv.gamma with
-                        | [] -> ()
-                        | _ -> failwith "Impossible: gamma contains leaked names"
-              in
-              let modul, env =
-                if fly_deps
-                then let Inl ast_mod = fmod in
-                     fly_deps_check fn tcenv ast_mod (Some? interface_fn)
-                else let Inr mod = fmod in
-                     Tc.check_module tcenv mod (Some? interface_fn) 
-              in
-                //AR: encode the module to to smt
-              restore_opts ();
-              let smt_decls =
-                  if not (Options.lax())
-                  then FStarC.SMTEncoding.Encode.encode_modul env modul
-                  else [], []
-              in
-              ((modul, smt_decls), env))
+            let modul, env =
+              if fly_deps
+              then let Inl ast_mod = fmod in
+                    fly_deps_check fn env ast_mod (Some? interface_fn)
+              else let Inr mod = fmod in
+                    with_tcenv_of_env env (fun tcenv -> Tc.check_module tcenv mod (Some? interface_fn))
+            in
+              //AR: encode the module to to smt
+            restore_opts ();
+            let smt_decls =
+              if not (Options.lax())
+              then FStarC.SMTEncoding.Encode.encode_modul (tcenv_of_uenv env) modul
+              else [], []
+            in
+            ((modul, smt_decls), env)
           in
 
           let ((tcmod, smt_decls), env) =
@@ -625,7 +620,6 @@ let rec tc_one_file_internal
         in
 
         let env, _time = maybe_extract_ml_iface tcmod env in
-
         tc_result,
         mllib,
         env
@@ -633,17 +627,7 @@ let rec tc_one_file_internal
   else let _, tc_result, mllib, env = tc_source_file () in
        tc_result, mllib, env
 
-and load_file
-        (env:TcEnv.env_t)
-        (interface_fn:option string) //interface file name
-        (fn:string) //file name
-: TcEnv.env_t
-= let env = env_of_tcenv env in
-  let tc_result, _, env = tc_one_file_internal false env interface_fn fn in
-  // Format.print1 "After load_file: %s\n" (show (tcenv_of_uenv env).dsenv);
-  tcenv_of_uenv env
-
-and fly_deps_check (filename:string) (tcenv:Env.env_t) (ast_mod:Ast.modul) (iface_exists:bool) =
+and fly_deps_check (filename:string) (env:uenv) (ast_mod:Ast.modul) (iface_exists:bool) : Syntax.modul & uenv =
   let decls = Ast.decls_of_modul ast_mod in
   let mname = match decls with
     | {d=Ast.TopLevelModule lid} :: rest -> lid
@@ -652,36 +636,38 @@ and fly_deps_check (filename:string) (tcenv:Env.env_t) (ast_mod:Ast.modul) (ifac
   if Dep.debug_fly_deps() then Format.print1 "Before fly load deps: %s\n" (FStarC.Pprint.render <| FStarC.Class.PP.pp decls);
   // let msg = "Internals for " ^ string_of_lid mname in
   // let tcenv = Tc.push_context tcenv msg in
-  Dep.populate_parsing_data filename ast_mod (DsEnv.dep_graph tcenv.dsenv);
+  Dep.populate_parsing_data filename ast_mod (DsEnv.dep_graph (tcenv_of_uenv env).dsenv);
   let is_interface = FStarC.Parser.Dep.is_interface filename in
-  let mod, tcenv =
-    List.fold_left 
+  let mod, env =
+    List.fold_left
       (fun (mod, env) decl ->
         if Dep.debug_fly_deps() 
         then Format.print1 "fly_deps_check next decl: %s\n" 
           (FStarC.Pprint.render <| FStarC.Class.PP.pp decl);
         
-        let env, _ = scan_and_load_fly_deps filename env (Inr decl) in
-        let mod, env, _ = tc_one_fragment is_interface mod env (Inr decl) in
+        let env, _ = scan_and_load_fly_deps_internal filename env (Inr decl) in
+        let mod, env = with_tcenv_of_env env (fun tcenv -> let mod, tcenv, _ = tc_one_fragment is_interface mod tcenv (Inr decl) in mod, tcenv) in
         mod, env)
-      (None, tcenv)
+      (None, env)
       decls 
   in
   if None? mod then failwith "Impossible";
   let Some mod = mod in
-  let dsenv, mod = DsEnv.finish_module_or_interface tcenv.dsenv mod in
-  let tcenv = {tcenv with dsenv=dsenv} in
-  let mod, tcenv = Tc.finish_partial_modul false false iface_exists tcenv mod in
-  mod, tcenv
+  let mod, env =
+    with_tcenv_of_env env (fun tcenv ->
+      let dsenv, mod = DsEnv.finish_module_or_interface tcenv.dsenv mod in
+      let tcenv = {tcenv with dsenv=dsenv} in
+      Tc.finish_partial_modul false false iface_exists tcenv mod) in
+  mod, env
 
-and scan_and_load_fly_deps filename env frag_or_decl: env_t & list string =
-  let load_fly_deps (env:env_t) filenames =
+and scan_and_load_fly_deps_internal filename (env:uenv) frag_or_decl: uenv & list string =
+  let load_fly_deps (env:uenv) filenames =
     let run_load_tasks env filenames =
-      let _, _, env = tc_fold_interleave false ([], [], env_of_tcenv env) filenames in
-      tcenv_of_uenv env
+      let _, _, env = tc_fold_interleave false ([], [], env) filenames in
+      env
     in
-    let _, env = TcEnv.with_restored_scope env (fun env -> (), run_load_tasks env filenames) in
-    if Dep.debug_fly_deps() then Format.print1 "After fly load deps: %s\n" (show env.dsenv);
+    let _, env = FStarC.Extraction.ML.UEnv.with_restored_tc_scope env (fun env -> (), run_load_tasks env filenames) in
+    if Dep.debug_fly_deps() then Format.print1 "After fly load deps: %s\n" (show (tcenv_of_uenv env).dsenv);
     env
   in
   let scan_fragment_deps env frag_or_decl =
@@ -728,25 +714,27 @@ and scan_and_load_fly_deps filename env frag_or_decl: env_t & list string =
         end);
     filenames, env
   in  
-  let env =
-    if Options.interactive()
-    && not (iface_interleaving_init env.dsenv)
-    && FStarC.Parser.Dep.is_implementation filename
-    then (
-      let deps = FStarC.Syntax.DsEnv.dep_graph env.dsenv in
-      let m = FStarC.Parser.Dep.lowercase_module_name filename in
-      match FStarC.Parser.Dep.interface_of deps m with
-      | None -> 
-        env
-      | Some fn ->
-        load_interface_decls env fn
-    )
-    else (
-     
-      env
-    )
+  let filenames, env =
+    with_tcenv_of_env env (fun tcenv ->
+      let tcenv =
+        if Options.interactive()
+        && not (iface_interleaving_init tcenv.dsenv)
+        && FStarC.Parser.Dep.is_implementation filename
+        then (
+          let deps = FStarC.Syntax.DsEnv.dep_graph tcenv.dsenv in
+          let m = FStarC.Parser.Dep.lowercase_module_name filename in
+          match FStarC.Parser.Dep.interface_of deps m with
+          | None -> 
+            tcenv
+          | Some fn ->
+            load_interface_decls tcenv fn
+        )
+        else (
+          tcenv
+        )
+      in
+      scan_fragment_deps tcenv frag_or_decl)
   in
-  let filenames, env = scan_fragment_deps env frag_or_decl in
   let env = load_fly_deps env filenames in
   env, filenames
 
@@ -787,6 +775,24 @@ and tc_fold_interleave (fly_deps:bool)
       if not (Options.profile_group_by_decl())
       then Profiling.report_and_clear (Ident.string_of_lid nmod.checked_module.name);
       tc_fold_interleave fly_deps (mods@[nmod], mllibs@(as_list env mllib), env) remaining
+
+let load_file
+        (env:TcEnv.env_t)
+        (interface_fn:option string) //interface file name
+        (fn:string) //file name
+: TcEnv.env_t
+= let env = env_of_tcenv env in
+  let tc_result, _, env = tc_one_file_internal false env interface_fn fn in
+  // Format.print1 "After load_file: %s\n" (show (tcenv_of_uenv env).dsenv);
+  tcenv_of_uenv env
+
+
+let scan_and_load_fly_deps
+    (filename:string)
+    (env:TcEnv.env_t)
+    (input:either (FStarC.Parser.ParseIt.input_frag & lang_decls_t) FStarC.Parser.AST.decl)
+= let uenv, files = scan_and_load_fly_deps_internal filename (new_uenv env) input in
+  tcenv_of_uenv uenv, files
 
 let tc_one_file 
         (env:uenv)
