@@ -46,6 +46,10 @@ include Pulse.Lib.Loc
 val mkey : unit
 val no_mkeys : unit
 
+val pulse_eager_elim : unit
+val pulse_eager_intro : unit
+val pulse_intro : unit
+
 (** This attribute allows to do ambiguous proving when calling a function. *)
 val allow_ambiguous : unit
 
