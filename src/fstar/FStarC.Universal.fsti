@@ -46,27 +46,26 @@ val tc_one_fragment :
     either (FStarC.Parser.ParseIt.input_frag & lang_decls_t) FStarC.Parser.AST.decl ->
     option Syntax.modul & TcEnv.env & lang_decls_t
 
-(* Load an interface file into the dsenv. *)
+(* Load an interface file into the dsenv. sed in interactive mode when fly_deps is off *)
 val load_interface_decls :
     TcEnv.env ->
     string ->
     TcEnv.env_t
 
-(* Batch mode: check one file. *)
-val tc_one_file :
-    uenv ->
-    option string ->
-    string ->
-    tc_result & option FStarC.Extraction.ML.Syntax.mlmodule & uenv
-
-(* A thin wrapper for tc_one_file, called by the interactive mode.
-Basically discards any information about extraction. *)
+(* Loads one file as a dependence. Used in interactive mode when fly_deps is off *)
 val load_file :
     TcEnv.env_t ->
-    option string ->
-    string ->
+    iface_fn:option string ->
+    filename:string ->
     TcEnv.env_t
 
+
+(* This is used by interactive mode (PushHelper). 
+    - initializes the desugaring environment for interleaving, if needed
+    - parses the input fragment into a decl
+    - interleaves the decl with decls from the interface
+    - scans them one by one, loads dependences, and checks them
+*)
 val load_fly_deps_and_tc_one_fragment :
     filename:string ->
     is_interface:bool ->

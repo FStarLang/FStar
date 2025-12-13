@@ -48,8 +48,10 @@ let fly_deps_enabled () =
       let res = 
         if Options.Ext.enabled "fly_deps"
         then (
-          if Some? <| Options.dep()
-          || Options.any_dump_module()
+          if Some? <| Options.dep() //if we're doing dep, then we want a full scan now
+          //dump_module: it's a debug feature, but Vale also depends on its output
+          //so don't change that yet
+          || Options.any_dump_module() 
           then (
             if Debug.any() 
             then (
@@ -1668,11 +1670,12 @@ let collect_deps_of_decl (deps:deps) (filename:string) (ds:list decl)
   if Nil? (SMap.keys deps.file_system_map)
   then build_map deps.file_system_map deps.valid_namespaces [filename];
   let pd = collect_module_or_decls filename roots in
-  let _ =
-    if !dbg then Format.print2 "Got pds=%s and scope_pds=%s\n" (show pd.elts) (show scope_pds) in
+  debug_print (fun _ -> 
+    Format.print2 "Got pds=%s and scope_pds=%s\n" (show pd.elts) (show scope_pds));
   let pd = { pd with elts = List.rev scope_pds@List.rev pd.elts } in
   let direct_deps, _has_inline_for_extraction, _additional_roots = deps_from_parsing_data pd deps.file_system_map filename in
-  debug_print (fun _ -> Format.print3 "direct deps of %s is %s, mo_roots=%s\n" 
+  debug_print (fun _ ->
+     Format.print3 "direct deps of %s is %s, mo_roots=%s\n" 
       (show ds) (show direct_deps) (show _additional_roots)); 
   let files = List.map (file_of_dep deps.file_system_map []) direct_deps in
   let inline_ifaces = build_dep_graph_for_files files deps.file_system_map deps.dep_graph deps.parse_results get_parsing_data_from_cache in

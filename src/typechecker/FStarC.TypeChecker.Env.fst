@@ -175,6 +175,8 @@ let set_tc_hooks env hooks = { env with tc_hooks = hooks }
 let set_dep_graph e g = {e with dsenv=DsEnv.set_dep_graph e.dsenv g}
 let dep_graph e = DsEnv.dep_graph e.dsenv
 
+//Used in fly_deps mode for loading a module on the fly and then
+//restoring the local environment to what it was
 let with_restored_scope (e:env) (f: env -> 'a & env) : 'a & env = 
   let env = { e with gamma=[]; gamma_sig=[]; proof_ns=[] } in
   env.solver.refresh None;

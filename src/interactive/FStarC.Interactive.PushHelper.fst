@@ -104,6 +104,8 @@ let snapshot_env env msg : repl_depth_t & env_t =
 
 let push_repl msg push_kind_opt task st =
   let depth, env = snapshot_env st.repl_env msg in
+  //clear buffered queries when pushing, otherwise this can cause an infinite loop
+  //of reprocessing queries when popping
   repl_stack := (depth, (task, { st with repl_buffered_input_queries=[] })) :: !repl_stack;
   match push_kind_opt with
   | None -> st
@@ -179,6 +181,8 @@ let pop_repl msg st =
     FStarC.Common.runtime_assert
       (U.physical_equality env st'.repl_env)
       "Inconsistent stack state";
+    //if we popped past some dependences that were loaded on the fly
+    //reset the solver to clear those deps from its state too
     if should_reset p then st'.repl_env.solver.refresh None;
     { st' with repl_buffered_input_queries=st.repl_buffered_input_queries }
 

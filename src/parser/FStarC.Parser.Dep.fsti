@@ -67,6 +67,11 @@ val is_valid_namespace (d:deps) (ns:lident) : bool
 val interface_of : deps -> module_name:string -> option string  //return value is the file name
 val implementation_of : deps -> module_name:string -> option string  //return value is the file name
 val cache_file_name: (string -> string)
+// Scan decls for dependences, key feature for fly_deps
+// Typically, ds is just a single decl
+// scope_parsing_data is a representing of the current desugaring environment's
+// gloabal scope, i.e., the modules and namespaces current open, module abbrevs etc., 
+// as parsing data, so that ds can be scanned in the appropriate scope.
 val collect_deps_of_decl 
     (deps:deps) (filename:string) (ds:list FStarC.Parser.AST.decl)
     (scope_parsing_data:list parsing_data_elt)

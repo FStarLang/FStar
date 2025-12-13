@@ -2059,7 +2059,7 @@ let snapshot_encoding msg = BU.atomically (fun () ->
     let varops_depth, () = varops.snapshot () in
     (env_depth, varops_depth))
 let rollback_encoding msg (depth:option encoding_depth) = BU.atomically (fun () ->
-    if Debug.medium () then Format.print2 "Encode.rollback_encodin: %s to %s\n" msg (show depth);
+    if Debug.medium () then Format.print2 "Encode.rollback_encoding: %s to %s\n" msg (show depth);
     let env_depth, varops_depth = match depth with
         | Some (s1, s2) -> Some s1, Some s2
         | None -> None, None in
@@ -2155,6 +2155,14 @@ let encode_modul tcenv modul =
     then Format.print2 "+++++++++++Encoding externals for %s ... %s declarations\n" name (List.length modul.declarations |> show);
     let env = get_env modul.name tcenv |> reset_current_module_fvbs in
     let clear_current_module env =
+      //in fly_deps mode, remove all items from the cache
+      //that resulted from encoding this module when checking its
+      //internals, so that it can be encoded in a clean state
+      //for persisting in a .checked file.
+      //This is quite fiddly, but we cannot reset the scope to a
+      //the state before the module was typechecked, because popping
+      //the environment will also unload all modules that were loaded
+      //on the fly.
       let keys = SMap.keys env.global_cache in
       List.iter
         (fun k ->

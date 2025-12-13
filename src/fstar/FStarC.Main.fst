@@ -401,11 +401,21 @@ let go_normal () =
         let filenames, dep_graph, fly_deps = 
           if FStarC.Parser.Dep.fly_deps_enabled()
           then (
+            //we first check if fn is already has a valid .checked file
+            //if so, we disable fly_deps and proceed; this will cause the
+            //batch mode tc to load all the checked files. It is important
+            //for --codegen mode, where typically, all the checked files
+            //already exists, and we do not want to check them again
+            //This also means that if you do `fstar.exe A.fst` and A.fst.checked
+            //is valid, then the compiler does nothing. This is something we could
+            //revisit and change.
             match filenames with
             | [fn] ->
               let m = FStarC.Parser.Dep.lowercase_module_name fn in
               Options.add_verify_module m;
               let default_flydeps () =
+                //by default, just initialize an empty dep graph
+                //return the file, its interface if any, and go
                 let deps = FStarC.Parser.Dep.empty_deps [fn] in
                 let filenames =
                   if FStarC.Parser.Dep.is_implementation fn
