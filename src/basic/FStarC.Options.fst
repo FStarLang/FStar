@@ -171,8 +171,8 @@ let depth () =
   let lev::_ = !history in
   List.length lev
 
-let snapshot ()    = Common.snapshot push history ()
-let rollback depth = Common.rollback pop  history depth
+let snapshot ()    = Common.snapshot "Options" push history ()
+let rollback depth = Common.rollback "Options" pop  history depth
 
 let set_option k v =
   let map : optionstate = peek() in
@@ -229,7 +229,6 @@ let defaults = [
   ("ide"                                       , Bool false);
   ("ide_id_info_off"                           , Bool false);
   ("ifuel"                                     , Unset);
-  ("in"                                        , Bool false);
   ("include"                                   , List []);
   ("initial_fuel"                              , Int 2);
   ("initial_ifuel"                             , Int 1);
@@ -248,7 +247,6 @@ let defaults = [
   ("log_failing_queries"                       , Bool false);
   ("log_queries"                               , Bool false);
   ("log_types"                                 , Bool false);
-  ("lsp"                                       , Bool false);
   ("max_fuel"                                  , Int 8);
   ("max_ifuel"                                 , Int 2);
   ("message_format"                            , String "auto");
@@ -494,10 +492,8 @@ let get_hide_uvar_nums          ()      = lookup_opt "hide_uvar_nums"           
 let get_hint_info               ()      = lookup_opt "hint_info"                as_bool
 let get_hint_dir                ()      = lookup_opt "hint_dir"                 (as_option as_string)
 let get_hint_file               ()      = lookup_opt "hint_file"                (as_option as_string)
-let get_in                      ()      = lookup_opt "in"                       as_bool
 let get_ide                     ()      = lookup_opt "ide"                      as_bool
 let get_ide_id_info_off         ()      = lookup_opt "ide_id_info_off"          as_bool
-let get_lsp                     ()      = lookup_opt "lsp"                      as_bool
 let get_print                   ()      = lookup_opt "print"                    as_bool
 let get_print_in_place          ()      = lookup_opt "print_in_place"           as_bool
 let get_initial_fuel            ()      = lookup_opt "initial_fuel"             as_int
@@ -1036,24 +1032,14 @@ let specs_with_types warn_unsafe : list (char & string & opt_type & Pprint.docum
     text "Print information regarding hints (deprecated; use --query_stats instead)");
 
   ( noshort,
-    "in",
-    Const (Bool true),
-    text "Legacy interactive mode; reads input from stdin");
-
-  ( noshort,
     "ide",
     Const (Bool true),
-    text "JSON-based interactive mode for IDEs");
+    text "JSON-based interactive mode for IDEs (used by VSCode, emacs, neovim, etc.)");
 
   ( noshort,
     "ide_id_info_off",
     Const (Bool true),
     text "Disable identifier tables in IDE mode (temporary workaround useful in Steel)");
-
-  ( noshort,
-    "lsp",
-    Const (Bool true),
-    text "Language Server Protocol-based interactive mode for IDEs");
 
   ( noshort,
     "include",
@@ -1955,6 +1941,12 @@ let restore_cmd_line_options should_clear =
     set_option' ("verify_module", List (List.map String old_verify_module));
     Success
 
+let with_restored_cmd_line_options (f:unit -> 'a) : 'a =
+  let snap = snapshot_all () in
+  let h = !history in
+  let _ = restore_cmd_line_options true in
+  finally (fun _ -> history := h; restore_all snap) f
+
 let module_name_of_file_name f =
     let f = Filepath.basename f in
     let f = String.substring f 0 (String.length f - String.length (Filepath.get_file_extension f) - 1) in
@@ -2084,7 +2076,7 @@ let dump_module                  s  = get_dump_module() |> List.existsb (module_
 let eager_subtyping              () = get_eager_subtyping()
 let error_contexts               () = get_error_contexts              ()
 let expose_interfaces            () = get_expose_interfaces          ()
-let interactive                  () = get_in () || get_ide () || get_lsp ()
+let interactive                  () = get_ide ()
 let message_format               () =
   match get_message_format () with
   | "auto" -> (
@@ -2138,8 +2130,6 @@ let lang_extensions              () = get_lang_extensions             ()
 let lax                          () = get_lax                         ()
 let load                         () = get_load                        ()
 let load_cmxs                    () = get_load_cmxs                   ()
-let legacy_interactive           () = get_in                          ()
-let lsp_server                   () = get_lsp                         ()
 let log_queries                  () = get_log_queries                 ()
 let log_failing_queries          () = get_log_failing_queries         ()
 let keep_query_captions          () =

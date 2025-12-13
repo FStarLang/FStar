@@ -3,6 +3,7 @@
   "options": [
     "--cache_dir", ".cache",
     "--ext", "optimize_let_vc",
+    "--ext", "fly_deps",
     "--z3smtopt", "(set-option :smt.qi.eager_threshold 100)",
     "--z3smtopt", "(set-option :smt.arith.nl false)",
     "--smtencoding.elim_box", "true",

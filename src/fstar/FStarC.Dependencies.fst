@@ -18,6 +18,8 @@
 module FStarC.Dependencies
 open FStarC
 open FStarC.Effect
+open FStarC.Format
+open FStarC.Class.Show
 
 (***********************************************************************)
 (* Finding the transitive dependencies of a list of files               *)

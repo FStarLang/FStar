@@ -21,7 +21,7 @@ ROOTS     = Test.fst
 
 FSTAR_FLAGS = $(OTHERFLAGS) --cmi --odir $(OUT_DIR) --cache_dir $(CACHE_DIR) \
   --cache_checked_modules --already_cached 'Prims FStar' \
-  --ext optimize_let_vc
+  --ext optimize_let_vc --ext fly_deps
 
 FSTAR = $(FSTAR_EXE) $(FSTAR_FLAGS)
 

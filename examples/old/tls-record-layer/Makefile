@@ -177,13 +177,13 @@ chacha-aead-test: chacha-aead-compile
 	./test_chacha_aead.exe
 
 bignum-ver:
-	$(FSTAR) --ext optimize_let_vc crypto/Crypto.Symmetric.Poly1305.Bignum.Lemmas.Part1.fst --include crypto
-	$(FSTAR) --ext optimize_let_vc crypto/Crypto.Symmetric.Poly1305.Bignum.Lemmas.Part2.fst --include crypto
-	$(FSTAR) --ext optimize_let_vc crypto/Crypto.Symmetric.Poly1305.Bignum.Lemmas.Part3.fst --include crypto
-	$(FSTAR) --ext optimize_let_vc crypto/Crypto.Symmetric.Poly1305.Bignum.Lemmas.Part4.fst --include crypto
-	$(FSTAR) --ext optimize_let_vc crypto/Crypto.Symmetric.Poly1305.Bignum.Lemmas.Part5.fst --include crypto
-	$(FSTAR) --ext optimize_let_vc crypto/Crypto.Symmetric.Poly1305.Bignum.Lemmas.Part6.fst --include crypto
-	$(FSTAR) --ext optimize_let_vc --include crypto crypto/Crypto.Symmetric.Poly1305.Bignum.fst
+	$(FSTAR) --ext optimize_let_vc --ext fly_deps crypto/Crypto.Symmetric.Poly1305.Bignum.Lemmas.Part1.fst --include crypto
+	$(FSTAR) --ext optimize_let_vc --ext fly_deps crypto/Crypto.Symmetric.Poly1305.Bignum.Lemmas.Part2.fst --include crypto
+	$(FSTAR) --ext optimize_let_vc --ext fly_deps crypto/Crypto.Symmetric.Poly1305.Bignum.Lemmas.Part3.fst --include crypto
+	$(FSTAR) --ext optimize_let_vc --ext fly_deps crypto/Crypto.Symmetric.Poly1305.Bignum.Lemmas.Part4.fst --include crypto
+	$(FSTAR) --ext optimize_let_vc --ext fly_deps crypto/Crypto.Symmetric.Poly1305.Bignum.Lemmas.Part5.fst --include crypto
+	$(FSTAR) --ext optimize_let_vc --ext fly_deps crypto/Crypto.Symmetric.Poly1305.Bignum.Lemmas.Part6.fst --include crypto
+	$(FSTAR) --ext optimize_let_vc --ext fly_deps --include crypto crypto/Crypto.Symmetric.Poly1305.Bignum.fst
 
 KRML_INCLUDES=$(addprefix -I ,spartan_aes crypto $(KRML_HOME)/krmllib $(KRML_HOME)/test)
 ifeq ($(OS),Windows_NT)

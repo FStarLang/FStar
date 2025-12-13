@@ -160,6 +160,8 @@ let rec prefix_with_iface_decls
        in
        {impl with attrs=karamel_private::impl.attrs}
    in
+   //friend always takes precedence
+   if Friend? impl.d then iface, [impl] else
    match iface with
    | [] -> [], [qualify_karamel_private impl]
    | iface_hd::iface_tl -> begin
@@ -313,7 +315,7 @@ let ml_mode_check_initial_interface mname (iface:list decl) =
     | ModuleAbbrev _ -> true
     | _ -> false)
 
-let prefix_one_decl mname iface impl =
+let prefix_one_decl iface impl =
     match impl.d with
     | TopLevelModule _ -> iface, [impl]
     | _ ->
@@ -345,7 +347,7 @@ let fixup_interleaved_decls (iface : list decl) : list decl =
   in
   iface |> List.map fix1
 
-let prefix_with_interface_decls mname (impl:decl) : E.withenv (list decl) =
+let prefix_with_interface_decls (impl:decl) : E.withenv (list decl) =
   fun (env:E.env) ->
     let decls, env = 
       match E.iface_decls env (E.current_module env) with
@@ -353,11 +355,11 @@ let prefix_with_interface_decls mname (impl:decl) : E.withenv (list decl) =
         [impl], env
       | Some iface ->
         let iface = fixup_interleaved_decls iface in
-        let iface, impl = prefix_one_decl mname iface impl in
+        let iface, impl = prefix_one_decl iface impl in
         let env = E.set_iface_decls env (E.current_module env) iface in
         impl, env
     in
-    if Options.dump_module (Ident.string_of_lid mname)
+    if Options.dump_module (Ident.string_of_lid (E.current_module env))
     then Format.print1 "Interleaved decls:\n%s\n" (show decls);
     decls,env
 
@@ -373,7 +375,7 @@ let interleave_module (a:modul) (expect_complete_modul:bool) : E.withenv modul =
         let iface, impls =
             List.fold_left
                 (fun (iface, impls) impl ->
-                    let iface, impls' = prefix_one_decl l iface impl in
+                    let iface, impls' = prefix_one_decl iface impl in
                     iface, impls@impls')
                 (iface, [])
                 impls

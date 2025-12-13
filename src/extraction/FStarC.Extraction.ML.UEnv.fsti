@@ -16,6 +16,7 @@
 
 module FStarC.Extraction.ML.UEnv
 open FStarC
+open FStarC.Class.Show
 open FStarC.Effect
 open FStarC.Ident
 open FStarC.Extraction.ML.Syntax
@@ -50,6 +51,8 @@ type mlbinding =
   | Fv  of fv & exp_binding
   | ErasedFv of fv
 
+instance val showable_mlbinding : showable mlbinding
+
 (** Type abbreviations, aka definitions *)
 val tydef : Type0
 val tydef_fv : tydef -> fv
@@ -59,6 +62,8 @@ val tydef_def: tydef -> mltyscheme
 
 (** The main type of this module *)
 val uenv : Type0
+instance val showable_uenv: showable uenv
+val with_restored_tc_scope (env:uenv) (f:uenv -> 'a & uenv) : 'a & uenv
 val tcenv_of_uenv : u:uenv -> TypeChecker.Env.env
 val set_tcenv : u:uenv -> t:TypeChecker.Env.env -> uenv
 val current_module_of_uenv : u:uenv -> mlpath

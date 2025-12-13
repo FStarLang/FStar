@@ -6,6 +6,7 @@ open FStarC.Effect
 open FStarC.Syntax.Syntax
 open FStarC.Syntax.Subst
 open FStarC.Syntax.Visit
+module Print = FStarC.Syntax.Print
 
 open FStarC.Class.Show
 

@@ -4070,9 +4070,9 @@ let desugar_modul_common (curmod: option S.modul) env (m:AST.modul) : env_t & Sy
   let (env, pop_when_done), mname, decls, intf =
     match m with
     | Interface {no_prelude; mname; decls; admitted} ->
-      Env.prepare_module_or_interface true admitted env mname Env.default_mii, mname, decls, true
+      Env.prepare_module_or_interface no_prelude true admitted env mname Env.default_mii, mname, decls, true
     | Module {no_prelude; mname; decls} ->
-      Env.prepare_module_or_interface false false env mname Env.default_mii, mname, decls, false
+      Env.prepare_module_or_interface no_prelude false false env mname Env.default_mii, mname, decls, false
   in
   let env, sigelts = desugar_decls env decls in
   let modul = {
@@ -4083,12 +4083,6 @@ let desugar_modul_common (curmod: option S.modul) env (m:AST.modul) : env_t & Sy
   env, modul, pop_when_done
 
 let desugar_partial_modul curmod (env:env_t) (m:AST.modul) : env_t & Syntax.modul =
-  let m =
-    if Options.interactive () &&
-      List.mem (Filepath.get_file_extension (List.hd (Options.file_list ()))) ["fsti"; "fsi"]
-    then as_interface m
-    else m
-  in
   let env, modul, pop_when_done = desugar_modul_common curmod env m in
   if pop_when_done then Env.pop (), modul
   else env, modul
@@ -4195,7 +4189,7 @@ let add_modul_to_env_core (finish: bool) (m:Syntax.modul)
             push_reflect_effect env se.sigquals ed.mname se.sigrng
           | _ -> Env.push_sigelt env se
       in
-      let en, pop_when_done = Env.prepare_module_or_interface false false en m.name mii in
+      let en, pop_when_done = Env.prepare_module_or_interface false false false en m.name mii in
       let en = List.fold_left
                     push_sigelt
                     (Env.set_current_module en m.name)

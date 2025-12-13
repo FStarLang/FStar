@@ -34,43 +34,52 @@ val module_or_interface_name : Syntax.modul -> bool & lid
 (* Uses the dsenv inside the TcEnv.env to run the computation. *)
 val with_dsenv_of_tcenv : TcEnv.env -> DsEnv.withenv 'a -> 'a & TcEnv.env
 
-(* Initialize a clean environment, built from a dependency graph. The
-graph is used to populate the internal dsenv of the tcenv. *)
-val init_env : Dep.deps -> TcEnv.env
-
 val core_check: TcEnv.core_check_t
 
 type lang_decls_t = list FStarC.Parser.AST.decl
 
 (* Interactive mode: checking a fragment of code. *)
 val tc_one_fragment :
+    is_interface:bool ->
     option Syntax.modul ->
     TcEnv.env_t ->
     either (FStarC.Parser.ParseIt.input_frag & lang_decls_t) FStarC.Parser.AST.decl ->
     option Syntax.modul & TcEnv.env & lang_decls_t
 
-(* Load an interface file into the dsenv. *)
+(* Load an interface file into the dsenv. sed in interactive mode when fly_deps is off *)
 val load_interface_decls :
     TcEnv.env ->
     string ->
     TcEnv.env_t
 
-(* Batch mode: check one file. *)
-val tc_one_file :
-    uenv ->
-    option string ->
-    string ->
-    FStarC.Parser.Dep.parsing_data ->
-    tc_result & option FStarC.Extraction.ML.Syntax.mlmodule & uenv
-
-(* A thin wrapper for tc_one_file, called by the interactive mode.
-Basically discards any information about extraction. *)
-val tc_one_file_for_ide :
+(* Loads one file as a dependence. Used in interactive mode when fly_deps is off *)
+val load_file :
     TcEnv.env_t ->
-    option string ->
-    string ->
-    FStarC.Parser.Dep.parsing_data ->
-    tc_result & TcEnv.env_t
+    iface_fn:option string ->
+    filename:string ->
+    TcEnv.env_t
+
+
+(* This is used by interactive mode (PushHelper). 
+    - initializes the desugaring environment for interleaving, if needed
+    - parses the input fragment into a decl
+    - interleaves the decl with decls from the interface
+    - scans them one by one, loads dependences, and checks them
+*)
+val load_fly_deps_and_tc_one_fragment :
+    filename:string ->
+    is_interface:bool ->
+    option Syntax.modul ->
+    TcEnv.env_t ->
+    either (FStarC.Parser.ParseIt.input_frag & lang_decls_t) FStarC.Parser.AST.decl ->
+    option Syntax.modul &
+    TcEnv.env &
+    lang_decls_t &
+    list string //filenames that were loaded
+
+(* Initialize a clean environment, built from a dependency graph. The
+graph is used to populate the internal dsenv of the tcenv. *)
+val init_env : Dep.deps -> TcEnv.env
 
 (* [needs_interleaving s1 s2] is when s1 and s2 are (resp.) the filenames
 for the interface and implementation of a (single) module. *)
@@ -81,6 +90,7 @@ val needs_interleaving :
 
 (* Batch mode: check multiple files. *)
 val batch_mode_tc :
+    fly_deps:bool ->
     list string ->
     FStarC.Parser.Dep.deps ->
     list tc_result & uenv & (uenv -> uenv)

@@ -39,3 +39,10 @@ val compress_and_norm: env -> typ -> option typ
 val tc_decls: env -> list sigelt -> list sigelt & env
 val tc_partial_modul: env -> modul -> modul & env
 val tc_more_partial_modul: env -> modul -> list sigelt -> modul & list sigelt & env
+val finish_partial_modul
+ (should_pop:bool)
+ (loading_from_cache:bool)
+ (iface_exists:bool)
+ (en:env) 
+ (m:modul)
+: (modul & env)

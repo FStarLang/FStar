@@ -1,4 +1,8 @@
 module Bug3210
+friend FStar.Tactics.NamedView
+// ^ We need this (at the start of the file for fly_deps)
+// to bring the definitions into scope,
+// since NamedView has an interface.
 
 module Tac = FStar.Tactics.V2
 
@@ -32,8 +36,5 @@ let test3 () : Tac.Tac unit =
   print (term_to_string tm)
 
 #push-options "--no_plugins"
-friend FStar.Tactics.NamedView
-// ^ We need this (at any point in the file) to bring the definitions into scope,
-// since NamedView has an interface.
 let _ = assert True by test3 ()
 #pop-options

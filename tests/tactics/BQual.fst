@@ -13,6 +13,6 @@ let _ = assert True by begin
   in
   let t : term = pack (Tv_Arrow b (C_Total (`int))) in
   let s = term_to_string t in
-  if term_to_string t <> "$xyz: Prims.int -> Prims.int" then
+  if term_to_string t <> "$xyz: int -> int" then
     fail ("unexpected: " ^ s)
 end

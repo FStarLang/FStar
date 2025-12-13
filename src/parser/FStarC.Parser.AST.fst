@@ -126,6 +126,11 @@ let lid_of_modul (m:modul) : lid =
   | Module {mname}
   | Interface {mname} -> mname
 
+let decls_of_modul (m:modul) : list decl =
+  match m with
+  | Module {decls}
+  | Interface {decls} -> decls
+  
 let check_id id =
     let first_char = String.substring (string_of_id id) 0 1 in
     if not (String.lowercase first_char = first_char) then

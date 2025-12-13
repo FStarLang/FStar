@@ -56,6 +56,13 @@ let plug () = Options.codegen () = Some Options.Plugin
            || Options.codegen () = Some Options.PluginNoLib
 let plug_no_lib () = Options.codegen () = Some Options.PluginNoLib
 
+instance showable_mlbinding : showable mlbinding = {
+  show = function 
+    | Bv (x, _) -> show x
+    | Fv (x, _) -> show x
+    | ErasedFv x -> Format.fmt1 "Erased %s" (show x)
+}
+
 (**** Type definitions *)
 
 (** A top-level F* type definition, i.e., a type abbreviation,
@@ -108,6 +115,23 @@ type uenv = {
   currentModule: mlpath // needed to properly translate the definitions in the current file
 }
 
+let with_restored_tc_scope 
+      (env:uenv)
+      (f:uenv -> 'a & uenv)
+: 'a & uenv
+= let (res, uenv'), tcenv' =
+    TypeChecker.Env.with_restored_scope
+      env.env_tcenv 
+      (fun tcenv ->
+        let uenv = {env with env_tcenv=tcenv} in
+        let res, uenv' = f uenv in
+        (res, uenv'), uenv'.env_tcenv)
+  in
+  res, {uenv' with env_tcenv=tcenv'}
+
+instance showable_uenv : showable uenv = {
+  show = fun e -> show e.env_bindings
+}
 (**** Getters and Setters *)
 
 let tcenv_of_uenv (u:uenv) : TypeChecker.Env.env = u.env_tcenv

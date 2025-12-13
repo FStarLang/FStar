@@ -26,18 +26,21 @@ module List = FStarC.List
 module BU = FStarC.Util
 module SB = FStarC.StringBuffer
 
-let snapshot (push: 'a -> 'b) (stackref: ref (list 'c)) (arg: 'a) : (int & 'b) = BU.atomically (fun () ->
+let snapshot msg (push: 'a -> 'b) (stackref: ref (list 'c)) (arg: 'a) : (int & 'b) = BU.atomically (fun () ->
   let len : int = List.length !stackref in
   let arg' = push arg in
+  if FStarC.Debug.any () then Format.print2 "(%s)snapshot %s\n" msg (string_of_int len);
   (len, arg'))
 
-let rollback (pop: unit -> 'a) (stackref: ref (list 'c)) (depth: option int) =
+let rollback msg (pop: unit -> 'a) (stackref: ref (list 'c)) (depth: option int) =
+  if FStarC.Debug.any () then Format.print2 "(%s)rollback %s ... " msg (match depth with None -> "None" | Some len ->string_of_int len);
   let rec aux n : 'a =
-    if n <= 0 then failwith "Too many pops"
+    if n <= 0 then failwith "(rollback) Too many pops"
     else if n = 1 then pop ()
     else (ignore (pop ()); aux (n - 1)) in
   let curdepth = List.length !stackref in
   let n = match depth with Some d -> curdepth - d | None -> 1 in
+  if FStarC.Debug.any () then Format.print1 " depth is %s\n "(string_of_int (List.length (!stackref)));
   BU.atomically (fun () -> aux n)
 
 // This function is separate to make it easier to put breakpoints on it

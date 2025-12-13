@@ -1,6 +1,5 @@
 FSTAR_ROOT ?= ../..
 SUBDIRS += emacs
-SUBDIRS += lsp
 include $(FSTAR_ROOT)/mk/test.mk
 
 INCR_TEST_FILES := $(wildcard $(FSTAR_ROOT)/ulib/*.fst  $(FSTAR_ROOT)/ulib/*.fsti)

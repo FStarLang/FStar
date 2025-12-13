@@ -5,7 +5,7 @@
 # 'include test.mk'.
 
 FSTAR_HOME=../..
-OTHERFLAGS += --ext optimize_let_vc
+OTHERFLAGS += --ext optimize_let_vc --ext fly_deps
 FSTAR_EXE ?= $(FSTAR_HOME)/out/bin/fstar.exe
 FSTAR=$(FSTAR_EXE) $(OTHERFLAGS)
 

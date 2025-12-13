@@ -1,11 +1,10 @@
 module FStar.PtrdiffT
-
+friend FStar.SizeT
 module Cast = FStar.Int.Cast
 module I64 = FStar.Int64
 
 open FStar.Ghost
 
-friend FStar.SizeT
 
 (** We assume the existence of lower and upper bounds corresponding to PTRDIFF_MIN
     and PTRDIFF_MAX, which ensure that a ptrdiff_t has at least width 16 according to

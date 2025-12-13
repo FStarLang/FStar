@@ -23,7 +23,11 @@ open FStarC.Format
 open FStarC.Getopt
 open FStarC.Ident
 open FStarC.Errors
-open FStarC.Interactive.JsonHelper
+open FStarC.Interactive.JsonHelper { 
+  js_bool, js_int, js_str, js_list, js_assoc, try_assoc,
+  write_json, json_debug,
+  UnexpectedJsonType, InvalidQuery,
+}
 open FStarC.Interactive.QueryHelper
 open FStarC.Interactive.PushHelper
 open FStarC.Interactive.Ide.Types
@@ -108,7 +112,7 @@ let run_repl_transaction st push_kind must_rollback task =
   // Run the task (and capture errors)
   let curmod, env, success, lds =
     match with_captured_errors env Util.sigint_raise
-              (fun env -> Some <| run_repl_task st.repl_curmod env task st.repl_lang) with
+              (fun env -> Some <| run_repl_task st.repl_fname st.repl_curmod env task st.repl_lang) with
     | Some (curmod, env, lds) when check_success () -> curmod, env, true, lds
     | _ -> st.repl_curmod, env, false, [] in
 
@@ -689,6 +693,11 @@ let run_load_partial_file st decl_name: (query_status & json) & either repl_stat
       let st = pop_repl "load partial file" st in
       (QueryNOK, json_errors), Inl st
 
+let json_errors () = 
+  let errors = List.map rephrase_dependency_error (collect_errors ()) in
+  let js_errors = errors |> List.map json_of_issue in
+  js_errors 
+
 let run_push_without_deps st query
   : (query_status & json) & either repl_state int =
   let set_flychecking_flag st flag =
@@ -712,9 +721,9 @@ let run_push_without_deps st query
       Inl { frag_fname = st.repl_fname; frag_text = text; frag_line = line; frag_col = column }
     | Inr (decl, _code) -> 
       Inr decl
-    in
+  in
   let st = set_flychecking_flag st peek_only in
-  let success, st = run_repl_transaction st (Some push_kind) peek_only (PushFragment (frag, push_kind, [])) in
+  let success, st = run_repl_transaction st (Some push_kind) peek_only (PushFragment (frag, push_kind, [], [])) in
   let st = set_flychecking_flag st false in
 
   let status = if success || peek_only then QueryOK else QueryNOK in
@@ -744,6 +753,7 @@ let run_push_without_deps st query
   let st = if success then { st with repl_line = line; repl_column = column } else st in
   ((status, json_errors), Inl st)
 
+
 let run_push_with_deps st query =
   if !dbg then
     Format.print_string "Reloading dependencies";
@@ -759,7 +769,7 @@ let run_push_with_deps st query =
     run_push_without_deps ({ st with repl_names = names }) query
 
 let run_push st query =
-  if nothing_left_to_pop st then
+  if not (FStarC.Parser.Dep.fly_deps_enabled()) && nothing_left_to_pop st then
     run_push_with_deps st query
   else
     run_push_without_deps st query
@@ -1141,16 +1151,17 @@ let rec run_query st (q: query) : (query_status & list json) & either repl_state
   | Push pquery -> as_json_list (run_push st pquery)
   | PushPartialCheckedFile decl_name -> as_json_list (run_load_partial_file st decl_name)
   | Pop -> as_json_list (run_pop st)
-  | FullBuffer (code, full_kind, with_symbols) ->
+  | FullBuffer (code, full_kind, with_symbols) -> (
     let open FStarC.Interactive.Incremental in
     write_full_buffer_fragment_progress FullBufferStarted;
-    let queries, issues = 
+    let queries, issues =
       run_full_buffer st q.qid code full_kind with_symbols write_full_buffer_fragment_progress
     in
     List.iter (write_response q.qid QueryOK) issues;
     let res = fold_query validate_and_run_query queries st in
     write_full_buffer_fragment_progress FullBufferFinished;
     res
+  )
   | AutoComplete (search_term, context) ->
     as_json_list (run_autocomplete st search_term context)
   | Lookup (symbol, context, pos_opt, rq_info, symrange) ->
@@ -1230,7 +1241,8 @@ let install_ide_mode_hooks printer =
 
 
 let build_initial_repl_state (filename: string) =
-  let env = init_env FStarC.Parser.Dep.empty_deps in
+  Options.add_verify_module (FStarC.Parser.Dep.lowercase_module_name filename);
+  let env = init_env (FStarC.Parser.Dep.empty_deps [filename])in
   let env = FStarC.TypeChecker.Env.set_range env (initial_range filename) in
   FStarC.Options.set_ide_filename filename;
   { repl_line = 1;

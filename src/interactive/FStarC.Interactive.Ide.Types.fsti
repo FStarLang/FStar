@@ -21,6 +21,7 @@ open FStarC
 open FStarC.Effect
 open FStarC.Util
 open FStarC.Range
+open FStarC.Class.Show
 module PI = FStarC.Parser.ParseIt
 module TcEnv = FStarC.TypeChecker.Env
 module CTable = FStarC.Interactive.CompletionTable
@@ -86,7 +87,11 @@ type repl_task =
   | PushFragment of either PI.input_frag FStarC.Parser.AST.decl (* code fragment *)
                   & push_kind (* FullCheck, LaxCheck, SyntaxCheck *)
                   & list json (* any warnings that were raised while checking this fragment *)
+                  & list string (* dependences loaded on the fly *)
   | Noop (* Used by compute, PushPartialCheckedFile *)
+
+val mk_ld_interleaved (iface impl:string) : repl_task
+val mk_ld_single (filename:string) : repl_task
 
 type full_buffer_request_kind =
   | Full : full_buffer_request_kind
@@ -141,13 +146,15 @@ and repl_state = {
 }
 and repl_stack_t = list repl_stack_entry_t
 and repl_stack_entry_t  = repl_depth_t & (repl_task & repl_state)
-
 // Global repl_state, keeping state of different buffers
 type grepl_state = { grepl_repls: PSMap.t repl_state; grepl_stdin: stream_reader }
 
 val query_to_string : query -> string
 
 val string_of_repl_task : repl_task -> string
+
+instance val repl_stack_entry_t_showable : showable repl_stack_entry_t
+instance val repl_state_showable : showable repl_state
 
 val json_of_issue : FStarC.Errors.issue -> json
 

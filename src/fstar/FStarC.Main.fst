@@ -248,7 +248,7 @@ let go_normal () =
     (* --read_checked: read and print a checked file *)
     | Success when Some? (Options.read_checked_file ()) -> (
       let path = Some?.v <| Options.read_checked_file () in
-      let env = Universal.init_env Parser.Dep.empty_deps in
+      let env = Universal.init_env (Parser.Dep.empty_deps filenames) in
       let res = CheckedFiles.load_tc_result path in
       match res with
       | None ->
@@ -259,7 +259,10 @@ let go_normal () =
 
       | Some (deps, tcr) ->
         print1 "Deps: %s\n" (show deps);
-        print1 "%s\n" (show tcr.checked_module)
+        print1 "Inclusion info: %s\n" (show tcr.mii);
+        print1 "Checked module: %s\n" (show tcr.checked_module);
+        print1 "SMT decls: %s\n" (show <| fst tcr.smt_decls);
+        print1 "SMT fvars: %s\n" (show <| snd tcr.smt_decls)
     )
 
     (* --read_krml_file: read and print a krml file *)
@@ -375,11 +378,8 @@ let go_normal () =
       (* Try to load the plugins that are specified in the command line *)
       load_native_tactics ();
 
-      (* --lsp: interactive mode for Language Server Protocol *)
-      if Options.lsp_server () then
-        Interactive.Lsp.start_server ()
-      (* --ide, --in: Interactive mode *)
-      else if Options.interactive () then begin
+      (* --ide: Interactive mode *)
+      if Options.interactive () then begin
         UF.set_rw ();
         match filenames with
         | [] -> (* input validation: move to process args? *)
@@ -391,19 +391,63 @@ let go_normal () =
             "--ide: Too many files in command line invocation\n";
           exit 1
         | [filename] ->
-          if Options.legacy_interactive () then
-            Interactive.Legacy.interactive_mode filename
-          else
-            Interactive.Ide.interactive_mode filename
+          Interactive.Ide.interactive_mode filename
         end
 
       (* Normal, batch mode compiler *)
       else begin
         if Nil? filenames then
           Errors.raise_error0 Errors.Error_MissingFileName "No file provided";
-
-        let filenames, dep_graph = Dependencies.find_deps_if_needed filenames CheckedFiles.load_parsing_data_from_cache in
-        let tcrs, env, cleanup = Universal.batch_mode_tc filenames dep_graph in
+        let filenames, dep_graph, fly_deps = 
+          if FStarC.Parser.Dep.fly_deps_enabled()
+          then (
+            //we first check if fn is already has a valid .checked file
+            //if so, we disable fly_deps and proceed; this will cause the
+            //batch mode tc to load all the checked files. It is important
+            //for --codegen mode, where typically, all the checked files
+            //already exists, and we do not want to check them again
+            //This also means that if you do `fstar.exe A.fst` and A.fst.checked
+            //is valid, then the compiler does nothing. This is something we could
+            //revisit and change.
+            match filenames with
+            | [fn] ->
+              let m = FStarC.Parser.Dep.lowercase_module_name fn in
+              Options.add_verify_module m;
+              let default_flydeps () =
+                //by default, just initialize an empty dep graph
+                //return the file, its interface if any, and go
+                let deps = FStarC.Parser.Dep.empty_deps [fn] in
+                let filenames =
+                  if FStarC.Parser.Dep.is_implementation fn
+                  then (
+                    match FStarC.Parser.Dep.interface_of deps m with
+                    | None -> [fn]
+                    | Some iface -> [iface; fn]
+                  )
+                  else [fn]
+                in
+                filenames, deps, true
+              in
+              if Options.force() then default_flydeps() else
+              match CheckedFiles.scan_deps_and_check_cache_validity fn with
+              | Some (files, deps) ->
+                files, deps, false //we have all the checked files; no need to fly deps
+              | None -> 
+                default_flydeps()
+            | _ ->
+              Errors.raise_error0 Errors.Error_TooManyFiles
+                "When using --ext fly_deps, only one file can be provided."
+          )
+          else (
+            let files, deps = 
+              Dependencies.find_deps_if_needed
+                filenames 
+                CheckedFiles.load_parsing_data_from_cache
+            in
+            files, deps, false
+          )
+        in
+        let tcrs, env, cleanup = Universal.batch_mode_tc fly_deps filenames dep_graph in
         ignore (cleanup env);
         let module_names =
           tcrs

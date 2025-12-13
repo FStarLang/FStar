@@ -40,6 +40,7 @@ module Gen = FStarC.TypeChecker.Generalize
 module BU = FStarC.Util //basic util
 module U  = FStarC.Syntax.Util
 module C  = FStarC.Parser.Const
+module Print = FStarC.Syntax.Print
 
 open FStarC.Class.Show
 open FStarC.Class.Listlike

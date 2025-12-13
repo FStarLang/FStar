@@ -28,6 +28,7 @@ module BU      = FStarC.Util
 module Dep     = FStarC.Parser.Dep
 
 let dbg = Debug.get_toggle "CheckedFiles"
+let debug (f:unit -> unit) = if !dbg then f () else ()
 
 (*
  * We write this version number to the cache files, and
@@ -107,12 +108,61 @@ type cache_t =
 
 //Internal cache
 let mcache : smap cache_t = SMap.create 50
+let add_and_return checked_fn elt = 
+  SMap.add mcache checked_fn elt; elt
+let try_find_in_cache checked_fn = SMap.try_find mcache checked_fn
+let dump_cache_keys tag = 
+  if !dbg then Format.print2 "(%s) Cache contains %s\n" tag (show (SMap.keys mcache))
+ 
+
+(*
+ * Load a checked file into the cache
+ *
+ * This is loading the parsing data, and tc data as Unknown (unless checked file is invalid)
+ *
+ * See above for the two steps of loading the checked files
+ *)
+let load_checked_file (fn:string) (checked_fn:string) :cache_t =
+  debug (fun _ ->
+      Format.print1
+        "Trying to load checked file result %s\n"
+        checked_fn);
+  let elt = checked_fn |> try_find_in_cache in
+  if elt |> Some?
+  then (
+    //already loaded
+    elt |> Option.must
+  ) else
+    let add_and_return = add_and_return checked_fn in
+    if not (Filepath.file_exists checked_fn)
+    then let msg = Format.fmt1 "checked file %s does not exist" checked_fn in
+         add_and_return (Invalid msg, Inl msg)
+    else let entry :option checked_file_entry_stage1 = BU.load_value_from_file checked_fn in
+         match entry with
+         | None ->
+           let msg = Format.fmt1 "checked file %s is corrupt" checked_fn in
+           add_and_return (Invalid msg, Inl msg)
+         | Some (x) ->
+           if x.version <> cache_version_number
+           then let msg = Format.fmt1 "checked file %s has incorrect version" checked_fn in
+                add_and_return (Invalid msg, Inl msg)
+           else let current_digest = BU.digest_of_file fn in
+                if x.digest <> current_digest
+                then begin
+                  debug (fun _ ->
+                    Format.print4 "Checked file %s is stale since incorrect digest of %s, \
+                      expected: %s, found: %s\n"
+                      checked_fn fn current_digest x.digest);
+                  let msg = Format.fmt2 "checked file %s is stale (digest mismatch for %s)" checked_fn fn in
+                  add_and_return (Invalid msg, Inl msg)
+                end
+                else add_and_return (Unknown, Inr x.parsing_data)
 
 (*
  * Either the reason because of which dependences are stale/invalid
  *   or the list of dep string, as defined in the checked_file_entry above
  *)
-let hash_dependences (deps:Dep.deps) (fn:string) :either string (list (string & string)) =
+let hash_dependences (deps:Dep.deps) (fn:string) (deps_of_fn:list string):either string (list (string & string)) =
   Stats.record "hash_dependences" fun () ->
   let fn =
     match Find.find_file fn with
@@ -132,7 +182,7 @@ let hash_dependences (deps:Dep.deps) (fn:string) :either string (list (string & 
       |> Some
     else None
   in
-  let binary_deps = Dep.deps_of deps fn
+  let binary_deps = deps_of_fn
     |> List.filter (fun fn ->
          not (Dep.is_interface fn &&
               Dep.lowercase_module_name fn = module_name)) in
@@ -142,26 +192,24 @@ let hash_dependences (deps:Dep.deps) (fn:string) :either string (list (string & 
        String.compare (Dep.lowercase_module_name fn1)
                       (Dep.lowercase_module_name fn2))
     binary_deps in
-
   let maybe_add_iface_hash out =
     match interface_checked_file_name with
     | None -> Inr (("source", source_hash)::out)
     | Some iface ->
-       (match SMap.try_find mcache iface with
+       (match try_find_in_cache iface with
        | None ->
          let msg = Format.fmt1
            "hash_dependences::the interface checked file %s does not exist\n"
            iface in
        
-         if !dbg
-         then Format.print1 "%s\n" msg;
+         debug (fun _ -> Format.print1 "%s\n" msg);
          
          Inl msg
        | Some (Invalid msg, _) -> Inl msg
        | Some (Valid h, _) -> Inr (("source", source_hash)::("interface", h)::out)
        | Some (Unknown, _) ->
          failwith (Format.fmt1
-           "Impossible: unknown entry in the mcache for interface %s\n"
+           "Impossible: unknown entry in the cache for interface %s\n"
            iface))
   in
 
@@ -170,15 +218,14 @@ let hash_dependences (deps:Dep.deps) (fn:string) :either string (list (string & 
   | fn::deps ->
     let cache_fn = Dep.cache_file_name fn in
     (*
-     * It is crucial to get the digest of fn from mcache, rather than computing it directly
+     * It is crucial to get the digest of fn from cache, rather than computing it directly
      * See #1668
      *)
     let digest =
-      match SMap.try_find mcache cache_fn with
+      match try_find_in_cache cache_fn with
       | None ->
         let msg = Format.fmt2 "For dependency %s, cache file %s is not loaded" fn cache_fn in
-        if !dbg
-        then Format.print1 "%s\n" msg;
+        debug (fun _ -> Format.print1 "%s\n" msg);
         Inl msg
       | Some (Invalid msg, _) -> Inl msg
       | Some (Valid dig, _)   -> Inr dig
@@ -194,48 +241,6 @@ let hash_dependences (deps:Dep.deps) (fn:string) :either string (list (string & 
   in
   hash_deps [] binary_deps
 
-(*
- * Load a checked file into mcache
- *
- * This is loading the parsing data, and tc data as Unknown (unless checked file is invalid)
- *
- * See above for the two steps of loading the checked files
- *)
-let load_checked_file (fn:string) (checked_fn:string) :cache_t =
-  if !dbg then
-    Format.print1 "Trying to load checked file result %s\n" checked_fn;
-  let elt = checked_fn |> SMap.try_find mcache in
-  if elt |> Some?
-  then (
-    //already loaded
-    if !dbg then
-      Format.print1 "Already loaded checked file %s\n" checked_fn;
-    elt |> Option.must
-  ) else
-    let add_and_return elt = SMap.add mcache checked_fn elt; elt in
-    if not (Filepath.file_exists checked_fn)
-    then let msg = Format.fmt1 "checked file %s does not exist" checked_fn in
-         add_and_return (Invalid msg, Inl msg)
-    else let entry :option checked_file_entry_stage1 = BU.load_value_from_file checked_fn in
-         match entry with
-         | None ->
-           let msg = Format.fmt1 "checked file %s is corrupt" checked_fn in
-           add_and_return (Invalid msg, Inl msg)
-         | Some (x) ->
-           if x.version <> cache_version_number
-           then let msg = Format.fmt1 "checked file %s has incorrect version" checked_fn in
-                add_and_return (Invalid msg, Inl msg)
-           else let current_digest = BU.digest_of_file fn in
-                if x.digest <> current_digest
-                then begin
-                  if !dbg then
-                    Format.print4 "Checked file %s is stale since incorrect digest of %s, \
-                      expected: %s, found: %s\n"
-                      checked_fn fn current_digest x.digest;
-                  let msg = Format.fmt2 "checked file %s is stale (digest mismatch for %s)" checked_fn fn in
-                  add_and_return (Invalid msg, Inl msg)
-                end
-                else add_and_return (Unknown, Inr x.parsing_data)
 
 let load_tc_result (checked_fn:string) : option (list (string & string) & tc_result) =
   let entry : option (checked_file_entry_stage1 & checked_file_entry_stage2) =
@@ -256,8 +261,7 @@ let load_checked_file_with_tc_result
   (checked_fn:string)
   : either string tc_result
 =
-  if !dbg then
-    Format.print1 "Trying to load checked file with tc result %s\n" checked_fn;
+  debug (fun _ -> Format.print1 "Trying to load checked file with tc result %s\n" checked_fn);
 
   let load_tc_result' (fn:string) :list (string & string) & tc_result =
     match load_tc_result fn with
@@ -270,10 +274,10 @@ let load_checked_file_with_tc_result
   | Invalid msg, _ -> Inl msg
   | Valid _, _ -> checked_fn |> load_tc_result' |> snd |> Inr
   | Unknown, parsing_data ->
-    match hash_dependences deps fn with
+    match hash_dependences deps fn (Dep.deps_of deps fn) with
     | Inl msg ->
       let elt = (Invalid msg, parsing_data) in
-      SMap.add mcache checked_fn elt;
+      let _ = add_and_return checked_fn elt in
       Inl msg
     | Inr deps_dig' ->
       let deps_dig, tc_result = checked_fn |> load_tc_result' in
@@ -281,7 +285,7 @@ let load_checked_file_with_tc_result
       then begin
         //mark the tc data of the file as valid
         let elt = (Valid (BU.digest_of_file checked_fn), parsing_data) in
-        SMap.add mcache checked_fn elt;
+        let _ = add_and_return checked_fn elt in
         (*
          * if there exists an interface for it, mark that too as valid
          * this is specially needed for extraction invocations of F* with --cmi flag
@@ -310,11 +314,10 @@ let load_checked_file_with_tc_result
           | Some iface ->
             try
               let iface_checked_fn = iface |> Dep.cache_file_name in
-              match SMap.try_find mcache iface_checked_fn with
+              match try_find_in_cache iface_checked_fn with
               | Some (Unknown, parsing_data) ->
-                SMap.add mcache
-                  iface_checked_fn
-                  (Valid (BU.digest_of_file iface_checked_fn), parsing_data)
+                let _ = add_and_return iface_checked_fn (Valid (BU.digest_of_file iface_checked_fn), parsing_data) in
+                ()
               | _ -> ()
             with
               | _ -> ()
@@ -323,8 +326,7 @@ let load_checked_file_with_tc_result
         Inr tc_result
       end
       else begin
-        if !dbg
-        then begin
+        debug (fun _ ->
           Format.print4 "FAILING to load.\nHashes computed (%s):\n%s\n\nHashes read (%s):\n%s\n"
             (show (List.length deps_dig'))
             (FStarC.Parser.Dep.print_digest deps_dig')
@@ -336,14 +338,14 @@ let load_checked_file_with_tc_result
                  then Format.print2 "Differ at: Expected %s\n Got %s\n"
                                 (FStarC.Parser.Dep.print_digest [(x,y)])
                                 (FStarC.Parser.Dep.print_digest [(x',y')])) deps_dig deps_dig'
-        end;
+        );
         let msg =
           Format.fmt1
             "checked file %s is stale (dependence hash mismatch, use --debug CheckedFiles for more details)"
             checked_fn
         in
         let elt = (Invalid msg, Inl msg) in
-        SMap.add mcache checked_fn elt;
+        let _ = add_and_return checked_fn elt in
         Inl msg
       end
 
@@ -392,17 +394,17 @@ let load_parsing_data_from_cache file_name =
     | _, Inr data -> Some data
   )
 
-let load_module_from_cache =
+let load_module_from_cache_internal =
   //this is only used for supressing more than one cache invalid warnings
   let already_failed = mk_ref false in
-  fun env fn -> Errors.with_ctx ("While loading module from file " ^ fn) (fun () ->
+  fun (try_load:bool) deps fn -> Errors.with_ctx ("While loading module from file " ^ fn) (fun () ->
     let load_it fn () =
       let cache_file = Dep.cache_file_name fn in
       let fail msg cache_file =
         //Don't feel too bad if fn is the file on the command line
         //Also suppress the warning if already given to avoid a deluge
-        let suppress_warning = Options.should_check_file fn || !already_failed in
-        if not suppress_warning then begin
+        let suppress_warning = try_load || Options.should_check_file fn || !already_failed in
+        if not suppress_warning || !dbg then begin
           already_failed := true;
           FStarC.Errors.log_issue (Range.mk_range fn (Range.mk_pos 0 0) (Range.mk_pos 0 0))
             Errors.Warning_CachedFile [Errors.text (Format.fmt3
@@ -412,13 +414,13 @@ let load_module_from_cache =
         end
       in
       match load_checked_file_with_tc_result
-              (TcEnv.dep_graph env)
+              deps
               fn
               cache_file with
       | Inl msg -> fail msg cache_file; None
       | Inr tc_result ->
-        if !dbg then
-          Format.print1 "Successfully loaded module from checked file %s\n" cache_file;
+        debug (fun _ ->
+          Format.print1 "Successfully loaded module from checked file %s\n" cache_file);
         Some tc_result
       (* | _ -> failwith "load_checked_file_tc_result must have an Invalid or Valid entry" *)
     in
@@ -439,7 +441,7 @@ let load_module_from_cache =
       "FStarC.CheckedFiles" in
 
     let i_fn_opt = Dep.interface_of
-      (TcEnv.dep_graph env)
+      deps
       (Dep.lowercase_module_name fn) in
 
     if Dep.is_implementation fn
@@ -453,6 +455,37 @@ let load_module_from_cache =
     else load_with_profiling fn
   )
 
+//This functions checks if the checked file for fn exists
+//and if so, whether all its dependences are also checked
+//and the hashes are all valid.
+//It is used in fly_deps mode when starting up the batch mode
+//compiler---if the checked files are all valid, no need to
+//check anything again, just load them and go.
+let scan_deps_and_check_cache_validity fn =
+  Dep.with_fly_deps_disabled fun _ ->
+  //do it with fly deps disabled so that we compute the full dep graph at once
+  let checked_fn = Dep.cache_file_name fn in
+  match Find.find_file checked_fn with
+  | None -> None //checked files does not exists
+  | Some checked_fn ->
+    let filenames, dep_graph = 
+      FStarC.Parser.Dep.with_fly_deps_disabled
+        (fun _ ->
+          FStarC.Dependencies.find_deps_if_needed [fn] load_parsing_data_from_cache)
+    in
+    let rec try_load_all fns =
+      match fns with
+      | [] ->
+        Some (filenames, dep_graph)
+      | fn::rest ->
+        match load_module_from_cache_internal false dep_graph fn with
+        | None -> None
+        | Some tcres -> try_load_all rest
+    in
+    try_load_all filenames
+ 
+let load_module_from_cache env fn =
+  load_module_from_cache_internal false (TcEnv.dep_graph env) fn
 (*
  * Just to make sure data has the right type
  *)
@@ -464,10 +497,34 @@ let store_values_to_cache
   Errors.with_ctx ("While writing checked file " ^ cache_file) (fun () ->
     BU.save_2values_to_file cache_file stage1 stage2)
 
-let store_module_to_cache env fn parsing_data tc_result =
+instance _ : showable Dep.parsing_data = {
+  show = Dep.str_of_parsing_data
+}
+
+let store_module_to_cache env fn parsing_data_and_direct_deps tc_result =
   if Options.cache_checked_modules()
   && not (Options.cache_off())
   then begin
+    debug (fun () -> 
+      Format.print2 "Storing checked file for %s with %s dependences\n"
+        fn (show parsing_data_and_direct_deps)
+    );
+    if Dep.fly_deps_enabled () then (
+      //populate the cache with the interface file, if it exists
+      //otherwise dependence hashing will fail
+      let i_fn_opt = Dep.interface_of
+          (TcEnv.dep_graph env)
+          (Dep.lowercase_module_name fn) in
+      match i_fn_opt with
+      | None -> ()
+      | Some iface ->
+        debug (fun () -> 
+          Format.print1 "Tryng to load interface %s from cache before storing\n"
+            iface
+        );
+
+        ignore <| load_module_from_cache_internal true (TcEnv.dep_graph env) iface
+    );
     let cache_file =
       match Options.output_to () with
       | Some fn -> fn
@@ -475,7 +532,8 @@ let store_module_to_cache env fn parsing_data tc_result =
          we would clobber previously-written checked files. *)
       | None -> FStarC.Parser.Dep.cache_file_name fn
     in
-    let digest = hash_dependences (TcEnv.dep_graph env) fn in
+    let parsing_data, deps_of_fn = parsing_data_and_direct_deps in
+    let digest = hash_dependences (TcEnv.dep_graph env) fn deps_of_fn in
     match digest with
     | Inr hashes ->
       let tc_result = { tc_result with tc_time=0; extraction_time=0 } in
@@ -487,6 +545,10 @@ let store_module_to_cache env fn parsing_data tc_result =
       let open FStarC.Errors in
       let open FStarC.Errors.Msg in
       let open FStarC.Pprint in
+      debug (fun _ ->
+          Format.print2 "FAILING to store cache file for %s, with deps %s\n"
+            fn (show deps_of_fn));
+
       log_issue (FStarC.Range.mk_range fn (FStarC.Range.mk_pos 0 0)
                                  (FStarC.Range.mk_pos 0 0))
         Errors.Warning_FileNotWritten [

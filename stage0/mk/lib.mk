@@ -1,4 +1,4 @@
-FSTAR_OPTIONS += --ext optimize_let_vc
+FSTAR_OPTIONS += --ext optimize_let_vc --ext fly_deps
 FSTAR_OPTIONS += --z3version 4.13.3
 
 # Checking a library, make sure to not use the parent lib.
