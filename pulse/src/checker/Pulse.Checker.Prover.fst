@@ -804,6 +804,46 @@ let try_apply_elim_lemma (g: env) (lid: R.name) (i: nat) (ctxt: slprop_view) :
   | _ ->
     None
 
+let try_apply_eager_intro_lemma (g: env) (lid: R.name) (i: nat) ctxt (goal: slprop_view) :
+    T.Tac (option (prover_result g ctxt [goal])) =
+  let do_match goal ctxt =
+    match goal, ctxt with
+    | Atom goal_hd goal_mkeys goal, Atom ctxt_hd ctxt_mkeys ctxt ->
+      do_match_mkeys g goal goal_mkeys ctxt ctxt_mkeys
+    | _ -> false in
+  let t, ty, _ = tc_term_phase1 g (R.pack_ln <| R.Tv_FVar <| R.pack_fv lid) in
+  let ty, t = apply_with_uvars g ty t in
+  match Pulse.Readback.readback_comp ty with
+  | Some (C_STGhost inames { pre; post; res; u }) ->
+    assume res == tm_unit;
+    let post' = open_term' post unit_const 0 in
+    (match inspect_slprop g post', i with
+    | [post''], 0 -> // only support introduction rules with single post
+      if do_match goal post'' then (
+        debug_prover g (fun _ -> Printf.sprintf "try_apply_eager_intro_lemma: applying %s by unifying %s and %s\n" (show lid) (show post) (show (elab_slprop goal)));
+        let ok = teq_nosmt_force_args (elab_env g) post' (elab_slprop goal) false in
+        debug_prover g (fun _ -> Printf.sprintf "try_apply_eager_intro_lemma: unified %s and %s, result is %s\n" (show post) (show (elab_slprop goal)) (show ok));
+        Some (| g, ctxt, [Unknown pre], [], fun g'' ->
+          let (| eff, typing |) = core_check_term_at_type g'' t ty in
+          let c = C_STGhost inames { pre; post; res; u } in
+          let t' = wtag (Some STT_Ghost) (Tm_ST { t; args=[] }) in
+          let ni: non_informative g'' c = admit () in
+          let typing: st_typing g'' t' c = T_STGhost g'' t c typing ni in
+          let c = C_STGhost inames { pre; post = post'; res; u } in
+          let typing: st_typing g'' t' c = assume post == post'; typing in
+          cont_elab_refl g'' _ _ (VE_Refl _ _),
+          (fun frame posth t ->
+            let h1: tot_typing g'' (tm_star (elab_slprops frame) (comp_pre c)) tm_slprop = admit () in
+            let h2: slprop_equiv g'' (tm_star (elab_slprops frame) (comp_pre c)) (elab_slprops (frame @ [] @ [Unknown pre])) = admit () in
+            let h3: slprop_equiv g'' (tm_star (comp_post c) (elab_slprops frame)) (elab_slprops (frame @ [goal])) = admit () in
+            k_elab_equiv (continuation_elaborator_with_bind_nondep (elab_slprops frame) typing h1) h2 h3 posth t)
+        |)
+      ) else
+        None
+    | _ -> None)
+  | _ ->
+    None
+
 let eager_elim_lemma_step (g:env) (plems: plems) (ctxt: slprop_view) :
     T.Tac (option (prover_result_nogoals g [ctxt])) =
   match ctxt with
@@ -812,6 +852,17 @@ let eager_elim_lemma_step (g:env) (plems: plems) (ctxt: slprop_view) :
       if plem.plem_kind <> EagerElim then None else
       if plem.plem_prop_head <> hd then None else
       try_apply_elim_lemma g plem.plem_lid plem.plem_prop_idx ctxt
+    ) plems
+  | _ -> None
+
+let eager_intro_lemma_step (g:env) (plems: plems) (ctxt: list slprop_view) (goal: slprop_view) :
+    T.Tac (option (prover_result g ctxt [goal])) =
+  match goal with
+  | Atom hd mkeys _ ->
+    T.tryPick (fun plem ->
+      if plem.plem_kind <> EagerIntro then None else
+      if plem.plem_prop_head <> hd then None else
+      try_apply_eager_intro_lemma g plem.plem_lid plem.plem_prop_idx ctxt goal
     ) plems
   | _ -> None
 
@@ -1176,6 +1227,7 @@ let rec try_prove_core (g: env) (plems: plems) (ctxt goals: list slprop_view) al
         (fun _ -> prove_first g ctxt goals (prove_atom g ctxt allow_amb));
         (fun _ -> prove_first g ctxt goals (prove_pure g ctxt false));
         (fun _ -> prove_first g ctxt goals (prove_with_pure g ctxt false));
+        (fun _ -> prove_first g ctxt goals (eager_intro_lemma_step g plems ctxt));
         (fun _ -> prove_first g ctxt goals (prove_on_l g ctxt));
 
       ] in
