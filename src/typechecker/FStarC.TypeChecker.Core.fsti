@@ -14,10 +14,14 @@
    limitations under the License.
 *)
 module FStarC.TypeChecker.Core
+
 open FStarC
 open FStarC.Syntax.Syntax
 open FStarC.TypeChecker.Common
+open FStarC.Class.Show
 module Env = FStarC.TypeChecker.Env
+
+
 type guard_commit_token_cb = unit -> unit
 (* The guard t is a precondition of typing computed by the core checker;
    Once the guard is proven, the caller should call commit_guard on the 
@@ -35,6 +39,7 @@ val clear_memo_table (_:unit)
   : unit
 
 val error : Type0
+instance val showable_error : showable error
 
 type side = 
   | Left

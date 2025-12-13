@@ -441,7 +441,7 @@ let go () =
 
   | _ -> go_normal ()
 
-let handle_error e =
+let handle_error (e:exn) : unit =
     if FStarC.Errors.handleable e then
       FStarC.Errors.err_exn e
     else begin

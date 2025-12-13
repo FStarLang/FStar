@@ -311,6 +311,8 @@ let print_error (err:error) =
   let ctx, msg = err in
   Format.fmt2 "%s%s" (print_context ctx) (Errors.Msg.rendermsg msg)
 
+instance showable_error : showable error = { show = print_error }
+
 let print_error_short (err:error) =
   let _, msg = err in
   Errors.Msg.rendermsg msg
@@ -1414,19 +1416,19 @@ and check_relation (g:env) (rel:relation) (t0 t1:typ)
   = if !dbg
     then (
       fun ctx cache ->
-        Format.print3 "check_relation %s %s %s\n"
+        Format.print3 "check_relation (%s, %s, %s) {\n"
                     (show t0)
                     (show rel)
                     (show t1);
         let res = check_relation' g rel t0 t1 ctx cache in
         match res with
-        | Error err -> Error err
+        | Error err ->
+          Format.print4 "} check_relation (%s, %s, %s) failed with %s\n"
+            (show t0) (show rel) (show t1) (show err);
+          Error err
         | Success ((_, g), cache) ->
-          Format.print4 "check_relation  %s %s %s succeeded with guard %s\n"
-              (show t0)
-              (show rel)
-              (show t1)
-              (show g);
+          Format.print4 "} check_relation  (%s, %s, %s) succeeded with guard %s\n"
+            (show t0) (show rel) (show t1) (show g);
           res
     )
     else (
