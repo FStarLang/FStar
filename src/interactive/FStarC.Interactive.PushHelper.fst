@@ -198,15 +198,14 @@ let run_repl_task (repl_fname:string) (curmod: optmod_t) (env: env_t) (task: rep
       | Inl frag -> Inl (frag, lds)
       | Inr decl -> Inr decl
     in
-    let env = 
-      if FStarC.Parser.Dep.fly_deps_enabled()
-      then let env, filenames = Universal.scan_and_load_fly_deps repl_fname env frag in
-            add_filenames_to_push_fragment filenames;
-            env
-      else env
-    in
     let is_interface = FStarC.Parser.Dep.is_interface repl_fname in
-    let o, e, langs = tc_one_fragment is_interface curmod env frag in
+    let o, e, langs, filenames = 
+      if FStarC.Parser.Dep.fly_deps_enabled()
+      then load_fly_deps_and_tc_one_fragment repl_fname is_interface curmod env frag
+      else let o, e, langs = tc_one_fragment is_interface curmod env frag in
+           o, e, langs, []
+    in
+    add_filenames_to_push_fragment filenames;
     o, e, langs
   | Noop ->
     curmod, env, []

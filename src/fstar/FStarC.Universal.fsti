@@ -67,11 +67,16 @@ val load_file :
     string ->
     TcEnv.env_t
 
-val scan_and_load_fly_deps : 
+val load_fly_deps_and_tc_one_fragment :
     filename:string ->
-    env:TcEnv.env_t ->
+    is_interface:bool ->
+    option Syntax.modul ->
+    TcEnv.env_t ->
     either (FStarC.Parser.ParseIt.input_frag & lang_decls_t) FStarC.Parser.AST.decl ->
-    TcEnv.env_t & list string //filenames that were loaded
+    option Syntax.modul &
+    TcEnv.env &
+    lang_decls_t &
+    list string //filenames that were loaded
 
 (* Initialize a clean environment, built from a dependency graph. The
 graph is used to populate the internal dsenv of the tcenv. *)

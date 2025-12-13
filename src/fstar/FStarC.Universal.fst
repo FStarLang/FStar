@@ -188,9 +188,9 @@ let tc_one_fragment is_interface curmod (env:TcEnv.env_t) frag =
          Actually, this is an abuse, and just means that we're type-checking the
          first chunk. *)
       let ast_modul, env =
-        if not <| Options.interactive()
-        then ast_modul, env
-        else with_dsenv_of_tcenv env <| FStarC.ToSyntax.Interleave.interleave_module ast_modul false
+        if Options.interactive () && not <| Dep.fly_deps_enabled()
+        then with_dsenv_of_tcenv env <| FStarC.ToSyntax.Interleave.interleave_module ast_modul false
+        else ast_modul, env
       in
       if not (acceptable_mod_name ast_modul) then
       begin
@@ -201,6 +201,9 @@ let tc_one_fragment is_interface curmod (env:TcEnv.env_t) frag =
         Errors.raise_error (range_of_first_mod_decl ast_modul) Errors.Fatal_NonSingletonTopLevelModule msg
       end;
       debug 1 env;
+      if Debug.extreme() then (
+        Format.print1 "About to desugar ast module %s\n" (show ast_modul)
+      );
       let modul, env =
           if DsEnv.syntax_only env.dsenv 
           then with_dsenv_of_tcenv env <| Desugar.partial_ast_modul_to_modul curmod ast_modul
@@ -230,27 +233,28 @@ let tc_one_fragment is_interface curmod (env:TcEnv.env_t) frag =
       Errors.raise_error rng Errors.Fatal_ModuleFirstStatement "First statement must be a module declaration"
     | Some modul ->
       let env, ast_decls_l =
-        if not <| Options.interactive()
-        then env, [ast_decls]
-        else begin
+        if Options.interactive () && not (Dep.fly_deps_enabled())
+        then 
           BU.fold_map
-              (fun env a_decl ->
-                  let decls, env =
-                      with_dsenv_of_tcenv env <|
-                      FStarC.ToSyntax.Interleave.prefix_with_interface_decls modul.name a_decl
-                  in
-                  env, decls)
-              env
-              ast_decls
-        end in
+                (fun env a_decl ->
+                    let decls, env =
+                        with_dsenv_of_tcenv env <|
+                        FStarC.ToSyntax.Interleave.prefix_with_interface_decls a_decl
+                    in
+                    env, decls)
+                env
+                ast_decls 
+        else env, [ast_decls]
+      in
+      let ast_decls = List.flatten ast_decls_l in
       let modul, _, env  = 
         if DsEnv.syntax_only env.dsenv 
-        then let _, env = with_dsenv_of_tcenv env <| Desugar.decls_to_sigelts (List.flatten ast_decls_l) in
+        then let _, env = with_dsenv_of_tcenv env <| Desugar.decls_to_sigelts ast_decls in
              (modul, [], env)
         else (
           let ses, env = 
           Errors.with_ctx ("While desugaring module " ^ Class.Show.show (modul.name)) (fun _ -> 
-            with_dsenv_of_tcenv env <| Desugar.decls_to_sigelts (List.flatten ast_decls_l)
+            with_dsenv_of_tcenv env <| Desugar.decls_to_sigelts ast_decls
           ) in
           Tc.tc_more_partial_modul env modul ses
         ) 
@@ -714,27 +718,7 @@ and scan_and_load_fly_deps_internal filename (env:uenv) frag_or_decl: uenv & lis
         end);
     filenames, env
   in  
-  let filenames, env =
-    with_tcenv_of_env env (fun tcenv ->
-      let tcenv =
-        if Options.interactive()
-        && not (iface_interleaving_init tcenv.dsenv)
-        && FStarC.Parser.Dep.is_implementation filename
-        then (
-          let deps = FStarC.Syntax.DsEnv.dep_graph tcenv.dsenv in
-          let m = FStarC.Parser.Dep.lowercase_module_name filename in
-          match FStarC.Parser.Dep.interface_of deps m with
-          | None -> 
-            tcenv
-          | Some fn ->
-            load_interface_decls tcenv fn
-        )
-        else (
-          tcenv
-        )
-      in
-      scan_fragment_deps tcenv frag_or_decl)
-  in
+  let filenames, env = with_tcenv_of_env env (fun tcenv -> scan_fragment_deps tcenv frag_or_decl) in
   let env = load_fly_deps env filenames in
   env, filenames
 
@@ -783,7 +767,6 @@ let load_file
 : TcEnv.env_t
 = let env = env_of_tcenv env in
   let tc_result, _, env = tc_one_file_internal false env interface_fn fn in
-  // Format.print1 "After load_file: %s\n" (show (tcenv_of_uenv env).dsenv);
   tcenv_of_uenv env
 
 
@@ -793,6 +776,71 @@ let scan_and_load_fly_deps
     (input:either (FStarC.Parser.ParseIt.input_frag & lang_decls_t) FStarC.Parser.AST.decl)
 = let uenv, files = scan_and_load_fly_deps_internal filename (new_uenv env) input in
   tcenv_of_uenv uenv, files
+
+let load_fly_deps_and_tc_one_fragment
+    (filename:string)
+    (is_interface:bool)
+    (mod:option Syntax.modul)
+    (tcenv:TcEnv.env_t)
+    (frag_or_decl:either (FStarC.Parser.ParseIt.input_frag & lang_decls_t) FStarC.Parser.AST.decl)
+: option Syntax.modul &
+  TcEnv.env &
+  lang_decls_t &
+  list string //filenames that were loaded
+= let tcenv =
+    if Options.interactive()
+    && not (iface_interleaving_init tcenv.dsenv)
+    && FStarC.Parser.Dep.is_implementation filename
+    then ( //initialize DsEnv for interface interleaving
+      let deps = FStarC.Syntax.DsEnv.dep_graph tcenv.dsenv in
+      let m = FStarC.Parser.Dep.lowercase_module_name filename in
+      match FStarC.Parser.Dep.interface_of deps m with
+      | None -> 
+        tcenv
+      | Some fn ->
+        load_interface_decls tcenv fn
+    )
+    else (
+      tcenv
+    )
+  in
+  let ast_decls = 
+    match frag_or_decl with
+    | Inl (frag, lang_decls) -> (
+      let dfrag = parse_frag frag lang_decls in
+      match dfrag with
+      | Parser.Driver.Empty
+      | Parser.Driver.Decls [] -> []
+
+      | Parser.Driver.Modul ast_modul ->
+        Ast.decls_of_modul ast_modul
+      
+      | Parser.Driver.Decls decls -> decls
+    )
+    | Inr d -> [d]
+  in
+  let tcenv, interleaved_decls =
+     BU.fold_map
+      (fun env a_decl ->
+          let decls, env =
+              with_dsenv_of_tcenv env <|
+              FStarC.ToSyntax.Interleave.prefix_with_interface_decls a_decl
+          in
+          env, decls)
+      tcenv
+      ast_decls
+  in
+  let (tcenv, curmod), langs_filenames =
+    BU.fold_map
+      (fun (tcenv, curmod) a_decl -> 
+        let tcenv, filenames = scan_and_load_fly_deps filename tcenv (Inr a_decl) in
+        let curmod, tcenv, langs = tc_one_fragment is_interface curmod tcenv (Inr a_decl) in
+        (tcenv, curmod), (langs, filenames))
+      (tcenv, mod)
+      (List.flatten interleaved_decls)
+  in
+  let langs_l, filenames_l = List.unzip langs_filenames in
+  curmod, tcenv, List.flatten langs_l, List.flatten filenames_l
 
 let tc_one_file 
         (env:uenv)
@@ -860,10 +908,7 @@ let batch_mode_tc fly_deps filenames dep_graph =
   let solver_refresh env =
       snd <|
       with_tcenv_of_env env (fun tcenv ->
-          if Options.interactive()
-          && FStarC.Errors.get_err_count () = 0
-          then tcenv.solver.refresh None
-          else tcenv.solver.finish();
-          (), tcenv)
+         tcenv.solver.finish();
+        (), tcenv)
   in
   all_mods, env, solver_refresh

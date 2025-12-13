@@ -23,5 +23,5 @@ module DsEnv = FStarC.Syntax.DsEnv
 (* GM: If I don't use the full name, I cannot bootstrap *)
 
 val initialize_interface:        lident -> list decl -> DsEnv.withenv unit
-val prefix_with_interface_decls: lident -> decl -> DsEnv.withenv (list decl)
+val prefix_with_interface_decls: decl -> DsEnv.withenv (list decl)
 val interleave_module:           modul -> expect_complete_modul:bool -> DsEnv.withenv modul
