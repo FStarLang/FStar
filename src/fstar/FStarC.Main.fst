@@ -405,10 +405,7 @@ let go_normal () =
             | [fn] ->
               let m = FStarC.Parser.Dep.lowercase_module_name fn in
               Options.add_verify_module m;
-              match CheckedFiles.scan_deps_and_check_cache_validity fn with
-              | Some (files, deps) ->
-                files, deps, false //we have all the checked files; no need to fly deps
-              | None -> 
+              let default_flydeps () =
                 let deps = FStarC.Parser.Dep.empty_deps [fn] in
                 let filenames =
                   if FStarC.Parser.Dep.is_implementation fn
@@ -420,6 +417,13 @@ let go_normal () =
                   else [fn]
                 in
                 filenames, deps, true
+              in
+              if Options.force() then default_flydeps() else
+              match CheckedFiles.scan_deps_and_check_cache_validity fn with
+              | Some (files, deps) ->
+                files, deps, false //we have all the checked files; no need to fly deps
+              | None -> 
+                default_flydeps()
             | _ ->
               Errors.raise_error0 Errors.Error_TooManyFiles
                 "When using --ext fly_deps, only one file can be provided."
