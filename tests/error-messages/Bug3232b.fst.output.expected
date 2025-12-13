@@ -5,7 +5,7 @@
 * Info at Bug3232b.fst(8,0-8,12):
   - Expected failure:
   - Inconsistent qualifier annotations on Bug3232b.f
-  - Expected '[inline_for_extraction]' got '[noextract, inline_for_extraction]'
+  - Expected '[inline_for_extraction]' got '[noextract; inline_for_extraction]'
   - Only in definition: '[noextract]'
 
 * Warning 240 at Bug3232b.fst(8,0-8,12):

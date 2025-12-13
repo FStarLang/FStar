@@ -325,40 +325,42 @@ let run_postprocess (for_extraction : bool) env (se : sigelt) : sigelt =
   in
   se
 
+(* qopt: qualifiers in the definition for l
+   val_q: qualifiers in the val decl for l.
+   This returns a new list of qualifiers from combining both, but they must match. *)
+let check_quals_eq (r:Range.t) (l:lident) (qopt : list qualifier) (val_q : list qualifier) : list qualifier =
+  match qopt with
+  | [] -> val_q
+  | q' ->
+    //logic is now a deprecated qualifier, so discard it from the checking
+    //AR: 05/19: drop irreducible also
+    //           irreducible is not allowed on val, but one could add it on let
+    let drop_logic_and_irreducible = List.filter (fun x -> not (Logic? x || Irreducible? x)) in
+    let val_q = drop_logic_and_irreducible val_q in
+    //but we retain it in the returned list of qualifiers, some code may still add type annotations of Type0, which will hinder `logical` inference
+    let q'0 = q' in
+    let q' = drop_logic_and_irreducible q' in
+    match Class.Ord.ord_list_diff val_q q' with
+    | [], [] -> q'0
+    | d1, d2 ->
+      let open FStarC.Pprint in
+      raise_error r Errors.Fatal_InconsistentQualifierAnnotation [
+          text "Inconsistent qualifier annotations on" ^/^ pp l;
+          prefix 4 1 (text "Expected") (squotes (pp val_q)) ^/^
+          prefix 4 1 (text "got") (squotes (pp q'));
+
+          if Cons? d1 then
+            prefix 2 1 (text "Only in declaration: ") (squotes (pp d1))
+          else empty;
+          if Cons? d2 then
+            prefix 2 1 (text "Only in definition: ") (squotes (pp d2))
+          else empty;
+        ]
+
 (* The type checking rule for Sig_let (lbs, lids) *)
 let tc_sig_let env r se lbs lids : list sigelt & list sigelt & Env.env =
     let env0 = env in
     let env = Env.set_range env r in
-    let check_quals_eq (l:lident) (qopt : option (list qualifier)) (val_q : list qualifier) : option (list qualifier) =
-      match qopt with
-      | None -> Some val_q
-      | Some q' ->
-        //logic is now a deprecated qualifier, so discard it from the checking
-        //AR: 05/19: drop irreducible also
-        //           irreducible is not allowed on val, but one could add it on let
-        let drop_logic_and_irreducible = List.filter (fun x -> not (Logic? x || Irreducible? x)) in
-        let val_q = drop_logic_and_irreducible val_q in
-        //but we retain it in the returned list of qualifiers, some code may still add type annotations of Type0, which will hinder `logical` inference
-        let q'0 = q' in
-        let q' = drop_logic_and_irreducible q' in
-        match Class.Ord.ord_list_diff val_q q' with
-        | [], [] -> Some q'0
-        | d1, d2 ->
-          let open FStarC.Pprint in
-          raise_error r Errors.Fatal_InconsistentQualifierAnnotation [
-              text "Inconsistent qualifier annotations on" ^/^ doc_of_string (show l);
-              prefix 4 1 (text "Expected") (squotes (arbitrary_string (show val_q))) ^/^
-              prefix 4 1 (text "got") (squotes (arbitrary_string (show q')));
-
-              if Cons? d1 then
-                prefix 2 1 (text "Only in declaration: ") (squotes (arbitrary_string (show d1)))
-              else empty;
-              if Cons? d2 then
-                prefix 2 1 (text "Only in definition: ") (squotes (arbitrary_string (show d2)))
-              else empty;
-            ]
-    in
-
     let rename_parameters lb =
       let rename_in_typ def typ =
         let typ = Subst.compress typ in
@@ -391,15 +393,15 @@ let tc_sig_let env r se lbs lids : list sigelt & list sigelt & Env.env =
     (* 1. (a) Annotate each lb in lbs with a type from the corresponding val decl, if there is one
           (b) Generalize the type of lb only if none of the lbs have val decls nor explicit universes
       *)
-    let should_generalize, lbs', quals_opt =
-       snd lbs |> List.fold_left (fun (gen, lbs, quals_opt) lb ->
+    let should_generalize, lbs', quals =
+       snd lbs |> List.fold_left (fun (gen, lbs, quals) lb ->
           let lbname = Inr?.v lb.lbname in //this is definitely not a local let binding
-          let gen, lb, quals_opt = match Env.try_lookup_val_decl env lbname.fv_name with
+          let gen, lb, quals = match Env.try_lookup_val_decl env lbname.fv_name with
             | None ->
-                gen, lb, quals_opt
+                gen, lb, quals
 
-            | Some ((uvs,tval), quals) ->
-              let quals_opt = check_quals_eq lbname.fv_name quals_opt quals in
+            | Some ((uvs,tval), vquals) ->
+              let quals = check_quals_eq r lbname.fv_name quals vquals in
               let def = match lb.lbtyp.n with
                 | Tm_unknown -> lb.lbdef
                 | _ ->
@@ -410,21 +412,19 @@ let tc_sig_let env r se lbs lids : list sigelt & list sigelt & Env.env =
               then raise_error r Errors.Fatal_IncoherentInlineUniverse "Inline universes are incoherent with annotation from val declaration";
               false, //explicit annotation provided; do not generalize
               mk_lb (Inr lbname, uvs, PC.effect_Tot_lid, tval, def, lb.lbattrs, lb.lbpos),
-              quals_opt
+              quals
           in
-          gen, lb::lbs, quals_opt)
-          (true, [], (if se.sigquals=[] then None else Some se.sigquals))
+          gen, lb::lbs, quals)
+          (true, [], se.sigquals)
     in
 
     (* Check that all the mutually recursive bindings mention the same universes *)
     U.check_mutual_universes lbs';
 
-    let quals = match quals_opt with
-      | None -> [Visible_default]
-      | Some q ->
-        if q |> BU.for_some (function Irreducible | Visible_default | Unfold_for_unification_and_vcgen -> true | _ -> false)
-        then q
-        else Visible_default::q //the default visibility for a let binding is Unfoldable
+    let quals =
+        if quals |> BU.for_some (function Irreducible | Visible_default | Unfold_for_unification_and_vcgen -> true | _ -> false)
+        then quals
+        else Visible_default :: quals //the default visibility for a let binding is Unfoldable
     in
 
     let lbs' = List.rev lbs' in
