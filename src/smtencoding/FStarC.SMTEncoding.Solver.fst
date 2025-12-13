@@ -1210,8 +1210,12 @@ let maybe_save_failing_query (env:env_t) (qs:query_settings) : unit =
     let open FStarC.Class.PP in
     let open FStarC.Errors.Msg in
     Errors.diag qs.query_range [
-      text "This query failed:";
-      pp qs.query_term;
+      text "A query failed.";
+      prefix 2 1 (text "Env =")
+        (all_binders qs.query_env.tcenv |> Pprint.flow_map (break_ 1) fun (b:Syntax.binder) ->
+          group <| parens <| nest 2 <|
+            pp b.binder_bv.ppname ^/^ colon ^/^ pp b.binder_bv.sort);
+      prefix 2 1 (text "VC =") (pp qs.query_term);
     ]
   );
   ()
@@ -1424,6 +1428,18 @@ let encode_and_ask (can_split:bool) (is_retry:bool) use_env_msg tcenv q : (list 
 
 (* Asks the solver and reports errors. Does quake if needed. *)
 let do_solve (can_split:bool) (is_retry:bool) use_env_msg tcenv q : unit =
+  let open FStarC.Errors.Msg in
+  let open FStarC.Pprint in
+  let open FStarC.Class.PP in
+  if !dbg_SMTQuery then
+    Errors.diag tcenv [
+      text "Before calling solver.";
+      prefix 2 1 (text "Env =")
+        (all_binders tcenv |> Pprint.flow_map (break_ 1) fun (b:Syntax.binder) ->
+          group <| parens <| nest 2 <|
+            pp b.binder_bv.ppname ^/^ colon ^/^ pp b.binder_bv.sort);
+      prefix 2 1 (text "VC =") (pp q);
+    ];
   let ans_opt = encode_and_ask can_split is_retry use_env_msg tcenv q in
   match ans_opt with
   | default_settings::_, ans when not ans.ok ->
@@ -1501,7 +1517,6 @@ _log_ (not raise) an error if the VC could not be proven. *)
 let solve use_env_msg tcenv q : unit =
   let open FStarC.Errors.Msg in
   let open FStarC.Pprint in
-  let open FStarC.Class.PP in
   if Options.no_smt () then
     FStarC.TypeChecker.Err.log_issue
       tcenv tcenv.range
@@ -1509,15 +1524,6 @@ let solve use_env_msg tcenv q : unit =
          [text "A query could not be solved internally, and --no_smt was given.";
           text "Query = " ^/^ pp q])
   else (
-    if !dbg_SMTQuery then
-      Errors.diag tcenv [
-        text "Before calling solver.";
-        prefix 2 1 (text "Env =")
-          (all_binders tcenv |> Pprint.flow_map (break_ 1) fun (b:Syntax.binder) ->
-            group <| parens <|
-              pp b.binder_bv.ppname ^/^ colon ^/^ pp b.binder_bv.sort);
-        prefix 2 1 (text "VC =") (pp q);
-      ];
     Profiling.profile
       (fun () -> do_solve_maybe_split use_env_msg tcenv q)
       (Some (Ident.string_of_lid (Env.current_module tcenv)))
