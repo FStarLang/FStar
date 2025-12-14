@@ -30,6 +30,7 @@ OTHERFLAGS += --cmi
 OTHERFLAGS += --warn_error -321
 OTHERFLAGS += --warn_error @247 # couldn't write a checked file? FAIL RIGHT NOW
 OTHERFLAGS += --ext optimize_let_vc
+OTHERFLAGS += --ext fly_deps
 ifdef TESTNOLIB
 OTHERFLAGS += --include $(PULSE_ROOT)/lib/common
 OTHERFLAGS += --include $(PULSE_ROOT)/build/lib.common.checked
