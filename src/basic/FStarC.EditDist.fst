@@ -1,5 +1,5 @@
 module FStarC.EditDist
-
+open FStarC.Effect
 
 let edit_distance (s1 s2 : string) : int =
   let cache : IMap.t (IMap.t int) = IMap.create 10 in

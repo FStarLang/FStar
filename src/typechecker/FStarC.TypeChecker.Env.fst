@@ -175,6 +175,31 @@ let set_tc_hooks env hooks = { env with tc_hooks = hooks }
 let set_dep_graph e g = {e with dsenv=DsEnv.set_dep_graph e.dsenv g}
 let dep_graph e = DsEnv.dep_graph e.dsenv
 
+//Used in fly_deps mode for loading a module on the fly and then
+//restoring the local environment to what it was
+let with_restored_scope (e:env) (f: env -> 'a & env) : 'a & env = 
+  let env = { e with gamma=[]; gamma_sig=[]; proof_ns=[] } in
+  env.solver.refresh None;
+  let res, env =
+    FStarC.Options.with_restored_cmd_line_options (fun _ -> 
+      let (res, env), dsenv =
+        DsEnv.with_restored_scope env.dsenv (fun dsenv -> 
+          let res, env = f env in
+          (res, env), env.dsenv)
+      in
+      res, 
+      {env with dsenv; 
+                curmodule=e.curmodule;
+                is_iface=e.is_iface;
+                admit=e.admit;
+                gamma=e.gamma;
+                gamma_sig=e.gamma_sig;
+                proof_ns=e.proof_ns}
+    )
+  in
+  env.solver.refresh (Some env.proof_ns);
+  res,env
+
 let record_val_for (e:env) (l:lident) : env =
   { e with missing_decl = add l e.missing_decl }
 
@@ -261,7 +286,7 @@ let initial_env deps
     postprocess = (fun e tau typ tm -> failwith "no postprocessor available");
     identifier_info=mk_ref FStarC.TypeChecker.Common.id_info_table_empty;
     tc_hooks = default_tc_hooks;
-    dsenv = FStarC.Syntax.DsEnv.empty_env deps;
+    dsenv = FStarC.Syntax.DsEnv.(set_current_module (empty_env deps) module_lid);
     nbe = nbe;
     strict_args_tab = SMap.create 20;
     erasable_types_tab = SMap.create 20;
@@ -290,8 +315,8 @@ let pop_query_indices () = match !query_indices with // already signal-atmoic
   | [] -> failwith "Empty query indices!"
   | hd::tl -> query_indices := tl
 
-let snapshot_query_indices () = Common.snapshot push_query_indices query_indices ()
-let rollback_query_indices depth = Common.rollback pop_query_indices query_indices depth
+let snapshot_query_indices () = Common.snapshot "TcEnv.query_indices" push_query_indices query_indices ()
+let rollback_query_indices depth = Common.rollback "TcEnv.query_indices" pop_query_indices query_indices depth
 
 let add_query_index (l, n) = match !query_indices with
   | hd::tl -> query_indices := ((l,n)::hd)::tl
@@ -319,8 +344,8 @@ let pop_stack () =
       env
     | _ -> failwith "Impossible: Too many pops"
 
-let snapshot_stack env = Common.snapshot push_stack stack env
-let rollback_stack depth = Common.rollback pop_stack stack depth
+let snapshot_stack env = Common.snapshot "TcEnv.stack" push_stack stack env
+let rollback_stack depth = Common.rollback "TcEnv.stack" pop_stack stack depth
 
 let snapshot env msg = BU.atomically (fun () ->
     let stack_depth, env = snapshot_stack env in
@@ -394,7 +419,9 @@ let promote_id_info env ty_map =
 ////////////////////////////////////////////////////////////
 let modules env = env.modules
 let current_module env = env.curmodule
-let set_current_module env lid = {env with curmodule=lid}
+let set_current_module env lid = 
+  let env = {env with curmodule=lid} in
+  {env with dsenv=DsEnv.set_current_module env.dsenv lid}
 let has_interface env l = env.modules |> BU.for_some (fun m -> m.is_interface && lid_equals m.name l)
 let find_in_sigtab env lid = SMap.try_find (sigtab env) (string_of_lid lid)
 

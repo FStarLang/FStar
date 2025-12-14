@@ -6,7 +6,8 @@
     "--lax",
     "--cache_dir", "../stage1/fstarc.checked",
     "--warn_error",
-    "-271-272-241-319-274"
+    "-271-272-241-319-274",
+    "--ext", "fly_deps"
   ],
   "include_dirs": [
     "."

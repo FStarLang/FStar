@@ -47,6 +47,7 @@ module EMB = FStarC.Syntax.Embeddings
 module TcComm = FStarC.TypeChecker.Common
 module TEQ = FStarC.TypeChecker.TermEqAndSimplify
 module PO = FStarC.TypeChecker.Primops
+module Print = FStarC.Syntax.Print //bring into scope for show instances
 open FStarC.TypeChecker.Normalize.Unfolding
 
 (* Max number of warnings to print in a single run.
@@ -2915,7 +2916,10 @@ let term_to_doc env t =
       warn_norm_failure t.pos e;
       t
   in
-  FStarC.Syntax.Print.term_to_doc' (DsEnv.set_current_module env.dsenv env.curmodule) t
+   //clearing scope mods: important to ensure uniform printing of identifiers with & without fly_deps
+  let env' = DsEnv.set_current_module env.dsenv env.curmodule in
+  let env' = if Options.interactive() then env' else DsEnv.clear_scope_mods env' in
+  FStarC.Syntax.Print.term_to_doc' env' t
 
 let term_to_string env t = GenSym.with_frozen_gensym (fun () ->
   let t =

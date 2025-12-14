@@ -98,7 +98,7 @@
 {"kind": "response", "query-id": "164", "response": [], "status": "success"}
 {"kind": "response", "query-id": "165", "response": [{"level": "error", "message": "- Assertion failed\n- The SMT solver could not prove the query. Use --query_stats for more details.\n- See also Integration.fst(13,15-13,23)\n", "number": 19, "ranges": [{"beg": [13, 8], "end": [13, 14], "fname": "Integration.fst"}, {"beg": [13, 15], "end": [13, 23], "fname": "Integration.fst"}]}], "status": "failure"}
 {"kind": "response", "query-id": "170", "response": [], "status": "success"}
-{"kind": "response", "query-id": "175", "response": [{"level": "error", "message": "- Unexpected numeric literal.  Restart F* to load FStar.UInt8.\n", "number": 201, "ranges": [{"beg": [13, 22], "end": [13, 24], "fname": "Integration.fst"}]}], "status": "success"}
+{"kind": "response", "query-id": "175", "response": [{"level": "error", "message": "- Expected type int but 2uy has type UInt8.t\n", "number": 12, "ranges": [{"beg": [13, 22], "end": [13, 24], "fname": "Integration.fst"}]}], "status": "success"}
 {"kind": "response", "query-id": "179", "response": [], "status": "success"}
 {"kind": "response", "query-id": "180", "response": [{"level": "error", "message": "- Assertion failed\n- The SMT solver could not prove the query. Use --query_stats for more details.\n- See also Integration.fst(13,15-13,24)\n", "number": 19, "ranges": [{"beg": [13, 8], "end": [13, 14], "fname": "Integration.fst"}, {"beg": [13, 15], "end": [13, 24], "fname": "Integration.fst"}]}], "status": "failure"}
 {"kind": "response", "query-id": "185", "response": [], "status": "success"}

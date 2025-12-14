@@ -18,11 +18,11 @@ module FStarC.Interactive.Incremental
 open FStarC.Effect
 open FStarC.List
 open FStarC
+open FStarC.Class.Show
 open FStarC.Range
 open FStarC.Getopt
 open FStarC.Ident
 open FStarC.Errors
-open FStarC.Interactive.JsonHelper
 open FStarC.Interactive.QueryHelper
 open FStarC.Interactive.PushHelper
 open FStarC.Universal
@@ -37,7 +37,7 @@ open FStarC.Parser.AST
 open FStarC.Parser.AST.Util
 open FStarC.Parser.AST.Diff { eq_decl }
 open FStarC.Class.Show
-
+let dbg = Debug.get_toggle "IDE"
 let qid = string & int
 let qst a = qid & repl_state -> a & qid
 let return (x:'a) : qst 'a = fun (q, _) -> x, q
@@ -148,12 +148,12 @@ let push_decls (push_kind:push_kind)
   : qst (list query)
   = let! qs = map (push_decl push_kind with_symbols write_full_buffer_fragment_progress) ds in
     return (List.flatten qs)
-  
+
+let repl_task_of_entry (_, (p, _)) = p
+
 let pop_entries (e:list repl_stack_entry_t)
   : qst (list query)
   = map (fun _ -> as_query Pop) e
-  
-let repl_task (_, (p, _)) = p
 
 let push_kind_geq pk1 pk2 =
   pk1=pk2 || (
@@ -162,6 +162,7 @@ let push_kind_geq pk1 pk2 =
   | LaxCheck, SyntaxCheck -> true
   | _ -> false
   )
+      
 (* Find a prefix of the repl stack that matche a prefix of the decls ds, 
    pop the rest of the stack
    and push the remaining suffix of decls
@@ -182,9 +183,8 @@ let inspect_repl_stack (s:repl_stack_t)
       let! ds = push_decls ds in
       return (ds, [])
     
-    | Some (prefix, first_push, rest) ->
+    | Some (_prefix, first_push, rest) ->
       let entries = first_push :: rest in
-      let repl_task (_, (p, _)) = p in
       let rec matching_prefix (accum:list json) (lookups:list query) entries (ds:list (decl & code_fragment))
         : qst (list query & list json)
         = match entries, ds with
@@ -192,14 +192,14 @@ let inspect_repl_stack (s:repl_stack_t)
             return (lookups, accum)
             
           | e::entries, d::ds -> (
-            match repl_task e with
+            match repl_task_of_entry e with
             | Noop -> 
               matching_prefix accum lookups entries (d::ds)
-            | PushFragment (Inl frag, _, _) ->
+            | PushFragment (Inl frag, _, _, _) ->
               let! pops = pop_entries (e::entries) in
               let! pushes = push_decls (d::ds) in
               return (lookups @ pops @ pushes, accum)
-            | PushFragment (Inr d', pk, issues) ->
+            | PushFragment (Inr d', pk, issues, _) -> (
               if eq_decl (fst d) d' && pk `push_kind_geq` push_kind
               then (
                 let d, s = d in
@@ -214,6 +214,8 @@ let inspect_repl_stack (s:repl_stack_t)
                    let! pushes = push_decls (d::ds) in
                    return (pops @ lookups @ pushes, accum)
             )
+            | _ -> failwith "Impossible: non-push fragment in repl stack during incremental check"
+          )
 
          | [], ds ->
            let! pushes = push_decls ds in
@@ -223,7 +225,8 @@ let inspect_repl_stack (s:repl_stack_t)
            let! pops = pop_entries es in
            return (lookups@pops, accum)
       in
-      matching_prefix [] [] entries ds 
+      let! queries, json = matching_prefix [] [] entries ds in
+      return (queries, json)
 
 (* A reload_deps request just pops away the entire stack of PushFragments.
    We also push on just the `module A` declaration after popping. That's done below. *)
@@ -231,7 +234,7 @@ let reload_deps repl_stack =
   let pop_until_deps entries
   : qst (list query)
   = match BU.prefix_until
-            (fun e -> match repl_task e with
+            (fun e -> match repl_task_of_entry e with
                       | PushFragment _ | Noop -> false
                       | _ -> true)
             entries
@@ -277,6 +280,12 @@ let run_full_buffer (st:repl_state)
     // to use the latest snapshot of the file, rather than what was present
     // in the buffer when the IDE was started. This is especially useful when
     // creating a new file and launching F* on it
+    if !dbg then (
+      Format.print1 "run_full_buffer: repl_state=%s\n"
+          (show st);
+      Format.print1 "run_full_buffer: repl_stack=%s\n"
+          (show (!repl_stack))
+    );
     FStarC.Parser.ParseIt.add_vfs_entry st.repl_fname code;
     let parse_result = parse_code st None code in
     let log_syntax_issues err =

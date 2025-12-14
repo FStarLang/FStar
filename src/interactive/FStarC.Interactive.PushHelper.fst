@@ -14,12 +14,13 @@
    limitations under the License.
 *)
 
-(* FStarC.Interactive.Lsp and FStarC.Interactive.Ide need to push various *
+(* FStarC.Interactive.Ide needs to push various *
  * text fragments and update state; this file collects helpers for them *)
 
 module FStarC.Interactive.PushHelper
 open FStarC
 open FStarC.Effect
+open FStarC.Class.Show
 open FStarC.List
 open FStarC.Ident
 open FStarC.Errors
@@ -103,20 +104,38 @@ let snapshot_env env msg : repl_depth_t & env_t =
 
 let push_repl msg push_kind_opt task st =
   let depth, env = snapshot_env st.repl_env msg in
-  repl_stack := (depth, (task, st)) :: !repl_stack;
+  //clear buffered queries when pushing, otherwise this can cause an infinite loop
+  //of reprocessing queries when popping
+  repl_stack := (depth, (task, { st with repl_buffered_input_queries=[] })) :: !repl_stack;
   match push_kind_opt with
   | None -> st
   | Some push_kind ->
     { st with repl_env = set_check_kind env push_kind } // repl_env is the only mutable part of st
 
 (* Record the issues that were raised by the last push *)
-let add_issues_to_push_fragment (issues: list json) =
+let adjust_topmost_push_frag (f:repl_task -> repl_task) =
   match !repl_stack with
-  | (depth, (PushFragment(frag, push_kind, i), st))::rest -> (
-    let pf = PushFragment(frag, push_kind, issues @ i) in
+  | (depth, (PushFragment x, st))::rest -> (
+    let pf = f (PushFragment x) in
     repl_stack := (depth, (pf, st)) :: rest
   )
   | _ -> ()
+
+
+let add_issues_to_push_fragment (issues: list json) =
+  let adjust = function
+    | PushFragment(frag, push_kind, i, deps) ->
+      PushFragment(frag, push_kind, issues @ i, deps)
+  in
+  adjust_topmost_push_frag adjust
+
+(* Record dependences that were loaded on the fly to the last push *)
+let add_filenames_to_push_fragment (deps: list string) =
+  let adjust = function
+    | PushFragment(frag, push_kind, i, deps') ->
+      PushFragment(frag, push_kind, i, deps@deps')
+  in
+  adjust_topmost_push_frag adjust
 
 (** Revert to a previous checkpoint.
 
@@ -145,10 +164,16 @@ let rollback_env solver msg (ctx_depth, opt_depth) =
   Options.rollback (Some opt_depth);
   env
 
+let should_reset (task:repl_task) =
+  match task with
+  | PushFragment (_, _, _, deps) -> Cons? deps
+  | _ -> false
+
 let pop_repl msg st =
   match !repl_stack with
-  | [] -> failwith "Too many pops"
-  | (depth, (_, st')) :: stack_tl ->
+  | [] -> failwith "(pop_repl) Too many pops"
+  | (depth, (p, st')) :: stack_tl ->
+    // Format.print1 "(pop_repl) popping %s\n" (string_of_repl_task p);
     let env = rollback_env st.repl_env.solver msg depth in
     repl_stack := stack_tl;
     // Because of the way ``snapshot`` is implemented, the `st'` and `env`
@@ -156,31 +181,35 @@ let pop_repl msg st =
     FStarC.Common.runtime_assert
       (U.physical_equality env st'.repl_env)
       "Inconsistent stack state";
-    st'
+    //if we popped past some dependences that were loaded on the fly
+    //reset the solver to clear those deps from its state too
+    if should_reset p then st'.repl_env.solver.refresh None;
+    { st' with repl_buffered_input_queries=st.repl_buffered_input_queries }
 
-(** Like ``tc_one_file``, but only return the new environment **)
-let tc_one (env:env_t) intf_opt modf =
-  let parse_data = modf |> FStarC.Parser.Dep.parsing_data_of (TcEnv.dep_graph env) in
-  let _, env = tc_one_file_for_ide env intf_opt modf parse_data in
-  env
 
-open FStarC.Class.Show
 (** Load the file or files described by `task` **)
-let run_repl_task (curmod: optmod_t) (env: env_t) (task: repl_task) lds : optmod_t & env_t & lang_decls_t =
+let run_repl_task (repl_fname:string) (curmod: optmod_t) (env: env_t) (task: repl_task) lds : optmod_t & env_t & lang_decls_t =
   match task with
   | LDInterleaved (intf, impl) ->
-    curmod, tc_one env (Some intf.tf_fname) impl.tf_fname, []
+    curmod, load_file env (Some intf.tf_fname) impl.tf_fname, []
   | LDSingle intf_or_impl ->
-    curmod, tc_one env None intf_or_impl.tf_fname, []
+    curmod, load_file env None intf_or_impl.tf_fname, []
   | LDInterfaceOfCurrentFile intf ->
     curmod, Universal.load_interface_decls env intf.tf_fname, []
-  | PushFragment (frag, _, _) ->
-    let frag =
+  | PushFragment (frag, _, _, filenames_to_load) ->
+    let frag  =
       match frag with
       | Inl frag -> Inl (frag, lds)
       | Inr decl -> Inr decl
     in
-    let o, e, langs = tc_one_fragment curmod env frag in
+    let is_interface = FStarC.Parser.Dep.is_interface repl_fname in
+    let o, e, langs, filenames = 
+      if FStarC.Parser.Dep.fly_deps_enabled()
+      then load_fly_deps_and_tc_one_fragment repl_fname is_interface curmod env frag
+      else let o, e, langs = tc_one_fragment is_interface curmod env frag in
+           o, e, langs, []
+    in
+    add_filenames_to_push_fragment filenames;
     o, e, langs
   | Noop ->
     curmod, env, []
@@ -261,27 +290,6 @@ let track_name_changes (env: env_t)
   (fun env -> set_hooks old_dshooks old_tchooks env,
            List.rev !events)
 
-// A REPL transaction with different error handling; used exclusively by LSP;
-// variant of run_repl_transaction in IDE
-let repl_tx st push_kind task =
-  try
-    let st = push_repl "repl_tx" (Some push_kind) task st in
-    let env, finish_name_tracking = track_name_changes st.repl_env in // begin name tracking
-    let curmod, env, lds = run_repl_task st.repl_curmod env task st.repl_lang in
-    let st = { st with repl_curmod = curmod; repl_env = env; repl_lang=List.rev lds @ st.repl_lang } in
-    let env, name_events = finish_name_tracking env in // end name tracking
-    None, commit_name_tracking st name_events
-  with
-  | Failure (msg) ->
-    Some (js_diag st.repl_fname msg None), st
-  | U.SigInt ->
-    Format.print_error "[E] Interrupt"; None, st
-  | Error (e, msg, r, _ctx) -> // TODO: display the error context somehow
-    // FIXME, or is it OK to render?
-    Some (js_diag st.repl_fname (Errors.rendermsg msg) (Some r)), st
-  | Stop ->
-    Format.print_error "[E] Stop"; None, st
-
 // Little helper
 let tf_of_fname fname =
   { tf_fname = fname;
@@ -296,62 +304,6 @@ let update_task_timestamps = function
   | LDInterfaceOfCurrentFile intf ->
     LDInterfaceOfCurrentFile (tf_of_fname intf.tf_fname)
   | other -> other
-
-// Variant of run_repl_ld_transactions in IDE; used exclusively by LSP.
-// The first dependencies (prims, ...) come first; the current file's
-// interface comes last. The original value of the `repl_deps_stack` field
-// in ``st`` is used to skip already completed tasks.
-let repl_ldtx (st: repl_state) (tasks: list repl_task) : either_replst =
-
-  (* Run as many ``pop_repl`` as there are entries in the input stack.
-  Elements of the input stack are expected to match the topmost ones of
-  ``!repl_stack`` *)
-  let rec revert_many st = function
-    | [] -> st
-    | (_id, (task, _st')) :: entries ->
-      let st' = pop_repl "repl_ldtx" st in
-      let dep_graph = TcEnv.dep_graph st.repl_env in
-      let st' = { st' with repl_env = TcEnv.set_dep_graph st'.repl_env dep_graph } in
-      revert_many st' entries in
-
-  let rec aux (st: repl_state)
-              (tasks: list repl_task)
-              (previous: list repl_stack_entry_t) =
-    match tasks, previous with
-    // All done: return the final state.
-    | [], [] -> Inl st
-
-    // We have more dependencies to load, and no previously loaded dependencies:
-    // run ``task`` and record the updated dependency stack in ``st``.
-    | task :: tasks, [] ->
-      let timestamped_task = update_task_timestamps task in
-      let diag, st = repl_tx st LaxCheck timestamped_task in
-      if None? diag then aux ({ st with repl_deps_stack = !repl_stack }) tasks []
-      else Inr st
-
-    // We've already run ``task`` previously, and no update is needed: skip.
-    | task :: tasks, prev :: previous
-        when fst (snd prev) = update_task_timestamps task ->
-      aux st tasks previous
-
-    // We have a timestamp mismatch or a new dependency:
-    // revert now-obsolete dependencies and resume loading.
-    | tasks, previous ->
-      aux (revert_many st previous) tasks [] in
-
-  aux st tasks (List.rev st.repl_deps_stack)
-
-// Variant of load_deps in IDE; used exclusively by LSP
-let ld_deps st =
-  try
-    let (deps, tasks, dep_graph) = deps_and_repl_ld_tasks_of_our_file st.repl_fname in
-    let st = { st with repl_env = TcEnv.set_dep_graph st.repl_env dep_graph } in
-    match repl_ldtx st tasks with
-    | Inr st -> Inr st
-    | Inl st -> Inl (st, deps)
-  with
-  | Error (e, msg, _rng, ctx) -> Format.print1_error "[E] Failed to load deps. %s" (Errors.rendermsg msg); Inr st
-  | exn -> Format.print1_error "[E] Failed to load deps. Message: %s" (Util.message_of_exn exn); Inr st
 
 let add_module_completions this_fname deps table =
   let open FStarC.PSMap in
@@ -378,13 +330,3 @@ let add_module_completions this_fname deps table =
         let ns_query = Util.split (capitalize modname) "." in
         CTable.register_module_path table (loaded mod_key) mod_path ns_query)
     table (List.rev mods) // List.rev to process files in order or *increasing* precedence
-
-// Variant of run_push_with_deps in IDE; used exclusively by LSP
-let full_lax text st =
-  TcEnv.toggle_id_info st.repl_env true;
-  let frag = { frag_fname = st.repl_fname; frag_text = text; frag_line = 1; frag_col = 0 } in
-  match ld_deps st with
-  | Inl (st, deps) ->
-      let names = add_module_completions st.repl_fname deps st.repl_names in
-      repl_tx ({ st with repl_names = names }) LaxCheck (PushFragment (Inl frag, LaxCheck, []))
-  | Inr st -> None, st

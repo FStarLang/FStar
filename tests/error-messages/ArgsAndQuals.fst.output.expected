@@ -1,12 +1,12 @@
-* Warning 240 at ArgsAndQuals.fst(23,4-23,9):
-  - ArgsAndQuals.test1 is declared but no definition was found
-  - Add an 'assume' if this is intentional
-
 * Info at ArgsAndQuals.fst(25,16-25,18):
   - Expected failure:
   - Inconsistent implicit argument annotation on argument uu___
   - Got: '#'
   - Expected: '$'
+
+* Warning 240 at ArgsAndQuals.fst(23,4-23,9):
+  - ArgsAndQuals.test1 is declared but no definition was found
+  - Add an 'assume' if this is intentional
 
 * Warning 240 at ArgsAndQuals.fst(25,0-25,29):
   - Missing definitions in module ArgsAndQuals: test1

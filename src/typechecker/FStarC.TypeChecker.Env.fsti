@@ -227,7 +227,6 @@ and env = {
   if anything remains here, we fail. *)
   missing_decl : RBSet.t lident;
 }
-
 and solver_depth_t = int & int & int
 and solver_t = {
     init            :env -> unit;
@@ -259,6 +258,7 @@ and splice_t =
   Range.t ->            (* entry range *)
   list sigelt
 
+val with_restored_scope (e:env) (f:env -> 'a & env) : 'a & env
 (* Keeping track of declarations and definitions. This operates
 over the missing_decl field. *)
 val record_val_for (e:env) (l:lident) : env

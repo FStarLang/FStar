@@ -307,6 +307,7 @@ type file = modul
 type inputFragment = either file (list decl)
 
 val lid_of_modul : modul -> lid
+val decls_of_modul : modul -> list decl
 
 (* Smart constructors *)
 val mk_decl : decl' -> range -> list decoration -> decl

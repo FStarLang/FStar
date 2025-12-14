@@ -14,7 +14,7 @@
    limitations under the License.
 *)
 module FStarC.Interactive.CompletionTable
-
+open FStarC.Effect
 val path_elem : Type0
 type path = list path_elem
 val matched_prefix_of_path_elem : path_elem -> option string

@@ -19,9 +19,9 @@
 module FStarC.Common
 open FStarC.Effect
 
-val snapshot (push: 'a -> 'b) (stackref: ref (list 'c)) (arg: 'a) : (int & 'b)
+val snapshot (msg:string) (push: 'a -> 'b) (stackref: ref (list 'c)) (arg: 'a) : (int & 'b)
 
-val rollback (pop: unit -> 'a) (stackref: ref (list 'c)) (depth: option int) : 'a
+val rollback (msg:string) (pop: unit -> 'a) (stackref: ref (list 'c)) (depth: option int) : 'a
 
 val runtime_assert (b:bool) (msg:string) : unit
 

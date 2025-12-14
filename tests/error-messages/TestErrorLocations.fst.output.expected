@@ -1,15 +1,3 @@
-* Warning 240 at TestErrorLocations.fst(60,4-60,9):
-  - TestErrorLocations.test7 is declared but no definition was found
-  - Add an 'assume' if this is intentional
-
-* Warning 240 at TestErrorLocations.fst(56,4-56,9):
-  - TestErrorLocations.test6 is declared but no definition was found
-  - Add an 'assume' if this is intentional
-
-* Warning 240 at TestErrorLocations.fst(46,4-46,9):
-  - TestErrorLocations.test5 is declared but no definition was found
-  - Add an 'assume' if this is intentional
-
 * Info at TestErrorLocations.fst(20,21-20,23):
   - Expected failure:
   - Assertion failed
@@ -121,6 +109,18 @@
   - The SMT solver could not prove the query. Use --query_stats for more
     details.
   - See also FStar.Classical.Sugar.fsti(88,21-88,31)
+
+* Warning 240 at TestErrorLocations.fst(60,4-60,9):
+  - TestErrorLocations.test7 is declared but no definition was found
+  - Add an 'assume' if this is intentional
+
+* Warning 240 at TestErrorLocations.fst(56,4-56,9):
+  - TestErrorLocations.test6 is declared but no definition was found
+  - Add an 'assume' if this is intentional
+
+* Warning 240 at TestErrorLocations.fst(46,4-46,9):
+  - TestErrorLocations.test5 is declared but no definition was found
+  - Add an 'assume' if this is intentional
 
 * Warning 240 at TestErrorLocations.fst(113,0-117,17):
   - Missing definitions in module TestErrorLocations:

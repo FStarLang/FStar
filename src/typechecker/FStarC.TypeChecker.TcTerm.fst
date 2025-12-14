@@ -49,6 +49,7 @@ module U  = FStarC.Syntax.Util
 module UF = FStarC.Syntax.Unionfind
 module Const = FStarC.Parser.Const
 module TEQ = FStarC.TypeChecker.TermEqAndSimplify
+module Print = FStarC.Syntax.Print
 
 let dbg_Exports        = Debug.get_toggle "Exports"
 let dbg_LayeredEffects = Debug.get_toggle "LayeredEffects"

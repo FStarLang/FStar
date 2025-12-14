@@ -2046,18 +2046,20 @@ let push_env () = match !last_env with
 let pop_env () = match !last_env with
     | [] -> failwith "Popping an empty stack"
     | _::tl -> last_env := tl
-let snapshot_env () = FStarC.Common.snapshot push_env last_env ()
-let rollback_env depth = FStarC.Common.rollback pop_env last_env depth
+let snapshot_env () = FStarC.Common.snapshot "SMTEncoding.Encode.env" push_env last_env ()
+let rollback_env depth = FStarC.Common.rollback "SMTEncoding.Encode.env" pop_env last_env depth
 (* TOP-LEVEL API *)
 
 let init tcenv =
     init_env tcenv;
     Z3.giveZ3 [DefPrelude]
 let snapshot_encoding msg = BU.atomically (fun () ->
+    if Debug.medium () then Format.print1 "Encode.snapshot_encoding: %s\n" msg;
     let env_depth, () = snapshot_env () in
     let varops_depth, () = varops.snapshot () in
     (env_depth, varops_depth))
 let rollback_encoding msg (depth:option encoding_depth) = BU.atomically (fun () ->
+    if Debug.medium () then Format.print2 "Encode.rollback_encoding: %s to %s\n" msg (show depth);
     let env_depth, varops_depth = match depth with
         | Some (s1, s2) -> Some s1, Some s2
         | None -> None, None in
@@ -2106,10 +2108,10 @@ let recover_caching_and_update_env (env:env_t) (decls:decls_t) :decls_t =
     if elt.key = None then [elt]  //not meant to be hashconsed, keep it
     else (
       match SMap.try_find env.global_cache (elt.key |> Some?.v) with
-      | Some cache_elt -> [Term.RetainAssumptions cache_elt.a_names] |> mk_decls_trivial  //hit, retain a_names from the hit entry
+      | Some (cache_elt, _) -> [Term.RetainAssumptions cache_elt.a_names] |> mk_decls_trivial  //hit, retain a_names from the hit entry
                                                                                              //AND drop elt
       | None ->  //no hit, update cache and retain elt
-        SMap.add env.global_cache (elt.key |> Some?.v) elt;
+        SMap.add env.global_cache (elt.key |> Some?.v) (elt, Env.current_module env.tcenv);
         [elt]
     )
   )
@@ -2138,6 +2140,10 @@ let give_decls_to_z3_and_set_env (env:env_t) (name:string) (decls:decls_t) :unit
   let z3_decls = caption (decls |> recover_caching_and_update_env env |> decls_list_of) in
   Z3.giveZ3 z3_decls
 
+instance instance_showable_smap (#a:Type) {|_:showable a|} : showable (SMap.t a) = {
+  show = (fun smap -> SMap.fold smap (fun k v acc -> Format.fmt3 "%s -> %s\n%s" (show k) (show v) acc) "")
+}
+
 let encode_modul tcenv modul =
   if Options.lax() && Options.ml_ish() then [], []
   else begin
@@ -2148,6 +2154,46 @@ let encode_modul tcenv modul =
     if Debug.medium ()
     then Format.print2 "+++++++++++Encoding externals for %s ... %s declarations\n" name (List.length modul.declarations |> show);
     let env = get_env modul.name tcenv |> reset_current_module_fvbs in
+    let clear_current_module env =
+      //in fly_deps mode, remove all items from the cache
+      //that resulted from encoding this module when checking its
+      //internals, so that it can be encoded in a clean state
+      //for persisting in a .checked file.
+      //This is quite fiddly, but we cannot reset the scope to a
+      //the state before the module was typechecked, because popping
+      //the environment will also unload all modules that were loaded
+      //on the fly.
+      let keys = SMap.keys env.global_cache in
+      List.iter
+        (fun k ->
+          match SMap.try_find env.global_cache k with
+          | None -> ()
+          | Some (elts, m) -> 
+            if Ident.lid_equals m modul.name then SMap.remove env.global_cache k else ())
+        keys;
+      let fvb =
+        PSMap.fold 
+          (fst env.fvar_bindings)
+          (fun key v fvb -> 
+            if FStarC.Ident.(lid_of_ids (ns_of_lid v.fvar_lid) `lid_equals` modul.name)
+            then fvb
+            else PSMap.add fvb key v)
+          (PSMap.empty())
+      in
+      if not (Options.interactive()) then varops.reset_scope();
+      { env with fvar_bindings=(fvb, [])}
+    in
+    let env = 
+      if FStarC.Parser.Dep.fly_deps_enabled ()
+      then clear_current_module env
+      else env in
+    if Debug.medium()
+    then (
+      Format.print3 "Global cache contains %s entries\n{%s}\nenv={%s}" 
+        (FStarC.Class.Show.show (SMap.size env.global_cache))
+        (FStarC.Class.Show.show #_ #(instance_showable_smap #_ #_) env.global_cache)
+        (print_env env)
+    );
     let encode_signature (env:env_t) (ses:sigelts) =
       let g', env =
         ses |> List.fold_left (fun (g, env) se ->

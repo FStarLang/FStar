@@ -21,7 +21,7 @@ open FStarC.Effect
 open FStarC.Syntax
 open FStarC.Syntax.Syntax
 open FStarC.Ident
-
+open FStarC.Class.Show
 module S = FStarC.Syntax.Syntax
 
 val ugly_sigelt_to_string_hook : ref (sigelt -> string)
@@ -40,7 +40,10 @@ type record_or_dc = {
 
 val env : Type0
 val dsenv_hooks : Type0
+val parsing_data_for_scope (e:env) : list FStarC.Parser.Dep.parsing_data_elt
+val with_restored_scope (e:env) (f: env -> 'a & env) : 'a & env
 
+instance val showable_env : showable env
 val mk_dsenv_hooks
   (open_hook:env -> open_module_or_namespace -> unit)
   (include_hook:env -> lident -> unit)
@@ -73,11 +76,13 @@ val set_expect_typ: env -> bool -> env
 val empty_env: FStarC.Parser.Dep.deps -> env
 val current_module: env -> lident
 val set_current_module: env -> lident -> env
+val clear_scope_mods: env -> env
 val open_modules: env -> list (lident & modul)
 val open_modules_and_namespaces: env -> list lident
 val module_abbrevs: env -> list (ident & lident)
 val iface_decls : env -> lident -> option (list Parser.AST.decl)
 val set_iface_decls: env -> lident -> list Parser.AST.decl -> env
+val iface_interleaving_init: env -> bool
 val try_lookup_id: env -> ident -> option term
 val shorten_module_path: env -> list ident -> bool -> (list ident & list ident)
 val shorten_lid: env -> lid -> lid
@@ -133,8 +138,8 @@ val transitive_exported_ids: env -> lident -> list string
 val module_inclusion_info : Type0
 val default_mii : module_inclusion_info
 val inclusion_info: env -> lident -> module_inclusion_info
-val prepare_module_or_interface: bool -> bool -> env -> lident -> module_inclusion_info -> env & bool //pop the context when done desugaring
-
+val prepare_module_or_interface: no_prelude:bool -> is_interface:bool -> is_admitted:bool -> env -> lident -> module_inclusion_info -> env & bool //pop the context when done desugaring
+instance val showable_mii: showable module_inclusion_info
 (* private *) val try_lookup_lid': bool -> bool -> env -> lident -> option (term & list attribute)
 (* private *) val unique:  bool -> bool -> env -> lident -> bool
 (* private *) val check_admits: env -> modul -> modul

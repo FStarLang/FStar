@@ -60,9 +60,18 @@ val load_parsing_data_from_cache: file_name:string -> option Parser.Dep.parsing_
 (* Loading and storing cache files                                     *)
 (***********************************************************************)
 
+//checks if the cache files exists and all their dependences are valid
+//returning the names of all the dependences if so
+val scan_deps_and_check_cache_validity (file:string) : option (list string & Dep.deps)
+
 val load_module_from_cache: TcEnv.env -> string -> option tc_result
 
-val store_module_to_cache: TcEnv.env -> file_name:string -> Dep.parsing_data -> tc_result -> unit
+val store_module_to_cache:
+    TcEnv.env ->
+    file_name: string ->
+    parsing_data_and_direct_deps: (Dep.parsing_data & list string) ->
+    tc_result ->
+    unit
 
 val unsafe_raw_load_checked_file (checked_file_name:string)
   : option (FStarC.Parser.Dep.parsing_data & list string & tc_result)

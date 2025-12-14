@@ -6,9 +6,9 @@
 
 * Info at Bug1988.fst(15,32-15,38):
   - Expected failure:
-  - Prims.string is not equal to the expected type _: ident -> Prims.string
+  - string is not equal to the expected type _: ident -> string
 
 * Info at Bug1988.fst(21,32-21,38):
   - Expected failure:
-  - Prims.string is not a subtype of the expected type _: (*?u21*)_ -> (*?u22*)_
+  - string is not a subtype of the expected type _: (*?u21*)_ -> (*?u22*)_
 
