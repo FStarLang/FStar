@@ -1530,7 +1530,6 @@ let topological_dependences_of'
        module implementaions first, then their interfaces, emitting
        them adjacent to the each other in the final order.
     *)
-
     let friends, all_files_0 =
         all_friend_deps dep_graph [] ([], []) root_files
     in
@@ -1542,19 +1541,23 @@ let topological_dependences_of'
                    (String.concat ", " all_files_0)
                    (String.concat ", " (remove_dups_fast friends))
                    (String.concat ", " (interfaces_needing_inlining));
-    match friends with
-    | [] -> all_files_0, false
-    | _ -> 
-      let widened, dep_graph = widen_deps friends dep_graph file_system_map widened in
-      let _, all_files =
+    if fly_deps_enabled() //no need to widen; we enforce that friends are first deps
+    then all_files_0, false
+    else begin
+      match friends with
+      | [] -> all_files_0, false
+      | _ -> 
+        let widened, dep_graph = widen_deps friends dep_graph file_system_map widened in
+        let _, all_files =
+          if !dbg
+          then Format.print_string "==============Phase2==================\n";
+          all_friend_deps dep_graph [] ([], []) root_files
+        in
         if !dbg
-        then Format.print_string "==============Phase2==================\n";
-        all_friend_deps dep_graph [] ([], []) root_files
-      in
-      if !dbg
-      then Format.print1 "Phase2 complete: all_files = %s\n" (String.concat ", " all_files);
-      all_files,
-      widened
+        then Format.print1 "Phase2 complete: all_files = %s\n" (String.concat ", " all_files);
+        all_files,
+        widened
+    end
 
 let phase1
         file_system_map
