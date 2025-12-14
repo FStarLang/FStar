@@ -2,30 +2,30 @@
   - Expected failure:
   - Tactic failed
   - Cannot prove any of:
-      Pulse.Lib.Trade.trade (*?u96*)_ (*?u97*)_
-      Pulse.Lib.Trade.trade (*?u97*)_ (*?u98*)_
+      trade (*?u96*)_ (*?u97*)_
+      trade (*?u97*)_ (*?u98*)_
   - In the context:
-      Pulse.Lib.Trade.trade p q
-      Pulse.Lib.Trade.trade q r
+      trade p q
+      trade q r
 
 * Info at Bug274.fst(41,4-41,9):
   - Expected failure:
   - Tactic failed
   - Cannot prove any of:
-      Pulse.Lib.Trade.trade (*?u96*)_ (*?u97*)_
-      Pulse.Lib.Trade.trade (*?u97*)_ (*?u98*)_
+      trade (*?u96*)_ (*?u97*)_
+      trade (*?u97*)_ (*?u98*)_
   - In the context:
-      Pulse.Lib.Trade.trade p q
-      Pulse.Lib.Trade.trade q r
+      trade p q
+      trade q r
 
 * Info at Bug274.fst(73,4-73,8):
   - Expected failure:
   - Tactic failed
   - Cannot prove any of:
-      Pulse.Lib.Trade.trade (*?u116*)_ (*?u117*)_
+      trade (*?u116*)_ (*?u117*)_
       (*?u116*)_
   - In the context:
       p
-      Pulse.Lib.Trade.trade p q
-      Pulse.Lib.Trade.trade r r
+      trade p q
+      trade r r
 

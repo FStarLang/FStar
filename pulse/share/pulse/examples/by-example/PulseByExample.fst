@@ -16,9 +16,6 @@
 
 module PulseByExample
 
-open Pulse.Lib.Core
-open Pulse.Class.PtsTo
-
 (* 
   Things to note:
   - syntax extension notation
@@ -28,7 +25,7 @@ open Pulse.Class.PtsTo
 
 //SNIPPET_START: five
 #lang-pulse
-
+open Pulse.Lib.Pervasives
 let fstar_five : int = 5
 
 fn five ()
@@ -54,6 +51,7 @@ fn five_alt ()
 
 
 open Pulse.Lib.Reference
+open Pulse.Class.PtsTo
 module R = Pulse.Lib.Reference
 
 (* 

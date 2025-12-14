@@ -14,14 +14,14 @@
    limitations under the License.
 *)
 module Pulse.Lib.Core.Inv
+friend PulseCore.InstantiatedSemantics
+friend Pulse.Lib.Core
 module I = PulseCore.InstantiatedSemantics
 module A = PulseCore.Atomic
 module T = FStar.Tactics.V2
 open PulseCore.InstantiatedSemantics
 open PulseCore.FractionalPermission
 open PulseCore.Observability
-friend PulseCore.InstantiatedSemantics
-friend Pulse.Lib.Core
 module Sep = PulseCore.IndirectionTheorySep
 
 (* Invariants, just reexport *)

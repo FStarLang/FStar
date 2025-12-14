@@ -2,13 +2,7 @@
   - Expected failure:
   - Tactic failed
   - Cannot prove:
-      Test.Matcher.fpts_to #Prims.int
-        r
-        #(0.1R +. p)
-        (FStar.Ghost.hide #Prims.int 1)
+      fpts_to #int r #(0.1R +. p) (hide #int 1)
   - In the context:
-      Test.Matcher.fpts_to #Prims.int
-        r
-        #(p +. 0.1R)
-        (FStar.Ghost.hide #Prims.int 1)
+      fpts_to #int r #(p +. 0.1R) (hide #int 1)
 

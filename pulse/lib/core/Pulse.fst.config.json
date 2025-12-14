@@ -3,7 +3,9 @@
 	"options": [
 		"--query_cache",
 		"--ext",
-		"optimize_let_vc"
+		"optimize_let_vc",
+		"--ext",
+		"fly_deps"
 	],
 	"include_dirs": [
 		"../../build/lib.common.checked",

@@ -7,7 +7,9 @@
     "--warn_error", 
     "-249",
     "--ext",
-    "optimize_let_vc"
+    "optimize_let_vc",
+    "--ext",
+    "fly_deps"
   ],
   "include_dirs": [
     "../../../out/lib/pulse",

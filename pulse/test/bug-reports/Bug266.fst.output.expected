@@ -1,6 +1,6 @@
 * Info at Bug266.fst(12,2-12,14):
   - Expected failure:
-  - Failed to prove pure property: Prims.l_False
+  - Failed to prove pure property: l_False
   - Assertion failed
   - The SMT solver could not prove the query. Use --query_stats for more
     details.
@@ -11,10 +11,10 @@
   - Current context:
       emp
   - In typing environment:
-      __#65 : Prims.squash (__ == Bug266.my_intro Prims.l_False),
+      __#65 : squash (__ == my_intro l_False),
       __#64 :
         ghost fn
-          requires Pulse.Lib.Core.pure Prims.l_False
-          ensures Bug266.post (),
-      uu___0#50 : Prims.unit
+          requires pure l_False
+          ensures post (),
+      uu___0#50 : unit
 

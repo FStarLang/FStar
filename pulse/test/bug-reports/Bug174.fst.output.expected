@@ -3,10 +3,9 @@
   - Ill-typed term: !r
   - Expected a term of type
       fn
-        requires r |-> Pulse.Class.PtsTo.Frac 1.0R v
-        returns x : FStar.SizeT.t
-        ensures
-          r |-> Pulse.Class.PtsTo.Frac 1.0R v ** Pulse.Lib.Core.rewrites_to x v
+        requires r |-> Frac 1.0R v
+        returns x : t
+        ensures r |-> Frac 1.0R v ** rewrites_to x v
   - Assertion failed
   - The SMT solver could not prove the query. Use --query_stats for more
     details.

@@ -14,16 +14,16 @@
    limitations under the License.
 *)
 module Pulse.Lib.Core.Refs
+friend PulseCore.InstantiatedSemantics
+friend Pulse.Lib.Core
 module I = PulseCore.InstantiatedSemantics
 module A = PulseCore.Atomic
 module T = FStar.Tactics.V2
 open PulseCore.InstantiatedSemantics
 open PulseCore.FractionalPermission
 open PulseCore.Observability
-friend PulseCore.InstantiatedSemantics
 module Sep = PulseCore.IndirectionTheorySep
 open Pulse.Lib.Core
-friend Pulse.Lib.Core
 
 //////////////////////////////////////////////////////////////////////////
 // References

@@ -1,7 +1,7 @@
 * Info at PartialApp.fst(26,2-26,3):
   - Expected failure:
   - Tactic failed
-  - This statement returns a value of type: Prims.int
+  - This statement returns a value of type: int
   - Did you forget to assign it or ignore it?
 
 * Info at PartialApp.fst(60,2-60,9):
@@ -10,7 +10,7 @@
   - This function is partially applied. Remaining type:
       y: t
         -> fn
-             requires Pulse.Lib.Core.emp
-             ensures Pulse.Lib.Core.emp
+             requires emp
+             ensures emp
   - Did you forget to apply some arguments?
 

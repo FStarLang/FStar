@@ -1,13 +1,13 @@
 * Info at ExistsErasedAndPureEqualities.fst(60,4-60,11):
   - Admitting continuation.
   - Current context:
-      ExistsErasedAndPureEqualities.some_pred x v
+      some_pred x v
   - In typing environment:
-      __#491 : Prims.squash (_v_4 == v),
-      _v_4#490 : FStar.Ghost.erased Prims.int,
-      __#369 : Prims.squash (v == v),
-      v#245 : FStar.Ghost.erased Prims.int,
-      x#239 : Pulse.Lib.Reference.ref Prims.int
+      __#491 : squash (_v_4 == v),
+      _v_4#490 : erased int,
+      __#369 : squash (v == v),
+      v#245 : erased int,
+      x#239 : R.ref int
 
 * Info at ExistsErasedAndPureEqualities.fst(70,32-72,5):
   - Expected failure:

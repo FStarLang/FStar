@@ -4,6 +4,8 @@
     "--query_cache",
     "--ext",
     "optimize_let_vc",
+    "--ext",
+    "fly_deps",
     "--z3version",
     "4.13.3",
     "--smtencoding.elim_box",

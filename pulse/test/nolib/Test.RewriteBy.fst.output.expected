@@ -1,12 +1,12 @@
 * Info at Test.RewriteBy.fst(31,1-37,8):
   - Expected failure:
   - rewrite: could not prove equality of
-  - Test.RewriteBy.p
-  - Test.RewriteBy.q
+  - p
+  - q
   - Using tactic:
     fun _ ->
-      FStar.Stubs.Tactics.V2.Builtins.dump "a";
-      Test.RewriteBy.tac ()
+      dump "a";
+      tac ()
   - Tactic failed
   - Tactic got stuck!
   - Reduction stopped at:
