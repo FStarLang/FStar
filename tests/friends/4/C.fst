@@ -1,5 +1,4 @@
 module C
-open A
 friend A
 friend B
 let c = B.b + A.a
