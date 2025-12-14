@@ -5,8 +5,7 @@
 
 * Info at Bug267.fst(61,5-61,8):
   - Expected failure:
-  - Could not prove equality between computed type Prims.int
-    and expected type Prims.nat
+  - Could not prove equality between computed type int and expected type nat
   - Assertion failed
   - The SMT solver could not prove the query. Use --query_stats for more
     details.

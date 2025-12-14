@@ -8,8 +8,8 @@
   - Ill-typed term: test_ghost_loop ()
   - Expected a term of type
       ghost fn
-        requires Pulse.Lib.Core.emp
-        ensures Pulse.Lib.Core.emp
+        requires emp
+        ensures emp
   - Could not prove termination
   - The SMT solver could not prove the query. Use --query_stats for more
     details.
@@ -19,8 +19,8 @@
   - Ill-typed term: test5' (z - 1) (y - 1)
   - Expected a term of type
       ghost fn
-        requires Pulse.Lib.Core.emp
-        ensures Pulse.Lib.Core.emp
+        requires emp
+        ensures emp
   - Could not prove termination
   - The SMT solver could not prove the query. Use --query_stats for more
     details.

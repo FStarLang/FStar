@@ -2,7 +2,8 @@
 	"fstar_exe": "fstar.exe",
 	"options": [
 		"--query_cache",
-		"--ext", "optimize_let_vc"
+		"--ext", "optimize_let_vc",
+		"--ext", "fly_deps"
 	],
 	"include_dirs": [
 		"../../build/ocaml/installed/lib/pulse",

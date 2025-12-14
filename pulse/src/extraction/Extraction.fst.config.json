@@ -7,7 +7,9 @@
     "--MLish_effect", "FStarC.Effect",
     "--with_fstarc",
     "--ext",
-    "optimize_let_vc"
+    "optimize_let_vc",
+    "--ext",
+    "fly_deps"
   ],
   "include_dirs": [
   ]

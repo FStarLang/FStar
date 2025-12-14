@@ -15,7 +15,7 @@
 *)
 
 module PulseCore.Action
-
+friend PulseCore.InstantiatedSemantics
 module Sem = PulseCore.Semantics
 module Sep = PulseCore.IndirectionTheorySep
 module ITA = PulseCore.IndirectionTheoryActions
@@ -25,7 +25,6 @@ module F = FStar.FunctionalExtensionality
 module ST = PulseCore.HoareStateMonad
 module Set = FStar.GhostSet
 module U = Pulse.Lib.Raise
-friend PulseCore.InstantiatedSemantics
 
 open FStar.PCM
 open FStar.Ghost

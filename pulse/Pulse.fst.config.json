@@ -2,7 +2,8 @@
   "fstar_exe": "fstar.exe",
   "options": [
     "--query_cache",
-    "--ext", "optimize_let_vc"
+    "--ext", "optimize_let_vc",
+    "--ext", "fly_deps"
   ],
   "include_dirs": [
     "out/lib/pulse",
