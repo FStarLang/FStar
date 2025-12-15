@@ -312,7 +312,7 @@ let check_typeclass_instance_attribute env (rng:Range.t) se =
   in
   let check_instance_typ (ty:typ) : unit =
     let _, res = U.arrow_formals_comp ty in
-    if not (Options.ml_ish ()) && not (U.is_total_comp res) then
+    if not (U.is_total_comp res) then
       log_issue rng FStarC.Errors.Error_UnexpectedTypeclassInstance [
           text "Instances are expected to be total.";
           text "This instance has effect" ^/^ pp (U.comp_effect_name res);
