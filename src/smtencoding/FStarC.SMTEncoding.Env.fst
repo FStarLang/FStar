@@ -96,10 +96,10 @@ let varops =
     //the fresh counter is reset after every module
     let reset_fresh () = ctr := initial_ctr in
     let push () =
-      if Debug.any() then Format.print_string "SMTEncoding.scopes.push";
+      if Debug.any() then Format.print_string "SMTEncoding.scopes.push\n";
       scopes := new_scope() :: !scopes in // already signal-atomic
     let pop () = 
-      if Debug.any() then Format.print_string "SMTEncoding.scopes.pop";
+      if Debug.any() then Format.print_string "SMTEncoding.scopes.pop\n";
       scopes := List.tl !scopes in // already signal-atomic
     let snapshot () = FStarC.Common.snapshot "SMTEncoding.scopes" push scopes () in
     let rollback depth = FStarC.Common.rollback "SMTEncoding.scopes" pop scopes depth in

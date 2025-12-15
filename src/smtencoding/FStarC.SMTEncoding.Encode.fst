@@ -2140,7 +2140,7 @@ let give_decls_to_z3_and_set_env (env:env_t) (name:string) (decls:decls_t) :unit
   let z3_decls = caption (decls |> recover_caching_and_update_env env |> decls_list_of) in
   Z3.giveZ3 z3_decls
 
-instance instance_showable_smap (#a:Type) {|_:showable a|} : showable (SMap.t a) = {
+instance instance_showable_smap (#a:Type) {|_:showable a|} : Tot (showable (SMap.t a)) = {
   show = (fun smap -> SMap.fold smap (fun k v acc -> Format.fmt3 "%s -> %s\n%s" (show k) (show v) acc) "")
 }
 
@@ -2187,11 +2187,11 @@ let encode_modul tcenv modul =
       if FStarC.Parser.Dep.fly_deps_enabled ()
       then clear_current_module env
       else env in
-    if Debug.medium()
+    if Debug.high ()
     then (
       Format.print3 "Global cache contains %s entries\n{%s}\nenv={%s}" 
-        (FStarC.Class.Show.show (SMap.size env.global_cache))
-        (FStarC.Class.Show.show #_ #(instance_showable_smap #_ #_) env.global_cache)
+        (show (SMap.size env.global_cache))
+        (show env.global_cache)
         (print_env env)
     );
     let encode_signature (env:env_t) (ses:sigelts) =
