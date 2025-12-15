@@ -1,102 +1,46 @@
 open Prims
-let solve : 'a . 'a -> 'a = fun ev -> ev
-let mk1 :
-  'res 't1 .
-    Prims.string ->
-      't1 FStarC_Syntax_Embeddings_Base.embedding ->
-        'res FStarC_Syntax_Embeddings_Base.embedding ->
-          't1 FStarC_TypeChecker_NBETerm.embedding ->
-            'res FStarC_TypeChecker_NBETerm.embedding ->
-              ('t1 -> 'res) -> FStarC_TypeChecker_Primops_Base.primitive_step
-  =
-  fun nm ->
-    fun uu___ ->
-      fun uu___1 ->
-        fun uu___2 ->
-          fun uu___3 ->
-            fun f ->
-              let lid =
-                FStarC_Reflection_V2_Constants.fstar_refl_builtins_lid nm in
-              FStarC_TypeChecker_Primops_Base.mk1' Prims.int_zero lid uu___
-                uu___2 uu___1 uu___3
-                (fun x ->
-                   let uu___4 = f x in FStar_Pervasives_Native.Some uu___4)
-                (fun x ->
-                   let uu___4 = f x in FStar_Pervasives_Native.Some uu___4)
-let mk2 :
-  'res 't1 't2 .
-    Prims.string ->
-      't1 FStarC_Syntax_Embeddings_Base.embedding ->
-        't2 FStarC_Syntax_Embeddings_Base.embedding ->
-          'res FStarC_Syntax_Embeddings_Base.embedding ->
-            't1 FStarC_TypeChecker_NBETerm.embedding ->
-              't2 FStarC_TypeChecker_NBETerm.embedding ->
-                'res FStarC_TypeChecker_NBETerm.embedding ->
-                  ('t1 -> 't2 -> 'res) ->
-                    FStarC_TypeChecker_Primops_Base.primitive_step
-  =
-  fun nm ->
-    fun uu___ ->
-      fun uu___1 ->
-        fun uu___2 ->
-          fun uu___3 ->
-            fun uu___4 ->
-              fun uu___5 ->
-                fun f ->
-                  let lid =
-                    FStarC_Reflection_V2_Constants.fstar_refl_builtins_lid nm in
-                  FStarC_TypeChecker_Primops_Base.mk2' Prims.int_zero lid
-                    uu___ uu___3 uu___1 uu___4 uu___2 uu___5
-                    (fun x ->
-                       fun y ->
-                         let uu___6 = f x y in
-                         FStar_Pervasives_Native.Some uu___6)
-                    (fun x ->
-                       fun y ->
-                         let uu___6 = f x y in
-                         FStar_Pervasives_Native.Some uu___6)
-let mk3 :
-  'res 't1 't2 't3 .
-    Prims.string ->
-      't1 FStarC_Syntax_Embeddings_Base.embedding ->
-        't2 FStarC_Syntax_Embeddings_Base.embedding ->
-          't3 FStarC_Syntax_Embeddings_Base.embedding ->
-            'res FStarC_Syntax_Embeddings_Base.embedding ->
-              't1 FStarC_TypeChecker_NBETerm.embedding ->
-                't2 FStarC_TypeChecker_NBETerm.embedding ->
-                  't3 FStarC_TypeChecker_NBETerm.embedding ->
-                    'res FStarC_TypeChecker_NBETerm.embedding ->
-                      ('t1 -> 't2 -> 't3 -> 'res) ->
-                        FStarC_TypeChecker_Primops_Base.primitive_step
-  =
-  fun nm ->
-    fun uu___ ->
-      fun uu___1 ->
-        fun uu___2 ->
-          fun uu___3 ->
-            fun uu___4 ->
-              fun uu___5 ->
-                fun uu___6 ->
-                  fun uu___7 ->
-                    fun f ->
-                      let lid =
-                        FStarC_Reflection_V2_Constants.fstar_refl_builtins_lid
-                          nm in
-                      FStarC_TypeChecker_Primops_Base.mk3' Prims.int_zero lid
-                        uu___ uu___4 uu___1 uu___5 uu___2 uu___6 uu___3
-                        uu___7
-                        (fun x ->
-                           fun y ->
-                             fun z ->
-                               let uu___8 = f x y z in
-                               FStar_Pervasives_Native.Some uu___8)
-                        (fun x ->
-                           fun y ->
-                             fun z ->
-                               let uu___8 = f x y z in
-                               FStar_Pervasives_Native.Some uu___8)
-let (reflection_primops :
-  FStarC_TypeChecker_Primops_Base.primitive_step Prims.list) =
+let solve (ev : 'a) : 'a= ev
+let mk1 (nm : Prims.string)
+  (uu___ : 't1 FStarC_Syntax_Embeddings_Base.embedding)
+  (uu___1 : 'res FStarC_Syntax_Embeddings_Base.embedding)
+  (uu___2 : 't1 FStarC_TypeChecker_NBETerm.embedding)
+  (uu___3 : 'res FStarC_TypeChecker_NBETerm.embedding) (f : 't1 -> 'res) :
+  FStarC_TypeChecker_Primops_Base.primitive_step=
+  let lid = FStarC_Reflection_V2_Constants.fstar_refl_builtins_lid nm in
+  FStarC_TypeChecker_Primops_Base.mk1' Prims.int_zero lid uu___ uu___2 uu___1
+    uu___3 (fun x -> let uu___4 = f x in FStar_Pervasives_Native.Some uu___4)
+    (fun x -> let uu___4 = f x in FStar_Pervasives_Native.Some uu___4)
+let mk2 (nm : Prims.string)
+  (uu___ : 't1 FStarC_Syntax_Embeddings_Base.embedding)
+  (uu___1 : 't2 FStarC_Syntax_Embeddings_Base.embedding)
+  (uu___2 : 'res FStarC_Syntax_Embeddings_Base.embedding)
+  (uu___3 : 't1 FStarC_TypeChecker_NBETerm.embedding)
+  (uu___4 : 't2 FStarC_TypeChecker_NBETerm.embedding)
+  (uu___5 : 'res FStarC_TypeChecker_NBETerm.embedding)
+  (f : 't1 -> 't2 -> 'res) : FStarC_TypeChecker_Primops_Base.primitive_step=
+  let lid = FStarC_Reflection_V2_Constants.fstar_refl_builtins_lid nm in
+  FStarC_TypeChecker_Primops_Base.mk2' Prims.int_zero lid uu___ uu___3 uu___1
+    uu___4 uu___2 uu___5
+    (fun x y -> let uu___6 = f x y in FStar_Pervasives_Native.Some uu___6)
+    (fun x y -> let uu___6 = f x y in FStar_Pervasives_Native.Some uu___6)
+let mk3 (nm : Prims.string)
+  (uu___ : 't1 FStarC_Syntax_Embeddings_Base.embedding)
+  (uu___1 : 't2 FStarC_Syntax_Embeddings_Base.embedding)
+  (uu___2 : 't3 FStarC_Syntax_Embeddings_Base.embedding)
+  (uu___3 : 'res FStarC_Syntax_Embeddings_Base.embedding)
+  (uu___4 : 't1 FStarC_TypeChecker_NBETerm.embedding)
+  (uu___5 : 't2 FStarC_TypeChecker_NBETerm.embedding)
+  (uu___6 : 't3 FStarC_TypeChecker_NBETerm.embedding)
+  (uu___7 : 'res FStarC_TypeChecker_NBETerm.embedding)
+  (f : 't1 -> 't2 -> 't3 -> 'res) :
+  FStarC_TypeChecker_Primops_Base.primitive_step=
+  let lid = FStarC_Reflection_V2_Constants.fstar_refl_builtins_lid nm in
+  FStarC_TypeChecker_Primops_Base.mk3' Prims.int_zero lid uu___ uu___4 uu___1
+    uu___5 uu___2 uu___6 uu___3 uu___7
+    (fun x y z -> let uu___8 = f x y z in FStar_Pervasives_Native.Some uu___8)
+    (fun x y z -> let uu___8 = f x y z in FStar_Pervasives_Native.Some uu___8)
+let reflection_primops :
+  FStarC_TypeChecker_Primops_Base.primitive_step Prims.list=
   let uu___ =
     mk1 "inspect_ln" FStarC_Reflection_V2_Embeddings.e_term
       FStarC_Reflection_V2_Embeddings.e_term_view
@@ -622,6 +566,6 @@ let (reflection_primops :
       uu___4 :: uu___5 in
     uu___2 :: uu___3 in
   uu___ :: uu___1
-let (uu___0 : unit) =
+let uu___0 : unit=
   FStar_List.iter FStarC_TypeChecker_Cfg.register_extra_step
     reflection_primops

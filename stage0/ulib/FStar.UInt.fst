@@ -133,10 +133,13 @@ let zero_from_vec_lemma #n = to_vec_lemma_2 (from_vec (zero_vec #n)) (zero n)
 let one_to_vec_lemma #n i =
   if i = n - 1 then () else zero_to_vec_lemma #n i
 
+#push-options "--z3rlimit_factor 8"
+#restart-solver
 let rec pow2_to_vec_lemma #n p i =
   if i = n - 1 then ()
   else if p = 0 then one_to_vec_lemma #n i
   else pow2_to_vec_lemma #(n - 1) (p - 1) i
+#pop-options
 
 let pow2_from_vec_lemma #n p =
   to_vec_lemma_2 (from_vec (elem_vec #n p)) (pow2_n #n (n - p - 1))
@@ -318,6 +321,7 @@ let logor_disjoint #n a b m =
   small_modulo_lemma_1 b (pow2 m);
   assert (from_vec #m (slice (to_vec b) (n - m) n) == b)
 
+#push-options "--z3rlimit_factor 2"
 let logand_mask #n a m =
   pow2_lt_compat n m;
   Seq.lemma_split (logand_vec (to_vec a) (to_vec (pow2 m - 1))) (n - m);
@@ -336,6 +340,7 @@ let logand_mask #n a m =
   assert (from_vec #(n - m) (zero_vec #(n - m)) == 0);
   slice_right_lemma #n (to_vec a) m;
   assert (from_vec #m (slice (to_vec a) (n - m) n) == a % pow2 m)
+#pop-options
 
 let shift_left_lemma_1 #n a s i = ()
 
@@ -458,6 +463,17 @@ let lemma_zero_extend #n a =
   append_lemma #1 #n hd0 av;
   assert (r = from_vec eav);
   from_vec_propriety #(n+1) eav 1;
+  assert (r = a)
+
+let lemma_zero_extends #n m a =
+  let hd0 = zero_vec #m in
+  let av = to_vec a in
+  let eav = Seq.append hd0 av in
+  let r = zero_extends m a in
+  append_lemma #m #n hd0 av;
+  assert (r = from_vec eav);
+  from_vec_propriety #(n+m) eav 1;
+  assert (from_vec #m hd0 = 0);
   assert (r = a)
 
 #push-options "--z3rlimit 40"

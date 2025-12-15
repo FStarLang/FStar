@@ -1797,7 +1797,8 @@ let addrs_of_loc_union_loc_of_loc
 let union_loc_of_loc_none #al c b =
   assert (loc_equal #_ #(cls_union c) (union_loc_of_loc c b (loc_none #_ #(c b)))  (loc_none #_ #(cls_union c)))
 
-#push-options "--z3rlimit 15"
+#push-options "--z3rlimit 35 --z3seed 1" //4.13 crashes with seed 0
+#restart-solver
 let union_loc_of_loc_union #al c b l1 l2 =
   assert (loc_equal #_ #(cls_union c) (union_loc_of_loc c b (loc_union #_ #(c b) l1 l2)) (loc_union #_ #(cls_union c) (union_loc_of_loc c b l1) (union_loc_of_loc c b l2)))
 #pop-options
@@ -2177,7 +2178,7 @@ let raise_loc_addresses #al #c preserve_liveness r a =
 let raise_loc_regions #al #c preserve_liveness r =
   assert (raise_loc u#x u#y (loc_regions #_ #c preserve_liveness r) `loc_equal` loc_regions preserve_liveness r)
 
-#push-options "--z3rlimit 15 --z3cliopt 'smt.qi.eager_threshold=100' --fuel 2 --ifuel 1"
+#push-options "--z3rlimit 50 --z3cliopt 'smt.qi.eager_threshold=100'--fuel 0 --ifuel 1"
 #restart-solver
 let raise_loc_includes #al #c l1 l2 =
   let l1' = raise_loc u#x u#y l1 in
@@ -2186,10 +2187,13 @@ let raise_loc_includes #al #c l1 l2 =
   assert (forall (x: aloc (raise_cls u#x u#y c)) . GSet.mem x (Ghost.reveal (Loc?.aux l2')) <==> GSet.mem (downgrade_aloc x) (Ghost.reveal (Loc?.aux l2)));
   assert (forall (x: aloc c) . GSet.mem x (Ghost.reveal (Loc?.aux l1)) <==> GSet.mem (upgrade_aloc u#x u#y x) (Ghost.reveal (Loc?.aux l1')));
   assert (forall (x: aloc c) . GSet.mem x (Ghost.reveal (Loc?.aux l2)) <==> GSet.mem (upgrade_aloc u#x u#y x) (Ghost.reveal (Loc?.aux l2')));
+  assert (loc_aux_includes (Ghost.reveal (Loc?.aux l1')) (Ghost.reveal (Loc?.aux l2')) <==> loc_aux_includes (Ghost.reveal (Loc?.aux l1)) (Ghost.reveal (Loc?.aux l2)));
+  //Sometimes hit a Z3 assertion violation on this one with 4.13.3: reported to Z3 authors & fixed in Z3 4.15
   ()
 #pop-options
 
-#push-options "--z3rlimit 20"
+#push-options "--z3rlimit 20 --z3cliopt 'smt.qi.eager_threshold=100'--fuel 0 --ifuel 1"
+#restart-solver
 let raise_loc_disjoint #al #c l1 l2 =
   let l1' = raise_loc u#x u#y l1 in
   let l2' = raise_loc u#x u#y l2 in

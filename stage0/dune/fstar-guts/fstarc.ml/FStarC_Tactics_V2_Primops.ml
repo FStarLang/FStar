@@ -1,20 +1,15 @@
 open Prims
-let solve : 'a . 'a -> 'a = fun ev -> ev
-let (uu___0 :
-  FStarC_Syntax_Syntax.term FStarC_Syntax_Embeddings_Base.embedding) =
+let solve (ev : 'a) : 'a= ev
+let uu___0 :
+  FStarC_Syntax_Syntax.term FStarC_Syntax_Embeddings_Base.embedding=
   FStarC_Reflection_V2_Embeddings.e_term
-let unseal :
-  'uuuuu 'a .
-    'uuuuu -> 'a FStarC_Sealed.sealed -> 'a FStarC_Tactics_Monad.tac
-  =
-  fun uu___1 ->
-    fun uu___ ->
-      (fun _typ ->
-         fun x ->
-           Obj.magic
-             (FStarC_Class_Monad.return FStarC_Tactics_Monad.monad_tac ()
-                (Obj.magic (FStarC_Sealed.unseal x)))) uu___1 uu___
-let (unseal_step : FStarC_TypeChecker_Primops_Base.primitive_step) =
+let unseal (uu___1 : 'uuuuu) (uu___ : 'a FStarC_Sealed.sealed) :
+  'a FStarC_Tactics_Monad.tac=
+  (fun _typ x ->
+     Obj.magic
+       (FStarC_Class_Monad.return FStarC_Tactics_Monad.monad_tac ()
+          (Obj.magic (FStarC_Sealed.unseal x)))) uu___1 uu___
+let unseal_step : FStarC_TypeChecker_Primops_Base.primitive_step=
   let s =
     FStarC_Tactics_InterpFuns.mk_tac_step_2 Prims.int_one "unseal"
       FStarC_Syntax_Embeddings.e_any
@@ -41,30 +36,20 @@ let (unseal_step : FStarC_TypeChecker_Primops_Base.primitive_step) =
     FStarC_TypeChecker_Primops_Base.interpretation_nbe =
       (s.FStarC_TypeChecker_Primops_Base.interpretation_nbe)
   }
-let e_ret_t :
-  'a .
-    'a FStarC_Syntax_Embeddings_Base.embedding ->
-      ('a FStar_Pervasives_Native.option * FStarC_Tactics_V2_Basic.issues)
-        FStarC_Syntax_Embeddings_Base.embedding
-  =
-  fun d ->
-    solve
-      (FStarC_Syntax_Embeddings.e_tuple2
-         (FStarC_Syntax_Embeddings.e_option d)
-         (FStarC_Syntax_Embeddings.e_list FStarC_Syntax_Embeddings.e_issue))
-let nbe_e_ret_t :
-  'a .
-    'a FStarC_TypeChecker_NBETerm.embedding ->
-      ('a FStar_Pervasives_Native.option * FStarC_Tactics_V2_Basic.issues)
-        FStarC_TypeChecker_NBETerm.embedding
-  =
-  fun d ->
-    solve
-      (FStarC_TypeChecker_NBETerm.e_tuple2
-         (FStarC_TypeChecker_NBETerm.e_option d)
-         (FStarC_TypeChecker_NBETerm.e_list
-            FStarC_TypeChecker_NBETerm.e_issue))
-let (ops : FStarC_TypeChecker_Primops_Base.primitive_step Prims.list) =
+let e_ret_t (d : 'a FStarC_Syntax_Embeddings_Base.embedding) :
+  ('a FStar_Pervasives_Native.option * FStarC_Tactics_V2_Basic.issues)
+    FStarC_Syntax_Embeddings_Base.embedding=
+  solve
+    (FStarC_Syntax_Embeddings.e_tuple2 (FStarC_Syntax_Embeddings.e_option d)
+       (FStarC_Syntax_Embeddings.e_list FStarC_Syntax_Embeddings.e_issue))
+let nbe_e_ret_t (d : 'a FStarC_TypeChecker_NBETerm.embedding) :
+  ('a FStar_Pervasives_Native.option * FStarC_Tactics_V2_Basic.issues)
+    FStarC_TypeChecker_NBETerm.embedding=
+  solve
+    (FStarC_TypeChecker_NBETerm.e_tuple2
+       (FStarC_TypeChecker_NBETerm.e_option d)
+       (FStarC_TypeChecker_NBETerm.e_list FStarC_TypeChecker_NBETerm.e_issue))
+let ops : FStarC_TypeChecker_Primops_Base.primitive_step Prims.list=
   let uu___ =
     FStarC_Tactics_InterpFuns.mk_tot_step_1_psc Prims.int_zero "tracepoint"
       FStarC_Tactics_Embedding.e_proofstate FStarC_Syntax_Embeddings.e_bool
@@ -561,8 +546,6 @@ let (ops : FStarC_TypeChecker_Primops_Base.primitive_step Prims.list) =
                                                                     FStarC_Tactics_V2_Basic.unquote
                                                                     (fun
                                                                     uu___82
-                                                                    ->
-                                                                    fun
                                                                     uu___83
                                                                     ->
                                                                     failwith
@@ -1005,8 +988,6 @@ let (ops : FStarC_TypeChecker_Primops_Base.primitive_step Prims.list) =
                                                                     FStarC_Tactics_V2_Basic.lget
                                                                     (fun
                                                                     uu___140
-                                                                    ->
-                                                                    fun
                                                                     uu___141
                                                                     ->
                                                                     FStarC_Tactics_Monad.fail
@@ -1029,11 +1010,7 @@ let (ops : FStarC_TypeChecker_Primops_Base.primitive_step Prims.list) =
                                                                     FStarC_Tactics_V2_Basic.lset
                                                                     (fun
                                                                     uu___142
-                                                                    ->
-                                                                    fun
                                                                     uu___143
-                                                                    ->
-                                                                    fun
                                                                     uu___144
                                                                     ->
                                                                     FStarC_Tactics_Monad.fail

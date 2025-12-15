@@ -161,7 +161,7 @@ val smt_theory_symbol:attribute
 let l_True:logical = squash trivial
 
 (** [l_False] has a special bit of syntactic sugar. It is written just
-    as "False" and rendered in the ide as [Falsee]. It is a squashed version
+    as "False" and rendered in the ide as [False]. It is a squashed version
     of constructive falsehood, the empty type. *)
 [@@ tac_opaque; smt_theory_symbol]
 let l_False:logical = squash empty
@@ -731,4 +731,4 @@ val string_of_int: int -> Tot string
 (** THIS IS MEANT TO BE KEPT IN SYNC WITH FStar.CheckedFiles.fs
     Incrementing this forces all .checked files to be invalidated *)
 irreducible
-let __cache_version_number__ = 75
+let __cache_version_number__ = 77

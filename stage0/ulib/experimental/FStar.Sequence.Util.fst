@@ -22,9 +22,9 @@ open FStar.Sequence.Base
 
 
 /// For convenience, we define `slice` to represent Dafny sequence slices.
-let slice (#ty: Type) (s: seq ty) (i: nat) (j: nat{j >= i && j <= length s})
+let slice (#ty: Type u#a) (s: seq ty) (i: nat) (j: nat{j >= i && j <= length s})
   : seq ty
-  = all_seq_facts_lemma();
+  = all_seq_facts_lemma u#a ();
     drop (take s j) i
 
 let cons #a (x:a) (s:seq a) = singleton x `append` s
@@ -47,9 +47,9 @@ let split #a (s:seq a) (i:nat{ i <= length s})
 
 /// Counts the number of elements of `s` that
 /// satisfy the predicate [f]
-let rec count_matches (#a:Type) (f:a -> bool) (s:seq a)
+let rec count_matches (#a:Type u#a) (f:a -> bool) (s:seq a)
   : Tot nat (decreases (length s))
-  = all_seq_facts_lemma();
+  = all_seq_facts_lemma u#a ();
     if length s = 0 then 0
     else if f (head s) then 1 + count_matches f (tail s)
     else count_matches f (tail s)
@@ -93,9 +93,9 @@ let rec lemma_append_count_aux (#a:eqtype) (x:a) (lo hi:seq a)
 
 /// Folding a function over a sequence, starting from its
 /// last element, hence fold_back
-let rec fold_back (#a #b:Type) (f:b -> a -> Tot a) (s:seq b) (init:a)
+let rec fold_back (#a:Type u#a) (#b:Type u#b) (f:b -> a -> Tot a) (s:seq b) (init:a)
   : Tot a (decreases (length s))
-  = all_seq_facts_lemma();
+  = all_seq_facts_lemma u#b ();
     if length s = 0 then init
     else let last  = s $@ (length s - 1) in
          let s = take s (length s - 1) in

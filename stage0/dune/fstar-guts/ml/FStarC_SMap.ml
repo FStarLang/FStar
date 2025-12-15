@@ -20,5 +20,5 @@ let fold (m:'value t) f a = StringHashtbl.fold f m a
 let remove (m:'value t) k = StringHashtbl.remove m k
 let keys (m:'value t) = fold m (fun k _ acc -> k::acc) []
 let copy (m:'value t) = StringHashtbl.copy m
-let size (m:'value t) = StringHashtbl.length m
+let size (m:'value t) = Z.of_int (StringHashtbl.length m)
 let iter (m:'value t) f = StringHashtbl.iter f m

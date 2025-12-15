@@ -1,57 +1,54 @@
 open Prims
-let solve : 'a . 'a -> 'a = fun ev -> ev
-let (uu___0 :
-  FStarC_Syntax_Syntax.term FStarC_Syntax_Embeddings_Base.embedding) =
+let solve (ev : 'a) : 'a= ev
+let uu___0 :
+  FStarC_Syntax_Syntax.term FStarC_Syntax_Embeddings_Base.embedding=
   FStarC_Reflection_V1_Embeddings.e_term
-let (fix_module :
-  FStarC_TypeChecker_Primops_Base.primitive_step ->
-    FStarC_TypeChecker_Primops_Base.primitive_step)
-  =
-  fun ps ->
-    let p = FStarC_Ident.path_of_lid ps.FStarC_TypeChecker_Primops_Base.name in
-    let uu___ =
-      FStarC_Path.is_under
-        (FStarC_Class_Ord.ord_eq FStarC_Class_Ord.ord_string) p
-        ["FStar"; "Stubs"; "Tactics"; "V2"; "Builtins"] in
-    if uu___
-    then
-      let p' =
-        let uu___1 =
-          let uu___2 =
-            let uu___3 =
-              let uu___4 =
-                let uu___5 = FStarC_List.tl p in FStarC_List.tl uu___5 in
-              FStarC_List.tl uu___4 in
-            FStarC_List.tl uu___3 in
-          FStarC_List.tl uu___2 in
-        FStarC_List.op_At ["FStar"; "Stubs"; "Tactics"; "V1"; "Builtins"]
-          uu___1 in
+let fix_module (ps : FStarC_TypeChecker_Primops_Base.primitive_step) :
+  FStarC_TypeChecker_Primops_Base.primitive_step=
+  let p = FStarC_Ident.path_of_lid ps.FStarC_TypeChecker_Primops_Base.name in
+  let uu___ =
+    FStarC_Path.is_under
+      (FStarC_Class_Ord.ord_eq FStarC_Class_Ord.ord_string) p
+      ["FStar"; "Stubs"; "Tactics"; "V2"; "Builtins"] in
+  if uu___
+  then
+    let p' =
       let uu___1 =
         let uu___2 =
-          FStarC_Class_HasRange.pos FStarC_Ident.hasrange_lident
-            ps.FStarC_TypeChecker_Primops_Base.name in
-        FStarC_Ident.lid_of_path p' uu___2 in
-      {
-        FStarC_TypeChecker_Primops_Base.name = uu___1;
-        FStarC_TypeChecker_Primops_Base.arity =
-          (ps.FStarC_TypeChecker_Primops_Base.arity);
-        FStarC_TypeChecker_Primops_Base.univ_arity =
-          (ps.FStarC_TypeChecker_Primops_Base.univ_arity);
-        FStarC_TypeChecker_Primops_Base.auto_reflect =
-          (ps.FStarC_TypeChecker_Primops_Base.auto_reflect);
-        FStarC_TypeChecker_Primops_Base.strong_reduction_ok =
-          (ps.FStarC_TypeChecker_Primops_Base.strong_reduction_ok);
-        FStarC_TypeChecker_Primops_Base.requires_binder_substitution =
-          (ps.FStarC_TypeChecker_Primops_Base.requires_binder_substitution);
-        FStarC_TypeChecker_Primops_Base.renorm_after =
-          (ps.FStarC_TypeChecker_Primops_Base.renorm_after);
-        FStarC_TypeChecker_Primops_Base.interpretation =
-          (ps.FStarC_TypeChecker_Primops_Base.interpretation);
-        FStarC_TypeChecker_Primops_Base.interpretation_nbe =
-          (ps.FStarC_TypeChecker_Primops_Base.interpretation_nbe)
-      }
-    else failwith "huh?"
-let (ops : FStarC_TypeChecker_Primops_Base.primitive_step Prims.list) =
+          let uu___3 =
+            let uu___4 =
+              let uu___5 = FStarC_List.tl p in FStarC_List.tl uu___5 in
+            FStarC_List.tl uu___4 in
+          FStarC_List.tl uu___3 in
+        FStarC_List.tl uu___2 in
+      FStarC_List.op_At ["FStar"; "Stubs"; "Tactics"; "V1"; "Builtins"]
+        uu___1 in
+    let uu___1 =
+      let uu___2 =
+        FStarC_Class_HasRange.pos FStarC_Ident.hasrange_lident
+          ps.FStarC_TypeChecker_Primops_Base.name in
+      FStarC_Ident.lid_of_path p' uu___2 in
+    {
+      FStarC_TypeChecker_Primops_Base.name = uu___1;
+      FStarC_TypeChecker_Primops_Base.arity =
+        (ps.FStarC_TypeChecker_Primops_Base.arity);
+      FStarC_TypeChecker_Primops_Base.univ_arity =
+        (ps.FStarC_TypeChecker_Primops_Base.univ_arity);
+      FStarC_TypeChecker_Primops_Base.auto_reflect =
+        (ps.FStarC_TypeChecker_Primops_Base.auto_reflect);
+      FStarC_TypeChecker_Primops_Base.strong_reduction_ok =
+        (ps.FStarC_TypeChecker_Primops_Base.strong_reduction_ok);
+      FStarC_TypeChecker_Primops_Base.requires_binder_substitution =
+        (ps.FStarC_TypeChecker_Primops_Base.requires_binder_substitution);
+      FStarC_TypeChecker_Primops_Base.renorm_after =
+        (ps.FStarC_TypeChecker_Primops_Base.renorm_after);
+      FStarC_TypeChecker_Primops_Base.interpretation =
+        (ps.FStarC_TypeChecker_Primops_Base.interpretation);
+      FStarC_TypeChecker_Primops_Base.interpretation_nbe =
+        (ps.FStarC_TypeChecker_Primops_Base.interpretation_nbe)
+    }
+  else failwith "huh?"
+let ops : FStarC_TypeChecker_Primops_Base.primitive_step Prims.list=
   let uu___ =
     let uu___1 =
       FStarC_Tactics_InterpFuns.mk_tac_step_1 Prims.int_zero "get"
@@ -338,10 +335,10 @@ let (ops : FStarC_TypeChecker_Primops_Base.primitive_step Prims.list) =
                                                         FStarC_Reflection_V1_NBEEmbeddings.e_term
                                                         FStarC_TypeChecker_NBETerm.e_any
                                                         FStarC_Tactics_V1_Basic.unquote
-                                                        (fun uu___50 ->
-                                                           fun uu___51 ->
-                                                             failwith
-                                                               "NBE unquote") in
+                                                        (fun uu___50 uu___51
+                                                           ->
+                                                           failwith
+                                                             "NBE unquote") in
                                                     let uu___50 =
                                                       let uu___51 =
                                                         FStarC_Tactics_InterpFuns.mk_tac_step_1
@@ -806,8 +803,6 @@ let (ops : FStarC_TypeChecker_Primops_Base.primitive_step Prims.list) =
                                                                     FStarC_Tactics_V1_Basic.lget
                                                                     (fun
                                                                     uu___114
-                                                                    ->
-                                                                    fun
                                                                     uu___115
                                                                     ->
                                                                     FStarC_Tactics_Monad.fail
@@ -830,11 +825,7 @@ let (ops : FStarC_TypeChecker_Primops_Base.primitive_step Prims.list) =
                                                                     FStarC_Tactics_V1_Basic.lset
                                                                     (fun
                                                                     uu___116
-                                                                    ->
-                                                                    fun
                                                                     uu___117
-                                                                    ->
-                                                                    fun
                                                                     uu___118
                                                                     ->
                                                                     FStarC_Tactics_Monad.fail
