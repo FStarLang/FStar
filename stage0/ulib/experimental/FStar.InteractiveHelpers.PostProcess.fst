@@ -1,7 +1,7 @@
 module FStar.InteractiveHelpers.PostProcess
 
 open FStar.List.Tot
-open FStar.Tactics
+open FStar.Tactics.V1
 open FStar.Mul
 open FStar.InteractiveHelpers.Base
 open FStar.InteractiveHelpers.ExploreTerm
@@ -597,6 +597,8 @@ let rec strip_implicit_parameters tm =
   | _ -> tm
 
 val unfold_in_assert_or_assume : bool -> exploration_result term -> Tac unit
+#push-options "--z3rlimit_factor 2 --fuel 0"
+#restart-solver
 let unfold_in_assert_or_assume dbg ares =
   print_dbg dbg ("[> unfold_in_assert_or_assume:\n" ^ term_to_string ares.res);
   (* Find the focused term inside the assert, and on which side of the
@@ -733,6 +735,7 @@ let unfold_in_assert_or_assume dbg ares =
   let ge3, asserts = subst_shadowed_with_abs_in_assertions dbg ge2 None asserts in
   (* Output *)
   printout_success ge3 asserts
+#pop-options
 
 [@plugin]
 val pp_unfold_in_assert_or_assume : bool -> unit -> Tac unit

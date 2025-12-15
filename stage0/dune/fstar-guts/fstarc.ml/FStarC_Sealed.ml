@@ -1,4 +1,4 @@
 open Prims
 type 'a sealed = 'a
-let seal : 'a . 'a -> 'a sealed = fun x -> x
-let unseal : 'a . 'a sealed -> 'a = fun x -> x
+let seal (x : 'a) : 'a sealed= x
+let unseal (x : 'a sealed) : 'a= x

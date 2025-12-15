@@ -1,5 +1,5 @@
 open Prims
-let (ops : FStarC_TypeChecker_Primops_Base.primitive_step Prims.list) =
+let ops : FStarC_TypeChecker_Primops_Base.primitive_step Prims.list=
   let mk_lid l = FStarC_Parser_Const.p2l ["FStar"; "Issue"; l] in
   let uu___ =
     let uu___1 = mk_lid "message_of_issue" in
@@ -77,20 +77,15 @@ let (ops : FStarC_TypeChecker_Primops_Base.primitive_step Prims.list) =
                   FStarC_TypeChecker_NBETerm.e_string_list
                   FStarC_Syntax_Embeddings.e_issue
                   FStarC_TypeChecker_NBETerm.e_issue
-                  (fun level ->
-                     fun msg ->
-                       fun range ->
-                         fun number ->
-                           fun context ->
-                             let uu___14 =
-                               FStarC_Errors.issue_level_of_string level in
-                             {
-                               FStarC_Errors.issue_msg = msg;
-                               FStarC_Errors.issue_level = uu___14;
-                               FStarC_Errors.issue_range = range;
-                               FStarC_Errors.issue_number = number;
-                               FStarC_Errors.issue_ctx = context
-                             }) in
+                  (fun level msg range number context ->
+                     let uu___14 = FStarC_Errors.issue_level_of_string level in
+                     {
+                       FStarC_Errors.issue_msg = msg;
+                       FStarC_Errors.issue_level = uu___14;
+                       FStarC_Errors.issue_range = range;
+                       FStarC_Errors.issue_number = number;
+                       FStarC_Errors.issue_ctx = context
+                     }) in
               [uu___12] in
             uu___10 :: uu___11 in
           uu___8 :: uu___9 in

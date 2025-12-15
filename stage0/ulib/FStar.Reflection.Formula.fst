@@ -16,4 +16,4 @@
 module FStar.Reflection.Formula
 
 (* This module is a temporary for Meta-F* migration *)
-include FStar.Reflection.V1.Formula
+include FStar.Reflection.V2.Formula

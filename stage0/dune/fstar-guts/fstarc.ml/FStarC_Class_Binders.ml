@@ -2,27 +2,24 @@ open Prims
 type 'a hasNames =
   {
   freeNames: 'a -> FStarC_Syntax_Syntax.bv FStarC_FlatSet.flat_set }
-let __proj__MkhasNames__item__freeNames :
-  'a . 'a hasNames -> 'a -> FStarC_Syntax_Syntax.bv FStarC_FlatSet.flat_set =
-  fun projectee -> match projectee with | { freeNames;_} -> freeNames
-let freeNames :
-  'a . 'a hasNames -> 'a -> FStarC_Syntax_Syntax.bv FStarC_FlatSet.flat_set =
-  fun projectee ->
-    match projectee with | { freeNames = freeNames1;_} -> freeNames1
+let __proj__MkhasNames__item__freeNames (projectee : 'a hasNames) :
+  'a -> FStarC_Syntax_Syntax.bv FStarC_FlatSet.flat_set=
+  match projectee with | { freeNames;_} -> freeNames
+let freeNames (projectee : 'a hasNames) :
+  'a -> FStarC_Syntax_Syntax.bv FStarC_FlatSet.flat_set=
+  match projectee with | { freeNames = freeNames1;_} -> freeNames1
 type 'a hasBinders =
   {
   boundNames: 'a -> FStarC_Syntax_Syntax.bv FStarC_FlatSet.flat_set }
-let __proj__MkhasBinders__item__boundNames :
-  'a . 'a hasBinders -> 'a -> FStarC_Syntax_Syntax.bv FStarC_FlatSet.flat_set
-  = fun projectee -> match projectee with | { boundNames;_} -> boundNames
-let boundNames :
-  'a . 'a hasBinders -> 'a -> FStarC_Syntax_Syntax.bv FStarC_FlatSet.flat_set
-  =
-  fun projectee ->
-    match projectee with | { boundNames = boundNames1;_} -> boundNames1
-let (hasNames_term : FStarC_Syntax_Syntax.term hasNames) =
+let __proj__MkhasBinders__item__boundNames (projectee : 'a hasBinders) :
+  'a -> FStarC_Syntax_Syntax.bv FStarC_FlatSet.flat_set=
+  match projectee with | { boundNames;_} -> boundNames
+let boundNames (projectee : 'a hasBinders) :
+  'a -> FStarC_Syntax_Syntax.bv FStarC_FlatSet.flat_set=
+  match projectee with | { boundNames = boundNames1;_} -> boundNames1
+let hasNames_term : FStarC_Syntax_Syntax.term hasNames=
   { freeNames = FStarC_Syntax_Free.names }
-let (hasNames_comp : FStarC_Syntax_Syntax.comp hasNames) =
+let hasNames_comp : FStarC_Syntax_Syntax.comp hasNames=
   {
     freeNames =
       (fun c ->
@@ -47,16 +44,15 @@ let (hasNames_comp : FStarC_Syntax_Syntax.comp hasNames) =
                    ct.FStarC_Syntax_Syntax.effect_args in
                uu___2 :: uu___3 in
              FStarC_List.fold_left
-               (fun uu___3 ->
-                  fun uu___2 ->
-                    (Obj.magic
-                       (FStarC_Class_Setlike.union ()
-                          (Obj.magic
-                             (FStarC_FlatSet.setlike_flat_set
-                                FStarC_Syntax_Syntax.ord_bv)))) uu___3 uu___2)
+               (fun uu___3 uu___2 ->
+                  (Obj.magic
+                     (FStarC_Class_Setlike.union ()
+                        (Obj.magic
+                           (FStarC_FlatSet.setlike_flat_set
+                              FStarC_Syntax_Syntax.ord_bv)))) uu___3 uu___2)
                uu___ uu___1)
   }
-let (hasBinders_list_bv : FStarC_Syntax_Syntax.bv Prims.list hasBinders) =
+let hasBinders_list_bv : FStarC_Syntax_Syntax.bv Prims.list hasBinders=
   {
     boundNames =
       (fun uu___ ->
@@ -66,6 +62,6 @@ let (hasBinders_list_bv : FStarC_Syntax_Syntax.bv Prims.list hasBinders) =
                   (FStarC_FlatSet.setlike_flat_set
                      FStarC_Syntax_Syntax.ord_bv)))) uu___)
   }
-let (hasBinders_set_bv :
-  FStarC_Syntax_Syntax.bv FStarC_FlatSet.flat_set hasBinders) =
+let hasBinders_set_bv :
+  FStarC_Syntax_Syntax.bv FStarC_FlatSet.flat_set hasBinders=
   { boundNames = (fun x -> x) }

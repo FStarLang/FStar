@@ -29,8 +29,13 @@ fi
 if windows; then
     # This dll is needed. It must be installed if we're packaging, as we
     # must have run F* already, but it should probably be obtained from
-    # somewhere else..
-    LIBGMP=$(which libgmp-10.dll) || echo "error: libgmp-10.dll not found! Carrying on..." >&2
+    # somewhere else... We also allow an external override.
+    if [ -z "$LIBGMP" ]; then
+      LIBGMP=$(which libgmp-10.dll)
+    fi
+    if ! [ -f "$LIBGMP" ]; then
+      echo "error: libgmp-10.dll not found! Carrying on..." >&2
+    fi
     cp "$LIBGMP" "$PREFIX/bin"
 fi
 

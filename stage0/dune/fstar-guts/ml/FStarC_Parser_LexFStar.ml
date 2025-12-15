@@ -233,12 +233,6 @@ let fail lexbuf (e, msg) =
      E.raise_error_text m e msg
 
 type delimiters = { angle:int ref; paren:int ref; }
-let n_typ_apps = ref 0
-
-let is_typ_app_gt () =
-  if !n_typ_apps > 0
-  then (decr n_typ_apps; true)
-  else false
 
 let rec mknewline n lexbuf =
   if n = 0 then ()
@@ -603,11 +597,9 @@ match%sedlex lexbuf with
  | op_token_5 -> L.lexeme lexbuf |> Hashtbl.find operators
 
  | "<" -> OPINFIX0c("<")
- | ">" -> if is_typ_app_gt ()
-          then TYP_APP_GREATER
-          else begin match%sedlex lexbuf with
-               | Star symbolchar -> ensure_no_comment lexbuf (fun s -> OPINFIX0c (">" ^ s))
-               | _ -> assert false end
+ | ">" -> begin match%sedlex lexbuf with
+          | Star symbolchar -> ensure_no_comment lexbuf (fun s -> OPINFIX0c (">" ^ s))
+          | _ -> assert false end
 
  (* Operators. *)
  | "**"     ,  Star symbolchar -> ensure_no_comment lexbuf (fun s -> OPINFIX3R  s)
