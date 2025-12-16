@@ -3028,3 +3028,7 @@ let call_subtac_tm (g:env) (f_tm : term) (_u:universe) (goal_ty : typ) : tac (op
 let stats_record (a:'a) (wp:'b) (s:string) (f : tac 'c) : tac 'c =
   mk_tac (fun ps ->
     Stats.record s (fun () -> run f ps))
+
+let with_error_context (a:'a) (wp:'b) (s:string) (f : tac 'c) : tac 'c =
+  mk_tac (fun ps ->
+    Errors.with_ctx s (fun () -> run f ps))
