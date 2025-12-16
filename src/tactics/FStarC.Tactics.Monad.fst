@@ -355,12 +355,14 @@ let goal_of_guard (reason:string) (e:Env.env)
   ret goal))
 
 let wrap_err_doc (pref:error_message) (t : tac 'a) : tac 'a =
-    mk_tac (fun ps ->
-            try run t ps with
-            | TacticFailure (msg, r) ->
-              raise (TacticFailure (pref @ msg, r))
-            | e -> raise e
-           )
+  mk_tac fun ps ->
+    try run t ps with
+    | TacticFailure (msg, r) ->
+      raise (TacticFailure (pref @ msg, r))
+    | Errors.Error (err, msg, r, ctx) ->
+      raise (Errors.Error (err, pref @ msg, r, ctx))
+    | e ->
+      raise e
 
 let wrap_err (pref:string) (t : tac 'a) : tac 'a =
   wrap_err_doc [text ("'" ^ pref ^ "' failed")] t

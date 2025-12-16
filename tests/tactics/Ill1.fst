@@ -18,7 +18,7 @@ module Ill1
 open FStar.Tactics.V2
 assume val f : term -> int
 
-[@@(expect_failure [228])]
+[@@(expect_failure [58])]
 let _ = assert True 
             by (let tm = quote (fun x -> x + 1) in
                 exact (quote (f tm)))
