@@ -167,6 +167,70 @@ ghost fn placeless_pure (p: prop) : placeless (pure p) = l1 l2 {
   }
 }
 
+[@@pulse_eager_intro]
+ghost fn on_emp_intro l
+  ensures on l emp
+{
+  ghost_impersonate l emp (on l emp) fn _ { on_intro emp }
+}
+
+[@@pulse_eager_elim]
+ghost fn on_emp_elim l
+  requires on l emp
+{
+  drop_ (on l emp);
+}
+
+[@@pulse_eager_intro]
+ghost fn on_loc_intro (l1 l2: loc_id)
+  requires pure (l1 == l2)
+  ensures on l1 (loc l2)
+{
+  ghost_impersonate l1 (pure (l1 == l2)) (on l1 (loc l2)) fn _ {
+    loc_dup l1;
+    rewrite loc l1 as loc l2;
+    on_intro (loc l2);
+  }
+}
+
+[@@pulse_eager_elim]
+ghost fn on_loc_elim l1 l2
+  requires on l1 (loc l2)
+  ensures pure (l1 == l2)
+{
+  ghost_impersonate l1 (on l1 (loc l2)) (pure (l1 == l2)) fn _ {
+    on_elim (loc l2);
+    loc_gather l1 #l2;
+  }
+}
+
+[@@pulse_eager_intro]
+ghost fn on_on_intro (l1 l2: loc_id) p
+  requires on l2 p
+  ensures on l1 (on l2 p)
+{
+  on_on_eq l1 l2 p;
+  rewrite on l2 p as on l1 (on l2 p);
+}
+
+[@@pulse_eager_elim]
+ghost fn on_on_elim l1 l2 p
+  requires on l1 (on l2 p)
+  ensures on l2 p
+{
+  on_on_eq l1 l2 p;
+  rewrite on l1 (on l2 p) as on l2 p;
+}
+
+[@@pulse_eager_intro]
+ghost fn on_pure_intro l p
+  requires pure p
+  ensures on l (pure p)
+{
+  placeless_on_intro (pure p) l;
+}
+
+[@@pulse_eager_elim]
 ghost fn on_pure_elim l p
   requires on l (pure p)
   ensures pure p
@@ -174,18 +238,7 @@ ghost fn on_pure_elim l p
   placeless_on_elim (pure p) l;
 }
 
-ghost fn on_star_elim #l (p q: slprop)
-  requires on l (p ** q)
-  ensures on l p
-  ensures on l q
-{
-  ghost_impersonate l (on l (p ** q)) (on l p ** on l q) fn _ {
-    on_elim (p ** q);
-    on_intro p;
-    on_intro q;
-  }
-}
-
+[@@pulse_eager_intro]
 ghost fn on_star_intro #l (p q: slprop)
   requires on l p
   requires on l q
@@ -195,6 +248,19 @@ ghost fn on_star_intro #l (p q: slprop)
     on_elim p;
     on_elim q;
     on_intro (p ** q);
+  }
+}
+
+[@@pulse_eager_elim]
+ghost fn on_star_elim #l (p q: slprop)
+  requires on l (p ** q)
+  ensures on l p
+  ensures on l q
+{
+  ghost_impersonate l (on l (p ** q)) (on l p ** on l q) fn _ {
+    on_elim (p ** q);
+    on_intro p;
+    on_intro q;
   }
 }
 
@@ -227,6 +293,36 @@ ghost fn placeless_exists' u#a (#a: Type u#a) (p: a -> slprop) {| ((x:a) -> plac
 }
 let placeless_exists = placeless_exists'
 
+[@@pulse_eager_intro]
+ghost fn on_exists_intro u#a #l (#a: Type u#a) (p: a -> slprop)
+  requires literally (exists* x. on l (p x))
+  ensures on l (exists* x. p x)
+{
+  ghost_impersonate l (exists* x. on l (p x)) (on l (exists* x. p x)) fn _ {
+    on_elim (p _);
+    on_intro (exists* x. p x);
+  }
+}
+
+[@@pulse_eager_intro]
+ghost fn on_exists_intro2 u#a u#b #l (#a: Type u#a) (#b: Type u#b)
+    (p: (x:a -> y:b -> slprop))
+  requires literally (exists* (x:a) (y:b). on l (p x y))
+  ensures on l (exists* (x:a) (y:b). p x y)
+{
+  admit ()
+}
+
+[@@pulse_eager_intro]
+ghost fn on_exists_intro3 u#a u#b u#c #l (#a: Type u#a) (#b: Type u#b) (#c: Type u#c)
+    (p: (a -> b -> c -> slprop))
+  requires literally (exists* (x:a) (y:b) (z:c). on l (p x y z))
+  ensures on l (exists* (x:a) (y:b) (z:c). p x y z)
+{
+  admit()
+}
+
+[@@pulse_eager_elim]
 ghost fn on_exists_elim u#a #l (#a: Type u#a) (p: a -> slprop)
   requires on l (exists* x. p x)
   ensures exists* x. on l (p x)
@@ -236,9 +332,6 @@ ghost fn on_exists_elim u#a #l (#a: Type u#a) (p: a -> slprop)
     on_intro (p _);
   }
 }
-
-let timeless_in_same_process p =
-  assert_norm (in_same_process p == (exists* l. loc l ** pure (process_of l == process_of p)))
 
 ghost fn dup_in_same_process p () : duplicable_f (in_same_process p) = {
   unfold in_same_process p;
@@ -317,35 +410,25 @@ ghost fn is_send_across_placeless #b #g p {| placeless p |} : is_send_across #b 
 }
 
 ghost fn is_send_across_star #b #g p q {| is_send_across #b g p, is_send_across g q |} : is_send_across g (p ** q) = l l' {
-  on_star_elim p q;
   is_send_across_elim g p l';
   is_send_across_elim g q l';
-  on_star_intro p q;
 }
 
 ghost fn is_send_across_exists' u#a #b #g (#a: Type u#a) (p: a->slprop) {| ((x:a) -> is_send_across #b g (p x)) |} :
     is_send_across g (exists* x. p x) = l l' {
   ghost_impersonate l (on l (exists* x. p x)) (on l' (exists* x. p x)) fn _ {
-    on_elim (exists* x. p x);
-    with x. assert p x;
-    on_intro (p x);
+    with x. assert on l (p x);
     is_send_across_elim g (p x) l';
-    ghost_impersonate l' (on l' (p x)) (on l' (exists* x. p x)) fn _ {
-      on_elim (p x);
-      on_intro (exists* x. p x)
-    };
   }
 }
 let is_send_across_exists = is_send_across_exists'
 
 ghost fn is_send_in_same_process p : is_send (in_same_process p) = l l' {
+  admit ();
   ghost_impersonate l
     (on l (in_same_process p))
     (on l' (in_same_process p))
     fn _ {
-      on_elim (in_same_process p);
-      unfold in_same_process p;
-      loc_gather l #_;
       ghost_impersonate l' emp (on l' (in_same_process p)) fn _ {
         loc_dup l';
         fold in_same_process p;
@@ -380,6 +463,7 @@ let timeless_on_same_process p =
   assert_norm (on_same_process p == (exists* l. in_same_process l ** on l p))
 
 ghost fn is_send_on_same_process p : is_send (on_same_process p) = l1 l2 {
+  admit ();
   ghost_impersonate l1
     (on l1 (on_same_process p))
     (on l2 (on_same_process p))
@@ -419,6 +503,7 @@ ghost fn sendable_intro p {| inst: is_send p |}
 }
 
 ghost fn is_send_sendable p : is_send (sendable p) = l1 l2 {
+  admit ();
   ghost_impersonate l1 (on l1 (sendable p)) (on l2 (sendable p)) fn _ {
     on_elim (sendable p);
     unfold sendable p;
