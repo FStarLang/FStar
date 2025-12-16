@@ -1356,7 +1356,7 @@ let rec try_elim_core (g: env) (plems: plems) (ctxt: list slprop_view) :
       (fun _ -> elim_first' g ctxt [] (elim_pure_step g));
       (fun _ -> elim_first' g ctxt [] (elim_with_pure_step g));
       (fun _ -> elim_first' g ctxt [] (elim_exists_step g));
-      (fun _ -> elim_first g ctxt [] (eager_elim_lemma_step g plems));
+      (fun _ -> elim_first' g ctxt [] (eager_elim_lemma_step g plems));
     ] in
   match step with
   | Some step ->
