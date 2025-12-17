@@ -1123,8 +1123,9 @@ let prove rng (g: env) (ctxt goals: slprop) allow_amb :
     T.Tac (g':env { env_extends g' g } &
       ctxt': slprop &
       continuation_elaborator g ctxt g' (goals `tm_star` ctxt')) =
-  let (| g', ctxt', goals', solved', k |) = try_prove g ctxt goals allow_amb in
-  if Cons? goals' then
+  let res = try_prove g ctxt goals allow_amb in
+  if not (prover_result_is_solved res) then
+    let (| g', ctxt', goals', solved', k |) = res in
     T.fail_doc_at ([
         text (if List.length goals' > 1 then "Cannot prove any of:" else "Cannot prove:") ^^
           indent (pp_slprops goals');
@@ -1135,12 +1136,11 @@ let prove rng (g: env) (ctxt goals: slprop) allow_amb :
       ] else []))
     (Some rng)
   else
-    (| g', RU.deep_compress_safe (elab_slprops ctxt'), fun post_hint post_hint_typ ->
-      let before, after = k g' in
-      let h: slprop_equiv g' (elab_slprops (solved' @ ctxt')) (elab_slprops (ctxt' @ solved' @ goals')) = RU.magic () in
-      let k = cont_elab_trans before (cont_elab_frame after ctxt') h [] in
-      let h: slprop_equiv g' (elab_slprops (ctxt' @ [Unknown goals])) (tm_star goals (elab_slprops ctxt')) = RU.magic () in
-      k_elab_equiv k (VE_Refl _ _) h post_hint post_hint_typ |)
+    let (| g', ctxt', k |) = prover_result_solved_unpack res in
+    let h: slprop_equiv g'
+        (elab_slprops ([] @ ctxt' @ [Unknown goals]))
+        (tm_star goals (RU.deep_compress_safe (elab_slprops ctxt'))) = RU.magic () in
+    (| g', RU.deep_compress_safe (elab_slprops ctxt'), k_elab_equiv (k []) (VE_Refl _ _) h |)
 
 #restart-solver
 #push-options "--z3rlimit_factor 2"
