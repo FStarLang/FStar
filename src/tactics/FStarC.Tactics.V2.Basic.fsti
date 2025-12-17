@@ -160,3 +160,5 @@ val call_subtac                       : env -> tac unit -> universe -> typ -> re
 val call_subtac_tm                    : env -> term     -> universe -> typ -> refl_tac term
 
 val stats_record (a:'a) (wp:'b) (s:string) (f : tac 'c) : tac 'c
+
+val with_error_context (a:'a) (wp:'b) (s:string) (f : tac 'c) : tac 'c

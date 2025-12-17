@@ -633,24 +633,14 @@ let curms () : tac int =
 let __tc (e : env) (t : term) : tac (term & typ & guard_t) =
     let! ps = get in
     log (fun () -> Format.print1 "Tac> __tc(%s)\n" (show t));!
-    try return (TcTerm.typeof_tot_or_gtot_term e t true)
-    with | Errors.Error (_, msg, _, _) ->
-           fail_doc ([
-              prefix 2 1 (text "Cannot type") (ttd e t) ^/^
-              prefix 2 1 (text "in context") (pp (Env.all_binders e))
-             ] @ msg)
+    return (TcTerm.typeof_tot_or_gtot_term e t true)
 
 let __tc_ghost (e : env) (t : term) : tac (term & typ & guard_t) =
     let! ps = get in
     log (fun () -> Format.print1 "Tac> __tc_ghost(%s)\n" (show t));!
     let e = {e with letrecs=[]} in
-    try let t, lc, g = TcTerm.tc_tot_or_gtot_term e t in
-        return (t, lc.res_typ, g)
-    with | Errors.Error (_, msg, _ ,_) ->
-           fail_doc ([
-              prefix 2 1 (text "Cannot type") (ttd e t) ^/^
-              prefix 2 1 (text "in context") (pp (Env.all_binders e))
-             ] @ msg)
+    let t, lc, g = TcTerm.tc_tot_or_gtot_term e t in
+    return (t, lc.res_typ, g)
 
 let __tc_lax (e : env) (t : term) : tac (term & lcomp & guard_t) =
     let! ps = get in
@@ -659,12 +649,7 @@ let __tc_lax (e : env) (t : term) : tac (term & lcomp & guard_t) =
                            (Env.all_binders e |> show));!
     let e = {e with admit = true} in
     let e = {e with letrecs=[]} in
-    try return (TcTerm.tc_term e t)
-    with | Errors.Error (_, msg, _, _) ->
-           fail_doc ([
-              prefix 2 1 (text "Cannot type") (ttd e t) ^/^
-              prefix 2 1 (text "in context") (pp (Env.all_binders e))
-             ] @ msg)
+    return (TcTerm.tc_term e t)
 
 let tcc (e : env) (t : term) : tac comp = wrap_err "tcc" <| (
   let! (_, lc, _) = __tc_lax e t in
@@ -3043,3 +3028,7 @@ let call_subtac_tm (g:env) (f_tm : term) (_u:universe) (goal_ty : typ) : tac (op
 let stats_record (a:'a) (wp:'b) (s:string) (f : tac 'c) : tac 'c =
   mk_tac (fun ps ->
     Stats.record s (fun () -> run f ps))
+
+let with_error_context (a:'a) (wp:'b) (s:string) (f : tac 'c) : tac 'c =
+  mk_tac (fun ps ->
+    Errors.with_ctx s (fun () -> run f ps))
