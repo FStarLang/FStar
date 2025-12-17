@@ -822,6 +822,7 @@ let rec apply_with_uvars (g:env) (t:typ) (v:term) : T.Tac (typ & term) =
     | _ -> t, v)
   | _ -> t, v
 
+#push-options "--split_queries always"
 let try_apply_elim_lemma (g: env) (lid: R.name) (i: nat) (ctxt: slprop_view) :
     T.Tac (option (prover_result_nogoals g [ctxt])) =
   let do_match goal ctxt =
@@ -843,23 +844,26 @@ let try_apply_elim_lemma (g: env) (lid: R.name) (i: nat) (ctxt: slprop_view) :
         debug_prover g (fun _ -> Printf.sprintf "try_apply_elim_lemma: unified %s and %s, result is %s\n" (show (elab_slprop ctxt)) (show pre) (show ok));
         let post' = open_term' post unit_const 0 in
         Some (| g, [Unknown post'], [], [], fun g'' ->
-          let (| eff, typing |) = core_check_term_at_type g'' t ty in
+          let typing = core_check_term g t T.E_Ghost ty in
           let t' = wtag (Some STT_Ghost) (Tm_ST { t; args=[] }) in
-          let ni: non_informative g'' c = admit () in
-          let typing: st_typing g'' t' c = T_STGhost g'' t c typing ni in
-          let h1: tot_typing g'' (comp_pre c) tm_slprop = RU.magic () in
-          let h2: slprop_equiv g'' (elab_slprops [Unknown (comp_pre c)]) (elab_slprops [ctxt]) =
+          let ni: non_informative g c = RU.magic () in
+          let typing: st_typing g t' c = T_STGhost g t c typing ni in
+          let h1: tot_typing g (comp_pre c) tm_slprop = RU.magic () in
+          let h2: slprop_equiv g (elab_slprops [Unknown (comp_pre c)]) (elab_slprops [ctxt]) =
             assume elab_slprop ctxt == pre; VE_Refl _ _ in
-          let h3: slprop_equiv g'' (elab_slprops [Unknown (open_term' (comp_post c) unit_const 0)])
+          let h3: slprop_equiv g (elab_slprops [Unknown (open_term' (comp_post c) unit_const 0)])
             (elab_slprops ([] @ [Unknown post'])) = VE_Refl _ _ in
-          cont_elab_equiv (cont_elab_with_bind_nondep_unit typing h1) h2 h3,
+          let k_t = cont_elab_with_bind_nondep_unit typing h1 in
+          cont_elab_equiv k_t h2 h3,
           cont_elab_refl g'' ([] @ []) [] (VE_Refl _ _) |)
       ) else
         None
     | _ -> None)
   | _ ->
     None
+#pop-options
 
+#push-options "--split_queries always"
 let try_apply_eager_intro_lemma (g: env) (lid: R.name) (i: nat) ctxt (goal: slprop_view) :
     T.Tac (option (prover_result g ctxt [goal])) =
   let do_match goal ctxt =
@@ -882,20 +886,23 @@ let try_apply_eager_intro_lemma (g: env) (lid: R.name) (i: nat) ctxt (goal: slpr
         let ok = teq_nosmt_force_args (elab_env g) post' (elab_slprop goal) false in
         debug_prover g (fun _ -> Printf.sprintf "try_apply_eager_intro_lemma: unified %s and %s, result is %s\n" (show post) (show (elab_slprop goal)) (show ok));
         Some (| g, ctxt, [Unknown pre], [], fun g'' ->
-          let (| eff, typing |) = core_check_term_at_type g'' t ty in
+          let typing = core_check_term g'' t T.E_Ghost ty in
           let t' = wtag (Some STT_Ghost) (Tm_ST { t; args=[] }) in
-          let ni: non_informative g'' c = admit () in
+          let ni: non_informative g'' c = RU.magic () in
           let typing: st_typing g'' t' c = T_STGhost g'' t c typing ni in
           let h1: tot_typing g'' (comp_pre c) tm_slprop = RU.magic () in
           let h2: slprop_equiv g'' (elab_slprops [Unknown (comp_pre c)]) (elab_slprops ([] @ [Unknown pre])) = VE_Refl _ _ in
-          let h3: slprop_equiv g'' (elab_slprops [Unknown (open_term' (comp_post c) unit_const 0)]) (elab_slprops [goal]) = VE_Refl _ _ in cont_elab_refl g'' _ _ (VE_Refl _ _),
-          cont_elab_equiv (cont_elab_with_bind_nondep_unit typing h1) h2 h3
+          let h3: slprop_equiv g'' (elab_slprops [Unknown (open_term' (comp_post c) unit_const 0)]) (elab_slprops [goal]) = RU.magic () in
+          let k_typing = cont_elab_with_bind_nondep_unit typing h1 in
+          cont_elab_refl g ctxt ([] @ ctxt) (VE_Refl _ _),
+          cont_elab_equiv k_typing h2 h3
         |)
       ) else
         None
     | _ -> None)
   | _ ->
     None
+#pop-options
 
 let eager_elim_lemma_step (g:penv) (ctxt: slprop_view) :
     T.Tac (option (prover_result_nogoals g.penv_env [ctxt])) =
@@ -943,6 +950,7 @@ let prover_result_solved_unpack #g #ctxt #goals (res: prover_result_solved g ctx
     let h: slprop_equiv g' (elab_slprops (solved @ ctxt')) (elab_slprops (ctxt' @ solved @ goals')) = RU.magic () in
     cont_elab_trans k1 (cont_elab_frame k2 ctxt') h |)
 
+#push-options "--split_queries always --z3rlimit 10"
 let try_apply_intro_lemma (g: env) (lid: R.name) (i: nat) ctxt (goal: slprop_view) :
     T.Tac (option (
       g': env &
@@ -974,19 +982,23 @@ let try_apply_intro_lemma (g: env) (lid: R.name) (i: nat) ctxt (goal: slprop_vie
         let (| g', ctxt', k |) = prover_result_solved_unpack subresult in
         (| g', ctxt' @ post''_rest, [], [goal], fun (g'': env { env_extends g'' g' }) ->
           let c = C_STGhost inames { pre; post; res; u } in
-          let (| eff, typing |) = core_check_term_at_type g'' t ty in
+          let typing = core_check_term g' t T.E_Ghost ty in
           let t' = wtag (Some STT_Ghost) (Tm_ST { t; args=[] }) in
-          let ni: non_informative g'' c = admit () in
-          let typing: st_typing g'' t' c = T_STGhost g'' t c typing ni in
-          let h1: tot_typing g'' (comp_pre c) tm_slprop = RU.magic () in
-          let h2: slprop_equiv g''
+          let ni: non_informative g' c = RU.magic () in
+          let typing: st_typing g' t' c = T_STGhost g' t c typing ni in
+          let h1: tot_typing g' (comp_pre c) tm_slprop = RU.magic () in
+          let h2: slprop_equiv g' (elab_slprops (ctxt' @ [Unknown (comp_pre c)])) (elab_slprops (ctxt' @ [Unknown pre])) =
+            RU.magic () in
+          let h3: slprop_equiv g'
             (elab_slprops (ctxt' @ [Unknown (open_term' (comp_post c) unit_const 0)]))
             (elab_slprops ([goal] @ ctxt' @ post''_rest)) = RU.magic () in
-          cont_elab_trans k
-            (cont_elab_equiv (cont_elab_frame (cont_elab_with_bind_nondep_unit typing h1) ctxt')
-              (VE_Refl _ _) h2)
-            (VE_Refl _ _),
-          cont_elab_refl _ _ _ (VE_Refl _ _)
+          let k_typing = cont_elab_with_bind_nondep_unit typing h1 in
+          let k_typing = cont_elab_frame k_typing ctxt' in
+          let k_typing: cont_elab g' (ctxt' @ [Unknown pre]) g' ([goal] @ ctxt' @ post''_rest) =
+            cont_elab_equiv k_typing h2 h3 in
+          cont_elab_trans k k_typing (VE_Refl _ _),
+          cont_elab_refl g'' ([goal] @ []) [goal] (VE_Refl _ _)
+          <: cont_elab g ctxt g' ([goal] @ ctxt' @ post''_rest) & cont_elab g'' ([goal] @ []) g'' [goal]
           |)
         <: T.Tac (prover_result g ctxt [goal])
         |)
@@ -994,7 +1006,7 @@ let try_apply_intro_lemma (g: env) (lid: R.name) (i: nat) ctxt (goal: slprop_vie
       None
   | _ ->
     None
-
+#pop-options
 
 let intro_lemma_main (g:penv) (ctxt: list slprop_view) (goal: slprop_view) :
     T.Tac (option (
