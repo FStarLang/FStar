@@ -30,3 +30,30 @@ ghost fn foo_demo ()
   requires foo (pure (1 < 0))
   ensures foo (pure (forall (x y: nat). x == y))
 {}
+
+let bar (p: slprop) = p
+
+[@@pulse_intro]
+ghost fn foo_of_bar p
+  requires bar p
+  ensures foo p
+{
+  unfold bar p;
+  fold foo p;
+}
+
+[@@pulse_intro]
+ghost fn bar_of_foo p
+  requires foo p
+  ensures bar p
+{
+  unfold foo p;
+  fold bar p;
+}
+
+ghost fn foo_of_bar_use p q
+  requires bar p
+  requires foo q
+  ensures foo p
+  ensures bar q
+{}

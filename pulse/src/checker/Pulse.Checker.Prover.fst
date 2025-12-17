@@ -209,12 +209,15 @@ let cont_elab_frame #g #ps #g' #ps' (k: cont_elab g ps g' ps') frame :
     cont_elab g (frame @ ps) g' (frame @ ps') =
   fun frame' -> k_elab_equiv (k (frame' @ frame)) (RU.magic()) (RU.magic())
 
+let cont_elab_thunk #g #ps #g' #ps' (k: unit -> T.Tac (cont_elab g ps g' ps')) : cont_elab g ps g' ps' =
+  fun frame posth typing -> k () frame posth typing
+
 let prover_result (g: env) (ctxt goals: list slprop_view) =
   g':env { env_extends g' g } &
   ctxt': list slprop_view &
   goals': list slprop_view &
   solved: list slprop_view &
-  (g'': env { env_extends g' g } -> T.Tac
+  (g'': env { env_extends g'' g' } -> T.Tac
     (cont_elab g ctxt g' (solved @ ctxt') &
     (cont_elab g'' (solved @ goals') g'' goals)))
 
@@ -224,7 +227,7 @@ let prover_result_join #g #ctxt #goals #g1 #ctxt1 #goals1
     prover_result g ctxt goals =
   let (| g1, ctxt1, goals1, solved1, k1 |) = r in
   let (| g2, ctxt2, goals2, solved2, k2 |) = r1 in
-  (| g2, ctxt2, goals2, solved1 @ solved2, fun g3 ->
+  (| g2, ctxt2, goals2, solved1 @ solved2, fun (g3: env { env_extends g3 g2 }) ->
     let before1, after1 = k1 g3 in
     let before2, after2 = k2 g3 in
     (fun frame ->
@@ -248,7 +251,7 @@ let prove_first (g: env) (ctxt goals: list slprop_view)
     | goal::goals ->
       match k goal with
       | Some (| g', ctxt', goals', solved, res |) ->
-        Some (| g', ctxt', List.rev goals_left_rev @ goals' @ goals, solved, fun g'' ->
+        Some (| g', ctxt', List.rev goals_left_rev @ goals' @ goals, solved, fun (g'': env { env_extends g'' g' }) ->
           let before, after = res g'' in
           before,
           (fun frame ->
@@ -284,6 +287,42 @@ let continuation_elaborator_with_bind_nondep (#g:env) (ctxt:term)
   let x = fresh g in
   admit ();
   continuation_elaborator_with_bind (RU.deep_compress_safe ctxt) #(deep_compress_comp c1) e1_typing ctxt_pre1_typing (ppname_default, x)
+
+let continuation_elaborator_with_bind_nondep_unit (#g:env) (ctxt:term)
+  (#c1:comp_st{comp_res c1 == tm_unit })
+  (#e1:st_term)
+  (e1_typing:st_typing g e1 c1)
+  (ctxt_pre1_typing:tot_typing g (tm_star ctxt (comp_pre c1)) tm_slprop)
+  : T.Tac (continuation_elaborator
+             g
+             (tm_star ctxt (comp_pre c1))
+             g
+             (tm_star (open_term' (comp_post c1) unit_const 0) ctxt)) =
+  let c1 = with_st_comp c1 { st_comp_of_comp c1 with post = open_term' (comp_post c1) unit_const 0 } in
+  let e1_typing: st_typing g e1 c1 = RU.magic () in
+  continuation_elaborator_with_bind_nondep #g ctxt #c1 #e1 e1_typing ctxt_pre1_typing
+
+let cont_elab_with_bind_nondep_unit (#g:env)
+  (#c1:comp_st{comp_res c1 == tm_unit })
+  (#e1:st_term)
+  (e1_typing:st_typing g e1 c1)
+  (pre1_typing:tot_typing g (comp_pre c1) tm_slprop)
+  : T.Tac (cont_elab
+             g
+             [Unknown (comp_pre c1)]
+             g
+             [Unknown (open_term' (comp_post c1) unit_const 0)]) =
+  fun frame posth t ->
+    let h1: tot_typing g (tm_star (elab_slprops frame) (comp_pre c1)) tm_slprop = RU.magic () in
+    let h2: slprop_equiv g
+        (tm_star (elab_slprops frame) (comp_pre c1))
+        (elab_slprops (frame @ [Unknown (comp_pre c1)])) = RU.magic () in
+    let h3: slprop_equiv g
+        (tm_star (open_term' (comp_post c1) unit_const 0) (elab_slprops frame))
+        (elab_slprops (frame @
+              [Unknown (open_term' (comp_post c1) unit_const 0)])) = RU.magic () in
+    k_elab_equiv (continuation_elaborator_with_bind_nondep_unit (elab_slprops frame) e1_typing h1)
+      h2 h3 posth t
 
 let tot_typing_tm_unit (g: env) : tot_typing g tm_unit (tm_type u0) = RU.magic ()
 
@@ -441,7 +480,7 @@ let elim_first' (g: env) (ctxt0 goals: list slprop_view)
       match k c with
       | Some (| g', ctxt', goals', solved, res |) ->
         assert goals' == [];
-        Some (| g', List.rev ctxt_left_rev @ ctxt' @ ctxt, goals, solved, fun g'' ->
+        Some (| g', List.rev ctxt_left_rev @ ctxt' @ ctxt, goals, solved, fun (g'': env { env_extends g'' g' }) ->
           let before, after = res g'' in
           let h1: slprop_equiv g (elab_slprops ((List.Tot.Base.rev ctxt_left_rev @ ctxt) @ [c])) (elab_slprops ctxt0) = RU.magic () in
           let h2: slprop_equiv g' (elab_slprops ((List.Tot.Base.rev ctxt_left_rev @ ctxt) @ solved @ ctxt'))
@@ -753,6 +792,22 @@ let prove_atom (g: env) (ctxt: list slprop_view) (allow_amb: bool) (goal: slprop
     |)
   | _ -> None
 
+noeq type penv = {
+  penv_env: env;
+  penv_plems: plems;
+  penv_allow_amb: bool;
+
+  // for loop detection when applying intro lemmas
+  penv_stack: list (R.name & list term);
+}
+
+let mk_penv (g: env) (allow_amb: bool) : T.Tac (pg:penv { pg.penv_env == g }) = {
+  penv_env = g;
+  penv_allow_amb = allow_amb;
+  penv_plems = build_plems g;
+  penv_stack = [];
+}
+
 let rec apply_with_uvars (g:env) (t:typ) (v:term) : T.Tac (typ & term) =
   match R.inspect_ln_unascribe t with
   | R.Tv_Arrow b c -> (
@@ -778,6 +833,7 @@ let try_apply_elim_lemma (g: env) (lid: R.name) (i: nat) (ctxt: slprop_view) :
   let ty, t = apply_with_uvars g ty t in
   match Pulse.Readback.readback_comp ty with
   | Some (C_STGhost inames { pre; post; res; u }) ->
+    let c = C_STGhost inames { pre; post; res; u } in
     assume res == tm_unit;
     (match inspect_slprop g pre, i with
     | [pre'], 0 -> // only support elimination rules with single pre
@@ -788,17 +844,15 @@ let try_apply_elim_lemma (g: env) (lid: R.name) (i: nat) (ctxt: slprop_view) :
         let post' = open_term' post unit_const 0 in
         Some (| g, [Unknown post'], [], [], fun g'' ->
           let (| eff, typing |) = core_check_term_at_type g'' t ty in
-          let c = C_STGhost inames { pre; post; res; u } in
           let t' = wtag (Some STT_Ghost) (Tm_ST { t; args=[] }) in
           let ni: non_informative g'' c = admit () in
           let typing: st_typing g'' t' c = T_STGhost g'' t c typing ni in
-          let c = C_STGhost inames { pre; post = post'; res; u } in
-          let typing: st_typing g'' t' c = assume post == post'; typing in
-          (fun frame posth t ->
-            let h1: tot_typing g'' (tm_star (elab_slprops frame) (comp_pre c)) tm_slprop = admit () in
-            let h2: slprop_equiv g'' (tm_star (elab_slprops frame) (comp_pre c)) (elab_slprops (frame @ [ctxt])) = admit () in
-            let h3: slprop_equiv g'' (tm_star (comp_post c) (elab_slprops frame)) (elab_slprops (frame @ [] @ [Unknown post'])) = admit () in
-            k_elab_equiv (continuation_elaborator_with_bind_nondep (elab_slprops frame) typing h1) h2 h3 posth t),
+          let h1: tot_typing g'' (comp_pre c) tm_slprop = RU.magic () in
+          let h2: slprop_equiv g'' (elab_slprops [Unknown (comp_pre c)]) (elab_slprops [ctxt]) =
+            assume elab_slprop ctxt == pre; VE_Refl _ _ in
+          let h3: slprop_equiv g'' (elab_slprops [Unknown (open_term' (comp_post c) unit_const 0)])
+            (elab_slprops ([] @ [Unknown post'])) = VE_Refl _ _ in
+          cont_elab_equiv (cont_elab_with_bind_nondep_unit typing h1) h2 h3,
           cont_elab_refl g'' ([] @ []) [] (VE_Refl _ _) |)
       ) else
         None
@@ -818,6 +872,7 @@ let try_apply_eager_intro_lemma (g: env) (lid: R.name) (i: nat) ctxt (goal: slpr
   let ty, t = apply_with_uvars g ty t in
   match Pulse.Readback.readback_comp ty with
   | Some (C_STGhost inames { pre; post; res; u }) ->
+    let c = C_STGhost inames { pre; post; res; u } in
     assume res == tm_unit;
     let post' = open_term' post unit_const 0 in
     (match inspect_slprop g post', i with
@@ -828,18 +883,13 @@ let try_apply_eager_intro_lemma (g: env) (lid: R.name) (i: nat) ctxt (goal: slpr
         debug_prover g (fun _ -> Printf.sprintf "try_apply_eager_intro_lemma: unified %s and %s, result is %s\n" (show post) (show (elab_slprop goal)) (show ok));
         Some (| g, ctxt, [Unknown pre], [], fun g'' ->
           let (| eff, typing |) = core_check_term_at_type g'' t ty in
-          let c = C_STGhost inames { pre; post; res; u } in
           let t' = wtag (Some STT_Ghost) (Tm_ST { t; args=[] }) in
           let ni: non_informative g'' c = admit () in
           let typing: st_typing g'' t' c = T_STGhost g'' t c typing ni in
-          let c = C_STGhost inames { pre; post = post'; res; u } in
-          let typing: st_typing g'' t' c = assume post == post'; typing in
-          cont_elab_refl g'' _ _ (VE_Refl _ _),
-          (fun frame posth t ->
-            let h1: tot_typing g'' (tm_star (elab_slprops frame) (comp_pre c)) tm_slprop = admit () in
-            let h2: slprop_equiv g'' (tm_star (elab_slprops frame) (comp_pre c)) (elab_slprops (frame @ [] @ [Unknown pre])) = admit () in
-            let h3: slprop_equiv g'' (tm_star (comp_post c) (elab_slprops frame)) (elab_slprops (frame @ [goal])) = admit () in
-            k_elab_equiv (continuation_elaborator_with_bind_nondep (elab_slprops frame) typing h1) h2 h3 posth t)
+          let h1: tot_typing g'' (comp_pre c) tm_slprop = RU.magic () in
+          let h2: slprop_equiv g'' (elab_slprops [Unknown (comp_pre c)]) (elab_slprops ([] @ [Unknown pre])) = VE_Refl _ _ in
+          let h3: slprop_equiv g'' (elab_slprops [Unknown (open_term' (comp_post c) unit_const 0)]) (elab_slprops [goal]) = VE_Refl _ _ in cont_elab_refl g'' _ _ (VE_Refl _ _),
+          cont_elab_equiv (cont_elab_with_bind_nondep_unit typing h1) h2 h3
         |)
       ) else
         None
@@ -847,29 +897,144 @@ let try_apply_eager_intro_lemma (g: env) (lid: R.name) (i: nat) ctxt (goal: slpr
   | _ ->
     None
 
-let eager_elim_lemma_step (g:env) (plems: plems) (ctxt: slprop_view) :
-    T.Tac (option (prover_result_nogoals g [ctxt])) =
+let eager_elim_lemma_step (g:penv) (ctxt: slprop_view) :
+    T.Tac (option (prover_result_nogoals g.penv_env [ctxt])) =
   match ctxt with
   | Atom hd mkeys _ ->
     T.tryPick (fun plem ->
       if plem.plem_kind <> EagerElim then None else
       if plem.plem_prop_head <> hd then None else
-      try_apply_elim_lemma g plem.plem_lid plem.plem_prop_idx ctxt
-    ) plems
+      try_apply_elim_lemma g.penv_env plem.plem_lid plem.plem_prop_idx ctxt
+    ) g.penv_plems
   | _ -> None
 
-let eager_intro_lemma_step (g:env) (plems: plems) (ctxt: list slprop_view) (goal: slprop_view) :
-    T.Tac (option (prover_result g ctxt [goal])) =
+let eager_intro_lemma_step (g:penv) (ctxt: list slprop_view) (goal: slprop_view) :
+    T.Tac (option (prover_result g.penv_env ctxt [goal])) =
   match goal with
   | Atom hd mkeys _ ->
     T.tryPick (fun plem ->
       if plem.plem_kind <> EagerIntro then None else
       if plem.plem_prop_head <> hd then None else
-      (debug_prover g (fun _ -> Printf.sprintf "eager_intro_lemma_step %s %s\n" (show plem.plem_lid) (show goal));
-      try_apply_eager_intro_lemma g plem.plem_lid plem.plem_prop_idx ctxt goal
-      )
-    ) plems
+      try_apply_eager_intro_lemma g.penv_env plem.plem_lid plem.plem_prop_idx ctxt goal
+    ) g.penv_plems
   | _ -> None
+
+let already_in_stack (g:penv) stackelem : T.Tac bool =
+  let (hd0, ts0) = stackelem in
+  T.existsb (fun (hd, ts) ->
+    if hd <> hd0 then false else
+    T.zip ts ts0 |> forallb (fun (t, t0) -> T.term_eq t t0)
+  ) g.penv_stack
+
+let prover_result_is_solved #g #ctxt #goals (res: prover_result g ctxt goals) : bool =
+  let (| g', ctxt', goals', solved, k |) = res in
+  match goals' with [] -> true | _ -> false
+
+let prover_result_solved g ctxt goals =
+  res: prover_result g ctxt goals { prover_result_is_solved res }
+
+let prover_result_solved_unpack #g #ctxt #goals (res: prover_result_solved g ctxt goals) :
+    g':env { env_extends g' g } &
+    ctxt': list slprop_view &
+    cont_elab g ctxt g' (ctxt' @ goals) =
+  let (| g', ctxt', goals', solved, k |) = res in
+  (| g', ctxt', cont_elab_thunk fun _ ->
+    let k1, k2 = k g' in
+    let h: slprop_equiv g' (elab_slprops (solved @ ctxt')) (elab_slprops (ctxt' @ solved @ goals')) = RU.magic () in
+    cont_elab_trans k1 (cont_elab_frame k2 ctxt') h |)
+
+let try_apply_intro_lemma (g: env) (lid: R.name) (i: nat) ctxt (goal: slprop_view) :
+    T.Tac (option (
+      g': env &
+      subgoals: list slprop_view &
+      (res:prover_result_solved g' ctxt subgoals ->
+        T.Tac (prover_result g ctxt [goal]))
+    )) =
+  let do_match goal ctxt =
+    match goal, ctxt with
+    | Atom goal_hd goal_mkeys goal, Atom ctxt_hd ctxt_mkeys ctxt ->
+      debug_prover g (fun _ -> Printf.sprintf "do_match:\n%s and\n%s\n" (show goal_mkeys) (show ctxt_mkeys));
+      do_match_mkeys g goal goal_mkeys ctxt ctxt_mkeys
+    | _ -> false in
+  let t, ty, _ = tc_term_phase1 g (R.pack_ln <| R.Tv_FVar <| R.pack_fv lid) in
+  let ty, t = apply_with_uvars g ty t in
+  match Pulse.Readback.readback_comp ty with
+  | Some (C_STGhost inames { pre; post; res; u }) ->
+    assume res == tm_unit;
+    let post' = open_term' post unit_const 0 in
+    let post'' = inspect_slprop g post' in
+    if i >= List.length post'' then None else
+    let post''_before, post''_i, post''_after = List.split3 post'' i in
+    let post''_rest = post''_before @ post''_after in
+    if do_match goal post''_i then (
+      debug_prover g (fun _ -> Printf.sprintf "try_apply_intro_lemma: applying %s by unifying %s and %s\n" (show lid) (show post) (show (elab_slprop goal)));
+      let ok = teq_nosmt_force_args (elab_env g) post' (elab_slprop goal) false in
+      debug_prover g (fun _ -> Printf.sprintf "try_apply_intro_lemma: unified %s and %s, result is %s\n" (show post) (show (elab_slprop goal)) (show ok));
+      Some (| g, [Unknown pre], fun subresult ->
+        let (| g', ctxt', k |) = prover_result_solved_unpack subresult in
+        (| g', ctxt' @ post''_rest, [], [goal], fun (g'': env { env_extends g'' g' }) ->
+          let c = C_STGhost inames { pre; post; res; u } in
+          let (| eff, typing |) = core_check_term_at_type g'' t ty in
+          let t' = wtag (Some STT_Ghost) (Tm_ST { t; args=[] }) in
+          let ni: non_informative g'' c = admit () in
+          let typing: st_typing g'' t' c = T_STGhost g'' t c typing ni in
+          let h1: tot_typing g'' (comp_pre c) tm_slprop = RU.magic () in
+          let h2: slprop_equiv g''
+            (elab_slprops (ctxt' @ [Unknown (open_term' (comp_post c) unit_const 0)]))
+            (elab_slprops ([goal] @ ctxt' @ post''_rest)) = RU.magic () in
+          cont_elab_trans k
+            (cont_elab_equiv (cont_elab_frame (cont_elab_with_bind_nondep_unit typing h1) ctxt')
+              (VE_Refl _ _) h2)
+            (VE_Refl _ _),
+          cont_elab_refl _ _ _ (VE_Refl _ _)
+          |)
+        <: T.Tac (prover_result g ctxt [goal])
+        |)
+    ) else
+      None
+  | _ ->
+    None
+
+
+let intro_lemma_main (g:penv) (ctxt: list slprop_view) (goal: slprop_view) :
+    T.Tac (option (
+      pg': penv &
+      subgoals: list slprop_view &
+      (res:prover_result_solved pg'.penv_env ctxt subgoals ->
+        T.Tac (prover_result g.penv_env ctxt [goal]))
+    )) =
+  match goal with
+  | Atom (FVarHead fv) mkeys p ->
+    let hd = FVarHead fv in
+    let breadcrumb = (fv, (match mkeys with Some mkeys -> mkeys | _ -> [p])) in
+    T.tryPick (fun plem ->
+      if plem.plem_kind <> Intro then None else
+      if plem.plem_prop_head <> hd then None else
+      if already_in_stack g breadcrumb then None else
+      (debug_prover g.penv_env (fun _ -> Printf.sprintf "intro_lemma_main: trying to apply %s to %s\n" (show plem.plem_lid) (show p));
+      match try_apply_intro_lemma g.penv_env plem.plem_lid plem.plem_prop_idx ctxt goal with
+      | Some (| g', subgoals, k |) ->
+        let g' = { g with penv_env = g'; penv_stack = breadcrumb :: g.penv_stack } in
+        Some ((| g', subgoals, k |)
+        <: (pg': penv &
+          subgoals: list slprop_view &
+          (res:prover_result_solved pg'.penv_env ctxt subgoals ->
+            T.Tac (prover_result g.penv_env ctxt [goal]))))
+      | None -> None)
+    ) g.penv_plems
+  | _ -> None
+
+let intro_lemma_step
+    (subprover : (pg: penv -> ctxt: list slprop_view -> goals: list slprop_view ->
+      T.Tac (prover_result pg.penv_env ctxt goals)))
+    (g:penv) (ctxt: list slprop_view) (goal: slprop_view) :
+    T.Tac (option (prover_result g.penv_env ctxt [goal])) =
+  match intro_lemma_main g ctxt goal with
+  | None -> None
+  | Some (| pg', subgoals, k |) ->
+    let subresult = subprover pg' ctxt subgoals in
+    if not (prover_result_is_solved subresult) then None else
+    Some (k subresult)
 
 let rec first_some #a (ks: list (unit -> T.Tac (option a))) : T.Tac (option a) =
   match ks with
@@ -882,7 +1047,8 @@ let rec first_some #a (ks: list (unit -> T.Tac (option a))) : T.Tac (option a) =
 let show_slprops ps =
   String.concat "\n" (T.map (fun p -> show (elab_slprop p)) ps)
 
-let rec try_prove_core (g: env) (plems: plems) (ctxt goals: list slprop_view) allow_amb : T.Tac (prover_result g ctxt goals) =
+let rec try_prove_core (pg: penv) (ctxt goals: list slprop_view) : T.Tac (prover_result pg.penv_env ctxt goals) =
+  let g = pg.penv_env in
   let noop () : prover_result g ctxt goals =
     (| g, ctxt, goals, [], fun g'' ->
       cont_elab_refl g _ _ (VE_Refl _ _),
@@ -898,23 +1064,27 @@ let rec try_prove_core (g: env) (plems: plems) (ctxt goals: list slprop_view) al
         (fun _ -> elim_first g ctxt goals (elim_pure_step g));
         (fun _ -> elim_first g ctxt goals (elim_with_pure_step g));
         (fun _ -> elim_first g ctxt goals (elim_exists_step g));
-        (fun _ -> elim_first g ctxt goals (eager_elim_lemma_step g plems));
+        (fun _ -> elim_first g ctxt goals (eager_elim_lemma_step pg));
         (fun _ -> prove_first g ctxt goals (prove_pure g ctxt true));
         (fun _ -> prove_first g ctxt goals (prove_with_pure g ctxt true));
         (fun _ -> prove_first g ctxt goals (prove_exists g ctxt));
         (fun _ -> prove_first g ctxt goals (unpack_and_norm_goal g ctxt));
         (fun _ -> prove_first g ctxt goals (prove_atom_unamb g ctxt));
-        (fun _ -> prove_first g ctxt goals (prove_atom g ctxt allow_amb));
+        (fun _ -> prove_first g ctxt goals (prove_atom g ctxt pg.penv_allow_amb));
         (fun _ -> prove_first g ctxt goals (prove_pure g ctxt false));
         (fun _ -> prove_first g ctxt goals (prove_with_pure g ctxt false));
-        (fun _ -> prove_first g ctxt goals (eager_intro_lemma_step g plems ctxt));
+        (fun _ -> prove_first g ctxt goals (eager_intro_lemma_step pg ctxt));
+
+        (fun _ -> prove_first g ctxt goals (intro_lemma_step try_prove_core { pg with penv_allow_amb = false } ctxt));
       ] in
     match step with
     | Some step ->
       let (| g1, ctxt1, goals1, solved1, k1 |) = step in
-      let step2 = try_prove_core g1 plems ctxt1 goals1 allow_amb in
+      let pg1 = { pg with penv_env = g1 } in
+      let step2 = try_prove_core pg1 ctxt1 goals1 in
       prover_result_join step step2
-    | None -> noop ()
+    | None ->
+      noop ()
 
 let try_prove (g: env) (ctxt goals: slprop) allow_amb : T.Tac (prover_result g [Unknown ctxt] [Unknown goals]) =
   let ctxt = RU.deep_compress_safe ctxt in
@@ -922,9 +1092,9 @@ let try_prove (g: env) (ctxt goals: slprop) allow_amb : T.Tac (prover_result g [
   let ss = Pulse.Checker.Prover.RewritesTo.get_subst_from_env g in
   let ctxt' = Pulse.Checker.Prover.Substs.ss_term ctxt ss in
   let goals' = Pulse.Checker.Prover.Substs.ss_term goals ss in
-  let plems = build_plems g in
-  let (| g1, ctxt1, goals1, solved1, k1 |) = try_prove_core g plems [Unknown ctxt'] [Unknown goals'] allow_amb in
-  (| g1, ctxt1, goals1, solved1, fun g2 ->
+  let pg = mk_penv g allow_amb in
+  let (| g1, ctxt1, goals1, solved1, k1 |) = try_prove_core pg [Unknown ctxt'] [Unknown goals'] in
+  (| g1, ctxt1, goals1, solved1, fun (g2: env { env_extends g2 g1 }) ->
     let before, after = k1 g2 in
     let h1: slprop_equiv g ctxt' ctxt = RU.magic () in
     let h2: slprop_equiv g2 goals' goals = RU.magic () in
@@ -1019,8 +1189,9 @@ let try_frame_pre (allow_ambiguous : bool) (#g:env)
   let h1: tot_typing g' ctxt' tm_slprop = RU.magic() in // weakening from to g'
   checker_result_for_st_typing (k _ (| t, add_frame c ctxt', T_Frame _ _ _ ctxt' h1 d |)) res_ppname
 
-let rec try_elim_core (g: env) (plems: plems) (ctxt: list slprop_view) :
-    T.Tac (prover_result_nogoals g ctxt) =
+let rec try_elim_core (pg: penv) (ctxt: list slprop_view) :
+    T.Tac (prover_result_nogoals pg.penv_env ctxt) =
+  let g = pg.penv_env in
   let noop () : prover_result g ctxt [] =
     (| g, ctxt, [], [], fun g'' ->
       cont_elab_refl g _ _ (VE_Refl _ _),
@@ -1033,12 +1204,13 @@ let rec try_elim_core (g: env) (plems: plems) (ctxt: list slprop_view) :
       (fun _ -> elim_first' g ctxt [] (elim_pure_step g));
       (fun _ -> elim_first' g ctxt [] (elim_with_pure_step g));
       (fun _ -> elim_first' g ctxt [] (elim_exists_step g));
-      (fun _ -> elim_first' g ctxt [] (eager_elim_lemma_step g plems));
+      (fun _ -> elim_first' g ctxt [] (eager_elim_lemma_step pg));
     ] in
   match step with
   | Some step ->
     let (| g1, ctxt1, goals1, solved1, k1 |) = step in
-    let step2 = try_elim_core g1 plems ctxt1 in
+    let pg1 = { pg with penv_env = g1 } in
+    let step2 = try_elim_core pg1 ctxt1 in
     prover_result_join step step2
   | None -> noop ()
 
@@ -1050,8 +1222,8 @@ let elim_exists_and_pure (#g:env) (#ctxt:slprop)
             continuation_elaborator g ctxt g' ctxt') =
   let ss = Pulse.Checker.Prover.RewritesTo.get_subst_from_env g in
   let ctxt' = Pulse.Checker.Prover.Substs.ss_term ctxt ss in
-  let plems = build_plems g in
-  let (| g', ctxt'', goals'', solved, k |) = try_elim_core g plems [Unknown ctxt'] in
+  let pg = mk_penv g false in
+  let (| g', ctxt'', goals'', solved, k |) = try_elim_core pg [Unknown ctxt'] in
   let h: tot_typing g' (elab_slprops ctxt'') tm_slprop = RU.magic () in // TODO thread through prover
   (| g', elab_slprops ctxt'', h, fun post_hint post_hint_typ ->
     let h1: slprop_equiv g (elab_slprops ([] @ [Unknown ctxt'])) ctxt = (RU.magic() <: slprop_equiv g ctxt' ctxt) in
