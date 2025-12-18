@@ -143,12 +143,24 @@ let eager_elim_attr = mk_pulse_core_attr "pulse_eager_elim"
 let eager_intro_attr = mk_pulse_core_attr "pulse_eager_intro"
 let intro_attr = mk_pulse_core_attr "pulse_intro"
 
-let build_plems_from_lemma (g: env) (kind: plem_kind_t) (se: R.sigelt) : T.Tac (list plem) =
+let get_fvs g (se: R.sigelt) : T.Tac (list (R.fv & list R.univ_name & R.term)) =
   match R.inspect_sigelt se with
-  | R.Sg_Let _ [lb] -> (
-    let lb = R.inspect_lb lb in
-    debug_prover g (fun _ -> Printf.sprintf "build_plems_from_lemma %s\n" (show (R.inspect_fv lb.lb_fv)));
-    let args, ty = R.collect_arr_ln_bs lb.lb_typ in
+  | R.Sg_Let _ lbs ->
+    T.map (fun lb ->
+        let lb = R.inspect_lb lb in
+        lb.lb_fv, lb.lb_us, lb.lb_typ)
+      lbs
+  | R.Sg_Val nm uvs typ ->
+    if Some? (RU.try_lookup_lid (fstar_env g) nm) then
+      [R.pack_fv nm, uvs, typ]
+    else
+      []
+  | R.Unk | R.Sg_Inductive .. -> []
+
+let build_plems_from_lemma (g: env) (kind: plem_kind_t) (se: R.sigelt) : T.Tac (list plem) =
+  T.concatMap (fun (fv, uvs, typ) ->
+    debug_prover g (fun _ -> Printf.sprintf "build_plems_from_lemma %s\n" (show (R.inspect_fv fv)));
+    let args, ty = R.collect_arr_ln_bs typ in
     match R.inspect_comp ty with
     | R.C_Total ty | R.C_GTotal ty -> (
       match Pulse.Readback.readback_comp ty with
@@ -162,7 +174,7 @@ let build_plems_from_lemma (g: env) (kind: plem_kind_t) (se: R.sigelt) : T.Tac (
               match p with
               | Atom (FVarHead h) mkeys p ->
                 [{
-                  plem_lid = R.inspect_fv lb.lb_fv;
+                  plem_lid = R.inspect_fv fv;
                   plem_kind = kind;
                   plem_prop_head = FVarHead h;
                   plem_prop_idx = i;
@@ -175,7 +187,7 @@ let build_plems_from_lemma (g: env) (kind: plem_kind_t) (se: R.sigelt) : T.Tac (
       | _ -> []
     )
     | _ -> [])
-  | _ -> []
+  (get_fvs g se)
 
 let build_plems (g: env) : T.Tac plems =
   debug_prover g (fun _ -> "build_plems\n");

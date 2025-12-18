@@ -277,3 +277,6 @@ let universe_of_well_typed_term g t
     with
     | _ ->
       None
+
+let try_lookup_lid g lid =
+  FStarC_TypeChecker_Env.try_lookup_lid g (FStarC_Ident.lid_of_path lid FStarC_Range.dummyRange)

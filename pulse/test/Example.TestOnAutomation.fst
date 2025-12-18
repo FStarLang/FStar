@@ -3,12 +3,6 @@ module Example.TestOnAutomation
 open Pulse
 open Pulse.Lib.Send
 
-[@@pulse_eager_intro] let on_emp_intro = on_emp_intro
-[@@pulse_eager_elim] let on_emp_elim = on_emp_elim
-[@@pulse_eager_intro] let on_pure_intro = on_pure_intro
-[@@pulse_eager_elim] let on_pure_elim = on_pure_elim
-[@@pulse_eager_intro] let on_star_intro #l = on_star_intro #l
-[@@pulse_eager_elim] let on_star_elim #l = on_star_elim #l
 [@@pulse_eager_intro] let on_exists_intro #l = on_exists_intro #l
 [@@pulse_eager_intro] let on_exists_intro2 #l = on_exists_intro2 #l
 [@@pulse_eager_intro] let on_exists_intro3 #l = on_exists_intro3 #l
