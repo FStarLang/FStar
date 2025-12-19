@@ -22,14 +22,14 @@ open Pulse.Syntax.Pure
 
 module RT = FStar.Reflection.Typing
 
-let return_post_with_eq (u:universe) (a:term) (e:term) (p:term) (x:var) : term =
+let return_post_with_eq (u:universe) (a:term) (e:term) (p:term) (x:var) : GTot term =
   let x_tm = RT.var_as_term x in
   let eq2_tm = mk_eq2 u a x_tm e in
   let p_app_x = pack_ln (Tv_App p (x_tm, Q_Explicit)) in  
   let star_tm = mk_star p_app_x (mk_pure eq2_tm) in
   mk_abs a Q_Explicit (RT.subst_term star_tm [ RT.ND x 0 ])
 
-let return_stt_comp (u:universe) (a:term) (e:term) (p:term) (x:var) : term =
+let return_stt_comp (u:universe) (a:term) (e:term) (p:term) (x:var) : GTot term =
   mk_stt_comp u a
     (pack_ln (Tv_App p (e, Q_Explicit)))
     (return_post_with_eq u a e p x)
@@ -67,7 +67,7 @@ val return_stt_noeq_typing
             (return_stt_noeq_comp u a x p))
 
 let neutral_fv = pack_ln (Tv_FVar (pack_fv neutral_lid))
-let return_stt_atomic_comp (u:universe) (a:term) (e:term) (p:term) (x:var) : term =
+let return_stt_atomic_comp (u:universe) (a:term) (e:term) (p:term) (x:var) : GTot term =
   mk_stt_atomic_comp neutral_fv u a tm_emp_inames
     (pack_ln (Tv_App p (e, Q_Explicit)))
     (return_post_with_eq u a e p x)
@@ -104,7 +104,7 @@ val return_stt_atomic_noeq_typing
             (mk_stt_atomic_return_noeq u a x p)
             (return_stt_atomic_noeq_comp u a x p))
 
-let return_stt_ghost_comp (u:universe) (a:term) (e:term) (p:term) (x:var) : term =
+let return_stt_ghost_comp (u:universe) (a:term) (e:term) (p:term) (x:var) : GTot term =
   mk_stt_ghost_comp u a tm_emp_inames
     (pack_ln (Tv_App p (e, Q_Explicit)))
     (return_post_with_eq u a e p x)
@@ -173,7 +173,7 @@ val while_typing
       (mk_stt_comp uzero unit_tm (mk_exists uzero bool_tm inv)
          (mk_abs unit_tm Q_Explicit (pack_ln (Tv_App inv (false_tm, Q_Explicit)))))
 
-let par_post (u:universe) (aL aR:term) (postL postR:term) (x:var) : term =
+let par_post (u:universe) (aL aR:term) (postL postR:term) (x:var) : GTot term =
   let x_tm = RT.var_as_term x in
   let postL = pack_ln (Tv_App postL (mk_fst u u aL aR x_tm, Q_Explicit)) in
   let postR = pack_ln (Tv_App postR (mk_snd u u aL aR x_tm, Q_Explicit)) in
