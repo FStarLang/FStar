@@ -83,7 +83,7 @@ let return_soundness
     | STT_Ghost -> elab_stghost_equiv _ c _ _ pre_eq (RT.Rel_refl _ _ _)  in
 
   let comp_equiv_eq (_:unit{use_eq == true})
-    : (match ctag with
+    : GTot (match ctag with
        | STT -> RT.equiv (elab_env g)
                          (WT.return_stt_comp u t e rpost_abs x)
                          (elab_comp c)

@@ -475,10 +475,10 @@ let rec subst_pat (p:pattern) (ss:subst)
     | Pat_Dot_Term None ->
       p
     | Pat_Var n t -> 
-      let t = RU.map_seal t (fun t -> RT.subst_term t ss) in
+      let t = RU.map_seal t (fun t -> subst_host_term t ss) in
       Pat_Var n t
     | Pat_Dot_Term (Some e) ->
-      Pat_Dot_Term (Some (subst_term e ss))
+      Pat_Dot_Term (Some (subst_host_term e ss))
     | Pat_Cons d args ->
       let args = subst_pat_args args ss in
       Pat_Cons d args

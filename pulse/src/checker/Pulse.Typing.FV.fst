@@ -24,7 +24,7 @@ open Pulse.Typing
 open Pulse.Elaborate
 open Pulse.Soundness.Common
 
-let vars_of_rt_env (g:R.env) = Set.intension (fun x -> Some? (RT.lookup_bvar g x))
+// let vars_of_rt_env (g:R.env) = Set.intension (fun x -> Some? (RT.lookup_bvar g x))
 
 let freevars_close_term_host_term (t:term) (x:var) (i:index)
   : Lemma
@@ -249,7 +249,8 @@ let freevars_open_term_both (x:var) (t:term)
 let freevars_close_st_term e x i = freevars_close_st_term' e x i
 
 let contains_r (g:R.env) (x:var) = Some? (RT.lookup_bvar g x)
-let vars_of_env_r (g:R.env) = Set.intension (contains_r g)
+assume val vars_of_env_r (g:R.env) :
+  s:Set.set var { forall x. Set.mem x s <==> contains_r g x } // = Set.intension (contains_r g)
 
 assume
 val refl_typing_freevars (#g:R.env) (#e:R.term) (#t:R.term) (#eff:_) 
