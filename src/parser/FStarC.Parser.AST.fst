@@ -183,7 +183,8 @@ let mkListLit r elts =
 let mkSeqLit r elts =
   mk_term (SeqLiteral elts) r Expr
 
-let unit_const r = mk_term(Const Const_unit) r Expr
+let unit_const r = mk_term (Const Const_unit) r Expr
+let unit_type  r = mk_term (Var (Ident.lid_of_str (`%unit))) r Expr
 
 let ml_comp t =
     let lid = C.effect_ML_lid () in
@@ -1007,12 +1008,14 @@ instance pretty_quote_kind : pretty quote_kind = {
 
 let ctor (n: string) (args: list document) =
   nest 2 (group (parens (flow (break_ 1) (doc_of_string n :: args))))
+// let ctor (n: string) (arg: document) : document =
+//   nest 2 (group (parens (doc_of_string n ^/^ arg)))
 
 let pp_list' (#a:Type) (f: a -> document) (xs: list a) : document =
   (pp_list a { pp = f }).pp xs // hack
 
 instance showable_arg_qualifier : showable arg_qualifier = {
-  show = function
+  show = function 
     | Implicit -> "Implicit"
     | Equality -> "Equality"
     | Meta i -> "Meta"
@@ -1057,7 +1060,7 @@ let rec pp_term (t:term) : document =
         ctor "LetOpBinding" [pp i; pp_pattern p; pp_term b]
       in
       ctor "LetOperator" [pp_list' pp_letopbinding lbs; pp_term body]
-  | LetOpen (lid, t) ->
+  | LetOpen (lid, t) -> 
       ctor "LetOpen" [pp lid; pp_term t]
   | LetOpenRecord (t1, t2, t3) ->
       ctor "LetOpenRecord" [pp_term t1; pp_term t2; pp_term t3]
@@ -1234,7 +1237,7 @@ instance pretty_constructor_payload : pretty constructor_payload = { pp = pp_con
 
 let pp_tycon (tc : tycon) : document =
   match tc with
-  | TyconAbstract (i, bs, knd) ->
+  | TyconAbstract (i, bs, knd) -> 
     ctor "TyconAbstract" [pp i; pp bs; pp knd]
   | TyconAbbrev (i, bs, knd, t) ->
     ctor "TyconAbbrev" [pp i; pp bs; pp knd; doc_of_string "_"]
@@ -1264,7 +1267,7 @@ let pp_decl (d:decl) : document =
       let pp_pat_term (p, t) =
         ctor "PatTerm" [pp p; pp t] in
       ctor "TopLevelLet" [doc_of_string (show q); pp_list' pp_pat_term pats]
-  | Assume (i, t_opt) ->
+  | Assume (i, t_opt) -> 
       let pp_opt_term = function None -> doc_of_string "None" | Some t -> pp_term t in
       ctor "Assume" [pp i; pp_term t_opt]
   | Tycon (r, tps, tys) ->
