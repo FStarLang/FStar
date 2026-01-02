@@ -399,6 +399,16 @@ let shift_right (#n:pos) (a:int_t n{0 <= a}) (s:nat) : Tot (int_t n) =
 let shift_arithmetic_right (#n:pos) (a:int_t n) (s:nat) : Tot (int_t n) =
   from_vec (shift_arithmetic_right_vec #n (to_vec #n a) s)
 
+(* Rotate operators *)
+
+(** Rotate left *)
+let rotate_left (#n:pos) (a:int_t n) (s:nat) : Tot (int_t n) =
+  from_vec (rotate_left_vec #n (to_vec #n a) s)
+
+(** Rotate right *)
+let rotate_right (#n:pos) (a:int_t n) (s:nat) : Tot (int_t n) =
+  from_vec (rotate_right_vec #n (to_vec #n a) s)
+
 (* Shift operators lemmas *)
 val shift_left_lemma_1: #n:pos -> a:int_t n{0 <= a} -> s:nat -> i:nat{i < n && i >= n - s} ->
   Lemma (requires True)
@@ -434,3 +444,31 @@ val shift_arithmetic_right_lemma_2: #n:pos -> a:int_t n -> s:nat -> i:nat{i < n 
   Lemma (requires True)
         (ensures (nth (shift_arithmetic_right #n a s) i = nth #n a (i - s)))
 	[SMTPat (nth (shift_arithmetic_right #n a s) i)]
+
+(* Rotate operators lemmas *)
+val rotate_left_lemma: #n:pos -> a:int_t n -> s:nat -> i:nat{i < n} ->
+  Lemma (requires True)
+        (ensures (nth (rotate_left #n a s) i = nth #n a ((i + s) % n)))
+        [SMTPat (nth (rotate_left #n a s) i)]
+
+val rotate_right_lemma: #n:pos -> a:int_t n -> s:nat -> i:nat{i < n} ->
+  Lemma (requires True)
+        (ensures (nth (rotate_right #n a s) i = nth #n a ((i + n - (s % n)) % n)))
+
+(** Rotate left by n is identity *)
+val rotate_left_full_identity: #n:pos -> a:int_t n ->
+  Lemma (rotate_left #n a n = a)
+  [SMTPat (rotate_left #n a n)]
+
+(** Rotate right by n is identity *)
+val rotate_right_full_identity: #n:pos -> a:int_t n ->
+  Lemma (rotate_right #n a n = a)
+  [SMTPat (rotate_right #n a n)]
+
+(** Rotate left and right are inverses *)
+val rotate_left_right_inverse: #n:pos -> a:int_t n -> s:nat ->
+  Lemma (rotate_right #n (rotate_left #n a s) s = a)
+
+(** Rotate right and left are inverses *)
+val rotate_right_left_inverse: #n:pos -> a:int_t n -> s:nat ->
+  Lemma (rotate_left #n (rotate_right #n a s) s = a)

@@ -60,6 +60,19 @@ let shift_right n i  = M.shift_right n (Stdint.Uint32.to_int i)
 let shift_left  n i  = M.shift_left n (Stdint.Uint32.to_int i)
 let shift_arithmetic_right = shift_right
 
+(* Rotate operations - the shift amount is a uint32 *)
+let rotate_left a i =
+  let bits = Z.to_int n in
+  let i32 = Stdint.Uint32.to_int i in
+  let amount = i32 mod bits in
+  M.logor (M.shift_left a amount) (M.shift_right a (bits - amount))
+
+let rotate_right a i =
+  let bits = Z.to_int n in
+  let i32 = Stdint.Uint32.to_int i in
+  let amount = i32 mod bits in
+  M.logor (M.shift_right a amount) (M.shift_left a (bits - amount))
+
 (* Comparison operators *)
 let eq  (a:t) (b:t) : bool = a = b
 let ne  (a:t) (b:t) : bool = a <> b
