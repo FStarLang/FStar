@@ -10,7 +10,15 @@ ghost fn foo_demo ()
   ensures foo (pure (forall (x y: nat). x == y))
 {}
 
-[@@pulse_eager_intro]
+[@@pulse_eager_elim]
+ghost fn foo_elim (q: prop)
+  requires foo (pure q)
+  ensures pure q
+{
+  unfold foo;
+}
+
+[@@expect_failure [228]]
 ghost fn foo_intro (q: prop)
   requires pure q
   ensures foo (pure q)
@@ -18,12 +26,14 @@ ghost fn foo_intro (q: prop)
   fold foo (pure q);
 }
 
-[@@pulse_eager_elim]
-ghost fn foo_elim (q: prop)
-  requires foo (pure q)
-  ensures pure q
+[@@pulse_eager_intro]
+ghost fn foo_intro (q: prop)
+  requires pure q
+  ensures foo (pure q)
 {
-  unfold foo;
+  #set-options "--ext pulse:prover_lemmas=false" {
+    fold foo (pure q);
+  }
 }
 
 ghost fn foo_demo ()

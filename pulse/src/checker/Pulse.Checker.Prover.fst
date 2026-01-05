@@ -814,14 +814,21 @@ let prove_atom (g: env) (ctxt: list slprop_view) (allow_amb: bool) (goal: slprop
 noeq type penv = {
   penv_env: env;
   penv_plems: plems;
+  penv_plems_enabled: bool;
   penv_allow_amb: bool;
 
   // for loop detection when applying intro lemmas
   penv_stack: list (R.name & list term);
 }
 
+let prover_lemmas_enabled () : T.Tac bool =
+  match T.ext_getv "pulse:prover_lemmas" with
+  | "" | "true" -> true
+  | _ -> false
+
 let mk_penv (g: env) (allow_amb: bool) : T.Tac (pg:penv { pg.penv_env == g }) = {
   penv_env = g;
+  penv_plems_enabled = prover_lemmas_enabled ();
   penv_allow_amb = allow_amb;
   penv_plems = build_plems g;
   penv_stack = [];
@@ -928,6 +935,7 @@ let try_apply_eager_intro_lemma (g: env) (lid: R.name) (i: nat) ctxt (goal: slpr
 
 let eager_elim_lemma_step (g:penv) (ctxt: slprop_view) :
     T.Tac (option (prover_result_nogoals g.penv_env [ctxt])) =
+  if not g.penv_plems_enabled then None else
   match ctxt with
   | Atom hd mkeys _ ->
     T.tryPick (fun plem ->
@@ -939,6 +947,7 @@ let eager_elim_lemma_step (g:penv) (ctxt: slprop_view) :
 
 let eager_intro_lemma_step (g:penv) (ctxt: list slprop_view) (goal: slprop_view) :
     T.Tac (option (prover_result g.penv_env ctxt [goal])) =
+  if not g.penv_plems_enabled then None else
   match goal with
   | Atom hd mkeys _ ->
     T.tryPick (fun plem ->
@@ -1064,6 +1073,7 @@ let intro_lemma_step
       T.Tac (prover_result pg.penv_env ctxt goals)))
     (g:penv) (ctxt: list slprop_view) (goal: slprop_view) :
     T.Tac (option (prover_result g.penv_env ctxt [goal])) =
+  if not g.penv_plems_enabled then None else
   match intro_lemma_main g ctxt goal with
   | None -> None
   | Some (| pg', subgoals, k |) ->
