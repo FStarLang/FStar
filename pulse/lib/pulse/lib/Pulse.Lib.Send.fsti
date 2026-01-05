@@ -154,18 +154,6 @@ ghost fn on_exists_intro u#a #l (#a: Type u#a) (p: a -> slprop)
   requires literally (exists* x. on l (p x))
   ensures on l (exists* x. p x)
 
-// [@@pulse_eager_intro]
-ghost fn on_exists_intro2 u#a u#b #l (#a: Type u#a) (#b: Type u#b)
-    (p: (x:a -> y:b -> slprop))
-  requires literally (exists* (x:a) (y:b). on l (p x y))
-  ensures on l (exists* (x:a) (y:b). p x y)
-
-// [@@pulse_eager_intro]
-ghost fn on_exists_intro3 u#a u#b u#c #l (#a: Type u#a) (#b: Type u#b) (#c: Type u#c)
-    (p: (a -> b -> c -> slprop))
-  requires literally (exists* (x:a) (y:b) (z:c). on l (p x y z))
-  ensures on l (exists* (x:a) (y:b) (z:c). p x y z)
-
 // [@@pulse_eager_elim]
 ghost fn on_exists_elim u#a #l (#a: Type u#a) (p: a -> slprop)
   requires on l (exists* x. p x)

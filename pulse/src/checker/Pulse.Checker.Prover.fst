@@ -659,12 +659,15 @@ let check_slprop_equiv_ext r (g:env) (p q:slprop)
 let on_name = R.inspect_fv (R.pack_fv <| Pulse.Reflection.Util.mk_pulse_lib_core_lid "on")
 let on_head_id : head_id = FVarHead on_name
 
-let teq_nosmt_force_args (g: R.env) (x y: term) (fail_fast: bool) : Dv bool =
+let teq_phase1 (g: R.env) (a b: term) (force: bool) : Dv bool =
+  if force then RU.teq_nosmt_force_phase1 g a b else RU.teq_nosmt_phase1 g a b
+
+let teq_nosmt_args (g: R.env) (x y: term) (fail_fast: bool) (force: bool) : Dv bool =
   let rec go (xs ys: list R.argv) : Dv bool =
     match xs, ys with
     | [], [] -> true
     | (x,_)::xs, (y,_)::ys ->
-      if RU.teq_nosmt_force_phase1 g x y then
+      if teq_phase1 g x y force then
         go xs ys
       else (
         if not fail_fast then ignore (go xs ys);
@@ -692,6 +695,9 @@ let teq_nosmt_force_args (g: R.env) (x y: term) (fail_fast: bool) : Dv bool =
   )
   | _ -> 
     fallback ()
+
+let teq_nosmt_force_args (g: R.env) (x y: term) (fail_fast: bool) : Dv bool =
+  teq_nosmt_args g x y fail_fast true
 
 let is_unamb g (cands: list (int & slprop_view)) : T.Tac bool =
   match cands with
@@ -751,13 +757,13 @@ let prove_atom_unamb (g: env) (ctxt: list slprop_view) (goal: slprop_view) :
       <: T.Tac _ |)
   | _ -> None
 
-let do_match_mkeys g goal mkeys_goal ctxt mkeys_ctxt =
+let do_match_mkeys g goal mkeys_goal ctxt mkeys_ctxt force =
   with_uf_transaction (fun _ ->
     match mkeys_goal, mkeys_ctxt with
     | Some mkeys, Some mkeys' ->
-      T.zip mkeys mkeys' |> forallb (fun (a, b) -> RU.teq_nosmt_force_phase1 (elab_env g) a b)
+      T.zip mkeys mkeys' |> forallb (fun (a, b) -> teq_phase1 (elab_env g) a b force)
     | _, _ ->
-      teq_nosmt_force_args (elab_env g) ctxt goal true
+      teq_nosmt_args (elab_env g) ctxt goal true force
   )
 
 let prove_atom (g: env) (ctxt: list slprop_view) (allow_amb: bool) (goal: slprop_view) :
@@ -765,6 +771,7 @@ let prove_atom (g: env) (ctxt: list slprop_view) (allow_amb: bool) (goal: slprop
   match goal with
   | Atom hd mkeys goal ->
     let matches_mkeys (ctxt: slprop_view) : T.Tac bool =
+      let force = true in
       match ctxt with
       | Atom hd' mkeys' ctxt ->
         if hd <> hd' then false 
@@ -777,12 +784,12 @@ let prove_atom (g: env) (ctxt: list slprop_view) (allow_amb: bool) (goal: slprop
             match p1_view, p2_view with
             | [Atom hd1 mkeys1 p1], [Atom hd2 mkeys2 p2] ->
               if hd1 <> hd2 then false
-              else do_match_mkeys g goal mkeys1 ctxt mkeys2
-            | _ -> do_match_mkeys g goal mkeys ctxt mkeys'
+              else do_match_mkeys g goal mkeys1 ctxt mkeys2 force
+            | _ -> do_match_mkeys g goal mkeys ctxt mkeys' force
           )
-          | _ -> do_match_mkeys g goal mkeys ctxt mkeys'
+          | _ -> do_match_mkeys g goal mkeys ctxt mkeys' force
         )
-        else do_match_mkeys g goal mkeys ctxt mkeys'
+        else do_match_mkeys g goal mkeys ctxt mkeys' force
       | _ -> false 
     in
     let ictxt = List.Tot.mapi (fun i ctxt -> i, ctxt) ctxt in
@@ -838,9 +845,10 @@ let rec apply_with_uvars (g:env) (t:typ) (v:term) : T.Tac (typ & term) =
 let try_apply_elim_lemma (g: env) (lid: R.name) (i: nat) (ctxt: slprop_view) :
     T.Tac (option (prover_result_nogoals g [ctxt])) =
   let do_match goal ctxt =
+    let force = true in
     match goal, ctxt with
     | Atom goal_hd goal_mkeys goal, Atom ctxt_hd ctxt_mkeys ctxt ->
-      do_match_mkeys g goal goal_mkeys ctxt ctxt_mkeys
+      do_match_mkeys g goal goal_mkeys ctxt ctxt_mkeys force
     | _ -> false in
   let t, ty, _ = tc_term_phase1 g (R.pack_ln <| R.Tv_FVar <| R.pack_fv lid) in
   let ty, t = apply_with_uvars g ty t in
@@ -879,10 +887,11 @@ let try_apply_elim_lemma (g: env) (lid: R.name) (i: nat) (ctxt: slprop_view) :
 let try_apply_eager_intro_lemma (g: env) (lid: R.name) (i: nat) ctxt (goal: slprop_view) :
     T.Tac (option (prover_result g ctxt [goal])) =
   let do_match goal ctxt =
+    let force = false in
     match goal, ctxt with
     | Atom goal_hd goal_mkeys goal, Atom ctxt_hd ctxt_mkeys ctxt ->
       debug_prover g (fun _ -> Printf.sprintf "do_match:\n%s and\n%s\n" (show goal_mkeys) (show ctxt_mkeys));
-      do_match_mkeys g goal goal_mkeys ctxt ctxt_mkeys
+      do_match_mkeys g goal goal_mkeys ctxt ctxt_mkeys force
     | _ -> false in
   let t, ty, _ = tc_term_phase1 g (R.pack_ln <| R.Tv_FVar <| R.pack_fv lid) in
   let ty, t = apply_with_uvars g ty t in
@@ -893,7 +902,8 @@ let try_apply_eager_intro_lemma (g: env) (lid: R.name) (i: nat) ctxt (goal: slpr
     let post' = open_term' post unit_const 0 in
     (match inspect_slprop g post', i with
     | [post''], 0 -> // only support introduction rules with single post
-      if do_match goal post'' then (
+      debug_prover g (fun _ -> Printf.sprintf "try_apply_eager_intro_lemma: ATTEMPTING %s by unifying %s and %s\n" (show lid) (show post) (show (elab_slprop goal)));
+      if do_match post'' goal then (
         debug_prover g (fun _ -> Printf.sprintf "try_apply_eager_intro_lemma: applying %s by unifying %s and %s\n" (show lid) (show post) (show (elab_slprop goal)));
         let ok = teq_nosmt_force_args (elab_env g) post' (elab_slprop goal) false in
         debug_prover g (fun _ -> Printf.sprintf "try_apply_eager_intro_lemma: unified %s and %s, result is %s\n" (show post) (show (elab_slprop goal)) (show ok));
@@ -971,10 +981,11 @@ let try_apply_intro_lemma (g: env) (lid: R.name) (i: nat) ctxt (goal: slprop_vie
         T.Tac (prover_result g ctxt [goal]))
     )) =
   let do_match goal ctxt =
+    let force = true in
     match goal, ctxt with
     | Atom goal_hd goal_mkeys goal, Atom ctxt_hd ctxt_mkeys ctxt ->
       debug_prover g (fun _ -> Printf.sprintf "do_match:\n%s and\n%s\n" (show goal_mkeys) (show ctxt_mkeys));
-      do_match_mkeys g goal goal_mkeys ctxt ctxt_mkeys
+      do_match_mkeys g goal goal_mkeys ctxt ctxt_mkeys force
     | _ -> false in
   let t, ty, _ = tc_term_phase1 g (R.pack_ln <| R.Tv_FVar <| R.pack_fv lid) in
   let ty, t = apply_with_uvars g ty t in

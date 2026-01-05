@@ -4,8 +4,6 @@ open Pulse
 open Pulse.Lib.Send
 
 [@@pulse_eager_intro] let on_exists_intro #l = on_exists_intro #l
-[@@pulse_eager_intro] let on_exists_intro2 #l = on_exists_intro2 #l
-[@@pulse_eager_intro] let on_exists_intro3 #l = on_exists_intro3 #l
 [@@pulse_eager_elim] let on_exists_elim #l = on_exists_elim #l
 
 ghost
