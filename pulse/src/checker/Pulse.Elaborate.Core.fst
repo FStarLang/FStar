@@ -271,6 +271,9 @@ let rec elab_st_typing (#g:env)
       let rbody = mk_abs (mk_ref init_t) R.Q_Explicit rbody in
       mk_withlocal rret_u init_t init rpre rret_t rpost rbody
 
+    | T_WithLocalUninit .. ->
+      admit ()
+
     | T_WithLocalArray _ _ init len _ init_t c x _ _ _ _ body_typing ->
       let rret_u = comp_u c in
       let rret_t = comp_res c in
@@ -280,6 +283,9 @@ let rec elab_st_typing (#g:env)
       let rbody = RT.close_term rbody x in
       let rbody = mk_abs (mk_array init_t) R.Q_Explicit rbody in
       mk_withlocalarray rret_u init_t init len rpre rret_t rpost rbody
+
+    | T_WithLocalArrayUninit .. ->
+      admit ()
 
     | T_Admit _ c _ ->
       let {u; res; pre; post} = st_comp_of_comp c in

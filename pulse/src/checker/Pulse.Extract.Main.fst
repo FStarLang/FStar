@@ -466,8 +466,13 @@ let rec extract_dv g (p:st_term) : T.Tac R.term =
 
     | Tm_WithLocal { binder; initializer; body } ->
       let b' = extract_dv_binder binder None in
-      let allocator = R.mk_app (R.pack_ln (R.Tv_UInst (R.pack_fv ["Pulse"; "Lib"; "Reference"; "alloc"]) [u0]))
-        [get_type_of_ref binder.binder_ty, R.Q_Implicit; small_type0, R.Q_Explicit; initializer, R.Q_Explicit] in
+      let allocator =
+        match initializer with
+        | Some initializer -> R.mk_app (R.pack_ln (R.Tv_UInst (R.pack_fv ["Pulse"; "Lib"; "Reference"; "alloc"]) [u0]))
+            [get_type_of_ref binder.binder_ty, R.Q_Implicit; small_type0, R.Q_Explicit; initializer, R.Q_Explicit]
+        | None -> R.mk_app (R.pack_ln (R.Tv_UInst (R.pack_fv ["Pulse"; "Lib"; "Reference"; "alloc_uninit"]) [u0]))
+            [get_type_of_ref binder.binder_ty, R.Q_Implicit; small_type0, R.Q_Explicit; ECL.unit_tm, R.Q_Explicit]
+      in
       let g, x = extend_env'_binder g binder in
       let body = extract_dv g (open_st_term_nv body x) in
       ECL.mk_let b' allocator (close_term body x._2)
@@ -479,8 +484,13 @@ let rec extract_dv g (p:st_term) : T.Tac R.term =
       //
       // This is parsed by Pulse2Rust
       //
-      let allocator = R.mk_app (R.pack_ln (R.Tv_UInst (R.pack_fv ["Pulse"; "Lib"; "Array"; "PtsTo"; "alloc"]) [u0]))
-        [get_type_of_array binder.binder_ty, R.Q_Implicit; small_type0, R.Q_Explicit; initializer, R.Q_Explicit; length, R.Q_Explicit] in
+      let allocator =
+        match initializer with
+        | Some initializer -> R.mk_app (R.pack_ln (R.Tv_UInst (R.pack_fv ["Pulse"; "Lib"; "Array"; "PtsTo"; "alloc"]) [u0]))
+            [get_type_of_array binder.binder_ty, R.Q_Implicit; small_type0, R.Q_Explicit; initializer, R.Q_Explicit; length, R.Q_Explicit]
+        | None -> R.mk_app (R.pack_ln (R.Tv_UInst (R.pack_fv ["Pulse"; "Lib"; "Array"; "Core"; "mask_alloc"]) [u0]))
+            [get_type_of_array binder.binder_ty, R.Q_Implicit; small_type0, R.Q_Explicit; length, R.Q_Explicit]
+      in
       let g, x = extend_env'_binder g binder in
       let body = extract_dv g (open_st_term_nv body x) in
       ECL.mk_let b' allocator (close_term body x._2)

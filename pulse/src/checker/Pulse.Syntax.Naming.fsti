@@ -132,12 +132,12 @@ let rec freevars_st (t:st_term)
 
     | Tm_WithLocal { binder; initializer; body } ->
       freevars binder.binder_ty ++
-      freevars initializer ++
+      freevars_term_opt initializer ++
       freevars_st body
 
     | Tm_WithLocalArray { binder; initializer; length; body } ->
       freevars binder.binder_ty ++
-      freevars initializer ++
+      freevars_term_opt initializer ++
       freevars length ++
       freevars_st body
 
@@ -317,12 +317,12 @@ let rec ln_st' (t:st_term) (i:int)
 
     | Tm_WithLocal { binder; initializer; body } ->
       ln' binder.binder_ty i &&
-      ln' initializer i &&
+      ln_opt' ln' initializer i &&
       ln_st' body (i + 1)
 
     | Tm_WithLocalArray { binder; initializer; length; body } ->
       ln' binder.binder_ty i &&
-      ln' initializer i &&
+      ln_opt' ln' initializer i &&
       ln' length i &&
       ln_st' body (i + 1)
 
@@ -563,12 +563,12 @@ let rec subst_st_term (t:st_term) (ss:subst)
 
     | Tm_WithLocal { binder; initializer; body } ->
       Tm_WithLocal { binder = subst_binder binder ss;
-                     initializer = subst_term initializer ss;
+                     initializer = subst_term_opt initializer ss;
                      body = subst_st_term body (shift_subst ss) }
 
     | Tm_WithLocalArray { binder; initializer; length; body } ->
       Tm_WithLocalArray { binder = subst_binder binder ss;
-                          initializer = subst_term initializer ss;
+                          initializer = subst_term_opt initializer ss;
                           length = subst_term length ss;
                           body = subst_st_term body (shift_subst ss) }
 

@@ -487,7 +487,7 @@ let rec desugar_stmt' (env:env_t) (s:Sugar.stmt)
         let! init_expr =
           match lb.init with
           | None -> fail "Pattern bindings must have an initializer" lb.pat.prange
-          | Some (Default_initializer (e, [])) -> return e
+          | Some (Default_initializer (Some e, [])) -> return e
           | Some _ -> fail "Pattern bindings cannot have complext initializers" lb.pat.prange
         in
         let lb' =
@@ -756,7 +756,7 @@ and desugar_bind (env:env_t) (lb:_) (s2:Sugar.stmt) (r:R.range)
         | Sugar.Lambda_initializer _ ->
           fail "Nested functions are not yet fully supported" r
 
-        | Default_initializer (e1, []) ->
+        | Default_initializer (Some e1, []) ->
           let! s1 = tosyntax env e1 in
           let t =
             match admit_or_return env s1 with
@@ -767,7 +767,7 @@ and desugar_bind (env:env_t) (lb:_) (s2:Sugar.stmt) (r:R.range)
           in
           return t
 
-        | Default_initializer (e1, args) ->
+        | Default_initializer (Some e1, args) ->
           let! s1 = tosyntax env e1 in
           let! args = desugar_st_args env args in
           let t = mk_bind b (SW.tm_st s1 args r) s2 r in
@@ -782,12 +782,22 @@ and desugar_bind (env:env_t) (lb:_) (s2:Sugar.stmt) (r:R.range)
         let b = SW.mk_binder id annot in
         match e1 with
         | Sugar.Array_initializer {init; len} ->
-          let! init = desugar_term env init in
+          let! init = 
+            match init with
+            | Some init ->
+              let! init = desugar_term env init in
+              return (Some init)
+            | None -> return None in
           let! len = desugar_term env len in
           return (SW.tm_let_mut_array b init len s2 r)
-        | Sugar.Default_initializer (e1, []) ->
-          let! e1 = desugar_term env e1 in
-          return (SW.tm_let_mut b e1 s2 r)
+        | Sugar.Default_initializer (init, []) ->
+          let! init = 
+            match init with
+            | Some init ->
+              let! init = desugar_term env init in
+              return (Some init)
+            | None -> return None in
+          return (SW.tm_let_mut b init s2 r)
         | Sugar.Default_initializer (e1, args) ->
           fail "Lambda arguments not yet supported in let mut" r
     )

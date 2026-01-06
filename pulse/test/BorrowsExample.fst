@@ -77,7 +77,7 @@ fn op_Array_Access u#t (#t: Type u#t) #a (x: array t) (#y: erased (seq t)) (i: S
 }
 
 fn demo () returns r: (r: bool {r}) {
-  let mut arr = [| 0uy; 10sz |];
+  let mut arr: array UInt8.t = [| 0uy; 10sz |];
   assert live arr; pts_to_len arr; // forget value
 
   let a = begin_lifetime ();

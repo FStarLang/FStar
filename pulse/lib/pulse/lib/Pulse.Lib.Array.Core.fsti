@@ -48,6 +48,13 @@ val is_null #a (r: array a) : b:bool {b <==> r == null #a}
 
 val pts_to_mask (#t: Type u#a) ([@@@mkey] a: array t) (#[full_default()] f: perm) (v: Seq.seq (option t)) (mask: nat -> prop) : slprop
 
+unfold let pts_to_uninit (#t: Type u#a) (a: array t) (len: nat) =
+  exists* s. pts_to_mask a s (fun _ -> True) ** pure (Seq.length s == len)
+
+// only used by let mut desugaring
+unfold let pts_to_uninit_post (#t: Type u#a) (a: array t) =
+  exists* s mask. pts_to_mask a s mask ** pure (forall (i: nat). i < Seq.length s ==> mask i)
+
 val loc_id_of_array #a (x:array a) : loc_id
 
 val visibility_of_array #a (x:array a) : visibility

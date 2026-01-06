@@ -274,12 +274,12 @@ type st_term' =
     }
   | Tm_WithLocal {
       binder:binder;
-      initializer:term;
+      initializer:option term;
       body:st_term;
     }
   | Tm_WithLocalArray {
       binder:binder;
-      initializer:term;
+      initializer:option term;
       length:term;
       body:st_term;
     }
