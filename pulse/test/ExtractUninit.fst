@@ -17,13 +17,7 @@ fn uninit_array ()
   ensures pure (i == 6ul)
 {
   let mut arr : array UInt32.t = [| 5sz |];
-  mask_write arr 0sz 1ul;
   mask_write arr 1sz 2ul;
-  mask_write arr 2sz 3ul;
   mask_write arr 3sz 4ul;
-  mask_write arr 4sz 5ul;
-  from_mask arr;
-  let result = arr.(1sz) `UInt32.add` arr.(3sz);
-  to_mask arr;
-  result
+  (mask_read arr 1sz) `UInt32.add` (mask_read arr 3sz)
 }
