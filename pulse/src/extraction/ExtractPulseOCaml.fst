@@ -123,9 +123,13 @@ let tr_expr (g:uenv) (t:term) : mlexpr & e_tag & mlty =
     let e = with_ty mlty <| MLE_App (bang, [(cb g v0)._1]) in
     e, E_PURE, mlty
 
+  | _, _, [(t, _)]
+      when S.fv_eq_lid fv (Ident.lid_of_str "Pulse.Lib.Reference.free") ->
+    (* We translate 'free' as no-ops in OCaml. *)
+    ml_unit, E_PURE, ml_unit_ty
+
   | _, _, [(t, _); (v0, None)]
-      when S.fv_eq_lid fv (Ident.lid_of_str "Pulse.Lib.Reference.free")
-        || S.fv_eq_lid fv (Ident.lid_of_str "Pulse.Lib.Box.free") ->
+      when S.fv_eq_lid fv (Ident.lid_of_str "Pulse.Lib.Box.free") ->
     (* We translate 'free' as no-ops in OCaml. *)
     ml_unit, E_PURE, ml_unit_ty
 
@@ -137,9 +141,15 @@ let tr_expr (g:uenv) (t:term) : mlexpr & e_tag & mlty =
     let e = with_ty mlty <| MLE_App (bang, [(cb g r)._1]) in
     e, E_PURE, mlty
 
+  | _, _, [(t, _); (r, None); (x, None)]
+      when S.fv_eq_lid fv (Ident.lid_of_str "Pulse.Lib.Reference.write") ->
+    let mlty = term_as_mlty g t in
+    let bang = with_ty ml_unit_ty <| MLE_Var "(:=)" in
+    let e = with_ty mlty <| MLE_App (bang, [(cb g r)._1; (cb g x)._1]) in
+    e, E_PURE, mlty
+
   | _, _, [(t, _); (r, None); (x, None); _n]
-      when S.fv_eq_lid fv (Ident.lid_of_str "Pulse.Lib.Reference.write")
-        || S.fv_eq_lid fv (Ident.lid_of_str "Pulse.Lib.Box.op_Colon_Equals") ->
+      when S.fv_eq_lid fv (Ident.lid_of_str "Pulse.Lib.Box.op_Colon_Equals") ->
     let mlty = term_as_mlty g t in
     let bang = with_ty ml_unit_ty <| MLE_Var "(:=)" in
     let e = with_ty mlty <| MLE_App (bang, [(cb g r)._1; (cb g x)._1]) in

@@ -40,16 +40,22 @@ instance val is_send_pts_to_range (#a: Type u#a) (x:array a) (i j : nat) (p:perm
   : is_send (pts_to_range x i j #p s)
 
 (* Exposing these is necessary to convert an array cell with pts_to_range to a ref *)
-ghost fn fold_pts_to_range u#a (#a: Type u#a) (x: array a) (i: nat) (j: nat { i <= j /\ j <= length x }) #p #s0 s #mask
+ghost fn fold_pts_to_range u#a (#a: Type u#a) (x: array a)
+    (i: nat) (j: nat { i <= j /\ j <= length x }) #p #s0 s #mask
   requires pts_to_mask (gsub x i j) #p s0 mask
-  requires pure (Seq.equal s s0)
+  requires pure (Seq.length s == Seq.length s0 /\
+    (forall (i: nat). i < Seq.length s ==> Some (Seq.index s i) == Seq.index s0 i))
   requires pure (forall (k: nat). k < j - i ==> mask k)
   ensures pts_to_range x i j #p s
 
 ghost fn unfold_pts_to_range u#a (#a: Type u#a) (x: array a) (i j: nat) #p s
   requires pts_to_range x i j #p s
   returns _: squash (i <= j /\ j <= length x)
-  ensures pts_to_mask (gsub x i j) #p s (fun _ -> True)
+  ensures exists* (s' : Seq.seq (option a)).
+    pts_to_mask (gsub x i j) #p s' (fun _ -> True) **
+    pure (Seq.length s' == Seq.length s /\
+      (forall (i: nat). i < Seq.length s' ==>
+        Seq.index s' i == Some (Seq.index s i)))
 
 val pts_to_range_timeless (#a: Type u#a) (x:array a) (i j : nat) (p:perm) (s:Seq.seq a)
   : Lemma (timeless (pts_to_range x i j #p s))

@@ -122,8 +122,8 @@ fn sub_array (x: array U32.t)
   to_mask x;
   mask_write (Pulse.Lib.Array.sub x 1sz 2) 0sz 42ul;
   return_sub x;
-  mask_vext x seq![0ul; 42ul];
   from_mask x;
+  with v. assert x |-> v ** pure (v `Seq.equal` seq![0ul; 42ul]);
 }
 
 

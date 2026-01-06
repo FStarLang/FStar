@@ -26,27 +26,38 @@ module Seq = FStar.Seq
 open Pulse.Lib.WithPure
 
 let pts_to (#elt: Type u#a) (a: array elt) (#p: perm) (s: Seq.seq elt) : Tot slprop =
-  pts_to_mask a #p s fun i -> True
+  exists* (s': Seq.seq (option elt)). pts_to_mask a #p s' (fun i -> True)
+    ** pure (Seq.length s == Seq.length s' /\
+      forall (i: nat). i < Seq.length s' ==> Some (Seq.index s i) == Seq.index s' i)
 
 let is_send_pts_to _ _ = Tactics.Typeclasses.solve
 
 ghost fn to_mask u#a (#t: Type u#a) (arr: array t) #f (#v: erased _)
   requires arr |-> Frac f v
-  ensures pts_to_mask arr #f v (fun _ -> True)
+  ensures exists* (s: Seq.seq (option t)).
+    pts_to_mask arr #f s (fun _ -> True) **
+    pure (Seq.length s == Seq.length v /\
+      (forall (i: nat). i < Seq.length s ==>
+        Seq.index s i == Some (Seq.index v i)))
 {
   unfold pts_to arr #f v;
 }
 
 ghost fn from_mask u#a (#t: Type u#a) (arr: array t) #f #v #mask
   requires pts_to_mask arr #f v mask
-  requires pure (forall (i: nat). i < Seq.length v ==> mask i)
-  ensures arr |-> Frac f v
+  requires pure (forall (i: nat). i < Seq.length v ==> mask i /\ Some? (Seq.index v i))
+  ensures exists* (v': Seq.seq t).
+    arr |-> Frac f v' **
+    pure (Seq.length v' == Seq.length v /\
+      (forall (i: nat). i < Seq.length v' ==>
+        Some (Seq.index v' i) == Seq.index v i))
 {
   mask_mext arr (fun _ -> True);
-  fold pts_to arr #f v;
+  fold pts_to #t arr #f (Seq.init_ghost (Seq.length v) (fun i -> Some?.v (Seq.index v i)));
 }
 
-let pts_to_timeless _ _ _ = ()
+let pts_to_timeless x p s =
+  assert_norm (timeless (pts_to x #p s))
 
 ghost
 fn pts_to_len
@@ -72,7 +83,8 @@ fn pts_to_not_null u#a (#a: Type u#a) (#p:_) (r:array a) (#v:Seq.seq a)
   fold pts_to r #p v;
 }
 
-inline_for_extraction
+module R = Pulse.Lib.Reference
+
 fn alloc
     u#a (#elt: Type u#a) {| small_type u#a |}
     (x: elt)
@@ -82,7 +94,18 @@ ensures
   pts_to a (Seq.create (SZ.v n) x) **
   pure (length a == SZ.v n /\ is_full_array a)
 {
-  let a = mask_alloc x n;
+  let a = mask_alloc elt n;
+  let mut i = 0sz;
+  while (((R.read i) `SZ.lt` n))
+    invariant live i
+    invariant exists* (s: Seq.seq (option elt)).
+      pts_to_mask a #1.0R s (fun _ -> True) **
+      pure (SZ.v (R.read i) <= SZ.v n /\ Seq.length s == SZ.v n /\
+        (forall (j: nat). j < SZ.v (R.read i) ==> Seq.index s j == Some x))
+  {
+    mask_write a (R.read i) x;
+    R.write i ((R.read i) `SZ.add` 1sz);
+  };
   fold pts_to a (Seq.create (SZ.v n) x);
   a
 }
@@ -123,6 +146,7 @@ fn write
 
 let op_Array_Assignment = write
 
+inline_for_extraction
 fn free
     u#a (#elt: Type u#a)
     (a: array elt)
@@ -162,8 +186,7 @@ fn gather
   unfold pts_to arr #p0 s0;
   unfold pts_to arr #p1 s1;
   mask_gather arr;
-  with v. assert pts_to_mask arr #(p0 +. p1) v (fun _ -> True);
-  assert pure (v `Seq.equal` s1 /\ v `Seq.equal` s0);
+  assert pure (s0 `Seq.equal` s1);
   fold pts_to arr #(p0 +. p1) s0;
 }
 

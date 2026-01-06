@@ -45,7 +45,16 @@ let is_send_mutex_live #a m #p v #_ = Tactics.Typeclasses.solve
 let pts_to mg #p x = pts_to mg #p x
 
 let op_Bang #a mg #x #p = R.op_Bang #a mg #x #p
-let op_Colon_Equals #a r y #x = R.op_Colon_Equals #a r y #x
+
+fn ( := ) (#a:Type0) (mg:mutex_guard a) (y:a) (#x:erased a)
+  requires mg `pts_to` x
+  ensures mg `pts_to` y
+{
+  unfold pts_to mg x;
+  R.write mg y;
+  fold pts_to mg y;
+}
+
 let replace #a r y #x = R.replace #a r y #x
 
 

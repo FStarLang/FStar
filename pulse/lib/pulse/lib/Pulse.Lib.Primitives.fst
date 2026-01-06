@@ -21,8 +21,8 @@ module Pulse.Lib.Primitives
 let read_atomic (r:ref U32.t) (#n:erased U32.t) (#p:perm)
 = Pulse.Lib.Core.as_atomic _ _ ((let open Pulse.Lib.Reference in ( ! )) r #n #p)
 
-let write_atomic (r:ref U32.t) (x:U32.t) (#n:erased U32.t)
-= Pulse.Lib.Core.as_atomic _ _ ((let open Pulse.Lib.Reference in ( := )) r x #n)
+let write_atomic (r:ref U32.t) (x:U32.t)
+= Pulse.Lib.Core.as_atomic _ _ ((let open Pulse.Lib.Reference in ( := )) r x)
 
 
 fn cas_impl

@@ -37,9 +37,9 @@ val read_atomic (r:ref U32.t) (#n:erased U32.t) (#p:perm)
     (pts_to r #p n)
     (fun x -> pts_to r #p n ** pure (x == reveal n))
 
-val write_atomic (r:ref U32.t) (x:U32.t) (#n:erased U32.t)
+val write_atomic (r:ref U32.t) (x:U32.t)
   : stt_atomic unit #Observable emp_inames
-        (pts_to r n) 
+        (pts_to_uninit r) 
         (fun _ -> pts_to r (hide x))
 
 let cond b (p q:slprop) = if b then p else q

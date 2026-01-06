@@ -1,35 +1,31 @@
 open Prims
 let rec basic (uu___ : unit) : FStar_Int32.t=
   let arr =
-    Pulse_Lib_Array_Core.mask_alloc_with_vis () (Stdint.Int32.of_int (123))
-      (Stdint.Uint64.of_int (2)) () () in
+    Pulse_Lib_Array_PtsTo.alloc () (Stdint.Int32.of_int (123))
+      (Stdint.Uint64.of_int (2)) in
   Pulse_Lib_Array_Core.mask_read arr Stdint.Uint64.zero () () ()
 let rec use (uu___ : unit) : FStar_Int32.t=
   let arr =
-    Pulse_Lib_Array_Core.mask_alloc_with_vis () (Stdint.Int32.of_int (123))
-      (Stdint.Uint64.of_int (2)) () () in
+    Pulse_Lib_Array_PtsTo.alloc () (Stdint.Int32.of_int (123))
+      (Stdint.Uint64.of_int (2)) in
   Pulse_Lib_Array_Core.mask_read arr Stdint.Uint64.zero () () ()
 let rec use_gen_init (uu___ : unit) : FStar_Int32.t=
   let arr =
-    Pulse_Lib_Array_Core.mask_alloc_with_vis () (Stdint.Int32.of_int (123))
-      (Stdint.Uint64.of_int (2)) () () in
+    Pulse_Lib_Array_PtsTo.alloc () (Stdint.Int32.of_int (123))
+      (Stdint.Uint64.of_int (2)) in
   Pulse_Lib_Array_Core.mask_read arr Stdint.Uint64.zero () () ()
 let rec use_gen_init_st (uu___ : unit) : FStar_Int32.t=
   let init uu___1 uu___2 = (Stdint.Int32.of_int (123)) in
   let __anf0 = init () () in
-  let arr =
-    Pulse_Lib_Array_Core.mask_alloc_with_vis () __anf0
-      (Stdint.Uint64.of_int (2)) () () in
+  let arr = Pulse_Lib_Array_PtsTo.alloc () __anf0 (Stdint.Uint64.of_int (2)) in
   Pulse_Lib_Array_Core.mask_read arr Stdint.Uint64.zero () () ()
 let rec use_gen_len (uu___ : unit) : FStar_Int32.t=
   let arr =
-    Pulse_Lib_Array_Core.mask_alloc_with_vis () (Stdint.Int32.of_int (123))
-      (Stdint.Uint64.of_int (2)) () () in
+    Pulse_Lib_Array_PtsTo.alloc () (Stdint.Int32.of_int (123))
+      (Stdint.Uint64.of_int (2)) in
   Pulse_Lib_Array_Core.mask_read arr Stdint.Uint64.zero () () ()
 let rec use_gen_len_st (uu___ : unit) : FStar_Int32.t=
   let len uu___1 uu___2 = (Stdint.Uint64.of_int (42)) in
   let __anf0 = len () () in
-  let arr =
-    Pulse_Lib_Array_Core.mask_alloc_with_vis () (Stdint.Int32.of_int (123))
-      __anf0 () () in
+  let arr = Pulse_Lib_Array_PtsTo.alloc () (Stdint.Int32.of_int (123)) __anf0 in
   Pulse_Lib_Array_Core.mask_read arr Stdint.Uint64.zero () () ()

@@ -107,6 +107,8 @@ fn to_array (#t: Type) (s: ptr t) (a: array t) (#p: perm) (#v: Seq.seq t)
 
 let is_from_ref #t s a = rewrites_to s.base (to_array_ghost a) ** pure (s.offset == 0sz /\ A.length (to_array_ghost a) == 1)
 
+module RA = Pulse.Lib.Reference.Array
+
 fn from_ref (#t: Type) (a: ref t) (#p: perm) (#v: Ghost.erased (t))
 requires
     (R.pts_to a #p v)
@@ -114,7 +116,7 @@ returns s: ptr t
 ensures
     (pts_to s #p (Seq.create 1 (Ghost.reveal v)) ** is_from_ref s a)
 {
-  let arr = R.to_array a;
+  let arr = RA.to_array a;
   A.pts_to_range_intro arr _ _;
   let res = {
     base = arr;
@@ -145,13 +147,15 @@ ghost fn to_ref (#t: Type) : to_ref_t t =
   rewrite A.pts_to_range s.base (SZ.v s.offset) (SZ.v s.offset + Seq.Base.length v) #p v
     as A.pts_to_range (R.to_array_ghost a) 0 (A.length s.base) #p v;
   A.pts_to_range_elim _ _ _;
-  R.return_to_array a;
+  RA.return_to_array a;
   ()
 }
 
-let with_pure (#p: prop) (x: squash p) : slprop = pure p
+open Pulse.Lib.WithPure
 
-let is_as_ref #t s p a = exists* (x: squash (SZ.v s.offset < base_len s.base)) (w: Seq.seq t) . with_pure x **
+let is_as_ref #t s p a : slprop =
+  with_pure (SZ.v s.offset < base_len s.base) fun _ ->
+  exists* (w: Seq.seq (option t)).
   rewrites_to a (array_at_ghost s.base (SizeT.v s.offset)) **
   pts_to_mask s.base #p w (fun _ -> False)
 
@@ -164,7 +168,6 @@ fn as_ref (#t: Type) : as_ref_t t =
   gsub_elim _ _ _;
   let res = R.array_at s.base s.offset;
   mask_mext _ (fun _ -> False);
-  fold (with_pure #(SZ.v s.offset < base_len s.base)) ();
   fold (is_as_ref s p res);
   res
 }
@@ -176,7 +179,6 @@ ensures
     (pts_to s #p (Seq.create 1 (Ghost.reveal v)))
 {
   unfold (is_as_ref s p a);
-  with sq . unfold (with_pure #(SZ.v s.offset < base_len s.base) sq);
   A.pts_to_mask_len _;
   R.return_array_at s.base (SZ.v s.offset);
   A.gsub_intro s.base (SZ.v s.offset) (SZ.v s.offset + 1);
@@ -333,8 +335,6 @@ fn join (#t: Type) (s1: ptr t) (#p: perm) (#v1: Seq.seq t) (s2: ptr t) (#v2: Seq
     A.pts_to_range_join s1.base (SZ.v s1.offset) (SZ.v s1.offset + Seq.length v1) (SZ.v s1.offset + Seq.length (Seq.append v1 v2));
     fold pts_to s1 #p (Seq.append v1 v2)
 }
-
-module R = Pulse.Lib.Reference
 
 fn memcpy
     (#t:Type0) (#p0:perm)

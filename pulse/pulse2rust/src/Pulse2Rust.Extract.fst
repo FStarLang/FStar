@@ -556,7 +556,7 @@ and extract_mlexpr (g:env) (e:S.mlexpr) : expr =
     let e = extract_mlexpr g e in
     mk_expr_field_unnamed e 2
 
-  | S.MLE_App ({expr=S.MLE_TApp ({expr=S.MLE_Name p}, [_])}, [e1; e2; _])
+  | S.MLE_App ({expr=S.MLE_TApp ({expr=S.MLE_Name p}, [_])}, [e1; e2])
     when S.string_of_mlpath p = "Pulse.Lib.Reference.write" ||
          S.string_of_mlpath p = "Pulse.Lib.Box.op_Colon_Equals" ||
          S.string_of_mlpath p = "Pulse.Lib.Mutex.op_Colon_Equals" ->

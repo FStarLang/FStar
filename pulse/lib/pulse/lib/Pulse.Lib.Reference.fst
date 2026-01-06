@@ -17,7 +17,7 @@
 module Pulse.Lib.Reference
 #lang-pulse
 open Pulse.Lib.Core
-module A = Pulse.Lib.Array.Basic
+module A = Pulse.Lib.Array.Core
 
 let ref a = A.array a
 
@@ -34,21 +34,37 @@ let upd_singleton #a (x y: a) :
       [SMTPat (Seq.upd (singleton x) 0 y)] =
   assert Seq.equal (Seq.upd (singleton x) 0 y) (singleton y)
 
-let pts_to (#a: Type u#a) (r:ref a) (#[T.exact (`1.0R)] p:perm) (n:a)
-= A.pts_to r #p (singleton n)
-let is_send_pts_to r n = Tactics.Typeclasses.solve
+let pts_to_uninit (#a: Type u#a) ([@@@mkey]r: ref a) : slprop =
+  exists* s. pure (Seq.length s == 1) ** A.pts_to_mask r s (fun _ -> True)
 
-let pts_to_timeless _ _ _ = ()
+let pts_to (#a: Type u#a) (r:ref a) (#[T.exact (`1.0R)] p:perm) (n:a) =
+  exists* s. pure (Seq.length s == 1 /\ Seq.index s 0 == Some n) **
+    A.pts_to_mask r #p s (fun _ -> True)
+
+let is_send_pts_to r n = Tactics.Typeclasses.solve
+let is_send_pts_to_uninit r = Tactics.Typeclasses.solve
+
+let pts_to_timeless r p n = assert_norm (timeless (pts_to r #p n))
+let pts_to_uninit_timeless r = assert_norm (timeless (pts_to_uninit r))
 
 let is_full_ref = A.is_full_array
 
-fn alloc u#a (#a: Type u#a) {| small_type u#a |} (x:a)
-  returns r:ref a
-  ensures pts_to r x
-  ensures pure (is_full_ref r)
+[@@pulse_intro]
+ghost fn forget_init u#a (#a: Type u#a) (r: ref a) #n
+  requires pts_to r n
+  ensures pts_to_uninit r
 {
-  let r = A.alloc x 1sz;
-  fold (pts_to r #1.0R x);
+  unfold pts_to r n;
+  fold pts_to_uninit r;
+}
+
+fn alloc_uninit u#a (a: Type u#a) {| small_type u#a |} ()
+  returns  r : ref a
+  ensures  pts_to_uninit r
+  ensures  pure (is_full_ref r)
+{
+  let r = A.mask_alloc a 1sz;
+  fold (pts_to_uninit r);
   r
 }
 
@@ -58,7 +74,7 @@ fn read u#a (#a: Type u#a) (r:ref a) (#n:erased a) (#p:perm)
   ensures  rewrites_to x n
 {
   unfold pts_to r #p n;
-  let x = A.(r.(0sz));
+  let x = A.mask_read r 0sz;
   fold (pts_to r #p n);
   x
 }
@@ -66,25 +82,34 @@ fn read u#a (#a: Type u#a) (r:ref a) (#n:erased a) (#p:perm)
 inline_for_extraction
 let ( ! ) #a = read #a
 
-fn write u#a (#a: Type u#a) (r:ref a) (x:a) (#n:erased a)
-  requires r |-> n
+fn write u#a (#a: Type u#a) (r:ref a) (x:a)
+  requires pts_to_uninit r
   ensures  r |-> x
 {
-  unfold pts_to r #1.0R n;
-  A.(r.(0sz) <- x);
+  unfold pts_to_uninit r;
+  A.mask_write r 0sz x;
   fold pts_to r #1.0R x;
 }
 
 inline_for_extraction
 let ( := ) #a = write #a
 
+fn alloc u#a (#a: Type u#a) {| small_type u#a |} (x:a)
+  returns r:ref a
+  ensures pts_to r x
+  ensures pure (is_full_ref r)
+{
+  let r = alloc_uninit a ();
+  r := x;
+  r
+}
 
-fn free u#a (#a: Type u#a) (r:ref a) (#n:erased a)
-  requires pts_to r #1.0R n
+fn free u#a (#a: Type u#a) (r:ref a)
+  requires pts_to_uninit r
   requires pure (is_full_ref r)
 {
-  unfold pts_to r #1.0R n;
-  A.free r;
+  unfold pts_to_uninit r;
+  A.mask_free r;
 }
 
 ghost
@@ -93,7 +118,7 @@ fn share u#a (#a: Type u#a) (r:ref a) (#v:erased a) (#p:perm)
   ensures pts_to r #(p /. 2.0R) v ** pts_to r #(p /. 2.0R) v
 {
   unfold pts_to r #p v;
-  A.share r;
+  A.mask_share r;
   fold (pts_to r #(p /. 2.0R) v);
   fold (pts_to r #(p /. 2.0R) v);
 }
@@ -105,7 +130,7 @@ fn gather u#a (#a: Type u#a) (r:ref a) (#x0 #x1:erased a) (#p0 #p1:perm)
 { 
   unfold pts_to r #p0 x0;
   unfold pts_to r #p1 x1;
-  A.gather r;
+  A.mask_gather r;
   fold (pts_to r #(p0 +. p1) x0)
 }
 
@@ -136,7 +161,7 @@ fn pts_to_injective_eq
 {
   unfold pts_to r #p0 v0;
   unfold pts_to r #p1 v1;
-  A.pts_to_injective_eq r;
+  A.pts_to_mask_injective_eq r;
   fold pts_to r #p0 v0;
   fold pts_to r #p1 v1;
 }
@@ -148,7 +173,7 @@ fn pts_to_perm_bound u#a (#a: Type u#a) (#p:_) (r:ref a) (#v:a)
   ensures pts_to r #p v ** pure (p <=. 1.0R)
 {
   unfold pts_to r #p v;
-  A.pts_to_perm_bound r;
+  A.pts_to_mask_perm_bound r;
   fold pts_to r #p v;
 }
 
@@ -158,69 +183,111 @@ fn pts_to_not_null u#a (#a: Type u#a) (#p:_) (r:ref a) (#v:a)
   ensures  pure (not (is_null #a r))
 {
   unfold pts_to r #p v;
-  A.pts_to_not_null r;
+  A.pts_to_mask_not_null r;
   fold pts_to r #p v;
+}
+
+ghost
+fn pts_to_uninit_not_null u#a (#a: Type u#a) (r:ref a)
+  preserves pts_to_uninit r
+  ensures  pure (not (is_null #a r))
+{
+  unfold pts_to_uninit r;
+  A.pts_to_mask_not_null r;
+  fold pts_to_uninit r;
 }
 
 let to_array_ghost r = r
 
 unobservable
-fn to_array u#a (#a: Type u#a) (r: ref a) #p (#v: erased a)
+fn to_array_mask u#a (#a: Type u#a) (r: ref a) #p (#v: erased a)
   requires r |-> Frac p v
   returns arr: array a
   ensures rewrites_to arr (to_array_ghost r)
-  ensures arr |-> Frac p (seq![reveal v])
+  ensures pts_to_mask arr #p seq![Some (reveal v)] (fun _ -> True)
   ensures pure (length arr == 1)
 {
   unfold pts_to r #p v;
-  pts_to_len r;
-  assert pure (Seq.equal seq![reveal v] (singleton (reveal v)));
+  pts_to_mask_len r;
+  with v'. assert pts_to_mask r #p v' _;
+  assert pure (v' `Seq.equal` seq![Some (reveal v)]);
   r
 }
 
 ghost
-fn return_to_array u#a (#a: Type u#a) (r: ref a) #p (#v: Seq.seq a)
-  requires to_array_ghost r |-> Frac p v
-  requires pure (length (to_array_ghost r) == 1)
+fn return_to_array_mask u#a (#a: Type u#a) (r: ref a) #p #v #m
+  requires pts_to_mask (to_array_ghost r) #p v m
+  requires pure (m 0)
+  requires pure (Seq.length v == 1 /\ Some? (Seq.index v 0))
   returns _: squash (Seq.length v == 1)
-  ensures r |-> Frac p (Seq.index v 0)
+  ensures exists* (v0:a). r |-> Frac p v0 ** pure (Seq.index v 0 == Some v0)
 {
-  pts_to_len r;
-  assert pure (singleton (Seq.Base.index v 0) `Seq.equal` v);
-  fold pts_to r #p (Seq.index v 0);
+  pts_to_mask_len r;
+  mask_mext r (fun _ -> True);
+  fold pts_to r #p (Some?.v (Seq.index v 0));
 }
 
 let array_at_ghost arr i = gsub arr i (i+1)
 
 unobservable
-fn array_at u#a (#a: Type u#a) (arr: array a) (i: SizeT.t) #p (#v: erased (Seq.seq a) { SizeT.v i < length arr /\ length arr == Seq.length v }) #mask
+fn array_at u#a (#a: Type u#a) (arr: array a) (i: SizeT.t) #p
+    (#v: erased (Seq.seq (option a)) { SizeT.v i < length arr /\ length arr == Seq.length v /\ Some? (Seq.index v (SizeT.v i)) }) #mask
   requires pts_to_mask arr #p v mask
   requires pure (mask (SizeT.v i))
   returns r: ref a
   ensures rewrites_to r (array_at_ghost arr (SizeT.v i))
-  ensures r |-> Frac p (Seq.index v (SizeT.v i))
+  ensures r |-> Frac p (Some?.v (Seq.index v (SizeT.v i)))
   ensures pts_to_mask arr #p v (fun k -> mask k /\ k <> SizeT.v i)
 {
   let res = sub arr i (SizeT.v i + 1);
   mask_ext res (singleton (Seq.index v (SizeT.v i))) (fun _ -> True);
-  from_mask res;
-  fold pts_to res #p (Seq.index v (SizeT.v i));
+  fold pts_to res #p (Some?.v (Seq.index v (SizeT.v i)));
+  mask_mext arr (fun k -> mask k /\ k <> SizeT.v i);
+  res
+}
+
+unobservable
+fn array_at_uninit u#a (#a: Type u#a) (arr: array a) (i: SizeT.t)
+    (#v: erased (Seq.seq (option a)) { SizeT.v i < length arr /\ length arr == Seq.length v }) #mask
+  requires pts_to_mask arr v mask
+  requires pure (mask (SizeT.v i))
+  returns r: ref a
+  ensures rewrites_to r (array_at_ghost arr (SizeT.v i))
+  ensures pts_to_uninit r
+  ensures pts_to_mask arr v (fun k -> mask k /\ k <> SizeT.v i)
+{
+  let res = sub arr i (SizeT.v i + 1);
+  mask_ext res (singleton (Seq.index v (SizeT.v i))) (fun _ -> True);
+  fold pts_to_uninit res;
   mask_mext arr (fun k -> mask k /\ k <> SizeT.v i);
   res
 }
 
 ghost
-fn return_array_at u#a (#a: Type u#a) (arr: array a) (i: nat) (#p: perm) (#v: a) (#v': Seq.seq a { i < length arr /\ length arr == Seq.length v' }) (#mask: nat->prop)
+fn return_array_at u#a (#a: Type u#a) (arr: array a) (i: nat) (#p: perm) (#v: a) (#v': Seq.seq (option a) { i < length arr /\ length arr == Seq.length v' }) (#mask: nat->prop)
   requires array_at_ghost arr i |-> Frac p v
   requires pts_to_mask arr #p v' mask
   requires pure (~(mask i))
-  ensures pts_to_mask arr #p (Seq.upd v' i v) (fun k -> mask k \/ k == i)
+  ensures pts_to_mask arr #p (Seq.upd v' i (Some v)) (fun k -> mask k \/ k == i)
 {
   unfold pts_to (array_at_ghost arr i) #p v;
-  to_mask (array_at_ghost arr i);
   gsub_elim arr i (i+1);
   join_mask arr;
-  mask_ext arr (Seq.upd v' i v) (fun k -> mask k \/ k == i);
+  mask_ext arr (Seq.upd v' i (Some v)) (fun k -> mask k \/ k == i);
+}
+
+ghost
+fn return_array_at_uninit u#a (#a: Type u#a) (arr: array a) (i: nat) (#v': Seq.seq (option a) { i < length arr /\ length arr == Seq.length v' }) (#mask: nat->prop)
+  requires pts_to_uninit (array_at_ghost arr i)
+  requires pts_to_mask arr v' mask
+  requires pure (~(mask i))
+  ensures exists* vi. pts_to_mask arr (Seq.upd v' i vi) (fun k -> mask k \/ k == i)
+{
+  unfold pts_to_uninit (array_at_ghost arr i);
+  with vi. assert pts_to_mask (array_at_ghost arr i) vi _;
+  gsub_elim arr i (i+1);
+  join_mask arr;
+  mask_ext arr (Seq.upd v' i (Seq.index vi 0)) (fun k -> mask k \/ k == i);
 }
 
 fn replace u#a (#a:Type u#a) (r:ref a) (x:a) (#v:erased a)
