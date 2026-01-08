@@ -456,9 +456,9 @@ let rec lb_init_and_def (g:env) (lb:S.mllb)
       extract_mlty g ty,
       extract_mlexpr g init
 
-    | S.MLE_App ({expr=S.MLE_TApp ({expr=S.MLE_Name pe}, _)}, [_; init; len; _; _]),
+    | S.MLE_App ({expr=S.MLE_TApp ({expr=S.MLE_Name pe}, _)}, [_; init; len]),
       Some ([], S.MLTY_Named ([ty], pt))
-      when S.string_of_mlpath pe = "Pulse.Lib.Array.Core.mask_alloc_with_vis" &&
+      when S.string_of_mlpath pe = "Pulse.Lib.Array.PtsTo.alloc" &&
            S.string_of_mlpath pt = "Pulse.Lib.Array.Core.array" ->
       let init = extract_mlexpr g init in
       let len = extract_mlexpr g len in
@@ -557,17 +557,29 @@ and extract_mlexpr (g:env) (e:S.mlexpr) : expr =
     mk_expr_field_unnamed e 2
 
   | S.MLE_App ({expr=S.MLE_TApp ({expr=S.MLE_Name p}, [_])}, [e1; e2])
-    when S.string_of_mlpath p = "Pulse.Lib.Reference.write" ||
-         S.string_of_mlpath p = "Pulse.Lib.Box.op_Colon_Equals" ||
-         S.string_of_mlpath p = "Pulse.Lib.Mutex.op_Colon_Equals" ->
+    when S.string_of_mlpath p = "Pulse.Lib.Reference.write" ->
     let e1 = extract_mlexpr g e1 in
     let e2 = extract_mlexpr g e2 in
     let b = type_of g e1 in
-    let is_mutex_guard =
-      S.string_of_mlpath p = "Pulse.Lib.Mutex.op_Colon_Equals" in
-    if is_mutex_guard || not b
+    if not b
     then mk_ref_assign e1 e2
     else mk_assign e1 e2
+
+  | S.MLE_App ({expr=S.MLE_TApp ({expr=S.MLE_Name p}, [_])}, [e1; e2; _])
+    when S.string_of_mlpath p = "Pulse.Lib.Box.op_Colon_Equals" ->
+    let e1 = extract_mlexpr g e1 in
+    let e2 = extract_mlexpr g e2 in
+    let b = type_of g e1 in
+    if not b
+    then mk_ref_assign e1 e2
+    else mk_assign e1 e2
+
+  | S.MLE_App ({expr=S.MLE_TApp ({expr=S.MLE_Name p}, [_])}, [e1; e2; _])
+    when S.string_of_mlpath p = "Pulse.Lib.Mutex.op_Colon_Equals" ->
+    let e1 = extract_mlexpr g e1 in
+    let e2 = extract_mlexpr g e2 in
+    mk_ref_assign e1 e2
+
   | S.MLE_App ({expr=S.MLE_TApp ({expr=S.MLE_Name p}, [_])}, [e; _; _])
     when S.string_of_mlpath p = "Pulse.Lib.Reference.read" ||
          S.string_of_mlpath p = "Pulse.Lib.Box.op_Bang" ||
