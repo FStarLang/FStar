@@ -149,12 +149,12 @@ instance val placeless_slprop_ref_pts_to x y : placeless (slprop_ref_pts_to x y)
 instance val placeless_exists #a (p: a -> slprop) {| ((x:a) -> placeless (p x)) |} :
   placeless (exists* x. p x)
 
-// [@@pulse_eager_intro]
+[@@pulse_eager_intro]
 ghost fn on_exists_intro u#a #l (#a: Type u#a) (p: a -> slprop)
   requires literally (exists* x. on l (p x))
   ensures on l (exists* x. p x)
 
-// [@@pulse_eager_elim]
+[@@pulse_eager_elim]
 ghost fn on_exists_elim u#a #l (#a: Type u#a) (p: a -> slprop)
   requires on l (exists* x. p x)
   ensures exists* x. on l (p x)

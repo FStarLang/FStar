@@ -3,9 +3,6 @@ module Example.TestOnAutomation
 open Pulse
 open Pulse.Lib.Send
 
-[@@pulse_eager_intro] let on_exists_intro #l = on_exists_intro #l
-[@@pulse_eager_elim] let on_exists_elim #l = on_exists_elim #l
-
 ghost
 fn test_on_l_prover_emp (l:loc_id)
 requires emp
