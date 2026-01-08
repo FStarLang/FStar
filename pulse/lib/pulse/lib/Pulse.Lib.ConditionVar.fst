@@ -271,7 +271,6 @@ ensures
   ()
 }
 
-#push-options "--print_implicits"
 fn rec wait (b:cvar_t) (#p:slprop)
 requires 
   recv b p
