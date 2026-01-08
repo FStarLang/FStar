@@ -665,6 +665,21 @@ type teq_cfg = {
   teq_noforce: bool;
 }
 
+let teq_cfg_full = {
+  teq_fail_fast = false;
+  teq_mkeys_only = false;
+  teq_noforce = false;
+}
+
+let teq_cfg_unamb =
+  { teq_cfg_full with teq_fail_fast = true }
+
+let teq_cfg_first_mkeys_pass = {
+  teq_fail_fast = true;
+  teq_mkeys_only = true;
+  teq_noforce = false;
+}
+
 let type_of_fv (g:R.env) (fv:R.fv)
   : option R.term
   = let n = R.inspect_fv fv in
@@ -813,7 +828,7 @@ let is_unamb g (cands: list (int & slprop_view)) : T.Tac bool =
   | [] | [_] -> true
   | (_, x)::cands ->
     let unifies x y = with_uf_transaction fun _ ->
-      teq_slprop g { teq_fail_fast = true; teq_mkeys_only = false; teq_noforce = false } x y in
+      teq_slprop g teq_cfg_unamb x y in
     forallb (fun (_, y) -> unifies (elab_slprop x) (elab_slprop y)) cands
 
 // this matches atoms when they're the only unifiable pair
@@ -829,7 +844,7 @@ let prove_atom_unamb (g: env) (ctxt: list slprop_view) (goal: slprop_view) :
       | Atom hd' mkeys' ctxt ->
         if hd <> hd' then false else
         with_uf_transaction fun _ ->
-          teq_slprop g { teq_fail_fast = true; teq_mkeys_only = false; teq_noforce = false } ctxt goal
+          teq_slprop g teq_cfg_unamb ctxt goal
       | _ -> false in
     debug_prover g (fun _ -> Printf.sprintf "prove_atom_unamb: searching for match for goal %s in ctxt %s\n" (show goal) (show ctxt));
     let ictxt = List.Tot.mapi (fun i ctxt -> i, ctxt) ctxt in
@@ -847,7 +862,7 @@ let prove_atom_unamb (g: env) (ctxt: list slprop_view) (goal: slprop_view) :
     else
     let (i, cand) :: _ = cands in
     debug_prover g (fun _ -> Printf.sprintf "prove_atom_unamb: commiting to unify %s and %s\n" (show (elab_slprop cand)) (show goal));
-    let ok = teq_slprop g { teq_fail_fast = false; teq_mkeys_only = false; teq_noforce = false } (elab_slprop cand) goal in
+    let ok = teq_slprop g teq_cfg_full (elab_slprop cand) goal in
     debug_prover g (fun _ -> Printf.sprintf "prove_atom_unamb: result of unify %s and %s is %s\n" (show (elab_slprop cand)) (show goal) (show ok));
     let rest_ctxt = List.Tot.filter (fun (j, _) -> j <> i) ictxt |> List.Tot.map snd in
     Some (| g, rest_ctxt, [], [cand], fun g' ->
@@ -868,7 +883,7 @@ let prove_atom (g: env) (ctxt: list slprop_view) (allow_amb: bool) (goal: slprop
       | Atom hd' mkeys' ctxt ->
         if hd <> hd' then false else
         with_uf_transaction fun _ ->
-          teq_slprop g { teq_fail_fast = true; teq_mkeys_only = true; teq_noforce = false  } ctxt goal
+          teq_slprop g teq_cfg_first_mkeys_pass ctxt goal
       | _ -> false in
     let ictxt = List.Tot.mapi (fun i ctxt -> i, ctxt) ctxt in
     let cands = T.filter (fun (i, ctxt) -> matches_mkeys ctxt) ictxt in
@@ -876,7 +891,7 @@ let prove_atom (g: env) (ctxt: list slprop_view) (allow_amb: bool) (goal: slprop
     if (if allow_amb then false else not (is_unamb g cands)) then None else
     let (i, cand)::_ = cands in
     debug_prover g (fun _ -> Printf.sprintf "prove_atom: committed to unifying %s and %s\n" (show (elab_slprop cand)) (show goal));
-    let ok = teq_slprop g { teq_fail_fast = false; teq_mkeys_only = false; teq_noforce = false } (elab_slprop cand) goal in
+    let ok = teq_slprop g teq_cfg_full (elab_slprop cand) goal in
     debug_prover g (fun _ -> Printf.sprintf "prove_atom: unified %s and %s, result is %s\n" (show (elab_slprop cand)) (show goal) (show ok));
     let rest_ctxt = List.Tot.filter (fun (j, _) -> j <> i) ictxt |> List.Tot.map snd in
     Some (| g, rest_ctxt, [], [cand], fun g' ->
@@ -930,11 +945,10 @@ let rec apply_with_uvars (g:env) (t:typ) (v:term) : T.Tac (typ & term) =
 let try_apply_elim_lemma (g: env) (lid: R.name) (i: nat) (ctxt: slprop_view) :
     T.Tac (option (prover_result_nogoals g [ctxt])) =
   let do_match goal ctxt =
-    let force = true in
     match goal, ctxt with
     | Atom goal_hd goal_mkeys goal, Atom ctxt_hd ctxt_mkeys ctxt ->
       with_uf_transaction fun _ ->
-        teq_slprop g { teq_fail_fast = true; teq_mkeys_only = true; teq_noforce = false } ctxt goal
+        teq_slprop g teq_cfg_first_mkeys_pass ctxt goal
     | _ -> false in
   let t, ty, _ = tc_term_phase1 g (R.pack_ln <| R.Tv_FVar <| R.pack_fv lid) in
   let ty, t = apply_with_uvars g ty t in
@@ -944,9 +958,10 @@ let try_apply_elim_lemma (g: env) (lid: R.name) (i: nat) (ctxt: slprop_view) :
     assume res == tm_unit;
     (match inspect_slprop g pre, i with
     | [pre'], 0 -> // only support elimination rules with single pre
+      debug_prover g (fun _ -> Printf.sprintf "try_apply_eager_elim_lemma: ATTEMPTING %s by unifying %s and %s\n" (show lid) (show (elab_slprop ctxt)) (show pre));
       if do_match pre' ctxt then (
         debug_prover g (fun _ -> Printf.sprintf "try_apply_elim_lemma: applying %s by unifying %s and %s\n" (show lid) (show (elab_slprop ctxt)) (show pre));
-        let ok = teq_slprop g { teq_fail_fast = false; teq_mkeys_only = false; teq_noforce = false } (elab_slprop ctxt) pre in
+        let ok = teq_slprop g teq_cfg_full (elab_slprop ctxt) pre in
         debug_prover g (fun _ -> Printf.sprintf "try_apply_elim_lemma: unified %s and %s, result is %s\n" (show (elab_slprop ctxt)) (show pre) (show ok));
         let post' = open_term' post unit_const 0 in
         Some (| g, [Unknown post'], [], [], fun g'' ->
@@ -973,12 +988,11 @@ let try_apply_elim_lemma (g: env) (lid: R.name) (i: nat) (ctxt: slprop_view) :
 let try_apply_eager_intro_lemma (g: env) (lid: R.name) (i: nat) ctxt (goal: slprop_view) :
     T.Tac (option (prover_result g ctxt [goal])) =
   let do_match goal ctxt =
-    let force = false in
     match goal, ctxt with
     | Atom goal_hd goal_mkeys goal, Atom ctxt_hd ctxt_mkeys ctxt ->
       debug_prover g (fun _ -> Printf.sprintf "do_match:\n%s and\n%s\n" (show goal_mkeys) (show ctxt_mkeys));
       with_uf_transaction fun _ ->
-        teq_slprop g { teq_fail_fast = true; teq_mkeys_only = true; teq_noforce = false } ctxt goal
+        teq_slprop g teq_cfg_first_mkeys_pass ctxt goal
     | _ -> false in
   let t, ty, _ = tc_term_phase1 g (R.pack_ln <| R.Tv_FVar <| R.pack_fv lid) in
   let ty, t = apply_with_uvars g ty t in
@@ -992,7 +1006,7 @@ let try_apply_eager_intro_lemma (g: env) (lid: R.name) (i: nat) ctxt (goal: slpr
       debug_prover g (fun _ -> Printf.sprintf "try_apply_eager_intro_lemma: ATTEMPTING %s by unifying %s and %s\n" (show lid) (show post) (show (elab_slprop goal)));
       if do_match post'' goal then (
         debug_prover g (fun _ -> Printf.sprintf "try_apply_eager_intro_lemma: applying %s by unifying %s and %s\n" (show lid) (show post) (show (elab_slprop goal)));
-        let ok = teq_slprop g { teq_fail_fast = false; teq_mkeys_only = false; teq_noforce = false } post' (elab_slprop goal) in
+        let ok = teq_slprop g teq_cfg_full post' (elab_slprop goal) in
         debug_prover g (fun _ -> Printf.sprintf "try_apply_eager_intro_lemma: unified %s and %s, result is %s\n" (show post) (show (elab_slprop goal)) (show ok));
         Some (| g, ctxt, [Unknown pre], [], fun g'' ->
           let typing = core_check_term g'' t T.E_Ghost ty in
@@ -1070,12 +1084,11 @@ let try_apply_intro_lemma (g: env) (lid: R.name) (i: nat) ctxt (goal: slprop_vie
         T.Tac (prover_result g ctxt [goal]))
     )) =
   let do_match goal ctxt =
-    let force = true in
     match goal, ctxt with
     | Atom goal_hd goal_mkeys goal, Atom ctxt_hd ctxt_mkeys ctxt ->
       debug_prover g (fun _ -> Printf.sprintf "do_match:\n%s and\n%s\n" (show goal_mkeys) (show ctxt_mkeys));
       with_uf_transaction fun _ ->
-        teq_slprop g { teq_fail_fast = true; teq_mkeys_only = true; teq_noforce = false } ctxt goal
+        teq_slprop g teq_cfg_first_mkeys_pass ctxt goal
     | _ -> false in
   let t, ty, _ = tc_term_phase1 g (R.pack_ln <| R.Tv_FVar <| R.pack_fv lid) in
   let ty, t = apply_with_uvars g ty t in
@@ -1089,7 +1102,7 @@ let try_apply_intro_lemma (g: env) (lid: R.name) (i: nat) ctxt (goal: slprop_vie
     let post''_rest = post''_before @ post''_after in
     if do_match goal post''_i then (
       debug_prover g (fun _ -> Printf.sprintf "try_apply_intro_lemma: applying %s by unifying %s and %s\n" (show lid) (show post) (show (elab_slprop goal)));
-      let ok = teq_slprop g { teq_fail_fast = false; teq_mkeys_only = false; teq_noforce = false } post' (elab_slprop goal) in
+      let ok = teq_slprop g teq_cfg_full post' (elab_slprop goal) in
       debug_prover g (fun _ -> Printf.sprintf "try_apply_intro_lemma: unified %s and %s, result is %s\n" (show post) (show (elab_slprop goal)) (show ok));
       Some (| g, [Unknown pre], fun subresult ->
         let (| g', ctxt', k |) = prover_result_solved_unpack subresult in
