@@ -68,7 +68,7 @@ ghost fn foo_of_bar_use p q
   ensures bar q
 {}
 
-[@@pulse_intro]
+[@@pulse_eager_intro]
 ghost fn bar_star p q
   requires bar p
   requires bar q
