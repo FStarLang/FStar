@@ -67,3 +67,21 @@ ghost fn foo_of_bar_use p q
   ensures foo p
   ensures bar q
 {}
+
+[@@pulse_intro]
+ghost fn bar_star p q
+  requires bar p
+  requires bar q
+  ensures bar (p ** q)
+{
+  unfold bar p;
+  unfold bar q;
+  fold bar (p ** q);
+}
+
+[@@expect_failure [228]]
+ghost fn uvar_loop p
+  requires p
+{
+  unfold bar;
+}

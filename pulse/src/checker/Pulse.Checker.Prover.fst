@@ -912,6 +912,8 @@ noeq type penv = {
 
   // for loop detection when applying intro lemmas
   penv_stack: list (R.name & list term);
+
+  penv_steps: nat;
 }
 
 let prover_lemmas_enabled () : T.Tac bool =
@@ -925,6 +927,7 @@ let mk_penv (g: env) (allow_amb: bool) : T.Tac (pg:penv { pg.penv_env == g }) = 
   penv_allow_amb = allow_amb;
   penv_plems = build_plems g;
   penv_stack = [];
+  penv_steps = 0;
 }
 
 let rec apply_with_uvars (g:env) (t:typ) (v:term) : T.Tac (typ & term) =
@@ -1186,6 +1189,24 @@ let rec first_some #a (ks: list (unit -> T.Tac (option a))) : T.Tac (option a) =
 let show_slprops ps =
   String.concat "\n" (T.map (fun p -> show (elab_slprop p)) ps)
 
+let pp_slprops ts = ts
+  |> List.Tot.map elab_slprop
+  |> sort_terms
+  |> T.map pp
+  |> separate hardline
+
+let check_steps (pg: penv) (ctxt goals: list slprop_view) : T.Tac (pg':penv { pg'.penv_env == pg.penv_env }) =
+  let pg = { pg with penv_steps = pg.penv_steps + 1 } in
+  let max_steps = 10000 in
+  if pg.penv_steps > max_steps then
+    T.fail_doc ([
+        text "Reached maximum number of steps (" ^^ text (show max_steps) ^^ text "), cannot prove:" ^^
+          indent (pp_slprops goals);
+        text "In the context:" ^^ indent (pp_slprops ctxt);
+      ])
+  else
+    pg
+
 let rec try_prove_core (pg: penv) (ctxt goals: list slprop_view) : T.Tac (prover_result pg.penv_env ctxt goals) =
   let g = pg.penv_env in
   let noop () : prover_result g ctxt goals =
@@ -1197,6 +1218,7 @@ let rec try_prove_core (pg: penv) (ctxt goals: list slprop_view) : T.Tac (prover
   | [] -> noop ()
   | goals ->
     debug_prover g (fun _ -> Printf.sprintf "proving\n%s\n from\n%s\n" (show_slprops goals) (show_slprops ctxt));
+    let pg = check_steps pg ctxt goals in
     let step : option (prover_result g ctxt goals) =
       first_some [
         (fun _ -> elim_first g ctxt goals (unpack_and_norm_ctxt g));
@@ -1239,12 +1261,6 @@ let try_prove (g: env) (ctxt goals: slprop) allow_amb : T.Tac (prover_result g [
     let h2: slprop_equiv g2 goals' goals = RU.magic () in
     cont_elab_equiv before h1 (VE_Refl _ _),
     cont_elab_equiv after (VE_Refl _ _) h2 |)
-
-let pp_slprops ts = ts
-  |> List.Tot.map elab_slprop
-  |> sort_terms
-  |> T.map pp
-  |> separate hardline
 
 let prove rng (g: env) (ctxt goals: slprop) allow_amb :
     T.Tac (g':env { env_extends g' g } &
@@ -1330,6 +1346,7 @@ let try_frame_pre (allow_ambiguous : bool) (#g:env)
 
 let rec try_elim_core (pg: penv) (ctxt: list slprop_view) :
     T.Tac (prover_result_nogoals pg.penv_env ctxt) =
+  let pg = check_steps pg ctxt [] in
   let g = pg.penv_env in
   let noop () : prover_result g ctxt [] =
     (| g, ctxt, [], [], fun g'' ->
