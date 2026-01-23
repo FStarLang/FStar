@@ -2,7 +2,7 @@
   - Expected failure:
   - Tactic failed
   - Cannot prove:
-      R.pts_to r (*?u263*)_
+      R.pts_to r (*?u265*)_
   - In the context:
       my_inv _b2 r
 
