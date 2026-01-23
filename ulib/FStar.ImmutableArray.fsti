@@ -79,3 +79,17 @@ let elem_precedes (#a:Type u#a) (s:t a) (i : nat{i < length s})
       assert (memP (index l i) l);
       memP_precedes (index l i) l
     )
+
+let index_extensionality (#a: Type) (ia1 ia2: t a) 
+: Lemma
+  (requires
+    (length ia1 == length ia2 /\
+    (forall (i: nat) . i < length ia1 ==> index ia1 i == index ia2 i)))
+  (ensures (ia1 == ia2))
+= 
+  let l1 = (to_list ia1) in 
+  let l2 = (to_list ia2) in
+  FStar.List.Tot.index_extensionality l1 l2;
+  of_list_to_list ia1;
+  of_list_to_list ia2
+

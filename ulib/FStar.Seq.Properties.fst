@@ -665,3 +665,11 @@ let map_seq_append #a #b f s1 s2 =
   Classical.forall_intro (map_seq_index f (Seq.append s1 s2));
   assert (Seq.equal (map_seq f (Seq.append s1 s2))
                     (Seq.append (map_seq f s1) (map_seq f s2)))
+
+let index_extensionality (#a: eqtype) (s1 s2: seq a) : 
+Lemma (requires
+         (length s1 == length s2 /\
+         (forall (i: nat) . i < length s1 ==> index s1 i == index s2 i)))
+  (ensures (s1 == s2))
+= lemma_eq_intro s1 s2;
+  lemma_eq_elim s1 s2

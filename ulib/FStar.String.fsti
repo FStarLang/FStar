@@ -1,5 +1,5 @@
 (*
-   Copyright 2008-2019 Microsoft Research
+   Copyright 2008-2024 Microsoft Research
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -14,7 +14,9 @@
    limitations under the License.
 *)
 module FStar.String
+
 open FStar.List.Tot
+
 (* String is a primitive type in F*.
 
    Most of the functions in this interface have a special status in
