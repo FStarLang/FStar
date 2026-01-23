@@ -159,7 +159,6 @@ let get_fvs g (se: R.sigelt) : T.Tac (list (R.fv & list R.univ_name & R.term)) =
 
 let build_plems_from_lemma (g: env) (kind: plem_kind_t) (se: R.sigelt) : T.Tac (list plem) =
   T.concatMap (fun (fv, uvs, typ) ->
-    debug_prover g (fun _ -> Printf.sprintf "build_plems_from_lemma %s\n" (show (R.inspect_fv fv)));
     let args, ty = R.collect_arr_ln_bs typ in
     match R.inspect_comp ty with
     | R.C_Total ty | R.C_GTotal ty -> (
@@ -173,6 +172,7 @@ let build_plems_from_lemma (g: env) (kind: plem_kind_t) (se: R.sigelt) : T.Tac (
             (fun (i, p) ->
               match p with
               | Atom (FVarHead h) mkeys p ->
+                debug_prover g (fun _ -> Printf.sprintf "using prover lemma %s (%s) for %s: %s\n" (show (R.inspect_fv fv)) (string_of_int (i <: nat)) (show h) (show p));
                 [{
                   plem_lid = R.inspect_fv fv;
                   plem_kind = kind;
@@ -670,7 +670,7 @@ let teq_cfg_full = {
   teq_fail_fast = false;
   teq_mkeys_only = false;
   teq_noforce = false;
-  teq_match = true;
+  teq_match = false;
 }
 
 let teq_cfg_unamb =
@@ -1114,15 +1114,19 @@ let try_apply_intro_lemma (g: env) (lid: R.name) (i: nat) ctxt (goal: slprop_vie
     assume res == tm_unit;
     let post' = open_term' post unit_const 0 in
     let post'' = inspect_slprop g post' in
+    debug_prover g (fun _ -> Printf.sprintf "try_apply_intro_lemma: %s %s %s\n" (show lid) (string_of_int i) (show post''));
     if i >= List.length post'' then None else
     let post''_before, post''_i, post''_after = List.split3 post'' i in
     let post''_rest = post''_before @ post''_after in
     if do_match post''_i goal then (
-      debug_prover g (fun _ -> Printf.sprintf "try_apply_intro_lemma: applying %s by unifying %s and %s\n" (show lid) (show post) (show (elab_slprop goal)));
-      let ok = teq_slprop g teq_cfg_full post' (elab_slprop goal) in
-      debug_prover g (fun _ -> Printf.sprintf "try_apply_intro_lemma: unified %s and %s, result is %s\n" (show post) (show (elab_slprop goal)) (show ok));
+      debug_prover g (fun _ -> Printf.sprintf "try_apply_intro_lemma: applying %s by unifying %s and %s\n" (show lid) (show (elab_slprop post''_i)) (show (elab_slprop goal)));
+      // Do not unify non-mkeys until after we run the prover on the subproblem.
+      let ok = teq_slprop g teq_cfg_first_mkeys_pass (elab_slprop post''_i) (elab_slprop goal) in
+      debug_prover g (fun _ -> Printf.sprintf "try_apply_intro_lemma: unified(1) %s and %s, result is %s\n" (show (elab_slprop post''_i)) (show (elab_slprop goal)) (show ok));
       Some (| g, [Unknown pre], fun subresult ->
         let (| g', ctxt', k |) = prover_result_solved_unpack subresult in
+        let ok = teq_slprop g teq_cfg_full (elab_slprop post''_i) (elab_slprop goal) in
+        debug_prover g (fun _ -> Printf.sprintf "try_apply_intro_lemma: unified(2) %s and %s, result is %s\n" (show (elab_slprop post''_i)) (show (elab_slprop goal)) (show ok));
         (| g', ctxt' @ post''_rest, [], [goal], fun (g'': env { env_extends g'' g' }) ->
           let c = C_STGhost inames { pre; post; res; u } in
           let typing = core_check_term g' t T.E_Ghost ty in
