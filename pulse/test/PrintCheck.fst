@@ -1,4 +1,4 @@
-module Print
+module PrintCheck
 
 #lang-pulse
 open Pulse

@@ -1,8 +1,3 @@
-* Warning 274:
-  - Implicitly opening namespace 'fstar.tactics.' shadows module 'print' in file
-    "Print.fst".
-  - Rename "Print.fst" to avoid conflicts.
-
 * Info at LoopInvariants.fst(64,17-64,20):
   - Expected failure:
   - When using multiple invariants, they must all be in the "new" style without a binder.
