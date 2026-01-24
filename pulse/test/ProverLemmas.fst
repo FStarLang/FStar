@@ -4,10 +4,13 @@ open Pulse
 
 let foo (p: slprop) : slprop = p
 
+assume val pred1 : prop
+assume val pred2 : p:prop { pred1 ==> p }
+
 [@@expect_failure]
 ghost fn foo_demo ()
-  requires foo (pure (1 < 0))
-  ensures foo (pure (forall (x y: nat). x == y))
+  requires foo (pure pred1)
+  ensures foo (pure pred2)
 {}
 
 [@@pulse_eager_elim]
@@ -37,8 +40,8 @@ ghost fn foo_intro (q: prop)
 }
 
 ghost fn foo_demo ()
-  requires foo (pure (1 < 0))
-  ensures foo (pure (forall (x y: nat). x == y))
+  requires foo (pure pred1)
+  ensures foo (pure pred2)
 {}
 
 let bar (p: slprop) = p
