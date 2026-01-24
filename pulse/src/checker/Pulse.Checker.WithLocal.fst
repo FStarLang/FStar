@@ -103,6 +103,7 @@ let check
         (| Some init, init_u, init_t, magic(), magic() |)
 
       | _, Some init ->
+        let ty, _ = tc_type_phase1 g ty in
         let (| u, ty_typing |) = check_universe g ty in
         let (| init, init_typing |) = check_term g init T.E_Total ty in
         let ty_typing : universe_of g ty u = ty_typing in
@@ -114,6 +115,7 @@ let check
           "allocating a local variable: type must be specified when there is no initializer"
 
       | _, None ->
+        let ty, _ = tc_type_phase1 g ty in
         let (| u, ty_typing |) = check_universe g ty in
         let ty_typing : universe_of g ty u = ty_typing in
         (| None, u, ty, ty_typing, () |)

@@ -121,6 +121,7 @@ let check
           fail g (Some <| head_range t)
             "allocating a local array: type must be specified when there is no initializer")
       | _ ->
+        let ty, _ = tc_type_phase1 g ty in
         match is_annotated_type_array ty with
         | None ->
           fail g (Some (Pulse.RuntimeUtils.range_of_term ty))
