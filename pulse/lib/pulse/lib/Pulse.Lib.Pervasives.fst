@@ -23,6 +23,7 @@ include Pulse.Lib.Send
 include Pulse.Lib.Forall
 include Pulse.Lib.Array
 include Pulse.Lib.Reference
+include Pulse.Lib.Reference.Array
 include Pulse.Lib.Primitives // TODO: what if we want to support several architectures?
 include Pulse.Class.PtsTo
 include Pulse.Class.Duplicable

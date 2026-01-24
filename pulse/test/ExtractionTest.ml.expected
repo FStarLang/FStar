@@ -5,12 +5,12 @@ let rec test_invariants_and_later (uu___ : unit) : unit=
 let rec test_read_write (x : FStar_UInt32.t Pulse_Lib_Reference.ref)
   (_'n : unit) : unit=
   let n = Pulse_Lib_Reference.read x () () in
-  Pulse_Lib_Reference.write x (FStar_UInt32.add n Stdint.Uint32.zero) ()
+  Pulse_Lib_Reference.write x (FStar_UInt32.add n Stdint.Uint32.zero)
 let rec test_write_10 (x : FStar_UInt32.t Pulse_Lib_Reference.ref)
   (_'n : unit) : unit=
-  Pulse_Lib_Reference.write x (Stdint.Uint32.of_int (2)) ();
+  Pulse_Lib_Reference.write x (Stdint.Uint32.of_int (2));
   test_read_write x ();
-  Pulse_Lib_Reference.write x Stdint.Uint32.zero ()
+  Pulse_Lib_Reference.write x Stdint.Uint32.zero
 let rec test_inner_ghost_fun (uu___ : unit) : unit= ()
 let rec write10 (x : FStar_UInt32.t Pulse_Lib_Reference.ref) (_'n : unit) :
   unit=
@@ -23,7 +23,7 @@ let rec write10 (x : FStar_UInt32.t Pulse_Lib_Reference.ref) (_'n : unit) :
        test_write_10 x ();
        (let __anf0 = Pulse_Lib_Reference.read ctr () () in
         Pulse_Lib_Reference.write ctr
-          (FStar_UInt32.sub __anf0 Stdint.Uint32.one) ()))
+          (FStar_UInt32.sub __anf0 Stdint.Uint32.one)))
 let rec fill_array (x : FStar_UInt32.t Pulse_Lib_Array_Core.array)
   (n : FStar_SizeT.t) (v : FStar_UInt32.t) (_'s : unit) : unit=
   let i = Pulse_Lib_Reference.alloc () Stdint.Uint64.zero in
@@ -36,7 +36,7 @@ let rec fill_array (x : FStar_UInt32.t Pulse_Lib_Array_Core.array)
        Pulse_Lib_Array_Core.mask_write x __anf0 v () ();
        (let __anf01 = Pulse_Lib_Reference.read i () () in
         Pulse_Lib_Reference.write i
-          (FStar_SizeT.add __anf01 Stdint.Uint64.one) ()))
+          (FStar_SizeT.add __anf01 Stdint.Uint64.one)))
 let rec sub_array (x : FStar_UInt32.t Pulse_Lib_Array_Core.array) : unit=
   let __anf0 = Pulse_Lib_Array_Core.sub x () () Stdint.Uint64.one () () in
   Pulse_Lib_Array_Core.mask_write __anf0 Stdint.Uint64.zero

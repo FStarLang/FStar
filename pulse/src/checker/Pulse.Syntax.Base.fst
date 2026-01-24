@@ -241,13 +241,13 @@ let rec eq_st_term (t1 t2:st_term)
     | Tm_WithLocal { binder=x1; initializer=e1; body=b1 },
       Tm_WithLocal { binder=x2; initializer=e2; body=b2 } ->
       eq_tm x1.binder_ty x2.binder_ty &&
-      eq_tm e1 e2 &&
+      eq_tm_opt e1 e2 &&
       eq_st_term b1 b2
 
     | Tm_WithLocalArray { binder=x1; initializer=e1; length=n1; body=b1 },
       Tm_WithLocalArray { binder=x2; initializer=e2; length=n2; body=b2 } ->
       eq_tm x1.binder_ty x2.binder_ty &&
-      eq_tm e1 e2 &&
+      eq_tm_opt e1 e2 &&
       eq_tm n1 n2 &&
       eq_st_term b1 b2
 

@@ -1,6 +1,7 @@
 module Example.TestOnAutomation
 #lang-pulse
-open Pulse.Lib.Pervasives
+open Pulse
+open Pulse.Lib.Send
 
 ghost
 fn test_on_l_prover_emp (l:loc_id)

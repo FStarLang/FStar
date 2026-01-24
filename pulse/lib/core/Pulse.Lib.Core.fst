@@ -26,6 +26,10 @@ module Sep = PulseCore.IndirectionTheorySep
 let mkey = ()
 let no_mkeys = ()
 
+let pulse_eager_elim = ()
+let pulse_eager_intro = ()
+let pulse_intro = ()
+
 let allow_ambiguous = ()
 
 let slprop = slprop

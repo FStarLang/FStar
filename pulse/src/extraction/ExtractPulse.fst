@@ -71,6 +71,14 @@ let pulse_translate_expr : translate_expr_t = fun env e ->
     when string_of_mlpath p = "Pulse.Lib.Reference.alloc" ->
     EBufCreate (Stack, cb init, EConstant (UInt32, "1"))
 
+  | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) } , [ _; _ ])
+    when string_of_mlpath p = "Pulse.Lib.Reference.alloc_uninit" ->
+    EBufCreate (Stack, EAny, EConstant (UInt32, "1"))
+
+  | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ x ])
+    when string_of_mlpath p = "Pulse.Lib.Reference.free" ->
+    EUnit // no-op to support manual stack allocation for testing
+
   | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, [ ty ] )}, [ _ ])
   | MLE_TApp({ expr = MLE_Name p }, [ ty ] )
     when
@@ -110,16 +118,27 @@ let pulse_translate_expr : translate_expr_t = fun env e ->
       || string_of_mlpath p = "Pulse.Lib.Box.op_Bang" ->
     EBufRead (cb e, zero_for_deref)
 
+  | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ e1; e2 ])
+    when string_of_mlpath p = "Pulse.Lib.Reference.write" ->
+    EBufWrite (cb e1, zero_for_deref, cb e2)
+
   | MLE_App ({expr=MLE_App({expr=MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ e1 ])}, [e2])}, [_e3])
   | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ e1; e2; _e3 ])
-    when string_of_mlpath p = "Pulse.Lib.Reference.write"
-      || string_of_mlpath p = "Pulse.Lib.Box.op_Colon_Equals" ->
+    when string_of_mlpath p = "Pulse.Lib.Box.op_Colon_Equals" ->
     EBufWrite (cb e1, zero_for_deref, cb e2)
 
   (* Pulse arrays *)
-  | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [_; x; n; _; _])
+  | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [_; n; _; _])
     when string_of_mlpath p = "Pulse.Lib.Array.Core.mask_alloc_with_vis" ->
+    EBufCreate (Stack, EAny, cb n)
+
+  | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [_; x; n])
+    when string_of_mlpath p = "Pulse.Lib.Array.PtsTo.alloc" ->
     EBufCreate (Stack, cb x, cb n)
+
+  | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [x; _; _])
+    when string_of_mlpath p = "Pulse.Lib.Array.Core.mask_free" ->
+    EUnit // no-op to support manual stack allocation for testing
 
   | MLE_App ({ expr = MLE_Name p }, [ x; n])
   | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ x; n])
@@ -147,11 +166,15 @@ let pulse_translate_expr : translate_expr_t = fun env e ->
     EBufSub (translate_expr env a, translate_expr env i)
 
   | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ r; _p; _w ])
-    when string_of_mlpath p = "Pulse.Lib.Reference.to_array" ->
+    when string_of_mlpath p = "Pulse.Lib.Reference.to_array_mask" ->
     translate_expr env r
 
   | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ a; i; _p; _w; _m ])
     when string_of_mlpath p = "Pulse.Lib.Reference.array_at" ->
+    EBufSub (translate_expr env a, translate_expr env i)
+
+  | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ a; i; _w; _m ])
+    when string_of_mlpath p = "Pulse.Lib.Reference.array_at_uninit" ->
     EBufSub (translate_expr env a, translate_expr env i)
 
   | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ x; _w ])

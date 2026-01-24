@@ -3,6 +3,14 @@ name = "tests"
 version = "0.1.0"
 edition = "2021"
 
+[lints.rust]
+unused = "allow"
+unused_mut = "allow"
+unused_variables = "allow"
+non_camel_case_types = "allow"
+non_snake_case = "allow"
+non_upper_case_globals = "allow"
+
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]

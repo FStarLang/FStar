@@ -89,19 +89,55 @@ ghost fn placeless_on_elim (p: slprop) {| placeless p |} l
   requires on l p
   ensures p
 
+[@@pulse_eager_intro]
+ghost fn on_emp_intro l
+  ensures on l emp
+
+[@@pulse_eager_elim]
+ghost fn on_emp_elim l
+  requires on l emp
+
+[@@pulse_eager_intro]
+ghost fn on_loc_intro (l1 l2: loc_id)
+  requires pure (l1 == l2)
+  ensures on l1 (loc l2)
+
+[@@pulse_eager_elim]
+ghost fn on_loc_elim l1 l2
+  requires on l1 (loc l2)
+  ensures pure (l1 == l2)
+
+[@@pulse_eager_intro]
+ghost fn on_on_intro (l1 l2: loc_id) p
+  requires on l2 p
+  ensures on l1 (on l2 p)
+
+[@@pulse_eager_elim]
+ghost fn on_on_elim l1 l2 p
+  requires on l1 (on l2 p)
+  ensures on l2 p
+
+[@@pulse_eager_intro]
+ghost fn on_pure_intro l p
+  requires pure p
+  ensures on l (pure p)
+
+[@@pulse_eager_elim]
 ghost fn on_pure_elim l p
   requires on l (pure p)
   ensures pure p
 
-ghost fn on_star_elim #l (p q: slprop)
-  requires on l (p ** q)
-  ensures on l p
-  ensures on l q
-
+[@@pulse_eager_intro]
 ghost fn on_star_intro #l (p q: slprop)
   requires on l p
   requires on l q
   ensures on l (p ** q)
+
+[@@pulse_eager_elim]
+ghost fn on_star_elim #l (p q: slprop)
+  requires on l (p ** q)
+  ensures on l p
+  ensures on l q
 
 instance val placeless_on (l: loc_id) (p: slprop) : placeless (on l p)
 instance val placeless_emp : placeless emp
@@ -113,12 +149,17 @@ instance val placeless_slprop_ref_pts_to x y : placeless (slprop_ref_pts_to x y)
 instance val placeless_exists #a (p: a -> slprop) {| ((x:a) -> placeless (p x)) |} :
   placeless (exists* x. p x)
 
+[@@pulse_eager_intro]
+ghost fn on_exists_intro u#a #l (#a: Type u#a) (p: a -> slprop)
+  requires literally (exists* x. on l (p x))
+  ensures on l (exists* x. p x)
+
+[@@pulse_eager_elim]
 ghost fn on_exists_elim u#a #l (#a: Type u#a) (p: a -> slprop)
   requires on l (exists* x. p x)
   ensures exists* x. on l (p x)
 
-let in_same_process p = exists* l. loc l ** pure (process_of l == process_of p)
-val timeless_in_same_process p : Lemma (timeless (in_same_process p)) [SMTPat (timeless (in_same_process p))]
+let in_same_process p : timeless_slprop = exists* l. loc l ** pure (process_of l == process_of p)
 instance val duplicable_in_same_process p : duplicable (in_same_process p)
 
 [@@Tactics.Typeclasses.tcclass; erasable]

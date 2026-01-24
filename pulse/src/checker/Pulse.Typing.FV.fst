@@ -191,12 +191,12 @@ let rec freevars_close_st_term' (t:st_term) (x:var) (i:index)
 
     | Tm_WithLocal { binder; initializer; body } ->
       freevars_close_term' binder.binder_ty x i;
-      freevars_close_term' initializer x i;
+      freevars_close_term_opt' initializer x i;
       freevars_close_st_term' body x (i + 1)
 
     | Tm_WithLocalArray { binder; initializer; length; body } ->
       freevars_close_term' binder.binder_ty x i;
-      freevars_close_term' initializer x i;
+      freevars_close_term_opt' initializer x i;
       freevars_close_term' length x i;
       freevars_close_st_term' body x (i + 1)
 
@@ -750,8 +750,12 @@ let rec st_typing_freevars
     st_typing_freevars_rewrite d st_typing_freevars
   | T_WithLocal .. ->
     st_typing_freevars_withlocal d st_typing_freevars
+  | T_WithLocalUninit .. ->
+    admit ()
   | T_WithLocalArray .. ->
     st_typing_freevars_withlocalarray d st_typing_freevars
+  | T_WithLocalArrayUninit .. ->
+    admit ()
   | T_Admit .. ->
     st_typing_freevars_admit d st_typing_freevars
   | T_Unreachable _ c c_typing _ ->

@@ -21,7 +21,7 @@ open Pulse.Lib.Core
 open PulseCore.FractionalPermission
 open FStar.Ghost
 open Pulse.Class.PtsTo
-open Pulse.Lib.Array.Basic
+open Pulse.Lib.Array.Core
 open Pulse.Lib.SmallType
 open Pulse.Lib.Send
 module T = FStar.Tactics
@@ -31,9 +31,11 @@ val null #a : ref a
 
 val is_null #a (r : ref a) : b:bool{b <==> r == null #a}
 
+val pts_to_uninit (#a: Type u#a) ([@@@mkey]r: ref a) : slprop
 val pts_to (#a:Type u#a) ([@@@mkey]r:ref a) (#[T.exact (`1.0R)] p:perm) (n:a) : slprop
 
 instance val is_send_pts_to #a r #p n : is_send (pts_to #a r #p n)
+instance val is_send_pts_to_uninit #a r : is_send (pts_to_uninit #a r)
 
 [@@pulse_unfold]
 instance has_pts_to_ref (a:Type u#a) : has_pts_to (ref a) a = {
@@ -43,15 +45,23 @@ instance has_pts_to_ref (a:Type u#a) : has_pts_to (ref a) a = {
 val pts_to_timeless (#a: Type u#a) (r:ref a) (p:perm) (n:a)
   : Lemma (timeless (pts_to r #p n))
           [SMTPat (timeless (pts_to r #p n))]
+val pts_to_uninit_timeless (#a: Type u#a) (r:ref a)
+  : Lemma (timeless (pts_to_uninit r))
+          [SMTPat (timeless (pts_to_uninit r))]
 
 val is_full_ref #a (x: ref a) : prop
 
-[@@deprecated "Reference.alloc is unsound; only use for model implementations"]
-fn alloc u#a (#a: Type u#a) {| small_type u#a |} (x:a)
+[@@pulse_intro]
+ghost fn forget_init u#a (#a: Type u#a) (r: ref a) #n
+  requires pts_to r n
+  ensures pts_to_uninit r
+
+[@@deprecated "Reference.alloc_uninit is unsound; only use for model implementations"]
+fn alloc_uninit u#a (a: Type u#a) {| small_type u#a |} ()
   returns  r : ref a
-  ensures  r |-> x
+  ensures  pts_to_uninit r
   ensures  pure (is_full_ref r)
-  
+
 fn read u#a (#a: Type u#a) (r:ref a) (#n:erased a) (#p:perm)
   preserves r |-> Frac p n
   returns  x : a
@@ -64,19 +74,25 @@ fn ( ! ) u#a (#a: Type u#a) (r:ref a) (#n:erased a) (#p:perm)
   returns  x : a
   ensures  rewrites_to x n
 
-fn write u#a (#a: Type u#a) (r:ref a) (x:a) (#n:erased a)
-  requires r |-> n
+fn write u#a (#a: Type u#a) (r:ref a) (x:a)
+  requires pts_to_uninit r
   ensures  r |-> x
 
 (* alias for write *)
 inline_for_extraction
-fn ( := ) u#a (#a: Type u#a) (r:ref a) (x:a) (#n:erased a)
-  requires r |-> n
+fn ( := ) u#a (#a: Type u#a) (r:ref a) (x:a)
+  requires pts_to_uninit r
   ensures  r |-> x
 
+[@@deprecated "Reference.alloc is unsound; only use for model implementations"]
+fn alloc u#a (#a: Type u#a) {| small_type u#a |} (x:a)
+  returns  r : ref a
+  ensures  r |-> x
+  ensures  pure (is_full_ref r)
+
 [@@deprecated "Reference.free is unsound; only use for model implementations"]
-fn free u#a (#a: Type u#a) (r:ref a) (#n:erased a)
-  requires pts_to r n
+fn free u#a (#a: Type u#a) (r:ref a)
+  requires pts_to_uninit r
   requires pure (is_full_ref r)
 
 ghost
@@ -131,40 +147,64 @@ fn pts_to_not_null u#a (#a: Type u#a) (#p:_) (r:ref a) (#v:a)
   preserves r |-> Frac p v
   ensures  pure (not (is_null #a r))
 
+ghost
+fn pts_to_uninit_not_null u#a (#a: Type u#a) (r:ref a)
+  preserves pts_to_uninit r
+  ensures  pure (not (is_null #a r))
+
 val to_array_ghost #a (r: ref a) : GTot (array a)
 
 unobservable
-fn to_array u#a (#a: Type u#a) (r: ref a) #p (#v: erased a)
+fn to_array_mask u#a (#a: Type u#a) (r: ref a) #p (#v: erased a)
   requires r |-> Frac p v
   returns arr: array a
   ensures rewrites_to arr (to_array_ghost r)
-  ensures arr |-> Frac p (seq![reveal v])
+  ensures pts_to_mask arr #p seq![Some (reveal v)] (fun _ -> True)
   ensures pure (length arr == 1)
 
 ghost
-fn return_to_array u#a (#a: Type u#a) (r: ref a) #p (#v: Seq.seq a)
-  requires to_array_ghost r |-> Frac p v
-  requires pure (length (to_array_ghost r) == 1)
+fn return_to_array_mask u#a (#a: Type u#a) (r: ref a) #p #v #m
+  requires pts_to_mask (to_array_ghost r) #p v m
+  requires pure (m 0)
+  requires pure (Seq.length v == 1 /\ Some? (Seq.index v 0))
   returns _: squash (Seq.length v == 1)
-  ensures r |-> Frac p (Seq.index v 0)
+  ensures exists* (v0:a). r |-> Frac p v0 ** pure (Seq.index v 0 == Some v0)
 
 val array_at_ghost (#a: Type u#a) (arr: array a) (i: nat { i < length arr }) : GTot (r:ref a { to_array_ghost r == gsub arr i (i+1) })
 
 unobservable
-fn array_at u#a (#a: Type u#a) (arr: array a) (i: SizeT.t) #p (#v: erased (Seq.seq a) { SizeT.v i < length arr /\ length arr == Seq.length v }) #mask
+fn array_at u#a (#a: Type u#a) (arr: array a) (i: SizeT.t) #p
+    (#v: erased (Seq.seq (option a)) { SizeT.v i < length arr /\ length arr == Seq.length v /\ Some? (Seq.index v (SizeT.v i)) }) #mask
   requires pts_to_mask arr #p v mask
   requires pure (mask (SizeT.v i))
   returns r: ref a
   ensures rewrites_to r (array_at_ghost arr (SizeT.v i))
-  ensures r |-> Frac p (Seq.index v (SizeT.v i))
+  ensures r |-> Frac p (Some?.v (Seq.index v (SizeT.v i)))
   ensures pts_to_mask arr #p v (fun k -> mask k /\ k <> SizeT.v i)
 
+unobservable
+fn array_at_uninit u#a (#a: Type u#a) (arr: array a) (i: SizeT.t)
+    (#v: erased (Seq.seq (option a)) { SizeT.v i < length arr /\ length arr == Seq.length v }) #mask
+  requires pts_to_mask arr v mask
+  requires pure (mask (SizeT.v i))
+  returns r: ref a
+  ensures rewrites_to r (array_at_ghost arr (SizeT.v i))
+  ensures pts_to_uninit r
+  ensures pts_to_mask arr v (fun k -> mask k /\ k <> SizeT.v i)
+
 ghost
-fn return_array_at u#a (#a: Type u#a) (arr: array a) (i: nat) (#p: perm) (#v: a) (#v': Seq.seq a { i < length arr /\ length arr == Seq.length v' }) (#mask: nat->prop)
+fn return_array_at u#a (#a: Type u#a) (arr: array a) (i: nat) (#p: perm) (#v: a) (#v': Seq.seq (option a) { i < length arr /\ length arr == Seq.length v' }) (#mask: nat->prop)
   requires array_at_ghost arr i |-> Frac p v
   requires pts_to_mask arr #p v' mask
   requires pure (~(mask i))
-  ensures pts_to_mask arr #p (Seq.upd v' i v) (fun k -> mask k \/ k == i)
+  ensures pts_to_mask arr #p (Seq.upd v' i (Some v)) (fun k -> mask k \/ k == i)
+
+ghost
+fn return_array_at_uninit u#a (#a: Type u#a) (arr: array a) (i: nat) (#v': Seq.seq (option a) { i < length arr /\ length arr == Seq.length v' }) (#mask: nat->prop)
+  requires pts_to_uninit (array_at_ghost arr i)
+  requires pts_to_mask arr v' mask
+  requires pure (~(mask i))
+  ensures exists* vi. pts_to_mask arr (Seq.upd v' i vi) (fun k -> mask k \/ k == i)
 
 fn replace u#a (#a:Type u#a) (r:ref a) (x:a) (#v:erased a)
   requires r |-> v

@@ -198,24 +198,31 @@ let maybe_elaborate_stateful_head (g:env) (t:st_term)
       { t with term=Tm_Match {sc; returns_=post_match; brs} }
     in
     Pulse.Checker.Base.hoist g (Inl sc) true rebuild
-  | Tm_WithLocal { binder; initializer; body } ->
+  | Tm_WithLocal { binder; initializer=Some initializer; body } ->
     let rebuild (sc:either term st_term {Inl? sc})
     : T.Tac st_term
     = let Inl initializer = sc in
-      { t with term=Tm_WithLocal {binder; initializer; body } }
+      { t with term=Tm_WithLocal {binder; initializer=Some initializer; body } }
     in
     Pulse.Checker.Base.hoist g (Inl initializer) true rebuild
-  | Tm_WithLocalArray { binder; initializer; body; length } -> (
+  | Tm_WithLocalArray { binder; initializer=None; body; length } ->
+    let rebuild (sc:either term st_term {Inl? sc})
+    : T.Tac st_term
+    = let Inl length = sc in
+      { t with term=Tm_WithLocalArray {binder; initializer=None; body; length } }
+    in
+    Pulse.Checker.Base.hoist g (Inl length) true rebuild
+  | Tm_WithLocalArray { binder; initializer=Some initializer; body; length } -> (
     (* Very awkward to compose two of these. *)
     let rebuild_len t (sc:either term st_term {Inl? sc})
     : T.Tac st_term
     = let Inl length = sc in
-      { t with term=Tm_WithLocalArray {binder; initializer; body; length } }
+      { t with term=Tm_WithLocalArray {binder; initializer=Some initializer; body; length } }
     in
     let rebuild_init (sc:either term st_term {Inl? sc})
     : T.Tac st_term
     = let Inl initializer = sc in
-      let t = { t with term=Tm_WithLocalArray {binder; initializer; body; length } } in
+      let t = { t with term=Tm_WithLocalArray {binder; initializer=Some initializer; body; length } } in
       match Pulse.Checker.Base.hoist g (Inl length) true (rebuild_len t) with
       | None -> t
       | Some t -> t

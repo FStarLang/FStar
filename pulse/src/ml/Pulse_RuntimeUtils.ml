@@ -212,6 +212,16 @@ let teq_nosmt_force (g:TcEnv.env) (ty1:S.term) (ty2:S.term) =
 let teq_nosmt_force_phase1 (g:TcEnv.env) (ty1:S.term) (ty2:S.term) =
   teq_nosmt_force {g with phase1=true; admit=true } ty1 ty2
 
+let teq_nosmt (g:TcEnv.env) (ty1:S.term) (ty2:S.term) =
+  let issues, res = FStarC_Errors.catch_errors (fun _ ->
+    let g = TcEnv.set_range g ty1.pos in
+    let ok = FStarC_TypeChecker_Rel.teq_nosmt g ty1 ty2 in
+    ok) in
+  match res with Some (Some guard) -> true | _ -> false
+
+let teq_nosmt_phase1 (g:TcEnv.env) (ty1:S.term) (ty2:S.term) =
+  teq_nosmt {g with phase1=true; admit=true } ty1 ty2
+
 let whnf_lax (g:TcEnv.env) (t:S.term) : S.term = 
   FStarC_TypeChecker_Normalize.unfold_whnf' [TcEnv.Unascribe] g t
 
@@ -277,3 +287,6 @@ let universe_of_well_typed_term g t
     with
     | _ ->
       None
+
+let try_lookup_lid g lid =
+  FStarC_TypeChecker_Env.try_lookup_lid g (FStarC_Ident.lid_of_path lid FStarC_Range.dummyRange)

@@ -39,17 +39,19 @@ unobservable fn array_slice u#t (#t: Type u#t) #a (x: array t) (#y: erased (seq 
   open_lifetime a;
   use_borrow a (x |-> Frac p y);
   to_mask x;
+  with y_. assert pts_to_mask x #p y_ (fun _ -> True);
   let x' = sub x i (SizeT.v j);
   with y'. assert pure (y' == slice y (SizeT.v i) (SizeT.v j));
   intro (trade (x' |-> Frac p y') (x |-> Frac p y))
-      #(pts_to_mask x #p y (fun k -> l_True /\ ~(SizeT.v i <= k /\ k < SizeT.v j))) fn _ {
+      #(pts_to_mask x #p y_ (fun k -> l_True /\ ~(SizeT.v i <= k /\ k < SizeT.v j))) fn _ {
     to_mask x';
     return_sub x;
-    mask_vext x y;
     from_mask x;
+    with y''. assert pts_to x #p y'' ** pure (Seq.equal y y'');
   };
   weaken_opened (x |-> Frac p y) (x' |-> Frac p y');
   from_mask x';
+  with y''. assert pts_to (gsub x (SizeT.v i) (SizeT.v j)) #p y'' ** pure (Seq.equal y' y'');
   end_use_borrow a (x' |-> Frac p y');
   close_lifetime a;
   fold array_bpts_to a x' y';
@@ -75,7 +77,7 @@ fn op_Array_Access u#t (#t: Type u#t) #a (x: array t) (#y: erased (seq t)) (i: S
 }
 
 fn demo () returns r: (r: bool {r}) {
-  let mut arr = [| 0uy; 10sz |];
+  let mut arr: array UInt8.t = [| 0uy; 10sz |];
   assert live arr; pts_to_len arr; // forget value
 
   let a = begin_lifetime ();

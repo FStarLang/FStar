@@ -137,10 +137,10 @@ let tm_bind (x:binder) (e1:st_term) (e2:st_term) r : st_term =
 let tm_totbind (x:binder) (e1:term) (e2:st_term) r : st_term =
   PSB.(with_range (tm_totbind x e1 e2) r)
 
-let tm_let_mut (x:binder) (v:term) (k:st_term) r : st_term =
+let tm_let_mut (x:binder) (v:term option) (k:st_term) r : st_term =
   PSB.(with_range (tm_with_local x v k) r)
 
-let tm_let_mut_array (x:binder) (v:term) (n:term) (k:st_term) (r:range) : st_term =
+let tm_let_mut_array (x:binder) (v:term option) (n:term) (k:st_term) (r:range) : st_term =
   PSB.(with_range (tm_with_local_array x v n k) r)
 
 let tm_while (head:st_term) (invariant: (ident * slprop)) (body:st_term) r : st_term =

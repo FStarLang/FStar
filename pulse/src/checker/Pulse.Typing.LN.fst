@@ -267,12 +267,12 @@ let rec open_st_term_ln' (e:st_term)
 
     | Tm_WithLocal { binder; initializer; body } ->
       open_term_ln' binder.binder_ty x i;
-      open_term_ln' initializer x i;
+      open_term_ln_opt' initializer x i;
       open_st_term_ln' body x (i + 1)
     
     | Tm_WithLocalArray { binder; initializer; length; body } ->
       open_term_ln' binder.binder_ty x i;
-      open_term_ln' initializer x i;
+      open_term_ln_opt' initializer x i;
       open_term_ln' length x i;
       open_st_term_ln' body x (i + 1)
 
@@ -478,11 +478,11 @@ let rec ln_weakening_st (t:st_term) (i j:int)
       ln_weakening t2 i j
 
     | Tm_WithLocal { initializer; body } ->
-      ln_weakening initializer i j;
+      ln_weakening_opt initializer i j;
       ln_weakening_st body (i + 1) (j + 1)
 
     | Tm_WithLocalArray { initializer; length; body } ->
-      ln_weakening initializer i j;
+      ln_weakening_opt initializer i j;
       ln_weakening length i j;
       ln_weakening_st body (i + 1) (j + 1)
    
@@ -672,13 +672,13 @@ let rec open_term_ln_inv_st' (t:st_term)
     | Tm_WithLocal { binder; initializer; body } ->
       FStar.Pure.BreakVC.break_vc();
       open_term_ln_inv' binder.binder_ty x i;
-      open_term_ln_inv' initializer x i;
+      open_term_ln_inv_opt' initializer x i;
       open_term_ln_inv_st' body x (i + 1)
 
     | Tm_WithLocalArray { binder; initializer; length; body } ->
       FStar.Pure.BreakVC.break_vc();
       open_term_ln_inv' binder.binder_ty x i;
-      open_term_ln_inv' initializer x i;
+      open_term_ln_inv_opt' initializer x i;
       open_term_ln_inv' length x i;
       open_term_ln_inv_st' body x (i + 1)
 
@@ -867,13 +867,13 @@ let rec close_st_term_ln' (t:st_term) (x:var) (i:index)
     | Tm_WithLocal { binder; initializer; body } ->
       FStar.Pure.BreakVC.break_vc();
       close_term_ln' binder.binder_ty x i;
-      close_term_ln' initializer x i;
+      close_term_ln_opt' initializer x i;
       close_st_term_ln' body x (i + 1)
 
     | Tm_WithLocalArray { binder; initializer; length; body } ->
       FStar.Pure.BreakVC.break_vc();
       close_term_ln' binder.binder_ty x i;
-      close_term_ln' initializer x i;
+      close_term_ln_opt' initializer x i;
       close_term_ln' length x i;
       close_st_term_ln' body x (i + 1)
 
@@ -1217,6 +1217,9 @@ let rec st_typing_ln (#g:_) (#t:_) (#c:_)
       tot_or_ghost_typing_ln init_t_typing;
       ln_mk_ref init_t (-1)
 
+    | T_WithLocalUninit .. ->
+      admit()
+
     | T_WithLocalArray g _ init len body init_t c x init_typing len_typing init_t_typing c_typing body_typing ->
       FStar.Pure.BreakVC.break_vc ();
       tot_or_ghost_typing_ln init_typing;
@@ -1226,6 +1229,9 @@ let rec st_typing_ln (#g:_) (#t:_) (#c:_)
       comp_typing_ln c_typing;
       tot_or_ghost_typing_ln init_t_typing;
       ln_mk_array init_t (-1)
+
+    | T_WithLocalArrayUninit .. ->
+      admit()
 
     | T_Admit _ c c_typing
     | T_Unreachable _ c c_typing _ ->

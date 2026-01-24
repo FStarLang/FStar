@@ -291,9 +291,13 @@ let rec soundness (g:stt_env)
 
     | T_WithLocal .. ->
       WithLocal.withlocal_soundness d soundness
+    | T_WithLocalUninit .. ->
+      admit ()
 
     | T_WithLocalArray .. ->
       WithLocalArray.withlocalarray_soundness d soundness
+    | T_WithLocalArrayUninit .. ->
+      admit ()
 
     | T_Rewrite .. ->
       Rewrite.rewrite_soundness d

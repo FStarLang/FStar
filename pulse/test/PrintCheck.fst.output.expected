@@ -1,11 +1,6 @@
-* Warning 274:
-  - Implicitly opening namespace 'fstar.tactics.' shadows module 'print' in file
-    "Print.fst".
-  - Rename "Print.fst" to avoid conflicts.
-
-* Info at Print.fst(15,0-15,11):
+* Info at PrintCheck.fst(15,0-15,11):
   - Term
-    Print.test
+    PrintCheck.test
     has type
     x: Pulse.Lib.Reference.ref Prims.int
       -> fn
@@ -13,20 +8,20 @@
            returns x : Prims.int
            ensures x |-> ('v + 1) ** Pulse.Lib.Core.pure (x == x)
 
-* Info at Print.fst(20,0-20,12):
+* Info at PrintCheck.fst(20,0-20,12):
   - Term
-    Print.test2
+    PrintCheck.test2
     has type
     ghost fn
       requires Pulse.Lib.Core.emp
       returns _ret : Prims.int
-      ensures Print.q _ret
+      ensures PrintCheck.q _ret
 
-* Info at Print.fst(25,0-25,12):
+* Info at PrintCheck.fst(25,0-25,12):
   - Term
-    Print.test3
+    PrintCheck.test3
     has type
     ghost fn
       requires Pulse.Lib.Core.emp
-      ensures Print.r ()
+      ensures PrintCheck.r ()
 

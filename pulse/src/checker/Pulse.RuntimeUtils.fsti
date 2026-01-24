@@ -75,6 +75,7 @@ module T = FStar.Tactics.V2
 val tc_term_phase1 (g:env) (t:T.term) (instantiate_imps:bool) : Dv (option (T.term & T.term & T.tot_or_ghost) & T.issues)
 val teq_nosmt_force (g:env) (ty1 ty2:T.term) : Dv bool
 val teq_nosmt_force_phase1 (g:env) (ty1 ty2:T.term) : Dv bool
+val teq_nosmt_phase1 (g:env) (ty1 ty2:T.term) : Dv bool
 val whnf_lax (g:env) (t:T.term) : T.term
 val hnf_lax (g:env) (t:T.term) : T.term
 val beta_lax (g:env) (t:T.term) : T.term
@@ -117,3 +118,5 @@ val push_options () : Dv unit
 val pop_options () : Dv unit
 val set_options (opts: string) : Dv unit
 val universe_of_well_typed_term (g:T.env) (t:T.term) : Tac (option (u:T.universe{T.typing_token g t (T.E_Total, T.pack_ln (FStar.Stubs.Reflection.V2.Data.Tv_Type u))}))
+
+val try_lookup_lid : T.env -> R.name -> option ((universes & typ) & range)

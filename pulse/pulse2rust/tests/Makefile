@@ -95,7 +95,7 @@ $(RUST_SRC_DIR)/example_slice.rs: $(OUTPUT_DIR)/Example_Slice.ast
 	$(MAIN) -odir $(RUST_SRC_DIR) $+
 
 %.rlib: %.rs
-	rustc --crate-type rlib -o $@ $+
+	rustc -A unused --crate-type rlib -o $@ $+
 
 DPE_FILES = $(addprefix $(OUTPUT_DIR)/, \
 	EngineTypes.ast \

@@ -41,22 +41,29 @@ let pts_to_range
 
 let is_send_pts_to_range x i j p s = Tactics.Typeclasses.solve
 
-ghost fn fold_pts_to_range u#a (#a: Type u#a) (x: array a) (i: nat) (j: nat { i <= j /\ j <= length x }) #p #s0 s #mask
+ghost fn fold_pts_to_range u#a (#a: Type u#a) (x: array a)
+    (i: nat) (j: nat { i <= j /\ j <= length x }) #p #s0 s #mask
   requires pts_to_mask (gsub x i j) #p s0 mask
-  requires pure (Seq.equal s s0)
+  requires pure (Seq.length s == Seq.length s0 /\
+    (forall (i: nat). i < Seq.length s ==> Some (Seq.index s i) == Seq.index s0 i))
   requires pure (forall (k: nat). k < j - i ==> mask k)
   ensures pts_to_range x i j #p s
 {
   pts_to_mask_len (gsub x i j);
-  mask_ext (gsub x i j) s (fun _ -> True);
+  mask_ext (gsub x i j) s0 (fun _ -> True);
   from_mask (gsub x i j);
-  fold pts_to_range x i j #p s;
+  with v. fold pts_to_range x i j #p v;
+  assert pure (v `Seq.equal` s);
 }
 
 ghost fn unfold_pts_to_range u#a (#a: Type u#a) (x: array a) (i j: nat) #p s
   requires pts_to_range x i j #p s
   returns _: squash (i <= j /\ j <= length x)
-  ensures pts_to_mask (gsub x i j) #p s (fun _ -> True)
+  ensures exists* (s' : Seq.seq (option a)).
+    pts_to_mask (gsub x i j) #p s' (fun _ -> True) **
+    pure (Seq.length s' == Seq.length s /\
+      (forall (i: nat). i < Seq.length s' ==>
+        Seq.index s' i == Some (Seq.index s i)))
 {
   unfold pts_to_range x i j #p s;
   to_mask (gsub x i j);
@@ -114,8 +121,8 @@ fn pts_to_range_elim
 {
   unfold_pts_to_range a 0 (length a) #p s;
   gsub_elim a 0 (length a);
-  with v' mask. assert pts_to_mask a #p v' mask ** pure (Seq.equal v' s);
   from_mask a;
+  with s'. assert pts_to a #p s' ** pure (s `Seq.equal` s');
 }
 
 ghost
@@ -171,7 +178,6 @@ requires
   gsub_elim a m j;
   join_mask a;
   gsub_intro a i j;
-  mask_ext (gsub a i j) (Seq.append s1 s2) (fun _ -> True);
   fold_pts_to_range a i j #p (Seq.append s1 s2);
 }
 
@@ -191,11 +197,13 @@ fn pts_to_range_index
     pure (eq2 #int (Seq.length s) (r - l) /\
           res == Seq.index s (SZ.v i - l))
 {
+  pts_to_range_prop a;
   unfold_pts_to_range a l r #p s;
+  with s1 m1. assert pts_to_mask (gsub a l r) #p s1 m1;
+  assert pure (Seq.index s1 (SZ.v i - l) == Some (Seq.index s (SZ.v i - l)));
   gsub_elim a l r;
   let res = mask_read a i;
   gsub_intro a l r;
-  mask_vext (gsub a l r) s;
   fold_pts_to_range a l r #p s;
   res
 }
@@ -223,7 +231,6 @@ fn pts_to_range_upd
   mask_write a i v;
   gsub_intro a l r;
   let s = hide (Seq.upd s0 (SZ.v i - l) v);
-  mask_vext (gsub a l r) s;
   fold_pts_to_range a l r #1.0R s;
 }
 
@@ -256,7 +263,6 @@ fn pts_to_range_gather
   unfold_pts_to_range arr l r s0;
   unfold_pts_to_range arr l r s1;
   mask_gather (gsub arr l r);
-  with s. assert pts_to_mask (gsub arr l r) #(p0 +. p1) s (fun _ -> True);
-  fold_pts_to_range arr l r s;
-  assert pure (Seq.equal s s0 /\ Seq.equal s s1);
+  assert pure (s0 `Seq.equal` s1);
+  fold_pts_to_range arr l r s0;
 }

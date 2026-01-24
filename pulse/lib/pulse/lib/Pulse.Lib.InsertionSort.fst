@@ -134,7 +134,7 @@ let step_outer_invariant
 #pop-options
 
 
-#push-options "--z3rlimit_factor 2"
+#push-options "--z3rlimit_factor 3"
 fn insertion_sort u#a
       (#t:Type u#a)
       {| total_order t |}

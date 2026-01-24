@@ -96,6 +96,12 @@ let mk_pts_to (ty:term) (r:term) (v:term) : term =
   let t = tm_pureapp t (Some Implicit) tm_full_perm in
   tm_pureapp t None v
 
+let mk_pts_to_uninit (ty:term) (r:term) : term =
+  let t = tm_uinst (as_fv pts_to_uninit_lid) [u0] in
+  let t = tm_pureapp t (Some Implicit) ty in
+  let t = tm_pureapp t None r in
+  t
+
 let comp_return (c:ctag) (use_eq:bool) (u:universe) (t:term) (e:term) (post:term) (x:var)
   : comp =
 
@@ -456,13 +462,13 @@ let comp_par (cL:comp{C_ST? cL}) (cR:comp{C_ST? cR}) (x:var) : comp =
     post
   }
 
-let comp_withlocal_body_pre (pre:slprop) (init_t:term) (r:term) (init:term) : slprop =
-  tm_star pre (mk_pts_to init_t r init)
+let comp_withlocal_body_pre (pre:slprop) (init_t:term) (r:term) (init:option term) : slprop =
+  tm_star pre (match init with | Some init -> mk_pts_to init_t r init | None -> mk_pts_to_uninit init_t r)
 
 let comp_withlocal_body_post (post:term) (init_t:term) (r:term) : term =
-  tm_star post (tm_exists_sl u0 (as_binder init_t) (mk_pts_to init_t r (null_bvar 0)))
+  tm_star post (mk_pts_to_uninit init_t r)
 
-let comp_withlocal_body (r:var) (init_t:term) (init:term) (c:comp{C_ST? c}) : comp =
+let comp_withlocal_body (r:var) (init_t:term) (init:option term) (c:comp{C_ST? c}) : comp =
   let r = null_var r in
   C_ST {
     u = comp_u c;
@@ -486,6 +492,18 @@ let mk_array_pts_to (a:term) (arr:term) (v:term) : term =
   let t = tm_pureapp t (Some Implicit) tm_full_perm in
   tm_pureapp t None v
 
+let mk_array_pts_to_uninit (a:term) (arr:term) (len:term) : term =
+  let t = tm_uinst (as_fv array_pts_to_uninit_lid) [u0] in
+  let t = tm_pureapp t (Some Implicit) a in
+  let t = tm_pureapp t None arr in
+  tm_pureapp t None len
+
+let mk_array_pts_to_uninit_post (a:term) (arr:term) : term =
+  let t = tm_uinst (as_fv array_pts_to_uninit_post_lid) [u0] in
+  let t = tm_pureapp t (Some Implicit) a in
+  let t = tm_pureapp t None arr in
+  t
+
 // let mk_array_is_full (a:term) (arr:term) : term =
 //   let t = tm_uinst (as_fv array_is_full_lid) [u0] in
 //   let t = tm_pureapp t (Some Implicit) a in
@@ -501,25 +519,31 @@ let mk_szv (n:term) : term =
   let t = tm_fvar (as_fv szv_lid) in
   tm_pureapp t None n
 
-let comp_withlocal_array_body_pre (pre:slprop) (a:term) (arr:term) (init:term) (len:term) : slprop =
-  tm_star pre
-          (tm_star (mk_array_pts_to a arr (mk_seq_create u0 a (mk_szv len) init))
-                   (tm_pure (mk_eq2 u0 tm_nat (mk_array_length a arr) (mk_szv len))))
+let comp_withlocal_array_body_pre (pre:slprop) (a:term) (arr:term) (init:option term) (len:term) : slprop =
+  let arr_pre =
+    match init with
+    | Some init -> mk_array_pts_to a arr (mk_seq_create u0 a (mk_szv len) init)
+    | None -> mk_array_pts_to_uninit a arr (mk_szv len)
+  in
+  tm_star pre (tm_star arr_pre (tm_pure (mk_eq2 u0 tm_nat (mk_array_length a arr) (mk_szv len))))
 
 let mk_seq (u:universe) (a:term) : term =
   let t = tm_uinst (as_fv seq_lid) [u] in
   tm_pureapp t None a
 
-let comp_withlocal_array_body_post (post:term) (a:term) (arr:term) : term =
-  tm_star post (tm_exists_sl u0 (as_binder (mk_seq u0 a)) (mk_array_pts_to a arr (null_bvar 0)))
+let comp_withlocal_array_body_post (post:term) (a:term) (arr:term) (init: option term) : term =
+  tm_star post 
+    (match init with
+    | Some _ -> tm_exists_sl u0 (as_binder (mk_seq u0 a)) (mk_array_pts_to a arr (null_bvar 0))
+    | None -> mk_array_pts_to_uninit_post a arr)
 
-let comp_withlocal_array_body (arr:var) (a:term) (init:term) (len:term) (c:comp{C_ST? c}) : comp =
+let comp_withlocal_array_body (arr:var) (a:term) (init:option term) (len:term) (c:comp{C_ST? c}) : comp =
   let arr = null_var arr in
   C_ST {
     u = comp_u c;
     res = comp_res c;
     pre = comp_withlocal_array_body_pre (comp_pre c) a arr init len;
-    post = comp_withlocal_array_body_post (comp_post c) a arr
+    post = comp_withlocal_array_body_post (comp_post c) a arr init;
   }
 
 let comp_rewrite (p q:slprop) : comp =
@@ -1007,8 +1031,22 @@ type st_typing : env -> st_term -> comp -> Type =
       comp_typing_u g c ->
       st_typing (push_binding g x ppname_default (mk_ref init_t))
                 (open_st_term_nv body (v_as_nv x))
-                (comp_withlocal_body x init_t init c) ->
-      st_typing g (wrst c (Tm_WithLocal { binder = mk_binder_ppname (mk_ref init_t) binder_ppname; initializer=init; body } )) c
+                (comp_withlocal_body x init_t (Some init) c) ->
+      st_typing g (wrst c (Tm_WithLocal { binder = mk_binder_ppname (mk_ref init_t) binder_ppname; initializer=Some init; body } )) c
+
+  | T_WithLocalUninit:
+      g:env ->
+      binder_ppname:ppname ->
+      body:st_term ->
+      init_t:term ->
+      c:comp { C_ST? c } ->
+      x:var { None? (lookup g x) /\ ~(x `Set.mem` freevars_st body) } ->
+      universe_of g init_t u0 ->
+      comp_typing_u g c ->
+      st_typing (push_binding g x ppname_default (mk_ref init_t))
+                (open_st_term_nv body (v_as_nv x))
+                (comp_withlocal_body x init_t None c) ->
+      st_typing g (wrst c (Tm_WithLocal { binder = mk_binder_ppname (mk_ref init_t) binder_ppname; initializer=None; body } )) c
 
   | T_WithLocalArray:
       g:env ->
@@ -1025,8 +1063,24 @@ type st_typing : env -> st_term -> comp -> Type =
       comp_typing_u g c ->
       st_typing (push_binding g x ppname_default (mk_array a))
                 (open_st_term_nv body (v_as_nv x))
-                (comp_withlocal_array_body x a initializer length c) ->
-      st_typing g (wrst c (Tm_WithLocalArray { binder = mk_binder_ppname (mk_array a) binder_ppname; initializer; length; body } )) c
+                (comp_withlocal_array_body x a (Some initializer) length c) ->
+      st_typing g (wrst c (Tm_WithLocalArray { binder = mk_binder_ppname (mk_array a) binder_ppname; initializer = Some initializer; length; body } )) c
+
+  | T_WithLocalArrayUninit:
+      g:env ->
+      binder_ppname:ppname ->
+      length:term ->
+      body:st_term ->
+      a:term ->
+      c:comp { C_ST? c } ->
+      x:var { None? (lookup g x) /\ ~(x `Set.mem` freevars_st body) } ->
+      tot_typing g length tm_szt ->
+      universe_of g a u0 ->
+      comp_typing_u g c ->
+      st_typing (push_binding g x ppname_default (mk_array a))
+                (open_st_term_nv body (v_as_nv x))
+                (comp_withlocal_array_body x a None length c) ->
+      st_typing g (wrst c (Tm_WithLocalArray { binder = mk_binder_ppname (mk_array a) binder_ppname; initializer = None; length; body } )) c
 
   | T_Rewrite:
       g:env ->

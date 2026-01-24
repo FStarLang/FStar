@@ -377,14 +377,14 @@ let rec st_term_to_string' (level:string) (t:st_term)
     | Tm_WithLocal { binder; initializer; body } ->
       sprintf "let mut %s = %s;\n%s%s"
         (binder_to_string binder)
-        (term_to_string initializer)
+        (term_opt_to_string initializer)
         level
         (st_term_to_string' level body)
 
     | Tm_WithLocalArray { binder; initializer; length; body } ->
       sprintf "let mut %s = [| %s; %s |]\n%s%s"
         (binder_to_string binder)
-        (term_to_string initializer)
+        (term_opt_to_string initializer)
         (term_to_string length)
         level
         (st_term_to_string' level body)

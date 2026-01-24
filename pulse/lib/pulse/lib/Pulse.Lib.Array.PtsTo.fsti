@@ -43,12 +43,20 @@ instance val is_send_pts_to #a r #p n : is_send (pts_to #a r #p n)
 
 ghost fn to_mask u#a (#t: Type u#a) (arr: array t) #f (#v: erased _)
   requires arr |-> Frac f v
-  ensures pts_to_mask arr #f v (fun _ -> True)
+  ensures exists* (s: Seq.seq (option t)).
+    pts_to_mask arr #f s (fun _ -> True) **
+    pure (Seq.length s == Seq.length v /\
+      (forall (i: nat). i < Seq.length s ==>
+        Seq.index s i == Some (Seq.index v i)))
 
 ghost fn from_mask u#a (#t: Type u#a) (arr: array t) #f #v #mask
   requires pts_to_mask arr #f v mask
-  requires pure (forall (i: nat). i < Seq.length v ==> mask i)
-  ensures arr |-> Frac f v
+  requires pure (forall (i: nat). i < Seq.length v ==> mask i /\ Some? (Seq.index v i))
+  ensures exists* (v': Seq.seq t).
+    arr |-> Frac f v' **
+    pure (Seq.length v' == Seq.length v /\
+      (forall (i: nat). i < Seq.length v' ==>
+        Some (Seq.index v' i) == Seq.index v i))
 
 val pts_to_timeless (#a: Type u#a) (x:array a) (p:perm) (s:Seq.seq a)
   : Lemma (timeless (pts_to x #p s))
@@ -64,12 +72,11 @@ fn pts_to_not_null u#a (#a: Type u#a) (#p:_) (r:array a) (#v:Seq.seq a)
   preserves r |-> Frac p v
   ensures  pure (not (is_null #a r))
 
-inline_for_extraction
+[@@deprecated "Array.alloc is unsound; only use for model implementations"]
 fn alloc
         u#a (#elt: Type u#a) {| small_type u#a |}
         (x: elt)
         (n: SZ.t)
-  requires emp
   returns  a : array elt
   ensures  pts_to a (Seq.create (SZ.v n) x) **
            pure (length a == SZ.v n /\ is_full_array a)
@@ -98,6 +105,7 @@ fn op_Array_Assignment
   requires pts_to a s
   ensures  exists* s'. pts_to a s' ** pure (s' == Seq.upd s (SZ.v i) v)
 
+[@@deprecated "Array.free is unsound; only use for model implementations"]
 inline_for_extraction
 fn free
         u#a (#elt: Type u#a)

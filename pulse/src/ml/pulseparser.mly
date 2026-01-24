@@ -250,7 +250,7 @@ pulseStmtNoSeq:
     }
   | tm=tmEq args=list(termPulseLambda)
     { PulseSyntaxExtension_Sugar.mk_expr tm args }
-  | norw=optional_norewrite LET q=option(mutOrRefQualifier) p=pulsePattern typOpt=option(preceded(COLON, appTerm)) EQUALS init=bindableTerm
+  | norw=optional_norewrite LET q=option(mutOrRefQualifier) p=pulsePattern typOpt=option(preceded(COLON, appTerm)) init=letMutInit
     { PulseSyntaxExtension_Sugar.mk_let_binding norw q p typOpt (Some init) }
   | s=pulseBindableTerm
     { s }
@@ -290,10 +290,12 @@ matchStmt:
   | MATCH tm=appTermNoRecordExp c=option(ensuresSLProp) LBRACE brs=list(pulseMatchBranch) RBRACE
     { PulseSyntaxExtension_Sugar.mk_match tm c brs }
 
-bindableTerm:
-  | p=pulseBindableTerm { let p = PulseSyntaxExtension_Sugar.mk_stmt p (rr $loc) in Stmt_initializer p }
-  | s=noSeqTerm args=list(termPulseLambda) { Default_initializer (s, args) }
-  | LBRACK_BAR v=noSeqTerm SEMICOLON n=noSeqTerm BAR_RBRACK { Array_initializer { init=v; len=n } }
+letMutInit:
+  | EQUALS p=pulseBindableTerm { let p = PulseSyntaxExtension_Sugar.mk_stmt p (rr $loc) in Stmt_initializer p }
+  | EQUALS s=noSeqTerm args=list(termPulseLambda) { Default_initializer (Some s, args) }
+  | EQUALS LBRACK_BAR v=noSeqTerm SEMICOLON n=noSeqTerm BAR_RBRACK { Array_initializer { init=Some v; len=n } }
+  | EQUALS LBRACK_BAR n=noSeqTerm BAR_RBRACK { Array_initializer { init=None; len=n } }
+  | { Default_initializer (None, []) }
  
 pulseBindableTerm:
   | p=ifStmt { p }

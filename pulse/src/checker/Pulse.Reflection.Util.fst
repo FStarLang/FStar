@@ -658,6 +658,7 @@ let mk_stt_ghost_comp_equiv (g:R.env) (u:R.universe) (res inames pre1 post1 pre2
 
 let ref_lid = mk_pulse_lib_reference_lid "ref"
 let pts_to_lid = mk_pulse_lib_reference_lid "pts_to"
+let pts_to_uninit_lid = mk_pulse_lib_reference_lid "pts_to_uninit"
 
 let mk_ref (a:R.term) : R.term =
   let open R in
@@ -678,6 +679,8 @@ let mk_pulse_lib_array_core_lid s = pulse_lib_array_core @ [s]
 
 let array_lid = mk_pulse_lib_array_core_lid "array"
 let array_pts_to_lid = pulse_lib_array_ptsto @ ["pts_to"]
+let array_pts_to_uninit_lid = pulse_lib_array_core @ ["pts_to_uninit"]
+let array_pts_to_uninit_post_lid = pulse_lib_array_core @ ["pts_to_uninit_post"]
 let array_length_lid = mk_pulse_lib_array_core_lid "length"
 let array_is_full_lid = mk_pulse_lib_array_core_lid "is_full_array"
 let array_with_local_lid = pulse_lib_array_ptsto @ ["with_local"]
