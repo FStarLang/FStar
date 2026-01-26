@@ -291,7 +291,8 @@ let elim_str #a (w1 w2 : st_wp a) (p : (a & state -> Type0)) (s0:state)
   : Lemma (requires (w1 <<= w2))
           (ensures w1 s0 p ==> w2 s0 p)
   = ()
-
+#restart-solver
+#push-options "--z3rlimit_factor 4"
 (* Takes a while *)
 let rec interp_morph #a #b (c : rwtree a) (f : a -> rwtree b) (p:_) (s0:_)
   : Lemma (interp_as_wp c s0 (fun (y, s1) -> interp_as_wp (f y) s1 p) == interp_as_wp (tbind c f) s0 p)
@@ -312,7 +313,7 @@ let rec interp_morph #a #b (c : rwtree a) (f : a -> rwtree b) (p:_) (s0:_)
       Classical.forall_intro aux
 
     | _ -> ()  // this branch is unreachable
-
+#pop-options
 val interp_bind (#a #b:Type)
   (c : rwtree a) (f : a -> rwtree b)
   (w1 : st_wp a) (w2 : a -> st_wp b)
