@@ -905,7 +905,7 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
                let a_name = "pre_typing_"^tsym in
                Util.mkAssume(mkForall_fuel module_name t0.pos ([[f_has_t]], fsym::cvars,
                              mkImp(f_has_t, mk_tester "Tm_arrow" (mk_PreType f))),
-                             Some "pre-typing for functions",
+                             Some "pretyping",
                              module_name ^ "_" ^ a_name)
              in
              let t_interp =
