@@ -429,11 +429,12 @@ let go_normal () =
                 filenames, deps, true
               in
               if Options.force() then default_flydeps() else
-              match CheckedFiles.scan_deps_and_check_cache_validity fn with
+              begin match CheckedFiles.scan_deps_and_check_cache_validity fn with
               | Some (files, deps) ->
                 files, deps, false //we have all the checked files; no need to fly deps
               | None -> 
                 default_flydeps()
+              end
             | _ ->
               Errors.raise_error0 Errors.Error_TooManyFiles
                 "When using --ext fly_deps, only one file can be provided."
