@@ -1282,13 +1282,14 @@ let rec norm : cfg -> env -> stack -> term -> term =
             //Finally, we add one optimization for laziness by tying a knot in rec_env
             //i.e., we set memo := Some (rec_env, \x. f x)
 
-            let rec_env, memos, _ = List.fold_right (fun lb (rec_env, memos, i) ->
+            let env_elts, memos, _ = List.fold_right (fun lb (env_elts, memos, i) ->
                     let bv = {Inl?.v lb.lbname with index=i} in
                     let f_i = Syntax.bv_to_tm bv in
                     let fix_f_i = mk (Tm_let {lbs; body=f_i}) t.pos in
                     let memo = fresh_memo () in
-                    let rec_env = (None, Clos(env, fix_f_i, memo, true), fresh_memo ())::rec_env in
-                    rec_env, memo::memos, i + 1) (snd lbs) (env, [], 0) in
+                    let env_elts = (None, Clos(env, fix_f_i, memo, true), fresh_memo ())::env_elts in
+                    env_elts, memo::memos, i + 1) (snd lbs) ([], [], 0) in
+            let rec_env = List.rev env_elts @ env in
             let _ = List.map2 (fun lb memo -> memo := Some (cfg, (rec_env, lb.lbdef))) (snd lbs) memos in //tying the knot
             // NB: fold_left, since the binding structure of lbs is that righmost is closer, while in the env leftmost
             // is closer. In other words, the last element of lbs is index 0 for body, hence needs to be pushed last.
