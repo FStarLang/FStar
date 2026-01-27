@@ -142,8 +142,6 @@ inline_for_extraction unfold let ( |^ )  = logor
 inline_for_extraction unfold let ( <<^ ) = shift_left
 inline_for_extraction unfold let ( >>^ ) = shift_right
 inline_for_extraction unfold let ( >>>^) = shift_arithmetic_right
-inline_for_extraction unfold let ( <<<^ ) = rotate_left
-inline_for_extraction unfold let ( >>>>^ ) = rotate_right
 inline_for_extraction unfold let ( =^ )  = eq
 inline_for_extraction unfold let ( <>^ ) = ne
 inline_for_extraction unfold let ( >^ )  = gt

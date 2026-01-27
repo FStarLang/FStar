@@ -401,11 +401,15 @@ let shift_arithmetic_right (#n:pos) (a:int_t n) (s:nat) : Tot (int_t n) =
 
 (* Rotate operators *)
 
-(** Rotate left *)
+(** Rotate left.
+    Note: Rotation is performed at the bit level and is essentially unsigned.
+    The sign bit is rotated just like any other bit. *)
 let rotate_left (#n:pos) (a:int_t n) (s:nat) : Tot (int_t n) =
   from_vec (rotate_left_vec #n (to_vec #n a) s)
 
-(** Rotate right *)
+(** Rotate right.
+    Note: Rotation is performed at the bit level and is essentially unsigned.
+    The sign bit is rotated just like any other bit. *)
 let rotate_right (#n:pos) (a:int_t n) (s:nat) : Tot (int_t n) =
   from_vec (rotate_right_vec #n (to_vec #n a) s)
 
@@ -454,6 +458,7 @@ val rotate_left_lemma: #n:pos -> a:int_t n -> s:nat -> i:nat{i < n} ->
 val rotate_right_lemma: #n:pos -> a:int_t n -> s:nat -> i:nat{i < n} ->
   Lemma (requires True)
         (ensures (nth (rotate_right #n a s) i = nth #n a ((i + n - (s % n)) % n)))
+        [SMTPat (nth (rotate_right #n a s) i)]
 
 (** Rotate left by n is identity *)
 val rotate_left_full_identity: #n:pos -> a:int_t n ->
