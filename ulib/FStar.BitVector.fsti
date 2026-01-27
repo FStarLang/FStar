@@ -180,12 +180,12 @@ val shift_arithmetic_right_vec_lemma_2 (#n: pos) (a: bv_t n) (s: nat) (i: nat{i 
 (** Rotate [a] left by [s] bits *)
 let rotate_left_vec (#n: pos) (a: bv_t n) (s: nat) : Tot (bv_t n) =
   let s = s % n in
-  if s = 0 then a else append (slice a s n) (slice a 0 s)
+  append (slice a s n) (slice a 0 s)
 
 (** Rotate [a] right by [s] bits *)
 let rotate_right_vec (#n: pos) (a: bv_t n) (s: nat) : Tot (bv_t n) =
   let s = s % n in
-  if s = 0 then a else append (slice a (n - s) n) (slice a 0 (n - s))
+  append (slice a (n - s) n) (slice a 0 (n - s))
 
 (** Relating the indexes of the rotated left vector to the original *)
 val rotate_left_vec_lemma (#n: pos) (a: bv_t n) (s: nat) (i: nat{i < n})
