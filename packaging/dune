@@ -1,0 +1,125 @@
+; Packaging rules for F*
+; NOTE: Actions run from _build/default/, so paths are relative to that
+
+; Binary package
+(rule
+ (alias package)
+ (deps ../version.txt ../LICENSE ../README.md ../INSTALL.md)
+ (action
+  (chdir %{workspace_root}
+   (run bash -c "
+     set -e
+     SRCROOT=$(cd ../.. && pwd)
+     rm -rf ${SRCROOT}/_package
+     mkdir -p ${SRCROOT}/_package/fstar/bin ${SRCROOT}/_package/fstar/lib/fstar
+     if [ -f src/stage2/fstar.exe ]; then
+       cp src/stage2/fstar.exe ${SRCROOT}/_package/fstar/bin/fstar.exe
+     elif [ -f src/stage2/fstar ]; then
+       cp src/stage2/fstar ${SRCROOT}/_package/fstar/bin/fstar
+     else
+       echo 'Error: fstar executable not found. Run esy build first.' >&2
+       exit 1
+     fi
+     rsync -a --exclude='*.checked' --exclude='*.checked.lax' --exclude='_cache' --exclude='_output' --exclude='.hints' --exclude='*.cm*' ${SRCROOT}/ulib/ ${SRCROOT}/_package/fstar/lib/fstar/ulib/ 2>/dev/null || cp -r ${SRCROOT}/ulib ${SRCROOT}/_package/fstar/lib/fstar/
+     cp ${SRCROOT}/LICENSE ${SRCROOT}/README.md ${SRCROOT}/INSTALL.md ${SRCROOT}/version.txt ${SRCROOT}/_package/fstar/
+     VERSION=$(cat ${SRCROOT}/version.txt | tr -d '\\n\\r')
+     ARCH=$(uname -m 2>/dev/null || echo x64)
+     OS=$(uname -s 2>/dev/null)
+     case \"$OS\" in CYGWIN*|MINGW*|MSYS*) OS=Windows ;; Darwin) OS=macOS ;; esac
+     cd ${SRCROOT}/_package && tar czf ../fstar-v${VERSION}-${OS}_${ARCH}.tar.gz fstar
+     rm -rf ${SRCROOT}/_package
+     echo Created: fstar-v${VERSION}-${OS}_${ARCH}.tar.gz
+   "))))
+
+; Source package
+(rule
+ (alias package-src)
+ (deps ../version.txt ../LICENSE ../README.md ../INSTALL.md ../dune ../dune-project ../dune-workspace ../fstar.opam ../package.json)
+ (action
+  (chdir %{workspace_root}
+   (run bash -c "
+     set -e
+     SRCROOT=$(cd ../.. && pwd)
+     rm -rf ${SRCROOT}/_srcpackage
+     mkdir -p ${SRCROOT}/_srcpackage/fstar
+     rsync -a --exclude='*.checked' --exclude='*.checked.lax' --exclude='_cache' --exclude='_output' --exclude='_build' --exclude='.hints' --exclude='*.cm*' --exclude='*.o' --exclude='*.a' ${SRCROOT}/stage0/ ${SRCROOT}/_srcpackage/fstar/stage0/ 2>/dev/null || cp -r ${SRCROOT}/stage0 ${SRCROOT}/_srcpackage/fstar/
+     rsync -a --exclude='*.checked' --exclude='*.checked.lax' --exclude='_cache' --exclude='_output' --exclude='_build' ${SRCROOT}/src/ ${SRCROOT}/_srcpackage/fstar/src/ 2>/dev/null || cp -r ${SRCROOT}/src ${SRCROOT}/_srcpackage/fstar/
+     rsync -a --exclude='*.checked' --exclude='*.checked.lax' --exclude='_cache' --exclude='_output' --exclude='.hints' ${SRCROOT}/ulib/ ${SRCROOT}/_srcpackage/fstar/ulib/ 2>/dev/null || cp -r ${SRCROOT}/ulib ${SRCROOT}/_srcpackage/fstar/
+     rsync -a ${SRCROOT}/.scripts/ ${SRCROOT}/_srcpackage/fstar/.scripts/ 2>/dev/null || cp -r ${SRCROOT}/.scripts ${SRCROOT}/_srcpackage/fstar/
+     cp ${SRCROOT}/dune ${SRCROOT}/dune-project ${SRCROOT}/dune-workspace ${SRCROOT}/fstar.opam ${SRCROOT}/package.json ${SRCROOT}/_srcpackage/fstar/
+     cp ${SRCROOT}/LICENSE ${SRCROOT}/README.md ${SRCROOT}/INSTALL.md ${SRCROOT}/version.txt ${SRCROOT}/_srcpackage/fstar/
+     VERSION=$(cat ${SRCROOT}/version.txt | tr -d '\\n\\r')
+     cd ${SRCROOT}/_srcpackage && tar czf ../fstar-v${VERSION}-src.tar.gz fstar
+     rm -rf ${SRCROOT}/_srcpackage
+     echo Created: fstar-v${VERSION}-src.tar.gz
+   "))))
+
+; Install to out/
+(rule
+ (alias install-fstar)
+ (deps ../version.txt ../LICENSE ../README.md ../INSTALL.md)
+ (action
+  (chdir %{workspace_root}
+   (run bash -c "
+     set -e
+     SRCROOT=$(cd ../.. && pwd)
+     mkdir -p ${SRCROOT}/out/bin ${SRCROOT}/out/lib/fstar
+     if [ -f src/stage2/fstar.exe ]; then
+       cp src/stage2/fstar.exe ${SRCROOT}/out/bin/fstar.exe
+     elif [ -f src/stage2/fstar ]; then
+       cp src/stage2/fstar ${SRCROOT}/out/bin/fstar
+     else
+       echo 'Error: fstar executable not found. Run esy build first.' >&2
+       exit 1
+     fi
+     rsync -a --exclude='*.checked' --exclude='*.checked.lax' --exclude='_cache' --exclude='_output' --exclude='.hints' --exclude='*.cm*' ${SRCROOT}/ulib/ ${SRCROOT}/out/lib/fstar/ulib/ 2>/dev/null || cp -r ${SRCROOT}/ulib ${SRCROOT}/out/lib/fstar/
+     cp ${SRCROOT}/LICENSE ${SRCROOT}/README.md ${SRCROOT}/INSTALL.md ${SRCROOT}/version.txt ${SRCROOT}/out/
+     echo 'Installed F* to out/'
+   "))))
+
+; Save stage0 snapshot
+(rule
+ (alias save)
+ (deps ../version.txt ../LICENSE ../README.md ../INSTALL.md)
+ (action
+  (chdir %{workspace_root}
+   (run bash -c "
+     set -e
+     SRCROOT=$(cd ../.. && pwd)
+     rm -rf ${SRCROOT}/stage0_new
+     mkdir -p ${SRCROOT}/stage0_new
+     rsync -a --exclude='_build' --exclude='*.cm*' ${SRCROOT}/stage0/dune/ ${SRCROOT}/stage0_new/dune/ 2>/dev/null || cp -r ${SRCROOT}/stage0/dune ${SRCROOT}/stage0_new/
+     rsync -a --exclude='*.checked' --exclude='*.checked.lax' --exclude='_cache' --exclude='_output' --exclude='.hints' ${SRCROOT}/ulib/ ${SRCROOT}/stage0_new/ulib/ 2>/dev/null || cp -r ${SRCROOT}/ulib ${SRCROOT}/stage0_new/
+     cp ${SRCROOT}/LICENSE ${SRCROOT}/README.md ${SRCROOT}/INSTALL.md ${SRCROOT}/version.txt ${SRCROOT}/stage0_new/
+     echo 'out' > ${SRCROOT}/stage0_new/.gitignore
+     echo '** -diff -merge linguist-generated=true' > ${SRCROOT}/stage0_new/.gitattributes
+     echo 'Created: stage0_new/'
+   "))))
+
+; Bump stage0
+(rule
+ (alias bump-stage0)
+ (deps (alias save))
+ (action
+  (chdir %{workspace_root}
+   (run bash -c "
+     set -e
+     SRCROOT=$(cd ../.. && pwd)
+     rm -rf ${SRCROOT}/stage0
+     mv ${SRCROOT}/stage0_new ${SRCROOT}/stage0
+     rm -rf ${SRCROOT}/stage1 2>/dev/null || true
+     echo 'stage0 bumped! Run esy clean && esy build to rebuild.'
+   "))))
+
+; Distclean
+(rule
+ (alias distclean)
+ (action
+  (chdir %{workspace_root}
+   (run bash -c "
+     SRCROOT=$(cd ../.. && pwd)
+     rm -rf ${SRCROOT}/out ${SRCROOT}/_package ${SRCROOT}/_srcpackage ${SRCROOT}/stage0_new ${SRCROOT}/*.tar.gz 2>/dev/null || true
+     find ${SRCROOT} -name '_cache' -type d -exec rm -rf {} + 2>/dev/null || true
+     find ${SRCROOT} -name '_output' -type d -exec rm -rf {} + 2>/dev/null || true
+     echo 'Distclean complete'
+   "))))

@@ -1,0 +1,2 @@
+; Scripts used by the build system
+; Just an empty dune file to let dune see this directory

@@ -1,0 +1,22 @@
+; =============================================================================
+; src/stage2/dune - Stage 2 F* Compiler Build
+; =============================================================================
+; 
+; Stage 2 builds the final fstar executable with plugins.
+; Plugins provide tactics (typeclasses, BV, canon, etc.) for ulib.
+
+; The main executable
+(executable
+ (name fstar)
+ (public_name fstar)
+ (libraries 
+   fstarcompiler_stage1
+   fstar_plugins_stage1)
+ (link_flags "-linkall")  ; Ensure all plugin modules are linked
+ (modes native)
+ (flags -w -8-20-26-27-28-33-35))
+
+; Alias for building stage2
+(alias
+ (name stage2)
+ (deps fstar.exe))

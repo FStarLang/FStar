@@ -1,0 +1,9 @@
+(include_subdirs unqualified)
+
+; Verification rules for ulib - disabled for now, will enable with @verify alias
+; (rule
+;  (alias verify_ulib)
+;  (deps (source_tree .))
+;  (action (run fstar --warn_error -272 ...)))
+
+; We don't define a library yet because we are not compiling extracted code.

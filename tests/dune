@@ -1,0 +1,6 @@
+; F* Test Suite
+; Run with: esy test
+; Or: esy dune runtest tests
+
+; Don't recurse automatically - each subdir has its own dune
+(data_only_dirs _cache _output)

@@ -1,0 +1,86 @@
+; Micro-benchmarks test suite
+; Verifies all .fst files in this directory
+;
+; NOTE: UseRBMap.fst and UseRBSet.fst are excluded from batch run due to
+; a known ulib dependency resolution issue when running many files together.
+; They are verified in a separate rule below.
+(data_only_dirs _cache _output ns_resolution)
+
+; Main test rule - explicit file list (no bash for cross-platform)
+(rule
+ (alias runtest)
+ (deps
+   (:fstar %{project_root}/src/stage2/fstar.exe)
+   (glob_files *.fst)
+   (glob_files *.fsti)
+   (source_tree %{project_root}/ulib))
+ (action
+   (chdir %{project_root}/tests/micro-benchmarks
+     (run %{fstar}
+          --include %{project_root}/ulib
+          --include .
+          --cache_dir %{project_root}/_build/default/tests/_cache
+          --odir %{project_root}/_build/default/tests/_output
+          --warn_error -240-241-321
+          --expose_interfaces
+          AdmitTermination.fst AnotType.fst ApplicationUnparenthesisedRecord.fst
+          ArgsAndQuals.fst Arith.fst AssumeRequires.fst B2T.fst BinderAttributes.fst
+          BoxBitVec.fst BvBinaryOps.fst BVExtend.fst ChrisCheck.fst ClassicalSugar.fst
+          CoerceAdmit.fst Coercions.fst CommuteNestedMatches.fst ConstructorAttributes.fst
+          CoreEqualityGuard.fst CoreGeneralization.fst CoreUnivs.fst CtorWithTc.fst
+          DeltaDepthUnif.fst DeltaQual.fst DoNotation.fst Effects.Coherence.fst
+          EqualityAscriptions.fst Erasable.fst Erased.fst ExpectFailure.fst Ext.fst
+          ExtractMutRecTypesAndTerms.fst FirstProofs.fst Funcs.fst GhostImplicits.fst
+          HideRevealUnif.fst Inference.fst InlineForExtractionNormRequest.fst
+          IntNormalization.fst Issues.fst LambdaImplicits.fst MAC.fst
+          MachineIntegerConstants.fst MachineIntegerPrimops.fst Match.Returns.fst
+          MatchRest.fst Misc.Norm1.fst Misc.Norm2.fst Misc.Norm3.fst
+          MultipleAttributesBinder.fst MultiRef.fst
+          NegativeTests.BST.fst NegativeTests.Bug260.fst NegativeTests.False.fst
+          NegativeTests.Heap.fst NegativeTests.Neg.fst NegativeTests.Positivity.fst
+          NegativeTests.Set.fst NegativeTests.ShortCircuiting.fst
+          NegativeTests.Termination.fst NestedLemma.fst Normalization.fst
+          NormCfgMemo.fst NormMachineInteger.fst NormPureSubtermsWithinComputations.fst
+          NormTypesForSMT.fst NormVsSMT.fst OccursCheckOnArrows.fst Operators.fst
+          OptionStack.fst PatAnnot.fst PatCoerce.fst PatternMatch.fst
+          PatternMatch.IFuel.fst Pipes.fst Positivity_A.fst Positivity.fst Pruning.fst
+          PulseBug100.fst Qualifiers.fst QuantifierOps.fst Raising.fst RangeOf.fst
+          RecordCtor.fst RecordFieldAttributes.fst RecordFieldDisambiguation.fst
+          RecordFieldOperator.fst RecordOpen.fst RecordUpdate.fst ReduceRecUnderMatch.fst
+          RefNew.fst Renaming.fst Renaming1.fst Renaming2.fst Renaming3.fst
+          ResolveImplicitsHook.fst RevealHide.fst RFD.A.fst RFD.B.fst RFD.fst
+          RFDIncluded.fst RFDIncluding.fst RightFlexible.fst ShortCircuit.fst
+          ShortCircuitEffect.fst SimplifyProp.fst StableErr.fst StrictUnfolding.fst
+          StringNormalization.fst StringOfExn.fst Subtyping.fst SyntaxTests.fst
+          TcSyntax.fst Test.Break.fst Test.BufferView.fst Test.ConstantTime.Integers.fst
+          Test.ConstantTimeIntegers.fst Test.Delta.Namespace.fst Test.FStar.Parse.fst
+          Test.FunctionalExtensionality.fst Test.HyperStack.fst Test.IFC.fst
+          Test.Integers.fst Test.LexemeFILELINE.fst Test.NBE.fst Test.Printf.fst
+          Test.QuickCode.fst Test.Real.fst Test.ReifyNBE.fst TestGhost.fst TestHasEq.fst
+          TestHeap.fst TestImmutableArray.fst TestMRef.fst TestPrintable.fst
+          TestQueue.fst TestSealed.fst TestSeq.fst TestSet.fst TestStrings.fst
+          TestTwoLevelHeap.fst TestWellFoundedRecursion.fst TopLevelIndexedEffects.fst
+          TupleSyntax.fst TwoPhaseTC.fst TypeclassesWithRefinements.fst Typos.fst
+          UnfoldOnce.fst UnicodeOperators.fst UnifierArith.fst UnifyMatch.fst
+          UnifyRefs.fst UnifyReify.fst Unit1.Basic.fst Unit1.Parser.fst
+          Unit1.Projectors1.fst Unit1.Projectors2.fst Unit1.RecursiveTypeFunctions.fst
+          Unit1.RefinementInference.fst Unit1.TopLevelPats.fst Unit1.UnificationTests.fst
+          Unit1.WPsAndTriples_ST.fst Unit1.WPsAndTriples.fst Unit2.fst UnrefineAttr.fst
+          WarnOnUse.fst WPExtensionality.fst))))
+
+; Separate rule for UseRB files (known dependency issue when run with other files)
+(rule
+ (alias runtest)
+ (deps
+   (:fstar %{project_root}/src/stage2/fstar.exe)
+   UseRBMap.fst
+   UseRBSet.fst
+   (source_tree %{project_root}/ulib))
+ (action
+   (chdir %{project_root}/tests/micro-benchmarks
+     (run %{fstar}
+          --include %{project_root}/ulib
+          --cache_dir %{project_root}/_build/default/tests/_cache
+          --odir %{project_root}/_build/default/tests/_output
+          --warn_error -240-241-321
+          UseRBMap.fst UseRBSet.fst))))

@@ -1,0 +1,6 @@
+(lang dune 3.0)
+
+; Single context - stages managed via aliases and promote
+; Stage 0: Build from snapshot in stage0/
+; Stage 1/2: Extract from F* sources, promote to src/extracted/
+(context default)

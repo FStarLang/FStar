@@ -1,0 +1,17 @@
+; Base library with app/ files - these don't depend on the compiler
+; The plugin/ directory is excluded since those files depend on fstarcompiler
+; The app-extra/ directory is excluded since it depends on extracted lib modules
+
+; Exclude plugin/ and app-extra/ from source scanning
+(data_only_dirs plugin app-extra)
+
+(include_subdirs unqualified)
+
+(library
+ (name fstar_ulib)
+ (public_name fstar.ulib)
+ (wrapped false)
+ (libraries batteries zarith stdint yojson memtrace menhirLib mtime pprint sedlex ppxlib process)
+ (preprocess (pps ppx_deriving.show ppx_deriving_yojson sedlex.ppx))
+ (flags -w -8-20-26-27-28-33-35)
+)

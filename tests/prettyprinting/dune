@@ -1,0 +1,17 @@
+; Prettyprinting tests - use --print mode instead of verification
+; This tests the prettyprinter, not the verifier
+(rule
+ (alias runtest)
+ (deps
+   (:fstar %{project_root}/src/stage2/fstar.exe)
+   (glob_files *.fst)
+   (source_tree %{project_root}/ulib))
+ (action
+   (chdir %{project_root}/tests/prettyprinting
+     (run %{fstar}
+          --include %{project_root}/ulib
+          --print_full_names
+          --lax
+          --print Arrows.fst Bug2181.fst Bug3560.fst Decreases.fst DTuples.fst
+          Fsdocs.fst Match.Returns.fst MetaArgs.fst Misc.fst Patterns.fst
+          SeqLit.fst Sequence.fst Tuples.fst TypeClasses.fst))))
