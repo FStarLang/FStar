@@ -1,0 +1,63 @@
+; =============================================================================
+; src/stage1/dune - Stage 1 F* Compiler Build
+; =============================================================================
+; 
+; Builds fstar from extracted OCaml files + hand-written ML files.
+; Uses copy_files to bring in files from sibling directories.
+
+; Copy extracted files from src/extracted/
+(copy_files ../extracted/*.ml)
+
+; Copy hand-written files from src/ml/
+(copy_files ../ml/*.ml)
+
+; Copy menhir grammar files from src/ml/
+(copy_files ../ml/*.mly)
+
+; Note: We DON'T copy ulib/ml/app files here - they are part of fstar_ulib library
+
+; The compiler library
+(library
+ (name fstarcompiler_stage1)
+ (public_name fstar.compiler.stage1)
+ (libraries
+    fstar_ulib       ; ulib runtime files (Prims, FStar_*, etc.)
+    batteries
+    zarith
+    stdint
+    yojson
+    ppxlib
+    dynlink
+    menhirLib
+    pprint
+    process
+    sedlex
+    mtime.clock)
+ (modes native)
+ (preprocess (pps ppx_deriving.show ppx_deriving_yojson sedlex.ppx))
+ (flags -w -8-20-26-27-28-33-35))
+
+; Menhir parsers
+(menhir
+ (modules FStarC_Parser_Parse))
+(menhir
+ (modules FStarC_Parser_WarnError))
+
+; Version file generation (uses Python for portability)
+(rule
+ (target FStarC_Version.ml)
+ (deps
+   %{project_root}/version.txt
+   (source_tree %{project_root}/.scripts))
+ (action
+   (chdir %{workspace_root}
+    (with-stdout-to %{target}
+      (run bash -c "
+        SRCROOT=$(cd ../.. && pwd)
+        bash ${SRCROOT}/.scripts/make_version.sh ${SRCROOT}/version.txt
+      ")))))
+
+; Alias for building stage1
+(alias
+ (name stage1)
+ (deps fstarcompiler_stage1.cmxa))

@@ -1,0 +1,59 @@
+{
+  "name": "fstar",
+  "version": "2025.12.15",
+  "description": "Verification system for effectful programs",
+  "license": "Apache-2.0",
+  "dependencies": {
+    "ocaml": ">= 4.14.0",
+    "@opam/batteries": "*",
+    "@opam/zarith": ">= 1.14",
+    "@opam/stdint": "*",
+    "@opam/yojson": "*",
+    "@opam/dune": ">= 3.8.0",
+    "@opam/memtrace": ">= 0.2.3",
+    "@opam/menhirLib": "*",
+    "@opam/menhir": ">= 20230415",
+    "@opam/mtime": ">= 2.1.0",
+    "@opam/pprint": "*",
+    "@opam/sedlex": ">= 3.5",
+    "@opam/ppxlib": ">= 0.36.0",
+    "@opam/process": "*",
+    "@opam/ppx_deriving": "*",
+    "@opam/ppx_deriving_yojson": "*"
+  },
+  "devDependencies": {
+    "@opam/merlin": "*",
+    "@opam/ocaml-lsp-server": "*"
+  },
+  "esy": {
+    "build": [
+      "dune build @stage0",
+      "dune build @extract-stage1", 
+      "dune build @stage1",
+      "dune build @stage2"
+    ],
+    "buildsInSource": "_build",
+    "exportedEnv": {
+      "PYTHON": {
+        "val": "python3",
+        "scope": "global"
+      }
+    }
+  },
+  "scripts": {
+    "stage0": "dune build @stage0",
+    "extract": "dune build @extract-stage1",
+    "stage1": "dune build @stage1",
+    "stage2": "dune build @stage2",
+    "build": "dune build @stage0 && dune build @extract-stage1 && dune build @stage1 && dune build @stage2",
+    "test": "dune runtest",
+    "unit-tests": "dune runtest tests/micro-benchmarks",
+    "clean": "dune clean",
+    "distclean": "dune build @packaging/distclean",
+    "install-fstar": "dune build @packaging/install-fstar",
+    "package": "dune build @packaging/package",
+    "package-src": "dune build @packaging/package-src",
+    "save": "dune build @packaging/save",
+    "bump-stage0": "dune build @packaging/bump-stage0"
+  }
+}

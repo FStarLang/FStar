@@ -1,9 +1,0 @@
-/inst
-/*.checked/**
-/*.ml/**
-/*.fs/**
-/*.pluginml/**
-.*_depend
-.depend
-*.install
-.fstarlock

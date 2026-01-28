@@ -1,0 +1,2 @@
+; Examples test directory
+(data_only_dirs _cache _output)

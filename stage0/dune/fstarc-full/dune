@@ -1,7 +1,6 @@
 (include_subdirs unqualified)
 (executable
  (name fstarc2_full)
- (public_name fstar.exe)
  (libraries
     ; Can we just say we extend fstar_bare instead of _guts, and duplicating main?
     fstarcompiler
@@ -12,3 +11,8 @@
  (modes (native exe))
  (preprocess (pps ppx_deriving.show ppx_deriving_yojson sedlex.ppx))
 )
+
+; Alias for stage0 build
+(alias
+ (name stage0)
+ (deps fstarc2_full.exe))

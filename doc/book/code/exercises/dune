@@ -1,0 +1,15 @@
+; Test directory
+(rule
+ (alias runtest)
+ (deps
+   (:fstar %{project_root}/src/stage2/fstar.exe)
+   (:tests (glob_files *.fst))
+   (glob_files *.fsti)
+   (source_tree %{project_root}/ulib))
+ (action
+   (run %{fstar}
+        --include %{project_root}/ulib
+        --cache_dir %{project_root}/_build/default/doc/_cache
+        --odir %{project_root}/_build/default/doc/_output
+        --warn_error -240-321
+        %{tests})))

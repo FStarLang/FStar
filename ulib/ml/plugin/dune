@@ -1,0 +1,2 @@
+; Disabled - plugin files depend on fstarcompiler which is not available during ulib build
+; This empty dune file prevents the parent include_subdirs from including this directory

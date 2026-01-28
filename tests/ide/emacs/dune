@@ -1,0 +1,11 @@
+; IDE/emacs tests - SKIPPED
+; Requires --ide mode with stdin/stdout interaction via .in files
+; Legacy: pipes .in files to fstar --ide and captures .ideout
+; TODO: Implement IDE test harness for dune
+;
+; Disabled by using (enabled_if false)
+(rule
+ (alias runtest)
+ (enabled_if false)
+ (deps)
+ (action (echo "ide/emacs tests skipped - needs IDE test harness")))

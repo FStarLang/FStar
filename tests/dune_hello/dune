@@ -1,9 +1,10 @@
-(executable
- (name hello)
- (public_name hello.exe)
- (libraries fstar.lib)
- (modes native byte)
-)
+; Disabled - fstar.lib does not exist yet
+; (executable
+;  (name hello)
+;  (public_name hello.exe)
+;  (libraries fstar.lib)
+;  (modes native byte)
+; )
 (env
   (_
     (flags (:standard -w -A))))

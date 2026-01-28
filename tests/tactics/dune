@@ -1,0 +1,44 @@
+; Tactics test directory
+; Use --expose_interfaces to handle SpliceVal which has both .fst/.fsti
+(data_only_dirs _cache _output)
+
+(rule
+ (alias runtest)
+ (deps
+   (:fstar %{project_root}/src/stage2/fstar.exe)
+   (glob_files *.fst)
+   (glob_files *.fsti)
+   (source_tree %{project_root}/ulib))
+ (action
+   (chdir %{project_root}/tests/tactics
+     (run %{fstar}
+          --include %{project_root}/ulib
+          --include .
+          --cache_dir %{project_root}/_build/default/tests/_cache
+          --odir %{project_root}/_build/default/tests/_output
+          --warn_error -240-241-321
+          --expose_interfaces
+          Admit.fst Alt.fst AndElim.fst AnnoyingVCs.fst Apply.fst ApplyLemma.fst
+          Branch.fst Bug1252.fst Bug1256.fst Bug1270.fst Bug1272.fst
+          Bug1299.fst Bug3175.fst Caller.fst CallSubtac.fst Cases.fst Change.fst
+          CharConstants.fst CheckEquiv.fst CheckMatchComplete.fst Clear.fst
+          Coercions.fst CommuteMatch.fst CoreCheckMatch.fst Cut.fst DeltaDepth.fst
+          DependentSynth.fst Destruct.fst Div.fst EExists.fst ElimExists.fst
+          EnvSquash.fst Fail.fst FailFlow.fst Fresh.fst Get.fst Goals.fst GRewrite.fst
+          Hacl.Meta.fst Hacl.Meta.Use.fst HoleBy.fst Ill1.fst Ill2.fst Inlining.fst
+          InspectEffComp.fst Instantiate.fst Join.fst Labels.fst LaxOn.fst
+          LeftToRight.fst LemmaArgs.fst LN.fst Map.OpaqueToSMT.fst
+          Map.OpaqueToSMT.Test.fst MetaArgs.fst MyMap.fst NamedViewCtor.fst
+          NatNeg.fst NatPos.fst Neg.fst Nest.fst NoDuplicateSplice.fst NonTot.fst
+          NormBinderType.fst PackInd.fst PackInd2.fst Parsing.fst PluginReturned.fst
+          PointwiseLoop.fst Pose.fst PoseLemma.fst Postprocess.fst PostprocessType.fst
+          Prettify.fst Pruning.fst Quals.fst Raise.fst ReflectionMisc.fst Reflexivity.fst
+          Rename.fst Retype.fst RewriteInArrow.fst SMTSync.fst SolvedWitness.fst
+          Splice.fst Splice2.fst SpliceVal.fsti SpliceVal.Use.fst State.fst
+          SyntaxBasics.fst SyntaxTest.fst Synthesis.fst TacF.fst
+          Test.CanonCommMonoid.fst Test.CanonCommMonoidSimple.Equiv.fst
+          Test.CanonCommMonoidSimple.fst Test.CanonCommSemiring.fst Test.CanonMonoid.fst
+          Test.LaxTermEq.fst Test.TypeRepr.fst TestBV.fst TestMApply.fst TestPprint.fst
+          Trans.fst TReflGuards.fst Unbound.fst Unfold.fst Unify.fst UnitTests.fst
+          Univs.fst UnknownSynth.fst Unresolved.fst VC.fst VQuote.fst WeakVsHNF.fst
+          Wild.fst))))

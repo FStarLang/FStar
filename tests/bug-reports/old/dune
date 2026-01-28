@@ -1,0 +1,7 @@
+; Bug-reports/old test directory - SKIPPED
+; Per legacy Makefile: "old tests, not checked and not clear that it's worthwhile"
+(rule
+ (alias runtest)
+ (enabled_if false)
+ (deps)
+ (action (echo "bug-reports/old tests skipped - legacy tests not checked")))

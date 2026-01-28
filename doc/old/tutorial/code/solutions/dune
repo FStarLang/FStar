@@ -1,0 +1,30 @@
+; Tutorial solutions - from legacy Makefile, uses specific file list and contrib
+(rule
+ (alias runtest)
+ (deps
+   (:fstar %{project_root}/src/stage2/fstar.exe)
+   (glob_files *.fst)
+   (glob_files *.fsti)
+   (source_tree %{project_root}/ulib)
+   (source_tree %{project_root}/contrib/Platform)
+   (source_tree %{project_root}/contrib/CoreCrypto))
+ (action
+   (chdir %{project_root}/doc/old/tutorial/code/solutions
+     (run %{fstar}
+          --include %{project_root}/ulib
+          --include %{project_root}/contrib/Platform/fst
+          --include %{project_root}/contrib/CoreCrypto/fst
+          --include .
+          --cache_dir %{project_root}/_build/default/doc/_cache
+          --odir %{project_root}/_build/default/doc/_output
+          --warn_error -240-241-321
+          --expose_interfaces
+          Ex01a.fst Ex02a.fst Ex03a.fst Ex03b.fst Ex03c.fst
+          Ex04a.fst Ex04b.fst Ex04c.fst Ex04e.fst Ex04f.fst Ex04g.fst Ex04h.fst
+          Ex05a.fst Ex05b.fst Ex06a.fst Ex06b.fst Ex06c.fst Ex06d.fst Ex06e.fst
+          Ex07a.fst Ex07b.fst Ex07c.fst Ex07d.fst Ex10a.fst Ex10b.fst Ex11a.fst
+          Ex12.MAC.fst Ex12a1.Cap.fst Ex12a2.Cap.fst Ex12b1.Format.fst
+          Ex12b2.Format.fst Ex12b.RPC.fst Ex12d.Pad.fst Ex12e.Pad.fst
+          Ex12f.TMAC.fst Ex12g.TMAC2.fst
+          EtM.Ideal.fsti EtM.Plain.fst EtM.CPA.fst EtM.MAC.fst EtM.AE.fst
+          LowStar.Ex1.fst LowStar.Ex2.fst LowStar.Ex3.fst))))

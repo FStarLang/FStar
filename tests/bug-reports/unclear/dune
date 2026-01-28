@@ -1,0 +1,7 @@
+; Bug-reports/unclear test directory - SKIPPED
+; Per legacy Makefile: "issues where it's not clear whether it's an actual bug"
+(rule
+ (alias runtest)
+ (enabled_if false)
+ (deps)
+ (action (echo "bug-reports/unclear tests skipped - unclear if they are bugs")))

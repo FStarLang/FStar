@@ -1,0 +1,19 @@
+; Bug-reports/closed test directory (531 tests of fixed bugs)
+; Use --expose_interfaces to handle modules with .fst/.fsti pairs
+(rule
+ (alias runtest)
+ (deps
+   (:fstar %{project_root}/src/stage2/fstar.exe)
+   (:tests (glob_files *.fst))
+   (glob_files *.fsti)
+   (source_tree %{project_root}/ulib))
+ (action
+   (chdir %{project_root}/tests/bug-reports/closed
+     (run %{fstar}
+          --include %{project_root}/ulib
+          --include .
+          --cache_dir %{project_root}/_build/default/tests/_cache
+          --odir %{project_root}/_build/default/tests/_output
+          --warn_error -240-241-321
+          --expose_interfaces
+          %{tests}))))

@@ -1,0 +1,8 @@
+; Bug-reports/open test directory - SKIPPED
+; Per legacy Makefile: "for open issues. We do *not* check this directory."
+; These are unfixed bugs, so tests are expected to fail.
+(rule
+ (alias runtest)
+ (enabled_if false)
+ (deps)
+ (action (echo "bug-reports/open tests skipped - these are unfixed bugs")))

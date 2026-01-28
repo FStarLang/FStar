@@ -7,7 +7,6 @@ open Pprintast
 open Ast_helper
 open Ast
 open Ppxlib.Ast_builder.Default
-open Longident
 
 open FStarC_Extraction_ML_Syntax
 
@@ -35,7 +34,9 @@ let mk_sym s: string Location.loc = {txt=s; loc=no_location}
 
 let mk_sym_lident s: Longident.t Location.loc = {txt=s; loc=no_location}
 
-let mk_lident name = Lident name |> mk_sym_lident
+let mk_lident name = 
+  let li = Lident name in
+  {Location.txt = li; loc = no_location}
 
 let mk_typ_name s =
   (* remove an apostrophe from beginning of type name *)
@@ -61,7 +62,7 @@ let split_path (l1: string list) (l2: string list): (string list * string list) 
     | Some l1' -> Some (l1', l2)
   else None
 
-let path_to_ident ((l, sym): mlpath): Longident.t Asttypes.loc =
+let path_to_ident ((l, sym): mlpath) =
   let codegen_libs = FStarC_Options.codegen_libs() in
   match l with
   | [] -> mk_lident sym
@@ -77,12 +78,15 @@ let path_to_ident ((l, sym): mlpath): Longident.t Asttypes.loc =
           mk_lident sym
        else
          match prefix with
-         | [] ->  Ldot(Lident path_abbrev, sym) |> mk_sym_lident
+         | [] ->  
+            let li = Ldot(Lident path_abbrev, sym) in
+            {Location.txt = li; loc = no_location}
          | p_hd::p_tl ->
-            let q = fold_left (fun x y -> Ldot (x,y)) (Lident p_hd) p_tl in
-            (match path_abbrev with
-             | "" -> Ldot(q, sym) |> mk_sym_lident
-             | _ -> Ldot(Ldot(q, path_abbrev), sym) |> mk_sym_lident)
+            let q = fold_left (fun acc y -> Ldot (acc, y)) (Lident p_hd) p_tl in
+            let li = (match path_abbrev with
+             | "" -> Ldot(q, sym)
+             | _ -> Ldot(Ldot(q, path_abbrev), sym)) in
+            {Location.txt = li; loc = no_location}
 
 let mk_top_mllb (e: mlexpr): mllb =
   {mllb_name="_";
