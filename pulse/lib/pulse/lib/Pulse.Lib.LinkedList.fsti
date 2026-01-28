@@ -33,6 +33,11 @@ fn is_empty (#t:Type) (x:llist t)
     returns b:bool
     ensures is_list x 'l ** pure (b <==> ('l == []))
 
+fn head (#t:Type0) (x:llist t) (#l:erased (list t){Cons? l})
+    requires is_list x l
+    returns v:t
+    ensures is_list x l ** pure (v == List.Tot.hd l)
+
 fn length (#t:Type0) (x:llist t)
           (#l:erased (list t))
   requires is_list x l
