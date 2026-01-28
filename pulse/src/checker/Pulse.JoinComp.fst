@@ -24,6 +24,7 @@ open Pulse.Checker.Base
 open Pulse.Checker.Prover
 open Pulse.Checker.Prover.Normalize
 open Pulse.Reflection.Util
+open Pulse.Typing.Env
 open FStar.List.Tot
 open Pulse.Show
 module T = FStar.Tactics.V2
@@ -32,7 +33,7 @@ module RT = FStar.Reflection.Typing
 module R = FStar.Reflection.V2
 module RU = Pulse.RuntimeUtils
 
-let rec close_post x_ret dom_g g1 (bs1:list (ppname & var & typ)) (post:slprop)
+let rec close_post x_ret dom_g g1 (bs1:env_bindings) (post:slprop)
 : T.Tac slprop
 = let maybe_close (n, y,ty) (post:slprop) = 
     if not (y `Set.mem` freevars post) then post
@@ -74,7 +75,7 @@ let rec close_post x_ret dom_g g1 (bs1:list (ppname & var & typ)) (post:slprop)
   let close_post = close_post x_ret dom_g g1 in
   match bs1 with
   | [] -> post
-  | (n,y,ty)::tl -> (
+  | BindingVar {n;x=y;ty}::tl -> (
     if y = x_ret
     then close_post tl post
     else if y `Set.mem` dom_g
@@ -93,6 +94,14 @@ let rec close_post x_ret dom_g g1 (bs1:list (ppname & var & typ)) (post:slprop)
       | _ -> close_post tl (maybe_close (n,y,ty) post)
     )
   )
+  | _::tl -> close_post tl post
+
+let rec bindings_var_dom : env_bindings -> Set.set var = function
+  | [] -> Set.empty
+  | BindingVar {x} :: bs -> Set.add x (bindings_var_dom bs)
+  | _ :: bs -> bindings_var_dom bs
+
+let var_dom (g: env) : Set.set var = bindings_var_dom (bindings g)
 
 let infer_post' (g:env) (g':env { g' `env_extends` g })
   #u #t (x: var { lookup g' x == Some t }) (t_typ: universe_of g' t u)
@@ -130,7 +139,7 @@ let infer_post' (g:env) (g':env { g' `env_extends` g })
   let post = RU.deep_compress post in
   let close_post =
     if post `eq_tm` tm_is_unreachable then post else
-    close_post x dom_g g1 (bindings_with_ppname g1) post in
+    close_post x dom_g g1 (bindings g1) post in
   Pulse.Checker.Util.debug g "pulse.infer_post" (fun _ ->
     Printf.sprintf "Original postcondition: %s |= %s\nInferred postcondition: %s |= %s\n" 
     (env_to_string g1) (T.term_to_string post) (env_to_string g) (T.term_to_string close_post));
@@ -342,7 +351,7 @@ let join_post #g #hyp #b
       )
   );
   let x = fresh g in
-  let g' = push_binding_def g x p1.ret_ty in
+  let g' = push_binding g x ppname_default p1.ret_ty in
   let p1_post = open_term_nv p1.post (ppname_default, x) in
   let (| p1_post, _ |) = normalize_slprop g' p1_post true in
   let p2_post = open_term_nv p2.post (ppname_default, x) in

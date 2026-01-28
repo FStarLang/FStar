@@ -50,7 +50,7 @@ type br_typing_vis : env -> universe -> typ -> term -> pattern -> st_term -> com
               ({name=Sealed.seal "branch equality"; range=FStar.Range.range_0})
               (mk_sq_eq2 sc_u sc_ty sc (wr (fst (Some?.v (RT.elaborate_pat (elab_pat p) bs))) Range.range_0))
          ) e c ->
-      br_typing_vis g sc_u sc_ty sc p (close_st_term_n e (L.map fst (L.map readback_binding bs))) c
+      br_typing_vis g sc_u sc_ty sc p (close_st_term_n e (L.map (fun b -> (readback_binding b).x) bs)) c
 
 let rec readback_pat (p : R.pattern) : option pattern =
   match p with
@@ -201,15 +201,15 @@ and elab_readback_subpat (pb : R.pattern & bool)
 
 val tot_typing_weakening_n
    (#g:env) (#t:term) (#ty:term)
-   (bs:list binding{all_fresh g bs})
+   (bs:list var_binding {all_fresh g bs})
    (d:tot_typing g t ty)
    : Tot (tot_typing (push_bindings g bs) t ty)
          (decreases bs)
 let rec tot_typing_weakening_n bs d =
   match bs with
   | [] -> d
-  | (x,t)::bs ->
-    let d = Pulse.Typing.Metatheory.tot_typing_weakening_single d x t in
+  | {x; ty} :: bs ->
+    let d = Pulse.Typing.Metatheory.tot_typing_weakening_single d x ty in
     tot_typing_weakening_n bs d
 
 let patof (b:branch) : pattern = b.pat
@@ -217,12 +217,12 @@ let samepat (b1 b2 : branch) : prop = b1.pat == b2.pat
 let samepats (bs1 bs2 : list branch) : prop =
   L.map patof bs1 == L.map patof bs2
 
-let open_st_term_bs (t:st_term) (bs:list binding) : st_term =
-  let rec aux (bs:list binding) (i:nat) : subst =
+let open_st_term_bs (t:st_term) (bs:list var_binding) : st_term =
+  let rec aux (bs: list var_binding) (i:nat) : subst =
     match bs with
     | [] -> []
-    | b::bs ->
-      (RT.DT i (Pulse.Syntax.Pure.term_of_nvar (ppname_default, fst b))) :: aux bs (i+1)
+    | {n; x}::bs ->
+      (RT.DT i (Pulse.Syntax.Pure.term_of_nvar (n, x))) :: aux bs (i+1)
   in
   let ss = aux (List.rev bs) 0 in
   subst_st_term t ss
@@ -233,11 +233,11 @@ let rec r_bindings_to_string (bs : list R.binding) : T.Tac string =
   | b::bs ->
     (T.unseal b.ppname ^ "-" ^ string_of_int b.uniq ^ ":" ^ T.term_to_string b.sort ^ " ") ^ r_bindings_to_string bs
 
-let rec bindings_to_string (bs : list binding) : T.Tac string =
+let rec bindings_to_string (bs : list var_binding) : T.Tac string =
   match bs with
   | [] -> ""
-  | b::bs ->
-    (string_of_int (fst b) ^ ":" ^ Pulse.Syntax.Printer.term_to_string (snd b) ^ " ") ^ bindings_to_string bs
+  | {x; ty}::bs ->
+    (string_of_int x ^ ":" ^ Pulse.Syntax.Printer.term_to_string ty ^ " ") ^ bindings_to_string bs
 
 #push-options "--z3rlimit 40 --fuel 0 --ifuel 1"
 #restart-solver
@@ -303,8 +303,8 @@ let check_branch
     let ppname = mk_ppname_no_range "_br" in
     let r = check g' pre pre_typing (PostHint post_hint) ppname e in
     apply_checker_result_k r ppname in
-  let br_d : br_typing_vis g sc_u sc_ty sc p (close_st_term_n e (L.map fst pulse_bs)) c = TBRV g sc_u sc_ty sc c p e bs () () () hyp_var e_d in
-  (| p, close_st_term_n e (L.map fst pulse_bs), c, br_d |)
+  let br_d : br_typing_vis g sc_u sc_ty sc p (close_st_term_n e (L.map (fun (b: var_binding) -> b.x) pulse_bs)) c = TBRV g sc_u sc_ty sc c p e bs () () () hyp_var e_d in
+  (| p, close_st_term_n e (L.map (fun (b: var_binding) -> b.x) pulse_bs), c, br_d |)
 
 #pop-options
 

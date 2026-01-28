@@ -55,7 +55,7 @@ let extend_env'_binder (g:env) (b: binder) =
 module R = FStar.Reflection.V2
 
 let rec extend_env'_pattern g (p:Pulse.Syntax.Base.pattern) :
-    T.Tac (env & list Pulse.Typing.Env.binding) =
+    T.Tac (env & list Pulse.Typing.Env.var_binding) =
   match p with
   | Pat_Cons fv pats ->
     let g, bs = extend_env'_patterns g (List.Tot.map fst pats) in
@@ -64,12 +64,13 @@ let rec extend_env'_pattern g (p:Pulse.Syntax.Base.pattern) :
     g, []
   | Pat_Var ppname sort ->
     let ty = T.unseal sort in
-    let g, (_, x) = extend_env' g (mk_ppname ppname Range.range_0) ty in
-    g, [x, ty]
+    let n = mk_ppname ppname Range.range_0 in
+    let g, (_, x) = extend_env' g n ty in
+    g, [{n; x; ty} <: Pulse.Typing.Env.var_binding]
   | Pat_Dot_Term t ->
     g, []
 and extend_env'_patterns g (ps:list Pulse.Syntax.Base.pattern) :
-    T.Tac (env & list Pulse.Typing.Env.binding) =
+    T.Tac (env & list Pulse.Typing.Env.var_binding) =
   match ps with
   | [] -> g, []
   | p::ps ->
@@ -241,7 +242,7 @@ and simplify_branch (g:env) (b:branch) : T.Tac branch =
   let g, bs = extend_env'_pattern g pat in
   let body = Pulse.Checker.Match.open_st_term_bs body bs in
   let body = simplify_st_term g body in
-  let body = Pulse.Syntax.Naming.close_st_term_n body (L.map fst bs) in
+  let body = Pulse.Syntax.Naming.close_st_term_n body (L.map (fun (b: Pulse.Typing.Env.var_binding) -> b.x) bs) in
   {pat; e=body; norw}
 
 let erase_type_for_extraction (g:env) (t:term) : T.Tac bool =
@@ -349,7 +350,7 @@ and erase_ghost_subterms_branch (g:env) (b:branch) : T.Tac branch =
   let g, bs = extend_env'_pattern g pat in
   let body = Pulse.Checker.Match.open_st_term_bs body bs in
   let body = erase_ghost_subterms g body in
-  let body = Pulse.Syntax.Naming.close_st_term_n body (L.map fst bs) in
+  let body = Pulse.Syntax.Naming.close_st_term_n body (L.map (fun (b: Pulse.Typing.Env.var_binding) -> b.x) bs) in
   { pat; e=body; norw }
 
 let extract_dv_binder (b:Pulse.Syntax.Base.binder) (q:option Pulse.Syntax.Base.qualifier)
@@ -374,7 +375,7 @@ let extract_dv_binder (b:Pulse.Syntax.Base.binder) (q:option Pulse.Syntax.Base.q
   }
 
 let rec extract_dv_pattern g (p:Pulse.Syntax.Base.pattern) :
-    T.Tac (env & R.pattern & list Pulse.Typing.Env.binding) =
+    T.Tac (env & R.pattern & list Pulse.Typing.Env.var_binding) =
   match p with
   | Pat_Cons fv pats ->
     let fv = R.pack_fv fv.fv_name in
@@ -384,12 +385,13 @@ let rec extract_dv_pattern g (p:Pulse.Syntax.Base.pattern) :
     g, R.Pat_Constant c, []
   | Pat_Var ppname sort ->
     let ty = T.unseal sort in
-    let g, (_, x) = extend_env' g (mk_ppname ppname Range.range_0) ty in
-    g, R.Pat_Var sort ppname, [x, ty]
+    let n = mk_ppname ppname Range.range_0 in
+    let g, (_, x) = extend_env' g n ty in
+    g, R.Pat_Var sort ppname, [{n; x; ty} <: Pulse.Typing.Env.var_binding]
   | Pat_Dot_Term t ->
     g, R.Pat_Dot_Term t, []
 and extract_dv_patterns g (ps:list Pulse.Syntax.Base.pattern) :
-    T.Tac (env & list R.pattern & list Pulse.Typing.Env.binding) =
+    T.Tac (env & list R.pattern & list Pulse.Typing.Env.var_binding) =
   match ps with
   | [] -> g, [], []
   | p::ps ->
@@ -565,7 +567,7 @@ and extract_dv_branch g (b:Pulse.Syntax.Base.branch) : T.Tac R.branch =
   let g, pat, bs = extract_dv_pattern g pat in
   pat, LN.close_term_n
     (extract_dv g (Pulse.Checker.Match.open_st_term_bs body bs))
-    (L.map fst bs)
+    (L.map (fun (b: Pulse.Typing.Env.var_binding) -> b.x) bs)
 
 let extract_pulse_dv (g: env) (p:st_term) : T.Tac ECL.term =
   debug g (fun _ -> Printf.sprintf "input: %s" (show p));

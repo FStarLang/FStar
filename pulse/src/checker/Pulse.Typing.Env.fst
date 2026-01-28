@@ -25,25 +25,11 @@ module RT = FStar.Reflection.Typing
 module RU = Pulse.RuntimeUtils
 open FStar.List.Tot
 
-type bmap = m:Map.t var typ {
-  forall (x:var). (~ (Map.contains m x)) ==> (Map.sel m x == tm_unknown)
-}
-
-let related (bs:list (var & typ)) (m:Map.t var typ) =
-  (forall (b:var & typ).
-          L.memP b bs ==> (Map.contains m (fst b) /\
-                           Map.sel m (fst b) == snd b)) /\
-  
-  (forall (x:var). Map.contains m x ==> (List.Tot.memP (x, Map.sel m x) bs))
-
 noeq
 type env = {
   f : RT.fstar_top_env;
-  bs : list (var & typ);
-  f_bs : (f_bs : R.env { f_bs == extend_env_l f bs });
-  names : ns:list ppname { List.length ns == List.length bs };
-  m : m:bmap { related bs m /\ L.length names == L.length bs };
-  goto: list (var & ppname & comp_st);
+  bs : list binding;
+  f_bs : (f_bs : R.env { f_bs == bindings_extend_env f bs });
   ctxt: Pulse.RuntimeUtils.context;
 
   anf_ctr : Sealed.sealed nat;
@@ -53,128 +39,80 @@ type env = {
 let fstar_env g = RU.env_set_context g.f g.ctxt
 
 let bindings g = g.bs
-let rec bindings_with_ppname_aux (bs:list (var & typ)) (names:list ppname { List.length bs == List.length names })
-  : list (ppname & var & typ) =
-  match bs, names with
-  | [], [] -> []
-  | (x, t)::bs, n::names -> (n, x, t)::(bindings_with_ppname_aux bs names)
-let bindings_with_ppname g = bindings_with_ppname_aux g.bs g.names  
 
+let equal_elim g1 g2 =
+  Sealed.sealed_singl g1.anf_ctr g2.anf_ctr
 
 let elab_env g = g.f_bs
-
-let elab_env_lemma g = ()
 
 let fresh_anf (g:env) =
   let id = T.unseal g.anf_ctr in
   let g = { g with anf_ctr = Sealed.seal (id + 1) } in
   g, id
 
-
-let as_map g = g.m
-
-let goto_bindings g = g.goto
-let bindings_as_map _ = ()
-
-let empty_bmap : bmap = Map.const_on Set.empty tm_unknown
-
-let rec equal_names (l1 l2:list ppname)
-  : Lemma 
-    (requires L.length l1 == L.length l2)
-    (ensures l1 == l2) =
-  match l1, l2 with
-  | [], [] -> ()
-  | n1::l1, n2::l2 ->
-    equal_names l1 l2
-
-let equal_elim g1 g2 =
-  equal_names g1.names g2.names;
-  Sealed.sealed_singl g1.anf_ctr g2.anf_ctr;
-  assert (Map.equal g1.m g2.m)
-
 let default_context : Pulse.RuntimeUtils.context = FStar.Sealed.seal []
 
 let mk_env (f:RT.fstar_top_env) : env =
-  { f; bs = []; f_bs=f; names=[]; m = empty_bmap; goto=[]; ctxt = default_context; anf_ctr = Sealed.seal 0 }
+  { f; bs = []; f_bs=f; ctxt = default_context; anf_ctr = Sealed.seal 0 }
 
-let mk_env_bs _ = ()
-
-let mk_env_goto_bindings _ = ()
-
-let mk_env_dom f =
-  assert_norm (goto_dom (mk_env f) == Set.empty);
+let mk_env_dom f : Lemma (dom (mk_env f) == Set.empty) =
   assert (dom (mk_env f) `Set.equal` Set.empty)
 
-let push_binding g x p t =
-  { g with bs = (x, t)::g.bs;
-           names = p::g.names;
-           f_bs = R.push_binding g.f_bs { ppname = p.name; uniq = x; sort = t };
-           m = Map.upd g.m x t }
-
-let push_goto g x n c =
-  { g with goto = (x, n,c)::g.goto }
-
-let dom_push_goto g x n c = admit ()
-let bindings_push_goto g x n c = ()
-let as_map_push_goto g x n c = ()
-
-let push_binding_bs _ _ _ _ = ()
-
-let push_binding_goto_bindings _ _ _ _ = ()
-
-let push_binding_as_map _ _ _ _ = ()
+let push g b =
+  { g with bs = b :: g.bs; f_bs = binding_extend_env g.f_bs b }
 
 let push_univ_vars g us =
   { g with f = RU.push_univ_vars g.f us; f_bs = RU.push_univ_vars g.f_bs us }
+
+let rec lookup_bindings (g: env_bindings) (x: var) : option typ =
+  match g with
+  | [] -> None
+  | BindingVar {n; x=y; ty} :: g -> if x = y then Some ty else lookup_bindings g x
+  | BindingGotoLabel .. :: g | BindingPost .. :: g -> lookup_bindings g x
+
+let rec lookup_bindings_fresh (g: env_bindings) (x: var { ~(x `Set.mem` bindings_dom g) }) :
+    Lemma (lookup_bindings g x == None) =
+  match g with
+  | [] -> ()
+  | b :: g -> lookup_bindings_fresh g x
+
+let lookup g x = lookup_bindings (bindings g) x
+let lookup_fresh g x = lookup_bindings_fresh (bindings g) x
+let lookup_push g x b = () 
+
+let rec lookup_goto_bindings (g: env_bindings) (x: var) : option (ppname & comp_st) =
+  match g with
+  | [] -> None
+  | BindingVar .. :: g -> lookup_goto_bindings g x
+  | BindingGotoLabel { n; x=y; post } :: g ->
+    if x = y then Some (n, post) else lookup_goto_bindings g x
+  | BindingPost { post } :: g ->
+    match lookup_goto_bindings g x with
+    | None -> None
+    | Some (n, post0) -> Some (n, comp_add_pre post0 post)
+
+let lookup_goto g x = lookup_goto_bindings (bindings g) x
+let lookup_goto_push g x b = ()
 
 let fresh g =
   let v = RU.next_id () in
   assume ~(v `Set.mem` dom g);
   v
 
-//
-// TODO: Move to ulib
-//
-let rec append_memP (#a:Type) (l1 l2:list a) (x:a)
-  : Lemma (L.memP x (l1 @ l2) <==> (L.memP x l1 \/ L.memP x l2))
-          [SMTPat (L.memP x (l1 @ l2))] =
-  match l1 with
-  | [] -> ()
-  | _::tl -> append_memP tl l2 x
-
-let rec extend_env_impl (f:R.env) (g:env_bindings) (ns:list ppname { List.length ns == List.length g }) :
-    f':R.env { f' == extend_env_l f g } =
-  match g, ns with
-  | [], [] -> f
-  | (x, t)::g, n::ns ->
-    let f = extend_env_impl f g ns in
-    R.push_binding f { ppname = (n <: ppname).name; uniq = x; sort = t }
-
-let push_env (g1:env) (g2:env { disjoint g1 g2 }) : env =
-  assume (extend_env_l (extend_env_l g1.f g1.bs) g2.bs == extend_env_l g1.f (g2.bs @ g1.bs));
-  assert Set.disjoint (var_dom g2) (var_dom g1);
+let push_env g1 g2 =
+  assume (bindings_extend_env (bindings_extend_env g1.f g1.bs) g2.bs == bindings_extend_env g1.f (g2.bs @ g1.bs));
   {
     f = g1.f;
     bs = g2.bs @ g1.bs;
-    goto  = g2.goto @ g1.goto;
-    f_bs = extend_env_impl g1.f_bs g2.bs g2.names;
-    names= g2.names @ g1.names;
-    m = Map.concat g2.m g1.m;
+    f_bs = bindings_extend_env g1.f_bs g2.bs;
     ctxt = g1.ctxt ;
     anf_ctr = g1.anf_ctr;
   }
 
-let push_env_fstar_env _ _ = ()
-
-let push_env_bindings _ _ = ()
-
-let push_env_goto_bindings _ _ = ()
-
-let push_env_as_map _ _ = ()
+let push_env_dom g1 g2 = admit ()
 
 let push_env_assoc g1 g2 g3 =
   L.append_assoc g3.bs g2.bs g1.bs;
-  L.append_assoc g3.goto g2.goto g1.goto;
   assert (equal (push_env g1 (push_env g2 g3)) (push_env (push_env g1 g2) g3))
 
 let intro_env_extends (g1 g2 g3:env)
@@ -200,23 +138,6 @@ let rec diff_witness (#a:Type) (l1 l2:list a) (l3:G.erased (list a))
   | hd1::tl1, hd2::tl2 ->
     diff_witness tl1 tl2 l3
 
-let rec create_m (bs:list (var & typ)) : m:bmap { related bs m } =
-  match bs with
-  | [] -> empty_bmap
-  | (x, t)::tl ->
-    // TODO: need to encode uniqueness in the repr
-    assume (forall (b:var & typ). List.Tot.memP b tl ==> fst b =!= x);
-    Map.upd (create_m tl) x t
-
-let rec diff_names (#a:Type) (l1 l2:list a)
-  : Pure (list a)
-         (requires L.length l1 >= L.length l2)
-         (ensures fun l -> L.length l == L.length l1 - L.length l2) =
-  match l1, l2 with
-  | [], _ -> []
-  | _, [] -> l1
-  | _::tl1, _::tl2 -> diff_names tl1 tl2
-
 let diff_witness' (#a:Type) (l1 l2:list a) (l3:G.erased (list a))
   : Pure (list a)
          (requires l1 == G.reveal l3 @ l2)
@@ -228,28 +149,14 @@ let diff_witness' (#a:Type) (l1 l2:list a) (l3:G.erased (list a))
 
 let diff g1 g2 =
   let g3 = elim_env_extends_tot g1 g2 in
-  assert (g1.bs == g3.bs @ g2.bs);
-
   let bs3 = diff_witness' g1.bs g2.bs g3.bs in
-  let goto3 = diff_witness' g1.goto g2.goto g3.goto in
-
-  L.append_length bs3 g2.bs;
-  assume (forall (a:Type) (l:list a). L.length (L.rev l) == L.length l);
-
-  let names3 = L.rev (diff_names (L.rev g1.names) (L.rev g2.names)) in
-  let m3 = create_m bs3 in
-
   let g3 = {
     f = g1.f;
     bs = bs3;
-    goto = goto3;
-    f_bs = extend_env_impl g1.f bs3 names3; // Recomputing, but probably ok
-    names = names3;
-    m = m3;
+    f_bs = bindings_extend_env g2.f bs3;
     ctxt = g1.ctxt;
     anf_ctr = g1.anf_ctr;
   } in
-  assume (disjoint g2 g3);  // needs distinct entries in g
   assert (equal g1 (push_env g2 g3));
   g3
 
@@ -263,14 +170,13 @@ let env_extends_trans (g1 g2 g3:env)
   let g12 = elim_env_extends g1 g2 in
   let g23 = elim_env_extends g2 g3 in
   L.append_assoc g12.bs g23.bs g3.bs;
-  L.append_assoc g12.goto g23.goto g3.goto;
   assert (equal g1 (push_env g3 (push_env g23 g12)));
   intro_env_extends g1 g3 (push_env g23 g12)
 
-let env_extends_push (g:env) (x:var { ~ (Set.mem x (dom g)) }) (n:ppname) (t:typ)
-  : Lemma (push_binding g x n t `env_extends` g) =
-  assert (equal (push_binding g x n t) (push_env g (push_binding (mk_env g.f) x n t)));
-  intro_env_extends (push_binding g x n t) g (push_binding (mk_env g.f) x n t)
+let env_extends_push (g:env) (b: binding { dom g `Set.disjoint` binding_dom b })
+  : Lemma (push g b `env_extends` g) =
+  assert (equal (push g b) (push_env g (push (mk_env g.f) b)));
+  intro_env_extends (push g b) g (push (mk_env g.f) b)
 
 let extends_with_push (g1 g2 g3:env)
   (x:var { ~ (Set.mem x (dom g1)) }) n (t:typ)
@@ -296,8 +202,6 @@ let range_of_env (g:env) =
     | Some r -> r
     | _ -> FStar.Range.range_0
   
-
-
 let ctxt_elt_to_string (c : (string & option range)) : T.Tac string = 
   match snd c with
   | None -> fst c
@@ -320,11 +224,16 @@ let print_context (g:env) : T.Tac string =
   | _ -> 
     Printf.sprintf "\n\tContext:\n\t%s" (String.concat "\n\t" (ctxt_to_list g))
 
+let binding_to_string : binding -> T.Tac string = function
+  | BindingVar { n; x; ty } ->
+    Printf.sprintf "%s#%d : %s" (T.unseal n.name) x (Pulse.Syntax.Printer.term_to_string ty)
+  | BindingGotoLabel { n; x; post } ->
+    Printf.sprintf "%s#%d : %s" (T.unseal n.name) x (Pulse.Syntax.Printer.comp_to_string post)
+  | BindingPost { post } ->
+    Printf.sprintf "extra post: %s" (Pulse.Syntax.Printer.term_to_string post)
+
 let env_to_string (e:env) : T.Tac string =
-  let bs = T.map #((var & typ) & ppname) #_
-    (fun ((n, t), x) -> Printf.sprintf "%s#%d : %s" (T.unseal x.name) n (Pulse.Syntax.Printer.term_to_string t))
-    (T.zip e.bs e.names) in
-  String.concat "\n  " bs
+  String.concat "\n  " (T.map binding_to_string (bindings e))
 
 open FStar.Pprint
 
@@ -338,24 +247,28 @@ let rec separate_map (sep: document) (f : 'a -> T.Tac document) (l : list 'a) : 
   | x::xs -> f x ^^ sep ^/^ separate_map sep f xs
 
 let env_to_doc' (simplify:bool) (e:env) : T.Tac document =
-  let pp1 : ((var & typ) & ppname) -> T.Tac document =
-    fun ((n, t), x) ->
+  let pp1 : var_binding -> T.Tac document =
+    fun { n; ty; x } ->
       infix 2 1 colon
-        (doc_of_string (T.unseal x.name ^ "#" ^ string_of_int n))
-        (align (Pulse.Syntax.Printer.term_to_doc t))
+        (doc_of_string (T.unseal n.name ^ "#" ^ string_of_int x))
+        (align (Pulse.Syntax.Printer.term_to_doc ty))
   in
-  let maybe_filter vtns =
+  let maybe_filter (vtns: list var_binding) =
     if simplify then
-      vtns |> T.filter (fun ((n, t), x) ->
-        let is_unit = FStar.Reflection.TermEq.term_eq t (`unit) in
-        let x : ppname = x in
-        let is_wild = T.unseal x.name = "__" in
+      vtns |> T.filter (fun {n; ty; x} ->
+        let is_unit = FStar.Reflection.TermEq.term_eq ty (`unit) in
+        let is_wild = T.unseal n.name = "__" in
         not (is_unit && is_wild)
       )
     else
       vtns
   in
-  T.zip e.bs e.names |> maybe_filter |> separate_map comma pp1
+  let rec var_bindings = function
+    | [] -> []
+    | BindingVar b :: bs -> b :: var_bindings bs
+    | _ :: bs -> var_bindings bs
+  in
+  var_bindings (bindings e) |> maybe_filter |> separate_map comma pp1
 
 let env_to_doc = env_to_doc' true
 

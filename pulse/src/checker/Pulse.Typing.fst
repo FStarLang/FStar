@@ -123,25 +123,15 @@ let comp_return (c:ctag) (use_eq:bool) (u:universe) (t:term) (e:term) (post:term
       tm_emp_inames
       { u; res = t; pre = open_term' post e 0; post = post_maybe_eq }
 
-
-
-(*
- * If I call this fresh, I get:
- *     Pulse.Typing.fst(545,0-546,20): (Error 162) The qualifier list "[assume]" is not permissible for this element: definitions cannot be assumed or marked with equality qualifiers
- * What!?!? Oh.. there's a fresh in Pulse.Typing.Env, which is *included*...
- *)
-let freshv (g:env) (x:var) : prop =
-  ~(Set.mem x (dom g))
-
-let rec all_fresh (g:env) (xs:list binding) : Tot prop (decreases xs) =
+let rec all_fresh (g:env) (xs:list var_binding) : Tot prop (decreases xs) =
   match xs with
   | [] -> True
-  | x::xs -> freshv g (fst x) /\ all_fresh (push_binding g (fst x) ppname_default (snd x)) xs
+  | x::xs -> freshv g x.x /\ all_fresh (push g (BindingVar x)) xs
 
-let rec push_bindings (g:env) (bs:list binding{all_fresh g bs}) : Tot (g':env{env_extends g' g}) (decreases bs) =
+let rec push_bindings (g:env) (bs:list var_binding {all_fresh g bs}) : Tot (g':env{env_extends g' g}) (decreases bs) =
   match bs with
   | [] -> g
-  | (x,t)::bs -> push_bindings (push_binding g x ppname_default t) bs
+  | x::bs -> push_bindings (push g (BindingVar x)) bs
 
 let elab_push_binding (g:env) (x:var { ~ (Set.mem x (dom g)) }) (t:typ)
   : Lemma (elab_env (push_binding g x ppname_default t) ==
@@ -794,8 +784,8 @@ let comp_typing_u (e:env) (c:comp_st) = comp_typing e c (universe_of_comp c)
 let subtyping_token g t1 t2 =
   T.subtyping_token (elab_env g) t1 t2
 
-val readback_binding : R.binding -> binding
-let readback_binding b = (b.uniq, b.sort)
+val readback_binding : R.binding -> var_binding
+let readback_binding b = { n = { name = b.ppname; range = Range.range_0 }; x = b.uniq; ty = b.sort }
 
 let non_informative (g:env) (c:comp) =
   my_erased (RT.non_informative (elab_env g) (elab_comp c))
@@ -1159,7 +1149,7 @@ and br_typing : env -> universe -> typ -> term -> pattern -> st_term -> comp_st 
               ({name=Sealed.seal "branch equality"; range=FStar.Range.range_0})
               (mk_sq_eq2 sc_u sc_ty sc (S.wr (fst (Some?.v (RT.elaborate_pat (elab_pat p) bs))) Range.range_0))
          ) e c ->
-      br_typing g sc_u sc_ty sc p (close_st_term_n e (L.map fst (L.map readback_binding bs))) c
+      br_typing g sc_u sc_ty sc p (close_st_term_n e (L.map (fun b -> (readback_binding b).x) bs)) c
 
 (* this requires some metatheory on FStar.Reflection.Typing
 
@@ -1246,7 +1236,7 @@ let post_hint_for_env_extends (g:env) (p:post_hint_t) (x:var { ~ (Set.mem x (dom
     (requires post_hint_for_env_p g p)
     (ensures post_hint_for_env_p (push_binding g x ppname_default b) p)
     [SMTPat (post_hint_for_env_p (push_binding g x ppname_default b) p)]
-  = env_extends_push g x ppname_default b
+  = env_extends_push g (BindingVar {x; n=ppname_default; ty=b})
   
 let post_hint_for_env (g:env) = p:post_hint_t { post_hint_for_env_p g p }
 noeq

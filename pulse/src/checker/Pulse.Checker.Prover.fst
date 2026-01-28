@@ -998,7 +998,7 @@ let rec apply_with_uvars (g:env) (t:typ) (v:term) : T.Tac (typ & term) =
     | _ -> t, v)
   | _ -> t, v
 
-#push-options "--split_queries always"
+#push-options "--split_queries always --z3rlimit 10"
 let try_apply_elim_lemma (g: env) (lid: R.name) (i: nat) (ctxt: slprop_view) :
     T.Tac (option (prover_result_nogoals g [ctxt])) =
   let do_match a b =
@@ -1456,6 +1456,7 @@ let prove_post_hint (#g:env) (#ctxt:slprop) (r:checker_result_t g ctxt NoHint) (
       else
         let (| g3, remaining_ctxt, k_post |) =
           prove rng g2 ctxt' post_hint_opened false in
+        assume lookup g3 x == lookup g2 x;
 
         let tv = inspect_term remaining_ctxt in
         if not (Tm_Emp? tv || remaining_ctxt `eq_tm` tm_is_unreachable) then
