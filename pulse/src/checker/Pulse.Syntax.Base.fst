@@ -278,6 +278,14 @@ let rec eq_st_term (t1 t2:st_term)
     | Tm_PragmaWithOptions { options=o1; body=b1 }, 
       Tm_PragmaWithOptions { options=o2; body=b2 } ->
       o1 = o2 && eq_st_term b1 b2
+    
+    | Tm_ForwardJumpLabel { lbl=l1; body=b1; post=p1 },
+      Tm_ForwardJumpLabel { lbl=l2; body=b2; post=p2 } ->
+      eq_st_term b1 b2 && eq_comp p1 p2
+    
+    | Tm_Goto { lbl=l1; arg=a1 },
+      Tm_Goto { lbl=l2; arg=a2 } ->
+      eq_tm l1 l2 && eq_tm a1 a2
       
     | _ -> false
 

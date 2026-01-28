@@ -307,6 +307,15 @@ type st_term' =
       options: string;
       body: st_term
     }
+  | Tm_ForwardJumpLabel {
+      lbl: ppname;
+      body: st_term;
+      post: comp_st;
+    }
+  | Tm_Goto {
+      lbl: term; // either var or named
+      arg: term;
+    }
 and st_term = {
     term : st_term';
     range : range;

@@ -63,6 +63,8 @@ val fresh_anf (g:env) : T.Tac (env & nat)
 
 val as_map (g:env) : Map.t var typ
 
+val goto_bindings (g:env) : list (var & ppname & comp_st)
+
 let is_related_to (bs:list (var & typ)) (m:Map.t var typ) =
   (forall (b:var & typ).{:pattern L.memP b bs}
           L.memP b bs ==> (Map.contains m (fst b) /\
@@ -74,10 +76,21 @@ val bindings_as_map (g:env)
   : Lemma (bindings g `is_related_to` as_map g)
           [SMTPat (bindings g); SMTPat (as_map g)]
 
-let dom (g:env) : Set.set var = Map.domain (as_map g)
+let goto_dom (g: env) : GTot (Set.set var) =
+  let rec go xs =
+    match xs with
+    | [] -> Set.empty
+    | (x,_,_)::xs -> Set.add x (go xs)
+  in
+  go (goto_bindings g)
+
+let var_dom (g: env) : Set.set var = Map.domain (as_map g)
+
+let dom (g:env) : GTot (Set.set var) = Set.union (var_dom g) (goto_dom g)
 
 let equal (g1 g2:env) =
   fstar_env g1 == fstar_env g2 /\
+  goto_bindings g1 == goto_bindings g2 /\
   bindings g1 == bindings g2
 
 val equal_elim (g1 g2:env)
@@ -91,6 +104,10 @@ val mk_env_bs (f:RT.fstar_top_env)
   : Lemma (bindings (mk_env f) == [])
           [SMTPat (bindings (mk_env f))]
 
+val mk_env_goto_bindings (f:RT.fstar_top_env)
+  : Lemma (goto_bindings (mk_env f) == [])
+          [SMTPat (goto_bindings (mk_env f))]
+
 val mk_env_dom (f:RT.fstar_top_env)
   : Lemma (dom (mk_env f) == Set.empty)
           [SMTPat (dom (mk_env f))]
@@ -98,14 +115,31 @@ val mk_env_dom (f:RT.fstar_top_env)
 val push_binding (g:env) (x:var { ~ (Set.mem x (dom g)) }) (n:ppname) (t:typ)
   : g':env { fstar_env g' == fstar_env g }
 
+val push_goto (g: env) (x: var { ~ (Set.mem x (dom g)) }) (n: ppname) (c: comp_st)
+  : g':env { fstar_env g' == fstar_env g }
+
 let singleton_env (f:_) (x:var) (t:typ) = push_binding (mk_env f) x ppname_default t
 
 let push_binding_def (g:env) (x:var { ~ (Set.mem x (dom g)) }) (t:typ)
   = push_binding g x ppname_default t
 
+val dom_push_goto (g: env) x n c
+  : Lemma (goto_dom (push_goto g x n c) == Set.add x (goto_dom g))
+      [SMTPat (goto_dom (push_goto g x n c))]
+val bindings_push_goto (g: env) x n c
+  : Lemma (bindings (push_goto g x n c) == bindings g)
+      [SMTPat (bindings (push_goto g x n c))]
+val as_map_push_goto (g: env) x n c
+  : Lemma (as_map (push_goto g x n c) == as_map g)
+      [SMTPat (as_map (push_goto g x n c))]
+
 val push_binding_bs (g:env) (x:var { ~ (Set.mem x (dom g)) }) (n:ppname) (t:typ)
   : Lemma (bindings (push_binding g x n t) == (x, t) :: bindings g)
           [SMTPat (bindings (push_binding g x n t))]
+
+val push_binding_goto_bindings (g:env) (x:var { ~ (Set.mem x (dom g)) }) (n:ppname) (t:typ)
+  : Lemma (goto_bindings (push_binding g x n t) == goto_bindings g)
+          [SMTPat (goto_bindings (push_binding g x n t))]
 
 val push_binding_as_map (g:env) (x:var { ~ (Set.mem x (dom g)) }) (n:ppname) (t:typ)
   : Lemma (as_map (push_binding g x n t) == Map.upd (as_map g) x t)
@@ -116,6 +150,15 @@ val push_univ_vars (g: env) (us: list R.univ_name) : g':env { g' == g }
 let lookup (g:env) (x:var) : option typ =
   let m = as_map g in
   if Map.contains m x then Some (Map.sel m x) else None
+
+let lookup_goto (g: env) (x: var) : option (ppname & comp_st) =
+  let go ys =
+    match ys with
+    | [] -> None
+    | (y,n,c)::ys ->
+      if x = y then Some (n,c) else None
+  in
+  go (goto_bindings g)
 
 val fresh (g:env) : Dv (v:var { ~ (Set.mem v (dom g)) })
 
@@ -143,6 +186,11 @@ val push_env_bindings (g1 g2:env)
           (ensures bindings (push_env g1 g2) == bindings g2 @ bindings g1)
           [SMTPat (bindings (push_env g1 g2))]
 
+val push_env_goto_bindings (g1 g2:env)
+  : Lemma (requires disjoint g1 g2)
+          (ensures goto_bindings (push_env g1 g2) == goto_bindings g2 @ goto_bindings g1)
+          [SMTPat (goto_bindings (push_env g1 g2))]
+
 val push_env_as_map (g1 g2:env)
   : Lemma (requires disjoint g1 g2)
           (ensures as_map (push_env g1 g2) == Map.concat (as_map g2) (as_map g1))
@@ -151,29 +199,6 @@ val push_env_as_map (g1 g2:env)
 val push_env_assoc (g1 g2 g3:env)
   : Lemma (requires disjoint g1 g2 /\ disjoint g2 g3 /\ disjoint g3 g1)
           (ensures push_env g1 (push_env g2 g3) == push_env (push_env g1 g2) g3)
-
-val check_disjoint (g:env) (s:Set.set var) : b:bool { b ==> Set.disjoint s (dom g)}
-
-// removes the binding that was added first
-// leftmost when we write env on paper
-val remove_binding (g:env { Cons? (bindings g) })
-  : Pure (var & typ & env)
-         (requires True)
-         (ensures fun r ->
-            let (x, t, g') = r in
-            fstar_env g' == fstar_env g /\
-            (~ (x `Set.mem` dom g')) /\
-            g == push_env (push_binding (mk_env (fstar_env g)) x ppname_default t) g')
-
-val remove_latest_binding (g:env { Cons? (bindings g) })
-  : Pure (var & typ & env)
-         (requires True)
-         (ensures fun r ->
-            let (x, t, g') = r in
-            fstar_env g' == fstar_env g /\
-            (~ (x `Set.mem` dom g')) /\
-            bindings g == (x, t) :: bindings g' /\
-            g == push_binding g' x ppname_default t)
 
 // g1 extends g2 with g3, i.e. g1.bs == g3.bs @ g2.bs (recall most recent binding at the head)
 let extends_with (g1 g2 g3:env) =
@@ -184,7 +209,7 @@ let env_extends (g1 g2:env) =
   exists g3. extends_with g1 g2 g3
 
 val diff (g1 g2:env)
-  : Pure env (requires g1 `env_extends` g2)
+  : Ghost env (requires g1 `env_extends` g2)
              (ensures fun g3 -> extends_with g1 g2 g3)
 
 val env_extends_refl (g:env)
@@ -207,10 +232,6 @@ val extends_with_push (g1 g2 g3:env)
           [SMTPat (extends_with g1 g2 g3);
            SMTPat (push_binding g1 x n t);
            SMTPat (push_binding g3 x n t)]
-
-val subst_env (en:env) (ss:subst)
-  : en':env { fstar_env en == fstar_env en' /\
-              dom en == dom en' }
 
 val push_context (g:env) (ctx:string) (r:range) : g':env { g' == g }
 val push_context_no_range (g:env) (ctx:string) : g':env { g' == g }

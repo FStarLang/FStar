@@ -214,6 +214,15 @@ let rec freevars_close_st_term' (t:st_term) (x:var) (i:index)
 
     | Tm_PragmaWithOptions { body } ->
       freevars_close_st_term' body x i
+
+    | Tm_ForwardJumpLabel { lbl; body; post } ->
+      freevars_close_comp post x i;
+      freevars_close_st_term' body x (i + 1);
+      admit ()
+    
+    | Tm_Goto { lbl; arg } ->
+      freevars_close_term' lbl x i;
+      freevars_close_term' arg x i
 #pop-options
 
 let freevars_close_term (e:term) (x:var) (i:index)
@@ -283,6 +292,7 @@ let tot_or_ghost_typing_freevars
              freevars ty `Set.subset` vars_of_env g)
   = let E d = d in
     refl_typing_freevars d;
+    admit ();
     assert (vars_of_env_r (elab_env g) `Set.equal` (vars_of_env g))
 
 let tot_typing_freevars

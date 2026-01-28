@@ -154,7 +154,7 @@ let check
               post_typing_rec.ty_typing
               x post_typing_rec.post_typing
           in
-          assert (None? (lookup g x));
+          assert (freshv g x);
           assert (~(Set.mem x (freevars_st body)));
           match init with
           | None ->

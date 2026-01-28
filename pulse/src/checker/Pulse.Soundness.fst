@@ -50,7 +50,7 @@ let tabs_t (d:'a) =
     ppname:ppname ->
     t_typing:tot_typing g ty (tm_type u) { t_typing << d } ->
     #body:st_term ->
-    #x:var { None? (lookup g x) /\ ~(x `Set.mem` freevars_st body) } ->
+    #x:var { freshv g x /\ ~(x `Set.mem` freevars_st body) } ->
     #c:comp ->
     body_typing:st_typing (push_binding g x ppname ty) (open_st_term body x) c { body_typing << d } ->
     GTot (RT.tot_typing (elab_env g)
@@ -228,7 +228,7 @@ let rec soundness (g:stt_env)
                  (ppname:ppname)
                  (t_typing:tot_typing g ty (tm_type u) { t_typing << d })
                  (#body:st_term)
-                 (#x:var { None? (lookup g x) /\ ~(x `Set.mem` freevars_st body) })
+                 (#x:var { freshv g x /\ ~(x `Set.mem` freevars_st body) })
                  (#c:comp)
                  (body_typing:st_typing (push_binding g x ppname ty) (open_st_term body x) c { body_typing << d })
       : GTot (RT.tot_typing (elab_env g)

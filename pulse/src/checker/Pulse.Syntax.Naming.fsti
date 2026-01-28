@@ -161,6 +161,12 @@ let rec freevars_st (t:st_term)
     | Tm_PragmaWithOptions { body } ->
       freevars_st body
 
+    | Tm_ForwardJumpLabel { body; post } ->
+      freevars_st body ++ freevars_comp post
+
+    | Tm_Goto { lbl; arg } ->
+      freevars lbl ++ freevars arg
+
 and freevars_branches (t:list branch) : Set.set var =
   match t with
   | [] -> empty
@@ -344,6 +350,13 @@ let rec ln_st' (t:st_term) (i:int)
 
     | Tm_PragmaWithOptions { body } ->
       ln_st' body i
+
+    | Tm_ForwardJumpLabel { lbl; body; post } ->
+      ln_c' post i &&
+      ln_st' body (i+1)
+
+    | Tm_Goto { lbl; arg } ->
+      ln' lbl i && ln' arg i
 
 and ln_branch' (b : branch) (i:int) : Tot bool (decreases b) =
   ln_pattern' b.pat i &&
@@ -595,6 +608,12 @@ let rec subst_st_term (t:st_term) (ss:subst)
 
     | Tm_PragmaWithOptions { options; body } ->
       Tm_PragmaWithOptions { options; body=subst_st_term body ss }
+
+    | Tm_ForwardJumpLabel { lbl; body; post } ->
+      Tm_ForwardJumpLabel { lbl; body=subst_st_term body (shift_subst ss); post=subst_comp post ss }
+
+    | Tm_Goto { lbl; arg } ->
+      Tm_Goto { lbl=subst_term lbl ss; arg=subst_term arg ss }
 
     in
     { t with term = t' }

@@ -170,6 +170,7 @@ let rec simplify_st_term (g:env) (e:st_term) : T.Tac st_term =
   | Tm_ST _
   | Tm_Rewrite _
   | Tm_Admit _
+  | Tm_Goto _
   | Tm_ProofHintWithBinders _ -> e
 
   | Tm_Abs { b; q; ascription; body } ->
@@ -226,6 +227,14 @@ let rec simplify_st_term (g:env) (e:st_term) : T.Tac st_term =
     simplify_st_term g body
 
   | Tm_Unreachable _ -> e
+
+  | Tm_ForwardJumpLabel { lbl; body; post } ->
+    let open Pulse.Syntax.Naming in
+    let x = fresh g in
+    let e = open_st_term' body (tm_var { nm_index = x; nm_ppname = lbl }) 0 in
+    let e = simplify_st_term (E.push_goto g x lbl post) e in
+    let e = close_st_term' e x 0 in
+    ret (Tm_ForwardJumpLabel { lbl; body = e; post })
 
 and simplify_branch (g:env) (b:branch) : T.Tac branch =
   let {pat; e=body; norw} = b in
@@ -322,6 +331,16 @@ let rec erase_ghost_subterms (g:env) (p:st_term) : T.Tac st_term =
 
     | Tm_PragmaWithOptions { options; body } ->
       ret (Tm_PragmaWithOptions { options; body=erase_ghost_subterms g body })
+
+    | Tm_ForwardJumpLabel { lbl; body; post } ->
+      let open Pulse.Syntax.Naming in
+      let x = fresh g in
+      let e = open_st_term' body (tm_var { nm_index = x; nm_ppname = lbl }) 0 in
+      let e = erase_ghost_subterms (E.push_goto g x lbl post) e in
+      let e = close_st_term' e x 0 in
+      ret (Tm_ForwardJumpLabel { lbl; body = e; post })
+
+    | Tm_Goto _ -> p
       
   end
 
@@ -505,6 +524,39 @@ let rec extract_dv g (p:st_term) : T.Tac R.term =
         [comp_res c, R.Q_Explicit; unit_tm, R.Q_Explicit])
 
     | Tm_PragmaWithOptions { body } -> extract_dv g body
+
+    | Tm_Goto { lbl; arg } ->
+      let lblv: var =
+        match R.inspect_ln lbl with
+        | R.Tv_Var lbl -> (R.inspect_namedv lbl).uniq
+        | _ -> T.fail (Printf.sprintf "invalid goto, label not var: %s" (show p)) in
+      let (lbln, c): ppname & st_comp =
+        match E.lookup_goto g lblv with
+        | Some (name, c) -> name, st_comp_of_comp c
+        | _ -> T.fail (Printf.sprintf "invalid goto, no matching block: %s" (show p)) in
+      ECL.mk_meta_monadic <|  
+        R.mk_app (R.pack_ln (R.Tv_UInst (R.pack_fv ["Pulse"; "Lib"; "Dv"; "goto"]) [c.u])) [
+          c.res, R.Q_Implicit;
+          tm_var { nm_index = lblv; nm_ppname = lbln }, R.Q_Explicit;
+          arg, R.Q_Explicit;
+        ]
+    
+    | Tm_ForwardJumpLabel { lbl; body; post } ->
+      let x = fresh g in
+      let g' = E.push_goto g x lbl post in
+      let body = extract_dv g' (open_st_term_nv body (lbl, x)) in
+      let post = st_comp_of_comp post in
+      ECL.mk_meta_monadic <|
+        R.mk_app (R.pack_ln (R.Tv_UInst (R.pack_fv ["Pulse"; "Lib"; "Dv"; "forward_jump_label"]) [post.u])) [
+          post.res, R.Q_Implicit;
+          R.pack_ln (R.Tv_Abs (R.pack_binder {
+            sort = R.mk_app (R.pack_ln (R.Tv_UInst (R.pack_fv ["Pulse"; "Lib"; "Dv"; "goto_label"]) [post.u]))
+              [post.res, R.Q_Explicit];
+            qual = R.Q_Explicit;
+            attrs = [];
+            ppname = lbl.name;
+          }) (close_term body x)), R.Q_Explicit;
+        ]
 
   end
 

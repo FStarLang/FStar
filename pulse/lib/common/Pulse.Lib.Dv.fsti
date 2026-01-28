@@ -19,3 +19,7 @@ module Pulse.Lib.Dv
 val while_ (cond: unit -> Dv bool) (body: unit -> Dv unit) : Dv unit
 val par (f1: unit -> Dv unit) (f2: unit -> Dv unit) : Dv unit
 val unreachable (t: Type0) : unit -> Dv t
+
+val goto_label (a: Type u#a) : Type0
+val goto (#a: Type u#a) (lbl: goto_label a) (arg: a) : Dv unit
+val forward_jump_label (#a: Type u#a) (body: goto_label a -> Dv a) : Dv a

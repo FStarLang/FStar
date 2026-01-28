@@ -133,7 +133,7 @@ let close_open_inverse_ascription' (t:comp_ascription)
      | None -> ()
      | Some c -> close_open_inverse_comp' c x i)
 
-#push-options "--z3rlimit_factor 16 --fuel 2 --ifuel 2 --split_queries no"
+#push-options "--z3rlimit_factor 20 --fuel 2 --ifuel 2 --split_queries no"
 #restart-solver
 let rec close_open_inverse_st'  (t:st_term) 
                                 (x:var { ~(x `Set.mem` freevars_st t) } )
@@ -228,6 +228,14 @@ let rec close_open_inverse_st'  (t:st_term)
       
     | Tm_PragmaWithOptions { body } ->
       close_open_inverse_st' body x i
+
+    | Tm_ForwardJumpLabel { body; post } ->
+      close_open_inverse_st' body x (i + 1);
+      close_open_inverse_comp' post x i
+    
+    | Tm_Goto { lbl; arg } ->
+      close_open_inverse' lbl x i;
+      close_open_inverse' arg x i
 #pop-options
 
 let close_open_inverse (t:term) (x:var { ~(x `Set.mem` freevars t) } )

@@ -413,6 +413,12 @@ let rec check
           let r = check g pre pre_typing post_hint res_ppname body in
           RU.pop_options ();
           r
+
+        | Tm_ForwardJumpLabel _ ->
+          T.fail "Tm_ForwardJumpLabel TODO"
+
+        | Tm_Goto _ ->
+          T.fail "Tm_Goto TODO"
       in
 
       let (| x, g1, t, pre', k |) = r in

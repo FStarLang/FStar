@@ -97,9 +97,9 @@ val typing_correctness
 
 let renaming x y = [RT.NT x (tm_var {nm_index=y; nm_ppname=ppname_default})]
 val tot_typing_renaming1
-  (g:env) (x:var {None? (lookup g x)}) (tx e ty:term)
+  (g:env) (x:var {freshv g x}) (tx e ty:term)
   (_:tot_typing (push_binding g x ppname_default tx) e ty)
-  (y:var { None? (lookup g y) /\ x <> y })
+  (y:var { freshv g y /\ x <> y })
   : tot_typing (push_binding g y ppname_default tx)
                (subst_term e (renaming x y))
                (subst_term ty (renaming x y))
@@ -115,7 +115,7 @@ val st_typing_weakening
   (g:env) (g':env { disjoint g g' })
   (t:st_term) (c:comp) (_:st_typing (push_env g g') t c)
   (g1:env { pairwise_disjoint g g1 g' })
-  : Dv (st_typing (push_env (push_env g g1) g') t c)
+  : GTot (st_typing (push_env (push_env g g1) g') t c)
 
 let veq_weakening
   (g:env) (g':env { disjoint g g' })
@@ -125,36 +125,10 @@ let veq_weakening
 
 let nt (x:var) (t:term) = [ RT.NT x t ]
 
-val st_typing_subst
-  (g:env) (x:var) (t:typ) (g':env { pairwise_disjoint g (singleton_env (fstar_env g) x t) g' })
-  (#e:term)
-  (#eff:T.tot_or_ghost)
-  (e_typing:typing g e eff t)
-  (#e1:st_term) (#c1:comp_st)
-  (e1_typing:st_typing (push_env g (push_env (singleton_env (fstar_env g) x t) g')) e1 c1)
-  (_:squash (eff == T.E_Ghost ==> C_STGhost? c1))
-
-  : st_typing (push_env g (subst_env g' (nt x e)))
-              (subst_st_term e1 (nt x e))
-              (subst_comp c1 (nt x e))
-
-let slprop_equiv_subst
-  (g:env) (x:var) (t:typ) (g':env { pairwise_disjoint g (singleton_env (fstar_env g) x t) g' })
-  (#e:term)
-  (#eff:T.tot_or_ghost)
-  (e_typing:typing g e eff t)
-  (#p1:term) (#p2:term)
-  (veq:slprop_equiv (push_env g (push_env (singleton_env (fstar_env g) x t) g')) p1 p2)
-
-: slprop_equiv (push_env g (subst_env g' (nt x e)))
-              (subst_term p1 (nt x e))
-              (subst_term p2 (nt x e)) =
-  admit ()
-
 let slprop_equiv_rename 
      (#g:env) (#t0 #t1:term) 
-     (x:var{None? (lookup g x)}) 
-     (y:var{None? (lookup g y)}) tx ty (eq:RT.equiv (elab_env g) tx ty)
+     (x:var{freshv g x}) 
+     (y:var{freshv g y}) tx ty (eq:RT.equiv (elab_env g) tx ty)
      (v:slprop_equiv (push_binding g x ppname_default tx) (open_term t0 x) (open_term t1 x))
 : slprop_equiv (push_binding g y ppname_default ty) (open_term t0 y) (open_term t1 y)
 = RU.magic()

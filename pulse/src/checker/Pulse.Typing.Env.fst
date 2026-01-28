@@ -43,6 +43,7 @@ type env = {
   f_bs : (f_bs : R.env { f_bs == extend_env_l f bs });
   names : ns:list ppname { List.length ns == List.length bs };
   m : m:bmap { related bs m /\ L.length names == L.length bs };
+  goto: list (var & ppname & comp_st);
   ctxt: Pulse.RuntimeUtils.context;
 
   anf_ctr : Sealed.sealed nat;
@@ -72,6 +73,7 @@ let fresh_anf (g:env) =
 
 let as_map g = g.m
 
+let goto_bindings g = g.goto
 let bindings_as_map _ = ()
 
 let empty_bmap : bmap = Map.const_on Set.empty tm_unknown
@@ -93,11 +95,15 @@ let equal_elim g1 g2 =
 let default_context : Pulse.RuntimeUtils.context = FStar.Sealed.seal []
 
 let mk_env (f:RT.fstar_top_env) : env =
-  { f; bs = []; f_bs=f; names=[]; m = empty_bmap; ctxt = default_context; anf_ctr = Sealed.seal 0 }
+  { f; bs = []; f_bs=f; names=[]; m = empty_bmap; goto=[]; ctxt = default_context; anf_ctr = Sealed.seal 0 }
 
 let mk_env_bs _ = ()
 
-let mk_env_dom _ = assert (Set.equal (Map.domain empty_bmap) Set.empty)
+let mk_env_goto_bindings _ = ()
+
+let mk_env_dom f =
+  assert_norm (goto_dom (mk_env f) == Set.empty);
+  assert (dom (mk_env f) `Set.equal` Set.empty)
 
 let push_binding g x p t =
   { g with bs = (x, t)::g.bs;
@@ -105,7 +111,16 @@ let push_binding g x p t =
            f_bs = R.push_binding g.f_bs { ppname = p.name; uniq = x; sort = t };
            m = Map.upd g.m x t }
 
+let push_goto g x n c =
+  { g with goto = (x, n,c)::g.goto }
+
+let dom_push_goto g x n c = admit ()
+let bindings_push_goto g x n c = ()
+let as_map_push_goto g x n c = ()
+
 let push_binding_bs _ _ _ _ = ()
+
+let push_binding_goto_bindings _ _ _ _ = ()
 
 let push_binding_as_map _ _ _ _ = ()
 
@@ -137,9 +152,11 @@ let rec extend_env_impl (f:R.env) (g:env_bindings) (ns:list ppname { List.length
 
 let push_env (g1:env) (g2:env { disjoint g1 g2 }) : env =
   assume (extend_env_l (extend_env_l g1.f g1.bs) g2.bs == extend_env_l g1.f (g2.bs @ g1.bs));
+  assert Set.disjoint (var_dom g2) (var_dom g1);
   {
     f = g1.f;
     bs = g2.bs @ g1.bs;
+    goto  = g2.goto @ g1.goto;
     f_bs = extend_env_impl g1.f_bs g2.bs g2.names;
     names= g2.names @ g1.names;
     m = Map.concat g2.m g1.m;
@@ -151,66 +168,14 @@ let push_env_fstar_env _ _ = ()
 
 let push_env_bindings _ _ = ()
 
+let push_env_goto_bindings _ _ = ()
+
 let push_env_as_map _ _ = ()
 
 let push_env_assoc g1 g2 g3 =
   L.append_assoc g3.bs g2.bs g1.bs;
+  L.append_assoc g3.goto g2.goto g1.goto;
   assert (equal (push_env g1 (push_env g2 g3)) (push_env (push_env g1 g2) g3))
-
-let check_disjoint g s =
-  admit ();
-  not (L.existsb (fun (x, _) -> Set.mem x s) g.bs)
-
-let rec remove_binding_aux (g:env)
-  (prefix:list (var & typ))
-  (prefix_names:list ppname { List.length prefix == List.length prefix_names})
-  (suffix:list (var & typ) { Cons? suffix })
-  (suffix_names:list ppname { List.length suffix == List.length suffix_names })
-  : Pure (var & typ & env)
-         (requires bindings g == prefix @ suffix /\
-                   g.names == prefix_names @ suffix_names)
-         (ensures fun r ->
-            let x, t, g' = r in
-            fstar_env g' == fstar_env g /\
-            (~ (x `Set.mem` dom g')) /\
-            g == push_env (push_binding (mk_env (fstar_env g)) x ppname_default t) g')
-         (decreases List.Tot.length suffix) =
-  match suffix, suffix_names with
-  | [x, t], _ ->
-    let m = Map.restrict (Set.complement (Set.singleton x)) (Map.upd g.m x tm_unknown) in
-    // we need uniqueness invariant in the representation
-    assume (forall (b:var & typ). List.Tot.memP b prefix <==> (List.Tot.memP b g.bs /\
-                                                               fst b =!= x));
-
-    let g' = {g with bs = prefix;
-                     f_bs = extend_env_impl g.f prefix prefix_names; // Recomputing, not ideal
-                     names=prefix_names;
-                     m
-    } in
-    assert (equal g (push_env (push_binding (mk_env (fstar_env g)) x ppname_default t) g'));
-    x, t, g'
-  | (x, t)::suffix_rest, n::suffix_names_rest ->
-    assume (prefix @ suffix == (prefix @ [x,t]) @ suffix_rest);
-    assume (prefix_names @ suffix_names == (prefix_names @ [n]) @ suffix_names_rest);
-    remove_binding_aux g (prefix @ [x, t]) (prefix_names @ [n]) suffix_rest suffix_names_rest
-
-let remove_binding g =
-  remove_binding_aux g [] [] g.bs g.names
-
-let remove_latest_binding g =
-  match g.bs, g.names with
-  | (x, t)::rest, _::names_rest ->
-    let m = Map.restrict (Set.complement (Set.singleton x)) (Map.upd g.m x tm_unknown) in
-    // we need uniqueness invariant in the representation
-    assume (forall (b:var & typ). List.Tot.memP b rest <==> (List.Tot.memP b g.bs /\
-                                                             fst b =!= x));
-    let g' = {g with bs = rest;
-                     f_bs = extend_env_impl g.f rest names_rest; // Recomputing, not ideal
-                     names=L.tl g.names;
-                     m;
-    } in
-    assert (equal g (push_binding g' x ppname_default t));
-    x, t, g'    
 
 let intro_env_extends (g1 g2 g3:env)
   : Lemma (requires extends_with g1 g2 g3)
@@ -252,28 +217,21 @@ let rec diff_names (#a:Type) (l1 l2:list a)
   | _, [] -> l1
   | _::tl1, _::tl2 -> diff_names tl1 tl2
 
+let diff_witness' (#a:Type) (l1 l2:list a) (l3:G.erased (list a))
+  : Pure (list a)
+         (requires l1 == G.reveal l3 @ l2)
+         (ensures fun w -> w == G.reveal l3) =
+  L.rev_append l3 l2;
+  let rev_l3 = diff_witness (L.rev l1) (L.rev l2) (L.rev l3) in
+  L.rev_involutive l3;
+  L.rev rev_l3
 
-#push-options "--z3rlimit_factor 12"
 let diff g1 g2 =
   let g3 = elim_env_extends_tot g1 g2 in
   assert (g1.bs == g3.bs @ g2.bs);
 
-  let g1_bs_rev = L.rev g1.bs in
-  let g2_bs_rev = L.rev g2.bs in
-  let g3_bs_rev : G.erased _ = G.elift1 L.rev g3.bs in
-
-  L.rev_append g3.bs g2.bs;
-  assert (g1_bs_rev == g2_bs_rev @ g3_bs_rev);
-
-  let rev_bs3 = diff_witness g1_bs_rev g2_bs_rev g3_bs_rev in
-  assert (g1_bs_rev == g2_bs_rev @ rev_bs3);
-
-  L.rev_append g2_bs_rev rev_bs3;
-  L.rev_involutive g1.bs;
-  L.rev_involutive g2.bs;
-
-  let bs3 = L.rev rev_bs3 in
-  assert (g1.bs == bs3 @ g2.bs);
+  let bs3 = diff_witness' g1.bs g2.bs g3.bs in
+  let goto3 = diff_witness' g1.goto g2.goto g3.goto in
 
   L.append_length bs3 g2.bs;
   assume (forall (a:Type) (l:list a). L.length (L.rev l) == L.length l);
@@ -284,6 +242,7 @@ let diff g1 g2 =
   let g3 = {
     f = g1.f;
     bs = bs3;
+    goto = goto3;
     f_bs = extend_env_impl g1.f bs3 names3; // Recomputing, but probably ok
     names = names3;
     m = m3;
@@ -293,7 +252,6 @@ let diff g1 g2 =
   assume (disjoint g2 g3);  // needs distinct entries in g
   assert (equal g1 (push_env g2 g3));
   g3
-#pop-options
 
 let env_extends_refl (g:env) : Lemma (g `env_extends` g) =
   assert (equal g (push_env g (mk_env g.f)));
@@ -305,6 +263,7 @@ let env_extends_trans (g1 g2 g3:env)
   let g12 = elim_env_extends g1 g2 in
   let g23 = elim_env_extends g2 g3 in
   L.append_assoc g12.bs g23.bs g3.bs;
+  L.append_assoc g12.goto g23.goto g3.goto;
   assert (equal g1 (push_env g3 (push_env g23 g12)));
   intro_env_extends g1 g3 (push_env g23 g12)
 
@@ -319,15 +278,6 @@ let extends_with_push (g1 g2 g3:env)
           (ensures extends_with (push_binding g1 x n t) g2 (push_binding g3 x n t)) =
   assert (equal (push_binding g1 x n t)
                 (push_env g2 (push_binding g3 x n t)))
-
-let rec subst_env (en:env) (ss:subst)
-  : Tot (en':env { fstar_env en == fstar_env en' /\ dom en == dom en' })
-      (decreases bindings en) =
-  match bindings en with
-  | [] -> en
-  | _ ->
-    let x, t, en = remove_latest_binding en in
-    push_binding (subst_env en ss) x ppname_default (subst_term t ss) 
 
 let push_context g ctx r = { g with ctxt = Pulse.RuntimeUtils.extend_context ctx (Some r) g.ctxt }
 let push_context_no_range g ctx = { g with ctxt = Pulse.RuntimeUtils.extend_context ctx None g.ctxt }

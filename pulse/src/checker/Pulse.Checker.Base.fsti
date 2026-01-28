@@ -73,7 +73,7 @@ val comp_typing_from_post_hint
 : T.Tac (comp_typing_u g c)
 
 val extend_post_hint (g:env) (p:post_hint_for_env g)
-                     (x:var{ None? (lookup g x) }) (tx:term)
+                     (x:var{freshv g x}) (tx:term)
                      (conjunct:term) (_:tot_typing (push_binding g x ppname_default tx) conjunct tm_slprop)
   : T.Tac (q:post_hint_for_env (push_binding g x ppname_default tx) {
             q.post == tm_star p.post conjunct /\
@@ -120,7 +120,7 @@ val continuation_elaborator_with_bind (#g:env) (ctxt:term)
   (#e1:st_term)
   (e1_typing:st_typing g e1 c1)
   (ctxt_pre1_typing:tot_typing g (tm_star ctxt (comp_pre c1)) tm_slprop)
-  (x:nvar { None? (lookup g (snd x)) })
+  (x:nvar { freshv g (snd x) })
   : T.Tac (continuation_elaborator
              g
              (tm_star ctxt (comp_pre c1))
@@ -133,7 +133,7 @@ val continuation_elaborator_with_bind_fn (#g:env) (#ctxt:term)
   (#c1:comp { C_Tot? c1 })
   (b:binder{b.binder_ty == comp_res c1})
   (e1_typing:st_typing g e1 c1)
-  (x:nvar { None? (lookup g (snd x)) })
+  (x:nvar { freshv g (snd x) })
 : T.Tac (continuation_elaborator
           g ctxt
           (push_binding g (snd x) ppname_default (comp_res c1)) ctxt)

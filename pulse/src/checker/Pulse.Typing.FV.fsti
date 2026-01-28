@@ -70,7 +70,7 @@ let st_typing_freevars_inv (#g:_) (#t:_) (#c:_)
                            (d:st_typing g t c)
                            (x:var)
   : Lemma 
-    (requires None? (lookup g x))
+    (requires freshv g x)
     (ensures ~(x `Set.mem` freevars_st t) /\
              ~(x `Set.mem` freevars_comp c))
   = st_typing_freevars d

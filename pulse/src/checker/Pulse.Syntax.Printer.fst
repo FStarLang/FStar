@@ -441,6 +441,15 @@ let rec st_term_to_string' (level:string) (t:st_term)
     | Tm_PragmaWithOptions { options; body } ->
       sprintf "#set-options \"%s\" {\n%s\n%s}"
         options (st_term_to_string' (indent level) body) level
+    | Tm_ForwardJumpLabel { lbl; body; post } ->
+      sprintf "%s\n%s:\n  ensures %s"
+        (st_term_to_string' (indent level) body)
+        (T.unseal lbl.name)
+        (comp_to_string post)
+    | Tm_Goto { lbl; arg } ->
+      sprintf "goto %s %s"
+        (term_to_string lbl)
+        (term_to_string arg)
 
 and branches_to_string brs : T.Tac _ =
   match brs with
@@ -510,6 +519,8 @@ let tag_of_st_term (t:st_term) =
   | Tm_Unreachable _ -> "Tm_Unreachable"
   | Tm_ProofHintWithBinders _ -> "Tm_ProofHintWithBinders"
   | Tm_PragmaWithOptions _ -> "Tm_PragmaWithOptions"
+  | Tm_ForwardJumpLabel _ -> "Tm_ForwardJumpLabel"
+  | Tm_Goto _ -> "Tm_Goto"
 
 let tag_of_comp (c:comp) : T.Tac string =
   match c with
@@ -542,6 +553,8 @@ let rec print_st_head (t:st_term)
   | Tm_ElimExists _ -> "ElimExists"  
   | Tm_ProofHintWithBinders _ -> "AssertWithBinders"
   | Tm_PragmaWithOptions _ -> "PragmaWithOptions"
+  | Tm_ForwardJumpLabel _ -> "ForwardJumpLabel"
+  | Tm_Goto _ -> "Goto"
 
 and print_head (t:term) =
   match t with
@@ -572,6 +585,8 @@ let rec print_skel (t:st_term) =
   | Tm_ElimExists _ -> "ElimExists"
   | Tm_ProofHintWithBinders _ -> "AssertWithBinders"
   | Tm_PragmaWithOptions _ -> "PragmaWithOptions"
+  | Tm_ForwardJumpLabel {body} -> Printf.sprintf "(ForwardJumpLabel %s)" (print_skel body)
+  | Tm_Goto _ -> "Goto"
 
 let decl_to_string (d:decl) : T.Tac string =
   match d.d with

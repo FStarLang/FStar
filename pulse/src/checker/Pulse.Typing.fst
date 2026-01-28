@@ -131,7 +131,7 @@ let comp_return (c:ctag) (use_eq:bool) (u:universe) (t:term) (e:term) (post:term
  * What!?!? Oh.. there's a fresh in Pulse.Typing.Env, which is *included*...
  *)
 let freshv (g:env) (x:var) : prop =
-  None? (lookup g x)
+  ~(Set.mem x (dom g))
 
 let rec all_fresh (g:env) (xs:list binding) : Tot prop (decreases xs) =
   match xs with
@@ -217,7 +217,7 @@ type slprop_equiv : env -> term -> term -> Type =
 
   | VE_Fa:
      g:env ->
-     x:var { None? (lookup g x) } ->
+     x:var { freshv g x } ->
      u:universe ->
      b:binder ->
      t0:term { ~(x `Set.mem` freevars t0 ) } ->
@@ -618,7 +618,7 @@ type st_equiv : env -> comp -> comp -> Type =
       g:env ->
       c1:comp_st ->
       c2:comp_st { st_equiv_pre c1 c2 } ->
-      x:var { None? (lookup g x) /\
+      x:var { freshv g x /\
               ~(x `Set.mem` freevars (comp_post c1)) /\
               ~(x `Set.mem` freevars (comp_post c2)) } ->
       tot_typing g (comp_pre c1) tm_slprop ->
@@ -725,7 +725,7 @@ type st_comp_typing : env -> st_comp -> Type =
   | STC:
       g:env -> 
       st:st_comp ->
-      x:var { None? (lookup g x) /\ ~(x `Set.mem` freevars st.post) } ->
+      x:var { freshv g x /\ ~(x `Set.mem` freevars st.post) } ->
       universe_of g st.res st.u ->
       tot_typing g st.pre tm_slprop ->
       tot_typing (push_binding g x ppname_default st.res) (open_term st.post x) tm_slprop ->
@@ -737,12 +737,12 @@ noeq
 type bind_comp  : env -> var -> comp -> comp -> comp -> Type =
   | Bind_comp :  // (C_ST and C_ST) or (C_STGhost and C_STGhost) or (C_STAtomic and C_STAtomic)
       g:env ->
-      x:var { None? (lookup g x) } ->
+      x:var { freshv g x } ->
       c1:comp_st ->
       c2:comp_st {bind_comp_pre x c1 c2} ->
       universe_of g (comp_res c2) (comp_u c2) ->
       //or in the result post; free var check isn't enough; we need typability
-      y:var { None? (lookup g y) /\ ~(y `Set.mem` freevars (comp_post c2)) } ->      
+      y:var { freshv g y /\ ~(y `Set.mem` freevars (comp_post c2)) } ->      
       tot_typing (push_binding g y ppname_default (comp_res c2)) (open_term (comp_post c2) y) tm_slprop ->
       bind_comp g x c1 c2 (bind_comp_out c1 c2)
 
@@ -816,7 +816,7 @@ noeq
 type st_typing : env -> st_term -> comp -> Type =
   | T_Abs: 
       g:env ->
-      x:var { None? (lookup g x) } ->
+      x:var { freshv g x } ->
       q:option qualifier ->
       b:binder ->
       u:universe ->
@@ -850,7 +850,7 @@ type st_typing : env -> st_term -> comp -> Type =
       t:term ->
       e:term ->
       post:term ->
-      x:var { None? (lookup g x) /\ ~ (x `Set.mem` freevars post) } ->
+      x:var { freshv g x /\ ~ (x `Set.mem` freevars post) } ->
       universe_of g t u ->
       typing g e (eff_of_ctag c) t ->
       tot_typing (push_binding g x ppname_default t) (open_term post x) tm_slprop ->
@@ -873,7 +873,7 @@ type st_typing : env -> st_term -> comp -> Type =
       c1:comp_st ->
       c2:comp_st ->
       b:binder { b.binder_ty == comp_res c1 }->
-      x:var { None? (lookup g x)  /\ ~(x `Set.mem` freevars_st e2) } ->
+      x:var { freshv g x /\ ~(x `Set.mem` freevars_st e2) } ->
       c:comp ->
       st_typing g e1 c1 ->
       tot_typing g (comp_res c1) (tm_type (comp_u c1)) -> //type-correctness; would be nice to derive it instead      
@@ -888,7 +888,7 @@ type st_typing : env -> st_term -> comp -> Type =
       c1:comp { C_Tot? c1 } ->
       c2:comp_st ->
       b:binder { b.binder_ty == comp_res c1 }->
-      x:var { None? (lookup g x)  /\ ~(x `Set.mem` freevars_st e2) } ->
+      x:var { freshv g x /\ ~(x `Set.mem` freevars_st e2) } ->
       st_typing g e1 c1 ->
       u:Ghost.erased universe ->
       tot_typing g (comp_res c1) (tm_type u) -> //type-correctness; would be nice to derive it instead      
@@ -907,7 +907,7 @@ type st_typing : env -> st_term -> comp -> Type =
          Maybe more natural to have one free var in e1,e2 and to open it with hyp?
          But that's also a change to FStar.Reflection.Typing
        *)
-      hyp:var { None? (lookup g hyp) /\
+      hyp:var { freshv g hyp /\
                ~(hyp `Set.mem` (freevars_st e1 `Set.union` freevars_st e2))
               } ->
       tot_typing g b tm_bool ->
@@ -970,7 +970,7 @@ type st_typing : env -> st_term -> comp -> Type =
       u:universe ->
       t:term ->
       p:term ->
-      x:var { None? (lookup g x) } ->
+      x:var { freshv g x } ->
       tot_typing g t (tm_type u) ->
       tot_typing g (tm_exists_sl u (as_binder t) p) tm_slprop ->
       st_typing g (wtag (Some STT_Ghost) (Tm_ElimExists { p = tm_exists_sl u (as_binder t) p }))
@@ -1025,7 +1025,7 @@ type st_typing : env -> st_term -> comp -> Type =
       body:st_term ->
       init_t:term ->
       c:comp { C_ST? c } ->
-      x:var { None? (lookup g x) /\ ~(x `Set.mem` freevars_st body) } ->
+      x:var { freshv g x /\ ~(x `Set.mem` freevars_st body) } ->
       tot_typing g init init_t ->
       universe_of g init_t u0 ->
       comp_typing_u g c ->
@@ -1040,7 +1040,7 @@ type st_typing : env -> st_term -> comp -> Type =
       body:st_term ->
       init_t:term ->
       c:comp { C_ST? c } ->
-      x:var { None? (lookup g x) /\ ~(x `Set.mem` freevars_st body) } ->
+      x:var { freshv g x /\ ~(x `Set.mem` freevars_st body) } ->
       universe_of g init_t u0 ->
       comp_typing_u g c ->
       st_typing (push_binding g x ppname_default (mk_ref init_t))
@@ -1056,7 +1056,7 @@ type st_typing : env -> st_term -> comp -> Type =
       body:st_term ->
       a:term ->
       c:comp { C_ST? c } ->
-      x:var { None? (lookup g x) /\ ~(x `Set.mem` freevars_st body) } ->
+      x:var { freshv g x /\ ~(x `Set.mem` freevars_st body) } ->
       tot_typing g initializer a ->
       tot_typing g length tm_szt ->
       universe_of g a u0 ->
@@ -1073,7 +1073,7 @@ type st_typing : env -> st_term -> comp -> Type =
       body:st_term ->
       a:term ->
       c:comp { C_ST? c } ->
-      x:var { None? (lookup g x) /\ ~(x `Set.mem` freevars_st body) } ->
+      x:var { freshv g x /\ ~(x `Set.mem` freevars_st body) } ->
       tot_typing g length tm_szt ->
       universe_of g a u0 ->
       comp_typing_u g c ->
@@ -1211,7 +1211,7 @@ let emp_typing (#g:_)
   = admit ()
 
 let fresh_wrt (x:var) (g:env) (vars:_) = 
-    None? (lookup g x) /\  ~(x `Set.mem` vars)
+  freshv g x /\  ~(x `Set.mem` vars)
 
 
 let effect_annot_typing (g:env) (e:effect_annot) =

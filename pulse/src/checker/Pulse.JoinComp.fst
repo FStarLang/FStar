@@ -101,7 +101,7 @@ let infer_post' (g:env) (g':env { g' `env_extends` g })
   // simplify post by applying elimination rules (particularly `frame ** is_unreachable ~~> is_unreachable`)
   let (| g1, post, _, _ |) = Pulse.Checker.Prover.elim_exists_and_pure post_typing in
   let bs0 = bindings g in
-  let dom_g = dom g in
+  let dom_g = var_dom g in
   let fvs_t = freevars t in
   let fail_fv_typ (x:string) 
   : T.Tac unit =

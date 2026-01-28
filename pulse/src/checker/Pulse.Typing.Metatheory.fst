@@ -40,7 +40,7 @@ let st_typing_weakening
   (g:env) (g':env { disjoint g g' })
   (t:st_term) (c:comp) (d:st_typing (push_env g g') t c)
   (g1:env { g1 `env_extends` g /\ disjoint g1 g' })
-  : Dv (st_typing (push_env g1 g') t c) =
+  : GTot (st_typing (push_env g1 g') t c) =
 
   let g2 = diff g1 g in
   let d = st_typing_weakening g g' t c d g2 in
@@ -50,7 +50,7 @@ let st_typing_weakening
 let st_typing_weakening_standard
   (#g:env) (#t:st_term) (#c:comp) (d:st_typing g t c)
   (g1:env { g1 `env_extends` g })
-  : Dv (st_typing g1 t c) =
+  : GTot (st_typing g1 t c) =
 
   let g' = mk_env (fstar_env g) in
   assert (equal (push_env g g') g);
@@ -62,7 +62,7 @@ let st_typing_weakening_end
   (g:env) (g':env { disjoint g g' })
   (t:st_term) (c:comp) (d:st_typing (push_env g g') t c)
   (g'':env { g'' `env_extends` g' /\ disjoint g'' g })
-  : Dv (st_typing (push_env g g'') t c) =
+  : GTot (st_typing (push_env g g'') t c) =
 
   let g2 = diff g'' g' in
   let emp_env = mk_env (fstar_env g) in
