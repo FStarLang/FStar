@@ -161,8 +161,52 @@ let load_checked_file (fn:string) (checked_fn:string) :cache_t =
 (*
  * Either the reason because of which dependences are stale/invalid
  *   or the list of dep string, as defined in the checked_file_entry above
+ *
+ * Note: hash_dependences and load_checked_file_with_tc_result' are mutually recursive
+ * to handle batch verification where dependencies may be in Unknown state.
+ * When a dependency is Unknown, we recursively validate it first.
  *)
-let hash_dependences (deps:Dep.deps) (fn:string) (deps_of_fn:list string):either string (list (string & string)) =
+
+(*
+ * chase_deps: Recursively validate a dependency that is in Unknown state.
+ * Given a source file and its cache file, recursively compute its dependency hashes,
+ * load the checked file entry, verify hashes match, and update the cache.
+ * Returns Inr digest on success, Inl error message on failure.
+ *)
+let rec chase_deps
+  (deps:Dep.deps)
+  (source_fn:string)
+  (cache_fn:string)
+  (parsing_data:Parser.Dep.parsing_data)
+  : either string string =
+  let dep_deps = Dep.deps_of deps source_fn in
+  match hash_dependences deps source_fn dep_deps with
+  | Inl msg ->
+    let _ = add_and_return cache_fn (Invalid msg, parsing_data) in
+    Inl msg
+  | Inr deps_dig' ->
+    let entry : option (checked_file_entry_stage1 & checked_file_entry_stage2) =
+      BU.load_2values_from_file cache_fn
+    in
+    match entry with
+    | None ->
+      let msg = Format.fmt1 "Could not load tc_result for %s" cache_fn in
+      let _ = add_and_return cache_fn (Invalid msg, parsing_data) in
+      Inl msg
+    | Some ((_, s2)) ->
+      if s2.deps_dig = deps_dig'
+      then begin
+        let dig = BU.digest_of_file cache_fn in
+        let _ = add_and_return cache_fn (Valid dig, parsing_data) in
+        Inr dig
+      end
+      else begin
+        let msg = Format.fmt1 "Dependency hash mismatch for %s" cache_fn in
+        let _ = add_and_return cache_fn (Invalid msg, parsing_data) in
+        Inl msg
+      end
+
+and hash_dependences (deps:Dep.deps) (fn:string) (deps_of_fn:list string):either string (list (string & string)) =
   Stats.record "hash_dependences" fun () ->
   let fn =
     match Find.find_file fn with
@@ -207,10 +251,11 @@ let hash_dependences (deps:Dep.deps) (fn:string) (deps_of_fn:list string):either
          Inl msg
        | Some (Invalid msg, _) -> Inl msg
        | Some (Valid h, _) -> Inr (("source", source_hash)::("interface", h)::out)
-       | Some (Unknown, _) ->
-         failwith (Format.fmt1
-           "Impossible: unknown entry in the cache for interface %s\n"
-           iface))
+       | Some (Unknown, parsing_data) ->
+         let iface_fn = Dep.interface_of deps module_name |> Option.must in
+         match chase_deps deps iface_fn iface parsing_data with
+         | Inl msg -> Inl msg
+         | Inr h -> Inr (("source", source_hash)::("interface", h)::out))
   in
 
   let rec hash_deps out = function
@@ -229,10 +274,8 @@ let hash_dependences (deps:Dep.deps) (fn:string) (deps_of_fn:list string):either
         Inl msg
       | Some (Invalid msg, _) -> Inl msg
       | Some (Valid dig, _)   -> Inr dig
-      | Some (Unknown, _)     ->
-        failwith (Format.fmt2
-                    "Impossible: unknown entry in the cache for dependence %s of module %s"
-                    fn module_name)
+      | Some (Unknown, parsing_data) ->
+        chase_deps deps fn cache_fn parsing_data
     in
     match digest with
     | Inl msg -> Inl msg
