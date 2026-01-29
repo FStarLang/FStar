@@ -42,6 +42,7 @@ let tm_nat  = tm_fvar (as_fv nat_lid)
 let tm_szt  = szt_tm
 let tm_true = tm_constant R.C_True
 let tm_false = tm_constant R.C_False
+let tm_l_false = tm_fvar (as_fv R.false_qn)
 
 let tm_prop = RU.set_range FStar.Reflection.Typing.tm_prop Range.range_0
 
@@ -806,6 +807,14 @@ let eff_of_ctag = function
 let g_with_eq g hyp b (eq_v:term) =
   push_binding g hyp (mk_ppname_no_range "_if_hyp") (mk_sq_rewrites_to_p u0 tm_bool b eq_v)
 
+let goto_comp_of_block_comp (c: comp_st) : comp_st =
+  let {u;res;pre;post} = st_comp_of_comp c in
+  with_st_comp c {
+    u; res;
+    pre = post;
+    post = tm_pure tm_l_false;
+  }
+
 [@@ erasable; no_auto_projectors]
 noeq
 type st_typing : env -> st_term -> comp -> Type =
@@ -1108,6 +1117,26 @@ type st_typing : env -> st_term -> comp -> Type =
       c:comp_st { comp_pre c == tm_is_unreachable } ->
       comp_typing g c (universe_of_comp c) ->
       st_typing g (wtag (Some (ctag_of_comp_st c)) (Tm_Unreachable {c})) c
+
+  | T_ForwardJumpLabel:
+      g:env ->
+      lbl:nvar { freshv g (snd lbl) } ->
+      body:st_term ->
+      c:comp_st ->
+      st_typing (push_goto g (snd lbl) (fst lbl) (goto_comp_of_block_comp c)) (open_st_term' body (term_of_nvar lbl) 0) c ->
+      st_typing g (wtag (Some (ctag_of_comp_st c)) (Tm_ForwardJumpLabel { lbl = fst lbl; body; post = c })) c
+
+  | T_Goto:
+      g:env ->
+      lbl:nvar ->
+      arg:term ->
+      lbl_c:comp_st { lookup_goto g (snd lbl) == Some (fst lbl, lbl_c) } ->
+      tot_typing g arg (comp_res lbl_c) ->
+      u:universe -> res:typ -> universe_of g res u ->
+      post:term -> post_x: var { freshv g post_x } -> tot_typing (push_binding_def g post_x res) (open_term post post_x) tm_slprop ->
+      // only stt for now
+      st_typing g (wtag (Some STT) (Tm_Goto { lbl = term_of_nvar lbl; arg }))
+        (C_ST { u; res; pre = open_term' (comp_pre lbl_c) arg 0; post })
 
 and pats_complete : env -> term -> typ -> list R.pattern -> Type0 =
   // just check the elaborated term with the core tc

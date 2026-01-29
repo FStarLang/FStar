@@ -310,7 +310,7 @@ type st_term' =
   | Tm_ForwardJumpLabel {
       lbl: ppname;
       body: st_term;
-      post: comp_st;
+      post: comp_st; // pre & post condition for the whole block, not the goto
     }
   | Tm_Goto {
       lbl: term; // either var or named

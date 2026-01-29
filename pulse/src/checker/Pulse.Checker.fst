@@ -43,6 +43,7 @@ module Exists = Pulse.Checker.Exists
 module Admit = Pulse.Checker.Admit
 module Return = Pulse.Checker.Return
 module Rewrite = Pulse.Checker.Rewrite
+module Goto = Pulse.Checker.Goto
 module PCP = Pulse.Checker.Pure
 
 let terms_to_string (t:list term)
@@ -418,7 +419,7 @@ let rec check
           T.fail "Tm_ForwardJumpLabel TODO"
 
         | Tm_Goto _ ->
-          T.fail "Tm_Goto TODO"
+          Goto.check g pre pre_typing post_hint res_ppname t
       in
 
       let (| x, g1, t, pre', k |) = r in

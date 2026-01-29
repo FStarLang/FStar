@@ -1283,4 +1283,7 @@ let rec st_typing_ln (#g:_) (#t:_) (#c:_)
       st_typing_ln d;
       st_sub_ln d_sub
 
+    | T_ForwardJumpLabel .. -> admit ()
+    | T_Goto .. -> admit ()
+
 #pop-options

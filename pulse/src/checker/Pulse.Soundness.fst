@@ -307,6 +307,9 @@ let rec soundness (g:stt_env)
     | T_Unreachable .. -> RU.magic()
 
     | T_Sub .. -> Sub.sub_soundness d soundness
+
+    | T_ForwardJumpLabel .. -> admit ()
+    | T_Goto .. -> admit ()
 #pop-options
 
 let soundness_lemma

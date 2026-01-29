@@ -773,3 +773,5 @@ let rec st_typing_freevars
   | T_Sub _ _ _ _ d_t d_sub ->
     st_typing_freevars d_t;
     st_sub_freevars d_sub
+  | T_ForwardJumpLabel .. -> admit ()
+  | T_Goto .. -> admit ()
