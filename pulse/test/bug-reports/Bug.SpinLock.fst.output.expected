@@ -2,7 +2,7 @@
   - Expected failure:
   - Tactic failed
   - Cannot prove:
-      R.pts_to_uninit __
+      R.pts_to_uninit r
   - In the context:
       lock_alive my_lock (exists* (v: int). R.pts_to r v)
 
