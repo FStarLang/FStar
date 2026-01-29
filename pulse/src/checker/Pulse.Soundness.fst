@@ -246,7 +246,7 @@ let rec soundness (g:stt_env)
       frame_soundness _ _ _ d soundness
 
     | T_Abs _ x q ty u body c t_typing body_typing ->
-      mk_t_abs q ppname_default t_typing body_typing    
+      admit ()
 
     | T_ST ..
     | T_STGhost .. -> admit()

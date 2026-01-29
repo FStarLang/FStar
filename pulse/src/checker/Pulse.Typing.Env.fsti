@@ -99,6 +99,9 @@ let push_binding (g:env) (x:var { freshv g x }) (n:ppname) (ty:typ) =
 let push_goto (g: env) (x: var { freshv g x }) (n: ppname) (c: comp_st) =
   push g (BindingGotoLabel { x; n; post = c })
 
+let push_post (g: env) (post: term) =
+  push g (BindingPost { post })
+
 let singleton_env (f:_) (x:var) (t:typ) : GTot _ =
   push_binding (mk_env f) x ppname_default t
 
@@ -189,6 +192,18 @@ val extends_with_push (g1 g2 g3:env)
           [SMTPat (extends_with g1 g2 g3);
            SMTPat (push_binding g1 x n t);
            SMTPat (push_binding g3 x n t)]
+
+let rec clear_goto_bindings : env_bindings -> env_bindings = function
+  | [] -> []
+  | BindingVar v :: bs -> BindingVar v :: clear_goto_bindings bs
+  | _ :: bs -> clear_goto_bindings bs
+
+val clear_goto (g: env) : g':env {
+    fstar_env g' == fstar_env g /\
+    elab_env g' == elab_env g /\
+    bindings g' == clear_goto_bindings (bindings g) /\
+    dom g' `Set.subset` dom g
+  }
 
 val push_context (g:env) (ctx:string) (r:range) : g':env { g' == g }
 val push_context_no_range (g:env) (ctx:string) : g':env { g' == g }

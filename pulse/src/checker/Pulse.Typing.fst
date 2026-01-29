@@ -455,8 +455,11 @@ let comp_par (cL:comp{C_ST? cL}) (cR:comp{C_ST? cR}) (x:var) : comp =
 let comp_withlocal_body_pre (pre:slprop) (init_t:term) (r:term) (init:option term) : slprop =
   tm_star pre (match init with | Some init -> mk_pts_to init_t r init | None -> mk_pts_to_uninit init_t r)
 
+let withlocal_post (init_t: term) (r: term) : term =
+  mk_pts_to_uninit init_t r
+
 let comp_withlocal_body_post (post:term) (init_t:term) (r:term) : term =
-  tm_star post (mk_pts_to_uninit init_t r)
+  tm_star post (withlocal_post init_t r)
 
 let comp_withlocal_body (r:var) (init_t:term) (init:option term) (c:comp{C_ST? c}) : comp =
   let r = null_var r in
@@ -521,11 +524,13 @@ let mk_seq (u:universe) (a:term) : term =
   let t = tm_uinst (as_fv seq_lid) [u] in
   tm_pureapp t None a
 
+let withlocal_array_post (a:term) (arr:term) (init: option term) : term =
+  match init with
+  | Some _ -> tm_exists_sl u0 (as_binder (mk_seq u0 a)) (mk_array_pts_to a arr (null_bvar 0))
+  | None -> mk_array_pts_to_uninit_post a arr
+
 let comp_withlocal_array_body_post (post:term) (a:term) (arr:term) (init: option term) : term =
-  tm_star post 
-    (match init with
-    | Some _ -> tm_exists_sl u0 (as_binder (mk_seq u0 a)) (mk_array_pts_to a arr (null_bvar 0))
-    | None -> mk_array_pts_to_uninit_post a arr)
+  tm_star post (withlocal_array_post a arr init)
 
 let comp_withlocal_array_body (arr:var) (a:term) (init:option term) (len:term) (c:comp{C_ST? c}) : comp =
   let arr = null_var arr in
@@ -813,7 +818,7 @@ type st_typing : env -> st_term -> comp -> Type =
       body:st_term {~ (x `Set.mem` freevars_st body) } ->
       c:comp ->
       tot_typing g b.binder_ty (tm_type u) ->
-      st_typing (push_binding g x ppname_default b.binder_ty) (open_st_term_nv body (b.binder_ppname, x)) c ->
+      st_typing (push_binding (clear_goto g) x ppname_default b.binder_ty) (open_st_term_nv body (b.binder_ppname, x)) c ->
       st_typing g (wtag None (Tm_Abs { b; q; body; ascription=empty_ascription}))
                   (C_Tot (tm_arrow b q (close_comp c x)))
                 
@@ -1019,7 +1024,7 @@ type st_typing : env -> st_term -> comp -> Type =
       tot_typing g init init_t ->
       universe_of g init_t u0 ->
       comp_typing_u g c ->
-      st_typing (push_binding g x ppname_default (mk_ref init_t))
+      st_typing (push_post (push_binding g x ppname_default (mk_ref init_t)) (withlocal_post init_t (null_var x)))
                 (open_st_term_nv body (v_as_nv x))
                 (comp_withlocal_body x init_t (Some init) c) ->
       st_typing g (wrst c (Tm_WithLocal { binder = mk_binder_ppname (mk_ref init_t) binder_ppname; initializer=Some init; body } )) c
@@ -1033,7 +1038,7 @@ type st_typing : env -> st_term -> comp -> Type =
       x:var { freshv g x /\ ~(x `Set.mem` freevars_st body) } ->
       universe_of g init_t u0 ->
       comp_typing_u g c ->
-      st_typing (push_binding g x ppname_default (mk_ref init_t))
+      st_typing (push_post (push_binding g x ppname_default (mk_ref init_t)) (withlocal_post init_t (null_var x)))
                 (open_st_term_nv body (v_as_nv x))
                 (comp_withlocal_body x init_t None c) ->
       st_typing g (wrst c (Tm_WithLocal { binder = mk_binder_ppname (mk_ref init_t) binder_ppname; initializer=None; body } )) c
@@ -1051,7 +1056,7 @@ type st_typing : env -> st_term -> comp -> Type =
       tot_typing g length tm_szt ->
       universe_of g a u0 ->
       comp_typing_u g c ->
-      st_typing (push_binding g x ppname_default (mk_array a))
+      st_typing (push_post (push_binding g x ppname_default (mk_array a)) (withlocal_array_post a (null_var x) (Some initializer)))
                 (open_st_term_nv body (v_as_nv x))
                 (comp_withlocal_array_body x a (Some initializer) length c) ->
       st_typing g (wrst c (Tm_WithLocalArray { binder = mk_binder_ppname (mk_array a) binder_ppname; initializer = Some initializer; length; body } )) c
@@ -1067,7 +1072,7 @@ type st_typing : env -> st_term -> comp -> Type =
       tot_typing g length tm_szt ->
       universe_of g a u0 ->
       comp_typing_u g c ->
-      st_typing (push_binding g x ppname_default (mk_array a))
+      st_typing (push_post (push_binding g x ppname_default (mk_array a)) (withlocal_array_post a (null_var x) None))
                 (open_st_term_nv body (v_as_nv x))
                 (comp_withlocal_array_body x a None length c) ->
       st_typing g (wrst c (Tm_WithLocalArray { binder = mk_binder_ppname (mk_array a) binder_ppname; initializer = None; length; body } )) c
@@ -1231,13 +1236,13 @@ type post_hint_t = {
 
 let post_hint_for_env_p (g:env) (p:post_hint_t) = g `env_extends` p.g
 
-let post_hint_for_env_extends (g:env) (p:post_hint_t) (x:var { ~ (Set.mem x (dom g)) }) (b:typ)
+let post_hint_for_env_extends (g:env) (p:post_hint_t) (b:binding { dom g `Set.disjoint` binding_dom b })
   : Lemma
     (requires post_hint_for_env_p g p)
-    (ensures post_hint_for_env_p (push_binding g x ppname_default b) p)
-    [SMTPat (post_hint_for_env_p (push_binding g x ppname_default b) p)]
-  = env_extends_push g (BindingVar {x; n=ppname_default; ty=b})
-  
+    (ensures post_hint_for_env_p (push g b) p)
+    [SMTPat (post_hint_for_env_p (push g b) p)]
+  = env_extends_push g b
+
 let post_hint_for_env (g:env) = p:post_hint_t { post_hint_for_env_p g p }
 noeq
 type post_hint_opt_t =

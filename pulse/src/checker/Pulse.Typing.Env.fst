@@ -185,6 +185,29 @@ let extends_with_push (g1 g2 g3:env)
   assert (equal (push_binding g1 x n t)
                 (push_env g2 (push_binding g3 x n t)))
 
+let rec extend_clear_goto_bindings f g :
+    Lemma (bindings_extend_env f (clear_goto_bindings g) == bindings_extend_env f g) =
+  match g with
+  | [] -> ()
+  | b :: g -> extend_clear_goto_bindings f g
+
+let rec dom_clear_goto_bindings g :
+    Lemma (bindings_dom (clear_goto_bindings g) `Set.subset` bindings_dom g) =
+  match g with
+  | [] -> ()
+  | b :: g -> dom_clear_goto_bindings g
+
+let clear_goto g =
+  extend_clear_goto_bindings g.f g.bs;
+  dom_clear_goto_bindings g.bs;
+  {
+    f = g.f;
+    bs = clear_goto_bindings g.bs;
+    f_bs = g.f_bs;
+    ctxt = g.ctxt;
+    anf_ctr = g.anf_ctr;
+  }
+
 let push_context g ctx r = { g with ctxt = Pulse.RuntimeUtils.extend_context ctx (Some r) g.ctxt }
 let push_context_no_range g ctx = { g with ctxt = Pulse.RuntimeUtils.extend_context ctx None g.ctxt }
 let reset_context g g' = { g with ctxt = g'.ctxt }
