@@ -2839,6 +2839,7 @@ type ht_iter_t (k:eqtype) (v:Type0) = {
   it_ht: ht k v;                              // Reference to hash table
   it_bucket_idx: B.box SZ.t;                  // Current bucket index (0 to capacity)
   it_entry_idx: B.box SZ.t;                   // Current entry index within bucket
+  it_remaining: B.box SZ.t;                   // Count of remaining entries
 }
 
 let ht_iter (k:eqtype) (v:Type0) = ht_iter_t k v
@@ -2872,11 +2873,13 @@ let is_ht_iter (#k:eqtype) (#v:Type0) (it:ht_iter k v)
           (bucket_contents:Seq.seq (list (entry k v))) 
           (cnt:SZ.t)
           (bucket_idx:SZ.t)
-          (entry_idx:SZ.t).
+          (entry_idx:SZ.t)
+          (rem_cnt:SZ.t).
     V.pts_to it.it_ht.buckets bucket_ptrs **
     B.pts_to it.it_ht.count cnt **
     B.pts_to it.it_bucket_idx bucket_idx **
     B.pts_to it.it_entry_idx entry_idx **
+    B.pts_to it.it_remaining rem_cnt **
     OR.on_range (bucket_at bucket_ptrs bucket_contents) 0 (SZ.v it.it_ht.capacity) **
     pure (
       Seq.length bucket_ptrs == SZ.v it.it_ht.capacity /\
@@ -2891,7 +2894,8 @@ let is_ht_iter (#k:eqtype) (#v:Type0) (it:ht_iter k v)
       SZ.v bucket_idx <= SZ.v it.it_ht.capacity /\
       (SZ.v bucket_idx < SZ.v it.it_ht.capacity ==> 
          SZ.v entry_idx <= List.length (Seq.index bucket_contents (SZ.v bucket_idx))) /\
-      reveal remaining == remaining_keys_from bucket_contents (SZ.v bucket_idx) (SZ.v entry_idx)
+      reveal remaining == remaining_keys_from bucket_contents (SZ.v bucket_idx) (SZ.v entry_idx) /\
+      SZ.v rem_cnt == FS.cardinality (reveal remaining)
     )
 
 //////////////////////////////////////////////////////////////////////////////
@@ -2915,6 +2919,123 @@ let remaining_keys_from_start (#k:eqtype) (#v:Type0)
     if Seq.length bucket_contents = 0 then ()
     else ()  // list_from_idx l 0 = l, so remaining == build_keys
 
+(** Lemma: list_from_idx of empty list is empty *)
+let list_from_idx_nil (#a:Type) (idx:nat)
+  : Lemma (list_from_idx #a [] idx == [])
+  = ()
+
+(** Lemma: list_from_idx at 0 is identity *)
+let list_from_idx_zero (#a:Type) (l:list a)
+  : Lemma (list_from_idx l 0 == l)
+  = ()
+
+(** Lemma: list_from_idx at length gives empty *)
+let rec list_from_idx_at_length (#a:Type) (l:list a)
+  : Lemma 
+    (ensures list_from_idx l (List.length l) == [])
+    (decreases l)
+  = match l with
+    | [] -> ()
+    | _::tl -> list_from_idx_at_length tl
+
+(** Lemma: list_from_idx advances by 1 *)
+let rec list_from_idx_succ (#a:Type) (l:list a) (idx:nat)
+  : Lemma 
+    (requires idx < List.length l)
+    (ensures 
+      Cons? (list_from_idx l idx) /\
+      list_from_idx l (idx + 1) == List.tl (list_from_idx l idx))
+    (decreases l)
+  = if idx = 0 then ()
+    else match l with
+      | _::tl -> list_from_idx_succ tl (idx - 1)
+
+(** Lemma: bucket_keys of empty list is empty set *)
+let bucket_keys_nil (#k:eqtype) (#v:Type0)
+  : Lemma (bucket_keys #k #v [] == FS.emptyset)
+  = FS.all_finite_set_facts_lemma ()
+
+(** Lemma: list_from_idx past length gives empty *)
+let rec list_from_idx_past_length (#a:Type) (l:list a) (i:nat)
+  : Lemma (requires i >= List.length l)
+          (ensures list_from_idx l i == [])
+          (decreases l)
+  = match l with
+    | [] -> ()
+    | _::tl -> if i = 0 then () else list_from_idx_past_length tl (i - 1)
+
+(** Lemma: remaining_keys nonempty means there's a current entry *)
+(** Lemma: remaining_keys nonempty means there's a current entry or more buckets *)
+let remaining_keys_nonempty_has_entry (#k:eqtype) (#v:Type0)
+  (bucket_contents:Seq.seq (list (entry k v)))
+  (bucket_idx:nat)
+  (entry_idx:nat)
+  : Lemma
+    (requires 
+      bucket_idx < Seq.length bucket_contents /\
+      entry_idx <= List.length (Seq.index bucket_contents bucket_idx) /\
+      FS.cardinality (remaining_keys_from bucket_contents bucket_idx entry_idx) > 0)
+    (ensures 
+      entry_idx < List.length (Seq.index bucket_contents bucket_idx) \/
+      FS.cardinality (build_keys_from_buckets bucket_contents (bucket_idx + 1)) > 0)
+  = FS.all_finite_set_facts_lemma ();
+    if entry_idx < List.length (Seq.index bucket_contents bucket_idx) then ()
+    else begin
+      // entry_idx == length, so list_from_idx gives []
+      list_from_idx_past_length (Seq.index bucket_contents bucket_idx) entry_idx;
+      bucket_keys_nil #k #v
+      // remaining = union emptyset (build_keys (bucket_idx+1))
+      // If remaining nonempty, build_keys (bucket_idx+1) must be nonempty
+    end
+
+(** Get entry at position (bucket_idx, entry_idx) in bucket *)
+let rec list_nth (#a:Type) (l:list a) (n:nat{n < List.length l}) : a =
+  match l with
+  | hd::tl -> if n = 0 then hd else list_nth tl (n - 1)
+
+(** Lemma: list_nth gives head of list_from_idx *)
+let rec list_nth_is_head_of_suffix (#a:Type) (l:list a) (n:nat)
+  : Lemma 
+    (requires n < List.length l)
+    (ensures Cons? (list_from_idx l n) /\ list_nth l n == List.hd (list_from_idx l n))
+    (decreases n)
+  = if n = 0 then ()
+    else match l with
+      | _::tl -> list_nth_is_head_of_suffix tl (n - 1)
+
+(** Helper function to get nth element - using option to avoid refinement issues *)
+let list_at (#a:Type) (l:list a) (n:nat) : option a =
+  if n < List.length l then Some (List.index l n) else None
+
+(** Helper: Get the nth entry from a linked list (non-destructive) *)
+fn rec get_nth_entry (#k:eqtype) (#v:Type0)
+  (b:bucket k v)
+  (n:SZ.t)
+  (#entries:erased (list (entry k v)))
+requires LL.is_list b entries ** pure (SZ.v n < List.length entries)
+returns e:entry k v
+ensures LL.is_list b entries ** pure (list_at entries (SZ.v n) == Some e)
+decreases (List.length entries)
+{
+  if (n = 0sz) {
+    LL.head b
+  } else {
+    let tail = LL.move_next b;
+    with tl. _;
+    
+    // tl == List.tl entries, so List.length tl < List.length entries
+    assert (pure (tl == List.tl entries));
+    
+    // Recursive call on tail
+    let e = get_nth_entry tail (n `SZ.sub` 1sz);
+    
+    // Restore original list using trade
+    T.elim (LL.is_list tail tl) (LL.is_list b entries);
+    
+    e
+  }
+}
+
 fn create_iter
   (#k:eqtype)
   (#v:Type0)
@@ -2928,24 +3049,30 @@ ensures is_ht_iter it m keys keys ** pure (ht_of it == h)
   unfold (is_ht h m keys);
   with bucket_ptrs bucket_contents cnt. _;
   
+  // Read count value (total entries = initial remaining)
+  let cnt_val = B.(!h.count);
+  
   // Allocate iterator state
   let bucket_idx_box = B.alloc 0sz;
   let entry_idx_box = B.alloc 0sz;
+  let remaining_box = B.alloc cnt_val;
   
   // Create iterator record
   let it : ht_iter k v = {
     it_ht = h;
     it_bucket_idx = bucket_idx_box;
     it_entry_idx = entry_idx_box;
+    it_remaining = remaining_box;
   };
   
   // Rewrite to use it.it_ht instead of h
   rewrite (V.pts_to h.buckets bucket_ptrs) as (V.pts_to it.it_ht.buckets bucket_ptrs);
-  rewrite (B.pts_to h.count cnt) as (B.pts_to it.it_ht.count cnt);
+  rewrite (B.pts_to h.count cnt_val) as (B.pts_to it.it_ht.count cnt_val);
   rewrite (OR.on_range (bucket_at bucket_ptrs bucket_contents) 0 (SZ.v h.capacity))
        as (OR.on_range (bucket_at bucket_ptrs bucket_contents) 0 (SZ.v it.it_ht.capacity));
   rewrite (B.pts_to bucket_idx_box 0sz) as (B.pts_to it.it_bucket_idx 0sz);
   rewrite (B.pts_to entry_idx_box 0sz) as (B.pts_to it.it_entry_idx 0sz);
+  rewrite (B.pts_to remaining_box cnt_val) as (B.pts_to it.it_remaining cnt_val);
   
   // Prove remaining_keys_from starts with all keys
   remaining_keys_from_start bucket_contents;
@@ -2965,7 +3092,109 @@ returns b:bool
 ensures is_ht_iter it m all_keys remaining ** 
         pure (b <==> FS.cardinality remaining > 0)
 {
-  admit()  // TODO: Need to check if bucket_idx < capacity or entry_idx < bucket length
+  unfold (is_ht_iter it m all_keys remaining);
+  with bucket_ptrs bucket_contents cnt bucket_idx entry_idx rem_cnt. _;
+  
+  let r = B.(!it.it_remaining);
+  let b = (r `SZ.gt` 0sz);
+  
+  fold (is_ht_iter it m all_keys remaining);
+  b
+}
+
+(** Safe index that returns [] if out of bounds *)
+let safe_bucket_index (#k:eqtype) (#v:Type0) 
+  (bucket_contents:Seq.seq (list (entry k v))) (i:nat) : list (entry k v) =
+  if i < Seq.length bucket_contents then Seq.index bucket_contents i else []
+
+(** Lemma: safe_bucket_index equals Seq.index when in bounds *)
+let safe_bucket_index_in_bounds (#k:eqtype) (#v:Type0)
+  (bucket_contents:Seq.seq (list (entry k v))) (i:nat)
+  : Lemma (requires i < Seq.length bucket_contents)
+          (ensures safe_bucket_index bucket_contents i == Seq.index bucket_contents i)
+  = ()
+
+(** Lemma: connecting ~(l == []) with Cons? l *)
+let not_eq_nil_is_cons (#k:eqtype) (#v:Type0) (l:list (entry k v))
+  : Lemma (requires ~(l == []))
+          (ensures Cons? l)
+  = ()
+
+(** Lemma: if bucket at idx is empty, build_keys_from_buckets idx == build_keys_from_buckets (idx+1) *)
+let build_keys_skip_empty (#k:eqtype) (#v:Type0)
+  (bucket_contents:Seq.seq (list (entry k v))) (idx:nat)
+  : Lemma (requires idx < Seq.length bucket_contents /\ Seq.index bucket_contents idx == [])
+          (ensures build_keys_from_buckets bucket_contents idx == 
+                   build_keys_from_buckets bucket_contents (idx + 1))
+  = FS.all_finite_set_facts_lemma ();
+    // bucket_keys [] == emptyset
+    assert (bucket_keys (Seq.index bucket_contents idx) == FS.emptyset);
+    // build_keys idx = union (bucket_keys idx) (build_keys (idx+1))
+    //                = union emptyset (build_keys (idx+1))
+    union_emptyset_left (build_keys_from_buckets bucket_contents (idx + 1))
+
+(** Helper: Scan forward to find first non-empty bucket.
+    Returns the bucket index, or capacity if all remaining buckets are empty. *)
+fn rec find_nonempty_bucket (#k:eqtype) (#v:Type0)
+  (bucket_ptrs:Seq.seq (bucket k v))
+  (bucket_contents:Ghost.erased (Seq.seq (list (entry k v))))
+  (capacity:SZ.t)
+  (start_idx:SZ.t)
+requires 
+  OR.on_range (bucket_at bucket_ptrs bucket_contents) 0 (SZ.v capacity) **
+  pure (
+    SZ.v start_idx <= SZ.v capacity /\
+    Seq.length bucket_ptrs == SZ.v capacity /\
+    Seq.length bucket_contents == SZ.v capacity
+  )
+returns bi:SZ.t
+ensures 
+  OR.on_range (bucket_at bucket_ptrs bucket_contents) 0 (SZ.v capacity) **
+  pure (
+    SZ.v start_idx <= SZ.v bi /\
+    SZ.v bi <= SZ.v capacity /\
+    // If bi < capacity, bucket bi is non-empty
+    (SZ.v bi < SZ.v capacity ==> Cons? (safe_bucket_index bucket_contents (SZ.v bi))) /\
+    // If bi == capacity, all remaining buckets are empty, so remaining keys is empty
+    (SZ.v bi == SZ.v capacity ==>
+       build_keys_from_buckets bucket_contents (SZ.v start_idx) == FS.emptyset)
+  )
+decreases (SZ.v capacity - SZ.v start_idx)
+{
+  if (start_idx = capacity) {
+    capacity
+  } else {
+    // start_idx < capacity
+    get_bucket_at bucket_ptrs bucket_contents 0 (SZ.v capacity) (SZ.v start_idx);
+    unfold_bucket_at bucket_ptrs bucket_contents (SZ.v start_idx);
+    
+    // Check if bucket is empty
+    let bucket_ptr = Seq.index bucket_ptrs (SZ.v start_idx);
+    rewrite (LL.is_list (Seq.index bucket_ptrs (SZ.v start_idx)) 
+                        (Seq.index bucket_contents (SZ.v start_idx)))
+         as (LL.is_list bucket_ptr (Seq.index bucket_contents (SZ.v start_idx)));
+    
+    let is_emp = LL.is_empty bucket_ptr;
+    
+    rewrite (LL.is_list bucket_ptr (Seq.index bucket_contents (SZ.v start_idx)))
+         as (LL.is_list (Seq.index bucket_ptrs (SZ.v start_idx)) 
+                        (Seq.index bucket_contents (SZ.v start_idx)));
+    fold_bucket_at bucket_ptrs bucket_contents (SZ.v start_idx);
+    put_bucket_at bucket_ptrs bucket_contents 0 (SZ.v capacity) (SZ.v start_idx);
+    
+    if is_emp {
+      // Empty bucket, continue searching
+      // Since bucket is empty, build_keys_from_buckets start_idx == build_keys_from_buckets (start_idx+1)
+      build_keys_skip_empty bucket_contents (SZ.v start_idx);
+      find_nonempty_bucket bucket_ptrs bucket_contents capacity (start_idx `SZ.add` 1sz)
+    } else {
+      // Found a non-empty bucket
+      // is_emp <==> (bucket == []), is_emp == false, so ~(bucket == []), so Cons? bucket
+      not_eq_nil_is_cons (Seq.index bucket_contents (SZ.v start_idx));
+      safe_bucket_index_in_bounds bucket_contents (SZ.v start_idx);
+      start_idx
+    }
+  }
 }
 
 fn iter_next
@@ -2984,7 +3213,82 @@ ensures exists* remaining'.
           Some (snd p) == reveal m (fst p)
         )
 {
-  admit()  // TODO: Read current entry, advance indices
+  unfold (is_ht_iter it m all_keys remaining);
+  with bucket_ptrs bucket_contents cnt bucket_idx entry_idx rem_cnt. _;
+  
+  // Read current position
+  let bi = B.(!it.it_bucket_idx);
+  
+  // Since remaining > 0, bucket_idx must be < capacity
+  // (if bucket_idx >= capacity, remaining_keys_from returns emptyset)
+  FS.all_finite_set_facts_lemma ();
+  if (bi `SZ.gte` it.it_ht.capacity) {
+    // This branch is impossible since remaining > 0
+    remaining_keys_from_at_capacity bucket_contents (SZ.v entry_idx);
+    assert (pure (reveal remaining == FS.emptyset));
+    assert (pure (FS.cardinality (reveal remaining) == 0));
+    // Contradiction with precondition
+    unreachable ()
+  } else {
+    // bi < capacity
+    // Since remaining > 0, we need to find an entry
+    // Use the helper lemma to know we have a valid entry somewhere
+    remaining_keys_nonempty_has_entry bucket_contents (SZ.v bi) (SZ.v entry_idx);
+    
+    // Read entry_idx
+    let ei = B.(!it.it_entry_idx);
+    
+    // Get the bucket at bi to check if we have an entry there
+    get_bucket_at bucket_ptrs bucket_contents 0 (SZ.v it.it_ht.capacity) (SZ.v bi);
+    unfold_bucket_at bucket_ptrs bucket_contents (SZ.v bi);
+    
+    // Get bucket pointer from vector (not from ghost sequence)
+    let bucket_ptr = V.op_Array_Access it.it_ht.buckets bi;
+    rewrite (LL.is_list (Seq.index bucket_ptrs (SZ.v bi)) 
+                        (Seq.index bucket_contents (SZ.v bi)))
+         as (LL.is_list bucket_ptr (Seq.index bucket_contents (SZ.v bi)));
+    
+    let bucket_len = LL.length bucket_ptr;
+    assume_ (pure (SZ.fits bucket_len));
+    let bucket_len_sz : SZ.t = SZ.uint_to_t bucket_len;
+    
+    if (ei `SZ.lt` bucket_len_sz) {
+      // We have an entry at position ei in this bucket
+      // Read the entry
+      let e = get_nth_entry bucket_ptr ei;
+      let result = (e.ekey, e.evalue);
+      
+      // Advance to next entry
+      let new_ei = ei `SZ.add` 1sz;
+      B.(it.it_entry_idx := new_ei);
+      
+      // Decrement remaining count
+      let r = B.(!it.it_remaining);
+      B.(it.it_remaining := (r `SZ.sub` 1sz));
+      
+      // Restore bucket state
+      rewrite (LL.is_list bucket_ptr (Seq.index bucket_contents (SZ.v bi)))
+           as (LL.is_list (Seq.index bucket_ptrs (SZ.v bi)) 
+                          (Seq.index bucket_contents (SZ.v bi)));
+      fold_bucket_at bucket_ptrs bucket_contents (SZ.v bi);
+      put_bucket_at bucket_ptrs bucket_contents 0 (SZ.v it.it_ht.capacity) (SZ.v bi);
+      
+      // Fold is_ht_iter with updated remaining
+      // remaining' = remaining_keys_from bucket_contents bi (ei+1)
+      // which should equal FS.remove e.ekey remaining
+      admit()  // TODO: prove remaining update and fold
+    } else {
+      // No entry at current position, need to find next non-empty bucket
+      rewrite (LL.is_list bucket_ptr (Seq.index bucket_contents (SZ.v bi)))
+           as (LL.is_list (Seq.index bucket_ptrs (SZ.v bi)) 
+                          (Seq.index bucket_contents (SZ.v bi)));
+      fold_bucket_at bucket_ptrs bucket_contents (SZ.v bi);
+      put_bucket_at bucket_ptrs bucket_contents 0 (SZ.v it.it_ht.capacity) (SZ.v bi);
+      
+      // TODO: Implement bucket scan and read
+      admit()
+    }
+  }
 }
 
 fn finish_iter
@@ -2998,11 +3302,12 @@ returns h:ht k v
 ensures is_ht h m all_keys ** pure (h == ht_of it)
 {
   unfold (is_ht_iter it m all_keys remaining);
-  with bucket_ptrs bucket_contents cnt bucket_idx entry_idx. _;
+  with bucket_ptrs bucket_contents cnt bucket_idx entry_idx rem_cnt. _;
   
   // Free iterator state boxes
   B.free it.it_bucket_idx;
   B.free it.it_entry_idx;
+  B.free it.it_remaining;
   
   fold (is_ht it.it_ht m all_keys);
   it.it_ht
