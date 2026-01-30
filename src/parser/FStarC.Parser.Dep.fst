@@ -2335,6 +2335,9 @@ let print_dune (outc : out_channel) (deps:deps) : unit =
         else ""
     in
     
+    (* Build --lax flag if lax mode is enabled *)
+    let lax_flag = if Options.lax() then " --lax" else "" in
+    
     (* Check if a filename is a checked file (local, no path needed) *)
     let is_checked_file (f:string) : bool =
         BU.ends_with f ".checked" || BU.ends_with f ".checked.lax"
@@ -2352,8 +2355,8 @@ let print_dune (outc : out_channel) (deps:deps) : unit =
         pr " (deps"; 
         all_deps |> List.iter (fun f -> pr " "; pr (format_dep f));
         pr ")\n";
-        pr " (action (run %{env:FSTAR_EXE=fstar.exe} %{env:FSTAR_OPTIONS=}"; pr mlish_flags;
-        pr " --already_cached \"*,\" -c ";
+        pr " (action (run %{env:FSTAR_EXE=fstar.exe}"; pr lax_flag; pr mlish_flags;
+        pr " --include . --already_cached \"*,\" -c ";
         pr (Filepath.basename source); pr " -o %{targets})))\n\n"
     in
     
@@ -2364,8 +2367,8 @@ let print_dune (outc : out_channel) (deps:deps) : unit =
         pr " (deps";
         all_deps |> List.iter (fun f -> pr " "; pr (format_dep f));
         pr ")\n";
-        pr " (action (run %{env:FSTAR_EXE=fstar.exe} %{env:FSTAR_OPTIONS=}"; pr mlish_flags;
-        pr " --already_cached \"*,\" --codegen ";
+        pr " (action (run %{env:FSTAR_EXE=fstar.exe}"; pr lax_flag; pr mlish_flags;
+        pr " --include . --already_cached \"*,\" --codegen ";
         pr codegen; pr " "; pr (Filepath.basename source); pr " -o %{targets})))\n\n"
     in
     

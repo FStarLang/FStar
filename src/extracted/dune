@@ -33,7 +33,7 @@
 ;         --lax --dep dune
 ;         --include %{project_root}/ulib
 ;         --extract "OCaml:-*" --extract "krml:-*"
-;         %{project_root}/ulib/prims.fst
+;         %{project_root}/ulib/Prims.fst
 ;         %{project_root}/ulib/FStar.Pervasives.Native.fst
 ;         %{project_root}/ulib/FStar.Pervasives.fsti
 ;         %{project_root}/ulib/FStar.Pervasives.fst))))

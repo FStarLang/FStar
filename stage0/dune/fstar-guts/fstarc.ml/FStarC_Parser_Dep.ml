@@ -3118,6 +3118,9 @@ let print_dune (outc : FStarC_Util.out_channel) (deps1 : deps) : unit=
       let uu___1 = FStarC_Options.ml_ish_effect () in
       Prims.strcat " --MLish --MLish_effect " uu___1
     else "" in
+  let lax_flag =
+    let uu___ = FStarC_Options.lax () in
+    if uu___ then " --lax" else "" in
   let is_checked_file f =
     (FStarC_Util.ends_with f ".checked") ||
       (FStarC_Util.ends_with f ".checked.lax") in
@@ -3131,9 +3134,10 @@ let print_dune (outc : FStarC_Util.out_channel) (deps1 : deps) : unit=
     FStarC_List.iter
       (fun f -> pr " "; (let uu___7 = format_dep f in pr uu___7)) all_deps;
     pr ")\n";
-    pr " (action (run %{env:FSTAR_EXE=fstar.exe} %{env:FSTAR_OPTIONS=}";
+    pr " (action (run %{env:FSTAR_EXE=fstar.exe}";
+    pr lax_flag;
     pr mlish_flags;
-    pr " --already_cached \"*,\" -c ";
+    pr " --include . --already_cached \"*,\" -c ";
     (let uu___12 = FStarC_Filepath.basename source in pr uu___12);
     pr " -o %{targets})))\n\n" in
   let print_extract_rule target source all_deps codegen =
@@ -3145,9 +3149,10 @@ let print_dune (outc : FStarC_Util.out_channel) (deps1 : deps) : unit=
     FStarC_List.iter
       (fun f -> pr " "; (let uu___7 = format_dep f in pr uu___7)) all_deps;
     pr ")\n";
-    pr " (action (run %{env:FSTAR_EXE=fstar.exe} %{env:FSTAR_OPTIONS=}";
+    pr " (action (run %{env:FSTAR_EXE=fstar.exe}";
+    pr lax_flag;
     pr mlish_flags;
-    pr " --already_cached \"*,\" --codegen ";
+    pr " --include . --already_cached \"*,\" --codegen ";
     pr codegen;
     pr " ";
     (let uu___13 = FStarC_Filepath.basename source in pr uu___13);
