@@ -69,11 +69,47 @@
 (copy_files (files ../../ulib/*.fst))
 (copy_files (files ../../ulib/*.fsti))
 
-(include ulib.dune.inc)
-; (include fstarc.dune.inc)
+; Copy FStarC source files
+(copy_files (files ../basic/*.fst))
+(copy_files (files ../basic/*.fsti))
+(copy_files (files ../class/*.fst))
+(copy_files (files ../class/*.fsti))
+(copy_files (files ../data/*.fst))
+(copy_files (files ../data/*.fsti))
+(copy_files (files ../extraction/*.fst))
+(copy_files (files ../extraction/*.fsti))
+(copy_files (files ../fstar/*.fst))
+(copy_files (files ../fstar/*.fsti))
+(copy_files (files ../interactive/*.fst))
+(copy_files (files ../interactive/*.fsti))
+(copy_files (files ../parser/*.fst))
+(copy_files (files ../parser/*.fsti))
+(copy_files (files ../prettyprint/*.fst))
+(copy_files (files ../prettyprint/*.fsti))
+(copy_files (files ../reflection/*.fst))
+(copy_files (files ../reflection/*.fsti))
+(copy_files (files ../smtencoding/*.fst))
+(copy_files (files ../smtencoding/*.fsti))
+(copy_files (files ../syntax/*.fst))
+(copy_files (files ../syntax/*.fsti))
+(copy_files (files ../syntax/print/*.fst))
+(copy_files (files ../syntax/print/*.fsti))
+(copy_files (files ../tactics/*.fst))
+(copy_files (files ../tactics/*.fsti))
+(copy_files (files ../tosyntax/*.fst))
+(copy_files (files ../tosyntax/*.fsti))
+(copy_files (files ../typechecker/*.fst))
+(copy_files (files ../typechecker/*.fsti))
+(copy_files (files ../tests/*.fst))
+(copy_files (files ../tests/*.fsti))
+
+; fstarc-fixed.dune.inc: All rules with correct MLish flags:
+;   - FStar.* and Prims.* verification rules: no --MLish
+;   - FStarC.* verification + extraction rules: with --MLish
+; (ulib.dune.inc is not needed as fstarc-fixed.dune.inc has all rules)
+(include fstarc-fixed.dune.inc)
 
 ; Alias for extraction
 (alias
  (name extract-stage1)
- (deps 
-   prims.fst.checked.lax FStar.Pervasives.fst.checked.lax))
+ (deps FStarC_Main.ml))
