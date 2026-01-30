@@ -14,52 +14,53 @@
 
 ; Generate extraction rules using --dep dune
 ; This produces a dune file with (rule ...) stanzas for each F* file
+; Note: We use relative paths (../../) to ensure the generated rules have relative paths
 (rule
  (target dune.extract.inc)
  (deps
-   (:fstar %{project_root}/stage0/out/bin/fstar.exe)
-   (source_tree %{project_root}/ulib)
-   (source_tree %{project_root}/src/basic)
-   (source_tree %{project_root}/src/class)
-   (source_tree %{project_root}/src/data)
-   (source_tree %{project_root}/src/extraction)
-   (source_tree %{project_root}/src/fstar)
-   (source_tree %{project_root}/src/interactive)
-   (source_tree %{project_root}/src/parser)
-   (source_tree %{project_root}/src/prettyprint)
-   (source_tree %{project_root}/src/reflection)
-   (source_tree %{project_root}/src/smtencoding)
-   (source_tree %{project_root}/src/syntax)
-   (source_tree %{project_root}/src/tactics)
-   (source_tree %{project_root}/src/tosyntax)
-   (source_tree %{project_root}/src/typechecker)
-   (source_tree %{project_root}/src/tests))
+   (:fstar ../../stage0/out/bin/fstar.exe)
+   (source_tree ../../ulib)
+   (source_tree ../basic)
+   (source_tree ../class)
+   (source_tree ../data)
+   (source_tree ../extraction)
+   (source_tree ../fstar)
+   (source_tree ../interactive)
+   (source_tree ../parser)
+   (source_tree ../prettyprint)
+   (source_tree ../reflection)
+   (source_tree ../smtencoding)
+   (source_tree ../syntax)
+   (source_tree ../tactics)
+   (source_tree ../tosyntax)
+   (source_tree ../typechecker)
+   (source_tree ../tests))
  (action
   (with-stdout-to %{target}
    (run %{fstar} 
         --lax
         --MLish --MLish_effect FStarC.Effect
         --dep dune
-        --include %{project_root}/ulib
-        --include %{project_root}/src/basic
-        --include %{project_root}/src/class
-        --include %{project_root}/src/data
-        --include %{project_root}/src/extraction
-        --include %{project_root}/src/fstar
-        --include %{project_root}/src/interactive
-        --include %{project_root}/src/parser
-        --include %{project_root}/src/prettyprint
-        --include %{project_root}/src/reflection
-        --include %{project_root}/src/smtencoding
-        --include %{project_root}/src/syntax
-        --include %{project_root}/src/tactics
-        --include %{project_root}/src/tosyntax
-        --include %{project_root}/src/typechecker
-        --include %{project_root}/src/tests
+        --include ../../ulib
+        --include ../basic
+        --include ../class
+        --include ../data
+        --include ../extraction
+        --include ../fstar
+        --include ../interactive
+        --include ../parser
+        --include ../prettyprint
+        --include ../reflection
+        --include ../smtencoding
+        --include ../syntax
+        --include ../tactics
+        --include ../tosyntax
+        --include ../typechecker
+        --include ../tests
         --extract FStarC
         --extract +FStar.Pervasives
         --extract -FStar.Pervasives.Native
-        %{project_root}/src/fstar/FStarC.Main.fst))))
+        ../fstar/FStarC.Main.fst))))
 
 ; Include the generated extraction rules
 ; Note: This is commented out until we have a working dune.extract.inc

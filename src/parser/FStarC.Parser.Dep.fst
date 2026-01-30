@@ -2288,6 +2288,20 @@ let print_dune (outc : out_channel) (deps:deps) : unit =
     let pr str = ignore <| FStarC.StringBuffer.add str sb in
     let norm_path s = replace_chars s '\\' "/" in
     
+    (* Get cwd for making paths relative *)
+    let cwd = Filepath.normalize_file_path (BU.getcwd ()) in
+    let cwd_with_sep = norm_path cwd ^ "/" in
+    let cwd_len = String.length cwd_with_sep in
+    
+    (* Make a path relative to cwd if possible *)
+    let make_relative (p : string) : string =
+        let p = norm_path p in
+        let p_len = String.length p in
+        if p_len >= cwd_len && String.substring p 0 cwd_len = cwd_with_sep
+        then String.substring p cwd_len (p_len - cwd_len)
+        else p
+    in
+    
     let keys = deps_keys deps.dep_graph in
     let no_fstar_stubs_file (s:string) : string =
       let s1 = "FStar.Stubs." in
@@ -2304,9 +2318,9 @@ let print_dune (outc : out_channel) (deps:deps) : unit =
         let ml_base_name = replace_chars basename '.' "_" in
         Find.prepend_output_dir (ml_base_name ^ ext)
     in
-    let output_ml_file   f = norm_path <| output_file ".ml" f in
-    let output_krml_file f = norm_path <| output_file ".krml" f in
-    let cache_file       f = norm_path <| cache_file_name f in
+    let output_ml_file   f = make_relative (output_file ".ml" f) in
+    let output_krml_file f = make_relative (output_file ".krml" f) in
+    let cache_file       f = make_relative (cache_file_name f) in
     
     (* Build --MLish flags if enabled *)
     let mlish_flags =
@@ -2320,11 +2334,11 @@ let print_dune (outc : out_channel) (deps:deps) : unit =
         pr "(rule\n";
         pr " (targets "; pr target; pr ")\n";
         pr " (deps"; 
-        all_deps |> List.iter (fun f -> pr " "; pr (norm_path f));
+        all_deps |> List.iter (fun f -> pr " "; pr (make_relative f));
         pr ")\n";
         pr " (action (run %{fstar} %{env:FSTAR_OPTIONS=}"; pr mlish_flags;
         pr " --already_cached \"*,\" -c ";
-        pr (norm_path source); pr " -o %{targets})))\n\n"
+        pr (make_relative source); pr " -o %{targets})))\n\n"
     in
     
     (* Print a dune rule for extraction *)
@@ -2332,11 +2346,11 @@ let print_dune (outc : out_channel) (deps:deps) : unit =
         pr "(rule\n";
         pr " (targets "; pr target; pr ")\n";
         pr " (deps";
-        all_deps |> List.iter (fun f -> pr " "; pr (norm_path f));
+        all_deps |> List.iter (fun f -> pr " "; pr (make_relative f));
         pr ")\n";
         pr " (action (run %{fstar} %{env:FSTAR_OPTIONS=}"; pr mlish_flags;
         pr " --already_cached \"*,\" --codegen ";
-        pr codegen; pr " "; pr (norm_path source); pr " -o %{targets})))\n\n"
+        pr codegen; pr " "; pr (make_relative source); pr " -o %{targets})))\n\n"
     in
     
     let widened, dep_graph = phase1 deps.file_system_map deps.dep_graph deps.interfaces_with_inlining true in

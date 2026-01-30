@@ -3063,6 +3063,21 @@ let print_dune (outc : FStarC_Util.out_channel) (deps1 : deps) : unit=
   let sb = FStarC_StringBuffer.create (Prims.of_int (10000)) in
   let pr str = let uu___ = FStarC_StringBuffer.add str sb in () in
   let norm_path s = FStarC_Util.replace_chars s 92 "/" in
+  let cwd =
+    let uu___ = FStarC_Util.getcwd () in
+    FStarC_Filepath.normalize_file_path uu___ in
+  let cwd_with_sep = Prims.strcat (norm_path cwd) "/" in
+  let cwd_len = FStarC_String.length cwd_with_sep in
+  let make_relative p =
+    let p1 = norm_path p in
+    let p_len = FStarC_String.length p1 in
+    let uu___ =
+      (p_len >= cwd_len) &&
+        (let uu___1 = FStarC_String.substring p1 Prims.int_zero cwd_len in
+         uu___1 = cwd_with_sep) in
+    if uu___
+    then FStarC_String.substring p1 cwd_len (p_len - cwd_len)
+    else p1 in
   let keys = deps_keys deps1.dep_graph in
   let no_fstar_stubs_file s =
     let s1 = "FStar.Stubs." in
@@ -3087,10 +3102,11 @@ let print_dune (outc : FStarC_Util.out_channel) (deps1 : deps) : unit=
     let basename1 = no_fstar_stubs_file basename in
     let ml_base_name = FStarC_Util.replace_chars basename1 46 "_" in
     FStarC_Find.prepend_output_dir (Prims.strcat ml_base_name ext) in
-  let output_ml_file f = let uu___ = output_file ".ml" f in norm_path uu___ in
+  let output_ml_file f =
+    let uu___ = output_file ".ml" f in make_relative uu___ in
   let output_krml_file f =
-    let uu___ = output_file ".krml" f in norm_path uu___ in
-  let cache_file f = let uu___ = cache_file_name f in norm_path uu___ in
+    let uu___ = output_file ".krml" f in make_relative uu___ in
+  let cache_file f = let uu___ = cache_file_name f in make_relative uu___ in
   let mlish_flags =
     let uu___ = FStarC_Options.ml_ish () in
     if uu___
@@ -3104,12 +3120,13 @@ let print_dune (outc : FStarC_Util.out_channel) (deps1 : deps) : unit=
     pr target;
     pr ")\n";
     pr " (deps";
-    FStarC_List.iter (fun f -> pr " "; pr (norm_path f)) all_deps;
+    FStarC_List.iter
+      (fun f -> pr " "; (let uu___7 = make_relative f in pr uu___7)) all_deps;
     pr ")\n";
     pr " (action (run %{fstar} %{env:FSTAR_OPTIONS=}";
     pr mlish_flags;
     pr " --already_cached \"*,\" -c ";
-    pr (norm_path source);
+    (let uu___11 = make_relative source in pr uu___11);
     pr " -o %{targets})))\n\n" in
   let print_extract_rule target source all_deps codegen =
     pr "(rule\n";
@@ -3117,14 +3134,15 @@ let print_dune (outc : FStarC_Util.out_channel) (deps1 : deps) : unit=
     pr target;
     pr ")\n";
     pr " (deps";
-    FStarC_List.iter (fun f -> pr " "; pr (norm_path f)) all_deps;
+    FStarC_List.iter
+      (fun f -> pr " "; (let uu___7 = make_relative f in pr uu___7)) all_deps;
     pr ")\n";
     pr " (action (run %{fstar} %{env:FSTAR_OPTIONS=}";
     pr mlish_flags;
     pr " --already_cached \"*,\" --codegen ";
     pr codegen;
     pr " ";
-    pr (norm_path source);
+    (let uu___13 = make_relative source in pr uu___13);
     pr " -o %{targets})))\n\n" in
   let uu___ =
     phase1 deps1.file_system_map deps1.dep_graph
