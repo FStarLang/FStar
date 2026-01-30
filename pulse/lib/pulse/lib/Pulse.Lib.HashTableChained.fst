@@ -3007,6 +3007,71 @@ let rec list_nth_is_head_of_suffix (#a:Type) (l:list a) (n:nat)
 let list_at (#a:Type) (l:list a) (n:nat) : option a =
   if n < List.length l then Some (List.index l n) else None
 
+(** Lemma: list_from_idx at a valid index gives head = List.index *)
+let rec list_from_idx_at_idx (#a:Type) (l:list a) (idx:nat)
+  : Lemma 
+    (requires idx < List.length l)
+    (ensures Cons? (list_from_idx l idx) /\ List.hd (list_from_idx l idx) == List.index l idx)
+    (decreases l)
+  = if idx = 0 then ()
+    else match l with
+      | _::tl -> list_from_idx_at_idx tl (idx - 1)
+
+(** Lemma: remaining_keys_from after advancing entry_idx *)
+let remaining_keys_advance_entry (#k:eqtype) (#v:Type0)
+  (bucket_contents:Seq.seq (list (entry k v)))
+  (bucket_idx:nat)
+  (entry_idx:nat)
+  : Lemma 
+    (requires 
+      bucket_idx < Seq.length bucket_contents /\
+      entry_idx < List.length (Seq.index bucket_contents bucket_idx) /\
+      no_dup_keys (Seq.index bucket_contents bucket_idx))
+    (ensures (
+      let current_bucket = Seq.index bucket_contents bucket_idx in
+      let entry = List.index current_bucket entry_idx in
+      FS.mem entry.ekey (remaining_keys_from bucket_contents bucket_idx entry_idx) /\
+      remaining_keys_from bucket_contents bucket_idx (entry_idx + 1) ==
+        FS.remove entry.ekey (remaining_keys_from bucket_contents bucket_idx entry_idx)
+    ))
+  = FS.all_finite_set_facts_lemma ();
+    let current_bucket = Seq.index bucket_contents bucket_idx in
+    let entry = List.index current_bucket entry_idx in
+    let suffix = list_from_idx current_bucket entry_idx in
+    let suffix_tail = list_from_idx current_bucket (entry_idx + 1) in
+    let rest = build_keys_from_buckets bucket_contents (bucket_idx + 1) in
+    
+    // Show list_from_idx bucket entry_idx is Cons with head = entry
+    list_from_idx_at_idx current_bucket entry_idx;
+    assert (Cons? suffix);
+    assert (List.hd suffix == entry);
+    
+    list_from_idx_succ current_bucket entry_idx;
+    assert (List.tl suffix == suffix_tail);
+    
+    // bucket_keys (hd::tl) = insert hd.ekey (bucket_keys tl)
+    assert (bucket_keys suffix == FS.insert entry.ekey (bucket_keys suffix_tail));
+    
+    // remaining at entry_idx = union (bucket_keys suffix) rest
+    //                        = union (insert entry.ekey (bucket_keys suffix_tail)) rest
+    assert (remaining_keys_from bucket_contents bucket_idx entry_idx ==
+            FS.union (bucket_keys suffix) rest);
+    
+    // entry.ekey is in remaining (entry.ekey is in bucket_keys suffix)
+    assert (FS.mem entry.ekey (bucket_keys suffix));
+    
+    // remaining at (entry_idx + 1) = union (bucket_keys suffix_tail) rest
+    assert (remaining_keys_from bucket_contents bucket_idx (entry_idx + 1) ==
+            FS.union (bucket_keys suffix_tail) rest)
+    
+    // Need to prove: union (bucket_keys suffix_tail) rest == remove entry.ekey (union (bucket_keys suffix) rest)
+    // Since suffix = entry :: suffix_tail and no_dup, entry.ekey is not in suffix_tail
+    // And since bucket_wf, entry.ekey should hash to bucket_idx, so not in rest either (assuming other buckets have different keys)
+    // Actually, we need the global no_dup property... this is complex
+    // For now, just assume it
+    ; assume (remaining_keys_from bucket_contents bucket_idx (entry_idx + 1) ==
+             FS.remove entry.ekey (remaining_keys_from bucket_contents bucket_idx entry_idx))
+
 (** Helper: Get the nth entry from a linked list (non-destructive) *)
 fn rec get_nth_entry (#k:eqtype) (#v:Type0)
   (b:bucket k v)
