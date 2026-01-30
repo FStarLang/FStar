@@ -3017,16 +3017,164 @@ let rec list_from_idx_at_idx (#a:Type) (l:list a) (idx:nat)
     else match l with
       | _::tl -> list_from_idx_at_idx tl (idx - 1)
 
+(** Lemma: element at position idx is in the bucket (key_in_bucket) *)
+let rec element_at_idx_in_bucket (#k:eqtype) (#v:Type0) (entries:list (entry k v)) (idx:nat)
+  : Lemma
+    (requires idx < List.length entries)
+    (ensures key_in_bucket entries (List.index entries idx).ekey)
+    (decreases entries)
+  = match entries with
+    | hd::tl ->
+      if idx = 0 then ()
+      else element_at_idx_in_bucket tl (idx - 1)
+
+(** Lemma: bucket_wf implies all keys hash to the bucket's index *)
+let rec key_in_wf_bucket_hashes_to_idx (#k:eqtype) (#v:Type0) 
+  (entries:list (entry k v)) (hashf:k -> SZ.t) (capacity:pos) (idx:nat{idx < capacity}) (key:k)
+  : Lemma 
+    (requires bucket_wf entries hashf capacity idx /\ key_in_bucket entries key)
+    (ensures SZ.v (hashf key) % capacity == idx)
+    (decreases entries)
+  = match entries with
+    | [] -> ()
+    | hd::tl -> 
+      if hd.ekey = key then ()
+      else key_in_wf_bucket_hashes_to_idx tl hashf capacity idx key
+
+(** Lemma: bucket_keys doesn't contain a key if key_in_bucket is false *)
+let rec not_in_bucket_means_not_in_keys_early (#k:eqtype) (#v:Type0) (entries:list (entry k v)) (key:k)
+  : Lemma 
+    (requires ~(key_in_bucket entries key))
+    (ensures ~(FS.mem key (bucket_keys entries)))
+    (decreases entries)
+  = FS.all_finite_set_facts_lemma ();
+    match entries with
+    | [] -> ()
+    | hd::tl -> not_in_bucket_means_not_in_keys_early tl key
+
+(** Lemma: if key hashes to bucket_idx, it's not in build_keys starting from start_idx where start_idx > bucket_idx *)
+let rec key_not_in_later_buckets (#k:eqtype) (#v:Type0)
+  (bucket_contents:Seq.seq (list (entry k v)))
+  (hashf:k -> SZ.t)
+  (capacity:pos)
+  (key_bucket_idx:nat)  // the bucket where the key hashes to
+  (start_idx:nat)       // where we're looking (must be > key_bucket_idx)
+  (key:k)
+  : Lemma 
+    (requires 
+      Seq.length bucket_contents == capacity /\
+      all_buckets_wf bucket_contents hashf capacity 0 /\
+      key_bucket_idx < capacity /\
+      key_bucket_idx < start_idx /\
+      SZ.v (hashf key) % capacity == key_bucket_idx)
+    (ensures ~(FS.mem key (build_keys_from_buckets bucket_contents start_idx)))
+    (decreases capacity - start_idx)
+  = FS.all_finite_set_facts_lemma ();
+    if start_idx >= capacity then ()
+    else begin
+      // build_keys start_idx = union (bucket_keys (bucket start_idx)) (build_keys (start_idx + 1))
+      let this_bucket = Seq.index bucket_contents start_idx in
+      
+      // Show bucket_wf for this_bucket
+      all_buckets_wf_at bucket_contents hashf capacity start_idx;
+      assert (bucket_wf this_bucket hashf capacity start_idx);
+      
+      // If key were in this_bucket, it would hash to start_idx
+      // But key hashes to key_bucket_idx < start_idx, contradiction
+      if key_in_bucket this_bucket key then begin
+        key_in_wf_bucket_hashes_to_idx this_bucket hashf capacity start_idx key;
+        assert (SZ.v (hashf key) % capacity == start_idx);
+        // But we know SZ.v (hashf key) % capacity == key_bucket_idx < start_idx
+        assert false
+      end;
+      not_in_bucket_means_not_in_keys_early this_bucket key;
+      
+      // Recursively prove key not in build_keys (start_idx + 1)
+      key_not_in_later_buckets bucket_contents hashf capacity key_bucket_idx (start_idx + 1) key
+    end
+
+(** Lemma: list_from_idx preserves no_dup_keys *)
+let rec list_from_idx_no_dup (#k:eqtype) (#v:Type0) (l:list (entry k v)) (idx:nat)
+  : Lemma 
+    (requires no_dup_keys l)
+    (ensures no_dup_keys (list_from_idx l idx))
+    (decreases l)
+  = if idx = 0 then ()
+    else match l with
+      | [] -> ()
+      | _::tl -> list_from_idx_no_dup tl (idx - 1)
+
+(** Lemma: if no_dup_keys and idx < length, then entry at idx is not in suffix after idx *)
+let list_from_idx_key_not_in_suffix (#k:eqtype) (#v:Type0) (l:list (entry k v)) (idx:nat)
+  : Lemma 
+    (requires no_dup_keys l /\ idx < List.length l)
+    (ensures ~(key_in_bucket (list_from_idx l (idx + 1)) (List.index l idx).ekey))
+  = list_from_idx_at_idx l idx;
+    list_from_idx_succ l idx;
+    let suffix = list_from_idx l idx in
+    let entry = List.hd suffix in
+    let suffix_tail = List.tl suffix in
+    // suffix = entry :: suffix_tail
+    // no_dup_keys l ==> no_dup_keys suffix (by list_from_idx_no_dup)
+    list_from_idx_no_dup l idx;
+    // no_dup_keys (entry :: suffix_tail) ==> ~(key_in_bucket suffix_tail entry.ekey)
+    assert (no_dup_keys suffix);
+    // suffix = entry :: suffix_tail where entry.ekey = (List.index l idx).ekey
+    assert (entry == List.index l idx)
+
+(** Lemma: if key not in set s, then union (insert key (bucket_keys rest)) s 
+    after removing key equals union (bucket_keys rest) s *)
+let remove_from_union_insert (#k:eqtype) (#v:Type0) 
+  (key:k) (rest:list (entry k v)) (s:FS.set k)
+  : Lemma 
+    (requires ~(FS.mem key (bucket_keys rest)) /\ ~(FS.mem key s))
+    (ensures FS.remove key (FS.union (FS.insert key (bucket_keys rest)) s) ==
+             FS.union (bucket_keys rest) s)
+  = FS.all_finite_set_facts_lemma ();
+    let keys_rest = bucket_keys rest in
+    let with_key = FS.insert key keys_rest in
+    let unioned = FS.union with_key s in
+    let removed = FS.remove key unioned in
+    let target = FS.union keys_rest s in
+    // By extensionality: removed == target if forall x. mem x removed <==> mem x target
+    // mem x removed <==> mem x unioned /\ x <> key
+    //                <==> (mem x with_key \/ mem x s) /\ x <> key
+    //                <==> ((x = key \/ mem x keys_rest) \/ mem x s) /\ x <> key
+    //                <==> (mem x keys_rest \/ mem x s)  [since x <> key]
+    //                <==> mem x target
+    assert (FS.equal removed target)
+
+(** Lemma: bucket_keys doesn't contain a key if key_in_bucket is false *)
+let rec not_in_bucket_means_not_in_keys (#k:eqtype) (#v:Type0) (entries:list (entry k v)) (key:k)
+  : Lemma 
+    (requires ~(key_in_bucket entries key))
+    (ensures ~(FS.mem key (bucket_keys entries)))
+    (decreases entries)
+  = FS.all_finite_set_facts_lemma ();
+    match entries with
+    | [] -> ()
+    | hd::tl -> 
+      // key_in_bucket (hd::tl) key = (hd.ekey = key || key_in_bucket tl key)
+      // ~(key_in_bucket entries key) means hd.ekey <> key /\ ~(key_in_bucket tl key)
+      not_in_bucket_means_not_in_keys tl key
+      // bucket_keys entries = insert hd.ekey (bucket_keys tl)
+      // mem key (insert hd.ekey (bucket_keys tl)) <==> key = hd.ekey \/ mem key (bucket_keys tl)
+      // Both are false by hypothesis
+
 (** Lemma: remaining_keys_from after advancing entry_idx *)
 let remaining_keys_advance_entry (#k:eqtype) (#v:Type0)
   (bucket_contents:Seq.seq (list (entry k v)))
   (bucket_idx:nat)
   (entry_idx:nat)
+  (hashf:k -> SZ.t)
+  (capacity:pos)
   : Lemma 
     (requires 
       bucket_idx < Seq.length bucket_contents /\
       entry_idx < List.length (Seq.index bucket_contents bucket_idx) /\
-      no_dup_keys (Seq.index bucket_contents bucket_idx))
+      no_dup_keys (Seq.index bucket_contents bucket_idx) /\
+      Seq.length bucket_contents == capacity /\
+      all_buckets_wf bucket_contents hashf capacity 0)
     (ensures (
       let current_bucket = Seq.index bucket_contents bucket_idx in
       let entry = List.index current_bucket entry_idx in
@@ -3062,15 +3210,30 @@ let remaining_keys_advance_entry (#k:eqtype) (#v:Type0)
     
     // remaining at (entry_idx + 1) = union (bucket_keys suffix_tail) rest
     assert (remaining_keys_from bucket_contents bucket_idx (entry_idx + 1) ==
-            FS.union (bucket_keys suffix_tail) rest)
+            FS.union (bucket_keys suffix_tail) rest);
     
-    // Need to prove: union (bucket_keys suffix_tail) rest == remove entry.ekey (union (bucket_keys suffix) rest)
-    // Since suffix = entry :: suffix_tail and no_dup, entry.ekey is not in suffix_tail
-    // And since bucket_wf, entry.ekey should hash to bucket_idx, so not in rest either (assuming other buckets have different keys)
-    // Actually, we need the global no_dup property... this is complex
-    // For now, just assume it
-    ; assume (remaining_keys_from bucket_contents bucket_idx (entry_idx + 1) ==
-             FS.remove entry.ekey (remaining_keys_from bucket_contents bucket_idx entry_idx))
+    // entry.ekey is not in suffix_tail (by no_dup_keys)
+    list_from_idx_key_not_in_suffix current_bucket entry_idx;
+    not_in_bucket_means_not_in_keys suffix_tail entry.ekey;
+    assert (~(FS.mem entry.ekey (bucket_keys suffix_tail)));
+    
+    // entry.ekey is not in rest (by bucket_wf - it hashes to bucket_idx, not bucket_idx+1 or later)
+    // First get the hash of entry.ekey
+    all_buckets_wf_at bucket_contents hashf capacity bucket_idx;
+    // entry is at position entry_idx in current_bucket, and current_bucket is bucket_wf
+    // So entry.ekey hashes to bucket_idx
+    // We need: key_in_bucket current_bucket entry.ekey to apply key_in_wf_bucket_hashes_to_idx
+    element_at_idx_in_bucket current_bucket entry_idx;
+    assert (key_in_bucket current_bucket entry.ekey);
+    key_in_wf_bucket_hashes_to_idx current_bucket hashf capacity bucket_idx entry.ekey;
+    assert (SZ.v (hashf entry.ekey) % capacity == bucket_idx);
+    
+    // Now use key_not_in_later_buckets
+    key_not_in_later_buckets bucket_contents hashf capacity bucket_idx (bucket_idx + 1) entry.ekey;
+    assert (~(FS.mem entry.ekey rest));
+    
+    // Now we can use remove_from_union_insert
+    remove_from_union_insert entry.ekey suffix_tail rest
 
 (** Helper: Get the nth entry from a linked list (non-destructive) *)
 fn rec get_nth_entry (#k:eqtype) (#v:Type0)
