@@ -3066,18 +3066,10 @@ let print_dune (outc : FStarC_Util.out_channel) (deps1 : deps) : unit=
   let cwd =
     let uu___ = FStarC_Util.getcwd () in
     FStarC_Filepath.normalize_file_path uu___ in
-  let cwd_with_sep = Prims.strcat (norm_path cwd) "/" in
-  let cwd_len = FStarC_String.length cwd_with_sep in
   let make_relative p =
-    let p1 = norm_path p in
-    let p_len = FStarC_String.length p1 in
-    let uu___ =
-      (p_len >= cwd_len) &&
-        (let uu___1 = FStarC_String.substring p1 Prims.int_zero cwd_len in
-         uu___1 = cwd_with_sep) in
-    if uu___
-    then FStarC_String.substring p1 cwd_len (p_len - cwd_len)
-    else p1 in
+    let p_normalized = FStarC_Filepath.normalize_file_path p in
+    let uu___ = FStarC_Filepath.make_relative_to cwd p_normalized in
+    norm_path uu___ in
   let keys = deps_keys deps1.dep_graph in
   let no_fstar_stubs_file s =
     let s1 = "FStar.Stubs." in

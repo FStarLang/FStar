@@ -2290,57 +2290,11 @@ let print_dune (outc : out_channel) (deps:deps) : unit =
     
     (* Get cwd for making paths relative *)
     let cwd = Filepath.normalize_file_path (BU.getcwd ()) in
-    let cwd_with_sep = norm_path cwd ^ "/" in
-    let cwd_len = String.length cwd_with_sep in
     
-    (* Also get the project root (cwd without _build/default/...) for paths that are in _build *)
-    let project_root =
-        let s = norm_path cwd in
-        match BU.find_str s "_build/" with
-        | Some idx -> String.substring s 0 idx
-        | None -> ""
-    in
-    let project_root_len = String.length project_root in
-    
-    (* Make a path relative to cwd if possible *)
+    (* Make a path relative to cwd using proper path computation *)
     let make_relative (p : string) : string =
-        let p = norm_path p in
-        let p_len = String.length p in
-        (* First try stripping cwd prefix *)
-        if p_len >= cwd_len && String.substring p 0 cwd_len = cwd_with_sep
-        then String.substring p cwd_len (p_len - cwd_len)
-        (* Then try stripping project_root/_build/default/ prefix and making relative *)
-        else if project_root_len > 0 && p_len >= project_root_len && 
-                String.substring p 0 project_root_len = project_root
-        then 
-            let rel_from_root = String.substring p project_root_len (p_len - project_root_len) in
-            (* If it starts with _build/default/, strip that and compute relative path *)
-            let build_prefix = "_build/default/" in
-            let build_prefix_len = String.length build_prefix in
-            if String.length rel_from_root >= build_prefix_len &&
-               String.substring rel_from_root 0 build_prefix_len = build_prefix
-            then
-                let after_build = String.substring rel_from_root build_prefix_len 
-                                    (String.length rel_from_root - build_prefix_len) in
-                (* Now compute relative path from src/extracted to after_build *)
-                (* If after_build starts with "src/extracted/", strip it *)
-                let src_prefix = "src/extracted/" in
-                let src_prefix_len = String.length src_prefix in
-                if String.length after_build >= src_prefix_len &&
-                   String.substring after_build 0 src_prefix_len = src_prefix
-                then String.substring after_build src_prefix_len 
-                       (String.length after_build - src_prefix_len)
-                (* If after_build starts with "ulib/", make it ../../ulib/ *)
-                else if String.length after_build >= 5 &&
-                        String.substring after_build 0 5 = "ulib/"
-                then "../../" ^ after_build
-                (* If after_build starts with "src/", make it ../<rest> *)
-                else if String.length after_build >= 4 &&
-                        String.substring after_build 0 4 = "src/"
-                then "../" ^ String.substring after_build 4 (String.length after_build - 4)
-                else p
-            else p
-        else p
+        let p_normalized = Filepath.normalize_file_path p in
+        norm_path (Filepath.make_relative_to cwd p_normalized)
     in
     
     let keys = deps_keys deps.dep_graph in
