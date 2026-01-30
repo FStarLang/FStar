@@ -226,7 +226,7 @@ let almost_up_implies_heap_down #t {| total_order t |}
 
 // When heap_up_at bad holds, it means parent(bad) <= bad, which fills in the missing
 // ordering relation in almost_heap_sift_up  
-#push-options "--z3rlimit 40 --fuel 1 --ifuel 1"
+#push-options "--z3rlimit 10 --fuel 1 --ifuel 1"
 let almost_to_full_heap #t {| total_order t |} (s:Seq.seq t) (bad:nat{bad < Seq.length s})
   : Lemma (requires almost_heap_sift_up s bad /\ heap_up_at s bad)
           (ensures is_heap s)
@@ -503,7 +503,7 @@ let sift_up_swap_heap_up_at #t {| total_order t |}
 #pop-options
 
 // Helper for sift_up_swap_lemma: part 2 (parent->child ordering except at bad)
-#push-options "--z3rlimit 30 --fuel 0 --ifuel 1"
+#push-options "--z3rlimit 10 --fuel 0 --ifuel 1"
 let sift_up_swap_part2 #t {| total_order t |}
   (s:Seq.seq t) (child:nat{child > 0 /\ child < Seq.length s})
   (i:nat{i < Seq.length s})
@@ -621,7 +621,7 @@ let sift_up_swap_lemma #t {| total_order t |}
 // Helper for sift_up: After swapping idx with parent, establish the grandparent->children property
 // for the recursive call. The recursive call has new idx = parent, new sequence = swap_seq.
 // The invariant requires: swap_seq[gp] <=? swap_seq[children of parent].
-#push-options "--z3rlimit 20 --fuel 1 --ifuel 1"
+#push-options "--z3rlimit 10 --fuel 1 --ifuel 1"
 let grandparent_up_after_swap #t {| total_order t |} 
   (s:Seq.seq t) (child:nat{child > 0 /\ child < Seq.length s})
   : Lemma (requires almost_heap_sift_up s child /\
@@ -951,7 +951,7 @@ let sift_down_swap_heap_up_at #t {| total_order t |}
 #pop-options
 
 // Helper for sift_down_swap_lemma: heap_down_at after swap
-#push-options "--z3rlimit 20 --fuel 1 --ifuel 1"
+#push-options "--z3rlimit 10 --fuel 1 --ifuel 1"
 let sift_down_swap_heap_down_at #t {| total_order t |}
   (s:Seq.seq t) (parent:nat{parent < Seq.length s}) (child:nat{child < Seq.length s /\ parent <> child})
   (i:nat{i < Seq.length s})
@@ -1075,7 +1075,7 @@ let grandparent_after_swap #t {| total_order t |}
     // heap_down_at s child means: s[child] <=? s[left_idx child] and s[child] <=? s[right_idx child]
     ()
 
-#push-options "--z3rlimit 20 --fuel 1 --ifuel 1"
+#push-options "--z3rlimit 10 --fuel 1 --ifuel 1"
 fn rec sift_down (#t:eqtype) {| total_order t |} (pq:rvec t) (idx:SZ.t) (len:SZ.t)
   (#s:erased (Seq.seq t){SZ.v idx < Seq.length s /\ SZ.v len == Seq.length s /\ 
                           SZ.fits (op_Multiply 2 (Seq.length s) + 2)})
@@ -1186,7 +1186,7 @@ fn rec sift_down (#t:eqtype) {| total_order t |} (pq:rvec t) (idx:SZ.t) (len:SZ.
 #pop-options
 
 // After setting root to last element and popping, we get almost_heap_sift_down at 0
-#push-options "--z3rlimit 20 --fuel 1 --ifuel 1"
+#push-options "--z3rlimit 10 --fuel 1 --ifuel 1"
 let extract_almost_heap #t {| total_order t |} (s:Seq.seq t) (v:t)
   : Lemma (requires is_heap s /\ Seq.length s > 1)
           (ensures almost_heap_sift_down (Seq.slice (Seq.upd s 0 v) 0 (Seq.length s - 1)) 0)
