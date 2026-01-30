@@ -2308,6 +2308,13 @@ let print_dune (outc : out_channel) (deps:deps) : unit =
     let output_krml_file f = norm_path <| output_file ".krml" f in
     let cache_file       f = norm_path <| cache_file_name f in
     
+    (* Build --MLish flags if enabled *)
+    let mlish_flags =
+        if Options.ml_ish()
+        then " --MLish --MLish_effect " ^ Options.ml_ish_effect()
+        else ""
+    in
+    
     (* Print a dune rule for checking a file *)
     let print_check_rule (target : string) (source : string) (all_deps : list string) : unit =
         pr "(rule\n";
@@ -2315,7 +2322,8 @@ let print_dune (outc : out_channel) (deps:deps) : unit =
         pr " (deps"; 
         all_deps |> List.iter (fun f -> pr " "; pr (norm_path f));
         pr ")\n";
-        pr " (action (run %{fstar} %{env:FSTAR_OPTIONS=} --already_cached \"*,\" -c ";
+        pr " (action (run %{fstar} %{env:FSTAR_OPTIONS=}"; pr mlish_flags;
+        pr " --already_cached \"*,\" -c ";
         pr (norm_path source); pr " -o %{targets})))\n\n"
     in
     
@@ -2326,7 +2334,8 @@ let print_dune (outc : out_channel) (deps:deps) : unit =
         pr " (deps";
         all_deps |> List.iter (fun f -> pr " "; pr (norm_path f));
         pr ")\n";
-        pr " (action (run %{fstar} %{env:FSTAR_OPTIONS=} --already_cached \"*,\" --codegen ";
+        pr " (action (run %{fstar} %{env:FSTAR_OPTIONS=}"; pr mlish_flags;
+        pr " --already_cached \"*,\" --codegen ";
         pr codegen; pr " "; pr (norm_path source); pr " -o %{targets})))\n\n"
     in
     

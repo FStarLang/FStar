@@ -1,0 +1,71 @@
+; =============================================================================
+; src/extracted/dune - Extracted OCaml files from F* sources
+; =============================================================================
+; 
+; This directory contains .ml files extracted from F* source code.
+; 
+; The extraction process uses fstar --dep dune to generate dune rules,
+; which are included via (include dune.extract.inc).
+;
+; Build flow:
+;   1. Run: dune build @extract-stage1 (generates rules and extracts)
+;   2. The extracted .ml files appear here
+;   3. Stage1 copies them via (copy_files ../extracted/*.ml)
+
+; Generate extraction rules using --dep dune
+; This produces a dune file with (rule ...) stanzas for each F* file
+(rule
+ (target dune.extract.inc)
+ (deps
+   (:fstar %{project_root}/stage0/out/bin/fstar.exe)
+   (source_tree %{project_root}/ulib)
+   (source_tree %{project_root}/src/basic)
+   (source_tree %{project_root}/src/class)
+   (source_tree %{project_root}/src/data)
+   (source_tree %{project_root}/src/extraction)
+   (source_tree %{project_root}/src/fstar)
+   (source_tree %{project_root}/src/interactive)
+   (source_tree %{project_root}/src/parser)
+   (source_tree %{project_root}/src/prettyprint)
+   (source_tree %{project_root}/src/reflection)
+   (source_tree %{project_root}/src/smtencoding)
+   (source_tree %{project_root}/src/syntax)
+   (source_tree %{project_root}/src/tactics)
+   (source_tree %{project_root}/src/tosyntax)
+   (source_tree %{project_root}/src/typechecker)
+   (source_tree %{project_root}/src/tests))
+ (action
+  (with-stdout-to %{target}
+   (run %{fstar} 
+        --lax
+        --MLish --MLish_effect FStarC.Effect
+        --dep dune
+        --include %{project_root}/ulib
+        --include %{project_root}/src/basic
+        --include %{project_root}/src/class
+        --include %{project_root}/src/data
+        --include %{project_root}/src/extraction
+        --include %{project_root}/src/fstar
+        --include %{project_root}/src/interactive
+        --include %{project_root}/src/parser
+        --include %{project_root}/src/prettyprint
+        --include %{project_root}/src/reflection
+        --include %{project_root}/src/smtencoding
+        --include %{project_root}/src/syntax
+        --include %{project_root}/src/tactics
+        --include %{project_root}/src/tosyntax
+        --include %{project_root}/src/typechecker
+        --include %{project_root}/src/tests
+        --extract FStarC
+        --extract +FStar.Pervasives
+        --extract -FStar.Pervasives.Native
+        %{project_root}/src/fstar/FStarC.Main.fst))))
+
+; Include the generated extraction rules
+; Note: This is commented out until we have a working dune.extract.inc
+; (include dune.extract.inc)
+
+; Alias for extraction
+(alias
+ (name extract-stage1)
+ (deps dune.extract.inc))
