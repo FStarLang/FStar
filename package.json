@@ -27,25 +27,33 @@
   },
   "esy": {
     "build": [
-      "dune build @stage0",
+      "dune build --root=stage0/dune",
+      "dune install --root=stage0/dune --prefix=stage0/out",
       "dune build @extract-stage1", 
       "dune build @stage1",
       "dune build @stage2"
     ],
     "buildsInSource": "_build",
+    "buildEnv": {
+      "FSTAR_EXE": "#{self.root}/stage0/out/bin/fstar.exe"
+    },
     "exportedEnv": {
       "PYTHON": {
         "val": "python3",
+        "scope": "global"
+      },
+      "FSTAR_EXE": {
+        "val": "#{self.root}/stage0/out/bin/fstar.exe",
         "scope": "global"
       }
     }
   },
   "scripts": {
-    "stage0": "dune build @stage0",
+    "stage0": "cd stage0 && dune build --root=dune && dune install --root=dune --prefix=out",
     "extract": "dune build @extract-stage1",
     "stage1": "dune build @stage1",
     "stage2": "dune build @stage2",
-    "build": "dune build @stage0 && dune build @extract-stage1 && dune build @stage1 && dune build @stage2",
+    "build": "npm run stage0 && dune build @extract-stage1 && dune build @stage1 && dune build @stage2",
     "test": "dune runtest",
     "unit-tests": "dune runtest tests/micro-benchmarks",
     "clean": "dune clean",

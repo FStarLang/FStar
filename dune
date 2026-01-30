@@ -1,5 +1,4 @@
 ; Exclude unused directories
-; Note: stage0 context should only build stage0/, stage1/2 should only build src/
-; This is handled via enabled_if in each dune file
+; Note: stage0 has its own dune-project in stage0/dune/ and is built separately
 ; Packaging rules are in packaging/ subdirectory
 (dirs :standard \ stage0 stage1 stage2 examples out _package _srcpackage stage0_new)

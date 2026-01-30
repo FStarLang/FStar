@@ -68,6 +68,8 @@
 ; Copy ulib source files to make them visible to dune
 (copy_files (files ../../ulib/*.fst))
 (copy_files (files ../../ulib/*.fsti))
+(copy_files (files ../../ulib/legacy/*.fst))
+(copy_files (files ../../ulib/legacy/*.fsti))
 
 ; Copy FStarC source files
 (copy_files (files ../basic/*.fst))
