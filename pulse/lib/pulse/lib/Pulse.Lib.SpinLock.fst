@@ -80,7 +80,8 @@ fn new_lock (v:slprop)
 
 fn rec acquire (#v:slprop) (#p:perm) (l:lock)
   preserves lock_alive l #p v
-  ensures v ** lock_acquired l
+  ensures v
+  ensures lock_acquired l
 {
   unfold (lock_alive l #p v);
   let b =
@@ -172,7 +173,8 @@ fn release (#v:slprop) (#p:perm) (l:lock)
 ghost
 fn share (#v:slprop) (#p:perm) (l:lock)
   requires lock_alive l #p v
-  ensures lock_alive l #(p /. 2.0R) v ** lock_alive l #(p /. 2.0R) v
+  ensures lock_alive l #(p /. 2.0R) v
+  ensures lock_alive l #(p /. 2.0R) v
 {
   unfold (lock_alive l #p v);
   CInv.share l.i;
@@ -221,7 +223,8 @@ fn lock_alive_inj
   (l:lock) (#p1 #p2 :perm) (#v1 #v2 :slprop)
   requires lock_alive l #p1 v1
   requires lock_alive l #p2 v2
-  ensures  lock_alive l #p1 v1 ** lock_alive l #p2 v1
+  ensures lock_alive l #p1 v1
+  ensures lock_alive l #p2 v1
 {
   unfold (lock_alive l #p2 v2);
   drop_ (inv _ _);

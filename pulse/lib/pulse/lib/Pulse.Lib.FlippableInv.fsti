@@ -46,6 +46,7 @@ ghost
 fn flip_off (#p:slprop) (fi : finv p)
   requires on fi
   requires later_credit 1
-  ensures  off fi ** p
+  ensures off fi
+  ensures p
   opens [iname_of fi]
 

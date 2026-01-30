@@ -31,7 +31,8 @@ val is_list #t ([@@@mkey]x:llist t) (l:list t)
 fn is_empty (#t:Type) (x:llist t)
     requires is_list x 'l
     returns b:bool
-    ensures is_list x 'l ** pure (b <==> ('l == []))
+    ensures is_list x 'l
+    ensures pure (b <==> ('l == []))
 
 fn head (#t:Type0) (x:llist t) (#l:erased (list t){Cons? l})
     requires is_list x l
@@ -47,7 +48,8 @@ fn length (#t:Type0) (x:llist t)
           (#l:erased (list t))
   requires is_list x l
   returns n:nat
-  ensures is_list x l ** pure (n == List.Tot.length l)
+  ensures is_list x l
+  ensures pure (n == List.Tot.length l)
 
 fn create (t:Type)
   requires emp
@@ -77,13 +79,15 @@ fn move_next (#t:Type) (x:llist t)
 fn length_iter (#t:Type) (x: llist t)
   requires is_list x 'l
   returns n:nat
-  ensures is_list x 'l ** pure (n == List.Tot.length 'l)
+  ensures is_list x 'l
+  ensures pure (n == List.Tot.length 'l)
 
 fn is_last_cell (#t:Type) (x:llist t)
   requires is_list x 'l
   requires pure (Cons? 'l)
   returns  b : bool
-  ensures  is_list x 'l ** pure (b == (List.Tot.length 'l = 1))
+  ensures is_list x 'l
+  ensures pure (b == (List.Tot.length 'l = 1))
 
 fn append_at_last_cell (#t:Type) (x y:llist t)
   requires

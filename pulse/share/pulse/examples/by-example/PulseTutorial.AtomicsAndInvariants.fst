@@ -67,7 +67,9 @@ ghost
 fn pts_to_dup_impossible u#a (#a: Type u#a) (x:ref a)
 requires pts_to x 'v
 requires pts_to x 'u
-ensures  pts_to x 'v ** pts_to x 'u ** pure False
+ensures pts_to x 'v
+ensures pts_to x 'u
+ensures pure False
 {
     gather x;
     pts_to_perm_bound x;
@@ -137,7 +139,8 @@ ghost
 fn split_readable (r:ref U32.t) (i:iname)
 requires inv i (readable r)
 requires later_credit 1
-ensures inv i (readable r) ** readable r
+ensures inv i (readable r)
+ensures readable r
 opens [i]
 {
   with_invariants_g unit emp_inames i (readable r) emp (fun _ -> readable r) fn _ {

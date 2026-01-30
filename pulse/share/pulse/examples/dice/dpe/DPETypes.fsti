@@ -305,7 +305,8 @@ let context_and_repr_tag_related (c:context_t) (r:context_repr_t) : bool =
 ghost
 fn intro_context_and_repr_tag_related (c:context_t) (r:context_repr_t)
   requires context_perm c r
-  ensures context_perm c r ** pure (context_and_repr_tag_related c r)
+  ensures context_perm c r
+  ensures pure (context_and_repr_tag_related c r)
 {
   let b = context_and_repr_tag_related c r;
   if b {
@@ -322,7 +323,8 @@ ghost
 fn rewrite_context_perm_engine (ec:engine_context_t) (#r:context_repr_t)
   requires context_perm (Engine_context ec) r
   returns uds:Ghost.erased (Seq.seq U8.t)
-  ensures engine_context_perm ec uds ** pure (r == Engine_context_repr uds)
+  ensures engine_context_perm ec uds
+  ensures pure (r == Engine_context_repr uds)
 {
   match r {
     Engine_context_repr uds -> {
@@ -351,7 +353,8 @@ ghost
 fn rewrite_context_perm_l0 (lc:l0_context_t) (#r:context_repr_t)
   requires context_perm (L0_context lc) r
   returns lrepr:Ghost.erased l0_context_repr_t
-  ensures l0_context_perm lc lrepr ** pure (r == L0_context_repr lrepr)
+  ensures l0_context_perm lc lrepr
+  ensures pure (r == L0_context_repr lrepr)
 {
   match r {
     L0_context_repr lrepr -> {
@@ -377,7 +380,8 @@ ghost
 fn rewrite_context_perm_l1 (lc:l1_context_t) (#r:context_repr_t)
   requires context_perm (L1_context lc) r
   returns lrepr:Ghost.erased l1_context_repr_t
-  ensures l1_context_perm lc lrepr ** pure (r == L1_context_repr lrepr)
+  ensures l1_context_perm lc lrepr
+  ensures pure (r == L1_context_repr lrepr)
 {
   match r {
     L1_context_repr lrepr -> {
@@ -442,7 +446,8 @@ ghost
 fn rewrite_record_perm_engine (er:engine_record_t) (#p:perm) (#repr:repr_t)
   requires record_perm (Engine_record er) p repr
   returns erepr:Ghost.erased engine_record_repr
-  ensures engine_record_perm er p erepr ** pure (repr == Engine_repr erepr)
+  ensures engine_record_perm er p erepr
+  ensures pure (repr == Engine_repr erepr)
 {
   match repr {
     Engine_repr erepr -> {
@@ -463,7 +468,8 @@ ghost
 fn rewrite_record_perm_l0 (lr:l0_record_t) (#p:perm) (#repr:repr_t)
   requires record_perm (L0_record lr) p repr
   returns r0:Ghost.erased l0_record_repr_t
-  ensures l0_record_perm lr p r0 ** pure (repr == L0_repr r0)
+  ensures l0_record_perm lr p r0
+  ensures pure (repr == L0_repr r0)
 {
   match repr {
     Engine_repr _ -> {

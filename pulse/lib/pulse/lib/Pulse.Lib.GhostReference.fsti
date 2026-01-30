@@ -98,7 +98,8 @@ ghost
 fn gather u#a (#a:Type u#a) (r:ref a) (#x0 #x1:erased a) (#p0 #p1:perm)
   requires (r |-> Frac p0 x0)
   requires (r |-> Frac p1 x1)
-  ensures  (r |-> Frac (p0 +. p1) x0) ** pure (x0 == x1)
+  ensures (r |-> Frac (p0 +. p1) x0)
+  ensures pure (x0 == x1)
 
 [@@allow_ambiguous]
 ghost
@@ -108,12 +109,15 @@ fn pts_to_injective_eq  u#a (#a:Type u#a)
                         (r:ref a)
   requires (r |-> Frac p v0)
   requires (r |-> Frac q v1)
-  ensures  (r |-> Frac p v0) ** (r |-> Frac q v1) ** pure (v0 == v1)
+  ensures (r |-> Frac p v0)
+  ensures (r |-> Frac q v1)
+  ensures pure (v0 == v1)
 
 ghost
 fn pts_to_perm_bound u#a (#a:Type u#a) (#p:_) (r:ref a) (#v:a)
   requires r |-> Frac p v
-  ensures  (r |-> Frac p v) ** pure (p <=. 1.0R)
+  ensures (r |-> Frac p v)
+  ensures pure (p <=. 1.0R)
 
 ghost
 fn pts_to_not_null u#a (#a:Type u#a) (#p:_) (r:ref a) (#v:a)

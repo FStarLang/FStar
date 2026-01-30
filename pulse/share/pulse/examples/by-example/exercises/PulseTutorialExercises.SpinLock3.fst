@@ -55,7 +55,8 @@ ensures emp
 ghost
 fn share #p #q (l:lock p)
 requires lock_live l #q
-ensures lock_live l #(half_perm q) ** lock_live l #(half_perm q)
+ensures lock_live l #(half_perm q)
+ensures lock_live l #(half_perm q)
 {
     admit()
 }
@@ -81,7 +82,8 @@ ensures lock_live l #(sum_perm q1 q2)
 
 fn acquire #p #q (l:lock p)
 requires lock_live l #q 
-ensures p ** lock_live l #q
+ensures p
+ensures lock_live l #q
 {
     admit()
 }

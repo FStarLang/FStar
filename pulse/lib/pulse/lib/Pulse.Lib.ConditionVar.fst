@@ -157,7 +157,8 @@ instance is_send_recv c p : is_send (recv c p) = Tactics.Typeclasses.solve
 fn create (p:slprop) {| is_send p |}
   requires emp
   returns c:cvar_t
-  ensures send c p ** recv c p
+  ensures send c p
+  ensures recv c p
 {
   let r = Box.alloc 0ul;
   let tab = SLT.create ();

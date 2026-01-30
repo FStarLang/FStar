@@ -134,7 +134,8 @@ fn alloc_rec_alt_alt (v1 v2:U8.t)
 fn get_witness (x:box U8.t) (#y:Ghost.erased U8.t)
 requires Box.pts_to x y
 returns z:Ghost.erased U8.t
-ensures Box.pts_to x y ** pure (y==z)
+ensures Box.pts_to x y
+ensures pure (y==z)
 {   
     y
 }

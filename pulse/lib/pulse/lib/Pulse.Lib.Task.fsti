@@ -42,7 +42,8 @@ fn spawn
   requires pool_alive #pf p
   requires pre
   returns h : handle
-  ensures pool_alive #pf p ** joinable p post h
+  ensures pool_alive #pf p
+  ensures joinable p post h
 
 val pool_done (p:pool) : slprop
 
@@ -64,7 +65,8 @@ fn spawn_
   (f : unit -> task_f pre post)
   requires pool_alive #pf p
   requires pre
-  ensures pool_alive #pf p ** pledge [] (pool_done p) post
+  ensures pool_alive #pf p
+  ensures pledge [] (pool_done p) post
 
 fn await
   (#p: pool)
@@ -73,7 +75,8 @@ fn await
   (#f : perm)
   requires pool_alive #f p
   requires joinable p post h
-  ensures pool_alive #f p ** post
+  ensures pool_alive #f p
+  ensures post
 
 fn await_pool
   (p:pool)
@@ -82,7 +85,8 @@ fn await_pool
   (q : slprop)
   requires pool_alive #f p
   requires pledge is (pool_done p) q
-  ensures pool_alive #f p ** q
+  ensures pool_alive #f p
+  ensures q
 
 fn teardown_pool
   (p:pool)
@@ -94,7 +98,8 @@ fn share_alive
   (p:pool)
   (e:perm)
   requires pool_alive #e p
-  ensures pool_alive #(e /. 2.0R) p ** pool_alive #(e /. 2.0R) p
+  ensures pool_alive #(e /. 2.0R) p
+  ensures pool_alive #(e /. 2.0R) p
 
 ghost
 fn gather_alive

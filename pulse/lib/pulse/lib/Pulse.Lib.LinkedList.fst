@@ -60,7 +60,8 @@ let is_list_cases #t ([@@@mkey]x:llist t) (l:list t)
 ghost 
 fn some_iff_cons #t (x:llist t) (#l:list t)
   requires is_list x l
-  ensures  is_list x l ** pure (Some? x <==> Cons? l)
+  ensures is_list x l
+  ensures pure (Some? x <==> Cons? l)
 {
   match l {
     [] -> {
@@ -133,7 +134,8 @@ ghost
 fn is_list_cases_none (#t:Type) (x:llist t) (#l:list t)
     requires is_list x l
     requires pure (x == None)
-    ensures  is_list x l ** pure (l == [])
+    ensures is_list x l
+    ensures pure (l == [])
 {
   match l {
     Nil -> {
@@ -167,7 +169,8 @@ fn is_list_cases_some (#t:Type) (x:llist t) (v:node_ptr t) (#l:list t)
 fn is_empty (#t:Type) (x:llist t)
     requires is_list x 'l
     returns b:bool
-    ensures is_list x 'l ** pure (b <==> ('l == []))
+    ensures is_list x 'l
+    ensures pure (b <==> ('l == []))
 {
   match x {
     None -> {
@@ -225,7 +228,8 @@ fn rec length (#t:Type0) (x:llist t)
               (#l:erased (list t))
     requires is_list x l
     returns n:nat
-    ensures is_list x l ** pure (n == List.Tot.length l)
+    ensures is_list x l
+    ensures pure (n == List.Tot.length l)
 {
    match x {
     None -> {
@@ -345,7 +349,8 @@ fn move_next (#t:Type) (x:llist t)
 fn length_iter (#t:Type) (x: llist t)
     requires is_list x 'l
     returns n:nat
-    ensures is_list x 'l ** pure (n == List.Tot.length 'l)
+    ensures is_list x 'l
+    ensures pure (n == List.Tot.length 'l)
 {
   let mut cur = x;
   let mut ctr = 0; 
@@ -390,7 +395,8 @@ fn is_last_cell (#t:Type) (x:llist t)
     requires is_list x 'l
     requires pure (Cons? 'l)
     returns b:bool
-    ensures is_list x 'l ** pure (b == (List.Tot.length 'l = 1))
+    ensures is_list x 'l
+    ensures pure (b == (List.Tot.length 'l = 1))
 {
   some_iff_cons x;
   let np = Some?.v x;
@@ -448,7 +454,8 @@ ghost
 fn non_empty_list (#t:Type0) (x:llist t)
     requires is_list x 'l
     requires pure (Cons? 'l)
-    ensures is_list x 'l ** pure (Some? x)
+    ensures is_list x 'l
+    ensures pure (Some? x)
 {
     unfold (is_list x (Cons?.hd 'l :: Cons?.tl 'l));
     with v tail. _;

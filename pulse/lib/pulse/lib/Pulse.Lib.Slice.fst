@@ -35,7 +35,8 @@ let pts_to_timeless x p v = ()
 ghost
 fn pts_to_len (#t: Type) (s: slice t) (#p: perm) (#v: Seq.seq t)
   requires pts_to s #p v
-  ensures pts_to s #p v ** pure (Seq.length v == SZ.v (len s))
+  ensures pts_to s #p v
+  ensures pure (Seq.length v == SZ.v (len s))
 {
     unfold pts_to s #p v;
     fold pts_to s #p v
@@ -185,7 +186,8 @@ fn share
   (#p:perm)
 requires
     pts_to arr #p s
-  ensures pts_to arr #(p /. 2.0R) s ** pts_to arr #(p /. 2.0R) s
+  ensures pts_to arr #(p /. 2.0R) s
+  ensures pts_to arr #(p /. 2.0R) s
 {
     unfold pts_to arr #p s;
     AP.share arr.elt;
@@ -201,7 +203,8 @@ fn gather
   (#p0 #p1:perm)
   requires pts_to arr #p0 s0
   requires pts_to arr #p1 s1
-  ensures pts_to arr #(p0 +. p1) s0 ** pure (s0 == s1)
+  ensures pts_to arr #(p0 +. p1) s0
+  ensures pure (s0 == s1)
 {
     unfold pts_to arr #p0 s0;
     unfold pts_to arr #p1 s1;
@@ -300,7 +303,8 @@ fn join (#t: Type) (s1: slice t) (#p: perm) (#v1: Seq.seq t) (s2: slice t) (#v2:
 fn subslice #t (s: slice t) #p (i j: SZ.t) (#v: erased (Seq.seq t) { SZ.v i <= SZ.v j /\ SZ.v j <= Seq.length v })
   requires pts_to s #p v
   returns res: slice t
-  ensures pts_to res #p (Seq.slice v (SZ.v i) (SZ.v j)) ** subslice_rest res s p i j v
+  ensures pts_to res #p (Seq.slice v (SZ.v i) (SZ.v j))
+  ensures subslice_rest res s p i j v
 {
   unfold pts_to s #p v;
   let elt' = AP.split s.elt i;

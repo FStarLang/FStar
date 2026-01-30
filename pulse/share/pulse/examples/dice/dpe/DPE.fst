@@ -56,7 +56,8 @@ let gvar_p : (gref & mutex (option st)) -> slprop =
 ghost
 fn dup_gvar_p (x:(gref & mutex (option st)))
   requires gvar_p x
-  ensures gvar_p x ** gvar_p x
+  ensures gvar_p x
+  ensures gvar_p x
 {
   unfold gvar_p;
   Pulse.Lib.Mutex.share (snd x);
@@ -1118,7 +1119,8 @@ fn rewrite_session_state_related_available
   (t:trace)
   requires session_state_related s (current_state t)
   returns r:G.erased context_repr_t
-  ensures context_perm context r ** pure (current_state t == G_Available r)
+  ensures context_perm context r
+  ensures pure (current_state t == G_Available r)
 {
   let cur = current_state t;
   intro_session_state_tag_related s cur;

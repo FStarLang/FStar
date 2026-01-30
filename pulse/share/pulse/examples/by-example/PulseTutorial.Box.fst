@@ -85,7 +85,8 @@ ensures Box.pts_to r' 'v
 fn copy_box #a #p (r:Box.box a)
 requires Box.pts_to r #p 'v
 returns s:Box.box a
-ensures Box.pts_to s 'v ** Box.pts_to r #p 'v
+ensures Box.pts_to s 'v
+ensures Box.pts_to r #p 'v
 {
     open Box;
     let v = !r;

@@ -19,7 +19,8 @@ fn push_front (#t:Type) (l : dq t) (x : t) (#xs:erased (list t))
 fn pop_front (#t:Type) (l : dq t) (#x : erased t) (#xs : erased (list t))
   requires is_dq l (reveal x :: xs)
   returns  y : t
-  ensures  is_dq l xs ** pure (y == x)
+  ensures is_dq l xs
+  ensures pure (y == x)
 
 fn pop_alt (#t:Type) (l : dq t) (#xs : erased (list t) { Cons? xs })
   requires is_dq l xs
@@ -33,4 +34,5 @@ fn push_back (#t:Type) (l : dq t) (x : t) (#xs:erased (list t))
 fn pop_back (#t:Type) (l : dq t) (#x : erased t) (#xs : erased (list t))
   requires is_dq l (xs @ [reveal x])
   returns  y : t
-  ensures  is_dq l xs ** pure (y == x)
+  ensures is_dq l xs
+  ensures pure (y == x)

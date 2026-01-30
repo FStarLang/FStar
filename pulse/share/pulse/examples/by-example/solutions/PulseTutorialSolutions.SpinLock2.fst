@@ -47,7 +47,8 @@ ensures emp
 
 fn rec acquire #p (l:lock p)
 requires emp
-ensures p ** locked l
+ensures p
+ensures locked l
 {
   let b = 
     with_invariants l.i
@@ -107,7 +108,8 @@ ensures emp
 
 fn acquire_loop #p (l:lock p)
 requires emp
-ensures p ** locked l
+ensures p
+ensures locked l
 {
   let mut acquired = false;
   fold (maybe false (p ** locked l));
@@ -125,7 +127,8 @@ ensures p ** locked l
     let b = 
       with_invariants l.i
       returns b:bool
-      ensures maybe b (p ** locked l) ** pts_to acquired false
+      ensures maybe b (p ** locked l)
+      ensures pts_to acquired false
       { 
         unfold lock_inv;
         let b = cas l.r 0ul 1ul;

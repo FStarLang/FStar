@@ -23,7 +23,8 @@ fn usebar (x:int)
 #push-options "--no_smt"
 
 fn test1 ()
-  preserves foo 1 ** bar 2
+  preserves foo 1
+  preserves bar 2
 {
   ();
 }
@@ -43,7 +44,8 @@ fn test3 ()
 }
 
 fn test4 ()
-  preserves foo 2 ** foo 1
+  preserves foo 2
+  preserves foo 1
 {
   ();
 }

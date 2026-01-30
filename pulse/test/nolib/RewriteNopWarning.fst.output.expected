@@ -3,7 +3,7 @@
   - Rewriting in:
       foo 1
 
-* Warning <unknown> at RewriteNopWarning.fst(20,1-21,22):
+* Warning <unknown> at RewriteNopWarning.fst(21,1-22,22):
   - No rewrites performed.
   - Rewriting in:
       foo y ** foo 1

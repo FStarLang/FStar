@@ -85,7 +85,8 @@ fn free (#a:Type0) (b:box a) (#v:erased a)
 ghost
 fn share (#a:Type) (r:box a) (#v:erased a) (#p:perm)
   requires pts_to r #p v
-  ensures pts_to r #(p /. 2.0R) v ** pts_to r #(p /. 2.0R) v
+  ensures pts_to r #(p /. 2.0R) v
+  ensures pts_to r #(p /. 2.0R) v
 {
   unfold pts_to r #p v;
   R.share r.r;
@@ -98,7 +99,8 @@ ghost
 fn gather (#a:Type) (r:box a) (#x0 #x1:erased a) (#p0 #p1:perm)
   requires pts_to r #p0 x0
   requires pts_to r #p1 x1
-  ensures  pts_to r #(p0 +. p1) x0 ** pure (x0 == x1)
+  ensures pts_to r #(p0 +. p1) x0
+  ensures pure (x0 == x1)
 {
   unfold pts_to r #p0 x0;
   unfold pts_to r #p1 x1;
@@ -114,7 +116,8 @@ fn pts_to_injective_eq (#a:_)
                         (r:box a)
   requires pts_to r #p v0
   requires pts_to r #q v1
-  ensures  (pts_to r #p v0 ** pts_to r #q v1) ** pure (v0 == v1)
+  ensures (pts_to r #p v0 ** pts_to r #q v1)
+  ensures pure (v0 == v1)
 {
   unfold pts_to r #p v0;
   unfold pts_to r #q v1;

@@ -139,7 +139,8 @@ let task_thunk_typing (t : task_t) : slprop =
 
 ghost fn task_thunk_typing_dup t
   requires task_thunk_typing t
-  ensures task_thunk_typing t ** task_thunk_typing t
+  ensures task_thunk_typing t
+  ensures task_thunk_typing t
 {
   unfold task_thunk_typing t;
   with pre post inst. assert task_thunk_typing_core t pre post inst;
@@ -374,7 +375,8 @@ fn recall_task_spotted
   (#f:perm)
   requires AR.pts_to p.g_runnable #f ts
   requires task_spotted p t
-  ensures  AR.pts_to p.g_runnable #f ts ** task_spotted p t
+  ensures AR.pts_to p.g_runnable #f ts
+  ensures task_spotted p t
            ** pure (List.memP t ts)
 {
   unfold (task_spotted p t);
@@ -389,7 +391,8 @@ fn recall_handle_spotted
   requires AR.pts_to p.g_runnable #f ts
   requires handle_spotted p post h
   returns  task : erased task_t
-  ensures AR.pts_to p.g_runnable #f ts ** handle_spotted p post h **
+  ensures AR.pts_to p.g_runnable #f ts
+  ensures handle_spotted p post h **
           shift (up task.post ** later_credit 1) post **
           pure (task.h == h /\ List.memP (reveal task) ts)
 {
@@ -524,7 +527,8 @@ fn spawn (p:pool)
     requires pool_alive #pf p
     requires pre
     returns  h : handle
-    ensures  pool_alive #pf p ** joinable p post h
+    ensures pool_alive #pf p
+    ensures joinable p post h
 {
   let task_st : task_state = Ready;
   assert (pure (anchor_rel Ready Ready));
@@ -610,7 +614,9 @@ fn claim_done_task
   requires state_res pre post h.g_state Done
   requires AR.pts_to h.g_state Done
   requires AR.anchored h.g_state Ready
-  ensures  state_res pre post h.g_state Claimed ** AR.pts_to h.g_state Claimed ** post
+  ensures state_res pre post h.g_state Claimed
+  ensures AR.pts_to h.g_state Claimed
+  ensures post
 {
   rewrite (state_res pre post h.g_state Done)
        as post;
@@ -634,7 +640,8 @@ fn try_await
   requires pool_alive #f p
   requires joinable p post h
   returns  ok : bool
-  ensures  pool_alive #f p ** (if ok then post else joinable p post h)
+  ensures pool_alive #f p
+  ensures (if ok then post else joinable p post h)
 {
   unfold (pool_alive #f p);
   acquire p.lk;
@@ -796,7 +803,8 @@ ghost
 fn rec all_tasks_done_inst (t : task_t) (ts : list task_t)
   requires all_tasks_done ts
   requires pure (List.memP t ts)
-  ensures  all_tasks_done ts ** task_done t
+  ensures all_tasks_done ts
+  ensures task_done t
   decreases ts
 {
   match ts {
@@ -907,7 +915,8 @@ fn spawn_ (p:pool)
     (f : unit -> stt unit (pre) (fun _ -> post))
     requires pool_alive #pf p
     requires pre
-    ensures  pool_alive #pf p ** pledge [] (pool_done p) (post)
+    ensures pool_alive #pf p
+    ensures pledge [] (pool_done p) (post)
 {
   let h = spawn p f;
   disown h
@@ -920,7 +929,8 @@ fn await (#p:pool)
          (#f:perm)
   requires pool_alive #f p
   requires joinable p post h
-  ensures  pool_alive #f p ** post
+  ensures pool_alive #f p
+  ensures post
 {
   let mut done = false;
   while (Pulse.Lib.Reference.(not !done))
@@ -946,7 +956,8 @@ fn rec pool_done_task_done_aux
       (ts : list task_t)
   requires all_tasks_done ts
   requires pure (List.memP t ts)
-  ensures  all_tasks_done ts ** task_done t
+  ensures all_tasks_done ts
+  ensures task_done t
   decreases ts
 {
   match ts {
@@ -982,7 +993,9 @@ fn pool_done_handle_done_aux2 (#p:pool)
   requires AR.pts_to p.g_runnable #0.5R ts
   requires all_tasks_done ts
   requires handle_spotted p post h
-  ensures  AR.pts_to p.g_runnable #0.5R ts ** all_tasks_done ts ** handle_done h
+  ensures AR.pts_to p.g_runnable #0.5R ts
+  ensures all_tasks_done ts
+  ensures handle_done h
 {
   let t = recall_handle_spotted p post h #ts;
   pool_done_task_done_aux t ts;
@@ -1274,7 +1287,8 @@ fn await_help
          (#f:perm)
   requires pool_alive #f p
   requires joinable p post h
-  ensures  pool_alive #f p ** post
+  ensures pool_alive #f p
+  ensures post
 {
   let mut done = false;
   while (Pulse.Lib.Reference.(not !done))
@@ -1305,7 +1319,8 @@ fn rec check_if_all_done
   (ts : list task_t)
   requires all_state_pred ts
   returns  b : bool
-  ensures  all_state_pred ts ** ite b (all_tasks_done ts) emp
+  ensures all_state_pred ts
+  ensures ite b (all_tasks_done ts) emp
 {
   match ts {
     [] -> {
@@ -1366,7 +1381,8 @@ fn try_await_pool
   requires pool_alive #f p
   requires pledge is (pool_done p) q
   returns  b : bool
-  ensures  pool_alive #f p ** ite b q (pledge is (pool_done p) q)
+  ensures pool_alive #f p
+  ensures ite b q (pledge is (pool_done p) q)
 {
   unfold (pool_alive #f p);
   acquire p.lk;
@@ -1416,7 +1432,8 @@ fn await_pool
   (q : slprop)
   requires pool_alive #f p
   requires pledge is (pool_done p) q
-  ensures  pool_alive #f p ** q
+  ensures pool_alive #f p
+  ensures q
 {
   let mut done = false;
   fold (ite false q (pledge is (pool_done p) q));
@@ -1478,7 +1495,8 @@ fn share_alive
   (p : pool)
   (f:perm)
   requires pool_alive #f p
-  ensures  pool_alive #(f /. 2.0R) p ** pool_alive #(f /. 2.0R) p
+  ensures pool_alive #(f /. 2.0R) p
+  ensures pool_alive #(f /. 2.0R) p
 {
   unfold (pool_alive #f p);
   Pulse.Lib.SpinLock.share #_ p.lk;

@@ -187,7 +187,8 @@ fn some_head_then_some_tail
   (#xs : erased (list t))
   requires is_deque l xs
   requires pure (Some? l.head)
-  ensures  is_deque l xs ** pure (Some? l.tail)
+  ensures is_deque l xs
+  ensures pure (Some? l.tail)
 {
   let xss = reveal xs;
   match xss {
@@ -442,7 +443,8 @@ fn pop_front_nil (#t:Type) (l : deque t)
   (#x : erased t)
   requires is_deque l [reveal x]
   returns  l'x : (deque t & t)
-  ensures  is_deque (fst l'x) [] ** pure (snd l'x == x)
+  ensures is_deque (fst l'x) []
+  ensures pure (snd l'x == x)
 {
   is_deque_cons_not_none l;
   assert (pure (Some? l.head));
@@ -483,7 +485,8 @@ fn pop_front_cons (#t:Type) (l : deque t)
   requires is_deque l (reveal x :: xs)
   requires pure (Cons? xs)
   returns  l'x : (deque t & t)
-  ensures  is_deque (fst l'x) xs ** pure (snd l'x == x)
+  ensures is_deque (fst l'x) xs
+  ensures pure (snd l'x == x)
 {
   let y = hide (Cons?.hd xs);
   let ys = hide (Cons?.tl xs);
@@ -583,7 +586,8 @@ fn is_singleton
   (#xs : erased (list t))
   requires is_deque p (reveal x::xs)
   returns  b : bool
-  ensures  is_deque p (reveal x::xs) ** pure (b <==> Nil? xs)
+  ensures is_deque p (reveal x::xs)
+  ensures pure (b <==> Nil? xs)
 {
   is_deque_cons_not_none p;
   unfold is_deque;
@@ -643,7 +647,8 @@ fn pop_front (#t:Type) (l : deque t)
   (#xs : erased (list t))
   requires is_deque l (reveal x :: xs)
   returns  l'x : (deque t & t)
-  ensures  is_deque (fst l'x) xs ** pure (snd l'x == x)
+  ensures is_deque (fst l'x) xs
+  ensures pure (snd l'x == x)
 {
   let b = is_singleton l;
   if b {
@@ -995,7 +1000,8 @@ fn pop_back_cons (#t:Type0) (l : deque t)
   requires is_deque l (snoc xs x)
   requires pure (Cons? xs)
   returns  l'x  :  (deque t & t)
-  ensures  is_deque (fst l'x) xs ** pure (snd l'x == x)
+  ensures is_deque (fst l'x) xs
+  ensures pure (snd l'x == x)
 {
   is_deque_cons_not_none l;
   let hptp = unfold_is_deque_cons l;
@@ -1027,7 +1033,8 @@ fn pop_back_nil (#t:Type0) (l : deque t)
   (#x : erased t)
   requires is_deque l [reveal x]
   returns  l'x  :  (deque t & t)
-  ensures  is_deque (fst l'x) [] ** pure (snd l'x == x)
+  ensures is_deque (fst l'x) []
+  ensures pure (snd l'x == x)
 {
   pop_front_nil l;
 }
@@ -1040,7 +1047,8 @@ fn is_singleton_snoc
   (#xs : erased (list t))
   requires is_deque p (snoc xs (reveal x))
   returns  b : bool
-  ensures  is_deque p (snoc xs (reveal x)) ** pure (b <==> Nil? xs)
+  ensures is_deque p (snoc xs (reveal x))
+  ensures pure (b <==> Nil? xs)
 {
   assert (pure (Cons? (snoc xs (reveal x))));
   let h = hide (Cons?.hd (snoc xs (reveal x)));
@@ -1060,7 +1068,8 @@ fn pop_back (#t:Type0) (l : deque t)
   (#xs : erased (list t))
   requires is_deque l (snoc xs x)
   returns  l'x  :  (deque t & t)
-  ensures  is_deque (fst l'x) xs ** pure (snd l'x == x)
+  ensures is_deque (fst l'x) xs
+  ensures pure (snd l'x == x)
 {
   let b = is_singleton_snoc l;
   if b {

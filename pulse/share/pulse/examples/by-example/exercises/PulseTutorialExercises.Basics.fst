@@ -28,7 +28,8 @@ fn incr (r:ref int) (#n:erased int) // since n is purely specificational, it is 
 fn read (r:ref int) p (n:erased int) // any permission is ok for reading
 requires pts_to r #p n
 returns x:int
-ensures pts_to r #p n ** pure (x == n)
+ensures pts_to r #p n
+ensures pure (x == n)
 {
     !r
 }
@@ -59,7 +60,8 @@ fn write (r:ref int) p (n:erased int)
 fn incr2 (r1 r2:ref int)
   requires pts_to r1 'n1
   requires pts_to r2 'n2
-  ensures pts_to r1 ('n1 + 1) ** pts_to r2 ('n2 + 1)
+  ensures pts_to r1 ('n1 + 1)
+  ensures pts_to r2 ('n2 + 1)
 {
     // pts_to r1 ‘n1 ** pts_to r2 ‘n2
     incr r1;

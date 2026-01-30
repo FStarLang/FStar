@@ -141,7 +141,8 @@ let swap_fun a = x:ref a -> y:ref a -> #vx:erased a -> #vy:erased a -> stt unit
 fn apply_swap2 (f:swap_fun int) (x y:ref int)
   requires pts_to x 'vx
   requires pts_to y 'vy
-  ensures pts_to x 'vx ** pts_to y 'vy
+  ensures pts_to x 'vx
+  ensures pts_to y 'vy
 {
    f x y;
    f x y

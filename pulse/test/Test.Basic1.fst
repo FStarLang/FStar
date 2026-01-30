@@ -45,7 +45,16 @@ fn test_synt ()
   requires foo8
   requires foo9
   requires foo10
-  ensures foo10 ** foo9 ** foo8 ** foo7 ** foo6 ** foo5 ** foo4 ** foo3 ** foo2 ** foo1
+  ensures foo10
+  ensures foo9
+  ensures foo8
+  ensures foo7
+  ensures foo6
+  ensures foo5
+  ensures foo4
+  ensures foo3
+  ensures foo2
+  ensures foo1
 {
   ();
 }
@@ -68,7 +77,16 @@ fn test_synt2 ()
   requires foo 8
   requires foo 9
   requires foo 10
-  ensures foo 10 ** foo 9 ** foo 8 ** foo 7 ** foo 6 ** foo 5 ** foo 4 ** foo 3 ** foo 2 ** foo 1
+  ensures foo 10
+  ensures foo 9
+  ensures foo 8
+  ensures foo 7
+  ensures foo 6
+  ensures foo 5
+  ensures foo 4
+  ensures foo 3
+  ensures foo 2
+  ensures foo 1
 {
   ();
 }

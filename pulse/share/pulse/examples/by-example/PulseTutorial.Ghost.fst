@@ -24,7 +24,8 @@ open Pulse.Lib.Pervasives
 fn incr_erased_non_ghost (x:erased int)
 requires emp
 returns y:int
-ensures emp ** pure (y == x + 1)
+ensures emp
+ensures pure (y == x + 1)
 {
   let x = reveal x;
   (x + 1)
@@ -36,7 +37,8 @@ ghost
 fn incr_erased (x:erased int)
 requires emp
 returns y:int
-ensures emp ** pure (y == x + 1)
+ensures emp
+ensures pure (y == x + 1)
 {
   let x = reveal x;
   (x + 1)
@@ -49,7 +51,8 @@ ensures emp ** pure (y == x + 1)
 fn use_incr_erased (x:erased int)
 requires emp
 returns y:int
-ensures emp ** pure (y == x + 1)
+ensures emp
+ensures pure (y == x + 1)
 {
   incr_erased x;
 }
@@ -60,13 +63,15 @@ ensures emp ** pure (y == x + 1)
 fn use_incr_erased (x:erased int)
 requires emp
 returns y:erased int
-ensures emp ** pure (y == x + 1)
+ensures emp
+ensures pure (y == x + 1)
 {
   ghost
   fn wrap (x:erased int)
   requires emp
   returns y:erased int
-  ensures emp ** pure (y == x + 1)
+  ensures emp
+  ensures pure (y == x + 1)
   {
     let y = incr_erased x;
     hide y
@@ -82,7 +87,8 @@ ensures emp ** pure (y == x + 1)
 fn use_incr_erased_alt (x:erased int)
 requires emp
 returns y:erased int
-ensures emp ** pure (y == x + 1)
+ensures emp
+ensures pure (y == x + 1)
 { 
   call_ghost incr_erased x;
 }
@@ -93,7 +99,8 @@ ghost
 fn add_erased (x y:erased int)
 requires emp
 returns z:int
-ensures emp ** pure (z == x + y)
+ensures emp
+ensures pure (z == x + y)
 {
   let x = reveal x;
   let y = reveal y;
@@ -106,7 +113,8 @@ ensures emp ** pure (z == x + y)
 fn use_add_erased (x y:erased int)
 requires emp
 returns z:erased int
-ensures emp ** pure (z == x + y)
+ensures emp
+ensures pure (z == x + y)
 {
   call_ghost (add_erased x) y
 }
@@ -118,7 +126,8 @@ ghost
 fn add_erased_erased (x y:erased int)
 requires emp
 returns z:erased int
-ensures emp ** pure (z == x + y)
+ensures emp
+ensures pure (z == x + y)
 {
   let x = reveal x;
   let y = reveal y;
@@ -202,7 +211,8 @@ ensures GR.pts_to r x
 fn use_new_ghost_ref (x:ref nat)
 requires pts_to x 'v
 returns r:GR.ref nat
-ensures pts_to x 'v ** GR.pts_to r 'v
+ensures pts_to x 'v
+ensures GR.pts_to r 'v
 {
   let v = !x;
   new_ghost_ref v

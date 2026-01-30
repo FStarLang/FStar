@@ -31,7 +31,8 @@ fn read_i
   (i:SZ.t { SZ.v i < Seq.length s })
   requires pts_to arr #p s
   returns x:t
-  ensures pts_to arr #p s ** pure (x == Seq.index s (SZ.v i))
+  ensures pts_to arr #p s
+  ensures pure (x == Seq.index s (SZ.v i))
 {
   arr.(i)
 }
@@ -269,7 +270,8 @@ fn copy_app ([@@@ Rust_mut_binder] v:V.vec int)
 fn test_match_head (x:ref (option int))
 requires R.pts_to x 'v
 returns i:int
-ensures R.pts_to x 'v ** pure (Some? 'v ==> i == Some?.v 'v)
+ensures R.pts_to x 'v
+ensures pure (Some? 'v ==> i == Some?.v 'v)
 {
   match !x {
   Some v -> { v }

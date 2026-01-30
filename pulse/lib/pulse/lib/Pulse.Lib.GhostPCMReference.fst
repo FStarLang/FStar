@@ -114,7 +114,8 @@ fn share u#a
     (v0:a)
     (v1:a{composable pcm v0 v1})
   requires pts_to r (v0 `op pcm` v1)
-  ensures  pts_to r v0 ** pts_to r v1
+  ensures pts_to r v0
+  ensures pts_to r v1
 {
   with inst. unfold small_token u#a inst; let inst = inst;
   fold small_token inst;

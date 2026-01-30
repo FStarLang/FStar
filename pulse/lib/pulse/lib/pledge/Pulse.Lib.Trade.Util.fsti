@@ -118,7 +118,8 @@ fn rewrite_with_trade
   (p1 p2: slprop)
   requires p1
   requires pure (p1 == p2)
-  ensures p2 ** (trade #is p2 p1)
+  ensures p2
+  ensures (trade #is p2 p1)
 
 ghost
 fn trans_hyp_l

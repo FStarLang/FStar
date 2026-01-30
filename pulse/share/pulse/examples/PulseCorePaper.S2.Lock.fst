@@ -40,7 +40,8 @@ let protects l p = inv l.i (lock_inv l.r p)
 
 fn dup (l:lock) (p:slprop)
 requires protects l p
-ensures protects l p ** protects l p
+ensures protects l p
+ensures protects l p
 {
   dup_inv l.i (lock_inv l.r p);
 }
@@ -74,7 +75,8 @@ ensures protects l p
 
 fn rec acquire #p (l:lock)
 requires protects l p
-ensures protects l p ** p
+ensures protects l p
+ensures p
 {
   let retry =
     with_invariants bool emp_inames l.i (lock_inv l.r p)

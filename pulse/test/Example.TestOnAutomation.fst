@@ -49,7 +49,8 @@ ensures pure p
 ghost
 fn test_on_l_elim_star (l:loc_id) (p1 p2:slprop)
 requires on l (p1 ** p2)
-ensures on l p1 ** on l p2
+ensures on l p1
+ensures on l p2
 {}
 
 ghost

@@ -37,7 +37,8 @@ let shift (#is:inames) (hyp concl:slprop) =
 ghost
 fn dup (p:slprop) (d:erased (duplicable p))
 requires p
-ensures p ** p
+ensures p
+ensures p
 {
   let d = reveal d;
   dup p #d ()
@@ -186,7 +187,8 @@ ensures shift #is2 hyp concl
 ghost
 fn dup_extra_duplicable (extra:slprop)
 requires extra_duplicable extra
-ensures extra_duplicable extra ** extra_duplicable extra
+ensures extra_duplicable extra
+ensures extra_duplicable extra
 {
   let d = extract_duplicator extra;
   fold (extra_duplicable extra);
@@ -195,7 +197,8 @@ ensures extra_duplicable extra ** extra_duplicable extra
 ghost
 fn dup_shift_elim_exists #is #extra hyp concl
 requires shift_elim_exists is hyp extra concl
-ensures shift_elim_exists is hyp extra concl ** shift_elim_exists is hyp extra concl
+ensures shift_elim_exists is hyp extra concl
+ensures shift_elim_exists is hyp extra concl
 {
   let d = extract_eliminator _ _ _ _;
   fold (shift_elim_exists is hyp extra concl);

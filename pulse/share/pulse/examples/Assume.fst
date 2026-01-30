@@ -22,7 +22,8 @@ fn test1 (x:int)
 
 fn test2 (x:int)
   requires emp
-  ensures foo 1 ** foo 2
+  ensures foo 1
+  ensures foo 2
 {
   assume foo 1;
   assume foo 2;
@@ -31,7 +32,8 @@ fn test2 (x:int)
 [@@expect_failure]
 fn test3 (x:int)
   requires emp
-  ensures foo 1 ** foo 2
+  ensures foo 1
+  ensures foo 2
 {
   assume foo 2;
 }

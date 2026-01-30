@@ -161,7 +161,8 @@ fn share
   (#s:Ghost.erased (Seq.seq a))
   (#p:perm)
   requires pts_to arr #p s
-  ensures  pts_to arr #(p /. 2.0R) s ** pts_to arr #(p /. 2.0R) s
+  ensures pts_to arr #(p /. 2.0R) s
+  ensures pts_to arr #(p /. 2.0R) s
 
 [@@allow_ambiguous]
 ghost
@@ -173,7 +174,8 @@ fn gather
   requires pts_to arr #p0 s0
   requires pts_to arr #p1 s1
   requires pure (Seq.length s0 == Seq.length s1)
-  ensures  pts_to arr #(p0 +. p1) s0 ** pure (s0 == s1)
+  ensures pts_to arr #(p0 +. p1) s0
+  ensures pure (s0 == s1)
 
 
 let adjacent #t (a: ptr t) (sz: nat) (b: ptr t) : prop =
@@ -214,4 +216,5 @@ fn memcpy
     (#s1:Ghost.erased (Seq.seq t) { SZ.v idx_dst + SZ.v len <= Seq.length s1 })
   requires pts_to src #p0 s0
   requires pts_to dst s1
-  ensures  pts_to src #p0 s0 ** pts_to dst (Seq.slice s0 0 (SZ.v len) `Seq.append` Seq.slice s1 (SZ.v len) (Seq.length s1))
+  ensures pts_to src #p0 s0
+  ensures pts_to dst (Seq.slice s0 0 (SZ.v len) `Seq.append` Seq.slice s1 (SZ.v len) (Seq.length s1))

@@ -146,7 +146,8 @@ ghost
 fn is_list_case_none (#t:Type) (x:llist t) (#l:list t)
 requires is_list x l
 requires pure (x == None)
-ensures is_list x l ** pure (l == [])
+ensures is_list x l
+ensures pure (l == [])
 {
   cases_of_is_list x l;
   rewrite each x as (None #(ref (node t)));
@@ -180,7 +181,8 @@ ensures
 fn rec length (#t:Type0) (x:llist t)
 requires is_list x 'l
 returns n:nat
-ensures is_list x 'l ** pure (n == List.Tot.length 'l)
+ensures is_list x 'l
+ensures pure (n == List.Tot.length 'l)
 {
   match x {
     norewrite None -> {
@@ -204,7 +206,8 @@ ensures is_list x 'l ** pure (n == List.Tot.length 'l)
 fn rec length_tail (#t:Type0) (x:llist t) (k:nat)
 requires is_list x 'l
 returns n:nat
-ensures is_list x 'l ** pure (n == k + List.Tot.length 'l)
+ensures is_list x 'l
+ensures pure (n == k + List.Tot.length 'l)
 {
   match x {
     norewrite None -> {
@@ -252,7 +255,8 @@ ensures exists* tl.
 fn length_iter (#t:Type) (x: llist t)
 requires is_list x 'l
 returns n:nat
-ensures is_list x 'l ** pure (n == List.Tot.length 'l)
+ensures is_list x 'l
+ensures pure (n == List.Tot.length 'l)
 {
   open I;
   let mut cur = x;
@@ -341,7 +345,8 @@ fn is_last_cell (#t:Type) (x:llist t)
 requires is_list x 'l
 requires pure (Some? x)
 returns b:bool
-ensures is_list x 'l ** pure (b == (List.Tot.length 'l = 1))
+ensures is_list x 'l
+ensures pure (b == (List.Tot.length 'l = 1))
 {
   let np = Some?.v x;
   is_list_case_some x np;
@@ -387,7 +392,8 @@ ghost
 fn non_empty_list (#t:Type0) (x:llist t)
 requires is_list x 'l
 requires pure (Cons? 'l)
-ensures is_list x 'l ** pure (Some? x)
+ensures is_list x 'l
+ensures pure (Some? x)
 {
     elim_is_list_cons x _ (Cons?.hd 'l) (Cons?.tl 'l);
     with v tail. _;
@@ -401,7 +407,8 @@ fn not_is_last_cell (#t:Type) (x:llist t)
 requires is_list x 'l
 requires pure (Some? x)
 returns b:bool
-ensures is_list x 'l ** pure (b == (List.Tot.length 'l <> 1))
+ensures is_list x 'l
+ensures pure (b == (List.Tot.length 'l <> 1))
 {
   not (is_last_cell x)
 }

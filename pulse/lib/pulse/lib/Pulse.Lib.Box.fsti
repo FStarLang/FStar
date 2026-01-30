@@ -70,14 +70,16 @@ fn free (#a:Type0) (b:box a) (#v:erased a)
 ghost
 fn share (#a:Type) (r:box a) (#v:erased a) (#p:perm)
   requires r |-> Frac p v
-  ensures (r |-> Frac (p /. 2.0R) v) ** (r |-> Frac (p /. 2.0R) v)
+  ensures (r |-> Frac (p /. 2.0R) v)
+  ensures (r |-> Frac (p /. 2.0R) v)
 
 [@@allow_ambiguous]
 ghost
 fn gather (#a:Type) (r:box a) (#x0 #x1:erased a) (#p0 #p1:perm)
   requires (r |-> Frac p0 x0)
   requires (r |-> Frac p1 x1)
-  ensures  (r |-> Frac (p0 +. p1) x0) ** pure (x0 == x1)
+  ensures (r |-> Frac (p0 +. p1) x0)
+  ensures pure (x0 == x1)
 
 [@@allow_ambiguous]
 ghost
@@ -85,7 +87,8 @@ fn pts_to_injective_eq (#a:_)
                         (#p #q:_)
                         (#v0 #v1:a)
                         (r:box a)
-  preserves (r |-> Frac p v0) ** (r |-> Frac q v1)
+  preserves (r |-> Frac p v0)
+  preserves (r |-> Frac q v1)
   ensures  pure (v0 == v1)
 
 val box_to_ref  (#a:Type0) (b:box a) : R.ref a

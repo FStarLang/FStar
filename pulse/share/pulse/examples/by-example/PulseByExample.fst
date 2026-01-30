@@ -79,7 +79,8 @@ fn ref_non_zero (r1:ref int) (n1:Ghost.erased int)
 requires
   r1 |-> n1
 returns b:bool
-ensures r1 |-> n1 ** pure (b == (Ghost.reveal n1 <> 0))
+ensures r1 |-> n1
+ensures pure (b == (Ghost.reveal n1 <> 0))
 {
   (0 <> !r1);
 }

@@ -23,7 +23,8 @@ fn usebar (x:int)
 fn ret2 ()
   requires emp
   returns xy : int & int
-  ensures foo (fst xy) ** bar (snd xy)
+  ensures foo (fst xy)
+  ensures bar (snd xy)
 {
   admit();
 }

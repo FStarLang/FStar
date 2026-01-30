@@ -50,7 +50,8 @@ let truncate (p1 p2: (int & int)) =
 fn trunc (p1 p2:point)
 requires is_point p1 'v1
 requires is_point p2 'v2
-ensures  is_point p1 'v1 ** is_point p2 (truncate 'v1 'v2)
+ensures is_point p1 'v1
+ensures is_point p2 (truncate 'v1 'v2)
 {
     unfold is_point;
     unfold is_point;

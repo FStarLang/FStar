@@ -25,7 +25,8 @@ module R = Pulse.Lib.Reference
 fn get_witness (x:R.ref int) (#p:perm) (#y:Ghost.erased int)
 requires pts_to x #p y
 returns z:Ghost.erased int
-ensures pts_to x #p y ** pure (y==z)
+ensures pts_to x #p y
+ensures pure (y==z)
 {   
     y
 }

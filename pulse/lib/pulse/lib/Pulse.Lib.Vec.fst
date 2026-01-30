@@ -72,7 +72,9 @@ fn read_ref (#a:Type0) (r:R.ref (vec a)) (i:SZ.t)
   requires R.pts_to r v
   requires pts_to v s
   returns x:a
-  ensures R.pts_to r v ** pts_to v s ** pure (x == Seq.index s (SZ.v i))
+  ensures R.pts_to r v
+  ensures pts_to v s
+  ensures pure (x == Seq.index s (SZ.v i))
 {
   let vc = !r;
   rewrite (pts_to (reveal v) s)
@@ -90,7 +92,8 @@ fn write_ref (#a:Type0) (r:R.ref (vec a)) (i:SZ.t) (x:a)
   (#s:(s:erased (Seq.seq a) { SZ.v i < Seq.length s }))
   requires R.pts_to r v
   requires pts_to v s
-  ensures R.pts_to r v ** pts_to v (Seq.upd s (SZ.v i) x)
+  ensures R.pts_to r v
+  ensures pts_to v (Seq.upd s (SZ.v i) x)
 {
   let vc = !r;
   rewrite (pts_to (reveal v) s)
@@ -107,7 +110,8 @@ fn replace_i (#a:Type0) (v:vec a) (i:SZ.t) (x:a)
   (#s:(s:erased (Seq.seq a) { SZ.v i < Seq.length s }))
   requires pts_to v s
   returns res:a
-  ensures pts_to v (Seq.upd s (SZ.v i) x) ** pure (res == Seq.index s (SZ.v i))
+  ensures pts_to v (Seq.upd s (SZ.v i) x)
+  ensures pure (res == Seq.index s (SZ.v i))
 {
   let y = op_Array_Access v i;
   op_Array_Assignment v i x;
@@ -122,7 +126,9 @@ fn replace_i_ref (#a:Type0) (r:R.ref (vec a)) (i:SZ.t) (x:a)
   requires R.pts_to r v
   requires pts_to v s
   returns res:a
-  ensures R.pts_to r v ** pts_to v (Seq.upd s (SZ.v i) x) ** pure (res == Seq.index s (SZ.v i))
+  ensures R.pts_to r v
+  ensures pts_to v (Seq.upd s (SZ.v i) x)
+  ensures pure (res == Seq.index s (SZ.v i))
 {
   let vc = !r;
   rewrite (pts_to v s)

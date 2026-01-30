@@ -77,7 +77,8 @@ fn mutate_r2 (r:rec_array) (#v:(v:Ghost.erased rec_array_repr { Seq.length v.v2 
 fn get_witness_array (x:A.array U8.t) (#y:Ghost.erased (Seq.seq U8.t))
 requires A.pts_to x y
 returns z:Ghost.erased (Seq.seq U8.t)
-ensures A.pts_to x y ** pure (y==z)
+ensures A.pts_to x y
+ensures pure (y==z)
 {   
     y
 }

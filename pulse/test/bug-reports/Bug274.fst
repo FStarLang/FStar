@@ -74,7 +74,8 @@ fn test_elim_fails (p q r:slprop)
 requires (r @==> r)
 requires p
 requires (p @==> q)
-ensures q ** (r @==> r)
+ensures q
+ensures (r @==> r)
 {
     elim _ _;
 }
@@ -121,7 +122,8 @@ ensures r
 ghost fn test_elim_4 (p q r:slprop)
 requires (p @==> (q ** r))
 requires p
-ensures r ** q
+ensures r
+ensures q
 { 
     elim _ _; //though it's fine when those solutions do not have to be matched again
 }

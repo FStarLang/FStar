@@ -81,7 +81,8 @@ let belongs_to (#a:Type0) (r:mutex_guard a) (m:mutex a) : slprop =
 fn lock (#a:Type0) (#v:a -> slprop) (#p:perm) (m:mutex a)
   preserves mutex_live m #p v
   returns r:mutex_guard a
-  ensures r `belongs_to` m ** (exists* x. pts_to r x ** v x)
+  ensures r `belongs_to` m
+  ensures (exists* x. pts_to r x ** v x)
 {
   unfold (mutex_live m#p v);
   acquire m.l;
@@ -116,7 +117,8 @@ fn unlock (#a:Type0) (#v:a -> slprop) (#p:perm) (m:mutex a) (mg:mutex_guard a)
 ghost
 fn share (#a:Type0) (#v:a -> slprop) (#p:perm) (m:mutex a)
   requires mutex_live m #p v
-  ensures mutex_live m #(p /. 2.0R) v ** mutex_live m #(p /. 2.0R) v
+  ensures mutex_live m #(p /. 2.0R) v
+  ensures mutex_live m #(p /. 2.0R) v
 {
   unfold (mutex_live m #p v);
   Pulse.Lib.SpinLock.share m.l;

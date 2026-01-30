@@ -94,7 +94,8 @@ fn foo4 ()
   requires res 1
   requires res 2
   returns int
-  ensures res 2 ** res 1
+  ensures res 2
+  ensures res 1
 {
   1
 }

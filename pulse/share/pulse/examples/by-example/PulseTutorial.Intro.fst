@@ -28,7 +28,8 @@ fn par (#p #q #r #s:_)
        (g: (unit -> stt unit r (fun _ -> s)))
 requires p
 requires r
-ensures q ** s
+ensures q
+ensures s
 {
     par #p #q #r #s
         fn _ { f () }
@@ -62,7 +63,8 @@ ensures pts_to x (i + 1)
 fn par_incr (x y:ref int)
 requires pts_to x 'i
 requires pts_to y 'j
-ensures pts_to x ('i + 1) ** pts_to y ('j + 1)
+ensures pts_to x ('i + 1)
+ensures pts_to y ('j + 1)
 {
    par (fun _ -> incr x #'i)
        (fun _ -> incr y #'j)
@@ -74,7 +76,8 @@ ensures pts_to x ('i + 1) ** pts_to y ('j + 1)
 fn incr_frame (x y:ref int)
 requires pts_to x 'i
 requires pts_to y 'j
-ensures pts_to x ('i + 1) ** pts_to y 'j
+ensures pts_to x ('i + 1)
+ensures pts_to y 'j
 {
    incr x;
 }
@@ -84,7 +87,8 @@ ensures pts_to x ('i + 1) ** pts_to y 'j
 fn incr_frame_any (x:ref int) (f:slprop)
 requires pts_to x 'i
 requires f
-ensures pts_to x ('i + 1) ** f
+ensures pts_to x ('i + 1)
+ensures f
 {
    incr x;
 }

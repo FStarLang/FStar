@@ -36,7 +36,9 @@ ghost
 fn pts_to_dup_impossible #a (x:ref a)
 requires pts_to x 'v
 requires pts_to x 'u
-ensures  pts_to x 'v ** pts_to x 'u ** pure False
+ensures pts_to x 'v
+ensures pts_to x 'u
+ensures pure False
 {
     gather x;
     pts_to_perm_bound x;

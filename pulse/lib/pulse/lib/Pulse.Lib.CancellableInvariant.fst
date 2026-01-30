@@ -65,7 +65,8 @@ fn new_cancellable_invariant (v:slprop)
   requires v
   opens []
   returns c:cinv
-  ensures inv (iname_of c) (cinv_vp c v) ** active c 1.0R
+  ensures inv (iname_of c) (cinv_vp c v)
+  ensures active c 1.0R
 {
   let r = GR.alloc true;
   rewrite v as cond true v emp;
@@ -86,7 +87,9 @@ ghost
 fn unpack_cinv_vp (#p:perm) (#v:slprop) (c:cinv)
   requires cinv_vp c v
   requires active c p
-  ensures v ** unpacked c v ** active c p
+  ensures v
+  ensures unpacked c v
+  ensures active c p
   opens []
 {
   unfold cinv_vp;
@@ -120,7 +123,8 @@ fn pack_cinv_vp (#v:slprop) (c:cinv)
 ghost
 fn share (#p:perm) (c:cinv)
   requires active c p
-  ensures active c (p /. 2.0R) ** active c (p /. 2.0R)
+  ensures active c (p /. 2.0R)
+  ensures active c (p /. 2.0R)
   opens []
 {
   unfold active;
@@ -149,7 +153,8 @@ ghost
 fn cancel_ (#v:slprop) (c:cinv)
   requires cinv_vp c v **
          active c 1.0R
-  ensures cinv_vp c v ** v
+  ensures cinv_vp c v
+  ensures v
   opens []
 {
   unfold cinv_vp;

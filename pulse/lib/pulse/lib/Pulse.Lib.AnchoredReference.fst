@@ -111,7 +111,8 @@ fn alloc (#a:Type) (x:a) (#p:_) (#anc:anchor_rel p)
 ghost
 fn share (#a:Type) (#p:_) (#anc:_) (r:ref a p anc) (#f: perm) (#v:erased a)
   requires pts_to r #f v
-  ensures pts_to r #(f /. 2.0R) v ** pts_to r #(f /. 2.0R) v
+  ensures pts_to r #(f /. 2.0R) v
+  ensures pts_to r #(f /. 2.0R) v
 {
   unfold (pts_to r #f v);
   with k. assert (GPR.pts_to r k);
@@ -127,7 +128,8 @@ ghost
 fn gather (#a:Type) (#p:_) (#anc:_) (r:ref a p anc) (#v1 #v2:erased a) (#f1 #f2: perm)
   requires pts_to r #f1 v1
   requires pts_to r #f2 v2
-  ensures pts_to r #(f1 +. f2) v1 ** pure (v1 == v2)
+  ensures pts_to r #(f1 +. f2) v1
+  ensures pure (v1 == v2)
 {
   unfold (pts_to r #f1 v1);
   unfold (pts_to r #f2 v2);
@@ -172,7 +174,8 @@ fn leave_anchor_pts_to
 ghost
 fn drop_anchor (#a:Type) (#p:_) (#anc:anchor_rel p) (r : ref a p anc) (#v:a)
   requires pts_to_full r v
-  ensures pts_to r v ** anchored r v
+  ensures pts_to r v
+  ensures anchored r v
 {
   unfold (pts_to_full r v);
   with k. assert (GPR.pts_to r k);
@@ -188,7 +191,8 @@ ghost
 fn unfold_anchored (#a:Type) (#p:_) (#anc:anchor_rel p) (r : ref a p anc) (#v:a)
   requires anchored r v
   returns k:FRAP.knowledge anc
-  ensures GPR.pts_to r k ** pure (owns_only_anchor v k)
+  ensures GPR.pts_to r k
+  ensures pure (owns_only_anchor v k)
 {
   unfold (anchored r v);
   with k. assert (GPR.pts_to r k);
@@ -210,7 +214,8 @@ fn lift_anchor (#a:Type) (#p:_) (#anc:anchor_rel p) (r : ref a p anc) (#v:a) (va
   requires pts_to r v
   requires anchored r va
   requires pure (anc v v)
-  ensures pts_to_full r v ** pure (anc va v /\ True)
+  ensures pts_to_full r v
+  ensures pure (anc va v /\ True)
 {
   unfold (pts_to r v);
   with k0. assert (GPR.pts_to r k0);
@@ -225,7 +230,9 @@ ghost
 fn recall_anchor (#a:Type) (#p:_) (#anc:anchor_rel p) (r : ref a p anc) (#v:a) (va:a) (#f:perm)
   requires pts_to r #f v
   requires anchored r va
-  ensures pts_to r #f v ** anchored r va ** pure (anc va v)
+  ensures pts_to r #f v
+  ensures anchored r va
+  ensures pure (anc va v)
 {
   unfold (pts_to r #f v);
   with k0. assert (GPR.pts_to r k0);
@@ -241,7 +248,8 @@ ghost
 fn unfold_snapshot (#a:Type) (#p:_) (#anc:_) (r : ref a p anc) (#v:a)
   requires snapshot r v
   returns k:FRAP.knowledge anc
-  ensures GPR.pts_to r k ** pure (snapshot_pred v k)
+  ensures GPR.pts_to r k
+  ensures pure (snapshot_pred v k)
 {
   unfold (snapshot r v);
   with k. assert (GPR.pts_to r k);
@@ -260,7 +268,8 @@ fn fold_snapshot (#a:Type) (#p:_) (#anc:_) (r : ref a p anc) (#v:a) (k:FRAP.know
 ghost
 fn dup_snapshot (#a:Type) (#p:_) (#anc:anchor_rel p) (r : ref a p anc) (#v:a)
   requires snapshot r v
-  ensures snapshot r v ** snapshot r v
+  ensures snapshot r v
+  ensures snapshot r v
 {
   unfold snapshot;
   with k. assert (GPR.pts_to r k);
@@ -274,7 +283,8 @@ fn dup_snapshot (#a:Type) (#p:_) (#anc:anchor_rel p) (r : ref a p anc) (#v:a)
 ghost
 fn take_snapshot_core (#a:Type) (#p:_) (#f:perm) (#anc:anchor_rel p) (r : ref a p anc) (#b:bool) (#v:a)
   requires core_pts_to r #f v b
-  ensures  core_pts_to r #f v b ** snapshot r v
+  ensures core_pts_to r #f v b
+  ensures snapshot r v
 {
   with k. assert (GPR.pts_to r k);
   rewrite (GPR.pts_to r k)
@@ -287,7 +297,8 @@ fn take_snapshot_core (#a:Type) (#p:_) (#f:perm) (#anc:anchor_rel p) (r : ref a 
 ghost
 fn take_snapshot (#a:Type) (#p:_) (#f:perm) (#anc:anchor_rel p) (r : ref a p anc) (#v:a)
   requires pts_to r #f v
-  ensures  pts_to r #f v ** snapshot r v
+  ensures pts_to r #f v
+  ensures snapshot r v
 {
   unfold (pts_to r #f v);
   take_snapshot_core #a #p #f r #false #v;
@@ -297,7 +308,8 @@ fn take_snapshot (#a:Type) (#p:_) (#f:perm) (#anc:anchor_rel p) (r : ref a p anc
 ghost
 fn take_snapshot_full (#a:Type) (#p:_) (#f:perm) (#anc:anchor_rel p) (r : ref a p anc) (#v:a)
   requires pts_to_full r #f v
-  ensures  pts_to_full r #f v ** snapshot r v
+  ensures pts_to_full r #f v
+  ensures snapshot r v
 {
   unfold (pts_to_full r #f v);
   take_snapshot_core #a #p #f r #true #v;
@@ -308,7 +320,9 @@ ghost
 fn recall_snapshot (#a:Type) (#p:_) (#anc:anchor_rel p) (r : ref a p anc) #f (#v0 #v:a)
   requires pts_to r #f v
   requires snapshot r v0
-  ensures  pts_to r #f v ** snapshot r v0 ** pure (p v0 v /\ True)
+  ensures pts_to r #f v
+  ensures snapshot r v0
+  ensures pure (p v0 v /\ True)
 {
   unfold (pts_to r #f v);
   with k. assert (GPR.pts_to r k);

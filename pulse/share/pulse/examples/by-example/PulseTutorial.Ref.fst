@@ -33,7 +33,8 @@ ensures pts_to r ('v + 1)
 fn swap u#a (#a: Type u#a) (r0 r1:ref a)
 requires pts_to r0 'v0
 requires pts_to r1 'v1
-ensures pts_to r0 'v1 ** pts_to r1 'v0
+ensures pts_to r0 'v1
+ensures pts_to r1 'v0
 {
     let v0 = !r0;
     let v1 = !r1;
@@ -47,7 +48,8 @@ ensures pts_to r0 'v1 ** pts_to r1 'v0
 fn value_of u#a (#a:Type u#a) (r:ref a)
 requires pts_to r 'v
 returns v:a
-ensures pts_to r 'v ** pure (v == 'v)
+ensures pts_to r 'v
+ensures pure (v == 'v)
 {
     !r;
 }
@@ -59,7 +61,8 @@ ensures pts_to r 'v ** pure (v == 'v)
 fn value_of_explicit u#a (#a:Type u#a) (r:ref a) (#w:erased a)
 requires pts_to r w
 returns v:a
-ensures pts_to r w ** pure (v == reveal w)
+ensures pts_to r w
+ensures pure (v == reveal w)
 {
     !r;
 }
@@ -71,7 +74,8 @@ ensures pts_to r w ** pure (v == reveal w)
 fn value_of_explicit_fail u#a (#a:Type u#a) (r:ref a) (#w:erased a)
 requires pts_to r w
 returns v:a
-ensures pts_to r w ** pure (v == reveal w)
+ensures pts_to r w
+ensures pure (v == reveal w)
 {
     reveal w
 }
@@ -171,7 +175,8 @@ ensures pts_to r #1.0R v
 fn value_of_perm u#a (#a: Type u#a) #p (r:ref a)
 requires pts_to r #p 'v
 returns v:a
-ensures pts_to r #p 'v ** pure (v == 'v)
+ensures pts_to r #p 'v
+ensures pure (v == 'v)
 {
     !r;
 }
@@ -193,7 +198,8 @@ ensures pts_to r #p w
  //share_ref$
 fn share_ref u#a (#a: Type u#a) #p (r:ref a)
 requires pts_to r #p 'v
-ensures pts_to r #(p /. 2.0R) 'v ** pts_to r #(p /. 2.0R) 'v
+ensures pts_to r #(p /. 2.0R) 'v
+ensures pts_to r #(p /. 2.0R) 'v
 {
     share r;
 }

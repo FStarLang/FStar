@@ -73,7 +73,9 @@ fn proof
    requires pts_to done #0.5R true
    requires pts_to claimed #0.5R false
    requires later_credit 1
-   ensures inv i inv_p ** pts_to done #0.5R true ** goal
+   ensures inv i inv_p
+   ensures pts_to done #0.5R true
+   ensures goal
    opens [i]
 {
   with_invariants_g unit emp_inames i inv_p 
@@ -173,7 +175,8 @@ let pretend_atomic pre post (k: unit -> stt unit pre (fun _ -> post)) =
 fn worker (i : iname) (_:unit)
    requires inv i inv_p
    requires pts_to done #0.5R false
-   ensures  inv i inv_p ** pts_to done #0.5R true
+   ensures inv i inv_p
+   ensures pts_to done #0.5R true
 {
   with_invariants unit emp_inames i inv_p (pts_to done #0.5R false) (fun _ -> pts_to done #0.5R true) fn _ {
     unfold inv_p;

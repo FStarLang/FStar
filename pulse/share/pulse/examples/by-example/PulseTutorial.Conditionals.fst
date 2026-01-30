@@ -25,7 +25,8 @@ fn max #p #q (x y:ref int)
 requires pts_to x #p 'vx
 requires pts_to y #q 'vy
 returns n:int
-ensures pts_to x #p 'vx ** pts_to y #q 'vy
+ensures pts_to x #p 'vx
+ensures pts_to y #q 'vy
         ** pure (n == max_spec 'vx 'vy)
 {
     let vx = !x;
@@ -46,7 +47,8 @@ fn max_alt #p #q (x y:ref int)
 requires pts_to x #p 'vx
 requires pts_to y #q 'vy
 returns n:int
-ensures pts_to x #p 'vx ** pts_to y #q 'vy
+ensures pts_to x #p 'vx
+ensures pts_to y #q 'vy
         ** pure (n == max_spec 'vx 'vy)
 {
     let mut result = 0;
@@ -70,7 +72,8 @@ fn max_alt2 #p #q (x y:ref int)
 requires pts_to x #p 'vx
 requires pts_to y #q 'vy
 returns n:int
-ensures pts_to x #p 'vx ** pts_to y #q 'vy
+ensures pts_to x #p 'vx
+ensures pts_to y #q 'vy
         ** pure (n == max_spec 'vx 'vy)
 {
     let mut result = 0;
@@ -139,7 +142,8 @@ ghost
 fn elim_pts_to_or_null_none #a #p (r:nullable_ref a)
 requires pts_to_or_null r #p 'v
 requires pure (r == None)
-ensures pts_to_or_null r #p 'v ** pure ('v == None)
+ensures pts_to_or_null r #p 'v
+ensures pure ('v == None)
 {
     rewrite each r as None;
     unfold (pts_to_or_null None #p 'v);

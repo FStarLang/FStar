@@ -33,7 +33,8 @@ fn g (i:iname)
   requires inv i p
   requires q
   requires later_credit 1
-  ensures  r ** inv i p
+  ensures r
+  ensures inv i p
   opens [i]
 {
   with_invariants_a unit emp_inames i p q (fun _ -> r) fn _ {
@@ -47,7 +48,8 @@ fn g2 (i:iname)
   requires inv i p
   requires q
   requires later_credit 1
-  ensures  r ** inv i p
+  ensures r
+  ensures inv i p
   opens [i]
 {
   with_invariants_a unit emp_inames i p q (fun _ -> r) fn _ {
@@ -232,7 +234,8 @@ atomic
 fn test_returns0 (i:iname) (b:bool)
   requires folded_inv i
   requires later_credit 1
-  ensures folded_inv i ** q
+  ensures folded_inv i
+  ensures q
   opens [i]
 {
   unfold folded_inv i;
@@ -252,7 +255,8 @@ ghost
 fn test_returns1 (i:iname)
   requires folded_inv i
   requires later_credit 1
-  ensures folded_inv i ** q
+  ensures folded_inv i
+  ensures q
   opens [i]
 {
   unfold folded_inv i;
@@ -274,7 +278,8 @@ ghost
 fn test_returns2 (i:iname)
   requires folded_inv i
   requires later_credit 1
-  ensures folded_inv i ** q
+  ensures folded_inv i
+  ensures q
   opens [i]
 {
   unfold folded_inv i;

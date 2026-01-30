@@ -87,7 +87,8 @@ ensures c.inv 0
     fn next (i:erased int)
     requires pts_to x i 
     returns j:int
-    ensures pts_to x (i + 1) ** pure (j == reveal i)
+    ensures pts_to x (i + 1)
+    ensures pure (j == reveal i)
     {
         let j = !x;
         x := j + 1;

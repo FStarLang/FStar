@@ -14,7 +14,8 @@ let rec foo (x:nat) : slprop =
 
 fn test_unfold ()
   requires foo 2
-  ensures  p ** foo 1
+  ensures p
+  ensures foo 1
 {
   unfold foo 2;
 }

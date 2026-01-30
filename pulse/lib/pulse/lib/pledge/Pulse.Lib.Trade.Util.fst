@@ -181,7 +181,8 @@ fn rewrite_with_trade
   (p1 p2: slprop)
   requires p1
   requires pure (p1 == p2)
-  ensures p2 ** (trade #is p2 p1)
+  ensures p2
+  ensures (trade #is p2 p1)
 {
   rewrite p1 as p2;
   intro (trade #is p2 p1) fn _{ rewrite p2 as p1 };

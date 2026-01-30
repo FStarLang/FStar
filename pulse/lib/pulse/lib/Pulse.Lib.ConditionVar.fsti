@@ -32,7 +32,8 @@ instance val is_send_recv c p : is_send (recv c p)
 fn create (p:slprop) {| is_send p |}
   requires emp
   returns c:cvar_t
-  ensures send c p ** recv c p
+  ensures send c p
+  ensures recv c p
 
 atomic
 fn signal_atomic (c:cvar_t) (#p:slprop)
@@ -55,5 +56,6 @@ ghost
 fn split (b:cvar_t) (#p #q:slprop) {| is_send p, is_send q |}
   requires recv b (p ** q)
   requires later_credit 2
-  ensures recv b p ** recv b q
+  ensures recv b p
+  ensures recv b q
   opens [ inv_name b ]

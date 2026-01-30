@@ -77,7 +77,8 @@ let is_from_array s sz a =
 fn from_array (#t: Type) (a: A.array t) (#p: perm) (#v: Ghost.erased (Seq.seq t))
     requires A.pts_to a #p v
     returns s: ptr t
-    ensures pts_to s #p v ** is_from_array s (Seq.length v) a
+    ensures pts_to s #p v
+    ensures is_from_array s (Seq.length v) a
 {
     A.pts_to_len a;
     let res = {
@@ -241,7 +242,8 @@ fn share
   (#s:Ghost.erased (Seq.seq a))
   (#p:perm)
   requires pts_to arr #p s
-  ensures pts_to arr #(p /. 2.0R) s ** pts_to arr #(p /. 2.0R) s
+  ensures pts_to arr #(p /. 2.0R) s
+  ensures pts_to arr #(p /. 2.0R) s
 {
     unfold pts_to arr #p s;
     A.pts_to_range_share arr.base;
@@ -258,7 +260,8 @@ fn gather
   requires pts_to arr #p0 s0
   requires pts_to arr #p1 s1
   requires pure (Seq.length s0 == Seq.length s1)
-  ensures pts_to arr #(p0 +. p1) s0 ** pure (s0 == s1)
+  ensures pts_to arr #(p0 +. p1) s0
+  ensures pure (s0 == s1)
 {
     unfold pts_to arr #p0 s0;
     unfold pts_to arr #p1 s1;

@@ -192,7 +192,8 @@ let subslice_rest #t (r: slice t) (s: slice t) p (i j: SZ.t) (v: erased (Seq.seq
 fn subslice #t (s: slice t) #p (i j: SZ.t) (#v: erased (Seq.seq t) { SZ.v i <= SZ.v j /\ SZ.v j <= Seq.length v })
   requires pts_to s #p v
   returns res: slice t
-  ensures pts_to res #p (Seq.slice v (SZ.v i) (SZ.v j)) ** subslice_rest res s p i j v
+  ensures pts_to res #p (Seq.slice v (SZ.v i) (SZ.v j))
+  ensures subslice_rest res s p i j v
 
 fn copy
   (#t: Type) (dst: slice t) (#p: perm) (src: slice t) (#v: Ghost.erased (Seq.seq t))

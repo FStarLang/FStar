@@ -9,7 +9,8 @@ open FStar.Mul
 fn value_of u#a (#a:Type u#a) (r:ref a)
   requires pts_to r 'v
   returns v:a
-  ensures pts_to r 'v ** pure (v == 'v)
+  ensures pts_to r 'v
+  ensures pure (v == 'v)
 {
     'v
 }

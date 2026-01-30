@@ -26,7 +26,7 @@
   - Expected failure:
   - requires must come before the return
 
-* Info at Annots.fst(112,15-112,16):
+* Info at Annots.fst(113,15-113,16):
   - Expected failure:
   - Identifier not found: v
 

@@ -26,7 +26,8 @@ fn return_atomic
 requires emp
 requires pts_to x 1ul
 returns n:U32.t
-ensures emp ** pts_to x 1ul
+ensures emp
+ensures pts_to x 1ul
 {
     read_atomic x;
 }
@@ -38,7 +39,8 @@ fn return_atomic2 (x:ref U32.t)
 requires emp
 requires pts_to x 1ul
 returns n:U32.t
-ensures emp ** pts_to x 1ul
+ensures emp
+ensures pts_to x 1ul
 {
     0ul;
 }
@@ -127,7 +129,8 @@ ensures inv i (pts_to x 1ul)
 fn test_invariant_annot (x:ref U32.t) (i:iname) (y:ref U32.t)
 requires inv i (pts_to x 0ul)
 requires pts_to y 'w
-ensures inv i (pts_to x 0ul) ** pts_to y 0ul
+ensures inv i (pts_to x 0ul)
+ensures pts_to y 0ul
 {
     let n = 
         with_invariants U32.t emp_inames i (pts_to x 0ul)

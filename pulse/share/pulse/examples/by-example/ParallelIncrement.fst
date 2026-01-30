@@ -29,7 +29,8 @@ fn increment (#p:perm)
              (l:L.lock)
 requires (L.lock_alive l #p (exists* v. pts_to x #0.5R v))
 requires R.pts_to x #0.5R 'i
-ensures  (L.lock_alive l #p (exists* v. pts_to x #0.5R v)) ** R.pts_to x #0.5R ('i + 1)
+ensures (L.lock_alive l #p (exists* v. pts_to x #0.5R v))
+ensures R.pts_to x #0.5R ('i + 1)
  {
     let v = !x;
     L.acquire l;
@@ -56,7 +57,9 @@ fn increment_f (x: ref nat)
 requires L.lock_alive l #p (exists* v. pts_to x #0.5R v ** pred v)
 requires R.pts_to x #0.5R 'i
 requires qpred 'i
-ensures  L.lock_alive l #p (exists* v. pts_to x #0.5R v ** pred v) ** R.pts_to x #0.5R ('i + 1) ** qpred ('i + 1)
+ensures L.lock_alive l #p (exists* v. pts_to x #0.5R v ** pred v)
+ensures R.pts_to x #0.5R ('i + 1)
+ensures qpred ('i + 1)
  {
     let vx = !x;
     L.acquire l;
@@ -83,7 +86,8 @@ fn increment_f2 (x: ref int)
                 (f: increment_f2_f x pred qpred)
 requires L.lock_alive l #p (exists* v. pts_to x v ** pred v)
 requires qpred 'i
-ensures L.lock_alive l #p (exists* v. pts_to x v ** pred v) ** qpred ('i + 1)
+ensures L.lock_alive l #p (exists* v. pts_to x v ** pred v)
+ensures qpred ('i + 1)
  {
     L.acquire l;
     let vx = !x;
@@ -190,7 +194,8 @@ fn atomic_increment_f2
                   (fun _ -> pred (v + 1) ** qpred (vq + 1) ** pts_to x (v + 1))))
 requires inv l (pts_to_refine x pred)
 requires qpred 'i
-ensures inv l (pts_to_refine x pred) ** qpred ('i + 1)
+ensures inv l (pts_to_refine x pred)
+ensures qpred ('i + 1)
 {
   with_invariants unit emp_inames l (pts_to_refine x pred) (qpred 'i) (fun _ -> qpred ('i + 1))
   fn _ {
@@ -217,7 +222,8 @@ requires
   (forall* v vq.
      (pred v ** qpred vq ** pts_to x (v + 1)) @==>
      (pred (v + 1) ** qpred (vq + 1) ** pts_to x (v + 1)))
-ensures inv l (pts_to_refine x pred) ** qpred ('i + 1)
+ensures inv l (pts_to_refine x pred)
+ensures qpred ('i + 1)
 {
   with_invariants unit emp_inames l (pts_to_refine x pred)
     (qpred 'i ** (forall* v vq.
@@ -254,7 +260,8 @@ requires
   qpred 'i **
   (invp @==> (exists* v. pts_to x v ** pred v)) ** 
   ((exists* v. pts_to x v ** pred v) @==> invp)
-ensures inv l invp ** qpred ('i + 1)
+ensures inv l invp
+ensures qpred ('i + 1)
 {
   with_invariants unit emp_inames l invp
     (qpred 'i **
@@ -306,7 +313,8 @@ fn atomic_increment_f5
                   (fun _ -> pred (v + 1) ** qpred (vq + 1) ** pts_to x (v + 1))))
 requires inv l invp
 requires qpred 'i
-ensures inv l invp ** qpred ('i + 1)
+ensures inv l invp
+ensures qpred ('i + 1)
 {
   fn read ()
   requires inv l invp
@@ -383,7 +391,9 @@ fn atomic_increment_f6
 requires inv (C.iname_of c) (C.cinv_vp c (exists* v. pts_to x v ** pred v))
 requires qpred 'i
 requires C.active c p
-ensures inv (C.iname_of c) (C.cinv_vp c (exists* v. pts_to x v ** pred v)) ** qpred ('i + 1) ** C.active c p
+ensures inv (C.iname_of c) (C.cinv_vp c (exists* v. pts_to x v ** pred v))
+ensures qpred ('i + 1)
+ensures C.active c p
 {
   with_invariants unit emp_inames (C.iname_of c) (C.cinv_vp c (exists* v. pts_to x v ** pred v))
     (qpred 'i ** C.active c p)

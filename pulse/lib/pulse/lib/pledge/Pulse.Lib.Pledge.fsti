@@ -152,10 +152,14 @@ fn ghost_split_pledge (#is:inames) (#f:slprop) (v1:slprop) (v2:slprop) {| is_sen
   requires pledge is f (v1 ** v2)
   requires later_credit 2
   returns i : iname
-  ensures pledge (add_inv is i) f v1 ** pledge (add_inv is i) f v2 ** pure (not (mem_inv is i))
+  ensures pledge (add_inv is i) f v1
+  ensures pledge (add_inv is i) f v2
+  ensures pure (not (mem_inv is i))
 
 // This is not ghost as it buys the later credits.
 fn split_pledge (#is:inames) (#f:slprop) (v1:slprop) (v2:slprop) {| is_send v1, is_send v2 |}
   requires pledge is f (v1 ** v2)
   returns i : iname
-  ensures pledge (add_inv is i) f v1 ** pledge (add_inv is i) f v2 ** pure (not (mem_inv is i))
+  ensures pledge (add_inv is i) f v1
+  ensures pledge (add_inv is i) f v2
+  ensures pure (not (mem_inv is i))

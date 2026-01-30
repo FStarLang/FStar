@@ -42,7 +42,8 @@ ensures emp
 
 fn rec acquire #p (l:lock p)
 requires emp
-ensures p ** locked l
+ensures p
+ensures locked l
 {
   admit()
 }

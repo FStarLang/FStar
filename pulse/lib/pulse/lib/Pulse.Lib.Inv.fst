@@ -171,7 +171,8 @@ ghost fn with_invariants_g u#a (a: Type u#a)
     requires pre
     requires p
     returns x: Ghost.erased a
-    ensures post x ** p
+    ensures post x
+    ensures p
   {
     let r = k ();
     r

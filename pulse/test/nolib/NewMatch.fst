@@ -69,7 +69,8 @@ fn test3' (x y z : int)
   requires foo2_nokey 1 z
   requires foo2_nokey x y
   requires pure (y == z)
-  ensures  foo2_nokey 1 y ** foo2_nokey x z
+  ensures foo2_nokey 1 y
+  ensures foo2_nokey x z
 {
   ()
 }
@@ -93,7 +94,8 @@ fn test5 (x y z w u : int)
   requires foo2 x y
   requires pure (y == z)
   requires pure (u == w)
-  ensures  foo2 x z ** foo2 x u
+  ensures foo2 x z
+  ensures foo2 x u
 {
   // rewrite foo2 x w as foo2 x u;
   ()
@@ -106,7 +108,8 @@ fn test6 (x y z w u : int)
   requires foo2 x y
   requires pure (y == z)
   requires pure (u == w)
-  ensures  foo2 x z ** foo2 x u
+  ensures foo2 x z
+  ensures foo2 x u
 {
   rewrite foo2 x w as foo2 x u;
   ()
@@ -129,7 +132,8 @@ fn test7 (x y z w u : int)
 fn test8 (x y z w u : int)
   requires foo2 x y
   requires foo2 w z
-  ensures  foo2 y x ** foo2 w z
+  ensures foo2 y x
+  ensures foo2 w z
 {
   flip2 ();
   ()
