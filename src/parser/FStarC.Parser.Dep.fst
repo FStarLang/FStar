@@ -2280,6 +2280,158 @@ let print_full (outc : out_channel) (deps:deps) : unit =
 
     FStarC.StringBuffer.output_channel outc sb
 
+(** Print the dependencies in dune format.
+    Outputs (rule ...) stanzas for building .checked and .ml files.
+  *)
+let print_dune (outc : out_channel) (deps:deps) : unit =
+    let sb = FStarC.StringBuffer.create 10000 in
+    let pr str = ignore <| FStarC.StringBuffer.add str sb in
+    let norm_path s = replace_chars s '\\' "/" in
+    
+    let keys = deps_keys deps.dep_graph in
+    let no_fstar_stubs_file (s:string) : string =
+      let s1 = "FStar.Stubs." in
+      let s2 = "FStar." in
+      let l1 = String.length s1 in
+      if String.length s >= l1 && String.substring s 0 l1 = s1 then
+        s2 ^ String.substring s l1 (String.length s - l1)
+      else
+        s
+    in
+    let output_file ext fst_file =
+        let basename = Option.must (check_and_strip_suffix (Filepath.basename fst_file)) in
+        let basename = no_fstar_stubs_file basename in
+        let ml_base_name = replace_chars basename '.' "_" in
+        Find.prepend_output_dir (ml_base_name ^ ext)
+    in
+    let output_ml_file   f = norm_path <| output_file ".ml" f in
+    let output_krml_file f = norm_path <| output_file ".krml" f in
+    let cache_file       f = norm_path <| cache_file_name f in
+    
+    (* Print a dune rule for checking a file *)
+    let print_check_rule (target : string) (source : string) (all_deps : list string) : unit =
+        pr "(rule\n";
+        pr " (targets "; pr target; pr ")\n";
+        pr " (deps"; 
+        all_deps |> List.iter (fun f -> pr " "; pr (norm_path f));
+        pr ")\n";
+        pr " (action (run %{fstar} %{env:FSTAR_OPTIONS=} --already_cached \"*,\" -c ";
+        pr (norm_path source); pr " -o %{targets})))\n\n"
+    in
+    
+    (* Print a dune rule for extraction *)
+    let print_extract_rule (target : string) (source : string) (all_deps : list string) (codegen : string) : unit =
+        pr "(rule\n";
+        pr " (targets "; pr target; pr ")\n";
+        pr " (deps";
+        all_deps |> List.iter (fun f -> pr " "; pr (norm_path f));
+        pr ")\n";
+        pr " (action (run %{fstar} %{env:FSTAR_OPTIONS=} --already_cached \"*,\" --codegen ";
+        pr codegen; pr " "; pr (norm_path source); pr " -o %{targets})))\n\n"
+    in
+    
+    let widened, dep_graph = phase1 deps.file_system_map deps.dep_graph deps.interfaces_with_inlining true in
+    
+    (* Collect all files for the summary *)
+    let all_checked_files =
+        keys |>
+        List.fold_left
+        (fun all_checked_files file_name ->
+          let process_one_key () =
+            let dep_node = deps_try_find deps.dep_graph file_name |> Option.must in
+            let iface_fn, iface_deps =
+                if is_interface file_name
+                then None, None
+                else match interface_of deps (lowercase_module_name file_name) with
+                     | None ->
+                       None, None
+                     | Some iface ->
+                       Some iface,
+                       Some ((Option.must (deps_try_find deps.dep_graph iface)).edges)
+            in
+            let iface_deps =
+                Option.map (List.filter
+                             (fun iface_dep ->
+                                not (BU.for_some (dep_subsumed_by iface_dep) dep_node.edges)))
+                           iface_deps
+            in
+            let files =
+              List.map
+                (file_of_dep_aux true deps.file_system_map deps.cmd_line_files)
+                dep_node.edges
+            in
+            let files =
+                match iface_deps with
+                | None -> files
+                | Some iface_deps ->
+                  let iface_files =
+                      List.map (file_of_dep_aux true deps.file_system_map deps.cmd_line_files) iface_deps
+                  in
+                  remove_dups_fast (files @ iface_files)
+            in
+            let files =
+              if iface_fn |> Some? then
+                let iface_fn = iface_fn |> Option.must in
+                files |> List.filter (fun f -> f <> iface_fn)
+                      |> (fun files -> (cache_file_name iface_fn)::files)
+              else files in
+
+            let cache_file_name = cache_file file_name in
+
+            let all_checked_files =
+                if not (Options.should_be_already_cached (module_name_of_file file_name))
+                then (print_check_rule cache_file_name file_name (file_name :: files);
+                      cache_file_name::all_checked_files)
+                else all_checked_files
+            in
+
+            (* Print extraction rules for implementations *)
+            if is_implementation file_name
+            then begin
+                let mname = lowercase_module_name file_name in
+                
+                if Options.should_extract mname Options.OCaml
+                then print_extract_rule 
+                       (output_ml_file file_name)
+                       file_name
+                       [cache_file_name]
+                       "OCaml";
+                       
+                print_extract_rule 
+                    (output_krml_file file_name)
+                    file_name
+                    [cache_file_name]
+                    "krml"
+            end;
+            
+            all_checked_files
+          in
+          profile process_one_key "FStarC.Parser.Dep.print_dune.process_one_key")
+          []
+    in
+    
+    (* Output file lists as comments for reference *)
+    let all_fst_files =
+      keys |> List.filter is_implementation
+           |> Util.sort_with String.compare
+    in
+    let all_ml_files =
+        all_fst_files
+        |> List.filter (fun fst_file -> 
+             Options.should_extract (lowercase_module_name fst_file) Options.OCaml)
+        |> List.map output_ml_file
+    in
+    
+    pr "; File lists (for reference)\n";
+    pr "; ALL_CHECKED_FILES:";
+    all_checked_files |> List.iter (fun f -> pr " "; pr f);
+    pr "\n";
+    pr "; ALL_ML_FILES:";
+    all_ml_files |> List.iter (fun f -> pr " "; pr f);
+    pr "\n";
+
+    FStarC.StringBuffer.output_channel outc sb
+
 let do_print (outc : out_channel) (fn : string) deps : unit =
   let pref () =
     BU.fprint outc "# This .depend was generated by F* %s\n" [!Options._version];
@@ -2290,6 +2442,15 @@ let do_print (outc : out_channel) (fn : string) deps : unit =
     BU.fprint outc "\n" [];
     ()
   in
+  let dune_pref () =
+    BU.fprint outc "; This dune file was generated by F* %s\n" [!Options._version];
+    BU.fprint outc "; Executable: %s\n" [show BU.exec_name];
+    BU.fprint outc "; Hash: %s\n" [!Options._commit];
+    BU.fprint outc "; Running in directory %s\n" [show (Filepath.normalize_file_path (BU.getcwd ()))];
+    BU.fprint outc "; Command line arguments: \"%s\"\n" [show (BU.get_cmd_args ())];
+    BU.fprint outc "\n" [];
+    ()
+  in
   match Options.dep() with
   | Some "make" ->
       pref ();
@@ -2297,6 +2458,9 @@ let do_print (outc : out_channel) (fn : string) deps : unit =
   | Some "full" ->
       pref ();
       profile (fun () -> print_full outc deps) "FStarC.Parser.Deps.print_full_deps"
+  | Some "dune" ->
+      dune_pref ();
+      profile (fun () -> print_dune outc deps) "FStarC.Parser.Deps.print_dune_deps"
   | Some "graph" ->
       print_graph outc fn deps.dep_graph deps.file_system_map deps.cmd_line_files
   | Some "raw" ->
