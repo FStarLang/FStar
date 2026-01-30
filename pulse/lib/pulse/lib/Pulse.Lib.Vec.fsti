@@ -55,8 +55,7 @@ val pts_to_timeless (#a:Type0) (v:vec a) (p:perm) (s:Seq.seq a)
 
 ghost
 fn pts_to_len (#a:Type0) (v:vec a) (#p:perm) (#s:Seq.seq a)
-  requires pts_to v #p s
-  ensures pts_to v #p s
+  preserves pts_to v #p s
   ensures pure (length v == Seq.length s)
 
 fn alloc 
@@ -133,11 +132,9 @@ fn read_ref (#a:Type0) (r:R.ref (vec a))
   (i:SZ.t)
   (#v:erased (vec a))
   (#s:erased (Seq.seq a) { SZ.v i < Seq.length s})
-  requires R.pts_to r v
-  requires pts_to v s
+  preserves R.pts_to r v
+  preserves pts_to v s
   returns res : a
-  ensures R.pts_to r v
-  ensures pts_to v s
   ensures pure (res == Seq.index s (SZ.v i))
 
 fn write_ref (#a:Type0) (r:R.ref (vec a))
@@ -145,9 +142,8 @@ fn write_ref (#a:Type0) (r:R.ref (vec a))
   (x:a)
   (#v:erased (vec a))
   (#s:erased (Seq.seq a) { SZ.v i < Seq.length s})
-  requires R.pts_to r v
+  preserves R.pts_to r v
   requires pts_to v s
-  ensures R.pts_to r v
   ensures pts_to v (Seq.upd s (SZ.v i) x)
 
 fn replace_i (#a:Type0) (v:vec a) (i:SZ.t) (x:a)
@@ -160,10 +156,9 @@ fn replace_i (#a:Type0) (v:vec a) (i:SZ.t) (x:a)
 fn replace_i_ref (#a:Type0) (r:R.ref (vec a)) (i:SZ.t) (x:a)
   (#v:erased (vec a))
   (#s:erased (Seq.seq a) { SZ.v i < Seq.length s})
-  requires R.pts_to r v
+  preserves R.pts_to r v
   requires pts_to v s
   returns  res : a
-  ensures R.pts_to r v
   ensures pts_to v (Seq.upd s (SZ.v i) x)
   ensures pure (res == Seq.index s (SZ.v i))
 

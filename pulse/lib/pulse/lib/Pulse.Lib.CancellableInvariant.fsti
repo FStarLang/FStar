@@ -53,10 +53,9 @@ val unpacked (c:cinv) (v:slprop) : slprop
 ghost
 fn unpack_cinv_vp (#p:perm) (#v:slprop) (c:cinv)
   requires cinv_vp c v
-  requires active c p
+  preserves active c p
   ensures v
   ensures unpacked c v
-  ensures active c p
 
 ghost
 fn pack_cinv_vp (#v:slprop) (c:cinv)

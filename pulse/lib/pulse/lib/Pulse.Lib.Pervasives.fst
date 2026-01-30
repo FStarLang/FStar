@@ -73,9 +73,8 @@ let inames_join_self (is1 : inames)
 //
 
 fn ref_apply u#a u#b (#a: Type u#a) (#b:Type u#b) (r:ref (a -> b)) (x:a) (#f:erased (a -> b))
-  requires pts_to r f
+  preserves pts_to r f
   returns y:b
-  ensures pts_to r f
   ensures pure (y == (reveal f) x)
 {
   let f = !r;

@@ -32,8 +32,7 @@ fn test_invariants_and_later ()
 }
 
 fn test_read_write (x:ref U32.t)
-  requires pts_to x 'n
-  ensures pts_to x 'n
+  preserves pts_to x 'n
 {
   let n = !x;
   x := n +^ (zero());

@@ -131,9 +131,8 @@ fn test7 (x y z w u : int)
 [@@expect_failure]
 fn test8 (x y z w u : int)
   requires foo2 x y
-  requires foo2 w z
+  preserves foo2 w z
   ensures foo2 y x
-  ensures foo2 w z
 {
   flip2 ();
   ()

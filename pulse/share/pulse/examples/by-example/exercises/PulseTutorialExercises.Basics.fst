@@ -25,9 +25,8 @@ fn incr (r:ref int) (#n:erased int) // since n is purely specificational, it is 
 
 
 fn read (r:ref int) p (n:erased int) // any permission is ok for reading
-requires pts_to r #p n
+preserves pts_to r #p n
 returns x:int
-ensures pts_to r #p n
 ensures pure (x == n)
 {
     !r
@@ -36,8 +35,7 @@ ensures pure (x == n)
 
 
 fn write (r:ref int) (n:erased int) // write requires full permission
-  requires pts_to r #full_perm n
-  ensures pts_to r #full_perm n
+  preserves pts_to r #full_perm n
 {
     let y = !r;
     r := y
@@ -47,8 +45,7 @@ fn write (r:ref int) (n:erased int) // write requires full permission
 [@@ expect_failure] // fails
 
 fn write (r:ref int) p (n:erased int)
-  requires pts_to r #p n
-  ensures pts_to r #p n
+  preserves pts_to r #p n
 {
     let y = !r;
     r := y

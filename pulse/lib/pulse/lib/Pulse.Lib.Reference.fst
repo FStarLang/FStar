@@ -174,8 +174,7 @@ fn pts_to_injective_eq
 
 ghost
 fn pts_to_perm_bound u#a (#a: Type u#a) (#p:_) (r:ref a) (#v:a)
-  requires pts_to r #p v
-  ensures pts_to r #p v
+  preserves pts_to r #p v
   ensures pure (p <=. 1.0R)
 {
   unfold pts_to r #p v;

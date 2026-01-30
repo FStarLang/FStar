@@ -22,10 +22,9 @@ open Pulse.Lib.Pervasives
 let max_spec x y = if x < y then y else x
 
 fn max #p #q (x y:ref int)
-requires pts_to x #p 'vx
+preserves pts_to x #p 'vx
 requires pts_to y #q 'vy
 returns n:int
-ensures pts_to x #p 'vx
 ensures pts_to y #q 'vy
         ** pure (n == max_spec 'vx 'vy)
 {
@@ -44,10 +43,9 @@ ensures pts_to y #q 'vy
 
 //max_alt_fail$
 fn max_alt #p #q (x y:ref int)
-requires pts_to x #p 'vx
+preserves pts_to x #p 'vx
 requires pts_to y #q 'vy
 returns n:int
-ensures pts_to x #p 'vx
 ensures pts_to y #q 'vy
         ** pure (n == max_spec 'vx 'vy)
 {
@@ -69,10 +67,9 @@ ensures pts_to y #q 'vy
 
 //max_alt$
 fn max_alt2 #p #q (x y:ref int)
-requires pts_to x #p 'vx
+preserves pts_to x #p 'vx
 requires pts_to y #q 'vy
 returns n:int
-ensures pts_to x #p 'vx
 ensures pts_to y #q 'vy
         ** pure (n == max_spec 'vx 'vy)
 {
@@ -140,9 +137,8 @@ ensures pts_to_or_null r #p 'v
 //pts_to_or_null_helpers$
 ghost
 fn elim_pts_to_or_null_none #a #p (r:nullable_ref a)
-requires pts_to_or_null r #p 'v
+preserves pts_to_or_null r #p 'v
 requires pure (r == None)
-ensures pts_to_or_null r #p 'v
 ensures pure ('v == None)
 {
     rewrite each r as None;

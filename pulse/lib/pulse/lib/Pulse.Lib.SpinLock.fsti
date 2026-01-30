@@ -70,7 +70,6 @@ I'm not sure if we can prove v1 == v2 here. *)
 ghost
 fn lock_alive_inj
   (l:lock) (#p1 #p2 :perm) (#v1 #v2 :slprop)
-  requires lock_alive l #p1 v1
+  preserves lock_alive l #p1 v1
   requires lock_alive l #p2 v2
-  ensures lock_alive l #p1 v1
   ensures lock_alive l #p2 v1

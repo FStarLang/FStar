@@ -43,8 +43,7 @@ let lock_alive (l:lock) (p:slprop) =
  //dup_lock_alive$
 ghost
 fn dup_lock_alive (l:lock) (p:slprop)
-  requires lock_alive l p
-  ensures lock_alive l p
+  preserves lock_alive l p
   ensures lock_alive l p
 {
   unfold lock_alive;
@@ -75,8 +74,7 @@ ensures lock_alive l p
 
 //acquire_sig$
 fn rec acquire (#p:slprop) (l:lock)
-requires lock_alive l p
-ensures lock_alive l p
+preserves lock_alive l p
 ensures p
 //end acquire_sig$
 //acquire_body$
@@ -113,9 +111,8 @@ ensures p
 
 //release$
 fn release (#p:slprop) (l:lock)
-requires lock_alive l p
+preserves lock_alive l p
 requires p
-ensures lock_alive l p
 {
   unfold lock_alive;
   with_invariants unit emp_inames l.i (lock_inv l.r p) p (fun _ -> emp) fn _ {

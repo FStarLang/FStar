@@ -64,8 +64,7 @@ val pts_to_timeless (#a: Type u#a) (x:array a) (p:perm) (s:Seq.seq a)
 
 ghost
 fn pts_to_len u#a (#t: Type u#a) (a:array t) (#p:perm) (#x:Seq.seq t)
-  requires pts_to a #p x
-  ensures pts_to a #p x
+  preserves pts_to a #p x
   ensures pure (length a == Seq.length x)
 
 ghost

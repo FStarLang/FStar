@@ -144,9 +144,8 @@ ensures is_list_cases x l
 //is_list_case_none$
 ghost
 fn is_list_case_none (#t:Type) (x:llist t) (#l:list t)
-requires is_list x l
+preserves is_list x l
 requires pure (x == None)
-ensures is_list x l
 ensures pure (l == [])
 {
   cases_of_is_list x l;
@@ -179,9 +178,8 @@ ensures
 
 //length$
 fn rec length (#t:Type0) (x:llist t)
-requires is_list x 'l
+preserves is_list x 'l
 returns n:nat
-ensures is_list x 'l
 ensures pure (n == List.Tot.length 'l)
 {
   match x {
@@ -204,9 +202,8 @@ ensures pure (n == List.Tot.length 'l)
 
 //length_tail$
 fn rec length_tail (#t:Type0) (x:llist t) (k:nat)
-requires is_list x 'l
+preserves is_list x 'l
 returns n:nat
-ensures is_list x 'l
 ensures pure (n == k + List.Tot.length 'l)
 {
   match x {
@@ -253,9 +250,8 @@ ensures exists* tl.
 
 //length_iter$
 fn length_iter (#t:Type) (x: llist t)
-requires is_list x 'l
+preserves is_list x 'l
 returns n:nat
-ensures is_list x 'l
 ensures pure (n == List.Tot.length 'l)
 {
   open I;
@@ -342,10 +338,9 @@ ensures exists* hd tl.
 
 //is_last_cell$
 fn is_last_cell (#t:Type) (x:llist t)
-requires is_list x 'l
+preserves is_list x 'l
 requires pure (Some? x)
 returns b:bool
-ensures is_list x 'l
 ensures pure (b == (List.Tot.length 'l = 1))
 {
   let np = Some?.v x;
@@ -390,9 +385,8 @@ ensures
 //non_empty_list$
 ghost
 fn non_empty_list (#t:Type0) (x:llist t)
-requires is_list x 'l
+preserves is_list x 'l
 requires pure (Cons? 'l)
-ensures is_list x 'l
 ensures pure (Some? x)
 {
     elim_is_list_cons x _ (Cons?.hd 'l) (Cons?.tl 'l);
@@ -404,10 +398,9 @@ ensures pure (Some? x)
 //end non_empty_list$
 
 fn not_is_last_cell (#t:Type) (x:llist t)
-requires is_list x 'l
+preserves is_list x 'l
 requires pure (Some? x)
 returns b:bool
-ensures is_list x 'l
 ensures pure (b == (List.Tot.length 'l <> 1))
 {
   not (is_last_cell x)

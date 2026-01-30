@@ -27,29 +27,25 @@ fn foo2' ()
 
 [@@expect_failure]
 fn no_multiple_ret ()
-  requires res 1
-  requires res 2
+  preserves res 1
+  preserves res 2
   returns int
   returns int
-  ensures res 2
-  ensures res 1
 {
   1
 }
 
 [@@expect_failure]
 fn wrong_order1 ()
-  ensures res 1
   returns int
-  requires res 1
+  preserves res 1
 {
   1
 }
 
 [@@expect_failure]
 fn wrong_order2 ()
-  ensures res 1
-  requires res 1
+  preserves res 1
 {
   1
 }
@@ -75,8 +71,7 @@ fn wrong_order4 (x:iname)
 
 [@@expect_failure]
 fn wrong_order2 ()
-  ensures res 1
-  requires res 1
+  preserves res 1
 {
   1
 }
@@ -91,11 +86,9 @@ fn wrong_order3 ()
 
 
 fn foo4 ()
-  requires res 1
-  requires res 2
+  preserves res 1
+  preserves res 2
   returns int
-  ensures res 2
-  ensures res 1
 {
   1
 }
@@ -110,9 +103,8 @@ fn foo5 ()
 
 [@@expect_failure [72]] // desugaring failure, precondition
 fn foo6 ()
-  requires res v
+  preserves res v
   returns v : int
-  ensures res v
 {
   1
 }

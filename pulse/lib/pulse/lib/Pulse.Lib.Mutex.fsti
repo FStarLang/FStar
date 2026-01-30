@@ -44,9 +44,8 @@ instance val is_send_mutex_live #a m #p v {| (x:a -> is_send (v x)) |} : is_send
 val pts_to (#a:Type0) (mg:mutex_guard a) (#[T.exact (`1.0R)] p:perm) (x:a) : slprop
 
 fn ( ! ) (#a:Type0) (mg:mutex_guard a) (#x:erased a) (#p:perm)
-  requires pts_to mg #p x
+  preserves pts_to mg #p x
   returns y:a
-  ensures pts_to mg #p x
   ensures rewrites_to y (reveal x)
 
 fn ( := ) (#a:Type0) (mg:mutex_guard a) (y:a) (#x:erased a)

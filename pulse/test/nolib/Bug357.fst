@@ -9,8 +9,7 @@ type t2 =
 assume val foo : t2 -> slprop
 
 fn test1 (x : t2)
-  requires foo x
-  ensures  foo x
+  preserves foo x
 {
   match x {
     norewrite C y z -> {
@@ -21,8 +20,7 @@ fn test1 (x : t2)
 }
 
 fn test11 (x : t2)
-  requires foo x
-  ensures  foo x
+  preserves foo x
 {
   match x {
     y -> {
@@ -32,8 +30,7 @@ fn test11 (x : t2)
 }
 
 fn test2 (x : t2)
-  requires foo x
-  ensures  foo x
+  preserves foo x
 {
   match x {
     C y z -> {
@@ -43,16 +40,14 @@ fn test2 (x : t2)
 }
 
 fn test3 (x : t2)
-  requires foo x
-  ensures  foo x
+  preserves foo x
 {
   norewrite let C y z = x;
   ();
 }
 
 fn test4 (x : t2)
-  requires foo x
-  ensures  foo x
+  preserves foo x
 {
   let C y z = x;
   rewrite each C y z as x;

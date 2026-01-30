@@ -138,8 +138,7 @@ let task_thunk_typing (t : task_t) : slprop =
   exists* pre post inst. task_thunk_typing_core t pre post inst
 
 ghost fn task_thunk_typing_dup t
-  requires task_thunk_typing t
-  ensures task_thunk_typing t
+  preserves task_thunk_typing t
   ensures task_thunk_typing t
 {
   unfold task_thunk_typing t;
@@ -373,9 +372,8 @@ ghost
 fn recall_task_spotted
   (p : pool) (t : task_t) (#ts : list task_t)
   (#f:perm)
-  requires AR.pts_to p.g_runnable #f ts
+  preserves AR.pts_to p.g_runnable #f ts
   requires task_spotted p t
-  ensures AR.pts_to p.g_runnable #f ts
   ensures task_spotted p t
            ** pure (List.memP t ts)
 {
@@ -388,10 +386,9 @@ ghost
 fn recall_handle_spotted
   (p : pool) (post : slprop) (h : handle) (#ts : list task_t)
   (#f:perm)
-  requires AR.pts_to p.g_runnable #f ts
+  preserves AR.pts_to p.g_runnable #f ts
   requires handle_spotted p post h
   returns  task : erased task_t
-  ensures AR.pts_to p.g_runnable #f ts
   ensures handle_spotted p post h **
           shift (up task.post ** later_credit 1) post **
           pure (task.h == h /\ List.memP (reveal task) ts)
@@ -637,10 +634,9 @@ fn try_await
          (#post : slprop)
          (h : handle)
          (#f:perm)
-  requires pool_alive #f p
+  preserves pool_alive #f p
   requires joinable p post h
   returns  ok : bool
-  ensures pool_alive #f p
   ensures (if ok then post else joinable p post h)
 {
   unfold (pool_alive #f p);
@@ -801,9 +797,8 @@ instance dup_snapshot
 
 ghost
 fn rec all_tasks_done_inst (t : task_t) (ts : list task_t)
-  requires all_tasks_done ts
+  preserves all_tasks_done ts
   requires pure (List.memP t ts)
-  ensures all_tasks_done ts
   ensures task_done t
   decreases ts
 {
@@ -927,9 +922,8 @@ fn await (#p:pool)
          (#post : slprop)
          (h : handle)
          (#f:perm)
-  requires pool_alive #f p
+  preserves pool_alive #f p
   requires joinable p post h
-  ensures pool_alive #f p
   ensures post
 {
   let mut done = false;
@@ -954,9 +948,8 @@ ghost
 fn rec pool_done_task_done_aux
       (t : task_t)
       (ts : list task_t)
-  requires all_tasks_done ts
+  preserves all_tasks_done ts
   requires pure (List.memP t ts)
-  ensures all_tasks_done ts
   ensures task_done t
   decreases ts
 {
@@ -990,11 +983,9 @@ fn pool_done_handle_done_aux2 (#p:pool)
       (#post : slprop)
       (h : handle)
       (ts : list task_t)
-  requires AR.pts_to p.g_runnable #0.5R ts
-  requires all_tasks_done ts
+  preserves AR.pts_to p.g_runnable #0.5R ts
+  preserves all_tasks_done ts
   requires handle_spotted p post h
-  ensures AR.pts_to p.g_runnable #0.5R ts
-  ensures all_tasks_done ts
   ensures handle_done h
 {
   let t = recall_handle_spotted p post h #ts;
@@ -1252,8 +1243,7 @@ fn put_back_result (p:pool) #f (t : task_t)
 }
 
 fn do_work_once (#f:perm) (p : pool)
-  requires pool_alive #f p
-  ensures  pool_alive #f p
+  preserves pool_alive #f p
 {
   let topt = grab_work p;
   match topt {
@@ -1271,8 +1261,7 @@ fn do_work_once (#f:perm) (p : pool)
 
 
 fn rec worker (#f:perm) (p : pool)
-  requires pool_alive #f p
-  ensures  pool_alive #f p
+  preserves pool_alive #f p
 {
   do_work_once #f p;
   worker p
@@ -1284,9 +1273,8 @@ fn await_help
          (#post : slprop)
          (h : handle)
          (#f:perm)
-  requires pool_alive #f p
+  preserves pool_alive #f p
   requires joinable p post h
-  ensures pool_alive #f p
   ensures post
 {
   let mut done = false;
@@ -1316,9 +1304,8 @@ let ite (b:bool) (p q : slprop) : slprop =
 
 fn rec check_if_all_done
   (ts : list task_t)
-  requires all_state_pred ts
+  preserves all_state_pred ts
   returns  b : bool
-  ensures all_state_pred ts
   ensures ite b (all_tasks_done ts) emp
 {
   match ts {
@@ -1377,10 +1364,9 @@ fn try_await_pool
   (p:pool)
   #is (#f:perm)
   (q : slprop)
-  requires pool_alive #f p
+  preserves pool_alive #f p
   requires pledge is (pool_done p) q
   returns  b : bool
-  ensures pool_alive #f p
   ensures ite b q (pledge is (pool_done p) q)
 {
   unfold (pool_alive #f p);
@@ -1429,9 +1415,8 @@ fn await_pool
   (p:pool)
   (#is: inames) (#f: perm)
   (q : slprop)
-  requires pool_alive #f p
+  preserves pool_alive #f p
   requires pledge is (pool_done p) q
-  ensures pool_alive #f p
   ensures q
 {
   let mut done = false;

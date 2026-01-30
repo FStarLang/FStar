@@ -39,8 +39,7 @@ let lock_inv r p : slprop = exists* v. Box.pts_to r v ** (maybe (v = 0ul) p)
 let protects l p = inv l.i (lock_inv l.r p)
 
 fn dup (l:lock) (p:slprop)
-requires protects l p
-ensures protects l p
+preserves protects l p
 ensures protects l p
 {
   dup_inv l.i (lock_inv l.r p);
@@ -59,9 +58,8 @@ ensures protects l p
 
 
 fn release (#p:slprop) (l:lock)
-requires protects l p
+preserves protects l p
 requires p
-ensures protects l p
 {
   with_invariants unit emp_inames l.i (lock_inv l.r p)
     p (fun _ -> emp)
@@ -74,8 +72,7 @@ ensures protects l p
 
 
 fn rec acquire #p (l:lock)
-requires protects l p
-ensures protects l p
+preserves protects l p
 ensures p
 {
   let retry =

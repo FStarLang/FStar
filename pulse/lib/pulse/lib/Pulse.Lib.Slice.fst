@@ -34,8 +34,7 @@ let pts_to_timeless x p v = ()
 
 ghost
 fn pts_to_len (#t: Type) (s: slice t) (#p: perm) (#v: Seq.seq t)
-  requires pts_to s #p v
-  ensures pts_to s #p v
+  preserves pts_to s #p v
   ensures pure (Seq.length v == SZ.v (len s))
 {
     unfold pts_to s #p v;

@@ -91,9 +91,8 @@ fn read_simple u#a
     (#p:pcm a)
     (r:gref p)
     (#x:a)
-  requires pts_to r x
+  preserves pts_to r x
   returns  v : (v:a{compatible p x v /\ p.refine v})
-  ensures  pts_to r x
 
 ghost
 fn write u#a

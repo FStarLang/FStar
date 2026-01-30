@@ -106,10 +106,8 @@ fn pts_to_injective_eq  u#a (#a:Type u#a)
                         (#p #q:_)
                         (#v0 #v1:a)
                         (r:ref a)
-  requires (r |-> Frac p v0)
-  requires (r |-> Frac q v1)
-  ensures (r |-> Frac p v0)
-  ensures (r |-> Frac q v1)
+  preserves (r |-> Frac p v0)
+  preserves (r |-> Frac q v1)
   ensures pure (v0 == v1)
 
 ghost

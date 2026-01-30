@@ -114,9 +114,8 @@ ensures lock_live l #(sum_perm q1 q2)
 
 
 fn acquire #p #q (l:lock p)
-requires lock_live l #q 
+preserves lock_live l #q
 ensures p
-ensures lock_live l #q
 {
     admit()
 }
@@ -125,8 +124,7 @@ ensures lock_live l #q
 
 fn release #p #q (l:lock p)
 requires p
-requires lock_live l #q
-ensures lock_live l #q
+preserves lock_live l #q
 {
     admit()
 }

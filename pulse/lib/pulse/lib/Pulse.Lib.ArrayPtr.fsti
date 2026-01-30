@@ -214,7 +214,6 @@ fn memcpy
     (len: SZ.t)
     (#s0:Ghost.erased (Seq.seq t) { SZ.v idx_src + SZ.v len <= Seq.length s0 })
     (#s1:Ghost.erased (Seq.seq t) { SZ.v idx_dst + SZ.v len <= Seq.length s1 })
-  requires pts_to src #p0 s0
+  preserves pts_to src #p0 s0
   requires pts_to dst s1
-  ensures pts_to src #p0 s0
   ensures pts_to dst (Seq.slice s0 0 (SZ.v len) `Seq.append` Seq.slice s1 (SZ.v len) (Seq.length s1))

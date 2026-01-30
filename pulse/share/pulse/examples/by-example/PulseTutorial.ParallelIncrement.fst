@@ -77,8 +77,7 @@ ensures exists* v. pts_to x v
 {
   let l = L.new_lock (exists* (v: int). pts_to x v);
   fn incr ()
-  requires L.lock_alive l #0.5R (exists* v. pts_to x v)
-  ensures L.lock_alive l #0.5R (exists* v. pts_to x v)
+  preserves L.lock_alive l #0.5R (exists* v. pts_to x v)
   {
     L.acquire l;
     let v = !x;
@@ -113,9 +112,8 @@ fn incr_left (x:ref int)
              (#right:GR.ref int)
              (#i:erased int)
              (lock:L.lock )
-requires L.lock_alive lock #p (lock_inv x i left right)
+preserves L.lock_alive lock #p (lock_inv x i left right)
 requires GR.pts_to left #0.5R 'vl
-ensures L.lock_alive lock #p (lock_inv x i left right)
 ensures GR.pts_to left #0.5R ('vl + 1)
 {
   L.acquire lock;
@@ -139,9 +137,8 @@ fn incr_right (x:ref int)
               (#right:GR.ref int)
               (#i:erased int)
               (lock:L.lock)
-requires L.lock_alive lock #p (lock_inv x i left right)
+preserves L.lock_alive lock #p (lock_inv x i left right)
 requires GR.pts_to right #0.5R 'vl
-ensures L.lock_alive lock #p (lock_inv x i left right)
 ensures GR.pts_to right #0.5R ('vl + 1)
 {
   L.acquire lock;
@@ -203,9 +200,8 @@ fn incr (x: ref int)
         (#refine #aspec: int -> slprop)
         (l:L.lock)
         (ghost_steps: incr_f x refine aspec)
-requires L.lock_alive l #p (exists* v. pts_to x v ** refine v)
+preserves L.lock_alive l #p (exists* v. pts_to x v ** refine v)
 requires aspec 'i
-ensures L.lock_alive l #p (exists* v. pts_to x v ** refine v)
 ensures aspec ('i + 1)
  {
     L.acquire l;
@@ -312,25 +308,21 @@ fn incr_atomic
         (#refine #aspec: int -> slprop)
         (c:C.cinv)
         (f: incr_f x refine aspec)
-requires inv (C.iname_of c) (C.cinv_vp c (exists* v. pts_to x v ** refine v))
+preserves inv (C.iname_of c) (C.cinv_vp c (exists* v. pts_to x v ** refine v))
 requires aspec 'i
-requires C.active c p
-ensures inv (C.iname_of c) (C.cinv_vp c (exists* v. pts_to x v ** refine v))
+preserves C.active c p
 ensures aspec ('i + 1)
-ensures C.active c p
 //end incr_atomic_spec$
 //incr_atomic_body$
 {
   //incr_atomic_body_read$
   atomic
   fn read ()
-  requires inv (C.iname_of c) (C.cinv_vp c (exists* v. pts_to x v ** refine v))
-  requires C.active c p
+  preserves inv (C.iname_of c) (C.cinv_vp c (exists* v. pts_to x v ** refine v))
+  preserves C.active c p
   requires later_credit 1
   opens [C.iname_of c]
   returns v:int
-  ensures inv (C.iname_of c) (C.cinv_vp c (exists* v. pts_to x v ** refine v))
-  ensures C.active c p
   {
     with_invariants_a int emp_inames (C.iname_of c) (C.cinv_vp c (exists* v. pts_to x v ** refine v))
       (C.active c p) (fun _ -> C.active c p) fn _ {

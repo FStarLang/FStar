@@ -31,10 +31,8 @@ opens [i]
 
 ghost
 fn pts_to_dup_impossible #a (x:ref a)
-requires pts_to x 'v
-requires pts_to x 'u
-ensures pts_to x 'v
-ensures pts_to x 'u
+preserves pts_to x 'v
+preserves pts_to x 'u
 ensures pure False
 {
     gather x;

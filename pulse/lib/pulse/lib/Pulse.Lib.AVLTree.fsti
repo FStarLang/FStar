@@ -31,15 +31,13 @@ val is_tree #t ([@@@mkey] ct:tree_t t) (ft:T.tree t)
 : Tot slprop (decreases ft)
 
 fn height (#t:Type0) (x:tree_t t) (#ft:G.erased (T.tree t))
-  requires is_tree x ft
+  preserves is_tree x ft
   returns  n : nat
-  ensures is_tree x ft
   ensures pure (n == T.height ft)
 
 fn is_empty (#t:Type) (x:tree_t t) (#ft:G.erased(T.tree t))
-  requires is_tree x ft
+  preserves is_tree x ft
   returns  b : bool
-  ensures is_tree x ft
   ensures pure (b <==> (T.is_empty ft))
 
 fn create (t:Type0)
@@ -47,9 +45,8 @@ fn create (t:Type0)
   ensures  is_tree x T.Leaf
 
 fn mem (#t:eqtype) (x:tree_t t) (v: t) (#ft:G.erased (T.tree t))
-  requires is_tree x ft
+  preserves is_tree x ft
   returns  b : bool
-  ensures is_tree x ft
   ensures pure (b <==> (T.mem ft v))
 
 fn insert_avl

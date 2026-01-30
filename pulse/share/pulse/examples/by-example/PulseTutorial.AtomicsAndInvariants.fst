@@ -48,9 +48,8 @@ ensures inv i (owns r)
 //update_ref_atomic$
 atomic
 fn update_ref_atomic (r:ref U32.t) (i:iname) (v:U32.t)
-requires inv i (owns r)
+preserves inv i (owns r)
 requires later_credit 1
-ensures inv i (owns r)
 opens [i]
 {
   with_invariants_a unit emp_inames i (owns r) emp (fun _ -> emp)
@@ -65,10 +64,8 @@ opens [i]
 [@@allow_ambiguous]
 ghost
 fn pts_to_dup_impossible u#a (#a: Type u#a) (x:ref a)
-requires pts_to x 'v
-requires pts_to x 'u
-ensures pts_to x 'v
-ensures pts_to x 'u
+preserves pts_to x 'v
+preserves pts_to x 'u
 ensures pure False
 {
     gather x;
@@ -101,8 +98,7 @@ ensures pure False
 
 //update_ref$
 fn update_ref (r:ref U32.t) (i:iname) (v:U32.t)
-requires inv i (owns r)
-ensures inv i (owns r)
+preserves inv i (owns r)
 {                    
   later_credit_buy 1;
   update_ref_atomic r i v;
@@ -112,8 +108,7 @@ ensures inv i (owns r)
 //update_ref_fail$
 [@@expect_failure [228]]
 fn update_ref_fail (r:ref U32.t) (i:iname) (v:U32.t)
-requires inv i (owns r)
-ensures inv i (owns r)
+preserves inv i (owns r)
 {
   with_invariants unit emp_inames i (owns r) emp (fun _ -> emp) fn _ {
     unfold owns;
@@ -137,9 +132,8 @@ fn intro_readable (r:ref U32.t) (p:perm) (v:U32.t)
 //split_readable$
 ghost
 fn split_readable (r:ref U32.t) (i:iname)
-requires inv i (readable r)
+preserves inv i (readable r)
 requires later_credit 1
-ensures inv i (readable r)
 ensures readable r
 opens [i]
 {

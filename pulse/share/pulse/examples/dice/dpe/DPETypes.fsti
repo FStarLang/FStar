@@ -304,8 +304,7 @@ let context_and_repr_tag_related (c:context_t) (r:context_repr_t) : bool =
 
 ghost
 fn intro_context_and_repr_tag_related (c:context_t) (r:context_repr_t)
-  requires context_perm c r
-  ensures context_perm c r
+  preserves context_perm c r
   ensures pure (context_and_repr_tag_related c r)
 {
   let b = context_and_repr_tag_related c r;

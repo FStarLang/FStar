@@ -24,8 +24,7 @@ let rel_cases_pred (x:t1) (y:t2) : bool =
 
 ghost
 fn rel_cases (x:t1) (y:t2)
-  requires rel x y
-  ensures rel x y
+  preserves rel x y
   ensures pure (rel_cases_pred x y)
 {
   if (rel_cases_pred x y) {
@@ -37,10 +36,8 @@ fn rel_cases (x:t1) (y:t2)
 }
 
 fn test (x : t1) (y z : t2)
-  requires rel x y
-  requires rel x z
-  ensures rel x y
-  ensures rel x z
+  preserves rel x y
+  preserves rel x z
   ensures pure (C? y == C? z)
 {
   rel_cases x y;

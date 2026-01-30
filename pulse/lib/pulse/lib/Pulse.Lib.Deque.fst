@@ -184,9 +184,8 @@ fn some_head_then_some_tail
   (#t:Type)
   (l : deque t)
   (#xs : erased (list t))
-  requires is_deque l xs
+  preserves is_deque l xs
   requires pure (Some? l.head)
-  ensures is_deque l xs
   ensures pure (Some? l.tail)
 {
   let xss = reveal xs;
@@ -583,9 +582,8 @@ fn is_singleton
   (#t:Type) (p : deque t)
   (#x : erased t)
   (#xs : erased (list t))
-  requires is_deque p (reveal x::xs)
+  preserves is_deque p (reveal x::xs)
   returns  b : bool
-  ensures is_deque p (reveal x::xs)
   ensures pure (b <==> Nil? xs)
 {
   is_deque_cons_not_none p;
@@ -1044,9 +1042,8 @@ fn is_singleton_snoc
   (#t:Type) (p : deque t)
   (#x : erased t)
   (#xs : erased (list t))
-  requires is_deque p (snoc xs (reveal x))
+  preserves is_deque p (snoc xs (reveal x))
   returns  b : bool
-  ensures is_deque p (snoc xs (reveal x))
   ensures pure (b <==> Nil? xs)
 {
   assert (pure (Cons? (snoc xs (reveal x))));

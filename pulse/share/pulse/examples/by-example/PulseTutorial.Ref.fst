@@ -46,9 +46,8 @@ ensures pts_to r1 'v0
 
  //value_of$
 fn value_of u#a (#a:Type u#a) (r:ref a)
-requires pts_to r 'v
+preserves pts_to r 'v
 returns v:a
-ensures pts_to r 'v
 ensures pure (v == 'v)
 {
     !r;
@@ -59,9 +58,8 @@ ensures pure (v == 'v)
 
  //value_of_explicit$
 fn value_of_explicit u#a (#a:Type u#a) (r:ref a) (#w:erased a)
-requires pts_to r w
+preserves pts_to r w
 returns v:a
-ensures pts_to r w
 ensures pure (v == reveal w)
 {
     !r;
@@ -72,9 +70,8 @@ ensures pure (v == reveal w)
 [@@expect_failure [228]]
  //value_of_explicit_fail$
 fn value_of_explicit_fail u#a (#a:Type u#a) (r:ref a) (#w:erased a)
-requires pts_to r w
+preserves pts_to r w
 returns v:a
-ensures pts_to r w
 ensures pure (v == reveal w)
 {
     reveal w
@@ -84,9 +81,8 @@ ensures pure (v == reveal w)
 
  //value_of_explicit_alt$
 fn value_of_explicit_alt u#a (#a:Type u#a) (r:ref a) (#w:erased a)
-requires pts_to r w
+preserves pts_to r w
 returns v:(x:a { x == reveal w } )
-ensures pts_to r w
 {
     let v = !r;
     v
@@ -173,9 +169,8 @@ ensures pts_to r #1.0R v
 
  //value_of_perm$
 fn value_of_perm u#a (#a: Type u#a) #p (r:ref a)
-requires pts_to r #p 'v
+preserves pts_to r #p 'v
 returns v:a
-ensures pts_to r #p 'v
 ensures pure (v == 'v)
 {
     !r;
@@ -187,8 +182,7 @@ ensures pure (v == 'v)
 [@@expect_failure [19]]
 
 fn assign_perm u#a (#a: Type u#a) #p (r:ref a) (v:a) (#w:erased a)
-requires pts_to r #p w
-ensures pts_to r #p w
+preserves pts_to r #p w
 {
     r := v;
 }

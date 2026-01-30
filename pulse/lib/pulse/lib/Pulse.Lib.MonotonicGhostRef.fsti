@@ -61,22 +61,18 @@ fn gather (#t:Type0) (#p:preorder t) (r:mref p) (#v:t) (#f #g:perm)
 
 ghost
 fn take_snapshot (#t:Type) (#p:preorder t) (r:mref p) (#f:perm) (v:t)
-  requires pts_to r #f v
-  ensures pts_to r #f v
+  preserves pts_to r #f v
   ensures snapshot r v
  
 ghost
 fn recall_snapshot (#t:Type) (#p:preorder t) (r:mref p) (#f:perm) (#v #u:t)
-  requires pts_to r #f v
-  requires snapshot r u
-  ensures pts_to r #f v
-  ensures snapshot r u
+  preserves pts_to r #f v
+  preserves snapshot r u
   ensures pure (as_prop (p u v))
 
 ghost
 fn dup_snapshot (#t:Type) (#p:preorder t) (r:mref p) (#u:t)
-  requires snapshot r u
-  ensures snapshot r u
+  preserves snapshot r u
   ensures snapshot r u
 
 ghost

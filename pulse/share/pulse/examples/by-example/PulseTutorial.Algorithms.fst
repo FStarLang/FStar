@@ -31,9 +31,8 @@ module R = Pulse.Lib.Reference
 
 
 fn read #p (#s:erased _) (arr:array UInt32.t) (len:SZ.t) (i:SZ.t { v len == Seq.length s /\ v i < v len })
-  requires pts_to arr #p s
+  preserves pts_to arr #p s
   returns x:UInt32.t
-  ensures pts_to arr #p s
   ensures pure (x == Seq.index s (v i))
 {
   arr.(i)

@@ -228,10 +228,8 @@ fn lift_anchor (#a:Type) (#p:_) (#anc:anchor_rel p) (r : ref a p anc) (#v:a) (va
 
 ghost
 fn recall_anchor (#a:Type) (#p:_) (#anc:anchor_rel p) (r : ref a p anc) (#v:a) (va:a) (#f:perm)
-  requires pts_to r #f v
-  requires anchored r va
-  ensures pts_to r #f v
-  ensures anchored r va
+  preserves pts_to r #f v
+  preserves anchored r va
   ensures pure (anc va v)
 {
   unfold (pts_to r #f v);
@@ -267,8 +265,7 @@ fn fold_snapshot (#a:Type) (#p:_) (#anc:_) (r : ref a p anc) (#v:a) (k:FRAP.know
 
 ghost
 fn dup_snapshot (#a:Type) (#p:_) (#anc:anchor_rel p) (r : ref a p anc) (#v:a)
-  requires snapshot r v
-  ensures snapshot r v
+  preserves snapshot r v
   ensures snapshot r v
 {
   unfold snapshot;
@@ -282,8 +279,7 @@ fn dup_snapshot (#a:Type) (#p:_) (#anc:anchor_rel p) (r : ref a p anc) (#v:a)
 
 ghost
 fn take_snapshot_core (#a:Type) (#p:_) (#f:perm) (#anc:anchor_rel p) (r : ref a p anc) (#b:bool) (#v:a)
-  requires core_pts_to r #f v b
-  ensures core_pts_to r #f v b
+  preserves core_pts_to r #f v b
   ensures snapshot r v
 {
   with k. assert (GPR.pts_to r k);
@@ -296,8 +292,7 @@ fn take_snapshot_core (#a:Type) (#p:_) (#f:perm) (#anc:anchor_rel p) (r : ref a 
   
 ghost
 fn take_snapshot (#a:Type) (#p:_) (#f:perm) (#anc:anchor_rel p) (r : ref a p anc) (#v:a)
-  requires pts_to r #f v
-  ensures pts_to r #f v
+  preserves pts_to r #f v
   ensures snapshot r v
 {
   unfold (pts_to r #f v);
@@ -307,8 +302,7 @@ fn take_snapshot (#a:Type) (#p:_) (#f:perm) (#anc:anchor_rel p) (r : ref a p anc
 
 ghost
 fn take_snapshot_full (#a:Type) (#p:_) (#f:perm) (#anc:anchor_rel p) (r : ref a p anc) (#v:a)
-  requires pts_to_full r #f v
-  ensures pts_to_full r #f v
+  preserves pts_to_full r #f v
   ensures snapshot r v
 {
   unfold (pts_to_full r #f v);
@@ -318,10 +312,8 @@ fn take_snapshot_full (#a:Type) (#p:_) (#f:perm) (#anc:anchor_rel p) (r : ref a 
 
 ghost
 fn recall_snapshot (#a:Type) (#p:_) (#anc:anchor_rel p) (r : ref a p anc) #f (#v0 #v:a)
-  requires pts_to r #f v
-  requires snapshot r v0
-  ensures pts_to r #f v
-  ensures snapshot r v0
+  preserves pts_to r #f v
+  preserves snapshot r v0
   ensures pure (p v0 v /\ True)
 {
   unfold (pts_to r #f v);

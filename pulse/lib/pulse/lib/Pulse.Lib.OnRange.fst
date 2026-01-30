@@ -106,8 +106,7 @@ fn on_range_le
     (p: (nat -> slprop))
     (#i:nat)
     (#j:nat)
-  requires on_range p i j
-  ensures on_range p i j
+  preserves on_range p i j
   ensures pure (i <= j)
 {
   if (j < i)

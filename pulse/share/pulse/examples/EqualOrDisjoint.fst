@@ -288,8 +288,7 @@ ensures refs_eq_or_disjoint x1 x2 v2 v1
 }
 
 fn call_swap_eq (#a:Type0) (x:ref a) (#v:erased a)
-requires x |-> v
-ensures x |-> v
+preserves x |-> v
 {
   intro_refs_eq x;
   swap x x;

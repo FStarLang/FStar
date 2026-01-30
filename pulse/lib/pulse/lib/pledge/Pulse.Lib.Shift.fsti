@@ -68,8 +68,7 @@ ghost
 fn shift_dup
   (#is : inames)
   (p q : slprop)
-  requires shift #is p q
-  ensures shift #is p q
+  preserves shift #is p q
   ensures shift #is p q
 
 instance val shift_duplicable

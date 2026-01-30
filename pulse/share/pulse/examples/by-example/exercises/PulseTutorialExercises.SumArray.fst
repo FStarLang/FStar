@@ -9,9 +9,8 @@ open FStar.Seq
 
 
 fn read (arr:array int) (s:erased (seq int) { Seq.length s > 0 })
-  requires pts_to arr s
+  preserves pts_to arr s
   returns x:int
-  ensures pts_to arr s
   ensures pure (x == Seq.index s 0)
 {
     arr.(0sz) // indices have type FStar.SizeT 
@@ -23,10 +22,9 @@ fn read (arr:array int) (s:erased (seq int) { Seq.length s > 0 })
 [@@expect_failure]
 
 fn read_spec_fails (arr:array int) (s:erased (seq int))
-  requires pts_to arr s
+  preserves pts_to arr s
   requires pure (Seq.length s > 0)
   returns x:int
-  ensures pts_to arr s
   ensures pure (x == Seq.index s 0)
 {
     arr.(0sz) // indices have type FStar.SizeT 
@@ -146,9 +144,8 @@ let rec sum_spec (s:Seq.seq int) : Tot int (decreases Seq.length s) =
 // to the sequence spec above
 
 fn sum #p (#s:erased _) (arr:array int) (len:SZ.t { v len == Seq.length s })
-  requires pts_to arr #p s
+  preserves pts_to arr #p s
   returns res:int
-  ensures pts_to arr #p s
   ensures pure (res == sum_spec s)
 {
   open BoundedInts;

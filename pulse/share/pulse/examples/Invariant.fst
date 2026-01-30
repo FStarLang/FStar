@@ -30,11 +30,10 @@ assume val f () : stt_atomic unit emp_inames (p ** q) (fun _ -> p ** r)
 
 atomic
 fn g (i:iname)
-  requires inv i p
+  preserves inv i p
   requires q
   requires later_credit 1
   ensures r
-  ensures inv i p
   opens [i]
 {
   with_invariants_a unit emp_inames i p q (fun _ -> r) fn _ {
@@ -45,11 +44,10 @@ fn g (i:iname)
 
 atomic
 fn g2 (i:iname)
-  requires inv i p
+  preserves inv i p
   requires q
   requires later_credit 1
   ensures r
-  ensures inv i p
   opens [i]
 {
   with_invariants_a unit emp_inames i p q (fun _ -> r) fn _ {
@@ -137,8 +135,7 @@ fn test3 ()
 
  ghost
  fn t00 () (i:iname)
-   requires (inv i emp)
-   ensures (inv i emp)
+   preserves (inv i emp)
    opens [i]
  {
   ()
@@ -148,9 +145,8 @@ fn test3 ()
 
 atomic
 fn t0 () (i:iname)
-  requires inv i emp
+  preserves inv i emp
   requires later_credit 1
-  ensures inv i emp
   opens [i]
 {
   with_invariants_a unit emp_inames i emp emp (fun _ -> emp) fn _ {
@@ -177,8 +173,7 @@ fn basic_ghost ()
 atomic
 fn t1 ()
   requires later_credit 1
-  requires inv i emp
-  ensures inv i emp
+  preserves inv i emp
   opens []
 {
   with_invariants_a unit emp_inames i emp emp (fun _ -> emp) fn _ {
@@ -192,8 +187,7 @@ fn t1 ()
 atomic
 fn t3 ()
   requires later_credit 1
-  requires inv i emp
-  ensures inv i emp
+  preserves inv i emp
   opens [i; i2]
 {
   with_invariants_a unit emp_inames i emp emp (fun _ -> emp) fn _ {
@@ -224,9 +218,8 @@ let folded_inv (i:iname) = inv i p
 
 atomic
 fn test_returns0 (i:iname) (b:bool)
-  requires folded_inv i
+  preserves folded_inv i
   requires later_credit 1
-  ensures folded_inv i
   ensures q
   opens [i]
 {
@@ -245,9 +238,8 @@ fn test_returns0 (i:iname) (b:bool)
 
 ghost
 fn test_returns1 (i:iname)
-  requires folded_inv i
+  preserves folded_inv i
   requires later_credit 1
-  ensures folded_inv i
   ensures q
   opens [i]
 {
@@ -268,9 +260,8 @@ let pp = p
 
 ghost
 fn test_returns2 (i:iname)
-  requires folded_inv i
+  preserves folded_inv i
   requires later_credit 1
-  ensures folded_inv i
   ensures q
   opens [i]
 {

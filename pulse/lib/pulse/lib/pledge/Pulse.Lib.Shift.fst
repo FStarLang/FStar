@@ -36,8 +36,7 @@ let shift (#is:inames) (hyp concl:slprop) =
 
 ghost
 fn dup (p:slprop) (d:erased (duplicable p))
-requires p
-ensures p
+preserves p
 ensures p
 {
   let d = reveal d;
@@ -92,9 +91,8 @@ returns i:a
 
 ghost
 fn extract_eliminator (is:inames) (extra hyp concl: slprop)
-requires shift_elim_exists is hyp (reveal extra) concl
+preserves shift_elim_exists is hyp (reveal extra) concl
 returns i : shift_elim_t is hyp (reveal extra) concl
-ensures shift_elim_exists is hyp (reveal extra) concl
 {
   unfold (shift_elim_exists is hyp (reveal extra) concl);
   let pf : squash (psquash (shift_elim_t is hyp (reveal extra) concl)) =
@@ -109,9 +107,8 @@ ensures shift_elim_exists is hyp (reveal extra) concl
 
 ghost
 fn extract_duplicator (extra:slprop)
-requires extra_duplicable extra
+preserves extra_duplicable extra
 returns d : duplicable extra
-ensures extra_duplicable extra
 {
   unfold (extra_duplicable extra);
   let pf : squash (psquash (duplicable extra)) =
@@ -184,8 +181,7 @@ ensures shift #is2 hyp concl
 
 ghost
 fn dup_extra_duplicable (extra:slprop)
-requires extra_duplicable extra
-ensures extra_duplicable extra
+preserves extra_duplicable extra
 ensures extra_duplicable extra
 {
   let d = extract_duplicator extra;
@@ -194,8 +190,7 @@ ensures extra_duplicable extra
 
 ghost
 fn dup_shift_elim_exists #is #extra hyp concl
-requires shift_elim_exists is hyp extra concl
-ensures shift_elim_exists is hyp extra concl
+preserves shift_elim_exists is hyp extra concl
 ensures shift_elim_exists is hyp extra concl
 {
   let d = extract_eliminator _ _ _ _;

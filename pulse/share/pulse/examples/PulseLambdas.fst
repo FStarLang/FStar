@@ -84,9 +84,8 @@ fn s3 () : swap_fun
 fn test_inner_lambda (#a:Type0)
                      (x y:ref int)
 requires pts_to x 'vx
-requires pts_to y 'vy
+preserves pts_to y 'vy
 ensures pts_to x 'vy
-ensures pts_to y 'vy
 {
   fn write_helper (#a:Type0) (x:ref a) (n:a) (#vx:erased a)
     requires pts_to x vx

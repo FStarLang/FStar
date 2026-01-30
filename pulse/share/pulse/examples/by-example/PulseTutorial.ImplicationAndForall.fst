@@ -124,9 +124,8 @@ ensures can_update x
 ghost
 fn update (x:GR.ref int) (k:int)
 requires pts_to x #0.5R 'u
-requires can_update x
+preserves can_update x
 ensures pts_to x #0.5R k
-ensures can_update x
 {
   unfold can_update;
   FA.elim #_ #(fun u -> forall* v. pts_to x #0.5R u @==> pts_to x v) 'u;

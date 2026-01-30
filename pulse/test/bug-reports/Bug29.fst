@@ -51,8 +51,7 @@ ensures
 [@@expect_failure]
 
 fn test_assert_with_duplicates(r: ref nat)
-    requires exists* v. pts_to r v
-    ensures exists* v. pts_to r v
+    preserves exists* v. pts_to r v
 {
     with v. assert (pts_to r v ** pts_to r v);
     ()
@@ -62,8 +61,7 @@ fn test_assert_with_duplicates(r: ref nat)
 
 
 fn test_with_assert_pure(r: R.ref nat)
-    requires R.pts_to r 5 
-    ensures R.pts_to r 5
+    preserves R.pts_to r 5
 {
     with v. assert (R.pts_to r v ** pure (v = 5));
     ()

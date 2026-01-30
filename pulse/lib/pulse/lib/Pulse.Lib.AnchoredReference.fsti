@@ -115,34 +115,27 @@ fn lift_anchor (#a:Type) (#p:_) (#anc:anchor_rel p) (r : ref a p anc) (#v:a) (va
 
 ghost
 fn recall_anchor (#a:Type) (#p:_) (#anc:anchor_rel p) (r : ref a p anc) (#v:a) (va:a) (#f:perm)
-  requires pts_to r #f v
-  requires anchored r va
-  ensures pts_to r #f v
-  ensures anchored r va
+  preserves pts_to r #f v
+  preserves anchored r va
   ensures pure (anc va v)
 
 ghost
 fn dup_snapshot (#a:Type) (#p:_) (#anc:anchor_rel p) (r : ref a p anc) (#v:a)
-  requires snapshot r v
-  ensures snapshot r v
+  preserves snapshot r v
   ensures snapshot r v
 
 ghost
 fn take_snapshot (#a:Type) (#p:_) (#f:perm) (#anc:anchor_rel p) (r : ref a p anc) (#v:a)
-  requires pts_to r #f v
-  ensures pts_to r #f v
+  preserves pts_to r #f v
   ensures snapshot r v
 
 ghost
 fn take_snapshot_full (#a:Type) (#p:_) (#f:perm) (#anc:anchor_rel p) (r : ref a p anc) (#v:a)
-  requires pts_to_full r #f v
-  ensures pts_to_full r #f v
+  preserves pts_to_full r #f v
   ensures snapshot r v
 
 ghost
 fn recall_snapshot (#a:Type) (#p:_) (#anc:anchor_rel p) (r : ref a p anc) #f (#v0 #v:a)
-  requires pts_to r #f v
-  requires snapshot r v0
-  ensures pts_to r #f v
-  ensures snapshot r v0
+  preserves pts_to r #f v
+  preserves snapshot r v0
   ensures pure (p v0 v /\ True)

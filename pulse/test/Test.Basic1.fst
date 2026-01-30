@@ -35,26 +35,16 @@ assume val foo10 : slprop
 
 #push-options "--no_smt"
 fn test_synt ()
-  requires foo1
-  requires foo2
-  requires foo3
-  requires foo4
-  requires foo5
-  requires foo6
-  requires foo7
-  requires foo8
-  requires foo9
-  requires foo10
-  ensures foo10
-  ensures foo9
-  ensures foo8
-  ensures foo7
-  ensures foo6
-  ensures foo5
-  ensures foo4
-  ensures foo3
-  ensures foo2
-  ensures foo1
+  preserves foo1
+  preserves foo2
+  preserves foo3
+  preserves foo4
+  preserves foo5
+  preserves foo6
+  preserves foo7
+  preserves foo8
+  preserves foo9
+  preserves foo10
 {
   ();
 }
@@ -67,26 +57,16 @@ assume val foo : int -> slprop
 
 
 fn test_synt2 ()
-  requires foo 1
-  requires foo 2
-  requires foo 3
-  requires foo 4
-  requires foo 5
-  requires foo 6
-  requires foo 7
-  requires foo 8
-  requires foo 9
-  requires foo 10
-  ensures foo 10
-  ensures foo 9
-  ensures foo 8
-  ensures foo 7
-  ensures foo 6
-  ensures foo 5
-  ensures foo 4
-  ensures foo 3
-  ensures foo 2
-  ensures foo 1
+  preserves foo 1
+  preserves foo 2
+  preserves foo 3
+  preserves foo 4
+  preserves foo 5
+  preserves foo 6
+  preserves foo 7
+  preserves foo 8
+  preserves foo 9
+  preserves foo 10
 {
   ();
 }
@@ -151,8 +131,7 @@ fn test4 (r:ref int)
 
 
 fn test5 (r:ref int)
-  requires pts_to r 0
-  ensures  pts_to r 0
+  preserves pts_to r 0
 {
   test3 r;
   ();

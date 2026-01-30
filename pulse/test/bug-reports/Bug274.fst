@@ -71,11 +71,10 @@ ensures q
 [@@expect_failure]
 ghost
 fn test_elim_fails (p q r:slprop)
-requires (r @==> r)
+preserves (r @==> r)
 requires p
 requires (p @==> q)
 ensures q
-ensures (r @==> r)
 {
     elim _ _;
 }

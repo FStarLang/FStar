@@ -190,9 +190,8 @@ ensures GR.pts_to r x
 
 //use_new_ghost_ref$
 fn use_new_ghost_ref (x:ref nat)
-requires pts_to x 'v
+preserves pts_to x 'v
 returns r:GR.ref nat
-ensures pts_to x 'v
 ensures GR.pts_to r 'v
 {
   let v = !x;

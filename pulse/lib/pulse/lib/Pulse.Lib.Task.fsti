@@ -73,9 +73,8 @@ fn await
   (#post : slprop)
   (h : handle)
   (#f : perm)
-  requires pool_alive #f p
+  preserves pool_alive #f p
   requires joinable p post h
-  ensures pool_alive #f p
   ensures post
 
 fn await_pool
@@ -83,9 +82,8 @@ fn await_pool
   (#is:inames)
   (#f:perm)
   (q : slprop)
-  requires pool_alive #f p
+  preserves pool_alive #f p
   requires pledge is (pool_done p) q
-  ensures pool_alive #f p
   ensures q
 
 fn teardown_pool

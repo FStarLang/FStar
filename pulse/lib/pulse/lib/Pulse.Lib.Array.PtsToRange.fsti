@@ -72,8 +72,7 @@ fn pts_to_range_prop
   u#a (#elt: Type u#a) (a: array elt) (#i #j: nat)
   (#p: perm)
   (#s: Seq.seq elt)
-  requires pts_to_range a i j #p s
-  ensures pts_to_range a i j #p s
+  preserves pts_to_range a i j #p s
   ensures pure (
    (~ (is_null a)) /\
    (i <= j /\ j <= length a /\ eq2 #nat (Seq.length s) (j - i))

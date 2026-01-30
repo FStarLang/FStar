@@ -238,11 +238,9 @@ ghost
 fn do_elim_body_l
   (#is:inames) (#f:slprop) (v1:slprop) (v2:slprop) (r1 r2 : GR.ref bool)
   ()
-  requires inv_p is f v1 v2 r1 r2
-  requires f
+  preserves inv_p is f v1 v2 r1 r2
+  preserves f
   requires (r1 |-> Frac 0.5R false)
-  ensures inv_p is f v1 v2 r1 r2
-  ensures f
   ensures v1
   opens is
 {
@@ -308,14 +306,12 @@ ghost
 fn elim_body_l1
   (#is:inames) (#f:slprop) (i : iname) (v1:slprop) (v2:slprop) (r1 r2 : GR.ref bool)
   ()
-  requires f
+  preserves f
   requires (r1 |-> Frac 0.5R false)
   requires later_credit 1
-  requires inv i (inv_p is f v1 v2 r1 r2)
+  preserves inv i (inv_p is f v1 v2 r1 r2)
   requires pure (not (mem_inv is i))
-  ensures f
   ensures v1
-  ensures inv i (inv_p is f v1 v2 r1 r2)
   opens add_inv is i
 {
   open Pulse.Lib.GhostReference;
@@ -356,14 +352,12 @@ ghost
 fn elim_body_r1
   (#is:inames) (#f:slprop) (i : iname) (v1:slprop) (v2:slprop) (r1 r2 : GR.ref bool)
   ()
-  requires f
+  preserves f
   requires (r2 |-> Frac 0.5R false)
   requires later_credit 1
-  requires inv i (inv_p is f v1 v2 r1 r2)
+  preserves inv i (inv_p is f v1 v2 r1 r2)
   requires pure (not (mem_inv is i))
-  ensures f
   ensures v2
-  ensures inv i (inv_p is f v1 v2 r1 r2)
   opens add_inv is i
 {
   open Pulse.Lib.GhostReference;

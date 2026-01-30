@@ -55,8 +55,7 @@ let gvar_p : (gref & mutex (option st)) -> slprop =
 
 ghost
 fn dup_gvar_p (x:(gref & mutex (option st)))
-  requires gvar_p x
-  ensures gvar_p x
+  preserves gvar_p x
   ensures gvar_p x
 {
   unfold gvar_p;

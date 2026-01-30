@@ -27,8 +27,7 @@ let folded_pts_to (r:ref U32.t) (n:erased U32.t) : slprop = pts_to r n
 
 
 fn unfold_test (r:ref U32.t) 
-  requires folded_pts_to r 'n
-  ensures folded_pts_to r 'n
+  preserves folded_pts_to r 'n
 {
   unfold folded_pts_to;
   fold folded_pts_to

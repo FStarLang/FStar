@@ -30,9 +30,8 @@ module R = Pulse.Lib.Reference
 
 ghost
 fn aux_squash_pledge (f v : slprop) (_:unit)
-  requires f
+  preserves f
   requires pledge emp_inames f (pledge emp_inames f v)
-  ensures f
   ensures v
 {
   P.squash_pledge emp_inames f v;
@@ -130,9 +129,8 @@ fn rec simple_for
    (r : slprop) // This resource is passed around through iterations.
    (n : nat)
    (f : simple_for_f pre post r)
-   requires r
+   preserves r
    requires on_range pre 0 n
-   ensures r
    ensures on_range post 0 n
 {
   (* Couldn't use a while loop here, weird errors, try again. *)
@@ -156,9 +154,8 @@ fn for_loop
    (r : slprop) // This resource is passed around through iterations.
    (f : (i:nat -> stt unit (r ** pre i) (fun () -> (r ** post i))))
    (lo hi : nat)
-   requires r
+   preserves r
    requires on_range pre lo hi
-   ensures r
    ensures on_range post lo hi
 {
   on_range_le pre;
@@ -209,9 +206,8 @@ fn rec redeem_range
   (p : (nat -> slprop))
   (f : slprop)
   (n : nat)
-  requires f
+  preserves f
   requires on_range (fun i -> pledge emp_inames f (p i)) 0 n
-  ensures f
   ensures on_range p 0 n
 {
   if (n = 0) {

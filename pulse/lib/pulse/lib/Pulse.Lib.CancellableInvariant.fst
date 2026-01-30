@@ -86,10 +86,9 @@ let unpacked c v = pts_to c.r #0.5R true
 ghost
 fn unpack_cinv_vp (#p:perm) (#v:slprop) (c:cinv)
   requires cinv_vp c v
-  requires active c p
+  preserves active c p
   ensures v
   ensures unpacked c v
-  ensures active c p
   opens []
 {
   unfold cinv_vp;

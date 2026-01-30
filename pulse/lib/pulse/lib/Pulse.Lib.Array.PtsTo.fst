@@ -65,8 +65,7 @@ fn pts_to_len
   (a:array elt)
   (#p:perm)
   (#x:Seq.seq elt)
-  requires pts_to a #p x
-  ensures pts_to a #p x
+  preserves pts_to a #p x
   ensures pure (length a == Seq.length x)
 {
   unfold pts_to a #p x;

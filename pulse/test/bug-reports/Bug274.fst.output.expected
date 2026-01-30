@@ -18,7 +18,7 @@
       trade p q
       trade q r
 
-* Info at Bug274.fst(80,4-80,8):
+* Info at Bug274.fst(79,4-79,8):
   - Expected failure:
   - Tactic failed
   - Cannot prove any of:

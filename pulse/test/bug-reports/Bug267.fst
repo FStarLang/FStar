@@ -7,9 +7,8 @@ open FStar.Mul
 (* Complains that 'v is ghost, good. *)
 [@@expect_failure [228]]
 fn value_of u#a (#a:Type u#a) (r:ref a)
-  requires pts_to r 'v
+  preserves pts_to r 'v
   returns v:a
-  ensures pts_to r 'v
   ensures pure (v == 'v)
 {
     'v

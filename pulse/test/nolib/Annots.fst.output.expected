@@ -2,31 +2,31 @@
   - Expected failure:
   - Multiple returns are not allowed.
 
-* Info at Annots.fst(43,2-43,13):
+* Info at Annots.fst(41,2-41,17):
   - Expected failure:
-  - returns must come before ensures (the name returned is in scope for the ensures clause)
+  - preserves must come before the return
 
-* Info at Annots.fst(52,2-52,16):
+* Info at Annots.fst(50,2-50,3):
   - Expected failure:
-  - requires must come before any ensures
+  - Expected expression of type Prims.unit got expression 1 of type Prims.int
 
-* Info at Annots.fst(60,2-60,16):
+* Info at Annots.fst(56,2-56,16):
   - Expected failure:
   - requires must come before the return
 
-* Info at Annots.fst(71,2-71,11):
+* Info at Annots.fst(67,2-67,11):
   - Expected failure:
   - opens must come before the return (the name returned is *not* in scope for the opens clause)
 
-* Info at Annots.fst(79,2-79,16):
+* Info at Annots.fst(76,2-76,3):
   - Expected failure:
-  - requires must come before any ensures
+  - Expected expression of type Prims.unit got expression 1 of type Prims.int
 
-* Info at Annots.fst(87,2-87,16):
+* Info at Annots.fst(82,2-82,16):
   - Expected failure:
   - requires must come before the return
 
-* Info at Annots.fst(113,15-113,16):
+* Info at Annots.fst(106,16-106,17):
   - Expected failure:
   - Identifier not found: v
 

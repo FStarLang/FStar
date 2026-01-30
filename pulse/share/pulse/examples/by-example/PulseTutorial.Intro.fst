@@ -75,9 +75,8 @@ ensures pts_to y ('j + 1)
 //incr_frame$
 fn incr_frame (x y:ref int)
 requires pts_to x 'i
-requires pts_to y 'j
+preserves pts_to y 'j
 ensures pts_to x ('i + 1)
-ensures pts_to y 'j
 {
    incr x;
 }
@@ -86,9 +85,8 @@ ensures pts_to y 'j
 //incr_frame_any$
 fn incr_frame_any (x:ref int) (f:slprop)
 requires pts_to x 'i
-requires f
+preserves f
 ensures pts_to x ('i + 1)
-ensures f
 {
    incr x;
 }
