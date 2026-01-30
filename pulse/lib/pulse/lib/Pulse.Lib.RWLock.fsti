@@ -19,6 +19,7 @@ module Pulse.Lib.RWLock
 
 open Pulse.Lib.Pervasives
 open PulseCore.FractionalPermission
+open Pulse.Lib.Fractional
 
 ///
 /// Reader-Writer Lock with Fractional Permissions
@@ -52,11 +53,6 @@ open PulseCore.FractionalPermission
 ///   release_writer lock
 ///
 
-/// Property that a predicate is fractional (can be split and combined)
-/// A fractional predicate satisfies: pred f1 ** pred f2 <==> pred (f1 +. f2)
-let fractional (p : perm -> slprop) : prop =
-  forall (f1 f2 : perm). p f1 ** p f2 == p (f1 +. f2)
-
 /// Type of reader-writer locks (abstract)  
 val rwlock (pred : perm -> slprop) : Type0
 
@@ -74,8 +70,8 @@ val writer_token (#pred : perm -> slprop) (l : rwlock pred) : slprop
 /// Requires: the predicate with full permission (pred 1.0R)
 ///           and a proof that the predicate is fractional (can be split/combined)
 /// Ensures: is_rwlock with full permission, lock initially unlocked
-fn create (#pred : perm -> slprop) 
-          (frac_pred : squash (fractional pred))
+fn create (#pred : perm -> slprop) {| fractional pred |}
+          (_u : unit)
   requires pred 1.0R
   returns l : rwlock pred
   ensures is_rwlock l #1.0R
@@ -83,7 +79,7 @@ fn create (#pred : perm -> slprop)
 /// Acquire reader access
 /// Spins until a reader slot is available
 /// Receives: reader_parts token and pred f separately so caller can use the predicate
-fn acquire_reader (#pred : perm -> slprop) (#perm_lock:perm) (l : rwlock pred)
+fn acquire_reader (#pred : perm -> slprop) {| fractional pred |} (#perm_lock:perm) (l : rwlock pred)
   preserves is_rwlock l #perm_lock
   returns f : perm
   ensures reader_parts l f ** pred f
@@ -91,31 +87,31 @@ fn acquire_reader (#pred : perm -> slprop) (#perm_lock:perm) (l : rwlock pred)
 /// Release reader access
 /// Returns the reader's fraction to the lock
 /// Requires both reader_parts and pred f
-fn release_reader (#pred : perm -> slprop) (#perm_lock:perm) (l : rwlock pred) (#f:perm)
+fn release_reader (#pred : perm -> slprop) {| fractional pred |} (#perm_lock:perm) (l : rwlock pred) (#f:perm)
   requires is_rwlock l #perm_lock ** reader_parts l f ** pred f
   ensures is_rwlock l #perm_lock
 
 /// Acquire writer access
 /// Spins until all readers have released and no other writer holds the lock
 /// Receives: full permission to the predicate (pred 1.0R)
-fn acquire_writer (#pred : perm -> slprop) (#perm_lock:perm) (l : rwlock pred)
+fn acquire_writer (#pred : perm -> slprop) {| fractional pred |} (#perm_lock:perm) (l : rwlock pred)
   requires is_rwlock l #perm_lock
   ensures is_rwlock l #perm_lock ** writer_token l ** pred 1.0R
 
 /// Release writer access
 /// Returns full permission to the lock
-fn release_writer (#pred : perm -> slprop) (#perm_lock:perm) (l : rwlock pred)
+fn release_writer (#pred : perm -> slprop) {| fractional pred |} (#perm_lock:perm) (l : rwlock pred)
   requires is_rwlock l #perm_lock ** writer_token l ** pred 1.0R
   ensures is_rwlock l #perm_lock
 
 /// Share is_rwlock permission (for multiple users of the same lock)
 ghost
-fn share (#pred:perm -> slprop) (#p:perm) (l:rwlock pred)
+fn share (#pred:perm -> slprop) {| fractional pred |} (#p:perm) (l:rwlock pred)
   requires is_rwlock l #p
   ensures is_rwlock l #(p /. 2.0R) ** is_rwlock l #(p /. 2.0R)
 
 /// Gather is_rwlock permissions
 ghost
-fn gather (#pred:perm -> slprop) (#p1 #p2:perm) (l:rwlock pred)
+fn gather (#pred:perm -> slprop) {| fractional pred |} (#p1 #p2:perm) (l:rwlock pred)
   requires is_rwlock l #p1 ** is_rwlock l #p2
   ensures is_rwlock l #(p1 +. p2)

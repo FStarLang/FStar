@@ -20,6 +20,7 @@ module Pulse.Lib.RWLock
 open Pulse.Lib.Pervasives
 open Pulse.Lib.Primitives
 open Pulse.Lib.CancellableInvariant
+open Pulse.Lib.Fractional
 
 module U32 = FStar.UInt32
 module B = Pulse.Lib.Box
@@ -27,6 +28,7 @@ module GR = Pulse.Lib.GhostReference
 module CInv = Pulse.Lib.CancellableInvariant
 module GFT = Pulse.Lib.GhostFractionalTable
 module OR = Pulse.Lib.OnRange
+module Frac = Pulse.Lib.Fractional
 
 ///
 /// Reader-Writer Lock Implementation using GhostFractionalTable
@@ -49,18 +51,6 @@ let writer_sentinel : U32.t = max_u32
 
 /// Safe reader count limit (to prevent overflow when incrementing)
 let max_readers : (n:U32.t{U32.v n < U32.v writer_sentinel - 1}) = 0xFFFFFFFDul
-
-/// Helper lemma: use fractional property to split
-let fractional_split_lemma (p : perm -> slprop) (f1 f2 : perm) 
-  : Lemma (requires fractional p)
-          (ensures p (f1 +. f2) == (p f1 ** p f2))
-  = ()
-
-/// Helper lemma: use fractional property to combine (reverse direction)
-let fractional_combine_lemma (p : perm -> slprop) (f1 f2 : perm) 
-  : Lemma (requires fractional p)
-          (ensures (p f1 ** p f2) == p (f1 +. f2))
-  = ()
 
 /// Helper lemma: half + half = whole
 let half_plus_half (f : perm) : Lemma (f /. 2.0R +. f /. 2.0R == f) = ()
@@ -387,13 +377,12 @@ type rwlock_rec (pred : perm -> slprop) = {
   ghost_counter: GR.ref U32.t;
   perm_table : GFT.table frac;
   cinv : cinv;
-  frac_pred : squash (fractional pred);
 }
 
 let rwlock (pred : perm -> slprop) : Type0 = rwlock_rec pred
 
 /// is_rwlock: own a share of the cancellable invariant
-let is_rwlock #pred (l : rwlock pred) (#p:perm) : slprop =
+let is_rwlock (#pred : perm -> slprop) (l : rwlock pred) (#p:perm) : slprop =
   inv (iname_of l.cinv) (cinv_vp l.cinv (rwlock_inv pred l.counter l.ghost_counter l.perm_table)) **
   active l.cinv p
 
@@ -402,7 +391,7 @@ let is_rwlock #pred (l : rwlock pred) (#p:perm) : slprop =
 //
 
 /// Reader parts: the permission data for a reader token
-let reader_parts #pred (l : rwlock pred) (f:frac) : slprop = 
+let reader_parts (#pred : perm -> slprop) (l : rwlock pred) (f:frac) : slprop = 
   exists* (i : nat).
     GFT.pts_to l.perm_table i #0.5R f ** //entry i in the table has a non-zero fraction
     pure (f >. 0.0R) 
@@ -411,7 +400,7 @@ let reader_parts #pred (l : rwlock pred) (f:frac) : slprop =
 
 /// Reader token: owns 0.5R of the table entry at position i
 /// This is the reader's proof that they have acquired the lock
-let reader_token #pred (l : rwlock pred) (f:perm) = 
+let reader_token (#pred : perm -> slprop) (l : rwlock pred) (f:perm) = 
   reader_parts l f ** pred f
 
 /// Writer token: ghost witness that writer has the lock  
@@ -422,7 +411,7 @@ let writer_token (#pred : perm -> slprop) (l : rwlock pred) : slprop =
 // Create
 //
 
-fn create (#pred : perm -> slprop) (frac_pred : squash (fractional pred))
+fn create (#pred : perm -> slprop) {| d: fractional pred |} (_u : unit)
   requires pred 1.0R
   returns l : rwlock pred
   ensures is_rwlock l #1.0R
@@ -473,7 +462,6 @@ fn create (#pred : perm -> slprop) (frac_pred : squash (fractional pred))
     ghost_counter = ghost_counter;
     perm_table = perm_table;
     cinv = cinv;
-    frac_pred = frac_pred;
   };
   
   // Rewrite to use record field names
@@ -509,7 +497,7 @@ fn weaken_single_entry
 }
 
 /// Try to acquire reader: CAS counter from expected to expected+1
-fn try_acquire_reader_at (#pred : perm -> slprop) (#perm_lock:perm) (l : rwlock pred) 
+fn try_acquire_reader_at (#pred : perm -> slprop) {| fractional pred |} (#perm_lock:perm) (l : rwlock pred) 
                          (expected : (n:U32.t{U32.v n <= U32.v max_readers}))
   preserves is_rwlock l #perm_lock
   returns result : option perm
@@ -554,11 +542,11 @@ fn try_acquire_reader_at (#pred : perm -> slprop) (#perm_lock:perm) (l : rwlock 
         // Since expected <> writer_sentinel (from precondition), we have pred f
         rewrite (if expected = writer_sentinel then emp else pred f) as (pred f);
         
-        // Split: pred f == pred (f/2) ** pred (f/2)
+        // Split: pred f -> pred (f/2) ** pred (f/2) using the fractional typeclass
         let half_f : perm = f /. 2.0R;
         half_plus_half f;
-        fractional_split_lemma pred half_f half_f;
-        rewrite (pred f) as (pred half_f ** pred half_f);
+        rewrite (pred f) as (pred (half_f +. half_f));
+        Frac.do_share #pred half_f half_f ();
         
         // Allocate new table entry with value half_f at position table_size
         GFT.alloc l.perm_table half_f;
@@ -638,7 +626,7 @@ fn try_acquire_reader_at (#pred : perm -> slprop) (#perm_lock:perm) (l : rwlock 
 }
 
 /// Read the current counter value
-fn read_counter (#pred : perm -> slprop) (#perm_lock:perm) (l : rwlock pred)
+fn read_counter (#pred : perm -> slprop) {| fractional pred |} (#perm_lock:perm) (l : rwlock pred)
   preserves is_rwlock l #perm_lock
   returns n : U32.t
   ensures emp
@@ -671,7 +659,7 @@ fn read_counter (#pred : perm -> slprop) (#perm_lock:perm) (l : rwlock pred)
 
 /// Read the current counter value while holding a reader token
 /// Proves that the counter is > 0 and < writer_sentinel
-fn read_counter_for_release (#pred : perm -> slprop) (#perm_lock:perm) (l : rwlock pred) (#f:perm)
+fn read_counter_for_release (#pred : perm -> slprop) {| fractional pred |} (#perm_lock:perm) (l : rwlock pred) (#f:perm)
   requires is_rwlock l #perm_lock ** reader_token l f
   returns n : (v:U32.t{U32.v v > 0 /\ U32.v v < U32.v writer_sentinel})
   ensures is_rwlock l #perm_lock ** reader_token l f
@@ -745,7 +733,7 @@ fn read_counter_for_release (#pred : perm -> slprop) (#perm_lock:perm) (l : rwlo
 
 /// Acquire reader: spin until successful
 /// Reads current counter and tries to increment (if not at max or writer-held)
-fn rec acquire_reader (#pred : perm -> slprop) (#perm_lock:perm) (l : rwlock pred)
+fn rec acquire_reader (#pred : perm -> slprop) {| fractional pred |} (#perm_lock:perm) (l : rwlock pred)
   preserves is_rwlock l #perm_lock
   returns f : perm
   ensures reader_parts l f ** pred f
@@ -783,7 +771,7 @@ fn rec acquire_reader (#pred : perm -> slprop) (#perm_lock:perm) (l : rwlock pre
 //
 
 /// Try to release reader with expected count
-fn try_release_reader_at (#pred : perm -> slprop) (#perm_lock:perm) (l : rwlock pred) (#f:perm)
+fn try_release_reader_at (#pred : perm -> slprop) {| fractional pred |} (#perm_lock:perm) (l : rwlock pred) (#f:perm)
                          (expected : (n:U32.t{U32.v n > 0 /\ U32.v n < U32.v writer_sentinel}))
   requires is_rwlock l #perm_lock ** reader_token l f
   returns b : bool
@@ -851,8 +839,8 @@ fn try_release_reader_at (#pred : perm -> slprop) (#perm_lock:perm) (l : rwlock 
         // Now we have full permission on the entry, and spec reader_pos == f
         
         // Combine predicates: we have pred f from reader, pred avail from invariant
-        fractional_combine_lemma pred avail f;
-        rewrite (pred avail ** pred f) as (pred (avail +. f));
+        // Using the fractional typeclass gather operation
+        Frac.do_gather #pred avail f ();
         
         // Inline definitions for new_entries, new_avail, new_spec
         // new_entries = Set.remove reader_pos entries
@@ -946,7 +934,7 @@ fn try_release_reader_at (#pred : perm -> slprop) (#perm_lock:perm) (l : rwlock 
 
 /// Release reader: spin until successful
 /// Reads current counter and tries to decrement
-fn rec release_reader (#pred : perm -> slprop) (#perm_lock:perm) (l : rwlock pred) (#f:perm)
+fn rec release_reader (#pred : perm -> slprop) {| fractional pred |} (#perm_lock:perm) (l : rwlock pred) (#f:perm)
   requires is_rwlock l #perm_lock ** reader_parts l f ** pred f
   ensures is_rwlock l #perm_lock
 {
@@ -974,7 +962,7 @@ fn rec release_reader (#pred : perm -> slprop) (#perm_lock:perm) (l : rwlock pre
 //
 
 /// Acquire writer: CAS from 0 to sentinel
-fn rec acquire_writer (#pred : perm -> slprop) (#perm_lock:perm) (l : rwlock pred)
+fn rec acquire_writer (#pred : perm -> slprop) {| fractional pred |} (#perm_lock:perm) (l : rwlock pred)
   preserves is_rwlock l #perm_lock
   ensures writer_token l ** pred 1.0R
 {
@@ -1067,7 +1055,7 @@ fn rec acquire_writer (#pred : perm -> slprop) (#perm_lock:perm) (l : rwlock pre
 //
 
 /// Release writer: set counter back to 0
-fn release_writer (#pred : perm -> slprop) (#perm_lock:perm) (l : rwlock pred)
+fn release_writer (#pred : perm -> slprop) {| fractional pred |} (#perm_lock:perm) (l : rwlock pred)
   requires is_rwlock l #perm_lock ** writer_token l ** pred 1.0R
   ensures is_rwlock l #perm_lock
 {
@@ -1127,7 +1115,7 @@ fn release_writer (#pred : perm -> slprop) (#perm_lock:perm) (l : rwlock pred)
 //
 
 ghost
-fn share (#pred:perm -> slprop) (#p:perm) (l:rwlock pred)
+fn share (#pred:perm -> slprop) {| fractional pred |} (#p:perm) (l:rwlock pred)
   requires is_rwlock l #p
   ensures is_rwlock l #(p /. 2.0R) ** is_rwlock l #(p /. 2.0R)
 {
@@ -1139,7 +1127,7 @@ fn share (#pred:perm -> slprop) (#p:perm) (l:rwlock pred)
 }
 
 ghost
-fn gather (#pred:perm -> slprop) (#p1 #p2:perm) (l:rwlock pred)
+fn gather (#pred:perm -> slprop) {| fractional pred |} (#p1 #p2:perm) (l:rwlock pred)
   requires is_rwlock l #p1 ** is_rwlock l #p2
   ensures is_rwlock l #(p1 +. p2)
 {
