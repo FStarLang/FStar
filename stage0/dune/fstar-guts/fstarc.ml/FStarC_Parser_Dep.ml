@@ -3241,9 +3241,15 @@ let print_dune (outc : FStarC_Util.out_channel) (deps1 : deps) : unit=
                            print_extract_rule uu___7 file_name1
                              [cache_file_name1] "OCaml"
                          else ());
-                        (let uu___6 = output_krml_file file_name1 in
-                         print_extract_rule uu___6 file_name1
-                           [cache_file_name1] "krml"))
+                        (let uu___6 =
+                           FStarC_Options.should_extract mname
+                             FStarC_Options.Krml in
+                         if uu___6
+                         then
+                           let uu___7 = output_krml_file file_name1 in
+                           print_extract_rule uu___7 file_name1
+                             [cache_file_name1] "krml"
+                         else ()))
                      else ());
                     all_checked_files2) in
              profile process_one_key

@@ -4,21 +4,50 @@
 ; 
 ; This directory contains .ml files extracted from F* source code.
 ; 
-; The extraction process uses fstar --dep dune to generate dune rules,
-; which are included via (include dune.extract.inc).
+; The extraction process uses fstar --dep dune to generate dune rules.
+; We generate TWO include files:
+;   1. ulib.dune.inc - Verification rules for ulib (no MLish, no extraction)
+;   2. fstarc.dune.inc - Verification + extraction rules for FStarC (with MLish)
 ;
 ; Build flow:
 ;   1. Run: dune build @extract-stage1 (generates rules and extracts)
 ;   2. The extracted .ml files appear here
 ;   3. Stage1 copies them via (copy_files ../extracted/*.ml)
 
-; Generate extraction rules using --dep dune
-; This produces a dune file with (rule ...) stanzas for each F* file
+; Common include paths
 ; Note: We use relative paths (../../) to ensure the generated rules have relative paths
+
+; =============================================================================
+; Step 1: Generate ulib verification rules (no MLish, no extraction)
+; =============================================================================
+; These rules verify ulib files and cache .checked.lax files.
+; No extraction is performed (--extract 'OCaml:-*' --extract 'krml:-*').
+; Note: FSTAR_EXE environment variable must be set to the path of fstar.exe
 (rule
- (target dune.extract.inc)
+ (target ulib.dune.inc)
  (deps
-   (:fstar ../../stage0/out/bin/fstar.exe)
+   (source_tree ../../ulib))
+ (action
+  (with-stdout-to %{target}
+   (run %{env:FSTAR_EXE=fstar.exe}
+        --lax
+        --dep dune
+        --include ../../ulib
+        --extract "OCaml:-*"
+        --extract "krml:-*"
+        ../../ulib/prims.fst
+        ../../ulib/FStar.Pervasives.Native.fst
+        ../../ulib/FStar.Pervasives.fsti
+        ../../ulib/FStar.Pervasives.fst))))
+
+; =============================================================================
+; Step 2: Generate FStarC extraction rules (with MLish)
+; =============================================================================
+; These rules verify and extract FStarC modules using --MLish.
+; The ulib .checked.lax files are assumed to exist (via --already_cached).
+(rule
+ (target fstarc.dune.inc)
+ (deps
    (source_tree ../../ulib)
    (source_tree ../basic)
    (source_tree ../class)
@@ -37,7 +66,7 @@
    (source_tree ../tests))
  (action
   (with-stdout-to %{target}
-   (run %{fstar} 
+   (run %{env:FSTAR_EXE=fstar.exe} 
         --lax
         --MLish --MLish_effect FStarC.Effect
         --dep dune
@@ -60,13 +89,17 @@
         --extract FStarC
         --extract +FStar.Pervasives
         --extract -FStar.Pervasives.Native
+        --extract "krml:-*"
         ../fstar/FStarC.Main.fst))))
 
+; =============================================================================
 ; Include the generated extraction rules
-; Note: This is commented out until we have a working dune.extract.inc
-; (include dune.extract.inc)
+; =============================================================================
+; Note: These are commented out until we have working includes
+; (include ulib.dune.inc)
+; (include fstarc.dune.inc)
 
 ; Alias for extraction
 (alias
  (name extract-stage1)
- (deps dune.extract.inc))
+ (deps ulib.dune.inc fstarc.dune.inc))
