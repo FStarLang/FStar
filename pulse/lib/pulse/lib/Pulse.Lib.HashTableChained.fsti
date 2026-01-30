@@ -121,3 +121,80 @@ fn free
   (#keys:erased (FS.set k))
   requires is_ht h m keys
   ensures emp
+
+//////////////////////////////////////////////////////////////////////////////
+// Iterator API
+//////////////////////////////////////////////////////////////////////////////
+
+(** Iterator type - abstract handle for iterating over hash table entries *)
+val ht_iter (k:eqtype) (v:Type0) : Type0
+
+(** Get the hash table pointer from an iterator *)
+val ht_of (#k:eqtype) (#v:Type0) (it:ht_iter k v) : ht k v
+
+(** Predicate for an iterator that borrows a hash table
+    - `it`: the iterator handle  
+    - `m`: the map contents of the hash table
+    - `all_keys`: all keys in the hash table
+    - `remaining`: the set of keys not yet visited
+    Invariant: remaining ⊆ all_keys *)
+val is_ht_iter (#k:eqtype) (#v:Type0) ([@@@mkey]it:ht_iter k v) 
+               (m:erased (pmap k v))
+               (all_keys:erased (FS.set k))
+               (remaining:erased (FS.set k))
+  : slprop
+
+(** Create an iterator for a hash table
+    The iterator borrows the table (doesn't consume it)
+    Initially all keys are remaining *)
+fn create_iter
+  (#k:eqtype)
+  (#v:Type0)
+  (h:ht k v)
+  (#m:erased (pmap k v))
+  (#keys:erased (FS.set k))
+  requires is_ht h m keys
+  returns it:ht_iter k v
+  ensures is_ht_iter it m keys keys ** pure (ht_of it == h)
+
+(** Check if there are more entries to iterate *)
+fn iter_has_next
+  (#k:eqtype)
+  (#v:Type0)
+  (it:ht_iter k v)
+  (#m:erased (pmap k v))
+  (#all_keys #remaining:erased (FS.set k))
+  requires is_ht_iter it m all_keys remaining
+  returns b:bool
+  ensures is_ht_iter it m all_keys remaining ** 
+          pure (b <==> FS.cardinality remaining > 0)
+
+(** Get current key-value pair and advance to next
+    Requires that iter_has_next returned true *)
+fn iter_next
+  (#k:eqtype)
+  (#v:Type0)
+  (it:ht_iter k v)
+  (#m:erased (pmap k v))
+  (#all_keys #remaining:erased (FS.set k))
+  requires is_ht_iter it m all_keys remaining ** pure (FS.cardinality remaining > 0)
+  returns p:(k & v)
+  ensures exists* remaining'.
+          is_ht_iter it m all_keys remaining' **
+          pure (
+            FS.mem (fst p) remaining /\
+            remaining' == FS.remove (fst p) remaining /\
+            Some (snd p) == reveal m (fst p)
+          )
+
+(** Finish iteration and return the hash table
+    Can finish at any time (doesn't need to exhaust all elements) *)
+fn finish_iter
+  (#k:eqtype)
+  (#v:Type0)
+  (it:ht_iter k v)
+  (#m:erased (pmap k v))
+  (#all_keys #remaining:erased (FS.set k))
+  requires is_ht_iter it m all_keys remaining
+  returns h:ht k v
+  ensures is_ht h m all_keys ** pure (h == ht_of it)
