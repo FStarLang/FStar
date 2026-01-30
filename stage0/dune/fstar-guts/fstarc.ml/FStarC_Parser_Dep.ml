@@ -3059,6 +3059,196 @@ let print_full (outc : FStarC_Util.out_channel) (deps1 : deps) : unit=
        print_all "ALL_ML_FILES" all_ml_files;
        print_all "ALL_KRML_FILES" all_krml_files;
        FStarC_StringBuffer.output_channel outc sb)
+let print_dune (outc : FStarC_Util.out_channel) (deps1 : deps) : unit=
+  let sb = FStarC_StringBuffer.create (Prims.of_int (10000)) in
+  let pr str = let uu___ = FStarC_StringBuffer.add str sb in () in
+  let norm_path s = FStarC_Util.replace_chars s 92 "/" in
+  let keys = deps_keys deps1.dep_graph in
+  let no_fstar_stubs_file s =
+    let s1 = "FStar.Stubs." in
+    let s2 = "FStar." in
+    let l1 = FStarC_String.length s1 in
+    let uu___ =
+      ((FStarC_String.length s) >= l1) &&
+        (let uu___1 = FStarC_String.substring s Prims.int_zero l1 in
+         uu___1 = s1) in
+    if uu___
+    then
+      let uu___1 =
+        FStarC_String.substring s l1 ((FStarC_String.length s) - l1) in
+      Prims.strcat s2 uu___1
+    else s in
+  let output_file ext fst_file =
+    let basename =
+      let uu___ =
+        let uu___1 = FStarC_Filepath.basename fst_file in
+        check_and_strip_suffix uu___1 in
+      FStarC_Option.must uu___ in
+    let basename1 = no_fstar_stubs_file basename in
+    let ml_base_name = FStarC_Util.replace_chars basename1 46 "_" in
+    FStarC_Find.prepend_output_dir (Prims.strcat ml_base_name ext) in
+  let output_ml_file f = let uu___ = output_file ".ml" f in norm_path uu___ in
+  let output_krml_file f =
+    let uu___ = output_file ".krml" f in norm_path uu___ in
+  let cache_file f = let uu___ = cache_file_name f in norm_path uu___ in
+  let mlish_flags =
+    let uu___ = FStarC_Options.ml_ish () in
+    if uu___
+    then
+      let uu___1 = FStarC_Options.ml_ish_effect () in
+      Prims.strcat " --MLish --MLish_effect " uu___1
+    else "" in
+  let print_check_rule target source all_deps =
+    pr "(rule\n";
+    pr " (targets ";
+    pr target;
+    pr ")\n";
+    pr " (deps";
+    FStarC_List.iter (fun f -> pr " "; pr (norm_path f)) all_deps;
+    pr ")\n";
+    pr " (action (run %{fstar} %{env:FSTAR_OPTIONS=}";
+    pr mlish_flags;
+    pr " --already_cached \"*,\" -c ";
+    pr (norm_path source);
+    pr " -o %{targets})))\n\n" in
+  let print_extract_rule target source all_deps codegen =
+    pr "(rule\n";
+    pr " (targets ";
+    pr target;
+    pr ")\n";
+    pr " (deps";
+    FStarC_List.iter (fun f -> pr " "; pr (norm_path f)) all_deps;
+    pr ")\n";
+    pr " (action (run %{fstar} %{env:FSTAR_OPTIONS=}";
+    pr mlish_flags;
+    pr " --already_cached \"*,\" --codegen ";
+    pr codegen;
+    pr " ";
+    pr (norm_path source);
+    pr " -o %{targets})))\n\n" in
+  let uu___ =
+    phase1 deps1.file_system_map deps1.dep_graph
+      deps1.interfaces_with_inlining true in
+  match uu___ with
+  | (widened, dep_graph) ->
+      let all_checked_files =
+        FStarC_List.fold_left
+          (fun all_checked_files1 file_name1 ->
+             let process_one_key uu___1 =
+               let dep_node1 =
+                 let uu___2 = deps_try_find deps1.dep_graph file_name1 in
+                 FStarC_Option.must uu___2 in
+               let uu___2 =
+                 let uu___3 = is_interface file_name1 in
+                 if uu___3
+                 then
+                   (FStar_Pervasives_Native.None,
+                     FStar_Pervasives_Native.None)
+                 else
+                   (let uu___5 =
+                      let uu___6 = lowercase_module_name file_name1 in
+                      interface_of deps1 uu___6 in
+                    match uu___5 with
+                    | FStar_Pervasives_Native.None ->
+                        (FStar_Pervasives_Native.None,
+                          FStar_Pervasives_Native.None)
+                    | FStar_Pervasives_Native.Some iface ->
+                        let uu___6 =
+                          let uu___7 =
+                            let uu___8 =
+                              let uu___9 =
+                                deps_try_find deps1.dep_graph iface in
+                              FStarC_Option.must uu___9 in
+                            uu___8.edges in
+                          FStar_Pervasives_Native.Some uu___7 in
+                        ((FStar_Pervasives_Native.Some iface), uu___6)) in
+               match uu___2 with
+               | (iface_fn, iface_deps) ->
+                   let iface_deps1 =
+                     FStarC_Option.map
+                       (FStarC_List.filter
+                          (fun iface_dep ->
+                             let uu___3 =
+                               FStarC_Util.for_some
+                                 (dep_subsumed_by iface_dep) dep_node1.edges in
+                             Prims.op_Negation uu___3)) iface_deps in
+                   let files =
+                     FStarC_List.map
+                       (file_of_dep_aux true deps1.file_system_map
+                          deps1.cmd_line_files) dep_node1.edges in
+                   let files1 =
+                     match iface_deps1 with
+                     | FStar_Pervasives_Native.None -> files
+                     | FStar_Pervasives_Native.Some iface_deps2 ->
+                         let iface_files =
+                           FStarC_List.map
+                             (file_of_dep_aux true deps1.file_system_map
+                                deps1.cmd_line_files) iface_deps2 in
+                         remove_dups_fast FStarC_Class_Ord.ord_string
+                           (FStarC_List.op_At files iface_files) in
+                   let files2 =
+                     if FStar_Pervasives_Native.uu___is_Some iface_fn
+                     then
+                       let iface_fn1 = FStarC_Option.must iface_fn in
+                       let uu___3 =
+                         FStarC_List.filter (fun f -> f <> iface_fn1) files1 in
+                       let uu___4 = cache_file_name iface_fn1 in uu___4 ::
+                         uu___3
+                     else files1 in
+                   let cache_file_name1 = cache_file file_name1 in
+                   let all_checked_files2 =
+                     let uu___3 =
+                       let uu___4 =
+                         let uu___5 = module_name_of_file file_name1 in
+                         FStarC_Options.should_be_already_cached uu___5 in
+                       Prims.op_Negation uu___4 in
+                     if uu___3
+                     then
+                       (print_check_rule cache_file_name1 file_name1
+                          (file_name1 :: files2);
+                        cache_file_name1
+                        ::
+                        all_checked_files1)
+                     else all_checked_files1 in
+                   ((let uu___4 = is_implementation file_name1 in
+                     if uu___4
+                     then
+                       let mname = lowercase_module_name file_name1 in
+                       ((let uu___6 =
+                           FStarC_Options.should_extract mname
+                             FStarC_Options.OCaml in
+                         if uu___6
+                         then
+                           let uu___7 = output_ml_file file_name1 in
+                           print_extract_rule uu___7 file_name1
+                             [cache_file_name1] "OCaml"
+                         else ());
+                        (let uu___6 = output_krml_file file_name1 in
+                         print_extract_rule uu___6 file_name1
+                           [cache_file_name1] "krml"))
+                     else ());
+                    all_checked_files2) in
+             profile process_one_key
+               "FStarC.Parser.Dep.print_dune.process_one_key") [] keys in
+      let all_fst_files =
+        let uu___1 = FStarC_List.filter is_implementation keys in
+        FStarC_Util.sort_with FStarC_String.compare uu___1 in
+      let all_ml_files =
+        let uu___1 =
+          FStarC_List.filter
+            (fun fst_file ->
+               let uu___2 = lowercase_module_name fst_file in
+               FStarC_Options.should_extract uu___2 FStarC_Options.OCaml)
+            all_fst_files in
+        FStarC_List.map output_ml_file uu___1 in
+      (pr "; File lists (for reference)\n";
+       pr "; ALL_CHECKED_FILES:";
+       FStarC_List.iter (fun f -> pr " "; pr f) all_checked_files;
+       pr "\n";
+       pr "; ALL_ML_FILES:";
+       FStarC_List.iter (fun f -> pr " "; pr f) all_ml_files;
+       pr "\n";
+       FStarC_StringBuffer.output_channel outc sb)
 let do_print (outc : FStarC_Util.out_channel) (fn : Prims.string)
   (deps1 : deps) : unit=
   let pref uu___ =
@@ -3091,6 +3281,37 @@ let do_print (outc : FStarC_Util.out_channel) (fn : Prims.string)
        [uu___7] in
      FStarC_Util.fprint outc "# Command line arguments: \"%s\"\n" uu___6);
     FStarC_Util.fprint outc "\n" [] in
+  let dune_pref uu___ =
+    (let uu___2 =
+       let uu___3 = FStarC_Effect.op_Bang FStarC_Options._version in [uu___3] in
+     FStarC_Util.fprint outc "; This dune file was generated by F* %s\n"
+       uu___2);
+    (let uu___3 =
+       let uu___4 =
+         FStarC_Class_Show.show FStarC_Class_Show.showable_string
+           FStarC_Util.exec_name in
+       [uu___4] in
+     FStarC_Util.fprint outc "; Executable: %s\n" uu___3);
+    (let uu___4 =
+       let uu___5 = FStarC_Effect.op_Bang FStarC_Options._commit in [uu___5] in
+     FStarC_Util.fprint outc "; Hash: %s\n" uu___4);
+    (let uu___5 =
+       let uu___6 =
+         let uu___7 =
+           let uu___8 = FStarC_Util.getcwd () in
+           FStarC_Filepath.normalize_file_path uu___8 in
+         FStarC_Class_Show.show FStarC_Class_Show.showable_string uu___7 in
+       [uu___6] in
+     FStarC_Util.fprint outc "; Running in directory %s\n" uu___5);
+    (let uu___6 =
+       let uu___7 =
+         let uu___8 = FStarC_Util.get_cmd_args () in
+         FStarC_Class_Show.show
+           (FStarC_Class_Show.show_list FStarC_Class_Show.showable_string)
+           uu___8 in
+       [uu___7] in
+     FStarC_Util.fprint outc "; Command line arguments: \"%s\"\n" uu___6);
+    FStarC_Util.fprint outc "\n" [] in
   let uu___ = FStarC_Options.dep () in
   match uu___ with
   | FStar_Pervasives_Native.Some "make" -> (pref (); print_make outc deps1)
@@ -3098,6 +3319,10 @@ let do_print (outc : FStarC_Util.out_channel) (fn : Prims.string)
       (pref ();
        profile (fun uu___2 -> print_full outc deps1)
          "FStarC.Parser.Deps.print_full_deps")
+  | FStar_Pervasives_Native.Some "dune" ->
+      (dune_pref ();
+       profile (fun uu___2 -> print_dune outc deps1)
+         "FStarC.Parser.Deps.print_dune_deps")
   | FStar_Pervasives_Native.Some "graph" ->
       print_graph outc fn deps1.dep_graph deps1.file_system_map
         deps1.cmd_line_files

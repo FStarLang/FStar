@@ -1285,7 +1285,7 @@ let specs_with_types (warn_unsafe : Prims.bool) :
                                           let uu___40 =
                                             let uu___41 =
                                               text
-                                                "Output the transitive closure of the full dependency graph in three formats:" in
+                                                "Output the transitive closure of the full dependency graph in several formats:" in
                                             let uu___42 =
                                               let uu___43 =
                                                 let uu___44 =
@@ -1299,7 +1299,12 @@ let specs_with_types (warn_unsafe : Prims.bool) :
                                                     let uu___48 =
                                                       text
                                                         "'make': (deprecated) a format suitable for 'make', including only dependences among source files" in
-                                                    [uu___48] in
+                                                    let uu___49 =
+                                                      let uu___50 =
+                                                        text
+                                                          "'dune': a format suitable for 'dune', outputting (rule ...) stanzas" in
+                                                      [uu___50] in
+                                                    uu___48 :: uu___49 in
                                                   uu___46 :: uu___47 in
                                                 uu___44 :: uu___45 in
                                               FStarC_Errors_Msg.bulleted
@@ -1311,7 +1316,8 @@ let specs_with_types (warn_unsafe : Prims.bool) :
                                                ["make";
                                                "graph";
                                                "full";
-                                               "raw"]), uu___40) in
+                                               "raw";
+                                               "dune"]), uu___40) in
                                         let uu___40 =
                                           let uu___41 =
                                             let uu___42 =
