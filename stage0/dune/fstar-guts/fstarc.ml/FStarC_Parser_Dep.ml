@@ -3066,9 +3066,16 @@ let print_dune (outc : FStarC_Util.out_channel) (deps1 : deps) : unit=
   let cwd =
     let uu___ = FStarC_Util.getcwd () in
     FStarC_Filepath.normalize_file_path uu___ in
+  let project_root =
+    let uu___ = FStarC_Filepath.join_paths (FStarC_Filepath.join_paths cwd "..") ".." in
+    FStarC_Filepath.normalize_file_path uu___ in
   let make_relative p =
     let p_normalized = FStarC_Filepath.normalize_file_path p in
     let uu___ = FStarC_Filepath.make_relative_to cwd p_normalized in
+    norm_path uu___ in
+  let make_project_relative p =
+    let p_normalized = FStarC_Filepath.normalize_file_path p in
+    let uu___ = FStarC_Filepath.make_relative_to project_root p_normalized in
     norm_path uu___ in
   let keys = deps_keys deps1.dep_graph in
   let no_fstar_stubs_file s =
@@ -3098,7 +3105,12 @@ let print_dune (outc : FStarC_Util.out_channel) (deps1 : deps) : unit=
     let uu___ = output_file ".ml" f in make_relative uu___ in
   let output_krml_file f =
     let uu___ = output_file ".krml" f in make_relative uu___ in
-  let cache_file f = let uu___ = cache_file_name f in make_relative uu___ in
+  let local_cache_file f =
+    let base = FStarC_Filepath.basename f in
+    let uu___ = FStarC_Options.lax () in
+    if uu___
+    then Prims.strcat base ".checked.lax"
+    else Prims.strcat base ".checked" in
   let mlish_flags =
     let uu___ = FStarC_Options.ml_ish () in
     if uu___
@@ -3106,6 +3118,10 @@ let print_dune (outc : FStarC_Util.out_channel) (deps1 : deps) : unit=
       let uu___1 = FStarC_Options.ml_ish_effect () in
       Prims.strcat " --MLish --MLish_effect " uu___1
     else "" in
+  let is_checked_file f =
+    (FStarC_Util.ends_with f ".checked") ||
+      (FStarC_Util.ends_with f ".checked.lax") in
+  let format_dep f = FStarC_Filepath.basename f in
   let print_check_rule target source all_deps =
     pr "(rule\n";
     pr " (targets ";
@@ -3113,12 +3129,12 @@ let print_dune (outc : FStarC_Util.out_channel) (deps1 : deps) : unit=
     pr ")\n";
     pr " (deps";
     FStarC_List.iter
-      (fun f -> pr " "; (let uu___7 = make_relative f in pr uu___7)) all_deps;
+      (fun f -> pr " "; (let uu___7 = format_dep f in pr uu___7)) all_deps;
     pr ")\n";
     pr " (action (run %{env:FSTAR_EXE=fstar.exe} %{env:FSTAR_OPTIONS=}";
     pr mlish_flags;
     pr " --already_cached \"*,\" -c ";
-    (let uu___11 = make_relative source in pr uu___11);
+    (let uu___12 = FStarC_Filepath.basename source in pr uu___12);
     pr " -o %{targets})))\n\n" in
   let print_extract_rule target source all_deps codegen =
     pr "(rule\n";
@@ -3127,14 +3143,14 @@ let print_dune (outc : FStarC_Util.out_channel) (deps1 : deps) : unit=
     pr ")\n";
     pr " (deps";
     FStarC_List.iter
-      (fun f -> pr " "; (let uu___7 = make_relative f in pr uu___7)) all_deps;
+      (fun f -> pr " "; (let uu___7 = format_dep f in pr uu___7)) all_deps;
     pr ")\n";
     pr " (action (run %{env:FSTAR_EXE=fstar.exe} %{env:FSTAR_OPTIONS=}";
     pr mlish_flags;
     pr " --already_cached \"*,\" --codegen ";
     pr codegen;
     pr " ";
-    (let uu___13 = make_relative source in pr uu___13);
+    (let uu___13 = FStarC_Filepath.basename source in pr uu___13);
     pr " -o %{targets})))\n\n" in
   let uu___ =
     phase1 deps1.file_system_map deps1.dep_graph
@@ -3202,10 +3218,10 @@ let print_dune (outc : FStarC_Util.out_channel) (deps1 : deps) : unit=
                        let iface_fn1 = FStarC_Option.must iface_fn in
                        let uu___3 =
                          FStarC_List.filter (fun f -> f <> iface_fn1) files1 in
-                       let uu___4 = cache_file_name iface_fn1 in uu___4 ::
+                       let uu___4 = local_cache_file iface_fn1 in uu___4 ::
                          uu___3
                      else files1 in
-                   let cache_file_name1 = cache_file file_name1 in
+                   let local_cache_name = local_cache_file file_name1 in
                    let all_checked_files2 =
                      let uu___3 =
                        let uu___4 =
@@ -3214,9 +3230,9 @@ let print_dune (outc : FStarC_Util.out_channel) (deps1 : deps) : unit=
                        Prims.op_Negation uu___4 in
                      if uu___3
                      then
-                       (print_check_rule cache_file_name1 file_name1
+                       (print_check_rule local_cache_name file_name1
                           (file_name1 :: files2);
-                        cache_file_name1
+                        local_cache_name
                         ::
                         all_checked_files1)
                      else all_checked_files1 in
@@ -3231,7 +3247,7 @@ let print_dune (outc : FStarC_Util.out_channel) (deps1 : deps) : unit=
                          then
                            let uu___7 = output_ml_file file_name1 in
                            print_extract_rule uu___7 file_name1
-                             [cache_file_name1] "OCaml"
+                             [local_cache_name] "OCaml"
                          else ());
                         (let uu___6 =
                            FStarC_Options.should_extract mname
@@ -3240,7 +3256,7 @@ let print_dune (outc : FStarC_Util.out_channel) (deps1 : deps) : unit=
                          then
                            let uu___7 = output_krml_file file_name1 in
                            print_extract_rule uu___7 file_name1
-                             [cache_file_name1] "krml"
+                             [local_cache_name] "krml"
                          else ()))
                      else ());
                     all_checked_files2) in
@@ -3299,7 +3315,10 @@ let do_print (outc : FStarC_Util.out_channel) (fn : Prims.string)
     FStarC_Util.fprint outc "\n" [] in
   let dune_pref uu___ =
     (let uu___2 =
-       let uu___3 = FStarC_Effect.op_Bang FStarC_Options._version in [uu___3] in
+       let uu___3 =
+         let uu___4 = FStarC_Effect.op_Bang FStarC_Options._version in
+         FStarC_Util.trim_string uu___4 in
+       [uu___3] in
      FStarC_Util.fprint outc "; This dune file was generated by F* %s\n"
        uu___2);
     (let uu___3 =
@@ -3309,7 +3328,10 @@ let do_print (outc : FStarC_Util.out_channel) (fn : Prims.string)
        [uu___4] in
      FStarC_Util.fprint outc "; Executable: %s\n" uu___3);
     (let uu___4 =
-       let uu___5 = FStarC_Effect.op_Bang FStarC_Options._commit in [uu___5] in
+       let uu___5 =
+         let uu___6 = FStarC_Effect.op_Bang FStarC_Options._commit in
+         FStarC_Util.trim_string uu___6 in
+       [uu___5] in
      FStarC_Util.fprint outc "; Hash: %s\n" uu___4);
     (let uu___5 =
        let uu___6 =

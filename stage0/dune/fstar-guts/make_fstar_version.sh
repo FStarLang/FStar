@@ -5,7 +5,7 @@ windows () {
 }
 
 if [[ -z "$FSTAR_VERSION" ]]; then
-  FSTAR_VERSION=$(head -n 1 version.txt)~dev
+  FSTAR_VERSION=$(head -n 1 version.txt | tr -d '\r\n')~dev
 fi
 
 if windows; then

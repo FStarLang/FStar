@@ -2288,13 +2288,20 @@ let print_dune (outc : out_channel) (deps:deps) : unit =
     let pr str = ignore <| FStarC.StringBuffer.add str sb in
     let norm_path s = replace_chars s '\\' "/" in
     
-    (* Get cwd for making paths relative *)
+    (* Get cwd and compute project root (2 levels up from src/extracted) *)
     let cwd = Filepath.normalize_file_path (BU.getcwd ()) in
+    let project_root = Filepath.normalize_file_path (Filepath.join_paths (Filepath.join_paths cwd "..") "..") in
     
-    (* Make a path relative to cwd using proper path computation *)
+    (* Make a path relative to cwd (for local references) *)
     let make_relative (p : string) : string =
         let p_normalized = Filepath.normalize_file_path p in
         norm_path (Filepath.make_relative_to cwd p_normalized)
+    in
+    
+    (* Make a path relative to project root (for %{project_root}/ references) *)
+    let make_project_relative (p : string) : string =
+        let p_normalized = Filepath.normalize_file_path p in
+        norm_path (Filepath.make_relative_to project_root p_normalized)
     in
     
     let keys = deps_keys deps.dep_graph in
@@ -2315,7 +2322,11 @@ let print_dune (outc : out_channel) (deps:deps) : unit =
     in
     let output_ml_file   f = make_relative (output_file ".ml" f) in
     let output_krml_file f = make_relative (output_file ".krml" f) in
-    let cache_file       f = make_relative (cache_file_name f) in
+    (* For dune: put checked files in current directory, not next to source *)
+    let local_cache_file (f:string) : string =
+        let base = Filepath.basename f in
+        if Options.lax() then base ^ ".checked.lax" else base ^ ".checked"
+    in
     
     (* Build --MLish flags if enabled *)
     let mlish_flags =
@@ -2324,16 +2335,26 @@ let print_dune (outc : out_channel) (deps:deps) : unit =
         else ""
     in
     
+    (* Check if a filename is a checked file (local, no path needed) *)
+    let is_checked_file (f:string) : bool =
+        BU.ends_with f ".checked" || BU.ends_with f ".checked.lax"
+    in
+    
+    (* Format a dep: all files become local basename *)
+    let format_dep (f:string) : string =
+        Filepath.basename f  (* All deps are local basenames now *)
+    in
+    
     (* Print a dune rule for checking a file *)
     let print_check_rule (target : string) (source : string) (all_deps : list string) : unit =
         pr "(rule\n";
         pr " (targets "; pr target; pr ")\n";
         pr " (deps"; 
-        all_deps |> List.iter (fun f -> pr " "; pr (make_relative f));
+        all_deps |> List.iter (fun f -> pr " "; pr (format_dep f));
         pr ")\n";
         pr " (action (run %{env:FSTAR_EXE=fstar.exe} %{env:FSTAR_OPTIONS=}"; pr mlish_flags;
         pr " --already_cached \"*,\" -c ";
-        pr (make_relative source); pr " -o %{targets})))\n\n"
+        pr (Filepath.basename source); pr " -o %{targets})))\n\n"
     in
     
     (* Print a dune rule for extraction *)
@@ -2341,11 +2362,11 @@ let print_dune (outc : out_channel) (deps:deps) : unit =
         pr "(rule\n";
         pr " (targets "; pr target; pr ")\n";
         pr " (deps";
-        all_deps |> List.iter (fun f -> pr " "; pr (make_relative f));
+        all_deps |> List.iter (fun f -> pr " "; pr (format_dep f));
         pr ")\n";
         pr " (action (run %{env:FSTAR_EXE=fstar.exe} %{env:FSTAR_OPTIONS=}"; pr mlish_flags;
         pr " --already_cached \"*,\" --codegen ";
-        pr codegen; pr " "; pr (make_relative source); pr " -o %{targets})))\n\n"
+        pr codegen; pr " "; pr (Filepath.basename source); pr " -o %{targets})))\n\n"
     in
     
     let widened, dep_graph = phase1 deps.file_system_map deps.dep_graph deps.interfaces_with_inlining true in
@@ -2391,15 +2412,15 @@ let print_dune (outc : out_channel) (deps:deps) : unit =
               if iface_fn |> Some? then
                 let iface_fn = iface_fn |> Option.must in
                 files |> List.filter (fun f -> f <> iface_fn)
-                      |> (fun files -> (cache_file_name iface_fn)::files)
+                      |> (fun files -> (local_cache_file iface_fn)::files)
               else files in
 
-            let cache_file_name = cache_file file_name in
+            let local_cache_name = local_cache_file file_name in
 
             let all_checked_files =
                 if not (Options.should_be_already_cached (module_name_of_file file_name))
-                then (print_check_rule cache_file_name file_name (file_name :: files);
-                      cache_file_name::all_checked_files)
+                then (print_check_rule local_cache_name file_name (file_name :: files);
+                      local_cache_name::all_checked_files)
                 else all_checked_files
             in
 
@@ -2412,14 +2433,14 @@ let print_dune (outc : out_channel) (deps:deps) : unit =
                 then print_extract_rule 
                        (output_ml_file file_name)
                        file_name
-                       [cache_file_name]
+                       [local_cache_name]
                        "OCaml";
                        
                 if Options.should_extract mname Options.Krml
                 then print_extract_rule 
                        (output_krml_file file_name)
                        file_name
-                       [cache_file_name]
+                       [local_cache_name]
                        "krml"
             end;
             
@@ -2462,9 +2483,9 @@ let do_print (outc : out_channel) (fn : string) deps : unit =
     ()
   in
   let dune_pref () =
-    BU.fprint outc "; This dune file was generated by F* %s\n" [!Options._version];
+    BU.fprint outc "; This dune file was generated by F* %s\n" [BU.trim_string !Options._version];
     BU.fprint outc "; Executable: %s\n" [show BU.exec_name];
-    BU.fprint outc "; Hash: %s\n" [!Options._commit];
+    BU.fprint outc "; Hash: %s\n" [BU.trim_string !Options._commit];
     BU.fprint outc "; Running in directory %s\n" [show (Filepath.normalize_file_path (BU.getcwd ()))];
     BU.fprint outc "; Command line arguments: \"%s\"\n" [show (BU.get_cmd_args ())];
     BU.fprint outc "\n" [];
