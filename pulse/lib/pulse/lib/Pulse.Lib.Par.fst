@@ -23,7 +23,8 @@ fn par (#preL: slprop) #postL #preR #postR
   {| is_send preL, is_send postL, is_send preR, is_send postR |}
   (f:unit -> stt unit preL (fun _ -> postL))
   (g:unit -> stt unit preR (fun _ -> postR))
-  requires preL ** preR
+  requires preL
+  requires preR
   ensures postL ** postR
 {
   let c = create postL #_;

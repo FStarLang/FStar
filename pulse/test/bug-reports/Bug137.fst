@@ -22,7 +22,8 @@ open Pulse.Lib.Pervasives
 let tag p : slprop = p
 
 fn test_elim_pure (x:option bool)
-requires exists* q. tag q ** pure (Some? x)
+requires exists* q. tag q
+requires pure (Some? x)
 ensures exists* q. tag q ** pure (Some? x)
 {
     let v = Some?.v x;

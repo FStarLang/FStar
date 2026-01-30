@@ -73,7 +73,8 @@ ensures c.inv 0
 
 
 fn do_something (c:ctr) (#i #k:erased int)
-requires c.inv i ** c.snapshot k
+requires c.inv i
+requires c.snapshot k
 ensures exists* j. c.inv j
 {
   let recall = c.recall;

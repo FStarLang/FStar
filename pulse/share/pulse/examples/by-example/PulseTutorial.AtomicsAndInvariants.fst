@@ -48,7 +48,8 @@ ensures inv i (owns r)
 //update_ref_atomic$
 atomic
 fn update_ref_atomic (r:ref U32.t) (i:iname) (v:U32.t)
-requires inv i (owns r) ** later_credit 1
+requires inv i (owns r)
+requires later_credit 1
 ensures inv i (owns r)
 opens [i]
 {
@@ -64,7 +65,8 @@ opens [i]
 [@@allow_ambiguous]
 ghost
 fn pts_to_dup_impossible u#a (#a: Type u#a) (x:ref a)
-requires pts_to x 'v ** pts_to x 'u
+requires pts_to x 'v
+requires pts_to x 'u
 ensures  pts_to x 'v ** pts_to x 'u ** pure False
 {
     gather x;

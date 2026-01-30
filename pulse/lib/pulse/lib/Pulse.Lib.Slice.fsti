@@ -176,7 +176,9 @@ fn ghost_split (#t: Type) (s: slice t) (#p: perm) (i: SZ.t)
 
 ghost
 fn join (#t: Type) (s1: slice t) (#p: perm) (#v1: Seq.seq t) (s2: slice t) (#v2: Seq.seq t) (s: slice t)
-    requires pts_to s1 #p v1 ** pts_to s2 #p v2 ** is_split s s1 s2
+    requires pts_to s1 #p v1
+    requires pts_to s2 #p v2
+    requires is_split s s1 s2
     ensures pts_to s #p (Seq.append v1 v2)
 
 (* `subslice_rest r s p i j v` is the resource remaining after taking the subslice `r = s[i..j]` *)

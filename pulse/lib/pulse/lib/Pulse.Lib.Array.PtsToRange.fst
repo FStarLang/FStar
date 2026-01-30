@@ -257,7 +257,8 @@ fn pts_to_range_gather
   (#l #r: nat)
   (#s0 #s1: Seq.seq a)
   (#p0 #p1:perm)
-      requires pts_to_range arr l r #p0 s0 ** pts_to_range arr l r #p1 s1
+      requires pts_to_range arr l r #p0 s0
+      requires pts_to_range arr l r #p1 s1
       ensures pts_to_range arr l r #(p0 +. p1) s0 ** pure (s0 == s1)
 {
   unfold_pts_to_range arr l r s0;

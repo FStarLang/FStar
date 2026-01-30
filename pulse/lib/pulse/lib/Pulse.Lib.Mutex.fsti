@@ -71,7 +71,8 @@ fn lock (#a:Type0) (#v:a -> slprop) (#p:perm) (m:mutex a)
 
 fn unlock (#a:Type0) (#v:a -> slprop) (#p:perm) (m:mutex a) (mg:mutex_guard a)
   preserves mutex_live m #p v
-  requires mg `belongs_to` m ** (exists* x. pts_to mg x ** v x)
+  requires mg `belongs_to` m
+  requires (exists* x. pts_to mg x ** v x)
 
 ghost
 fn share (#a:Type0) (#v:a -> slprop) (#p:perm) (m:mutex a)
@@ -81,5 +82,6 @@ fn share (#a:Type0) (#v:a -> slprop) (#p:perm) (m:mutex a)
 [@@allow_ambiguous]
 ghost
 fn gather (#a:Type0) (#v:a -> slprop) (#p1 #p2:perm) (m:mutex a)
-  requires mutex_live m #p1 v ** mutex_live m #p2 v
+  requires mutex_live m #p1 v
+  requires mutex_live m #p2 v
   ensures mutex_live m #(p1 +. p2) v

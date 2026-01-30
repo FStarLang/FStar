@@ -17,7 +17,8 @@ ensures on l (pure p)
 
 ghost
 fn test_on_l_prover_star (l:loc_id) (p1 p2:slprop)
-requires on l p1 ** on l p2
+requires on l p1
+requires on l p2
 ensures on l (p1 ** p2)
 {}
 
@@ -95,13 +96,15 @@ ensures on l (pred r (y + x))
 [@@expect_failure]
 ghost
 fn test_pred_ext_key_failure (l:loc_id) (r s:int) (x y:int)
-requires pred r (x + y) ** pure (r == s)
+requires pred r (x + y)
+requires pure (r == s)
 ensures pred s (y + x)
 {}
 
 [@@expect_failure]
 ghost
 fn test_pred_on_l_ext_key_failure (l:loc_id) (r s:int) (x y:int)
-requires on l (pred r (x + y)) ** pure (r == s)
+requires on l (pred r (x + y))
+requires pure (r == s)
 ensures on l (pred s (y + x))
 {}

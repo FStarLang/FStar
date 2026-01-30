@@ -28,7 +28,8 @@ fn h ()
 }
 
 fn test0 (x y z : int)
-  requires foo x ** pure (x == 3)
+  requires foo x
+  requires pure (x == 3)
   ensures  foo 103
 {
   rewrite each x as 3;
@@ -37,7 +38,8 @@ fn test0 (x y z : int)
 
 [@@expect_failure] // we won't try to ask the SMT if x==3
 fn test1 (x y z : int)
-  requires foo x ** pure (x == 3)
+  requires foo x
+  requires pure (x == 3)
   ensures  foo 103
 {
   h ();
@@ -54,7 +56,8 @@ fn test2 (x y z : int)
 // No keys on foo2_nokey means we try to match occurrences of this predicate,
 // and discharge a query.
 fn test3 (x y z : int)
-  requires foo2_nokey x y ** pure (y == z)
+  requires foo2_nokey x y
+  requires pure (y == z)
   ensures  foo2_nokey x z
 {
   ()
@@ -63,7 +66,9 @@ fn test3 (x y z : int)
 // But if there are several, then it's ambiguous
 [@@expect_failure]
 fn test3' (x y z : int)
-  requires foo2_nokey 1 z ** foo2_nokey x y ** pure (y == z)
+  requires foo2_nokey 1 z
+  requires foo2_nokey x y
+  requires pure (y == z)
   ensures  foo2_nokey 1 y ** foo2_nokey x z
 {
   ()
@@ -74,7 +79,8 @@ fn test3' (x y z : int)
 // commit to proving that `y == z` (i.e. log that as a guard ) and carry on
 // checking.
 fn test4 (x y z : int)
-  requires foo2 x y ** pure (y == z)
+  requires foo2 x y
+  requires pure (y == z)
   ensures  foo2 x z
 {
   ()
@@ -83,7 +89,10 @@ fn test4 (x y z : int)
 // two key matches is ambiguous, should reject
 [@@expect_failure]
 fn test5 (x y z w u : int)
-  requires foo2 x w ** foo2 x y ** pure (y == z) ** pure (u == w)
+  requires foo2 x w
+  requires foo2 x y
+  requires pure (y == z)
+  requires pure (u == w)
   ensures  foo2 x z ** foo2 x u
 {
   // rewrite foo2 x w as foo2 x u;
@@ -93,7 +102,10 @@ fn test5 (x y z w u : int)
 // This works since, after rewriting, foo2 x u gets syntactically
 // matched and we are left with only foo2 x y |- foo2 x z
 fn test6 (x y z w u : int)
-  requires foo2 x w ** foo2 x y ** pure (y == z) ** pure (u == w)
+  requires foo2 x w
+  requires foo2 x y
+  requires pure (y == z)
+  requires pure (u == w)
   ensures  foo2 x z ** foo2 x u
 {
   rewrite foo2 x w as foo2 x u;
@@ -115,7 +127,8 @@ fn test7 (x y z w u : int)
 
 [@@expect_failure]
 fn test8 (x y z w u : int)
-  requires foo2 x y ** foo2 w z
+  requires foo2 x y
+  requires foo2 w z
   ensures  foo2 y x ** foo2 w z
 {
   flip2 ();

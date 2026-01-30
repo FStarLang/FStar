@@ -84,7 +84,8 @@ fn bind_pledge (#is:inames) (#f:slprop) (#v1:slprop) (#v2:slprop)
         (extra : slprop) {| is_send extra |}
         (#is_k:inames { inames_subset is_k is })
         (k:unit -> bind_pledge_f #is #is_k f #extra v1 v2)
-  requires pledge is f v1 ** extra
+  requires pledge is f v1
+  requires extra
   ensures pledge is f v2
 
 (* Weaker variant, the proof does not use f. It's implemented
@@ -100,7 +101,8 @@ fn bind_pledge' (#is:inames) (#f:slprop) (#v1:slprop) (#v2:slprop)
         (extra : slprop) {| is_send extra |}
         (#is_k:inames { inames_subset is_k is })
         (k:unit -> bind_pledge_f' #is #is_k f #extra v1 v2)
-  requires pledge is f v1 ** extra
+  requires pledge is f v1
+  requires extra
   ensures pledge is f v2
 
 [@@erasable]
@@ -129,7 +131,8 @@ fn rewrite_pledge (#is:inames) (#f:slprop) (v1 : slprop) (v2 : slprop)
 
 ghost
 fn join_pledge (#is:inames) (#f:slprop) (v1:slprop) (v2:slprop)
-  requires pledge is f v1 ** pledge is f v2
+  requires pledge is f v1
+  requires pledge is f v2
   ensures pledge is f (v1 ** v2)
 
 (* Heterogenous variant. Takes the result invlist as an arg since we don't have
@@ -146,7 +149,8 @@ fn squash_pledge'
 
 ghost
 fn ghost_split_pledge (#is:inames) (#f:slprop) (v1:slprop) (v2:slprop) {| is_send v1, is_send v2 |}
-  requires pledge is f (v1 ** v2) ** later_credit 2
+  requires pledge is f (v1 ** v2)
+  requires later_credit 2
   returns i : iname
   ensures pledge (add_inv is i) f v1 ** pledge (add_inv is i) f v2 ** pure (not (mem_inv is i))
 

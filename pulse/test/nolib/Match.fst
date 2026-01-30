@@ -36,7 +36,8 @@ fn rel_cases (x:t1) (y:t2)
 }
 
 fn test (x : t1) (y z : t2)
-  requires rel x y ** rel x z
+  requires rel x y
+  requires rel x z
   ensures rel x y ** rel x z ** pure (C? y == C? z)
 {
   rel_cases x y;

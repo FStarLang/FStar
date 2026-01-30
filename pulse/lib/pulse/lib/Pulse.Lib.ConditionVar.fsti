@@ -36,12 +36,15 @@ fn create (p:slprop) {| is_send p |}
 
 atomic
 fn signal_atomic (c:cvar_t) (#p:slprop)
-  requires send c p ** p ** later_credit 1
+  requires send c p
+  requires p
+  requires later_credit 1
   ensures emp
   opens [ inv_name c ]
 
 fn signal (c:cvar_t) (#p:slprop)
-  requires send c p ** p
+  requires send c p
+  requires p
   ensures emp
 
 fn wait (b:cvar_t) (#p:slprop)
@@ -50,6 +53,7 @@ fn wait (b:cvar_t) (#p:slprop)
 
 ghost
 fn split (b:cvar_t) (#p #q:slprop) {| is_send p, is_send q |}
-  requires recv b (p ** q) ** later_credit 2
+  requires recv b (p ** q)
+  requires later_credit 2
   ensures recv b p ** recv b q
   opens [ inv_name b ]

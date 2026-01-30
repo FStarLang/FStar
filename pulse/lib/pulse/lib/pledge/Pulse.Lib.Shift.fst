@@ -149,7 +149,8 @@ ghost
 fn elim_shift_alt
   (is:inames)
   (hyp concl:slprop)
-requires shift #is hyp concl ** hyp
+requires shift #is hyp concl
+requires hyp
 ensures concl
 opens is
 {
@@ -224,7 +225,8 @@ ghost
 fn shift_compose
   (#is : inames)
   (p q r : slprop)
-requires shift #is p q ** shift #is q r
+requires shift #is p q
+requires shift #is q r
 ensures  shift #is p r
 {
   intro (shift #is p r) #(shift #is p q ** shift #is q r) fn _

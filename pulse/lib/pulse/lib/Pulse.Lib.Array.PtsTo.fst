@@ -180,7 +180,8 @@ fn gather
   (arr:array a)
   (#s0 #s1:Ghost.erased (Seq.seq a))
   (#p0 #p1:perm)
-  requires pts_to arr #p0 s0 ** pts_to arr #p1 s1
+  requires pts_to arr #p0 s0
+  requires pts_to arr #p1 s1
   ensures pts_to arr #(p0 +. p1) s0 ** pure (s0 == s1)
 {
   unfold pts_to arr #p0 s0;

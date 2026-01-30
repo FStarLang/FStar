@@ -139,7 +139,8 @@ fn cases_of_is_tree #t (x:tree_t t) (ft:T.tree t)
  
 ghost
 fn is_tree_case_none (#t:Type) (x:tree_t t) (#l:T.tree t)
-  requires is_tree x l ** pure (x == None)
+  requires is_tree x l
+  requires pure (x == None)
   ensures  is_tree x l ** pure (l == T.Leaf)
 {
   rewrite each x as None;
@@ -154,7 +155,8 @@ fn is_tree_case_none (#t:Type) (x:tree_t t) (#l:T.tree t)
  
 ghost
 fn is_tree_case_some (#t:Type) (x:tree_t t) (v:node_ptr t) (#ft:T.tree t) 
-  requires is_tree x ft ** pure (x == Some v)
+  requires is_tree x ft
+  requires pure (x == Some v)
 ensures
    exists* (node:node t) (ltree:T.tree t) (rtree:T.tree t).
     (v |-> node) **
@@ -251,7 +253,8 @@ fn node_cons (#t:Type0) (v:t) (ltree:tree_t t) (rtree:tree_t t) (#l:(T.tree t)) 
 /// Appends value [v] at the leftmost leaf of the tree that [ptr] points to.
 
 fn rec append_left_none (#t:Type0) (x:tree_t t) (v:t) (#ft:G.erased (T.tree t))
-  requires is_tree x ft ** pure (None? x)
+  requires is_tree x ft
+  requires pure (None? x)
   returns y:tree_t t
   ensures is_tree x ft  ** is_tree y (T.Node v T.Leaf T.Leaf)
 {
@@ -355,7 +358,8 @@ fn rec append_right (#t:Type0) (x:tree_t t) (v:t) (#ft:G.erased (T.tree t))
 
 
 fn node_data (#t:Type) (x:tree_t t) (#ft:G.erased (T.tree t))
-    requires is_tree x ft  ** (pure (Some? x))
+    requires is_tree x ft
+    requires (pure (Some? x))
     returns v:t
     ensures is_tree x ft
 {
@@ -412,7 +416,8 @@ fn rec mem (#t:eqtype) (x:tree_t t) (v: t) (#ft:G.erased (T.tree t))
 
 
 fn get_some_ref (#t:Type) (x:tree_t t)
-  requires is_tree x 'l ** pure (T.Node? 'l)
+  requires is_tree x 'l
+  requires pure (T.Node? 'l)
   returns v:node_ptr t
 ensures  
   exists* (node:node t) (ltree:T.tree t) (rtree:T.tree t).
@@ -742,7 +747,8 @@ fn rec insert_avl (#t:Type0) (cmp: T.cmp t) (tree:tree_t t) (key: t)
  
 ghost
 fn is_tree_case_some1 (#t:Type) (x:tree_t t) (v:node_ptr t) (#ft:T.tree t) 
-  requires is_tree x ft ** pure (x == Some v)
+  requires is_tree x ft
+  requires pure (x == Some v)
   ensures  is_tree x ft ** pure (T.Node? ft)
 {
   rewrite each x as Some v;

@@ -25,7 +25,8 @@ fn test2 ()
 (* ambig *)
 [@@expect_failure]
 fn test3 ()
-  requires p 1 ** p 2
+  requires p 1
+  requires p 2
   ensures  exists* (v:int). p v
 {
   introduce exists* (v:int). p v with _;
@@ -34,7 +35,8 @@ fn test3 ()
 }
 
 fn test4 ()
-  requires p 1 ** p 2
+  requires p 1
+  requires p 2
   ensures  exists* (v:int). p v
 {
   introduce exists* (v:int). p v with 2;

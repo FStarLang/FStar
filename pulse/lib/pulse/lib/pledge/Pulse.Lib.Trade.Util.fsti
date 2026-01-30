@@ -65,12 +65,14 @@ fn assoc_concl_r (#is: inames) (p q r s:slprop)
 
 ghost
 fn elim_hyp_l (#is: inames) (p q r:slprop)
-    requires (trade #is (p ** q) r) ** p
+    requires (trade #is (p ** q) r)
+    requires p
     ensures (trade #is q r)
 
 ghost
 fn elim_hyp_r (#is: inames) (p q r:slprop)
-    requires (trade #is (p ** q) r) ** q
+    requires (trade #is (p ** q) r)
+    requires q
     ensures (trade #is p r)
 
 ghost
@@ -91,14 +93,16 @@ ghost
 fn weak_concl_l
   (#is: inames)
   (p1 p2 p: slprop)
-  requires (trade #is p1 p2) ** p
+  requires (trade #is p1 p2)
+  requires p
   ensures (trade #is p1 (p ** p2))
 
 ghost
 fn weak_concl_r
   (#is: inames)
   (p1 p2 p: slprop)
-  requires (trade #is p1 p2) ** p
+  requires (trade #is p1 p2)
+  requires p
   ensures (trade #is p1 (p2 ** p))
 
 ghost
@@ -112,7 +116,8 @@ ghost
 fn rewrite_with_trade
   (#[T.exact (`emp_inames)] is:inames)
   (p1 p2: slprop)
-  requires p1 ** pure (p1 == p2)
+  requires p1
+  requires pure (p1 == p2)
   ensures p2 ** (trade #is p2 p1)
 
 ghost

@@ -13,7 +13,8 @@ assume val foo () (#x:erased int)
 [@@expect_failure]
 
 fn ambig1 ()
-  requires p 1 ** p 2
+  requires p 1
+  requires p 2
   ensures p 1
 {
   foo ();
@@ -24,7 +25,8 @@ fn ambig1 ()
 (* lucky *)
 
 fn ambig2 ()
-  requires p 1 ** p 2
+  requires p 1
+  requires p 2
   ensures p 2
 {
   foo ();
@@ -34,7 +36,8 @@ fn ambig2 ()
 
 
 fn ambig ()
-  requires p 1 ** p 2
+  requires p 1
+  requires p 2
   ensures emp
 {
   foo ();

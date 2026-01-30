@@ -35,7 +35,16 @@ assume val foo10 : slprop
 
 #push-options "--no_smt"
 fn test_synt ()
-  requires foo1 ** foo2 ** foo3 ** foo4 ** foo5 ** foo6 ** foo7 ** foo8 ** foo9 ** foo10
+  requires foo1
+  requires foo2
+  requires foo3
+  requires foo4
+  requires foo5
+  requires foo6
+  requires foo7
+  requires foo8
+  requires foo9
+  requires foo10
   ensures foo10 ** foo9 ** foo8 ** foo7 ** foo6 ** foo5 ** foo4 ** foo3 ** foo2 ** foo1
 {
   ();
@@ -49,7 +58,16 @@ assume val foo : int -> slprop
 
 
 fn test_synt2 ()
-  requires foo 1 ** foo 2 ** foo 3 ** foo 4 ** foo 5 ** foo 6 ** foo 7 ** foo 8 ** foo 9 ** foo 10
+  requires foo 1
+  requires foo 2
+  requires foo 3
+  requires foo 4
+  requires foo 5
+  requires foo 6
+  requires foo 7
+  requires foo 8
+  requires foo 9
+  requires foo 10
   ensures foo 10 ** foo 9 ** foo 8 ** foo 7 ** foo 6 ** foo 5 ** foo 4 ** foo 3 ** foo 2 ** foo 1
 {
   ();

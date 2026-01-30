@@ -16,7 +16,8 @@ val foo () (#x:erased int)
 [@@expect_failure]
 
 fn ambig ()
-  requires p 1 ** p 2
+  requires p 1
+  requires p 2
   ensures  p 1
 {
   foo ();
@@ -39,7 +40,8 @@ fn ambig ()
 
 
 fn ok1 ()
-  requires p 1 ** p 2
+  requires p 1
+  requires p 2
   ensures p 2
 {
   foo () #1;
@@ -49,7 +51,8 @@ fn ok1 ()
 
 
 fn ok2 ()
-  requires p 1 ** p 2
+  requires p 1
+  requires p 2
   ensures p 1
 {
   foo () #2;
@@ -61,7 +64,8 @@ fn ok2 ()
 syntactically equal we do not complain. *)
 
 fn ok3 ()
-  requires p 1 ** p 1
+  requires p 1
+  requires p 1
   ensures emp
 {
   foo ();
@@ -78,7 +82,8 @@ assume val foo2 () (#x #y:erased int)
 This is a problem for any use of gather, really. *)
 
 fn ok4 ()
-  requires p 2 ** p 1
+  requires p 2
+  requires p 1
   ensures emp
 {
   foo2 ();

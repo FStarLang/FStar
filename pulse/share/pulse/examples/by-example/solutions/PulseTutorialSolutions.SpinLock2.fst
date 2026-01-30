@@ -85,7 +85,8 @@ ensures p ** locked l
 
 
 fn release #p (l:lock p)
-requires p ** locked l
+requires p
+requires locked l
 ensures emp
 {
   with_invariants l.i {

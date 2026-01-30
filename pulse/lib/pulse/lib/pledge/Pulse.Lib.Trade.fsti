@@ -91,13 +91,15 @@ ghost
 fn trade_compose
   (#is : inames)
   (p q r : slprop)
-  requires trade #is p q ** trade #is q r
+  requires trade #is p q
+  requires trade #is q r
   ensures  trade #is p r
 
 ghost
 fn rewrite_with_trade
   (p1 p2 : slprop)
-  requires p1 ** pure (p1 == p2)
+  requires p1
+  requires pure (p1 == p2)
   ensures  p2 ** (p2 @==> p1)
 
 instance val is_send_across_trade #b #g #is (p1 p2: slprop) {| is_send_across #b g p1, is_send_across g p2 |} : is_send_across g (trade #is p1 p2)

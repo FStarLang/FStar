@@ -94,7 +94,8 @@ fn from_array (#t: Type) (a: A.array t) (#p: perm) (#v: Ghost.erased (Seq.seq t)
 
 ghost
 fn to_array (#t: Type) (s: ptr t) (a: array t) (#p: perm) (#v: Seq.seq t)
-    requires pts_to s #p v ** is_from_array s (Seq.length v) a
+    requires pts_to s #p v
+    requires is_from_array s (Seq.length v) a
     ensures A.pts_to a #p v
 {
     unfold is_from_array s (Seq.length v) a;
@@ -254,7 +255,9 @@ fn gather
   (arr:ptr a)
   (#s0 #s1:Ghost.erased (Seq.seq a))
   (#p0 #p1:perm)
-  requires pts_to arr #p0 s0 ** pts_to arr #p1 s1 ** pure (Seq.length s0 == Seq.length s1)
+  requires pts_to arr #p0 s0
+  requires pts_to arr #p1 s1
+  requires pure (Seq.length s0 == Seq.length s1)
   ensures pts_to arr #(p0 +. p1) s0 ** pure (s0 == s1)
 {
     unfold pts_to arr #p0 s0;
@@ -325,7 +328,9 @@ ghost fn ghost_split (#t: Type) (s: ptr t) (#p: perm) (i: SZ.t)
 
 ghost
 fn join (#t: Type) (s1: ptr t) (#p: perm) (#v1: Seq.seq t) (s2: ptr t) (#v2: Seq.seq t)
-    requires pts_to s1 #p v1 ** pts_to s2 #p v2 ** pure (adjacent s1 (Seq.length v1) s2)
+    requires pts_to s1 #p v1
+    requires pts_to s2 #p v2
+    requires pure (adjacent s1 (Seq.length v1) s2)
     ensures pts_to s1 #p (Seq.append v1 v2)
 {
     unfold pts_to s1 #p v1;
@@ -343,7 +348,8 @@ fn memcpy
     (len: SZ.t)
     (#s0:Ghost.erased (Seq.seq t) { SZ.v idx_src + SZ.v len <= Seq.length s0 })
     (#s1:Ghost.erased (Seq.seq t) { SZ.v idx_dst + SZ.v len <= Seq.length s1 })
-  requires pts_to src #p0 s0 ** pts_to dst s1
+  requires pts_to src #p0 s0
+  requires pts_to dst s1
   ensures pts_to src #p0 s0 **
     pts_to dst (Seq.slice s0 0 (SZ.v len) `Seq.append` Seq.slice s1 (SZ.v len) (Seq.length s1))
 {

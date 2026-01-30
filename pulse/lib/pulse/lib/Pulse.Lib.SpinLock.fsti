@@ -44,7 +44,8 @@ fn rec acquire (#v:slprop) (#p:perm) (l:lock)
 
 fn release (#v:slprop) (#p:perm) (l:lock)
   preserves lock_alive l #p v
-  requires lock_acquired l ** v
+  requires lock_acquired l
+  requires v
 
 ghost
 fn share (#v:slprop) (#p:perm) (l:lock)
@@ -54,7 +55,8 @@ fn share (#v:slprop) (#p:perm) (l:lock)
 [@@allow_ambiguous]
 ghost
 fn gather (#v:slprop) (#p1 #p2 :perm) (l:lock)
-  requires lock_alive l #p1 v ** lock_alive l #p2 v
+  requires lock_alive l #p1 v
+  requires lock_alive l #p2 v
   ensures lock_alive l #(p1 +. p2) v
 
 fn free (#v:slprop) (l:lock)
@@ -66,5 +68,6 @@ I'm not sure if we can prove v1 == v2 here. *)
 ghost
 fn lock_alive_inj
   (l:lock) (#p1 #p2 :perm) (#v1 #v2 :slprop)
-  requires lock_alive l #p1 v1 ** lock_alive l #p2 v2
+  requires lock_alive l #p1 v1
+  requires lock_alive l #p2 v2
   ensures  lock_alive l #p1 v1 ** lock_alive l #p2 v1

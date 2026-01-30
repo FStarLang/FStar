@@ -261,7 +261,8 @@ ensures can_give gs (i - 1) ** can_give gs 1
 
 ghost
 fn gather_has_given (#n:nat) (gs:ghost_state n) (#i #j:nat)
-requires has_given gs i ** has_given gs j
+requires has_given gs i
+requires has_given gs j
 ensures has_given gs (i + j)
 {
   unfold (has_given gs i);
@@ -375,7 +376,8 @@ fn par_atomic (#is #js #pf #pg #qf #qg:_)
       //  {| is_send pf, is_send pg, is_send qf, is_send qg |}
        (f: unit -> stt_atomic unit #Observable is pf (fun _ -> qf))
        (g: unit -> stt_atomic unit js pg (fun _ -> qg))
-  requires pf ** pg
+  requires pf
+  requires pg
   ensures qf ** qg
 {
   admit (); // is_send
@@ -388,7 +390,8 @@ fn par_atomic_l (#is #pf #pg #qf #qg:_)
       //  {| is_send pf, is_send pg, is_send qf, is_send qg |}
        (f: unit -> stt_atomic unit #Observable is pf (fun _ -> qf))
        (g: unit -> stt unit pg (fun _ -> qg))
-  requires pf ** pg
+  requires pf
+  requires pg
   ensures qf ** qg
 {
   admit (); // is_send

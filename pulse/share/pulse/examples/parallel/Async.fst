@@ -52,7 +52,8 @@ fn async_fill
   (f : (unit -> stt a pre post))
   (r : Box.box (option a))
   (_:unit)
-  requires pre ** Box.pts_to r None
+  requires pre
+  requires Box.pts_to r None
   returns _ : unit
   ensures box_solves_post r post
 {
@@ -141,7 +142,8 @@ fn __map
 {
   let r' = Box.alloc (None #b);
   fn filler (_:unit)
-    requires async_joinable h ** Box.pts_to r' None
+    requires async_joinable h
+    requires Box.pts_to r' None
     ensures box_solves_post r' post2
   {
     let x = await h;

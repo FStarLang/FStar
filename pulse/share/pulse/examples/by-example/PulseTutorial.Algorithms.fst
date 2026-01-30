@@ -78,7 +78,8 @@ let no_majority (#a:eqtype) (s:Seq.seq a) = forall (x:a). ~(x `has_majority_in` 
 fn majority
   (#[@@@ Rust_generics_bounds ["Copy"; "PartialEq"]] a:eqtype)
   #p (#s:G.erased _) (votes:array a) (len:SZ.t { SZ.v len == Seq.length s })
-  requires pts_to votes #p s ** pure (0 < SZ.v len /\ SZ.fits (2 * SZ.v len))
+  requires pts_to votes #p s
+  requires pure (0 < SZ.v len /\ SZ.fits (2 * SZ.v len))
   returns x:option a
   ensures pts_to votes #p s **
           pure ((x == None ==> no_majority s) /\ (Some? x ==> (Some?.v x) `has_majority_in` s))
@@ -180,7 +181,8 @@ type u32_t = FStar.UInt32.t
 
 //majoritymono$
 fn majority_mono #p (#s:G.erased _) (votes:array u32_t) (len:SZ.t { SZ.v len == Seq.length s })
-  requires pts_to votes #p s ** pure (0 < SZ.v len /\ SZ.fits (2 * SZ.v len))
+  requires pts_to votes #p s
+  requires pure (0 < SZ.v len /\ SZ.fits (2 * SZ.v len))
   returns x:option u32_t
   ensures pts_to votes #p s **
           pure ((x == None ==> no_majority s) /\ (Some? x ==> (Some?.v x) `has_majority_in` s))

@@ -168,7 +168,8 @@ ghost fn with_invariants_g u#a (a: Type u#a)
 {
   ghost fn k ()
     opens is
-    requires pre ** p
+    requires pre
+    requires p
     returns x: Ghost.erased a
     ensures post x ** p
   {

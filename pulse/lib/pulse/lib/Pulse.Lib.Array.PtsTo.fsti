@@ -111,7 +111,8 @@ fn free
         u#a (#elt: Type u#a)
         (a: array elt)
         (#s: Ghost.erased (Seq.seq elt))
-  requires pts_to a s ** pure (is_full_array a)
+  requires pts_to a s
+  requires pure (is_full_array a)
   ensures  emp
 
 ghost
@@ -130,7 +131,8 @@ fn gather
   (arr:array a)
   (#s0 #s1:Ghost.erased (Seq.seq a))
   (#p0 #p1:perm)
-  requires pts_to arr #p0 s0 ** pts_to arr #p1 s1
+  requires pts_to arr #p0 s0
+  requires pts_to arr #p1 s1
   ensures  pts_to arr #(p0 +. p1) s0 ** pure (s0 == s1)
 
 [@@allow_ambiguous]

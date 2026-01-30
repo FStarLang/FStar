@@ -84,7 +84,8 @@ let unpacked c v = pts_to c.r #0.5R true
 
 ghost
 fn unpack_cinv_vp (#p:perm) (#v:slprop) (c:cinv)
-  requires cinv_vp c v ** active c p
+  requires cinv_vp c v
+  requires active c p
   ensures v ** unpacked c v ** active c p
   opens []
 {
@@ -103,7 +104,8 @@ fn unpack_cinv_vp (#p:perm) (#v:slprop) (c:cinv)
 
 ghost
 fn pack_cinv_vp (#v:slprop) (c:cinv)
-  requires v ** unpacked c v
+  requires v
+  requires unpacked c v
   ensures cinv_vp c v
   opens []
 {
@@ -131,7 +133,8 @@ fn share (#p:perm) (c:cinv)
 
 ghost
 fn gather (#p1 #p2:perm) (c:cinv)
-  requires active c p1 ** active c p2
+  requires active c p1
+  requires active c p2
   ensures active c (p1 +. p2)
 {
   unfold (active c p1);
@@ -168,7 +171,8 @@ fn cancel_ (#v:slprop) (c:cinv)
 
 ghost
 fn cancel (#v:slprop) (c:cinv)
-  requires inv (iname_of c) (cinv_vp c v) ** active c 1.0R
+  requires inv (iname_of c) (cinv_vp c v)
+  requires active c 1.0R
     ** later_credit 1 // Maybe we could hide the credit in active
   ensures v
   opens [iname_of c]

@@ -26,7 +26,8 @@ fn par (#p #q #r #s:_)
         {| is_send p, is_send q, is_send r, is_send s |}
        (f: (unit -> stt unit p (fun _ -> q)))
        (g: (unit -> stt unit r (fun _ -> s)))
-requires p ** r
+requires p
+requires r
 ensures q ** s
 {
     par #p #q #r #s
@@ -59,7 +60,8 @@ ensures pts_to x (i + 1)
 
 //par_incr$
 fn par_incr (x y:ref int)
-requires pts_to x 'i ** pts_to y 'j
+requires pts_to x 'i
+requires pts_to y 'j
 ensures pts_to x ('i + 1) ** pts_to y ('j + 1)
 {
    par (fun _ -> incr x #'i)
@@ -70,7 +72,8 @@ ensures pts_to x ('i + 1) ** pts_to y ('j + 1)
 
 //incr_frame$
 fn incr_frame (x y:ref int)
-requires pts_to x 'i ** pts_to y 'j
+requires pts_to x 'i
+requires pts_to y 'j
 ensures pts_to x ('i + 1) ** pts_to y 'j
 {
    incr x;
@@ -79,7 +82,8 @@ ensures pts_to x ('i + 1) ** pts_to y 'j
 
 //incr_frame_any$
 fn incr_frame_any (x:ref int) (f:slprop)
-requires pts_to x 'i ** f
+requires pts_to x 'i
+requires f
 ensures pts_to x ('i + 1) ** f
 {
    incr x;

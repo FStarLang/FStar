@@ -47,7 +47,8 @@ ensures pts_to x #0.5R 'v ** regain_half x 'v
 //use_regain_half$
 ghost
 fn use_regain_half (x:GR.ref int)
-requires pts_to x #0.5R 'v ** regain_half x 'v
+requires pts_to x #0.5R 'v
+requires regain_half x 'v
 ensures pts_to x 'v
 {
   unfold regain_half;
@@ -82,7 +83,8 @@ ensures pts_to x #0.5R 'v ** regain_half_q x
 //use_regain_half_q$
 ghost
 fn use_regain_half_q (x:GR.ref int)
-requires pts_to x #0.5R 'u ** regain_half_q x
+requires pts_to x #0.5R 'u
+requires regain_half_q x
 ensures pts_to x 'u
 {
   unfold regain_half_q;
@@ -118,7 +120,8 @@ ensures pts_to x #0.5R 'w ** can_update x
 //update$
 ghost
 fn update (x:GR.ref int) (k:int)
-requires pts_to x #0.5R 'u ** can_update x
+requires pts_to x #0.5R 'u
+requires can_update x
 ensures pts_to x #0.5R k ** can_update x
 {
   unfold can_update;

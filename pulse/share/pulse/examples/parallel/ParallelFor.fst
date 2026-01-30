@@ -30,7 +30,8 @@ module R = Pulse.Lib.Reference
 
 ghost
 fn aux_squash_pledge (f v : slprop) (_:unit)
-  requires f ** pledge emp_inames f (pledge emp_inames f v)
+  requires f
+  requires pledge emp_inames f (pledge emp_inames f v)
   ensures  f ** v
 {
   P.squash_pledge emp_inames f v;
@@ -128,7 +129,8 @@ fn rec simple_for
    (r : slprop) // This resource is passed around through iterations.
    (n : nat)
    (f : simple_for_f pre post r)
-   requires r ** on_range pre 0 n
+   requires r
+   requires on_range pre 0 n
    ensures r ** on_range post 0 n
 {
   (* Couldn't use a while loop here, weird errors, try again. *)
@@ -152,7 +154,8 @@ fn for_loop
    (r : slprop) // This resource is passed around through iterations.
    (f : (i:nat -> stt unit (r ** pre i) (fun () -> (r ** post i))))
    (lo hi : nat)
-   requires r ** on_range pre lo hi
+   requires r
+   requires on_range pre lo hi
    ensures r ** on_range post lo hi
 {
   on_range_le pre;
@@ -203,7 +206,8 @@ fn rec redeem_range
   (p : (nat -> slprop))
   (f : slprop)
   (n : nat)
-  requires f ** on_range (fun i -> pledge emp_inames f (p i)) 0 n
+  requires f
+  requires on_range (fun i -> pledge emp_inames f (p i)) 0 n
   ensures f ** on_range p 0 n
 {
   if (n = 0) {
@@ -333,7 +337,9 @@ fn rec ffold
   (ss : (i:nat -> stt_ghost unit emp_inames (p i ** fp i) (fun () -> fp (i+1))))
   (n : nat)
   (i : nat)
-  requires pure (i <= n) ** fp i ** on_range p i n
+  requires pure (i <= n)
+  requires fp i
+  requires on_range p i n
   ensures fp n
 {
    if (i = n) {
@@ -386,7 +392,8 @@ parallel_for_wsr
   (unfold_pre : (i:nat -> stt_ghost unit emp_inames (full_pre (i+1)) (fun () -> pre i ** full_pre i)))
   (fold_post : (i:nat -> stt_ghost unit emp_inames (post i ** full_post i) (fun () -> full_post (i+1))))
   (n : pos)
-  requires full_pre n ** full_post 0
+  requires full_pre n
+  requires full_post 0
   ensures full_pre 0 ** full_post n
 {
   funfold pre full_pre unfold_pre n;
@@ -412,7 +419,8 @@ fn rec h_for_task
   (f : (i:nat -> stt unit (pre i) (fun () -> post i)))
   (lo hi : nat)
   (_:unit)
-  requires pool_alive #e p ** on_range pre lo hi
+  requires pool_alive #e p
+  requires on_range pre lo hi
   ensures pledge emp_inames (pool_done p) (on_range post lo hi)
 {
   if (hi - lo < 100) {

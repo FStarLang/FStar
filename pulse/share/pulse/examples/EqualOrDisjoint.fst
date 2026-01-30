@@ -71,7 +71,8 @@ ensures refs_eq_or_disjoint x x v v
 
 ghost
 fn intro_refs_disjoint u#a (#a:Type u#a) (x1 x2:ref a) (#v1 #v2:erased a)
-requires x1 |-> v1 ** x2 |-> v2
+requires x1 |-> v1
+requires x2 |-> v2
 ensures refs_eq_or_disjoint x1 x2 v1 v2
 {
   share x1; share x2;
@@ -208,7 +209,8 @@ ensures pure (v1 == v2)
 
 ghost
 fn intro_refs_disj u#a (#a:Type u#a) (x1 x2:ref a) (#v1 #v2:erased a)
-requires x1 |-> v1 ** x2 |-> v2
+requires x1 |-> v1
+requires x2 |-> v2
 ensures refs_eq_or_disjoint x1 x2 v1 v2
 ensures pure (x1 =!= x2)
 {
@@ -293,7 +295,8 @@ ensures x |-> v
 }
 
 fn call_swap_disj (#a:Type0) (x1 x2:ref a) (#v1 #v2:erased a)
-requires x1 |-> v1 ** x2 |-> v2
+requires x1 |-> v1
+requires x2 |-> v2
 ensures x1 |-> v2 ** x2 |-> v1
 {
   intro_refs_disj x1 x2;

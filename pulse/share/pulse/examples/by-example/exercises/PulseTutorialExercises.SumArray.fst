@@ -22,7 +22,8 @@ fn read (arr:array int) (s:erased (seq int) { Seq.length s > 0 })
 [@@expect_failure]
 
 fn read_spec_fails (arr:array int) (s:erased (seq int))
-  requires pts_to arr s ** pure (Seq.length s > 0)
+  requires pts_to arr s
+  requires pure (Seq.length s > 0)
   returns x:int
   ensures pts_to arr s ** pure (x == Seq.index s 0)
 {

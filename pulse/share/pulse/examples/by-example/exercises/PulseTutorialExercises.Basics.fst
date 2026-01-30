@@ -57,7 +57,8 @@ fn write (r:ref int) p (n:erased int)
 
 
 fn incr2 (r1 r2:ref int)
-  requires pts_to r1 'n1 ** pts_to r2 'n2
+  requires pts_to r1 'n1
+  requires pts_to r2 'n2
   ensures pts_to r1 ('n1 + 1) ** pts_to r2 ('n2 + 1)
 {
     // pts_to r1 ‘n1 ** pts_to r2 ‘n2

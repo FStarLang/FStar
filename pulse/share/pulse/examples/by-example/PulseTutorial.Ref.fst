@@ -31,7 +31,8 @@ ensures pts_to r ('v + 1)
 
 //swap$
 fn swap u#a (#a: Type u#a) (r0 r1:ref a)
-requires pts_to r0 'v0 ** pts_to r1 'v1
+requires pts_to r0 'v0
+requires pts_to r1 'v1
 ensures pts_to r0 'v1 ** pts_to r1 'v0
 {
     let v0 = !r0;
@@ -215,7 +216,8 @@ ensures
 
 
 fn max_perm u#a (#a: Type u#a) (r:ref a) #p anything
-requires pts_to r #p 'v ** pure (~ (p <=. 1.0R))
+requires pts_to r #p 'v
+requires pure (~ (p <=. 1.0R))
 returns _:squash False
 ensures anything
 {

@@ -41,7 +41,8 @@ let destroy c #i = c.destroy i
 [@@allow_ambiguous]
 ghost
 fn gather (c:ctr) #p #q #i #j
-requires c.inv p i ** c.inv q j
+requires c.inv p i
+requires c.inv q j
 ensures c.inv (p +. q) i
 {
     let gather = c.gather;

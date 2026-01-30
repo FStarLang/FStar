@@ -218,7 +218,8 @@ ensures
 }
 
 fn signal (c:cvar_t) (#p:slprop)
-  requires send c p ** p
+  requires send c p
+  requires p
   ensures emp
 {
   later_credit_buy 1;

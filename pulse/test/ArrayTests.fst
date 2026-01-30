@@ -215,7 +215,8 @@ fn read_at_offset_refine_poly (#t:Type0) (#p:perm) (#s:Ghost.erased (Seq.seq t))
 [@@expect_failure]
 
 fn read_at_offset_refine_fail (a:array U32.t) (i:US.t) (#p:perm) (#s:Ghost.erased (Seq.seq U32.t))
-   requires (A.pts_to a #p s ** pure (US.v i < A.length a))
+   requires A.pts_to a #p s
+   requires pure (US.v i < A.length a)
    returns x: (x:U32.t { Seq.length s == A.length a /\
                          x == Seq.index s (US.v i)})
    ensures (
@@ -246,7 +247,8 @@ fn read_at_offset_refine_post (a:array U32.t) (i:(i:US.t { US.v i < A.length a})
 
 
 fn read_at_offset_refine_post2 (a:array U32.t) (i:US.t) (#p:perm) (#s:Ghost.erased (Seq.seq U32.t))
-   requires (A.pts_to a #p s ** pure (US.v i < A.length a))
+   requires A.pts_to a #p s
+   requires pure (US.v i < A.length a)
    returns x: (x:U32.t { Seq.length s == A.length a /\
                          US.v i < A.length a /\
                          x == Seq.index s (US.v i)})

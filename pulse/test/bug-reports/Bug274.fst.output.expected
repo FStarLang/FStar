@@ -1,4 +1,4 @@
-* Info at Bug274.fst(29,4-29,9):
+* Info at Bug274.fst(30,4-30,9):
   - Expected failure:
   - Tactic failed
   - Cannot prove any of:
@@ -8,7 +8,7 @@
       trade p q
       trade q r
 
-* Info at Bug274.fst(41,4-41,9):
+* Info at Bug274.fst(43,4-43,9):
   - Expected failure:
   - Tactic failed
   - Cannot prove any of:
@@ -18,7 +18,7 @@
       trade p q
       trade q r
 
-* Info at Bug274.fst(73,4-73,8):
+* Info at Bug274.fst(79,4-79,8):
   - Expected failure:
   - Tactic failed
   - Cannot prove any of:

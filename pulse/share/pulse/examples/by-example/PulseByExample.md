@@ -152,7 +152,8 @@ Pulse syntax spotlight: The program body demonstrates Pulse syntax for
 ocaml
 ``pulse
 fn max (n:SZ.t) (a:larray nat (v n))
-  requires A.pts_to a #'p 's ** pure (Seq.length 's == v n)
+  requires A.pts_to a #'p 's
+  requires pure (Seq.length 's == v n)
   returns r:nat
   ensures A.pts_to a #'p 's
        ** pure (Seq.length 's == v n

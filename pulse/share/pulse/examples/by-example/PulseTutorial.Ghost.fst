@@ -131,7 +131,8 @@ let id p = p
 //__rewrite_sig$
 ghost
 fn __rewrite (p q:slprop)
-requires p ** pure (p == q)
+requires p
+requires pure (p == q)
 ensures q
 //end __rewrite_sig$
 {
@@ -163,7 +164,8 @@ let rec all_at_most (l:list (ref nat)) (n:nat)
 //weaken_at_most$
 ghost
 fn rec weaken_at_most (l:list (ref nat)) (n:nat) (m:nat)
-requires all_at_most l n ** pure (n <= m)
+requires all_at_most l n
+requires pure (n <= m)
 ensures all_at_most l m
 decreases l
 {

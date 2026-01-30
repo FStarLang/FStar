@@ -69,7 +69,9 @@ let goal : slprop =
 ghost
 fn proof
    (i : iname) (_:unit)
-   requires inv i inv_p ** pts_to done #0.5R true ** pts_to claimed #0.5R false
+   requires inv i inv_p
+   requires pts_to done #0.5R true
+   requires pts_to claimed #0.5R false
    requires later_credit 1
    ensures inv i inv_p ** pts_to done #0.5R true ** goal
    opens [i]
@@ -133,7 +135,9 @@ fn proof
 
 
 fn setup (_:unit)
-   requires pts_to done 'v_done ** pts_to res 'v_res ** pts_to claimed 'v_claimed
+   requires pts_to done 'v_done
+   requires pts_to res 'v_res
+   requires pts_to claimed 'v_claimed
    returns i:iname
    ensures pts_to done #0.5R false **
            pledge (add_inv emp_inames i) (pts_to done #0.5R true) goal
@@ -167,7 +171,8 @@ let pretend_atomic pre post (k: unit -> stt unit pre (fun _ -> post)) =
   as_atomic pre _ (k ())
 
 fn worker (i : iname) (_:unit)
-   requires inv i inv_p ** pts_to done #0.5R false
+   requires inv i inv_p
+   requires pts_to done #0.5R false
    ensures  inv i inv_p ** pts_to done #0.5R true
 {
   with_invariants unit emp_inames i inv_p (pts_to done #0.5R false) (fun _ -> pts_to done #0.5R true) fn _ {

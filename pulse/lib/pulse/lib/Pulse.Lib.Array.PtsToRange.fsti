@@ -125,7 +125,8 @@ fn pts_to_range_join
   (i m j: nat)
   (#p: perm)
   (#s1 #s2: Seq.seq elt)
-  requires pts_to_range a i m #p s1 ** pts_to_range a m j #p s2
+  requires pts_to_range a i m #p s1
+  requires pts_to_range a m j #p s2
   ensures  pts_to_range a i j #p (s1 `Seq.append` s2)
 
 inline_for_extraction
@@ -180,5 +181,6 @@ fn pts_to_range_gather
   (#l #r: nat)
   (#s0 #s1: Seq.seq a)
   (#p0 #p1:perm)
-  requires pts_to_range arr l r #p0 s0 ** pts_to_range arr l r #p1 s1
+  requires pts_to_range arr l r #p0 s0
+  requires pts_to_range arr l r #p1 s1
   ensures  pts_to_range arr l r #(p0 +. p1) s0 ** pure (s0 == s1)

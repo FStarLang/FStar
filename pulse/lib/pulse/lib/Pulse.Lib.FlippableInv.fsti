@@ -34,7 +34,9 @@ val iname_of #p (f : finv p) : iname
 
 ghost
 fn flip_on (#p:slprop) (fi : finv p)
-  requires off fi ** p ** later_credit 1
+  requires off fi
+  requires p
+  requires later_credit 1
   ensures on fi
   opens [iname_of fi]
 
@@ -42,7 +44,8 @@ fn flip_on (#p:slprop) (fi : finv p)
 
 ghost
 fn flip_off (#p:slprop) (fi : finv p)
-  requires on fi ** later_credit 1
+  requires on fi
+  requires later_credit 1
   ensures  off fi ** p
   opens [iname_of fi]
 

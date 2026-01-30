@@ -26,7 +26,8 @@ fn par (#pf #pg #qf #qg:_)
        {| is_send pf, is_send pg, is_send qf, is_send qg |}
        (f: unit -> stt unit pf (fun _ -> qf))
        (g: unit -> stt unit pg (fun _ -> qg))
-requires pf ** pg
+requires pf
+requires pg
 ensures qf ** qg
 {
   par f g
@@ -35,7 +36,8 @@ ensures qf ** qg
 
 
 fn incr2 (x y:ref int)
-requires pts_to x 'i ** pts_to y 'j
+requires pts_to x 'i
+requires pts_to y 'j
 ensures pts_to x ('i + 1) ** pts_to y ('j + 1)
 {
   fn incr (x:ref int) (#i:erased int)
@@ -109,7 +111,8 @@ fn incr_left (x:ref int)
              (#right:GR.ref int)
              (#i:erased int)
              (lock:L.lock )
-requires L.lock_alive lock #p (lock_inv x i left right) ** GR.pts_to left #0.5R 'vl
+requires L.lock_alive lock #p (lock_inv x i left right)
+requires GR.pts_to left #0.5R 'vl
 ensures L.lock_alive lock #p (lock_inv x i left right) ** GR.pts_to left #0.5R ('vl + 1)
 {
   L.acquire lock;
@@ -133,7 +136,8 @@ fn incr_right (x:ref int)
               (#right:GR.ref int)
               (#i:erased int)
               (lock:L.lock)
-requires L.lock_alive lock #p (lock_inv x i left right) ** GR.pts_to right #0.5R 'vl
+requires L.lock_alive lock #p (lock_inv x i left right)
+requires GR.pts_to right #0.5R 'vl
 ensures L.lock_alive lock #p (lock_inv x i left right) ** GR.pts_to right #0.5R ('vl + 1)
 {
   L.acquire lock;
@@ -195,7 +199,8 @@ fn incr (x: ref int)
         (#refine #aspec: int -> slprop)
         (l:L.lock)
         (ghost_steps: incr_f x refine aspec)
-requires L.lock_alive l #p (exists* v. pts_to x v ** refine v) ** aspec 'i
+requires L.lock_alive l #p (exists* v. pts_to x v ** refine v)
+requires aspec 'i
 ensures L.lock_alive l #p (exists* v. pts_to x v ** refine v) ** aspec ('i + 1)
  {
     L.acquire l;
@@ -302,7 +307,9 @@ fn incr_atomic
         (#refine #aspec: int -> slprop)
         (c:C.cinv)
         (f: incr_f x refine aspec)
-requires inv (C.iname_of c) (C.cinv_vp c (exists* v. pts_to x v ** refine v)) ** aspec 'i ** C.active c p
+requires inv (C.iname_of c) (C.cinv_vp c (exists* v. pts_to x v ** refine v))
+requires aspec 'i
+requires C.active c p
 ensures inv (C.iname_of c) (C.cinv_vp c (exists* v. pts_to x v ** refine v)) ** aspec ('i + 1) ** C.active c p
 //end incr_atomic_spec$
 //incr_atomic_body$
@@ -310,7 +317,9 @@ ensures inv (C.iname_of c) (C.cinv_vp c (exists* v. pts_to x v ** refine v)) ** 
   //incr_atomic_body_read$
   atomic
   fn read ()
-  requires inv (C.iname_of c) (C.cinv_vp c (exists* v. pts_to x v ** refine v)) ** C.active c p ** later_credit 1
+  requires inv (C.iname_of c) (C.cinv_vp c (exists* v. pts_to x v ** refine v))
+  requires C.active c p
+  requires later_credit 1
   opens [C.iname_of c]
   returns v:int
   ensures inv (C.iname_of c) (C.cinv_vp c (exists* v. pts_to x v ** refine v)) ** C.active c p
@@ -681,7 +690,8 @@ fn incr_pcm_abstract (r:ref int)
 
   ghost
   fn t1 (v:int)
-    requires GPR.pts_to ghost_r (half 0, None) ** lock_inv_ghost ghost_r v
+    requires GPR.pts_to ghost_r (half 0, None)
+    requires lock_inv_ghost ghost_r v
     ensures GPR.pts_to ghost_r (half (add_one  0), None) ** lock_inv_ghost ghost_r (v + 1)
   {
     unfold lock_inv_ghost;
@@ -701,7 +711,8 @@ fn incr_pcm_abstract (r:ref int)
 
   ghost
   fn t2 (v:int)
-    requires GPR.pts_to ghost_r (None, half 0) ** lock_inv_ghost ghost_r v
+    requires GPR.pts_to ghost_r (None, half 0)
+    requires lock_inv_ghost ghost_r v
     ensures GPR.pts_to ghost_r (None, half (add_one  0)) ** lock_inv_ghost ghost_r (v +1)
   {
     unfold lock_inv_ghost;

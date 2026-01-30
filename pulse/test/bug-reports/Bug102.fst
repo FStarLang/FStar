@@ -22,7 +22,8 @@ fn test_unfold ()
 
 
 fn test_fold ()
-  requires p ** foo 1
+  requires p
+  requires foo 1
   ensures  foo 2
 {
   fold foo 2;

@@ -111,7 +111,8 @@ ensures lock_alive l p ** p
 
 //release$
 fn release (#p:slprop) (l:lock)
-requires lock_alive l p ** p
+requires lock_alive l p
+requires p
 ensures lock_alive l p
 {
   unfold lock_alive;

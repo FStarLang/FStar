@@ -49,12 +49,14 @@ fn alloc (#t:Type0) (#p:preorder t) (v:t)
 
 ghost
 fn share (#t:Type0) (#p:preorder t) (r:mref p) (#v:t) (#q #f #g:perm)
-  requires pts_to r #q v ** pure (q == f +. g)
+  requires pts_to r #q v
+  requires pure (q == f +. g)
   ensures pts_to r #f v ** pts_to r #g v
 
 ghost
 fn gather (#t:Type0) (#p:preorder t) (r:mref p) (#v:t) (#f #g:perm)
-  requires pts_to r #f v ** pts_to r #g v
+  requires pts_to r #f v
+  requires pts_to r #g v
   ensures pts_to r #(f +. g) v
 
 ghost
@@ -64,7 +66,8 @@ fn take_snapshot (#t:Type) (#p:preorder t) (r:mref p) (#f:perm) (v:t)
  
 ghost
 fn recall_snapshot (#t:Type) (#p:preorder t) (r:mref p) (#f:perm) (#v #u:t)
-  requires pts_to r #f v ** snapshot r u
+  requires pts_to r #f v
+  requires snapshot r u
   ensures  pts_to r #f v ** snapshot r u ** pure (as_prop (p u v))
 
 ghost
@@ -74,5 +77,6 @@ fn dup_snapshot (#t:Type) (#p:preorder t) (r:mref p) (#u:t)
 
 ghost
 fn update (#t:Type) (#p:preorder t) (r:mref p) (#u:t) (v:t)
-  requires pts_to r #1.0R u ** pure (as_prop (p u v))
+  requires pts_to r #1.0R u
+  requires pure (as_prop (p u v))
   ensures pts_to r #1.0R v

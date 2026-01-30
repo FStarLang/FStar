@@ -125,7 +125,8 @@ fn share (#a:Type) (#p:_) (#anc:_) (r:ref a p anc) (#f: perm) (#v:erased a)
 
 ghost
 fn gather (#a:Type) (#p:_) (#anc:_) (r:ref a p anc) (#v1 #v2:erased a) (#f1 #f2: perm)
-  requires pts_to r #f1 v1 ** pts_to r #f2 v2
+  requires pts_to r #f1 v1
+  requires pts_to r #f2 v2
   ensures pts_to r #(f1 +. f2) v1 ** pure (v1 == v2)
 {
   unfold (pts_to r #f1 v1);
@@ -136,7 +137,8 @@ fn gather (#a:Type) (#p:_) (#anc:_) (r:ref a p anc) (#v1 #v2:erased a) (#f1 #f2:
 
 ghost
 fn write (#a:Type) (#p:_) (#anc:_) (r:ref a p anc) (#v:erased a) (w : erased a)
-  requires pts_to r v ** pure (p v w /\ (forall anchor. anc anchor v ==> anc anchor w))
+  requires pts_to r v
+  requires pure (p v w /\ (forall anchor. anc anchor v ==> anc anchor w))
   ensures pts_to r w
 {
   unfold (pts_to r v);
@@ -147,7 +149,8 @@ fn write (#a:Type) (#p:_) (#anc:_) (r:ref a p anc) (#v:erased a) (w : erased a)
 
 ghost
 fn write_full (#a:Type) (#p:_) (#anc:_) (r:ref a p anc) (#v:erased a) (w : erased a)
-  requires pts_to_full r v ** pure (p v w /\ anc w w)
+  requires pts_to_full r v
+  requires pure (p v w /\ anc w w)
   ensures pts_to_full r w
 {
   unfold (pts_to_full r v);
@@ -194,7 +197,8 @@ fn unfold_anchored (#a:Type) (#p:_) (#anc:anchor_rel p) (r : ref a p anc) (#v:a)
 
 ghost
 fn fold_anchored (#a:Type) (#p:_) (#anc:anchor_rel p) (r : ref a p anc) (#v:a) (k:FRAP.knowledge anc)
-  requires GPR.pts_to r k ** pure (owns_only_anchor v k)
+  requires GPR.pts_to r k
+  requires pure (owns_only_anchor v k)
   ensures anchored r v
 {
   fold (anchored r v)
@@ -203,7 +207,9 @@ fn fold_anchored (#a:Type) (#p:_) (#anc:anchor_rel p) (r : ref a p anc) (#v:a) (
 
 ghost
 fn lift_anchor (#a:Type) (#p:_) (#anc:anchor_rel p) (r : ref a p anc) (#v:a) (va:a)
-  requires pts_to r v ** anchored r va ** pure (anc v v)
+  requires pts_to r v
+  requires anchored r va
+  requires pure (anc v v)
   ensures pts_to_full r v ** pure (anc va v /\ True)
 {
   unfold (pts_to r v);
@@ -217,7 +223,8 @@ fn lift_anchor (#a:Type) (#p:_) (#anc:anchor_rel p) (r : ref a p anc) (#v:a) (va
 
 ghost
 fn recall_anchor (#a:Type) (#p:_) (#anc:anchor_rel p) (r : ref a p anc) (#v:a) (va:a) (#f:perm)
-  requires pts_to r #f v ** anchored r va
+  requires pts_to r #f v
+  requires anchored r va
   ensures pts_to r #f v ** anchored r va ** pure (anc va v)
 {
   unfold (pts_to r #f v);
@@ -243,7 +250,8 @@ fn unfold_snapshot (#a:Type) (#p:_) (#anc:_) (r : ref a p anc) (#v:a)
 
 ghost
 fn fold_snapshot (#a:Type) (#p:_) (#anc:_) (r : ref a p anc) (#v:a) (k:FRAP.knowledge anc)
-  requires GPR.pts_to r k ** pure (snapshot_pred v k)
+  requires GPR.pts_to r k
+  requires pure (snapshot_pred v k)
   ensures snapshot r v
 {
   fold (snapshot r v)
@@ -298,7 +306,8 @@ fn take_snapshot_full (#a:Type) (#p:_) (#f:perm) (#anc:anchor_rel p) (r : ref a 
 
 ghost
 fn recall_snapshot (#a:Type) (#p:_) (#anc:anchor_rel p) (r : ref a p anc) #f (#v0 #v:a)
-  requires pts_to r #f v ** snapshot r v0
+  requires pts_to r #f v
+  requires snapshot r v0
   ensures  pts_to r #f v ** snapshot r v0 ** pure (p v0 v /\ True)
 {
   unfold (pts_to r #f v);

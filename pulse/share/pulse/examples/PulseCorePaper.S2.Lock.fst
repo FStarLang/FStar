@@ -58,7 +58,8 @@ ensures protects l p
 
 
 fn release (#p:slprop) (l:lock)
-requires protects l p ** p
+requires protects l p
+requires p
 ensures protects l p
 {
   with_invariants unit emp_inames l.i (lock_inv l.r p)

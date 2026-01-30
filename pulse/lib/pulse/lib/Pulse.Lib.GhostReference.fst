@@ -115,7 +115,8 @@ fn share u#a (#a:Type u#a) (r:ref a) (#v:erased a) (#p:perm)
 [@@allow_ambiguous]
 ghost
 fn gather u#a (#a:Type u#a) (r:ref a) (#x0 #x1:erased a) (#p0 #p1:perm)
-  requires (r |-> Frac p0 x0) ** (r |-> Frac p1 x1)
+  requires (r |-> Frac p0 x0)
+  requires (r |-> Frac p1 x1)
   ensures  (r |-> Frac (p0 +. p1) x0) ** pure (x0 == x1)
 { 
   unfold pts_to r #p0 x0;
@@ -131,7 +132,8 @@ fn pts_to_injective_eq  u#a (#a:Type u#a)
                         (#p #q:_)
                         (#v0 #v1:a)
                         (r:ref a)
-  requires (r |-> Frac p v0) ** (r |-> Frac q v1)
+  requires (r |-> Frac p v0)
+  requires (r |-> Frac q v1)
   ensures  (r |-> Frac p v0) ** (r |-> Frac q v1) ** pure (v0 == v1)
 {
   unfold pts_to r #p v0;

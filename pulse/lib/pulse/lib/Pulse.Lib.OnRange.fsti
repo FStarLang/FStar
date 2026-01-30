@@ -190,7 +190,9 @@ fn rec on_range_put
   (j:nat{ i <= j })
   (k:nat{ j < k })
   (#p: (nat -> slprop))
-  requires on_range p i j ** p j ** on_range p (j + 1) k
+  requires on_range p i j
+  requires p j
+  requires on_range p (j + 1) k
   ensures on_range p i k
  
 val on_range_focus

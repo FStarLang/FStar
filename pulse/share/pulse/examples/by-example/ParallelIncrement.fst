@@ -27,7 +27,8 @@ open Pulse.Lib.Par
 fn increment (#p:perm)
              (x:ref nat)
              (l:L.lock)
-requires (L.lock_alive l #p (exists* v. pts_to x #0.5R v)) ** R.pts_to x #0.5R 'i
+requires (L.lock_alive l #p (exists* v. pts_to x #0.5R v))
+requires R.pts_to x #0.5R 'i
 ensures  (L.lock_alive l #p (exists* v. pts_to x #0.5R v)) ** R.pts_to x #0.5R ('i + 1)
  {
     let v = !x;
@@ -52,7 +53,9 @@ fn increment_f (x: ref nat)
                (#pred #qpred: nat -> slprop)
                (l:L.lock)
                (f: increment_f_f x pred qpred)
-requires L.lock_alive l #p (exists* v. pts_to x #0.5R v ** pred v) ** R.pts_to x #0.5R 'i ** qpred 'i
+requires L.lock_alive l #p (exists* v. pts_to x #0.5R v ** pred v)
+requires R.pts_to x #0.5R 'i
+requires qpred 'i
 ensures  L.lock_alive l #p (exists* v. pts_to x #0.5R v ** pred v) ** R.pts_to x #0.5R ('i + 1) ** qpred ('i + 1)
  {
     let vx = !x;
@@ -78,7 +81,8 @@ fn increment_f2 (x: ref int)
                 (#pred #qpred: int -> slprop)
                 (l:L.lock)
                 (f: increment_f2_f x pred qpred)
-requires L.lock_alive l #p (exists* v. pts_to x v ** pred v) ** qpred 'i
+requires L.lock_alive l #p (exists* v. pts_to x v ** pred v)
+requires qpred 'i
 ensures L.lock_alive l #p (exists* v. pts_to x v ** pred v) ** qpred ('i + 1)
  {
     L.acquire l;
@@ -184,7 +188,8 @@ fn atomic_increment_f2
         (f: (v:int -> vq:int -> stt_ghost unit emp_inames
                   (pred v ** qpred vq ** pts_to x (v + 1))
                   (fun _ -> pred (v + 1) ** qpred (vq + 1) ** pts_to x (v + 1))))
-requires inv l (pts_to_refine x pred) ** qpred 'i
+requires inv l (pts_to_refine x pred)
+requires qpred 'i
 ensures inv l (pts_to_refine x pred) ** qpred ('i + 1)
 {
   with_invariants unit emp_inames l (pts_to_refine x pred) (qpred 'i) (fun _ -> qpred ('i + 1))
@@ -299,7 +304,8 @@ fn atomic_increment_f5
                   emp_inames
                   (pred v ** qpred vq ** pts_to x (v + 1))
                   (fun _ -> pred (v + 1) ** qpred (vq + 1) ** pts_to x (v + 1))))
-requires inv l invp ** qpred 'i
+requires inv l invp
+requires qpred 'i
 ensures inv l invp ** qpred ('i + 1)
 {
   fn read ()
@@ -374,7 +380,9 @@ fn atomic_increment_f6
         (#pred #qpred: int -> slprop)
         (c:C.cinv)
         (f: atomic_increment_f6_f x pred qpred)
-requires inv (C.iname_of c) (C.cinv_vp c (exists* v. pts_to x v ** pred v)) ** qpred 'i ** C.active c p
+requires inv (C.iname_of c) (C.cinv_vp c (exists* v. pts_to x v ** pred v))
+requires qpred 'i
+requires C.active c p
 ensures inv (C.iname_of c) (C.cinv_vp c (exists* v. pts_to x v ** pred v)) ** qpred ('i + 1) ** C.active c p
 {
   with_invariants unit emp_inames (C.iname_of c) (C.cinv_vp c (exists* v. pts_to x v ** pred v))

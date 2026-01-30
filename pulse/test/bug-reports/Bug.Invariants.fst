@@ -23,7 +23,8 @@ module U32 = FStar.UInt32
 atomic
 fn return_atomic
       (x:ref U32.t)
-requires emp ** pts_to x 1ul
+requires emp
+requires pts_to x 1ul
 returns n:U32.t
 ensures emp ** pts_to x 1ul
 {
@@ -34,7 +35,8 @@ ensures emp ** pts_to x 1ul
 
 atomic
 fn return_atomic2 (x:ref U32.t)
-requires emp ** pts_to x 1ul
+requires emp
+requires pts_to x 1ul
 returns n:U32.t
 ensures emp ** pts_to x 1ul
 {
@@ -123,7 +125,8 @@ ensures inv i (pts_to x 1ul)
 
 
 fn test_invariant_annot (x:ref U32.t) (i:iname) (y:ref U32.t)
-requires inv i (pts_to x 0ul) ** pts_to y 'w
+requires inv i (pts_to x 0ul)
+requires pts_to y 'w
 ensures inv i (pts_to x 0ul) ** pts_to y 0ul
 {
     let n = 

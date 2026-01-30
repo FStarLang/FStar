@@ -115,7 +115,8 @@ fn call_ghost
 
 ghost
 fn elim_cond_true (b:bool) (p q:slprop)
-  requires (cond b p q ** pure (b == true))
+  requires cond b p q
+  requires pure (b == true)
   ensures p
 {
   rewrite (cond b p q) as p;
@@ -125,7 +126,8 @@ fn elim_cond_true (b:bool) (p q:slprop)
 
 ghost
 fn elim_cond_false b p q
-  requires (cond b p q ** pure (b == false))
+  requires cond b p q
+  requires pure (b == false)
   ensures q
 {
   rewrite (cond b p q) as q;

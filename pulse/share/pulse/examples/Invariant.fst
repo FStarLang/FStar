@@ -30,7 +30,9 @@ assume val f () : stt_atomic unit emp_inames (p ** q) (fun _ -> p ** r)
 
 atomic
 fn g (i:iname)
-  requires inv i p ** q ** later_credit 1
+  requires inv i p
+  requires q
+  requires later_credit 1
   ensures  r ** inv i p
   opens [i]
 {
@@ -42,7 +44,9 @@ fn g (i:iname)
 
 atomic
 fn g2 (i:iname)
-  requires inv i p ** q ** later_credit 1
+  requires inv i p
+  requires q
+  requires later_credit 1
   ensures  r ** inv i p
   opens [i]
 {
@@ -56,7 +60,9 @@ assume val f_ghost () : stt_ghost unit emp_inames (p ** q) (fun _ -> p ** r)
 
 ghost
 fn g_ghost (i:iname)
-  requires (inv i p ** q ** later_credit 1)
+  requires inv i p
+  requires q
+  requires later_credit 1
   ensures (r ** inv i p)
   opens [i]
 {
@@ -224,7 +230,8 @@ let folded_inv (i:iname) = inv i p
 
 atomic
 fn test_returns0 (i:iname) (b:bool)
-  requires folded_inv i ** later_credit 1
+  requires folded_inv i
+  requires later_credit 1
   ensures folded_inv i ** q
   opens [i]
 {
@@ -243,7 +250,8 @@ fn test_returns0 (i:iname) (b:bool)
 
 ghost
 fn test_returns1 (i:iname)
-  requires folded_inv i ** later_credit 1
+  requires folded_inv i
+  requires later_credit 1
   ensures folded_inv i ** q
   opens [i]
 {
@@ -264,7 +272,8 @@ let pp = p
 
 ghost
 fn test_returns2 (i:iname)
-  requires folded_inv i ** later_credit 1
+  requires folded_inv i
+  requires later_credit 1
   ensures folded_inv i ** q
   opens [i]
 {

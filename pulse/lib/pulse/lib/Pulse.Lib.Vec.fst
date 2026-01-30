@@ -69,7 +69,8 @@ fn to_vec_pts_to (#a:Type0) (v:vec a) (#p:perm) (#s:Seq.seq a)
 fn read_ref (#a:Type0) (r:R.ref (vec a)) (i:SZ.t)
   (#v:erased (vec a))
   (#s:(s:erased (Seq.seq a) { SZ.v i < Seq.length s }))
-  requires R.pts_to r v ** pts_to v s
+  requires R.pts_to r v
+  requires pts_to v s
   returns x:a
   ensures R.pts_to r v ** pts_to v s ** pure (x == Seq.index s (SZ.v i))
 {
@@ -87,7 +88,8 @@ fn read_ref (#a:Type0) (r:R.ref (vec a)) (i:SZ.t)
 fn write_ref (#a:Type0) (r:R.ref (vec a)) (i:SZ.t) (x:a)
   (#v:erased (vec a))
   (#s:(s:erased (Seq.seq a) { SZ.v i < Seq.length s }))
-  requires R.pts_to r v ** pts_to v s
+  requires R.pts_to r v
+  requires pts_to v s
   ensures R.pts_to r v ** pts_to v (Seq.upd s (SZ.v i) x)
 {
   let vc = !r;
@@ -117,7 +119,8 @@ fn replace_i (#a:Type0) (v:vec a) (i:SZ.t) (x:a)
 fn replace_i_ref (#a:Type0) (r:R.ref (vec a)) (i:SZ.t) (x:a)
   (#v:erased (vec a))
   (#s:erased (Seq.seq a) { SZ.v i < Seq.length s })
-  requires R.pts_to r v ** pts_to v s
+  requires R.pts_to r v
+  requires pts_to v s
   returns res:a
   ensures R.pts_to r v ** pts_to v (Seq.upd s (SZ.v i) x) ** pure (res == Seq.index s (SZ.v i))
 {

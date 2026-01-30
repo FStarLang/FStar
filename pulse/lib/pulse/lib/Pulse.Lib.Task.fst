@@ -372,7 +372,8 @@ ghost
 fn recall_task_spotted
   (p : pool) (t : task_t) (#ts : list task_t)
   (#f:perm)
-  requires AR.pts_to p.g_runnable #f ts ** task_spotted p t
+  requires AR.pts_to p.g_runnable #f ts
+  requires task_spotted p t
   ensures  AR.pts_to p.g_runnable #f ts ** task_spotted p t
            ** pure (List.memP t ts)
 {
@@ -385,7 +386,8 @@ ghost
 fn recall_handle_spotted
   (p : pool) (post : slprop) (h : handle) (#ts : list task_t)
   (#f:perm)
-  requires AR.pts_to p.g_runnable #f ts ** handle_spotted p post h
+  requires AR.pts_to p.g_runnable #f ts
+  requires handle_spotted p post h
   returns  task : erased task_t
   ensures AR.pts_to p.g_runnable #f ts ** handle_spotted p post h **
           shift (up task.post ** later_credit 1) post **
@@ -405,7 +407,8 @@ ghost
 fn rec extract_state_pred
   (p : pool) (t : task_t)
   (#ts : list task_t)
-  requires all_state_pred ts ** pure (List.memP t ts)
+  requires all_state_pred ts
+  requires pure (List.memP t ts)
   ensures (state_pred t.pre t.post t.h)
        ** trade (state_pred t.pre t.post t.h) (all_state_pred ts) // trade to put things back together
   decreases ts
@@ -518,7 +521,8 @@ fn spawn (p:pool)
     (#post : slprop)
     {| pre_inst: is_send pre, post_inst: is_send post |}
     (f : unit -> task_f pre post)
-    requires pool_alive #pf p ** pre
+    requires pool_alive #pf p
+    requires pre
     returns  h : handle
     ensures  pool_alive #pf p ** joinable p post h
 {
@@ -603,7 +607,9 @@ fn claim_done_task
          (#p:pool)
          (#pre : slprop) (#post : slprop)
          (h : handle)
-  requires state_res pre post h.g_state Done    ** AR.pts_to h.g_state Done    ** AR.anchored h.g_state Ready
+  requires state_res pre post h.g_state Done
+  requires AR.pts_to h.g_state Done
+  requires AR.anchored h.g_state Ready
   ensures  state_res pre post h.g_state Claimed ** AR.pts_to h.g_state Claimed ** post
 {
   rewrite (state_res pre post h.g_state Done)
@@ -625,7 +631,8 @@ fn try_await
          (#post : slprop)
          (h : handle)
          (#f:perm)
-  requires pool_alive #f p ** joinable p post h
+  requires pool_alive #f p
+  requires joinable p post h
   returns  ok : bool
   ensures  pool_alive #f p ** (if ok then post else joinable p post h)
 {
@@ -787,7 +794,8 @@ instance dup_snapshot
 
 ghost
 fn rec all_tasks_done_inst (t : task_t) (ts : list task_t)
-  requires all_tasks_done ts ** pure (List.memP t ts)
+  requires all_tasks_done ts
+  requires pure (List.memP t ts)
   ensures  all_tasks_done ts ** task_done t
   decreases ts
 {
@@ -897,7 +905,8 @@ fn spawn_ (p:pool)
     (#post : slprop)
     {| is_send pre, is_send post |}
     (f : unit -> stt unit (pre) (fun _ -> post))
-    requires pool_alive #pf p ** pre
+    requires pool_alive #pf p
+    requires pre
     ensures  pool_alive #pf p ** pledge [] (pool_done p) (post)
 {
   let h = spawn p f;
@@ -909,7 +918,8 @@ fn await (#p:pool)
          (#post : slprop)
          (h : handle)
          (#f:perm)
-  requires pool_alive #f p ** joinable p post h
+  requires pool_alive #f p
+  requires joinable p post h
   ensures  pool_alive #f p ** post
 {
   let mut done = false;
@@ -934,7 +944,8 @@ ghost
 fn rec pool_done_task_done_aux
       (t : task_t)
       (ts : list task_t)
-  requires all_tasks_done ts ** pure (List.memP t ts)
+  requires all_tasks_done ts
+  requires pure (List.memP t ts)
   ensures  all_tasks_done ts ** task_done t
   decreases ts
 {
@@ -968,7 +979,9 @@ fn pool_done_handle_done_aux2 (#p:pool)
       (#post : slprop)
       (h : handle)
       (ts : list task_t)
-  requires AR.pts_to p.g_runnable #0.5R ts ** all_tasks_done ts ** handle_spotted p post h
+  requires AR.pts_to p.g_runnable #0.5R ts
+  requires all_tasks_done ts
+  requires handle_spotted p post h
   ensures  AR.pts_to p.g_runnable #0.5R ts ** all_tasks_done ts ** handle_done h
 {
   let t = recall_handle_spotted p post h #ts;
@@ -1033,7 +1046,8 @@ fn weaken_vopt (#a:Type0) (o : option a)
     (#p1 #p2 : a -> slprop)
     (#extra : slprop) // CAUTION: this can be dropped!
     (f : (x:a -> weaken_vopt_f (p1 x) #extra (p2 x)))
-  requires extra ** vopt o p1
+  requires extra
+  requires vopt o p1
   ensures  vopt o p2
 {
   match o {
@@ -1164,7 +1178,8 @@ let undyn pre post (d: Dyn.dyn { Dyn.dyn_has_ty d (task_type pre post) }) : stt 
   hide_div (fun _ -> let f = Dyn.undyn #(task_type pre post) d in f ())
 
 fn perf_work (t : task_t)
-  requires up t.pre ** task_thunk_typing t
+  requires up t.pre
+  requires task_thunk_typing t
   returns  _:unit
   ensures  up t.post
 {
@@ -1257,7 +1272,8 @@ fn await_help
          (#post : slprop)
          (h : handle)
          (#f:perm)
-  requires pool_alive #f p ** joinable p post h
+  requires pool_alive #f p
+  requires joinable p post h
   ensures  pool_alive #f p ** post
 {
   let mut done = false;
@@ -1347,7 +1363,8 @@ fn try_await_pool
   (p:pool)
   #is (#f:perm)
   (q : slprop)
-  requires pool_alive #f p ** pledge is (pool_done p) q
+  requires pool_alive #f p
+  requires pledge is (pool_done p) q
   returns  b : bool
   ensures  pool_alive #f p ** ite b q (pledge is (pool_done p) q)
 {
@@ -1397,7 +1414,8 @@ fn await_pool
   (p:pool)
   (#is: inames) (#f: perm)
   (q : slprop)
-  requires pool_alive #f p ** pledge is (pool_done p) q
+  requires pool_alive #f p
+  requires pledge is (pool_done p) q
   ensures  pool_alive #f p ** q
 {
   let mut done = false;
@@ -1472,7 +1490,8 @@ ghost
 fn gather_alive
   (p : pool)
   (f:perm)
-  requires pool_alive #(f /. 2.0R) p ** pool_alive #(f /. 2.0R) p
+  requires pool_alive #(f /. 2.0R) p
+  requires pool_alive #(f /. 2.0R) p
   ensures  pool_alive #f p
 {
   unfold (pool_alive #(f /. 2.0R) p);

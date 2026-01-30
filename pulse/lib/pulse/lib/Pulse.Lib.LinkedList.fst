@@ -79,7 +79,9 @@ fn some_iff_cons #t (x:llist t) (#l:list t)
 
 ghost
 fn intro_is_list_cons (#t:Type0) (x:llist t) (v:node_ptr t) (#node:node t) (#tl:list t)
-    requires pts_to v node ** is_list node.tail tl ** pure (x == Some v)
+    requires pts_to v node
+    requires is_list node.tail tl
+    requires pure (x == Some v)
     ensures is_list x (node.head::tl)
 {
   fold (is_list x (node.head::tl));
@@ -129,7 +131,8 @@ fn is_list_of_cases (#t:Type) (x:llist t) (l:list t)
 
 ghost
 fn is_list_cases_none (#t:Type) (x:llist t) (#l:list t)
-    requires is_list x l ** pure (x == None)
+    requires is_list x l
+    requires pure (x == None)
     ensures  is_list x l ** pure (l == [])
 {
   match l {
@@ -146,7 +149,8 @@ fn is_list_cases_none (#t:Type) (x:llist t) (#l:list t)
 
 ghost
 fn is_list_cases_some (#t:Type) (x:llist t) (v:node_ptr t) (#l:list t) 
-    requires is_list x l ** pure (x == Some v)
+    requires is_list x l
+    requires pure (x == Some v)
     ensures exists* (node:node t) (tl:list t).
                 pts_to v node **
                 pure (l == node.head::tl) **
@@ -267,7 +271,9 @@ fn cons (#t:Type) (v:t) (x:llist t)
 
 
 fn rec append (#t:Type0) (x y:llist t)
-  requires is_list x 'l1 ** (is_list y 'l2 ** pure (Cons? 'l1))
+  requires is_list x 'l1
+  requires is_list y 'l2
+  requires pure (Cons? 'l1)
   ensures is_list x ('l1 @ 'l2)
 {
   some_iff_cons x;
@@ -314,7 +320,8 @@ ensures
 
 
 fn move_next (#t:Type) (x:llist t)
-    requires is_list x 'l ** pure (Cons? 'l)
+    requires is_list x 'l
+    requires pure (Cons? 'l)
     returns y:llist t
     ensures exists* tl.
         is_list y tl **
@@ -380,7 +387,8 @@ fn length_iter (#t:Type) (x: llist t)
 
 
 fn is_last_cell (#t:Type) (x:llist t)
-    requires is_list x 'l ** pure (Cons? 'l)
+    requires is_list x 'l
+    requires pure (Cons? 'l)
     returns b:bool
     ensures is_list x 'l ** pure (b == (List.Tot.length 'l = 1))
 {
@@ -438,7 +446,8 @@ ensures
 
 ghost
 fn non_empty_list (#t:Type0) (x:llist t)
-    requires is_list x 'l ** pure (Cons? 'l)
+    requires is_list x 'l
+    requires pure (Cons? 'l)
     ensures is_list x 'l ** pure (Some? x)
 {
     unfold (is_list x (Cons?.hd 'l :: Cons?.tl 'l));
@@ -451,7 +460,8 @@ fn non_empty_list (#t:Type0) (x:llist t)
 let is_cons #t ([@@@mkey] x: list t) hd tl = pure (x == hd :: tl)
 
 fn move_next_forall (#t:Type) (x:llist t)
-    requires is_list x 'l ** pure (Some? x)
+    requires is_list x 'l
+    requires pure (Some? x)
     returns y:llist t
     ensures exists* hd tl.
         is_list y tl **
@@ -486,7 +496,9 @@ fn not_is_last_cell (#t:Type) (x:llist t)
 }
 
 fn append_iter (#t:Type) (x y:llist t)
-  requires is_list x 'l1 ** is_list y 'l2 ** pure (Cons? 'l1)
+  requires is_list x 'l1
+  requires is_list y 'l2
+  requires pure (Cons? 'l1)
   ensures is_list x ('l1 @ 'l2)
 {
   let mut cur = x;
@@ -521,7 +533,8 @@ fn append_iter (#t:Type) (x y:llist t)
 
 
 fn detach_next (#t:Type) (x:llist t)
-  requires is_list x 'l ** pure (Cons? 'l)
+  requires is_list x 'l
+  requires pure (Cons? 'l)
   returns y:llist t
   ensures exists* hd tl.
     is_list x [hd] **
@@ -542,7 +555,8 @@ fn detach_next (#t:Type) (x:llist t)
 
 
 fn split (#t:Type0) (x:llist t) (n:U32.t) (#xl:erased (list t))
- requires is_list x xl ** pure (Cons? xl /\ 0 < v n /\ v n <= List.Tot.length xl)
+ requires is_list x xl
+ requires pure (Cons? xl /\ 0 < v n /\ v n <= List.Tot.length xl)
  returns  y:llist t
  ensures exists* l1 l2. 
     is_list x l1 **
@@ -593,7 +607,8 @@ fn split (#t:Type0) (x:llist t) (n:U32.t) (#xl:erased (list t))
  }
 
 fn insert (#kk:Type0) (x:llist kk) (item:kk) (pos:U32.t) (#xl:erased (list kk))
-  requires is_list x xl ** pure (Cons? xl /\ 0 < v pos /\ v pos < List.Tot.length xl)
+  requires is_list x xl
+  requires pure (Cons? xl /\ 0 < v pos /\ v pos < List.Tot.length xl)
   ensures exists* l0 l1.
   is_list x (l0 @ item :: l1) **
   pure (
@@ -611,7 +626,8 @@ fn insert (#kk:Type0) (x:llist kk) (item:kk) (pos:U32.t) (#xl:erased (list kk))
 
 
 fn delete (#kk:Type0) (x:llist kk) (item:kk) (pos:U32.t) (#xl:erased (list kk))
-  requires is_list x xl ** pure (Cons? xl /\ 0 < v pos /\ v pos < List.Tot.length xl)
+  requires is_list x xl
+  requires pure (Cons? xl /\ 0 < v pos /\ v pos < List.Tot.length xl)
   ensures exists* l0 l1.
   is_list x (l0 @ item :: l1) **
   pure (

@@ -52,7 +52,8 @@ ensures pts_to r #f v ** snapshot r v
  
 ghost
 fn recall_snapshot u#a (#t:Type u#a) (#p:preorder t) (r:mref p) (#f:perm) (#v #u:t)
-requires pts_to r #f v ** snapshot r u
+requires pts_to r #f v
+requires snapshot r u
 ensures  pts_to r #f v ** snapshot r u ** pure (as_prop (p u v))
 {
   unfold pts_to u#a;
@@ -79,7 +80,8 @@ ensures snapshot r u ** snapshot r u
 
 ghost
 fn update u#a (#t:Type u#a) (#p:preorder t) (r:mref p) (#u:t) (v:t)
-requires pts_to r #1.0R u ** pure (as_prop (p u v))
+requires pts_to r #1.0R u
+requires pure (as_prop (p u v))
 ensures pts_to r #1.0R v
 {
   unfold pts_to u#a;

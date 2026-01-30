@@ -378,7 +378,8 @@ ghost fn pcm_gather u#a (#t: Type u#a) #l
 
 ghost
 fn mask_share_gen u#a (#a: Type u#a) (arr:array a) #s #p (p1: perm) (p2: perm) #mask
-  requires pts_to_mask arr #p s mask ** pure ((p <: real) == p1 +. p2)
+  requires pts_to_mask arr #p s mask
+  requires pure ((p <: real) == p1 +. p2)
   ensures pts_to_mask arr #p1 s mask
   ensures pts_to_mask arr #p2 s mask
 {

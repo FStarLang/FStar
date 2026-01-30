@@ -50,7 +50,8 @@ let rec is_list #t ([@@@mkey] x:llist t) (l:list t)
 
 ghost
 fn elim_is_list_nil (#t:Type0) (x:llist t)
-requires is_list x 'l ** pure ('l == [])
+requires is_list x 'l
+requires pure ('l == [])
 ensures pure (x == None)
 {
    rewrite each 'l as Nil #t;
@@ -71,7 +72,8 @@ ensures is_list x []
 
 ghost
 fn elim_is_list_cons (#t:Type0) (x:llist t) (l:list t) (head:t) (tl:list t)
-requires is_list x l ** pure (l == head::tl)
+requires is_list x l
+requires pure (l == head::tl)
 ensures (
   exists* (p:node_ptr t) (tail:llist t).
     pure (x == Some p) **
@@ -142,7 +144,8 @@ ensures is_list_cases x l
 //is_list_case_none$
 ghost
 fn is_list_case_none (#t:Type) (x:llist t) (#l:list t)
-requires is_list x l ** pure (x == None)
+requires is_list x l
+requires pure (x == None)
 ensures is_list x l ** pure (l == [])
 {
   cases_of_is_list x l;
@@ -157,7 +160,8 @@ ensures is_list x l ** pure (l == [])
 //is_list_case_some$
 ghost
 fn is_list_case_some (#t:Type) (x:llist t) (v:node_ptr t) (#l:list t) 
-requires is_list x l ** pure (x == Some v)
+requires is_list x l
+requires pure (x == Some v)
 ensures
   exists* (node:node t) (tl:list t).
     pts_to v node **
@@ -225,7 +229,8 @@ open I
 
 //tail$
 fn tail (#t:Type) (x:llist t)
-requires is_list x 'l ** pure (Some? x)
+requires is_list x 'l
+requires pure (Some? x)
 returns y:llist t
 ensures exists* tl.
     is_list y tl **
@@ -282,7 +287,9 @@ ensures is_list x 'l ** pure (n == List.Tot.length 'l)
 
 //append$
 fn rec append (#t:Type0) (x y:llist t)
-requires is_list x 'l1 ** is_list y 'l2 ** pure (Some? x)
+requires is_list x 'l1
+requires is_list y 'l2
+requires pure (Some? x)
 ensures is_list x ('l1 @ 'l2)
 {
   let np = Some?.v x;
@@ -308,7 +315,8 @@ let is_cons #t ([@@@mkey] x: list t) (hd: t) (tl: list t) : slprop =
   pure (x == hd :: tl)
 
 fn tail_alt (#t:Type) (x:llist t)
-requires is_list x 'l ** pure (Some? x)
+requires is_list x 'l
+requires pure (Some? x)
 returns y:llist t
 ensures exists* hd tl.
   is_list y tl **
@@ -330,7 +338,8 @@ ensures exists* hd tl.
 
 //is_last_cell$
 fn is_last_cell (#t:Type) (x:llist t)
-requires is_list x 'l ** pure (Some? x)
+requires is_list x 'l
+requires pure (Some? x)
 returns b:bool
 ensures is_list x 'l ** pure (b == (List.Tot.length 'l = 1))
 {
@@ -376,7 +385,8 @@ ensures
 //non_empty_list$
 ghost
 fn non_empty_list (#t:Type0) (x:llist t)
-requires is_list x 'l ** pure (Cons? 'l)
+requires is_list x 'l
+requires pure (Cons? 'l)
 ensures is_list x 'l ** pure (Some? x)
 {
     elim_is_list_cons x _ (Cons?.hd 'l) (Cons?.tl 'l);
@@ -388,7 +398,8 @@ ensures is_list x 'l ** pure (Some? x)
 //end non_empty_list$
 
 fn not_is_last_cell (#t:Type) (x:llist t)
-requires is_list x 'l ** pure (Some? x)
+requires is_list x 'l
+requires pure (Some? x)
 returns b:bool
 ensures is_list x 'l ** pure (b == (List.Tot.length 'l <> 1))
 {
@@ -397,7 +408,9 @@ ensures is_list x 'l ** pure (b == (List.Tot.length 'l <> 1))
 
 //append_iter$
 fn append_iter (#t:Type) (x y:llist t)
-requires is_list x 'l1 ** is_list y 'l2 ** pure (Some? x)
+requires is_list x 'l1
+requires is_list y 'l2
+requires pure (Some? x)
 ensures is_list x ('l1 @ 'l2)
 {
   let mut cur = x;
