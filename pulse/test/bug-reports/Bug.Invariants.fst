@@ -23,10 +23,8 @@ module U32 = FStar.UInt32
 atomic
 fn return_atomic
       (x:ref U32.t)
-requires emp
 requires pts_to x 1ul
 returns n:U32.t
-ensures emp
 ensures pts_to x 1ul
 {
     read_atomic x;
@@ -36,10 +34,8 @@ ensures pts_to x 1ul
 
 atomic
 fn return_atomic2 (x:ref U32.t)
-requires emp
 requires pts_to x 1ul
 returns n:U32.t
-ensures emp
 ensures pts_to x 1ul
 {
     0ul;
@@ -50,8 +46,6 @@ ensures pts_to x 1ul
 
 ghost
 fn ghost_step ()
-requires emp
-ensures emp
 {
     ()
 }
@@ -62,8 +56,6 @@ val atomic_step (_:unit) : stt_atomic unit emp_inames emp (fun _ -> emp)
 
 
 fn ghost_then_atomic ()
-requires emp
-ensures emp
 {
     ghost_step();
     atomic_step();
@@ -75,9 +67,7 @@ val atomic_step_res (_:unit) : stt_atomic bool emp_inames emp (fun _ -> emp)
 
 
 fn ghost_then_atomic_bool ()
-requires emp
 returns b:bool
-ensures emp
 {
     ghost_step();
     atomic_step_res();
@@ -86,9 +76,7 @@ ensures emp
 
 
 fn ghost_then_atomic_bool2 ()
-requires emp
 returns b:bool
-ensures emp
 {
     ghost_step();
     let b = atomic_step_res();

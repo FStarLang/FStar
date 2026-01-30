@@ -114,7 +114,6 @@ fn free
         (#s: Ghost.erased (Seq.seq elt))
   requires pts_to a s
   requires pure (is_full_array a)
-  ensures  emp
 
 ghost
 fn share

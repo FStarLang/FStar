@@ -389,9 +389,7 @@ fn test_tot_let (r:ref U32.t)
 
 
 fn incr (x:nat)
-  requires emp
   returns r : (r:nat { r > x })
-  ensures emp
 {  let y = x + 1;
   ( y <: r:nat { r > x } )
 }
@@ -405,8 +403,6 @@ module GR = Pulse.Lib.GhostPCMReference
 //
 
 fn test_ghost_ref_non_informative u#a (#a:Type u#a) {|small_type u#a|} (y:a)
-  requires emp
-  ensures emp
 {
   full_values_compatible y;
   let r = GR.alloc #_ #(pcm_frac #a) (hide (Some (y, 1.0R)));

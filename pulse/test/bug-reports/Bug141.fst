@@ -22,8 +22,6 @@ open Pulse.Lib.Pervasives
 
 
 fn rec loop (#t:Type0) (l:list t)
-requires emp
-ensures emp
 {
   loop l;
 }

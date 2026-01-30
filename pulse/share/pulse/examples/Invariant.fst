@@ -107,8 +107,6 @@ fn package (r:ref int)
 
 
 fn test2 ()
-  requires emp
-  ensures emp
 {
   let r = Box.alloc #int 0;
   let i = new_invariant (exists* v. Box.pts_to r v);
@@ -123,8 +121,6 @@ fn test2 ()
 
 [@@expect_failure [228]]
 fn test3 ()
-  requires emp
-  ensures emp
 {
   let r = Box.alloc 0;
   let i = new_invariant (exists* v. pts_to r v);
@@ -170,8 +166,6 @@ assume val i2 : iname
 
 ghost
 fn basic_ghost ()
-  requires emp
-  ensures emp
 {
   (); ()
 }
@@ -211,9 +205,7 @@ fn t3 ()
 (* Works, no need to declare opens as its an effectful fn *)
 
 fn t2 ()
-  requires emp
   returns _:int
-  ensures emp
 {
   let j = new_invariant emp;
   with_invariants unit emp_inames j emp emp (fun _ -> emp) fn _ {

@@ -21,7 +21,6 @@ let tst (a : array int) (s : Seq.seq nat) = pts_to int a s
 [@@expect_failure [19]]
 fn init (a1 : array int) (s1 : Seq.Base.seq nat)
   requires pts_to int a1 s1
-  ensures  emp
 {
   admit();
   ()

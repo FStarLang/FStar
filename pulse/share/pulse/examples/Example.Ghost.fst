@@ -60,9 +60,7 @@ fn test_elim_false_alt (a:Type0) (p:(a -> slprop))
 
 ghost
 fn ret (#a:Type0) (x:a)
-    requires emp
     returns y:a
-    ensures emp
 {
     x
 }
@@ -73,9 +71,7 @@ fn ret (#a:Type0) (x:a)
 
 ghost
 fn ret2 (#a:Type0) (x:a)
-    requires emp
     returns y:erased a
-    ensures emp
 {
     hide x
 }
@@ -85,7 +81,6 @@ fn ret2 (#a:Type0) (x:a)
 
 ghost
 fn use_admit (t:Type0) (p:slprop)
-    requires emp
     returns x:t
     ensures p
 {

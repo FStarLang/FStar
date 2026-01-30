@@ -23,8 +23,6 @@ inline_for_extraction
 let zero () = 0ul
 
 fn test_invariants_and_later ()
-  requires emp
-  ensures emp
 {
   let i = new_invariant emp;
   with_invariants unit emp_inames i emp emp (fun _ -> emp) fn _ {
@@ -147,9 +145,7 @@ let my_safe_add (x y : SZ.t)
      
 
 fn testbi (x:SZ.t) (y:(y:SZ.t { SZ.v y <> 0 }))
-  requires emp
   returns z:SZ.t
-  ensures emp
 {
   open SZ;
   (x %^ y)
@@ -158,9 +154,7 @@ fn testbi (x:SZ.t) (y:(y:SZ.t { SZ.v y <> 0 }))
 
 
 fn testbi2 (x:SZ.t) (y:SZ.t)
-  requires emp
   returns o:opt SZ.t
-  ensures emp
 {
   (my_safe_add x y)
 }
@@ -168,9 +162,7 @@ fn testbi2 (x:SZ.t) (y:SZ.t)
 
 
 fn extract_match (x:opt bool)
-  requires emp
   returns b:bool
-  ensures emp
 {
   match x {
     None ->
@@ -187,9 +179,7 @@ fn extract_match (x:opt bool)
 
 
 fn rec fib (x:nat)
-  requires emp
   returns y:nat
-  ensures emp
 {
   if (x <= 1)
   {
@@ -206,9 +196,7 @@ fn rec fib (x:nat)
 
 
 fn fib2 (x:nat)
-requires emp
 returns y:nat
-ensures emp
 {
   let n = fib x;
   let m = fib (x + 1);
@@ -221,9 +209,7 @@ type data (a b: Type0) =
   | Two: a -> data a b
   | Three: b -> a -> data a b
 fn test_that_we_access_the_right_field_in_matches (x: data nat bool)
-  requires emp
   returns y: nat
-  ensures emp
 {
   match x {
     One y z -> { y }

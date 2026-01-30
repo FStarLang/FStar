@@ -108,8 +108,6 @@ ensures is_point p (fst 'xy + dx, snd 'xy + dy)
 
 //create_and_move$
 fn create_and_move ()
-requires emp
-ensures emp
 {
     let mut x = 0;
     let mut y = 0;
@@ -132,8 +130,6 @@ ensures emp
 
 //create_and_move_alt$
 fn create_and_move_alt ()
-requires emp
-ensures emp
 {
     let mut x = 0;
     let mut y = 0;

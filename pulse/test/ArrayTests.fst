@@ -92,7 +92,6 @@ fn fill_array (#t:Type0) (l:US.t) (a:(a:A.array t{ US.v l == A.length a })) (v:t
 
 
 fn array_of_zeroes (n:US.t)
-   requires emp
    returns a: V.vec U32.t
    ensures (
     V.pts_to a (Seq.create (US.v n) 0ul) **
@@ -386,7 +385,6 @@ fn sort3_alt (a:array U32.t)
 
 
 fn test_local_array0 ()
-  requires emp
   returns  b:bool
   ensures  pure (b)
 {
@@ -405,7 +403,6 @@ fn test_local_array0 ()
 
 
 fn test_local_array1 ()
-  requires emp
   returns  i:int
   ensures  pure (i == 3)
 {
@@ -419,8 +416,6 @@ fn test_local_array1 ()
 [@@ expect_failure]  // cannot call free on a local array
 
 fn test_local_array2 ()
-  requires emp
-  ensures  emp
 {
   let mut a = [| 1; 2sz |];
   A.free a
@@ -430,7 +425,6 @@ fn test_local_array2 ()
 [@@ expect_failure]  // cannot return a local array
 
 fn test_local_array3 ()
-  requires emp
   returns  a:array int
   ensures  (
     A.pts_to a (Seq.create (US.v 2sz) 0)
@@ -444,8 +438,6 @@ fn test_local_array3 ()
 [@@ expect_failure]  // immutable local arrays are not yet supported
 
 fn test_local_array4 ()
-  requires emp
-  ensures  emp
 {
   let a = [| 0; 2sz |];
   ()

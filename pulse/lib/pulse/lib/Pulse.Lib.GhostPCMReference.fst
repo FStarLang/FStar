@@ -51,7 +51,6 @@ fn alloc u#a (#a:Type u#a)
     (#pcm:pcm a)
     {| inst: small_type u#a |}
     (x:a{pcm.refine x})
-  requires emp
   returns  r : gref pcm
   ensures  pts_to r x
 {

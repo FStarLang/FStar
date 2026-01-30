@@ -65,7 +65,6 @@ fn ( := ) (#a:Type0) (b:box a) (x:a) (#v:erased a)
 
 fn free (#a:Type0) (b:box a) (#v:erased a)
   requires b |-> v
-  ensures  emp
 
 ghost
 fn share (#a:Type) (r:box a) (#v:erased a) (#p:perm)

@@ -55,7 +55,6 @@ ensures lock_live l
 
 fn free_lock #p (l:lock p)
 requires lock_live l 
-ensures emp
 {
   with_invariants l.i 
   returns _:unit

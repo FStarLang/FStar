@@ -124,7 +124,6 @@ ghost
 fn on_range_empty
   (p: (nat -> slprop))
   (i: nat)
-  requires emp
   ensures on_range p i i
 {
   rewrite emp as on_range p i i;
@@ -137,7 +136,6 @@ fn on_range_empty_elim
   (p: (nat -> slprop))
   (i: nat)
   requires on_range p i i
-  ensures emp
 {
   rewrite (on_range p i i) as emp;
 }

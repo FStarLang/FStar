@@ -251,7 +251,6 @@ fn rec length (#t:Type0) (x:llist t)
 let null_llist #t : llist t = None #(node_ptr t)
 
 fn create (t:Type)
-    requires emp
     returns x:llist t
     ensures is_list x []
 {

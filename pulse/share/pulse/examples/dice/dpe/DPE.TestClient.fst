@@ -46,8 +46,6 @@ assume val get_l0_record ()  // used only for testing a client
 
 
 fn dpe_client ()
-  requires emp
-  ensures emp
 {
   let sid_opt = DPE.open_session ();
   match sid_opt {
@@ -82,8 +80,6 @@ fn dpe_client ()
 [@@ expect_failure]
 
 fn dpe_client_err ()
-  requires emp
-  ensures emp
 {
   let sid_opt = DPE.open_session ();
   match sid_opt {

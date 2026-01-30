@@ -8,14 +8,12 @@ assume val bar : int -> slprop
 
 fn usefoo (x:int)
   requires foo x
-  ensures emp
 {
   admit()
 }
 
 fn usebar (x:int)
   requires bar x
-  ensures emp
 {
   admit()
 }

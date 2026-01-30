@@ -45,7 +45,6 @@ let full (#t:Type) (#p:preorder t) (v:t) : FP.pcm_carrier p =
 
 ghost
 fn alloc (#t:Type0) (#p:preorder t) (v:t)
-  requires emp
   returns r:mref p
   ensures pts_to r #1.0R v
 {

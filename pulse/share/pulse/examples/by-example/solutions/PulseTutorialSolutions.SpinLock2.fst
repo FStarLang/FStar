@@ -30,7 +30,6 @@ let locked #p (l:lock p) = GR.pts_to l.gr #one_half 1ul
 fn new_lock (p:slprop)
 requires p
 returns l:lock p
-ensures emp
 {
    let r = Box.alloc 0ul;
    let gr = GR.alloc 0ul;
@@ -46,7 +45,6 @@ ensures emp
 
 
 fn rec acquire #p (l:lock p)
-requires emp
 ensures p
 ensures locked l
 {
@@ -88,7 +86,6 @@ ensures locked l
 fn release #p (l:lock p)
 requires p
 requires locked l
-ensures emp
 {
   with_invariants l.i {
     unfold lock_inv;
@@ -107,7 +104,6 @@ ensures emp
 
 
 fn acquire_loop #p (l:lock p)
-requires emp
 ensures p
 ensures locked l
 {

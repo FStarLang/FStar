@@ -30,7 +30,6 @@ instance val is_send_send c p : is_send (send c p)
 instance val is_send_recv c p : is_send (recv c p)
 
 fn create (p:slprop) {| is_send p |}
-  requires emp
   returns c:cvar_t
   ensures send c p
   ensures recv c p
@@ -40,13 +39,11 @@ fn signal_atomic (c:cvar_t) (#p:slprop)
   requires send c p
   requires p
   requires later_credit 1
-  ensures emp
   opens [ inv_name c ]
 
 fn signal (c:cvar_t) (#p:slprop)
   requires send c p
   requires p
-  ensures emp
 
 fn wait (b:cvar_t) (#p:slprop)
   requires recv b p

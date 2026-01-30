@@ -42,7 +42,6 @@ below is only a model, and uses the internal Ref.alloc. Hence
 we disable the warning about using Ref.alloc. *)
 #push-options "--warn_error -288"
 fn alloc (#a:Type0) (x:a)
-  requires emp
   returns  b : box a
   ensures  pts_to b x
 {

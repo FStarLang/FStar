@@ -52,7 +52,6 @@ fn length (#t:Type0) (x:llist t)
   ensures pure (n == List.Tot.length l)
 
 fn create (t:Type)
-  requires emp
   returns x : llist t
   ensures is_list x []
 

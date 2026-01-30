@@ -1026,7 +1026,6 @@ let vopt (#a:Type) (o : option a) (p : a -> slprop) =
 
 ghost
 fn intro_vopt_none (#a:Type0) (#p : a -> slprop) ()
-  requires emp
   ensures vopt None p
 {
   fold (vopt None p);
@@ -1520,7 +1519,6 @@ fn gather_alive
 
 fn worker_thread (#f:perm) (p : pool)
   requires pool_alive #f p
-  ensures emp
 {
   worker p;
   drop_ (pool_alive #f p)
@@ -1530,7 +1528,6 @@ fn spawn_worker
   (p:pool)
   (#f:perm)
   requires pool_alive #f p
-  ensures  emp
 {
   fork' (pool_alive #f p) (fun () -> worker_thread #f p)
 }
@@ -1539,7 +1536,6 @@ fn rec spawn_workers
   (p:pool) (#f:perm)
   (n:pos)
   requires pool_alive #f p
-  ensures  emp
 {
   if (n = 1) {
     spawn_worker p;
@@ -1552,7 +1548,6 @@ fn rec spawn_workers
 
 fn setup_pool
   (n : pos)
-  requires emp
   returns p : pool
   ensures pool_alive p
 {

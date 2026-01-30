@@ -123,7 +123,6 @@ open FStar.Mul
 
 //multiply_by_repeated_addition$
 fn multiply_by_repeated_addition (x y:nat)
-    requires emp
     returns z:nat
     ensures pure (z == x * y)
 {
@@ -168,7 +167,6 @@ let rec sum_lemma (n:nat)
 noextract
 
 fn isum (n:nat)
-requires emp
 returns z:nat
 ensures pure ((n * (n + 1) / 2) == z)
 {
@@ -231,7 +229,6 @@ ensures
 
 //fib_loop$
 fn fib_loop (k:pos)
-  requires emp
   returns r:nat
   ensures pure (r == fib k)
 {

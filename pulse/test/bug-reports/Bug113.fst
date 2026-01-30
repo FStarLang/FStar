@@ -29,7 +29,6 @@ val f : (x:bool -> #index:nat -> stt bool (p index) (fun _ -> emp))
 fn apply_with_imps_inst3 (x:bool) (#i:erased nat)
     requires p i
     returns b:bool
-    ensures emp
 {
     f x
 }

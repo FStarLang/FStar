@@ -230,7 +230,6 @@ let null_tree_t (t:Type0) : tree_t t = None
 
 
 fn create (t:Type0)
-  requires emp
   returns x:tree_t t
   ensures is_tree x T.Leaf
 {

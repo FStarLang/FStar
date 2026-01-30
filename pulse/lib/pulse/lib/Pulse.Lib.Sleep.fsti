@@ -6,5 +6,3 @@ open Pulse.Main
 
 (* Do nothing, just sleep. Implemented primitively. *)
 fn sleep_ms (msecs : int)
-  requires emp
-  ensures emp

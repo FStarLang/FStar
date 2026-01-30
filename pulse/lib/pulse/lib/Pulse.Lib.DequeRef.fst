@@ -13,7 +13,6 @@ let is_dq (#t:Type0) ([@@@mkey]x:dq t) (l:list t)
 = exists* xx. B.pts_to x xx ** is_deque xx l
 
 fn mk_empty (#t:Type) (_:unit)
-  requires emp
   returns  p : dq t
   ensures  is_dq p []
 {

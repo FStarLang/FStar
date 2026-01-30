@@ -10,7 +10,6 @@ fn foo (x:int)
 
 fn test (x:nat)
   requires pure (x > 0)
-  ensures  emp
 {
   foo x; foo x; foo x; foo x; foo x; foo x; foo x; foo x; foo x; foo x;
   foo x; foo x; foo x; foo x; foo x; foo x; foo x; foo x; foo x; foo x;

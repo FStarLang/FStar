@@ -23,18 +23,14 @@ let mini_t = int
 
 
 fn test (z: unit)
-  requires emp
   returns y: int
-  ensures emp
 {
   42;
 }
 
 
 fn test2 (z: unit)
-  requires emp
   returns y: mini_t
-  ensures emp
 {
   test ()
 }

@@ -20,9 +20,7 @@ open Pulse.Lib.Pervasives
 
 
 fn apply (#a #b:Type0) (f: (x:a -> stt b emp (fun _ -> emp))) (x:a)
-    requires emp
     returns y:b
-    ensures emp
 {
     f x
 }
@@ -30,9 +28,7 @@ fn apply (#a #b:Type0) (f: (x:a -> stt b emp (fun _ -> emp))) (x:a)
 
 
 fn apply2 (#a #b:Type0) (f: (x:a -> stt b emp (fun _ -> emp))) (x:a)
-    requires emp
     returns y:(b & b)
-    ensures emp
 {
     let fst = f x;
     let snd = f x;
@@ -82,9 +78,7 @@ fn apply_with_imps_explicit
 
 
 fn rec loop (x:int)
-    requires emp
     returns y:int
-    ensures emp
 {
     let res = loop x;
     (res + 1)
@@ -96,9 +90,7 @@ fn curry_stt
     (#a #b #c:Type0)
     (f: (a -> stt (b -> (stt c emp (fun _ -> emp))) emp (fun _ -> emp)))
     (x:a) (y:b)
-  requires emp
   returns _:c
-  ensures emp
 {
     let g = f x;
     g y
@@ -109,9 +101,7 @@ let id_t (a:Type) = a -> stt a emp (fun _ -> emp)
 
 
 fn apply_id_t (f:id_t bool) (x:bool)
-  requires emp
   returns _:bool
-  ensures emp
 {
    f x;
 }
@@ -122,9 +112,7 @@ let choice_t (a:Type) = a -> a -> stt a emp (fun _ -> emp)
 
 
 fn apply_choice (f:choice_t bool) (x y:bool)
-  requires emp
   returns _:bool
-  ensures emp
 {
    f x y;
 }
@@ -158,9 +146,7 @@ type record = {
 
 
 fn projection (r:record)
-requires emp
 returns _:bool
-ensures emp
 {
     let res = r.first;
     res
@@ -169,7 +155,6 @@ ensures emp
 
 
 fn return (#a:Type0) (x:a)
-requires emp
 returns y:a
 ensures pure (x == y)
 {
@@ -179,9 +164,7 @@ ensures pure (x == y)
 
 
 fn project_and_apply (r:record)
-requires emp
 returns _:bool
-ensures emp
 {
     let f = return r.second; //need the return since otherwise Pulse adds an equality refinement to the type of x
     f r.first
@@ -191,9 +174,7 @@ ensures emp
 assume val g :  (f:(bool -> stt bool emp (fun _ -> emp)){ f == f })
 
 fn apply_refined_function (b:bool)
-requires emp
 returns b:bool
-ensures emp
 {
     g b
 }

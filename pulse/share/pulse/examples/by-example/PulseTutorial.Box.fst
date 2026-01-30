@@ -21,7 +21,6 @@ module Box = Pulse.Lib.Box
 
 //new_heap_ref$
 fn new_heap_ref (#a:Type) (v:a)
-requires emp
 returns r:Box.box a
 ensures Box.pts_to r v
 {

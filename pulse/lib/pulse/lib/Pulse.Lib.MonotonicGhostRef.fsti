@@ -43,7 +43,6 @@ val snapshot_is_timeless (#t:Type) (#p:preorder t) (r:mref p) (v:t)
   
 ghost
 fn alloc (#t:Type0) (#p:preorder t) (v:t)
-  requires emp
   returns r:mref p
   ensures pts_to r #1.0R v
 

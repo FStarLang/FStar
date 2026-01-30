@@ -45,7 +45,6 @@ let on  #p (fi : finv p) : slprop =
 
 
 ghost fn mk_finv (p:slprop)
-   requires emp
    returns f:(finv p)
    ensures off f
 {

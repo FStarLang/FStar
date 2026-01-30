@@ -119,8 +119,6 @@ fn compare (#t:eqtype) #p1 #p2 (a1 a2:A.array t) (l:SZ.t)
 module Vec = Pulse.Lib.Vec
 
 fn test_compare ()
-  requires emp
-  ensures emp
 {
     let mut a1 = [| 0; 2sz |];  // stack array, allocated using the repeat constructor
 

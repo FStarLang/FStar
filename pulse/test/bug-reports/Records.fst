@@ -75,7 +75,6 @@ fn mutate_r2 (r:rec2) (#v:Ghost.erased rec_repr)
 
 
 fn alloc_rec (v1 v2:U8.t)
-  requires emp
   returns r:rec2
   ensures (rec_perm r {v1; v2})
 {
@@ -96,7 +95,6 @@ fn alloc_rec (v1 v2:U8.t)
 //Here's another more compact way, using rename
 
 fn alloc_rec_alt (v1 v2:U8.t)
-  requires emp
   returns r:rec2
   ensures (rec_perm r {v1; v2})
 {
@@ -112,7 +110,6 @@ fn alloc_rec_alt (v1 v2:U8.t)
 //Here's yet another way, a bit more explicit
 
 fn alloc_rec_alt_alt (v1 v2:U8.t)
-  requires emp
   returns r:rec2
   ensures (rec_perm r {v1; v2})
 {

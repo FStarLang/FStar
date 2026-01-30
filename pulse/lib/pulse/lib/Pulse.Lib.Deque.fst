@@ -85,7 +85,6 @@ let is_deque #t ([@@@mkey] x:deque t) (l:list t)
 
 
 fn mk_empty (#t:Type) (_:unit)
-  requires emp
   returns  p : deque t
   ensures  is_deque p []
 {

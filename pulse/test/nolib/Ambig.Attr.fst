@@ -38,7 +38,6 @@ fn ambig2 ()
 fn ambig ()
   requires p 1
   requires p 2
-  ensures emp
 {
   foo ();
   foo ();

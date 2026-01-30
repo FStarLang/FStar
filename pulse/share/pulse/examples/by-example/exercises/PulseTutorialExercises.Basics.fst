@@ -6,7 +6,6 @@ let fstar_five : int = 5
 
 
 fn five ()
-requires emp
 returns n:int
 ensures pure (n == 5)
 { 
@@ -75,7 +74,6 @@ fn incr2 (r1 r2:ref int)
 
 
 fn incr_stack ()
-  requires emp
   returns x:int
   ensures pure (x == 1)
 {
@@ -88,7 +86,6 @@ fn incr_stack ()
 module Box = Pulse.Lib.Box
 
 fn incr_heap ()
-  requires emp
   returns x:int
   ensures pure (x == 1)
 {
@@ -105,8 +102,6 @@ fn incr_heap ()
 //Exercise 1: Fill in the spec and implementation of swap
 
 fn swap #a (r1 r2:ref a)
-requires emp
-ensures emp
 {
     admit()
 }

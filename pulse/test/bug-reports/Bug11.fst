@@ -23,9 +23,7 @@ let h' () = g () // works
 
 
 fn h ()
-  requires emp
   returns n:nat
-  ensures emp
 {
   let n = g (); // used to fail because the postcondition of `g` didn't typecheck
   n

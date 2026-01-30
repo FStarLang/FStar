@@ -35,7 +35,6 @@ let pts_to_timeless _ _ _ = ()
 
 ghost
 fn full_values_compatible u#a (#a:Type u#a) (x:a)
-  requires emp
   ensures pure (compatible pcm_frac (Some (x, 1.0R)) (Some (x, 1.0R)))
 {
    assert pure (FStar.PCM.composable pcm_frac (Some(x, 1.0R)) None);
@@ -90,7 +89,6 @@ let write = ( := )
 ghost
 fn free u#a (#a:Type u#a) (r:ref a) (#n:erased a)
   requires pts_to r n
-  ensures  emp
 {
   unfold pts_to r #1.0R n;
   GR.write r _ _ (mk_frame_preserving_upd_none n);

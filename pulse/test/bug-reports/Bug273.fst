@@ -4,9 +4,7 @@ module Bug273
 open Pulse
 
 fn test ()
-  requires emp
   returns o : option int
-  ensures emp
 {
   None
 }

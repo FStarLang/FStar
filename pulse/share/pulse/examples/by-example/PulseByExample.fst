@@ -29,7 +29,6 @@ open Pulse.Lib.Pervasives
 let fstar_five : int = 5
 
 fn five ()
-  requires emp
   returns n:int
   ensures pure (n == 5)
 { 
@@ -42,9 +41,7 @@ let pulse_five_in_fstar = five ()
 
 
 fn five_alt ()
-  requires emp
   returns n:(n:int { n == 5 })
-  ensures emp
 { 
   5
 }

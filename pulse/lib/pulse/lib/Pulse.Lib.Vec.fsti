@@ -63,7 +63,6 @@ fn alloc
   (#a:Type0)
   (x:a)
   (n:SZ.t)
-  requires emp
   returns  v:vec a
   ensures pts_to v (Seq.create (SZ.v n) x) **
           pure (length v == SZ.v n /\ is_full_vec v)
@@ -96,7 +95,6 @@ fn free
   (#s:Ghost.erased (Seq.seq a))
   requires pts_to v s
   requires pure (is_full_vec v)
-  ensures emp
 ghost
 fn share
   (#a:Type)

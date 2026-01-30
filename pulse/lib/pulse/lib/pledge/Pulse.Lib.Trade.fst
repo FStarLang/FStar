@@ -68,9 +68,7 @@ let psquash (a:Type u#a) : prop = squash a
 
 ghost
 fn pextract (a:Type u#5) (_:squash a)
-  requires emp
   returns i:a
-  ensures emp
 {
   let pf = elim_pure_explicit (psquash a);
   let pf : squash a = FStar.Squash.join_squash pf;

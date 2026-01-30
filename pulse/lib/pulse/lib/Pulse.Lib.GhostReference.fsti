@@ -85,7 +85,6 @@ fn ( := ) u#a (#a:Type u#a) (r:ref a) (x:erased a) (#n:erased a)
 ghost
 fn free u#a (#a:Type u#a) (r:ref a) (#n:erased a)
   requires pts_to r n
-  ensures  emp
 
 ghost
 fn share u#a (#a:Type u#a) (r:ref a) (#v:erased a) (#p:perm)

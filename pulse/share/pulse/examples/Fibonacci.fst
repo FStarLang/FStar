@@ -34,7 +34,6 @@ open Pulse.Lib.BoundedIntegers
 
 
 fn fibonacci (k:pos)
-  requires emp
   returns r:int
   ensures pure (r == fib k)
 {
@@ -93,7 +92,6 @@ fn fibonacci32 (k:U32.t)
 
 
 fn fibo (n:pos)
-  requires emp
   returns r:int
   ensures pure (r == fib n)
 {
@@ -122,7 +120,6 @@ fn fibo (n:pos)
 
 
 fn fibo2 (n:pos)
-  requires emp
   returns r:nat
   ensures pure (r == fib n)
 {
@@ -149,9 +146,7 @@ fn fibo2 (n:pos)
 }
 
 fn fibo3 (n:pos)
-  requires emp
   returns r: (r:nat { r == fib n })
-  ensures emp
 {
   let mut i : nat = 1;
   let mut j : nat = 1;

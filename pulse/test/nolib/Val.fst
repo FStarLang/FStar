@@ -5,8 +5,6 @@ open Pulse.Nolib
 
 
 fn foo ()
-  requires emp
-  ensures emp
 {
   ()
 }

@@ -31,7 +31,6 @@ val qsc : n:nat -> stt unit emp (fun _ -> qsv n)
 
 
 fn qs (n:nat)
-  requires emp
   returns _:unit
   ensures qsv 1
   ensures qsv 2
@@ -54,7 +53,6 @@ fn qs (n:nat)
 
 
 fn qs_joinpromises (n:nat)
-  requires emp
   returns _:unit
   ensures qsv 1
   ensures qsv 2
@@ -77,7 +75,6 @@ fn qs_joinpromises (n:nat)
 
 
 fn qs12 (_:unit)
-  requires emp
   returns _:unit
   ensures qsv 1
   ensures qsv 2
@@ -89,7 +86,6 @@ fn qs12 (_:unit)
 
 
 fn qsh (n:nat)
-  requires emp
   returns _:unit
   ensures qsv 1
   ensures qsv 2
@@ -125,7 +121,6 @@ fn qs12_par (#e:perm) (p:pool)
   }
 
 fn qsh_par (n:nat)
-  requires emp
   returns _:unit
   ensures qsv 1
   ensures qsv 2

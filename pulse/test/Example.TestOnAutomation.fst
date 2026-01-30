@@ -5,7 +5,6 @@ open Pulse.Lib.Send
 
 ghost
 fn test_on_l_prover_emp (l:loc_id)
-requires emp
 ensures on l emp
 {}
 
@@ -37,7 +36,6 @@ ensures on l (exists* (x y z:a). p1 x y z)
 ghost
 fn test_on_l_elim_emp (l:loc_id)
 requires on l emp
-ensures emp
 {}
 
 ghost

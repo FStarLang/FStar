@@ -72,8 +72,6 @@ fn test_with_assert_pure(r: R.ref nat)
 
 
 fn trivial (x:unit)
-requires emp
-ensures emp
 {
   assert (pure (5 == 5));
   ()

@@ -250,7 +250,6 @@ ensures
 
  //one
 fn one ()
-requires emp
 returns v:int
 ensures pure (v == 1)
 {
@@ -266,7 +265,6 @@ ensures pure (v == 1)
 [@@expect_failure [228]]
  //refs_as_scoped FAIL
 fn refs_are_scoped ()
-requires emp
 returns s:ref int
 ensures pts_to s 0
 {

@@ -78,7 +78,6 @@ let destroy c = c.destroy
 
 //new_counter$
 fn new_counter ()
-requires emp
 returns c:ctr
 ensures c.inv 0
 {
@@ -96,7 +95,6 @@ ensures c.inv 0
     };
     fn destroy (i:erased int)
     requires pts_to x i
-    ensures emp
     {
        free x
     };
@@ -107,7 +105,6 @@ ensures c.inv 0
 //end new_counter$
 
 fn return (#a:Type0) (x:a)
-requires emp
 returns y:a
 ensures pure (x == y)
 {
@@ -118,8 +115,6 @@ ensures pure (x == y)
 
 //test_counter$
 fn test_counter ()
-requires emp
-ensures emp
 {
     let c = new_counter ();
     let next = c.next;

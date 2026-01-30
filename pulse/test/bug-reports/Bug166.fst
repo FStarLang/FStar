@@ -4,9 +4,7 @@ open Pulse
 
 inline_for_extraction noextract
 fn h ()
-  requires emp
   returns  x : int
-  ensures  emp
 {
   42
 }

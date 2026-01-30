@@ -8,7 +8,6 @@ val dq (t:Type0) : Type0
 val is_dq (#t:Type0) ([@@@mkey]x:dq t) (l:list t) : slprop
 
 fn mk_empty (#t:Type) (_:unit)
-  requires emp
   returns  p : dq t
   ensures  is_dq p []
 

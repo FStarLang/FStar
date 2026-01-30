@@ -148,7 +148,6 @@ requires
     (pts_to_or_null p v ** pure (
       p == null _
     ))
-ensures emp
 {
   rewrite (pts_to_or_null p v) as emp
 }

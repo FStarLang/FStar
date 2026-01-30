@@ -210,7 +210,6 @@ ensures pts_to_or_null r #p 'v
 fn read_nullable_alt #a #p (r:nullable_ref a)
 requires pts_to_or_null r #p 'v
 returns o:option a
-ensures emp
 {
     match r {
      Some x -> { admit () }

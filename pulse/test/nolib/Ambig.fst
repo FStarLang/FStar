@@ -66,7 +66,6 @@ syntactically equal we do not complain. *)
 fn ok3 ()
   requires p 1
   requires p 1
-  ensures emp
 {
   foo ();
   foo ();
@@ -84,7 +83,6 @@ This is a problem for any use of gather, really. *)
 fn ok4 ()
   requires p 2
   requires p 1
-  ensures emp
 {
   foo2 ();
   ()
@@ -98,7 +96,6 @@ variables and then disambiguate. *)
 fn ok5 ()
   requires (exists* x. p (12+x)) **
            (exists* y. p (34+y))
-  ensures emp
 {
   with x.
     assert p (12+x);
@@ -119,7 +116,6 @@ val foo' () (#x:erased int)
 fn ok6 ()
   requires (exists* x. p x) **
            (exists* y. p y)
-  ensures emp
 {
   foo' ();
   foo ();

@@ -114,8 +114,6 @@ module SZ = FStar.SizeT
 // during matching...
 // #push-options "--no_smt"
 fn test1 (n:SZ.t)
-  requires emp
-  ensures emp
 {
   let mut i : SZ.t = 0sz;
   let mut max : nat = 0;
@@ -127,8 +125,6 @@ fn test1 (n:SZ.t)
 
 
 fn test2 (n:SZ.t)
-  requires emp
-  ensures emp
 {
   let mut max : nat = 0;
   let mut i : SZ.t = 0sz;

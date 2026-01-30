@@ -207,8 +207,6 @@ fn copy2
 
  //compare_stack_arrays$
 fn compare_stack_arrays ()
-  requires emp
-  ensures emp
 {
   // |- emp
   let mut a1 = [| 0; 2sz |];
@@ -224,7 +222,6 @@ fn compare_stack_arrays ()
 [@@ expect_failure]
 
 fn ret_stack_array ()
-  requires emp
   returns a:array int
   ensures pts_to a (Seq.create 2 0)
 {
@@ -239,7 +236,6 @@ module V = Pulse.Lib.Vec
 
  
 fn heap_arrays ()
-  requires emp
   returns a:V.vec int
   ensures V.pts_to a (Seq.create 2 0)
 {

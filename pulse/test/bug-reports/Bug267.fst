@@ -24,7 +24,6 @@ fn add (r : ref int) (v : int)
 }
 
 fn four_fail ()
-  requires emp
   returns i:int
   ensures pure (i == 4)
 {
@@ -36,7 +35,6 @@ fn four_fail ()
 
 [@@expect_failure [19]]
 fn multiply_by_repeated_addition (x y:nat)
-    requires emp
     returns z:nat
     ensures pure (z == x * y)
 {

@@ -37,8 +37,6 @@ val global_tup : tup_t
 assume val get_v #v (l:t v) : stt unit emp (fun _ -> v)
 
 fn tuple ()
-  requires emp
-  ensures emp
 {
   get_v global_tup._2;
   assert (exists_n global_tup._1);
@@ -64,8 +62,6 @@ val global_rec : rec_t
 
 
 fn record ()
-  requires emp
-  ensures emp
 {
   get_v global_rec.lk;
   assert (exists_n global_rec.r);

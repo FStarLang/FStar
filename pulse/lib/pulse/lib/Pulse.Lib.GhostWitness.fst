@@ -27,9 +27,7 @@ let psquash (a:Type u#a) : prop = squash a
 
 ghost
 fn ghost_witness (a:Type u#0) (_:squash a)
-  requires emp
   returns i:a
-  ensures emp
 {
   let pf = elim_pure_explicit (psquash a);
   let pf : squash a = FStar.Squash.join_squash pf;
@@ -42,9 +40,7 @@ fn ghost_witness (a:Type u#0) (_:squash a)
 
 ghost
 fn ghost_witness2 (a:Type u#4) (_:squash a)
-  requires emp
   returns i:a
-  ensures emp
 {
   let pf = elim_pure_explicit (psquash a);
   let pf : squash a = FStar.Squash.join_squash pf;
@@ -59,7 +55,6 @@ ghost
 fn ghost_witness_exists (a:Type u#0)
   requires pure (exists (x:a). True)
   returns i:a
-  ensures emp
 {
   ghost_witness a ();
 }
@@ -70,7 +65,6 @@ ghost
 fn ghost_witness_exists2 (a:Type u#4)
   requires pure (exists (x:a). True)
   returns i:a
-  ensures emp
 {
   ghost_witness2 a ();
 }

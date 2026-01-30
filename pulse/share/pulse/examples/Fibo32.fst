@@ -37,7 +37,6 @@ open Pulse.Lib.BoundedIntegers
 #push-options "--z3rlimit_factor 4"
 
 fn fibo32 (k:U32.t) (_:squash(0ul < k /\ fits #U32.t (fib (v k))))
-  requires emp
   returns r:U32.t
   ensures pure (v r == fib (v k))
 {

@@ -25,8 +25,6 @@ val some_stt_val ()
 
 
 fn use_some_stt_val ()
-   requires emp
-   ensures emp
 {
     some_stt_val()
 }

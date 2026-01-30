@@ -111,6 +111,5 @@ fn gather_alive
 
 fn setup_pool
   (n: pos)
-  requires emp
   returns p : pool
   ensures pool_alive p

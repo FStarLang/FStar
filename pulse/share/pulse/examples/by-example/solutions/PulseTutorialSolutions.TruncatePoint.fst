@@ -29,7 +29,6 @@ ensures (is_point {x; y} (a, b))
 
 
 fn new_point (x y : int)
-requires emp
 returns p:point
 ensures is_point p (x, y)
 {

@@ -11,7 +11,6 @@ ghost
 fn bad_pre (#a #b : Type0) (x:a) (y:b)
   requires pure (x == y)
   returns _:unit
-  ensures emp
 {
   assert (pure (1 == 2));
   admit();
