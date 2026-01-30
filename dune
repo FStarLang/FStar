@@ -1,4 +1,5 @@
 ; Exclude unused directories
 ; Note: stage0 has its own dune-project in stage0/dune/ and is built separately
 ; Packaging rules are in packaging/ subdirectory
-(dirs :standard \ stage0 stage1 stage2 examples out _package _srcpackage stage0_new)
+; Include .scripts explicitly (dune ignores dot-dirs by default)
+(dirs :standard .scripts \ stage0 stage1 stage2 examples out _package _srcpackage stage0_new)

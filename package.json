@@ -36,7 +36,7 @@
     "buildsInSource": "_build",
     "buildEnv": {
       "FSTAR_EXE": "#{self.root}/stage0/out/bin/fstar.exe",
-      "PATH": "/cygdrive/c/msys64/mingw64/bin:$PATH"
+      "PATH": "/cygdrive/c/msys64/mingw64/bin:/cygdrive/c/Users/eioannidis/AppData/Local/Microsoft/WindowsApps:$PATH"
     },
     "exportedEnv": {
       "PYTHON": {
@@ -48,7 +48,7 @@
         "scope": "global"
       },
       "PATH": {
-        "val": "/cygdrive/c/msys64/mingw64/bin:$PATH",
+        "val": "/cygdrive/c/msys64/mingw64/bin:/cygdrive/c/Users/eioannidis/AppData/Local/Microsoft/WindowsApps:$PATH",
         "scope": "global"
       }
     }
