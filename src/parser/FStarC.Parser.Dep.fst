@@ -2331,7 +2331,7 @@ let print_dune (outc : out_channel) (deps:deps) : unit =
         pr " (deps"; 
         all_deps |> List.iter (fun f -> pr " "; pr (make_relative f));
         pr ")\n";
-        pr " (action (run %{fstar} %{env:FSTAR_OPTIONS=}"; pr mlish_flags;
+        pr " (action (run %{env:FSTAR_EXE=fstar.exe} %{env:FSTAR_OPTIONS=}"; pr mlish_flags;
         pr " --already_cached \"*,\" -c ";
         pr (make_relative source); pr " -o %{targets})))\n\n"
     in
@@ -2343,7 +2343,7 @@ let print_dune (outc : out_channel) (deps:deps) : unit =
         pr " (deps";
         all_deps |> List.iter (fun f -> pr " "; pr (make_relative f));
         pr ")\n";
-        pr " (action (run %{fstar} %{env:FSTAR_OPTIONS=}"; pr mlish_flags;
+        pr " (action (run %{env:FSTAR_EXE=fstar.exe} %{env:FSTAR_OPTIONS=}"; pr mlish_flags;
         pr " --already_cached \"*,\" --codegen ";
         pr codegen; pr " "; pr (make_relative source); pr " -o %{targets})))\n\n"
     in

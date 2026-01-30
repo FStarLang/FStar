@@ -3115,7 +3115,7 @@ let print_dune (outc : FStarC_Util.out_channel) (deps1 : deps) : unit=
     FStarC_List.iter
       (fun f -> pr " "; (let uu___7 = make_relative f in pr uu___7)) all_deps;
     pr ")\n";
-    pr " (action (run %{fstar} %{env:FSTAR_OPTIONS=}";
+    pr " (action (run %{env:FSTAR_EXE=fstar.exe} %{env:FSTAR_OPTIONS=}";
     pr mlish_flags;
     pr " --already_cached \"*,\" -c ";
     (let uu___11 = make_relative source in pr uu___11);
@@ -3129,7 +3129,7 @@ let print_dune (outc : FStarC_Util.out_channel) (deps1 : deps) : unit=
     FStarC_List.iter
       (fun f -> pr " "; (let uu___7 = make_relative f in pr uu___7)) all_deps;
     pr ")\n";
-    pr " (action (run %{fstar} %{env:FSTAR_OPTIONS=}";
+    pr " (action (run %{env:FSTAR_EXE=fstar.exe} %{env:FSTAR_OPTIONS=}";
     pr mlish_flags;
     pr " --already_cached \"*,\" --codegen ";
     pr codegen;
