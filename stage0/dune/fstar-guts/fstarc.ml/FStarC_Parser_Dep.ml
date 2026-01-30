@@ -3067,7 +3067,9 @@ let print_dune (outc : FStarC_Util.out_channel) (deps1 : deps) : unit=
     let uu___ = FStarC_Util.getcwd () in
     FStarC_Filepath.normalize_file_path uu___ in
   let project_root =
-    let uu___ = FStarC_Filepath.join_paths (FStarC_Filepath.join_paths cwd "..") ".." in
+    let uu___ =
+      let uu___1 = FStarC_Filepath.join_paths cwd ".." in
+      FStarC_Filepath.join_paths uu___1 ".." in
     FStarC_Filepath.normalize_file_path uu___ in
   let make_relative p =
     let p_normalized = FStarC_Filepath.normalize_file_path p in
@@ -3119,13 +3121,18 @@ let print_dune (outc : FStarC_Util.out_channel) (deps1 : deps) : unit=
       Prims.strcat " --MLish --MLish_effect " uu___1
     else "" in
   let lax_flag =
-    let uu___ = FStarC_Options.lax () in
-    if uu___ then " --lax" else "" in
+    let uu___ = FStarC_Options.lax () in if uu___ then " --lax" else "" in
   let is_checked_file f =
     (FStarC_Util.ends_with f ".checked") ||
       (FStarC_Util.ends_with f ".checked.lax") in
   let format_dep f = FStarC_Filepath.basename f in
+  let is_fstarc_module source =
+    let base = FStarC_Filepath.basename source in
+    FStarC_Util.starts_with base "FStarC." in
   let print_check_rule target source all_deps =
+    let flags =
+      let uu___ = is_fstarc_module source in
+      if uu___ then mlish_flags else "" in
     pr "(rule\n";
     pr " (targets ";
     pr target;
@@ -3136,11 +3143,14 @@ let print_dune (outc : FStarC_Util.out_channel) (deps1 : deps) : unit=
     pr ")\n";
     pr " (action (run %{env:FSTAR_EXE=fstar.exe}";
     pr lax_flag;
-    pr mlish_flags;
+    pr flags;
     pr " --include . --already_cached \"*,\" -c ";
     (let uu___12 = FStarC_Filepath.basename source in pr uu___12);
     pr " -o %{targets})))\n\n" in
   let print_extract_rule target source all_deps codegen =
+    let flags =
+      let uu___ = is_fstarc_module source in
+      if uu___ then mlish_flags else "" in
     pr "(rule\n";
     pr " (targets ";
     pr target;
@@ -3151,11 +3161,11 @@ let print_dune (outc : FStarC_Util.out_channel) (deps1 : deps) : unit=
     pr ")\n";
     pr " (action (run %{env:FSTAR_EXE=fstar.exe}";
     pr lax_flag;
-    pr mlish_flags;
+    pr flags;
     pr " --include . --already_cached \"*,\" --codegen ";
     pr codegen;
     pr " ";
-    (let uu___13 = FStarC_Filepath.basename source in pr uu___13);
+    (let uu___14 = FStarC_Filepath.basename source in pr uu___14);
     pr " -o %{targets})))\n\n" in
   let uu___ =
     phase1 deps1.file_system_map deps1.dep_graph

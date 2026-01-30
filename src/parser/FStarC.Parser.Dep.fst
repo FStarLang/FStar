@@ -2348,26 +2348,36 @@ let print_dune (outc : out_channel) (deps:deps) : unit =
         Filepath.basename f  (* All deps are local basenames now *)
     in
     
+    (* Check if a source file is an FStarC module (not ulib) *)
+    let is_fstarc_module (source : string) : bool =
+        let base = Filepath.basename source in
+        BU.starts_with base "FStarC."
+    in
+    
     (* Print a dune rule for checking a file *)
     let print_check_rule (target : string) (source : string) (all_deps : list string) : unit =
+        (* Only apply --MLish to FStarC modules, not ulib *)
+        let flags = if is_fstarc_module source then mlish_flags else "" in
         pr "(rule\n";
         pr " (targets "; pr target; pr ")\n";
         pr " (deps"; 
         all_deps |> List.iter (fun f -> pr " "; pr (format_dep f));
         pr ")\n";
-        pr " (action (run %{env:FSTAR_EXE=fstar.exe}"; pr lax_flag; pr mlish_flags;
+        pr " (action (run %{env:FSTAR_EXE=fstar.exe}"; pr lax_flag; pr flags;
         pr " --include . --already_cached \"*,\" -c ";
         pr (Filepath.basename source); pr " -o %{targets})))\n\n"
     in
     
     (* Print a dune rule for extraction *)
     let print_extract_rule (target : string) (source : string) (all_deps : list string) (codegen : string) : unit =
+        (* Only apply --MLish to FStarC modules, not ulib *)
+        let flags = if is_fstarc_module source then mlish_flags else "" in
         pr "(rule\n";
         pr " (targets "; pr target; pr ")\n";
         pr " (deps";
         all_deps |> List.iter (fun f -> pr " "; pr (format_dep f));
         pr ")\n";
-        pr " (action (run %{env:FSTAR_EXE=fstar.exe}"; pr lax_flag; pr mlish_flags;
+        pr " (action (run %{env:FSTAR_EXE=fstar.exe}"; pr lax_flag; pr flags;
         pr " --include . --already_cached \"*,\" --codegen ";
         pr codegen; pr " "; pr (Filepath.basename source); pr " -o %{targets})))\n\n"
     in
