@@ -1,10 +1,7 @@
-# Skill: F* Verification
-
-## Skill Name
-fstarverifier
-
-## Description
-Use fstar.exe to verify F* code and interpret the errors reported.
+---
+name: fstarverifier
+description: Use fstar.exe to verify F* code and interpret the errors reported
+---
 
 ## Invocation
 This skill is used when:

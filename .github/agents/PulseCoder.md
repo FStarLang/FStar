@@ -1,3 +1,8 @@
+---
+name: PulseCoder
+description: An expert programmer in Pulse for concurrent separation logic programming
+---
+
 # PulseCoder Agent
 
 ## Agent Identity

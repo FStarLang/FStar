@@ -1,3 +1,8 @@
+---
+name: FStarCoder
+description: An expert programmer in F* for proof-oriented programming tasks
+---
+
 # FStarCoder Agent
 
 ## Agent Identity
@@ -127,9 +132,7 @@ assert (pure (FS.cardinality (FS.remove x s) == FS.cardinality s - 1));
 
 ---
 
----
-
-## Pattern 4: OnRange Predicate Management
+## Pattern 3: OnRange Predicate Management
 
 ### Problem
 Working with iterated predicates over array ranges.
@@ -154,7 +157,7 @@ put_bucket_at ptrs contents 0 capacity idx;
 
 ---
 
-## Pattern 5: Bounds Checking for Machine Integers
+## Pattern 4: Bounds Checking for Machine Integers
 
 ### Problem
 Operations like `SZ.add` require proof that result fits.
@@ -176,7 +179,7 @@ let y = x `SZ.add` 1sz;  // Now this works
 
 ---
 
-## Pattern 6: Iterator State Management
+## Pattern 5: Iterator State Management
 
 ### Problem
 Iterators need to track position and remaining elements.
@@ -211,7 +214,7 @@ ensures exists* remaining'.
 
 ---
 
-## Pattern 7: Proof Debugging via Isolation
+## Pattern 6: Proof Debugging via Isolation
 
 ### Problem
 Complex proof fails; need to find specific failing assertion.
@@ -244,7 +247,7 @@ let complex_lemma () : Lemma (...) =
 
 ---
 
-## Pattern 8: Fractional Permission Accounting
+## Pattern 7: Fractional Permission Accounting
 
 ### Problem
 Need to track permissions distributed across multiple holders.
@@ -273,7 +276,7 @@ Need to track permissions distributed across multiple holders.
 
 ---
 
-## Pattern 9: Interface vs Implementation Verification
+## Pattern 8: Interface vs Implementation Verification
 
 ### Problem
 F* verifies files separately; interfaces constrain implementations.
@@ -292,7 +295,7 @@ fstar.exe --ext pulse Module.fst
 
 ---
 
-## Pattern 10: Rlimit Management
+## Pattern 9: Rlimit Management
 
 ### Problem
 High rlimits make proofs flaky and slow.

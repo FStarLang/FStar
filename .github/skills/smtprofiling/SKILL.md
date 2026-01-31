@@ -1,10 +1,7 @@
-# Skill: F* SMT profiling
-
-## Skill Name
-fstarsmtprofiling
-
-## Description
-Debug F* queries sent to Z3, diagnosing proof instability and performance issues
+---
+name: smtprofiling
+description: Debug F* queries sent to Z3, diagnosing proof instability and performance issues
+---
 
 ## Invocation
 This skill is used when:

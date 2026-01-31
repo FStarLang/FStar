@@ -1,3 +1,8 @@
+---
+name: UserGuidancePatterns
+description: Patterns for guiding AI agents through F*/Pulse verification tasks
+---
+
 # User Guidance Patterns
 
 This document captures effective patterns for guiding an AI agent through complex F*/Pulse verification tasks, based on a 67-hour session.

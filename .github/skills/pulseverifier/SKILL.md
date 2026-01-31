@@ -1,10 +1,7 @@
-# Skill: Pulse Verification
-
-## Skill Name
-pulseverifier
-
-## Description
-Use fstar.exe to verify Pulse code and interpret the errors reported.
+---
+name: pulseverifier
+description: Use fstar.exe to verify Pulse code and interpret the errors reported
+---
 
 ## Invocation
 This skill is used when:
