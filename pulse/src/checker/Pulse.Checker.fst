@@ -43,6 +43,7 @@ module Exists = Pulse.Checker.Exists
 module Admit = Pulse.Checker.Admit
 module Return = Pulse.Checker.Return
 module Rewrite = Pulse.Checker.Rewrite
+module ForwardJumpLabel = Pulse.Checker.ForwardJumpLabel
 module Goto = Pulse.Checker.Goto
 module PCP = Pulse.Checker.Pure
 
@@ -416,7 +417,7 @@ let rec check
           r
 
         | Tm_ForwardJumpLabel _ ->
-          T.fail "Tm_ForwardJumpLabel TODO"
+          ForwardJumpLabel.check g pre pre_typing post_hint res_ppname t check
 
         | Tm_Goto _ ->
           Goto.check g pre pre_typing post_hint res_ppname t
