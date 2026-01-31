@@ -234,6 +234,13 @@ let maybe_elaborate_stateful_head (g:env) (t:st_term)
     | None ->
       Pulse.Checker.Base.hoist g (Inl length) true (rebuild_len t)
   )
+  | Tm_Goto { lbl; arg } ->
+    let rebuild (arg:either term st_term {Inl? arg})
+    : T.Tac st_term
+    = let Inl arg = arg in
+      {t with term=Tm_Goto { lbl; arg }}
+    in
+    Pulse.Checker.Base.hoist g (Inl arg) true rebuild  
 
   | _ -> None
 #pop-options

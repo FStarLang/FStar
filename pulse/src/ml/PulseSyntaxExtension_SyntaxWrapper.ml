@@ -161,6 +161,12 @@ let tm_intro_exists (p:slprop) (witnesses:term list) r : st_term =
 let tm_with_options (options:string) (body:st_term) r : st_term =
   PSB.(with_range (tm_pragma_with_options options body) r)
 
+let tm_forward_jump_label (body:st_term) (lbl:ident) (post:comp) r : st_term =
+  PSB.(with_range (tm_forward_jump_label body (ppname_of_id lbl) post) r)
+
+let tm_goto (lbl:term) (arg:term) r : st_term =
+  PSB.(with_range (tm_goto lbl arg) r)
+
 let is_tm_intro_exists (s:st_term) : bool =
   match s.term1 with
   | Tm_IntroExists _ -> true

@@ -54,8 +54,12 @@ let sugar_app (r:Range.range) (f:A.term) (aa : list A.term) : A.term =
     A.mk_term (A.App (f, a, A.Nothing)) r A.Expr)
   f aa
 
+let sugar_var (i: lid) (r:Range.range) : A.term =
+  A.mk_term (A.Var i) r A.Expr
 let sugar_unit (r:Range.range) : A.term =
   A.mk_term (A.Var FStarC.Parser.Const.unit_lid) r A.Expr
+let sugar_unit_const (r:Range.range) : A.term =
+  A.mk_term (A.Const FStarC.Const.Const_unit) r A.Expr
 let sugar_emp (r:Range.range) : A.term =
   A.mk_term (A.Var emp_lid) r A.Expr
 let sugar_star (r:Range.range) : A.term =
@@ -607,6 +611,24 @@ let rec desugar_stmt' (env:env_t) (s:Sugar.stmt)
       let! body = desugar_stmt env body in
       FStarC.Syntax.Util.process_pragma S.PopOptions s.range;
       return (SW.tm_with_options options body s.range)
+    
+    | ForwardJumpLabel { body; lbl; post } ->
+      let env', lblx = push_bv env lbl in
+      let! body = desugar_stmt env' body in
+      let body = close_st_term body lblx.index in
+      let! post =
+        match post with
+        | None -> return (SW.tm_emp s.range)
+        | Some (_, t, _opens) -> desugar_slprop env t
+      in
+      let post = SW.mk_comp (SW.tm_unknown s.range) (SW.mk_binder (id_of_text "_") (SW.tm_unknown s.range)) post in
+      return (SW.tm_forward_jump_label body lbl post s.range)
+
+    | Goto { lbl; arg } ->
+      let! lbl = tosyntax env (sugar_var (id_as_lid lbl) s.range) in
+      let arg = match arg with Some arg -> arg | None -> sugar_unit_const s.range in
+      let! arg = tosyntax env arg in
+      return (SW.tm_goto lbl arg s.range)
 
 and desugar_st_args (env:env_t) (args:list Sugar.lambda) : err (list SW.st_term) =
   match args with

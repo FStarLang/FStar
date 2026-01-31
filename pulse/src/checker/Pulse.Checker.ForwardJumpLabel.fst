@@ -57,6 +57,7 @@ let check
   let g' = push_goto g lbl_x lbl lbl_c in
   let pre_typing': tot_typing g' pre tm_slprop = admit () in
   let post_hint' : post_hint_opt g' = admit (); PostHint post in
+  let body = open_st_term_nv body (lbl, lbl_x) in
   let body' = check g' pre pre_typing' post_hint' res_ppname body in
   let (| body', body'_c, body'_typing |) = apply_checker_result_k #g #pre #post body' res_ppname in
   assert comp_u body'_c == comp_u lbl_c;

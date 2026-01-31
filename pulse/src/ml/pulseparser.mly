@@ -72,6 +72,7 @@ let add_decorations decors ds =
 %token GHOST ATOMIC UNOBSERVABLE
 %token OPENS  SHOW_PROOF_STATE
 %token PRESERVES
+%token GOTO LABEL
 
 %start pulseDeclEOF
 %start peekFnId
@@ -236,6 +237,10 @@ while_invariant1:
 while_invariant:
   | is=list(while_invariant1) { is }
 
+pulseStmtAfterLabel:
+  | { None }
+  | SEMICOLON s=pulseStmtNonempty { Some s }
+
 pulseStmtNoSeq:
   | OPEN i=quident
     { PulseSyntaxExtension_Sugar.mk_open i }
@@ -282,10 +287,19 @@ pulseStmtNoSeq:
     }
   | LBRACE s=pulseStmt RBRACE
     { PulseSyntaxExtension_Sugar.mk_block s }
+  | LBRACE body=pulseStmt LABEL lbl=lident COLON post=option(ensuresSLProp) after=pulseStmtAfterLabel RBRACE
+    {
+      let s1 = PulseSyntaxExtension_Sugar.mk_forward_jump_label body lbl post in
+      match after with
+      | None -> s1
+      | Some s2 -> PulseSyntaxExtension_Sugar.mk_sequence (PulseSyntaxExtension_Sugar.mk_stmt s1 (rr2 $loc($1) $loc(post))) s2
+    }
   | p=matchStmt { p }
   | PRAGMA_SET_OPTIONS options=STRING LBRACE s=pulseStmt RBRACE
     { PulseSyntaxExtension_Sugar.mk_pragma_set_options options s }
-  
+  | GOTO lbl=lident arg=option(noSeqTerm)
+    { PulseSyntaxExtension_Sugar.mk_goto lbl arg }
+
 matchStmt:
   | MATCH tm=appTermNoRecordExp c=option(ensuresSLProp) LBRACE brs=list(pulseMatchBranch) RBRACE
     { PulseSyntaxExtension_Sugar.mk_match tm c brs }

@@ -63,7 +63,7 @@ let check'
       | None ->
         fail g (Some t.range) "Unknown goto label")
     | _ ->
-      fail g (Some t.range) "Unknown goto label")
+      fail g (Some t.range) "Goto label is not a variable")
   | _ ->
     fail g (Some t.range) "goto requires stt"
 

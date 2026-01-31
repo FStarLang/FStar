@@ -179,6 +179,17 @@ type stmt' =
       body:stmt
     }
 
+  | ForwardJumpLabel {
+      body: stmt;
+      lbl: ident;
+      post:option ensures_slprop;
+    }
+  
+  | Goto {
+      lbl: ident;
+      arg: option A.term;
+    }
+
 and stmt = {
   s:stmt';
   range:rng;
@@ -242,6 +253,8 @@ let tag_of_stmt (s:stmt) : string =
   | Introduce {} -> "Introduce"
   | Sequence {} -> "Sequence"
   | ProofHintWithBinders {} -> "ProofHintWithBinders"
+  | ForwardJumpLabel {} -> "ForwardJumpLabel"
+  | Goto {} -> "Goto"
 
 instance tagged_stmt : Class.Tagged.tagged stmt = {
   tag_of = tag_of_stmt
@@ -321,6 +334,17 @@ let rec stmt_to_string (s:stmt) : string =
     "ProofHintWithBinders " ^ record_string [
       "hint_type", show hint_type;
       "binders", show binders;
+    ]
+  | ForwardJumpLabel { body; lbl; post } ->
+    "ForwardJumpLabel " ^ record_string [
+      "body", stmt_to_string body;
+      "lbl", show lbl;
+      "post", show post;
+    ]
+  | Goto { lbl; arg } ->
+    "ForwardJumpLabel " ^ record_string [
+      "lbl", show lbl;
+      "arg", show arg;
     ]
 
 and branch_to_string (b:bool & A.pattern & stmt) : string =
@@ -435,6 +459,10 @@ and eq_stmt' (s1 s2:stmt') =
   | PragmaSetOptions { options=o1; body=b1 }, PragmaSetOptions { options=o2; body=b2 } ->
     o1=o2 &&
     eq_stmt b1 b2
+  | ForwardJumpLabel { body=b1; lbl=l1; post=p1 }, ForwardJumpLabel { body=b2; lbl=l2; post=p2 } ->
+    eq_stmt b1 b2 && eq_ident l1 l2 && eq_opt eq_ensures_slprop p1 p2
+  | Goto { lbl=l1; arg=a1 }, Goto { lbl=l2; arg=a2 } ->
+    eq_ident l1 l2 && eq_opt AD.eq_term a1 a2
   | _ -> false
 and eq_let_init (i1 i2:let_init) =
   match i1, i2 with
@@ -561,6 +589,11 @@ and scan_stmt (cbs:A.dep_scan_callbacks) (s:stmt) =
     iter (scan_binder cbs) bs
   | PragmaSetOptions { body } ->
     scan_stmt cbs body
+  | ForwardJumpLabel { body; lbl; post } ->
+    scan_stmt cbs body;
+    iopt (scan_ensures_slprop cbs) post
+  | Goto { lbl; arg } ->
+    iopt cbs.scan_term arg
 and scan_let_init (cbs:A.dep_scan_callbacks) (i:let_init) =
   match i with
   | Array_initializer a -> iopt cbs.scan_term a.init; cbs.scan_term a.len
@@ -622,3 +655,5 @@ let mk_open lid = Open lid
 let mk_proof_hint_with_binders ht bs =  ProofHintWithBinders { hint_type=ht; binders=bs }
 let mk_lambda bs ascription body range : lambda = { binders=bs; ascription; body; range }
 let mk_pragma_set_options options body = PragmaSetOptions { options; body }
+let mk_forward_jump_label body lbl post = ForwardJumpLabel { body; lbl; post }
+let mk_goto lbl arg = Goto { lbl; arg }
