@@ -26,13 +26,11 @@ fn find_zero (a: array int) (sz: SizeT.t)
     invariant pure (SizeT.v !i <= SizeT.v sz /\
       (forall (j: nat). j < SizeT.v (!i) ==> Seq.index 'va j <> 0))
   {
-    with vi. assert i |-> vi;
-    if (a.(!i) = 0)
-      ensures pts_to a #'r 'va ** i |-> vi ** pure (Seq.index 'va (SizeT.v vi) <> 0)
-    {
+    if (a.(!i) = 0) {
       goto return (!i);
-    };
-    i := !i `SizeT.add` 1sz;
+    } else {
+      i := !i `SizeT.add` 1sz;
+    }
   };
   !i
   label return:
