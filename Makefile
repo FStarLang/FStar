@@ -1,105 +1,149 @@
-# F* Makefile - Wrapper for esy/dune build system
-#
-# This Makefile provides backward compatibility with the legacy build commands.
-# All commands delegate to esy, which uses dune for the actual build.
+# F* Makefile - Build system using dune
 #
 # Prerequisites:
-#   - esy (install via: npm install -g esy)
-#   - Run 'esy install' once to set up dependencies
+#   - OCaml 4.14+ with opam
+#   - Run 'make install-deps' once to install OCaml dependencies
+#   - Python 3 (for version generation)
+#   - Z3 theorem prover in PATH
 #
-# For direct dune usage, see package.json for available esy scripts.
+# Quick start:
+#   make install-deps   # install OCaml dependencies (once)
+#   make                # build F* compiler
 
-.PHONY: all build test clean distclean install help
-.PHONY: stage0 stage1 stage2 0 1 2
+.PHONY: all build test clean distclean install install-deps help
+.PHONY: stage0 stage1 stage2 extract 0 1 2
 .PHONY: package package-src save bump-stage0 unit-tests
 
 # Default goal
 FSTAR_DEFAULT_GOAL ?= build
 .DEFAULT_GOAL := $(FSTAR_DEFAULT_GOAL)
 
+# Number of parallel jobs (default: number of CPUs)
+JOBS ?= $(shell nproc 2>/dev/null || sysctl -n hw.ncpu 2>/dev/null || echo 4)
+
+# Platform-specific commands
+ifeq ($(OS),Windows_NT)
+  RM = powershell -Command "Remove-Item -Recurse -Force -ErrorAction SilentlyContinue"
+  MKDIR = powershell -Command "New-Item -ItemType Directory -Force"
+  ECHO = echo
+else
+  RM = rm -rf
+  MKDIR = mkdir -p
+  ECHO = echo
+endif
+
 # =============================================================================
-# Main Rules
+# Dependency Installation
 # =============================================================================
 
-build:
-	esy build
+install-deps:
+	opam install --deps-only ./fstar.opam
+
+# =============================================================================
+# Main Build Rules
+# =============================================================================
+
+all: build
+
+build: stage0 extract stage1 stage2
 
 test:
-	esy test
+	dune runtest
 
 clean:
-	esy clean
+	dune clean
+	-dune clean --root=stage0
+	-$(RM) stage0/out
+	-$(RM) _deps.txt
 
-distclean:
-	esy distclean
-
-install:
-	esy install-fstar
+distclean: clean
+	-$(RM) _build
+	-$(RM) stage0/_build
 
 # =============================================================================
-# Stage Rules (for F* hackers)
+# Stage Rules
 # =============================================================================
 
+# Path to stage0 fstar executable (absolute path for dune)
+FSTAR_STAGE0 := $(CURDIR)/stage0/out/bin/fstar.exe
+export FSTAR_EXE := $(FSTAR_STAGE0)
+
+# Stage 0: Bootstrap compiler from OCaml snapshot
 stage0 0:
-	esy stage0
+	dune build --root=stage0
+	dune install --root=stage0 --prefix=$(CURDIR)/stage0/out
 
+# Extract: Generate stage1 ML files from F* sources
+extract:
+	dune build @extract-stage1
+
+# Stage 1: Build stage1 compiler library
 stage1 1:
-	esy stage1
+	dune build @stage1
 
+# Stage 2: Build final compiler with plugins
 stage2 2:
-	esy stage2
+	dune build @stage2
 
 # =============================================================================
 # Packaging Rules
 # =============================================================================
 
 package:
-	esy package
+	dune build @packaging/package
 
 package-src:
-	esy package-src
+	dune build @packaging/package-src
+
+install:
+	dune build @packaging/install-fstar
 
 # =============================================================================
 # Maintenance Rules
 # =============================================================================
 
 save:
-	esy save
+	dune build @packaging/save
 
 bump-stage0:
-	esy bump-stage0
+	dune build @packaging/bump-stage0
 
 unit-tests:
-	esy unit-tests
+	dune runtest tests/micro-benchmarks
 
 # =============================================================================
 # Help
 # =============================================================================
 
 help:
-	@echo "F* Build System (esy/dune)"
-	@echo ""
-	@echo "Main rules:"
-	@echo "  build              build the compiler and libraries (default)"
-	@echo "  test               run tests"
-	@echo "  clean              clean build artifacts"
-	@echo "  distclean          remove all generated files"
-	@echo "  install            install F* to out/"
-	@echo ""
-	@echo "Stage rules (for F* hackers):"
-	@echo "  stage0 / 0         build stage0 compiler"
-	@echo "  stage1 / 1         build stage1 compiler"
-	@echo "  stage2 / 2         build stage2 compiler (= build)"
-	@echo ""
-	@echo "Packaging rules:"
-	@echo "  package            create binary distribution"
-	@echo "  package-src        create source distribution"
-	@echo ""
-	@echo "Maintenance rules:"
-	@echo "  save               snapshot stage2 to stage0_new"
-	@echo "  bump-stage0        replace stage0 with snapshot"
-	@echo "  unit-tests         run unit tests only"
-	@echo ""
-	@echo "Prerequisites:"
-	@echo "  npm install -g esy   # install esy"
-	@echo "  esy install          # install dependencies (run once)"
+	@$(ECHO) "F* Build System (dune)"
+	@$(ECHO) ""
+	@$(ECHO) "Setup:"
+	@$(ECHO) "  install-deps       install OCaml dependencies via opam"
+	@$(ECHO) ""
+	@$(ECHO) "Main rules:"
+	@$(ECHO) "  build              build the compiler (default)"
+	@$(ECHO) "  test               run tests"
+	@$(ECHO) "  clean              clean build artifacts"
+	@$(ECHO) "  distclean          remove all generated files"
+	@$(ECHO) "  install            install F* to system"
+	@$(ECHO) ""
+	@$(ECHO) "Stage rules (for F* hackers):"
+	@$(ECHO) "  stage0 / 0         build stage0 (bootstrap) compiler"
+	@$(ECHO) "  extract            extract stage1 ML from F* sources"
+	@$(ECHO) "  stage1 / 1         build stage1 compiler library"
+	@$(ECHO) "  stage2 / 2         build stage2 (final) compiler"
+	@$(ECHO) ""
+	@$(ECHO) "Packaging rules:"
+	@$(ECHO) "  package            create binary distribution"
+	@$(ECHO) "  package-src        create source distribution"
+	@$(ECHO) ""
+	@$(ECHO) "Maintenance rules:"
+	@$(ECHO) "  save               snapshot stage2 to stage0_new"
+	@$(ECHO) "  bump-stage0        replace stage0 with snapshot"
+	@$(ECHO) "  unit-tests         run unit tests only"
+	@$(ECHO) ""
+	@$(ECHO) "Prerequisites:"
+	@$(ECHO) "  - OCaml 4.14+ with opam"
+	@$(ECHO) "  - Python 3"
+	@$(ECHO) "  - Z3 theorem prover"

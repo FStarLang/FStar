@@ -1,5 +1,0 @@
-(env
-  (_
-    (bin_annot false)
-    (flags (:standard -w -A)))
-)

@@ -1,0 +1,8 @@
+(env
+  (_
+    (bin_annot false)
+    (flags (:standard -w -A)))
+)
+
+; Include .scripts explicitly (dune ignores dot-dirs by default)
+(dirs :standard .scripts)

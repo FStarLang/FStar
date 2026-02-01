@@ -52,7 +52,7 @@ buildDunePackage {
     "dune-project"
     "dune-workspace"
     "fstar.opam"
-    "package.json"
+    "Makefile"
     "packaging.*"
     "src.*"
     "stage0.*"
@@ -69,7 +69,9 @@ buildDunePackage {
     export PATH="${z3}/bin:$PATH"
     
     # Stage 0: Build bootstrap compiler from OCaml snapshot
-    dune build @stage0
+    dune build --root=stage0
+    dune install --root=stage0 --prefix=stage0/out
+    export FSTAR_EXE=$(pwd)/stage0/out/bin/fstar.exe
     
     # Extract: Generate stage1 ML files from F* sources
     dune build @extract-stage1

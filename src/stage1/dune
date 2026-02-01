@@ -44,16 +44,14 @@
  (modules FStarC_Parser_WarnError))
 
 ; Version file generation (uses Python for portability)
-; The bash wrapper finds Python in a portable way
 (rule
  (target FStarC_Version.ml)
  (deps
    (:version %{project_root}/version.txt)
-   (:script %{project_root}/.scripts/make_version.sh)
-   (source_tree %{project_root}/.scripts))
+   (:script %{project_root}/.scripts/make_version.py))
  (action
   (with-stdout-to %{target}
-   (run bash %{script} %{version}))))
+   (system "python %{script} %{version}"))))
 
 ; Alias for building stage1
 (alias

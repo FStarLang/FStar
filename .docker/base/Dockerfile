@@ -1,4 +1,4 @@
-FROM ubuntu:18.04
+FROM ubuntu:22.04
 
 MAINTAINER Benjamin Beurdouche <benjamin.beurdouche@inria.fr>; Victor Dumitrescu <victor.dumitrescu@nomadic-labs.com>; Daniel Fabian <daniel.fabian@integral-it.ch>;
 
@@ -7,7 +7,7 @@ RUN apt-get -qq update
 RUN apt-get install -y software-properties-common
 RUN add-apt-repository -y ppa:avsm/ppa # for opam 2
 RUN apt-get -qq update
-RUN apt-get install -y sudo wget libssl-dev libsqlite3-dev g++ gcc m4 make opam pkg-config python libgmp3-dev unzip cmake
+RUN apt-get install -y sudo wget libssl-dev libsqlite3-dev g++ gcc m4 make opam pkg-config python3 libgmp-dev unzip cmake git
 
 # Create user
 RUN useradd -ms /bin/bash build
@@ -18,7 +18,7 @@ WORKDIR /home/build
 # Prepare and build OPAM and OCaml
 RUN opam init -y --disable-sandboxing
 RUN opam update
-RUN opam install -y ocamlbuild ocamlfind batteries stdint zarith yojson fileutils pprint menhir mtime sedlex ppx_deriving ppx_deriving_yojson process pprint visitors fix wasm ppxlib=0.22.0
+RUN opam install -y dune batteries stdint zarith yojson pprint menhir mtime sedlex ppx_deriving ppx_deriving_yojson process ppxlib memtrace
 
 # Prepare and build Z3
 ENV z3=z3-4.8.5-x64-debian-8.11

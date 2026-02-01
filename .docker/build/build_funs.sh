@@ -71,9 +71,21 @@ function fstar_default_build () {
         (fetch_karamel ; make_karamel_pre) &
     fi
 
-    # Build F*, along with fstarlib
-    if ! make -j $threads ci-pre; then
-        echo Warm-up failed
+    # Build F* using dune (replaces old make ci-pre)
+    echo "Building F* with dune..."
+    
+    # Stage 0: Bootstrap compiler
+    dune build --root=stage0/dune -j $threads
+    dune install --root=stage0/dune --prefix=stage0/out
+    export FSTAR_EXE=$(pwd)/stage0/out/bin/fstar.exe
+    
+    # Extract, Stage 1, Stage 2
+    dune build @extract-stage1 -j $threads
+    dune build @stage1 -j $threads
+    dune build @stage2 -j $threads
+    
+    if [ $? -ne 0 ]; then
+        echo Build failed
         echo Failure >$result_file
         return 1
     fi
@@ -82,25 +94,25 @@ function fstar_default_build () {
 
     wait # for fetches above
 
-    # Once F* is built, run its main regression suite. This also runs the karamel
-    # test (unless CI_NO_KARAMEL is set).
-    $gnutime make -j $threads -k ci-post && echo true >$status_file
+    # Run tests (replaces old make ci-post)
+    echo "Running tests with dune..."
+    $gnutime dune runtest -j $threads && echo true >$status_file
     echo Done building FStar
 
     if [ -z "${FSTAR_CI_NO_GITDIFF}" ]; then
         # Make it a hard failure if there's a git diff in the snapshot. First check for
         # extraneous files, then for a diff.
-        echo "Searching for a diff in ocaml/*/generated"
-        git status ocaml/*/generated # Print status for log
+        echo "Searching for a diff in src/extracted"
+        git status src/extracted # Print status for log
 
         # If there's any output, i.e. any file not in HEAD, fail
-        if git ls-files --others --exclude-standard -- ocaml/*/generated | grep -q . ; then
+        if git ls-files --others --exclude-standard -- src/extracted | grep -q . ; then
             echo " *** GIT DIFF: there are extraneous files in the snapshot"
             echo false >$status_file
         fi
 
         # If there's a diff in existing files, fail
-        if ! git diff --exit-code ocaml/*/generated ; then
+        if ! git diff --exit-code src/extracted ; then
             echo " *** GIT DIFF: the files in the list above have a git diff"
             echo false >$status_file
         fi
