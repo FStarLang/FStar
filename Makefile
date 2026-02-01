@@ -89,13 +89,13 @@ stage2 2:
 # Packaging Rules
 # =============================================================================
 
-package:
+package: build
 	dune build @packaging/package
 
-package-src:
+package-src: build
 	dune build @packaging/package-src
 
-install:
+install: build
 	dune build @packaging/install-fstar
 
 # =============================================================================
