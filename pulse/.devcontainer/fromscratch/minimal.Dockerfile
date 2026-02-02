@@ -21,6 +21,7 @@ RUN apt-get update \
       vim \
       pkg-config \
       time \
+      libffi-dev \
     && apt-get clean -y
 # FIXME: libgmp-dev should be installed automatically by opam,
 # but it is not working, so just adding it above.
@@ -51,7 +52,7 @@ RUN eval $(opam env) \
  && source $HOME/.profile \
  && git clone --depth=1 https://github.com/FStarLang/FStar \
  && cd FStar/ \
- && opam install --deps-only ./fstar.opam \
+ && opam install --yes --deps-only ./fstar.opam \
  && make -j$(nproc) ADMIT=1 \
  && ln -s $(realpath bin/fstar.exe) $HOME/bin/fstar.exe
 
@@ -64,8 +65,7 @@ RUN eval $(opam env) \
  && git clone --depth=1 https://github.com/FStarLang/karamel \
  && cd karamel/ \
  && sed -i '/"fstar"/d' karamel.opam \
- && opam install --deps-only ./karamel.opam \
- && .docker/build/install-other-deps.sh \
+ && opam install --yes --deps-only ./karamel.opam \
  && make -j$(nproc)
 
 ENV FSTAR_EXE  $HOME/FStar/bin/fstar.exe
