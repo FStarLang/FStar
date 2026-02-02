@@ -1717,7 +1717,7 @@ let expand_directories (files: list file_name) : list file_name =
       [f]
   ) files in
   (* Filter out .fst files when corresponding .fsti exists *)
-  let fsti_set = 
+  let fsti_set : RBSet.t string = 
     List.fold_left (fun acc f ->
       if Util.ends_with f ".fsti" then
         let base = String.substring f 0 (String.length f - 1) in (* remove trailing 'i' to get .fst *)
