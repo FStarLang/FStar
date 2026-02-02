@@ -1094,9 +1094,6 @@ fn release_writer (#pred : perm -> slprop) {| fractional pred |} (#perm_lock:per
     rewrite (GR.pts_to l.ghost_counter #1.0R 0ul)
          as (GR.pts_to l.ghost_counter #(ghost_counter_perm 0ul) 0ul);
     
-    // f = 1.0R when writer held
-    rewrite (if writer_sentinel = writer_sentinel then emp else pred f) as emp;
-    
     // Fold table_relation for unlocked state
     fold (table_relation 0ul table_size entries spec 1.0R);
     
@@ -1112,6 +1109,127 @@ fn release_writer (#pred : perm -> slprop) {| fractional pred |} (#perm_lock:per
   };
   
   fold (is_rwlock l #perm_lock)
+}
+
+//
+// Try-free
+//
+
+/// Try to free the lock if it is not acquired (counter = 0)
+fn try_free (#pred : perm -> slprop) {| fractional pred |} (l : rwlock pred)
+  requires is_rwlock l #1.0R
+  returns b:bool
+  ensures cond b (pred 1.0R) (is_rwlock l #1.0R)
+{
+  unfold (is_rwlock l #1.0R);
+  
+  let result : bool =
+    with_invariants bool emp_inames (CInv.iname_of l.cinv)
+        (cinv_vp l.cinv (rwlock_inv pred l.counter l.ghost_counter l.perm_table))
+        (active l.cinv 1.0R)
+        (fun r -> active l.cinv 1.0R ** cond r (GR.pts_to l.ghost_counter #0.5R writer_sentinel ** pred 1.0R) emp)
+    fn _ {
+      unpack_cinv_vp l.cinv;
+      unfold (rwlock_inv pred l.counter l.ghost_counter l.perm_table);
+      unfold (rwlock_inv_aux pred l.counter l.ghost_counter l.perm_table);
+      
+      with n table_size entries spec f. _;
+      unfold (table_relation n table_size entries spec f);
+      
+      // Try CAS from 0 to writer_sentinel to acquire exclusive ownership
+      let b = cas_box l.counter 0ul writer_sentinel;
+      
+      if b {
+        elim_cond_true _ _ _;
+        // CAS succeeded! n was 0, now writer_sentinel
+        rewrite each n as 0ul;
+        
+        // n = 0 means no readers, so f = 1.0R
+        Set.all_finite_set_facts_lemma ();
+        assert (pure (Set.cardinality entries == 0));
+        assert (pure (total_frac spec entries == 0.0R));
+        assert (pure (f == 1.0R));
+        
+        // We have pred f = pred 1.0R
+        rewrite (if 0ul = writer_sentinel then emp else pred f) as (pred 1.0R);
+        
+        // Split ghost_counter permission: 1.0R -> 0.5R + 0.5R
+        // ghost_counter_perm 0ul = 1.0R
+        rewrite (GR.pts_to l.ghost_counter #(ghost_counter_perm 0ul) 0ul)
+             as (GR.pts_to l.ghost_counter #1.0R 0ul);
+        GR.(l.ghost_counter := writer_sentinel);
+        GR.share l.ghost_counter;
+        
+        // One half stays in invariant
+        // ghost_counter_perm writer_sentinel = 0.5R
+        rewrite (GR.pts_to l.ghost_counter #0.5R writer_sentinel)
+             as (GR.pts_to l.ghost_counter #(ghost_counter_perm writer_sentinel) writer_sentinel);
+        
+        // Fold table_relation for writer state
+        fold (table_relation writer_sentinel table_size entries spec 1.0R);
+        
+        // Fold the predicate part (emp since writer_sentinel)
+        rewrite emp as (if writer_sentinel = writer_sentinel then emp else pred 1.0R);
+        
+        // Fold the invariant
+        fold (rwlock_inv_aux pred l.counter l.ghost_counter l.perm_table);
+        fold (rwlock_inv pred l.counter l.ghost_counter l.perm_table);
+        pack_cinv_vp l.cinv;
+        
+        fold (cond true (GR.pts_to l.ghost_counter #0.5R writer_sentinel ** pred 1.0R) emp);
+        true
+      } else {
+        elim_cond_false _ _ _;
+        // CAS failed - refold invariant
+        fold (table_relation n table_size entries spec f);
+        fold (rwlock_inv_aux pred l.counter l.ghost_counter l.perm_table);
+        fold (rwlock_inv pred l.counter l.ghost_counter l.perm_table);
+        pack_cinv_vp l.cinv;
+        fold (cond false (GR.pts_to l.ghost_counter #0.5R writer_sentinel ** pred 1.0R) emp);
+        false
+      }
+    };
+  
+  if result {
+    elim_cond_true result _ _;
+    
+    // Buy a later credit for cancel
+    later_credit_buy 1;
+    
+    // Cancel the invariant and free the lock
+    CInv.cancel l.cinv;
+    
+    unfold (rwlock_inv pred l.counter l.ghost_counter l.perm_table);
+    unfold (rwlock_inv_aux pred l.counter l.ghost_counter l.perm_table);
+    with n table_size entries spec f. _;
+    
+    // Use ghost_counter to show n = writer_sentinel, then eliminate the predicate part
+    GR.pts_to_injective_eq l.ghost_counter;
+    rewrite each n as writer_sentinel;
+    rewrite (if writer_sentinel = writer_sentinel then emp else pred f) as emp;
+    unfold (table_relation writer_sentinel table_size entries spec f);
+    
+    // Free the physical counter
+    B.free l.counter;
+    
+    // Gather ghost_counter to full permission and free it
+    rewrite (GR.pts_to l.ghost_counter #(ghost_counter_perm writer_sentinel) writer_sentinel)
+         as (GR.pts_to l.ghost_counter #0.5R writer_sentinel);
+    GR.gather l.ghost_counter;
+    GR.free l.ghost_counter #writer_sentinel;
+    
+    // Drop ghost table resources
+    drop_ (OR.on_range (owns_half_table_entry l.perm_table spec) 0 table_size);
+    drop_ (GFT.is_table l.perm_table table_size);
+    
+    fold (cond true (pred 1.0R) (is_rwlock l #1.0R));
+    true
+  } else {
+    elim_cond_false result _ _;
+    fold (is_rwlock l #1.0R);
+    fold (cond false (pred 1.0R) (is_rwlock l #1.0R));
+    false
+  }
 }
 
 //
