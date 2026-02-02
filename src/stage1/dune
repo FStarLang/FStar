@@ -1,0 +1,102 @@
+; =============================================================================
+; src/stage1/dune - Stage 1 F* Compiler Build
+; =============================================================================
+; 
+; Builds fstar from extracted OCaml files + hand-written ML files.
+; Uses copy_files to bring in files from sibling directories.
+
+; Copy extracted files from src/extracted/
+(copy_files ../extracted/*.ml)
+
+; Copy hand-written files from src/ml/
+(copy_files ../ml/*.ml)
+
+; Copy menhir grammar files from src/ml/
+(copy_files ../ml/*.mly)
+
+; Copy ulib runtime ML files (matching stage0 structure)
+; These are included directly rather than as a separate library
+; to avoid module conflicts with plugins
+(copy_files ../../ulib/ml/app/*.ml)
+(copy_files ../../ulib/ml/app-extra/*.ml)
+
+; Generate FStar Int/UInt modules
+; Copy the generator script and body file, then generate the modules
+(copy_files ../../ulib/ml/app/ints/mk_int_file.sh)
+(copy_files ../../ulib/ml/app/ints/FStar_Ints.ml.body)
+
+(rule
+  (target FStar_UInt16.ml)
+  (deps mk_int_file.sh FStar_Ints.ml.body)
+  (action (with-stdout-to %{target} (run bash ./mk_int_file.sh U 16))))
+
+(rule
+  (target FStar_UInt32.ml)
+  (deps mk_int_file.sh FStar_Ints.ml.body)
+  (action (with-stdout-to %{target} (run bash ./mk_int_file.sh U 32))))
+
+(rule
+  (target FStar_UInt64.ml)
+  (deps mk_int_file.sh FStar_Ints.ml.body)
+  (action (with-stdout-to %{target} (run bash ./mk_int_file.sh U 64))))
+
+(rule
+  (target FStar_Int8.ml)
+  (deps mk_int_file.sh FStar_Ints.ml.body)
+  (action (with-stdout-to %{target} (run bash ./mk_int_file.sh S 8))))
+
+(rule
+  (target FStar_Int16.ml)
+  (deps mk_int_file.sh FStar_Ints.ml.body)
+  (action (with-stdout-to %{target} (run bash ./mk_int_file.sh S 16))))
+
+(rule
+  (target FStar_Int32.ml)
+  (deps mk_int_file.sh FStar_Ints.ml.body)
+  (action (with-stdout-to %{target} (run bash ./mk_int_file.sh S 32))))
+
+(rule
+  (target FStar_Int64.ml)
+  (deps mk_int_file.sh FStar_Ints.ml.body)
+  (action (with-stdout-to %{target} (run bash ./mk_int_file.sh S 64))))
+
+; The compiler library
+(library
+ (name fstarcompiler)
+ (public_name fstar.compiler)
+ (libraries
+    batteries
+    zarith
+    stdint
+    yojson
+    ppxlib
+    dynlink
+    menhirLib
+    pprint
+    process
+    sedlex
+    mtime.clock)
+ (modes native)
+ (preprocess (pps ppx_deriving.show ppx_deriving_yojson sedlex.ppx))
+ (flags -w -8-20-26-27-28-33-35))
+
+; Menhir parsers
+(menhir
+ (modules FStarC_Parser_Parse))
+(menhir
+ (modules FStarC_Parser_WarnError))
+
+; Version file generation (uses Python for portability)
+(rule
+ (target FStarC_Version.ml)
+ (deps
+   (:version %{project_root}/version.txt)
+   (:script %{project_root}/.scripts/make_version.py))
+ (action
+  (with-stdout-to %{target}
+   (system "python %{script} %{version}"))))
+
+; Alias for building stage1
+(alias
+ (name stage1)
+ (deps fstarcompiler.cmxa))

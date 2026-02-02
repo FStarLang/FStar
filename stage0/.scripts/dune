@@ -1,0 +1,8 @@
+; Copy scripts from root .scripts/ into stage0/.scripts/
+; This avoids duplicating scripts in the repo
+; Path: from stage0/.scripts/ -> ../../.scripts/
+(copy_files ../../.scripts/make_version.py)
+(copy_files ../../.scripts/get_fstar_z3.sh)
+(copy_files ../../.scripts/package_z3.sh)
+(copy_files ../../.scripts/bin-install.sh)
+(copy_files ../../.scripts/mk-package.sh)

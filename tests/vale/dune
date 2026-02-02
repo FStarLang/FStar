@@ -1,0 +1,27 @@
+; Vale test - verify with dependency order
+; Only pass .fsti files to let F* handle abstraction properly
+(rule
+ (alias runtest)
+ (deps
+   (:fstar %{project_root}/src/stage2/fstar.exe)
+   (glob_files *.fst)
+   (glob_files *.fsti)
+   (source_tree %{project_root}/ulib))
+ (action
+   (chdir %{project_root}/tests/vale
+     (run %{fstar}
+          --include %{project_root}/ulib
+          --include .
+          --cache_dir %{project_root}/_build/default/tests/_cache
+          --odir %{project_root}/_build/default/tests/_output
+          --warn_error -240-241-321
+          Opaque_i.fsti
+          X64.Poly1305.Bitvectors_i.fsti
+          X64.Poly1305.Math_i.fsti
+          X64.Poly1305.fsti
+          X64.Vale.Regs_i.fsti
+          X64.Vale.State_i.fsti
+          X64.Vale.StateLemmas_i.fsti
+          X64.Vale.StrongPost_i.fsti
+          X64.Vale.Lemmas_i.fsti
+          X64.Vale.Decls.fsti))))

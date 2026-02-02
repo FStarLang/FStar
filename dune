@@ -1,0 +1,10 @@
+; Exclude unused directories
+; Note: stage0 has its own dune-project in stage0/dune/ and is built separately
+; Packaging rules are in packaging/ subdirectory
+; Include .scripts explicitly (dune ignores dot-dirs by default)
+; ulib/ml is excluded because we copy files from it rather than using fstar_ulib library
+(dirs :standard .scripts \ stage0 stage1 stage2 examples out _package _srcpackage stage0_new)
+
+; Mark ulib/ml as data-only so dune doesn't build fstar_ulib
+; The ML files are copied into stage1 via copy_files
+(data_only_dirs ulib)

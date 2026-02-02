@@ -1,0 +1,37 @@
+; Book code directory
+; Per legacy Makefile: excludes ContextPollution.fst
+; Also excludes UInt32.fst and UInt32BV.fst - they implement .fsti files
+; and can't be passed together as both are loaded
+(rule
+ (alias runtest)
+ (deps
+   (:fstar %{project_root}/src/stage2/fstar.exe)
+   (glob_files *.fst)
+   (glob_files *.fsti)
+   (source_tree %{project_root}/ulib))
+ (action
+   (chdir %{project_root}/doc/book/code
+     (run %{fstar}
+          --include %{project_root}/ulib
+          --include .
+          --cache_dir %{project_root}/_build/default/doc/_cache
+          --odir %{project_root}/_build/default/doc/_output
+          --warn_error -240-241-321
+          --expose_interfaces
+          AdHocEffectPolymorphism.fst Alex.fst AlexOpaque.fst Connectives.fst
+          Divergence.fst FactorialTailRec.fst GradedMonad.fst HintReplay.fst
+          Imp.fst LList.fst MemCpy.Deps.fst MemCpy.fst MerkleTree.fst
+          MonadFunctorInference.fst Part1.Assertions.fst Part1.GettingOffTheGround.fst
+          Part1.Inductives.fst Part1.Lemmas.fst Part1.Poly.fst Part1.Poly2.fst
+          Part1.Quicksort.fst Part1.Quicksort.Generic.fst Part1.Quicksort.Main.fst
+          Part1.Quicksort.Permutation.fst Part1.Termination.fst Part2.Free.fst
+          Part2.FreeFunExt.fst Part2.HOAS.fst Part2.Par.fst Part2.PHOAS.fst
+          Part2.Positivity.fst Part2.ST.fst Part2.STInt.fst Part2.STLC.fst
+          Part2.STLC.Strong.fst Part2.WellFounded.fst Part3.DataTypesALaCarte.fst
+          Part4.UTLCEx1.fst Part4.UTLCEx2.fst Part5.IsConj.fst Part5.Mapply.fst
+          Part5.Pow2.fst ProvableEquality.fst Pure.fst RevealHideCoercions.fst
+          Russell.fst SimplifiedFStarSet.fst SMTEncoding.fst Typeclasses.fst
+          TypeclassesAlt.fst TypeclassesAlt2.fst TypeclassesAlt3.fst
+          UInt32.fsti UInt32BV.fsti
+          Universes.fst UnsoundUniverseLowering.fst Vec.fst
+          VecErased.fst VecErasedExplicit.fst))))

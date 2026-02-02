@@ -35,3 +35,8 @@ val canonicalize : string -> string
 
 (* Like canonicalize, but always returns an absolute path. *)
 val normalize_file_path: string -> string
+
+(* Compute a relative path from base_dir to target_path.
+   Both paths should be absolute. If they share a common prefix,
+   returns a relative path; otherwise returns the target unchanged. *)
+val make_relative_to: string -> string -> string

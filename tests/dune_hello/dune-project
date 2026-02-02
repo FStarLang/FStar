@@ -1,7 +1,0 @@
-(lang dune 3.8)
-(name hello)
-
-(package
-  (name hello)
-  (synopsis "An example F* application")
-)

@@ -1,0 +1,10 @@
+; Extension-lang test - SKIPPED
+; Requires compiled TinyPlugin.cmxs and --load TinyPlugin --lang_extensions tiny
+; TODO: Add plugin compilation support to dune build
+;
+; Disabled by using (enabled_if false)
+(rule
+ (alias runtest)
+ (enabled_if false)
+ (deps)
+ (action (echo "extension-lang tests skipped - needs plugin compilation")))

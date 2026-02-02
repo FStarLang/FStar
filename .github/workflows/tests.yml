@@ -127,9 +127,9 @@ jobs:
 
       - name: Smoke test
         run: |
-          ./fstar/bin/fstar.exe fstar/lib/fstar/ulib/Prims.fst -f
+          ./fstar/bin/fstar fstar/lib/fstar/ulib/Prims.fst -f
           echo -e "module A\nopen FStar.Mul\nlet _ = assert (forall x. 1 + x*x > 0)" > A.fst
-          ./fstar/bin/fstar.exe A.fst
+          ./fstar/bin/fstar A.fst
 
   ocaml-smoke:
     strategy:
@@ -167,9 +167,9 @@ jobs:
 
       - name: Smoke test
         run: |
-          ./out/bin/fstar.exe out/lib/fstar/ulib/Prims.fst -f
+          ./out/bin/fstar out/lib/fstar/ulib/Prims.fst -f
           echo -e "module A\nopen FStar.Mul\nlet _ = assert (forall x. 1 + x*x > 0)" > A.fst
-          ./out/bin/fstar.exe A.fst
+          ./out/bin/fstar --include out/lib/fstar/ulib A.fst
         working-directory: fstar
 
   perf-canaries:
@@ -190,4 +190,4 @@ jobs:
       - run: tar xzf fstar.tar.gz
 
       - name: Run perf canaries
-        run: .scripts/perf_canaries.sh ./fstar/bin/fstar.exe
+        run: .scripts/perf_canaries.sh ./fstar/bin/fstar

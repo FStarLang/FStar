@@ -1,0 +1,19 @@
+; Negative test - expected to fail
+; Legacy: ! $(FSTAR) Test.fst (inverts exit code)
+(rule
+ (alias runtest)
+ (deps
+   (:fstar %{project_root}/src/stage2/fstar.exe)
+   (glob_files *.fst)
+   (glob_files *.fsti)
+   (source_tree %{project_root}/ulib))
+ (action
+   (chdir %{project_root}/tests/incl/private.neg
+     (with-accepted-exit-codes (not 0)
+       (run %{fstar}
+            --include %{project_root}/ulib
+            --include .
+            --cache_dir %{project_root}/_build/default/tests/_cache
+            --odir %{project_root}/_build/default/tests/_output
+            --warn_error -240-241-321
+            Test.fst)))))
