@@ -50,8 +50,9 @@ ifdef USE_UNIX_CMDS
   ECHO = echo
   ifeq ($(OS),Windows_NT)
     # Cygwin on Windows - executable has .exe suffix
-    # Use cygpath -w to convert Cygwin path to Windows path for dune
-    FSTAR_EXE_ABS = $(shell cygpath -w $(shell pwd)/stage0/out/bin/fstar.exe 2>/dev/null || echo $(shell pwd)/stage0/out/bin/fstar.exe)
+    # Use cygpath -m for mixed mode paths (D:/a/FStar/...) that work in both
+    # shell commands and Windows-native tools like dune
+    FSTAR_EXE_ABS = $(shell cygpath -m $(shell pwd)/stage0/out/bin/fstar.exe 2>/dev/null || echo $(shell pwd)/stage0/out/bin/fstar.exe)
   else
     # Unix: binary is just 'fstar' (no .exe suffix)
     FSTAR_EXE_ABS = $(shell pwd)/stage0/out/bin/fstar
