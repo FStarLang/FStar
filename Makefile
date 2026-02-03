@@ -152,7 +152,6 @@ ifeq ($(OS),Windows_NT)
 	@$(MKDIR) bin
 	@$(CP) out/bin/fstar.exe bin/
 else
-	@if [ -e out ] && ! [ -h out ]; then echo "ERROR: out/ exists and is not a symbolic link, please remove it"; false; fi
 	rm -rf out && mkdir -p out/bin out/lib/fstar
 	@# dune always produces .exe suffix for native executables, link to that
 	ln -sf $(CURDIR)/_build/default/src/stage2/fstar.exe out/bin/fstar
