@@ -1,7 +1,7 @@
 name: Build F* (Windows)
 
 # Full native Windows build of F* (stage0 → stage2) with tests.
-# Uses PowerShell and native Windows OCaml.
+# Uses PowerShell with winget-installed opam and MSYS2 for GMP.
 
 on:
   workflow_call:
@@ -17,27 +17,46 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: ocaml/setup-ocaml@v3
-        with:
-          ocaml-compiler: 4.14.2
-
-      # Install GMP via MSYS2 (setup-ocaml includes MSYS2)
-      - name: Install GMP
+      # Add MSYS2 GMP to PATH (already installed on GitHub runners)
+      - name: Add MSYS2 to PATH
         run: |
-          C:\msys64\usr\bin\bash.exe -lc "pacman -S --noconfirm mingw-w64-x86_64-gmp"
+          echo "C:\msys64\mingw64\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
 
+      # Install opam via winget
+      - name: Install opam
+        run: |
+          winget install OCaml.opam --accept-source-agreements --accept-package-agreements --disable-interactivity
+
+      # Initialize opam and create switch
+      - name: Initialize opam
+        run: |
+          opam init --auto-setup --bare --disable-sandboxing
+          opam switch create 4.14.2
+
+      # Persist opam environment to GITHUB_ENV
+      - name: Setup opam environment
+        run: |
+          $opamEnv = & opam env
+          $opamEnv -split '\r?\n' | ForEach-Object {
+            if ($_ -match '^([^=]+)=(.*)$') {
+              $name = $matches[1]
+              $value = $matches[2] -replace '^"','' -replace '"$',''
+              echo "$name=$value" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+            }
+          }
+
+      # Install Z3
       - name: Install Z3
         run: |
-          # Download Z3 for Windows
           $z3_url = "https://github.com/Z3Prover/z3/releases/download/z3-4.13.3/z3-4.13.3-x64-win.zip"
           Invoke-WebRequest -Uri $z3_url -OutFile z3.zip
           Expand-Archive -Path z3.zip -DestinationPath $env:USERPROFILE
           $z3_dir = Get-ChildItem -Path $env:USERPROFILE -Filter "z3-*" -Directory | Select-Object -First 1
-          Copy-Item -Path "$($z3_dir.FullName)\bin\z3.exe" -Destination "$env:USERPROFILE\bin\z3.exe" -Force
           New-Item -ItemType Directory -Force -Path "$env:USERPROFILE\bin" | Out-Null
           Copy-Item -Path "$($z3_dir.FullName)\bin\z3.exe" -Destination "$env:USERPROFILE\bin\z3.exe" -Force
           echo "$env:USERPROFILE\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
 
+      # Install F* dependencies
       - name: Install opam dependencies
         run: |
           opam install --deps-only ./fstar.opam
@@ -53,7 +72,6 @@ jobs:
 
       - name: Build F* (stage0 → stage2)
         run: |
-          # Get number of processors
           $nproc = (Get-CimInstance Win32_ComputerSystem).NumberOfLogicalProcessors
           make -skj$nproc
 
