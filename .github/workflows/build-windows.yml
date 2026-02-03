@@ -20,8 +20,15 @@ jobs:
       - name: Set up Cygwin
         uses: cygwin/cygwin-install-action@master
         with:
-          packages: mingw64-i686-gmp, mingw64-i686-libffi, mingw64-x86_64-gmp, mingw64-x86_64-libffi
+          # Include all packages setup-ocaml needs plus GMP/libffi for zarith/ctypes
+          packages: >-
+            curl, m4, make, perl, rsync, unzip,
+            mingw64-i686-gcc-core, mingw64-i686-gcc-g++,
+            mingw64-x86_64-gcc-core, mingw64-x86_64-gcc-g++,
+            mingw64-i686-gmp, mingw64-i686-libffi,
+            mingw64-x86_64-gmp, mingw64-x86_64-libffi
           site: https://mirrors.dotsrc.org/cygwin/
+          install-dir: C:\cygwin
 
       - name: Set up OCaml
         uses: ocaml/setup-ocaml@v3
