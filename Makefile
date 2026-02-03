@@ -86,9 +86,6 @@ all: build setlink-2
 # Build depends on stage2, which chains to stage1 -> extract -> stage0
 build: stage2
 
-test:
-	dune runtest --root=.
-
 clean:
 	dune clean --root=.
 	-dune clean --root=stage0
