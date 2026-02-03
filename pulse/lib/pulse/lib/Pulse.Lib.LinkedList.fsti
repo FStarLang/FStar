@@ -38,6 +38,11 @@ fn head (#t:Type0) (x:llist t) (#l:erased (list t){Cons? l})
     returns v:t
     ensures is_list x l ** pure (v == List.Tot.hd l)
 
+fn pop (#t:Type0) (x:llist t) (#l:erased (list t){Cons? l})
+    requires is_list x l
+    returns r:(llist t & t)
+    ensures is_list (fst r) (List.Tot.tl l) ** pure (snd r == List.Tot.hd l)
+
 fn length (#t:Type0) (x:llist t)
           (#l:erased (list t))
   requires is_list x l

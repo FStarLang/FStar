@@ -196,6 +196,27 @@ fn head (#t:Type0) (x:llist t) (#l:erased (list t){Cons? l})
   n.head
 }
 
+fn pop (#t:Type0) (x:llist t) (#l:erased (list t){Cons? l})
+    requires is_list x l
+    returns r:(llist t & t)
+    ensures is_list (fst r) (List.Tot.tl l) ** pure (snd r == List.Tot.hd l)
+{
+  // Since Cons? l, we know x must be Some
+  some_iff_cons x;
+  let np = Some?.v x;
+  is_list_cases_some x np;
+  with node tl. _;
+  let n = !np;
+  let value = n.head;
+  let next = n.tail;
+  // Rewrite to connect the tail
+  rewrite each node.tail as next;
+  // Free the node
+  Box.free np;
+  // Return the tail and the value
+  (next, value)
+}
+
 fn rec length (#t:Type0) (x:llist t)
               (#l:erased (list t))
     requires is_list x l
