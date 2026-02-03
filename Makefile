@@ -28,7 +28,8 @@ ifeq ($(OS),Windows_NT)
   CP = powershell -Command "Copy-Item -Recurse -Force"
   ECHO = echo
   # Windows uses .exe suffix
-  FSTAR_EXE_ABS = $(CURDIR)/stage0/out/bin/fstar.exe
+  # Use cygpath to convert to Windows path for dune compatibility
+  FSTAR_EXE_ABS = $(shell cygpath -m "$(CURDIR)/stage0/out/bin/fstar.exe" 2>/dev/null || echo "$(CURDIR)/stage0/out/bin/fstar.exe")
 else
   RM = rm -rf
   MKDIR = mkdir -p
