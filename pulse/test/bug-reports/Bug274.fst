@@ -23,7 +23,8 @@ open Pulse.Lib.Trade.Util
 [@@expect_failure]
 ghost
 fn test_trans (p q r:slprop)
-requires (p @==> q) ** (q @==> r)
+requires (p @==> q)
+requires (q @==> r)
 ensures (p @==> r)
 {
     trans _ _ _;
@@ -35,7 +36,8 @@ ensures (p @==> r)
 
 ghost
 fn test_trans_2 (p q r:slprop)
-requires (q @==> r) ** (p @==> q)
+requires (q @==> r)
+requires (p @==> q)
 ensures (p @==> r)
 {
     trans _ _ _;
@@ -46,7 +48,8 @@ ensures (p @==> r)
 
 ghost
 fn test_trans_3 (p q r:slprop)
-requires (q @==> r) ** (p @==> q)
+requires (q @==> r)
+requires (p @==> q)
 ensures (p @==> r)
 {
     trans p _ _;
@@ -56,7 +59,8 @@ ensures (p @==> r)
 
 ghost
 fn test_elim (p q:slprop)
-requires (p @==> q) ** p
+requires (p @==> q)
+requires p
 ensures q
 {
     elim _ _;
@@ -67,8 +71,10 @@ ensures q
 [@@expect_failure]
 ghost
 fn test_elim_fails (p q r:slprop)
-requires (r @==> r) ** p ** (p @==> q)
-ensures q ** (r @==> r)
+preserves (r @==> r)
+requires p
+requires (p @==> q)
+ensures q
 {
     elim _ _;
 }
@@ -78,7 +84,8 @@ ensures q ** (r @==> r)
 
 ghost
 fn test_elim_2 (p q r:slprop)
-requires ((p ** q) @==> r) ** p
+requires ((p ** q) @==> r)
+requires p
 ensures q @==> r
 {
     elim_hyp_l _ _ _;
@@ -88,7 +95,9 @@ ensures q @==> r
 
 ghost
 fn test_elim_3 (p q r:slprop)
-requires ((p ** q) @==> r) ** p ** q
+requires ((p ** q) @==> r)
+requires p
+requires q
 ensures r
 {
     elim (_ ** _) _;
@@ -98,7 +107,9 @@ ensures r
 
 ghost
 fn test_elim_3' (p q r:slprop)
-requires ((p ** q) @==> r) ** p ** q
+requires ((p ** q) @==> r)
+requires p
+requires q
 ensures r
 {
     elim _ _; //unifier doesn't work when solving uvars to non-atomic slprops
@@ -108,8 +119,10 @@ ensures r
 
 
 ghost fn test_elim_4 (p q r:slprop)
-requires (p @==> (q ** r)) ** p
-ensures r ** q
+requires (p @==> (q ** r))
+requires p
+ensures r
+ensures q
 { 
     elim _ _; //though it's fine when those solutions do not have to be matched again
 }

@@ -37,8 +37,6 @@ fn lock_ref (r:R.ref int) (#v_:Ghost.erased int)
 [@@expect_failure]
 
 fn create_and_lock_ref ()
-  requires emp
-  ensures emp
 {
   let mut r = 0;
   let my_lock = new_lock (exists* v. R.pts_to r v);

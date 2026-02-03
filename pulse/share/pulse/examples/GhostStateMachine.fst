@@ -97,9 +97,9 @@ val some_payload : payload_t
 
 
 fn init ()
-  requires emp
   returns st:locked_state_t
-  ensures pure_handle_has_state st.ph Init ** lock_alive st.lk #1.0R (lock_inv st.h st.ph)
+  ensures pure_handle_has_state st.ph Init
+  ensures lock_alive st.lk #1.0R (lock_inv st.h st.ph)
 {
   let ph = Box.alloc Init;
   let h = Box.alloc CInit;

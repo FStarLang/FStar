@@ -27,7 +27,6 @@ let rec multiply (x y:nat) : z:nat { z == x * y} =
 
 
 fn mult (x y:nat)
-    requires emp
     returns z:nat
     ensures pure (z == x * y)
 {

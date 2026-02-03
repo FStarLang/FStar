@@ -5,8 +5,6 @@ open Pulse
 
 [@@expect_failure [19]]
 fn foo ()
-  requires emp
-  ensures  emp
 {
   let x : nat = -1;
   ()
@@ -14,8 +12,6 @@ fn foo ()
 
 [@@expect_failure [189]]
 fn foo (y:string)
-  requires emp
-  ensures  emp
 {
   let x : nat = y;
   ()
@@ -28,8 +24,6 @@ let divide
 
 [@@expect_failure [19]]
 fn divide_test ()
-  requires emp
-  ensures emp
 {
     let hundred = divide 100;
     ();

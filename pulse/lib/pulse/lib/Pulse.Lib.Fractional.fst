@@ -26,7 +26,8 @@ let half_plus_half (f : perm) : Lemma (f /. 2.0R +. f /. 2.0R == f) = ()
 ghost
 fn share_half (#p : perm -> slprop) {| d: fractional p |} (f : perm)
   requires p f
-  ensures p (f /. 2.0R) ** p (f /. 2.0R)
+  ensures p (f /. 2.0R)
+  ensures p (f /. 2.0R)
 {
   half_plus_half f;
   rewrite (p f) as (p (f /. 2.0R +. f /. 2.0R));
@@ -35,7 +36,8 @@ fn share_half (#p : perm -> slprop) {| d: fractional p |} (f : perm)
 
 ghost
 fn gather_half (#p : perm -> slprop) {| d: fractional p |} (f : perm)
-  requires p (f /. 2.0R) ** p (f /. 2.0R)
+  requires p (f /. 2.0R)
+  requires p (f /. 2.0R)
   ensures p f
 {
   do_gather #p #d (f /. 2.0R) (f /. 2.0R) ();

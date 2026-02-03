@@ -556,7 +556,6 @@ requires
     (freeable_array a ** array_pts_to a s ** pure (
       full_seq td s
     ))
-ensures emp
 {
   let al = array_ptr_of a;
   let n: array_len_t al = array_len_of a;

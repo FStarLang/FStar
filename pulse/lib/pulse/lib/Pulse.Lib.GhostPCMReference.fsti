@@ -68,7 +68,6 @@ fn alloc u#a (#a:Type u#a)
     (#pcm:pcm a)
     {| inst: small_type u#a |}
     (x:a{pcm.refine x})
-  requires emp
   returns  r : gref pcm
   ensures  pts_to r x
 
@@ -92,9 +91,8 @@ fn read_simple u#a
     (#p:pcm a)
     (r:gref p)
     (#x:a)
-  requires pts_to r x
+  preserves pts_to r x
   returns  v : (v:a{compatible p x v /\ p.refine v})
-  ensures  pts_to r x
 
 ghost
 fn write u#a
@@ -114,7 +112,8 @@ fn share u#a
     (v0:a)
     (v1:a{composable pcm v0 v1})
   requires pts_to r (v0 `op pcm` v1)
-  ensures  pts_to r v0 ** pts_to r v1
+  ensures pts_to r v0
+  ensures pts_to r v1
 
 [@@allow_ambiguous]
 ghost
@@ -124,7 +123,8 @@ fn gather u#a
     (r:gref pcm)
     (v0:a)
     (v1:a)
-  requires pts_to r v0 ** pts_to r v1
+  requires pts_to r v0
+  requires pts_to r v1
   returns  squash (composable pcm v0 v1)
   ensures  pts_to r (op pcm v0 v1)
 

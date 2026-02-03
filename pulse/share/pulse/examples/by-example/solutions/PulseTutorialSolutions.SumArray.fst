@@ -16,9 +16,9 @@ open Pulse.Lib.BoundedIntegers
 
 
 fn sum #p (#s:erased _) (arr:array int) (len:SZ.t { v len == Seq.length s })
-  requires pts_to arr #p s
+  preserves pts_to arr #p s
   returns res:int
-  ensures pts_to arr #p s ** pure (res == sum_spec s)
+  ensures pure (res == sum_spec s)
 {
   let mut i = 0sz;
   let mut res = 0;

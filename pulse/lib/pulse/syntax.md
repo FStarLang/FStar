@@ -158,9 +158,7 @@ For example, here's how an iterative fibonacci would look
 
 ```
 fn fibonacci(n:nat)
-  requires emp
   returns  _ : nat
-  ensures emp
  {
    var mut i0 = 1;
    var mut i1 = 1;

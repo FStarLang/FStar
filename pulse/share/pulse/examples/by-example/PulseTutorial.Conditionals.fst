@@ -22,9 +22,10 @@ open Pulse.Lib.Pervasives
 let max_spec x y = if x < y then y else x
 
 fn max #p #q (x y:ref int)
-requires pts_to x #p 'vx ** pts_to y #q 'vy
+preserves pts_to x #p 'vx
+requires pts_to y #q 'vy
 returns n:int
-ensures pts_to x #p 'vx ** pts_to y #q 'vy
+ensures pts_to y #q 'vy
         ** pure (n == max_spec 'vx 'vy)
 {
     let vx = !x;
@@ -42,9 +43,10 @@ ensures pts_to x #p 'vx ** pts_to y #q 'vy
 
 //max_alt_fail$
 fn max_alt #p #q (x y:ref int)
-requires pts_to x #p 'vx ** pts_to y #q 'vy
+preserves pts_to x #p 'vx
+requires pts_to y #q 'vy
 returns n:int
-ensures pts_to x #p 'vx ** pts_to y #q 'vy
+ensures pts_to y #q 'vy
         ** pure (n == max_spec 'vx 'vy)
 {
     let mut result = 0;
@@ -65,9 +67,10 @@ ensures pts_to x #p 'vx ** pts_to y #q 'vy
 
 //max_alt$
 fn max_alt2 #p #q (x y:ref int)
-requires pts_to x #p 'vx ** pts_to y #q 'vy
+preserves pts_to x #p 'vx
+requires pts_to y #q 'vy
 returns n:int
-ensures pts_to x #p 'vx ** pts_to y #q 'vy
+ensures pts_to y #q 'vy
         ** pure (n == max_spec 'vx 'vy)
 {
     let mut result = 0;
@@ -134,8 +137,9 @@ ensures pts_to_or_null r #p 'v
 //pts_to_or_null_helpers$
 ghost
 fn elim_pts_to_or_null_none #a #p (r:nullable_ref a)
-requires pts_to_or_null r #p 'v ** pure (r == None)
-ensures pts_to_or_null r #p 'v ** pure ('v == None)
+preserves pts_to_or_null r #p 'v
+requires pure (r == None)
+ensures pure ('v == None)
 {
     rewrite each r as None;
     unfold (pts_to_or_null None #p 'v);
@@ -154,7 +158,8 @@ ensures pts_to_or_null r #p None
 
 ghost
 fn elim_pts_to_or_null_some #a #p (r:nullable_ref a) (x:ref a)
-requires pts_to_or_null r #p 'v ** pure (r == Some x)
+requires pts_to_or_null r #p 'v
+requires pure (r == Some x)
 ensures exists* w. pts_to x #p w ** pure ('v == Some w)
 {
     rewrite each r as (Some x);
@@ -163,7 +168,8 @@ ensures exists* w. pts_to x #p w ** pure ('v == Some w)
 
 ghost
 fn intro_pts_to_or_null_some #a #p (r:nullable_ref a) (x:ref a)
-requires pts_to x #p 'v ** pure (r == Some x)
+requires pts_to x #p 'v
+requires pure (r == Some x)
 ensures pts_to_or_null r #p (Some 'v)
 {
     fold (pts_to_or_null (Some x) #p (Some (reveal 'v)));
@@ -200,7 +206,6 @@ ensures pts_to_or_null r #p 'v
 fn read_nullable_alt #a #p (r:nullable_ref a)
 requires pts_to_or_null r #p 'v
 returns o:option a
-ensures emp
 {
     match r {
      Some x -> { admit () }

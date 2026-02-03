@@ -1,8 +1,8 @@
-* Info at MatchBasic.fst(154,2-156,3):
+* Info at MatchBasic.fst(134,2-136,3):
   - Expected failure:
   - Could not verify that this match is exhaustive.
   - Patterns are incomplete
   - The SMT solver could not prove the query. Use --query_stats for more
     details.
-  - Also see: MatchBasic.fst(154,8-154,10)
+  - Also see: MatchBasic.fst(134,8-134,10)
 

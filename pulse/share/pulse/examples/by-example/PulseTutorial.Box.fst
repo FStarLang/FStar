@@ -21,7 +21,6 @@ module Box = Pulse.Lib.Box
 
 //new_heap_ref$
 fn new_heap_ref (#a:Type) (v:a)
-requires emp
 returns r:Box.box a
 ensures Box.pts_to r v
 {
@@ -83,9 +82,9 @@ ensures Box.pts_to r' 'v
 
 //copy_box$
 fn copy_box #a #p (r:Box.box a)
-requires Box.pts_to r #p 'v
+preserves Box.pts_to r #p 'v
 returns s:Box.box a
-ensures Box.pts_to s 'v ** Box.pts_to r #p 'v
+ensures Box.pts_to s 'v
 {
     open Box;
     let v = !r;

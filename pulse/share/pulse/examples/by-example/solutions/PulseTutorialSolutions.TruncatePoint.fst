@@ -16,7 +16,8 @@ let is_point (p:point) (xy:int & int) =
 
 ghost
 fn fold_is_point (x y:box int) (#a #b:int)
-requires pts_to x a ** pts_to y b
+requires pts_to x a
+requires pts_to y b
 ensures (is_point {x; y} (a, b))
 {
     let p = { x; y };
@@ -28,7 +29,6 @@ ensures (is_point {x; y} (a, b))
 
 
 fn new_point (x y : int)
-requires emp
 returns p:point
 ensures is_point p (x, y)
 {
@@ -47,8 +47,9 @@ let truncate (p1 p2: (int & int)) =
     
 
 fn trunc (p1 p2:point)
-requires is_point p1 'v1 ** is_point p2 'v2
-ensures  is_point p1 'v1 ** is_point p2 (truncate 'v1 'v2)
+preserves is_point p1 'v1
+requires is_point p2 'v2
+ensures is_point p2 (truncate 'v1 'v2)
 {
     unfold is_point;
     unfold is_point;

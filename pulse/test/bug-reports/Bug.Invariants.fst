@@ -23,9 +23,8 @@ module U32 = FStar.UInt32
 atomic
 fn return_atomic
       (x:ref U32.t)
-requires emp ** pts_to x 1ul
+preserves pts_to x 1ul
 returns n:U32.t
-ensures emp ** pts_to x 1ul
 {
     read_atomic x;
 }
@@ -34,9 +33,8 @@ ensures emp ** pts_to x 1ul
 
 atomic
 fn return_atomic2 (x:ref U32.t)
-requires emp ** pts_to x 1ul
+preserves pts_to x 1ul
 returns n:U32.t
-ensures emp ** pts_to x 1ul
 {
     0ul;
 }
@@ -46,8 +44,6 @@ ensures emp ** pts_to x 1ul
 
 ghost
 fn ghost_step ()
-requires emp
-ensures emp
 {
     ()
 }
@@ -58,8 +54,6 @@ val atomic_step (_:unit) : stt_atomic unit emp_inames emp (fun _ -> emp)
 
 
 fn ghost_then_atomic ()
-requires emp
-ensures emp
 {
     ghost_step();
     atomic_step();
@@ -71,9 +65,7 @@ val atomic_step_res (_:unit) : stt_atomic bool emp_inames emp (fun _ -> emp)
 
 
 fn ghost_then_atomic_bool ()
-requires emp
 returns b:bool
-ensures emp
 {
     ghost_step();
     atomic_step_res();
@@ -82,9 +74,7 @@ ensures emp
 
 
 fn ghost_then_atomic_bool2 ()
-requires emp
 returns b:bool
-ensures emp
 {
     ghost_step();
     let b = atomic_step_res();
@@ -97,9 +87,8 @@ ensures emp
 fn return_with_invariant
       (p:slprop)
       (i:iname)
-requires inv i p
+preserves inv i p
 returns x:bool
-ensures inv i p
 {
     with_invariants bool emp_inames i p emp (fun _ -> emp) fn _ {
       atomic_step_res();
@@ -111,9 +100,8 @@ ensures inv i p
 fn return_with_invariant2
       (x:ref U32.t)
       (i:iname)
-requires inv i (pts_to x 1ul)
+preserves inv i (pts_to x 1ul)
 returns _:U32.t
-ensures inv i (pts_to x 1ul)
 {
     with_invariants U32.t emp_inames i (pts_to x 1ul) emp (fun _ -> emp) fn _ {
         read_atomic x
@@ -123,8 +111,9 @@ ensures inv i (pts_to x 1ul)
 
 
 fn test_invariant_annot (x:ref U32.t) (i:iname) (y:ref U32.t)
-requires inv i (pts_to x 0ul) ** pts_to y 'w
-ensures inv i (pts_to x 0ul) ** pts_to y 0ul
+preserves inv i (pts_to x 0ul)
+requires pts_to y 'w
+ensures pts_to y 0ul
 {
     let n = 
         with_invariants U32.t emp_inames i (pts_to x 0ul)

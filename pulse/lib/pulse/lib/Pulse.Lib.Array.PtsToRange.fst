@@ -82,8 +82,8 @@ fn pts_to_range_prop
   (#i #j: nat)
   (#p: perm)
   (#s: Seq.seq elt)
-  requires pts_to_range a i j #p s
-  ensures pts_to_range a i j #p s ** pure (
+  preserves pts_to_range a i j #p s
+  ensures pure (
       (~ (is_null a)) /\
       (i <= j /\ j <= length a /\ Seq.length s == j - i)
     )
@@ -242,7 +242,8 @@ fn pts_to_range_share
   (#s:Seq.seq a)
   (#p:perm)
       requires pts_to_range arr l r #p s
-      ensures pts_to_range arr l r #(p /. 2.0R) s ** pts_to_range arr l r #(p /. 2.0R) s
+      ensures pts_to_range arr l r #(p /. 2.0R) s
+      ensures pts_to_range arr l r #(p /. 2.0R) s
 {
   unfold_pts_to_range arr l r #p s;
   mask_share (gsub arr l r);
@@ -257,8 +258,10 @@ fn pts_to_range_gather
   (#l #r: nat)
   (#s0 #s1: Seq.seq a)
   (#p0 #p1:perm)
-      requires pts_to_range arr l r #p0 s0 ** pts_to_range arr l r #p1 s1
-      ensures pts_to_range arr l r #(p0 +. p1) s0 ** pure (s0 == s1)
+      requires pts_to_range arr l r #p0 s0
+      requires pts_to_range arr l r #p1 s1
+      ensures pts_to_range arr l r #(p0 +. p1) s0
+      ensures pure (s0 == s1)
 {
   unfold_pts_to_range arr l r s0;
   unfold_pts_to_range arr l r s1;

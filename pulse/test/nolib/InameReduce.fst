@@ -19,11 +19,13 @@ fn test2 ()
 #pop-options
 
 fn test3 (is : list iname)
-  requires foo is ** pure (Nil? is)
+  requires foo is
+  requires pure (Nil? is)
   ensures  foo emp_inames
 { (); }
 
 fn test4 (is : list iname)
-  requires foo is ** pure (Nil? is)
+  requires foo is
+  requires pure (Nil? is)
   ensures  foo []
 { (); }

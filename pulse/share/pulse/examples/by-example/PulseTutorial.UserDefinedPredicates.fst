@@ -82,7 +82,8 @@ ensures is_point p (fst 'xy + dx, snd 'xy + dy)
 //fold_is_point$
 ghost
 fn fold_is_point (p:point)
-requires pts_to p.x 'x ** pts_to p.y 'y
+requires pts_to p.x 'x
+requires pts_to p.y 'y
 ensures is_point p (reveal 'x, reveal 'y)
 {
   fold (is_point p (reveal 'x, reveal 'y))
@@ -107,8 +108,6 @@ ensures is_point p (fst 'xy + dx, snd 'xy + dy)
 
 //create_and_move$
 fn create_and_move ()
-requires emp
-ensures emp
 {
     let mut x = 0;
     let mut y = 0;
@@ -131,8 +130,6 @@ ensures emp
 
 //create_and_move_alt$
 fn create_and_move_alt ()
-requires emp
-ensures emp
 {
     let mut x = 0;
     let mut y = 0;

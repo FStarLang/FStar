@@ -126,8 +126,7 @@ fn exists_introduces_ghost (r:R.ref int)
 
 
 fn with_assert_OK (r:R.ref int)
-  requires pts_to r 0
-  ensures pts_to r 0
+  preserves pts_to r 0
 {
   r := 0;
 

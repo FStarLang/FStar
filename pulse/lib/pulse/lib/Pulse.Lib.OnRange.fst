@@ -106,8 +106,8 @@ fn on_range_le
     (p: (nat -> slprop))
     (#i:nat)
     (#j:nat)
-  requires on_range p i j
-  ensures on_range p i j ** pure (i <= j)
+  preserves on_range p i j
+  ensures pure (i <= j)
 {
   if (j < i)
   {
@@ -123,7 +123,6 @@ ghost
 fn on_range_empty
   (p: (nat -> slprop))
   (i: nat)
-  requires emp
   ensures on_range p i i
 {
   rewrite emp as on_range p i i;
@@ -136,7 +135,6 @@ fn on_range_empty_elim
   (p: (nat -> slprop))
   (i: nat)
   requires on_range p i i
-  ensures emp
 {
   rewrite (on_range p i i) as emp;
 }
@@ -179,7 +177,8 @@ fn rec on_range_split
   (#i:nat{ i <= j })
   (#k:nat{ j <= k })
   requires on_range p i k
-  ensures on_range p i j ** on_range p j k
+  ensures on_range p i j
+  ensures on_range p j k
   decreases (j - i)
 {
   if (i = j)
@@ -200,7 +199,8 @@ ghost
 fn on_range_join
   (i j k: nat)
   (#p: (nat -> slprop))
-  requires on_range p i j ** on_range p j k
+  requires on_range p i j
+  requires on_range p j k
   ensures on_range p i k
   decreases (j - i)
 {
@@ -218,7 +218,8 @@ fn on_range_cons
   (#p: (nat -> slprop))
   (#j:nat{j == i + 1})
   (#k: nat)
-  requires p i ** on_range p j k
+  requires p i
+  requires on_range p j k
   ensures on_range p i k
 {
   on_range_le p #j #k;
@@ -234,7 +235,8 @@ fn on_range_uncons
   (#i:nat)
   (#k:nat { i < k })
   requires on_range p i k
-  ensures p i ** on_range p (i + 1) k
+  ensures p i
+  ensures on_range p (i + 1) k
 {
   rewrite (on_range p i k) as (p i ** on_range p (i + 1) k);
 }
@@ -246,8 +248,10 @@ fn on_range_cons_with_implies
   (i:nat)
   (#p: (nat -> slprop))
   (#k: nat)
-  requires p i ** on_range p (i + 1) k
-  ensures on_range p i k ** (on_range p i k @==> (p i ** on_range p (i + 1) k))
+  requires p i
+  requires on_range p (i + 1) k
+  ensures on_range p i k
+  ensures (on_range p i k @==> (p i ** on_range p (i + 1) k))
 {
   on_range_le p #(i + 1) #k;
   intro (on_range p i k @==> p i ** on_range p (i + 1) k) fn _
@@ -265,7 +269,8 @@ fn rec on_range_snoc
   ()
   (#p: (nat -> slprop))
   (#i #j:nat)
-  requires on_range p i j ** p j
+  requires on_range p i j
+  requires p j
   ensures on_range p i (j + 1)
   decreases (if j <= i then 0 else j - i)
 {
@@ -293,7 +298,8 @@ fn rec on_range_unsnoc
   (#i:nat)
   (#k:nat{ i < k })
   requires on_range p i k
-  ensures on_range p i (k - 1) ** p (k - 1)
+  ensures on_range p i (k - 1)
+  ensures p (k - 1)
   decreases (k - i)
 {
   if (i = k - 1)
@@ -316,8 +322,10 @@ fn on_range_snoc_with_implies
   (#p: (nat -> slprop))
   (#i:nat)
   (#j:nat)
-  requires on_range p i j ** p j
-  ensures on_range p i (j + 1) **  (on_range p i (j + 1) @==> (on_range p i j ** p j))
+  requires on_range p i j
+  requires p j
+  ensures on_range p i (j + 1)
+  ensures (on_range p i (j + 1) @==> (on_range p i j ** p j))
 {
   on_range_le p #i #j;
   intro (on_range p i (j + 1) @==> on_range p i j ** p j) fn _
@@ -336,7 +344,8 @@ fn rec on_range_get
   (#i:nat{i <= j})
   (#k:nat{j < k})
   requires on_range p i k
-  ensures on_range p i j ** (p j ** on_range p (j + 1) k)
+  ensures on_range p i j
+  ensures (p j ** on_range p (j + 1) k)
   decreases (j - i)
 {
   if (j = i)
@@ -360,7 +369,9 @@ fn rec on_range_put
   (j:nat{ i <= j })
   (k:nat{ j < k })
   (#p: (nat -> slprop))
-  requires on_range p i j ** (p j ** on_range p (j + 1) k)
+  requires on_range p i j
+  requires p j
+  requires on_range p (j + 1) k
   ensures on_range p i k
   decreases (j - i)
 {
@@ -388,7 +399,8 @@ fn on_range_focus
   (#i:nat{ i <= j })
   (#k:nat{ j < k })
   requires on_range p i k
-  ensures p j ** (p j @==> on_range p i k)
+  ensures p j
+  ensures (p j @==> on_range p i k)
 {
   on_range_get j;
   intro (p j @==> on_range p i k) #(on_range p i j ** on_range p (j + 1) k) fn _
@@ -447,7 +459,8 @@ let on_range_weaken
 
 ghost
 fn rec on_range_zip (p q:nat -> slprop) (i j:nat)
-  requires on_range p i j ** on_range q i j
+  requires on_range p i j
+  requires on_range q i j
   ensures on_range (fun k -> p k ** q k) i j
   decreases (j-i)
 {
@@ -473,7 +486,8 @@ fn rec on_range_zip (p q:nat -> slprop) (i j:nat)
 ghost
 fn rec on_range_unzip (p q:nat -> slprop) (i j:nat)
   requires on_range (fun k -> p k ** q k) i j
-  ensures  on_range p i j ** on_range q i j
+  ensures on_range p i j
+  ensures on_range q i j
   decreases (j-i)
 {
   if (j < i) {

@@ -23,8 +23,7 @@ assume
 val some_pred (x:R.ref int) (v:int) : slprop
 
 fn test1 (x:R.ref int) (#v:Ghost.erased int)
-  requires some_pred x v
-  ensures some_pred x v
+  preserves some_pred x v
 {
     introduce exists* (v_:erased int). (
         pure (v == v_)
@@ -36,8 +35,7 @@ fn test1 (x:R.ref int) (#v:Ghost.erased int)
 
 
 fn test2 (x:R.ref int) (#v:Ghost.erased int)
-  requires some_pred x v
-  ensures some_pred x v
+  preserves some_pred x v
 {
     introduce exists* (v_:erased int). (
         pure (v == v_)
@@ -51,7 +49,6 @@ fn test2 (x:R.ref int) (#v:Ghost.erased int)
 
 fn test3 (x:R.ref int) (#v:Ghost.erased int)
   requires some_pred x v
-  ensures emp
 {
     introduce exists* (v_:int). (
         pure (v_ == v)
@@ -65,7 +62,6 @@ fn test3 (x:R.ref int) (#v:Ghost.erased int)
 [@@expect_failure]
 fn test4 (x:R.ref int) (#v:Ghost.erased int)
   requires some_pred x v
-  ensures emp
 {
     introduce exists* (v_:int). (
         pure (v == v_)

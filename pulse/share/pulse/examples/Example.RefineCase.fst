@@ -59,7 +59,8 @@ ghost
 fn refine (x:ref int) (v:erased t_rep)
   requires t_perm (A x) v
   returns i:erased int
-  ensures pts_to x i ** pure (v == AR i)
+  ensures pts_to x i
+  ensures pure (v == AR i)
 {
    let u = reveal v;
    match u {
@@ -84,7 +85,8 @@ ghost
 fn refine_alt (x:ref int) (v:t_rep)
   requires t_perm (A x) v
   returns i:int
-  ensures pts_to x i ** pure (v == AR i)
+  ensures pts_to x i
+  ensures pure (v == AR i)
 {
    match v {
     AR i -> {
@@ -107,7 +109,8 @@ ghost
 fn refine_ghost (x:ref int) (v:erased t_rep)
   requires t_perm (A x) v
   returns i:erased int
-  ensures pts_to x i ** pure (v == AR i)
+  ensures pts_to x i
+  ensures pure (v == AR i)
 {
    let r = refine_alt x v;
    hide r

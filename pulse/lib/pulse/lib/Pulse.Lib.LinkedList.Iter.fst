@@ -52,7 +52,8 @@ let is_iter (#t:Type0) ([@@@mkey]it:iter t)
 fn create_iter (#t:Type0) (x:llist t)
   requires is_list x 'l
   returns it:iter t
-  ensures is_iter it 'l 'l ** pure (llist_of it == x)
+  ensures is_iter it 'l 'l
+  ensures pure (llist_of it == x)
 {
   let cur_box = Box.alloc x;
   let it : iter t = { orig = x; cur_box = cur_box };
@@ -94,7 +95,8 @@ fn has_next (#t:Type0) (it:iter t)
 /// Get current element and advance to next
 fn next (#t:Type0) (it:iter t)
          (#original #remaining: erased (list t))
-  requires is_iter it original remaining ** pure (Cons? remaining)
+  requires is_iter it original remaining
+  requires pure (Cons? remaining)
   returns v:t
   ensures exists* tl. 
           pure (remaining == v :: tl) **
@@ -134,7 +136,8 @@ fn finish_iter (#t:Type0) (it:iter t)
                (#original: erased (list t))
   requires is_iter it original []
   returns x:llist t
-  ensures is_list x original ** pure (x == llist_of it)
+  ensures is_list x original
+  ensures pure (x == llist_of it)
 {
   unfold (is_iter it original []);
   

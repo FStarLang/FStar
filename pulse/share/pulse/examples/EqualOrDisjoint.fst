@@ -13,7 +13,8 @@ ensures pure (b <==> (x==y))
 
 ghost
 fn disjoint_neq u#a (#a:Type u#a) (x y:ref a) (#v1 #v2:a)
-preserves x |-> v1 ** y |-> v2
+preserves x |-> v1
+preserves y |-> v2
 ensures pure (x =!= y)
 {
   let b:bool = FStar.StrongExcludedMiddle.strong_excluded_middle (x == y);
@@ -71,7 +72,8 @@ ensures refs_eq_or_disjoint x x v v
 
 ghost
 fn intro_refs_disjoint u#a (#a:Type u#a) (x1 x2:ref a) (#v1 #v2:erased a)
-requires x1 |-> v1 ** x2 |-> v2
+requires x1 |-> v1
+requires x2 |-> v2
 ensures refs_eq_or_disjoint x1 x2 v1 v2
 {
   share x1; share x2;
@@ -208,7 +210,8 @@ ensures pure (v1 == v2)
 
 ghost
 fn intro_refs_disj u#a (#a:Type u#a) (x1 x2:ref a) (#v1 #v2:erased a)
-requires x1 |-> v1 ** x2 |-> v2
+requires x1 |-> v1
+requires x2 |-> v2
 ensures refs_eq_or_disjoint x1 x2 v1 v2
 ensures pure (x1 =!= x2)
 {
@@ -225,7 +228,8 @@ ghost
 fn elim_refs_disj  u#a (#a:Type u#a) (x1 x2:ref a) (#v1 #v2:erased a)
 requires refs_eq_or_disjoint x1 x2 v1 v2
 requires pure (x1 =!= x2)
-ensures x1 |-> v1 ** x2 |-> v2
+ensures x1 |-> v1
+ensures x2 |-> v2
 {
   unfold refs_eq_or_disjoint;
   with (eq:bool). assert (cond eq _ _);
@@ -284,8 +288,7 @@ ensures refs_eq_or_disjoint x1 x2 v2 v1
 }
 
 fn call_swap_eq (#a:Type0) (x:ref a) (#v:erased a)
-requires x |-> v
-ensures x |-> v
+preserves x |-> v
 {
   intro_refs_eq x;
   swap x x;
@@ -293,8 +296,10 @@ ensures x |-> v
 }
 
 fn call_swap_disj (#a:Type0) (x1 x2:ref a) (#v1 #v2:erased a)
-requires x1 |-> v1 ** x2 |-> v2
-ensures x1 |-> v2 ** x2 |-> v1
+requires x1 |-> v1
+requires x2 |-> v2
+ensures x1 |-> v2
+ensures x2 |-> v1
 {
   intro_refs_disj x1 x2;
   swap x1 x2;

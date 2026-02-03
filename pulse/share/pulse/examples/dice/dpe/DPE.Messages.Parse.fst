@@ -35,7 +35,8 @@ open Pulse.Lib.Trade
 
 ghost
 fn elim_implies (#p #q:slprop) ()
-   requires (p @==> q) ** p
+   requires (p @==> q)
+   requires p
    ensures q
 {
   open Pulse.Lib.Trade;

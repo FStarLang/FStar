@@ -68,7 +68,8 @@ fn squash_single_coerce
   (v : squash p -> slprop)
   (s : squash p)
   requires v s
-  ensures  pure p ** v ()
+  ensures pure p
+  ensures v ()
 {
   rewrite v s as v ();
   ();

@@ -38,7 +38,6 @@ let inv_core (x:B.box int) (mr:MR.mref increases)
 = exists* j. B.pts_to x j ** MR.pts_to mr #1.0R j
 
 fn new_counter ()
-requires emp
 returns c:ctr
 ensures c.inv 0
 {
@@ -83,8 +82,6 @@ ensures exists* j. c.inv j
 }
 
 fn test_counter ()
-requires emp
-ensures emp
 {
     let c = new_counter ();
     dup c;
@@ -107,8 +104,6 @@ ensures named name (exists* j. c.inv j)
 }
 
 fn test_counter' ()
-requires emp
-ensures emp
 {
     let c = new_counter ();
     dup c;

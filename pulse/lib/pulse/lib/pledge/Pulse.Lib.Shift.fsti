@@ -52,7 +52,8 @@ fn elim_shift
   (#[T.exact (`emp_inames)] is:inames)
   (hyp concl:slprop)
   opens is
-  requires shift #is hyp concl ** hyp
+  requires shift #is hyp concl
+  requires hyp
   ensures  concl
 
 ghost
@@ -67,8 +68,8 @@ ghost
 fn shift_dup
   (#is : inames)
   (p q : slprop)
-  requires shift #is p q
-  ensures  shift #is p q ** shift #is p q
+  preserves shift #is p q
+  ensures shift #is p q
 
 instance val shift_duplicable
   (#is : inames)
@@ -79,5 +80,6 @@ ghost
 fn shift_compose
   (#is : inames)
   (p q r : slprop)
-  requires shift #is p q ** shift #is q r
+  requires shift #is p q
+  requires shift #is q r
   ensures  shift #is p r

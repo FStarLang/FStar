@@ -6,8 +6,6 @@ open Pulse
 [@@expect_failure]
 fn
 test_intro (_:unit)
-  requires emp
-  ensures emp
 {
   intro_exists (fun () -> pure False) ();
   admit()
@@ -21,8 +19,6 @@ val my_intro (p : prop)
 (* Should fail! Pulse is not actually applying my_intro. *)
 fn
 test_my_intro (_:unit)
-  requires emp
-  ensures emp
 {
   my_intro False;
   admit()

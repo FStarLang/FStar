@@ -41,9 +41,7 @@ let just #a (x:a) : stt a emp (fun _ -> emp) =
 
 
 fn pth (n:pos) ()
-  requires emp
   returns n:nat
-  ensures emp
 {
   fib0 (n-1)
 }
@@ -52,9 +50,7 @@ fn pth (n:pos) ()
 [@@expect_failure]
 
 fn pfib (n:nat)
-  requires emp
   returns n:nat
-  ensures emp
 {
   if (n < 20) {
     fib0 n

@@ -16,7 +16,8 @@ fn test1 (y : int)
 (* Same *)
 fn test2 (y : int) (z : int)
   requires pure (z == 42)
-  preserves foo 1 ** foo y
+  preserves foo 1
+  preserves foo y
 {
   rewrite each z as 42;
 }

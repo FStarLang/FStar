@@ -7,7 +7,8 @@ open Pulse
 
 (* OK *)
 fn test1 (i j : int)
-  requires foo i ** pure (foo i == foo j)
+  requires foo i
+  requires pure (foo i == foo j)
   ensures  foo j
 {
   rewrite foo i as foo j;
@@ -16,7 +17,8 @@ fn test1 (i j : int)
 (* Should fail, we cannot prove i == j *)
 [@@expect_failure [19]]
 fn test2 (i j : int)
-  requires foo i ** pure (foo i == foo j)
+  requires foo i
+  requires pure (foo i == foo j)
   ensures  foo j
 {
   rewrite each i as j;

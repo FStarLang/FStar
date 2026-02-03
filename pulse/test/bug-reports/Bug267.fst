@@ -7,9 +7,9 @@ open FStar.Mul
 (* Complains that 'v is ghost, good. *)
 [@@expect_failure [228]]
 fn value_of u#a (#a:Type u#a) (r:ref a)
-  requires pts_to r 'v
+  preserves pts_to r 'v
   returns v:a
-  ensures pts_to r 'v ** pure (v == 'v)
+  ensures pure (v == 'v)
 {
     'v
 }
@@ -23,7 +23,6 @@ fn add (r : ref int) (v : int)
 }
 
 fn four_fail ()
-  requires emp
   returns i:int
   ensures pure (i == 4)
 {
@@ -35,7 +34,6 @@ fn four_fail ()
 
 [@@expect_failure [19]]
 fn multiply_by_repeated_addition (x y:nat)
-    requires emp
     returns z:nat
     ensures pure (z == x * y)
 {

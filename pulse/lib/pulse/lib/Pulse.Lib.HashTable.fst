@@ -71,7 +71,6 @@ fn dealloc
   (ht:ht_t k v)
   norewrite
   requires exists* pht. models ht pht
-  ensures emp
 {
   open SZ;
   unfold models;

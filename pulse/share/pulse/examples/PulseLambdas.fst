@@ -62,8 +62,10 @@ fn s2 ()
 (*
 fn s3 () : swap_fun
   = (#a:Type0) (x y #_vx #_vy:_)
-    requires pts_to x _vx ** pts_to y _vy //reject repeated annotation
-    ensures  pts_to x _vy ** pts_to y _vx
+    requires pts_to x _vx
+    requires pts_to y _vy //reject repeated annotation
+    ensures pts_to x _vy
+    ensures pts_to y _vx
     {
       let vx = !x;
       let vy = !y;
@@ -81,8 +83,9 @@ fn s3 () : swap_fun
 
 fn test_inner_lambda (#a:Type0)
                      (x y:ref int)
-requires pts_to x 'vx ** pts_to y 'vy
-ensures  pts_to x 'vy ** pts_to y 'vy
+requires pts_to x 'vx
+preserves pts_to y 'vy
+ensures pts_to x 'vy
 {
   fn write_helper (#a:Type0) (x:ref a) (n:a) (#vx:erased a)
     requires pts_to x vx

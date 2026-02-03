@@ -55,8 +55,8 @@ let gvar_p : (gref & mutex (option st)) -> slprop =
 
 ghost
 fn dup_gvar_p (x:(gref & mutex (option st)))
-  requires gvar_p x
-  ensures gvar_p x ** gvar_p x
+  preserves gvar_p x
+  ensures gvar_p x
 {
   unfold gvar_p;
   Pulse.Lib.Mutex.share (snd x);
@@ -69,14 +69,12 @@ instance duplicable_gvar x : duplicable (gvar_p x) = { dup_f = fun _ -> dup_gvar
 ghost
 fn drop_mutex_live (#a:Type0) (m:mutex a) (#p:perm) (v:a -> slprop)
 requires mutex_live m #p v
-ensures emp
 {
   drop_ (mutex_live m #p v);
 }
 
 [@@ Rust_const_fn]
 fn initialize_global_state ()
-  requires emp
   returns x:(gref & mutex (option st))
   ensures gvar_p x
 {
@@ -430,7 +428,6 @@ fn maybe_mk_session_tbl (sopt:option st)
 }
 
 fn open_session ()
-  requires emp
   returns r:(option sid_t)
   ensures open_session_client_perm r
 {
@@ -890,7 +887,6 @@ let valid_context_and_record_for_derive_child (c:context_repr_t) (r:repr_t) : pr
  
 fn destroy_ctxt (ctxt:context_t) (#repr:erased context_repr_t)
   requires context_perm ctxt repr
-  ensures emp
 {
   match ctxt
   {
@@ -1118,7 +1114,8 @@ fn rewrite_session_state_related_available
   (t:trace)
   requires session_state_related s (current_state t)
   returns r:G.erased context_repr_t
-  ensures context_perm context r ** pure (current_state t == G_Available r)
+  ensures context_perm context r
+  ensures pure (current_state t == G_Available r)
 {
   let cur = current_state t;
   intro_session_state_tag_related s cur;
@@ -1242,7 +1239,6 @@ fn derive_child (sid:sid_t)
 
 fn destroy_session_state (s:session_state) (t:G.erased trace)
   requires session_state_related s (current_state t)
-  ensures emp
 {
   intro_session_state_tag_related s (current_state t);
   match s {
@@ -1476,9 +1472,7 @@ ensures
 *)
 
 fn get_profile ()
-  requires emp
   returns d:profile_descriptor_t
-  ensures emp
 {
   mk_profile_descriptor
     (*name=*)""

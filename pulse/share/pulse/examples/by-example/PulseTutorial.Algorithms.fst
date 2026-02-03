@@ -31,9 +31,9 @@ module R = Pulse.Lib.Reference
 
 
 fn read #p (#s:erased _) (arr:array UInt32.t) (len:SZ.t) (i:SZ.t { v len == Seq.length s /\ v i < v len })
-  requires pts_to arr #p s
+  preserves pts_to arr #p s
   returns x:UInt32.t
-  ensures pts_to arr #p s ** pure (x == Seq.index s (v i))
+  ensures pure (x == Seq.index s (v i))
 {
   arr.(i)
 }
@@ -78,7 +78,8 @@ let no_majority (#a:eqtype) (s:Seq.seq a) = forall (x:a). ~(x `has_majority_in` 
 fn majority
   (#[@@@ Rust_generics_bounds ["Copy"; "PartialEq"]] a:eqtype)
   #p (#s:G.erased _) (votes:array a) (len:SZ.t { SZ.v len == Seq.length s })
-  requires pts_to votes #p s ** pure (0 < SZ.v len /\ SZ.fits (2 * SZ.v len))
+  requires pts_to votes #p s
+  requires pure (0 < SZ.v len /\ SZ.fits (2 * SZ.v len))
   returns x:option a
   ensures pts_to votes #p s **
           pure ((x == None ==> no_majority s) /\ (Some? x ==> (Some?.v x) `has_majority_in` s))
@@ -180,7 +181,8 @@ type u32_t = FStar.UInt32.t
 
 //majoritymono$
 fn majority_mono #p (#s:G.erased _) (votes:array u32_t) (len:SZ.t { SZ.v len == Seq.length s })
-  requires pts_to votes #p s ** pure (0 < SZ.v len /\ SZ.fits (2 * SZ.v len))
+  requires pts_to votes #p s
+  requires pure (0 < SZ.v len /\ SZ.fits (2 * SZ.v len))
   returns x:option u32_t
   ensures pts_to votes #p s **
           pure ((x == None ==> no_majority s) /\ (Some? x ==> (Some?.v x) `has_majority_in` s))

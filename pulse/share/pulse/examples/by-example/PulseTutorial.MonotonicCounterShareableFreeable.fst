@@ -41,7 +41,8 @@ let destroy c #i = c.destroy i
 [@@allow_ambiguous]
 ghost
 fn gather (c:ctr) #p #q #i #j
-requires c.inv p i ** c.inv q j
+requires c.inv p i
+requires c.inv q j
 ensures c.inv (p +. q) i
 {
     let gather = c.gather;
@@ -56,7 +57,6 @@ let inv_core (x:B.box int) (mr:MR.mref increases)
 = exists* j. B.pts_to x j ** MR.pts_to mr #1.0R j
 
 fn new_counter ()
-requires emp
 returns c:ctr
 ensures c.inv 1.0R 0
 {
@@ -128,8 +128,6 @@ ensures exists* j. c.inv p j
 }
 
 fn test_counter ()
-requires emp
-ensures emp
 {
     let c = new_counter ();
     share c;

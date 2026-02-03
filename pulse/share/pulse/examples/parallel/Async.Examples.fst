@@ -22,9 +22,7 @@ open Async
 
 
 fn mock_http_req (cb : (string -> stt int emp (fun _ -> emp)))
-  requires emp
   returns _:int
-  ensures emp
 {
   let t1 = async (fun () -> cb "/index.html");
   let t2 = async (fun () -> cb "/favicon.ico");
@@ -37,7 +35,6 @@ fn mock_http_req (cb : (string -> stt int emp (fun _ -> emp)))
 
 
 fn mock_http_req2_retasync (cb : (string -> stt int emp (fun _ -> emp)))
-  requires emp
   returns r:(asynch int (fun _ -> emp))
   ensures async_joinable r
 {

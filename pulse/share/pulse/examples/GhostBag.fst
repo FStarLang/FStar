@@ -243,7 +243,6 @@ let gbagh #a (r:GR.gref (gbag_pcm a)) (x:a) : slprop =
 
 ghost
 fn gbag_create (a:eqtype)
-  requires emp
   returns r:GR.gref (gbag_pcm a)
   ensures gbag r Set.empty
 {

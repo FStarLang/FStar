@@ -32,7 +32,6 @@ let locked #p (l:lock p) = GR.pts_to l.gr #one_half 1ul
 fn new_lock (p:slprop)
 requires p
 returns l:lock p
-ensures emp
 {
   admit()
 }
@@ -41,8 +40,8 @@ ensures emp
 
 
 fn rec acquire #p (l:lock p)
-requires emp
-ensures p ** locked l
+ensures p
+ensures locked l
 {
   admit()
 }
@@ -50,8 +49,8 @@ ensures p ** locked l
 
 
 fn release #p (l:lock p)
-requires p ** locked l
-ensures emp
+requires p
+requires locked l
 {
   admit()
 }

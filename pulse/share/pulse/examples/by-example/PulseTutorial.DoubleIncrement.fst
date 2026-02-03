@@ -50,9 +50,8 @@ ensures exists* v1. MR.snapshot mr v1 ** pure (v1 >= v0 + 1) //and value of mr i
 
 //And here's a double increment
 fn double_increment (x:ref int) (#mr:ghost_monotonic_ref) (#i:iname) (#v0:erased int)
-requires inv i (inv_core x mr)
+preserves inv i (inv_core x mr)
 requires MR.snapshot mr v0
-ensures inv i (inv_core x mr)
 ensures exists* v1. MR.snapshot mr v1 ** pure (v1 >= v0 + 2) // value of mr is at least two more than it was before
 {
     increment x;

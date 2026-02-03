@@ -35,7 +35,6 @@ let increases : preorder int = fun x y -> b2t (x <= y)
 let mctr = MR.mref increases
 
 fn new_counter ()
-requires emp
 returns c:ctr
 ensures c.inv 0
 {
@@ -73,7 +72,8 @@ ensures c.inv 0
 
 
 fn do_something (c:ctr) (#i #k:erased int)
-requires c.inv i ** c.snapshot k
+requires c.inv i
+requires c.snapshot k
 ensures exists* j. c.inv j
 {
   let recall = c.recall;
@@ -82,8 +82,6 @@ ensures exists* j. c.inv j
 }
 
 fn test_counter ()
-requires emp
-ensures emp
 {
     let c = new_counter ();
     snap c;

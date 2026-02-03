@@ -33,7 +33,8 @@ let regain_half (#a: Type0) (x:GR.ref a) (v:a) =
 ghost 
 fn intro_regain_half (x:GR.ref int)
 requires pts_to x 'v
-ensures pts_to x #0.5R 'v ** regain_half x 'v
+ensures pts_to x #0.5R 'v
+ensures regain_half x 'v
 {
   GR.share x;
   intro (pts_to x #0.5R 'v @==> pts_to x 'v) #(pts_to x #0.5R 'v) fn _
@@ -47,7 +48,8 @@ ensures pts_to x #0.5R 'v ** regain_half x 'v
 //use_regain_half$
 ghost
 fn use_regain_half (x:GR.ref int)
-requires pts_to x #0.5R 'v ** regain_half x 'v
+requires pts_to x #0.5R 'v
+requires regain_half x 'v
 ensures pts_to x 'v
 {
   unfold regain_half;
@@ -68,7 +70,8 @@ module FA = Pulse.Lib.Forall.Util
 ghost 
 fn intro_regain_half_q (x:GR.ref int)
 requires pts_to x 'v
-ensures pts_to x #0.5R 'v ** regain_half_q x
+ensures pts_to x #0.5R 'v
+ensures regain_half_q x
 {
   GR.share x;
   intro (forall* u. pts_to x #0.5R u @==> pts_to x u)
@@ -82,7 +85,8 @@ ensures pts_to x #0.5R 'v ** regain_half_q x
 //use_regain_half_q$
 ghost
 fn use_regain_half_q (x:GR.ref int)
-requires pts_to x #0.5R 'u ** regain_half_q x
+requires pts_to x #0.5R 'u
+requires regain_half_q x
 ensures pts_to x 'u
 {
   unfold regain_half_q;
@@ -102,7 +106,8 @@ let can_update (x:GR.ref int) =
 ghost
 fn make_can_update (x:GR.ref int)
 requires pts_to x 'w
-ensures pts_to x #0.5R 'w ** can_update x
+ensures pts_to x #0.5R 'w
+ensures can_update x
 {
   share x;
   intro (forall* u v. pts_to x #0.5R u @==> pts_to x v)
@@ -118,8 +123,9 @@ ensures pts_to x #0.5R 'w ** can_update x
 //update$
 ghost
 fn update (x:GR.ref int) (k:int)
-requires pts_to x #0.5R 'u ** can_update x
-ensures pts_to x #0.5R k ** can_update x
+requires pts_to x #0.5R 'u
+preserves can_update x
+ensures pts_to x #0.5R k
 {
   unfold can_update;
   FA.elim #_ #(fun u -> forall* v. pts_to x #0.5R u @==> pts_to x v) 'u;

@@ -30,8 +30,10 @@ assume val f () : stt_atomic unit emp_inames (p ** q) (fun _ -> p ** r)
 
 atomic
 fn g (i:iname)
-  requires inv i p ** q ** later_credit 1
-  ensures  r ** inv i p
+  preserves inv i p
+  requires q
+  requires later_credit 1
+  ensures r
   opens [i]
 {
   with_invariants_a unit emp_inames i p q (fun _ -> r) fn _ {
@@ -42,8 +44,10 @@ fn g (i:iname)
 
 atomic
 fn g2 (i:iname)
-  requires inv i p ** q ** later_credit 1
-  ensures  r ** inv i p
+  preserves inv i p
+  requires q
+  requires later_credit 1
+  ensures r
   opens [i]
 {
   with_invariants_a unit emp_inames i p q (fun _ -> r) fn _ {
@@ -56,7 +60,9 @@ assume val f_ghost () : stt_ghost unit emp_inames (p ** q) (fun _ -> p ** r)
 
 ghost
 fn g_ghost (i:iname)
-  requires (inv i p ** q ** later_credit 1)
+  requires inv i p
+  requires q
+  requires later_credit 1
   ensures (r ** inv i p)
   opens [i]
 {
@@ -99,8 +105,6 @@ fn package (r:ref int)
 
 
 fn test2 ()
-  requires emp
-  ensures emp
 {
   let r = Box.alloc #int 0;
   let i = new_invariant (exists* v. Box.pts_to r v);
@@ -115,8 +119,6 @@ fn test2 ()
 
 [@@expect_failure [228]]
 fn test3 ()
-  requires emp
-  ensures emp
 {
   let r = Box.alloc 0;
   let i = new_invariant (exists* v. pts_to r v);
@@ -133,8 +135,7 @@ fn test3 ()
 
  ghost
  fn t00 () (i:iname)
-   requires (inv i emp)
-   ensures (inv i emp)
+   preserves (inv i emp)
    opens [i]
  {
   ()
@@ -144,9 +145,8 @@ fn test3 ()
 
 atomic
 fn t0 () (i:iname)
-  requires inv i emp
+  preserves inv i emp
   requires later_credit 1
-  ensures inv i emp
   opens [i]
 {
   with_invariants_a unit emp_inames i emp emp (fun _ -> emp) fn _ {
@@ -162,8 +162,6 @@ assume val i2 : iname
 
 ghost
 fn basic_ghost ()
-  requires emp
-  ensures emp
 {
   (); ()
 }
@@ -175,8 +173,7 @@ fn basic_ghost ()
 atomic
 fn t1 ()
   requires later_credit 1
-  requires inv i emp
-  ensures inv i emp
+  preserves inv i emp
   opens []
 {
   with_invariants_a unit emp_inames i emp emp (fun _ -> emp) fn _ {
@@ -190,8 +187,7 @@ fn t1 ()
 atomic
 fn t3 ()
   requires later_credit 1
-  requires inv i emp
-  ensures inv i emp
+  preserves inv i emp
   opens [i; i2]
 {
   with_invariants_a unit emp_inames i emp emp (fun _ -> emp) fn _ {
@@ -203,9 +199,7 @@ fn t3 ()
 (* Works, no need to declare opens as its an effectful fn *)
 
 fn t2 ()
-  requires emp
   returns _:int
-  ensures emp
 {
   let j = new_invariant emp;
   with_invariants unit emp_inames j emp emp (fun _ -> emp) fn _ {
@@ -224,8 +218,9 @@ let folded_inv (i:iname) = inv i p
 
 atomic
 fn test_returns0 (i:iname) (b:bool)
-  requires folded_inv i ** later_credit 1
-  ensures folded_inv i ** q
+  preserves folded_inv i
+  requires later_credit 1
+  ensures q
   opens [i]
 {
   unfold folded_inv i;
@@ -243,8 +238,9 @@ fn test_returns0 (i:iname) (b:bool)
 
 ghost
 fn test_returns1 (i:iname)
-  requires folded_inv i ** later_credit 1
-  ensures folded_inv i ** q
+  preserves folded_inv i
+  requires later_credit 1
+  ensures q
   opens [i]
 {
   unfold folded_inv i;
@@ -264,8 +260,9 @@ let pp = p
 
 ghost
 fn test_returns2 (i:iname)
-  requires folded_inv i ** later_credit 1
-  ensures folded_inv i ** q
+  preserves folded_inv i
+  requires later_credit 1
+  ensures q
   opens [i]
 {
   unfold folded_inv i;

@@ -6,8 +6,7 @@ open Pulse.Nolib
 assume val foo : [@@@mkey]_:int -> slprop
 
 fn test1 (x : int)
-  requires foo x
-  ensures  foo x
+  preserves foo x
 {
   match x {
     norewrite y -> {
@@ -18,8 +17,7 @@ fn test1 (x : int)
 }
 
 fn test2 (x : int)
-  requires foo x
-  ensures  foo x
+  preserves foo x
 {
   match x {
     y -> {
@@ -32,8 +30,7 @@ fn test2 (x : int)
 assume val bar : [@@@mkey]_:option int -> slprop
 
 fn test3 (x : option int{Some? x})
-  requires bar x
-  ensures  bar x
+  preserves bar x
 {
   let Some xx = x;
   assert (bar (Some xx));
@@ -41,8 +38,7 @@ fn test3 (x : option int{Some? x})
 }
 
 fn test4 (x : option int{Some? x})
-  requires bar x
-  ensures  bar x
+  preserves bar x
 {
   norewrite let Some xx = x;
   assert (bar x);

@@ -9,7 +9,6 @@ let foo x y = emp
 
 fn test0 ()
   requires foo 1 2
-  ensures emp
 {
   unfold foo 1 2;
   ()
@@ -19,7 +18,6 @@ fn test0 ()
 
 fn test1 ()
   requires foo 1 2
-  ensures emp
 {
   unfold foo;
   ()
@@ -29,7 +27,6 @@ fn test1 ()
 
 fn test2 ()
   requires foo 1 2
-  ensures emp
 {
   unfold foo 1;
   ()
@@ -38,7 +35,6 @@ fn test2 ()
 
 fn test3 ()
   requires foo 1 2
-  ensures emp
 {
   unfold foo 1 _;
   ()
@@ -47,7 +43,6 @@ fn test3 ()
 
 fn test4 ()
   requires foo 1 2
-  ensures emp
 {
   unfold foo _ 2;
   ()

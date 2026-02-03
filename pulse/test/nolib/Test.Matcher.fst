@@ -20,8 +20,7 @@ assume val dpts_to
 
 
 fn d_basic_self (r:dref int)
-  requires dpts_to r 1
-  ensures  dpts_to r 1
+  preserves dpts_to r 1
 { (); }
 
 
@@ -50,8 +49,7 @@ assume val fpts_to
 
 
 fn f_basic_self (r:fref int)
-  requires fpts_to r 1
-  ensures  fpts_to r 1
+  preserves fpts_to r 1
 { (); }
 
 

@@ -29,7 +29,6 @@ open Pulse.Lib.Pervasives
 let fstar_five : int = 5
 
 fn five ()
-  requires emp
   returns n:int
   ensures pure (n == 5)
 { 
@@ -42,9 +41,7 @@ let pulse_five_in_fstar = five ()
 
 
 fn five_alt ()
-  requires emp
   returns n:(n:int { n == 5 })
-  ensures emp
 { 
   5
 }
@@ -79,7 +76,8 @@ fn ref_non_zero (r1:ref int) (n1:Ghost.erased int)
 requires
   r1 |-> n1
 returns b:bool
-ensures r1 |-> n1 ** pure (b == (Ghost.reveal n1 <> 0))
+ensures r1 |-> n1
+ensures pure (b == (Ghost.reveal n1 <> 0))
 {
   (0 <> !r1);
 }

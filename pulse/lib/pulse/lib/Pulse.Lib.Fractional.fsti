@@ -59,10 +59,12 @@ let do_gather (#p : perm -> slprop) {| d : fractional p |} (f1 f2 : perm) ()
 ghost
 fn share_half (#p : perm -> slprop) {| fractional p |} (f : perm)
   requires p f
-  ensures p (f /. 2.0R) ** p (f /. 2.0R)
+  ensures p (f /. 2.0R)
+  ensures p (f /. 2.0R)
 
 /// Convenience: gather from halves
 ghost
 fn gather_half (#p : perm -> slprop) {| fractional p |} (f : perm)
-  requires p (f /. 2.0R) ** p (f /. 2.0R)
+  requires p (f /. 2.0R)
+  requires p (f /. 2.0R)
   ensures p f

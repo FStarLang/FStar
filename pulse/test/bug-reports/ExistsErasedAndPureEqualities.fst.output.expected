@@ -1,4 +1,4 @@
-* Info at ExistsErasedAndPureEqualities.fst(60,4-60,11):
+* Info at ExistsErasedAndPureEqualities.fst(57,4-57,11):
   - Admitting continuation.
   - Current context:
       some_pred x v
@@ -9,7 +9,7 @@
       v#245 : erased int,
       x#239 : R.ref int
 
-* Info at ExistsErasedAndPureEqualities.fst(70,32-72,5):
+* Info at ExistsErasedAndPureEqualities.fst(66,32-68,5):
   - Expected failure:
   - Ill-typed term: pure (v == (*?u102*)_)
   - Expected a term of type slprop

@@ -51,7 +51,6 @@ fn alloc u#a (#a:Type u#a)
     (#pcm:pcm a)
     {| inst: small_type u#a |}
     (x:a{pcm.refine x})
-  requires emp
   returns  r : gref pcm
   ensures  pts_to r x
 {
@@ -114,7 +113,8 @@ fn share u#a
     (v0:a)
     (v1:a{composable pcm v0 v1})
   requires pts_to r (v0 `op pcm` v1)
-  ensures  pts_to r v0 ** pts_to r v1
+  ensures pts_to r v0
+  ensures pts_to r v1
 {
   with inst. unfold small_token u#a inst; let inst = inst;
   fold small_token inst;
@@ -130,7 +130,8 @@ fn gather u#a
     (r:gref pcm)
     (v0:a)
     (v1:a)
-  requires pts_to r v0 ** pts_to r v1
+  requires pts_to r v0
+  requires pts_to r v1
   returns  squash (composable pcm v0 v1)
   ensures  pts_to r (op pcm v0 v1)
 {

@@ -44,9 +44,9 @@ instance val is_send_mutex_live #a m #p v {| (x:a -> is_send (v x)) |} : is_send
 val pts_to (#a:Type0) (mg:mutex_guard a) (#[T.exact (`1.0R)] p:perm) (x:a) : slprop
 
 fn ( ! ) (#a:Type0) (mg:mutex_guard a) (#x:erased a) (#p:perm)
-  requires pts_to mg #p x
+  preserves pts_to mg #p x
   returns y:a
-  ensures pts_to mg #p x ** rewrites_to y (reveal x)
+  ensures rewrites_to y (reveal x)
 
 fn ( := ) (#a:Type0) (mg:mutex_guard a) (y:a) (#x:erased a)
   requires mg `pts_to` x
@@ -55,7 +55,8 @@ fn ( := ) (#a:Type0) (mg:mutex_guard a) (y:a) (#x:erased a)
 fn replace (#a:Type0) (mg:mutex_guard a) (y:a) (#x:erased a)
   requires mg `pts_to` x
   returns r: _
-  ensures mg `pts_to` y ** rewrites_to r (reveal x)
+  ensures mg `pts_to` y
+  ensures rewrites_to r (reveal x)
 
 fn new_mutex (#a:Type0) (v:a -> slprop) (x:a)
   requires v x
@@ -67,19 +68,23 @@ val belongs_to (#a:Type0) (mg:mutex_guard a) (m:mutex a) : slprop
 fn lock (#a:Type0) (#v:a -> slprop) (#p:perm) (m:mutex a)
   preserves mutex_live m #p v
   returns r:mutex_guard a
-  ensures r `belongs_to` m ** (exists* x. pts_to r x ** v x)
+  ensures r `belongs_to` m
+  ensures (exists* x. pts_to r x ** v x)
 
 fn unlock (#a:Type0) (#v:a -> slprop) (#p:perm) (m:mutex a) (mg:mutex_guard a)
   preserves mutex_live m #p v
-  requires mg `belongs_to` m ** (exists* x. pts_to mg x ** v x)
+  requires mg `belongs_to` m
+  requires (exists* x. pts_to mg x ** v x)
 
 ghost
 fn share (#a:Type0) (#v:a -> slprop) (#p:perm) (m:mutex a)
   requires mutex_live m #p v
-  ensures mutex_live m #(p /. 2.0R) v ** mutex_live m #(p /. 2.0R) v
+  ensures mutex_live m #(p /. 2.0R) v
+  ensures mutex_live m #(p /. 2.0R) v
 
 [@@allow_ambiguous]
 ghost
 fn gather (#a:Type0) (#v:a -> slprop) (#p1 #p2:perm) (m:mutex a)
-  requires mutex_live m #p1 v ** mutex_live m #p2 v
+  requires mutex_live m #p1 v
+  requires mutex_live m #p2 v
   ensures mutex_live m #(p1 +. p2) v
