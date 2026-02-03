@@ -58,9 +58,9 @@ jobs:
       # See: https://github.com/ocaml/setup-ocaml/pull/857
       - uses: tobil4sk/setup-ocaml@feature/msys2
         with:
-          ocaml-compiler: 4.14.2
+          ocaml-compiler: 5.3.0
           windows-environment: msys2
-          cache-prefix: v6
+          cache-prefix: v7
 
       # Print out some debug info
       - name: dbg
