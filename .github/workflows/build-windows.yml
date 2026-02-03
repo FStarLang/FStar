@@ -53,6 +53,7 @@ jobs:
       - name: Build F* (stage0 → stage2)
         shell: bash
         run: |
+          eval $(opam env)
           make -skj$(nproc)
 
       - name: Verify F* works
@@ -63,11 +64,13 @@ jobs:
       - name: Run tests
         shell: bash
         run: |
+          eval $(opam env)
           make test
 
       - name: Make binary package
         shell: bash
         run: |
+          eval $(opam env)
           export FSTAR_TAG="-Windows_NT-x86_64"
           make package
 
