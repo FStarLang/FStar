@@ -26,10 +26,25 @@ jobs:
       - name: Install opam
         run: |
           winget install OCaml.opam --accept-source-agreements --accept-package-agreements --disable-interactivity
+          # Refresh PATH to pick up newly installed opam
+          $machinePath = [System.Environment]::GetEnvironmentVariable("Path","Machine")
+          $userPath = [System.Environment]::GetEnvironmentVariable("Path","User")
+          $env:Path = "$machinePath;$userPath"
+          # Find and persist opam location to GITHUB_PATH
+          $opamPath = (Get-Command opam -ErrorAction SilentlyContinue).Source
+          if ($opamPath) {
+            $opamDir = Split-Path $opamPath
+            echo $opamDir | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+          }
+          opam --version
 
       # Initialize opam and create switch
       - name: Initialize opam
         run: |
+          # Refresh PATH again for this step
+          $machinePath = [System.Environment]::GetEnvironmentVariable("Path","Machine")
+          $userPath = [System.Environment]::GetEnvironmentVariable("Path","User")
+          $env:Path = "$machinePath;$userPath;$env:Path"
           opam init --auto-setup --bare --disable-sandboxing
           opam switch create 4.14.2
 

@@ -26,6 +26,7 @@ ifeq ($(OS),Windows_NT)
   # PowerShell commands for Windows
   RM = powershell -Command "Remove-Item -Recurse -Force -ErrorAction SilentlyContinue"
   MKDIR = powershell -Command "New-Item -ItemType Directory -Force -Path"
+  CP = powershell -Command "Copy-Item -Recurse -Force"
   # PowerShell copy with wildcard: CP_TO takes source and dest as separate args
   # Usage: $(call CP_TO,source/*,dest/)
   define CP_TO
@@ -37,6 +38,7 @@ ifeq ($(OS),Windows_NT)
 else
   RM = rm -rf
   MKDIR = mkdir -p
+  CP = cp -r
   define CP_TO
     cp -r $(1) $(2)
   endef
