@@ -1282,9 +1282,10 @@ fn insert (#t:eqtype) {| total_order t |} (pq:pqueue t) (x:t) (#cap:erased nat)
 {
   unfold (is_pqueue pq 's0 cap);
   
-  let success = RV.push pq x;
+  let has_space = RV.has_room pq;
   
-  if success {
+  if has_space {
+    RV.push pq x;
     let new_len = RV.len pq;
     let last_idx = SZ.sub new_len 1sz;
     // After push, we have almost_heap_sift_up at last position

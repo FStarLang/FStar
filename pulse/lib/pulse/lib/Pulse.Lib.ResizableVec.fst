@@ -186,39 +186,27 @@ fn has_room (#t:Type0) (v:rvec t) (#s:erased (Seq.seq t)) (#cap:erased nat)
   b
 }
 
-/// Push - returns true if successful, false if at capacity
-fn push (#t:Type0) (v:rvec t) (x:t) (#s:erased (Seq.seq t)) (#cap:erased nat)
+/// Push - capacity precondition required
+fn push (#t:Type0) (v:rvec t) (x:t) (#s:erased (Seq.seq t)) (#cap:erased nat { Seq.length s < cap })
   requires is_rvec v s cap
-  returns b:bool
-  ensures (if b then is_rvec v (Seq.snoc s x) cap ** pure (Seq.length s < cap)
-           else is_rvec v s cap ** pure (Seq.length s == cap))
+  ensures is_rvec v (Seq.snoc s x) cap
 {
   unfold (is_rvec v s cap);
   with vec buf sz cap_sz. _;
   
   let current_sz = op_Bang v.size_box;
-  let current_cap = op_Bang v.cap_box;
   let current_vec = op_Bang v.vec_box;
   
   rewrite (V.pts_to vec buf) as (V.pts_to current_vec buf);
   
-  // Check if we have room
-  if (SZ.lt current_sz current_cap) {
-    V.op_Array_Assignment current_vec current_sz (Some x);
-    with buf'. _;
-    
-    ( := ) v.size_box (SZ.add current_sz 1sz);
-    
-    rewrite (V.pts_to current_vec buf') as (V.pts_to vec buf');
-    buf_wf_extend buf (SZ.v sz) x;
-    fold (is_rvec v (Seq.snoc s x) cap);
-    true
-  } else {
-    // No room - at capacity
-    rewrite (V.pts_to current_vec buf) as (V.pts_to vec buf);
-    fold (is_rvec v s cap);
-    false
-  }
+  V.op_Array_Assignment current_vec current_sz (Some x);
+  with buf'. _;
+  
+  ( := ) v.size_box (SZ.add current_sz 1sz);
+  
+  rewrite (V.pts_to current_vec buf') as (V.pts_to vec buf');
+  buf_wf_extend buf (SZ.v sz) x;
+  fold (is_rvec v (Seq.snoc s x) cap)
 }
 
 /// Pop
