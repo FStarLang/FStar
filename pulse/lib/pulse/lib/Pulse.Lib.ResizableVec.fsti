@@ -74,14 +74,10 @@ fn has_room (#t:Type0) (v:rvec t) (#s:erased (Seq.seq t)) (#cap:erased nat)
   returns b:bool
   ensures pure (b <==> Seq.length s < cap)
 
-/// Try to append element to end of vector
-/// Returns true and appends if length < capacity
-/// Returns false if length == capacity (no room)
-fn push (#t:Type0) (v:rvec t) (x:t) (#s:erased (Seq.seq t)) (#cap:erased nat)
+/// Append element to end of vector
+fn push (#t:Type0) (v:rvec t) (x:t) (#s:erased (Seq.seq t)) (#cap:erased nat { Seq.length s < cap })
   requires is_rvec v s cap
-  returns b:bool
-  ensures (if b then is_rvec v (Seq.snoc s x) cap ** pure (Seq.length s < cap)
-           else is_rvec v s cap ** pure (Seq.length s == cap))
+  ensures is_rvec v (Seq.snoc s x) cap
 
 /// Remove and return the last element
 /// Requires: vector is non-empty
