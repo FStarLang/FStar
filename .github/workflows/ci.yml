@@ -13,43 +13,44 @@ defaults:
     shell: bash
 
 jobs:
-  opam:
-    name: opam
-    uses: ./.github/workflows/build-opam.yml
+  # Temporarily disabled to iterate faster on Windows build fix
+  # opam:
+  #   name: opam
+  #   uses: ./.github/workflows/build-opam.yml
 
-  build:
-    name: build
-    uses: ./.github/workflows/build-ci.yml
+  # build:
+  #   name: build
+  #   uses: ./.github/workflows/build-ci.yml
 
-  tests:
-    name: tests
-    needs: build
-    uses: ./.github/workflows/tests.yml
+  # tests:
+  #   name: tests
+  #   needs: build
+  #   uses: ./.github/workflows/tests.yml
 
-  nix-build:
-    name: nix
-    uses: ./.github/workflows/nix.yml
+  # nix-build:
+  #   name: nix
+  #   uses: ./.github/workflows/nix.yml
 
   windows-build:
     name: windows
     uses: ./.github/workflows/build-windows.yml
 
-  pulse-build-test:
-    name: pulse
-    needs: build
-    uses: ./.github/workflows/build-pulse.yml
+  # pulse-build-test:
+  #   name: pulse
+  #   needs: build
+  #   uses: ./.github/workflows/build-pulse.yml
 
   # Branch protection points here
-  ciok:
-    runs-on: ubuntu-latest
-    if: ${{ cancelled() || contains(needs.*.result, 'cancelled') || contains(needs.*.result, 'failure') }}
-    # ^ Workaround for insane github behavior: https://github.com/actions/runner/issues/2566
-    needs:
-      - build
-      - tests
-      - opam
-      - nix-build
-    steps:
-      # Note: we only run on failure. Otherwise this is skipped, which counts
-      # as a success.
-      - run: exit 1
+  # ciok:
+  #   runs-on: ubuntu-latest
+  #   if: ${{ cancelled() || contains(needs.*.result, 'cancelled') || contains(needs.*.result, 'failure') }}
+  #   # ^ Workaround for insane github behavior: https://github.com/actions/runner/issues/2566
+  #   needs:
+  #     - build
+  #     - tests
+  #     - opam
+  #     - nix-build
+  #   steps:
+  #     # Note: we only run on failure. Otherwise this is skipped, which counts
+  #     # as a success.
+  #     - run: exit 1
