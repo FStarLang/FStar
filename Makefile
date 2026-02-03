@@ -22,20 +22,25 @@ FSTAR_DEFAULT_GOAL ?= all
 JOBS ?= $(shell nproc 2>/dev/null || sysctl -n hw.ncpu 2>/dev/null || echo 4)
 
 # Platform-specific commands
+# Detect if we're in Cygwin/MSYS (bash on Windows) vs native PowerShell
+UNAME_S := $(shell uname -s 2>/dev/null || echo Windows)
+IS_CYGWIN := $(findstring CYGWIN,$(UNAME_S))$(findstring MINGW,$(UNAME_S))$(findstring MSYS,$(UNAME_S))
+
+# USE_UNIX_CMDS is non-empty if we should use Unix commands (Linux, macOS, or Cygwin/MSYS on Windows)
 ifeq ($(OS),Windows_NT)
-  # PowerShell commands for Windows
-  RM = powershell -Command "Remove-Item -Recurse -Force -ErrorAction SilentlyContinue"
-  MKDIR = powershell -Command "New-Item -ItemType Directory -Force -Path"
-  CP = powershell -Command "Copy-Item -Recurse -Force"
-  # PowerShell copy with wildcard: CP_TO takes source and dest as separate args
-  # Usage: $(call CP_TO,source/*,dest/)
-  define CP_TO
-    powershell -Command "Copy-Item -Path '$(1)' -Destination '$(2)' -Recurse -Force"
-  endef
-  ECHO = echo
-  # Windows uses .exe suffix - use native Windows path
-  FSTAR_EXE_ABS = $(CURDIR)/stage0/out/bin/fstar.exe
-else
+  ifneq ($(IS_CYGWIN),)
+    USE_UNIX_CMDS := yes
+  endif
+endif
+ifndef OS
+  USE_UNIX_CMDS := yes
+endif
+ifneq ($(OS),Windows_NT)
+  USE_UNIX_CMDS := yes
+endif
+
+ifdef USE_UNIX_CMDS
+  # Unix commands (Linux, macOS, or Cygwin/MSYS on Windows)
   RM = rm -rf
   MKDIR = mkdir -p
   CP = cp -r
@@ -43,8 +48,23 @@ else
     cp -r $(1) $(2)
   endef
   ECHO = echo
-  # Unix: binary is just 'fstar' (no .exe suffix)
-  FSTAR_EXE_ABS = $(shell pwd)/stage0/out/bin/fstar
+  ifeq ($(OS),Windows_NT)
+    # Cygwin on Windows - executable has .exe suffix
+    FSTAR_EXE_ABS = $(shell pwd)/stage0/out/bin/fstar.exe
+  else
+    # Unix: binary is just 'fstar' (no .exe suffix)
+    FSTAR_EXE_ABS = $(shell pwd)/stage0/out/bin/fstar
+  endif
+else
+  # Native PowerShell on Windows
+  RM = powershell -Command "Remove-Item -Recurse -Force -ErrorAction SilentlyContinue"
+  MKDIR = powershell -Command "New-Item -ItemType Directory -Force -Path"
+  CP = powershell -Command "Copy-Item -Recurse -Force"
+  define CP_TO
+    powershell -Command "Copy-Item -Path '$(1)' -Destination '$(2)' -Recurse -Force"
+  endef
+  ECHO = echo
+  FSTAR_EXE_ABS = $(CURDIR)/stage0/out/bin/fstar.exe
 endif
 
 # Export FSTAR_EXE for dune (used in fstarc.dune.inc for .checked file generation)
@@ -142,7 +162,14 @@ verify-ulib: stage2 setlink-2
 # Set up symlinks/directories for compatibility with CI and tests
 # Creates out/bin/fstar and out/lib/fstar/ulib for the smoke test
 setlink-%:
-ifeq ($(OS),Windows_NT)
+ifdef USE_UNIX_CMDS
+	rm -rf out && mkdir -p out/bin out/lib/fstar
+	@# dune always produces .exe suffix for native executables, link to that
+	ln -sf $(CURDIR)/_build/default/src/stage2/fstar.exe out/bin/fstar
+	ln -sf $(CURDIR)/ulib out/lib/fstar/ulib
+	mkdir -p bin
+	ln -sf $(CURDIR)/out/bin/fstar bin/fstar
+else
 	@if exist out if not exist out\NUL (echo ERROR: out/ exists and is not a directory, please remove it && exit 1)
 	-@$(RM) out
 	@$(MKDIR) out/bin
@@ -151,13 +178,6 @@ ifeq ($(OS),Windows_NT)
 	@if exist ulib (mklink /D out\lib\fstar\ulib "$(CURDIR)\ulib" 2>nul || xcopy /E /I /Q ulib out\lib\fstar\ulib)
 	@$(MKDIR) bin
 	@$(CP) out/bin/fstar.exe bin/
-else
-	rm -rf out && mkdir -p out/bin out/lib/fstar
-	@# dune always produces .exe suffix for native executables, link to that
-	ln -sf $(CURDIR)/_build/default/src/stage2/fstar.exe out/bin/fstar
-	ln -sf $(CURDIR)/ulib out/lib/fstar/ulib
-	mkdir -p bin
-	ln -sf $(CURDIR)/out/bin/fstar bin/fstar
 endif
 
 # =============================================================================
@@ -173,17 +193,7 @@ FSTAR_TAG ?= auto
 
 # Binary package - creates fstar{FSTAR_TAG}.tar.gz or .zip
 package: build
-ifeq ($(OS),Windows_NT)
-	-@powershell -Command "Remove-Item -Recurse -Force _package -ErrorAction SilentlyContinue"
-	@powershell -Command "New-Item -ItemType Directory -Force _package/fstar/bin | Out-Null"
-	@powershell -Command "New-Item -ItemType Directory -Force _package/fstar/lib/fstar | Out-Null"
-	@powershell -Command "Copy-Item _build/default/src/stage2/fstar.exe _package/fstar/bin/"
-	@powershell -Command "Copy-Item -Recurse ulib _package/fstar/lib/fstar/"
-	@powershell -Command "'ulib' | Out-File -FilePath '_package/fstar/lib/fstar/fstar.include' -Encoding utf8"
-	@powershell -Command "Copy-Item LICENSE,README.md,INSTALL.md,version.txt _package/fstar/"
-	@powershell -Command "$$v = (Get-Content version.txt -Raw).Trim(); Compress-Archive -Path _package/fstar -DestinationPath \"fstar-v$$v-Windows_x64.zip\" -Force; Write-Host \"Created: fstar-v$$v-Windows_x64.zip\""
-	@powershell -Command "Remove-Item -Recurse -Force _package"
-else
+ifdef USE_UNIX_CMDS
 	@rm -rf _package
 	@mkdir -p _package/fstar/bin _package/fstar/lib/fstar
 	@cp _build/default/src/stage2/fstar.exe _package/fstar/bin/fstar 2>/dev/null || \
@@ -197,28 +207,28 @@ else ifeq ($(FSTAR_TAG),auto)
 	@VERSION=$$(cat version.txt | tr -d '\n\r'); \
 		ARCH=$$(uname -m); \
 		OS=$$(uname -s); \
-		case "$$OS" in Darwin) OS=macOS ;; esac; \
+		case "$$OS" in Darwin) OS=macOS ;; CYGWIN*|MINGW*|MSYS*) OS=Windows ;; esac; \
 		cd _package && tar czf ../fstar-v$${VERSION}-$${OS}_$${ARCH}.tar.gz fstar && \
 		echo "Created: fstar-v$${VERSION}-$${OS}_$${ARCH}.tar.gz"
 else
 	@cd _package && tar czf ../fstar$(FSTAR_TAG).tar.gz fstar && echo "Created: fstar$(FSTAR_TAG).tar.gz"
 endif
 	@rm -rf _package
+else
+	-@powershell -Command "Remove-Item -Recurse -Force _package -ErrorAction SilentlyContinue"
+	@powershell -Command "New-Item -ItemType Directory -Force _package/fstar/bin | Out-Null"
+	@powershell -Command "New-Item -ItemType Directory -Force _package/fstar/lib/fstar | Out-Null"
+	@powershell -Command "Copy-Item _build/default/src/stage2/fstar.exe _package/fstar/bin/"
+	@powershell -Command "Copy-Item -Recurse ulib _package/fstar/lib/fstar/"
+	@powershell -Command "'ulib' | Out-File -FilePath '_package/fstar/lib/fstar/fstar.include' -Encoding utf8"
+	@powershell -Command "Copy-Item LICENSE,README.md,INSTALL.md,version.txt _package/fstar/"
+	@powershell -Command "$$v = (Get-Content version.txt -Raw).Trim(); Compress-Archive -Path _package/fstar -DestinationPath \"fstar-v$$v-Windows_x64.zip\" -Force; Write-Host \"Created: fstar-v$$v-Windows_x64.zip\""
+	@powershell -Command "Remove-Item -Recurse -Force _package"
 endif
 
 # Source package - creates fstar-src.tar.gz (if FSTAR_TAG=) or fstar-v{VERSION}-src.tar.gz
 package-src: build
-ifeq ($(OS),Windows_NT)
-	-@powershell -Command "Remove-Item -Recurse -Force _srcpackage -ErrorAction SilentlyContinue"
-	@powershell -Command "New-Item -ItemType Directory -Force _srcpackage/fstar | Out-Null"
-	@powershell -Command "Copy-Item -Recurse stage0,src,ulib,.scripts _srcpackage/fstar/"
-	@powershell -Command "Copy-Item dune,dune-project,dune-workspace,fstar.opam,Makefile _srcpackage/fstar/"
-	@powershell -Command "Copy-Item LICENSE,README.md,INSTALL.md,version.txt _srcpackage/fstar/"
-	-@powershell -Command "Get-ChildItem -Path _srcpackage -Recurse -Directory -Filter '_build' | Remove-Item -Recurse -Force"
-	-@powershell -Command "Get-ChildItem -Path _srcpackage -Recurse -Filter '*.checked*' | Remove-Item -Force"
-	@powershell -Command "$$v = (Get-Content version.txt -Raw).Trim(); Compress-Archive -Path _srcpackage/fstar -DestinationPath \"fstar-v$$v-src.zip\" -Force; Write-Host \"Created: fstar-v$$v-src.zip\""
-	@powershell -Command "Remove-Item -Recurse -Force _srcpackage"
-else
+ifdef USE_UNIX_CMDS
 	@rm -rf _srcpackage
 	@mkdir -p _srcpackage/fstar
 	@cp -r stage0 src ulib .scripts _srcpackage/fstar/
@@ -234,24 +244,34 @@ else
 		echo "Created: fstar-v$${VERSION}-src.tar.gz"
 endif
 	@rm -rf _srcpackage
+else
+	-@powershell -Command "Remove-Item -Recurse -Force _srcpackage -ErrorAction SilentlyContinue"
+	@powershell -Command "New-Item -ItemType Directory -Force _srcpackage/fstar | Out-Null"
+	@powershell -Command "Copy-Item -Recurse stage0,src,ulib,.scripts _srcpackage/fstar/"
+	@powershell -Command "Copy-Item dune,dune-project,dune-workspace,fstar.opam,Makefile _srcpackage/fstar/"
+	@powershell -Command "Copy-Item LICENSE,README.md,INSTALL.md,version.txt _srcpackage/fstar/"
+	-@powershell -Command "Get-ChildItem -Path _srcpackage -Recurse -Directory -Filter '_build' | Remove-Item -Recurse -Force"
+	-@powershell -Command "Get-ChildItem -Path _srcpackage -Recurse -Filter '*.checked*' | Remove-Item -Force"
+	@powershell -Command "$$v = (Get-Content version.txt -Raw).Trim(); Compress-Archive -Path _srcpackage/fstar -DestinationPath \"fstar-v$$v-src.zip\" -Force; Write-Host \"Created: fstar-v$$v-src.zip\""
+	@powershell -Command "Remove-Item -Recurse -Force _srcpackage"
 endif
 
 # Install F* to PREFIX (used by opam install)
 install: build
-ifeq ($(OS),Windows_NT)
-	powershell -Command "New-Item -ItemType Directory -Force -Path '$(PREFIX)/bin' | Out-Null"
-	powershell -Command "New-Item -ItemType Directory -Force -Path '$(PREFIX)/lib/fstar' | Out-Null"
-	powershell -Command "Copy-Item -Force '_build/default/src/stage2/fstar.exe' '$(PREFIX)/bin/'"
-	powershell -Command "Copy-Item -Recurse -Force 'ulib' '$(PREFIX)/lib/fstar/'"
-	powershell -Command "'ulib' | Out-File -FilePath '$(PREFIX)/lib/fstar/fstar.include' -Encoding utf8"
-	powershell -Command "Copy-Item -Force 'LICENSE','README.md','INSTALL.md','version.txt' '$(PREFIX)/'"
-else
+ifdef USE_UNIX_CMDS
 	$(MKDIR) $(PREFIX)/bin $(PREFIX)/lib/fstar
 	cp _build/default/src/stage2/fstar.exe $(PREFIX)/bin/fstar 2>/dev/null || \
 		cp _build/default/src/stage2/fstar $(PREFIX)/bin/fstar
 	$(CP) ulib $(PREFIX)/lib/fstar/
 	echo 'ulib' > $(PREFIX)/lib/fstar/fstar.include
 	cp LICENSE README.md INSTALL.md version.txt $(PREFIX)/
+else
+	powershell -Command "New-Item -ItemType Directory -Force -Path '$(PREFIX)/bin' | Out-Null"
+	powershell -Command "New-Item -ItemType Directory -Force -Path '$(PREFIX)/lib/fstar' | Out-Null"
+	powershell -Command "Copy-Item -Force '_build/default/src/stage2/fstar.exe' '$(PREFIX)/bin/'"
+	powershell -Command "Copy-Item -Recurse -Force 'ulib' '$(PREFIX)/lib/fstar/'"
+	powershell -Command "'ulib' | Out-File -FilePath '$(PREFIX)/lib/fstar/fstar.include' -Encoding utf8"
+	powershell -Command "Copy-Item -Force 'LICENSE','README.md','INSTALL.md','version.txt' '$(PREFIX)/'"
 endif
 
 # =============================================================================

@@ -1,15 +1,11 @@
 name: Build F* (Windows)
 
-# Full native Windows build of F* (stage0 → stage2) with tests.
-# Uses PowerShell with winget-installed opam and MSYS2 for GMP.
+# Full Windows build of F* (stage0 → stage2) with tests.
+# Uses ocaml/setup-ocaml with Cygwin for OCaml toolchain.
 
 on:
   workflow_call:
   workflow_dispatch:
-
-defaults:
-  run:
-    shell: pwsh
 
 jobs:
   build:
@@ -17,102 +13,58 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      # Add MSYS2 GMP to PATH (already installed on GitHub runners)
-      - name: Add MSYS2 to PATH
-        run: |
-          echo "C:\msys64\mingw64\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+      - name: Set up OCaml
+        uses: ocaml/setup-ocaml@v3
+        with:
+          ocaml-compiler: 4.14.2
 
-      # Install opam via winget
-      - name: Install opam
-        run: |
-          winget install OCaml.opam --accept-source-agreements --accept-package-agreements --disable-interactivity
-          # Refresh PATH to pick up newly installed opam
-          $machinePath = [System.Environment]::GetEnvironmentVariable("Path","Machine")
-          $userPath = [System.Environment]::GetEnvironmentVariable("Path","User")
-          $env:Path = "$machinePath;$userPath"
-          # Find and persist opam location to GITHUB_PATH
-          $opamPath = (Get-Command opam -ErrorAction SilentlyContinue).Source
-          if ($opamPath) {
-            $opamDir = Split-Path $opamPath
-            echo $opamDir | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
-          }
-          opam --version
-
-      # Initialize opam and create switch with MSVC
-      - name: Initialize opam
-        run: |
-          # Refresh PATH again for this step
-          $machinePath = [System.Environment]::GetEnvironmentVariable("Path","Machine")
-          $userPath = [System.Environment]::GetEnvironmentVariable("Path","User")
-          $env:Path = "$machinePath;$userPath;$env:Path"
-          opam init --auto-setup --bare --disable-sandboxing -y
-          opam switch create 4.14.2
-          # Set up opam environment for this step
-          (& opam env) -split '\r?\n' | ForEach-Object { Invoke-Expression $_ }
-          # Use MSVC instead of GCC
-          opam install system-msvc -y
-
-      # Persist opam environment to GITHUB_ENV
-      - name: Setup opam environment
-        run: |
-          # Set up opam env for current step
-          (& opam env) -split '\r?\n' | ForEach-Object { Invoke-Expression $_ }
-          # Persist to GITHUB_ENV for subsequent steps
-          $opamEnv = & opam env
-          $opamEnv -split '\r?\n' | ForEach-Object {
-            if ($_ -match '^([^=]+)=(.*)$') {
-              $name = $matches[1]
-              $value = $matches[2] -replace '^"','' -replace '"$',''
-              echo "$name=$value" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
-            }
-          }
-
-      # Install Z3
       - name: Install Z3
+        shell: bash
         run: |
-          $z3_url = "https://github.com/Z3Prover/z3/releases/download/z3-4.13.3/z3-4.13.3-x64-win.zip"
-          Invoke-WebRequest -Uri $z3_url -OutFile z3.zip
-          Expand-Archive -Path z3.zip -DestinationPath $env:USERPROFILE
-          $z3_dir = Get-ChildItem -Path $env:USERPROFILE -Filter "z3-*" -Directory | Select-Object -First 1
-          New-Item -ItemType Directory -Force -Path "$env:USERPROFILE\bin" | Out-Null
-          Copy-Item -Path "$($z3_dir.FullName)\bin\z3.exe" -Destination "$env:USERPROFILE\bin\z3.exe" -Force
-          echo "$env:USERPROFILE\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+          Z3_VERSION=4.13.3
+          curl -L -o z3.zip "https://github.com/Z3Prover/z3/releases/download/z3-${Z3_VERSION}/z3-${Z3_VERSION}-x64-win.zip"
+          unzip -q z3.zip
+          mkdir -p ~/bin
+          cp z3-*/bin/z3.exe ~/bin/
+          echo "$HOME/bin" >> $GITHUB_PATH
 
-      # Install F* dependencies
       - name: Install opam dependencies
-        run: |
-          opam install --deps-only ./fstar.opam -y
+        run: opam install --deps-only ./fstar.opam -y
 
       - name: Set version
+        shell: bash
         run: |
-          if ("${{github.workflow_ref}}" -match "nightly.yml") {
-            echo "FSTAR_VERSION=nightly-$(Get-Date -Format 'yyyy-MM-dd')" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
-          } elseif ("${{github.workflow_ref}}" -match "release.yml") {
-            $version = Get-Content version.txt
-            echo "FSTAR_VERSION=$version" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
-          }
+          if [[ "${{github.workflow_ref}}" == *"nightly.yml"* ]]; then
+            echo "FSTAR_VERSION=nightly-$(date +%Y-%m-%d)" >> $GITHUB_ENV
+          elif [[ "${{github.workflow_ref}}" == *"release.yml"* ]]; then
+            echo "FSTAR_VERSION=$(cat version.txt)" >> $GITHUB_ENV
+          fi
 
       - name: Build F* (stage0 → stage2)
+        shell: bash
         run: |
-          $nproc = (Get-CimInstance Win32_ComputerSystem).NumberOfLogicalProcessors
-          make -skj$nproc
+          make -skj$(nproc)
 
       - name: Verify F* works
+        shell: bash
         run: |
-          .\out\bin\fstar.exe --version
+          ./out/bin/fstar.exe --version
 
       - name: Run tests
+        shell: bash
         run: |
           make test
 
       - name: Make binary package
+        shell: bash
         run: |
-          $env:FSTAR_TAG = "-Windows_NT-x86_64"
+          export FSTAR_TAG="-Windows_NT-x86_64"
           make package
 
       - name: List packages
+        shell: bash
         run: |
-          Get-ChildItem -Recurse -Filter "*.zip" | Select-Object FullName
+          find . -name "*.zip" -type f
 
       - uses: actions/upload-artifact@v4
         if: ${{ always() }}
@@ -128,20 +80,12 @@ jobs:
         with:
           name: package-win
 
-      - name: Extract package
+      - name: Extract and test package
+        shell: bash
         run: |
-          Expand-Archive -Path fstar-*.zip
-
-      - name: Test fstar.exe
-        run: |
-          Get-ChildItem
-          $dir = Get-ChildItem -Directory -Filter "fstar-*" | Select-Object -First 1
-          & "$($dir.FullName)\fstar\bin\fstar.exe" --version
-
-      - name: Smoke test
-        run: |
-          $dir = Get-ChildItem -Directory -Filter "fstar-*" | Select-Object -First 1
-          & "$($dir.FullName)\fstar\bin\fstar.exe" "$($dir.FullName)\fstar\lib\fstar\ulib\Prims.fst" -f
-          $PSDefaultParameterValues['Out-File:Encoding'] = 'utf8'
-          "module A`nopen FStar.Mul`nlet _ = assert (forall x. 1 + x*x > 0)" | Out-File -FilePath A.fst -Encoding utf8
-          & "$($dir.FullName)\fstar\bin\fstar.exe" --already_cached "*,-A" A.fst
+          unzip -q fstar-*.zip
+          dir=$(ls -d fstar-* | head -1)
+          ./$dir/fstar/bin/fstar.exe --version
+          ./$dir/fstar/bin/fstar.exe $dir/fstar/lib/fstar/ulib/Prims.fst -f
+          echo -e "module A\nopen FStar.Mul\nlet _ = assert (forall x. 1 + x*x > 0)" > A.fst
+          ./$dir/fstar/bin/fstar.exe --already_cached "*,-A" A.fst
