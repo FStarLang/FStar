@@ -9,15 +9,15 @@ name: Build F* (Windows)
 # At some point, this should just look exactly like the Linux and macos
 # workflows, just running 'make package' in a proper environment, and
 # doing a full bootstrapping build.
+#
+# NOTE: We use MSYS2 instead of Cygwin because setup-ocaml has a hardcoded
+# Cygwin mirror (mirrors.kernel.org) that frequently fails with connection
+# errors from GitHub Actions' cloud IPs.
+# See: https://github.com/ocaml/setup-ocaml/issues/1038
 
 on:
   workflow_call:
   workflow_dispatch:
-
-defaults:
-  run:
-    shell:
-      bash
 
 jobs:
   # We begin from a source package (built in Linux)
@@ -27,19 +27,40 @@ jobs:
   build:
     needs: build-src
     runs-on: windows-latest
+    defaults:
+      run:
+        shell: msys2 {0}
     steps:
-      # Not sure if this is useful. It prevents the PATH in the Cygwin shell
-      # from containing Windows directories, and makes it Cygwin only.
-      - run: echo "CYGWIN_NOWINPATH=1" >>$GITHUB_ENV
+      # Setup MSYS2 - pre-installed on GitHub runners at C:\msys64
+      # This bypasses the Cygwin mirror issue entirely
+      - uses: msys2/setup-msys2@v2
+        with:
+          msystem: UCRT64
+          update: true
+          install: >-
+            base-devel
+            m4
+            make
+            patch
+            diffutils
+            git
+            curl
+            rsync
+            unzip
+            zip
+            time
+            pkg-config
+            mingw-w64-ucrt-x86_64-gcc
+            mingw-w64-ucrt-x86_64-gmp
+            mingw-w64-ucrt-x86_64-libffi
 
-      - uses: ocaml/setup-ocaml@v3
+      # Use the fork with MSYS2 support
+      # See: https://github.com/ocaml/setup-ocaml/pull/857
+      - uses: tobil4sk/setup-ocaml@feature/msys2
         with:
           ocaml-compiler: 4.14.2
-          cache-prefix: v3
-
-      - name: Install additional Cygwin packages
-        shell: cmd
-        run: C:\cygwin\setup-x86_64.exe --quiet-mode --no-shortcuts --no-startmenu --no-desktop --upgrade-also --root C:\cygwin --site https://cygwin.osuosl.org/ --packages mingw64-i686-gmp,mingw64-i686-libffi,mingw64-x86_64-gmp,mingw64-x86_64-libffi
+          windows-environment: msys2
+          cache-prefix: v6
 
       # Print out some debug info
       - name: dbg
@@ -113,16 +134,15 @@ jobs:
           make ADMIT=1 -skj$(nproc)
         working-directory: fstar
 
-      # F* was built in this cygwin environment, and can run. There is
+      # F* was built in this MSYS2 environment, and can run. There is
       # somewhere a libgmp DLL that is being used, and that we must ship in
       # order for systems without this DLL to able to run F*. Using `which
       # libgmp-10.dll` returns a hit, but it seems to be (sometimes?) wrong and
       # point to a 32-bit version of the library that does not work. Here, we
-      # use (Cygwin's) `ldd` to find out which dll we are using exactly, and
-      # ship that.
+      # use `ldd` to find out which dll we are using exactly, and ship that.
       - name: Find the right libgmp DLL
         run: |
-          LIBGMP=$(ldd fstar/out/bin/fstar.exe | sed -n 's/^[[:space:]]libgmp-10.dll => *\([^ ]*\) .*$/\1/p')
+          LIBGMP=$(ldd fstar/out/bin/fstar.exe | sed -n 's/^[[:space:]]*libgmp-10.dll => *\([^ ]*\) .*$/\1/p')
           echo "LIBGMP=$LIBGMP" >>$GITHUB_ENV
 
       - name: Make binary package
