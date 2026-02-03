@@ -127,6 +127,12 @@ jobs:
       - run: eval $(opam env) && opam install . --deps-only
         working-directory: fstar
 
+      # Clean stale dune lock files that may have been included in the source package
+      - name: Clean dune lock files
+        run: |
+          rm -f _build/.lock stage0/_build/.lock
+        working-directory: fstar
+
       # Note: we admit queries here, like the OPAM build does.
       - name: Build
         run: |
