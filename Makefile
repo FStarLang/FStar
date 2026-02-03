@@ -45,7 +45,14 @@ install-deps:
 
 all: build
 
-build: stage0 extract stage1 stage2
+# Build dependencies: stage0 -> extract -> stage1 -> stage2
+# These must be sequential, not parallel
+build: stage2
+
+# Explicit dependencies for parallel-safe builds
+extract: stage0
+stage1: extract
+stage2: stage1
 
 test:
 	dune runtest
