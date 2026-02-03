@@ -20,9 +20,6 @@ jobs:
           opam-repositories: |
             default: https://github.com/ocaml/opam-repository.git
 
-      - name: Install system dependencies
-        run: opam depext gcc make flexdll
-
       - name: Install Z3
         shell: bash
         run: |
