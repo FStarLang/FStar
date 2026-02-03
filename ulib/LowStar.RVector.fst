@@ -710,7 +710,7 @@ val alloc_:
       Set.subset (Map.domain (HS.get_hmap h0))
                  (Map.domain (HS.get_hmap h1))))
     (decreases (U32.v cidx))
-#reset-options "--z3rlimit 20"
+#reset-options "--z3rlimit 20 --proof_recovery"
 let rec alloc_ #a #rst #rg rv cidx =
   let hh0 = HST.get () in
   if cidx = 0ul then ()
