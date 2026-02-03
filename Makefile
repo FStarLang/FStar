@@ -77,7 +77,7 @@ export FSTAR_EXE := $(FSTAR_STAGE0)
 
 # Stage 0: Bootstrap compiler from OCaml snapshot
 stage0 0:
-	dune build --root=stage0
+	dune build --root=stage0 @install
 	dune install --root=stage0 --prefix=$(CURDIR)/stage0/out
 
 # Extract: Generate stage1 ML files from F* sources
