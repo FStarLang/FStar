@@ -7,18 +7,25 @@ on:
   workflow_call:
   workflow_dispatch:
 
+defaults:
+  run:
+    shell: bash
+
 jobs:
   build:
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
 
+      - name: Set up Cygwin
+        uses: cygwin/cygwin-install-action@master
+        with:
+          packages: mingw64-i686-gmp, mingw64-i686-libffi, mingw64-x86_64-gmp, mingw64-x86_64-libffi
+
       - name: Set up OCaml
         uses: ocaml/setup-ocaml@v3
         with:
           ocaml-compiler: 4.14.2
-          opam-repositories: |
-            default: https://github.com/ocaml/opam-repository.git
 
       - name: Install Z3
         shell: bash
