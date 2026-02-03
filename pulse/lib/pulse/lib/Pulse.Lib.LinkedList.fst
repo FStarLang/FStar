@@ -180,6 +180,22 @@ fn is_empty (#t:Type) (x:llist t)
   }
 }
 
+fn head (#t:Type0) (x:llist t) (#l:erased (list t){Cons? l})
+    requires is_list x l
+    returns v:t
+    ensures is_list x l ** pure (v == List.Tot.hd l)
+{
+  // Since Cons? l, we know x must be Some
+  some_iff_cons x;
+  let np = Some?.v x;
+  is_list_cases_some x np;
+  with node tl. _;
+  let n = !np;
+  // Restore the is_list predicate
+  intro_is_list_cons x np;
+  n.head
+}
+
 fn rec length (#t:Type0) (x:llist t)
               (#l:erased (list t))
     requires is_list x l
