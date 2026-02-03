@@ -45,10 +45,10 @@ jobs:
           $machinePath = [System.Environment]::GetEnvironmentVariable("Path","Machine")
           $userPath = [System.Environment]::GetEnvironmentVariable("Path","User")
           $env:Path = "$machinePath;$userPath;$env:Path"
-          opam init --auto-setup --bare --disable-sandboxing
+          opam init --auto-setup --bare --disable-sandboxing -y
           opam switch create 4.14.2
           # Set up opam environment for this step
-          (& opam env --switch=default) -split '\r?\n' | ForEach-Object { Invoke-Expression $_ }
+          (& opam env) -split '\r?\n' | ForEach-Object { Invoke-Expression $_ }
           # Use MSVC instead of GCC
           opam install system-msvc -y
 
@@ -56,7 +56,7 @@ jobs:
       - name: Setup opam environment
         run: |
           # Set up opam env for current step
-          (& opam env --switch=default) -split '\r?\n' | ForEach-Object { Invoke-Expression $_ }
+          (& opam env) -split '\r?\n' | ForEach-Object { Invoke-Expression $_ }
           # Persist to GITHUB_ENV for subsequent steps
           $opamEnv = & opam env
           $opamEnv -split '\r?\n' | ForEach-Object {
@@ -81,7 +81,7 @@ jobs:
       # Install F* dependencies
       - name: Install opam dependencies
         run: |
-          opam install --deps-only ./fstar.opam
+          opam install --deps-only ./fstar.opam -y
 
       - name: Set version
         run: |
