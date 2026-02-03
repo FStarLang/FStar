@@ -21,6 +21,7 @@ jobs:
         uses: cygwin/cygwin-install-action@master
         with:
           packages: mingw64-i686-gmp, mingw64-i686-libffi, mingw64-x86_64-gmp, mingw64-x86_64-libffi
+          site: https://mirrors.dotsrc.org/cygwin/
 
       - name: Set up OCaml
         uses: ocaml/setup-ocaml@v3
