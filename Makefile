@@ -23,9 +23,11 @@ JOBS ?= $(shell nproc 2>/dev/null || sysctl -n hw.ncpu 2>/dev/null || echo 4)
 
 # Platform-specific commands
 ifeq ($(OS),Windows_NT)
+  # Use PowerShell for RM since it handles Windows paths better
   RM = powershell -Command "Remove-Item -Recurse -Force -ErrorAction SilentlyContinue"
-  MKDIR = powershell -Command "New-Item -ItemType Directory -Force -Path"
-  CP = powershell -Command "Copy-Item -Recurse -Force"
+  # Use bash commands since we run in Cygwin bash on Windows CI
+  MKDIR = mkdir -p
+  CP = cp -r
   ECHO = echo
   # Windows uses .exe suffix
   # Use cygpath to convert to Windows path for dune compatibility
