@@ -72,11 +72,13 @@ jobs:
           make stage1 V=1
           echo "Running stage2..."
           make stage2 V=1
+          echo "Setting up output directories..."
+          make setlink-2
 
       - name: Verify F* works
         shell: bash
         run: |
-          ./out/bin/fstar.exe --version
+          ./out/bin/fstar.exe --version || ./out/bin/fstar --version
 
       - name: Run tests
         shell: bash
