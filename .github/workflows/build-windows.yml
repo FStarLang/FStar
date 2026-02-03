@@ -28,13 +28,18 @@ jobs:
     needs: build-src
     runs-on: windows-latest
     steps:
-      - uses: cygwin/cygwin-install-action@master
-        with:
-          packages: mingw64-i686-gmp, mingw64-i686-libffi, mingw64-x86_64-gmp, mingw64-x86_64-libffi
-
       # Not sure if this is useful. It prevents the PATH in the Cygwin shell
       # from containing Windows directories, and makes it Cygwin only.
       - run: echo "CYGWIN_NOWINPATH=1" >>$GITHUB_ENV
+
+      - uses: ocaml/setup-ocaml@v3
+        with:
+          ocaml-compiler: 4.14.2
+          cache-prefix: v3
+
+      - name: Install additional Cygwin packages
+        shell: cmd
+        run: C:\cygwin\setup-x86_64.exe --quiet-mode --no-shortcuts --no-startmenu --no-desktop --upgrade-also --root C:\cygwin --site https://cygwin.osuosl.org/ --packages mingw64-i686-gmp,mingw64-i686-libffi,mingw64-x86_64-gmp,mingw64-x86_64-libffi
 
       # Print out some debug info
       - name: dbg
@@ -51,10 +56,6 @@ jobs:
           echo OS=$OS
           which make || true
           make --version || true
-
-      - uses: ocaml/setup-ocaml@v3
-        with:
-          ocaml-compiler: 4.14.2
 
       # - name: Prepare
       #   shell: powershell # somehow in bash we fail to build ocamlfind?
