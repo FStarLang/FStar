@@ -23,19 +23,23 @@ JOBS ?= $(shell nproc 2>/dev/null || sysctl -n hw.ncpu 2>/dev/null || echo 4)
 
 # Platform-specific commands
 ifeq ($(OS),Windows_NT)
-  # Use PowerShell for RM since it handles Windows paths better
+  # PowerShell commands for Windows
   RM = powershell -Command "Remove-Item -Recurse -Force -ErrorAction SilentlyContinue"
-  # Use bash commands since we run in Cygwin bash on Windows CI
-  MKDIR = mkdir -p
-  CP = cp -r
+  MKDIR = powershell -Command "New-Item -ItemType Directory -Force -Path"
+  # PowerShell copy with wildcard: CP_TO takes source and dest as separate args
+  # Usage: $(call CP_TO,source/*,dest/)
+  define CP_TO
+    powershell -Command "Copy-Item -Path '$(1)' -Destination '$(2)' -Recurse -Force"
+  endef
   ECHO = echo
-  # Windows uses .exe suffix
-  # Use cygpath to convert to Windows path for dune compatibility
-  FSTAR_EXE_ABS = $(shell cygpath -m "$(CURDIR)/stage0/out/bin/fstar.exe" 2>/dev/null || echo "$(CURDIR)/stage0/out/bin/fstar.exe")
+  # Windows uses .exe suffix - use native Windows path
+  FSTAR_EXE_ABS = $(CURDIR)/stage0/out/bin/fstar.exe
 else
   RM = rm -rf
   MKDIR = mkdir -p
-  CP = cp -r
+  define CP_TO
+    cp -r $(1) $(2)
+  endef
   ECHO = echo
   # Unix: binary is just 'fstar' (no .exe suffix)
   FSTAR_EXE_ABS = $(shell pwd)/stage0/out/bin/fstar
@@ -109,9 +113,9 @@ stage1 1: extract
 	$(MKDIR) src/plugins/app
 	$(MKDIR) src/plugins/plugin
 	$(MKDIR) src/plugins/plugins.ml
-	$(CP) stage0/fstar-plugins/app/* src/plugins/app/
-	$(CP) stage0/fstar-plugins/plugin/* src/plugins/plugin/
-	$(CP) stage0/fstar-plugins/plugins.ml/* src/plugins/plugins.ml/
+	$(call CP_TO,stage0/fstar-plugins/app/*,src/plugins/app/)
+	$(call CP_TO,stage0/fstar-plugins/plugin/*,src/plugins/plugin/)
+	$(call CP_TO,stage0/fstar-plugins/plugins.ml/*,src/plugins/plugins.ml/)
 	dune build --root=. @stage1
 
 # Stage 2: Build final compiler with plugins

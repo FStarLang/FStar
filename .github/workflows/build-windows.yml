@@ -1,7 +1,7 @@
 name: Build F* (Windows)
 
 # Full native Windows build of F* (stage0 → stage2) with tests.
-# This builds directly from the repository without relying on Linux artifacts.
+# Uses PowerShell and native Windows OCaml.
 
 on:
   workflow_call:
@@ -9,7 +9,7 @@ on:
 
 defaults:
   run:
-    shell: bash
+    shell: pwsh
 
 jobs:
   build:
@@ -17,70 +17,62 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: cygwin/cygwin-install-action@master
-        with:
-          packages: mingw64-i686-gmp, mingw64-i686-libffi, mingw64-x86_64-gmp, mingw64-x86_64-libffi, curl, unzip
-
-      - name: Debug info
-        continue-on-error: true
-        run: |
-          echo "uname: $(uname -a)"
-          echo "arch: $(uname -m)"
-          which make || true
-          make --version || true
-
       - uses: ocaml/setup-ocaml@v3
         with:
           ocaml-compiler: 4.14.2
 
+      # Install GMP via MSYS2 (setup-ocaml includes MSYS2)
+      - name: Install GMP
+        run: |
+          C:\msys64\usr\bin\bash.exe -lc "pacman -S --noconfirm mingw-w64-x86_64-gmp"
+
       - name: Install Z3
         run: |
-          ./.scripts/get_fstar_z3.sh $HOME/bin
-          echo "$HOME/bin" >> $GITHUB_PATH
+          # Download Z3 for Windows
+          $z3_url = "https://github.com/Z3Prover/z3/releases/download/z3-4.13.3/z3-4.13.3-x64-win.zip"
+          Invoke-WebRequest -Uri $z3_url -OutFile z3.zip
+          Expand-Archive -Path z3.zip -DestinationPath $env:USERPROFILE
+          $z3_dir = Get-ChildItem -Path $env:USERPROFILE -Filter "z3-*" -Directory | Select-Object -First 1
+          Copy-Item -Path "$($z3_dir.FullName)\bin\z3.exe" -Destination "$env:USERPROFILE\bin\z3.exe" -Force
+          New-Item -ItemType Directory -Force -Path "$env:USERPROFILE\bin" | Out-Null
+          Copy-Item -Path "$($z3_dir.FullName)\bin\z3.exe" -Destination "$env:USERPROFILE\bin\z3.exe" -Force
+          echo "$env:USERPROFILE\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
 
       - name: Install opam dependencies
         run: |
-          eval $(opam env)
           opam install --deps-only ./fstar.opam
 
       - name: Set version
         run: |
-          if [[ "${{github.workflow_ref}}" =~ "nightly.yml" ]]; then
-            echo FSTAR_VERSION="nightly-$(date -I)" >> $GITHUB_ENV
-          elif [[ "${{github.workflow_ref}}" =~ "release.yml" ]]; then
-            echo FSTAR_VERSION="$(cat version.txt)" >> $GITHUB_ENV
-          fi
+          if ("${{github.workflow_ref}}" -match "nightly.yml") {
+            echo "FSTAR_VERSION=nightly-$(Get-Date -Format 'yyyy-MM-dd')" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+          } elseif ("${{github.workflow_ref}}" -match "release.yml") {
+            $version = Get-Content version.txt
+            echo "FSTAR_VERSION=$version" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+          }
 
       - name: Build F* (stage0 → stage2)
         run: |
-          eval $(opam env)
-          make -skj$(nproc)
+          # Get number of processors
+          $nproc = (Get-CimInstance Win32_ComputerSystem).NumberOfLogicalProcessors
+          make -skj$nproc
 
       - name: Verify F* works
         run: |
-          eval $(opam env)
-          ./out/bin/fstar.exe --version
+          .\out\bin\fstar.exe --version
 
       - name: Run tests
         run: |
-          eval $(opam env)
           make test
-
-      # Find the right libgmp DLL for packaging
-      - name: Find libgmp DLL
-        run: |
-          LIBGMP=$(ldd out/bin/fstar.exe | sed -n 's/^[[:space:]]libgmp-10.dll => *\([^ ]*\) .*$/\1/p')
-          echo "LIBGMP=$LIBGMP" >>$GITHUB_ENV
 
       - name: Make binary package
         run: |
-          eval $(opam env)
-          KERNEL=Windows_NT
-          ARCH=$(uname -m)
-          export FSTAR_TAG=-$KERNEL-$ARCH
+          $env:FSTAR_TAG = "-Windows_NT-x86_64"
           make package
 
-      - run: find . -name '*.zip'
+      - name: List packages
+        run: |
+          Get-ChildItem -Recurse -Filter "*.zip" | Select-Object FullName
 
       - uses: actions/upload-artifact@v4
         if: ${{ always() }}
@@ -97,22 +89,19 @@ jobs:
           name: package-win
 
       - name: Extract package
-        shell: powershell
         run: |
           Expand-Archive -Path fstar-*.zip
 
       - name: Test fstar.exe
-        shell: cmd
         run: |
-          dir
-          cd fstar-*
-          .\fstar\bin\fstar.exe --version
+          Get-ChildItem
+          $dir = Get-ChildItem -Directory -Filter "fstar-*" | Select-Object -First 1
+          & "$($dir.FullName)\fstar\bin\fstar.exe" --version
 
       - name: Smoke test
-        shell: powershell
         run: |
-          cd fstar-*
-          .\fstar\bin\fstar.exe fstar\lib\fstar\ulib\Prims.fst -f
+          $dir = Get-ChildItem -Directory -Filter "fstar-*" | Select-Object -First 1
+          & "$($dir.FullName)\fstar\bin\fstar.exe" "$($dir.FullName)\fstar\lib\fstar\ulib\Prims.fst" -f
           $PSDefaultParameterValues['Out-File:Encoding'] = 'utf8'
-          echo "module A`nopen FStar.Mul`nlet _ = assert (forall x. 1 + x*x > 0)" > A.fst
-          .\fstar\bin\fstar.exe --already_cached *,-A A.fst
+          "module A`nopen FStar.Mul`nlet _ = assert (forall x. 1 + x*x > 0)" | Out-File -FilePath A.fst -Encoding utf8
+          & "$($dir.FullName)\fstar\bin\fstar.exe" --already_cached "*,-A" A.fst
