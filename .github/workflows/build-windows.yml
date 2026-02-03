@@ -54,7 +54,16 @@ jobs:
         shell: bash
         run: |
           eval $(opam env)
-          make -skj$(nproc)
+          echo "Building stage0..."
+          make stage0 V=1
+          echo "Checking stage0/out/bin:"
+          ls -la stage0/out/bin/ || echo "stage0/out/bin/ not found"
+          echo "Running extract..."
+          make extract V=1
+          echo "Running stage1..."
+          make stage1 V=1
+          echo "Running stage2..."
+          make stage2 V=1
 
       - name: Verify F* works
         shell: bash
