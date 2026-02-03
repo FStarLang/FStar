@@ -30,6 +30,10 @@ jobs:
     name: nix
     uses: ./.github/workflows/nix.yml
 
+  windows-build:
+    name: windows
+    uses: ./.github/workflows/build-windows.yml
+
   pulse-build-test:
     name: pulse
     needs: build
