@@ -38,7 +38,7 @@ jobs:
           }
           opam --version
 
-      # Initialize opam and create switch
+      # Initialize opam and create switch with MSVC
       - name: Initialize opam
         run: |
           # Refresh PATH again for this step
@@ -47,10 +47,17 @@ jobs:
           $env:Path = "$machinePath;$userPath;$env:Path"
           opam init --auto-setup --bare --disable-sandboxing
           opam switch create 4.14.2
+          # Set up opam environment for this step
+          (& opam env --switch=default) -split '\r?\n' | ForEach-Object { Invoke-Expression $_ }
+          # Use MSVC instead of GCC
+          opam install system-msvc -y
 
       # Persist opam environment to GITHUB_ENV
       - name: Setup opam environment
         run: |
+          # Set up opam env for current step
+          (& opam env --switch=default) -split '\r?\n' | ForEach-Object { Invoke-Expression $_ }
+          # Persist to GITHUB_ENV for subsequent steps
           $opamEnv = & opam env
           $opamEnv -split '\r?\n' | ForEach-Object {
             if ($_ -match '^([^=]+)=(.*)$') {
