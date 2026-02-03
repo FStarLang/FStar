@@ -39,10 +39,9 @@ fn spawn
   (#post: slprop)
   {| is_send pre, is_send post |}
   (f : unit -> task_f pre post)
-  requires pool_alive #pf p
+  preserves pool_alive #pf p
   requires pre
   returns h : handle
-  ensures pool_alive #pf p
   ensures joinable p post h
 
 val pool_done (p:pool) : slprop
@@ -63,9 +62,8 @@ fn spawn_
   (#post : slprop)
   {| is_send pre, is_send post |}
   (f : unit -> task_f pre post)
-  requires pool_alive #pf p
+  preserves pool_alive #pf p
   requires pre
-  ensures pool_alive #pf p
   ensures pledge [] (pool_done p) post
 
 fn await

@@ -120,7 +120,6 @@ let is_ringbuffer (#t:Type0) ([@@@mkey]rb:ringbuffer t) (s:Seq.seq t) (cap:nat{c
 
 /// Create a new ring buffer
 fn create (#t:Type0) (capacity:SZ.t{SZ.v capacity > 0}) (init:t)
-  requires emp
   returns rb : ringbuffer t
   ensures is_ringbuffer rb Seq.empty (SZ.v capacity)
 {
@@ -159,9 +158,9 @@ fn create (#t:Type0) (capacity:SZ.t{SZ.v capacity > 0}) (init:t)
 fn capacity (#t:Type0) (rb:ringbuffer t)
   (#s:erased (Seq.seq t))
   (#cap:erased nat{cap > 0})
-  requires is_ringbuffer rb s cap
+  preserves is_ringbuffer rb s cap
   returns n : SZ.t
-  ensures is_ringbuffer rb s cap ** pure (SZ.v n == cap)
+  ensures pure (SZ.v n == cap)
 {
   unfold (is_ringbuffer rb s cap);
   with _buf _h _tl _cnt. _;
@@ -173,9 +172,9 @@ fn capacity (#t:Type0) (rb:ringbuffer t)
 fn size (#t:Type0) (rb:ringbuffer t)
   (#s:erased (Seq.seq t))
   (#cap:erased nat{cap > 0})
-  requires is_ringbuffer rb s cap
+  preserves is_ringbuffer rb s cap
   returns n : SZ.t
-  ensures is_ringbuffer rb s cap ** pure (SZ.v n == Seq.length s)
+  ensures pure (SZ.v n == Seq.length s)
 {
   unfold (is_ringbuffer rb s cap);
   with _buf _h _tl _cnt. _;
@@ -188,9 +187,9 @@ fn size (#t:Type0) (rb:ringbuffer t)
 fn is_empty (#t:Type0) (rb:ringbuffer t)
   (#s:erased (Seq.seq t))
   (#cap:erased nat{cap > 0})
-  requires is_ringbuffer rb s cap
+  preserves is_ringbuffer rb s cap
   returns b : bool
-  ensures is_ringbuffer rb s cap ** pure (b <==> Seq.length s == 0)
+  ensures pure (b <==> Seq.length s == 0)
 {
   unfold (is_ringbuffer rb s cap);
   with _buf _h _tl _cnt. _;
@@ -204,9 +203,9 @@ fn is_empty (#t:Type0) (rb:ringbuffer t)
 fn is_full (#t:Type0) (rb:ringbuffer t)
   (#s:erased (Seq.seq t))
   (#cap:erased nat{cap > 0})
-  requires is_ringbuffer rb s cap
+  preserves is_ringbuffer rb s cap
   returns b : bool
-  ensures is_ringbuffer rb s cap ** pure (b <==> Seq.length s == cap)
+  ensures pure (b <==> Seq.length s == cap)
 {
   unfold (is_ringbuffer rb s cap);
   with _buf _h _tl _cnt. _;
@@ -389,7 +388,6 @@ fn free (#t:Type0) (rb:ringbuffer t)
   (#s:erased (Seq.seq t))
   (#cap:erased nat{cap > 0})
   requires is_ringbuffer rb s cap
-  ensures emp
 {
   unfold (is_ringbuffer rb s cap);
   with buf h tl cnt. _;

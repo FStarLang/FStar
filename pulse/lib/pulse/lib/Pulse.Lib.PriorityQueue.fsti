@@ -46,27 +46,26 @@ val is_pqueue (#t:Type0) {| total_order t |} ([@@@mkey]pq:pqueue t) (s:Seq.seq t
 
 /// Create empty priority queue with given capacity
 fn create (#t:Type0) {| total_order t |} (capacity:SZ.t{SZ.v capacity > 0})
-  requires emp
   returns pq : pqueue t
   ensures is_pqueue pq Seq.empty (SZ.v capacity)
 
 /// Check if empty
 fn is_empty (#t:Type0) {| total_order t |} (pq:pqueue t) (#cap:erased nat)
-  requires is_pqueue pq 's0 cap
+  preserves is_pqueue pq 's0 cap
   returns b:bool
-  ensures is_pqueue pq 's0 cap ** pure (b <==> Seq.length 's0 == 0)
+  ensures pure (b <==> Seq.length 's0 == 0)
 
 /// Get size
 fn size (#t:Type0) {| total_order t |} (pq:pqueue t) (#cap:erased nat)
-  requires is_pqueue pq 's0 cap
+  preserves is_pqueue pq 's0 cap
   returns n:SZ.t
-  ensures is_pqueue pq 's0 cap ** pure (SZ.v n == Seq.length 's0)
+  ensures pure (SZ.v n == Seq.length 's0)
 
 /// Get capacity
 fn get_capacity (#t:Type0) {| total_order t |} (pq:pqueue t) (#s0:erased (Seq.seq t)) (#cap:erased nat)
-  requires is_pqueue pq s0 cap
+  preserves is_pqueue pq s0 cap
   returns n:SZ.t
-  ensures is_pqueue pq s0 cap ** pure (SZ.v n == cap)
+  ensures pure (SZ.v n == cap)
 
 /// Insert element - returns true on success, false if at capacity
 /// On success: s1 extends s0 with x, and length was < capacity
@@ -82,9 +81,9 @@ fn insert (#t:eqtype) {| total_order t |} (pq:pqueue t) (x:t) (#cap:erased nat)
 fn peek_min (#t:Type0) {| total_order t |} (pq:pqueue t)
   (#s0:erased (Seq.seq t){Seq.length s0 > 0})
   (#cap:erased nat)
-  requires is_pqueue pq s0 cap
+  preserves is_pqueue pq s0 cap
   returns x:t
-  ensures is_pqueue pq s0 cap ** pure (x == Seq.index s0 0 /\ is_minimum x s0)
+  ensures pure (x == Seq.index s0 0 /\ is_minimum x s0)
 
 /// Extract minimum - removes and returns the smallest element
 /// The resulting sequence s1 satisfies: extends s1 s0 x (i.e., s0 extends s1 with x)
@@ -99,4 +98,3 @@ fn extract_min (#t:eqtype) {| total_order t |} (pq:pqueue t)
 /// Free the queue
 fn free (#t:Type0) {| total_order t |} (pq:pqueue t) (#cap:erased nat)
   requires is_pqueue pq 's0 cap
-  ensures emp

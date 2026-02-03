@@ -212,7 +212,8 @@ fn bubble_sort
   (a: array t)
   (#s0: Ghost.erased (Seq.seq t))
   (len: SZ.t)
-  requires A.pts_to a s0 ** pure (
+  requires A.pts_to a s0
+  requires pure (
     SZ.v len == Seq.length s0 /\
     Seq.length s0 <= A.length a /\
     SZ.v len > 0

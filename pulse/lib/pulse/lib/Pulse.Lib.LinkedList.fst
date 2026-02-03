@@ -185,9 +185,9 @@ fn is_empty (#t:Type) (x:llist t)
 }
 
 fn head (#t:Type0) (x:llist t) (#l:erased (list t){Cons? l})
-    requires is_list x l
+    preserves is_list x l
     returns v:t
-    ensures is_list x l ** pure (v == List.Tot.hd l)
+    ensures pure (v == List.Tot.hd l)
 {
   // Since Cons? l, we know x must be Some
   some_iff_cons x;
@@ -203,7 +203,8 @@ fn head (#t:Type0) (x:llist t) (#l:erased (list t){Cons? l})
 fn pop (#t:Type0) (x:llist t) (#l:erased (list t){Cons? l})
     requires is_list x l
     returns r:(llist t & t)
-    ensures is_list (fst r) (List.Tot.tl l) ** pure (snd r == List.Tot.hd l)
+    ensures is_list (fst r) (List.Tot.tl l)
+    ensures pure (snd r == List.Tot.hd l)
 {
   // Since Cons? l, we know x must be Some
   some_iff_cons x;

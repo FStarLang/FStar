@@ -521,10 +521,9 @@ fn spawn (p:pool)
     (#post : slprop)
     {| pre_inst: is_send pre, post_inst: is_send post |}
     (f : unit -> task_f pre post)
-    requires pool_alive #pf p
+    preserves pool_alive #pf p
     requires pre
     returns  h : handle
-    ensures pool_alive #pf p
     ensures joinable p post h
 {
   let task_st : task_state = Ready;
@@ -908,9 +907,8 @@ fn spawn_ (p:pool)
     (#post : slprop)
     {| is_send pre, is_send post |}
     (f : unit -> stt unit (pre) (fun _ -> post))
-    requires pool_alive #pf p
+    preserves pool_alive #pf p
     requires pre
-    ensures pool_alive #pf p
     ensures pledge [] (pool_done p) (post)
 {
   let h = spawn p f;

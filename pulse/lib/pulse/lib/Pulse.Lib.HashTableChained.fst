@@ -1300,9 +1300,9 @@ fn rec search_bucket_rec
   (b:bucket k v)
   (key:k)
   (#entries:erased (list (entry k v)))
-requires LL.is_list b entries
+preserves LL.is_list b entries
 returns result:option v
-ensures LL.is_list b entries ** pure (result == find_in_bucket entries key)
+ensures pure (result == find_in_bucket entries key)
 decreases entries
 {
   let is_emp = LL.is_empty b;
@@ -1342,7 +1342,6 @@ fn rec free_bucket
   (b:bucket k v)
   (#entries:erased (list (entry k v)))
 requires LL.is_list b entries
-ensures emp
 decreases entries
 {
   let is_emp = LL.is_empty b;
@@ -2268,7 +2267,6 @@ fn create
   (#v:Type0)
   (hashf:(k -> SZ.t))
   (initial_capacity:SZ.t{SZ.v initial_capacity > 0})
-requires emp
 returns h:ht k v
 ensures is_ht h empty_pmap FS.emptyset
 {
@@ -2328,9 +2326,9 @@ fn lookup
   (key:k)
   (#m:erased (pmap k v))
   (#keys:erased (FS.set k))
-requires is_ht h m keys
+preserves is_ht h m keys
 returns result:option v
-ensures is_ht h m keys ** pure (result == reveal m key)
+ensures pure (result == reveal m key)
 {
   unfold (is_ht h m keys);
   with bucket_ptrs bucket_contents cnt. _;
@@ -2384,7 +2382,8 @@ fn insert
   (value:v)
   (#m:erased (pmap k v))
   (#keys:erased (FS.set k))
-requires is_ht h m keys ** pure (FS.mem key keys \/ SZ.fits (FS.cardinality keys + 1))
+requires is_ht h m keys
+requires pure (FS.mem key keys \/ SZ.fits (FS.cardinality keys + 1))
 ensures is_ht h (insert_pmap m key value) (FS.insert key keys)
 {
   unfold (is_ht h m keys);
@@ -2550,7 +2549,8 @@ fn remove
   (#keys:erased (FS.set k))
 requires is_ht h m keys
 returns removed:bool
-ensures is_ht h (remove_pmap m key) (FS.remove key keys) ** pure (removed == Some? (reveal m key))
+ensures is_ht h (remove_pmap m key) (FS.remove key keys)
+ensures pure (removed == Some? (reveal m key))
 {
   unfold (is_ht h m keys);
   with bucket_ptrs bucket_contents cnt. _;
@@ -2755,9 +2755,9 @@ fn size
   (h:ht k v)
   (#m:erased (pmap k v))
   (#keys:erased (FS.set k))
-requires is_ht h m keys
+preserves is_ht h m keys
 returns n:SZ.t
-ensures is_ht h m keys ** pure (SZ.v n == FS.cardinality keys)
+ensures pure (SZ.v n == FS.cardinality keys)
 {
   unfold (is_ht h m keys);
   with bucket_ptrs bucket_contents cnt. _;
@@ -2824,7 +2824,6 @@ fn free
   (#m:erased (pmap k v))
   (#keys:erased (FS.set k))
 requires is_ht h m keys
-ensures emp
 {
   unfold (is_ht h m keys);
   with bucket_ptrs bucket_contents cnt. _;
@@ -3356,9 +3355,10 @@ fn rec get_nth_entry (#k:eqtype) (#v:Type0)
   (b:bucket k v)
   (n:SZ.t)
   (#entries:erased (list (entry k v)))
-requires LL.is_list b entries ** pure (SZ.v n < List.length entries)
+preserves LL.is_list b entries
+requires pure (SZ.v n < List.length entries)
 returns e:entry k v
-ensures LL.is_list b entries ** pure (list_at entries (SZ.v n) == Some e)
+ensures pure (list_at entries (SZ.v n) == Some e)
 decreases (List.length entries)
 {
   if (n = 0sz) {
@@ -3388,7 +3388,8 @@ fn create_iter
   (#keys:erased (FS.set k))
 requires is_ht h m keys
 returns it:ht_iter k v
-ensures is_ht_iter it m keys keys ** pure (ht_of it == h)
+ensures is_ht_iter it m keys keys
+ensures pure (ht_of it == h)
 {
   unfold (is_ht h m keys);
   with bucket_ptrs bucket_contents cnt. _;
@@ -3555,7 +3556,8 @@ fn iter_next
   (it:ht_iter k v)
   (#m:erased (pmap k v))
   (#all_keys #remaining:erased (FS.set k))
-requires is_ht_iter it m all_keys remaining ** pure (FS.cardinality remaining > 0)
+requires is_ht_iter it m all_keys remaining
+requires pure (FS.cardinality remaining > 0)
 returns p:(k & v)
 ensures exists* remaining'.
         is_ht_iter it m all_keys remaining' **
@@ -3775,7 +3777,8 @@ fn finish_iter
   (#all_keys #remaining:erased (FS.set k))
 requires is_ht_iter it m all_keys remaining
 returns h:ht k v
-ensures is_ht h m all_keys ** pure (h == ht_of it)
+ensures is_ht h m all_keys
+ensures pure (h == ht_of it)
 {
   unfold (is_ht_iter it m all_keys remaining);
   with bucket_ptrs bucket_contents cnt bucket_idx entry_idx rem_cnt. _;

@@ -82,36 +82,42 @@ fn create (#pred : perm -> slprop) {| fractional pred |}
 fn acquire_reader (#pred : perm -> slprop) {| fractional pred |} (#perm_lock:perm) (l : rwlock pred)
   preserves is_rwlock l #perm_lock
   returns f : perm
-  ensures reader_parts l f ** pred f
+  ensures reader_parts l f
+  ensures pred f
 
 /// Release reader access
 /// Returns the reader's fraction to the lock
 /// Requires both reader_parts and pred f
 fn release_reader (#pred : perm -> slprop) {| fractional pred |} (#perm_lock:perm) (l : rwlock pred) (#f:perm)
-  requires is_rwlock l #perm_lock ** reader_parts l f ** pred f
-  ensures is_rwlock l #perm_lock
+  preserves is_rwlock l #perm_lock
+  requires reader_parts l f
+  requires pred f
 
 /// Acquire writer access
 /// Spins until all readers have released and no other writer holds the lock
 /// Receives: full permission to the predicate (pred 1.0R)
 fn acquire_writer (#pred : perm -> slprop) {| fractional pred |} (#perm_lock:perm) (l : rwlock pred)
-  requires is_rwlock l #perm_lock
-  ensures is_rwlock l #perm_lock ** writer_token l ** pred 1.0R
+  preserves is_rwlock l #perm_lock
+  ensures writer_token l
+  ensures pred 1.0R
 
 /// Release writer access
 /// Returns full permission to the lock
 fn release_writer (#pred : perm -> slprop) {| fractional pred |} (#perm_lock:perm) (l : rwlock pred)
-  requires is_rwlock l #perm_lock ** writer_token l ** pred 1.0R
-  ensures is_rwlock l #perm_lock
+  preserves is_rwlock l #perm_lock
+  requires writer_token l
+  requires pred 1.0R
 
 /// Share is_rwlock permission (for multiple users of the same lock)
 ghost
 fn share (#pred:perm -> slprop) {| fractional pred |} (#p:perm) (l:rwlock pred)
   requires is_rwlock l #p
-  ensures is_rwlock l #(p /. 2.0R) ** is_rwlock l #(p /. 2.0R)
+  ensures is_rwlock l #(p /. 2.0R)
+  ensures is_rwlock l #(p /. 2.0R)
 
 /// Gather is_rwlock permissions
 ghost
 fn gather (#pred:perm -> slprop) {| fractional pred |} (#p1 #p2:perm) (l:rwlock pred)
-  requires is_rwlock l #p1 ** is_rwlock l #p2
+  requires is_rwlock l #p1
+  requires is_rwlock l #p2
   ensures is_rwlock l #(p1 +. p2)
