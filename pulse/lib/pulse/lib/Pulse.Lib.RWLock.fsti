@@ -108,6 +108,13 @@ fn release_writer (#pred : perm -> slprop) {| fractional pred |} (#perm_lock:per
   requires writer_token l
   requires pred 1.0R
 
+/// Try to free the lock when it is not acquired
+/// Returns pred 1.0R on success, otherwise returns the lock back
+fn try_free (#pred : perm -> slprop) {| fractional pred |} (l : rwlock pred)
+  requires is_rwlock l #1.0R
+  returns b:bool
+  ensures cond b (pred 1.0R) (is_rwlock l #1.0R)
+
 /// Share is_rwlock permission (for multiple users of the same lock)
 ghost
 fn share (#pred:perm -> slprop) {| fractional pred |} (#p:perm) (l:rwlock pred)
