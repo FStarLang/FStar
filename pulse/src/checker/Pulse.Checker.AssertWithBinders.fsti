@@ -27,13 +27,6 @@ let head_wild (st:st_term) =
   | Tm_ProofHintWithBinders { hint_type = WILD } -> true
   | _ -> false
 
-let head_show_proof_state (st:st_term) =
-  match st.term with
-  | Tm_ProofHintWithBinders { hint_type = SHOW_PROOF_STATE _ } -> true
-  | _ -> false
-
-let handle_head_immediately st = head_wild st || head_show_proof_state st
-
 val check
   (g:env)
   (pre:term)

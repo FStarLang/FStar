@@ -190,6 +190,9 @@ type stmt' =
       arg: option A.term;
     }
 
+  | Return { arg: option A.term }
+  | Continue
+
 and stmt = {
   s:stmt';
   range:rng;
@@ -463,6 +466,10 @@ and eq_stmt' (s1 s2:stmt') =
     eq_stmt b1 b2 && eq_ident l1 l2 && eq_opt eq_ensures_slprop p1 p2
   | Goto { lbl=l1; arg=a1 }, Goto { lbl=l2; arg=a2 } ->
     eq_ident l1 l2 && eq_opt AD.eq_term a1 a2
+  | Return { arg=a1 }, Return { arg=a2 } ->
+    eq_opt AD.eq_term a1 a2
+  | Continue, Continue ->
+    true
   | _ -> false
 and eq_let_init (i1 i2:let_init) =
   match i1, i2 with
@@ -594,6 +601,10 @@ and scan_stmt (cbs:A.dep_scan_callbacks) (s:stmt) =
     iopt (scan_ensures_slprop cbs) post
   | Goto { lbl; arg } ->
     iopt cbs.scan_term arg
+  | Return { arg } ->
+    iopt cbs.scan_term arg
+  | Continue ->
+    ()
 and scan_let_init (cbs:A.dep_scan_callbacks) (i:let_init) =
   match i with
   | Array_initializer a -> iopt cbs.scan_term a.init; cbs.scan_term a.len
@@ -657,3 +668,5 @@ let mk_lambda bs ascription body range : lambda = { binders=bs; ascription; body
 let mk_pragma_set_options options body = PragmaSetOptions { options; body }
 let mk_forward_jump_label body lbl post = ForwardJumpLabel { body; lbl; post }
 let mk_goto lbl arg = Goto { lbl; arg }
+let mk_return arg = Return { arg }
+let mk_continue = Continue

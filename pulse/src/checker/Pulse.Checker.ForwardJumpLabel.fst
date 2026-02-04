@@ -26,6 +26,10 @@ open Pulse.Checker.Base
 open Pulse.Checker.Prover
 module RU = Pulse.RuntimeUtils
 
+let starts_with (a b: string) : bool =
+  if String.length b > String.length a then false
+  else String.sub a 0 (String.length b) = b
+
 #push-options "--z3rlimit 10 --split_queries always"
 let check
     (g:env)
@@ -50,39 +54,36 @@ let check
         ph
   in
   if not (EffectAnnotSTT? post.effect_annot) then
-    fail g (Some rng) "Labels require stt" else
-  let lbl_c = C_ST {
-    u = post.u;
-    res = post.ret_ty;
-    pre = post.post;
-    post = tm_pure tm_l_false;
-  } in
-  let lbl_x = fresh g in
-  let g' = push_goto g lbl_x lbl lbl_c in
-  let pre_typing': tot_typing g' pre tm_slprop = RU.magic () in
-  let post_hint' : post_hint_opt g' =
-    assume post_hint_for_env_p g' post;
-    PostHint post in
-  let body = open_st_term_nv body (lbl, lbl_x) in
-  let body' = check g' pre pre_typing' post_hint' res_ppname body in
-  let (| body', body'_c, body'_typing |) = apply_checker_result_k #g' #pre #post body' res_ppname in
-  assert comp_u body'_c == comp_u lbl_c;
-  assert comp_res body'_c == comp_res lbl_c;
-  assert comp_pre body'_c == pre;
-  assert comp_post body'_c == post.post;
-  assert C_ST? body'_c;
-  assert lbl_c == goto_comp_of_block_comp body'_c;
-  let body = close_st_term body' lbl_x in
-  if not (lbl_x `Set.mem` freevars_st body) then (
-    // drop label if no goto in body
-    assume body == body';
-    let body_typing: st_typing g body' body'_c = RU.magic () in
-    let (| c'', typing'' |) = match_comp_res_with_post_hint body_typing post_hint0 in
-    prove_post_hint #g
-      (try_frame_pre false #g pre_typing (|_,c'',typing''|) res_ppname)
-      post_hint0
-      rng
-  ) else (
+    if T.unseal lbl.name `starts_with` "_" then
+      // TODO: just ignore early return/continue labels in atomic/ghost contexts for now
+      let lbl_x = fresh g in
+      let body = open_st_term_nv body (lbl, lbl_x) in
+      check _ _ pre_typing _ res_ppname body
+    else
+      fail g (Some rng) "Labels require stt"
+  else
+    let lbl_c = C_ST {
+      u = post.u;
+      res = post.ret_ty;
+      pre = post.post;
+      post = tm_is_unreachable;
+    } in
+    let lbl_x = fresh g in
+    let g' = push_goto g lbl_x lbl lbl_c in
+    let pre_typing': tot_typing g' pre tm_slprop = RU.magic () in
+    let post_hint' : post_hint_opt g' =
+      assume post_hint_for_env_p g' post;
+      PostHint post in
+    let body = open_st_term_nv body (lbl, lbl_x) in
+    let body' = check g' pre pre_typing' post_hint' res_ppname body in
+    let (| body', body'_c, body'_typing |) = apply_checker_result_k #g' #pre #post body' res_ppname in
+    assert comp_u body'_c == comp_u lbl_c;
+    assert comp_res body'_c == comp_res lbl_c;
+    assert comp_pre body'_c == pre;
+    assert comp_post body'_c == post.post;
+    assert C_ST? body'_c;
+    assert lbl_c == goto_comp_of_block_comp body'_c;
+    let body = close_st_term body' lbl_x in
     let t = wtag (Some STT) (Tm_ForwardJumpLabel {
       lbl = lbl;
       body = close_st_term body' lbl_x;
@@ -91,10 +92,14 @@ let check
     assume open_st_term' body (term_of_nvar (lbl, lbl_x)) 0 == body';
     let typing: st_typing g t body'_c =
       T_ForwardJumpLabel g (lbl, lbl_x) body body'_c body'_typing in
-    let (| c'', typing'' |) = match_comp_res_with_post_hint typing post_hint0 in
-    prove_post_hint #g
-      (try_frame_pre false #g pre_typing (|_,c'',typing''|) res_ppname)
-      post_hint0
-      rng
-  )
+    if not has_explicit_post then (
+      assert post_hint0 == PostHint post;
+      checker_result_for_st_typing (| _, _, typing |) res_ppname
+    ) else (
+      let (| c'', typing'' |) = match_comp_res_with_post_hint typing post_hint0 in
+      prove_post_hint #g
+        (try_frame_pre false #g pre_typing (|_,c'',typing''|) res_ppname)
+        post_hint0
+        rng
+    )
 #pop-options

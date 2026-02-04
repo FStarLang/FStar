@@ -324,16 +324,16 @@ ensures qpred ('i + 1)
         v
     }
   };
-  let mut continue = true;
+  let mut cont = true;
   fold (cond true (qpred 'i) (qpred ('i + 1)));
-  while (!continue)
+  while (!cont)
   invariant
     exists* b.
     inv l invp **
-    pts_to continue b **
+    pts_to cont b **
     cond b (qpred 'i) (qpred ('i + 1))
   {
-    rewrite each (!continue) as true; // FIXME: rewrites_to goes the wrong direction?
+    rewrite each (!cont) as true; // FIXME: rewrites_to goes the wrong direction?
     elim_cond_true _ _ _;
     let v = read ();
     let next = 
@@ -360,9 +360,9 @@ ensures qpred ('i + 1)
           true
         }
       };
-    continue := next
+    cont := next
   };
-  rewrite each (!continue) as false; // FIXME: rewrites_to goes the wrong direction?
+  rewrite each (!cont) as false; // FIXME: rewrites_to goes the wrong direction?
   unfold cond;
 }
  

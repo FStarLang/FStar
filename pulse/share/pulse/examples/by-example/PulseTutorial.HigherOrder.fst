@@ -104,7 +104,7 @@ ensures c.inv 0
 }
 //end new_counter$
 
-fn return (#a:Type0) (x:a)
+fn ret (#a:Type0) (x:a)
 returns y:a
 ensures pure (x == y)
 {

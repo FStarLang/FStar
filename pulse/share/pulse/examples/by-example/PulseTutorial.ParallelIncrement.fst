@@ -338,25 +338,25 @@ ensures aspec ('i + 1)
   };
   //end incr_atomic_body_read$
   //incr_atomic_body_loop$
-  let mut continue = true;
+  let mut cont = true;
   fold (cond true (aspec 'i) (aspec ('i + 1)));
-  while (!continue)
+  while (!cont)
   invariant exists* b.
     inv (C.iname_of c) (C.cinv_vp c (exists* v. pts_to x v ** refine v)) **
-    pts_to continue b **
+    pts_to cont b **
     C.active c p **
     cond b (aspec 'i) (aspec ('i + 1))
   {
-    rewrite each (!continue) as true; // FIXME: rewrites_to goes in the wrong direction
+    rewrite each (!cont) as true; // FIXME: rewrites_to goes in the wrong direction
     later_credit_buy 1;
     let v = read ();
     let next =
       with_invariants bool emp_inames
         (C.iname_of c) (C.cinv_vp c (exists* v. pts_to x v ** refine v))
-        (C.active c p ** pts_to continue true **
-          cond (!continue) (aspec 'i) (aspec ('i + 1)))
+        (C.active c p ** pts_to cont true **
+          cond (!cont) (aspec 'i) (aspec ('i + 1)))
         (fun b1 -> cond b1 (aspec 'i) (aspec ('i + 1))
-          ** pts_to continue true
+          ** pts_to cont true
           ** C.active c p)
       fn _ {
         C.unpack_cinv_vp c;
@@ -379,10 +379,10 @@ ensures aspec ('i + 1)
           true
         }
       };
-    continue := next
+    cont := next
   };
   //end incr_atomic_body_loop$
-  rewrite each (!continue) as false; // FIXME: rewrites_to goes in the wrong direction
+  rewrite each (!cont) as false; // FIXME: rewrites_to goes in the wrong direction
   unfold cond;
 }
 //end incr_atomic_body$

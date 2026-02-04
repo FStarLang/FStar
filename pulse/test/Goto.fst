@@ -19,7 +19,7 @@ fn find_zero (a: array int) (sz: SizeT.t)
   ensures pure (SizeT.v i <= SizeT.v sz /\
     (forall (j: nat). j < SizeT.v i ==> Seq.index 'va j <> 0))
   ensures pure (SizeT.v i < SizeT.v sz ==> Seq.index 'va (SizeT.v i) == 0)
-{{
+{
   let mut i: SizeT.t = 0sz;
   while (!i `SizeT.lt` sz)
     invariant live i
@@ -27,11 +27,11 @@ fn find_zero (a: array int) (sz: SizeT.t)
       (forall (j: nat). j < SizeT.v (!i) ==> Seq.index 'va j <> 0))
   {
     if (a.(!i) = 0) {
-      goto return (!i);
+      return !i;
     } else {
       i := !i `SizeT.add` 1sz;
+      continue;
     }
   };
   !i
-  label return:
-}}
+}

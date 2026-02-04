@@ -214,13 +214,13 @@ let app_lid lid (args:list S.term) (r:_)
 let ret (s:S.term) = SW.(tm_return (as_term s) s.pos)
 
 type admit_or_return_t =
-  | STTerm : SW.st_term -> admit_or_return_t
-  | Return : S.term -> admit_or_return_t
+  | AdmitOrReturn_STTerm : SW.st_term -> admit_or_return_t
+  | AdmitOrReturn_Return : S.term -> admit_or_return_t
 
 let st_term_of_admit_or_return (t:admit_or_return_t) : SW.st_term =
   match t with
-  | STTerm t -> t
-  | Return t -> ret t
+  | AdmitOrReturn_STTerm t -> t
+  | AdmitOrReturn_Return t -> ret t
 
 let admit_or_return (env:env_t) (s:S.term)
   : admit_or_return_t
@@ -229,10 +229,10 @@ let admit_or_return (env:env_t) (s:S.term)
     match head.n, args with
     | S.Tm_fvar fv, [_] -> (
       if S.fv_eq_lid fv admit_lid
-      then STTerm (SW.tm_admit r)
-      else Return s
+      then AdmitOrReturn_STTerm (SW.tm_admit r)
+      else AdmitOrReturn_Return s
     )
-    | _ -> Return s
+    | _ -> AdmitOrReturn_Return s
 
 let prepend_ctx_issue (c : Pprint.document) (i : Errors.issue) : Errors.issue =
   { i with issue_msg = c :: i.issue_msg }
@@ -594,6 +594,7 @@ let rec desugar_stmt' (env:env_t) (s:Sugar.stmt)
       let inv = sugar_star_of_list s.range invs in
       let! guard = desugar_stmt env guard in
       let! inv = desugar_slprop env inv in
+      let body = { body with s = ForwardJumpLabel { body; lbl = id_of_text "_continue"; post = None } } in
       let! body = desugar_stmt env body in
       return (SW.tm_nuwhile guard inv body s.range)
 
@@ -629,6 +630,12 @@ let rec desugar_stmt' (env:env_t) (s:Sugar.stmt)
       let arg = match arg with Some arg -> arg | None -> sugar_unit_const s.range in
       let! arg = tosyntax env arg in
       return (SW.tm_goto lbl arg s.range)
+
+    | Return { arg } ->
+      desugar_stmt' env { s with s = Goto { lbl = id_of_text "_return"; arg } } 
+    
+    | Continue ->
+      desugar_stmt' env { s with s = Goto { lbl = id_of_text "_continue"; arg = None } } 
 
 and desugar_st_args (env:env_t) (args:list Sugar.lambda) : err (list SW.st_term) =
   match args with
@@ -780,9 +787,9 @@ and desugar_bind (env:env_t) (lb:_) (s2:Sugar.stmt) (r:R.range)
           let! s1 = tosyntax env e1 in
           let t =
             match admit_or_return env s1 with
-            | STTerm s1 ->
+            | AdmitOrReturn_STTerm s1 ->
               mk_bind b s1 s2 r
-            | Return s1 ->
+            | AdmitOrReturn_Return s1 ->
               mk_totbind b (as_term s1) s2 r
           in
           return t
@@ -904,6 +911,7 @@ and desugar_lambda (env:env_t) (l:Sugar.lambda)
         let! comp = desugar_computation_type env c in
         return (env, bs, bvs, Some comp)
     in
+    let body = { body with s = Sugar.ForwardJumpLabel { body; lbl = id_of_text "_return"; post = None } } in
     let! body = desugar_stmt env body in
     let! qbs = map2 faux bs bvs in
     let abs = mk_abs_with_comp qbs comp body range in
@@ -934,6 +942,7 @@ and desugar_decl (env:env_t)
       else
         return (env, bs, bvs)
     in
+    let body = { body with s = Sugar.ForwardJumpLabel { body; lbl = id_of_text "_return"; post = None } } in
     let! body = desugar_stmt env body in
     let! qbs = map2 faux bs bvs in
     return (SW.fn_defn range id is_rec us qbs comp meas body)

@@ -43,6 +43,7 @@ let tm_szt  = szt_tm
 let tm_true = tm_constant R.C_True
 let tm_false = tm_constant R.C_False
 let tm_l_false = tm_fvar (as_fv R.false_qn)
+include Pulse.Reflection.Util { tm_is_unreachable }
 
 let tm_prop = RU.set_range FStar.Reflection.Typing.tm_prop Range.range_0
 
@@ -812,7 +813,7 @@ let goto_comp_of_block_comp (c: comp_st) : comp_st =
   with_st_comp c {
     u; res;
     pre = post;
-    post = tm_pure tm_l_false;
+    post = tm_is_unreachable;
   }
 
 [@@ erasable; no_auto_projectors]
@@ -1134,9 +1135,8 @@ type st_typing : env -> st_term -> comp -> Type =
       tot_typing g arg (comp_res lbl_c) ->
       u:universe -> res:typ -> universe_of g res u ->
       post:term -> post_x: var { freshv g post_x } -> tot_typing (push_binding_def g post_x res) (open_term post post_x) tm_slprop ->
-      // only stt for now
-      st_typing g (wtag (Some STT) (Tm_Goto { lbl = term_of_nvar lbl; arg }))
-        (C_ST { u; res; pre = open_term' (comp_pre lbl_c) arg 0; post })
+      st_typing g (wtag (Some (ctag_of_comp_st lbl_c)) (Tm_Goto { lbl = term_of_nvar lbl; arg }))
+        (with_st_comp lbl_c { u; res; pre = open_term' (comp_pre lbl_c) arg 0; post })
 
 and pats_complete : env -> term -> typ -> list R.pattern -> Type0 =
   // just check the elaborated term with the core tc

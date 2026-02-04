@@ -72,7 +72,7 @@ let add_decorations decors ds =
 %token GHOST ATOMIC UNOBSERVABLE
 %token OPENS  SHOW_PROOF_STATE
 %token PRESERVES
-%token GOTO LABEL
+%token GOTO LABEL CONTINUE RETURN
 
 %start pulseDeclEOF
 %start peekFnId
@@ -299,6 +299,10 @@ pulseStmtNoSeq:
     { PulseSyntaxExtension_Sugar.mk_pragma_set_options options s }
   | GOTO lbl=lident arg=option(noSeqTerm)
     { PulseSyntaxExtension_Sugar.mk_goto lbl arg }
+  | RETURN arg=option(noSeqTerm)
+    { PulseSyntaxExtension_Sugar.mk_return arg }
+  | CONTINUE
+    { PulseSyntaxExtension_Sugar.mk_continue }
 
 matchStmt:
   | MATCH tm=appTermNoRecordExp c=option(ensuresSLProp) LBRACE brs=list(pulseMatchBranch) RBRACE

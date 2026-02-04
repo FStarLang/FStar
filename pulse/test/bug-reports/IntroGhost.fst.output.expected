@@ -4,7 +4,7 @@
   - Cannot prove:
       R.pts_to r (*?u265*)_
   - In the context:
-      my_inv _b2 r
+      my_inv _b3 r
 
 * Info at IntroGhost.fst(70,2-70,4):
   - Expected failure:
@@ -12,7 +12,7 @@
   - Cannot prove:
       R.pts_to r 0
   - In the context:
-      my_inv _b3 r
+      my_inv _b4 r
 
 * Info at IntroGhost.fst(87,46-90,24):
   - Expected failure:
@@ -20,5 +20,5 @@
   - Cannot prove:
       my_inv true r
   - In the context:
-      my_inv _b3 r
+      my_inv _b4 r
 

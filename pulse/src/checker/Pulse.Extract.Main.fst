@@ -234,8 +234,11 @@ let rec simplify_st_term (g:env) (e:st_term) : T.Tac st_term =
     let x = fresh g in
     let e = open_st_term' body (tm_var { nm_index = x; nm_ppname = lbl }) 0 in
     let e = simplify_st_term (E.push_goto g x lbl post) e in
-    let e = close_st_term' e x 0 in
-    ret (Tm_ForwardJumpLabel { lbl; body = e; post })
+    if x `Set.mem` freevars_st e then
+      let e = close_st_term' e x 0 in
+      ret (Tm_ForwardJumpLabel { lbl; body = e; post })
+    else
+      e
 
 and simplify_branch (g:env) (b:branch) : T.Tac branch =
   let {pat; e=body; norw} = b in

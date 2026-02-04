@@ -36,36 +36,32 @@ let check'
 = let rng = t.range in
   let Tm_Goto { lbl; arg } = t.term in
   let PostHint ph = post_hint in
-  match ph.effect_annot with
-  | EffectAnnotSTT ->
-    (match R.inspect_ln lbl with
-    | R.Tv_Var v ->
-      let v = (R.inspect_namedv v).uniq in
-      (match lookup_goto g v with
-      | Some (lbln, lbl_c) ->
-        let (| arg, arg_typ |) = check_tot_term g arg (comp_res lbl_c) in
-        let c' = C_ST {
-          u = ph.u;
-          res = ph.ret_ty;
-          pre = open_term' (comp_pre lbl_c) arg 0;
-          post = ph.post
-        } in
-        let t = wtag (Some STT) (Tm_Goto { lbl = term_of_nvar (lbln, v); arg }) in
-        let typing: st_typing g t c' =
-          let x' = fresh g in assume fresh_wrt x' g (freevars ph.post);
-          let pht = post_hint_typing g ph x' in
-          T_Goto _ (lbln, v) arg lbl_c arg_typ ph.u ph.ret_ty pht.ty_typing ph.post x' pht.post_typing in
-        let (| c'', typing'' |) = match_comp_res_with_post_hint typing post_hint in
-        prove_post_hint #g
-          (try_frame_pre false #g pre_typing (|_,c'',typing''|) res_ppname)
-          post_hint
-          rng
-      | None ->
-        fail g (Some t.range) "Unknown goto label")
-    | _ ->
-      fail g (Some t.range) "Goto label is not a variable")
+  match R.inspect_ln lbl with
+  | R.Tv_Var v ->
+    let v = (R.inspect_namedv v).uniq in
+    (match lookup_goto g v with
+    | Some (lbln, lbl_c) ->
+      let (| arg, arg_typ |) = check_tot_term g arg (comp_res lbl_c) in
+      let c' = with_st_comp lbl_c {
+        u = ph.u;
+        res = ph.ret_ty;
+        pre = open_term' (comp_pre lbl_c) arg 0;
+        post = ph.post
+      } in
+      let t = wtag (Some (ctag_of_comp_st c')) (Tm_Goto { lbl = term_of_nvar (lbln, v); arg }) in
+      let typing: st_typing g t c' =
+        let x' = fresh g in assume fresh_wrt x' g (freevars ph.post);
+        let pht = post_hint_typing g ph x' in
+        T_Goto _ (lbln, v) arg lbl_c arg_typ ph.u ph.ret_ty pht.ty_typing ph.post x' pht.post_typing in
+      let (| c'', typing'' |) = match_comp_res_with_post_hint typing post_hint in
+      prove_post_hint #g
+        (try_frame_pre false #g pre_typing (|_,c'',typing''|) res_ppname)
+        post_hint
+        rng
+    | None ->
+      fail g (Some t.range) "Unknown goto label")
   | _ ->
-    fail g (Some t.range) "goto requires stt"
+    fail g (Some t.range) "Goto label is not a variable"
 
 let check
   (g:env)
@@ -77,11 +73,11 @@ let check
 : T.Tac (checker_result_t g pre post_hint)
 = match post_hint with
   | NoHint ->
-    let post_hint' = intro_post_hint g EffectAnnotSTT None (tm_pure tm_l_false) in
+    let post_hint' = intro_post_hint g EffectAnnotSTT None tm_is_unreachable in
     let res = check' g pre pre_typing (PostHint post_hint') res_ppname t in
     retype_checker_result _ res
   | TypeHint ty ->
-    let post_hint' = intro_post_hint g EffectAnnotSTT (Some ty) (tm_pure tm_l_false) in
+    let post_hint' = intro_post_hint g EffectAnnotSTT (Some ty) tm_is_unreachable in
     let res = check' g pre pre_typing (PostHint post_hint') res_ppname t in
     retype_checker_result _ res
   | PostHint post ->
