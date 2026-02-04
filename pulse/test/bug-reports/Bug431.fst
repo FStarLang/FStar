@@ -104,11 +104,9 @@ fn hoist_nested_stateful_apps_let_mut
 (arr : array bool)
 (i : ref SizeT.t)
 (#s:erased _ { Seq.length s > 0 })
-requires arr |-> s
-requires i |-> 0sz
+preserves arr |-> s
+preserves i |-> 0sz
 returns b:bool
-ensures arr |-> s
-ensures i |-> 0sz
 ensures pure (b == Seq.index s 0)
 {
   pts_to_len arr;
@@ -120,11 +118,9 @@ fn hoist_nested_stateful_apps_let_mut_array
 (arr : array bool)
 (i : ref SizeT.t)
 (#s:erased _ { Seq.length s > 0 })
-requires arr |-> s
-requires i |-> 0sz
+preserves arr |-> s
+preserves i |-> 0sz
 returns b:bool
-ensures arr |-> s
-ensures i |-> 0sz
 ensures pure (b == Seq.index s 0)
 {
   pts_to_len arr;
@@ -136,11 +132,9 @@ fn hoist_nested_stateful_apps_if
 (arr : array bool)
 (i : ref SizeT.t)
 (#s:erased _ { Seq.length s > 0 })
-requires arr |-> s
-requires i |-> 0sz
+preserves arr |-> s
+preserves i |-> 0sz
 returns b:bool
-ensures arr |-> s
-ensures i |-> 0sz
 ensures pure (b == Seq.index s 0)
 {
   pts_to_len arr;
@@ -155,11 +149,9 @@ ensures pure (b == Seq.index s 0)
 }
 
 fn test2 (x:ref (ref int)) (#v:erased (ref int))
-requires x |-> v
-requires (Ghost.reveal v) |-> 'n
+preserves x |-> v
+preserves (Ghost.reveal v) |-> 'n
 returns n:int
-ensures x |-> v
-ensures (Ghost.reveal v) |-> 'n
 ensures pure (n == 'n)
 {
   let mut v = !(!x);

@@ -1,10 +1,10 @@
-* Info at PartialApp.fst(26,2-26,3):
+* Info at PartialApp.fst(24,2-24,3):
   - Expected failure:
   - Tactic failed
   - This statement returns a value of type: int
   - Did you forget to assign it or ignore it?
 
-* Info at PartialApp.fst(60,2-60,9):
+* Info at PartialApp.fst(50,2-50,9):
   - Expected failure:
   - Tactic failed
   - This function is partially applied. Remaining type:

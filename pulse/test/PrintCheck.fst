@@ -6,7 +6,8 @@ open Pulse
 fn test (x : ref int)
   requires x |-> 'v
   returns  old : int
-  ensures  x |-> ('v + 1) ** pure (old == old)
+  ensures x |-> ('v + 1)
+  ensures pure (old == old)
 {
   let old = !x;
   x := !x + 1;

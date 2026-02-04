@@ -629,7 +629,6 @@ fn try_acquire_reader_at (#pred : perm -> slprop) {| fractional pred |} (#perm_l
 fn read_counter (#pred : perm -> slprop) {| fractional pred |} (#perm_lock:perm) (l : rwlock pred)
   preserves is_rwlock l #perm_lock
   returns n : U32.t
-  ensures emp
 {
   unfold (is_rwlock l #perm_lock);
   
@@ -660,9 +659,9 @@ fn read_counter (#pred : perm -> slprop) {| fractional pred |} (#perm_lock:perm)
 /// Read the current counter value while holding a reader token
 /// Proves that the counter is > 0 and < writer_sentinel
 fn read_counter_for_release (#pred : perm -> slprop) {| fractional pred |} (#perm_lock:perm) (l : rwlock pred) (#f:perm)
-  requires is_rwlock l #perm_lock ** reader_token l f
+  preserves is_rwlock l #perm_lock
+  preserves reader_token l f
   returns n : (v:U32.t{U32.v v > 0 /\ U32.v v < U32.v writer_sentinel})
-  ensures is_rwlock l #perm_lock ** reader_token l f
 {
   unfold (is_rwlock l #perm_lock);
   unfold (reader_token l f);
@@ -736,7 +735,8 @@ fn read_counter_for_release (#pred : perm -> slprop) {| fractional pred |} (#per
 fn rec acquire_reader (#pred : perm -> slprop) {| fractional pred |} (#perm_lock:perm) (l : rwlock pred)
   preserves is_rwlock l #perm_lock
   returns f : perm
-  ensures reader_parts l f ** pred f
+  ensures reader_parts l f
+  ensures pred f
 {
   // Read current counter value through the invariant
   let current = read_counter l;
@@ -773,9 +773,10 @@ fn rec acquire_reader (#pred : perm -> slprop) {| fractional pred |} (#perm_lock
 /// Try to release reader with expected count
 fn try_release_reader_at (#pred : perm -> slprop) {| fractional pred |} (#perm_lock:perm) (l : rwlock pred) (#f:perm)
                          (expected : (n:U32.t{U32.v n > 0 /\ U32.v n < U32.v writer_sentinel}))
-  requires is_rwlock l #perm_lock ** reader_token l f
+  preserves is_rwlock l #perm_lock
+  requires reader_token l f
   returns b : bool
-  ensures is_rwlock l #perm_lock ** cond b emp (reader_token l f)
+  ensures cond b emp (reader_token l f)
 {
   unfold (is_rwlock l #perm_lock);
   unfold (reader_token l f);
@@ -935,8 +936,9 @@ fn try_release_reader_at (#pred : perm -> slprop) {| fractional pred |} (#perm_l
 /// Release reader: spin until successful
 /// Reads current counter and tries to decrement
 fn rec release_reader (#pred : perm -> slprop) {| fractional pred |} (#perm_lock:perm) (l : rwlock pred) (#f:perm)
-  requires is_rwlock l #perm_lock ** reader_parts l f ** pred f
-  ensures is_rwlock l #perm_lock
+  preserves is_rwlock l #perm_lock
+  requires reader_parts l f
+  requires pred f
 {
   // Fold reader_token for internal use
   fold (reader_token l f);
@@ -964,7 +966,8 @@ fn rec release_reader (#pred : perm -> slprop) {| fractional pred |} (#perm_lock
 /// Acquire writer: CAS from 0 to sentinel
 fn rec acquire_writer (#pred : perm -> slprop) {| fractional pred |} (#perm_lock:perm) (l : rwlock pred)
   preserves is_rwlock l #perm_lock
-  ensures writer_token l ** pred 1.0R
+  ensures writer_token l
+  ensures pred 1.0R
 {
   unfold (is_rwlock l #perm_lock);
   
@@ -1056,8 +1059,9 @@ fn rec acquire_writer (#pred : perm -> slprop) {| fractional pred |} (#perm_lock
 
 /// Release writer: set counter back to 0
 fn release_writer (#pred : perm -> slprop) {| fractional pred |} (#perm_lock:perm) (l : rwlock pred)
-  requires is_rwlock l #perm_lock ** writer_token l ** pred 1.0R
-  ensures is_rwlock l #perm_lock
+  preserves is_rwlock l #perm_lock
+  requires writer_token l
+  requires pred 1.0R
 {
   unfold (is_rwlock l #perm_lock);
   unfold (writer_token l);
@@ -1117,7 +1121,8 @@ fn release_writer (#pred : perm -> slprop) {| fractional pred |} (#perm_lock:per
 ghost
 fn share (#pred:perm -> slprop) {| fractional pred |} (#p:perm) (l:rwlock pred)
   requires is_rwlock l #p
-  ensures is_rwlock l #(p /. 2.0R) ** is_rwlock l #(p /. 2.0R)
+  ensures is_rwlock l #(p /. 2.0R)
+  ensures is_rwlock l #(p /. 2.0R)
 {
   unfold (is_rwlock l #p);
   CInv.share l.cinv;
@@ -1128,7 +1133,8 @@ fn share (#pred:perm -> slprop) {| fractional pred |} (#p:perm) (l:rwlock pred)
 
 ghost
 fn gather (#pred:perm -> slprop) {| fractional pred |} (#p1 #p2:perm) (l:rwlock pred)
-  requires is_rwlock l #p1 ** is_rwlock l #p2
+  requires is_rwlock l #p1
+  requires is_rwlock l #p2
   ensures is_rwlock l #(p1 +. p2)
 {
   unfold (is_rwlock l #p1);

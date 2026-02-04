@@ -59,8 +59,7 @@ fn invar_introduces_ghost (r:R.ref int)
 [@@expect_failure]
 
 fn exists_introduces_ghost (r:R.ref int)
-  requires R.pts_to r 0
-  ensures R.pts_to r 0
+  preserves R.pts_to r 0
 {
   r := 0;
 
@@ -79,8 +78,7 @@ fn exists_introduces_ghost (r:R.ref int)
 [@@expect_failure]
 
 fn exists_with_witness_introduces_ghost (r:R.ref int)
-  requires R.pts_to r 0
-  ensures R.pts_to r 0
+  preserves R.pts_to r 0
 {
   r := 0;
 
@@ -101,8 +99,7 @@ fn exists_with_witness_introduces_ghost (r:R.ref int)
 *)
 
 fn with_assert_OK (r:R.ref int)
-  requires R.pts_to r 0
-  ensures R.pts_to r 0
+  preserves R.pts_to r 0
 {
   r := 0;
 

@@ -65,8 +65,8 @@ fn pts_to_len
   (a:array elt)
   (#p:perm)
   (#x:Seq.seq elt)
-  requires pts_to a #p x
-  ensures pts_to a #p x ** pure (length a == Seq.length x)
+  preserves pts_to a #p x
+  ensures pure (length a == Seq.length x)
 {
   unfold pts_to a #p x;
   pts_to_mask_len a;
@@ -165,7 +165,8 @@ fn share
   (#s:Ghost.erased (Seq.seq elt))
   (#p:perm)
   requires pts_to arr #p s
-  ensures pts_to arr #(p /. 2.0R) s ** pts_to arr #(p /. 2.0R) s
+  ensures pts_to arr #(p /. 2.0R) s
+  ensures pts_to arr #(p /. 2.0R) s
 {
   unfold pts_to arr #p s;
   mask_share arr;
@@ -180,8 +181,10 @@ fn gather
   (arr:array a)
   (#s0 #s1:Ghost.erased (Seq.seq a))
   (#p0 #p1:perm)
-  requires pts_to arr #p0 s0 ** pts_to arr #p1 s1
-  ensures pts_to arr #(p0 +. p1) s0 ** pure (s0 == s1)
+  requires pts_to arr #p0 s0
+  requires pts_to arr #p1 s1
+  ensures pts_to arr #(p0 +. p1) s0
+  ensures pure (s0 == s1)
 {
   unfold pts_to arr #p0 s0;
   unfold pts_to arr #p1 s1;

@@ -22,7 +22,6 @@ open Pulse.Lib.Pervasives
 
 fn rec test1
   (x:unit)
-  requires emp
   ensures pure False
 {
   test1 ()
@@ -34,7 +33,6 @@ let _ = test1
 
 fn test_call_1
   (z:unit)
-  requires emp
   ensures pure False
 {
   test1()
@@ -44,8 +42,6 @@ fn test_call_1
 
 fn rec test2
   (y:nat)
-  requires emp
-  ensures emp
 {
   if (y > 0) {
     test2 (y-1)
@@ -57,9 +53,7 @@ fn rec test2
 fn rec test3
   (z:nat)
   (y:nat)
-  requires emp
   returns _:int
-  ensures emp
 {
   if (y > 0) {
     test3 (z+1) (y-1)
@@ -73,8 +67,6 @@ fn rec test3
 ghost
 fn rec test_ghost_nop
   (x:unit)
-  requires emp
-  ensures emp
   decreases ()
 {
   ()
@@ -87,8 +79,6 @@ fn rec test_ghost_nop
 ghost
 fn rec test_ghost_loop
   (x:unit)
-  requires emp
-  ensures emp
   decreases ()
 {
   test_ghost_loop ()
@@ -116,8 +106,6 @@ ghost
 fn rec test5
   (z:nat)
   (y:nat)
-  requires emp
-  ensures emp
   decreases z
 {
   if (z <> 0 && y <> 0) {
@@ -133,8 +121,6 @@ ghost
 fn rec test5'
   (z:int)
   (y:nat)
-  requires emp
-  ensures emp
   decreases z
 {
   if (z <> 0 && y <> 0) {
@@ -146,7 +132,6 @@ fn rec test5'
 
 fn rec test6
   (x:unit) (y:int)
-  requires emp
   ensures pure False
 {
   let x = test6 () (y+1);

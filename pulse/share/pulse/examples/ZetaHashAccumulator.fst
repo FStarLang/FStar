@@ -284,7 +284,6 @@ fn package
 // TODO: A.alloc is deprecated, use V.alloc instead and use vectors instead of arrays in datatypes.
 
 fn create ()
-    requires emp
     returns h:ha
     ensures ha_val h initial_hash
 {  
@@ -301,7 +300,6 @@ fn create ()
 
 fn reclaim (#h:hash_value_t) (s:ha)
     requires ha_val s h
-    ensures emp
 {
     unfold ha_val;
     unfold ha_val_core;

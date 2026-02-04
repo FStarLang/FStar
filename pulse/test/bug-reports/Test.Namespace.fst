@@ -20,8 +20,6 @@ open Pulse.Lib.Pervasives
 
 
 fn test ()
-   requires emp
-   ensures emp
 {
     ()
 }

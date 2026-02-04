@@ -21,7 +21,6 @@ open Pulse.Lib.Pervasives
 
 
 fn test (z:int)
-  requires emp
   returns _:unit
   ensures (exists* (x:int). emp)
 {

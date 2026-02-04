@@ -22,7 +22,8 @@ open Pulse.Lib.Trade.Util
 
 ghost
 fn test_trans (p q r:slprop)
-requires (p @==> q) ** (q @==> r)
+requires (p @==> q)
+requires (q @==> r)
 ensures  (p @==> r)
 {
     trans p _ r;

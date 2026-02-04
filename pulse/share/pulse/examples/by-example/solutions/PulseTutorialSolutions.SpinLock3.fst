@@ -55,7 +55,6 @@ ensures lock_live l
 
 fn free_lock #p (l:lock p)
 requires lock_live l 
-ensures emp
 {
   with_invariants l.i 
   returns _:unit
@@ -83,7 +82,8 @@ ensures emp
 ghost
 fn share #p #q (l:lock p)
 requires lock_live l #q
-ensures lock_live l #(half_perm q) ** lock_live l #(half_perm q)
+ensures lock_live l #(half_perm q)
+ensures lock_live l #(half_perm q)
 {
   unfold (lock_live l #q);
   GR.share l.live;
@@ -101,7 +101,8 @@ let sum_halves (x y:perm)
 
 ghost
 fn gather #p #q1 #q2 (l:lock p)
-requires lock_live l #q1 ** lock_live l #q2
+requires lock_live l #q1
+requires lock_live l #q2
 ensures lock_live l #(sum_perm q1 q2)
 {
   unfold (lock_live l #q1);
@@ -113,8 +114,8 @@ ensures lock_live l #(sum_perm q1 q2)
 
 
 fn acquire #p #q (l:lock p)
-requires lock_live l #q 
-ensures p ** lock_live l #q
+preserves lock_live l #q
+ensures p
 {
     admit()
 }
@@ -122,8 +123,8 @@ ensures p ** lock_live l #q
 
 
 fn release #p #q (l:lock p)
-requires p ** lock_live l #q 
-ensures lock_live l #q
+requires p
+preserves lock_live l #q
 {
     admit()
 }

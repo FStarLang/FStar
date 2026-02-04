@@ -46,7 +46,6 @@ let placeless_pts_to #a t i #f p = Tactics.Typeclasses.solve
 
 ghost
 fn create (#a:Type)
-  requires emp
   returns t:table a
   ensures is_table t 0
 {

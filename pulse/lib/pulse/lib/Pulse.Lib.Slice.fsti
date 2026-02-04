@@ -176,7 +176,9 @@ fn ghost_split (#t: Type) (s: slice t) (#p: perm) (i: SZ.t)
 
 ghost
 fn join (#t: Type) (s1: slice t) (#p: perm) (#v1: Seq.seq t) (s2: slice t) (#v2: Seq.seq t) (s: slice t)
-    requires pts_to s1 #p v1 ** pts_to s2 #p v2 ** is_split s s1 s2
+    requires pts_to s1 #p v1
+    requires pts_to s2 #p v2
+    requires is_split s s1 s2
     ensures pts_to s #p (Seq.append v1 v2)
 
 (* `subslice_rest r s p i j v` is the resource remaining after taking the subslice `r = s[i..j]` *)
@@ -190,7 +192,8 @@ let subslice_rest #t (r: slice t) (s: slice t) p (i j: SZ.t) (v: erased (Seq.seq
 fn subslice #t (s: slice t) #p (i j: SZ.t) (#v: erased (Seq.seq t) { SZ.v i <= SZ.v j /\ SZ.v j <= Seq.length v })
   requires pts_to s #p v
   returns res: slice t
-  ensures pts_to res #p (Seq.slice v (SZ.v i) (SZ.v j)) ** subslice_rest res s p i j v
+  ensures pts_to res #p (Seq.slice v (SZ.v i) (SZ.v j))
+  ensures subslice_rest res s p i j v
 
 fn copy
   (#t: Type) (dst: slice t) (#p: perm) (src: slice t) (#v: Ghost.erased (Seq.seq t))

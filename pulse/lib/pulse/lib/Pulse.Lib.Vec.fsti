@@ -55,14 +55,13 @@ val pts_to_timeless (#a:Type0) (v:vec a) (p:perm) (s:Seq.seq a)
 
 ghost
 fn pts_to_len (#a:Type0) (v:vec a) (#p:perm) (#s:Seq.seq a)
-  requires pts_to v #p s
-  ensures  pts_to v #p s ** pure (length v == Seq.length s)
+  preserves pts_to v #p s
+  ensures pure (length v == Seq.length s)
 
 fn alloc 
   (#a:Type0)
   (x:a)
   (n:SZ.t)
-  requires emp
   returns  v:vec a
   ensures pts_to v (Seq.create (SZ.v n) x) **
           pure (length v == SZ.v n /\ is_full_vec v)
@@ -93,8 +92,8 @@ fn free
   (#a:Type0)
   (v:vec a)
   (#s:Ghost.erased (Seq.seq a))
-  requires pts_to v s ** pure (is_full_vec v)
-  ensures emp
+  requires pts_to v s
+  requires pure (is_full_vec v)
 ghost
 fn share
   (#a:Type)
@@ -102,7 +101,8 @@ fn share
   (#s:Ghost.erased (Seq.seq a))
   (#p:perm)
   requires pts_to v #p s
-  ensures pts_to v #(p /. 2.0R) s ** pts_to v #(p /. 2.0R) s
+  ensures pts_to v #(p /. 2.0R) s
+  ensures pts_to v #(p /. 2.0R) s
 
 [@@allow_ambiguous]
 ghost
@@ -111,8 +111,10 @@ fn gather
   (v:vec a)
   (#s0 #s1:Ghost.erased (Seq.seq a))
   (#p0 #p1:perm)
-  requires pts_to v #p0 s0 ** pts_to v #p1 s1
-  ensures pts_to v #(p0 +. p1) s0 ** pure (s0 == s1)
+  requires pts_to v #p0 s0
+  requires pts_to v #p1 s1
+  ensures pts_to v #(p0 +. p1) s0
+  ensures pure (s0 == s1)
 
 val vec_to_array (#a:Type0) (v:vec a) : arr:A.array a { A.length arr == length v }
 
@@ -130,30 +132,35 @@ fn read_ref (#a:Type0) (r:R.ref (vec a))
   (i:SZ.t)
   (#v:erased (vec a))
   (#s:erased (Seq.seq a) { SZ.v i < Seq.length s})
-  requires R.pts_to r v ** pts_to v s
+  preserves R.pts_to r v
+  preserves pts_to v s
   returns res : a
-  ensures R.pts_to r v ** pts_to v s ** pure (res == Seq.index s (SZ.v i))
+  ensures pure (res == Seq.index s (SZ.v i))
 
 fn write_ref (#a:Type0) (r:R.ref (vec a))
   (i:SZ.t)
   (x:a)
   (#v:erased (vec a))
   (#s:erased (Seq.seq a) { SZ.v i < Seq.length s})
-  requires R.pts_to r v ** pts_to v s
-  ensures R.pts_to r v ** pts_to v (Seq.upd s (SZ.v i) x)
+  preserves R.pts_to r v
+  requires pts_to v s
+  ensures pts_to v (Seq.upd s (SZ.v i) x)
 
 fn replace_i (#a:Type0) (v:vec a) (i:SZ.t) (x:a)
   (#s:erased (Seq.seq a) { SZ.v i < Seq.length s})
   requires pts_to v s
   returns  res : a
-  ensures  pts_to v (Seq.upd s (SZ.v i) x) ** pure (res == Seq.index s (SZ.v i))
+  ensures pts_to v (Seq.upd s (SZ.v i) x)
+  ensures pure (res == Seq.index s (SZ.v i))
 
 fn replace_i_ref (#a:Type0) (r:R.ref (vec a)) (i:SZ.t) (x:a)
   (#v:erased (vec a))
   (#s:erased (Seq.seq a) { SZ.v i < Seq.length s})
-  requires R.pts_to r v ** pts_to v s
+  preserves R.pts_to r v
+  requires pts_to v s
   returns  res : a
-  ensures R.pts_to r v ** pts_to v (Seq.upd s (SZ.v i) x) ** pure (res == Seq.index s (SZ.v i))
+  ensures pts_to v (Seq.upd s (SZ.v i) x)
+  ensures pure (res == Seq.index s (SZ.v i))
 
 fn compare
         (#t:eqtype)

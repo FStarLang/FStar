@@ -1,4 +1,4 @@
-* Info at Bug206.fst(18,2-18,6):
+* Info at Bug206.fst(14,2-14,6):
   - Expected failure:
   - Ill-typed term: test x
   - Expected a term of type
@@ -8,5 +8,5 @@
   - Assertion failed
   - The SMT solver could not prove the query. Use --query_stats for more
     details.
-  - See also Bug206.fst(18,2-18,8)
+  - See also Bug206.fst(14,2-14,8)
 

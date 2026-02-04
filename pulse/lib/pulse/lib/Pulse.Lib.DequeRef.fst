@@ -13,7 +13,6 @@ let is_dq (#t:Type0) ([@@@mkey]x:dq t) (l:list t)
 = exists* xx. B.pts_to x xx ** is_deque xx l
 
 fn mk_empty (#t:Type) (_:unit)
-  requires emp
   returns  p : dq t
   ensures  is_dq p []
 {
@@ -40,7 +39,8 @@ fn push_front (#t:Type) (l : dq t) (x : t) (#xs:erased (list t))
 fn pop_front (#t:Type) (l : dq t) (#x : erased t) (#xs : erased (list t))
   requires is_dq l (reveal x :: xs)
   returns  y : t
-  ensures  is_dq l xs ** pure (y == x)
+  ensures is_dq l xs
+  ensures pure (y == x)
 {
   unfold is_dq;
   with xx0. assert (B.pts_to l xx0);
@@ -77,7 +77,8 @@ fn push_back (#t:Type) (l : dq t) (x : t) (#xs:erased (list t))
 fn pop_back (#t:Type) (l : dq t) (#x : erased t) (#xs : erased (list t))
   requires is_dq l (xs @ [reveal x])
   returns  y : t
-  ensures  is_dq l xs ** pure (y == x)
+  ensures is_dq l xs
+  ensures pure (y == x)
 {
   unfold is_dq;
   with xx0. assert (B.pts_to l xx0);

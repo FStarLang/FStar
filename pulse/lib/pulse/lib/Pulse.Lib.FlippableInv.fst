@@ -25,7 +25,8 @@ let finv_p (p:slprop) (r : GR.ref bool) : slprop =
 
 ghost
 fn fold_finv_p (p:slprop) (r : GR.ref bool) (#b:bool)
-  requires pts_to r #0.5R b ** (if b then p else emp)
+  requires pts_to r #0.5R b
+  requires (if b then p else emp)
   ensures  finv_p p r
 {
   fold finv_p;
@@ -44,7 +45,6 @@ let on  #p (fi : finv p) : slprop =
 
 
 ghost fn mk_finv (p:slprop)
-   requires emp
    returns f:(finv p)
    ensures off f
 {
@@ -70,7 +70,9 @@ let iname_of #p (f : finv p) : iname = f.i
 
 ghost
 fn flip_on (#p:slprop) (fi:finv p)
-   requires off fi ** p ** later_credit 1
+   requires off fi
+   requires p
+   requires later_credit 1
    ensures on fi
    opens [iname_of fi]
 {
@@ -93,8 +95,10 @@ fn flip_on (#p:slprop) (fi:finv p)
 
 ghost
 fn flip_off (#p:slprop) (fi : finv p)
-   requires on fi ** later_credit 1
-   ensures off fi ** p
+   requires on fi
+   requires later_credit 1
+   ensures off fi
+   ensures p
    opens [iname_of fi]
 {
   open Pulse.Lib.GhostReference;

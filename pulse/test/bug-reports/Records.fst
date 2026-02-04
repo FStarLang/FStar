@@ -75,7 +75,6 @@ fn mutate_r2 (r:rec2) (#v:Ghost.erased rec_repr)
 
 
 fn alloc_rec (v1 v2:U8.t)
-  requires emp
   returns r:rec2
   ensures (rec_perm r {v1; v2})
 {
@@ -96,7 +95,6 @@ fn alloc_rec (v1 v2:U8.t)
 //Here's another more compact way, using rename
 
 fn alloc_rec_alt (v1 v2:U8.t)
-  requires emp
   returns r:rec2
   ensures (rec_perm r {v1; v2})
 {
@@ -112,7 +110,6 @@ fn alloc_rec_alt (v1 v2:U8.t)
 //Here's yet another way, a bit more explicit
 
 fn alloc_rec_alt_alt (v1 v2:U8.t)
-  requires emp
   returns r:rec2
   ensures (rec_perm r {v1; v2})
 {
@@ -132,9 +129,9 @@ fn alloc_rec_alt_alt (v1 v2:U8.t)
 
 
 fn get_witness (x:box U8.t) (#y:Ghost.erased U8.t)
-requires Box.pts_to x y
+preserves Box.pts_to x y
 returns z:Ghost.erased U8.t
-ensures Box.pts_to x y ** pure (y==z)
+ensures pure (y==z)
 {   
     y
 }

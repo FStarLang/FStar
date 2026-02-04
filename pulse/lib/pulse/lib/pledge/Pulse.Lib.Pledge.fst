@@ -112,7 +112,8 @@ fn bind_pledge (#is:inames) (#f:slprop) (#v1:slprop) (#v2:slprop)
         (extra : slprop) {| is_send extra |}
         (#is_k:inames { inames_subset is_k is })
         (k:unit -> bind_pledge_f #is #is_k f #extra v1 v2)
-  requires pledge is f v1 ** extra
+  requires pledge is f v1
+  requires extra
   ensures pledge is f v2
 {
   pledge_inames_finite is f v1;
@@ -130,7 +131,8 @@ fn bind_pledge' (#is:inames) (#f:slprop) (#v1:slprop) (#v2:slprop)
         (extra : slprop) {| is_send extra |}
         (#is_k:inames { inames_subset is_k is })
         (k:unit -> bind_pledge_f' #is #is_k f #extra v1 v2)
-  requires pledge is f v1 ** extra
+  requires pledge is f v1
+  requires extra
   ensures pledge is f v2
 {
   bind_pledge #is #f #v1 #v2 extra #_ #is_k fn _ {
@@ -176,7 +178,8 @@ ghost
 fn join_pledge
   (#is:inames)
   (#f v1 v2:slprop)
-  requires pledge is f v1 ** pledge is f v2
+  requires pledge is f v1
+  requires pledge is f v2
   ensures pledge is f (v1 ** v2)
 {
   pledge_inames_finite is f v1;
@@ -235,8 +238,10 @@ ghost
 fn do_elim_body_l
   (#is:inames) (#f:slprop) (v1:slprop) (v2:slprop) (r1 r2 : GR.ref bool)
   ()
-  requires inv_p is f v1 v2 r1 r2 ** f ** (r1 |-> Frac 0.5R false)
-  ensures  inv_p is f v1 v2 r1 r2 ** f ** v1
+  preserves inv_p is f v1 v2 r1 r2
+  preserves f
+  requires (r1 |-> Frac 0.5R false)
+  ensures v1
   opens is
 {
   open Pulse.Lib.GhostReference;
@@ -301,8 +306,12 @@ ghost
 fn elim_body_l1
   (#is:inames) (#f:slprop) (i : iname) (v1:slprop) (v2:slprop) (r1 r2 : GR.ref bool)
   ()
-  requires f ** ((r1 |-> Frac 0.5R false) ** later_credit 1 ** inv i (inv_p is f v1 v2 r1 r2)) ** pure (not (mem_inv is i))
-  ensures  f ** v1 ** inv i (inv_p is f v1 v2 r1 r2)
+  preserves f
+  requires (r1 |-> Frac 0.5R false)
+  requires later_credit 1
+  preserves inv i (inv_p is f v1 v2 r1 r2)
+  requires pure (not (mem_inv is i))
+  ensures v1
   opens add_inv is i
 {
   open Pulse.Lib.GhostReference;
@@ -343,8 +352,12 @@ ghost
 fn elim_body_r1
   (#is:inames) (#f:slprop) (i : iname) (v1:slprop) (v2:slprop) (r1 r2 : GR.ref bool)
   ()
-  requires f ** ((r2 |-> Frac 0.5R false) ** later_credit 1 ** inv i (inv_p is f v1 v2 r1 r2) ** pure (not (mem_inv is i)))
-  ensures  f ** v2 ** inv i (inv_p is f v1 v2 r1 r2)
+  preserves f
+  requires (r2 |-> Frac 0.5R false)
+  requires later_credit 1
+  preserves inv i (inv_p is f v1 v2 r1 r2)
+  requires pure (not (mem_inv is i))
+  ensures v2
   opens add_inv is i
 {
   open Pulse.Lib.GhostReference;
@@ -367,9 +380,12 @@ fn ghost_split_pledge (#is:inames) (#f:slprop) (v1:slprop) (v2:slprop)
   // returns r : (e : inames_elem { not (mem_inv (inames_names is) (snd e)) })
   // ensures pledge (add_one r is) f v1 ** pledge (add_one r is) f v2
   // opens (inames_names is)
-  requires pledge is f (v1 ** v2) ** later_credit 2
+  requires pledge is f (v1 ** v2)
+  requires later_credit 2
   returns i : iname
-  ensures pledge (add_inv is i) f v1 ** pledge (add_inv is i) f v2 ** pure (not (mem_inv is i))
+  ensures pledge (add_inv is i) f v1
+  ensures pledge (add_inv is i) f v2
+  ensures pure (not (mem_inv is i))
 {
   pledge_inames_finite is f (v1 ** v2);
   let r1 = GR.alloc false;
@@ -418,7 +434,9 @@ fn split_pledge (#is:inames) (#f:slprop) (v1:slprop) (v2:slprop)
     {| is_send v1, is_send v2 |}
   requires pledge is f (v1 ** v2)
   returns i : iname
-  ensures pledge (add_inv is i) f v1 ** pledge (add_inv is i) f v2 ** pure (not (mem_inv is i))
+  ensures pledge (add_inv is i) f v1
+  ensures pledge (add_inv is i) f v2
+  ensures pure (not (mem_inv is i))
 {
   later_credit_buy 2;
   let i = ghost_split_pledge #is #f v1 v2 #_ #_;

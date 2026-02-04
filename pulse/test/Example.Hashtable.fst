@@ -8,8 +8,6 @@ let hash (x: SizeT.t) : SizeT.t = x
 type data = { left: bool; right: bool }
 
 fn insert_lookup_and_replace ()
-  requires emp
-  ensures emp
 {
   let h = alloc #SizeT.t #data hash 100sz;
   let h, _ = insert h 1sz { left = true; right = false };

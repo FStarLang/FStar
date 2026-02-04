@@ -64,8 +64,8 @@ val pts_to_timeless (#a: Type u#a) (x:array a) (p:perm) (s:Seq.seq a)
 
 ghost
 fn pts_to_len u#a (#t: Type u#a) (a:array t) (#p:perm) (#x:Seq.seq t)
-  requires pts_to a #p x
-  ensures  pts_to a #p x ** pure (length a == Seq.length x)
+  preserves pts_to a #p x
+  ensures pure (length a == Seq.length x)
 
 ghost
 fn pts_to_not_null u#a (#a: Type u#a) (#p:_) (r:array a) (#v:Seq.seq a)
@@ -111,8 +111,8 @@ fn free
         u#a (#elt: Type u#a)
         (a: array elt)
         (#s: Ghost.erased (Seq.seq elt))
-  requires pts_to a s ** pure (is_full_array a)
-  ensures  emp
+  requires pts_to a s
+  requires pure (is_full_array a)
 
 ghost
 fn share
@@ -121,7 +121,8 @@ fn share
   (#s:Ghost.erased (Seq.seq a))
   (#p:perm)
   requires pts_to arr #p s
-  ensures  pts_to arr #(p /. 2.0R) s ** pts_to arr #(p /. 2.0R) s
+  ensures pts_to arr #(p /. 2.0R) s
+  ensures pts_to arr #(p /. 2.0R) s
 
 [@@allow_ambiguous]
 ghost
@@ -130,8 +131,10 @@ fn gather
   (arr:array a)
   (#s0 #s1:Ghost.erased (Seq.seq a))
   (#p0 #p1:perm)
-  requires pts_to arr #p0 s0 ** pts_to arr #p1 s1
-  ensures  pts_to arr #(p0 +. p1) s0 ** pure (s0 == s1)
+  requires pts_to arr #p0 s0
+  requires pts_to arr #p1 s1
+  ensures pts_to arr #(p0 +. p1) s0
+  ensures pure (s0 == s1)
 
 [@@allow_ambiguous]
 ghost

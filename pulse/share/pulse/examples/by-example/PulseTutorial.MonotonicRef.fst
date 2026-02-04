@@ -27,7 +27,6 @@ let full (#t:Type) (#p:preorder t) (v:t) : FP.pcm_carrier p =
 
 ghost
 fn alloc u#a (#t:Type u#a) {| small_type u#a |} (#p:preorder t) (v:t)
-requires emp
 returns r:mref p
 ensures pts_to r #1.0R v
 {
@@ -38,8 +37,8 @@ ensures pts_to r #1.0R v
 
 ghost
 fn take_snapshot u#a (#t:Type u#a) (#p:preorder t) (r:mref p) (#f:perm) (v:t)
-requires pts_to r #f v
-ensures pts_to r #f v ** snapshot r v
+preserves pts_to r #f v
+ensures snapshot r v
 {
   unfold pts_to u#a;
   with h. assert (GR.pts_to r (Some f, h));
@@ -52,8 +51,9 @@ ensures pts_to r #f v ** snapshot r v
  
 ghost
 fn recall_snapshot u#a (#t:Type u#a) (#p:preorder t) (r:mref p) (#f:perm) (#v #u:t)
-requires pts_to r #f v ** snapshot r u
-ensures  pts_to r #f v ** snapshot r u ** pure (as_prop (p u v))
+preserves pts_to r #f v
+preserves snapshot r u
+ensures pure (as_prop (p u v))
 {
   unfold pts_to u#a;
   with h. assert (GR.pts_to r (Some f, h));
@@ -67,8 +67,8 @@ ensures  pts_to r #f v ** snapshot r u ** pure (as_prop (p u v))
 
 ghost
 fn dup_snapshot u#a (#t:Type u#a) (#p:preorder t) (r:mref p) (#u:t)
-requires snapshot r u
-ensures snapshot r u ** snapshot r u
+preserves snapshot r u
+ensures snapshot r u
 {
   unfold snapshot u#a;
   with h. assert (GR.pts_to r (None, h));
@@ -79,7 +79,8 @@ ensures snapshot r u ** snapshot r u
 
 ghost
 fn update u#a (#t:Type u#a) (#p:preorder t) (r:mref p) (#u:t) (v:t)
-requires pts_to r #1.0R u ** pure (as_prop (p u v))
+requires pts_to r #1.0R u
+requires pure (as_prop (p u v))
 ensures pts_to r #1.0R v
 {
   unfold pts_to u#a;

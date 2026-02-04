@@ -61,7 +61,6 @@ fn create
   (#v:Type0)
   (hashf:(k -> SZ.t))
   (initial_capacity:SZ.t{SZ.v initial_capacity > 0})
-  requires emp
   returns h:ht k v
   ensures is_ht h empty_pmap FS.emptyset
 
@@ -73,9 +72,9 @@ fn lookup
   (key:k)
   (#m:erased (pmap k v))
   (#keys:erased (FS.set k))
-  requires is_ht h m keys
+  preserves is_ht h m keys
   returns result:option v
-  ensures is_ht h m keys ** pure (result == reveal m key)
+  ensures pure (result == reveal m key)
 
 (** Insert a key-value pair - requires space for new key if not present *)
 fn insert
@@ -86,7 +85,8 @@ fn insert
   (value:v)
   (#m:erased (pmap k v))
   (#keys:erased (FS.set k))
-  requires is_ht h m keys ** pure (FS.mem key keys \/ SZ.fits (FS.cardinality keys + 1))
+  requires is_ht h m keys
+  requires pure (FS.mem key keys \/ SZ.fits (FS.cardinality keys + 1))
   ensures is_ht h (insert_pmap m key value) (FS.insert key keys)
 
 (** Remove a key-value pair *)
@@ -99,7 +99,8 @@ fn remove
   (#keys:erased (FS.set k))
   requires is_ht h m keys
   returns removed:bool
-  ensures is_ht h (remove_pmap m key) (FS.remove key keys) ** pure (removed == Some? (reveal m key))
+  ensures is_ht h (remove_pmap m key) (FS.remove key keys)
+  ensures pure (removed == Some? (reveal m key))
 
 (** Get the number of entries *)
 fn size
@@ -108,9 +109,9 @@ fn size
   (h:ht k v)
   (#m:erased (pmap k v))
   (#keys:erased (FS.set k))
-  requires is_ht h m keys
+  preserves is_ht h m keys
   returns n:SZ.t
-  ensures is_ht h m keys ** pure (SZ.v n == FS.cardinality keys)
+  ensures pure (SZ.v n == FS.cardinality keys)
 
 (** Free the hash table *)
 fn free
@@ -120,7 +121,6 @@ fn free
   (#m:erased (pmap k v))
   (#keys:erased (FS.set k))
   requires is_ht h m keys
-  ensures emp
 
 //////////////////////////////////////////////////////////////////////////////
 // Iterator API
@@ -155,7 +155,8 @@ fn create_iter
   (#keys:erased (FS.set k))
   requires is_ht h m keys
   returns it:ht_iter k v
-  ensures is_ht_iter it m keys keys ** pure (ht_of it == h)
+  ensures is_ht_iter it m keys keys
+  ensures pure (ht_of it == h)
 
 (** Check if there are more entries to iterate *)
 fn iter_has_next
@@ -177,7 +178,8 @@ fn iter_next
   (it:ht_iter k v)
   (#m:erased (pmap k v))
   (#all_keys #remaining:erased (FS.set k))
-  requires is_ht_iter it m all_keys remaining ** pure (FS.cardinality remaining > 0)
+  requires is_ht_iter it m all_keys remaining
+  requires pure (FS.cardinality remaining > 0)
   returns p:(k & v)
   ensures exists* remaining'.
           is_ht_iter it m all_keys remaining' **
@@ -197,4 +199,5 @@ fn finish_iter
   (#all_keys #remaining:erased (FS.set k))
   requires is_ht_iter it m all_keys remaining
   returns h:ht k v
-  ensures is_ht h m all_keys ** pure (h == ht_of it)
+  ensures is_ht h m all_keys
+  ensures pure (h == ht_of it)

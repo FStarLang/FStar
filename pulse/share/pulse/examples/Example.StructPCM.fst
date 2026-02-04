@@ -83,7 +83,6 @@ type ref a b : Type0 = pcm_ref (spcm a b)
 
 
 fn alloc #a #b (x:a) (y:b)
-  requires emp
   returns r:ref a b
   ensures pcm_pts_to r (XY x y)
 {

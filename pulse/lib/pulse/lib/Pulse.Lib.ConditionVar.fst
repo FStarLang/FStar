@@ -155,9 +155,9 @@ instance is_send_send c p : is_send (send c p) = Tactics.Typeclasses.solve
 instance is_send_recv c p : is_send (recv c p) = Tactics.Typeclasses.solve
 
 fn create (p:slprop) {| is_send p |}
-  requires emp
   returns c:cvar_t
-  ensures send c p ** recv c p
+  ensures send c p
+  ensures recv c p
 {
   let r = Box.alloc 0ul;
   let tab = SLT.create ();
@@ -218,8 +218,8 @@ ensures
 }
 
 fn signal (c:cvar_t) (#p:slprop)
-  requires send c p ** p
-  ensures emp
+  requires send c p
+  requires p
 {
   later_credit_buy 1;
   signal_atomic c #p

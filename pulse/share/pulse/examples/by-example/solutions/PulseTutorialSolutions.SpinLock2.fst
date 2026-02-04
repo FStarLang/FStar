@@ -30,7 +30,6 @@ let locked #p (l:lock p) = GR.pts_to l.gr #one_half 1ul
 fn new_lock (p:slprop)
 requires p
 returns l:lock p
-ensures emp
 {
    let r = Box.alloc 0ul;
    let gr = GR.alloc 0ul;
@@ -46,8 +45,8 @@ ensures emp
 
 
 fn rec acquire #p (l:lock p)
-requires emp
-ensures p ** locked l
+ensures p
+ensures locked l
 {
   let b = 
     with_invariants l.i
@@ -85,8 +84,8 @@ ensures p ** locked l
 
 
 fn release #p (l:lock p)
-requires p ** locked l
-ensures emp
+requires p
+requires locked l
 {
   with_invariants l.i {
     unfold lock_inv;
@@ -105,8 +104,8 @@ ensures emp
 
 
 fn acquire_loop #p (l:lock p)
-requires emp
-ensures p ** locked l
+ensures p
+ensures locked l
 {
   let mut acquired = false;
   fold (maybe false (p ** locked l));
@@ -124,7 +123,8 @@ ensures p ** locked l
     let b = 
       with_invariants l.i
       returns b:bool
-      ensures maybe b (p ** locked l) ** pts_to acquired false
+      ensures maybe b (p ** locked l)
+      ensures pts_to acquired false
       { 
         unfold lock_inv;
         let b = cas l.r 0ul 1ul;

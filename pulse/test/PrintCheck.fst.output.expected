@@ -1,4 +1,4 @@
-* Info at PrintCheck.fst(15,0-15,11):
+* Info at PrintCheck.fst(16,0-16,11):
   - Term
     PrintCheck.test
     has type
@@ -8,7 +8,7 @@
            returns x : Prims.int
            ensures x |-> ('v + 1) ** Pulse.Lib.Core.pure (x == x)
 
-* Info at PrintCheck.fst(20,0-20,12):
+* Info at PrintCheck.fst(21,0-21,12):
   - Term
     PrintCheck.test2
     has type
@@ -17,7 +17,7 @@
       returns _ret : Prims.int
       ensures PrintCheck.q _ret
 
-* Info at PrintCheck.fst(25,0-25,12):
+* Info at PrintCheck.fst(26,0-26,12):
   - Term
     PrintCheck.test3
     has type

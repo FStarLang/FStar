@@ -1,4 +1,4 @@
-* Info at Bug36.fst(13,6-13,7):
+* Info at Bug36.fst(12,6-12,7):
   - Expected failure:
   - Expected expression of type Type got expression n of type Prims.nat
 

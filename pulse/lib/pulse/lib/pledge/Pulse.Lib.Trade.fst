@@ -68,9 +68,7 @@ let psquash (a:Type u#a) : prop = squash a
 
 ghost
 fn pextract (a:Type u#5) (_:squash a)
-  requires emp
   returns i:a
-  ensures emp
 {
   let pf = elim_pure_explicit (psquash a);
   let pf : squash a = FStar.Squash.join_squash pf;
@@ -107,7 +105,8 @@ ghost
 fn elim_trade
   (#[T.exact (`emp_inames)]is:inames)
   (hyp concl:slprop)
-  requires trade #is hyp concl ** hyp
+  requires trade #is hyp concl
+  requires hyp
   ensures concl
   opens is
 {
@@ -155,7 +154,8 @@ ghost
 fn trade_compose
   (#is : inames)
   (p q r : slprop)
-  requires trade #is p q ** trade #is q r
+  requires trade #is p q
+  requires trade #is q r
   ensures  trade #is p r
 {
   intro (trade #is p r) #(trade #is p q ** trade #is q r) fn _
@@ -177,8 +177,10 @@ fn eq_as_trade
 ghost
 fn rewrite_with_trade
   (p1 p2 : slprop)
-  requires p1 ** pure (p1 == p2)
-  ensures  p2 ** (p2 @==> p1)
+  requires p1
+  requires pure (p1 == p2)
+  ensures p2
+  ensures (p2 @==> p1)
 {
   eq_as_trade p1 p2;
   rewrite p1 as p2;

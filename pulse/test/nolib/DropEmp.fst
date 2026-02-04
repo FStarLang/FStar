@@ -6,7 +6,6 @@ open Pulse.Nolib
 
 fn test0 (p:slprop)
   requires (if true then emp else p)
-  ensures emp
 {
   ();
 }
@@ -35,7 +34,6 @@ fn test2 (p:slprop)
 
 fn test3 (p:slprop)
   requires (if false then emp else p)
-  ensures emp
 {
   ();
 }

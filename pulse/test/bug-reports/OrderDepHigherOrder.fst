@@ -11,8 +11,7 @@ assume
 val p : int -> slprop
 
 fn test (m:mutex int)
-  requires mutex_live m p
-  ensures  mutex_live m p
+  preserves mutex_live m p
 {
   let r = lock m;
   unlock m r;
@@ -22,8 +21,7 @@ fn test (m:mutex int)
 
 
 fn test2 (m:mutex int)
-  requires mutex_live m p
-  ensures  mutex_live m p
+  preserves mutex_live m p
 {
   let r = lock m;
   assert (mutex_live m p ** belongs_to r m ** (exists* (x:int). pts_to r x ** p x));
@@ -35,8 +33,7 @@ fn test2 (m:mutex int)
 
 
 fn test3 (m:mutex int)
-  requires mutex_live m p
-  ensures  mutex_live m p
+  preserves mutex_live m p
 {
   let r = lock m;
   unlock m r;

@@ -26,8 +26,6 @@ val foo (x:int) (f : unit -> Tac unit) : unit
 *)
 [@@expect_failure]
 fn test0 ()
-  requires emp
-  ensures emp
 {
   foo 1 (fun _ -> ());
   ()
@@ -48,8 +46,6 @@ fn test0 ()
 *)
 [@@expect_failure]
 fn test1 ()
-  requires emp
-  ensures emp
 {
   foo 1 (fun _ -> dump "");
   ()
@@ -78,8 +74,6 @@ fn test1 ()
 *)
 [@@expect_failure]
 fn test2 ()
-  requires emp
-  ensures emp
 {
   assert_by_tactic True (fun _ -> Tactics.set_rlimit 50; ());
   ()

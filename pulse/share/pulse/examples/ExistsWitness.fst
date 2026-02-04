@@ -23,9 +23,9 @@ module R = Pulse.Lib.Reference
 
 
 fn get_witness (x:R.ref int) (#p:perm) (#y:Ghost.erased int)
-requires pts_to x #p y
+preserves pts_to x #p y
 returns z:Ghost.erased int
-ensures pts_to x #p y ** pure (y==z)
+ensures pure (y==z)
 {   
     y
 }
@@ -72,7 +72,6 @@ assume val drop (p:slprop) : stt unit p (fun _ -> emp)
 
 fn sample3 (x0:R.ref int) (x1:R.ref bool) (#p0 #p1:perm)
 requires exists* v0 v1. pts_to x0 #p0 v0 ** pts_to x1 #p1 v1
-ensures emp
 {
     
     with (v0 v1:erased _).
@@ -85,7 +84,6 @@ ensures emp
 
 fn sample4 (x0:R.ref int) (x1:R.ref bool) (#p0 #p1:perm)
 requires exists* v0 v1. pts_to x0 #p0 v0 ** pts_to x1 #p1 v1
-ensures emp
 {
     
     with v0 v1.
@@ -98,7 +96,6 @@ ensures emp
 
 fn sample5 (x0:R.ref int) (x1:R.ref bool) (#p0 #p1:perm)
 requires exists* v0 v1. pts_to x0 #p0 v0 ** pts_to x1 #p1 v1
-ensures emp
 {
     
     with v0.
@@ -113,7 +110,6 @@ ensures emp
 
 fn sample6 (x0:R.ref int) (x1:R.ref bool)
 requires exists* p0 p1 v0 v1. pts_to x0 #p0 v0 ** pts_to x1 #p1 v1
-ensures emp
 {
     
     with p0 p1 v0 v1.
@@ -128,7 +124,6 @@ ensures emp
 
 fn sample7 (x0:R.ref int) (x1:R.ref bool)
 requires exists* p0 p1 v0 v1. pts_to x0 #p0 v0 ** pts_to x1 #p1 v1
-ensures emp
 {
     assert exists* p0 p1 v0 v1. pts_to x0 #p0 v0 ** pts_to x1 #p1 v1;
     with p0 p1 v0 v1. _;

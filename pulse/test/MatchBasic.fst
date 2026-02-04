@@ -20,9 +20,7 @@ open Pulse.Lib.Pervasives
 
 
 fn test1 (n:nat)
-  requires emp
   returns r:int
-  ensures emp
 {
   (* let v = n; *)
   match n {
@@ -34,9 +32,7 @@ fn test1 (n:nat)
 
 
 fn test2 (n:nat)
-  requires emp
   returns r:int
-  ensures emp
 {
   let v = n;
   match n {
@@ -48,9 +44,7 @@ fn test2 (n:nat)
 
 
 fn test3 (n:nat)
-  requires emp
   returns r:int
-  ensures emp
 {
   match n {
     0 -> { 1 }
@@ -64,9 +58,7 @@ fn test3 (n:nat)
 // the (not yet in scope) type below. Only in batch mode apparently.
 
 fn test3_5 (n:option int) (z:bool)
-  requires emp
   returns r:int
-  ensures emp
 {
   match n {
     Prelude.None -> { (-1) }
@@ -82,9 +74,7 @@ type optionint =
 
 
 fn test4 (n:optionint) (z:bool)
-  requires emp
   returns r:int
-  ensures emp
 {
   match n {
     None -> { 0 }
@@ -95,9 +85,7 @@ fn test4 (n:optionint) (z:bool)
 
 
 fn test5 (n:option int) (z:bool)
-  requires emp
   returns r:int
-  ensures emp
 {
   match n {
     Prelude.None -> { (-1) }
@@ -108,9 +96,7 @@ fn test5 (n:option int) (z:bool)
 
 
 fn listid (xs : list int)
-  requires emp
   returns r:(list int)
-  ensures emp
 {
   match xs {
     [] -> { Nil #int }
@@ -121,9 +107,7 @@ fn listid (xs : list int)
 
 
 fn hd (xs : list int)
-  requires emp
   returns r:(int)
-  ensures emp
 {
   match xs {
     [] -> { 0 }
@@ -134,9 +118,7 @@ fn hd (xs : list int)
 
 
 fn tl (xs : list int)
-  requires emp
   returns r:(list u#0 int)
-  ensures emp
 {
   match xs {
     [] -> { Nil #int }
@@ -147,9 +129,7 @@ fn tl (xs : list int)
 
 [@@expect_failure [19]]
 fn incomplete (xs : list int)
-  requires emp
   returns r:int
-  ensures emp
 {
   match xs {
     [] -> { 1 }
@@ -159,9 +139,7 @@ fn incomplete (xs : list int)
 
 
 fn partial_complete (xs : (xs:list int{List.Tot.length xs == 0}))
-  requires emp
   returns r:int
-  ensures emp
 {
   match xs {
     [] -> { 1 }
@@ -171,9 +149,7 @@ fn partial_complete (xs : (xs:list int{List.Tot.length xs == 0}))
 
 
 fn breq_1 (xs : list int)
-  requires emp
   returns r:int
-  ensures emp
 {
   match xs {
     [] -> { assert (pure (List.Tot.length xs == 0)); 0 } // works because of branch eq
@@ -184,9 +160,7 @@ fn breq_1 (xs : list int)
 
 
 fn breq_2 (xs : list int)
-  requires emp
   returns r:int
-  ensures emp
 {
   match xs {
     [] -> { assert (pure (List.Tot.length xs == 0)); 0 }

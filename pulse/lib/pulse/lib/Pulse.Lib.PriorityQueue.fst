@@ -683,7 +683,6 @@ let is_pqueue #t {| total_order t |} (pq:pqueue t) (s:Seq.seq t) (cap:nat) : slp
 //
 
 fn create (#t:Type0) {| total_order t |} (capacity:SZ.t{SZ.v capacity > 0})
-  requires emp
   returns pq : pqueue t
   ensures is_pqueue pq Seq.empty (SZ.v capacity)
 {
@@ -694,9 +693,9 @@ fn create (#t:Type0) {| total_order t |} (capacity:SZ.t{SZ.v capacity > 0})
 }
 
 fn is_empty (#t:Type0) {| total_order t |} (pq:pqueue t) (#cap:erased nat)
-  requires is_pqueue pq 's0 cap
+  preserves is_pqueue pq 's0 cap
   returns b:bool
-  ensures is_pqueue pq 's0 cap ** pure (b <==> Seq.length 's0 == 0)
+  ensures pure (b <==> Seq.length 's0 == 0)
 {
   unfold (is_pqueue pq 's0 cap);
   let n = RV.len pq;
@@ -706,9 +705,9 @@ fn is_empty (#t:Type0) {| total_order t |} (pq:pqueue t) (#cap:erased nat)
 }
 
 fn size (#t:Type0) {| total_order t |} (pq:pqueue t) (#cap:erased nat)
-  requires is_pqueue pq 's0 cap
+  preserves is_pqueue pq 's0 cap
   returns n:SZ.t
-  ensures is_pqueue pq 's0 cap ** pure (SZ.v n == Seq.length 's0)
+  ensures pure (SZ.v n == Seq.length 's0)
 {
   unfold (is_pqueue pq 's0 cap);
   let n = RV.len pq;
@@ -717,9 +716,9 @@ fn size (#t:Type0) {| total_order t |} (pq:pqueue t) (#cap:erased nat)
 }
 
 fn get_capacity (#t:Type0) {| total_order t |} (pq:pqueue t) (#s0:erased (Seq.seq t)) (#cap:erased nat)
-  requires is_pqueue pq s0 cap
+  preserves is_pqueue pq s0 cap
   returns n:SZ.t
-  ensures is_pqueue pq s0 cap ** pure (SZ.v n == cap)
+  ensures pure (SZ.v n == cap)
 {
   unfold (is_pqueue pq s0 cap);
   let n = RV.get_capacity pq;
@@ -763,7 +762,8 @@ let swap_preserves_counts (#t:eqtype) (s:Seq.seq t) (i j:nat{i < Seq.length s /\
 fn rec sift_up (#t:eqtype) {| total_order t |} (pq:rvec t) (idx:SZ.t)
   (#s:erased (Seq.seq t){SZ.v idx < Seq.length s})
   (#cap:erased nat)
-  requires is_rvec pq s cap ** pure (almost_heap_sift_up s (SZ.v idx) /\
+  requires is_rvec pq s cap
+  requires pure (almost_heap_sift_up s (SZ.v idx) /\
                                  (SZ.v idx > 0 ==>
                                    (left_idx (SZ.v idx) < Seq.length s ==> 
                                      Seq.index s (parent_idx (SZ.v idx)) <=? Seq.index s (left_idx (SZ.v idx))) /\
@@ -1080,7 +1080,8 @@ fn rec sift_down (#t:eqtype) {| total_order t |} (pq:rvec t) (idx:SZ.t) (len:SZ.
   (#s:erased (Seq.seq t){SZ.v idx < Seq.length s /\ SZ.v len == Seq.length s /\ 
                           SZ.fits (op_Multiply 2 (Seq.length s) + 2)})
   (#cap:erased nat)
-  requires is_rvec pq s cap ** pure (almost_heap_sift_down s (SZ.v idx) /\
+  requires is_rvec pq s cap
+  requires pure (almost_heap_sift_down s (SZ.v idx) /\
                                  (SZ.v idx > 0 ==> 
                                    (left_idx (SZ.v idx) < SZ.v len ==> 
                                      Seq.index s (parent_idx (SZ.v idx)) <=? Seq.index s (left_idx (SZ.v idx))) /\
@@ -1281,9 +1282,10 @@ fn insert (#t:eqtype) {| total_order t |} (pq:pqueue t) (x:t) (#cap:erased nat)
 {
   unfold (is_pqueue pq 's0 cap);
   
-  let success = RV.push pq x;
+  let has_space = RV.has_room pq;
   
-  if success {
+  if has_space {
+    RV.push pq x;
     let new_len = RV.len pq;
     let last_idx = SZ.sub new_len 1sz;
     // After push, we have almost_heap_sift_up at last position
@@ -1306,9 +1308,9 @@ fn insert (#t:eqtype) {| total_order t |} (pq:pqueue t) (x:t) (#cap:erased nat)
 fn peek_min (#t:Type0) {| total_order t |} (pq:pqueue t)
   (#s0:erased (Seq.seq t){Seq.length s0 > 0})
   (#cap:erased nat)
-  requires is_pqueue pq s0 cap
+  preserves is_pqueue pq s0 cap
   returns x:t
-  ensures is_pqueue pq s0 cap ** pure (x == Seq.index s0 0 /\ is_minimum x s0)
+  ensures pure (x == Seq.index s0 0 /\ is_minimum x s0)
 {
   unfold (is_pqueue pq s0 cap);
   let x = RV.get pq 0sz;
@@ -1373,7 +1375,6 @@ fn extract_min (#t:eqtype) {| total_order t |} (pq:pqueue t)
 
 fn free (#t:Type0) {| total_order t |} (pq:pqueue t) (#cap:erased nat)
   requires is_pqueue pq 's0 cap
-  ensures emp
 {
   unfold (is_pqueue pq 's0 cap);
   RV.free pq;

@@ -12,7 +12,6 @@ val is_deque #t ([@@@mkey]x:deque t) (l:list t)
 
 
 fn mk_empty (#t:Type) (_:unit)
-  requires emp
   returns  p : deque t
   ensures  is_deque p []
 
@@ -31,7 +30,8 @@ fn pop_front (#t:Type) (l : deque t)
   (#xs : erased (list t))
   requires is_deque l (reveal x :: xs)
   returns  l'x : (deque t & t)
-  ensures  is_deque (fst l'x) xs ** pure (snd l'x == x)
+  ensures is_deque (fst l'x) xs
+  ensures pure (snd l'x == x)
 
 
 
@@ -48,5 +48,6 @@ fn pop_back (#t:Type) (l : deque t)
   (#xs : erased (list t))
   requires is_deque l (xs @ [reveal x])
   returns  l'x : (deque t & t)
-  ensures  is_deque (fst l'x) xs ** pure (snd l'x == x)
+  ensures is_deque (fst l'x) xs
+  ensures pure (snd l'x == x)
 

@@ -6,7 +6,6 @@ let fstar_five : int = 5
 
 
 fn five ()
-requires emp
 returns n:int
 ensures pure (n == 5)
 { 
@@ -26,9 +25,9 @@ fn incr (r:ref int) (#n:erased int) // since n is purely specificational, it is 
 
 
 fn read (r:ref int) p (n:erased int) // any permission is ok for reading
-requires pts_to r #p n
+preserves pts_to r #p n
 returns x:int
-ensures pts_to r #p n ** pure (x == n)
+ensures pure (x == n)
 {
     !r
 }
@@ -36,8 +35,7 @@ ensures pts_to r #p n ** pure (x == n)
 
 
 fn write (r:ref int) (n:erased int) // write requires full permission
-  requires pts_to r #full_perm n
-  ensures pts_to r #full_perm n
+  preserves pts_to r #full_perm n
 {
     let y = !r;
     r := y
@@ -47,8 +45,7 @@ fn write (r:ref int) (n:erased int) // write requires full permission
 [@@ expect_failure] // fails
 
 fn write (r:ref int) p (n:erased int)
-  requires pts_to r #p n
-  ensures pts_to r #p n
+  preserves pts_to r #p n
 {
     let y = !r;
     r := y
@@ -57,8 +54,10 @@ fn write (r:ref int) p (n:erased int)
 
 
 fn incr2 (r1 r2:ref int)
-  requires pts_to r1 'n1 ** pts_to r2 'n2
-  ensures pts_to r1 ('n1 + 1) ** pts_to r2 ('n2 + 1)
+  requires pts_to r1 'n1
+  requires pts_to r2 'n2
+  ensures pts_to r1 ('n1 + 1)
+  ensures pts_to r2 ('n2 + 1)
 {
     // pts_to r1 ‘n1 ** pts_to r2 ‘n2
     incr r1;
@@ -72,7 +71,6 @@ fn incr2 (r1 r2:ref int)
 
 
 fn incr_stack ()
-  requires emp
   returns x:int
   ensures pure (x == 1)
 {
@@ -85,7 +83,6 @@ fn incr_stack ()
 module Box = Pulse.Lib.Box
 
 fn incr_heap ()
-  requires emp
   returns x:int
   ensures pure (x == 1)
 {
@@ -102,8 +99,6 @@ fn incr_heap ()
 //Exercise 1: Fill in the spec and implementation of swap
 
 fn swap #a (r1 r2:ref a)
-requires emp
-ensures emp
 {
     admit()
 }

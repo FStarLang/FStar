@@ -92,7 +92,8 @@ fn assoc_concl_r (#is: inames) (p q r s:slprop)
 
 ghost
 fn elim_hyp_l (#is: inames) (p q r:slprop)
-    requires (trade #is (p ** q) r) ** p
+    requires (trade #is (p ** q) r)
+    requires p
     ensures (trade #is q r)
 {
     curry _ _ _;
@@ -101,7 +102,8 @@ fn elim_hyp_l (#is: inames) (p q r:slprop)
 
 ghost
 fn elim_hyp_r (#is: inames) (p q r:slprop)
-    requires (trade #is (p ** q) r) ** q
+    requires (trade #is (p ** q) r)
+    requires q
     ensures (trade #is p r)
 {
     comm_l _ _ _;
@@ -139,7 +141,8 @@ ghost
 fn weak_concl_l
   (#is: inames)
   (p1 p2 p: slprop)
-  requires (trade #is p1 p2) ** p
+  requires (trade #is p1 p2)
+  requires p
   ensures (trade #is p1 (p ** p2))
 {
   intro (trade #is p1 (p ** p2)) #(trade #is p1 p2 ** p) fn _{ elim _ _ }
@@ -149,7 +152,8 @@ ghost
 fn weak_concl_r
   (#is: inames)
   (p1 p2 p: slprop)
-  requires (trade #is p1 p2) ** p
+  requires (trade #is p1 p2)
+  requires p
   ensures (trade #is p1 (p2 ** p))
 {
   weak_concl_l p1 p2 p;
@@ -175,8 +179,10 @@ ghost
 fn rewrite_with_trade
   (#[T.exact (`emp_inames)] is:inames)
   (p1 p2: slprop)
-  requires p1 ** pure (p1 == p2)
-  ensures p2 ** (trade #is p2 p1)
+  requires p1
+  requires pure (p1 == p2)
+  ensures p2
+  ensures (trade #is p2 p1)
 {
   rewrite p1 as p2;
   intro (trade #is p2 p1) fn _{ rewrite p2 as p1 };

@@ -31,8 +31,9 @@ fn rec t_msort_par
   (a : array int)
   (lo hi : SZ.t)
   (s : erased (S.seq int))
-  requires pool_alive #f p ** pts_to_range a (SZ.v lo) (SZ.v hi) (reveal s)
-  ensures  pool_alive #f p ** pts_to_range a (SZ.v lo) (SZ.v hi) (sort (reveal s))
+  preserves pool_alive #f p
+  requires pts_to_range a (SZ.v lo) (SZ.v hi) (reveal s)
+  ensures pts_to_range a (SZ.v lo) (SZ.v hi) (sort (reveal s))
 {
   pts_to_range_prop a;
   if ((hi `SZ.sub` lo) `SZ.lt` 2sz) {

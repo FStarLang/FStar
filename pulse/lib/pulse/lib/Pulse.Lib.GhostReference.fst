@@ -35,7 +35,6 @@ let pts_to_timeless _ _ _ = ()
 
 ghost
 fn full_values_compatible u#a (#a:Type u#a) (x:a)
-  requires emp
   ensures pure (compatible pcm_frac (Some (x, 1.0R)) (Some (x, 1.0R)))
 {
    assert pure (FStar.PCM.composable pcm_frac (Some(x, 1.0R)) None);
@@ -90,7 +89,6 @@ let write = ( := )
 ghost
 fn free u#a (#a:Type u#a) (r:ref a) (#n:erased a)
   requires pts_to r n
-  ensures  emp
 {
   unfold pts_to r #1.0R n;
   GR.write r _ _ (mk_frame_preserving_upd_none n);
@@ -115,8 +113,10 @@ fn share u#a (#a:Type u#a) (r:ref a) (#v:erased a) (#p:perm)
 [@@allow_ambiguous]
 ghost
 fn gather u#a (#a:Type u#a) (r:ref a) (#x0 #x1:erased a) (#p0 #p1:perm)
-  requires (r |-> Frac p0 x0) ** (r |-> Frac p1 x1)
-  ensures  (r |-> Frac (p0 +. p1) x0) ** pure (x0 == x1)
+  requires (r |-> Frac p0 x0)
+  requires (r |-> Frac p1 x1)
+  ensures (r |-> Frac (p0 +. p1) x0)
+  ensures pure (x0 == x1)
 { 
   unfold pts_to r #p0 x0;
   unfold pts_to r #p1 x1;
@@ -131,8 +131,9 @@ fn pts_to_injective_eq  u#a (#a:Type u#a)
                         (#p #q:_)
                         (#v0 #v1:a)
                         (r:ref a)
-  requires (r |-> Frac p v0) ** (r |-> Frac q v1)
-  ensures  (r |-> Frac p v0) ** (r |-> Frac q v1) ** pure (v0 == v1)
+  preserves (r |-> Frac p v0)
+  preserves (r |-> Frac q v1)
+  ensures pure (v0 == v1)
 {
   unfold pts_to r #p v0;
   unfold pts_to r #q v1;
@@ -147,7 +148,8 @@ fn pts_to_injective_eq  u#a (#a:Type u#a)
 ghost
 fn pts_to_perm_bound u#a (#a:Type u#a) (#p:_) (r:ref a) (#v:a)
   requires r |-> Frac p v
-  ensures  (r |-> Frac p v) ** pure (p <=. 1.0R)
+  ensures (r |-> Frac p v)
+  ensures pure (p <=. 1.0R)
 {
   unfold pts_to r #p v;
   fold pts_to r #p v;

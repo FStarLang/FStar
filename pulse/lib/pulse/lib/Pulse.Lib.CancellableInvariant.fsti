@@ -45,33 +45,41 @@ ghost
 fn new_cancellable_invariant (v:slprop)
   requires v
   returns  c : cinv
-  ensures  inv (iname_of c) (cinv_vp c v) ** active c 1.0R
+  ensures inv (iname_of c) (cinv_vp c v)
+  ensures active c 1.0R
 
 val unpacked (c:cinv) (v:slprop) : slprop
 
 ghost
 fn unpack_cinv_vp (#p:perm) (#v:slprop) (c:cinv)
-  requires cinv_vp c v ** active c p
-  ensures  v ** unpacked c v ** active c p
+  requires cinv_vp c v
+  preserves active c p
+  ensures v
+  ensures unpacked c v
 
 ghost
 fn pack_cinv_vp (#v:slprop) (c:cinv)
-  requires v ** unpacked c v
+  requires v
+  requires unpacked c v
   ensures  cinv_vp c v
 
 ghost
 fn share (#p:perm) (c:cinv)
   requires active c p
-  ensures  active c (p /. 2.0R) ** active c (p /. 2.0R)
+  ensures active c (p /. 2.0R)
+  ensures active c (p /. 2.0R)
 
 [@@allow_ambiguous]
 ghost
 fn gather (#p1 #p2 :perm) (c:cinv)
-  requires active c p1 ** active c p2
+  requires active c p1
+  requires active c p2
   ensures  active c (p1 +. p2)
 
 ghost
 fn cancel (#v:slprop) (c:cinv)
-  requires inv (iname_of c) (cinv_vp c v) ** active c 1.0R ** later_credit 1
+  requires inv (iname_of c) (cinv_vp c v)
+  requires active c 1.0R
+  requires later_credit 1
   opens add_inv emp_inames (iname_of c)
   ensures v

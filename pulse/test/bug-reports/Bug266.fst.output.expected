@@ -1,12 +1,12 @@
-* Info at Bug266.fst(12,2-12,14):
+* Info at Bug266.fst(10,2-10,14):
   - Expected failure:
   - Failed to prove pure property: l_False
   - Assertion failed
   - The SMT solver could not prove the query. Use --query_stats for more
     details.
-  - See also Bug266.fst(12,31-12,36)
+  - See also Bug266.fst(10,31-10,36)
 
-* Info at Bug266.fst(28,2-28,9):
+* Info at Bug266.fst(24,2-24,9):
   - Admitting continuation.
   - Current context:
       emp

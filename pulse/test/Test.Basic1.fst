@@ -35,8 +35,16 @@ assume val foo10 : slprop
 
 #push-options "--no_smt"
 fn test_synt ()
-  requires foo1 ** foo2 ** foo3 ** foo4 ** foo5 ** foo6 ** foo7 ** foo8 ** foo9 ** foo10
-  ensures foo10 ** foo9 ** foo8 ** foo7 ** foo6 ** foo5 ** foo4 ** foo3 ** foo2 ** foo1
+  preserves foo1
+  preserves foo2
+  preserves foo3
+  preserves foo4
+  preserves foo5
+  preserves foo6
+  preserves foo7
+  preserves foo8
+  preserves foo9
+  preserves foo10
 {
   ();
 }
@@ -49,8 +57,16 @@ assume val foo : int -> slprop
 
 
 fn test_synt2 ()
-  requires foo 1 ** foo 2 ** foo 3 ** foo 4 ** foo 5 ** foo 6 ** foo 7 ** foo 8 ** foo 9 ** foo 10
-  ensures foo 10 ** foo 9 ** foo 8 ** foo 7 ** foo 6 ** foo 5 ** foo 4 ** foo 3 ** foo 2 ** foo 1
+  preserves foo 1
+  preserves foo 2
+  preserves foo 3
+  preserves foo 4
+  preserves foo 5
+  preserves foo 6
+  preserves foo 7
+  preserves foo 8
+  preserves foo 9
+  preserves foo 10
 {
   ();
 }
@@ -78,8 +94,6 @@ module SZ = FStar.SizeT
 // during matching...
 // #push-options "--no_smt"
 fn test1 (n:SZ.t)
-  requires emp
-  ensures emp
 {
   let mut i : SZ.t = 0sz;
   let mut max : nat = 0;
@@ -91,8 +105,6 @@ fn test1 (n:SZ.t)
 
 
 fn test2 (n:SZ.t)
-  requires emp
-  ensures emp
 {
   let mut max : nat = 0;
   let mut i : SZ.t = 0sz;
@@ -119,8 +131,7 @@ fn test4 (r:ref int)
 
 
 fn test5 (r:ref int)
-  requires pts_to r 0
-  ensures  pts_to r 0
+  preserves pts_to r 0
 {
   test3 r;
   ();

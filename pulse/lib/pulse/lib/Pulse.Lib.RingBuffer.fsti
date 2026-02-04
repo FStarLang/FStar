@@ -38,7 +38,6 @@ val is_ringbuffer (#t:Type0) ([@@@mkey]rb:ringbuffer t) (s:Seq.seq t) (cap:nat{c
 /// The capacity must be positive
 /// Initially the ring buffer is empty
 fn create (#t:Type0) (capacity:SZ.t{SZ.v capacity > 0}) (init:t)
-  requires emp
   returns rb : ringbuffer t
   ensures is_ringbuffer rb Seq.empty (SZ.v capacity)
 
@@ -46,33 +45,33 @@ fn create (#t:Type0) (capacity:SZ.t{SZ.v capacity > 0}) (init:t)
 fn capacity (#t:Type0) (rb:ringbuffer t)
   (#s:erased (Seq.seq t))
   (#cap:erased nat{cap > 0})
-  requires is_ringbuffer rb s cap
+  preserves is_ringbuffer rb s cap
   returns n : SZ.t
-  ensures is_ringbuffer rb s cap ** pure (SZ.v n == cap)
+  ensures pure (SZ.v n == cap)
 
 /// Get the current size (number of elements) in the ring buffer
 fn size (#t:Type0) (rb:ringbuffer t)
   (#s:erased (Seq.seq t))
   (#cap:erased nat{cap > 0})
-  requires is_ringbuffer rb s cap
+  preserves is_ringbuffer rb s cap
   returns n : SZ.t
-  ensures is_ringbuffer rb s cap ** pure (SZ.v n == Seq.length s)
+  ensures pure (SZ.v n == Seq.length s)
 
 /// Check if the ring buffer is empty
 fn is_empty (#t:Type0) (rb:ringbuffer t)
   (#s:erased (Seq.seq t))
   (#cap:erased nat{cap > 0})
-  requires is_ringbuffer rb s cap
+  preserves is_ringbuffer rb s cap
   returns b : bool
-  ensures is_ringbuffer rb s cap ** pure (b <==> Seq.length s == 0)
+  ensures pure (b <==> Seq.length s == 0)
 
 /// Check if the ring buffer is full
 fn is_full (#t:Type0) (rb:ringbuffer t)
   (#s:erased (Seq.seq t))
   (#cap:erased nat{cap > 0})
-  requires is_ringbuffer rb s cap
+  preserves is_ringbuffer rb s cap
   returns b : bool
-  ensures is_ringbuffer rb s cap ** pure (b <==> Seq.length s == cap)
+  ensures pure (b <==> Seq.length s == cap)
 
 /// Push an element to the back of the ring buffer
 /// Behavior when full: Returns false and does not modify the buffer (reject mode)
@@ -114,4 +113,3 @@ fn free (#t:Type0) (rb:ringbuffer t)
   (#s:erased (Seq.seq t))
   (#cap:erased nat{cap > 0})
   requires is_ringbuffer rb s cap
-  ensures emp

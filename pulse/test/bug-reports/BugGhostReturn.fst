@@ -11,7 +11,6 @@ val some_lemma (#a:Type) (x:a)
 
 
 fn use_some_lemma (#a:Type u#0) (x:a)
-requires emp
 ensures pure (p x)
 {
   some_lemma x;
@@ -22,7 +21,6 @@ ensures pure (p x)
 
 ghost
 fn use_some_lemma_ghost (#a:Type u#0) (x:a)
-requires emp
 ensures pure (p x)
 {
   some_lemma x;

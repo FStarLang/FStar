@@ -44,8 +44,7 @@ let dump_trefl (s:string) : Tac unit =
 
 
 fn test ()
-  requires p
-  ensures  p
+  preserves p
 {
   rewrite p
        as p

@@ -35,7 +35,8 @@ fn pledge_return_now (f:slprop) (r : ref int)
 
 ghost
 fn pledge_join (f:slprop) (v1 v2 : slprop)
-  requires pledge emp_inames f v1 ** pledge emp_inames f v2
+  requires pledge emp_inames f v1
+  requires pledge emp_inames f v2
   ensures pledge emp_inames f (v1 ** v2)
 {
   join_pledge #emp_inames #f v1 v2; // ideally automated
@@ -73,7 +74,8 @@ fn pledge_squash (f:slprop) (v1 v2 : slprop)
 
 ghost
 fn pledge_squash_and_join (f:slprop) (v1 v2 : slprop)
-  requires pledge emp_inames f (pledge emp_inames f v1) ** pledge emp_inames f v2
+  requires pledge emp_inames f (pledge emp_inames f v1)
+  requires pledge emp_inames f v2
   ensures pledge emp_inames f (v1 ** v2)
 {
   squash_pledge emp_inames f v1;  // ideally automated
