@@ -8,7 +8,7 @@ on:
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_NAME: ${{ github.repository_owner }}/pulse-base-devcontainer
+  IMAGE_NAME: fstarlang/pulse-base-devcontainer
 
 jobs:
   build-and-push:
