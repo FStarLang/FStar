@@ -21,7 +21,7 @@ let new_goto_lbl : unit -> goto_label_core =
 exception Goto of goto_label_core * Obj.t
 
 let goto (lbl: 'a goto_label) (arg: 'a) : unit =
-  raise (Goto (lbl, arg))
+  raise (Goto (lbl, Obj.repr arg))
 
 let forward_jump_label (body: 'a goto_label -> 'a) : 'a =
   let lbl = new_goto_lbl () in
@@ -29,4 +29,4 @@ let forward_jump_label (body: 'a goto_label -> 'a) : 'a =
     body lbl
   with
     | Goto (lbl', ret) when lbl' = lbl ->
-      ret
+      Obj.obj ret
