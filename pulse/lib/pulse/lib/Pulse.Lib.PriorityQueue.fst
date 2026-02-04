@@ -1273,36 +1273,25 @@ let extends_permutation (#t:eqtype) (s0 s1 s2:Seq.seq t) (x:t)
           (ensures extends s0 s2 x)
   = ()
 
-fn insert (#t:eqtype) {| total_order t |} (pq:pqueue t) (x:t) (#cap:erased nat)
-  requires is_pqueue pq 's0 cap
-  returns b:bool
-  ensures (if b 
-           then exists* s1. is_pqueue pq s1 cap ** pure (extends 's0 s1 x /\ Seq.length 's0 < cap)
-           else is_pqueue pq 's0 cap ** pure (Seq.length 's0 == cap))
+fn insert (#t:eqtype) {| total_order t |} (pq:pqueue t) (x:t) (#s0:erased (Seq.seq t)) (#cap:erased nat { Seq.length s0 < cap })
+  requires is_pqueue pq s0 cap
+  ensures exists* s1. is_pqueue pq s1 cap ** pure (extends s0 s1 x)
 {
-  unfold (is_pqueue pq 's0 cap);
+  unfold (is_pqueue pq s0 cap);
   
-  let has_space = RV.has_room pq;
-  
-  if has_space {
-    RV.push pq x;
-    let new_len = RV.len pq;
-    let last_idx = SZ.sub new_len 1sz;
-    // After push, we have almost_heap_sift_up at last position
-    snoc_almost_heap 's0 x;
-    // snoc extends 's0 with x
-    snoc_extends 's0 x;
-    sift_up pq last_idx;
-    with s1. _;
-    // sift_up preserves counts, so s1 is a permutation of (snoc 's0 x)
-    // Combined with snoc_extends: extends 's0 s1 x
-    extends_permutation 's0 (Seq.snoc 's0 x) s1 x;
-    fold (is_pqueue pq s1 cap);
-    true
-  } else {
-    fold (is_pqueue pq 's0 cap);
-    false
-  }
+  RV.push pq x;
+  let new_len = RV.len pq;
+  let last_idx = SZ.sub new_len 1sz;
+  // After push, we have almost_heap_sift_up at last position
+  snoc_almost_heap s0 x;
+  // snoc extends s0 with x
+  snoc_extends s0 x;
+  sift_up pq last_idx;
+  with s1. _;
+  // sift_up preserves counts, so s1 is a permutation of (snoc s0 x)
+  // Combined with snoc_extends: extends s0 s1 x
+  extends_permutation s0 (Seq.snoc s0 x) s1 x;
+  fold (is_pqueue pq s1 cap);
 }
 
 fn peek_min (#t:Type0) {| total_order t |} (pq:pqueue t)

@@ -67,15 +67,11 @@ fn get_capacity (#t:Type0) {| total_order t |} (pq:pqueue t) (#s0:erased (Seq.se
   returns n:SZ.t
   ensures pure (SZ.v n == cap)
 
-/// Insert element - returns true on success, false if at capacity
-/// On success: s1 extends s0 with x, and length was < capacity
-/// On failure: length == capacity (queue is full)
-fn insert (#t:eqtype) {| total_order t |} (pq:pqueue t) (x:t) (#cap:erased nat)
-  requires is_pqueue pq 's0 cap
-  returns b:bool
-  ensures (if b 
-           then exists* s1. is_pqueue pq s1 cap ** pure (extends 's0 s1 x /\ Seq.length 's0 < cap)
-           else is_pqueue pq 's0 cap ** pure (Seq.length 's0 == cap))
+/// Insert element into priority queue
+/// Requires: queue has room (length < capacity)
+fn insert (#t:eqtype) {| total_order t |} (pq:pqueue t) (x:t) (#s0:erased (Seq.seq t)) (#cap:erased nat { Seq.length s0 < cap })
+  requires is_pqueue pq s0 cap
+  ensures exists* s1. is_pqueue pq s1 cap ** pure (extends s0 s1 x)
 
 /// Peek at minimum (root of heap) - returns the smallest element
 fn peek_min (#t:Type0) {| total_order t |} (pq:pqueue t)
