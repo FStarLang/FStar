@@ -237,7 +237,9 @@ let s_lemma_equal_instances_implies_equal_types (_:unit)
                     (has_type s2 (Seq.seq b)) }
           s1 === s2 ==> a == b)
   = Seq.lemma_equal_instances_implies_equal_types u#a ()
-  
+
+#push-options "--ext pretyping_axioms"
+#restart-solver  
 let live_same_addresses_equal_types_and_preorders'
   (#a1 #a2: Type0)
   (#rrel1 #rel1: srel a1)
@@ -262,6 +264,7 @@ let live_same_addresses_equal_types_and_preorders'
     let s1' : Seq.seq a2 = coerce_eq _ s1 in
     assert (s1 === s1');
     lemma_equal_instances_implies_equal_types a1 a2 s1 s1'
+#pop-options
 
 let live_same_addresses_equal_types_and_preorders
   #_ #_ #_ #_ #_ #_ b1 b2 h
@@ -1352,8 +1355,8 @@ val modifies_loc_buffer_from_to_intro'
   ))
   (ensures (modifies (loc_union l (loc_buffer_from_to b from to)) h h'))
 
-#push-options "--z3rlimit 16"
-
+#push-options "--z3rlimit 16 --ext pretyping_axioms"
+#restart-solver 
 let modifies_loc_buffer_from_to_intro' #a #rrel #rel b from to l h h' =
   let r0 = frameOf b in
   let a0 = as_addr b in
@@ -1411,7 +1414,6 @@ let modifies_loc_buffer_from_to_intro' #a #rrel #rel b from to l h h' =
         assert (xh `Seq.equal` xh')
       )
   )
-
 #pop-options
 
 let modifies_loc_buffer_from_to_intro #a #rrel #rel b from to l h h' =
@@ -1583,7 +1585,8 @@ let lemma_g_upd_with_same_seq #_ #_ #_ b h =
     assert (Seq.equal (Seq.replace_subseq s (v idx) (v idx + v length) (Seq.slice s (v idx) (v idx + v length))) s);
     HS.lemma_heap_equality_upd_with_sel h (Buffer?.content b)
 
-#push-options "--z3rlimit 48"
+#push-options "--z3rlimit 48 --ext pretyping_axioms"
+#restart-solver
 let g_upd_seq_as_seq #a #_ #_ b s h =
   let h' = g_upd_seq b s h in
   if g_is_null b then assert (Seq.equal s Seq.empty)
