@@ -12,6 +12,7 @@ env:
 
 jobs:
   build-and-push:
+    if: github.repository == 'FStarLang/pulse'
     runs-on: ubuntu-latest
     permissions:
       contents: read
