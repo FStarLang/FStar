@@ -275,7 +275,6 @@ fn try_acquire (#p: nat -> slprop) (#perm: perm) (#max: sem_max) (s: sem p)
         if b {
           elim_cond_true _ _ _;
           // CAS succeeded! n was v, counter now is new_v
-          rewrite each n as v;
           
           // Use external ghost function to acquire slot - returns erased target
           let target = SemGhost.acquire_slot p s.tbl flags 0 max;
@@ -359,7 +358,6 @@ fn rec release_loop (#p: nat -> slprop) (#perm: perm) (#max: sem_max) (s: sem p)
       if b {
         elim_cond_true b _ _;
         // CAS succeeded! n was v, counter now is v+1
-        rewrite each n as v;
         
         // Use extract_slot_at to prove flag correlation
         let _ = SemGhost.extract_slot_at p s.tbl flags 0 idx max;
@@ -463,7 +461,6 @@ fn try_free (#p: nat -> slprop) (#max: sem_max) (s: sem p)
       if b {
         elim_cond_true b _ _;
         // CAS succeeded! counter was max (all permits available), now 0
-        rewrite each n as max_u32;
         
         // Since counter was max, count_true_list flags == max == length flags
         // Therefore all flags are true
