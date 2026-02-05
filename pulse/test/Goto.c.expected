@@ -1,0 +1,33 @@
+/* krml header omitted for test repeatability */
+
+
+#include "Goto.h"
+
+void Goto_test1(int32_t *r)
+{
+  KRML_MAYBE_UNUSED_VAR(r);
+  return;
+}
+
+size_t Goto_find_zero(int32_t *a, size_t sz)
+{
+  size_t i = (size_t)0U;
+  size_t __anf0 = i;
+  bool cond = __anf0 < sz;
+  while (cond)
+  {
+    size_t __anf01 = i;
+    int32_t __anf1 = a[__anf01];
+    if (__anf1 == (int32_t)0)
+    {
+      size_t __anf02 = i;
+      return __anf02;
+    }
+    size_t __anf02 = i;
+    i = __anf02 + (size_t)1U;
+    size_t __anf0 = i;
+    cond = __anf0 < sz;
+  }
+  return i;
+}
+

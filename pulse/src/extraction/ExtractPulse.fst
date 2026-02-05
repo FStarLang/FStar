@@ -58,6 +58,42 @@ let head_and_args (e : mlexpr) : mlexpr & list mlexpr =
 
 let zero_for_deref = EQualified (["C"], "_zero_for_deref")
 
+type goto_env_elem =
+  | ReturnLabel
+
+type goto_env_t = list (mlident & goto_env_elem)
+
+let goto_env : ref goto_env_t = mk_ref []
+
+let with_goto_env_update #a (f: goto_env_t -> goto_env_t) (k: unit -> ML a) : ML a =
+  let old = !goto_env in
+  finally (fun _ -> goto_env := old) fun _ ->
+    goto_env := f old;
+    k ()
+
+let with_goto_env_elem #a (id: mlident) (e: goto_env_elem) (k: unit -> ML a) : ML a =
+  with_goto_env_update (Cons (id, e)) k
+
+let lookup_goto (id: mlident) : option goto_env_elem =
+  let rec go (env: goto_env_t) =
+    match env with
+    | [] -> None
+    | (j, e) :: _ when j = id -> Some e
+    | _ :: env -> go env
+  in
+  go !goto_env
+
+let pulse_translate_let : translate_let_t = fun env flv lb ->
+  if !dbg then Format.print1_warning "ExtractPulse.pulse_translate_let %s\n" (mlletbinding_to_string (flv, [lb]));
+  match lb with
+  | { mllb_def = { expr = MLE_Fun (args,
+        { expr = MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ { expr = MLE_Fun ([{mlbinder_name=lbl}], body) } ]) }) } }
+      when string_of_mlpath p = "Pulse.Lib.Dv.forward_jump_label" ->
+    with_goto_env_elem lbl ReturnLabel fun _ ->
+      translate_let env flv { lb with mllb_def = { lb.mllb_def with expr = MLE_Fun (args, body) } }
+  | _ ->
+    raise NotSupportedByKrmlExtension
+
 let pulse_translate_expr : translate_expr_t = fun env e ->
   let e = flatten_app e in
   if !dbg
@@ -235,8 +271,15 @@ let pulse_translate_expr : translate_expr_t = fun env e ->
     when string_of_mlpath p = "DPE.run_stt" ->
     cb body
 
+  | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ { expr = MLE_Var lbl }; arg ])
+    when string_of_mlpath p = "Pulse.Lib.Dv.goto" ->
+    (match lookup_goto lbl with
+    | Some ReturnLabel -> EReturn (cb arg)
+    | _ -> raise NotSupportedByKrmlExtension)
+
   | _ -> raise NotSupportedByKrmlExtension
 
 let _ =
   register_pre_translate_type_without_decay pulse_translate_type_without_decay;
+  register_pre_translate_let pulse_translate_let;
   register_pre_translate_expr pulse_translate_expr
