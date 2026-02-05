@@ -1,0 +1,18 @@
+; Friends test - verify with dependency order
+; Only pass .fsti files to let F* handle abstraction properly
+(rule
+ (alias runtest)
+ (deps
+   (:fstar %{project_root}/src/stage2/fstar.exe)
+   (glob_files *.fst)
+   (glob_files *.fsti)
+   (source_tree %{project_root}/ulib))
+ (action
+   (chdir %{project_root}/tests/friends/1
+     (run %{fstar}
+          --include %{project_root}/ulib
+          --include .
+          --cache_dir %{project_root}/_build/default/tests/_cache
+          --odir %{project_root}/_build/default/tests/_output
+          --warn_error -240-241-321
+          FriendConsumer.fsti FriendProvider.fsti))))

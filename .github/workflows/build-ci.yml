@@ -36,6 +36,10 @@ jobs:
         run: |
           # Note: we don't package Z3 for the CI artifact as the images
           # already have the relevant Z3.
+          # verify-ulib creates .checked files needed by downstream projects like Pulse
+          # Run verify-ulib first (sequential) because it generates ulib.dune.inc
+          # which dune needs to parse before building package
+          make -skj$(nproc) verify-ulib
           make -skj$(nproc) package package-src FSTAR_TAG= FSTAR_PACKAGE_Z3=false
         working-directory: FStar
 

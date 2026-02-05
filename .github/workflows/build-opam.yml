@@ -18,7 +18,7 @@ jobs:
       matrix:
         ocamlv:
           - 4.14.2
-          - 5.3
+          - 5.4
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@master
@@ -36,4 +36,4 @@ jobs:
       - name: Smoke test
         run: |
           echo -e "module A\nopen FStar.Mul\nlet _ = assert (forall x. 1 + x*x > 0)" > A.fst
-          eval $(opam env) && fstar.exe A.fst
+          eval $(opam env) && fstar A.fst

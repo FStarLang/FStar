@@ -1,0 +1,17 @@
+; =============================================================================
+; src/dune - F* Compiler Source Directory
+; =============================================================================
+; 
+; This directory contains F* source files (.fst, .fsti) and hand-written
+; OCaml support files (in ml/).
+;
+; The extracted OCaml files go to src/extracted/ (via promote rules).
+; Hand-written files stay in src/ml/.
+;
+; Stage 0: Built from snapshot in stage0/dune/fstar-guts/
+; Stage 1+: Built from src/extracted/ + src/ml/
+
+; Exclude F* source directories from OCaml compilation
+(data_only_dirs basic class data extraction fstar interactive parser 
+                prettyprint reflection smtencoding syntax tactics 
+                tosyntax typechecker tests tools)

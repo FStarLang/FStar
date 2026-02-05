@@ -1,0 +1,19 @@
+; =============================================================================
+; src/plugins/dune - Stage 1 Plugins Library
+; =============================================================================
+;
+; This library provides the ulib plugin implementations (tactics, typeclasses, etc.)
+; built against stage1's fstarcompiler_stage1 library.
+;
+; The .ml files here are copied from stage0/fstar-plugins/ during the build.
+; See Makefile stage1 target.
+
+(include_subdirs unqualified)
+
+(library
+ (name fstar_plugins)
+ (libraries fstarcompiler)
+ (modes native)
+ (wrapped false)
+ (preprocess (pps ppx_deriving.show ppx_deriving_yojson sedlex.ppx))
+ (flags -w -8-20-26-27-28-33-35))

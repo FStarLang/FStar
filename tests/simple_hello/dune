@@ -1,0 +1,14 @@
+; Simple hello world test
+(rule
+ (alias runtest)
+ (deps
+   (:fstar %{project_root}/src/stage2/fstar.exe)
+   Hello.fst
+   (source_tree %{project_root}/ulib))
+ (action
+   (run %{fstar}
+        --include %{project_root}/ulib
+        --cache_dir %{project_root}/_build/default/tests/_cache
+        --odir %{project_root}/_build/default/tests/_output
+        
+        Hello.fst)))

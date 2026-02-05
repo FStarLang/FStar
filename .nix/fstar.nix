@@ -1,4 +1,4 @@
-{ callPackage, installShellFiles, lib, makeWrapper, buildDunePackage, version, z3, bash,
+{ callPackage, installShellFiles, lib, makeWrapper, buildDunePackage, version, z3, bash, python3, gnumake,
     batteries,
     menhir,
     menhirLib,
@@ -20,11 +20,10 @@ buildDunePackage {
 
   duneVersion = "3";
 
-  nativeBuildInputs = [ installShellFiles makeWrapper menhir ];
+  nativeBuildInputs = [ installShellFiles makeWrapper menhir python3 gnumake ];
 
   buildInputs = [
     batteries
-    menhir
     menhirLib
     pprint
     ppx_deriving
@@ -43,41 +42,57 @@ buildDunePackage {
 
   prePatch = ''
     patchShebangs .scripts/*.sh
+    patchShebangs .scripts/*.py
     patchShebangs ulib/ml/app/ints/mk_int_file.sh
   '';
 
   src = lib.sourceByRegex ./.. [
+    "dune"
+    "dune-project"
+    "dune-workspace"
+    "fstar.opam"
     "Makefile"
+    "packaging.*"
     "src.*"
-    "mk.*"
-    "stage..*"
+    "stage0.*"
     "ulib.*"
-    "doc.*"
     "version.txt"
-    ".scripts.*" # Mostly here for get_fstar_z3.sh
+    ".scripts.*"
     "LICENSE.*"
     "README.md"
     "INSTALL.md"
   ];
 
+  # Use make for the multi-stage build instead of pure dune
   buildPhase = ''
+    runHook preBuild
     export PATH="${z3}/bin:$PATH"
-    make -j$(nproc)
+    export HOME=$TMPDIR
+    make
+    runHook postBuild
   '';
 
   installPhase = ''
-    PREFIX=$out make install
+    runHook preInstall
+    mkdir -p $out/bin $out/lib/fstar
 
-    for binary in $out/bin/*
-    do
-      wrapProgram $binary --prefix PATH ":" ${z3}/bin
-    done
+    # Copy the fstar executable
+    cp _build/default/src/stage2/fstar.exe $out/bin/fstar.exe 2>/dev/null || \
+      cp _build/default/src/stage2/fstar $out/bin/fstar
 
-    cd $out
-    installShellCompletion --bash ${../.completion/bash/fstar.exe.bash}
-    installShellCompletion --fish ${../.completion/fish/fstar.exe.fish}
-    installShellCompletion --zsh --name _fstar.exe ${
-      ../.completion/zsh/__fstar.exe
-    }
+    # Copy ulib
+    cp -r ulib $out/lib/fstar/
+
+    # Wrap with Z3
+    wrapProgram $out/bin/fstar.exe --prefix PATH ":" ${z3}/bin 2>/dev/null || \
+      wrapProgram $out/bin/fstar --prefix PATH ":" ${z3}/bin
+
+    # Install shell completions if they exist
+    if [ -d .completion ]; then
+      installShellCompletion --bash .completion/bash/fstar.exe.bash 2>/dev/null || true
+      installShellCompletion --fish .completion/fish/fstar.exe.fish 2>/dev/null || true
+      installShellCompletion --zsh --name _fstar.exe .completion/zsh/__fstar.exe 2>/dev/null || true
+    fi
+    runHook postInstall
   '';
 }

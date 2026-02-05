@@ -24,7 +24,7 @@ depends: [
 ]
 depexts: ["coreutils"] {os = "macos" & os-distribution = "homebrew"}
 build: [
-  [make "-j" jobs "ADMIT=1"]
+  [make "ADMIT=1"]
 ]
 install: [
   [make "PREFIX=%{prefix}%" "install"]

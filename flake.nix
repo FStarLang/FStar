@@ -16,8 +16,11 @@
 
         z3 = pkgs.callPackage (import ./.nix/z3.nix) { };
         version = self.rev or "dirty";
-        fstar = ocamlPackages.callPackage ./.nix/fstar.nix {
+        fstar = pkgs.callPackage ./.nix/fstar.nix {
           inherit version z3;
+          inherit (ocamlPackages) buildDunePackage batteries menhir menhirLib pprint
+            ppx_deriving ppx_deriving_yojson ppxlib process sedlex stdint
+            yojson zarith memtrace mtime;
         };
 
         emacs = pkgs.writeScriptBin "emacs-fstar" ''

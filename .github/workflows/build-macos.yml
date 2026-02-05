@@ -70,6 +70,6 @@ jobs:
 
       - name: Smoke test
         run: |
-          ./fstar/bin/fstar.exe --admit_smt_queries true fstar/lib/fstar/ulib/Prims.fst -f
+          ./fstar/bin/fstar --admit_smt_queries true fstar/lib/fstar/ulib/Prims.fst -f
           echo -e "module A\nopen FStar.Mul\nlet _ = assert (forall x. 1 + x*x > 0)" > A.fst
-          ./fstar/bin/fstar.exe --admit_smt_queries true A.fst
+          ./fstar/bin/fstar --admit_smt_queries true A.fst

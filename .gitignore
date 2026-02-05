@@ -59,3 +59,17 @@ tags
 
 # devcontainer temp files
 /.devcontainer_build.log
+
+esy.lock
+node_modules
+_esy
+
+# Generated OCaml code and plugins
+src/extracted/
+!src/extracted/dune
+src/plugins/
+!src/plugins/dune
+
+# Build artifacts and logs
+_deps.txt
+test-output.log

@@ -26,7 +26,7 @@ jobs:
         with:
           name: fstar.tar.gz
       - run: tar -xzf fstar.tar.gz
-      - run: echo "FSTAR_EXE=$(pwd)/fstar/bin/fstar.exe" >> $GITHUB_ENV
+      - run: echo "FSTAR_EXE=$(pwd)/fstar/bin/fstar" >> $GITHUB_ENV
 
       - name: Checkout pulse
         uses: actions/checkout@master
