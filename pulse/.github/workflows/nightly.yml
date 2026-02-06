@@ -10,6 +10,7 @@ defaults:
 
 jobs:
   linux:
+    if: github.repository == 'FStarLang/pulse'
     runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@master
@@ -35,6 +36,7 @@ jobs:
           name: package-linux
 
   mac:
+    if: github.repository == 'FStarLang/pulse'
     runs-on: macos-14
     steps:
       - uses: actions/checkout@master
@@ -61,6 +63,7 @@ jobs:
           name: package-mac
 
   publish:
+    if: github.repository == 'FStarLang/pulse'
     runs-on: ubuntu-latest
     needs:
       - linux
