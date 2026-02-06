@@ -267,6 +267,3 @@ val compose_checker_result_t
   (r1:checker_result_t g ctxt NoHint)
   (r2:checker_result_t g' ctxt' post_hint { composable r1 r2 })
 : T.Tac (checker_result_t g ctxt post_hint)
-
-val infer_post #g #ctxt (r:checker_result_t g ctxt NoHint)
-: T.Tac (p:post_hint_for_env g {p.g == g /\ p.effect_annot==EffectAnnotSTT})

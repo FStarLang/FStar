@@ -287,6 +287,7 @@ fn insert
       ((vcont) ==> s `Seq.equal` pht.repr.seq)
     ))
   {
+    assert pure (!cont);
     let voff = !off;
     if (voff = ht.sz)
     {

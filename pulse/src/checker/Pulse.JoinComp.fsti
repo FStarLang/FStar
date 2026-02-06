@@ -18,7 +18,11 @@ module Pulse.JoinComp
 
 open Pulse.Syntax
 open Pulse.Typing
+open Pulse.Checker.Base
 module T = FStar.Tactics.V2
+
+val infer_post #g #ctxt (r:checker_result_t g ctxt NoHint)
+: T.Tac (p:post_hint_for_env g {p.g == g /\ p.effect_annot==EffectAnnotSTT})
 
 val join_post #g #hyp #b
     (p1:post_hint_for_env (g_with_eq g hyp b tm_true))

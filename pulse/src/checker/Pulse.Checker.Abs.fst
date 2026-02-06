@@ -579,7 +579,7 @@ let rec check_abs_core
           (* we support inference of postconditions for functions,
              but this functionality is still unusable from the front end,
              which expects functions to be annotated *)
-          let ph = Pulse.Checker.Base.infer_post r in
+          let ph = Pulse.JoinComp.infer_post r in
           let r = Pulse.Checker.Prover.prove_post_hint r (PostHint ph) (T.range_of_term t) in
           (| PostHint ph, r |)
       in
