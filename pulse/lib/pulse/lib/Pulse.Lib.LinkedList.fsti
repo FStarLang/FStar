@@ -140,3 +140,8 @@ fn delete (#kk:Type0) (x:llist kk) (item:kk) (pos:U32.t) (#xl:erased (list kk))
           xl == l0 @ l1 /\
           List.Tot.length l0 == v pos
         )
+
+fn reverse (#t:Type0) (x:llist t)
+  requires is_list x 'l
+  returns y:llist t
+  ensures is_list y (List.Tot.rev 'l)
