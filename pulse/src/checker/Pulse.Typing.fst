@@ -1110,9 +1110,8 @@ type st_typing : env -> st_term -> comp -> Type =
 
   | T_Unreachable:
       g:env ->
-      c:comp_st ->
+      c:comp_st { comp_pre c == tm_is_unreachable } ->
       comp_typing g c (universe_of_comp c) ->
-      prop_validity g (S.wr (`False) FStar.Range.range_0) -> 
       st_typing g (wtag (Some (ctag_of_comp_st c)) (Tm_Unreachable {c})) c
 
 and pats_complete : env -> term -> typ -> list R.pattern -> Type0 =

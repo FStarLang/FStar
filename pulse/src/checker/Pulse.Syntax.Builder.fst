@@ -52,7 +52,6 @@ let tm_add_inv names n r = tm_add_inv names n
 let tm_with_local binder initializer body = Tm_WithLocal { binder; initializer; body }
 let tm_with_local_array binder initializer length body = Tm_WithLocalArray { binder; initializer; length; body }
 let tm_admit ctag u typ post = Tm_Admit { ctag; u; typ; post }
-let tm_unreachable = Tm_Unreachable
 let tm_pragma_with_options o b = Tm_PragmaWithOptions { options=o; body=b }
 let with_range t r = { term = t; range = r; effect_tag = default_effect_hint; source=Sealed.seal true; seq_lhs=Sealed.seal false; }
 let tm_assert_with_binders bs p t = Tm_ProofHintWithBinders { hint_type=ASSERT { p; elaborated=false }; binders=bs; t }

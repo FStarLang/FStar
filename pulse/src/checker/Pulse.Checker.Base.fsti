@@ -97,7 +97,7 @@ val k_elab_unit (g:env) (ctxt:term)
 val k_elab_trans
   (#g0:env) (#g1:env { g1 `env_extends` g0 }) (#g2:env { g2 `env_extends` g1 }) (#ctxt0 #ctxt1 #ctxt2:term)
   (k0:continuation_elaborator g0 ctxt0 g1 ctxt1)
-  (k1:continuation_elaborator g1 ctxt1 g2 ctxt2 { g1 `env_extends` g0})
+  (k1:continuation_elaborator g1 ctxt1 g2 ctxt2)
    : continuation_elaborator g0 ctxt0 g2 ctxt2
 
 val k_elab_equiv_continuation (#g1:env) (#g2:env { g2 `env_extends` g1 }) (#ctxt #ctxt1 #ctxt2:term)

@@ -187,9 +187,6 @@ let tm_proof_hint_with_binders (ht:_) (binders: binder list)  (s:st_term) r : st
 
 let tm_admit r : st_term =
   PSB.(with_range (tm_admit STT u_zero (tm_unknown r) None) r)
-let tm_unreachable r : st_term =
-  let dummy_comp = C_Tot (tm_unknown r) in
-  PSB.(with_range (tm_unreachable { c = dummy_comp }) r)
   
 let close_term t v = Pulse_Syntax_Naming.close_term t v
 let close_st_term t v = Pulse_Syntax_Naming.close_st_term t v

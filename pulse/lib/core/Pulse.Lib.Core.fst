@@ -315,16 +315,8 @@ let assert_ (p:slprop) = A.noop p
 let assume_ (p:slprop) = admit() //intentional
 let drop_ (p:slprop) = A.drop p
 
-let unreachable (#a:Type) (#p:slprop) (#q:a -> slprop) (_:squash False)
-  : stt_ghost a emp_inames p q
-  = let v = FStar.Pervasives.false_elim #a () in
-    let m = A.return_ghost v q in
-    coerce_eq () m
-
-let elim_false (a:Type) (p:a -> slprop) =
-  A.bind_ghost
-    (A.noop (pure False))
-    (fun _ -> A.bind_ghost (A.elim_pure False) unreachable )
+let unreachable (_:squash False)
+  = FStar.Pervasives.false_elim ()
 
 let as_atomic #a pre post e = admit () // intentional since it is an assumption
 

@@ -669,11 +669,10 @@ val assume_ (p:slprop)
 val drop_ (p:slprop)
 : stt_ghost unit emp_inames p (fun _ -> emp)
 
-val unreachable (#a:Type) (#p:slprop) (#q:a -> slprop) (_:squash False)
-: stt_ghost a emp_inames p q
+let is_unreachable = pure False
 
-val elim_false (a:Type) (p:a -> slprop)
-: stt_ghost a emp_inames (pure False) p
+val unreachable (_:squash False)
+: stt_ghost unit emp_inames emp (fun _ -> is_unreachable)
 
 // Finally, a big escape hatch for introducing architecture/backend-specific
 // atomic operations from proven stt specifications

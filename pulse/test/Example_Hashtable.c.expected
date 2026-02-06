@@ -237,15 +237,7 @@ insert__size_t_Example_Hashtable_data(
   while (cont)
   {
     size_t voff = off;
-    if (voff == ht.sz)
-    {
-      KRML_HOST_EPRINTF("KaRaMeL abort at %s:%d\n%s\n",
-        __FILE__,
-        __LINE__,
-        "Pulse.Lib.Dv.unreachable");
-      KRML_HOST_EXIT(255U);
-    }
-    else
+    if (!(voff == ht.sz))
     {
       size_t sum = cidx + voff;
       size_t vidx = size_t_mod(sum, ht.sz);
