@@ -121,3 +121,5 @@ let test #a #i (n:int) : GTD nat i =
   let r = labs0 n in
   assume (r >= 0);
   r
+
+#pop-options

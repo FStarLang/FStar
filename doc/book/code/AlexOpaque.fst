@@ -124,3 +124,5 @@ let find_above_for_g' (m:nat) : Lemma(exists (i:nat). abs(g i) > m) =
     end 
   end 
 //SNIPPET_END: explicit_exists$
+#pop-options
+#pop-options

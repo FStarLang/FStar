@@ -3,6 +3,7 @@ module UseRBMap
 open FStar.RBMap
 open FStar.Class.Printable
 
+#push-options "--warn_error -272" //Warning_TopLevelEffect
 let _ =
   let s = empty () in
   let s = add 5 "5" s in
@@ -22,3 +23,4 @@ let _ =
   IO.print_string (to_string (lookup 4 s) ^ "\n");
   IO.print_string (to_string (lookup 5 s) ^ "\n");
   ()
+#pop-options

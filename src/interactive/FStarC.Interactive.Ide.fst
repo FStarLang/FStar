@@ -153,7 +153,8 @@ let run_repl_ld_transactions (st: repl_state) (tasks: list repl_task)
     | [] -> st
     | (_id, (task, _st')) :: entries ->
       //NS: this assertion has been failing for a while in debug mode; not sure why
-      assert (task = fst (snd (List.hd !repl_stack)));
+      let current_task = fst (snd (List.hd !repl_stack)) in
+      assert (task = current_task);
       debug "Reverting" task;
       let st' = pop_repl "run_repl_ls_transactions" st in
       let dep_graph = FStarC.TypeChecker.Env.dep_graph st.repl_env in

@@ -22,4 +22,6 @@ let test _ : ML unit =
   else
      ()
 
+#push-options "--warn_error -272" //Warning_TopLevelEffect
 let _ = test()
+#pop-options

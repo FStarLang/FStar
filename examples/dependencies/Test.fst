@@ -18,4 +18,6 @@ module Test
 open FStar.IO
 open Message
 
+#push-options "--warn_error -272" //Warning_TopLevelEffect
 let main = print_string message
+#pop-options
