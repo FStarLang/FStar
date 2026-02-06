@@ -293,82 +293,79 @@ fn insert
     {
       full_not_full pht.repr k;
       unreachable();
-    }
-    else
+    };
+
+    let sum = cidx `SZ.add` voff;
+    let vidx = size_t_mod sum ht.sz;
+    let c = V.replace_i_ref contents vidx Zombie;
+    match c
     {
-      let sum = cidx `SZ.add` voff;
-      let vidx = size_t_mod sum ht.sz;
-      let c = V.replace_i_ref contents vidx Zombie;
-      match c
-      {
-        Used k' v' -> {
-          if (k' = k) {
-            V.write_ref contents vidx (Used k' v');
-            with vcontents. assert (pts_to contents vcontents);
-            with s. assert (pts_to vcontents s);
-            assert (pure (Seq.equal s pht.repr.seq));
-            cont := false;
-            idx := vidx;
-            assert (pure ((insert_repr #kt #vt #(pht_sz pht) #pht.spec pht.repr k v).seq `Seq.equal`
-                          Seq.upd pht.repr.seq (SZ.v vidx) (mk_used_cell k v)));
-          } else {
-            V.write_ref contents vidx (Used k' v');
-            with vcontents. assert (pts_to contents vcontents);
-            with s. assert (pts_to vcontents s);
-            assert (pure (Seq.equal s pht.repr.seq));
-            off := SZ.(voff +^ 1sz);
-          };
-        }
-        Clean -> {
-          V.write_ref contents vidx Clean;
+      Used k' v' -> {
+        if (k' = k) {
+          V.write_ref contents vidx (Used k' v');
           with vcontents. assert (pts_to contents vcontents);
           with s. assert (pts_to vcontents s);
           assert (pure (Seq.equal s pht.repr.seq));
           cont := false;
           idx := vidx;
           assert (pure ((insert_repr #kt #vt #(pht_sz pht) #pht.spec pht.repr k v).seq `Seq.equal`
-                  Seq.upd pht.repr.seq (SZ.v vidx) (mk_used_cell k v)));
-        }
-        Zombie ->
-        {
-          with vcontents_g. assert (pts_to contents vcontents_g);
-          with s. assert (pts_to vcontents_g s);
+                        Seq.upd pht.repr.seq (SZ.v vidx) (mk_used_cell k v)));
+        } else {
+          V.write_ref contents vidx (Used k' v');
+          with vcontents. assert (pts_to contents vcontents);
+          with s. assert (pts_to vcontents s);
           assert (pure (Seq.equal s pht.repr.seq));
-          let vcontents = !contents;
-          let ht = { sz = ht.sz; hashf = hashf; contents = vcontents;};
-          with s. rewrite (V.pts_to vcontents_g s) as (V.pts_to ht.contents s);
-          fold (models ht pht);
-          let res = lookup ht k;
-          unfold (models (fst res) pht);
-          contents := (fst res).contents;
-          with s. rewrite (V.pts_to (fst res).contents s) as
-                          (V.pts_to (reveal (hide (fst res).contents)) s);
-          let o = snd res;
-          match o
+          off := SZ.(voff +^ 1sz);
+        };
+      }
+      Clean -> {
+        V.write_ref contents vidx Clean;
+        with vcontents. assert (pts_to contents vcontents);
+        with s. assert (pts_to vcontents s);
+        assert (pure (Seq.equal s pht.repr.seq));
+        cont := false;
+        idx := vidx;
+        assert (pure ((insert_repr #kt #vt #(pht_sz pht) #pht.spec pht.repr k v).seq `Seq.equal`
+                Seq.upd pht.repr.seq (SZ.v vidx) (mk_used_cell k v)));
+      }
+      Zombie ->
+      {
+        with vcontents_g. assert (pts_to contents vcontents_g);
+        with s. assert (pts_to vcontents_g s);
+        assert (pure (Seq.equal s pht.repr.seq));
+        let vcontents = !contents;
+        let ht = { sz = ht.sz; hashf = hashf; contents = vcontents;};
+        with s. rewrite (V.pts_to vcontents_g s) as (V.pts_to ht.contents s);
+        fold (models ht pht);
+        let res = lookup ht k;
+        unfold (models (fst res) pht);
+        contents := (fst res).contents;
+        with s. rewrite (V.pts_to (fst res).contents s) as
+                        (V.pts_to (reveal (hide (fst res).contents)) s);
+        let o = snd res;
+        match o
+        {
+          Some p ->
           {
-            Some p ->
-            {
-              V.write_ref contents p Zombie;
-              with s. rewrite (V.pts_to (reveal (hide (fst res).contents)) s)
-                         as   (V.pts_to (fst res).contents s);
-              with s. assert (V.pts_to (fst res).contents s);
-              cont := false;
-              idx := vidx;
-              assert (pure ((insert_repr #kt #vt #(pht_sz pht) #pht.spec pht.repr k v).seq `Seq.equal`
-                            Seq.upd (Seq.upd pht.repr.seq (SZ.v (p)) Zombie) (SZ.v vidx) (mk_used_cell k v)));
-            }
-            None ->
-            {
-              with s. rewrite (V.pts_to (reveal (hide (fst res).contents)) s)
-                         as   (V.pts_to (fst res).contents s);
-              with s. assert (V.pts_to (fst res).contents s);
-              cont := false;
-              idx := vidx;
-              assert (pure ((insert_repr #kt #vt #(pht_sz pht) #pht.spec pht.repr k v).seq `Seq.equal`
-                            Seq.upd pht.repr.seq (SZ.v vidx) (mk_used_cell k v)));
-            }
+            V.write_ref contents p Zombie;
+            with s. rewrite (V.pts_to (reveal (hide (fst res).contents)) s)
+                        as   (V.pts_to (fst res).contents s);
+            with s. assert (V.pts_to (fst res).contents s);
+            cont := false;
+            idx := vidx;
+            assert (pure ((insert_repr #kt #vt #(pht_sz pht) #pht.spec pht.repr k v).seq `Seq.equal`
+                          Seq.upd (Seq.upd pht.repr.seq (SZ.v (p)) Zombie) (SZ.v vidx) (mk_used_cell k v)));
           }
-
+          None ->
+          {
+            with s. rewrite (V.pts_to (reveal (hide (fst res).contents)) s)
+                        as   (V.pts_to (fst res).contents s);
+            with s. assert (V.pts_to (fst res).contents s);
+            cont := false;
+            idx := vidx;
+            assert (pure ((insert_repr #kt #vt #(pht_sz pht) #pht.spec pht.repr k v).seq `Seq.equal`
+                          Seq.upd pht.repr.seq (SZ.v vidx) (mk_used_cell k v)));
+          }
         }
       }
     }

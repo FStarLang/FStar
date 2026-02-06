@@ -3583,189 +3583,189 @@ ensures exists* remaining'.
     assert (pure (FS.cardinality (reveal remaining) == 0));
     // Contradiction with precondition
     unreachable ()
+  };
+
+  // bi < capacity
+  // Since remaining > 0, we need to find an entry
+  // Use the helper lemma to know we have a valid entry somewhere
+  remaining_keys_nonempty_has_entry bucket_contents (SZ.v bi) (SZ.v entry_idx);
+  
+  // Read entry_idx
+  let ei = B.(!it.it_entry_idx);
+  
+  // Get the bucket at bi to check if we have an entry there
+  get_bucket_at bucket_ptrs bucket_contents 0 (SZ.v it.it_ht.capacity) (SZ.v bi);
+  unfold_bucket_at bucket_ptrs bucket_contents (SZ.v bi);
+  
+  // Get bucket pointer from vector (not from ghost sequence)
+  let bucket_ptr = V.op_Array_Access it.it_ht.buckets bi;
+  rewrite (LL.is_list (Seq.index bucket_ptrs (SZ.v bi)) 
+                      (Seq.index bucket_contents (SZ.v bi)))
+        as (LL.is_list bucket_ptr (Seq.index bucket_contents (SZ.v bi)));
+  
+  let bucket_len = LL.length bucket_ptr;
+  
+  // Check if we have an entry at position ei
+  // Use bool type explicitly
+  let have_entry : bool = (SZ.v ei < bucket_len);
+  
+  if have_entry {
+    // We have an entry at position ei in this bucket
+    // Read the entry
+    let e = get_nth_entry bucket_ptr ei;
+    let result = (e.ekey, e.evalue);
+    
+    // Advance to next entry
+    // Prove SZ.fits (SZ.v ei + 1):
+    // - bucket_len <= total_count bucket_contents 0 == SZ.v cnt
+    // - SZ.v ei < bucket_len
+    // - So SZ.v ei + 1 <= bucket_len <= SZ.v cnt
+    // - cnt : SZ.t, so SZ.v cnt fits, meaning SZ.v cnt <= SZ.max_value
+    // - Thus SZ.v ei + 1 <= SZ.max_value, so SZ.fits (SZ.v ei + 1)
+    bucket_length_le_total bucket_contents (SZ.v bi) 0;
+    assert (pure (bucket_len <= total_count bucket_contents 0));
+    assert (pure (total_count bucket_contents 0 == SZ.v cnt));
+    assert (pure (SZ.v ei < bucket_len));
+    assert (pure (SZ.v ei + 1 <= bucket_len));
+    assert (pure (SZ.v ei + 1 <= SZ.v cnt));
+    // SZ.fits means value is <= SZ.max_value. Since cnt:SZ.t, SZ.v cnt <= SZ.max_value
+    assert (pure (SZ.fits (SZ.v cnt)));
+    assert (pure (SZ.fits (SZ.v ei + 1)));
+    let new_ei = ei `SZ.add` 1sz;
+    B.(it.it_entry_idx := new_ei);
+    
+    // Decrement remaining count
+    let r = B.(!it.it_remaining);
+    B.(it.it_remaining := (r `SZ.sub` 1sz));
+    
+    // Restore bucket state
+    rewrite (LL.is_list bucket_ptr (Seq.index bucket_contents (SZ.v bi)))
+          as (LL.is_list (Seq.index bucket_ptrs (SZ.v bi)) 
+                        (Seq.index bucket_contents (SZ.v bi)));
+    fold_bucket_at bucket_ptrs bucket_contents (SZ.v bi);
+    put_bucket_at bucket_ptrs bucket_contents 0 (SZ.v it.it_ht.capacity) (SZ.v bi);
+    
+    // Fold is_ht_iter with updated remaining
+    // remaining' = remaining_keys_from bucket_contents bi (ei+1)
+    // which should equal FS.remove e.ekey remaining
+    
+    // First prove the key is in remaining and remaining' is FS.remove e.ekey remaining
+    all_buckets_no_dup_at bucket_contents (SZ.v bi);
+    remaining_keys_advance_entry bucket_contents (SZ.v bi) (SZ.v ei) it.it_ht.hashf (SZ.v it.it_ht.capacity);
+    
+    // Now get remaining_new from the lemma
+    let remaining_new : erased (FS.set k) = remaining_keys_from bucket_contents (SZ.v bi) (SZ.v new_ei);
+    assert (pure (reveal remaining_new == FS.remove e.ekey (reveal remaining)));
+    assert (pure (FS.mem e.ekey (reveal remaining)));
+    
+    // Prove the map lookup
+    pmap_returns_entry_value bucket_contents it.it_ht.hashf (SZ.v it.it_ht.capacity) (SZ.v bi) (SZ.v ei);
+    assert (pure (reveal m e.ekey == Some e.evalue));
+    
+    // Prove cardinality relation: |remove x S| = |S| - 1 when x in S
+    // This follows from FS.all_finite_set_facts_lemma() and FS.mem e.ekey remaining
+    assert (pure (FS.cardinality (reveal remaining_new) == FS.cardinality (reveal remaining) - 1));
+    assert (pure (SZ.v (r `SZ.sub` 1sz) == FS.cardinality (reveal remaining_new)));
+    
+    // Fold is_ht_iter
+    fold (is_ht_iter it m all_keys remaining_new);
+    
+    // Return result
+    result
   } else {
-    // bi < capacity
-    // Since remaining > 0, we need to find an entry
-    // Use the helper lemma to know we have a valid entry somewhere
-    remaining_keys_nonempty_has_entry bucket_contents (SZ.v bi) (SZ.v entry_idx);
+    // No entry at current position (exhausted this bucket), need to find next non-empty bucket
+    rewrite (LL.is_list bucket_ptr (Seq.index bucket_contents (SZ.v bi)))
+          as (LL.is_list (Seq.index bucket_ptrs (SZ.v bi)) 
+                        (Seq.index bucket_contents (SZ.v bi)));
+    fold_bucket_at bucket_ptrs bucket_contents (SZ.v bi);
+    put_bucket_at bucket_ptrs bucket_contents 0 (SZ.v it.it_ht.capacity) (SZ.v bi);
     
-    // Read entry_idx
-    let ei = B.(!it.it_entry_idx);
+    // Find next non-empty bucket starting from bi+1
+    // Pass the actual vector so we can read from it
+    let next_bi = find_nonempty_bucket it.it_ht.buckets bucket_contents it.it_ht.capacity (bi `SZ.add` 1sz);
     
-    // Get the bucket at bi to check if we have an entry there
-    get_bucket_at bucket_ptrs bucket_contents 0 (SZ.v it.it_ht.capacity) (SZ.v bi);
-    unfold_bucket_at bucket_ptrs bucket_contents (SZ.v bi);
+    // ei >= bucket_len, so remaining = build_keys from (bi+1)
+    remaining_keys_exhausted_bucket bucket_contents (SZ.v bi) (SZ.v ei);
+    assert (pure (reveal remaining == build_keys_from_buckets bucket_contents (SZ.v bi + 1)));
     
-    // Get bucket pointer from vector (not from ghost sequence)
-    let bucket_ptr = V.op_Array_Access it.it_ht.buckets bi;
-    rewrite (LL.is_list (Seq.index bucket_ptrs (SZ.v bi)) 
-                        (Seq.index bucket_contents (SZ.v bi)))
-         as (LL.is_list bucket_ptr (Seq.index bucket_contents (SZ.v bi)));
+    // Since remaining > 0, next_bi must be < capacity (otherwise remaining would be empty)
+    if (next_bi `SZ.gte` it.it_ht.capacity) {
+      // This case is impossible - would mean remaining is empty
+      assert (pure (build_keys_from_buckets bucket_contents (SZ.v bi + 1) == FS.emptyset));
+      assert (pure (FS.cardinality (reveal remaining) == 0));
+      unreachable ()
+    };
+
+    // next_bi < capacity, and bucket at next_bi is non-empty (Cons?)
+    // Read first entry from bucket next_bi
+    get_bucket_at bucket_ptrs bucket_contents 0 (SZ.v it.it_ht.capacity) (SZ.v next_bi);
+    unfold_bucket_at bucket_ptrs bucket_contents (SZ.v next_bi);
     
-    let bucket_len = LL.length bucket_ptr;
+    let next_bucket_ptr = V.op_Array_Access it.it_ht.buckets next_bi;
+    rewrite (LL.is_list (Seq.index bucket_ptrs (SZ.v next_bi)) 
+                        (Seq.index bucket_contents (SZ.v next_bi)))
+          as (LL.is_list next_bucket_ptr (Seq.index bucket_contents (SZ.v next_bi)));
     
-    // Check if we have an entry at position ei
-    // Use bool type explicitly
-    let have_entry : bool = (SZ.v ei < bucket_len);
+    // We know bucket is non-empty (Cons?)
+    safe_bucket_index_in_bounds bucket_contents (SZ.v next_bi);
+    assert (pure (Cons? (Seq.index bucket_contents (SZ.v next_bi))));
+    assert (pure (List.length (Seq.index bucket_contents (SZ.v next_bi)) > 0));
     
-    if have_entry {
-      // We have an entry at position ei in this bucket
-      // Read the entry
-      let e = get_nth_entry bucket_ptr ei;
-      let result = (e.ekey, e.evalue);
-      
-      // Advance to next entry
-      // Prove SZ.fits (SZ.v ei + 1):
-      // - bucket_len <= total_count bucket_contents 0 == SZ.v cnt
-      // - SZ.v ei < bucket_len
-      // - So SZ.v ei + 1 <= bucket_len <= SZ.v cnt
-      // - cnt : SZ.t, so SZ.v cnt fits, meaning SZ.v cnt <= SZ.max_value
-      // - Thus SZ.v ei + 1 <= SZ.max_value, so SZ.fits (SZ.v ei + 1)
-      bucket_length_le_total bucket_contents (SZ.v bi) 0;
-      assert (pure (bucket_len <= total_count bucket_contents 0));
-      assert (pure (total_count bucket_contents 0 == SZ.v cnt));
-      assert (pure (SZ.v ei < bucket_len));
-      assert (pure (SZ.v ei + 1 <= bucket_len));
-      assert (pure (SZ.v ei + 1 <= SZ.v cnt));
-      // SZ.fits means value is <= SZ.max_value. Since cnt:SZ.t, SZ.v cnt <= SZ.max_value
-      assert (pure (SZ.fits (SZ.v cnt)));
-      assert (pure (SZ.fits (SZ.v ei + 1)));
-      let new_ei = ei `SZ.add` 1sz;
-      B.(it.it_entry_idx := new_ei);
-      
-      // Decrement remaining count
-      let r = B.(!it.it_remaining);
-      B.(it.it_remaining := (r `SZ.sub` 1sz));
-      
-      // Restore bucket state
-      rewrite (LL.is_list bucket_ptr (Seq.index bucket_contents (SZ.v bi)))
-           as (LL.is_list (Seq.index bucket_ptrs (SZ.v bi)) 
-                          (Seq.index bucket_contents (SZ.v bi)));
-      fold_bucket_at bucket_ptrs bucket_contents (SZ.v bi);
-      put_bucket_at bucket_ptrs bucket_contents 0 (SZ.v it.it_ht.capacity) (SZ.v bi);
-      
-      // Fold is_ht_iter with updated remaining
-      // remaining' = remaining_keys_from bucket_contents bi (ei+1)
-      // which should equal FS.remove e.ekey remaining
-      
-      // First prove the key is in remaining and remaining' is FS.remove e.ekey remaining
-      all_buckets_no_dup_at bucket_contents (SZ.v bi);
-      remaining_keys_advance_entry bucket_contents (SZ.v bi) (SZ.v ei) it.it_ht.hashf (SZ.v it.it_ht.capacity);
-      
-      // Now get remaining_new from the lemma
-      let remaining_new : erased (FS.set k) = remaining_keys_from bucket_contents (SZ.v bi) (SZ.v new_ei);
-      assert (pure (reveal remaining_new == FS.remove e.ekey (reveal remaining)));
-      assert (pure (FS.mem e.ekey (reveal remaining)));
-      
-      // Prove the map lookup
-      pmap_returns_entry_value bucket_contents it.it_ht.hashf (SZ.v it.it_ht.capacity) (SZ.v bi) (SZ.v ei);
-      assert (pure (reveal m e.ekey == Some e.evalue));
-      
-      // Prove cardinality relation: |remove x S| = |S| - 1 when x in S
-      // This follows from FS.all_finite_set_facts_lemma() and FS.mem e.ekey remaining
-      assert (pure (FS.cardinality (reveal remaining_new) == FS.cardinality (reveal remaining) - 1));
-      assert (pure (SZ.v (r `SZ.sub` 1sz) == FS.cardinality (reveal remaining_new)));
-      
-      // Fold is_ht_iter
-      fold (is_ht_iter it m all_keys remaining_new);
-      
-      // Return result
-      result
-    } else {
-      // No entry at current position (exhausted this bucket), need to find next non-empty bucket
-      rewrite (LL.is_list bucket_ptr (Seq.index bucket_contents (SZ.v bi)))
-           as (LL.is_list (Seq.index bucket_ptrs (SZ.v bi)) 
-                          (Seq.index bucket_contents (SZ.v bi)));
-      fold_bucket_at bucket_ptrs bucket_contents (SZ.v bi);
-      put_bucket_at bucket_ptrs bucket_contents 0 (SZ.v it.it_ht.capacity) (SZ.v bi);
-      
-      // Find next non-empty bucket starting from bi+1
-      // Pass the actual vector so we can read from it
-      let next_bi = find_nonempty_bucket it.it_ht.buckets bucket_contents it.it_ht.capacity (bi `SZ.add` 1sz);
-      
-      // ei >= bucket_len, so remaining = build_keys from (bi+1)
-      remaining_keys_exhausted_bucket bucket_contents (SZ.v bi) (SZ.v ei);
-      assert (pure (reveal remaining == build_keys_from_buckets bucket_contents (SZ.v bi + 1)));
-      
-      // Since remaining > 0, next_bi must be < capacity (otherwise remaining would be empty)
-      if (next_bi `SZ.gte` it.it_ht.capacity) {
-        // This case is impossible - would mean remaining is empty
-        assert (pure (build_keys_from_buckets bucket_contents (SZ.v bi + 1) == FS.emptyset));
-        assert (pure (FS.cardinality (reveal remaining) == 0));
-        unreachable ()
-      } else {
-        // next_bi < capacity, and bucket at next_bi is non-empty (Cons?)
-        // Read first entry from bucket next_bi
-        get_bucket_at bucket_ptrs bucket_contents 0 (SZ.v it.it_ht.capacity) (SZ.v next_bi);
-        unfold_bucket_at bucket_ptrs bucket_contents (SZ.v next_bi);
-        
-        let next_bucket_ptr = V.op_Array_Access it.it_ht.buckets next_bi;
-        rewrite (LL.is_list (Seq.index bucket_ptrs (SZ.v next_bi)) 
-                            (Seq.index bucket_contents (SZ.v next_bi)))
-             as (LL.is_list next_bucket_ptr (Seq.index bucket_contents (SZ.v next_bi)));
-        
-        // We know bucket is non-empty (Cons?)
-        safe_bucket_index_in_bounds bucket_contents (SZ.v next_bi);
-        assert (pure (Cons? (Seq.index bucket_contents (SZ.v next_bi))));
-        assert (pure (List.length (Seq.index bucket_contents (SZ.v next_bi)) > 0));
-        
-        // Read the first entry (index 0)
-        let e = get_nth_entry next_bucket_ptr 0sz;
-        let result = (e.ekey, e.evalue);
-        
-        // Update indices: bucket_idx = next_bi, entry_idx = 1
-        B.(it.it_bucket_idx := next_bi);
-        B.(it.it_entry_idx := 1sz);
-        
-        // Decrement remaining count
-        let r = B.(!it.it_remaining);
-        B.(it.it_remaining := (r `SZ.sub` 1sz));
-        
-        // Restore bucket state
-        rewrite (LL.is_list next_bucket_ptr (Seq.index bucket_contents (SZ.v next_bi)))
-             as (LL.is_list (Seq.index bucket_ptrs (SZ.v next_bi)) 
-                            (Seq.index bucket_contents (SZ.v next_bi)));
-        fold_bucket_at bucket_ptrs bucket_contents (SZ.v next_bi);
-        put_bucket_at bucket_ptrs bucket_contents 0 (SZ.v it.it_ht.capacity) (SZ.v next_bi);
-        
-        // Prove remaining properties
-        // We have: remaining == build_keys_from_buckets bucket_contents (bi + 1)
-        //                    == build_keys_from_buckets bucket_contents (next_bi)  [from find_nonempty_bucket postcondition]
-        // And: remaining' = remaining_keys_from bucket_contents next_bi 1
-        //                 = FS.remove e.ekey remaining  [by remaining_keys_advance_entry at next_bi, 0]
-        
-        // First, establish that build_keys from (bi+1) == build_keys from next_bi
-        // (this follows from find_nonempty_bucket's postcondition)
-        assert (pure (build_keys_from_buckets bucket_contents (SZ.v bi + 1) == 
-                      build_keys_from_buckets bucket_contents (SZ.v next_bi)));
-        
-        // So remaining == build_keys_from_buckets bucket_contents next_bi
-        //              == remaining_keys_from bucket_contents next_bi 0
-        build_keys_equals_remaining_at_0 bucket_contents (SZ.v next_bi);
-        assert (pure (reveal remaining == remaining_keys_from bucket_contents (SZ.v next_bi) 0));
-        
-        // Now apply remaining_keys_advance_entry at (next_bi, 0)
-        all_buckets_no_dup_at bucket_contents (SZ.v next_bi);
-        remaining_keys_advance_entry bucket_contents (SZ.v next_bi) 0 it.it_ht.hashf (SZ.v it.it_ht.capacity);
-        
-        let remaining_new : erased (FS.set k) = remaining_keys_from bucket_contents (SZ.v next_bi) 1;
-        assert (pure (reveal remaining_new == FS.remove e.ekey (reveal remaining)));
-        assert (pure (FS.mem e.ekey (reveal remaining)));
-        
-        // Prove the map lookup
-        pmap_returns_entry_value bucket_contents it.it_ht.hashf (SZ.v it.it_ht.capacity) (SZ.v next_bi) 0;
-        assert (pure (reveal m e.ekey == Some e.evalue));
-        
-        // Prove cardinality
-        assert (pure (FS.cardinality (reveal remaining_new) == FS.cardinality (reveal remaining) - 1));
-        assert (pure (SZ.v (r `SZ.sub` 1sz) == FS.cardinality (reveal remaining_new)));
-        
-        // Fold is_ht_iter
-        fold (is_ht_iter it m all_keys remaining_new);
-        
-        result
-      }
-    }
+    // Read the first entry (index 0)
+    let e = get_nth_entry next_bucket_ptr 0sz;
+    let result = (e.ekey, e.evalue);
+    
+    // Update indices: bucket_idx = next_bi, entry_idx = 1
+    B.(it.it_bucket_idx := next_bi);
+    B.(it.it_entry_idx := 1sz);
+    
+    // Decrement remaining count
+    let r = B.(!it.it_remaining);
+    B.(it.it_remaining := (r `SZ.sub` 1sz));
+    
+    // Restore bucket state
+    rewrite (LL.is_list next_bucket_ptr (Seq.index bucket_contents (SZ.v next_bi)))
+          as (LL.is_list (Seq.index bucket_ptrs (SZ.v next_bi)) 
+                        (Seq.index bucket_contents (SZ.v next_bi)));
+    fold_bucket_at bucket_ptrs bucket_contents (SZ.v next_bi);
+    put_bucket_at bucket_ptrs bucket_contents 0 (SZ.v it.it_ht.capacity) (SZ.v next_bi);
+    
+    // Prove remaining properties
+    // We have: remaining == build_keys_from_buckets bucket_contents (bi + 1)
+    //                    == build_keys_from_buckets bucket_contents (next_bi)  [from find_nonempty_bucket postcondition]
+    // And: remaining' = remaining_keys_from bucket_contents next_bi 1
+    //                 = FS.remove e.ekey remaining  [by remaining_keys_advance_entry at next_bi, 0]
+    
+    // First, establish that build_keys from (bi+1) == build_keys from next_bi
+    // (this follows from find_nonempty_bucket's postcondition)
+    assert (pure (build_keys_from_buckets bucket_contents (SZ.v bi + 1) == 
+                  build_keys_from_buckets bucket_contents (SZ.v next_bi)));
+    
+    // So remaining == build_keys_from_buckets bucket_contents next_bi
+    //              == remaining_keys_from bucket_contents next_bi 0
+    build_keys_equals_remaining_at_0 bucket_contents (SZ.v next_bi);
+    assert (pure (reveal remaining == remaining_keys_from bucket_contents (SZ.v next_bi) 0));
+    
+    // Now apply remaining_keys_advance_entry at (next_bi, 0)
+    all_buckets_no_dup_at bucket_contents (SZ.v next_bi);
+    remaining_keys_advance_entry bucket_contents (SZ.v next_bi) 0 it.it_ht.hashf (SZ.v it.it_ht.capacity);
+    
+    let remaining_new : erased (FS.set k) = remaining_keys_from bucket_contents (SZ.v next_bi) 1;
+    assert (pure (reveal remaining_new == FS.remove e.ekey (reveal remaining)));
+    assert (pure (FS.mem e.ekey (reveal remaining)));
+    
+    // Prove the map lookup
+    pmap_returns_entry_value bucket_contents it.it_ht.hashf (SZ.v it.it_ht.capacity) (SZ.v next_bi) 0;
+    assert (pure (reveal m e.ekey == Some e.evalue));
+    
+    // Prove cardinality
+    assert (pure (FS.cardinality (reveal remaining_new) == FS.cardinality (reveal remaining) - 1));
+    assert (pure (SZ.v (r `SZ.sub` 1sz) == FS.cardinality (reveal remaining_new)));
+    
+    // Fold is_ht_iter
+    fold (is_ht_iter it m all_keys remaining_new);
+    
+    result
   }
 }
 
