@@ -27,4 +27,6 @@ let rec f (x : int) : Dv int = 25
 #pop-options
 
 let g (x : int) : Tac int = f x
+#push-options "--warn_error -272" //Warning_TopLevelEffect
 let _ = assert True by (let x = g 2 in trivial ())
+#pop-options

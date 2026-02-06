@@ -17,11 +17,13 @@ module Bug262
 
 open FStar.ST
 
+#push-options "--warn_error -272" //Warning_TopLevelEffect
 [@@expect_failure [66]]
 let log0 = alloc []
 
 val log: ref (list int) //<-- adding this line makes it succeed
 let log = alloc []
+#pop-options
 
 val test : unit -> ST unit (requires (fun h -> Heap.contains h log))
                            (ensures (fun h0 _ h1 -> Heap.modifies !{log} h0 h1))

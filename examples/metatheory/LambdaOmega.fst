@@ -558,7 +558,7 @@ let kinding_strengthening_ebnd g x t_x #t #k h = kinding_extensional h g
 irreducible val kinding_inversion_arrow: #g:env -> #t1:typ -> #t2:typ ->
                              h:(kinding g (TArr t1 t2) KTyp) ->
                              Tot (cand (kinding g t1 KTyp) (kinding g t2 KTyp))
-let rec kinding_inversion_arrow #g #t1 #t2 h = match h with
+let kinding_inversion_arrow #g #t1 #t2 h = match h with
   | KiArr h1 h2 -> Conj h1 h2
 
 irreducible val typing_to_kinding : #g:env -> #e:exp -> #t:typ ->
@@ -583,7 +583,7 @@ val tshift_up_above_tsubst_beta : x:var -> t1:typ -> t2:typ -> Lemma
     (ensures (tshift_up_above x (tsubst_beta t2 t1) =
               tsubst_beta (tshift_up_above x t2) (tshift_up_above (x + 1) t1)))
     (decreases t1)
-let rec tshift_up_above_tsubst_beta x t1 t2 =
+let tshift_up_above_tsubst_beta x t1 t2 =
 
   assert(tshift_up_above x (tsubst_beta t2 t1) =
          tsubst (tsub_inc_above x) (tsubst_beta t2 t1));
@@ -683,7 +683,7 @@ irreducible val typing_substitution: #e:exp -> #v:exp -> #t_x:typ ->
       h1:(typing g v t_x) ->
       h2:(typing (extend_evar g 0 t_x) e t) ->
       Tot (typing g (esubst_beta v e) t) (decreases %[e;h2])
-let rec typing_substitution #e #v #t_x #t #g h1 h2 =
+let typing_substitution #e #v #t_x #t #g h1 h2 =
   let hs : subst_typing (esub_beta v) (extend_evar g 0 t_x) g =
     fun y hkind -> if y = 0 then h1
                    else TyVar (y-1) (kinding_extensional hkind g) in
@@ -796,7 +796,7 @@ let tsh = tshift_up_above
 (* shift above and substitute is an identity *)
 val shift_above_and_subst: s:typ -> y:nat -> t:typ -> Lemma
                            (ensures (ts y t (tsh y s) = s)) (decreases s)
-let rec shift_above_and_subst s y t =
+let shift_above_and_subst s y t =
   tsubst_comp (tsub_beta_gen y t) (tsub_inc_above y) s;
   tsubst_extensional (tsub_comp (tsub_beta_gen y t) (tsub_inc_above y)) tsub_id s;
   tsubst_id s
@@ -813,7 +813,7 @@ val tsubst_commute: t1:typ -> y:nat -> t2:typ -> x:nat{x >= y} -> s:typ ->
                     Lemma (requires True)
                     (ensures (ts x s (ts y t2 t1) =
                               ts y (ts x s t2) (ts (x + 1) (tsh y s) t1)))
-let rec tsubst_commute t1 y t2 x s =
+let tsubst_commute t1 y t2 x s =
   tsubst_comp (tsub_beta_gen x s) (tsub_beta_gen y t2) t1;
   forall_intro (tsubst_commute_aux y x s t2);
   tsubst_extensional (tsub_comp (tsub_beta_gen x s) (tsub_beta_gen y t2))

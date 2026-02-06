@@ -506,7 +506,8 @@ let rec desugar_maybe_non_constant_universe t
              ("Negative universe constant  are not supported : " ^ repr);
       Inl n
   | Op (op_plus, [t1 ; t2]) ->
-      assert (Ident.string_of_id op_plus = "+") ;
+      let op_str = Ident.string_of_id op_plus in
+      assert (op_str = "+") ;
       let u1 = desugar_maybe_non_constant_universe t1 in
       let u2 = desugar_maybe_non_constant_universe t2 in
       begin match u1, u2 with
@@ -524,7 +525,8 @@ let rec desugar_maybe_non_constant_universe t
             let uarg = desugar_maybe_non_constant_universe targ in
             aux t (uarg::univargs)
         | Var max_lid ->
-            assert (Ident.string_of_lid max_lid = "max") ;
+            let lid_str = Ident.string_of_lid max_lid in
+            assert (lid_str = "max") ;
             if List.existsb (function Inr _ -> true | _ -> false) univargs
             then Inr (U_max (List.map (function Inl n -> int_to_universe n | Inr u -> u) univargs))
             else
