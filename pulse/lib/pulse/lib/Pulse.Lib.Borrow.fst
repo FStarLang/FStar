@@ -701,11 +701,11 @@ ghost fn too_much_perm u#t (#t: Type u#t) (x: ref t) #y1 #y2 #p1 #p2
   requires pts_to x #p1 y1
   requires pts_to x #p2 y2
   requires pure (p1 +. p2 >. 1.0R)
-  ensures pure False
+  ensures is_unreachable
 {
   gather x;
   pts_to_perm_bound x;
-  drop_ (pts_to x _)
+  unreachable ()
 }
 
 ghost fn later_equiv_commute p q
@@ -793,13 +793,11 @@ ghost fn rec bc_stored_take x (d: stored_shape) y (is: list bool) p #l
           unfold bc_idx x [] l;
           rewrite each l as x;
           too_much_perm x.be_ref;
-          unreachable ();
         }
         i::is -> {
           unfold bc_idx x (i::is) l;
           unfold fpts_to x.be_ref;
           too_much_perm x.be_ref;
-          unreachable ();
         }
       }
     }
@@ -812,7 +810,6 @@ ghost fn rec bc_stored_take x (d: stored_shape) y (is: list bool) p #l
           rewrite each l as x;
           unfold fpts_to x.be_ref;
           too_much_perm x.be_ref;
-          unreachable ();
         }
         i::is' -> {
           unfold bc_idx x (i::is') l; with a' b'. _;
@@ -882,7 +879,6 @@ ghost fn rec rt_stored_take x (n: unat) b j is #r p #l
       fpts_to_of_root_idx' x j r;
       unfold fpts_to x;
       too_much_perm x;
-      unreachable ()
     }
     Succ m -> {
       assert rewrites_to n (Succ m);
@@ -1044,7 +1040,6 @@ ghost fn rec rt_borrowed_take x (n: unat) j #r #p
       fpts_to_of_root_idx' x j r;
       unfold fpts_to x;
       too_much_perm x;
-      unreachable ()
     }
     Succ m -> {
       assert rewrites_to n (Succ m);
