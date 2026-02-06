@@ -23,6 +23,7 @@ open Pulse.Checker.Pure
 open Pulse.Checker.Base
 open Pulse.Checker.Prover
 open Pulse.Checker.Prover.Normalize
+open Pulse.Reflection.Util
 open FStar.List.Tot
 open Pulse.Show
 module T = FStar.Tactics.V2
@@ -93,9 +94,10 @@ let rec close_post x_ret dom_g g1 (bs1:list (ppname & var & typ)) (post:slprop)
     )
   )
 
-let infer_post #g #ctxt (r:checker_result_t g ctxt NoHint)
-: T.Tac (p:post_hint_for_env g { p.g == g /\ p.effect_annot == EffectAnnotSTT })
-= let (| x, g0, (| u, t, _ |), (| post, post_typing |), k |) = r in
+let infer_post' (g:env) (g':env { g' `env_extends` g })
+  #u #t (x: var { lookup g' x == Some t }) (t_typ: universe_of g' t u)
+  #post (post_typing: tot_typing g' post tm_slprop)
+=
   // simplify post by applying elimination rules (particularly `frame ** is_unreachable ~~> is_unreachable`)
   let (| g1, post, _, _ |) = Pulse.Checker.Prover.elim_exists_and_pure post_typing in
   let bs0 = bindings g in
@@ -126,7 +128,9 @@ let infer_post #g #ctxt (r:checker_result_t g ctxt NoHint)
   in
   let post = RU.beta_lax (elab_env g) post in // clean up spurious dependencies on variables
   let post = RU.deep_compress post in
-  let close_post = close_post x dom_g g1 (bindings_with_ppname g1) post in
+  let close_post =
+    if post `eq_tm` tm_is_unreachable then post else
+    close_post x dom_g g1 (bindings_with_ppname g1) post in
   Pulse.Checker.Util.debug g "pulse.infer_post" (fun _ ->
     Printf.sprintf "Original postcondition: %s |= %s\nInferred postcondition: %s |= %s\n" 
     (env_to_string g1) (T.term_to_string post) (env_to_string g) (T.term_to_string close_post));
