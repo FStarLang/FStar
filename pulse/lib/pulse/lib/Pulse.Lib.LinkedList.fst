@@ -640,3 +640,51 @@ fn delete (#kk:Type0) (x:llist kk) (item:kk) (pos:U32.t) (#xl:erased (list kk))
   append x z;
   with m. rewrite (is_list x m) as (is_list x (l0 @ item :: l1));
 }
+
+
+fn reverse (#t:Type0) (x:llist t)
+  requires is_list x 'l
+  returns y:llist t
+  ensures is_list y (List.Tot.rev 'l)
+{
+  let mut prev = null_llist #t;
+  let mut cur = x;
+  fold (is_list (null_llist #t) ([] <: list t));
+  while (
+    let c = Pulse.Lib.Reference.(!cur);
+    Some? c
+  )
+  invariant exists* (p:llist t) (c:llist t) (rev_pfx:list t) (suffix:list t).
+    pts_to prev p **
+    pts_to cur c **
+    is_list p rev_pfx **
+    is_list c suffix **
+    pure (List.Tot.rev rev_pfx @ suffix == 'l)
+  {
+    with _p _c _rev_pfx _suffix. _;
+    let p = Pulse.Lib.Reference.(!prev);
+    let c = Pulse.Lib.Reference.(!cur);
+    some_iff_cons c;
+    let np = Some?.v c;
+    is_list_cases_some c np;
+    with node tl. _;
+    let n = !np;
+    let next = n.tail;
+    rewrite each node.tail as next;
+    np := { n with tail = p };
+    intro_is_list_cons (Some np) np;
+    Pulse.Lib.Reference.(prev := Some np);
+    Pulse.Lib.Reference.(cur := next);
+    List.Tot.Properties.rev_rev' (n.head :: _rev_pfx);
+    List.Tot.Properties.rev_rev' _rev_pfx;
+    List.Tot.Properties.append_assoc (List.Tot.rev _rev_pfx) [n.head] tl;
+  };
+  with _p _c _rev_pfx _suffix. _;
+  is_list_cases_none _c;
+  drop_ (is_list _c _suffix);
+  List.Tot.Properties.append_l_nil (List.Tot.rev _rev_pfx);
+  List.Tot.Properties.rev_involutive _rev_pfx;
+  let result = Pulse.Lib.Reference.(!prev);
+  rewrite (is_list _p _rev_pfx) as (is_list result (List.Tot.rev 'l));
+  result
+}
