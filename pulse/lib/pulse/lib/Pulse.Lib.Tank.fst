@@ -32,6 +32,8 @@ let owns #n ([@@@mkey] g : tank n) (i:nat)
 : timeless_slprop
 = GPR.pts_to #_ #(pcm_of n) g i
 
+instance owns_placeless #n g i = Tactics.Typeclasses.solve
+
 ghost
 fn alloc (n:nat)
   returns g : tank n

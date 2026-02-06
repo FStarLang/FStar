@@ -28,6 +28,8 @@ instance val non_informative_tank (n:nat)
 // A predicate asserting ownership of `i` units of the tank
 val owns (#n:nat) ([@@@mkey] g : tank n) (i:nat) : timeless_slprop
 
+instance val owns_placeless (#n:nat) (g : tank n) (i:nat) : placeless (owns g i)
+
 // Allocate a new tank of capacity `n`, returning ownership of all `n` units
 ghost
 fn alloc (n:nat)
