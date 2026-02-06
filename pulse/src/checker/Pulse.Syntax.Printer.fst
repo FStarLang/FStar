@@ -85,6 +85,8 @@ and term_to_string' (level:string) (t:term) : T.Tac string
   = match inspect_term t with
     | Tm_Emp -> "emp"
 
+    | Tm_IsUnreachable -> "is_unreachable"
+
     | Tm_Pure p ->
       sprintf "pure (%s)" 
         (term_to_string' (indent level) p)
@@ -148,6 +150,7 @@ let rec binder_to_doc b : T.Tac document =
 and term_to_doc t : T.Tac document
   = match inspect_term t with
     | Tm_Emp -> doc_of_string "emp"
+    | Tm_IsUnreachable -> doc_of_string "is_unreachable"
 
     | Tm_Pure p -> doc_of_string "pure " ^^ parens (term_to_doc p)
     | Tm_Star _ _ ->
@@ -473,6 +476,7 @@ let st_term_to_string t = st_term_to_string' "" t
 let tag_of_term (t:term) =
   match inspect_term t with
   | Tm_Emp -> "Tm_Emp"
+  | Tm_IsUnreachable -> "Tm_IsUnreachable"
   | Tm_Pure _ -> "Tm_Pure"
   | Tm_Star _ _ -> "Tm_Star"
   | Tm_ExistsSL _ _ _ -> "Tm_ExistsSL"

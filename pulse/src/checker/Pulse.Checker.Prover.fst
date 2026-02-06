@@ -25,6 +25,7 @@ open Pulse.Syntax.Pure
 open Pulse.Syntax.Naming
 open Pulse.Checker.Prover.Util
 open Pulse.Checker.Prover.Normalize
+open Pulse.Reflection.Util
 open FStar.List { (@) }
 module RU = Pulse.RuntimeUtils
 module T = FStar.Tactics.V2
@@ -44,6 +45,7 @@ instance show_head_id : tac_showable head_id = {
 noeq type slprop_view =
   | Pure : term -> slprop_view
   | WithPure : term -> ppname -> body: term -> slprop_view // body is opened with ()
+  | IsUnreachable
   | Exists : u: universe -> b: binder -> body: term -> slprop_view
   | Atom : head: head_id -> mkeys: option (list term) -> t: slprop -> slprop_view
   | Unknown : slprop -> slprop_view
@@ -52,6 +54,7 @@ instance showable_slprop_view : tac_showable slprop_view = {
   show = (function
   | Pure p -> Printf.sprintf "(Pure %s)" (show p)
   | WithPure t x b -> Printf.sprintf "(WithPure %s %s %s)" (show t) (show x) (show b)
+  | IsUnreachable -> "IsUnreachable"
   | Exists u x b -> Printf.sprintf "(exists* (%s). %s)" (Pulse.Syntax.Printer.binder_to_string x) (show b)
   | Atom head keys t -> Printf.sprintf "(Atom {head=%s; keys=%s} %s)" (show head) (show keys) (show t)
   | Unknown p -> Printf.sprintf "(Unknown %s)" (show p)
@@ -62,6 +65,7 @@ let elab_slprop (p: slprop_view) : slprop =
   match p with
   | Pure p -> tm_pure p
   | Exists u b body -> tm_exists_sl u b body
+  | IsUnreachable -> tm_is_unreachable
   | Atom _ _ t -> t
   | WithPure p n b -> tm_with_pure p n b
   | Unknown p -> p
@@ -87,6 +91,7 @@ let rec inspect_slprop (g: env) (p: slprop) : T.Tac (v:list slprop_view { elab_s
   slprop_eqv_refl p;
   match inspect_term p with
   | Tm_Pure p -> [Pure p]
+  | Tm_IsUnreachable -> [IsUnreachable]
   | Tm_WithPure a n b ->
     assume tm_with_pure a n (open_term' b unit_const 0) `slprop_eqv` p;
     [WithPure a n (open_term' b unit_const 0)]
@@ -513,6 +518,41 @@ let elim_first (g: env) (ctxt0 goals: list slprop_view)
   match elim_first' g ctxt0 goals k with
   | Some r -> Some r
   | None -> None
+
+let unreachable_elim_typing (g: env) (u: universe) (res: term) (post: term) :
+    t:st_term & st_typing g t (C_STGhost tm_emp_inames { u; res; pre=tm_is_unreachable; post }) =
+  let st = wtag (Some STT_Ghost) (Tm_ST { t = tm_unknown; args = [] }) in
+  let c = C_STGhost tm_emp_inames { u; res; pre=tm_is_unreachable; post } in
+  let typing: st_typing g st c = RU.magic () in
+  (| st, typing |)
+
+let unreachable_elim (g: env) (goals: list slprop_view) : cont_elab g [IsUnreachable] g goals = fun frame post t ->
+  let frame = elab_slprops frame in
+  let (| st, typing |) = unreachable_elim_typing g u0 tm_unit frame in
+  let h: tot_typing g (tm_star frame tm_is_unreachable) tm_slprop = RU.magic () in
+  k_elab_equiv (continuation_elaborator_with_bind_nondep frame typing h) (RU.magic ()) (RU.magic ())
+    post t
+
+let elim_is_unreachable (g: env) (ctxt goals: list slprop_view) :
+    T.Tac (option (prover_result g ctxt goals)) =
+  if not (List.existsb IsUnreachable? ctxt) then None else
+  // TODO: maybe add `_: squash False` to the environment?
+  let h1 : slprop_equiv g (elab_slprops ctxt) (elab_slprops ([IsUnreachable] @ [IsUnreachable])) = RU.magic () in
+  Some (| g, [IsUnreachable], [], [IsUnreachable], (fun g'' -> cont_elab_refl _ _ _ h1, unreachable_elim _ _ <: T.Tac _)|)
+
+let elim_is_unreachable' (g: env) (ctxt goals: list slprop_view) :
+    T.Tac (option (prover_result_samegoals g ctxt goals)) =
+  match ctxt with
+  | [IsUnreachable] -> None
+  | _ ->
+    if not (List.existsb IsUnreachable? ctxt) then None else
+    // TODO: maybe add `_: squash False` to the environment?
+    Some (| g, [IsUnreachable], goals, [IsUnreachable], (fun g'' ->
+      let h1 : slprop_equiv g (elab_slprops ctxt) (elab_slprops ([IsUnreachable] @ [IsUnreachable])) = RU.magic () in
+      let h2: slprop_equiv g'' (elab_slprops [IsUnreachable]) (elab_slprops ([IsUnreachable] @ goals)) = RU.magic () in
+      cont_elab_refl _ _ _ h1,
+      cont_elab_equiv (unreachable_elim g'' goals) h2 (VE_Refl _ _)
+      <: T.Tac _)|)
 
 let unpack_and_norm_ctxt (g: env) (ctxt: slprop_view) :
     T.Tac (option (prover_result_nogoals g [ctxt])) =
@@ -1092,7 +1132,8 @@ let prover_result_solved_unpack #g #ctxt #goals (res: prover_result_solved g ctx
     let h: slprop_equiv g' (elab_slprops (solved @ ctxt')) (elab_slprops (ctxt' @ solved @ goals')) = RU.magic () in
     cont_elab_trans k1 (cont_elab_frame k2 ctxt') h |)
 
-#push-options "--split_queries always --z3rlimit 10"
+#restart-solver
+#push-options "--split_queries always --z3rlimit 15"
 let try_apply_intro_lemma (g: env) (lid: R.name) (i: nat) ctxt (goal: slprop_view) :
     T.Tac (option (
       g': env &
@@ -1225,45 +1266,59 @@ let check_steps (pg: penv) (ctxt goals: list slprop_view) : T.Tac (pg':penv { pg
   else
     pg
 
+let elim_step (pg: penv) (ctxt goals: list slprop_view) :
+    T.Tac (option (prover_result_samegoals pg.penv_env ctxt goals)) =
+  let g = pg.penv_env in
+  first_some [
+    (fun _ -> elim_first' g ctxt goals (unpack_and_norm_ctxt g));
+    (fun _ -> elim_first' g ctxt goals (elim_pure_step g));
+    (fun _ -> elim_first' g ctxt goals (elim_with_pure_step g));
+    (fun _ -> elim_first' g ctxt goals (elim_exists_step g));
+    (fun _ -> elim_is_unreachable' g ctxt goals);
+    (fun _ -> elim_first' g ctxt goals (eager_elim_lemma_step pg));
+  ]
+
+let prove_step (pg: penv) (ctxt goals: list slprop_view)
+    (try_prove_core : (pg:penv -> ctxt: list slprop_view -> goals: list slprop_view ->
+      T.Tac (prover_result pg.penv_env ctxt goals))) :
+    T.Tac (option (prover_result pg.penv_env ctxt goals)) =
+  let g = pg.penv_env in
+  first_some [
+    (fun _ -> elim_is_unreachable g ctxt goals);
+    (fun _ -> prove_first g ctxt goals (prove_pure g ctxt true));
+    (fun _ -> prove_first g ctxt goals (prove_with_pure g ctxt true));
+    (fun _ -> prove_first g ctxt goals (prove_exists g ctxt));
+    (fun _ -> prove_first g ctxt goals (unpack_and_norm_goal g ctxt));
+    (fun _ -> prove_first g ctxt goals (prove_atom_unamb g ctxt));
+    (fun _ -> prove_first g ctxt goals (prove_atom g ctxt pg.penv_allow_amb));
+    (fun _ -> prove_first g ctxt goals (prove_pure g ctxt false));
+    (fun _ -> prove_first g ctxt goals (prove_with_pure g ctxt false));
+    (fun _ -> prove_first g ctxt goals (eager_intro_lemma_step pg ctxt));
+    (fun _ -> prove_first g ctxt goals (intro_lemma_step try_prove_core { pg with penv_allow_amb = false } ctxt));
+  ]
+
 let rec try_prove_core (pg: penv) (ctxt goals: list slprop_view) : T.Tac (prover_result pg.penv_env ctxt goals) =
   let g = pg.penv_env in
-  let noop () : prover_result g ctxt goals =
+  debug_prover g (fun _ -> Printf.sprintf "proving\n%s\n from\n%s\n" (show_slprops goals) (show_slprops ctxt));
+  let pg = check_steps pg ctxt goals in
+  let step =
+    match elim_step pg ctxt goals with
+    | Some step -> Some step
+    | None ->
+      match goals with
+      | [] -> None
+      | _ -> prove_step pg ctxt goals try_prove_core in
+  match step with
+  | Some step ->
+    let (| g1, ctxt1, goals1, solved1, k1 |) = step in
+    let pg1 = { pg with penv_env = g1 } in
+    let step2 = try_prove_core pg1 ctxt1 goals1 in
+    prover_result_join step step2
+  | None ->
     (| g, ctxt, goals, [], fun g'' ->
       cont_elab_refl g _ _ (VE_Refl _ _),
       cont_elab_refl g'' ([] @ goals) goals (VE_Refl _ _)
-      <: T.Tac _ |) in
-  match goals with
-  | [] -> noop ()
-  | goals ->
-    debug_prover g (fun _ -> Printf.sprintf "proving\n%s\n from\n%s\n" (show_slprops goals) (show_slprops ctxt));
-    let pg = check_steps pg ctxt goals in
-    let step : option (prover_result g ctxt goals) =
-      first_some [
-        (fun _ -> elim_first g ctxt goals (unpack_and_norm_ctxt g));
-        (fun _ -> elim_first g ctxt goals (elim_pure_step g));
-        (fun _ -> elim_first g ctxt goals (elim_with_pure_step g));
-        (fun _ -> elim_first g ctxt goals (elim_exists_step g));
-        (fun _ -> elim_first g ctxt goals (eager_elim_lemma_step pg));
-        (fun _ -> prove_first g ctxt goals (prove_pure g ctxt true));
-        (fun _ -> prove_first g ctxt goals (prove_with_pure g ctxt true));
-        (fun _ -> prove_first g ctxt goals (prove_exists g ctxt));
-        (fun _ -> prove_first g ctxt goals (unpack_and_norm_goal g ctxt));
-        (fun _ -> prove_first g ctxt goals (prove_atom_unamb g ctxt));
-        (fun _ -> prove_first g ctxt goals (prove_atom g ctxt pg.penv_allow_amb));
-        (fun _ -> prove_first g ctxt goals (prove_pure g ctxt false));
-        (fun _ -> prove_first g ctxt goals (prove_with_pure g ctxt false));
-        (fun _ -> prove_first g ctxt goals (eager_intro_lemma_step pg ctxt));
-
-        (fun _ -> prove_first g ctxt goals (intro_lemma_step try_prove_core { pg with penv_allow_amb = false } ctxt));
-      ] in
-    match step with
-    | Some step ->
-      let (| g1, ctxt1, goals1, solved1, k1 |) = step in
-      let pg1 = { pg with penv_env = g1 } in
-      let step2 = try_prove_core pg1 ctxt1 goals1 in
-      prover_result_join step step2
-    | None ->
-      noop ()
+      <: T.Tac _ |)
 
 let try_prove (g: env) (ctxt goals: slprop) allow_amb : T.Tac (prover_result g [Unknown ctxt] [Unknown goals]) =
   let ctxt = RU.deep_compress_safe ctxt in
@@ -1303,65 +1358,6 @@ let prove rng (g: env) (ctxt goals: slprop) allow_amb :
         (tm_star goals (RU.deep_compress_safe (elab_slprops ctxt'))) = RU.magic () in
     (| g', RU.deep_compress_safe (elab_slprops ctxt'), k_elab_equiv (k []) (VE_Refl _ _) h |)
 
-#restart-solver
-#push-options "--z3rlimit_factor 2"
-let prove_post_hint (#g:env) (#ctxt:slprop) (r:checker_result_t g ctxt NoHint) (post_hint:post_hint_opt g) (rng:range)
-  : T.Tac (checker_result_t g ctxt post_hint) =
-
-  let g = push_context g "prove_post_hint" rng in
-
-  match post_hint with
-  | NoHint -> r
-  | TypeHint _ -> retype_checker_result post_hint r
-  | PostHint post_hint ->
-    let (| x, g2, (| u_ty, ty, ty_typing |), (| ctxt', ctxt'_typing |), k |) = r in
-
-    let ppname = mk_ppname_no_range "_posth" in
-    let post_hint_opened = open_term_nv post_hint.post (ppname, x) in
-
-    // TODO: subtyping
-    if not (eq_tm (RU.deep_compress_safe ty) (RU.deep_compress_safe post_hint.ret_ty))
-    then
-      fail_doc g (Some rng) [
-        text "The return type" ^^ indent (pp ty) ^/^
-        text "does not match the expected" ^^ indent (pp post_hint.ret_ty)
-      ]
-    else if eq_tm post_hint_opened ctxt'
-    then (| x, g2, (| u_ty, ty, ty_typing |), (| ctxt', ctxt'_typing |), k |)
-    else
-      let (| g3, remaining_ctxt, k_post |) =
-        prove rng g2 ctxt' post_hint_opened false in
-
-      let tv = inspect_term remaining_ctxt in
-      if not (Tm_Emp? tv) then
-        fail_doc g (Some rng) [
-          prefix 2 1 (text "Leftover resources:")
-                     (align (pp remaining_ctxt));
-          (if Tm_Star? tv
-           then text "Did you forget to free these resources?"
-           else text "Did you forget to free this resource?");
-        ]
-      else
-        let h3: slprop_equiv g3 (tm_star post_hint_opened remaining_ctxt) post_hint_opened = RU.magic () in
-        // for the typing of ty in g3, we have typing of ty in g2 above, and g3 `env_extends` g2
-        let h1: universe_of g3 ty u_ty = RU.magic () in
-        // for the typing of post_hint_opened, again post_hint is well-typed in g, and g3 `env_extends` g
-        let h2: tot_typing g3 post_hint_opened tm_slprop = RU.magic () in
-        (| x, g3, (| u_ty, ty, h1 |), (| post_hint_opened, h2 |),
-          k_elab_trans k (k_elab_equiv k_post (VE_Refl _ _) h3) |)
-#pop-options
-
-let try_frame_pre (allow_ambiguous : bool) (#g:env)
-    (#ctxt:slprop) (ctxt_typing:tot_typing g ctxt tm_slprop)
-    (d:(t:st_term & c:comp_st & st_typing g t c))
-    (res_ppname:ppname) :
-    T.Tac (checker_result_t g ctxt NoHint) =
-  let (| t, c, d |) = d in
-  let (| g', ctxt', k |) = prove t.range g ctxt (comp_pre c) allow_ambiguous in
-  let d: st_typing g' t c = RU.magic () in // weakening from g to g'
-  let h1: tot_typing g' ctxt' tm_slprop = RU.magic() in // weakening from to g'
-  checker_result_for_st_typing (k _ (| t, add_frame c ctxt', T_Frame _ _ _ ctxt' h1 d |)) res_ppname
-
 let rec try_elim_core (pg: penv) (ctxt: list slprop_view) :
     T.Tac (prover_result_nogoals pg.penv_env ctxt) =
   let pg = check_steps pg ctxt [] in
@@ -1373,13 +1369,7 @@ let rec try_elim_core (pg: penv) (ctxt: list slprop_view) :
       <: T.Tac _ |) in
   debug_prover g (fun _ -> Printf.sprintf "eliminating\n%s\n" (show_slprops ctxt));
   let step : option (prover_result_nogoals g ctxt) =
-    first_some [
-      (fun _ -> elim_first' g ctxt [] (unpack_and_norm_ctxt g));
-      (fun _ -> elim_first' g ctxt [] (elim_pure_step g));
-      (fun _ -> elim_first' g ctxt [] (elim_with_pure_step g));
-      (fun _ -> elim_first' g ctxt [] (elim_exists_step g));
-      (fun _ -> elim_first' g ctxt [] (eager_elim_lemma_step pg));
-    ] in
+    elim_step pg ctxt [] in
   match step with
   | Some step ->
     let (| g1, ctxt1, goals1, solved1, k1 |) = step in
@@ -1406,3 +1396,93 @@ let elim_exists_and_pure (#g:env) (#ctxt:slprop)
     let before, after = k g' in
     k_elab_trans (k_elab_equiv (before []) h1 (VE_Refl _ _))
       (k_elab_equiv (after ctxt'') h2 h3) post_hint post_hint_typ |)
+
+let k_unreach (g: env) (x: nvar { freshv g (snd x) }) (post_hint: post_hint_t { g `env_extends` post_hint.g }) :
+    T.Tac (continuation_elaborator g tm_is_unreachable (push_binding g (snd x) (fst x) post_hint.ret_ty) (open_term_nv post_hint.post x)) =
+  let h: tot_typing g tm_is_unreachable tm_slprop = RU.magic () in
+  let (| c, c_typ |) = Pulse.Typing.Combinators.comp_for_post_hint h post_hint (snd x) in
+  let typ = T_Unreachable g c c_typ in
+  let g' = push_binding g (snd x) (fst x) post_hint.ret_ty in
+  let post_opened = open_term_nv post_hint.post x in
+  let k_elim: continuation_elaborator g (tm_star tm_emp tm_is_unreachable) g' (tm_star post_opened tm_emp) =
+    let h3: tot_typing g (tm_star tm_emp tm_is_unreachable) tm_slprop = RU.magic () in
+    continuation_elaborator_with_bind #g tm_emp typ h3 x in
+  let h4: slprop_equiv g (tm_star tm_emp tm_is_unreachable) tm_is_unreachable = RU.magic () in
+  let h5: slprop_equiv g' (tm_star post_opened tm_emp) post_opened = RU.magic () in
+  k_elab_equiv k_elim h4 h5
+
+#restart-solver
+#push-options "--z3rlimit_factor 2 --split_queries always"
+let prove_post_hint (#g:env) (#ctxt:slprop) (r:checker_result_t g ctxt NoHint) (post_hint:post_hint_opt g) (rng:range)
+  : T.Tac (checker_result_t g ctxt post_hint) =
+
+  let g = push_context g "prove_post_hint" rng in
+
+  match post_hint with
+  | NoHint -> r
+  | TypeHint _ -> retype_checker_result post_hint r
+  | PostHint post_hint ->
+    let (| x, g2, (| u_ty, ty, ty_typing |), (| ctxt', ctxt'_typing |), k |) = r in
+    let k: continuation_elaborator g ctxt g2 ctxt' = k in
+
+    // TODO: subtyping
+    if not (eq_tm (RU.deep_compress_safe ty) (RU.deep_compress_safe post_hint.ret_ty))
+    then (
+      let (| g3, ctxt3, ctxt3_typing, k3 |) = elim_exists_and_pure #g2 #ctxt' ctxt'_typing in
+      let k3: continuation_elaborator g2 ctxt' g3 ctxt3 = k3 in
+
+      if ctxt3 `eq_tm` tm_is_unreachable then (
+        let y = fresh g3 in
+        let ppname = mk_ppname_no_range "_posth" in
+        let post_hint_opened = open_term_nv post_hint.post (ppname, y) in
+        let g4 = push_binding g3 y ppname post_hint.ret_ty in
+        let h1: universe_of g4 post_hint.ret_ty post_hint.u = RU.magic () in
+        let h2: tot_typing g4 post_hint_opened tm_slprop = RU.magic () in
+        let k_unreach: continuation_elaborator g3 ctxt3 g4 post_hint_opened =
+          k_unreach g3 (ppname, y) post_hint in
+        (| y, g4, (| post_hint.u, post_hint.ret_ty, h1 |), (| post_hint_opened, h2 |),
+          k_elab_trans k (k_elab_trans k3 k_unreach) |)
+      ) else
+        fail_doc g (Some rng) [
+          text "The return type" ^^ indent (pp ty) ^/^
+          text "does not match the expected" ^^ indent (pp post_hint.ret_ty)
+        ]
+    ) else
+      let ppname = mk_ppname_no_range "_posth" in
+      let post_hint_opened = open_term_nv post_hint.post (ppname, x) in
+
+      if eq_tm post_hint_opened ctxt'
+      then (| x, g2, (| u_ty, ty, ty_typing |), (| ctxt', ctxt'_typing |), k |)
+      else
+        let (| g3, remaining_ctxt, k_post |) =
+          prove rng g2 ctxt' post_hint_opened false in
+
+        let tv = inspect_term remaining_ctxt in
+        if not (Tm_Emp? tv || remaining_ctxt `eq_tm` tm_is_unreachable) then
+          fail_doc g (Some rng) [
+            prefix 2 1 (text "Leftover resources:")
+                      (align (pp remaining_ctxt));
+            (if Tm_Star? tv
+            then text "Did you forget to free these resources?"
+            else text "Did you forget to free this resource?");
+          ]
+        else
+          let h3: slprop_equiv g3 (tm_star post_hint_opened remaining_ctxt) post_hint_opened = RU.magic () in
+          // for the typing of ty in g3, we have typing of ty in g2 above, and g3 `env_extends` g2
+          let h1: universe_of g3 ty u_ty = RU.magic () in
+          // for the typing of post_hint_opened, again post_hint is well-typed in g, and g3 `env_extends` g
+          let h2: tot_typing g3 post_hint_opened tm_slprop = RU.magic () in
+          (| x, g3, (| u_ty, ty, h1 |), (| post_hint_opened, h2 |),
+            k_elab_trans k (k_elab_equiv k_post (VE_Refl _ _) h3) |)
+#pop-options
+
+let try_frame_pre (allow_ambiguous : bool) (#g:env)
+    (#ctxt:slprop) (ctxt_typing:tot_typing g ctxt tm_slprop)
+    (d:(t:st_term & c:comp_st & st_typing g t c))
+    (res_ppname:ppname) :
+    T.Tac (checker_result_t g ctxt NoHint) =
+  let (| t, c, d |) = d in
+  let (| g', ctxt', k |) = prove t.range g ctxt (comp_pre c) allow_ambiguous in
+  let d: st_typing g' t c = RU.magic () in // weakening from g to g'
+  let h1: tot_typing g' ctxt' tm_slprop = RU.magic() in // weakening from to g'
+  checker_result_for_st_typing (k _ (| t, add_frame c ctxt', T_Frame _ _ _ ctxt' h1 d |)) res_ppname

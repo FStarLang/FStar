@@ -699,7 +699,7 @@ fun d cb ->
 let st_typing_freevars_unreachable : st_typing_freevars_case T_Unreachable? =
 fun d cb ->
   match d with
-  | T_Unreachable _ c c_typing _ ->
+  | T_Unreachable _ c c_typing ->
     comp_typing_freevars c_typing;
     let st_typing, _ = Pulse.Typing.Metatheory.Base.comp_typing_inversion c_typing in
     let STC _ _ x t_typing pre_typing post_typing = st_typing in
@@ -758,7 +758,7 @@ let rec st_typing_freevars
     admit ()
   | T_Admit .. ->
     st_typing_freevars_admit d st_typing_freevars
-  | T_Unreachable _ c c_typing _ ->
+  | T_Unreachable .. ->
     st_typing_freevars_unreachable d st_typing_freevars
   | T_Sub _ _ _ _ d_t d_sub ->
     st_typing_freevars d_t;

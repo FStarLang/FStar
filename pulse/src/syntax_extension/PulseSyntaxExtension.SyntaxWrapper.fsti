@@ -105,7 +105,6 @@ val tm_intro_exists (vp:slprop) (witnesses:list term) (_:range) : st_term
 val is_tm_intro_exists (x:st_term) : bool
 val tm_protect (s:st_term) : st_term
 val tm_admit (_:range) : st_term
-val tm_unreachable (_:range) : st_term
 val tm_proof_hint_with_binders (_:hint_type) (_:list binder) (body:st_term) (_:range) : st_term
 val tm_with_inv (iname:term) (body:st_term) (returns_:option (binder & term & term)) (_:range) : st_term
 val tm_add_inv (inames:term) (n:term) (_:range) : term

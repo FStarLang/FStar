@@ -31,6 +31,13 @@ val prove (rng: range) (g: env) (ctxt goals: slprop) (allow_amb: bool) :
   T.Tac (g':env { env_extends g' g } & ctxt': slprop &
     continuation_elaborator g ctxt g' (goals `tm_star` ctxt'))
 
+val elim_exists_and_pure (#g:env) (#ctxt:slprop)
+    (ctxt_typing:tot_typing g ctxt tm_slprop)
+    : T.Tac (g':env { env_extends g' g } &
+            ctxt':term &
+            tot_typing g' ctxt' tm_slprop &
+            continuation_elaborator g ctxt g' ctxt')
+
 val prove_post_hint (#g:env) (#ctxt:slprop) (r:checker_result_t g ctxt NoHint) (post_hint:post_hint_opt g) (rng:range) :
   T.Tac (checker_result_t g ctxt post_hint)
 
@@ -39,10 +46,3 @@ val try_frame_pre (allow_ambiguous : bool) (#g:env)
     (d:(t:st_term & c:comp_st & st_typing g t c))
     (res_ppname:ppname) :
   T.Tac (checker_result_t g ctxt NoHint)
-
-val elim_exists_and_pure (#g:env) (#ctxt:slprop)
-    (ctxt_typing:tot_typing g ctxt tm_slprop)
-    : T.Tac (g':env { env_extends g' g } &
-            ctxt':term &
-            tot_typing g' ctxt' tm_slprop &
-            continuation_elaborator g ctxt g' ctxt')

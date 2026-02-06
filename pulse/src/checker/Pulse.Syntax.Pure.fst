@@ -274,6 +274,7 @@ let mk_squash (u:universe) (t:term) : term =
 noeq
 type term_view =
   | Tm_Emp        : term_view
+  | Tm_IsUnreachable : term_view
   | Tm_Pure       : p:term -> term_view
   | Tm_Star       : l:slprop -> r:slprop -> term_view
   | Tm_ExistsSL   : u:universe -> b:binder -> body:slprop -> term_view
@@ -298,6 +299,9 @@ let pack_term_view (top:term_view) (r:range)
 
     | Tm_Emp ->
       w (pack_ln (Tv_FVar (pack_fv emp_lid)))
+
+    | Tm_IsUnreachable ->
+      w tm_is_unreachable
       
     | Tm_Inv i p ->
       let head = pack_ln (Tv_FVar (pack_fv inv_lid)) in
@@ -371,6 +375,7 @@ let tm_full_perm = tm_constant (R.C_Real "1.0")
 let is_view_of (tv:term_view) (t:term) : prop =
   match tv with
   | Tm_Emp -> t == tm_emp
+  | Tm_IsUnreachable -> t == tm_is_unreachable
   | Tm_SLProp -> t == tm_slprop
   | Tm_Inames -> t == tm_inames
   | Tm_EmpInames -> t == tm_emp_inames
@@ -412,6 +417,8 @@ let rec inspect_term (t:R.term)
     then Tm_SLProp
     else if fv_lid = emp_lid
     then Tm_Emp
+    else if fv_lid = is_unreachable_lid
+    then Tm_IsUnreachable
     else if fv_lid = inames_lid
     then Tm_Inames
     else if fv_lid = emp_inames_lid

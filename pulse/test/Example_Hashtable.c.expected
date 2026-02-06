@@ -237,85 +237,66 @@ insert__size_t_Example_Hashtable_data(
   while (cont)
   {
     size_t voff = off;
-    if (voff == ht.sz)
+    size_t sum = cidx + voff;
+    size_t vidx = size_t_mod(sum, ht.sz);
+    cell__size_t_Example_Hashtable_data
+    c =
+      replace_i_ref__Pulse_Lib_HashTable_Spec_cell_size_t_Example_Hashtable_data(&contents,
+        vidx,
+        ((cell__size_t_Example_Hashtable_data){ .tag = Zombie }));
+    if (c.tag == Used)
     {
-      KRML_HOST_EPRINTF("KaRaMeL abort at %s:%d\n%s\n",
-        __FILE__,
-        __LINE__,
-        "Pulse.Lib.Dv.unreachable");
-      KRML_HOST_EXIT(255U);
-    }
-    else
-    {
-      size_t sum = cidx + voff;
-      size_t vidx = size_t_mod(sum, ht.sz);
-      cell__size_t_Example_Hashtable_data
-      c =
-        replace_i_ref__Pulse_Lib_HashTable_Spec_cell_size_t_Example_Hashtable_data(&contents,
-          vidx,
-          ((cell__size_t_Example_Hashtable_data){ .tag = Zombie }));
-      if (c.tag == Used)
-      {
-        Example_Hashtable_data v_ = c.v;
-        size_t k_ = c.k;
-        if (k_ == k)
-        {
-          write_ref__Pulse_Lib_HashTable_Spec_cell_size_t_Example_Hashtable_data(&contents,
-            vidx,
-            ((cell__size_t_Example_Hashtable_data){ .tag = Used, .k = k_, .v = v_ }));
-          cont = false;
-          idx = vidx;
-        }
-        else
-        {
-          write_ref__Pulse_Lib_HashTable_Spec_cell_size_t_Example_Hashtable_data(&contents,
-            vidx,
-            ((cell__size_t_Example_Hashtable_data){ .tag = Used, .k = k_, .v = v_ }));
-          off = voff + (size_t)1U;
-        }
-      }
-      else if (c.tag == Clean)
+      Example_Hashtable_data v_ = c.v;
+      size_t k_ = c.k;
+      if (k_ == k)
       {
         write_ref__Pulse_Lib_HashTable_Spec_cell_size_t_Example_Hashtable_data(&contents,
           vidx,
-          ((cell__size_t_Example_Hashtable_data){ .tag = Clean }));
+          ((cell__size_t_Example_Hashtable_data){ .tag = Used, .k = k_, .v = v_ }));
         cont = false;
         idx = vidx;
       }
-      else if (c.tag == Zombie)
+      else
       {
-        cell__size_t_Example_Hashtable_data *vcontents = contents;
-        ht_t__size_t_Example_Hashtable_data
-        ht1 = { .sz = ht.sz, .hashf = hashf, .contents = vcontents };
-        __Pulse_Lib_HashTable_Type_ht_t__size_t_Example_Hashtable_data_FStar_Pervasives_Native_option__size_t
-        res = lookup__size_t_Example_Hashtable_data(ht1, k);
-        contents =
-          fst__Pulse_Lib_HashTable_Type_ht_t_size_t_Example_Hashtable_data_FStar_Pervasives_Native_option_size_t(res).contents;
-        option__size_t
-        o =
-          snd__Pulse_Lib_HashTable_Type_ht_t_size_t_Example_Hashtable_data_FStar_Pervasives_Native_option_size_t(res);
-        if (o.tag == Some)
-        {
-          size_t p = o.v;
-          write_ref__Pulse_Lib_HashTable_Spec_cell_size_t_Example_Hashtable_data(&contents,
-            p,
-            ((cell__size_t_Example_Hashtable_data){ .tag = Zombie }));
-          cont = false;
-          idx = vidx;
-        }
-        else if (o.tag == None)
-        {
-          cont = false;
-          idx = vidx;
-        }
-        else
-        {
-          KRML_HOST_EPRINTF("KaRaMeL abort at %s:%d\n%s\n",
-            __FILE__,
-            __LINE__,
-            "unreachable (pattern matches are exhaustive in F*)");
-          KRML_HOST_EXIT(255U);
-        }
+        write_ref__Pulse_Lib_HashTable_Spec_cell_size_t_Example_Hashtable_data(&contents,
+          vidx,
+          ((cell__size_t_Example_Hashtable_data){ .tag = Used, .k = k_, .v = v_ }));
+        off = voff + (size_t)1U;
+      }
+    }
+    else if (c.tag == Clean)
+    {
+      write_ref__Pulse_Lib_HashTable_Spec_cell_size_t_Example_Hashtable_data(&contents,
+        vidx,
+        ((cell__size_t_Example_Hashtable_data){ .tag = Clean }));
+      cont = false;
+      idx = vidx;
+    }
+    else if (c.tag == Zombie)
+    {
+      cell__size_t_Example_Hashtable_data *vcontents = contents;
+      ht_t__size_t_Example_Hashtable_data
+      ht1 = { .sz = ht.sz, .hashf = hashf, .contents = vcontents };
+      __Pulse_Lib_HashTable_Type_ht_t__size_t_Example_Hashtable_data_FStar_Pervasives_Native_option__size_t
+      res = lookup__size_t_Example_Hashtable_data(ht1, k);
+      contents =
+        fst__Pulse_Lib_HashTable_Type_ht_t_size_t_Example_Hashtable_data_FStar_Pervasives_Native_option_size_t(res).contents;
+      option__size_t
+      o =
+        snd__Pulse_Lib_HashTable_Type_ht_t_size_t_Example_Hashtable_data_FStar_Pervasives_Native_option_size_t(res);
+      if (o.tag == Some)
+      {
+        size_t p = o.v;
+        write_ref__Pulse_Lib_HashTable_Spec_cell_size_t_Example_Hashtable_data(&contents,
+          p,
+          ((cell__size_t_Example_Hashtable_data){ .tag = Zombie }));
+        cont = false;
+        idx = vidx;
+      }
+      else if (o.tag == None)
+      {
+        cont = false;
+        idx = vidx;
       }
       else
       {
@@ -325,6 +306,14 @@ insert__size_t_Example_Hashtable_data(
           "unreachable (pattern matches are exhaustive in F*)");
         KRML_HOST_EXIT(255U);
       }
+    }
+    else
+    {
+      KRML_HOST_EPRINTF("KaRaMeL abort at %s:%d\n%s\n",
+        __FILE__,
+        __LINE__,
+        "unreachable (pattern matches are exhaustive in F*)");
+      KRML_HOST_EXIT(255U);
     }
   }
   bool vcont = cont;

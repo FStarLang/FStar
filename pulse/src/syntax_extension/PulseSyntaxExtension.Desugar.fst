@@ -226,8 +226,6 @@ let admit_or_return (env:env_t) (s:S.term)
     | S.Tm_fvar fv, [_] -> (
       if S.fv_eq_lid fv admit_lid
       then STTerm (SW.tm_admit r)
-      else if S.fv_eq_lid fv unreachable_lid
-      then STTerm (SW.tm_unreachable r) 
       else Return s
     )
     | _ -> Return s

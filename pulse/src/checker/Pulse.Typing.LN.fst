@@ -1234,7 +1234,7 @@ let rec st_typing_ln (#g:_) (#t:_) (#c:_)
       admit()
 
     | T_Admit _ c c_typing
-    | T_Unreachable _ c c_typing _ ->
+    | T_Unreachable _ c c_typing ->
       FStar.Pure.BreakVC.break_vc ();
       comp_typing_ln c_typing;
       let st_typing, _ = Pulse.Typing.Metatheory.Base.comp_typing_inversion c_typing in

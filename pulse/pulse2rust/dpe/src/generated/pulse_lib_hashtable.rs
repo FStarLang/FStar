@@ -133,56 +133,46 @@ pub fn insert<KT: Copy + PartialEq + Clone, VT: Clone>(
     let mut idx = 0;
     while cont {
         let voff = off;
-        if voff == ht.sz {
-            panic!()
-        } else {
-            let sum = cidx + voff;
-            let vidx = super::pulse_lib_hashtable::size_t_mod(sum, ht.sz);
-            let c = std::mem::replace::<
-                super::pulse_lib_hashtable_spec::cell<KT, VT>,
-            >(&mut contents[vidx], super::pulse_lib_hashtable_spec::cell::Zombie);
-            match c {
-                super::pulse_lib_hashtable_spec::cell::Used(mut k_, mut v_) => {
-                    if k_ == k {
-                        contents[vidx] = super::pulse_lib_hashtable_spec::cell::Used(
-                            k_,
-                            v_,
-                        );
-                        cont = false;
-                        idx = vidx;
-                    } else {
-                        contents[vidx] = super::pulse_lib_hashtable_spec::cell::Used(
-                            k_,
-                            v_,
-                        );
-                        off = voff + 1;
-                    }
-                }
-                super::pulse_lib_hashtable_spec::cell::Clean => {
-                    contents[vidx] = super::pulse_lib_hashtable_spec::cell::Clean;
+        let sum = cidx + voff;
+        let vidx = super::pulse_lib_hashtable::size_t_mod(sum, ht.sz);
+        let c = std::mem::replace::<
+            super::pulse_lib_hashtable_spec::cell<KT, VT>,
+        >(&mut contents[vidx], super::pulse_lib_hashtable_spec::cell::Zombie);
+        match c {
+            super::pulse_lib_hashtable_spec::cell::Used(mut k_, mut v_) => {
+                if k_ == k {
+                    contents[vidx] = super::pulse_lib_hashtable_spec::cell::Used(k_, v_);
                     cont = false;
                     idx = vidx;
+                } else {
+                    contents[vidx] = super::pulse_lib_hashtable_spec::cell::Used(k_, v_);
+                    off = voff + 1;
                 }
-                super::pulse_lib_hashtable_spec::cell::Zombie => {
-                    let vcontents = contents;
-                    let ht1 = super::pulse_lib_hashtable_type::ht_t {
-                        sz: ht.sz,
-                        hashf: hashf,
-                        contents: vcontents,
-                    };
-                    let res = super::pulse_lib_hashtable::lookup((), ht1, k);
-                    contents = res.0.contents;
-                    let o = res.1;
-                    match o {
-                        Some(mut p) => {
-                            contents[p] = super::pulse_lib_hashtable_spec::cell::Zombie;
-                            cont = false;
-                            idx = vidx;
-                        }
-                        None => {
-                            cont = false;
-                            idx = vidx;
-                        }
+            }
+            super::pulse_lib_hashtable_spec::cell::Clean => {
+                contents[vidx] = super::pulse_lib_hashtable_spec::cell::Clean;
+                cont = false;
+                idx = vidx;
+            }
+            super::pulse_lib_hashtable_spec::cell::Zombie => {
+                let vcontents = contents;
+                let ht1 = super::pulse_lib_hashtable_type::ht_t {
+                    sz: ht.sz,
+                    hashf: hashf,
+                    contents: vcontents,
+                };
+                let res = super::pulse_lib_hashtable::lookup((), ht1, k);
+                contents = res.0.contents;
+                let o = res.1;
+                match o {
+                    Some(mut p) => {
+                        contents[p] = super::pulse_lib_hashtable_spec::cell::Zombie;
+                        cont = false;
+                        idx = vidx;
+                    }
+                    None => {
+                        cont = false;
+                        idx = vidx;
                     }
                 }
             }

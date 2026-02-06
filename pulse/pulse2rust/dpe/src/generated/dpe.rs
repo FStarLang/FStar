@@ -189,10 +189,10 @@ pub fn initialize_context(
             });
             let s2 = super::dpe::replace_session(sid, (), s1, ());
         }
-        super::dpe::session_state::InUse => panic!(),
-        super::dpe::session_state::SessionClosed => panic!(),
-        super::dpe::session_state::SessionError => panic!(),
-        super::dpe::session_state::Available(_) => panic!(),
+        super::dpe::session_state::InUse => {}
+        super::dpe::session_state::SessionClosed => {}
+        super::dpe::session_state::SessionError => {}
+        super::dpe::session_state::Available(_) => {}
     }
 }
 pub fn init_l0_ctxt(
@@ -541,14 +541,14 @@ pub fn sign(
                     });
                     let s1 = super::dpe::replace_session(sid, (), ns, ());
                 }
-                super::dpetypes::context_t::L0_context(_) => panic!(),
-                super::dpetypes::context_t::Engine_context(_) => panic!(),
+                super::dpetypes::context_t::L0_context(_) => {}
+                super::dpetypes::context_t::Engine_context(_) => {}
             }
         }
-        super::dpe::session_state::SessionStart => panic!(),
-        super::dpe::session_state::InUse => panic!(),
-        super::dpe::session_state::SessionClosed => panic!(),
-        super::dpe::session_state::SessionError => panic!(),
+        super::dpe::session_state::SessionStart => {}
+        super::dpe::session_state::InUse => {}
+        super::dpe::session_state::SessionClosed => {}
+        super::dpe::session_state::SessionError => {}
     }
 }
 pub fn get_profile(uu___: ()) -> super::dpetypes::profile_descriptor_t {

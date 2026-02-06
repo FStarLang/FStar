@@ -18,7 +18,18 @@ module Pulse.JoinComp
 
 open Pulse.Syntax
 open Pulse.Typing
+open Pulse.Checker.Base
 module T = FStar.Tactics.V2
+
+val infer_post' (g:env) (g':env { g' `env_extends` g })
+  #u #t (x: var { lookup g' x == Some t }) (t_typ: universe_of g' t u)
+  #post (post_typing: tot_typing g' post tm_slprop)
+: T.Tac (p:post_hint_for_env g {p.g == g /\ p.effect_annot==EffectAnnotSTT})
+
+let infer_post #g #ctxt (r:checker_result_t g ctxt NoHint)
+: T.Tac (p:post_hint_for_env g {p.g == g /\ p.effect_annot==EffectAnnotSTT})
+= let (| x, g', (| u, t, t_typ |), (| post, post_typing |), k |) = r in
+  infer_post' g g' x t_typ post_typing
 
 val join_post #g #hyp #b
     (p1:post_hint_for_env (g_with_eq g hyp b tm_true))

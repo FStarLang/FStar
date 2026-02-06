@@ -402,7 +402,7 @@ let rec check
           Admit.check g pre pre_typing post_hint res_ppname t
 
         | Tm_Unreachable _ ->
-          Pulse.Checker.Unreachable.check g pre pre_typing post_hint res_ppname t
+          T.fail "Tm_Unreachable check should not have been called in the checker"
 
         | Tm_Rewrite _ ->
           Rewrite.check g pre pre_typing post_hint res_ppname t

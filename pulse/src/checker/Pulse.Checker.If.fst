@@ -88,6 +88,12 @@ let check
     r
   in
 
+  let infer_post_branch (#eq_v:term) (r: checker_result_t (g_with_eq eq_v) pre NoHint) :
+    T.Tac (p:post_hint_for_env g {p.g == g /\ p.effect_annot==EffectAnnotSTT}) =
+    let (| x, g', (| u, t, t_typ |), (| post, post_typing |), k |) = r in
+    J.infer_post' g g' x t_typ post_typing
+  in
+
   let then_ = check_branch tm_true e1 true in
   let else_ = check_branch tm_false e2 false in
   let joinable : (
@@ -100,8 +106,8 @@ let check
       | _ ->
         let then_ : checker_result_t _ _ NoHint = retype_checker_result _ then_ in
         let else_ : checker_result_t _ _ NoHint = retype_checker_result _ else_ in
-        let post_then = Pulse.Checker.Base.infer_post then_ in
-        let post_else = Pulse.Checker.Base.infer_post else_ in
+        let post_then = infer_post_branch then_ in
+        let post_else = infer_post_branch else_ in
         let post = Pulse.JoinComp.join_post #g #hyp #b post_then post_else in
         let then_ = Pulse.Checker.Prover.prove_post_hint then_ (PostHint post) e1.range in
         let else_ = Pulse.Checker.Prover.prove_post_hint else_ (PostHint post) e2.range in
