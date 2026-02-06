@@ -67,7 +67,9 @@ noeq type entry =
          -> m:tag
          -> entry
 
+#push-options "--warn_error -272" //Warning_TopLevelEffect
 let log :ref (list entry) = ST.alloc #(list entry) []
+#pop-options
 
 let mac k t =
   let m = sha1 k t in

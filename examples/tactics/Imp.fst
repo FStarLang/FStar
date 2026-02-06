@@ -55,7 +55,7 @@ let override r v rm =
         then v
         else rm r'
 
-let rec eval' (i:inst) (rm:regmap)
+let eval' (i:inst) (rm:regmap)
     : Tot regmap (decreases (size i))
     = match i with
       | Add r1 r2 r3 -> override r3 (rm r1 + rm r2) rm

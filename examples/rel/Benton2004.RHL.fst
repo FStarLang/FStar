@@ -390,7 +390,7 @@ let rec r_while_correct
     r_while_correct b b' c c' p s1 s1' (fuel - 1)
   else ()
 
-let rec r_while
+let r_while
   (b b' : exp bool)
   (c c' : computation)
   (p: gexp bool)

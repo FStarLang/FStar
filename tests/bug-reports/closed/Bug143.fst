@@ -35,7 +35,9 @@ let delta = Lam f
 
 
 val omega : empty
+#push-options "--warn_error -272" //Warning_TopLevelEffect
 let omega = f delta
+#pop-options
 
 
 val bug : unit -> Lemma (requires True) (ensures False)
