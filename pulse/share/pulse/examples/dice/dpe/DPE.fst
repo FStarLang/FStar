@@ -675,9 +675,10 @@ ghost fn unrelated_session_state #x #y ()
     | SessionError, G_SessionError _
     | Available .., G_Available .. -> False
     | _ -> True)
-  ensures pure False
+  ensures is_unreachable
 {
   rewrite session_state_related x y as pure False;
+  unreachable ()
 }
 
 #push-options "--fuel 2 --ifuel 2 --split_queries no"
@@ -711,19 +712,15 @@ fn initialize_context (sid:sid_t)
     }
     InUse -> {
       unrelated_session_state ();
-      unreachable ()
     }
     SessionClosed -> {
       unrelated_session_state ();
-      unreachable ()
     }
     SessionError -> {
       unrelated_session_state ();
-      unreachable ()
     }
     Available _ -> {
       unrelated_session_state ();
-      unreachable ()
     }
   }
 }
@@ -1218,19 +1215,15 @@ fn derive_child (sid:sid_t)
     }
     SessionStart -> {
       unrelated_session_state ();
-      unreachable ()
     }
     InUse -> {
       unrelated_session_state ();
-      unreachable ()
     }
     SessionClosed -> {
       unrelated_session_state ();
-      unreachable ()
     }
     SessionError -> {
       unrelated_session_state ();
-      unreachable ()
     }
   }
 }
@@ -1366,19 +1359,15 @@ ensures
     }
     SessionStart -> {
       unrelated_session_state ();
-      unreachable ()
     }
     InUse -> {
       unrelated_session_state ();
-      unreachable ()
     }
     SessionClosed -> {
       unrelated_session_state ();
-      unreachable ()
     }
     SessionError -> {
       unrelated_session_state ();
-      unreachable ()
     }
   }
 }
@@ -1446,19 +1435,15 @@ ensures
     }
     SessionStart -> {
       unrelated_session_state ();
-      unreachable ()
     }
     InUse -> {
       unrelated_session_state ();
-      unreachable ()
     }
     SessionClosed -> {
       unrelated_session_state ();
-      unreachable ()
     }
     SessionError -> {
       unrelated_session_state ();
-      unreachable ()
     }
 
   }
