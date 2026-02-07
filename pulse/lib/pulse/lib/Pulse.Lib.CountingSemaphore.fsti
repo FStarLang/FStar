@@ -27,6 +27,8 @@ let rec replicate (p: slprop) (i: nat) : slprop =
   | 0 -> emp
   | _ -> p ** replicate p (i - 1)
 
+instance val is_send_replicate (p: slprop) (i: nat) {| is_send p |} : is_send (replicate p i)
+
 (** Split replicate into two parts *)
 ghost fn replicate_split (p: slprop) (i j: nat)
   requires replicate p (i + j)
@@ -53,15 +55,17 @@ let permit #p ([@@@mkey] s: sem p) (i: nat) : slprop =
 (** The semaphore is alive with fractional permission *)
 val sem_alive #p ([@@@mkey] s: sem p) (#[full_default()] f:perm) : slprop
 
+instance val is_send_sem_alive #p s f {| is_send p |} : is_send (sem_alive #p s #f)
+
 (** Create a new semaphore with n initial resources *)
-fn new_sem (p: slprop) {| is_send p |} (n: U32.t)
+fn new_sem (p: slprop) (n: U32.t)
   requires replicate p (U32.v n)
   returns s: sem p
   ensures sem_alive s
   ensures permit s (U32.v sem_max - U32.v n)
 
 (** Create a new semaphore initialized to 0 *)
-fn new_sem_0 (p: slprop) {| is_send p |}
+fn new_sem_0 (p: slprop)
   returns s: sem p
   ensures sem_alive s
   ensures permit s (U32.v sem_max)

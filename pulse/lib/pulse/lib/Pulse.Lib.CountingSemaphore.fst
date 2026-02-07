@@ -20,6 +20,13 @@ open Pulse.Lib.Primitives
 module B = Pulse.Lib.Box
 module CInv = Pulse.Lib.CancellableInvariant
 
+let rec is_send_replicate_aux (p: slprop) (i: nat) (inst: is_send p) : Tot (is_send (replicate p i)) (decreases i) =
+  match i with
+  | 0 -> is_send_placeless emp
+  | _ -> is_send_star p (replicate p (i - 1)) #inst #(is_send_replicate_aux p (i - 1) inst)
+
+instance is_send_replicate p i {| inst: is_send p |} : is_send (replicate p i) = is_send_replicate_aux p i inst
+
 noeq type sem (p: slprop) : Type0 = {
   counter: B.box U32.t;
   ptank: Tank.tank (U32.v sem_max);
@@ -38,6 +45,11 @@ let sem_inv (p: slprop) (counter: B.box U32.t) (ptank: Tank.tank (U32.v sem_max)
 let sem_alive #p ([@@@mkey] s: sem p) (#[full_default()] f:perm) : slprop =
   inv (CInv.iname_of s.i) (CInv.cinv_vp s.i (sem_inv p s.counter s.ptank)) **
   CInv.active s.i f
+
+instance is_send_sem_inv p counter ptank {| is_send p |} : is_send (sem_inv p counter ptank) =
+  Tactics.Typeclasses.solve
+
+instance is_send_sem_alive #p s f {| is_send p |} : is_send (sem_alive #p s #f) = Tactics.Typeclasses.solve
 
 (** Replicate equality lemmas *)
 let replicate_eq_emp (p: slprop)
@@ -126,7 +138,7 @@ ghost fn rec replicate_join (p: slprop) (i j: nat)
   }
 }
 
-fn new_sem (p: slprop) {| is_send p |} (n: U32.t)
+fn new_sem (p: slprop) (n: U32.t)
   requires replicate p (U32.v n)
   returns s: sem p
   ensures sem_alive s
@@ -147,7 +159,7 @@ fn new_sem (p: slprop) {| is_send p |} (n: U32.t)
   s
 }
 
-fn new_sem_0 (p: slprop) {| is_send p |}
+fn new_sem_0 (p: slprop)
   returns s: sem p
   ensures sem_alive s
   ensures permit s (U32.v sem_max)
