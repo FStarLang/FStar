@@ -16,536 +16,422 @@
 
 module Pulse.Lib.CountingSemaphore
 #lang-pulse
-
-open Pulse.Lib.Pervasives
-open Pulse.Lib.OnRange
 open Pulse.Lib.Primitives
-open Pulse.Lib.CancellableInvariant
-
-module U32 = FStar.UInt32
 module B = Pulse.Lib.Box
-module R = Pulse.Lib.Reference
-module GFT = Pulse.Lib.GhostFractionalTable
-module OR = Pulse.Lib.OnRange
 module CInv = Pulse.Lib.CancellableInvariant
-module SemGhost = Pulse.Lib.CountingSemaphore.Ghost
 
-(**
-  Implementation using GhostFractionalTable with bool values.
-  
-  Key design:
-  - GFT.table bool: table[i] = true means semaphore owns p i, false means client has it
-  - permit p s i = GFT.pts_to tbl i #0.5R false (client half of the entry with value false)
-  - slot_inv relates table entry to ownership of p i
-  - slots_range builds invariant over all slots
-*)
+noeq type sem (p: slprop) : Type0 = {
+  counter: B.box U32.t;
+  ptank: Tank.tank (U32.v sem_max);
+  i: CInv.cinv;
+}
 
-(** Build initial all-true flags list *)
-let rec all_true_list (n: nat) : SemGhost.flags_list =
-  if n = 0 then [] else true :: all_true_list (n - 1)
-
-let rec all_true_length (n: nat) 
-  : Lemma (ensures List.length (all_true_list n) == n) (decreases n)
-= if n = 0 then () else all_true_length (n - 1)
-
-let rec all_true_count (n: nat)
-  : Lemma (ensures SemGhost.count_true_list (all_true_list n) == n) (decreases n)
-= if n = 0 then () else all_true_count (n - 1)
-
-(** Pure relation factored out for explicit fold/unfold *)
-let sem_relation (n: U32.t) (flags: SemGhost.flags_list) (max: sem_max) : prop =
-  List.length flags == max /\ U32.v n == SemGhost.count_true_list flags
+let permit_tank #p (s: sem p) : Tank.tank (U32.v sem_max) = s.ptank
 
 (** Full invariant *)
-let sem_inv_aux (p: nat -> slprop) (counter: B.box U32.t) (tbl: GFT.table bool) (max: sem_max) : slprop =
-  exists* (n: U32.t) (flags: SemGhost.flags_list).
-    B.pts_to counter n **
-    GFT.is_table tbl max **
-    SemGhost.slots_range p tbl flags 0 **
-    pure (sem_relation n flags max)
+let sem_inv (p: slprop) (counter: B.box U32.t) (ptank: Tank.tank (U32.v sem_max)) : slprop =
+  exists* (n: U32.t).
+    counter |-> n **
+    replicate p (U32.v n) **
+    Tank.owns ptank (U32.v n)
 
-let sem_inv p counter tbl max = sem_inv_aux p counter tbl max
+let sem_alive #p ([@@@mkey] s: sem p) (#[full_default()] f:perm) : slprop =
+  inv (CInv.iname_of s.i) (CInv.cinv_vp s.i (sem_inv p s.counter s.ptank)) **
+  CInv.active s.i f
 
-[@@CAbstractStruct]
-noeq
-type sem_rec (p: nat -> slprop) = {
-  counter: B.box U32.t;
-  tbl: GFT.table bool;
-  max: sem_max;
-  i: cinv;
+(** Replicate equality lemmas *)
+let replicate_eq_emp (p: slprop)
+: Lemma (replicate p 0 == emp)
+= ()
+
+let replicate_eq_cons (p: slprop) (i: pos)
+: Lemma (replicate p i == (p ** replicate p (i - 1)))
+= ()
+
+let replicate_eq_cons' (p: slprop) (i: nat)
+: Lemma (replicate p (i + 1) == (p ** replicate p i))
+= ()
+
+(** Replicate lemma: add one to front *)
+ghost fn replicate_cons (p: slprop) (i: nat)
+  requires p ** replicate p i
+  ensures replicate p (i + 1)
+{
+  replicate_eq_cons' p i;
+  rewrite (p ** replicate p i) as (replicate p (i + 1))
 }
 
-let sem (p: nat -> slprop) : Type0 = sem_rec p
-
-(** Permit = half ownership of table entry with value false *)
-let permit p (s: sem p) (idx: nat) : slprop =
-  GFT.pts_to s.tbl idx #0.5R false ** pure (idx < s.max)
-
-instance placeless_permit p s idx : placeless (permit p s idx) =
-  placeless_star 
-    (GFT.pts_to s.tbl idx #0.5R false) 
-    (pure (idx < s.max))
-
-let sem_alive p s #perm max =
-  inv (iname_of s.i) (cinv_vp s.i (sem_inv p s.counter s.tbl max)) **
-  active s.i perm **
-  pure (s.max == max)
-
-(** Initialize slots from on_range - creates all-true slots_range *)
-ghost fn rec init_slots_from_range (p: nat -> slprop) (tbl: GFT.table bool) (n lo: nat)
-  requires OR.on_range p lo (lo + n) ** 
-           OR.on_range (fun j -> GFT.pts_to tbl j #1.0R true) lo (lo + n)
-  ensures SemGhost.slots_range p tbl (all_true_list n) lo
-  decreases n
+(** Replicate lemma: extract one from front *)
+ghost fn replicate_uncons (p: slprop) (i: pos)
+  requires replicate p i
+  ensures p ** replicate p (i - 1)
 {
-  if (n = 0) {
-    assert (pure (lo + n == lo));
-    assert (pure (all_true_list n == []));
-    rewrite (OR.on_range p lo (lo + n)) as (OR.on_range p lo lo);
-    OR.on_range_empty_elim p lo;
-    rewrite (OR.on_range (fun j -> GFT.pts_to tbl j #1.0R true) lo (lo + n))
-         as (OR.on_range (fun j -> GFT.pts_to tbl j #1.0R true) lo lo);
-    OR.on_range_empty_elim (fun j -> GFT.pts_to tbl j #1.0R true) lo;
-    fold (SemGhost.slots_range p tbl ([] <: SemGhost.flags_list) lo);
-    rewrite (SemGhost.slots_range p tbl ([] <: SemGhost.flags_list) lo) 
-         as (SemGhost.slots_range p tbl (all_true_list n) lo)
+  replicate_eq_cons p i;
+  rewrite (replicate p i) as (p ** replicate p (i - 1))
+}
+
+(** Split replicate into two parts *)
+ghost fn rec replicate_split (p: slprop) (i j: nat)
+  requires replicate p (i + j)
+  ensures replicate p i ** replicate p j
+  decreases i
+{
+  if (i = 0) {
+    // We have: replicate p (i + j) where i = 0, so (i + j) = j
+    // Need: replicate p i ** replicate p j = replicate p 0 ** replicate p j
+    assert (pure (i + j == j));
+    rewrite (replicate p (i + j)) as (replicate p j);
+    replicate_eq_emp p;
+    rewrite emp as (replicate p i)
   } else {
-    OR.on_range_uncons () #p #lo #(lo + n);
-    OR.on_range_uncons () #(fun j -> GFT.pts_to tbl j #1.0R true) #lo #(lo + n);
-    // Have: p lo ** on_range p (lo+1) (lo+n) ** GFT.pts_to tbl lo #1.0R true ** on_range ... (lo+1)
-    fold (SemGhost.slot_inv p tbl true lo);
-    init_slots_from_range p tbl (n - 1) (lo + 1);
-    assert (pure (all_true_list n == true :: all_true_list (n - 1)));
-    rewrite (SemGhost.slot_inv p tbl true lo ** SemGhost.slots_range p tbl (all_true_list (n - 1)) (lo + 1))
-         as (SemGhost.slots_range p tbl (all_true_list n) lo)
+    // Have: replicate p (i + j)
+    // i + j > 0 when i > 0
+    replicate_uncons p (i + j);
+    // Now have: p ** replicate p ((i + j) - 1)
+    // Note: (i + j) - 1 = (i - 1) + j when i > 0
+    assert (pure ((i + j) - 1 == (i - 1) + j));
+    rewrite (replicate p ((i + j) - 1)) as (replicate p ((i - 1) + j));
+    replicate_split p (i - 1) j;
+    // Now have: p ** replicate p (i - 1) ** replicate p j
+    replicate_cons p (i - 1);
+    // Now have: replicate p ((i-1)+1) ** replicate p j
+    assert (pure ((i - 1) + 1 == i));
+    rewrite (replicate p ((i - 1) + 1)) as (replicate p i)
   }
 }
 
-(** Allocate table slots with initial value true *)
-ghost fn rec alloc_slots (tbl: GFT.table bool) (cur max_val: nat)
-  requires GFT.is_table tbl cur ** pure (cur <= max_val)
-  ensures GFT.is_table tbl max_val ** OR.on_range (fun j -> GFT.pts_to tbl j #1.0R true) cur max_val
-  decreases (max_val - cur)
+(** Join two replicates into one *)
+ghost fn rec replicate_join (p: slprop) (i j: nat)
+  requires replicate p i ** replicate p j
+  ensures replicate p (i + j)
+  decreases i
 {
-  if (cur = max_val) {
-    OR.on_range_empty (fun j -> GFT.pts_to tbl j #1.0R true) cur
+  if (i = 0) {
+    // Have: replicate p i ** replicate p j = replicate p 0 ** replicate p j
+    // Need: replicate p (i + j) = replicate p j (since i = 0)
+    assert (pure (i + j == j));
+    replicate_eq_emp p;
+    rewrite (replicate p i) as emp;
+    rewrite (replicate p j) as (replicate p (i + j))
   } else {
-    GFT.alloc tbl true;
-    alloc_slots tbl (cur + 1) max_val;
-    OR.on_range_cons cur #(fun j -> GFT.pts_to tbl j #1.0R true) #(cur + 1) #max_val
+    // Have: replicate p i ** replicate p j
+    replicate_uncons p i;
+    // Have: p ** replicate p (i - 1) ** replicate p j
+    replicate_join p (i - 1) j;
+    // Have: p ** replicate p ((i - 1) + j)
+    replicate_cons p ((i - 1) + j);
+    // Have: replicate p ((i-1)+j+1)
+    assert (pure ((i - 1) + j + 1 == i + j));
+    rewrite (replicate p ((i - 1) + j + 1)) as (replicate p (i + j))
   }
 }
 
-fn new_sem (p: nat -> slprop) {| d: (k:nat) -> is_send (p k) |} (max: sem_max)
-  requires OR.on_range p 0 max
+fn new_sem (p: slprop) {| is_send p |} (n: U32.t)
+  requires replicate p (U32.v n)
   returns s: sem p
-  ensures sem_alive p s max
+  ensures sem_alive s
+  ensures permit s (U32.v sem_max - U32.v n)
 {
-  let counter = B.alloc (U32.uint_to_t max);
-  let tbl = GFT.create #bool;
-  alloc_slots tbl 0 max;
-  init_slots_from_range p tbl max 0;
+  let counter = B.alloc n;
+  let ptank = Tank.alloc (U32.v sem_max);
+  // ptank owns sem_max initially
+  // We need to split: owns ptank (U32.v n) for invariant, owns ptank (sem_max - n) for permit
+  Tank.share ptank #(U32.v n) #(U32.v sem_max - U32.v n);
   
-  all_true_length max;
-  all_true_count max;
-  
-  fold (sem_inv_aux p counter tbl max);
-  fold (sem_inv p counter tbl max);
-  
-  let i = new_cancellable_invariant (sem_inv p counter tbl max);
-  let s : sem p = { counter; tbl; max; i };
-  rewrite each counter as s.counter, tbl as s.tbl, i as s.i;
-  fold (sem_alive p s #1.0R max);
+  fold (sem_inv p counter ptank);
+  let i = CInv.new_cancellable_invariant (sem_inv p counter ptank);
+  let s : sem p = { counter; ptank; i };
+  rewrite each counter as s.counter, ptank as s.ptank, i as s.i;
+  fold (sem_alive s);
+  rewrite (Tank.owns s.ptank (U32.v sem_max - U32.v n)) as (permit s (U32.v sem_max - U32.v n));
   s
 }
 
-(** Read counter value through invariant - basic version *)
-fn read_counter (#p: nat -> slprop) (#perm: perm) (#max: sem_max) (s: sem p)
-  preserves sem_alive p s #perm max
-  returns v: U32.t
-  ensures emp
+fn new_sem_0 (p: slprop) {| is_send p |}
+  returns s: sem p
+  ensures sem_alive s
+  ensures permit s (U32.v sem_max)
 {
-  unfold (sem_alive p s #perm max);
+  fold (replicate p 0);
+  let s = new_sem p 0ul;
+  s
+}
+
+(** Read the counter value *)
+fn read_counter (#p: slprop) (#f: perm) (s: sem p)
+  preserves sem_alive s #f
+  returns v: U32.t
+{
+  unfold (sem_alive s #f);
   
   let result =
     with_invariants U32.t emp_inames (CInv.iname_of s.i)
-        (cinv_vp s.i (sem_inv p s.counter s.tbl s.max))
-        (active s.i perm)
-        (fun _ -> active s.i perm)
+        (CInv.cinv_vp s.i (sem_inv p s.counter s.ptank))
+        (CInv.active s.i f)
+        (fun _ -> CInv.active s.i f)
     fn _ {
-      unpack_cinv_vp s.i;
-      unfold (sem_inv p s.counter s.tbl s.max);
-      unfold (sem_inv_aux p s.counter s.tbl s.max);
+      CInv.unpack_cinv_vp s.i;
+      unfold (sem_inv p s.counter s.ptank);
       
-      with n flags. _;
+      with n. _;
       
       let v = read_atomic_box s.counter;
       
-      fold (sem_inv_aux p s.counter s.tbl s.max);
-      fold (sem_inv p s.counter s.tbl s.max);
-      pack_cinv_vp s.i;
+      fold (sem_inv p s.counter s.ptank);
+      CInv.pack_cinv_vp s.i;
       v
     };
   
-  fold (sem_alive p s #perm max);
+  fold (sem_alive s #f);
   result
 }
 
-(** Read counter for release - proves counter < max when holding a permit *)
-fn read_counter_for_release (#p: nat -> slprop) (#perm: perm) (#max: sem_max) (s: sem p) (idx: nat { idx < max })
-  requires sem_alive p s #perm max ** GFT.pts_to s.tbl idx #0.5R false ** pure (idx < s.max)
-  returns v: (v:U32.t{U32.v v < max})
-  ensures sem_alive p s #perm max ** GFT.pts_to s.tbl idx #0.5R false ** pure (idx < s.max)
+(** Read counter for release - proves counter < sem_max when holding a permit *)
+fn read_counter_for_release (#p: slprop) (#f: perm) (s: sem p) (#perm_amt: erased nat)
+  requires sem_alive s #f ** permit s perm_amt ** pure (perm_amt > 0)
+  returns v: (v:U32.t{U32.v v < U32.v sem_max})
+  ensures sem_alive s #f ** permit s perm_amt
 {
-  unfold (sem_alive p s #perm max);
+  unfold (sem_alive s #f);
+  rewrite (permit s perm_amt) as (Tank.owns s.ptank perm_amt);
   
-  let result : (v:U32.t{U32.v v < max}) =
-    with_invariants (v:U32.t{U32.v v < max}) emp_inames (CInv.iname_of s.i)
-        (cinv_vp s.i (sem_inv p s.counter s.tbl s.max))
-        (active s.i perm ** GFT.pts_to s.tbl idx #0.5R false ** pure (idx < s.max))
-        (fun _ -> active s.i perm ** GFT.pts_to s.tbl idx #0.5R false ** pure (idx < s.max))
+  let result : (v:U32.t{U32.v v < U32.v sem_max}) =
+    with_invariants (v:U32.t{U32.v v < U32.v sem_max}) emp_inames (CInv.iname_of s.i)
+        (CInv.cinv_vp s.i (sem_inv p s.counter s.ptank))
+        (CInv.active s.i f ** Tank.owns s.ptank perm_amt ** pure (perm_amt > 0))
+        (fun _ -> CInv.active s.i f ** Tank.owns s.ptank perm_amt)
     fn _ {
-      unpack_cinv_vp s.i;
-      unfold (sem_inv p s.counter s.tbl s.max);
-      unfold (sem_inv_aux p s.counter s.tbl s.max);
+      CInv.unpack_cinv_vp s.i;
+      unfold (sem_inv p s.counter s.ptank);
       
-      with n flags. _;
+      with n. _;
       
-      // Use extract_slot_at to prove that the flag at idx is false
-      let _ = SemGhost.extract_slot_at p s.tbl flags 0 idx max;
-      // Now we know: list_index flags idx == false
-      
-      // Since flag at idx is false and length flags == max, 
-      // count_true_list flags < length flags == max
-      // And U32.v n == count_true_list flags
-      // Therefore U32.v n < max
-      SemGhost.count_true_lt_length_with_false flags idx;
+      // Gather permits to prove bound
+      Tank.gather s.ptank #perm_amt #(U32.v n);
+      // Now we know: perm_amt + U32.v n <= sem_max
+      // Since perm_amt > 0, U32.v n < sem_max
+      Tank.share s.ptank #perm_amt #(U32.v n);
       
       let v = read_atomic_box s.counter;
-      // v == n, and U32.v n < max, so U32.v v < max
       
-      fold (sem_inv_aux p s.counter s.tbl s.max);
-      fold (sem_inv p s.counter s.tbl s.max);
-      pack_cinv_vp s.i;
+      fold (sem_inv p s.counter s.ptank);
+      CInv.pack_cinv_vp s.i;
       v
     };
   
-  fold (sem_alive p s #perm max);
-  intro_pure (idx < s.max) ();
+  fold (sem_alive s #f);
+  rewrite (Tank.owns s.ptank perm_amt) as (permit s perm_amt);
   result
 }
 
-(** Try to acquire a slot *)
-fn try_acquire (#p: nat -> slprop) (#perm: perm) (#max: sem_max) (s: sem p)
-  preserves sem_alive p s #perm max
+fn try_acquire_many (#p: slprop) (#f: perm) (s: sem p) (n: U32.t)
+  preserves sem_alive s #f
   returns b: bool
-  ensures cond b (exists* (i:nat{i < max}). permit p s i ** p i) emp
+  ensures (if b then permit s (U32.v n) ** replicate p (U32.v n) else emp)
 {
-  // Read counter outside
-  let v = read_counter #p #perm #max s;
+  // Read counter outside the invariant
+  let v = read_counter s;
   
-  if (v = 0ul) {
-    // No available slots
-    intro_cond_false (exists* (i:nat{i < max}). permit p s i ** p i) emp;
+  if (U32.lt v n) {
+    // Not enough available
     false
   } else {
-    unfold (sem_alive p s #perm max);
+    unfold (sem_alive s #f);
     
-    // Try to acquire - CAS from v to v-1
-    let new_v : U32.t = U32.sub v 1ul;
+    // Try CAS from v to v - n
+    let new_v = U32.sub v n;
     
-    // Result type: just a boolean, resources tracked in postcondition via existential
     let result : bool =
       with_invariants bool emp_inames (CInv.iname_of s.i)
-          (cinv_vp s.i (sem_inv p s.counter s.tbl s.max))
-          (active s.i perm ** pure (U32.v v > 0 /\ s.max == max))
-          (fun b -> 
-            active s.i perm ** pure (s.max == max) **
-            cond b (exists* (i:nat{i < max}). GFT.pts_to s.tbl i #0.5R false ** p i) emp)
+          (CInv.cinv_vp s.i (sem_inv p s.counter s.ptank))
+          (CInv.active s.i f ** pure (U32.v v >= U32.v n))
+          (fun b -> CInv.active s.i f **
+                    cond b (Tank.owns s.ptank (U32.v n) ** replicate p (U32.v n)) emp)
       fn _ {
-        unpack_cinv_vp s.i;
-        unfold (sem_inv p s.counter s.tbl s.max);
-        unfold (sem_inv_aux p s.counter s.tbl s.max);
+        CInv.unpack_cinv_vp s.i;
+        unfold (sem_inv p s.counter s.ptank);
         
-        with n flags. _;
+        with counter_val. _;
         
-        // Try CAS from v to v-1
+        // Try CAS from v to new_v
         let b = cas_box s.counter v new_v;
         
         if b {
-          elim_cond_true _ _ _;
-          // CAS succeeded! n was v, counter now is new_v
+          elim_cond_true b _ _;
+          // CAS succeeded: counter was v (== counter_val), now is new_v
+          // We have: replicate p (U32.v counter_val) and Tank.owns s.ptank (U32.v counter_val)
+          // We need to split off: replicate p (U32.v n) and Tank.owns s.ptank (U32.v n)
           
-          // Use external ghost function to acquire slot - returns erased target
-          let target = SemGhost.acquire_slot p s.tbl flags 0 max;
+          // counter_val == v and new_v = v - n, so counter_val = n + new_v
+          assert (pure (U32.v counter_val == U32.v n + U32.v new_v));
+          rewrite (replicate p (U32.v counter_val)) as (replicate p (U32.v n + U32.v new_v));
+          rewrite (Tank.owns s.ptank (U32.v counter_val)) as (Tank.owns s.ptank (U32.v n + U32.v new_v));
           
-          // Update invariant with new flags
-          SemGhost.count_true_update_to_false flags (reveal target);
-          SemGhost.list_update_length flags (reveal target) false;
+          // Split the tank: U32.v v = U32.v n + U32.v new_v
+          Tank.share s.ptank #(U32.v n) #(U32.v new_v);
           
-          fold (sem_inv_aux p s.counter s.tbl s.max);
-          fold (sem_inv p s.counter s.tbl s.max);
-          pack_cinv_vp s.i;
+          // Split replicate
+          replicate_split p (U32.v n) (U32.v new_v);
           
-          // We have: GFT.pts_to s.tbl (0 + reveal target) #0.5R false ** p (0 + reveal target)
-          assert (pure (0 + reveal target == reveal target /\ reveal target < max /\ reveal target < s.max));
-          rewrite (GFT.pts_to s.tbl (0 + reveal target) #0.5R false ** p (0 + reveal target))
-               as (GFT.pts_to s.tbl (reveal target) #0.5R false ** p (reveal target));
+          fold (sem_inv p s.counter s.ptank);
+          CInv.pack_cinv_vp s.i;
           
-          // Introduce existential with the acquired resources
-          intro_exists (fun (i:nat{i < max}) -> GFT.pts_to s.tbl i #0.5R false ** p i) (reveal target);
-          fold (cond true (exists* (i:nat{i < max}). GFT.pts_to s.tbl i #0.5R false ** p i) emp);
+          fold (cond true (Tank.owns s.ptank (U32.v n) ** replicate p (U32.v n)) emp);
           true
         } else {
-          elim_cond_false _ _ _;
-          // CAS failed, put invariant back unchanged
-          fold (sem_inv_aux p s.counter s.tbl s.max);
-          fold (sem_inv p s.counter s.tbl s.max);
-          pack_cinv_vp s.i;
-          intro_cond_false (exists* (i:nat{i < max}). GFT.pts_to s.tbl i #0.5R false ** p i) emp;
+          elim_cond_false b _ _;
+          // CAS failed
+          fold (sem_inv p s.counter s.ptank);
+          CInv.pack_cinv_vp s.i;
+          fold (cond false (Tank.owns s.ptank (U32.v n) ** replicate p (U32.v n)) emp);
           false
         }
       };
     
-    fold (sem_alive p s #perm max);
+    fold (sem_alive s #f);
     
     if result {
-      rewrite (cond result (exists* (i:nat{i < max}). GFT.pts_to s.tbl i #0.5R false ** p i) emp)
-           as (exists* (i:nat{i < max}). GFT.pts_to s.tbl i #0.5R false ** p i);
-      // Repackage with permit
-      with target. _;
-      fold (permit p s target);
-      intro_exists (fun (i:nat{i < max}) -> permit p s i ** p i) target;
-      intro_cond_true (exists* (i:nat{i < max}). permit p s i ** p i) emp;
+      elim_cond_true result (Tank.owns s.ptank (U32.v n) ** replicate p (U32.v n)) emp;
+      rewrite (Tank.owns s.ptank (U32.v n)) as (permit s (U32.v n));
       true
     } else {
-      rewrite (cond result (exists* (i:nat{i < max}). GFT.pts_to s.tbl i #0.5R false ** p i) emp) as emp;
-      intro_cond_false (exists* (i:nat{i < max}). permit p s i ** p i) emp;
+      elim_cond_false result (Tank.owns s.ptank (U32.v n) ** replicate p (U32.v n)) emp;
       false
     }
   }
 }
 
-(** Release a slot back to the semaphore - recursive helper *)
-fn rec release_loop (#p: nat -> slprop) (#perm: perm) (#max: sem_max) (s: sem p) (idx: nat { idx < max })
-  requires sem_alive p s #perm max ** GFT.pts_to s.tbl idx #0.5R false ** p idx ** pure (idx < s.max)
-  ensures sem_alive p s #perm max
+fn try_acquire (#p: slprop) (#f: perm) (s: sem p)
+  preserves sem_alive s #f
+  returns b: bool
+  ensures (if b then permit s 1 ** p else emp)
 {
-  // Read counter outside invariant - this proves v < max since we hold a permit
-  intro_pure (idx < s.max) ();
-  let v = read_counter_for_release #p #perm #max s idx;
-  // v < max, so v + 1 <= max <= U32.max_int (since max: sem_max, i.e., max <= U32.max_int)
-  // Therefore v + 1 won't overflow
+  let b = try_acquire_many s 1ul;
+  if b {
+    replicate_uncons p 1;
+    unfold (replicate p 0);
+    true
+  } else {
+    false
+  }
+}
+
+(** Release loop - retry CAS until success *)
+fn rec release_loop (#p: slprop) (#f: perm) (s: sem p)
+  requires sem_alive s #f ** permit s 1 ** p
+  ensures sem_alive s #f
+{
+  // Read counter to get expected value, proving it's < sem_max since we hold a permit
+  let v = read_counter_for_release s #1;
+  // v < sem_max, so v + 1 won't overflow
   let new_v : U32.t = U32.add v 1ul;
   
-  unfold (sem_alive p s #perm max);
+  unfold (sem_alive s #f);
+  rewrite (permit s 1) as (Tank.owns s.ptank 1);
   
   let result : bool =
     with_invariants bool emp_inames (CInv.iname_of s.i)
-        (cinv_vp s.i (sem_inv p s.counter s.tbl s.max))
-        (active s.i perm ** pure (s.max == max) ** GFT.pts_to s.tbl idx #0.5R false ** p idx ** pure (idx < s.max))
-        (fun b -> active s.i perm ** cond b emp (GFT.pts_to s.tbl idx #0.5R false ** p idx ** pure (idx < s.max)))
+        (CInv.cinv_vp s.i (sem_inv p s.counter s.ptank))
+        (CInv.active s.i f ** Tank.owns s.ptank 1 ** p)
+        (fun b -> CInv.active s.i f ** cond b emp (Tank.owns s.ptank 1 ** p))
     fn _ {
-      unpack_cinv_vp s.i;
-      unfold (sem_inv p s.counter s.tbl s.max);
-      unfold (sem_inv_aux p s.counter s.tbl s.max);
+      CInv.unpack_cinv_vp s.i;
+      unfold (sem_inv p s.counter s.ptank);
       
-      with n flags. _;
+      with n. _;
       
-      // Try CAS from v to v+1
       let b = cas_box s.counter v new_v;
       
       if b {
         elim_cond_true b _ _;
-        // CAS succeeded! n was v, counter now is v+1
+        // CAS succeeded: n was v, counter is now new_v = v + 1
+        // We have: replicate p (U32.v n) and n == v (since CAS succeeded)
+        // We need: replicate p (U32.v new_v) = replicate p (U32.v v + 1)
         
-        // Use extract_slot_at to prove flag correlation
-        let _ = SemGhost.extract_slot_at p s.tbl flags 0 idx max;
+        // Rewrite using n == v
+        rewrite (replicate p (U32.v n)) as (replicate p (U32.v v));
+        rewrite (Tank.owns s.ptank (U32.v n)) as (Tank.owns s.ptank (U32.v v));
         
-        // Now we can call release_slot
-        SemGhost.release_slot p s.tbl flags 0 idx max;
-        SemGhost.count_true_update_to_true flags idx;
-        SemGhost.list_update_length flags idx true;
+        // Join the replicate: p ** replicate p (U32.v v) -> replicate p (U32.v v + 1)
+        replicate_cons p (U32.v v);
+        // Now have: replicate p (U32.v v + 1) = replicate p (U32.v new_v)
+        assert (pure (U32.v v + 1 == U32.v new_v));
+        rewrite (replicate p (U32.v v + 1)) as (replicate p (U32.v new_v));
         
-        fold (sem_inv_aux p s.counter s.tbl s.max);
-        fold (sem_inv p s.counter s.tbl s.max);
-        pack_cinv_vp s.i;
+        // Join the tank permissions
+        Tank.gather s.ptank #1 #(U32.v v);
+        // Now have: Tank.owns s.ptank (1 + U32.v v) = Tank.owns s.ptank (U32.v new_v)
+        rewrite (Tank.owns s.ptank (1 + U32.v v)) as (Tank.owns s.ptank (U32.v new_v));
         
-        fold (cond true emp (GFT.pts_to s.tbl idx #0.5R false ** p idx ** pure (idx < s.max)));
+        fold (sem_inv p s.counter s.ptank);
+        CInv.pack_cinv_vp s.i;
+        
+        fold (cond true emp (Tank.owns s.ptank 1 ** p));
         true
       } else {
         elim_cond_false b _ _;
-        // CAS failed, put invariant back unchanged
-        fold (sem_inv_aux p s.counter s.tbl s.max);
-        fold (sem_inv p s.counter s.tbl s.max);
-        pack_cinv_vp s.i;
-        fold (cond false emp (GFT.pts_to s.tbl idx #0.5R false ** p idx ** pure (idx < s.max)));
+        // CAS failed
+        fold (sem_inv p s.counter s.ptank);
+        CInv.pack_cinv_vp s.i;
+        
+        fold (cond false emp (Tank.owns s.ptank 1 ** p));
         false
       }
     };
   
-  fold (sem_alive p s #perm max);
+  fold (sem_alive s #f);
   
   if result {
-    elim_cond_true result emp (GFT.pts_to s.tbl idx #0.5R false ** p idx ** pure (idx < s.max));
-    ()
+    elim_cond_true result emp (Tank.owns s.ptank 1 ** p)
   } else {
-    elim_cond_false result emp (GFT.pts_to s.tbl idx #0.5R false ** p idx ** pure (idx < s.max));
-    intro_pure (idx < s.max) ();
-    release_loop #p #perm #max s idx
+    elim_cond_false result emp (Tank.owns s.ptank 1 ** p);
+    rewrite (Tank.owns s.ptank 1) as (permit s 1);
+    release_loop s
   }
 }
 
-(** Release a slot back to the semaphore *)
-fn release (#p: nat -> slprop) (#perm: perm) (#max: sem_max) (s: sem p) (idx: nat { idx < max })
-  preserves sem_alive p s #perm max
-  requires permit p s idx ** p idx
-  ensures emp
+fn release (#p: slprop) (#f: perm) (s: sem p)
+  preserves sem_alive s #f
+  requires permit s 1 ** p
 {
-  unfold (permit p s idx);
-  // Have: GFT.pts_to s.tbl idx #0.5R false ** pure (idx < s.max) ** p idx ** sem_alive p s #perm max
-  release_loop #p #perm #max s idx
+  release_loop s
 }
 
-(** Share permission on sem_alive *)
-ghost fn share (#p: nat -> slprop) (#perm: perm) (#max: sem_max) (s: sem p)
-  requires sem_alive p s #perm max
-  ensures sem_alive p s #(perm /. 2.0R) max ** sem_alive p s #(perm /. 2.0R) max
+ghost fn share (#p: slprop) (#f: perm) (s: sem p)
+  requires sem_alive s #f
+  ensures sem_alive s #(f /. 2.0R) ** sem_alive s #(f /. 2.0R)
 {
-  unfold (sem_alive p s #perm max);
+  unfold (sem_alive s #f);
   CInv.share s.i;
-  dup_inv (iname_of s.i) (cinv_vp s.i (sem_inv p s.counter s.tbl max));
-  fold (sem_alive p s #(perm /. 2.0R) max);
-  fold (sem_alive p s #(perm /. 2.0R) max)
+  dup_inv (CInv.iname_of s.i) (CInv.cinv_vp s.i (sem_inv p s.counter s.ptank));
+  fold (sem_alive s #(f /. 2.0R));
+  fold (sem_alive s #(f /. 2.0R))
 }
 
-(** Gather permission on sem_alive *)
-ghost fn gather (#p: nat -> slprop) (#perm1 #perm2: perm) (#max: sem_max) (s: sem p)
-  requires sem_alive p s #perm1 max ** sem_alive p s #perm2 max
-  ensures sem_alive p s #(perm1 +. perm2) max
+ghost fn gather (#p: slprop) (#p1 #p2: perm) (s: sem p)
+  requires sem_alive s #p1 ** sem_alive s #p2
+  ensures sem_alive s #(p1 +. p2)
 {
-  unfold (sem_alive p s #perm1 max);
-  unfold (sem_alive p s #perm2 max);
+  unfold (sem_alive s #p1);
+  unfold (sem_alive s #p2);
   CInv.gather s.i;
-  drop_ (inv (iname_of s.i) (cinv_vp s.i (sem_inv p s.counter s.tbl max)));
-  fold (sem_alive p s #(perm1 +. perm2) max)
+  drop_ (inv (CInv.iname_of s.i) (CInv.cinv_vp s.i (sem_inv p s.counter s.ptank)));
+  fold (sem_alive s #(p1 +. p2))
 }
 
-(** Try to free the semaphore - CAS counter from max to 0, atomically acquire all permits *)
-fn try_free (#p: nat -> slprop) (#max: sem_max) (s: sem p)
-  requires sem_alive p s #1.0R max
-  returns b: bool
-  ensures cond b (OR.on_range p 0 max) (sem_alive p s #1.0R max)
+fn free (#p: slprop) (s: sem p)
+  requires sem_alive s
 {
-  unfold (sem_alive p s #1.0R max);
+  unfold (sem_alive s);
   
-  let max_u32 : U32.t = U32.uint_to_t max;
+  later_credit_buy 1;
+  CInv.cancel s.i;
   
-  // Try to CAS counter from max to 0 inside the invariant
-  // If successful, extract on_range and leave invariant with empty slots_range
-  let result : bool =
-    with_invariants bool emp_inames (CInv.iname_of s.i)
-        (cinv_vp s.i (sem_inv p s.counter s.tbl s.max))
-        (active s.i 1.0R ** pure (s.max == max))
-        (fun b -> active s.i 1.0R ** cond b (OR.on_range p 0 max) emp)
-    fn _ {
-      unpack_cinv_vp s.i;
-      unfold (sem_inv p s.counter s.tbl s.max);
-      unfold (sem_inv_aux p s.counter s.tbl s.max);
-      
-      with n flags. _;
-      
-      // Try CAS from max to 0
-      let b = cas_box s.counter max_u32 0ul;
-      
-      if b {
-        elim_cond_true b _ _;
-        // CAS succeeded! counter was max (all permits available), now 0
-        
-        // Since counter was max, count_true_list flags == max == length flags
-        // Therefore all flags are true
-        SemGhost.count_true_all_true flags;
-        
-        // Extract on_range from slots_range (all flags true)
-        SemGhost.extract_on_range p s.tbl flags 0 max;
-        
-        // Now we have:
-        // - on_range p 0 max (to return to caller)
-        // - on_range (GFT.pts_to tbl j #1.0R true) 0 max
-        // - B.pts_to s.counter 0ul
-        // - GFT.is_table s.tbl max
-        
-        // We need to put back the invariant with counter=0 and all-false flags
-        // slots_range with all-false flags is emp (no p i owned)
-        // But we need to update the GFT entries from true to false
-        
-        // Actually, we need to build a new slots_range with all false flags
-        // This requires updating each GFT entry and creating the new flags list
-        
-        // For now, we'll use a ghost function to convert all-true slots to all-false
-        // Since all flags are true, each slot_inv has GFT.pts_to #1.0R true ** p i
-        // We extracted p i via extract_on_range
-        // We still have GFT.pts_to #1.0R true for each slot
-        // We can update them to false and create slots_range with all-false flags
-        
-        // Update all GFT entries from true to false
-        SemGhost.make_all_slots_false p s.tbl max;
-        
-        // Now we have slots_range with all-false flags
-        // Prove sem_relation for the new state: counter=0, all_false_list max flags
-        SemGhost.all_false_length max;
-        SemGhost.all_false_count max;
-        // Now: List.length (all_false_list max) == max == s.max
-        //      count_true_list (all_false_list max) == 0 == U32.v 0ul
-        // So sem_relation 0ul (all_false_list max) s.max holds
-        
-        // Restore the invariant with counter=0, all-false flags
-        fold (sem_inv_aux p s.counter s.tbl s.max);
-        fold (sem_inv p s.counter s.tbl s.max);
-        pack_cinv_vp s.i;
-        
-        fold (cond true (OR.on_range p 0 max) emp);
-        true
-      } else {
-        elim_cond_false b _ _;
-        // CAS failed, restore invariant unchanged
-        fold (sem_inv_aux p s.counter s.tbl s.max);
-        fold (sem_inv p s.counter s.tbl s.max);
-        pack_cinv_vp s.i;
-        fold (cond false (OR.on_range p 0 max) emp);
-        false
-      }
-    };
+  unfold (sem_inv p s.counter s.ptank);
+  with n. _;
   
-  if result {
-    // CAS succeeded - we have on_range p 0 max, can cancel invariant
-    elim_cond_true result _ _;
-    
-    // Buy a later credit for cancel
-    later_credit_buy 1;
-    
-    // Cancel the invariant
-    CInv.cancel s.i;
-    
-    // The cancelled invariant content is sem_inv with counter=0, all-false flags
-    unfold (sem_inv p s.counter s.tbl s.max);
-    unfold (sem_inv_aux p s.counter s.tbl s.max);
-    with n flags. _;
-    
-    // Free the counter box
-    B.free s.counter;
-    
-    // Drop ghost resources
-    drop_ (SemGhost.slots_range p s.tbl flags 0);
-    drop_ (GFT.is_table s.tbl s.max);
-    
-    intro_cond_true (OR.on_range p 0 max) (sem_alive p s #1.0R max);
-    true
-  } else {
-    // CAS failed - restore sem_alive
-    elim_cond_false result _ _;
-    fold (sem_alive p s #1.0R max);
-    intro_cond_false (OR.on_range p 0 max) (sem_alive p s #1.0R max);
-    false
-  }
+  B.free s.counter;
+  
+  drop_ (replicate p (U32.v n));
+  drop_ (Tank.owns s.ptank (U32.v n))
 }
