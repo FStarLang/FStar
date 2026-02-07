@@ -27,6 +27,16 @@ let rec replicate (p: slprop) (i: nat) : slprop =
   | 0 -> emp
   | _ -> p ** replicate p (i - 1)
 
+(** Split replicate into two parts *)
+ghost fn replicate_split (p: slprop) (i j: nat)
+  requires replicate p (i + j)
+  ensures replicate p i ** replicate p j
+
+(** Join two replicates into one *)
+ghost fn replicate_join (p: slprop) (i j: nat)
+  requires replicate p i ** replicate p j
+  ensures replicate p (i + j)
+
 (** The semaphore capacity must fit in a U32 *)
 let sem_max: U32.t = 0xfffffffful
 
