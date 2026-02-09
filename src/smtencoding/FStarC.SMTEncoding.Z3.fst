@@ -260,13 +260,14 @@ let bg_z3_proc =
         let kill_handler () = "\nkilled\n" in
         BU.ask_process (z3proc ()) input kill_handler (warn_handler [])
     in
-    let maybe_kill_z3proc () =
+    let maybe_kill_z3proc tag =
       if !the_z3proc <> None then begin
         let old_params = Option.must (!the_z3proc_params) in
         let old_version = !the_z3proc_version in
 
         if Options.hint_info () then
-          Format.print2 "Killing old z3proc (ask_count=%s, old_cmd=[%s])\n"
+          Format.print3 "Killing (%s) old z3proc (ask_count=%s, old_cmd=[%s])\n"
+            tag 
             (show !the_z3proc_ask_count)
             (show old_params);
 
@@ -276,11 +277,11 @@ let bg_z3_proc =
       end
     in
     let refresh () =
-        maybe_kill_z3proc ();
+        maybe_kill_z3proc "refresh";
         query_logging.close_log()
     in
     let restart () =
-        maybe_kill_z3proc();
+        maybe_kill_z3proc "restart";
         query_logging.close_log();
         let next_params = z3_cmd_and_args () in
         make_new_z3_proc next_params

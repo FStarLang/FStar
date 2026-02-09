@@ -5,6 +5,7 @@
     "--ext", "fly_deps"
   ],
   "include_dirs": [
-    "ide/emacs"
+    "ide/emacs",
+    "bug-reports"
   ]
 }

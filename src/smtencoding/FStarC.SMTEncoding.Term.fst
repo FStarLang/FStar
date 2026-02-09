@@ -48,7 +48,7 @@ let rec strSort x = match x with
   | Fuel_sort -> "Fuel"
   | BitVec_sort n -> Format.fmt1 "(_ BitVec %s)" (show n)
   | Array(s1, s2) -> Format.fmt2 "(Array %s %s)" (strSort s1) (strSort s2)
-  | Arrow(s1, s2) -> Format.fmt2 "(%s -> %s)" (strSort s1) (strSort s2)
+  | Arrow(s1, s2) -> Format.fmt2 "(=> %s %s)" (strSort s1) (strSort s2)
   | Sort s -> s
 
 let rec docSort x = match x with
@@ -60,7 +60,7 @@ let rec docSort x = match x with
   | BitVec_sort n -> form "_" [doc_of_string "BitVec"; doc_of_string (show n)]
   | Array(s1, s2) -> form "Array" [docSort s1; docSort s2]
   | Arrow(s1, s2) ->
-    nest 1 (group (parens (docSort s1 ^^ doc_of_string " ->" ^/^ docSort s2)))
+    nest 1 (group (parens (doc_of_string "=>" ^/^ docSort s1 ^/^ docSort s2)))
   | Sort s -> doc_of_string s
 
 (** Note [Thunking Nullary Constants]
@@ -193,6 +193,7 @@ let rec freevars t = match t.tm with
   | Quant(_, _, _, _, t)
   | Labeled(t, _, _) -> freevars t
   | Let (es, body) -> List.collect freevars (body::es)
+  | Lambda (_sort, body) -> freevars body
 
 //memo-ized
 let free_variables t = match !t.freevars with
@@ -219,6 +220,7 @@ let free_top_level_names (t:term)
       let acc = List.fold_left free_top_level_names acc tms in
       free_top_level_names acc t
     | Labeled(t, _, _) -> free_top_level_names acc t
+    | Lambda(_, body) -> free_top_level_names acc body
     | _ -> acc
   in
   free_top_level_names (empty()) t
@@ -305,6 +307,8 @@ let rec hash_of_term' t =
     ^ "))"
   | Let (es, body) ->
     "(let (" ^ (List.map hash_of_term es |> String.concat " ") ^ ") " ^ hash_of_term body ^ ")"
+  | Lambda (sort, body) ->
+    "(lambda (" ^ (strSort sort) ^") " ^hash_of_term body^")"
 and hash_of_term tm = hash_of_term' tm.tm
 
 let mkBoxFunctions s = (s, s ^ "_proj_0")
@@ -469,6 +473,9 @@ let check_pattern_ok (t:term) : option term =
             else aux_l terms
         | Labeled(t, _, _) ->
           aux t
+        | Lambda(_, t) ->
+          aux t
+        //quantifiers: illegal in patterns 
         | Quant _ -> Some t
     and aux_l ts =
         match ts with
@@ -480,7 +487,8 @@ let check_pattern_ok (t:term) : option term =
     in
     aux t
 
- let rec print_smt_term (t:term) :string =
+//debug output
+let rec print_smt_term (t:term) :string =
   match t.tm with
   | Integer n               -> Format.fmt1 "(Integer %s)" n
   | String s                -> Format.fmt1 "(String %s)" s
@@ -491,7 +499,7 @@ let check_pattern_ok (t:term) : option term =
   | Labeled(t, r1, r2)      -> Format.fmt2 "(Labeled '%s' %s)" (Errors.Msg.rendermsg r1) (print_smt_term t)
   | Quant (qop, l, _, _, t) -> Format.fmt3 "(%s %s %s)" (qop_to_string qop) (print_smt_term_list_list l) (print_smt_term t)
   | Let (es, body) -> Format.fmt2 "(let %s %s)" (print_smt_term_list es) (print_smt_term body)
-
+  | Lambda (sort, body) -> Format.fmt2 "(lambda (_ %s) %s)" (strSort sort) (print_smt_term body)
 and print_smt_term_list (l:list term) :string = List.map print_smt_term l |> String.concat " "
 
 and print_smt_term_list_list (l:list (list term)) :string =
@@ -549,6 +557,9 @@ let abstr fvs t = //fvs is a subset of the free vars of t; the result closes ove
         | Let (es, body) ->
           let ix, es_rev = List.fold_left (fun (ix, l) e -> ix+1, aux ix e::l) (ix, []) es in
           mkLet (List.rev es_rev, aux ix body) t.rng
+        | Lambda (sort, body) ->
+          let body = aux (ix + 1) body in
+          mk (Lambda (sort, body)) t.rng
       end
   in
   aux 0 t
@@ -574,6 +585,8 @@ let inst tms t =
     | Let (es, body) ->
       let shift, es_rev = List.fold_left (fun (ix, es) e -> shift+1, aux shift e::es) (shift, []) es in
       mkLet (List.rev es_rev, aux shift body) t.rng
+    | Lambda(sort, body) ->
+      mk (Lambda(sort, aux (shift + 1) body)) t.rng      
   in
   aux 0 t
 
@@ -603,6 +616,17 @@ let mkForallFlat (vars, body) =
 let mkLet' (bindings, body) r =
   let vars, es = List.split bindings in
   mkLet (es, abstr vars body) r
+
+let mkTm_refine r base fv refine =
+  let FV (x, sort, _) = fv in
+  let lambda = mk (Lambda(sort, abstr [fv] refine)) r in
+  mkApp ("Tm_refinement", [base; lambda]) r
+let mkTm_refinement r base lambda =
+  mkApp ("Tm_refinement", [base; lambda]) r
+let mkLambda r ty fv body =
+  let FV (x, sort, _) = fv in
+  let lambda = mk (Lambda(sort, abstr [fv] body)) r in
+  mkApp ("Tm_lambda", [ty; lambda]) r
 
 let norng = Range.dummyRange
 let mkDefineFun (nm, vars, s, tm, c) = DefineFun(nm, List.map fv_sort vars, s, abstr vars tm, c)
@@ -839,6 +863,10 @@ let termToSmt
           in
           binder "let" (form_core binders) [aux n names body]
 
+        | Lambda(sort, body) ->
+          let names, binders, n = name_binders_inner None names n [sort] in
+          binder "lambda" (form_core binders) [aux n names body]
+
       and aux depth n names t : document =
         let s = aux' depth n names t in
         if print_ranges && t.rng <> norng
@@ -1011,7 +1039,35 @@ and mkPrelude z3options =
                 (declare-fun _rdiv (Real Real) Real)\n\
                 (assert (forall ((x Real) (y Real)) (! (= (_rmul x y) (* x y)) :pattern ((_rmul x y)))))\n\
                 (assert (forall ((x Real) (y Real)) (! (= (_rdiv x y) (/ x y)) :pattern ((_rdiv x y)))))\n\
-                (define-fun Unreachable () Bool false)"
+                (define-fun Unreachable () Bool false)\n\
+                (declare-fun Tm_refinement (Term (=> Term Bool)) Term)\n\
+                (assert (forall ((x Term) (base Term) (f (=> Term Bool)))
+                  (! (iff (and (HasType x base) (select f x))
+                          (HasType x (Tm_refinement base f)))
+                  :pattern ((HasType x (Tm_refinement base f)))
+                  :qid refine_interpretation)))\n\
+                (assert (forall ((t Term) (base Term) (f (=> Term Bool)))
+                  (! (iff (HasType base t)
+                          (HasType (Tm_refinement base f) t))
+                  :pattern ((HasType (Tm_refinement base f) t))
+                  :qid refine_typing)))\n\
+                (declare-fun Tm_lambda (Term (=> Term Term)) Term)\n\
+                (assert (forall ((t Term) (f (=> Term Term)) (x Term))
+                  (! (implies (HasTypeFuel ZFuel x t)
+                              (= (ApplyTT (Tm_lambda t f) x)
+                                 (select f x)))
+                  :pattern ((ApplyTT (Tm_lambda t f) x))
+                  :qid beta_reduction)))\n\
+                (declare-fun WithType (Term Term) Term)\n\
+                (assert (forall ((t Term) (ty Term))
+                        (! (and (HasType (WithType t ty) ty)
+                                (= (WithType t ty) t))
+                          :pattern ((WithType t ty)))))\n\
+                (declare-fun WithInterp (Term Bool) Term)\n\
+                (assert (forall ((t Term) (interp Bool))
+                        (! (and (= (Valid t) interp)
+                                (= (WithInterp t interp) t))
+                          :pattern ((WithInterp t interp)))))\n"
    in
    let as_constr (name, fields, sort, id, _injective)
      : constructor_t

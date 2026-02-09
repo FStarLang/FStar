@@ -153,6 +153,7 @@ let split_5 #a s i j =
   let frag_mid = slice s (i + 1) j in
   let frag_j = slice s j (j + 1) in
   let frag_hi = slice s (j + 1) (length s) in
+  admit();
   upd (upd (upd (upd (create 5 frag_lo) 1 frag_i) 2 frag_mid) 3 frag_j) 4 frag_hi
 
 let lemma_swap_permutes_aux_frag_eq #a s i j i' j' =

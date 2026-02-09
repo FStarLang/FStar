@@ -88,6 +88,7 @@ type term' =
   | Quant      of qop & list (list pat) & option int & list sort & term
   | Let        of list term & term
   | Labeled    of term & Errors.error_message & Range.t
+  | Lambda     of sort & term
 and pat  = term
 and term = {tm:term'; freevars:S.memo fvs; rng:Range.t}
 and fv = | FV of string & sort & bool (* bool iff variable must be forced/unthunked *)
@@ -272,7 +273,9 @@ val mkExists: Range.t -> (list (list pat) & fvs & term) -> term
 val mkForallFlat:  (fvs & term) -> term
 val mkLet: (list term & term) -> Range.t -> term
 val mkLet': (list (fv & term) & term) -> Range.t -> term
-
+val mkTm_refine : Range.t -> base:term -> fv -> refine:term -> term
+val mkTm_refinement : Range.t -> base:term -> refine_lambda:term -> term
+val mkLambda : Range.t -> ty:term -> fv -> body:term -> term
 val fresh_token: (term & fvs & sort) -> int -> decl
 val fresh_constructor : Range.t -> (string & list sort & sort & int) -> decl
 //val constructor_to_decl_aux: bool -> constructor_t -> decls_t

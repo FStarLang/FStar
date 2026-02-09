@@ -266,6 +266,18 @@ $(FSTAR2_FULL_EXE): .bare2.src.touch .full2.src.touch .src.ml.touch $(MAYBEFORCE
 	  $(MAKE) -f mk/lib.mk ocaml verify
 	# ^ NB: also verify files we don't extract
 
+
+test_ulib: $(FSTAR2_FULL_EXE) .force
+	env \
+	  SRC=ulib/ \
+	  FSTAR_EXE=$(FSTAR2_FULL_EXE) \
+	  CACHE_DIR=test_ulib/ulib.checked/ \
+	  OUTPUT_DIR=test_ulib/ulib.ml/ \
+	  CODEGEN=OCaml \
+	  TAG=lib \
+	  $(MAKE) -f mk/lib.mk ocaml verify
+
+	# ^ NB: also verify files we don't extract
 .alib2.touch: .alib2.src.touch .src.ml.touch $(MAYBEFORCE)
 	$(call bold_msg, "BUILD", "STAGE 2 LIB")
 	$(MAKE) -C stage2/ libapp FSTAR_DUNE_RELEASE=1

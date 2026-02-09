@@ -72,12 +72,14 @@ let impl_intro_gen #p #q f =
   let g () : Lemma (requires p) (ensures (p ==> q ())) = give_proof #(q ()) (f (get_proof p)) in
   move_requires g ()
 
+#push-options "--ext higher_order_smt:off"
 (*** Universal quantification *)
 let get_forall #a p =
   let unfold t = (forall (x:a). p x) in
   assert (norm [delta; delta_only [`%l_Forall]] t == (squash (x:a -> GTot (p x))));
   norm_spec [delta; delta_only [`%l_Forall]] t;
   get_squashed #(x: a -> GTot (p x)) (forall (x: a). p x)
+#pop-options
 
 (* TODO: Maybe this should move to FStar.Squash.fst *)
 let forall_intro_gtot #a #p f =

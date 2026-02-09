@@ -56,9 +56,9 @@ let primitive_projector_by_pos env lid i =
         | _ -> fail ()
 let mk_term_projector_name_by_pos lid (i:int) = escape <| Format.fmt2 "%s_@%s" (string_of_lid lid) (show i)
 let mk_term_projector (lid:lident) (a:bv) : term =
-    mkFreeV <| mk_fv (mk_term_projector_name lid a, Arrow(Term_sort, Term_sort))
+    mkFreeV <| mk_fv (mk_term_projector_name lid a, Sort "NoSort")
 let mk_term_projector_by_pos (lid:lident) (i:int) : term =
-    mkFreeV <| mk_fv (mk_term_projector_name_by_pos lid i, Arrow(Term_sort, Term_sort))
+    mkFreeV <| mk_fv (mk_term_projector_name_by_pos lid i, Sort "NoSort")
 let mk_data_tester env l x = mk_tester (escape (string_of_lid l)) x
 (* ------------------------------------ *)
 (* New name generation *)
