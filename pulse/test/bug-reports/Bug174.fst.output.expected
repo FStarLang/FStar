@@ -1,13 +1,8 @@
-* Info at Bug174.fst(15,30-15,42):
+* Info at Bug174.fst(15,10-15,37):
   - Expected failure:
-  - Ill-typed term: !r
-  - Expected a term of type
-      fn
-        requires r |-> Frac 1.0R v
-        returns x : t
-        ensures r |-> Frac 1.0R v ** rewrites_to x v
-  - Assertion failed
-  - The SMT solver could not prove the query. Use --query_stats for more
-    details.
-  - See also Bug174.fst(14,1-15,40)
+  - Tactic failed
+  - Cannot prove:
+      Pulse.Lib.Reference.pts_to r (*?u173*)_
+  - In the context:
+      Pulse.Lib.Reference.pts_to r v
 
