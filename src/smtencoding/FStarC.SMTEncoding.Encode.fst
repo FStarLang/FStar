@@ -1358,7 +1358,7 @@ let encode_sig_inductive (env:env_t) (se:sigelt)
       if List.length formals > 0
       then [Util.mkAssume(
           mkForall (Ident.range_of_lid t) ([[ttok_tm]], univ_vars, mk_tester "Tm_arrow" (mk_PreType ttok_tm)),
-          Some "kinding", ("pre_kinding_"^ttok))]
+          Some "pretyping", ("pre_kinding_"^ttok))]
       else []
     in
     let rng = Ident.range_of_lid t in

@@ -642,7 +642,7 @@ and fly_deps_check (filename:string) (env:uenv) (ast_mod:Ast.modul) (iface_exist
 and scan_and_load_fly_deps_internal filename (env:uenv) frag_or_decl: uenv & list string =
   let load_fly_deps (env:uenv) filenames =
     match filenames with
-    | [] -> env
+    | [] -> env //if nothing to load, just return to avoid resetting solver, etc.
     | _ ->
       let run_load_tasks env filenames =
         let _, _, env = tc_fold_interleave false ([], [], env) filenames in
