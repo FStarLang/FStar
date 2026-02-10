@@ -83,6 +83,10 @@ let check_fndefn
   let refl_t = elab_comp c in
   
   let refl_e = Pulse.RuntimeUtils.embed_st_term_for_extraction #st_term body (Some rng) in
+  let refl_e = RU.deep_compress refl_e in
+  (* ^ This is important. F* has no idea what's in this blob, and we MUST compress
+  it since it will go directly into the checked files. If we do not, a lambda could
+  remain here, and cause an error in output_value. *)
   let blob = "pulse", refl_e in
   soundness_lemma g body c t_typing;
 
