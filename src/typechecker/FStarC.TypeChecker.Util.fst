@@ -3784,9 +3784,6 @@ let make_record_fields_in_order env uc topt
           (print_rdc rdc)
           (show (List.map fst fas))
     in
-    if not rdc.is_record then // This should not happen, there are external checks.
-      raise_error rng Errors.Error_CannotResolveRecord
-        (Format.fmt1 "Type '%s' is not a record type." (show topt));
     let rest, as_rev, missing =
       List.fold_left
         (fun (fields, as_rev, missing) (field_name, _) ->

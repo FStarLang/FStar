@@ -563,14 +563,20 @@ val lemma_sub_add_cancel: #n:pos -> a:uint_t n -> b:uint_t n ->
   Lemma (sub_mod (add_mod a b) b = a)
 
 let zero_extend_vec (#n:pos) (a:BitVector.bv_t n): Tot (BitVector.bv_t (n+1)) = append (create 1 false) a
+let zero_extends_vec (#n:pos) (m: pos) (a:BitVector.bv_t n): Tot (BitVector.bv_t (n+m)) = append (zero_vec #m) a
 let one_extend_vec (#n:pos) (a:BitVector.bv_t n): Tot (BitVector.bv_t (n+1)) = append (create 1 true) a
 
 let zero_extend (#n:pos) (a:uint_t n): Tot (uint_t (n+1)) = from_vec (zero_extend_vec (to_vec a))
+let zero_extends (#n:pos) (m: pos) (a:uint_t n): Tot (uint_t (n+m)) = from_vec (zero_extends_vec m (to_vec a))
 let one_extend (#n:pos) (a:uint_t n): Tot (uint_t (n+1)) = from_vec (one_extend_vec (to_vec a))
 
 val lemma_zero_extend: #n:pos -> a:uint_t n ->
   Lemma (zero_extend a = a)
   [SMTPat (zero_extend a)]
+
+val lemma_zero_extends: #n:pos -> m: pos -> a:uint_t n ->
+  Lemma (zero_extends #n m a = a)
+  [SMTPat (zero_extends #n m a)]
 
 val lemma_one_extend: #n:pos -> a:uint_t n ->
   Lemma (one_extend a = pow2 n + a)

@@ -38,10 +38,159 @@ irreducible let fundeps (_ : list int) : unit = ()
 irreducible let noinst : unit = ()
 irreducible let no_method : unit = ()
 
+(* An entry in the global instance map. *)
+noeq
+type glb_inst = {
+  inst_name : fv;
+  noinst : bool;
+}
+
+noeq
+type glb_entry = {
+  class_name : fv;
+  instances  : list glb_inst;
+}
+
+(* Would be nice to define an unembedding class here.. but it's circular. *)
+let unembed_int (t:term) : Tac (option int) =
+  match inspect_ln t with
+  | R.Tv_Const (C_Int i) -> Some i
+  | _ -> None
+
+let rec unembed_list (#a:Type) (u : term -> Tac (option a)) (t:term) : Tac (option (list a)) =
+  match hua t with
+  | Some (fv, _, [(ty, Q_Implicit); (hd, Q_Explicit); (tl, Q_Explicit)]) ->
+    if implode_qn (inspect_fv fv) = `%Prims.Cons then
+      match u hd, unembed_list u tl with
+      | Some hd, Some tl -> Some (hd::tl)
+      | _ -> None
+    else
+      None
+  | Some (fv, _, [(ty, Q_Implicit)]) ->
+    if implode_qn (inspect_fv fv) = `%Prims.Nil then
+      Some []
+    else
+      None
+  | _ ->
+    None
+
+let extract_fundeps (se : sigelt) : Tac (option (list int)) =
+  let attrs = sigelt_attrs se in
+  let rec aux (attrs : list term) : Tac (option (list int)) =
+    match attrs with
+    | [] -> None
+    | attr::attrs' ->
+      match collect_app attr with
+      | hd, [(a0, Q_Explicit)] ->
+        if FStar.Reflection.TermEq.Simple.term_eq hd (`fundeps) then
+          unembed_list unembed_int a0
+        else
+          aux attrs'
+      | _ ->
+        aux attrs'
+    in
+    aux attrs
+
+let sigelt_name (se:sigelt) : Tac fv =
+  match FStar.Stubs.Reflection.V2.Builtins.inspect_sigelt se with
+  | Stubs.Reflection.V2.Data.Sg_Let _ lbs -> (
+    match lbs with
+    | [lb] -> (FStar.Stubs.Reflection.V2.Builtins.inspect_lb lb).lb_fv
+    | _ -> fail "GGG1"
+  )
+  | Stubs.Reflection.V2.Data.Sg_Val nm _ _ -> pack_fv nm
+  | _ -> fail "GGG2"
+
+let rec head_of (t:term) : Tac (option fv) =
+  (* NB: must use `inspect` to make use of unionfind graph.
+  inspect_ln won't work. *)
+  match inspect t with
+  | Tv_FVar fv
+  | Tv_UInst fv _ -> Some fv
+  | Tv_App h _ -> head_of h
+  | v ->
+    None
+
+let rec res_typ (t:term) : Tac term =
+  match inspect t with
+  | Tv_Arrow _ c -> (
+    match inspect_comp c with
+    | C_Total t -> res_typ t
+    | _ -> t
+  )
+  | _ -> t
+
+val fv_eq : fv -> fv -> Tot bool
+let fv_eq fv1 fv2 =
+  let n1 = inspect_fv fv1 in
+  let n2 = inspect_fv fv2 in
+  n1 = n2
+
+let rec compact (xs : list glb_entry) : Tac (list glb_entry) =
+  match xs with
+  | [] -> []
+  | x::xs ->
+    let (same, rest) = L.partition (fun y -> fv_eq x.class_name y.class_name) xs in
+    { class_name = x.class_name;
+      instances  = x.instances @ (same |> L.concatMap (fun y -> y.instances));
+    } :: compact rest
+
+let is_class_name (f : fv) : Tac bool =
+  let se = lookup_typ (cur_env ()) (inspect_fv f) in
+  match se with
+  | None -> false
+  | Some se ->
+    let attrs = sigelt_attrs se in
+    L.existsb (Reflection.TermEq.Simple.term_eq (`tcclass)) attrs
+
+let class_of_typ (t:term) : Tac (option fv) =
+  match head_of (res_typ t) with
+  | None -> None
+  | Some fv ->
+    if is_class_name fv then
+      Some fv
+    else
+      (* If the head of the result type of this instance
+      does not look like a class, try normalizing. It may
+      be an alias to a class. *)
+      let t' =
+        try norm_term (hnf :: tc_norm_steps) t with | _ -> t
+      in
+      head_of (res_typ t')
+
+let type_matches_class (cfv:fv) (t:term) : Tac bool =
+  match class_of_typ t with
+  | None -> false
+  | Some fv -> fv_eq cfv fv
+
+let build_glb_map (all_glb : list sigelt) : Tac (list glb_entry) =
+  let sigelt_to_inst (se : sigelt) : Tac glb_inst =
+    let inst_name = sigelt_name se in
+    let attrs = sigelt_attrs se in
+    let noinst = L.existsb (Reflection.TermEq.Simple.term_eq (`noinst)) attrs in
+    { inst_name; noinst; }
+  in
+  all_glb |> Tactics.Util.concatMap (fun se ->
+    let entry = sigelt_to_inst se in
+    let typ =
+      try
+        Some <| tc (cur_env()) (pack (Tv_FVar entry.inst_name))
+        // FIXME: a bit slow... but at least it's a simple fvar
+      with | _ -> None
+    in
+    match typ with
+    | None -> []
+    | Some typ ->
+      let attrs = sigelt_attrs se in
+      match class_of_typ typ with
+      | None -> []
+      | Some cvf -> [ { class_name = cvf; instances = [entry]; } ]
+  ) |> compact
+
 noeq
 type st_t = {
   seen           : list term;
-  glb            : list (sigelt & fv);
+  glb            : list glb_entry;
   fuel           : int;
   rng            : range;
   (* ^ The range of the original goal, for error reporting.
@@ -72,31 +221,6 @@ type tc_goal = {
   unresolved, even partially. I.e. the boolean is true
   when the arg contains uvars. *)
 }
-
-
-val fv_eq : fv -> fv -> Tot bool
-let fv_eq fv1 fv2 =
-  let n1 = inspect_fv fv1 in
-  let n2 = inspect_fv fv2 in
-  n1 = n2
-
-let rec head_of (t:term) : Tac (option fv) =
-  (* NB: must use `inspect` to make use of unionfind graph.
-  inspect_ln won't work. *)
-  match inspect t with
-  | Tv_FVar fv
-  | Tv_UInst fv _ -> Some fv
-  | Tv_App h _ -> head_of h
-  | v -> None
-
-let rec res_typ (t:term) : Tac term =
-  match inspect t with
-  | Tv_Arrow _ c -> (
-    match inspect_comp c with
-    | C_Total t -> res_typ t
-    | _ -> t
-  )
-  | _ -> t
 
 (* Would be good to use different exceptions for each reason
 the search stops, but it takes some work to properly account
@@ -136,125 +260,66 @@ let rec maybe_intros () : Tac unit =
     maybe_intros ()
   | _ -> ()
 
-let sigelt_name (se:sigelt) : list fv =
-  match FStar.Stubs.Reflection.V2.Builtins.inspect_sigelt se with
-  | Stubs.Reflection.V2.Data.Sg_Let _ lbs -> (
-    match lbs with
-    | [lb] -> [(FStar.Stubs.Reflection.V2.Builtins.inspect_lb lb).lb_fv]
-    | _ -> []
-  )
-  | Stubs.Reflection.V2.Data.Sg_Val nm _ _ -> [pack_fv nm]
-  | _ -> []
+let trywith (st:st_t) (g:tc_goal) (t : term) (noinst : bool) (k : st_t -> Tac unit) : Tac unit =
+  (* debug st (fun () -> "trying " ^ term_to_string t); *)
+  (* debug st (fun () -> "of type: " ^ term_to_string typ); *)
+  (* print ("head_fv = " ^ fv_to_string g.head_fv); *)
+  // print ("fundeps = " ^ Util.string_of_option (Util.string_of_list (fun i -> string_of_int i)) fundeps);
+  // print ("unresolved_args = " ^ Util.string_of_list (fun i -> string_of_int i) unresolved_args);
 
-(* Would be nice to define an unembedding class here.. but it's circular. *)
-let unembed_int (t:term) : Tac (option int) =
-  match inspect_ln t with
-  | R.Tv_Const (C_Int i) -> Some i
-  | _ -> None
+  let unresolved_args = g.args_and_uvars |> Util.mapi (fun i (_, b) -> if b then [i <: int] else []) |> List.Tot.flatten in
+  debug st (fun () -> "Trying to apply hypothesis/instance: " ^ term_to_string t);
+  (fun () ->
+    if noinst then (
+      (* If this instance has the noinst attribute, force using apply_noinst.
+        This means we will not let this instance instantiate the goal, regardless
+        of any fundeps on the class. *)
+      orskip st "apply_noinst" (fun () -> apply_noinst t)
+    ) else if Cons? unresolved_args then (
+      (* If some args have uvars, we check to see if they are
+        functional dependencies of the class. If so, we apply
+        the instance and instantiate the uvars. Otherwise skip. *)
+      if None? g.fundeps then
+        skip st "Will not continue as there are unresolved args (and no fundeps)";
 
-let rec unembed_list (#a:Type) (u : term -> Tac (option a)) (t:term) : Tac (option (list a)) =
-  match hua t with
-  | Some (fv, _, [(ty, Q_Implicit); (hd, Q_Explicit); (tl, Q_Explicit)]) ->
-    if implode_qn (inspect_fv fv) = `%Prims.Cons then
-      match u hd, unembed_list u tl with
-      | Some hd, Some tl -> Some (hd::tl)
-      | _ -> None
-    else
-      None
-  | Some (fv, _, [(ty, Q_Implicit)]) ->
-    if implode_qn (inspect_fv fv) = `%Prims.Nil then
-      Some []
-    else
-      None
-  | _ ->
-    None
+      let Some fundeps = g.fundeps in
+      debug st (fun () -> "checking fundeps");
+      if unresolved_args |> L.existsb (fun i -> not (List.Tot.mem i fundeps)) then
+        skip st "fundeps: a non-fundep is unresolved";
 
-let extract_fundeps (se : sigelt) : Tac (option (list int)) =
-  let attrs = sigelt_attrs se in
-  let rec aux (attrs : list term) : Tac (option (list int)) =
-    match attrs with
-    | [] -> None
-    | attr::attrs' ->
-      match collect_app attr with
-      | hd, [(a0, Q_Explicit)] ->
-        if FStar.Reflection.TermEq.Simple.term_eq hd (`fundeps) then (
-          unembed_list unembed_int a0
-        ) else
-          aux attrs'
-      | _ ->
-        aux attrs'
-    in
-    aux attrs
-
-let trywith (st:st_t) (g:tc_goal) (t typ : term) (attrs : list term) (k : st_t -> Tac unit) : Tac unit =
-    (* debug st (fun () -> "trying " ^ term_to_string t); *)
-    (* debug st (fun () -> "of type: " ^ term_to_string typ); *)
-    (* print ("head_fv = " ^ fv_to_string g.head_fv); *)
-    // print ("fundeps = " ^ Util.string_of_option (Util.string_of_list (fun i -> string_of_int i)) fundeps);
-    // print ("unresolved_args = " ^ Util.string_of_list (fun i -> string_of_int i) unresolved_args);
-
-    (* Try to normalize the type, but this can fail due to out-of-scope
-       variables. This should *not* be possible, it indicates a bug
-       somewhere. We should investigate and remove this catching. *)
-    let typ =
-      try norm_term tc_norm_steps typ with
-      | _ -> typ
-    in
-
-    match head_of (res_typ typ) with
-    | None ->
-      debug st (fun () -> "no head for typ of this? " ^ term_to_string t ^ "    typ=" ^ term_to_string typ);
-      raise Next
-    | Some fv' ->
-      if not (fv_eq fv' g.head_fv) then (
-        (* print ("fv' = " ^ implode_qn (inspect_fv fv')); *)
-        (* print ("g.head_fv = " ^ implode_qn (inspect_fv g.head_fv)); *)
-        skip st "class mismatch" // class mismatch, would be better to not even get here
-      );
-      let unresolved_args = g.args_and_uvars |> Util.mapi (fun i (_, b) -> if b then [i <: int] else []) |> List.Tot.flatten in
-      debug st (fun () -> "Trying to apply hypothesis/instance: " ^ term_to_string t);
-      (fun () ->
-        if L.existsb (Reflection.TermEq.Simple.term_eq (`noinst)) attrs then (
-          (* If this instance has the noinst attribute, force using apply_noinst.
-            This means we will not let this instance instantiate the goal, regardless
-            of any fundeps on the class. *)
-          orskip st "apply_noinst" (fun () -> apply_noinst t)
-        ) else if Cons? unresolved_args then (
-          (* If some args have uvars, we check to see if they are
-            functional dependencies of the class. If so, we apply
-            the instance and instantiate the uvars. Otherwise skip. *)
-          if None? g.fundeps then
-            skip st "Will not continue as there are unresolved args (and no fundeps)";
-
-          let Some fundeps = g.fundeps in
-          debug st (fun () -> "checking fundeps");
-          if unresolved_args |> L.existsb (fun i -> not (List.Tot.mem i fundeps)) then
-            skip st "fundeps: a non-fundep is unresolved";
-
-          (* Gor for it, with the full apply. *)
-          orskip st "apply" (fun () -> apply t)
-        ) else (
-          orskip st "apply_noinst" (fun () -> apply_noinst t)
-        )
-      ) `seq` (fun () ->
-        debug st (fun () -> dump "next"; "apply of " ^ term_to_string t ^ " seems to have worked");
-        let st = { st with fuel = st.fuel - 1 } in
-        k st)
+      (* Gor for it, with the full apply. *)
+      orskip st "apply" (fun () -> apply t)
+    ) else (
+      orskip st "apply_noinst" (fun () -> apply_noinst t)
+    )
+  ) `seq` (fun () ->
+    debug st (fun () -> dump "next"; "apply of " ^ term_to_string t ^ " seems to have worked");
+    let st = { st with fuel = st.fuel - 1 } in
+    k st)
 
 let local (st:st_t) (g:tc_goal) (k : st_t -> Tac unit) () : Tac unit =
     debug st (fun () -> "local, goal = " ^ term_to_string g.g);
     let bs = vars_of_env (cur_env ()) in
-    first (fun (b:binding) ->
-              trywith st g (pack (Tv_Var b)) b.sort [] k)
-          bs
+    bs |> first fun (b:binding) ->
+       if type_matches_class g.head_fv b.sort then
+         trywith st g (pack (Tv_Var b)) false k
+       else
+         skip st "head mismatch"
 
 let global (st:st_t) (g:tc_goal) (k : st_t -> Tac unit) () : Tac unit =
     debug st (fun () -> "global, goal = " ^ term_to_string g.g);
-    first (fun (se, fv) ->
-              let typ = orskip st "tc" (fun () -> tc (cur_env()) (pack (Tv_FVar fv))) in // FIXME: a bit slow.. but at least it's a simple fvar
-              let attrs = sigelt_attrs se in
-              trywith st g (pack (Tv_FVar fv)) typ attrs k)
-          st.glb
+    (* Find the set of instances for this class and try them. There can only
+    be one. Would be nice to use a map here to avoid the lookup. *)
+    let rec go (l : list glb_entry) : Tac unit =
+      match l with
+      | [] -> skip st "no more global instances"
+      | { class_name ; instances } :: rest ->
+        if type_matches_class g.head_fv (pack (Tv_FVar class_name)) then
+          instances |> first fun i -> trywith st g (pack (Tv_FVar i.inst_name)) i.noinst k
+        else
+          go rest
+    in
+    go st.glb
 
 let rec unrefine t : Tac term =
   match t with
@@ -373,11 +438,8 @@ let __tcresolve (dbg : bool) : Tac unit =
     // Fetch a list of all instances in scope right now.
     // TODO: turn this into a hash map per class, ideally one that can be
     // persisted across calls.
-    let glb = lookup_attr_ses (`tcinstance) (cur_env ()) in
-    let glb = glb |> Tactics.Util.concatMap (fun se ->
-              sigelt_name se |> Tactics.Util.concatMap (fun fv -> [(se, fv)])
-    )
-    in
+    let all_glb = lookup_attr_ses (`tcinstance) (cur_env ()) in
+    let glb = build_glb_map all_glb in
     let st0 = {
       seen = [];
       glb = glb;
@@ -421,12 +483,16 @@ let rec last (l : list 'a) : Tac 'a =
 
 private
 let filter_no_method_binders (bs:binders)
-  : binders
+  : Tac binders
   = let open FStar.Reflection.TermEq.Simple in
     let has_no_method_attr (b:binder) : bool =
       L.existsb (term_eq (`no_method)) b.attrs
     in
-    bs |> L.filter (fun b -> not (has_no_method_attr b))
+    bs |> Tactics.Util.filter (fun b ->
+      let nm = unseal b.ppname in
+      assume (String.length nm > 0); (* should be provided by F*? *)
+      if FStar.String.index nm 0 = '_' then false
+      else not (has_no_method_attr b))
 
 private
 let binder_set_meta (b : binder) (t : term) : binder =
@@ -435,7 +501,8 @@ let binder_set_meta (b : binder) (t : term) : binder =
 let debug' (f : unit -> Tac string) : Tac unit =
   if debugging () then
     print (f ())
-
+    
+#push-options "--z3rlimit_factor 2"
 [@@plugin]
 let mk_class (nm:string) : Tac decls =
     let ns = explode_qn nm in
@@ -533,3 +600,4 @@ let mk_class (nm:string) : Tac decls =
       //debug' (fun () -> "trying to return : " ^ term_to_string (quote se));
       se
     )
+#pop-options

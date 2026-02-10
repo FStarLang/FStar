@@ -1,63 +1,44 @@
 open Prims
 type unsealedRange =
   | U of FStarC_Range_Type.t 
-let (uu___is_U : unsealedRange -> Prims.bool) = fun projectee -> true
-let (__proj__U__item___0 : unsealedRange -> FStarC_Range_Type.t) =
-  fun projectee -> match projectee with | U _0 -> _0
-let (mk_range :
-  Prims.string ->
-    Prims.int -> Prims.int -> Prims.int -> Prims.int -> FStarC_Range_Type.t)
-  =
-  fun fn ->
-    fun from_l ->
-      fun from_c ->
-        fun to_l ->
-          fun to_c ->
-            let uu___ = FStarC_Range_Type.mk_pos from_l from_c in
-            let uu___1 = FStarC_Range_Type.mk_pos to_l to_c in
-            FStarC_Range_Type.mk_range fn uu___ uu___1
-let (__mk_range :
-  Prims.string ->
-    Prims.int -> Prims.int -> Prims.int -> Prims.int -> unsealedRange)
-  =
-  fun fn ->
-    fun from_l ->
-      fun from_c ->
-        fun to_l ->
-          fun to_c ->
-            let uu___ = mk_range fn from_l from_c to_l to_c in U uu___
-let (explode :
-  unsealedRange ->
-    (Prims.string * Prims.int * Prims.int * Prims.int * Prims.int))
-  =
-  fun r ->
-    match r with
-    | U r1 ->
-        let uu___ = FStarC_Range_Ops.file_of_range r1 in
-        let uu___1 =
-          let uu___2 = FStarC_Range_Ops.start_of_range r1 in
-          FStarC_Range_Ops.line_of_pos uu___2 in
-        let uu___2 =
-          let uu___3 = FStarC_Range_Ops.start_of_range r1 in
-          FStarC_Range_Ops.col_of_pos uu___3 in
-        let uu___3 =
-          let uu___4 = FStarC_Range_Ops.end_of_range r1 in
-          FStarC_Range_Ops.line_of_pos uu___4 in
-        let uu___4 =
-          let uu___5 = FStarC_Range_Ops.end_of_range r1 in
-          FStarC_Range_Ops.col_of_pos uu___5 in
-        (uu___, uu___1, uu___2, uu___3, uu___4)
-let (e_unsealedRange : unsealedRange FStarC_Syntax_Embeddings_Base.embedding)
-  =
+let uu___is_U (projectee : unsealedRange) : Prims.bool= true
+let __proj__U__item___0 (projectee : unsealedRange) : FStarC_Range_Type.t=
+  match projectee with | U _0 -> _0
+let mk_range (fn : Prims.string) (from_l : Prims.int) (from_c : Prims.int)
+  (to_l : Prims.int) (to_c : Prims.int) : FStarC_Range_Type.t=
+  let uu___ = FStarC_Range_Type.mk_pos from_l from_c in
+  let uu___1 = FStarC_Range_Type.mk_pos to_l to_c in
+  FStarC_Range_Type.mk_range fn uu___ uu___1
+let __mk_range (fn : Prims.string) (from_l : Prims.int) (from_c : Prims.int)
+  (to_l : Prims.int) (to_c : Prims.int) : unsealedRange=
+  let uu___ = mk_range fn from_l from_c to_l to_c in U uu___
+let explode (r : unsealedRange) :
+  (Prims.string * Prims.int * Prims.int * Prims.int * Prims.int)=
+  match r with
+  | U r1 ->
+      let uu___ = FStarC_Range_Ops.file_of_range r1 in
+      let uu___1 =
+        let uu___2 = FStarC_Range_Ops.start_of_range r1 in
+        FStarC_Range_Ops.line_of_pos uu___2 in
+      let uu___2 =
+        let uu___3 = FStarC_Range_Ops.start_of_range r1 in
+        FStarC_Range_Ops.col_of_pos uu___3 in
+      let uu___3 =
+        let uu___4 = FStarC_Range_Ops.end_of_range r1 in
+        FStarC_Range_Ops.line_of_pos uu___4 in
+      let uu___4 =
+        let uu___5 = FStarC_Range_Ops.end_of_range r1 in
+        FStarC_Range_Ops.col_of_pos uu___5 in
+      (uu___, uu___1, uu___2, uu___3, uu___4)
+let e_unsealedRange : unsealedRange FStarC_Syntax_Embeddings_Base.embedding=
   FStarC_Syntax_Embeddings_Base.embed_as FStarC_Syntax_Embeddings.e___range
     (fun r -> U r) (fun uu___ -> match uu___ with | U r -> r)
     FStar_Pervasives_Native.None
-let (nbe_e_unsealedRange :
-  unsealedRange FStarC_TypeChecker_NBETerm.embedding) =
+let nbe_e_unsealedRange : unsealedRange FStarC_TypeChecker_NBETerm.embedding=
   FStarC_TypeChecker_NBETerm.embed_as FStarC_TypeChecker_NBETerm.e___range
     (fun r -> U r) (fun uu___ -> match uu___ with | U r -> r)
     FStar_Pervasives_Native.None
-let (ops : FStarC_TypeChecker_Primops_Base.primitive_step Prims.list) =
+let ops : FStarC_TypeChecker_Primops_Base.primitive_step Prims.list=
   let uu___ =
     FStarC_TypeChecker_Primops_Base.mk5 Prims.int_zero
       FStarC_Parser_Const.__mk_range_lid FStarC_Syntax_Embeddings.e_string

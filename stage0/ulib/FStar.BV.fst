@@ -32,6 +32,16 @@ let int2bv_lemma_2 = U.to_vec_lemma_2
 let inverse_vec_lemma = U.inverse_vec_lemma
 let inverse_num_lemma = U.inverse_num_lemma
 
+let int2bv_bv_uext (#n #i: pos)
+  (a: uint_t n)
+  : Lemma
+    (ensures (bv_uext #n #i (int2bv #n a) == int2bv #(i + n) (U.zero_extends #n i a))) =
+  let zero = B.zero_vec #i in
+  assert (U.from_vec #i zero == 0);
+  U.append_lemma #i #n zero (int2bv #n a);
+  assert (U.from_vec #(i + n) (bv_uext #n #i (int2bv #n a)) == a);
+  ()
+
 (** Mapping an unbounded nat to a bitvector; only used for bvshl and bvshr
   compatibility funs *)
 let int2bv_nat (#n: pos) (num: nat): Tot (bv_t n) = U.to_vec (num % pow2 n)

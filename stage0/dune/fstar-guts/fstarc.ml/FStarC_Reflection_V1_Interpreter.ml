@@ -1,227 +1,167 @@
 open Prims
-let mk1 :
-  'res 't1 .
-    Prims.string ->
-      't1 FStarC_Syntax_Embeddings_Base.embedding ->
-        'res FStarC_Syntax_Embeddings_Base.embedding ->
-          't1 FStarC_TypeChecker_NBETerm.embedding ->
-            'res FStarC_TypeChecker_NBETerm.embedding ->
-              ('t1 -> 'res) -> FStarC_TypeChecker_Primops_Base.primitive_step
-  =
-  fun nm ->
-    fun uu___ ->
-      fun uu___1 ->
-        fun uu___2 ->
-          fun uu___3 ->
-            fun f ->
-              let lid =
-                FStarC_Reflection_V1_Constants.fstar_refl_builtins_lid nm in
-              FStarC_TypeChecker_Primops_Base.mk1' Prims.int_zero lid uu___
-                uu___2 uu___1 uu___3
-                (fun x ->
-                   let uu___4 = f x in FStar_Pervasives_Native.Some uu___4)
-                (fun x ->
-                   let uu___4 = f x in FStar_Pervasives_Native.Some uu___4)
-let mk2 :
-  'res 't1 't2 .
-    Prims.string ->
-      't1 FStarC_Syntax_Embeddings_Base.embedding ->
-        't2 FStarC_Syntax_Embeddings_Base.embedding ->
-          'res FStarC_Syntax_Embeddings_Base.embedding ->
-            't1 FStarC_TypeChecker_NBETerm.embedding ->
-              't2 FStarC_TypeChecker_NBETerm.embedding ->
-                'res FStarC_TypeChecker_NBETerm.embedding ->
-                  ('t1 -> 't2 -> 'res) ->
-                    FStarC_TypeChecker_Primops_Base.primitive_step
-  =
-  fun nm ->
-    fun uu___ ->
-      fun uu___1 ->
-        fun uu___2 ->
-          fun uu___3 ->
-            fun uu___4 ->
-              fun uu___5 ->
-                fun f ->
-                  let lid =
-                    FStarC_Reflection_V1_Constants.fstar_refl_builtins_lid nm in
-                  FStarC_TypeChecker_Primops_Base.mk2' Prims.int_zero lid
-                    uu___ uu___3 uu___1 uu___4 uu___2 uu___5
-                    (fun x ->
-                       fun y ->
-                         let uu___6 = f x y in
-                         FStar_Pervasives_Native.Some uu___6)
-                    (fun x ->
-                       fun y ->
-                         let uu___6 = f x y in
-                         FStar_Pervasives_Native.Some uu___6)
-let mk3 :
-  'res 't1 't2 't3 .
-    Prims.string ->
-      't1 FStarC_Syntax_Embeddings_Base.embedding ->
-        't2 FStarC_Syntax_Embeddings_Base.embedding ->
-          't3 FStarC_Syntax_Embeddings_Base.embedding ->
-            'res FStarC_Syntax_Embeddings_Base.embedding ->
-              't1 FStarC_TypeChecker_NBETerm.embedding ->
-                't2 FStarC_TypeChecker_NBETerm.embedding ->
-                  't3 FStarC_TypeChecker_NBETerm.embedding ->
-                    'res FStarC_TypeChecker_NBETerm.embedding ->
-                      ('t1 -> 't2 -> 't3 -> 'res) ->
-                        FStarC_TypeChecker_Primops_Base.primitive_step
-  =
-  fun nm ->
-    fun uu___ ->
-      fun uu___1 ->
-        fun uu___2 ->
-          fun uu___3 ->
-            fun uu___4 ->
-              fun uu___5 ->
-                fun uu___6 ->
-                  fun uu___7 ->
-                    fun f ->
-                      let lid =
-                        FStarC_Reflection_V1_Constants.fstar_refl_builtins_lid
-                          nm in
-                      FStarC_TypeChecker_Primops_Base.mk3' Prims.int_zero lid
-                        uu___ uu___4 uu___1 uu___5 uu___2 uu___6 uu___3
-                        uu___7
-                        (fun x ->
-                           fun y ->
-                             fun z ->
-                               let uu___8 = f x y z in
-                               FStar_Pervasives_Native.Some uu___8)
-                        (fun x ->
-                           fun y ->
-                             fun z ->
-                               let uu___8 = f x y z in
-                               FStar_Pervasives_Native.Some uu___8)
-let (uu___0 :
-  FStarC_Syntax_Syntax.term FStarC_Syntax_Embeddings_Base.embedding) =
+let mk1 (nm : Prims.string)
+  (uu___ : 't1 FStarC_Syntax_Embeddings_Base.embedding)
+  (uu___1 : 'res FStarC_Syntax_Embeddings_Base.embedding)
+  (uu___2 : 't1 FStarC_TypeChecker_NBETerm.embedding)
+  (uu___3 : 'res FStarC_TypeChecker_NBETerm.embedding) (f : 't1 -> 'res) :
+  FStarC_TypeChecker_Primops_Base.primitive_step=
+  let lid = FStarC_Reflection_V1_Constants.fstar_refl_builtins_lid nm in
+  FStarC_TypeChecker_Primops_Base.mk1' Prims.int_zero lid uu___ uu___2 uu___1
+    uu___3 (fun x -> let uu___4 = f x in FStar_Pervasives_Native.Some uu___4)
+    (fun x -> let uu___4 = f x in FStar_Pervasives_Native.Some uu___4)
+let mk2 (nm : Prims.string)
+  (uu___ : 't1 FStarC_Syntax_Embeddings_Base.embedding)
+  (uu___1 : 't2 FStarC_Syntax_Embeddings_Base.embedding)
+  (uu___2 : 'res FStarC_Syntax_Embeddings_Base.embedding)
+  (uu___3 : 't1 FStarC_TypeChecker_NBETerm.embedding)
+  (uu___4 : 't2 FStarC_TypeChecker_NBETerm.embedding)
+  (uu___5 : 'res FStarC_TypeChecker_NBETerm.embedding)
+  (f : 't1 -> 't2 -> 'res) : FStarC_TypeChecker_Primops_Base.primitive_step=
+  let lid = FStarC_Reflection_V1_Constants.fstar_refl_builtins_lid nm in
+  FStarC_TypeChecker_Primops_Base.mk2' Prims.int_zero lid uu___ uu___3 uu___1
+    uu___4 uu___2 uu___5
+    (fun x y -> let uu___6 = f x y in FStar_Pervasives_Native.Some uu___6)
+    (fun x y -> let uu___6 = f x y in FStar_Pervasives_Native.Some uu___6)
+let mk3 (nm : Prims.string)
+  (uu___ : 't1 FStarC_Syntax_Embeddings_Base.embedding)
+  (uu___1 : 't2 FStarC_Syntax_Embeddings_Base.embedding)
+  (uu___2 : 't3 FStarC_Syntax_Embeddings_Base.embedding)
+  (uu___3 : 'res FStarC_Syntax_Embeddings_Base.embedding)
+  (uu___4 : 't1 FStarC_TypeChecker_NBETerm.embedding)
+  (uu___5 : 't2 FStarC_TypeChecker_NBETerm.embedding)
+  (uu___6 : 't3 FStarC_TypeChecker_NBETerm.embedding)
+  (uu___7 : 'res FStarC_TypeChecker_NBETerm.embedding)
+  (f : 't1 -> 't2 -> 't3 -> 'res) :
+  FStarC_TypeChecker_Primops_Base.primitive_step=
+  let lid = FStarC_Reflection_V1_Constants.fstar_refl_builtins_lid nm in
+  FStarC_TypeChecker_Primops_Base.mk3' Prims.int_zero lid uu___ uu___4 uu___1
+    uu___5 uu___2 uu___6 uu___3 uu___7
+    (fun x y z -> let uu___8 = f x y z in FStar_Pervasives_Native.Some uu___8)
+    (fun x y z -> let uu___8 = f x y z in FStar_Pervasives_Native.Some uu___8)
+let uu___0 :
+  FStarC_Syntax_Syntax.term FStarC_Syntax_Embeddings_Base.embedding=
   FStarC_Reflection_V1_Embeddings.e_term
-let (uu___1 :
-  FStarC_Reflection_V1_Data.term_view FStarC_Syntax_Embeddings_Base.embedding)
-  = FStarC_Reflection_V1_Embeddings.e_term_view
-let (uu___2 :
-  FStarC_Syntax_Syntax.fv FStarC_Syntax_Embeddings_Base.embedding) =
+let uu___1 :
+  FStarC_Reflection_V1_Data.term_view FStarC_Syntax_Embeddings_Base.embedding=
+  FStarC_Reflection_V1_Embeddings.e_term_view
+let uu___2 : FStarC_Syntax_Syntax.fv FStarC_Syntax_Embeddings_Base.embedding=
   FStarC_Reflection_V1_Embeddings.e_fv
-let (uu___3 :
-  FStarC_Syntax_Syntax.bv FStarC_Syntax_Embeddings_Base.embedding) =
+let uu___3 : FStarC_Syntax_Syntax.bv FStarC_Syntax_Embeddings_Base.embedding=
   FStarC_Reflection_V1_Embeddings.e_bv
-let (uu___4 :
-  FStarC_Reflection_V1_Data.bv_view FStarC_Syntax_Embeddings_Base.embedding)
-  = FStarC_Reflection_V1_Embeddings.e_bv_view
-let (uu___5 :
-  FStarC_Syntax_Syntax.comp FStarC_Syntax_Embeddings_Base.embedding) =
+let uu___4 :
+  FStarC_Reflection_V1_Data.bv_view FStarC_Syntax_Embeddings_Base.embedding=
+  FStarC_Reflection_V1_Embeddings.e_bv_view
+let uu___5 :
+  FStarC_Syntax_Syntax.comp FStarC_Syntax_Embeddings_Base.embedding=
   FStarC_Reflection_V1_Embeddings.e_comp
-let (uu___6 :
-  FStarC_Reflection_V1_Data.comp_view FStarC_Syntax_Embeddings_Base.embedding)
-  = FStarC_Reflection_V1_Embeddings.e_comp_view
-let (uu___7 :
-  FStarC_Syntax_Syntax.universe FStarC_Syntax_Embeddings_Base.embedding) =
+let uu___6 :
+  FStarC_Reflection_V1_Data.comp_view FStarC_Syntax_Embeddings_Base.embedding=
+  FStarC_Reflection_V1_Embeddings.e_comp_view
+let uu___7 :
+  FStarC_Syntax_Syntax.universe FStarC_Syntax_Embeddings_Base.embedding=
   FStarC_Reflection_V1_Embeddings.e_universe
-let (uu___8 :
+let uu___8 :
   FStarC_Reflection_V1_Data.universe_view
-    FStarC_Syntax_Embeddings_Base.embedding)
-  = FStarC_Reflection_V1_Embeddings.e_universe_view
-let (uu___9 :
-  FStarC_Syntax_Syntax.sigelt FStarC_Syntax_Embeddings_Base.embedding) =
+    FStarC_Syntax_Embeddings_Base.embedding=
+  FStarC_Reflection_V1_Embeddings.e_universe_view
+let uu___9 :
+  FStarC_Syntax_Syntax.sigelt FStarC_Syntax_Embeddings_Base.embedding=
   FStarC_Reflection_V1_Embeddings.e_sigelt
-let (uu___10 :
+let uu___10 :
   FStarC_Reflection_V1_Data.sigelt_view
-    FStarC_Syntax_Embeddings_Base.embedding)
-  = FStarC_Reflection_V1_Embeddings.e_sigelt_view
-let (uu___11 :
-  FStarC_Syntax_Syntax.binder FStarC_Syntax_Embeddings_Base.embedding) =
+    FStarC_Syntax_Embeddings_Base.embedding=
+  FStarC_Reflection_V1_Embeddings.e_sigelt_view
+let uu___11 :
+  FStarC_Syntax_Syntax.binder FStarC_Syntax_Embeddings_Base.embedding=
   FStarC_Reflection_V1_Embeddings.e_binder
-let (uu___12 :
+let uu___12 :
   FStarC_Reflection_V1_Data.binder_view
-    FStarC_Syntax_Embeddings_Base.embedding)
-  = FStarC_Reflection_V1_Embeddings.e_binder_view
-let (uu___13 :
-  FStarC_Reflection_V1_Data.binders FStarC_Syntax_Embeddings_Base.embedding)
-  = FStarC_Reflection_V1_Embeddings.e_binders
-let (uu___14 :
-  FStarC_Syntax_Syntax.letbinding FStarC_Syntax_Embeddings_Base.embedding) =
+    FStarC_Syntax_Embeddings_Base.embedding=
+  FStarC_Reflection_V1_Embeddings.e_binder_view
+let uu___13 :
+  FStarC_Reflection_V1_Data.binders FStarC_Syntax_Embeddings_Base.embedding=
+  FStarC_Reflection_V1_Embeddings.e_binders
+let uu___14 :
+  FStarC_Syntax_Syntax.letbinding FStarC_Syntax_Embeddings_Base.embedding=
   FStarC_Reflection_V1_Embeddings.e_letbinding
-let (uu___15 :
-  FStarC_Reflection_V1_Data.lb_view FStarC_Syntax_Embeddings_Base.embedding)
-  = FStarC_Reflection_V1_Embeddings.e_lb_view
-let (uu___16 :
-  FStarC_TypeChecker_Env.env FStarC_Syntax_Embeddings_Base.embedding) =
+let uu___15 :
+  FStarC_Reflection_V1_Data.lb_view FStarC_Syntax_Embeddings_Base.embedding=
+  FStarC_Reflection_V1_Embeddings.e_lb_view
+let uu___16 :
+  FStarC_TypeChecker_Env.env FStarC_Syntax_Embeddings_Base.embedding=
   FStarC_Reflection_V1_Embeddings.e_env
-let (uu___17 :
-  FStarC_Reflection_V1_Data.aqualv FStarC_Syntax_Embeddings_Base.embedding) =
+let uu___17 :
+  FStarC_Reflection_V1_Data.aqualv FStarC_Syntax_Embeddings_Base.embedding=
   FStarC_Reflection_V1_Embeddings.e_aqualv
-let (uu___18 :
+let uu___18 :
   FStarC_Syntax_Syntax.attribute Prims.list
-    FStarC_Syntax_Embeddings_Base.embedding)
-  = FStarC_Reflection_V1_Embeddings.e_attributes
-let (uu___19 :
+    FStarC_Syntax_Embeddings_Base.embedding=
+  FStarC_Reflection_V1_Embeddings.e_attributes
+let uu___19 :
   FStarC_Reflection_V1_Data.qualifier Prims.list
-    FStarC_Syntax_Embeddings_Base.embedding)
-  = FStarC_Reflection_V1_Embeddings.e_qualifiers
-let (uu___20 :
-  FStarC_Syntax_Syntax.term FStarC_TypeChecker_NBETerm.embedding) =
+    FStarC_Syntax_Embeddings_Base.embedding=
+  FStarC_Reflection_V1_Embeddings.e_qualifiers
+let uu___20 : FStarC_Syntax_Syntax.term FStarC_TypeChecker_NBETerm.embedding=
   FStarC_Reflection_V1_NBEEmbeddings.e_term
-let (uu___21 :
-  FStarC_Reflection_V1_Data.term_view FStarC_TypeChecker_NBETerm.embedding) =
+let uu___21 :
+  FStarC_Reflection_V1_Data.term_view FStarC_TypeChecker_NBETerm.embedding=
   FStarC_Reflection_V1_NBEEmbeddings.e_term_view
-let (uu___22 : FStarC_Syntax_Syntax.fv FStarC_TypeChecker_NBETerm.embedding)
-  = FStarC_Reflection_V1_NBEEmbeddings.e_fv
-let (uu___23 : FStarC_Syntax_Syntax.bv FStarC_TypeChecker_NBETerm.embedding)
-  = FStarC_Reflection_V1_NBEEmbeddings.e_bv
-let (uu___24 :
-  FStarC_Reflection_V1_Data.bv_view FStarC_TypeChecker_NBETerm.embedding) =
+let uu___22 : FStarC_Syntax_Syntax.fv FStarC_TypeChecker_NBETerm.embedding=
+  FStarC_Reflection_V1_NBEEmbeddings.e_fv
+let uu___23 : FStarC_Syntax_Syntax.bv FStarC_TypeChecker_NBETerm.embedding=
+  FStarC_Reflection_V1_NBEEmbeddings.e_bv
+let uu___24 :
+  FStarC_Reflection_V1_Data.bv_view FStarC_TypeChecker_NBETerm.embedding=
   FStarC_Reflection_V1_NBEEmbeddings.e_bv_view
-let (uu___25 :
-  FStarC_Syntax_Syntax.comp FStarC_TypeChecker_NBETerm.embedding) =
+let uu___25 : FStarC_Syntax_Syntax.comp FStarC_TypeChecker_NBETerm.embedding=
   FStarC_Reflection_V1_NBEEmbeddings.e_comp
-let (uu___26 :
-  FStarC_Reflection_V1_Data.comp_view FStarC_TypeChecker_NBETerm.embedding) =
+let uu___26 :
+  FStarC_Reflection_V1_Data.comp_view FStarC_TypeChecker_NBETerm.embedding=
   FStarC_Reflection_V1_NBEEmbeddings.e_comp_view
-let (uu___27 :
-  FStarC_Syntax_Syntax.universe FStarC_TypeChecker_NBETerm.embedding) =
+let uu___27 :
+  FStarC_Syntax_Syntax.universe FStarC_TypeChecker_NBETerm.embedding=
   FStarC_Reflection_V1_NBEEmbeddings.e_universe
-let (uu___28 :
+let uu___28 :
   FStarC_Reflection_V1_Data.universe_view
-    FStarC_TypeChecker_NBETerm.embedding)
-  = FStarC_Reflection_V1_NBEEmbeddings.e_universe_view
-let (uu___29 :
-  FStarC_Syntax_Syntax.sigelt FStarC_TypeChecker_NBETerm.embedding) =
+    FStarC_TypeChecker_NBETerm.embedding=
+  FStarC_Reflection_V1_NBEEmbeddings.e_universe_view
+let uu___29 :
+  FStarC_Syntax_Syntax.sigelt FStarC_TypeChecker_NBETerm.embedding=
   FStarC_Reflection_V1_NBEEmbeddings.e_sigelt
-let (uu___30 :
-  FStarC_Reflection_V1_Data.sigelt_view FStarC_TypeChecker_NBETerm.embedding)
-  = FStarC_Reflection_V1_NBEEmbeddings.e_sigelt_view
-let (uu___31 :
-  FStarC_Syntax_Syntax.binder FStarC_TypeChecker_NBETerm.embedding) =
+let uu___30 :
+  FStarC_Reflection_V1_Data.sigelt_view FStarC_TypeChecker_NBETerm.embedding=
+  FStarC_Reflection_V1_NBEEmbeddings.e_sigelt_view
+let uu___31 :
+  FStarC_Syntax_Syntax.binder FStarC_TypeChecker_NBETerm.embedding=
   FStarC_Reflection_V1_NBEEmbeddings.e_binder
-let (uu___32 :
-  FStarC_Reflection_V1_Data.binder_view FStarC_TypeChecker_NBETerm.embedding)
-  = FStarC_Reflection_V1_NBEEmbeddings.e_binder_view
-let (uu___33 :
-  FStarC_Reflection_V1_Data.binders FStarC_TypeChecker_NBETerm.embedding) =
+let uu___32 :
+  FStarC_Reflection_V1_Data.binder_view FStarC_TypeChecker_NBETerm.embedding=
+  FStarC_Reflection_V1_NBEEmbeddings.e_binder_view
+let uu___33 :
+  FStarC_Reflection_V1_Data.binders FStarC_TypeChecker_NBETerm.embedding=
   FStarC_Reflection_V1_NBEEmbeddings.e_binders
-let (uu___34 :
-  FStarC_Syntax_Syntax.letbinding FStarC_TypeChecker_NBETerm.embedding) =
+let uu___34 :
+  FStarC_Syntax_Syntax.letbinding FStarC_TypeChecker_NBETerm.embedding=
   FStarC_Reflection_V1_NBEEmbeddings.e_letbinding
-let (uu___35 :
-  FStarC_Reflection_V1_Data.lb_view FStarC_TypeChecker_NBETerm.embedding) =
+let uu___35 :
+  FStarC_Reflection_V1_Data.lb_view FStarC_TypeChecker_NBETerm.embedding=
   FStarC_Reflection_V1_NBEEmbeddings.e_lb_view
-let (uu___36 :
-  FStarC_TypeChecker_Env.env FStarC_TypeChecker_NBETerm.embedding) =
+let uu___36 :
+  FStarC_TypeChecker_Env.env FStarC_TypeChecker_NBETerm.embedding=
   FStarC_Reflection_V1_NBEEmbeddings.e_env
-let (uu___37 :
-  FStarC_Reflection_V1_Data.aqualv FStarC_TypeChecker_NBETerm.embedding) =
+let uu___37 :
+  FStarC_Reflection_V1_Data.aqualv FStarC_TypeChecker_NBETerm.embedding=
   FStarC_Reflection_V1_NBEEmbeddings.e_aqualv
-let (uu___38 :
+let uu___38 :
   FStarC_Syntax_Syntax.attribute Prims.list
-    FStarC_TypeChecker_NBETerm.embedding)
-  = FStarC_Reflection_V1_NBEEmbeddings.e_attributes
-let (uu___39 :
+    FStarC_TypeChecker_NBETerm.embedding=
+  FStarC_Reflection_V1_NBEEmbeddings.e_attributes
+let uu___39 :
   FStarC_Reflection_V1_Data.qualifier Prims.list
-    FStarC_TypeChecker_NBETerm.embedding)
-  = FStarC_Reflection_V1_NBEEmbeddings.e_qualifiers
-let (reflection_primops :
-  FStarC_TypeChecker_Primops_Base.primitive_step Prims.list) =
+    FStarC_TypeChecker_NBETerm.embedding=
+  FStarC_Reflection_V1_NBEEmbeddings.e_qualifiers
+let reflection_primops :
+  FStarC_TypeChecker_Primops_Base.primitive_step Prims.list=
   let uu___ =
     mk1 "inspect_ln" uu___0 uu___1 uu___20 uu___21
       FStarC_Reflection_V1_Builtins.inspect_ln in
@@ -557,6 +497,6 @@ let (reflection_primops :
       uu___43 :: uu___44 in
     uu___41 :: uu___42 in
   uu___ :: uu___40
-let (uu___40 : unit) =
+let uu___40 : unit=
   FStarC_List.iter FStarC_TypeChecker_Cfg.register_extra_step
     reflection_primops

@@ -32,6 +32,7 @@ module BU = FStarC.Util
 open FStarC.Class.Show
 
 let dbg_PartialApp = Debug.get_toggle "PartialApp"
+let dbg_Snapshot = Debug.get_toggle "Snapshot"
 
 let add_fuel x tl = if (Options.unthrottle_inductives()) then tl else x::tl
 let withenv c (a, b) = (a,b,c)
@@ -96,10 +97,10 @@ let varops =
     //the fresh counter is reset after every module
     let reset_fresh () = ctr := initial_ctr in
     let push () =
-      if Debug.any() then Format.print_string "SMTEncoding.scopes.push";
+      if !dbg_Snapshot then Format.print_string "SMTEncoding.scopes.push\n";
       scopes := new_scope() :: !scopes in // already signal-atomic
     let pop () = 
-      if Debug.any() then Format.print_string "SMTEncoding.scopes.pop";
+      if !dbg_Snapshot then Format.print_string "SMTEncoding.scopes.pop\n";
       scopes := List.tl !scopes in // already signal-atomic
     let snapshot () = FStarC.Common.snapshot "SMTEncoding.scopes" push scopes () in
     let rollback depth = FStarC.Common.rollback "SMTEncoding.scopes" pop scopes depth in
@@ -114,7 +115,7 @@ let varops =
      next_id=next_id;
      mk_unique=mk_unique;
      reset_scope=fun () -> 
-      if Debug.any() then Format.print_string "reset_scope!\n";
+      if !dbg_Snapshot then Format.print_string "reset_scope!\n";
       scopes := [new_scope ()]}
 
 (* ---------------------------------------------------- *)

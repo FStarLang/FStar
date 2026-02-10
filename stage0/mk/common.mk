@@ -9,6 +9,8 @@ else
 cygpath=$(abspath $(1))
 endif
 
+FSTAR_OPTIONS += --ext fly_deps
+FSTAR_ARGS += --ext fly_deps
 MAKEFLAGS += --no-builtin-rules
 Q?=@
 SIL?=--silent

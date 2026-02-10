@@ -76,14 +76,19 @@ let read_file (filename:string) =
     if debug then FStarC_Format.print1 "Opening file %s\n" filename;
     filename, read_physical_file filename
 
-let fst_extensions = [".fst"; ".fsti"]
-let interface_extensions = [".fsti"]
+let extra_extensions () = List.concat_map (fun x -> ["." ^ x; "." ^ x ^ "i"]) (FStarC_Options.lang_extensions ())
+let fst_extensions () = [".fst"; ".fsti"] @ extra_extensions ()
+let extra_extensions_interface () = List.map (fun x -> "." ^ x ^ "i") (FStarC_Options.lang_extensions ())
+let interface_extensions () = [".fsti"] @ extra_extensions_interface ()
 
 let has_extension file extensions =
   FStar_List.existsb (U.ends_with file) extensions
 
+let take_lang_extension file =
+  FStar_List.tryFind (fun x -> U.ends_with file ("."^x)) (FStarC_Options.lang_extensions ())
+
 let check_extension fn =
-  if (not (has_extension fn fst_extensions)) then
+  if (not (has_extension fn (fst_extensions ()))) then
     let message = FStarC_Format.fmt1 "Unrecognized extension '%s'" fn in
     raise_error_text FStarC_Range.dummyRange Fatal_UnrecognizedExtension message
 
@@ -127,10 +132,6 @@ let err_of_parse_error filename lexbuf tag =
     Fatal_SyntaxError,
     Msg.mkmsg tag,
     range_of_positions filename pos pos
-
-let string_of_lexpos lp = 
-    let r = range_of_positions "<input>" lp lp in
-    FStarC_Range.string_of_range r
 
 let parse_incremental_decls
     filename
@@ -339,8 +340,6 @@ let string_of_token =
   | PRAGMA_POP_OPTIONS -> "PRAGMA_POP_OPTIONS"
   | PRAGMA_RESTART_SOLVER -> "PRAGMA_RESTART_SOLVER"
   | PRAGMA_PRINT_EFFECTS_GRAPH -> "PRAGMA_PRINT_EFFECTS_GRAPH"
-  | TYP_APP_LESS -> "TYP_APP_LESS"
-  | TYP_APP_GREATER -> "TYP_APP_GREATER"
   | SUBTYPE -> "SUBTYPE"
   | EQUALTYPE -> "EQUALTYPE"
   | SUBKIND -> "SUBKIND"
@@ -523,91 +522,123 @@ let _ = FStarC_Parser_AST_Util.register_extension_lang_parser "fstar" parse_fsta
 type lang_opts = string option
 
 let parse_lang lang fn =
-  match fn with
-  | Filename _ ->
-    failwith "parse_lang: only in incremental mode"
-  | Incremental s
-  | Toplevel s
-  | Fragment s ->
-    try
-      let frag_pos = FStarC_Range.mk_pos s.frag_line s.frag_col in
-      let rng = FStarC_Range.mk_range s.frag_fname frag_pos frag_pos in
-      let decls = FStarC_Parser_AST_Util.parse_extension_lang lang s.frag_text rng in
-      let comments = FStarC_Parser_Util.flush_comments () in
-      ASTFragment (Inr decls, comments)
-    with
+  let frag =
+    match fn with
+    | Filename f ->
+      check_extension f;
+      let f', contents = read_file f in
+      {
+        frag_fname = f';
+        frag_text = contents;
+        frag_line = Z.one;
+        frag_col = Z.zero;
+      }
+    | Incremental frag
+    | Toplevel frag
+    | Fragment frag -> frag
+  in
+  try
+    let frag_pos = FStarC_Range.mk_pos frag.frag_line frag.frag_col in
+    let rng = FStarC_Range.mk_range frag.frag_fname frag_pos frag_pos in
+    let contents_at = contents_at frag.frag_text in
+    let decls = FStarC_Parser_AST_Util.parse_extension_lang lang frag.frag_text rng in
+    let comments = FStarC_Parser_Util.flush_comments () in
+    match fn with
+      | Filename _ | Toplevel _ ->
+        ASTFragment (FStarC_Parser_AST.as_frag decls, comments)
+      | Incremental _ ->
+        let decls = List.map (fun d -> d, contents_at d.FStarC_Parser_AST.drange) decls in
+        IncrementalFragment (decls, comments, None)
+      | Fragment _ ->
+        (* parse_no_lang returns `Term` for Fragment, but we don't have a term parser for language extensions *)
+        ASTFragment (FStar_Pervasives.Inr decls, comments)
+  with
+  | FStarC_Errors.Error(e, msg, r, _ctx) ->
+    ParseError (e, msg, r)
+
+let parse_no_lang fn =
+  let lexbuf, filename, contents =
+    match fn with
+    | Filename f ->
+        check_extension f;
+        let f', contents = read_file f in
+        (try create contents f' 1 0, f', contents
+        with _ -> raise_error_text FStarC_Range.dummyRange Fatal_InvalidUTF8Encoding (FStarC_Format.fmt1 "File %s has invalid UTF-8 encoding." f'))
+    | Incremental s
+    | Toplevel s
+    | Fragment s ->
+      create s.frag_text s.frag_fname (Z.to_int s.frag_line) (Z.to_int s.frag_col), s.frag_fname, s.frag_text
+  in
+
+  let lexer () =
+    let tok = FStarC_Parser_LexFStar.token lexbuf in
+      if !dbg_Tokens then
+        print_string ("TOKEN: " ^ (string_of_token tok) ^ "\n");
+    (tok, lexbuf.start_p, lexbuf.cur_p)
+  in
+  try
+    match fn with
+    | Filename _
+    | Toplevel _ -> begin
+      let fileOrFragment =
+          MenhirLib.Convert.Simplified.traditional2revised FStarC_Parser_Parse.inputFragment lexer
+      in
+      let frags = match fileOrFragment with
+          | FStar_Pervasives.Inl modul ->
+            if has_extension filename (interface_extensions ())
+            then FStar_Pervasives.Inl (FStarC_Parser_AST.as_interface modul)
+            else FStar_Pervasives.Inl modul
+          | _ -> fileOrFragment
+      in ASTFragment (frags, FStarC_Parser_Util.flush_comments ())
+      end
+      
+    | Incremental i ->
+      let decls, comments, err_opt = 
+        parse_incremental_fragment 
+          filename
+          i.frag_text
+          lexbuf
+          lexer
+          (fun (d:FStarC_Parser_AST.decl) -> d.drange)
+          FStarC_Parser_Parse.oneDeclOrEOF
+      in
+      IncrementalFragment(decls, comments, err_opt)
+    
+    | Fragment _ ->
+      Term (MenhirLib.Convert.Simplified.traditional2revised FStarC_Parser_Parse.term lexer)
+  with
+    | FStarC_Errors.Empty_frag ->
+      ASTFragment (FStar_Pervasives.Inr [], [])
+
     | FStarC_Errors.Error(e, msg, r, _ctx) ->
       ParseError (e, msg, r)
+
+    | e ->
+(*
+    | Parsing.Parse_error as _e
+    | FStarC_Parser_Parse.MenhirBasics.Error as _e  ->
+*)
+      ParseError (err_of_parse_error filename lexbuf None)
+
 
 let parse (lang_opt:lang_opts) fn =
   FStarC_Stats.record "parse" @@ fun () ->
   FStarC_Parser_Util.warningHandler := (function
     | e -> Printf.printf "There was some warning (TODO)\n");
+
   match lang_opt with
   | Some lang -> parse_lang lang fn
-  | _ -> 
-    let lexbuf, filename, contents =
-      match fn with
-      | Filename f ->
-          check_extension f;
-          let f', contents = read_file f in
-          (try create contents f' 1 0, f', contents
-          with _ -> raise_error_text FStarC_Range.dummyRange Fatal_InvalidUTF8Encoding (FStarC_Format.fmt1 "File %s has invalid UTF-8 encoding." f'))
-      | Incremental s
-      | Toplevel s
-      | Fragment s ->
-        create s.frag_text s.frag_fname (Z.to_int s.frag_line) (Z.to_int s.frag_col), "<input>", s.frag_text
+  | None ->
+    let filename =
+        match fn with
+        | Filename fn -> fn
+        | Toplevel frag -> frag.frag_fname
+        | Incremental frag -> frag.frag_fname
+        | Fragment frag -> frag.frag_fname
     in
-
-    let lexer () =
-      let tok = FStarC_Parser_LexFStar.token lexbuf in
-        if !dbg_Tokens then
-          print_string ("TOKEN: " ^ (string_of_token tok) ^ "\n");
-      (tok, lexbuf.start_p, lexbuf.cur_p)
-    in
-    try
-      match fn with
-      | Filename _
-      | Toplevel _ -> begin
-        let fileOrFragment =
-            MenhirLib.Convert.Simplified.traditional2revised FStarC_Parser_Parse.inputFragment lexer
-        in
-        let frags = match fileOrFragment with
-            | FStar_Pervasives.Inl modul ->
-              if has_extension filename interface_extensions
-              then FStar_Pervasives.Inl (FStarC_Parser_AST.as_interface modul)
-              else FStar_Pervasives.Inl modul
-            | _ -> fileOrFragment
-        in ASTFragment (frags, FStarC_Parser_Util.flush_comments ())
-        end
-        
-      | Incremental i ->
-        let decls, comments, err_opt = 
-          parse_incremental_fragment 
-            filename
-            i.frag_text
-            lexbuf
-            lexer
-            (fun (d:FStarC_Parser_AST.decl) -> d.drange)
-            FStarC_Parser_Parse.oneDeclOrEOF
-        in
-        IncrementalFragment(decls, comments, err_opt)
-      
-      | Fragment _ ->
-        Term (MenhirLib.Convert.Simplified.traditional2revised FStarC_Parser_Parse.term lexer)
-    with
-      | FStarC_Errors.Empty_frag ->
-        ASTFragment (FStar_Pervasives.Inr [], [])
-
-      | FStarC_Errors.Error(e, msg, r, _ctx) ->
-        ParseError (e, msg, r)
-
-      | e ->
-  (*
-      | Parsing.Parse_error as _e
-      | FStarC_Parser_Parse.MenhirBasics.Error as _e  ->
-  *)
-        ParseError (err_of_parse_error filename lexbuf None)
+    match take_lang_extension filename with
+    | Some lang -> parse_lang lang fn
+    | None -> parse_no_lang fn
 
 
 (** Parsing of command-line error/warning/silent flags. *)

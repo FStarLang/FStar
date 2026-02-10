@@ -41,6 +41,10 @@ module F = FStarC.Format
 
 let fd_enabled = mk_ref (None #bool)
 
+let debug_fly_deps =
+  let dbg = FStarC.Debug.get_toggle "fly_deps" in
+  fun () -> !dbg
+
 let fly_deps_enabled () =
     match !fd_enabled with
     | Some b -> b
@@ -53,19 +57,19 @@ let fly_deps_enabled () =
           //so don't change that yet
           || Options.any_dump_module() 
           then (
-            if Debug.any() 
+            if debug_fly_deps ()
             then (
               Format.print_string "Ignoring fly_deps because dep or dump_module is on\n"
             );
             false
           )
           else (
-            if Debug.any() then Format.print_string "fly_deps is on!\n";
+            if debug_fly_deps () then Format.print_string "fly_deps is on!\n";
             true
           )
         )
         else (
-          if Debug.any() then Format.print_string "fly_deps is off!\n";
+          if debug_fly_deps () then Format.print_string "fly_deps is off!\n";
           false
         )
       in
@@ -77,10 +81,6 @@ let with_fly_deps_disabled (f: unit -> 'a) : 'a =
   let v = !fd_enabled in
   fd_enabled := Some false;
   FStarC.Util.finally (fun _ -> fd_enabled := v) f
-
-let debug_fly_deps =
-  let dbg = FStarC.Debug.get_toggle "fly_deps" in
-  fun () -> !dbg
 
 (* This is faster than the quadratic BU.remove_dups, since we can use
 the total order. *)

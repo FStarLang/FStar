@@ -1,7 +1,7 @@
 module FStar.InteractiveHelpers.Propositions
 
 open FStar.List.Tot
-open FStar.Tactics
+open FStar.Tactics.V1
 open FStar.Mul
 open FStar.InteractiveHelpers.Base
 open FStar.InteractiveHelpers.ExploreTerm

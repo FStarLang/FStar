@@ -252,12 +252,15 @@ new_effect {
 (** [PURE] computations can be silently promoted for use in a [DIV] context *)
 sub_effect PURE ~> DIV { lift_wp = purewp_id }
 
+private unfold let pure_wp_intro #a (wp: pure_wp' a { pure_wp_monotonic0 a wp }) : pure_wp a =
+  // GE: FIXME: this only works if pure_wp_monotonic is fully applied
+  reveal_opaque (`%pure_wp_monotonic) (pure_wp_monotonic a wp);
+  wp
 
 (** [Div] is the Hoare-style counterpart of the wp-indexed [DIV] *)
 unfold
 let div_hoare_to_wp (#a:Type) (#pre:pure_pre) (post:pure_post' a pre) : Tot (pure_wp a) =
-  reveal_opaque (`%pure_wp_monotonic) pure_wp_monotonic;
-  fun (p:pure_post a) -> pre /\ (forall a. post a ==> p a)
+  pure_wp_intro fun (p:pure_post a) -> pre /\ (forall a. post a ==> p a)
 
 effect Div (a: Type) (pre: pure_pre) (post: pure_post' a pre) =
   DIV a (div_hoare_to_wp post)
