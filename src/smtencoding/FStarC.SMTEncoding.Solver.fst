@@ -1392,7 +1392,7 @@ let encode_and_ask (can_split:bool) (is_retry:bool) use_env_msg tcenv q : (list 
 
       | Assume _ ->
         if (is_retry || Options.split_queries() = Options.Always)
-        && Debug.any()
+        && !dbg_SMTQuery
         then (
           let n = List.length labels in
           if n <> 1
@@ -1452,7 +1452,7 @@ let do_solve (can_split:bool) (is_retry:bool) use_env_msg tcenv q : unit =
     failwith "impossible: bad answer from encode_and_ask"
 
 let split_and_solve (retrying:bool) use_env_msg tcenv q : unit =
-  if retrying && (Debug.any () || Options.query_stats ()) then begin
+  if retrying && (!dbg_SMTQuery || Options.query_stats ()) then begin
     Format.print1 "(%s)\tQuery-stats splitting query because retrying failed query\n"
                    (show (Env.get_range tcenv))
   end;
@@ -1504,7 +1504,7 @@ let do_solve_maybe_split use_env_msg tcenv q : unit =
       end
     | Options.Always ->
       (* Set retrying=false so queries go through the full config list, etc. *)
-      if Debug.any () || Options.query_stats () then
+      if !dbg_SMTQuery || Options.query_stats () then
         Format.print1 "(%s)\tQuery-stats splitting query because --split_queries is always\n"
                       (show (Env.get_range tcenv));
       split_and_solve false use_env_msg tcenv q

@@ -48,6 +48,7 @@ module Cfg    = FStarC.TypeChecker.Cfg
 module PO     = FStarC.TypeChecker.Primops
 module Print  = FStarC.Syntax.Print
 
+let dbg_Extraction     = Debug.get_toggle "Extraction"
 let dbg_ExtractionReify = Debug.get_toggle "ExtractionReify"
 
 type tydef_declaration = (mlsymbol & FStarC.Extraction.ML.Syntax.metadata & int) //int is the arity
@@ -893,7 +894,7 @@ let extract_iface' (g:env_t) modul =
 let extract_iface (g:env_t) modul =
   let g, iface =
     UF.with_uf_enabled (fun () ->
-      if Debug.any()
+      if !dbg_Extraction
       then FStarC.Util.measure_execution_time
              (Format.fmt1 "Extracted interface of %s" (string_of_lid modul.name))
              (fun () -> extract_iface' g modul)
