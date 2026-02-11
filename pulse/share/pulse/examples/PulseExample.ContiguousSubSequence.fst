@@ -37,27 +37,24 @@ ensures
   {
     let mut i0 : SZ.t = 0sz;
     let mut i1 : SZ.t = j;
-    let mut break : bool = false;
     while (
-      (not !break &&
-       !i0 <> len0 &&
+      (!i0 <> len0 &&
        !i1 <> len1)
     )
-    invariant (
-      exists* v0 v1 vb.
+    invariant
+      exists* v0 v1.
         pts_to i0 v0 **
         pts_to i1 v1 **
-        pts_to break vb **
         pts_to a0 #p s0 **
         pts_to a1 #p s1 **
         pure (
           v0 <= len0 /\
           v1 <= len1 /\
           (v1 == j + v0) /\
-          starts_with_at (SZ.v j) (take s0 (SZ.v v0)) s1 /\
-          (vb==true ==> v1 <> len1 /\ v0 <> len0 /\ Seq.index s1 (SZ.v v1) =!= Seq.index s0 (SZ.v v0))
+          starts_with_at (SZ.v j) (take s0 (SZ.v v0)) s1
         )
-    )
+    break requires
+      (!i1 < len1 /\ !i0 < len0 /\ Seq.index s1 (SZ.v !i1) =!= Seq.index s0 (SZ.v !i0))
     {
       let v0 = !i0;
       let v1 = !i1;
@@ -74,7 +71,7 @@ ensures
       }
       else
       {
-        break := true;
+        break;
       }
     };
     let v0 = !i0;

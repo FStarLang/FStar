@@ -144,6 +144,7 @@ let infer_post' (g:env) (g':env { g' `env_extends` g })
     Printf.sprintf "Original postcondition: %s |= %s\nInferred postcondition: %s |= %s\n" 
     (env_to_string g1) (T.term_to_string post) (env_to_string g) (T.term_to_string close_post));
   let ph = mk_post_hint close_post in
+  admit ();
   ph
 
 let mk_imp lhs rhs =

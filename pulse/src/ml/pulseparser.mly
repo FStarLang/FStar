@@ -72,7 +72,7 @@ let add_decorations decors ds =
 %token GHOST ATOMIC UNOBSERVABLE
 %token OPENS  SHOW_PROOF_STATE
 %token PRESERVES
-%token GOTO LABEL CONTINUE RETURN
+%token GOTO LABEL BREAK CONTINUE RETURN
 
 %start pulseDeclEOF
 %start peekFnId
@@ -233,6 +233,8 @@ while_invariant1:
     { PulseSyntaxExtension_Sugar.Old (i, v) }
   | INVARIANT v=pulseSLProp
     { PulseSyntaxExtension_Sugar.New v }
+  | BREAK REQUIRES v=appTermNoRecordExp
+    { PulseSyntaxExtension_Sugar.BreakRequires v }
 
 while_invariant:
   | is=list(while_invariant1) { is }
@@ -303,6 +305,8 @@ pulseStmtNoSeq:
     { PulseSyntaxExtension_Sugar.mk_return arg }
   | CONTINUE
     { PulseSyntaxExtension_Sugar.mk_continue }
+  | BREAK
+    { PulseSyntaxExtension_Sugar.mk_break }
 
 matchStmt:
   | MATCH tm=appTermNoRecordExp c=option(ensuresSLProp) LBRACE brs=list(pulseMatchBranch) RBRACE

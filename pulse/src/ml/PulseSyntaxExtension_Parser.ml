@@ -29,6 +29,7 @@ let rewrite_token (tok:FP.token)
     | IDENT "label" -> PP.LABEL
     | IDENT "return" -> PP.RETURN
     | IDENT "continue" -> PP.CONTINUE
+    | IDENT "break" -> PP.BREAK
     (* the rest are just copied from FStarC_Parser_Parse *)
     | IDENT s -> PP.IDENT s
     | AMP -> PP.AMP

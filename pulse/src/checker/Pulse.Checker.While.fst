@@ -24,6 +24,7 @@ open Pulse.Checker.Prover
 open Pulse.Checker.ImpureSpec
 
 module T = FStar.Tactics.V2
+module R = FStar.Reflection.V2
 module P = Pulse.Syntax.Printer
 module Metatheory = Pulse.Typing.Metatheory
 module RU = Pulse.RuntimeUtils
@@ -164,6 +165,8 @@ let check_nuwhile
   (post_hint:post_hint_opt g {~ (PostHint? post_hint) })
   (res_ppname:ppname)
   (t:st_term{Tm_NuWhile? t.term})
+  (breaklblx: var { freshv g breaklblx })
+  (break_inv: option term)
   (check:check_t)
   : T.Tac (checker_result_t g pre post_hint) =
 
@@ -177,53 +180,113 @@ let check_nuwhile
   let (| g1, remaining, k |) = Pulse.Checker.Prover.prove t.range g pre inv false in
   let inv = tm_star (RU.deep_compress_safe inv) remaining in
   let inv_typing : tot_typing g1 inv tm_slprop = RU.magic () in
+  let res_cond : checker_result_t g1 inv (TypeHint tm_bool) =
+    check (push_context "check_while_condition" cond.range g1) inv inv_typing (TypeHint tm_bool) ppname_default cond in
   let (| post_cond, r_cond |) : (ph:post_hint_for_env g1 & checker_result_t g1 inv (PostHint ph)) =
-    let r_cond = check (push_context "check_while_condition" cond.range g1) inv inv_typing (TypeHint tm_bool) ppname_default cond in
-    let r_cond = retype_checker_result NoHint r_cond in
-    let ph = Pulse.JoinComp.infer_post r_cond in
-    (| ph, Pulse.Checker.Prover.prove_post_hint r_cond (PostHint ph) cond.range |)
+    let res_cond = retype_checker_result NoHint res_cond in
+    let ph = Pulse.JoinComp.infer_post res_cond in
+    (| ph, Pulse.Checker.Prover.prove_post_hint res_cond (PostHint ph) cond.range |)
   in
   if not (T.term_eq post_cond.ret_ty tm_bool)
   || not (T.univ_eq post_cond.u u0)
   then T.fail "Expected while condition to return a bool";
-  let inv_ph : post_hint_for_env g1 = inv_as_post_hint inv_typing in
-  let body_pre_open = post_cond.post in
-  let x = fresh g1 in
-  assume (x == Ghost.reveal post_cond.x);
-  let body_open_pre_typing : tot_typing (push_binding g1 x ppname_default tm_bool) (open_term body_pre_open x) tm_slprop =
-    post_cond.post_typing_src
+
+  assume freshv g1 breaklblx;
+  let (| break_pred, break_typ |) : t:term & tot_typing g1 t tm_slprop =
+    match break_inv with
+    | Some break_inv ->
+      let (| x_cond, g1', (| _, _, t_typ |), (| cond_post, cond_post_typing |), k |) = res_cond in
+      let break_inv = purify_term g1' { ctxt_now = cond_post; ctxt_old = Some pre } break_inv in
+      let break_inv = RU.beta_lax (elab_env g1') break_inv in
+      let break_inv = RU.deep_compress_safe break_inv in
+      let (| break_inv, break_inv_typ |) = check_tot_term g1' break_inv tm_prop in
+      let break_inv = tm_star cond_post
+        (tm_pure (R.mk_app (R.pack_ln (R.Tv_FVar (R.pack_fv R.or_qn))) [
+          mk_eq2 u0 tm_bool (term_of_nvar (ppname_default, x_cond)) tm_false, R.Q_Explicit;
+          break_inv, R.Q_Explicit;
+        ])) in
+      let y = fresh g1' in
+      let g1'' = push_binding g1' y ppname_default tm_unit in
+      assert g1' `env_extends` g1;
+      assert g1'' `env_extends` g1';
+      let break_inv_typ: tot_typing g1'' break_inv tm_slprop = RU.magic () in
+      let unit_typ: universe_of g1'' tm_unit u0 = RU.magic () in
+      let break_inv = Pulse.JoinComp.infer_post' g1 g1'' y unit_typ break_inv_typ in
+      let break_inv = open_term' break_inv.post unit_const 0 in
+      let break_inv_typ: tot_typing g1 break_inv tm_slprop = RU.magic () in
+      (| break_inv, break_inv_typ |)
+    | None ->
+      let t: term = open_term' post_cond.post tm_false 0 in
+      let typ: tot_typing g1 t tm_slprop = RU.magic () in
+      (| t, typ |)
   in
+  let break_lbl_c = C_ST {
+    u = u0;
+    res = tm_unit;
+    pre = break_pred;
+    post = tm_is_unreachable;
+  } in
+  let breaklbln = { name = T.seal "_break"; range = t.range } in
+  let g2 = push_goto g1 breaklblx breaklbln break_lbl_c in
+  
+  // lift post_cond across g2 `env_extends` g1
+  let (| post_cond, r_cond |) : (ph:post_hint_for_env g2 & checker_result_t g2 inv (PostHint ph)) =
+    (fun _ -> assume g1 == g2; ((| post_cond, r_cond |) <: ph:post_hint_for_env g2 & checker_result_t g2 inv (PostHint ph))) () in
+
+  let inv_ph : post_hint_for_env g2 = inv_as_post_hint inv_typing in
+  let body_pre_open = post_cond.post in
+  let x = fresh g2 in
+  assume (x == Ghost.reveal post_cond.x);
+  let body_open_pre_typing : tot_typing (push_binding g2 x ppname_default tm_bool) (open_term body_pre_open x) tm_slprop =
+    RU.magic () in // post_cond.post_typing_src
   let body_pre_typing = body_typing_subst_true body_open_pre_typing in
   let r_body = 
     check 
-      (push_context "check_while_body" body.range g1) 
+      (push_context "check_while_body" body.range g2) 
       _ body_pre_typing (PostHint inv_ph) ppname_default body
   in
   let (| cond, comp_cond, cond_typing |) = apply_checker_result_k r_cond ppname_default in
   let (| body, comp_body, body_typing |) = apply_checker_result_k r_body ppname_default in
   assert (comp_cond == (comp_nuwhile_cond inv body_pre_open));
   assert (comp_body == comp_nuwhile_body inv body_pre_open);
-  let d = T_NuWhile g1 inv body_pre_open cond body inv_typing (body_typing_ex body_open_pre_typing) cond_typing body_typing in
+  let inv_typing2 : tot_typing g2 inv tm_slprop = RU.magic () in
+
+  let while = wtag (Some STT) (Tm_NuWhile { invariant = inv; condition = cond; body }) in
+  let d: st_typing g2 while (comp_nuwhile inv body_pre_open) =
+    T_NuWhile g2 inv body_pre_open cond body inv_typing2 (body_typing_ex body_open_pre_typing) cond_typing body_typing in
   let C_ST cst = comp_nuwhile inv body_pre_open in
-  assume (fresh_wrt x g (freevars cst.post));
-  let post_hint_for_while : post_hint_for_env g = {
-      g=g;
+  // let phw = PostHint post_hint_for_while in
+  let d_st : Pulse.Typing.Combinators.st_typing_in_ctxt g2 inv NoHint = (| _, _, d |) in
+  let res = checker_result_for_st_typing d_st ppname_default in
+  assume (fresh_wrt x g1 (freevars break_pred));
+  let post_hint_for_while : post_hint_for_env g1 = {
+      g=g1;
       effect_annot=EffectAnnotSTT;
       effect_annot_typing=();
       ret_ty=RT.unit_ty;
       u=u_zero;
       ty_typing=RU.magic(); //unit typing
-      post=cst.post;
+      post=break_pred;
       x;
       post_typing_src=RU.magic(); //from inv typing and body_open_pre_typing
       post_typing=RU.magic()
     }
   in
-  let ph = PostHint post_hint_for_while in
-  let d_st : Pulse.Typing.Combinators.st_typing_in_ctxt g1 inv ph =  (| _, _, d |) in
-  let d_st : Pulse.Typing.Combinators.st_typing_in_ctxt g pre ph = k ph d_st in
+  let res = prove_post_hint res (PostHint post_hint_for_while) t.range in
+  let (| while, while_comp, while_d |) = apply_checker_result_k res ppname_default in
+
+  assume open_st_term_nv (close_st_term while breaklblx) (breaklbln, breaklblx) == while;
+  let fjl = wtag (Some (ctag_of_comp_st while_comp))
+    (Tm_ForwardJumpLabel { lbl = breaklbln; body = close_st_term while breaklblx; post = while_comp }) in
+  assert break_lbl_c == goto_comp_of_block_comp while_comp;
+  let fjl_d: st_typing g1 fjl while_comp =
+    T_ForwardJumpLabel g1 (breaklbln, breaklblx) (close_st_term while breaklblx) while_comp while_d in
+
+  let d_st: Pulse.Typing.Combinators.st_typing_in_ctxt g1 inv (TypeHint tm_unit) = (| _, _, fjl_d |) in
+
+  let d_st : Pulse.Typing.Combinators.st_typing_in_ctxt g pre NoHint = k NoHint d_st in
   let res = checker_result_for_st_typing d_st ppname_default in
-  let res = retype_checker_result #_ #_ #ph post_hint res in
+  let res = retype_checker_result #_ #_ #NoHint post_hint res in
   res
 
 #pop-options

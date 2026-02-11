@@ -583,20 +583,32 @@ let rec desugar_stmt' (env:env_t) (s:Sugar.stmt)
       let! body = desugar_stmt env body in
       return (SW.tm_while guard (id, inv) body s.range)
 
-    | While { guard; invariant=invs; body } ->
+    | While { guard; invariant=invs0; body } ->
       (* If there are multiple invariants, they must all be in
       the New style. *)
-      let! invs = invs |> mapM (function
-                        | New i -> return i
+      let! invs = invs0 |> mapM (function
+                        | New i -> return [i]
+                        | BreakRequires _ -> return []
                         | Old (_, p) -> fail "When using multiple invariants, they must all be in the \
-                        \"new\" style without a binder." (pos p))
-      in
+                        \"new\" style without a binder." (pos p)) in
+      let invs = L.concat invs in
       let inv = sugar_star_of_list s.range invs in
       let! guard = desugar_stmt env guard in
       let! inv = desugar_slprop env inv in
       let body = { body with s = ForwardJumpLabel { body; lbl = id_of_text "_continue"; post = None } } in
-      let! body = desugar_stmt env body in
-      return (SW.tm_nuwhile guard inv body s.range)
+      let breaklbl = Ident.mk_ident ("_break", s.range) in
+      let env', lblx = push_bv env breaklbl in
+      let! body = desugar_stmt env' body in
+      let while = SW.tm_nuwhile guard inv body s.range in
+      let while = close_st_term while lblx.index in
+      let break_req = invs0 |> L.concatMap (function | BreakRequires r -> [r] | _ -> []) in
+      let! break_req = mapM (tosyntax env) break_req in
+      let break_req =
+        match break_req with
+        | [] -> SW.tm_emp s.range
+        | r::rs -> SW.tm_pure (L.fold_left U.mk_disj r rs) s.range in
+      let break_req = SW.mk_comp (SW.tm_unknown s.range) (SW.mk_binder (id_of_text "_") (SW.tm_unknown s.range)) break_req in
+      return (SW.tm_forward_jump_label while breaklbl break_req s.range)
 
     | Introduce { slprop; witnesses } -> (
       let! vp = desugar_slprop env slprop in
@@ -636,6 +648,9 @@ let rec desugar_stmt' (env:env_t) (s:Sugar.stmt)
     
     | Continue ->
       desugar_stmt' env { s with s = Goto { lbl = id_of_text "_continue"; arg = None } } 
+
+    | Break ->
+      desugar_stmt' env { s with s = Goto { lbl = id_of_text "_break"; arg = None } } 
 
 and desugar_st_args (env:env_t) (args:list Sugar.lambda) : err (list SW.st_term) =
   match args with
