@@ -1188,11 +1188,17 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
     in
     let rdc : DsEnv.record_or_dc = rdc in //for type-based disambiguation of rdc projectors below
     let open FStarC.Pprint in
-    if Some? (Env.expected_typ env) && not rdc.is_record then
-      raise_error top Errors.Error_CannotResolveRecord [
-        text "Expected an expression of type" ^/^ pp (fst (Some?.v (Env.expected_typ env)));
-        text "Type" ^/^ pp rdc.typename ^/^ text "is not a record type.";
-      ];
+    (if Some? (Env.expected_typ env) && not rdc.is_record then
+      let rdc_field_names = List.map (fun (i, _) -> Ident.string_of_id i) rdc.fields in
+      let bad_field = List.tryFind (fun i -> not (List.existsb (fun f -> f = Ident.string_of_id (Ident.ident_of_lid i)) rdc_field_names)) uc.uc_fields in
+      match bad_field with
+      | Some f ->
+        raise_error top Errors.Error_CannotResolveRecord [
+          text "Expected an expression of type" ^/^ pp (fst (Some?.v (Env.expected_typ env)));
+          text "Type" ^/^ pp rdc.typename ^/^ text "is not declared as a record type;" ^/^
+          text "field" ^/^ pp f ^/^ text "is not valid for this type.";
+        ]
+      | None -> ());
     let constructor = S.fv_to_tm constructor in
     let mk_field_projector i x =
         let projname = mk_field_projector_name_from_ident constrname i in
@@ -3274,11 +3280,18 @@ and tc_pat env (pat_t:typ) (p0:pat) :
           let rdc, _, constructor_fv = TcUtil.find_record_or_dc_from_head_fv env (TcUtil.head_fv_of_typ env t) uc p.p in
           let f_sub_pats = List.zip uc.uc_fields sub_pats in
           let open FStarC.Pprint in
-          if not rdc.is_record then
-            raise_error p Errors.Error_CannotResolveRecord [
-              text "Expected a pattern of type" ^/^ pp t;
-              text "Type" ^/^ pp rdc.typename ^/^ text "is not a record type.";
-            ];
+          if not rdc.is_record then begin
+            let rdc_field_names = List.map (fun (i, _) -> Ident.string_of_id i) rdc.fields in
+            let bad_field = List.tryFind (fun i -> not (List.existsb (fun f -> f = Ident.string_of_id (Ident.ident_of_lid i)) rdc_field_names)) uc.uc_fields in
+            match bad_field with
+            | Some f ->
+              raise_error p Errors.Error_CannotResolveRecord [
+                text "Expected a pattern of type" ^/^ pp t;
+                text "Type" ^/^ pp rdc.typename ^/^ text "is not declared as a record type;" ^/^
+                text "field" ^/^ pp f ^/^ text "is not valid for this type.";
+              ]
+            | None -> ()
+          end;
           let sub_pats =
             TcUtil.make_record_fields_in_order env uc (Some (Inl t)) rdc f_sub_pats
               (fun _ ->
