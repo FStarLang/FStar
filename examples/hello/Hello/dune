@@ -1,0 +1,9 @@
+; F* verification and extraction rules (generated in sibling gen/ dir)
+(dynamic_include ../gen/hello.dune.inc)
+
+; Build the Hello executable from extracted OCaml
+(executable
+  (name Hello)
+  (libraries fstar.lib)
+  (preprocess (pps ppx_deriving_yojson))
+  (flags (:standard -w -8-9-11-26-27-32-33-39)))
