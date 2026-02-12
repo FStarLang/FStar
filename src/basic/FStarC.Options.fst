@@ -918,12 +918,13 @@ let specs_with_types warn_unsafe : list (char & string & opt_type & Pprint.docum
 
   ( noshort,
     "dep",
-    EnumStr ["make"; "graph"; "full"; "raw"],
-    text "Output the transitive closure of the full dependency graph in three formats:"
+    EnumStr ["make"; "graph"; "full"; "raw"; "dune"],
+    text "Output the transitive closure of the full dependency graph in several formats:"
     ^^ bulleted [
          text "'graph': a format suitable the 'dot' tool from 'GraphViz'";
          text "'full': a format suitable for 'make', including dependences for producing .ml and .krml files";
          text "'make': (deprecated) a format suitable for 'make', including only dependences among source files";
+         text "'dune': a format suitable for 'dune', outputting (rule ...) stanzas";
        ]);
 
   ( noshort,
