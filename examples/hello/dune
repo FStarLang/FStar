@@ -1,0 +1,2 @@
+; Route to subdirectories; exclude old output dir and other non-dune dirs
+(dirs Hello multifile)

@@ -1,28 +1,8 @@
-include ../Makefile.include
+.PHONY: all clean
 
-include $(FSTAR_ULIB)/ml/Makefile.include
-
-all: hello testseq multi strings
-
-hello: out Hello/Hello.fst
-	$(FSTAR) $(FSTAR_DEFAULT_ARGS) --odir out --codegen OCaml --extract 'Hello' Hello/Hello.fst
-	$(OCAMLOPT) out/Hello.ml -o hello.exe
-	./hello.exe
-
-testseq: out TestSeq/TestSeq.fst
-	$(FSTAR) $(FSTAR_DEFAULT_ARGS) --odir out --codegen OCaml --extract 'TestSeq' TestSeq/TestSeq.fst
-	$(OCAMLOPT) out/TestSeq.ml -o testseq.exe
-	./testseq.exe
-
-strings: out strings/TestStrings.fst
-	$(FSTAR) $(FSTAR_DEFAULT_ARGS) --odir out --codegen OCaml --extract 'TestStrings' strings/TestStrings.fst
-	$(OCAMLOPT) out/TestStrings.ml -o teststrings.exe
-
-multi:
-	$(MAKE) -C multifile
-
-out:
-	mkdir -p out
+all:
+	dune build
 
 clean:
-	rm -rf out *~ *.exe
+	dune clean
+	rm -f Hello/dune.deps.inc multifile/dune.deps.inc
