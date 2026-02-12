@@ -78,9 +78,12 @@ let wtag ct (t:st_term') : st_term =
     seq_lhs = Sealed.seal false;
   }
 
+let mk_binder_ppname_inline (binder_ty:term) (binder_ppname:ppname) : binder =
+  mk_binder_with_attrs binder_ty binder_ppname (T.seal [`CInline])
+
 let mk_if_cond (g: env) (t: st_term) (cond: nvar) : T.Tac st_term =
   wtag t.effect_tag <| Tm_Bind {
-    binder = mk_binder_ppname tm_bool (fst cond);
+    binder = mk_binder_ppname_inline tm_bool (fst cond);
     head = mk_read u0 tm_bool (term_of_nvar cond);
     body = wtag t.effect_tag <| Tm_If {
       b = close_term (term_of_nvar cond) (snd cond);
@@ -114,7 +117,7 @@ let add_write_if_necessary (g: env) (t: st_term) (cond: cond_params) : T.Tac st_
     wtag t.effect_tag <|
       Tm_Bind {
         head = t;
-        binder = mk_binder_ppname result.ty ppname_default;
+        binder = mk_binder_ppname_inline result.ty ppname_default;
         body = close_st_term (mk_write u0 result.ty (term_of_nvar (result.n, result.x)) (term_of_nvar (ppname_default, y))) y;
       }
 
@@ -147,7 +150,9 @@ let rec conditionalize (g: env) (t: st_term) (cond: cond_params) : T.Tac (option
     let g' = push_binding g x binder.binder_ppname binder.binder_ty in
     let body = open_st_term_nv body (binder.binder_ppname, x) in
     let x_ref = fresh g in
-    let cond_head = { cond with result = Some { n = binder.binder_ppname; x = x_ref; ty = binder.binder_ty } } in
+    let cond_head = { cond with result = 
+      if eq_tm binder.binder_ty tm_unit then None else
+        Some { n = binder.binder_ppname; x = x_ref; ty = binder.binder_ty } } in
     match conditionalize g' head cond_head,
           conditionalize g' body cond with
     | None, None -> None
@@ -164,18 +169,24 @@ let rec conditionalize (g: env) (t: st_term) (cond: cond_params) : T.Tac (option
         | Some body' -> body' in
 
       let body =
-        wtag t.effect_tag <| Tm_Bind {
-          binder = mk_binder_ppname binder.binder_ty binder.binder_ppname;
-          head = mk_read u0 binder.binder_ty (term_of_nvar (binder.binder_ppname, x_ref));
-          body = close_st_term body' x;
-        } in
+        if None? cond_head.result then
+          open_st_term' (close_st_term body' x) unit_const 0
+        else
+          wtag t.effect_tag <| Tm_Bind {
+            binder = mk_binder_ppname_inline binder.binder_ty binder.binder_ppname;
+            head = mk_read u0 binder.binder_ty (term_of_nvar (binder.binder_ppname, x_ref));
+            body = close_st_term body' x;
+          } in
       let body = mk_if_cond g body cond.cond in
       let body = mk_seq head body in
-      Some <| wtag t.effect_tag <| Tm_WithLocal {
-        binder = mk_binder_ppname (mk_ref binder.binder_ty) binder.binder_ppname;
-        initializer = None;
-        body = close_st_term body x_ref;
-      }
+      if None? cond_head.result then
+        Some body
+      else
+        Some <| wtag t.effect_tag <| Tm_WithLocal {
+          binder = mk_binder_ppname (mk_ref binder.binder_ty) binder.binder_ppname;
+          initializer = None;
+          body = close_st_term body x_ref;
+        }
   )
   | Tm_TotBind { binder; head; body } -> (
     let x = fresh g in
@@ -218,8 +229,8 @@ let rec conditionalize (g: env) (t: st_term) (cond: cond_params) : T.Tac (option
       } }
     else
       None
-  | Tm_While { invariant; condition; condition_var; body } ->
-    None // FIXME TODO
+  | Tm_While { invariant; condition; condition_var; body } -> 
+    conditionalize g { t with term = Tm_NuWhile { invariant; condition; body } } cond
   | Tm_NuWhile { invariant; condition; body } -> (
     let x = fresh g in
     let cond_cond = { cond with result = Some { n = ppname_default; x; ty = tm_bool } } in
@@ -233,7 +244,7 @@ let rec conditionalize (g: env) (t: st_term) (cond: cond_params) : T.Tac (option
         condition = wtag condition.effect_tag <|
           Tm_Bind {
             head = mk_read u0 tm_bool (term_of_nvar cond.cond);
-            binder = mk_binder_ppname tm_bool ppname_default;
+            binder = mk_binder_ppname_inline tm_bool ppname_default;
             body = (fun t -> close_st_term t y) <| wtag condition.effect_tag <|
               Tm_If {
                 b = term_of_nvar (ppname_default, y);
@@ -281,11 +292,16 @@ let rec conditionalize (g: env) (t: st_term) (cond: cond_params) : T.Tac (option
         post = with_st_comp post { st_comp_of_comp post with u = u0; res = tm_unit };
       } }
   )
-  | Tm_Goto { arg } ->
-    let body = mk_write u0 tm_bool (term_of_nvar cond.cond) tm_true in
-    Some (match cond.cond_arg with
-    | Some cond_arg -> mk_seq (mk_write u0 cond_arg.ty (term_of_nvar (cond_arg.n, cond_arg.x)) arg) body
-    | None -> body)
+  | Tm_Goto { lbl; arg } -> (
+    match R.inspect_ln lbl with
+    | R.Tv_Var lbl ->
+      if (R.inspect_namedv lbl).uniq <> snd cond.cond then None else
+      let body = mk_write u0 tm_bool (term_of_nvar cond.cond) tm_true in
+      Some (match cond.cond_arg with
+      | Some cond_arg -> mk_seq (mk_write u0 cond_arg.ty (term_of_nvar (cond_arg.n, cond_arg.x)) arg) body
+      | None -> body)
+    | _ -> None
+  )
 
 let rec elim_gotos (g: env) (t: st_term) : T.Tac st_term =
   match t.term with
@@ -376,8 +392,9 @@ let rec elim_gotos (g: env) (t: st_term) : T.Tac st_term =
     let cond = { cond = (lbl, cond_var); cond_arg = result; result } in
     (match conditionalize g' body cond, result with
     | Some body, Some _ ->
+      let body = elim_gotos g body in
       let body = wtag t.effect_tag <| Tm_Bind {
-        binder = mk_binder_ppname tm_unit ppname_default;
+        binder = mk_binder_ppname_inline tm_unit ppname_default;
         head = body;
         body = mk_read (comp_u post) (comp_res post) (term_of_nvar (lbl, res_var));
       } in
@@ -392,6 +409,7 @@ let rec elim_gotos (g: env) (t: st_term) : T.Tac st_term =
         body = close_st_term body res_var;
       }
     | Some body, None ->
+      let body = elim_gotos g body in
       wtag t.effect_tag <| Tm_WithLocal {
         binder = mk_binder_ppname (mk_ref tm_bool) lbl;
         initializer = Some tm_false;

@@ -14,6 +14,26 @@ fn simple_break ()
   }
 }
 
+fn break_continue_and_return (which: UInt8.t)
+{
+  let mut i = 0ul;
+  while (!i `UInt32.lt` 1000ul)
+    invariant live i
+    break requires true
+  {
+    if (which = 0uy) {
+      break;
+    };
+    if (which = 1uy) {
+      continue;
+    };
+    if (which = 2uy) {
+      return;
+    };
+    i := !i `UInt32.add` 1ul;
+  }
+}
+
 fn find_zero_with_break (a: array Int32.t) (sz: SizeT.t)
   preserves pts_to a #'r 'va
   requires with_pure (SizeT.v sz <= Seq.length 'va)
