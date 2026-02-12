@@ -1,22 +1,35 @@
 /* krml header omitted for test repeatability */
 
 
-#include "Goto.h"
+#include "Break.h"
 
-void Goto_test1(int32_t *r)
+void Break_simple_break(void)
 {
-  KRML_MAYBE_UNUSED_VAR(r);
-  bool fail = false;
-  fail = true;
+  bool k = true;
+  bool _break = false;
+  bool cond;
+  if (_break)
+    cond = false;
+  else
+    cond = k;
+  while (cond)
+  {
+    _break = true;
+    bool ite;
+    if (_break)
+      ite = false;
+    else
+      ite = k;
+    cond = ite;
+  }
 }
 
-size_t Goto_find_zero(int32_t *a, size_t sz)
+size_t Break_find_zero_with_break(int32_t *a, size_t sz)
 {
-  size_t _return;
-  bool _return1 = false;
   size_t i = (size_t)0U;
+  bool _break = false;
   bool cond;
-  if (_return1)
+  if (_break)
     cond = false;
   else
   {
@@ -28,19 +41,15 @@ size_t Goto_find_zero(int32_t *a, size_t sz)
     size_t __anf01 = i;
     int32_t __anf1 = a[__anf01];
     if (__anf1 == (int32_t)0)
-    {
-      size_t __anf02 = i;
-      _return = __anf02;
-      _return1 = true;
-    }
-    bool _return2 = _return1;
-    if (!_return2)
+      _break = true;
+    bool _break1 = _break;
+    if (!_break1)
     {
       size_t __anf02 = i;
       i = __anf02 + (size_t)1U;
     }
     bool ite;
-    if (_return1)
+    if (_break)
       ite = false;
     else
     {
@@ -49,9 +58,6 @@ size_t Goto_find_zero(int32_t *a, size_t sz)
     }
     cond = ite;
   }
-  bool _return2 = _return1;
-  if (!_return2)
-    _return = i;
-  return _return;
+  return i;
 }
 

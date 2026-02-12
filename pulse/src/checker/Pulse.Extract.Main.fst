@@ -353,7 +353,7 @@ and erase_ghost_subterms_branch (g:env) (b:branch) : T.Tac branch =
   let g, bs = extend_env'_pattern g pat in
   let body = Pulse.Checker.Match.open_st_term_bs body bs in
   let body = erase_ghost_subterms g body in
-  let body = Pulse.Syntax.Naming.close_st_term_n body (L.map (fun (b: Pulse.Typing.Env.var_binding) -> b.x) bs) in
+  let body = Pulse.Checker.Match.close_st_term_bs body bs in
   { pat; e=body; norw }
 
 let extract_dv_binder (b:Pulse.Syntax.Base.binder) (q:option Pulse.Syntax.Base.qualifier)
@@ -578,6 +578,8 @@ let extract_pulse_dv (g: env) (p:st_term) : T.Tac ECL.term =
   debug g (fun _ -> Printf.sprintf "post erasure: %s" (show p));
   let p = simplify_st_term g p in
   debug g (fun _ -> Printf.sprintf "after simp: %s" (show p));
+  let p = Pulse.ElimGoto.elim_gotos g p in
+  debug g (fun _ -> Printf.sprintf "post goto elim: %s" (show p));
   let p = extract_dv g p in
   debug g (fun _ -> Printf.sprintf "output: %s" (show p));
   p

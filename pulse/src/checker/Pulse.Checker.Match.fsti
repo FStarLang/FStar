@@ -23,6 +23,8 @@ open Pulse.Checker.Base
 module T = FStar.Tactics.V2
 
 val open_st_term_bs (t:st_term) (bs:list var_binding) : st_term 
+let close_st_term_bs t bs =
+    Pulse.Syntax.Naming.close_st_term_n t (List.Tot.map (fun (b: Pulse.Typing.Env.var_binding) -> b.x) bs)
 
 val check
         (g:env)
