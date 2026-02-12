@@ -7,9 +7,13 @@ fn test1 (r: ref Int32.t)
     preserves live r
 {
   {
+    r := 42l;
+    let mut x : UInt32.t;
+    x := 1ul;
     goto fail;
-    label fail:
   }
+  label fail:
+  // x not in scope for cleanup
 }
 
 fn find_zero (a: array Int32.t) (sz: SizeT.t)

@@ -5,8 +5,10 @@
 
 void Goto_test1(int32_t *r)
 {
-  KRML_MAYBE_UNUSED_VAR(r);
   bool fail = false;
+  *r = (int32_t)42;
+  uint32_t x;
+  x = 1U;
   fail = true;
 }
 

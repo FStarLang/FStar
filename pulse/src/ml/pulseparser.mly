@@ -289,13 +289,8 @@ pulseStmtNoSeq:
     }
   | LBRACE s=pulseStmt RBRACE
     { PulseSyntaxExtension_Sugar.mk_block s }
-  | LBRACE body=pulseStmt LABEL lbl=lident COLON post=option(ensuresSLProp) after=pulseStmtAfterLabel RBRACE
-    {
-      let s1 = PulseSyntaxExtension_Sugar.mk_forward_jump_label body lbl post in
-      match after with
-      | None -> s1
-      | Some s2 -> PulseSyntaxExtension_Sugar.mk_sequence (PulseSyntaxExtension_Sugar.mk_stmt s1 (rr2 $loc($1) $loc(post))) s2
-    }
+  | LBRACE body=pulseStmt RBRACE post=option(ensuresSLProp) LABEL lbl=lident COLON
+    { PulseSyntaxExtension_Sugar.mk_forward_jump_label body lbl post }
   | p=matchStmt { p }
   | PRAGMA_SET_OPTIONS options=STRING LBRACE s=pulseStmt RBRACE
     { PulseSyntaxExtension_Sugar.mk_pragma_set_options options s }
