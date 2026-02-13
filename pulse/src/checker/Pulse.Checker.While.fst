@@ -155,8 +155,33 @@ let inv_as_post_hint (#g:env) (#inv:slprop) (inv_typing:tot_typing g inv tm_slpr
     ret_ty=tm_unit; u=u0; ty_typing=unit_typing g; post=inv;
     x; post_typing_src; post_typing=RU.magic() }
 
+let tm_l_true : term = FStar.Reflection.V2.Formula.(formula_as_term True_)
+let tm_l_or (a b: term) : term = FStar.Reflection.V2.Formula.(formula_as_term (Or a b))
 
-#push-options "--fuel 0 --ifuel 0 --z3rlimit_factor 8"
+let cont_req_marker_lid = Pulse.Reflection.Util.mk_pulse_lib_core_lid "continue_requires_marker"
+let mk_cont_req_marker p = R.pack_ln (R.Tv_App (R.pack_ln (R.Tv_FVar (R.pack_fv cont_req_marker_lid))) (p, R.Q_Explicit))
+
+let rec subst_cont_req_marker (t: term) (v: term -> term) : Dv term =
+  match R.inspect_ln t with
+  | R.Tv_App hd arg -> (
+    let default () : Dv term =
+      R.pack_ln (R.Tv_App (subst_cont_req_marker hd v) (subst_cont_req_marker (fst arg) v, snd arg)) in
+    match R.inspect_ln hd with
+    | R.Tv_FVar fv ->
+      if R.inspect_fv fv = cont_req_marker_lid then
+        v (fst arg)
+      else
+        default ()
+    | _ -> default ()
+  )
+  | R.Tv_Abs b body ->
+    R.pack_ln (R.Tv_Abs b (subst_cont_req_marker body v))
+  | _ -> t
+
+let subst_cont_req_marker_with_true t = subst_cont_req_marker t fun _ -> tm_l_true
+let reduce_cont_req_marker t = subst_cont_req_marker t id
+
+#push-options "--fuel 0 --ifuel 0 --z3rlimit_factor 16"
 module RT = FStar.Reflection.Typing
 let check_nuwhile
   (g:env)
@@ -171,7 +196,10 @@ let check_nuwhile
   : T.Tac (checker_result_t g pre post_hint) =
 
   let g = push_context "nu while loop" t.range g in
-  let Tm_NuWhile { invariant=inv; condition=cond; body } = t.term in
+  let Tm_NuWhile { invariant=inv; cont_req; condition=cond; body } = t.term in
+  let inv =
+    if cont_req `eq_tm` tm_l_true then inv else
+    (inv `tm_star` tm_pure (mk_cont_req_marker cont_req)) in
   let (| inv, inv_typing |) =
     purify_and_check_spec (push_context "invariant" (term_range inv) g)
       { ctxt_now = pre; ctxt_old = Some pre }
@@ -195,16 +223,14 @@ let check_nuwhile
   let (| break_pred, break_typ |) : t:term & tot_typing g1 t tm_slprop =
     match break_inv with
     | Some break_inv ->
-      let (| x_cond, g1', (| _, _, t_typ |), (| cond_post, cond_post_typing |), k |) = res_cond in
+      let (| x_cond, g1', (| _, _, t_typ |), (| cond_post, _ |), k |) = res_cond in
       let break_inv = purify_term g1' { ctxt_now = cond_post; ctxt_old = Some pre } break_inv in
       let break_inv = RU.beta_lax (elab_env g1') break_inv in
       let break_inv = RU.deep_compress_safe break_inv in
       let (| break_inv, break_inv_typ |) = check_tot_term g1' break_inv tm_prop in
-      let break_inv = tm_star cond_post
-        (tm_pure (R.mk_app (R.pack_ln (R.Tv_FVar (R.pack_fv R.or_qn))) [
-          mk_eq2 u0 tm_bool (term_of_nvar (ppname_default, x_cond)) tm_false, R.Q_Explicit;
-          break_inv, R.Q_Explicit;
-        ])) in
+      let break_inv = cond_post `tm_star`
+        tm_pure (mk_eq2 u0 tm_bool (term_of_nvar (ppname_default, x_cond)) tm_false
+          `tm_l_or` break_inv) in
       let y = fresh g1' in
       let g1'' = push_binding g1' y ppname_default tm_unit in
       assert g1' `env_extends` g1;
@@ -212,7 +238,8 @@ let check_nuwhile
       let break_inv_typ: tot_typing g1'' break_inv tm_slprop = RU.magic () in
       let unit_typ: universe_of g1'' tm_unit u0 = RU.magic () in
       let break_inv = Pulse.JoinComp.infer_post' g1 g1'' y unit_typ break_inv_typ in
-      let break_inv = open_term' break_inv.post unit_const 0 in
+      let break_inv = subst_cont_req_marker_with_true break_inv.post in
+      let break_inv = open_term' break_inv unit_const 0 in
       let break_inv_typ: tot_typing g1 break_inv tm_slprop = RU.magic () in
       (| break_inv, break_inv_typ |)
     | None ->
@@ -251,7 +278,7 @@ let check_nuwhile
   assert (comp_body == comp_nuwhile_body inv body_pre_open);
   let inv_typing2 : tot_typing g2 inv tm_slprop = RU.magic () in
 
-  let while = wtag (Some STT) (Tm_NuWhile { invariant = inv; condition = cond; body }) in
+  let while = wtag (Some STT) (Tm_NuWhile { invariant = inv; cont_req = tm_unknown; condition = cond; body }) in
   let d: st_typing g2 while (comp_nuwhile inv body_pre_open) =
     T_NuWhile g2 inv body_pre_open cond body inv_typing2 (body_typing_ex body_open_pre_typing) cond_typing body_typing in
   let C_ST cst = comp_nuwhile inv body_pre_open in

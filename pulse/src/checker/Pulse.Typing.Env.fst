@@ -291,7 +291,15 @@ let env_to_doc' (simplify:bool) (e:env) : T.Tac document =
     | BindingVar b :: bs -> b :: var_bindings bs
     | _ :: bs -> var_bindings bs
   in
-  var_bindings (bindings e) |> maybe_filter |> separate_map comma pp1
+  let var_bindings = var_bindings (bindings e) |> maybe_filter |> T.map pp1 in 
+  let goto_bindings = bindings e |> T.concatMap (function
+    | BindingGotoLabel {n; x; post} ->
+      [infix 2 1 (doc_of_string "requires")
+        (group <| doc_of_string "goto" ^/^ doc_of_string (T.unseal n.name ^ "#" ^ string_of_int x))
+        (Pulse.Syntax.Printer.term_to_doc (comp_pre post))]
+    | BindingPost ..
+    | BindingVar .. -> []) in
+  separate hardline (var_bindings @ [empty] @ goto_bindings) 
 
 let env_to_doc = env_to_doc' true
 

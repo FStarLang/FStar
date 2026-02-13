@@ -235,6 +235,8 @@ while_invariant1:
     { PulseSyntaxExtension_Sugar.New v }
   | BREAK REQUIRES v=appTermNoRecordExp
     { PulseSyntaxExtension_Sugar.BreakRequires v }
+  | CONTINUE REQUIRES v=appTermNoRecordExp
+    { PulseSyntaxExtension_Sugar.ContinueRequires v }
 
 while_invariant:
   | is=list(while_invariant1) { is }

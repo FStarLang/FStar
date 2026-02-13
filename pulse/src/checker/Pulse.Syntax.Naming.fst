@@ -181,8 +181,9 @@ let rec close_open_inverse_st'  (t:st_term)
       close_open_inverse_st' condition x i;
       close_open_inverse_st' body x i
 
-    | Tm_NuWhile { invariant; condition; body } ->
+    | Tm_NuWhile { invariant; cont_req; condition; body } ->
       close_open_inverse' invariant x i;
+      close_open_inverse' cont_req x i;
       close_open_inverse_st' condition x i;
       close_open_inverse_st' body x i
 

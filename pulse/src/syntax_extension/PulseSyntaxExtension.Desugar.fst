@@ -589,6 +589,7 @@ let rec desugar_stmt' (env:env_t) (s:Sugar.stmt)
       let! invs = invs0 |> mapM (function
                         | New i -> return [i]
                         | BreakRequires _ -> return []
+                        | ContinueRequires _ -> return []
                         | Old (_, p) -> fail "When using multiple invariants, they must all be in the \
                         \"new\" style without a binder." (pos p)) in
       let invs = L.concat invs in
@@ -599,8 +600,17 @@ let rec desugar_stmt' (env:env_t) (s:Sugar.stmt)
       let breaklbl = Ident.mk_ident ("_break", s.range) in
       let env', lblx = push_bv env breaklbl in
       let! body = desugar_stmt env' body in
-      let while = SW.tm_nuwhile guard inv body s.range in
+      
+      let cont_req = invs0 |> L.concatMap (function | ContinueRequires r -> [r] | _ -> []) in
+      let! cont_req = mapM (tosyntax env) cont_req in
+      let cont_req =
+        match cont_req with
+        | [] -> U.t_true
+        | r::rs -> L.fold_left U.mk_conj r rs in
+
+      let while = SW.tm_nuwhile guard inv body cont_req s.range in
       let while = close_st_term while lblx.index in
+
       let break_req = invs0 |> L.concatMap (function | BreakRequires r -> [r] | _ -> []) in
       let! break_req = mapM (tosyntax env) break_req in
       let break_req =

@@ -124,9 +124,13 @@ let rec freevars_st (t:st_term)
     | Tm_IntroExists { p; witnesses } ->
       freevars p ++
       freevars_list witnesses
-    | Tm_While { invariant; condition; body }
-    | Tm_NuWhile { invariant; condition; body } ->
+    | Tm_While { invariant; condition; body } ->
       freevars invariant ++
+      freevars_st condition ++
+      freevars_st body
+    | Tm_NuWhile { invariant; cont_req; condition; body } ->
+      freevars invariant ++
+      freevars cont_req ++
       freevars_st condition ++
       freevars_st body
 
@@ -316,8 +320,9 @@ let rec ln_st' (t:st_term) (i:int)
       ln_st' condition i &&
       ln_st' body i
 
-    | Tm_NuWhile { invariant; condition; body } ->
+    | Tm_NuWhile { invariant; cont_req; condition; body } ->
       ln' invariant i &&
+      ln' cont_req i &&
       ln_st' condition i &&
       ln_st' body i
 
@@ -569,8 +574,9 @@ let rec subst_st_term (t:st_term) (ss:subst)
                  body = subst_st_term body ss;
                  condition_var }
 
-    | Tm_NuWhile { invariant; condition; body } ->
+    | Tm_NuWhile { invariant; cont_req; condition; body } ->
       Tm_NuWhile { invariant = subst_term invariant ss;
+                    cont_req = subst_term cont_req ss;
                     condition = subst_st_term condition ss;
                     body = subst_st_term body ss }
 
