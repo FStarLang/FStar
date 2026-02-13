@@ -86,44 +86,26 @@ fn contiguous_sub_sequence
       (#s0:erased (Seq.seq t) { Seq.length s0 == SZ.v len0})
       (#s1:erased (Seq.seq t) { Seq.length s1 == SZ.v len1})
       (#p:perm)
-requires
+preserves
   pts_to a0 #p s0 **
   pts_to a1 #p s1
 returns b:bool
 ensures
-  pts_to a0 #p s0 **
-  pts_to a1 #p s1 **
   pure (b <==> (exists (j:nat { j < SZ.v len1 }).  starts_with_at j s0 s1))
 { 
   let mut j : SZ.t = 0sz;
-  let mut found : bool = false;
-  while (
-    (not !found &&
-     !j <> len1)
-  )
-  invariant (
-    exists* vj (vb:bool).
-      pts_to j vj **
-      pts_to found vb **
-      pts_to a0 #p s0 **
-      pts_to a1 #p s1 **
-      pure (
-        vj <= len1 /\
-        (vb ==> SZ.v vj < SZ.v len1 /\ starts_with_at (SZ.v vj) s0 s1) /\
-        (~vb ==> forall (j:nat{ j < SZ.v vj }). ~(starts_with_at j s0 s1))
-      )
-  )
+  while (!j <> len1)
+    invariant live j
+    invariant pure (
+      !j <= len1 /\
+      (forall (k:nat). k < SZ.v (!j) ==> ~(starts_with_at k s0 s1))
+    )
   {
-    let vj = !j;
-    let at_j = check_starts_with_at a0 a1 len0 len1 vj; 
-    if (at_j)
-    {
-      found := true;
-    }
-    else
-    {
-      j := vj + 1sz;
+    if (check_starts_with_at a0 a1 len0 len1 (!j)) {
+      return true;
+    } else {
+      j := !j + 1sz;
     }
   };
-  !found
+  false
 }

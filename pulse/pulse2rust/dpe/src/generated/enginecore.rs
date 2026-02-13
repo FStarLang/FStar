@@ -21,7 +21,6 @@ pub fn authenticate_l0_image(
         (),
         (),
     );
-    let mut b = false;
     if valid_header_sig {
         let hash_buf = &mut [0; 32];
         super::hacl::hacl_hash(

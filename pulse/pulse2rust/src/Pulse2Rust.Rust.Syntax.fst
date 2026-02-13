@@ -189,6 +189,8 @@ let mk_cast (e:expr) (ty:typ) : expr =
     expr_cast_type = ty;
   }
 
+let mk_not (l:expr) = Expr_unary { expr_unary_op = Not; expr_unary_expr = l }
+
 let mk_range (s:option expr) (l:range_limits) (e:option expr) : expr =
   Expr_range {
     expr_range_start = s;

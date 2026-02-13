@@ -500,6 +500,9 @@ and extract_mlexpr (g:env) (e:S.mlexpr) : expr =
        mk_method_call elit "to_string" [] 
      | _ -> elit)
   | S.MLE_App ({expr=S.MLE_Name p}, [e])
+    when S.string_of_mlpath p = "Prims.op_Negation" ->
+    mk_not (extract_mlexpr g e)
+  | S.MLE_App ({expr=S.MLE_Name p}, [e])
     when S.string_of_mlpath p = "FStar.SizeT.uint_to_t" ->
     extract_mlexpr g e
   | S.MLE_App ({expr=S.MLE_Name p}, [e])

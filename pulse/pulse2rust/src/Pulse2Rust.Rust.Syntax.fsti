@@ -56,6 +56,7 @@ type binop =
 
 type unop =
   | Deref
+  | Not
 
 type pat_ident = {
   pat_name : string;
@@ -369,6 +370,7 @@ val mk_expr_tuple (l:list expr) : expr
 val mk_mem_replace (t:typ) (e:expr) (new_v:expr) : expr
 val mk_method_call (receiver:expr) (name:string) (args:list expr) : expr
 val mk_cast (e:expr) (ty:typ) : expr
+val mk_not (e:expr) : expr
 val mk_range (s:option expr) (l:range_limits) (e:option expr) : expr
 
 val mk_new_mutex (e:expr) : expr

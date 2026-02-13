@@ -409,8 +409,6 @@ let is_used
   | Used _ _ -> true, c
   | _ -> false, c
 
-let not_ b = if b then false else true //Rust extraction does not recognize F*'s not/op_Negation
-
 fn not_full
   (#[@@@ Rust_generics_bounds ["Copy"; "PartialEq"; "Clone"]] kt:eqtype)
   (#[@@@ Rust_generics_bounds ["Clone"]] vt:Type0)
@@ -427,25 +425,18 @@ fn not_full
   let mut contents = ht.contents;
 
   let mut i = 0sz;
-  let mut break_ = false;
   unfold (models ht pht);
 
-  while
-  ((SZ.(!i <^ ht.sz) && not_ !(break_)))
-  invariant //b.
-   exists* (vi:SZ.t) vcontents (br:bool). (
-    pts_to contents vcontents **
-    V.pts_to vcontents pht.repr.seq **
-    pts_to i vi **
-    pts_to break_ br **
-    pure (
-      V.is_full_vec vcontents /\
+  while (SZ.(!i <^ ht.sz))
+    invariant V.pts_to (!contents) pht.repr.seq
+    invariant live i
+    invariant pure (
+      V.is_full_vec (!contents) /\
       SZ.v ht.sz == pht_sz pht /\
-      SZ.(vi <=^ ht.sz) /\
-      (br ==> (vi =!= ht.sz /\ not (Used? (pht.repr @@ (SZ.v vi))))) /\
-      (forall (i:nat). i < SZ.v vi ==> Used? (pht.repr @@ i))
+      SZ.(!i <=^ ht.sz) /\
+      (forall (j:nat). j < SZ.v !i ==> Used? (pht.repr @@ j))
     )
-  )
+    break requires (SZ.(!i <^ ht.sz) /\ not (Used? (pht.repr @@ (SZ.v !i))))
   {
     let vi = !i;
     let c = V.replace_i_ref contents vi Zombie;
@@ -454,19 +445,17 @@ fn not_full
     with vcontents. assert (pts_to contents vcontents);
     with s. assert (V.pts_to vcontents s);
     assert (pure (Seq.equal s pht.repr.seq));
-    break_ := not_ (fst b);
-    if (not_ (!break_)) { i := SZ.add (!i) 1sz; }
+    if (not (fst b)) {
+      break;
+    };
+    i := SZ.add (!i) 1sz;
   };
 
-  let vi = !i;
-  let res = !break_;
-
-  let vcontents = !contents;
-  let ht = mk_ht ht.sz hashf vcontents;
-  with vcontentsg. assert (pts_to contents vcontentsg);
-  with s. rewrite (V.pts_to vcontentsg s) as (V.pts_to ht.contents s);
+  let is_not_full = not (!i = ht.sz);
+  let ht = mk_ht ht.sz hashf (!contents);
+  with vcontentsg s. rewrite (V.pts_to vcontentsg s) as (V.pts_to ht.contents s);
   fold (models ht pht);
-  let b = ((ht <: ht_t kt vt), (res <: bool));
+  let b = (ht, is_not_full);
   rewrite (models ht pht) as (models (fst b) pht);
   b
 }
@@ -528,27 +517,21 @@ fn delete
   let mut cont = true;
   let mut err = false;
 
-  while
-  (
-    (!cont && not_ (!err))
-  )
-  invariant exists* (voff:SZ.t) (vcont verr:bool) (contents_v:V.vec _). (
-    pts_to off voff **
-    pts_to cont vcont **
-    pts_to err verr **
-    pts_to contents contents_v **
-    V.pts_to contents_v (if (vcont || verr) then pht.repr.seq else (PHT.delete pht k).repr.seq) **
-    pure (
-      V.is_full_vec contents_v /\
+  while (!cont && not (!err))
+    invariant live off
+    invariant live cont
+    invariant live err
+    invariant V.pts_to (!contents) (if (!cont || !err) then pht.repr.seq else (PHT.delete pht k).repr.seq)
+    invariant pure (
+      V.is_full_vec (!contents) /\
       SZ.v ht.sz == pht_sz pht /\
-      SZ.(voff <=^ ht.sz) /\
-      all_used_not_by pht.repr (SZ.v cidx) (SZ.v voff) k /\
-      walk pht.repr (SZ.v cidx) k (SZ.v voff) == lookup_repr pht.repr k /\
-      delete_repr_walk #kt #vt #(pht_sz pht) #pht.spec pht.repr k (SZ.v voff) (SZ.v cidx) () ()
+      SZ.(!off <=^ ht.sz) /\
+      all_used_not_by pht.repr (SZ.v cidx) (SZ.v !off) k /\
+      walk pht.repr (SZ.v cidx) k (SZ.v !off) == lookup_repr pht.repr k /\
+      delete_repr_walk #kt #vt #(pht_sz pht) #pht.spec pht.repr k (SZ.v !off) (SZ.v cidx) () ()
         == delete_repr #kt #vt #(pht_sz pht) #pht.spec pht.repr k
-    ))
+    )
   {
-    with vcont. assert (pts_to cont vcont);
     let voff = !off;
     if (voff = ht.sz)
     {
@@ -594,8 +577,7 @@ fn delete
   let ht = mk_ht ht.sz hashf contents_v;
   with s. rewrite (V.pts_to contents_v_g s) as (V.pts_to ht.contents s);
 
-  let verr = !err;
-  if verr
+  if (!err)
   {
     let res = ((ht <: ht_t kt vt), false);
     fold (models ht pht);

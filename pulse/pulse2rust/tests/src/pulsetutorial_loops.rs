@@ -5,22 +5,34 @@
 ////
 
 pub fn count_down(x: &mut i64, __v: ()) -> () {
-    let mut keep_going = true;
-    while keep_going {
-        let n = *x;
-        if n == 0 { keep_going = false } else { *x = n - 1 }
+    let mut _break = false;
+    while {
+        let uu___1 = _break;
+        if uu___1 { false } else { true }
+    } {
+        let __anf0 = *x;
+        if __anf0 == 0 {
+            _break = true
+        } else {
+            let __anf01 = *x;
+            *x = __anf01 - 1;
+        }
     }
 }
 pub fn count_down2(x: &mut i64, v: ()) -> () {
-    let mut keep_going = true;
     let mut decr = 1;
-    while keep_going {
-        let n = *x;
-        if n == 0 {
-            keep_going = false
+    let mut _break = false;
+    while {
+        let uu___1 = _break;
+        if uu___1 { false } else { true }
+    } {
+        let __anf0 = *x;
+        if __anf0 == 0 {
+            _break = true
         } else {
-            let __anf0 = decr;
-            *x = n - __anf0;
+            let __anf1 = *x;
+            let __anf01 = decr;
+            *x = __anf1 - __anf01;
         }
     }
 }

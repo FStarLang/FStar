@@ -199,12 +199,6 @@ pub fn is_used<K: Copy + PartialEq + Clone, V: Clone>(
         _ => (false, c),
     }
 }
-pub fn not_(b: bool) -> bool {
-    match b {
-        true => false,
-        _ => true,
-    }
-}
 pub fn not_full<KT: Copy + PartialEq + Clone, VT: Clone>(
     ht: super::pulse_lib_hashtable_type::ht_t<KT, VT>,
     pht: (),
@@ -212,11 +206,15 @@ pub fn not_full<KT: Copy + PartialEq + Clone, VT: Clone>(
     let hashf = ht.hashf;
     let mut contents = ht.contents;
     let mut i = 0;
-    let mut break_ = false;
+    let mut _break = false;
     while {
-        let __anf1 = i;
-        let __anf0 = break_;
-        __anf1 < ht.sz && super::pulse_lib_hashtable::not_(__anf0)
+        let uu___1 = _break;
+        if uu___1 {
+            false
+        } else {
+            let __anf0 = i;
+            __anf0 < ht.sz
+        }
     } {
         let vi = i;
         let c = std::mem::replace::<
@@ -226,20 +224,18 @@ pub fn not_full<KT: Copy + PartialEq + Clone, VT: Clone>(
         let uu___1 = std::mem::replace::<
             super::pulse_lib_hashtable_spec::cell<KT, VT>,
         >(&mut contents[vi], b.1);
-        break_ = super::pulse_lib_hashtable::not_(b.0);
-        let __anf0 = break_;
-        if super::pulse_lib_hashtable::not_(__anf0) {
-            let __anf01 = i;
-            i = __anf01 + 1;
-        } else {
-            ()
+        if !b.0 { _break = true } else { () };
+        let _break1 = _break;
+        if _break1 {} else {
+            let __anf0 = i;
+            i = __anf0 + 1;
         }
     }
-    let vi = i;
-    let res = break_;
-    let vcontents = contents;
-    let ht1 = super::pulse_lib_hashtable::mk_ht(ht.sz, hashf, vcontents);
-    (ht1, res)
+    let __anf0 = i;
+    let is_not_full = !(__anf0 == ht.sz);
+    let __anf01 = contents;
+    let ht1 = super::pulse_lib_hashtable::mk_ht(ht.sz, hashf, __anf01);
+    (ht1, is_not_full)
 }
 pub fn insert_if_not_full<KT: Copy + PartialEq + Clone, VT: Clone>(
     ht: super::pulse_lib_hashtable_type::ht_t<KT, VT>,

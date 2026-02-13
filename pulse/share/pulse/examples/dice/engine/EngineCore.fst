@@ -60,7 +60,6 @@ fn authenticate_l0_image ([@@@ Rust_mut_binder] record:engine_record_t) (#repr:G
   V.to_vec_pts_to record.l0_image_header;
   V.to_vec_pts_to record.l0_image_header_sig;
   
-  let mut b = false;
   if valid_header_sig
   {
     let mut hash_buf = [| 0uy; dice_digest_len |];

@@ -55,6 +55,7 @@ enum BinOp {
 
 enum UnOp {
     Deref,
+    Not,
 }
 
 struct ExprCall {
@@ -389,6 +390,7 @@ impl_from_ocaml_variant! {
 impl_from_ocaml_variant! {
   UnOp {
       UnOp::Deref,
+      UnOp::Not,
   }
 }
 
@@ -996,6 +998,9 @@ fn to_syn_expr(e: &Expr) -> syn::Expr {
                 attrs: vec![],
                 op: match e.expr_unary_op {
                     UnOp::Deref => syn::UnOp::Deref(syn::token::Star {
+                        spans: [Span::call_site()],
+                    }),
+                    UnOp::Not => syn::UnOp::Not(syn::token::Not {
                         spans: [Span::call_site()],
                     }),
                 },
@@ -1944,6 +1949,7 @@ impl fmt::Display for UnOp {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let s = match &self {
             UnOp::Deref => "*",
+            UnOp::Not => "!",
         };
         write!(f, "{}", s)
     }
