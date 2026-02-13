@@ -157,6 +157,7 @@ let inv_as_post_hint (#g:env) (#inv:slprop) (inv_typing:tot_typing g inv tm_slpr
 
 let tm_l_true : term = FStar.Reflection.V2.Formula.(formula_as_term True_)
 let tm_l_or (a b: term) : term = FStar.Reflection.V2.Formula.(formula_as_term (Or a b))
+let tm_l_and (a b: term) : term = FStar.Reflection.V2.Formula.(formula_as_term (And a b))
 
 let cont_req_marker_lid = Pulse.Reflection.Util.mk_pulse_lib_core_lid "continue_requires_marker"
 let mk_cont_req_marker p = R.pack_ln (R.Tv_App (R.pack_ln (R.Tv_FVar (R.pack_fv cont_req_marker_lid))) (p, R.Q_Explicit))
@@ -224,13 +225,15 @@ let check_nuwhile
     match break_inv with
     | Some break_inv ->
       let (| x_cond, g1', (| _, _, t_typ |), (| cond_post, _ |), k |) = res_cond in
+      let break_inv = 
+        (mk_eq2 u0 tm_bool (term_of_nvar (ppname_default, x_cond)) tm_false
+            `tm_l_and` cont_req)
+          `tm_l_or` break_inv in
       let break_inv = purify_term g1' { ctxt_now = cond_post; ctxt_old = Some pre } break_inv in
       let break_inv = RU.beta_lax (elab_env g1') break_inv in
       let break_inv = RU.deep_compress_safe break_inv in
       let (| break_inv, break_inv_typ |) = check_tot_term g1' break_inv tm_prop in
-      let break_inv = cond_post `tm_star`
-        tm_pure (mk_eq2 u0 tm_bool (term_of_nvar (ppname_default, x_cond)) tm_false
-          `tm_l_or` break_inv) in
+      let break_inv = cond_post `tm_star` tm_pure break_inv in
       let y = fresh g1' in
       let g1'' = push_binding g1' y ppname_default tm_unit in
       assert g1' `env_extends` g1;

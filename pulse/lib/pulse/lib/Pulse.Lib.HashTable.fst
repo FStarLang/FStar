@@ -514,14 +514,12 @@ fn delete
 
   let cidx = size_t_mod (hashf k) ht.sz;
   let mut off = 0sz;
-  let mut cont = true;
   let mut err = false;
 
-  while (!cont && not (!err))
+  while (not (!err))
     invariant live off
-    invariant live cont
     invariant live err
-    invariant V.pts_to (!contents) (if (!cont || !err) then pht.repr.seq else (PHT.delete pht k).repr.seq)
+    invariant live (!contents)
     invariant pure (
       V.is_full_vec (!contents) /\
       SZ.v ht.sz == pht_sz pht /\
@@ -531,11 +529,13 @@ fn delete
       delete_repr_walk #kt #vt #(pht_sz pht) #pht.spec pht.repr k (SZ.v !off) (SZ.v cidx) () ()
         == delete_repr #kt #vt #(pht_sz pht) #pht.spec pht.repr k
     )
+    continue requires (value_of (!contents) == pht.repr.seq)
+    break requires (not (!err) /\ value_of (!contents) == (PHT.delete pht k).repr.seq)
   {
     let voff = !off;
     if (voff = ht.sz)
     {
-      cont := false;
+      break;
     }
     else
     {
@@ -549,10 +549,10 @@ fn delete
           if (k' = k)
           {
             V.write_ref contents idx Zombie;
-            cont := false;
             assert (pure (pht.repr @@ SZ.v idx == Used k v'));
             assert (pure (Seq.upd pht.repr.seq (SZ.v idx) Zombie
               `Seq.equal` (PHT.delete pht k).repr.seq));
+            break;
           }
           else
           {
@@ -561,8 +561,8 @@ fn delete
         }
         Clean ->
         {
-          cont := false;
           assert (pure (pht.repr == (PHT.delete pht k).repr));
+          break;
         }
         Zombie ->
         {
