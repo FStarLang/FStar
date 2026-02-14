@@ -33,7 +33,7 @@ assume
 val invert_forall_typing
         (#g #u #b #body:_)
         (d:tot_typing g (tm_forall_sl u b body) tm_slprop)
-        (x:var { None? (lookup g x) /\ ~ (x `Set.mem` freevars body) })
+        (x:var { freshv g x /\ ~ (x `Set.mem` freevars body) })
   : GTot (
     tot_typing g b.binder_ty (tm_type u) &
     tot_typing (push_binding g x ppname_default b.binder_ty) (open_term body x) tm_slprop
@@ -42,7 +42,7 @@ val invert_forall_typing
 assume
 val construct_forall_typing
         (#g #u #b #body:_)
-        (x:var { None? (lookup g x) /\ ~ (x `Set.mem` freevars body) })
+        (x:var { freshv g x /\ ~ (x `Set.mem` freevars body) })
         (dt:tot_typing g b.binder_ty (tm_type u))
         (db:tot_typing (push_binding g x ppname_default b.binder_ty) (open_term body x) tm_slprop)
   : GTot (tot_typing g (tm_forall_sl u b body) tm_slprop)
@@ -192,7 +192,7 @@ let bind_t (case_c1 case_c2:comp_st -> bool) =
            (requires
               (let _, x = px in
               comp_pre c1 == pre /\
-              None? (lookup g x) /\
+              freshv g x /\
               (~(x `Set.mem` freevars_st e2)) /\
               open_term (comp_post c1) x == comp_pre c2 /\
               (~ (x `Set.mem` freevars (comp_post c2)))))
@@ -361,7 +361,7 @@ let rec mk_bind (g:env)
            (requires
               (let _, x = px in
               comp_pre c1 == pre /\
-              None? (lookup g x) /\
+              freshv g x /\
               (~(x `Set.mem` freevars_st e2)) /\
               open_term (comp_post c1) x == comp_pre c2 /\
               (~ (x `Set.mem` freevars (comp_post c2)))))
@@ -525,7 +525,7 @@ let apply_frame (#g:env)
 #push-options "--z3rlimit_factor 2"
 let comp_for_post_hint #g (#pre:slprop) (pre_typing:tot_typing g pre tm_slprop)
   (post:post_hint_t { g `env_extends` post.g })
-  (x:var { lookup g x == None })
+  (x:var { freshv g x })
   : T.Tac (c:comp_st { comp_pre c == pre /\ comp_post_matches_hint c (PostHint post) } &
            comp_typing g c (universe_of_comp c)) =
 

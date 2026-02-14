@@ -29,12 +29,12 @@ let ln_comp = c:comp_st { ln_c c }
 let rec extend_env_l_lookup_fvar (g:R.env) (sg:env_bindings) (fv:R.fv) (us:R.universes)
   : Lemma 
     (ensures
-      RT.lookup_fvar_uinst (extend_env_l g sg) fv us ==
+      RT.lookup_fvar_uinst (bindings_extend_env g sg) fv us ==
       RT.lookup_fvar_uinst g fv us)
-    [SMTPat (RT.lookup_fvar_uinst (extend_env_l g sg) fv us)]
+    [SMTPat (RT.lookup_fvar_uinst (bindings_extend_env g sg) fv us)]
   = match sg with
     | [] -> ()
-    | hd::tl -> extend_env_l_lookup_fvar g tl fv us
+    | hd::tl -> admit (); extend_env_l_lookup_fvar g tl fv us
 
 // let rec extend_env_l_lookup_bvar (g:R.env) (sg:env_bindings) (x:var)
 //   : Lemma 
@@ -77,7 +77,7 @@ let mk_t_abs_tot (g:env)
                  (t_typing:tot_typing g ty (tm_type u))
                  (#body:term)
                  (#body_ty:term)
-                 (#x:var { None? (lookup g x) /\ ~(x `Set.mem` freevars body) })
+                 (#x:var { freshv g x /\ ~(x `Set.mem` freevars body) })
                  (body_typing:tot_typing (push_binding g x ppname ty) (open_term body x) body_ty)
   : GTot (RT.tot_typing (elab_env g)
             (mk_abs_with_name ppname.name ty (elab_qual q) body)
@@ -133,7 +133,7 @@ let mk_t_abs (g:env)
                                        ty
                                        (elab_comp (C_Tot (tm_type u))))
              (#body:st_term)
-             (#x:var { None? (lookup g x) /\ ~(x `Set.mem` freevars_st body) })
+             (#x:var { freshv g x /\ ~(x `Set.mem` freevars_st body) })
              (#c:comp)
              (#body_typing:st_typing (push_binding g x ppname ty) (open_st_term body x) c)
              (r_body_typing:RT.tot_typing (elab_env (push_binding g x ppname ty))

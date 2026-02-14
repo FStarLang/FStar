@@ -22,3 +22,7 @@ let rec while_ cond body =
   else ()
 let par f1 f2 = magic()
 let rec unreachable t () = unreachable t ()
+
+let goto_label = magic()
+let goto = magic ()
+let forward_jump_label = magic ()

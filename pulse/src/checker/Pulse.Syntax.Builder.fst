@@ -47,12 +47,14 @@ let tm_match sc returns_ brs = Tm_Match {sc; returns_; brs}
 let tm_elim_exists p = Tm_ElimExists { p }
 let tm_intro_exists p witnesses = Tm_IntroExists { p; witnesses }
 let tm_while invariant condition condition_var body = Tm_While { invariant; condition; condition_var; body }
-let tm_nuwhile invariant condition body = Tm_NuWhile { invariant; condition; body }
+let tm_nuwhile invariant condition body loop_requires = Tm_NuWhile { invariant; loop_requires; condition; body }
 let tm_add_inv names n r = tm_add_inv names n
 let tm_with_local binder initializer body = Tm_WithLocal { binder; initializer; body }
 let tm_with_local_array binder initializer length body = Tm_WithLocalArray { binder; initializer; length; body }
 let tm_admit ctag u typ post = Tm_Admit { ctag; u; typ; post }
 let tm_pragma_with_options o b = Tm_PragmaWithOptions { options=o; body=b }
+let tm_forward_jump_label body lbl post = Tm_ForwardJumpLabel { body; lbl; post }
+let tm_goto lbl arg = Tm_Goto { lbl; arg }
 let with_range t r = { term = t; range = r; effect_tag = default_effect_hint; source=Sealed.seal true; seq_lhs=Sealed.seal false; }
 let tm_assert_with_binders bs p t = Tm_ProofHintWithBinders { hint_type=ASSERT { p; elaborated=false }; binders=bs; t }
 let mk_assert_hint_type p = ASSERT { p; elaborated=false }

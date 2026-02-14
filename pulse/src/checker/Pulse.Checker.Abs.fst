@@ -468,7 +468,7 @@ let rec check_abs_core
     let x = fresh g in
     let px = ppname, x in
     let var = tm_var {nm_ppname=ppname;nm_index=x} in
-    let g' = push_binding g x ppname t in
+    let g' = push_binding (clear_goto g) x ppname t in
     let body_opened = open_st_term_nv body px in
     let asc = open_ascription asc px in 
     match body_opened.term with

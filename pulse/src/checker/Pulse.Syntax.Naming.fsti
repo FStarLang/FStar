@@ -124,9 +124,13 @@ let rec freevars_st (t:st_term)
     | Tm_IntroExists { p; witnesses } ->
       freevars p ++
       freevars_list witnesses
-    | Tm_While { invariant; condition; body }
-    | Tm_NuWhile { invariant; condition; body } ->
+    | Tm_While { invariant; condition; body } ->
       freevars invariant ++
+      freevars_st condition ++
+      freevars_st body
+    | Tm_NuWhile { invariant; loop_requires; condition; body } ->
+      freevars invariant ++
+      freevars loop_requires ++
       freevars_st condition ++
       freevars_st body
 
@@ -160,6 +164,12 @@ let rec freevars_st (t:st_term)
 
     | Tm_PragmaWithOptions { body } ->
       freevars_st body
+
+    | Tm_ForwardJumpLabel { body; post } ->
+      freevars_st body ++ freevars_comp post
+
+    | Tm_Goto { lbl; arg } ->
+      freevars lbl ++ freevars arg
 
 and freevars_branches (t:list branch) : Set.set var =
   match t with
@@ -310,8 +320,9 @@ let rec ln_st' (t:st_term) (i:int)
       ln_st' condition i &&
       ln_st' body i
 
-    | Tm_NuWhile { invariant; condition; body } ->
+    | Tm_NuWhile { invariant; loop_requires; condition; body } ->
       ln' invariant i &&
+      ln' loop_requires i &&
       ln_st' condition i &&
       ln_st' body i
 
@@ -344,6 +355,13 @@ let rec ln_st' (t:st_term) (i:int)
 
     | Tm_PragmaWithOptions { body } ->
       ln_st' body i
+
+    | Tm_ForwardJumpLabel { lbl; body; post } ->
+      ln_c' post i &&
+      ln_st' body (i+1)
+
+    | Tm_Goto { lbl; arg } ->
+      ln' lbl i && ln' arg i
 
 and ln_branch' (b : branch) (i:int) : Tot bool (decreases b) =
   ln_pattern' b.pat i &&
@@ -556,8 +574,9 @@ let rec subst_st_term (t:st_term) (ss:subst)
                  body = subst_st_term body ss;
                  condition_var }
 
-    | Tm_NuWhile { invariant; condition; body } ->
+    | Tm_NuWhile { invariant; loop_requires; condition; body } ->
       Tm_NuWhile { invariant = subst_term invariant ss;
+                    loop_requires = subst_term loop_requires ss;
                     condition = subst_st_term condition ss;
                     body = subst_st_term body ss }
 
@@ -595,6 +614,12 @@ let rec subst_st_term (t:st_term) (ss:subst)
 
     | Tm_PragmaWithOptions { options; body } ->
       Tm_PragmaWithOptions { options; body=subst_st_term body ss }
+
+    | Tm_ForwardJumpLabel { lbl; body; post } ->
+      Tm_ForwardJumpLabel { lbl; body=subst_st_term body (shift_subst ss); post=subst_comp post ss }
+
+    | Tm_Goto { lbl; arg } ->
+      Tm_Goto { lbl=subst_term lbl ss; arg=subst_term arg ss }
 
     in
     { t with term = t' }

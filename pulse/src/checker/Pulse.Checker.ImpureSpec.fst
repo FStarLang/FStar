@@ -130,6 +130,14 @@ let rec symb_eval_subterms (g:env) (ctxt: ctxt) (t:R.term) : T.Tac (bool & R.ter
     else
       false, t
 
+  | R.Tv_Match sc ret brs ->
+    let changed_sc, sc = symb_eval_subterms g ctxt sc in
+    // TODO: branches
+    if changed_sc then
+      true, R.pack_ln (R.Tv_Match sc ret brs)
+    else
+      false, t
+
   | _ ->
     let head, args = T.collect_app_ln t in
     let fallback () =
@@ -285,7 +293,8 @@ let rec purify_spec_core (g: env) (ctxt: ctxt) (ts: list slprop) : T.Tac (option
     | Tm_ExistsSL _ b body ->
       let x = fresh g in
       let px = b.binder_ppname, x in
-      let x_ty, x_u = tc_type_phase1 g b.binder_ty in
+      let _, x_ty = symb_eval_subterms g ctxt b.binder_ty in
+      let x_ty, x_u = tc_type_phase1 g x_ty in
       let b = { b with binder_ty = x_ty } in
       let g' = push_binding g x (fst px) x_ty in
       let body = open_term_nv body px in

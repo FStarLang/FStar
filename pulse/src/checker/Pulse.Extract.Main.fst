@@ -55,7 +55,7 @@ let extend_env'_binder (g:env) (b: binder) =
 module R = FStar.Reflection.V2
 
 let rec extend_env'_pattern g (p:Pulse.Syntax.Base.pattern) :
-    T.Tac (env & list Pulse.Typing.Env.binding) =
+    T.Tac (env & list Pulse.Typing.Env.var_binding) =
   match p with
   | Pat_Cons fv pats ->
     let g, bs = extend_env'_patterns g (List.Tot.map fst pats) in
@@ -64,12 +64,13 @@ let rec extend_env'_pattern g (p:Pulse.Syntax.Base.pattern) :
     g, []
   | Pat_Var ppname sort ->
     let ty = T.unseal sort in
-    let g, (_, x) = extend_env' g (mk_ppname ppname Range.range_0) ty in
-    g, [x, ty]
+    let n = mk_ppname ppname Range.range_0 in
+    let g, (_, x) = extend_env' g n ty in
+    g, [{n; x; ty} <: Pulse.Typing.Env.var_binding]
   | Pat_Dot_Term t ->
     g, []
 and extend_env'_patterns g (ps:list Pulse.Syntax.Base.pattern) :
-    T.Tac (env & list Pulse.Typing.Env.binding) =
+    T.Tac (env & list Pulse.Typing.Env.var_binding) =
   match ps with
   | [] -> g, []
   | p::ps ->
@@ -170,6 +171,7 @@ let rec simplify_st_term (g:env) (e:st_term) : T.Tac st_term =
   | Tm_ST _
   | Tm_Rewrite _
   | Tm_Admit _
+  | Tm_Goto _
   | Tm_ProofHintWithBinders _ -> e
 
   | Tm_Abs { b; q; ascription; body } ->
@@ -211,10 +213,10 @@ let rec simplify_st_term (g:env) (e:st_term) : T.Tac st_term =
     let body = simplify_st_term g body in
     { e with term = Tm_While { invariant; condition; condition_var; body } }
 
-  | Tm_NuWhile { invariant; condition; body } ->
+  | Tm_NuWhile { invariant; loop_requires; condition; body } ->
     let condition = simplify_st_term g condition in
     let body = simplify_st_term g body in
-    { e with term = Tm_NuWhile { invariant; condition; body } }
+    { e with term = Tm_NuWhile { invariant; loop_requires; condition; body } }
 
   | Tm_WithLocal { binder; initializer; body } ->
     ret (Tm_WithLocal { binder; initializer; body = with_open binder body })
@@ -227,12 +229,23 @@ let rec simplify_st_term (g:env) (e:st_term) : T.Tac st_term =
 
   | Tm_Unreachable _ -> e
 
+  | Tm_ForwardJumpLabel { lbl; body; post } ->
+    let open Pulse.Syntax.Naming in
+    let x = fresh g in
+    let e = open_st_term' body (tm_var { nm_index = x; nm_ppname = lbl }) 0 in
+    let e = simplify_st_term (E.push_goto g x lbl post) e in
+    if x `Set.mem` freevars_st e then
+      let e = close_st_term' e x 0 in
+      ret (Tm_ForwardJumpLabel { lbl; body = e; post })
+    else
+      e
+
 and simplify_branch (g:env) (b:branch) : T.Tac branch =
   let {pat; e=body; norw} = b in
   let g, bs = extend_env'_pattern g pat in
   let body = Pulse.Checker.Match.open_st_term_bs body bs in
   let body = simplify_st_term g body in
-  let body = Pulse.Syntax.Naming.close_st_term_n body (L.map fst bs) in
+  let body = Pulse.Syntax.Naming.close_st_term_n body (L.map (fun (b: Pulse.Typing.Env.var_binding) -> b.x) bs) in
   {pat; e=body; norw}
 
 let erase_type_for_extraction (g:env) (t:term) : T.Tac bool =
@@ -300,10 +313,10 @@ let rec erase_ghost_subterms (g:env) (p:st_term) : T.Tac st_term =
       let body = erase_ghost_subterms g body in
       ret (Tm_While { invariant; condition; condition_var; body })
 
-    | Tm_NuWhile { invariant; condition; body } ->
+    | Tm_NuWhile { invariant; loop_requires; condition; body } ->
       let condition = erase_ghost_subterms g condition in
       let body = erase_ghost_subterms g body in
-      ret (Tm_NuWhile { invariant; condition; body })
+      ret (Tm_NuWhile { invariant; loop_requires; condition; body })
 
     | Tm_WithLocal { binder; initializer; body } ->
       let body = open_erase_close g binder body in
@@ -322,6 +335,16 @@ let rec erase_ghost_subterms (g:env) (p:st_term) : T.Tac st_term =
 
     | Tm_PragmaWithOptions { options; body } ->
       ret (Tm_PragmaWithOptions { options; body=erase_ghost_subterms g body })
+
+    | Tm_ForwardJumpLabel { lbl; body; post } ->
+      let open Pulse.Syntax.Naming in
+      let x = fresh g in
+      let e = open_st_term' body (tm_var { nm_index = x; nm_ppname = lbl }) 0 in
+      let e = erase_ghost_subterms (E.push_goto g x lbl post) e in
+      let e = close_st_term' e x 0 in
+      ret (Tm_ForwardJumpLabel { lbl; body = e; post })
+
+    | Tm_Goto _ -> p
       
   end
 
@@ -330,7 +353,7 @@ and erase_ghost_subterms_branch (g:env) (b:branch) : T.Tac branch =
   let g, bs = extend_env'_pattern g pat in
   let body = Pulse.Checker.Match.open_st_term_bs body bs in
   let body = erase_ghost_subterms g body in
-  let body = Pulse.Syntax.Naming.close_st_term_n body (L.map fst bs) in
+  let body = Pulse.Checker.Match.close_st_term_bs body bs in
   { pat; e=body; norw }
 
 let extract_dv_binder (b:Pulse.Syntax.Base.binder) (q:option Pulse.Syntax.Base.qualifier)
@@ -355,7 +378,7 @@ let extract_dv_binder (b:Pulse.Syntax.Base.binder) (q:option Pulse.Syntax.Base.q
   }
 
 let rec extract_dv_pattern g (p:Pulse.Syntax.Base.pattern) :
-    T.Tac (env & R.pattern & list Pulse.Typing.Env.binding) =
+    T.Tac (env & R.pattern & list Pulse.Typing.Env.var_binding) =
   match p with
   | Pat_Cons fv pats ->
     let fv = R.pack_fv fv.fv_name in
@@ -365,12 +388,13 @@ let rec extract_dv_pattern g (p:Pulse.Syntax.Base.pattern) :
     g, R.Pat_Constant c, []
   | Pat_Var ppname sort ->
     let ty = T.unseal sort in
-    let g, (_, x) = extend_env' g (mk_ppname ppname Range.range_0) ty in
-    g, R.Pat_Var sort ppname, [x, ty]
+    let n = mk_ppname ppname Range.range_0 in
+    let g, (_, x) = extend_env' g n ty in
+    g, R.Pat_Var sort ppname, [{n; x; ty} <: Pulse.Typing.Env.var_binding]
   | Pat_Dot_Term t ->
     g, R.Pat_Dot_Term t, []
 and extract_dv_patterns g (ps:list Pulse.Syntax.Base.pattern) :
-    T.Tac (env & list R.pattern & list Pulse.Typing.Env.binding) =
+    T.Tac (env & list R.pattern & list Pulse.Typing.Env.var_binding) =
   match ps with
   | [] -> g, [], []
   | p::ps ->
@@ -506,6 +530,39 @@ let rec extract_dv g (p:st_term) : T.Tac R.term =
 
     | Tm_PragmaWithOptions { body } -> extract_dv g body
 
+    | Tm_Goto { lbl; arg } ->
+      let lblv: var =
+        match R.inspect_ln lbl with
+        | R.Tv_Var lbl -> (R.inspect_namedv lbl).uniq
+        | _ -> T.fail (Printf.sprintf "invalid goto, label not var: %s" (show p)) in
+      let (lbln, c): ppname & st_comp =
+        match E.lookup_goto g lblv with
+        | Some (name, c) -> name, st_comp_of_comp c
+        | _ -> T.fail (Printf.sprintf "invalid goto, no matching block: %s" (show p)) in
+      ECL.mk_meta_monadic <|  
+        R.mk_app (R.pack_ln (R.Tv_UInst (R.pack_fv ["Pulse"; "Lib"; "Dv"; "goto"]) [c.u])) [
+          c.res, R.Q_Implicit;
+          tm_var { nm_index = lblv; nm_ppname = lbln }, R.Q_Explicit;
+          arg, R.Q_Explicit;
+        ]
+    
+    | Tm_ForwardJumpLabel { lbl; body; post } ->
+      let x = fresh g in
+      let g' = E.push_goto g x lbl post in
+      let body = extract_dv g' (open_st_term_nv body (lbl, x)) in
+      let post = st_comp_of_comp post in
+      ECL.mk_meta_monadic <|
+        R.mk_app (R.pack_ln (R.Tv_UInst (R.pack_fv ["Pulse"; "Lib"; "Dv"; "forward_jump_label"]) [post.u])) [
+          post.res, R.Q_Implicit;
+          R.pack_ln (R.Tv_Abs (R.pack_binder {
+            sort = R.mk_app (R.pack_ln (R.Tv_UInst (R.pack_fv ["Pulse"; "Lib"; "Dv"; "goto_label"]) [post.u]))
+              [post.res, R.Q_Explicit];
+            qual = R.Q_Explicit;
+            attrs = [];
+            ppname = lbl.name;
+          }) (close_term body x)), R.Q_Explicit;
+        ]
+
   end
 
 and extract_dv_branch g (b:Pulse.Syntax.Base.branch) : T.Tac R.branch =
@@ -513,7 +570,7 @@ and extract_dv_branch g (b:Pulse.Syntax.Base.branch) : T.Tac R.branch =
   let g, pat, bs = extract_dv_pattern g pat in
   pat, LN.close_term_n
     (extract_dv g (Pulse.Checker.Match.open_st_term_bs body bs))
-    (L.map fst bs)
+    (L.map (fun (b: Pulse.Typing.Env.var_binding) -> b.x) bs)
 
 let extract_pulse_dv (g: env) (p:st_term) : T.Tac ECL.term =
   debug g (fun _ -> Printf.sprintf "input: %s" (show p));
@@ -521,6 +578,8 @@ let extract_pulse_dv (g: env) (p:st_term) : T.Tac ECL.term =
   debug g (fun _ -> Printf.sprintf "post erasure: %s" (show p));
   let p = simplify_st_term g p in
   debug g (fun _ -> Printf.sprintf "after simp: %s" (show p));
+  let p = Pulse.ElimGoto.elim_gotos g p in
+  debug g (fun _ -> Printf.sprintf "post goto elim: %s" (show p));
   let p = extract_dv g p in
   debug g (fun _ -> Printf.sprintf "output: %s" (show p));
   p

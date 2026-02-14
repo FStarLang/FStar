@@ -1,5 +1,5 @@
 (*
-   Copyright 2023 Microsoft Research
+   Copyright 2026 Microsoft Research
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -14,26 +14,9 @@
    limitations under the License.
 *)
 
-module Pulse.Checker.AssertWithBinders
-
+module Pulse.ElimGoto
 module T = FStar.Tactics.V2
-
 open Pulse.Syntax
-open Pulse.Typing
-open Pulse.Checker.Base
+open Pulse.Typing.Env
 
-let head_wild (st:st_term) =
-  match st.term with
-  | Tm_ProofHintWithBinders { hint_type = WILD } -> true
-  | _ -> false
-
-val check
-  (g:env)
-  (pre:term)
-  (pre_typing:tot_typing g pre tm_slprop)
-  (post_hint:post_hint_opt g)
-  (res_ppname:ppname)
-  (st:st_term { Tm_ProofHintWithBinders? st.term })
-  (check:check_t)
-  : T.Tac (checker_result_t g pre post_hint)
-
+val elim_gotos (g: env) (t: st_term) : T.Tac st_term

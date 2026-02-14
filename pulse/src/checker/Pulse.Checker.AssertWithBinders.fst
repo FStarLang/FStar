@@ -196,16 +196,18 @@ let rec as_subst (p : list (term & term & 'a))
 let try_find_equality (g:env) (x:R.term)
 : T.Tac (option R.term)
 = T.tryPick
-    (fun (_, ty) ->
-      match is_squash ty with
-      | None -> None
-      | Some maybe_eq ->
-        match is_eq2 maybe_eq with
+    (function
+      | BindingGotoLabel .. | BindingPost .. -> None
+      | BindingVar {ty} ->
+        match is_squash ty with
         | None -> None
-        | Some (_, lhs, rhs) ->
-          if eq_tm x lhs then Some rhs
-          else if eq_tm x rhs then Some lhs
-          else None)
+        | Some maybe_eq ->
+          match is_eq2 maybe_eq with
+          | None -> None
+          | Some (_, lhs, rhs) ->
+            if eq_tm x lhs then Some rhs
+            else if eq_tm x rhs then Some lhs
+            else None)
     (Env.bindings g)
 
 

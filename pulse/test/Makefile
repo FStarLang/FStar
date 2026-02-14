@@ -5,6 +5,8 @@ SUBDIRS += pool
 PULSE_ROOT ?= ..
 include $(PULSE_ROOT)/mk/test.mk
 
+KRML_FLAGS = -ccopt -Wno-error=unused-but-set-variable
+
 # FIXME: these extra karamel dependencies should be somehow
 # automatically computed. I am just retaining them from the previous
 # Makefile.

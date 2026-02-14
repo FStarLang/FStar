@@ -365,7 +365,7 @@ let continuation_elaborator_with_bind' (#g:env) (ctxt:term)
   (#e1:st_term)
   (e1_typing:st_typing g e1 c1)
   (ctxt_pre1_typing:tot_typing g (tm_star ctxt (comp_pre c1)) tm_slprop)
-  (x:nvar { None? (lookup g (snd x)) })
+  (x:nvar {freshv g (snd x)})
   : T.Tac (continuation_elaborator
              g
              (tm_star ctxt (comp_pre c1))
@@ -444,7 +444,7 @@ let continuation_elaborator_with_bind (#g:env) (ctxt:term)
   (#e1:st_term)
   (e1_typing:st_typing g e1 c1)
   (ctxt_pre1_typing:tot_typing g (tm_star ctxt (comp_pre c1)) tm_slprop)
-  (x:nvar { None? (lookup g (snd x)) })
+  (x:nvar { freshv g (snd x) })
   : T.Tac (continuation_elaborator
              g
              (tm_star ctxt (comp_pre c1))
@@ -514,7 +514,7 @@ let continuation_elaborator_with_bind_fn (#g:env) (#ctxt:term)
   (#c1:comp { C_Tot? c1 })
   (b:binder{b.binder_ty == comp_res c1})
   (e1_typing:st_typing g e1 c1)
-  (x:nvar { None? (lookup g (snd x)) })
+  (x:nvar { freshv g (snd x) })
 : T.Tac (continuation_elaborator
           g ctxt
           (push_binding g (snd x) ppname_default (comp_res c1)) ctxt)

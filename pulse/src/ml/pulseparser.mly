@@ -72,6 +72,7 @@ let add_decorations decors ds =
 %token GHOST ATOMIC UNOBSERVABLE
 %token OPENS  SHOW_PROOF_STATE
 %token PRESERVES
+%token GOTO LABEL BREAK CONTINUE RETURN
 
 %start pulseDeclEOF
 %start peekFnId
@@ -232,9 +233,17 @@ while_invariant1:
     { PulseSyntaxExtension_Sugar.Old (i, v) }
   | INVARIANT v=pulseSLProp
     { PulseSyntaxExtension_Sugar.New v }
+  | ENSURES v=appTermNoRecordExp
+    { PulseSyntaxExtension_Sugar.LoopEnsures v }
+  | REQUIRES v=appTermNoRecordExp
+    { PulseSyntaxExtension_Sugar.LoopRequires v }
 
 while_invariant:
   | is=list(while_invariant1) { is }
+
+pulseStmtAfterLabel:
+  | { None }
+  | SEMICOLON s=pulseStmtNonempty { Some s }
 
 pulseStmtNoSeq:
   | OPEN i=quident
@@ -282,10 +291,20 @@ pulseStmtNoSeq:
     }
   | LBRACE s=pulseStmt RBRACE
     { PulseSyntaxExtension_Sugar.mk_block s }
+  | LBRACE body=pulseStmt RBRACE post=option(ensuresSLProp) LABEL lbl=lident COLON
+    { PulseSyntaxExtension_Sugar.mk_forward_jump_label body lbl post }
   | p=matchStmt { p }
   | PRAGMA_SET_OPTIONS options=STRING LBRACE s=pulseStmt RBRACE
     { PulseSyntaxExtension_Sugar.mk_pragma_set_options options s }
-  
+  | GOTO lbl=lident arg=option(noSeqTerm)
+    { PulseSyntaxExtension_Sugar.mk_goto lbl arg }
+  | RETURN arg=option(noSeqTerm)
+    { PulseSyntaxExtension_Sugar.mk_return arg }
+  | CONTINUE
+    { PulseSyntaxExtension_Sugar.mk_continue }
+  | BREAK
+    { PulseSyntaxExtension_Sugar.mk_break }
+
 matchStmt:
   | MATCH tm=appTermNoRecordExp c=option(ensuresSLProp) LBRACE brs=list(pulseMatchBranch) RBRACE
     { PulseSyntaxExtension_Sugar.mk_match tm c brs }

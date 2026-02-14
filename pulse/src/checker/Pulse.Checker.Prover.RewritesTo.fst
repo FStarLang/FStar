@@ -49,16 +49,18 @@ let maybe_add_binding_to_subst (ss: PS.ss_t) (t: typ) =
 let get_subst_from_env g =
   let rec go (ss: PS.ss_t) (bs: env_bindings) : Tot PS.ss_t (decreases bs) =
     match bs with
-    | (x, t) :: bs -> go (maybe_add_binding_to_subst ss t) bs
+    | BindingVar { ty } :: bs -> go (maybe_add_binding_to_subst ss ty) bs
+    | _ :: bs -> go ss bs
     | [] -> ss in
   go PS.empty (bindings g)
 
 let get_new_substs_from_env g g' ss =
   let rec go (ss: PS.ss_t) (bs: env_bindings) : Tot PS.ss_t (decreases bs) =
     match bs with
-    | (x, t) :: bs ->
-      let ss = if contains g x then ss else 
-        maybe_add_binding_to_subst ss t in
+    | BindingVar { x; ty } :: bs ->
+      let ss = if contains_var g x then ss else 
+        maybe_add_binding_to_subst ss ty in
       go ss bs
+    | _ :: bs -> go ss bs
     | [] -> ss in
   go ss (bindings g')

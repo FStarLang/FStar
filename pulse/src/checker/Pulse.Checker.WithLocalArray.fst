@@ -25,14 +25,19 @@ module T = FStar.Tactics.V2
 module P = Pulse.Syntax.Printer
 module RU = Pulse.Reflection.Util
 
+let extend_env (g: env) (init_t: term) (x: var { freshv g x }) (n: ppname) (init: option term) =
+  push_post (push_binding g x n (mk_array init_t))
+    (withlocal_array_post init_t (term_of_nvar (n, x)) init)
+
 let extend_post_hint
       (g:env)
       (p:post_hint_for_env g)
       (init_t:term)
       (init: option term)
       (x:var { ~ (Set.mem x (dom g)) })
-: T.Tac (q:post_hint_for_env (push_binding g x ppname_default (mk_array init_t)) {
-          q.post == comp_withlocal_array_body_post p.post init_t (null_var x) init /\
+      (n: ppname)
+: T.Tac (q:post_hint_for_env (extend_env g init_t x n init) {
+          q.post == comp_withlocal_array_body_post p.post init_t (term_of_nvar (n, x)) init /\
           q.ret_ty == p.ret_ty /\
           q.u == p.u /\
           q.effect_annot == p.effect_annot
@@ -42,7 +47,7 @@ let extend_post_hint
     (match init with
     | Some _ -> tm_exists_sl u0 (as_binder (mk_seq u0 init_t)) (mk_array_pts_to init_t arr (null_bvar 0))
     | None -> mk_array_pts_to_uninit_post init_t arr) in
-  let g' = push_binding g x ppname_default (mk_array init_t) in
+  let g' = push_binding g x n (mk_array init_t) in
   let c_typing = Pulse.Checker.Pure.core_check_term g' conjunct T.E_Total tm_slprop in
   let res = Pulse.Checker.Base.extend_post_hint g p x (mk_array init_t) _ c_typing in
   res
@@ -56,8 +61,9 @@ let with_local_array_pre_typing (#g:env) (#pre:term)
   (init_typing:(match init with Some init -> tot_typing g init init_t | _ -> unit))
   (len_typing:tot_typing g len tm_szt)
   (x:var { ~ (Set.mem x (dom g)) })
-  : tot_typing (push_binding g x ppname_default (mk_array init_t))
-               (comp_withlocal_array_body_pre pre init_t (null_var x) init len)
+  (n: ppname)
+  : tot_typing (extend_env g init_t x n init)
+               (comp_withlocal_array_body_pre pre init_t (term_of_nvar (n, x)) init len)
                tm_slprop
   = admit()
 
@@ -152,15 +158,15 @@ let check
       let px = binder.binder_ppname, x in
       assume ~(x `Set.mem` freevars_st body);
         let x_tm = term_of_nvar px in
-        let g_extended = push_binding g x binder.binder_ppname (mk_array init_t) in
+        let g_extended = extend_env g init_t x binder.binder_ppname init in
         let body_pre = comp_withlocal_array_body_pre pre init_t x_tm init len in
         let body_pre_typing =
-          with_local_array_pre_typing pre_typing init_t init len init_typing len_typing x in
+          with_local_array_pre_typing pre_typing init_t init len init_typing len_typing x binder.binder_ppname in
         // elaborating this post here,
         //   so that later we can check the computed post to be equal to this one
         let post : post_hint_for_env g = post in
         assume ~(x `Set.mem` freevars post.post);
-          let body_post = extend_post_hint g post init_t init x in
+          let body_post = extend_post_hint g post init_t init x binder.binder_ppname in
           let (| opened_body, c_body, body_typing |) =
             let r =
               check g_extended body_pre body_pre_typing (PostHint body_post) binder.binder_ppname (open_st_term_nv body px) in

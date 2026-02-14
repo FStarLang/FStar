@@ -147,21 +147,17 @@ ensures exists* s'. (a |-> s') **
   pure (sorted #t s' /\ permutation s s')
 {
   let mut j = 1sz;
-  while (
-    SZ.(!j <^ len)
-  )
-  invariant (
-    exists* vj (s':Seq.seq t).
-      (j |-> vj) **
-      (a |-> s') **
+  while (SZ.(!j <^ len))
+    invariant live j
+    invariant live a
+    invariant
       pure (
-        1 <= SZ.v vj /\ 
-        SZ.v vj <= SZ.v len /\
-        Seq.length s' == Seq.length s /\
-        sorted (Seq.slice s' 0 (SZ.v vj)) /\
-        permutation s s'
+        1 <= SZ.v !j /\ 
+        SZ.v !j <= SZ.v len /\
+        Seq.length (value_of a) == Seq.length s /\
+        sorted (Seq.slice (value_of a) 0 (SZ.v !j)) /\
+        permutation s (value_of a)
       )
-  )
   {
     pts_to_len a;
     let vj = !j;
@@ -173,10 +169,10 @@ ensures exists* s'. (a |-> s') **
     while (
       (not !done && a.(!i) >? key)
     )
-    invariant (
-      exists* (vi:SZ.t) (d:bool) (s':Seq.seq t { inner_invariant ss s' key vi vj d}).
-        (i |-> vi) ** (a |-> s') ** (done |-> d) 
-    )
+      invariant live i
+      invariant live done
+      invariant exists* (s':Seq.seq t { inner_invariant ss s' key (!i) vj (!done)}).
+          a |-> s'
     {
       let vi = !i;
       with s0. assert (a |-> s0);

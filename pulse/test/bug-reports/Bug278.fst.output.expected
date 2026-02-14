@@ -1,5 +1,5 @@
 * Info at Bug278.fst(29,5-31,5):
   - Expected failure:
   - Tactic failed
-  - Internal error: unexpected unresolved (universe) uvar in deep_compress: 38
+  - Internal error: unexpected unresolved (universe) uvar in deep_compress: 41
 

@@ -152,7 +152,7 @@ returns _:bool
 
 
 
-fn return (#a:Type0) (x:a)
+fn ret (#a:Type0) (x:a)
 returns y:a
 ensures pure (x == y)
 {
@@ -164,7 +164,7 @@ ensures pure (x == y)
 fn project_and_apply (r:record)
 returns _:bool
 {
-    let f = return r.second; //need the return since otherwise Pulse adds an equality refinement to the type of x
+    let f = ret r.second; //need the return since otherwise Pulse adds an equality refinement to the type of x
     f r.first
 }
 

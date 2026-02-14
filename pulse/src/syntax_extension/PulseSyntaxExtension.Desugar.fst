@@ -54,8 +54,12 @@ let sugar_app (r:Range.range) (f:A.term) (aa : list A.term) : A.term =
     A.mk_term (A.App (f, a, A.Nothing)) r A.Expr)
   f aa
 
+let sugar_var (i: lid) (r:Range.range) : A.term =
+  A.mk_term (A.Var i) r A.Expr
 let sugar_unit (r:Range.range) : A.term =
   A.mk_term (A.Var FStarC.Parser.Const.unit_lid) r A.Expr
+let sugar_unit_const (r:Range.range) : A.term =
+  A.mk_term (A.Const FStarC.Const.Const_unit) r A.Expr
 let sugar_emp (r:Range.range) : A.term =
   A.mk_term (A.Var emp_lid) r A.Expr
 let sugar_star (r:Range.range) : A.term =
@@ -210,13 +214,13 @@ let app_lid lid (args:list S.term) (r:_)
 let ret (s:S.term) = SW.(tm_return (as_term s) s.pos)
 
 type admit_or_return_t =
-  | STTerm : SW.st_term -> admit_or_return_t
-  | Return : S.term -> admit_or_return_t
+  | AdmitOrReturn_STTerm : SW.st_term -> admit_or_return_t
+  | AdmitOrReturn_Return : S.term -> admit_or_return_t
 
 let st_term_of_admit_or_return (t:admit_or_return_t) : SW.st_term =
   match t with
-  | STTerm t -> t
-  | Return t -> ret t
+  | AdmitOrReturn_STTerm t -> t
+  | AdmitOrReturn_Return t -> ret t
 
 let admit_or_return (env:env_t) (s:S.term)
   : admit_or_return_t
@@ -225,10 +229,10 @@ let admit_or_return (env:env_t) (s:S.term)
     match head.n, args with
     | S.Tm_fvar fv, [_] -> (
       if S.fv_eq_lid fv admit_lid
-      then STTerm (SW.tm_admit r)
-      else Return s
+      then AdmitOrReturn_STTerm (SW.tm_admit r)
+      else AdmitOrReturn_Return s
     )
-    | _ -> Return s
+    | _ -> AdmitOrReturn_Return s
 
 let prepend_ctx_issue (c : Pprint.document) (i : Errors.issue) : Errors.issue =
   { i with issue_msg = c :: i.issue_msg }
@@ -579,19 +583,42 @@ let rec desugar_stmt' (env:env_t) (s:Sugar.stmt)
       let! body = desugar_stmt env body in
       return (SW.tm_while guard (id, inv) body s.range)
 
-    | While { guard; invariant=invs; body } ->
+    | While { guard; invariant=invs0; body } ->
       (* If there are multiple invariants, they must all be in
       the New style. *)
-      let! invs = invs |> mapM (function
-                        | New i -> return i
+      let! invs = invs0 |> mapM (function
+                        | New i -> return [i]
+                        | LoopEnsures _ -> return []
+                        | LoopRequires _ -> return []
                         | Old (_, p) -> fail "When using multiple invariants, they must all be in the \
-                        \"new\" style without a binder." (pos p))
-      in
+                        \"new\" style without a binder." (pos p)) in
+      let invs = L.concat invs in
       let inv = sugar_star_of_list s.range invs in
       let! guard = desugar_stmt env guard in
       let! inv = desugar_slprop env inv in
-      let! body = desugar_stmt env body in
-      return (SW.tm_nuwhile guard inv body s.range)
+      let body = { body with s = ForwardJumpLabel { body; lbl = id_of_text "_continue"; post = None } } in
+      let breaklbl = Ident.mk_ident ("_break", s.range) in
+      let env', lblx = push_bv env breaklbl in
+      let! body = desugar_stmt env' body in
+      
+      let loop_requires = invs0 |> L.concatMap (function | LoopRequires r -> [r] | _ -> []) in
+      let! loop_requires = mapM (tosyntax env) loop_requires in
+      let loop_requires =
+        match loop_requires with
+        | [] -> U.t_true
+        | r::rs -> L.fold_left U.mk_conj r rs in
+
+      let while = SW.tm_nuwhile guard inv body loop_requires s.range in
+      let while = close_st_term while lblx.index in
+
+      let loop_ensures = invs0 |> L.concatMap (function | LoopEnsures r -> [r] | _ -> []) in
+      let! loop_ensures = mapM (tosyntax env) loop_ensures in
+      let loop_ensures =
+        match loop_ensures with
+        | [] -> SW.tm_emp s.range
+        | r::rs -> SW.tm_pure (L.fold_left U.mk_disj r rs) s.range in
+      let loop_ensures = SW.mk_comp (SW.tm_unknown s.range) (SW.mk_binder (id_of_text "_") (SW.tm_unknown s.range)) loop_ensures in
+      return (SW.tm_forward_jump_label while breaklbl loop_ensures s.range)
 
     | Introduce { slprop; witnesses } -> (
       let! vp = desugar_slprop env slprop in
@@ -607,6 +634,33 @@ let rec desugar_stmt' (env:env_t) (s:Sugar.stmt)
       let! body = desugar_stmt env body in
       FStarC.Syntax.Util.process_pragma S.PopOptions s.range;
       return (SW.tm_with_options options body s.range)
+    
+    | ForwardJumpLabel { body; lbl; post } ->
+      let env', lblx = push_bv env lbl in
+      let! body = desugar_stmt env' body in
+      let body = close_st_term body lblx.index in
+      let! post =
+        match post with
+        | None -> return (SW.tm_emp s.range)
+        | Some (_, t, _opens) -> desugar_slprop env t
+      in
+      let post = SW.mk_comp (SW.tm_unknown s.range) (SW.mk_binder (id_of_text "_") (SW.tm_unknown s.range)) post in
+      return (SW.tm_forward_jump_label body lbl post s.range)
+
+    | Goto { lbl; arg } ->
+      let! lbl = tosyntax env (sugar_var (id_as_lid lbl) s.range) in
+      let arg = match arg with Some arg -> arg | None -> sugar_unit_const s.range in
+      let! arg = tosyntax env arg in
+      return (SW.tm_goto lbl arg s.range)
+
+    | Return { arg } ->
+      desugar_stmt' env { s with s = Goto { lbl = id_of_text "_return"; arg } } 
+    
+    | Continue ->
+      desugar_stmt' env { s with s = Goto { lbl = id_of_text "_continue"; arg = None } } 
+
+    | Break ->
+      desugar_stmt' env { s with s = Goto { lbl = id_of_text "_break"; arg = None } } 
 
 and desugar_st_args (env:env_t) (args:list Sugar.lambda) : err (list SW.st_term) =
   match args with
@@ -758,9 +812,9 @@ and desugar_bind (env:env_t) (lb:_) (s2:Sugar.stmt) (r:R.range)
           let! s1 = tosyntax env e1 in
           let t =
             match admit_or_return env s1 with
-            | STTerm s1 ->
+            | AdmitOrReturn_STTerm s1 ->
               mk_bind b s1 s2 r
-            | Return s1 ->
+            | AdmitOrReturn_Return s1 ->
               mk_totbind b (as_term s1) s2 r
           in
           return t
@@ -882,6 +936,7 @@ and desugar_lambda (env:env_t) (l:Sugar.lambda)
         let! comp = desugar_computation_type env c in
         return (env, bs, bvs, Some comp)
     in
+    let body = { body with s = Sugar.ForwardJumpLabel { body; lbl = id_of_text "_return"; post = None } } in
     let! body = desugar_stmt env body in
     let! qbs = map2 faux bs bvs in
     let abs = mk_abs_with_comp qbs comp body range in
@@ -912,6 +967,7 @@ and desugar_decl (env:env_t)
       else
         return (env, bs, bvs)
     in
+    let body = { body with s = Sugar.ForwardJumpLabel { body; lbl = id_of_text "_return"; post = None } } in
     let! body = desugar_stmt env body in
     let! qbs = map2 faux bs bvs in
     return (SW.fn_defn range id is_rec us qbs comp meas body)

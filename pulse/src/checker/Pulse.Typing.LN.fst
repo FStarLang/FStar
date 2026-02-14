@@ -254,8 +254,9 @@ let rec open_st_term_ln' (e:st_term)
       open_st_term_ln' condition x i;
       open_st_term_ln' body x i
 
-    | Tm_NuWhile { invariant; condition; body } ->
+    | Tm_NuWhile { invariant; loop_requires; condition; body } ->
       open_term_ln' invariant x i;
+      open_term_ln' loop_requires x i;
       open_st_term_ln' condition x i;
       open_st_term_ln' body x i
 
@@ -290,6 +291,14 @@ let rec open_st_term_ln' (e:st_term)
 
     | Tm_PragmaWithOptions { body } ->
       open_st_term_ln' body x i
+    
+    | Tm_ForwardJumpLabel { lbl; body; post } ->
+      open_comp_ln' post x i;
+      open_st_term_ln' body x (i+1)
+    
+    | Tm_Goto { lbl; arg } ->
+      open_term_ln' lbl x i;
+      open_term_ln' arg x i
 
 // The Tm_Match? and __brs_of conditions are to prove that the ln_branches' below
 // satisfies the termination refinment.
@@ -439,8 +448,9 @@ let rec ln_weakening_st (t:st_term) (i j:int)
       ln_weakening_st condition i j;
       ln_weakening_st body i j
     
-    | Tm_NuWhile { invariant; condition; body } ->
+    | Tm_NuWhile { invariant; loop_requires; condition; body } ->
       ln_weakening invariant i j;
+      ln_weakening loop_requires i j;
       ln_weakening_st condition i j;
       ln_weakening_st body i j
     
@@ -500,6 +510,14 @@ let rec ln_weakening_st (t:st_term) (i j:int)
 
     | Tm_PragmaWithOptions { body } ->
       ln_weakening_st body i j
+    
+    | Tm_ForwardJumpLabel { body; post } ->
+      ln_weakening_st body (i + 1) (j + 1);
+      ln_weakening_comp post i j
+    
+    | Tm_Goto { lbl; arg } ->
+      ln_weakening lbl i j;
+      ln_weakening arg i j
 
 assume
 val r_open_term_ln_inv' (e:R.term) (x:R.term { RT.ln x }) (i:index)
@@ -624,9 +642,10 @@ let rec open_term_ln_inv_st' (t:st_term)
       open_term_ln_inv_st' condition x i;
       open_term_ln_inv_st' body x i
 
-    | Tm_NuWhile { invariant; condition; body } ->
+    | Tm_NuWhile { invariant; loop_requires; condition; body } ->
       FStar.Pure.BreakVC.break_vc();
       open_term_ln_inv' invariant x i;
+      open_term_ln_inv' loop_requires x i;
       open_term_ln_inv_st' condition x i;
       open_term_ln_inv_st' body x i
 
@@ -699,6 +718,15 @@ let rec open_term_ln_inv_st' (t:st_term)
 
     | Tm_PragmaWithOptions { body } ->
       open_term_ln_inv_st' body x i
+
+    | Tm_ForwardJumpLabel { body; post } ->
+      open_term_ln_inv_st' body x (i + 1);
+      open_comp_ln_inv' post x i
+    
+    | Tm_Goto { lbl; arg } ->
+      open_term_ln_inv' lbl x i;
+      open_term_ln_inv' arg x i
+
 #pop-options
 
 assume
@@ -819,9 +847,10 @@ let rec close_st_term_ln' (t:st_term) (x:var) (i:index)
       close_st_term_ln' condition x i;
       close_st_term_ln' body x i
 
-    | Tm_NuWhile { invariant; condition; body } ->
+    | Tm_NuWhile { invariant; loop_requires; condition; body } ->
       FStar.Pure.BreakVC.break_vc();
       close_term_ln' invariant x i;
+      close_term_ln' loop_requires x i;
       close_st_term_ln' condition x i;
       close_st_term_ln' body x i
 
@@ -894,6 +923,15 @@ let rec close_st_term_ln' (t:st_term) (x:var) (i:index)
 
     | Tm_PragmaWithOptions { body } ->
       close_st_term_ln' body x i
+
+    | Tm_ForwardJumpLabel { body; post } ->
+      close_st_term_ln' body x (i + 1);
+      close_comp_ln' post x i
+    
+    | Tm_Goto { lbl; arg } ->
+      close_term_ln' lbl x i;
+      close_term_ln' arg x i
+
 #pop-options
 let close_comp_ln (c:comp) (v:var)
   : Lemma 
@@ -1248,5 +1286,8 @@ let rec st_typing_ln (#g:_) (#t:_) (#c:_)
       FStar.Pure.BreakVC.break_vc ();
       st_typing_ln d;
       st_sub_ln d_sub
+
+    | T_ForwardJumpLabel .. -> admit ()
+    | T_Goto .. -> admit ()
 
 #pop-options

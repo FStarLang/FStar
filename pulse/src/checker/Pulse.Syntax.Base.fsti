@@ -269,6 +269,7 @@ type st_term' =
     }
    | Tm_NuWhile {
       invariant:term;
+      loop_requires:term;
       condition:st_term;
       body:st_term;
     }
@@ -306,6 +307,15 @@ type st_term' =
   | Tm_PragmaWithOptions {
       options: string;
       body: st_term
+    }
+  | Tm_ForwardJumpLabel {
+      lbl: ppname;
+      body: st_term;
+      post: comp_st; // pre & post condition for the whole block, not the goto
+    }
+  | Tm_Goto {
+      lbl: term; // either var or named
+      arg: term;
     }
 and st_term = {
     term : st_term';

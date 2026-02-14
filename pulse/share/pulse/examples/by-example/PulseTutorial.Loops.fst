@@ -24,24 +24,14 @@ fn count_down (x:ref nat)
 requires R.pts_to x 'v
 ensures  R.pts_to x 0
 {
-    let mut keep_going = true;
-    while (
-        !keep_going
-    )
-    invariant
-      exists* (b:bool) (v:nat).
-        pts_to keep_going b **
-        pts_to x v **
-        pure (not b  ==> v == 0)
+    while (true)
+        invariant live x
+        ensures (!x == 0)
     {
-        let n = !x;
-        if (n = 0) 
-        {
-            keep_going := false;
-        } 
-        else
-        {
-            x := n - 1;
+        if (!x = 0) {
+            break;
+        } else {
+            x := !x - 1;
         }
     }
 }
@@ -51,24 +41,15 @@ fn count_down2 (x:ref nat) (#v:erased nat)
 requires R.pts_to x v
 ensures  R.pts_to x 0
 {
-    let mut keep_going = true;
     let mut decr : nat = 1;
-    while (
-        !keep_going
-    )
-    invariant
-      exists* (b:bool) (v:nat).
-        pts_to keep_going b **
-        pts_to x v **
-        pure (not b ==> v == 0)
-    {   let n = !x;
-        if (n = 0) 
-        {
-            keep_going := false;
-        } 
-        else
-        {
-            x := n - !decr;
+    while (true)
+        invariant live x
+        ensures (!x == 0)
+    {
+        if (!x = 0) {
+            break;
+        } else {
+            x := !x - !decr;
         }
     }
 }

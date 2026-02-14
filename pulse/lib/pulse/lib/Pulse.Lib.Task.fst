@@ -924,22 +924,12 @@ fn await (#p:pool)
   requires joinable p post h
   ensures post
 {
-  let mut done = false;
-  while (Pulse.Lib.Reference.(not !done))
-    invariant
-      exists* v_done.
-        pool_alive #f p **
-        pts_to done v_done **
-        (if v_done then post else joinable p post h)
-  {
-    with v_done. assert (pts_to done v_done);
-    rewrite each v_done as false;
-    let b = try_await #p #post h #f;
-    Pulse.Lib.Reference.(done := b);
+  while (true) {
+    if (try_await #p #post h #f) {
+      return;
+    }
   };
-  with v_done. assert (pts_to done v_done);
-  rewrite each v_done as true;
-  ()
+  unreachable ()
 }
 
 ghost
@@ -1275,26 +1265,13 @@ fn await_help
   requires joinable p post h
   ensures post
 {
-  let mut done = false;
-  while (Pulse.Lib.Reference.(not !done))
-    invariant
-      exists* v_done.
-        pool_alive #f p **
-        pts_to done v_done **
-        (if v_done then post else joinable p post h)
-  {
-    with v_done. assert (pts_to done v_done);
-    rewrite each v_done as false;
-    let b = try_await #p #post h #f;
-    Pulse.Lib.Reference.(done := b);
-    if (not b) {
-      do_work_once #f p;
-    }
+  while (true) {
+    if (try_await h) {
+      return;
+    };
+    do_work_once p;
   };
-  with v_done.
-    assert (pts_to done v_done);
-    rewrite each v_done as true;
-  ();
+  unreachable ();
 }
 
 let ite (b:bool) (p q : slprop) : slprop =
@@ -1417,24 +1394,14 @@ fn await_pool
   requires pledge is (pool_done p) q
   ensures q
 {
-  let mut done = false;
-  fold (ite false q (pledge is (pool_done p) q));
-  while (Pulse.Lib.Reference.(not !done))
-    invariant
-      exists* v_done.
-        pool_alive #f p **
-        pts_to done v_done **
-        ite v_done q (pledge is (pool_done p) q)
-  {
-    with v_done. assert (pts_to done v_done);
-    rewrite each v_done as false;
-    unfold (ite false q (pledge is (pool_done p) q));
-    let b = try_await_pool p #is #f q;
-    Pulse.Lib.Reference.(done := b);
+  while (true) {
+    if (try_await_pool p #is #f q) {
+      unfold ite;
+      return;
+    };
+    unfold ite;
   };
-  with v_done. assert (pts_to done v_done);
-  rewrite each v_done as true;
-  unfold (ite true q (pledge is (pool_done p) q));
+  unreachable ();
 }
 
 fn rec teardown_pool
