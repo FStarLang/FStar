@@ -233,10 +233,10 @@ while_invariant1:
     { PulseSyntaxExtension_Sugar.Old (i, v) }
   | INVARIANT v=pulseSLProp
     { PulseSyntaxExtension_Sugar.New v }
-  | BREAK REQUIRES v=appTermNoRecordExp
-    { PulseSyntaxExtension_Sugar.BreakRequires v }
-  | CONTINUE REQUIRES v=appTermNoRecordExp
-    { PulseSyntaxExtension_Sugar.ContinueRequires v }
+  | ENSURES v=appTermNoRecordExp
+    { PulseSyntaxExtension_Sugar.LoopEnsures v }
+  | REQUIRES v=appTermNoRecordExp
+    { PulseSyntaxExtension_Sugar.LoopRequires v }
 
 while_invariant:
   | is=list(while_invariant1) { is }

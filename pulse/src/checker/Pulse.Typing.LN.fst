@@ -254,9 +254,9 @@ let rec open_st_term_ln' (e:st_term)
       open_st_term_ln' condition x i;
       open_st_term_ln' body x i
 
-    | Tm_NuWhile { invariant; cont_req; condition; body } ->
+    | Tm_NuWhile { invariant; loop_requires; condition; body } ->
       open_term_ln' invariant x i;
-      open_term_ln' cont_req x i;
+      open_term_ln' loop_requires x i;
       open_st_term_ln' condition x i;
       open_st_term_ln' body x i
 
@@ -448,9 +448,9 @@ let rec ln_weakening_st (t:st_term) (i j:int)
       ln_weakening_st condition i j;
       ln_weakening_st body i j
     
-    | Tm_NuWhile { invariant; cont_req; condition; body } ->
+    | Tm_NuWhile { invariant; loop_requires; condition; body } ->
       ln_weakening invariant i j;
-      ln_weakening cont_req i j;
+      ln_weakening loop_requires i j;
       ln_weakening_st condition i j;
       ln_weakening_st body i j
     
@@ -642,10 +642,10 @@ let rec open_term_ln_inv_st' (t:st_term)
       open_term_ln_inv_st' condition x i;
       open_term_ln_inv_st' body x i
 
-    | Tm_NuWhile { invariant; cont_req; condition; body } ->
+    | Tm_NuWhile { invariant; loop_requires; condition; body } ->
       FStar.Pure.BreakVC.break_vc();
       open_term_ln_inv' invariant x i;
-      open_term_ln_inv' cont_req x i;
+      open_term_ln_inv' loop_requires x i;
       open_term_ln_inv_st' condition x i;
       open_term_ln_inv_st' body x i
 
@@ -847,10 +847,10 @@ let rec close_st_term_ln' (t:st_term) (x:var) (i:index)
       close_st_term_ln' condition x i;
       close_st_term_ln' body x i
 
-    | Tm_NuWhile { invariant; cont_req; condition; body } ->
+    | Tm_NuWhile { invariant; loop_requires; condition; body } ->
       FStar.Pure.BreakVC.break_vc();
       close_term_ln' invariant x i;
-      close_term_ln' cont_req x i;
+      close_term_ln' loop_requires x i;
       close_st_term_ln' condition x i;
       close_st_term_ln' body x i
 

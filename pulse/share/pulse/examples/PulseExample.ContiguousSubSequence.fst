@@ -53,7 +53,7 @@ ensures
           (v1 == j + v0) /\
           starts_with_at (SZ.v j) (take s0 (SZ.v v0)) s1
         )
-    break requires
+    ensures
       (!i1 < len1 /\ !i0 < len0 /\ Seq.index s1 (SZ.v !i1) =!= Seq.index s0 (SZ.v !i0))
     {
       let v0 = !i0;

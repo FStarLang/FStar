@@ -26,7 +26,7 @@ ensures  R.pts_to x 0
 {
     while (true)
         invariant live x
-        break requires (!x == 0)
+        ensures (!x == 0)
     {
         if (!x = 0) {
             break;
@@ -44,7 +44,7 @@ ensures  R.pts_to x 0
     let mut decr : nat = 1;
     while (true)
         invariant live x
-        break requires (!x == 0)
+        ensures (!x == 0)
     {
         if (!x = 0) {
             break;

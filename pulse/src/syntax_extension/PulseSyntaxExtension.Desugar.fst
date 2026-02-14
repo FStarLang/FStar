@@ -588,8 +588,8 @@ let rec desugar_stmt' (env:env_t) (s:Sugar.stmt)
       the New style. *)
       let! invs = invs0 |> mapM (function
                         | New i -> return [i]
-                        | BreakRequires _ -> return []
-                        | ContinueRequires _ -> return []
+                        | LoopEnsures _ -> return []
+                        | LoopRequires _ -> return []
                         | Old (_, p) -> fail "When using multiple invariants, they must all be in the \
                         \"new\" style without a binder." (pos p)) in
       let invs = L.concat invs in
@@ -601,24 +601,24 @@ let rec desugar_stmt' (env:env_t) (s:Sugar.stmt)
       let env', lblx = push_bv env breaklbl in
       let! body = desugar_stmt env' body in
       
-      let cont_req = invs0 |> L.concatMap (function | ContinueRequires r -> [r] | _ -> []) in
-      let! cont_req = mapM (tosyntax env) cont_req in
-      let cont_req =
-        match cont_req with
+      let loop_requires = invs0 |> L.concatMap (function | LoopRequires r -> [r] | _ -> []) in
+      let! loop_requires = mapM (tosyntax env) loop_requires in
+      let loop_requires =
+        match loop_requires with
         | [] -> U.t_true
         | r::rs -> L.fold_left U.mk_conj r rs in
 
-      let while = SW.tm_nuwhile guard inv body cont_req s.range in
+      let while = SW.tm_nuwhile guard inv body loop_requires s.range in
       let while = close_st_term while lblx.index in
 
-      let break_req = invs0 |> L.concatMap (function | BreakRequires r -> [r] | _ -> []) in
-      let! break_req = mapM (tosyntax env) break_req in
-      let break_req =
-        match break_req with
+      let loop_ensures = invs0 |> L.concatMap (function | LoopEnsures r -> [r] | _ -> []) in
+      let! loop_ensures = mapM (tosyntax env) loop_ensures in
+      let loop_ensures =
+        match loop_ensures with
         | [] -> SW.tm_emp s.range
         | r::rs -> SW.tm_pure (L.fold_left U.mk_disj r rs) s.range in
-      let break_req = SW.mk_comp (SW.tm_unknown s.range) (SW.mk_binder (id_of_text "_") (SW.tm_unknown s.range)) break_req in
-      return (SW.tm_forward_jump_label while breaklbl break_req s.range)
+      let loop_ensures = SW.mk_comp (SW.tm_unknown s.range) (SW.mk_binder (id_of_text "_") (SW.tm_unknown s.range)) loop_ensures in
+      return (SW.tm_forward_jump_label while breaklbl loop_ensures s.range)
 
     | Introduce { slprop; witnesses } -> (
       let! vp = desugar_slprop env slprop in

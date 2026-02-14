@@ -110,8 +110,8 @@ let ensures_slprop = option (ident & A.term) & slprop & option A.term
 type while_invariant1 =
   | Old of ident & slprop
   | New of slprop
-  | BreakRequires of A.term
-  | ContinueRequires of A.term
+  | LoopEnsures of A.term
+  | LoopRequires of A.term
 
 type while_invariant = list while_invariant1
 
@@ -286,8 +286,8 @@ instance showable_while_invariant1 : showable while_invariant1 = {
   show = (fun i -> match i with
     | Old x -> "Old " ^ show x
     | New x -> "New " ^ show x
-    | BreakRequires x -> "BreakRequires " ^ show x
-    | ContinueRequires x -> "ContinueRequires " ^ show x
+    | LoopEnsures x -> "LoopEnsures " ^ show x
+    | LoopRequires x -> "LoopRequires " ^ show x
     );
 }
 
@@ -387,8 +387,8 @@ let eq_while_invariant1 (i1 i2:while_invariant1) =
   match i1, i2 with
   | Old (id1, t1), Old (id2, t2) -> eq_ident id1 id2 && eq_slprop t1 t2
   | New t1, New t2 -> eq_slprop t1 t2
-  | BreakRequires t1, BreakRequires t2 -> AD.eq_term t1 t2
-  | ContinueRequires t1, ContinueRequires t2 -> AD.eq_term t1 t2
+  | LoopEnsures t1, LoopEnsures t2 -> AD.eq_term t1 t2
+  | LoopRequires t1, LoopRequires t2 -> AD.eq_term t1 t2
   | _, _ -> false
 
 let rec eq_decl (d1 d2:decl) =
@@ -574,8 +574,8 @@ and scan_while_invariant1 (cbs:A.dep_scan_callbacks) (i:while_invariant1) =
   match i with
   | Old (id, t) -> cbs.scan_term t
   | New t -> cbs.scan_term t
-  | BreakRequires t -> cbs.scan_term t
-  | ContinueRequires t -> cbs.scan_term t
+  | LoopEnsures t -> cbs.scan_term t
+  | LoopRequires t -> cbs.scan_term t
 and scan_stmt (cbs:A.dep_scan_callbacks) (s:stmt) =
   match s.s with
   | Open l -> cbs.add_open l

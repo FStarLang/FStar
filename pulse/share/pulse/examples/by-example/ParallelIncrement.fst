@@ -326,8 +326,8 @@ ensures qpred ('i + 1)
   };
   while (true)
     invariant exists* j. qpred j
-    continue requires (observe qpred == 'i)
-    break requires (observe qpred == 'i + 1)
+    requires (observe qpred == 'i)
+    ensures (observe qpred == 'i + 1)
   {
     with j. rewrite qpred j as qpred 'i;
     let v = read ();

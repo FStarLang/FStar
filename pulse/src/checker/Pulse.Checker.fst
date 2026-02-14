@@ -392,10 +392,10 @@ let rec check
             assert Tm_NuWhile? body.term;
             let body = open_st_term_nv body (lbl, lblx) in
             assume Tm_NuWhile? body.term;
-            let break_req = match inspect_term (comp_post post) with
+            let loop_ensures = match inspect_term (comp_post post) with
               | Tm_Pure p -> Some p
               | _ -> None in
-            While.check_nuwhile g pre pre_typing post_hint res_ppname body lblx break_req check
+            While.check_nuwhile g pre pre_typing post_hint res_ppname body lblx loop_ensures check
         else
           ForwardJumpLabel.check g pre pre_typing post_hint res_ppname t check
 

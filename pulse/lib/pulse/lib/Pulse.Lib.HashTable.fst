@@ -114,8 +114,8 @@ fn lookup
       walk_get_idx pht.repr (SZ.v cidx) k (SZ.v !off)
         == lookup_repr_index pht.repr k
     )
-    continue requires (!ret == None)
-    break requires (!ret == PHT.lookup_index_us pht k)
+    requires (!ret == None)
+    ensures (!ret == PHT.lookup_index_us pht k)
   {
     let voff = !off;
     if (voff = ht.sz) { break };
@@ -267,11 +267,11 @@ fn insert
         insert_repr_walk #kt #vt #(pht_sz pht) #pht.spec pht.repr k v (SZ.v !off) (SZ.v cidx) () ()
           == insert_repr #kt #vt #(pht_sz pht) #pht.spec pht.repr k v
     )
-    break requires // insert succeeded
+    ensures // insert succeeded
       (SZ.v !idx < Seq.length (value_of !contents) /\
         (insert_repr #kt #vt #(pht_sz pht) #pht.spec pht.repr k v).seq `Seq.equal`
         Seq.upd (value_of !contents) (SZ.v !idx) (mk_used_cell k v))
-    continue requires
+    requires
       (value_of !contents `Seq.equal` pht.repr.seq)
   {
     let voff = !off;
@@ -406,7 +406,7 @@ fn not_full
       SZ.(!i <=^ ht.sz) /\
       (forall (j:nat). j < SZ.v !i ==> Used? (pht.repr @@ j))
     )
-    break requires (SZ.(!i <^ ht.sz) /\ not (Used? (pht.repr @@ (SZ.v !i))))
+    ensures (SZ.(!i <^ ht.sz) /\ not (Used? (pht.repr @@ (SZ.v !i))))
   {
     let vi = !i;
     let c = V.replace_i_ref contents vi Zombie;
@@ -499,8 +499,8 @@ fn delete
       delete_repr_walk #kt #vt #(pht_sz pht) #pht.spec pht.repr k (SZ.v !off) (SZ.v cidx) () ()
         == delete_repr #kt #vt #(pht_sz pht) #pht.spec pht.repr k
     )
-    continue requires (value_of (!contents) == pht.repr.seq)
-    break requires (not (!err) /\ value_of (!contents) == (PHT.delete pht k).repr.seq)
+    requires (value_of (!contents) == pht.repr.seq)
+    ensures (not (!err) /\ value_of (!contents) == (PHT.delete pht k).repr.seq)
   {
     let voff = !off;
     if (voff = ht.sz) { break };

@@ -1,4 +1,4 @@
-module ContinueRequires
+module LoopRequires
 open Pulse
 #lang-pulse
 
@@ -12,8 +12,8 @@ fn continue_requires () {
   let mut x = false;
   while ({ assert_ (!x == false); true })
     invariant live x
-    continue requires (!x == false)
-    break requires (!x == true)
+    requires (!x == false)
+    ensures (!x == true)
   {
     assert pure (!x == false);
     if (dice_roll ()) {

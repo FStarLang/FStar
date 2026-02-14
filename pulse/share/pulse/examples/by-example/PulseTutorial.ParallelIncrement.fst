@@ -340,8 +340,8 @@ ensures aspec ('i + 1)
   //incr_atomic_body_loop$
   while (true)
     invariant exists* j. aspec j
-    continue requires (observe aspec == 'i)
-    break requires (observe aspec == 'i + 1)
+    requires (observe aspec == 'i)
+    ensures (observe aspec == 'i + 1)
   {
     with j. rewrite aspec j as aspec 'i;
     later_credit_buy 1;

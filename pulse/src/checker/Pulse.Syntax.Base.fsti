@@ -269,7 +269,7 @@ type st_term' =
     }
    | Tm_NuWhile {
       invariant:term;
-      cont_req:term;
+      loop_requires:term;
       condition:st_term;
       body:st_term;
     }
