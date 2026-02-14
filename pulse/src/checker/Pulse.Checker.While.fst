@@ -159,7 +159,7 @@ let tm_l_true : term = FStar.Reflection.V2.Formula.(formula_as_term True_)
 let tm_l_or (a b: term) : term = FStar.Reflection.V2.Formula.(formula_as_term (Or a b))
 let tm_l_and (a b: term) : term = FStar.Reflection.V2.Formula.(formula_as_term (And a b))
 
-let loop_requires_marker_lid = Pulse.Reflection.Util.mk_pulse_lib_core_lid "continue_requires_marker"
+let loop_requires_marker_lid = Pulse.Reflection.Util.mk_pulse_lib_core_lid "loop_requires_marker"
 let mk_loop_requires_marker p = R.pack_ln (R.Tv_App (R.pack_ln (R.Tv_FVar (R.pack_fv loop_requires_marker_lid))) (p, R.Q_Explicit))
 
 let rec subst_loop_requires_marker (t: term) (v: term -> term) : Dv term =
@@ -182,6 +182,41 @@ let rec subst_loop_requires_marker (t: term) (v: term -> term) : Dv term =
 let subst_loop_requires_marker_with_true t = subst_loop_requires_marker t fun _ -> tm_l_true
 let reduce_loop_requires_marker t = subst_loop_requires_marker t id
 
+(*
+The desugaring of while loops into the unelaborated syntax is awful and hacky.
+
+while (cond)
+  invariant inv
+  requires pre
+  ensures post
+{
+  body
+}
+
+is represented as
+
+Tm_ForwardJumpLabel {
+  lbl = "_break";
+  body = Tm_NuWhile {
+    invariant = inv;
+    loop_requires = pre;
+    condition = cond;
+    body = Tm_ForwardJumpLabel {
+      lbl = "_continue";
+      body = body; 
+    };
+  };
+  post = C_ST {
+    post = tm_pure post;
+  };
+}
+
+The continue inside the body is nice and modular (and we don't need to anything special for it).
+But when the Pulse.Checker module sees a while loop inside a forward jump label,
+it directly calls this checker and pass the post as the loop_ensures argument here.
+
+*)
+
 #push-options "--fuel 0 --ifuel 0 --z3rlimit_factor 16"
 module RT = FStar.Reflection.Typing
 let check_nuwhile
@@ -192,12 +227,32 @@ let check_nuwhile
   (res_ppname:ppname)
   (t:st_term{Tm_NuWhile? t.term})
   (breaklblx: var { freshv g breaklblx })
-  (break_inv: option term)
+  (loop_ensures: option term)
   (check:check_t)
   : T.Tac (checker_result_t g pre post_hint) =
 
   let g = push_context "nu while loop" t.range g in
   let Tm_NuWhile { invariant=inv; loop_requires; condition=cond; body } = t.term in
+
+  (*
+  We need to compute three slprops here:
+   - The invariant, which is true before the loop and at the end of the body.
+   - The postcondition, which is true after the condition and immediately after
+     the end of the loop (but before the label).
+   - The break condition, which is true after the break label.
+  
+  The postcondition is computed from the invariant by inferring a postcondition
+  for `cond` ensuring `pure (result == x)`.  The break condition is also
+  computed from the invariant by inferring a postcondition for `cond` but
+  ensuring `pure ((loop_requires /\ result == false) \/ loop_ensures)`.
+  
+  One problem is that loop_requires should be part of the invariant and
+  postcondition, but not of the break condition (except for the part guarded by
+  `result == false`).  Therefore we mark the loop_requires in the invariant with
+  the `loop_requires_marker` identity function, and replace that subterm with
+  `True` in the break condition.
+  *)
+
   let inv =
     if loop_requires `eq_tm` tm_l_true then inv else
     (inv `tm_star` tm_pure (mk_loop_requires_marker loop_requires)) in
@@ -222,29 +277,29 @@ let check_nuwhile
 
   assume freshv g1 breaklblx;
   let (| break_pred, break_typ |) : t:term & tot_typing g1 t tm_slprop =
-    match break_inv with
-    | Some break_inv ->
+    match loop_ensures with
+    | Some loop_ensures ->
       let (| x_cond, g1', (| _, _, t_typ |), (| cond_post, _ |), k |) = res_cond in
-      let break_inv = 
+      let loop_ensures = 
         (mk_eq2 u0 tm_bool (term_of_nvar (ppname_default, x_cond)) tm_false
             `tm_l_and` loop_requires)
-          `tm_l_or` break_inv in
-      let break_inv = purify_term g1' { ctxt_now = cond_post; ctxt_old = Some pre } break_inv in
-      let break_inv = RU.beta_lax (elab_env g1') break_inv in
-      let break_inv = RU.deep_compress_safe break_inv in
-      let (| break_inv, break_inv_typ |) = check_tot_term g1' break_inv tm_prop in
-      let break_inv = cond_post `tm_star` tm_pure break_inv in
+          `tm_l_or` loop_ensures in
+      let loop_ensures = purify_term g1' { ctxt_now = cond_post; ctxt_old = Some pre } loop_ensures in
+      let loop_ensures = RU.beta_lax (elab_env g1') loop_ensures in
+      let loop_ensures = RU.deep_compress_safe loop_ensures in
+      let (| loop_ensures, loop_ensures_typ |) = check_tot_term g1' loop_ensures tm_prop in
+      let loop_ensures = cond_post `tm_star` tm_pure loop_ensures in
       let y = fresh g1' in
       let g1'' = push_binding g1' y ppname_default tm_unit in
       assert g1' `env_extends` g1;
       assert g1'' `env_extends` g1';
-      let break_inv_typ: tot_typing g1'' break_inv tm_slprop = RU.magic () in
+      let loop_ensures_typ: tot_typing g1'' loop_ensures tm_slprop = RU.magic () in
       let unit_typ: universe_of g1'' tm_unit u0 = RU.magic () in
-      let break_inv = Pulse.JoinComp.infer_post' g1 g1'' y unit_typ break_inv_typ in
-      let break_inv = subst_loop_requires_marker_with_true break_inv.post in
-      let break_inv = open_term' break_inv unit_const 0 in
-      let break_inv_typ: tot_typing g1 break_inv tm_slprop = RU.magic () in
-      (| break_inv, break_inv_typ |)
+      let loop_ensures = Pulse.JoinComp.infer_post' g1 g1'' y unit_typ loop_ensures_typ in
+      let loop_ensures = subst_loop_requires_marker_with_true loop_ensures.post in
+      let loop_ensures = open_term' loop_ensures unit_const 0 in
+      let loop_ensures_typ: tot_typing g1 loop_ensures tm_slprop = RU.magic () in
+      (| loop_ensures, loop_ensures_typ |)
     | None ->
       let t: term = open_term' post_cond.post tm_false 0 in
       let typ: tot_typing g1 t tm_slprop = RU.magic () in

@@ -733,7 +733,7 @@ fn ( ! ) #t (x: ref t) (y: erased t)
 [@@pulse_unfold] let rewrites_to #t (x y: t) = pure (rewrites_to_p x y)
 
 (* Used internally by the while checker. *)
-let continue_requires_marker (p: prop) = p
+let loop_requires_marker (p: prop) = p
 
 [@@coercion; pulse_unfold; strict_on_arguments [0]; unfold_check_opens]
 let rec iname_list (xs : list iname) : inames =

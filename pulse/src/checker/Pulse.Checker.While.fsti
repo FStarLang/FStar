@@ -40,6 +40,6 @@ val check_nuwhile
   (res_ppname:ppname)
   (t:st_term{Tm_NuWhile? t.term})
   (break_lbl: var { freshv g break_lbl })
-  (break_inv: option term)
+  (loop_ensures: option term)
   (check:check_t)
   : T.Tac (checker_result_t g pre post_hint)
