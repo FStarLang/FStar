@@ -23,6 +23,7 @@ RUN += ValLetRec.fst
 RUN += Bug3473.fst
 RUN += Bug490.fst
 RUN += Bug1714.fst
+RUN += Bug4104.fst
 
 # Just extract these. Note: there are .fs.expected files in this directory,
 # so the diff rule triggers automatically, even without these lines.

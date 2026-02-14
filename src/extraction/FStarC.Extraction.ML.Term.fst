@@ -827,7 +827,11 @@ let rec translate_term_to_mlty' (g:uenv) (t0:term) : mlty =
         | _ -> false
     in
     if TcUtil.must_erase_for_extraction (tcenv_of_uenv g) t0
-    then MLTY_Erased
+    then
+      let mlt = aux g t0 in
+      (match mlt with
+       | MLTY_Fun _ -> mlt
+       | _ -> MLTY_Erased)
     else let mlt = aux g t0 in
          if is_top_ty mlt
          then MLTY_Top
