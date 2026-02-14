@@ -16,95 +16,94 @@
 
 module Pulse.Lib.CountingSemaphore
 #lang-pulse
-
-(**
-  A counting semaphore managing indexed resources `on_range p 0 max`.
-  
-  Design:
-  - GhostFractionalTable with bool values tracks per-slot state
-  - table[i] = true: semaphore owns p(i), full permission in invariant
-  - table[i] = false: client has permit, half permission split
-  - Counter tracks number of available resources
-
-  **Current Status:**
-  - try_acquire: Working (uses existential for ghost slot index)
-  - release: Stub with memory leak
-  - share/gather: Working
-  - try_free: Stub that always returns false
-*)
-
 open Pulse.Lib.Pervasives
-open Pulse.Lib.OnRange
-open Pulse.Lib.Primitives
-
 module T = FStar.Tactics.V2
 module U32 = FStar.UInt32
-module CInv = Pulse.Lib.CancellableInvariant
-open Pulse.Lib.CancellableInvariant
+module Tank = Pulse.Lib.Tank
+
+(** i copies of the resource p *)
+let rec replicate (p: slprop) (i: nat) : slprop =
+  match i with
+  | 0 -> emp
+  | _ -> p ** replicate p (i - 1)
+
+instance val is_send_replicate (p: slprop) (i: nat) {| is_send p |} : is_send (replicate p i)
+
+(** Split replicate into two parts *)
+ghost fn replicate_split (p: slprop) (i j: nat)
+  requires replicate p (i + j)
+  ensures replicate p i ** replicate p j
+
+(** Join two replicates into one *)
+ghost fn replicate_join (p: slprop) (i j: nat)
+  requires replicate p i ** replicate p j
+  ensures replicate p (i + j)
 
 (** The semaphore capacity must fit in a U32 *)
-let sem_max = n:pos{ n <= UInt.max_int 32 }
+let sem_max: U32.t = 0xfffffffful
 
-(** The abstract semaphore type, parameterized by indexed predicate *)
-val sem (p: nat -> slprop) : Type0
+(** A counting semaphore managing copies of the resources `p`. *)
+val sem (p: slprop) : Type0
 
-(** 
-  A permit witnessing acquisition of resource at index i.
-  Internally: half ownership of table entry showing flag=false.
-*)
-val permit ([@@@mkey] p: nat -> slprop) (s: sem p) (i: nat) : slprop
+(** Permissions to release the semaphore. *)
+val permit_tank #p (s: sem p) : Tank.tank (U32.v sem_max)
 
-instance val placeless_permit p s i : placeless (permit p s i)
+(** A permit for releasing i times. *)
+let permit #p ([@@@mkey] s: sem p) (i: nat) : slprop =
+  Tank.owns (permit_tank s) i
 
 (** The semaphore is alive with fractional permission *)
-val sem_alive
-      ([@@@mkey] p: nat -> slprop)
-      ([@@@mkey] s: sem p)
-      (#[T.exact (`1.0R)] perm:perm)
-      (max: sem_max)
-  : slprop
+val sem_alive #p ([@@@mkey] s: sem p) (#[full_default()] f:perm) : slprop
 
-(** Create a new semaphore with max indexed resources *)
-fn new_sem (p: nat -> slprop) {| (k:nat) -> is_send (p k) |} (max: sem_max)
-  requires on_range p 0 max
+instance val is_send_sem_alive #p s f {| is_send p |} : is_send (sem_alive #p s #f)
+
+(** Create a new semaphore with n initial resources *)
+fn new_sem (p: slprop) (n: U32.t)
+  requires replicate p (U32.v n)
   returns s: sem p
-  ensures sem_alive p s max
+  ensures sem_alive s
+  ensures permit s (U32.v sem_max - U32.v n)
+
+(** Create a new semaphore initialized to 0 *)
+fn new_sem_0 (p: slprop)
+  returns s: sem p
+  ensures sem_alive s
+  ensures permit s (U32.v sem_max)
 
 (**
-  Try to acquire ANY available resource.
-  Returns true on success with an existentially quantified index.
-  
-  Note: Current implementation is a stub that always returns false.
+  Try to acquire multiple available resources with a single CAS, without waiting.
+  Returns true on success.
 *)
-fn try_acquire (#p: nat -> slprop) (#perm: perm) (#max: sem_max) (s: sem p)
-  preserves sem_alive p s #perm max
+fn try_acquire_many (#p: slprop) (#f: perm) (s: sem p) (n: U32.t)
+  preserves sem_alive s #f
   returns b: bool
-  ensures cond b (exists* (i:nat{i < max}). permit p s i ** p i) emp
+  ensures (if b then permit s (U32.v n) ** replicate p (U32.v n) else emp)
 
-(** 
-  Release resource back to the semaphore.
-  Index is provided via existential from acquire.
+(**
+  Try to acquire an available resource, without waiting.
+  Returns true on success.
 *)
-fn release (#p: nat -> slprop) (#perm: perm) (#max: sem_max) (s: sem p) (i: nat { i < max })
-  preserves sem_alive p s #perm max
-  requires permit p s i ** p i
+fn try_acquire (#p: slprop) (#f: perm) (s: sem p)
+  preserves sem_alive s #f
+  returns b: bool
+  ensures (if b then permit s 1 ** p else emp)
+
+(** Release resource to the semaphore. *)
+fn release (#p: slprop) (#f: perm) (s: sem p)
+  preserves sem_alive s #f
+  requires permit s 1 ** p
 
 (** Share semaphore permission for concurrent access *)
-ghost fn share (#p: nat -> slprop) (#perm: perm) (#max: sem_max) (s: sem p)
-  requires sem_alive p s #perm max
-  ensures sem_alive p s #(perm /. 2.0R) max ** sem_alive p s #(perm /. 2.0R) max
+ghost fn share (#p: slprop) (#f: perm) (s: sem p)
+  requires sem_alive s #f
+  ensures sem_alive s #(f /. 2.0R) ** sem_alive s #(f /. 2.0R)
 
 (** Gather permissions back *)
 [@@allow_ambiguous]
-ghost fn gather (#p: nat -> slprop) (#p1 #p2: perm) (#max: sem_max) (s: sem p)
-  requires sem_alive p s #p1 max ** sem_alive p s #p2 max
-  ensures sem_alive p s #(p1 +. p2) max
+ghost fn gather (#p: slprop) (#p1 #p2: perm) (s: sem p)
+  requires sem_alive s #p1 ** sem_alive s #p2
+  ensures sem_alive s #(p1 +. p2)
 
-(** 
-  Try to free the semaphore. 
-  Note: Current implementation is a stub that always returns false.
-*)
-fn try_free (#p: nat -> slprop) (#max: sem_max) (s: sem p)
-  requires sem_alive p s #1.0R max
-  returns b: bool
-  ensures cond b (on_range p 0 max) (sem_alive p s #1.0R max)
+(** Free the semaphore. *)
+fn free (#p: slprop) (s: sem p)
+  requires sem_alive s
