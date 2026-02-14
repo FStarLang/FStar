@@ -3,17 +3,19 @@ let loaded : Prims.string Prims.list FStarC_Effect.ref=
   FStarC_Effect.mk_ref []
 let loaded_plugin_lib : Prims.bool FStarC_Effect.ref=
   FStarC_Effect.mk_ref false
+let dbg_Plugin : Prims.bool FStarC_Effect.ref=
+  FStarC_Debug.get_toggle "Plugin"
 let pout (s : Prims.string) : unit=
-  let uu___ = FStarC_Debug.any () in
+  let uu___ = FStarC_Effect.op_Bang dbg_Plugin in
   if uu___ then FStarC_Format.print_string s else ()
 let pout1 (s : Prims.string) (x : Prims.string) : unit=
-  let uu___ = FStarC_Debug.any () in
+  let uu___ = FStarC_Effect.op_Bang dbg_Plugin in
   if uu___ then FStarC_Format.print1 s x else ()
 let perr (s : Prims.string) : unit=
-  let uu___ = FStarC_Debug.any () in
+  let uu___ = FStarC_Effect.op_Bang dbg_Plugin in
   if uu___ then FStarC_Format.print_error s else ()
 let perr1 (s : Prims.string) (x : Prims.string) : unit=
-  let uu___ = FStarC_Debug.any () in
+  let uu___ = FStarC_Effect.op_Bang dbg_Plugin in
   if uu___ then FStarC_Format.print1_error s x else ()
 let do_dynlink (fname : Prims.string) : unit=
   try
@@ -162,7 +164,7 @@ let autoload_plugin (ext : Prims.string) : Prims.bool=
   if uu___
   then false
   else
-    ((let uu___3 = FStarC_Debug.any () in
+    ((let uu___3 = FStarC_Effect.op_Bang dbg_Plugin in
       if uu___3
       then
         FStarC_Format.print1 "Trying to find a plugin for extension %s\n" ext
@@ -176,7 +178,7 @@ let autoload_plugin (ext : Prims.string) : Prims.bool=
           if uu___4
           then false
           else
-            ((let uu___7 = FStarC_Debug.any () in
+            ((let uu___7 = FStarC_Effect.op_Bang dbg_Plugin in
               if uu___7
               then FStarC_Format.print1 "Autoloading plugin %s ...\n" fn
               else ());
