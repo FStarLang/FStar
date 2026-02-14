@@ -827,7 +827,18 @@ let rec translate_term_to_mlty' (g:uenv) (t0:term) : mlty =
         | _ -> false
     in
     if TcUtil.must_erase_for_extraction (tcenv_of_uenv g) t0
-    then MLTY_Erased
+    then
+      // For a pure arrow type whose result is erasable (e.g., A -> Tot unit),
+      // we preserve the function type structure instead of collapsing to MLTY_Erased.
+      // The function still exists at runtime; only its result is meaningless.
+      // Ghost/erasable-effect arrows are fully erased. (#4104)
+      match (SS.compress t0).n with
+      | Tm_arrow {comp=c} when U.is_pure_comp c ->
+        let mlt = aux g t0 in
+        (match mlt with
+         | MLTY_Fun _ -> mlt
+         | _ -> MLTY_Erased)
+      | _ -> MLTY_Erased
     else let mlt = aux g t0 in
          if is_top_ty mlt
          then MLTY_Top
