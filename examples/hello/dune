@@ -2,17 +2,17 @@
 (dirs gen Hello multifile)
 
 ; Generator rules in virtual gen/ dir. Uses (universe) to avoid cycles with
-; dynamic_include in child dirs. Fstar resolves source files from the include
-; path; %{project_root} points at the dune-project root.
+; dynamic_include in child dirs. %{workspace_root}/../../ escapes the build
+; tree (_build/default/gen/) back to the source tree root.
 (subdir gen
  (rule
   (target hello.dune.inc)
   (deps (universe))
   (action (with-stdout-to %{target}
-    (run %{env:FSTAR_EXE=fstar.exe} --dep dune --already_cached "Prims FStar" --include %{workspace_root}/../../Hello %{workspace_root}/../../Hello/Hello.fst))))
+    (run %{env:FSTAR_EXE=fstar.exe} --dep dune --already_cached "Prims FStar" %{workspace_root}/../../Hello/))))
 
  (rule
   (target multifile.dune.inc)
   (deps (universe))
   (action (with-stdout-to %{target}
-    (run %{env:FSTAR_EXE=fstar.exe} --dep dune --already_cached "Prims FStar" --include %{workspace_root}/../../multifile %{workspace_root}/../../multifile/A.fst %{workspace_root}/../../multifile/B.fst %{workspace_root}/../../multifile/Main.fst)))))
+    (run %{env:FSTAR_EXE=fstar.exe} --dep dune --already_cached "Prims FStar" %{workspace_root}/../../multifile/)))))
