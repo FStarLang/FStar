@@ -111,17 +111,23 @@ lookup__size_t_Example_Hashtable_data(ht_t__size_t_Example_Hashtable_data ht, si
   cell__size_t_Example_Hashtable_data *contents = ht.contents;
   size_t cidx = size_t_mod(hashf(k), ht.sz);
   size_t off = (size_t)0U;
-  bool cont = true;
   option__size_t ret = { .tag = None };
-  size_t __anf1 = off;
-  bool __anf00 = cont;
-  bool cond = __anf1 <= ht.sz && __anf00;
+  bool _break = false;
+  bool cond;
+  if (_break)
+    cond = false;
+  else
+  {
+    size_t __anf0 = off;
+    cond = __anf0 <= ht.sz;
+  }
   while (cond)
   {
     size_t voff = off;
     if (voff == ht.sz)
-      cont = false;
-    else
+      _break = true;
+    bool _break1 = _break;
+    if (!_break1)
     {
       size_t sum = cidx + voff;
       size_t idx = size_t_mod(sum, ht.sz);
@@ -136,11 +142,11 @@ lookup__size_t_Example_Hashtable_data(ht_t__size_t_Example_Hashtable_data ht, si
         size_t k_ = c.k;
         if (k_ == k)
         {
-          cont = false;
           ret = ((option__size_t){ .tag = Some, .v = idx });
           replace_i_ref__Pulse_Lib_HashTable_Spec_cell_size_t_Example_Hashtable_data(&contents,
             idx,
             ((cell__size_t_Example_Hashtable_data){ .tag = Used, .k = k_, .v = v_ }));
+          _break = true;
         }
         else
         {
@@ -152,10 +158,10 @@ lookup__size_t_Example_Hashtable_data(ht_t__size_t_Example_Hashtable_data ht, si
       }
       else if (c.tag == Clean)
       {
-        cont = false;
         replace_i_ref__Pulse_Lib_HashTable_Spec_cell_size_t_Example_Hashtable_data(&contents,
           idx,
           c);
+        _break = true;
       }
       else if (c.tag == Zombie)
       {
@@ -173,9 +179,15 @@ lookup__size_t_Example_Hashtable_data(ht_t__size_t_Example_Hashtable_data ht, si
         KRML_HOST_EXIT(255U);
       }
     }
-    size_t __anf1 = off;
-    bool __anf0 = cont;
-    cond = __anf1 <= ht.sz && __anf0;
+    bool ite;
+    if (_break)
+      ite = false;
+    else
+    {
+      size_t __anf0 = off;
+      ite = __anf0 <= ht.sz;
+    }
+    cond = ite;
   }
   option__size_t o = ret;
   cell__size_t_Example_Hashtable_data *vcontents = contents;
@@ -232,9 +244,14 @@ insert__size_t_Example_Hashtable_data(
   cell__size_t_Example_Hashtable_data *contents = ht.contents;
   size_t cidx = size_t_mod(hashf(k), ht.sz);
   size_t off = (size_t)0U;
-  bool cont = true;
   size_t idx = (size_t)0U;
-  while (cont)
+  bool _break = false;
+  bool cond;
+  if (_break)
+    cond = false;
+  else
+    cond = true;
+  while (cond)
   {
     size_t voff = off;
     size_t sum = cidx + voff;
@@ -253,8 +270,8 @@ insert__size_t_Example_Hashtable_data(
         write_ref__Pulse_Lib_HashTable_Spec_cell_size_t_Example_Hashtable_data(&contents,
           vidx,
           ((cell__size_t_Example_Hashtable_data){ .tag = Used, .k = k_, .v = v_ }));
-        cont = false;
         idx = vidx;
+        _break = true;
       }
       else
       {
@@ -269,8 +286,8 @@ insert__size_t_Example_Hashtable_data(
       write_ref__Pulse_Lib_HashTable_Spec_cell_size_t_Example_Hashtable_data(&contents,
         vidx,
         ((cell__size_t_Example_Hashtable_data){ .tag = Clean }));
-      cont = false;
       idx = vidx;
+      _break = true;
     }
     else if (c.tag == Zombie)
     {
@@ -290,13 +307,13 @@ insert__size_t_Example_Hashtable_data(
         write_ref__Pulse_Lib_HashTable_Spec_cell_size_t_Example_Hashtable_data(&contents,
           p,
           ((cell__size_t_Example_Hashtable_data){ .tag = Zombie }));
-        cont = false;
         idx = vidx;
+        _break = true;
       }
       else if (o.tag == None)
       {
-        cont = false;
         idx = vidx;
+        _break = true;
       }
       else
       {
@@ -315,38 +332,27 @@ insert__size_t_Example_Hashtable_data(
         "unreachable (pattern matches are exhaustive in F*)");
       KRML_HOST_EXIT(255U);
     }
+    bool ite;
+    if (_break)
+      ite = false;
+    else
+      ite = true;
+    cond = ite;
   }
-  bool vcont = cont;
-  size_t vidx = idx;
-  if (vcont == false)
-  {
-    write_ref__Pulse_Lib_HashTable_Spec_cell_size_t_Example_Hashtable_data(&contents,
-      vidx,
-      mk_used_cell__size_t_Example_Hashtable_data(k, v));
-    cell__size_t_Example_Hashtable_data *vcontents = contents;
-    ht_t__size_t_Example_Hashtable_data
-    ht1 = mk_ht__size_t_Example_Hashtable_data(ht.sz, hashf, vcontents);
-    return
-      (
-        (__Pulse_Lib_HashTable_Type_ht_t__size_t_Example_Hashtable_data_bool){
-          .fst = ht1,
-          .snd = true
-        }
-      );
-  }
-  else
-  {
-    cell__size_t_Example_Hashtable_data *vcontents = contents;
-    ht_t__size_t_Example_Hashtable_data
-    ht1 = mk_ht__size_t_Example_Hashtable_data(ht.sz, hashf, vcontents);
-    return
-      (
-        (__Pulse_Lib_HashTable_Type_ht_t__size_t_Example_Hashtable_data_bool){
-          .fst = ht1,
-          .snd = false
-        }
-      );
-  }
+  size_t __anf0 = idx;
+  write_ref__Pulse_Lib_HashTable_Spec_cell_size_t_Example_Hashtable_data(&contents,
+    __anf0,
+    mk_used_cell__size_t_Example_Hashtable_data(k, v));
+  cell__size_t_Example_Hashtable_data *__anf01 = contents;
+  ht_t__size_t_Example_Hashtable_data
+  ht1 = mk_ht__size_t_Example_Hashtable_data(ht.sz, hashf, __anf01);
+  return
+    (
+      (__Pulse_Lib_HashTable_Type_ht_t__size_t_Example_Hashtable_data_bool){
+        .fst = ht1,
+        .snd = true
+      }
+    );
 }
 
 typedef struct

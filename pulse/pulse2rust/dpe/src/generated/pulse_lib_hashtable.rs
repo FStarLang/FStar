@@ -41,17 +41,21 @@ pub fn lookup<KT: Copy + PartialEq + Clone, VT: Clone>(
     let mut contents = ht.contents;
     let cidx = super::pulse_lib_hashtable::size_t_mod(hashf(k), ht.sz);
     let mut off = 0;
-    let mut cont = true;
     let mut ret = None;
+    let mut _break = false;
     while {
-        let __anf1 = off;
-        let __anf0 = cont;
-        __anf1 <= ht.sz && __anf0
+        let uu___1 = _break;
+        if uu___1 {
+            false
+        } else {
+            let __anf0 = off;
+            __anf0 <= ht.sz
+        }
     } {
         let voff = off;
-        if voff == ht.sz {
-            cont = false
-        } else {
+        if voff == ht.sz { _break = true } else { () };
+        let _break1 = _break;
+        if _break1 {} else {
             let sum = cidx + voff;
             let idx = super::pulse_lib_hashtable::size_t_mod(sum, ht.sz);
             let c = std::mem::replace::<
@@ -60,7 +64,6 @@ pub fn lookup<KT: Copy + PartialEq + Clone, VT: Clone>(
             match c {
                 super::pulse_lib_hashtable_spec::cell::Used(mut k_, mut v_) => {
                     if k_ == k {
-                        cont = false;
                         ret = Some(idx);
                         let uu___3 = std::mem::replace::<
                             super::pulse_lib_hashtable_spec::cell<KT, VT>,
@@ -68,9 +71,10 @@ pub fn lookup<KT: Copy + PartialEq + Clone, VT: Clone>(
                             &mut contents[idx],
                             super::pulse_lib_hashtable_spec::cell::Used(k_, v_),
                         );
+                        _break = true;
                     } else {
                         off = voff + 1;
-                        let uu___2 = std::mem::replace::<
+                        let uu___3 = std::mem::replace::<
                             super::pulse_lib_hashtable_spec::cell<KT, VT>,
                         >(
                             &mut contents[idx],
@@ -79,14 +83,14 @@ pub fn lookup<KT: Copy + PartialEq + Clone, VT: Clone>(
                     }
                 }
                 super::pulse_lib_hashtable_spec::cell::Clean => {
-                    cont = false;
                     let uu___2 = std::mem::replace::<
                         super::pulse_lib_hashtable_spec::cell<KT, VT>,
                     >(&mut contents[idx], c);
+                    _break = true;
                 }
                 super::pulse_lib_hashtable_spec::cell::Zombie => {
                     off = voff + 1;
-                    let uu___2 = std::mem::replace::<
+                    let uu___3 = std::mem::replace::<
                         super::pulse_lib_hashtable_spec::cell<KT, VT>,
                     >(&mut contents[idx], c);
                 }
@@ -129,9 +133,12 @@ pub fn insert<KT: Copy + PartialEq + Clone, VT: Clone>(
     let mut contents = ht.contents;
     let cidx = super::pulse_lib_hashtable::size_t_mod(hashf(k), ht.sz);
     let mut off = 0;
-    let mut cont = true;
     let mut idx = 0;
-    while cont {
+    let mut _break = false;
+    while {
+        let uu___1 = _break;
+        if uu___1 { false } else { true }
+    } {
         let voff = off;
         let sum = cidx + voff;
         let vidx = super::pulse_lib_hashtable::size_t_mod(sum, ht.sz);
@@ -142,8 +149,8 @@ pub fn insert<KT: Copy + PartialEq + Clone, VT: Clone>(
             super::pulse_lib_hashtable_spec::cell::Used(mut k_, mut v_) => {
                 if k_ == k {
                     contents[vidx] = super::pulse_lib_hashtable_spec::cell::Used(k_, v_);
-                    cont = false;
                     idx = vidx;
+                    _break = true;
                 } else {
                     contents[vidx] = super::pulse_lib_hashtable_spec::cell::Used(k_, v_);
                     off = voff + 1;
@@ -151,8 +158,8 @@ pub fn insert<KT: Copy + PartialEq + Clone, VT: Clone>(
             }
             super::pulse_lib_hashtable_spec::cell::Clean => {
                 contents[vidx] = super::pulse_lib_hashtable_spec::cell::Clean;
-                cont = false;
                 idx = vidx;
+                _break = true;
             }
             super::pulse_lib_hashtable_spec::cell::Zombie => {
                 let vcontents = contents;
@@ -167,29 +174,22 @@ pub fn insert<KT: Copy + PartialEq + Clone, VT: Clone>(
                 match o {
                     Some(mut p) => {
                         contents[p] = super::pulse_lib_hashtable_spec::cell::Zombie;
-                        cont = false;
                         idx = vidx;
+                        _break = true;
                     }
                     None => {
-                        cont = false;
                         idx = vidx;
+                        _break = true;
                     }
                 }
             }
         }
     }
-    let vcont = cont;
-    let vidx = idx;
-    if vcont == false {
-        contents[vidx] = super::pulse_lib_hashtable::mk_used_cell(k, v);
-        let vcontents = contents;
-        let ht1 = super::pulse_lib_hashtable::mk_ht(ht.sz, hashf, vcontents);
-        (ht1, true)
-    } else {
-        let vcontents = contents;
-        let ht1 = super::pulse_lib_hashtable::mk_ht(ht.sz, hashf, vcontents);
-        (ht1, false)
-    }
+    let __anf0 = idx;
+    contents[__anf0] = super::pulse_lib_hashtable::mk_used_cell(k, v);
+    let __anf01 = contents;
+    let ht1 = super::pulse_lib_hashtable::mk_ht(ht.sz, hashf, __anf01);
+    (ht1, true)
 }
 pub fn is_used<K: Copy + PartialEq + Clone, V: Clone>(
     c: super::pulse_lib_hashtable_spec::cell<K, V>,

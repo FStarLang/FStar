@@ -338,29 +338,22 @@ ensures aspec ('i + 1)
   };
   //end incr_atomic_body_read$
   //incr_atomic_body_loop$
-  let mut cont = true;
-  fold (cond true (aspec 'i) (aspec ('i + 1)));
-  while (!cont)
-  invariant exists* b.
-    inv (C.iname_of c) (C.cinv_vp c (exists* v. pts_to x v ** refine v)) **
-    pts_to cont b **
-    C.active c p **
-    cond b (aspec 'i) (aspec ('i + 1))
+  while (true)
+    invariant exists* j. aspec j
+    continue requires (observe aspec == 'i)
+    break requires (observe aspec == 'i + 1)
   {
-    rewrite each (!cont) as true; // FIXME: rewrites_to goes in the wrong direction
+    with j. rewrite aspec j as aspec 'i;
     later_credit_buy 1;
     let v = read ();
     let next =
       with_invariants bool emp_inames
         (C.iname_of c) (C.cinv_vp c (exists* v. pts_to x v ** refine v))
-        (C.active c p ** pts_to cont true **
-          cond (!cont) (aspec 'i) (aspec ('i + 1)))
-        (fun b1 -> cond b1 (aspec 'i) (aspec ('i + 1))
-          ** pts_to cont true
+        (C.active c p ** aspec 'i)
+        (fun b1 -> exists* j. aspec j ** pure (j == (if b1 then reveal 'i else 'i + 1))
           ** C.active c p)
       fn _ {
         C.unpack_cinv_vp c;
-        unfold cond;
         with vv. assert x |-> vv;
         let b = cas x v (v + 1);
         if b
@@ -368,22 +361,19 @@ ensures aspec ('i + 1)
           unfold cond;
           f vv 'i;
           C.pack_cinv_vp #(exists* v. pts_to x v ** refine v) c;
-          fold (cond false (aspec 'i) (aspec ('i + 1)));
           false
         }
         else
         {
           unfold cond;
           C.pack_cinv_vp #(exists* v. pts_to x v ** refine v) c;
-          fold (cond true (aspec 'i) (aspec ('i + 1)));
           true
         }
       };
-    cont := next
+    if (not next) { break }
   };
   //end incr_atomic_body_loop$
-  rewrite each (!cont) as false; // FIXME: rewrites_to goes in the wrong direction
-  unfold cond;
+  with j. rewrite aspec j as aspec ('i + 1);
 }
 //end incr_atomic_body$
 

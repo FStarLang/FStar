@@ -324,22 +324,17 @@ ensures qpred ('i + 1)
         v
     }
   };
-  let mut cont = true;
-  fold (cond true (qpred 'i) (qpred ('i + 1)));
-  while (!cont)
-  invariant
-    exists* b.
-    inv l invp **
-    pts_to cont b **
-    cond b (qpred 'i) (qpred ('i + 1))
+  while (true)
+    invariant exists* j. qpred j
+    continue requires (observe qpred == 'i)
+    break requires (observe qpred == 'i + 1)
   {
-    rewrite each (!cont) as true; // FIXME: rewrites_to goes the wrong direction?
-    elim_cond_true _ _ _;
+    with j. rewrite qpred j as qpred 'i;
     let v = read ();
     let next = 
       with_invariants bool emp_inames l invp
         (qpred 'i)
-        (fun b1 -> cond b1 (qpred 'i) (qpred ('i + 1)))
+        (fun b1 -> exists* j. qpred j ** pure (j == (if b1 then reveal 'i else 'i + 1)))
       fn _ {
         elim_inv ();
         with vv. assert pure (vv == !x);
@@ -349,21 +344,18 @@ ensures qpred ('i + 1)
           unfold cond;
           f vv 'i;
           intro_inv ();
-          fold (cond false (qpred 'i) (qpred ('i + 1)));
           false
         }
         else
         {
           unfold cond;
           intro_inv ();
-          fold (cond true (qpred 'i) (qpred ('i + 1)));
           true
         }
       };
-    cont := next
+    if (not next) { break }
   };
-  rewrite each (!cont) as false; // FIXME: rewrites_to goes the wrong direction?
-  unfold cond;
+  with j. rewrite qpred j as qpred ('i + 1);
 }
  
 
