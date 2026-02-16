@@ -38,3 +38,17 @@ fn find_zero (a: array Int32.t) (sz: SizeT.t)
   };
   !i
 }
+
+//labels with impure specs in ensures
+fn test2_alt (r: ref Int32.t)
+    preserves live r
+    ensures pure (!r == 17l \/ !r == 42l)
+{
+  {
+    if (!r = 67l) { r := 42l; return; };
+    goto fail;
+  }
+  ensures live r ** pure (!r <> 67l)
+  label fail:;
+  r := 17l;
+}
