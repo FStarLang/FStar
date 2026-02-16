@@ -1,18 +1,27 @@
-{ callPackage, installShellFiles, lib, makeWrapper, buildDunePackage, version, z3, bash,
-    batteries,
-    menhir,
-    menhirLib,
-    pprint,
-    ppx_deriving,
-    ppx_deriving_yojson,
-    ppxlib,
-    process,
-    sedlex,
-    stdint,
-    yojson,
-    zarith,
-    memtrace,
-    mtime } :
+{
+  bash,
+  batteries,
+  buildDunePackage,
+  callPackage,
+  installShellFiles,
+  lib,
+  makeWrapper,
+  memtrace,
+  menhir,
+  menhirLib,
+  mtime,
+  pprint,
+  ppx_deriving,
+  ppx_deriving_yojson,
+  ppxlib,
+  process,
+  sedlex,
+  stdint,
+  version,
+  yojson,
+  z3,
+  zarith,
+}:
 
 buildDunePackage {
   pname = "fstar";
@@ -20,12 +29,18 @@ buildDunePackage {
 
   duneVersion = "3";
 
-  nativeBuildInputs = [ installShellFiles makeWrapper menhir ];
+  nativeBuildInputs = [
+    installShellFiles
+    makeWrapper
+    menhir
+  ];
 
   buildInputs = [
     batteries
+    memtrace
     menhir
     menhirLib
+    mtime
     pprint
     ppx_deriving
     ppx_deriving_yojson
@@ -35,8 +50,6 @@ buildDunePackage {
     stdint
     yojson
     zarith
-    memtrace
-    mtime
   ];
 
   enableParallelBuilding = true;
@@ -76,8 +89,6 @@ buildDunePackage {
     cd $out
     installShellCompletion --bash ${../.completion/bash/fstar.exe.bash}
     installShellCompletion --fish ${../.completion/fish/fstar.exe.fish}
-    installShellCompletion --zsh --name _fstar.exe ${
-      ../.completion/zsh/__fstar.exe
-    }
+    installShellCompletion --zsh --name _fstar.exe ${../.completion/zsh/__fstar.exe}
   '';
 }

@@ -6,8 +6,14 @@
     nixpkgs.url = "nixpkgs/nixos-unstable";
   };
 
-  outputs = { self, flake-utils, nixpkgs }:
-    flake-utils.lib.eachDefaultSystem (system:
+  outputs =
+    {
+      flake-utils,
+      nixpkgs,
+      self,
+    }:
+    flake-utils.lib.eachDefaultSystem (
+      system:
       let
         pkgs = import nixpkgs {
           inherit system;
@@ -25,14 +31,20 @@
           export PATH="${fstar}/bin:$PATH"
           export EMACSLOADPATH=
           ${
-            (pkgs.emacsPackagesFor pkgs.emacs).emacsWithPackages
-            (epkgs: with epkgs.melpaPackages; [ fstar-mode ])
+            (pkgs.emacsPackagesFor pkgs.emacs).emacsWithPackages (
+              epkgs: with epkgs.melpaPackages; [ fstar-mode ]
+            )
           }/bin/emacs -q "$@"
         '';
       in
       {
         packages = {
-          inherit z3 fstar emacs ocamlPackages;
+          inherit
+            z3
+            fstar
+            emacs
+            ocamlPackages
+            ;
           default = fstar;
         };
         apps.emacs = {
@@ -47,5 +59,6 @@
             export PATH="$FSTAR_SOURCES_ROOT/bin/:$PATH"
           '';
         };
-      });
+      }
+    );
 }
