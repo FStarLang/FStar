@@ -61,6 +61,13 @@ buildDunePackage {
     zarith
   ];
 
+  # Packages with shared libraries needed at runtime
+  propagatedBuildInputs = [
+    num
+    stdint
+    zarith
+  ];
+
   enableParallelBuilding = true;
 
   prePatch = ''
