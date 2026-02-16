@@ -57,3 +57,21 @@ size_t Goto_find_zero(int32_t *a, size_t sz)
   return _return;
 }
 
+void Goto_test2_alt(int32_t *r)
+{
+  bool _return = false;
+  bool fail = false;
+  int32_t __anf0 = *r;
+  if (__anf0 == (int32_t)67)
+  {
+    *r = (int32_t)42;
+    _return = true;
+  }
+  bool _return1 = _return;
+  if (!_return1)
+    fail = true;
+  bool _return10 = _return;
+  if (!_return10)
+    *r = (int32_t)17;
+}
+

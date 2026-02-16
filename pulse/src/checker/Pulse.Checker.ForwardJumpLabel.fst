@@ -24,6 +24,7 @@ open Pulse.Typing
 open Pulse.Checker.Pure
 open Pulse.Checker.Base
 open Pulse.Checker.Prover
+open Pulse.Checker.ImpureSpec
 module RU = Pulse.RuntimeUtils
 
 let starts_with (a b: string) : bool =
@@ -45,7 +46,8 @@ let check
   let has_explicit_post = not (T.term_eq (comp_post c) tm_emp) in
   let post : post_hint_t =
     if has_explicit_post then
-      intro_post_hint g EffectAnnotSTT None (comp_post c)
+      let post_slprop = purify_spec g { ctxt_now = pre; ctxt_old = None } (comp_post c) in
+      intro_post_hint g EffectAnnotSTT None post_slprop
     else
       match post_hint0 with
       | NoHint | TypeHint .. ->
