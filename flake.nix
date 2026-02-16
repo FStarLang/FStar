@@ -22,6 +22,17 @@
 
         z3 = pkgs.callPackage (import ./.nix/z3.nix) { };
         version = self.rev or "dirty";
+
+        # Create OCaml library path with .so files for CAML_LD_LIBRARY_PATH
+        ocamlLibraryPath = pkgs.symlinkJoin {
+          name = "ocaml-shared-libs";
+          paths = [
+            "${ocamlPackages.num}/lib/ocaml/${ocamlPackages.ocaml.version}/site-lib/num"
+            "${ocamlPackages.zarith}/lib/ocaml/${ocamlPackages.ocaml.version}/site-lib/stublibs"
+            "${ocamlPackages.stdint}/lib/ocaml/${ocamlPackages.ocaml.version}/site-lib/stublibs"
+          ];
+        };
+
         fstar = ocamlPackages.callPackage ./.nix/fstar.nix {
           inherit version z3;
         };
@@ -56,6 +67,7 @@
           inputsFrom = [ fstar ];
           buildInputs = [ z3 ];
           shellHook = ''
+            export CAML_LD_LIBRARY_PATH="${ocamlLibraryPath}"
             export FSTAR_SOURCES_ROOT="$(pwd)"
             export PATH="$FSTAR_SOURCES_ROOT/bin/:$PATH"
           '';
