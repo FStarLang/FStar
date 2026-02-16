@@ -54,6 +54,7 @@
         devShells.default = pkgs.mkShell {
           name = "${fstar.name}-dev";
           inputsFrom = [ fstar ];
+          buildInputs = [ z3 ];
           shellHook = ''
             export FSTAR_SOURCES_ROOT="$(pwd)"
             export PATH="$FSTAR_SOURCES_ROOT/bin/:$PATH"

@@ -10,14 +10,18 @@
   menhir,
   menhirLib,
   mtime,
+  num,
   pprint,
   ppx_deriving,
   ppx_deriving_yojson,
   ppxlib,
   process,
+  python3,
   sedlex,
   stdint,
+  util-linux,
   version,
+  which,
   yojson,
   z3,
   zarith,
@@ -33,6 +37,9 @@ buildDunePackage {
     installShellFiles
     makeWrapper
     menhir
+    python3
+    util-linux
+    which
   ];
 
   buildInputs = [
@@ -41,6 +48,7 @@ buildDunePackage {
     menhir
     menhirLib
     mtime
+    num
     pprint
     ppx_deriving
     ppx_deriving_yojson
