@@ -11,6 +11,7 @@
   menhirLib,
   mtime,
   num,
+  ocamlLibraryPath,
   pprint,
   ppx_deriving,
   ppx_deriving_yojson,
@@ -75,15 +76,33 @@ buildDunePackage {
     "ulib.*"
     "doc.*"
     "version.txt"
-    ".scripts.*" # Mostly here for get_fstar_z3.sh
     "LICENSE.*"
     "README.md"
     "INSTALL.md"
+    # Mostly here for get_fstar_z3.sh
+    ".scripts.*"
+    # Required for check phase
+    "bare-tests.*"
+    "bin.*"
+    "contrib.*"
+    "examples.*"
+    "fsharp.*"
+    "tests.*"
   ];
 
   buildPhase = ''
     export PATH="${z3}/bin:$PATH"
     make -j$(nproc)
+  '';
+
+  doCheck = false;
+
+  # F# tests are not run as they require .NET 6 which is EOL
+  # (nixpkgs has .NET 8 and global.json doesn't allow major version jumps)
+  checkPhase = ''
+    export PATH="${z3}/bin:$PATH"
+    export CAML_LD_LIBRARY_PATH="${ocamlLibraryPath}"
+    make test stage3-diff test-2-bare stage2-unit-tests
   '';
 
   installPhase = ''

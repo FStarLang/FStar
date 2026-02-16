@@ -34,7 +34,7 @@
         };
 
         fstar = ocamlPackages.callPackage ./.nix/fstar.nix {
-          inherit version z3;
+          inherit version z3 ocamlLibraryPath;
         };
 
         emacs = pkgs.writeScriptBin "emacs-fstar" ''
@@ -57,6 +57,11 @@
             ocamlPackages
             ;
           default = fstar;
+
+          # fstar with tests enabled
+          check = fstar.overrideAttrs (old: {
+            doCheck = true;
+          });
         };
         apps.emacs = {
           type = "app";
