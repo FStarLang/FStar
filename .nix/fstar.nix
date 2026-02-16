@@ -90,6 +90,9 @@ buildDunePackage {
     "tests.*"
   ];
 
+  # Disable dune cache to avoid sandbox permission warnings
+  DUNE_CACHE = "disabled";
+
   buildPhase = ''
     export PATH="${z3}/bin:$PATH"
     make -j$(nproc)
