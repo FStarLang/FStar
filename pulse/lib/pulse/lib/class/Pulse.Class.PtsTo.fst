@@ -46,8 +46,8 @@ instance pts_to_lseq (p a : Type) (n : nat) (d : has_pts_to p (Seq.seq a)) : has
 }
 
 let observe #a (p: a -> slprop) #x :
-    stt_ghost a emp_inames (p x) (fun y -> p x ** rewrites_to y x) =
-  lift_neutral_ghost #a #emp_inames (return_neutral #a x (fun _ -> p x))
+    stt_ghost (erased a) emp_inames (p x) (fun y -> p x ** rewrites_to y (hide x)) =
+  lift_neutral_ghost #_ #emp_inames (return_neutral #_ (hide x) (fun _ -> p x))
 
 let value_of #p #r {| has_pts_to p r |} (x: p) (#f: perm) (#v: r) =
   observe (pts_to x #f) #v

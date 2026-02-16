@@ -246,45 +246,40 @@ fn bubble_sort
     let mut j: SZ.t = 0sz;
     
     while (!j <^ vi)
-    invariant exists* vj s_inner.
-      R.pts_to i vi **
-      R.pts_to j vj **
-      A.pts_to a s_inner **
-      pure (
-        SZ.v vj <= SZ.v vi /\
+    invariant live j
+    invariant live a
+    invariant pure (
+        SZ.v !j <= SZ.v vi /\
         SZ.v vi < SZ.v len /\
-        Seq.length s_inner == Seq.length s0 /\
-        Seq.length s_inner <= A.length a /\
-        permutation s0 s_inner /\
-        suffix_sorted s_inner (SZ.v vi + 1) /\
-        prefix_le_suffix s_inner (SZ.v vi + 1) /\
-        (SZ.v vj > 0 ==> is_max_up_to s_inner (SZ.v vj))
+        Seq.length (value_of a) == Seq.length s0 /\
+        Seq.length (value_of a) <= A.length a /\
+        permutation s0 (value_of a) /\
+        suffix_sorted (value_of a) (SZ.v vi + 1) /\
+        prefix_le_suffix (value_of a) (SZ.v vi + 1) /\
+        (SZ.v !j > 0 ==> is_max_up_to (value_of a) (SZ.v !j))
       )
     {
       let vj = !j;
       
-      with s_pre. assert (A.pts_to a s_pre);
+      let s_pre = value_of a;
       assert (pure (Seq.length s_pre <= A.length a));
       assert (pure (permutation s0 s_pre));
       
       bubble_step a vj vi;
       
-      with s_post. assert (A.pts_to a s_post);
-      assert (pure (is_max_up_to s_post (SZ.v vj + 1)));
-      assert (pure (permutation s_pre s_post));
+      assert (pure (is_max_up_to (value_of a) (SZ.v vj + 1)));
+      assert (pure (permutation s_pre (value_of a)));
       
       // Compose permutations: s0 ~ s_pre ~ s_post ==> s0 ~ s_post
-      compose_permutations s0 s_pre s_post;
+      compose_permutations s0 s_pre (value_of a);
       
       j := vj + 1sz;
       
       // Help F* see that SZ.v (vj + 1sz) = SZ.v vj + 1
       assert (pure (SZ.v (vj + 1sz) == SZ.v vj + 1))
     };
-    
-    with s_after_inner. assert (A.pts_to a s_after_inner);
-    
-    lemma_bubble_extends_sorted_suffix s_after_inner (SZ.v vi);
+        
+    lemma_bubble_extends_sorted_suffix (value_of a) (SZ.v vi);
     
     i := vi - 1sz;
   };
