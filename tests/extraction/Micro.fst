@@ -51,7 +51,9 @@ let h6 (s:string) c = c (f6 s)
 
 assume
 val f7: string -> Dv unit
+#push-options "--warn_error -272" //Warning_TopLevelEffect
 let h7:unit = f7 "hello"
+#pop-options
 
 let g8 (f:int -> 'b) (x:int) : Dv 'b = f x
 let ignore (x:int) : unit = ()

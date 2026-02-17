@@ -197,7 +197,7 @@ let rec decode_prefix_aux (t':trie{Node? t'}) (t:trie)
   | Node _ t1 t2, b::bs'' ->
       decode_prefix_aux t' (if b then t2 else t1) bs'' bs' s
 
-let rec decode_prefix (t:trie{Node? t})
+let decode_prefix (t:trie{Node? t})
   (bs:list bool) (bs':list bool{Cons? bs'}) (s:symbol) : Lemma
   (requires (decode t bs = Some [s]))
   (ensures (decode t (bs @ bs') = (match decode t bs' with
@@ -222,7 +222,7 @@ let rec cancelation_aux (t:trie{Node? t}) (ss:list symbol) : Lemma
     | Some bs, Some bs' -> decode_prefix t bs bs' s
     | _, _ -> ())
 
-let rec cancelation (sws:list (symbol&pos)) (ss:list symbol) : Lemma
+let cancelation (sws:list (symbol&pos)) (ss:list symbol) : Lemma
   (requires (b2t (List.Tot.length sws > 1)))
   (ensures (List.Tot.length sws > 1 ==>
             (let t = huffman sws in

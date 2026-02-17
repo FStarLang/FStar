@@ -419,7 +419,7 @@ let lemma_subset_prefix (is1:intervals{Cons? is1}) (is2:intervals{Cons? is2})
 /// proof. The other was the importance of set operation distributivity for the
 /// proof.
 
-let rec lemma_overlapping_prefix (is1:intervals{Cons? is1}) (is2:intervals{Cons? is2})
+let lemma_overlapping_prefix (is1:intervals{Cons? is1}) (is2:intervals{Cons? is2})
   : Lemma
     (requires (hd is1).to >^ (hd is2).to /\ (hd is1).from <^ (hd is2).to)
     (ensures (
@@ -511,8 +511,6 @@ let rec lemma_intersection_spec (is1:intervals) (is2:intervals)
 
 /// The following pragma resets the SMT solver to its original resource limit (roughly 5 seconds):
 
-  #reset-options
-
 /// Taking stock: intrinsic vs. extrinsic, intensional vs extensional
 /// -----------------------------------------------------------------
 ///
@@ -590,10 +588,12 @@ let rec ppIntervals' (is:intervals): ML unit =
 let toI f t = I (int_to_t f) (int_to_t t)
 
 let ppIntervals is : ML string = FStar.List.Tot.fold_left (sprintf "%s %s") "" (FStar.List.map ppInterval is)
+#push-options "--warn_error -272" //Warning_TopLevelEffect
 let main =
   print_string
     (ppIntervals (intersect [toI 3 10; toI 10 15] [toI 1 4; toI 10 14]));
   print_newline ()
+#pop-options
 
 /// And the winner is!
 /// ==================

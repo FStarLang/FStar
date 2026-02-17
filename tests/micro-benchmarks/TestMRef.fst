@@ -20,7 +20,9 @@ open FStar.ST
 (*assume val x : MRef.mref int increasing *)
 
 val x : mref int (fun (x:int) (y:int) -> b2t (y >= x))
+#push-options "--warn_error -272" //Warning_TopLevelEffect
 let x = alloc 0
+#pop-options
 assume val y : ref int
 assume val z : ref int
 

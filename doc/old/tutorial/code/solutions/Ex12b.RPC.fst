@@ -26,8 +26,9 @@ open FStar.MRef
 open FStar.List.Tot
 open FStar.String
 
-
+#push-options "--warn_error -272" //Warning_TopLevelEffect
 let init_print = print_string "\ninitializing...\n\n"
+#pop-options
 
 open Platform.Bytes
 open Ex12.SHA1
@@ -39,7 +40,9 @@ module Formatting = Ex12b2.Format
 
 (** some basic, untrusted network controlled by the adversary *)
 val msg_buffer: ref message
+#push-options "--warn_error -272" //Warning_TopLevelEffect
 let msg_buffer = alloc (empty_bytes)
+#pop-options
 
 // BEGIN: Network
 private val send: message -> St unit
@@ -68,7 +71,9 @@ let subset (#a:eqtype) : Tot (preorder (list a)) = subset'
 
 type lref = mref (list log_entry) subset
 
+#push-options "--warn_error -272" //Warning_TopLevelEffect
 private let log : lref = alloc #_ #(subset #log_entry) []
+#pop-options
 
 let add_to_log (r:lref) (v:log_entry) :
       ST unit (requires (fun _ -> True))
@@ -97,8 +102,10 @@ type reqresp text =
 // END: MsgProperty
 
 val k:pkey reqresp
+#push-options "--warn_error -272" //Warning_TopLevelEffect
 let k = print_string "generating shared key...\n";
   keygen reqresp
+#pop-options
 
 
 val client_send : s:string16 -> ML unit
@@ -178,5 +185,7 @@ let test () =
     print_string "\n\n"
 
 val run : unit
+#push-options "--warn_error -272" //Warning_TopLevelEffect
 let run = test ()
+#pop-options
 (* check_marker *)
