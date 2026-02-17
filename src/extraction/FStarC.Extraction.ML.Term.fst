@@ -1222,8 +1222,8 @@ type lb_sig =
   & bool   //whether this was marked CInline
   & term   //the term e, maybe after some type binders have been erased
 
-let rec extract_lb_sig (g:uenv) (lbs:letbindings) : list lb_sig =
-    let maybe_generalize {lbname=lbname_; lbeff=lbeff; lbtyp=lbtyp; lbdef=lbdef; lbattrs=lbattrs} : lb_sig =
+let rec extract_lb_sig (g:uenv) (lbs:letbindings) (orig_lbdefs: list (option term)) : list lb_sig =
+    let maybe_generalize (orig_lbdef: option term) {lbname=lbname_; lbeff=lbeff; lbtyp=lbtyp; lbdef=lbdef; lbattrs=lbattrs} : lb_sig =
               let has_c_inline = U.has_attribute lbattrs PC.c_inline_attr in
               // begin match lbattrs with
               // | [] -> ()
@@ -1284,11 +1284,36 @@ let rec extract_lb_sig (g:uenv) (lbs:letbindings) : list lb_sig =
                              let expected_t = term_as_mlty env expected_source_ty in
                              let polytype = tbinders_as_ty_params env targs, expected_t in
                              let add_unit =
-                                match rest_args with
-                                | [] ->
-                                  not (is_fstar_value body) //if it's a pure type app, then it will be extracted to a value in ML; so don't add a unit
-                                  || not (U.is_pure_comp c)
-                                | _ -> false in
+                                // When an original (pre-extraction-normalization) body is
+                                // provided, compute add_unit from it. Extraction normalization
+                                // may inline functions (e.g. on_dom/on_domain), turning a
+                                // Tm_app into a Tm_abs and changing add_unit. Using the
+                                // original body ensures consistency with interface extraction,
+                                // which uses always_fail bodies not subject to such inlining.
+                                let default_add_unit () =
+                                  match rest_args with
+                                  | [] ->
+                                    not (is_fstar_value body)
+                                    || not (U.is_pure_comp c)
+                                  | _ -> false
+                                in
+                                match orig_lbdef with
+                                | Some orig_def ->
+                                  let orig_def = normalize_abs orig_def |> U.unmeta in
+                                  begin match orig_def.n with
+                                  | Tm_abs {bs=orig_bs; body=orig_body} ->
+                                    let orig_bs, orig_body = SS.open_term orig_bs orig_body in
+                                    if n_tbinders <= List.length orig_bs then
+                                      let _, orig_rest = BU.first_N n_tbinders orig_bs in
+                                      (match orig_rest with
+                                       | [] -> not (is_fstar_value orig_body)
+                                              || not (U.is_pure_comp c)
+                                       | _ -> false)
+                                    else default_add_unit ()
+                                  | _ -> default_add_unit ()
+                                  end
+                                | None -> default_add_unit ()
+                                in
                              let rest_args = if add_unit then (unit_binder()::rest_args) else rest_args in
                              let polytype =
                                 if add_unit
@@ -1338,13 +1363,18 @@ let rec extract_lb_sig (g:uenv) (lbs:letbindings) : list lb_sig =
 
                 | _ ->  no_gen()
     in
-    snd lbs |> List.map maybe_generalize
+    let orig_defs =
+      if List.length orig_lbdefs = List.length (snd lbs)
+      then orig_lbdefs
+      else List.map (fun _ -> None) (snd lbs)
+    in
+    List.map2 maybe_generalize orig_defs (snd lbs)
 
 and extract_lb_iface (g:uenv) (lbs:letbindings)
     : uenv & list (fv & exp_binding) =
     let is_top = FStarC.Syntax.Syntax.is_top_level (snd lbs) in
     let is_rec = not is_top && fst lbs in
-    let lbs = extract_lb_sig g lbs in
+    let lbs = extract_lb_sig g lbs [] in
     BU.fold_map #_ #(Syntax.Syntax.lbname & _ & _ & _ & _ & _) (fun env
                      (lbname, _e_tag, (typ, (_binders, mltyscheme)), add_unit, _has_c_inline, _body) ->
                   let env, _, exp_binding =
@@ -1915,7 +1945,7 @@ and term_as_mlexpr' (g:uenv) (top:term) : (mlexpr & e_tag & mlty) =
            let top = {top with n = maybe_rewritten_let } in
            term_as_mlexpr g top
 
-        | Tm_let {lbs=(is_rec, lbs); body=e'} ->
+         | Tm_let {lbs=(is_rec, lbs); body=e'} ->
           let top_level = is_top_level lbs in
           let lbs, e' =
             if is_rec
@@ -1927,17 +1957,15 @@ and term_as_mlexpr' (g:uenv) (top:term) : (mlexpr & e_tag & mlty) =
                       let lb = {lb with lbname=Inl x} in
                       let e' = SS.subst [DB(0, x)] e' in
                       [lb], e' in
+          // Save original bodies before extraction normalization, so that
+          // extract_lb_sig can compute add_unit from the un-inlined body.
+          let orig_lbs = lbs in
           let lbs =
             if top_level
             then
             let tcenv = TcEnv.set_current_module (tcenv_of_uenv g)
                                 (Ident.lid_of_path ((fst (current_module_of_uenv g)) @ [snd (current_module_of_uenv g)]) Range.dummyRange) in
             lbs |> List.map (fun lb ->
-                    // let tcenv = TcEnv.set_current_module (tcenv_of_uenv g)
-                    //             (Ident.lid_of_path ((fst (current_module_of_uenv g)) @ [snd (current_module_of_uenv g)]) Range.dummyRange) in
-                    // debug g (fun () ->
-                    //            Format.print1 "!!!!!!!About to normalize: %s\n" (show lb.lbdef);
-                    //            Options.set_option "debug" (Options.List [Options.String "Norm"; Options.String "Extraction"]));
                     let lbdef =
                         let norm_call () =
                             Profiling.profile
@@ -1975,7 +2003,8 @@ and term_as_mlexpr' (g:uenv) (top:term) : (mlexpr & e_tag & mlty) =
               let meta = if has_c_inline || Options.Ext.get "extraction_inline_all" <> "" then CInline :: meta else meta in
               f, {mllb_meta = meta; mllb_attrs = []; mllb_name=nm; mllb_tysc=Some polytype; mllb_add_unit=add_unit; mllb_def=e; print_typ=true}
           in
-          let lbs = extract_lb_sig g (is_rec, lbs) in
+          let orig_lbdefs = if top_level then List.map (fun lb -> Some lb.lbdef) orig_lbs else [] in
+          let lbs = extract_lb_sig g (is_rec, lbs) orig_lbdefs in
 
           (* env_burn only matters for non-recursive lets and simply burns
            * the let bound variable in its own definition to generate

@@ -1171,8 +1171,8 @@ let specs_with_types (warn_unsafe : Prims.bool) :
                           let uu___24 =
                             text
                               "Disable inlining across module interfaces during extraction (aka. cross-module inlining). Enabled by default." in
-                          (FStarC_Getopt.noshort, "no_cmi", (Const (Bool true)),
-                            uu___24) in
+                          (FStarC_Getopt.noshort, "no_cmi",
+                            (Const (Bool true)), uu___24) in
                         let uu___24 =
                           let uu___25 =
                             let uu___26 =
@@ -4341,7 +4341,8 @@ let cache_checked_modules (uu___ : unit) : Prims.bool=
 let cache_off (uu___ : unit) : Prims.bool= get_cache_off ()
 let print_cache_version (uu___ : unit) : Prims.bool=
   get_print_cache_version ()
-let cmi (uu___ : unit) : Prims.bool= Prims.op_Negation (get_no_cmi ())
+let cmi (uu___ : unit) : Prims.bool=
+  let uu___3 = get_no_cmi () in Prims.op_Negation uu___3
 let parse_codegen (uu___ : Prims.string) :
   codegen_t FStar_Pervasives_Native.option=
   match uu___ with

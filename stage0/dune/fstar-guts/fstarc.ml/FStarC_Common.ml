@@ -1,4 +1,5 @@
 open Prims
+let dbg : Prims.bool FStarC_Effect.ref= FStarC_Debug.get_toggle "Snapshot"
 let snapshot (msg : Prims.string) (push : 'a -> 'b)
   (stackref : 'c Prims.list FStarC_Effect.ref) (arg : 'a) : (Prims.int * 'b)=
   FStarC_Util.atomically
@@ -7,7 +8,7 @@ let snapshot (msg : Prims.string) (push : 'a -> 'b)
          let uu___1 = FStarC_Effect.op_Bang stackref in
          FStarC_List.length uu___1 in
        let arg' = push arg in
-       (let uu___2 = FStarC_Debug.any () in
+       (let uu___2 = FStarC_Effect.op_Bang dbg in
         if uu___2
         then
           FStarC_Format.print2 "(%s)snapshot %s\n" msg
@@ -17,7 +18,7 @@ let snapshot (msg : Prims.string) (push : 'a -> 'b)
 let rollback (msg : Prims.string) (pop : unit -> 'a)
   (stackref : 'c Prims.list FStarC_Effect.ref)
   (depth : Prims.int FStar_Pervasives_Native.option) : 'a=
-  (let uu___1 = FStarC_Debug.any () in
+  (let uu___1 = FStarC_Effect.op_Bang dbg in
    if uu___1
    then
      FStarC_Format.print2 "(%s)rollback %s ... " msg
@@ -38,7 +39,7 @@ let rollback (msg : Prims.string) (pop : unit -> 'a)
      match depth with
      | FStar_Pervasives_Native.Some d -> curdepth - d
      | FStar_Pervasives_Native.None -> Prims.int_one in
-   (let uu___2 = FStarC_Debug.any () in
+   (let uu___2 = FStarC_Effect.op_Bang dbg in
     if uu___2
     then
       let uu___3 =
