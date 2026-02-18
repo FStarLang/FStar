@@ -542,6 +542,13 @@ let rec desugar_stmt' (env:env_t) (s:Sugar.stmt)
     | Sequence { s1; s2 } when ProofHintWithBinders? s1.s ->
       desugar_proof_hint_with_binders env s1 (Some s2) s1.range
 
+    | Sequence { s1; s2 } when Defer? s1.s ->
+      let Defer { handler_pre; defer_handler } = s1.s in
+      let! cpre = desugar_slprop env handler_pre in
+      let! handler = desugar_stmt env defer_handler in
+      let! body = desugar_stmt env s2 in
+      return (SW.tm_defer cpre handler body s.range)
+
     | Sequence { s1; s2 } -> 
       desugar_sequence env s1 s2 s.range
       
@@ -650,6 +657,9 @@ let rec desugar_stmt' (env:env_t) (s:Sugar.stmt)
       let arg = match arg with Some arg -> arg | None -> sugar_unit_const s.range in
       let! arg = tosyntax env arg in
       return (SW.tm_goto lbl arg s.range)
+
+    | Defer { handler_pre; defer_handler } ->
+      fail "defer must be followed by a body (use defer pre { handler }; body)" s.range
 
     | Return { arg } ->
       desugar_stmt' env { s with s = Goto { lbl = id_of_text "_return"; arg } } 

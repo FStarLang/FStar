@@ -219,6 +219,11 @@ let rec freevars_close_st_term' (t:st_term) (x:var) (i:index)
     | Tm_Goto { lbl; arg } ->
       freevars_close_term' lbl x i;
       freevars_close_term' arg x i
+
+    | Tm_Defer { handler_pre; handler; body } ->
+      freevars_close_term' handler_pre x i;
+      freevars_close_st_term' handler x i;
+      freevars_close_st_term' body x i
 #pop-options
 
 let freevars_close_term (e:term) (x:var) (i:index)

@@ -441,6 +441,12 @@ let rec st_term_to_string' (level:string) (t:st_term)
       sprintf "goto %s %s"
         (term_to_string lbl)
         (term_to_string arg)
+    | Tm_Defer { handler_pre; handler; body } ->
+      sprintf "defer %s { %s };\n%s%s"
+        (term_to_string handler_pre)
+        (st_term_to_string' (indent level) handler)
+        level
+        (st_term_to_string' level body)
 
 and branches_to_string brs : T.Tac _ =
   match brs with
@@ -511,6 +517,7 @@ let tag_of_st_term (t:st_term) =
   | Tm_PragmaWithOptions _ -> "Tm_PragmaWithOptions"
   | Tm_ForwardJumpLabel _ -> "Tm_ForwardJumpLabel"
   | Tm_Goto _ -> "Tm_Goto"
+  | Tm_Defer _ -> "Tm_Defer"
 
 let tag_of_comp (c:comp) : T.Tac string =
   match c with
@@ -544,6 +551,7 @@ let rec print_st_head (t:st_term)
   | Tm_PragmaWithOptions _ -> "PragmaWithOptions"
   | Tm_ForwardJumpLabel _ -> "ForwardJumpLabel"
   | Tm_Goto _ -> "Goto"
+  | Tm_Defer _ -> "Defer"
 
 and print_head (t:term) =
   match t with
@@ -575,6 +583,7 @@ let rec print_skel (t:st_term) =
   | Tm_PragmaWithOptions _ -> "PragmaWithOptions"
   | Tm_ForwardJumpLabel {body} -> Printf.sprintf "(ForwardJumpLabel %s)" (print_skel body)
   | Tm_Goto _ -> "Goto"
+  | Tm_Defer {body} -> Printf.sprintf "(Defer %s)" (print_skel body)
 
 let decl_to_string (d:decl) : T.Tac string =
   match d.d with
