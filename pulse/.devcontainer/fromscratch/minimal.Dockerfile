@@ -68,8 +68,9 @@ RUN ./FStar/.scripts/get_fstar_z3.sh $HOME/bin
 # Get karamel master and build (installing opam deps too, but ignoring fstar dependency)
 RUN eval $(opam env) \
  && . $HOME/.profile \
- && git clone --depth=1 https://github.com/FStarLang/karamel \
+ && git clone https://github.com/FStarLang/karamel \
  && cd karamel/ \
+ && git checkout d6607b99477640cb1e5d423d5cbe709d76da61f7 \
  && sed -i '/"fstar"/d' karamel.opam \
  && opam install --yes --deps-only ./karamel.opam \
  && make -j$(nproc)

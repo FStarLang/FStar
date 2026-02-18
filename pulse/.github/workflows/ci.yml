@@ -58,7 +58,7 @@ jobs:
         with:
           path: karamel
           repository: FStarLang/karamel
-          ref: master
+          ref: d6607b99477640cb1e5d423d5cbe709d76da61f7
 
       - name: Try fetch built karamel
         id: cache-karamel
