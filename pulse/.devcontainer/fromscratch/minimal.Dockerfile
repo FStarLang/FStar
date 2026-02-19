@@ -29,6 +29,7 @@ RUN apt-get update \
 # and setting OPAMYES.
 
 USER vscode
+ENV HOME=/home/vscode
 WORKDIR /home/vscode
 
 # Make sure ~/bin is in the PATH
