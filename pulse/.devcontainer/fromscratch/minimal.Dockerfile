@@ -1,4 +1,4 @@
-FROM ubuntu:24.04
+FROM mcr.microsoft.com/devcontainers/base:ubuntu
 
 # Base dependencies: opam
 # CI dependencies: jq (to identify F* branch)
@@ -28,17 +28,12 @@ RUN apt-get update \
 # Same for pkg-config. OPAM prompts even if we're giving --yes
 # and setting OPAMYES.
 
-# Create a new user and give them sudo rights
-ARG USER=vscode
-RUN useradd -d /home/$USER -s /bin/bash -m $USER
-RUN echo "$USER ALL=NOPASSWD: ALL" >> /etc/sudoers
-USER $USER
-ENV HOME /home/$USER
-WORKDIR $HOME
-RUN mkdir -p $HOME/bin
+USER vscode
+WORKDIR /home/vscode
 
 # Make sure ~/bin is in the PATH
-RUN echo 'export PATH=$HOME/bin:$HOME/.local/bin:$PATH' | tee --append $HOME/.profile $HOME/.bashrc $HOME/.bash_profile
+RUN mkdir -p $HOME/bin
+RUN echo 'export PATH=$HOME/bin:$PATH' | tee --append $HOME/.profile $HOME/.bashrc $HOME/.bash_profile
 
 # Install Rust
 RUN rustup install stable
