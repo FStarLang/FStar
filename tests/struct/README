@@ -1,8 +1,0 @@
-Testing the 'struct' feature.
-
-Each positive (resp. negative) test here MUST be a subdirectory of the
-form <example>.pos (resp. <example>.neg), and in that subdirectory,
-shall have a Test.fst file, which shall be the entry point being
-verified.
-
-(This build system has been taken from '../incl', and updated 2024-06-29)

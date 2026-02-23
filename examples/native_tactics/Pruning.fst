@@ -23,7 +23,6 @@ open FStar.Bytes
 open FStar.Char
 open FStar.Classical
 open FStar.Constructive
-open FStar.Crypto
 open FStar.DependentMap
 open FStar.ErasedLogic
 open FStar.Fin

@@ -70,14 +70,6 @@
                                                                          It lacks only the constraint on the key and there's an issue 
                                                                          with erasure of 'key:eqtype implicit parameter on map_val 
                                                               -->
-    <Compile Link="FStar_Monotonic_HyperHeap.fs" Include="extracted\FStar_Monotonic_HyperHeap.fs" />
-    <Compile Link="FStar_Monotonic_HyperStack.fs" Include="extracted\FStar_Monotonic_HyperStack.fs" />
-    <!-- TODO: Produces unsafe coerce -->
-    <Compile Link="FStar_HyperStack.fs" Include="extracted\FStar_HyperStack.fs" />
-    <Compile Include="base/FStar_HyperStack_All.fs" Link="FStar_HyperStack_All.fs" />
-    <Compile Include="base/FStar_HyperStack_ST.fs" Link="FStar_HyperStack_ST.fs" />
-    <Compile Include="base/FStar_HyperStack_IO.fs" Link="FStar_HyperStack_IO.fs" />
-    <Compile Link="FStar_Monotonic_Map.fs" Include="extracted\FStar_Monotonic_Map.fs" />
     <!-- TODO: Produces unsafe coerce -->
     <Compile Link="FStar_Seq_Base.fs" Include="extracted\FStar_Seq_Base.fs" />
     <Compile Link="FStar_Seq_Properties.fs" Include="extracted\FStar_Seq_Properties.fs" />

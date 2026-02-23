@@ -28,7 +28,6 @@ Ex07c.fst \
 Ex07d.fst \
 Ex10a.fst \
 Ex10b.fst \
-Ex11a.fst \
 Ex12a1.Cap.fst \
 Ex12b1.Format.fst \
 Ex12b2.Format.fst \
@@ -36,10 +35,7 @@ Ex12c.Format.fst \
 Ex12d.Pad.fst \
 Ex12e.Pad.fst \
 Ex12f.TMAC.fst \
-Ex12g.TMAC2.fst \
-LowStar.Ex1.fst \
-LowStar.Ex2.fst \
-LowStar.Ex3.fst
+Ex12g.TMAC2.fst
 
 include $(FSTAR_ROOT)/mk/test.mk
 
