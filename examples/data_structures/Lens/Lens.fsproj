@@ -5,7 +5,7 @@
   <PropertyGroup>
     <FSTAR_HOME>..\..\..</FSTAR_HOME>
     <!-- Custom FStar flags used in this project . -->
-    <FSTAR_FLAGS>--ext optimize_let_vc</FSTAR_FLAGS>
+    <FSTAR_FLAGS></FSTAR_FLAGS>
   </PropertyGroup>
   <Import Project="$(FSTAR_HOME)\examples\fsharp.extraction.targets" />
   <ItemGroup>

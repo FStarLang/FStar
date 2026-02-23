@@ -14,7 +14,7 @@ TOP_LEVEL_FILE=ml/main.ml
 OUTPUT_DIRECTORY=_output
 
 ################################################################################
-FSTAR=fstar.exe --cache_checked_modules --odir $(OUTPUT_DIRECTORY) --ext optimize_let_vc --ext fly_deps $(OTHERFLAGS)
+FSTAR=fstar.exe --cache_checked_modules --odir $(OUTPUT_DIRECTORY) $(OTHERFLAGS)
 ML_FILES=$(addprefix $(OUTPUT_DIRECTORY)/,$(addsuffix .ml,$(subst .,_, $(subst .fst,,$(FSTAR_FILES)))))
 OCAML_EXE=$(PROGRAM).ocaml.exe
 KRML_EXE=$(PROGRAM).exe

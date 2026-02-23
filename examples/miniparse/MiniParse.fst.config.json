@@ -1,8 +1,6 @@
 {
   "fstar_exe": "fstar.exe",
   "options": [
-    "--ext", "optimize_let_vc",
-    "--ext", "fly_deps"
   ],
   "include_dirs": [
   ]
