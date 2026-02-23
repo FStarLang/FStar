@@ -52,7 +52,6 @@ EXTRACT_NS += -FStar.NMSTTotal
 EXTRACT_NS += -FStar.NMST
 EXTRACT_NS += -FStar.Printf
 EXTRACT_NS += -FStar.ModifiesGen
-EXTRACT_NS += -LowStar.Printf
 EXTRACT_NS += -FStar.Sealed
 EXTRACT_NS += +FStar.List.Pure.Base
 EXTRACT_NS += +FStar.List.Tot.Properties

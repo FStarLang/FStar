@@ -165,39 +165,32 @@ def validate_response(response, file_contents):
     if json_objects[l]["contents"]["stage"] != "full-buffer-fragment-started":
         print(f"Line {l} does not have stage full-buffer-fragment-started; got {json_objects[l]}")
         return False
-    l=5
-    # Next several messages are progress messages with contents.stage = "loading-dependency"
-    # Check all of these messages for the correct kind, level, and stage and stop
-    # when the first message with a different kind or level or stage is found
-    for i in range(l, len(json_objects) - 1):
-        if json_objects[i]["kind"] != "message":
-            break
-        if json_objects[i]["level"] != "progress":
-            break
-        if json_objects[i]["contents"]["stage"] != "loading-dependency":
-            break
-    # the message and index i has contents.stage = None
-    if json_objects[i]["contents"]["stage"] != None:
-        print(f"Message {i} has contents {json_objects[i]} does not have stage None")
-        return False
-    i += 1
-    # the next message has conents.stage = "full-buffer-fragment-lax-ok"
+    i = 5
+    # With fly_deps (the default), there are no loading-dependency messages.
+    # Without fly_deps, next several messages are progress messages with
+    # contents.stage = "loading-dependency", followed by a stage=None sentinel.
+    # Handle both cases.
+    while (i < len(json_objects) - 1
+           and json_objects[i]["kind"] == "message"
+           and json_objects[i]["level"] == "progress"
+           and json_objects[i]["contents"]["stage"] == "loading-dependency"):
+        i += 1
+    # If we saw any loading-dependency messages, the next message has stage=None
+    if i > 5:
+        if json_objects[i]["contents"]["stage"] != None:
+            print(f"Message {i} has contents {json_objects[i]} does not have stage None")
+            return False
+        i += 1
+    # the next message has contents.stage = "full-buffer-fragment-lax-ok"
     if json_objects[i]["contents"]["stage"] != "full-buffer-fragment-lax-ok":
         print("Message does not have stage full-buffer-fragment-lax-ok")
         return False
     i += 1
-    # the next message has conents.stage = "full-buffer-fragment-lax-ok"
     if json_objects[i]["status"] != "success":
         print(f"Message does not have success message at line {i}")
         return False
     i += 1
-    # Then, we have a sequence of pairs of messages
-    # where the first message in the pair has contents.stage = "full-buffer-fragment-started"
-    # and the second message in the pair has contents.stage = "full-buffer-fragment-lax-ok"
-    # Check all of these messages for the correct kind, level, and stage and stop
-    # when the first message with a different kind or level or stage is found
-    # The first message in the pair has contents.stage = "full-buffer-fragment-started"
-    # The second message in the pair has contents.stage = "full-buffer-fragment-lax-ok"
+    # Then, we have a sequence of fragments, each handled by check_one_fragment
     num_successes = 1
     last_fragment_end = [0, 0]
     while (i < len(json_objects) - 1):
