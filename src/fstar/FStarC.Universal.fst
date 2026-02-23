@@ -641,19 +641,22 @@ and fly_deps_check (filename:string) (env:uenv) (ast_mod:Ast.modul) (iface_exist
 
 and scan_and_load_fly_deps_internal filename (env:uenv) frag_or_decl: uenv & list string =
   let load_fly_deps (env:uenv) filenames =
-    let run_load_tasks env filenames =
-      let _, _, env = tc_fold_interleave false ([], [], env) filenames in
+    match filenames with
+    | [] -> env //if nothing to load, just return to avoid resetting solver, etc.
+    | _ ->
+      let run_load_tasks env filenames =
+        let _, _, env = tc_fold_interleave false ([], [], env) filenames in
+        env
+      in
+      let _, env = 
+        //load modules clearing out the current local environment, and then
+        //restore it. The global environment is accumulated, e.g., containing
+        //all modules desugared and extracted so far. This is key to fly_deps. 
+        FStarC.Extraction.ML.UEnv.with_restored_tc_scope env 
+          (fun env -> (), run_load_tasks env filenames) 
+      in
+      if Dep.debug_fly_deps() then Format.print1 "After fly load deps: %s\n" (show (tcenv_of_uenv env).dsenv);
       env
-    in
-    let _, env = 
-      //load modules clearing out the current local environment, and then
-      //restore it. The global environment is accumulated, e.g., containing
-      //all modules desugared and extracted so far. This is key to fly_deps. 
-      FStarC.Extraction.ML.UEnv.with_restored_tc_scope env 
-        (fun env -> (), run_load_tasks env filenames) 
-    in
-    if Dep.debug_fly_deps() then Format.print1 "After fly load deps: %s\n" (show (tcenv_of_uenv env).dsenv);
-    env
   in
   let scan_fragment_deps env frag_or_decl =
     let deps = FStarC.Syntax.DsEnv.dep_graph env.dsenv in
