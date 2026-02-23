@@ -69,11 +69,15 @@ val mkBvAdd   : term & term -> term
 val mkBvSub   : term & term -> term
 val mkBvShl   : int -> term & term -> term
 val mkBvShr   : int -> term & term -> term
+val mkBvRol   : int -> term & term -> term
+val mkBvRor   : int -> term & term -> term
 val mkBvUdiv  : int -> term & term -> term
 val mkBvMod   : int -> term & term -> term
 val mkBvMul   : int -> term & term -> term
 val mkBvShl'  : int -> term & term -> term
 val mkBvShr'  : int -> term & term -> term
+val mkBvRol'  : int -> term & term -> term
+val mkBvRor'  : int -> term & term -> term
 val mkBvUdivUnsafe : int -> term & term -> term
 val mkBvModUnsafe  : int -> term & term -> term
 val mkBvMul'   : int -> term & term -> term

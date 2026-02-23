@@ -51,6 +51,10 @@ let shift_left a s = Mk (shift_left (v a) (UInt32.v s))
 
 let shift_arithmetic_right a s = Mk (shift_arithmetic_right (v a) (UInt32.v s))
 
+let rotate_right a s = Mk (rotate_right (v a) (UInt32.v s))
+
+let rotate_left a s = Mk (rotate_left (v a) (UInt32.v s))
+
 let to_string _ = admit ()
 
 //AR: this is to workaround the interleaving semantics of pragmas in FStar.Int128.fst
