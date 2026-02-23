@@ -42,7 +42,7 @@ let extend_gen x t g = if x = 0 then extend t g
 irreducible val weakening : n:nat -> #g:env -> #e:exp -> #t:typ -> t':typ ->
       h:typing g e t -> Tot (typing (extend_gen n t' g) (shift_up_above n e) t)
       (decreases h)
-let rec weakening n #g #v #t t' h =
+let weakening n #g #v #t t' h =
   let hs : subst_typing (sub_inc_above n) g (extend_gen n t' g) =
     fun y -> if y < n then TyVar y else TyVar (y+1)
   in substitution (sub_inc_above n) h hs
@@ -205,7 +205,7 @@ let rec subst_below x v s =
 
 val subst_closed : v:exp{closed v} -> s:sub ->
   Lemma (requires True) (ensures (v = subst s v)) (decreases v)
-let rec subst_closed v s = subst_below 0 v s
+let subst_closed v s = subst_below 0 v s
 
 val subst_gen_elam_aux : x:var -> v:exp{closed v} -> y:var -> Lemma
       (ensures ((sub_elam (sub_beta_gen  x    v)) y =
@@ -274,7 +274,7 @@ val extend_gen_0 : t:typ -> g:env ->
 let extend_gen_0 t g =
   forall_intro (extend_gen_0_aux t g)
 
-let rec extend_gen_typing_conversion (#t:typ) (#g:env) (#e0:exp) (#t0:typ) (h:typing (extend t g) e0 t0)
+let extend_gen_typing_conversion (#t:typ) (#g:env) (#e0:exp) (#t0:typ) (h:typing (extend t g) e0 t0)
   :Tot (typing (extend_gen 0 t g) e0 t0) = h
 
 val preservation : #e:exp -> #t:typ -> h:typing empty e t{Some? (step e)} ->

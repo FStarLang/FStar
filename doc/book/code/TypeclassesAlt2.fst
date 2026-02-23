@@ -235,3 +235,5 @@ instance __base_comp #a {| d : bounded_unsigned_int_ops a |}
 let try_sub3 {| bounded_unsigned_int_ops 'a |}
              (acc:'a)
   = bound `sub` acc
+
+#pop-options
