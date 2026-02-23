@@ -1,5 +1,3 @@
-FSTAR_OPTIONS += --ext optimize_let_vc
-
 # Checking a library, make sure to not use the parent lib.
 FSTAR_OPTIONS += --no_default_includes
 FSTAR_OPTIONS += --include $(SRC)

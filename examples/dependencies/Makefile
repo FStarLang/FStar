@@ -20,8 +20,7 @@ CACHE_DIR = cache
 ROOTS     = Test.fst
 
 FSTAR_FLAGS = $(OTHERFLAGS) --cmi --odir $(OUT_DIR) --cache_dir $(CACHE_DIR) \
-  --cache_checked_modules --already_cached 'Prims FStar' \
-  --ext optimize_let_vc --ext fly_deps
+  --cache_checked_modules --already_cached 'Prims FStar'
 
 FSTAR = $(FSTAR_EXE) $(FSTAR_FLAGS)
 
