@@ -14,6 +14,7 @@
    limitations under the License.
 *)
 module Protocol
+#set-options "--ext pretyping_axioms"
 open FStar.Seq
 
 open FStar.Preorder
