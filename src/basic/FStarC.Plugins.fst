@@ -24,14 +24,17 @@ open FStarC.Plugins.Base
 module BU = FStarC.Util
 module E   = FStarC.Errors
 open FStarC.Class.Show
+open FStar.List.Tot
 
 let loaded : ref (list string) = mk_ref []
 let loaded_plugin_lib : ref bool = mk_ref false
 
-let pout  s   = if Debug.any () then Format.print_string s
-let pout1 s x = if Debug.any () then Format.print1 s x
-let perr  s   = if Debug.any () then Format.print_error s
-let perr1 s x = if Debug.any () then Format.print1_error s x
+let dbg_Plugin = Debug.get_toggle "Plugin"
+
+let pout  s   = if !dbg_Plugin then Format.print_string s
+let pout1 s x = if !dbg_Plugin then Format.print1 s x
+let perr  s   = if !dbg_Plugin then Format.print_error s
+let perr1 s x = if !dbg_Plugin then Format.print1_error s x
 
 let do_dynlink (fname:string) : unit =
   try
@@ -122,13 +125,13 @@ if it could find a plugin with the proper name. This will fail hard
 if loading the plugin fails. *)
 let autoload_plugin (ext:string) : bool =
   if Options.Ext.enabled "noautoload" then false else (
-  if Debug.any () then
+  if !dbg_Plugin then
     Format.print1 "Trying to find a plugin for extension %s\n" ext;
   match Find.find_file (ext ^ ".cmxs") with
   | Some fn ->
     if List.mem fn !loaded then false
     else (
-    if Debug.any () then
+    if !dbg_Plugin then
       Format.print1 "Autoloading plugin %s ...\n" fn;
     load_plugin fn;
     true

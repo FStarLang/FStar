@@ -35,7 +35,9 @@ assume UTF8_inj:
 
 type capRead (msg:bytes) = (forall f. msg = utf8 f ==> ACLs.canRead f)
 
+#push-options "--warn_error -272" //Warning_TopLevelEffect
 let k = MAC.keygen capRead
+#pop-options
 
 // BEGIN: CapType
 val issue: f:string{ ACLs.canRead f } -> ML MAC.tag

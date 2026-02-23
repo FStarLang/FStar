@@ -76,6 +76,10 @@ let shift_right a s = Mk (shift_right (v a) (v s))
 
 let shift_left a s = Mk (shift_left (v a) (v s))
 
+let rotate_right a s = Mk (rotate_right (v a) (v s))
+
+let rotate_left a s = Mk (rotate_left (v a) (v s))
+
 let lemma_sub_msbs a b
     = from_vec_propriety (to_vec (v a)) 1;
       from_vec_propriety (to_vec (v b)) 1;

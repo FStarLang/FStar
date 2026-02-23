@@ -22,8 +22,10 @@ val null: unit -> All unit
   (ensures  (fun h r h' -> True))
 let null () = ()
 
+#push-options "--warn_error -272" //Warning_TopLevelEffect
 [@@expect_failure [19]]
 let test0 = assert(false); null ()
+#pop-options
 
 [@@expect_failure [19]]
 let test1 () = assert(false); null ()
