@@ -449,7 +449,7 @@ let run_full_buffer (st : FStarC_Interactive_Ide_Types.repl_state)
                     (if request_type <> FStarC_Interactive_Ide_Types.Cache
                      then log_syntax_issues err_opt
                      else ();
-                     (let uu___8 = FStarC_Debug.any () in
+                     (let uu___8 = FStarC_Effect.op_Bang dbg in
                       if uu___8
                       then
                         let uu___9 =

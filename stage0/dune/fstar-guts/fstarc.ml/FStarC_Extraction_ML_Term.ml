@@ -1889,8 +1889,11 @@ type lb_sig =
     FStarC_Extraction_ML_Syntax.mltyscheme)) * Prims.bool * Prims.bool *
     FStarC_Syntax_Syntax.term)
 let rec extract_lb_sig (g : FStarC_Extraction_ML_UEnv.uenv)
-  (lbs : FStarC_Syntax_Syntax.letbindings) : lb_sig Prims.list=
-  let maybe_generalize uu___ =
+  (lbs : FStarC_Syntax_Syntax.letbindings)
+  (orig_lbdefs :
+    FStarC_Syntax_Syntax.term FStar_Pervasives_Native.option Prims.list)
+  : lb_sig Prims.list=
+  let maybe_generalize orig_lbdef uu___ =
     match uu___ with
     | { FStarC_Syntax_Syntax.lbname = lbname_;
         FStarC_Syntax_Syntax.lbunivs = uu___1;
@@ -2054,16 +2057,82 @@ let rec extract_lb_sig (g : FStarC_Extraction_ML_UEnv.uenv)
                                               tbinders_as_ty_params env targs in
                                             (uu___9, expected_t) in
                                           let add_unit =
-                                            match rest_args with
-                                            | [] ->
-                                                (let uu___9 =
-                                                   is_fstar_value body1 in
-                                                 Prims.op_Negation uu___9) ||
-                                                  (let uu___9 =
-                                                     FStarC_Syntax_Util.is_pure_comp
-                                                       c1 in
-                                                   Prims.op_Negation uu___9)
-                                            | uu___9 -> false in
+                                            let default_add_unit uu___9 =
+                                              match rest_args with
+                                              | [] ->
+                                                  (let uu___10 =
+                                                     is_fstar_value body1 in
+                                                   Prims.op_Negation uu___10)
+                                                    ||
+                                                    (let uu___10 =
+                                                       FStarC_Syntax_Util.is_pure_comp
+                                                         c1 in
+                                                     Prims.op_Negation
+                                                       uu___10)
+                                              | uu___10 -> false in
+                                            match orig_lbdef with
+                                            | FStar_Pervasives_Native.Some
+                                                orig_def ->
+                                                let orig_def1 =
+                                                  let uu___9 =
+                                                    normalize_abs orig_def in
+                                                  FStarC_Syntax_Util.unmeta
+                                                    uu___9 in
+                                                (match orig_def1.FStarC_Syntax_Syntax.n
+                                                 with
+                                                 | FStarC_Syntax_Syntax.Tm_abs
+                                                     {
+                                                       FStarC_Syntax_Syntax.bs
+                                                         = orig_bs;
+                                                       FStarC_Syntax_Syntax.body
+                                                         = orig_body;
+                                                       FStarC_Syntax_Syntax.rc_opt
+                                                         = uu___9;_}
+                                                     ->
+                                                     let uu___10 =
+                                                       FStarC_Syntax_Subst.open_term
+                                                         orig_bs orig_body in
+                                                     (match uu___10 with
+                                                      | (orig_bs1,
+                                                         orig_body1) ->
+                                                          if
+                                                            n_tbinders <=
+                                                              (FStarC_List.length
+                                                                 orig_bs1)
+                                                          then
+                                                            let uu___11 =
+                                                              FStarC_Util.first_N
+                                                                n_tbinders
+                                                                orig_bs1 in
+                                                            (match uu___11
+                                                             with
+                                                             | (uu___12,
+                                                                orig_rest) ->
+                                                                 (match orig_rest
+                                                                  with
+                                                                  | [] ->
+                                                                    (let uu___13
+                                                                    =
+                                                                    is_fstar_value
+                                                                    orig_body1 in
+                                                                    Prims.op_Negation
+                                                                    uu___13)
+                                                                    ||
+                                                                    (let uu___13
+                                                                    =
+                                                                    FStarC_Syntax_Util.is_pure_comp
+                                                                    c1 in
+                                                                    Prims.op_Negation
+                                                                    uu___13)
+                                                                  | uu___13
+                                                                    -> false))
+                                                          else
+                                                            default_add_unit
+                                                              ())
+                                                 | uu___9 ->
+                                                     default_add_unit ())
+                                            | FStar_Pervasives_Native.None ->
+                                                default_add_unit () in
                                           let rest_args1 =
                                             if add_unit
                                             then
@@ -2220,7 +2289,16 @@ let rec extract_lb_sig (g : FStarC_Extraction_ML_UEnv.uenv)
                                 false, has_c_inline, e)
                           | uu___7 -> err_value_restriction lbdef1)))
            | uu___5 -> no_gen ()) in
-  FStarC_List.map maybe_generalize (FStar_Pervasives_Native.snd lbs)
+  let orig_defs =
+    if
+      (FStarC_List.length orig_lbdefs) =
+        (FStarC_List.length (FStar_Pervasives_Native.snd lbs))
+    then orig_lbdefs
+    else
+      FStarC_List.map (fun uu___1 -> FStar_Pervasives_Native.None)
+        (FStar_Pervasives_Native.snd lbs) in
+  FStarC_List.map2 maybe_generalize orig_defs
+    (FStar_Pervasives_Native.snd lbs)
 and extract_lb_iface (g : FStarC_Extraction_ML_UEnv.uenv)
   (lbs : FStarC_Syntax_Syntax.letbindings) :
   (FStarC_Extraction_ML_UEnv.uenv * (FStarC_Syntax_Syntax.fv *
@@ -2229,7 +2307,7 @@ and extract_lb_iface (g : FStarC_Extraction_ML_UEnv.uenv)
     FStarC_Syntax_Syntax.is_top_level (FStar_Pervasives_Native.snd lbs) in
   let is_rec =
     (Prims.op_Negation is_top) && (FStar_Pervasives_Native.fst lbs) in
-  let lbs1 = extract_lb_sig g lbs in
+  let lbs1 = extract_lb_sig g lbs [] in
   FStarC_Util.fold_map
     (fun env uu___ ->
        match uu___ with
@@ -3681,6 +3759,7 @@ and term_as_mlexpr' (g : FStarC_Extraction_ML_UEnv.uenv)
                ([lb1], e'1))) in
        (match uu___1 with
         | (lbs1, e'1) ->
+            let orig_lbs = lbs1 in
             let lbs2 =
               if top_level
               then
@@ -3817,7 +3896,15 @@ and term_as_mlexpr' (g : FStarC_Extraction_ML_UEnv.uenv)
                                 FStarC_Extraction_ML_Syntax.mllb_meta = meta1;
                                 FStarC_Extraction_ML_Syntax.print_typ = true
                               }))) in
-            let lbs3 = extract_lb_sig g (is_rec, lbs2) in
+            let orig_lbdefs =
+              if top_level
+              then
+                FStarC_List.map
+                  (fun lb ->
+                     FStar_Pervasives_Native.Some
+                       (lb.FStarC_Syntax_Syntax.lbdef)) orig_lbs
+              else [] in
+            let lbs3 = extract_lb_sig g (is_rec, lbs2) orig_lbdefs in
             let uu___2 =
               FStarC_List.fold_right
                 (fun lb uu___3 ->

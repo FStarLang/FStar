@@ -1,4 +1,6 @@
 open Prims
+let dbg_Extraction : Prims.bool FStarC_Effect.ref=
+  FStarC_Debug.get_toggle "Extraction"
 let dbg_ExtractionReify : Prims.bool FStarC_Effect.ref=
   FStarC_Debug.get_toggle "ExtractionReify"
 type tydef_declaration =
@@ -1662,7 +1664,7 @@ let extract_iface (g : env_t) (modul : FStarC_Syntax_Syntax.modul) :
   let uu___ =
     FStarC_Syntax_Unionfind.with_uf_enabled
       (fun uu___1 ->
-         let uu___2 = FStarC_Debug.any () in
+         let uu___2 = FStarC_Effect.op_Bang dbg_Extraction in
          if uu___2
          then
            let uu___3 =

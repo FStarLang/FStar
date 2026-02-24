@@ -61,8 +61,14 @@ all: $(addsuffix .sep.test, $(TAC_MODULES)) $(addsuffix .test, $(ALL))
 	$(FSTAR) $*.Test.fst --load $*
 	touch -c $@
 
-%.ml: %.fst
-	$(FSTAR) $*.fst --cache_checked_modules --codegen Plugin --extract $*
+%.fst.checked: %.fst
+	$(FSTAR) $< --cache_checked_modules
+	touch -c $@
+
+# Extract step must not use fly_deps: it skips cache for CLI files,
+# which conflicts with CMI requiring modules to be pre-checked.
+%.ml: %.fst.checked
+	$(FSTAR_EXE) --ext optimize_let_vc $*.fst --cache_checked_modules --codegen Plugin --extract $*
 	touch -c $@
 
 %.clean:
@@ -75,4 +81,4 @@ all: $(addsuffix .sep.test, $(TAC_MODULES)) $(addsuffix .test, $(ALL))
 	$(FSTAR) $*.fst
 
 clean:
-	rm -f *.test *.ml *.o *.cm[ix] *.cmxs
+	rm -f *.test *.ml *.o *.cm[ix] *.cmxs *.checked

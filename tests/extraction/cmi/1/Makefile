@@ -8,7 +8,6 @@
 ################################################################################
 
 FSTAR_ROOT ?= ../../../..
-OTHERFLAGS += --cmi
 include $(FSTAR_ROOT)/mk/test.mk
 
 # There should not be a call to A.id in B.ml.expected.
