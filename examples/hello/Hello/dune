@@ -1,5 +1,5 @@
-; F* verification and extraction rules (generated in sibling gen/ dir)
-(dynamic_include ../gen/hello.dune.inc)
+; F* verification and extraction rules (generated in sibling Hello-gen/ dir)
+(dynamic_include ../Hello-gen/dune.deps.inc)
 
 ; Build the Hello executable from extracted OCaml
 (executable

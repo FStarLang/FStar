@@ -1,5 +1,5 @@
-; F* verification and extraction rules (generated in sibling gen/ dir)
-(dynamic_include ../gen/multifile.dune.inc)
+; F* verification and extraction rules (generated in sibling multifile-gen/ dir)
+(dynamic_include ../multifile-gen/dune.deps.inc)
 
 ; Build the Main executable from extracted OCaml
 (executable

@@ -3118,111 +3118,77 @@ let print_full (outc : FStarC_Util.out_channel) (deps1 : deps) : unit=
 let print_dune (outc : FStarC_Util.out_channel) (deps1 : deps) : unit=
   let sb = FStarC_StringBuffer.create (Prims.of_int (10000)) in
   let pr str = let uu___ = FStarC_StringBuffer.add str sb in () in
-  let norm_path s = FStarC_Util.replace_chars s 92 "/" in
-  let cwd =
-    let uu___ = FStarC_Util.getcwd () in
-    FStarC_Filepath.normalize_file_path uu___ in
-  let project_root =
-    let uu___ =
-      let uu___1 = FStarC_Filepath.join_paths cwd ".." in
-      FStarC_Filepath.join_paths uu___1 ".." in
-    FStarC_Filepath.normalize_file_path uu___ in
-  let make_relative p =
-    let p_normalized = FStarC_Filepath.normalize_file_path p in
-    let uu___ = FStarC_Filepath.make_relative_to cwd p_normalized in
-    norm_path uu___ in
-  let make_project_relative p =
-    let p_normalized = FStarC_Filepath.normalize_file_path p in
-    let uu___ = FStarC_Filepath.make_relative_to project_root p_normalized in
-    norm_path uu___ in
+  let forwarded_flags =
+    let args = FStarC_Util.get_cmd_args () in
+    let args1 = match args with | uu___::tl -> tl | [] -> [] in
+    let rec collect1 acc uu___ =
+      match uu___ with
+      | [] -> FStarC_List.rev acc
+      | "--dep"::uu___1::rest -> collect1 acc rest
+      | "--already_cached"::uu___1::rest -> collect1 acc rest
+      | flag::rest when FStarC_Util.starts_with flag "-" ->
+          (match rest with
+           | arg::rest' when
+               (Prims.op_Negation (FStarC_Util.starts_with arg "-")) &&
+                 (arg <> "")
+               ->
+               collect1 ((Prims.strcat " " arg) :: (Prims.strcat " " flag) ::
+                 acc) rest'
+           | uu___1 -> collect1 ((Prims.strcat " " flag) :: acc) rest)
+      | uu___1::rest -> collect1 acc rest in
+    let uu___ = collect1 [] args1 in FStarC_String.concat "" uu___ in
   let keys = deps_keys deps1.dep_graph in
-  let no_fstar_stubs_file s =
-    let s1 = "FStar.Stubs." in
-    let s2 = "FStar." in
-    let l1 = FStarC_String.length s1 in
-    let uu___ =
-      ((FStarC_String.length s) >= l1) &&
-        (let uu___1 = FStarC_String.substring s Prims.int_zero l1 in
-         uu___1 = s1) in
-    if uu___
-    then
-      let uu___1 =
-        FStarC_String.substring s l1 ((FStarC_String.length s) - l1) in
-      Prims.strcat s2 uu___1
-    else s in
-  let output_file ext fst_file =
-    let basename =
-      let uu___ =
-        let uu___1 = FStarC_Filepath.basename fst_file in
-        check_and_strip_suffix uu___1 in
-      FStarC_Option.must uu___ in
-    let basename1 = no_fstar_stubs_file basename in
-    let ml_base_name = FStarC_Util.replace_chars basename1 46 "_" in
-    FStarC_Find.prepend_output_dir (Prims.strcat ml_base_name ext) in
-  let output_ml_file f =
-    let uu___ = output_file ".ml" f in make_relative uu___ in
-  let output_krml_file f =
-    let uu___ = output_file ".krml" f in make_relative uu___ in
   let local_cache_file f =
     let base = FStarC_Filepath.basename f in
     let uu___ = FStarC_Options.lax () in
     if uu___
     then Prims.strcat base ".checked.lax"
     else Prims.strcat base ".checked" in
-  let mlish_flags =
-    let uu___ = FStarC_Options.ml_ish () in
-    if uu___
-    then
-      let uu___1 = FStarC_Options.ml_ish_effect () in
-      Prims.strcat " --MLish --MLish_effect " uu___1
-    else "" in
-  let lax_flag =
-    let uu___ = FStarC_Options.lax () in if uu___ then " --lax" else "" in
-  let is_checked_file f =
-    (FStarC_Util.ends_with f ".checked") ||
-      (FStarC_Util.ends_with f ".checked.lax") in
   let format_dep f = FStarC_Filepath.basename f in
-  let is_fstarc_module source =
-    let base = FStarC_Filepath.basename source in
-    FStarC_Util.starts_with base "FStarC." in
+  let extraction_target source =
+    let uu___ = FStarC_Options.codegen () in
+    match uu___ with
+    | FStar_Pervasives_Native.Some (FStarC_Options.OCaml) ->
+        let basename =
+          let uu___1 =
+            let uu___2 = FStarC_Filepath.basename source in
+            check_and_strip_suffix uu___2 in
+          FStarC_Option.must uu___1 in
+        let ml_base_name = FStarC_Util.replace_chars basename 46 "_" in
+        let uu___1 = is_implementation source in
+        if uu___1
+        then FStar_Pervasives_Native.Some (Prims.strcat ml_base_name ".ml")
+        else FStar_Pervasives_Native.None
+    | FStar_Pervasives_Native.Some (FStarC_Options.Krml) ->
+        let basename =
+          let uu___1 =
+            let uu___2 = FStarC_Filepath.basename source in
+            check_and_strip_suffix uu___2 in
+          FStarC_Option.must uu___1 in
+        let ml_base_name = FStarC_Util.replace_chars basename 46 "_" in
+        let uu___1 = is_implementation source in
+        if uu___1
+        then FStar_Pervasives_Native.Some (Prims.strcat ml_base_name ".krml")
+        else FStar_Pervasives_Native.None
+    | uu___1 -> FStar_Pervasives_Native.None in
   let print_check_rule target source all_deps =
-    let flags =
-      let uu___ = is_fstarc_module source in
-      if uu___ then mlish_flags else "" in
+    let extra_target = extraction_target source in
     pr "(rule\n";
     pr " (targets ";
     pr target;
+    (match extra_target with
+     | FStar_Pervasives_Native.Some t -> (pr " "; pr t)
+     | FStar_Pervasives_Native.None -> ());
     pr ")\n";
     pr " (deps";
     FStarC_List.iter
-      (fun f -> pr " "; (let uu___7 = format_dep f in pr uu___7)) all_deps;
+      (fun f -> pr " "; (let uu___8 = format_dep f in pr uu___8)) all_deps;
     pr ")\n";
     pr " (action (run %{env:FSTAR_EXE=fstar.exe}";
-    pr lax_flag;
-    pr flags;
+    pr forwarded_flags;
     pr " --include . --already_cached \"*,\" -c ";
     (let uu___12 = FStarC_Filepath.basename source in pr uu___12);
-    pr " -o %{targets})))\n\n" in
-  let print_extract_rule target source all_deps codegen =
-    let flags =
-      let uu___ = is_fstarc_module source in
-      if uu___ then mlish_flags else "" in
-    pr "(rule\n";
-    pr " (targets ";
-    pr target;
-    pr ")\n";
-    pr " (deps";
-    FStarC_List.iter
-      (fun f -> pr " "; (let uu___7 = format_dep f in pr uu___7)) all_deps;
-    pr ")\n";
-    pr " (action (run %{env:FSTAR_EXE=fstar.exe}";
-    pr lax_flag;
-    pr flags;
-    pr " --include . --already_cached \"*,\" --codegen ";
-    pr codegen;
-    pr " ";
-    (let uu___14 = FStarC_Filepath.basename source in pr uu___14);
-    pr " -o %{targets})))\n\n" in
+    pr ")))\n\n" in
   let uu___ =
     phase1 deps1.file_system_map deps1.dep_graph
       deps1.interfaces_with_inlining true in
@@ -3331,54 +3297,12 @@ let print_dune (outc : FStarC_Util.out_channel) (deps1 : deps) : unit=
                         ::
                         all_checked_files1)
                      else all_checked_files1 in
-                   ((let uu___4 =
-                       (is_implementation file_name1) &&
-                         (let uu___5 =
-                            let uu___6 = module_name_of_file file_name1 in
-                            FStarC_Options.should_be_already_cached uu___6 in
-                          Prims.op_Negation uu___5) in
-                     if uu___4
-                     then
-                       let mname = lowercase_module_name file_name1 in
-                       ((let uu___6 =
-                           FStarC_Options.should_extract mname
-                             FStarC_Options.OCaml in
-                         if uu___6
-                         then
-                           let uu___7 = output_ml_file file_name1 in
-                           print_extract_rule uu___7 file_name1
-                             [local_cache_name] "OCaml"
-                         else ());
-                        (let uu___6 =
-                           FStarC_Options.should_extract mname
-                             FStarC_Options.Krml in
-                         if uu___6
-                         then
-                           let uu___7 = output_krml_file file_name1 in
-                           print_extract_rule uu___7 file_name1
-                             [local_cache_name] "krml"
-                         else ()))
-                     else ());
-                    all_checked_files2) in
+                   all_checked_files2 in
              profile process_one_key
                "FStarC.Parser.Dep.print_dune.process_one_key") [] keys in
-      let all_fst_files =
-        let uu___1 = FStarC_List.filter is_implementation keys in
-        FStarC_Util.sort_with FStarC_String.compare uu___1 in
-      let all_ml_files =
-        let uu___1 =
-          FStarC_List.filter
-            (fun fst_file ->
-               let uu___2 = lowercase_module_name fst_file in
-               FStarC_Options.should_extract uu___2 FStarC_Options.OCaml)
-            all_fst_files in
-        FStarC_List.map output_ml_file uu___1 in
       (pr "; File lists (for reference)\n";
        pr "; ALL_CHECKED_FILES:";
        FStarC_List.iter (fun f -> pr " "; pr f) all_checked_files;
-       pr "\n";
-       pr "; ALL_ML_FILES:";
-       FStarC_List.iter (fun f -> pr " "; pr f) all_ml_files;
        pr "\n";
        FStarC_StringBuffer.output_channel outc sb)
 let do_print (outc : FStarC_Util.out_channel) (fn : Prims.string)

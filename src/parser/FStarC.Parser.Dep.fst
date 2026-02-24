@@ -2329,100 +2329,76 @@ let print_full (outc : out_channel) (deps:deps) : unit =
 let print_dune (outc : out_channel) (deps:deps) : unit =
     let sb = FStarC.StringBuffer.create 10000 in
     let pr str = ignore <| FStarC.StringBuffer.add str sb in
-    let norm_path s = replace_chars s '\\' "/" in
     
-    (* Get cwd and compute project root (2 levels up from src/extracted) *)
-    let cwd = Filepath.normalize_file_path (BU.getcwd ()) in
-    let project_root = Filepath.normalize_file_path (Filepath.join_paths (Filepath.join_paths cwd "..") "..") in
-    
-    (* Make a path relative to cwd (for local references) *)
-    let make_relative (p : string) : string =
-        let p_normalized = Filepath.normalize_file_path p in
-        norm_path (Filepath.make_relative_to cwd p_normalized)
-    in
-    
-    (* Make a path relative to project root (for %{project_root}/ references) *)
-    let make_project_relative (p : string) : string =
-        let p_normalized = Filepath.normalize_file_path p in
-        norm_path (Filepath.make_relative_to project_root p_normalized)
+    (* Collect flags to forward into generated rules.
+       We take all argv flags except --dep/--already_cached and
+       positional file/directory arguments. *)
+    let forwarded_flags =
+        let args = BU.get_cmd_args () in
+        (* Drop the executable name *)
+        let args = match args with | _::tl -> tl | [] -> [] in
+        let rec collect acc = function
+          | [] -> List.rev acc
+          (* Skip --dep and its argument *)
+          | "--dep"::_::rest -> collect acc rest
+          (* Skip --already_cached and its argument *)
+          | "--already_cached"::_::rest -> collect acc rest
+          (* Keep flags and their arguments *)
+          | flag::rest when BU.starts_with flag "-" ->
+            begin match rest with
+            | arg::rest' when not (BU.starts_with arg "-") && arg <> "" ->
+              collect ((" " ^ arg)::(" " ^ flag)::acc) rest'
+            | _ ->
+              collect ((" " ^ flag)::acc) rest
+            end
+          (* Skip positional arguments (file/directory paths) *)
+          | _::rest -> collect acc rest
+        in
+        String.concat "" (collect [] args)
     in
     
     let keys = deps_keys deps.dep_graph in
-    let no_fstar_stubs_file (s:string) : string =
-      let s1 = "FStar.Stubs." in
-      let s2 = "FStar." in
-      let l1 = String.length s1 in
-      if String.length s >= l1 && String.substring s 0 l1 = s1 then
-        s2 ^ String.substring s l1 (String.length s - l1)
-      else
-        s
-    in
-    let output_file ext fst_file =
-        let basename = Option.must (check_and_strip_suffix (Filepath.basename fst_file)) in
-        let basename = no_fstar_stubs_file basename in
-        let ml_base_name = replace_chars basename '.' "_" in
-        Find.prepend_output_dir (ml_base_name ^ ext)
-    in
-    let output_ml_file   f = make_relative (output_file ".ml" f) in
-    let output_krml_file f = make_relative (output_file ".krml" f) in
     (* For dune: put checked files in current directory, not next to source *)
     let local_cache_file (f:string) : string =
         let base = Filepath.basename f in
         if Options.lax() then base ^ ".checked.lax" else base ^ ".checked"
     in
     
-    (* Build --MLish flags if enabled *)
-    let mlish_flags =
-        if Options.ml_ish()
-        then " --MLish --MLish_effect " ^ Options.ml_ish_effect()
-        else ""
-    in
-    
-    (* Build --lax flag if lax mode is enabled *)
-    let lax_flag = if Options.lax() then " --lax" else "" in
-    
-    (* Check if a filename is a checked file (local, no path needed) *)
-    let is_checked_file (f:string) : bool =
-        BU.ends_with f ".checked" || BU.ends_with f ".checked.lax"
-    in
-    
     (* Format a dep: all files become local basename *)
     let format_dep (f:string) : string =
-        Filepath.basename f  (* All deps are local basenames now *)
+        Filepath.basename f
     in
     
-    (* Check if a source file is an FStarC module (not ulib) *)
-    let is_fstarc_module (source : string) : bool =
-        let base = Filepath.basename source in
-        BU.starts_with base "FStarC."
+    (* Compute the extraction target for a source file, if codegen is set *)
+    let extraction_target (source : string) : option string =
+        match Options.codegen () with
+        | Some Options.OCaml ->
+            let basename = Option.must (check_and_strip_suffix (Filepath.basename source)) in
+            let ml_base_name = replace_chars basename '.' "_" in
+            if is_implementation source then Some (ml_base_name ^ ".ml")
+            else None
+        | Some Options.Krml ->
+            let basename = Option.must (check_and_strip_suffix (Filepath.basename source)) in
+            let ml_base_name = replace_chars basename '.' "_" in
+            if is_implementation source then Some (ml_base_name ^ ".krml")
+            else None
+        | _ -> None
     in
     
-    (* Print a dune rule for checking a file *)
+    (* Print a dune rule for checking (and optionally extracting) a file *)
     let print_check_rule (target : string) (source : string) (all_deps : list string) : unit =
-        (* Only apply --MLish to FStarC modules, not ulib *)
-        let flags = if is_fstarc_module source then mlish_flags else "" in
+        let extra_target = extraction_target source in
         pr "(rule\n";
-        pr " (targets "; pr target; pr ")\n";
+        pr " (targets "; pr target;
+        (match extra_target with | Some t -> pr " "; pr t | None -> ());
+        pr ")\n";
         pr " (deps"; 
         all_deps |> List.iter (fun f -> pr " "; pr (format_dep f));
         pr ")\n";
-        pr " (action (run %{env:FSTAR_EXE=fstar.exe}"; pr lax_flag; pr flags;
+        pr " (action (run %{env:FSTAR_EXE=fstar.exe}";
+        pr forwarded_flags;
         pr " --include . --already_cached \"*,\" -c ";
-        pr (Filepath.basename source); pr " -o %{targets})))\n\n"
-    in
-    
-    (* Print a dune rule for extraction *)
-    let print_extract_rule (target : string) (source : string) (all_deps : list string) (codegen : string) : unit =
-        (* Only apply --MLish to FStarC modules, not ulib *)
-        let flags = if is_fstarc_module source then mlish_flags else "" in
-        pr "(rule\n";
-        pr " (targets "; pr target; pr ")\n";
-        pr " (deps";
-        all_deps |> List.iter (fun f -> pr " "; pr (format_dep f));
-        pr ")\n";
-        pr " (action (run %{env:FSTAR_EXE=fstar.exe}"; pr lax_flag; pr flags;
-        pr " --include . --already_cached \"*,\" --codegen ";
-        pr codegen; pr " "; pr (Filepath.basename source); pr " -o %{targets})))\n\n"
+        pr (Filepath.basename source); pr ")))\n\n"
     in
     
     let widened, dep_graph = phase1 deps.file_system_map deps.dep_graph deps.interfaces_with_inlining true in
@@ -2497,51 +2473,15 @@ let print_dune (outc : out_channel) (deps:deps) : unit =
                 else all_checked_files
             in
 
-            (* Print extraction rules for implementations (skip already-cached modules) *)
-            if is_implementation file_name
-            && not (Options.should_be_already_cached (module_name_of_file file_name))
-            then begin
-                let mname = lowercase_module_name file_name in
-                
-                if Options.should_extract mname Options.OCaml
-                then print_extract_rule 
-                       (output_ml_file file_name)
-                       file_name
-                       [local_cache_name]
-                       "OCaml";
-                       
-                if Options.should_extract mname Options.Krml
-                then print_extract_rule 
-                       (output_krml_file file_name)
-                       file_name
-                       [local_cache_name]
-                       "krml"
-            end;
-            
             all_checked_files
           in
           profile process_one_key "FStarC.Parser.Dep.print_dune.process_one_key")
           []
     in
     
-    (* Output file lists as comments for reference *)
-    let all_fst_files =
-      keys |> List.filter is_implementation
-           |> Util.sort_with String.compare
-    in
-    let all_ml_files =
-        all_fst_files
-        |> List.filter (fun fst_file -> 
-             Options.should_extract (lowercase_module_name fst_file) Options.OCaml)
-        |> List.map output_ml_file
-    in
-    
     pr "; File lists (for reference)\n";
     pr "; ALL_CHECKED_FILES:";
     all_checked_files |> List.iter (fun f -> pr " "; pr f);
-    pr "\n";
-    pr "; ALL_ML_FILES:";
-    all_ml_files |> List.iter (fun f -> pr " "; pr f);
     pr "\n";
 
     FStarC.StringBuffer.output_channel outc sb
