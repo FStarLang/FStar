@@ -1,6 +1,8 @@
 open Prims
 let dbg_PartialApp : Prims.bool FStarC_Effect.ref=
   FStarC_Debug.get_toggle "PartialApp"
+let dbg_Snapshot : Prims.bool FStarC_Effect.ref=
+  FStarC_Debug.get_toggle "Snapshot"
 let add_fuel (x : 'uuuuu) (tl : 'uuuuu Prims.list) : 'uuuuu Prims.list=
   let uu___ = FStarC_Options.unthrottle_inductives () in
   if uu___ then tl else x :: tl
@@ -203,7 +205,7 @@ let varops : varops_t=
     FStarC_Format.fmt3 "%s_%s_%s" pfx mname uu___ in
   let reset_fresh uu___ = FStarC_Effect.op_Colon_Equals ctr initial_ctr in
   let push uu___ =
-    (let uu___2 = FStarC_Debug.any () in
+    (let uu___2 = FStarC_Effect.op_Bang dbg_Snapshot in
      if uu___2
      then FStarC_Format.print_string "SMTEncoding.scopes.push\n"
      else ());
@@ -212,7 +214,7 @@ let varops : varops_t=
        let uu___4 = FStarC_Effect.op_Bang scopes in uu___3 :: uu___4 in
      FStarC_Effect.op_Colon_Equals scopes uu___2) in
   let pop uu___ =
-    (let uu___2 = FStarC_Debug.any () in
+    (let uu___2 = FStarC_Effect.op_Bang dbg_Snapshot in
      if uu___2
      then FStarC_Format.print_string "SMTEncoding.scopes.pop\n"
      else ());
@@ -236,7 +238,7 @@ let varops : varops_t=
     mk_unique;
     reset_scope =
       (fun uu___ ->
-         (let uu___2 = FStarC_Debug.any () in
+         (let uu___2 = FStarC_Effect.op_Bang dbg_Snapshot in
           if uu___2 then FStarC_Format.print_string "reset_scope!\n" else ());
          (let uu___2 = let uu___3 = new_scope () in [uu___3] in
           FStarC_Effect.op_Colon_Equals scopes uu___2))

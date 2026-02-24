@@ -1,0 +1,21 @@
+; Route to subdirectories
+(dirs Hello Hello-gen multifile multifile-gen)
+
+; Per-project generator rules in sibling virtual dirs. dynamic_include
+; cycles when generator and consumer are in parent→child dirs, so each
+; project gets its own sibling gen dir. (universe) avoids listing deps
+; explicitly. %{workspace_root}/../../ escapes the build tree back to
+; the source tree root.
+(subdir Hello-gen
+ (rule
+  (target dune.deps.inc)
+  (deps (universe))
+  (action (with-stdout-to %{target}
+    (run %{env:FSTAR_EXE=fstar.exe} --dep dune --codegen OCaml --already_cached "Prims FStar" %{workspace_root}/../../Hello/)))))
+
+(subdir multifile-gen
+ (rule
+  (target dune.deps.inc)
+  (deps (universe))
+  (action (with-stdout-to %{target}
+    (run %{env:FSTAR_EXE=fstar.exe} --dep dune --codegen OCaml --already_cached "Prims FStar" %{workspace_root}/../../multifile/)))))
