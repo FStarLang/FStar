@@ -1019,9 +1019,10 @@ type st_typing : env -> st_term -> comp -> Type =
       st_typing g cond (comp_nuwhile_cond inv post_cond) ->
       st_typing g body (comp_nuwhile_body inv post_cond) ->
       st_typing g (wtag (Some STT) (Tm_NuWhile { invariant = inv;
-                                               loop_requires = tm_unknown;
-                                               condition = cond;
-                                               body }))
+                                                loop_requires = tm_unknown;
+                                                meas = None;
+                                                condition = cond;
+                                                body }))
                   (comp_nuwhile inv post_cond)
 
   | T_WithLocal:

@@ -237,6 +237,8 @@ while_invariant1:
     { PulseSyntaxExtension_Sugar.LoopEnsures v }
   | REQUIRES v=appTermNoRecordExp
     { PulseSyntaxExtension_Sugar.LoopRequires v }
+  | DECREASES v=appTermNoRecordExp
+    { PulseSyntaxExtension_Sugar.Decreases v }
 
 while_invariant:
   | is=list(while_invariant1) { is }

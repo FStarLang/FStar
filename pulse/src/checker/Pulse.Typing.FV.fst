@@ -179,9 +179,10 @@ let rec freevars_close_st_term' (t:st_term) (x:var) (i:index)
       freevars_close_st_term' condition x i;
       freevars_close_st_term' body x i
 
-    | Tm_NuWhile { invariant; loop_requires; condition; body } ->
+    | Tm_NuWhile { invariant; loop_requires; meas; condition; body } ->
       freevars_close_term' invariant x i;
       freevars_close_term' loop_requires x i;
+      (match meas with | Some d -> freevars_close_term' d x i | None -> ());
       freevars_close_st_term' condition x i;
       freevars_close_st_term' body x i
 

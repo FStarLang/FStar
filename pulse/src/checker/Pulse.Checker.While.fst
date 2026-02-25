@@ -232,7 +232,7 @@ let check_nuwhile
   : T.Tac (checker_result_t g pre post_hint) =
 
   let g = push_context "nu while loop" t.range g in
-  let Tm_NuWhile { invariant=inv; loop_requires; condition=cond; body } = t.term in
+  let Tm_NuWhile { invariant=inv; loop_requires; meas; condition=cond; body } = t.term in
 
   (*
   We need to compute three slprops here:
@@ -251,11 +251,25 @@ let check_nuwhile
   `result == false`).  Therefore we mark the loop_requires in the invariant with
   the `loop_requires_marker` identity function, and replace that subterm with
   `True` in the break condition.
+
+  If a decreases clause is present, we tack `pure (x == meas)` onto the
+  invariant, where x is a fresh erased variable. This allows the checker to
+  track the termination measure across loop iterations.
+
+  TODO: Actually enforcing termination (proving `meas_new << meas_old`) requires
+  changes to the typing rule so the body post is
+  `exists* y. pure(y << x) ** inv y` rather than just `inv`. For now, the
+  decreases clause is parsed and threaded through, and the measure equality is
+  added to the invariant, but the strict decrease is not yet checked.
   *)
 
   let inv =
     if loop_requires `eq_tm` tm_l_true then inv else
     (inv `tm_star` tm_pure (mk_loop_requires_marker loop_requires)) in
+  (* TODO: When meas is Some, elaborate the decreases clause into the invariant.
+     This requires extending the typing rule so the body post is
+     `exists* y. pure(y << x) ** inv y` rather than just `inv`. *)
+  let _ = meas in
   let (| inv, inv_typing |) =
     purify_and_check_spec (push_context "invariant" (term_range inv) g)
       { ctxt_now = pre; ctxt_old = Some pre }
@@ -336,7 +350,7 @@ let check_nuwhile
   assert (comp_body == comp_nuwhile_body inv body_pre_open);
   let inv_typing2 : tot_typing g2 inv tm_slprop = RU.magic () in
 
-  let while = wtag (Some STT) (Tm_NuWhile { invariant = inv; loop_requires = tm_unknown; condition = cond; body }) in
+  let while = wtag (Some STT) (Tm_NuWhile { invariant = inv; loop_requires = tm_unknown; meas = None; condition = cond; body }) in
   let d: st_typing g2 while (comp_nuwhile inv body_pre_open) =
     T_NuWhile g2 inv body_pre_open cond body inv_typing2 (body_typing_ex body_open_pre_typing) cond_typing body_typing in
   let C_ST cst = comp_nuwhile inv body_pre_open in

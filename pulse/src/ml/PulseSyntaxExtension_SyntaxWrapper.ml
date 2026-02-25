@@ -146,8 +146,8 @@ let tm_let_mut_array (x:binder) (v:term option) (n:term) (k:st_term) (r:range) :
 let tm_while (head:st_term) (invariant: (ident * slprop)) (body:st_term) r : st_term =
   PSB.(with_range (tm_while (snd invariant) head (ppname_of_id (fst invariant)) body) r)
    
-let tm_nuwhile (head:st_term) (invariant: slprop) (body:st_term) loop_requires r : st_term =
-  PSB.(with_range (tm_nuwhile invariant head body loop_requires) r)
+let tm_nuwhile (head:st_term) (invariant: slprop) (body:st_term) loop_requires meas r : st_term =
+  PSB.(with_range (tm_nuwhile invariant head body loop_requires meas) r)
    
 let tm_if (head:term) (returns_annot:slprop option) (then_:st_term) (else_:st_term) r : st_term =
   PSB.(with_range (tm_if head then_ else_ returns_annot) r)
