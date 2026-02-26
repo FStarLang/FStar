@@ -110,6 +110,18 @@ val shift_arithmetic_right (a:t) (s:UInt32.t) : Pure t
   (requires (UInt32.v s < n))
   (ensures (fun c -> FStar.Int.shift_arithmetic_right (v a) (UInt32.v s) = v c))
 
+(* Rotate operators *)
+
+(** Rotate right for non-negative values *)
+val rotate_right (a:t) (s:UInt32.t) : Pure t
+  (requires (0 <= v a /\ UInt32.v s < n))
+  (ensures (fun c -> FStar.Int.rotate_right (v a) (UInt32.v s) = v c))
+
+(** Rotate left for non-negative values *)
+val rotate_left (a:t) (s:UInt32.t) : Pure t
+  (requires (0 <= v a /\ UInt32.v s < n))
+  (ensures (fun c -> FStar.Int.rotate_left (v a) (UInt32.v s) = v c))
+
 (* Comparison operators *)
 let eq  (a:t) (b:t) : Tot bool = eq  #n (v a) (v b)
 let ne  (a:t) (b:t) : Tot bool = ne  #n (v a) (v b)
