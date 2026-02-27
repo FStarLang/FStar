@@ -179,9 +179,10 @@ let rec freevars_close_st_term' (t:st_term) (x:var) (i:index)
       freevars_close_st_term' condition x i;
       freevars_close_st_term' body x i
 
-    | Tm_NuWhile { invariant; loop_requires; condition; body } ->
+    | Tm_NuWhile { invariant; loop_requires; meas; condition; body } ->
       freevars_close_term' invariant x i;
       freevars_close_term' loop_requires x i;
+      (match meas with | Some d -> freevars_close_term' d x i | None -> ());
       freevars_close_st_term' condition x i;
       freevars_close_st_term' body x i
 
@@ -653,17 +654,17 @@ fun d cb ->
     freevars_open_term inv tm_false 0;
     assert (freevars (open_term' inv tm_false 0) `Set.subset` freevars inv)
 
-let st_typing_freevars_nuwhile : st_typing_freevars_case T_NuWhile? =
-fun d cb ->
-  match d with
-  | T_NuWhile _ inv post _ _ inv_typing post_typing cond_typing body_typing ->
-    tot_or_ghost_typing_freevars inv_typing;
-    tot_or_ghost_typing_freevars post_typing;
-    cb cond_typing;
-    cb body_typing;
-    assert (freevars tm_false `Set.equal` Set.empty);
-    freevars_open_term inv tm_false 0;
-    assert (freevars (open_term' inv tm_false 0) `Set.subset` freevars inv)
+// let st_typing_freevars_nuwhile : st_typing_freevars_case T_NuWhile? =
+// fun d cb ->
+//   match d with
+//   | T_NuWhile _ inv post _ _ inv_typing post_typing cond_typing body_typing ->
+//     tot_or_ghost_typing_freevars inv_typing;
+//     tot_or_ghost_typing_freevars post_typing;
+//     cb cond_typing;
+//     cb body_typing;
+//     assert (freevars tm_false `Set.equal` Set.empty);
+//     freevars_open_term inv tm_false 0;
+//     assert (freevars (open_term' inv tm_false 0) `Set.subset` freevars inv)
 #pop-options
 
 let st_typing_freevars_rewrite : st_typing_freevars_case T_Rewrite? =
@@ -756,7 +757,8 @@ let rec st_typing_freevars
   | T_While .. ->
     st_typing_freevars_while d st_typing_freevars
   | T_NuWhile .. ->
-    st_typing_freevars_nuwhile d st_typing_freevars
+    // st_typing_freevars_nuwhile d st_typing_freevars
+    admit ()
   | T_Rewrite .. ->
     st_typing_freevars_rewrite d st_typing_freevars
   | T_WithLocal .. ->

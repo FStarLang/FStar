@@ -351,12 +351,13 @@ let rec st_term_to_string' (level:string) (t:st_term)
         level
         (term_list_to_string " " witnesses)
 
-    | Tm_NuWhile { invariant; condition; body } ->
-      sprintf "nuwhile (%s)\n%sinvariant %s\n%s{\n%s%s\n%s}"
+    | Tm_NuWhile { invariant; meas; condition; body } ->
+      sprintf "nuwhile (%s)\n%sinvariant %s\n%s%s{\n%s%s\n%s}"
         (st_term_to_string' level condition)
         level
         (term_to_string invariant)
         level
+        (match meas with | Some d -> sprintf "decreases %s\n%s" (term_to_string d) level | None -> "")
         (indent level)
         (st_term_to_string' (indent level) body)
         level

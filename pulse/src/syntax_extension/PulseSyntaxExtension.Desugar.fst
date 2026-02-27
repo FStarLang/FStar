@@ -590,6 +590,7 @@ let rec desugar_stmt' (env:env_t) (s:Sugar.stmt)
                         | New i -> return [i]
                         | LoopEnsures _ -> return []
                         | LoopRequires _ -> return []
+                        | Decreases _ -> return []
                         | Old (_, p) -> fail "When using multiple invariants, they must all be in the \
                         \"new\" style without a binder." (pos p)) in
       let invs = L.concat invs in
@@ -608,7 +609,18 @@ let rec desugar_stmt' (env:env_t) (s:Sugar.stmt)
         | [] -> U.t_true
         | r::rs -> L.fold_left U.mk_conj r rs in
 
-      let while = SW.tm_nuwhile guard inv body loop_requires s.range in
+      let meas_list = invs0 |> L.concatMap (function | Decreases r -> [r] | _ -> []) in
+      let! _ =
+        if L.length meas_list > 1
+        then fail "At most one decreases clause is allowed per while loop." s.range
+        else return () in
+      let! meas_terms = mapM (tosyntax env) meas_list in
+      let meas =
+        match meas_terms with
+        | [d] -> Some d
+        | _ -> None in
+
+      let while = SW.tm_nuwhile guard inv body loop_requires meas s.range in
       let while = close_st_term while lblx.index in
 
       let loop_ensures = invs0 |> L.concatMap (function | LoopEnsures r -> [r] | _ -> []) in

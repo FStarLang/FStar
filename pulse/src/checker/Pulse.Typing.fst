@@ -394,22 +394,36 @@ let comp_nuwhile_cond (inv:term) (post_cond:term)
            post=post_cond
          }
 
-let comp_nuwhile_body (inv:term) (post_cond:term)
+let mk_precedes u ty a b =
+  R.mk_app (R.pack_ln <| R.Tv_UInst (R.pack_fv ["Prims"; "precedes"]) [u; u]) [
+    ty, R.Q_Implicit;
+    ty, R.Q_Implicit;
+    a, R.Q_Explicit;
+    b, R.Q_Explicit;
+  ]
+
+let comp_nuwhile_body u_meas ty_meas is_tot x (inv:term) (post_cond:term)
   : comp
   = C_ST {
            u=u0;
            res=tm_unit;
            pre=open_term' post_cond tm_true 0;
-           post=inv
+           post=
+            tm_exists_sl u_meas (as_binder ty_meas)
+              (if is_tot then
+                // TODO: this pretty prints like horse manure
+                close_term inv (snd x) `tm_star` tm_pure (mk_precedes u_meas ty_meas (tm_bvar {bv_index=0;bv_ppname=fst x}) (term_of_nvar x))
+              else
+                close_term inv (snd x))
          }
 
-let comp_nuwhile (inv:term) (post_cond:term)
+let comp_nuwhile u_meas ty_meas (x:nvar) (inv:term) (post_cond:term)
   : comp
   = C_ST {
            u=u0;
            res=tm_unit;
-           pre=inv;
-           post=open_term' post_cond tm_false 0;
+           pre=tm_exists_sl u_meas (as_binder ty_meas) (close_term inv (snd x));
+           post=tm_exists_sl u_meas (as_binder ty_meas) (close_term (open_term' post_cond tm_false 0) (snd x));
          }
 
 
@@ -1014,15 +1028,20 @@ type st_typing : env -> st_term -> comp -> Type =
       post_cond:term ->
       cond:st_term ->
       body:st_term ->
-      tot_typing g inv tm_slprop ->
-      tot_typing g (tm_exists_sl u0 (as_binder tm_bool) post_cond) tm_slprop ->
-      st_typing g cond (comp_nuwhile_cond inv post_cond) ->
-      st_typing g body (comp_nuwhile_body inv post_cond) ->
+      u_meas: universe -> ty_meas: term -> universe_of g ty_meas u_meas ->
+      is_tot: bool ->
+      x:nvar { freshv g (snd x) /\ ~(snd x `Set.mem` freevars_st cond) /\ ~(snd x `Set.mem` freevars_st cond) } ->
+      gx:env { gx == push_binding g (snd x) (fst x) ty_meas } ->
+      tot_typing gx inv tm_slprop ->
+      tot_typing gx (tm_exists_sl u0 (as_binder tm_bool) post_cond) tm_slprop ->
+      st_typing gx cond (comp_nuwhile_cond inv post_cond) ->
+      st_typing gx body (comp_nuwhile_body u_meas ty_meas is_tot x inv post_cond) ->
       st_typing g (wtag (Some STT) (Tm_NuWhile { invariant = inv;
-                                               loop_requires = tm_unknown;
-                                               condition = cond;
-                                               body }))
-                  (comp_nuwhile inv post_cond)
+                                                loop_requires = tm_unknown;
+                                                meas = None;
+                                                condition = cond;
+                                                body }))
+                  (comp_nuwhile u_meas ty_meas x inv post_cond)
 
   | T_WithLocal:
       g:env ->

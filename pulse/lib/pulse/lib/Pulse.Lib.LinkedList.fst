@@ -376,7 +376,7 @@ fn length_iter (#t:Type) (x: llist t)
     Pulse.Lib.Reference.(cur := next);
     Pulse.Lib.Reference.(ctr := n + 1);
   };
-  with _n ll _sfx. _;
+  with _ _n ll _sfx. _;
   is_list_cases_none ll;
   T.elim _ _;
   let n = Pulse.Lib.Reference.(!ctr);
@@ -523,7 +523,7 @@ fn append_iter (#t:Type) (x y:llist t)
           as (forall* tl. is_list next tl @==> is_list x ((pfx@[reveal hd])@tl));
     Pulse.Lib.Reference.(cur := next);
   };
-  with ll pfx sfx. _;
+  with _ ll pfx sfx. _;
   append_at_last_cell Pulse.Lib.Reference.(!cur) y;
   (* finally, use the quqnatified postcondition of the invariant *)
   FA.elim_forall_imp (is_list ll) (fun sfx' -> is_list x (pfx @ sfx')) (sfx@'l2);
@@ -596,7 +596,7 @@ fn split (#t:Type0) (x:llist t) (n:U32.t) (#xl:erased (list t))
     List.Tot.append_length pfx [hd];
     non_empty_list next; (* need to prove Some? next *)
   };
-  with i ll pfx sfx. _;
+  with _ i ll pfx sfx. _;
   let last = Pulse.Lib.Reference.(!cur);
   let y = detach_next last;
   with hd tl. _;
@@ -679,7 +679,7 @@ fn reverse (#t:Type0) (x:llist t)
     List.Tot.Properties.rev_rev' _rev_pfx;
     List.Tot.Properties.append_assoc (List.Tot.rev _rev_pfx) [n.head] tl;
   };
-  with _p _c _rev_pfx _suffix. _;
+  with _ _p _c _rev_pfx _suffix. _;
   is_list_cases_none _c;
   drop_ (is_list _c _suffix);
   List.Tot.Properties.append_l_nil (List.Tot.rev _rev_pfx);

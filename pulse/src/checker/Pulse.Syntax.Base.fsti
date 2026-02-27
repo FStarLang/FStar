@@ -270,6 +270,7 @@ type st_term' =
    | Tm_NuWhile {
       invariant:term;
       loop_requires:term;
+      meas:option term;
       condition:st_term;
       body:st_term;
     }

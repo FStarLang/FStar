@@ -277,7 +277,7 @@ ensures pure (n == List.Tot.length 'l)
     cur := next;
     ctr := n + 1;
   };
-  with _n ll _sfx. _;
+  with _ _n ll _sfx. _;
   is_list_case_none ll; //this tells us that suffix=[]; so n == List.Tot.length 'l
   I.elim _ _;           //regain ownership of x, giving up ll
   let n = !ctr;
@@ -445,7 +445,7 @@ ensures is_list x ('l1 @ 'l2)
     cur := next;
     non_empty_list next; //need to prove that Some? next, for the invariant
   };
-  with ll pfx sfx. _;
+  with _ ll pfx sfx. _;
   let last = !cur;
   append_at_last_cell last y;
   FA.elim_forall_imp (is_list last) (fun sfx' -> is_list x (pfx @ sfx')) (sfx@'l2);

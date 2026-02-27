@@ -213,10 +213,10 @@ let rec simplify_st_term (g:env) (e:st_term) : T.Tac st_term =
     let body = simplify_st_term g body in
     { e with term = Tm_While { invariant; condition; condition_var; body } }
 
-  | Tm_NuWhile { invariant; loop_requires; condition; body } ->
+  | Tm_NuWhile { invariant; loop_requires; meas; condition; body } ->
     let condition = simplify_st_term g condition in
     let body = simplify_st_term g body in
-    { e with term = Tm_NuWhile { invariant; loop_requires; condition; body } }
+    { e with term = Tm_NuWhile { invariant; loop_requires; meas; condition; body } }
 
   | Tm_WithLocal { binder; initializer; body } ->
     ret (Tm_WithLocal { binder; initializer; body = with_open binder body })
@@ -313,10 +313,10 @@ let rec erase_ghost_subterms (g:env) (p:st_term) : T.Tac st_term =
       let body = erase_ghost_subterms g body in
       ret (Tm_While { invariant; condition; condition_var; body })
 
-    | Tm_NuWhile { invariant; loop_requires; condition; body } ->
+    | Tm_NuWhile { invariant; loop_requires; meas; condition; body } ->
       let condition = erase_ghost_subterms g condition in
       let body = erase_ghost_subterms g body in
-      ret (Tm_NuWhile { invariant; loop_requires; condition; body })
+      ret (Tm_NuWhile { invariant; loop_requires; meas; condition; body })
 
     | Tm_WithLocal { binder; initializer; body } ->
       let body = open_erase_close g binder body in

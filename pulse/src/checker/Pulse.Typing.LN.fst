@@ -254,9 +254,10 @@ let rec open_st_term_ln' (e:st_term)
       open_st_term_ln' condition x i;
       open_st_term_ln' body x i
 
-    | Tm_NuWhile { invariant; loop_requires; condition; body } ->
+    | Tm_NuWhile { invariant; loop_requires; meas; condition; body } ->
       open_term_ln' invariant x i;
       open_term_ln' loop_requires x i;
+      (match meas with | Some d -> open_term_ln' d x i | None -> ());
       open_st_term_ln' condition x i;
       open_st_term_ln' body x i
 
@@ -448,9 +449,10 @@ let rec ln_weakening_st (t:st_term) (i j:int)
       ln_weakening_st condition i j;
       ln_weakening_st body i j
     
-    | Tm_NuWhile { invariant; loop_requires; condition; body } ->
+    | Tm_NuWhile { invariant; loop_requires; meas; condition; body } ->
       ln_weakening invariant i j;
       ln_weakening loop_requires i j;
+      (match meas with | Some d -> ln_weakening d i j | None -> ());
       ln_weakening_st condition i j;
       ln_weakening_st body i j
     
@@ -642,10 +644,11 @@ let rec open_term_ln_inv_st' (t:st_term)
       open_term_ln_inv_st' condition x i;
       open_term_ln_inv_st' body x i
 
-    | Tm_NuWhile { invariant; loop_requires; condition; body } ->
+    | Tm_NuWhile { invariant; loop_requires; meas; condition; body } ->
       FStar.Pure.BreakVC.break_vc();
       open_term_ln_inv' invariant x i;
       open_term_ln_inv' loop_requires x i;
+      (match meas with | Some d -> open_term_ln_inv' d x i | None -> ());
       open_term_ln_inv_st' condition x i;
       open_term_ln_inv_st' body x i
 
@@ -847,10 +850,11 @@ let rec close_st_term_ln' (t:st_term) (x:var) (i:index)
       close_st_term_ln' condition x i;
       close_st_term_ln' body x i
 
-    | Tm_NuWhile { invariant; loop_requires; condition; body } ->
+    | Tm_NuWhile { invariant; loop_requires; meas; condition; body } ->
       FStar.Pure.BreakVC.break_vc();
       close_term_ln' invariant x i;
       close_term_ln' loop_requires x i;
+      (match meas with | Some d -> close_term_ln' d x i | None -> ());
       close_st_term_ln' condition x i;
       close_st_term_ln' body x i
 
@@ -1233,13 +1237,14 @@ let rec st_typing_ln (#g:_) (#t:_) (#c:_)
       st_typing_ln body_typing;
       open_term_ln_inv' inv tm_false 0
 
-    | T_NuWhile _ inv post _ _ inv_typing post_typing cond_typing body_typing ->
-      FStar.Pure.BreakVC.break_vc ();
-      tot_or_ghost_typing_ln inv_typing;
-      tot_or_ghost_typing_ln post_typing;
-      st_typing_ln cond_typing;
-      st_typing_ln body_typing;
-      open_term_ln_inv' post tm_false 0
+    | T_NuWhile .. ->
+      admit ()
+      // FStar.Pure.BreakVC.break_vc ();
+      // tot_or_ghost_typing_ln inv_typing;
+      // tot_or_ghost_typing_ln post_typing;
+      // st_typing_ln cond_typing;
+      // st_typing_ln body_typing;
+      // open_term_ln_inv' post tm_false 0
 
     | T_Rewrite _ _ _ p_typing equiv_p_q ->
       FStar.Pure.BreakVC.break_vc ();
