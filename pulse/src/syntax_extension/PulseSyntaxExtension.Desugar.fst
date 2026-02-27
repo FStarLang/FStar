@@ -614,11 +614,11 @@ let rec desugar_stmt' (env:env_t) (s:Sugar.stmt)
         if L.length meas_list > 1
         then fail "At most one decreases clause is allowed per while loop." s.range
         else return () in
-      let! meas_terms = mapM (tosyntax env) meas_list in
-      let meas =
-        match meas_terms with
-        | [d] -> Some d
-        | _ -> None in
+      let! meas =
+        match meas_list with
+        | [{ A.tm = A.LexList ts }] -> mapM (tosyntax env) ts
+        | _ -> mapM (tosyntax env) meas_list
+      in
 
       let while = SW.tm_nuwhile guard inv body loop_requires meas s.range in
       let while = close_st_term while lblx.index in

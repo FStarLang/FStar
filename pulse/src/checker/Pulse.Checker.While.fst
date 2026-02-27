@@ -217,8 +217,41 @@ it directly calls this checker and pass the post as the loop_ensures argument he
 
 *)
 
-#push-options "--fuel 0 --ifuel 0 --z3rlimit_factor 64"
+#push-options "--fuel 0 --ifuel 0 --z3rlimit_factor 72"
 module RT = FStar.Reflection.Typing
+
+#push-options "--fuel 1 --ifuel 1"
+let rec compute_meas_infos (g:env) (pre:term) (ms: list term)
+  : T.Tac (list (term & term & universe))
+  = match ms with
+    | [] -> []
+    | m :: rest ->
+      let m' = purify_term g { ctxt_now = pre; ctxt_old = Some pre } m in
+      let (| _, _, ty, (| u, _ |), _ |) = compute_term_type_and_u g m' in
+      (m, ty, u) :: compute_meas_infos g pre rest
+
+let rec build_tuple_info (infos: list (term & term & universe))
+  : T.Tac (term & term & universe & (term -> term -> term))
+  = match infos with
+    | [(m, ty, u)] -> (m, ty, u, mk_precedes u ty)
+    | (m, ty, u) :: rest ->
+      let (m_rest, ty_rest, u_rest, mk_dec_rest) = build_tuple_info rest in
+      let ty_tup = mk_tuple2 u u_rest ty ty_rest in
+      let m_tup = mk_mktuple2 u u_rest ty ty_rest m m_rest in
+      let mk_dec_tup (new_m: term) (old_m: term) : term =
+        let new_hd = mk_fst u u_rest ty ty_rest new_m in
+        let old_hd = mk_fst u u_rest ty ty_rest old_m in
+        let new_tl = mk_snd u u_rest ty ty_rest new_m in
+        let old_tl = mk_snd u u_rest ty ty_rest old_m in
+        let precedes_hd = mk_precedes u ty new_hd old_hd in
+        let eq_hd = mk_eq2 u ty new_hd old_hd in
+        let rest_dec = mk_dec_rest new_tl old_tl in
+        tm_l_or precedes_hd (tm_l_and eq_hd rest_dec)
+      in
+      (m_tup, ty_tup, u, mk_dec_tup)
+    | _ -> (unit_const, tm_unit, u0, mk_precedes u0 tm_unit)
+#pop-options
+
 let check_nuwhile
   (g:env)
   (pre:term)
@@ -261,20 +294,27 @@ let check_nuwhile
     if loop_requires `eq_tm` tm_l_true then inv else
     (inv `tm_star` tm_pure (mk_loop_requires_marker loop_requires)) in
   let x_meas: nvar = mk_ppname_no_range "meas", fresh g in
-  let u_meas, ty_meas, meas, is_tot =
+  let u_meas, ty_meas, meas_val, is_tot, mk_dec =
     match meas with
-    | None -> u0, tm_unit, unit_const, false
-    | Some meas ->
+    | [] -> u0, tm_unit, unit_const, false, mk_precedes u0 tm_unit
+    | [meas] ->
       let meas' = purify_term g { ctxt_now = pre; ctxt_old = Some pre } meas in
       let (| _, _, ty, (| u, _ |), _ |) = compute_term_type_and_u g meas' in
-      u, ty, meas, true
+      u, ty, meas, true, mk_precedes u ty
+    | _ ->
+      let meas_infos = compute_meas_infos g pre meas in
+      let (meas_val, _ty_approx, _u_approx, mk_dec) = build_tuple_info meas_infos in
+      let meas_val' = purify_term g { ctxt_now = pre; ctxt_old = Some pre } meas_val in
+      let (| _, _, ty, (| u, _ |), _ |) = compute_term_type_and_u g meas_val' in
+      u, ty, meas_val, true, mk_dec
   in
+  let dec_formula = mk_dec (tm_bvar {bv_index=0;bv_ppname=fst x_meas}) (term_of_nvar x_meas) in
   let inv_range = term_range inv in
   let g_meas = push_binding g (snd x_meas) (fst x_meas) ty_meas in
   let inv = dfst <|
     purify_and_check_spec (push_context "invariant" inv_range g_meas)
       { ctxt_now = pre; ctxt_old = Some pre }
-      (inv `tm_star` tm_pure (mk_eq2 u_meas ty_meas (term_of_nvar x_meas) meas))
+      (inv `tm_star` tm_pure (mk_eq2 u_meas ty_meas (term_of_nvar x_meas) meas_val))
   in
   let loop_pre0 = tm_exists_sl u_meas (as_binder ty_meas) (close_term inv (snd x_meas)) in
   let (| g0, remaining, k |) = Pulse.Checker.Prover.prove t.range g pre loop_pre0 false in
@@ -347,7 +387,7 @@ let check_nuwhile
     (| t, c, typ |) in
 
   let body_pre_open = post_cond.post in
-  let body_post_typing : tot_typing g2 (comp_post (comp_nuwhile_body u_meas ty_meas is_tot x_meas inv body_pre_open)) tm_slprop = RU.magic () in
+  let body_post_typing : tot_typing g2 (comp_post (comp_nuwhile_body u_meas ty_meas is_tot dec_formula x_meas inv body_pre_open)) tm_slprop = RU.magic () in
   let body_ph : post_hint_for_env g2 = inv_as_post_hint body_post_typing in
   assert body_ph.ret_ty == tm_unit;
   let x = fresh g2 in
@@ -363,21 +403,21 @@ let check_nuwhile
   let (| cond, comp_cond, cond_typing |) = r_cond in
   let (| body, comp_body, body_typing |) = apply_checker_result_k r_body ppname_default in
   assert (comp_cond == (comp_nuwhile_cond inv body_pre_open));
-  assert (comp_post comp_body == comp_post (comp_nuwhile_body u_meas ty_meas is_tot x_meas inv body_pre_open));
-  assert (comp_pre comp_body == comp_pre (comp_nuwhile_body u_meas ty_meas is_tot x_meas inv body_pre_open));
-  assert (comp_u comp_body == comp_u (comp_nuwhile_body u_meas ty_meas is_tot x_meas inv body_pre_open));
-  assert (comp_res comp_body == comp_res (comp_nuwhile_body u_meas ty_meas is_tot x_meas inv body_pre_open));
-  assert (comp_body == comp_nuwhile_body u_meas ty_meas is_tot x_meas inv body_pre_open);
+  assert (comp_post comp_body == comp_post (comp_nuwhile_body u_meas ty_meas is_tot dec_formula x_meas inv body_pre_open));
+  assert (comp_pre comp_body == comp_pre (comp_nuwhile_body u_meas ty_meas is_tot dec_formula x_meas inv body_pre_open));
+  assert (comp_u comp_body == comp_u (comp_nuwhile_body u_meas ty_meas is_tot dec_formula x_meas inv body_pre_open));
+  assert (comp_res comp_body == comp_res (comp_nuwhile_body u_meas ty_meas is_tot dec_formula x_meas inv body_pre_open));
+  assert (comp_body == comp_nuwhile_body u_meas ty_meas is_tot dec_formula x_meas inv body_pre_open);
   let inv_typing2 : tot_typing g2 inv tm_slprop = RU.magic () in
 
-  let while = wtag (Some STT) (Tm_NuWhile { invariant = inv; loop_requires = tm_unknown; meas = None; condition = cond; body }) in
+  let while = wtag (Some STT) (Tm_NuWhile { invariant = inv; loop_requires = tm_unknown; meas = []; condition = cond; body }) in
   let typ_meas: universe_of g1' ty_meas u_meas = RU.magic () in
   assume ~(snd x_meas `Set.mem` freevars_st cond);
   assume ~(snd x_meas `Set.mem` freevars_st body);
   let d: st_typing g1' while (comp_nuwhile u_meas ty_meas x_meas inv body_pre_open) =
     let h = RU.magic () in
     T_NuWhile g1' inv body_pre_open cond body
-      u_meas ty_meas typ_meas is_tot
+      u_meas ty_meas typ_meas is_tot dec_formula
       x_meas g2
       inv_typing2 h cond_typing body_typing
     in

@@ -230,7 +230,7 @@ let rec conditionalize (g: env) (t: st_term) (cond: cond_params) : T.Tac (option
     else
       None
   | Tm_While { invariant; condition; condition_var; body } -> 
-    conditionalize g { t with term = Tm_NuWhile { invariant; condition; loop_requires = tm_unknown; meas = None; body } } cond
+    conditionalize g { t with term = Tm_NuWhile { invariant; condition; loop_requires = tm_unknown; meas = []; body } } cond
   | Tm_NuWhile { invariant; loop_requires; meas; condition; body } -> (
     let x = fresh g in
     let cond_cond = { cond with result = Some { n = ppname_default; x; ty = tm_bool } } in

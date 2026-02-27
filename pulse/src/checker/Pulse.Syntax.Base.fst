@@ -236,7 +236,7 @@ let rec eq_st_term (t1 t2:st_term)
       Tm_NuWhile { invariant=inv2; loop_requires=cr2; meas=d2; condition=cond2; body=body2 } ->
       eq_tm inv1 inv2 &&
       eq_tm cr1 cr2 &&
-      eq_tm_opt d1 d2 &&
+      eq_tm_list d1 d2 &&
       eq_st_term cond1 cond2 &&
       eq_st_term body1 body2
 

@@ -44,7 +44,6 @@ let rec lex_rec (x y:nat)
   else if x > 0 then lex_rec (x - 1) y
   else lex_rec x (y - 1)
 
-[@@expect_failure]
 fn lex (x y:ref nat)
 requires live x ** live y
 ensures x |-> (0<:nat) ** y |-> (0<:nat)

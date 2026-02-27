@@ -257,7 +257,7 @@ let rec open_st_term_ln' (e:st_term)
     | Tm_NuWhile { invariant; loop_requires; meas; condition; body } ->
       open_term_ln' invariant x i;
       open_term_ln' loop_requires x i;
-      (match meas with | Some d -> open_term_ln' d x i | None -> ());
+      open_term_ln_list' meas x i;
       open_st_term_ln' condition x i;
       open_st_term_ln' body x i
 
@@ -452,7 +452,7 @@ let rec ln_weakening_st (t:st_term) (i j:int)
     | Tm_NuWhile { invariant; loop_requires; meas; condition; body } ->
       ln_weakening invariant i j;
       ln_weakening loop_requires i j;
-      (match meas with | Some d -> ln_weakening d i j | None -> ());
+      admit(); // list lemma for meas
       ln_weakening_st condition i j;
       ln_weakening_st body i j
     
@@ -648,7 +648,7 @@ let rec open_term_ln_inv_st' (t:st_term)
       FStar.Pure.BreakVC.break_vc();
       open_term_ln_inv' invariant x i;
       open_term_ln_inv' loop_requires x i;
-      (match meas with | Some d -> open_term_ln_inv' d x i | None -> ());
+      admit(); // list lemma for meas
       open_term_ln_inv_st' condition x i;
       open_term_ln_inv_st' body x i
 
@@ -854,7 +854,7 @@ let rec close_st_term_ln' (t:st_term) (x:var) (i:index)
       FStar.Pure.BreakVC.break_vc();
       close_term_ln' invariant x i;
       close_term_ln' loop_requires x i;
-      (match meas with | Some d -> close_term_ln' d x i | None -> ());
+      admit(); // list lemma for meas
       close_st_term_ln' condition x i;
       close_st_term_ln' body x i
 

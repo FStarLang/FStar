@@ -402,7 +402,7 @@ let mk_precedes u ty a b =
     b, R.Q_Explicit;
   ]
 
-let comp_nuwhile_body u_meas ty_meas is_tot x (inv:term) (post_cond:term)
+let comp_nuwhile_body u_meas ty_meas is_tot (dec_formula:term) x (inv:term) (post_cond:term)
   : comp
   = C_ST {
            u=u0;
@@ -411,8 +411,7 @@ let comp_nuwhile_body u_meas ty_meas is_tot x (inv:term) (post_cond:term)
            post=
             tm_exists_sl u_meas (as_binder ty_meas)
               (if is_tot then
-                // TODO: this pretty prints like horse manure
-                close_term inv (snd x) `tm_star` tm_pure (mk_precedes u_meas ty_meas (tm_bvar {bv_index=0;bv_ppname=fst x}) (term_of_nvar x))
+                close_term inv (snd x) `tm_star` tm_pure dec_formula
               else
                 close_term inv (snd x))
          }
@@ -444,6 +443,13 @@ let mk_snd (u1 u2:universe) (a1 a2 e:term) : term =
                          (Some Implicit) a2)
              None
              e
+
+let mk_mktuple2 (u1 u2:universe) (a1 a2 v1 v2:term) : term =
+  tm_pureapp (tm_pureapp (tm_pureapp (tm_pureapp (tm_uinst (as_fv mktuple2_lid) [u1; u2])
+                                                  (Some Implicit) a1)
+                                     (Some Implicit) a2)
+                         None v1)
+             None v2
 
 let par_post (uL uR:universe) (aL aR postL postR:term) (x:var) : term =
   let x_tm = term_of_no_name_var x in
@@ -1030,15 +1036,16 @@ type st_typing : env -> st_term -> comp -> Type =
       body:st_term ->
       u_meas: universe -> ty_meas: term -> universe_of g ty_meas u_meas ->
       is_tot: bool ->
+      dec_formula: term ->
       x:nvar { freshv g (snd x) /\ ~(snd x `Set.mem` freevars_st cond) /\ ~(snd x `Set.mem` freevars_st cond) } ->
       gx:env { gx == push_binding g (snd x) (fst x) ty_meas } ->
       tot_typing gx inv tm_slprop ->
       tot_typing gx (tm_exists_sl u0 (as_binder tm_bool) post_cond) tm_slprop ->
       st_typing gx cond (comp_nuwhile_cond inv post_cond) ->
-      st_typing gx body (comp_nuwhile_body u_meas ty_meas is_tot x inv post_cond) ->
+      st_typing gx body (comp_nuwhile_body u_meas ty_meas is_tot dec_formula x inv post_cond) ->
       st_typing g (wtag (Some STT) (Tm_NuWhile { invariant = inv;
                                                 loop_requires = tm_unknown;
-                                                meas = None;
+                                                meas = [];
                                                 condition = cond;
                                                 body }))
                   (comp_nuwhile u_meas ty_meas x inv post_cond)
