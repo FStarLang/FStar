@@ -53,18 +53,6 @@ fn test4 ()
   { (); }
 }
 
-(* One cannot mix old-style and new-style invariants. *)
-[@@expect_failure]
-fn test5 (r s : ref int)
-  preserves r |-> 1
-  preserves s |-> 2
-{
-  while (true)
-    invariant r |-> 1
-    invariant b. emp
-  { (); }
-}
-
 [@@expect_failure]
 fn test6 (r s : ref int)
   preserves r |-> 1

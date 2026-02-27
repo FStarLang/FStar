@@ -317,7 +317,7 @@ ensures
                     let res = !pres;
                     (res = 0s && not done)
                 )
-                invariant cont . exists* i1 i2 done res l1 l2 .
+                invariant  exists* i1 i2 done res l1 l2 .
                     pts_to pi1 i1 ** pts_to pi2 i2 ** pts_to pdone done ** pts_to pres res **
                     cbor_map_iterator_match p1 i1 l1 **
                     cbor_map_iterator_match p2 i2 l2 **
@@ -326,8 +326,7 @@ ensures
                     pure (
                         List.Tot.length l1 == List.Tot.length l2 /\
                         (Cbor.cbor_compare v1 v2 == (if res = 0s then Cbor.cbor_compare_map l1 l2 else I16.v res)) /\
-                        (res == 0s ==> done == Nil? l1)) **
-                    pure (cont == (Cons? l1 && res = 0s))
+                        (res == 0s ==> done == Nil? l1))
                 {
                     let x1 = cbor_map_iterator_next pi1;
                     with v1' . assert (raw_data_item_map_entry_match p1 x1 v1');
@@ -633,7 +632,6 @@ let cbor_map_sort_merge_invariant_prop
     (hi: SZ.t)
     (l1_0: Ghost.erased (list (Cbor.raw_data_item & Cbor.raw_data_item)))
     (l2_0: Ghost.erased (list (Cbor.raw_data_item & Cbor.raw_data_item)))
-    (cont: bool)
     i1 i2 (res: bool) accu l1 l2
 : Tot prop
 =
@@ -644,8 +642,7 @@ let cbor_map_sort_merge_invariant_prop
                 if res
                 then Cbor.map_sort_merge Cbor.cbor_compare accu l1 l2
                 else (false, accu `List.Tot.append` (l1 `List.Tot.append` l2))
-            ) /\
-            cont == (res && not (i1 = i2 || i2 = hi))
+            )
 
 let cbor_map_sort_merge_invariant // FIXME: WHY WHY WHY?
     (a: A.array cbor_map_entry)
@@ -656,7 +653,6 @@ let cbor_map_sort_merge_invariant // FIXME: WHY WHY WHY?
     (pi1: ref SZ.t)
     (pi2: ref SZ.t)
     (pres: ref bool)
-    (cont: bool)
     i1 i2 (res: bool) c c1 c2 accu l1 l2
 : Tot slprop
 =
@@ -667,7 +663,7 @@ let cbor_map_sort_merge_invariant // FIXME: WHY WHY WHY?
         SM.seq_list_match c1 l1 (raw_data_item_map_entry_match 1.0R) **
         A.pts_to_range a (SZ.v i2) (SZ.v hi) c2 **
         SM.seq_list_match c2 l2 (raw_data_item_map_entry_match 1.0R) **
-        pure (cbor_map_sort_merge_invariant_prop lo hi l1_0 l2_0 cont i1 i2 res accu l1 l2)
+        pure (cbor_map_sort_merge_invariant_prop lo hi l1_0 l2_0 i1 i2 res accu l1 l2)
 
 inline_for_extraction noextract [@@noextract_to "krml"]
 let size_add (x1 x2: SZ.t) (sq: squash (SZ.fits (SZ.v x1 + SZ.v x2))) : Tot SZ.t = x1 `SZ.add` x2
@@ -721,27 +717,23 @@ ensures exists* c l .
     let mut pi2 = mi;
     let mut pres = true;
     fold (cbor_map_sort_merge_invariant a lo hi l1_0 l2_0 pi1 pi2 pres
-        (not (lo = mi || mi = hi))
         lo mi true
         c1l c1r c2 [] l1_0 l2_0
     );
     while (
-        with gcont gi1 gi2 gres c c1 c2 accu l1 l2 .
-            assert (cbor_map_sort_merge_invariant a lo hi l1_0 l2_0 pi1 pi2 pres gcont gi1 gi2 gres c c1 c2 accu l1 l2);
-        unfold (cbor_map_sort_merge_invariant a lo hi l1_0 l2_0 pi1 pi2 pres gcont gi1 gi2 gres c c1 c2 accu l1 l2);
+        unfold cbor_map_sort_merge_invariant;
         let i1 = !pi1;
         let i2 = !pi2;
         let res = !pres;
         let cont = (res && not (i1 = i2 || i2 = hi));
-        fold (cbor_map_sort_merge_invariant a lo hi l1_0 l2_0 pi1 pi2 pres cont gi1 gi2 gres c c1 c2 accu l1 l2);
         cont
     )
-    invariant cont . exists* i1 i2 res c c1 c2 accu l1 l2 .
-        cbor_map_sort_merge_invariant a lo hi l1_0 l2_0 pi1 pi2 pres cont i1 i2 res c c1 c2 accu l1 l2
+    invariant  exists* i1 i2 res c c1 c2 accu l1 l2 .
+        cbor_map_sort_merge_invariant a lo hi l1_0 l2_0 pi1 pi2 pres i1 i2 res c c1 c2 accu l1 l2
     {
         with gi1 gi2 gres c c1 c2 accu l1 l2 .
-            assert (cbor_map_sort_merge_invariant a lo hi l1_0 l2_0 pi1 pi2 pres true gi1 gi2 gres c c1 c2 accu l1 l2);
-        unfold (cbor_map_sort_merge_invariant a lo hi l1_0 l2_0 pi1 pi2 pres true gi1 gi2 gres c c1 c2 accu l1 l2);
+            fold (cbor_map_sort_merge_invariant a lo hi l1_0 l2_0 pi1 pi2 pres gi1 gi2 gres c c1 c2 accu l1 l2);
+        unfold (cbor_map_sort_merge_invariant a lo hi l1_0 l2_0 pi1 pi2 pres gi1 gi2 gres c c1 c2 accu l1 l2);
         let prf_res : squash (gres == true) = ();
         SM.seq_list_match_length (raw_data_item_map_entry_match 1.0R) c1 l1;
         SM.seq_list_match_length (raw_data_item_map_entry_match 1.0R) c2 l2;
@@ -778,7 +770,7 @@ ensures exists* c l .
                 as (A.pts_to_range a (SZ.v gi1) (SZ.v gi2) (Seq.cons x1 (Seq.tail c1)));
             rewrite (A.pts_to_range a (Ghost.reveal (SZ.v gi2)) (Ghost.reveal (SZ.v hi)) c2)
                 as (A.pts_to_range a (SZ.v gi2) (SZ.v hi) (Seq.cons x2 (Seq.tail c2)));
-            fold (cbor_map_sort_merge_invariant a lo hi l1_0 l2_0 pi1 pi2 pres false gi1 gi2 false c
+            fold (cbor_map_sort_merge_invariant a lo hi l1_0 l2_0 pi1 pi2 pres gi1 gi2 false c
                 (Seq.cons x1 (Seq.tail c1))
                 (Seq.cons x2 (Seq.tail c2))
                 accu
@@ -802,8 +794,7 @@ ensures exists* c l .
                 as (A.pts_to_range a (SZ.v gi2) (SZ.v hi) (Seq.cons x2 (Seq.tail c2)));
             rewrite (A.pts_to_range a (SZ.v i1') (Ghost.reveal (SZ.v gi2)) (Seq.tail c1))
                 as (A.pts_to_range a (SZ.v i1') (SZ.v gi2) (Seq.tail c1));
-            let gcont' = Ghost.hide (gres && not (i1' `size_eq` gi2 || gi2 `size_eq` hi));
-            fold (cbor_map_sort_merge_invariant a lo hi l1_0 l2_0 pi1 pi2 pres gcont' i1' gi2 gres
+            fold (cbor_map_sort_merge_invariant a lo hi l1_0 l2_0 pi1 pi2 pres i1' gi2 gres
                 (Seq.append c (Seq.cons x1 Seq.empty))
                 (Seq.tail c1)
                 (Seq.cons x2 (Seq.tail c2))
@@ -830,8 +821,7 @@ ensures exists* c l .
             SM.seq_list_match_append_intro (raw_data_item_map_entry_match 1.0R) c accu (Seq.cons x2 Seq.empty) [List.Tot.hd l2];
             pi1 := i1';
             pi2 := i2';
-            let gcont' = Ghost.hide (gres && not (i1' `size_eq` i2' || i2' `size_eq` hi));
-            fold (cbor_map_sort_merge_invariant a lo hi l1_0 l2_0 pi1 pi2 pres gcont' i1' i2' gres
+            fold (cbor_map_sort_merge_invariant a lo hi l1_0 l2_0 pi1 pi2 pres i1' i2' gres
                 (Seq.append c (Seq.cons x2 Seq.empty))
                 (Seq.cons x1 (Seq.tail c1))
                 (Seq.tail c2)
@@ -842,8 +832,8 @@ ensures exists* c l .
         }
     };
     with i1 i2 res c c1 c2 accu l1 l2 .
-        assert (cbor_map_sort_merge_invariant a lo hi l1_0 l2_0 pi1 pi2 pres false i1 i2 res c c1 c2 accu l1 l2);
-    unfold (cbor_map_sort_merge_invariant a lo hi l1_0 l2_0 pi1 pi2 pres false i1 i2 res c c1 c2 accu l1 l2);
+        fold (cbor_map_sort_merge_invariant a lo hi l1_0 l2_0 pi1 pi2 pres i1 i2 res c c1 c2 accu l1 l2);
+    unfold (cbor_map_sort_merge_invariant a lo hi l1_0 l2_0 pi1 pi2 pres i1 i2 res c c1 c2 accu l1 l2);
     SM.seq_list_match_length (raw_data_item_map_entry_match 1.0R) c1 l1;
     SM.seq_list_match_length (raw_data_item_map_entry_match 1.0R) c2 l2;
     List.Tot.append_l_nil l1;
