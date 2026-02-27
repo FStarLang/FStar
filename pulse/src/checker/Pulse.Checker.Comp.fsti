@@ -20,7 +20,6 @@ module T = FStar.Tactics.V2
 
 open Pulse.Syntax
 open Pulse.Typing
-open Pulse.Typing.Metatheory.Base
 
 val check (g:env) 
           (c:comp_st)

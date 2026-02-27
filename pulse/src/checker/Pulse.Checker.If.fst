@@ -23,7 +23,6 @@ open Pulse.Checker.Pure
 open Pulse.Checker.Base
 
 module T = FStar.Tactics.V2
-module Metatheory = Pulse.Typing.Metatheory
 module J = Pulse.JoinComp
 module RW = Pulse.Checker.Prover.RewritesTo
 #set-options "--z3rlimit 40"
@@ -65,13 +64,7 @@ let check
   let g_with_eq = g_with_eq g hyp b in  
   let check_branch (eq_v:term) (br:st_term) (is_then:bool)
   : T.Tac (checker_result_t (g_with_eq eq_v) pre post_hint)
-  = let pre_typing = 
-      Metatheory.tot_typing_weakening_single
-        g pre tm_slprop
-        pre_typing
-        hyp 
-        (mk_sq_rewrites_to_p u0 tm_bool b eq_v)
-    in
+  = let pre_typing : tot_typing (g_with_eq eq_v) pre tm_slprop = () in
 
     let br =
       let t =

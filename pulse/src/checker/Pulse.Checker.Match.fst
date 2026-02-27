@@ -184,12 +184,7 @@ val tot_typing_weakening_n
    (d:tot_typing g t ty)
    : Tot (tot_typing (push_bindings g bs) t ty)
          (decreases bs)
-let rec tot_typing_weakening_n bs d =
-  match bs with
-  | [] -> d
-  | {x; ty} :: bs ->
-    let d = Pulse.Typing.Metatheory.tot_typing_weakening_single _ _ _ d x ty in
-    tot_typing_weakening_n bs d
+let rec tot_typing_weakening_n #g #t #ty bs d = ()
 
 let patof (b:branch) : pattern = b.pat
 let samepat (b1 b2 : branch) : prop = b1.pat == b2.pat
@@ -276,7 +271,7 @@ let check_branch
       { t with effect_tag = e.effect_tag }
   in
   let pre_typing = tot_typing_weakening_n pulse_bs pre_typing in // weaken w/ binders
-  let pre_typing = Pulse.Typing.Metatheory.tot_typing_weakening_single _ _ _ pre_typing hyp_var eq_typ in // weaken w/ branch eq
+  let pre_typing : tot_typing _ _ _ = () in // weaken w/ branch eq
 
   let (| e, c |) =
     let ppname = mk_ppname_no_range "_br" in

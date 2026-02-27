@@ -22,8 +22,6 @@ module P = Pulse.Syntax.Printer
 module CU = Pulse.Checker.Util
 module RU = Pulse.RuntimeUtils
 
-module Metatheory = Pulse.Typing.Metatheory.Base
-
 open FStar.List.Tot
 open Pulse.Syntax
 open Pulse.Typing

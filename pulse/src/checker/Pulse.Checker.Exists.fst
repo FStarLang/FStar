@@ -28,8 +28,6 @@ module T = FStar.Tactics.V2
 module P = Pulse.Syntax.Printer
 module FV = Pulse.Typing.FV
 
-module Metatheory = Pulse.Typing.Metatheory
-
 let slprop_as_list_typing (#g:env) (#p:term)
   (t:tot_typing g p tm_slprop)
   (x:term { List.Tot.memP x (slprop_as_list p) })
@@ -129,7 +127,7 @@ let check_intro_exists
 
   Pulse.Typing.FV.tot_typing_freevars g t tm_slprop ();
   let x = fresh g in
-  let ty_typing, _ = Metatheory.tm_exists_inversion g u b.binder_ty p () x in
+  let ty_typing, _ = (), () in
   let witness = 
     check_term g witness T.E_Ghost b.binder_ty in
   let intro_st = wtag (Some STT_Ghost) (Tm_IntroExists { p = tm_exists_sl u b p; witnesses = [witness] }) in

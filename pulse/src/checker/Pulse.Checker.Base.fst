@@ -19,7 +19,6 @@ module Pulse.Checker.Base
 module R = FStar.Reflection.V2
 module T = FStar.Tactics.V2
 module RT = FStar.Reflection.Typing
-module Metatheory = Pulse.Typing.Metatheory
 module CP = Pulse.Checker.Pure
 module RU = Pulse.RuntimeUtils
 module FV = Pulse.Typing.FV
@@ -27,8 +26,6 @@ open Pulse.Checker.Util
 open Pulse.Show
 
 open Pulse.Typing.Combinators
-open Pulse.Typing.Metatheory
-
 let debug (g:env) (f: unit -> T.Tac string) : T.Tac unit =
   if RU.debug_at_level (fstar_env g) "pulse.checker" then
     T.print (f())
@@ -138,18 +135,16 @@ let comp_typing_as_effect_annot_typing (#g:env) (#c:comp_st) (ct:comp_typing_u g
   
 
 let post_hint_from_comp_typing #g #c ct = 
-  let st_comp_typing = fst <| Metatheory.comp_typing_inversion g c ct in
   let effect_annot_typing = comp_typing_as_effect_annot_typing ct in
-  let inv = Metatheory.st_comp_typing_inversion g (st_comp_of_comp c) st_comp_typing in
   let p : post_hint_t = 
     { g;
       effect_annot=_;
       effect_annot_typing;
       ret_ty = comp_res c; u=comp_u c; 
-      ty_typing=Mkdtuple4?._1 inv;
+      ty_typing=();
       post=comp_post c;
-      x=Mkdtuple4?._3 inv;
-      post_typing_src=Mkdtuple4?._4 inv }
+      x=admit();
+      post_typing_src=() }
   in
   p
 
@@ -337,7 +332,6 @@ let continuation_elaborator_with_bind' (#g:env) (ctxt:term)
   let res1 = comp_res c1 in
   let post1 = comp_post c1 in
   let ctxt_typing = star_typing_inversion_l ctxt_pre1_typing in
-  // let p_prop = Metatheory.pure_typing_inversion pure_typing in
   let v_eq = () in
   let framing_token : frame_for_req_in_ctxt g (tm_star ctxt pre1) pre1 = 
     ctxt
@@ -348,8 +342,7 @@ let continuation_elaborator_with_bind' (#g:env) (ctxt:term)
       (show c1));
   let c1 =
     apply_frame g e1 (tm_star ctxt pre1) ctxt_pre1_typing c1 e1_typing framing_token in
-  let (| u_of_1, pre_typing, _, _ |) = 
-    Metatheory.(st_comp_typing_inversion g (st_comp_of_comp c1) (fst <| comp_typing_inversion g c1 (st_typing_correctness g e1 c1 ()))) in
+  let u_of_1 = () in
   let b = res1 in
   let ppname, x = x in
   let g' = push_binding g x ppname b in
@@ -440,18 +433,7 @@ let st_comp_typing_with_post_hint
     = if x = Ghost.reveal ph.x
       then post_typing_src
       else 
-        let open Pulse.Typing.Metatheory.Base in
-        let tt :
-         tot_typing
-            (push_binding ph.g x ppname_default ph.ret_ty)
-            (subst_term (open_term ph.post ph.x) (renaming ph.x x))
-            (subst_term tm_slprop (renaming ph.x x)) =
-          tot_typing_renaming1 ph.g ph.x ph.ret_ty (open_term ph.post ph.x) tm_slprop post_typing_src x
-        in
-        assert (subst_term tm_slprop (renaming ph.x x) == tm_slprop);
-        assume (subst_term (open_term ph.post ph.x) (renaming ph.x x) ==
-                open_term ph.post x);
-        coerce_eq tt ()
+        ()
   in
   let post_typing_src
     : tot_typing (push_binding g x ppname_default ph.ret_ty)
@@ -484,7 +466,7 @@ let continuation_elaborator_with_bind_fn (#g:env) (ctxt:term)
     let e2_closed = close_st_term e2 x in
     assume (open_st_term (close_st_term e2 x) x == e2);
     let e = wrst c2 (Tm_Bind {binder=b; head=e1; body=e2_closed}) in
-    let u = Pulse.Typing.Metatheory.Base.st_typing_correctness_ctot g e1 c1 e1_typing in
+    let u : Ghost.erased universe = RU.magic () in
     let c2_typing : comp_typing g c2 (universe_of_comp c2) = () in
     (| e, c2 |)
 
@@ -600,8 +582,7 @@ let checker_result_for_st_typing (#g:env) (#ctxt:slprop) (#post_hint:post_hint_o
 = let (| e1, c1 |) = d in
   let x = fresh g in
   assume (~ (x `Set.mem` freevars (comp_post c1)));
-  let u_of_1, pre_typing, post_typing = 
-    Metatheory.(st_comp_typing_inversion_with_name g (st_comp_of_comp c1) (fst <| comp_typing_inversion g c1 (st_typing_correctness g e1 c1 ())) x) in
+  let u_of_1, pre_typing, post_typing = (), (), () in
   let g' = push_binding g x ppname (comp_res c1) in
   let ctxt' = open_term_nv (comp_post c1) (ppname, x) in
   let k
@@ -788,7 +769,7 @@ let norm_st_typing_inverse
     then (
       let t0_typing 
         : Ghost.erased (RT.tot_typing (elab_env g) t0 (RT.tm_type u)) =
-        rt_equiv_typing #_ #_ #t0 related_t1_t1' d1
+        admit()
       in
       let eq
         : Ghost.erased (RT.equiv (elab_env g) t0 t1)

@@ -23,7 +23,6 @@ open Pulse.Checker.Base
 open Pulse.Checker.Prover
 
 module T = FStar.Tactics.V2
-module Metatheory = Pulse.Typing.Metatheory
 module RU = Pulse.RuntimeUtils
 
 let check_effect

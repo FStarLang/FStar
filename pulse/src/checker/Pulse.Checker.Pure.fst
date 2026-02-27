@@ -521,7 +521,6 @@ let check_slprop_with_core (g:env)
     (push_context_no_range g "check_slprop_with_core") t T.E_Total tm_slprop
 
   
-module Metatheory = Pulse.Typing.Metatheory.Base
 
 let non_informative_class_typing
   (g:env) (u:universe) (ty:typ) (ty_typing : universe_of g ty u)

@@ -26,7 +26,6 @@ open Pulse.Checker.Pure
 module L = FStar.List.Tot
 
 module Env = Pulse.Typing.Env
-module Metatheory = Pulse.Typing.Metatheory
 
 let coerce_eq (#a #b:Type) (x:a) (_:squash (a == b)) : y:b {y == x} = x
 
