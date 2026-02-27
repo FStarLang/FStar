@@ -284,7 +284,7 @@ let rec soundness (g:stt_env)
     | T_IntroExists .. ->
       Exists.intro_exists_soundness d
 
-    | T_NuWhile .. ->
+    | T_While .. ->
       admit()
 
     | T_WithLocal .. ->

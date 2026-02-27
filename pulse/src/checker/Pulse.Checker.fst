@@ -371,15 +371,15 @@ let rec check
         (| x, t, pre', g1, k |)
       )
 
-      | Tm_NuWhile .. -> (
+      | Tm_While .. -> (
         match post_hint with
         | PostHint _ -> Bind.check_bind g pre pre_typing post_hint res_ppname (seq_with_unit t) check
-        | _ -> While.check_nuwhile g pre pre_typing post_hint res_ppname t (fresh g) None check
+        | _ -> While.check_while g pre pre_typing post_hint res_ppname t (fresh g) None check
       )
 
       // SUPER HACKY, we pass break invariants from the frontend by annotating a
       // forward jump label around the while.....
-      | Tm_ForwardJumpLabel { lbl; body = { term = Tm_NuWhile _ }; post } ->
+      | Tm_ForwardJumpLabel { lbl; body = { term = Tm_While _ }; post } ->
         if T.unseal lbl.name = "_break" then
           match post_hint with
           | PostHint _ ->
@@ -387,13 +387,13 @@ let rec check
           | _ ->
             let lblx = fresh g in
             let Tm_ForwardJumpLabel {body} = t.term in
-            assert Tm_NuWhile? body.term;
+            assert Tm_While? body.term;
             let body = open_st_term_nv body (lbl, lblx) in
-            assume Tm_NuWhile? body.term;
+            assume Tm_While? body.term;
             let loop_ensures = match inspect_term (comp_post post) with
               | Tm_Pure p -> Some p
               | _ -> None in
-            While.check_nuwhile g pre pre_typing post_hint res_ppname body lblx loop_ensures check
+            While.check_while g pre pre_typing post_hint res_ppname body lblx loop_ensures check
         else
           ForwardJumpLabel.check g pre pre_typing post_hint res_ppname t check
 

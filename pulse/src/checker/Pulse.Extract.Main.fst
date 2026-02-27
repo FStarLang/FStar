@@ -208,10 +208,10 @@ let rec simplify_st_term (g:env) (e:st_term) : T.Tac st_term =
   | Tm_Match { sc; returns_; brs } ->
     ret (Tm_Match { sc; returns_; brs = T.map (simplify_branch g) brs })
 
-  | Tm_NuWhile { invariant; loop_requires; meas; condition; body } ->
+  | Tm_While { invariant; loop_requires; meas; condition; body } ->
     let condition = simplify_st_term g condition in
     let body = simplify_st_term g body in
-    { e with term = Tm_NuWhile { invariant; loop_requires; meas; condition; body } }
+    { e with term = Tm_While { invariant; loop_requires; meas; condition; body } }
 
   | Tm_WithLocal { binder; initializer; body } ->
     ret (Tm_WithLocal { binder; initializer; body = with_open binder body })
@@ -303,10 +303,10 @@ let rec erase_ghost_subterms (g:env) (p:st_term) : T.Tac st_term =
       let brs = T.map (erase_ghost_subterms_branch g) brs in
       ret (Tm_Match { sc; brs; returns_ })
 
-    | Tm_NuWhile { invariant; loop_requires; meas; condition; body } ->
+    | Tm_While { invariant; loop_requires; meas; condition; body } ->
       let condition = erase_ghost_subterms g condition in
       let body = erase_ghost_subterms g body in
-      ret (Tm_NuWhile { invariant; loop_requires; meas; condition; body })
+      ret (Tm_While { invariant; loop_requires; meas; condition; body })
 
     | Tm_WithLocal { binder; initializer; body } ->
       let body = open_erase_close g binder body in
@@ -469,7 +469,7 @@ let rec extract_dv g (p:st_term) : T.Tac R.term =
     | Tm_Match { sc; brs } ->
       R.pack_ln (R.Tv_Match sc None (T.map (extract_dv_branch g) brs))
 
-    | Tm_NuWhile { condition; body } ->
+    | Tm_While { condition; body } ->
       let condition = extract_dv g condition in
       let body = extract_dv g body in
       ECL.mk_meta_monadic

@@ -14,7 +14,7 @@ fn while_loop
   requires exists* x. inv x
   ensures inv false
 
-fn nu_while_loop
+fn while_loop
   (inv:slprop)
   (post:bool -> slprop)
   (cond:unit -> stt bool inv (fun b -> post b))

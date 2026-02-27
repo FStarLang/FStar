@@ -357,7 +357,7 @@ let comp_intro_exists_erased (u:universe) (b:binder) (p:term) (e:term)
         post=tm_exists_sl u b p
       }
 
-let comp_nuwhile_cond (inv:term) (post_cond:term)
+let comp_while_cond (inv:term) (post_cond:term)
   : comp
   = C_ST {
            u=u0;
@@ -374,7 +374,7 @@ let mk_precedes u ty a b =
     b, R.Q_Explicit;
   ]
 
-let comp_nuwhile_body u_meas ty_meas is_tot x (inv:term) (post_cond:term)
+let comp_while_body u_meas ty_meas is_tot x (inv:term) (post_cond:term)
   : comp
   = C_ST {
            u=u0;
@@ -389,7 +389,7 @@ let comp_nuwhile_body u_meas ty_meas is_tot x (inv:term) (post_cond:term)
                 close_term inv (snd x))
          }
 
-let comp_nuwhile u_meas ty_meas (x:nvar) (inv:term) (post_cond:term)
+let comp_while u_meas ty_meas (x:nvar) (inv:term) (post_cond:term)
   : comp
   = C_ST {
            u=u0;
@@ -980,7 +980,7 @@ type st_typing : env -> st_term -> comp -> Type =
                                          witnesses= [e] }))
                   (comp_intro_exists u b p e)
 
-  | T_NuWhile:
+  | T_While:
       g:env ->
       inv:term ->
       post_cond:term ->
@@ -992,14 +992,14 @@ type st_typing : env -> st_term -> comp -> Type =
       gx:env { gx == push_binding g (snd x) (fst x) ty_meas } ->
       tot_typing gx inv tm_slprop ->
       tot_typing gx (tm_exists_sl u0 (as_binder tm_bool) post_cond) tm_slprop ->
-      st_typing gx cond (comp_nuwhile_cond inv post_cond) ->
-      st_typing gx body (comp_nuwhile_body u_meas ty_meas is_tot x inv post_cond) ->
-      st_typing g (wtag (Some STT) (Tm_NuWhile { invariant = inv;
+      st_typing gx cond (comp_while_cond inv post_cond) ->
+      st_typing gx body (comp_while_body u_meas ty_meas is_tot x inv post_cond) ->
+      st_typing g (wtag (Some STT) (Tm_While { invariant = inv;
                                                 loop_requires = tm_unknown;
                                                 meas = None;
                                                 condition = cond;
                                                 body }))
-                  (comp_nuwhile u_meas ty_meas x inv post_cond)
+                  (comp_while u_meas ty_meas x inv post_cond)
 
   | T_WithLocal:
       g:env ->

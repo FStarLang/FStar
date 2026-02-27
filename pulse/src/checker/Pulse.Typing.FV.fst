@@ -174,7 +174,7 @@ let rec freevars_close_st_term' (t:st_term) (x:var) (i:index)
       freevars_close_term' p x i;
       freevars_close_term_list' witnesses x i
 
-    | Tm_NuWhile { invariant; loop_requires; meas; condition; body } ->
+    | Tm_While { invariant; loop_requires; meas; condition; body } ->
       freevars_close_term' invariant x i;
       freevars_close_term' loop_requires x i;
       (match meas with | Some d -> freevars_close_term' d x i | None -> ());
@@ -637,10 +637,10 @@ fun #g #t #c d cb ->
         freevars p);
     }
 
-// let st_typing_freevars_nuwhile : st_typing_freevars_case T_NuWhile? =
+// let st_typing_freevars_while : st_typing_freevars_case T_While? =
 // fun d cb ->
 //   match d with
-//   | T_NuWhile _ inv post _ _ inv_typing post_typing cond_typing body_typing ->
+//   | T_While _ inv post _ _ inv_typing post_typing cond_typing body_typing ->
 //     tot_or_ghost_typing_freevars inv_typing;
 //     tot_or_ghost_typing_freevars post_typing;
 //     cb cond_typing;
@@ -737,8 +737,8 @@ let rec st_typing_freevars
   | T_Equiv _ _ _ _ d2 deq ->
     st_typing_freevars d2;
     st_equiv_freevars deq
-  | T_NuWhile .. ->
-    // st_typing_freevars_nuwhile d st_typing_freevars
+  | T_While .. ->
+    // st_typing_freevars_while d st_typing_freevars
     admit ()
   | T_Rewrite .. ->
     st_typing_freevars_rewrite d st_typing_freevars

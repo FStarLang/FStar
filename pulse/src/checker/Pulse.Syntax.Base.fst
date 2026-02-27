@@ -226,8 +226,8 @@ let rec eq_st_term (t1 t2:st_term)
       eq_tm_opt r1 r2 &&
       eq_list_dec t1 t2 eq_branch br1 br2
 
-    | Tm_NuWhile { invariant=inv1; loop_requires=cr1; meas=d1; condition=cond1; body=body1 },
-      Tm_NuWhile { invariant=inv2; loop_requires=cr2; meas=d2; condition=cond2; body=body2 } ->
+    | Tm_While { invariant=inv1; loop_requires=cr1; meas=d1; condition=cond1; body=body1 },
+      Tm_While { invariant=inv2; loop_requires=cr2; meas=d2; condition=cond2; body=body2 } ->
       eq_tm inv1 inv2 &&
       eq_tm cr1 cr2 &&
       eq_tm_opt d1 d2 &&

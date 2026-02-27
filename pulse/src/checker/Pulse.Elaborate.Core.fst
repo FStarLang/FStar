@@ -248,11 +248,11 @@ let rec elab_st_typing (#g:env)
       let rt = b.binder_ty in
       mk_intro_exists u rt (mk_abs rt R.Q_Explicit p) e
 
-    | T_NuWhile .. ->
+    | T_While .. ->
       admit ()
       // let cond = elab_st_typing cond_typing in
       // let body = elab_st_typing body_typing in
-      // mk_nu_while inv (mk_abs bool_tm R.Q_Explicit post) cond body
+      // mk_while inv (mk_abs bool_tm R.Q_Explicit post) cond body
 
 		| T_Rewrite _ p q _ _ ->
 		  mk_rewrite p q

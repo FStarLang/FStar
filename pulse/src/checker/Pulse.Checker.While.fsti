@@ -22,13 +22,13 @@ open Pulse.Checker.Base
 
 module T = FStar.Tactics.V2
 
-val check_nuwhile
+val check_while
   (g:env)
   (pre:term)
   (pre_typing:tot_typing g pre tm_slprop)
   (post_hint:post_hint_opt g { ~ (PostHint? post_hint) })
   (res_ppname:ppname)
-  (t:st_term{Tm_NuWhile? t.term})
+  (t:st_term{Tm_While? t.term})
   (break_lbl: var { freshv g break_lbl })
   (loop_ensures: option term)
   (check:check_t)

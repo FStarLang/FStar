@@ -92,7 +92,7 @@ is represented as
 
 Tm_ForwardJumpLabel {
   lbl = "_break";
-  body = Tm_NuWhile {
+  body = Tm_While {
     invariant = inv;
     loop_requires = pre;
     condition = cond;
@@ -114,20 +114,20 @@ it directly calls this checker and pass the post as the loop_ensures argument he
 
 #push-options "--fuel 0 --ifuel 0 --z3rlimit_factor 64"
 module RT = FStar.Reflection.Typing
-let check_nuwhile
+let check_while
   (g:env)
   (pre:term)
   (pre_typing:tot_typing g pre tm_slprop)
   (post_hint:post_hint_opt g {~ (PostHint? post_hint) })
   (res_ppname:ppname)
-  (t:st_term{Tm_NuWhile? t.term})
+  (t:st_term{Tm_While? t.term})
   (breaklblx: var { freshv g breaklblx })
   (loop_ensures: option term)
   (check:check_t)
   : T.Tac (checker_result_t g pre post_hint) =
 
-  let g = push_context "nu while loop" t.range g in
-  let Tm_NuWhile { invariant=inv; loop_requires; meas; condition=cond; body } = t.term in
+  let g = push_context "while loop" t.range g in
+  let Tm_While { invariant=inv; loop_requires; meas; condition=cond; body } = t.term in
 
   (*
   We need to compute three slprops here:
@@ -242,7 +242,7 @@ let check_nuwhile
     (| t, c, typ |) in
 
   let body_pre_open = post_cond.post in
-  let body_post_typing : tot_typing g2 (comp_post (comp_nuwhile_body u_meas ty_meas is_tot x_meas inv body_pre_open)) tm_slprop = RU.magic () in
+  let body_post_typing : tot_typing g2 (comp_post (comp_while_body u_meas ty_meas is_tot x_meas inv body_pre_open)) tm_slprop = RU.magic () in
   let body_ph : post_hint_for_env g2 = inv_as_post_hint body_post_typing in
   assert body_ph.ret_ty == tm_unit;
   let x = fresh g2 in
@@ -257,28 +257,28 @@ let check_nuwhile
   in
   let (| cond, comp_cond, cond_typing |) = r_cond in
   let (| body, comp_body, body_typing |) = apply_checker_result_k r_body ppname_default in
-  assert (comp_cond == (comp_nuwhile_cond inv body_pre_open));
-  assert (comp_post comp_body == comp_post (comp_nuwhile_body u_meas ty_meas is_tot x_meas inv body_pre_open));
-  assert (comp_pre comp_body == comp_pre (comp_nuwhile_body u_meas ty_meas is_tot x_meas inv body_pre_open));
-  assert (comp_u comp_body == comp_u (comp_nuwhile_body u_meas ty_meas is_tot x_meas inv body_pre_open));
-  assert (comp_res comp_body == comp_res (comp_nuwhile_body u_meas ty_meas is_tot x_meas inv body_pre_open));
-  assert (comp_body == comp_nuwhile_body u_meas ty_meas is_tot x_meas inv body_pre_open);
+  assert (comp_cond == (comp_while_cond inv body_pre_open));
+  assert (comp_post comp_body == comp_post (comp_while_body u_meas ty_meas is_tot x_meas inv body_pre_open));
+  assert (comp_pre comp_body == comp_pre (comp_while_body u_meas ty_meas is_tot x_meas inv body_pre_open));
+  assert (comp_u comp_body == comp_u (comp_while_body u_meas ty_meas is_tot x_meas inv body_pre_open));
+  assert (comp_res comp_body == comp_res (comp_while_body u_meas ty_meas is_tot x_meas inv body_pre_open));
+  assert (comp_body == comp_while_body u_meas ty_meas is_tot x_meas inv body_pre_open);
   let inv_typing2 : tot_typing g2 inv tm_slprop = RU.magic () in
 
-  let while = wtag (Some STT) (Tm_NuWhile { invariant = inv; loop_requires = tm_unknown; meas = None; condition = cond; body }) in
+  let while = wtag (Some STT) (Tm_While { invariant = inv; loop_requires = tm_unknown; meas = None; condition = cond; body }) in
   let typ_meas: universe_of g1' ty_meas u_meas = RU.magic () in
   assume ~(snd x_meas `Set.mem` freevars_st cond);
   assume ~(snd x_meas `Set.mem` freevars_st body);
-  let d: st_typing g1' while (comp_nuwhile u_meas ty_meas x_meas inv body_pre_open) =
+  let d: st_typing g1' while (comp_while u_meas ty_meas x_meas inv body_pre_open) =
     let h = RU.magic () in
-    T_NuWhile g1' inv body_pre_open cond body
+    T_While g1' inv body_pre_open cond body
       u_meas ty_meas typ_meas is_tot
       x_meas g2
       inv_typing2 h cond_typing body_typing
     in
-  let C_ST cst = comp_nuwhile u_meas ty_meas x_meas inv body_pre_open in
+  let C_ST cst = comp_while u_meas ty_meas x_meas inv body_pre_open in
   let loop_pre = tm_exists_sl u_meas (as_binder ty_meas) (close_term inv (snd x_meas)) in
-  assert comp_pre (comp_nuwhile u_meas ty_meas x_meas inv body_pre_open) == loop_pre;
+  assert comp_pre (comp_while u_meas ty_meas x_meas inv body_pre_open) == loop_pre;
   let d_st : Pulse.Typing.Combinators.st_typing_in_ctxt g1' loop_pre NoHint = (| _, _, d |) in
   let res = checker_result_for_st_typing d_st ppname_default in
   assume (fresh_wrt x g0 (freevars break_pred));

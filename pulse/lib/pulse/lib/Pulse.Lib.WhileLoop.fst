@@ -40,7 +40,7 @@ let while_loop inv cond body =
   while_loop' inv (fun _ -> cond) (fun _ -> body)
 
 
-fn rec nu_while_loop
+fn rec while_loop
   (inv:slprop)
   (post:bool -> slprop)
   (cond:unit -> stt bool inv (fun b -> post b))
@@ -51,6 +51,6 @@ fn rec nu_while_loop
   let b = cond ();
   if b {
      body ();
-     nu_while_loop inv post cond body;
+     while_loop inv post cond body;
   }
 }

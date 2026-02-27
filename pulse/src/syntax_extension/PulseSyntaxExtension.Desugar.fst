@@ -606,7 +606,7 @@ let rec desugar_stmt' (env:env_t) (s:Sugar.stmt)
         | [d] -> Some d
         | _ -> None in
 
-      let while = SW.tm_nuwhile guard inv body loop_requires meas s.range in
+      let while = SW.tm_while guard inv body loop_requires meas s.range in
       let while = close_st_term while lblx.index in
 
       let loop_ensures = invs0 |> L.concatMap (function | LoopEnsures r -> [r] | _ -> []) in

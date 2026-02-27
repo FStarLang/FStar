@@ -249,7 +249,7 @@ let rec open_st_term_ln' (e:st_term)
       open_term_ln' p x i;
       open_term_ln_list' witnesses x i
 
-    | Tm_NuWhile { invariant; loop_requires; meas; condition; body } ->
+    | Tm_While { invariant; loop_requires; meas; condition; body } ->
       open_term_ln' invariant x i;
       open_term_ln' loop_requires x i;
       (match meas with | Some d -> open_term_ln' d x i | None -> ());
@@ -439,7 +439,7 @@ let rec ln_weakening_st (t:st_term) (i j:int)
       ln_weakening p i j;
       ln_weakening_list witnesses i j
 
-    | Tm_NuWhile { invariant; loop_requires; meas; condition; body } ->
+    | Tm_While { invariant; loop_requires; meas; condition; body } ->
       ln_weakening invariant i j;
       ln_weakening loop_requires i j;
       (match meas with | Some d -> ln_weakening d i j | None -> ());
@@ -628,7 +628,7 @@ let rec open_term_ln_inv_st' (t:st_term)
       open_term_ln_inv' p x i;
       open_term_ln_inv_list' witnesses x i
 
-    | Tm_NuWhile { invariant; loop_requires; meas; condition; body } ->
+    | Tm_While { invariant; loop_requires; meas; condition; body } ->
       FStar.Pure.BreakVC.break_vc();
       open_term_ln_inv' invariant x i;
       open_term_ln_inv' loop_requires x i;
@@ -828,7 +828,7 @@ let rec close_st_term_ln' (t:st_term) (x:var) (i:index)
       close_term_ln' p x i;
       close_term_ln_list' witnesses x i
 
-    | Tm_NuWhile { invariant; loop_requires; meas; condition; body } ->
+    | Tm_While { invariant; loop_requires; meas; condition; body } ->
       FStar.Pure.BreakVC.break_vc();
       close_term_ln' invariant x i;
       close_term_ln' loop_requires x i;
@@ -1208,7 +1208,7 @@ let rec st_typing_ln (#g:_) (#t:_) (#c:_)
       st_typing_ln d2;
       st_equiv_ln deq
 
-    | T_NuWhile .. ->
+    | T_While .. ->
       admit ()
       // FStar.Pure.BreakVC.break_vc ();
       // tot_or_ghost_typing_ln inv_typing;
