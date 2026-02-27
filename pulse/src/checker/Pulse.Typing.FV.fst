@@ -637,19 +637,6 @@ fun #g #t #c d cb ->
         freevars p);
     }
 
-// let st_typing_freevars_while : st_typing_freevars_case T_While? =
-// fun d cb ->
-//   match d with
-//   | T_While _ inv post _ _ inv_typing post_typing cond_typing body_typing ->
-//     tot_or_ghost_typing_freevars inv_typing;
-//     tot_or_ghost_typing_freevars post_typing;
-//     cb cond_typing;
-//     cb body_typing;
-//     assert (freevars tm_false `Set.equal` Set.empty);
-//     freevars_open_term inv tm_false 0;
-//     assert (freevars (open_term' inv tm_false 0) `Set.subset` freevars inv)
-#pop-options
-
 let st_typing_freevars_rewrite : st_typing_freevars_case T_Rewrite? =
 fun d cb ->
   match d with
