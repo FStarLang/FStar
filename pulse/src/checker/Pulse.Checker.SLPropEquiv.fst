@@ -69,8 +69,8 @@ let list_as_slprop_ctx g (vp0 vp0' vp1 vp1':list term)
                         (d1:slprop_equiv g (list_as_slprop vp1) (list_as_slprop vp1'))
   : GTot (slprop_equiv g (list_as_slprop (vp0 @ vp1)) (list_as_slprop (vp0' @ vp1')))
 
-  = let split_app = list_as_slprop_append _ vp0 vp1 in
-    let split_app' = list_as_slprop_append _ vp0' vp1' in
+  = let split_app = list_as_slprop_append g vp0 vp1 in
+    let split_app' = list_as_slprop_append g vp0' vp1' in
     ()
   
 let list_as_slprop_singleton g
@@ -89,7 +89,7 @@ let rec slprop_list_equiv (g:env)
       let eq0 = slprop_list_equiv g vp0 in
       let eq1 = slprop_list_equiv g vp1 in      
       let app_eq
-        : slprop_equiv _ (canon_slprop vp) (tm_star (canon_slprop vp0) (canon_slprop vp1))
+        : slprop_equiv g (canon_slprop vp) (tm_star (canon_slprop vp0) (canon_slprop vp1))
         = list_as_slprop_append g (slprop_as_list vp0) (slprop_as_list vp1)
       in
       ()
@@ -128,20 +128,20 @@ let slprop_equiv_split_frame (g:_) (ctxt req:term) (frame:list term)
     let veq : slprop_equiv g (list_as_slprop (req_l @ frame))
                             (list_as_slprop ctxt_l) = veq in
     let d1 
-        : slprop_equiv _ (tm_star (canon_slprop req) (list_as_slprop frame))
+        : slprop_equiv g (tm_star (canon_slprop req) (list_as_slprop frame))
                         (list_as_slprop (req_l @ frame))
         = ()
     in
     let d1 
-        : slprop_equiv _ (tm_star req (list_as_slprop frame))
+        : slprop_equiv g (tm_star req (list_as_slprop frame))
                         (list_as_slprop (req_l @ frame))
         = ()
     in
-    let d : slprop_equiv  _ (tm_star req (list_as_slprop frame))
+    let d : slprop_equiv g (tm_star req (list_as_slprop frame))
                             (canon_slprop ctxt) =
         ()
     in
-    let d : slprop_equiv _ (tm_star req (list_as_slprop frame))
+    let d : slprop_equiv g (tm_star req (list_as_slprop frame))
                             ctxt =
         ()
     in

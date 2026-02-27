@@ -355,7 +355,7 @@ let check_renaming
     let h2: slprop_equiv g rhs pre = RU.magic () in
     let h1: tot_typing g rhs tm_slprop = RU.magic () in
     let (| x, g', ty, ctxt', k |) = check g rhs h1 post_hint res_ppname body in
-    (| x, g', ty, ctxt', k_elab_equiv k h2 (VE_Refl _ _) |)
+    (| x, g', ty, ctxt', k_elab_equiv pre (dfst ctxt') k h2 () |)
 
   | [], Some goal -> (
       let rhs, _ = rewrite_all st.range (T.unseal st.source) g pairs goal pre elaborated tac_opt true in
@@ -560,4 +560,4 @@ let check
 
     let (| x, g'', ty, ctxt', k' |) =
       check g' (tm_star pre_remaining rhs') h1 post_hint res_ppname body in
-    (| x, g'', ty, ctxt', k_elab_trans k (k_elab_equiv k' h2 (VE_Refl _ _)) |)
+    (| x, g'', ty, ctxt', k_elab_trans k (k_elab_equiv (tm_star lhs pre_remaining) (dfst ctxt') k' h2 ()) |)

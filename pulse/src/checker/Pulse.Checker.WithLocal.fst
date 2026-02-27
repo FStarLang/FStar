@@ -159,6 +159,6 @@ let check
           in
           assert (freshv g x);
           assert (~(Set.mem x (freevars_st body)));
-          let d : st_typing g _ c = () in
-          checker_result_for_st_typing (| _, _, d |) res_ppname
+          let st = wrst c (Tm_WithLocal { binder = mk_binder_ppname (mk_ref init_t) binder.binder_ppname; initializer=init; body }) in
+          checker_result_for_st_typing (| st, c, () |) res_ppname
 #pop-options

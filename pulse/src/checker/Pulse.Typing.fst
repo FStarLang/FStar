@@ -140,82 +140,7 @@ let elab_push_binding (g:env) (x:var { ~ (Set.mem x (dom g)) }) (t:typ)
            RT.extend_env (elab_env g) x t) = ()
 
 [@@ erasable; no_auto_projectors]
-noeq
-type slprop_equiv : env -> term -> term -> Type =
-  | VE_Refl:
-     g:env ->
-     t:term ->
-     slprop_equiv g t t
-
-  | VE_Sym:
-     g:env ->
-     t1:term -> 
-     t2:term -> 
-     slprop_equiv g t1 t2 ->
-     slprop_equiv g t2 t1
-
-  | VE_Trans:
-     g:env ->
-     t0:term ->
-     t1:term ->
-     t2:term ->
-     slprop_equiv g t0 t1 ->
-     slprop_equiv g t1 t2 ->
-     slprop_equiv g t0 t2
-
-  | VE_Ctxt:
-     g:env ->
-     t0:term -> 
-     t1:term -> 
-     t0':term -> 
-     t1':term ->
-     slprop_equiv g t0 t0' ->
-     slprop_equiv g t1 t1' ->
-     slprop_equiv g (tm_star t0 t1) (tm_star t0' t1')
-     
-  | VE_Unit: (*   *)
-     g:env ->
-     t:term ->
-     slprop_equiv g (tm_star tm_emp t) t
-
-  | VE_Comm:
-     g:env ->
-     t0:term ->
-     t1:term ->
-     slprop_equiv g (tm_star t0 t1) (tm_star t1 t0)
-     
-  | VE_Assoc:
-     g:env ->
-     t0:term ->
-     t1:term ->
-     t2:term ->
-     slprop_equiv g (tm_star t0 (tm_star t1 t2)) (tm_star (tm_star t0 t1) t2)
-
-  | VE_Ext:
-     g:env ->
-     t0:term ->
-     t1:term ->
-     RT.equiv (elab_env g) t0 t1 ->
-     slprop_equiv g t0 t1
-
-  // | VE_Ex:
-  //    g:env ->
-  //    x:var { None? (lookup_ty g x) } ->
-  //    ty:term ->
-  //    t0:term ->
-  //    t1:term ->
-  //    slprop_equiv f ((x, Inl ty)::g) (open_term t0 x) (open_term t1 x) ->
-  //    slprop_equiv f g (tm_exists_sl ty t0) (tm_exists_sl ty t1)
-
-  | VE_Fa:
-     g:env ->
-     x:var { freshv g x } ->
-     u:universe ->
-     b:binder ->
-     t0:term { ~(x `Set.mem` freevars t0 ) } ->
-     t1:term { ~(x `Set.mem` freevars t1 ) } ->
-     slprop_equiv (push_binding g x ppname_default b.binder_ty) (open_term t0 x) (open_term t1 x) ->
-     slprop_equiv g (tm_forall_sl u b t0) (tm_forall_sl u b t1)
+let slprop_equiv (g:env) (t1:term) (t2:term) = unit
 
 
 let add_frame (s:comp_st) (frame:term)
@@ -587,93 +512,13 @@ let prop_validity (g:env) (t:term) =
   FTB.prop_validity_token (elab_env g) t
 
 [@@ erasable; no_auto_projectors]
-noeq
-type st_equiv : env -> comp -> comp -> Type =
-  | ST_SLPropEquiv :
-      g:env ->
-      c1:comp_st ->
-      c2:comp_st { st_equiv_pre c1 c2 } ->
-      x:var { freshv g x /\
-              ~(x `Set.mem` freevars (comp_post c1)) /\
-              ~(x `Set.mem` freevars (comp_post c2)) } ->
-      RT.equiv (elab_env g) (comp_res c1) (comp_res c2) ->
-      slprop_equiv g (comp_pre c1) (comp_pre c2) ->
-      slprop_equiv (push_binding g x ppname_default (comp_res c1))
-                  (open_term (comp_post c1) x)
-                  (open_term (comp_post c2) x) ->      
-      st_equiv g c1 c2
-    
-  | ST_TotEquiv :
-      g:env -> 
-      t1:term ->
-      t2:term ->
-      u:universe ->
-      Ghost.erased (RT.equiv (elab_env g) t1 t2) ->
-      st_equiv g (C_Tot t1) (C_Tot t2)
+let st_equiv (g:env) (c1:comp) (c2:comp) = unit
 
 let sub_observability (o1 o2:observability) = o1 = Neutral || o1 = o2 || o2 = Observable
 
-[@@ erasable; no_auto_projectors]
-noeq
-type st_sub : env -> comp -> comp -> Type =
-  | STS_Refl :
-    g:env ->
-    c:comp ->
-    st_sub g c c
+let st_sub (g:env) (c1:comp) (c2:comp) = unit
 
-  | STS_Trans :
-    g:env ->
-    c1:comp ->
-    c2:comp ->
-    c3:comp ->
-    st_sub g c1 c2 ->
-    st_sub g c2 c3 ->
-    st_sub g c1 c3
-
-  | STS_GhostInvs :
-    g:env ->
-    stc:st_comp ->
-    is1:term ->
-    is2:term ->
-    prop_validity g (tm_inames_subset is1 is2) ->
-    st_sub g (C_STGhost is1 stc) (C_STGhost is2 stc)
-
-  | STS_AtomicInvs :
-    g:env ->
-    stc:st_comp ->
-    is1:term ->
-    is2:term ->
-    obs1:observability ->
-    obs2:observability { sub_observability obs1 obs2 } ->
-    prop_validity g (tm_inames_subset is1 is2) ->
-    st_sub g (C_STAtomic is1 obs1 stc) (C_STAtomic is2 obs2 stc)
-
-[@@ erasable; no_auto_projectors]
-noeq
-type lift_comp : env -> comp -> comp -> Type =
-  | Lift_STAtomic_ST :
-      g:env ->
-      c:comp_st{C_STAtomic? c} -> // Note: we have to reflect a univerese bound here!
-      lift_comp g c (C_ST (st_comp_of_comp c))
-
-  | Lift_Observability:
-      g:env ->
-      c:comp_st{C_STAtomic? c } ->
-      o2:observability { sub_observability (C_STAtomic?.obs c) o2 } ->
-      lift_comp g
-        (C_STAtomic (comp_inames c) (C_STAtomic?.obs c) (st_comp_of_comp c))
-        (C_STAtomic (comp_inames c) o2 (st_comp_of_comp c))
-
-  | Lift_Ghost_Neutral:
-      g:env ->
-      c:comp_st{C_STGhost? c} ->
-      non_informative_c:non_informative_c g c ->
-      lift_comp g c (C_STAtomic (comp_inames c) Neutral (st_comp_of_comp c))
-
-  | Lift_Neutral_Ghost:
-      g:env ->
-      c:comp_st{C_STAtomic? c /\ C_STAtomic?.obs c == Neutral } ->
-      lift_comp g c (C_STGhost (comp_inames c) (st_comp_of_comp c))
+let lift_comp (g:env) (c1:comp) (c2:comp) = unit
 
 let wrst (ct:comp_st) (t:st_term') : st_term =
   { term = t;
@@ -690,26 +535,10 @@ let wtag (ct:option ctag)  (t:st_term') : st_term =
     seq_lhs = Sealed.seal false;
   }
 
-[@@ erasable; no_auto_projectors]
-noeq
-type st_comp_typing : env -> st_comp -> Type =
-  | STC:
-      g:env -> 
-      st:st_comp ->
-      x:var { freshv g x /\ ~(x `Set.mem` freevars st.post) } ->
-      st_comp_typing g st
+let st_comp_typing (g:env) (st:st_comp) = unit
 
 
-[@@ erasable; no_auto_projectors]
-noeq
-type bind_comp  : env -> var -> comp -> comp -> comp -> Type =
-  | Bind_comp :
-      g:env ->
-      x:var { freshv g x } ->
-      c1:comp_st ->
-      c2:comp_st {bind_comp_pre x c1 c2} ->
-      y:var { freshv g y /\ ~(y `Set.mem` freevars (comp_post c2)) } ->      
-      bind_comp g x c1 c2 (bind_comp_out c1 c2)
+let bind_comp (g:env) (x:var) (c1:comp) (c2:comp) (c:comp) = unit
 
 let tr_binding (vt : var & typ) : Tot R.binding =
   let v, t = vt in
@@ -721,35 +550,7 @@ let tr_binding (vt : var & typ) : Tot R.binding =
 
 let tr_bindings = L.map tr_binding
 
-[@@ erasable; no_auto_projectors]
-noeq
-type comp_typing : env -> comp -> universe -> Type =
-  | CT_Tot :
-      g:env ->
-      t:term ->
-      u:universe ->
-      comp_typing g (C_Tot t) u
-
-  | CT_ST :
-      g:env -> 
-      st:st_comp -> 
-      st_comp_typing g st ->
-      comp_typing g (C_ST st) (universe_of_comp (C_ST st))
-
-  | CT_STAtomic :
-      g:env -> 
-      inames:term ->
-      obs:observability ->
-      st:st_comp -> 
-      st_comp_typing g st ->
-      comp_typing g (C_STAtomic inames obs st) (universe_of_comp (C_STAtomic inames obs st))
-
-  | CT_STGhost :
-      g:env ->
-      inames:term ->
-      st:st_comp ->
-      st_comp_typing g st ->
-      comp_typing g (C_STGhost inames st) (universe_of_comp (C_STGhost inames st))
+let comp_typing (g:env) (c:comp) (u:universe) = unit
 
 let comp_typing_u (e:env) (c:comp_st) = comp_typing e c (universe_of_comp c)
 
@@ -759,8 +560,7 @@ let subtyping_token g t1 t2 =
 val readback_binding : R.binding -> var_binding
 let readback_binding b = { n = { name = b.ppname; range = Range.range_0 }; x = b.uniq; ty = b.sort }
 
-let non_informative (g:env) (c:comp) =
-  my_erased (RT.non_informative (elab_env g) (elab_comp c))
+let non_informative (g:env) (c:comp) = unit
 
 let inv_disjointness (inames i:term) = 
   let g = Pulse.Reflection.Util.inv_disjointness_goal inames i in 
@@ -782,326 +582,13 @@ let goto_comp_of_block_comp (c: comp_st) : comp_st =
   }
 
 [@@ erasable; no_auto_projectors]
-noeq
-type st_typing : env -> st_term -> comp -> Type =
-  | T_Abs: 
-      g:env ->
-      x:var { freshv g x } ->
-      q:option qualifier ->
-      b:binder ->
-      u:universe ->
-      body:st_term {~ (x `Set.mem` freevars_st body) } ->
-      c:comp ->
-      st_typing (push_binding (clear_goto g) x ppname_default b.binder_ty) (open_st_term_nv body (b.binder_ppname, x)) c ->
-      st_typing g (wtag None (Tm_Abs { b; q; body; ascription=empty_ascription}))
-                  (C_Tot (tm_arrow b q (close_comp c x)))
-                
-  | T_ST:
-      g:env ->
-      t:term ->
-      c:comp_st ->
-      tot_typing g t (elab_comp c) ->
-      st_typing g (wrst c (Tm_ST { t; args=[] } )) c
- 
-  | T_STGhost:
-      g:env ->
-      t:term ->
-      c:comp_st ->
-      ghost_typing g t (elab_comp c) ->
-      non_informative g c ->
-      st_typing g (wrst c (Tm_ST { t; args=[] } )) c
- 
-  | T_Return:
-      g:env ->
-      c:ctag ->
-      use_eq:bool ->
-      u:universe ->
-      t:term ->
-      e:term ->
-      post:term ->
-      x:var { freshv g x /\ ~ (x `Set.mem` freevars post) } ->
-      st_typing g (wtag (Some c) (Tm_Return { expected_type=tm_unknown; insert_eq=use_eq; term=e }))
-                  (comp_return c use_eq u t e post x)
+let st_typing (g:env) (t:st_term) (c:comp) = unit
 
-  | T_Lift:
-      g:env ->
-      e:st_term ->
-      c1:comp_st ->
-      c2:comp_st ->
-      st_typing g e c1 ->
-      lift_comp g c1 c2 ->
-      st_typing g e c2
+let pats_complete (g:env) (sc:term) (sc_ty:typ) (pats:list R.pattern) = unit
 
-  | T_Bind:
-      g:env ->
-      e1:st_term ->
-      e2:st_term ->
-      c1:comp_st ->
-      c2:comp_st ->
-      b:binder { b.binder_ty == comp_res c1 }->
-      x:var { freshv g x /\ ~(x `Set.mem` freevars_st e2) } ->
-      c:comp ->
-      st_typing g e1 c1 ->
-      st_typing (push_binding g x ppname_default (comp_res c1)) (open_st_term_nv e2 (b.binder_ppname, x)) c2 ->
-      bind_comp g x c1 c2 c ->
-      st_typing g (wrst c (Tm_Bind { binder=b; head=e1; body=e2 })) c
+let brs_typing (g:env) (sc_u:universe) (sc_ty:typ) (sc:term) (brs:list branch) (c:comp_st) = unit
 
-  | T_BindFn:
-      g:env ->
-      e1:st_term ->
-      e2:st_term ->
-      c1:comp { C_Tot? c1 } ->
-      c2:comp_st ->
-      b:binder { b.binder_ty == comp_res c1 }->
-      x:var { freshv g x /\ ~(x `Set.mem` freevars_st e2) } ->
-      st_typing g e1 c1 ->
-      u:Ghost.erased universe ->
-      st_typing (push_binding g x ppname_default (comp_res c1)) (open_st_term_nv e2 (b.binder_ppname, x)) c2 ->
-      comp_typing_u g c2 ->
-      st_typing g (wrst c2 (Tm_Bind { binder=b; head=e1; body=e2 })) c2
-
-  | T_If:
-      g:env ->
-      b:term -> 
-      e1:st_term ->
-      e2:st_term ->
-      c:comp_st ->
-      hyp:var { freshv g hyp /\
-               ~(hyp `Set.mem` (freevars_st e1 `Set.union` freevars_st e2))
-              } ->
-      st_typing (g_with_eq g hyp b tm_true) e1 c ->
-      st_typing (g_with_eq g hyp b tm_false) e2 c ->
-      my_erased (comp_typing_u g c) ->
-      st_typing g (wrst c (Tm_If { b; then_=e1; else_=e2; post=None })) c
-
-  | T_Match :
-      g:env ->
-      sc_u:universe ->
-      sc_ty:typ ->
-      sc:term ->
-      c:comp_st ->
-      my_erased (comp_typing_u g c) ->
-      brs:list branch ->
-      brs_typing g sc_u sc_ty sc brs c ->
-      pats_complete g sc sc_ty (L.map (fun b -> elab_pat b.pat) brs) ->
-      st_typing g (wrst c (Tm_Match {sc; returns_=None; brs})) c
-
-  | T_Frame:
-      g:env ->
-      e:st_term ->
-      c:comp_st ->
-      frame:term ->
-      st_typing g e c ->
-      st_typing g e (add_frame c frame)
-
-  | T_Equiv:
-      g:env ->
-      e:st_term ->
-      c:comp ->
-      c':comp ->      
-      st_typing g e c ->
-      st_equiv g c c' ->
-      st_typing g e c'
-
-  | T_Sub :
-      g:env ->
-      e:st_term ->
-      c:comp ->
-      c':comp ->
-      st_typing g e c ->
-      st_sub g c c' ->
-      st_typing g e c'
-
-  | T_IntroPure:
-      g:env ->
-      p:term ->
-      prop_validity g p -> 
-      st_typing g (wtag (Some STT_Ghost) (Tm_IntroPure { p }))
-                  (comp_intro_pure p)
-
-  | T_ElimExists:
-      g:env ->
-      u:universe ->
-      t:term ->
-      p:term ->
-      x:var { freshv g x } ->
-      st_typing g (wtag (Some STT_Ghost) (Tm_ElimExists { p = tm_exists_sl u (as_binder t) p }))
-                  (comp_elim_exists u t p (v_as_nv x))
-
-  | T_IntroExists:
-      g:env ->
-      u:universe ->
-      b:binder ->
-      p:term ->
-      e:term ->
-      st_typing g (wtag (Some STT_Ghost) (Tm_IntroExists { p = tm_exists_sl u b p;
-                                         witnesses= [e] }))
-                  (comp_intro_exists u b p e)
-
-  | T_While:
-      g:env ->
-      inv:term ->
-      post_cond:term ->
-      cond:st_term ->
-      body:st_term ->
-      u_meas: universe -> ty_meas: term ->
-      is_tot: bool ->
-      x:nvar { freshv g (snd x) /\ ~(snd x `Set.mem` freevars_st cond) /\ ~(snd x `Set.mem` freevars_st cond) } ->
-      gx:env { gx == push_binding g (snd x) (fst x) ty_meas } ->
-      st_typing gx cond (comp_while_cond inv post_cond) ->
-      st_typing gx body (comp_while_body u_meas ty_meas is_tot x inv post_cond) ->
-      st_typing g (wtag (Some STT) (Tm_While { invariant = inv;
-                                                loop_requires = tm_unknown;
-                                                meas = None;
-                                                condition = cond;
-                                                body }))
-                  (comp_while u_meas ty_meas x inv post_cond)
-
-  | T_WithLocal:
-      g:env ->
-      binder_ppname:ppname ->
-      init:term ->
-      body:st_term ->
-      init_t:term ->
-      c:comp { C_ST? c } ->
-      x:var { freshv g x /\ ~(x `Set.mem` freevars_st body) } ->
-      comp_typing_u g c ->
-      st_typing (push_post (push_binding g x ppname_default (mk_ref init_t)) (withlocal_post init_t (null_var x)))
-                (open_st_term_nv body (v_as_nv x))
-                (comp_withlocal_body x init_t (Some init) c) ->
-      st_typing g (wrst c (Tm_WithLocal { binder = mk_binder_ppname (mk_ref init_t) binder_ppname; initializer=Some init; body } )) c
-
-  | T_WithLocalUninit:
-      g:env ->
-      binder_ppname:ppname ->
-      body:st_term ->
-      init_t:term ->
-      c:comp { C_ST? c } ->
-      x:var { freshv g x /\ ~(x `Set.mem` freevars_st body) } ->
-      comp_typing_u g c ->
-      st_typing (push_post (push_binding g x ppname_default (mk_ref init_t)) (withlocal_post init_t (null_var x)))
-                (open_st_term_nv body (v_as_nv x))
-                (comp_withlocal_body x init_t None c) ->
-      st_typing g (wrst c (Tm_WithLocal { binder = mk_binder_ppname (mk_ref init_t) binder_ppname; initializer=None; body } )) c
-
-  | T_WithLocalArray:
-      g:env ->
-      binder_ppname:ppname ->
-      initializer:term ->
-      length:term ->
-      body:st_term ->
-      a:term ->
-      c:comp { C_ST? c } ->
-      x:var { freshv g x /\ ~(x `Set.mem` freevars_st body) } ->
-      comp_typing_u g c ->
-      st_typing (push_post (push_binding g x ppname_default (mk_array a)) (withlocal_array_post a (null_var x) (Some initializer)))
-                (open_st_term_nv body (v_as_nv x))
-                (comp_withlocal_array_body x a (Some initializer) length c) ->
-      st_typing g (wrst c (Tm_WithLocalArray { binder = mk_binder_ppname (mk_array a) binder_ppname; initializer = Some initializer; length; body } )) c
-
-  | T_WithLocalArrayUninit:
-      g:env ->
-      binder_ppname:ppname ->
-      length:term ->
-      body:st_term ->
-      a:term ->
-      c:comp { C_ST? c } ->
-      x:var { freshv g x /\ ~(x `Set.mem` freevars_st body) } ->
-      comp_typing_u g c ->
-      st_typing (push_post (push_binding g x ppname_default (mk_array a)) (withlocal_array_post a (null_var x) None))
-                (open_st_term_nv body (v_as_nv x))
-                (comp_withlocal_array_body x a None length c) ->
-      st_typing g (wrst c (Tm_WithLocalArray { binder = mk_binder_ppname (mk_array a) binder_ppname; initializer = None; length; body } )) c
-
-  | T_Rewrite:
-      g:env ->
-      p:slprop ->
-      q:slprop ->
-      slprop_equiv g p q ->
-      st_typing g (wtag (Some STT_Ghost) (Tm_Rewrite { t1=p; t2=q; tac_opt=None; elaborated=true } ))
-                  (comp_rewrite p q)
-
-  | T_Admit:
-      g:env ->
-      c:comp_st ->
-      comp_typing g c (universe_of_comp c) ->
-      st_typing g (wtag (Some (ctag_of_comp_st c))
-                        (Tm_Admit { ctag=ctag_of_comp_st c;
-                                    u=comp_u c;
-                                    typ=comp_res c;
-                                    post=None }))
-                  c
-
-  | T_Unreachable:
-      g:env ->
-      c:comp_st { comp_pre c == tm_is_unreachable } ->
-      comp_typing g c (universe_of_comp c) ->
-      st_typing g (wtag (Some (ctag_of_comp_st c)) (Tm_Unreachable {c})) c
-
-  | T_ForwardJumpLabel:
-      g:env ->
-      lbl:nvar { freshv g (snd lbl) } ->
-      body:st_term ->
-      c:comp_st ->
-      st_typing (push_goto g (snd lbl) (fst lbl) (goto_comp_of_block_comp c)) (open_st_term' body (term_of_nvar lbl) 0) c ->
-      st_typing g (wtag (Some (ctag_of_comp_st c)) (Tm_ForwardJumpLabel { lbl = fst lbl; body; post = c })) c
-
-  | T_Goto:
-      g:env ->
-      lbl:nvar ->
-      arg:term ->
-      lbl_c:comp_st { lookup_goto g (snd lbl) == Some (fst lbl, lbl_c) } ->
-      u:universe -> res:typ ->
-      post:term -> post_x: var { freshv g post_x } ->
-      st_typing g (wtag (Some (ctag_of_comp_st lbl_c)) (Tm_Goto { lbl = term_of_nvar lbl; arg }))
-        (with_st_comp lbl_c { u; res; pre = open_term' (comp_pre lbl_c) arg 0; post })
-
-and pats_complete : env -> term -> typ -> list R.pattern -> Type0 =
-  // just check the elaborated term with the core tc
-  | PC_Elab :
-    g:env ->
-    sc:term ->
-    sc_ty:typ ->
-    pats:list R.pattern ->
-    bnds:list (list R.binding) ->
-    RT.match_is_complete (elab_env g) sc sc_ty pats bnds ->
-    pats_complete g sc sc_ty pats
-
-and brs_typing (g:env) (sc_u:universe) (sc_ty:typ) (sc:term) : list branch -> comp_st -> Type =
-  | TBRS_0 :
-      c:comp_st ->
-      brs_typing g sc_u sc_ty sc [] c
-
-  | TBRS_1 :
-      c:comp_st ->
-      pat:pattern ->
-      e:st_term ->
-      br_typing g sc_u sc_ty sc pat e c ->
-      rest:list branch ->
-      brs_typing g sc_u sc_ty sc rest c ->
-      brs_typing g sc_u sc_ty sc ({pat;e;norw=Sealed.seal false}::rest) c
-
-and br_typing : env -> universe -> typ -> term -> pattern -> st_term -> comp_st -> Type =
-  | TBR :
-      g:env ->
-      sc_u : universe ->
-      sc_ty : typ ->
-      sc:term ->
-      c:comp_st ->
-      p:pattern ->
-      e:st_term ->
-      bs:(list R.binding){RT.bindings_ok_for_pat (fstar_env g) bs (elab_pat p)} ->
-      _ : squash (all_fresh g (L.map readback_binding bs)) ->
-      _ : squash (Some? (RT.elaborate_pat (elab_pat p) bs)) ->
-      _ : squash (~(R.Tv_Unknown? (R.inspect_ln (fst (Some?.v (RT.elaborate_pat (elab_pat p) bs)))))) -> // should be provable from defn of elaborate_pat
-      hyp:var {freshv (push_bindings g (L.map readback_binding bs)) hyp} ->
-      st_typing (
-         push_binding (push_bindings g (L.map readback_binding bs))
-              hyp
-              ({name=Sealed.seal "branch equality"; range=FStar.Range.range_0})
-              (mk_sq_eq2 sc_u sc_ty sc (S.wr (fst (Some?.v (RT.elaborate_pat (elab_pat p) bs))) Range.range_0))
-         ) e c ->
-      br_typing g sc_u sc_ty sc p (close_st_term_n e (L.map (fun b -> (readback_binding b).x) bs)) c
+let br_typing (g:env) (sc_u:universe) (sc_ty:typ) (sc:term) (p:pattern) (e:st_term) (c:comp_st) = unit
 
 (* this requires some metatheory on FStar.Reflection.Typing
 

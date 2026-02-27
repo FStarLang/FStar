@@ -54,10 +54,10 @@ let check_bind_fn
     let b = { binder with binder_ty = comp_res c } in
     let g' = push_binding g x (binder.binder_ppname) b.binder_ty in
     let ctxt_typing' : tot_typing g' ctxt tm_slprop =
-      Metatheory.tot_typing_weakening_single ctxt_typing x b.binder_ty in
+      Metatheory.tot_typing_weakening_single g ctxt tm_slprop ctxt_typing x b.binder_ty in
     let r = check g' _ ctxt_typing' post_hint res_ppname (open_st_term_nv body (binder.binder_ppname, x)) in
     let body_typing = apply_checker_result_k #_ #_ #(PostHint?.v post_hint) r res_ppname in
-    let k = Pulse.Checker.Base.continuation_elaborator_with_bind_fn ctxt_typing b head_typing (binder.binder_ppname, x) in
+    let k = Pulse.Checker.Base.continuation_elaborator_with_bind_fn ctxt ctxt_typing t c b head_typing (binder.binder_ppname, x) in
     let d = k post_hint body_typing in
     checker_result_for_st_typing d res_ppname
   )

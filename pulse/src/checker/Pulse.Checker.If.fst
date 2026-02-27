@@ -67,6 +67,7 @@ let check
   : T.Tac (checker_result_t (g_with_eq eq_v) pre post_hint)
   = let pre_typing = 
       Metatheory.tot_typing_weakening_single
+        g pre tm_slprop
         pre_typing
         hyp 
         (mk_sq_rewrites_to_p u0 tm_bool b eq_v)
@@ -134,12 +135,13 @@ let check
   let (| e1, c1, e1_typing |) = extract then_ true in
   let (| e2, c2, e2_typing |) = extract else_ false in
   let (| c, e1_typing, e2_typing |) =
-    J.join_comps _ _ _ e1_typing _ _ _ e2_typing post_hint' in
+    J.join_comps (g_with_eq tm_true) e1 c1 e1_typing (g_with_eq tm_false) e2 c2 e2_typing post_hint' in
 
   let c_typing = comp_typing_from_post_hint c pre_typing post_hint' in
 
+  let if_st = wrst c (Tm_If { b; then_=e1; else_=e2; post=None }) in
   let d : st_typing_in_ctxt g pre (PostHint post_hint') =
-    (| _, c, () |) in
+    (| if_st, c, () |) in
 
   let res : checker_result_t g pre (PostHint post_hint') = checker_result_for_st_typing d res_ppname in
   retype_checker_result_post_hint post_hint' post_hint res

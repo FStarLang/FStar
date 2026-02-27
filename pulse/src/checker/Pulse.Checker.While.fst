@@ -274,7 +274,7 @@ let check_while
   let C_ST cst = comp_while u_meas ty_meas x_meas inv body_pre_open in
   let loop_pre = tm_exists_sl u_meas (as_binder ty_meas) (close_term inv (snd x_meas)) in
   assert comp_pre (comp_while u_meas ty_meas x_meas inv body_pre_open) == loop_pre;
-  let d_st : Pulse.Typing.Combinators.st_typing_in_ctxt g1' loop_pre NoHint = (| _, _, d |) in
+  let d_st : Pulse.Typing.Combinators.st_typing_in_ctxt g1' loop_pre NoHint = (| while, comp_while u_meas ty_meas x_meas inv body_pre_open, d |) in
   let res = checker_result_for_st_typing d_st ppname_default in
   assume (fresh_wrt x g0 (freevars break_pred));
   let post_hint_for_while : post_hint_for_env g0 = {
@@ -307,7 +307,7 @@ let check_while
   let fjl_d: st_typing g0 fjl while_comp =
     () in
 
-  let d_st: Pulse.Typing.Combinators.st_typing_in_ctxt g0 loop_pre (TypeHint tm_unit) = (| _, _, fjl_d |) in
+  let d_st: Pulse.Typing.Combinators.st_typing_in_ctxt g0 loop_pre (TypeHint tm_unit) = (| fjl, while_comp, fjl_d |) in
   let d_st: Pulse.Typing.Combinators.st_typing_in_ctxt g0 loop_pre0 (TypeHint tm_unit) =
     let (| t, c, _ |) = d_st in
     let c = with_st_comp c { st_comp_of_comp c with pre = loop_pre0 } in

@@ -29,28 +29,7 @@ module R = FStar.Reflection.V2
 module RT = FStar.Reflection.Typing
 module RU = Pulse.RuntimeUtils
 
-noeq
-type br_typing_vis : env -> universe -> typ -> term -> pattern -> st_term -> comp_st -> Type =
-  | TBRV :
-      g:env ->
-      sc_u : universe ->
-      sc_ty : typ ->
-      sc:term ->
-      c:comp_st ->
-      p:pattern ->
-      e:st_term ->
-      bs:(list R.binding){RT.bindings_ok_for_pat (fstar_env g) bs (elab_pat p)} ->
-      _ : squash (all_fresh g (L.map readback_binding bs)) ->
-      _ : squash (Some? (RT.elaborate_pat (elab_pat p) bs)) ->
-      _ : squash (~(R.Tv_Unknown? (R.inspect_ln (fst (Some?.v (RT.elaborate_pat (elab_pat p) bs)))))) -> // should be provable from defn of elaborate_pat
-      hyp:var {freshv (push_bindings g (L.map readback_binding bs)) hyp} ->
-      st_typing (
-         push_binding (push_bindings g (L.map readback_binding bs))
-              hyp
-              ({name=Sealed.seal "branch equality"; range=FStar.Range.range_0})
-              (mk_sq_eq2 sc_u sc_ty sc (wr (fst (Some?.v (RT.elaborate_pat (elab_pat p) bs))) Range.range_0))
-         ) e c ->
-      br_typing_vis g sc_u sc_ty sc p (close_st_term_n e (L.map (fun b -> (readback_binding b).x) bs)) c
+let br_typing_vis (g:env) (_:universe) (_:typ) (_:term) (_:pattern) (_:st_term) (_:comp_st) : Type = unit
 
 let rec readback_pat (p : R.pattern) : option pattern =
   match p with
@@ -209,7 +188,7 @@ let rec tot_typing_weakening_n bs d =
   match bs with
   | [] -> d
   | {x; ty} :: bs ->
-    let d = Pulse.Typing.Metatheory.tot_typing_weakening_single d x ty in
+    let d = Pulse.Typing.Metatheory.tot_typing_weakening_single _ _ _ d x ty in
     tot_typing_weakening_n bs d
 
 let patof (b:branch) : pattern = b.pat
@@ -297,13 +276,13 @@ let check_branch
       { t with effect_tag = e.effect_tag }
   in
   let pre_typing = tot_typing_weakening_n pulse_bs pre_typing in // weaken w/ binders
-  let pre_typing = Pulse.Typing.Metatheory.tot_typing_weakening_single pre_typing hyp_var eq_typ in // weaken w/ branch eq
+  let pre_typing = Pulse.Typing.Metatheory.tot_typing_weakening_single _ _ _ pre_typing hyp_var eq_typ in // weaken w/ branch eq
 
   let (| e, c, e_d |) =
     let ppname = mk_ppname_no_range "_br" in
     let r = check g' pre pre_typing (PostHint post_hint) ppname e in
     apply_checker_result_k r ppname in
-  let br_d : br_typing_vis g sc_u sc_ty sc p (close_st_term_n e (L.map (fun (b: var_binding) -> b.x) pulse_bs)) c = TBRV g sc_u sc_ty sc c p e bs () () () hyp_var e_d in
+  let br_d : br_typing_vis g sc_u sc_ty sc p (close_st_term_n e (L.map (fun (b: var_binding) -> b.x) pulse_bs)) c = () in
   (| p, close_st_term_n e (L.map (fun (b: var_binding) -> b.x) pulse_bs), c, br_d |)
 
 #pop-options
@@ -374,12 +353,7 @@ let weaken_branch_observability
     if not (sub_observability obs' obs)
     then T.fail "Cannot weaken observability"
     else (
-      let d : br_typing_vis g sc_u sc_ty sc br.pat br.e c = 
-        let TBRV g sc_u sc_ty sc c p e bs p1 p2 p3 hyp st_typing = typing in
-        let st_typing : st_typing _ _ _ = () in
-        let d = TBRV g sc_u sc_ty sc _ p e bs p1 p2 p3 hyp st_typing in
-        d
-      in
+      let d : br_typing_vis g sc_u sc_ty sc br.pat br.e c = () in
       (| br, d |)
     )
 #pop-options
@@ -463,10 +437,9 @@ let weaken_branch_tag_to
       fail g (Some r)  "Cannot lift a branch to ST"
 
     | STT_Atomic, C_STGhost _ _ -> (
-      let TBRV g sc_u sc_ty sc c p e bs pf1 pf2 pf3 h d = d in
-      let d : st_typing _ _ _ = () in
-      let d = TBRV g sc_u sc_ty sc _ p e bs pf1 pf2 pf3 h d in
-      (| pe, _, d |)
+      let c' = Pulse.Typing.Combinators.st_ghost_as_atomic c in
+      let d : br_typing_vis g sc_u sc_ty sc pe.pat pe.e c' = () in
+      (| pe, c', d |)
     )
     
 
@@ -500,7 +473,6 @@ let maybe_weaken_branch_tags
 #pop-options
 let erase_br_typing #g #sc_u #sc_ty #sc #p #e #c (d: br_typing_vis g sc_u sc_ty sc p e c)
   : br_typing g sc_u sc_ty sc p e c =
-  let TBRV g sc_u sc_ty sc c p e bs pf1 pf2 pf3 hyp d = d in
   ()
 
 (* Hoisting this makes the proof much faster and more stable. *)
@@ -605,6 +577,7 @@ let check
   (* Provable *)
   assume (L.map (fun br -> elab_pat br.pat) brs == elab_pats');
   let c_typing = comp_typing_from_post_hint c pre_typing post_hint in
-  let d : st_typing g _ c = () in
-  checker_result_for_st_typing (| _, _, d |) res_ppname
+  let t = wtag (Some (ctag_of_comp_st c)) (Tm_Match {sc; returns_=None; brs}) in
+  let d : st_typing g t c = () in
+  checker_result_for_st_typing (| t, c, d |) res_ppname
 #pop-options

@@ -59,85 +59,12 @@ let elab_sub (c1 c2:comp_st) (e:R.term) =
 let elab_bind #g #x #c1 #c2 #c
               (bc:bind_comp g x c1 c2 c)
               (e1 e2:R.term)
-  : R.term
-  = let t1 = comp_res c1 in
-    let t2 = comp_res c2 in
-    match c1 with
-    | C_ST _ ->
-      mk_bind_stt
-          (comp_u c1)
-          (comp_u c2)
-          t1 t2
-          (comp_pre c1)
-          (mk_abs t1 R.Q_Explicit (comp_post c1))
-          (mk_abs t2 R.Q_Explicit (comp_post c2))
-          e1 e2
-    | C_STGhost inames _ ->
-        mk_bind_ghost
-          (comp_u c1)
-          (comp_u c2)
-          t1 t2
-          inames
-          (comp_pre c1)
-          (mk_abs t1 R.Q_Explicit (comp_post c1))
-          (mk_abs t2 R.Q_Explicit (comp_post c2))
-          e1 e2
-    | C_STAtomic inames obs1 _ ->
-      let C_STAtomic _ obs2 _ = c2 in      
-      mk_bind_atomic
-          (comp_u c1)
-          (comp_u c2)
-          (elab_observability obs1)
-          (elab_observability obs2)
-          (comp_inames c1)
-          t1 t2
-          (comp_pre c1)
-          (mk_abs t1 R.Q_Explicit (comp_post c1))
-          (mk_abs t2 R.Q_Explicit (comp_post c2))
-          e1 e2
+  : GTot R.term
+  = RU.magic ()
   
 let elab_lift #g #c1 #c2 (d:lift_comp g c1 c2) (e:R.term)
   : GTot R.term
-  = match d with
-    | Lift_STAtomic_ST _ _ ->
-      let t = comp_res c1 in
-      mk_lift_atomic_stt
-        (comp_u c1)
-        (comp_res c1)
-        t
-        (mk_abs t R.Q_Explicit (comp_post c1))
-        e
-
-    | Lift_Observability _ c o2 ->
-      let t = comp_res c1 in
-      mk_lift_observability
-        (comp_u c1)
-        (elab_observability (C_STAtomic?.obs c))
-        (elab_observability o2)
-        (comp_inames c1)
-        t
-        (comp_pre c1)
-        (mk_abs t R.Q_Explicit (comp_post c1))
-        e
-            
-    | Lift_Ghost_Neutral _ _ (| reveal_a, reveal_a_typing |) ->
-      let t = comp_res c1 in
-      mk_lift_ghost_neutral
-        (comp_u c1)
-        t
-        (comp_pre c1)
-        (mk_abs t R.Q_Explicit (comp_post c1))
-        e
-        reveal_a
-
-    | Lift_Neutral_Ghost _ c ->
-      let t = comp_res c1 in
-      mk_lift_neutral_ghost
-        (comp_u c1)
-        t
-        (comp_pre c1)
-        (mk_abs t R.Q_Explicit (comp_post c1))
-        e
+  = RU.magic ()
 
 let intro_pure_tm (p:term) =
   let open Pulse.Reflection.Util in

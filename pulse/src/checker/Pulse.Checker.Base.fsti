@@ -38,7 +38,7 @@ val intro_comp_typing (g:env)
   : T.Tac (comp_typing g c (universe_of_comp c))
 
 val post_typing_as_abstraction
-  (#g:env) (#x:var) (#ty:term) (#t:term { fresh_wrt x g (freevars t) })
+  (g:env) (x:var) (ty:term) (t:term { fresh_wrt x g (freevars t) })
   (_:tot_typing (push_binding g x ppname_default ty) (open_term t x) tm_slprop)
   : FStar.Ghost.erased (RT.tot_typing (elab_env g)
                              (RT.mk_abs ty T.Q_Explicit t)
@@ -100,13 +100,13 @@ val k_elab_trans
   (k1:continuation_elaborator g1 ctxt1 g2 ctxt2)
    : continuation_elaborator g0 ctxt0 g2 ctxt2
 
-val k_elab_equiv_continuation (#g1:env) (#g2:env { g2 `env_extends` g1 }) (#ctxt #ctxt1 #ctxt2:term)
+val k_elab_equiv_continuation (#g1:env) (#g2:env { g2 `env_extends` g1 }) (#ctxt #ctxt1:term) (ctxt2:term)
   (k:continuation_elaborator g1 ctxt g2 ctxt1)
   (d:slprop_equiv g2 ctxt1 ctxt2)
   : continuation_elaborator g1 ctxt g2 ctxt2
 
 val k_elab_equiv
-  (#g1:env) (#g2:env { g2 `env_extends` g1 }) (#ctxt1 #ctxt1' #ctxt2 #ctxt2':term)
+  (#g1:env) (#g2:env { g2 `env_extends` g1 }) (#ctxt1 #ctxt2:term) (ctxt1' ctxt2':term)
   (k:continuation_elaborator g1 ctxt1 g2 ctxt2)
   (d1:slprop_equiv g1 ctxt1 ctxt1')
   (d2:slprop_equiv g2 ctxt2 ctxt2')
@@ -116,8 +116,8 @@ val k_elab_equiv
 // A canonical continuation elaborator for Bind
 //
 val continuation_elaborator_with_bind (#g:env) (ctxt:term)
-  (#c1:comp{stateful_comp c1})
-  (#e1:st_term)
+  (c1:comp{stateful_comp c1})
+  (e1:st_term)
   (e1_typing:st_typing g e1 c1)
   (ctxt_pre1_typing:tot_typing g (tm_star ctxt (comp_pre c1)) tm_slprop)
   (x:nvar { freshv g (snd x) })
@@ -127,10 +127,10 @@ val continuation_elaborator_with_bind (#g:env) (ctxt:term)
              (push_binding g (snd x) (fst x) (comp_res c1))
              (tm_star (open_term (comp_post c1) (snd x)) ctxt))
 
-val continuation_elaborator_with_bind_fn (#g:env) (#ctxt:term)
+val continuation_elaborator_with_bind_fn (#g:env) (ctxt:term)
   (ctxt_typing:tot_typing g ctxt tm_slprop)
-  (#e1:st_term)
-  (#c1:comp { C_Tot? c1 })
+  (e1:st_term)
+  (c1:comp { C_Tot? c1 })
   (b:binder{b.binder_ty == comp_res c1})
   (e1_typing:st_typing g e1 c1)
   (x:nvar { freshv g (snd x) })
@@ -192,7 +192,7 @@ type check_t =
   t:st_term ->
   T.Tac (checker_result_t g ctxt post_hint)
   
-val match_comp_res_with_post_hint (#g:env) (#t:st_term) (#c:comp_st)
+val match_comp_res_with_post_hint (#g:env) (t:st_term) (c:comp_st)
   (d:st_typing g t c)
   (post_hint:post_hint_opt g)
   : T.Tac (c':comp_st { comp_pre c' == comp_pre c } &
@@ -233,7 +233,7 @@ val norm_typing_inverse
   : T.Tac (option (typing g e eff t1))
 
 val norm_st_typing_inverse
-      (#g:env) (#e:st_term) (#t0:term)
+      (g:env) (e:st_term) (t0:term)
       (d:st_typing g e (C_Tot t0))
       (#u:_)
       (t1:term)

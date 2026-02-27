@@ -412,13 +412,14 @@ let rec join_comps
 = let g = g_then in
   assert (st_comp_of_comp c_then == st_comp_of_comp c_else);
   match c_then, c_else with
-  | C_STAtomic _ obs1 _, C_STAtomic _ obs2 _ ->
+  | C_STAtomic inames obs1 st, C_STAtomic _ obs2 _ ->
     let obs = join_obs obs1 obs2 in
-    let e_then_typing : st_typing g_then e_then _ = () in
-    let e_else_typing : st_typing g_else e_else _ = () in
-    (| _, e_then_typing, e_else_typing |)
+    let c = C_STAtomic inames obs st in
+    let e_then_typing : st_typing g_then e_then c = () in
+    let e_else_typing : st_typing g_else e_else c = () in
+    (| c, e_then_typing, e_else_typing |)
   | C_STGhost _ _, C_STGhost _ _
-  | C_ST _, C_ST _ -> (| _, e_then_typing, e_else_typing |)
+  | C_ST _, C_ST _ -> (| c_then, e_then_typing, e_else_typing |)
 
   | _ ->
     assert (EffectAnnotAtomicOrGhost? post.effect_annot);
@@ -427,10 +428,10 @@ let rec join_comps
       let d : st_typing g_then e_then (st_ghost_as_atomic c_then) =
         () in
       st_ghost_as_atomic_matches_post_hint c_then post;
-      join_comps _ _ _ d _ _ _ e_else_typing post
+      join_comps g_then e_then (st_ghost_as_atomic c_then) d g_else e_else c_else e_else_typing post
 
     | C_STAtomic _ _ _, C_STGhost _ _ ->
       let d : st_typing g_else e_else (st_ghost_as_atomic c_else) = () in
       st_ghost_as_atomic_matches_post_hint c_else post;
-      join_comps _ _ _ e_then_typing _ _ _ d post
+      join_comps g_then e_then c_then e_then_typing g_else e_else (st_ghost_as_atomic c_else) d post
 #pop-options

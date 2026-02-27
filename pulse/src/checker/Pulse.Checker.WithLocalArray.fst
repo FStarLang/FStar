@@ -181,6 +181,6 @@ let check
               post_typing_rec.ty_typing
               x post_typing_rec.post_typing
           in
-          let d : st_typing g _ c = () in
-          checker_result_for_st_typing (| _, _, d |) res_ppname
+          let st = wrst c (Tm_WithLocalArray { binder = mk_binder_ppname (mk_array init_t) binder.binder_ppname; initializer=init; length=len; body }) in
+          checker_result_for_st_typing (| st, c, () |) res_ppname
 #pop-options

@@ -26,17 +26,17 @@ let st_comp_with_pre (st:st_comp) (pre:term) : st_comp = { st with pre }
 let nvar_as_binder (x:nvar) (t:term) : binder =
   mk_binder_ppname t (fst x)
 
-val t_equiv #g #st #c (d:st_typing g st c) (#c':comp) (eq:st_equiv g c c')
+val t_equiv (g:env) (st:st_term) (c:comp) (d:st_typing g st c) (c':comp) (eq:st_equiv g c c')
   : st_typing g st c'
   
-val slprop_equiv_typing (#g:_) (#t0 #t1:term) (v:slprop_equiv g t0 t1)
+val slprop_equiv_typing (g:env) (t0 t1:term) (v:slprop_equiv g t0 t1)
   : GTot ((tot_typing g t0 tm_slprop -> tot_typing g t1 tm_slprop) &
           (tot_typing g t1 tm_slprop -> tot_typing g t0 tm_slprop))
 
 let st_ghost_as_atomic (c:comp_st { C_STGhost? c }) = 
   C_STAtomic (comp_inames c) Neutral (st_comp_of_comp c)
 
-val lift_ghost_atomic (#g:env) (#e:st_term) (#c:comp_st { C_STGhost? c }) (d:st_typing g e c)
+val lift_ghost_atomic (g:env) (e:st_term) (c:comp_st { C_STGhost? c }) (d:st_typing g e c)
 : T.Tac (st_typing g e (st_ghost_as_atomic c))
 
 val mk_bind (g:env)
@@ -73,8 +73,8 @@ val bind_res_and_post_typing (g:env) (s2:comp_st) (x:var { fresh_wrt x g (freeva
   : T.Tac (universe_of g (comp_res s2) (comp_u s2) &
            tot_typing (push_binding g x ppname_default (comp_res s2)) (open_term_nv (comp_post s2) (v_as_nv x)) tm_slprop)
 
-val add_frame (#g:env) (#t:st_term) (#c:comp_st) (t_typing:st_typing g t c)
-  (#frame:slprop)
+val add_frame (g:env) (t:st_term) (c:comp_st) (t_typing:st_typing g t c)
+  (frame:slprop)
   (frame_typing:tot_typing g frame tm_slprop)
   : t':st_term &
     c':comp_st { c' == add_frame c frame } &
@@ -88,11 +88,11 @@ let frame_for_req_in_ctxt (g:env) (ctxt:term) (req:term)
 let frame_of #g #ctxt #req (f:frame_for_req_in_ctxt g ctxt req) =
   let (| frame, _, _ |) = f in frame
 
-val apply_frame (#g:env)
-                (#t:st_term)
-                (#ctxt:term)
+val apply_frame (g:env)
+                (t:st_term)
+                (ctxt:term)
                 (ctxt_typing: tot_typing g ctxt tm_slprop)
-                (#c:comp { stateful_comp c })
+                (c:comp { stateful_comp c })
                 (t_typing: st_typing g t c)
                 (frame_t:frame_for_req_in_ctxt g ctxt (comp_pre c))
   : Dv  (c':comp_st { comp_pre c' == ctxt /\
@@ -106,7 +106,7 @@ type st_typing_in_ctxt (g:env) (ctxt:slprop) (post_hint:post_hint_opt g) =
   c:comp_st { comp_pre c == ctxt /\ comp_post_matches_hint c post_hint } &
   st_typing g t c
 
-val comp_for_post_hint #g (#pre:slprop) (pre_typing:tot_typing g pre tm_slprop)
+val comp_for_post_hint (g:env) (pre:slprop) (pre_typing:tot_typing g pre tm_slprop)
   (post:post_hint_t { g `env_extends` post.g })
   (x:var { freshv g x })
   : T.Tac (c:comp_st { comp_pre c == pre /\ comp_post_matches_hint c (PostHint post) } &

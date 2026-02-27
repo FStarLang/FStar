@@ -88,9 +88,11 @@ let check_elim_exists
   let (| u', ty_typing |) = universe_of_well_typed_term g ty in
   if eq_univ u u'
   then let x = fresh g in
-       let d : st_typing g _ _ = () in
-       let (|_,d|) = match_comp_res_with_post_hint d post_hint in
-       prove_post_hint (try_frame_pre false pre_typing (|_,_,d|) res_ppname) post_hint t_rng
+       let elim_st = wtag (Some STT_Ghost) (Tm_ElimExists { p = tm_exists_sl u (as_binder ty) p }) in
+       let elim_c = comp_elim_exists u ty p (ppname_default, x) in
+       let d : st_typing g elim_st elim_c = () in
+       let (|c,d|) = match_comp_res_with_post_hint elim_st elim_c d post_hint in
+       prove_post_hint (try_frame_pre false pre_typing (|elim_st,c,d|) res_ppname) post_hint t_rng
   else fail g (Some t_rng)
          (Printf.sprintf "check_elim_exists: universe checking failed, computed %s, expected %s"
             (P.univ_to_string u') (P.univ_to_string u))
@@ -125,15 +127,16 @@ let check_intro_exists
 
   let Tm_ExistsSL u b p = tv in
 
-  Pulse.Typing.FV.tot_typing_freevars t_typing;
+  Pulse.Typing.FV.tot_typing_freevars g t tm_slprop t_typing;
   let x = fresh g in
-  let ty_typing, _ = Metatheory.tm_exists_inversion #g #u #b.binder_ty #p t_typing x in
+  let ty_typing, _ = Metatheory.tm_exists_inversion g u b.binder_ty p t_typing x in
   let (| witness, witness_typing |) = 
     check_term g witness T.E_Ghost b.binder_ty in
-  let d : st_typing g _ _ = () in
-  let (| c, d |) : (c:_ & st_typing g _ c) = (| _, d |) in
-  let (| c, d |) = match_comp_res_with_post_hint d post_hint in
-  prove_post_hint (try_frame_pre false pre_typing (|_,_,d|) res_ppname)
+  let intro_st = wtag (Some STT_Ghost) (Tm_IntroExists { p = tm_exists_sl u b p; witnesses = [witness] }) in
+  let intro_c = C_STGhost tm_emp_inames { u=u0; res=tm_unit; pre=open_term' p witness 0; post=tm_exists_sl u (as_binder b.binder_ty) p } in
+  let d : st_typing g intro_st intro_c = () in
+  let (| c, d |) = match_comp_res_with_post_hint intro_st intro_c d post_hint in
+  prove_post_hint (try_frame_pre false pre_typing (|intro_st, c, d|) res_ppname)
                   post_hint
                   (Pulse.RuntimeUtils.range_of_term t)
 #pop-options

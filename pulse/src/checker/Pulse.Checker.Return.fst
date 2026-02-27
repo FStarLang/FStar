@@ -135,13 +135,15 @@ let check_core
   let use_eq = use_eq || (not (PostHint? post_hint) && not (T.term_eq ty (`unit))) in
   assume (open_term (close_term post_opened x) x == post_opened);
   let post = close_term post_opened x in
-  let d : st_typing g _ _ = () in
-  let (|c',d'|) = match_comp_res_with_post_hint d post_hint in
+  let ret_st = wtag (Some c) (Tm_Return {expected_type=tm_unknown; insert_eq=use_eq; term=t}) in
+  let ret_c = comp_return c use_eq u ty t post x in
+  let d : st_typing g ret_st ret_c = () in
+  let (|c',d'|) = match_comp_res_with_post_hint ret_st ret_c d post_hint in
   Pulse.Checker.Util.debug g "pulse.return" (fun _ -> 
     Printf.sprintf "Return comp is: %s"
       (Pulse.Syntax.Printer.comp_to_string c'));
   prove_post_hint #g
-    (try_frame_pre false #g ctxt_typing (|_,c',d'|) res_ppname)
+    (try_frame_pre false #g ctxt_typing (|ret_st,c',d'|) res_ppname)
     post_hint
     st.range
 #pop-options

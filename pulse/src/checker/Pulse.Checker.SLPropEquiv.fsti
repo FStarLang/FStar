@@ -65,14 +65,14 @@ val slprop_equiv_split_frame (g:_) (ctxt req:term) (frame:list term)
 
 
 let slprop_equiv_typing_fwd (#g:env) (#ctxt:_) (ctxt_typing:tot_typing g ctxt tm_slprop)
-                           (#p:_) (d:slprop_equiv g ctxt p)
+                           (p:_) (d:slprop_equiv g ctxt p)
   : tot_typing g p tm_slprop 
-  = let fwd, _ = slprop_equiv_typing d in
+  = let fwd, _ = slprop_equiv_typing g ctxt p d in
     fwd ctxt_typing
 
 
 let slprop_equiv_typing_bk (#g:env) (#ctxt:_) (ctxt_typing:tot_typing g ctxt tm_slprop)
-                           (#p:_) (d:slprop_equiv g p ctxt)
+                           (p:_) (d:slprop_equiv g p ctxt)
   : tot_typing g p tm_slprop 
-  = let _, bk = slprop_equiv_typing d in
+  = let _, bk = slprop_equiv_typing g p ctxt d in
     bk ctxt_typing

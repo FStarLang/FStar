@@ -53,7 +53,7 @@ let check'
         let x' = fresh g in assume fresh_wrt x' g (freevars ph.post);
         let pht = post_hint_typing g ph x' in
         () in
-      let (| c'', typing'' |) = match_comp_res_with_post_hint typing post_hint in
+      let (| c'', typing'' |) = match_comp_res_with_post_hint t c' typing post_hint in
       prove_post_hint #g
         (try_frame_pre false #g pre_typing (|_,c'',typing''|) res_ppname)
         post_hint

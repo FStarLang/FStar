@@ -111,7 +111,7 @@ let check
         RU.record_stats "prove_post_hint" fun _ -> prove_post_hint framed post_hint range
       else
         // TODO: not sure why we need the type equality check below..
-        let (| c, d |) = match_comp_res_with_post_hint d post_hint in
+        let (| c, d |) = match_comp_res_with_post_hint t c d post_hint in
         let framed = checker_result_for_st_typing (k _ (| t, add_frame c ctxt', () |)) res_ppname in
         RU.record_stats "prove_post_hint" fun _ -> prove_post_hint framed post_hint range
   )

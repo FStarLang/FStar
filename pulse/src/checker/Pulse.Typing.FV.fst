@@ -289,51 +289,29 @@ let tot_or_ghost_typing_freevars
   = admit ()
 
 let tot_typing_freevars
-  (#g:_) (#t:_) (#ty:_)
+  (g:_) (t:_) (ty:_)
   (d:tot_typing g t ty)
   : Lemma 
     (ensures freevars t `Set.subset` vars_of_env g /\
              freevars ty `Set.subset` vars_of_env g)
   = admit ()
 
-#push-options "--z3rlimit 10"
-let bind_comp_freevars (#g:_) (#x:_) (#c1 #c2 #c:_)
+let bind_comp_freevars (g:_) (x:_) (c1:_) (c2:_) (c:_)
                        (d:bind_comp g x c1 c2 c)
   : Lemma 
     (requires freevars_comp c1 `Set.subset` vars_of_env g /\
               freevars_comp c2 `Set.subset` (Set.union (vars_of_env g) (Set.singleton x)))
     (ensures freevars_comp c `Set.subset` vars_of_env g)
-  = match d with
-    | Bind_comp _ _ _ _ _ -> admit ()
-#pop-options
+  = admit ()
 
-let rec slprop_equiv_freevars (#g:_) (#t0 #t1:_) (v:slprop_equiv g t0 t1)
+let slprop_equiv_freevars (g:_) (t0:_) (t1:_) (v:slprop_equiv g t0 t1)
   : Lemma (ensures (freevars t0 `Set.subset` vars_of_env g) <==>
                    (freevars t1 `Set.subset` vars_of_env g))
-          (decreases v)
-  = assume False;  // TODO: AR
-    match v with
-    | VE_Refl _ _ -> ()
-    | VE_Sym _ _ _ v' -> 
-      slprop_equiv_freevars v'
-    | VE_Trans g t0 t2 t1 v02 v21 ->
-      slprop_equiv_freevars v02;
-      slprop_equiv_freevars v21
-    | VE_Ctxt g s0 s1 s0' s1' v0 v1 ->
-      slprop_equiv_freevars v0;
-      slprop_equiv_freevars v1
-    | VE_Unit g t -> ()
-    | VE_Comm g t0 t1 -> ()
-    | VE_Assoc g t0 t1 t2 -> ()
-    | VE_Ext g t0 t1 token ->
-      admit ()
-    | VE_Fa g x u b t0 t1 d ->
-      slprop_equiv_freevars d;
-      close_open_inverse t0 x
+  = admit ()
 
 
 
-let st_equiv_freevars #g (#c1 #c2:_)
+let st_equiv_freevars (g:_) (c1:_) (c2:_)
                       (d:st_equiv g c1 c2)
   : Lemma
     (requires freevars_comp c1 `Set.subset` vars_of_env g)
@@ -346,41 +324,28 @@ let prop_validity_fv (g:env) (p:term)
     (ensures freevars p `Set.subset` vars_of_env g)
   = admit()
 
-let rec st_sub_freevars #g (#c1 #c2:_)
+let st_sub_freevars (g:_) (c1:_) (c2:_)
                       (d:st_sub g c1 c2)
   : Lemma
     (requires freevars_comp c1 `Set.subset` vars_of_env g)
     (ensures freevars_comp c2 `Set.subset` vars_of_env g)
-    (decreases d)
-=
-  match d with
-  | STS_Refl _ _ -> ()
-  | STS_Trans _ _ _ _ d1 d2 ->
-    st_sub_freevars d1;
-    st_sub_freevars d2
-  | STS_GhostInvs _ _ is1 is2 tok
-  | STS_AtomicInvs _ _ is1 is2 _ _ tok ->
-    assume (freevars is2 `Set.subset` freevars (tm_inames_subset is1 is2));
-    prop_validity_fv g (tm_inames_subset is1 is2)
+  = admit ()
 
 let src_typing_freevars_t (d':'a) =
-    (#g:_) -> (#t:_) -> (#c:_) -> (d:st_typing g t c { d << d' }) ->
+    (g:_) -> (t:_) -> (c:_) -> (d:st_typing g t c { d << d' }) ->
     Lemma 
     (ensures freevars_st t `Set.subset` vars_of_env g /\
              freevars_comp c `Set.subset` vars_of_env g)
 
-let st_comp_typing_freevars #g #st (d:st_comp_typing g st)
+let st_comp_typing_freevars (g:_) (st:_) (d:st_comp_typing g st)
   : Lemma
     (ensures freevars_st_comp st `Set.subset` vars_of_env g)
-    (decreases d)
-  = let STC _ _ x = d in
-    admit ()
+  = admit ()
 
-let comp_typing_freevars  (#g:_) (#c:_) (#u:_)
+let comp_typing_freevars  (g:_) (c:_) (u:_)
                           (d:comp_typing g c u)
   : Lemma 
     (ensures freevars_comp c `Set.subset` vars_of_env g)
-    (decreases d)
   = admit ()
 
 let freevars_open_st_term_inv (e:st_term) 
@@ -452,141 +417,10 @@ let freevars_array (t:term)
 
 (** Big lemma follows. We have to split it to make it digestible to SMT. *)
 
-let st_typing_freevars_cb_t
-  (#g0:_) (#t0:_) (#c0:_)
-  (d0:st_typing g0 t0 c0)
-=
-  (#g:_) -> (#t:_) -> (#c:_) ->
-  (d:st_typing g t c{d << d0}) ->
-  Lemma (ensures freevars_st t `Set.subset` vars_of_env g /\
-                 freevars_comp c `Set.subset` vars_of_env g)
-  (decreases d)
-
-let st_typing_freevars_case
-  (pred : (
-    (#g:_) -> (#t:_) -> (#c:_) ->
-    st_typing g t c -> GTot bool))
-  : Type =
-  (#g:_) -> (#t:_) -> (#c:_) ->
-  (d : st_typing g t c{pred d}) ->
-  (cb : st_typing_freevars_cb_t d) ->
-  Lemma (freevars_st t `Set.subset` vars_of_env g /\ freevars_comp c `Set.subset` vars_of_env g)
-
-let st_typing_freevars_abs : st_typing_freevars_case T_Abs? =
-fun d cb ->
-  admit ()
-
-#push-options "--z3rlimit_factor 20 --fuel 3 --ifuel 2 --split_queries no"
-#restart-solver
-let st_typing_freevars_return : st_typing_freevars_case T_Return? =
-fun d cb ->
-  admit ()
-#pop-options
-#restart-solver
-#push-options "--z3rlimit_factor 4 --fuel 1 --ifuel 1 --split_queries always"
-let st_typing_freevars_bind : st_typing_freevars_case T_Bind? =
-fun d cb ->
-  admit ()
-
-let st_typing_freevars_bind_fn : st_typing_freevars_case T_BindFn? =
-fun d cb ->
-  admit ()
-
-let st_typing_freevars_if : st_typing_freevars_case T_If? =
-fun #g #t #c d cb ->
-  admit ()
-#pop-options
-#restart-solver
-#push-options "--z3rlimit_factor 8"
-let st_typing_freevars_frame : st_typing_freevars_case T_Frame? =
-fun d cb ->
-  admit ()
-#pop-options
-
-#restart-solver
-#push-options "--z3rlimit_factor 4 --fuel 2 --ifuel 1"
-let st_typing_freevars_elimexists : st_typing_freevars_case T_ElimExists? =
-fun #g #t #c d cb ->
-  admit ()
-
-let st_typing_freevars_introexists : st_typing_freevars_case T_IntroExists? =
-fun #g #t #c d cb ->
-  admit ()
-
-let st_typing_freevars_rewrite : st_typing_freevars_case T_Rewrite? =
-fun d cb ->
-  admit ()
-
-let st_typing_freevars_withlocal : st_typing_freevars_case T_WithLocal? =
-fun d cb ->
-  admit ()
-
-let st_typing_freevars_withlocalarray : st_typing_freevars_case T_WithLocalArray? =
-fun d cb ->
-  admit ()
-
-let st_typing_freevars_admit : st_typing_freevars_case T_Admit? =
-fun d cb ->
-  admit ()
-
-let st_typing_freevars_unreachable : st_typing_freevars_case T_Unreachable? =
-fun d cb ->
-  admit ()
-
-let rec st_typing_freevars
-  (#g:_) (#t:_) (#c:_)
+let st_typing_freevars
+  (g:_) (t:_) (c:_)
   (d:st_typing g t c)
 : Lemma
   (ensures freevars_st t `Set.subset` vars_of_env g /\
            freevars_comp c `Set.subset` vars_of_env g)
-  (decreases d)
-= match d with
-  | T_Abs .. ->
-    st_typing_freevars_abs d st_typing_freevars
-  | T_ST ..
-  | T_STGhost .. -> admit()
-  | T_Return .. ->
-    st_typing_freevars_return d st_typing_freevars
-  | T_Lift _ _ _ _ d1 _ ->
-    st_typing_freevars d1
-  | T_Bind .. ->
-    st_typing_freevars_bind d st_typing_freevars
-  | T_BindFn .. ->
-    st_typing_freevars_bind_fn d st_typing_freevars
-  | T_If .. ->
-    st_typing_freevars_if d st_typing_freevars
-  | T_Match .. ->
-    admit () // IOU
-  | T_Frame .. ->
-    st_typing_freevars_frame d st_typing_freevars
-  | T_IntroPure _ p _ ->
-    admit ()
-  | T_ElimExists _ u t p x ->
-    st_typing_freevars_elimexists d st_typing_freevars
-  | T_IntroExists _ u b p w ->
-    st_typing_freevars_introexists d st_typing_freevars
-  | T_Equiv _ _ _ _ d2 deq ->
-    st_typing_freevars d2;
-    st_equiv_freevars deq
-  | T_While .. ->
-    // st_typing_freevars_while d st_typing_freevars
-    admit ()
-  | T_Rewrite .. ->
-    st_typing_freevars_rewrite d st_typing_freevars
-  | T_WithLocal .. ->
-    st_typing_freevars_withlocal d st_typing_freevars
-  | T_WithLocalUninit .. ->
-    admit ()
-  | T_WithLocalArray .. ->
-    st_typing_freevars_withlocalarray d st_typing_freevars
-  | T_WithLocalArrayUninit .. ->
-    admit ()
-  | T_Admit .. ->
-    st_typing_freevars_admit d st_typing_freevars
-  | T_Unreachable .. ->
-    st_typing_freevars_unreachable d st_typing_freevars
-  | T_Sub _ _ _ _ d_t d_sub ->
-    st_typing_freevars d_t;
-    st_sub_freevars d_sub
-  | T_ForwardJumpLabel .. -> admit ()
-  | T_Goto .. -> admit ()
+= admit ()

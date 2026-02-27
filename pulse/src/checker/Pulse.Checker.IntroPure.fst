@@ -31,7 +31,7 @@ let check_prop (g:env) (p:term)
   let (| p, p_typing |) = Pulse.Checker.Pure.check_slprop g (tm_pure p) in
   match inspect_term p with
   | Tm_Pure pp ->
-    let prop_typing = Pulse.Typing.Metatheory.pure_typing_inversion #_ #pp p_typing in
+    let prop_typing = Pulse.Typing.Metatheory.pure_typing_inversion _ pp p_typing in
     (| pp, prop_typing |)
   | _ ->
     fail g None
@@ -58,6 +58,8 @@ let check
   let Tm_IntroPure { p } = t.term in
   let (| p, p_typing |) = check_prop g p in
   let pv = check_prop_validity g p p_typing in
-  let st_typing : st_typing g _ _ = () in
-  let (| c,d |) = match_comp_res_with_post_hint st_typing post_hint in
-  prove_post_hint (try_frame_pre false pre_typing (|_,c,d|) res_ppname) post_hint t.range
+  let intro_st = wtag (Some STT_Ghost) (Tm_IntroPure { p }) in
+  let intro_c = C_STGhost tm_emp_inames { u=u0; res=tm_unit; pre=tm_emp; post=tm_pure p } in
+  let st_typing : st_typing g intro_st intro_c = () in
+  let (| c,d |) = match_comp_res_with_post_hint intro_st intro_c st_typing post_hint in
+  prove_post_hint (try_frame_pre false pre_typing (|intro_st,c,d|) res_ppname) post_hint t.range

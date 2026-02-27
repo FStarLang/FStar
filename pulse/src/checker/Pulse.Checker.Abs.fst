@@ -493,7 +493,7 @@ let rec check_abs_core
       case to the st_sub judg. *)
       let (| c_body, body_typing |) = maybe_rewrite_body_typing body_typing asc in
 
-      FV.st_typing_freevars body_typing;
+      FV.st_typing_freevars g' body c_body body_typing;
       let body_closed = close_st_term body x in
       assume (open_st_term body_closed x == body);
 
@@ -505,9 +505,9 @@ let rec check_abs_core
         |> FStar.Sealed.seal in
 
       let b = {binder_ty=t;binder_ppname=ppname;binder_attrs} in
-      let tt : st_typing g _ (C_Tot (tm_arrow {binder_ty=t;binder_ppname=ppname;binder_attrs} qual (close_comp c_body x))) = () in
       let tres = tm_arrow {binder_ty=t;binder_ppname=ppname;binder_attrs} qual (close_comp c_body x) in
-      (| _, C_Tot tres, tt |)
+      let tt : st_typing g body_closed (C_Tot tres) = () in
+      (| body_closed, C_Tot tres, tt |)
     | _ ->
       let elab_c, pre_opened, inames_opened, ret_ty, post_hint_body =
         match asc.elaborated with
@@ -602,14 +602,14 @@ let rec check_abs_core
 
       let (| c_body, body_typing |) = maybe_rewrite_body_typing body_typing asc in
 
-      FV.st_typing_freevars body_typing;
+      FV.st_typing_freevars g' body c_body body_typing;
       let body_closed = close_st_term body x in
       assume (open_st_term body_closed x == body);
       let b = {binder_ty=t;binder_ppname=ppname;binder_attrs} in
-      let tt : st_typing g _ (C_Tot (tm_arrow {binder_ty=t;binder_ppname=ppname;binder_attrs} qual (close_comp c_body x))) = () in
       let tres = tm_arrow {binder_ty=t;binder_ppname=ppname;binder_attrs} qual (close_comp c_body x) in
+      let tt : st_typing g body_closed (C_Tot tres) = () in
 
-      (| _, C_Tot tres, tt |)
+      (| body_closed, C_Tot tres, tt |)
 #pop-options
 
 let check_abs (g:env) (t:st_term{Tm_Abs? t.term}) (check:check_t)
