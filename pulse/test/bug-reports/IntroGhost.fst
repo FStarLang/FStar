@@ -31,24 +31,20 @@ let my_inv (b:bool) (r:R.ref int) : slprop
       pure ( b == (v = 0) )
     
 
-[@@expect_failure]
-
 fn invar_introduces_ghost (r:R.ref int)
   requires R.pts_to r 0
   ensures R.pts_to r 1
 {
   r := 0;
 
-  fold (my_inv true r);
-
   while (let vr = !r; (vr = 0))
-  invariant b. my_inv b r  // FAILS: trying to prove: my_inv (reveal (hide true)) r
+  invariant live r  // FAILS: trying to prove: my_inv (reveal (hide true)) r
                            // but typing context has: my_inv true r
   {
     r := 1;
   };
 
-  ()
+  r := 1;
 }
 
 
@@ -63,6 +59,7 @@ fn exists_introduces_ghost (r:R.ref int)
 {
   r := 0;
 
+  fold live r;
   fold (my_inv true r);
 
   introduce exists* b. (my_inv b r) with _;  // FAILS: trying to prove: my_inv (reveal (hide true)) r

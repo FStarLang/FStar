@@ -108,8 +108,7 @@ type array_init = {
 let ensures_slprop = option (ident & A.term) & slprop & option A.term
 
 type while_invariant1 =
-  | Old of ident & slprop
-  | New of slprop
+  | LoopInvariant of slprop
   | LoopEnsures of A.term
   | LoopRequires of A.term
   | Decreases of A.term
@@ -285,8 +284,7 @@ instance showable_a_binder : showable A.binder = {
 
 instance showable_while_invariant1 : showable while_invariant1 = {
   show = (fun i -> match i with
-    | Old x -> "Old " ^ show x
-    | New x -> "New " ^ show x
+    | LoopInvariant x -> "LoopInvariant " ^ show x
     | LoopEnsures x -> "LoopEnsures " ^ show x
     | LoopRequires x -> "LoopRequires " ^ show x
     | Decreases x -> "Decreases " ^ show x
@@ -387,8 +385,7 @@ let eq_slprop (s1 s2 : slprop) =
 
 let eq_while_invariant1 (i1 i2:while_invariant1) =
   match i1, i2 with
-  | Old (id1, t1), Old (id2, t2) -> eq_ident id1 id2 && eq_slprop t1 t2
-  | New t1, New t2 -> eq_slprop t1 t2
+  | LoopInvariant t1, LoopInvariant t2 -> eq_slprop t1 t2
   | LoopEnsures t1, LoopEnsures t2 -> AD.eq_term t1 t2
   | LoopRequires t1, LoopRequires t2 -> AD.eq_term t1 t2
   | Decreases t1, Decreases t2 -> AD.eq_term t1 t2
@@ -575,8 +572,7 @@ and scan_lambda (cbs:A.dep_scan_callbacks) (l:lambda) =
   scan_stmt cbs l.body
 and scan_while_invariant1 (cbs:A.dep_scan_callbacks) (i:while_invariant1) =
   match i with
-  | Old (id, t) -> cbs.scan_term t
-  | New t -> cbs.scan_term t
+  | LoopInvariant t -> cbs.scan_term t
   | LoopEnsures t -> cbs.scan_term t
   | LoopRequires t -> cbs.scan_term t
   | Decreases t -> cbs.scan_term t

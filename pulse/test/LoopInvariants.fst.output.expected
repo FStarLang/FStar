@@ -1,8 +1,4 @@
-* Info at LoopInvariants.fst(64,17-64,20):
-  - Expected failure:
-  - When using multiple invariants, they must all be in the "new" style without a binder.
-
-* Info at LoopInvariants.fst(77,4-77,8):
+* Info at LoopInvariants.fst(65,4-65,8):
   - Expected failure:
   - Could not prove equality of:
   - Pulse.Lib.Reference.pts_to s 3
@@ -10,9 +6,9 @@
   - Assertion failed
   - The SMT solver could not prove the query. Use --query_stats for more
     details.
-  - See also LoopInvariants.fst(77,4-77,10)
+  - See also LoopInvariants.fst(65,4-65,10)
 
-* Info at LoopInvariants.fst(88,4-88,8):
+* Info at LoopInvariants.fst(76,4-76,8):
   - Expected failure:
   - Could not prove equality of:
   - Pulse.Lib.Reference.pts_to s 3
@@ -20,5 +16,5 @@
   - Assertion failed
   - The SMT solver could not prove the query. Use --query_stats for more
     details.
-  - See also LoopInvariants.fst(88,4-88,10)
+  - See also LoopInvariants.fst(76,4-76,10)
 

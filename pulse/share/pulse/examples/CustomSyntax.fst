@@ -167,7 +167,7 @@ fn while_test_alt (r:ref U32.t)
               pred false)
 {
   while (read_pred ())
-  invariant b . exists* n. (pts_to r n  ** pred b)
+  invariant exists* b n. (pts_to r n  ** pred b)
   {
     ()
   }
@@ -193,9 +193,7 @@ fn while_count2 (r:ref U32.t)
 {
   open FStar.UInt32;
   while (let x = !r; (x <> 10ul))
-  invariant b. 
-    exists* n. (pts_to r n  **
-          pure (b == (n <> 10ul)))
+  invariant live r
   {
     let x = !r;
     if (x <^ 10ul)
@@ -262,9 +260,7 @@ fn count_local (r:ref int) (n:int)
   let mut i = 0;
   while
     (let m = !i; (m <> n))
-  invariant b. exists* m. 
-    (pts_to i m  **
-     pure (b == (m <> n)))
+  invariant live i
   {
     let m = !i;
     i := m + 1

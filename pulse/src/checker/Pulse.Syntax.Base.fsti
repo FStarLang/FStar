@@ -261,13 +261,7 @@ type st_term' =
       p:slprop;
       witnesses:list term;
     }
-  | Tm_While {
-      invariant:term;
-      condition:st_term;
-      condition_var:ppname;
-      body:st_term;
-    }
-   | Tm_NuWhile {
+   | Tm_While {
       invariant:term;
       loop_requires:term;
       meas:list term;

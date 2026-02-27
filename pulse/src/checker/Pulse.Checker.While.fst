@@ -29,111 +29,6 @@ module P = Pulse.Syntax.Printer
 module Metatheory = Pulse.Typing.Metatheory
 module RU = Pulse.RuntimeUtils
 
-let while_cond_comp_typing (#g:env) (u:universe) (x:ppname) (ty:term) (inv_body:term)
-                           (inv_typing:tot_typing g (tm_exists_sl u (as_binder ty) inv_body) tm_slprop)
-  : Dv (comp_typing_u g (comp_while_cond x inv_body))
-  = Metatheory.admit_comp_typing g (comp_while_cond x inv_body)
-
-let while_body_comp_typing (#g:env) (u:universe) (x:ppname) (ty:term) (inv_body:term)
-                           (inv_typing:tot_typing g (tm_exists_sl u (as_binder ty) inv_body) tm_slprop)
-  : Dv (comp_typing_u g (comp_while_body x inv_body))
-  = Metatheory.admit_comp_typing g (comp_while_body x inv_body)
-
-#push-options "--fuel 0 --ifuel 0 --z3rlimit_factor 8"
-#restart-solver
-let check
-  (g:env)
-  (pre:term)
-  (pre_typing:tot_typing g pre tm_slprop)
-  (post_hint:post_hint_opt g)
-  (res_ppname:ppname)
-  (t:st_term{Tm_While? t.term})
-  (check:check_t)
-  : T.Tac (checker_result_t g pre post_hint) =
-
-  let g = push_context "while loop" t.range g in
-  let Tm_While { invariant=inv; condition=cond; body; condition_var } = t.term in
-  let (| ex_inv, inv_typing |) =
-    purify_and_check_spec (push_context "invariant" (term_range inv) g) 
-                { ctxt_now = pre; ctxt_old = Some pre }
-                (tm_exists_sl u0 (mk_binder_ppname tm_bool condition_var) inv)
-  in
-  let ex_inv_v = inspect_term ex_inv in
-  if not (Tm_ExistsSL? ex_inv_v)
-  then fail g (Some t.range)
-         (Printf.sprintf "check_while: typechecked invariant %s is not an existential"
-            (P.term_to_string ex_inv));
-
-  let Tm_ExistsSL u {binder_ppname=nm; binder_ty=ty} inv = ex_inv_v in
-
-  if not (eq_tm ty tm_bool) ||
-     not (eq_univ u u0)
-  then fail g (Some nm.range)
-         (Printf.sprintf "While loop invariant exists but its witness type is %s, expected bool"
-            (P.term_to_string ty));
-
-  let while_cond_comp_typing = while_cond_comp_typing u nm ty inv inv_typing in
-  let (| res_typing, cond_pre_typing, x, post_typing |) =
-    Metatheory.(st_comp_typing_inversion (fst <| comp_typing_inversion while_cond_comp_typing))
-  in
-  let while_cond_hint : post_hint_for_env g =
-    post_hint_from_comp_typing while_cond_comp_typing
-  in
-
-  let (| cond, cond_comp, cond_typing |) =
-    let ppname = mk_ppname_no_range "_while_c" in
-    let r = check
-      (push_context "check_while_condition" cond.range g)
-      (comp_pre (comp_while_cond nm inv))
-      (coerce_eq () cond_pre_typing) // why is coerce_eq needed !?
-      (PostHint while_cond_hint)
-      ppname
-      cond in
-    apply_checker_result_k r ppname
-  in
-  if eq_comp cond_comp (comp_while_cond nm inv)
-  then begin
-    let while_body_comp_typing = while_body_comp_typing u nm ty inv inv_typing in
-    let (| res_typing, body_pre_typing, x, post_typing |) = 
-      Metatheory.(st_comp_typing_inversion (fst <| comp_typing_inversion while_body_comp_typing))
-    in
-    let while_post_hint : post_hint_for_env g =
-      post_hint_from_comp_typing while_body_comp_typing
-    in
-    debug g (fun _ -> 
-      Printf.sprintf "while_body post_hint: %s\n"
-        (Pulse.Syntax.Printer.term_to_string while_post_hint.post)
-    );
-    let (| body, body_comp, body_typing |) =
-      let ppname = mk_ppname_no_range "_while_b" in
-      let r = check
-        (push_context "check_while_body" body.range g)
-        (comp_pre (comp_while_body nm inv))
-        (coerce_eq () body_pre_typing) // why is coerce_eq needed !?
-        (PostHint while_post_hint)
-        ppname
-        body in
-      apply_checker_result_k r ppname in
-    if eq_comp body_comp (comp_while_body nm inv)
-    then
-      let d = T_While g inv cond body inv_typing cond_typing body_typing in
-      let (| c,d |) = match_comp_res_with_post_hint d post_hint in
-      prove_post_hint (try_frame_pre false pre_typing (|_,c,d|) res_ppname) post_hint t.range
-    else fail g None
-          (Printf.sprintf "Could not prove the inferred type of the while body matches the annotation\n\
-                           Inferred type = %s\n\
-                           Annotated type = %s\n"
-                           (P.comp_to_string body_comp)
-                           (P.comp_to_string (comp_while_body nm inv)))
-  end
-  else fail g None
-         (Printf.sprintf "Could not prove that the inferred type of the while condition matches the annotation\n\
-                          Inferred type = %s\n\
-                          Annotated type = %s\n"
-                          (P.comp_to_string cond_comp)
-                          (P.comp_to_string (comp_while_cond nm inv)))
-#pop-options
-
 let empty_env g = mk_env (fstar_env g)
 let push_empty_env_idem (g:env) : Lemma (push_env g (empty_env g) == g)[SMTPat (push_env g (empty_env g))] = admit()
 let body_typing_subst_true #g #x #post (_:tot_typing (push_binding g x ppname_default tm_bool) (open_term post x) tm_slprop)
@@ -197,7 +92,7 @@ is represented as
 
 Tm_ForwardJumpLabel {
   lbl = "_break";
-  body = Tm_NuWhile {
+  body = Tm_While {
     invariant = inv;
     loop_requires = pre;
     condition = cond;
@@ -252,20 +147,20 @@ let rec build_tuple_info (infos: list (term & term & universe))
     | _ -> (unit_const, tm_unit, u0, mk_precedes u0 tm_unit)
 #pop-options
 
-let check_nuwhile
+let check_while
   (g:env)
   (pre:term)
   (pre_typing:tot_typing g pre tm_slprop)
   (post_hint:post_hint_opt g {~ (PostHint? post_hint) })
   (res_ppname:ppname)
-  (t:st_term{Tm_NuWhile? t.term})
+  (t:st_term{Tm_While? t.term})
   (breaklblx: var { freshv g breaklblx })
   (loop_ensures: option term)
   (check:check_t)
   : T.Tac (checker_result_t g pre post_hint) =
 
-  let g = push_context "nu while loop" t.range g in
-  let Tm_NuWhile { invariant=inv; loop_requires; meas; condition=cond; body } = t.term in
+  let g = push_context "while loop" t.range g in
+  let Tm_While { invariant=inv; loop_requires; meas; condition=cond; body } = t.term in
 
   (*
   We need to compute three slprops here:
@@ -387,7 +282,7 @@ let check_nuwhile
     (| t, c, typ |) in
 
   let body_pre_open = post_cond.post in
-  let body_post_typing : tot_typing g2 (comp_post (comp_nuwhile_body u_meas ty_meas is_tot dec_formula x_meas inv body_pre_open)) tm_slprop = RU.magic () in
+  let body_post_typing : tot_typing g2 (comp_post (comp_while_body u_meas ty_meas is_tot dec_formula x_meas inv body_pre_open)) tm_slprop = RU.magic () in
   let body_ph : post_hint_for_env g2 = inv_as_post_hint body_post_typing in
   assert body_ph.ret_ty == tm_unit;
   let x = fresh g2 in
@@ -402,28 +297,28 @@ let check_nuwhile
   in
   let (| cond, comp_cond, cond_typing |) = r_cond in
   let (| body, comp_body, body_typing |) = apply_checker_result_k r_body ppname_default in
-  assert (comp_cond == (comp_nuwhile_cond inv body_pre_open));
-  assert (comp_post comp_body == comp_post (comp_nuwhile_body u_meas ty_meas is_tot dec_formula x_meas inv body_pre_open));
-  assert (comp_pre comp_body == comp_pre (comp_nuwhile_body u_meas ty_meas is_tot dec_formula x_meas inv body_pre_open));
-  assert (comp_u comp_body == comp_u (comp_nuwhile_body u_meas ty_meas is_tot dec_formula x_meas inv body_pre_open));
-  assert (comp_res comp_body == comp_res (comp_nuwhile_body u_meas ty_meas is_tot dec_formula x_meas inv body_pre_open));
-  assert (comp_body == comp_nuwhile_body u_meas ty_meas is_tot dec_formula x_meas inv body_pre_open);
+  assert (comp_cond == (comp_while_cond inv body_pre_open));
+  assert (comp_post comp_body == comp_post (comp_while_body u_meas ty_meas is_tot dec_formula x_meas inv body_pre_open));
+  assert (comp_pre comp_body == comp_pre (comp_while_body u_meas ty_meas is_tot dec_formula x_meas inv body_pre_open));
+  assert (comp_u comp_body == comp_u (comp_while_body u_meas ty_meas is_tot dec_formula x_meas inv body_pre_open));
+  assert (comp_res comp_body == comp_res (comp_while_body u_meas ty_meas is_tot dec_formula x_meas inv body_pre_open));
+  assert (comp_body == comp_while_body u_meas ty_meas is_tot dec_formula x_meas inv body_pre_open);
   let inv_typing2 : tot_typing g2 inv tm_slprop = RU.magic () in
 
-  let while = wtag (Some STT) (Tm_NuWhile { invariant = inv; loop_requires = tm_unknown; meas = []; condition = cond; body }) in
+  let while = wtag (Some STT) (Tm_While { invariant = inv; loop_requires = tm_unknown; meas = []; condition = cond; body }) in
   let typ_meas: universe_of g1' ty_meas u_meas = RU.magic () in
   assume ~(snd x_meas `Set.mem` freevars_st cond);
   assume ~(snd x_meas `Set.mem` freevars_st body);
-  let d: st_typing g1' while (comp_nuwhile u_meas ty_meas x_meas inv body_pre_open) =
+  let d: st_typing g1' while (comp_while u_meas ty_meas x_meas inv body_pre_open) =
     let h = RU.magic () in
-    T_NuWhile g1' inv body_pre_open cond body
+    T_While g1' inv body_pre_open cond body
       u_meas ty_meas typ_meas is_tot dec_formula
       x_meas g2
       inv_typing2 h cond_typing body_typing
     in
-  let C_ST cst = comp_nuwhile u_meas ty_meas x_meas inv body_pre_open in
+  let C_ST cst = comp_while u_meas ty_meas x_meas inv body_pre_open in
   let loop_pre = tm_exists_sl u_meas (as_binder ty_meas) (close_term inv (snd x_meas)) in
-  assert comp_pre (comp_nuwhile u_meas ty_meas x_meas inv body_pre_open) == loop_pre;
+  assert comp_pre (comp_while u_meas ty_meas x_meas inv body_pre_open) == loop_pre;
   let d_st : Pulse.Typing.Combinators.st_typing_in_ctxt g1' loop_pre NoHint = (| _, _, d |) in
   let res = checker_result_for_st_typing d_st ppname_default in
   assume (fresh_wrt x g0 (freevars break_pred));

@@ -40,11 +40,10 @@ fn compare (#t:eqtype) (#p1 #p2:perm) (l:US.t) (#s1 #s2:elseq t l) (a1 a2:A.larr
 {
   let mut i = 0sz;
   while (let vi = !i; if US.(vi <^ l) { let v1 = a1.(vi); let v2 = a2.(vi); (v1 = v2) } else { false } )
-  invariant b. exists* (vi:US.t). ( 
+  invariant exists* (vi:US.t). ( 
     R.pts_to i vi **
     A.pts_to a1 #p1 s1 **
     A.pts_to a2 #p2 s2 **
-    pure (b == (US.(vi <^ l) && Seq.index s1 (US.v vi) = Seq.index s2 (US.v vi))) **
     pure (
       US.v vi <= US.v l /\
       (forall (i:nat). i < US.v vi ==> Seq.index s1 i == Seq.index s2 i)

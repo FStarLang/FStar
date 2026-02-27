@@ -229,9 +229,7 @@ let rec conditionalize (g: env) (t: st_term) (cond: cond_params) : T.Tac (option
       } }
     else
       None
-  | Tm_While { invariant; condition; condition_var; body } -> 
-    conditionalize g { t with term = Tm_NuWhile { invariant; condition; loop_requires = tm_unknown; meas = []; body } } cond
-  | Tm_NuWhile { invariant; loop_requires; meas; condition; body } -> (
+  | Tm_While { invariant; loop_requires; meas; condition; body } -> (
     let x = fresh g in
     let cond_cond = { cond with result = Some { n = ppname_default; x; ty = tm_bool } } in
     let cond_body = { cond with result = None } in
@@ -239,7 +237,7 @@ let rec conditionalize (g: env) (t: st_term) (cond: cond_params) : T.Tac (option
     | None, None -> None
     | None, Some body ->
       let y = fresh g in
-      Some { t with term = Tm_NuWhile {
+      Some { t with term = Tm_While {
         invariant;
         loop_requires;
         meas;
@@ -354,15 +352,8 @@ let rec elim_gotos (g: env) (t: st_term) : T.Tac st_term =
         let e = close_st_term_bs (elim_gotos g (open_st_term_bs e bs)) bs in
         {pat;e;norw}) brs
     } }
-  | Tm_While { invariant; condition; condition_var; body } ->
+  | Tm_While { invariant; loop_requires; meas; condition; body } ->
     { t with term = Tm_While {
-      invariant;
-      condition = elim_gotos g condition;
-      condition_var;
-      body = elim_gotos g body;
-    } }
-  | Tm_NuWhile { invariant; loop_requires; meas; condition; body } ->
-    { t with term = Tm_NuWhile {
       invariant;
       loop_requires;
       meas;
