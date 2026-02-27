@@ -53,14 +53,14 @@ let check (g:env)
                  (Printf.sprintf "check_comp: ill-typed postcondition %s" (P.term_to_string (comp_post c)))
           else (
             assert (ty == tm_slprop);
-            STC g st x
+            ()
           )
         )
     in
     match c with
     | C_ST st -> 
       let stc = check_st_comp st in
-      CT_ST _ _ stc
+      ()
     | C_STAtomic i obs st -> 
       let stc = check_st_comp st in
       let (| ty, i_typing |) = core_compute_tot_term_type g i in
@@ -68,7 +68,7 @@ let check (g:env)
       then fail g None
              (Printf.sprintf "check_comp (atomic): type of inames term %s is %s, expected %s"
                 (P.term_to_string i) (P.term_to_string ty) (P.term_to_string tm_inames))
-      else CT_STAtomic _ i obs _ stc
+      else ()
     | C_STGhost i st ->
       let (| ty, i_typing |) = core_compute_tot_term_type g i in
       if not (eq_tm ty tm_inames)
@@ -77,4 +77,4 @@ let check (g:env)
                 (P.term_to_string i) (P.term_to_string ty) (P.term_to_string tm_inames))
       else 
         let stc = check_st_comp st in
-        CT_STGhost _ i _ stc
+        ()

@@ -159,15 +159,6 @@ let check
           in
           assert (freshv g x);
           assert (~(Set.mem x (freevars_st body)));
-          match init with
-          | None ->
-            let d = T_WithLocalUninit g binder.binder_ppname body init_t c x
-              c_typing
-              body_typing in
-            checker_result_for_st_typing (| _, _, d |) res_ppname
-          | Some init ->
-            let d = T_WithLocal g binder.binder_ppname init body init_t c x
-              c_typing
-              body_typing in
-            checker_result_for_st_typing (| _, _, d |) res_ppname
+          let d : st_typing g _ c = () in
+          checker_result_for_st_typing (| _, _, d |) res_ppname
 #pop-options

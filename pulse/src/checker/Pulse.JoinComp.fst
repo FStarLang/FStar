@@ -414,8 +414,8 @@ let rec join_comps
   match c_then, c_else with
   | C_STAtomic _ obs1 _, C_STAtomic _ obs2 _ ->
     let obs = join_obs obs1 obs2 in
-    let e_then_typing = T_Lift _ _ _ _ e_then_typing (Lift_Observability g_then c_then obs) in
-    let e_else_typing = T_Lift _ _ _ _ e_else_typing (Lift_Observability g_else c_else obs) in
+    let e_then_typing : st_typing g_then e_then _ = () in
+    let e_else_typing : st_typing g_else e_else _ = () in
     (| _, e_then_typing, e_else_typing |)
   | C_STGhost _ _, C_STGhost _ _
   | C_ST _, C_ST _ -> (| _, e_then_typing, e_else_typing |)
@@ -425,12 +425,12 @@ let rec join_comps
     match c_then, c_else with
     | C_STGhost _ _, C_STAtomic _ _ _ ->
       let d : st_typing g_then e_then (st_ghost_as_atomic c_then) =
-        lift_ghost_atomic e_then_typing in
+        () in
       st_ghost_as_atomic_matches_post_hint c_then post;
       join_comps _ _ _ d _ _ _ e_else_typing post
 
     | C_STAtomic _ _ _, C_STGhost _ _ ->
-      let d = lift_ghost_atomic e_else_typing in
+      let d : st_typing g_else e_else (st_ghost_as_atomic c_else) = () in
       st_ghost_as_atomic_matches_post_hint c_else post;
       join_comps _ _ _ e_then_typing _ _ _ d post
 #pop-options

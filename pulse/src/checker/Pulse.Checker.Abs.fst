@@ -326,11 +326,11 @@ let sub_effect_comp g r (asc:comp_ascription) (c_computed:comp) : T.Tac (option 
     | C_ST _, C_ST _ -> nop
     | C_STGhost _ _, C_STGhost _ _ -> nop
     | C_STAtomic i Neutral c1, C_STGhost _ _ ->
-      let lift = Lift_Neutral_Ghost g c_computed in
+      let lift : lift_comp g c_computed (C_STGhost i c1) = () in
       Some (| C_STGhost i c1, lift |)
     | C_STAtomic i o1 c1, C_STAtomic j o2 c2 ->
       if sub_observability o1 o2
-      then let lift = Lift_Observability g c_computed o2 in
+      then let lift : lift_comp g c_computed (C_STAtomic i o2 c1) = () in
            Some (| C_STAtomic i o2 c1, lift |)
       else nop
 
@@ -338,7 +338,7 @@ let sub_effect_comp g r (asc:comp_ascription) (c_computed:comp) : T.Tac (option 
     | _ -> nop
 
 let check_effect_annotation g r (asc:comp_ascription) (c_computed:comp) : T.Tac (c2:comp & st_sub g c_computed c2) =
-  let nop = (| c_computed, STS_Refl _ _ |) in
+  let nop = (| c_computed, () |) in
   match asc.elaborated with
   | None -> nop
   | Some c ->
@@ -377,8 +377,8 @@ let check_effect_annotation g r (asc:comp_ascription) (c_computed:comp) : T.Tac 
 
       let d_sub : st_sub g c_computed c =
         match c_computed with
-        | C_STAtomic _ obs _ -> STS_AtomicInvs g c2 j i obs obs tok
-        | C_STGhost _ _ -> STS_GhostInvs g c2 j i tok
+        | C_STAtomic _ obs _ -> ()
+        | C_STGhost _ _ -> ()
       in
       (| c, d_sub |)
 
@@ -424,10 +424,9 @@ let maybe_rewrite_body_typing
             magic ()
           in
           let tok' : st_equiv g (C_Tot t') (C_Tot t) =
-            ST_TotEquiv _ t' t u
-              (RT.Rel_sym _ _ _ (RT.Rel_eq_token _ _ _ sq))
+            ()
           in
-          (| C_Tot t, T_Equiv _ _ _ _ d tok' |)
+          (| C_Tot t, () |)
     )
 
     (* c is not a C_Tot *)
@@ -481,14 +480,14 @@ let rec check_abs_core
         match sub_effect_comp g' body.range asc c_body with
         | None -> (| c_body, body_typing |)
         | Some (| c_body, lift |) ->
-          let body_typing = T_Lift _ _ _ _ body_typing lift in
+          let body_typing : st_typing g' body c_body = () in
           (| c_body, body_typing |)
       in
 
       (* Check if it matches annotation (if any, likely not), and adjust derivation
       if needed. Currently this only subtypes the invariants. *)
       let (| c_body, d_sub |) = check_effect_annotation g' body.range asc c_body in
-      let body_typing = T_Sub _ _ _ _ body_typing d_sub in
+      let body_typing : st_typing g' body c_body = () in
       (* Similar to above, fixes the type of the computation if we need to match
       its annotation. TODO: merge these two by adding a tot subtyping (or equiv)
       case to the st_sub judg. *)
@@ -506,7 +505,7 @@ let rec check_abs_core
         |> FStar.Sealed.seal in
 
       let b = {binder_ty=t;binder_ppname=ppname;binder_attrs} in
-      let tt = T_Abs g x qual b u body_closed c_body body_typing in
+      let tt : st_typing g _ (C_Tot (tm_arrow {binder_ty=t;binder_ppname=ppname;binder_attrs} qual (close_comp c_body x))) = () in
       let tres = tm_arrow {binder_ty=t;binder_ppname=ppname;binder_attrs} qual (close_comp c_body x) in
       (| _, C_Tot tres, tt |)
     | _ ->
@@ -594,12 +593,12 @@ let rec check_abs_core
         match sub_effect_comp g' body.range c_opened c_body with
         | None -> (| c_body, body_typing |)
         | Some (| c_body, lift |) ->
-          let body_typing = T_Lift _ _ _ _ body_typing lift in
+          let body_typing : st_typing g' body c_body = () in
           (| c_body, body_typing |)
       in
 
       let (| c_body, d_sub |) = check_effect_annotation g' body.range c_opened c_body in
-      let body_typing = T_Sub _ _ _ _ body_typing d_sub in
+      let body_typing : st_typing g' body c_body = () in
 
       let (| c_body, body_typing |) = maybe_rewrite_body_typing body_typing asc in
 
@@ -607,7 +606,7 @@ let rec check_abs_core
       let body_closed = close_st_term body x in
       assume (open_st_term body_closed x == body);
       let b = {binder_ty=t;binder_ppname=ppname;binder_attrs} in
-      let tt = T_Abs g x qual b u body_closed c_body body_typing in
+      let tt : st_typing g _ (C_Tot (tm_arrow {binder_ty=t;binder_ppname=ppname;binder_attrs} qual (close_comp c_body x))) = () in
       let tres = tm_arrow {binder_ty=t;binder_ppname=ppname;binder_attrs} qual (close_comp c_body x) in
 
       (| _, C_Tot tres, tt |)

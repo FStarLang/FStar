@@ -270,11 +270,7 @@ let check_while
   assume ~(snd x_meas `Set.mem` freevars_st cond);
   assume ~(snd x_meas `Set.mem` freevars_st body);
   let d: st_typing g1' while (comp_while u_meas ty_meas x_meas inv body_pre_open) =
-    T_While g1' inv body_pre_open cond body
-      u_meas ty_meas is_tot
-      x_meas g2
-      cond_typing body_typing
-    in
+    () in
   let C_ST cst = comp_while u_meas ty_meas x_meas inv body_pre_open in
   let loop_pre = tm_exists_sl u_meas (as_binder ty_meas) (close_term inv (snd x_meas)) in
   assert comp_pre (comp_while u_meas ty_meas x_meas inv body_pre_open) == loop_pre;
@@ -309,7 +305,7 @@ let check_while
   admit ();
   assert break_lbl_c == goto_comp_of_block_comp while_comp;
   let fjl_d: st_typing g0 fjl while_comp =
-    T_ForwardJumpLabel g0 (breaklbln, breaklblx) (close_st_term while breaklblx) while_comp while_d in
+    () in
 
   let d_st: Pulse.Typing.Combinators.st_typing_in_ctxt g0 loop_pre (TypeHint tm_unit) = (| _, _, fjl_d |) in
   let d_st: Pulse.Typing.Combinators.st_typing_in_ctxt g0 loop_pre0 (TypeHint tm_unit) =

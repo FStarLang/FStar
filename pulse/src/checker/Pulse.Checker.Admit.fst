@@ -66,16 +66,16 @@ let check
         let post = close_term post_opened x in
         let s : st_comp = {u;res=t;pre;post} in
         assume (open_term (close_term post_opened x) x == post_opened);
-        let d_s : st_comp_typing _ s = STC _ s x in
+        let d_s : st_comp_typing _ s = () in
         (match c with
-         | STT -> (| _,  CT_ST _ _ d_s |)
-         | STT_Ghost -> (| _, CT_STGhost _ tm_emp_inames _ d_s |)
-         | STT_Atomic -> (| _, CT_STAtomic _ tm_emp_inames Neutral _ d_s |))
+         | STT -> (| _,  () |)
+         | STT_Ghost -> (| _, () |)
+         | STT_Atomic -> (| _, () |))
 
-      | _, PostHint post -> Pulse.Typing.Combinators.comp_for_post_hint pre_typing post x
+      | _, PostHint post -> Pulse.Typing.Combinators.comp_for_post_hint g pre pre_typing post x
   in
   let (| c, d_c |) = res in
-  let d = T_Admit _ _ d_c in
+  let d : st_typing g _ c = () in
   FStar.Tactics.BreakVC.break_vc ();
   // ^ This makes a big difference! Would be good to distill into
   // a smaller F*-only example and file an issue.

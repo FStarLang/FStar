@@ -139,7 +139,7 @@ let check
   let c_typing = comp_typing_from_post_hint c pre_typing post_hint' in
 
   let d : st_typing_in_ctxt g pre (PostHint post_hint') =
-    (| _, c, T_If g b e1 e2 c hyp e1_typing e2_typing (E c_typing) |) in
+    (| _, c, () |) in
 
   let res : checker_result_t g pre (PostHint post_hint') = checker_result_for_st_typing d res_ppname in
   retype_checker_result_post_hint post_hint' post_hint res

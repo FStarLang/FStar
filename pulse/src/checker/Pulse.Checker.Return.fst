@@ -135,7 +135,7 @@ let check_core
   let use_eq = use_eq || (not (PostHint? post_hint) && not (T.term_eq ty (`unit))) in
   assume (open_term (close_term post_opened x) x == post_opened);
   let post = close_term post_opened x in
-  let d = T_Return g c use_eq u ty t post x in
+  let d : st_typing g _ _ = () in
   let (|c',d'|) = match_comp_res_with_post_hint d post_hint in
   Pulse.Checker.Util.debug g "pulse.return" (fun _ -> 
     Printf.sprintf "Return comp is: %s"

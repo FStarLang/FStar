@@ -88,7 +88,7 @@ let check_elim_exists
   let (| u', ty_typing |) = universe_of_well_typed_term g ty in
   if eq_univ u u'
   then let x = fresh g in
-       let d = T_ElimExists g u ty p x in
+       let d : st_typing g _ _ = () in
        let (|_,d|) = match_comp_res_with_post_hint d post_hint in
        prove_post_hint (try_frame_pre false pre_typing (|_,_,d|) res_ppname) post_hint t_rng
   else fail g (Some t_rng)
@@ -130,7 +130,7 @@ let check_intro_exists
   let ty_typing, _ = Metatheory.tm_exists_inversion #g #u #b.binder_ty #p t_typing x in
   let (| witness, witness_typing |) = 
     check_term g witness T.E_Ghost b.binder_ty in
-  let d = T_IntroExists g u b p witness in
+  let d : st_typing g _ _ = () in
   let (| c, d |) : (c:_ & st_typing g _ c) = (| _, d |) in
   let (| c, d |) = match_comp_res_with_post_hint d post_hint in
   prove_post_hint (try_frame_pre false pre_typing (|_,_,d|) res_ppname)

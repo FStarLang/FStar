@@ -376,7 +376,7 @@ let weaken_branch_observability
     else (
       let d : br_typing_vis g sc_u sc_ty sc br.pat br.e c = 
         let TBRV g sc_u sc_ty sc c p e bs p1 p2 p3 hyp st_typing = typing in
-        let st_typing = T_Lift _ _ _ _ st_typing (Lift_Observability _ c obs) in
+        let st_typing : st_typing _ _ _ = () in
         let d = TBRV g sc_u sc_ty sc _ p e bs p1 p2 p3 hyp st_typing in
         d
       in
@@ -464,7 +464,7 @@ let weaken_branch_tag_to
 
     | STT_Atomic, C_STGhost _ _ -> (
       let TBRV g sc_u sc_ty sc c p e bs pf1 pf2 pf3 h d = d in
-      let d = Pulse.Typing.Combinators.lift_ghost_atomic d in
+      let d : st_typing _ _ _ = () in
       let d = TBRV g sc_u sc_ty sc _ p e bs pf1 pf2 pf3 h d in
       (| pe, _, d |)
     )
@@ -501,7 +501,7 @@ let maybe_weaken_branch_tags
 let erase_br_typing #g #sc_u #sc_ty #sc #p #e #c (d: br_typing_vis g sc_u sc_ty sc p e c)
   : br_typing g sc_u sc_ty sc p e c =
   let TBRV g sc_u sc_ty sc c p e bs pf1 pf2 pf3 hyp d = d in
-  TBR g sc_u sc_ty sc c p e bs pf1 pf2 pf3 hyp d
+  ()
 
 (* Hoisting this makes the proof much faster and more stable. *)
 let rec check_branches_aux2
@@ -513,10 +513,12 @@ let rec check_branches_aux2
   (brs : list (br:branch & br_typing_vis g sc_u sc_ty sc br.pat br.e c0))
   : brs_typing g sc_u sc_ty sc (List.Tot.map dfst brs) c0
   = match brs with
-    | [] -> TBRS_0 c0
+    | [] -> ()
     | (| br, d|)::rest ->
       let { pat; e } = br in
-      TBRS_1 c0 pat e (erase_br_typing d) (List.Tot.map dfst rest) (check_branches_aux2 g sc_u sc_ty sc c0 rest)
+      let _ = erase_br_typing d in
+      let _ = check_branches_aux2 g sc_u sc_ty sc c0 rest in
+      ()
 
 let check_branches
         (g:env)
@@ -577,7 +579,7 @@ let check
         text "Could not verify that this match is exhaustive.";
       ]
     | Some (elab_pats', bnds), _ ->
-      (| elab_pats', bnds, PC_Elab _ _ _ _ _ (RT.MC_Tok _ _ _ _ bnds ()) |)
+      (| elab_pats', bnds, () |)
   in
   let new_pats = map_opt readback_pat elab_pats' in 
   if None? new_pats then
@@ -603,6 +605,6 @@ let check
   (* Provable *)
   assume (L.map (fun br -> elab_pat br.pat) brs == elab_pats');
   let c_typing = comp_typing_from_post_hint c pre_typing post_hint in
-  let d = T_Match g sc_u sc_ty sc c (E c_typing) brs brs_d complete_d in
+  let d : st_typing g _ c = () in
   checker_result_for_st_typing (| _, _, d |) res_ppname
 #pop-options

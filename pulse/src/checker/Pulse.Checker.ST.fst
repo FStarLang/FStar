@@ -82,7 +82,7 @@ let check
     let t = { t with term = Tm_ST { t=e; args=[] }; effect_tag = T.seal (Some (ctag_of_comp_st c)) } in
     let d : st_typing g' t c =
       if eff = T.E_Total
-      then T_ST g' e c typing
+      then ()
       else (
         match c with
         | C_ST _ | C_STAtomic .. ->
@@ -100,19 +100,19 @@ let check
               fail g' (Some range)
                 (Printf.sprintf "Unexpected informative result for %s" (P.comp_to_string c))
             | Some token ->
-                E <| RT.Non_informative_token _ _ (FStar.Squash.return_squash token) 
+                ()
           in
-          T_STGhost g' e c typing d_non_info
+          ()
       )
       in
       let h: tot_typing g' ctxt' tm_slprop = RU.magic () in // TODO: thread through prover
       if comp_post c `eq_tm` tm_is_unreachable then
-        let framed = checker_result_for_st_typing (k _ (| t, add_frame c ctxt', T_Frame _ _ _ ctxt' d |)) res_ppname in
+        let framed = checker_result_for_st_typing (k _ (| t, add_frame c ctxt', () |)) res_ppname in
         RU.record_stats "prove_post_hint" fun _ -> prove_post_hint framed post_hint range
       else
         // TODO: not sure why we need the type equality check below..
         let (| c, d |) = match_comp_res_with_post_hint d post_hint in
-        let framed = checker_result_for_st_typing (k _ (| t, add_frame c ctxt', T_Frame _ _ _ ctxt' d |)) res_ppname in
+        let framed = checker_result_for_st_typing (k _ (| t, add_frame c ctxt', () |)) res_ppname in
         RU.record_stats "prove_post_hint" fun _ -> prove_post_hint framed post_hint range
   )
 #pop-options

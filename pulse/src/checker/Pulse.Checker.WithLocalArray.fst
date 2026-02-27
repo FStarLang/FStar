@@ -181,15 +181,6 @@ let check
               post_typing_rec.ty_typing
               x post_typing_rec.post_typing
           in
-          match init with
-          | Some init ->
-            let d = T_WithLocalArray g binder.binder_ppname init len body init_t c x
-              c_typing
-              body_typing in
-            checker_result_for_st_typing (| _, _, d |) res_ppname
-          | None ->
-            let d = T_WithLocalArrayUninit g binder.binder_ppname len body init_t c x
-              c_typing
-              body_typing in
-            checker_result_for_st_typing (| _, _, d |) res_ppname
+          let d : st_typing g _ c = () in
+          checker_result_for_st_typing (| _, _, d |) res_ppname
 #pop-options
