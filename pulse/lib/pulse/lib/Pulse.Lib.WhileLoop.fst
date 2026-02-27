@@ -20,26 +20,6 @@ open Pulse.Main
 open Pulse.Lib.Core
 
 
-fn rec while_loop'
-  (inv:bool -> slprop)
-  (cond:unit -> stt bool (exists* x. inv x) (fun b -> inv b))
-  (body:unit -> stt unit (inv true) (fun _ -> exists* x. inv x))
-  norewrite
-  requires exists* x. inv x
-  ensures inv false
-{
-  let b = cond ();
-  if b {
-     body ();
-     while_loop' inv cond body;
-  }
-}
-
-
-let while_loop inv cond body = 
-  while_loop' inv (fun _ -> cond) (fun _ -> body)
-
-
 fn rec while_loop
   (inv:slprop)
   (post:bool -> slprop)

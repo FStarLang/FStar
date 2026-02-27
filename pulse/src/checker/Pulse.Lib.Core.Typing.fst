@@ -27,8 +27,6 @@ let return_stt_atomic_noeq_typing _ _ _ = admit ()
 let return_stt_ghost_typing _ _ _ = admit ()
 let return_stt_ghost_noeq_typing _ _ _ = admit ()
 
-let while_typing _ _ _ = admit ()
-
 let exists_inversion _ = admit ()
 let elim_exists_typing _ _ _ = admit ()
 let intro_exists_typing _ _ _ = admit ()
