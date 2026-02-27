@@ -197,7 +197,7 @@ fn copy2
   };
   //copy2rewriting$
   // after the loop
-  with v1 s1. _; //bind existentially bound witnesses from the invariant
+  with _ v1 s1. _; //bind existentially bound witnesses from the invariant
   Seq.lemma_eq_elim s1 's2; //call an F* lemma to prove that s1 == 's2
   ()
   //copy2rewritingend$
