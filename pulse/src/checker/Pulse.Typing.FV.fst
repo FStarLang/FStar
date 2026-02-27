@@ -300,6 +300,7 @@ let tot_typing_freevars
              freevars ty `Set.subset` vars_of_env g)
   = tot_or_ghost_typing_freevars d
 
+#push-options "--z3rlimit 10"
 let bind_comp_freevars (#g:_) (#x:_) (#c1 #c2 #c:_)
                        (d:bind_comp g x c1 c2 c)
   : Lemma 
@@ -308,6 +309,7 @@ let bind_comp_freevars (#g:_) (#x:_) (#c1 #c2 #c:_)
     (ensures freevars_comp c `Set.subset` vars_of_env g)
   = match d with
     | Bind_comp _ _ _ _ dt _ _ -> tot_or_ghost_typing_freevars dt
+#pop-options
 
 let rec slprop_equiv_freevars (#g:_) (#t0 #t1:_) (v:slprop_equiv g t0 t1)
   : Lemma (ensures (freevars t0 `Set.subset` vars_of_env g) <==>
