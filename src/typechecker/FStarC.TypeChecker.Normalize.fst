@@ -1167,7 +1167,7 @@ let rec norm : cfg -> env -> stack -> term -> term =
                 let t1 = norm cfg env [] t1 in
                 log cfg  (fun () -> Format.print_string "+++ Normalizing ascription \n");
                 let asc = norm_ascription cfg env asc in
-                rebuild cfg env stack (mk (Tm_ascribed {tm=U.unascribe t1; asc; eff_opt=l}) t.pos)
+                rebuild cfg env stack (mk (Tm_ascribed {tm=t1; asc; eff_opt=l}) t.pos)
             )
 
           | Tm_match {scrutinee=head; ret_opt=asc_opt; brs=branches; rc_opt=lopt} ->
