@@ -52,7 +52,7 @@ let check'
       let typing: st_typing g t c' =
         let x' = fresh g in assume fresh_wrt x' g (freevars ph.post);
         let pht = post_hint_typing g ph x' in
-        T_Goto _ (lbln, v) arg lbl_c arg_typ ph.u ph.ret_ty pht.ty_typing ph.post x' pht.post_typing in
+        T_Goto _ (lbln, v) arg lbl_c ph.u ph.ret_ty ph.post x' in
       let (| c'', typing'' |) = match_comp_res_with_post_hint typing post_hint in
       prove_post_hint #g
         (try_frame_pre false #g pre_typing (|_,c'',typing''|) res_ppname)

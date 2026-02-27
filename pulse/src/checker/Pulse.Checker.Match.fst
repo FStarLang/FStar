@@ -603,6 +603,6 @@ let check
   (* Provable *)
   assume (L.map (fun br -> elab_pat br.pat) brs == elab_pats');
   let c_typing = comp_typing_from_post_hint c pre_typing post_hint in
-  let d = T_Match g sc_u sc_ty sc sc_ty_typing sc_typing c (E c_typing) brs brs_d complete_d in
+  let d = T_Match g sc_u sc_ty sc c (E c_typing) brs brs_d complete_d in
   checker_result_for_st_typing (| _, _, d |) res_ppname
 #pop-options

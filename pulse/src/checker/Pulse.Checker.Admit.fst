@@ -66,11 +66,11 @@ let check
         let post = close_term post_opened x in
         let s : st_comp = {u;res=t;pre;post} in
         assume (open_term (close_term post_opened x) x == post_opened);
-        let d_s : st_comp_typing _ s = STC _ s x t_typing pre_typing post_typing in
+        let d_s : st_comp_typing _ s = STC _ s x in
         (match c with
          | STT -> (| _,  CT_ST _ _ d_s |)
-         | STT_Ghost -> (| _, CT_STGhost _ tm_emp_inames _ (RU.magic ()) d_s |)
-         | STT_Atomic -> (| _, CT_STAtomic _ tm_emp_inames Neutral _ (RU.magic ()) d_s |))
+         | STT_Ghost -> (| _, CT_STGhost _ tm_emp_inames _ d_s |)
+         | STT_Atomic -> (| _, CT_STAtomic _ tm_emp_inames Neutral _ d_s |))
 
       | _, PostHint post -> Pulse.Typing.Combinators.comp_for_post_hint pre_typing post x
   in

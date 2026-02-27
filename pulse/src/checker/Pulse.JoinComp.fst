@@ -132,7 +132,7 @@ let infer_post' (g:env) (g':env { g' `env_extends` g })
     {
       g; effect_annot=EffectAnnotSTT; effect_annot_typing=();
       ret_ty=t; u; ty_typing;
-      post; x; post_typing_src; post_typing=RU.magic()
+      post; x; post_typing_src
     }
   in
   let post = RU.beta_lax (elab_env g) post in // clean up spurious dependencies on variables
@@ -371,7 +371,7 @@ let join_post #g #hyp #b
   let res : post_hint_for_env g =
     {g; effect_annot=eff; effect_annot_typing=eff_ty;
      ret_ty=p1.ret_ty; u=u; ty_typing; x;
-     post=joined_post; post_typing_src; post_typing=RU.magic()}
+     post=joined_post; post_typing_src}
   in
   res
 

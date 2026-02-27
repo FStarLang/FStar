@@ -49,7 +49,7 @@ let extend_post_hint
     | None -> mk_array_pts_to_uninit_post init_t arr) in
   let g' = push_binding g x n (mk_array init_t) in
   let c_typing = Pulse.Checker.Pure.core_check_term g' conjunct T.E_Total tm_slprop in
-  let res = Pulse.Checker.Base.extend_post_hint g p x (mk_array init_t) _ c_typing in
+  let res = Pulse.Checker.Base.extend_post_hint g p x (mk_array init_t) conjunct c_typing in
   res
 
 
@@ -184,16 +184,11 @@ let check
           match init with
           | Some init ->
             let d = T_WithLocalArray g binder.binder_ppname init len body init_t c x
-              init_typing
-              len_typing
-              init_t_typing
               c_typing
               body_typing in
             checker_result_for_st_typing (| _, _, d |) res_ppname
           | None ->
             let d = T_WithLocalArrayUninit g binder.binder_ppname len body init_t c x
-              len_typing
-              init_t_typing
               c_typing
               body_typing in
             checker_result_for_st_typing (| _, _, d |) res_ppname

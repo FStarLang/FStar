@@ -58,6 +58,6 @@ let check
   let Tm_IntroPure { p } = t.term in
   let (| p, p_typing |) = check_prop g p in
   let pv = check_prop_validity g p p_typing in
-  let st_typing = T_IntroPure _ _ p_typing pv in
+  let st_typing = T_IntroPure _ _ pv in
   let (| c,d |) = match_comp_res_with_post_hint st_typing post_hint in
   prove_post_hint (try_frame_pre false pre_typing (|_,c,d|) res_ppname) post_hint t.range

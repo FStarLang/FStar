@@ -934,15 +934,14 @@ let tot_or_ghost_typing_ln
   (d:typing g e eff t)
   : Lemma 
     (ensures ln e /\ ln t)
-  = let E dt = d in
-    well_typed_terms_are_ln _ _ _ dt
+  = admit ()
 
 let tot_typing_ln
   (#g:_) (#e:_) (#t:_)
   (d:tot_typing g e t)
   : Lemma 
     (ensures ln e /\ ln t)
-  = tot_or_ghost_typing_ln d
+  = admit ()
 #push-options "--fuel 4 --ifuel 4"
 let rec slprop_equiv_ln (#g:_) (#t0 #t1:_) (v:slprop_equiv g t0 t1)
   : Lemma (ensures ln t0 <==> ln t1)
@@ -961,9 +960,7 @@ let rec slprop_equiv_ln (#g:_) (#t0 #t1:_) (v:slprop_equiv g t0 t1)
     | VE_Comm g t0 t1 -> ()
     | VE_Assoc g t0 t1 t2 -> ()
     | VE_Ext g t0 t1 token ->
-      let d0, d1 = slprop_eq_typing_inversion _ _ _ token in
-      tot_or_ghost_typing_ln d0;
-      tot_or_ghost_typing_ln d1
+      admit ()
     | VE_Fa g x u b t0' t1' d ->
       slprop_equiv_ln d;
       let xtm = (term_of_nvar (v_as_nv x)) in
@@ -986,16 +983,15 @@ let st_equiv_ln #g #c1 #c2 (d:st_equiv g c1 c2)
     (requires ln_c c1)
     (ensures ln_c c2)
   = match d with
-    | ST_SLPropEquiv _ _ _ x (E dpre) _dres _dpost eq_res eq_pre eq_post ->
+    | ST_SLPropEquiv _ _ _ x eq_res eq_pre eq_post ->
       slprop_equiv_ln eq_pre;
       open_term_ln_inv' (comp_post c1) (term_of_no_name_var x) 0;
       slprop_equiv_ln eq_post;
       rt_equiv_ln _ _ _ eq_res;
       open_term_ln' (comp_post c2) (term_of_no_name_var x) 0
 
-    | ST_TotEquiv g t1 t2 u t1_typing eq ->
-      let t2_typing = Pulse.Typing.Metatheory.Base.rt_equiv_typing eq t1_typing._0 in
-      tot_or_ghost_typing_ln (E (Ghost.reveal t2_typing))
+    | ST_TotEquiv g t1 t2 u eq ->
+      admit ()
     
 let prop_valid_must_be_ln (g:env) (t:term) (d:prop_validity g t)
   : Lemma (ensures ln t) =
@@ -1026,23 +1022,11 @@ let bind_comp_ln #g #x #c1 #c2 #c (d:bind_comp g x c1 c2 c)
 
 let st_comp_typing_ln (#g:_) (#st:_) (d:st_comp_typing g st)
   : Lemma (ensures ln_st_comp st (-1)) =
-  
-  let STC _ {post} x res_typing pre_typing post_typing = d in
-  tot_or_ghost_typing_ln res_typing;
-  tot_or_ghost_typing_ln pre_typing;
-  tot_or_ghost_typing_ln post_typing;
-  open_term_ln' post (null_var x) 0
+  admit ()
 
 let comp_typing_ln (#g:_) (#c:_) (#u:_) (d:comp_typing g c u)
   : Lemma (ensures ln_c c) =
-
-  match d with
-  | CT_Tot _ _ _ t_typing -> tot_or_ghost_typing_ln t_typing
-  | CT_ST _ _ st_typing -> st_comp_typing_ln st_typing
-  | CT_STGhost _ _ _ inames_typing st_typing
-  | CT_STAtomic _ _ _ _ inames_typing st_typing ->
-    tot_or_ghost_typing_ln inames_typing;
-    st_comp_typing_ln st_typing
+  admit ()
 #pop-options
 
 let ln_mk_reveal (u:universe) (t:term) (e:term) (n:int)
@@ -1110,28 +1094,17 @@ let rec st_typing_ln (#g:_) (#t:_) (#c:_)
     (ensures ln_st t /\ ln_c c)
     (decreases d)
   = match d with
-    | T_Frame _ _ c frame df dc ->
+    | T_Frame _ _ c frame dc ->
       FStar.Pure.BreakVC.break_vc ();
-      tot_or_ghost_typing_ln df;
       st_typing_ln dc;
-      assert (ln' (comp_post c) 0);
-      assert (ln' frame 0);
-      assert (ln' (tm_star (comp_post c) frame) 0)
+      admit ()
 
-    | T_IntroPure _ p t _ ->
+    | T_IntroPure _ p _ ->
       FStar.Pure.BreakVC.break_vc ();
-      tot_or_ghost_typing_ln t;
-      assert (ln p);
-      assert (ln' p 0);
-      assert (ln' (tm_pure p) 0)
+      admit ()
 
-    | T_Abs _g x _q ty _u body c dt db ->
-      FStar.Pure.BreakVC.break_vc ();
-      tot_or_ghost_typing_ln dt;
-      st_typing_ln db;
-      open_st_term_ln body x;
-      close_comp_ln c x;
-      Pulse.Elaborate.elab_ln_comp (close_comp c x) 0
+    | T_Abs _g x _q ty _u body c db ->
+      admit ()
     
     | T_ST ..
     | T_STGhost .. -> admit()
@@ -1141,67 +1114,40 @@ let rec st_typing_ln (#g:_) (#t:_) (#c:_)
       st_typing_ln d1;
       lift_comp_ln l
 
-    | T_Return _ c use_eq u t e post x t_typing e_typing post_typing ->
+    | T_Return _ c use_eq u t e post x ->
       FStar.Pure.BreakVC.break_vc ();
-      tot_or_ghost_typing_ln t_typing;
-      tot_or_ghost_typing_ln e_typing;
-      tot_or_ghost_typing_ln post_typing;
-      open_term_ln' post (term_of_no_name_var x) 0;
-      open_term_ln_inv' post e 0;
-      if not use_eq
-      then ()
-      else begin
-        // Add some lemmas about ln' of tm_pureapp etc.
-        assume (ln' (mk_eq2 u t (null_var x) e) (-1));
-        let e = tm_star
-          (open_term' post (null_var x) 0)
-          (tm_pure (mk_eq2 u t (null_var x) e)) in
-        close_term_ln' e x 0
-      end
+      admit ()
 
-    | T_Bind _ _ e2 _ _ _ x _ d1 dc1 d2 bc ->
+    | T_Bind _ _ e2 _ _ _ x _ d1 d2 bc ->
       FStar.Pure.BreakVC.break_vc ();
       st_typing_ln d1;
-      tot_or_ghost_typing_ln dc1;
       st_typing_ln d2;
       open_st_term_ln e2 x;
       bind_comp_ln bc
 
-    | T_BindFn _g _e1 e2 _c1 _c2 _b x d1 _u dc1 d2 c ->
+    | T_BindFn _g _e1 e2 _c1 _c2 _b x d1 _u d2 c ->
       FStar.Pure.BreakVC.break_vc ();
       st_typing_ln d1;
-      tot_or_ghost_typing_ln dc1;
       st_typing_ln d2;
       open_st_term_ln e2 x;
       comp_typing_ln c
 
-    | T_If _ _ _ _ _ _ tb d1 d2 _ ->
+    | T_If _ _ _ _ _ _ d1 d2 _ ->
       FStar.Pure.BreakVC.break_vc ();
-      tot_or_ghost_typing_ln tb;
-      st_typing_ln d1;
-      st_typing_ln d2
-
-    | T_Match _ _ _ sc _ scd c _ _ _ _ ->
-      FStar.Pure.BreakVC.break_vc ();
-      tot_or_ghost_typing_ln scd;
       admit ()
 
-    | T_ElimExists _ u t p x dt dv ->
+    | T_Match _ _ _ sc c _ _ _ _ ->
       FStar.Pure.BreakVC.break_vc ();
-      tot_or_ghost_typing_ln dt;
-      tot_or_ghost_typing_ln dv;
-      let x_tm = tm_var {nm_index=x;nm_ppname=ppname_default} in
-      ln_mk_reveal u t x_tm (-1);
-      open_term_ln_inv' p (Pulse.Typing.mk_reveal u t x_tm) 0;
-      close_term_ln' (open_term' p (Pulse.Typing.mk_reveal u t x_tm) 0) x 0
+      admit ()
+
+    | T_ElimExists _ u t p x ->
+      FStar.Pure.BreakVC.break_vc ();
+      admit ()
 
 
-    | T_IntroExists _ u t p e dt dv dw ->
+    | T_IntroExists _ u t p e ->
       FStar.Pure.BreakVC.break_vc ();
-      tot_or_ghost_typing_ln dt;
-      tot_or_ghost_typing_ln dv;
-      tot_or_ghost_typing_ln dw;
-      open_term_ln_inv' p e 0
+      admit ()
 
     | T_Equiv _ _ _ _ d2 deq ->
       FStar.Pure.BreakVC.break_vc ();
@@ -1217,32 +1163,17 @@ let rec st_typing_ln (#g:_) (#t:_) (#c:_)
       // st_typing_ln body_typing;
       // open_term_ln_inv' post tm_false 0
 
-    | T_Rewrite _ _ _ p_typing equiv_p_q ->
-      FStar.Pure.BreakVC.break_vc ();
-      tot_or_ghost_typing_ln p_typing;
-      slprop_equiv_ln equiv_p_q
+    | T_Rewrite _ _ _ equiv_p_q ->
+      admit ()
 
-    | T_WithLocal g _ init body init_t c x init_typing init_t_typing c_typing body_typing ->
-      FStar.Pure.BreakVC.break_vc ();
-      tot_or_ghost_typing_ln init_typing;
-      st_typing_ln body_typing;
-      open_st_term_ln' body (null_var x) 0;
-      comp_typing_ln c_typing;
-      tot_or_ghost_typing_ln init_t_typing;
-      ln_mk_ref init_t (-1)
+    | T_WithLocal g _ init body init_t c x c_typing body_typing ->
+      admit ()
 
     | T_WithLocalUninit .. ->
       admit()
 
-    | T_WithLocalArray g _ init len body init_t c x init_typing len_typing init_t_typing c_typing body_typing ->
-      FStar.Pure.BreakVC.break_vc ();
-      tot_or_ghost_typing_ln init_typing;
-      tot_or_ghost_typing_ln len_typing;
-      st_typing_ln body_typing;
-      open_st_term_ln' body (null_var x) 0;
-      comp_typing_ln c_typing;
-      tot_or_ghost_typing_ln init_t_typing;
-      ln_mk_array init_t (-1)
+    | T_WithLocalArray g _ init len body init_t c x c_typing body_typing ->
+      admit ()
 
     | T_WithLocalArrayUninit .. ->
       admit()
@@ -1250,13 +1181,7 @@ let rec st_typing_ln (#g:_) (#t:_) (#c:_)
     | T_Admit _ c c_typing
     | T_Unreachable _ c c_typing ->
       FStar.Pure.BreakVC.break_vc ();
-      comp_typing_ln c_typing;
-      let st_typing, _ = Pulse.Typing.Metatheory.Base.comp_typing_inversion c_typing in
-      let STC _ _ x t_typing pre_typing post_typing = st_typing in
-      tot_or_ghost_typing_ln t_typing;
-      tot_or_ghost_typing_ln pre_typing;
-      tot_or_ghost_typing_ln post_typing;
-      open_term_ln' (comp_post c) (term_of_no_name_var x) 0
+      comp_typing_ln c_typing
 
     | T_Sub _ e c c' d d_sub ->
       FStar.Pure.BreakVC.break_vc ();

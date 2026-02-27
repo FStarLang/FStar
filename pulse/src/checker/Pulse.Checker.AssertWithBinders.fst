@@ -518,7 +518,7 @@ let check
     assume (v == v'); //sorry---ideally, we would retype everything proving that it is stable after normalization
     let v = v' in
     let body = body in // TODO compress
-    let h: tot_typing g1 v tm_slprop = PC.core_check_term _ _ _ _ in
+    let h: tot_typing g1 v tm_slprop = PC.core_check_term g1 v T.E_Total tm_slprop in
     let h: tot_typing g1 (tm_star v pre') tm_slprop = RU.magic () in // TODO: propagate through prover
     let (| x, x_ty, pre'', g2, k |) =
       check g1 (tm_star v pre') h post_hint res_ppname body in

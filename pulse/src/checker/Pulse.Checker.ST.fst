@@ -107,12 +107,12 @@ let check
       in
       let h: tot_typing g' ctxt' tm_slprop = RU.magic () in // TODO: thread through prover
       if comp_post c `eq_tm` tm_is_unreachable then
-        let framed = checker_result_for_st_typing (k _ (| t, add_frame c ctxt', T_Frame _ _ _ ctxt' h d |)) res_ppname in
+        let framed = checker_result_for_st_typing (k _ (| t, add_frame c ctxt', T_Frame _ _ _ ctxt' d |)) res_ppname in
         RU.record_stats "prove_post_hint" fun _ -> prove_post_hint framed post_hint range
       else
         // TODO: not sure why we need the type equality check below..
         let (| c, d |) = match_comp_res_with_post_hint d post_hint in
-        let framed = checker_result_for_st_typing (k _ (| t, add_frame c ctxt', T_Frame _ _ _ ctxt' h d |)) res_ppname in
+        let framed = checker_result_for_st_typing (k _ (| t, add_frame c ctxt', T_Frame _ _ _ ctxt' d |)) res_ppname in
         RU.record_stats "prove_post_hint" fun _ -> prove_post_hint framed post_hint range
   )
 #pop-options

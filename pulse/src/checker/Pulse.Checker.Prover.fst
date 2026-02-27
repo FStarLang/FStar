@@ -351,7 +351,7 @@ let intro_pure (g: env) (frame: slprop) (p: term)
   let frame_typ : tot_typing g frame tm_slprop = RU.magic () in // implied by t2_typing
   let h: tot_typing g (tm_star frame (comp_pre (comp_intro_pure p))) tm_slprop = RU.magic () in
   debug_prover g (fun _ -> Printf.sprintf "intro_pure p=%s\nframe=%s\n" (show p) (show frame));
-  k_elab_equiv (continuation_elaborator_with_bind_nondep frame (T_IntroPure g p p_typing pv) h) (RU.magic ()) (RU.magic ())
+  k_elab_equiv (continuation_elaborator_with_bind_nondep frame (T_IntroPure g p pv) h) (RU.magic ()) (RU.magic ())
     post t
 
 let is_uvar (t:term) : bool =
@@ -448,7 +448,7 @@ let intro_exists (g: env) (frame: slprop) (u: universe) (b: binder) (body: slpro
   let h2: slprop_equiv g (tm_star frame (comp_pre (comp_intro_exists u b body e))) (tm_star frame (open_term' body e 0)) = RU.magic () in
   let h3: slprop_equiv g (tm_star (comp_post (comp_intro_exists u b body e)) frame) (tm_star frame (tm_exists_sl u b body)) = RU.magic () in
   debug_prover g (fun _ -> Printf.sprintf "intro_exists %s\nframe=%s\n" (show (tm_exists_sl u b body)) (show frame));
-  k_elab_equiv (continuation_elaborator_with_bind_nondep frame (T_IntroExists g u b body e binder_ty_typ tm_ex_typ e_typ) h1) h2 h3
+  k_elab_equiv (continuation_elaborator_with_bind_nondep frame (T_IntroExists g u b body e) h1) h2 h3
     post t
 
 let prove_exists (g: env) (ctxt: list slprop_view) (goal: slprop_view) :
@@ -636,7 +636,7 @@ let elim_exists (g: env) (frame: slprop) u b body (x: nvar { ~(Set.mem (snd x) (
   let c = comp_elim_exists u b.binder_ty body x in
   let h1: tot_typing g b.binder_ty (tm_type u) = RU.magic () in
   let h2: tot_typing g (tm_exists_sl u (as_binder b.binder_ty) body) tm_slprop = RU.magic () in
-  let typing: st_typing g _ c  = T_ElimExists g u b.binder_ty body (snd x) h1 h2 in
+  let typing: st_typing g _ c  = T_ElimExists g u b.binder_ty body (snd x) in
   let h: tot_typing g (tm_star frame (comp_pre c)) tm_slprop = RU.magic () in
   let c_post_x = open_term' body (mk_reveal u b.binder_ty (term_of_nvar x)) 0 in
   assume open_term (comp_post c) (snd x) == c_post_x;
@@ -1486,4 +1486,4 @@ let try_frame_pre (allow_ambiguous : bool) (#g:env)
   let (| g', ctxt', k |) = prove t.range g ctxt (comp_pre c) allow_ambiguous in
   let d: st_typing g' t c = RU.magic () in // weakening from g to g'
   let h1: tot_typing g' ctxt' tm_slprop = RU.magic() in // weakening from to g'
-  checker_result_for_st_typing (k _ (| t, add_frame c ctxt', T_Frame _ _ _ ctxt' h1 d |)) res_ppname
+  checker_result_for_st_typing (k _ (| t, add_frame c ctxt', T_Frame _ _ _ ctxt' d |)) res_ppname

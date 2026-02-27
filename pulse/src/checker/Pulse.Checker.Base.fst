@@ -68,7 +68,7 @@ let intro_comp_typing (g:env)
                                            comp_res c == st.res /\
                                            comp_post c == st.post } )
       : T.Tac (st_comp_typing g st)
-      = STC g st x res_typing pre_typing post_typing
+      = STC g st x
     in
     match c with
     | C_ST st -> 
@@ -76,10 +76,10 @@ let intro_comp_typing (g:env)
       CT_ST _ _ stc
     | C_STAtomic i obs st -> 
       let stc = intro_st_comp_typing st in
-      CT_STAtomic _ i obs _ i_typing stc
+      CT_STAtomic _ i obs _ stc
     | C_STGhost i st -> 
       let stc = intro_st_comp_typing st in
-      CT_STGhost _ i _ i_typing stc
+      CT_STGhost _ i _ stc
 
 irreducible
 let post_typing_as_abstraction
@@ -101,8 +101,7 @@ let equiv_preserves_typing
     (eq : squash (T.equiv_token (elab_env g) t1 t2))
     (t1_typing : typing g t1 T.E_Total typ)
   : typing g t2 T.E_Total typ
-  = match t1_typing with
-    | E pf -> E (fstar_equiv_preserves_typing _ t1 typ t2 eq pf)
+  = ()
 
 let check_effect_annot (g:env) (e:effect_annot)
   : T.Tac (e':effect_annot { effect_annot_labels_match e e' } & effect_annot_typing g e') =
@@ -147,8 +146,7 @@ let intro_post_hint g effect_annot ret_ty_opt post =
     effect_annot_typing;
     ret_ty; u; ty_typing;
     post=post';
-    x; post_typing_src=post_typing;
-    post_typing=post_typing_as_abstraction #_ #_ #_ #post' post_typing }
+    x; post_typing_src=post_typing }
 
 let comp_typing_as_effect_annot_typing (#g:env) (#c:comp_st) (ct:comp_typing_u g c)
 : effect_annot_typing g (effect_annot_of_comp c)
@@ -171,8 +169,7 @@ let post_hint_from_comp_typing #g #c ct =
       ty_typing=Mkdtuple4?._1 inv;
       post=comp_post c;
       x=Mkdtuple4?._3 inv;
-      post_typing_src=Mkdtuple4?._4 inv;
-      post_typing=post_typing_as_abstraction (Mkdtuple4?._4 inv) }
+      post_typing_src=Mkdtuple4?._4 inv }
   in
   p
 
@@ -220,16 +217,11 @@ let extend_post_hint g p x tx conjunct conjunct_typing =
     = Pulse.Typing.star_typing p_post_typing_src'' conjunct_typing''
   in
   assume (fresh_wrt y g'' (freevars new_post));
-  let new_post_abs_typing
-    : Ghost.erased (RT.tot_typing (elab_env g'') (mk_abs p.ret_ty new_post) (mk_arrow p.ret_ty tm_slprop))
-    = post_typing_as_abstraction new_post_typing
-  in
   { p with
     g=g';
     post=new_post;
     x=y;
-    post_typing_src=new_post_typing;
-    post_typing=new_post_abs_typing }
+    post_typing_src=new_post_typing }
 
 let k_elab_unit (g:env) (ctxt:term)
   : continuation_elaborator g ctxt g ctxt
@@ -265,7 +257,7 @@ let st_equiv_post (#g:env) (#t:st_term) (#c:comp_st) (d:st_typing g t c)
       let (| u_of, pre_typing, x, post_typing |) = Metatheory.(st_comp_typing_inversion (fst (comp_typing_inversion (st_typing_correctness d)))) in
       let veq = veq x in
       let st_equiv : st_equiv g c c' =
-          ST_SLPropEquiv g c c' x pre_typing u_of post_typing (RT.Rel_refl _ _ _) (VE_Refl _ _) veq
+          ST_SLPropEquiv g c c' x (RT.Rel_refl _ _ _) (VE_Refl _ _) veq
       in
       t_equiv d st_equiv
 
@@ -309,7 +301,7 @@ let st_equiv_pre (#g:env) (#t:st_term) (#c:comp_st) (d:st_typing g t c)
       let (| u_of, pre_typing, x, post_typing |) =
         Metatheory.(st_comp_typing_inversion (fst (comp_typing_inversion (st_typing_correctness d)))) in
       let st_equiv : st_equiv g c c' =
-          ST_SLPropEquiv g c c' x pre_typing u_of post_typing (RT.Rel_refl _ _ _) veq (VE_Refl _ _)
+          ST_SLPropEquiv g c c' x (RT.Rel_refl _ _ _) veq (VE_Refl _ _)
       in
       t_equiv d st_equiv
 
@@ -500,12 +492,10 @@ let st_comp_typing_with_post_hint
       RU.magic ()
   in
   let ty_typing : universe_of ph.g st.res st.u = ph.ty_typing in
-  let ty_typing : universe_of g st.res st.u =
-    Pulse.Typing.Metatheory.tot_typing_weakening_standard ph.g ty_typing g
-  in
+  let ty_typing : universe_of g st.res st.u = () in
   assert (st.res == ph.ret_ty);
   assert (st.post == ph.post);
-  STC g st x ty_typing ctxt_typing post_typing_src
+  STC g st x
 #pop-options
 
 let continuation_elaborator_with_bind_fn (#g:env) (#ctxt:term)
@@ -526,7 +516,7 @@ let continuation_elaborator_with_bind_fn (#g:env) (#ctxt:term)
     let e2_closed = close_st_term e2 x in
     assume (open_st_term (close_st_term e2 x) x == e2);
     let e = wrst c2 (Tm_Bind {binder=b; head=e1; body=e2_closed}) in
-    let (| u, c1_typing |) = Pulse.Typing.Metatheory.Base.st_typing_correctness_ctot e1_typing in
+    let (| u, _ |) = Pulse.Typing.Metatheory.Base.st_typing_correctness_ctot e1_typing in
     let c2_typing : comp_typing g c2 (universe_of_comp c2) =
       match c2 with
       | C_ST st -> 
@@ -535,16 +525,14 @@ let continuation_elaborator_with_bind_fn (#g:env) (#ctxt:term)
       
       | C_STAtomic i obs st -> 
         let stc = st_comp_typing_with_post_hint ctxt_typing post_hint c2 in
-        let i_typing = CP.core_check_term g i T.E_Total tm_inames in
-        CT_STAtomic _ _ obs _ i_typing stc
+        CT_STAtomic _ i obs _ stc
 
       | C_STGhost i st ->
-        let i_typing = CP.core_check_term g i T.E_Total tm_inames in
         let stc = st_comp_typing_with_post_hint ctxt_typing post_hint c2 in
-        CT_STGhost _ i _ i_typing stc
+        CT_STGhost _ i _ stc
     in
     let d : st_typing g e c2 =
-        T_BindFn g e1 e2_closed c1 c2 b x e1_typing u c1_typing d2 c2_typing
+        T_BindFn g e1 e2_closed c1 c2 b x e1_typing u d2 c2_typing
     in
     (| e, c2, d |)
 
@@ -585,9 +573,7 @@ let return_in_ctxt (g:env) (y:var) (y_ppname:ppname) (u:universe) (ty:term) (ctx
     | EffectAnnotSTT -> STT
   in
   let y_tm = tm_var {nm_index=y;nm_ppname=y_ppname} in
-  let d = T_Return g ctag false u ty y_tm post_hint.post x ty_typing
-    (RU.magic ())  // that null_var y is well typed at ty in g, we know since lookup g y == Some ty
-    (RU.magic ())  // typing of (open post x) in (g, x) ... post_hint is well-typed, so should get
+  let d = T_Return g ctag false u ty y_tm post_hint.post x
   in
   let t = wtag (Some ctag) (Tm_Return {expected_type=tm_unknown;insert_eq=false;term=y_tm}) in
   let c = comp_return ctag false u ty y_tm post_hint.post x in
@@ -642,7 +628,7 @@ let match_comp_res_with_post_hint (#g:env) (#t:st_term) (#c:comp_st)
            let (| cres_typing, cpre_typing, x, cpost_typing |) =
              st_comp_typing_inversion (fst <| comp_typing_inversion (st_typing_correctness d)) in
            let d_stequiv : st_equiv g c c' =
-             ST_SLPropEquiv _ c c' _ cpre_typing cres_typing cpost_typing d_equiv (VE_Refl _ _) (VE_Refl _ _)
+             ST_SLPropEquiv _ c c' x d_equiv (VE_Refl _ _) (VE_Refl _ _)
            in
 
            (| c', Pulse.Typing.Combinators.t_equiv d d_stequiv |)
@@ -706,9 +692,9 @@ let checker_result_for_st_typing (#g:env) (#ctxt:slprop) (#post_hint:post_hint_o
     | _ -> () in
     
   assert (g' `env_extends` g);
-  let u_of_1_g' : universe_of _ _ _ = Pulse.Typing.Metatheory.tot_typing_weakening_standard g u_of_1 g' in
+  let u_of_1_g' : universe_of g' (comp_res c1) (comp_u c1) = () in
   assert (~ (x `Set.mem` freevars (comp_post c1)));
-  (| x, g', (| _, _, u_of_1_g' |), (| ctxt', post_typing |), k |)
+  (| x, g', (| comp_u c1, comp_res c1, u_of_1_g' |), (| ctxt', post_typing |), k |)
 #pop-options
 
 let readback_comp_res_as_comp (c:T.comp) : option comp =
@@ -813,27 +799,17 @@ let apply_conversion
       (#t1:term)
       (eq:Ghost.erased (RT.related (elab_env g) t0 RT.R_Eq t1))
   : typing g e eff t1
-  = let d : RT.typing (elab_env g) e (eff, t0) = d._0 in
-    let r : RT.related (elab_env g) t0 RT.R_Eq t1 = eq in
-    let r  = RT.Rel_equiv _ _ _ RT.R_Sub r in
-    let s : RT.sub_comp (elab_env g) (eff, t0) (eff, t1) = 
-        RT.Relc_typ _ _ _ _ _ r
-    in
-    E (RT.T_Sub _ _ _ _ d s)
+  = ()
 
 let norm_typing
       (g:env) (e:term) (eff:_) (t0:term)
       (d:typing g e eff t0)
       (steps:list norm_step)
   : T.Tac (t':term & typing g e eff t')
-  = let u_t_typing : Ghost.erased (u:R.universe & RT.typing _ _ _) = 
-      Pulse.Typing.Metatheory.Base.typing_correctness d._0
+  = let (| t', _, _ |) =
+      CP.norm_well_typed_term_alt #(elab_env g) #e #eff #t0 (magic()) steps
     in
-    let (| t', t'_typing, related_t_t' |) =
-      CP.norm_well_typed_term_alt (dsnd u_t_typing) steps
-    in
-    let d : typing g e eff t' = apply_conversion d related_t_t' in
-    (| t', d |)
+    (| t', () |)
 
 module TermEq = FStar.Reflection.TermEq
 let norm_typing_inverse
@@ -845,14 +821,10 @@ let norm_typing_inverse
       (steps:list norm_step)
   : T.Tac (option (typing g e eff t1))
   = let (| t1', t1'_typing, related_t1_t1' |) =
-      let d1 = Ghost.hide d1._0 in
-      CP.norm_well_typed_term_alt d1 steps
+      CP.norm_well_typed_term_alt #(elab_env g) #t1 #T.E_Total #(R.pack_ln (R.Tv_Type u)) (Ghost.hide (magic())) steps
     in
     if TermEq.term_eq t0 t1'
-    then (
-      let related_t1'_t1 = Ghost.hide (RT.Rel_sym _ _ _ related_t1_t1') in
-      Some (apply_conversion d related_t1'_t1)
-    )
+    then Some ()
     else None
 
 
@@ -866,7 +838,7 @@ let norm_st_typing_inverse
   : T.Tac (option (st_typing g e (C_Tot t1)))
   = let d1 
       : Ghost.erased (RT.tot_typing (elab_env g) t1 (RT.tm_type u))
-      = Ghost.hide (coerce_eq d1._0 ())
+      = Ghost.hide (magic())
     in
     let (| t1', t1'_typing, related_t1_t1' |) =
       CP.norm_well_typed_term_alt d1 steps
@@ -882,7 +854,7 @@ let norm_st_typing_inverse
         = Ghost.hide (RT.Rel_sym _ _ _ related_t1_t1')
       in
       let steq : st_equiv g (C_Tot t0) (C_Tot t1) =
-        ST_TotEquiv _ _ _ u (E (coerce_eq (Ghost.reveal t0_typing) ())) eq
+        ST_TotEquiv _ _ _ u eq
       in
       Some (Pulse.Typing.Combinators.t_equiv d steq)
     )

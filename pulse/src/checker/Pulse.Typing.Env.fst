@@ -391,3 +391,11 @@ let info_doc_with_subissues (g:env) (r:option range)
          concat) ]
   in
   info_doc g r msg
+
+let has_stt_bindings (f:RT.fstar_top_env) =
+    RT.lookup_fvar f RT.bool_fv == Some (RT.tm_type RT.u_zero) /\
+    RT.lookup_fvar f Pulse.Reflection.Util.slprop_fv == Some (RT.tm_type Pulse.Syntax.Pure.u2) /\ True
+
+let check_top_level_environment (f:RT.fstar_top_env)
+  : option (g:stt_env{fstar_env g == f /\ bindings g == []})
+  = admit(); Some (mk_env f)

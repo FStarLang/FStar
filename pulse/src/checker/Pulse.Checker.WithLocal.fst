@@ -39,7 +39,7 @@ let extend_post_hint_for_local (g:env) (p:post_hint_for_env g)
   = let conjunct = withlocal_post init_t (term_of_nvar (n, x)) in
     let g' = extend_env g x n init_t in
     let c_typing = Pulse.Checker.Pure.core_check_term (push_binding g x n (mk_ref init_t)) conjunct T.E_Total tm_slprop in
-    let res = Pulse.Checker.Base.extend_post_hint g p x (mk_ref init_t) _ c_typing in
+    let res = Pulse.Checker.Base.extend_post_hint g p x (mk_ref init_t) conjunct c_typing in
     res
 
 let with_local_pre_typing (#g:env) (#pre:term) (pre_typing:tot_typing g pre tm_slprop)
@@ -162,14 +162,11 @@ let check
           match init with
           | None ->
             let d = T_WithLocalUninit g binder.binder_ppname body init_t c x
-              init_t_typing
               c_typing
               body_typing in
             checker_result_for_st_typing (| _, _, d |) res_ppname
           | Some init ->
             let d = T_WithLocal g binder.binder_ppname init body init_t c x
-              init_typing
-              init_t_typing
               c_typing
               body_typing in
             checker_result_for_st_typing (| _, _, d |) res_ppname

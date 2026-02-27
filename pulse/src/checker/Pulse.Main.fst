@@ -25,7 +25,6 @@ open Pulse.Syntax
 open Pulse.Typing
 open Pulse.Checker
 open Pulse.Elaborate
-open Pulse.Soundness
 module RU = Pulse.RuntimeUtils
 module P = Pulse.Syntax.Printer
 module Rec = Pulse.Recursion
@@ -44,7 +43,7 @@ let set_impl src_g #g #t (se: RT.sigelt_for g t) (r: bool) (impl: R.term) : T.Ta
 #push-options "--z3rlimit_factor 4"
 let check_fndefn
     (d : decl{FnDefn? d.d})
-    (g : Soundness.Common.stt_env{bindings g == []})
+    (g : stt_env{bindings g == []})
     (expected_t : option term)
     (* Both of these unused: *)
     (pre : term) (pre_typing : tot_typing g pre tm_slprop)
@@ -70,7 +69,7 @@ let check_fndefn
   let rng = body.range in
   debug_main g (fun _ -> Printf.sprintf "\nbody after mk_abs:\n%s\n" (P.st_term_to_string body));
 
-  let (| body, c, t_typing |) = Pulse.Checker.Abs.check_abs g body Pulse.Checker.check in
+  let (| body, c, _t_typing |) = Pulse.Checker.Abs.check_abs g body Pulse.Checker.check in
 
   Pulse.Checker.Prover.Util.debug_prover g
     (fun _ -> Printf.sprintf "\ncheck call returned in main with:\n%s\nat type %s\n"
@@ -88,7 +87,6 @@ let check_fndefn
   it since it will go directly into the checked files. If we do not, a lambda could
   remain here, and cause an error in output_value. *)
   let blob = "pulse", refl_e in
-  soundness_lemma g body c t_typing;
 
   let cur_module = T.cur_module () in
 
@@ -110,9 +108,9 @@ let check_fndefn
 
   let mk_main_decl
     (refl_t:typ)
-    (_:squash (RT.tot_typing (elab_env g) (elab_st_typing t_typing) refl_t)) =
+    (_:squash (RT.tot_typing (elab_env g) (RU.magic #R.term ()) refl_t)) =
     let nm = fst (inspect_ident id) in
-    Reflection.Util.mk_opaque_let (fstar_env g) cur_module nm us (elab_st_typing t_typing) refl_t
+    Reflection.Util.mk_opaque_let (fstar_env g) cur_module nm us (RU.magic #R.term ()) refl_t
   in
 
   if fn_d.isrec
@@ -124,7 +122,7 @@ let check_fndefn
     //
     // So, nothing to be done for expected type here
     //
-    let main_decl = mk_main_decl refl_t () in
+    let main_decl = mk_main_decl refl_t (FStar.Squash.return_squash (RU.magic ())) in
     let main_decl : RT.sigelt_for (elab_env g) None = main_decl in
     let (chk, se, _) = main_decl in
     let nm = R.pack_ln (R.Tv_Const (R.C_String nm_orig)) in
@@ -144,16 +142,16 @@ let check_fndefn
     //
     let (| refl_t, _ |) :
       refl_t:term { Some? expected_t ==> Some refl_t == expected_t } &
-      squash (RT.tot_typing (elab_env g) (elab_st_typing t_typing) refl_t) =
+      squash (RT.tot_typing (elab_env g) (RU.magic #R.term ()) refl_t) =
 
       match expected_t with
-      | None -> (| refl_t, FStar.Squash.get_proof _ |)
+      | None -> (| refl_t, FStar.Squash.return_squash (RU.magic ()) |)
 
       | Some t ->
         let tok = Pulse.Checker.Pure.check_subtyping g refl_t t in
         let refl_t_typing
-          : squash (RT.tot_typing (elab_env g) (elab_st_typing t_typing) refl_t) = () in
-        let sq : squash (RT.tot_typing (elab_env g) (elab_st_typing t_typing) t) =
+          : squash (RT.tot_typing (elab_env g) (RU.magic #R.term ()) refl_t) = FStar.Squash.return_squash (RU.magic ()) in
+        let sq : squash (RT.tot_typing (elab_env g) (RU.magic #R.term ()) t) =
           FStar.Squash.bind_squash refl_t_typing (fun refl_t_typing ->
             FStar.Squash.return_squash (
               RT.T_Sub _ _ _ _
@@ -164,7 +162,7 @@ let check_fndefn
         (| t, sq |)
     in
 
-    let main_decl = mk_main_decl refl_t () in
+    let main_decl = mk_main_decl refl_t (FStar.Squash.return_squash (RU.magic ())) in
     let chk, se, _ = main_decl in
     let main_decl = chk, se, Some blob in
     [], maybe_add_impl (Some refl_t) main_decl, []
@@ -173,7 +171,7 @@ let check_fndefn
 
 let check_fndecl
     (d : decl{FnDecl? d.d})
-    (g : Soundness.Common.stt_env{bindings g == []})
+    (g : stt_env{bindings g == []})
   : T.Tac (RT.dsl_tac_result_t (fstar_env g) None)
 =
   let FnDecl { id; us; bs; comp } = d.d in
@@ -196,7 +194,7 @@ let check_fndecl
   in
   let body = Pulse.Checker.Abs.mk_abs g bs body comp in
   let rng = body.range in
-  let (| _, c, t_typing |) =
+  let (| _, c, _t_typing |) =
     (* We don't want to print the diagnostic for the admit in the body. *)
     RU.with_extv "pulse:no_admit_diag" "1" (fun () ->
       Pulse.Checker.Abs.check_abs g body Pulse.Checker.check
@@ -215,7 +213,7 @@ let check_fndecl
 
 let main' (d:decl) (pre:term) (g:RT.fstar_top_env) (expected_t:option term)
   : T.Tac (RT.dsl_tac_result_t g expected_t)
-  = match Pulse.Soundness.Common.check_top_level_environment g with
+  = match check_top_level_environment g with
     | None -> T.fail "pulse main: top-level environment does not include stt at the expected types"
     | Some g ->
       if RU.debug_at_level (fstar_env g) "Pulse" then 

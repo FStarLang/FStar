@@ -251,3 +251,8 @@ val info_doc_with_subissues (g:env) (r:option range)
   (sub : list Issue.issue)
   (msg : list Pprint.document)
   : T.Tac unit
+
+val has_stt_bindings (f:RT.fstar_top_env) : prop
+let stt_env = e:env { has_stt_bindings (fstar_env e) }
+val check_top_level_environment (f:RT.fstar_top_env)
+  : option (g:stt_env{fstar_env g == f /\ bindings g == []})

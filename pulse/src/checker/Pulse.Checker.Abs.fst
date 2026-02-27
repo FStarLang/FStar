@@ -424,7 +424,7 @@ let maybe_rewrite_body_typing
             magic ()
           in
           let tok' : st_equiv g (C_Tot t') (C_Tot t) =
-            ST_TotEquiv _ t' t u t'_typing
+            ST_TotEquiv _ t' t u
               (RT.Rel_sym _ _ _ (RT.Rel_eq_token _ _ _ sq))
           in
           (| C_Tot t, T_Equiv _ _ _ _ d tok' |)
@@ -506,7 +506,7 @@ let rec check_abs_core
         |> FStar.Sealed.seal in
 
       let b = {binder_ty=t;binder_ppname=ppname;binder_attrs} in
-      let tt = T_Abs g x qual b u body_closed c_body t_typing body_typing in
+      let tt = T_Abs g x qual b u body_closed c_body body_typing in
       let tres = tm_arrow {binder_ty=t;binder_ppname=ppname;binder_attrs} qual (close_comp c_body x) in
       (| _, C_Tot tres, tt |)
     | _ ->
@@ -607,7 +607,7 @@ let rec check_abs_core
       let body_closed = close_st_term body x in
       assume (open_st_term body_closed x == body);
       let b = {binder_ty=t;binder_ppname=ppname;binder_attrs} in
-      let tt = T_Abs g x qual b u body_closed c_body t_typing body_typing in
+      let tt = T_Abs g x qual b u body_closed c_body body_typing in
       let tres = tm_arrow {binder_ty=t;binder_ppname=ppname;binder_attrs} qual (close_comp c_body x) in
 
       (| _, C_Tot tres, tt |)

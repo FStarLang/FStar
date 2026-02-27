@@ -74,4 +74,4 @@ let normalize_slprop_welltyped
 =
   let (| v', v_equiv_v' |) = normalize_slprop g v true in
   // FIXME: prove (or add axiom) that equiv preserves typing
-  (| v', v_equiv_v', E (magic()) |)
+  (| v', v_equiv_v', () |)

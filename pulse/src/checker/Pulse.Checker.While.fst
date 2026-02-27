@@ -48,7 +48,7 @@ let inv_as_post_hint (#g:env) (#inv:slprop) (inv_typing:tot_typing g inv tm_slpr
 = let (| x, post_typing_src |) = inv_typing_weakening inv_typing in
   { g; effect_annot=EffectAnnotSTT; effect_annot_typing=();
     ret_ty=tm_unit; u=u0; ty_typing=unit_typing g; post=inv;
-    x; post_typing_src; post_typing=RU.magic() }
+    x; post_typing_src }
 
 let tm_l_true : term = FStar.Reflection.V2.Formula.(formula_as_term True_)
 let tm_l_or (a b: term) : term = FStar.Reflection.V2.Formula.(formula_as_term (Or a b))
@@ -253,7 +253,7 @@ let check_while
   let r_body = 
     check 
       (push_context "check_while_body" body.range g2) 
-      _ body_pre_typing (PostHint body_ph) ppname_default body
+      (open_term' body_pre_open tm_true 0) body_pre_typing (PostHint body_ph) ppname_default body
   in
   let (| cond, comp_cond, cond_typing |) = r_cond in
   let (| body, comp_body, body_typing |) = apply_checker_result_k r_body ppname_default in
@@ -270,11 +270,10 @@ let check_while
   assume ~(snd x_meas `Set.mem` freevars_st cond);
   assume ~(snd x_meas `Set.mem` freevars_st body);
   let d: st_typing g1' while (comp_while u_meas ty_meas x_meas inv body_pre_open) =
-    let h = RU.magic () in
     T_While g1' inv body_pre_open cond body
-      u_meas ty_meas typ_meas is_tot
+      u_meas ty_meas is_tot
       x_meas g2
-      inv_typing2 h cond_typing body_typing
+      cond_typing body_typing
     in
   let C_ST cst = comp_while u_meas ty_meas x_meas inv body_pre_open in
   let loop_pre = tm_exists_sl u_meas (as_binder ty_meas) (close_term inv (snd x_meas)) in
@@ -291,8 +290,7 @@ let check_while
       ty_typing=RU.magic(); //unit typing
       post=break_pred;
       x;
-      post_typing_src=RU.magic(); //from inv typing and body_open_pre_typing
-      post_typing=RU.magic()
+      post_typing_src=RU.magic() //from inv typing and body_open_pre_typing
     }
   in
   let res = prove_post_hint res (PostHint post_hint_for_while) t.range in

@@ -88,8 +88,7 @@ let check_core
     match post_hint with
     | PostHint post ->
       assert (g `env_extends` post.g);
-      let ty_typing : universe_of g post.ret_ty post.u =
-        Metatheory.tot_typing_weakening_standard post.g post.ty_typing g in
+      let ty_typing : universe_of g post.ret_ty post.u = () in
       Some (| post.ret_ty, post.u, ty_typing |)
     | _ ->
       match inspect_term expected_type with
@@ -136,7 +135,7 @@ let check_core
   let use_eq = use_eq || (not (PostHint? post_hint) && not (T.term_eq ty (`unit))) in
   assume (open_term (close_term post_opened x) x == post_opened);
   let post = close_term post_opened x in
-  let d = T_Return g c use_eq u ty t post x uty d post_typing in
+  let d = T_Return g c use_eq u ty t post x in
   let (|c',d'|) = match_comp_res_with_post_hint d post_hint in
   Pulse.Checker.Util.debug g "pulse.return" (fun _ -> 
     Printf.sprintf "Return comp is: %s"
