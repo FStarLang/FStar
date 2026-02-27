@@ -353,7 +353,7 @@ let intro_pure (g: env) (frame: slprop) (p: term)
   fun post t ->
   let frame_typ : tot_typing g frame tm_slprop = RU.magic () in // implied by t2_typing
   let h: tot_typing g (tm_star frame (comp_pre (comp_intro_pure p))) tm_slprop = RU.magic () in
-  let st = wtag (Some STT_Ghost) (Tm_ST { t = tm_unknown; args = [] }) in
+  let st = wtag (Some STT_Ghost) (Tm_IntroPure { p }) in
   debug_prover g (fun _ -> Printf.sprintf "intro_pure p=%s\nframe=%s\n" (show p) (show frame));
   k_elab_equiv frame (frame `tm_star` tm_pure p) (continuation_elaborator_with_bind_nondep frame (comp_intro_pure p) st () h) (RU.magic ()) (RU.magic ())
     post t
@@ -453,7 +453,7 @@ let intro_exists (g: env) (frame: slprop) (u: universe) (b: binder) (body: slpro
   let h1: tot_typing g (tm_star frame (comp_pre (comp_intro_exists u b body e))) tm_slprop = RU.magic () in
   let h2: slprop_equiv g (tm_star frame (comp_pre (comp_intro_exists u b body e))) (tm_star frame (open_term' body e 0)) = RU.magic () in
   let h3: slprop_equiv g (tm_star (comp_post (comp_intro_exists u b body e)) frame) (tm_star frame (tm_exists_sl u b body)) = RU.magic () in
-  let st = wtag (Some STT_Ghost) (Tm_ST { t = tm_unknown; args = [] }) in
+  let st = wtag (Some STT_Ghost) (Tm_IntroExists { p = tm_exists_sl u b body; witnesses = [e] }) in
   debug_prover g (fun _ -> Printf.sprintf "intro_exists %s\nframe=%s\n" (show (tm_exists_sl u b body)) (show frame));
   k_elab_equiv (frame `tm_star` open_term' body e 0) (frame `tm_star` tm_exists_sl u b body) (continuation_elaborator_with_bind_nondep frame (comp_intro_exists u b body e) st () h1) h2 h3
     post t
@@ -528,8 +528,8 @@ let elim_first (g: env) (ctxt0 goals: list slprop_view)
 
 let unreachable_elim_typing (g: env) (u: universe) (res: term) (post: term) :
     t:st_term & st_typing g t (C_STGhost tm_emp_inames { u; res; pre=tm_is_unreachable; post }) =
-  let st = wtag (Some STT_Ghost) (Tm_ST { t = tm_unknown; args = [] }) in
   let c = C_STGhost tm_emp_inames { u; res; pre=tm_is_unreachable; post } in
+  let st = wtag (Some STT_Ghost) (Tm_Unreachable { c }) in
   let typing: st_typing g st c = RU.magic () in
   (| st, typing |)
 
@@ -1409,7 +1409,7 @@ let k_unreach (g: env) (x: nvar { freshv g (snd x) }) (post_hint: post_hint_t { 
     T.Tac (continuation_elaborator g tm_is_unreachable (push_binding g (snd x) (fst x) post_hint.ret_ty) (open_term_nv post_hint.post x)) =
   let h: tot_typing g tm_is_unreachable tm_slprop = RU.magic () in
   let (| c, c_typ |) = Pulse.Typing.Combinators.comp_for_post_hint g tm_is_unreachable h post_hint (snd x) in
-  let st = wtag (Some STT_Ghost) (Tm_ST { t = tm_unknown; args = [] }) in
+  let st = wtag (Some STT_Ghost) (Tm_Unreachable { c }) in
   let typ : st_typing g st c = () in
   let g' = push_binding g (snd x) (fst x) post_hint.ret_ty in
   let post_opened = open_term_nv post_hint.post x in

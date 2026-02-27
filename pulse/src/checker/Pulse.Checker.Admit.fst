@@ -75,7 +75,12 @@ let check
       | _, PostHint post -> Pulse.Typing.Combinators.comp_for_post_hint g pre pre_typing post x
   in
   let (| c, d_c |) = res in
-  let d : st_typing g t0 c = () in
+  let admit_st = wtag (Some (ctag_of_comp_st c))
+                      (Tm_Admit { ctag=ctag_of_comp_st c;
+                                  u=comp_u c;
+                                  typ=comp_res c;
+                                  post=None }) in
+  let d : st_typing g admit_st c = () in
   FStar.Tactics.BreakVC.break_vc ();
   // ^ This makes a big difference! Would be good to distill into
   // a smaller F*-only example and file an issue.
@@ -92,4 +97,4 @@ let check
     ] in
     info_doc_env g (Some t0.range) msg
   end else ()) <: T.Tac unit;
-  checker_result_for_st_typing (| t0, c, d |) res_ppname
+  checker_result_for_st_typing (| admit_st, c, d |) res_ppname

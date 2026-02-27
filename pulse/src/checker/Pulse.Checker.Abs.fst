@@ -506,8 +506,9 @@ let rec check_abs_core
 
       let b = {binder_ty=t;binder_ppname=ppname;binder_attrs} in
       let tres = tm_arrow {binder_ty=t;binder_ppname=ppname;binder_attrs} qual (close_comp c_body x) in
-      let tt : st_typing g body_closed (C_Tot tres) = () in
-      (| body_closed, C_Tot tres, tt |)
+      let abs_st = wtag None (Tm_Abs { b; q=qual; body=body_closed; ascription=empty_ascription}) in
+      let tt : st_typing g abs_st (C_Tot tres) = () in
+      (| abs_st, C_Tot tres, tt |)
     | _ ->
       let elab_c, pre_opened, inames_opened, ret_ty, post_hint_body =
         match asc.elaborated with
@@ -607,9 +608,10 @@ let rec check_abs_core
       assume (open_st_term body_closed x == body);
       let b = {binder_ty=t;binder_ppname=ppname;binder_attrs} in
       let tres = tm_arrow {binder_ty=t;binder_ppname=ppname;binder_attrs} qual (close_comp c_body x) in
-      let tt : st_typing g body_closed (C_Tot tres) = () in
+      let abs_st = wtag None (Tm_Abs { b; q=qual; body=body_closed; ascription=empty_ascription}) in
+      let tt : st_typing g abs_st (C_Tot tres) = () in
 
-      (| body_closed, C_Tot tres, tt |)
+      (| abs_st, C_Tot tres, tt |)
 #pop-options
 
 let check_abs (g:env) (t:st_term{Tm_Abs? t.term}) (check:check_t)
