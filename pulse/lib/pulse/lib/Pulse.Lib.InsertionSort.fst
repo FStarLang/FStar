@@ -158,6 +158,7 @@ ensures exists* s'. (a |-> s') **
         sorted (Seq.slice (value_of a) 0 (SZ.v !j)) /\
         permutation s (value_of a)
       )
+    decreases (SZ.v len - SZ.v !j)
   {
     pts_to_len a;
     let vj = !j;
@@ -173,13 +174,14 @@ ensures exists* s'. (a |-> s') **
       invariant live done
       invariant exists* (s':Seq.seq t { inner_invariant ss s' key (!i) vj (!done)}).
           a |-> s'
+      decreases (SZ.v !i)
     {
       let vi = !i;
       with s0. assert (a |-> s0);
       a.(SZ.(vi +^ 1sz)) <- a.(vi);
       with s1. assert (a |-> s1);
       step_inner_invariant ss s0 s1 key vi vj;
-      if (vi = 0sz) { done := true }
+      if (vi = 0sz) { done := true; break }
       else { i := SZ.(vi -^ 1sz); }
     };
     with s0. assert (a |-> s0);

@@ -47,6 +47,15 @@ let rec is_list #t ([@@@mkey]x:llist t) (l:list t)
         pts_to v { head; tail } **
         is_list tail tl
 
+ghost
+fn list_of (#t:Type) (x:llist t) (#y:list t)
+requires is_list x y
+returns z:erased (list t)
+ensures is_list x y ** rewrites_to z (hide y)
+{
+  hide y
+}
+
 let is_list_cases #t ([@@@mkey]x:llist t) (l:list t)
   : Tot slprop
   = match x with
@@ -339,8 +348,6 @@ fn move_next (#t:Type) (x:llist t)
     node.tail
 }
 
-
-
 fn length_iter (#t:Type) (x: llist t)
     preserves is_list x 'l
     returns n:nat
@@ -353,7 +360,7 @@ fn length_iter (#t:Type) (x: llist t)
     let v = Pulse.Lib.Reference.(!cur); 
     Some? v
   )
-  invariant
+  invariant 
   exists* (n:int) ll suffix.
     pts_to ctr n **
     pts_to cur ll **
@@ -365,6 +372,8 @@ fn length_iter (#t:Type) (x: llist t)
     (* ^ Having the bounded_int nat instance in BoundedIntegers means we try to
     to check the subtraction as a nat, which fails without the extra condition.
     We can also just write `n + len suff = len 'l`. *)
+    //Also below, the bounded integer stuff leads to problems
+  decreases  (List.Tot.length 'l `Prims.op_Subtraction` value_of ctr)
   {
     with _n _ll suffix. _;
     let n = Pulse.Lib.Reference.(!ctr);
@@ -509,6 +518,7 @@ fn append_iter (#t:Type) (x y:llist t)
       is_list ll sfx **
       (forall* sfx'. is_list ll sfx' @==> is_list x (pfx @ sfx')) **
       pure (pfx @ sfx == 'l1 /\ Cons? sfx)
+    decreases reveal (list_of (value_of cur))
   {
     with ll pfx sfx. _;
     some_iff_cons ll;
@@ -580,6 +590,7 @@ fn split (#t:Type0) (x:llist t) (n:U32.t) (#xl:erased (list t))
          Some? ll /\
          pfx@sfx == xl
       )
+    decreases reveal (list_of (value_of cur))
   {
     with i ll pfx sfx. _;
     let next = move_next_forall Pulse.Lib.Reference.(!cur);
@@ -660,6 +671,7 @@ fn reverse (#t:Type0) (x:llist t)
     is_list p rev_pfx **
     is_list c suffix **
     pure (List.Tot.rev rev_pfx @ suffix == 'l)
+  decreases reveal (list_of (value_of cur))
   {
     with _p _c _rev_pfx _suffix. _;
     let p = Pulse.Lib.Reference.(!prev);
