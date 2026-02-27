@@ -395,7 +395,7 @@ let prove_pure (g: env) (ctxt: list slprop_view) (skip_eq_uvar: bool) (goal: slp
 
     Some (| g, ctxt, [], [], fun g'' ->
       let p_typing: tot_typing g'' p tm_prop = () in // implied by t2_typing
-      let pv = check_prop_validity g'' p p_typing in
+      let pv = check_prop_validity g'' p in
       cont_elab_refl g ctxt ([] @ ctxt) (()),
       (fun frame ->
         let h1: slprop_equiv g'' (elab_slprops frame) (elab_slprops (frame @ [] @ [])) = () in
@@ -414,7 +414,7 @@ let intro_with_pure (g: env) (frame: slprop) (p: term) (n: ppname) (v: term) :
   fun post t ->
   let g = push_context g "check_intro_with_pure" (RU.range_of_term p) in
   let p_typing: tot_typing g p tm_prop = () in // implied by t2_typing
-  let pv = check_prop_validity g p p_typing in
+  let pv = check_prop_validity g p in
   let frame_typ : tot_typing g frame tm_slprop = () in // implied by t2_typing
   let ty = mk_squash u0 p in
   let st = wtag (Some STT_Ghost) (Tm_ST { t = tm_unknown; args = [] }) in
@@ -448,7 +448,7 @@ let intro_exists (g: env) (frame: slprop) (u: universe) (b: binder) (body: slpro
   let frame_typ : tot_typing g frame tm_slprop = () in // implied by t2_typing
   let binder_ty_typ : tot_typing g b.binder_ty (tm_type u) = () in // implied by t2_typing
   let tm_ex_typ : tot_typing g (tm_exists_sl u b body) tm_slprop = () in // implied by t2_typing
-  let e_typ = core_check_term' g e T.E_Ghost b.binder_ty (fun _ -> let open Pulse.PP in
+  let _ = core_check_term' g e T.E_Ghost b.binder_ty (fun _ -> let open Pulse.PP in
     [text "Cannot find witness for" ^/^ pp (tm_exists_sl u b body)]) in
   let h1: tot_typing g (tm_star frame (comp_pre (comp_intro_exists u b body e))) tm_slprop = () in
   let h2: slprop_equiv g (tm_star frame (comp_pre (comp_intro_exists u b body e))) (tm_star frame (open_term' body e 0)) = () in
@@ -527,16 +527,16 @@ let elim_first (g: env) (ctxt0 goals: list slprop_view)
   | None -> None
 
 let unreachable_elim_typing (g: env) (u: universe) (res: term) (post: term) :
-    t:st_term & st_typing g t (C_STGhost tm_emp_inames { u; res; pre=tm_is_unreachable; post }) =
+    st_term =
   let c = C_STGhost tm_emp_inames { u; res; pre=tm_is_unreachable; post } in
   let st = wtag (Some STT_Ghost) (Tm_Unreachable { c }) in
-  let typing: st_typing g st c = () in
-  (| st, typing |)
+  st
 
 let unreachable_elim (g: env) (goals: list slprop_view) : cont_elab g [IsUnreachable] g goals = fun frame post t ->
   let frame_t = elab_slprops frame in
   let c = C_STGhost tm_emp_inames { u=u0; res=tm_unit; pre=tm_is_unreachable; post=frame_t } in
-  let (| st, typing |) = unreachable_elim_typing g u0 tm_unit frame_t in
+  let st = unreachable_elim_typing g u0 tm_unit frame_t in
+  let typing : st_typing g st c = () in
   let h: tot_typing g (tm_star frame_t tm_is_unreachable) tm_slprop = () in
   k_elab_equiv (elab_slprops (frame @ [IsUnreachable])) (elab_slprops (frame @ goals)) (continuation_elaborator_with_bind_nondep frame_t c st typing h) (()) (())
     post t

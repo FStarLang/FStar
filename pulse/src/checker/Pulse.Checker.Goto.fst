@@ -41,7 +41,7 @@ let check'
     let v = (R.inspect_namedv v).uniq in
     (match lookup_goto g v with
     | Some (lbln, lbl_c) ->
-      let (| arg, arg_typ |) = check_tot_term g arg (comp_res lbl_c) in
+      let arg = check_tot_term g arg (comp_res lbl_c) in
       let c' = with_st_comp lbl_c {
         u = ph.u;
         res = ph.ret_ty;

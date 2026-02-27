@@ -122,7 +122,7 @@ let check
     else
       let ctxt = { ctxt_now = pre; ctxt_old = None } in
       purify_term g ctxt p, purify_term g ctxt q in
-  let (| p, p_typing |), (| q, q_typing |) =
+  let p, q =
     check_slprop g p, check_slprop g q in
 
   let equiv_p_q =

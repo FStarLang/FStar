@@ -342,8 +342,7 @@ let compute_term_type (g:env) (t:term)
   = let aux () 
     : T.Tac (t:term &
             eff:T.tot_or_ghost &
-            ty:term &
-            typing g t eff ty)
+            ty:term)
     = let rng, fg = elab_env_with_term_range g t in
       debug g (fun _ ->
               Printf.sprintf "check_tot : called on %s elaborated to %s"
@@ -353,7 +352,7 @@ let compute_term_type (g:env) (t:term)
       match res with
       | None -> 
         fail_doc_with_subissues g (Some rng) issues (ill_typed_term t None None)
-      | Some (| rt, eff, ty', tok |) -> (| rt, eff, ty', () |)
+      | Some (| rt, eff, ty', tok |) -> (| rt, eff, ty' |)
     in
     RU.record_stats "Pulse.compute_term_type" aux
 
@@ -362,8 +361,7 @@ let compute_term_type_and_u (g:env) (t:term)
     : T.Tac (t:term &
            eff:T.tot_or_ghost &
            ty:term &
-           universe &
-           typing g t eff ty)
+           universe)
     = let rng, fg = elab_env_with_term_range g t in
       let res, issues = tc_meta_callback g fg t in
       match res with
@@ -371,13 +369,13 @@ let compute_term_type_and_u (g:env) (t:term)
         fail_doc_with_subissues g (Some rng) issues (ill_typed_term t None None)
       | Some (| rt, eff, ty', tok |) ->
         let u = check_universe_aux g ty' true in //ty' is well-typed; we just need to find its universe
-        (| rt, eff, ty', u, () |)
+        (| rt, eff, ty', u |)
     in
     RU.record_stats "Pulse.compute_term_type_and_u" aux
 
 let check_term (g:env) (e:term) (eff:T.tot_or_ghost) (t:term)
 = let aux ()
-  : T.Tac (e:term & typing g e eff t)
+  : T.Tac term
   = let e, _ = instantiate_term_implicits g e (Some t) (*inst_extra:*)true in
     let rng, fg = elab_env_with_term_range g e in
 
@@ -389,13 +387,13 @@ let check_term (g:env) (e:term) (eff:T.tot_or_ghost) (t:term)
     match topt with
     | None ->
       fail_doc_with_subissues g (Some rng) issues (ill_typed_term e (Some t) None)
-    | Some tok -> (| e, () |)
+    | Some tok -> e
   in
   RU.record_stats "Pulse.check_term" aux
 
 let check_term_at_type (g:env) (e:term) (t:term)
 = let aux ()
-  : T.Tac (e:term & eff:T.tot_or_ghost & typing g e eff t)
+  : T.Tac (e:term & eff:T.tot_or_ghost)
   = let e, _ = instantiate_term_implicits g e (Some t) true in
     let rng, fg = elab_env_with_term_range g e in
 
@@ -408,7 +406,7 @@ let check_term_at_type (g:env) (e:term) (t:term)
     | None ->
       fail_doc_with_subissues g (Some rng) issues (ill_typed_term e (Some t) None)
     | Some eff ->
-      (| e, eff, () |)
+      (| e, eff |)
   in
   RU.record_stats "Pulse.check_term_at_type" aux
 
@@ -464,19 +462,18 @@ let tc_type_phase1 (g: env) (t: term) : T.Tac (term & universe) =
 let core_compute_term_type (g:env) (t:term)
 = let aux ()
   : T.Tac (eff:T.tot_or_ghost &
-            ty:term &
-            typing g t eff ty)
+            ty:term)
   = let _, fg = elab_env_with_term_range g t in
     let res, issues = tc_with_core (push_context g "core_check_term" (range_of_term t)) fg t in
       match res with
       | None -> 
         fail_doc_with_subissues g (Some <| RU.range_of_term t) issues (ill_typed_term t None None)
-      | Some (| eff, ty', tok |) -> (| eff, ty', () |)
+      | Some (| eff, ty', tok |) -> (| eff, ty' |)
   in
   RU.record_stats "Pulse.core_compute_term_type" aux
 
 let core_check_term' g e eff t extra_msg
-= let aux () : T.Tac (typing g e eff t) 
+= let aux () : T.Tac unit 
   = let _, fg = elab_env_with_term_range g e in
     let topt, issues =
       catch_all (fun _ ->
@@ -495,7 +492,7 @@ let core_check_term g e eff t
 = core_check_term' g e eff t fun _ -> []
 
 let core_check_term_at_type g e t
-= let aux () : T.Tac (eff:T.tot_or_ghost & typing g e eff t) 
+= let aux () : T.Tac T.tot_or_ghost 
   = let _, fg = elab_env_with_term_range g e in
     let effopt, issues =
       catch_all (fun _ -> 
@@ -506,19 +503,19 @@ let core_check_term_at_type g e t
     | None ->
       fail_doc_with_subissues g (Some <| RU.range_of_term e) issues (ill_typed_term e (Some t) None)
     | Some eff ->
-      (| eff, () |)
+      eff
   in
   RU.record_stats "Pulse.core_check_term_at_type" aux
 
 let check_slprop (g:env)
                 (t:term)
-: T.Tac (t:term & tot_typing g t tm_slprop)
+: T.Tac term
 = RU.record_stats "Pulse.check_slprop" <| fun _ -> 
   check_term (push_context_no_range g "check_slprop") t T.E_Total tm_slprop
 
 let check_slprop_with_core (g:env)
                           (t:term)
-: T.Tac (tot_typing g t tm_slprop) =
+: T.Tac unit =
 
   core_check_term
     (push_context_no_range g "check_slprop_with_core") t T.E_Total tm_slprop
@@ -605,14 +602,14 @@ let try_get_non_informative_witness_aux (g:env) (u:universe) (ty:term) (ty_typin
       Some dict, issues
     )
 
-let try_get_non_informative_witness g u ty ty_typing =
+let try_get_non_informative_witness g u ty =
   RU.record_stats "Pulse.try_get_noninformative_witness" <| fun _ -> 
-  let ropt, _ = try_get_non_informative_witness_aux g u ty ty_typing in
+  let ropt, _ = try_get_non_informative_witness_aux g u ty () in
   ropt
 
-let get_non_informative_witness g u t t_typing
+let get_non_informative_witness g u t
   : T.Tac (non_informative_t g u t)
-  = match try_get_non_informative_witness_aux g u t t_typing with
+  = match try_get_non_informative_witness_aux g u t () with
     | None, issues ->
       let open Pulse.PP in
       fail_doc g (Some (RU.range_of_term t)) [
@@ -623,18 +620,18 @@ let get_non_informative_witness g u t t_typing
     | Some e, issues ->
       e
 
-let try_check_prop_validity (g:env) (p:term) (pf:tot_typing g p tm_prop)
+let try_check_prop_validity (g:env) (p:term)
   : T.Tac (option (Pulse.Typing.prop_validity g p))
   = let _, f = elab_env_with_term_range g p in
     RU.record_stats "Pulse.try_check_prop_validity" fun _ -> 
-    let t_opt, issues = rtb_check_prop_validity g true f p pf in
+    let t_opt, issues = rtb_check_prop_validity g true f p () in
     t_opt
 
-let check_prop_validity (g:env) (p:term) (pf:tot_typing g p tm_prop)
+let check_prop_validity (g:env) (p:term)
   : T.Tac (Pulse.Typing.prop_validity g p)
   = let _, f = elab_env_with_term_range g p in
     RU.record_stats "Pulse.check_prop_validity" fun _ -> 
-    let t_opt, issues = rtb_check_prop_validity g true f p pf in
+    let t_opt, issues = rtb_check_prop_validity g true f p () in
     match t_opt with
     | None -> 
       let open Pulse.PP in
@@ -650,12 +647,12 @@ let fail_expected_tot_found_ghost (g:env) (t:term) =
   ]
 
 let compute_tot_term_type g t =
-  let (| t, eff, ty, t_typing |) = compute_term_type g t in
+  let (| t, eff, ty |) = compute_term_type g t in
   if eff = T.E_Total then (| t, ty |)
   else fail_expected_tot_found_ghost g t
 
 let compute_tot_term_type_and_u g t =
-  let (| t, eff, ty, u, t_typing |) = compute_term_type_and_u g t in
+  let (| t, eff, ty, u |) = compute_term_type_and_u g t in
   if eff = T.E_Total then (| t, u, ty |)
   else fail_expected_tot_found_ghost g t
 
@@ -663,12 +660,12 @@ let check_tot_term g e t =
   check_term g e T.E_Total t
 
 let core_compute_tot_term_type g t =
-  let (| eff, ty, d |) = core_compute_term_type g t in
-  if eff = T.E_Total then (| ty, d |)
+  let (| eff, ty |) = core_compute_term_type g t in
+  if eff = T.E_Total then ty
   else fail_expected_tot_found_ghost g t
 
 let core_check_tot_term g e t =
-  core_check_term g e T.E_Total t
+  core_check_term g e T.E_Total t; ()
 
 let is_non_informative g c = 
   RU.record_stats "Pulse.is_non_informative" fun _ ->

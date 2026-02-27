@@ -38,17 +38,16 @@ let body_typing_ex #g #x #post (_:tot_typing (push_binding g x ppname_default tm
 let unit_typing g : universe_of g tm_unit u0 = admit()
 
 let inv_typing_weakening (#g:env) (#inv:slprop) (inv_typing:tot_typing g inv tm_slprop) 
-: (x:FStar.Ghost.erased var {fresh_wrt x g (freevars inv)} & tot_typing (push_binding g x ppname_default tm_unit) (open_term inv x) tm_slprop)
+: (x:FStar.Ghost.erased var {fresh_wrt x g (freevars inv)})
  = let x : (x:FStar.Ghost.erased var {fresh_wrt x g (freevars inv)}) = RU.magic () in
-   let tt : tot_typing (push_binding g x ppname_default tm_unit) (open_term inv x) tm_slprop = () in
-   (|x, tt|)
+   x
 
 let inv_as_post_hint (#g:env) (#inv:slprop) (inv_typing:tot_typing g inv tm_slprop) 
 : T.Tac (ph:post_hint_for_env g { ph.post == inv /\ ph.ret_ty == tm_unit /\ ph.u == u0 /\ ph.effect_annot == EffectAnnotSTT })
-= let (| x, post_typing_src |) = inv_typing_weakening inv_typing in
+= let x = inv_typing_weakening inv_typing in
   { g; effect_annot=EffectAnnotSTT; effect_annot_typing=();
     ret_ty=tm_unit; u=u0; ty_typing=unit_typing g; post=inv;
-    x; post_typing_src }
+    x; post_typing_src = () }
 
 let tm_l_true : term = FStar.Reflection.V2.Formula.(formula_as_term True_)
 let tm_l_or (a b: term) : term = FStar.Reflection.V2.Formula.(formula_as_term (Or a b))
@@ -161,7 +160,7 @@ let check_while
     | None -> u0, tm_unit, unit_const, false
     | Some meas ->
       let meas' = purify_term g { ctxt_now = pre; ctxt_old = Some pre } meas in
-      let (| _, _, ty, u, _ |) = compute_term_type_and_u g meas' in
+      let (| _, _, ty, u |) = compute_term_type_and_u g meas' in
       u, ty, meas, true
   in
   let inv_range = term_range inv in
@@ -191,7 +190,7 @@ let check_while
   then T.fail "Expected while condition to return a bool";
 
   assume freshv g1 breaklblx;
-  let (| break_pred, break_typ |) : t:term & tot_typing g0 t tm_slprop =
+  let break_pred : term =
     match loop_ensures with
     | Some loop_ensures ->
       let (| x_cond, g1', (_, _), cond_post, k |) = res_cond in
@@ -202,7 +201,7 @@ let check_while
       let loop_ensures = purify_term g1' { ctxt_now = cond_post; ctxt_old = Some pre } loop_ensures in
       let loop_ensures = RU.beta_lax (elab_env g1') loop_ensures in
       let loop_ensures = RU.deep_compress_safe loop_ensures in
-      let (| loop_ensures, loop_ensures_typ |) = check_tot_term g1' loop_ensures tm_prop in
+      let loop_ensures = check_tot_term g1' loop_ensures tm_prop in
       let loop_ensures = cond_post `tm_star` tm_pure loop_ensures in
       let y = fresh g1' in
       let g1'' = push_binding g1' y ppname_default tm_unit in
@@ -215,11 +214,10 @@ let check_while
       let loop_ensures = subst_loop_requires_marker_with_true loop_ensures.post in
       let loop_ensures = open_term' loop_ensures unit_const 0 in
       let loop_ensures_typ: tot_typing g0 loop_ensures tm_slprop = () in
-      (| loop_ensures, loop_ensures_typ |)
+      loop_ensures
     | None ->
       let t: term = tm_exists_sl u_meas (as_binder ty_meas) (close_term (open_term' post_cond.post tm_false 0) (snd x_meas)) in
-      let typ: tot_typing g0 t tm_slprop = () in
-      (| t, typ |)
+      t
   in
   let break_lbl_c = C_ST {
     u = u0;

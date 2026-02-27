@@ -55,7 +55,7 @@ let check_elim_exists
 
   let Tm_ElimExists { p = t } = t.term in
   let t_rng = Pulse.RuntimeUtils.range_of_term t in
-  let (| t, t_typing |) : (t:term & tot_typing g t tm_slprop ) = 
+  let t : term = 
     match inspect_term t with
     | Tm_Unknown -> (
       //There should be exactly one exists_ slprop in the context and we eliminate it      
@@ -66,7 +66,7 @@ let check_elim_exists
       match exist_tms with
       | [one] -> 
         assume (one `List.Tot.memP` ts);
-        (| one, slprop_as_list_typing pre_typing one |) //shouldn't need to check this again
+        one //shouldn't need to check this again
       | _ -> 
         fail g (Some t_rng)
           (Printf.sprintf "Could not decide which exists term to eliminate: choices are\n%s"
@@ -113,9 +113,9 @@ let check_intro_exists
   let g = Pulse.Typing.Env.push_context g "check_intro_exists_non_erased" st.range in
 
   let Tm_IntroExists { p=t; witnesses=[witness] } = st.term in
-  let (| t, t_typing |) =
+  let t =
     match slprop_typing with
-    | Some typing -> (| t, typing |)
+    | Some typing -> t
     | _ -> check_slprop g t
   in
 
@@ -127,10 +127,10 @@ let check_intro_exists
 
   let Tm_ExistsSL u b p = tv in
 
-  Pulse.Typing.FV.tot_typing_freevars g t tm_slprop t_typing;
+  Pulse.Typing.FV.tot_typing_freevars g t tm_slprop ();
   let x = fresh g in
-  let ty_typing, _ = Metatheory.tm_exists_inversion g u b.binder_ty p t_typing x in
-  let (| witness, witness_typing |) = 
+  let ty_typing, _ = Metatheory.tm_exists_inversion g u b.binder_ty p () x in
+  let witness = 
     check_term g witness T.E_Ghost b.binder_ty in
   let intro_st = wtag (Some STT_Ghost) (Tm_IntroExists { p = tm_exists_sl u b p; witnesses = [witness] }) in
   let intro_c = C_STGhost tm_emp_inames { u=u0; res=tm_unit; pre=open_term' p witness 0; post=tm_exists_sl u b p } in

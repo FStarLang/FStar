@@ -59,7 +59,7 @@ let check
       | Some post, _ ->
         let u = check_universe g t in    
         let post_opened = open_term_nv post px in      
-        let (| post_opened, post_typing |) = 
+        let post_opened = 
           check_tot_term (push_binding g x (fst px) t) post_opened tm_slprop
         in
         let post = close_term post_opened x in

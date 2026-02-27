@@ -87,9 +87,8 @@ let check
   | PostHint post ->
     let g = push_context "check_withlocal" t.range g in
     let Tm_WithLocal {binder; initializer=init; body} = t.term in
-    let (| init, init_u, init_t, init_t_typing, init_typing |) :
-          (init: option term & u:universe & ty:term & universe_of g ty u &
-            (match init with Some init -> tot_typing g init ty | None -> unit))
+    let (| init, init_u, init_t |) :
+          (init: option term & u:universe & ty:term)
     =
       (* Check against annotation if any *)
       let ty = binder.binder_ty in
@@ -102,16 +101,13 @@ let check
         // will turn postconditions into refinements, and we don't want these
         // going into the type of the local variable. See issue #512.
         let init_t = unrefine init_t in
-        // The proofs of typing should follow from the ones above + inversion lemmas.
-        (| Some init, init_u, init_t, magic(), magic() |)
+        (| Some init, init_u, init_t |)
 
       | _, Some init ->
         let ty, _ = tc_type_phase1 g ty in
         let u = check_universe g ty in
-        let (| init, init_typing |) = check_term g init T.E_Total ty in
-        let ty_typing : universe_of g ty u = () in
-        let init_typing : typing g init T.E_Total ty = init_typing in
-        (| Some init, u, ty, ty_typing, init_typing |)
+        let init = check_term g init T.E_Total ty in
+        (| Some init, u, ty |)
 
       | Tm_Unknown, None ->
         fail g (Some <| head_range t)
@@ -120,8 +116,7 @@ let check
       | _, None ->
         let ty, _ = tc_type_phase1 g ty in
         let u = check_universe g ty in
-        let ty_typing : universe_of g ty u = () in
-        (| None, u, ty, ty_typing, () |)
+        (| None, u, ty |)
     in
     if not (eq_univ init_u u0)
     then (

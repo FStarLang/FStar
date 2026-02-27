@@ -58,7 +58,7 @@ let check
   | None -> fail g (Some range) (Printf.sprintf "readback of %s failed" (show ty))
   | Some (C_Tot _) ->
     let h, a = T.collect_app_ln e in
-    let (| _, _, th, _ |) = Pulse.Checker.Pure.compute_term_type g h in
+    let (| _, _, th |) = Pulse.Checker.Pure.compute_term_type g h in
     let open Pulse.PP in
     fail_doc g 
       (Some range)
@@ -78,7 +78,7 @@ let check
     assume elab_comp c0 == ty;
     let Some c = Pulse.Readback.readback_comp ty in
 
-    let (| eff, typing |) = core_check_term_at_type g' e ty in
+    let eff = core_check_term_at_type g' e ty in
     let t = { t with term = Tm_ST { t=e; args=[] }; effect_tag = T.seal (Some (ctag_of_comp_st c)) } in
     let d : st_typing g' t c =
       if eff = T.E_Total

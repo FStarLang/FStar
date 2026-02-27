@@ -293,26 +293,23 @@ let join_slprop g b (ex1 ex2:list (universe & binder)) (p1 p2:slprop)
       list_as_slprop (remaining::pures1@pures2@matched)
 
 let rec join_effect_annot g (e1 e2:effect_annot)
-: T.Tac (e:effect_annot & effect_annot_typing g e)
+: T.Tac effect_annot
 = match e1, e2 with
   | _, EffectAnnotSTT
-  | EffectAnnotSTT, _ -> (| EffectAnnotSTT, () |)
+  | EffectAnnotSTT, _ -> EffectAnnotSTT
   
   | EffectAnnotGhost { opens=o1 }, EffectAnnotGhost { opens=o2 } ->
     let o = tm_join_inames o1 o2 in
     let ty = Pulse.Checker.Pure.core_check_term g o RT.E_Total tm_inames in
-    let e = EffectAnnotGhost { opens = o } in
-    (| e, ty |)
+    EffectAnnotGhost { opens = o }
   | EffectAnnotAtomic { opens=o1 }, EffectAnnotAtomic { opens=o2 } ->
     let o = tm_join_inames o1 o2 in
     let ty = Pulse.Checker.Pure.core_check_term g o RT.E_Total tm_inames in
-    let e = EffectAnnotAtomic { opens = o } in
-    (| e, ty |)
+    EffectAnnotAtomic { opens = o }
   | EffectAnnotAtomicOrGhost { opens=o1 }, EffectAnnotAtomicOrGhost { opens=o2 } ->
     let o = tm_join_inames o1 o2 in
     let ty = Pulse.Checker.Pure.core_check_term g o RT.E_Total tm_inames in
-    let e = EffectAnnotAtomicOrGhost { opens = o } in
-    (| e, ty |)
+    EffectAnnotAtomicOrGhost { opens = o }
 
   | EffectAnnotAtomicOrGhost { opens=o1 }, EffectAnnotGhost _ ->
     join_effect_annot g (EffectAnnotGhost {opens=o1}) e2
@@ -366,12 +363,12 @@ let join_post #g #hyp #b
   assume (fresh_wrt x g (freevars joined_post));
   let u = Pulse.Checker.Pure.check_universe g p1.ret_ty in
   let joined_post' = open_term_nv joined_post (ppname_default, x) in 
-  let post_typing_src = Pulse.Checker.Pure.check_slprop_with_core g' joined_post' in
-  let (| eff, eff_ty |) = join_effect_annot g p1.effect_annot p2.effect_annot in
+  let _ = Pulse.Checker.Pure.check_slprop_with_core g' joined_post' in
+  let eff = join_effect_annot g p1.effect_annot p2.effect_annot in
   let res : post_hint_for_env g =
-    {g; effect_annot=eff; effect_annot_typing=eff_ty;
+    {g; effect_annot=eff; effect_annot_typing=();
      ret_ty=p1.ret_ty; u=u; ty_typing=(); x;
-     post=joined_post; post_typing_src}
+     post=joined_post; post_typing_src=()}
   in
   res
 

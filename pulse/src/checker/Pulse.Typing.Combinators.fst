@@ -115,17 +115,16 @@ let weaken_comp_inames (#g:env) (#e:st_term) (#c:comp_st) (d_e:st_typing g e c) 
   = match c with
     | C_ST _ -> (| c, d_e |)
     | C_STGhost inames sc ->
-      let _ = check_prop_validity g _ (tm_inames_subset_typing g inames new_inames) in
+      let _ = check_prop_validity g (tm_inames_subset inames new_inames) in
       (| with_inames c new_inames, () |)
 
     | C_STAtomic inames obs sc ->
-      let _ = check_prop_validity g _ (tm_inames_subset_typing g inames new_inames) in
+      let _ = check_prop_validity g (tm_inames_subset inames new_inames) in
       (| with_inames c new_inames, () |)
 
 let try_lift_ghost_atomic (g:env) (e:st_term) (c:comp_st { C_STGhost? c }) (d:st_typing g e c)
 : T.Tac (option (st_typing g e (st_ghost_as_atomic c)))
-= let comp_res_typing : universe_of g (comp_res c) (comp_u c) = () in
-  let w = try_get_non_informative_witness g (comp_u c) (comp_res c) comp_res_typing in
+= let w = try_get_non_informative_witness g (comp_u c) (comp_res c) in
   match w with
   | None -> None
   | Some w -> Some ()
@@ -161,15 +160,15 @@ let mk_bind_ghost_ghost : bind_t C_STGhost? C_STGhost? =
   end
   else if (PostHint? post_hint)
   then (
-    let _ = check_prop_validity g _ (tm_inames_subset_typing g inames1 inames2) in
+    let _ = check_prop_validity g (tm_inames_subset inames1 inames2) in
     let c : comp_st = C_STGhost inames2 (st_comp_with_pre sc2 pre) in
     let t = wrst c (Tm_Bind {binder=b; head=e1; body=e2}) in
     (| t, c |)
   )
   else begin
     let new_inames = tm_join_inames inames1 inames2 in
-    let _ = check_prop_validity g _ (tm_inames_subset_typing g inames1 new_inames) in
-    let _ = check_prop_validity g _ (tm_inames_subset_typing g inames2 new_inames) in
+    let _ = check_prop_validity g (tm_inames_subset inames1 new_inames) in
+    let _ = check_prop_validity g (tm_inames_subset inames2 new_inames) in
     let c : comp_st = C_STGhost new_inames (st_comp_with_pre sc2 pre) in
     let t = wrst c (Tm_Bind {binder=b; head=e1; body=e2}) in
     (| t, c |)
@@ -192,15 +191,15 @@ let mk_bind_atomic_atomic
         end
         else if (PostHint? post_hint)
         then (
-          let _ = check_prop_validity g _ (tm_inames_subset_typing g inames1 inames2) in
+          let _ = check_prop_validity g (tm_inames_subset inames1 inames2) in
           let c : comp_st = C_STAtomic inames2 (join_obs obs1 obs2) (st_comp_with_pre sc2 pre) in
           let t = wrst c (Tm_Bind {binder=b; head=e1; body=e2}) in
           (| t, c |)
         )
         else begin
           let new_inames = tm_join_inames inames1 inames2 in
-          let _ = check_prop_validity g _ (tm_inames_subset_typing g inames1 new_inames) in
-          let _ = check_prop_validity g _ (tm_inames_subset_typing g inames2 new_inames) in
+          let _ = check_prop_validity g (tm_inames_subset inames1 new_inames) in
+          let _ = check_prop_validity g (tm_inames_subset inames2 new_inames) in
           let c : comp_st = C_STAtomic new_inames (join_obs obs1 obs2) (st_comp_with_pre sc2 pre) in
           let t = wrst c (Tm_Bind {binder=b; head=e1; body=e2}) in
           (| t, c |)
@@ -346,7 +345,7 @@ let bind_res_and_post_typing g c2 x post_hint
       else (
         let y = x in //fresh g in
         let s2_post_opened = open_term_nv s2.post (v_as_nv y) in
-        let post_typing =
+        let _ =
           check_slprop_with_core (push_binding g y ppname_default s2.res) s2_post_opened in
         ()
       )

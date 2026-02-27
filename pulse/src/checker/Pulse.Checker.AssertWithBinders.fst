@@ -297,8 +297,8 @@ let check_equiv_maybe_tac (g:env) (rng:Range.range) (lhs rhs ty:term) (tac_opt:o
     check_equiv_with_tac g rng lhs rhs ty tac_tm
 
 let check_pair (g:env) rng (lhs rhs:term) (tac_opt:option term) : T.Tac unit =
-  let (| _, ty, _ |) = PC.core_compute_term_type g lhs in
-  let (| _, _ |) = PC.core_check_term_at_type g rhs ty in
+  let (| _, ty |) = PC.core_compute_term_type g lhs in
+  let _ = PC.core_check_term_at_type g rhs ty in
   let issues = check_equiv_maybe_tac g rng lhs rhs ty tac_opt in
   match issues with
   | Some issues -> 
@@ -553,7 +553,7 @@ let check
     let rhs' = norm rhs in
     let v' = norm v in
 
-    let _: tot_typing g v' tm_slprop = PC.check_slprop_with_core g v' in
+    let _ = PC.check_slprop_with_core g v' in
 
     let h1: tot_typing g' (tm_star pre_remaining rhs') tm_slprop = () in
     let h2: slprop_equiv g' (tm_star pre_remaining rhs') (tm_star lhs pre_remaining) = () in

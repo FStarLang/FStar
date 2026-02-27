@@ -25,14 +25,14 @@ module T = FStar.Tactics.V2
 module P = Pulse.Syntax.Printer
 
 let check_prop (g:env) (p:term) 
-  : T.Tac (p:term & tot_typing g p tm_prop) =
+  : T.Tac term =
   
   let p0 = p in
-  let (| p, p_typing |) = Pulse.Checker.Pure.check_slprop g (tm_pure p) in
+  let p = Pulse.Checker.Pure.check_slprop g (tm_pure p) in
   match inspect_term p with
   | Tm_Pure pp ->
-    let prop_typing = Pulse.Typing.Metatheory.pure_typing_inversion _ pp p_typing in
-    (| pp, prop_typing |)
+    let prop_typing = Pulse.Typing.Metatheory.pure_typing_inversion g pp () in
+    pp
   | _ ->
     fail g None
       (Printf.sprintf "Impossible: check_intro_pure: checking a pure slprop %s returned a non-pure slprop %s,\
@@ -40,8 +40,8 @@ let check_prop (g:env) (p:term)
          (P.term_to_string (tm_pure p0))
          (P.term_to_string p))
 
-let check_prop_validity (g:env) (p:term) (typing:tot_typing g p tm_prop): T.Tac (prop_validity g p) =
-    Pulse.Checker.Pure.check_prop_validity g p typing
+let check_prop_validity (g:env) (p:term): T.Tac (prop_validity g p) =
+    Pulse.Checker.Pure.check_prop_validity g p
 
 let check
   (g:env)
@@ -56,8 +56,9 @@ let check
   let g = Pulse.Typing.Env.push_context g "check_intro_pure" t.range in
 
   let Tm_IntroPure { p } = t.term in
-  let (| p, p_typing |) = check_prop g p in
-  let pv = check_prop_validity g p p_typing in
+  let p = check_prop g p in
+  let p_typing : tot_typing g p tm_prop = () in
+  let pv = check_prop_validity g p in
   let intro_st = wtag (Some STT_Ghost) (Tm_IntroPure { p }) in
   let intro_c = C_STGhost tm_emp_inames { u=u0; res=tm_unit; pre=tm_emp; post=tm_pure p } in
   let st_typing : st_typing g intro_st intro_c = () in

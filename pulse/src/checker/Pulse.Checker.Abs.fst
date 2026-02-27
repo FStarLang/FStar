@@ -316,7 +316,7 @@ let preprocess_abs
     debug_abs g (fun _ -> Printf.sprintf "rebuild_abs = %s\n" (P.st_term_to_string abs));
     abs
 
-let sub_effect_comp g r (asc:comp_ascription) (c_computed:comp) : T.Tac (option (c2:comp & lift_comp g c_computed c2)) =
+let sub_effect_comp g r (asc:comp_ascription) (c_computed:comp) : T.Tac (option comp) =
   let nop = None in
   match asc.elaborated with
   | None -> nop
@@ -326,19 +326,17 @@ let sub_effect_comp g r (asc:comp_ascription) (c_computed:comp) : T.Tac (option 
     | C_ST _, C_ST _ -> nop
     | C_STGhost _ _, C_STGhost _ _ -> nop
     | C_STAtomic i Neutral c1, C_STGhost _ _ ->
-      let lift : lift_comp g c_computed (C_STGhost i c1) = () in
-      Some (| C_STGhost i c1, lift |)
+      Some (C_STGhost i c1)
     | C_STAtomic i o1 c1, C_STAtomic j o2 c2 ->
       if sub_observability o1 o2
-      then let lift : lift_comp g c_computed (C_STAtomic i o2 c1) = () in
-           Some (| C_STAtomic i o2 c1, lift |)
+      then Some (C_STAtomic i o2 c1)
       else nop
 
     (* FIXME: more lifts here *) 
     | _ -> nop
 
-let check_effect_annotation g r (asc:comp_ascription) (c_computed:comp) : T.Tac (c2:comp & st_sub g c_computed c2) =
-  let nop = (| c_computed, () |) in
+let check_effect_annotation g r (asc:comp_ascription) (c_computed:comp) : T.Tac comp =
+  let nop = c_computed in
   match asc.elaborated with
   | None -> nop
   | Some c ->
@@ -360,10 +358,9 @@ let check_effect_annotation g r (asc:comp_ascription) (c_computed:comp) : T.Tac 
       
       let b = mk_binder "res" Range.range_0 c2.res in
       let phi = tm_inames_subset j i in
-      let typing = tm_inames_subset_typing g j i in
       // Or:
       // let typing = core_check_tot_term g phi tm_prop in
-      let tok = T.with_policy T.ForceSMT (fun () -> try_check_prop_validity g phi typing) in
+      let tok = T.with_policy T.ForceSMT (fun () -> try_check_prop_validity g phi) in
       if None? tok then (
         let open Pulse.PP in
         fail_doc g (Some (RU.range_of_term i)) [
@@ -380,7 +377,7 @@ let check_effect_annotation g r (asc:comp_ascription) (c_computed:comp) : T.Tac 
         | C_STAtomic _ obs _ -> ()
         | C_STGhost _ _ -> ()
       in
-      (| c, d_sub |)
+      c
 
     | _, _ ->
       let open Pulse.PP in
@@ -479,12 +476,12 @@ let rec check_abs_core
       let c_body : comp =
         match sub_effect_comp g' body.range asc c_body with
         | None -> c_body
-        | Some (| c_body, lift |) -> c_body
+        | Some c_body -> c_body
       in
 
       (* Check if it matches annotation (if any, likely not), and adjust derivation
       if needed. Currently this only subtypes the invariants. *)
-      let (| c_body, d_sub |) = check_effect_annotation g' body.range asc c_body in
+      let c_body = check_effect_annotation g' body.range asc c_body in
       let body_typing : st_typing g' body c_body = () in
       let c_body = maybe_rewrite_body_typing body_typing asc in
 
@@ -541,7 +538,7 @@ let rec check_abs_core
           Some (open_term_nv (comp_res c) px),
           Some (open_term' (comp_post c) var 1)
       in
-      let (| pre_opened, pre_typing |) =
+      let pre_opened =
         (* In some cases F* can mess up the range in error reporting and make it
          point outside of this term. Bound it here. See e.g. Bug59, if we remove
          this bound then the range points to the span between the 'x' and 'y' binders. *)
@@ -565,7 +562,7 @@ let rec check_abs_core
       in
 
       let ppname_ret = mk_ppname_no_range "_fret" in
-      let r  = check g' pre_opened pre_typing post ppname_ret body_opened  in
+      let r  = check g' pre_opened () post ppname_ret body_opened  in
       let (| post, r |) : (ph:post_hint_opt g' & checker_result_t g' pre_opened ph) =
         match post with
         | PostHint _ -> (| post, r |)
@@ -587,10 +584,10 @@ let rec check_abs_core
       let c_body : comp =
         match sub_effect_comp g' body.range c_opened c_body with
         | None -> c_body
-        | Some (| c_body, lift |) -> c_body
+        | Some c_body -> c_body
       in
 
-      let (| c_body, d_sub |) = check_effect_annotation g' body.range c_opened c_body in
+      let c_body = check_effect_annotation g' body.range c_opened c_body in
       let body_typing : st_typing g' body c_body = () in
 
       let c_body = maybe_rewrite_body_typing body_typing asc in

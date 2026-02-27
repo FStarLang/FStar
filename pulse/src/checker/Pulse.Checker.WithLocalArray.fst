@@ -112,9 +112,8 @@ let check
     let _ = Tactics.BreakVC.break_vc () in
     let g = push_context "check_withlocal_array" t.range g in
     let Tm_WithLocalArray {binder; initializer; length; body} = t.term in
-    let (| init, init_u, init_t, init_t_typing, init_typing |)
-      : (init:option term & u:universe & ty:term & universe_of g ty u &
-        (match init with Some t -> tot_typing g t ty | None -> unit)) =
+    let (| init, init_u, init_t |)
+      : (init:option term & u:universe & ty:term) =
       (* Check against annotation if any *)
       let ty = binder.binder_ty in
       match inspect_term ty with
@@ -122,7 +121,7 @@ let check
         (match initializer with
         | Some initializer ->
           let (| init, init_u, init_t |) = compute_tot_term_type_and_u g initializer in
-          (| Some init, init_u, init_t, (), () |)
+          (| Some init, init_u, init_t |)
         | None ->
           fail g (Some <| head_range t)
             "allocating a local array: type must be specified when there is no initializer")
@@ -135,16 +134,14 @@ let check
               (P.term_to_string ty))
         | Some ty ->
           let u = check_universe g ty in
-          let ty_typing : universe_of g ty u = () in
           match initializer with
           | Some initializer ->
-            let (| init, init_typing |) = check_term g initializer T.E_Total ty in
-            let init_typing : typing g init T.E_Total ty = init_typing in
-            (| Some init, u, ty, ty_typing, init_typing |)
+            let init = check_term g initializer T.E_Total ty in
+            (| Some init, u, ty |)
           | None ->
-            (| None, u, ty, ty_typing, () |)
+            (| None, u, ty |)
     in
-    let (| len, len_typing |) =
+    let len =
       check_tot_term g length tm_szt in
     if not (eq_univ init_u u0)
     then (
@@ -161,7 +158,7 @@ let check
         let g_extended = extend_env g init_t x binder.binder_ppname init in
         let body_pre = comp_withlocal_array_body_pre pre init_t x_tm init len in
         let body_pre_typing =
-          with_local_array_pre_typing pre_typing init_t init len init_typing len_typing x binder.binder_ppname in
+          with_local_array_pre_typing pre_typing init_t init len () () x binder.binder_ppname in
         // elaborating this post here,
         //   so that later we can check the computed post to be equal to this one
         let post : post_hint_for_env g = post in

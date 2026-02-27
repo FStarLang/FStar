@@ -88,28 +88,28 @@ let equiv_preserves_typing
   = ()
 
 let check_effect_annot (g:env) (e:effect_annot)
-  : T.Tac (e':effect_annot { effect_annot_labels_match e e' } & effect_annot_typing g e') =
-  let check_opens opens : T.Tac (e:term & typing g e T.E_Total tm_inames) =
-    let (| opens, d |) = CP.check_term g opens T.E_Total tm_inames in
+  : T.Tac (e':effect_annot { effect_annot_labels_match e e' }) =
+  let check_opens opens : T.Tac term =
+    let opens = CP.check_term g opens T.E_Total tm_inames in
     let opens' =
       CP.norm_well_typed_term
         (elab_env g)
         [primops; iota; zeta; delta_attr ["Pulse.Lib.Core.unfold_check_opens"]]
         opens
     in
-    (| opens', equiv_preserves_typing _ _ _ _ () d |)
+    opens'
   in
   match e with
-  | EffectAnnotSTT -> (| e, () |)
+  | EffectAnnotSTT -> e
   | EffectAnnotGhost { opens } ->
-    let (| opens, d |) = check_opens opens in
-    (| EffectAnnotGhost { opens }, d |)
+    let opens = check_opens opens in
+    EffectAnnotGhost { opens }
   | EffectAnnotAtomic { opens } ->
-    let (| opens, d |) = check_opens opens in
-    (| EffectAnnotAtomic { opens }, d |)
+    let opens = check_opens opens in
+    EffectAnnotAtomic { opens }
   | EffectAnnotAtomicOrGhost { opens } ->
-    let (| opens, d |) = check_opens opens in
-    (| EffectAnnotAtomicOrGhost { opens }, d |)
+    let opens = check_opens opens in
+    EffectAnnotAtomicOrGhost { opens }
 
 let intro_post_hint g effect_annot ret_ty_opt post =
   let x = fresh g in
@@ -120,17 +120,17 @@ let intro_post_hint g effect_annot ret_ty_opt post =
   in
   let ret_ty, _ = CP.instantiate_term_implicits g ret_ty None false in
   let u = CP.check_universe g ret_ty in
-  let (| post, post_typing |) = CP.check_slprop (push_binding g x ppname_default ret_ty) (open_term_nv post (v_as_nv x)) in 
+  let post = CP.check_slprop (push_binding g x ppname_default ret_ty) (open_term_nv post (v_as_nv x)) in 
   let post' = close_term post x in
   Pulse.Typing.FV.freevars_close_term post x 0;
-  let (| effect_annot, effect_annot_typing |) = check_effect_annot g effect_annot in
+  let effect_annot = check_effect_annot g effect_annot in
   assume (open_term post' x == post);
   { g;
     effect_annot;
-    effect_annot_typing;
+    effect_annot_typing = ();
     ret_ty; u; ty_typing=();
     post=post';
-    x; post_typing_src=post_typing }
+    x; post_typing_src=() }
 
 let comp_typing_as_effect_annot_typing (#g:env) (#c:comp_st) (ct:comp_typing_u g c)
 : effect_annot_typing g (effect_annot_of_comp c)

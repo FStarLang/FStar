@@ -401,4 +401,4 @@ let purify_spec (g: env) (ctxt: ctxt) (t0: slprop) : T.Tac slprop =
   t
 
 let purify_and_check_spec (g: env) (ctxt: ctxt) (t: slprop) =
-  dfst (check_slprop g (purify_spec g ctxt t))
+  check_slprop g (purify_spec g ctxt t)

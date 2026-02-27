@@ -77,7 +77,7 @@ let check_if_seq_lhs
         text "Did you forget to apply some arguments?";
       ]
     else if None? (fst <| T.is_non_informative (elab_env g) ty) then (
-      if None? (Pulse.Checker.Pure.try_get_non_informative_witness g u ty ()) then
+      if None? (Pulse.Checker.Pure.try_get_non_informative_witness g u ty) then
         fail_doc g (Some e1.range) [
           prefix 2 1 (text "This statement returns a value of type:") (pp ty);
           text "Did you forget to assign it or ignore it?";
