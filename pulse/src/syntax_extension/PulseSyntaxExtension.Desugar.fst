@@ -573,26 +573,12 @@ let rec desugar_stmt' (env:env_t) (s:Sugar.stmt)
       let! branches = branches |> mapM (desugar_branch env) in
       return (SW.tm_match head returns_annot branches s.range)
 
-    | While { guard; invariant=[Old (id, inv)]; body } ->
-      let! guard = desugar_stmt env guard in
-      let! inv =
-        let env, bv = push_bv env id in
-        let! inv = desugar_slprop env inv in
-        return (SW.close_term inv bv.index)
-      in
-      let! body = desugar_stmt env body in
-      return (SW.tm_while guard (id, inv) body s.range)
-
     | While { guard; invariant=invs0; body } ->
-      (* If there are multiple invariants, they must all be in
-      the New style. *)
       let! invs = invs0 |> mapM (function
-                        | New i -> return [i]
+                        | LoopInvariant i -> return [i]
                         | LoopEnsures _ -> return []
                         | LoopRequires _ -> return []
-                        | Decreases _ -> return []
-                        | Old (_, p) -> fail "When using multiple invariants, they must all be in the \
-                        \"new\" style without a binder." (pos p)) in
+                        | Decreases _ -> return []) in
       let invs = L.concat invs in
       let inv = sugar_star_of_list s.range invs in
       let! guard = desugar_stmt env guard in
@@ -620,7 +606,7 @@ let rec desugar_stmt' (env:env_t) (s:Sugar.stmt)
         | [d] -> Some d
         | _ -> None in
 
-      let while = SW.tm_nuwhile guard inv body loop_requires meas s.range in
+      let while = SW.tm_while guard inv body loop_requires meas s.range in
       let while = close_st_term while lblx.index in
 
       let loop_ensures = invs0 |> L.concatMap (function | LoopEnsures r -> [r] | _ -> []) in

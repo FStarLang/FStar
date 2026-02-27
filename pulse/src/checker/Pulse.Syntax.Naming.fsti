@@ -124,11 +124,7 @@ let rec freevars_st (t:st_term)
     | Tm_IntroExists { p; witnesses } ->
       freevars p ++
       freevars_list witnesses
-    | Tm_While { invariant; condition; body } ->
-      freevars invariant ++
-      freevars_st condition ++
-      freevars_st body
-    | Tm_NuWhile { invariant; loop_requires; meas; condition; body } ->
+    | Tm_While { invariant; loop_requires; meas; condition; body } ->
       freevars invariant ++
       freevars loop_requires ++
       freevars_term_opt meas ++
@@ -316,12 +312,7 @@ let rec ln_st' (t:st_term) (i:int)
       ln' p i &&
       ln_list' witnesses i
   
-    | Tm_While { invariant; condition; body } ->
-      ln' invariant (i + 1) &&
-      ln_st' condition i &&
-      ln_st' body i
-
-    | Tm_NuWhile { invariant; loop_requires; meas; condition; body } ->
+    | Tm_While { invariant; loop_requires; meas; condition; body } ->
       ln' invariant i &&
       ln' loop_requires i &&
       ln_opt' ln' meas i &&
@@ -570,14 +561,8 @@ let rec subst_st_term (t:st_term) (ss:subst)
       Tm_IntroExists { p = subst_term p ss;
                        witnesses = subst_term_list witnesses ss }                             
 
-    | Tm_While { invariant; condition; body; condition_var } ->
-      Tm_While { invariant = subst_term invariant (shift_subst ss);
-                 condition = subst_st_term condition ss;
-                 body = subst_st_term body ss;
-                 condition_var }
-
-    | Tm_NuWhile { invariant; loop_requires; meas; condition; body } ->
-      Tm_NuWhile { invariant = subst_term invariant ss;
+    | Tm_While { invariant; loop_requires; meas; condition; body } ->
+      Tm_While { invariant = subst_term invariant ss;
                     loop_requires = subst_term loop_requires ss;
                     meas = subst_term_opt meas ss;
                     condition = subst_st_term condition ss;

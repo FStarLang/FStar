@@ -19,42 +19,6 @@ module BugWhileInv
 open Pulse.Lib.Pervasives
 module R = Pulse.Lib.Reference
 
-[@@no_mkeys]
-let workaround (b:bool) (v:nat) : slprop =
-    pure (not b ==> v == 0)
-
-
-fn count_down_ugly (x:ref nat)
-requires exists* v. R.pts_to x v
-ensures  R.pts_to x 0
-{
-  with v. assert (pts_to x v);
-  fold (workaround true v);
-  while (
-    let v = !x;
-    with b v'. unfold (workaround b v');
-    if (v = 0)
-    {
-      fold (workaround false v);
-      false;
-    }
-    else
-    {
-      x := v - 1;
-      fold (workaround true (v - 1));
-      true;
-    }
-  )
-  invariant b.
-    exists* v. 
-        pts_to x v **
-        workaround b v
-  { () };
-  with v. unfold (workaround false v);
- }
-
-
-
 fn count_down (x:ref nat)
 requires exists* v. R.pts_to x v
 ensures  R.pts_to x 0

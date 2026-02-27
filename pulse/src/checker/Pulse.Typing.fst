@@ -357,35 +357,7 @@ let comp_intro_exists_erased (u:universe) (b:binder) (p:term) (e:term)
         post=tm_exists_sl u b p
       }
 
-
-let comp_while_cond (x:ppname) (inv:term)
-  : comp
-  = C_ST {
-           u=u0;
-           res=tm_bool;
-           pre=tm_exists_sl u0 (named_binder x tm_bool) inv;
-           post=inv
-         }
-
-let comp_while_body (x:ppname) (inv:term)
-  : comp
-  = C_ST {
-           u=u0;
-           res=tm_unit;
-           pre=open_term' inv tm_true 0;
-           post=tm_exists_sl u0 (named_binder x tm_bool) inv
-         }
-
-let comp_while (x:ppname) (inv:term)
-  : comp
-  = C_ST {
-           u=u0;
-           res=tm_unit;
-           pre=tm_exists_sl u0 (named_binder x tm_bool) inv;
-           post=open_term' inv tm_false 0
-         }
-
-let comp_nuwhile_cond (inv:term) (post_cond:term)
+let comp_while_cond (inv:term) (post_cond:term)
   : comp
   = C_ST {
            u=u0;
@@ -402,7 +374,7 @@ let mk_precedes u ty a b =
     b, R.Q_Explicit;
   ]
 
-let comp_nuwhile_body u_meas ty_meas is_tot x (inv:term) (post_cond:term)
+let comp_while_body u_meas ty_meas is_tot x (inv:term) (post_cond:term)
   : comp
   = C_ST {
            u=u0;
@@ -417,7 +389,7 @@ let comp_nuwhile_body u_meas ty_meas is_tot x (inv:term) (post_cond:term)
                 close_term inv (snd x))
          }
 
-let comp_nuwhile u_meas ty_meas (x:nvar) (inv:term) (post_cond:term)
+let comp_while u_meas ty_meas (x:nvar) (inv:term) (post_cond:term)
   : comp
   = C_ST {
            u=u0;
@@ -1011,20 +983,6 @@ type st_typing : env -> st_term -> comp -> Type =
   | T_While:
       g:env ->
       inv:term ->
-      cond:st_term ->
-      body:st_term ->
-      tot_typing g (tm_exists_sl u0 (as_binder tm_bool) inv) tm_slprop ->
-      st_typing g cond (comp_while_cond ppname_default inv) ->
-      st_typing g body (comp_while_body ppname_default inv) ->
-      st_typing g (wtag (Some STT) (Tm_While { invariant = inv;
-                                              condition = cond;
-                                              body;
-                                              condition_var = ppname_default } ))
-                  (comp_while ppname_default inv)
-
-  | T_NuWhile:
-      g:env ->
-      inv:term ->
       post_cond:term ->
       cond:st_term ->
       body:st_term ->
@@ -1034,14 +992,14 @@ type st_typing : env -> st_term -> comp -> Type =
       gx:env { gx == push_binding g (snd x) (fst x) ty_meas } ->
       tot_typing gx inv tm_slprop ->
       tot_typing gx (tm_exists_sl u0 (as_binder tm_bool) post_cond) tm_slprop ->
-      st_typing gx cond (comp_nuwhile_cond inv post_cond) ->
-      st_typing gx body (comp_nuwhile_body u_meas ty_meas is_tot x inv post_cond) ->
-      st_typing g (wtag (Some STT) (Tm_NuWhile { invariant = inv;
+      st_typing gx cond (comp_while_cond inv post_cond) ->
+      st_typing gx body (comp_while_body u_meas ty_meas is_tot x inv post_cond) ->
+      st_typing g (wtag (Some STT) (Tm_While { invariant = inv;
                                                 loop_requires = tm_unknown;
                                                 meas = None;
                                                 condition = cond;
                                                 body }))
-                  (comp_nuwhile u_meas ty_meas x inv post_cond)
+                  (comp_while u_meas ty_meas x inv post_cond)
 
   | T_WithLocal:
       g:env ->

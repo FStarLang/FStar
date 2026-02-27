@@ -229,10 +229,8 @@ optional_norewrite:
   | { false }
 
 while_invariant1:
-  | INVARIANT i=lident DOT v=pulseSLProp
-    { PulseSyntaxExtension_Sugar.Old (i, v) }
   | INVARIANT v=pulseSLProp
-    { PulseSyntaxExtension_Sugar.New v }
+    { PulseSyntaxExtension_Sugar.LoopInvariant v }
   | ENSURES v=appTermNoRecordExp
     { PulseSyntaxExtension_Sugar.LoopEnsures v }
   | REQUIRES v=appTermNoRecordExp

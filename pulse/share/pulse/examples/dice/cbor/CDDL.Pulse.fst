@@ -921,7 +921,7 @@ fn impl_matches_map_group_no_restricted
     let done0 = cbor_map_iterator_is_done i0;
     let mut pcont = not done0;
     while (let cont = !pcont ; cont)
-    invariant cont . exists* (i: cbor_map_iterator_t) (l: list (raw_data_item & raw_data_item)) (res: bool) . (
+    invariant exists* (i: cbor_map_iterator_t) (l: list (raw_data_item & raw_data_item)) (res: bool) cont . (
         pts_to pcont cont **
         pts_to pres res **
         pts_to pi i **

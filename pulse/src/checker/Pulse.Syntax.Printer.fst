@@ -351,23 +351,13 @@ let rec st_term_to_string' (level:string) (t:st_term)
         level
         (term_list_to_string " " witnesses)
 
-    | Tm_NuWhile { invariant; meas; condition; body } ->
-      sprintf "nuwhile (%s)\n%sinvariant %s\n%s%s{\n%s%s\n%s}"
+    | Tm_While { invariant; meas; condition; body } ->
+      sprintf "while (%s)\n%sinvariant %s\n%s%s{\n%s%s\n%s}"
         (st_term_to_string' level condition)
         level
         (term_to_string invariant)
         level
         (match meas with | Some d -> sprintf "decreases %s\n%s" (term_to_string d) level | None -> "")
-        (indent level)
-        (st_term_to_string' (indent level) body)
-        level
-
-    | Tm_While { invariant; condition; body } ->
-      sprintf "while (%s)\n%sinvariant %s\n%s{\n%s%s\n%s}"
-        (st_term_to_string' level condition)
-        level
-        (term_to_string invariant)
-        level
         (indent level)
         (st_term_to_string' (indent level) body)
         level
@@ -512,7 +502,6 @@ let tag_of_st_term (t:st_term) =
   | Tm_ElimExists _ -> "Tm_ElimExists"
   | Tm_IntroExists _ -> "Tm_IntroExists"
   | Tm_While _ -> "Tm_While"
-  | Tm_NuWhile _ -> "Tm_NuWhile"
   | Tm_WithLocal _ -> "Tm_WithLocal"
   | Tm_WithLocalArray _ -> "Tm_WithLocalArray"
   | Tm_Rewrite _ -> "Tm_Rewrite"
@@ -542,7 +531,6 @@ let rec print_st_head (t:st_term)
   | Tm_If _ -> "If"
   | Tm_Match _ -> "Match"
   | Tm_While _ -> "While"
-  | Tm_NuWhile _ -> "NuWhile"
   | Tm_Admit _ -> "Admit"
   | Tm_Unreachable _ -> "Unreachable"
   | Tm_Rewrite _ -> "Rewrite"
@@ -574,7 +562,6 @@ let rec print_skel (t:st_term) =
   | Tm_If _ -> "If"
   | Tm_Match _ -> "Match"
   | Tm_While _ -> "While"
-  | Tm_NuWhile _ -> "NuWhile"
   | Tm_Admit _ -> "Admit"
   | Tm_Unreachable _ -> "Unreachable"
   | Tm_Rewrite _ -> "Rewrite"

@@ -174,12 +174,7 @@ let rec freevars_close_st_term' (t:st_term) (x:var) (i:index)
       freevars_close_term' p x i;
       freevars_close_term_list' witnesses x i
 
-    | Tm_While { invariant; condition; body } ->
-      freevars_close_term' invariant x (i + 1);
-      freevars_close_st_term' condition x i;
-      freevars_close_st_term' body x i
-
-    | Tm_NuWhile { invariant; loop_requires; meas; condition; body } ->
+    | Tm_While { invariant; loop_requires; meas; condition; body } ->
       freevars_close_term' invariant x i;
       freevars_close_term' loop_requires x i;
       (match meas with | Some d -> freevars_close_term' d x i | None -> ());
@@ -305,6 +300,7 @@ let tot_typing_freevars
              freevars ty `Set.subset` vars_of_env g)
   = tot_or_ghost_typing_freevars d
 
+#push-options "--z3rlimit 10"
 let bind_comp_freevars (#g:_) (#x:_) (#c1 #c2 #c:_)
                        (d:bind_comp g x c1 c2 c)
   : Lemma 
@@ -313,6 +309,7 @@ let bind_comp_freevars (#g:_) (#x:_) (#c1 #c2 #c:_)
     (ensures freevars_comp c `Set.subset` vars_of_env g)
   = match d with
     | Bind_comp _ _ _ _ dt _ _ -> tot_or_ghost_typing_freevars dt
+#pop-options
 
 let rec slprop_equiv_freevars (#g:_) (#t0 #t1:_) (v:slprop_equiv g t0 t1)
   : Lemma (ensures (freevars t0 `Set.subset` vars_of_env g) <==>
@@ -642,31 +639,6 @@ fun #g #t #c d cb ->
         freevars p);
     }
 
-#push-options "--z3rlimit 20"
-let st_typing_freevars_while : st_typing_freevars_case T_While? =
-fun d cb ->
-  match d with
-  | T_While _ inv _ _ inv_typing cond_typing body_typing ->
-    tot_or_ghost_typing_freevars inv_typing;
-    cb cond_typing;
-    cb body_typing;
-    assert (freevars tm_false `Set.equal` Set.empty);
-    freevars_open_term inv tm_false 0;
-    assert (freevars (open_term' inv tm_false 0) `Set.subset` freevars inv)
-
-// let st_typing_freevars_nuwhile : st_typing_freevars_case T_NuWhile? =
-// fun d cb ->
-//   match d with
-//   | T_NuWhile _ inv post _ _ inv_typing post_typing cond_typing body_typing ->
-//     tot_or_ghost_typing_freevars inv_typing;
-//     tot_or_ghost_typing_freevars post_typing;
-//     cb cond_typing;
-//     cb body_typing;
-//     assert (freevars tm_false `Set.equal` Set.empty);
-//     freevars_open_term inv tm_false 0;
-//     assert (freevars (open_term' inv tm_false 0) `Set.subset` freevars inv)
-#pop-options
-
 let st_typing_freevars_rewrite : st_typing_freevars_case T_Rewrite? =
 fun d cb ->
   match d with
@@ -755,9 +727,7 @@ let rec st_typing_freevars
     st_typing_freevars d2;
     st_equiv_freevars deq
   | T_While .. ->
-    st_typing_freevars_while d st_typing_freevars
-  | T_NuWhile .. ->
-    // st_typing_freevars_nuwhile d st_typing_freevars
+    // st_typing_freevars_while d st_typing_freevars
     admit ()
   | T_Rewrite .. ->
     st_typing_freevars_rewrite d st_typing_freevars

@@ -20,7 +20,6 @@ let merge_invariant_prop
     (hi: SZ.t)
     (l1_0: Ghost.erased (list t))
     (l2_0: Ghost.erased (list t))
-    (cont: bool)
     i1 i2 (res: bool) accu l1 l2
 : Tot prop
 =
@@ -31,8 +30,7 @@ let merge_invariant_prop
                 if res
                 then spec_merge compare accu l1 l2
                 else (false, accu `List.Tot.append` (l1 `List.Tot.append` l2))
-            ) /\
-            cont == (res && not (i1 = i2 || i2 = hi))
+            )
 
 let merge_invariant // FIXME: WHY WHY WHY?
     (#tl #th: Type)
@@ -47,7 +45,6 @@ let merge_invariant // FIXME: WHY WHY WHY?
     (pi1: R.ref SZ.t)
     (pi2: R.ref SZ.t)
     (pres: R.ref bool)
-    (cont: bool)
     i1 i2 (res: bool) c c1 c2 accu l1 l2
 : Tot slprop
 =
@@ -61,7 +58,7 @@ let merge_invariant // FIXME: WHY WHY WHY?
         Trade.trade
           (SM.seq_list_match c accu vmatch ** (SM.seq_list_match c1 l1 vmatch ** SM.seq_list_match c2 l2 vmatch))
           (SM.seq_list_match c1_0 l1_0 vmatch ** SM.seq_list_match c2_0 l2_0 vmatch) **
-        pure (merge_invariant_prop compare lo hi l1_0 l2_0 cont i1 i2 res accu l1 l2)
+        pure (merge_invariant_prop compare lo hi l1_0 l2_0 i1 i2 res accu l1 l2)
 
 inline_for_extraction
 fn merge
@@ -107,27 +104,22 @@ requires
     let mut pi2 = mi;
     let mut pres = true;
     fold (merge_invariant vmatch compare a c1 c2 lo hi l1_0 l2_0 pi1 pi2 pres
-        (not (lo = mi || mi = hi))
         lo mi true
         c1l c1 c2 [] l1_0 l2_0
     );
     while (
-        with gcont gi1 gi2 gres c c1' c2' accu l1' l2' .
-            assert (merge_invariant vmatch compare a c1 c2 lo hi l1_0 l2_0 pi1 pi2 pres gcont gi1 gi2 gres c c1' c2' accu l1' l2');
-        unfold (merge_invariant vmatch compare a c1 c2 lo hi l1_0 l2_0 pi1 pi2 pres gcont gi1 gi2 gres c c1' c2' accu l1' l2');
+        unfold merge_invariant;
         let i1 = !pi1;
         let i2 = !pi2;
         let res = !pres;
-        let cont = (res && not (i1 = i2 || i2 = hi));
-        fold (merge_invariant vmatch compare a c1 c2 lo hi l1_0 l2_0 pi1 pi2 pres cont gi1 gi2 gres c c1' c2' accu l1' l2');
-        cont
+        (res && not (i1 = i2 || i2 = hi))
     )
-    invariant cont . exists* i1 i2 res c c1' c2' accu l1' l2' .
-        merge_invariant vmatch compare a c1 c2 lo hi l1_0 l2_0 pi1 pi2 pres cont i1 i2 res c c1' c2' accu l1' l2'
+    invariant exists* i1 i2 res c c1' c2' accu l1' l2'.
+        merge_invariant vmatch compare a c1 c2 lo hi l1_0 l2_0 pi1 pi2 pres i1 i2 res c c1' c2' accu l1' l2'
     {
         with gi1 gi2 gres c c1' c2' accu l1 l2 .
-            assert (merge_invariant vmatch compare a c1 c2 lo hi l1_0 l2_0 pi1 pi2 pres true gi1 gi2 gres c c1' c2' accu l1 l2);
-        unfold (merge_invariant vmatch compare a c1 c2 lo hi l1_0 l2_0 pi1 pi2 pres true gi1 gi2 gres c c1' c2' accu l1 l2);
+            fold (merge_invariant vmatch compare a c1 c2 lo hi l1_0 l2_0 pi1 pi2 pres gi1 gi2 gres c c1' c2' accu l1 l2);
+        unfold (merge_invariant vmatch compare a c1 c2 lo hi l1_0 l2_0 pi1 pi2 pres gi1 gi2 gres c c1' c2' accu l1 l2);
         let prf_res : squash (gres == true) = ();
         SM.seq_list_match_length vmatch c1' l1;
         SM.seq_list_match_length vmatch c2' l2;
@@ -158,7 +150,7 @@ requires
         Trade.elim (vmatch x2 (List.Tot.hd l2) ** _) _;
         if (comp = 0s) {
             pres := false;
-            fold (merge_invariant vmatch compare a c1 c2 lo hi l1_0 l2_0 pi1 pi2 pres false gi1 gi2 false c
+            fold (merge_invariant vmatch compare a c1 c2 lo hi l1_0 l2_0 pi1 pi2 pres gi1 gi2 false c
                 c1'
                 c2'
                 accu
@@ -181,8 +173,7 @@ requires
                 as (pts_to_range a (SZ.v gi2) (SZ.v hi) c2');
             rewrite (pts_to_range a (SZ.v i1') (Ghost.reveal (SZ.v gi2)) (Seq.tail c1'))
                 as (pts_to_range a (SZ.v i1') (SZ.v gi2) (Seq.tail c1'));
-            let gcont' = Ghost.hide (gres && not (i1' `size_eq` gi2 || gi2 `size_eq` hi));
-            fold (merge_invariant vmatch compare a c1 c2 lo hi l1_0 l2_0 pi1 pi2 pres gcont' i1' gi2 gres
+            fold (merge_invariant vmatch compare a c1 c2 lo hi l1_0 l2_0 pi1 pi2 pres i1' gi2 gres
                 (Seq.append c (Seq.cons x1 Seq.empty))
                 (Seq.tail c1')
                 c2'
@@ -208,8 +199,7 @@ requires
             pi2 := i2';
             merge_aux_consume_2 vmatch c accu c1' l1 c2' l2 x2 ();
             Trade.trans _ _ (SM.seq_list_match c1 l1_0 vmatch ** SM.seq_list_match c2 l2_0 vmatch);
-            let gcont' = Ghost.hide (gres && not (i1' `size_eq` i2' || i2' `size_eq` hi));
-            fold (merge_invariant vmatch compare a c1 c2 lo hi l1_0 l2_0 pi1 pi2 pres gcont' i1' i2' gres
+            fold (merge_invariant vmatch compare a c1 c2 lo hi l1_0 l2_0 pi1 pi2 pres i1' i2' gres
                 (Seq.append c (Seq.cons x2 Seq.empty))
                 c1'
                 (Seq.tail c2')
@@ -220,8 +210,8 @@ requires
         }
     };
     with i1 i2 res c c1' c2' accu l1' l2' .
-        assert (merge_invariant vmatch compare a c1 c2 lo hi l1_0 l2_0 pi1 pi2 pres false i1 i2 res c c1' c2' accu l1' l2');
-    unfold (merge_invariant vmatch compare a c1 c2 lo hi l1_0 l2_0 pi1 pi2 pres false i1 i2 res c c1' c2' accu l1' l2');
+        fold (merge_invariant vmatch compare a c1 c2 lo hi l1_0 l2_0 pi1 pi2 pres i1 i2 res c c1' c2' accu l1' l2');
+    unfold (merge_invariant vmatch compare a c1 c2 lo hi l1_0 l2_0 pi1 pi2 pres i1 i2 res c c1' c2' accu l1' l2');
     SM.seq_list_match_length vmatch c1' l1';
     SM.seq_list_match_length vmatch c2' l2';
     List.Tot.append_l_nil l1';
