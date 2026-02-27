@@ -91,8 +91,8 @@ let check
 
   let infer_post_branch (#eq_v:term) (r: checker_result_t (g_with_eq eq_v) pre NoHint) :
     T.Tac (p:post_hint_for_env g {p.g == g /\ p.effect_annot==EffectAnnotSTT}) =
-    let (| x, g', (| u, t, t_typ |), (| post, post_typing |), k |) = r in
-    J.infer_post' g g' x t_typ post_typing
+    let (| x, g', (u, t), post, k |) = r in
+    J.infer_post' g g' #u #t x () #post ()
   in
 
   let then_ = check_branch tm_true e1 true in
@@ -120,7 +120,7 @@ let check
   : T.Tac (br:st_term { ~(hyp `Set.mem` freevars_st br) } &
            c:comp_st { comp_pre c == pre /\ comp_post_matches_hint c (PostHint ph)} &
            st_typing g br c)
-  = let (| br, c, d |) =
+  = let (| br, c |) =
       let ppname = mk_ppname_no_range "_if_br" in
       apply_checker_result_k r ppname
     in
@@ -130,7 +130,7 @@ let check
     //        (Printf.sprintf "check_if: branch hypothesis is in freevars of checked %s branch" br_name)
     // else
      assume not (hyp `Set.mem` freevars_st br);
-     (| br, c, d |)
+     (| br, c, () |)
   in
   let (| e1, c1, e1_typing |) = extract then_ true in
   let (| e2, c2, e2_typing |) = extract else_ false in
@@ -141,7 +141,7 @@ let check
 
   let if_st = wrst c (Tm_If { b; then_=e1; else_=e2; post=None }) in
   let d : st_typing_in_ctxt g pre (PostHint post_hint') =
-    (| if_st, c, () |) in
+    (| if_st, c |) in
 
   let res : checker_result_t g pre (PostHint post_hint') = checker_result_for_st_typing d res_ppname in
   retype_checker_result_post_hint post_hint' post_hint res

@@ -218,10 +218,10 @@ let rewrite_all rng (is_source:bool) (g:env) (p: list (term & term)) (t:term) pr
   rewrite. Otherwise, tactics may become brittle as the goal is changed unexpectedly
   by other things in the context. See tests/Match.fst. *)
   let use_rwr = None? tac_opt in
-  let norm (t:term) : T.Tac term = dfst <| normalize_slprop g t use_rwr in
+  let norm (t:term) : T.Tac term = normalize_slprop g t use_rwr in
   let t =
     let t, _ = Pulse.Checker.Pure.instantiate_term_implicits g t None true in
-    let t = dfst <| normalize_slprop g t use_rwr in
+    let t = normalize_slprop g t use_rwr in
     t
   in
   let maybe_purify t = if elaborated then t else purify_term g {ctxt_now=pre;ctxt_old=None} t in
@@ -355,7 +355,7 @@ let check_renaming
     let h2: slprop_equiv g rhs pre = () in
     let h1: tot_typing g rhs tm_slprop = () in
     let (| x, g', ty, ctxt', k |) = check g rhs h1 post_hint res_ppname body in
-    (| x, g', ty, ctxt', k_elab_equiv pre (dfst ctxt') k h2 () |)
+    (| x, g', ty, ctxt', k_elab_equiv pre ctxt' k h2 () |)
 
   | [], Some goal -> (
       let rhs, _ = rewrite_all st.range (T.unseal st.source) g pairs goal pre elaborated tac_opt true in
@@ -560,4 +560,4 @@ let check
 
     let (| x, g'', ty, ctxt', k' |) =
       check g' (tm_star pre_remaining rhs') h1 post_hint res_ppname body in
-    (| x, g'', ty, ctxt', k_elab_trans k (k_elab_equiv (tm_star lhs pre_remaining) (dfst ctxt') k' h2 ()) |)
+    (| x, g'', ty, ctxt', k_elab_trans k (k_elab_equiv (tm_star lhs pre_remaining) ctxt' k' h2 ()) |)

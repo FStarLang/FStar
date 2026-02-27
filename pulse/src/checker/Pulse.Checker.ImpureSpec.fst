@@ -77,7 +77,7 @@ let symb_eval_stateful_app (g: env) (ctxt: slprop) (t: term) : T.Tac R.term =
     let x_ppn = mk_ppname_no_range "result" in
     let g' = push_binding g x (mk_ppname_no_range "result") ty in
     let post = open_term_nv post (x_ppn, x) in
-    let (| post, _ |) = normalize_slprop g' post true in 
+    let post = normalize_slprop g' post true in 
     match get_rewrites_to_from_post g x post with
     | None ->
       let head, _ = T.collect_app_ln t in
@@ -214,7 +214,7 @@ let rec run_elim_core (g: env) (ctxt: list slprop) : T.Tac (env & list nvar & li
       g', xs, c::ctxt'
 
 let run_elim (g: env) (ctxt: slprop) : T.Tac (env & list nvar & slprop) =
-  let (| ctxt, _ |) = normalize_slprop g ctxt true in
+  let ctxt = normalize_slprop g ctxt true in
   let g', xs, ctxt = run_elim_core g (slprop_as_list ctxt) in
   g', xs, list_as_slprop ctxt
 
@@ -401,4 +401,4 @@ let purify_spec (g: env) (ctxt: ctxt) (t0: slprop) : T.Tac slprop =
   t
 
 let purify_and_check_spec (g: env) (ctxt: ctxt) (t: slprop) =
-  check_slprop g (purify_spec g ctxt t)
+  dfst (check_slprop g (purify_spec g ctxt t))

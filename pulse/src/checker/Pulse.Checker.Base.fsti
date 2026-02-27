@@ -155,11 +155,10 @@ let checker_res_matches_post_hint
 let checker_result_inv (g:env) (post_hint:post_hint_opt g)
   (x:var)
   (g1:env)
-  (t:(u:universe & t:term & universe_of g1 t u))
-  (ctxt':(ctxt':slprop & tot_typing g1 ctxt' tm_slprop)) =
+  (u:universe)
+  (t:typ)
+  (ctxt':slprop) =
 
-  let (| _, t, _ |) = t in
-  let (| ctxt', _ |) = ctxt' in
   checker_res_matches_post_hint g post_hint x t ctxt' /\
   lookup g1 x == Some t
 
@@ -170,10 +169,10 @@ let checker_result_inv (g:env) (post_hint:post_hint_opt g)
 type checker_result_t (g:env) (ctxt:slprop) (post_hint:post_hint_opt g) =
   x:var &
   g1:env { g1 `env_extends` g } &
-  t:(u:universe & t:typ & universe_of g1 t u) &
-  ctxt':(ctxt':slprop & tot_typing g1 ctxt' tm_slprop) &
-  k:continuation_elaborator g ctxt g1 (dfst ctxt') {
-    checker_result_inv g post_hint x g1 t ctxt'
+  t:(universe & typ) &
+  ctxt':slprop &
+  k:continuation_elaborator g ctxt g1 ctxt' {
+    checker_result_inv g post_hint x g1 (fst t) (snd t) ctxt'
   }
 
 
@@ -195,8 +194,7 @@ type check_t =
 val match_comp_res_with_post_hint (#g:env) (t:st_term) (c:comp_st)
   (d:st_typing g t c)
   (post_hint:post_hint_opt g)
-  : T.Tac (c':comp_st { comp_pre c' == comp_pre c } &
-           st_typing g t c')
+  : T.Tac (c':comp_st { comp_pre c' == comp_pre c })
 
 val apply_checker_result_k (#g:env) (#ctxt:slprop) (#post_hint:post_hint_for_env g)
   (r:checker_result_t g ctxt (PostHint post_hint))
@@ -259,7 +257,7 @@ let composable
   (r2:checker_result_t g' ctxt' post_hint) =
   let (| x1, g1, t1, ctxt1, k1 |) = r1 in
   g1 == g' /\
-  dfst ctxt1 == ctxt'
+  ctxt1 == ctxt'
 
  
 val compose_checker_result_t 

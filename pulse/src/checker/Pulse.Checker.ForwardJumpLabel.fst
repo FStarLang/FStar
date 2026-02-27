@@ -78,7 +78,7 @@ let check
       PostHint post in
     let body = open_st_term_nv body (lbl, lbl_x) in
     let body' = check g' pre pre_typing' post_hint' res_ppname body in
-    let (| body', body'_c, body'_typing |) = apply_checker_result_k #g' #pre #post body' res_ppname in
+    let (| body', body'_c |) = apply_checker_result_k #g' #pre #post body' res_ppname in
     assert comp_u body'_c == comp_u lbl_c;
     assert comp_res body'_c == comp_res lbl_c;
     assert comp_pre body'_c == pre;
@@ -95,11 +95,11 @@ let check
     let typing: st_typing g t body'_c = () in
     if not has_explicit_post then (
       assert post_hint0 == PostHint post;
-      checker_result_for_st_typing (| t, body'_c, typing |) res_ppname
+      checker_result_for_st_typing (| t, body'_c |) res_ppname
     ) else (
-      let (| c'', typing'' |) = match_comp_res_with_post_hint t body'_c typing post_hint0 in
+      let c'' = match_comp_res_with_post_hint t body'_c typing post_hint0 in
       prove_post_hint #g
-        (try_frame_pre false #g pre_typing (|t,c'',typing''|) res_ppname)
+        (try_frame_pre false #g pre_typing (|t,c''|) res_ppname)
         post_hint0
         rng
     )

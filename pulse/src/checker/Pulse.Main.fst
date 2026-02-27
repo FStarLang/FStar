@@ -69,7 +69,7 @@ let check_fndefn
   let rng = body.range in
   debug_main g (fun _ -> Printf.sprintf "\nbody after mk_abs:\n%s\n" (P.st_term_to_string body));
 
-  let (| body, c, _t_typing |) = Pulse.Checker.Abs.check_abs g body Pulse.Checker.check in
+  let (| body, c |) = Pulse.Checker.Abs.check_abs g body Pulse.Checker.check in
 
   Pulse.Checker.Prover.Util.debug_prover g
     (fun _ -> Printf.sprintf "\ncheck call returned in main with:\n%s\nat type %s\n"
@@ -194,7 +194,7 @@ let check_fndecl
   in
   let body = Pulse.Checker.Abs.mk_abs g bs body comp in
   let rng = body.range in
-  let (| _, c, _t_typing |) =
+  let (| _, c |) =
     (* We don't want to print the diagnostic for the admit in the body. *)
     RU.with_extv "pulse:no_admit_diag" "1" (fun () ->
       Pulse.Checker.Abs.check_abs g body Pulse.Checker.check
@@ -218,10 +218,10 @@ let main' (d:decl) (pre:term) (g:RT.fstar_top_env) (expected_t:option term)
     | Some g ->
       if RU.debug_at_level (fstar_env g) "Pulse" then 
         T.print (Printf.sprintf "About to check pulse decl:\n%s\n" (P.decl_to_string d));
-      let (| pre, ty, pre_typing |) = Pulse.Checker.Pure.compute_tot_term_type g pre in
+      let (| pre, ty |) = Pulse.Checker.Pure.compute_tot_term_type g pre in
       if not (eq_tm ty tm_slprop) then
         fail g (Some (Pulse.RuntimeUtils.range_of_term pre)) "pulse main: cannot typecheck pre at type slprop"; //fix range
-      let pre_typing : tot_typing g pre tm_slprop = pre_typing in
+      let pre_typing : tot_typing g pre tm_slprop = () in
       match d.d with
       | FnDefn {} -> check_fndefn d g expected_t pre pre_typing
       | FnDecl {} ->

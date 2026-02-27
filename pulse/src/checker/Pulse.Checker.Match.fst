@@ -278,7 +278,7 @@ let check_branch
   let pre_typing = tot_typing_weakening_n pulse_bs pre_typing in // weaken w/ binders
   let pre_typing = Pulse.Typing.Metatheory.tot_typing_weakening_single _ _ _ pre_typing hyp_var eq_typ in // weaken w/ branch eq
 
-  let (| e, c, e_d |) =
+  let (| e, c |) =
     let ppname = mk_ppname_no_range "_br" in
     let r = check g' pre pre_typing (PostHint post_hint) ppname e in
     apply_checker_result_k r ppname in
@@ -531,7 +531,7 @@ let check
   let orig_brs = brs in
   let nbr = L.length brs in
 
-  let (| sc, sc_u, sc_ty, sc_ty_typing, sc_typing |) = compute_tot_term_type_and_u g sc in
+  let (| sc, sc_u, sc_ty |) = compute_tot_term_type_and_u g sc in
   let elab_pats = L.map elab_pat (L.map patof brs) in
 
   assertby (L.length elab_pats == L.length brs) (fun () ->
@@ -579,5 +579,5 @@ let check
   let c_typing = comp_typing_from_post_hint c pre_typing post_hint in
   let t = wtag (Some (ctag_of_comp_st c)) (Tm_Match {sc; returns_=None; brs}) in
   let d : st_typing g t c = () in
-  checker_result_for_st_typing (| t, c, d |) res_ppname
+  checker_result_for_st_typing (| t, c |) res_ppname
 #pop-options

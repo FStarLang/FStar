@@ -35,10 +35,10 @@ val instantiate_term_implicits_uvs (g:env) (t:term)
   : T.Tac (uvs:env { disjoint g uvs } & term & term)  // uvs
 
 val universe_of_well_typed_term (g:env) (t:term)
-  : T.Tac (u:universe & universe_of g t u)
+  : T.Tac universe
 
 val check_universe (g:env) (t:term)
-  : T.Tac (u:universe & universe_of g t u)
+  : T.Tac universe
 
 val compute_term_type (g:env) (t:term)
   : T.Tac (t:term &
@@ -50,7 +50,7 @@ val compute_term_type_and_u (g:env) (t:term)
   : T.Tac (t:term  &
            eff:T.tot_or_ghost &
            ty:term &
-           (u:universe & universe_of g ty u) &
+           universe &
            typing g t eff ty)
 
 val check_term (g:env) (e:term) (eff:T.tot_or_ghost) (t:term)
@@ -101,14 +101,12 @@ val check_prop_validity (g:env) (p:term) (_:tot_typing g p tm_prop)
   : T.Tac (Pulse.Typing.prop_validity g p)
 
 val compute_tot_term_type (g:env) (t:term)
-  : T.Tac (t:term & ty:typ & tot_typing g t ty)
+  : T.Tac (t:term & ty:typ)
 
 val compute_tot_term_type_and_u (g:env) (t:term)
   : T.Tac (t:term &
            u:universe &
-           ty:typ &
-           universe_of g ty u &
-           tot_typing g t ty)
+           ty:typ)
 
 val check_tot_term (g:env) (e:term) (t:term)
   : T.Tac (e:term &

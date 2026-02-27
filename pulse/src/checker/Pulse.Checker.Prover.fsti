@@ -43,6 +43,6 @@ val prove_post_hint (#g:env) (#ctxt:slprop) (r:checker_result_t g ctxt NoHint) (
 
 val try_frame_pre (allow_ambiguous : bool) (#g:env)
     (#ctxt:slprop) (ctxt_typing:tot_typing g ctxt tm_slprop)
-    (d:(t:st_term & c:comp_st & st_typing g t c))
+    (d:(t:st_term & c:comp_st))
     (res_ppname:ppname) :
   T.Tac (checker_result_t g ctxt NoHint)

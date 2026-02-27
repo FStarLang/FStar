@@ -42,7 +42,7 @@ let rt_equiv_typing (#g:_) (#t0 #t1:_) (d:RT.equiv g t0 t1)
 
 val st_typing_correctness_ctot (g:env) (t:st_term) (c:comp{C_Tot? c}) 
                                (_:st_typing g t c)
-  : (u:Ghost.erased universe & universe_of g (comp_res c) u)
+  : Ghost.erased universe
 
 let inames_of_comp_st (c:comp_st) =
   match c with

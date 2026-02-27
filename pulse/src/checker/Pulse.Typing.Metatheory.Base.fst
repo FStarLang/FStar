@@ -31,10 +31,9 @@ let admit_comp_typing (g:env) (c:comp_st)
 
 let st_typing_correctness_ctot (g:env) (t:st_term) (c:comp{C_Tot? c}) 
                                (_:st_typing g t c)
-: (u:Ghost.erased universe & universe_of g (comp_res c) u)
+: Ghost.erased universe
 = let u : Ghost.erased universe = RU.magic () in
-  let ty : universe_of g (comp_res c) u = () in
-  (| u, ty |)    
+  u
 
 let st_typing_correctness (g:env) (t:st_term) (c:comp_st) 
                           (_:st_typing g t c)
@@ -84,8 +83,7 @@ let non_informative_t_weakening (g g':env) (g1:env{ pairwise_disjoint g g1 g' })
   (u:universe) (t:term)
   (d:non_informative_t (push_env g g') u t)
   : non_informative_t (push_env (push_env g g1) g') u t =
-  let (| w, _ |) = d in
-  (| w, () |)
+  d
 
 let non_informative_c_weakening (g g':env) (g1:env{ pairwise_disjoint g g1 g' })
   (c:comp_st)

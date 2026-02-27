@@ -39,7 +39,7 @@ let rec close_post x_ret dom_g g1 (bs1:env_bindings) (post:slprop)
     if not (y `Set.mem` freevars post) then post
     else (
       let b = {binder_ty=ty; binder_ppname=n; binder_attrs=Sealed.seal []} in
-      let (| u, _ |) = Pulse.Checker.Pure.universe_of_well_typed_term g1 ty in
+      let u = Pulse.Checker.Pure.universe_of_well_typed_term g1 ty in
       tm_exists_sl u b (close_term post y)
     )
   in
@@ -122,7 +122,7 @@ let infer_post' (g:env) (g':env { g' `env_extends` g })
           Pulse.PP.text " that escape its environment"]
   in
   let mk_post_hint (post:term) : T.Tac (p:post_hint_for_env g {p.g==g /\ p.effect_annot == EffectAnnotSTT }) = 
-    let (| u, ty_typing |) = Pulse.Checker.Pure.check_universe g t in
+    let u = Pulse.Checker.Pure.check_universe g t in
     let x = fresh g in
     let post' = open_term_nv post (ppname_default, x) in 
     let g' = push_binding g x ppname_default t in
@@ -131,7 +131,7 @@ let infer_post' (g:env) (g':env { g' `env_extends` g })
     assume (fresh_wrt x g (freevars post));
     {
       g; effect_annot=EffectAnnotSTT; effect_annot_typing=();
-      ret_ty=t; u; ty_typing;
+      ret_ty=t; u; ty_typing=();
       post; x; post_typing_src
     }
   in
@@ -354,9 +354,9 @@ let join_post #g #hyp #b
   let x = fresh g in
   let g' = push_binding g x ppname_default p1.ret_ty in
   let p1_post = open_term_nv p1.post (ppname_default, x) in
-  let (| p1_post, _ |) = normalize_slprop g' p1_post true in
+  let p1_post = normalize_slprop g' p1_post true in
   let p2_post = open_term_nv p2.post (ppname_default, x) in
-  let (| p2_post, _ |) = normalize_slprop g' p2_post true in
+  let p2_post = normalize_slprop g' p2_post true in
   let joined_post = join_slprop g' b [] [] p1_post p2_post in
   let joined_post = close_term joined_post x in
   Pulse.Checker.Util.debug g "pulse.join_comp" (fun _ ->
@@ -364,13 +364,13 @@ let join_post #g #hyp #b
       (T.term_to_string joined_post)
   );
   assume (fresh_wrt x g (freevars joined_post));
-  let (| u, ty_typing |) = Pulse.Checker.Pure.check_universe g p1.ret_ty in
+  let u = Pulse.Checker.Pure.check_universe g p1.ret_ty in
   let joined_post' = open_term_nv joined_post (ppname_default, x) in 
   let post_typing_src = Pulse.Checker.Pure.check_slprop_with_core g' joined_post' in
   let (| eff, eff_ty |) = join_effect_annot g p1.effect_annot p2.effect_annot in
   let res : post_hint_for_env g =
     {g; effect_annot=eff; effect_annot_typing=eff_ty;
-     ret_ty=p1.ret_ty; u=u; ty_typing; x;
+     ret_ty=p1.ret_ty; u=u; ty_typing=(); x;
      post=joined_post; post_typing_src}
   in
   res

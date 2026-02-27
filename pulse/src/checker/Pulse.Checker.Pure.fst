@@ -304,8 +304,8 @@ let instantiate_term_implicits_uvs (g:env) (t0:term) (inst_extra:bool) =
     (fun _ -> instantiate_term_implicits_uvs' g t0 inst_extra)
 
 let check_universe_aux (g:env) (t:term) (t_well_typed:bool)
-  : T.Tac (u:universe & universe_of g t u)
-  = let aux () : T.Tac (u:universe & universe_of g t u) =
+  : T.Tac universe
+  = let aux () : T.Tac universe =
       let rng, f = elab_env_with_term_range g t in
       let ru_opt, issues = catch_all (fun _ -> if t_well_typed then universe_of_well_typed_term_internal g f t else rtb_universe_of g f t) in
       match ru_opt with
@@ -317,7 +317,7 @@ let check_universe_aux (g:env) (t:term) (t_well_typed:bool)
             FStar.Squash.get_proof _
         in
         let proof : RT.typing f t (E_Total, R.pack_ln (R.Tv_Type ru)) = RT.T_Token _ _ _ proof in
-        (| ru, () |)
+        ru
     in
     RU.record_stats "check_universe" aux
 
@@ -362,7 +362,7 @@ let compute_term_type_and_u (g:env) (t:term)
     : T.Tac (t:term &
            eff:T.tot_or_ghost &
            ty:term &
-           (u:universe & universe_of g ty u) &
+           universe &
            typing g t eff ty)
     = let rng, fg = elab_env_with_term_range g t in
       let res, issues = tc_meta_callback g fg t in
@@ -370,8 +370,8 @@ let compute_term_type_and_u (g:env) (t:term)
       | None ->
         fail_doc_with_subissues g (Some rng) issues (ill_typed_term t None None)
       | Some (| rt, eff, ty', tok |) ->
-        let (| u, uty |) = check_universe_aux g ty' true in //ty' is well-typed; we just need to find its universe
-        (| rt, eff, ty', (| u, uty |), () |)
+        let u = check_universe_aux g ty' true in //ty' is well-typed; we just need to find its universe
+        (| rt, eff, ty', u, () |)
     in
     RU.record_stats "Pulse.compute_term_type_and_u" aux
 
@@ -602,7 +602,7 @@ let try_get_non_informative_witness_aux (g:env) (u:universe) (ty:term) (ty_typin
       let r_dict_typing_token : squash (typing_token r_env r_dict (E_Total, goal)) = () in
       let r_dict_typing : RT.typing r_env r_dict (E_Total, goal) = RT.T_Token _ _ _ () in
       let dict_typing : tot_typing g dict (non_informative_class u ty) = () in
-      Some (| dict, dict_typing |), issues
+      Some dict, issues
     )
 
 let try_get_non_informative_witness g u ty ty_typing =
@@ -651,12 +651,12 @@ let fail_expected_tot_found_ghost (g:env) (t:term) =
 
 let compute_tot_term_type g t =
   let (| t, eff, ty, t_typing |) = compute_term_type g t in
-  if eff = T.E_Total then (| t, ty, t_typing |)
+  if eff = T.E_Total then (| t, ty |)
   else fail_expected_tot_found_ghost g t
 
 let compute_tot_term_type_and_u g t =
-  let (| t, eff, ty, (| u, ty_typing |), t_typing |) = compute_term_type_and_u g t in
-  if eff = T.E_Total then (| t, u, ty, ty_typing, t_typing |)
+  let (| t, eff, ty, u, t_typing |) = compute_term_type_and_u g t in
+  if eff = T.E_Total then (| t, u, ty |)
   else fail_expected_tot_found_ghost g t
 
 let check_tot_term g e t =

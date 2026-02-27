@@ -95,7 +95,7 @@ let check
       let ty = binder.binder_ty in
       match inspect_term ty, init with
       | Tm_Unknown, Some init ->
-        let (| init, init_u, init_t, init_t_typing, init_typing |) =
+        let (| init, init_u, init_t |) =
           compute_tot_term_type_and_u g init
         in
         // Remove any refinements from this inferred type. The Core typechecker
@@ -107,9 +107,9 @@ let check
 
       | _, Some init ->
         let ty, _ = tc_type_phase1 g ty in
-        let (| u, ty_typing |) = check_universe g ty in
+        let u = check_universe g ty in
         let (| init, init_typing |) = check_term g init T.E_Total ty in
-        let ty_typing : universe_of g ty u = ty_typing in
+        let ty_typing : universe_of g ty u = () in
         let init_typing : typing g init T.E_Total ty = init_typing in
         (| Some init, u, ty, ty_typing, init_typing |)
 
@@ -119,8 +119,8 @@ let check
 
       | _, None ->
         let ty, _ = tc_type_phase1 g ty in
-        let (| u, ty_typing |) = check_universe g ty in
-        let ty_typing : universe_of g ty u = ty_typing in
+        let u = check_universe g ty in
+        let ty_typing : universe_of g ty u = () in
         (| None, u, ty, ty_typing, () |)
     in
     if not (eq_univ init_u u0)
@@ -146,7 +146,7 @@ let check
           let body_post : post_hint_for_env g_extended = extend_post_hint_for_local g post init_t x binder.binder_ppname in
           let r = check g_extended body_pre body_pre_typing (PostHint body_post) binder.binder_ppname (open_st_term_nv body px) in
           let r: checker_result_t g_extended body_pre (PostHint body_post) = r in
-          let (| opened_body, c_body, body_typing |) = apply_checker_result_k #g_extended #body_pre #body_post r binder.binder_ppname in
+          let (| opened_body, c_body |) = apply_checker_result_k #g_extended #body_pre #body_post r binder.binder_ppname in
           let body = close_st_term opened_body x in
           assume (open_st_term (close_st_term opened_body x) x == opened_body);
           let c = C_ST {u=comp_u c_body;res=comp_res c_body;pre;post=post.post} in
@@ -160,5 +160,5 @@ let check
           assert (freshv g x);
           assert (~(Set.mem x (freevars_st body)));
           let st = wrst c (Tm_WithLocal { binder = mk_binder_ppname (mk_ref init_t) binder.binder_ppname; initializer=init; body }) in
-          checker_result_for_st_typing (| st, c, () |) res_ppname
+          checker_result_for_st_typing (| st, c |) res_ppname
 #pop-options

@@ -119,7 +119,7 @@ let intro_post_hint g effect_annot ret_ty_opt post =
       | Some t -> t
   in
   let ret_ty, _ = CP.instantiate_term_implicits g ret_ty None false in
-  let (| u, ty_typing |) = CP.check_universe g ret_ty in
+  let u = CP.check_universe g ret_ty in
   let (| post, post_typing |) = CP.check_slprop (push_binding g x ppname_default ret_ty) (open_term_nv post (v_as_nv x)) in 
   let post' = close_term post x in
   Pulse.Typing.FV.freevars_close_term post x 0;
@@ -128,7 +128,7 @@ let intro_post_hint g effect_annot ret_ty_opt post =
   { g;
     effect_annot;
     effect_annot_typing;
-    ret_ty; u; ty_typing;
+    ret_ty; u; ty_typing=();
     post=post';
     x; post_typing_src=post_typing }
 
@@ -282,11 +282,9 @@ let k_elab_equiv_continuation (#g1:env) (#g2:env { g2 `env_extends` g1 }) (#ctxt
   (d:slprop_equiv g2 ctxt1 ctxt2)
   : continuation_elaborator g1 ctxt g2 ctxt2 =
   fun post_hint res ->
-    let (| st, c, st_d |) = res in
-    let st_d : st_typing g2 st c = st_d in
+    let (| st, c |) = res in
     assert (comp_pre c == ctxt2);
-    let st_d' : st_typing g2 st (comp_with_pre c ctxt1) = st_equiv_pre st_d _ () in
-    k post_hint (| st, comp_with_pre c ctxt1, st_d' |)
+    k post_hint (| st, comp_with_pre c ctxt1 |)
 
 let slprop_equiv_typing_fwd (#g:env) (#ctxt:_) (ctxt_typing:tot_typing g ctxt tm_slprop)
                            (p:_) (d:slprop_equiv g ctxt p)
@@ -301,13 +299,12 @@ let k_elab_equiv_prefix
   : continuation_elaborator g1 ctxt2 g2 ctxt =
   fun post_hint res ->
   let framing_token : frame_for_req_in_ctxt g1 ctxt2 ctxt1 = 
-  let d = () in
-    (| tm_emp, emp_typing, d |)
+    tm_emp
   in
   let res = k post_hint res in
-  let (| st, c, st_d |) = res in
+  let (| st, c |) = res in
   assert (comp_pre c == ctxt1);
-  (| st, comp_with_pre c ctxt2, st_equiv_pre st_d ctxt2 d |)
+  (| st, comp_with_pre c ctxt2 |)
 
 let k_elab_equiv
   (#g1:env) (#g2:env { g2 `env_extends` g1 }) (#ctxt1 #ctxt2:term) (ctxt1' ctxt2':term)                 
@@ -343,16 +340,16 @@ let continuation_elaborator_with_bind' (#g:env) (ctxt:term)
   // let p_prop = Metatheory.pure_typing_inversion pure_typing in
   let v_eq = () in
   let framing_token : frame_for_req_in_ctxt g (tm_star ctxt pre1) pre1 = 
-    (| ctxt, ctxt_typing, () |)
+    ctxt
   in
   Pulse.Checker.Prover.Util.debug_prover g (fun _ ->
     Printf.sprintf "Applying frame %s to computation %s\n"
       (show ctxt)
       (show c1));
-  let (| c1, e1_typing |) =
+  let c1 =
     apply_frame g e1 (tm_star ctxt pre1) ctxt_pre1_typing c1 e1_typing framing_token in
   let (| u_of_1, pre_typing, _, _ |) = 
-    Metatheory.(st_comp_typing_inversion g (st_comp_of_comp c1) (fst <| comp_typing_inversion g c1 (st_typing_correctness g e1 c1 e1_typing))) in
+    Metatheory.(st_comp_typing_inversion g (st_comp_of_comp c1) (fst <| comp_typing_inversion g c1 (st_typing_correctness g e1 c1 ()))) in
   let b = res1 in
   let ppname, x = x in
   let g' = push_binding g x ppname b in
@@ -360,9 +357,8 @@ let continuation_elaborator_with_bind' (#g:env) (ctxt:term)
   let post1_opened = open_term_nv post1 (v_as_nv x) in
   let k : continuation_elaborator g (tm_star ctxt pre1) g' (tm_star post1_opened ctxt) =
     fun post_hint res ->
-    let (| e2, c2, e2_typing |) = res in
+    let (| e2, c2 |) = res in
     assert (comp_post_matches_hint c2 post_hint);
-    let e2_typing : st_typing g' e2 c2 = e2_typing in
     let e2_closed = close_st_term e2 x in
     assume (open_st_term e2_closed x == e2);
     assert (comp_pre c1 == (tm_star ctxt pre1));
@@ -377,7 +373,7 @@ let continuation_elaborator_with_bind' (#g:env) (ctxt:term)
     if x `Set.mem` freevars (RU.deep_compress_safe (comp_post c2))
     then fail g' None ("Impossible: freevar clash when constructing continuation elaborator for bind, please file a bug-report" ^ show (comp_post c2))
     else (
-      let t_typing, post_typing =
+      let _ =
         RU.record_stats "bind_res_and_post_typing" fun _ ->
         Pulse.Typing.Combinators.bind_res_and_post_typing g c2 x post_hint in
       let g = push_context g "mk_bind" e1.range in
@@ -387,17 +383,17 @@ let continuation_elaborator_with_bind' (#g:env) (ctxt:term)
       //    prefix 4 1 (doc_of_string "mk_bind e2 = ") (doc_of_string (Pulse.Syntax.Printer.st_term_to_string e2));
       //    prefix 4 1 (doc_of_string "mk_bind c2 = ") (pp #comp c2)]
       // ;
-      let (| e, c, e_typing |) =
+      let (| e, c |) =
         Pulse.Typing.Combinators.mk_bind
           g (tm_star ctxt pre1) 
           e1 e2_closed c1 c2 (ppname, x) e1_typing
           u_of_1 
-          e2_typing
-          t_typing
-          post_typing
+          ()
+          ()
+          ()
           post_hint
       in
-      (| e, c, e_typing |)
+      (| e, c |)
     )
   in
   k
@@ -482,16 +478,15 @@ let continuation_elaborator_with_bind_fn (#g:env) (ctxt:term)
           (push_binding g (snd x) ppname_default (comp_res c1)) ctxt)
 = let t1 = comp_res c1 in
   assert ((push_binding g (snd x) (fst x) t1) `env_extends` g);
-  fun post_hint (| e2, c2, d2 |) ->
+  fun post_hint (| e2, c2 |) ->
     if not (PostHint? post_hint) then T.fail "bind_fn: expects the post_hint to be set";
     let ppname, x = x in
     let e2_closed = close_st_term e2 x in
     assume (open_st_term (close_st_term e2 x) x == e2);
     let e = wrst c2 (Tm_Bind {binder=b; head=e1; body=e2_closed}) in
-    let (| u, _ |) = Pulse.Typing.Metatheory.Base.st_typing_correctness_ctot g e1 c1 e1_typing in
+    let u = Pulse.Typing.Metatheory.Base.st_typing_correctness_ctot g e1 c1 e1_typing in
     let c2_typing : comp_typing g c2 (universe_of_comp c2) = () in
-    let d : st_typing g e c2 = () in
-    (| e, c2, d |)
+    (| e, c2 |)
 
 let rec check_equiv_emp (g:env) (vp:term)
   : option (slprop_equiv g vp tm_emp)
@@ -537,32 +532,31 @@ let return_in_ctxt (g:env) (y:var) (y_ppname:ppname) (u:universe) (ty:term) (ctx
     let pht = post_hint_typing g post_hint x in
     let validity = emp_inames_included g opens pht.effect_annot_typing in
     let c' = C_STAtomic opens obs st in
-    (| t, c', () |)
+    (| t, c' |)
   | C_STGhost _ st, EffectAnnotGhost { opens }
   | C_STGhost _ st, EffectAnnotAtomicOrGhost { opens } ->
     assert (comp_inames c == tm_emp_inames);
     let pht = post_hint_typing g post_hint x in
     let validity = emp_inames_included g opens pht.effect_annot_typing in
     let c' = C_STGhost opens st in
-    (| t, c', () |)
+    (| t, c' |)
   | _ -> 
-    (| t, c, d |)
+    (| t, c |)
 
 #push-options "--z3rlimit_factor 4 --ifuel 1 --split_queries always"
 #restart-solver
 let match_comp_res_with_post_hint (#g:env) (t:st_term) (c:comp_st)
   (d:st_typing g t c)
   (post_hint:post_hint_opt g)
-  : T.Tac (c':comp_st { comp_pre c' == comp_pre c } &
-           st_typing g t c') =
+  : T.Tac (c':comp_st { comp_pre c' == comp_pre c }) =
 
   match post_hint with
-  | NoHint -> (| c, d |)
+  | NoHint -> c
   | TypeHint ret_ty
   | PostHint { ret_ty } ->
     let cres = comp_res c in
     if eq_tm cres ret_ty
-    then (| c, d |)
+    then c
     else match Pulse.Typing.Util.check_equiv_now (elab_env g) cres ret_ty with
          | None, issues ->
            let open Pulse.PP in
@@ -578,7 +572,7 @@ let match_comp_res_with_post_hint (#g:env) (t:st_term) (c:comp_st)
            let c' = with_st_comp c {(st_comp_of_comp c) with res = ret_ty } in
            let d_stequiv : st_equiv g c c' = () in
 
-           (| c', Pulse.Typing.Combinators.t_equiv g t c d c' d_stequiv |)
+           c'
 #pop-options
 #pop-options
 
@@ -588,12 +582,12 @@ let apply_checker_result_k (#g:env) (#ctxt:slprop) (#post_hint:post_hint_for_env
   : T.Tac (st_typing_in_ctxt g ctxt (PostHint post_hint)) =
 
   // TODO: FIXME add to checker result type?
-  let (| y, g1, (| u_ty, ty_y, d_ty_y |), (| pre', _ |), k |) = r in
+  let (| y, g1, (u_ty, ty_y), pre', k |) = r in
 
-  let (| u_ty_y, d_ty_y |) = Pulse.Checker.Pure.universe_of_well_typed_term g1 ty_y in
+  let u_ty_y = Pulse.Checker.Pure.universe_of_well_typed_term g1 ty_y in
 
   let d : st_typing_in_ctxt g1 pre' (PostHint post_hint) =
-    return_in_ctxt g1 y res_ppname u_ty_y ty_y pre' d_ty_y (PostHint post_hint) in
+    return_in_ctxt g1 y res_ppname u_ty_y ty_y pre' () (PostHint post_hint) in
 
   k (PostHint post_hint) d
 
@@ -603,34 +597,34 @@ let checker_result_for_st_typing (#g:env) (#ctxt:slprop) (#post_hint:post_hint_o
   (d:st_typing_in_ctxt g ctxt post_hint)
   (ppname:ppname)
 : T.Tac (checker_result_t g ctxt post_hint)
-= let (| e1, c1, d1 |) = d in
+= let (| e1, c1 |) = d in
   let x = fresh g in
   assume (~ (x `Set.mem` freevars (comp_post c1)));
   let u_of_1, pre_typing, post_typing = 
-    Metatheory.(st_comp_typing_inversion_with_name g (st_comp_of_comp c1) (fst <| comp_typing_inversion g c1 (st_typing_correctness g e1 c1 d1)) x) in
+    Metatheory.(st_comp_typing_inversion_with_name g (st_comp_of_comp c1) (fst <| comp_typing_inversion g c1 (st_typing_correctness g e1 c1 ())) x) in
   let g' = push_binding g x ppname (comp_res c1) in
   let ctxt' = open_term_nv (comp_post c1) (ppname, x) in
   let k
     : continuation_elaborator g (comp_pre c1) g' ctxt'
     = fun post_hint st_k ->
-        let (| e2, c2, d2 |) = st_k in
+        let (| e2, c2 |) = st_k in
         let e2_closed = close_st_term e2 x in
         assume (open_st_term e2_closed x == e2);
         if x `Set.mem` freevars (comp_post c2)
         then fail g None "Impossible: freevar clash when constructing continuation elaborator for bind, please file a bug-report"
         else (
-          let t_typing, post_typing =
+          let _ =
             Pulse.Typing.Combinators.bind_res_and_post_typing g c2 x post_hint in
-          let (| ee, cc, ee_typing |) =
+          let (| ee, cc |) =
             Pulse.Typing.Combinators.mk_bind
               g (comp_pre c1)
               e1 e2_closed c1 c2 (ppname, x)
-              d1 u_of_1
-              d2 t_typing
-              post_typing 
+              () u_of_1
+              () ()
+              () 
               post_hint
           in
-          (| ee, cc, ee_typing |)
+          (| ee, cc |)
         )
   in
   let _ : squash (checker_res_matches_post_hint g post_hint x (comp_res c1) ctxt') =
@@ -641,7 +635,7 @@ let checker_result_for_st_typing (#g:env) (#ctxt:slprop) (#post_hint:post_hint_o
   assert (g' `env_extends` g);
   let u_of_1_g' : universe_of g' (comp_res c1) (comp_u c1) = () in
   assert (~ (x `Set.mem` freevars (comp_post c1)));
-  (| x, g', (| comp_u c1, comp_res c1, u_of_1_g' |), (| ctxt', post_typing |), k |)
+  (| x, g', (comp_u c1, comp_res c1), ctxt', k |)
 #pop-options
 
 let readback_comp_res_as_comp (c:T.comp) : option comp =
@@ -718,7 +712,7 @@ let checker_result_t_equiv_ctxt (g:env) (ctxt ctxt' : slprop)
   (r : checker_result_t g ctxt post_hint)
 : checker_result_t g ctxt' post_hint
 = let (| x, g1, t, ctxt_r, k |) = r in
-  (| x, g1, t, ctxt_r, k_elab_equiv ctxt' (dfst ctxt_r) k equiv () |)
+  (| x, g1, t, ctxt_r, k_elab_equiv ctxt' ctxt_r k equiv () |)
 
 module RU = Pulse.RuntimeUtils  
 let as_stateful_application (e:term) (head:term) (args:list T.argv { Cons? args })
@@ -1034,7 +1028,7 @@ let compose_checker_result_t
   (r1:checker_result_t g ctxt NoHint)
   (r2:checker_result_t g' ctxt' post_hint { composable r1 r2 })
 : T.Tac (checker_result_t g ctxt post_hint)
-= let (| x1, g1, t1, (| _, ctxt'_typing |), k1 |) = r1 in
+= let (| x1, g1, t1, ctxt1, k1 |) = r1 in
   let (| x2, g2, t2, ctxt2, k2 |) = r2 in
   let k = k_elab_trans k1 k2 in
   (| x2, g2, t2, ctxt2, k |)

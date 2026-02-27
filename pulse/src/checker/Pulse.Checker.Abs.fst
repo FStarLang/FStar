@@ -399,13 +399,13 @@ let maybe_rewrite_body_typing
       (#g:_) (#e:st_term) (#c:comp)
       (d:st_typing g e c)
       (asc:comp_ascription)
-  : T.Tac (c':comp & st_typing g e c')
+  : T.Tac comp
   = let open Pulse.PP in
     match asc.annotated, c with
-    | None, _ -> (| c, d |)
+    | None, _ -> c
     | Some (C_Tot t), C_Tot t' -> (
         let t, _ = Pulse.Checker.Pure.instantiate_term_implicits g t None false in
-        let (| u, t_typing |) = Pulse.Checker.Pure.check_universe g t in
+        let u = Pulse.Checker.Pure.check_universe g t in
         match T.t_check_equiv true true (elab_env g) t t' with
         | None, _ ->
           Env.fail_doc g (Some e.range) [
@@ -426,7 +426,7 @@ let maybe_rewrite_body_typing
           let tok' : st_equiv g (C_Tot t') (C_Tot t) =
             ()
           in
-          (| C_Tot t, () |)
+          C_Tot t
     )
 
     (* c is not a C_Tot *)
@@ -455,15 +455,15 @@ let rec check_abs_core
   (g:env)
   (t:st_term{Tm_Abs? t.term})
   (check:check_t)
-  : T.Tac (t:st_term & c:comp & st_typing g t c) =
+  : T.Tac (t:st_term & c:comp) =
   //warn g (Some t.range) (Printf.sprintf "check_abs_core, t = %s" (P.st_term_to_string t));
   let range = t.range in
   match t.term with  
   | Tm_Abs { b = {binder_ty=t;binder_ppname=ppname;binder_attrs}; q=qual; ascription=asc; body } -> //pre=pre_hint; body; ret_ty; post=post_hint_body } ->
     let qual = T.map_opt (check_qual g) qual in
     (*  (fun (x:t) -> {pre_hint} body : t { post_hint } *)
-    let (| t, _, _ |) = compute_tot_term_type g t in //elaborate it first
-    let (| u, t_typing |) = universe_of_well_typed_term g t in //then check that its universe ... We could collapse the two calls
+    let (| t, _ |) = compute_tot_term_type g t in //elaborate it first
+    let u = universe_of_well_typed_term g t in //then check that its universe ... We could collapse the two calls
     let x = fresh g in
     let px = ppname, x in
     let var = tm_var {nm_ppname=ppname;nm_index=x} in
@@ -473,25 +473,20 @@ let rec check_abs_core
     match body_opened.term with
     | Tm_Abs _ ->
       (* Check the opened body *)
-      let (| body, c_body, body_typing |) = check_abs_core g' body_opened check in
+      let (| body, c_body |) = check_abs_core g' body_opened check in
 
       (* First lift into annotated effect *)
-      let (| c_body, body_typing |) : ( c_body:comp & st_typing g' body c_body ) =
+      let c_body : comp =
         match sub_effect_comp g' body.range asc c_body with
-        | None -> (| c_body, body_typing |)
-        | Some (| c_body, lift |) ->
-          let body_typing : st_typing g' body c_body = () in
-          (| c_body, body_typing |)
+        | None -> c_body
+        | Some (| c_body, lift |) -> c_body
       in
 
       (* Check if it matches annotation (if any, likely not), and adjust derivation
       if needed. Currently this only subtypes the invariants. *)
       let (| c_body, d_sub |) = check_effect_annotation g' body.range asc c_body in
       let body_typing : st_typing g' body c_body = () in
-      (* Similar to above, fixes the type of the computation if we need to match
-      its annotation. TODO: merge these two by adding a tot subtyping (or equiv)
-      case to the st_sub judg. *)
-      let (| c_body, body_typing |) = maybe_rewrite_body_typing body_typing asc in
+      let c_body = maybe_rewrite_body_typing body_typing asc in
 
       FV.st_typing_freevars g' body c_body body_typing;
       let body_closed = close_st_term body x in
@@ -507,8 +502,7 @@ let rec check_abs_core
       let b = {binder_ty=t;binder_ppname=ppname;binder_attrs} in
       let tres = tm_arrow {binder_ty=t;binder_ppname=ppname;binder_attrs} qual (close_comp c_body x) in
       let abs_st = wtag None (Tm_Abs { b; q=qual; body=body_closed; ascription=empty_ascription}) in
-      let tt : st_typing g abs_st (C_Tot tres) = () in
-      (| abs_st, C_Tot tres, tt |)
+      (| abs_st, C_Tot tres |)
     | _ ->
       let elab_c, pre_opened, inames_opened, ret_ty, post_hint_body =
         match asc.elaborated with
@@ -583,25 +577,23 @@ let rec check_abs_core
           let r = Pulse.Checker.Prover.prove_post_hint r (PostHint ph) (T.range_of_term t) in
           (| PostHint ph, r |)
       in
-      let (| body, c_body, body_typing |) : st_typing_in_ctxt g' pre_opened post =
+      let (| body, c_body |) : st_typing_in_ctxt g' pre_opened post =
         RU.record_stats "apply_checker_result_k" fun _ ->
         apply_checker_result_k #_ #_ #(PostHint?.v post) r ppname_ret in
 
       let c_opened : comp_ascription = { annotated = None; elaborated = Some (open_comp_nv elab_c px) } in
 
       (* First lift into annotated effect *)
-      let (| c_body, body_typing |) : ( c_body:comp & st_typing g' body c_body ) =
+      let c_body : comp =
         match sub_effect_comp g' body.range c_opened c_body with
-        | None -> (| c_body, body_typing |)
-        | Some (| c_body, lift |) ->
-          let body_typing : st_typing g' body c_body = () in
-          (| c_body, body_typing |)
+        | None -> c_body
+        | Some (| c_body, lift |) -> c_body
       in
 
       let (| c_body, d_sub |) = check_effect_annotation g' body.range c_opened c_body in
       let body_typing : st_typing g' body c_body = () in
 
-      let (| c_body, body_typing |) = maybe_rewrite_body_typing body_typing asc in
+      let c_body = maybe_rewrite_body_typing body_typing asc in
 
       FV.st_typing_freevars g' body c_body body_typing;
       let body_closed = close_st_term body x in
@@ -609,12 +601,11 @@ let rec check_abs_core
       let b = {binder_ty=t;binder_ppname=ppname;binder_attrs} in
       let tres = tm_arrow {binder_ty=t;binder_ppname=ppname;binder_attrs} qual (close_comp c_body x) in
       let abs_st = wtag None (Tm_Abs { b; q=qual; body=body_closed; ascription=empty_ascription}) in
-      let tt : st_typing g abs_st (C_Tot tres) = () in
 
-      (| abs_st, C_Tot tres, tt |)
+      (| abs_st, C_Tot tres |)
 #pop-options
 
 let check_abs (g:env) (t:st_term{Tm_Abs? t.term}) (check:check_t)
-  : T.Tac (t:st_term & c:comp & st_typing g t c) =
+  : T.Tac (t:st_term & c:comp) =
   let t = preprocess_abs g t in
   check_abs_core g t check

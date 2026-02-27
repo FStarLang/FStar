@@ -34,7 +34,7 @@ let check (g:env)
                                     comp_res c == st.res /\
                                     comp_post c == st.post } )
       : T.Tac (st_comp_typing g st)
-      = let (| u, t_u |) = check_universe g st.res in 
+      = let u = check_universe g st.res in 
         if not (eq_univ u (comp_u c))
         then fail g None
               (Printf.sprintf "check_comp: computed universe of %s as %s, whereas annotated as %s"

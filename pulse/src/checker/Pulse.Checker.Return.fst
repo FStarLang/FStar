@@ -65,9 +65,9 @@ type result_of_typing (g:env) =
 let compute_tot_or_ghost_term_type_and_u (g:env) (e:term) (c:option ctag)
 : T.Tac (result_of_typing g)
 = RU.with_error_bound (RU.range_of_term e) fun () -> // stopgap, ideally remove
-  let (| t, eff, ty, (| u, ud |), d |) = compute_term_type_and_u g e in
+  let (| t, eff, ty, u, d |) = compute_term_type_and_u g e in
   let (| c, e, d |) = check_effect d c in
-  R c e u ty ud d
+  R c e u ty () d
 
 #push-options "--z3rlimit_factor 16 --fuel 0 --ifuel 1 --split_queries no"
 #restart-solver
@@ -97,13 +97,13 @@ let check_core
         | NoHint -> None
         | TypeHint expected_type -> 
           let ty, _ = Pulse.Checker.Pure.instantiate_term_implicits g expected_type None false in
-          let (| u, d |) = check_universe g ty in
-          Some (| ty, u, d |)
+          let u = check_universe g ty in
+          Some (| ty, u, () |)
       )
       | _ ->
         let ty, _ = Pulse.Checker.Pure.instantiate_term_implicits g expected_type None false in
-        let (| u, d |) = check_universe g ty in
-        Some (| ty, u, d |)
+        let u = check_universe g ty in
+        Some (| ty, u, () |)
   in
   let R c t u ty uty d : result_of_typing g =
     match return_type with
@@ -138,12 +138,12 @@ let check_core
   let ret_st = wtag (Some c) (Tm_Return {expected_type=tm_unknown; insert_eq=use_eq; term=t}) in
   let ret_c = comp_return c use_eq u ty t post x in
   let d : st_typing g ret_st ret_c = () in
-  let (|c',d'|) = match_comp_res_with_post_hint ret_st ret_c d post_hint in
+  let c' = match_comp_res_with_post_hint ret_st ret_c d post_hint in
   Pulse.Checker.Util.debug g "pulse.return" (fun _ -> 
     Printf.sprintf "Return comp is: %s"
       (Pulse.Syntax.Printer.comp_to_string c'));
   prove_post_hint #g
-    (try_frame_pre false #g ctxt_typing (|ret_st,c',d'|) res_ppname)
+    (try_frame_pre false #g ctxt_typing (|ret_st,c'|) res_ppname)
     post_hint
     st.range
 #pop-options

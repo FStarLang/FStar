@@ -121,8 +121,8 @@ let check
       | Tm_Unknown ->
         (match initializer with
         | Some initializer ->
-          let (| init, init_u, init_t, init_t_typing, init_typing |) = compute_tot_term_type_and_u g initializer in
-          (| Some init, init_u, init_t, init_t_typing, init_typing |)
+          let (| init, init_u, init_t |) = compute_tot_term_type_and_u g initializer in
+          (| Some init, init_u, init_t, (), () |)
         | None ->
           fail g (Some <| head_range t)
             "allocating a local array: type must be specified when there is no initializer")
@@ -134,8 +134,8 @@ let check
             (Printf.sprintf "expected annotated type to be an array, found: %s"
               (P.term_to_string ty))
         | Some ty ->
-          let (| u, ty_typing |) = check_universe g ty in
-          let ty_typing : universe_of g ty u = ty_typing in
+          let u = check_universe g ty in
+          let ty_typing : universe_of g ty u = () in
           match initializer with
           | Some initializer ->
             let (| init, init_typing |) = check_term g initializer T.E_Total ty in
@@ -167,7 +167,7 @@ let check
         let post : post_hint_for_env g = post in
         assume ~(x `Set.mem` freevars post.post);
           let body_post = extend_post_hint g post init_t init x binder.binder_ppname in
-          let (| opened_body, c_body, body_typing |) =
+          let (| opened_body, c_body |) =
             let r =
               check g_extended body_pre body_pre_typing (PostHint body_post) binder.binder_ppname (open_st_term_nv body px) in
             apply_checker_result_k r binder.binder_ppname in
@@ -182,5 +182,5 @@ let check
               x post_typing_rec.post_typing
           in
           let st = wrst c (Tm_WithLocalArray { binder = mk_binder_ppname (mk_array init_t) binder.binder_ppname; initializer=init; length=len; body }) in
-          checker_result_for_st_typing (| st, c, () |) res_ppname
+          checker_result_for_st_typing (| st, c |) res_ppname
 #pop-options

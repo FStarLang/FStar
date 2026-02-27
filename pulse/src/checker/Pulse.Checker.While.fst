@@ -161,12 +161,12 @@ let check_while
     | None -> u0, tm_unit, unit_const, false
     | Some meas ->
       let meas' = purify_term g { ctxt_now = pre; ctxt_old = Some pre } meas in
-      let (| _, _, ty, (| u, _ |), _ |) = compute_term_type_and_u g meas' in
+      let (| _, _, ty, u, _ |) = compute_term_type_and_u g meas' in
       u, ty, meas, true
   in
   let inv_range = term_range inv in
   let g_meas = push_binding g (snd x_meas) (fst x_meas) ty_meas in
-  let inv = dfst <|
+  let inv =
     purify_and_check_spec (push_context "invariant" inv_range g_meas)
       { ctxt_now = pre; ctxt_old = Some pre }
       (inv `tm_star` tm_pure (mk_eq2 u_meas ty_meas (term_of_nvar x_meas) meas))
@@ -185,7 +185,7 @@ let check_while
     let r_cond = Pulse.Checker.Prover.prove_post_hint res_cond (PostHint ph) cond.range in
     (| ph, apply_checker_result_k r_cond ppname_default |)
   in
-  let (| cond, comp_cond, cond_typing |) = r_cond in
+  let (| cond, comp_cond |) = r_cond in
   if not (T.term_eq post_cond.ret_ty tm_bool)
   || not (T.univ_eq post_cond.u u0)
   then T.fail "Expected while condition to return a bool";
@@ -194,7 +194,7 @@ let check_while
   let (| break_pred, break_typ |) : t:term & tot_typing g0 t tm_slprop =
     match loop_ensures with
     | Some loop_ensures ->
-      let (| x_cond, g1', (| _, _, t_typ |), (| cond_post, _ |), k |) = res_cond in
+      let (| x_cond, g1', (_, _), cond_post, k |) = res_cond in
       let loop_ensures = 
         (mk_eq2 u0 tm_bool (term_of_nvar (ppname_default, x_cond)) tm_false
             `tm_l_and` loop_requires)
@@ -237,9 +237,9 @@ let check_while
   // lift post_cond across "g2 `env_extends` g1"
   let post_cond : post_hint_for_env g2 = assume post_hint_for_env_p g2 post_cond; post_cond in
   let r_cond : Pulse.Typing.Combinators.st_typing_in_ctxt g2 inv (PostHint post_cond) =
-    let (| t, c, typ |) = r_cond in
+    let (| t, c |) = r_cond in
     let typ : st_typing g2 t c = () in
-    (| t, c, typ |) in
+    (| t, c |) in
 
   let body_pre_open = post_cond.post in
   let body_post_typing : tot_typing g2 (comp_post (comp_while_body u_meas ty_meas is_tot x_meas inv body_pre_open)) tm_slprop = () in
@@ -255,8 +255,8 @@ let check_while
       (push_context "check_while_body" body.range g2) 
       (open_term' body_pre_open tm_true 0) body_pre_typing (PostHint body_ph) ppname_default body
   in
-  let (| cond, comp_cond, cond_typing |) = r_cond in
-  let (| body, comp_body, body_typing |) = apply_checker_result_k r_body ppname_default in
+  let (| cond, comp_cond |) = r_cond in
+  let (| body, comp_body |) = apply_checker_result_k r_body ppname_default in
   assert (comp_cond == (comp_while_cond inv body_pre_open));
   assert (comp_post comp_body == comp_post (comp_while_body u_meas ty_meas is_tot x_meas inv body_pre_open));
   assert (comp_pre comp_body == comp_pre (comp_while_body u_meas ty_meas is_tot x_meas inv body_pre_open));
@@ -274,7 +274,7 @@ let check_while
   let C_ST cst = comp_while u_meas ty_meas x_meas inv body_pre_open in
   let loop_pre = tm_exists_sl u_meas (as_binder ty_meas) (close_term inv (snd x_meas)) in
   assert comp_pre (comp_while u_meas ty_meas x_meas inv body_pre_open) == loop_pre;
-  let d_st : Pulse.Typing.Combinators.st_typing_in_ctxt g1' loop_pre NoHint = (| while, comp_while u_meas ty_meas x_meas inv body_pre_open, d |) in
+  let d_st : Pulse.Typing.Combinators.st_typing_in_ctxt g1' loop_pre NoHint = (| while, comp_while u_meas ty_meas x_meas inv body_pre_open |) in
   let res = checker_result_for_st_typing d_st ppname_default in
   assume (fresh_wrt x g0 (freevars break_pred));
   let post_hint_for_while : post_hint_for_env g0 = {
@@ -290,7 +290,7 @@ let check_while
     }
   in
   let res = prove_post_hint res (PostHint post_hint_for_while) t.range in
-  let (| while, while_comp, while_d |) = apply_checker_result_k res ppname_default in
+  let (| while, while_comp |) = apply_checker_result_k res ppname_default in
   assert post_hint_for_while.post == break_pred;
   assert post_hint_for_while.u == u0;
   assert post_hint_for_while.ret_ty == tm_unit;
@@ -307,12 +307,12 @@ let check_while
   let fjl_d: st_typing g0 fjl while_comp =
     () in
 
-  let d_st: Pulse.Typing.Combinators.st_typing_in_ctxt g0 loop_pre (TypeHint tm_unit) = (| fjl, while_comp, fjl_d |) in
+  let d_st: Pulse.Typing.Combinators.st_typing_in_ctxt g0 loop_pre (TypeHint tm_unit) = (| fjl, while_comp |) in
   let d_st: Pulse.Typing.Combinators.st_typing_in_ctxt g0 loop_pre0 (TypeHint tm_unit) =
-    let (| t, c, _ |) = d_st in
+    let (| t, c |) = d_st in
     let c = with_st_comp c { st_comp_of_comp c with pre = loop_pre0 } in
     let typ : st_typing g0 t c = () in
-    (| t, c, typ |) in
+    (| t, c |) in
 
   let d_st : Pulse.Typing.Combinators.st_typing_in_ctxt g pre NoHint = k NoHint d_st in
   let res = checker_result_for_st_typing d_st ppname_default in

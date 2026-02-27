@@ -44,7 +44,7 @@ let check_bind_fn
 = let Tm_Bind { binder; head; body } = t.term in
   match head.term with
   | Tm_Abs _ -> (
-    let (| t, c, head_typing |) = Abs.check_abs g head check in
+    let (| t, c |) = Abs.check_abs g head check in
     if not (C_Tot? c)
     then fail g (Some t.range) "check_bind_fn: head is not a total abstraction";
     if not (PostHint? post_hint)
@@ -57,7 +57,7 @@ let check_bind_fn
       Metatheory.tot_typing_weakening_single g ctxt tm_slprop ctxt_typing x b.binder_ty in
     let r = check g' _ ctxt_typing' post_hint res_ppname (open_st_term_nv body (binder.binder_ppname, x)) in
     let body_typing = apply_checker_result_k #_ #_ #(PostHint?.v post_hint) r res_ppname in
-    let k = Pulse.Checker.Base.continuation_elaborator_with_bind_fn ctxt ctxt_typing t c b head_typing (binder.binder_ppname, x) in
+    let k = Pulse.Checker.Base.continuation_elaborator_with_bind_fn ctxt ctxt_typing t c b () (binder.binder_ppname, x) in
     let d = k post_hint body_typing in
     checker_result_for_st_typing d res_ppname
   )
@@ -69,7 +69,7 @@ let check_if_seq_lhs
   : T.Tac unit
 =
   if T.unseal e1.seq_lhs then begin
-    let (| _x, g, (| u, ty, ty_wf |), _ctxt', _k |) = r in
+    let (| _x, g, (u, ty), _ctxt', _k |) = r in
     let open Pulse.PP in
     if T.Tv_Arrow? ty then
       fail_doc g (Some e1.range) [
@@ -77,7 +77,7 @@ let check_if_seq_lhs
         text "Did you forget to apply some arguments?";
       ]
     else if None? (fst <| T.is_non_informative (elab_env g) ty) then (
-      if None? (Pulse.Checker.Pure.try_get_non_informative_witness g u ty ty_wf) then
+      if None? (Pulse.Checker.Pure.try_get_non_informative_witness g u ty ()) then
         fail_doc g (Some e1.range) [
           prefix 2 1 (text "This statement returns a value of type:") (pp ty);
           text "Did you forget to assign it or ignore it?";
@@ -97,8 +97,8 @@ let check_binder_typ
   begin match inspect_term ty with
   | Tm_Unknown -> ()
   | _ ->
-    let (| ty, _, _ |) = compute_tot_term_type g ty in //elaborate it first
-    let (| _, _, (| _, t, _ |), _, _ |) = r in
+    let (| ty, _ |) = compute_tot_term_type g ty in //elaborate it first
+    let (| _, _, (_, t), _, _ |) = r in
     // TODO: once we have the rename operation then we should
     // ditch this check and just elaborate the bind
     //   let x : ty = stapp in ...
@@ -153,9 +153,9 @@ let check_bind'
       let r0 = check g ctxt ctxt_typing NoHint binder.binder_ppname e1 in
       check_if_seq_lhs g ctxt _ r0 e1;
       check_binder_typ g ctxt _ r0 binder e1;
-      let (| x, g1, _, (| ctxt', ctxt'_typing |), k1 |) = r0 in
+      let (| x, g1, _, ctxt', k1 |) = r0 in
       let g1 = reset_context g1 g in
-      let r1 = check g1 ctxt' ctxt'_typing post_hint ppname_default (open_st_term_nv e2 (binder.binder_ppname, x)) in
+      let r1 = check g1 ctxt' () post_hint ppname_default (open_st_term_nv e2 (binder.binder_ppname, x)) in
       Pulse.Checker.Base.compose_checker_result_t r0 r1 
     in
     if not maybe_elaborate then dflt()

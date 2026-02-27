@@ -480,7 +480,7 @@ let lift_typing_to_ghost_typing (#g:env) (#e:term) (#eff:T.tot_or_ghost) (#t:ter
 let universe_of (g:env) (t:term) (u:universe) = unit
 
 let non_informative_t (g:env) (u:universe) (t:term) =
-  w:term & tot_typing g w (non_informative_class u t)
+  term
 
 let non_informative_c (g:env) (c:comp_st) =
   non_informative_t g (comp_u c) (comp_res c)

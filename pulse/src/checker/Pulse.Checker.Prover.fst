@@ -477,7 +477,7 @@ let unpack_and_norm_goal (g: env) (ctxt: list slprop_view) (goal: slprop_view) :
     T.Tac (option (prover_result g ctxt [goal])) =
   match goal with
   | Unknown goal ->
-    let (| goal', goal_eq_goal' |) = normalize_slprop g goal false in
+    let goal' = normalize_slprop g goal false in
     let goal'' = inspect_slprop g goal' in
     (match goal'' with
     | [Unknown _] -> None
@@ -566,7 +566,7 @@ let unpack_and_norm_ctxt (g: env) (ctxt: slprop_view) :
     T.Tac (option (prover_result_nogoals g [ctxt])) =
   match ctxt with
   | Unknown ctxt ->
-    let (| ctxt', ctxt_eq_ctxt' |) = normalize_slprop g ctxt false in
+    let ctxt' = normalize_slprop g ctxt false in
     let ctxt'' = inspect_slprop g ctxt' in
     (match ctxt'' with
     | [Unknown _] -> None
@@ -1408,7 +1408,7 @@ let elim_exists_and_pure (#g:env) (#ctxt:slprop)
 let k_unreach (g: env) (x: nvar { freshv g (snd x) }) (post_hint: post_hint_t { g `env_extends` post_hint.g }) :
     T.Tac (continuation_elaborator g tm_is_unreachable (push_binding g (snd x) (fst x) post_hint.ret_ty) (open_term_nv post_hint.post x)) =
   let h: tot_typing g tm_is_unreachable tm_slprop = () in
-  let (| c, c_typ |) = Pulse.Typing.Combinators.comp_for_post_hint g tm_is_unreachable h post_hint (snd x) in
+  let c = Pulse.Typing.Combinators.comp_for_post_hint g tm_is_unreachable h post_hint (snd x) in
   let st = wtag (Some (ctag_of_comp_st c)) (Tm_Unreachable { c }) in
   let typ : st_typing g st c = () in
   let g' = push_binding g (snd x) (fst x) post_hint.ret_ty in
@@ -1431,13 +1431,13 @@ let prove_post_hint (#g:env) (#ctxt:slprop) (r:checker_result_t g ctxt NoHint) (
   | NoHint -> r
   | TypeHint _ -> retype_checker_result post_hint r
   | PostHint post_hint ->
-    let (| x, g2, (| u_ty, ty, ty_typing |), (| ctxt', ctxt'_typing |), k |) = r in
+    let (| x, g2, (u_ty, ty), ctxt', k |) = r in
     let k: continuation_elaborator g ctxt g2 ctxt' = k in
 
     // TODO: subtyping
     if not (eq_tm (RU.deep_compress_safe ty) (RU.deep_compress_safe post_hint.ret_ty))
     then (
-      let (| g3, ctxt3, ctxt3_typing, k3 |) = elim_exists_and_pure #g2 #ctxt' ctxt'_typing in
+      let (| g3, ctxt3, ctxt3_typing, k3 |) = elim_exists_and_pure #g2 #ctxt' () in
       let k3: continuation_elaborator g2 ctxt' g3 ctxt3 = k3 in
 
       if ctxt3 `eq_tm` tm_is_unreachable then (
@@ -1449,7 +1449,7 @@ let prove_post_hint (#g:env) (#ctxt:slprop) (r:checker_result_t g ctxt NoHint) (
         let h2: tot_typing g4 post_hint_opened tm_slprop = () in
         let k_unreach: continuation_elaborator g3 ctxt3 g4 post_hint_opened =
           k_unreach g3 (ppname, y) post_hint in
-        (| y, g4, (| post_hint.u, post_hint.ret_ty, h1 |), (| post_hint_opened, h2 |),
+        (| y, g4, (post_hint.u, post_hint.ret_ty), post_hint_opened,
           k_elab_trans k (k_elab_trans k3 k_unreach) |)
       ) else
         fail_doc g (Some rng) [
@@ -1461,7 +1461,7 @@ let prove_post_hint (#g:env) (#ctxt:slprop) (r:checker_result_t g ctxt NoHint) (
       let post_hint_opened = open_term_nv post_hint.post (ppname, x) in
 
       if eq_tm post_hint_opened ctxt'
-      then (| x, g2, (| u_ty, ty, ty_typing |), (| ctxt', ctxt'_typing |), k |)
+      then (| x, g2, (u_ty, ty), ctxt', k |)
       else
         let (| g3, remaining_ctxt, k_post |) =
           prove rng g2 ctxt' post_hint_opened false in
@@ -1482,17 +1482,17 @@ let prove_post_hint (#g:env) (#ctxt:slprop) (r:checker_result_t g ctxt NoHint) (
           let h1: universe_of g3 ty u_ty = () in
           // for the typing of post_hint_opened, again post_hint is well-typed in g, and g3 `env_extends` g
           let h2: tot_typing g3 post_hint_opened tm_slprop = () in
-          (| x, g3, (| u_ty, ty, h1 |), (| post_hint_opened, h2 |),
+          (| x, g3, (u_ty, ty), post_hint_opened,
             k_elab_trans k (k_elab_equiv ctxt' post_hint_opened k_post () h3) |)
 #pop-options
 
 let try_frame_pre (allow_ambiguous : bool) (#g:env)
     (#ctxt:slprop) (ctxt_typing:tot_typing g ctxt tm_slprop)
-    (d:(t:st_term & c:comp_st & st_typing g t c))
+    (d:(t:st_term & c:comp_st))
     (res_ppname:ppname) :
     T.Tac (checker_result_t g ctxt NoHint) =
-  let (| t, c, d |) = d in
+  let (| t, c |) = d in
   let (| g', ctxt', k |) = prove t.range g ctxt (comp_pre c) allow_ambiguous in
   let d: st_typing g' t c = () in // weakening from g to g'
   let h1: tot_typing g' ctxt' tm_slprop = () in // weakening from to g'
-  checker_result_for_st_typing (k _ (| t, add_frame c ctxt', () |)) res_ppname
+  checker_result_for_st_typing (k _ (| t, add_frame c ctxt' |)) res_ppname
