@@ -208,11 +208,6 @@ let rec simplify_st_term (g:env) (e:st_term) : T.Tac st_term =
   | Tm_Match { sc; returns_; brs } ->
     ret (Tm_Match { sc; returns_; brs = T.map (simplify_branch g) brs })
 
-  | Tm_While { invariant; condition; condition_var; body } ->
-    let condition = simplify_st_term g condition in
-    let body = simplify_st_term g body in
-    { e with term = Tm_While { invariant; condition; condition_var; body } }
-
   | Tm_NuWhile { invariant; loop_requires; meas; condition; body } ->
     let condition = simplify_st_term g condition in
     let body = simplify_st_term g body in
@@ -307,11 +302,6 @@ let rec erase_ghost_subterms (g:env) (p:st_term) : T.Tac st_term =
     | Tm_Match { sc; brs; returns_ } ->
       let brs = T.map (erase_ghost_subterms_branch g) brs in
       ret (Tm_Match { sc; brs; returns_ })
-
-    | Tm_While { invariant; condition; condition_var; body } ->
-      let condition = erase_ghost_subterms g condition in
-      let body = erase_ghost_subterms g body in
-      ret (Tm_While { invariant; condition; condition_var; body })
 
     | Tm_NuWhile { invariant; loop_requires; meas; condition; body } ->
       let condition = erase_ghost_subterms g condition in
@@ -479,7 +469,6 @@ let rec extract_dv g (p:st_term) : T.Tac R.term =
     | Tm_Match { sc; brs } ->
       R.pack_ln (R.Tv_Match sc None (T.map (extract_dv_branch g) brs))
 
-    | Tm_While { condition; body } 
     | Tm_NuWhile { condition; body } ->
       let condition = extract_dv g condition in
       let body = extract_dv g body in

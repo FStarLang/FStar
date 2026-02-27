@@ -370,8 +370,6 @@ let rec check
           If.check g pre pre_typing post res_ppname b e1 e2 check in
         (| x, t, pre', g1, k |)
       )
-      | Tm_While _ ->
-        While.check g pre pre_typing post_hint res_ppname t check
 
       | Tm_NuWhile .. -> (
         match post_hint with

@@ -573,15 +573,9 @@ let rec desugar_stmt' (env:env_t) (s:Sugar.stmt)
       let! branches = branches |> mapM (desugar_branch env) in
       return (SW.tm_match head returns_annot branches s.range)
 
-    | While { guard; invariant=[Old (id, inv)]; body } ->
-      let! guard = desugar_stmt env guard in
-      let! inv =
-        let env, bv = push_bv env id in
-        let! inv = desugar_slprop env inv in
-        return (SW.close_term inv bv.index)
-      in
-      let! body = desugar_stmt env body in
-      return (SW.tm_while guard (id, inv) body s.range)
+    | While { guard; invariant=[Old (_, p)]; body } ->
+      fail "Old-style while loop syntax with a binder is no longer supported. \
+            Use the new-style invariant syntax without a binder instead." (pos p)
 
     | While { guard; invariant=invs0; body } ->
       (* If there are multiple invariants, they must all be in

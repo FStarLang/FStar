@@ -362,16 +362,6 @@ let rec st_term_to_string' (level:string) (t:st_term)
         (st_term_to_string' (indent level) body)
         level
 
-    | Tm_While { invariant; condition; body } ->
-      sprintf "while (%s)\n%sinvariant %s\n%s{\n%s%s\n%s}"
-        (st_term_to_string' level condition)
-        level
-        (term_to_string invariant)
-        level
-        (indent level)
-        (st_term_to_string' (indent level) body)
-        level
-
     | Tm_Rewrite { t1; t2; tac_opt } ->
        sprintf "rewrite %s as %s (with %s)"
         (term_to_string t1)
@@ -511,7 +501,6 @@ let tag_of_st_term (t:st_term) =
   | Tm_IntroPure _ -> "Tm_IntroPure"
   | Tm_ElimExists _ -> "Tm_ElimExists"
   | Tm_IntroExists _ -> "Tm_IntroExists"
-  | Tm_While _ -> "Tm_While"
   | Tm_NuWhile _ -> "Tm_NuWhile"
   | Tm_WithLocal _ -> "Tm_WithLocal"
   | Tm_WithLocalArray _ -> "Tm_WithLocalArray"
@@ -541,7 +530,6 @@ let rec print_st_head (t:st_term)
   | Tm_TotBind _ -> "TotBind"
   | Tm_If _ -> "If"
   | Tm_Match _ -> "Match"
-  | Tm_While _ -> "While"
   | Tm_NuWhile _ -> "NuWhile"
   | Tm_Admit _ -> "Admit"
   | Tm_Unreachable _ -> "Unreachable"
@@ -573,7 +561,6 @@ let rec print_skel (t:st_term) =
   | Tm_TotBind { body=e2 } -> Printf.sprintf "(TotBind _ %s)" (print_skel e2)
   | Tm_If _ -> "If"
   | Tm_Match _ -> "Match"
-  | Tm_While _ -> "While"
   | Tm_NuWhile _ -> "NuWhile"
   | Tm_Admit _ -> "Admit"
   | Tm_Unreachable _ -> "Unreachable"

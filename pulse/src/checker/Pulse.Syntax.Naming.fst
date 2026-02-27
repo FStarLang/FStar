@@ -176,11 +176,6 @@ let rec close_open_inverse_st'  (t:st_term)
     | Tm_ElimExists { p } ->
       close_open_inverse' p x i
       
-    | Tm_While { invariant; condition; body } ->
-      close_open_inverse' invariant x (i + 1);
-      close_open_inverse_st' condition x i;
-      close_open_inverse_st' body x i
-
     | Tm_NuWhile { invariant; loop_requires; meas; condition; body } ->
       close_open_inverse' invariant x i;
       close_open_inverse' loop_requires x i;

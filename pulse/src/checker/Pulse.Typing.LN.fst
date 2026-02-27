@@ -249,11 +249,6 @@ let rec open_st_term_ln' (e:st_term)
       open_term_ln' p x i;
       open_term_ln_list' witnesses x i
 
-    | Tm_While { invariant; condition; body } ->
-      open_term_ln' invariant x (i + 1);
-      open_st_term_ln' condition x i;
-      open_st_term_ln' body x i
-
     | Tm_NuWhile { invariant; loop_requires; meas; condition; body } ->
       open_term_ln' invariant x i;
       open_term_ln' loop_requires x i;
@@ -444,11 +439,6 @@ let rec ln_weakening_st (t:st_term) (i j:int)
       ln_weakening p i j;
       ln_weakening_list witnesses i j
 
-    | Tm_While { invariant; condition; body } ->
-      ln_weakening invariant (i + 1) (j + 1);
-      ln_weakening_st condition i j;
-      ln_weakening_st body i j
-    
     | Tm_NuWhile { invariant; loop_requires; meas; condition; body } ->
       ln_weakening invariant i j;
       ln_weakening loop_requires i j;
@@ -637,12 +627,6 @@ let rec open_term_ln_inv_st' (t:st_term)
       FStar.Pure.BreakVC.break_vc();
       open_term_ln_inv' p x i;
       open_term_ln_inv_list' witnesses x i
-
-    | Tm_While { invariant; condition; body } ->
-      FStar.Pure.BreakVC.break_vc();
-      open_term_ln_inv' invariant x (i + 1);
-      open_term_ln_inv_st' condition x i;
-      open_term_ln_inv_st' body x i
 
     | Tm_NuWhile { invariant; loop_requires; meas; condition; body } ->
       FStar.Pure.BreakVC.break_vc();
@@ -843,12 +827,6 @@ let rec close_st_term_ln' (t:st_term) (x:var) (i:index)
       FStar.Pure.BreakVC.break_vc();
       close_term_ln' p x i;
       close_term_ln_list' witnesses x i
-
-    | Tm_While { invariant; condition; body } ->
-      FStar.Pure.BreakVC.break_vc();
-      close_term_ln' invariant x (i + 1);
-      close_st_term_ln' condition x i;
-      close_st_term_ln' body x i
 
     | Tm_NuWhile { invariant; loop_requires; meas; condition; body } ->
       FStar.Pure.BreakVC.break_vc();
@@ -1229,13 +1207,6 @@ let rec st_typing_ln (#g:_) (#t:_) (#c:_)
       FStar.Pure.BreakVC.break_vc ();
       st_typing_ln d2;
       st_equiv_ln deq
-
-    | T_While _ inv _ _ inv_typing cond_typing body_typing ->
-      FStar.Pure.BreakVC.break_vc ();
-      tot_or_ghost_typing_ln inv_typing;
-      st_typing_ln cond_typing;
-      st_typing_ln body_typing;
-      open_term_ln_inv' inv tm_false 0
 
     | T_NuWhile .. ->
       admit ()

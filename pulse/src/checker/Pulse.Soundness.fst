@@ -284,8 +284,6 @@ let rec soundness (g:stt_env)
     | T_IntroExists .. ->
       Exists.intro_exists_soundness d
 
-    | T_While .. ->
-      While.while_soundness d soundness
     | T_NuWhile .. ->
       admit()
 
