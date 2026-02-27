@@ -181,7 +181,7 @@ let extend_post_hint g p x tx conjunct conjunct_typing =
   in
   let p_post_typing_src''
     : tot_typing g'' (open_term p.post y) tm_slprop
-    = RU.magic () //weaken, rename
+    = () //weaken, rename
   in
   let conjunct_typing'
     : tot_typing g' conjunct tm_slprop
@@ -189,7 +189,7 @@ let extend_post_hint g p x tx conjunct conjunct_typing =
   in
   let conjunct_typing''
     : tot_typing g'' (open_term conjunct y) tm_slprop
-    = RU.magic () //weaken
+    = () //weaken
   in
   let new_post = tm_star p.post conjunct in
   let new_post_typing
@@ -461,7 +461,7 @@ let st_comp_typing_with_post_hint
     : tot_typing (push_binding g x ppname_default ph.ret_ty)
                  (open_term ph.post x) tm_slprop
     = //weakening: TODO
-      RU.magic ()
+      ()
   in
   let ty_typing : universe_of ph.g st.res st.u = ph.ty_typing in
   let ty_typing : universe_of g st.res st.u = () in

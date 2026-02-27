@@ -127,7 +127,7 @@ let infer_post' (g:env) (g':env { g' `env_extends` g })
     let post' = open_term_nv post (ppname_default, x) in 
     let g' = push_binding g x ppname_default t in
     // we just constructed it; should ideally prove it well-typed rather then re-checking it
-    let post_typing_src : tot_typing g' post' tm_slprop = RU.magic () in
+    let post_typing_src : tot_typing g' post' tm_slprop = () in
     assume (fresh_wrt x g (freevars post));
     {
       g; effect_annot=EffectAnnotSTT; effect_annot_typing=();

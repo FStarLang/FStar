@@ -33,7 +33,7 @@ let st_typing_correctness_ctot (g:env) (t:st_term) (c:comp{C_Tot? c})
                                (_:st_typing g t c)
 : (u:Ghost.erased universe & universe_of g (comp_res c) u)
 = let u : Ghost.erased universe = RU.magic () in
-  let ty : universe_of g (comp_res c) u = RU.magic() in
+  let ty : universe_of g (comp_res c) u = () in
   (| u, ty |)    
 
 let st_typing_correctness (g:env) (t:st_term) (c:comp_st) 

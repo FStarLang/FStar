@@ -121,7 +121,7 @@ let veq_weakening
   (g:env) (g':env { disjoint g g' })
   (v1 v2:slprop) (_:slprop_equiv (push_env g g') v1 v2)
   (g1:env { pairwise_disjoint g g1 g' })
-  : slprop_equiv (push_env (push_env g g1) g') v1 v2 = RU.magic ()
+  : slprop_equiv (push_env (push_env g g1) g') v1 v2 = ()
 
 let nt (x:var) (t:term) = [ RT.NT x t ]
 
@@ -131,7 +131,7 @@ let slprop_equiv_rename
      (y:var{freshv g y}) tx ty (eq:RT.equiv (elab_env g) tx ty)
      (v:slprop_equiv (push_binding g x ppname_default tx) (open_term t0 x) (open_term t1 x))
 : slprop_equiv (push_binding g y ppname_default ty) (open_term t0 y) (open_term t1 y)
-= RU.magic()
+= ()
 
 let freevars_slprop_equiv (g:env) (t0 t1:term) (d:slprop_equiv g t0 t1)
 : Lemma ((freevars t0 `Set.subset` dom g) /\ (freevars t1 `Set.subset` dom g))

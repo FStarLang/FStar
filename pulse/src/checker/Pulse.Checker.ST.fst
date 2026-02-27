@@ -105,7 +105,7 @@ let check
           ()
       )
       in
-      let h: tot_typing g' ctxt' tm_slprop = RU.magic () in // TODO: thread through prover
+      let h: tot_typing g' ctxt' tm_slprop = () in // TODO: thread through prover
       if comp_post c `eq_tm` tm_is_unreachable then
         let framed = checker_result_for_st_typing (k _ (| t, add_frame c ctxt', () |)) res_ppname in
         RU.record_stats "prove_post_hint" fun _ -> prove_post_hint framed post_hint range
