@@ -1409,7 +1409,7 @@ let k_unreach (g: env) (x: nvar { freshv g (snd x) }) (post_hint: post_hint_t { 
     T.Tac (continuation_elaborator g tm_is_unreachable (push_binding g (snd x) (fst x) post_hint.ret_ty) (open_term_nv post_hint.post x)) =
   let h: tot_typing g tm_is_unreachable tm_slprop = RU.magic () in
   let (| c, c_typ |) = Pulse.Typing.Combinators.comp_for_post_hint g tm_is_unreachable h post_hint (snd x) in
-  let st = wtag (Some STT_Ghost) (Tm_Unreachable { c }) in
+  let st = wtag (Some (ctag_of_comp_st c)) (Tm_Unreachable { c }) in
   let typ : st_typing g st c = () in
   let g' = push_binding g (snd x) (fst x) post_hint.ret_ty in
   let post_opened = open_term_nv post_hint.post x in
