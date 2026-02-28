@@ -67,6 +67,54 @@ type tc_constraint = {
   r: FStarC_Range.t;
 }
 
+let pattern_must_be_binder (p : pattern) : binder =
+  match p.pat with
+  | PatConst Const_unit ->
+    (* A unit pattern: `()`. Unsure if this is the right place to look
+    for it. *)
+    let x = gen p.prange in
+    let u =
+      unit_type p.prange
+      (* mk_term (Const Const_unit) p.prange Expr *)
+    in
+    mk_binder (Annotated (x, u)) p.prange Expr None
+
+  | PatAscribed ({ pat = PatVar (x, aq, attrs)}, (t, _tac_opt)) ->
+    mk_binder_with_attrs (Annotated (x, t)) p.prange Expr aq attrs
+
+  | PatVar (x, aq, attrs) ->
+    mk_binder_with_attrs (Variable x) p.prange Expr aq attrs
+
+  | PatAscribed ({ pat = PatWild (aq, attrs)}, (t, _tac_opt)) ->
+    let x = gen p.prange in
+    mk_binder_with_attrs (Annotated (x, t)) p.prange Expr aq attrs
+
+  | PatWild (aq, attrs) ->
+    let x = gen p.prange in
+    mk_binder_with_attrs (Variable x) p.prange Expr aq attrs
+
+  | _ ->
+    raise_error_text p.prange Fatal_SyntaxError
+      ("Must be a simple binder: " ^ pat_to_string p)
+
+(* For a multibinder like `(a b c : Type | eq, ord)`, this generates
+   binders
+     {| _ : eq a |} {| _ : ord a |}
+     {| _ : eq b |} {| _ : ord b |}
+     {| _ : eq c |} {| _ : ord c |}
+  in that order.
+*)
+let expand_inline_constraints (cts : term list) (xs : ident list) : pattern list =
+  List.concat_map (fun x ->
+    List.concat_map (fun ct ->
+      let r = ct.range in
+      let x_t = mk_term (Var (lid_of_ids [x])) r Expr in
+      let ct = mk_term (App (ct, x_t, Nothing)) r Expr in
+      let id = gen r in
+      [ mk_pattern (PatAscribed(mk_pattern (PatVar (id, Some TypeClassArg, [])) r, (ct, None))) r ]
+    ) cts
+  ) xs
+
 %}
 
 %token <string> STRING
@@ -508,7 +556,7 @@ letoperatorbinding:
     }
 
 letbinding:
-  | focus_opt=maybeFocus lid=lidentOrOperator lbp=nonempty_list(patternOrMultibinder) ascr_opt=ascribeTyp? EQUALS tm=term
+  | focus_opt=maybeFocus lid=lidentOrOperator lbp=nonempty_list(genBinder) ascr_opt=ascribeTyp? EQUALS tm=term
       {
         let pat = mk_pattern (PatVar(lid, None, [])) (rr $loc(lid)) in
         let pat = mk_pattern (PatApp (pat, flatten lbp)) (rr2 $loc(focus_opt) $loc(lbp)) in
@@ -681,24 +729,62 @@ tuplePattern:
 constructorPattern:
   | pat=constructorPattern COLON_COLON pats=constructorPattern
       { mk_pattern (consPat (rr $loc(pats)) pat pats) (rr $loc) }
-  | uid=quident args=nonempty_list(atomicPattern)
+  | uid=quident args=nonempty_list(singleAtomicPattern)
       {
         let head_pat = mk_pattern (PatName uid) (rr $loc(uid)) in
         mk_pattern (PatApp (head_pat, args)) (rr $loc)
       }
-  | pat=atomicPattern
+  | pat=singleAtomicPattern
       { pat }
 
+singleAtomicPattern:
+  | pats=atomicPattern
+    {
+      match pats with
+      | [p] -> p
+      | _ -> raise_error_text (rr $loc) Fatal_SyntaxError "Syntax error: expected a single atomic pattern, not a list"
+    }
+
 atomicPattern:
+  | a=atomicPatternNoLParen
+      { [a] }
+  | LPAREN
+      pats=nonempty_list(tuplePattern)
+      ann=genBinderAnnotation
+    RPAREN
+      {
+        let t_ann, ref_opt, tc_cts = ann in
+        let t_pos = rr $loc(ann) in
+        (* let pats = List.flatten pats in *)
+        let n = List.length pats in
+        let bs : pattern list =
+          List.mapi (fun idx pat ->
+            (* let pat = mk_pattern (PatVar (x, aq, attrs)) pos in *)
+            (* Only the last binder carries the refinement, if any. *)
+            let ref_opt = if idx = Int.sub n 1 then ref_opt else None in
+            (*                    ^ The - symbol resolves to F* addition. *)
+            match t_ann with
+            | Some ty ->
+              mkRefinedPattern pat ty true ref_opt t_pos pat.prange
+            | None -> pat
+          ) pats
+        in
+        let rec pat_names bs =
+          match bs with
+          | [] -> []
+          | b::bs' ->
+            match b.pat with
+            | PatAscribed ({pat = PatVar (x, _, _)}, _)
+            | PatVar (x, _, _) -> x::pat_names bs'
+            | _ -> pat_names bs'
+        in
+        bs @ expand_inline_constraints tc_cts (pat_names bs)
+      }
+
+atomicPatternNoLParen:
   | DOT_DOT
       {
         mk_pattern PatRest (rr $loc)
-      }
-  | LPAREN pat=tuplePattern COLON t=simpleArrow phi_opt=refineOpt RPAREN
-      {
-        let pos_t = rr2 $loc(pat) $loc(t) in
-        let pos = rr $loc in
-        mkRefinedPattern pat t true phi_opt pos_t pos
       }
   | LBRACK pats=right_flexible_list(SEMICOLON, tuplePattern) RBRACK
       { mk_pattern (PatList pats) (rr2 $loc($1) $loc($3)) }
@@ -706,13 +792,8 @@ atomicPattern:
       { mk_pattern (PatRecord record_pat) (rr $loc) }
   | LENS_PAREN_LEFT pat0=constructorPattern COMMA pats=separated_nonempty_list(COMMA, constructorPattern) LENS_PAREN_RIGHT
       { mk_pattern (PatTuple(pat0::pats, true)) (rr $loc) }
-  | LPAREN pat=tuplePattern RPAREN   { pat }
   | LPAREN op=operator RPAREN
       { mk_pattern (PatOp op) (rr $loc) }
-  | UNDERSCORE
-      { mk_pattern (PatWild (None, [])) (rr $loc) }
-  | HASH UNDERSCORE
-      { mk_pattern (PatWild (Some Implicit, [])) (rr $loc) }
   | c=constant
       { mk_pattern (PatConst c) (rr $loc(c)) }
   | tok=MINUS c=constant
@@ -733,6 +814,10 @@ atomicPattern:
     {
       let (aqual, attrs), lid = qual_id in
       mk_pattern (PatVar (lid, aqual, attrs)) (rr $loc(qual_id)) }
+  | qual_id=aqualifiedWithAttrs(UNDERSCORE)
+    {
+      let (aqual, attrs), _ = qual_id in
+      mk_pattern (PatWild (aqual, attrs)) (rr $loc(qual_id)) }
   | uid=quident
       { mk_pattern (PatName uid) (rr $loc(uid)) }
 
@@ -749,82 +834,23 @@ tc_constraint:
       {id; t; r}
     }
 
+(* Typeclass constraints: what appears inside a {| ... |}. They can
+be named or anonymous *)
 tc_constraints:
   | constraints=right_flexible_nonempty_list(COMMA, tc_constraint) { constraints }
-
-  (* (x : t) is already covered by atomicPattern *)
-  (* we do *NOT* allow _ in multibinder () since it creates reduce/reduce conflicts when*)
-  (* preprocessing to ocamlyacc/fsyacc (which is expected since the macro are expanded) *)
-patternOrMultibinder:
-  | LBRACE_BAR constraints=tc_constraints BAR_RBRACE
-      {
-        let constraint_as_pat (c:tc_constraint) =
-          let w = mk_pattern (PatVar (c.id, Some TypeClassArg, [])) c.r in
-          let asc = (c.t, None) in
-          mk_pattern (PatAscribed(w, asc)) c.r
-        in
-        List.map constraint_as_pat constraints
-      }
-
-  | pat=atomicPattern { [pat] }
-  | LPAREN
-      qual_id0=aqualifiedWithAttrs(lident)
-      qual_ids=nonempty_list(aqualifiedWithAttrs(lident))
-      COLON
-      t=simpleArrow r=refineOpt
-    RPAREN
-      {
-        let pos = rr $loc in
-        let t_pos = rr $loc(t) in
-        let qual_ids = qual_id0 :: qual_ids in
-        let n = List.length qual_ids in
-        List.mapi (fun idx ((aq, attrs), x) ->
-          let pat = mk_pattern (PatVar (x, aq, attrs)) pos in
-          (* Only the last binder carries the refinement, if any. *)
-          let refine_opt = if idx = Int.sub n 1 then r else None in
-          (*                    ^ The - symbol resolves to F* addition. *)
-          mkRefinedPattern pat t true refine_opt t_pos pos
-        ) qual_ids
-      }
-
-binder:
-  | aqualifiedWithAttrs_lid=aqualifiedWithAttrs(lidentOrUnderscore)
-     {
-       let (q, attrs), lid = aqualifiedWithAttrs_lid in
-       mk_binder_with_attrs (Variable lid) (rr $loc(aqualifiedWithAttrs_lid)) Type_level q attrs
-     }
+ 
+(* Constraints on binders: like (#a : Type | deq) *)
+type_tc_constraints:
+  | BAR constraints=right_flexible_nonempty_list(COMMA, tmEqNoRefinement) { constraints }
+  | { [] }
 
 %public
-multiBinder:
-  | LBRACE_BAR constraints=tc_constraints BAR_RBRACE
-      {
-        let constraint_as_binder (c:tc_constraint) =
-          mk_binder (Annotated (c.id, c.t)) c.r Type_level (Some TypeClassArg)
-        in
-        List.map constraint_as_binder constraints
-      }
-
-  | LPAREN qual_ids=nonempty_list(aqualifiedWithAttrs(lidentOrUnderscore)) COLON t=simpleArrow r=refineOpt RPAREN
-     {
-       let should_bind_var = match qual_ids with | [ _ ] -> true | _ -> false in
-       let n = List.length qual_ids in
-       List.mapi (fun idx ((q, attrs), x) ->
-         let refine_opt = if idx = Int.sub n 1 then r else None in
-         mkRefinedBinder x t true refine_opt (rr $loc) q attrs
-       ) qual_ids
-     }
-
-  | LPAREN_RPAREN
+binders:
+  | bss=list(genBinder)
     {
-      let r = rr $loc in
-      let unit_t = mk_term (Var (lid_of_ids [(mk_ident("unit", r))])) r Un in
-      [mk_binder (Annotated (gen r, unit_t)) r Un None]
+      let bs = flatten bss in
+      List.map pattern_must_be_binder bs
     }
-
-  | b=binder { [b] }
-
-%public
-binders: bss=list(bs=multiBinder {bs}) { flatten bss }
 
 aqualifiedWithAttrs(X):
   | aq=aqual attrs=binderAttributes x=X { (Some aq, attrs), x }
@@ -1255,6 +1281,7 @@ simpleArrowDomain:
 
 (* Tm already accounts for ( term ), we need to add an explicit case for (#Tm), (#[@@@...]Tm) and ([@@@...]Tm) *)
 %inline tmArrowDomain(Tm):
+  (* Replace all this for genBinder? *)
   | LBRACE_BAR t=Tm BAR_RBRACE { ((Some TypeClassArg, []), t) }
   | LPAREN q=aqual attrs_opt=ioption(binderAttributes) dom_tm=Tm RPAREN { (Some q, none_to_empty_list attrs_opt), dom_tm }
   | LPAREN attrs=binderAttributes dom_tm=Tm RPAREN { (None, attrs), dom_tm }
@@ -1469,7 +1496,7 @@ trailingTerm:
     { x }
 
 onlyTrailingTerm:
-  | FUN pats=nonempty_list(patternOrMultibinder) RARROW e=term
+  | FUN pats=nonempty_list(genBinder) RARROW e=term
       { mk_term (Abs(flatten pats, e)) (rr2 $loc($1) $loc(e)) Un }
   | q=quantifier bs=binders DOT trigger=trigger e=term
       {
@@ -1688,3 +1715,26 @@ reverse_left_flexible_nonempty_list(delim, X):
 %inline left_flexible_nonempty_list(delim, X):
  xs = reverse_left_flexible_nonempty_list(delim, X)
    { List.rev xs }
+
+genBinderAnnotation:
+  | { None, None, [] }
+  | COLON
+      t=simpleArrow
+      r=refineOpt
+      cts=type_tc_constraints
+      {
+        (Some t), r, cts
+      }
+
+genBinder:
+  | LBRACE_BAR constraints=tc_constraints BAR_RBRACE
+      {
+        let constraint_as_pat (c:tc_constraint) =
+          let w = mk_pattern (PatVar (c.id, Some TypeClassArg, [])) c.r in
+          let asc = (c.t, None) in
+          mk_pattern (PatAscribed(w, asc)) c.r
+        in
+        List.map constraint_as_pat constraints
+      }
+
+  | pats=atomicPattern { pats }
