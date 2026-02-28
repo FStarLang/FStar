@@ -219,7 +219,6 @@ let check_branch
         (norw:bool)
         (g:env)
         (pre:term)
-        (pre_typing: unit)
         (post_hint:post_hint_for_env g)
         (check:check_t)
         (sc_u : universe)
@@ -293,7 +292,6 @@ let check_branches_aux_t
 let check_branches_aux
         (g:env)
         (pre:term)
-        (pre_typing: unit)
         (post_hint:post_hint_for_env g)
         (check:check_t)
         (sc_u : universe)
@@ -310,7 +308,7 @@ let check_branches_aux
     : T.Tac (check_branches_aux_t pre post_hint sc_u sc_ty sc)
     = let e = b.e in
       let (p, bs) = pbs in
-      let (| p, e, c |) = check_branch (T.unseal b.norw) g pre pre_typing post_hint check sc_u sc_ty sc p e bs in
+      let (| p, e, c |) = check_branch (T.unseal b.norw) g pre post_hint check sc_u sc_ty sc p e bs in
       (| {pat=p; e; norw=b.norw}, c |)
   in
   let r = zipWith tr1 brs0 bnds in
@@ -464,7 +462,6 @@ let maybe_weaken_branch_tags
 let check_branches
         (g:env)
         (pre:term)
-        (pre_typing: unit)
         (post_hint:post_hint_for_env g)
         (check:check_t)
         (sc_u : universe)
@@ -474,7 +471,7 @@ let check_branches
         (bnds: list (R.pattern & list R.binding){L.length brs0 == L.length bnds})
 : T.Tac (brs:list branch
          & c:comp_st{comp_pre c == pre /\ comp_post_matches_hint c (PostHint post_hint)})
-= let checked_brs = check_branches_aux g pre pre_typing post_hint check sc_u sc_ty sc brs0 bnds in
+= let checked_brs = check_branches_aux g pre post_hint check sc_u sc_ty sc brs0 bnds in
   let (| ct, checked_brs |) = maybe_weaken_branch_tags checked_brs in
   let (| c0, checked_brs |) = join_branches ct checked_brs in
   let brs = checked_brs in
@@ -483,7 +480,6 @@ let check_branches
 let check
         (g:env)
         (pre:term)
-        (pre_typing: unit)
         (post_hint:post_hint_for_env g)
         (res_ppname:ppname)
         (sc:term)
@@ -538,11 +534,11 @@ let check
   assert (L.length (zip elab_pats' bnds') == nbr);
 
   let (| brs, c |) =
-    check_branches g pre pre_typing post_hint check sc_u sc_ty sc brs (zip elab_pats' bnds') in
+    check_branches g pre post_hint check sc_u sc_ty sc brs (zip elab_pats' bnds') in
 
   (* Provable *)
   assume (L.map (fun br -> elab_pat br.pat) brs == elab_pats');
-  let c_typing = comp_typing_from_post_hint c pre_typing post_hint in
+  let c_typing = comp_typing_from_post_hint c () post_hint in
   let t = wtag (Some (ctag_of_comp_st c)) (Tm_Match {sc; returns_=None; brs}) in
 
   checker_result_for_st_typing (| t, c |) res_ppname

@@ -318,7 +318,6 @@ let rec check_pairs (g:env) rng (ps: list (term & term)) (tac_opt:option term) :
 let check_renaming 
     (g:env)
     (pre:term)
-    (pre_typing:unit)
     (post_hint:post_hint_opt g)
     (res_ppname:ppname)
     (st:st_term { 
@@ -342,7 +341,7 @@ let check_renaming
    // ...
    let body = {st with term = Tm_ProofHintWithBinders { ht with binders = [] };
                        source = Sealed.seal false; } in
-   check g pre pre_typing post_hint res_ppname
+   check g pre () post_hint res_ppname
    { st with
        term = Tm_ProofHintWithBinders { hint_type=ASSERT { p = goal; elaborated = true }; binders=bs; t=body };
        source = Sealed.seal false;
@@ -361,7 +360,7 @@ let check_renaming
       let rhs, _ = rewrite_all st.range (T.unseal st.source) g pairs goal pre elaborated tac_opt true in
       let t = { st with term = Tm_Rewrite { t1 = goal; t2 = rhs; tac_opt; elaborated = true };
                         source = Sealed.seal false; } in
-      check g pre pre_typing post_hint res_ppname
+      check g pre () post_hint res_ppname
       { st with term = Tm_Bind { binder = as_binder tm_unit; head = t; body };
                 source = Sealed.seal false;
       }
@@ -403,7 +402,6 @@ let open_st_term_with_reveals (t: st_term) (xs: list (universe & typ & nvar)) : 
 let check_wild
       (g:env)
       (pre:term)
-      (pre_typing:unit)
       (post_hint:post_hint_opt g)
       (res_ppname:ppname)
       (st:st_term { head_wild st })
@@ -462,7 +460,6 @@ let rec add_rem_uvs (g:env) (t:typ) (v:term)
 let check
   (g:env)
   (pre:term)
-  (pre_typing:unit)
   (post_hint:post_hint_opt g)
   (res_ppname:ppname)
   (st:st_term { Tm_ProofHintWithBinders? st.term })
@@ -476,7 +473,7 @@ let check
   allow_invert hint_type;
   match hint_type with
   | WILD ->
-    check_wild g pre pre_typing post_hint res_ppname st check
+    check_wild g pre post_hint res_ppname st check
 
   | SHOW_PROOF_STATE r ->
     let open FStar.Pprint in
@@ -488,19 +485,19 @@ let check
     fail_doc_env true g (Some r) msg
 
   | RENAME {} ->
-    check_renaming g pre pre_typing post_hint res_ppname st check
+    check_renaming g pre post_hint res_ppname st check
 
   | REWRITE { t1; t2; tac_opt; elaborated } -> (
     match bs with
     | [] -> 
       let t = { st with term = Tm_Rewrite { t1; t2; tac_opt; elaborated } } in
-      check g pre pre_typing post_hint res_ppname 
+      check g pre () post_hint res_ppname 
           { st with term = Tm_Bind { binder = as_binder tm_unit; head = t; body } } 
     | _ ->
       let t = { st with term = Tm_Rewrite { t1; t2; tac_opt; elaborated } } in
       let body = { st with term = Tm_Bind { binder = as_binder tm_unit; head = t; body } } in
       let st = { st with term = Tm_ProofHintWithBinders { hint_type = ASSERT { p = t1; elaborated }; binders = bs; t = body } } in
-      check g pre pre_typing post_hint res_ppname st
+      check g pre () post_hint res_ppname st
   )
   
   | ASSERT { p = v; elaborated } ->

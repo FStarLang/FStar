@@ -107,7 +107,6 @@ let rec check_slprop_equiv r (g:env) (p q:slprop)
 let check
   (g:env)
   (pre:term)
-  (pre_typing:unit)
   (post_hint:post_hint_opt g)
   (res_ppname:ppname)
   (t:st_term{Tm_Rewrite? t.term})
@@ -141,4 +140,4 @@ let check
   let rew_c = C_STGhost tm_emp_inames { u=u0; res=tm_unit; pre=p; post=q } in
 
   let c = match_comp_res_with_post_hint rew_st rew_c () post_hint in
-  prove_post_hint (try_frame_pre false pre_typing (| rew_st,c |) res_ppname) post_hint t.range
+  prove_post_hint (try_frame_pre false () (| rew_st,c |) res_ppname) post_hint t.range

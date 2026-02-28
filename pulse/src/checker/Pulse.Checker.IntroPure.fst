@@ -46,7 +46,6 @@ let check_prop_validity (g:env) (p:term): T.Tac (prop_validity g p) =
 let check
   (g:env)
   (pre:term)
-  (pre_typing:unit)
   (post_hint:post_hint_opt g)
   (res_ppname:ppname)
   (t:st_term { Tm_IntroPure? t.term })
@@ -63,4 +62,4 @@ let check
   let intro_c = C_STGhost tm_emp_inames { u=u0; res=tm_unit; pre=tm_emp; post=tm_pure p } in
 
   let c = match_comp_res_with_post_hint intro_st intro_c () post_hint in
-  prove_post_hint (try_frame_pre false pre_typing (|intro_st,c|) res_ppname) post_hint t.range
+  prove_post_hint (try_frame_pre false () (|intro_st,c|) res_ppname) post_hint t.range

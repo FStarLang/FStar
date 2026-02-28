@@ -25,7 +25,6 @@ module T = FStar.Tactics.V2
 val check
   (g:env)
   (ctxt:term)
-  (ctxt_typing:unit)
   (post_hint:post_hint_opt g)
   (res_ppname:ppname)
   (st:st_term { Tm_Return? st.term })

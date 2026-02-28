@@ -46,7 +46,7 @@ let check_fndefn
     (g : stt_env{bindings g == []})
     (expected_t : option term)
     (* Both of these unused: *)
-    (pre : term) (pre_typing : unit)
+    (pre : term) (_pre_typing : unit)
   : T.Tac (RT.dsl_tac_result_t (fstar_env g) expected_t)
 = 
   let g = let FnDefn {us} = d.d in push_univ_vars g us in

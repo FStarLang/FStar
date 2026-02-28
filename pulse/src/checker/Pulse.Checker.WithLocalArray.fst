@@ -54,7 +54,7 @@ let extend_post_hint
 
 
 let with_local_array_pre_typing (#g:env) (#pre:term)
-  (pre_typing:unit)
+  (_pre_typing:unit)
   (init_t:term)
   (init:option term)
   (len:term)
@@ -89,7 +89,6 @@ let head_range (t:st_term {Tm_WithLocalArray? t.term}) : range =
 let check
   (g:env)
   (pre:term)
-  (pre_typing:unit)
   (post_hint:post_hint_opt g)
   (res_ppname:ppname)
   (t:st_term { Tm_WithLocalArray? t.term })
@@ -169,7 +168,7 @@ let check
           assume (open_st_term (close_st_term opened_body x) x == opened_body);
           let c = C_ST {u=comp_u c_body;res=comp_res c_body;pre;post=post.post} in
           let c_typing =
-            intro_comp_typing g c pre_typing 
+            intro_comp_typing g c () 
               ()
               ()
               x ()

@@ -287,33 +287,33 @@ let rec check
 
   match maybe_elaborate_stateful_head g0 t with
   | Some t ->
-    check g0 pre0 pre0_typing post_hint res_ppname t
+    check g0 pre0 () post_hint res_ppname t
   | None -> 
-    let (| g, pre, pre_typing, k_elim_pure |) :
+    let (| g, pre, _, k_elim_pure |) :
         (g':env { env_extends g' g0 } &
             ctxt':term &
             unit &
             continuation_elaborator g0 pre0 g' ctxt') = 
       if do_not_elim_state t then
-        (| g0, pre0, pre0_typing, k_elab_unit _ _ |)
+        (| g0, pre0, (), k_elab_unit _ _ |)
       else
-        Pulse.Checker.Prover.elim_exists_and_pure pre0_typing 
+        Pulse.Checker.Prover.elim_exists_and_pure () 
     in
     let r : checker_result_t g pre post_hint =
       let g = push_context (P.tag_of_st_term t) t.range g in
       match t.term with
       | Tm_Return _ ->
-        Return.check g pre pre_typing post_hint res_ppname t check
+        Return.check g pre post_hint res_ppname t check
       
       | Tm_Abs _ ->
         T.fail "Tm_Abs check should not have been called in the checker"
 
       | Tm_ST _ ->
         RU.record_stats "check_st" (fun _ ->
-        Pulse.Checker.ST.check g pre pre_typing post_hint res_ppname t)
+        Pulse.Checker.ST.check g pre post_hint res_ppname t)
 
       | Tm_ElimExists _ ->
-        Exists.check_elim_exists g pre pre_typing post_hint res_ppname t
+        Exists.check_elim_exists g pre post_hint res_ppname t
 
       | Tm_IntroExists _ -> (
         (* First of all, elaborate *)
@@ -328,22 +328,22 @@ let rec check
 
         match instantiate_unknown_witnesses g t with
         | Some t ->
-          check g pre pre_typing post_hint res_ppname t
+          check g pre () post_hint res_ppname t
         | None ->
           match witnesses with
           | [] -> fail g (Some t.range) "intro exists with empty witnesses"
           | [_] ->
-            Exists.check_intro_exists g pre pre_typing post_hint res_ppname t None 
+            Exists.check_intro_exists g pre post_hint res_ppname t None 
           | _ ->
             let t = transform_to_unary_intro_exists g p witnesses in
-            check g pre pre_typing post_hint res_ppname t
+            check g pre () post_hint res_ppname t
       )
 
       | Tm_Bind _ ->
-        Bind.check_bind g pre pre_typing post_hint res_ppname t check
+        Bind.check_bind g pre post_hint res_ppname t check
 
       | Tm_TotBind _ ->
-        Bind.check_tot_bind g pre pre_typing post_hint res_ppname t check
+        Bind.check_tot_bind g pre post_hint res_ppname t check
 
       | Tm_If { b; then_=e1; else_=e2; post=post_if } -> (
         let post : post_hint_opt g =
@@ -367,14 +367,14 @@ let rec check
             NoHint
         in
         let (| x, t, pre', g1, k |) : checker_result_t g pre post =
-          If.check g pre pre_typing post res_ppname b e1 e2 check in
+          If.check g pre post res_ppname b e1 e2 check in
         (| x, t, pre', g1, k |)
       )
 
       | Tm_While .. -> (
         match post_hint with
-        | PostHint _ -> Bind.check_bind g pre pre_typing post_hint res_ppname (seq_with_unit t) check
-        | _ -> While.check_while g pre pre_typing post_hint res_ppname t (fresh g) None check
+        | PostHint _ -> Bind.check_bind g pre post_hint res_ppname (seq_with_unit t) check
+        | _ -> While.check_while g pre post_hint res_ppname t (fresh g) None check
       )
 
       // SUPER HACKY, we pass break invariants from the frontend by annotating a
@@ -383,7 +383,7 @@ let rec check
         if T.unseal lbl.name = "_break" then
           match post_hint with
           | PostHint _ ->
-            Bind.check_bind g pre pre_typing post_hint res_ppname (seq_with_unit t) check
+            Bind.check_bind g pre post_hint res_ppname (seq_with_unit t) check
           | _ ->
             let lblx = fresh g in
             let Tm_ForwardJumpLabel {body} = t.term in
@@ -393,9 +393,9 @@ let rec check
             let loop_ensures = match inspect_term (comp_post post) with
               | Tm_Pure p -> Some p
               | _ -> None in
-            While.check_while g pre pre_typing post_hint res_ppname body lblx loop_ensures check
+            While.check_while g pre post_hint res_ppname body lblx loop_ensures check
         else
-          ForwardJumpLabel.check g pre pre_typing post_hint res_ppname t check
+          ForwardJumpLabel.check g pre post_hint res_ppname t check
 
       | Tm_Match {sc;returns_=post_match;brs} ->
         // TODO : dedup
@@ -421,42 +421,42 @@ let rec check
                   Either annotate this `if` with `returns` clause; or rewrite your code to use a tail conditional")
         in
         let (| x, ty, pre', g1, k |) =
-          Match.check g pre pre_typing post res_ppname sc brs check in
+          Match.check g pre post res_ppname sc brs check in
         (| x, ty, pre', g1, k |)
 
       | Tm_ProofHintWithBinders _ ->
-        Pulse.Checker.AssertWithBinders.check g pre pre_typing post_hint res_ppname t check
+        Pulse.Checker.AssertWithBinders.check g pre post_hint res_ppname t check
 
       | Tm_WithLocal _ ->
-        WithLocal.check g pre pre_typing post_hint res_ppname t check
+        WithLocal.check g pre post_hint res_ppname t check
 
       | Tm_WithLocalArray _ ->
-        WithLocalArray.check g pre pre_typing post_hint res_ppname t check
+        WithLocalArray.check g pre post_hint res_ppname t check
 
       | Tm_IntroPure _ -> 
-        Pulse.Checker.IntroPure.check g pre pre_typing post_hint res_ppname t
+        Pulse.Checker.IntroPure.check g pre post_hint res_ppname t
 
       | Tm_Admit _ ->
-        Admit.check g pre pre_typing post_hint res_ppname t
+        Admit.check g pre post_hint res_ppname t
 
       | Tm_Unreachable _ ->
         T.fail "Tm_Unreachable check should not have been called in the checker"
 
       | Tm_Rewrite _ ->
-        Rewrite.check g pre pre_typing post_hint res_ppname t
+        Rewrite.check g pre post_hint res_ppname t
 
       | Tm_PragmaWithOptions { options; body } ->
         RU.push_options();
         RU.set_options options;
-        let r = check g pre pre_typing post_hint res_ppname body in
+        let r = check g pre () post_hint res_ppname body in
         RU.pop_options ();
         r
 
       | Tm_ForwardJumpLabel _ ->
-        ForwardJumpLabel.check g pre pre_typing post_hint res_ppname t check
+        ForwardJumpLabel.check g pre post_hint res_ppname t check
 
       | Tm_Goto _ ->
-        Goto.check g pre pre_typing post_hint res_ppname t
+        Goto.check g pre post_hint res_ppname t
     in
 
     let (| x, g1, t, pre', k |) = r in

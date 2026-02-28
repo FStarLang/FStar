@@ -25,7 +25,6 @@ open Pulse.Checker.Base
 val check_elim_exists
   (g:env)
   (pre:term)
-  (pre_typing:unit)
   (post_hint:post_hint_opt g)
   (res_ppname:ppname)
   (t:st_term{Tm_ElimExists? t.term})
@@ -43,7 +42,6 @@ let intro_exists_slprop (st:st_term { Tm_IntroExists? st.term })  =
 val check_intro_exists
   (g:env)
   (pre:term)
-  (pre_typing:unit)
   (post_hint:post_hint_opt g)
   (res_ppname:ppname)
   (st:st_term { intro_exists_witness_singleton st })

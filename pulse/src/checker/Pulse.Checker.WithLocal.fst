@@ -42,7 +42,7 @@ let extend_post_hint_for_local (g:env) (p:post_hint_for_env g)
     let res = Pulse.Checker.Base.extend_post_hint g p x (mk_ref init_t) conjunct c_typing in
     res
 
-let with_local_pre_typing (#g:env) (#pre:term) (pre_typing:unit)
+let with_local_pre_typing (#g:env) (#pre:term) (_pre_typing:unit)
                           (init_t:term) (x:var { ~ (Set.mem x (dom g)) }) n (i:option term)
   : unit
   = admit()
@@ -64,7 +64,6 @@ let head_range (t:st_term {Tm_WithLocal? t.term}) : range =
 let check
   (g:env)
   (pre:term)
-  (pre_typing:unit)
   (post_hint:post_hint_opt g)
   (res_ppname:ppname)
   (t:st_term { Tm_WithLocal? t.term })
@@ -144,7 +143,7 @@ let check
           assume (open_st_term (close_st_term opened_body x) x == opened_body);
           let c = C_ST {u=comp_u c_body;res=comp_res c_body;pre;post=post.post} in
           let c_typing =
-            intro_comp_typing g c pre_typing 
+            intro_comp_typing g c () 
               ()
               ()
               x ()

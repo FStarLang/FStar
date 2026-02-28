@@ -34,7 +34,6 @@ module RU = Pulse.Reflection.Util
 let check_bind_fn
   (g:env)
   (ctxt:slprop)
-  (ctxt_typing:unit)
   (post_hint:post_hint_opt g)
   (res_ppname:ppname)
   (t:st_term {Tm_Bind? t.term})
@@ -55,7 +54,7 @@ let check_bind_fn
     let ctxt_typing' : unit = () in
     let r = check g' _ ctxt_typing' post_hint res_ppname (open_st_term_nv body (binder.binder_ppname, x)) in
     let body_typing = apply_checker_result_k #_ #_ #(PostHint?.v post_hint) r res_ppname in
-    let k = Pulse.Checker.Base.continuation_elaborator_with_bind_fn ctxt ctxt_typing t c b () (binder.binder_ppname, x) in
+    let k = Pulse.Checker.Base.continuation_elaborator_with_bind_fn ctxt () t c b () (binder.binder_ppname, x) in
     let d = k post_hint body_typing in
     checker_result_for_st_typing d res_ppname
   )
@@ -120,7 +119,6 @@ let check_bind'
   (maybe_elaborate:bool)
   (g:env)
   (ctxt:slprop)
-  (ctxt_typing:unit)
   (post_hint:post_hint_opt g)
   (res_ppname:ppname)
   (t:st_term {Tm_Bind? t.term})
@@ -134,11 +132,11 @@ let check_bind'
   let Tm_Bind { binder; head=e1; body=e2 } = t.term in
   if Tm_Admit? e1.term
   then ( //Discard the continuation if the head is an admit
-    check g ctxt ctxt_typing post_hint res_ppname e1
+    check g ctxt () post_hint res_ppname e1
   )
   else if Tm_Abs? e1.term
   then (
-    check_bind_fn g ctxt ctxt_typing post_hint res_ppname t check
+    check_bind_fn g ctxt post_hint res_ppname t check
   )
   else (
     let dflt () =
@@ -148,7 +146,7 @@ let check_bind'
           { binder with binder_ppname = ppname_default }
         else
           binder in
-      let r0 = check g ctxt ctxt_typing NoHint binder.binder_ppname e1 in
+      let r0 = check g ctxt () NoHint binder.binder_ppname e1 in
       check_if_seq_lhs g ctxt _ r0 e1;
       check_binder_typ g ctxt _ r0 binder e1;
       let (| x, g1, _, ctxt', k1 |) = r0 in
@@ -171,7 +169,7 @@ let check_bind'
         match Pulse.Checker.Base.hoist g (Inl tm) false rebuild with
         | Some t -> //something was elaborated, go back to the top checking loop
           Util.debug g "pulse.hoist" (fun _ -> Printf.sprintf "Bind was elaborated to %s\n" (show t));
-          check g ctxt ctxt_typing post_hint res_ppname t
+          check g ctxt () post_hint res_ppname t
         | None -> 
           Util.debug g "pulse.hoist" (fun _ -> Printf.sprintf "No elaboration in check_bind, proceeding to check head\n");
           dflt()
@@ -184,7 +182,7 @@ let check_bind'
         match Pulse.Checker.Base.hoist g (Inr e1) false rebuild with
         | Some t -> //something was elaborated, go back to the top checking loop
           debug_prover g (fun _ -> Printf.sprintf "Bind was elaborated to %s\n" (show t));
-          check g ctxt ctxt_typing post_hint res_ppname t
+          check g ctxt () post_hint res_ppname t
         | None -> 
           debug_prover g (fun _ -> "No elaboration in check_bind, proceeding to check head\n");
           dflt()
@@ -196,7 +194,6 @@ let check_bind = check_bind' true
 let check_tot_bind
   (g:env)
   (pre:term)
-  (pre_typing:unit)
   (post_hint:post_hint_opt g)
   (res_ppname:ppname)
   (t:st_term { Tm_TotBind? t.term })
@@ -219,11 +216,11 @@ let check_tot_bind
     let t = rebuild (Inl e1) in
     Pulse.Checker.Util.debug g "pulse.hoist" (fun _ ->
       Printf.sprintf "No elaboration in check_tot_bind, proceeding to check\n%s\n" (show t));
-    check_bind' false g pre pre_typing post_hint res_ppname t check
+    check_bind' false g pre post_hint res_ppname t check
   | Some t' ->
     Pulse.Checker.Util.debug g "pulse.hoist" (fun _ ->
       Printf.sprintf "Elaborated and proceeding back to top-level\n%s\nto\n%s\n" 
       (show t)
       (show t'));
-    check g pre pre_typing post_hint res_ppname t'
+    check g pre () post_hint res_ppname t'
 #pop-options

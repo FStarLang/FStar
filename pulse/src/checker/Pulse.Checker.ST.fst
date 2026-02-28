@@ -38,7 +38,6 @@ open Pulse.PP
 let check
   (g:env)
   (ctxt:slprop)
-  (ctxt_typing:unit)
   (post_hint:post_hint_opt g)
   (res_ppname:ppname)
   (t:st_term { Tm_ST? t.term })

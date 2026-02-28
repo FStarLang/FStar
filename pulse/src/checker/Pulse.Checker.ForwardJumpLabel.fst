@@ -35,7 +35,6 @@ let starts_with (a b: string) : bool =
 let check
     (g:env)
     (pre:term)
-    (pre_typing:unit)
     (post_hint0:post_hint_opt g)
     (res_ppname:ppname)
     (t:st_term { Tm_ForwardJumpLabel? t.term })
@@ -60,7 +59,7 @@ let check
       // TODO: just ignore early return/continue labels in atomic/ghost contexts for now
       let lbl_x = fresh g in
       let body = open_st_term_nv body (lbl, lbl_x) in
-      check _ _ pre_typing _ res_ppname body
+      check _ _ () _ res_ppname body
     else
       fail g (Some rng) "Labels require stt"
   else
@@ -99,7 +98,7 @@ let check
     ) else (
       let c'' = match_comp_res_with_post_hint t body'_c () post_hint0 in
       prove_post_hint #g
-        (try_frame_pre false #g pre_typing (|t,c''|) res_ppname)
+        (try_frame_pre false #g () (|t,c''|) res_ppname)
         post_hint0
         rng
     )

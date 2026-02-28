@@ -28,7 +28,6 @@ open Pulse.Checker.Prover
 let check'
   (g:env)
   (pre:term)
-  (pre_typing:unit)
   (post_hint:post_hint_opt g { PostHint? post_hint })
   (res_ppname:ppname)
   (t:st_term { Tm_Goto? t.term })
@@ -54,7 +53,7 @@ let check'
         () in
       let c' = match_comp_res_with_post_hint t c' typing post_hint in
       prove_post_hint #g
-        (try_frame_pre false #g pre_typing (|t,c'|) res_ppname)
+        (try_frame_pre false #g () (|t,c'|) res_ppname)
         post_hint
         rng
     | None ->
@@ -65,7 +64,6 @@ let check'
 let check
   (g:env)
   (pre:term)
-  (pre_typing:unit)
   (post_hint:post_hint_opt g)
   (res_ppname:ppname)
   (t:st_term { Tm_Goto? t.term })
@@ -73,11 +71,11 @@ let check
 = match post_hint with
   | NoHint ->
     let post_hint' = intro_post_hint g EffectAnnotSTT None tm_is_unreachable in
-    let res = check' g pre pre_typing (PostHint post_hint') res_ppname t in
+    let res = check' g pre (PostHint post_hint') res_ppname t in
     retype_checker_result _ res
   | TypeHint ty ->
     let post_hint' = intro_post_hint g EffectAnnotSTT (Some ty) tm_is_unreachable in
-    let res = check' g pre pre_typing (PostHint post_hint') res_ppname t in
+    let res = check' g pre (PostHint post_hint') res_ppname t in
     retype_checker_result _ res
   | PostHint post ->
-    check' g pre pre_typing post_hint res_ppname t
+    check' g pre post_hint res_ppname t

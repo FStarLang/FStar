@@ -79,7 +79,6 @@ let compute_tot_or_ghost_term_type_and_u (g:env) (e:term) (c:option ctag)
 let check_core
   (g:env)
   (ctxt:term)
-  (ctxt_typing:unit)
   (post_hint:post_hint_opt g)
   (res_ppname:ppname)
   (st:st_term { Tm_Return? st.term })
@@ -147,7 +146,7 @@ let check_core
     Printf.sprintf "Return comp is: %s"
       (Pulse.Syntax.Printer.comp_to_string c'));
   prove_post_hint #g
-    (try_frame_pre false #g ctxt_typing (|ret_st,c'|) res_ppname)
+    (try_frame_pre false #g () (|ret_st,c'|) res_ppname)
     post_hint
     st.range
 #pop-options
@@ -155,7 +154,6 @@ let check_core
 let check
   (g:env)
   (ctxt:term)
-  (ctxt_typing:unit)
   (post_hint:post_hint_opt g)
   (res_ppname:ppname)
   (st:st_term { Tm_Return? st.term })
@@ -172,7 +170,7 @@ let check
     Pulse.Checker.Util.debug g "pulse.hoist" (fun _ ->
       Printf.sprintf "Hoisted term: %s" (Pulse.Syntax.Printer.st_term_to_string tt)
     );
-    check g ctxt ctxt_typing post_hint res_ppname tt
+    check g ctxt () post_hint res_ppname tt
   | None -> (
     match post_hint with
     | PostHint p -> (
@@ -180,8 +178,8 @@ let check
         match ctag_of_effect_annot p.effect_annot with
         | Some c -> c
         | None -> STT_Atomic in
-      check_core g ctxt ctxt_typing post_hint res_ppname st (Some ctag)
+      check_core g ctxt post_hint res_ppname st (Some ctag)
       
     )
-    | _ ->  check_core g ctxt ctxt_typing post_hint res_ppname st None
+    | _ ->  check_core g ctxt post_hint res_ppname st None
   )

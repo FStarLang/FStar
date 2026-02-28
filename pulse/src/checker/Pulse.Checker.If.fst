@@ -46,7 +46,6 @@ let retype_checker_result (#g:env) (#ctxt:slprop) (#ph:post_hint_opt g) (ph':pos
 let check
   (g:env)
   (pre:term)
-  (pre_typing: unit)
   (post_hint:post_hint_opt g)
   (res_ppname:ppname)
   (b:term)
@@ -64,8 +63,7 @@ let check
   let g_with_eq = g_with_eq g hyp b in  
   let check_branch (eq_v:term) (br:st_term) (is_then:bool)
   : T.Tac (checker_result_t (g_with_eq eq_v) pre post_hint)
-  = let pre_typing : unit = () in
-
+  =
     let br =
       let t =
         mk_term (Tm_ProofHintWithBinders {
@@ -78,7 +76,7 @@ let check
     in
 
     let ppname = mk_ppname_no_range "_if_br" in
-    let r = check (g_with_eq eq_v) pre pre_typing post_hint ppname br in
+    let r = check (g_with_eq eq_v) pre () post_hint ppname br in
     r
   in
 
@@ -130,7 +128,7 @@ let check
   let (| c, e1_typing, e2_typing |) =
     J.join_comps (g_with_eq tm_true) e1 c1 e1_typing (g_with_eq tm_false) e2 c2 e2_typing post_hint' in
 
-  let c_typing = comp_typing_from_post_hint c pre_typing post_hint' in
+  let c_typing = comp_typing_from_post_hint c () post_hint' in
 
   let if_st = wrst c (Tm_If { b; then_=e1; else_=e2; post=None }) in
   let d : st_typing_in_ctxt g pre (PostHint post_hint') =

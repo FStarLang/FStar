@@ -43,7 +43,6 @@ let terms_to_string (t:list term)
 let check_elim_exists
   (g:env)
   (pre:term)
-  (pre_typing:unit)
   (post_hint:post_hint_opt g)
   (res_ppname:ppname)
   (t:st_term{Tm_ElimExists? t.term})
@@ -90,7 +89,7 @@ let check_elim_exists
        let elim_c = comp_elim_exists u ty p (ppname_default, x) in
 
        let c = match_comp_res_with_post_hint elim_st elim_c () post_hint in
-       prove_post_hint (try_frame_pre false pre_typing (|elim_st,c|) res_ppname) post_hint t_rng
+       prove_post_hint (try_frame_pre false () (|elim_st,c|) res_ppname) post_hint t_rng
   else fail g (Some t_rng)
          (Printf.sprintf "check_elim_exists: universe checking failed, computed %s, expected %s"
             (P.univ_to_string u') (P.univ_to_string u))
@@ -101,7 +100,6 @@ let check_elim_exists
 let check_intro_exists
   (g:env)
   (pre:term)
-  (pre_typing:unit)
   (post_hint:post_hint_opt g)
   (res_ppname:ppname)
   (st:st_term { intro_exists_witness_singleton st })
@@ -134,7 +132,7 @@ let check_intro_exists
   let intro_c = C_STGhost tm_emp_inames { u=u0; res=tm_unit; pre=open_term' p witness 0; post=tm_exists_sl u b p } in
 
   let c = match_comp_res_with_post_hint intro_st intro_c () post_hint in
-  prove_post_hint (try_frame_pre false pre_typing (|intro_st, c|) res_ppname)
+  prove_post_hint (try_frame_pre false () (|intro_st, c|) res_ppname)
                   post_hint
                   (Pulse.RuntimeUtils.range_of_term t)
 #pop-options

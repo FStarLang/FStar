@@ -147,7 +147,6 @@ let rec build_tuple_info (infos: list (term & term & universe))
 let check_while
   (g:env)
   (pre:term)
-  (pre_typing:unit)
   (post_hint:post_hint_opt g {~ (PostHint? post_hint) })
   (res_ppname:ppname)
   (t:st_term{Tm_While? t.term})

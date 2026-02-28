@@ -29,7 +29,6 @@ module P = Pulse.Syntax.Printer
 let check
   (g:env)
   (pre:term)
-  (pre_typing:unit)
   (post_hint:post_hint_opt g)
   (res_ppname:ppname)
   (t:st_term { Tm_Admit? t.term })
@@ -71,7 +70,7 @@ let check
          | STT_Ghost -> C_STGhost tm_emp_inames s
          | STT_Atomic -> C_STAtomic tm_emp_inames Neutral s)
 
-      | _, PostHint post -> Pulse.Typing.Combinators.comp_for_post_hint g pre pre_typing post x
+      | _, PostHint post -> Pulse.Typing.Combinators.comp_for_post_hint g pre () post x
   in
   let c = res in
   let admit_st = wtag (Some (ctag_of_comp_st c))
