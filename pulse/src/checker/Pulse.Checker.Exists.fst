@@ -88,8 +88,8 @@ let check_elim_exists
   then let x = fresh g in
        let elim_st = wtag (Some STT_Ghost) (Tm_ElimExists { p = tm_exists_sl u (as_binder ty) p }) in
        let elim_c = comp_elim_exists u ty p (ppname_default, x) in
-       let d : unit = () in
-       let c = match_comp_res_with_post_hint elim_st elim_c d post_hint in
+
+       let c = match_comp_res_with_post_hint elim_st elim_c () post_hint in
        prove_post_hint (try_frame_pre false pre_typing (|elim_st,c|) res_ppname) post_hint t_rng
   else fail g (Some t_rng)
          (Printf.sprintf "check_elim_exists: universe checking failed, computed %s, expected %s"
@@ -132,8 +132,8 @@ let check_intro_exists
     check_term g witness T.E_Ghost b.binder_ty in
   let intro_st = wtag (Some STT_Ghost) (Tm_IntroExists { p = tm_exists_sl u b p; witnesses = [witness] }) in
   let intro_c = C_STGhost tm_emp_inames { u=u0; res=tm_unit; pre=open_term' p witness 0; post=tm_exists_sl u b p } in
-  let d : unit = () in
-  let c = match_comp_res_with_post_hint intro_st intro_c d post_hint in
+
+  let c = match_comp_res_with_post_hint intro_st intro_c () post_hint in
   prove_post_hint (try_frame_pre false pre_typing (|intro_st, c|) res_ppname)
                   post_hint
                   (Pulse.RuntimeUtils.range_of_term t)

@@ -92,12 +92,12 @@ let check
       post = body'_c;
     }) in
     assume open_st_term' body (term_of_nvar (lbl, lbl_x)) 0 == body';
-    let typing: unit = () in
+
     if not has_explicit_post then (
       assert post_hint0 == PostHint post;
       checker_result_for_st_typing (| t, body'_c |) res_ppname
     ) else (
-      let c'' = match_comp_res_with_post_hint t body'_c typing post_hint0 in
+      let c'' = match_comp_res_with_post_hint t body'_c () post_hint0 in
       prove_post_hint #g
         (try_frame_pre false #g pre_typing (|t,c''|) res_ppname)
         post_hint0

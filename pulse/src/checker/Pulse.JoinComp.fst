@@ -410,23 +410,22 @@ let rec join_comps
   | C_STAtomic inames obs1 st, C_STAtomic _ obs2 _ ->
     let obs = join_obs obs1 obs2 in
     let c = C_STAtomic inames obs st in
-    let e_then_typing : unit = () in
-    let e_else_typing : unit = () in
-    (| c, e_then_typing, e_else_typing |)
+
+
+    (| c, (), () |)
   | C_STGhost _ _, C_STGhost _ _
-  | C_ST _, C_ST _ -> (| c_then, e_then_typing, e_else_typing |)
+  | C_ST _, C_ST _ -> (| c_then, (), () |)
 
   | _ ->
     assert (EffectAnnotAtomicOrGhost? post.effect_annot);
     match c_then, c_else with
     | C_STGhost _ _, C_STAtomic _ _ _ ->
-      let d : unit =
-        () in
+
       st_ghost_as_atomic_matches_post_hint c_then post;
-      join_comps g_then e_then (st_ghost_as_atomic c_then) d g_else e_else c_else e_else_typing post
+      join_comps g_then e_then (st_ghost_as_atomic c_then) () g_else e_else c_else () post
 
     | C_STAtomic _ _ _, C_STGhost _ _ ->
-      let d : unit = () in
+
       st_ghost_as_atomic_matches_post_hint c_else post;
-      join_comps g_then e_then c_then e_then_typing g_else e_else (st_ghost_as_atomic c_else) d post
+      join_comps g_then e_then c_then () g_else e_else (st_ghost_as_atomic c_else) () post
 #pop-options

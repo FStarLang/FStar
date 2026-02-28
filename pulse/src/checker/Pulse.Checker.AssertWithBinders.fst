@@ -352,10 +352,10 @@ let check_renaming
     // if there is no goal, take the goal to be the full current pre
     let rhs, pairs = rewrite_all st.range (T.unseal st.source) g pairs pre pre elaborated tac_opt false in
     check_pairs g st.range pairs tac_opt;
-    let h2: unit = () in
-    let h1: unit = () in
-    let (| x, g', ty, ctxt', k |) = check g rhs h1 post_hint res_ppname body in
-    (| x, g', ty, ctxt', k_elab_equiv pre ctxt' k h2 () |)
+
+
+    let (| x, g', ty, ctxt', k |) = check g rhs () post_hint res_ppname body in
+    (| x, g', ty, ctxt', k_elab_equiv pre ctxt' k () () |)
 
   | [], Some goal -> (
       let rhs, _ = rewrite_all st.range (T.unseal st.source) g pairs goal pre elaborated tac_opt true in
@@ -433,12 +433,12 @@ let check_wild
     | [ex] ->
       let k = List.Tot.length bs in
       let frame = list_as_slprop rest in
-      let ex_typ : unit = () in
-      let (|g', ex', bs, k|) = peel_binders k ex pre st.range g frame bs ex ex_typ in
+
+      let (|g', ex', bs, k|) = peel_binders k ex pre st.range g frame bs ex () in
       let body = open_st_term_with_reveals body bs in
-      let pre_typ : unit = () in
+
       let (| x'', g'', t'', ctxt'', k' |) =
-        check g' (frame `tm_star` ex') pre_typ post_hint res_ppname body in
+        check g' (frame `tm_star` ex') () post_hint res_ppname body in
       assume pre == (frame `tm_star` ex);
       (| x'', g'', t'', ctxt'', k_elab_trans k k' |)
 #pop-options
@@ -519,9 +519,9 @@ let check
     let v = v' in
     let body = body in // TODO compress
     let h: unit = PC.core_check_term g1 v T.E_Total tm_slprop in
-    let h: unit = () in // TODO: propagate through prover
+ // TODO: propagate through prover
     let (| x, x_ty, pre'', g2, k |) =
-      check g1 (tm_star v pre') h post_hint res_ppname body in
+      check g1 (tm_star v pre') () post_hint res_ppname body in
     (| x, x_ty, pre'', g2, k_elab_trans k_frame k |)
 
 
@@ -555,9 +555,9 @@ let check
 
     let _ = PC.check_slprop_with_core g v' in
 
-    let h1: unit = () in
-    let h2: unit = () in
+
+
 
     let (| x, g'', ty, ctxt', k' |) =
-      check g' (tm_star pre_remaining rhs') h1 post_hint res_ppname body in
-    (| x, g'', ty, ctxt', k_elab_trans k (k_elab_equiv (tm_star lhs pre_remaining) ctxt' k' h2 ()) |)
+      check g' (tm_star pre_remaining rhs') () post_hint res_ppname body in
+    (| x, g'', ty, ctxt', k_elab_trans k (k_elab_equiv (tm_star lhs pre_remaining) ctxt' k' () ()) |)

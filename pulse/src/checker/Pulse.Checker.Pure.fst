@@ -597,7 +597,7 @@ let try_get_non_informative_witness_aux (g:env) (u:universe) (ty:term) (ty_typin
       let dict = wr r_dict (RU.range_of_term ty) in
       let r_dict_typing_token : squash (typing_token r_env r_dict (E_Total, goal)) = () in
       let r_dict_typing : RT.typing r_env r_dict (E_Total, goal) = RT.T_Token _ _ _ () in
-      let dict_typing : unit = () in
+
       Some dict, issues
     )
 

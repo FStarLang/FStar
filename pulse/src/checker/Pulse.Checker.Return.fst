@@ -141,8 +141,8 @@ let check_core
   let post = close_term post_opened x in
   let ret_st = wtag (Some c) (Tm_Return {expected_type=tm_unknown; insert_eq=use_eq; term=t}) in
   let ret_c = comp_return c use_eq u ty t post x in
-  let d : unit = () in
-  let c' = match_comp_res_with_post_hint ret_st ret_c d post_hint in
+
+  let c' = match_comp_res_with_post_hint ret_st ret_c () post_hint in
   Pulse.Checker.Util.debug g "pulse.return" (fun _ -> 
     Printf.sprintf "Return comp is: %s"
       (Pulse.Syntax.Printer.comp_to_string c'));

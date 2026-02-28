@@ -197,8 +197,8 @@ let st_equiv_post (#g:env) (t:st_term) (c:comp_st) (d:unit)
   = if eq_tm post (comp_post c) then d
     else
       let c' = comp_st_with_post c post in
-      let st_equiv : unit = () in
-      Pulse.Typing.Combinators.t_equiv g t c d c' st_equiv
+
+      Pulse.Typing.Combinators.t_equiv g t c d c' ()
 
 let simplify_post (g:env) (t:st_term) (c:comp_st) (d:unit)
                   (post:term { comp_post c == tm_star post tm_emp})
@@ -237,8 +237,8 @@ let st_equiv_pre (#g:env) (t:st_term) (c:comp_st) (d:unit)
   = if eq_tm pre (comp_pre c) then d
     else
       let c' = comp_with_pre c pre in
-      let st_equiv : unit = () in
-      Pulse.Typing.Combinators.t_equiv g t c d c' st_equiv
+
+      Pulse.Typing.Combinators.t_equiv g t c d c' ()
 
 let k_elab_equiv_continuation (#g1:env) (#g2:env { g2 `env_extends` g1 }) (#ctxt #ctxt1:term) (ctxt2:term)
   (k:continuation_elaborator g1 ctxt g2 ctxt1)
@@ -389,11 +389,8 @@ let st_comp_typing_with_post_hint
   let PostHint ph = post_hint in
   let x = RU.magic () in //fresh g in
   assume (fresh_wrt x g (freevars ph.post));
-  let post_typing_src
-    : unit
-    = ()
-  in
-  let ty_typing : unit = () in
+
+
   assert (st.res == ph.ret_ty);
   assert (st.post == ph.post);
   ()
@@ -418,7 +415,7 @@ let continuation_elaborator_with_bind_fn (#g:env) (ctxt:term)
     assume (open_st_term (close_st_term e2 x) x == e2);
     let e = wrst c2 (Tm_Bind {binder=b; head=e1; body=e2_closed}) in
     let u : Ghost.erased universe = RU.magic () in
-    let c2_typing : unit = () in
+
     (| e, c2 |)
 
 let rec check_equiv_emp (g:env) (vp:term)
@@ -456,7 +453,7 @@ let return_in_ctxt (g:env) (y:var) (y_ppname:ppname) (u:universe) (ty:term) (ctx
   let y_tm = tm_var {nm_index=y;nm_ppname=y_ppname} in
   let t = wtag (Some ctag) (Tm_Return {expected_type=tm_unknown;insert_eq=false;term=y_tm}) in
   let c = comp_return ctag false u ty y_tm post_hint.post x in
-  let d : unit = () in
+
   assume (comp_u c == post_hint.u); // this u should follow from equality of t
   match c, post_hint.effect_annot with
   | C_STAtomic _ obs st, EffectAnnotAtomic { opens }
@@ -503,7 +500,7 @@ let match_comp_res_with_post_hint (#g:env) (t:st_term) (c:comp_st)
              RT.Rel_eq_token _ _ _ (FStar.Squash.return_squash tok) in
            
            let c' = with_st_comp c {(st_comp_of_comp c) with res = ret_ty } in
-           let d_stequiv : unit = () in
+
 
            c'
 #pop-options
@@ -726,8 +723,8 @@ let norm_st_typing_inverse
         : Ghost.erased (RT.equiv (elab_env g) t0 t1)
         = Ghost.hide (RT.Rel_sym _ _ _ related_t1_t1')
       in
-      let steq : unit = () in
-      Some (Pulse.Typing.Combinators.t_equiv g e (C_Tot t0) d (C_Tot t1) steq)
+
+      Some (Pulse.Typing.Combinators.t_equiv g e (C_Tot t0) d (C_Tot t1) ())
     )
     else None
 

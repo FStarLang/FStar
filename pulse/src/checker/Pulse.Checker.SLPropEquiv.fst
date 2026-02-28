@@ -27,9 +27,8 @@ let rec list_as_slprop_append g (vp0 vp1:list term)
          (decreases vp0)
   = match vp0 with
     | [] -> 
-      let v : unit = ()
-      in
-      v
+
+      ()
     | [hd] ->
       (* Need to check vp1 too in this case *)
       begin match vp1 with
@@ -38,12 +37,9 @@ let rec list_as_slprop_append g (vp0 vp1:list term)
       end
     | hd::tl ->
       let tl_vp1 = list_as_slprop_append g tl vp1 in
-      let d : unit
-            = ()
-      in
-      let d : unit
-            = () in
-      d
+
+
+      ()
 
 
 let list_as_slprop_comm g (vp0 vp1:list term)
@@ -98,8 +94,7 @@ let slprop_equiv_swap_equiv (g:env)
     let d' : unit
         = List.Tot.append_assoc [q] l0 l2;
         () in
-    let d : unit
-        = () in
+
     let d_q_p = d_p_q in
     let d' : unit = d_q_p in
     let d' : unit
@@ -113,18 +108,8 @@ let slprop_equiv_split_frame (g:env) (ctxt req:term) (frame:list term)
   = let ctxt_l = slprop_as_list ctxt in
     let req_l = slprop_as_list req in
     let veq : unit = veq in
-    let d1 
-        : unit
-        = ()
-    in
-    let d1 
-        : unit
-        = ()
-    in
-    let d : unit =
-        ()
-    in
-    let d : unit =
-        ()
-    in
-    d
+
+
+
+
+    ()

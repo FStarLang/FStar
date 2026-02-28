@@ -139,6 +139,6 @@ let check
   in
   let rew_st = wtag (Some STT_Ghost) (Tm_Rewrite { t1=p; t2=q; tac_opt=None; elaborated=true }) in
   let rew_c = C_STGhost tm_emp_inames { u=u0; res=tm_unit; pre=p; post=q } in
-  let d : unit = () in
-  let c = match_comp_res_with_post_hint rew_st rew_c d post_hint in
+
+  let c = match_comp_res_with_post_hint rew_st rew_c () post_hint in
   prove_post_hint (try_frame_pre false pre_typing (| rew_st,c |) res_ppname) post_hint t.range
