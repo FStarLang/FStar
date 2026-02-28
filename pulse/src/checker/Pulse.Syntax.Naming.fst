@@ -179,7 +179,7 @@ let rec close_open_inverse_st'  (t:st_term)
     | Tm_While { invariant; loop_requires; meas; condition; body } ->
       close_open_inverse' invariant x i;
       close_open_inverse' loop_requires x i;
-      (match meas with | Some d -> close_open_inverse' d x i | None -> ());
+      close_open_inverse_list' meas x i;
       close_open_inverse_st' condition x i;
       close_open_inverse_st' body x i
 

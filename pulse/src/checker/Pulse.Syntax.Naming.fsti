@@ -127,7 +127,7 @@ let rec freevars_st (t:st_term)
     | Tm_While { invariant; loop_requires; meas; condition; body } ->
       freevars invariant ++
       freevars loop_requires ++
-      freevars_term_opt meas ++
+      freevars_list meas ++
       freevars_st condition ++
       freevars_st body
 
@@ -315,7 +315,7 @@ let rec ln_st' (t:st_term) (i:int)
     | Tm_While { invariant; loop_requires; meas; condition; body } ->
       ln' invariant i &&
       ln' loop_requires i &&
-      ln_opt' ln' meas i &&
+      ln_list' meas i &&
       ln_st' condition i &&
       ln_st' body i
 
@@ -564,7 +564,7 @@ let rec subst_st_term (t:st_term) (ss:subst)
     | Tm_While { invariant; loop_requires; meas; condition; body } ->
       Tm_While { invariant = subst_term invariant ss;
                     loop_requires = subst_term loop_requires ss;
-                    meas = subst_term_opt meas ss;
+                    meas = subst_term_list meas ss;
                     condition = subst_st_term condition ss;
                     body = subst_st_term body ss }
 

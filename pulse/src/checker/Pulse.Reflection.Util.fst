@@ -105,6 +105,16 @@ let mk_snd (u1 u2:R.universe) (a1 a2 e:R.term) : R.term =
   let t = pack_ln (Tv_App t (a2, Q_Implicit)) in
   pack_ln (Tv_App t (e, Q_Explicit))
 
+let mktuple2_lid = ["FStar"; "Pervasives"; "Native"; "Mktuple2"]
+
+let mk_mktuple2 (u1 u2:R.universe) (a1 a2 v1 v2:R.term) : R.term =
+  let open R in
+  let t = pack_ln (Tv_UInst (pack_fv mktuple2_lid) [u1; u2]) in
+  let t = pack_ln (Tv_App t (a1, Q_Implicit)) in
+  let t = pack_ln (Tv_App t (a2, Q_Implicit)) in
+  let t = pack_ln (Tv_App t (v1, Q_Explicit)) in
+  pack_ln (Tv_App t (v2, Q_Explicit))
+
 let true_tm = R.pack_ln (R.Tv_Const (R.C_True))
 let false_tm = R.pack_ln (R.Tv_Const (R.C_False))
 
