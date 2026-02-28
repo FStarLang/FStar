@@ -104,11 +104,11 @@ let rec bindings_var_dom : env_bindings -> Set.set var = function
 let var_dom (g: env) : Set.set var = bindings_var_dom (bindings g)
 
 let infer_post' (g:env) (g':env { g' `env_extends` g })
-  #u #t (x: var { lookup g' x == Some t }) (t_typ: universe_of g' t u)
-  #post (post_typing: tot_typing g' post tm_slprop)
+  (u:universe) (t:typ) (x: var { lookup g' x == Some t }) (t_typ: unit)
+  (post:term) (post_typing: unit)
 =
   // simplify post by applying elimination rules (particularly `frame ** is_unreachable ~~> is_unreachable`)
-  let (| g1, post, _, _ |) = Pulse.Checker.Prover.elim_exists_and_pure post_typing in
+  let (| g1, post, _, _ |) = Pulse.Checker.Prover.elim_exists_and_pure #g' #post post_typing in
   let bs0 = bindings g in
   let dom_g = var_dom g in
   let fvs_t = freevars t in
@@ -128,8 +128,8 @@ let infer_post' (g:env) (g':env { g' `env_extends` g })
     let g' = push_binding g x ppname_default t in
     assume (fresh_wrt x g (freevars post));
     {
-      g; effect_annot=EffectAnnotSTT; effect_annot_typing=();
-      ret_ty=t; u; ty_typing=();
+      g; effect_annot=EffectAnnotSTT;
+      ret_ty=t; u;
       post
     }
   in
@@ -364,8 +364,8 @@ let join_post #g #hyp #b
   let _ = Pulse.Checker.Pure.check_slprop_with_core g' joined_post' in
   let eff = join_effect_annot g p1.effect_annot p2.effect_annot in
   let res : post_hint_for_env g =
-    {g; effect_annot=eff; effect_annot_typing=();
-     ret_ty=p1.ret_ty; u=u; ty_typing=();
+    {g; effect_annot=eff;
+     ret_ty=p1.ret_ty; u=u;
      post=joined_post}
   in
   res
@@ -388,15 +388,15 @@ let rec join_comps
   (g_then:env)
   (e_then:st_term)
   (c_then:comp_st)
-  (e_then_typing:st_typing g_then e_then c_then)
+  (e_then_typing:unit)
   (g_else:env)
   (e_else:st_term)
   (c_else:comp_st)
-  (e_else_typing:st_typing g_else e_else c_else)
+  (e_else_typing:unit)
   (post:post_hint_t)
   : T.TacH (c:comp_st &
-          st_typing g_then e_then c &
-          st_typing g_else e_else c)
+          unit &
+          unit)
          (requires
             comp_post_matches_hint c_then (PostHint post) /\
             comp_post_matches_hint c_else (PostHint post) /\
@@ -410,8 +410,8 @@ let rec join_comps
   | C_STAtomic inames obs1 st, C_STAtomic _ obs2 _ ->
     let obs = join_obs obs1 obs2 in
     let c = C_STAtomic inames obs st in
-    let e_then_typing : st_typing g_then e_then c = () in
-    let e_else_typing : st_typing g_else e_else c = () in
+    let e_then_typing : unit = () in
+    let e_else_typing : unit = () in
     (| c, e_then_typing, e_else_typing |)
   | C_STGhost _ _, C_STGhost _ _
   | C_ST _, C_ST _ -> (| c_then, e_then_typing, e_else_typing |)
@@ -420,13 +420,13 @@ let rec join_comps
     assert (EffectAnnotAtomicOrGhost? post.effect_annot);
     match c_then, c_else with
     | C_STGhost _ _, C_STAtomic _ _ _ ->
-      let d : st_typing g_then e_then (st_ghost_as_atomic c_then) =
+      let d : unit =
         () in
       st_ghost_as_atomic_matches_post_hint c_then post;
       join_comps g_then e_then (st_ghost_as_atomic c_then) d g_else e_else c_else e_else_typing post
 
     | C_STAtomic _ _ _, C_STGhost _ _ ->
-      let d : st_typing g_else e_else (st_ghost_as_atomic c_else) = () in
+      let d : unit = () in
       st_ghost_as_atomic_matches_post_hint c_else post;
       join_comps g_then e_then c_then e_then_typing g_else e_else (st_ghost_as_atomic c_else) d post
 #pop-options

@@ -22,14 +22,14 @@ open Pulse.Checker.Base
 module T = FStar.Tactics.V2
 
 val infer_post' (g:env) (g':env { g' `env_extends` g })
-  #u #t (x: var { lookup g' x == Some t }) (t_typ: universe_of g' t u)
-  #post (post_typing: tot_typing g' post tm_slprop)
+  (u:universe) (t:typ) (x: var { lookup g' x == Some t }) (t_typ: unit)
+  (post:term) (post_typing: unit)
 : T.Tac (p:post_hint_for_env g {p.g == g /\ p.effect_annot==EffectAnnotSTT})
 
 let infer_post #g #ctxt (r:checker_result_t g ctxt NoHint)
 : T.Tac (p:post_hint_for_env g {p.g == g /\ p.effect_annot==EffectAnnotSTT})
 = let (| x, g', (u, t), post, k |) = r in
-  infer_post' g g' #u #t x () #post ()
+  infer_post' g g' u t x () post ()
 
 val join_post #g #hyp #b
     (p1:post_hint_for_env (g_with_eq g hyp b tm_true))
@@ -40,15 +40,15 @@ val join_comps
   (g_then:env)
   (e_then:st_term)
   (c_then:comp_st)
-  (e_then_typing:st_typing g_then e_then c_then)
+  (e_then_typing:unit)
   (g_else:env)
   (e_else:st_term)
   (c_else:comp_st)
-  (e_else_typing:st_typing g_else e_else c_else)
+  (e_else_typing:unit)
   (post:post_hint_t)
 : T.TacH (c:comp_st &
-        st_typing g_then e_then c &
-        st_typing g_else e_else c)
+        unit &
+        unit)
     (requires
       comp_post_matches_hint c_then (PostHint post) /\
       comp_post_matches_hint c_else (PostHint post) /\

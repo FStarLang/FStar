@@ -145,7 +145,7 @@ let squash_prop_validity_token f p (t:prop_validity_token f (mk_squash0 p))
   : prop_validity_token f p
   = admit(); t
 
-let rtb_check_prop_validity (g:env) (sync:bool) (f:_{f == elab_env g }) (p:_) (pf:tot_typing g p tm_prop) =
+let rtb_check_prop_validity (g:env) (sync:bool) (f:_{f == elab_env g }) (p:_) (pf:unit) =
   let _ : squash (typing_token f p (E_Total, tm_prop)) =
     magic ()
   in
@@ -523,7 +523,7 @@ let check_slprop_with_core (g:env)
   
 
 let non_informative_class_typing
-  (g:env) (u:universe) (ty:typ) (ty_typing : universe_of g ty u)
+  (g:env) (u:universe) (ty:typ) (ty_typing : unit)
   : my_erased (typing_token (elab_env g) (non_informative_class u ty) (E_Total, R.pack_ln (R.Tv_Type u)))
   = E (magic())
 
@@ -551,7 +551,7 @@ let non_info_squash_tm (u:universe) (t:term) : term =
 To do so, we simply create that constraint (and prove it's well-typed), and then
 call the tcresolve typeclass resolution tactic on it to obtain a dictionary and
 a proof of typing for the dictionary. *)
-let try_get_non_informative_witness_aux (g:env) (u:universe) (ty:term) (ty_typing:universe_of g ty u)
+let try_get_non_informative_witness_aux (g:env) (u:universe) (ty:term) (ty_typing:unit)
   : T.Tac (option (non_informative_t g u ty) & issues)
   = let goal = non_informative_class u ty in
     let r_env = elab_env g in
@@ -597,7 +597,7 @@ let try_get_non_informative_witness_aux (g:env) (u:universe) (ty:term) (ty_typin
       let dict = wr r_dict (RU.range_of_term ty) in
       let r_dict_typing_token : squash (typing_token r_env r_dict (E_Total, goal)) = () in
       let r_dict_typing : RT.typing r_env r_dict (E_Total, goal) = RT.T_Token _ _ _ () in
-      let dict_typing : tot_typing g dict (non_informative_class u ty) = () in
+      let dict_typing : unit = () in
       Some dict, issues
     )
 

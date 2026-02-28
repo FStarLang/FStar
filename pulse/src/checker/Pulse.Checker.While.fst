@@ -30,22 +30,22 @@ module RU = Pulse.RuntimeUtils
 
 let empty_env g = mk_env (fstar_env g)
 let push_empty_env_idem (g:env) : Lemma (push_env g (empty_env g) == g)[SMTPat (push_env g (empty_env g))] = admit()
-let body_typing_subst_true #g #x #post (_:tot_typing (push_binding g x ppname_default tm_bool) (open_term post x) tm_slprop)
-: tot_typing g (open_term' post tm_true 0) tm_slprop = admit()
-let body_typing_ex #g #x #post (_:tot_typing (push_binding g x ppname_default tm_bool) (open_term post x) tm_slprop)
-: tot_typing g (tm_exists_sl u0 (as_binder tm_bool) post) tm_slprop = admit()
-let unit_typing g : universe_of g tm_unit u0 = admit()
+let body_typing_subst_true #g #x #post (_:unit)
+: unit = admit()
+let body_typing_ex #g #x #post (_:unit)
+: unit = admit()
+let unit_typing g : unit = admit()
 
-let inv_typing_weakening (#g:env) (#inv:slprop) (inv_typing:tot_typing g inv tm_slprop) 
+let inv_typing_weakening (g:env) (inv:slprop) (inv_typing:unit) 
 : (x:FStar.Ghost.erased var {fresh_wrt x g (freevars inv)})
  = let x : (x:FStar.Ghost.erased var {fresh_wrt x g (freevars inv)}) = RU.magic () in
    x
 
-let inv_as_post_hint (#g:env) (#inv:slprop) (inv_typing:tot_typing g inv tm_slprop) 
+let inv_as_post_hint (g:env) (inv:slprop) (inv_typing:unit) 
 : T.Tac (ph:post_hint_for_env g { ph.post == inv /\ ph.ret_ty == tm_unit /\ ph.u == u0 /\ ph.effect_annot == EffectAnnotSTT })
-= let x = inv_typing_weakening inv_typing in
-  { g; effect_annot=EffectAnnotSTT; effect_annot_typing=();
-    ret_ty=tm_unit; u=u0; ty_typing=unit_typing g; post=inv }
+= let x = inv_typing_weakening g inv inv_typing in
+  { g; effect_annot=EffectAnnotSTT;
+    ret_ty=tm_unit; u=u0; post=inv }
 
 let tm_l_true : term = FStar.Reflection.V2.Formula.(formula_as_term True_)
 let tm_l_or (a b: term) : term = FStar.Reflection.V2.Formula.(formula_as_term (Or a b))
@@ -147,7 +147,7 @@ let rec build_tuple_info (infos: list (term & term & universe))
 let check_while
   (g:env)
   (pre:term)
-  (pre_typing:tot_typing g pre tm_slprop)
+  (pre_typing:unit)
   (post_hint:post_hint_opt g {~ (PostHint? post_hint) })
   (res_ppname:ppname)
   (t:st_term{Tm_While? t.term})
@@ -213,7 +213,7 @@ let check_while
   assume freshv g0 (snd x_meas);
   let g1 = push_binding g0 (snd x_meas) (fst x_meas) ty_meas in
   let inv = tm_star (RU.deep_compress_safe inv) remaining in
-  let inv_typing : tot_typing g1 inv tm_slprop = () in
+  let inv_typing : unit = () in
   let res_cond : checker_result_t g1 inv (TypeHint tm_bool) =
     check (push_context "check_while_condition" cond.range g1) inv inv_typing (TypeHint tm_bool) ppname_default cond in
   let (| post_cond, r_cond |) : (ph:post_hint_for_env g1 & Pulse.Typing.Combinators.st_typing_in_ctxt g1 inv (PostHint ph)) =
@@ -246,12 +246,12 @@ let check_while
       assert g1 `env_extends` g0;
       assert g1' `env_extends` g1;
       assert g1'' `env_extends` g1';
-      let loop_ensures_typ: tot_typing g1'' loop_ensures tm_slprop = () in
-      let unit_typ: universe_of g1'' tm_unit u0 = () in
-      let loop_ensures = Pulse.JoinComp.infer_post' g0 g1'' y unit_typ loop_ensures_typ in
+      let loop_ensures_typ: unit = () in
+      let unit_typ: unit = () in
+      let loop_ensures = Pulse.JoinComp.infer_post' g0 g1'' u0 tm_unit y () loop_ensures () in
       let loop_ensures = subst_loop_requires_marker_with_true loop_ensures.post in
       let loop_ensures = open_term' loop_ensures unit_const 0 in
-      let loop_ensures_typ: tot_typing g0 loop_ensures tm_slprop = () in
+      let loop_ensures_typ: unit = () in
       loop_ensures
     | None ->
       let t: term = tm_exists_sl u_meas (as_binder ty_meas) (close_term (open_term' post_cond.post tm_false 0) (snd x_meas)) in
@@ -274,17 +274,17 @@ let check_while
   let post_cond : post_hint_for_env g2 = assume post_hint_for_env_p g2 post_cond; post_cond in
   let r_cond : Pulse.Typing.Combinators.st_typing_in_ctxt g2 inv (PostHint post_cond) =
     let (| t, c |) = r_cond in
-    let typ : st_typing g2 t c = () in
+    let typ : unit = () in
     (| t, c |) in
 
   let body_pre_open = post_cond.post in
-  let body_post_typing : tot_typing g2 (comp_post (comp_while_body u_meas ty_meas is_tot dec_formula x_meas inv body_pre_open)) tm_slprop = () in
-  let body_ph : post_hint_for_env g2 = inv_as_post_hint body_post_typing in
+  let body_post_typing : unit = () in
+  let body_ph : post_hint_for_env g2 = inv_as_post_hint g2 (comp_post (comp_while_body u_meas ty_meas is_tot dec_formula x_meas inv body_pre_open)) body_post_typing in
   assert body_ph.ret_ty == tm_unit;
   let x = fresh g2 in
-  let body_open_pre_typing : tot_typing (push_binding g2 x ppname_default tm_bool) (open_term body_pre_open x) tm_slprop =
+  let body_open_pre_typing : unit =
     () in
-  let body_pre_typing = body_typing_subst_true body_open_pre_typing in
+  let body_pre_typing = () in
   let r_body = 
     check 
       (push_context "check_while_body" body.range g2) 
@@ -298,13 +298,13 @@ let check_while
   assert (comp_u comp_body == comp_u (comp_while_body u_meas ty_meas is_tot dec_formula x_meas inv body_pre_open));
   assert (comp_res comp_body == comp_res (comp_while_body u_meas ty_meas is_tot dec_formula x_meas inv body_pre_open));
   assert (comp_body == comp_while_body u_meas ty_meas is_tot dec_formula x_meas inv body_pre_open);
-  let inv_typing2 : tot_typing g2 inv tm_slprop = () in
+  let inv_typing2 : unit = () in
 
   let while = wtag (Some STT) (Tm_While { invariant = inv; loop_requires = tm_unknown; meas = []; condition = cond; body }) in
-  let typ_meas: universe_of g1' ty_meas u_meas = () in
+  let typ_meas: unit = () in
   assume ~(snd x_meas `Set.mem` freevars_st cond);
   assume ~(snd x_meas `Set.mem` freevars_st body);
-  let d: st_typing g1' while (comp_while u_meas ty_meas x_meas inv body_pre_open) =
+  let d: unit =
     () in
   let C_ST cst = comp_while u_meas ty_meas x_meas inv body_pre_open in
   let loop_pre = tm_exists_sl u_meas (as_binder ty_meas) (close_term inv (snd x_meas)) in
@@ -315,10 +315,8 @@ let check_while
   let post_hint_for_while : post_hint_for_env g0 = {
       g=g0;
       effect_annot=EffectAnnotSTT;
-      effect_annot_typing=();
       ret_ty=RT.unit_ty;
       u=u_zero;
-      ty_typing=RU.magic(); //unit typing
       post=break_pred
     }
   in
@@ -337,14 +335,14 @@ let check_while
     (Tm_ForwardJumpLabel { lbl = breaklbln; body = close_st_term while breaklblx; post = while_comp }) in
   admit ();
   assert break_lbl_c == goto_comp_of_block_comp while_comp;
-  let fjl_d: st_typing g0 fjl while_comp =
+  let fjl_d: unit =
     () in
 
   let d_st: Pulse.Typing.Combinators.st_typing_in_ctxt g0 loop_pre (TypeHint tm_unit) = (| fjl, while_comp |) in
   let d_st: Pulse.Typing.Combinators.st_typing_in_ctxt g0 loop_pre0 (TypeHint tm_unit) =
     let (| t, c |) = d_st in
     let c = with_st_comp c { st_comp_of_comp c with pre = loop_pre0 } in
-    let typ : st_typing g0 t c = () in
+    let typ : unit = () in
     (| t, c |) in
 
   let d_st : Pulse.Typing.Combinators.st_typing_in_ctxt g pre NoHint = k NoHint d_st in

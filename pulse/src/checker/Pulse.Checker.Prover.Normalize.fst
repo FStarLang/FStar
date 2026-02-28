@@ -48,7 +48,7 @@ let __normalize_slprop
 
   let v' = PCP.norm_well_typed_term (elab_env g) steps v in
   let v' = Pulse.Simplify.simplify v' in (* NOTE: the simplify stage is unverified *)
-  let v_equiv_v' : slprop_equiv g v v' = () in
+  let v_equiv_v' : unit = () in
   v'
 
 let normalize_slprop
@@ -60,7 +60,7 @@ let normalize_slprop
   if use_rewrites_to then
     let rwr = Pulse.Checker.Prover.RewritesTo.get_subst_from_env g in
     let v' = PS.ss_term v rwr in
-    let eq_v_v' : slprop_equiv g v v' = () in
+    let eq_v_v' : unit = () in
     let v'' = __normalize_slprop g v' in
     v''
   else
@@ -69,7 +69,7 @@ let normalize_slprop
 let normalize_slprop_welltyped
   (g:env)
   (v:slprop)
-  (v_typing:tot_typing g v tm_slprop)
+  (v_typing:unit)
   : T.Tac slprop
 =
   let v' = normalize_slprop g v true in

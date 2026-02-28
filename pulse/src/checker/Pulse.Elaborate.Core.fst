@@ -56,13 +56,13 @@ let elab_sub (c1 c2:comp_st) (e:R.term) =
   else mk_sub_stt_ghost u ty pre1 pre2 post1 post2 e
 
 
-let elab_bind #g #x #c1 #c2 #c
-              (bc:bind_comp g x c1 c2 c)
+let elab_bind (g:env) (x:var) (c1:comp) (c2:comp) (c:comp)
+              (bc:unit)
               (e1 e2:R.term)
   : GTot R.term
   = RU.magic ()
   
-let elab_lift #g #c1 #c2 (d:lift_comp g c1 c2) (e:R.term)
+let elab_lift (g:env) (c1:comp) (c2:comp) (d:unit) (e:R.term)
   : GTot R.term
   = RU.magic ()
 
@@ -86,32 +86,32 @@ let simple_arr (t1 t2 : R.term) : R.term =
            attrs = [] } in
   R.pack_ln (R.Tv_Arrow b (R.pack_comp (R.C_Total t2)))
 
-let elab_st_sub (#g:env) (#c1 #c2 : comp)
-     (d_sub : st_sub g c1 c2)
+let elab_st_sub (g:env) (c1:comp) (c2:comp)
+     (d_sub : unit)
    : Tot (t:R.term
           & RT.tot_typing (elab_env g) t (simple_arr (elab_comp c1) (elab_comp c2)))
 = RU.magic_s "elab_st_sub"
 
-let rec elab_st_typing (#g:env)
-                       (#t:st_term)
-                       (#c:comp)
-                       (d:st_typing g t c)
+let rec elab_st_typing (g:env)
+                       (t:st_term)
+                       (c:comp)
+                       (d:unit)
   : GTot R.term (decreases d)
   = RU.magic ()
 
-and elab_br (#g:env)
-            (#c:comp_st)
-            (#sc_u:universe) (#sc_ty:typ) (#sc:term)
-            (#p:pattern)
-            (#e:st_term)
-            (d : br_typing g sc_u sc_ty sc p e c)
+and elab_br (g:env)
+            (c:comp_st)
+            (sc_u:universe) (sc_ty:typ) (sc:term)
+            (p:pattern)
+            (e:st_term)
+            (d : unit)
   : GTot R.branch (decreases d)
   = RU.magic ()
-and elab_branches (#g:env)
-                  (#c:comp_st)
-                  (#sc_u:universe) (#sc_ty:typ) (#sc:term)
-                  (#brs:list branch)
-                  (d : brs_typing g sc_u sc_ty sc brs c)
+and elab_branches (g:env)
+                  (c:comp_st)
+                  (sc_u:universe) (sc_ty:typ) (sc:term)
+                  (brs:list branch)
+                  (d : unit)
   : GTot (list R.branch)
         (decreases d)
   = RU.magic ()

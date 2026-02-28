@@ -63,8 +63,8 @@ type result_of_typing (g:env) =
     t:term ->
     u:universe ->
     ty:term ->
-    universe_of g ty u ->
-    typing g t (eff_of_ctag c) ty ->
+    unit ->
+    unit ->
     result_of_typing g
 
 let compute_tot_or_ghost_term_type_and_u (g:env) (e:term) (c:option ctag)
@@ -79,7 +79,7 @@ let compute_tot_or_ghost_term_type_and_u (g:env) (e:term) (c:option ctag)
 let check_core
   (g:env)
   (ctxt:term)
-  (ctxt_typing:tot_typing g ctxt tm_slprop)
+  (ctxt_typing:unit)
   (post_hint:post_hint_opt g)
   (res_ppname:ppname)
   (st:st_term { Tm_Return? st.term })
@@ -141,7 +141,7 @@ let check_core
   let post = close_term post_opened x in
   let ret_st = wtag (Some c) (Tm_Return {expected_type=tm_unknown; insert_eq=use_eq; term=t}) in
   let ret_c = comp_return c use_eq u ty t post x in
-  let d : st_typing g ret_st ret_c = () in
+  let d : unit = () in
   let c' = match_comp_res_with_post_hint ret_st ret_c d post_hint in
   Pulse.Checker.Util.debug g "pulse.return" (fun _ -> 
     Printf.sprintf "Return comp is: %s"
@@ -155,7 +155,7 @@ let check_core
 let check
   (g:env)
   (ctxt:term)
-  (ctxt_typing:tot_typing g ctxt tm_slprop)
+  (ctxt_typing:unit)
   (post_hint:post_hint_opt g)
   (res_ppname:ppname)
   (st:st_term { Tm_Return? st.term })

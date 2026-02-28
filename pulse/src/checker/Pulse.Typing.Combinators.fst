@@ -29,33 +29,33 @@ open Pulse.Checker.Pure
 
 assume
 val invert_forall_typing
-        (#g #u #b #body:_)
-        (d:tot_typing g (tm_forall_sl u b body) tm_slprop)
+        (g:env) (u:universe) (b:binder) (body:term)
+        (d:unit)
         (x:var { freshv g x /\ ~ (x `Set.mem` freevars body) })
   : GTot (
-    tot_typing g b.binder_ty (tm_type u) &
-    tot_typing (push_binding g x ppname_default b.binder_ty) (open_term body x) tm_slprop
+    unit &
+    unit
   )
 
 assume
 val construct_forall_typing
-        (#g #u #b #body:_)
+        (g:env) (u:universe) (b:binder) (body:term)
         (x:var { freshv g x /\ ~ (x `Set.mem` freevars body) })
-        (dt:tot_typing g b.binder_ty (tm_type u))
-        (db:tot_typing (push_binding g x ppname_default b.binder_ty) (open_term body x) tm_slprop)
-  : GTot (tot_typing g (tm_forall_sl u b body) tm_slprop)
+        (dt:unit)
+        (db:unit)
+  : GTot (unit)
 
-let st_equiv_trans (#g:env) (#c0 #c1 #c2:comp) (d01:st_equiv g c0 c1) (d12:st_equiv g c1 c2)
-  : st_equiv g c0 c2
+let st_equiv_trans (g:env) (c0 c1 c2:comp) (d01:unit) (d12:unit)
+  : unit
   = ()
 
-let t_equiv (g:env) (st:st_term) (c:comp) (d:st_typing g st c) (c':comp) (eq:st_equiv g c c')
-  : st_typing g st c'
+let t_equiv (g:env) (st:st_term) (c:comp) (d:unit) (c':comp) (eq:unit)
+  : unit
   = ()
 
-let slprop_equiv_typing (g:env) (t0 t1:term) (v:slprop_equiv g t0 t1)
-  : GTot ((tot_typing g t0 tm_slprop -> tot_typing g t1 tm_slprop) &
-          (tot_typing g t1 tm_slprop -> tot_typing g t0 tm_slprop))
+let slprop_equiv_typing (g:env) (t0 t1:term) (v:unit)
+  : GTot ((unit -> unit) &
+          (unit -> unit))
   = (fun _ -> ()), (fun _ -> ())
         
 let bind_t (case_c1 case_c2:comp_st -> bool) =
@@ -66,13 +66,11 @@ let bind_t (case_c1 case_c2:comp_st -> bool) =
       (c1:comp_st{ case_c1 c1 }) ->
       (c2:comp_st{ case_c2 c2 }) ->
       (px:nvar { ~ (Set.mem (snd px) (dom g)) }) ->
-      (d_e1:st_typing g e1 c1) ->
-      (d_c1res:tot_typing g (comp_res c1) (tm_type (comp_u c1))) ->
-      (d_e2:st_typing (push_binding g (snd px) (fst px) (comp_res c1)) (open_st_term_nv e2 px) c2) ->
-      (res_typing:universe_of g (comp_res c2) (comp_u c2)) ->
-      (post_typing:tot_typing (push_binding g (snd px) (fst px) (comp_res c2))
-                              (open_term_nv (comp_post c2) px)
-                                      tm_slprop) ->
+      (d_e1:unit) ->
+      (d_c1res:unit) ->
+      (d_e2:unit) ->
+      (res_typing:unit) ->
+      (post_typing:unit) ->
       (post_hint:post_hint_opt g { comp_post_matches_hint c2 post_hint }) ->
     T.TacH (t:st_term &
             c:comp_st { st_comp_of_comp c == st_comp_with_pre (st_comp_of_comp c2) pre  /\
@@ -107,9 +105,9 @@ let with_inames (c:comp_st) (i:term) =
   | C_STGhost _ sc -> C_STGhost i sc
   | C_STAtomic _ obs sc -> C_STAtomic i obs sc
 
-let weaken_comp_inames (#g:env) (#e:st_term) (#c:comp_st) (d_e:st_typing g e c) (new_inames:term)
+let weaken_comp_inames (g:env) (e:st_term) (c:comp_st) (d_e:unit) (new_inames:term)
   : T.Tac (c':comp_st { with_inames c new_inames == c' } &
-           st_typing g e c')
+           unit)
   = match c with
     | C_ST _ -> (| c, d_e |)
     | C_STGhost inames sc ->
@@ -120,15 +118,15 @@ let weaken_comp_inames (#g:env) (#e:st_term) (#c:comp_st) (d_e:st_typing g e c) 
       let _ = check_prop_validity g (tm_inames_subset inames new_inames) in
       (| with_inames c new_inames, () |)
 
-let try_lift_ghost_atomic (g:env) (e:st_term) (c:comp_st { C_STGhost? c }) (d:st_typing g e c)
-: T.Tac (option (st_typing g e (st_ghost_as_atomic c)))
+let try_lift_ghost_atomic (g:env) (e:st_term) (c:comp_st { C_STGhost? c }) (d:unit)
+: T.Tac (option (unit))
 = let w = try_get_non_informative_witness g (comp_u c) (comp_res c) in
   match w with
   | None -> None
   | Some w -> Some ()
 
-let lift_ghost_atomic (g:env) (e:st_term) (c:comp_st { C_STGhost? c }) (d:st_typing g e c)
-: T.Tac (st_typing g e (st_ghost_as_atomic c))
+let lift_ghost_atomic (g:env) (e:st_term) (c:comp_st { C_STGhost? c }) (d:unit)
+: T.Tac (unit)
 = let w = try_lift_ghost_atomic g e c d in
   match w with
   | None -> 
@@ -217,13 +215,11 @@ let rec mk_bind (g:env)
                 (c1:comp_st)
                 (c2:comp_st)
                 (px:nvar { ~ (Set.mem (snd px) (dom g)) })
-                (d_e1:st_typing g e1 c1)
-                (d_c1res:tot_typing g (comp_res c1) (tm_type (comp_u c1)))
-                (d_e2:st_typing (push_binding g (snd px) (fst px) (comp_res c1)) (open_st_term_nv e2 px) c2)
-                (res_typing:universe_of g (comp_res c2) (comp_u c2))
-                (post_typing:tot_typing (push_binding g (snd px) (fst px) (comp_res c2))
-                                        (open_term_nv (comp_post c2) px)
-                                        tm_slprop)
+                (d_e1:unit)
+                (d_c1res:unit)
+                (d_e2:unit)
+                (res_typing:unit)
+                (post_typing:unit)
                 (post_hint:post_hint_opt g { comp_post_matches_hint c2 post_hint })
   : T.TacH (t:st_term &
             c:comp_st {
@@ -351,9 +347,9 @@ let bind_res_and_post_typing g c2 x post_hint
       CU.debug g "pulse.main" (fun _ -> "bind_res_and_post_typing (with post_hint)\n");
       ()
      
-let add_frame (g:env) (t:st_term) (c:comp_st) (t_typing:st_typing g t c)
+let add_frame (g:env) (t:st_term) (c:comp_st) (t_typing:unit)
   (frame:slprop)
-  (frame_typing:tot_typing g frame tm_slprop)
+  (frame_typing:unit)
   : t':st_term &
     c':comp_st { c' == add_frame c frame } =
 
@@ -363,9 +359,9 @@ let add_frame (g:env) (t:st_term) (c:comp_st) (t_typing:st_typing g t c)
 let apply_frame (g:env)
                 (t:st_term)
                 (ctxt:term)
-                (ctxt_typing: tot_typing g ctxt tm_slprop)
+                (ctxt_typing: unit)
                 (c:comp { stateful_comp c })
-                (t_typing: st_typing g t c)
+                (t_typing: unit)
                 (frame_t:frame_for_req_in_ctxt g ctxt (comp_pre c))
   : Dv  (c':comp_st { comp_pre c' == ctxt /\
                       comp_res c' == comp_res c /\
@@ -382,7 +378,7 @@ let apply_frame (g:env)
 #pop-options
 
 #push-options "--z3rlimit_factor 2"
-let comp_for_post_hint (g:env) (pre:slprop) (pre_typing:tot_typing g pre tm_slprop)
+let comp_for_post_hint (g:env) (pre:slprop) (pre_typing:unit)
   (post:post_hint_t { g `env_extends` post.g })
   (x:var { freshv g x })
   : T.Tac (c:comp_st { comp_pre c == pre /\ comp_post_matches_hint c (PostHint post) }) =

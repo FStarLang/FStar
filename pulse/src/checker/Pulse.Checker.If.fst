@@ -46,7 +46,7 @@ let retype_checker_result (#g:env) (#ctxt:slprop) (#ph:post_hint_opt g) (ph':pos
 let check
   (g:env)
   (pre:term)
-  (pre_typing: tot_typing g pre tm_slprop)
+  (pre_typing: unit)
   (post_hint:post_hint_opt g)
   (res_ppname:ppname)
   (b:term)
@@ -64,7 +64,7 @@ let check
   let g_with_eq = g_with_eq g hyp b in  
   let check_branch (eq_v:term) (br:st_term) (is_then:bool)
   : T.Tac (checker_result_t (g_with_eq eq_v) pre post_hint)
-  = let pre_typing : tot_typing (g_with_eq eq_v) pre tm_slprop = () in
+  = let pre_typing : unit = () in
 
     let br =
       let t =
@@ -85,7 +85,7 @@ let check
   let infer_post_branch (#eq_v:term) (r: checker_result_t (g_with_eq eq_v) pre NoHint) :
     T.Tac (p:post_hint_for_env g {p.g == g /\ p.effect_annot==EffectAnnotSTT}) =
     let (| x, g', (u, t), post, k |) = r in
-    J.infer_post' g g' #u #t x () #post ()
+    J.infer_post' g g' u t x () post ()
   in
 
   let then_ = check_branch tm_true e1 true in
@@ -112,7 +112,7 @@ let check
   let extract #g #pre (#ph:post_hint_for_env g) (r:checker_result_t g pre (PostHint ph)) (is_then:bool)
   : T.Tac (br:st_term { ~(hyp `Set.mem` freevars_st br) } &
            c:comp_st { comp_pre c == pre /\ comp_post_matches_hint c (PostHint ph)} &
-           st_typing g br c)
+           unit)
   = let (| br, c |) =
       let ppname = mk_ppname_no_range "_if_br" in
       apply_checker_result_k r ppname

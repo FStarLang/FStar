@@ -261,7 +261,7 @@ let rec do_not_elim_state (t:st_term) : Dv bool =
 let rec check
   (g0:env)
   (pre0:term)
-  (pre0_typing: tot_typing g0 pre0 tm_slprop)
+  (pre0_typing: unit)
   (post_hint:post_hint_opt g0)
   (res_ppname:ppname)
   (t:st_term)
@@ -292,7 +292,7 @@ let rec check
     let (| g, pre, pre_typing, k_elim_pure |) :
         (g':env { env_extends g' g0 } &
             ctxt':term &
-            tot_typing g' ctxt' tm_slprop &
+            unit &
             continuation_elaborator g0 pre0 g' ctxt') = 
       if do_not_elim_state t then
         (| g0, pre0, pre0_typing, k_elab_unit _ _ |)

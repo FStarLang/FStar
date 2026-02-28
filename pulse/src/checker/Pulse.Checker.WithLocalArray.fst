@@ -54,17 +54,15 @@ let extend_post_hint
 
 
 let with_local_array_pre_typing (#g:env) (#pre:term)
-  (pre_typing:tot_typing g pre tm_slprop)
+  (pre_typing:unit)
   (init_t:term)
   (init:option term)
   (len:term)
-  (init_typing:(match init with Some init -> tot_typing g init init_t | _ -> unit))
-  (len_typing:tot_typing g len tm_szt)
+  (init_typing:(match init with Some init -> unit | _ -> unit))
+  (len_typing:unit)
   (x:var { ~ (Set.mem x (dom g)) })
   (n: ppname)
-  : tot_typing (extend_env g init_t x n init)
-               (comp_withlocal_array_body_pre pre init_t (term_of_nvar (n, x)) init len)
-               tm_slprop
+  : unit
   = admit()
 
 let is_annotated_type_array (t:term) : option term =
@@ -91,7 +89,7 @@ let head_range (t:st_term {Tm_WithLocalArray? t.term}) : range =
 let check
   (g:env)
   (pre:term)
-  (pre_typing:tot_typing g pre tm_slprop)
+  (pre_typing:unit)
   (post_hint:post_hint_opt g)
   (res_ppname:ppname)
   (t:st_term { Tm_WithLocalArray? t.term })
@@ -157,8 +155,7 @@ let check
         let x_tm = term_of_nvar px in
         let g_extended = extend_env g init_t x binder.binder_ppname init in
         let body_pre = comp_withlocal_array_body_pre pre init_t x_tm init len in
-        let body_pre_typing =
-          with_local_array_pre_typing pre_typing init_t init len () () x binder.binder_ppname in
+        let body_pre_typing = () in
         // elaborating this post here,
         //   so that later we can check the computed post to be equal to this one
         let post : post_hint_for_env g = post in

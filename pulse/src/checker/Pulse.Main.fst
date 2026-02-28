@@ -46,7 +46,7 @@ let check_fndefn
     (g : stt_env{bindings g == []})
     (expected_t : option term)
     (* Both of these unused: *)
-    (pre : term) (pre_typing : tot_typing g pre tm_slprop)
+    (pre : term) (pre_typing : unit)
   : T.Tac (RT.dsl_tac_result_t (fstar_env g) expected_t)
 = 
   let g = let FnDefn {us} = d.d in push_univ_vars g us in
@@ -221,7 +221,7 @@ let main' (d:decl) (pre:term) (g:RT.fstar_top_env) (expected_t:option term)
       let (| pre, ty |) = Pulse.Checker.Pure.compute_tot_term_type g pre in
       if not (eq_tm ty tm_slprop) then
         fail g (Some (Pulse.RuntimeUtils.range_of_term pre)) "pulse main: cannot typecheck pre at type slprop"; //fix range
-      let pre_typing : tot_typing g pre tm_slprop = () in
+      let pre_typing : unit = () in
       match d.d with
       | FnDefn {} -> check_fndefn d g expected_t pre pre_typing
       | FnDecl {} ->

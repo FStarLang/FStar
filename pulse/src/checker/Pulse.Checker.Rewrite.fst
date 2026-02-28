@@ -29,7 +29,7 @@ module RT = FStar.Reflection.Typing
 module RU = Pulse.RuntimeUtils
 
 let check_slprop_equiv_ext r (g:env) (p q:slprop)
-: T.Tac (slprop_equiv g p q)
+: T.Tac (unit)
 = let res, issues = Pulse.Typing.Util.check_equiv_now (elab_env g) p q in
   match res with
   | None -> 
@@ -42,7 +42,7 @@ let check_slprop_equiv_ext r (g:env) (p q:slprop)
     ()
 
 let check_slprop_equiv_tac r (g:env) (p q:slprop) (tac_tm : term)
-: T.Tac (slprop_equiv g p q)
+: T.Tac (unit)
 = let open FStar.Reflection.Typing in
   let open FStar.Stubs.TypeChecker.Core in
   begin match T.inspect tac_tm with
@@ -78,7 +78,7 @@ let check_slprop_equiv_tac r (g:env) (p q:slprop) (tac_tm : term)
     ()
 
 let rec check_slprop_equiv r (g:env) (p q:slprop)
-: T.Tac (slprop_equiv g p q)
+: T.Tac (unit)
 = if eq_tm p q
   then ()
   else (
@@ -107,7 +107,7 @@ let rec check_slprop_equiv r (g:env) (p q:slprop)
 let check
   (g:env)
   (pre:term)
-  (pre_typing:tot_typing g pre tm_slprop)
+  (pre_typing:unit)
   (post_hint:post_hint_opt g)
   (res_ppname:ppname)
   (t:st_term{Tm_Rewrite? t.term})
@@ -139,6 +139,6 @@ let check
   in
   let rew_st = wtag (Some STT_Ghost) (Tm_Rewrite { t1=p; t2=q; tac_opt=None; elaborated=true }) in
   let rew_c = C_STGhost tm_emp_inames { u=u0; res=tm_unit; pre=p; post=q } in
-  let d : st_typing g rew_st rew_c = () in
+  let d : unit = () in
   let c = match_comp_res_with_post_hint rew_st rew_c d post_hint in
   prove_post_hint (try_frame_pre false pre_typing (| rew_st,c |) res_ppname) post_hint t.range

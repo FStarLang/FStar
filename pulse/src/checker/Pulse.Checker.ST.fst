@@ -38,7 +38,7 @@ open Pulse.PP
 let check
   (g:env)
   (ctxt:slprop)
-  (ctxt_typing:tot_typing g ctxt tm_slprop)
+  (ctxt_typing:unit)
   (post_hint:post_hint_opt g)
   (res_ppname:ppname)
   (t:st_term { Tm_ST? t.term })
@@ -80,7 +80,7 @@ let check
 
     let eff = core_check_term_at_type g' e ty in
     let t = { t with term = Tm_ST { t=e; args=[] }; effect_tag = T.seal (Some (ctag_of_comp_st c)) } in
-    let d : st_typing g' t c =
+    let d : unit =
       if eff = T.E_Total
       then ()
       else (
@@ -93,7 +93,7 @@ let check
             text "has computation type";
             pp c]
         | C_STGhost .. ->
-          let d_non_info : non_informative g' c =
+          let d_non_info : unit =
             let token = is_non_informative g' c in
             match token with
             | None ->
@@ -105,7 +105,7 @@ let check
           ()
       )
       in
-      let h: tot_typing g' ctxt' tm_slprop = () in // TODO: thread through prover
+      let h: unit = () in // TODO: thread through prover
       if comp_post c `eq_tm` tm_is_unreachable then
         let framed = checker_result_for_st_typing (k _ (| t, add_frame c ctxt' |)) res_ppname in
         RU.record_stats "prove_post_hint" fun _ -> prove_post_hint framed post_hint range

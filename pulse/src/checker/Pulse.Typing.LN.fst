@@ -923,32 +923,32 @@ let close_comp_ln (c:comp) (v:var)
 
 #push-options "--ifuel 2 --z3rlimit_factor 4 --z3cliopt 'smt.qi.eager_threshold=100'"
 
-let lift_comp_ln #g #c1 #c2 (d:lift_comp g c1 c2)
+let lift_comp_ln (g:env) (c1:comp) (c2:comp) (d:unit)
   : Lemma
     (requires ln_c c1)
     (ensures ln_c c2)    
   = admit ()
 
 let tot_or_ghost_typing_ln
-  (#g:_) (#e:_) (#t:_) (#eff:_)
-  (d:typing g e eff t)
+  (g:env) (e:term) (t:term) (eff:FStar.Tactics.V2.tot_or_ghost)
+  (d:unit)
   : Lemma 
     (ensures ln e /\ ln t)
   = admit ()
 
 let tot_typing_ln
-  (#g:_) (#e:_) (#t:_)
-  (d:tot_typing g e t)
+  (g:env) (e:term) (t:term)
+  (d:unit)
   : Lemma 
     (ensures ln e /\ ln t)
   = admit ()
 #push-options "--fuel 4 --ifuel 4"
-let slprop_equiv_ln (#g:_) (#t0 #t1:_) (v:slprop_equiv g t0 t1)
+let slprop_equiv_ln (g:env) (t0:term) (t1:term) (v:unit)
   : Lemma (ensures ln t0 <==> ln t1)
   = admit ()
 #pop-options      
 
-let st_equiv_ln #g #c1 #c2 (d:st_equiv g c1 c2)
+let st_equiv_ln (g:env) (c1:comp) (c2:comp) (d:unit)
   : Lemma 
     (requires ln_c c1)
     (ensures ln_c c2)
@@ -958,23 +958,23 @@ let prop_valid_must_be_ln (g:env) (t:term) (d:prop_validity g t)
   : Lemma (ensures ln t) =
   admit()
 
-let st_sub_ln #g #c1 #c2 (d:st_sub g c1 c2)
+let st_sub_ln (g:env) (c1:comp) (c2:comp) (d:unit)
   : Lemma
     (requires ln_c c1)
     (ensures ln_c c2)
   = admit ()
 
-let bind_comp_ln #g #x #c1 #c2 #c (d:bind_comp g x c1 c2 c)
+let bind_comp_ln (g:env) (x:var) (c1:comp) (c2:comp) (c:comp) (d:unit)
   : Lemma 
     (requires ln_c c1 /\ ln_c c2)
     (ensures ln_c c)
   = admit ()
 
-let st_comp_typing_ln (#g:_) (#st:_) (d:st_comp_typing g st)
+let st_comp_typing_ln (g:env) (st:st_comp) (d:unit)
   : Lemma (ensures ln_st_comp st (-1)) =
   admit ()
 
-let comp_typing_ln (#g:_) (#c:_) (#u:_) (d:comp_typing g c u)
+let comp_typing_ln (g:env) (c:comp) (u:universe) (d:unit)
   : Lemma (ensures ln_c c) =
   admit ()
 #pop-options
@@ -1038,8 +1038,8 @@ let comp_par_ln (cL : comp{C_ST? cL}) (cR : comp{C_ST? cR}) (x : var)
 // Note the use of break_vc in every case below.
 
 #push-options "--z3rlimit_factor 15 --fuel 4 --ifuel 1 --split_queries no --z3cliopt 'smt.qi.eager_threshold=100'"
-let st_typing_ln (#g:_) (#t:_) (#c:_)
-                     (d:st_typing g t c)
+let st_typing_ln (g:env) (t:st_term) (c:comp)
+                     (d:unit)
   : Lemma 
     (ensures ln_st t /\ ln_c c)
   = admit ()

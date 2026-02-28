@@ -20,14 +20,14 @@ open Pulse.Syntax
 open Pulse.Syntax.Naming
 open Pulse.Typing
 
-val tot_typing_ln (#g:_) (#e:_) (#t:_)
-                  (d:tot_typing g e t)
+val tot_typing_ln (g:env) (e:term) (t:term)
+                  (d:unit)
   : Lemma (ln e /\ ln t)
 
-val comp_typing_ln (#g:_) (#c:_) (#u:_)
-                   (d:comp_typing g c u)
+val comp_typing_ln (g:env) (c:comp) (u:universe)
+                   (d:unit)
   : Lemma (ln_c c)
 
-val st_typing_ln  (#g:_) (#t:_) (#c:_)
-                  (st:st_typing g t c)
+val st_typing_ln  (g:env) (t:st_term) (c:comp)
+                  (st:unit)
   : Lemma (ln_st t /\ ln_c c)

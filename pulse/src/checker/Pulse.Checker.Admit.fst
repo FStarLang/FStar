@@ -29,7 +29,7 @@ module P = Pulse.Syntax.Printer
 let check
   (g:env)
   (pre:term)
-  (pre_typing:tot_typing g pre tm_slprop)
+  (pre_typing:unit)
   (post_hint:post_hint_opt g)
   (res_ppname:ppname)
   (t:st_term { Tm_Admit? t.term })
@@ -65,7 +65,7 @@ let check
         let post = close_term post_opened x in
         let s : st_comp = {u;res=t;pre;post} in
         assume (open_term (close_term post_opened x) x == post_opened);
-        let d_s : st_comp_typing g s = () in
+        let d_s : unit = () in
         (match c with
          | STT -> C_ST s
          | STT_Ghost -> C_STGhost tm_emp_inames s
@@ -79,7 +79,7 @@ let check
                                   u=comp_u c;
                                   typ=comp_res c;
                                   post=None }) in
-  let d : st_typing g admit_st c = () in
+  let d : unit = () in
   FStar.Tactics.BreakVC.break_vc ();
   // ^ This makes a big difference! Would be good to distill into
   // a smaller F*-only example and file an issue.

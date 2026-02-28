@@ -25,15 +25,15 @@ module P = Pulse.Syntax.Printer
 
 let check (g:env) 
           (c:comp_st)
-          (pre_typing:tot_typing g (comp_pre c) tm_slprop)
-  : T.Tac (comp_typing g c (universe_of_comp c))
+          (pre_typing:unit)
+  : T.Tac (unit)
   = let g = Pulse.Typing.Env.push_context_no_range g "check_comp"  in
   
     let check_st_comp (st:st_comp { comp_u c == st.u /\
                                     comp_pre c == st.pre /\
                                     comp_res c == st.res /\
                                     comp_post c == st.post } )
-      : T.Tac (st_comp_typing g st)
+      : T.Tac (unit)
       = let u = check_universe g st.res in 
         if not (eq_univ u (comp_u c))
         then fail g None

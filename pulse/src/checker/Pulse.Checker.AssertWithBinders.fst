@@ -318,7 +318,7 @@ let rec check_pairs (g:env) rng (ps: list (term & term)) (tac_opt:option term) :
 let check_renaming 
     (g:env)
     (pre:term)
-    (pre_typing:tot_typing g pre tm_slprop)
+    (pre_typing:unit)
     (post_hint:post_hint_opt g)
     (res_ppname:ppname)
     (st:st_term { 
@@ -352,8 +352,8 @@ let check_renaming
     // if there is no goal, take the goal to be the full current pre
     let rhs, pairs = rewrite_all st.range (T.unseal st.source) g pairs pre pre elaborated tac_opt false in
     check_pairs g st.range pairs tac_opt;
-    let h2: slprop_equiv g rhs pre = () in
-    let h1: tot_typing g rhs tm_slprop = () in
+    let h2: unit = () in
+    let h1: unit = () in
     let (| x, g', ty, ctxt', k |) = check g rhs h1 post_hint res_ppname body in
     (| x, g', ty, ctxt', k_elab_equiv pre ctxt' k h2 () |)
 
@@ -369,7 +369,7 @@ let check_renaming
 #restart-solver
 #push-options "--z3rlimit_factor 2 --fuel 0 --ifuel 1"
 let rec peel_binders k (ex: slprop) pre r
-    (g:env) frame (bs: list binder) (t:term) (t_typ: tot_typing g t tm_slprop) :
+    (g:env) frame (bs: list binder) (t:term) (t_typ: unit) :
     T.Tac (g':env {env_extends g' g} & t': slprop & xs: list (universe & typ & nvar) &
       continuation_elaborator
         g (frame `tm_star` t)
@@ -383,7 +383,7 @@ let rec peel_binders k (ex: slprop) pre r
       let ty = mk_erased u b.binder_ty in
       let g' = push_binding g (snd x) (fst x) ty in
       let t' = open_term' body (mk_reveal u b.binder_ty (term_of_nvar x)) 0 in
-      let t'_typ : tot_typing g' t' tm_slprop = () in
+      let t'_typ : unit = () in
       let (|g'', t'', bs', k'|) = peel_binders k ex pre r g' frame bs t' t'_typ in
       (| g'', t'', (u,b.binder_ty,x)::bs', k_elab_trans (Pulse.Checker.Prover.elim_exists g frame u b body x g') k' |)
     | _ -> 
@@ -403,7 +403,7 @@ let open_st_term_with_reveals (t: st_term) (xs: list (universe & typ & nvar)) : 
 let check_wild
       (g:env)
       (pre:term)
-      (pre_typing:tot_typing g pre tm_slprop)
+      (pre_typing:unit)
       (post_hint:post_hint_opt g)
       (res_ppname:ppname)
       (st:st_term { head_wild st })
@@ -433,10 +433,10 @@ let check_wild
     | [ex] ->
       let k = List.Tot.length bs in
       let frame = list_as_slprop rest in
-      let ex_typ : tot_typing g ex tm_slprop = () in
+      let ex_typ : unit = () in
       let (|g', ex', bs, k|) = peel_binders k ex pre st.range g frame bs ex ex_typ in
       let body = open_st_term_with_reveals body bs in
-      let pre_typ : tot_typing g' (tm_star frame ex') tm_slprop = () in
+      let pre_typ : unit = () in
       let (| x'', g'', t'', ctxt'', k' |) =
         check g' (frame `tm_star` ex') pre_typ post_hint res_ppname body in
       assume pre == (frame `tm_star` ex);
@@ -462,7 +462,7 @@ let rec add_rem_uvs (g:env) (t:typ) (v:term)
 let check
   (g:env)
   (pre:term)
-  (pre_typing:tot_typing g pre tm_slprop)
+  (pre_typing:unit)
   (post_hint:post_hint_opt g)
   (res_ppname:ppname)
   (st:st_term { Tm_ProofHintWithBinders? st.term })
@@ -518,8 +518,8 @@ let check
     assume (v == v'); //sorry---ideally, we would retype everything proving that it is stable after normalization
     let v = v' in
     let body = body in // TODO compress
-    let h: tot_typing g1 v tm_slprop = PC.core_check_term g1 v T.E_Total tm_slprop in
-    let h: tot_typing g1 (tm_star v pre') tm_slprop = () in // TODO: propagate through prover
+    let h: unit = PC.core_check_term g1 v T.E_Total tm_slprop in
+    let h: unit = () in // TODO: propagate through prover
     let (| x, x_ty, pre'', g2, k |) =
       check g1 (tm_star v pre') h post_hint res_ppname body in
     (| x, x_ty, pre'', g2, k_elab_trans k_frame k |)
@@ -555,8 +555,8 @@ let check
 
     let _ = PC.check_slprop_with_core g v' in
 
-    let h1: tot_typing g' (tm_star pre_remaining rhs') tm_slprop = () in
-    let h2: slprop_equiv g' (tm_star pre_remaining rhs') (tm_star lhs pre_remaining) = () in
+    let h1: unit = () in
+    let h2: unit = () in
 
     let (| x, g'', ty, ctxt', k' |) =
       check g' (tm_star pre_remaining rhs') h1 post_hint res_ppname body in

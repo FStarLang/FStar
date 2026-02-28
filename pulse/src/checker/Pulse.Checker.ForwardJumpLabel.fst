@@ -35,7 +35,7 @@ let starts_with (a b: string) : bool =
 let check
     (g:env)
     (pre:term)
-    (pre_typing:tot_typing g pre tm_slprop)
+    (pre_typing:unit)
     (post_hint0:post_hint_opt g)
     (res_ppname:ppname)
     (t:st_term { Tm_ForwardJumpLabel? t.term })
@@ -72,7 +72,7 @@ let check
     } in
     let lbl_x = fresh g in
     let g' = push_goto g lbl_x lbl lbl_c in
-    let pre_typing': tot_typing g' pre tm_slprop = () in
+    let pre_typing': unit = () in
     let post_hint' : post_hint_opt g' =
       assume post_hint_for_env_p g' post;
       PostHint post in
@@ -92,7 +92,7 @@ let check
       post = body'_c;
     }) in
     assume open_st_term' body (term_of_nvar (lbl, lbl_x)) 0 == body';
-    let typing: st_typing g t body'_c = () in
+    let typing: unit = () in
     if not has_explicit_post then (
       assert post_hint0 == PostHint post;
       checker_result_for_st_typing (| t, body'_c |) res_ppname

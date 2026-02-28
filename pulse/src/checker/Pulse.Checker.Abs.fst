@@ -372,7 +372,7 @@ let check_effect_annotation g r (asc:comp_ascription) (c_computed:comp) : T.Tac 
 
       let Some tok = tok in
 
-      let d_sub : st_sub g c_computed c =
+      let d_sub : unit =
         match c_computed with
         | C_STAtomic _ obs _ -> ()
         | C_STGhost _ _ -> ()
@@ -393,8 +393,8 @@ let check_effect_annotation g r (asc:comp_ascription) (c_computed:comp) : T.Tac 
 (* Rewrite the comp c into the annotated one, if any,
 preserving the st_typing derivation d *)
 let maybe_rewrite_body_typing
-      (#g:_) (#e:st_term) (#c:comp)
-      (d:st_typing g e c)
+      (g:_) (e:st_term) (c:comp)
+      (d:unit)
       (asc:comp_ascription)
   : T.Tac comp
   = let open Pulse.PP in
@@ -416,11 +416,11 @@ let maybe_rewrite_body_typing
               (show c)
               (show (C_Tot t)));
           let sq : squash (RT.equiv_token (elab_env g) t t') = () in
-          let t'_typing : universe_of g t' u =
+          let t'_typing : unit =
             (* t is equiv to t', and t has universe t. *)
             magic ()
           in
-          let tok' : st_equiv g (C_Tot t') (C_Tot t) =
+          let tok' : unit =
             ()
           in
           C_Tot t
@@ -482,11 +482,10 @@ let rec check_abs_core
       (* Check if it matches annotation (if any, likely not), and adjust derivation
       if needed. Currently this only subtypes the invariants. *)
       let c_body = check_effect_annotation g' body.range asc c_body in
-      let body_typing : st_typing g' body c_body = () in
-      let c_body = maybe_rewrite_body_typing body_typing asc in
+      let body_typing : unit = () in
+      let c_body = maybe_rewrite_body_typing g' body c_body body_typing asc in
 
-      FV.st_typing_freevars g' body c_body body_typing;
-      let body_closed = close_st_term body x in
+      FV.st_typing_freevars g' body c_body body_typing;      let body_closed = close_st_term body x in
       assume (open_st_term body_closed x == body);
 
       // instantiate implicits in the attributes
@@ -588,9 +587,9 @@ let rec check_abs_core
       in
 
       let c_body = check_effect_annotation g' body.range c_opened c_body in
-      let body_typing : st_typing g' body c_body = () in
+      let body_typing : unit = () in
 
-      let c_body = maybe_rewrite_body_typing body_typing asc in
+      let c_body = maybe_rewrite_body_typing g' body c_body body_typing asc in
 
       FV.st_typing_freevars g' body c_body body_typing;
       let body_closed = close_st_term body x in

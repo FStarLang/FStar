@@ -42,11 +42,9 @@ let extend_post_hint_for_local (g:env) (p:post_hint_for_env g)
     let res = Pulse.Checker.Base.extend_post_hint g p x (mk_ref init_t) conjunct c_typing in
     res
 
-let with_local_pre_typing (#g:env) (#pre:term) (pre_typing:tot_typing g pre tm_slprop)
+let with_local_pre_typing (#g:env) (#pre:term) (pre_typing:unit)
                           (init_t:term) (x:var { ~ (Set.mem x (dom g)) }) n (i:option term)
-  : tot_typing (extend_env g x n init_t)
-               (comp_withlocal_body_pre pre init_t (term_of_nvar (n, x)) i)
-               tm_slprop
+  : unit
   = admit()
 
 #push-options "--z3rlimit_factor 10 --fuel 0 --ifuel 0"
@@ -66,7 +64,7 @@ let head_range (t:st_term {Tm_WithLocal? t.term}) : range =
 let check
   (g:env)
   (pre:term)
-  (pre_typing:tot_typing g pre tm_slprop)
+  (pre_typing:unit)
   (post_hint:post_hint_opt g)
   (res_ppname:ppname)
   (t:st_term { Tm_WithLocal? t.term })
@@ -132,7 +130,7 @@ let check
         let x_tm = term_of_nvar px in
         let g_extended = extend_env g x binder.binder_ppname init_t in
         let body_pre = comp_withlocal_body_pre pre init_t x_tm init in
-        let body_pre_typing = with_local_pre_typing pre_typing init_t x binder.binder_ppname init in
+        let body_pre_typing = () in
         // elaborating this post here,
         //   so that later we can check the computed post to be equal to this one
         let post : post_hint_for_env g = post in

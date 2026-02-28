@@ -28,7 +28,7 @@ open Pulse.Checker.Prover
 let check'
   (g:env)
   (pre:term)
-  (pre_typing:tot_typing g pre tm_slprop)
+  (pre_typing:unit)
   (post_hint:post_hint_opt g { PostHint? post_hint })
   (res_ppname:ppname)
   (t:st_term { Tm_Goto? t.term })
@@ -49,7 +49,7 @@ let check'
         post = ph.post
       } in
       let t = wtag (Some (ctag_of_comp_st c')) (Tm_Goto { lbl = term_of_nvar (lbln, v); arg }) in
-      let typing: st_typing g t c' =
+      let typing: unit =
         let x' = fresh g in assume fresh_wrt x' g (freevars ph.post);
         () in
       let c' = match_comp_res_with_post_hint t c' typing post_hint in
@@ -65,7 +65,7 @@ let check'
 let check
   (g:env)
   (pre:term)
-  (pre_typing:tot_typing g pre tm_slprop)
+  (pre_typing:unit)
   (post_hint:post_hint_opt g)
   (res_ppname:ppname)
   (t:st_term { Tm_Goto? t.term })

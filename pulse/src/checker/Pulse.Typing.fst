@@ -139,8 +139,6 @@ let elab_push_binding (g:env) (x:var { ~ (Set.mem x (dom g)) }) (t:typ)
   : Lemma (elab_env (push_binding g x ppname_default t) ==
            RT.extend_env (elab_env g) x t) = ()
 
-[@@ erasable; no_auto_projectors]
-let slprop_equiv (g:env) (t1:term) (t2:term) = unit
 
 
 let add_frame (s:comp_st) (frame:term)
@@ -473,17 +471,6 @@ let comp_rewrite (p q:slprop) : comp =
 noeq
 type my_erased (a:Type) = | E of a
 
-let typing (g:env) (e:term) (eff:T.tot_or_ghost) (t:term) = unit
-
-let tot_typing (g:env) (e:term) (t:term) = unit
-
-let ghost_typing (g:env) (e:term) (t:typ) = unit
-
-let lift_typing_to_ghost_typing (#g:env) (#e:term) (#eff:T.tot_or_ghost) (#t:term)
-  (d:typing g e eff t)
-  : ghost_typing g e t = ()
-
-let universe_of (g:env) (t:term) (u:universe) = unit
 
 let non_informative_t (g:env) (u:universe) (t:term) =
   term
@@ -508,23 +495,16 @@ let tm_inames_subset (inames1 inames2 : term) : term =
   wr (R.mk_e_app join [inames1; inames2])
      (T.range_of_term inames1)
 
-let tm_inames_subset_typing (g:env) (inames1 inames2 : term) : tot_typing g (tm_inames_subset inames1 inames2) tm_prop =
-  (* Need to add the typing hypothesis for `inames_subset` to
-  the env and a precondition that the inames have type Pulse.Lib.Core.inames in g,
-  which the caller should get from an inversion lemma *)
-  RU.magic()
+let tm_inames_subset_typing (g:env) (inames1 inames2 : term) : unit =
+  ()
 
 let prop_validity (g:env) (t:term) =
   FTB.prop_validity_token (elab_env g) t
 
-[@@ erasable; no_auto_projectors]
-let st_equiv (g:env) (c1:comp) (c2:comp) = unit
 
 let sub_observability (o1 o2:observability) = o1 = Neutral || o1 = o2 || o2 = Observable
 
-let st_sub (g:env) (c1:comp) (c2:comp) = unit
 
-let lift_comp (g:env) (c1:comp) (c2:comp) = unit
 
 let wrst (ct:comp_st) (t:st_term') : st_term =
   { term = t;
@@ -541,10 +521,8 @@ let wtag (ct:option ctag)  (t:st_term') : st_term =
     seq_lhs = Sealed.seal false;
   }
 
-let st_comp_typing (g:env) (st:st_comp) = unit
 
 
-let bind_comp (g:env) (x:var) (c1:comp) (c2:comp) (c:comp) = unit
 
 let tr_binding (vt : var & typ) : Tot R.binding =
   let v, t = vt in
@@ -556,9 +534,7 @@ let tr_binding (vt : var & typ) : Tot R.binding =
 
 let tr_bindings = L.map tr_binding
 
-let comp_typing (g:env) (c:comp) (u:universe) = unit
 
-let comp_typing_u (e:env) (c:comp_st) = comp_typing e c (universe_of_comp c)
 
 let subtyping_token g t1 t2 =
   T.subtyping_token (elab_env g) t1 t2
@@ -566,7 +542,6 @@ let subtyping_token g t1 t2 =
 val readback_binding : R.binding -> var_binding
 let readback_binding b = { n = { name = b.ppname; range = Range.range_0 }; x = b.uniq; ty = b.sort }
 
-let non_informative (g:env) (c:comp) = unit
 
 let inv_disjointness (inames i:term) = 
   let g = Pulse.Reflection.Util.inv_disjointness_goal inames i in 
@@ -587,77 +562,21 @@ let goto_comp_of_block_comp (c: comp_st) : comp_st =
     post = tm_is_unreachable;
   }
 
-[@@ erasable; no_auto_projectors]
-let st_typing (g:env) (t:st_term) (c:comp) = unit
-
-let pats_complete (g:env) (sc:term) (sc_ty:typ) (pats:list R.pattern) = unit
-
-let brs_typing (g:env) (sc_u:universe) (sc_ty:typ) (sc:term) (brs:list branch) (c:comp_st) = unit
-
-let br_typing (g:env) (sc_u:universe) (sc_ty:typ) (sc:term) (p:pattern) (e:st_term) (c:comp_st) = unit
-
-(* this requires some metatheory on FStar.Reflection.Typing
-
-     G |- fv e : t
-
-    G(fv) = t0 -> t1
-
-     G |- e : t0
-     G |- t1 <: t
 
 
 
-    G |- e0 e1 : t ==>
-
-   exists t0 t1.
-    G |- e0 : t0 -> t1 /\
-    G |- e1 : t0
-
-*)
-let star_typing_inversion_l (#g:_) (#t0 #t1:term) (d:tot_typing g (tm_star t0 t1) tm_slprop)
-  : tot_typing g t0 tm_slprop
-  = ()
-
-let star_typing_inversion_r (#g:_) (#t0 #t1:term) (d:tot_typing g (tm_star t0 t1) tm_slprop)
-  : tot_typing g t1 tm_slprop
-  = ()
-
-let star_typing_inversion (#g:_) (#t0 #t1:term) (d:tot_typing g (tm_star t0 t1) tm_slprop)
-  : GTot (tot_typing g t0 tm_slprop & tot_typing g t1 tm_slprop)
-  = ((), ())
-
-let slprop_eq_typing_inversion g (t0 t1:term)
-                              (token:RT.equiv (elab_env g)
-                                                     t0
-                                                     t1)
-  : GTot (tot_typing g t0 tm_slprop &
-          tot_typing g t1 tm_slprop)
-  = ((), ())
-
-let star_typing (#g:_) (#t0 #t1:term)
-                (d0:tot_typing g t0 tm_slprop)
-                (d1:tot_typing g t1 tm_slprop)
-  : tot_typing g (tm_star t0 t1) tm_slprop
-  = ()
-
-let emp_typing (#g:_) 
-  : tot_typing g tm_emp tm_slprop
-  = ()
 
 let fresh_wrt (x:var) (g:env) (vars:_) = 
   freshv g x /\  ~(x `Set.mem` vars)
 
 
-let effect_annot_typing (g:env) (e:effect_annot) = unit
 
 noeq
 type post_hint_t = {
   g:env;
   effect_annot:effect_annot;
-  effect_annot_typing:effect_annot_typing g effect_annot;
   ret_ty:term;
   u:universe;
-  ty_typing:universe_of g ret_ty u;
   post:term;  // post has a free de Bruijn variable 0 for the result of type ret_ty
 }
 

@@ -181,8 +181,8 @@ and elab_readback_subpat (pb : R.pattern & bool)
 val tot_typing_weakening_n
    (#g:env) (#t:term) (#ty:term)
    (bs:list var_binding {all_fresh g bs})
-   (d:tot_typing g t ty)
-   : Tot (tot_typing (push_bindings g bs) t ty)
+   (d:unit)
+   : Tot (unit)
          (decreases bs)
 let rec tot_typing_weakening_n #g #t #ty bs d = ()
 
@@ -219,7 +219,7 @@ let check_branch
         (norw:bool)
         (g:env)
         (pre:term)
-        (pre_typing: tot_typing g pre tm_slprop)
+        (pre_typing: unit)
         (post_hint:post_hint_for_env g)
         (check:check_t)
         (sc_u : universe)
@@ -270,8 +270,7 @@ let check_branch
       in
       { t with effect_tag = e.effect_tag }
   in
-  let pre_typing = tot_typing_weakening_n pulse_bs pre_typing in // weaken w/ binders
-  let pre_typing : tot_typing _ _ _ = () in // weaken w/ branch eq
+  let pre_typing : unit = () in // weakened w/ binders and branch eq
 
   let (| e, c |) =
     let ppname = mk_ppname_no_range "_br" in
@@ -294,7 +293,7 @@ let check_branches_aux_t
 let check_branches_aux
         (g:env)
         (pre:term)
-        (pre_typing: tot_typing g pre tm_slprop)
+        (pre_typing: unit)
         (post_hint:post_hint_for_env g)
         (check:check_t)
         (sc_u : universe)
@@ -465,7 +464,7 @@ let maybe_weaken_branch_tags
 let check_branches
         (g:env)
         (pre:term)
-        (pre_typing: tot_typing g pre tm_slprop)
+        (pre_typing: unit)
         (post_hint:post_hint_for_env g)
         (check:check_t)
         (sc_u : universe)
@@ -484,7 +483,7 @@ let check_branches
 let check
         (g:env)
         (pre:term)
-        (pre_typing: tot_typing g pre tm_slprop)
+        (pre_typing: unit)
         (post_hint:post_hint_for_env g)
         (res_ppname:ppname)
         (sc:term)
@@ -545,6 +544,6 @@ let check
   assume (L.map (fun br -> elab_pat br.pat) brs == elab_pats');
   let c_typing = comp_typing_from_post_hint c pre_typing post_hint in
   let t = wtag (Some (ctag_of_comp_st c)) (Tm_Match {sc; returns_=None; brs}) in
-  let d : st_typing g t c = () in
+  let d : unit = () in
   checker_result_for_st_typing (| t, c |) res_ppname
 #pop-options

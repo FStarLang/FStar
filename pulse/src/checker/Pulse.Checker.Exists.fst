@@ -29,9 +29,9 @@ module P = Pulse.Syntax.Printer
 module FV = Pulse.Typing.FV
 
 let slprop_as_list_typing (#g:env) (#p:term)
-  (t:tot_typing g p tm_slprop)
+  (t:unit)
   (x:term { List.Tot.memP x (slprop_as_list p) })
-  : tot_typing g x tm_slprop
+  : unit
   = assume false; t
 
 let terms_to_string (t:list term)
@@ -43,7 +43,7 @@ let terms_to_string (t:list term)
 let check_elim_exists
   (g:env)
   (pre:term)
-  (pre_typing:tot_typing g pre tm_slprop)
+  (pre_typing:unit)
   (post_hint:post_hint_opt g)
   (res_ppname:ppname)
   (t:st_term{Tm_ElimExists? t.term})
@@ -88,7 +88,7 @@ let check_elim_exists
   then let x = fresh g in
        let elim_st = wtag (Some STT_Ghost) (Tm_ElimExists { p = tm_exists_sl u (as_binder ty) p }) in
        let elim_c = comp_elim_exists u ty p (ppname_default, x) in
-       let d : st_typing g elim_st elim_c = () in
+       let d : unit = () in
        let c = match_comp_res_with_post_hint elim_st elim_c d post_hint in
        prove_post_hint (try_frame_pre false pre_typing (|elim_st,c|) res_ppname) post_hint t_rng
   else fail g (Some t_rng)
@@ -101,11 +101,11 @@ let check_elim_exists
 let check_intro_exists
   (g:env)
   (pre:term)
-  (pre_typing:tot_typing g pre tm_slprop)
+  (pre_typing:unit)
   (post_hint:post_hint_opt g)
   (res_ppname:ppname)
   (st:st_term { intro_exists_witness_singleton st })
-  (slprop_typing: option (tot_typing g (intro_exists_slprop st) tm_slprop))
+  (slprop_typing: option (unit))
   : T.Tac (checker_result_t g pre post_hint) =
 
   let g = Pulse.Typing.Env.push_context g "check_intro_exists_non_erased" st.range in
@@ -132,7 +132,7 @@ let check_intro_exists
     check_term g witness T.E_Ghost b.binder_ty in
   let intro_st = wtag (Some STT_Ghost) (Tm_IntroExists { p = tm_exists_sl u b p; witnesses = [witness] }) in
   let intro_c = C_STGhost tm_emp_inames { u=u0; res=tm_unit; pre=open_term' p witness 0; post=tm_exists_sl u b p } in
-  let d : st_typing g intro_st intro_c = () in
+  let d : unit = () in
   let c = match_comp_res_with_post_hint intro_st intro_c d post_hint in
   prove_post_hint (try_frame_pre false pre_typing (|intro_st, c|) res_ppname)
                   post_hint
