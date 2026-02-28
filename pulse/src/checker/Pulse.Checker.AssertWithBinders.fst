@@ -341,7 +341,7 @@ let check_renaming
    // ...
    let body = {st with term = Tm_ProofHintWithBinders { ht with binders = [] };
                        source = Sealed.seal false; } in
-   check g pre () post_hint res_ppname
+   check g pre post_hint res_ppname
    { st with
        term = Tm_ProofHintWithBinders { hint_type=ASSERT { p = goal; elaborated = true }; binders=bs; t=body };
        source = Sealed.seal false;
@@ -353,14 +353,14 @@ let check_renaming
     check_pairs g st.range pairs tac_opt;
 
 
-    let (| x, g', ty, ctxt', k |) = check g rhs () post_hint res_ppname body in
-    (| x, g', ty, ctxt', k_elab_equiv pre ctxt' k () () |)
+    let (| x, g', ty, ctxt', k |) = check g rhs post_hint res_ppname body in
+    (| x, g', ty, ctxt', k_elab_equiv pre ctxt' k |)
 
   | [], Some goal -> (
       let rhs, _ = rewrite_all st.range (T.unseal st.source) g pairs goal pre elaborated tac_opt true in
       let t = { st with term = Tm_Rewrite { t1 = goal; t2 = rhs; tac_opt; elaborated = true };
                         source = Sealed.seal false; } in
-      check g pre () post_hint res_ppname
+      check g pre post_hint res_ppname
       { st with term = Tm_Bind { binder = as_binder tm_unit; head = t; body };
                 source = Sealed.seal false;
       }
@@ -436,7 +436,7 @@ let check_wild
       let body = open_st_term_with_reveals body bs in
 
       let (| x'', g'', t'', ctxt'', k' |) =
-        check g' (frame `tm_star` ex') () post_hint res_ppname body in
+        check g' (frame `tm_star` ex') post_hint res_ppname body in
       assume pre == (frame `tm_star` ex);
       (| x'', g'', t'', ctxt'', k_elab_trans k k' |)
 #pop-options
@@ -491,13 +491,13 @@ let check
     match bs with
     | [] -> 
       let t = { st with term = Tm_Rewrite { t1; t2; tac_opt; elaborated } } in
-      check g pre () post_hint res_ppname 
+      check g pre post_hint res_ppname 
           { st with term = Tm_Bind { binder = as_binder tm_unit; head = t; body } } 
     | _ ->
       let t = { st with term = Tm_Rewrite { t1; t2; tac_opt; elaborated } } in
       let body = { st with term = Tm_Bind { binder = as_binder tm_unit; head = t; body } } in
       let st = { st with term = Tm_ProofHintWithBinders { hint_type = ASSERT { p = t1; elaborated }; binders = bs; t = body } } in
-      check g pre () post_hint res_ppname st
+      check g pre post_hint res_ppname st
   )
   
   | ASSERT { p = v; elaborated } ->
@@ -515,10 +515,10 @@ let check
     assume (v == v'); //sorry---ideally, we would retype everything proving that it is stable after normalization
     let v = v' in
     let body = body in // TODO compress
-    let h: unit = PC.core_check_term g1 v T.E_Total tm_slprop in
+    let _ = PC.core_check_term g1 v T.E_Total tm_slprop in
  // TODO: propagate through prover
     let (| x, x_ty, pre'', g2, k |) =
-      check g1 (tm_star v pre') () post_hint res_ppname body in
+      check g1 (tm_star v pre') post_hint res_ppname body in
     (| x, x_ty, pre'', g2, k_elab_trans k_frame k |)
 
 
@@ -556,5 +556,5 @@ let check
 
 
     let (| x, g'', ty, ctxt', k' |) =
-      check g' (tm_star pre_remaining rhs') () post_hint res_ppname body in
-    (| x, g'', ty, ctxt', k_elab_trans k (k_elab_equiv (tm_star lhs pre_remaining) ctxt' k' () ()) |)
+      check g' (tm_star pre_remaining rhs') post_hint res_ppname body in
+    (| x, g'', ty, ctxt', k_elab_trans k (k_elab_equiv (tm_star lhs pre_remaining) ctxt' k') |)

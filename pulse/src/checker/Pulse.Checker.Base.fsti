@@ -30,16 +30,11 @@ val format_failed_goal (g:env) (ctxt:list term) (goal:list term) : T.Tac string
 
 val intro_comp_typing (g:env) 
                       (c:comp_st)
-                      (pre_typing:unit)
-                      (iname_typing:unit)
-                      (res_typing:unit)
                       (x:var { fresh_wrt x g (freevars (comp_post c)) })
-                      (post_typing:unit)
   : T.Tac unit
 
 val post_typing_as_abstraction
   (g:env) (x:var) (ty:term) (t:term { fresh_wrt x g (freevars t) })
-  (_:unit)
   : FStar.Ghost.erased (RT.tot_typing (elab_env g)
                              (RT.mk_abs ty T.Q_Explicit t)
                              (RT.mk_arrow ty T.Q_Explicit tm_slprop))
@@ -62,19 +57,18 @@ val intro_post_hint
       effect_annot_labels_match h.effect_annot effect_annot
     })
 
-val post_hint_from_comp_typing (g:env) (c:comp_st) (ct:unit)
+val post_hint_from_comp_typing (g:env) (c:comp_st)
   : post_hint_for_env g
 
 val comp_typing_from_post_hint
     (#g: env)
     (c: comp_st)
-    (pre_typing: unit)
     (p:post_hint_for_env g { comp_post_matches_hint c (PostHint p) })
 : T.Tac unit
 
 val extend_post_hint (g:env) (p:post_hint_for_env g)
                      (x:var{freshv g x}) (tx:term)
-                     (conjunct:term) (_:unit)
+                     (conjunct:term)
   : T.Tac (q:post_hint_for_env (push_binding g x ppname_default tx) {
             q.post == tm_star p.post conjunct /\
             q.ret_ty == p.ret_ty /\
@@ -102,14 +96,11 @@ val k_elab_trans
 
 val k_elab_equiv_continuation (#g1:env) (#g2:env { g2 `env_extends` g1 }) (#ctxt #ctxt1:term) (ctxt2:term)
   (k:continuation_elaborator g1 ctxt g2 ctxt1)
-  (d:unit)
   : continuation_elaborator g1 ctxt g2 ctxt2
 
 val k_elab_equiv
   (#g1:env) (#g2:env { g2 `env_extends` g1 }) (#ctxt1 #ctxt2:term) (ctxt1' ctxt2':term)
   (k:continuation_elaborator g1 ctxt1 g2 ctxt2)
-  (d1:unit)
-  (d2:unit)
   : continuation_elaborator g1 ctxt1' g2 ctxt2'
 
 //
@@ -118,8 +109,6 @@ val k_elab_equiv
 val continuation_elaborator_with_bind (#g:env) (ctxt:term)
   (c1:comp{stateful_comp c1})
   (e1:st_term)
-  (e1_typing:unit)
-  (ctxt_pre1_typing:unit)
   (x:nvar { freshv g (snd x) })
   : T.Tac (continuation_elaborator
              g
@@ -128,11 +117,9 @@ val continuation_elaborator_with_bind (#g:env) (ctxt:term)
              (tm_star (open_term (comp_post c1) (snd x)) ctxt))
 
 val continuation_elaborator_with_bind_fn (#g:env) (ctxt:term)
-  (ctxt_typing:unit)
   (e1:st_term)
   (c1:comp { C_Tot? c1 })
   (b:binder{b.binder_ty == comp_res c1})
-  (e1_typing:unit)
   (x:nvar { freshv g (snd x) })
 : T.Tac (continuation_elaborator
           g ctxt
@@ -185,14 +172,12 @@ let retype_checker_result (#g:env) (#ctxt:slprop) (#ph:post_hint_opt g) (ph':pos
 type check_t =
   g:env ->
   ctxt:slprop ->
-  ctxt_typing:unit ->
   post_hint:post_hint_opt g ->
   res_ppname:ppname ->
   t:st_term ->
   T.Tac (checker_result_t g ctxt post_hint)
   
 val match_comp_res_with_post_hint (#g:env) (t:st_term) (c:comp_st)
-  (d:unit)
   (post_hint:post_hint_opt g)
   : T.Tac (c':comp_st { comp_pre c' == comp_pre c })
 
@@ -208,7 +193,6 @@ val checker_result_for_st_typing (#g:env) (#ctxt:slprop) (#post_hint:post_hint_o
 
 val checker_result_t_equiv_ctxt (g:env) (ctxt ctxt' : slprop)
   (post_hint:post_hint_opt g)
-  (equiv : unit)
   (r : checker_result_t g ctxt post_hint)
 : checker_result_t g ctxt' post_hint
 
@@ -217,25 +201,20 @@ val is_stateful_application (g:env) (e:term)
 
 val norm_typing
       (g:env) (e:term) (eff:T.tot_or_ghost) (t0:term)
-      (d:unit)
       (steps:list norm_step)
   : T.Tac (t':term & unit)
 
 val norm_typing_inverse
       (g:env) (e:term) (eff:T.tot_or_ghost) (t0:term)
-      (d:unit)
       (t1:term)
       (u:universe)
-      (d1:unit)
       (steps:list norm_step)
   : T.Tac (option unit)
 
 val norm_st_typing_inverse
       (g:env) (e:st_term) (t0:term)
-      (d:unit)
       (u:universe)
       (t1:term)
-      (d1:unit)
       (steps:list norm_step)
   : T.Tac (option unit)
 

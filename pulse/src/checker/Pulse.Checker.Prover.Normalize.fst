@@ -69,7 +69,6 @@ let normalize_slprop
 let normalize_slprop_welltyped
   (g:env)
   (v:slprop)
-  (v_typing:unit)
   : T.Tac slprop
 =
   let v' = normalize_slprop g v true in

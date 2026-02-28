@@ -261,7 +261,6 @@ let rec do_not_elim_state (t:st_term) : Dv bool =
 let rec check
   (g0:env)
   (pre0:term)
-  (pre0_typing: unit)
   (post_hint:post_hint_opt g0)
   (res_ppname:ppname)
   (t:st_term)
@@ -287,17 +286,16 @@ let rec check
 
   match maybe_elaborate_stateful_head g0 t with
   | Some t ->
-    check g0 pre0 () post_hint res_ppname t
+    check g0 pre0 post_hint res_ppname t
   | None -> 
-    let (| g, pre, _, k_elim_pure |) :
+    let (| g, pre, k_elim_pure |) :
         (g':env { env_extends g' g0 } &
             ctxt':term &
-            unit &
             continuation_elaborator g0 pre0 g' ctxt') = 
       if do_not_elim_state t then
-        (| g0, pre0, (), k_elab_unit _ _ |)
+        (| g0, pre0, k_elab_unit _ _ |)
       else
-        Pulse.Checker.Prover.elim_exists_and_pure () 
+        Pulse.Checker.Prover.elim_exists_and_pure #g0 #pre0
     in
     let r : checker_result_t g pre post_hint =
       let g = push_context (P.tag_of_st_term t) t.range g in
@@ -328,7 +326,7 @@ let rec check
 
         match instantiate_unknown_witnesses g t with
         | Some t ->
-          check g pre () post_hint res_ppname t
+          check g pre post_hint res_ppname t
         | None ->
           match witnesses with
           | [] -> fail g (Some t.range) "intro exists with empty witnesses"
@@ -336,7 +334,7 @@ let rec check
             Exists.check_intro_exists g pre post_hint res_ppname t None 
           | _ ->
             let t = transform_to_unary_intro_exists g p witnesses in
-            check g pre () post_hint res_ppname t
+            check g pre post_hint res_ppname t
       )
 
       | Tm_Bind _ ->
@@ -448,7 +446,7 @@ let rec check
       | Tm_PragmaWithOptions { options; body } ->
         RU.push_options();
         RU.set_options options;
-        let r = check g pre () post_hint res_ppname body in
+        let r = check g pre post_hint res_ppname body in
         RU.pop_options ();
         r
 

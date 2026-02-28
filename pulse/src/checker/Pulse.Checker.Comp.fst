@@ -25,7 +25,6 @@ module P = Pulse.Syntax.Printer
 
 let check (g:env) 
           (c:comp_st)
-          (pre_typing:unit)
   : T.Tac (unit)
   = let g = Pulse.Typing.Env.push_context_no_range g "check_comp"  in
   

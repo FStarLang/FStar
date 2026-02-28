@@ -76,7 +76,7 @@ let check
     in
 
     let ppname = mk_ppname_no_range "_if_br" in
-    let r = check (g_with_eq eq_v) pre () post_hint ppname br in
+    let r = check (g_with_eq eq_v) pre post_hint ppname br in
     r
   in
 
@@ -126,9 +126,9 @@ let check
   let (| e1, c1, e1_typing |) = extract then_ true in
   let (| e2, c2, e2_typing |) = extract else_ false in
   let (| c, e1_typing, e2_typing |) =
-    J.join_comps (g_with_eq tm_true) e1 c1 e1_typing (g_with_eq tm_false) e2 c2 e2_typing post_hint' in
+    J.join_comps (g_with_eq tm_true) e1 c1 (g_with_eq tm_false) e2 c2 post_hint' in
 
-  let c_typing = comp_typing_from_post_hint c () post_hint' in
+  let c_typing = comp_typing_from_post_hint c post_hint' in
 
   let if_st = wrst c (Tm_If { b; then_=e1; else_=e2; post=None }) in
   let d : st_typing_in_ctxt g pre (PostHint post_hint') =

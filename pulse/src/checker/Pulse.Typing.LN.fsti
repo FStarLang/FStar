@@ -21,13 +21,10 @@ open Pulse.Syntax.Naming
 open Pulse.Typing
 
 val tot_typing_ln (g:env) (e:term) (t:term)
-                  (d:unit)
   : Lemma (ln e /\ ln t)
 
 val comp_typing_ln (g:env) (c:comp) (u:universe)
-                   (d:unit)
   : Lemma (ln_c c)
 
 val st_typing_ln  (g:env) (t:st_term) (c:comp)
-                  (st:unit)
   : Lemma (ln_st t /\ ln_c c)

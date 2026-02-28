@@ -145,7 +145,7 @@ let squash_prop_validity_token f p (t:prop_validity_token f (mk_squash0 p))
   : prop_validity_token f p
   = admit(); t
 
-let rtb_check_prop_validity (g:env) (sync:bool) (f:_{f == elab_env g }) (p:_) (pf:unit) =
+let rtb_check_prop_validity (g:env) (sync:bool) (f:_{f == elab_env g }) (p:_) =
   let _ : squash (typing_token f p (E_Total, tm_prop)) =
     magic ()
   in
@@ -551,11 +551,11 @@ let non_info_squash_tm (u:universe) (t:term) : term =
 To do so, we simply create that constraint (and prove it's well-typed), and then
 call the tcresolve typeclass resolution tactic on it to obtain a dictionary and
 a proof of typing for the dictionary. *)
-let try_get_non_informative_witness_aux (g:env) (u:universe) (ty:term) (ty_typing:unit)
+let try_get_non_informative_witness_aux (g:env) (u:universe) (ty:term)
   : T.Tac (option (non_informative_t g u ty) & issues)
   = let goal = non_informative_class u ty in
     let r_env = elab_env g in
-    let constraint_typing = non_informative_class_typing g u ty ty_typing in
+    let constraint_typing = non_informative_class_typing g u ty () in
     let goal_typing_tok : squash (typing_token r_env goal (E_Total, R.pack_ln (R.Tv_Type u))) =
       match constraint_typing with | E tok -> Squash.return_squash tok
     in
@@ -603,12 +603,12 @@ let try_get_non_informative_witness_aux (g:env) (u:universe) (ty:term) (ty_typin
 
 let try_get_non_informative_witness g u ty =
   RU.record_stats "Pulse.try_get_noninformative_witness" <| fun _ -> 
-  let ropt, _ = try_get_non_informative_witness_aux g u ty () in
+  let ropt, _ = try_get_non_informative_witness_aux g u ty in
   ropt
 
 let get_non_informative_witness g u t
   : T.Tac (non_informative_t g u t)
-  = match try_get_non_informative_witness_aux g u t () with
+  = match try_get_non_informative_witness_aux g u t with
     | None, issues ->
       let open Pulse.PP in
       fail_doc g (Some (RU.range_of_term t)) [
@@ -623,14 +623,14 @@ let try_check_prop_validity (g:env) (p:term)
   : T.Tac (option (Pulse.Typing.prop_validity g p))
   = let _, f = elab_env_with_term_range g p in
     RU.record_stats "Pulse.try_check_prop_validity" fun _ -> 
-    let t_opt, issues = rtb_check_prop_validity g true f p () in
+    let t_opt, issues = rtb_check_prop_validity g true f p in
     t_opt
 
 let check_prop_validity (g:env) (p:term)
   : T.Tac (Pulse.Typing.prop_validity g p)
   = let _, f = elab_env_with_term_range g p in
     RU.record_stats "Pulse.check_prop_validity" fun _ -> 
-    let t_opt, issues = rtb_check_prop_validity g true f p () in
+    let t_opt, issues = rtb_check_prop_validity g true f p in
     match t_opt with
     | None -> 
       let open Pulse.PP in

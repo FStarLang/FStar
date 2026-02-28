@@ -108,7 +108,7 @@ let infer_post' (g:env) (g':env { g' `env_extends` g })
   (post:term) (post_typing: unit)
 =
   // simplify post by applying elimination rules (particularly `frame ** is_unreachable ~~> is_unreachable`)
-  let (| g1, post, _, _ |) = Pulse.Checker.Prover.elim_exists_and_pure #g' #post post_typing in
+  let (| g1, post, _ |) = Pulse.Checker.Prover.elim_exists_and_pure #g' #post in
   let bs0 = bindings g in
   let dom_g = var_dom g in
   let fvs_t = freevars t in
@@ -388,11 +388,9 @@ let rec join_comps
   (g_then:env)
   (e_then:st_term)
   (c_then:comp_st)
-  (e_then_typing:unit)
   (g_else:env)
   (e_else:st_term)
   (c_else:comp_st)
-  (e_else_typing:unit)
   (post:post_hint_t)
   : T.TacH (c:comp_st &
           unit &
@@ -422,10 +420,10 @@ let rec join_comps
     | C_STGhost _ _, C_STAtomic _ _ _ ->
 
       st_ghost_as_atomic_matches_post_hint c_then post;
-      join_comps g_then e_then (st_ghost_as_atomic c_then) () g_else e_else c_else () post
+      join_comps g_then e_then (st_ghost_as_atomic c_then) g_else e_else c_else post
 
     | C_STAtomic _ _ _, C_STGhost _ _ ->
 
       st_ghost_as_atomic_matches_post_hint c_else post;
-      join_comps g_then e_then c_then () g_else e_else (st_ghost_as_atomic c_else) () post
+      join_comps g_then e_then c_then g_else e_else (st_ghost_as_atomic c_else) post
 #pop-options

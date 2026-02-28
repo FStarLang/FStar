@@ -39,10 +39,10 @@ let extend_post_hint_for_local (g:env) (p:post_hint_for_env g)
   = let conjunct = withlocal_post init_t (term_of_nvar (n, x)) in
     let g' = extend_env g x n init_t in
     let c_typing = Pulse.Checker.Pure.core_check_term (push_binding g x n (mk_ref init_t)) conjunct T.E_Total tm_slprop in
-    let res = Pulse.Checker.Base.extend_post_hint g p x (mk_ref init_t) conjunct c_typing in
+    let res = Pulse.Checker.Base.extend_post_hint g p x (mk_ref init_t) conjunct in
     res
 
-let with_local_pre_typing (#g:env) (#pre:term) (_pre_typing:unit)
+let with_local_pre_typing (#g:env) (#pre:term)
                           (init_t:term) (x:var { ~ (Set.mem x (dom g)) }) n (i:option term)
   : unit
   = admit()
@@ -136,17 +136,15 @@ let check
         assume not (x `Set.mem` freevars post.post);
           let open Pulse.Typing.Combinators in
           let body_post : post_hint_for_env g_extended = extend_post_hint_for_local g post init_t x binder.binder_ppname in
-          let r = check g_extended body_pre body_pre_typing (PostHint body_post) binder.binder_ppname (open_st_term_nv body px) in
+          let r = check g_extended body_pre (PostHint body_post) binder.binder_ppname (open_st_term_nv body px) in
           let r: checker_result_t g_extended body_pre (PostHint body_post) = r in
           let (| opened_body, c_body |) = apply_checker_result_k #g_extended #body_pre #body_post r binder.binder_ppname in
           let body = close_st_term opened_body x in
           assume (open_st_term (close_st_term opened_body x) x == opened_body);
           let c = C_ST {u=comp_u c_body;res=comp_res c_body;pre;post=post.post} in
           let c_typing =
-            intro_comp_typing g c () 
-              ()
-              ()
-              x ()
+            intro_comp_typing g c
+              x
           in
           assert (freshv g x);
           assert (~(Set.mem x (freevars_st body)));

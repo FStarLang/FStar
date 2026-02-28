@@ -49,28 +49,24 @@ val freevars_close_st_term (e:st_term) (x:var) (i:index)
     [SMTPat (freevars_st (close_st_term' e x i))]
 
 val tot_typing_freevars (g:env) (t:term) (ty:term)
-                        (d:unit)
   : Lemma 
       (ensures freevars t `Set.subset` vars_of_env g /\
                freevars ty `Set.subset` vars_of_env g)
 
 val comp_typing_freevars  (g:env) (c:comp) (u:universe)
-                          (d:unit)
   : Lemma 
       (ensures freevars_comp c `Set.subset` vars_of_env g)
 
 val st_typing_freevars (g:env) (t:st_term) (c:comp)
-                       (d:unit)
   : Lemma 
     (ensures freevars_st t `Set.subset` vars_of_env g /\
              freevars_comp c `Set.subset` vars_of_env g)
 
 
 let st_typing_freevars_inv (g:env) (t:st_term) (c:comp)
-                           (d:unit)
                            (x:var)
   : Lemma 
     (requires freshv g x)
     (ensures ~(x `Set.mem` freevars_st t) /\
              ~(x `Set.mem` freevars_comp c))
-  = st_typing_freevars g t c d
+  = st_typing_freevars g t c

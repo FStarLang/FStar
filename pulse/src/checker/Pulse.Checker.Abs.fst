@@ -372,11 +372,6 @@ let check_effect_annotation g r (asc:comp_ascription) (c_computed:comp) : T.Tac 
 
       let Some tok = tok in
 
-      let d_sub : unit =
-        match c_computed with
-        | C_STAtomic _ obs _ -> ()
-        | C_STGhost _ _ -> ()
-      in
       c
 
     | _, _ ->
@@ -394,7 +389,6 @@ let check_effect_annotation g r (asc:comp_ascription) (c_computed:comp) : T.Tac 
 preserving the st_typing derivation d *)
 let maybe_rewrite_body_typing
       (g:_) (e:st_term) (c:comp)
-      (d:unit)
       (asc:comp_ascription)
   : T.Tac comp
   = let open Pulse.PP in
@@ -483,9 +477,9 @@ let rec check_abs_core
       if needed. Currently this only subtypes the invariants. *)
       let c_body = check_effect_annotation g' body.range asc c_body in
 
-      let c_body = maybe_rewrite_body_typing g' body c_body () asc in
+      let c_body = maybe_rewrite_body_typing g' body c_body asc in
 
-      FV.st_typing_freevars g' body c_body ();      let body_closed = close_st_term body x in
+      FV.st_typing_freevars g' body c_body;      let body_closed = close_st_term body x in
       assume (open_st_term body_closed x == body);
 
       // instantiate implicits in the attributes
@@ -561,7 +555,7 @@ let rec check_abs_core
       in
 
       let ppname_ret = mk_ppname_no_range "_fret" in
-      let r  = check g' pre_opened () post ppname_ret body_opened  in
+      let r  = check g' pre_opened post ppname_ret body_opened  in
       let (| post, r |) : (ph:post_hint_opt g' & checker_result_t g' pre_opened ph) =
         match post with
         | PostHint _ -> (| post, r |)
@@ -589,9 +583,9 @@ let rec check_abs_core
       let c_body = check_effect_annotation g' body.range c_opened c_body in
 
 
-      let c_body = maybe_rewrite_body_typing g' body c_body () asc in
+      let c_body = maybe_rewrite_body_typing g' body c_body asc in
 
-      FV.st_typing_freevars g' body c_body ();
+      FV.st_typing_freevars g' body c_body;
       let body_closed = close_st_term body x in
       assume (open_st_term body_closed x == body);
       let b = {binder_ty=t;binder_ppname=ppname;binder_attrs} in

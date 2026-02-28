@@ -70,7 +70,7 @@ let check
          | STT_Ghost -> C_STGhost tm_emp_inames s
          | STT_Atomic -> C_STAtomic tm_emp_inames Neutral s)
 
-      | _, PostHint post -> Pulse.Typing.Combinators.comp_for_post_hint g pre () post x
+      | _, PostHint post -> Pulse.Typing.Combinators.comp_for_post_hint g pre post x
   in
   let c = res in
   let admit_st = wtag (Some (ctag_of_comp_st c))

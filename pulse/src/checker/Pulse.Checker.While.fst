@@ -30,20 +30,20 @@ module RU = Pulse.RuntimeUtils
 
 let empty_env g = mk_env (fstar_env g)
 let push_empty_env_idem (g:env) : Lemma (push_env g (empty_env g) == g)[SMTPat (push_env g (empty_env g))] = admit()
-let body_typing_subst_true #g #x #post (_:unit)
+let body_typing_subst_true #g #x #post
 : unit = admit()
-let body_typing_ex #g #x #post (_:unit)
+let body_typing_ex #g #x #post
 : unit = admit()
 let unit_typing g : unit = admit()
 
-let inv_typing_weakening (g:env) (inv:slprop) (inv_typing:unit) 
+let inv_typing_weakening (g:env) (inv:slprop) 
 : (x:FStar.Ghost.erased var {fresh_wrt x g (freevars inv)})
  = let x : (x:FStar.Ghost.erased var {fresh_wrt x g (freevars inv)}) = RU.magic () in
    x
 
-let inv_as_post_hint (g:env) (inv:slprop) (inv_typing:unit) 
+let inv_as_post_hint (g:env) (inv:slprop) 
 : T.Tac (ph:post_hint_for_env g { ph.post == inv /\ ph.ret_ty == tm_unit /\ ph.u == u0 /\ ph.effect_annot == EffectAnnotSTT })
-= let x = inv_typing_weakening g inv inv_typing in
+= let x = inv_typing_weakening g inv in
   { g; effect_annot=EffectAnnotSTT;
     ret_ty=tm_unit; u=u0; post=inv }
 
@@ -214,7 +214,7 @@ let check_while
   let inv = tm_star (RU.deep_compress_safe inv) remaining in
 
   let res_cond : checker_result_t g1 inv (TypeHint tm_bool) =
-    check (push_context "check_while_condition" cond.range g1) inv () (TypeHint tm_bool) ppname_default cond in
+    check (push_context "check_while_condition" cond.range g1) inv (TypeHint tm_bool) ppname_default cond in
   let (| post_cond, r_cond |) : (ph:post_hint_for_env g1 & Pulse.Typing.Combinators.st_typing_in_ctxt g1 inv (PostHint ph)) =
     let res_cond = retype_checker_result NoHint res_cond in
     let ph = Pulse.JoinComp.infer_post res_cond in
@@ -278,7 +278,7 @@ let check_while
 
   let body_pre_open = post_cond.post in
 
-  let body_ph : post_hint_for_env g2 = inv_as_post_hint g2 (comp_post (comp_while_body u_meas ty_meas is_tot dec_formula x_meas inv body_pre_open)) () in
+  let body_ph : post_hint_for_env g2 = inv_as_post_hint g2 (comp_post (comp_while_body u_meas ty_meas is_tot dec_formula x_meas inv body_pre_open)) in
   assert body_ph.ret_ty == tm_unit;
   let x = fresh g2 in
 
@@ -286,7 +286,7 @@ let check_while
   let r_body = 
     check 
       (push_context "check_while_body" body.range g2) 
-      (open_term' body_pre_open tm_true 0) body_pre_typing (PostHint body_ph) ppname_default body
+      (open_term' body_pre_open tm_true 0) (PostHint body_ph) ppname_default body
   in
   let (| cond, comp_cond |) = r_cond in
   let (| body, comp_body |) = apply_checker_result_k r_body ppname_default in

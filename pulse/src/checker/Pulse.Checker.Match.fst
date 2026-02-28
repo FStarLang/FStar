@@ -181,10 +181,9 @@ and elab_readback_subpat (pb : R.pattern & bool)
 val tot_typing_weakening_n
    (#g:env) (#t:term) (#ty:term)
    (bs:list var_binding {all_fresh g bs})
-   (d:unit)
    : Tot (unit)
          (decreases bs)
-let rec tot_typing_weakening_n #g #t #ty bs d = ()
+let rec tot_typing_weakening_n #g #t #ty bs = ()
 
 let patof (b:branch) : pattern = b.pat
 let samepat (b1 b2 : branch) : prop = b1.pat == b2.pat
@@ -273,7 +272,7 @@ let check_branch
 
   let (| e, c |) =
     let ppname = mk_ppname_no_range "_br" in
-    let r = check g' pre () (PostHint post_hint) ppname e in
+    let r = check g' pre (PostHint post_hint) ppname e in
     apply_checker_result_k r ppname in
   (| p, close_st_term_n e (L.map (fun (b: var_binding) -> b.x) pulse_bs), c |)
 
@@ -538,7 +537,7 @@ let check
 
   (* Provable *)
   assume (L.map (fun br -> elab_pat br.pat) brs == elab_pats');
-  let c_typing = comp_typing_from_post_hint c () post_hint in
+  let c_typing = comp_typing_from_post_hint c post_hint in
   let t = wtag (Some (ctag_of_comp_st c)) (Tm_Match {sc; returns_=None; brs}) in
 
   checker_result_for_st_typing (| t, c |) res_ppname

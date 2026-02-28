@@ -61,5 +61,5 @@ let check
   let intro_st = wtag (Some STT_Ghost) (Tm_IntroPure { p }) in
   let intro_c = C_STGhost tm_emp_inames { u=u0; res=tm_unit; pre=tm_emp; post=tm_pure p } in
 
-  let c = match_comp_res_with_post_hint intro_st intro_c () post_hint in
-  prove_post_hint (try_frame_pre false () (|intro_st,c|) res_ppname) post_hint t.range
+  let c = match_comp_res_with_post_hint intro_st intro_c post_hint in
+  prove_post_hint (try_frame_pre false (|intro_st,c|) res_ppname) post_hint t.range

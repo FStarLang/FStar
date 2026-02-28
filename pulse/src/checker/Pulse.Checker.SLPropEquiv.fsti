@@ -39,34 +39,31 @@ val list_as_slprop_assoc (g:env) (vp0 vp1 vp2:list term)
   : GTot (unit)
 
 val list_as_slprop_ctx (g:env) (vp0 vp0' vp1 vp1':list term)
-                      (_:unit)
-                      (_:unit)
   : GTot (unit)
 
-val list_as_slprop_singleton (g:env) (p q:term) (d:unit)
+val list_as_slprop_singleton (g:env) (p q:term)
   : GTot (unit)
   
 val slprop_list_equiv (g:env)  (vp:term)
   : GTot (unit)
 
 val slprop_equiv_swap_equiv (g:env) (l0 l2:list term)
-                           (p q:term) (d_p_q:unit)
+                           (p q:term)
   : GTot (unit)
 
 val slprop_equiv_split_frame (g:env) (ctxt req:term) (frame:list term)
-                            (d:unit)
   : unit
 
 
 let slprop_equiv_typing_fwd (#g:env) (#ctxt:term) (ctxt_typing:unit)
-                           (p:term) (d:unit)
+                           (p:term)
   : unit 
-  = let fwd, _ = slprop_equiv_typing g ctxt p d in
+  = let fwd, _ = slprop_equiv_typing g ctxt p in
     fwd ctxt_typing
 
 
 let slprop_equiv_typing_bk (#g:env) (#ctxt:term) (ctxt_typing:unit)
-                           (p:term) (d:unit)
+                           (p:term)
   : unit 
-  = let _, bk = slprop_equiv_typing g p ctxt d in
+  = let _, bk = slprop_equiv_typing g p ctxt in
     bk ctxt_typing

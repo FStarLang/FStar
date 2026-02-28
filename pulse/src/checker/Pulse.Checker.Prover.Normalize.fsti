@@ -35,5 +35,4 @@ val normalize_slprop
 val normalize_slprop_welltyped
   (g:env)
   (v:slprop)
-  (v_typing:unit)
   : T.Tac slprop

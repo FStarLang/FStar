@@ -49,17 +49,15 @@ let extend_post_hint
     | None -> mk_array_pts_to_uninit_post init_t arr) in
   let g' = push_binding g x n (mk_array init_t) in
   let c_typing = Pulse.Checker.Pure.core_check_term g' conjunct T.E_Total tm_slprop in
-  let res = Pulse.Checker.Base.extend_post_hint g p x (mk_array init_t) conjunct c_typing in
+  let res = Pulse.Checker.Base.extend_post_hint g p x (mk_array init_t) conjunct in
   res
 
 
 let with_local_array_pre_typing (#g:env) (#pre:term)
-  (_pre_typing:unit)
   (init_t:term)
   (init:option term)
   (len:term)
   (init_typing:(match init with Some init -> unit | _ -> unit))
-  (len_typing:unit)
   (x:var { ~ (Set.mem x (dom g)) })
   (n: ppname)
   : unit
@@ -162,16 +160,14 @@ let check
           let body_post = extend_post_hint g post init_t init x binder.binder_ppname in
           let (| opened_body, c_body |) =
             let r =
-              check g_extended body_pre body_pre_typing (PostHint body_post) binder.binder_ppname (open_st_term_nv body px) in
+              check g_extended body_pre (PostHint body_post) binder.binder_ppname (open_st_term_nv body px) in
             apply_checker_result_k r binder.binder_ppname in
           let body = close_st_term opened_body x in
           assume (open_st_term (close_st_term opened_body x) x == opened_body);
           let c = C_ST {u=comp_u c_body;res=comp_res c_body;pre;post=post.post} in
           let c_typing =
-            intro_comp_typing g c () 
-              ()
-              ()
-              x ()
+            intro_comp_typing g c
+              x
           in
           let st = wrst c (Tm_WithLocalArray { binder = mk_binder_ppname (mk_array init_t) binder.binder_ppname; initializer=init; length=len; body }) in
           checker_result_for_st_typing (| st, c |) res_ppname

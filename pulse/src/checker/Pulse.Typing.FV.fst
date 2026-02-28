@@ -282,7 +282,6 @@ val freevars_open_comp (c:comp) (x:term) (i:index)
 #push-options "--fuel 2 --ifuel 2"
 let tot_or_ghost_typing_freevars
   (g:env) (t:term) (ty:term) (eff:FStar.Tactics.V2.tot_or_ghost)
-  (d:unit)
   : Lemma 
     (ensures freevars t `Set.subset` vars_of_env g /\
              freevars ty `Set.subset` vars_of_env g)
@@ -290,21 +289,19 @@ let tot_or_ghost_typing_freevars
 
 let tot_typing_freevars
   (g:env) (t:term) (ty:term)
-  (d:unit)
   : Lemma 
     (ensures freevars t `Set.subset` vars_of_env g /\
              freevars ty `Set.subset` vars_of_env g)
   = admit ()
 
 let bind_comp_freevars (g:env) (x:var) (c1:comp) (c2:comp) (c:comp)
-                       (d:unit)
   : Lemma 
     (requires freevars_comp c1 `Set.subset` vars_of_env g /\
               freevars_comp c2 `Set.subset` (Set.union (vars_of_env g) (Set.singleton x)))
     (ensures freevars_comp c `Set.subset` vars_of_env g)
   = admit ()
 
-let slprop_equiv_freevars (g:env) (t0:term) (t1:term) (v:unit)
+let slprop_equiv_freevars (g:env) (t0:term) (t1:term)
   : Lemma (ensures (freevars t0 `Set.subset` vars_of_env g) <==>
                    (freevars t1 `Set.subset` vars_of_env g))
   = admit ()
@@ -312,7 +309,6 @@ let slprop_equiv_freevars (g:env) (t0:term) (t1:term) (v:unit)
 
 
 let st_equiv_freevars (g:env) (c1:comp) (c2:comp)
-                      (d:unit)
   : Lemma
     (requires freevars_comp c1 `Set.subset` vars_of_env g)
     (ensures freevars_comp c2 `Set.subset` vars_of_env g)    
@@ -325,25 +321,23 @@ let prop_validity_fv (g:env) (p:term)
   = admit()
 
 let st_sub_freevars (g:env) (c1:comp) (c2:comp)
-                      (d:unit)
   : Lemma
     (requires freevars_comp c1 `Set.subset` vars_of_env g)
     (ensures freevars_comp c2 `Set.subset` vars_of_env g)
   = admit ()
 
 let src_typing_freevars_t (d':'a) =
-    (g:env) -> (t:st_term) -> (c:comp) -> (d:unit) ->
+    (g:env) -> (t:st_term) -> (c:comp) ->
     Lemma 
     (ensures freevars_st t `Set.subset` vars_of_env g /\
              freevars_comp c `Set.subset` vars_of_env g)
 
-let st_comp_typing_freevars (g:env) (st:st_comp) (d:unit)
+let st_comp_typing_freevars (g:env) (st:st_comp)
   : Lemma
     (ensures freevars_st_comp st `Set.subset` vars_of_env g)
   = admit ()
 
 let comp_typing_freevars  (g:env) (c:comp) (u:universe)
-                          (d:unit)
   : Lemma 
     (ensures freevars_comp c `Set.subset` vars_of_env g)
   = admit ()
@@ -419,7 +413,6 @@ let freevars_array (t:term)
 
 let st_typing_freevars
   (g:env) (t:st_term) (c:comp)
-  (d:unit)
 : Lemma
   (ensures freevars_st t `Set.subset` vars_of_env g /\
            freevars_comp c `Set.subset` vars_of_env g)

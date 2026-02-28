@@ -79,38 +79,30 @@ let check
 
     let eff = core_check_term_at_type g' e ty in
     let t = { t with term = Tm_ST { t=e; args=[] }; effect_tag = T.seal (Some (ctag_of_comp_st c)) } in
-    let d : unit =
-      if eff = T.E_Total
-      then ()
-      else (
-        match c with
-        | C_ST _ | C_STAtomic .. ->
-          let open Pulse.PP in
-          fail_doc g (Some range)
-            [text "Application of a stateful or atomic computation cannot have a ghost effect";
-            pp t;
-            text "has computation type";
-            pp c]
-        | C_STGhost .. ->
-          let d_non_info : unit =
-            let token = is_non_informative g' c in
-            match token with
-            | None ->
-              fail g' (Some range)
-                (Printf.sprintf "Unexpected informative result for %s" (P.comp_to_string c))
-            | Some token ->
-                ()
-          in
-          ()
-      )
-      in
+    if not (eff = T.E_Total) then (
+      match c with
+      | C_ST _ | C_STAtomic .. ->
+        let open Pulse.PP in
+        fail_doc g (Some range)
+          [text "Application of a stateful or atomic computation cannot have a ghost effect";
+          pp t;
+          text "has computation type";
+          pp c]
+      | C_STGhost .. ->
+        let token = is_non_informative g' c in
+        (match token with
+         | None ->
+           fail g' (Some range)
+             (Printf.sprintf "Unexpected informative result for %s" (P.comp_to_string c))
+         | Some _ -> ())
+    );
  // TODO: thread through prover
       if comp_post c `eq_tm` tm_is_unreachable then
         let framed = checker_result_for_st_typing (k _ (| t, add_frame c ctxt' |)) res_ppname in
         RU.record_stats "prove_post_hint" fun _ -> prove_post_hint framed post_hint range
       else
         // TODO: not sure why we need the type equality check below..
-        let c = match_comp_res_with_post_hint t c d post_hint in
+        let c = match_comp_res_with_post_hint t c post_hint in
         let framed = checker_result_for_st_typing (k _ (| t, add_frame c ctxt' |)) res_ppname in
         RU.record_stats "prove_post_hint" fun _ -> prove_post_hint framed post_hint range
   )

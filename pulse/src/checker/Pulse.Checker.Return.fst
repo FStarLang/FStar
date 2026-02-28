@@ -141,12 +141,12 @@ let check_core
   let ret_st = wtag (Some c) (Tm_Return {expected_type=tm_unknown; insert_eq=use_eq; term=t}) in
   let ret_c = comp_return c use_eq u ty t post x in
 
-  let c' = match_comp_res_with_post_hint ret_st ret_c () post_hint in
+  let c' = match_comp_res_with_post_hint ret_st ret_c post_hint in
   Pulse.Checker.Util.debug g "pulse.return" (fun _ -> 
     Printf.sprintf "Return comp is: %s"
       (Pulse.Syntax.Printer.comp_to_string c'));
   prove_post_hint #g
-    (try_frame_pre false #g () (|ret_st,c'|) res_ppname)
+    (try_frame_pre false #g (|ret_st,c'|) res_ppname)
     post_hint
     st.range
 #pop-options
@@ -170,7 +170,7 @@ let check
     Pulse.Checker.Util.debug g "pulse.hoist" (fun _ ->
       Printf.sprintf "Hoisted term: %s" (Pulse.Syntax.Printer.st_term_to_string tt)
     );
-    check g ctxt () post_hint res_ppname tt
+    check g ctxt post_hint res_ppname tt
   | None -> (
     match post_hint with
     | PostHint p -> (

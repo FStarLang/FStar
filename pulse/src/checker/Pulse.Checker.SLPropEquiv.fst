@@ -54,8 +54,6 @@ let list_as_slprop_assoc g (vp0 vp1 vp2:list term)
     ()
     
 let list_as_slprop_ctx g (vp0 vp0' vp1 vp1':list term)
-                        (d0:unit)
-                        (d1:unit)
   : GTot (unit)
 
   = let split_app = list_as_slprop_append g vp0 vp1 in
@@ -64,9 +62,8 @@ let list_as_slprop_ctx g (vp0 vp0' vp1 vp1':list term)
   
 let list_as_slprop_singleton g
   (p q:term)
-  (d:unit)
   : GTot (unit)
-  = d
+  = ()
 
 let rec slprop_list_equiv (g:env)
                          (vp:term)
@@ -87,7 +84,7 @@ let rec slprop_list_equiv (g:env)
 
 let slprop_equiv_swap_equiv (g:env)
                           (l0 l2:list term)
-                           (p q:term) (d_p_q:unit)
+                           (p q:term)
   : unit
   = let d : unit
         = () in
@@ -95,7 +92,7 @@ let slprop_equiv_swap_equiv (g:env)
         = List.Tot.append_assoc [q] l0 l2;
         () in
 
-    let d_q_p = d_p_q in
+    let d_q_p = () in
     let d' : unit = d_q_p in
     let d' : unit
         = () in
@@ -103,11 +100,9 @@ let slprop_equiv_swap_equiv (g:env)
 
 
 let slprop_equiv_split_frame (g:env) (ctxt req:term) (frame:list term)
-                            (veq:unit)                                             
   : unit
   = let ctxt_l = slprop_as_list ctxt in
     let req_l = slprop_as_list req in
-    let veq : unit = veq in
 
 
 

@@ -29,10 +29,9 @@ module P = Pulse.Syntax.Printer
 module FV = Pulse.Typing.FV
 
 let slprop_as_list_typing (#g:env) (#p:term)
-  (t:unit)
   (x:term { List.Tot.memP x (slprop_as_list p) })
   : unit
-  = assume false; t
+  = assume false; ()
 
 let terms_to_string (t:list term)
   : T.Tac string 
@@ -88,8 +87,8 @@ let check_elim_exists
        let elim_st = wtag (Some STT_Ghost) (Tm_ElimExists { p = tm_exists_sl u (as_binder ty) p }) in
        let elim_c = comp_elim_exists u ty p (ppname_default, x) in
 
-       let c = match_comp_res_with_post_hint elim_st elim_c () post_hint in
-       prove_post_hint (try_frame_pre false () (|elim_st,c|) res_ppname) post_hint t_rng
+       let c = match_comp_res_with_post_hint elim_st elim_c post_hint in
+       prove_post_hint (try_frame_pre false (|elim_st,c|) res_ppname) post_hint t_rng
   else fail g (Some t_rng)
          (Printf.sprintf "check_elim_exists: universe checking failed, computed %s, expected %s"
             (P.univ_to_string u') (P.univ_to_string u))
@@ -123,7 +122,7 @@ let check_intro_exists
 
   let Tm_ExistsSL u b p = tv in
 
-  Pulse.Typing.FV.tot_typing_freevars g t tm_slprop ();
+  Pulse.Typing.FV.tot_typing_freevars g t tm_slprop;
   let x = fresh g in
   let ty_typing, _ = (), () in
   let witness = 
@@ -131,8 +130,8 @@ let check_intro_exists
   let intro_st = wtag (Some STT_Ghost) (Tm_IntroExists { p = tm_exists_sl u b p; witnesses = [witness] }) in
   let intro_c = C_STGhost tm_emp_inames { u=u0; res=tm_unit; pre=open_term' p witness 0; post=tm_exists_sl u b p } in
 
-  let c = match_comp_res_with_post_hint intro_st intro_c () post_hint in
-  prove_post_hint (try_frame_pre false () (|intro_st, c|) res_ppname)
+  let c = match_comp_res_with_post_hint intro_st intro_c post_hint in
+  prove_post_hint (try_frame_pre false (|intro_st, c|) res_ppname)
                   post_hint
                   (Pulse.RuntimeUtils.range_of_term t)
 #pop-options

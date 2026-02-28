@@ -26,17 +26,17 @@ let st_comp_with_pre (st:st_comp) (pre:term) : st_comp = { st with pre }
 let nvar_as_binder (x:nvar) (t:term) : binder =
   mk_binder_ppname t (fst x)
 
-val t_equiv (g:env) (st:st_term) (c:comp) (d:unit) (c':comp) (eq:unit)
+val t_equiv (g:env) (st:st_term) (c:comp) (c':comp)
   : unit
   
-val slprop_equiv_typing (g:env) (t0 t1:term) (v:unit)
+val slprop_equiv_typing (g:env) (t0 t1:term)
   : GTot ((unit -> unit) &
           (unit -> unit))
 
 let st_ghost_as_atomic (c:comp_st { C_STGhost? c }) = 
   C_STAtomic (comp_inames c) Neutral (st_comp_of_comp c)
 
-val lift_ghost_atomic (g:env) (e:st_term) (c:comp_st { C_STGhost? c }) (d:unit)
+val lift_ghost_atomic (g:env) (e:st_term) (c:comp_st { C_STGhost? c })
 : T.Tac (unit)
 
 val mk_bind (g:env)
@@ -46,11 +46,6 @@ val mk_bind (g:env)
             (c1:comp_st)
             (c2:comp_st)
             (px:nvar { ~ (Set.mem (snd px) (dom g)) })
-            (d_e1:unit)
-            (d_c1res:unit)
-            (d_e2:unit)
-            (res_typing:unit)
-            (post_typing:unit)
             (post_hint:post_hint_opt g { comp_post_matches_hint c2 post_hint })
   : T.TacH (t:st_term &
             c:comp_st { st_comp_of_comp c == st_comp_with_pre (st_comp_of_comp c2) pre /\
@@ -69,9 +64,8 @@ val bind_res_and_post_typing (g:env) (s2:comp_st) (x:var { fresh_wrt x g (freeva
                              (post_hint:post_hint_opt g { comp_post_matches_hint s2 post_hint })
   : T.Tac unit
 
-val add_frame (g:env) (t:st_term) (c:comp_st) (t_typing:unit)
+val add_frame (g:env) (t:st_term) (c:comp_st)
   (frame:slprop)
-  (frame_typing:unit)
   : t':st_term &
     c':comp_st { c' == add_frame c frame }
 
@@ -83,9 +77,7 @@ let frame_of #g #ctxt #req (f:frame_for_req_in_ctxt g ctxt req) = f
 val apply_frame (g:env)
                 (t:st_term)
                 (ctxt:term)
-                (ctxt_typing: unit)
                 (c:comp { stateful_comp c })
-                (t_typing: unit)
                 (frame_t:frame_for_req_in_ctxt g ctxt (comp_pre c))
   : Dv  (c':comp_st { comp_pre c' == ctxt /\
                       comp_res c' == comp_res c /\
@@ -96,7 +88,7 @@ type st_typing_in_ctxt (g:env) (ctxt:slprop) (post_hint:post_hint_opt g) =
   t:st_term &
   c:comp_st { comp_pre c == ctxt /\ comp_post_matches_hint c post_hint }
 
-val comp_for_post_hint (g:env) (pre:slprop) (pre_typing:unit)
+val comp_for_post_hint (g:env) (pre:slprop)
   (post:post_hint_t { g `env_extends` post.g })
   (x:var { freshv g x })
   : T.Tac (c:comp_st { comp_pre c == pre /\ comp_post_matches_hint c (PostHint post) })

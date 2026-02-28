@@ -30,7 +30,6 @@ open Pulse.Checker.Pure
 assume
 val invert_forall_typing
         (g:env) (u:universe) (b:binder) (body:term)
-        (d:unit)
         (x:var { freshv g x /\ ~ (x `Set.mem` freevars body) })
   : GTot (
     unit &
@@ -41,19 +40,17 @@ assume
 val construct_forall_typing
         (g:env) (u:universe) (b:binder) (body:term)
         (x:var { freshv g x /\ ~ (x `Set.mem` freevars body) })
-        (dt:unit)
-        (db:unit)
-  : GTot (unit)
+        : GTot (unit)
 
-let st_equiv_trans (g:env) (c0 c1 c2:comp) (d01:unit) (d12:unit)
+let st_equiv_trans (g:env) (c0 c1 c2:comp)
   : unit
   = ()
 
-let t_equiv (g:env) (st:st_term) (c:comp) (d:unit) (c':comp) (eq:unit)
+let t_equiv (g:env) (st:st_term) (c:comp) (c':comp)
   : unit
   = ()
 
-let slprop_equiv_typing (g:env) (t0 t1:term) (v:unit)
+let slprop_equiv_typing (g:env) (t0 t1:term)
   : GTot ((unit -> unit) &
           (unit -> unit))
   = (fun _ -> ()), (fun _ -> ())
@@ -66,11 +63,6 @@ let bind_t (case_c1 case_c2:comp_st -> bool) =
       (c1:comp_st{ case_c1 c1 }) ->
       (c2:comp_st{ case_c2 c2 }) ->
       (px:nvar { ~ (Set.mem (snd px) (dom g)) }) ->
-      (d_e1:unit) ->
-      (d_c1res:unit) ->
-      (d_e2:unit) ->
-      (res_typing:unit) ->
-      (post_typing:unit) ->
       (post_hint:post_hint_opt g { comp_post_matches_hint c2 post_hint }) ->
     T.TacH (t:st_term &
             c:comp_st { st_comp_of_comp c == st_comp_with_pre (st_comp_of_comp c2) pre  /\
@@ -86,7 +78,7 @@ let bind_t (case_c1 case_c2:comp_st -> bool) =
 #push-options "--fuel 0 --ifuel 0"
 let mk_bind_st_st
   : bind_t C_ST? C_ST?
-  = fun g pre e1 e2 c1 c2 px d_e1 d_c1res d_e2 res_typing post_typing _ ->
+  = fun g pre e1 e2 c1 c2 px _ ->
       let _, x = px in
       let b = nvar_as_binder px (comp_res c1) in
       let c : comp_st = C_ST (st_comp_with_pre (st_comp_of_comp c2) pre) in
@@ -105,11 +97,11 @@ let with_inames (c:comp_st) (i:term) =
   | C_STGhost _ sc -> C_STGhost i sc
   | C_STAtomic _ obs sc -> C_STAtomic i obs sc
 
-let weaken_comp_inames (g:env) (e:st_term) (c:comp_st) (d_e:unit) (new_inames:term)
+let weaken_comp_inames (g:env) (e:st_term) (c:comp_st) (new_inames:term)
   : T.Tac (c':comp_st { with_inames c new_inames == c' } &
            unit)
   = match c with
-    | C_ST _ -> (| c, d_e |)
+    | C_ST _ -> (| c, () |)
     | C_STGhost inames sc ->
       let _ = check_prop_validity g (tm_inames_subset inames new_inames) in
       (| with_inames c new_inames, () |)
@@ -118,16 +110,16 @@ let weaken_comp_inames (g:env) (e:st_term) (c:comp_st) (d_e:unit) (new_inames:te
       let _ = check_prop_validity g (tm_inames_subset inames new_inames) in
       (| with_inames c new_inames, () |)
 
-let try_lift_ghost_atomic (g:env) (e:st_term) (c:comp_st { C_STGhost? c }) (d:unit)
+let try_lift_ghost_atomic (g:env) (e:st_term) (c:comp_st { C_STGhost? c })
 : T.Tac (option (unit))
 = let w = try_get_non_informative_witness g (comp_u c) (comp_res c) in
   match w with
   | None -> None
   | Some w -> Some ()
 
-let lift_ghost_atomic (g:env) (e:st_term) (c:comp_st { C_STGhost? c }) (d:unit)
+let lift_ghost_atomic (g:env) (e:st_term) (c:comp_st { C_STGhost? c })
 : T.Tac (unit)
-= let w = try_lift_ghost_atomic g e c d in
+= let w = try_lift_ghost_atomic g e c in
   match w with
   | None -> 
     let open Pulse.PP in
@@ -143,7 +135,7 @@ let lift_ghost_atomic (g:env) (e:st_term) (c:comp_st { C_STGhost? c }) (d:unit)
 #push-options "--z3rlimit_factor 2 --ifuel 0 --fuel 0 --split_queries no"
 #restart-solver
 let mk_bind_ghost_ghost : bind_t C_STGhost? C_STGhost? =
-  fun g pre e1 e2 c1 c2 px d_e1 d_c1res d_e2 res_typing post_typing post_hint ->
+  fun g pre e1 e2 c1 c2 px post_hint ->
   let _, x = px in
   let b = nvar_as_binder px (comp_res c1) in
   let C_STGhost inames1 sc1 = c1 in
@@ -172,7 +164,7 @@ let mk_bind_ghost_ghost : bind_t C_STGhost? C_STGhost? =
 
 let mk_bind_atomic_atomic
   : bind_t C_STAtomic? C_STAtomic?
-  = fun g pre e1 e2 c1 c2 px d_e1 d_c1res d_e2 res_typing post_typing post_hint ->
+  = fun g pre e1 e2 c1 c2 px post_hint ->
       let _, x = px in
       let b = nvar_as_binder px (comp_res c1) in
       let C_STAtomic inames1 obs1 sc1 = c1 in
@@ -215,11 +207,6 @@ let rec mk_bind (g:env)
                 (c1:comp_st)
                 (c2:comp_st)
                 (px:nvar { ~ (Set.mem (snd px) (dom g)) })
-                (d_e1:unit)
-                (d_c1res:unit)
-                (d_e2:unit)
-                (res_typing:unit)
-                (post_typing:unit)
                 (post_hint:post_hint_opt g { comp_post_matches_hint c2 post_hint })
   : T.TacH (t:st_term &
             c:comp_st {
@@ -245,45 +232,45 @@ let rec mk_bind (g:env)
   in
   match c1, c2 with
   | C_ST _, C_ST _ ->
-    mk_bind_st_st g pre e1 e2 c1 c2 px d_e1 d_c1res d_e2 res_typing post_typing post_hint
+    mk_bind_st_st g pre e1 e2 c1 c2 px post_hint
 
   | C_STGhost _ _, C_STGhost _ _ ->
-    mk_bind_ghost_ghost g pre e1 e2 c1 c2 px d_e1 d_c1res d_e2 res_typing post_typing post_hint
+    mk_bind_ghost_ghost g pre e1 e2 c1 c2 px post_hint
 
   | C_STAtomic inames1 obs1 sc1, C_STAtomic inames2 obs2 sc2 ->
     if at_most_one_observable obs1 obs2
     then (
-      mk_bind_atomic_atomic g pre e1 e2 c1 c2 px d_e1 d_c1res d_e2 res_typing post_typing post_hint
+      mk_bind_atomic_atomic g pre e1 e2 c1 c2 px post_hint
     ) 
     else if (PostHint? post_hint)
     then fail_bias "atomic"
     else (
-      mk_bind g pre e1 e2 (C_ST (st_comp_of_comp c1)) c2 px () d_c1res d_e2 res_typing post_typing post_hint
+      mk_bind g pre e1 e2 (C_ST (st_comp_of_comp c1)) c2 px post_hint
     )
 
   | C_STAtomic inames _ _, C_ST _ ->
-    mk_bind g pre e1 e2 (C_ST (st_comp_of_comp c1)) c2 px () d_c1res d_e2 res_typing post_typing post_hint
+    mk_bind g pre e1 e2 (C_ST (st_comp_of_comp c1)) c2 px post_hint
 
   | C_ST _, C_STAtomic inames _ _ ->
     if (PostHint? post_hint)
     then fail_bias "atomic"
     else (
       let c2_lifted = C_ST (st_comp_of_comp c2) in
-      let (| t, c |) = mk_bind g pre e1 e2 c1 c2_lifted px () d_c1res () res_typing post_typing post_hint in
+      let (| t, c |) = mk_bind g pre e1 e2 c1 c2_lifted px post_hint in
       (| t, c |)
     )
 
   | C_STGhost _ _, C_STAtomic _ Neutral _ -> (
-    match try_lift_ghost_atomic g e1 c1 d_e1 with
+    match try_lift_ghost_atomic g e1 c1 with
     | Some _ ->
-      mk_bind g pre e1 e2 (st_ghost_as_atomic c1) c2 px () d_c1res d_e2 res_typing post_typing post_hint
+      mk_bind g pre e1 e2 (st_ghost_as_atomic c1) c2 px post_hint
     | None ->
       match post_hint with
       | TypeHint _
       | NoHint
       | PostHint { effect_annot = EffectAnnotAtomicOrGhost _ } ->
         let c2_lifted = C_STGhost (comp_inames c2) (st_comp_of_comp c2) in
-        let (| t, c |) = mk_bind g pre e1 e2 c1 c2_lifted px () d_c1res () res_typing post_typing post_hint in
+        let (| t, c |) = mk_bind g pre e1 e2 c1 c2_lifted px post_hint in
         (| t, c |)
       | _ -> fail_bias "atomic"
   )
@@ -294,32 +281,32 @@ let rec mk_bind (g:env)
     | NoHint
     | PostHint { effect_annot = EffectAnnotGhost _ } ->
       let c1_lifted = C_STGhost (comp_inames c1) (st_comp_of_comp c1) in
-      mk_bind g pre e1 e2 c1_lifted c2 px () d_c1res d_e2 res_typing post_typing post_hint
+      mk_bind g pre e1 e2 c1_lifted c2 px post_hint
 
     | _ ->
-      match try_lift_ghost_atomic (push_binding g (snd px) (fst px) (comp_res c1)) (open_st_term_nv e2 px) c2 d_e2 with
+      match try_lift_ghost_atomic (push_binding g (snd px) (fst px) (comp_res c1)) (open_st_term_nv e2 px) c2 with
       | Some _ ->
         let c2_lifted = st_ghost_as_atomic c2 in
-        let (| t, c |) = mk_bind g pre e1 e2 c1 c2_lifted px () d_c1res () res_typing post_typing post_hint in
+        let (| t, c |) = mk_bind g pre e1 e2 c1 c2_lifted px post_hint in
         (| t, c |)
       | None ->
         let c1_lifted = C_STGhost (comp_inames c1) (st_comp_of_comp c1) in
-        mk_bind g pre e1 e2 c1_lifted c2 px () d_c1res d_e2 res_typing post_typing post_hint
+        mk_bind g pre e1 e2 c1_lifted c2 px post_hint
   )
 
   | C_STGhost _ _, C_ST _
   | C_STGhost _ _, C_STAtomic _ _ _ ->
-    let _ = lift_ghost_atomic g e1 c1 d_e1 in
-    mk_bind g pre e1 e2 (st_ghost_as_atomic c1) c2 px () d_c1res d_e2 res_typing post_typing post_hint
+    let _ = lift_ghost_atomic g e1 c1 in
+    mk_bind g pre e1 e2 (st_ghost_as_atomic c1) c2 px post_hint
 
   | C_ST _, C_STGhost _ _
   | C_STAtomic _ _ _, C_STGhost _ _ ->
     if (PostHint? post_hint)
     then fail_bias "ghost"
     else (
-      let _ = lift_ghost_atomic (push_binding g (snd px) (fst px) (comp_res c1)) (open_st_term_nv e2 px) c2 d_e2 in
+      let _ = lift_ghost_atomic (push_binding g (snd px) (fst px) (comp_res c1)) (open_st_term_nv e2 px) c2 in
       let c2_lifted = st_ghost_as_atomic c2 in
-      let (| t, c |) = mk_bind g pre e1 e2 c1 c2_lifted px () d_c1res () res_typing post_typing post_hint in
+      let (| t, c |) = mk_bind g pre e1 e2 c1 c2_lifted px post_hint in
       (| t, c |)
     )
   | _ -> T.fail "Impossible: unexpected combination of effects"
@@ -347,9 +334,8 @@ let bind_res_and_post_typing g c2 x post_hint
       CU.debug g "pulse.main" (fun _ -> "bind_res_and_post_typing (with post_hint)\n");
       ()
      
-let add_frame (g:env) (t:st_term) (c:comp_st) (t_typing:unit)
+let add_frame (g:env) (t:st_term) (c:comp_st)
   (frame:slprop)
-  (frame_typing:unit)
   : t':st_term &
     c':comp_st { c' == add_frame c frame } =
 
@@ -359,9 +345,7 @@ let add_frame (g:env) (t:st_term) (c:comp_st) (t_typing:unit)
 let apply_frame (g:env)
                 (t:st_term)
                 (ctxt:term)
-                (ctxt_typing: unit)
                 (c:comp { stateful_comp c })
-                (t_typing: unit)
                 (frame_t:frame_for_req_in_ctxt g ctxt (comp_pre c))
   : Dv  (c':comp_st { comp_pre c' == ctxt /\
                       comp_res c' == comp_res c /\
@@ -378,7 +362,7 @@ let apply_frame (g:env)
 #pop-options
 
 #push-options "--z3rlimit_factor 2"
-let comp_for_post_hint (g:env) (pre:slprop) (pre_typing:unit)
+let comp_for_post_hint (g:env) (pre:slprop)
   (post:post_hint_t { g `env_extends` post.g })
   (x:var { freshv g x })
   : T.Tac (c:comp_st { comp_pre c == pre /\ comp_post_matches_hint c (PostHint post) }) =

@@ -32,17 +32,15 @@ val prove (rng: range) (g: env) (ctxt goals: slprop) (allow_amb: bool) :
     continuation_elaborator g ctxt g' (goals `tm_star` ctxt'))
 
 val elim_exists_and_pure (#g:env) (#ctxt:slprop)
-    (ctxt_typing:unit)
     : T.Tac (g':env { env_extends g' g } &
             ctxt':term &
-            unit &
             continuation_elaborator g ctxt g' ctxt')
 
 val prove_post_hint (#g:env) (#ctxt:slprop) (r:checker_result_t g ctxt NoHint) (post_hint:post_hint_opt g) (rng:range) :
   T.Tac (checker_result_t g ctxt post_hint)
 
 val try_frame_pre (allow_ambiguous : bool) (#g:env)
-    (#ctxt:slprop) (ctxt_typing:unit)
+    (#ctxt:slprop)
     (d:(t:st_term & c:comp_st))
     (res_ppname:ppname) :
   T.Tac (checker_result_t g ctxt NoHint)

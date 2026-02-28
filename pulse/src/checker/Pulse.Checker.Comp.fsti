@@ -23,5 +23,4 @@ open Pulse.Typing
 
 val check (g:env) 
           (c:comp_st)
-          (pre_typing:unit)
   : T.Tac (unit)

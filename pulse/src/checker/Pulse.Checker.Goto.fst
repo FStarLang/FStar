@@ -48,12 +48,9 @@ let check'
         post = ph.post
       } in
       let t = wtag (Some (ctag_of_comp_st c')) (Tm_Goto { lbl = term_of_nvar (lbln, v); arg }) in
-      let typing: unit =
-        let x' = fresh g in assume fresh_wrt x' g (freevars ph.post);
-        () in
-      let c' = match_comp_res_with_post_hint t c' typing post_hint in
+      let c' = match_comp_res_with_post_hint t c' post_hint in
       prove_post_hint #g
-        (try_frame_pre false #g () (|t,c'|) res_ppname)
+        (try_frame_pre false #g (|t,c'|) res_ppname)
         post_hint
         rng
     | None ->

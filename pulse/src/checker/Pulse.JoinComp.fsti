@@ -40,11 +40,9 @@ val join_comps
   (g_then:env)
   (e_then:st_term)
   (c_then:comp_st)
-  (e_then_typing:unit)
   (g_else:env)
   (e_else:st_term)
   (c_else:comp_st)
-  (e_else_typing:unit)
   (post:post_hint_t)
 : T.TacH (c:comp_st &
         unit &

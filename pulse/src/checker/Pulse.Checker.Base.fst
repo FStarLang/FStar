@@ -54,18 +54,13 @@ let mk_abs ty t = RT.(mk_abs ty T.Q_Explicit t)
 
 let intro_comp_typing (g:env) 
                       (c:comp_st)
-                      (pre_typing:unit)
-                      (i_typing:unit)
-                      (res_typing:unit)
                       (x:var { fresh_wrt x g (freevars (comp_post c)) })
-                      (post_typing:unit)
   : T.Tac unit
   = ()
 
 irreducible
 let post_typing_as_abstraction
   (g:env) (x:var) (ty:term) (t:term { fresh_wrt x g (freevars t) })
-  (_:unit)
   : FStar.Ghost.erased (RT.tot_typing (elab_env g) (mk_abs ty t) (mk_arrow ty tm_slprop))                                 
   = admit()
 
@@ -80,7 +75,6 @@ let fstar_equiv_preserves_typing
 let equiv_preserves_typing
     (g:env) (t1 : term) (typ : term) (t2 : term)
     (eq : squash (T.equiv_token (elab_env g) t1 t2))
-    (t1_typing : unit)
   : unit
   = ()
 
@@ -128,12 +122,12 @@ let intro_post_hint g effect_annot ret_ty_opt post =
     post=post';
     }
 
-let comp_typing_as_effect_annot_typing (g:env) (c:comp_st) (ct:unit)
+let comp_typing_as_effect_annot_typing (g:env) (c:comp_st)
 : unit
 = ()
   
 
-let post_hint_from_comp_typing g c ct = 
+let post_hint_from_comp_typing g c = 
   let p : post_hint_t = 
     { g;
       effect_annot = effect_annot_of_comp c;
@@ -146,19 +140,16 @@ let post_hint_from_comp_typing g c ct =
 let comp_typing_from_post_hint
     (#g: env)
     (c: comp_st)
-    (pre_typing: unit)
     (p:post_hint_for_env g { comp_post_matches_hint c (PostHint p) })
 : T.Tac unit
 = let x = fresh g in
   if x `Set.mem` freevars p.post //exclude this
   then fail g None "Impossible: unexpected freevar in post, please file a bug-report"
-  else intro_comp_typing g c pre_typing
-        ()
-        () 
-        x ()
+  else intro_comp_typing g c
+        x
 
 
-let extend_post_hint g p x tx conjunct conjunct_typing =
+let extend_post_hint g p x tx conjunct =
   let g' = push_binding g x ppname_default tx in
   let y = fresh g' in
   let g'' = push_binding g' y ppname_default p.ret_ty in
@@ -189,21 +180,21 @@ let comp_st_with_post (c:comp_st) (post:term)
 let ve_unit_r g (p:term) : unit = 
   ()
 
-let st_equiv_post (#g:env) (t:st_term) (c:comp_st) (d:unit)
+let st_equiv_post (#g:env) (t:st_term) (c:comp_st)
                   (post:term { freevars post `Set.subset` freevars (comp_post c)})
                   (veq: (x:var { fresh_wrt x g (freevars (comp_post c)) } ->
                          unit))
   : Dv unit
-  = if eq_tm post (comp_post c) then d
+  = if eq_tm post (comp_post c) then ()
     else
       let c' = comp_st_with_post c post in
 
-      Pulse.Typing.Combinators.t_equiv g t c d c' ()
+      Pulse.Typing.Combinators.t_equiv g t c c'
 
-let simplify_post (g:env) (t:st_term) (c:comp_st) (d:unit)
+let simplify_post (g:env) (t:st_term) (c:comp_st)
                   (post:term { comp_post c == tm_star post tm_emp})
   : Dv unit
-  = st_equiv_post #g t c d post (fun x -> ve_unit_r (push_binding g x ppname_default (comp_res c)) (open_term post x))
+  = st_equiv_post #g t c post (fun x -> ve_unit_r (push_binding g x ppname_default (comp_res c)) (open_term post x))
 
 let simplify_lemma (c:comp_st) (c':comp_st) (post_hint:post_hint_opt_t)
   : Lemma
@@ -217,11 +208,11 @@ let simplify_lemma (c:comp_st) (c':comp_st) (post_hint:post_hint_opt_t)
              comp_pre (comp_st_with_post c' (comp_post c)) == comp_pre c')
   = ()
 
-let slprop_equiv_typing_bk (#g:env) (#ctxt:_) (ctxt_typing:unit)
-                           (p:_) (d:unit)
+let slprop_equiv_typing_bk (#g:env) (#ctxt:_)
+                           (p:_)
   : unit 
-  = let _, bk = slprop_equiv_typing g p ctxt d in
-    bk ctxt_typing
+  = let _, bk = slprop_equiv_typing g p ctxt in
+    bk ()
 
 let comp_with_pre (c:comp_st) (pre:term) =
   match c with
@@ -230,35 +221,33 @@ let comp_with_pre (c:comp_st) (pre:term) =
   | C_STAtomic i obs st -> C_STAtomic i obs {st with pre}
 
 #push-options "--fuel 0 --ifuel 0"
-let st_equiv_pre (#g:env) (t:st_term) (c:comp_st) (d:unit)
+let st_equiv_pre (#g:env) (t:st_term) (c:comp_st)
                  (pre:term)
                  (veq: unit)
   : Dv unit
-  = if eq_tm pre (comp_pre c) then d
+  = if eq_tm pre (comp_pre c) then ()
     else
       let c' = comp_with_pre c pre in
 
-      Pulse.Typing.Combinators.t_equiv g t c d c' ()
+      Pulse.Typing.Combinators.t_equiv g t c c'
 
 let k_elab_equiv_continuation (#g1:env) (#g2:env { g2 `env_extends` g1 }) (#ctxt #ctxt1:term) (ctxt2:term)
   (k:continuation_elaborator g1 ctxt g2 ctxt1)
-  (d:unit)
   : continuation_elaborator g1 ctxt g2 ctxt2 =
   fun post_hint res ->
     let (| st, c |) = res in
     assert (comp_pre c == ctxt2);
     k post_hint (| st, comp_with_pre c ctxt1 |)
 
-let slprop_equiv_typing_fwd (#g:env) (#ctxt:_) (ctxt_typing:unit)
-                           (p:_) (d:unit)
+let slprop_equiv_typing_fwd (#g:env) (#ctxt:_)
+                           (p:_)
   : unit 
-  = let fwd, _ = slprop_equiv_typing g ctxt p d in
-    fwd ctxt_typing
+  = let fwd, _ = slprop_equiv_typing g ctxt p in
+    fwd ()
 
 let k_elab_equiv_prefix
   (#g1:env) (#g2:env { g2 `env_extends` g1 }) (#ctxt1 #ctxt:term) (ctxt2:term)
   (k:continuation_elaborator g1 ctxt1 g2 ctxt)
-  (d:unit)
   : continuation_elaborator g1 ctxt2 g2 ctxt =
   fun post_hint res ->
   let framing_token : frame_for_req_in_ctxt g1 ctxt2 ctxt1 = 
@@ -272,14 +261,12 @@ let k_elab_equiv_prefix
 let k_elab_equiv
   (#g1:env) (#g2:env { g2 `env_extends` g1 }) (#ctxt1 #ctxt2:term) (ctxt1' ctxt2':term)                 
   (k:continuation_elaborator g1 ctxt1 g2 ctxt2)
-  (d1:unit)
-  (d2:unit)
   : continuation_elaborator g1 ctxt1' g2 ctxt2' =
   
   let k : continuation_elaborator g1 ctxt1 g2 ctxt2' =
-    k_elab_equiv_continuation ctxt2' k d2 in
+    k_elab_equiv_continuation ctxt2' k in
   let k : continuation_elaborator g1 ctxt1' g2 ctxt2' =
-    k_elab_equiv_prefix ctxt1' k d1 in
+    k_elab_equiv_prefix ctxt1' k in
   k
 
 #push-options "--fuel 3 --ifuel 1 --split_queries no --z3rlimit_factor 20"
@@ -287,8 +274,6 @@ open Pulse.PP
 let continuation_elaborator_with_bind' (#g:env) (ctxt:term)
   (c1:comp{stateful_comp c1})
   (e1:st_term)
-  (e1_typing:unit)
-  (ctxt_pre1_typing:unit)
   (x:nvar {freshv g (snd x)})
   : T.Tac (continuation_elaborator
              g
@@ -309,7 +294,7 @@ let continuation_elaborator_with_bind' (#g:env) (ctxt:term)
       (show ctxt)
       (show c1));
   let c1 =
-    apply_frame g e1 (tm_star ctxt pre1) ctxt_pre1_typing c1 e1_typing framing_token in
+    apply_frame g e1 (tm_star ctxt pre1) c1 framing_token in
   let u_of_1 = () in
   let b = res1 in
   let ppname, x = x in
@@ -347,11 +332,7 @@ let continuation_elaborator_with_bind' (#g:env) (ctxt:term)
       let (| e, c |) =
         Pulse.Typing.Combinators.mk_bind
           g (tm_star ctxt pre1) 
-          e1 e2_closed c1 c2 (ppname, x) e1_typing
-          u_of_1 
-          ()
-          ()
-          ()
+          e1 e2_closed c1 c2 (ppname, x)
           post_hint
       in
       (| e, c |)
@@ -363,8 +344,6 @@ let continuation_elaborator_with_bind' (#g:env) (ctxt:term)
 let continuation_elaborator_with_bind (#g:env) (ctxt:term)
   (c1:comp{stateful_comp c1})
   (e1:st_term)
-  (e1_typing:unit)
-  (ctxt_pre1_typing:unit)
   (x:nvar { freshv g (snd x) })
   : T.Tac (continuation_elaborator
              g
@@ -372,7 +351,7 @@ let continuation_elaborator_with_bind (#g:env) (ctxt:term)
              (push_binding g (snd x) (fst x) (comp_res c1))
              (tm_star (open_term (comp_post c1) (snd x)) ctxt)) =
   RU.record_stats "continuation_elaborator_with_bind" fun _ -> 
-    continuation_elaborator_with_bind' ctxt c1 e1 e1_typing ctxt_pre1_typing x
+    continuation_elaborator_with_bind' ctxt c1 e1 x
 
 
 let coerce_eq (#a #b:Type) (x:a) (_:squash (a == b)) : y:b{y == x} = x
@@ -381,7 +360,6 @@ let coerce_eq (#a #b:Type) (x:a) (_:squash (a == b)) : y:b{y == x} = x
 
 let st_comp_typing_with_post_hint 
       (#g:env) (#ctxt:_)
-      (ctxt_typing:unit)
       (post_hint:post_hint_opt g { PostHint? post_hint })
       (c:comp_st { comp_pre c == ctxt /\ comp_post_matches_hint c post_hint })
 : unit
@@ -397,11 +375,9 @@ let st_comp_typing_with_post_hint
 #pop-options
 
 let continuation_elaborator_with_bind_fn (#g:env) (ctxt:term)
-  (ctxt_typing:unit)
   (e1:st_term)
   (c1:comp { C_Tot? c1 })
   (b:binder{b.binder_ty == comp_res c1})
-  (e1_typing:unit)
   (x:nvar { freshv g (snd x) })
 : T.Tac (continuation_elaborator
           g ctxt
@@ -429,7 +405,7 @@ let rec check_equiv_emp (g:env) (vp:term)
        | _, _ -> None)
      | _ -> None
 
-let emp_inames_included (g:env) (i:term) (_:unit)
+let emp_inames_included (g:env) (i:term)
 : prop_validity g (tm_inames_subset tm_emp_inames i)
 = RU.magic()
 
@@ -459,15 +435,13 @@ let return_in_ctxt (g:env) (y:var) (y_ppname:ppname) (u:universe) (ty:term) (ctx
   | C_STAtomic _ obs st, EffectAnnotAtomic { opens }
   | C_STAtomic _ obs st, EffectAnnotAtomicOrGhost { opens } ->
     assert (comp_inames c == tm_emp_inames);
-    let pht = () in
-    let validity = emp_inames_included g opens pht in
+    let validity = emp_inames_included g opens in
     let c' = C_STAtomic opens obs st in
     (| t, c' |)
   | C_STGhost _ st, EffectAnnotGhost { opens }
   | C_STGhost _ st, EffectAnnotAtomicOrGhost { opens } ->
     assert (comp_inames c == tm_emp_inames);
-    let pht = () in
-    let validity = emp_inames_included g opens pht in
+    let validity = emp_inames_included g opens in
     let c' = C_STGhost opens st in
     (| t, c' |)
   | _ -> 
@@ -476,7 +450,6 @@ let return_in_ctxt (g:env) (y:var) (y_ppname:ppname) (u:universe) (ty:term) (ctx
 #push-options "--z3rlimit_factor 4 --ifuel 1 --split_queries always"
 #restart-solver
 let match_comp_res_with_post_hint (#g:env) (t:st_term) (c:comp_st)
-  (d:unit)
   (post_hint:post_hint_opt g)
   : T.Tac (c':comp_st { comp_pre c' == comp_pre c }) =
 
@@ -548,9 +521,6 @@ let checker_result_for_st_typing (#g:env) (#ctxt:slprop) (#post_hint:post_hint_o
             Pulse.Typing.Combinators.mk_bind
               g (comp_pre c1)
               e1 e2_closed c1 c2 (ppname, x)
-              () u_of_1
-              () ()
-              () 
               post_hint
           in
           (| ee, cc |)
@@ -637,11 +607,10 @@ let rec is_stateful_arrow (g:env) (c:option comp) (args:list T.argv) (out:list T
 
 let checker_result_t_equiv_ctxt (g:env) (ctxt ctxt' : slprop)
   (post_hint:post_hint_opt g)
-  (equiv : unit)
   (r : checker_result_t g ctxt post_hint)
 : checker_result_t g ctxt' post_hint
 = let (| x, g1, t, ctxt_r, k |) = r in
-  (| x, g1, t, ctxt_r, k_elab_equiv ctxt' ctxt_r k equiv () |)
+  (| x, g1, t, ctxt_r, k_elab_equiv ctxt' ctxt_r k |)
 
 module RU = Pulse.RuntimeUtils  
 let as_stateful_application (e:term) (head:term) (args:list T.argv { Cons? args })
@@ -665,7 +634,6 @@ let is_stateful_application (g:env) (e:term)
 
 let apply_conversion
       (#g:env) (#e:term) (#eff:FStar.Tactics.V2.tot_or_ghost) (#t0:term)
-      (d:unit)
       (#t1:term)
       (eq:Ghost.erased (RT.related (elab_env g) t0 RT.R_Eq t1))
   : unit
@@ -673,7 +641,6 @@ let apply_conversion
 
 let norm_typing
       (g:env) (e:term) (eff:FStar.Tactics.V2.tot_or_ghost) (t0:term)
-      (d:unit)
       (steps:list norm_step)
   : T.Tac (t':term & unit)
   = let (| t', _, _ |) =
@@ -684,10 +651,8 @@ let norm_typing
 module TermEq = FStar.Reflection.TermEq
 let norm_typing_inverse
       (g:env) (e:term) (eff:FStar.Tactics.V2.tot_or_ghost) (t0:term)
-      (d:unit)
       (t1:term)
       (u:universe)
-      (d1:unit)
       (steps:list norm_step)
   : T.Tac (option unit)
   = let (| t1', t1'_typing, related_t1_t1' |) =
@@ -700,10 +665,8 @@ let norm_typing_inverse
 
 let norm_st_typing_inverse
       (g:env) (e:st_term) (t0:term)
-      (d:unit)
       (u:universe)
       (t1:term)
-      (d1:unit)
       (steps:list norm_step)
   : T.Tac (option unit)
   = let d1 
@@ -724,7 +687,7 @@ let norm_st_typing_inverse
         = Ghost.hide (RT.Rel_sym _ _ _ related_t1_t1')
       in
 
-      Some (Pulse.Typing.Combinators.t_equiv g e (C_Tot t0) d (C_Tot t1) ())
+      Some (Pulse.Typing.Combinators.t_equiv g e (C_Tot t0) (C_Tot t1))
     )
     else None
 
