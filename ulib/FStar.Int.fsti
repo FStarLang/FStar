@@ -22,20 +22,6 @@ open FStar.Mul
 open FStar.BitVector
 open FStar.Math.Lemmas
 
-val pow2_values: x:nat -> Lemma
-  (let p = pow2 x in
-   match x with
-   | 0  -> p=1
-   | 1  -> p=2
-   | 8  -> p=256
-   | 16 -> p=65536
-   | 31 -> p=2147483648
-   | 32 -> p=4294967296
-   | 63 -> p=9223372036854775808
-   | 64 -> p=18446744073709551616
-   | _  -> True)
-  [SMTPat (pow2 x)]
-
 /// Specs
 
 let max_int (n:pos) : Tot int = pow2 (n-1) - 1

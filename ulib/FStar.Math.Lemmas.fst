@@ -20,6 +20,20 @@ open FStar.Math.Lib
 
 #set-options "--fuel 0 --ifuel 0"
 
+let pow2_values x =
+   match x with
+   | 0  -> assert_norm (pow2 0 == 1)
+   | 1  -> assert_norm (pow2 1 == 2)
+   | 8  -> assert_norm (pow2 8 == 256)
+   | 16 -> assert_norm (pow2 16 == 65536)
+   | 31 -> assert_norm (pow2 31 == 2147483648)
+   | 32 -> assert_norm (pow2 32 == 4294967296)
+   | 63 -> assert_norm (pow2 63 == 9223372036854775808)
+   | 64 -> assert_norm (pow2 64 == 18446744073709551616)
+   | 127 -> assert_norm (pow2 127 == 170141183460469231731687303715884105728)
+   | 128 -> assert_norm (pow2 128 == 340282366920938463463374607431768211456)
+   | _  -> ()
+
 (* Lemma: definition of Euclidean division *)
 let euclidean_div_axiom a b = ()
 

@@ -261,7 +261,7 @@ let lemma_mod_power2_lo (x0:nat64) (x1:nat64) (y:int) (z:int) =
 
 let lemma_power2_add64 (n:nat) =
   pow2_plus 64 n;
-  FStar.UInt.pow2_values 64
+  FStar.Math.Lemmas.pow2_values 64
 
 //TODO: dafny proof seems tedious
 let lemma_mod_breakdown (a:nat) (b:pos) (c:pos) :
