@@ -51,7 +51,6 @@ let check'
       let t = wtag (Some (ctag_of_comp_st c')) (Tm_Goto { lbl = term_of_nvar (lbln, v); arg }) in
       let typing: st_typing g t c' =
         let x' = fresh g in assume fresh_wrt x' g (freevars ph.post);
-        let pht = post_hint_typing g ph x' in
         () in
       let c' = match_comp_res_with_post_hint t c' typing post_hint in
       prove_post_hint #g

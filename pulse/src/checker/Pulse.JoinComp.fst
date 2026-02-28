@@ -126,13 +126,11 @@ let infer_post' (g:env) (g':env { g' `env_extends` g })
     let x = fresh g in
     let post' = open_term_nv post (ppname_default, x) in 
     let g' = push_binding g x ppname_default t in
-    // we just constructed it; should ideally prove it well-typed rather then re-checking it
-    let post_typing_src : tot_typing g' post' tm_slprop = () in
     assume (fresh_wrt x g (freevars post));
     {
       g; effect_annot=EffectAnnotSTT; effect_annot_typing=();
       ret_ty=t; u; ty_typing=();
-      post; x; post_typing_src
+      post
     }
   in
   let post = RU.beta_lax (elab_env g) post in // clean up spurious dependencies on variables
@@ -367,8 +365,8 @@ let join_post #g #hyp #b
   let eff = join_effect_annot g p1.effect_annot p2.effect_annot in
   let res : post_hint_for_env g =
     {g; effect_annot=eff; effect_annot_typing=();
-     ret_ty=p1.ret_ty; u=u; ty_typing=(); x;
-     post=joined_post; post_typing_src=()}
+     ret_ty=p1.ret_ty; u=u; ty_typing=();
+     post=joined_post}
   in
   res
 

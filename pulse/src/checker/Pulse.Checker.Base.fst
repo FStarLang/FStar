@@ -127,7 +127,7 @@ let intro_post_hint g effect_annot ret_ty_opt post =
     effect_annot_typing = ();
     ret_ty; u; ty_typing=();
     post=post';
-    x; post_typing_src=() }
+    }
 
 let comp_typing_as_effect_annot_typing (#g:env) (#c:comp_st) (ct:comp_typing_u g c)
 : effect_annot_typing g (effect_annot_of_comp c)
@@ -142,9 +142,7 @@ let post_hint_from_comp_typing #g #c ct =
       effect_annot_typing;
       ret_ty = comp_res c; u=comp_u c; 
       ty_typing=();
-      post=comp_post c;
-      x=admit();
-      post_typing_src=() }
+      post=comp_post c }
   in
   p
 
@@ -158,45 +156,21 @@ let comp_typing_from_post_hint
 = let x = fresh g in
   if x `Set.mem` freevars p.post //exclude this
   then fail g None "Impossible: unexpected freevar in post, please file a bug-report"
-  else let post_typing = post_hint_typing g p x in
-       intro_comp_typing g c pre_typing
-        post_typing.effect_annot_typing
-        post_typing.ty_typing 
-        x post_typing.post_typing
+  else intro_comp_typing g c pre_typing
+        ()
+        () 
+        x ()
 
 
 let extend_post_hint g p x tx conjunct conjunct_typing =
   let g' = push_binding g x ppname_default tx in
   let y = fresh g' in
   let g'' = push_binding g' y ppname_default p.ret_ty in
-  let p_post_typing_src
-    : tot_typing (push_binding p.g p.x ppname_default p.ret_ty)
-                 (open_term p.post p.x) tm_slprop
-    = p.post_typing_src
-  in
-  let p_post_typing_src''
-    : tot_typing g'' (open_term p.post y) tm_slprop
-    = () //weaken, rename
-  in
-  let conjunct_typing'
-    : tot_typing g' conjunct tm_slprop
-    = conjunct_typing
-  in
-  let conjunct_typing''
-    : tot_typing g'' (open_term conjunct y) tm_slprop
-    = () //weaken
-  in
   let new_post = tm_star p.post conjunct in
-  let new_post_typing
-    : tot_typing g'' (open_term new_post y) tm_slprop
-    = Pulse.Typing.star_typing p_post_typing_src'' conjunct_typing''
-  in
   assume (fresh_wrt y g'' (freevars new_post));
   { p with
     g=g';
-    post=new_post;
-    x=y;
-    post_typing_src=new_post_typing }
+    post=new_post }
 
 let k_elab_unit (g:env) (ctxt:term)
   : continuation_elaborator g ctxt g ctxt
@@ -419,27 +393,12 @@ let st_comp_typing_with_post_hint
 : st_comp_typing g (st_comp_of_comp c)
 = let st = st_comp_of_comp c in
   let PostHint ph = post_hint in
-  let post_typing_src
-    : tot_typing (push_binding ph.g ph.x ppname_default ph.ret_ty)
-                 (open_term ph.post ph.x) tm_slprop
-    = ph.post_typing_src
-  in
   let x = RU.magic () in //fresh g in
   assume (fresh_wrt x g (freevars ph.post));
-  assume (None? (lookup g ph.x));
-  let post_typing_src
-    : tot_typing (push_binding ph.g x ppname_default ph.ret_ty)
-                 (open_term ph.post x) tm_slprop
-    = if x = Ghost.reveal ph.x
-      then post_typing_src
-      else 
-        ()
-  in
   let post_typing_src
     : tot_typing (push_binding g x ppname_default ph.ret_ty)
                  (open_term ph.post x) tm_slprop
-    = //weakening: TODO
-      ()
+    = ()
   in
   let ty_typing : universe_of ph.g st.res st.u = ph.ty_typing in
   let ty_typing : universe_of g st.res st.u = () in
@@ -511,15 +470,15 @@ let return_in_ctxt (g:env) (y:var) (y_ppname:ppname) (u:universe) (ty:term) (ctx
   | C_STAtomic _ obs st, EffectAnnotAtomic { opens }
   | C_STAtomic _ obs st, EffectAnnotAtomicOrGhost { opens } ->
     assert (comp_inames c == tm_emp_inames);
-    let pht = post_hint_typing g post_hint x in
-    let validity = emp_inames_included g opens pht.effect_annot_typing in
+    let pht = () in
+    let validity = emp_inames_included g opens pht in
     let c' = C_STAtomic opens obs st in
     (| t, c' |)
   | C_STGhost _ st, EffectAnnotGhost { opens }
   | C_STGhost _ st, EffectAnnotAtomicOrGhost { opens } ->
     assert (comp_inames c == tm_emp_inames);
-    let pht = post_hint_typing g post_hint x in
-    let validity = emp_inames_included g opens pht.effect_annot_typing in
+    let pht = () in
+    let validity = emp_inames_included g opens pht in
     let c' = C_STGhost opens st in
     (| t, c' |)
   | _ -> 

@@ -45,8 +45,7 @@ let inv_as_post_hint (#g:env) (#inv:slprop) (inv_typing:tot_typing g inv tm_slpr
 : T.Tac (ph:post_hint_for_env g { ph.post == inv /\ ph.ret_ty == tm_unit /\ ph.u == u0 /\ ph.effect_annot == EffectAnnotSTT })
 = let x = inv_typing_weakening inv_typing in
   { g; effect_annot=EffectAnnotSTT; effect_annot_typing=();
-    ret_ty=tm_unit; u=u0; ty_typing=unit_typing g; post=inv;
-    x; post_typing_src = () }
+    ret_ty=tm_unit; u=u0; ty_typing=unit_typing g; post=inv }
 
 let tm_l_true : term = FStar.Reflection.V2.Formula.(formula_as_term True_)
 let tm_l_or (a b: term) : term = FStar.Reflection.V2.Formula.(formula_as_term (Or a b))
@@ -243,9 +242,8 @@ let check_while
   let body_ph : post_hint_for_env g2 = inv_as_post_hint body_post_typing in
   assert body_ph.ret_ty == tm_unit;
   let x = fresh g2 in
-  assume (x == Ghost.reveal post_cond.x);
   let body_open_pre_typing : tot_typing (push_binding g2 x ppname_default tm_bool) (open_term body_pre_open x) tm_slprop =
-    () in // post_cond.post_typing_src
+    () in
   let body_pre_typing = body_typing_subst_true body_open_pre_typing in
   let r_body = 
     check 
@@ -281,9 +279,7 @@ let check_while
       ret_ty=RT.unit_ty;
       u=u_zero;
       ty_typing=RU.magic(); //unit typing
-      post=break_pred;
-      x;
-      post_typing_src=RU.magic() //from inv typing and body_open_pre_typing
+      post=break_pred
     }
   in
   let res = prove_post_hint res (PostHint post_hint_for_while) t.range in

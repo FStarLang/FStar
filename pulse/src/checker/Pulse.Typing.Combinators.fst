@@ -349,7 +349,6 @@ let bind_res_and_post_typing g c2 x post_hint
       )
     | PostHint post -> 
       CU.debug g "pulse.main" (fun _ -> "bind_res_and_post_typing (with post_hint)\n");
-      let pr = post_hint_typing g post x in
       ()
      
 let add_frame (g:env) (t:st_term) (c:comp_st) (t_typing:st_typing g t c)

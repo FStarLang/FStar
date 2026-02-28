@@ -130,7 +130,6 @@ let check_core
                ("check_return: unexpected variable clash in return post,\
                  please file a bug report")
         else 
-         let ty_rec = post_hint_typing g post x in
          open_term_nv post.post px
       | _ ->
         let t = check_tot_term (push_binding g x (fst px) ty) tm_emp tm_slprop in

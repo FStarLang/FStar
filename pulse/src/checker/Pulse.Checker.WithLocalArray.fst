@@ -172,11 +172,10 @@ let check
           assume (open_st_term (close_st_term opened_body x) x == opened_body);
           let c = C_ST {u=comp_u c_body;res=comp_res c_body;pre;post=post.post} in
           let c_typing =
-            let post_typing_rec = post_hint_typing g post x in
             intro_comp_typing g c pre_typing 
-              post_typing_rec.effect_annot_typing
-              post_typing_rec.ty_typing
-              x post_typing_rec.post_typing
+              ()
+              ()
+              x ()
           in
           let st = wrst c (Tm_WithLocalArray { binder = mk_binder_ppname (mk_array init_t) binder.binder_ppname; initializer=init; length=len; body }) in
           checker_result_for_st_typing (| st, c |) res_ppname

@@ -652,9 +652,7 @@ type post_hint_t = {
   ret_ty:term;
   u:universe;
   ty_typing:universe_of g ret_ty u;
-  post:term;
-  x:(x:FStar.Ghost.erased var { fresh_wrt x g (freevars post) });
-  post_typing_src:tot_typing (push_binding g x ppname_default ret_ty) (open_term post x) tm_slprop;
+  post:term;  // post has a free de Bruijn variable 0 for the result of type ret_ty
 }
 
 let post_hint_for_env_p (g:env) (p:post_hint_t) = g `env_extends` p.g
@@ -674,24 +672,6 @@ type post_hint_opt_t =
 | NoHint
 
 let post_hint_opt (g:env) = p:post_hint_opt_t { PostHint? p ==> post_hint_for_env_p g (PostHint?.v p) }
-
-noeq
-type post_hint_typing_t (g:env) (p:post_hint_t) (x:var { ~ (Set.mem x (dom g)) }) = {
-  effect_annot_typing:effect_annot_typing g p.effect_annot;
-  ty_typing:universe_of g p.ret_ty p.u;
-  post_typing:tot_typing (push_binding g x ppname_default p.ret_ty) (open_term p.post x) tm_slprop
-}
-
-irreducible
-let post_hint_typing (g:env)
-                     (p:post_hint_for_env g)
-                     (x:var { fresh_wrt x g (freevars p.post) })
-  : post_hint_typing_t g p x
-  = {
-    effect_annot_typing = ();
-    ty_typing = ();
-    post_typing = ();
-  }
 
 
 let effect_annot_matches (c:comp_st) (effect_annot:effect_annot) : prop =
