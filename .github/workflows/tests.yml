@@ -116,7 +116,7 @@ jobs:
     steps:
       - uses: cda-tum/setup-z3@main
         with:
-          version: 4.13.3
+          version: 4.15.3
 
       - name: Get fstar package
         uses: actions/download-artifact@v4
@@ -143,10 +143,10 @@ jobs:
           - ubuntu-latest
     runs-on: ${{ matrix.os }}
     steps:
-      # TODO: Install both 4.8.5 and 4.13.3
+      # TODO: Install all versions?
       - uses: cda-tum/setup-z3@main
         with:
-          version: 4.13.3
+          version: 4.15.3
 
       - name: Get fstar package
         uses: actions/download-artifact@v4
@@ -180,7 +180,7 @@ jobs:
 
       - uses: cda-tum/setup-z3@main
         with:
-          version: 4.13.3
+          version: 4.15.3
 
       - name: Get fstar package
         uses: actions/download-artifact@v4
