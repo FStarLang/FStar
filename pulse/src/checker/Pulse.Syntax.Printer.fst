@@ -357,7 +357,7 @@ let rec st_term_to_string' (level:string) (t:st_term)
         level
         (term_to_string invariant)
         level
-        (match meas with | Some d -> sprintf "decreases %s\n%s" (term_to_string d) level | None -> "")
+        (match meas with | [] -> "" | [d] -> sprintf "decreases %s\n%s" (term_to_string d) level | ds -> sprintf "decreases %%[%s]\n%s" (term_list_to_string "; " ds) level)
         (indent level)
         (st_term_to_string' (indent level) body)
         level

@@ -264,7 +264,7 @@ type st_term' =
    | Tm_While {
       invariant:term;
       loop_requires:term;
-      meas:option term;
+      meas:list term;
       condition:st_term;
       body:st_term;
     }
