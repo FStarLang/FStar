@@ -4041,6 +4041,8 @@ let settable (uu___ : Prims.string) : Prims.bool=
   | "log_queries" -> true
   | "log_failing_queries" -> true
   | "log_types" -> true
+  | "MLish" -> true
+  | "MLish_effect" -> true
   | "max_fuel" -> true
   | "max_ifuel" -> true
   | "no_plugins" -> true
