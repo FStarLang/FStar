@@ -38,7 +38,7 @@ let try_unembed_simple {| EMB.embedding 'a |} (x:term) : ML (option 'a) =
 let mk_interp1 #a #r
   {| EMB.embedding a |}
   {| EMB.embedding r |}
-  (f : a -> r)
+  (f : a -> ML r)
   : interp_t =
     fun psc cb us args ->
       match args with
@@ -50,7 +50,7 @@ let mk_interp1 #a #r
 let mk_nbe_interp1 #a #r
   {| NBE.embedding a |}
   {| NBE.embedding r |}
-  (f : a -> r)
+  (f : a -> ML r)
   : nbe_interp_t =
     fun cbs us args ->
       match args with
@@ -64,7 +64,7 @@ let mk_interp2 #a #b #r
   {| EMB.embedding a |}
   {| EMB.embedding b |}
   {| EMB.embedding r |}
-  (f : a -> b -> r)
+  (f : a -> ML (b -> ML r))
   : interp_t =
     fun psc cb us args ->
       match args with
@@ -79,7 +79,7 @@ let mk_nbe_interp2 #a #b #r
   {| NBE.embedding a |}
   {| NBE.embedding b |}
   {| NBE.embedding r |}
-  (f : a -> b -> r)
+  (f : a -> ML (b -> ML r))
   : nbe_interp_t =
     fun cbs us args ->
       match args with
@@ -96,7 +96,7 @@ let mk_interp3 #a #b #c #r
   {| EMB.embedding b |}
   {| EMB.embedding c |}
   {| EMB.embedding r |}
-  (f : a -> b -> c -> r)
+  (f : a -> ML (b -> ML (c -> ML r)))
   : interp_t =
     fun psc cb us args ->
       match args with
@@ -113,7 +113,7 @@ let mk_nbe_interp3 #a #b #c #r
   {| NBE.embedding b |}
   {| NBE.embedding c |}
   {| NBE.embedding r |}
-  (f : a -> b -> c -> r)
+  (f : a -> ML (b -> ML (c -> ML r)))
   : nbe_interp_t =
     fun cbs us args ->
       match args with
@@ -132,7 +132,7 @@ let mk_interp4 #a #b #c #d #r
   {| EMB.embedding c |}
   {| EMB.embedding d |}
   {| EMB.embedding r |}
-  (f : a -> b -> c -> d -> r)
+  (f : a -> ML (b -> ML (c -> ML (d -> ML r))))
   : interp_t =
     fun psc cb us args ->
       match args with
@@ -151,7 +151,7 @@ let mk_nbe_interp4 #a #b #c #d #r
   {| NBE.embedding c |}
   {| NBE.embedding d |}
   {| NBE.embedding r |}
-  (f : a -> b -> c -> d -> r)
+  (f : a -> ML (b -> ML (c -> ML (d -> ML r))))
   : nbe_interp_t =
     fun cbs us args ->
       match args with
@@ -172,7 +172,7 @@ let mk_interp5 #a #b #c #d #e #r
   {| EMB.embedding d |}
   {| EMB.embedding e |}
   {| EMB.embedding r |}
-  (f : a -> b -> c -> d -> e -> r)
+  (f : a -> ML (b -> ML (c -> ML (d -> ML (e -> ML r)))))
   : interp_t =
     fun psc cb us args ->
       match args with
@@ -193,7 +193,7 @@ let mk_nbe_interp5 #a #b #c #d #e #r
   {| NBE.embedding d |}
   {| NBE.embedding e |}
   {| NBE.embedding r |}
-  (f : a -> b -> c -> d -> e -> r)
+  (f : a -> ML (b -> ML (c -> ML (d -> ML (e -> ML r)))))
   : nbe_interp_t =
     fun cbs us args ->
       match args with
@@ -213,7 +213,7 @@ let mk1 #a #r
   (name : Ident.lid)
   {| EMB.embedding a |} {| NBE.embedding a |}
   {| EMB.embedding r |} {| NBE.embedding r |}
-  (f : a -> r)
+  (f : a -> ML r)
   : primitive_step =
   let interp : interp_t = mk_interp1 f in
   let nbe_interp : nbe_interp_t = mk_nbe_interp1 f in
@@ -225,7 +225,7 @@ let mk2 #a #b #r
   {| EMB.embedding a |} {| NBE.embedding a |}
   {| EMB.embedding b |} {| NBE.embedding b |}
   {| EMB.embedding r |} {| NBE.embedding r |}
-  (f : a -> b -> r)
+  (f : a -> ML (b -> ML r))
   : primitive_step =
   let interp : interp_t = mk_interp2 f in
   let nbe_interp : nbe_interp_t = mk_nbe_interp2 f in
@@ -238,7 +238,7 @@ let mk3 #a #b #c #r
   {| EMB.embedding b |} {| NBE.embedding b |}
   {| EMB.embedding c |} {| NBE.embedding c |}
   {| EMB.embedding r |} {| NBE.embedding r |}
-  (f : a -> b -> c -> r)
+  (f : a -> ML (b -> ML (c -> ML r)))
   : primitive_step =
   let interp : interp_t = mk_interp3 f in
   let nbe_interp : nbe_interp_t = mk_nbe_interp3 f in
@@ -252,7 +252,7 @@ let mk4 #a #b #c #d #r
   {| EMB.embedding c |} {| NBE.embedding c |}
   {| EMB.embedding d |} {| NBE.embedding d |}
   {| EMB.embedding r |} {| NBE.embedding r |}
-  (f : a -> b -> c -> d -> r)
+  (f : a -> ML (b -> ML (c -> ML (d -> ML r))))
   : primitive_step =
   let interp : interp_t = mk_interp4 f in
   let nbe_interp : nbe_interp_t = mk_nbe_interp4 f in
@@ -267,7 +267,7 @@ let mk5 #a #b #c #d #e #r
   {| EMB.embedding d |} {| NBE.embedding d |}
   {| EMB.embedding e |} {| NBE.embedding e |}
   {| EMB.embedding r |} {| NBE.embedding r |}
-  (f : a -> b -> c -> d -> e -> r)
+  (f : a -> ML (b -> ML (c -> ML (d -> ML (e -> ML r)))))
   : primitive_step =
   let interp : interp_t = mk_interp5 f in
   let nbe_interp : nbe_interp_t = mk_nbe_interp5 f in
@@ -278,8 +278,8 @@ let mk1' #a #r #na #nr
   (name : Ident.lid)
   {| EMB.embedding a |} {| NBE.embedding na |}
   {| EMB.embedding r |} {| NBE.embedding nr |}
-  (f : a -> option r)
-  (nbe_f : na -> option nr)
+  (f : a -> ML (option r))
+  (nbe_f : na -> ML (option nr))
   : primitive_step =
   let interp : interp_t =
     fun psc cb us args ->
@@ -306,15 +306,15 @@ let mk1_psc' #a #r #na #nr
   (name : Ident.lid)
   {| EMB.embedding a |} {| NBE.embedding na |}
   {| EMB.embedding r |} {| NBE.embedding nr |}
-  (f : psc -> a -> option r)
-  (nbe_f : psc -> na -> option nr)
+  (f : psc -> ML (a -> ML (option r)))
+  (nbe_f : psc -> ML (na -> ML (option nr)))
   : primitive_step =
   let interp : interp_t =
     fun psc cb us args ->
       match args with
       | [(a, _)] ->
-        let! r = f psc <$> try_unembed_simple a in
-        let! r = r in
+        let! a' = try_unembed_simple a in
+        let! r = f psc a' in
         return (embed_simple psc.psc_range r)
       | _ -> failwith "arity"
   in
@@ -322,13 +322,12 @@ let mk1_psc' #a #r #na #nr
     fun cbs us args ->
       match args with
       | [(a, _)] ->
-        let! r = nbe_f null_psc <$> NBE.unembed solve cbs a in
-        let! r = r in
+        let! a' = NBE.unembed solve cbs a in
+        let! r = nbe_f null_psc a' in
         return (NBE.embed solve cbs r)
       | _ -> failwith "arity"
   in
   as_primitive_step_nbecbs true (name, 1, u_arity, interp, nbe_interp)
-
 
 let mk2' #a #b #r #na #nb #nr
   (u_arity : int)
@@ -336,8 +335,8 @@ let mk2' #a #b #r #na #nb #nr
   {| EMB.embedding a |} {| NBE.embedding na |}
   {| EMB.embedding b |} {| NBE.embedding nb |}
   {| EMB.embedding r |} {| NBE.embedding nr |}
-  (f : a -> b -> option r)
-  (nbe_f : na -> nb -> option nr)
+  (f : a -> ML (b -> ML (option r)))
+  (nbe_f : na -> ML (nb -> ML (option nr)))
   : primitive_step =
   let interp : interp_t =
     fun psc cb us args ->
@@ -368,8 +367,8 @@ let mk3' #a #b #c #r #na #nb #nc #nr
   {| EMB.embedding b |} {| NBE.embedding nb |}
   {| EMB.embedding c |} {| NBE.embedding nc |}
   {| EMB.embedding r |} {| NBE.embedding nr |}
-  (f : a -> b -> c -> option r)
-  (nbe_f : na -> nb -> nc -> option nr)
+  (f : a -> ML (b -> ML (c -> ML (option r))))
+  (nbe_f : na -> ML (nb -> ML (nc -> ML (option nr))))
   : primitive_step =
   let interp : interp_t =
     fun psc cb us args ->
@@ -403,8 +402,8 @@ let mk4' #a #b #c #d #r #na #nb #nc #nd #nr
   {| EMB.embedding c |} {| NBE.embedding nc |}
   {| EMB.embedding d |} {| NBE.embedding nd |}
   {| EMB.embedding r |} {| NBE.embedding nr |}
-  (f : a -> b -> c -> d -> option r)
-  (nbe_f : na -> nb -> nc -> nd -> option nr)
+  (f : a -> ML (b -> ML (c -> ML (d -> ML (option r)))))
+  (nbe_f : na -> ML (nb -> ML (nc -> ML (nd -> ML (option nr)))))
   : primitive_step =
   let interp : interp_t =
     fun psc cb us args ->
@@ -441,8 +440,8 @@ let mk5' #a #b #c #d #e #r #na #nb #nc #nd #ne #nr
   {| EMB.embedding d |} {| NBE.embedding nd |}
   {| EMB.embedding e |} {| NBE.embedding ne |}
   {| EMB.embedding r |} {| NBE.embedding nr |}
-  (f : a -> b -> c -> d -> e -> option r)
-  (nbe_f : na -> nb -> nc -> nd -> ne -> option nr)
+  (f : a -> ML (b -> ML (c -> ML (d -> ML (e -> ML (option r))))))
+  (nbe_f : na -> ML (nb -> ML (nc -> ML (nd -> ML (ne -> ML (option nr))))))
   : primitive_step =
   let interp : interp_t =
     fun psc cb us args ->
@@ -482,8 +481,8 @@ let mk6' #a #b #c #d #e #f #r #na #nb #nc #nd #ne #nf #nr
   {| EMB.embedding e |} {| NBE.embedding ne |}
   {| EMB.embedding f |} {| NBE.embedding nf |}
   {| EMB.embedding r |} {| NBE.embedding nr |}
-  (ff : a -> b -> c -> d -> e -> f -> option r)
-  (nbe_ff : na -> nb -> nc -> nd -> ne -> nf -> option nr)
+  (ff : a -> ML (b -> ML (c -> ML (d -> ML (e -> ML (f -> ML (option r)))))))
+  (nbe_ff : na -> ML (nb -> ML (nc -> ML (nd -> ML (ne -> ML (nf -> ML (option nr)))))))
   : primitive_step =
   let interp : interp_t =
     fun psc cb us args ->
